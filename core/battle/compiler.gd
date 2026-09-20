@@ -9,7 +9,7 @@
 ## 1. 只收集棋盘上的非包物品（暂存区不参战，见 3.4）
 ## 2. 各物品写入基础值
 ## 3. 包体效果：按 bag_of() 聚合，施加给内容物
-## 4. 插槽点亮：数每件物品的星/菱形被几个【不同的】物品占住
+## 4. 邻接标记点亮：数每件物品的增益/受益格被几个【不同的】物品占住
 ## 5. 按 4.3 的数值约定结算，产出 abilities
 ## [endcodeblock]
 class_name BattleCompiler
@@ -46,8 +46,8 @@ static func compile(board: GridInventory, base_hp: float = BASE_HP) -> Combatant
 	# --- 3. 包体效果施加给内容物 ---
 	_apply_bag_effects(board, fighters, stats)
 
-	# --- 4. 插槽点亮 ---
-	_apply_sockets(board, fighters, stats)
+	# --- 4. 邻接标记 ---
+	_apply_adjacency(board, fighters, stats)
 
 	# --- 5. 产出 ---
 	var hp := StatMath.from_float(base_hp)
@@ -81,69 +81,60 @@ static func _apply_bag_effects(board: GridInventory, fighters: Array[int], stats
 			(mod as StatModifier).apply_to(stats[uid], 1)
 
 
-static func _apply_sockets(board: GridInventory, fighters: Array[int], stats: Dictionary) -> void:
+static func _apply_adjacency(board: GridInventory, fighters: Array[int], stats: Dictionary) -> void:
 	for uid in fighters:
 		var holder := board.get_item(uid)
-		var sockets: SocketProfile = holder.def.sockets
-		if sockets == null:
+		var profile: AdjacencyProfile = holder.def.adjacency
+		if profile == null:
 			continue
-		if sockets.has_star():
-			_resolve_socket(
-				board, holder, stats,
-				sockets.star_cells, sockets.star_filter,
-				sockets.star_direction, sockets.star_mods
+
+		# 增益：站在这些格子上的邻居，各得一份
+		if profile.has_grant():
+			var receivers := _lit_neighbors(
+				board, holder, profile.grant_cells, profile.grant_filter
 			)
-		if sockets.has_diamond():
-			_resolve_socket(
-				board, holder, stats,
-				sockets.diamond_cells, sockets.diamond_filter,
-				sockets.diamond_direction, sockets.diamond_mods
-			)
+			for other in receivers:
+				if not stats.has(other):
+					continue  # 不参战的（比如包）跳过
+				for mod in profile.grant_mods:
+					(mod as StatModifier).apply_to(stats[other], 1)
+
+		# 受益：点亮几个格，本物品就得几份
+		if profile.has_receive():
+			var lit := _lit_neighbors(
+				board, holder, profile.receive_cells, profile.receive_filter
+			).size()
+			if lit > 0:
+				for mod in profile.receive_mods:
+					(mod as StatModifier).apply_to(stats[uid], lit)
 
 
-## 点亮一类插槽并施加效果。
+## 占住指定标记格的邻居，**去重**后按 uid 升序返回。
 ##
-## 计数方式是**去重**：一件物品压住多个插槽格也只算一次。这直接来自
-## 「一件物品最多只能填另一件的一个星」这条规则，也让结果与遍历顺序无关。
-static func _resolve_socket(
+## 去重直接来自「一件物品最多只能填另一件的一个格」这条规则：一件物品压住多个标记格
+## 也只算一次。正因为是去重计数而不是匹配，结果才与遍历顺序无关。
+## 排序只为调试时可读，对结果无影响。
+static func _lit_neighbors(
 	board: GridInventory,
 	holder: ItemInstance,
-	stats: Dictionary,
-	socket_cells: Array[Vector2i],
-	filter: Array[StringName],
-	direction: int,
-	mods: Array[StatModifier]
-) -> void:
+	marker_cells: Array[Vector2i],
+	filter: Array[StringName]
+) -> Array[int]:
+	var found: Array[int] = []
 	var shape := holder.def.shape
 	if shape == null:
-		return
+		return found
 
-	var fillers: Array[int] = []
 	var seen := {}
-	for offset in socket_cells:
+	for offset in marker_cells:
 		var cell := holder.origin + shape.transform_point(offset, holder.rotation)
 		var other := board.cell_uid(cell)
 		if other == GridInventory.EMPTY_UID or other == holder.uid or seen.has(other):
 			continue
 		var other_inst := board.get_item(other)
-		if other_inst == null or not SocketProfile.accepts(filter, other_inst.def):
+		if other_inst == null or not AdjacencyProfile.accepts(filter, other_inst.def):
 			continue
 		seen[other] = true
-		fillers.append(other)
-
-	if fillers.is_empty():
-		return
-	fillers.sort()  # 顺序对结果无影响，排序只为调试时可读
-
-	if direction == SocketProfile.Direction.HOLDER:
-		# 持有者受益，份数 = 点亮数
-		for mod in mods:
-			(mod as StatModifier).apply_to(stats[holder.uid], fillers.size())
-		return
-
-	# 填充者受影响，各得一份。不在棋盘参战列表里的（比如包）跳过。
-	for filler in fillers:
-		if not stats.has(filler):
-			continue
-		for mod in mods:
-			(mod as StatModifier).apply_to(stats[filler], 1)
+		found.append(other)
+	found.sort()
+	return found

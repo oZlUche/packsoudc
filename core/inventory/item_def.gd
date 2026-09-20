@@ -43,8 +43,8 @@ extends Resource
 ## 战斗定义。为空表示本物品不参战（纯素材、纯包体）。
 @export var combat: CombatProfile
 
-## 星形／菱形插槽。为空表示本物品不提供邻接加成。
-@export var sockets: SocketProfile
+## 邻接标记（增益／受益）。为空表示本物品与邻居无互动。
+@export var adjacency: AdjacencyProfile
 
 
 ## 定义是否完整可用。资产批量校验与单元测试用。

@@ -155,37 +155,35 @@ static func run_bag_effects(t: TestCase) -> void:
 		t.ne(ability.haste(), StatMath.ONE, "两件都在急速包里，都应有加成")
 
 
-static func run_sockets(t: TestCase) -> void:
-	t.begin("编译阶段 · 插槽")
+static func run_adjacency(t: TestCase) -> void:
+	t.begin("编译阶段 · 邻接标记")
 
 	var B := StatMath.Buff
 	ItemInstance.reset_uid_counter()
 
 	var bag := _bag("bag", ["####", "####", "####"])
 
-	# 磨刀石：星格在右邻，点亮后【填充者】增伤（FILLER 方向）
+	# 磨刀石：【增益】右邻的武器
 	var whetstone := _item("whetstone", ["#"])
-	var ws := SocketProfile.new()
-	ws.star_cells = [Vector2i(1, 0)]
-	ws.star_filter = [&"weapon"] as Array[StringName]
-	ws.star_direction = SocketProfile.Direction.FILLER
-	ws.star_mods = [_mod(BattleStats.DAMAGE, B.SHARP, 50)]
-	whetstone.sockets = ws
+	var ws := AdjacencyProfile.new()
+	ws.grant_cells = [Vector2i(1, 0)]
+	ws.grant_filter = [&"weapon"] as Array[StringName]
+	ws.grant_mods = [_mod(BattleStats.DAMAGE, B.SHARP, 50)]
+	whetstone.adjacency = ws
 
-	# 饭盒：三个星格，点亮几个【自己】就加几份（HOLDER 方向）
+	# 饭盒：【受益】于右侧三格的邻居，点亮几个就得几份
 	var lunchbox := _weapon("lunchbox", ["#"], 10.0, 2.0)
-	var lb := SocketProfile.new()
-	lb.star_cells = [Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]
-	lb.star_direction = SocketProfile.Direction.HOLDER
-	lb.star_mods = [_mod(BattleStats.DAMAGE, B.EMPOWER, 20)]
-	lunchbox.sockets = lb
+	var lb := AdjacencyProfile.new()
+	lb.receive_cells = [Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]
+	lb.receive_mods = [_mod(BattleStats.DAMAGE, B.EMPOWER, 20)]
+	lunchbox.adjacency = lb
 
 	var sword := _weapon("sword", ["#"], 10.0, 2.0, ["weapon"])
 	var shield := _weapon("shield", ["#"], 4.0, 3.0, ["gear"])
 	var longbar := _item("longbar", ["###"], ["food"])
 	var dot := _item("dot", ["#"], ["food"])
 
-	# --- FILLER：磨刀石让右邻的武器增伤 ---
+	# --- 增益：磨刀石让右邻的武器增伤 ---
 	var board := _board(Vector2i(8, 6))
 	board.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
 	board.place(ItemInstance.create(whetstone), Vector2i(0, 0), 0)
@@ -194,7 +192,7 @@ static func run_sockets(t: TestCase) -> void:
 
 	t.eq(_dmg(BattleCompiler.compile(board), s.uid), 15, "磨刀石让右邻武器 10 → 15")
 
-	# --- 过滤器：非 weapon 填不亮 ---
+	# --- 过滤器：非 weapon 不受增益 ---
 	var board2 := _board(Vector2i(8, 6))
 	board2.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
 	board2.place(ItemInstance.create(whetstone), Vector2i(0, 0), 0)
@@ -203,10 +201,10 @@ static func run_sockets(t: TestCase) -> void:
 	t.eq(
 		_dmg(BattleCompiler.compile(board2), sh.uid),
 		4,
-		"gear 标签不满足 weapon 过滤器，不受加成"
+		"gear 标签不满足 weapon 过滤器，不受增益"
 	)
 
-	# --- HOLDER：点亮几个加几份 ---
+	# --- 受益：点亮几个加几份 ---
 	var board3 := _board(Vector2i(8, 6))
 	board3.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
 	var lunch := ItemInstance.create(lunchbox)
@@ -214,14 +212,14 @@ static func run_sockets(t: TestCase) -> void:
 	t.eq(
 		_dmg(BattleCompiler.compile(board3), lunch.uid),
 		10,
-		"无人填星时不加成"
+		"无人占格时不加成"
 	)
 
 	board3.place(ItemInstance.create(dot), Vector2i(1, 0), 0)
 	t.eq(
 		_dmg(BattleCompiler.compile(board3), lunch.uid),
 		12,
-		"点亮 1 个星：10 × 1.2 = 12"
+		"点亮 1 个受益格：10 × 1.2 = 12"
 	)
 
 	board3.place(ItemInstance.create(dot), Vector2i(2, 0), 0)
@@ -229,26 +227,26 @@ static func run_sockets(t: TestCase) -> void:
 	t.eq(
 		_dmg(BattleCompiler.compile(board3), lunch.uid),
 		16,
-		"点亮 3 个星：同区 +60%，10 × 1.6 = 16"
+		"点亮 3 个受益格：同区 +60%，10 × 1.6 = 16"
 	)
 
-	# --- 去重：一件物品压住 3 个星格也只算 1 个 ---
+	# --- 去重：一件物品压住 3 个标记格也只算 1 个 ---
 	var board4 := _board(Vector2i(8, 6))
 	board4.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
 	var lunch4 := ItemInstance.create(lunchbox)
 	board4.place(lunch4, Vector2i(0, 0), 0)
 	var bar := ItemInstance.create(longbar)   # 1x3 横条，正好盖住三个星格
 	board4.place(bar, Vector2i(1, 0), 0)
-	t.eq(board4.cell_uid(Vector2i(1, 0)), bar.uid, "长条压住第一个星格")
-	t.eq(board4.cell_uid(Vector2i(3, 0)), bar.uid, "长条压住第三个星格")
+	t.eq(board4.cell_uid(Vector2i(1, 0)), bar.uid, "长条压住第一个受益格")
+	t.eq(board4.cell_uid(Vector2i(3, 0)), bar.uid, "长条压住第三个受益格")
 	t.eq(
 		_dmg(BattleCompiler.compile(board4), lunch4.uid),
 		12,
-		"一件物品压住 3 个星格只算 1 份：10 × 1.2 = 12"
+		"一件物品压住 3 个受益格只算 1 份：10 × 1.2 = 12"
 	)
 
-	# --- 插槽随物品旋转 ---
-	# 磨刀石是 1x1，星格 (1,0) 在右邻；转 1 步后应变成下邻 (0,1)
+	# --- 标记格随物品旋转 ---
+	# 磨刀石是 1x1，增益格 (1,0) 在右邻；转 1 步后应变成下邻 (0,1)
 	var board5 := _board(Vector2i(8, 6))
 	board5.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
 	var ws_inst := ItemInstance.create(whetstone)
@@ -258,13 +256,13 @@ static func run_sockets(t: TestCase) -> void:
 	t.eq(
 		_dmg(BattleCompiler.compile(board5), below.uid),
 		10,
-		"rot0 时下邻不在星格上，不受加成"
+		"rot0 时下邻不在增益格上，不受加成"
 	)
 	t.check(board5.rotate_item(ws_inst.uid, 1), "磨刀石旋转一步")
 	t.eq(
 		_dmg(BattleCompiler.compile(board5), below.uid),
 		15,
-		"rot1 后星格转到下邻，加成生效"
+		"rot1 后增益格转到下邻，加成生效"
 	)
 
 
@@ -276,12 +274,11 @@ static func run_determinism(t: TestCase) -> void:
 	var sword := _weapon("sword", ["#"], 10.0, 2.0, ["weapon"])
 	var axe := _weapon("axe", ["#"], 7.0, 1.5, ["weapon"])
 	var stone := _item("stone", ["#"], ["weapon"])
-	var sp := SocketProfile.new()
-	sp.star_cells = [Vector2i(1, 0), Vector2i(-1, 0)]
-	sp.star_filter = [&"weapon"] as Array[StringName]
-	sp.star_direction = SocketProfile.Direction.FILLER
-	sp.star_mods = [_mod(BattleStats.DAMAGE, B.SHARP, 25)]
-	stone.sockets = sp
+	var sp := AdjacencyProfile.new()
+	sp.grant_cells = [Vector2i(1, 0), Vector2i(-1, 0)]
+	sp.grant_filter = [&"weapon"] as Array[StringName]
+	sp.grant_mods = [_mod(BattleStats.DAMAGE, B.SHARP, 25)]
+	stone.adjacency = sp
 
 	## 摆同一个局面，只改放置调用的先后
 	var build := func(order: Array) -> Array:
@@ -316,7 +313,7 @@ static func run_determinism(t: TestCase) -> void:
 			StatMath.ONE + StatMath.from_percent(10)
 		)
 		expected = StatMath.mul(expected, StatMath.ONE + StatMath.from_percent(25))
-		t.eq(row[1], expected, "%s 应吃到包体 +10%% 与插槽 +25%% 两个乘区" % row[0])
+		t.eq(row[1], expected, "%s 应吃到包体 +10%% 与邻接 +25%% 两个乘区" % row[0])
 
 	# 同一棋盘反复编译结果一致
 	ItemInstance.reset_uid_counter()

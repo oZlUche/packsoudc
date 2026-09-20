@@ -119,10 +119,11 @@ class_name ItemDef extends Resource
 @export var is_bag: bool = false               # 本物品是否是「包」
 @export var bag_accept_tags: Array[StringName] # 包内准入标签，空 = 不限
 
-# —— M2 追加 ——
-# @export var sockets: SocketProfile           # 星/菱形插槽需求与供给
-# @export var combat: CombatProfile            # 冷却、伤害、触发方式
-# @export var bag_effect: BagEffect            # 仅 is_bag 时生效，作用于内容物
+@export var bag_mods: Array[StatModifier]      # 仅 is_bag 时生效，作用于内容物
+
+# —— 战斗 ——
+@export var combat: CombatProfile              # 冷却、基础属性、是否主动；空 = 不参战
+@export var adjacency: AdjacencyProfile        # 邻接标记（增益／受益）；空 = 与邻居无互动
 
 # core/inventory/item_instance.gd —— 运行时实例，可变
 class_name ItemInstance extends RefCounted
@@ -297,69 +298,72 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 static func compile(board: GridInventory) -> CombatantSpec:
     # 1. 只遍历棋盘容器（暂存区的物品不参战，见 3.4）
     # 2. 包体效果：按 bag_of(uid) 聚合，把各包的效果施加给其内容物
-    # 3. 插槽点亮：数每件物品的星/菱形被几个【不同的】物品占住（见下）
+    # 3. 邻接标记点亮：数每件物品的增益/受益格被几个【不同的】物品占住（见下）
     # 4. 按 4.3 的数值约定结算，得到每项属性的终值
     # 5. 产出 abilities: [{cooldown_ticks, trigger, effect, snapshot_stats}]
 ```
 
-#### 星形与菱形插槽
+#### 邻接标记：增益与受益
 
-物品**轮廓之外的相邻格**上会标出星形或菱形，这些标记格就是它的插槽。某个插槽格被别的
-物品占住，该插槽即被点亮；点亮做什么由物品自己的描述决定，方向有两种，数据里必须显式标：
+物品**轮廓之外的相邻格**上会标出记号，这些标记格被别的物品占住即被点亮。
 
-| 方向 | 例子 | 受影响方 |
+参照作品用星形与菱形区分两类标记，那只是两个任意符号。**本作直接按语义命名**，
+省掉「标记类型」与「效果方向」两个概念的拆分：
+
+| 类别 | 含义 | 例子 |
 |---|---|---|
-| `HOLDER` | 「★ 位置上的食物让**本物品**触发更快」 | 插槽持有者 |
-| `FILLER` | 「本物品触发时，连带触发 ★ 位置的物品」 | 填充者 |
+| **增益** `grant` | 我给站在这些格子上的邻居加成 | 「磨刀石让相邻的武器增伤」 |
+| **受益** `receive` | 站在这些格子上的邻居给我加成 | 「旁边每有一份食物，我就触发更快」 |
 
-菱形与星形是同一套机制，只是第二种插槽类型，用于一件物品有两种不同效果时区分位置。
+UI 上用什么图形表示这两类，是表现层的事，数据层不关心。
 
-**关键约束：一件物品最多只能填另一件的一个星、一个菱形。** 一个大件压住目标的 3 个星格，
-也只算 1 个。
+> **这不是宝石镶嵌。** 邻接标记是「谁挨着谁」，双方各占各的格子；宝石是放进宿主物品
+> 孔位、不占网格、按宿主类型给不同效果的另一套系统，尚未实现。
+> **`socket` / 「镶嵌」这组词留给宝石**，不要用在邻接标记上。
+
+**关键约束：一件物品最多只能填另一件的一个增益格、一个受益格。**
+一个大件压住目标的 3 个标记格，也只算 1 个。
 
 #### 这一步是去重计数，不是匹配
 
 由上述约束可直接得出：
 
 ```
-点亮的星数 = 占住星格的【不同物品】数量，上限为星格总数
+点亮数 = 占住标记格的【不同物品】数量，上限为标记格总数
 ```
 
 这是个去重计数，**天然与遍历顺序无关**，不需要任何匹配算法，也不存在确定性隐患。
 
-只有当同一件物品的多个星**含义各不相同**（一号星管伤害、二号星管冷却）时，才需要决定
-「谁分配到哪个星」，那时才退化成真正的二分匹配。**本作不采用这种设计** —— 同一件物品的
-所有星同质。这条是硬约束，内容设计时不要越线；真要越线，先回来改这一节。
+只有当同一类标记的各个格子**含义各不相同**（一号格管伤害、二号格管冷却）时，才需要决定
+「谁分配到哪个格」，那时才退化成真正的二分匹配。**本作不采用这种设计** —— 同一类标记的
+各格同质。这条是硬约束，内容设计时不要越线；真要越线，先回来改这一节。
 
-#### 插槽的数据形态
+#### 数据形态
 
 ```gdscript
-# core/battle/socket_profile.gd
-class_name SocketProfile extends Resource
+# core/battle/adjacency_profile.gd
+class_name AdjacencyProfile extends Resource
 
-enum Kind { STAR, DIAMOND }
-enum Direction { HOLDER, FILLER }
+## 标记格相对本物品原点的偏移。【随物品一起旋转】，
+## 且必须与形状共用同一套规范化平移量（见 ItemShape.transform_point）——
+## 否则转一下物品，标记位置就和实际生效的格子错开。
+@export var grant_cells: Array[Vector2i] = []
+@export var grant_filter: Array[StringName] = []   # 为空 = 不限
+@export var grant_mods: Array[StatModifier] = []   # 每个符合条件的邻居各得一份
 
-## 插槽格相对本物品原点的偏移。【随物品一起旋转】——
-## 否则转一下物品，生效的邻居就和画面上看到的标记对不上。
-@export var star_cells: Array[Vector2i] = []
-@export var diamond_cells: Array[Vector2i] = []
-
-## 填充条件：为空表示任何物品都算，否则填充者需命中其一
-@export var star_filter: Array[StringName] = []
-@export var diamond_filter: Array[StringName] = []
-
-@export var star_effect: SocketEffect      # 含 direction 与具体加成
-@export var diamond_effect: SocketEffect
+@export var receive_cells: Array[Vector2i] = []
+@export var receive_filter: Array[StringName] = []
+@export var receive_mods: Array[StatModifier] = [] # 点亮几格就得几份
 ```
 
 编译期三步，全部与顺序无关：
 
 ```
 对每件物品 A：
-  1. 把 A 的插槽偏移按 A 的朝向旋转，得到绝对格坐标
-  2. 收集这些格上的物品 uid，去重，按 filter 过滤 → lit_stars / lit_diamonds
-  3. 按 effect.direction 把「点亮数 × 单份效果」记到对应一方
+  1. 把 A 的标记偏移按 A 的朝向变换，得到绝对格坐标
+  2. 收集这些格上的物品 uid，去重，按 filter 过滤 → 点亮列表
+  3. 增益 → 列表里每个邻居各得一份
+     受益 → A 自己得「点亮数」份
 全部记完后，再按 4.3 的数值约定统一结算。
 ```
 
@@ -1002,6 +1006,7 @@ res://
 | 侵蚀方向变体（如由内向外） | 生成器对 `erosion_band` 的标注方式 | 不把 `erosion_band` 与 `tier` 合并成一个字段 |
 | 非矩形 / 可扩容背包 | `GridInventory._blocked` 与 `size` | 不假定容器是满矩形、尺寸不变 |
 | 物品损坏与随机词条 | `ItemInstance.state` 字典 | 不把运行时可变状态写进 `ItemDef` |
+| 宝石镶嵌 | `ItemDef.gem_slots` + `ItemInstance.state.gems`，编译期在包体效果之后插一步 | 宝石不占网格，效果随宿主类型（武器／护甲／散放）而变；`socket` 一词留给它，不要用在邻接标记上 |
 | 合成配方 | 新增 `RecipeBook` + 回合边界的结算钩子 | 匹配的是**相对偏移模式**而非「挨着」；`state` 预留 `locked` 标志 |
 | 有内容物的包可旋转 | `GridInventory.rotate_item` 的包分支 | 现在直接拒绝；放开时内容物需同步做坐标变换 |
 
@@ -1033,3 +1038,4 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v0.6 | 2026-09-20 | 邻接机制按语义重命名：`SocketProfile` → `AdjacencyProfile`，星形／菱形两类标记改为**增益 grant／受益 receive**，原先分开的「标记类型」与「效果方向」合并为一个概念；`socket`／「镶嵌」一词腾出来留给尚未实现的宝石系统，并在第 12 节登记其接入点 |
