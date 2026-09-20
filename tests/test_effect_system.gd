@@ -231,9 +231,9 @@ static func run_rule_layers(t: TestCase) -> void:
 	_advance_to(odd_ctx, 0.36)
 	t.eq(StatMath.to_int(odd_ctx.sides[1].resources.current(BattleStats.RES_HP)), 100,
 		"0.37 秒冷却，0.36 秒时未触发")
-	_advance_to(odd_ctx, 1.12)
+	_advance_to(odd_ctx, 1.11)
 	t.eq(StatMath.to_int(odd_ctx.sides[1].resources.current(BattleStats.RES_HP)), 97,
-		"1.12 秒内触发 3 次（约 0.37 / 0.74 / 1.11）—— 任意小数周期都能表达")
+		"1.11 秒内恰好触发 3 次（0.37 / 0.74 / 1.11）—— 小数周期精确无误差")
 
 	# --- 开局触发 ---
 	var opener := _spec(100.0, [
@@ -253,21 +253,20 @@ static func run_rule_layers(t: TestCase) -> void:
 	burst.n = 3
 	var counter := _spec(100.0, [
 		_compiled(1, "tri", {"damage": 5.0},
-			[_rule(OnSchedule.new(), _cooldown(0.25), [_damage()], [burst])]),
+			[_rule(OnSchedule.new(), _cooldown(0.1), [_damage()], [burst])]),
 	])
 	var ctx3 := _battle(counter, _spec(100.0, []))
-	# 用 0.25 秒这种定点可精确表示的周期。0.1 秒在定点里是 6554/65536，
-	# 三次累加不等于 round(0.3)，差 1/65536 秒 —— 那是定点数的固有性质，
-	# 不该让测试去碰它。
-	_advance_to(ctx3, 0.6)
+	# 十进制标度下 0.1 是精确的，0.1 × 3 恰好等于 0.3。
+	# 换成 2^16 标度这几条会差 1/65536 秒而失败 —— 这正是不用 2 的幂的理由。
+	_advance_to(ctx3, 0.2)
 	t.eq(StatMath.to_int(ctx3.sides[1].resources.current(BattleStats.RES_HP)), 100,
-		"0.25 / 0.5 秒两次只蓄力不执行")
-	_advance_to(ctx3, 0.75)
+		"0.1 / 0.2 秒两次只蓄力不执行")
+	_advance_to(ctx3, 0.3)
 	t.eq(StatMath.to_int(ctx3.sides[1].resources.current(BattleStats.RES_HP)), 95,
-		"0.75 秒第 3 次放出")
-	_advance_to(ctx3, 1.5)
+		"0.3 秒第 3 次放出 —— 0.1 × 3 精确等于 0.3")
+	_advance_to(ctx3, 0.6)
 	t.eq(StatMath.to_int(ctx3.sides[1].resources.current(BattleStats.RES_HP)), 90,
-		"1.5 秒再放一次 —— 证明被挡住的两次冷却确实照常推进了")
+		"0.6 秒再放一次 —— 证明被挡住的两次冷却确实照常推进了")
 
 
 static func run_cost_semantics(t: TestCase) -> void:
