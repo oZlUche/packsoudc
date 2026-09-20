@@ -23,12 +23,23 @@ static func _item(id: String, rows: Array, tags: Array = []) -> ItemDef:
 	return d
 
 
+## 按冷却自动出手的一条规则。冷却不再是 CombatProfile 的字段，
+## 而是 CooldownCadence 的参数 —— 这正是「效果不写死」的体现。
+static func _cooldown_rule(cd: float) -> AbilityRule:
+	var r := AbilityRule.new()
+	r.trigger = OnTick.new()
+	var cad := CooldownCadence.new()
+	cad.seconds = cd
+	r.cadence = cad
+	r.effects = [DealDamage.new()] as Array[Effect]
+	return r
+
+
 static func _weapon(id: String, rows: Array, damage: float, cd: float, tags: Array = []) -> ItemDef:
 	var d := _item(id, rows, tags)
 	var c := CombatProfile.new()
-	c.is_active = true
-	c.cooldown_sec = cd
 	c.base_stats = {"damage": damage}
+	c.rules = [_cooldown_rule(cd)] as Array[AbilityRule]
 	d.combat = c
 	return d
 
@@ -44,10 +55,14 @@ static func _board(size: Vector2i = Vector2i(6, 6)) -> GridInventory:
 	return GridInventory.new(size, 1, true)
 
 
-## item_stats 是 Dictionary，取出来是 Variant，推不出类型；这里显式标注一次
 static func _dmg(spec: CombatantSpec, uid: int) -> int:
-	var set: StatSet = spec.item_stats[uid]
-	return set.total_int_of(BattleStats.DAMAGE)
+	var set := spec.stats_of(uid)
+	return set.total_int_of(BattleStats.DAMAGE) if set != null else -1
+
+
+## 主动物品数量
+static func _active(spec: CombatantSpec) -> int:
+	return spec.active_items().size()
 
 
 static func run(t: TestCase) -> void:
@@ -63,7 +78,7 @@ static func run(t: TestCase) -> void:
 	# --- 空棋盘 ---
 	var empty := BattleCompiler.compile(_board(), 25.0)
 	t.eq(empty.max_hp_int(), 25, "空棋盘只有基础生命值")
-	t.eq(empty.abilities.size(), 0, "空棋盘没有任何能力")
+	t.eq(empty.items.size(), 0, "空棋盘没有任何物品")
 	t.eq(empty.rough_dps(), 0.0, "空棋盘 DPS 为 0")
 
 	# --- 单件主动物品 ---
@@ -73,41 +88,41 @@ static func run(t: TestCase) -> void:
 	board.place(s1, Vector2i(0, 0), 0)
 
 	var spec := BattleCompiler.compile(board, 25.0)
-	t.eq(spec.abilities.size(), 1, "一件主动物品产出一个能力")
-	t.eq(spec.abilities[0].source_uid, s1.uid, "能力记录来源 uid")
-	t.eq(spec.abilities[0].def_id, &"sword", "能力记录定义 id")
-	t.eq(StatMath.to_int(spec.abilities[0].damage()), 10, "伤害取基础值")
-	t.eq(spec.abilities[0].cooldown(), StatMath.from_float(2.0), "冷却取基础值")
-	t.eq(spec.abilities[0].haste(), StatMath.ONE, "速度默认 1.0")
+	t.eq(_active(spec), 1, "一件主动物品")
+	t.eq(spec.items[0].source_uid, s1.uid, "记录来源 uid")
+	t.eq(spec.items[0].def_id, &"sword", "记录定义 id")
+	t.eq(_dmg(spec, s1.uid), 10, "伤害取基础值")
+	t.eq(spec.items[0].rules.size(), 1, "带一条规则")
+	t.check(spec.rough_dps() > 0.0, "有主动物品时 DPS 预估非零")
 
-	# --- 包不产出能力 ---
+	# --- 包不参与编译 ---
 	t.check(board.acts_as_bag(plain_bag), "包在棋盘上作为包生效")
-	for ability in spec.abilities:
-		t.ne(ability.def_id, &"bag", "包本身不应产出能力")
+	for item in spec.items:
+		t.ne(item.def_id, &"bag", "包本身不进编译结果")
 
 	# --- 非主动物品贡献属性但不出手 ---
 	var charm := _item("charm", ["#"])
 	var charm_combat := CombatProfile.new()
-	charm_combat.is_active = false
 	charm_combat.base_stats = {"max_hp": 30.0}
-	charm.combat = charm_combat
+	charm.combat = charm_combat          # 无 rules 即为被动
 	board.place(ItemInstance.create(charm), Vector2i(1, 0), 0)
 
 	spec = BattleCompiler.compile(board, 25.0)
-	t.eq(spec.abilities.size(), 1, "被动物品不产出能力")
+	t.eq(_active(spec), 1, "被动物品不产出规则")
+	t.eq(spec.items.size(), 2, "但它仍在编译结果里，因为要贡献属性")
 	t.eq(spec.max_hp_int(), 55, "被动物品的 max_hp 叠加到基础 25 上")
 
 	# --- 暂存区不参战 ---
 	var storage := GridInventory.new(Vector2i(4, 4), 2)
 	storage.place(ItemInstance.create(sword), Vector2i(0, 0), 0)
 	var spec_board_only := BattleCompiler.compile(board, 25.0)
-	t.eq(spec_board_only.abilities.size(), 1, "暂存区里的武器不参战")
+	t.eq(_active(spec_board_only), 1, "暂存区里的武器不参战")
 
 	# --- 纯素材不产出能力 ---
 	var mat_board := _board()
 	mat_board.place(ItemInstance.create(plain_bag), Vector2i(0, 0), 0)
 	mat_board.place(ItemInstance.create(rock), Vector2i(0, 0), 0)
-	t.eq(BattleCompiler.compile(mat_board).abilities.size(), 0, "没有 CombatProfile 的物品不参战")
+	t.eq(_active(BattleCompiler.compile(mat_board)), 0, "没有 CombatProfile 的物品不参战")
 
 
 static func run_bag_effects(t: TestCase) -> void:
@@ -127,9 +142,9 @@ static func run_bag_effects(t: TestCase) -> void:
 	board.place(inside, Vector2i(0, 0), 0)
 
 	var spec := BattleCompiler.compile(board)
-	t.eq(spec.abilities.size(), 1, "一个能力")
+	t.eq(_active(spec), 1, "一件主动物品")
 	t.eq(
-		spec.abilities[0].haste(),
+		spec.stats_of(inside.uid).total_of(BattleStats.HASTE),
 		StatMath.mul(StatMath.ONE, StatMath.ONE + StatMath.from_percent(10)),
 		"包内物品触发速度 ×1.1"
 	)
@@ -140,19 +155,19 @@ static func run_bag_effects(t: TestCase) -> void:
 	board.place(outside, Vector2i(3, 0), 0)
 
 	spec = BattleCompiler.compile(board)
-	var by_uid := {}
-	for ability in spec.abilities:
-		by_uid[ability.source_uid] = ability
-	t.eq(by_uid.size(), 2, "两个能力")
-	t.ne(by_uid[inside.uid].haste(), StatMath.ONE, "急速包里的仍有加成")
-	t.eq(by_uid[outside.uid].haste(), StatMath.ONE, "普通包里的没有加成")
+	t.eq(_active(spec), 2, "两件主动物品")
+	t.ne(spec.stats_of(inside.uid).total_of(BattleStats.HASTE), StatMath.ONE,
+		"急速包里的仍有加成")
+	t.eq(spec.stats_of(outside.uid).total_of(BattleStats.HASTE), StatMath.ONE,
+		"普通包里的没有加成")
 
 	# --- 把物品挪进急速包，加成随之生效 ---
 	InventoryService.move(board, outside.uid, board, Vector2i(1, 0), 0)
 	t.eq(board.bag_of(outside.uid), board.bag_at(Vector2i(1, 0)), "已挪进急速包")
 	spec = BattleCompiler.compile(board)
-	for ability in spec.abilities:
-		t.ne(ability.haste(), StatMath.ONE, "两件都在急速包里，都应有加成")
+	for item in spec.items:
+		t.ne((item as CompiledItem).stats.total_of(BattleStats.HASTE), StatMath.ONE,
+			"两件都在急速包里，都应有加成")
 
 
 static func run_adjacency(t: TestCase) -> void:
@@ -289,9 +304,12 @@ static func run_determinism(t: TestCase) -> void:
 			board.place(ItemInstance.create(entry[0]), entry[1], 0)
 		var spec := BattleCompiler.compile(board)
 		var rows: Array = []
-		for ability in spec.abilities:
+		for item in spec.active_items():
+			var it := item as CompiledItem
 			rows.append([
-				String(ability.def_id), ability.damage(), ability.cooldown(), ability.haste()
+				String(it.def_id),
+				it.stats.total_of(BattleStats.DAMAGE),
+				it.stats.total_of(BattleStats.HASTE),
 			])
 		rows.sort_custom(func(a, b): return str(a) < str(b))
 		return [spec.max_hp, rows]
@@ -324,15 +342,16 @@ static func run_determinism(t: TestCase) -> void:
 	var a := BattleCompiler.compile(board)
 	var b := BattleCompiler.compile(board)
 	t.eq(a.max_hp, b.max_hp, "重复编译生命值一致")
-	t.eq(a.abilities.size(), b.abilities.size(), "重复编译能力数一致")
-	for i in a.abilities.size():
-		t.eq(a.abilities[i].damage(), b.abilities[i].damage(), "重复编译伤害一致")
-		t.eq(a.abilities[i].source_uid, b.abilities[i].source_uid, "重复编译来源顺序一致")
+	t.eq(a.items.size(), b.items.size(), "重复编译物品数一致")
+	for i in a.items.size():
+		t.eq(a.items[i].stats.total_of(BattleStats.DAMAGE),
+			b.items[i].stats.total_of(BattleStats.DAMAGE), "重复编译伤害一致")
+		t.eq(a.items[i].source_uid, b.items[i].source_uid, "重复编译顺序一致")
 
-	# 能力按 uid 升序，顺序稳定
+	# 物品按 uid 升序，顺序稳定
 	var uids: Array = []
-	for ability in a.abilities:
-		uids.append(ability.source_uid)
+	for item in a.items:
+		uids.append((item as CompiledItem).source_uid)
 	var sorted_uids := uids.duplicate()
 	sorted_uids.sort()
-	t.eq(uids, sorted_uids, "能力列表按 source_uid 升序")
+	t.eq(uids, sorted_uids, "物品列表按 source_uid 升序")

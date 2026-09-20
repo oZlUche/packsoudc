@@ -55,15 +55,15 @@ static func compile(board: GridInventory, base_hp: float = BASE_HP) -> Combatant
 		var set: StatSet = stats[uid]
 		hp += set.total_of(BattleStats.MAX_HP)
 		var def := board.get_item(uid).def
-		if def.combat != null and def.combat.is_active:
-			var ability := Ability.new()
-			ability.source_uid = uid
-			ability.def_id = def.id
-			ability.stats = set
-			spec.abilities.append(ability)
+		var item := CompiledItem.new()
+		item.source_uid = uid
+		item.def_id = def.id
+		item.stats = set
+		if def.combat != null:
+			item.rules = def.combat.rules.duplicate()
+		spec.add(item)
 
 	spec.max_hp = maxi(0, hp)
-	spec.item_stats = stats
 	return spec
 
 

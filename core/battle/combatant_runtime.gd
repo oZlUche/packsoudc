@@ -1,0 +1,217 @@
+## 一个战斗单位在战场上的完整状态（架构文档 4.5）。
+##
+## [b]运行时属性 = 编译快照 + 活跃 buff。[/b]
+## [member base] 来自 [BattleCompiler]，全程不可变；buff 在其之上叠加。
+## 参战属性在进入战斗时只读取一次 —— 战斗中改动背包不影响本场战斗，
+## 而且战斗期间背包 UI 本就禁用（4.1），玩家碰不到。
+class_name CombatantRuntime
+extends RefCounted
+
+var side: int = 0
+## 编译产物，全程不可变
+var base: StatSet = null
+var buffs: Array[BuffInstance] = []
+var resources: ResourcePool = null
+var rules: Array[RuleRuntime] = []
+
+## uid -> 该物品的编译期属性（不可变）。
+## **必须按物品保留粒度** —— 「磨刀石只给旁边那把武器加伤害」是这个品类的核心，
+## 全部并成单位级属性表会把它抹平。
+var item_base: Dictionary = {}
+
+var _merged: StatSet = null
+var _merged_items: Dictionary = {}
+var _dirty: bool = true
+
+## 对 BattleContext 的弱引用。
+##
+## 必须是弱引用：ctx 持有 sides，若 sides 上的信号回调又强持 ctx，
+## 就成了引用环，RefCounted 永远不释放（表现为退出时 "resources still in use"）。
+var _ctx_ref: WeakRef = null
+
+
+static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
+	var rt := CombatantRuntime.new()
+	rt.side = p_side
+	rt.base = StatSet.new()
+	rt.resources = ResourcePool.new()
+
+	# 把各物品的属性并成一份单位级属性表。
+	# 物品级的乘区已在编译期结算完毕，这里只汇总终值，不再二次相乘。
+	for item in spec.items:
+		var it := item as CompiledItem
+		rt.item_base[it.source_uid] = it.stats
+		for key in it.stats.keys():
+			rt.base.ensure(key).base += it.stats.total_of(key)
+	rt.base.ensure(BattleStats.MAX_HP).base = spec.max_hp
+
+	for item in spec.items:
+		var it2 := item as CompiledItem
+		for rule in it2.rules:
+			rt.rules.append(RuleRuntime.create(rule, it2.source_uid))
+
+	rt._rebuild()
+	return rt
+
+
+#region 属性
+## 按 4.3 公式把 base 与所有 buff 的 mods 合并后的终值。
+func stat(key: StringName, fallback: int = 0) -> int:
+	if _dirty:
+		_rebuild()
+	return _merged.total_of(key, fallback)
+
+
+func stat_int(key: StringName, fallback: int = 0) -> int:
+	return StatMath.to_int(stat(key, fallback))
+
+
+## buff 增减后必须调用。整表重算而非按键脏标记 ——
+## 物品数量在几十这个量级，重算一次远比维护细粒度依赖便宜。
+func mark_dirty() -> void:
+	_dirty = true
+
+
+## 某件物品的属性终值 = 它自己的编译期属性 + 单位级 buff。
+##
+## 与 [method stat] 的区别：伤害、冷却、消耗这类**属于单件物品**的属性走这里；
+## 生命上限、护甲这类**属于整个单位**的走 [method stat]。
+func item_stat(uid: int, key: StringName, fallback: int = 0) -> int:
+	if _dirty:
+		_rebuild()
+	var merged: StatSet = _merged_items.get(uid, null)
+	if merged == null:
+		return stat(key, fallback)
+	return merged.total_of(key, fallback)
+
+
+func item_stat_int(uid: int, key: StringName, fallback: int = 0) -> int:
+	return StatMath.to_int(item_stat(uid, key, fallback))
+
+
+func _rebuild() -> void:
+	_dirty = false
+	_merged = base.clone()
+	_merged_items = {}
+	for uid in item_base:
+		_merged_items[uid] = (item_base[uid] as StatSet).clone()
+	for buff in buffs:
+		for mod in buff.def.mods:
+			(mod as StatModifier).apply_to(_merged, buff.stacks)
+			for uid in _merged_items:
+				(mod as StatModifier).apply_to(_merged_items[uid], buff.stacks)
+	_sync_resource_maxes()
+
+
+## 资源由 max_* 属性自动派生：有 max_shield 就有 shield 资源。
+func _sync_resource_maxes() -> void:
+	for key in _merged.keys():
+		var res := BattleStats.resource_of_max(key)
+		if res == &"":
+			continue
+		var cap := _merged.total_of(key)
+		if resources.has(res):
+			resources.set_max(res, cap)
+		else:
+			resources.define(res, cap)
+#endregion
+
+
+#region buff
+func stacks_of(buff_id: StringName) -> int:
+	for b in buffs:
+		if b.def.id == buff_id:
+			return b.stacks
+	return 0
+
+
+func find_buff(buff_id: StringName) -> BuffInstance:
+	for b in buffs:
+		if b.def.id == buff_id:
+			return b
+	return null
+
+
+## 施加 buff。已存在则叠层，否则新建。返回实际增加的层数。
+##
+## [b]会改变规则集[/b]（buff 可携带 rules），调用方必须随后重算事件掩码，
+## 否则新规则订阅的事件可能尚未开启，那条规则会静默失效。
+func apply_buff(def: BuffDef, stacks: int = 1) -> int:
+	var existing := find_buff(def.id)
+	var added := 0
+	if existing != null:
+		added = existing.add_stacks(stacks)
+	else:
+		var inst := BuffInstance.create(def, stacks)
+		buffs.append(inst)
+		added = inst.stacks
+		for rule in def.rules:
+			rules.append(RuleRuntime.create(rule, 0, inst))
+	mark_dirty()
+	return added
+
+
+## 移除层数，返回实际移除的层数。层数归零时整条 buff 连同其规则一并移除。
+func remove_buff_stacks(buff_id: StringName, count: int) -> int:
+	var inst := find_buff(buff_id)
+	if inst == null or count <= 0:
+		return 0
+	var removed := mini(count, inst.stacks)
+	inst.stacks -= removed
+	if inst.stacks <= 0:
+		_drop_buff(inst)
+	mark_dirty()
+	return removed
+
+
+func _drop_buff(inst: BuffInstance) -> void:
+	buffs.erase(inst)
+	var kept: Array[RuleRuntime] = []
+	for rt in rules:
+		if rt.buff != inst:
+			kept.append(rt)
+	rules = kept
+
+
+## 推进一帧的 buff 时长，返回本帧过期的 buff 列表。
+func advance_buffs() -> Array[BuffInstance]:
+	var expired: Array[BuffInstance] = []
+	for b in buffs:
+		if b.is_permanent():
+			continue
+		b.remaining -= 1
+		if b.remaining <= 0:
+			expired.append(b)
+	for b in expired:
+		_drop_buff(b)
+	if not expired.is_empty():
+		mark_dirty()
+	return expired
+#endregion
+
+
+## 把资源变动接到事件总线上。由 [method BattleContext.create] 调用。
+func bind_context(ctx: BattleContext) -> void:
+	_ctx_ref = weakref(ctx)
+	if not resources.changed.is_connected(_on_resource_changed):
+		resources.changed.connect(_on_resource_changed)
+
+
+func _on_resource_changed(key: StringName, delta: int, reason: StringName) -> void:
+	var ctx: BattleContext = _ctx_ref.get_ref() if _ctx_ref != null else null
+	if ctx == null:
+		return
+	ctx.emit(BattleEvent.RESOURCE_CHANGED, side, {
+		"key": String(key), "delta": delta, "reason": String(reason),
+	})
+
+
+func is_alive() -> bool:
+	return resources.current(BattleStats.RES_HP) > 0
+
+
+func snapshot() -> Dictionary:
+	var buff_snap := {}
+	for b in buffs:
+		buff_snap[String(b.def.id)] = b.stacks
+	return {"side": side, "resources": resources.snapshot(), "buffs": buff_snap}

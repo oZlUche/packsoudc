@@ -22,3 +22,35 @@ const MAX_HP := &"max_hp"
 
 ## 护甲，减伤用
 const ARMOR := &"armor"
+
+## 资源的上限属性统一以 max_ 开头。
+##
+## [b]资源由 max_* 属性自动派生[/b]：战斗单位扫描自己的属性表，
+## 每发现一个 max_xxx 就开一个名为 xxx 的资源池。
+## 新增一种资源（护盾、充能…）只需配一个 max_shield 属性，不改任何代码。
+const MAX_PREFIX := "max_"
+
+const RES_HP := &"hp"
+const RES_STAMINA := &"stamina"
+const RES_MANA := &"mana"
+
+const MAX_STAMINA := &"max_stamina"
+const MAX_MANA := &"max_mana"
+
+## 耐力消耗的面板值。走 4.3 公式结算，
+## 因此「减少耐力消耗 20%」就是一条作用于本键的普通 StatModifier。
+const STAMINA_COST := &"stamina_cost"
+const MANA_COST := &"mana_cost"
+
+
+## max_xxx -> xxx；不是上限属性则返回空
+static func resource_of_max(stat_key: StringName) -> StringName:
+	var s := String(stat_key)
+	if not s.begins_with(MAX_PREFIX):
+		return &""
+	return StringName(s.substr(MAX_PREFIX.length()))
+
+
+## xxx -> max_xxx
+static func max_of_resource(resource_key: StringName) -> StringName:
+	return StringName(MAX_PREFIX + String(resource_key))

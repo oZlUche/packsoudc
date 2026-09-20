@@ -2,31 +2,48 @@
 class_name CombatantSpec
 extends RefCounted
 
-var max_hp: int = 0                ## 定点
-var abilities: Array[Ability] = [] ## 按 source_uid 升序，顺序稳定
+var max_hp: int = 0                  ## 定点
+## 按 source_uid 升序，顺序稳定
+var items: Array[CompiledItem] = []
 
-## uid -> StatSet，供 UI 显示每件物品的终值。战斗本身不需要它。
-var item_stats: Dictionary = {}
+var _by_uid: Dictionary = {}
+
+
+func add(item: CompiledItem) -> void:
+	items.append(item)
+	_by_uid[item.source_uid] = item
+
+
+func stats_of(uid: int) -> StatSet:
+	var it: CompiledItem = _by_uid.get(uid, null)
+	return it.stats if it != null else null
+
+
+func item_of(uid: int) -> CompiledItem:
+	return _by_uid.get(uid, null)
+
+
+## 有规则的物品
+func active_items() -> Array[CompiledItem]:
+	var out: Array[CompiledItem] = []
+	for it in items:
+		if it.is_active():
+			out.append(it)
+	return out
 
 
 func max_hp_int() -> int:
 	return StatMath.to_int(max_hp)
 
 
-## 粗略 DPS，用于玩家拖动物品时的实时预估。
-## 不考虑触发顺序与状态效果，只做手感参考。
 func rough_dps() -> float:
 	var total := 0.0
-	for ability in abilities:
-		var cd := StatMath.to_float(ability.cooldown())
-		var haste := StatMath.to_float(ability.haste())
-		if cd <= 0.0 or haste <= 0.0:
-			continue
-		total += StatMath.to_float(ability.damage()) * haste / cd
+	for it in items:
+		total += it.estimated_dps()
 	return total
 
 
 func _to_string() -> String:
-	return "CombatantSpec(HP=%d, %d 个能力, 约 %.1f DPS)" % [
-		max_hp_int(), abilities.size(), rough_dps()
+	return "CombatantSpec(HP=%d, %d 件物品 / %d 件主动, 约 %.1f DPS)" % [
+		max_hp_int(), items.size(), active_items().size(), rough_dps()
 	]
