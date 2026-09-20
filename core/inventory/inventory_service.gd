@@ -1,0 +1,84 @@
+## 跨容器移动的唯一入口。全部为静态方法，不持有任何状态。
+##
+## 存在的理由只有一个：[b]移动必须是原子的[/b]。先从源移除、再往目标放，
+## 目标放不下时必须把物品原样放回源容器。漏掉回滚分支会导致
+## 「拖到非法位置物品消失」—— 这是异形格子背包最常见的严重 bug。
+class_name InventoryService
+extends RefCounted
+
+
+## 把 uid 从 from 移到 to 的 origin 处。失败时源容器保持原样，返回 false。
+##
+## from 与 to 可以是同一个容器（容器内挪位）。
+static func move(
+	from: GridInventory, uid: int, to: GridInventory, origin: Vector2i, rot: int = 0
+) -> bool:
+	if from == null or to == null:
+		return false
+	var inst := from.get_item(uid)
+	if inst == null:
+		return false
+
+	var saved_origin := inst.origin
+	var saved_rot := inst.rotation
+
+	from.begin_batch()
+	if to != from:
+		to.begin_batch()
+
+	var moved := false
+	if from.remove(uid) != null:
+		if to.place(inst, origin, rot):
+			moved = true
+		else:
+			# 回滚。place 是先校验后写入的全有全无操作，
+			# 失败时未触碰任何格子，因此这里一定放得回去。
+			if not from.place(inst, saved_origin, saved_rot):
+				push_error(
+					"InventoryService.move: uid %d 回滚失败，容器状态已损坏" % uid
+				)
+
+	if to != from:
+		to.end_batch()
+	from.end_batch()
+	return moved
+
+
+## 容器内挪位的便捷写法。
+static func move_within(inv: GridInventory, uid: int, origin: Vector2i, rot: int = 0) -> bool:
+	return move(inv, uid, inv, origin, rot)
+
+
+## 把 uid 从 from 自动装填进 to 的第一个可用位置。用于「全部拾取」。
+static func transfer_auto(from: GridInventory, uid: int, to: GridInventory) -> bool:
+	if from == null or to == null:
+		return false
+	var inst := from.get_item(uid)
+	if inst == null:
+		return false
+	var fit := to.find_first_fit(inst.def)
+	if not fit["found"]:
+		return false
+	return move(from, uid, to, fit["origin"], fit["rotation"])
+
+
+## 尽可能多地把 from 的内容搬进 to，返回成功搬运的件数。
+##
+## 按占格数从大到小搬 —— 先安置大件，小件更容易见缝插针，
+## 总装入量明显优于随机顺序。
+static func transfer_all(from: GridInventory, to: GridInventory) -> int:
+	if from == null or to == null:
+		return 0
+	var sorted: Array = from.items()
+	sorted.sort_custom(
+		func(a, b): return (a as ItemInstance).def.shape.cell_count() > (b as ItemInstance).def.shape.cell_count()
+	)
+	var moved := 0
+	from.begin_batch()
+	to.begin_batch()
+	for inst in sorted:
+		if transfer_auto(from, (inst as ItemInstance).uid, to):
+			moved += 1
+	to.end_batch()
+	from.end_batch()
+	return moved
