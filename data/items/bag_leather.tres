@@ -1,12 +1,14 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_84k5l"]
-[ext_resource type="Resource" path="res://data/shapes/bag_leather.tres" id="2_vsgf4"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_nher2"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_wooo7"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_jfsye"]
+[ext_resource type="Resource" path="res://data/shapes/bag_leather.tres" id="4_0tdvc"]
 
 [resource]
-script = ExtResource("1_84k5l")
+script = ExtResource("3_jfsye")
 id = &"bag_leather"
 display_name = "皮革包"
-shape = ExtResource("2_vsgf4")
+shape = ExtResource("4_0tdvc")
 rarity = 1
 is_bag = true

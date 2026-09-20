@@ -68,3 +68,44 @@ static func run(t: TestCase) -> void:
 	var split := ItemShape.from_ascii(["#.#"])
 	t.check(split.is_valid(), "不连通形状在数据层视为合法")
 	t.eq(split.cell_count(), 2, "不连通形状占 2 格")
+
+
+static func run_bit_notation(t: TestCase) -> void:
+	t.begin("形状 · 0/1 记法")
+
+	# 形状本质是一张布尔矩阵，0/1 串是它所见即所得的写法
+	var l_shape := ItemShape.from_bits("11\n10")
+	t.eq(l_shape.cell_count(), 3, "L 形三格")
+	t.eq(l_shape.size_rotated(0), Vector2i(2, 2), "包围盒 2x2")
+	t.check(l_shape.cells_rotated(0).has(Vector2i(0, 0)), "左上角占格")
+	t.check(l_shape.cells_rotated(0).has(Vector2i(1, 0)), "右上角占格")
+	t.check(l_shape.cells_rotated(0).has(Vector2i(0, 1)), "左下角占格")
+	t.check(not l_shape.cells_rotated(0).has(Vector2i(1, 1)), "右下角是 0，不占")
+
+	# 与旧的 # 写法等价 —— from_ascii 两种字符都认
+	t.eq(ItemShape.from_bits("11\n10").cells_rotated(0),
+		ItemShape.from_ascii(["##", "#."]).cells_rotated(0),
+		"0/1 与 #/. 两种写法结果相同")
+
+	# 空白与多余换行不影响结果，方便在 JSON 里用多行字符串书写
+	t.eq(ItemShape.from_bits("\n  11 \n  10  \n").cells_rotated(0),
+		l_shape.cells_rotated(0), "首尾空白与缩进被忽略")
+
+	# --- 往返 ---
+	t.eq(l_shape.to_bits(), "11\n10", "导出回 0/1 串")
+	t.eq(ItemShape.from_bits(l_shape.to_bits()).cells_rotated(0),
+		l_shape.cells_rotated(0), "from_bits(to_bits()) 往返不变")
+
+	var cross := ItemShape.from_bits("010\n111\n010")
+	t.eq(cross.to_bits(), "010\n111\n010", "十字形往返不变")
+	t.eq(cross.cell_count(), 5, "十字占 5 格")
+
+	# 导出的是规范化之后的占格，因此旋转后仍是紧贴原点的矩阵
+	var bar := ItemShape.from_bits("1111")
+	t.eq(bar.to_bits(0), "1111", "横条")
+	t.eq(bar.to_bits(1), "1\n1\n1\n1", "转 90° 后是竖条，且已平移到原点")
+
+	t.eq(ItemShape.new().to_bits(), "1", "默认形状是单格")
+	var empty := ItemShape.new()
+	empty.cells = [] as Array[Vector2i]
+	t.eq(empty.to_bits(), "", "空形状导出空串")

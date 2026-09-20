@@ -1,12 +1,14 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_naue7"]
-[ext_resource type="Resource" path="res://data/shapes/drone.tres" id="2_47c5b"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_evo7l"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_vam15"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_x8boj"]
+[ext_resource type="Resource" path="res://data/shapes/drone.tres" id="4_vnmkr"]
 
 [resource]
-script = ExtResource("1_naue7")
+script = ExtResource("3_x8boj")
 id = &"drone"
 display_name = "无人机"
-shape = ExtResource("2_47c5b")
+shape = ExtResource("4_vnmkr")
 rarity = 2
 tags = Array[StringName]([&"tool"])

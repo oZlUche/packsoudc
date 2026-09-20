@@ -1,12 +1,14 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_txnkl"]
-[ext_resource type="Resource" path="res://data/shapes/core.tres" id="2_kwkag"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_3saxm"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_80vu7"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_c4f3n"]
+[ext_resource type="Resource" path="res://data/shapes/core.tres" id="4_u7fuw"]
 
 [resource]
-script = ExtResource("1_txnkl")
+script = ExtResource("3_c4f3n")
 id = &"core"
 display_name = "能量核心"
-shape = ExtResource("2_kwkag")
+shape = ExtResource("4_u7fuw")
 rarity = 3
 tags = Array[StringName]([&"part"])

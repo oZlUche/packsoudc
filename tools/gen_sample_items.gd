@@ -12,29 +12,29 @@ const ITEM_DIR := "res://data/items"
 
 const ITEMS: Array[Dictionary] = [
 	# —— 包体：棋盘上的可用区来自它们 ——
-	{"id": "bag_small", "name": "小背包", "rows": ["##", "##"], "rarity": 0, "bag": true},
-	{"id": "bag_leather", "name": "皮革包", "rows": ["##", "##", "##"], "rarity": 1, "bag": true},
-	{"id": "bag_long", "name": "长条包", "rows": ["####"], "rarity": 1, "bag": true},
+	{"id": "bag_small", "name": "小背包", "bits": "11\n11", "rarity": 0, "bag": true},
+	{"id": "bag_leather", "name": "皮革包", "bits": "11\n11\n11", "rarity": 1, "bag": true},
+	{"id": "bag_long", "name": "长条包", "bits": "1111", "rarity": 1, "bag": true},
 	{
 		"id": "belt_potion",
 		"name": "药水带",
-		"rows": ["#", "#", "#"],
+		"bits": "1\n1\n1",
 		"rarity": 2,
 		"bag": true,
 		"accept": ["consumable"],
 	},
 	# —— 普通物品 ——
-	{"id": "mag", "name": "弹匣", "rows": ["#"], "rarity": 0, "tags": ["ammo"]},
-	{"id": "battery", "name": "电池", "rows": ["#"], "rarity": 0, "tags": ["part"]},
-	{"id": "pistol", "name": "手枪", "rows": ["##"], "rarity": 1, "tags": ["weapon"]},
-	{"id": "medkit", "name": "医疗包", "rows": ["##", "##"], "rarity": 1, "tags": ["consumable"]},
-	{"id": "stim", "name": "兴奋剂", "rows": ["#"], "rarity": 2, "tags": ["consumable"]},
-	{"id": "rifle", "name": "步枪", "rows": ["#", "#", "#"], "rarity": 2, "tags": ["weapon"]},
-	{"id": "crowbar", "name": "撬棍", "rows": ["##", "#."], "rarity": 1, "tags": ["tool"]},
-	{"id": "drone", "name": "无人机", "rows": ["###", ".#."], "rarity": 2, "tags": ["tool"]},
-	{"id": "sniper", "name": "狙击枪", "rows": ["#", "#", "#", "#"], "rarity": 3, "tags": ["weapon"]},
-	{"id": "armor", "name": "防弹衣", "rows": ["###", "###"], "rarity": 2, "tags": ["gear"]},
-	{"id": "core", "name": "能量核心", "rows": [".#.", "###", ".#."], "rarity": 3, "tags": ["part"]},
+	{"id": "mag", "name": "弹匣", "bits": "1", "rarity": 0, "tags": ["ammo"]},
+	{"id": "battery", "name": "电池", "bits": "1", "rarity": 0, "tags": ["part"]},
+	{"id": "pistol", "name": "手枪", "bits": "11", "rarity": 1, "tags": ["weapon"]},
+	{"id": "medkit", "name": "医疗包", "bits": "11\n11", "rarity": 1, "tags": ["consumable"]},
+	{"id": "stim", "name": "兴奋剂", "bits": "1", "rarity": 2, "tags": ["consumable"]},
+	{"id": "rifle", "name": "步枪", "bits": "1\n1\n1", "rarity": 2, "tags": ["weapon"]},
+	{"id": "crowbar", "name": "撬棍", "bits": "11\n10", "rarity": 1, "tags": ["tool"]},
+	{"id": "drone", "name": "无人机", "bits": "111\n010", "rarity": 2, "tags": ["tool"]},
+	{"id": "sniper", "name": "狙击枪", "bits": "1\n1\n1\n1", "rarity": 3, "tags": ["weapon"]},
+	{"id": "armor", "name": "防弹衣", "bits": "111\n111", "rarity": 2, "tags": ["gear"]},
+	{"id": "core", "name": "能量核心", "bits": "010\n111\n010", "rarity": 3, "tags": ["part"]},
 ]
 
 
@@ -46,7 +46,7 @@ func _initialize() -> void:
 	for row in ITEMS:
 		var id: String = row["id"]
 
-		var shape := ItemShape.from_ascii(row["rows"])
+		var shape := ItemShape.from_bits(row["bits"])
 		var shape_path := "%s/%s.tres" % [SHAPE_DIR, id]
 		if ResourceSaver.save(shape, shape_path) != OK:
 			push_error("保存形状失败: " + shape_path)

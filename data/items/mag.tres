@@ -1,11 +1,13 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_nmfdk"]
-[ext_resource type="Resource" path="res://data/shapes/mag.tres" id="2_mhrqx"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_skdxu"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_j38e5"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_j804i"]
+[ext_resource type="Resource" path="res://data/shapes/mag.tres" id="4_acv6y"]
 
 [resource]
-script = ExtResource("1_nmfdk")
+script = ExtResource("3_j804i")
 id = &"mag"
 display_name = "弹匣"
-shape = ExtResource("2_mhrqx")
+shape = ExtResource("4_acv6y")
 tags = Array[StringName]([&"ammo"])

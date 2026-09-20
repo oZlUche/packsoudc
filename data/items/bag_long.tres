@@ -1,12 +1,14 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_hvhlo"]
-[ext_resource type="Resource" path="res://data/shapes/bag_long.tres" id="2_g3qyt"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_1hkeu"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_e3d8s"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_1dic7"]
+[ext_resource type="Resource" path="res://data/shapes/bag_long.tres" id="4_rbdf7"]
 
 [resource]
-script = ExtResource("1_hvhlo")
+script = ExtResource("3_1dic7")
 id = &"bag_long"
 display_name = "长条包"
-shape = ExtResource("2_g3qyt")
+shape = ExtResource("4_rbdf7")
 rarity = 1
 is_bag = true

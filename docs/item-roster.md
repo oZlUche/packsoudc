@@ -16,7 +16,17 @@
 
 **稀有度**：0 常见 · 1 罕见 · 2 稀有 · 3 史诗 · 4 传说
 
-**形状**用 ASCII 写，`/` 分隔行：`##/#.` 就是一个 L 形。
+**形状**是一张布尔矩阵，写成 0/1 数字串，1 为占格、0 为空。
+表格单元格里用 `<br>` 代替换行：
+
+| 写法 | 含义 |
+|---|---|
+| `1111` | 横条四格 |
+| `11`<br>`10` | L 形三格 |
+| `010`<br>`111`<br>`010` | 十字五格 |
+
+代码侧同一记法：`ItemShape.from_bits("11\n10")`，`to_bits()` 导出回来。
+导入器的 JSON 也用它，三方不必各写一套。
 
 **规则**统一写成四段，缺省的段省略：
 
@@ -41,12 +51,12 @@
 
 | id | 名称 | 形状 | 稀 | 准入 | 包体效果 | 有? |
 |---|---|---|---|---|---|---|
-| `bag_small` | 小背包 | `##/##` | 0 | — | — | ✓ |
-| `bag_leather` | 皮革包 | `##/##/##` | 1 | — | — | ✓ |
-| `bag_long` | 长条包 | `####` | 1 | — | — | ✓ |
-| `belt_potion` | 医疗腰带 | `#/#/#` | 2 | `consumable` | 包内物品 `haste` +15% | ✓ |
-| `rig_chest` | 战术胸挂 | `###/###` | 2 | `weapon` | 包内物品 `damage` +10% | **新** |
-| `case_hard` | 防爆箱 | `##/##` | 3 | — | 包内物品 `damage` +30%、`haste` −10% | **新** |
+| `bag_small` | 小背包 | `11`<br>`11` | 0 | — | — | ✓ |
+| `bag_leather` | 皮革包 | `11`<br>`11`<br>`11` | 1 | — | — | ✓ |
+| `bag_long` | 长条包 | `1111` | 1 | — | — | ✓ |
+| `belt_potion` | 医疗腰带 | `1`<br>`1`<br>`1` | 2 | `consumable` | 包内物品 `haste` +15% | ✓ |
+| `rig_chest` | 战术胸挂 | `111`<br>`111` | 2 | `weapon` | 包内物品 `damage` +10% | **新** |
+| `case_hard` | 防爆箱 | `11`<br>`11` | 3 | — | 包内物品 `damage` +30%、`haste` −10% | **新** |
 
 `belt_potion` 的显示名从「药水带」改为「医疗腰带」—— 现代搜刮题材里没有药水。
 id 保持不变，改 id 会让存档失效。
@@ -57,14 +67,14 @@ id 保持不变，改 id 会让存档失效。
 
 | id | 名称 | 形状 | 稀 | 伤害 | 规则 | 有? |
 |---|---|---|---|---|---|---|
-| `knife` | 匕首 | `#` | 0 | 3 | `on_schedule · cooldown(0.6) · resource(stamina,3) · deal_damage + apply_status(流血,1)` | **新** |
-| `pistol` | 手枪 | `##` | 1 | 6 | `on_schedule · cooldown(1.2) · resource(stamina,6) · deal_damage` | ✓ |
-| `smg` | 冲锋枪 | `##/#.` | 1 | 4 | `on_schedule · cooldown(0.5) · resource(stamina,4) · deal_damage` | **新** |
+| `knife` | 匕首 | `1` | 0 | 3 | `on_schedule · cooldown(0.6) · resource(stamina,3) · deal_damage + apply_status(流血,1)` | **新** |
+| `pistol` | 手枪 | `11` | 1 | 6 | `on_schedule · cooldown(1.2) · resource(stamina,6) · deal_damage` | ✓ |
+| `smg` | 冲锋枪 | `11`<br>`10` | 1 | 4 | `on_schedule · cooldown(0.5) · resource(stamina,4) · deal_damage` | **新** |
 | | | | | | ＋`on_stacks_at_least(肾上腺素,2) · cooldown(2.0) · deal_damage(8)` | |
-| `rifle` | 步枪 | `#/#/#` | 2 | 8 | `on_schedule · cooldown(0.8) · resource(stamina,5) · deal_damage` | ✓ |
-| `shotgun` | 霰弹枪 | `##/##` | 2 | 20 | `on_schedule · cooldown(2.2) · resource(stamina,14) · deal_damage` | **新** |
-| `sniper` | 狙击枪 | `#/#/#/#` | 3 | 30 | `on_schedule · cooldown(3.0) · resource(stamina,18) · deal_damage + apply_status(标记,1)` | ✓ |
-| `crowbar` | 撬棍 | `##/#.` | 1 | 14 | `on_schedule · cooldown(2.0) · resource(stamina,12) · deal_damage` | ✓ |
+| `rifle` | 步枪 | `1`<br>`1`<br>`1` | 2 | 8 | `on_schedule · cooldown(0.8) · resource(stamina,5) · deal_damage` | ✓ |
+| `shotgun` | 霰弹枪 | `11`<br>`11` | 2 | 20 | `on_schedule · cooldown(2.2) · resource(stamina,14) · deal_damage` | **新** |
+| `sniper` | 狙击枪 | `1`<br>`1`<br>`1`<br>`1` | 3 | 30 | `on_schedule · cooldown(3.0) · resource(stamina,18) · deal_damage + apply_status(标记,1)` | ✓ |
+| `crowbar` | 撬棍 | `11`<br>`10` | 1 | 14 | `on_schedule · cooldown(2.0) · resource(stamina,12) · deal_damage` | ✓ |
 
 `smg` 的第二条规则是**激活型** `on_stacks_at_least`：嗑了兴奋剂就多一路扫射，
 层数留着不消耗。与下面 `railgun` 的消耗型正好成对，用来在内容里体现那个勾选框的差别。
@@ -78,13 +88,13 @@ id 保持不变，改 id 会让存档失效。
 
 | id | 名称 | 形状 | 稀 | 属性 | 规则 | 有? |
 |---|---|---|---|---|---|---|
-| `battery` | 电池 | `#` | 0 | `max_power` +20 | 无规则，纯供电 | ✓ |
-| `core` | 能量核心 | `.#./###/.#.` | 3 | `max_power` +60 | 无规则，纯供电 | ✓ |
-| `capacitor` | 电容器 | `#` | 2 | — | `on_schedule · cooldown(1.0) · resource(power,4) · apply_status(自己,蓄力,1)` | **新** |
-| `drone` | 无人机 | `###/.#.` | 2 | — | `on_schedule · cooldown(2.5) · resource(power,10) · deal_damage(6)` | ✓ |
+| `battery` | 电池 | `1` | 0 | `max_power` +20 | 无规则，纯供电 | ✓ |
+| `core` | 能量核心 | `010`<br>`111`<br>`010` | 3 | `max_power` +60 | 无规则，纯供电 | ✓ |
+| `capacitor` | 电容器 | `1` | 2 | — | `on_schedule · cooldown(1.0) · resource(power,4) · apply_status(自己,蓄力,1)` | **新** |
+| `drone` | 无人机 | `111`<br>`010` | 2 | — | `on_schedule · cooldown(2.5) · resource(power,10) · deal_damage(6)` | ✓ |
 | | | | | | ＋`on_item_fired(己方) · always · charge(3) · deal_damage(5)` | |
-| `railgun` | 电磁炮 | `#/#/#/#` | 4 | — | `on_stacks_at_least(蓄力,3,消耗) · always · resource(power,20) · deal_damage(50)` | **新** |
-| `shield_gen` | 护盾发生器 | `##/##` | 3 | `max_shield` +30 | `on_schedule · cooldown(4.0) · resource(power,15) · change_resource(自己,shield,+15)` | **新** |
+| `railgun` | 电磁炮 | `1`<br>`1`<br>`1`<br>`1` | 4 | — | `on_stacks_at_least(蓄力,3,消耗) · always · resource(power,20) · deal_damage(50)` | **新** |
+| `shield_gen` | 护盾发生器 | `11`<br>`11` | 3 | `max_shield` +30 | `on_schedule · cooldown(4.0) · resource(power,15) · change_resource(自己,shield,+15)` | **新** |
 
 `core` 与 `battery` **有 `CombatProfile` 但没有 `rules`** —— 这是合法的「参战但不主动」，
 `is_active()` 返回 false，它们只贡献属性。
@@ -99,13 +109,13 @@ id 保持不变，改 id 会让存档失效。
 
 | id | 名称 | 形状 | 稀 | 属性 | 规则 | 有? |
 |---|---|---|---|---|---|---|
-| `ration` | 口粮 | `#` | 0 | `max_stamina` +40 | 无规则 | **新** |
-| `armor` | 防弹衣 | `###/###` | 2 | `armor` +5、`max_hp` +20 | 无规则 | ✓ |
-| `medkit` | 医疗包 | `##/##` | 1 | — | `on_resource_below(hp,40%) · always · uses(1) · change_resource(自己,hp,+35)` | ✓ |
-| `painkiller` | 止痛药 | `#` | 1 | — | `on_resource_below(hp,25%) · always · uses(1) · remove_status(自己,流血,全部) + change_resource(自己,hp,+10)` | **新** |
-| `stim` | 兴奋剂 | `#` | 2 | — | `on_battle_start · always · apply_status(自己,肾上腺素,3)` | ✓ |
-| `plate_reactive` | 反应装甲 | `##/##` | 3 | `armor` +2 | `on_damage(受到,physical,≥12) · cooldown(3.0) · deal_damage(10)` | **新** |
-| `bio_monitor` | 生命监测仪 | `##` | 2 | — | `on_resource_changed(hp,下降,自己) · cooldown(5.0) · apply_status(自己,强壮,1)` | **新** |
+| `ration` | 口粮 | `1` | 0 | `max_stamina` +40 | 无规则 | **新** |
+| `armor` | 防弹衣 | `111`<br>`111` | 2 | `armor` +5、`max_hp` +20 | 无规则 | ✓ |
+| `medkit` | 医疗包 | `11`<br>`11` | 1 | — | `on_resource_below(hp,40%) · always · uses(1) · change_resource(自己,hp,+35)` | ✓ |
+| `painkiller` | 止痛药 | `1` | 1 | — | `on_resource_below(hp,25%) · always · uses(1) · remove_status(自己,流血,全部) + change_resource(自己,hp,+10)` | **新** |
+| `stim` | 兴奋剂 | `1` | 2 | — | `on_battle_start · always · apply_status(自己,肾上腺素,3)` | ✓ |
+| `plate_reactive` | 反应装甲 | `11`<br>`11` | 3 | `armor` +2 | `on_damage(受到,physical,≥12) · cooldown(3.0) · deal_damage(10)` | **新** |
+| `bio_monitor` | 生命监测仪 | `11` | 2 | — | `on_resource_changed(hp,下降,自己) · cooldown(5.0) · apply_status(自己,强壮,1)` | **新** |
 
 `medkit` 与 `painkiller` 都用 `uses(1)` 全场限一次 —— 没有它，每次掉血都会回一口，
 `on_resource_below` 会变成无限奶。这是消耗层的典型用法。
@@ -119,9 +129,9 @@ id 保持不变，改 id 会让存档失效。
 
 | id | 名称 | 形状 | 稀 | 方向 | 标记格 | 过滤 | 加成 | 有? |
 |---|---|---|---|---|---|---|---|---|
-| `mag` | 弹匣 | `#` | 0 | 增益 | 上、下 | `weapon` | `damage` +20% | ✓ |
-| `scope` | 瞄准镜 | `##` | 2 | 增益 | 下方两格 | `weapon` | `damage` +35% | **新** |
-| `grip` | 战术握把 | `#` | 1 | 增益 | 四周 | `weapon` | `stamina_cost` −20% | **新** |
+| `mag` | 弹匣 | `1` | 0 | 增益 | 上、下 | `weapon` | `damage` +20% | ✓ |
+| `scope` | 瞄准镜 | `11` | 2 | 增益 | 下方两格 | `weapon` | `damage` +35% | **新** |
+| `grip` | 战术握把 | `1` | 1 | 增益 | 四周 | `weapon` | `stamina_cost` −20% | **新** |
 | `sniper` | 狙击枪 | — | — | **受益** | 下方一格 | `part` | 本枪 `damage` +25% | ✓ |
 
 `sniper` 是全表唯一带**受益**标记的：它得架在支撑物上。
@@ -134,9 +144,9 @@ id 保持不变，改 id 会让存档失效。
 
 | id | 名称 | 形状 | 稀 | 规则 | 有? |
 |---|---|---|---|---|---|
-| `leech_mod` | 吸血模块 | `#` | 3 | `on_damage(造成,≥8) · always · change_resource(自己,hp,+2)` | **新** |
-| `frag_pouch` | 破片袋 | `#` | 2 | `on_item_fired(己方) · always · chance(25%) · deal_damage(4)` | **新** |
-| `overclock` | 超频模块 | `##` | 3 | `on_schedule · cooldown(5.0) · change_resource(自己,hp,−5) + apply_status(自己,肾上腺素,2)` | **新** |
+| `leech_mod` | 吸血模块 | `1` | 3 | `on_damage(造成,≥8) · always · change_resource(自己,hp,+2)` | **新** |
+| `frag_pouch` | 破片袋 | `1` | 2 | `on_item_fired(己方) · always · chance(25%) · deal_damage(4)` | **新** |
+| `overclock` | 超频模块 | `11` | 3 | `on_schedule · cooldown(5.0) · change_resource(自己,hp,−5) + apply_status(自己,肾上腺素,2)` | **新** |
 
 `overclock` 是 `change_resource` **负数**的用处：以血换速。
 原先叫 `RestoreResource` 的时候这件道具写不出来，只能传个负数假装在「恢复」。
@@ -150,10 +160,10 @@ id 保持不变，改 id 会让存档失效。
 
 | id | 名称 | 形状 | 稀 | 效果 | 有? |
 |---|---|---|---|---|---|
-| `lucky_charm` | 幸运护符 | `#` | 2 | `extra_rolls(+1)` | **新** |
-| `lockpick` | 开锁器 | `##` | 2 | `category_bias(tool, +20)` | **新** |
-| `scanner` | 战术扫描仪 | `##` | 3 | `drop_owned_chance(+25%)` | **新** |
-| `collector_tag` | 收藏家标签 | `#` | 3 | `rarity_bias(稀有度3, +25)` | **新** |
+| `lucky_charm` | 幸运护符 | `1` | 2 | `extra_rolls(+1)` | **新** |
+| `lockpick` | 开锁器 | `11` | 2 | `category_bias(tool, +20)` | **新** |
+| `scanner` | 战术扫描仪 | `11` | 3 | `drop_owned_chance(+25%)` | **新** |
+| `collector_tag` | 收藏家标签 | `1` | 3 | `rarity_bias(稀有度3, +25)` | **新** |
 
 这一组存在的意义是压测 v1.5 那次重构：**单件道具带跨域效果，不必归属任何套装。**
 重构之前这四件一件也写不出来。

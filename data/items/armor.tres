@@ -1,12 +1,14 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_gwj0s"]
-[ext_resource type="Resource" path="res://data/shapes/armor.tres" id="2_gd0jq"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_oerhq"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_r243q"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_jg5fs"]
+[ext_resource type="Resource" path="res://data/shapes/armor.tres" id="4_ywc2w"]
 
 [resource]
-script = ExtResource("1_gwj0s")
+script = ExtResource("3_jg5fs")
 id = &"armor"
 display_name = "防弹衣"
-shape = ExtResource("2_gd0jq")
+shape = ExtResource("4_ywc2w")
 rarity = 2
 tags = Array[StringName]([&"gear"])

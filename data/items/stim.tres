@@ -1,12 +1,14 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_he2ej"]
-[ext_resource type="Resource" path="res://data/shapes/stim.tres" id="2_6xehq"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_pup3q"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_2a85y"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_pnwjq"]
+[ext_resource type="Resource" path="res://data/shapes/stim.tres" id="4_og01g"]
 
 [resource]
-script = ExtResource("1_he2ej")
+script = ExtResource("3_pnwjq")
 id = &"stim"
 display_name = "兴奋剂"
-shape = ExtResource("2_6xehq")
+shape = ExtResource("4_og01g")
 rarity = 2
 tags = Array[StringName]([&"consumable"])

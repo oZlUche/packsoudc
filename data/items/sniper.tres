@@ -1,12 +1,14 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_lmgva"]
-[ext_resource type="Resource" path="res://data/shapes/sniper.tres" id="2_4acur"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_d6hqy"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_6mwih"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_qnnj0"]
+[ext_resource type="Resource" path="res://data/shapes/sniper.tres" id="4_etadt"]
 
 [resource]
-script = ExtResource("1_lmgva")
+script = ExtResource("3_qnnj0")
 id = &"sniper"
 display_name = "狙击枪"
-shape = ExtResource("2_4acur")
+shape = ExtResource("4_etadt")
 rarity = 3
 tags = Array[StringName]([&"weapon"])

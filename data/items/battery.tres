@@ -1,11 +1,13 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_bauvg"]
-[ext_resource type="Resource" path="res://data/shapes/battery.tres" id="2_lvu8d"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_borgp"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_dxdng"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_4rc8l"]
+[ext_resource type="Resource" path="res://data/shapes/battery.tres" id="4_qb8yr"]
 
 [resource]
-script = ExtResource("1_bauvg")
+script = ExtResource("3_4rc8l")
 id = &"battery"
 display_name = "电池"
-shape = ExtResource("2_lvu8d")
+shape = ExtResource("4_qb8yr")
 tags = Array[StringName]([&"part"])

@@ -150,14 +150,55 @@ static func _normalize(cs: Array[Vector2i]) -> Array[Vector2i]:
 
 ## 从紧凑的文本写法构造形状，便于测试与手写数据：
 ## "##." 一行代表一列格子，'#' 为占格，其余字符留空。
-##     ItemShape.from_ascii(["##", ".#"])  ->  L 形三格
+##     ItemShape.from_ascii(["11", "01"])  ->  L 形三格
+##
+## `1` 与 `#` 都算占格，其余字符（`0`、`.`、空格）算空 —— `#` 是旧写法，仍然接受。
 static func from_ascii(rows: Array) -> ItemShape:
 	var s := ItemShape.new()
 	var cs: Array[Vector2i] = []
 	for y in rows.size():
 		var line: String = rows[y]
 		for x in line.length():
-			if line[x] == "#":
+			if line[x] == "1" or line[x] == "#":
 				cs.append(Vector2i(x, y))
 	s.cells = cs
 	return s
+
+
+## 由 0/1 数字串构造，行以换行分隔。**这是形状的正式记法。**
+##
+## [codeblock]
+## ItemShape.from_bits("11\n10")   # L 形三格
+## [/codeblock]
+##
+## 形状本质就是一张布尔矩阵，0/1 串是它所见即所得的写法：
+## 读的人不必在脑子里把 `##/#.` 这种压扁的形式还原回二维。
+## 文档表格、导入器的 JSON、测试三方共用这一种记法。
+static func from_bits(text: String) -> ItemShape:
+	var rows: Array = []
+	for line in text.strip_edges().split("\n"):
+		rows.append((line as String).strip_edges())
+	return from_ascii(rows)
+
+
+## 反向：导出成 0/1 数字串。用于导入器回写、报错信息与调试。
+##
+## 导出的是**规范化之后**的占格（已平移到 min = (0,0)），
+## 因此 `from_bits(s.to_bits())` 与 `s` 的各旋转占格逐一相等。
+func to_bits(rot: int = 0) -> String:
+	var cs := cells_rotated(rot)
+	if cs.is_empty():
+		return ""
+	var size := size_rotated(rot)
+	var rows: Array[PackedByteArray] = []
+	for y in size.y:
+		var row := PackedByteArray()
+		row.resize(size.x)
+		row.fill(48)  # '0'
+		rows.append(row)
+	for c in cs:
+		rows[c.y][c.x] = 49  # '1'
+	var out: PackedStringArray = []
+	for row in rows:
+		out.append(row.get_string_from_ascii())
+	return "\n".join(out)
