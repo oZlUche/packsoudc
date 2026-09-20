@@ -31,20 +31,26 @@ static func _bag(id: String) -> ItemDef:
 	return d
 
 
-static func _combat_effect(percent: int, target: int = CombatSetEffect.Target.SET_PIECES) -> CombatSetEffect:
-	var e := CombatSetEffect.new()
-	e.target = target
-	e.mods = [_mod(BattleStats.DAMAGE, StatMath.Buff.EMPOWER, percent)] as Array[StatModifier]
-	return e
+static func _dmg_mod(percent: int) -> StatModifier:
+	return _mod(BattleStats.DAMAGE, StatMath.Buff.EMPOWER, percent)
 
 
-static func _tier(pieces: int, effects: Array) -> SetTier:
+## 一个档位。三份内容分开传：编译期属性修饰 / 战斗规则 / 非战斗作用域效果。
+static func _tier(pieces: int, mods: Array = [], rules: Array = [], effects: Array = []) -> SetTier:
 	var t := SetTier.new()
 	t.pieces = pieces
-	var typed: Array[SetEffect] = []
+	var tm: Array[StatModifier] = []
+	for m in mods:
+		tm.append(m)
+	t.mods = tm
+	var tr: Array[AbilityRule] = []
+	for r in rules:
+		tr.append(r)
+	t.rules = tr
+	var te: Array[Effect] = []
 	for e in effects:
-		typed.append(e)
-	t.effects = typed
+		te.append(e)
+	t.effects = te
 	return t
 
 
@@ -65,8 +71,8 @@ static func run(t: TestCase) -> void:
 
 	ItemInstance.reset_uid_counter()
 	var scav := _set_def("scavenger", [
-		_tier(2, [_combat_effect(20)]),
-		_tier(4, [_combat_effect(30)]),
+		_tier(2, [_dmg_mod(20)]),
+		_tier(4, [_dmg_mod(30)]),
 	])
 	var db := SetDatabase.new()
 	t.check(db.register(scav), "登记套装")
@@ -139,7 +145,7 @@ static func run_count_mode(t: TestCase) -> void:
 	var sword := _item("sword", "twins")
 
 	# DISTINCT_DEFS：同一定义只算一次
-	var distinct := _set_def("twins", [_tier(2, [_combat_effect(10)])],
+	var distinct := _set_def("twins", [_tier(2, [_dmg_mod(10)])],
 		ItemSetDef.CountMode.DISTINCT_DEFS)
 	var db1 := SetDatabase.new()
 	db1.register(distinct)
@@ -152,7 +158,7 @@ static func run_count_mode(t: TestCase) -> void:
 	t.eq(tr1.count_of(&"twins"), 1, "DISTINCT_DEFS：两把同样的剑只算 1 件")
 
 	# INSTANCES：每件实例算一件
-	var instances := _set_def("twins", [_tier(2, [_combat_effect(10)])],
+	var instances := _set_def("twins", [_tier(2, [_dmg_mod(10)])],
 		ItemSetDef.CountMode.INSTANCES)
 	var db2 := SetDatabase.new()
 	db2.register(instances)
@@ -167,18 +173,21 @@ static func run_count_mode(t: TestCase) -> void:
 
 
 static func run_scopes(t: TestCase) -> void:
-	t.begin("套装 · 作用域隔离")
+	t.begin("效果 · 作用域隔离")
 
-	var combat := _combat_effect(25)
-	var loot := LootSetEffect.new()
-	loot.extra_rolls = 1
-	loot.rarity_bonus = 5
+	# 三支效果共用同一棵树，各自声明作用域
+	var combat := DealDamage.new()
+	var loot := ExtraRolls.new()
+	loot.rolls = 1
+	t.eq(combat.scope(), EffectScope.COMBAT, "战斗效果的作用域")
+	t.eq(loot.scope(), EffectScope.LOOT, "掉落效果的作用域")
+	t.check(combat is Effect and loot is Effect, "同根，因此道具与套装能共用一套效果词汇")
 
-	t.eq(combat.scope(), SetScope.COMBAT, "战斗效果的作用域")
-	t.eq(loot.scope(), SetScope.LOOT, "掉落效果的作用域")
-
-	# 同一档里混放两种作用域
-	var mixed := _set_def("mixed", [_tier(2, [combat, loot])])
+	# --- 套装：跨域效果与战斗内容分开放 ---
+	var bias := RarityBias.new()
+	bias.rarity = 3
+	bias.amount = 20
+	var mixed := _set_def("mixed", [_tier(2, [_dmg_mod(25)], [], [loot, bias])])
 	var db := SetDatabase.new()
 	db.register(mixed)
 
@@ -192,26 +201,66 @@ static func run_scopes(t: TestCase) -> void:
 	t.check(tracker.is_active(&"mixed"), "已激活")
 
 	# 各系统只取自己那一档，互不干扰
-	var combat_side := tracker.effects_in_scope(SetScope.COMBAT)
-	var loot_side := tracker.effects_in_scope(SetScope.LOOT)
-	t.eq(combat_side.size(), 1, "战斗作用域只拿到 1 条")
-	t.eq(loot_side.size(), 1, "掉落作用域只拿到 1 条")
-	t.check(combat_side[0] is CombatSetEffect, "编译器拿到的是战斗效果")
-	t.check(loot_side[0] is LootSetEffect, "掉落系统拿到的是掉落效果")
+	t.eq(tracker.effects_in_scope(EffectScope.LOOT).size(), 2, "掉落侧拿到 2 条")
+	t.eq(tracker.effects_in_scope(EffectScope.MAP).size(), 0, "地图侧还没有内容")
 	t.eq(tracker.effects_in_scope(&"nonexistent").size(), 0, "未知作用域返回空")
+	t.eq(tracker.combat_mods().size(), 1, "战斗侧的属性修饰单独取")
+	t.eq(tracker.effects_in_scope(EffectScope.COMBAT).size(), 0,
+		"战斗效果不从 effects_in_scope 出 —— 它们需要扳机，只能以规则形式存在")
 
-	# 未激活时任何作用域都取不到
+	# --- 掉落效果确实改到了上下文 ---
+	var lctx := LootContext.new()
+	for e in tracker.effects_in_scope(EffectScope.LOOT):
+		(e as LootEffect).modify(lctx)
+	t.eq(lctx.rolls, 2, "掉落次数 1 + 1")
+	t.eq(int(lctx.rarity_bias.get(3, 0)), 20, "稀有度 3 的权重 +20")
+
+	# --- 失活后任何作用域都取不到 ---
 	board.remove(board.cell_uid(Vector2i(1, 0)))
 	t.check(not tracker.is_active(&"mixed"), "掉到 1 件，失活")
-	t.eq(tracker.effects_in_scope(SetScope.COMBAT).size(), 0, "失活后战斗侧取不到")
-	t.eq(tracker.effects_in_scope(SetScope.LOOT).size(), 0, "失活后掉落侧也取不到")
+	t.eq(tracker.effects_in_scope(EffectScope.LOOT).size(), 0, "失活后掉落侧取不到")
+	t.eq(tracker.combat_mods().size(), 0, "战斗侧也取不到")
+
+
+static func run_item_scope_effects(t: TestCase) -> void:
+	t.begin("效果 · 道具自带的跨域效果")
+
+	# 跨域效果不再是套装专有的：单件道具就能带
+	var charm := _item("lucky_charm", "")
+	var owned := DropOwnedChance.new()
+	owned.percent = 25
+	var rolls := ExtraRolls.new()
+	rolls.rolls = 2
+	charm.effects = [owned, rolls] as Array[Effect]
+
+	var bag := _bag("bag")
+	var board := GridInventory.new(Vector2i(8, 6), 1, true)
+	board.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
+	var tracker := SetTracker.create(SetDatabase.new())
+	tracker.bind(board)
+
+	t.eq(tracker.effects_in_scope(EffectScope.LOOT).size(), 0, "不在棋盘上时取不到")
+
+	board.place(ItemInstance.create(charm), Vector2i(0, 0), 0)
+	var effs := tracker.effects_in_scope(EffectScope.LOOT)
+	t.eq(effs.size(), 2, "不需要凑套装，道具在棋盘上就算激活")
+
+	var lctx := LootContext.new()
+	for e in effs:
+		(e as LootEffect).modify(lctx)
+	t.eq(lctx.rolls, 3, "掉落次数 1 + 2")
+	t.eq(lctx.drop_owned_chance, StatMath.from_percent(25), "敌人掉落自身道具的概率 +25%")
+
+	# 拿下棋盘即失效
+	board.remove(board.cell_uid(Vector2i(0, 0)))
+	t.eq(tracker.effects_in_scope(EffectScope.LOOT).size(), 0, "拿下棋盘即失效")
 
 
 static func run_compile_integration(t: TestCase) -> void:
 	t.begin("套装 · 编译期并入战斗")
 
 	ItemInstance.reset_uid_counter()
-	var scav := _set_def("scavenger", [_tier(2, [_combat_effect(50)])])
+	var scav := _set_def("scavenger", [_tier(2, [_dmg_mod(50)])])
 	var db := SetDatabase.new()
 	db.register(scav)
 
@@ -228,36 +277,19 @@ static func run_compile_integration(t: TestCase) -> void:
 	board.place(outsider, Vector2i(2, 0), 0)
 
 	# 只有 1 件，未激活
-	var spec := BattleCompiler.compile(board, 25.0, tracker.effects_in_scope(SetScope.COMBAT))
+	var spec := BattleCompiler.compile(board, 25.0, tracker.combat_mods(), tracker.combat_rules())
 	t.eq(spec.stats_of(piece_a.uid).total_int_of(BattleStats.DAMAGE), 10, "未激活时无加成")
 
 	# 凑齐 2 件
 	board.place(piece_b, Vector2i(1, 0), 0)
 	t.check(tracker.is_active(&"scavenger"), "已激活")
-	spec = BattleCompiler.compile(board, 25.0, tracker.effects_in_scope(SetScope.COMBAT))
+	spec = BattleCompiler.compile(board, 25.0, tracker.combat_mods(), tracker.combat_rules())
 	t.eq(spec.stats_of(piece_a.uid).total_int_of(BattleStats.DAMAGE), 15, "套装部件 +50%")
 	t.eq(spec.stats_of(piece_b.uid).total_int_of(BattleStats.DAMAGE), 15, "另一件部件同样")
-	t.eq(spec.stats_of(outsider.uid).total_int_of(BattleStats.DAMAGE), 10,
-		"SET_PIECES 目标：非部件不吃加成")
-
-	# ALL_ITEMS 目标
-	var global_set := _set_def("global", [_tier(1, [_combat_effect(50, CombatSetEffect.Target.ALL_ITEMS)])])
-	var db2 := SetDatabase.new()
-	db2.register(global_set)
-	var board2 := GridInventory.new(Vector2i(8, 6), 2, true)
-	board2.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
-	var tr2 := SetTracker.create(db2)
-	tr2.bind(board2)
-	var member := ItemInstance.create(_item("banner", "global", 10.0))
-	var bystander := ItemInstance.create(_item("stone", "", 10.0))
-	board2.place(member, Vector2i(0, 0), 0)
-	board2.place(bystander, Vector2i(1, 0), 0)
-	var spec2 := BattleCompiler.compile(board2, 25.0, tr2.effects_in_scope(SetScope.COMBAT))
-	t.eq(spec2.stats_of(bystander.uid).total_int_of(BattleStats.DAMAGE), 15,
-		"ALL_ITEMS 目标：非部件也吃加成")
+	t.eq(spec.stats_of(outsider.uid).total_int_of(BattleStats.DAMAGE), 15,
+		"属性修饰施加给棋盘上全部物品 —— SET_PIECES 定向已移除，见报告 020 遗留")
 
 	# --- 套装自带的规则会真的出手 ---
-	var pulse := CombatSetEffect.new()
 	var rule := AbilityRule.new()
 	rule.trigger = OnSchedule.new()
 	var cd := CooldownCadence.new()
@@ -266,10 +298,9 @@ static func run_compile_integration(t: TestCase) -> void:
 	var dmg := DealDamage.new()
 	dmg.damage_stat = &""
 	dmg.amount = 7.0
-	rule.effects = [dmg] as Array[Effect]
-	pulse.rules = [rule] as Array[AbilityRule]
+	rule.effects = [dmg] as Array[CombatEffect]
 
-	var pulse_set := _set_def("pulse", [_tier(1, [pulse])])
+	var pulse_set := _set_def("pulse", [_tier(1, [], [rule])])
 	var db3 := SetDatabase.new()
 	db3.register(pulse_set)
 	var board3 := GridInventory.new(Vector2i(8, 6), 3, true)
@@ -278,7 +309,7 @@ static func run_compile_integration(t: TestCase) -> void:
 	tr3.bind(board3)
 	board3.place(ItemInstance.create(_item("totem", "pulse", 0.0)), Vector2i(0, 0), 0)
 
-	var spec3 := BattleCompiler.compile(board3, 100.0, tr3.effects_in_scope(SetScope.COMBAT))
+	var spec3 := BattleCompiler.compile(board3, 100.0, tr3.combat_mods(), tr3.combat_rules())
 	t.eq(spec3.set_rules.size(), 1, "套装规则挂在 spec 上，不属于任何物品")
 
 	var foe := CombatantSpec.new()

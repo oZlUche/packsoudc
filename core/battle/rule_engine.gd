@@ -26,12 +26,13 @@ static func fire_scheduled(ctx: BattleContext, owner: CombatantRuntime, rt: Rule
 	rule.cadence.commit(rc, ctx.now)
 	_reschedule(ctx, owner, rt, rc)
 
-	for cost in rule.costs:
+	var all_costs := rule.effective_costs()
+	for cost in all_costs:
 		(cost as Cost).on_attempt(rc)
-	for cost in rule.costs:
+	for cost in all_costs:
 		if not (cost as Cost).can_pay(rc):
 			return false
-	for cost in rule.costs:
+	for cost in all_costs:
 		(cost as Cost).pay(rc)
 
 	if rt.source_uid != 0:
@@ -82,12 +83,13 @@ static func evaluate(
 	rule.cadence.commit(rc, ctx.now)
 
 	# 3. 消耗。本层内部原子：全过才逐个扣，不允许半付款
-	for cost in rule.costs:
+	var all_costs := rule.effective_costs()
+	for cost in all_costs:
 		(cost as Cost).on_attempt(rc)
-	for cost in rule.costs:
+	for cost in all_costs:
 		if not (cost as Cost).can_pay(rc):
 			return false
-	for cost in rule.costs:
+	for cost in all_costs:
 		(cost as Cost).pay(rc)
 
 	# 物品出手。连带触发靠监听这条事件，不需要任何特例

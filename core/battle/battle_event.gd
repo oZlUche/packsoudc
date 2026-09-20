@@ -16,6 +16,9 @@ const STATUS_UNSTACKED := &"status_unstacked"
 ## 生命、耐力、法力全部走这一条，靠 payload 里的 key 区分。
 ## 新增一种资源不新增事件类型。
 const RESOURCE_CHANGED := &"resource_changed"
+## 伤害。携带类型与原始／实际两个数值 —— resource_changed 只记「实际掉了多少血」，
+## 既不带类型也分不清是谁打的，「受到 N 点火焰伤害时」这类扳机需要这一条。
+const DAMAGE := &"damage"
 const DIED := &"died"
 ## 派发深度超限时记一条，便于内容配错时定位而不是直接崩
 const DISPATCH_OVERFLOW := &"dispatch_overflow"
@@ -36,7 +39,7 @@ const REASON_MAX_CHANGED := &"max_changed"
 ## 否则「掩码开／关两条路径日志逐条相同」这个不变式根本不可能成立。
 const VIEW_EVENTS: Array[StringName] = [
 	BATTLE_START, BATTLE_END, ITEM_FIRED, EFFECT_RESOLVED,
-	STATUS_STACKED, STATUS_UNSTACKED, RESOURCE_CHANGED, DIED, DISPATCH_OVERFLOW,
+	STATUS_STACKED, STATUS_UNSTACKED, RESOURCE_CHANGED, DAMAGE, DIED, DISPATCH_OVERFLOW,
 ]
 
 

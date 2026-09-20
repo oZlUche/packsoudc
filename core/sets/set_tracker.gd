@@ -73,6 +73,28 @@ func tracked_ids() -> Array:
 	return k
 
 
+## 棋盘上所有道具自带的跨域效果（战利品、地图…）。
+##
+## **道具的跨域效果不需要凑套装，在棋盘上就算激活。** 暂存区不算 ——
+## 那里的东西视同不存在，过关即连同道具一起消失。
+func item_effects_in_scope(scope: StringName) -> Array[Effect]:
+	var out: Array[Effect] = []
+	if _board == null:
+		return out
+	var uids: Array[int] = []
+	for inst in _board.items():
+		uids.append((inst as ItemInstance).uid)
+	uids.sort()  # 顺序稳定
+	for uid in uids:
+		var item := _board.get_item(uid)
+		if item.def == null:
+			continue
+		for e in item.def.effects:
+			if (e as Effect).scope() == scope:
+				out.append(e)
+	return out
+
+
 func active_tiers(set_id: StringName) -> Array[SetTier]:
 	var def := db.get_def(set_id) if db != null else null
 	if def == null:
@@ -84,15 +106,43 @@ func is_active(set_id: StringName) -> bool:
 	return not active_tiers(set_id).is_empty()
 
 
-## 取所有已激活套装中属于该作用域的效果。
-##
-## 这是各系统唯一的入口：编译器传 [constant SetScope.COMBAT]，
-## 掉落系统传 [constant SetScope.LOOT]。
-func effects_in_scope(scope: StringName) -> Array[SetEffect]:
-	var out: Array[SetEffect] = []
+## 已激活套装中属于该作用域的效果。
+func set_effects_in_scope(scope: StringName) -> Array[Effect]:
+	var out: Array[Effect] = []
 	for set_id in tracked_ids():
 		for tier in active_tiers(set_id):
 			out.append_array((tier as SetTier).effects_in(scope))
+	return out
+
+
+## 该作用域下**全部**生效中的效果：道具自带的 + 已激活套装的。
+##
+## 这是各系统唯一的入口。掉落系统传 [constant EffectScope.LOOT]，
+## 地图系统传 [constant EffectScope.MAP]。
+##
+## 战斗作用域不走这里 —— 战斗效果需要扳机，只能以 [AbilityRule] 的形式存在，
+## 见 [method combat_rules] 与 [method combat_mods]。
+func effects_in_scope(scope: StringName) -> Array[Effect]:
+	var out: Array[Effect] = item_effects_in_scope(scope)
+	out.append_array(set_effects_in_scope(scope))
+	return out
+
+
+## 已激活套装贡献的战斗规则
+func combat_rules() -> Array[AbilityRule]:
+	var out: Array[AbilityRule] = []
+	for set_id in tracked_ids():
+		for tier in active_tiers(set_id):
+			out.append_array((tier as SetTier).rules)
+	return out
+
+
+## 已激活套装贡献的编译期属性修饰
+func combat_mods() -> Array[StatModifier]:
+	var out: Array[StatModifier] = []
+	for set_id in tracked_ids():
+		for tier in active_tiers(set_id):
+			out.append_array((tier as SetTier).mods)
 	return out
 
 

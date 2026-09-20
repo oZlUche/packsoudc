@@ -18,3 +18,12 @@ extends Resource
 ## 只有 [OnSchedule] 返回 true。
 func is_self_driven() -> bool:
 	return false
+
+
+## 本扳机隐含的消耗。**「消耗型扳机」的脱糖点。**
+##
+## 作者在扳机上勾一个 `consume`，这里就返回对应的 [Cost]，由规则求值时
+## 并进 costs 一起结算。这样作者只填一个勾选框，而「只读判定 → 频率 → 消耗 → 执行」
+## 四层的顺序与原子性都不被破坏。
+func implied_costs() -> Array[Cost]:
+	return [] as Array[Cost]

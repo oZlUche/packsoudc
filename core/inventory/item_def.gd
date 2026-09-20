@@ -45,6 +45,12 @@ extends Resource
 ## 纯粹是 UI 提示（按激活状态暗／亮切换），不参与任何结算。
 @export var set_id: StringName = &""
 
+## 非战斗作用域的效果（战利品、地图…）。**激活即生效，不需要扳机。**
+##
+## 「这把刀让敌人多掉一件东西」这类道具靠它表达 ——
+## 掉落效果不再是套装专有。战斗效果请写在 combat.rules 里，它们需要扳机。
+@export var effects: Array[Effect] = []
+
 @export_group("战斗")
 ## 战斗定义。为空表示本物品不参战（纯素材、纯包体）。
 @export var combat: CombatProfile

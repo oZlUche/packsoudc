@@ -31,7 +31,7 @@ static func _cooldown_rule(cd: float) -> AbilityRule:
 	var cad := CooldownCadence.new()
 	cad.seconds = cd
 	r.cadence = cad
-	r.effects = [DealDamage.new()] as Array[Effect]
+	r.effects = [DealDamage.new()] as Array[CombatEffect]
 	return r
 
 

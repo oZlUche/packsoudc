@@ -28,8 +28,8 @@ extends Resource
 ## 「灼烧：每层每秒掉 2 点血」= 挂在这里的一条 OnTick + Cooldown(1s) + DealDamage，
 ## BattleSim 里不需要为灼烧写任何特例。
 @export var rules: Array[AbilityRule] = []
-@export var on_apply: Array[Effect] = []
-@export var on_expire: Array[Effect] = []
+@export var on_apply: Array[CombatEffect] = []
+@export var on_expire: Array[CombatEffect] = []
 
 
 func is_valid() -> bool:

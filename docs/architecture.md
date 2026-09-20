@@ -222,11 +222,30 @@ func neighbors_of(uid) -> Array[int]      # 四邻相接的其他物品
 
 ### 3.4 暂存区与作战区
 
-物品可以放在**暂存区**（`requires_bag = false` 的自由容器）里保留，但**不参战** —— 只有装进棋盘上的包里才会被编译进 `CombatantSpec`。
+**暂存区里的道具 = 不存在。**
 
-这条规则对本作尤其契合：**背着但没装进包 = 占位置不出力**。搜刮到的战利品要不要腾出作战格位来装，正是「搜打撤」的核心取舍，并且与第一章侵蚀机制下「战利品在手里烂掉」的压力天然叠加。
+它是关卡内的一块临时摆放区（搜出道具、战后搜刮战利品时用来腾挪位置），
+**进入下一关时连同里面的道具一起消失**。它不是第二个背包，也不是仓库。
 
-实现上没有特殊处理：编译 `CombatantSpec` 时只遍历棋盘容器即可。
+因此凡是「棋盘之外」的东西，对任何系统都不可见：
+
+| 系统 | 只看 |
+|---|---|
+| 战斗编译（4.2） | 棋盘上的非包物品 |
+| 套装计数（9.1） | 棋盘上的非包物品 |
+| 道具自带的跨域效果（9.2） | 棋盘上的物品 |
+
+实现上没有特殊处理 —— 各系统一律只遍历棋盘容器，「暂存区不算数」是这条规则的**结果**，
+不需要任何一处写 `if in_staging`。
+
+唯一的例外在 UI：离开关卡前若暂存区里还有高稀有度道具，应当提示玩家可能遗落。
+这是提示，不是挽留。
+
+> **这条尚未定稿。** 另一种设计是暂存区在关卡之间保留、只在一局游戏结算时清空
+> （「带不出去」而不是「立刻消失」）。两者的差别是玩家要在**每关**还是**每局**结束前
+> 做取舍，节奏完全不同。目前按「进入下一关即消失」实现；
+> 两种方案对代码的要求相同 —— 都只需要各系统坚持「只看棋盘」，
+> 所以推迟决定不阻塞任何模块。
 
 ### 3.5 跨容器移动必须原子化
 
@@ -480,8 +499,8 @@ GDScript 没有 Java／C# 意义上的接口与泛型，但 Godot 4.5+ 的 `@abs
 class_name AbilityRule extends Resource
 @export var trigger: Trigger        ## 时机
 @export var cadence: Cadence        ## 频率
-@export var costs: Array[Cost]      ## 消耗（可为空）
-@export var effects: Array[Effect]  ## 内容
+@export var costs: Array[Cost]            ## 消耗（可为空）
+@export var effects: Array[CombatEffect]  ## 内容
 ```
 
 物品的 `CombatProfile` 持有 `Array[AbilityRule]`，而不是「冷却 + 伤害」两个字段。
@@ -499,6 +518,7 @@ class_name AbilityRule extends Resource
 | 效果 | `effect_resolved` | 效果类型、来源、目标、结果摘要 |
 | 层数 | `status_stacked` / `status_unstacked` | 状态键、变化量、变化后层数 |
 | 资源 | `resource_changed` | 资源键、增量、原因（见下） |
+| 伤害 | `damage` | 伤害类型、原始值、实际扣除量、施加方、来源 uid |
 | 存亡 | `died` | 阵亡方 |
 
 **生命与耐力不各开一套事件**，统一走 `resource_changed(key, delta, reason)`。
@@ -509,6 +529,11 @@ class_name AbilityRule extends Resource
 也不需要改 `BattleSim`。想只听生命下降的触发器，在 `matches()` 里判断
 `key == hp and delta < 0` 即可。
 
+**`damage` 是 `resource_changed` 之外的一条独立事件**，不是冗余：
+`resource_changed` 不带伤害类型，也分不清「我打了人」与「我挨了打」
+（两者都表现为某一方的 hp 下降）。事件里 `side` 是**承受方**、`source_side` 是**施加方**，
+`OnDamage` 靠这两个字段区分方向。
+
 **连带触发不是一种特殊机制**，而是一个订阅 `item_fired` 并判断来源是否落在自己
 增益／受益格上的普通 `Trigger` 子类。这是把时机做成可扩展接口后自然得到的结果 ——
 如果把「连带触发」单列成字段，就又写死了一种。
@@ -518,20 +543,56 @@ class_name AbilityRule extends Resource
 class_name Trigger extends Resource
 ## 关心哪些事件
 @abstract func subscribed_events() -> Array[StringName]
-## 事件到来时是否算命中
-@abstract func matches(ctx: BattleContext, event: BattleEvent) -> bool
+## 事件到来时是否算命中。【只读】
+@abstract func matches(ctx: RuleContext, event: BattleEvent) -> bool
+## 本时机隐含的消耗，由规则在求值时并入（见「消耗型与激活型」）
+func implied_costs() -> Array[Cost]: return []
 ```
 
-初期子类：`OnSchedule`（自发型，不订阅事件，由频率层排出时刻）、`OnBattleStart`、
-`OnItemFired`（连带触发）、`OnResourceChanged`。
+现有子类：
+
+| 子类 | 命中条件 |
+|---|---|
+| `OnSchedule` | 自发型，不订阅事件，由频率层排出时刻 |
+| `OnBattleStart` | 开场一次 |
+| `OnItemFired` | 别的物品出手时（连带触发） |
+| `OnResourceChanged` | 某种资源发生变化时 |
+| `OnResourceBelow` | 资源降到上限的 N%（或绝对值 N）以下时 |
+| `OnStacksAtLeast` | 自己／对手身上有 N 层某增益减益时 |
+| `OnDamage` | 受到／造成某类伤害，且不低于 N 点时 |
 
 **没有 `OnTick`。** 「每帧检查一下冷却好没好」是固定步长模拟才需要的东西，
-事件驱动直接算出下一次出手的精确时刻（见 4.7）。
+事件驱动直接算出下一次出手的精确时刻（见 4.6）。
+
+#### 消耗型与激活型
+
+「拥有 3 层蓄力时」这类状态扳机有两种用法：**激活型**只要求条件成立，
+**消耗型**触发后要把那 3 层扣掉。二者只差一个勾选框，不该是两个类。
+
+实现上，消耗型由扳机向规则**隐式追加**一条 `StatusStackCost`：
+
+```gdscript
+func implied_costs() -> Array[Cost]:        # OnStacksAtLeast
+    if not consume: return []
+    ...返回一条 StatusStackCost(buff_id, stacks)
+
+func effective_costs() -> Array[Cost]:      # AbilityRule
+    return costs + trigger.implied_costs()
+```
+
+**为什么不让扳机自己扣层数**：`matches()` 必须只读，而消耗必须发生在频率与
+其他消耗都通过之后 —— 否则「攒够 3 层但耐力不够」会把 3 层白吃掉。
+脱糖成一条普通 `Cost` 后，它自动享有消耗层「全部付得起才付」的原子性，
+四层结构也没有被破坏。
 
 #### 只广播有人听的事件
 
 把每个步骤都做成事件，代价是绝大多数事件没有任何监听者。**进入战斗时先算出订阅并集，
 只开启被订阅的事件**；未被订阅的事件连对象都不构造。
+
+> v1.3 起这层已升级为**事件 → 规则索引**（`BattleContext._by_event`）：
+> 既做开关，又直接给出订阅者列表，派发从 O(全部规则) 降为 O(订阅者)。
+> 下面三条约束对索引同样成立，`refresh_event_mask()` 现名 `refresh_event_index()`。
 
 ```gdscript
 # 编译期／开战前
@@ -552,8 +613,9 @@ func _emit(name: StringName, payload_builder: Callable) -> void:
 1. **掩码取双方并集。** A 方发出的事件可能被 B 方的物品监听（「敌人回血时我获得强化」）。
    按单侧算掩码会漏事件。
 2. **规则集变化时必须重算掩码。** 若某个效果能在战斗中授予新规则，新规则订阅的事件可能
-   尚未开启，那条规则就会静默失效 —— 这是最难查的一类 bug。授予规则的效果**必须**
-   调用 `ctx.refresh_event_mask()`。重算很便宜，宁可多算。
+   尚未开启，那条规则就会静默失效 —— 这是最难查的一类 bug。
+   重建由 `CombatantRuntime` 在规则集变动时自动触发，不指望效果作者记得调
+   —— 施加时漏调只是少触发，**移除时漏调会让已删除的规则继续派发**，后者是真 bug。
 3. **掩码是纯优化，必须不可见。** 测试里同时跑「全开」与「掩码」两条路径，
    断言两者产出的事件日志与最终状态**逐条相同**。一旦掩码影响结果，说明它被误用成了
    游戏逻辑，必须立即修掉，而不是接受现状。
@@ -568,9 +630,9 @@ func _emit(name: StringName, payload_builder: Callable) -> void:
 @abstract
 class_name Cadence extends Resource
 ## 这次命中能不能执行。只读，不得改状态
-@abstract func can_fire(ctx: BattleContext, state: Dictionary) -> bool
-## 确认执行，在此扣冷却／计数／资源
-@abstract func commit(ctx: BattleContext, state: Dictionary) -> void
+@abstract func can_fire(ctx: RuleContext, now: int) -> bool
+## 确认执行，在此重置冷却／计数
+@abstract func commit(ctx: RuleContext, now: int) -> void
 ```
 
 注意：**消耗与条件都不属于这一层**，且刻意不与冷却原子，理由见下一小节。
@@ -684,17 +746,22 @@ AbilityRule.effects:  Array[Effect]        ## 一条规则多个效果
 
 #### 效果
 
+战斗效果是效果树的一支（完整的三支见 9.2）：
+
 ```gdscript
 @abstract
-class_name Effect extends Resource
-@abstract func apply(ctx: BattleContext, source: int) -> void
+class_name CombatEffect extends Effect
+enum Target { OPPONENT, SELF, BOTH }
+func scope() -> StringName: return EffectScope.COMBAT
+@abstract func apply(ctx: RuleContext) -> void
 ```
 
-初期子类：`DealDamage`、`RestoreResource`、`ApplyStatus`、`ModifyStat`、
-`FireItem`（让另一件物品出手）、`GrantRule`（战斗中授予新规则，注意上文约束 2）。
+现有子类：`DealDamage`、`ChangeResource`（增减资源，正负同一条）、
+`ApplyStatus`、`RemoveStatus`。
+计划中：`FireItem`（让另一件物品出手）、`GrantRule`（战斗中授予新规则，注意上文约束 2）。
 
-`BattleContext` 是效果访问战场的唯一入口：读写双方状态与资源池、取随机数、写事件日志、
-重算事件掩码。效果不持有 `BattleSim` 的引用，也不知道模拟循环怎么跑 ——
+`RuleContext` 是效果访问战场的唯一入口：读写双方状态与资源池、取随机数、写事件日志、
+按来源物品取属性。效果不持有 `BattleSim` 的引用，也不知道模拟循环怎么跑 ——
 这样模拟循环重构时效果无需改动。
 
 #### 确定性
@@ -1310,7 +1377,7 @@ MainMenu → RunSetup(选初始背包) → MapView
 
 ---
 
-## 9. 套装系统
+## 9. 套装与跨域效果
 
 **套装是由道具触发的独立系统，不是编译期的一步。**
 
@@ -1339,28 +1406,66 @@ SetTracker.recount()  →  activation_changed  →  UI 暗／亮切换
 **只数棋盘上的。** 暂存区的物品不参战，也不该凑套装，与 3.4 的参战规则一致。
 **包不算部件** —— 它是承载物，即便标了 `set_id` 也不计入。
 
-### 9.2 效果按作用域分类
+### 9.2 一棵效果树，道具与套装共用
 
-把「战斗加成」和「掉落修改」塞进同一套接口，会逼着掉落系统去理解 `StatModifier`，
-或逼着战斗系统去理解掉落表。因此按作用域拆开，**每个系统只查自己那一档**：
+早先套装效果（`SetEffect`）与战斗效果（`Effect`）是两棵独立的树，结果是同一个概念存在两遍，
+而且战利品效果被锁死在套装上 —— 「这把刀让敌人多掉一件东西」这种完全合理的单件道具
+反而写不出来。现在统一成一棵，**按作用域分支**：
 
 ```gdscript
 @abstract
-class_name SetEffect extends Resource
-@abstract func scope() -> StringName        ## SetScope.COMBAT / LOOT / …
+class_name Effect extends Resource
+@abstract func scope() -> StringName        ## EffectScope.COMBAT / LOOT / MAP
+func describe() -> String                   ## 给 UI 与编辑器的一行说明
 ```
 
-| 子类 | 作用域 | 内容 |
+```
+Effect
+  CombatEffect   战斗内，【依赖扳机】       DealDamage / ApplyStatus / RemoveStatus / ChangeResource
+  LootEffect     战利品，激活即生效         RarityBias / CategoryBias / ExtraRolls / DropOwnedChance
+  MapEffect      地图，占位（M3 再填）
+```
+
+基类**只声明作用域，不声明执行方法**。各分支的调用签名本就不同
+（战斗要 `RuleContext`，掉落要 `LootContext`），强行统一只会得到一个没人能用的签名。
+
+| 分支 | 何时生效 | 由谁调用 |
 |---|---|---|
-| `CombatSetEffect` | `combat` | `mods` 属性加成 + `rules` 规则（一次性增益与周期性效果都靠它） |
-| `LootSetEffect` | `loot` | 额外掉落次数、稀有度权重偏移（**接口先留着，M4 才实现**） |
+| `CombatEffect` | 扳机命中且消耗付清后 | `RuleEngine` |
+| `LootEffect` | 进入战利品计算阶段，**只要处于激活状态** | M4 掉落系统 |
+| `MapEffect` | 待定 | M3 地图系统 |
 
-**新增一个作用域 = 加一个子类 + 对应系统去查询**，不改基类，也不动其他系统。
-`LootSetEffect` 现在就存在，是为了证明这层抽象确实容纳得下战斗之外的效果 ——
-而不是等做掉落时才发现套装塞不进去。
+**只有战斗这一支依赖扳机。** 掉落效果不需要时机 —— 它没有「什么时候发生」可言，
+掉落计算阶段本身就是它的时机。硬给它配一个 `Trigger` 只会多出一个永远填 `Always` 的字段。
 
-一个档位里可以混放不同作用域：「4 件套：增伤 20% 且掉落 +1」就是一条
-`CombatSetEffect` 加一条 `LootSetEffect`。
+#### 道具与套装是两个入口，不是两套词汇
+
+```gdscript
+class_name ItemDef extends Resource
+@export var effects: Array[Effect]     ## 道具自带的跨域效果
+@export var combat: CombatProfile      ## 战斗规则（含扳机）走这里
+```
+
+道具自带的跨域效果**不需要凑套装，在棋盘上就算激活**；套装的那份要满足件数门槛。
+两者最终汇入同一个查询：
+
+```gdscript
+tracker.effects_in_scope(EffectScope.LOOT)   # 道具的 + 已激活套装的
+```
+
+各系统只查自己那一档，彼此不需要认识对方。**新增一个作用域 = 加一个 `Effect` 子树 +
+对应系统去查询**，不改基类，也不动其他系统。
+
+#### 伤害类型不绑定乘区
+
+`DealDamage.damage_type`（`physical` / `fire` / …）与 `StatMath.Buff` 乘区分类
+（`EMPOWER` / `SHARP` / `FIRE` / …）是**两个正交的维度**，刻意不做映射。
+
+绑在一起看似省事，但立刻会写不出「强化影响全部伤害」这种最常见的加成 ——
+那是一个乘区作用于所有类型。反过来，「火焰抗性」是按类型减伤，与乘区无关。
+让内容作者各填各的，比替他们建立一个总要开后门的对应表更诚实。
+
+`damage_type` 的唯一用处是给伤害事件打标签，供 `OnDamage` 和未来的抗性系统筛选。
 
 ### 9.3 数据形态
 
@@ -1373,10 +1478,17 @@ class_name ItemSetDef extends Resource
 
 class_name SetTier extends Resource
 @export var pieces: int                    ## 达到几件时生效
-@export var effects: Array[SetEffect]      ## 可跨作用域混放
+@export var mods: Array[StatModifier]      ## 编译期属性修饰，按物品施加
+@export var rules: Array[AbilityRule]      ## 战斗规则（需要扳机）
+@export var effects: Array[Effect]         ## 非战斗作用域，激活即生效
 ```
 
-`ItemDef.set_id` 只是归属标记。
+**三个列表分开，而不是并成一个 `Array[Effect]`**，是因为它们的生命周期确实不同：
+`mods` 在编译期一次性并入、`rules` 由扳机驱动、`effects` 在别的系统的别的阶段被查询。
+并成一个列表后消费方还是得按类型分拣，只是把分拣从编辑期挪到了运行时。
+
+`ItemDef.set_id` 只是归属标记 —— 道具上记载的套装信息是**纯 UI 提示**
+（可暗／亮切换显示是否激活），真正的激活由 9.1 的计数决定。
 
 | `count_mode` | 语义 |
 |---|---|
@@ -1388,16 +1500,19 @@ class_name SetTier extends Resource
 
 ### 9.4 战斗作用域的并入
 
-编译器**不认识 [SetTracker]，也不自己数件数** —— 计数与激活是背包层的事。
-它只接收一个已经筛好的 `Array[SetEffect]`：
+编译器**不认识 `SetTracker`，也不自己数件数** —— 计数与激活是背包层的事，
+物品一拖进棋盘就已经算好了（UI 要实时显示暗／亮）。它只接收两份筛好的列表：
 
 ```gdscript
-BattleCompiler.compile(board, base_hp, tracker.effects_in_scope(SetScope.COMBAT))
+BattleCompiler.compile(board, base_hp, tracker.combat_mods(), tracker.combat_rules())
 ```
 
-- `mods` 按物品施加，`target` 决定加给**套装部件**还是**全部物品**
+- `mods` 按物品施加，作用于棋盘上的**全部**参战物品
 - `rules` 挂到 `CombatantSpec.set_rules`，**不属于任何物品**，来源 uid 为 0，
   取属性时退回单位级
+
+**战斗效果不从 `effects_in_scope()` 出。** 它需要扳机，因此只能以 `AbilityRule` 的形式
+存在；那个查询返回的是「激活即生效」的那一类。
 
 **想改单位级属性（生命上限之类）不要写在 `mods` 里** —— mods 是按物品施加的，
 逐件放大再求和不等于整体放大。改用一条
@@ -1418,7 +1533,7 @@ haste 每件都是 1.0，逐件相加会得出「N 件物品 = N 倍速度」。
 
 道具是本作内容量最大的部分，必须能**不写代码**地增删改。本节定义从制作到入库的整条路径。
 
-### 9.1 两层：作者数据与引擎资产
+### 10.1 两层：作者数据与引擎资产
 
 ```
 data/authoring/items/*.json     道具源数据
@@ -1436,7 +1551,7 @@ data/buffs/*.tres   data/sets/*.tres
 `.tres` 是生成物，但**仍然入库** —— 否则每次 clone 都要先跑一遍导入才能打开工程。
 导入器需具备幂等性：源数据未改时重复运行不产生 diff。
 
-### 9.2 导入器不认识任何具体效果
+### 10.2 导入器不认识任何具体效果
 
 这是整条管线的关键约束。导入器只做三件事：读 JSON、按**注册表**解析类型名、写 `.tres`。
 
@@ -1489,7 +1604,7 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 
 形状用 ASCII 行书写，与 `ItemShape.from_ascii` 同一套写法 —— 在文本编辑器里看得见形状。
 
-### 9.3 校验必须比引擎严格
+### 10.3 校验必须比引擎严格
 
 导入器是内容质量的唯一关口，宁可啰嗦：
 
@@ -1503,7 +1618,7 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 **校验失败一律拒绝生成**，不产出半成品资产。导入器以退出码区分成功／失败，
 可直接接进 `tools/test.sh` 之后的流水线。
 
-### 9.4 可视化编辑器（后续增强）
+### 10.4 可视化编辑器（后续增强）
 
 JSON + 导入器已经可用，但形状与邻接标记格靠坐标书写仍然反直觉。后续增强一个编辑器 dock：
 
@@ -1514,7 +1629,7 @@ JSON + 导入器已经可用，但形状与邻接标记格靠坐标书写仍然�
 它**只是 JSON 的图形前端**，产出仍是 `data/authoring/`，不绕过导入器。
 这样手写与 GUI 两条路产出的数据完全等价，也不存在「GUI 能表达而 JSON 不能」的分裂。
 
-### 9.5 与测试的关系
+### 10.5 与测试的关系
 
 `tests/test_item_assets.gd` 已有的「校验磁盘上的真实资产」思路继续保留并扩充：
 导入器保证生成时正确，资产测试保证**入库后**仍然正确（防止有人手改 `.tres`）。
@@ -1536,9 +1651,11 @@ res://
       stat_math.gd  stat_value.gd  stat_set.gd  stat_modifier.gd
       adjacency_profile.gd  combat_profile.gd  ability_rule.gd
       effect_registry.gd           # 类型名 → 脚本路径，新增效果只登记一行
+      combat_effect.gd             # Effect 的战斗分支，依赖扳机
       triggers/                    # Trigger 子类，每种时机一个文件
       cadences/                    # Cadence 子类，每种频率一个文件
-      effects/                     # Effect 子类，每种效果一个文件
+      costs/                       # Cost 子类：资源、层数、充能、次数、概率
+      effects/                     # CombatEffect 子类，每种效果一个文件
     map/
       map_graph.gd  map_node.gd  map_edge.gd
       map_generator.gd           # 抽象基类
@@ -1548,13 +1665,15 @@ res://
         ring_map_generator.gd    # 第一章
         ring_map_config.gd
         (未来：layered_map_generator.gd 等)
+    effects/                       # 效果树的根（第 9.2 节），三个作用域的公共祖先
+      effect.gd  effect_scope.gd
     loot/
       loot_roller.gd  loot_table.gd
+      loot_effect.gd  loot_context.gd
+      effects/                     # LootEffect 子类
     sets/                          # 套装系统（第 9 节），跨战斗与掉落
       item_set_def.gd  set_tier.gd  set_database.gd
       set_tracker.gd             # 背包层的计数与激活
-      set_scope.gd  set_effect.gd
-      combat_set_effect.gd  loot_set_effect.gd
     run/
       action_clock.gd            # 行动计数
       move_intent.gd             # 移动意图，扩展机制的接入点
@@ -1629,7 +1748,7 @@ res://
 | 非矩形 / 可扩容背包 | `GridInventory._blocked` 与 `size` | 不假定容器是满矩形、尺寸不变 |
 | 物品损坏与随机词条 | `ItemInstance.state` 字典 | 不把运行时可变状态写进 `ItemDef` |
 | 宝石镶嵌 | `ItemDef.gem_slots` + `ItemInstance.state.gems`，编译期在包体效果之后插一步 | 宝石不占网格，效果随宿主类型（武器／护甲／散放）而变；`socket` 一词留给它，不要用在邻接标记上 |
-| 套装效果的新作用域（地图、商店、撤离…） | `SetEffect` 子类 + 该系统调 `tracker.effects_in_scope()` | 不把跨域效果塞进战斗的 `Effect` 体系；各系统只查自己那一档，互不认识 |
+| 效果的新作用域（地图、商店、撤离…） | `Effect` 子树 + 该系统调 `tracker.effects_in_scope()` | 一棵树按作用域分支；各系统只查自己那一档，互不认识。道具与套装共用同一套词汇 |
 | 新的消耗种类（层数、充能、耐久…） | `Cost` 子类 + 注册表登记 | `costs` 是列表且 AND 语义；消耗与冷却**故意不原子**，失败跳过效果但冷却照走 |
 | 新的资源种类（法力、护盾值…） | `ResourcePool` 的新键 + `max_*` 属性键 | 不为每种资源单开事件，统一走 `resource_changed(key, delta, reason)` |
 | 新的触发时机／频率／效果 | `Trigger`／`Cadence`／`Effect` 子类 + `effect_registry` 登记一行 | 不在 `BattleSim` 或导入器里出现任何具体效果名；连带触发是 `OnItemFired` 子类，不是特例字段 |
@@ -1650,6 +1769,7 @@ res://
 | 4 | 撤离后的保留规则 | 背包内容全额进入仓库，死亡全失 | 影响 meta 成长曲线，不影响任何模块接口 |
 | 5 | 棋盘尺寸与开局可用格数 | 暂定 7x9，开局由一个小包提供约 12 格 | 纯数值，不影响结构 |
 | 6 | 合成配方是否纳入第一章 | 暂缓，先跑通包体系统与战斗 | 独立子系统，可后加 |
+| 7 | 暂存区的清空时机（见 3.4） | 进入下一关即消失，连同里面的道具 | 另一案是留到一局结算时才清空。只改 UI 提示与清空时点；各系统「只看棋盘」的约定两案通用 |
 
 这几项都被刻意隔离在参数层或单个类的内部，**推迟决定不会阻塞任何模块的开工**。
 
@@ -1664,9 +1784,10 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.5 | 2026-09-20 | **效果收归一棵树**：`SetEffect` 与 `Effect` 两棵独立的树合并为 `Effect`，按作用域分支成 `CombatEffect` / `LootEffect` / `MapEffect`（第 9.2 节重写）。原先同一个概念存在两遍，且战利品效果被锁死在套装上 —— 单件道具想「让敌人多掉一件东西」写不出来；现在 `ItemDef.effects` 与 `SetTier.effects` 共用同一套词汇，道具的那份在棋盘上就算激活，不必凑套装。`SetTier` 随之摊平为 `mods` / `rules` / `effects` 三份（生命周期不同，并成一个列表只是把分拣挪到运行时），编译器改收 `combat_mods()` + `combat_rules()`。新增 `RemoveStatus` 与 `ChangeResource`（后者取代 `RestoreResource`：原名只有正向语义，减少要靠传负数，命名撒谎）。新增三个状态条件型扳机 `OnStacksAtLeast` / `OnResourceBelow` / `OnDamage`；其中**消耗型与激活型只差一个勾选框**，消耗型由扳机隐式追加一条 `StatusStackCost` 而非自己扣层数 —— `matches()` 必须只读，且消耗要发生在所有条件通过之后，否则「攒够 3 层但耐力不够」会把 3 层白吃掉。**伤害类型不绑定乘区分类**（两个正交维度，绑一起就写不出「强化影响全部伤害」）。另澄清 3.4：**暂存区里的道具 = 不存在**，它是关卡内的临时摆放区，进入下一关即连同道具消失；清空时机列入待确认第 7 项 |
 | v1.4 | 2026-09-20 | 套装由「编译期的一步」升格为**独立的背包层系统**（新增第 9 节，原 4.6 删除，其后各节顺延）：物品拖入棋盘即计数激活并发信号供 UI 实时暗／亮切换，不必等到战斗。效果**按作用域分类**（`SetEffect.scope()`）——`CombatSetEffect` 由编译器取用，`LootSetEffect` 留给 M4 掉落系统；把跨域效果塞进同一接口会逼着掉落系统去理解 `StatModifier`。另修两处：单位级属性聚合时**乘法单位元类属性不得跨物品累加**（否则 N 件物品 = N 倍速度），且这类属性缺席时返回自身单位元而非调用方 fallback（漏传一处就把速度当成 0） |
 | v1.3 | 2026-09-20 | 事件掩码升级为**事件→规则索引**（`_by_event`），派发从 O(全部规则) 降为 O(订阅者)，并省掉大量一次性 `RuleContext` 分配；原掩码是它的退化版，已合并。索引重建改由 `CombatantRuntime` 在规则集变动时自动触发 —— 施加时漏调只是少触发，移除时漏调会让已删除的规则继续派发，后者是真 bug。另修正：`_resolve_instant` 开头调 `flush_all`，否则事件型规则的冷却只在触发时结算，期间发生的变速会被错误地套用到整段区间 |
-| v1.2 | 2026-09-20 | 定点标度由  (2^16) 改为十进制 （四位小数）。2 的幂来自 C／嵌入式惯例，图乘除能编译成移位，而 GDScript 里这个好处不存在；代价却是设计师写的每个十进制数都被舍入（ 三次累加不等于 ）。改后该类误差消失；取一万而非一百万是因为  的溢出余量 从  提到  |
+| v1.2 | 2026-09-20 | 定点标度由 `65536` (2^16) 改为十进制 `10_000`（四位小数）。2 的幂来自 C／嵌入式惯例，图的是乘除能编译成移位，而 GDScript 里这个好处根本不存在；代价却是设计师写的每个十进制数都被舍入（`0.1` 在 2^16 下是 `6554/65536`，三次累加不等于 `0.3`）。改后该类误差消失。取一万而非一百万，是因为 `mul()` 的约束是「两个值之积 < 2^63 / ONE²」：`ONE = 1e4` 时余量 `9.2e10`，`ONE = 1e6` 时只剩 `9.2e6` —— 百万血乘十倍就溢出 |
 | v1.1 | 2026-09-20 | **模拟改为事件驱动，彻底去掉帧**：直接算出每次出手与 buff 到期的精确时刻并在其间跳跃，零累积误差、可跑批量平衡、出手间隔可为任意小数；`OnTick` 由 `OnSchedule` 取代。冷却按「工作量」累积而非绝对就绪时刻，变速不丢进度。频率层收窄为纯调度（`Always` / `CooldownCadence`），「攒够 N 次」「全场限用」「按概率」移入消耗层 —— 它们与耐力不足的失败行为一致，留在频率层会让调度器在同一时刻空转；`costs` 列表本身即 AND 组合子，删去 `AllOf`。另新增 `docs/effect-catalog.md` 汇总全部可用积木 |
 | v1.0 | 2026-09-20 | 定案两条：资源上限增加时**当前值同量增加**（降低则截断），连带变化以 `reason = max_changed` 区分于治疗；**战斗中没有任何玩家操作**（仅观看与跳过），由此 4.1 的模拟／表现分离从设计选择变为必然结论，并确立四条硬约束 —— 胜负开战即定、`BattleView` 不接收战场输入、战斗期间背包 UI 禁用而非「改了不生效」、`Effect.apply()` 必须同步完成不得等待玩家输入 |
 | v0.9 | 2026-09-20 | 效果系统由三层扩为**四层**，新增独立的**消耗层** `Cost`：`costs` 为列表且 AND 语义，支持消耗资源与 buff 层数；**消耗与冷却刻意不原子** —— 付不起则跳过效果但冷却照常清零，否则耐力不足毫无代价；明确否决等待队列。新增 4.5「战斗内增益系统」：战斗中一切属性变化（含资源上限）均由 buff 承载，buff 仅限本场战斗、结束清空，参战属性只在开战时读取一次；buff 可携带 `rules`，故灼烧之类无需在 `BattleSim` 写特例；buff 走同一条内容管线 |

@@ -42,7 +42,7 @@ static func _rule(trigger: Trigger, cadence: Cadence, effects: Array, costs: Arr
 	var r := AbilityRule.new()
 	r.trigger = trigger
 	r.cadence = cadence
-	var te: Array[Effect] = []
+	var te: Array[CombatEffect] = []
 	for e in effects:
 		te.append(e)
 	r.effects = te

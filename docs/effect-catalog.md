@@ -4,15 +4,34 @@
 需要写代码的只有「新增一种积木」，那时加一个脚本并在
 [`core/battle/effect_registry.gd`](../core/battle/effect_registry.gd) 登记一行即可。
 
-> 状态：截至架构 v1.2。`data/items/` 里的 15 个示例资产**尚未配置任何战斗数据**，
+> 状态：截至架构 v1.5。`data/items/` 里的 15 个示例资产**尚未配置任何战斗数据**，
 > 下面列的是可用积木，不是已有内容。
 
 ---
 
-## 一条规则的结构
+## 效果分三个作用域
+
+所有效果同出一棵树，按**在哪个系统里起作用**分支。道具与套装共用同一套词汇。
 
 ```
-时机 Trigger  →  频率 Cadence  →  消耗 Cost[]  →  内容 Effect[]
+Effect
+  CombatEffect   战斗内     【依赖扳机】      → 第 1~4 节
+  LootEffect     战利品     激活即生效        → 第 5 节
+  MapEffect      地图       占位，M3 再填
+```
+
+**只有战斗这一支需要时机。** 战利品效果没有「什么时候发生」可言 ——
+掉落计算阶段本身就是它的时机，所以它不配扳机，也没有频率与消耗。
+
+道具自带的跨域效果（`ItemDef.effects`）**在棋盘上就算激活，不必凑套装**；
+套装那份（`SetTier.effects`）要满足件数门槛。两者汇入同一个查询。
+
+---
+
+## 一条战斗规则的结构
+
+```
+时机 Trigger  →  频率 Cadence  →  消耗 Cost[]  →  内容 CombatEffect[]
 什么时候        多久一次          满足才执行        做什么
 ```
 
@@ -31,8 +50,29 @@
 | `on_battle_start` | `OnBattleStart` | 开战瞬间 | — |
 | `on_item_fired` | `OnItemFired` | 有物品出手时。**连带触发就是它** | `same_side` 听己方还是敌方；`source_uids` 限定来源（空=不限）；`include_self` 是否含自己（默认否，防自循环） |
 | `on_resource_changed` | `OnResourceChanged` | 资源增减时 | `resource_key`（hp/stamina/mana…）；`direction`（ANY/INCREASE/DECREASE）；`same_side`；`reasons` 限定原因 |
+| `on_resource_below` | `OnResourceBelow` | 资源**降到阈值以下**时 | `resource_key`；`percent` 按上限的百分比（0 则改用绝对值）；`absolute`；`on_self` |
+| `on_stacks_at_least` | `OnStacksAtLeast` | 身上有 **N 层**某增益减益时 | `buff_id`；`stacks`；`on_self` 看自己还是对手；`consume` **消耗型开关**，见下 |
+| `on_damage` | `OnDamage` | **受到／造成**某类伤害时 | `direction`（TAKEN/DEALT）；`damage_type` 空=不限；`min_amount` 按实际扣除量 |
 
 > 没有 `on_tick`。**模拟里没有帧** —— 帧是渲染概念，底层直接按时刻跳跃。
+
+### 消耗型与激活型
+
+`on_stacks_at_least` 的 `consume` 勾上即为**消耗型**：触发后扣掉那 N 层；
+不勾就是**激活型**，层数只作为条件，不消耗。
+
+实现上消耗型不是另一个类，而是由扳机**隐式追加**一条 `status_stack` 消耗。
+作者只填一个勾选框，四层结构不变：
+
+```
+on_stacks_at_least(蓄力, 3, consume) + always + deal_damage
+等价于
+on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal_damage
+```
+
+**扳机自己不扣层数**，因为 `matches()` 必须只读，而消耗要发生在其他消耗也付得起之后 ——
+否则「攒够 3 层但耐力不够」会把 3 层白吃掉。脱糖成普通消耗后，
+它自动享有消耗层「全部付得起才付」的原子性。
 
 ---
 
@@ -65,17 +105,50 @@
 
 ---
 
-## 4 · 内容 Effect
+## 4 · 战斗效果 CombatEffect
 
 | 类型名 | 类 | 含义 | 参数 |
 |---|---|---|---|
-| `deal_damage` | `DealDamage` | 造成伤害，按护甲减免 | `target`（OPPONENT/SELF）；`amount` 固定值；`damage_stat` 改从属性取（默认 `damage`）；`per_stack` 是否乘来源 buff 层数 |
-| `restore_resource` | `RestoreResource` | 恢复资源（治疗／回耐力／回法力共用） | `target`；`resource_key`；`amount`；`amount_stat`；`per_stack` |
-| `apply_status` | `ApplyStatus` | 施加增益／减益 | `target`；`buff`；`stacks` |
+所有战斗效果的 `target` 三选一：`OPPONENT` / `SELF` / `BOTH`。
+
+| 类型名 | 类 | 含义 | 参数 |
+|---|---|---|---|
+| `deal_damage` | `DealDamage` | 造成伤害，按护甲减免 | `target`；`damage_type` 伤害类型（默认 `physical`）；`amount` 固定值；`damage_stat` 改从属性取（默认 `damage`）；`per_stack` 是否乘来源 buff 层数 |
+| `change_resource` | `ChangeResource` | **增减**资源。治疗／回耐力／抽血／耗蓝共用 | `target`；`resource_key`；`amount` **正为获得、负为失去**；`amount_stat`；`per_stack` |
+| `apply_status` | `ApplyStatus` | 施加增益／减益 | `target`；`buff`；`stacks`；`per_stack` |
+| `remove_status` | `RemoveStatus` | 减少层数。净化、驱散、削减对手蓄力 | `target`；`buff_id`；`stacks`（**0 = 全部移除**） |
+
+### 伤害类型不是乘区
+
+`damage_type`（`physical` / `fire` / …）与第 6 节的乘区分类（`EMPOWER` / `SHARP` / `FIRE`）
+是**两个正交的维度**，刻意不做映射。
+
+绑在一起看似省事，但立刻写不出「强化影响全部伤害」—— 那是一个乘区作用于所有类型；
+反过来「火焰抗性」是按类型减伤，与乘区无关。
+`damage_type` 的唯一用处是给伤害事件打标签，供 `on_damage` 和未来的抗性系统筛选。
 
 ---
 
-## 5 · 属性键
+## 5 · 战利品效果 LootEffect
+
+**不依赖扳机，也没有频率与消耗。** 只要处于激活状态，进入战利品计算阶段就生效。
+
+| 类型名 | 类 | 含义 | 参数 |
+|---|---|---|---|
+| `extra_rolls` | `ExtraRolls` | 增加掉落次数 | `rolls` |
+| `rarity_bias` | `RarityBias` | 偏向某个稀有度 | `rarity`；`amount` 权重偏移 |
+| `category_bias` | `CategoryBias` | 偏向某类道具 | `tag`；`amount` |
+| `drop_owned_chance` | `DropOwnedChance` | 提高「敌人掉落其自身携带道具」的概率 | `percent` 0..100 |
+
+> 掉落系统（M4）尚未实现，这里定的是接口：效果写进 `LootContext`，
+> M4 接上真正的掉落表即可。现在就能配、能测。
+
+`drop_owned_chance` 与按掉落表随机生成不同 —— 它让玩家能定向抢夺**看得见的**东西，
+搜刮环节因此从「开箱」变成「挑目标」。
+
+---
+
+## 6 · 属性键
 
 | 键 | 含义 | 粒度 |
 |---|---|---|
@@ -93,7 +166,7 @@
 
 ---
 
-## 6 · 乘区（buff 分类）
+## 7 · 乘区（buff 分类）
 
 结算公式：`终值 = 基础值 × (1 + A区之和) × (1 + B区之和) × … + 固定加值之和`
 
@@ -111,7 +184,7 @@
 
 ---
 
-## 7 · 增益 BuffDef
+## 8 · 增益 BuffDef
 
 | 字段 | 含义 |
 |---|---|
@@ -179,6 +252,62 @@
 ```
 
 不需要任何特殊机制，就是一条订阅出手事件的普通规则。
+
+### 蓄力消耗型
+
+```
+时机 on_stacks_at_least(蓄力, 3, consume = true)
+频率 always
+内容 deal_damage(damage_stat = damage)
+```
+
+攒到 3 层的那一刻打出并清空这 3 层。消耗没写在 `costs` 里 —— 扳机自己带进来的。
+
+### 濒死回血
+
+```
+时机 on_resource_below(hp, percent = 30)
+频率 always
+消耗 uses(1)                ← 全场限一次，否则每次掉血都回
+内容 change_resource(SELF, hp, +40)
+```
+
+### 火焰反击
+
+```
+时机 on_damage(TAKEN, damage_type = fire, min_amount = 15)
+频率 cooldown(2.0)          ← 这里冷却当闸门用，不是调度器
+内容 deal_damage(OPPONENT, 8)
+```
+
+只对火焰、且单次不低于 15 点的伤害反应。
+
+### 吸血
+
+```
+时机 on_damage(DEALT)
+频率 always
+内容 change_resource(SELF, hp, +4)
+```
+
+打到自己不算「造成伤害」，所以自伤类效果不会触发它。
+
+### 净化
+
+```
+时机 on_stacks_at_least(中毒, 5)
+频率 always
+内容 remove_status(SELF, 中毒, stacks = 0)   ← 0 = 全清
+```
+
+### 战利品道具（不进战斗）
+
+```
+ItemDef 幸运护符
+  effects: [ drop_owned_chance(+25%), extra_rolls(+2) ]
+```
+
+没有扳机、没有冷却，**放在棋盘上就生效**。也不需要归属任何套装。
 
 ### 灼烧（复合效果 buff）
 

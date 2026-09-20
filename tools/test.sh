@@ -29,5 +29,20 @@ if grep -q 'SCRIPT ERROR' "$LOG"; then
   code=1
 fi
 
+# tests/ 之外的脚本不会被 run_tests 加载，改接口时最容易漏。
+# 逐个 --check-only 解析一遍：它不设退出码，只往 stderr 打字，所以看输出。
+TOOLLOG="${TMPDIR:-/tmp}/godot_tools_check.log"
+: >"$TOOLLOG"
+for f in "$ROOT"/tools/*.gd; do
+  [ -e "$f" ] || continue
+  "$GODOT" --headless --path "$ROOT" --check-only     --script "res://tools/$(basename "$f")" >>"$TOOLLOG" 2>&1
+done
+if grep -qE 'Parse error|SCRIPT ERROR' "$TOOLLOG"; then
+  echo ""
+  echo "!! tools/ 下有脚本解析失败"
+  grep -E 'Parse Error|Parse error|Failed to load script' "$TOOLLOG" | head -10
+  code=1
+fi
+
 echo "EXIT=$code"
 exit $code

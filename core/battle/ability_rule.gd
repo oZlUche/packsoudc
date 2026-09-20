@@ -11,7 +11,20 @@ extends Resource
 ## 可为空。非武器道具通常没有消耗，但检查环节一律保留 ——
 ## 后期必然出现「消耗 N 层某增益才能触发」的效果。
 @export var costs: Array[Cost] = []
-@export var effects: Array[Effect] = []
+## 收窄为 CombatEffect：只有战斗效果依赖扳机，编辑器下拉也只会列出它们
+@export var effects: Array[CombatEffect] = []
+
+
+## 实际生效的消耗 = 显式写的 + 扳机隐含的
+func effective_costs() -> Array[Cost]:
+	if trigger == null:
+		return costs
+	var implied := trigger.implied_costs()
+	if implied.is_empty():
+		return costs
+	var out: Array[Cost] = costs.duplicate()
+	out.append_array(implied)
+	return out
 
 
 func is_valid() -> bool:

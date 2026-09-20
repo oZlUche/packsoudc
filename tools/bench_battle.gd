@@ -47,7 +47,7 @@ func _build(hp: float, dmg: float, cd: float, rule_count: int) -> CombatantSpec:
 		var cad := CooldownCadence.new()
 		cad.seconds = cd + i * 0.13
 		rule.cadence = cad
-		rule.effects = [DealDamage.new()] as Array[Effect]
+		rule.effects = [DealDamage.new()] as Array[CombatEffect]
 		it.rules = [rule] as Array[AbilityRule]
 		spec.add(it)
 	return spec
