@@ -175,3 +175,94 @@ static func run(t: TestCase) -> void:
 	for v in [view_a, view_b, view_c, view_d]:
 		v.free()
 	drag.free()
+
+
+## 某格中心在视图内的局部坐标，用于模拟「点在这一格上」
+static func _grab(cell: Vector2i) -> Vector2:
+	return (Vector2(cell) + Vector2(0.5, 0.5)) * CELL
+
+
+static func _bag_def(id: String, rows: Array) -> ItemDef:
+	var d := _def(id, rows)
+	d.is_bag = true
+	return d
+
+
+static func run_bag_drag(t: TestCase) -> void:
+	t.begin("DragLayer · 拖包")
+
+	ItemInstance.reset_uid_counter()
+	var bag_def := _bag_def("bag6", ["##", "##", "##"])   # 2 宽 3 高
+	var dot := _def("dot", ["#"])
+
+	var board_a := GridInventory.new(Vector2i(6, 6), 1, true)
+	var board_b := GridInventory.new(Vector2i(6, 6), 2, true)
+	var view_a := _view(board_a, Vector2.ZERO)
+	var view_b := _view(board_b, Vector2(500, 0))
+	var drag := DragLayer.new()
+	drag.register_view(view_a)
+	drag.register_view(view_b)
+
+	var bag := ItemInstance.create(bag_def)
+	board_a.place(bag, Vector2i(0, 0), 0)
+	var a := ItemInstance.create(dot)
+	var b := ItemInstance.create(dot)
+	board_a.place(a, Vector2i(0, 0), 0)
+	board_a.place(b, Vector2i(1, 2), 0)
+
+	# --- 点物品格抓物品 ---
+	view_a.grab_requested.emit(view_a, a.uid, _grab(Vector2i(0, 0)))
+	t.check(drag.is_dragging(), "点物品格应抓起该物品")
+	t.check(board_a.has_item(bag.uid), "抓物品不应把包一起带走")
+	drag.cancel()
+	t.eq(board_a.item_count(), 3, "取消后恢复")
+
+	# --- 包内的空格确实归包所有 ---
+	var empty_cell := Vector2i(0, 1)
+	t.eq(board_a.cell_uid(empty_cell), GridInventory.EMPTY_UID, "该格没有物品")
+	t.eq(board_a.bag_at(empty_cell), bag.uid, "该格被包覆盖")
+
+	# --- 抓起包，内容物一起离开 ---
+	view_a.grab_requested.emit(view_a, bag.uid, _grab(empty_cell))
+	t.check(drag.is_dragging(), "点包的空白处应抓起包")
+	t.eq(board_a.item_count(), 0, "包与内容物一起离开棋盘")
+	t.eq(board_a.usable_cell_count(), 0, "包走了，可用格归零")
+
+	# --- 带内容物时不能旋转 ---
+	drag.rotate_dragged()
+	# 抓的是包的 (0,1) 格，落到 (2,2) 则包的原点在 (2,1)
+	t.check(drag.drop_at(_center(view_b, Vector2i(2, 2))), "放到另一块棋盘应成功")
+	t.eq(bag.rotation, 0, "带内容物的包拖拽中不能旋转，朝向应保持 0")
+
+	# --- 内容物保持相对位置 ---
+	t.eq(board_b.item_count(), 3, "目标棋盘收到包与两件内容物")
+	t.eq(bag.origin, Vector2i(2, 1), "包的原点按抓取偏移落位")
+	t.eq(a.origin, Vector2i(2, 1), "内容物相对偏移 (0,0) 保持")
+	t.eq(b.origin, Vector2i(3, 3), "内容物相对偏移 (1,2) 保持")
+	t.eq(board_b.bag_of(a.uid), bag.uid, "容纳关系保持")
+	t.eq(board_b.usable_cell_count(), 6, "包在新棋盘上照常提供 6 格")
+
+	# --- 放到放不下的位置：整体退回 ---
+	var blocker := ItemInstance.create(bag_def)
+	board_a.place(blocker, Vector2i(0, 0), 0)
+	view_b.grab_requested.emit(view_b, bag.uid, _grab(Vector2i(2, 1)))  # 抓包的左上角
+	t.check(not drag.drop_at(_center(view_a, Vector2i(0, 0))), "目标已被别的包占据，应失败")
+	t.eq(board_b.item_count(), 3, "失败后包与内容物全部退回原棋盘")
+	t.eq(bag.origin, Vector2i(2, 1), "退回原位")
+	t.eq(a.origin, Vector2i(2, 1), "内容物也退回原位")
+	t.eq(board_a.item_count(), 1, "目标棋盘只剩它自己的包，无残留")
+
+	# --- 落点预览 ---
+	view_b.grab_requested.emit(view_b, bag.uid, _grab(Vector2i(2, 1)))
+	drag.update_preview(_center(view_a, Vector2i(3, 0)))
+	t.check(view_a._preview_on, "光标所在棋盘显示预览")
+	t.check(view_a._preview_valid, "空处应判为合法")
+	drag.update_preview(_center(view_a, Vector2i(0, 0)))
+	t.check(not view_a._preview_valid, "与已有包重叠应判为非法")
+	drag.cancel()
+	t.eq(board_b.item_count(), 3, "取消后整体退回")
+	t.check(not view_a._preview_on, "结束拖拽清掉预览")
+
+	for v in [view_a, view_b]:
+		v.free()
+	drag.free()

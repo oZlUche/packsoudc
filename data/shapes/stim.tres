@@ -1,0 +1,6 @@
+[gd_resource type="Resource" script_class="ItemShape" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="1_rpoli"]
+
+[resource]
+script = ExtResource("1_rpoli")

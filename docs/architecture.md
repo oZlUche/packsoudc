@@ -16,7 +16,8 @@
 
 四大机制：
 
-1. **异形格子背包**：物品占据不同形状/尺寸的格子，可旋转，跨容器拖拽
+1. **异形格子背包**：物品占据不同形状/尺寸的格子，可旋转，跨容器拖拽。
+   空间模型以《背包乱斗》为准：**棋盘 + 玩家自己放包体拼出可用区，没有装备栏**（见 3.2）
 2. **自动战斗**：背包内物品编译成战斗能力，双方自动对轰，邻接关系影响数值
 3. **肉鸽地图**：程序化生成的点线图，可插拔多种生成形态
 4. **搜刮系统**：战后搜索敌人尸体，渐进式揭示掉落物（三角洲行动风格）
@@ -102,8 +103,9 @@ UI 调用服务方法（`InventoryService.move(...)`），服务改完状态后�
 ```gdscript
 # core/inventory/item_shape.gd —— 静态形状定义
 class_name ItemShape extends Resource
-@export var cells: Array[Vector2i] = [Vector2i(0, 0)]   # 相对原点的占格
-# 运行时预计算 4 个旋转：(x, y) -> (-y, x)，再平移到 min = (0, 0)
+@export var cells: Array[Vector2i] = [Vector2i(0,0)]   # 相对原点的占格
+# 运行时预计算 4 个旋转：(x, y) -> (-y, x)，平移到 min = (0, 0) 后排序，
+# 得到与书写方式无关的规范形式
 
 # core/inventory/item_def.gd —— 静态定义，全局共享只读
 class_name ItemDef extends Resource
@@ -111,49 +113,121 @@ class_name ItemDef extends Resource
 @export var shape: ItemShape
 @export var rarity: int
 @export var can_rotate: bool = true
-@export var combat: CombatProfile             # 冷却、伤害、触发方式
-@export var adjacency: Array[AdjacencyRule]   # 邻接加成规则
+@export var tags: Array[StringName]
+
+# —— 包体 ——
+@export var is_bag: bool = false               # 本物品是否是「包」
+@export var bag_accept_tags: Array[StringName] # 包内准入标签，空 = 不限
+
+# —— M2 追加 ——
+# @export var sockets: SocketProfile           # 星/菱形插槽需求与供给
+# @export var combat: CombatProfile            # 冷却、伤害、触发方式
+# @export var bag_effect: BagEffect            # 仅 is_bag 时生效，作用于内容物
 
 # core/inventory/item_instance.gd —— 运行时实例，可变
 class_name ItemInstance extends RefCounted
 var uid: int             # 全局自增唯一 id
 var def: ItemDef
 var rotation: int        # 0..3
-var origin: Vector2i     # 在所属容器中的左上锚点
+var origin: Vector2i     # 在所属容器中的锚点
 var container_id: int
-var state: Dictionary    # 耐久 / 充能 / 随机词条
+var state: Dictionary    # 耐久 / 充能 / 随机词条 / locked
 ```
 
 **`ItemDef`（共享只读）与 `ItemInstance`（运行时可变）必须分开。**
 存档只写 `def.id` 字符串 + `state`，不写 Resource 路径 —— 否则改动资源路径会导致存档失效。
 
-### 3.2 GridInventory：一个类服务所有容器
+### 3.2 空间模型：棋盘 + 包体，不是固定网格
+
+这是整个背包系统的核心规则，**照《背包乱斗》的结构来**，不要凭「背包构筑大概长这样」的印象设计。
+
+#### 两种容器模式
+
+| 模式 | `requires_bag` | 用途 | 规则 |
+|---|---|---|---|
+| **棋盘** | `true` | 玩家的作战背包 | 盘面固定（如 7x9），**开局全部不可用**；可用格来自玩家放上去的「包」 |
+| **自由容器** | `false` | 暂存区、敌人尸体、商店货架 | 整片可用，物品直接摆放 |
+
+两种模式共用同一个 `GridInventory` 实现，只差一个开关。
+
+#### 棋盘上的两层占用
+
+棋盘有两张互相独立的占用表：
+
+```gdscript
+var _bag_owner: PackedInt32Array   # 该格被哪个包覆盖，0 = 未覆盖
+var _occ: PackedInt32Array         # 该格被哪件非包物品占据，0 = 空
+```
+
+一个格子可以「被包 B 覆盖」同时「被物品 I 占据」。放置规则由此分成两套：
+
+- **放包**：每格须在盘内、未被其他包覆盖。包之间不能重叠，但包不需要被覆盖。
+- **放普通物品**：每格须被**同一个包**覆盖，该包的 `bag_accept_tags` 须接受此物品，且这些格上没有其他物品。
+
+#### 为什么要求「同一个包」
+
+物品必须整件落在单个包内，不允许跨两个相邻的包摆放。理由是**容纳关系必须无歧义** —— 包自带作用于内容物的效果（「包内物品触发快 10%」之类），拿起包时内容物要跟着走，这两件事都要求每件物品有且只有一个归属包。
+
+副作用是包的形状变得有意义：一把 1x3 的步枪需要某个包里有连续的 1x3 空间，而不是「随便哪三格连着就行」。这是设计上想要的。
+
+#### 包在自由容器里只是普通物品
+
+一个包被当作战利品搜到时，它躺在尸体容器里就是件普通异形物品，不提供任何格子。**包只有放到棋盘上才作为包生效。** 这条规则省掉了「容器套容器」的递归，实现和心智负担都大幅下降。
+
+#### 没有装备栏
+
+武器、护甲、药水与其他一切物品一样占棋盘格子。**空间是唯一的约束** —— 一把 1x3 的步枪值不值得带，取决于它挤掉的三格能换来什么。任何品类的免费槽位都会把这个取舍取消掉，因此不设装备栏。
+
+需要「只收某类物品」的语义时，用**包体**表达（比如只收药水的药水带），而不是用独立槽位。
+
+### 3.3 GridInventory：一个类服务所有容器
 
 ```gdscript
 class_name GridInventory extends RefCounted
+signal changed
 
 var id: int
 var size: Vector2i
-var _occupancy: PackedInt32Array    # size.x * size.y，存 uid，0 表示空
+var requires_bag: bool = false      # true = 棋盘模式
+var accept_tags: Array[StringName]  # 容器级准入，空 = 不限
+var _occ: PackedInt32Array
+var _bag_owner: PackedInt32Array
 var _items: Dictionary              # uid -> ItemInstance
-var _blocked: PackedByteArray       # 支持非矩形容器（如 L 形背包）
-var accept_tags: Array[StringName]  # 装备栏过滤用
+var _blocked: PackedByteArray       # 自由容器的非矩形支持
 
-func can_place(shape_cells: Array, origin: Vector2i, ignore_uid := 0) -> bool
-func place(inst: ItemInstance, origin: Vector2i, rot: int) -> bool
-func remove(uid: int) -> ItemInstance
-func find_first_fit(shape: ItemShape, allow_rotate: bool) -> Dictionary
-func neighbors_of(uid: int) -> Array[int]     # 4-邻域内的其他物品，战斗编译期用
-func to_dict() -> Dictionary
-static func from_dict(d: Dictionary) -> GridInventory
+# 放置与移除
+func can_place_item(inst, origin, rot) -> bool
+func place(inst, origin, rot) -> bool
+func remove(uid) -> ItemInstance          # 非空的包拒绝直接移除
+func rotate_item(uid, steps) -> bool      # 有内容物的包拒绝旋转
+func find_first_fit(def, allow_rotate) -> Dictionary
+func try_add(inst, allow_rotate) -> bool
+
+# 包与容纳关系
+func is_covered(c: Vector2i) -> bool
+func bag_at(c: Vector2i) -> int           # 覆盖该格的包 uid
+func bag_of(uid: int) -> int              # 该物品所属的包 uid
+func contents_of(bag_uid: int) -> Array[int]
+func detach_bag(bag_uid) -> Dictionary    # 连内容物一起摘下，记录相对偏移
+func attach_bag(payload, origin, rot) -> bool   # 原子放回，失败不留残迹
+
+# 战斗编译期使用
+func neighbors_of(uid) -> Array[int]      # 四邻相接的其他物品
 ```
 
-**玩家背包、敌人尸体、商店货架、仓库、装备栏全部复用这一个类。**
-装备栏 = 1×1 且带 `accept_tags` 过滤的容器。尸体 = 一个临时生成的容器。
+玩家棋盘、暂存区、敌人尸体、商店货架、仓库全部复用这一个类。不要为它们另写实现 —— 掉落系统几乎零成本，正是因为这里没有分叉。
 
-这个复用是后续掉落系统几乎零成本的原因，不要为尸体/商店另写容器实现。
+**有内容物的包不能旋转。** 旋转包意味着内容物要跟着做坐标变换，边界情况多且玩家难以预期。要转先掏空。这是一条有意的简化，需要时再放开。
 
-### 3.3 跨容器移动必须原子化
+### 3.4 暂存区与作战区
+
+物品可以放在**暂存区**（`requires_bag = false` 的自由容器）里保留，但**不参战** —— 只有装进棋盘上的包里才会被编译进 `CombatantSpec`。
+
+这条规则对本作尤其契合：**背着但没装进包 = 占位置不出力**。搜刮到的战利品要不要腾出作战格位来装，正是「搜打撤」的核心取舍，并且与第一章侵蚀机制下「战利品在手里烂掉」的压力天然叠加。
+
+实现上没有特殊处理：编译 `CombatantSpec` 时只遍历棋盘容器即可。
+
+### 3.5 跨容器移动必须原子化
 
 ```gdscript
 # core/inventory/inventory_service.gd
@@ -172,7 +246,7 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 
 漏掉回滚分支会导致"拖到非法位置物品消失"，这是此类系统最常见的严重 bug。
 
-### 3.4 实现要点与 Godot 特定坑
+### 3.6 实现要点与 Godot 特定坑
 
 1. **不要用 `GridContainer`** —— 它做不了跨格布局。用一个 `Control`（`InventoryView`）自己 `_draw()` 画网格线，物品作为子 `Control`，位置 = `cell_coord * CELL_PX`。
 
@@ -188,7 +262,7 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 
 4. **碰撞检测先用朴素双重循环**。10×8 网格不足 80 次判断，完全够用。等到实现"自动整理"的暴力搜索时再考虑位掩码优化，不要过早优化。
 
-### 3.5 验收标准
+### 3.7 验收标准
 
 能拖、能转、能跨容器、非法位置红色高亮、序列化成 JSON 再读回来状态完全一致。
 此时它已经是一个可玩的"整理背包"沙盒，可以验证核心手感。
@@ -220,13 +294,27 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 
 ```gdscript
 # core/battle/compiler.gd
-static func compile(inv: GridInventory) -> CombatantSpec:
-    # 1. 收集所有 ItemInstance
-    # 2. 构建邻接图：对每件物品求其占格 4-邻域中的其他物品 uid
-    # 3. 分层结算 modifier：flat → percent → final_override
+static func compile(board: GridInventory) -> CombatantSpec:
+    # 1. 只遍历棋盘容器（暂存区的物品不参战，见 3.4）
+    # 2. 包体效果：按 bag_of(uid) 聚合，把各包的效果施加给其内容物
+    # 3. 插槽配对：用 neighbors_of() 取候选，再做一次带约束的分配（见下）
+    # 4. 分层结算 modifier：flat → percent → final_override
     #    （分层顺序必须一开始定死，后期修改会导致所有物品需重平衡）
-    # 4. 产出 abilities: [{cooldown_ticks, trigger, effect, snapshot_stats}]
+    # 5. 产出 abilities: [{cooldown_ticks, trigger, effect, snapshot_stats}]
 ```
+
+#### 邻接是插槽配对，不是邻居集合
+
+物品身上带有**星形与菱形插槽**，由相邻物品去填。关键约束：
+**一件物品通常只能填另一件的一个星和一个菱形。**
+
+因此这一步本质上是一次**带约束的二分匹配**，而不是「把每个邻居的加成都累上」。
+`neighbors_of()` 只是它的**输入**，不是输出。
+
+**匹配必须是确定性的。** 同一个背包布局必须永远编译出同一份 `CombatantSpec`，
+否则回放、批量模拟与存档全部失效。解法：按 uid 升序遍历需求方，每个插槽按
+「候选的 (相对方位, uid)」升序取第一个尚未被占用的邻居。不要用任何依赖哈希顺序
+或插入顺序的容器来驱动这个循环。
 
 `compile` **必须是纯函数**：同样的背包永远编译出同样的 spec。
 这样 UI 可以在玩家拖动物品时实时显示预计 DPS / 有效血量 —— 这是此类游戏的核心爽点。
@@ -246,9 +334,15 @@ func run(a: CombatantSpec, b: CombatantSpec, rng) -> Array[BattleEvent]:
     return log
 ```
 
-**避坑：用整数 tick 计数，不要用 float 累积冷却。**
-浮点累积在长战斗中会产生精度漂移，导致回放与原始模拟不一致。
-加速（haste）表现为"每逻辑帧累积 N 个 cooldown tick"，保持完全确定性。
+**避坑：用定点数，既不能用 float，也不能用纯整数。**
+
+浮点累积在长战斗中会产生精度漂移，导致回放与原始模拟不一致。但纯整数 tick 同样不行 ——
+参照作里 Heat / Cold **每层让所有物品触发速度 ±2%**，这种比例叠乘用整数表达不了，
+多层叠加后要么丢精度，要么在不同叠加顺序下得到不同结果。
+
+正确做法：冷却进度用**定点整数**记录（如以 1/65536 为单位），每逻辑帧累积
+`base_rate * speed_multiplier` 的定点值。速度乘数本身也是定点数，由 Stamina、
+Heat / Cold 层数等按固定顺序相乘得出。整数确定性保住了，比例缩放也能精确表达。
 
 ### 4.4 表现层
 
@@ -692,8 +786,8 @@ var action_clock: ActionClock    # 行动计数（run 级）
 var erosion: ErosionField        # 侵蚀状态，低难度下 schedule.enabled = false
 var hp: int                      # run 内持久生命值（见 5.7 待确认项）
 var max_hp: int
-var player: GridInventory        # 背包
-var equipment: GridInventory     # 装备栏
+var board: GridInventory         # 作战棋盘，requires_bag = true，只有这里的物品参战
+var storage: GridInventory       # 暂存区，requires_bag = false，保留但不参战
 var gold: int
 var meta_stash: GridInventory    # 跨 run 持久仓库
 ```
@@ -810,6 +904,8 @@ res://
 | 侵蚀方向变体（如由内向外） | 生成器对 `erosion_band` 的标注方式 | 不把 `erosion_band` 与 `tier` 合并成一个字段 |
 | 非矩形 / 可扩容背包 | `GridInventory._blocked` 与 `size` | 不假定容器是满矩形、尺寸不变 |
 | 物品损坏与随机词条 | `ItemInstance.state` 字典 | 不把运行时可变状态写进 `ItemDef` |
+| 合成配方 | 新增 `RecipeBook` + 回合边界的结算钩子 | 匹配的是**相对偏移模式**而非「挨着」；`state` 预留 `locked` 标志 |
+| 有内容物的包可旋转 | `GridInventory.rotate_item` 的包分支 | 现在直接拒绝；放开时内容物需同步做坐标变换 |
 
 **这张表的用法是防御性的**：实现底层时对照检查有没有踩到右列，而不是现在就去实现左列。
 
@@ -823,6 +919,8 @@ res://
 | 2 | 侵蚀损失的具体形式 | 浅层扣生命值，深层额外损坏背包物品 | 同上，只改效果实现与参数 |
 | 3 | 节点事件的额外行动消耗 | 搜刮 +1 ／ 休息 +2 ／ 商店 +0 | 仅影响节奏调参 |
 | 4 | 撤离后的保留规则 | 背包内容全额进入仓库，死亡全失 | 影响 meta 成长曲线，不影响任何模块接口 |
+| 5 | 棋盘尺寸与开局可用格数 | 暂定 7x9，开局由一个小包提供约 12 格 | 纯数值，不影响结构 |
+| 6 | 合成配方是否纳入第一章 | 暂缓，先跑通包体系统与战斗 | 独立子系统，可后加 |
 
 这几项都被刻意隔离在参数层或单个类的内部，**推迟决定不会阻塞任何模块的开工**。
 
@@ -835,3 +933,4 @@ res://
 | v0.1 | 2026-09-20 | 初版：六大模块设计；地图系统确定为可插拔生成器架构，第一章采用同心环形地图 |
 | v0.2 | 2026-09-20 | 地图移动规则改为可自由折返（已访问节点仅可穿行、不再触发事件）；新增行动计数 `ActionClock` 与由外向内的侵蚀系统 `ErosionField`；撤离点回归外环与中环 |
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
+| v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |

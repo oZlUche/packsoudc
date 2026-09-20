@@ -24,4 +24,5 @@
 | 003 | [GridInventory 容器核心与原子移动](003-grid-inventory.md) | 阶段 1 · M1 | 完成 |
 | 004 | [示例物品资产](004-sample-item-assets.md) | 阶段 1 · M1 | 完成 |
 | 005 | [背包表现层与拖拽沙盒](005-inventory-ui.md) | 阶段 1 · M1 **完结** | 完成 |
-| 006 | [与《背包乱斗》机制的差异复盘](006-backpack-battles-gap-analysis.md) | 分析 · 无代码改动 | **待决策** |
+| 006 | [与《背包乱斗》机制的差异复盘](006-backpack-battles-gap-analysis.md) | 分析 · 无代码改动 | 已决策 |
+| 007 | [棋盘与包体系统（M1 返工）](007-board-and-bags.md) | 阶段 1 · M1 **重新完结** | 完成 |

@@ -24,8 +24,16 @@ extends Resource
 ## 是否允许旋转。少数物品（如某些装备）可能强制朝向。
 @export var can_rotate: bool = true
 
-## 容器准入标签。装备栏通过 [member GridInventory.accept_tags] 与之比对。
+## 准入标签。容器级与包体级的准入都拿它比对。
 @export var tags: Array[StringName] = []
+
+## 本物品是否是「包」。包只在棋盘模式的容器里作为包生效，
+## 躺在尸体或暂存区里时就是件普通异形物品。
+@export var is_bag: bool = false
+
+## 仅 is_bag 为真时有效：包内准入标签，为空表示不限。
+## 「只收药水的药水带」这类语义用它表达 —— 本作没有装备栏。
+@export var bag_accept_tags: Array[StringName] = []
 
 
 ## 定义是否完整可用。资产批量校验与单元测试用。

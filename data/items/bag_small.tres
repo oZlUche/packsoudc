@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_3fdyu"]
+[ext_resource type="Resource" path="res://data/shapes/bag_small.tres" id="2_xewyu"]
+
+[resource]
+script = ExtResource("1_3fdyu")
+id = &"bag_small"
+display_name = "小背包"
+shape = ExtResource("2_xewyu")
+is_bag = true

@@ -1,11 +1,17 @@
-## 网格容器：玩家背包、敌人尸体、商店货架、仓库、装备栏全部复用本类。
+## 网格容器。两种模式共用本实现，只差一个 [member requires_bag] 开关：
 ##
-## 装备栏就是 1x1 且设了 [member accept_tags] 的容器；尸体就是战后临时生成的容器。
-## 不要为这些场景另写实现 —— 掉落系统几乎零成本，正是因为它直接复用了这里。
+## - **棋盘模式**（`requires_bag = true`）：玩家的作战背包。盘面固定，但**开局全部不可用**，
+##   可用格来自玩家自己放上去的「包」。普通物品只能放进某个包覆盖的格子里。
+## - **自由容器**（`requires_bag = false`）：暂存区、敌人尸体、商店货架。整片可用，直接摆放。
+##
+## 棋盘上有两张互相独立的占用表：[member _bag_owner] 记录每格被哪个包覆盖，
+## [member _occ] 记录每格被哪件普通物品占据。一个格子可以同时「被包 B 覆盖」和「被物品 I 占据」。
+##
+## 包只有在棋盘模式下才作为包生效。一个包躺在尸体容器里时就是件普通异形物品，
+## 不提供任何格子 —— 这条规则省掉了容器套容器的递归。
 ##
 ## 本类是纯 [RefCounted]，不进场景树。表现层连 [signal changed] 后
-## [b]从状态完整重建视图[/b]，不要做增量猜测：拖拽中断、跨容器失败回滚、旋转撤销
-## 这些路径上，增量状态极易与真实状态脱节。
+## [b]从状态完整重建视图[/b]，不要做增量猜测。
 class_name GridInventory
 extends RefCounted
 
@@ -17,10 +23,14 @@ const EMPTY_UID := 0
 var id: int = 0
 var size: Vector2i = Vector2i(8, 6)
 
-## 准入标签。为空表示不限制；非空时物品需至少命中一个标签。
+## true = 棋盘模式，普通物品必须落在包内
+var requires_bag: bool = false
+
+## 容器级准入标签。为空表示不限制。包体自身的准入见 [member ItemDef.bag_accept_tags]。
 var accept_tags: Array[StringName] = []
 
 var _occ: PackedInt32Array = PackedInt32Array()
+var _bag_owner: PackedInt32Array = PackedInt32Array()
 var _items: Dictionary = {}  # uid -> ItemInstance
 var _blocked: PackedByteArray = PackedByteArray()
 
@@ -28,9 +38,10 @@ var _batch_depth: int = 0
 var _dirty: bool = false
 
 
-func _init(p_size: Vector2i = Vector2i(8, 6), p_id: int = 0) -> void:
+func _init(p_size: Vector2i = Vector2i(8, 6), p_id: int = 0, p_requires_bag: bool = false) -> void:
 	id = p_id
 	size = p_size
+	requires_bag = p_requires_bag
 	_reset_cells()
 
 
@@ -67,30 +78,59 @@ func is_blocked(c: Vector2i) -> bool:
 	return _blocked[_idx(c)] != 0
 
 
-## 该格被哪件物品占据，空格返回 [constant EMPTY_UID]。
+## 该格被哪件普通物品占据，空格返回 [constant EMPTY_UID]。
 func cell_uid(c: Vector2i) -> int:
 	if not in_bounds(c):
 		return EMPTY_UID
 	return _occ[_idx(c)]
 
 
-## 标记某格为不可用，用于非矩形容器（如 L 形背包）。
-## 已被占据的格子不能封禁，返回 false。
+## 覆盖该格的包 uid。自由容器恒为 [constant EMPTY_UID]。
+func bag_at(c: Vector2i) -> int:
+	if not in_bounds(c):
+		return EMPTY_UID
+	return _bag_owner[_idx(c)]
+
+
+## 该格是否可用于摆放普通物品（棋盘模式下须被包覆盖）。
+func is_covered(c: Vector2i) -> bool:
+	if not in_bounds(c) or is_blocked(c):
+		return false
+	if not requires_bag:
+		return true
+	return _bag_owner[_idx(c)] != EMPTY_UID
+
+
+## 标记某格为不可用，用于非矩形的自由容器。
 func set_blocked(c: Vector2i, blocked: bool) -> bool:
 	if not in_bounds(c):
 		return false
-	if blocked and cell_uid(c) != EMPTY_UID:
+	var i := _idx(c)
+	if blocked and (_occ[i] != EMPTY_UID or _bag_owner[i] != EMPTY_UID):
 		return false
-	_blocked[_idx(c)] = 1 if blocked else 0
+	_blocked[i] = 1 if blocked else 0
 	_notify_changed()
 	return true
 
 
+## 可摆放普通物品且当前为空的格数。
 func free_cell_count() -> int:
 	var n := 0
-	for i in _occ.size():
-		if _occ[i] == EMPTY_UID and _blocked[i] == 0:
-			n += 1
+	for y in size.y:
+		for x in size.x:
+			var c := Vector2i(x, y)
+			if is_covered(c) and _occ[_idx(c)] == EMPTY_UID:
+				n += 1
+	return n
+
+
+## 可摆放普通物品的总格数（棋盘模式下 = 已被包覆盖的格数）。
+func usable_cell_count() -> int:
+	var n := 0
+	for y in size.y:
+		for x in size.x:
+			if is_covered(Vector2i(x, y)):
+				n += 1
 	return n
 
 
@@ -99,8 +139,8 @@ func _idx(c: Vector2i) -> int:
 #endregion
 
 
-#region 放置与移除
-## 该容器是否接受这件定义（仅看标签，不看空间）。
+#region 准入
+## 容器是否接受这件定义（仅看容器级标签，不看空间）。
 func accepts(def: ItemDef) -> bool:
 	if def == null:
 		return false
@@ -112,11 +152,27 @@ func accepts(def: ItemDef) -> bool:
 	return false
 
 
-## 指定占格集合能否落在 origin 处。
-## [param ignore_uid] 用于「原地旋转」「移动自己」这类需要忽略自身占用的判定。
+## 该定义在本容器中是否作为「包」生效。
+func acts_as_bag(def: ItemDef) -> bool:
+	return requires_bag and def != null and def.is_bag
+
+
+func _bag_accepts(bag_def: ItemDef, def: ItemDef) -> bool:
+	if bag_def == null or bag_def.bag_accept_tags.is_empty():
+		return true
+	for tag in def.tags:
+		if bag_def.bag_accept_tags.has(tag):
+			return true
+	return false
+#endregion
+
+
+#region 落点判定
+## 普通物品的落点判定。棋盘模式下要求每格都被**同一个包**覆盖。
 func can_place(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int = EMPTY_UID) -> bool:
 	if cells.is_empty():
 		return false
+	var bag := EMPTY_UID
 	for c in cells:
 		var p := origin + c
 		if not in_bounds(p):
@@ -127,17 +183,60 @@ func can_place(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int = EMPTY
 		var occupant := _occ[i]
 		if occupant != EMPTY_UID and occupant != ignore_uid:
 			return false
+		if requires_bag:
+			var owner := _bag_owner[i]
+			if owner == EMPTY_UID:
+				return false          # 未被任何包覆盖
+			if bag == EMPTY_UID:
+				bag = owner
+			elif bag != owner:
+				return false          # 跨了两个包，不允许
 	return true
 
 
-## 实例能否以指定旋转落在 origin 处（含标签校验）。
+## 包体的落点判定。包之间不能重叠，但包本身不需要被覆盖。
+func can_place_bag(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int = EMPTY_UID) -> bool:
+	if cells.is_empty() or not requires_bag:
+		return false
+	for c in cells:
+		var p := origin + c
+		if not in_bounds(p):
+			return false
+		var i := _idx(p)
+		if _blocked[i] != 0:
+			return false
+		var owner := _bag_owner[i]
+		if owner != EMPTY_UID and owner != ignore_uid:
+			return false
+	return true
+
+
+## 指定定义能否以该朝向落在 origin（含容器级与包体级标签校验）。
+func can_place_def(def: ItemDef, origin: Vector2i, rot: int, ignore_uid: int = EMPTY_UID) -> bool:
+	if def == null or not accepts(def):
+		return false
+	var cells := def.cells_rotated(rot)
+	if acts_as_bag(def):
+		return can_place_bag(cells, origin, ignore_uid)
+	if not can_place(cells, origin, ignore_uid):
+		return false
+	if requires_bag:
+		var bag_uid := _bag_owner[_idx(origin + cells[0])]
+		var bag_inst: ItemInstance = _items.get(bag_uid, null)
+		if bag_inst != null and not _bag_accepts(bag_inst.def, def):
+			return false
+	return true
+
+
 func can_place_item(inst: ItemInstance, origin: Vector2i, rot: int) -> bool:
-	if inst == null or inst.def == null or not accepts(inst.def):
+	if inst == null or inst.def == null:
 		return false
 	var effective_rot := rot if inst.def.can_rotate else 0
-	return can_place(inst.def.cells_rotated(effective_rot), origin, inst.uid)
+	return can_place_def(inst.def, origin, effective_rot, inst.uid)
+#endregion
 
 
+#region 放置与移除
 ## 放置。成功后会写回 [member ItemInstance.origin]、[member ItemInstance.rotation]
 ## 与 [member ItemInstance.container_id]，这三个字段必须与占用表一致，外部不要直接改。
 func place(inst: ItemInstance, origin: Vector2i, rot: int = 0) -> bool:
@@ -148,8 +247,10 @@ func place(inst: ItemInstance, origin: Vector2i, rot: int = 0) -> bool:
 		return false
 
 	var effective_rot := rot if inst.def.can_rotate else 0
-	for c in inst.def.cells_rotated(effective_rot):
-		_occ[_idx(origin + c)] = inst.uid
+	var cells := inst.def.cells_rotated(effective_rot)
+	var table := _bag_owner if acts_as_bag(inst.def) else _occ
+	for c in cells:
+		table[_idx(origin + c)] = inst.uid
 
 	inst.origin = origin
 	inst.rotation = effective_rot
@@ -160,14 +261,22 @@ func place(inst: ItemInstance, origin: Vector2i, rot: int = 0) -> bool:
 
 
 ## 移除并返回该实例；不存在时返回 null。
+##
+## **非空的包会被拒绝**（返回 null 并告警）—— 连内容物一起摘下请用 [method detach_bag]。
 func remove(uid: int) -> ItemInstance:
 	var inst: ItemInstance = _items.get(uid, null)
 	if inst == null:
 		return null
+	var is_bag := acts_as_bag(inst.def)
+	if is_bag and not contents_of(uid).is_empty():
+		push_warning("GridInventory.remove: uid %d 是非空的包，请改用 detach_bag" % uid)
+		return null
+
+	var table := _bag_owner if is_bag else _occ
 	for c in inst.def.cells_rotated(inst.rotation):
 		var i := _idx(inst.origin + c)
-		if _occ[i] == uid:
-			_occ[i] = EMPTY_UID
+		if table[i] == uid:
+			table[i] = EMPTY_UID
 	_items.erase(uid)
 	inst.container_id = 0
 	_notify_changed()
@@ -175,22 +284,31 @@ func remove(uid: int) -> ItemInstance:
 
 
 ## 原地旋转。放不下则保持原样并返回 false。
+##
+## **有内容物的包不能旋转** —— 旋转包意味着内容物要跟着做坐标变换，边界情况多且玩家难以预期。
+## 要转先掏空。这是一条有意的简化。
 func rotate_item(uid: int, steps: int = 1) -> bool:
 	var inst: ItemInstance = _items.get(uid, null)
 	if inst == null or not inst.def.can_rotate:
 		return false
+	var is_bag := acts_as_bag(inst.def)
+	if is_bag and not contents_of(uid).is_empty():
+		return false
 	var new_rot := posmod(inst.rotation + steps, 4)
 	if new_rot == inst.rotation:
 		return true
-	if not can_place(inst.def.cells_rotated(new_rot), inst.origin, uid):
+
+	var table := _bag_owner if is_bag else _occ
+	var ok := can_place_bag(inst.def.cells_rotated(new_rot), inst.origin, uid) if is_bag \
+		else can_place(inst.def.cells_rotated(new_rot), inst.origin, uid)
+	if not ok:
 		return false
 
 	begin_batch()
-	var old_rot := inst.rotation
-	for c in inst.def.cells_rotated(old_rot):
-		_occ[_idx(inst.origin + c)] = EMPTY_UID
+	for c in inst.def.cells_rotated(inst.rotation):
+		table[_idx(inst.origin + c)] = EMPTY_UID
 	for c in inst.def.cells_rotated(new_rot):
-		_occ[_idx(inst.origin + c)] = inst.uid
+		table[_idx(inst.origin + c)] = inst.uid
 	inst.rotation = new_rot
 	_notify_changed()
 	end_batch()
@@ -203,8 +321,137 @@ func clear() -> void:
 		(_items[uid] as ItemInstance).container_id = 0
 	_items.clear()
 	_occ.fill(EMPTY_UID)
+	_bag_owner.fill(EMPTY_UID)
 	_notify_changed()
 	end_batch()
+#endregion
+
+
+#region 包与容纳关系
+## 该物品所属的包 uid。物品本身是包、或容器不是棋盘时返回 [constant EMPTY_UID]。
+func bag_of(uid: int) -> int:
+	var inst: ItemInstance = _items.get(uid, null)
+	if inst == null or not requires_bag or acts_as_bag(inst.def):
+		return EMPTY_UID
+	var cells := inst.def.cells_rotated(inst.rotation)
+	if cells.is_empty():
+		return EMPTY_UID
+	return _bag_owner[_idx(inst.origin + cells[0])]
+
+
+## 该包内的所有物品 uid，按 uid 升序 —— 顺序必须稳定，否则战斗编译结果会随之抖动。
+func contents_of(bag_uid: int) -> Array[int]:
+	var out: Array[int] = []
+	if bag_uid == EMPTY_UID or not requires_bag:
+		return out
+	for uid in _items:
+		if bag_of(uid) == bag_uid:
+			out.append(uid)
+	out.sort()
+	return out
+
+
+func is_bag_with_contents(uid: int) -> bool:
+	var inst: ItemInstance = _items.get(uid, null)
+	if inst == null or not acts_as_bag(inst.def):
+		return false
+	return not contents_of(uid).is_empty()
+
+
+## 棋盘上所有作为包生效的物品。
+func bags() -> Array:
+	var out: Array = []
+	for uid in _items:
+		var inst: ItemInstance = _items[uid]
+		if acts_as_bag(inst.def):
+			out.append(inst)
+	return out
+
+
+## 连同内容物一起摘下一个包，返回可交给 [method attach_bag] 的载荷。
+## 失败返回空字典，容器不变。
+func detach_bag(bag_uid: int) -> Dictionary:
+	var bag: ItemInstance = _items.get(bag_uid, null)
+	if bag == null or not acts_as_bag(bag.def):
+		return {}
+
+	var content_uids := contents_of(bag_uid)
+	var contents: Array = []
+	var offsets: Array[Vector2i] = []
+
+	begin_batch()
+	for uid in content_uids:
+		var inst: ItemInstance = _items[uid]
+		offsets.append(inst.origin - bag.origin)
+		contents.append(remove(uid))
+	var removed := remove(bag_uid)
+	end_batch()
+
+	if removed == null:
+		return {}
+	return {
+		"bag": bag,
+		"rotation": bag.rotation,
+		"contents": contents,
+		"offsets": offsets,
+	}
+
+
+## 非破坏性地检查载荷能否整体落在 origin。
+func can_attach_bag(payload: Dictionary, origin: Vector2i, rot: int) -> bool:
+	if payload.is_empty():
+		return false
+	var bag: ItemInstance = payload["bag"]
+	var contents: Array = payload["contents"]
+	if not requires_bag:
+		# 自由容器收不下带内容物的包：它没有覆盖概念，内容物无处安放
+		return contents.is_empty() and can_place_def(bag.def, origin, rot, bag.uid)
+	# 有内容物时不允许换朝向，与 rotate_item 的限制保持一致
+	if not contents.is_empty() and rot != int(payload["rotation"]):
+		return false
+	if not can_place_bag(bag.def.cells_rotated(rot), origin, bag.uid):
+		return false
+
+	var bag_cells := {}
+	for c in bag.def.cells_rotated(rot):
+		bag_cells[origin + c] = true
+	var offsets: Array = payload["offsets"]
+	for i in contents.size():
+		var inst: ItemInstance = contents[i]
+		var at: Vector2i = origin + offsets[i]
+		for c in inst.def.cells_rotated(inst.rotation):
+			var p: Vector2i = at + c
+			if not bag_cells.has(p):
+				return false          # 超出包的轮廓
+			if _occ[_idx(p)] != EMPTY_UID:
+				return false          # 被目标容器里已有的物品占了
+	return true
+
+
+## 把载荷整体放到 origin。失败时不留任何残迹，容器保持原样。
+func attach_bag(payload: Dictionary, origin: Vector2i, rot: int) -> bool:
+	if not can_attach_bag(payload, origin, rot):
+		return false
+	var bag: ItemInstance = payload["bag"]
+	var contents: Array = payload["contents"]
+	var offsets: Array = payload["offsets"]
+
+	begin_batch()
+	if not place(bag, origin, rot):
+		end_batch()
+		return false
+	for i in contents.size():
+		var inst: ItemInstance = contents[i]
+		if not place(inst, origin + offsets[i], inst.rotation):
+			# can_attach_bag 已经验过，走到这里说明有别处改了容器状态。回滚干净。
+			push_error("GridInventory.attach_bag: 内容物 uid %d 放置失败，回滚" % inst.uid)
+			for j in i:
+				remove((contents[j] as ItemInstance).uid)
+			remove(bag.uid)
+			end_batch()
+			return false
+	end_batch()
+	return true
 #endregion
 
 
@@ -225,7 +472,7 @@ func find_first_fit(def: ItemDef, allow_rotate: bool = true, ignore_uid: int = E
 		for x in size.x:
 			var origin := Vector2i(x, y)
 			for rot in rot_count:
-				if can_place(def.cells_rotated(rot), origin, ignore_uid):
+				if can_place_def(def, origin, rot, ignore_uid):
 					return {"found": true, "origin": origin, "rotation": rot}
 	return miss
 
@@ -258,7 +505,8 @@ func item_count() -> int:
 	return _items.size()
 
 
-## 与该物品四邻相接的其他物品 uid。M2 的战斗编译期用它解析邻接加成。
+## 与该物品四邻相接的其他物品 uid。M2 的插槽配对以它为输入。
+## 包不参与邻接 —— 包与内容物之间是容纳关系，不是邻接关系。
 func neighbors_of(uid: int) -> Array[int]:
 	var result: Array[int] = []
 	var inst: ItemInstance = _items.get(uid, null)
@@ -272,6 +520,7 @@ func neighbors_of(uid: int) -> Array[int]:
 			if other != EMPTY_UID and other != uid and not seen.has(other):
 				seen[other] = true
 				result.append(other)
+	result.sort()
 	return result
 #endregion
 
@@ -293,6 +542,7 @@ func to_dict() -> Dictionary:
 	return {
 		"id": id,
 		"size": [size.x, size.y],
+		"requires_bag": requires_bag,
 		"accept_tags": tags,
 		"blocked": blocked_idx,
 		"items": item_dicts,
@@ -301,7 +551,9 @@ func to_dict() -> Dictionary:
 
 static func from_dict(d: Dictionary, db: ItemDatabase) -> GridInventory:
 	var s: Array = d.get("size", [8, 6])
-	var inv := GridInventory.new(Vector2i(int(s[0]), int(s[1])), int(d.get("id", 0)))
+	var inv := GridInventory.new(
+		Vector2i(int(s[0]), int(s[1])), int(d.get("id", 0)), bool(d.get("requires_bag", false))
+	)
 
 	var tags: Array[StringName] = []
 	for tag in d.get("accept_tags", []):
@@ -313,14 +565,23 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> GridInventory:
 		if idx >= 0 and idx < inv._blocked.size():
 			inv._blocked[idx] = 1
 
-	inv.begin_batch()
+	# 必须先放包再放内容物：内容物的落点合法性依赖包提供的覆盖
+	var bags_first: Array = []
+	var rest: Array = []
 	for raw in d.get("items", []):
 		var inst := ItemInstance.from_dict(raw, db)
 		if inst == null:
 			continue  # 定义已不存在，from_dict 已告警
+		if inv.acts_as_bag(inst.def):
+			bags_first.append(inst)
+		else:
+			rest.append(inst)
+
+	inv.begin_batch()
+	for inst in bags_first + rest:
 		if not inv.place(inst, inst.origin, inst.rotation):
 			push_warning(
-				"GridInventory.from_dict: uid %d 无法放回 %s，已丢弃（存档与当前形状定义不一致？）"
+				"GridInventory.from_dict: uid %d 无法放回 %s，已丢弃（存档与当前定义不一致？）"
 				% [inst.uid, inst.origin]
 			)
 	inv.end_batch()
@@ -331,6 +592,8 @@ func _reset_cells() -> void:
 	var total := maxi(0, size.x * size.y)
 	_occ.resize(total)
 	_occ.fill(EMPTY_UID)
+	_bag_owner.resize(total)
+	_bag_owner.fill(EMPTY_UID)
 	_blocked.resize(total)
 	_blocked.fill(0)
 	_items.clear()

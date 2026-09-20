@@ -6,6 +6,9 @@
 ##
 ## 抓取时就把物品从源容器移除，因此拖拽期间物品不在任何容器里 ——
 ## 本层持有它的强引用（ItemInstance 是 RefCounted），任何退出路径都必须把它安置好。
+##
+## 拖「包」时内容物跟着一起走：抓取走 [method GridInventory.detach_bag]，
+## 放手走 [method GridInventory.attach_bag]，载荷存在 [member _payload] 里。
 class_name DragLayer
 extends Control
 
@@ -23,6 +26,8 @@ var _src_rot: int = 0
 ## 抓取点相对物品 origin 的格偏移，拖拽时用它反推落点
 var _grab_cell: Vector2i = Vector2i.ZERO
 var _rot: int = 0
+## 非空表示正在拖一个带内容物的包，内容为 detach_bag 的载荷
+var _payload: Dictionary = {}
 
 
 func _ready() -> void:
@@ -55,7 +60,12 @@ func _on_grab_requested(view: InventoryView, uid: int, local_pos: Vector2) -> vo
 	_rot = inst.rotation
 	_source = view.inventory
 
-	if _source.remove(uid) == null:
+	if _source.is_bag_with_contents(uid):
+		_payload = _source.detach_bag(uid)
+		if _payload.is_empty():
+			_source = null
+			return
+	elif _source.remove(uid) == null:
 		_source = null
 		return
 
@@ -94,9 +104,11 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
-## 拖拽中顺时针转一步。
+## 拖拽中顺时针转一步。带内容物的包不能转，与 GridInventory.rotate_item 的限制一致。
 func rotate_dragged() -> void:
 	if _inst == null or _inst.def == null or not _inst.def.can_rotate:
+		return
+	if not _payload.is_empty():
 		return
 	_rot = posmod(_rot + 1, 4)
 	# 抓取点必须跟着落进新的包围盒，否则旋转后物品会离奇地跳开
@@ -137,7 +149,10 @@ func update_preview(global_pos: Vector2) -> void:
 		return
 	var cells := _inst.def.cells_rotated(_rot)
 	var origin := target_origin(target, global_pos)
-	var ok := target.inventory.accepts(_inst.def) and target.inventory.can_place(cells, origin)
+	var ok := (
+		target.inventory.can_attach_bag(_payload, origin, _rot) if not _payload.is_empty()
+		else target.inventory.can_place_def(_inst.def, origin, _rot, _inst.uid)
+	)
 	target.set_preview(cells, origin, ok)
 
 
@@ -150,8 +165,11 @@ func drop_at(global_pos: Vector2) -> bool:
 	var target := view_at(global_pos)
 
 	if target != null and target.inventory != null:
-		if target.inventory.place(inst, target_origin(target, global_pos), _rot):
-			dropped = true
+		var at := target_origin(target, global_pos)
+		if _payload.is_empty():
+			dropped = target.inventory.place(inst, at, _rot)
+		else:
+			dropped = target.inventory.attach_bag(_payload, at, _rot)
 
 	if not dropped:
 		_restore()
@@ -176,6 +194,10 @@ func cancel() -> void:
 func _restore() -> void:
 	if _inst == null or _source == null:
 		return
+	if not _payload.is_empty():
+		if not _source.attach_bag(_payload, _src_origin, _src_rot):
+			push_error("DragLayer: 包 uid %d 连内容物放不回源容器，已丢失" % _inst.uid)
+		return
 	if _source.place(_inst, _src_origin, _src_rot):
 		return
 	push_warning("DragLayer: uid %d 无法放回原位，改为自动装填" % _inst.uid)
@@ -188,6 +210,7 @@ func _end_drag() -> void:
 		view.clear_preview()
 	_inst = null
 	_source = null
+	_payload = {}
 	set_process_input(false)
 	queue_redraw()
 
@@ -201,13 +224,36 @@ func _draw() -> void:
 	var anchor := get_local_mouse_position() \
 		- (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * InventoryView.CELL
 
-	var body := ItemPainter.body_color(_inst.def)
-	body.a = 0.85
-	ItemPainter.draw_item(
-		self, cells, anchor, InventoryView.CELL, body, ItemPainter.rarity_color(_inst.def)
-	)
 	var font := label_font if label_font != null else get_theme_default_font()
+	var is_bag := not _payload.is_empty()
+
+	var body := (
+		InventoryView.COLOR_BAG_FILL if is_bag else ItemPainter.body_color(_inst.def)
+	)
+	body.a = 0.85
+	var edge := (
+		InventoryView.COLOR_BAG_EDGE if is_bag else ItemPainter.rarity_color(_inst.def)
+	)
+	ItemPainter.draw_item(self, cells, anchor, InventoryView.CELL, body, edge)
 	ItemPainter.draw_label(
 		self, cells, anchor, InventoryView.CELL,
-		_inst.def.display_name, font, 13, Color("f2f4f8")
+		_inst.def.display_name, font, 11 if is_bag else 13, Color("f2f4f8")
 	)
+
+	# 包里的东西要跟着残影一起画，否则玩家看不出自己正拖着什么
+	if is_bag:
+		var contents: Array = _payload["contents"]
+		var offsets: Array = _payload["offsets"]
+		for i in contents.size():
+			var item: ItemInstance = contents[i]
+			var at: Vector2 = anchor + Vector2(offsets[i]) * InventoryView.CELL
+			var c_body := ItemPainter.body_color(item.def)
+			c_body.a = 0.9
+			ItemPainter.draw_item(
+				self, item.cells(), at, InventoryView.CELL,
+				c_body, ItemPainter.rarity_color(item.def)
+			)
+			ItemPainter.draw_label(
+				self, item.cells(), at, InventoryView.CELL,
+				item.def.display_name, font, 12, Color("f2f4f8")
+			)

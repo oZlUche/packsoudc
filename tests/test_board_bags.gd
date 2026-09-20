@@ -1,0 +1,258 @@
+## 棋盘模式与包体系统。
+##
+## 这是依《背包乱斗》真实机制修正后的空间模型（架构文档 3.2）：
+## 棋盘开局全部不可用，可用格来自玩家放上去的包；普通物品只能整件落进单个包内。
+extends RefCounted
+
+
+static func _def(id: String, rows: Array, tags: Array = []) -> ItemDef:
+	var d := ItemDef.new()
+	d.id = StringName(id)
+	d.display_name = id
+	d.shape = ItemShape.from_ascii(rows)
+	var t: Array[StringName] = []
+	for tag in tags:
+		t.append(StringName(tag))
+	d.tags = t
+	return d
+
+
+static func _bag(id: String, rows: Array, accept: Array = []) -> ItemDef:
+	var d := _def(id, rows)
+	d.is_bag = true
+	var t: Array[StringName] = []
+	for tag in accept:
+		t.append(StringName(tag))
+	d.bag_accept_tags = t
+	return d
+
+
+static func run(t: TestCase) -> void:
+	t.begin("棋盘与包体")
+
+	ItemInstance.reset_uid_counter()
+	var big_bag := _bag("bag6", ["##", "##", "##"])     # 2x3，6 格
+	var tiny_bag := _bag("bag1", ["#"])                  # 1x1
+	var belt := _bag("belt", ["#", "#"], ["potion"])     # 1x2，只收药水
+	var dot := _def("dot", ["#"])
+	var bar := _def("bar", ["#", "#", "#"])              # 1x3
+	var wide := _def("wide", ["##"])                     # 2x1
+	var potion := _def("potion", ["#"], ["potion"])
+
+	# --- 空棋盘：一格都不能用 ---
+	var board := GridInventory.new(Vector2i(7, 9), 1, true)
+	t.eq(board.usable_cell_count(), 0, "空棋盘没有任何可用格")
+	t.eq(board.free_cell_count(), 0, "空棋盘没有任何空闲格")
+	t.check(not board.is_covered(Vector2i(0, 0)), "未放包时格子未被覆盖")
+	var loose := ItemInstance.create(dot)
+	t.check(not board.place(loose, Vector2i(0, 0), 0), "空棋盘上放不下普通物品")
+	t.eq(board.item_count(), 0, "被拒后棋盘仍为空")
+
+	# --- 放包后才有可用格 ---
+	var b1 := ItemInstance.create(big_bag)
+	t.check(board.place(b1, Vector2i(0, 0), 0), "包可以直接放在空棋盘上")
+	t.eq(board.usable_cell_count(), 6, "2x3 的包提供 6 个可用格")
+	t.eq(board.free_cell_count(), 6, "包内目前全空")
+	t.check(board.is_covered(Vector2i(1, 2)), "包覆盖范围内的格子可用")
+	t.check(not board.is_covered(Vector2i(2, 0)), "包外的格子仍不可用")
+	t.eq(board.bag_at(Vector2i(0, 0)), b1.uid, "格子记录了覆盖它的包")
+	t.eq(board.cell_uid(Vector2i(0, 0)), GridInventory.EMPTY_UID, "包不占普通物品的占用表")
+
+	# --- 包内放物品 ---
+	var d1 := ItemInstance.create(dot)
+	t.check(board.place(d1, Vector2i(0, 0), 0), "包内可以放物品")
+	t.eq(board.free_cell_count(), 5, "放入 1 格后剩 5")
+	t.eq(board.bag_of(d1.uid), b1.uid, "物品归属于覆盖它的包")
+	t.eq(board.contents_of(b1.uid), [d1.uid] as Array[int], "包的内容物列表")
+	t.eq(board.bag_of(b1.uid), GridInventory.EMPTY_UID, "包本身不属于任何包")
+
+	var out_of_bag := ItemInstance.create(dot)
+	t.check(not board.place(out_of_bag, Vector2i(3, 3), 0), "包外仍放不下物品")
+
+	var overhang := ItemInstance.create(bar)
+	t.check(not board.place(overhang, Vector2i(1, 1), 0), "1x3 从 y=1 起会伸出包外，应被拒绝")
+	t.check(board.place(overhang, Vector2i(1, 0), 0), "1x3 沿包的整列放得下")
+	t.eq(board.free_cell_count(), 2, "6 格用掉 4 格")
+
+	# --- 包之间不能重叠 ---
+	var b2 := ItemInstance.create(big_bag)
+	t.check(not board.place(b2, Vector2i(1, 1), 0), "包与已有的包重叠，应被拒绝")
+	t.check(board.place(b2, Vector2i(2, 0), 0), "错开后可以放第二个包")
+	t.eq(board.usable_cell_count(), 12, "两个 2x3 的包共 12 格")
+
+	# --- 物品必须整件落在同一个包内 ---
+	var straddle := ItemInstance.create(wide)
+	t.check(
+		not board.place(straddle, Vector2i(1, 2), 0),
+		"2x1 横跨两个相邻的包，应被拒绝 —— 容纳关系必须无歧义"
+	)
+	t.check(board.place(straddle, Vector2i(2, 0), 0), "整件落在第二个包内则可以")
+	t.eq(board.bag_of(straddle.uid), b2.uid, "归属于第二个包")
+
+	# --- 非空的包不能直接移除，也不能旋转 ---
+	t.check(board.is_bag_with_contents(b1.uid), "第一个包有内容物")
+	t.is_null(board.remove(b1.uid), "非空的包 remove 应返回 null")
+	t.check(board.has_item(b1.uid), "被拒后包仍在棋盘上")
+	t.check(not board.rotate_item(b1.uid, 1), "有内容物的包不能旋转")
+	t.eq(b1.rotation, 0, "旋转被拒后朝向不变")
+
+	# --- 空包可以旋转 ---
+	var empty_board := GridInventory.new(Vector2i(6, 6), 9, true)
+	var eb := ItemInstance.create(big_bag)
+	empty_board.place(eb, Vector2i(0, 0), 0)
+	t.check(empty_board.rotate_item(eb.uid, 1), "空包可以旋转")
+	t.eq(eb.rotation, 1, "旋转生效")
+	t.check(empty_board.is_covered(Vector2i(2, 1)), "旋转后覆盖范围跟着变（3x2）")
+	t.check(not empty_board.is_covered(Vector2i(0, 2)), "旋转后原先的覆盖已释放")
+
+	# --- 摘下与放回 ---
+	var payload := board.detach_bag(b1.uid)
+	t.check(not payload.is_empty(), "detach_bag 应返回载荷")
+	t.eq((payload["contents"] as Array).size(), 2, "载荷含 2 件内容物")
+	t.check(not board.has_item(b1.uid), "摘下后包不在棋盘上")
+	t.check(not board.has_item(d1.uid), "内容物也一并摘下")
+	t.eq(board.usable_cell_count(), 6, "只剩第二个包的 6 格")
+
+	t.check(board.attach_bag(payload, Vector2i(0, 3), 0), "载荷可以整体放到别处")
+	t.eq(board.bag_of(d1.uid), b1.uid, "内容物仍属于原来的包")
+	t.eq(d1.origin, Vector2i(0, 3), "内容物保持相对位置")
+	t.eq(board.item_count(), 5, "两个包 + 三件物品")
+
+	# --- 带内容物时不允许换朝向 ---
+	var p2 := board.detach_bag(b1.uid)
+	t.check(not board.can_attach_bag(p2, Vector2i(0, 3), 1), "有内容物的包不能换朝向放回")
+	t.check(board.attach_bag(p2, Vector2i(0, 3), 0), "原朝向放回成功")
+
+	# --- 包体准入标签 ---
+	var belt_board := GridInventory.new(Vector2i(4, 4), 2, true)
+	var belt_inst := ItemInstance.create(belt)
+	belt_board.place(belt_inst, Vector2i(0, 0), 0)
+	t.check(not belt_board.place(ItemInstance.create(dot), Vector2i(0, 0), 0), "药水带不收普通物品")
+	t.check(belt_board.place(ItemInstance.create(potion), Vector2i(0, 0), 0), "药水带收药水")
+
+	# --- 包在自由容器里只是普通物品 ---
+	var loot := GridInventory.new(Vector2i(6, 6), 3)  # requires_bag = false
+	var looted_bag := ItemInstance.create(big_bag)
+	t.check(not loot.acts_as_bag(big_bag), "自由容器里包不作为包生效")
+	t.check(loot.place(looted_bag, Vector2i(0, 0), 0), "包可以作为战利品躺在尸体里")
+	t.eq(loot.cell_uid(Vector2i(0, 0)), looted_bag.uid, "此时它占的是普通物品占用表")
+	t.eq(loot.bag_at(Vector2i(0, 0)), GridInventory.EMPTY_UID, "它不提供覆盖")
+	t.eq(loot.bag_of(looted_bag.uid), GridInventory.EMPTY_UID, "自由容器无容纳关系")
+	t.check(not loot.place(ItemInstance.create(dot), Vector2i(0, 0), 0), "它像普通物品一样挡住格子")
+	t.check(loot.place(ItemInstance.create(dot), Vector2i(3, 3), 0), "空处照常可放")
+
+	# --- 自动装填要认覆盖 ---
+	var fit_board := GridInventory.new(Vector2i(5, 5), 4, true)
+	t.check(not fit_board.find_first_fit(dot)["found"], "空棋盘上找不到落点")
+	var fb := ItemInstance.create(tiny_bag)
+	fit_board.place(fb, Vector2i(2, 2), 0)
+	var fit := fit_board.find_first_fit(dot)
+	t.check(fit["found"], "放了 1x1 的包后能找到落点")
+	t.eq(fit["origin"], Vector2i(2, 2), "落点就是那个包所在的格子")
+	t.check(not fit_board.find_first_fit(bar)["found"], "1 格的包装不下 1x3")
+
+	# --- 包不参与邻接 ---
+	var adj := GridInventory.new(Vector2i(5, 5), 5, true)
+	var ab := ItemInstance.create(big_bag)
+	adj.place(ab, Vector2i(0, 0), 0)
+	var n1 := ItemInstance.create(dot)
+	var n2 := ItemInstance.create(dot)
+	adj.place(n1, Vector2i(0, 0), 0)
+	adj.place(n2, Vector2i(1, 0), 0)
+	var nb := adj.neighbors_of(n1.uid)
+	t.eq(nb, [n2.uid] as Array[int], "邻居只含普通物品，不含容纳它的包")
+	t.check(not nb.has(ab.uid), "包不是邻居 —— 容纳关系与邻接关系是两回事")
+
+
+static func run_bag_move(t: TestCase) -> void:
+	t.begin("包的跨容器搬运")
+
+	ItemInstance.reset_uid_counter()
+	var big_bag := _bag("bag6", ["##", "##", "##"])
+	var dot := _def("dot", ["#"])
+
+	var src := GridInventory.new(Vector2i(6, 6), 1, true)
+	var dst := GridInventory.new(Vector2i(6, 6), 2, true)
+	var bag := ItemInstance.create(big_bag)
+	src.place(bag, Vector2i(0, 0), 0)
+	var a := ItemInstance.create(dot)
+	var b := ItemInstance.create(dot)
+	src.place(a, Vector2i(0, 0), 0)
+	src.place(b, Vector2i(1, 2), 0)
+
+	# --- 跨棋盘搬运，内容物跟着走并保持相对位置 ---
+	t.check(InventoryService.move(src, bag.uid, dst, Vector2i(2, 1), 0), "带内容物的包可跨棋盘搬运")
+	t.eq(src.item_count(), 0, "源棋盘清空")
+	t.eq(dst.item_count(), 3, "目标棋盘收到包与两件内容物")
+	t.eq(bag.origin, Vector2i(2, 1), "包落到新位置")
+	t.eq(a.origin, Vector2i(2, 1), "内容物保持相对偏移 (0,0)")
+	t.eq(b.origin, Vector2i(3, 3), "内容物保持相对偏移 (1,2)")
+	t.eq(dst.bag_of(a.uid), bag.uid, "容纳关系保持")
+
+	# --- 目标放不下时整体退回 ---
+	var blocker := ItemInstance.create(big_bag)
+	var src2 := GridInventory.new(Vector2i(6, 6), 3, true)
+	src2.place(blocker, Vector2i(0, 0), 0)
+	t.check(
+		not InventoryService.move(dst, bag.uid, src2, Vector2i(0, 0), 0),
+		"目标位置已被别的包占据，搬运应失败"
+	)
+	t.eq(dst.item_count(), 3, "失败后包与内容物全部留在原处")
+	t.eq(bag.origin, Vector2i(2, 1), "失败后位置不变")
+	t.eq(a.origin, Vector2i(2, 1), "失败后内容物位置不变")
+	t.eq(dst.bag_of(b.uid), bag.uid, "失败后容纳关系不变")
+
+	# --- 自由容器收不下带内容物的包 ---
+	var storage := GridInventory.new(Vector2i(6, 6), 4)
+	t.check(
+		not InventoryService.move(dst, bag.uid, storage, Vector2i(0, 0), 0),
+		"自由容器没有覆盖概念，收不下带内容物的包"
+	)
+	t.eq(dst.item_count(), 3, "被拒后仍全部留在棋盘上")
+	t.eq(storage.item_count(), 0, "自由容器没有残留")
+
+	# --- 掏空后就能搬进自由容器 ---
+	InventoryService.move(dst, a.uid, storage, Vector2i(0, 0), 0)
+	InventoryService.move(dst, b.uid, storage, Vector2i(1, 0), 0)
+	t.check(not dst.is_bag_with_contents(bag.uid), "包已掏空")
+	t.check(
+		InventoryService.move(dst, bag.uid, storage, Vector2i(0, 1), 0),
+		"空包可以作为普通物品搬进自由容器"
+	)
+	t.eq(storage.item_count(), 3, "自由容器收下三件")
+	t.check(not storage.acts_as_bag(big_bag), "它在这里不提供覆盖")
+
+
+static func run_board_serialization(t: TestCase) -> void:
+	t.begin("棋盘序列化")
+
+	ItemInstance.reset_uid_counter()
+	var big_bag := _bag("bag6", ["##", "##", "##"])
+	var dot := _def("dot", ["#"])
+	var db := ItemDatabase.new()
+	db.register(big_bag)
+	db.register(dot)
+
+	var board := GridInventory.new(Vector2i(7, 9), 42, true)
+	var bag := ItemInstance.create(big_bag)
+	board.place(bag, Vector2i(1, 1), 0)
+	var a := ItemInstance.create(dot)
+	board.place(a, Vector2i(2, 3), 0)
+
+	var dict := board.to_dict()
+	t.check(dict["requires_bag"], "棋盘模式应写进存档")
+
+	var back := GridInventory.from_dict(dict, db)
+	t.check(back.requires_bag, "读档后仍是棋盘模式")
+	t.eq(back.item_count(), 2, "包与物品都还原了")
+	t.eq(back.usable_cell_count(), 6, "包的覆盖由放置推导，不需单独存")
+	t.eq(back.bag_of(a.uid), bag.uid, "容纳关系还原")
+	t.eq(back.get_item(a.uid).origin, Vector2i(2, 3), "物品位置还原")
+	t.eq(back.to_dict(), dict, "二次序列化与首次一致")
+
+	# 内容物在存档里排在包前面时也必须能还原（from_dict 要先放包）
+	var shuffled := dict.duplicate(true)
+	(shuffled["items"] as Array).reverse()
+	var back2 := GridInventory.from_dict(shuffled, db)
+	t.eq(back2.item_count(), 2, "存档条目顺序颠倒时仍应完整还原")
+	t.eq(back2.bag_of(a.uid), bag.uid, "顺序颠倒后容纳关系仍正确")

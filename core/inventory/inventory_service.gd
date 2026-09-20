@@ -18,6 +18,8 @@ static func move(
 	var inst := from.get_item(uid)
 	if inst == null:
 		return false
+	if from.is_bag_with_contents(uid):
+		return _move_bag(from, uid, to, origin, rot)
 
 	var saved_origin := inst.origin
 	var saved_rot := inst.rotation
@@ -37,6 +39,35 @@ static func move(
 				push_error(
 					"InventoryService.move: uid %d 回滚失败，容器状态已损坏" % uid
 				)
+
+	if to != from:
+		to.end_batch()
+	from.end_batch()
+	return moved
+
+
+## 搬运一个带内容物的包：内容物保持相对位置一起走。
+##
+## 目标放不下时整体退回源容器原位。自由容器收不下带内容物的包
+## （它没有覆盖概念，内容物无处安放），这种情况会直接失败并原样退回。
+static func _move_bag(
+	from: GridInventory, uid: int, to: GridInventory, origin: Vector2i, rot: int
+) -> bool:
+	var bag := from.get_item(uid)
+	var saved_origin := bag.origin
+	var saved_rot := bag.rotation
+
+	from.begin_batch()
+	if to != from:
+		to.begin_batch()
+
+	var moved := false
+	var payload := from.detach_bag(uid)
+	if not payload.is_empty():
+		if to.attach_bag(payload, origin, rot):
+			moved = true
+		elif not from.attach_bag(payload, saved_origin, saved_rot):
+			push_error("InventoryService._move_bag: 包 uid %d 回滚失败，容器状态已损坏" % uid)
 
 	if to != from:
 		to.end_batch()

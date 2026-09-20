@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_84k5l"]
+[ext_resource type="Resource" path="res://data/shapes/bag_leather.tres" id="2_vsgf4"]
+
+[resource]
+script = ExtResource("1_84k5l")
+id = &"bag_leather"
+display_name = "皮革包"
+shape = ExtResource("2_vsgf4")
+rarity = 1
+is_bag = true

@@ -17,6 +17,10 @@ const CELL := 48.0
 const COLOR_BG := Color("1b1e24")
 const COLOR_CELL := Color("272b33")
 const COLOR_BLOCKED := Color("14161a")
+## 棋盘上尚未被任何包覆盖的格子：明显比空格更暗，一眼看出「这里还不能用」
+const COLOR_UNUSABLE := Color("15171c")
+const COLOR_BAG_FILL := Color("2f3542")
+const COLOR_BAG_EDGE := Color("5d6577")
 const COLOR_GRID := Color("343943")
 const COLOR_BORDER := Color("4a515e")
 const COLOR_TEXT := Color("e6e9ef")
@@ -91,7 +95,10 @@ func _gui_input(event: InputEvent) -> void:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
 			var c := cell_at_local(mb.position)
+			# 先抓普通物品；点在包的空白处才抓包本身
 			var uid := inventory.cell_uid(c)
+			if uid == GridInventory.EMPTY_UID:
+				uid = inventory.bag_at(c)
 			if uid != GridInventory.EMPTY_UID:
 				grab_requested.emit(self, uid, mb.position)
 				accept_event()
@@ -104,11 +111,15 @@ func _draw() -> void:
 
 	draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BG, true)
 
-	# 格底：封禁格用更暗的色，与空格区分开
+	# 格底。棋盘模式下未被包覆盖的格子最暗，表示「还不能用」
 	for y in inventory.size.y:
 		for x in inventory.size.x:
 			var c := Vector2i(x, y)
-			var col := COLOR_BLOCKED if inventory.is_blocked(c) else COLOR_CELL
+			var col := COLOR_CELL
+			if inventory.is_blocked(c):
+				col = COLOR_BLOCKED
+			elif not inventory.is_covered(c):
+				col = COLOR_UNUSABLE
 			draw_rect(Rect2(cell_origin_px(c) + Vector2.ONE, Vector2(CELL - 2, CELL - 2)), col, true)
 
 	# 网格线
@@ -119,10 +130,24 @@ func _draw() -> void:
 		var fy := y * CELL
 		draw_line(Vector2(0, fy), Vector2(grid_px.x, fy), COLOR_GRID, 1.0)
 
-	# 物品
 	var font := label_font if label_font != null else get_theme_default_font()
+
+	# 包体：作为底层区域先画，物品压在上面。
+	# 用统一的灰调而不是物品配色 —— 包是承载物，抢了内容物的视觉就本末倒置了
+	for bag in inventory.bags():
+		var b := bag as ItemInstance
+		var bag_cells := b.cells()
+		var bag_anchor := cell_origin_px(b.origin)
+		ItemPainter.draw_item(self, bag_cells, bag_anchor, CELL, COLOR_BAG_FILL, COLOR_BAG_EDGE)
+		ItemPainter.draw_label(
+			self, bag_cells, bag_anchor, CELL, b.def.display_name, font, 11, Color("79839a")
+		)
+
+	# 物品
 	for inst in inventory.items():
 		var item := inst as ItemInstance
+		if inventory.acts_as_bag(item.def):
+			continue
 		var cells := item.cells()
 		var anchor := cell_origin_px(item.origin)
 		ItemPainter.draw_item(
