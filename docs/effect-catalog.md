@@ -4,6 +4,8 @@
 需要写代码的只有「新增一种积木」，那时加一个脚本并在
 [`core/battle/effect_registry.gd`](../core/battle/effect_registry.gd) 登记一行即可。
 
+> 用这些积木拼出的**首批内容计划**见 [`item-roster.md`](item-roster.md)。
+>
 > 状态：截至架构 v1.5。`data/items/` 里的 15 个示例资产**尚未配置任何战斗数据**，
 > 下面列的是可用积木，不是已有内容。
 
