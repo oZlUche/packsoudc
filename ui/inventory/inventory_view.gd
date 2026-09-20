@@ -1,0 +1,146 @@
+## 一个 [GridInventory] 的可视化。
+##
+## 全部内容在 [method _draw] 里重画，不使用子节点表示物品 —— 这直接落实了
+## 架构原则 1.2「从状态完整重建视图」：容器发 changed 就 queue_redraw，
+## 不存在需要与真实状态对账的增量视图状态。
+##
+## 拖拽本身不在这里处理，见 [DragLayer]。本类只负责「告诉外面哪一件被按下了」
+## 以及「按要求显示一个落点预览」。
+class_name InventoryView
+extends Control
+
+## 某件物品被按下，请求开始拖拽。[param local_pos] 为本控件内的像素坐标。
+signal grab_requested(view: InventoryView, uid: int, local_pos: Vector2)
+
+const CELL := 48.0
+
+const COLOR_BG := Color("1b1e24")
+const COLOR_CELL := Color("272b33")
+const COLOR_BLOCKED := Color("14161a")
+const COLOR_GRID := Color("343943")
+const COLOR_BORDER := Color("4a515e")
+const COLOR_TEXT := Color("e6e9ef")
+const COLOR_OK := Color(0.35, 0.85, 0.45, 0.35)
+const COLOR_BAD := Color(0.9, 0.3, 0.3, 0.35)
+
+@export var title: String = ""
+## 中文标签需要系统字体，Godot 内置字体不含 CJK 字形。
+@export var label_font: Font
+
+var inventory: GridInventory:
+	set = set_inventory
+
+var _preview_cells: Array[Vector2i] = []
+var _preview_origin: Vector2i = Vector2i.ZERO
+var _preview_valid: bool = false
+var _preview_on: bool = false
+
+
+func set_inventory(inv: GridInventory) -> void:
+	if inventory == inv:
+		return
+	if inventory != null and inventory.changed.is_connected(queue_redraw):
+		inventory.changed.disconnect(queue_redraw)
+	inventory = inv
+	if inventory != null:
+		inventory.changed.connect(queue_redraw)
+		custom_minimum_size = Vector2(inventory.size) * CELL
+		size = custom_minimum_size
+	queue_redraw()
+
+
+#region 坐标换算
+## 本控件内的像素坐标 → 格坐标。可能越界，调用方自行判断。
+func cell_at_local(p: Vector2) -> Vector2i:
+	return Vector2i(floori(p.x / CELL), floori(p.y / CELL))
+
+
+## 全局像素坐标 → 格坐标。
+func cell_at_global(p: Vector2) -> Vector2i:
+	return cell_at_local(p - global_position)
+
+
+## 格坐标 → 本控件内的像素坐标（该格左上角）。
+func cell_origin_px(c: Vector2i) -> Vector2:
+	return Vector2(c) * CELL
+#endregion
+
+
+#region 落点预览
+func set_preview(cells: Array[Vector2i], origin: Vector2i, valid: bool) -> void:
+	_preview_cells = cells
+	_preview_origin = origin
+	_preview_valid = valid
+	_preview_on = true
+	queue_redraw()
+
+
+func clear_preview() -> void:
+	if not _preview_on:
+		return
+	_preview_on = false
+	_preview_cells = []
+	queue_redraw()
+#endregion
+
+
+func _gui_input(event: InputEvent) -> void:
+	if inventory == null:
+		return
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
+			var c := cell_at_local(mb.position)
+			var uid := inventory.cell_uid(c)
+			if uid != GridInventory.EMPTY_UID:
+				grab_requested.emit(self, uid, mb.position)
+				accept_event()
+
+
+func _draw() -> void:
+	if inventory == null:
+		return
+	var grid_px := Vector2(inventory.size) * CELL
+
+	draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BG, true)
+
+	# 格底：封禁格用更暗的色，与空格区分开
+	for y in inventory.size.y:
+		for x in inventory.size.x:
+			var c := Vector2i(x, y)
+			var col := COLOR_BLOCKED if inventory.is_blocked(c) else COLOR_CELL
+			draw_rect(Rect2(cell_origin_px(c) + Vector2.ONE, Vector2(CELL - 2, CELL - 2)), col, true)
+
+	# 网格线
+	for x in inventory.size.x + 1:
+		var fx := x * CELL
+		draw_line(Vector2(fx, 0), Vector2(fx, grid_px.y), COLOR_GRID, 1.0)
+	for y in inventory.size.y + 1:
+		var fy := y * CELL
+		draw_line(Vector2(0, fy), Vector2(grid_px.x, fy), COLOR_GRID, 1.0)
+
+	# 物品
+	var font := label_font if label_font != null else get_theme_default_font()
+	for inst in inventory.items():
+		var item := inst as ItemInstance
+		var cells := item.cells()
+		var anchor := cell_origin_px(item.origin)
+		ItemPainter.draw_item(
+			self, cells, anchor, CELL,
+			ItemPainter.body_color(item.def),
+			ItemPainter.rarity_color(item.def)
+		)
+		ItemPainter.draw_label(
+			self, cells, anchor, CELL, item.def.display_name, font, 13, COLOR_TEXT
+		)
+
+	# 落点预览：整片染色，合法绿、非法红
+	if _preview_on:
+		var tint := COLOR_OK if _preview_valid else COLOR_BAD
+		for c in _preview_cells:
+			var p := _preview_origin + c
+			if p.x < 0 or p.y < 0 or p.x >= inventory.size.x or p.y >= inventory.size.y:
+				continue
+			draw_rect(Rect2(cell_origin_px(p), Vector2(CELL, CELL)), tint, true)
+
+	draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BORDER, false, 2.0)
