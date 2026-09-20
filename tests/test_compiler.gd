@@ -27,7 +27,7 @@ static func _item(id: String, rows: Array, tags: Array = []) -> ItemDef:
 ## 而是 CooldownCadence 的参数 —— 这正是「效果不写死」的体现。
 static func _cooldown_rule(cd: float) -> AbilityRule:
 	var r := AbilityRule.new()
-	r.trigger = OnTick.new()
+	r.trigger = OnSchedule.new()
 	var cad := CooldownCadence.new()
 	cad.seconds = cd
 	r.cadence = cad

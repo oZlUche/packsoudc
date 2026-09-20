@@ -136,13 +136,13 @@ func find_buff(buff_id: StringName) -> BuffInstance:
 ##
 ## [b]会改变规则集[/b]（buff 可携带 rules），调用方必须随后重算事件掩码，
 ## 否则新规则订阅的事件可能尚未开启，那条规则会静默失效。
-func apply_buff(def: BuffDef, stacks: int = 1) -> int:
+func apply_buff(def: BuffDef, stacks: int = 1, now: int = 0) -> int:
 	var existing := find_buff(def.id)
 	var added := 0
 	if existing != null:
-		added = existing.add_stacks(stacks)
+		added = existing.add_stacks(stacks, now)
 	else:
-		var inst := BuffInstance.create(def, stacks)
+		var inst := BuffInstance.create(def, stacks, now)
 		buffs.append(inst)
 		added = inst.stacks
 		for rule in def.rules:
@@ -173,20 +173,29 @@ func _drop_buff(inst: BuffInstance) -> void:
 	rules = kept
 
 
-## 推进一帧的 buff 时长，返回本帧过期的 buff 列表。
-func advance_buffs() -> Array[BuffInstance]:
+## 移除所有在 now 已到期的 buff，返回被移除的列表。
+func expire_buffs(now: int) -> Array[BuffInstance]:
 	var expired: Array[BuffInstance] = []
 	for b in buffs:
-		if b.is_permanent():
-			continue
-		b.remaining -= 1
-		if b.remaining <= 0:
+		if b.is_expired_at(now):
 			expired.append(b)
 	for b in expired:
 		_drop_buff(b)
 	if not expired.is_empty():
 		mark_dirty()
 	return expired
+
+
+## 下一个 buff 到期的时刻；没有限时 buff 则返回 -1。
+## 模拟器把它排进时间轮，不需要逐帧扫描。
+func next_expiry() -> int:
+	var soonest := -1
+	for b in buffs:
+		if b.is_permanent():
+			continue
+		if soonest < 0 or b.expires_at < soonest:
+			soonest = b.expires_at
+	return soonest
 #endregion
 
 

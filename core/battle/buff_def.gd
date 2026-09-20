@@ -15,8 +15,9 @@ extends Resource
 @export_group("叠层与时长")
 ## 0 = 不限层数
 @export var max_stacks: int = 0
-## 0 = 持续到本场战斗结束
-@export var duration_ticks: int = 0
+## 持续时长，秒。0 = 持续到本场战斗结束。
+## 可以是任意小数 —— 模拟按时刻跳跃，不受任何「帧」粒度限制。
+@export var duration_sec: float = 0.0
 ## 叠层时是否把时长刷新回满
 @export var refresh_on_restack: bool = true
 

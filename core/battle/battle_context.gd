@@ -7,7 +7,8 @@
 class_name BattleContext
 extends RefCounted
 
-var tick: int = 0
+## 当前时刻，定点秒。事件驱动模拟，**没有帧**。
+var now: int = 0
 var rng: RandomNumberGenerator = null
 var sides: Array[CombatantRuntime] = []
 
@@ -74,7 +75,7 @@ func emit(name: StringName, side: int, payload: Dictionary = {}) -> void:
 	var for_rules := is_listening(name)
 	if not for_view and not for_rules:
 		return
-	var e := BattleEvent.make(name, tick, side, payload)
+	var e := BattleEvent.make(name, now, side, payload)
 	if for_view:
 		log.append(e)
 	if for_rules:
@@ -91,7 +92,7 @@ func drain() -> void:
 		if processed >= max_chain:
 			_queue.clear()
 			log.append(BattleEvent.make(
-				BattleEvent.DISPATCH_OVERFLOW, tick, -1, {"limit": max_chain}
+				BattleEvent.DISPATCH_OVERFLOW, now, -1, {"limit": max_chain}
 			))
 			push_warning("BattleContext: 单帧连锁派发超过 %d 条，已截断" % max_chain)
 			break
@@ -107,4 +108,4 @@ func pending() -> int:
 
 
 func snapshot() -> Dictionary:
-	return {"tick": tick, "sides": [sides[0].snapshot(), sides[1].snapshot()]}
+	return {"time": now, "sides": [sides[0].snapshot(), sides[1].snapshot()]}

@@ -16,15 +16,16 @@ const TRIGGERS := {
 const CADENCES := {
 	&"always": "res://core/battle/cadences/always.gd",
 	&"cooldown": "res://core/battle/cadences/cooldown_cadence.gd",
-	&"every_nth": "res://core/battle/cadences/every_nth.gd",
-	&"once_per_battle": "res://core/battle/cadences/once_per_battle.gd",
-	&"chance": "res://core/battle/cadences/chance_cadence.gd",
-	&"all_of": "res://core/battle/cadences/all_of.gd",
 }
 
+## 消耗与条件同层：两者失败行为一致，都是跳过效果但不退还冷却。
+## costs 本身就是列表且 AND 语义，因此不需要 AllOf 之类的组合子。
 const COSTS := {
 	&"resource": "res://core/battle/costs/resource_cost.gd",
 	&"status_stack": "res://core/battle/costs/status_stack_cost.gd",
+	&"charge": "res://core/battle/costs/charge_cost.gd",
+	&"uses": "res://core/battle/costs/uses_cost.gd",
+	&"chance": "res://core/battle/costs/chance_condition.gd",
 }
 
 const EFFECTS := {

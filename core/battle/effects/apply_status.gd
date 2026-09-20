@@ -17,7 +17,7 @@ func apply(ctx: RuleContext) -> void:
 		return
 	var who := ctx.opponent() if target == Target.OPPONENT else ctx.owner
 	var had := who.find_buff(buff.id) != null
-	var added := who.apply_buff(buff, maxi(1, stacks))
+	var added := who.apply_buff(buff, maxi(1, stacks), ctx.battle.now)
 	if added <= 0 and had:
 		return
 

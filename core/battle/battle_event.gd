@@ -45,16 +45,17 @@ static func is_view_event(n: StringName) -> bool:
 
 
 var name: StringName = &""
-var tick: int = 0
+## 事件发生的时刻，定点秒。**不是帧号** —— 模拟里没有帧。
+var time: int = 0
 ## 事件归属的一方（0 / 1），-1 表示全局
 var side: int = -1
 var payload: Dictionary = {}
 
 
-static func make(p_name: StringName, p_tick: int, p_side: int, p_payload: Dictionary = {}) -> BattleEvent:
+static func make(p_name: StringName, p_time: int, p_side: int, p_payload: Dictionary = {}) -> BattleEvent:
 	var e := BattleEvent.new()
 	e.name = p_name
-	e.tick = p_tick
+	e.time = p_time
 	e.side = p_side
 	e.payload = p_payload
 	return e
@@ -69,4 +70,4 @@ func get_name(key: StringName, fallback: StringName = &"") -> StringName:
 
 
 func _to_string() -> String:
-	return "[t%d side%d] %s %s" % [tick, side, name, payload]
+	return "[%.3fs side%d] %s %s" % [StatMath.to_float(time), side, name, payload]

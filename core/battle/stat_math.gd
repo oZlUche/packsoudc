@@ -70,17 +70,6 @@ static func mul(a: int, b: int) -> int:
 	return -((-p + ONE / 2) / ONE)
 
 
-## 第 tick_index 帧（从 1 起）对应的时长，定点秒。
-##
-## [b]不能写成 ONE / hz。[/b] 65536 / 20 = 3276.8 会被截断成 3276，
-## 20 帧只走 0.9997 秒，冷却永远差一点，而且误差随战斗时长累积。
-## 这里用「累计时刻之差」把余数精确摊到各帧上，20 帧之和恰好等于 ONE。
-static func tick_delta(tick_index: int, hz: int) -> int:
-	if hz <= 0:
-		return 0
-	return (tick_index * ONE) / hz - ((tick_index - 1) * ONE) / hz
-
-
 ## 定点值转成用于显示或应用伤害的整数。**只在管线末端调用。**
 ## 中途反复取整会让「两个 +5%」不等于「一个 +10%」，玩家算得出来，会当成 bug。
 static func to_int(v: int) -> int:

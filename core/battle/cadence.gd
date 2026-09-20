@@ -1,13 +1,36 @@
-## 频率：命中之后，这次要不要真的执行（架构文档 4.4）。
+## 频率：命中之后，这次要不要真的执行；以及自发型规则下一次何时执行。
 ##
-## 两阶段是为了**多个频率条件组合时的原子性**：[AllOf] 先全体 [method can_fire]，
-## 全过才逐个 [method commit]，与 [GridInventory] 的「先校验后写入」是同一个不变式。
+## [b]模拟是事件驱动的，没有帧。[/b] 帧只是渲染概念，底层直接用定点秒计算出手时刻，
+## 在时刻之间跳跃。因此这里不存在「每帧推进一点进度」那种东西 ——
+## 进度按「已完成的工作量」记，速率变化时先结算到当下，再按新速率外推。
 ##
-## [b]资源消耗不在这一层。[/b] 消耗是独立的第四层，且刻意不与冷却原子 ——
-## 付不起时冷却照常清零。详见 [Cost]。
+## 两种用法：
+## [codeblock]
+## OnSchedule + Cooldown(2.0)     自发型：每 2 秒一次，由模拟器排进时间轮
+## OnDamageTaken + Cooldown(2.0)  被动型：受击时触发，但最快 2 秒一次（内置冷却）
+## [endcodeblock]
+## 只有搭配 [OnSchedule] 的规则会进时间轮，其余只在事件到来时被询问。
 @abstract
 class_name Cadence
 extends Resource
+
+## 不自发调度时的返回值
+const NEVER := -1
+
+
+## 把内部进度结算到 now。速率（haste）变化前必须调用，
+## 否则新速率会被错误地套用到之前那段时间上。
+func flush(_ctx: RuleContext, _now: int) -> void:
+	pass
+
+
+## 自发型：下一次可执行的时刻（定点秒）。返回 [constant NEVER] 表示不自发调度。
+##
+## 默认不自发 —— 计数、概率、一次性这类频率本身不产生时刻，
+## 它们只在被事件触发时作为闸门使用。
+func next_time(_ctx: RuleContext, _now: int) -> int:
+	return NEVER
+
 
 ## 时机命中后立刻调用，无论最终是否执行。计数类在这里累加。
 ##
@@ -17,15 +40,12 @@ func on_match(_ctx: RuleContext) -> void:
 	pass
 
 
-## 这次命中能不能执行。只读，不得改状态。
-@abstract func can_fire(ctx: RuleContext) -> bool
+## 这次能不能执行。只读，不得改状态。
+@abstract func can_fire(ctx: RuleContext, now: int) -> bool
 
-## 确认执行，在此扣冷却／计数。
-@abstract func commit(ctx: RuleContext) -> void
 
-## 每逻辑帧推进一次，供冷却类累积进度用。默认什么都不做。
-func advance(_ctx: RuleContext, _delta_fp: int) -> void:
-	pass
+## 确认执行，在此重置冷却／计数。
+@abstract func commit(ctx: RuleContext, now: int) -> void
 
 
 ## 估算每秒触发次数，供 UI 实时显示预估 DPS。

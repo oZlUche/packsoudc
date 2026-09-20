@@ -7,6 +7,33 @@ extends RefCounted
 ##
 ## 遍历顺序固定：先 side 0 后 side 1，各方内部按规则登记顺序 ——
 ## 登记顺序来自编译期按 uid 升序的物品遍历，因此整体是确定性的。
+## 自发型规则：不经由事件，直接求值（跳过时机层）。由 [BattleSim] 在排定时刻调用。
+static func fire_scheduled(ctx: BattleContext, owner: CombatantRuntime, rt: RuleRuntime) -> bool:
+	var rule := rt.rule
+	if rule == null or not rule.is_valid():
+		return false
+	var rc := RuleContext.create(ctx, owner, rt)
+
+	rule.cadence.on_match(rc)
+	if not rule.cadence.can_fire(rc, ctx.now):
+		return false
+	rule.cadence.commit(rc, ctx.now)
+
+	for cost in rule.costs:
+		(cost as Cost).on_attempt(rc)
+	for cost in rule.costs:
+		if not (cost as Cost).can_pay(rc):
+			return false
+	for cost in rule.costs:
+		(cost as Cost).pay(rc)
+
+	if rt.source_uid != 0:
+		ctx.emit(BattleEvent.ITEM_FIRED, owner.side, {"uid": rt.source_uid})
+	for effect in rule.effects:
+		(effect as Effect).apply(rc)
+	return true
+
+
 static func dispatch(ctx: BattleContext, event: BattleEvent) -> void:
 	for rt in ctx.sides:
 		var owner := rt as CombatantRuntime
@@ -38,11 +65,13 @@ static func evaluate(
 
 	# 2. 频率。on_match 先记账（计数类要把没执行的那几次也数上），再判是否放行
 	rule.cadence.on_match(rc)
-	if not rule.cadence.can_fire(rc):
+	if not rule.cadence.can_fire(rc, ctx.now):
 		return false
-	rule.cadence.commit(rc)
+	rule.cadence.commit(rc, ctx.now)
 
 	# 3. 消耗。本层内部原子：全过才逐个扣，不允许半付款
+	for cost in rule.costs:
+		(cost as Cost).on_attempt(rc)
 	for cost in rule.costs:
 		if not (cost as Cost).can_pay(rc):
 			return false
@@ -59,10 +88,37 @@ static func evaluate(
 	return true
 
 
-## 推进一帧：先让冷却类累积进度，再广播 tick。
-static func advance(ctx: BattleContext, delta_fp: int) -> void:
+## 把所有冷却进度结算到 now。**速率变化前必须调用** ——
+## 否则新速率会被错误地套用到变化之前那段时间上。
+static func flush_all(ctx: BattleContext, now: int) -> void:
 	for rt in ctx.sides:
 		for rule_rt in (rt as CombatantRuntime).rules:
 			var cadence := (rule_rt as RuleRuntime).rule.cadence
 			if cadence != null:
-				cadence.advance(RuleContext.create(ctx, rt, rule_rt), delta_fp)
+				cadence.flush(RuleContext.create(ctx, rt, rule_rt), now)
+
+
+## 自发型规则中最早的下一次执行时刻，以及它属于谁。
+## 返回 {"time": int, "owner": CombatantRuntime, "rule": RuleRuntime}，
+## 没有自发规则时 time 为 [constant Cadence.NEVER]。
+##
+## 同刻并列时按 (side, source_uid, 规则序号) 取最小，保证确定性。
+## [param skip] 里的 RuleRuntime 会被跳过 —— 同一时刻每条规则只尝试一次，
+## 否则「就绪但拒绝执行」的规则（次数没攒够、耐力不够）会让调用方原地空转。
+static func earliest_scheduled(ctx: BattleContext, now: int, skip: Dictionary = {}) -> Dictionary:
+	var best := {"time": Cadence.NEVER, "owner": null, "rule": null}
+	for rt in ctx.sides:
+		var owner := rt as CombatantRuntime
+		for i in owner.rules.size():
+			var rule_rt := owner.rules[i] as RuleRuntime
+			var rule := rule_rt.rule
+			if rule == null or not rule.is_valid() or not rule.trigger.is_self_driven():
+				continue
+			if skip.has(rule_rt.get_instance_id()):
+				continue
+			var t := rule.cadence.next_time(RuleContext.create(ctx, owner, rule_rt), now)
+			if t == Cadence.NEVER:
+				continue
+			if best["time"] == Cadence.NEVER or t < best["time"]:
+				best = {"time": t, "owner": owner, "rule": rule_rt}
+	return best

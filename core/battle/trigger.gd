@@ -12,3 +12,9 @@ extends Resource
 
 ## 事件到来时是否算命中。只读，不得改任何状态。
 @abstract func matches(ctx: RuleContext, event: BattleEvent) -> bool
+
+
+## 是否为自发型：不等事件，由频率层排出执行时刻，由 [BattleSim] 放进时间轮。
+## 只有 [OnSchedule] 返回 true。
+func is_self_driven() -> bool:
+	return false
