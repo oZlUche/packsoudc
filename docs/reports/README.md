@@ -31,3 +31,4 @@
 | 010 | [邻接机制按语义重命名](010-adjacency-rename.md) | 阶段 2 · M2 | 完成 |
 | 011 | [效果系统设计与计划重排](011-effect-system-and-pipeline.md) | 设计 · 无代码改动 | 完成 |
 | 012 | [事件掩码与资源池](012-event-mask-and-resources.md) | 设计 · 无代码改动 | 完成 |
+| 013 | [消耗层与战斗内增益系统](013-cost-layer-and-buffs.md) | 设计 · 无代码改动 | 完成 |

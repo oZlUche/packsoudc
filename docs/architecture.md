@@ -421,9 +421,9 @@ enum Buff { EMPOWER, SHARP, FIRE, HASTE }   # 追加只能加在末尾
 `core/battle/stat_math.gd`（定点数与乘区枚举）与 `core/battle/stat_value.gd`
 （一项属性的累积器）。**这套约定是可执行的，不是文字描述** —— 改公式必须先改测试。
 
-### 4.4 效果系统：时机、频率、内容三者分离
+### 4.4 效果系统：时机、频率、消耗、内容四者分离
 
-**硬性要求：效果不得写死。** 触发时机、触发频率、连带触发、具体效果，四者各自可扩展，
+**硬性要求：效果不得写死。** 触发时机、触发频率、消耗、连带触发、具体效果，各自可扩展，
 新增任何一种都不应改动 `BattleSim` 或导入程序。
 
 这条约束必须在写 `BattleSim` 之前落实。一旦模拟循环按「冷却到了就打一下」写出来，
@@ -444,13 +444,14 @@ GDScript 没有 Java／C# 意义上的接口与泛型，但 Godot 4.5+ 的 `@abs
 还有一个额外好处：`@export var xs: Array[基类]` 在检视器里会自动列出**所有非抽象子类**
 供选择。内容制作因此不需要手写类型名。
 
-#### 三层结构
+#### 四层结构
 
 ```gdscript
-## 一条完整规则：什么时候 · 多久一次 · 做什么
+## 一条完整规则：什么时候 · 多久一次 · 付什么代价 · 做什么
 class_name AbilityRule extends Resource
 @export var trigger: Trigger        ## 时机
 @export var cadence: Cadence        ## 频率
+@export var costs: Array[Cost]      ## 消耗（可为空）
 @export var effects: Array[Effect]  ## 内容
 ```
 
@@ -540,16 +541,16 @@ class_name Cadence extends Resource
 @abstract func commit(ctx: BattleContext, state: Dictionary) -> void
 ```
 
-两阶段是为了**组合时的原子性**：`AllOf([冷却 2 秒, 耗 10 耐力])` 必须在耐力不足时
-不消耗冷却。先全体 `can_fire`，全过才逐个 `commit` —— 与 `GridInventory` 的
-「先校验后写入」是同一个不变式。
+两阶段是为了**多个频率条件组合时的原子性**：`AllOf([冷却 2 秒, 每场一次])` 先全体
+`can_fire`，全过才逐个 `commit` —— 与 `GridInventory` 的「先校验后写入」是同一个不变式。
+
+注意：**资源消耗不属于这一层**，且刻意不与冷却原子，理由见下一小节。
 
 初期子类：
 
 | 子类 | 语义 |
 |---|---|
 | `CooldownCadence` | 按定点进度累积，满了执行并清零（配合 `OnTick`） |
-| `ResourceCost` | 消耗指定资源，不足则不执行 |
 | `EveryNth` | 每命中 N 次执行一次 |
 | `OncePerBattle` | 全场最多一次 |
 | `ChanceCadence` | 按概率执行，走 `battle` 随机流 |
@@ -558,8 +559,8 @@ class_name Cadence extends Resource
 
 把频率独立出来、再配上组合子，收益是**组合数为乘积而非加和**：
 「每 3 次攻击附带一次爆发」= `OnItemFired` + `EveryNth(3)`；
-「耗 10 耐力、冷却 2 秒的重击」= `OnTick` + `AllOf([Cooldown(2), ResourceCost(stamina, 10)])`。
-两者都不需要新写任何类。
+「开局一次性爆发」= `OnBattleStart` + `Always`。
+两者都不需要新写任何类。资源消耗不在这一层，见下。
 
 #### 资源池
 
@@ -579,6 +580,71 @@ func can_afford(key: StringName, amount: int) -> bool
 
 资源键与上限来自编译期的 `StatSet`（`max_hp`、`max_stamina` …），因此「装备增加耐力上限」
 不需要特殊处理，就是一条普通的 `StatModifier`。
+
+#### 消耗：第四层，且故意不与频率原子
+
+四层，顺序固定：
+
+```
+时机 Trigger  →  频率 Cadence  →  消耗 Cost  →  内容 Effect
+```
+
+以武器为例：冷却到点后，检查当前耐力是否 ≥ **实际消耗**（面板消耗经 4.3 公式结算后的值）。
+**不通过则跳过本次效果，但冷却照常清零。**
+
+这与「先全体 `can_fire` 再 `commit`」的原子语义相反，是**有意为之**：
+
+- 若消耗与冷却原子，耐力不足时冷却不走，武器会在耐力回满的那一瞬间立刻打出 ——
+  等于耐力不足毫无代价，耐力管理不构成决策
+- 现在的语义下，耐力不足实打实损失一次出手机会，玩家必须为「带几把耗耐力的武器」付出代价
+
+**这条不是疏忽，不要「修」它。** Cadence 的两阶段仍然保留，用于多个频率条件之间的组合
+（`AllOf([冷却, 每场一次])`）；不原子的只是**频率与消耗之间**这一道。
+
+关于等待队列：考虑过「攒着，耐力够了再补打」，**否决**。多把武器排队时的优先级、
+队列长度上限、队列里的武器要不要吃后来才生效的增益，每一条都得新立规则，
+而收益只是让耐力不足不那么难受。真要保留可能性，把失败策略做成一个字段即可：
+
+```gdscript
+enum OnCostFailed { SKIP }   ## 目前只实现 SKIP，留位不留实现
+```
+
+不为一个尚未确定要不要的机制先建队列。
+
+#### 消耗是列表，且不止是资源
+
+非武器道具通常没有消耗，但**检查环节一律保留** —— 后期必然出现「消耗 N 层某增益才能触发」
+的效果，而且可能同时消耗多种。
+
+```gdscript
+@abstract
+class_name Cost extends Resource
+@abstract func can_pay(ctx: BattleContext, source: int) -> bool
+@abstract func pay(ctx: BattleContext, source: int) -> void
+```
+
+初期子类：`ResourceCost`（耐力／法力／…）、`StatusStackCost`（消耗 N 层某 buff）。
+
+`AbilityRule.costs: Array[Cost]` 是 AND 语义：**全部 `can_pay` 通过，才逐个 `pay`**。
+这一层内部仍然原子 —— 不允许出现「扣了耐力但层数不够」的半付款。
+
+默认消耗按物品类型给：武器默认耗耐力，法术书类默认耗法力。**写在物品定义里，
+不硬编码在代码中** —— 「不耗耐力的武器」只是一件 `costs` 为空的武器，不需要任何特例。
+
+实际消耗走 4.3 公式结算，所以「减少耐力消耗 20%」就是一条作用于 `stamina_cost` 的
+普通 `StatModifier`，与增伤减伤同一套机制。
+
+#### 多规则、多效果都是列表
+
+两层都是列表，任何道具与武器都可以有多条：
+
+```gdscript
+ItemDef.combat.rules: Array[AbilityRule]   ## 一件物品多条规则
+AbilityRule.effects:  Array[Effect]        ## 一条规则多个效果
+```
+
+一条规则内的多个效果按声明顺序依次执行，共用同一次消耗 —— 「付一次耐力，
+同时造成伤害并施加灼烧」是一条规则两个效果，不是两条规则。
 
 #### 效果
 
@@ -604,7 +670,87 @@ class_name Effect extends Resource
 否则「A 触发 B、B 又触发 A」会变成栈溢出而不是可控的连锁。派发深度设上限，
 超限则丢弃并记一条警告事件，便于内容出问题时定位而不是直接崩。
 
-### 4.5 套装效果
+### 4.5 战斗内增益系统
+
+**战斗中一切属性变化都由 buff 承载，包括资源上限。**
+「强壮」提供额外生命上限，「病弱」降低生命上限 —— 不为上限另开一套机制。
+
+buff 仅在本场战斗内存在，**战斗结束全部清空**。因此**参战属性在进入战斗时只读取一次**，
+这也正是 4.1「编译期快照，战斗中不回头读背包」的直接后果。
+
+#### 两套修饰，边界必须清楚
+
+|  | 编译期修饰 | 战斗内 buff |
+|---|---|---|
+| 来源 | 包体效果、邻接标记、套装 | 战斗中由效果施加 |
+| 结算时机 | 开战前编译一次 | 战斗中动态增减 |
+| 生命周期 | 随背包布局变化 | 随本场战斗，结束清空 |
+| 载体 | `StatModifier` | `BuffDef.mods`，同样是 `StatModifier` |
+
+两者复用同一种 `StatModifier`，但**不是同一个系统**：编译期修饰决定「初始属性」，
+buff 在其之上叠加。
+
+由此产生一条必须写进 UI 的后果：**战斗中改动背包不会影响本场战斗**。
+这不是 bug，是设计 —— 别让玩家以为自己遇到了 bug。
+
+#### 运行时属性 = 编译快照 + 活跃 buff
+
+```gdscript
+class_name CombatantRuntime extends RefCounted
+var base: StatSet                     ## 编译产物，全程不可变
+var buffs: Array[BuffInstance]        ## 本场战斗内的增益，结束即弃
+var resources: ResourcePool
+
+## 按 4.3 公式把 base 与所有 buff 的 mods 合并
+func stat(key: StringName) -> int
+```
+
+按属性键设脏标记，只在 buff 增减时失效，不每次访问都重算。
+
+#### 上限变动时当前值怎么办（待确认）
+
+推荐：**上限增加时当前值同量增加**（吃到「强壮」立刻多一截血，手感对得上），
+**上限降低时当前值按新上限截断**。
+
+反过来（加上限不加当前值）会让「强壮」在满血时毫无即时反馈，玩家会怀疑没生效。
+
+#### BuffDef
+
+```gdscript
+class_name BuffDef extends Resource
+@export var id: StringName
+@export var display_name: String
+@export var is_debuff: bool = false        ## 仅影响 UI 配色与「净化」类效果的筛选
+@export var max_stacks: int = 0            ## 0 = 不限
+@export var duration_ticks: int = 0        ## 0 = 持续到本场战斗结束
+@export var on_restack: RestackMode        ## 叠层时是否刷新时长
+@export var mods: Array[StatModifier]      ## 每层一份，走 4.3 公式
+@export var rules: Array[AbilityRule]      ## 复合效果的关键，见下
+@export var on_apply: Array[Effect]
+@export var on_expire: Array[Effect]
+```
+
+`rules` 是「复合效果 buff」成立的关键：**buff 自己也能带触发规则**。
+
+「灼烧：每层每秒造成 2 点伤害」＝ 一条挂在 buff 上的
+`OnTick` + `Cooldown(1s)` + `DealDamage(2 × 层数)`。
+`BattleSim` 里**不需要为灼烧写任何特例**，它和物品的规则走完全相同的四层流程。
+
+buff 带的规则同样参与事件掩码的订阅并集计算（见上文约束 2：施加 buff 会改变规则集，
+必须重算掩码）。
+
+#### buff 也走内容管线
+
+与道具同一条路径（第 9 节）：
+
+```
+data/authoring/buffs/*.json  →  tools/import_buffs.gd  →  data/buffs/*.tres
+```
+
+导入器复用同一套注册表解析 `mods` / `rules` / `effects`，因此 buff 编辑器几乎不额外
+增加代码。新增一种 buff 不写代码；新增一种**效果**才需要加脚本并登记一行。
+
+### 4.6 套装效果
 
 ```gdscript
 class_name ItemSetDef extends Resource
@@ -633,7 +779,7 @@ class_name SetTier extends Resource
 套装结算插在编译流程的包体效果之后、邻接标记之前。由于 4.3 的加成对施加顺序不敏感
 （同区相加、跨区相乘均可交换），这个位置只影响可读性，不影响结果。
 
-### 4.6 模拟循环
+### 4.7 模拟循环
 
 ```gdscript
 const TICK_HZ := 20                     # 20Hz 逻辑帧，定步长
@@ -658,7 +804,7 @@ func run(a: CombatantSpec, b: CombatantSpec, rng) -> Array[BattleEvent]:
 `base_rate * speed_multiplier` 的定点值。速度乘数本身也是定点数，由 Stamina、
 Heat / Cold 层数等按固定顺序相乘得出。整数确定性保住了，比例缩放也能精确表达。
 
-### 4.7 表现层
+### 4.8 表现层
 
 `BattleView` 持有 `log` 与播放游标，`_process(delta)` 推进播放时间、消费到期事件、播放动画与跳字。
 
@@ -1138,12 +1284,13 @@ MainMenu → RunSetup(选初始背包) → MapView
 ### 9.1 两层：作者数据与引擎资产
 
 ```
-data/authoring/items/*.json     人写的、可 diff 的源数据
-        │  tools/import_items.gd   校验 + 生成
+data/authoring/items/*.json     道具源数据
+data/authoring/buffs/*.json     增益源数据
+data/authoring/sets/*.json      套装源数据
+        │  tools/import_items.gd / import_buffs.gd   校验 + 生成
         ▼
-data/items/*.tres               引擎吃的资产
-data/shapes/*.tres
-data/sets/*.tres
+data/items/*.tres   data/shapes/*.tres
+data/buffs/*.tres   data/sets/*.tres
 ```
 
 **源数据用 JSON 而不是直接编辑 `.tres`**：`.tres` 的数组与子资源字面量手写极易出错，
@@ -1274,8 +1421,8 @@ res://
     rng.gd
   data/
     authoring/                     # 人写的源数据，导入器的输入（第 9 节）
-      items/*.json   sets/*.json
-    items/*.tres      shapes/*.tres      sets/*.tres
+      items/*.json   buffs/*.json   sets/*.json
+    items/*.tres   shapes/*.tres   buffs/*.tres   sets/*.tres
     loot_tables/*.tres  enemies/*.tres
     chapters/chapter_01.tres
   ui/
@@ -1340,6 +1487,7 @@ res://
 | 非矩形 / 可扩容背包 | `GridInventory._blocked` 与 `size` | 不假定容器是满矩形、尺寸不变 |
 | 物品损坏与随机词条 | `ItemInstance.state` 字典 | 不把运行时可变状态写进 `ItemDef` |
 | 宝石镶嵌 | `ItemDef.gem_slots` + `ItemInstance.state.gems`，编译期在包体效果之后插一步 | 宝石不占网格，效果随宿主类型（武器／护甲／散放）而变；`socket` 一词留给它，不要用在邻接标记上 |
+| 新的消耗种类（层数、充能、耐久…） | `Cost` 子类 + 注册表登记 | `costs` 是列表且 AND 语义；消耗与冷却**故意不原子**，失败跳过效果但冷却照走 |
 | 新的资源种类（法力、护盾值…） | `ResourcePool` 的新键 + `max_*` 属性键 | 不为每种资源单开事件，统一走 `resource_changed(key, delta, reason)` |
 | 新的触发时机／频率／效果 | `Trigger`／`Cadence`／`Effect` 子类 + `effect_registry` 登记一行 | 不在 `BattleSim` 或导入器里出现任何具体效果名；连带触发是 `OnItemFired` 子类，不是特例字段 |
 | 合成配方 | 新增 `RecipeBook` + 回合边界的结算钩子 | 匹配的是**相对偏移模式**而非「挨着」；`state` 预留 `locked` 标志 |
@@ -1359,6 +1507,7 @@ res://
 | 4 | 撤离后的保留规则 | 背包内容全额进入仓库，死亡全失 | 影响 meta 成长曲线，不影响任何模块接口 |
 | 5 | 棋盘尺寸与开局可用格数 | 暂定 7x9，开局由一个小包提供约 12 格 | 纯数值，不影响结构 |
 | 6 | 合成配方是否纳入第一章 | 暂缓，先跑通包体系统与战斗 | 独立子系统，可后加 |
+| 7 | 资源上限变动时当前值如何处理 | 上限增加则当前值同量增加；上限降低则按新上限截断 | 只影响 `ResourcePool` 内部，不改接口 |
 
 这几项都被刻意隔离在参数层或单个类的内部，**推迟决定不会阻塞任何模块的开工**。
 
@@ -1373,6 +1522,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v0.9 | 2026-09-20 | 效果系统由三层扩为**四层**，新增独立的**消耗层** `Cost`：`costs` 为列表且 AND 语义，支持消耗资源与 buff 层数；**消耗与冷却刻意不原子** —— 付不起则跳过效果但冷却照常清零，否则耐力不足毫无代价；明确否决等待队列。新增 4.5「战斗内增益系统」：战斗中一切属性变化（含资源上限）均由 buff 承载，buff 仅限本场战斗、结束清空，参战属性只在开战时读取一次；buff 可携带 `rules`，故灼烧之类无需在 `BattleSim` 写特例；buff 走同一条内容管线 |
 | v0.8 | 2026-09-20 | 细化 4.4：战斗每个步骤（出手／效果结算／状态叠减层／资源增减）均为事件；生命与耐力统一为**资源池** `resource_changed(key, delta, reason)`，新增资源种类不新增事件类型；**开战前按订阅并集算事件掩码，只广播有人听的事件**，并明确三条约束（取双方并集／规则集变化须重算／必须与全开路径逐条一致）；`Cadence` 改为 `can_fire`＋`commit` 两阶段并引入 `AllOf` 组合子，使「冷却＋耐力消耗」原子成立；事件排队派发、设深度上限，禁止递归立即派发 |
 | v0.7 | 2026-09-20 | 新增 4.4「效果系统」：时机（`Trigger`）／频率（`Cadence`）／内容（`Effect`）三者分离，一切皆事件，连带触发不再是特例；新增 4.5「套装效果」；新增第 9 节「内容制作管线」（JSON 源数据 + 注册表驱动的导入器）；实施顺序重排：内容管线紧跟 M2，侵蚀系统推迟到循环闭合之后 |
 | v0.6 | 2026-09-20 | 邻接机制按语义重命名：`SocketProfile` → `AdjacencyProfile`，星形／菱形两类标记改为**增益 grant／受益 receive**，原先分开的「标记类型」与「效果方向」合并为一个概念；`socket`／「镶嵌」一词腾出来留给尚未实现的宝石系统，并在第 12 节登记其接入点 |
