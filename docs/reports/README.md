@@ -36,3 +36,4 @@
 | 015 | [效果系统骨架](015-effect-system-skeleton.md) | 阶段 2 · M2 | 完成 |
 | 016 | [事件驱动模拟与积木清单](016-event-driven-sim.md) | 阶段 2 · M2 | 完成 |
 | 017 | [定点标度改为十进制](017-decimal-fixed-point.md) | 阶段 2 · M2 | 完成 |
+| 018 | [事件索引与冷却结算时机](018-event-index.md) | 阶段 2 · M2 | 完成 |

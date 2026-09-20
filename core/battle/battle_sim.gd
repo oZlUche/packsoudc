@@ -74,6 +74,12 @@ static func _next_instant(ctx: BattleContext) -> int:
 ## 一个正好在此刻到期的增益不应该再为这一刻的出手加成 —— 否则「buff 还剩 0 秒」
 ## 这种边界会变成玩家无法预期的运气。
 static func _resolve_instant(ctx: BattleContext) -> void:
+	# 先把【所有】规则的冷却进度结算到此刻，再做任何可能改变速率的事。
+	#
+	# 只结算自发规则是不够的：事件型规则的冷却只在其触发器命中时才被查询，
+	# 若这中间发生过变速，整段区间都会按新速率计算。必须在变速发生前落账。
+	RuleEngine.flush_all(ctx, ctx.now)
+
 	for rt in ctx.sides:
 		var owner := rt as CombatantRuntime
 		for buff in owner.expire_buffs(ctx.now):

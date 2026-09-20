@@ -48,7 +48,7 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 	for item in spec.items:
 		var it2 := item as CompiledItem
 		for rule in it2.rules:
-			rt.rules.append(RuleRuntime.create(rule, it2.source_uid))
+			rt.rules.append(RuleRuntime.create(rule, it2.source_uid, null, p_side))
 
 	rt._rebuild()
 	return rt
@@ -146,7 +146,8 @@ func apply_buff(def: BuffDef, stacks: int = 1, now: int = 0) -> int:
 		buffs.append(inst)
 		added = inst.stacks
 		for rule in def.rules:
-			rules.append(RuleRuntime.create(rule, 0, inst))
+			rules.append(RuleRuntime.create(rule, 0, inst, side))
+		_notify_rules_changed()
 	mark_dirty()
 	return added
 
@@ -166,11 +167,25 @@ func remove_buff_stacks(buff_id: StringName, count: int) -> int:
 
 func _drop_buff(inst: BuffInstance) -> void:
 	buffs.erase(inst)
+	var before := rules.size()
 	var kept: Array[RuleRuntime] = []
 	for rt in rules:
 		if rt.buff != inst:
 			kept.append(rt)
 	rules = kept
+	if rules.size() != before:
+		_notify_rules_changed()
+
+
+## 规则集一变就重建事件索引。
+##
+## [b]放在这里而不是让调用方各自记得调。[/b] 施加 buff 时漏掉只是少触发，
+## 移除 buff 时漏掉却会让已删除的规则继续被派发 —— 后者是真 bug，
+## 而且「有时候某个效果还在生效」极难定位。集中在这一处就不可能漏。
+func _notify_rules_changed() -> void:
+	var ctx: BattleContext = _ctx_ref.get_ref() if _ctx_ref != null else null
+	if ctx != null:
+		ctx.refresh_event_index()
 
 
 ## 移除所有在 now 已到期的 buff，返回被移除的列表。

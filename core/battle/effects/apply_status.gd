@@ -24,9 +24,7 @@ func apply(ctx: RuleContext) -> void:
 	ctx.battle.emit(BattleEvent.STATUS_STACKED, who.side, {
 		"buff": String(buff.id), "delta": added, "stacks": who.stacks_of(buff.id),
 	})
-	# 新 buff 带来了新规则，订阅集变了，必须重算掩码
-	if not had and not buff.rules.is_empty():
-		ctx.battle.refresh_event_mask()
+	# 索引重建由 CombatantRuntime 在规则集变动时自动完成，这里不需要手动调
 	for e in buff.on_apply:
 		(e as Effect).apply(ctx)
 

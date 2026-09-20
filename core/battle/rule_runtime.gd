@@ -6,6 +6,12 @@ class_name RuleRuntime
 extends RefCounted
 
 var rule: AbilityRule
+## 归属哪一方（0 / 1）。
+##
+## 存 int 而不是 CombatantRuntime 引用：单位持有规则，规则再反指单位就成了引用环，
+## RefCounted 永不释放。派发时用 ctx.sides[owner_side] 取回。
+var owner_side: int = 0
+
 ## 来源物品 uid；0 表示这条规则来自 buff 或套装
 var source_uid: int = 0
 ## 规则来自 buff 时非空
@@ -13,9 +19,12 @@ var buff: BuffInstance = null
 var state: Dictionary = {}
 
 
-static func create(p_rule: AbilityRule, p_uid: int = 0, p_buff: BuffInstance = null) -> RuleRuntime:
+static func create(
+	p_rule: AbilityRule, p_uid: int = 0, p_buff: BuffInstance = null, p_side: int = 0
+) -> RuleRuntime:
 	var rt := RuleRuntime.new()
 	rt.rule = p_rule
 	rt.source_uid = p_uid
 	rt.buff = p_buff
+	rt.owner_side = p_side
 	return rt

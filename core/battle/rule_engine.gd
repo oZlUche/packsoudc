@@ -34,14 +34,19 @@ static func fire_scheduled(ctx: BattleContext, owner: CombatantRuntime, rt: Rule
 	return true
 
 
+## 只遍历**订阅了该事件**的规则，而不是全部规则。
+##
+## 朴素做法是扫全部规则再让每条自己判断，那样每个事件都要给每条规则分配一个
+## RuleContext，绝大多数当场丢弃。索引把它降到 O(订阅者)。
 static func dispatch(ctx: BattleContext, event: BattleEvent) -> void:
-	for rt in ctx.sides:
-		var owner := rt as CombatantRuntime
-		# 复制一份再遍历：效果可能施加 buff 从而往 rules 里追加条目，
-		# 边遍历边改会漏掉或重复。新规则从下一条事件开始生效。
-		var snapshot := owner.rules.duplicate()
-		for rule_rt in snapshot:
-			evaluate(ctx, owner, rule_rt as RuleRuntime, event)
+	var subs := ctx.subscribers_of(event.name)
+	if subs.is_empty():
+		return
+	# 复制一份再遍历：效果可能施加或移除 buff 从而重建索引，
+	# 边遍历边改会漏掉或重复。规则集的变化从下一条事件开始生效。
+	for rule_rt in subs.duplicate():
+		var rt := rule_rt as RuleRuntime
+		evaluate(ctx, ctx.sides[rt.owner_side], rt, event)
 
 
 ## 四层求值。返回是否真的执行了效果。

@@ -518,3 +518,73 @@ static func run_battle_sim(t: TestCase) -> void:
 		BattleSim.run(make.call(60.0, 7.0, 0.8), make.call(60.0, 5.0, 0.6), seeded)
 	var elapsed := Time.get_ticks_msec() - started
 	t.check(elapsed < 3000, "200 场模拟应在 3 秒内跑完，实际 %d ms" % elapsed)
+
+
+static func run_event_index(t: TestCase) -> void:
+	t.begin("事件索引")
+
+	# 一条订阅 resource_changed 的 buff 规则
+	var thorns_rule := _rule(OnResourceChanged.new(), Always.new(), [_damage(1.0)])
+	var thorns := BuffDef.new()
+	thorns.id = &"thorns"
+	thorns.rules = [thorns_rule] as Array[AbilityRule]
+
+	var ctx := _battle(_spec(100.0, []), _spec(100.0, []))
+	var me := ctx.sides[0]
+
+	t.check(not ctx.is_listening(BattleEvent.RESOURCE_CHANGED), "开局无人订阅")
+	t.eq(ctx.subscribers_of(BattleEvent.RESOURCE_CHANGED).size(), 0, "索引为空")
+
+	# --- 施加：索引自动重建 ---
+	me.apply_buff(thorns, 1, ctx.now)
+	t.check(ctx.is_listening(BattleEvent.RESOURCE_CHANGED),
+		"施加带规则的 buff 后索引自动重建，无需调用方记得")
+	t.eq(ctx.subscribers_of(BattleEvent.RESOURCE_CHANGED).size(), 1, "索引里有 1 条订阅")
+
+	var before := StatMath.to_int(ctx.sides[1].resources.current(BattleStats.RES_HP))
+	ctx.emit(BattleEvent.RESOURCE_CHANGED, 0, {"key": "hp", "delta": -5, "reason": "damage"})
+	ctx.drain()
+	t.eq(StatMath.to_int(ctx.sides[1].resources.current(BattleStats.RES_HP)), before - 1,
+		"buff 的规则确实被派发到了")
+
+	# --- 移除：索引必须跟着清掉 ---
+	# 这是修复前的真 bug：残留条目会让已删除的规则继续触发，
+	# 表现为「某个效果明明没了却还在生效」，极难定位
+	me.remove_buff_stacks(&"thorns", 1)
+	t.eq(me.stacks_of(&"thorns"), 0, "buff 已移除")
+	t.check(not ctx.is_listening(BattleEvent.RESOURCE_CHANGED), "索引已清空")
+	t.eq(ctx.subscribers_of(BattleEvent.RESOURCE_CHANGED).size(), 0, "不再有订阅者")
+
+	var after_removal := StatMath.to_int(ctx.sides[1].resources.current(BattleStats.RES_HP))
+	ctx.emit(BattleEvent.RESOURCE_CHANGED, 0, {"key": "hp", "delta": -5, "reason": "damage"})
+	ctx.drain()
+	t.eq(StatMath.to_int(ctx.sides[1].resources.current(BattleStats.RES_HP)), after_removal,
+		"已移除的规则绝不能再触发")
+
+	# --- 索引只收订阅者，自发型规则不进索引 ---
+	var sched_only := _battle(
+		_spec(100.0, [_compiled(1, "w", {"damage": 1.0},
+			[_rule(OnSchedule.new(), _cooldown(1.0), [_damage()])])]),
+		_spec(100.0, [])
+	)
+	t.eq(sched_only.subscribers_of(BattleEvent.TICK).size(), 0, "自发型不订阅任何事件")
+	t.eq(sched_only.subscribers_of(BattleEvent.ITEM_FIRED).size(), 0, "它也不订阅出手事件")
+	_advance_to(sched_only, 1.0)
+	t.eq(StatMath.to_int(sched_only.sides[1].resources.current(BattleStats.RES_HP)), 99,
+		"但它照常按时间轮出手")
+
+	# --- 派发顺序稳定：side 0 在前，各方内部按登记顺序 ---
+	var listener := func() -> AbilityRule:
+		return _rule(OnItemFired.new(), Always.new(), [_damage(1.0)])
+	var order_ctx := _battle(
+		_spec(100.0, [_compiled(1, "a", {}, [listener.call()]),
+			_compiled(2, "b", {}, [listener.call()])]),
+		_spec(100.0, [_compiled(3, "c", {}, [listener.call()])])
+	)
+	var subs := order_ctx.subscribers_of(BattleEvent.ITEM_FIRED)
+	t.eq(subs.size(), 3, "三条订阅")
+	t.eq((subs[0] as RuleRuntime).owner_side, 0, "第一条属于 side 0")
+	t.eq((subs[1] as RuleRuntime).owner_side, 0, "第二条属于 side 0")
+	t.eq((subs[2] as RuleRuntime).owner_side, 1, "第三条属于 side 1")
+	t.eq((subs[0] as RuleRuntime).source_uid, 1, "side 0 内部按登记顺序")
+	t.eq((subs[1] as RuleRuntime).source_uid, 2, "side 0 内部按登记顺序")

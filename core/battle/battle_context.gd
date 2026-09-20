@@ -15,9 +15,16 @@ var sides: Array[CombatantRuntime] = []
 ## 回放日志。内容与掩码无关。
 var log: Array[BattleEvent] = []
 
-## 关掉即全量派发。测试用它跑「全开」路径与掩码路径比对。
+## 关掉后，未被订阅的事件也照样构造并入队。
+## 测试用它比对两条路径 —— 派发本身仍走索引，没有订阅者的事件自然是空操作，
+## 所以结果必须完全一致。
 var mask_enabled: bool = true
-var _listened: Dictionary = {}
+
+## 事件名 → 订阅它的规则列表。
+##
+## 既是派发索引，也顺带回答「有没有人听」—— 原先的 `_listened` 掩码是它的退化版本，
+## 已合并进来，不再需要两个结构。
+var _by_event: Dictionary = {}
 
 ## 单次排空最多派发多少条。防「A 触发 B、B 又触发 A」变成死循环。
 ## 超限则丢弃剩余队列并记一条 DISPATCH_OVERFLOW，便于内容配错时定位而不是直接崩。
@@ -35,7 +42,7 @@ static func create(a: CombatantRuntime, b: CombatantRuntime, p_rng: RandomNumber
 	# 生命、耐力、法力共用这一条，新增资源不需要接线。
 	for rt in ctx.sides:
 		(rt as CombatantRuntime).bind_context(ctx)
-	ctx.refresh_event_mask()
+	ctx.refresh_event_index()
 	return ctx
 
 
@@ -44,27 +51,37 @@ func opponent_of(rt: CombatantRuntime) -> CombatantRuntime:
 
 
 #region 事件掩码
-## 重算订阅并集。
+## 重建事件索引。
 ##
 ## [b]必须取双方并集[/b]：A 方发出的事件可能被 B 方的物品监听
 ## （「敌人回血时我获得强化」），按单侧算会漏。
 ##
-## [b]规则集变化后必须重算[/b]：施加带 rules 的 buff 会引入新订阅，
-## 不重算的话那条规则会静默失效 —— 没报错、没崩溃，只是「有时候不生效」，
-## 是最难查的一类 bug。重算很便宜，宁可多算。
-func refresh_event_mask() -> void:
-	_listened.clear()
+## [b]规则集变化后必须重建[/b]：施加带 rules 的 buff 会引入新订阅，不重建则那条规则
+## 静默失效；移除 buff 后不重建则已删除的规则继续被派发。后者更糟。
+## 因此改由 [CombatantRuntime] 在规则集变动时自动调用，不靠各处记得。
+##
+## 遍历顺序固定为 side 0 → side 1、各方内部按规则登记顺序，派发顺序由此确定。
+func refresh_event_index() -> void:
+	_by_event.clear()
 	for rt in sides:
 		for rule_rt in rt.rules:
 			var trigger := (rule_rt as RuleRuntime).rule.trigger
 			if trigger == null:
 				continue
 			for n in trigger.subscribed_events():
-				_listened[n] = true
+				if not _by_event.has(n):
+					_by_event[n] = [] as Array[RuleRuntime]
+				(_by_event[n] as Array[RuleRuntime]).append(rule_rt)
 
 
 func is_listening(n: StringName) -> bool:
-	return true if not mask_enabled else _listened.has(n)
+	return true if not mask_enabled else _by_event.has(n)
+
+
+## 订阅该事件的规则。返回内部数组，**调用方遍历前须自行复制** ——
+## 效果可能施加 buff 从而触发索引重建。
+func subscribers_of(n: StringName) -> Array[RuleRuntime]:
+	return _by_event.get(n, [] as Array[RuleRuntime])
 #endregion
 
 
