@@ -76,7 +76,7 @@ static func run(t: TestCase) -> void:
 	var rock := _item("rock", ["#"], ["material"])
 
 	# --- 空棋盘 ---
-	var empty := BattleCompiler.compile(_board(), 25.0)
+	var empty := BattleCompiler.compile(_board(), CombatantBaseline.with_hp(25.0))
 	t.eq(empty.max_hp_int(), 25, "空棋盘只有基础生命值")
 	t.eq(empty.items.size(), 0, "空棋盘没有任何物品")
 	t.eq(empty.rough_dps(), 0.0, "空棋盘 DPS 为 0")
@@ -87,7 +87,7 @@ static func run(t: TestCase) -> void:
 	var s1 := ItemInstance.create(sword)
 	board.place(s1, Vector2i(0, 0), 0)
 
-	var spec := BattleCompiler.compile(board, 25.0)
+	var spec := BattleCompiler.compile(board, CombatantBaseline.with_hp(25.0))
 	t.eq(_active(spec), 1, "一件主动物品")
 	t.eq(spec.items[0].source_uid, s1.uid, "记录来源 uid")
 	t.eq(spec.items[0].def_id, &"sword", "记录定义 id")
@@ -107,7 +107,7 @@ static func run(t: TestCase) -> void:
 	charm.combat = charm_combat          # 无 rules 即为被动
 	board.place(ItemInstance.create(charm), Vector2i(1, 0), 0)
 
-	spec = BattleCompiler.compile(board, 25.0)
+	spec = BattleCompiler.compile(board, CombatantBaseline.with_hp(25.0))
 	t.eq(_active(spec), 1, "被动物品不产出规则")
 	t.eq(spec.items.size(), 2, "但它仍在编译结果里，因为要贡献属性")
 	t.eq(spec.max_hp_int(), 55, "被动物品的 max_hp 叠加到基础 25 上")
@@ -115,7 +115,7 @@ static func run(t: TestCase) -> void:
 	# --- 暂存区不参战 ---
 	var storage := GridInventory.new(Vector2i(4, 4), 2)
 	storage.place(ItemInstance.create(sword), Vector2i(0, 0), 0)
-	var spec_board_only := BattleCompiler.compile(board, 25.0)
+	var spec_board_only := BattleCompiler.compile(board, CombatantBaseline.with_hp(25.0))
 	t.eq(_active(spec_board_only), 1, "暂存区里的武器不参战")
 
 	# --- 纯素材不产出能力 ---
@@ -355,3 +355,155 @@ static func run_determinism(t: TestCase) -> void:
 	var sorted_uids := uids.duplicate()
 	sorted_uids.sort()
 	t.eq(uids, sorted_uids, "物品列表按 source_uid 升序")
+
+
+static func run_baseline(t: TestCase) -> void:
+	t.begin("编译 · 角色自带的基线属性")
+
+	# 基线不是「一个基础生命值」而是一张属性表 ——
+	# 玩家开局捡到枪却因为没有耐力一发打不出，是只有做成属性表才修得掉的坑。
+	var spec := BattleCompiler.compile(_board())
+	t.eq(spec.max_hp_int(), 25, "默认基线的生命上限")
+	t.eq(StatMath.to_int(spec.baseline.total_of(BattleStats.MAX_STAMINA)), 50,
+		"**耐力有基线**，不必靠道具提供")
+
+	# 空棋盘也该拿到基线，否则「什么都没装」会变成没有耐力
+	var rt := CombatantRuntime.from_spec(spec, 0)
+	t.check(rt.resources.has(BattleStats.RES_STAMINA), "空棋盘照样有耐力资源")
+	t.eq(StatMath.to_int(rt.resources.current(BattleStats.RES_STAMINA)), 50, "并且是满的")
+
+	# 道具在基线之上叠加
+	var bag := _bag("bag", ["####", "####"])
+	var board := _board(Vector2i(8, 6))
+	board.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
+	var ration := _item("ration", ["#"])
+	var rc := CombatProfile.new()
+	rc.base_stats = {"max_stamina": 40.0, "max_hp": 10.0}
+	ration.combat = rc
+	board.place(ItemInstance.create(ration), Vector2i(0, 0), 0)
+
+	var spec2 := BattleCompiler.compile(board)
+	t.eq(spec2.max_hp_int(), 35, "25 基线 + 10 道具")
+	var rt2 := CombatantRuntime.from_spec(spec2, 0)
+	t.eq(StatMath.to_int(rt2.resources.maximum(BattleStats.RES_STAMINA)), 90,
+		"50 基线 + 40 道具")
+
+	# 自定义基线：角色系统落地后由角色定义提供，编译器不用改
+	var tanky := CombatantBaseline.new()
+	tanky.base_stats = {"max_hp": 80.0, "max_stamina": 20.0, "max_mana": 30.0}
+	var spec3 := BattleCompiler.compile(board, tanky)
+	t.eq(spec3.max_hp_int(), 90, "自定义基线 80 + 道具 10")
+	var rt3 := CombatantRuntime.from_spec(spec3, 0)
+	t.eq(StatMath.to_int(rt3.resources.maximum(BattleStats.RES_STAMINA)), 60, "20 + 40")
+	t.check(rt3.resources.has(BattleStats.RES_MANA),
+		"基线里配一个 max_mana 就多一种资源，不用改代码")
+
+	t.eq(BattleCompiler.compile(_board(), CombatantBaseline.with_hp(100.0)).max_hp_int(),
+		100, "with_hp 只改生命，其余沿用默认")
+
+
+static func run_links(t: TestCase) -> void:
+	t.begin("编译 · 增益槽的连结关系")
+
+	const B := StatMath.Buff
+	ItemInstance.reset_uid_counter()
+	var bag := _bag("bag", ["####", "####"])
+
+	# 弹匣：【增益】右邻的武器
+	var mag := _item("mag", ["#"])
+	var ap := AdjacencyProfile.new()
+	ap.grant_cells = [Vector2i(1, 0)]
+	ap.grant_filter = [&"weapon"] as Array[StringName]
+	ap.grant_mods = [_mod(BattleStats.DAMAGE, B.SHARP, 20)]
+	mag.adjacency = ap
+
+	var rifle := _weapon("rifle", ["#"], 10.0, 1.0, ["weapon"])
+	var rock := _weapon("rock", ["#"], 10.0, 1.0, ["junk"])
+
+	var board := _board(Vector2i(8, 6))
+	board.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
+	var m := ItemInstance.create(mag)
+	var r := ItemInstance.create(rifle)
+	var far := ItemInstance.create(rock)
+	board.place(m, Vector2i(0, 0), 0)
+	board.place(r, Vector2i(1, 0), 0)
+	board.place(far, Vector2i(3, 0), 0)
+
+	var spec := BattleCompiler.compile(board)
+	t.eq(spec.item_of(m.uid).linked_uids, [r.uid] as Array[int], "弹匣连到了步枪")
+	t.eq(spec.item_of(r.uid).linked_uids, [m.uid] as Array[int],
+		"**连结是对称的** —— 否则贴上去的配件只有一边听得见对方")
+	t.eq(spec.item_of(far.uid).linked_uids, [] as Array[int], "隔着距离的没连上")
+
+	# 过滤器不匹配时不算连结 —— 加成没发生，就不该有连结
+	var board2 := _board(Vector2i(8, 6))
+	board2.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
+	var m2 := ItemInstance.create(mag)
+	var junk := ItemInstance.create(rock)
+	board2.place(m2, Vector2i(0, 0), 0)
+	board2.place(junk, Vector2i(1, 0), 0)
+	var spec2 := BattleCompiler.compile(board2)
+	t.eq(spec2.item_of(m2.uid).linked_uids, [] as Array[int],
+		"标签不匹配，既没加成也没连结")
+
+
+static func run_linked_trigger(t: TestCase) -> void:
+	t.begin("扳机 · 只听与自己连结的物品出手")
+
+	const B := StatMath.Buff
+	ItemInstance.reset_uid_counter()
+	var bag := _bag("bag", ["####", "####"])
+
+	# 破片袋：贴在武器旁边，那把武器每次出手它就补一下。
+	# 本作没有「主武器」设定，所以「跟着某件东西一起触发」只能靠摆放上的连结来表达。
+	var pouch := _item("pouch", ["#"])
+	var ap := AdjacencyProfile.new()
+	ap.grant_cells = [Vector2i(1, 0)]
+	ap.grant_filter = [&"weapon"] as Array[StringName]
+	ap.grant_mods = [_mod(BattleStats.DAMAGE, B.SHARP, 0)]  # 只为建立连结
+	pouch.adjacency = ap
+
+	var linked_trigger := OnItemFired.new()
+	linked_trigger.source = OnItemFired.Source.LINKED
+	var frag := DealDamage.new()
+	frag.damage_stat = &""
+	frag.amount = 3.0
+	var rule := AbilityRule.new()
+	rule.trigger = linked_trigger
+	rule.cadence = Always.new()
+	rule.effects = [frag] as Array[CombatEffect]
+	var pc := CombatProfile.new()
+	pc.rules = [rule] as Array[AbilityRule]
+	pouch.combat = pc
+
+	# 贴着的那把（1 秒一发）与离得远的那把（也 1 秒一发）
+	var near_gun := _weapon("near_gun", ["#"], 6.0, 1.0, ["weapon"])
+	var far_gun := _weapon("far_gun", ["#"], 6.0, 1.0, ["weapon"])
+
+	var board := _board(Vector2i(8, 6))
+	board.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
+	board.place(ItemInstance.create(pouch), Vector2i(0, 0), 0)
+	board.place(ItemInstance.create(near_gun), Vector2i(1, 0), 0)
+	board.place(ItemInstance.create(far_gun), Vector2i(3, 0), 0)
+
+	var spec := BattleCompiler.compile(board)
+	var foe := CombatantSpec.new()
+	foe.max_hp = StatMath.from_float(1000.0)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1
+	var result := BattleSim.run(spec, foe, rng, 1.5)
+
+	# 1 秒时两把枪各打 6 点；破片袋只跟着【贴着的】那把补 3 点
+	var left := int(result.final["sides"][1]["resources"][&"hp"][0])
+	t.eq(1000 - left, 15, "6 + 6 + 3 —— 破片袋只响应连结的那把枪，没有响应两把")
+
+	# --- 对照：改成 ANY 就两把都听 ---
+	linked_trigger.source = OnItemFired.Source.ANY
+	var rng2 := RandomNumberGenerator.new()
+	rng2.seed = 1
+	var foe2 := CombatantSpec.new()
+	foe2.max_hp = StatMath.from_float(1000.0)
+	var result2 := BattleSim.run(BattleCompiler.compile(board), foe2, rng2, 1.5)
+	t.eq(1000 - int(result2.final["sides"][1]["resources"][&"hp"][0]), 18,
+		"ANY：两把枪都听，补两次")
+

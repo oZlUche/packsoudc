@@ -55,5 +55,13 @@ func source_stacks() -> int:
 	return runtime.buff.stacks if runtime.buff != null else 1
 
 
+## 正在结算的那一包伤害；不在受伤前阶段时为 null。
+##
+## [ModifyDamage] 靠它改写伤害。放在上下文上而不是事件载荷里，
+## 是因为效果拿到的只有上下文 —— 事件在时机层就被消费掉了。
+func damage() -> DamagePacket:
+	return battle.current_damage()
+
+
 func emit(name: StringName, payload: Dictionary = {}) -> void:
 	battle.emit(name, owner.side, payload)

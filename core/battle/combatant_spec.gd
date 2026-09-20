@@ -3,6 +3,10 @@ class_name CombatantSpec
 extends RefCounted
 
 var max_hp: int = 0                  ## 定点
+
+## 角色自带的基础属性（生命上限、耐力上限…），不属于任何道具。
+## 为 null 时该单位没有任何自带属性 —— 手搓的测试假人就是这样。
+var baseline: StatSet = null
 ## 按 source_uid 升序，顺序稳定
 var items: Array[CompiledItem] = []
 

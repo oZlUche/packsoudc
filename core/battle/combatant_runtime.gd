@@ -19,6 +19,9 @@ var rules: Array[RuleRuntime] = []
 ## 全部并成单位级属性表会把它抹平。
 var item_base: Dictionary = {}
 
+## uid -> 与它连结的物品 uid 列表（增益／受益格）。[OnItemFired] 的 LINKED 来源查它。
+var item_links: Dictionary = {}
+
 var _merged: StatSet = null
 var _merged_items: Dictionary = {}
 var _dirty: bool = true
@@ -33,7 +36,7 @@ var _ctx_ref: WeakRef = null
 static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 	var rt := CombatantRuntime.new()
 	rt.side = p_side
-	rt.base = StatSet.new()
+	rt.base = spec.baseline.clone() if spec.baseline != null else StatSet.new()
 	rt.resources = ResourcePool.new()
 
 	# 把各物品的属性并成一份单位级属性表。
@@ -41,6 +44,8 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 	for item in spec.items:
 		var it := item as CompiledItem
 		rt.item_base[it.source_uid] = it.stats
+		if not it.linked_uids.is_empty():
+			rt.item_links[it.source_uid] = it.linked_uids
 		for key in it.stats.keys():
 			# **乘法单位元类属性不能跨物品累加。** haste 每件都是 1.0，
 			# 逐件相加会得出「N 件物品 = N 倍速度」；而且单位级 haste 的含义是
@@ -123,6 +128,11 @@ func _sync_resource_maxes() -> void:
 		else:
 			resources.define(res, cap)
 #endregion
+
+
+## 某件物品通过增益／受益格连结到的其他物品 uid
+func links_of(uid: int) -> Array[int]:
+	return item_links.get(uid, [] as Array[int])
 
 
 #region buff

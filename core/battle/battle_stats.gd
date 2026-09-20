@@ -33,9 +33,12 @@ const MAX_PREFIX := "max_"
 const RES_HP := &"hp"
 const RES_STAMINA := &"stamina"
 const RES_MANA := &"mana"
+## 护盾。扣血之前先扣它，由伤害类型决定能不能吸收（见 [DamageResolver]）。
+const RES_SHIELD := &"shield"
 
 const MAX_STAMINA := &"max_stamina"
 const MAX_MANA := &"max_mana"
+const MAX_SHIELD := &"max_shield"
 
 ## 耐力消耗的面板值。走 4.3 公式结算，
 ## 因此「减少耐力消耗 20%」就是一条作用于本键的普通 StatModifier。

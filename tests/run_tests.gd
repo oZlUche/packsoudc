@@ -22,6 +22,7 @@ const SUITES: Array = [
 	preload("res://tests/test_effect_system.gd"),
 	preload("res://tests/test_sets.gd"),
 	preload("res://tests/test_effect_tree.gd"),
+	preload("res://tests/test_damage_pipeline.gd"),
 	preload("res://tests/test_drag_layer.gd"),
 ]
 

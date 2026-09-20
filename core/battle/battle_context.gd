@@ -36,6 +36,16 @@ var max_chain: int = 256
 var _queue: Array[BattleEvent] = []
 var _draining: bool = false
 
+## 正在结算中的伤害包，栈顶是当前这一包。
+##
+## 是栈而不是单个字段：受伤前效果自己也可能造成伤害（荆棘反弹），
+## 那一下会在本次结算内部再开一层。
+var _damage_stack: Array[DamagePacket] = []
+
+## 伤害结算的最大嵌套层数。超过就不再派发受伤前效果 ——
+## 两件互相反伤的道具会无限对轰，截断比栈溢出可控。
+const MAX_DAMAGE_DEPTH := 4
+
 
 static func create(a: CombatantRuntime, b: CombatantRuntime, p_rng: RandomNumberGenerator) -> BattleContext:
 	var ctx := BattleContext.new()
@@ -140,6 +150,40 @@ func drain() -> void:
 
 func pending() -> int:
 	return _queue.size()
+
+
+## 正在结算的伤害包，不在结算中时为 null
+func current_damage() -> DamagePacket:
+	return _damage_stack.back() if not _damage_stack.is_empty() else null
+
+
+## 同步派发「受伤前」。**只有伤害管线该调它。**
+##
+## 普通事件一律入队，靠 [method drain] 逐条处理，连锁才不会变成栈溢出。
+## 这一条是例外：受伤前效果必须在伤害算出来之前改到包，排队就晚了。
+## 代价是允许有限重入，因此有 [constant MAX_DAMAGE_DEPTH] 兜底。
+func dispatch_before_damage(packet: DamagePacket) -> void:
+	if packet == null or not is_listening(BattleEvent.BEFORE_DAMAGE):
+		return
+	if _damage_stack.size() >= MAX_DAMAGE_DEPTH:
+		log.append(BattleEvent.make(
+			BattleEvent.DISPATCH_OVERFLOW, now, -1,
+			{"limit": MAX_DAMAGE_DEPTH, "where": "before_damage"}
+		))
+		push_warning("BattleContext: 伤害结算嵌套超过 %d 层，本层不再派发受伤前效果"
+			% MAX_DAMAGE_DEPTH)
+		return
+	_damage_stack.append(packet)
+	RuleEngine.dispatch(self, BattleEvent.make(
+		BattleEvent.BEFORE_DAMAGE, now, packet.victim_side(), {
+			"type": String(packet.type),
+			"amount": packet.pending(),
+			"notifies": packet.def().notifies,
+			"source_side": packet.source_side,
+			"uid": packet.source_uid,
+		}
+	))
+	_damage_stack.pop_back()
 #endregion
 
 

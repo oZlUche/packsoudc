@@ -6,7 +6,7 @@
 
 > 用这些积木拼出的**首批内容计划**见 [`item-roster.md`](item-roster.md)。
 >
-> 状态：截至架构 v1.5。`data/items/` 里的 15 个示例资产**尚未配置任何战斗数据**，
+> 状态：截至架构 v1.7。`data/items/` 里的 15 个示例资产**尚未配置任何战斗数据**，
 > 下面列的是可用积木，不是已有内容。
 
 ---
@@ -54,7 +54,13 @@ Effect
 | `on_resource_changed` | `OnResourceChanged` | 资源增减时 | `resource_key`（hp/stamina/mana…）；`direction`（ANY/INCREASE/DECREASE）；`same_side`；`reasons` 限定原因 |
 | `on_resource_below` | `OnResourceBelow` | 资源**降到阈值以下**时 | `resource_key`；`percent` 按上限的百分比（0 则改用绝对值）；`absolute`；`on_self` |
 | `on_stacks_at_least` | `OnStacksAtLeast` | 身上有 **N 层**某增益减益时 | `buff_id`；`stacks`；`on_self` 看自己还是对手；`consume` **消耗型开关**，见下 |
-| `on_damage` | `OnDamage` | **受到／造成**某类伤害时 | `direction`（TAKEN/DEALT）；`damage_type` 空=不限；`min_amount` 按实际扣除量 |
+| `on_damage` | `OnDamage` | 受到／造成某类伤害**之后** | `direction`（TAKEN/DEALT）；`damage_type` 空=不限；`min_amount` 按实际扣除量 |
+| `on_before_damage` | `OnBeforeDamage` | 受到／造成某类伤害**之前**。减伤、免疫、反转唯一的接入点 | 同上；`min_amount` 按护盾吸收后的待结算量 |
+
+`on_item_fired` 的 `source` 值得单独说一句：填 `LINKED` 时**只听与本物品通过
+增益／受益格连结的道具**。本作没有「主武器」的设定，「跟着某把枪一起触发」
+只能靠摆放上的连结来表达 —— 配件贴到武器旁边，连结就成立了，这是玩家摆出来的，
+不是在 .tres 里配出来的。
 
 > 没有 `on_tick`。**模拟里没有帧** —— 帧是渲染概念，底层直接按时刻跳跃。
 
@@ -119,15 +125,45 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 | `change_resource` | `ChangeResource` | **增减**资源。治疗／回耐力／抽血／耗蓝共用 | `target`；`resource_key`；`amount` **正为获得、负为失去**；`amount_stat`；`per_stack` |
 | `apply_status` | `ApplyStatus` | 施加增益／减益 | `target`；`buff`；`stacks`；`per_stack` |
 | `remove_status` | `RemoveStatus` | 减少层数。净化、驱散、削减对手蓄力 | `target`；`buff_id`；`stacks`（**0 = 全部移除**） |
+| `modify_damage` | `ModifyDamage` | 改写正在结算的那一包伤害。**只在受伤前阶段有效** | `flat` 固定增减；`percent` 百分比；`invert` 反转成治疗；`cancel` 完全免疫 |
 
-### 伤害类型不是乘区
+### 伤害怎么结算
 
-`damage_type`（`physical` / `fire` / …）与第 6 节的乘区分类（`EMPOWER` / `SHARP` / `FIRE`）
-是**两个正交的维度**，刻意不做映射。
+**一切血量的减少都走同一条五步管线**，武器命中、持续伤害、以血为代价的自伤
+区别只在类型：
 
-绑在一起看似省事，但立刻写不出「强化影响全部伤害」—— 那是一个乘区作用于所有类型；
+```
+确认类型 → 护盾吸收 → 受伤前效果 → 计算受伤量 → 受伤后效果
+```
+
+`modify_damage` 在第三步生效，这是减伤／免疫／反转唯一的接入点。
+**有条件的减伤靠消耗层表达**，不需要任何新机制：
+
+```
+消耗 2 层格挡减免 10 点
+  on_before_damage(受到) · always · status_stack(格挡,2) · modify_damage(flat = -10)
+```
+
+层数不够时不减伤，也**不会白吃掉那几层** —— 消耗层的原子性白拿。
+
+内置四种伤害类型，性质写在 `DamageTypeDef` 里而不是结算代码的 if 里：
+
+| 类型 | 护盾 | 护甲 | 通知受伤效果 | 用途 |
+|---|---|---|---|---|
+| `physical` | ✓ | ✓ | ✓ | 常规 |
+| `fire` | ✓ | ✓ | ✓ | 元素线的起点 |
+| `poison` | ✗ | ✗ | ✓ | 绕过防御 |
+| `drain` | ✗ | ✗ | **✗** | 流失：代价、超频、献祭 |
+
+新增一种（腐蚀、真实、精神…）＝ 加一份 `DamageTypeDef` 并登记，管线一行不改。
+
+**流失**：`change_resource` 扣血量时不直接改资源，而是造一包 `drain` 走管线 ——
+这样「以血换速」的超频模块同样吃得到减伤与免疫。但它不点亮反伤与吸血，
+否则割自己一刀就成了正收益。想专门听流失，把扳机的 `damage_type` 显式填成 `drain`。
+
+**伤害类型不是乘区**：`damage_type` 与第 7 节的乘区分类是两个正交维度，刻意不做映射。
+绑在一起就写不出「强化影响全部伤害」—— 那是一个乘区作用于所有类型；
 反过来「火焰抗性」是按类型减伤，与乘区无关。
-`damage_type` 的唯一用处是给伤害事件打标签，供 `on_damage` 和未来的抗性系统筛选。
 
 ---
 
@@ -158,13 +194,18 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 | `cooldown` | 冷却秒数，覆盖 `CooldownCadence.seconds` | 单件物品 |
 | `haste` | 速度倍率，基础 1.0，越大越快 | 单件物品 |
 | `stamina_cost` / `mana_cost` | 消耗面板值 | 单件物品 |
-| `max_hp` / `max_stamina` / `max_mana` | 资源上限 | 整个单位 |
+| `max_hp` / `max_stamina` / `max_mana` / `max_shield` | 资源上限 | 整个单位 |
 | `armor` | 减伤 | 整个单位 |
 
 **属性按物品保留粒度。** 「磨刀石只给旁边那把武器加伤害」靠的就是这一点，
 不能把所有物品的属性并成一份单位级表。
 
 **资源由 `max_*` 自动派生**：配一个 `max_shield` 属性就有了 `shield` 资源，不用改代码。
+`shield` 另有一条特殊待遇 —— 伤害管线第二步会优先扣它（能不能扣由伤害类型决定）。
+
+**还有一份不属于任何道具的基线**（`CombatantBaseline`）：默认生命 25、耐力 50。
+没有它，玩家捡到一把枪却可能因为身上没有 `max_stamina` 道具而一发都打不出。
+这同时是角色系统的占位 —— 将来不同角色带不同的基线。
 
 ---
 
@@ -301,6 +342,39 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 频率 always
 内容 remove_status(SELF, 中毒, stacks = 0)   ← 0 = 全清
 ```
+
+### 格挡（有条件的减伤）
+
+```
+时机 on_before_damage(受到)
+频率 always
+消耗 status_stack(格挡, 2)
+内容 modify_damage(flat = -10)
+```
+
+层数不够就全额挨打，且那 1 层不会被白吃掉。
+
+### 解毒剂（反转伤害）
+
+```
+时机 on_before_damage(受到, poison)
+频率 always
+消耗 uses(1)
+内容 modify_damage(invert)
+```
+
+全场一次，把一发中毒变成等量治疗。
+
+### 破片袋（只跟着邻居那把枪）
+
+```
+时机 on_item_fired(己方, source = LINKED)
+频率 always
+消耗 chance(25%)
+内容 deal_damage(4)
+```
+
+贴在武器的增益格旁边才听得见它 —— 换个位置就失联，摆放本身是内容。
 
 ### 战利品道具（不进战斗）
 

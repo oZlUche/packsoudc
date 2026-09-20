@@ -11,6 +11,16 @@ var def_id: StringName = &""
 var stats: StatSet = null
 var rules: Array[AbilityRule] = []
 
+## 通过增益／受益格与本物品连结的其他物品 uid，升序去重。
+##
+## 本作没有「主武器」这种设定，所以「跟着某件东西一起触发」只能靠邻接连结来表达：
+## 谁占着我的增益格、谁给我点亮了受益格，编译期就已经知道，
+## [OnItemFired] 的 LINKED 来源直接查这张表。
+##
+## 在编译期算好而不是运行时查棋盘：战斗中背包是冻结的（4.1），
+## 而且这样战斗层完全不需要认识 [GridInventory]。
+var linked_uids: Array[int] = []
+
 
 func is_active() -> bool:
 	return not rules.is_empty()
@@ -28,7 +38,7 @@ func estimated_dps() -> float:
 		if hz <= 0.0:
 			continue
 		for effect in r.effects:
-			total += hz * (effect as Effect).estimated_damage(stats)
+			total += hz * (effect as CombatEffect).estimated_damage(stats)
 	return total
 
 

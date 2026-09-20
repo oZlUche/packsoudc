@@ -1,15 +1,18 @@
 ## 造成伤害。
+##
+## 本效果只负责**算出原始值并交给管线**，减免与结算全在 [DamageResolver] 里 ——
+## 护盾、护甲、受伤前减伤、反转对所有伤害来源一视同仁，不该由每个效果各实现一遍。
 class_name DealDamage
 extends CombatEffect
 
 @export var target: Target = Target.OPPONENT
 
-## 伤害类型。用于抗性、元素联动、以及「受到火焰伤害时」这类扳机。
+## 伤害类型。决定能否被护盾吸收、吃不吃护甲、是否通知受伤效果，
+## 具体性质见 [DamageTypeDef]，不写死在结算里。
 ##
-## [b]刻意不与乘区绑定。[/b] 火焰伤害吃不吃 FIRE 乘区由效果自己声明
-## （写在对应物品的属性上），否则伤害类型与乘区被迫一一对应，
-## 以后想加「不吃任何元素加成的真实伤害」就没法表达。
-@export var damage_type: StringName = &"physical"
+## [b]刻意不与乘区绑定。[/b] 火焰伤害吃不吃 FIRE 乘区由内容自己在属性上声明，
+## 否则伤害类型与乘区被迫一一对应，以后想加「不吃任何元素加成的真实伤害」就没法表达。
+@export var damage_type: StringName = DamageTypes.PHYSICAL
 
 ## 固定伤害值；damage_stat 非空时改用属性值
 @export var amount: float = 0.0
@@ -31,24 +34,9 @@ func apply(ctx: RuleContext) -> void:
 		return
 
 	for victim in resolve_targets(ctx, target):
-		# 护甲按定点值减伤，下限 0
-		var armor := victim.stat(BattleStats.ARMOR, 0)
-		var dealt := maxi(0, raw - armor)
-		var actual := victim.resources.change(
-			BattleStats.RES_HP, -dealt, BattleEvent.REASON_DAMAGE
-		)
-		# 专门的伤害事件：携带类型与原始／实际两个数值。
-		# resource_changed 记的是「实际掉了多少血」，不带类型，
-		# 「受到 N 点某类伤害时」这类扳机需要的是这一条。
-		ctx.battle.emit(BattleEvent.DAMAGE, victim.side, {
-			"type": String(damage_type),
-			"raw": raw,
-			"amount": -actual,
-			"source_side": ctx.owner.side,
-			"uid": ctx.source_uid(),
-		})
-		if not victim.is_alive():
-			ctx.battle.emit(BattleEvent.DIED, victim.side, {})
+		DamageResolver.resolve(ctx.battle, DamagePacket.create(
+			damage_type, raw, victim, ctx.owner.side, ctx.source_uid()
+		))
 
 
 func estimated_damage(stats: StatSet) -> float:

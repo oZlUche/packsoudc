@@ -19,6 +19,12 @@ const RESOURCE_CHANGED := &"resource_changed"
 ## 伤害。携带类型与原始／实际两个数值 —— resource_changed 只记「实际掉了多少血」，
 ## 既不带类型也分不清是谁打的，「受到 N 点火焰伤害时」这类扳机需要这一条。
 const DAMAGE := &"damage"
+## 伤害【结算之前】。受伤前效果靠它接入，此刻还改得动这一下。
+##
+## [b]这条是同步派发的[/b]（见 BattleContext.dispatch_before_damage），
+## 不进队列 —— 排队就赶不上本次结算了。也因此它不进回放日志：
+## 它没有可观测的结果，结果体现在随后那条 damage 上。
+const BEFORE_DAMAGE := &"before_damage"
 const DIED := &"died"
 ## 派发深度超限时记一条，便于内容配错时定位而不是直接崩
 const DISPATCH_OVERFLOW := &"dispatch_overflow"
@@ -32,6 +38,8 @@ const REASON_REGEN := &"regen"
 ## 上限变动连带引起的当前值变化。与治疗区分开 ——
 ## 否则监听「生命恢复」的效果会把「强壮」生效误当成治疗。
 const REASON_MAX_CHANGED := &"max_changed"
+## 护盾替血量挡下的那部分
+const REASON_ABSORBED := &"absorbed"
 #endregion
 
 ## 回放视图需要的事件。日志只收这些，因此**日志内容与事件掩码无关** ——
@@ -70,6 +78,10 @@ func get_int(key: StringName, fallback: int = 0) -> int:
 
 func get_name(key: StringName, fallback: StringName = &"") -> StringName:
 	return StringName(payload.get(key, fallback))
+
+
+func get_bool(key: StringName, fallback: bool = false) -> bool:
+	return bool(payload.get(key, fallback))
 
 
 func _to_string() -> String:

@@ -15,7 +15,7 @@
 class_name BattleCompiler
 extends RefCounted
 
-## run 级基础生命值。物品提供的 max_hp 在此之上叠加。
+## run 级基础生命值。保留给只关心生命的调用方；完整基线见 [CombatantBaseline]。
 const BASE_HP := 25.0
 
 
@@ -24,14 +24,21 @@ const BASE_HP := 25.0
 ##
 ## 编译器不认识 [SetTracker]，也不自己去数套装件数 —— 计数与激活是背包层的事，
 ## 物品一拖进棋盘就已经算好了（UI 要实时显示暗／亮）。这里只负责并入。
+## [param baseline] 是角色自带的那份属性（生命上限、耐力上限…），
+## 为 null 时用 [method CombatantBaseline.default_baseline]。
+## 角色系统落地后由角色定义提供，编译器这里不用改。
 static func compile(
-	board: GridInventory, base_hp: float = BASE_HP,
+	board: GridInventory, baseline: CombatantBaseline = null,
 	set_mods: Array[StatModifier] = [] as Array[StatModifier],
 	set_rules: Array[AbilityRule] = [] as Array[AbilityRule]
 ) -> CombatantSpec:
+	var base := baseline if baseline != null else CombatantBaseline.default_baseline()
 	var spec := CombatantSpec.new()
+	spec.baseline = StatSet.new()
+	base.seed_stats(spec.baseline)
+
 	if board == null:
-		spec.max_hp = StatMath.from_float(base_hp)
+		spec.max_hp = spec.baseline.total_of(BattleStats.MAX_HP)
 		return spec
 
 	# --- 1. 收集参战物品：棋盘上的非包物品，按 uid 升序 ---
@@ -61,11 +68,12 @@ static func compile(
 			(mod as StatModifier).apply_to(stats[uid], 1)
 	spec.set_rules.append_array(set_rules)
 
-	# --- 5. 邻接标记 ---
-	_apply_adjacency(board, fighters, stats)
+	# --- 5. 邻接标记。顺带记下连结关系，供 OnItemFired 的 LINKED 来源使用 ---
+	var links: Dictionary = {}  # uid -> {uid: true}
+	_apply_adjacency(board, fighters, stats, links)
 
 	# --- 6. 产出 ---
-	var hp := StatMath.from_float(base_hp)
+	var hp := spec.baseline.total_of(BattleStats.MAX_HP)
 	for uid in fighters:
 		var set: StatSet = stats[uid]
 		hp += set.total_of(BattleStats.MAX_HP)
@@ -76,6 +84,11 @@ static func compile(
 		item.stats = set
 		if def.combat != null:
 			item.rules = def.combat.rules.duplicate()
+		var linked: Array[int] = []
+		for other in (links.get(uid, {}) as Dictionary).keys():
+			linked.append(other)
+		linked.sort()  # 顺序稳定，编译结果才可复现
+		item.linked_uids = linked
 		spec.add(item)
 
 	spec.max_hp = maxi(0, hp)
@@ -96,7 +109,13 @@ static func _apply_bag_effects(board: GridInventory, fighters: Array[int], stats
 			(mod as StatModifier).apply_to(stats[uid], 1)
 
 
-static func _apply_adjacency(board: GridInventory, fighters: Array[int], stats: Dictionary) -> void:
+## [param links] 收集双向的连结关系：uid -> {对方 uid: true}。
+##
+## 连结是**对称**的 —— 「我给你加成」和「你给我加成」都算连着。
+## 非对称会让内容作者踩坑：把配件贴在武器旁边，却只有一边听得见对方出手。
+static func _apply_adjacency(
+	board: GridInventory, fighters: Array[int], stats: Dictionary, links: Dictionary
+) -> void:
 	for uid in fighters:
 		var holder := board.get_item(uid)
 		var profile: AdjacencyProfile = holder.def.adjacency
@@ -111,17 +130,32 @@ static func _apply_adjacency(board: GridInventory, fighters: Array[int], stats: 
 			for other in receivers:
 				if not stats.has(other):
 					continue  # 不参战的（比如包）跳过
+				_link(links, uid, other)
 				for mod in profile.grant_mods:
 					(mod as StatModifier).apply_to(stats[other], 1)
 
 		# 受益：点亮几个格，本物品就得几份
 		if profile.has_receive():
-			var lit := _lit_neighbors(
+			var providers := _lit_neighbors(
 				board, holder, profile.receive_cells, profile.receive_filter
-			).size()
-			if lit > 0:
+			)
+			for other in providers:
+				if stats.has(other):
+					_link(links, uid, other)
+			if not providers.is_empty():
 				for mod in profile.receive_mods:
-					(mod as StatModifier).apply_to(stats[uid], lit)
+					(mod as StatModifier).apply_to(stats[uid], providers.size())
+
+
+static func _link(links: Dictionary, a: int, b: int) -> void:
+	if a == b:
+		return
+	if not links.has(a):
+		links[a] = {}
+	if not links.has(b):
+		links[b] = {}
+	links[a][b] = true
+	links[b][a] = true
 
 
 ## 占住指定标记格的邻居，**去重**后按 uid 升序返回。

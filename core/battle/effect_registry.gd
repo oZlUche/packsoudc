@@ -15,6 +15,7 @@ const TRIGGERS := {
 	&"on_stacks_at_least": "res://core/battle/triggers/on_stacks_at_least.gd",
 	&"on_resource_below": "res://core/battle/triggers/on_resource_below.gd",
 	&"on_damage": "res://core/battle/triggers/on_damage.gd",
+	&"on_before_damage": "res://core/battle/triggers/on_before_damage.gd",
 }
 
 const CADENCES := {
@@ -38,6 +39,8 @@ const COMBAT_EFFECTS := {
 	&"change_resource": "res://core/battle/effects/change_resource.gd",
 	&"apply_status": "res://core/battle/effects/apply_status.gd",
 	&"remove_status": "res://core/battle/effects/remove_status.gd",
+	# 只在受伤前阶段有效，见 DamageResolver
+	&"modify_damage": "res://core/battle/effects/modify_damage.gd",
 }
 
 ## 战利品作用域的效果。**不依赖扳机，激活即生效。**
