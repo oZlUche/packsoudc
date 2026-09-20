@@ -19,7 +19,15 @@ extends RefCounted
 const BASE_HP := 25.0
 
 
-static func compile(board: GridInventory, base_hp: float = BASE_HP) -> CombatantSpec:
+## [param set_effects] 由 [SetTracker] 按 [constant SetScope.COMBAT] 取出后传入。
+##
+## 编译器不认识 [SetTracker]，也不自己去数套装件数 —— 计数与激活是背包层的事，
+## 物品一拖进棋盘就已经算好了（UI 要实时显示暗／亮）。这里只负责「把已激活的
+## 战斗作用域效果并进来」。
+static func compile(
+	board: GridInventory, base_hp: float = BASE_HP,
+	set_effects: Array[SetEffect] = [] as Array[SetEffect]
+) -> CombatantSpec:
 	var spec := CombatantSpec.new()
 	if board == null:
 		spec.max_hp = StatMath.from_float(base_hp)
@@ -46,10 +54,13 @@ static func compile(board: GridInventory, base_hp: float = BASE_HP) -> Combatant
 	# --- 3. 包体效果施加给内容物 ---
 	_apply_bag_effects(board, fighters, stats)
 
-	# --- 4. 邻接标记 ---
+	# --- 4. 套装效果（战斗作用域）---
+	_apply_set_effects(board, fighters, stats, set_effects, spec)
+
+	# --- 5. 邻接标记 ---
 	_apply_adjacency(board, fighters, stats)
 
-	# --- 5. 产出 ---
+	# --- 6. 产出 ---
 	var hp := StatMath.from_float(base_hp)
 	for uid in fighters:
 		var set: StatSet = stats[uid]
@@ -79,6 +90,28 @@ static func _apply_bag_effects(board: GridInventory, fighters: Array[int], stats
 			continue
 		for mod in bag.def.bag_mods:
 			(mod as StatModifier).apply_to(stats[uid], 1)
+
+
+## 把已激活的战斗作用域套装效果并入。
+##
+## 属性加成按物品施加（与包体、邻接同一层）；套装自带的规则挂到 spec 上，
+## 不属于任何物品。
+static func _apply_set_effects(
+	board: GridInventory, fighters: Array[int], stats: Dictionary,
+	set_effects: Array[SetEffect], spec: CombatantSpec
+) -> void:
+	for raw in set_effects:
+		var eff := raw as CombatSetEffect
+		if eff == null:
+			continue  # 非战斗作用域，不该传进来，容错跳过
+		for uid in fighters:
+			if eff.target == CombatSetEffect.Target.SET_PIECES:
+				var def := board.get_item(uid).def
+				if def == null or def.set_id == &"":
+					continue
+			for mod in eff.mods:
+				(mod as StatModifier).apply_to(stats[uid], 1)
+		spec.set_rules.append_array(eff.rules)
 
 
 static func _apply_adjacency(board: GridInventory, fighters: Array[int], stats: Dictionary) -> void:

@@ -706,3 +706,30 @@ static func run_lazy_removal(t: TestCase) -> void:
 	t.eq(StatMath.to_int(victim.resources.current(BattleStats.RES_HP)), 95,
 		"移除后绝不能再触发 —— 弹出时发现规则已不属于该单位，直接丢弃")
 	t.eq(ctx.schedule.size(), 0, "残留条目已被清空")
+
+
+static func run_unit_stat_aggregation(t: TestCase) -> void:
+	t.begin("单位级属性聚合")
+
+	# 加法类属性跨物品求和
+	var spec := _spec(0.0, [
+		_compiled(1, "a", {"max_hp": 30.0, "armor": 2.0}),
+		_compiled(2, "b", {"max_hp": 20.0, "armor": 3.0}),
+	])
+	var rt := CombatantRuntime.from_spec(spec, 0)
+	t.eq(rt.stat_int(BattleStats.ARMOR), 5, "护甲这类加法属性跨物品求和")
+
+	# 乘法单位元类属性【不能】跨物品累加
+	var many := _spec(100.0, [
+		_compiled(1, "a", {"damage": 1.0}),
+		_compiled(2, "b", {"damage": 1.0}),
+		_compiled(3, "c", {"damage": 1.0}),
+	])
+	var rt2 := CombatantRuntime.from_spec(many, 0)
+	t.eq(rt2.stat(BattleStats.HASTE), StatMath.ONE,
+		"三件物品各带 1.0 速度，单位级仍是 1.0 —— 累加会得出「N 件 = N 倍速」")
+	t.eq(rt2.item_stat(1, BattleStats.HASTE), StatMath.ONE, "单件仍是 1.0")
+
+	# 空单位读 haste 也是 1.0，不是 0
+	var empty := CombatantRuntime.from_spec(_spec(100.0, []), 0)
+	t.eq(empty.stat(BattleStats.HASTE, StatMath.ONE), StatMath.ONE, "无物品时 haste 为 1.0")

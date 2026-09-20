@@ -30,11 +30,19 @@ func has(key: StringName) -> bool:
 	return _values.has(key)
 
 
-## 该键的终值（定点）。键不存在时返回 [param fallback]，
-## 便于区分「没有这项属性」与「这项属性算出来是 0」。
+## 该键的终值（定点）。
+##
+## 键不存在时：**单位元类属性（haste）返回它自己的单位元 1.0**，
+## 其余返回 [param fallback]（默认 0，便于区分「没有这项属性」与「算出来是 0」）。
+##
+## 单位元不走 fallback，是因为那样就得靠每个调用方都记得传 `StatMath.ONE`，
+## 漏一处就会把速度当成 0，冷却随之被放大上万倍。属性的单位元是属性自身的性质。
 func total_of(key: StringName, fallback: int = 0) -> int:
 	var v: StatValue = _values.get(key, null)
-	return v.total() if v != null else fallback
+	if v != null:
+		return v.total()
+	var identity := BattleStats.default_base(key)
+	return identity if identity != 0 else fallback
 
 
 func total_int_of(key: StringName, fallback: int = 0) -> int:

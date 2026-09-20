@@ -39,6 +39,12 @@ extends Resource
 ## 「包内物品触发快 10%」这类语义放这里。
 @export var bag_mods: Array[StatModifier] = []
 
+## 所属套装的 id，为空表示不属于任何套装。
+##
+## **只是归属标记**，套装效果本身写在 ItemSetDef 上。物品界面显示的套装信息
+## 纯粹是 UI 提示（按激活状态暗／亮切换），不参与任何结算。
+@export var set_id: StringName = &""
+
 @export_group("战斗")
 ## 战斗定义。为空表示本物品不参战（纯素材、纯包体）。
 @export var combat: CombatProfile

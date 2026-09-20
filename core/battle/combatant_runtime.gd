@@ -42,6 +42,11 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 		var it := item as CompiledItem
 		rt.item_base[it.source_uid] = it.stats
 		for key in it.stats.keys():
+			# **乘法单位元类属性不能跨物品累加。** haste 每件都是 1.0，
+			# 逐件相加会得出「N 件物品 = N 倍速度」；而且单位级 haste 的含义是
+			# 「不属于任何物品的规则（套装、buff）用什么速率」，本就该是 1.0 起。
+			if BattleStats.default_base(key) != 0:
+				continue
 			rt.base.ensure(key).base += it.stats.total_of(key)
 	rt.base.ensure(BattleStats.MAX_HP).base = spec.max_hp
 
@@ -49,6 +54,9 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 		var it2 := item as CompiledItem
 		for rule in it2.rules:
 			rt._register(RuleRuntime.create(rule, it2.source_uid, null, p_side))
+	# 套装规则不属于任何物品，来源 uid 为 0
+	for rule in spec.set_rules:
+		rt._register(RuleRuntime.create(rule, 0, null, p_side))
 
 	rt._rebuild()
 	return rt

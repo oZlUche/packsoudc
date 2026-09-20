@@ -6,6 +6,9 @@ var max_hp: int = 0                  ## 定点
 ## 按 source_uid 升序，顺序稳定
 var items: Array[CompiledItem] = []
 
+## 套装带来的规则。不属于任何物品，来源 uid 为 0，取属性时退回单位级。
+var set_rules: Array[AbilityRule] = []
+
 var _by_uid: Dictionary = {}
 
 
