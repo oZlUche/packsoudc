@@ -421,7 +421,142 @@ enum Buff { EMPOWER, SHARP, FIRE, HASTE }   # 追加只能加在末尾
 `core/battle/stat_math.gd`（定点数与乘区枚举）与 `core/battle/stat_value.gd`
 （一项属性的累积器）。**这套约定是可执行的，不是文字描述** —— 改公式必须先改测试。
 
-### 4.4 模拟循环
+### 4.4 效果系统：时机、频率、内容三者分离
+
+**硬性要求：效果不得写死。** 触发时机、触发频率、连带触发、具体效果，四者各自可扩展，
+新增任何一种都不应改动 `BattleSim` 或导入程序。
+
+这条约束必须在写 `BattleSim` 之前落实。一旦模拟循环按「冷却到了就打一下」写出来，
+「受击时触发」「连带触发」就没有接入点了。
+
+#### GDScript 里的「接口」
+
+GDScript 没有 Java／C# 意义上的接口与泛型，但 Godot 4.5+ 的 `@abstract` 足够表达这套结构，
+已在 4.7.1 上实测：
+
+| 能力 | 结论 |
+|---|---|
+| `@abstract class` 不可实例化 | 可用，且是**解析期**报错，不是运行时 |
+| `@abstract func` 强制子类覆写 | 可用 |
+| `Array[基类]` 装子类、多态派发 | 可用 |
+| 运行时按脚本路径动态构造子类 | 可用 |
+
+还有一个额外好处：`@export var xs: Array[基类]` 在检视器里会自动列出**所有非抽象子类**
+供选择。内容制作因此不需要手写类型名。
+
+#### 三层结构
+
+```gdscript
+## 一条完整规则：什么时候 · 多久一次 · 做什么
+class_name AbilityRule extends Resource
+@export var trigger: Trigger        ## 时机
+@export var cadence: Cadence        ## 频率
+@export var effects: Array[Effect]  ## 内容
+```
+
+物品的 `CombatProfile` 持有 `Array[AbilityRule]`，而不是「冷却 + 伤害」两个字段。
+一件物品可以有多条规则（平时按冷却出手、受击时额外反击、开局给自己加护盾）。
+
+#### 一切皆事件
+
+`BattleSim` 只负责推进时间并广播事件，不知道任何具体效果：
+
+```
+battle_start / battle_end
+tick                      每个逻辑帧
+item_fired(uid)           某件物品出手了  ← 连带触发靠它，不需要特例
+damage_dealt / damage_taken
+hp_crossed(ratio)
+killed
+```
+
+**连带触发不是一种特殊机制**，而是一个订阅 `item_fired` 并判断来源是否落在自己
+增益／受益格上的普通 `Trigger` 子类。这是把时机做成可扩展接口后自然得到的结果 ——
+如果把「连带触发」单列成字段，就又写死了一种。
+
+```gdscript
+@abstract
+class_name Trigger extends Resource
+## 关心哪些事件
+@abstract func subscribed_events() -> Array[StringName]
+## 事件到来时是否算命中
+@abstract func matches(ctx: BattleContext, event: BattleEvent) -> bool
+```
+
+初期子类：`OnTick`、`OnBattleStart`、`OnDamageTaken`、`OnItemFired`（连带触发）、`OnHpBelow`。
+
+#### 频率与时机分开
+
+命中不等于执行。`Cadence` 决定「这次命中要不要真的做」：
+
+```gdscript
+@abstract
+class_name Cadence extends Resource
+## 返回本次命中执行几次（0 = 不执行）。可改自身状态（冷却进度、已用次数）
+@abstract func consume(ctx: BattleContext, state: Dictionary) -> int
+```
+
+初期子类：
+
+| 子类 | 语义 |
+|---|---|
+| `CooldownCadence` | 按定点进度累积，满了执行一次并清零（配合 `OnTick`） |
+| `EveryNth` | 每命中 N 次执行一次 |
+| `OncePerBattle` | 全场最多一次 |
+| `ChanceCadence` | 按概率执行，走 `battle` 随机流 |
+| `Always` | 每次命中都执行 |
+
+把频率独立出来的收益：「每 3 次攻击附带一次爆发」不需要新写触发器，
+`OnItemFired` + `EveryNth(3)` 组合即可。
+
+#### 效果
+
+```gdscript
+@abstract
+class_name Effect extends Resource
+@abstract func apply(ctx: BattleContext, source: int) -> void
+```
+
+初期子类：`DealDamage`、`Heal`、`ApplyStatus`、`ModifyStat`、`FireItem`（让另一件物品出手）。
+
+`BattleContext` 是效果访问战场的唯一入口：读写双方状态、取随机数、写事件日志。
+效果不持有 `BattleSim` 的引用，也不知道模拟循环怎么跑 —— 这样模拟循环重构时效果无需改动。
+
+#### 确定性
+
+规则的求值顺序必须稳定：**按 `source_uid` 升序遍历物品，同一物品内按 `rules` 声明顺序**。
+`ChanceCadence` 等一切随机走 `RunRNG` 的 `battle` 流（见 1.4），不得使用全局 `randf`。
+
+### 4.5 套装效果
+
+```gdscript
+class_name ItemSetDef extends Resource
+@export var id: StringName
+@export var display_name: String
+@export var tiers: Array[SetTier]          ## 按 pieces 升序
+
+class_name SetTier extends Resource
+@export var pieces: int                    ## 达到几件时生效
+@export var mods: Array[StatModifier]      ## 给全体套装件加属性
+@export var rules: Array[AbilityRule]      ## 套装也能给规则，不只是数值
+```
+
+`ItemDef.set_id` 标明归属。计数方式可配，因为两种都有合理用法：
+
+| `count_mode` | 语义 |
+|---|---|
+| `INSTANCES` | 每件实例算一件（带两把同样的剑 = 2 件） |
+| `DISTINCT_DEFS` | 同一定义只算一次（逼玩家集齐不同部件） |
+
+**只数棋盘上的**，暂存区不算 —— 与 3.4 的参战规则一致。
+
+档位是**累加**而非互斥：4 件套同时享有 2 件档与 4 件档的效果。若想要互斥，
+在内容里把高档的数值写成增量即可，不为此增加机制。
+
+套装结算插在编译流程的包体效果之后、邻接标记之前。由于 4.3 的加成对施加顺序不敏感
+（同区相加、跨区相乘均可交换），这个位置只影响可读性，不影响结果。
+
+### 4.6 模拟循环
 
 ```gdscript
 const TICK_HZ := 20                     # 20Hz 逻辑帧，定步长
@@ -446,7 +581,7 @@ func run(a: CombatantSpec, b: CombatantSpec, rng) -> Array[BattleEvent]:
 `base_rate * speed_multiplier` 的定点值。速度乘数本身也是定点数，由 Stamina、
 Heat / Cold 层数等按固定顺序相乘得出。整数确定性保住了，比例缩放也能精确表达。
 
-### 4.5 表现层
+### 4.7 表现层
 
 `BattleView` 持有 `log` 与播放游标，`_process(delta)` 推进播放时间、消费到期事件、播放动画与跳字。
 
@@ -919,7 +1054,113 @@ MainMenu → RunSetup(选初始背包) → MapView
 
 ---
 
-## 9. 目录结构
+## 9. 内容制作管线
+
+道具是本作内容量最大的部分，必须能**不写代码**地增删改。本节定义从制作到入库的整条路径。
+
+### 9.1 两层：作者数据与引擎资产
+
+```
+data/authoring/items/*.json     人写的、可 diff 的源数据
+        │  tools/import_items.gd   校验 + 生成
+        ▼
+data/items/*.tres               引擎吃的资产
+data/shapes/*.tres
+data/sets/*.tres
+```
+
+**源数据用 JSON 而不是直接编辑 `.tres`**：`.tres` 的数组与子资源字面量手写极易出错，
+且改动的 diff 不可读；JSON 可以人写、可以脚本批量生成、评审时看得懂。
+
+`.tres` 是生成物，但**仍然入库** —— 否则每次 clone 都要先跑一遍导入才能打开工程。
+导入器需具备幂等性：源数据未改时重复运行不产生 diff。
+
+### 9.2 导入器不认识任何具体效果
+
+这是整条管线的关键约束。导入器只做三件事：读 JSON、按**注册表**解析类型名、写 `.tres`。
+
+```gdscript
+# core/battle/effect_registry.gd
+## 类型名 → 脚本路径。新增一种效果＝加一个脚本 + 在这里登记一行，
+## 导入器、BattleSim、编辑器三方都不需要改。
+const EFFECTS := {
+    &"deal_damage": "res://core/battle/effects/deal_damage.gd",
+    &"heal":        "res://core/battle/effects/heal.gd",
+    ...
+}
+const TRIGGERS := { ... }
+const CADENCES := { ... }
+```
+
+JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并逐字段赋值：
+
+```json
+{
+  "id": "rifle",
+  "display_name": "步枪",
+  "shape": ["#", "#", "#"],
+  "rarity": 2,
+  "tags": ["weapon"],
+  "set_id": "scavenger",
+  "combat": {
+    "rules": [
+      {
+        "trigger": {"type": "on_tick"},
+        "cadence": {"type": "cooldown", "seconds": 2.0},
+        "effects": [{"type": "deal_damage", "amount": 10.0}]
+      },
+      {
+        "trigger": {"type": "on_damage_taken"},
+        "cadence": {"type": "every_nth", "n": 3},
+        "effects": [{"type": "deal_damage", "amount": 4.0}]
+      }
+    ]
+  },
+  "adjacency": {
+    "grant": {
+      "cells": [[1, 0]],
+      "filter": ["weapon"],
+      "mods": [{"stat": "damage", "category": "SHARP", "percent": 25}]
+    }
+  }
+}
+```
+
+形状用 ASCII 行书写，与 `ItemShape.from_ascii` 同一套写法 —— 在文本编辑器里看得见形状。
+
+### 9.3 校验必须比引擎严格
+
+导入器是内容质量的唯一关口，宁可啰嗦：
+
+- id 唯一、与文件名一致、非空
+- 形状非空、无重复格
+- 引用的 `set_id`、乘区名、属性键、类型名都存在
+- 邻接标记格不与自身轮廓重叠（重叠说明作者搞错了坐标系）
+- `AbilityRule` 三项齐全；`CooldownCadence` 的秒数为正
+- 数值落在合理区间（区间写在配置里，越界只警告不阻断）
+
+**校验失败一律拒绝生成**，不产出半成品资产。导入器以退出码区分成功／失败，
+可直接接进 `tools/test.sh` 之后的流水线。
+
+### 9.4 可视化编辑器（后续增强）
+
+JSON + 导入器已经可用，但形状与邻接标记格靠坐标书写仍然反直觉。后续增强一个编辑器 dock：
+
+- 网格画笔涂形状，同一张网格上标增益／受益格
+- 效果／触发／频率从下拉菜单选（直接复用 `@export var x: Array[基类]` 的自动子类列表）
+- 实时预览：把这件物品放进一个样例棋盘，显示编译后的属性与预估 DPS
+
+它**只是 JSON 的图形前端**，产出仍是 `data/authoring/`，不绕过导入器。
+这样手写与 GUI 两条路产出的数据完全等价，也不存在「GUI 能表达而 JSON 不能」的分裂。
+
+### 9.5 与测试的关系
+
+`tests/test_item_assets.gd` 已有的「校验磁盘上的真实资产」思路继续保留并扩充：
+导入器保证生成时正确，资产测试保证**入库后**仍然正确（防止有人手改 `.tres`）。
+
+---
+
+## 10. 目录结构
 
 ```
 res://
@@ -929,8 +1170,14 @@ res://
       item_shape.gd  item_def.gd  item_instance.gd
       inventory_service.gd
     battle/
-      battle_sim.gd  compiler.gd
-      combatant_spec.gd  battle_event.gd
+      battle_sim.gd  compiler.gd  battle_context.gd
+      combatant_spec.gd  battle_event.gd  ability.gd
+      stat_math.gd  stat_value.gd  stat_set.gd  stat_modifier.gd
+      adjacency_profile.gd  combat_profile.gd  ability_rule.gd
+      effect_registry.gd           # 类型名 → 脚本路径，新增效果只登记一行
+      triggers/                    # Trigger 子类，每种时机一个文件
+      cadences/                    # Cadence 子类，每种频率一个文件
+      effects/                     # Effect 子类，每种效果一个文件
     map/
       map_graph.gd  map_node.gd  map_edge.gd
       map_generator.gd           # 抽象基类
@@ -948,8 +1195,10 @@ res://
       erosion_field.gd           # 侵蚀推进与惩罚结算
       erosion_schedule.gd
     rng.gd
-  data/                          # Resource 资产
-    items/*.tres      shapes/*.tres
+  data/
+    authoring/                     # 人写的源数据，导入器的输入（第 9 节）
+      items/*.json   sets/*.json
+    items/*.tres      shapes/*.tres      sets/*.tres
     loot_tables/*.tres  enemies/*.tres
     chapters/chapter_01.tres
   ui/
@@ -962,38 +1211,45 @@ res://
 
 ---
 
-## 10. 实施顺序
+## 11. 实施顺序
 
-| 阶段 | 内容 | 产出 |
-|---|---|---|
-| **1** | M1 网格背包 + 拖拽 + 序列化 | 可玩的整理沙盒，核心手感可验证 |
-| **2** | M2 编译 + 模拟 + 极简可视化（血条 + 跳字） | 两个背包能打起来，可批量跑平衡 |
-| **3** | M3 环形地图生成 + 单步导航 + 渲染 + 行动计数 | run 的骨架成立 |
-| **4** | 侵蚀系统 + 难度档位开关 | 时间压力成立，可开始调节奏 |
-| **5** | M4 掉落 + 搜刮揭示 + 撤离 | **循环闭合，第一个可玩 Demo** |
-| **6** | M5 存档 + M6 场景流打磨 | 可对外试玩 |
-| **7** | 内容扩充（物品 / 敌人 / 事件 / 新章节地图形态 / 扩展移动机制） | 此后 90% 的时间 |
+| 阶段 | 内容 | 产出 | 状态 |
+|---|---|---|---|
+| **1** | M1 网格背包 + 拖拽 + 序列化 | 可玩的整理沙盒，核心手感可验证 | 完成 |
+| **2** | M2 编译 + 效果系统 + 模拟 + 极简可视化 | 两个背包能打起来，可批量跑平衡 | 进行中 |
+| **3** | 内容制作管线（第 9 节） | 不写代码就能造道具，数值可迭代 | |
+| **4** | M3 环形地图生成 + 单步导航 + 渲染 + 行动计数 | run 的骨架成立 | |
+| **5** | M4 掉落 + 搜刮揭示 + 撤离 | **循环闭合，第一个可玩 Demo** | |
+| **6** | M5 存档 + M6 场景流打磨 | 可对外试玩 | |
+| **7** | 侵蚀系统 + 难度档位开关 | 时间压力成立，可开始调节奏 | |
+| **8** | 内容扩充（物品 / 敌人 / 事件 / 新章节地图形态 / 扩展移动机制） | 此后 90% 的时间 | |
 
-阶段 3 与 4 拆开的理由：地图 + 行动计数本身就能跑通一整局，侵蚀是叠加在上面的压力层。先让无压力版本可玩，再加侵蚀，才能判断出节奏问题到底来自地图结构还是来自侵蚀参数。
+**内容制作管线紧跟在 M2 之后**：战斗系统一旦能跑，瓶颈立刻从「有没有机制」变成
+「有没有内容可调」。此时手写 `.tres` 会成为迭代速度的天花板，而管线本身依赖 M2
+定下的效果系统结构（第 4.4 节），早做也没有稳定的目标可对。
+
+**侵蚀系统排到循环闭合之后**：地图 + 行动计数本身就能跑通一整局，侵蚀是叠加在上面的
+压力层。先让无压力版本可玩、可调，再加时间压力，才分得清节奏问题来自地图结构还是
+侵蚀参数。
 
 **先把 M1 做到能跑，再动其他模块。**
 常见失败模式是先做地图（因为最容易看到画面），结果背包系统定型后地图与战斗全部要改。
 
 ---
 
-## 11. 已知风险
+## 12. 已知风险
 
 1. **异形物品的拖拽手感调优被严重低估** —— 抓取偏移、旋转轴心、吸附容差需要反复迭代，预留充足时间。
 2. **邻接加成的结算顺序**必须在实现前定死分层规则，后期修改将导致全部物品数值重平衡。
 3. **地图形态硬编码风险** —— 任何时候在 `MapGraph` / `MapNavigator` / `MapView` 主体里看到 `ring` / `angle` 字样，就是在给第二章挖坑，立即重构进 `layout` 字典或布局策略。
 4. **侵蚀节奏的数值调校是第一章最难平衡的部分。** `first_at_action` / `interval_actions` 与地图规模强耦合，改环数或节点密度就必须重调。建议写一个“给定策略下的行动点消耗”模拟脚本（用贪心 AI 走图），批量跑出行动点分布再反推侵蚀时间表，不要靠手感拍数字。
-5. **扩展机制的预留缝容易被无意堵死。** 凡是在 `ActionClock` / `ErosionField` / 存档 / HUD 里直接写死 `+1`、或绕开 `MoveIntent` 直接读 `edge` 的地方，都是在给传送与定点移动挖坑。见第 12 节。
+5. **扩展机制的预留缝容易被无意堵死。** 凡是在 `ActionClock` / `ErosionField` / 存档 / HUD 里直接写死 `+1`、或绕开 `MoveIntent` 直接读 `edge` 的地方，都是在给传送与定点移动挖坑。见第 13 节。
 6. `godot_ai` 插件注册了 autoload `_mcp_game_helper`，**正式导出前必须摘除**，避免打进发布包。
 7. 使用 Godot 4.7（较新版本），自定义 Resource 的 `@export var x: Array[Vector2i]` 在编辑器内联编辑时偶有异常。`.tres` 出现数据丢失时优先排查泛型数组导出问题。
 
 ---
 
-## 12. 扩展机制的预留接口
+## 13. 扩展机制的预留接口
 
 已知会在后续加入、但**当前不实现**的机制。本节只记录它们将挂在哪条接缝上，用途是防止底层把路堵死。
 
@@ -1007,6 +1263,7 @@ res://
 | 非矩形 / 可扩容背包 | `GridInventory._blocked` 与 `size` | 不假定容器是满矩形、尺寸不变 |
 | 物品损坏与随机词条 | `ItemInstance.state` 字典 | 不把运行时可变状态写进 `ItemDef` |
 | 宝石镶嵌 | `ItemDef.gem_slots` + `ItemInstance.state.gems`，编译期在包体效果之后插一步 | 宝石不占网格，效果随宿主类型（武器／护甲／散放）而变；`socket` 一词留给它，不要用在邻接标记上 |
+| 新的触发时机／频率／效果 | `Trigger`／`Cadence`／`Effect` 子类 + `effect_registry` 登记一行 | 不在 `BattleSim` 或导入器里出现任何具体效果名；连带触发是 `OnItemFired` 子类，不是特例字段 |
 | 合成配方 | 新增 `RecipeBook` + 回合边界的结算钩子 | 匹配的是**相对偏移模式**而非「挨着」；`state` 预留 `locked` 标志 |
 | 有内容物的包可旋转 | `GridInventory.rotate_item` 的包分支 | 现在直接拒绝；放开时内容物需同步做坐标变换 |
 
@@ -1014,7 +1271,7 @@ res://
 
 ---
 
-## 13. 待确认事项
+## 14. 待确认事项
 
 | # | 事项 | 当前假设 | 若改变的影响面 |
 |---|---|---|---|
@@ -1029,7 +1286,7 @@ res://
 
 ---
 
-## 14. 变更记录
+## 15. 变更记录
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
@@ -1038,4 +1295,5 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v0.7 | 2026-09-20 | 新增 4.4「效果系统」：时机（`Trigger`）／频率（`Cadence`）／内容（`Effect`）三者分离，一切皆事件，连带触发不再是特例；新增 4.5「套装效果」；新增第 9 节「内容制作管线」（JSON 源数据 + 注册表驱动的导入器）；实施顺序重排：内容管线紧跟 M2，侵蚀系统推迟到循环闭合之后 |
 | v0.6 | 2026-09-20 | 邻接机制按语义重命名：`SocketProfile` → `AdjacencyProfile`，星形／菱形两类标记改为**增益 grant／受益 receive**，原先分开的「标记类型」与「效果方向」合并为一个概念；`socket`／「镶嵌」一词腾出来留给尚未实现的宝石系统，并在第 12 节登记其接入点 |

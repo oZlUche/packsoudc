@@ -29,3 +29,4 @@
 | 008 | [插槽模型修正与数值约定](008-stat-conventions.md) | 阶段 2 · M2 前置 | 完成 |
 | 009 | [战斗编译器](009-battle-compiler.md) | 阶段 2 · M2 | 完成 |
 | 010 | [邻接机制按语义重命名](010-adjacency-rename.md) | 阶段 2 · M2 | 完成 |
+| 011 | [效果系统设计与计划重排](011-effect-system-and-pipeline.md) | 设计 · 无代码改动 | 完成 |
