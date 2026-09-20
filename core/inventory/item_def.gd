@@ -35,6 +35,17 @@ extends Resource
 ## 「只收药水的药水带」这类语义用它表达 —— 本作没有装备栏。
 @export var bag_accept_tags: Array[StringName] = []
 
+## 仅 is_bag 为真时有效：施加给包内每件物品的效果。
+## 「包内物品触发快 10%」这类语义放这里。
+@export var bag_mods: Array[StatModifier] = []
+
+@export_group("战斗")
+## 战斗定义。为空表示本物品不参战（纯素材、纯包体）。
+@export var combat: CombatProfile
+
+## 星形／菱形插槽。为空表示本物品不提供邻接加成。
+@export var sockets: SocketProfile
+
 
 ## 定义是否完整可用。资产批量校验与单元测试用。
 func is_valid() -> bool:

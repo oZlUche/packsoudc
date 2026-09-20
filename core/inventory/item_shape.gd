@@ -12,11 +12,15 @@ extends Resource
 # 必须声明在 cells 之前：cells 的 setter 会在资源加载期被调用，
 # 那时若 _rot_cache 尚未初始化，赋值会落空。
 var _rot_cache: Array = []
+## 每一步旋转后减去的平移量。插槽格在轮廓之外，必须跟形状用同一套平移，
+## 否则物品一转，标记位置就和实际生效的格子对不上。
+var _step_offset: Array = []
 
 @export var cells: Array[Vector2i] = [Vector2i.ZERO]:
 	set(value):
 		cells = value
 		_rot_cache = []
+		_step_offset = []
 
 
 ## 取指定旋转下的占格集合。rot 会被折算到 0..3。
@@ -73,12 +77,53 @@ func is_valid() -> bool:
 	return true
 
 
+## 把一个「相对本形状原点的偏移」按该朝向下形状所经历的同一变换转过去。
+##
+## 用于插槽格：它们在轮廓之外，`cells_rotated` 的规范化平移对它们同样适用，
+## 必须共用同一个平移量，不能各转各的。
+func transform_point(p: Vector2i, rot: int) -> Vector2i:
+	if _rot_cache.is_empty():
+		_build_cache()
+	var steps := posmod(rot, 4)
+	var q: Vector2i = p - _step_offset[0]
+	for i in range(1, steps + 1):
+		q = Vector2i(-q.y, q.x) - _step_offset[i]
+	return q
+
+
+## 一组偏移的批量变换。
+func transform_points(points: Array[Vector2i], rot: int) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for p in points:
+		out.append(transform_point(p, rot))
+	return out
+
+
 func _build_cache() -> void:
 	_rot_cache = []
-	var cur := _normalize(cells)
-	for _i in 4:
-		_rot_cache.append(cur)
-		cur = _normalize(_rotate_cw(cur))
+	_step_offset = []
+	var cur: Array[Vector2i] = cells.duplicate()
+	for i in 4:
+		if i > 0:
+			cur = _rotate_cw(cur)
+		var off := _min_of(cur)
+		var shifted: Array[Vector2i] = []
+		for c in cur:
+			shifted.append(c - off)
+		shifted.sort()
+		_rot_cache.append(shifted)
+		_step_offset.append(off)
+		cur = shifted
+
+
+static func _min_of(cs: Array[Vector2i]) -> Vector2i:
+	if cs.is_empty():
+		return Vector2i.ZERO
+	var mn := cs[0]
+	for c in cs:
+		mn.x = mini(mn.x, c.x)
+		mn.y = mini(mn.y, c.y)
+	return mn
 
 
 static func _rotate_cw(cs: Array[Vector2i]) -> Array[Vector2i]:

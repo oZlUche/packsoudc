@@ -20,5 +20,14 @@ code=$?
 # 过滤引擎与插件的噪声，只留测试输出和脚本错误
 grep -vE '^\[|Ziva|PluginUpdater|Unreferenced static string|RID allocations|PagedAllocator|Thread object is being destroyed|wait_to_finish' "$LOG" \
   | grep -vE '^\s*$' | tail -60
+# 脚本运行时错误会中断所在的套件函数，剩下的断言静默消失，而退出码仍是 0 ——
+# 那样覆盖率会悄悄缩水。凡日志里出现 SCRIPT ERROR 一律判失败。
+if grep -q 'SCRIPT ERROR' "$LOG"; then
+  echo ""
+  echo "!! 日志中存在 SCRIPT ERROR，断言可能被静默跳过，判为失败"
+  grep -n 'SCRIPT ERROR' "$LOG" | head -10
+  code=1
+fi
+
 echo "EXIT=$code"
 exit $code
