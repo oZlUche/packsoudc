@@ -26,6 +26,9 @@ var mask_enabled: bool = true
 ## 已合并进来，不再需要两个结构。
 var _by_event: Dictionary = {}
 
+## 自发型规则的时间轮。每条规则在堆里至多一个条目，只排下一次。
+var schedule: ScheduleHeap = ScheduleHeap.new()
+
 ## 单次排空最多派发多少条。防「A 触发 B、B 又触发 A」变成死循环。
 ## 超限则丢弃剩余队列并记一条 DISPATCH_OVERFLOW，便于内容配错时定位而不是直接崩。
 var max_chain: int = 256
@@ -43,6 +46,11 @@ static func create(a: CombatantRuntime, b: CombatantRuntime, p_rng: RandomNumber
 	for rt in ctx.sides:
 		(rt as CombatantRuntime).bind_context(ctx)
 	ctx.refresh_event_index()
+	# 开局把所有自发型规则排进时间轮
+	for rt in ctx.sides:
+		var owner := rt as CombatantRuntime
+		for rule_rt in owner.rules:
+			ctx.schedule_rule(owner, rule_rt as RuleRuntime)
 	return ctx
 
 
@@ -82,6 +90,17 @@ func is_listening(n: StringName) -> bool:
 ## 效果可能施加 buff 从而触发索引重建。
 func subscribers_of(n: StringName) -> Array[RuleRuntime]:
 	return _by_event.get(n, [] as Array[RuleRuntime])
+
+
+## 把一条自发型规则排进时间轮。非自发型直接忽略。
+func schedule_rule(owner: CombatantRuntime, rt: RuleRuntime) -> void:
+	var rule := rt.rule
+	if rule == null or not rule.is_valid() or not rule.trigger.is_self_driven():
+		return
+	var t := rule.cadence.next_time(RuleContext.create(self, owner, rt), now)
+	if t == Cadence.NEVER:
+		return
+	schedule.push(maxi(t, now), rt)
 #endregion
 
 

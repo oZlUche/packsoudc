@@ -588,3 +588,121 @@ static func run_event_index(t: TestCase) -> void:
 	t.eq((subs[2] as RuleRuntime).owner_side, 1, "第三条属于 side 1")
 	t.eq((subs[0] as RuleRuntime).source_uid, 1, "side 0 内部按登记顺序")
 	t.eq((subs[1] as RuleRuntime).source_uid, 2, "side 0 内部按登记顺序")
+
+
+static func run_schedule_heap(t: TestCase) -> void:
+	t.begin("时间轮")
+
+	var mk := func(order: int) -> RuleRuntime:
+		var rt := RuleRuntime.new()
+		rt.order = order
+		return rt
+
+	# --- 堆序 ---
+	var h := ScheduleHeap.new()
+	t.check(h.is_empty(), "初始为空")
+	t.eq(h.peek_time(), -1, "空堆 peek 返回 -1")
+
+	h.push(500, mk.call(1))
+	h.push(100, mk.call(2))
+	h.push(900, mk.call(3))
+	h.push(300, mk.call(4))
+	t.eq(h.size(), 4, "四个条目")
+	t.eq(h.peek_time(), 100, "堆顶是最小时刻")
+
+	var popped: Array = []
+	while not h.is_empty():
+		popped.append(h.pop()[ScheduleHeap.T])
+	t.eq(popped, [100, 300, 500, 900], "弹出顺序按时刻升序")
+
+	# --- 同刻按次序键，这是确定性的唯一保证 ---
+	var h2 := ScheduleHeap.new()
+	h2.push(200, mk.call(100007))   # side 1
+	h2.push(200, mk.call(2))        # side 0 第 3 条
+	h2.push(200, mk.call(0))        # side 0 第 1 条
+	var orders: Array = []
+	while not h2.is_empty():
+		orders.append(h2.pop()[ScheduleHeap.ORDER])
+	t.eq(orders, [0, 2, 100007],
+		"同刻并列按次序键升序 —— side 0 在前，各方内部按登记顺序")
+
+	# --- 次序键由 CombatantRuntime 写入 ---
+	var spec := _spec(100.0, [
+		_compiled(1, "a", {}, [_rule(OnSchedule.new(), _cooldown(1.0), [_damage(1.0)])]),
+		_compiled(2, "b", {}, [_rule(OnSchedule.new(), _cooldown(1.0), [_damage(1.0)])]),
+	])
+	var side0 := CombatantRuntime.from_spec(spec, 0)
+	var side1 := CombatantRuntime.from_spec(spec, 1)
+	t.eq(side0.rules[0].order, 0, "side 0 第一条次序键为 0")
+	t.eq(side0.rules[1].order, 1, "side 0 第二条为 1")
+	t.check(side1.rules[0].order > side0.rules[1].order, "side 1 的次序键整体靠后")
+
+
+static func run_snapshot_cooldown(t: TestCase) -> void:
+	t.begin("冷却快照语义")
+
+	var B := StatMath.Buff
+	var quicken := BuffDef.new()
+	quicken.id = &"quicken"
+	quicken.mods = [_mod(BattleStats.HASTE, B.HASTE, 100)] as Array[StatModifier]
+
+	var spec := _spec(100.0, [
+		_compiled(1, "sword", {"damage": 10.0},
+			[_rule(OnSchedule.new(), _cooldown(1.0), [_damage()])]),
+	])
+	var ctx := _battle(spec, _spec(100.0, []))
+	var me := ctx.sides[0]
+	var foe := ctx.sides[1]
+
+	# 冷却 1 秒，开局已排在 t=1.0
+	_advance_to(ctx, 0.5)
+	t.eq(StatMath.to_int(foe.resources.current(BattleStats.RES_HP)), 100, "0.5 秒时还没出手")
+
+	# 半途施加 +100% 急速
+	me.apply_buff(quicken, 1, ctx.now)
+	t.eq(me.item_stat(1, BattleStats.HASTE), StatMath.from_float(2.0), "速度已翻倍")
+
+	_advance_to(ctx, 0.99)
+	t.eq(StatMath.to_int(foe.resources.current(BattleStats.RES_HP)), 100,
+		"**正在走的这一轮不受影响** —— 急速不会把它提前到 0.75 秒")
+
+	_advance_to(ctx, 1.0)
+	t.eq(StatMath.to_int(foe.resources.current(BattleStats.RES_HP)), 90,
+		"仍然在原定的 1.0 秒出手")
+
+	# 从这一次起才按新速率
+	_advance_to(ctx, 1.49)
+	t.eq(StatMath.to_int(foe.resources.current(BattleStats.RES_HP)), 90, "1.49 秒时未到")
+	_advance_to(ctx, 1.5)
+	t.eq(StatMath.to_int(foe.resources.current(BattleStats.RES_HP)), 80,
+		"下一轮冷却减半，1.5 秒即出手")
+
+
+static func run_lazy_removal(t: TestCase) -> void:
+	t.begin("时间轮惰性删除")
+
+	# 自发型规则挂在 buff 上：入堆后若 buff 被移除，堆里的条目必须作废
+	var burn := BuffDef.new()
+	burn.id = &"burn"
+	burn.rules = [
+		_rule(OnSchedule.new(), _cooldown(1.0), [_self_damage(5.0)])
+	] as Array[AbilityRule]
+
+	var ctx := _battle(_spec(100.0, []), _spec(100.0, []))
+	var victim := ctx.sides[1]
+
+	victim.apply_buff(burn, 1, ctx.now)
+	t.eq(ctx.schedule.size(), 1, "buff 的自发规则已排进时间轮")
+
+	_advance_to(ctx, 1.0)
+	t.eq(StatMath.to_int(victim.resources.current(BattleStats.RES_HP)), 95, "1 秒时灼烧生效")
+
+	# 移除 buff。堆里还留着它下一次的条目，必须被丢弃而不是照常触发
+	victim.remove_buff_stacks(&"burn", 1)
+	t.eq(victim.stacks_of(&"burn"), 0, "buff 已移除")
+	t.check(ctx.schedule.size() > 0, "堆里仍残留着它的条目（惰性删除，不主动摘）")
+
+	_advance_to(ctx, 5.0)
+	t.eq(StatMath.to_int(victim.resources.current(BattleStats.RES_HP)), 95,
+		"移除后绝不能再触发 —— 弹出时发现规则已不属于该单位，直接丢弃")
+	t.eq(ctx.schedule.size(), 0, "残留条目已被清空")

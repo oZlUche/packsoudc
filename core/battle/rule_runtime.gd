@@ -18,6 +18,13 @@ var source_uid: int = 0
 var buff: BuffInstance = null
 var state: Dictionary = {}
 
+## 排序次序键，同刻并列时用它决定先后。
+##
+## 由 [CombatantRuntime] 在登记时写入，形如 side × 100000 + 登记序号，
+## 因此顺序是「side 0 在前，各方内部按登记顺序」—— 与架构文档 4.7 一致。
+## 没有它的话，同刻并列的先后会取决于堆的内部排布，同一局面可能产出不同结果。
+var order: int = 0
+
 
 static func create(
 	p_rule: AbilityRule, p_uid: int = 0, p_buff: BuffInstance = null, p_side: int = 0

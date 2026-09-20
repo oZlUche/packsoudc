@@ -5,7 +5,7 @@
 ##
 ## - **零累积误差**。固定步长要把 dt 反复相加，除不尽的步长会稳定跑偏；
 ##   这里只在离散时刻改写状态，冷却 0.37 秒就是精确的 0.37 秒
-## - **快**。60 秒的战斗只处理几百个时刻，而不是 1200 帧 × 全部规则
+## - **快**。下一个事件由最小堆 O(log n) 给出，不必每跳一步就把全部规则问一遍
 ## - 分辨率不再受步长限制，出手间隔可以是任意小数
 ##
 ## 整场战斗在开战瞬间一次算完（4.1：战斗中没有任何玩家操作），
@@ -55,12 +55,9 @@ static func run_context(ctx: BattleContext, time_limit_sec: float = DEFAULT_TIME
 	return result
 
 
-## 下一个会发生点事的时刻：自发规则的下一次出手，或最近的 buff 到期。
+## 下一个会发生点事的时刻：时间轮堆顶，或最近的 buff 到期。
 static func _next_instant(ctx: BattleContext) -> int:
-	var best := -1
-	var sched: Dictionary = RuleEngine.earliest_scheduled(ctx, ctx.now)
-	if sched["time"] != Cadence.NEVER:
-		best = sched["time"]
+	var best := ctx.schedule.peek_time()
 	for rt in ctx.sides:
 		var expiry := (rt as CombatantRuntime).next_expiry()
 		if expiry >= 0 and (best < 0 or expiry < best):
@@ -74,12 +71,6 @@ static func _next_instant(ctx: BattleContext) -> int:
 ## 一个正好在此刻到期的增益不应该再为这一刻的出手加成 —— 否则「buff 还剩 0 秒」
 ## 这种边界会变成玩家无法预期的运气。
 static func _resolve_instant(ctx: BattleContext) -> void:
-	# 先把【所有】规则的冷却进度结算到此刻，再做任何可能改变速率的事。
-	#
-	# 只结算自发规则是不够的：事件型规则的冷却只在其触发器命中时才被查询，
-	# 若这中间发生过变速，整段区间都会按新速率计算。必须在变速发生前落账。
-	RuleEngine.flush_all(ctx, ctx.now)
-
 	for rt in ctx.sides:
 		var owner := rt as CombatantRuntime
 		for buff in owner.expire_buffs(ctx.now):
@@ -89,23 +80,26 @@ static func _resolve_instant(ctx: BattleContext) -> void:
 			})
 			for e in buff.def.on_expire:
 				(e as Effect).apply(RuleContext.create(
-					ctx, owner, RuleRuntime.create(null, 0, buff)
+					ctx, owner, RuleRuntime.create(null, 0, buff, owner.side)
 				))
 	ctx.drain()
 
-	# 逐个结算已就绪的自发规则。每次重新找最早的一条，
-	# 因为上一条的效果可能改变了其他规则的就绪时刻（施加急速、扣光耐力…）。
+	# 弹出所有已到时刻的自发型规则。
 	#
-	# **每条规则在同一时刻只尝试一次。** 就绪却拒绝执行（次数没攒够、耐力不够）
-	# 的规则不会重置冷却，下一轮还会被选中，不记账就会原地空转。
-	var attempted := {}
+	# 每次出手后规则会以新时刻重新入堆（严格大于当前时刻），所以这个循环必然收敛 ——
+	# 不需要「同一时刻每条只试一次」那种额外记账。
 	var steps := 0
 	while steps < MAX_STEPS_PER_INSTANT:
-		var sched: Dictionary = RuleEngine.earliest_scheduled(ctx, ctx.now, attempted)
-		if sched["time"] == Cadence.NEVER or sched["time"] > ctx.now:
+		var t := ctx.schedule.peek_time()
+		if t < 0 or t > ctx.now:
 			break
-		attempted[(sched["rule"] as RuleRuntime).get_instance_id()] = true
-		RuleEngine.fire_scheduled(ctx, sched["owner"], sched["rule"])
+		var entry := ctx.schedule.pop()
+		var rt2 := entry[ScheduleHeap.RULE] as RuleRuntime
+		var owner2 := ctx.sides[rt2.owner_side] as CombatantRuntime
+		# 惰性删除：buff 掉了之后它的规则还留在堆里，这里丢弃
+		if not owner2.owns_rule(rt2):
+			continue
+		RuleEngine.fire_scheduled(ctx, owner2, rt2)
 		ctx.drain()
 		steps += 1
 		if not _both_alive(ctx):

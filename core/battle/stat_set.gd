@@ -8,11 +8,14 @@ extends RefCounted
 var _values: Dictionary = {}  # StringName -> StatValue
 
 
-## 取该键的累积器，不存在则以 0 为基础值创建。
+## 取该键的累积器，不存在则按该属性的默认基础值创建。
+##
+## 默认值取自 [method BattleStats.default_base] —— 对 haste 这类乘法单位元属性是 1.0，
+## 其余是 0。用死的 0 会让「给未声明该属性的物品加百分比速度」算出 0。
 func ensure(key: StringName) -> StatValue:
 	var v: StatValue = _values.get(key, null)
 	if v == null:
-		v = StatValue.new(0)
+		v = StatValue.new(BattleStats.default_base(key))
 		_values[key] = v
 	return v
 

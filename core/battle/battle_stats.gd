@@ -43,6 +43,24 @@ const STAMINA_COST := &"stamina_cost"
 const MANA_COST := &"mana_cost"
 
 
+## 属性的默认基础值。
+##
+## 绝大多数属性（伤害、护甲、上限）默认 0，加成从 0 起累加。
+## 但**乘法单位元类的属性默认必须是 1.0** —— haste 是速度倍率，
+## 没人给它设基础值时它应当是 1.0 而不是 0。
+##
+## 这条很要命：若默认 0，任何给 haste 加百分比的 buff 都会算出 0 × (1+x) = 0，
+## 冷却随之被放大上万倍。新增倍率类属性时记得登记在这里。
+const DEFAULT_BASE := {
+	HASTE: 1,  # 占位，实际值由 default_base() 换算成定点
+}
+
+
+## 该属性在未被显式设置时的基础值（定点）
+static func default_base(key: StringName) -> int:
+	return StatMath.ONE if DEFAULT_BASE.has(key) else 0
+
+
 ## max_xxx -> xxx；不是上限属性则返回空
 static func resource_of_max(stat_key: StringName) -> StringName:
 	var s := String(stat_key)

@@ -48,7 +48,7 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 	for item in spec.items:
 		var it2 := item as CompiledItem
 		for rule in it2.rules:
-			rt.rules.append(RuleRuntime.create(rule, it2.source_uid, null, p_side))
+			rt._register(RuleRuntime.create(rule, it2.source_uid, null, p_side))
 
 	rt._rebuild()
 	return rt
@@ -145,9 +145,12 @@ func apply_buff(def: BuffDef, stacks: int = 1, now: int = 0) -> int:
 		var inst := BuffInstance.create(def, stacks, now)
 		buffs.append(inst)
 		added = inst.stacks
+		var added_rules: Array[RuleRuntime] = []
 		for rule in def.rules:
-			rules.append(RuleRuntime.create(rule, 0, inst, side))
-		_notify_rules_changed()
+			var new_rt := RuleRuntime.create(rule, 0, inst, side)
+			_register(new_rt)
+			added_rules.append(new_rt)
+		_notify_rules_changed(added_rules)
 	mark_dirty()
 	return added
 
@@ -177,15 +180,31 @@ func _drop_buff(inst: BuffInstance) -> void:
 		_notify_rules_changed()
 
 
-## 规则集一变就重建事件索引。
+## 登记一条规则并写入次序键。
+func _register(rt: RuleRuntime) -> void:
+	rt.order = side * 100000 + rules.size()
+	rules.append(rt)
+
+
+## 规则集一变就重建事件索引，并把新增的自发型规则排进时间轮。
 ##
 ## [b]放在这里而不是让调用方各自记得调。[/b] 施加 buff 时漏掉只是少触发，
 ## 移除 buff 时漏掉却会让已删除的规则继续被派发 —— 后者是真 bug，
 ## 而且「有时候某个效果还在生效」极难定位。集中在这一处就不可能漏。
-func _notify_rules_changed() -> void:
+##
+## 被移除的规则不从堆里摘 —— 堆删任意元素代价高，改由弹出时惰性丢弃。
+func _notify_rules_changed(added: Array[RuleRuntime] = [] as Array[RuleRuntime]) -> void:
 	var ctx: BattleContext = _ctx_ref.get_ref() if _ctx_ref != null else null
-	if ctx != null:
-		ctx.refresh_event_index()
+	if ctx == null:
+		return
+	ctx.refresh_event_index()
+	for rt in added:
+		ctx.schedule_rule(self, rt)
+
+
+## 该规则是否仍在本单位的规则表里。时间轮弹出时用它做惰性删除。
+func owns_rule(rt: RuleRuntime) -> bool:
+	return rules.has(rt)
 
 
 ## 移除所有在 now 已到期的 buff，返回被移除的列表。

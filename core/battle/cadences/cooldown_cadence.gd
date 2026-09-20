@@ -1,70 +1,52 @@
-## 冷却：完成一个周期的「工作量」后可执行一次。
+## 冷却：距上次出手满 period 秒后可再次执行。
 ##
-## 进度以**工作量**计而非时间：每秒推进 haste 点工作量，攒满 period 点即就绪。
-## 这样速率变化不会丢失已有进度 —— 变速前把进度结算到当下，之后按新速率外推。
+## [b]快照语义[/b]：出手那一刻按**当时**的速率算死下一次时刻，此后不再重算。
+## 后来施加的急速只影响再下一次，不会加速正在走的这一轮。
 ##
-## 相比「每帧 += dt」的做法，这里完全没有累积误差：
-## 进度只在变速与执行这两个离散时刻被改写。
+## 换来的是：排定时刻永不失效，因此可以放进最小堆（[ScheduleHeap]），
+## 推进器 O(log n) 取下一个事件，而不必每跳一步就把全部规则重问一遍。
+## 代价是喝下急速药时当前这一轮不变快 —— 这是有意的取舍。
 class_name CooldownCadence
 extends Cadence
 
-const PROGRESS := &"cd_work"
-const LAST := &"cd_last"
+const READY_AT := &"cd_ready_at"
 
 ## 冷却下限，防止 period 被改到 0 造成同一时刻无限触发
 const MIN_PERIOD := StatMath.ONE / 100  # 0.01 秒
 
 ## 基础冷却，秒
 @export var seconds: float = 2.0
-## 进度累积是否吃 haste（速度倍率，1.0 为基准，越大越快）
+## 是否吃 haste（速度倍率，1.0 为基准，越大越快）
 @export var use_haste: bool = true
 
 
-func _period(ctx: RuleContext) -> int:
+## 本次冷却的实际时长：周期 ÷ 速率，按调用当刻的属性算
+func _duration(ctx: RuleContext) -> int:
 	var from_stats := ctx.item_stat(BattleStats.COOLDOWN, -1)
 	var period := from_stats if from_stats > 0 else StatMath.from_float(seconds)
-	return maxi(MIN_PERIOD, period)
-
-
-func _rate(ctx: RuleContext) -> int:
+	period = maxi(MIN_PERIOD, period)
 	if not use_haste:
-		return StatMath.ONE
-	return maxi(1, ctx.item_stat(BattleStats.HASTE, StatMath.ONE))
+		return period
+	var rate := maxi(1, ctx.item_stat(BattleStats.HASTE, StatMath.ONE))
+	return maxi(MIN_PERIOD, (period * StatMath.ONE) / rate)
 
 
-## 把进度推进到 now。变速前必须调用。
-func flush(ctx: RuleContext, now: int) -> void:
-	var st := ctx.state()
-	var last := int(st.get(LAST, 0))
-	if now <= last:
-		st[LAST] = now
-		return
-	st[PROGRESS] = int(st.get(PROGRESS, 0)) + StatMath.mul(now - last, _rate(ctx))
-	st[LAST] = now
-
-
+## 下一次可执行的时刻。首次调用（尚未出手过）时按 now 起算一个完整冷却。
 func next_time(ctx: RuleContext, now: int) -> int:
-	flush(ctx, now)
-	var remaining := _period(ctx) - int(ctx.state().get(PROGRESS, 0))
-	if remaining <= 0:
-		return now
-	# 还差 remaining 点工作量，按当前速率还需要 remaining / rate 秒
-	var rate := _rate(ctx)
-	var wait := (remaining * StatMath.ONE + rate - 1) / rate  # 向上取整，避免早一个最小单位
-	return now + maxi(1, wait)
+	var st := ctx.state()
+	if not st.has(READY_AT):
+		st[READY_AT] = now + _duration(ctx)
+	return int(st[READY_AT])
 
 
 func can_fire(ctx: RuleContext, now: int) -> bool:
-	flush(ctx, now)
-	return int(ctx.state().get(PROGRESS, 0)) >= _period(ctx)
+	return now >= next_time(ctx, now)
 
 
 func commit(ctx: RuleContext, now: int) -> void:
-	flush(ctx, now)
-	var st := ctx.state()
-	# 扣一个周期而不是清零：溢出的进度留给下一次，
-	# 否则高速率下每次都浪费掉一点，实际频率永远低于名义值
-	st[PROGRESS] = int(st.get(PROGRESS, 0)) - _period(ctx)
+	# 从此刻起算新的一轮。不是「上次就绪时刻 + 周期」——
+	# 那样在被消耗挡住多次后会积欠一串补偿性触发
+	ctx.state()[READY_AT] = now + _duration(ctx)
 
 
 func estimated_hz(stats: StatSet) -> float:

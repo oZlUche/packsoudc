@@ -8,12 +8,23 @@ class_name StatValue
 extends RefCounted
 
 ## 物品定义上写的基础值
-var base: int = 0
+var base: int = 0:
+	set(v):
+		base = v
+		_valid = false
 
 ## 固定加值，任意来源相加。在所有乘法之后加上，不吃百分比放大。
-var flat: int = 0
+var flat: int = 0:
+	set(v):
+		flat = v
+		_valid = false
 
 var _mult: PackedInt32Array
+
+## total() 的结果缓存。属性在战斗中被反复读取（每次冷却查询要读速率与周期），
+## 而每次 total() 都要跑一遍乘区连乘 —— 不缓存的话这是最热的一条路径。
+var _cached: int = 0
+var _valid: bool = false
 
 
 func _init(p_base: int = 0) -> void:
@@ -29,6 +40,7 @@ func add_mult(category: int, amount: int) -> void:
 		push_error("StatValue.add_mult: 乘区下标越界 %d" % category)
 		return
 	_mult[category] += amount
+	_valid = false
 
 
 ## 便捷写法：add_percent(Buff.SHARP, 25) 等价于该乘区 +25%
@@ -37,7 +49,7 @@ func add_percent(category: int, percent: int) -> void:
 
 
 func add_flat(amount: int) -> void:
-	flat += amount
+	flat += amount  # setter 会置脏
 
 
 func mult_of(category: int) -> int:
@@ -48,13 +60,17 @@ func mult_of(category: int) -> int:
 
 ## 按约定结算：base × ∏(1 + 各乘区) + flat
 func total() -> int:
+	if _valid:
+		return _cached
 	var v := base
 	for category in StatMath.categories():
 		# 单个乘区的减益总和低于 −100% 时钳到 0，不允许出现负数因子 ——
 		# 否则叠够减益反而会把伤害翻成正的
 		var factor := maxi(0, StatMath.ONE + _mult[category])
 		v = StatMath.mul(v, factor)
-	return v + flat
+	_cached = v + flat
+	_valid = true
+	return _cached
 
 
 ## 终值取整，用于应用伤害或显示。
@@ -66,6 +82,7 @@ func clone() -> StatValue:
 	var copy := StatValue.new(base)
 	copy.flat = flat
 	copy._mult = _mult.duplicate()
+	copy._valid = false
 	return copy
 
 

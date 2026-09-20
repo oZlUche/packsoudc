@@ -8,6 +8,9 @@ extends RefCounted
 ## 遍历顺序固定：先 side 0 后 side 1，各方内部按规则登记顺序 ——
 ## 登记顺序来自编译期按 uid 升序的物品遍历，因此整体是确定性的。
 ## 自发型规则：不经由事件，直接求值（跳过时机层）。由 [BattleSim] 在排定时刻调用。
+##
+## [b]无论最终是否真的放出效果，都会重新排进时间轮。[/b]
+## 这正是「每次尝试使用后都重算冷却」—— 消耗付不起也照样走冷却。
 static func fire_scheduled(ctx: BattleContext, owner: CombatantRuntime, rt: RuleRuntime) -> bool:
 	var rule := rt.rule
 	if rule == null or not rule.is_valid():
@@ -16,8 +19,12 @@ static func fire_scheduled(ctx: BattleContext, owner: CombatantRuntime, rt: Rule
 
 	rule.cadence.on_match(rc)
 	if not rule.cadence.can_fire(rc, ctx.now):
+		# 理论上不该发生（是按就绪时刻弹出的）。保险起见也要重新入堆，
+		# 否则这条规则会永远消失
+		_reschedule(ctx, owner, rt, rc)
 		return false
 	rule.cadence.commit(rc, ctx.now)
+	_reschedule(ctx, owner, rt, rc)
 
 	for cost in rule.costs:
 		(cost as Cost).on_attempt(rc)
@@ -93,37 +100,13 @@ static func evaluate(
 	return true
 
 
-## 把所有冷却进度结算到 now。**速率变化前必须调用** ——
-## 否则新速率会被错误地套用到变化之前那段时间上。
-static func flush_all(ctx: BattleContext, now: int) -> void:
-	for rt in ctx.sides:
-		for rule_rt in (rt as CombatantRuntime).rules:
-			var cadence := (rule_rt as RuleRuntime).rule.cadence
-			if cadence != null:
-				cadence.flush(RuleContext.create(ctx, rt, rule_rt), now)
-
-
-## 自发型规则中最早的下一次执行时刻，以及它属于谁。
-## 返回 {"time": int, "owner": CombatantRuntime, "rule": RuleRuntime}，
-## 没有自发规则时 time 为 [constant Cadence.NEVER]。
+## 出手（或尝试出手）之后重新排队。
 ##
-## 同刻并列时按 (side, source_uid, 规则序号) 取最小，保证确定性。
-## [param skip] 里的 RuleRuntime 会被跳过 —— 同一时刻每条规则只尝试一次，
-## 否则「就绪但拒绝执行」的规则（次数没攒够、耐力不够）会让调用方原地空转。
-static func earliest_scheduled(ctx: BattleContext, now: int, skip: Dictionary = {}) -> Dictionary:
-	var best := {"time": Cadence.NEVER, "owner": null, "rule": null}
-	for rt in ctx.sides:
-		var owner := rt as CombatantRuntime
-		for i in owner.rules.size():
-			var rule_rt := owner.rules[i] as RuleRuntime
-			var rule := rule_rt.rule
-			if rule == null or not rule.is_valid() or not rule.trigger.is_self_driven():
-				continue
-			if skip.has(rule_rt.get_instance_id()):
-				continue
-			var t := rule.cadence.next_time(RuleContext.create(ctx, owner, rule_rt), now)
-			if t == Cadence.NEVER:
-				continue
-			if best["time"] == Cadence.NEVER or t < best["time"]:
-				best = {"time": t, "owner": owner, "rule": rule_rt}
-	return best
+## 时刻必须严格大于当前时刻，否则同刻会被反复弹出，推进器再也走不动。
+static func _reschedule(
+	ctx: BattleContext, owner: CombatantRuntime, rt: RuleRuntime, rc: RuleContext
+) -> void:
+	var t: int = rt.rule.cadence.next_time(rc, ctx.now)
+	if t == Cadence.NEVER:
+		return
+	ctx.schedule.push(maxi(t, ctx.now + 1), rt)
