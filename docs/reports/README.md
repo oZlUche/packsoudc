@@ -22,3 +22,4 @@
 | 001 | [仓库初始化与开发环境](001-repo-bootstrap.md) | 阶段 0 · 准备 | 完成 |
 | 002 | [背包数据层](002-inventory-data-layer.md) | 阶段 1 · M1 | 完成 |
 | 003 | [GridInventory 容器核心与原子移动](003-grid-inventory.md) | 阶段 1 · M1 | 完成 |
+| 004 | [示例物品资产](004-sample-item-assets.md) | 阶段 1 · M1 | 完成 |

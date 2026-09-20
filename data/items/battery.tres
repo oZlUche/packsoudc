@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_bauvg"]
+[ext_resource type="Resource" path="res://data/shapes/battery.tres" id="2_lvu8d"]
+
+[resource]
+script = ExtResource("1_bauvg")
+id = &"battery"
+display_name = "电池"
+shape = ExtResource("2_lvu8d")
+tags = Array[StringName]([&"part"])

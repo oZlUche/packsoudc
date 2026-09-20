@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_nmfdk"]
+[ext_resource type="Resource" path="res://data/shapes/mag.tres" id="2_mhrqx"]
+
+[resource]
+script = ExtResource("1_nmfdk")
+id = &"mag"
+display_name = "弹匣"
+shape = ExtResource("2_mhrqx")
+tags = Array[StringName]([&"ammo"])

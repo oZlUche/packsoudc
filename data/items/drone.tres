@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_naue7"]
+[ext_resource type="Resource" path="res://data/shapes/drone.tres" id="2_47c5b"]
+
+[resource]
+script = ExtResource("1_naue7")
+id = &"drone"
+display_name = "无人机"
+shape = ExtResource("2_47c5b")
+rarity = 2
+tags = Array[StringName]([&"tool"])

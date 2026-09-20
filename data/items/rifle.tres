@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_1i833"]
+[ext_resource type="Resource" path="res://data/shapes/rifle.tres" id="2_e6i7p"]
+
+[resource]
+script = ExtResource("1_1i833")
+id = &"rifle"
+display_name = "步枪"
+shape = ExtResource("2_e6i7p")
+rarity = 2
+tags = Array[StringName]([&"weapon"])

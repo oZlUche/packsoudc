@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1_e4gi0"]
+[ext_resource type="Resource" path="res://data/shapes/medkit.tres" id="2_ljosp"]
+
+[resource]
+script = ExtResource("1_e4gi0")
+id = &"medkit"
+display_name = "医疗包"
+shape = ExtResource("2_ljosp")
+rarity = 1
+tags = Array[StringName]([&"consumable"])
