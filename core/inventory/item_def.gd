@@ -1,0 +1,40 @@
+## 物品的静态定义：全局共享、只读。
+##
+## 与 [ItemInstance] 严格分开 —— 定义描述「这是什么」，实例描述「这一件现在怎么样」。
+## 存档只写 [member id] 字符串，绝不写资源路径，否则挪动 .tres 会让旧存档失效。
+##
+## 战斗相关字段（冷却、伤害、邻接加成）属于 M2，届时直接在本类追加导出属性即可，
+## Godot 对 .tres 中缺失的新属性会取默认值，不会破坏已有资产。
+class_name ItemDef
+extends Resource
+
+## 全局唯一标识，同时是存档键。一经发布不得修改。
+@export var id: StringName = &""
+
+@export var display_name: String = ""
+
+## 占格形状。为 null 时本定义不可用。
+@export var shape: ItemShape
+
+@export var icon: Texture2D
+
+## 稀有度档位，0 起。影响掉落权重与 UI 配色。
+@export var rarity: int = 0
+
+## 是否允许旋转。少数物品（如某些装备）可能强制朝向。
+@export var can_rotate: bool = true
+
+## 容器准入标签。装备栏通过 [member GridInventory.accept_tags] 与之比对。
+@export var tags: Array[StringName] = []
+
+
+## 定义是否完整可用。资产批量校验与单元测试用。
+func is_valid() -> bool:
+	return id != &"" and shape != null and shape.is_valid()
+
+
+## 该定义在指定旋转下的占格。
+func cells_rotated(rot: int) -> Array[Vector2i]:
+	if shape == null:
+		return [] as Array[Vector2i]
+	return shape.cells_rotated(rot if can_rotate else 0)
