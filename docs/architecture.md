@@ -459,16 +459,25 @@ class_name AbilityRule extends Resource
 
 #### 一切皆事件
 
-`BattleSim` 只负责推进时间并广播事件，不知道任何具体效果：
+`BattleSim` 只负责推进时间、维护状态并广播事件，不知道任何具体效果。
+**战斗中每一个可观测的步骤都是一个事件**，而不只是「出手」和「受伤」：
 
-```
-battle_start / battle_end
-tick                      每个逻辑帧
-item_fired(uid)           某件物品出手了  ← 连带触发靠它，不需要特例
-damage_dealt / damage_taken
-hp_crossed(ratio)
-killed
-```
+| 分组 | 事件 | 载荷要点 |
+|---|---|---|
+| 时间 | `battle_start` / `battle_end` / `tick` | tick 带帧号 |
+| 出手 | `item_fired` | 来源 uid、命中的规则序号 |
+| 效果 | `effect_resolved` | 效果类型、来源、目标、结果摘要 |
+| 层数 | `status_stacked` / `status_unstacked` | 状态键、变化量、变化后层数 |
+| 资源 | `resource_changed` | 资源键、增量、原因（见下） |
+| 存亡 | `died` | 阵亡方 |
+
+**生命与耐力不各开一套事件**，统一走 `resource_changed(key, delta, reason)`。
+`key` 是资源键（`hp` / `stamina` / `mana` / …），`delta` 正负表示恢复与扣除，
+`reason` 说明来由（`damage` / `heal` / `cost` / `regen` / …）。
+
+这样「生命扣除」「耐力恢复」都是同一个事件的不同取值，新增一种资源不需要新增事件类型，
+也不需要改 `BattleSim`。想只听生命下降的触发器，在 `matches()` 里判断
+`key == hp and delta < 0` 即可。
 
 **连带触发不是一种特殊机制**，而是一个订阅 `item_fired` 并判断来源是否落在自己
 增益／受益格上的普通 `Trigger` 子类。这是把时机做成可扩展接口后自然得到的结果 ——
@@ -483,31 +492,93 @@ class_name Trigger extends Resource
 @abstract func matches(ctx: BattleContext, event: BattleEvent) -> bool
 ```
 
-初期子类：`OnTick`、`OnBattleStart`、`OnDamageTaken`、`OnItemFired`（连带触发）、`OnHpBelow`。
+初期子类：`OnTick`、`OnBattleStart`、`OnItemFired`（连带触发）、`OnResourceChanged`、
+`OnStatusStacked`、`OnHpBelow`、`OnDeath`。
+
+#### 只广播有人听的事件
+
+把每个步骤都做成事件，代价是绝大多数事件没有任何监听者。**进入战斗时先算出订阅并集，
+只开启被订阅的事件**；未被订阅的事件连对象都不构造。
+
+```gdscript
+# 编译期／开战前
+var active: Dictionary = {}          # StringName -> true
+for rule in all_rules_on_both_sides:
+    for name in rule.trigger.subscribed_events():
+        active[name] = true
+
+# BattleSim 内部，发事件前先查
+func _emit(name: StringName, payload_builder: Callable) -> void:
+    if not _active.has(name):
+        return                        # 连 payload 都不构造
+    ...
+```
+
+三条约束，缺一不可：
+
+1. **掩码取双方并集。** A 方发出的事件可能被 B 方的物品监听（「敌人回血时我获得强化」）。
+   按单侧算掩码会漏事件。
+2. **规则集变化时必须重算掩码。** 若某个效果能在战斗中授予新规则，新规则订阅的事件可能
+   尚未开启，那条规则就会静默失效 —— 这是最难查的一类 bug。授予规则的效果**必须**
+   调用 `ctx.refresh_event_mask()`。重算很便宜，宁可多算。
+3. **掩码是纯优化，必须不可见。** 测试里同时跑「全开」与「掩码」两条路径，
+   断言两者产出的事件日志与最终状态**逐条相同**。一旦掩码影响结果，说明它被误用成了
+   游戏逻辑，必须立即修掉，而不是接受现状。
+
+第 3 条尤其重要：性能优化混进语义是这类系统最常见的腐坏方式。
 
 #### 频率与时机分开
 
-命中不等于执行。`Cadence` 决定「这次命中要不要真的做」：
+命中不等于执行。`Cadence` 决定「这次命中要不要真的做」，采用**两阶段**：
 
 ```gdscript
 @abstract
 class_name Cadence extends Resource
-## 返回本次命中执行几次（0 = 不执行）。可改自身状态（冷却进度、已用次数）
-@abstract func consume(ctx: BattleContext, state: Dictionary) -> int
+## 这次命中能不能执行。只读，不得改状态
+@abstract func can_fire(ctx: BattleContext, state: Dictionary) -> bool
+## 确认执行，在此扣冷却／计数／资源
+@abstract func commit(ctx: BattleContext, state: Dictionary) -> void
 ```
+
+两阶段是为了**组合时的原子性**：`AllOf([冷却 2 秒, 耗 10 耐力])` 必须在耐力不足时
+不消耗冷却。先全体 `can_fire`，全过才逐个 `commit` —— 与 `GridInventory` 的
+「先校验后写入」是同一个不变式。
 
 初期子类：
 
 | 子类 | 语义 |
 |---|---|
-| `CooldownCadence` | 按定点进度累积，满了执行一次并清零（配合 `OnTick`） |
+| `CooldownCadence` | 按定点进度累积，满了执行并清零（配合 `OnTick`） |
+| `ResourceCost` | 消耗指定资源，不足则不执行 |
 | `EveryNth` | 每命中 N 次执行一次 |
 | `OncePerBattle` | 全场最多一次 |
 | `ChanceCadence` | 按概率执行，走 `battle` 随机流 |
+| `AllOf` / `AnyOf` | 组合子，把上面几种拼起来 |
 | `Always` | 每次命中都执行 |
 
-把频率独立出来的收益：「每 3 次攻击附带一次爆发」不需要新写触发器，
-`OnItemFired` + `EveryNth(3)` 组合即可。
+把频率独立出来、再配上组合子，收益是**组合数为乘积而非加和**：
+「每 3 次攻击附带一次爆发」= `OnItemFired` + `EveryNth(3)`；
+「耗 10 耐力、冷却 2 秒的重击」= `OnTick` + `AllOf([Cooldown(2), ResourceCost(stamina, 10)])`。
+两者都不需要新写任何类。
+
+#### 资源池
+
+生命、耐力、法力不各写一套，统一为可扩展的资源池：
+
+```gdscript
+class_name ResourcePool extends RefCounted
+## 键名 → {current, max}，全部定点
+func change(key: StringName, delta: int, reason: StringName) -> int  ## 返回实际变化量
+func current(key: StringName) -> int
+func can_afford(key: StringName, amount: int) -> bool
+```
+
+每次变动发一条 `resource_changed`。**实际变化量可能小于请求量**（打到 0 封顶、
+超过上限截断），事件里记的是实际值 —— 「受到 50 伤害」和「实际掉了 12 点血」是两回事，
+监听者关心的通常是后者。
+
+资源键与上限来自编译期的 `StatSet`（`max_hp`、`max_stamina` …），因此「装备增加耐力上限」
+不需要特殊处理，就是一条普通的 `StatModifier`。
 
 #### 效果
 
@@ -517,15 +588,21 @@ class_name Effect extends Resource
 @abstract func apply(ctx: BattleContext, source: int) -> void
 ```
 
-初期子类：`DealDamage`、`Heal`、`ApplyStatus`、`ModifyStat`、`FireItem`（让另一件物品出手）。
+初期子类：`DealDamage`、`RestoreResource`、`ApplyStatus`、`ModifyStat`、
+`FireItem`（让另一件物品出手）、`GrantRule`（战斗中授予新规则，注意上文约束 2）。
 
-`BattleContext` 是效果访问战场的唯一入口：读写双方状态、取随机数、写事件日志。
-效果不持有 `BattleSim` 的引用，也不知道模拟循环怎么跑 —— 这样模拟循环重构时效果无需改动。
+`BattleContext` 是效果访问战场的唯一入口：读写双方状态与资源池、取随机数、写事件日志、
+重算事件掩码。效果不持有 `BattleSim` 的引用，也不知道模拟循环怎么跑 ——
+这样模拟循环重构时效果无需改动。
 
 #### 确定性
 
 规则的求值顺序必须稳定：**按 `source_uid` 升序遍历物品，同一物品内按 `rules` 声明顺序**。
 `ChanceCadence` 等一切随机走 `RunRNG` 的 `battle` 流（见 1.4），不得使用全局 `randf`。
+
+事件在同一逻辑帧内**按发生顺序排队、逐条派发**，不允许递归立即派发 ——
+否则「A 触发 B、B 又触发 A」会变成栈溢出而不是可控的连锁。派发深度设上限，
+超限则丢弃并记一条警告事件，便于内容出问题时定位而不是直接崩。
 
 ### 4.5 套装效果
 
@@ -1263,6 +1340,7 @@ res://
 | 非矩形 / 可扩容背包 | `GridInventory._blocked` 与 `size` | 不假定容器是满矩形、尺寸不变 |
 | 物品损坏与随机词条 | `ItemInstance.state` 字典 | 不把运行时可变状态写进 `ItemDef` |
 | 宝石镶嵌 | `ItemDef.gem_slots` + `ItemInstance.state.gems`，编译期在包体效果之后插一步 | 宝石不占网格，效果随宿主类型（武器／护甲／散放）而变；`socket` 一词留给它，不要用在邻接标记上 |
+| 新的资源种类（法力、护盾值…） | `ResourcePool` 的新键 + `max_*` 属性键 | 不为每种资源单开事件，统一走 `resource_changed(key, delta, reason)` |
 | 新的触发时机／频率／效果 | `Trigger`／`Cadence`／`Effect` 子类 + `effect_registry` 登记一行 | 不在 `BattleSim` 或导入器里出现任何具体效果名；连带触发是 `OnItemFired` 子类，不是特例字段 |
 | 合成配方 | 新增 `RecipeBook` + 回合边界的结算钩子 | 匹配的是**相对偏移模式**而非「挨着」；`state` 预留 `locked` 标志 |
 | 有内容物的包可旋转 | `GridInventory.rotate_item` 的包分支 | 现在直接拒绝；放开时内容物需同步做坐标变换 |
@@ -1295,5 +1373,6 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v0.8 | 2026-09-20 | 细化 4.4：战斗每个步骤（出手／效果结算／状态叠减层／资源增减）均为事件；生命与耐力统一为**资源池** `resource_changed(key, delta, reason)`，新增资源种类不新增事件类型；**开战前按订阅并集算事件掩码，只广播有人听的事件**，并明确三条约束（取双方并集／规则集变化须重算／必须与全开路径逐条一致）；`Cadence` 改为 `can_fire`＋`commit` 两阶段并引入 `AllOf` 组合子，使「冷却＋耐力消耗」原子成立；事件排队派发、设深度上限，禁止递归立即派发 |
 | v0.7 | 2026-09-20 | 新增 4.4「效果系统」：时机（`Trigger`）／频率（`Cadence`）／内容（`Effect`）三者分离，一切皆事件，连带触发不再是特例；新增 4.5「套装效果」；新增第 9 节「内容制作管线」（JSON 源数据 + 注册表驱动的导入器）；实施顺序重排：内容管线紧跟 M2，侵蚀系统推迟到循环闭合之后 |
 | v0.6 | 2026-09-20 | 邻接机制按语义重命名：`SocketProfile` → `AdjacencyProfile`，星形／菱形两类标记改为**增益 grant／受益 receive**，原先分开的「标记类型」与「效果方向」合并为一个概念；`socket`／「镶嵌」一词腾出来留给尚未实现的宝石系统，并在第 12 节登记其接入点 |
