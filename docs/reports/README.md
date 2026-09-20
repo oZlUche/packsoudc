@@ -32,3 +32,4 @@
 | 011 | [效果系统设计与计划重排](011-effect-system-and-pipeline.md) | 设计 · 无代码改动 | 完成 |
 | 012 | [事件掩码与资源池](012-event-mask-and-resources.md) | 设计 · 无代码改动 | 完成 |
 | 013 | [消耗层与战斗内增益系统](013-cost-layer-and-buffs.md) | 设计 · 无代码改动 | 完成 |
+| 014 | [两条定案：上限联动与战斗零操作](014-battle-interaction-model.md) | 设计 · **M2 设计冻结** | 完成 |
