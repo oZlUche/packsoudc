@@ -75,8 +75,13 @@ static func run(t: TestCase) -> void:
 	t.eq(DamageTypes.get_def(DamageTypes.PHYSICAL).shield_absorbable, true, "物理可被护盾吸收")
 	t.eq(DamageTypes.get_def(DamageTypes.POISON).shield_absorbable, false, "中毒绕过护盾")
 	t.eq(DamageTypes.get_def(DamageTypes.POISON).armor_applies, false, "中毒也无视护甲")
-	t.eq(DamageTypes.get_def(DamageTypes.DRAIN).notifies, false,
-		"流失不通知默认的受伤监听 —— 否则割自己一刀成了正收益")
+	t.eq(DamageTypes.get_def(DamageTypes.DRAIN).provokes, false,
+		"流失不招致反应 —— 否则割自己一刀成了正收益")
+	t.eq(DamageTypes.get_def(DamageTypes.POISON).provokes, false, "中毒不招致反应")
+	t.eq(DamageTypes.get_def(DamageTypes.BLEED).provokes, false, "流血不招致反应")
+	t.eq(DamageTypes.get_def(DamageTypes.REFLECT).provokes, false,
+		"**反伤自己不招致反伤** —— 这是对轰在第一层就终止的真正原因，不是靠深度上限")
+	t.eq(DamageTypes.get_def(DamageTypes.PHYSICAL).provokes, true, "直接攻击才招致反应")
 	t.eq(DamageTypes.get_def(DamageTypes.DRAIN).shield_absorbable, false, "流失不吃护盾")
 
 	# 内容可以追加类型，结算代码一行不改
@@ -96,7 +101,7 @@ static func run(t: TestCase) -> void:
 
 	DamageTypes.reset_to_builtins()
 	t.check(not DamageTypes.has(&"corrode"), "重置后只剩内置四种")
-	t.eq(DamageTypes.ids().size(), 4, "内置四种")
+	t.eq(DamageTypes.ids().size(), 6, "内置六种")
 
 
 static func run_shield(t: TestCase) -> void:
@@ -306,9 +311,11 @@ static func run_drain(t: TestCase) -> void:
 
 
 static func run_nesting_guard(t: TestCase) -> void:
-	t.begin("伤害 · 嵌套深度上限")
+	t.begin("伤害 · 深度上限（兜底，不是防线）")
 
-	# 两件互相反伤的道具：受伤前效果自己又造成伤害，会一层层套下去
+	# 这里【故意】用 deal_damage(physical) 手写反伤，把类型配错。
+	# physical 会招致反应，于是双方一层层对轰下去 —— 上限在这时兜住。
+	# 正确的写法见下一组：用 reflect_damage，它在第一层就终止。
 	var reflect_a := _hit(5.0)
 	var reflect_b := _hit(5.0)
 	var side_a := H._spec(500.0, [
@@ -330,3 +337,118 @@ static func run_nesting_guard(t: TestCase) -> void:
 			overflowed = true
 	t.check(overflowed, "达到上限时记了一条 dispatch_overflow，便于内容配错时定位")
 	t.check(_hp(ctx, 0) < 500 and _hp(ctx, 1) < 500, "双方都实际挨了打，不是被整条跳过")
+
+
+static func run_reflect(t: TestCase) -> void:
+	t.begin("伤害 · 反伤靠类型终止，不靠深度上限")
+
+	# 两件都用 reflect_damage 的道具互相反伤。
+	# reflect 类型 provokes 为 false，所以 A 弹给 B 的那一下不会再引发 B 的反伤 ——
+	# 对轰在第一层就结束，而不是撞到深度上限被截断。
+	var ra := ReflectDamage.new()
+	ra.percent = 50
+	var rb := ReflectDamage.new()
+	rb.percent = 50
+
+	var side_a := H._spec(500.0, [
+		H._compiled(1, "gun", {}, [_opener([_hit(20.0)])]),
+		H._compiled(2, "thorns_a", {}, [_before_rule(ra)]),
+	])
+	var side_b := H._spec(500.0, [
+		H._compiled(3, "thorns_b", {}, [_before_rule(rb)]),
+	])
+
+	var ctx := H._battle(side_a, side_b)
+	_start(ctx)
+
+	t.eq(_hp(ctx, 1), 480, "B 挨了 20")
+	t.eq(_hp(ctx, 0), 490, "B 弹回 10，**A 的反伤没有再被点燃**")
+
+	var overflowed := false
+	for e in ctx.log:
+		if (e as BattleEvent).name == BattleEvent.DISPATCH_OVERFLOW:
+			overflowed = true
+	t.check(not overflowed, "根本没碰到深度上限 —— 语义把它挡住了，兜底没出场")
+
+
+static func run_indirect_damage_does_not_provoke(t: TestCase) -> void:
+	t.begin("伤害 · 间接伤害不招致反应")
+
+	# 持续伤害每秒跳一次。若它能招致反伤，一个中毒 buff 就把反伤刷成了主要输出，
+	# 而玩家根本没在攻击。
+	var thorns := ReflectDamage.new()
+	thorns.percent = 100
+
+	var make_victim := func() -> CombatantSpec:
+		return H._spec(200.0, [H._compiled(2, "thorns", {}, [_before_rule(thorns)])])
+
+	for case in [
+		{"type": DamageTypes.POISON, "name": "中毒"},
+		{"type": DamageTypes.BLEED, "name": "流血"},
+		{"type": DamageTypes.DRAIN, "name": "流失"},
+	]:
+		var ctx := H._battle(_attacker(20.0, case["type"]), make_victim.call())
+		_run(ctx)
+		t.eq(_hp(ctx, 1), 180, "%s 照常造成伤害" % case["name"])
+		t.eq(_hp(ctx, 0), 100, "%s 不招致反伤" % case["name"])
+
+	# 直接攻击照样招致
+	var ctx2 := H._battle(_attacker(20.0, DamageTypes.PHYSICAL), make_victim.call())
+	_run(ctx2)
+	t.eq(_hp(ctx2, 1), 180, "物理造成伤害")
+	t.eq(_hp(ctx2, 0), 80, "物理招致 100% 反伤")
+
+	# --- 逃生口：显式写下类型名就听得见 ---
+	# 作者写下 poison，就表示他知道自己在监听什么
+	var explicit := ReflectDamage.new()
+	explicit.percent = 100
+	var t_poison := OnBeforeDamage.new()
+	t_poison.direction = DamageTrigger.Direction.TAKEN
+	t_poison.damage_type = DamageTypes.POISON
+	var ctx3 := H._battle(
+		_attacker(20.0, DamageTypes.POISON),
+		H._spec(200.0, [H._compiled(2, "spite", {},
+			[H._rule(t_poison, Always.new(), [explicit])])])
+	)
+	_run(ctx3)
+	t.eq(_hp(ctx3, 0), 80, "显式监听 poison 的道具照样弹得回去")
+
+
+static func run_reflect_details(t: TestCase) -> void:
+	t.begin("伤害 · 反伤的边界情况")
+
+	var thorns := ReflectDamage.new()
+	thorns.percent = 50
+
+	# 自伤不反弹：没有可以弹回去的对象
+	var self_hit := _hit(20.0)
+	self_hit.target = CombatEffect.Target.SELF
+	var ctx := H._battle(H._spec(200.0, [
+		H._compiled(1, "toll", {}, [_opener([self_hit])]),
+		H._compiled(2, "thorns", {}, [_before_rule(thorns)]),
+	]), H._spec(200.0, []))
+	_start(ctx)
+	t.eq(_hp(ctx, 0), 180, "自伤 20")
+	t.eq(_hp(ctx, 1), 200, "对手毫发无损 —— 自伤不反弹")
+
+	# 反弹量按【护盾吸收之后】的待结算量算：护盾扛住的部分不算在内
+	var ctx2 := H._battle(
+		_attacker(20.0),
+		H._spec(200.0, [H._compiled(2, "thorns", {"max_shield": 12.0},
+			[_before_rule(thorns)])])
+	)
+	_run(ctx2)
+	t.eq(_shield(ctx2, 1), 0, "护盾吃掉 12")
+	t.eq(_hp(ctx2, 0), 96, "只弹余下 8 的一半 = 4")
+
+	# 反伤本身会被对方的护甲减免 —— 它是一包普通伤害，走完整管线
+	var ctx3 := H._battle(
+		H._spec(200.0, [
+			H._compiled(1, "gun", {"armor": 3.0}, []),
+			H._compiled(4, "sched", {}, [_opener([_hit(20.0)])]),
+		]),
+		H._spec(200.0, [H._compiled(2, "thorns", {}, [_before_rule(thorns)])])
+	)
+	_start(ctx3)
+	t.eq(_hp(ctx3, 0), 193, "弹回 10，被攻击方自己的 3 点护甲挡掉 3")
+

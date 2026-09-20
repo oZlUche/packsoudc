@@ -42,8 +42,11 @@ var _draining: bool = false
 ## 那一下会在本次结算内部再开一层。
 var _damage_stack: Array[DamagePacket] = []
 
-## 伤害结算的最大嵌套层数。超过就不再派发受伤前效果 ——
-## 两件互相反伤的道具会无限对轰，截断比栈溢出可控。
+## 伤害结算的最大嵌套层数。**兜底，不是防线。**
+##
+## 真正阻止反伤对轰的是伤害类型：反伤打出的是 [constant DamageTypes.REFLECT]，
+## 而它 provokes 为 false，因此第一层就终止了。这个上限只在内容把某种
+## 会招致反应的类型配进反弹效果时兜住，并记一条 dispatch_overflow 供定位。
 const MAX_DAMAGE_DEPTH := 4
 
 
@@ -178,7 +181,7 @@ func dispatch_before_damage(packet: DamagePacket) -> void:
 		BattleEvent.BEFORE_DAMAGE, now, packet.victim_side(), {
 			"type": String(packet.type),
 			"amount": packet.pending(),
-			"notifies": packet.def().notifies,
+			"provokes": packet.def().provokes,
 			"source_side": packet.source_side,
 			"uid": packet.source_uid,
 		}

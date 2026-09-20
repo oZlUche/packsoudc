@@ -15,10 +15,13 @@ enum Direction {
 
 ## 伤害类型；留空表示不限。
 ##
-## [b]留空时只认「会通知」的类型[/b] —— 流失（自伤、以血为代价）不会点亮
-## 反伤与吸血，否则割自己一刀就成了正收益。
-## 想专门监听流失，把本字段显式填成 [constant DamageTypes.DRAIN] 即可，
-## 这是留给未来联动效果的口子。
+## [b]留空时只认「会招致反应」的类型[/b]（[member DamageTypeDef.provokes]）——
+## 也就是直接攻击。中毒、流血、反伤、流失都不在其列：
+## 持续伤害每秒跳一次，若能招致反伤，一个中毒 buff 就把反伤刷成了主要输出；
+## 反伤若能招致反伤，两件反伤道具会互相引燃。
+##
+## 想专门监听其中某一种，把本字段**显式**填成那个类型名即可 ——
+## 写下类型名就表示作者知道自己在监听什么。这是留给联动效果的口子。
 @export var damage_type: StringName = &""
 
 ## 至少这么多点才算数。按**实际扣除量**判定，不是原始值 ——
@@ -40,6 +43,6 @@ func matches_damage(ctx: RuleContext, event: BattleEvent) -> bool:
 	if damage_type != &"":
 		if event.get_name(&"type") != damage_type:
 			return false
-	elif not event.get_bool(&"notifies", true):
+	elif not event.get_bool(&"provokes", true):
 		return false
 	return event.get_int(&"amount") >= StatMath.from_float(min_amount)

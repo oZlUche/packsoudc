@@ -76,9 +76,9 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 
 ## 发出 damage 事件。
 ##
-## [b]流失类也照发。[/b] 屏蔽发生在扳机那一侧（[DamageTrigger] 默认只认
-## notifies 为真的类型），而不是这里不发 —— 不发的话「流失时触发」这类联动
-## 就永远没有接入点，而那正是我们想留的口子。
+## [b]不招致反应的类型也照发。[/b] 过滤发生在扳机那一侧（[DamageTrigger] 默认只认
+## provokes 为真的类型），而不是这里不发 —— 不发的话「中毒时净化」「流失时回气」
+## 这类联动就永远没有接入点，而那正是我们想留的口子。
 static func _notify(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef) -> void:
 	ctx.emit(BattleEvent.DAMAGE, packet.victim_side(), {
 		"type": String(packet.type),
@@ -86,7 +86,7 @@ static func _notify(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef)
 		"absorbed": packet.absorbed,
 		"armor": packet.armor,
 		"amount": -packet.applied,
-		"notifies": td.notifies,
+		"provokes": td.provokes,
 		"source_side": packet.source_side,
 		"uid": packet.source_uid,
 	})

@@ -6,7 +6,7 @@
 写它的用意有两个：一是给 M2 的收尾定个靶子，二是**用真实内容去压一遍效果系统** ——
 凡是这里写得出、系统里做不到的，都在最后一节「写不出来的东西」列了账。
 
-> 状态：截至架构 v1.7。`data/items/` 里现有 15 个资产**只有形状与标签，没有战斗数据**；
+> 状态：截至架构 v1.8。`data/items/` 里现有 15 个资产**只有形状与标签，没有战斗数据**；
 > 下表里标 ✓ 的就是它们，标 **新** 的还不存在。
 > 所有数值都是**占位**，等可视化（021）能看见战斗之后再调。
 
@@ -115,7 +115,7 @@ id 保持不变，改 id 会让存档失效。
 | `medkit` | 医疗包 | `11`<br>`11` | 1 | — | `on_resource_below(hp,40%) · always · uses(1) · change_resource(自己,hp,+35)` | ✓ |
 | `painkiller` | 止痛药 | `1` | 1 | — | `on_resource_below(hp,25%) · always · uses(1) · remove_status(自己,流血,全部) + change_resource(自己,hp,+10)` | **新** |
 | `stim` | 兴奋剂 | `1` | 2 | — | `on_battle_start · always · apply_status(自己,肾上腺素,3)` | ✓ |
-| `plate_reactive` | 反应装甲 | `11`<br>`11` | 3 | `armor` +2 | `on_damage(受到,physical,≥12) · cooldown(3.0) · deal_damage(10)` | **新** |
+| `plate_reactive` | 反应装甲 | `11`<br>`11` | 3 | `armor` +2 | `on_before_damage(受到,physical,≥12) · cooldown(3.0) · reflect_damage(percent=50)` | **新** |
 | `bio_monitor` | 生命监测仪 | `11` | 2 | — | `on_resource_changed(hp,下降,自己) · cooldown(5.0) · apply_status(自己,强壮,1)` | **新** |
 
 `medkit` 与 `painkiller` 都用 `uses(1)` 全场限一次 —— 没有它，每次掉血都会回一口，
@@ -200,8 +200,8 @@ id 保持不变，改 id 会让存档失效。
 | `edge` | 锋锐 | 5 | 8s | `damage` SHARP +10% | （留给后续武器） |
 | `adrenaline` | 肾上腺素 | 3 | 10s | `haste` HASTE +12% | `stim` `overclock` `assault_kit` |
 | `fortify` | 强壮 | 3 | 永续 | `max_hp` +15 | `bio_monitor` |
-| `burn` | 灼烧 | 10 | 5s | 规则：`on_schedule · cooldown(1.0) · deal_damage(自己,2,每层)` | （留给火系武器） |
-| `bleed` | 流血 | 5 | 6s | 规则：`on_schedule · cooldown(1.0) · deal_damage(自己,1,每层)` | `knife` |
+| `burn` | 灼烧 | 10 | 5s | 规则：`on_schedule · cooldown(1.0) · deal_damage(自己,2,每层,类型=fire)`。**注意 fire 会招致反伤**，若不想如此，得为灼烧单开一个不招致反应的类型 | （留给火系武器） |
+| `bleed` | 流血 | 5 | 6s | 规则：`on_schedule · cooldown(1.0) · deal_damage(自己,1,每层,类型=bleed)` | `knife` |
 | `marked` | 标记 | 1 | 8s | `armor` −3 | `sniper` |
 | `overheat` | 过热 | 3 | 4s | `haste` −15% | （留给后续） |
 
@@ -229,7 +229,10 @@ id 保持不变，改 id 会让存档失效。
 | `on_stacks_at_least`（消耗型） | `railgun` |
 | `on_damage`（受到） | `plate_reactive` |
 | `on_damage`（造成） | `leech_mod` |
-| `on_before_damage` | `nano_ward` |
+| `on_before_damage` | `nano_ward`（减伤）、`plate_reactive`（反伤） |
+| `reflect_damage` | `plate_reactive` |
+| 伤害类型 · `bleed` | `knife` 施加的流血 buff |
+| 伤害类型 · `reflect` | `plate_reactive`（由 reflect_damage 自动使用） |
 | **频率** | |
 | `always` | 事件型规则的默认搭配 |
 | `cooldown` | 全部武器；`plate_reactive` `bio_monitor` 用它当闸门 |

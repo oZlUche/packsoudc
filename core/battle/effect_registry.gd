@@ -41,6 +41,7 @@ const COMBAT_EFFECTS := {
 	&"remove_status": "res://core/battle/effects/remove_status.gd",
 	# 只在受伤前阶段有效，见 DamageResolver
 	&"modify_damage": "res://core/battle/effects/modify_damage.gd",
+	&"reflect_damage": "res://core/battle/effects/reflect_damage.gd",
 }
 
 ## 战利品作用域的效果。**不依赖扳机，激活即生效。**
