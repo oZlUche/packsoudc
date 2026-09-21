@@ -44,6 +44,7 @@ const SUITES: Array = [
 	preload("res://tests/test_item_stash.gd"),
 	preload("res://tests/test_dev_nav.gd"),
 	preload("res://tests/test_item_value.gd"),
+	preload("res://tests/test_map_graph.gd"),
 ]
 
 
