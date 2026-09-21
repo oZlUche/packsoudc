@@ -1,12 +1,12 @@
 ## 批量战斗基准。做数值平衡时要跑成千上万场，这里量的是单场成本。
 ##
 ##     "E:/Godot/..._console.exe" --headless --path . --script res://tools/bench_battle.gd
-extends SceneTree
+extends CliTool
 
 const BATTLES := 2000
 
 
-func _initialize() -> void:
+func run() -> void:
 	var a := _build(80.0, 9.0, 0.7, 3)
 	var b := _build(80.0, 7.0, 0.5, 4)
 
@@ -28,7 +28,7 @@ func _initialize() -> void:
 		BATTLES, elapsed / 1000.0, elapsed / 1000.0 / BATTLES,
 		float(total_events) / BATTLES,
 	])
-	quit(0)
+	finish(0)
 
 
 func _build(hp: float, dmg: float, cd: float, rule_count: int) -> CombatantSpec:

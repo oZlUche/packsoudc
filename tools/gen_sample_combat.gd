@@ -7,14 +7,14 @@
 ## 没有这一步，血条和伤害数字都没有东西可显示。
 ##
 ## 只动 combat 与 adjacency 两个字段，形状、标签、稀有度沿用 gen_sample_items 的产物。
-extends SceneTree
+extends CliTool
 
 const ITEM_DIR := "res://data/items"
 
 const B := StatMath.Buff
 
 
-func _initialize() -> void:
+func run() -> void:
 	var count := 0
 	for id in _combat_ids():
 		var path := "%s/%s.tres" % [ITEM_DIR, id]
@@ -25,12 +25,12 @@ func _initialize() -> void:
 		_configure(def)
 		if ResourceSaver.save(def, path) != OK:
 			push_error("保存失败: " + path)
-			quit(1)
+			finish(1)
 			return
 		count += 1
 
 	print("已为 %d 件物品写入战斗数据" % count)
-	quit(0)
+	finish(0)
 
 
 static func _combat_ids() -> Array:

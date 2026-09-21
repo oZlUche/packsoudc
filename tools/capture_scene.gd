@@ -2,7 +2,7 @@
 ## 必须在非 headless 下运行 —— headless 用的是空渲染驱动，截出来是黑的。
 ##
 ##     "E:/Godot/..._console.exe" --path . --script res://tools/capture_scene.gd -- <输出路径> [场景路径]
-extends SceneTree
+extends CliTool
 
 const DEFAULT_SCENE := "res://ui/inventory/inventory_sandbox.tscn"
 const WARMUP_FRAMES := 4
@@ -12,7 +12,7 @@ var _out: String = "user://capture.png"
 var _scene: Node = null
 
 
-func _initialize() -> void:
+func run() -> void:
 	var args := OS.get_cmdline_user_args()
 	if args.size() > 0:
 		_out = args[0]
@@ -20,13 +20,15 @@ func _initialize() -> void:
 	var packed: PackedScene = load(scene_path)
 	if packed == null:
 		push_error("场景加载失败: " + scene_path)
-		quit(1)
+		finish(1)
 		return
 	_scene = packed.instantiate()
 	root.add_child(_scene)
 
 
-func _process(_delta: float) -> bool:
+## 覆写 tick 而不是 _process —— 基类的 _process 里有「run() 被错误中断」的兜底，
+## 直接覆写会把它盖掉，又变回挂住。
+func tick(_delta: float) -> bool:
 	_frames += 1
 	# 截图用的演示钩子：场景如果提供了 demo_fill()，先调一下，
 	# 否则截到的往往是一个空界面。必须等到进入帧循环：
@@ -38,12 +40,12 @@ func _process(_delta: float) -> bool:
 	var img := root.get_texture().get_image()
 	if img == null:
 		push_error("取不到视口图像")
-		quit(1)
+		finish(1)
 		return true
 	if img.save_png(_out) != OK:
 		push_error("截图保存失败: " + _out)
-		quit(1)
+		finish(1)
 		return true
 	print("已保存截图: %s (%dx%d)" % [_out, img.get_width(), img.get_height()])
-	quit(0)
+	finish(0)
 	return true

@@ -5,7 +5,7 @@
 ## 手写 .tres 太容易出错（尤其 Array[Vector2i] 的字面量格式，写错时 Godot 往往
 ## 静默留空而不报错），所以用 ResourceSaver 生成。
 ## 这些是开发期占位内容，正式内容确定后可以直接在编辑器里改这些 .tres。
-extends SceneTree
+extends CliTool
 
 const SHAPE_DIR := "res://data/shapes"
 const ITEM_DIR := "res://data/items"
@@ -40,7 +40,7 @@ const ITEMS: Array[Dictionary] = [
 ]
 
 
-func _initialize() -> void:
+func run() -> void:
 	_ensure_dir(SHAPE_DIR)
 	_ensure_dir(ITEM_DIR)
 
@@ -52,7 +52,7 @@ func _initialize() -> void:
 		var shape_path := "%s/%s.tres" % [SHAPE_DIR, id]
 		if ResourceSaver.save(shape, shape_path) != OK:
 			push_error("保存形状失败: " + shape_path)
-			quit(1)
+			finish(1)
 			return
 
 		var def := ItemDef.new()
@@ -67,12 +67,12 @@ func _initialize() -> void:
 		var item_path := "%s/%s.tres" % [ITEM_DIR, id]
 		if ResourceSaver.save(def, item_path) != OK:
 			push_error("保存物品失败: " + item_path)
-			quit(1)
+			finish(1)
 			return
 		count += 1
 
 	print("已生成 %d 组形状与物品定义" % count)
-	quit(0)
+	finish(0)
 
 
 func _string_names(values: Array) -> Array[StringName]:

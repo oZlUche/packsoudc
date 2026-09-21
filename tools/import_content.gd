@@ -6,7 +6,7 @@
 ## 因为游戏照样跑得起来，只是有几件道具悄悄不对。
 ##
 ## 导入顺序是有讲究的：增益 → 套装 → 物品。后者可以按 id 引用前者。
-extends SceneTree
+extends CliTool
 
 const SRC := "res://data/authoring"
 const OUT := {
@@ -18,7 +18,7 @@ const OUT := {
 const ORDER := ["buffs", "sets", "items"]
 
 
-func _initialize() -> void:
+func run() -> void:
 	var ctx := ContentImporter.Context.new()
 	var report := ImportReport.new()
 	var built := {}  # 相对输出路径 -> Resource
@@ -46,18 +46,18 @@ func _initialize() -> void:
 		print("")
 		print("导入失败，%s —— 未产出任何资产" % report.summary())
 		print(report.to_text())
-		quit(1)
+		finish(1)
 		return
 
 	for path in built:
 		DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 		if ResourceSaver.save(built[path], path) != OK:
 			push_error("写入失败: " + path)
-			quit(1)
+			finish(1)
 			return
 
 	print("导入成功：%d 份资产，%d 条警告" % [built.size(), report.warnings.size()])
-	quit(0)
+	finish(0)
 
 
 func _build(

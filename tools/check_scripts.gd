@@ -8,12 +8,12 @@
 ## Variant 推断警告，后者让整个类静默加载失败，测试只表现为一堆莫名其妙的断言不过）。
 ##
 ## `--import` 抓不到这些：它只解析被场景引用到的脚本。
-extends SceneTree
+extends CliTool
 
 const SKIP_DIRS := [".godot", "addons", ".git"]
 
 
-func _initialize() -> void:
+func run() -> void:
 	var paths := _all_scripts("res://")
 	paths.sort()  # 顺序稳定，报错顺序才可复现
 
@@ -29,7 +29,7 @@ func _initialize() -> void:
 	# 措辞刻意避开引擎的错误字样：调用方 grep 的就是那几个词，
 	# 这行自己带上就会把干净的一次也判成失败（踩过一次）。
 	print("已加载 %d 个脚本；解析失败的话，上方会有引擎自己打的报错。" % paths.size())
-	quit(0)
+	finish(0)
 
 
 func _all_scripts(root: String) -> Array[String]:
