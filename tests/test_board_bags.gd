@@ -80,14 +80,21 @@ static func run(t: TestCase) -> void:
 	t.check(board.place(b2, Vector2i(2, 0), 0), "错开后可以放第二个包")
 	t.eq(board.usable_cell_count(), 12, "两个 2x3 的包共 12 格")
 
-	# --- 物品必须整件落在同一个包内 ---
+	# --- 可以横跨两个包，但谁的内容物都不算 ---
+	board.remove(overhang.uid)   # 它占着 (1,2)，先挪开腾出跨包的位置
 	var straddle := ItemInstance.create(wide)
-	t.check(
-		not board.place(straddle, Vector2i(1, 2), 0),
-		"2x1 横跨两个相邻的包，应被拒绝 —— 容纳关系必须无歧义"
-	)
-	t.check(board.place(straddle, Vector2i(2, 0), 0), "整件落在第二个包内则可以")
-	t.eq(board.bag_of(straddle.uid), b2.uid, "归属于第二个包")
+	t.check(board.place(straddle, Vector2i(1, 2), 0),
+		"2x1 横跨两个相邻的包，放得下 —— 每格有包覆盖就行")
+	t.eq(board.bag_of(straddle.uid), GridInventory.EMPTY_UID,
+		"**跨包的物品不属于任何包**：两边的加成都拿不到，这是用空间换加成的取舍")
+	t.eq(board.bags_touching(straddle.uid), [b1.uid, b2.uid] as Array[int], "但碰到了两个包")
+	t.check(not board.contents_of(b1.uid).has(straddle.uid), "不在第一个包的内容物里")
+	t.eq(board.straddlers_of(b1.uid), [straddle.uid] as Array[int], "在第一个包的跨包名单里")
+	t.eq(board.straddlers_of(b2.uid), [straddle.uid] as Array[int], "也在第二个包的")
+	board.remove(straddle.uid)
+	board.place(overhang, Vector2i(1, 0), 0)   # 放回去，后面的用例按原状态写
+	t.check(board.place(straddle, Vector2i(2, 0), 0), "整件落在第二个包内也可以")
+	t.eq(board.bag_of(straddle.uid), b2.uid, "这时归属于第二个包")
 
 	# --- 非空的包不能直接移除；rotate_item 也接不住脱落的东西，要走 rotate_bag ---
 	t.check(board.is_bag_with_contents(b1.uid), "第一个包有内容物")
@@ -118,10 +125,10 @@ static func run(t: TestCase) -> void:
 	t.eq(d1.origin, Vector2i(0, 3), "内容物保持相对位置")
 	t.eq(board.item_count(), 5, "两个包 + 三件物品")
 
-	# --- 换朝向放回：严格版一件都不能少，所以不成立；脱落版才成立 ---
+	# --- 换朝向放回：内容物按本地坐标跟着转，一件不少，严格版也放得回 ---
 	var p2 := board.detach_bag(b1.uid)
-	t.check(not board.can_attach_bag(p2, Vector2i(0, 3), 1),
-		"换朝向后有内容物依附不上，严格版（一件不能少）放不回")
+	t.check(board.can_attach_bag(p2, Vector2i(0, 3), 1),
+		"换个朝向放回也一件不少 —— 竖着的 1x3 跟着包一起变横")
 	t.check(board.attach_bag(p2, Vector2i(0, 3), 0), "原朝向放回成功")
 
 	# --- 包体准入标签 ---
@@ -264,44 +271,79 @@ static func run_board_serialization(t: TestCase) -> void:
 ## 「内容物跟着包一起转」是另一条路，但那样转一下包会同时改掉包里每一件东西的朝向，
 ## 玩家摆好的布局被整个搅乱；脱落是局部的、看得见的、放手前可以撤回的。
 static func run_rotate_shedding(t: TestCase) -> void:
-	t.begin("棋盘与包 · 包旋转与脱落")
+	t.begin("棋盘与包 · 包旋转：内容物按本地坐标跟着转，跨包的脱落")
 
 	ItemInstance.reset_uid_counter()
 	var big_bag := _bag("bag6", ["##", "##", "##"])   # 2 宽 3 高
 	var dot := _def("dot", ["#"])
-	var board := GridInventory.new(Vector2i(6, 6), 1, true)
+	var bar := _def("bar", ["#", "#", "#"])            # 竖 1x3
+	var board := GridInventory.new(Vector2i(8, 8), 1, true)
 
 	var bag := ItemInstance.create(big_bag)
-	board.place(bag, Vector2i(0, 0), 0)
-	var keep := ItemInstance.create(dot)     # (0,0)：转成 3x2 之后仍在轮廓内
-	var drop := ItemInstance.create(dot)     # (1,2)：转成 3x2 之后落在轮廓外
-	board.place(keep, Vector2i(0, 0), 0)
-	board.place(drop, Vector2i(1, 2), 0)
+	board.place(bag, Vector2i(1, 1), 0)              # 占 (1..2, 1..3)
+	var corner := ItemInstance.create(dot)
+	var column := ItemInstance.create(bar)
+	board.place(corner, Vector2i(1, 1), 0)           # 包的左上角
+	board.place(column, Vector2i(2, 1), 0)           # 包的右列，竖着占满
 
-	# --- 先问不动手 ---
-	var payload := board.detach_bag(bag.uid)
-	var report := board.bag_fit_report(payload, Vector2i(0, 0), 1)
-	t.check(report["ok"], "包本身转得动")
-	t.eq((report["fallen"] as Array).size(), 1, "报告点名一件会脱落")
-	t.eq(((report["fallen"] as Array)[0] as ItemInstance).uid, drop.uid, "点名的就是轮廓外那件")
-	t.check(board.attach_bag(payload, Vector2i(0, 0), 0), "先原样放回")
+	# --- 本地坐标往返 ---
+	var local := GridInventory.to_local(bag, column)
+	t.eq(local["origin"], Vector2i(1, 0), "右列在本地坐标里是 (1,0)")
+	t.eq(int(local["rot"]), 0, "本地朝向 0")
+	var back := GridInventory.to_global(bag, local, column, bag.origin, bag.rotation)
+	t.eq(back["origin"], Vector2i(2, 1), "本地 → 全局回到原处")
+	t.eq(int(back["rot"]), 0, "朝向也回来")
 
-	# --- 原地转 ---
+	# --- 原地转：内容物跟着转，一件不掉 ---
 	var fallen = board.rotate_bag(bag.uid, 1)
 	t.not_null(fallen, "非空的包能转")
-	t.eq(bag.rotation, 1, "朝向变了")
-	t.eq((fallen as Array).size(), 1, "脱落一件")
-	t.eq(((fallen as Array)[0] as ItemInstance).uid, drop.uid, "脱落的是轮廓外那件")
-	t.check(board.has_item(keep.uid), "**轮廓内那件留在原位**")
-	t.eq(keep.origin, Vector2i(0, 0), "而且没动")
-	t.eq(board.bag_of(keep.uid), bag.uid, "仍归这个包")
-	t.check(not board.has_item(drop.uid), "脱落的离开了棋盘")
-	t.eq(drop.container_id, 0, "脱落的处于游离态，等调用方安置")
-	t.check(board.is_covered(Vector2i(2, 1)), "覆盖范围跟着变成 3x2")
-	t.check(not board.is_covered(Vector2i(0, 2)), "原先的第三行不再覆盖")
+	t.eq(bag.rotation, 1, "包转了一步（2x3 → 3x2，占 (1..3, 1..2)）")
+	t.eq((fallen as Array).size(), 0, "**整件在包里的东西不脱落**")
+	t.check(board.has_item(corner.uid) and board.has_item(column.uid), "两件都还在棋盘上")
+	t.eq(board.bag_of(corner.uid), bag.uid, "小方块仍归这个包")
+	t.eq(board.bag_of(column.uid), bag.uid, "长条仍归这个包")
+	t.eq(column.rotation, 1, "**长条跟着包转了 90°**，竖的变横的")
+	t.eq(column.origin, Vector2i(1, 2), "横着躺在包转过之后的底行")
+	t.eq(corner.origin, Vector2i(3, 1), "左上角的方块转到了右上角")
+	for c in column.cells():
+		t.eq(board.bag_at(column.origin + c), bag.uid, "长条的每一格都仍被这个包覆盖")
+
+	# --- 转回去：完全复原 ---
+	board.rotate_bag(bag.uid, -1)
+	t.eq(column.origin, Vector2i(2, 1), "转回去长条回到右列")
+	t.eq(column.rotation, 0, "朝向也回来")
+	t.eq(corner.origin, Vector2i(1, 1), "方块回到左上角")
+
+	# --- 跨包的那件才会脱落 ---
+	# 邻包放在【下面】：2x3 转成 3x2 会向右长一格，放右边会撞上
+	var other := ItemInstance.create(big_bag)
+	board.place(other, Vector2i(1, 4), 0)            # 占 (1..2, 4..6)
+	board.remove(column.uid)
+	var bridge := ItemInstance.create(_def("tall", ["#", "#"]))
+	t.check(board.place(bridge, Vector2i(2, 3), 0), "竖 1x2 横跨两个包放得下：(2,3) 在上面的包，(2,4) 在下面的包")
+	t.eq(board.bag_of(bridge.uid), GridInventory.EMPTY_UID, "它谁的都不是")
+
+	var payload := board.detach_bag(bag.uid)
+	t.eq((payload["contents"] as Array).size(), 1, "内容物只有整件在里面的方块")
+	t.eq((payload["straddlers"] as Array).size(), 1, "跨包的另记一笔")
+	t.check(not board.has_item(bridge.uid), "跨包的也被摘了下来（少了一半依托）")
+
+	var report := board.bag_fit_report(payload, Vector2i(1, 1), 0)
+	t.check(report["ok"] and (report["fallen"] as Array).is_empty(),
+		"原样放回：跨包的那件能回到原处，不脱落")
+	report = board.bag_fit_report(payload, Vector2i(1, 1), 1)
+	t.eq((report["fallen"] as Array).size(), 1, "换个朝向放回：跨包的那件没了依托，脱落")
+	t.eq(((report["fallen"] as Array)[0] as ItemInstance).uid, bridge.uid, "脱落的就是它")
+	t.check(board.attach_bag(payload, Vector2i(1, 1), 0), "严格版原样放回")
+	t.check(board.has_item(bridge.uid), "跨包的那件回来了")
+	t.eq(bridge.origin, Vector2i(2, 3), "回到原处")
+
+	var shed = board.rotate_bag(bag.uid, 1)
+	t.eq((shed as Array).size(), 1, "原地转：跨包的脱落")
+	t.check(not board.has_item(bridge.uid), "离开了棋盘")
+	t.check(board.has_item(corner.uid), "整件在里面的跟着转，没掉")
 
 	# --- 转不动时原样不动，一件不掉 ---
-	# 3x3 的小棋盘，2x3 的包贴着右边放：转成 3x2 必然出界
 	var edge_bag := ItemInstance.create(big_bag)
 	var edge_board := GridInventory.new(Vector2i(3, 3), 2, true)
 	edge_board.place(edge_bag, Vector2i(1, 0), 0)      # 2x3 占 (1..2, 0..2)
@@ -311,3 +353,22 @@ static func run_rotate_shedding(t: TestCase) -> void:
 	t.eq(edge_bag.rotation, 0, "朝向没变")
 	t.check(edge_board.has_item(inside.uid), "**内容物一件不掉**")
 	t.eq(inside.origin, Vector2i(1, 0), "位置也没动")
+
+
+static func run_bag_accept_touching(t: TestCase) -> void:
+	t.begin("棋盘与包 · 跨包时每个碰到的包都得接受")
+
+	ItemInstance.reset_uid_counter()
+	var big_bag := _bag("bag6", ["##", "##", "##"])
+	var belt := _bag("belt", ["##", "##", "##"])
+	belt.bag_accept_tags = [&"potion"] as Array[StringName]
+	var rifle := _def("rifle", ["##"], ["weapon"])
+	var potion := _def("potion", ["##"], ["potion"])
+	var board := GridInventory.new(Vector2i(6, 6), 1, true)
+	board.place(ItemInstance.create(big_bag), Vector2i(0, 0), 0)
+	board.place(ItemInstance.create(belt), Vector2i(2, 0), 0)
+
+	t.check(not board.place(ItemInstance.create(rifle), Vector2i(1, 0), 0),
+		"步枪一格压在药水带上，药水带不收 —— 哪怕只压一格")
+	t.check(board.place(ItemInstance.create(potion), Vector2i(1, 0), 0),
+		"药水横跨普通包与药水带，两边都收")

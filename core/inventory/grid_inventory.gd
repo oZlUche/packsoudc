@@ -139,7 +139,10 @@ func _bag_accepts(bag_def: ItemDef, def: ItemDef) -> bool:
 
 
 #region 落点判定
-## 只看**地形**：出界、禁用格、包覆盖、是否跨了两个包。不看有没有别的物品挡着。
+## 只看**地形**：出界、禁用格、包覆盖。不看有没有别的物品挡着。
+##
+## 每一格被【某个】包覆盖即可，**允许一件东西横跨两个包**（3.2）。
+## 「归属于哪个包」由 [method bag_of] 另行回答：整件落在一个包里才算它的内容物。
 ##
 ## 抽出来是因为「这儿根本放不下」和「挡着但能挤开」是两回事：前者只能拒绝，
 ## 后者可以顶替。两条路径必须共用同一套地形判断，否则会出现
@@ -147,7 +150,6 @@ func _bag_accepts(bag_def: ItemDef, def: ItemDef) -> bool:
 func _terrain_ok(cells: Array[Vector2i], origin: Vector2i) -> bool:
 	if cells.is_empty():
 		return false
-	var bag := EMPTY_UID
 	for c in cells:
 		var p := origin + c
 		if not in_bounds(p):
@@ -155,14 +157,25 @@ func _terrain_ok(cells: Array[Vector2i], origin: Vector2i) -> bool:
 		var i := _idx(p)
 		if _blocked[i] != 0:
 			return false
-		if requires_bag:
-			var owner := _bag_owner[i]
-			if owner == EMPTY_UID:
-				return false          # 未被任何包覆盖
-			if bag == EMPTY_UID:
-				bag = owner
-			elif bag != owner:
-				return false          # 跨了两个包，不允许
+		if requires_bag and _bag_owner[i] == EMPTY_UID:
+			return false          # 未被任何包覆盖
+	return true
+
+
+## 这件东西落在这些格子上时，**每一个**被它碰到的包都得接受它 ——
+## 只收药水的药水带，哪怕只被一把步枪压住一格，也不该收。
+func _touched_bags_accept(cells: Array[Vector2i], origin: Vector2i, def: ItemDef) -> bool:
+	if not requires_bag:
+		return true
+	var seen := {}
+	for c in cells:
+		var owner := _bag_owner[_idx(origin + c)]
+		if owner == EMPTY_UID or seen.has(owner):
+			continue
+		seen[owner] = true
+		var bag_inst: ItemInstance = _items.get(owner, null)
+		if bag_inst != null and not _bag_accepts(bag_inst.def, def):
+			return false
 	return true
 
 
@@ -203,12 +216,7 @@ func can_place_def(def: ItemDef, origin: Vector2i, rot: int, ignore_uid: int = E
 		return can_place_bag(cells, origin, ignore_uid)
 	if not can_place(cells, origin, ignore_uid):
 		return false
-	if requires_bag:
-		var bag_uid := _bag_owner[_idx(origin + cells[0])]
-		var bag_inst: ItemInstance = _items.get(bag_uid, null)
-		if bag_inst != null and not _bag_accepts(bag_inst.def, def):
-			return false
-	return true
+	return _touched_bags_accept(cells, origin, def)
 
 
 func can_place_item(inst: ItemInstance, origin: Vector2i, rot: int) -> bool:
@@ -228,11 +236,7 @@ func terrain_allows(def: ItemDef, origin: Vector2i, rot: int) -> bool:
 	var cells := def.cells_rotated(rot)
 	if not _terrain_ok(cells, origin):
 		return false
-	if requires_bag:
-		var bag_inst: ItemInstance = _items.get(_bag_owner[_idx(origin + cells[0])], null)
-		if bag_inst != null and not _bag_accepts(bag_inst.def, def):
-			return false
-	return true
+	return _touched_bags_accept(cells, origin, def)
 
 
 ## 这个落点会顶掉哪些普通物品，uid 升序去重。
@@ -412,18 +416,43 @@ func clear() -> void:
 
 
 #region 包与容纳关系
-## 该物品所属的包 uid。物品本身是包、或容器不是棋盘时返回 [constant EMPTY_UID]。
+## 该物品所属的包 uid：**整件**落在哪个包里。
+##
+## 横跨两个包的物品不属于任何包（返回 [constant EMPTY_UID]）—— 它只是「摆在棋盘上」。
+## 包的效果只给自己整件装着的东西，拿起包时也只带走这些；跨包的那件谁也不带走。
+## 归属因此仍然无歧义，只是多了一种「谁的都不是」。
 func bag_of(uid: int) -> int:
 	var inst: ItemInstance = _items.get(uid, null)
 	if inst == null or not requires_bag or acts_as_bag(inst.def):
 		return EMPTY_UID
-	var cells := inst.def.cells_rotated(inst.rotation)
-	if cells.is_empty():
-		return EMPTY_UID
-	return _bag_owner[_idx(inst.origin + cells[0])]
+	var owner := EMPTY_UID
+	for c in inst.def.cells_rotated(inst.rotation):
+		var o := _bag_owner[_idx(inst.origin + c)]
+		if o == EMPTY_UID:
+			return EMPTY_UID
+		if owner == EMPTY_UID:
+			owner = o
+		elif o != owner:
+			return EMPTY_UID      # 跨包
+	return owner
 
 
-## 该包内的所有物品 uid，按 uid 升序 —— 顺序必须稳定，否则战斗编译结果会随之抖动。
+## 该物品碰到的所有包，uid 升序。整件在一个包里就只有一个；跨包就是两个以上。
+func bags_touching(uid: int) -> Array[int]:
+	var out: Array[int] = []
+	var inst: ItemInstance = _items.get(uid, null)
+	if inst == null or not requires_bag or acts_as_bag(inst.def):
+		return out
+	for c in inst.def.cells_rotated(inst.rotation):
+		var o := _bag_owner[_idx(inst.origin + c)]
+		if o != EMPTY_UID and not out.has(o):
+			out.append(o)
+	out.sort()
+	return out
+
+
+## 该包内的所有物品 uid（整件在包里的），按 uid 升序 ——
+## 顺序必须稳定，否则战斗编译结果会随之抖动。
 func contents_of(bag_uid: int) -> Array[int]:
 	var out: Array[int] = []
 	if bag_uid == EMPTY_UID or not requires_bag:
@@ -435,11 +464,25 @@ func contents_of(bag_uid: int) -> Array[int]:
 	return out
 
 
+## 压在该包上、但没有整件落在里面的物品（跨包的那些），uid 升序。
+## 包一动，它们就少了一半依托 —— 得脱落。
+func straddlers_of(bag_uid: int) -> Array[int]:
+	var out: Array[int] = []
+	if bag_uid == EMPTY_UID or not requires_bag:
+		return out
+	for uid in _items:
+		var touched := bags_touching(uid)
+		if touched.size() > 1 and touched.has(bag_uid):
+			out.append(uid)
+	out.sort()
+	return out
+
+
 func is_bag_with_contents(uid: int) -> bool:
 	var inst: ItemInstance = _items.get(uid, null)
 	if inst == null or not acts_as_bag(inst.def):
 		return false
-	return not contents_of(uid).is_empty()
+	return not contents_of(uid).is_empty() or not straddlers_of(uid).is_empty()
 
 
 ## 棋盘上所有作为包生效的物品。
@@ -452,22 +495,42 @@ func bags() -> Array:
 	return out
 
 
-## 连同内容物一起摘下一个包，返回可交给 [method attach_bag] 的载荷。
-## 失败返回空字典，容器不变。
+## 连同内容物一起摘下一个包，返回可交给 [method attach_bag] 的载荷。失败返回空字典，容器不变。
+##
+## 内容物记的是**本地坐标**：相对包原点、且折回包 rot 0 坐标系的位置与朝向。
+## 包换个朝向放下时，内容物按同一个变换跟着转 —— 包怎么转它们就怎么转，
+## 不会出现「包转了、里面的东西还横着」这种错位。这就是本地坐标与全局坐标的区别。
+##
+## 跨包的物品带不走（另一半在别的包里），也留不下（少了一半依托）。它们一并摘下，
+## 记在 `straddlers` 里连同原来的全局位置：原样放回时能回到原处，放到别处时脱落。
+##
+## [codeblock]
+## {
+##   "bag": ItemInstance, "rotation": int,
+##   "contents": [ItemInstance], "locals": [{"origin": Vector2i, "rot": int}],
+##   "straddlers": [{"inst": ItemInstance, "origin": Vector2i, "rot": int}],
+## }
+## [endcodeblock]
 func detach_bag(bag_uid: int) -> Dictionary:
 	var bag: ItemInstance = _items.get(bag_uid, null)
 	if bag == null or not acts_as_bag(bag.def):
 		return {}
 
 	var content_uids := contents_of(bag_uid)
+	var straddler_uids := straddlers_of(bag_uid)
 	var contents: Array = []
-	var offsets: Array[Vector2i] = []
+	var locals: Array = []
+	var straddlers: Array = []
 
 	begin_batch()
 	for uid in content_uids:
 		var inst: ItemInstance = _items[uid]
-		offsets.append(inst.origin - bag.origin)
+		locals.append(to_local(bag, inst))
 		contents.append(remove(uid))
+	for uid in straddler_uids:
+		var inst: ItemInstance = _items[uid]
+		straddlers.append({"inst": inst, "origin": inst.origin, "rot": inst.rotation})
+		remove(uid)
 	var removed := remove(bag_uid)
 	end_batch()
 
@@ -477,68 +540,108 @@ func detach_bag(bag_uid: int) -> Dictionary:
 		"bag": bag,
 		"rotation": bag.rotation,
 		"contents": contents,
-		"offsets": offsets,
+		"locals": locals,
+		"straddlers": straddlers,
 	}
 
 
-## 非破坏性地检查载荷能否整体落在 origin。
+#region 本地坐标 ↔ 全局坐标
+## 内容物在包里的本地位置：相对包原点、折回包 rot 0 坐标系。
+static func to_local(bag: ItemInstance, inst: ItemInstance) -> Dictionary:
+	var local_rot := posmod(inst.rotation - bag.rotation, 4)
+	var rel := inst.origin - bag.origin
+	var local_cells: Array[Vector2i] = []
+	for c in inst.def.cells_rotated(inst.rotation):
+		local_cells.append(bag.def.shape.untransform_point(rel + c, bag.rotation))
+	return {"origin": _min_of(local_cells), "rot": local_rot}
+
+
+## 本地位置在「包摆在 origin、朝向 rot」时的全局位置。
+static func to_global(bag: ItemInstance, local: Dictionary, inst: ItemInstance,
+		origin: Vector2i, rot: int) -> Dictionary:
+	var global_rot := posmod(int(local["rot"]) + rot, 4)
+	var cells: Array[Vector2i] = []
+	for c in inst.def.cells_rotated(int(local["rot"])):
+		cells.append(bag.def.shape.transform_point((local["origin"] as Vector2i) + c, rot))
+	return {"origin": origin + _min_of(cells), "rot": global_rot}
+
+
+static func _min_of(cs: Array[Vector2i]) -> Vector2i:
+	var m := cs[0]
+	for c in cs:
+		m.x = mini(m.x, c.x)
+		m.y = mini(m.y, c.y)
+	return m
+#endregion
+
+
+#region 放包
+## 非破坏性地检查载荷能否**一件不少**地落在 origin。
 func can_attach_bag(payload: Dictionary, origin: Vector2i, rot: int) -> bool:
-	if payload.is_empty():
-		return false
-	var bag: ItemInstance = payload["bag"]
-	var contents: Array = payload["contents"]
-	if not requires_bag:
-		# 自由容器收不下带内容物的包：它没有覆盖概念，内容物无处安放
-		return contents.is_empty() and can_place_def(bag.def, origin, rot, bag.uid)
 	var report := bag_fit_report(payload, origin, rot)
 	return report["ok"] and (report["fallen"] as Array).is_empty()
 
 
-## 载荷落在 origin 时会发生什么：包本身放不放得下，以及**哪些内容物会脱落**。
-## 不改任何状态。
+## 载荷落在 origin 时会发生什么：包本身放不放得下，以及**哪些东西会脱落**。不改任何状态。
 ##
 ## [codeblock]
 ## {"ok": bool, "fallen": Array[ItemInstance]}
 ## [endcodeblock]
 ##
-## 包可以换朝向。转过之后内容物**不跟着转**，仍按原来相对包原点的偏移摆 ——
-## 于是有些会落在新轮廓之外，那些就是会脱落的。让内容物跟着包一起转是另一条路，
-## 但那样「转一下包」会同时改掉包里每一件东西的朝向，玩家摆好的布局被整个搅乱；
-## 而脱落是局部的、看得见的、可以在放手前撤回的。
+## 内容物按本地坐标跟着包转，永远落在包的轮廓里，所以不会脱落。
+## 会脱落的只有**跨包的**那些：它们记着原来的全局位置，放回去之后那个位置
+## 仍然每格有包覆盖、没被占，就还能回去；否则脱落。
 func bag_fit_report(payload: Dictionary, origin: Vector2i, rot: int) -> Dictionary:
 	var failed := {"ok": false, "fallen": []}
 	if payload.is_empty():
 		return failed
 	var bag: ItemInstance = payload["bag"]
 	var contents: Array = payload["contents"]
+	var straddlers: Array = payload.get("straddlers", [])
 	if not requires_bag:
 		# 自由容器收不下带内容物的包：它没有覆盖概念，内容物无处安放
-		if not contents.is_empty() or not can_place_def(bag.def, origin, rot, bag.uid):
+		if not contents.is_empty() or not straddlers.is_empty() \
+				or not can_place_def(bag.def, origin, rot, bag.uid):
 			return failed
 		return {"ok": true, "fallen": []}
 	if not can_place_bag(bag.def.cells_rotated(rot), origin, bag.uid):
 		return failed
 
-	var bag_cells := {}
+	# 包放下之后的覆盖与占用：原有的 + 这个包 + 它的内容物
+	var covered := {}
 	for c in bag.def.cells_rotated(rot):
-		bag_cells[origin + c] = true
-	var offsets: Array = payload["offsets"]
-	var fallen: Array = []
+		covered[origin + c] = true
+	var taken := {}
+	var locals: Array = payload["locals"]
 	for i in contents.size():
 		var inst: ItemInstance = contents[i]
-		var at: Vector2i = origin + offsets[i]
-		var fits := true
-		for c in inst.def.cells_rotated(inst.rotation):
-			var p: Vector2i = at + c
-			if not bag_cells.has(p) or _occ[_idx(p)] != EMPTY_UID:
-				fits = false  # 超出包的轮廓，或被目标容器里已有的物品占了
+		var g := to_global(bag, locals[i], inst, origin, rot)
+		for c in inst.def.cells_rotated(int(g["rot"])):
+			var p: Vector2i = (g["origin"] as Vector2i) + c
+			if not covered.has(p) or _occ[_idx(p)] != EMPTY_UID or taken.has(p):
+				return failed     # 按本地坐标转过来还落在包外，说明载荷本身不对
+			taken[p] = true
+
+	var fallen: Array = []
+	for s in straddlers:
+		var inst: ItemInstance = s["inst"]
+		var ok := true
+		for c in inst.def.cells_rotated(int(s["rot"])):
+			var p: Vector2i = (s["origin"] as Vector2i) + c
+			if not in_bounds(p) or _blocked[_idx(p)] != 0:
+				ok = false
+			elif not covered.has(p) and _bag_owner[_idx(p)] == EMPTY_UID:
+				ok = false        # 原来那半边的依托没了
+			elif _occ[_idx(p)] != EMPTY_UID or taken.has(p):
+				ok = false
+			if not ok:
 				break
-		if not fits:
+		if not ok:
 			fallen.append(inst)
 	return {"ok": true, "fallen": fallen}
 
 
-## 把载荷放到 origin，**依附不上的内容物脱落**并交还给调用方。
+## 把载荷放到 origin，**依附不上的脱落**并交还给调用方。
 ##
 ## 返回与 [method bag_fit_report] 同形。`ok` 为假时容器原样不动；为真时
 ## `fallen` 里的实例已处于游离态，调用方[b]必须[/b]给它们找地方（通常是暂存区）。
@@ -549,31 +652,53 @@ func attach_bag_shedding(payload: Dictionary, origin: Vector2i, rot: int) -> Dic
 	var fallen: Array = report["fallen"]
 	var bag: ItemInstance = payload["bag"]
 	var contents: Array = payload["contents"]
-	var offsets: Array = payload["offsets"]
+	var locals: Array = payload["locals"]
+	var straddlers: Array = payload.get("straddlers", [])
 
 	begin_batch()
 	if not place(bag, origin, rot):
 		end_batch()
 		return {"ok": false, "fallen": []}
 	var placed: Array = []
+	var failed := false
 	for i in contents.size():
 		var inst: ItemInstance = contents[i]
-		if fallen.has(inst):
-			continue
-		if not place(inst, origin + offsets[i], inst.rotation):
-			# 报告刚验过，走到这里说明有别处改了容器状态。回滚干净。
-			push_error("GridInventory.attach_bag_shedding: 内容物 uid %d 放置失败，回滚" % inst.uid)
-			for p in placed:
-				remove((p as ItemInstance).uid)
-			remove(bag.uid)
-			end_batch()
-			return {"ok": false, "fallen": []}
+		var g := to_global(bag, locals[i], inst, origin, rot)
+		if not place(inst, g["origin"], int(g["rot"])):
+			failed = true
+			break
 		placed.append(inst)
+	if not failed:
+		for s in straddlers:
+			var inst: ItemInstance = s["inst"]
+			if fallen.has(inst):
+				continue
+			if not place(inst, s["origin"], int(s["rot"])):
+				failed = true
+				break
+			placed.append(inst)
+	if failed:
+		# 报告刚验过，走到这里说明有别处改了容器状态。回滚干净。
+		push_error("GridInventory.attach_bag_shedding: 放置失败，回滚")
+		for p in placed:
+			remove((p as ItemInstance).uid)
+		remove(bag.uid)
+		end_batch()
+		return {"ok": false, "fallen": []}
 	end_batch()
 	return report
 
 
-## 原地转一个包，内容物不跟着转；依附不上的脱落。
+## 把载荷整体放到 origin，**一件都不能少**。失败时不留任何残迹，容器保持原样。
+##
+## 这是「原样放回」用的严格版；玩家放手走的是 [method attach_bag_shedding]。
+func attach_bag(payload: Dictionary, origin: Vector2i, rot: int) -> bool:
+	if not can_attach_bag(payload, origin, rot):
+		return false
+	return attach_bag_shedding(payload, origin, rot)["ok"]
+
+
+## 原地转一个包，内容物按本地坐标跟着转；跨包的脱落。
 ##
 ## 成功返回脱落的实例数组（可能为空），失败返回 [code]null[/code] 且容器不变。
 ## 实现上就是「摘下来、换个朝向放回去」—— 与拖拽中按 R 走的是同一条路，
@@ -601,34 +726,6 @@ func rotate_bag(bag_uid: int, steps: int = 1):
 		return null
 	end_batch()
 	return result["fallen"]
-
-
-## 把载荷整体放到 origin，**一件都不能少**。失败时不留任何残迹，容器保持原样。
-##
-## 这是「原样放回」用的严格版；玩家放手走的是 [method attach_bag_shedding]。
-func attach_bag(payload: Dictionary, origin: Vector2i, rot: int) -> bool:
-	if not can_attach_bag(payload, origin, rot):
-		return false
-	var bag: ItemInstance = payload["bag"]
-	var contents: Array = payload["contents"]
-	var offsets: Array = payload["offsets"]
-
-	begin_batch()
-	if not place(bag, origin, rot):
-		end_batch()
-		return false
-	for i in contents.size():
-		var inst: ItemInstance = contents[i]
-		if not place(inst, origin + offsets[i], inst.rotation):
-			# can_attach_bag 已经验过，走到这里说明有别处改了容器状态。回滚干净。
-			push_error("GridInventory.attach_bag: 内容物 uid %d 放置失败，回滚" % inst.uid)
-			for j in i:
-				remove((contents[j] as ItemInstance).uid)
-			remove(bag.uid)
-			end_batch()
-			return false
-	end_batch()
-	return true
 #endregion
 
 

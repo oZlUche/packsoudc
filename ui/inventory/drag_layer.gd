@@ -480,28 +480,52 @@ func _draw() -> void:
 	)
 
 	# 包里的东西要跟着残影一起画，否则玩家看不出自己正拖着什么。
-	# 落在当前轮廓之外的那些（包转过之后才会有）压暗并描橙边 —— 放手它们就脱落
+	# 按本地坐标算它们在当前朝向下的位置 —— 包转了，它们就跟着转
 	if is_bag:
-		var outline := {}
-		for c in cells:
-			outline[c] = true
+		var bag: ItemInstance = _payload["bag"]
 		var contents: Array = _payload["contents"]
-		var offsets: Array = _payload["offsets"]
+		var locals: Array = _payload["locals"]
 		for i in contents.size():
 			var item: ItemInstance = contents[i]
-			var off: Vector2i = offsets[i]
-			var covered := true
-			for c in item.cells():
-				if not outline.has(off + c):
-					covered = false
-					break
-			var at: Vector2 = anchor + Vector2(off) * InventoryView.CELL
+			var g := GridInventory.to_global(bag, locals[i], item, Vector2i.ZERO, _rot)
+			var at: Vector2 = anchor + Vector2(g["origin"] as Vector2i) * InventoryView.CELL
+			var item_cells := item.def.cells_rotated(int(g["rot"]))
 			var c_body := ItemPainter.body_color(item.def)
-			c_body.a = 0.9 if covered else 0.45
-			var c_edge := ItemPainter.rarity_color(item.def) if covered \
-				else InventoryView.COLOR_VICTIM
-			ItemPainter.draw_item(self, item.cells(), at, InventoryView.CELL, c_body, c_edge)
-			ItemPainter.draw_label(
-				self, item.cells(), at, InventoryView.CELL,
-				item.def.display_name, font, 12, Color("f2f4f8") if covered else Color("f2f4f8", 0.6)
+			c_body.a = 0.9
+			ItemPainter.draw_item(
+				self, item_cells, at, InventoryView.CELL, c_body, ItemPainter.rarity_color(item.def)
 			)
+			ItemPainter.draw_label(
+				self, item_cells, at, InventoryView.CELL,
+				item.def.display_name, font, 12, Color("f2f4f8")
+			)
+		_draw_straddlers(font)
+
+
+## 跨包的物品被包一起摘了下来，但带不走 —— 画在它们原来的位置上，压暗描橙：
+## 放回原处它们就回去，放到别处它们就脱落。
+func _draw_straddlers(font: Font) -> void:
+	var straddlers: Array = _payload.get("straddlers", [])
+	if straddlers.is_empty():
+		return
+	var src_view: ContainerView = null
+	for v in _views:
+		if v.container() == _source:
+			src_view = v
+			break
+	if src_view == null or not (src_view is InventoryView):
+		return
+	var base := (src_view as InventoryView).global_position - global_position
+	for s in straddlers:
+		var item: ItemInstance = s["inst"]
+		var at := base + Vector2(s["origin"] as Vector2i) * InventoryView.CELL
+		var item_cells := item.def.cells_rotated(int(s["rot"]))
+		var c_body := ItemPainter.body_color(item.def)
+		c_body.a = 0.45
+		ItemPainter.draw_item(
+			self, item_cells, at, InventoryView.CELL, c_body, InventoryView.COLOR_VICTIM
+		)
+		ItemPainter.draw_label(
+			self, item_cells, at, InventoryView.CELL,
+			item.def.display_name, font, 12, Color("f2f4f8", 0.6)
+		)

@@ -91,6 +91,22 @@ func transform_point(p: Vector2i, rot: int) -> Vector2i:
 	return q
 
 
+## [method transform_point] 的逆：把一个「在 rot 朝向下的坐标」折回 rot 0 的坐标系。
+##
+## 包的内容物要用它：内容物在棋盘上的位置是包**当前**朝向下的坐标，
+## 而「相对包的本地坐标」定义在包的 rot 0 坐标系里。先折回本地，再按新朝向正变换，
+## 包怎么转内容物就怎么转 —— 这就是本地坐标与全局坐标的区别。
+func untransform_point(q: Vector2i, rot: int) -> Vector2i:
+	if _rot_cache.is_empty():
+		_build_cache()
+	var steps := posmod(rot, 4)
+	var p := q
+	for i in range(steps, 0, -1):
+		p = p + _step_offset[i]
+		p = Vector2i(p.y, -p.x)      # 顺时针 (x, y) -> (-y, x) 的逆
+	return p + _step_offset[0]
+
+
 ## 一组偏移的批量变换。
 func transform_points(points: Array[Vector2i], rot: int) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []

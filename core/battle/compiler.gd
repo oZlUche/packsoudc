@@ -95,7 +95,8 @@ static func compile(
 	return spec
 
 
-## 包只作用于自己装着的东西。按 bag_of() 查归属，因此跨包摆放被禁止这条规则
+## 包只作用于自己**整件**装着的东西。横跨两个包的物品 bag_of() 为空，两边的加成都拿不到 ——
+## 跨包是用空间换加成的取舍，不是双份加成的漏洞。按 bag_of() 查归属，这条规则
 ## （3.2）在这里直接兑现为「每件物品的归属包唯一」。
 static func _apply_bag_effects(board: GridInventory, fighters: Array[int], stats: Dictionary) -> void:
 	for uid in fighters:
