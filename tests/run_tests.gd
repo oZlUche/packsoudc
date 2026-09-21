@@ -10,6 +10,19 @@ extends SceneTree
 ## 这个标志让第一帧 _process 兜底退出。
 var _finished: bool = false
 
+## 两个阶段：
+##
+## - `run_*(t)` 在 _initialize 里跑，纯逻辑用例都在这一档；
+## - `frame_*(t, root)` 在**第一帧**跑，需要节点进场景树的用例在这一档 ——
+##   `_ready` 要等进入帧循环才派发，在 _initialize 里 add_child 之后立刻用，
+##   控件全是 null。
+##
+## 分两档而不是把所有用例都挪到帧里：绝大多数用例不需要场景树，
+## 让它们等一帧只是白等，而且出错时的栈更难读。
+var _phase1_ok: bool = false
+var _case: TestCase = null
+var _started: int = 0
+
 const SUITES: Array = [
 	preload("res://tests/test_item_shape.gd"),
 	preload("res://tests/test_item_instance.gd"),
@@ -24,49 +37,67 @@ const SUITES: Array = [
 	preload("res://tests/test_effect_tree.gd"),
 	preload("res://tests/test_damage_pipeline.gd"),
 	preload("res://tests/test_content_pipeline.gd"),
+	preload("res://tests/test_content_editor.gd"),
 	preload("res://tests/test_drag_layer.gd"),
 ]
 
 
 func _initialize() -> void:
-	var t := TestCase.new()
-	var started := Time.get_ticks_msec()
+	_case = TestCase.new()
+	_started = Time.get_ticks_msec()
 
+	# 套件用 run / run_xxx 拆分多组用例，这里自动发现并调用。
+	# run 也走自动发现而不是写死调用 —— 只有 frame_ 用例的套件没有 run，
+	# 写死会让它一加进来就崩。
 	for suite in SUITES:
-		suite.run(t)
-		# 套件可用 run_xxx 拆分多组用例，这里自动发现并调用
 		for m in suite.get_script_method_list():
 			var n: String = m["name"]
-			if n.begins_with("run_") and m["args"].size() == 1:
-				suite.call(n, t)
+			if (n == "run" or n.begins_with("run_")) and m["args"].size() == 1:
+				suite.call(n, _case)
 
-	var elapsed := Time.get_ticks_msec() - started
-	print("")
-	print("======================================================")
-	if t.passed():
-		print("通过  %d 项断言，%d 个套件，耗时 %d ms" % [t.checks, SUITES.size(), elapsed])
-		print("======================================================")
-		_finished = true
-		quit(0)
-		return
-
-	print("失败  %d / %d 项断言未通过：" % [t.failures.size(), t.checks])
-	print("------------------------------------------------------")
-	for f in t.failures:
-		print("  ✗ " + f)
-	print("======================================================")
-	_finished = true
-	quit(1)
+	_phase1_ok = true
 
 
-## 兜底：若 _initialize 被脚本错误中断，这里会在第一帧把进程结束掉，
+## 第二阶段 + 兜底。
+##
+## 兜底：若 _initialize 被脚本错误中断，这里会把进程结束掉，
 ## 而不是让无头进程挂到超时。退出码 2 专表示“测试自身崩了”。
 func _process(_delta: float) -> bool:
-	if not _finished:
+	if not _phase1_ok:
 		push_error("run_tests: _initialize 未正常完成，往上看脚本错误")
 		print("")
 		print("======================================================")
 		print("中断  测试未跑完（脚本错误），请检查上方 SCRIPT ERROR")
 		print("======================================================")
 		quit(2)
+		return true
+
+	# 需要场景树的用例：到这里 _ready 才派发得了
+	for suite in SUITES:
+		for m in suite.get_script_method_list():
+			var n: String = m["name"]
+			if n.begins_with("frame_") and m["args"].size() == 2:
+				suite.call(n, _case, root)
+
+	_report()
 	return true
+
+
+func _report() -> void:
+	var elapsed := Time.get_ticks_msec() - _started
+	print("")
+	print("======================================================")
+	if _case.passed():
+		print("通过  %d 项断言，%d 个套件，耗时 %d ms" % [_case.checks, SUITES.size(), elapsed])
+		print("======================================================")
+		_finished = true
+		quit(0)
+		return
+
+	print("失败  %d / %d 项断言未通过：" % [_case.failures.size(), _case.checks])
+	print("------------------------------------------------------")
+	for f in _case.failures:
+		print("  ✗ " + f)
+	print("======================================================")
+	_finished = true
+	quit(1)

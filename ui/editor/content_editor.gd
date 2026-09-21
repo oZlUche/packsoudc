@@ -27,6 +27,20 @@ var _ids: Array[String] = []
 var _current_id: String = ""
 var _def: ItemDef = null
 
+## 改过但还没存盘的道具：列表键 → 正在编辑的对象。
+##
+## [b]切走不该丢改动。[/b] 对着一件道具改到一半，想去看另一件的形状是什么样，
+## 回来发现全没了 —— 这种事发生一次，作者就再也不敢点列表了。
+##
+## 只在内存里，关掉编辑器就没了（所以叫草稿，不叫自动保存）。
+var _drafts: Dictionary = {}
+
+## 列表键 → 该道具在盘上的规范化 JSON 文本，用来判断脏没脏。
+##
+## 存的是**规范化之后**的文本（读进来再导出一遍），这样手改过格式的文件
+## 不会一打开就被当成「改过了」。
+var _baseline: Dictionary = {}
+
 var _list: ItemList
 var _form_host: VBoxContainer
 var _shape: ShapeEditor
@@ -77,7 +91,8 @@ func _build_ui() -> void:
 	left.add_child(_list)
 	var list_buttons := HBoxContainer.new()
 	list_buttons.add_child(_button("新建", _new_item))
-	list_buttons.add_child(_button("重载", _on_reload))
+	list_buttons.add_child(_button("刷新列表", _on_rescan))
+	list_buttons.add_child(_button("放弃改动", _on_discard))
 	left.add_child(list_buttons)
 
 	var right_split := HSplitContainer.new()
@@ -204,14 +219,46 @@ func _reload_list() -> void:
 		for f in files:
 			if f.ends_with(".json"):
 				_ids.append(f.get_basename())
+	# 草稿里可能有还没存过盘的新道具，它们不在目录里但得看得见
+	for key in _drafts:
+		if not _ids.has(key):
+			_ids.append(key)
+			_ids.sort()
+	_repaint_list()
+
+
+## 有未保存改动的条目前面加一个点。没有这个标记，作者就得靠记忆。
+func _repaint_list() -> void:
+	var keep := _list.get_selected_items()
+	_list.clear()
 	for id in _ids:
-		_list.add_item(id)
+		_list.add_item(("● " if _drafts.has(id) else "") + id)
+	for i in keep:
+		if i < _list.item_count:
+			_list.select(i)
 
 
-func _on_reload() -> void:
+func _on_rescan() -> void:
+	_stash_current()
 	_reload_list()
-	if _current_id != "":
-		_open(_current_id)
+
+
+## 丢掉当前这件的草稿，从盘上重读。**只影响当前这一件** ——
+## 一键清空所有草稿太容易误点。
+func _on_discard() -> void:
+	var key := _draft_key()
+	_drafts.erase(key)
+	_baseline.erase(key)
+	# 先把当前状态清掉再重读：否则 _open 会认出「点的就是当前这件」而直接返回，
+	# 而且 _stash_current 会在基准刚被删掉的情况下把它又标成脏的。
+	_def = null
+	_current_id = ""
+	if FileAccess.file_exists(ContentPaths.authoring_file("items", key)):
+		_open(key)
+	else:
+		_reload_list()
+		_new_item()
+	_repaint_list()
 
 
 func _on_id_changed(text: String) -> void:
@@ -220,38 +267,83 @@ func _on_id_changed(text: String) -> void:
 	_refresh()
 
 
+## 当前这件在草稿表里的键。
+##
+## 用**打开时的那个 id**，不是输入框里的当前值 —— 否则边改 id 边切走，
+## 草稿会散落在一堆半成品名字下面。新建的还没有来源文件，就用当前 id。
+func _draft_key() -> String:
+	if _current_id != "":
+		return _current_id
+	return String(_def.id) if _def != null else ""
+
+
+## 当前内容与盘上不一致时，把它收进草稿；一致就把草稿撤掉。
+##
+## 比对的是规范化后的 JSON 文本，所以「改了又改回去」不会留下假的脏标记。
+func _stash_current() -> void:
+	if _def == null:
+		return
+	var key := _draft_key()
+	if key == "":
+		return
+	var now := ContentExporter.to_json(ContentExporter.export_item(_def))
+	if _baseline.has(key) and _baseline[key] == now:
+		_drafts.erase(key)
+	else:
+		_drafts[key] = _def
+
+
 func _open(id: String) -> void:
-	var text := FileAccess.get_file_as_string("%s/%s.json" % [ITEM_DIR, id])
+	if id == _draft_key() and _def != null:
+		return  # 点的就是当前这件，不用重来
+	_stash_current()
+
+	# 有草稿就接着改那一份，不要从盘上覆盖回去
+	if _drafts.has(id):
+		_bind(_drafts[id], id)
+		return
+
+	var text := FileAccess.get_file_as_string(ContentPaths.authoring_file("items", id))
 	var parsed = JSON.parse_string(text)
 	if not (parsed is Dictionary):
 		_status.text = "[color=#d9534f]读不出 %s.json[/color]" % id
 		return
-	_load_dict(parsed, id)
+	var report := ImportReport.new()
+	report.source = id
+	var def := ContentImporter.import_item(parsed, ContentImporter.Context.new(), report)
+	# 基准必须在 _bind 之前写好：_bind 会走一遍 _refresh，
+	# 而 _refresh 里的脏判断「没有基准」就当作改过了 —— 刚打开就被标成脏。
+	# 只有【从盘上读】才刷新基准；套用 JSON、切回草稿都不算。
+	_baseline[id] = ContentExporter.to_json(ContentExporter.export_item(def))
+	_bind(def, id)
 
 
+## 套用 JSON 预览里的内容。算一次编辑，不刷新基准。
 func _load_dict(data: Dictionary, id: String) -> void:
 	var report := ImportReport.new()
 	report.source = id
-	_def = ContentImporter.import_item(data, ContentImporter.Context.new(), report)
+	_bind(ContentImporter.import_item(data, ContentImporter.Context.new(), report), id)
+
+
+## 把一个对象接到界面上
+func _bind(def: ItemDef, id: String) -> void:
+	_def = def
 	_current_id = id
 	_id_edit.text = String(_def.id)
 	_shape.set_from(_def.shape, _def.adjacency)
 	_set_layer(ShapeEditor.Layer.SHAPE)
 	_rebuild_form()
 	_refresh()
+	_repaint_list()
 
 
 func _new_item() -> void:
-	_def = ItemDef.new()
-	_def.id = &"new_item"
-	_def.display_name = "新道具"
-	_def.shape = ItemShape.from_bits("1")
-	_current_id = ""
-	_id_edit.text = "new_item"
-	_shape.set_from(_def.shape, null)
-	_set_layer(ShapeEditor.Layer.SHAPE)
-	_rebuild_form()
-	_refresh()
+	_stash_current()
+	var def := ItemDef.new()
+	def.id = &"new_item"
+	def.display_name = "新道具"
+	def.shape = ItemShape.from_bits("1")
+	_bind(def, "")
 
 
 func _save() -> void:
@@ -284,6 +376,10 @@ func _save() -> void:
 		_status.text = "[color=#f0ad4e]JSON 存了，但资产写入失败 —— 跑一次 import_content[/color]"
 		return
 
+	# 存下去了，草稿就没有意义了；基准换成刚写出去的那份
+	_drafts.erase(_draft_key())
+	_drafts.erase(id)
+	_baseline[id] = ContentExporter.to_json(data)
 	_current_id = id
 	_reload_list()
 	_select_in_list(id)
@@ -300,7 +396,7 @@ func _save_as() -> void:
 
 func _select_in_list(id: String) -> void:
 	var i := _ids.find(id)
-	if i >= 0:
+	if i >= 0 and i < _list.item_count:
 		_list.select(i)
 
 
@@ -328,6 +424,24 @@ func _rebuild_form() -> void:
 	})
 	form.changed.connect(_refresh)
 	_form_host.add_child(form)
+
+
+## 每次改动都更新脏标记，这样列表上的点是实时的。
+##
+## 只在「与基准不同」时才记草稿 —— 否则打开看一眼就被标成改过，
+## 点满屏都是，标记也就没意义了。
+func _track_draft() -> void:
+	var key := _draft_key()
+	if key == "":
+		return
+	var now := ContentExporter.to_json(ContentExporter.export_item(_def))
+	var was := _drafts.has(key)
+	if _baseline.has(key) and _baseline[key] == now:
+		_drafts.erase(key)
+	else:
+		_drafts[key] = _def
+	if was != _drafts.has(key):
+		_repaint_list()
 
 
 ## 把画板上的标记格写回 adjacency。
@@ -374,6 +488,7 @@ func _refresh() -> void:
 		return
 	_def.shape = _shape.to_shape()
 	_sync_adjacency()
+	_track_draft()
 	_preview.text = ContentExporter.to_json(ContentExporter.export_item(_def))
 	_status.text = _status_text(_validate())
 
