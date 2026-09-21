@@ -19,7 +19,7 @@ tools: Read, Grep, Glob, Write, Edit, WebSearch, WebFetch
 - `docs/architecture.md` —— 唯一的设计正本，带版本号与**变更记录**表。先看变更记录，
   它按时间倒序记着每一次决策**以及为什么**，比正文更快让你进入状态。
 - `docs/reports/README.md` —— 每一步的实施报告索引，记着踩过的坑。
-- `docs/item-roster.md`、`docs/effect-catalog.md` —— 内容侧的清单与可用积木。
+- `docs/item-roster.md`、`docs/effect-catalog.md` —— 内容侧的清单与可用构件。
 
 ## 这个项目的既定原则（不要推翻，除非有很强的理由并明说）
 
