@@ -8,14 +8,7 @@
 ## 导入顺序是有讲究的：增益 → 套装 → 物品。后者可以按 id 引用前者。
 extends CliTool
 
-const SRC := "res://data/authoring"
-const OUT := {
-	"buffs": "res://data/buffs",
-	"sets": "res://data/sets",
-	"items": "res://data/items",
-}
-## 顺序即依赖顺序
-const ORDER := ["buffs", "sets", "items"]
+## 目录约定集中在 [ContentPaths] —— 编辑器也用同一份，免得两边读写不同目录
 
 
 func run() -> void:
@@ -23,8 +16,8 @@ func run() -> void:
 	var report := ImportReport.new()
 	var built := {}  # 相对输出路径 -> Resource
 
-	for kind in ORDER:
-		var dir := "%s/%s" % [SRC, kind]
+	for kind in ContentPaths.ORDER:
+		var dir: String = ContentPaths.KINDS[kind][0]
 		for file in _json_files(dir):
 			var id := file.get_file().get_basename()
 			report.source = "%s/%s.json" % [kind, id]
@@ -38,7 +31,7 @@ func run() -> void:
 				continue
 			var res := _build(kind, data, ctx, report)
 			if res != null:
-				built["%s/%s.tres" % [OUT[kind], id]] = res
+				built[ContentPaths.asset_file(kind, id)] = res
 
 	if not report.warnings.is_empty():
 		print(report.to_text())

@@ -12,9 +12,15 @@
 ##    界面上说没问题，命令行就一定过得去。
 ## 3. **JSON 预览始终可见**，而且能直接改了套用：作者随时看得见自己在写什么文件，
 ##    界面覆盖不到的角落也不会把人挡在外面。
+##
+## 保存**同时产出 JSON 与 .tres**，不需要再手动跑一次命令行导入器。
+## 产出 .tres 走的就是导入器那条路（先导出成 JSON、再导入回来），
+## 所以界面存出来的东西和命令行存出来的逐字节相同 ——
+## 「省一步」不能以「两条路产出不同的资产」为代价。
 extends Control
 
-const ITEM_DIR := "res://data/authoring/items"
+## 作者数据目录。资产目录见 [ContentPaths]。
+const ITEM_DIR := ContentPaths.AUTHORING_ITEMS
 
 var _font: Font
 var _ids: Array[String] = []
@@ -255,23 +261,35 @@ func _save() -> void:
 	if id == "":
 		_status.text = "[color=#d9534f]id 不能为空[/color]"
 		return
-	var report := _validate()
+	# 校验顺带把资产也建出来了 —— 它走的就是「导出成 JSON 再导入回来」那条路，
+	# 与命令行导入器完全一致，不是另算一遍
+	var data := ContentExporter.export_item(_def)
+	var report := ImportReport.new()
+	report.source = id
+	var built := ContentImporter.import_item(data, ContentImporter.Context.new(), report)
 	if not report.ok():
 		# 有错就不写盘：半套内容比没内容更难查，游戏照样跑得起来，只是悄悄不对
 		_status.text = "[color=#d9534f]有错误，没有保存[/color]\n" + _status_text(report)
 		return
+
 	DirAccess.make_dir_recursive_absolute(ITEM_DIR)
-	var err := ContentExporter.save(
-		ContentExporter.export_item(_def), "%s/%s.json" % [ITEM_DIR, id]
-	)
-	if err != OK:
-		_status.text = "[color=#d9534f]写入失败[/color]"
+	if ContentExporter.save(data, ContentPaths.authoring_file("items", id)) != OK:
+		_status.text = "[color=#d9534f]作者数据写入失败[/color]"
 		return
+
+	# 顺手把引擎资产也产出来，省掉「改完还要记得跑一次导入」这一步。
+	# 忘了跑的表现是「改了没生效」，而界面上一切正常 —— 最容易让人怀疑人生。
+	DirAccess.make_dir_recursive_absolute(ContentPaths.ITEMS)
+	if ResourceSaver.save(built, ContentPaths.asset_file("items", id)) != OK:
+		_status.text = "[color=#f0ad4e]JSON 存了，但资产写入失败 —— 跑一次 import_content[/color]"
+		return
+
 	_current_id = id
 	_reload_list()
 	_select_in_list(id)
 	_refresh()
-	_status.text = "[color=#5cb85c]已保存 %s.json[/color]\n" % id + _status_text(report)
+	_status.text = "[color=#5cb85c]已保存 %s.json，并生成 %s.tres[/color]\n" % [id, id] \
+		+ _status_text(report)
 
 
 ## 改了 id 再保存就是另一个文件；旧的留着，删不删由作者决定

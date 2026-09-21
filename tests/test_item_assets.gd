@@ -2,8 +2,13 @@
 ## 内容做错了（形状为空、id 重复、id 与文件名不符）应该在这里被挡住。
 extends RefCounted
 
-const EXPECTED_COUNT := 17
-const EXPECTED_BAGS := 4
+## **最少**这么多，不是正好这么多。
+##
+## 写死成精确值意味着每加一件道具测试就红一次 —— 而加道具恰恰是最频繁的操作，
+## 尤其内容现在是 MOD 作者也会动的。这条断言想守的是「资产目录别空掉、
+## 别被生成脚本清干净」，那用下限就够了。逐件的合法性由下面的循环把关。
+const MIN_COUNT := 17
+const MIN_BAGS := 4
 
 
 static func run(t: TestCase) -> void:
@@ -11,8 +16,9 @@ static func run(t: TestCase) -> void:
 
 	var db := ItemDatabase.new()
 	var loaded := db.load_dir(ItemDatabase.DEFAULT_DIR)
-	t.eq(loaded, EXPECTED_COUNT, "应从 data/items 加载到 %d 个定义" % EXPECTED_COUNT)
-	t.eq(db.size(), EXPECTED_COUNT, "数据库条目数应一致")
+	t.check(loaded >= MIN_COUNT,
+		"应从 data/items 至少加载到 %d 个定义（实际 %d）" % [MIN_COUNT, loaded])
+	t.eq(db.size(), loaded, "数据库条目数应与加载数一致")
 
 	for id in db.ids():
 		var def := db.get_def(id)
@@ -44,7 +50,8 @@ static func run(t: TestCase) -> void:
 	for id in db.ids():
 		if db.get_def(id).is_bag:
 			bag_count += 1
-	t.eq(bag_count, EXPECTED_BAGS, "应有 %d 个包体定义" % EXPECTED_BAGS)
+	t.check(bag_count >= MIN_BAGS,
+		"应至少有 %d 个包体定义（实际 %d）" % [MIN_BAGS, bag_count])
 
 	var leather := db.get_def(&"bag_leather")
 	t.not_null(leather, "应存在皮革包")

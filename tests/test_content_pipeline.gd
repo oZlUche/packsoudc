@@ -194,6 +194,19 @@ static func run_validation(t: TestCase) -> void:
 	})[1]
 	t.check(not no_type.ok(), "时机没写 type 被拒")
 
+	# --- 标记格压在自己身上：永远点不亮，但不是错误 ---
+	var overlap := _import_item({
+		"id": "plate", "shape": ["11"],
+		"adjacency": {
+			"grant_cells": [[0, 0], [2, 0]],
+			"grant_mods": [{"stat": "armor", "flat": 1.0}],
+		},
+	})
+	t.check((overlap[1] as ImportReport).ok(), "压在自己身上只是警告，不阻断")
+	t.eq((overlap[1] as ImportReport).warnings.size(), 1, "只对压住的那一格报")
+	t.check((overlap[1] as ImportReport).warnings[0]["message"].contains("(0, 0)"),
+		"报出来是哪一格：" + (overlap[1] as ImportReport).warnings[0]["message"])
+
 	# --- 警告不阻断 ---
 	var warn_only := _import_item({
 		"id": "x", "shape": ["1"], "bag_accept_tags": ["consumable"],

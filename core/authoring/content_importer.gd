@@ -89,6 +89,30 @@ static func _validate_item(def: ItemDef, report: ImportReport) -> void:
 			report.warn("adjacency.grant", "标了增益格却没有加成，不会点亮任何东西")
 		if not ap.receive_cells.is_empty() and ap.receive_mods.is_empty():
 			report.warn("adjacency.receive", "标了受益格却没有加成")
+		_warn_overlapping_markers(def, report)
+
+
+## 标记格压在自己轮廓上时提醒。
+##
+## [b]不是错误，但一定是死数据。[/b] 编译器点亮邻居时会跳过 holder 自己
+## （见 BattleCompiler._lit_neighbors 里的 `other == holder.uid`），
+## 所以这种格子永远点不亮 —— 既不报错也不生效，是最难自查的一类配置。
+##
+## 画板已经不让点在自己身上了，但手写的 JSON 和早先存下来的数据还会有。
+static func _warn_overlapping_markers(def: ItemDef, report: ImportReport) -> void:
+	if def.shape == null or not def.shape.is_valid():
+		return
+	var own := {}
+	for c in def.shape.cells_rotated(0):
+		own[c] = true
+	for pair in [["grant", def.adjacency.grant_cells], ["receive", def.adjacency.receive_cells]]:
+		for c in pair[1]:
+			if own.has(c):
+				report.warn(
+					"adjacency.%s_cells" % pair[0],
+					"标记格 (%d, %d) 压在物品自己的格子上，永远点不亮 —— 标记格要在轮廓之外"
+						% [(c as Vector2i).x, (c as Vector2i).y]
+				)
 #endregion
 
 

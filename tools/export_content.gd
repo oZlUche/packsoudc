@@ -6,8 +6,7 @@
 ## 日常流程是反过来的：改 JSON，跑 import_content。
 extends CliTool
 
-const ITEM_DIR := "res://data/items"
-const OUT_DIR := "res://data/authoring/items"
+const OUT_DIR := ContentPaths.AUTHORING_ITEMS
 
 
 func run() -> void:
