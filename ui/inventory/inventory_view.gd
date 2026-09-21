@@ -26,6 +26,11 @@ const COLOR_BORDER := Color("4a515e")
 const COLOR_TEXT := Color("e6e9ef")
 const COLOR_OK := Color(0.35, 0.85, 0.45, 0.35)
 const COLOR_BAD := Color(0.9, 0.3, 0.3, 0.35)
+## 放得下，但会把别人顶出来。必须和「放不下」区分开 —— 都画成红的，
+## 玩家会以为这一下没生效；都画成绿的，东西就会不声不响地被挤走。
+const COLOR_DISPLACE := Color(0.95, 0.72, 0.25, 0.38)
+## 即将被顶出来的那几件，描一圈边，让人看清代价
+const COLOR_VICTIM := Color(0.98, 0.62, 0.25)
 
 @export var title: String = ""
 ## 中文标签需要系统字体，Godot 内置字体不含 CJK 字形。
@@ -38,6 +43,11 @@ var _preview_cells: Array[Vector2i] = []
 var _preview_origin: Vector2i = Vector2i.ZERO
 var _preview_valid: bool = false
 var _preview_on: bool = false
+## 本次落点会顶掉的物品 uid
+var _preview_victims: Array[int] = []
+
+## 是否画邻接标记格。战利品、商店货架这类地方不参战，画了只是噪音。
+@export var show_adjacency: bool = true
 
 
 func set_inventory(inv: GridInventory) -> void:
@@ -71,10 +81,13 @@ func cell_origin_px(c: Vector2i) -> Vector2:
 
 
 #region 落点预览
-func set_preview(cells: Array[Vector2i], origin: Vector2i, valid: bool) -> void:
+func set_preview(
+	cells: Array[Vector2i], origin: Vector2i, valid: bool, victims: Array[int] = []
+) -> void:
 	_preview_cells = cells
 	_preview_origin = origin
 	_preview_valid = valid
+	_preview_victims = victims
 	_preview_on = true
 	queue_redraw()
 
@@ -84,6 +97,7 @@ func clear_preview() -> void:
 		return
 	_preview_on = false
 	_preview_cells = []
+	_preview_victims = []
 	queue_redraw()
 #endregion
 
@@ -159,13 +173,123 @@ func _draw() -> void:
 			self, cells, anchor, CELL, item.def.display_name, font, 13, COLOR_TEXT
 		)
 
-	# 落点预览：整片染色，合法绿、非法红
+	# 邻接标记：画在物品之上、落点预览之下。
+	# 压在物品身上才看得出「这一格已经被谁占住了」—— 那正是标记点亮与否的判据。
+	if show_adjacency:
+		_draw_adjacency()
+
+	# 落点预览：整片染色。合法绿、会顶人黄、放不下红
 	if _preview_on:
-		var tint := COLOR_OK if _preview_valid else COLOR_BAD
+		var tint := COLOR_BAD
+		if _preview_valid:
+			tint = COLOR_DISPLACE if not _preview_victims.is_empty() else COLOR_OK
 		for c in _preview_cells:
 			var p := _preview_origin + c
 			if p.x < 0 or p.y < 0 or p.x >= inventory.size.x or p.y >= inventory.size.y:
 				continue
 			draw_rect(Rect2(cell_origin_px(p), Vector2(CELL, CELL)), tint, true)
 
+		# 被顶的那几件描一圈，让人放手前就知道要付什么代价
+		for uid in _preview_victims:
+			var victim := inventory.get_item(uid)
+			if victim == null:
+				continue
+			for c in victim.cells():
+				var p := victim.origin + c
+				draw_rect(
+					Rect2(cell_origin_px(p) + Vector2(2, 2), Vector2(CELL - 4, CELL - 4)),
+					COLOR_VICTIM, false, 2.0
+				)
+
 	draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BORDER, false, 2.0)
+
+
+#region 邻接标记
+## 增益／受益格画成**四个角括号**，不是一圈方框。
+##
+## 方框会和物品自己的稀有度描边撞车 —— 蓝框的稀有物品和蓝色的增益标记挨在一起，
+## 谁也分不出哪个是哪个。角括号一看就是「贴在格子上的标注」而不是某件东西的轮廓。
+##
+## 两类标记缩进不同：**增益贴着格边、受益缩在里面**，同时落在一格上也分得清。
+##
+## 点亮（这一格确实站着一个符合条件的邻居）就填色加粗，没点亮只留细线。
+## 这一层是玩家判断「摆位对不对」的唯一依据 —— 只画位置不画点亮状态，
+## 等于让人对着说明书心算，而摆位正是这类游戏的全部乐趣所在。
+const MARK_INSET_GRANT := 3.0
+const MARK_INSET_RECEIVE := 9.0
+## 角括号单边长度，占格边的比例
+const MARK_CORNER := 0.3
+
+
+func _draw_adjacency() -> void:
+	for inst in inventory.items():
+		var item := inst as ItemInstance
+		if item.def == null or item.def.adjacency == null:
+			continue
+		if inventory.acts_as_bag(item.def):
+			continue
+		var profile := item.def.adjacency
+		if profile.has_grant():
+			_draw_markers(
+				item, profile.grant_cells, profile.grant_filter,
+				UiPalette.GRANT, MARK_INSET_GRANT
+			)
+		if profile.has_receive():
+			_draw_markers(
+				item, profile.receive_cells, profile.receive_filter,
+				UiPalette.RECEIVE, MARK_INSET_RECEIVE
+			)
+
+
+func _draw_markers(
+	item: ItemInstance,
+	offsets: Array[Vector2i],
+	filter: Array[StringName],
+	color: Color,
+	inset: float
+) -> void:
+	for cell in item.absolute_cells(offsets):
+		if not inventory.in_bounds(cell):
+			continue
+		var rect := Rect2(
+			cell_origin_px(cell) + Vector2(inset, inset),
+			Vector2(CELL - inset * 2.0, CELL - inset * 2.0)
+		)
+		var lit := _marker_lit(item, cell, filter)
+		if lit:
+			var fill := color
+			fill.a = 0.20
+			draw_rect(rect, fill, true)
+		var line := color
+		if not lit:
+			line.a = 0.5
+		_draw_corners(rect, line, 2.0 if lit else 1.0)
+
+
+## 四个角括号。比整圈描边省墨，也不会被误读成物品轮廓。
+func _draw_corners(rect: Rect2, color: Color, width: float) -> void:
+	var arm := rect.size.x * MARK_CORNER
+	var l := rect.position.x
+	var r := rect.position.x + rect.size.x
+	var top := rect.position.y
+	var bottom := rect.position.y + rect.size.y
+	for corner in [
+		[Vector2(l, top), Vector2(arm, 0), Vector2(0, arm)],
+		[Vector2(r, top), Vector2(-arm, 0), Vector2(0, arm)],
+		[Vector2(l, bottom), Vector2(arm, 0), Vector2(0, -arm)],
+		[Vector2(r, bottom), Vector2(-arm, 0), Vector2(0, -arm)],
+	]:
+		var at: Vector2 = corner[0]
+		draw_line(at, at + corner[1], color, width)
+		draw_line(at, at + corner[2], color, width)
+
+
+## 这一格是否被一个符合过滤条件的邻居占住。判据与 [Compiler] 的点亮规则一致：
+## 得是别人、得是普通物品、标签得对得上。
+func _marker_lit(item: ItemInstance, cell: Vector2i, filter: Array[StringName]) -> bool:
+	var other := inventory.cell_uid(cell)
+	if other == GridInventory.EMPTY_UID or other == item.uid:
+		return false
+	var other_inst := inventory.get_item(other)
+	return other_inst != null and AdjacencyProfile.accepts(filter, other_inst.def)
+#endregion

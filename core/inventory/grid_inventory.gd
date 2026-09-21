@@ -168,8 +168,12 @@ func _bag_accepts(bag_def: ItemDef, def: ItemDef) -> bool:
 
 
 #region 落点判定
-## 普通物品的落点判定。棋盘模式下要求每格都被**同一个包**覆盖。
-func can_place(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int = EMPTY_UID) -> bool:
+## 只看**地形**：出界、禁用格、包覆盖、是否跨了两个包。不看有没有别的物品挡着。
+##
+## 抽出来是因为「这儿根本放不下」和「挡着但能挤开」是两回事：前者只能拒绝，
+## 后者可以顶替。两条路径必须共用同一套地形判断，否则会出现
+## 「直接拖进去不行、顶着别人反而进得去」这种玩家看不懂的事。
+func _terrain_ok(cells: Array[Vector2i], origin: Vector2i) -> bool:
 	if cells.is_empty():
 		return false
 	var bag := EMPTY_UID
@@ -180,9 +184,6 @@ func can_place(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int = EMPTY
 		var i := _idx(p)
 		if _blocked[i] != 0:
 			return false
-		var occupant := _occ[i]
-		if occupant != EMPTY_UID and occupant != ignore_uid:
-			return false
 		if requires_bag:
 			var owner := _bag_owner[i]
 			if owner == EMPTY_UID:
@@ -191,6 +192,17 @@ func can_place(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int = EMPTY
 				bag = owner
 			elif bag != owner:
 				return false          # 跨了两个包，不允许
+	return true
+
+
+## 普通物品的落点判定。棋盘模式下要求每格都被**同一个包**覆盖。
+func can_place(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int = EMPTY_UID) -> bool:
+	if not _terrain_ok(cells, origin):
+		return false
+	for c in cells:
+		var occupant := _occ[_idx(origin + c)]
+		if occupant != EMPTY_UID and occupant != ignore_uid:
+			return false
 	return true
 
 
@@ -233,6 +245,108 @@ func can_place_item(inst: ItemInstance, origin: Vector2i, rot: int) -> bool:
 		return false
 	var effective_rot := rot if inst.def.can_rotate else 0
 	return can_place_def(inst.def, origin, effective_rot, inst.uid)
+
+
+## 这件定义在这个落点上，**地形**允不允许 —— 出界、禁用格、包覆盖、
+## 容器与包的准入标签全都看，唯独不看有没有别的物品挡着。
+##
+## 表现层用它把落点分成三档：地形不允许（红）、允许且空着（绿）、
+## 允许但压着别人（黄，会顶掉）。
+func terrain_allows(def: ItemDef, origin: Vector2i, rot: int) -> bool:
+	if def == null or not accepts(def) or acts_as_bag(def):
+		return false
+	var cells := def.cells_rotated(rot)
+	if not _terrain_ok(cells, origin):
+		return false
+	if requires_bag:
+		var bag_inst: ItemInstance = _items.get(_bag_owner[_idx(origin + cells[0])], null)
+		if bag_inst != null and not _bag_accepts(bag_inst.def, def):
+			return false
+	return true
+
+
+## 这个落点会顶掉哪些普通物品，uid 升序去重。
+##
+## 只在 [method terrain_allows] 为真时才有意义 —— 空数组既可能是「落点干净」，
+## 也可能是「这儿压根放不下」，两者靠这里分不开，调用方先问地形。
+func displaced_by(def: ItemDef, origin: Vector2i, rot: int, ignore_uid: int = EMPTY_UID) -> Array[int]:
+	var out: Array[int] = []
+	if def == null:
+		return out
+	var seen := {}
+	for c in def.cells_rotated(rot):
+		var p := origin + c
+		if not in_bounds(p):
+			continue
+		var occupant := _occ[_idx(p)]
+		if occupant == EMPTY_UID or occupant == ignore_uid or seen.has(occupant):
+			continue
+		seen[occupant] = true
+		out.append(occupant)
+	out.sort()
+	return out
+#endregion
+
+
+#region 顶替式放置
+## 放置，并把挡路的普通物品**挤出来**交还给调用方。
+##
+## 成功返回被顶出来的实例数组（可能为空）；失败返回 [code]null[/code]，
+## 且容器保持原样 —— 半数物品被摘下、另一半不知去向，比「这一下不生效」糟得多。
+##
+## [b]包不参与顶替[/b]：包是棋盘的地基，往包上丢东西该落进包里，而不是把包连同
+## 一整袋内容物掀掉；反过来，拖一个包去顶掉另一个包，内容物也没有着落。
+## 两个方向都拒绝 —— 被顶的只可能是 [member _occ] 里的普通物品。
+##
+## 调用方拿到返回的实例后[b]必须[/b]给它们找地方（抓在手上、塞暂存区），
+## 它们此刻处于游离态，谁也不持有。
+func place_displacing(inst: ItemInstance, origin: Vector2i, rot: int = 0):
+	if inst == null or inst.def == null or acts_as_bag(inst.def):
+		return null
+	var effective_rot := rot if inst.def.can_rotate else 0
+	if not terrain_allows(inst.def, origin, effective_rot):
+		return null
+	if _items.has(inst.uid):
+		push_warning("GridInventory.place_displacing: uid %d 已在本容器中" % inst.uid)
+		return null
+
+	var victims: Array[ItemInstance] = []
+	# 原位记下来，放不成的时候要一件不差地摆回去
+	var homes: Array[Vector2i] = []
+	var rots: Array[int] = []
+
+	begin_batch()
+	for uid in displaced_by(inst.def, origin, effective_rot, inst.uid):
+		var v: ItemInstance = _items.get(uid, null)
+		if v == null:
+			continue
+		homes.append(v.origin)
+		rots.append(v.rotation)
+		if remove(uid) == null:
+			# 摘不下来（非空的包等）—— 已经摘掉的先还原，整件事作废
+			homes.resize(victims.size())
+			rots.resize(victims.size())
+			_put_back(victims, homes, rots)
+			end_batch()
+			return null
+		victims.append(v)
+
+	if not place(inst, origin, effective_rot):
+		# 地形已经确认过，挡路的也清空了，走到这里说明有别的校验没被地形覆盖。
+		# 不猜原因，原样还回去。
+		_put_back(victims, homes, rots)
+		end_batch()
+		return null
+
+	end_batch()
+	return victims
+
+
+## 把一批实例放回各自的原位。这些格子刚刚才腾出来，正常必然放得回去。
+func _put_back(items: Array[ItemInstance], homes: Array[Vector2i], rots: Array[int]) -> void:
+	for i in items.size():
+		if not place(items[i], homes[i], rots[i]):
+			push_error("GridInventory: uid %d 放不回原位，物品已丢失" % items[i].uid)
 #endregion
 
 

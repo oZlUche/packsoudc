@@ -63,6 +63,20 @@ func size() -> Vector2i:
 	return def.shape.size_rotated(rotation if def.can_rotate else 0)
 
 
+## 一组「相对原点的偏移」在容器里的绝对格坐标，已按当前朝向变换。
+##
+## 邻接标记格（[AdjacencyProfile]）就是这样一组偏移。抽在这里，是因为
+## 编译器要用它算点亮、界面要用它画标记 —— 两边各写一遍的话，
+## 迟早出现「界面画在这格、实际生效在那格」这种最难查的错。
+func absolute_cells(offsets: Array[Vector2i]) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	if def == null or def.shape == null:
+		return out
+	for o in offsets:
+		out.append(origin + def.shape.transform_point(o, rotation))
+	return out
+
+
 ## 顺时针旋转一步，返回旋转后的值。不检查是否放得下 —— 那是容器的事。
 func rotated_step(steps: int = 1) -> int:
 	if def == null or not def.can_rotate:

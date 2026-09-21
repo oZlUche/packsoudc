@@ -149,8 +149,24 @@ static func run(t: TestCase) -> void:
 	t.check(view_b._preview_valid, "空位处预览应为合法")
 	t.check(not view_a._preview_on, "非光标所在视图应清除预览")
 
+	# 压着别人不再是「非法」，而是「会顶人」—— 预览必须把这两档分开，
+	# 否则玩家要么以为这一下没生效，要么不知道自己挤走了什么
 	drag.update_preview(_center(view_b, Vector2i(0, 0)))
-	t.check(not view_b._preview_valid, "被占位置预览应为非法")
+	t.check(view_b._preview_valid, "压着一件的位置是合法落点（会顶掉它）")
+	t.eq(view_b._preview_victims.size(), 1, "预览点名了会被顶掉的那一件")
+	# 「点名的是谁」问容器，不写死 —— 前面的用例往 dst 里放过东西，
+	# 写死某个实例只会测出上面那些用例的摆放顺序
+	var named: int = view_b._preview_victims[0]
+	var overlaps := false
+	for pc in view_b._preview_cells:
+		if dst.cell_uid(view_b._preview_origin + pc) == named:
+			overlaps = true
+	t.check(overlaps, "点名的那件确实压在落点上")
+
+	# 2x2 摆在 4x4 的 (3,3)，右下角伸出界外。地形不允许，顶谁都没用
+	drag.update_preview(_center(view_b, Vector2i(3, 3)))
+	t.check(not view_b._preview_valid, "伸出界外的落点仍是非法")
+	t.check(view_b._preview_victims.is_empty(), "非法落点不该点名任何受害者")
 
 	drag.update_preview(_center(view_d, Vector2i(0, 0)))
 	t.check(not view_d._preview_valid, "标签不符时预览应为非法")

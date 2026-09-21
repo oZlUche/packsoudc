@@ -31,7 +31,7 @@ func _ready() -> void:
 	_font = _make_cjk_font()
 	_db = ItemDatabase.new()
 	if _db.load_dir() == 0:
-		push_error("没有加载到任何物品定义，先跑 tools/gen_sample_items.gd")
+		push_error("没有加载到任何物品定义，先跑 tools/import_content.gd 把作者数据导成资产")
 
 	ItemInstance.reset_uid_counter()
 	_board = GridInventory.new(BOARD_SIZE, 1, true)
@@ -80,7 +80,7 @@ func _build_ui() -> void:
 	row.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	root.add_child(row)
 
-	row.add_child(_labeled_grid("作战棋盘 7x9　只有放进包里的才参战", _board))
+	row.add_child(_labeled_grid("作战棋盘 7x9　只有放进包里的才参战", _board, true))
 
 	var side := VBoxContainer.new()
 	side.add_theme_constant_override("separation", 16)
@@ -99,7 +99,11 @@ func _build_ui() -> void:
 	_status = _heading("", 14, DIM)
 	root.add_child(_status)
 	root.add_child(
-		_heading("左键拖动　R 旋转　右键 / Esc 取消　　拖包时内容物跟着走（带东西的包不能转）", 14, DIM)
+		_heading(
+			"左键拖动　R 旋转　右键 / Esc 取消　　拖包时内容物跟着走（带东西的包不能转）"
+			+ "　　压着别人放手会把人顶出来：一件直接上手，多件进暂存区",
+			14, DIM
+		)
 	)
 
 	# 拖拽层最后加入，才能盖在所有容器之上
@@ -107,11 +111,14 @@ func _build_ui() -> void:
 	_drag.label_font = _font
 	_drag.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_drag)
+	_drag.stash = _storage
 	for view in _grid_views():
 		_drag.register_view(view)
 
 
-func _labeled_grid(caption: String, inv: GridInventory) -> Control:
+## [param adjacency] 只对棋盘开。暂存区与战利品里的东西不参战，
+## 那里的邻接「点亮」什么也不代表 —— 画出来只会让人以为摆对了。
+func _labeled_grid(caption: String, inv: GridInventory, adjacency: bool = false) -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	box.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -120,6 +127,7 @@ func _labeled_grid(caption: String, inv: GridInventory) -> Control:
 	var view := InventoryView.new()
 	view.label_font = _font
 	view.inventory = inv
+	view.show_adjacency = adjacency
 	view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	box.add_child(view)
 	return box
@@ -215,6 +223,41 @@ func demo_fill() -> void:
 	InventoryService.transfer_all(_loot, _storage)
 	_refill_loot()
 	_update_status()
+	_demo_hover_displacing()
+
+
+## 抓一件东西悬在别人身上，把「会顶掉它」的落点预览摆出来。
+##
+## 顶替是这个场景里唯一一个**只在拖拽途中**才看得见的状态，
+## 不摆出来，截图就永远证明不了它画对了。
+func _demo_hover_displacing() -> void:
+	var views := _grid_views()
+	if views.size() < 2:
+		return
+	var board_view := views[0]
+	var storage_view := views[1]
+
+	var picked: ItemInstance = null
+	for inst in _storage.items():
+		if (inst as ItemInstance).cells().size() == 1:
+			picked = inst
+			break
+	if picked == null:
+		return
+	storage_view.grab_requested.emit(
+		storage_view, picked.uid,
+		storage_view.cell_origin_px(picked.origin) + Vector2(InventoryView.CELL, 0) * 0.5
+	)
+
+	for inst in _board.items():
+		var item := inst as ItemInstance
+		if _board.acts_as_bag(item.def):
+			continue
+		_drag.update_preview(
+			board_view.global_position + board_view.cell_origin_px(item.origin)
+			+ Vector2(InventoryView.CELL, InventoryView.CELL) * 0.5
+		)
+		return
 
 
 func _update_status() -> void:

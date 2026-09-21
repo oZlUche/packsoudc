@@ -14,8 +14,15 @@ extends Control
 
 signal drag_started(uid: int)
 signal drag_finished(uid: int, dropped: bool)
+## 放下时顶出来了东西。[param grabbed] 为真表示那一件已经拿在手上，
+## 否则整批都进了 [member stash]。界面拿它写提示。
+signal items_displaced(instances: Array, grabbed: bool)
 
 @export var label_font: Font
+
+## 顶出来一次多于一件时的去处。为空则这类落点直接拒绝 ——
+## 宁可这一下不生效，也不能让物品没地方去。
+var stash: GridInventory = null
 
 var _views: Array[InventoryView] = []
 
@@ -73,6 +80,32 @@ func _on_grab_requested(view: InventoryView, uid: int, local_pos: Vector2) -> vo
 	set_process_input(true)
 	queue_redraw()
 	drag_started.emit(uid)
+
+
+## 让一件**已经游离**的物品直接上手。顶替时被挤出来的那一件走这条路 ——
+## 它此刻不在任何容器里，没有 view 可以「按下」。
+##
+## [param home] / [param home_rot] 只用于取消时的回退落点，不保证还回得去。
+func grab_free(inst: ItemInstance, home: GridInventory, home_at: Vector2i, home_rot: int,
+		grab_cell: Vector2i) -> void:
+	if is_dragging() or inst == null or inst.def == null:
+		return
+	var box := inst.def.shape.size_rotated(inst.rotation)
+	_grab_cell = Vector2i(
+		clampi(grab_cell.x, 0, maxi(0, box.x - 1)),
+		clampi(grab_cell.y, 0, maxi(0, box.y - 1))
+	)
+	_src_origin = home_at
+	_src_rot = home_rot
+	_rot = inst.rotation
+	_source = home
+	_payload = {}
+	_inst = inst
+	set_process_input(true)
+	if is_inside_tree():
+		update_preview(get_global_mouse_position())
+	queue_redraw()
+	drag_started.emit(inst.uid)
 
 
 func _input(event: InputEvent) -> void:
@@ -147,13 +180,21 @@ func update_preview(global_pos: Vector2) -> void:
 			view.clear_preview()
 	if target == null or target.inventory == null:
 		return
+	var inv := target.inventory
 	var cells := _inst.def.cells_rotated(_rot)
 	var origin := target_origin(target, global_pos)
-	var ok := (
-		target.inventory.can_attach_bag(_payload, origin, _rot) if not _payload.is_empty()
-		else target.inventory.can_place_def(_inst.def, origin, _rot, _inst.uid)
-	)
-	target.set_preview(cells, origin, ok)
+
+	if not _payload.is_empty():
+		target.set_preview(cells, origin, inv.can_attach_bag(_payload, origin, _rot))
+		return
+
+	if inv.can_place_def(_inst.def, origin, _rot, _inst.uid):
+		target.set_preview(cells, origin, true)
+		return
+
+	# 放不进空位，但地形允许 —— 那就是「压着别人」，可以顶替
+	var victims := _displaceable(inv, origin)
+	target.set_preview(cells, origin, not victims.is_empty(), victims)
 
 
 ## 在指定位置放手。返回是否成功落入某个容器（否则已退回源容器）。
@@ -164,19 +205,115 @@ func drop_at(global_pos: Vector2) -> bool:
 	var dropped := false
 	var target := view_at(global_pos)
 
+	# 顶替留到本次拖拽收尾之后再处理：被顶出来的那一件要接着上手，
+	# 而上手的前提是当前这一次已经彻底结束
+	var pending: Array = []
+	var home: GridInventory = null
+
 	if target != null and target.inventory != null:
 		var at := target_origin(target, global_pos)
-		if _payload.is_empty():
-			dropped = target.inventory.place(inst, at, _rot)
-		else:
+		if not _payload.is_empty():
 			dropped = target.inventory.attach_bag(_payload, at, _rot)
+		elif target.inventory.place(inst, at, _rot):
+			dropped = true
+		else:
+			# 「顶成功但一件没顶到」不可能发生（放不进空位才会走到这儿），
+			# 但成败不能靠数组空不空来推断 —— 那是把不变式当接口用。
+			var outcome := _drop_displacing(target.inventory, inst, at)
+			dropped = outcome["ok"]
+			pending = outcome["victims"]
+		if dropped:
+			home = target.inventory
 
 	if not dropped:
 		_restore()
 
 	_end_drag()
 	drag_finished.emit(inst.uid, dropped)
+
+	if not pending.is_empty():
+		_settle_displaced(pending, home, global_pos)
 	return dropped
+
+
+## 顶替式放下。返回 [code]{"ok": bool, "victims": Array}[/code]；
+## 失败时容器保持原样。
+func _drop_displacing(inv: GridInventory, inst: ItemInstance, at: Vector2i) -> Dictionary:
+	var failed := {"ok": false, "victims": []}
+	if _displaceable(inv, at).is_empty():
+		return failed
+
+	# 原位先记下来。remove 不清 origin，但依赖那个残值等于依赖实现细节 —— 显式抄一份。
+	var homes := {}
+	for uid in inv.displaced_by(inst.def, at, _rot, inst.uid):
+		var v := inv.get_item(uid)
+		if v != null:
+			homes[uid] = [v.origin, v.rotation]
+
+	var victims = inv.place_displacing(inst, at, _rot)
+	if victims == null:
+		return failed
+	if victims.size() < 2:
+		return {"ok": true, "victims": victims}
+
+	# 多于一件：全部进暂存区，进不去就整件事作废。
+	# 只塞进去一半、另一半留在手上，玩家根本追不过来。
+	if stash != null and _admit_all(stash, victims):
+		return {"ok": true, "victims": victims}
+
+	inv.begin_batch()
+	inv.remove(inst.uid)
+	for v in victims:
+		var h: Array = homes[(v as ItemInstance).uid]
+		if not inv.place(v, h[0], h[1]):
+			push_error("DragLayer: uid %d 放不回原位，物品已丢失" % (v as ItemInstance).uid)
+	inv.end_batch()
+	return failed
+
+
+## 安置被顶出来的物品：一件就直接拿在手上，多于一件已经在暂存区了。
+##
+## 「一件就上手」是因为那几乎总是接下来要挪的东西 —— 顶掉它再去暂存区里翻出来，
+## 中间那两下纯属多余。
+func _settle_displaced(victims: Array, home: GridInventory, global_pos: Vector2) -> void:
+	if victims.size() == 1:
+		var v := victims[0] as ItemInstance
+		var view := view_at(global_pos)
+		var cell := view.cell_at_global(global_pos) if view != null else v.origin
+		grab_free(v, home, v.origin, v.rotation, cell - v.origin)
+		items_displaced.emit(victims, true)
+		return
+	items_displaced.emit(victims, false)
+
+
+## 这个落点能顶掉哪些：地形得允许，且确实压着别人。
+## 多于一件时还要有地方安置，否则不算可顶 —— 预览就该是红的，不该给出做不到的承诺。
+func _displaceable(inv: GridInventory, origin: Vector2i) -> Array[int]:
+	var none: Array[int] = []
+	if _inst == null or not _payload.is_empty():
+		return none
+	if not inv.terrain_allows(_inst.def, origin, _rot):
+		return none
+	var victims := inv.displaced_by(_inst.def, origin, _rot, _inst.uid)
+	if victims.size() >= 2 and stash == null:
+		return none
+	return victims
+
+
+## 整批塞进目标容器：有一件放不下就整批退回。
+static func _admit_all(dest: GridInventory, items: Array) -> bool:
+	dest.begin_batch()
+	var done: Array[ItemInstance] = []
+	for it in items:
+		if dest.try_add(it):
+			done.append(it)
+			continue
+		for placed in done:
+			dest.remove(placed.uid)
+		dest.end_batch()
+		return false
+	dest.end_batch()
+	return true
 
 
 ## 放弃本次拖拽，物品退回源容器。
@@ -200,9 +337,14 @@ func _restore() -> void:
 		return
 	if _source.place(_inst, _src_origin, _src_rot):
 		return
+	# 原位没了（顶替之后取消，多半如此）。依次退而求其次，
+	# 每一级都比上一级更不合玩家心意，但都好过物品凭空消失。
 	push_warning("DragLayer: uid %d 无法放回原位，改为自动装填" % _inst.uid)
-	if not _source.try_add(_inst):
-		push_error("DragLayer: uid %d 放不回源容器，物品已丢失" % _inst.uid)
+	if _source.try_add(_inst):
+		return
+	if stash != null and stash.try_add(_inst):
+		return
+	push_error("DragLayer: uid %d 放不回源容器，物品已丢失" % _inst.uid)
 
 
 func _end_drag() -> void:

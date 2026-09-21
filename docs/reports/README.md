@@ -34,7 +34,7 @@
 | 013 | [消耗层与战斗内增益系统](013-cost-layer-and-buffs.md) | 设计 · 无代码改动 | 完成 |
 | 014 | [两条定案：上限联动与战斗零操作](014-battle-interaction-model.md) | 设计 · **M2 设计冻结** | 完成 |
 | 015 | [效果系统骨架](015-effect-system-skeleton.md) | 阶段 2 · M2 | 完成 |
-| 016 | [事件驱动模拟与积木清单](016-event-driven-sim.md) | 阶段 2 · M2 | 完成 |
+| 016 | [事件驱动模拟与构件清单](016-event-driven-sim.md) | 阶段 2 · M2 | 完成 |
 | 017 | [定点标度改为十进制](017-decimal-fixed-point.md) | 阶段 2 · M2 | 完成 |
 | 018 | [事件索引与冷却结算时机](018-event-index.md) | 阶段 2 · M2 | 完成 |
 | 019 | [套装系统](019-set-system.md) | 阶段 2 · M2 | 完成 |
@@ -42,3 +42,4 @@
 | 021 | [伤害结算管线、角色基线、增益槽连结](021-damage-pipeline.md) | 阶段 2 · M2 | 完成 |
 | 022 | [战斗可视化](022-battle-view.md) | 阶段 2 · M2 **完结** | 完成 |
 | 023 | [内容管线：导入器、导出器与可视化编辑器](023-content-pipeline.md) | 阶段 3 · 内容管线 | 完成 |
+| 024 | [邻接标记可见化、顶替式放置、战斗沙盒暂存区](024-adjacency-and-displacement.md) | 阶段 3 · 背包交互补完 | 完成 |

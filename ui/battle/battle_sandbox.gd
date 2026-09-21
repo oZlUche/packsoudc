@@ -8,9 +8,13 @@
 extends Control
 
 const BOARD_SIZE := Vector2i(7, 9)
+## 暂存区。摆不下、或者暂时不想要的东西放这儿 —— 它**不参战**，
+## 所以「拿下来」和「扔掉」不再是同一个动作。
+const STORAGE_SIZE := Vector2i(6, 3)
 
 var _db: ItemDatabase
 var _board: GridInventory
+var _storage: GridInventory
 var _tracker: SetTracker
 var _drag: DragLayer
 var _view: BattleView
@@ -30,6 +34,7 @@ func _ready() -> void:
 
 	ItemInstance.reset_uid_counter()
 	_board = GridInventory.new(BOARD_SIZE, 1, true)
+	_storage = GridInventory.new(STORAGE_SIZE, 2)
 	_tracker = SetTracker.create(SetDatabase.new())
 	_tracker.bind(_board)
 
@@ -91,6 +96,15 @@ func _build_ui() -> void:
 	_hint = _label("同一种子 → 逐条相同的回放。改变棋盘才会改变结果。", 12, UiPalette.DIM)
 	left.add_child(_hint)
 
+	left.add_child(_label("暂存区　放这儿的不参战", 13, UiPalette.DIM))
+	var storage_view := InventoryView.new()
+	storage_view.label_font = _font
+	storage_view.inventory = _storage
+	# 不参战的地方不画邻接标记：那里的「点亮」没有任何意义，只会误导
+	storage_view.show_adjacency = false
+	storage_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	left.add_child(storage_view)
+
 	# --- 右：回放 ---
 	_view = BattleView.new()
 	_view.label_font = _font
@@ -104,6 +118,9 @@ func _build_ui() -> void:
 	_drag.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_drag)
 	_drag.register_view(view)
+	_drag.register_view(storage_view)
+	_drag.stash = _storage
+	_drag.items_displaced.connect(_on_displaced)
 
 
 func _label(text: String, font_size: int, color: Color) -> Label:
@@ -128,6 +145,20 @@ func _button(text: String, handler: Callable) -> Button:
 ## 开局摆一套能把各条机制都演出来的东西：
 ## 枪（自发出手）、弹匣（邻接增益）、匕首（施加流血）、
 ## 兴奋剂（开场 buff）、医疗包（跌破 40% 回一口）、口粮（耐力）。
+##
+## [b]位置是指定的，不是 try_add 摆出来的。[/b] 弹匣的增益格朝上，随便一摆就可能
+## 落在第一排 —— 标记指向棋盘外，既不点亮也画不出来，开局看到的就是一件
+## 「好像没有效果」的配件。演示场景得让机制自己显形，不能指望玩家去试。
+const LAYOUT := [
+	[&"pistol", Vector2i(0, 0)],
+	[&"mag", Vector2i(0, 1)],      # 正在枪的下面：增益格 (0,-1) 刚好指着枪
+	[&"knife", Vector2i(1, 1)],
+	[&"medkit", Vector2i(2, 0)],
+	[&"stim", Vector2i(2, 2)],
+	[&"ration", Vector2i(3, 2)],
+]
+
+
 func _seed_board() -> void:
 	_board.begin_batch()
 	_board.clear()
@@ -137,11 +168,29 @@ func _seed_board() -> void:
 	if bag != null:
 		_board.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
 		_board.place(ItemInstance.create(bag), Vector2i(2, 0), 0)
-	for id in [&"medkit", &"pistol", &"mag", &"knife", &"stim", &"ration"]:
-		var def := _db.get_def(id)
-		if def != null:
-			_board.try_add(ItemInstance.create(def))
+	for row in LAYOUT:
+		var def := _db.get_def(row[0])
+		if def == null:
+			continue
+		var inst := ItemInstance.create(def)
+		# 内容随时会改形状，指定的位置未必还放得下。放不下就退回自动装填，
+		# 布局难看总好过这件东西干脆不上场
+		if not _board.place(inst, row[1], 0):
+			_board.try_add(inst)
 	_board.end_batch()
+
+
+## 顶掉别人之后给一句交代。不说的话，东西就是「不见了」——
+## 玩家不会去暂存区找一件自己都不知道被挤走的物品。
+func _on_displaced(instances: Array, grabbed: bool) -> void:
+	var names: Array[String] = []
+	for inst in instances:
+		var item := inst as ItemInstance
+		names.append(item.def.display_name if item.def != null else "?")
+	if grabbed:
+		_hint.text = "顶出了「%s」，已经拿在手上。" % names[0]
+	else:
+		_hint.text = "顶出了 %d 件（%s），都放进暂存区了。" % [names.size(), "、".join(names)]
 
 
 func _on_reseed() -> void:

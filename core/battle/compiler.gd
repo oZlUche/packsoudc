@@ -170,13 +170,11 @@ static func _lit_neighbors(
 	filter: Array[StringName]
 ) -> Array[int]:
 	var found: Array[int] = []
-	var shape := holder.def.shape
-	if shape == null:
+	if holder.def.shape == null:
 		return found
 
 	var seen := {}
-	for offset in marker_cells:
-		var cell := holder.origin + shape.transform_point(offset, holder.rotation)
+	for cell in holder.absolute_cells(marker_cells):
 		var other := board.cell_uid(cell)
 		if other == GridInventory.EMPTY_UID or other == holder.uid or seen.has(other):
 			continue
