@@ -3,11 +3,15 @@
 [ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_6cqs8"]
 [ext_resource type="Script" path="res://core/effects/effect.gd" id="2_yalko"]
 [ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_2whw8"]
-[ext_resource type="Resource" path="res://data/shapes/bag_small.tres" id="4_vrgpl"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="4_vrgpl"]
+
+[sub_resource type="Resource" id="Resource_1jxc0"]
+script = ExtResource("4_vrgpl")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
 
 [resource]
 script = ExtResource("3_2whw8")
 id = &"bag_small"
 display_name = "小背包"
-shape = ExtResource("4_vrgpl")
+shape = SubResource("Resource_1jxc0")
 is_bag = true

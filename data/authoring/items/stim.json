@@ -1,0 +1,43 @@
+{
+  "id": "stim",
+  "display_name": "兴奋剂",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "consumable"
+  ],
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_battle_start"
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "target": "SELF",
+            "buff": {
+              "id": "adrenaline",
+              "display_name": "肾上腺素",
+              "max_stacks": 3,
+              "duration_sec": 10.0,
+              "mods": [
+                {
+                  "stat": "haste",
+                  "mult_category": "HASTE",
+                  "mult_percent": 12
+                }
+              ]
+            },
+            "stacks": 3
+          }
+        ]
+      }
+    ]
+  }
+}

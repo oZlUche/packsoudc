@@ -1,0 +1,16 @@
+{
+  "id": "ration",
+  "display_name": "口粮",
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "consumable"
+  ],
+  "combat": {
+    "base_stats": {
+      "max_stamina": 40.0,
+      "regen_stamina": 2.0
+    }
+  }
+}

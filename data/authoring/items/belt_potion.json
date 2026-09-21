@@ -1,0 +1,14 @@
+{
+  "id": "belt_potion",
+  "display_name": "药水带",
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "is_bag": true,
+  "bag_accept_tags": [
+    "consumable"
+  ]
+}

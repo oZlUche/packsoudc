@@ -1,0 +1,75 @@
+{
+  "id": "sniper",
+  "display_name": "狙击枪",
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 30.0
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 3.0
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 18.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage"
+          },
+          {
+            "type": "apply_status",
+            "buff": {
+              "id": "marked",
+              "display_name": "标记",
+              "is_debuff": true,
+              "max_stacks": 1,
+              "duration_sec": 8.0,
+              "mods": [
+                {
+                  "stat": "armor",
+                  "mult_category": "EMPOWER",
+                  "flat": -3.0
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "adjacency": {
+    "receive_cells": [
+      [
+        0,
+        4
+      ]
+    ],
+    "receive_filter": [
+      "part"
+    ],
+    "receive_mods": [
+      {
+        "mult_category": "SHARP",
+        "mult_percent": 25
+      }
+    ]
+  }
+}

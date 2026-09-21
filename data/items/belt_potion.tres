@@ -3,13 +3,17 @@
 [ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_457sk"]
 [ext_resource type="Script" path="res://core/effects/effect.gd" id="2_612m2"]
 [ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_sbg1u"]
-[ext_resource type="Resource" path="res://data/shapes/belt_potion.tres" id="4_rru0s"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="4_rru0s"]
+
+[sub_resource type="Resource" id="Resource_tt1ft"]
+script = ExtResource("4_rru0s")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
 
 [resource]
 script = ExtResource("3_sbg1u")
 id = &"belt_potion"
 display_name = "药水带"
-shape = ExtResource("4_rru0s")
+shape = SubResource("Resource_tt1ft")
 rarity = 2
 is_bag = true
 bag_accept_tags = Array[StringName]([&"consumable"])

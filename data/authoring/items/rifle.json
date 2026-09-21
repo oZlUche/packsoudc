@@ -1,0 +1,40 @@
+{
+  "id": "rifle",
+  "display_name": "步枪",
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "weapon"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 8.0
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 5.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage"
+          }
+        ]
+      }
+    ]
+  }
+}

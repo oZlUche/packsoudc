@@ -1,0 +1,38 @@
+{
+  "id": "crowbar",
+  "display_name": "撬棍",
+  "shape": [
+    "11",
+    "10"
+  ],
+  "rarity": 1,
+  "tags": [
+    "tool"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 14.0
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown"
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 12.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "armor",
+  "display_name": "防弹衣",
+  "shape": [
+    "111",
+    "111"
+  ],
+  "rarity": 2,
+  "tags": [
+    "gear"
+  ],
+  "combat": {
+    "base_stats": {
+      "armor": 5.0,
+      "max_hp": 20.0
+    }
+  }
+}

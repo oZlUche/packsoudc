@@ -13,7 +13,10 @@ if [ ! -x "$GODOT" ]; then
   exit 127
 fi
 
-"$GODOT" --headless --path "$ROOT" --import >/dev/null 2>&1
+# --import 会把整个项目的脚本解析一遍。它的输出以前直接丢掉了，
+# 于是 ui/ 里的解析错误只能靠「跑起来才发现」。现在留下来一起检查。
+IMPORTLOG="${TMPDIR:-/tmp}/godot_import.log"
+"$GODOT" --headless --path "$ROOT" --import >"$IMPORTLOG" 2>&1
 timeout 120 "$GODOT" --headless --path "$ROOT" --script res://tests/run_tests.gd >"$LOG" 2>&1
 code=$?
 
@@ -29,18 +32,15 @@ if grep -q 'SCRIPT ERROR' "$LOG"; then
   code=1
 fi
 
-# tests/ 之外的脚本不会被 run_tests 加载，改接口时最容易漏。
-# 逐个 --check-only 解析一遍：它不设退出码，只往 stderr 打字，所以看输出。
-TOOLLOG="${TMPDIR:-/tmp}/godot_tools_check.log"
-: >"$TOOLLOG"
-for f in "$ROOT"/tools/*.gd; do
-  [ -e "$f" ] || continue
-  "$GODOT" --headless --path "$ROOT" --check-only     --script "res://tools/$(basename "$f")" >>"$TOOLLOG" 2>&1
-done
-if grep -qE 'Parse error|SCRIPT ERROR' "$TOOLLOG"; then
+# 单元测试只加载 run_tests 够得着的脚本；ui/ 与 tools/ 下的东西改接口时最容易漏。
+# 这一步把全项目的 .gd 都 load 一遍，一次 Godot 启动搞定。
+CHECKLOG="${TMPDIR:-/tmp}/godot_check_scripts.log"
+"$GODOT" --headless --path "$ROOT" --script res://tools/check_scripts.gd \
+  >"$CHECKLOG" 2>&1
+if grep -qE '加载失败|Failed to load script|Parse Error' "$CHECKLOG"; then
   echo ""
-  echo "!! tools/ 下有脚本解析失败"
-  grep -E 'Parse Error|Parse error|Failed to load script' "$TOOLLOG" | head -10
+  echo "!! 有脚本加载失败"
+  grep -E 'Failed to load script|Parse Error|SCRIPT ERROR' "$CHECKLOG" | head -12
   code=1
 fi
 

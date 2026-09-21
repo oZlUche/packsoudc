@@ -1,0 +1,36 @@
+{
+  "id": "medkit",
+  "display_name": "医疗包",
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "consumable"
+  ],
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_resource_below",
+          "percent": 40
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "costs": [
+          {
+            "type": "uses"
+          }
+        ],
+        "effects": [
+          {
+            "type": "change_resource",
+            "amount": 35.0
+          }
+        ]
+      }
+    ]
+  }
+}

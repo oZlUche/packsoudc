@@ -1,22 +1,25 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_borgp"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_4rc8l"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_dxdng"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_4rc8l"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_qb8yr"]
-[ext_resource type="Resource" path="res://data/shapes/battery.tres" id="4_qb8yr"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_4rc8l"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_qb8yr"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_4phem"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_ceue3"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_bvc6o"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_sn8fo"]
 
-[sub_resource type="Resource" id="Resource_4rc8l"]
-script = ExtResource("3_qb8yr")
+[sub_resource type="Resource" id="Resource_5x3f4"]
+script = ExtResource("3_4phem")
 base_stats = {
 "max_power": 20.0
 }
 
+[sub_resource type="Resource" id="Resource_ttehx"]
+script = ExtResource("6_sn8fo")
+
 [resource]
-script = ExtResource("3_4rc8l")
+script = ExtResource("5_bvc6o")
 id = &"battery"
 display_name = "电池"
-shape = ExtResource("4_qb8yr")
+shape = SubResource("Resource_ttehx")
 tags = Array[StringName]([&"part"])
-combat = SubResource("Resource_4rc8l")
+combat = SubResource("Resource_5x3f4")

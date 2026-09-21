@@ -1,0 +1,31 @@
+{
+  "id": "mag",
+  "display_name": "弹匣",
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "ammo"
+  ],
+  "adjacency": {
+    "grant_cells": [
+      [
+        0,
+        -1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "grant_filter": [
+      "weapon"
+    ],
+    "grant_mods": [
+      {
+        "mult_category": "SHARP",
+        "mult_percent": 20
+      }
+    ]
+  }
+}

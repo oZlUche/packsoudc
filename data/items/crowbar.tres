@@ -1,50 +1,54 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_jejh2"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_d5uhb"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_uld12"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_47lpy"]
-[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_xyhc3"]
-[ext_resource type="Resource" path="res://data/shapes/crowbar.tres" id="4_0y8wh"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_un6fy"]
-[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="5_wmt4w"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_nliur"]
-[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_5wq4i"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_ksx8x"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_my4k8"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_uld12"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_xyhc3"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_un6fy"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_wmt4w"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="5_nliur"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_5wq4i"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_ksx8x"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_my4k8"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_4jkl4"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_htdnj"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_ujr6m"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_ukfir"]
 
-[sub_resource type="Resource" id="Resource_uld12"]
-script = ExtResource("3_xyhc3")
+[sub_resource type="Resource" id="Resource_rap38"]
+script = ExtResource("3_un6fy")
 
-[sub_resource type="Resource" id="Resource_xyhc3"]
-script = ExtResource("5_wmt4w")
+[sub_resource type="Resource" id="Resource_irkrp"]
+script = ExtResource("5_nliur")
 amount = 12.0
 
-[sub_resource type="Resource" id="Resource_un6fy"]
-script = ExtResource("7_5wq4i")
+[sub_resource type="Resource" id="Resource_v5y44"]
+script = ExtResource("7_ksx8x")
 
-[sub_resource type="Resource" id="Resource_wmt4w"]
-script = ExtResource("8_ksx8x")
+[sub_resource type="Resource" id="Resource_s76eq"]
+script = ExtResource("8_my4k8")
 
-[sub_resource type="Resource" id="Resource_nliur"]
-script = ExtResource("2_uld12")
-trigger = SubResource("Resource_wmt4w")
-cadence = SubResource("Resource_uld12")
-costs = Array[ExtResource("4_un6fy")]([SubResource("Resource_xyhc3")])
-effects = Array[ExtResource("6_nliur")]([SubResource("Resource_un6fy")])
+[sub_resource type="Resource" id="Resource_l8iga"]
+script = ExtResource("2_xyhc3")
+trigger = SubResource("Resource_s76eq")
+cadence = SubResource("Resource_rap38")
+costs = Array[ExtResource("4_wmt4w")]([SubResource("Resource_irkrp")])
+effects = Array[ExtResource("6_5wq4i")]([SubResource("Resource_v5y44")])
 
-[sub_resource type="Resource" id="Resource_5wq4i"]
-script = ExtResource("9_my4k8")
+[sub_resource type="Resource" id="Resource_bt6dh"]
+script = ExtResource("9_4jkl4")
 base_stats = {
 "damage": 14.0
 }
-rules = Array[ExtResource("2_uld12")]([SubResource("Resource_nliur")])
+rules = Array[ExtResource("2_xyhc3")]([SubResource("Resource_l8iga")])
+
+[sub_resource type="Resource" id="Resource_1y71a"]
+script = ExtResource("12_ukfir")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)])
 
 [resource]
-script = ExtResource("3_47lpy")
+script = ExtResource("11_ujr6m")
 id = &"crowbar"
 display_name = "撬棍"
-shape = ExtResource("4_0y8wh")
+shape = SubResource("Resource_1y71a")
 rarity = 1
 tags = Array[StringName]([&"tool"])
-combat = SubResource("Resource_5wq4i")
+combat = SubResource("Resource_bt6dh")

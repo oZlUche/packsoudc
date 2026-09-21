@@ -1,59 +1,62 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_pup3q"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_2a85y"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_mnnfs"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_83wfo"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_pnwjq"]
-[ext_resource type="Resource" path="res://data/shapes/stim.tres" id="4_og01g"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_wakea"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_jcuet"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="6_g2jki"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="7_uqkql"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="8_4xr3b"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_mwhy1"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_mnnfs"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_83wfo"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_wakea"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_jcuet"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_g2jki"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="6_uqkql"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="7_4xr3b"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="8_mwhy1"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_6ub74"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_17g3a"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_2f6po"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_dgjve"]
 
-[sub_resource type="Resource" id="Resource_mnnfs"]
-script = ExtResource("3_83wfo")
+[sub_resource type="Resource" id="Resource_x6x38"]
+script = ExtResource("3_wakea")
 
-[sub_resource type="Resource" id="Resource_83wfo"]
-script = ExtResource("1_pup3q")
+[sub_resource type="Resource" id="Resource_r8q2q"]
+script = ExtResource("1_mnnfs")
 stat = &"haste"
 mult_category = 3
 mult_percent = 12
 
-[sub_resource type="Resource" id="Resource_wakea"]
-script = ExtResource("6_g2jki")
+[sub_resource type="Resource" id="Resource_autuc"]
+script = ExtResource("6_uqkql")
 id = &"adrenaline"
 display_name = "肾上腺素"
 max_stacks = 3
 duration_sec = 10.0
-mods = Array[ExtResource("1_pup3q")]([SubResource("Resource_83wfo")])
+mods = Array[ExtResource("1_mnnfs")]([SubResource("Resource_r8q2q")])
 
-[sub_resource type="Resource" id="Resource_jcuet"]
-script = ExtResource("7_uqkql")
+[sub_resource type="Resource" id="Resource_5tn4f"]
+script = ExtResource("7_4xr3b")
 target = 1
-buff = SubResource("Resource_wakea")
+buff = SubResource("Resource_autuc")
 stacks = 3
 
-[sub_resource type="Resource" id="Resource_g2jki"]
-script = ExtResource("8_4xr3b")
+[sub_resource type="Resource" id="Resource_hn7hk"]
+script = ExtResource("8_mwhy1")
 
-[sub_resource type="Resource" id="Resource_uqkql"]
-script = ExtResource("2_mnnfs")
-trigger = SubResource("Resource_g2jki")
-cadence = SubResource("Resource_mnnfs")
-effects = Array[ExtResource("5_jcuet")]([SubResource("Resource_jcuet")])
+[sub_resource type="Resource" id="Resource_7sf63"]
+script = ExtResource("2_83wfo")
+trigger = SubResource("Resource_hn7hk")
+cadence = SubResource("Resource_x6x38")
+effects = Array[ExtResource("5_g2jki")]([SubResource("Resource_5tn4f")])
 
-[sub_resource type="Resource" id="Resource_4xr3b"]
-script = ExtResource("9_mwhy1")
-rules = Array[ExtResource("2_mnnfs")]([SubResource("Resource_uqkql")])
+[sub_resource type="Resource" id="Resource_ywq85"]
+script = ExtResource("9_6ub74")
+rules = Array[ExtResource("2_83wfo")]([SubResource("Resource_7sf63")])
+
+[sub_resource type="Resource" id="Resource_e0xm3"]
+script = ExtResource("12_dgjve")
 
 [resource]
-script = ExtResource("3_pnwjq")
+script = ExtResource("11_2f6po")
 id = &"stim"
 display_name = "兴奋剂"
-shape = ExtResource("4_og01g")
+shape = SubResource("Resource_e0xm3")
 rarity = 2
 tags = Array[StringName]([&"consumable"])
-combat = SubResource("Resource_4xr3b")
+combat = SubResource("Resource_ywq85")

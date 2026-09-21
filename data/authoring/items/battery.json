@@ -1,0 +1,15 @@
+{
+  "id": "battery",
+  "display_name": "电池",
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "part"
+  ],
+  "combat": {
+    "base_stats": {
+      "max_power": 20.0
+    }
+  }
+}

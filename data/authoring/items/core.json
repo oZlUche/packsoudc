@@ -1,0 +1,18 @@
+{
+  "id": "core",
+  "display_name": "能量核心",
+  "shape": [
+    "010",
+    "111",
+    "010"
+  ],
+  "rarity": 3,
+  "tags": [
+    "part"
+  ],
+  "combat": {
+    "base_stats": {
+      "max_power": 60.0
+    }
+  }
+}

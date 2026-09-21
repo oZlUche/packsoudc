@@ -1,23 +1,27 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_3saxm"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_80vu7"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_c4f3n"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_c4f3n"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_u7fuw"]
-[ext_resource type="Resource" path="res://data/shapes/core.tres" id="4_u7fuw"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_c4f3n"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_u7fuw"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_t4si2"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_ke6uw"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_xcelq"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_k3l6a"]
 
-[sub_resource type="Resource" id="Resource_c4f3n"]
-script = ExtResource("3_u7fuw")
+[sub_resource type="Resource" id="Resource_dlrj8"]
+script = ExtResource("3_t4si2")
 base_stats = {
 "max_power": 60.0
 }
 
+[sub_resource type="Resource" id="Resource_gygn4"]
+script = ExtResource("6_k3l6a")
+cells = Array[Vector2i]([Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(1, 2)])
+
 [resource]
-script = ExtResource("3_c4f3n")
+script = ExtResource("5_xcelq")
 id = &"core"
 display_name = "能量核心"
-shape = ExtResource("4_u7fuw")
+shape = SubResource("Resource_gygn4")
 rarity = 3
 tags = Array[StringName]([&"part"])
-combat = SubResource("Resource_c4f3n")
+combat = SubResource("Resource_dlrj8")

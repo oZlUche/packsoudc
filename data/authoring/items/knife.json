@@ -1,0 +1,67 @@
+{
+  "id": "knife",
+  "display_name": "匕首",
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "weapon"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 3.0
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.6
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 3.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage"
+          },
+          {
+            "type": "apply_status",
+            "buff": {
+              "id": "bleed",
+              "display_name": "流血",
+              "max_stacks": 5,
+              "duration_sec": 6.0,
+              "rules": [
+                {
+                  "trigger": {
+                    "type": "on_schedule"
+                  },
+                  "cadence": {
+                    "type": "cooldown",
+                    "seconds": 1.0
+                  },
+                  "effects": [
+                    {
+                      "type": "deal_damage",
+                      "target": "SELF",
+                      "damage_type": "bleed",
+                      "amount": 1.0,
+                      "damage_stat": "",
+                      "per_stack": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
