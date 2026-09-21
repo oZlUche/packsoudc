@@ -98,7 +98,8 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
 ### M3-3b 手绘地图：网格脚本的解析与导出
 
 `core/map/map_grid_text.gd`（`parse` / `render`）+ `generators/grid_script_generator.gd`。
-格式见架构 5.4.1，首张图 `data/authoring/maps/chapter01_v0.txt` 已从作者的电子表格转出。
+格式见架构 5.4.1，两张图 `data/authoring/maps/chapter01_v0.txt`、`chapter01_v0.1.txt` 已从作者的电子表格转出
+（`tools/map_xlsx_to_text.py`）。
 
 **做完算过**：
 
@@ -107,6 +108,8 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
   往返不掉字，才说明解析没有丢信息
 - 随机生成器产出的图 `render` 出来再 `parse` 回去，`to_dict()` 一致
 - `\|` 落在 `-` 上得到一个 `junction` 节点，把那段弧一分为二；连续 `\|` 得到一条 `layout.span = 2` 的径向边
+- `[danger]` 层逐格对上 `[map]`：字母格的等级写进 `MapNode.danger`；同等级相连的一片得到同一个 `zone`
+- `chapter01_v0.1.txt` 解析出来：红区那一片只有一条边通向区外，且那条边挂在精英上 —— 作者画的和 5.4 的高危区规则一致，验证一下
 
 **为什么排在随机生成器之后而不是之前**：解析器很小，但「生成图能导出成同一种文本」
 是它最值钱的部分 —— 生成器调参时，看一张文本图比看一堆坐标快十倍。
