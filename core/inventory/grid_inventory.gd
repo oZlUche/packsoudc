@@ -214,8 +214,7 @@ func can_place_def(def: ItemDef, origin: Vector2i, rot: int, ignore_uid: int = E
 func can_place_item(inst: ItemInstance, origin: Vector2i, rot: int) -> bool:
 	if inst == null or inst.def == null:
 		return false
-	var effective_rot := rot if inst.def.can_rotate else 0
-	return can_place_def(inst.def, origin, effective_rot, inst.uid)
+	return can_place_def(inst.def, origin, rot, inst.uid)
 
 
 ## 这件定义在这个落点上，**地形**允不允许 —— 出界、禁用格、包覆盖、
@@ -274,8 +273,7 @@ func displaced_by(def: ItemDef, origin: Vector2i, rot: int, ignore_uid: int = EM
 func place_displacing(inst: ItemInstance, origin: Vector2i, rot: int = 0):
 	if inst == null or inst.def == null or acts_as_bag(inst.def):
 		return null
-	var effective_rot := rot if inst.def.can_rotate else 0
-	if not terrain_allows(inst.def, origin, effective_rot):
+	if not terrain_allows(inst.def, origin, rot):
 		return null
 	if _items.has(inst.uid):
 		push_warning("GridInventory.place_displacing: uid %d 已在本容器中" % inst.uid)
@@ -287,7 +285,7 @@ func place_displacing(inst: ItemInstance, origin: Vector2i, rot: int = 0):
 	var rots: Array[int] = []
 
 	begin_batch()
-	for uid in displaced_by(inst.def, origin, effective_rot, inst.uid):
+	for uid in displaced_by(inst.def, origin, rot, inst.uid):
 		var v: ItemInstance = _items.get(uid, null)
 		if v == null:
 			continue
@@ -302,7 +300,7 @@ func place_displacing(inst: ItemInstance, origin: Vector2i, rot: int = 0):
 			return null
 		victims.append(v)
 
-	if not place(inst, origin, effective_rot):
+	if not place(inst, origin, rot):
 		# 地形已经确认过，挡路的也清空了，走到这里说明有别的校验没被地形覆盖。
 		# 不猜原因，原样还回去。
 		_put_back(victims, homes, rots)
@@ -331,14 +329,13 @@ func place(inst: ItemInstance, origin: Vector2i, rot: int = 0) -> bool:
 		push_warning("GridInventory.place: uid %d 已在本容器中，应先 remove" % inst.uid)
 		return false
 
-	var effective_rot := rot if inst.def.can_rotate else 0
-	var cells := inst.def.cells_rotated(effective_rot)
+	var cells := inst.def.cells_rotated(rot)
 	var table := _bag_owner if acts_as_bag(inst.def) else _occ
 	for c in cells:
 		table[_idx(origin + c)] = inst.uid
 
 	inst.origin = origin
-	inst.rotation = effective_rot
+	inst.rotation = rot
 	inst.container_id = id
 	_items[inst.uid] = inst
 	_notify_changed()
@@ -374,7 +371,7 @@ func remove(uid: int) -> ItemInstance:
 ## 要转先掏空。这是一条有意的简化。
 func rotate_item(uid: int, steps: int = 1) -> bool:
 	var inst: ItemInstance = _items.get(uid, null)
-	if inst == null or not inst.def.can_rotate:
+	if inst == null:
 		return false
 	var is_bag := acts_as_bag(inst.def)
 	if is_bag and not contents_of(uid).is_empty():
@@ -550,7 +547,7 @@ func find_first_fit(def: ItemDef, allow_rotate: bool = true, ignore_uid: int = E
 	if def == null or not accepts(def):
 		return miss
 	var rot_count := 1
-	if allow_rotate and def.can_rotate and def.shape != null:
+	if allow_rotate and def.shape != null:
 		rot_count = def.shape.distinct_rotation_count()
 
 	for y in size.y:

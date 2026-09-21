@@ -12,7 +12,11 @@ static var _next_uid: int = 1
 var uid: int = NONE
 var def: ItemDef = null
 
-## 0..3，顺时针。def.can_rotate 为 false 时恒为 0。
+## 0..3，顺时针。
+##
+## [b]一切道具都能转。[/b] 曾经有过一个 `can_rotate` 开关，用来「钉死某些装备的朝向」——
+## 但一件占两格的东西横着还是竖着，是玩家在棋盘上的空间取舍，
+## 不是内容作者该替他做的决定。开关删了，理由见架构文档 3.1。
 var rotation: int = 0
 
 ## 在所属容器中的锚点（形状规范化后的左上角）。
@@ -31,7 +35,7 @@ static func create(p_def: ItemDef, p_rotation: int = 0) -> ItemInstance:
 	inst.uid = _next_uid
 	_next_uid += 1
 	inst.def = p_def
-	inst.rotation = p_rotation if (p_def != null and p_def.can_rotate) else 0
+	inst.rotation = posmod(p_rotation, 4)
 	return inst
 
 
@@ -60,7 +64,7 @@ func cells() -> Array[Vector2i]:
 func size() -> Vector2i:
 	if def == null or def.shape == null:
 		return Vector2i.ZERO
-	return def.shape.size_rotated(rotation if def.can_rotate else 0)
+	return def.shape.size_rotated(rotation)
 
 
 ## 一组「相对原点的偏移」在容器里的绝对格坐标，已按当前朝向变换。
@@ -79,7 +83,7 @@ func absolute_cells(offsets: Array[Vector2i]) -> Array[Vector2i]:
 
 ## 顺时针旋转一步，返回旋转后的值。不检查是否放得下 —— 那是容器的事。
 func rotated_step(steps: int = 1) -> int:
-	if def == null or not def.can_rotate:
+	if def == null:
 		return 0
 	return posmod(rotation + steps, 4)
 

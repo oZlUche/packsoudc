@@ -1,12 +1,11 @@
 extends RefCounted
 
 
-static func _def(id: String, rows: Array, can_rotate: bool = true, tags: Array = []) -> ItemDef:
+static func _def(id: String, rows: Array, tags: Array = []) -> ItemDef:
 	var d := ItemDef.new()
 	d.id = StringName(id)
 	d.display_name = id
 	d.shape = ItemShape.from_ascii(rows)
-	d.can_rotate = can_rotate
 	var t: Array[StringName] = []
 	for tag in tags:
 		t.append(StringName(tag))
@@ -21,7 +20,7 @@ static func run(t: TestCase) -> void:
 	var bar := _def("bar", ["#", "#", "#"])          # 竖 1x3
 	var l_shape := _def("L", ["##", "#."])           # L 形三格
 	var single := _def("dot", ["#"])
-	var weapon := _def("sword", ["#", "#"], true, ["weapon"])
+	var weapon := _def("sword", ["#", "#"], ["weapon"])
 
 	# --- 初始状态 ---
 	var inv := GridInventory.new(Vector2i(4, 4), 1)

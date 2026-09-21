@@ -160,7 +160,7 @@ func _input(event: InputEvent) -> void:
 
 ## 拖拽中顺时针转一步。带内容物的包不能转，与 GridInventory.rotate_item 的限制一致。
 func rotate_dragged() -> void:
-	if _inst == null or _inst.def == null or not _inst.def.can_rotate:
+	if _inst == null or _inst.def == null:
 		return
 	if not _payload.is_empty():
 		return

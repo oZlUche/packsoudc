@@ -1,12 +1,11 @@
 extends RefCounted
 
 
-static func _make_def(id: String, rows: Array, can_rotate: bool = true) -> ItemDef:
+static func _make_def(id: String, rows: Array) -> ItemDef:
 	var d := ItemDef.new()
 	d.id = StringName(id)
 	d.display_name = id
 	d.shape = ItemShape.from_ascii(rows)
-	d.can_rotate = can_rotate
 	return d
 
 
@@ -16,7 +15,7 @@ static func run(t: TestCase) -> void:
 	ItemInstance.reset_uid_counter()
 
 	var bar := _make_def("bar", ["#", "#", "#"])
-	var fixed := _make_def("fixed", ["##"], false)
+	var wide := _make_def("wide", ["##"])
 
 	# --- 定义校验 ---
 	t.check(bar.is_valid(), "完整定义应合法")
@@ -34,11 +33,11 @@ static func run(t: TestCase) -> void:
 	t.ne(a.uid, b.uid, "同一 def 的两个实例 uid 必须不同")
 	t.check(a.def == b.def, "两个实例共享同一个 ItemDef 对象")
 
-	# --- 不可旋转的物品被强制钉在 rot 0 ---
-	var f := ItemInstance.create(fixed, 3)
-	t.eq(f.rotation, 0, "can_rotate = false 时创建旋转应被归零")
-	t.eq(f.rotated_step(1), 0, "can_rotate = false 时旋转一步仍为 0")
-	t.eq(f.cells(), fixed.shape.cells_rotated(0), "不可旋转物品恒用 rot0 占格")
+	# --- 一切道具都能转，创建时给的朝向原样保留 ---
+	var f := ItemInstance.create(wide, 3)
+	t.eq(f.rotation, 3, "创建时指定的朝向不该被改掉")
+	t.eq(f.rotated_step(1), 0, "转一步回到 0")
+	t.eq(f.cells(), wide.shape.cells_rotated(3), "占格按当前朝向算")
 
 	# --- 可旋转物品 ---
 	var r := ItemInstance.create(bar)
@@ -61,7 +60,7 @@ static func run(t: TestCase) -> void:
 	t.check(db.register(bar), "登记合法定义应成功")
 	t.check(not db.register(bar), "重复 id 应被拒绝")
 	t.check(not db.register(no_id), "无效定义应被拒绝")
-	t.check(db.register(fixed), "登记第二个定义应成功")
+	t.check(db.register(wide), "登记第二个定义应成功")
 	t.eq(db.size(), 2, "数据库应有 2 条定义")
 	t.check(db.get_def(&"bar") == bar, "按 id 应取回同一个对象")
 	t.is_null(db.get_def(&"nope"), "未知 id 应返回 null")

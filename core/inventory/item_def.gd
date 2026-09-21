@@ -21,9 +21,6 @@ extends Resource
 ## 稀有度档位，0 起。影响掉落权重与 UI 配色。
 @export var rarity: int = 0
 
-## 是否允许旋转。少数物品（如某些装备）可能强制朝向。
-@export var can_rotate: bool = true
-
 ## 准入标签。容器级与包体级的准入都拿它比对。
 @export var tags: Array[StringName] = []
 
@@ -68,4 +65,4 @@ func is_valid() -> bool:
 func cells_rotated(rot: int) -> Array[Vector2i]:
 	if shape == null:
 		return [] as Array[Vector2i]
-	return shape.cells_rotated(rot if can_rotate else 0)
+	return shape.cells_rotated(rot)

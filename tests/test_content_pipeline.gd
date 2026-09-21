@@ -225,7 +225,6 @@ static func run_round_trip(t: TestCase) -> void:
 		"display_name": "全家桶",
 		"shape": ["110", "011"],
 		"rarity": 3,
-		"can_rotate": false,
 		"tags": ["weapon", "tool"],
 		"set_id": "scavenger",
 		"effects": [{"type": "rarity_bias", "rarity": 2, "amount": 15}],
@@ -275,7 +274,6 @@ static func run_round_trip(t: TestCase) -> void:
 	# 逐项比对
 	t.eq(def2.id, def.id, "往返：id")
 	t.eq(def2.rarity, def.rarity, "往返：稀有度")
-	t.eq(def2.can_rotate, def.can_rotate, "往返：can_rotate（非默认的 false）")
 	t.eq(def2.tags, def.tags, "往返：标签")
 	t.eq(def2.set_id, def.set_id, "往返：套装归属")
 	t.eq(def2.shape.to_bits(), def.shape.to_bits(), "往返：形状")
