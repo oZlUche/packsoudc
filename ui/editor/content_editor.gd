@@ -22,6 +22,12 @@ extends Control
 ## 作者数据目录。资产目录见 [ContentPaths]。
 const ITEM_DIR := ContentPaths.AUTHORING_ITEMS
 
+## 分类页签的三种形态。
+##
+## 不用「哨兵字符串」表示「无标签」那一页：标签是作者自己起的名字，
+## 挑哪个词当哨兵都可能撞上，而撞上的表现是某个标签页莫名其妙变成了另一页。
+enum Filter { ALL, TAG, UNTAGGED }
+
 var _font: Font
 var _ids: Array[String] = []
 var _current_id: String = ""
@@ -41,6 +47,21 @@ var _drafts: Dictionary = {}
 ## 不会一打开就被当成「改过了」。
 var _baseline: Dictionary = {}
 
+## 当前分类筛选之后，列表里实际显示的 id，**按显示顺序**。
+##
+## 与 [member _ids] 分开：ItemList 的行号对应的是这一份，不是全集。
+## 两者混用的表现是「点第三行打开了第五件」—— 一加筛选就错，而且错得很隐蔽。
+var _shown: Array[String] = []
+
+## 分类筛选。[constant Filter.TAG] 时看 [member _filter_tag]。
+var _filter: Filter = Filter.ALL
+var _filter_tag: String = ""
+
+## 列表键 → 它的标签。标签是**从数据里读出来的**，不是写死的表 ——
+## MOD 作者加一个新标签，分类页签就该自己多出来一个。
+var _tags_of: Dictionary = {}
+
+var _tab_host: VBoxContainer
 var _list: ItemList
 var _form_host: VBoxContainer
 var _shape: ShapeEditor
@@ -78,17 +99,36 @@ func _build_ui() -> void:
 	var columns := HSplitContainer.new()
 	margin.add_child(columns)
 
-	# --- 左：道具列表 ---
+	# --- 左：分类页签 + 道具列表 ---
 	var left := VBoxContainer.new()
-	left.custom_minimum_size.x = 180
+	left.custom_minimum_size.x = 290
 	left.add_theme_constant_override("separation", 6)
 	columns.add_child(left)
 	left.add_child(_label("道具", 16, UiPalette.FG))
+
+	var browse := HBoxContainer.new()
+	browse.add_theme_constant_override("separation", 6)
+	browse.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left.add_child(browse)
+
+	# 页签竖排。标签数量由内容决定，可能比窗口高 —— 套个滚动容器，
+	# 不然加到第十几个标签时最后几个就够不着了
+	var tab_scroll := ScrollContainer.new()
+	tab_scroll.custom_minimum_size.x = 104
+	tab_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	tab_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	browse.add_child(tab_scroll)
+	_tab_host = VBoxContainer.new()
+	_tab_host.add_theme_constant_override("separation", 2)
+	_tab_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tab_scroll.add_child(_tab_host)
+
 	_list = ItemList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_list.add_theme_font_override("font", _font)
-	_list.item_selected.connect(func(i: int): _open(_ids[i]))
-	left.add_child(_list)
+	_list.item_selected.connect(func(i: int): _open(_shown[i]))
+	browse.add_child(_list)
 	var list_buttons := HBoxContainer.new()
 	list_buttons.add_child(_button("新建", _new_item))
 	list_buttons.add_child(_button("刷新列表", _on_rescan))
@@ -211,14 +251,18 @@ func _button(text: String, handler: Callable) -> Button:
 #region 文件
 func _reload_list() -> void:
 	_ids.clear()
+	_tags_of.clear()
 	_list.clear()
 	var d := DirAccess.open(ITEM_DIR)
 	if d != null:
 		var files := d.get_files()
 		files.sort()  # 顺序稳定，列表才不会每次打开都换位置
 		for f in files:
-			if f.ends_with(".json"):
-				_ids.append(f.get_basename())
+			if not f.ends_with(".json"):
+				continue
+			var id := f.get_basename()
+			_ids.append(id)
+			_tags_of[id] = _tags_in_file(f)
 	# 草稿里可能有还没存过盘的新道具，它们不在目录里但得看得见
 	for key in _drafts:
 		if not _ids.has(key):
@@ -227,15 +271,147 @@ func _reload_list() -> void:
 	_repaint_list()
 
 
+## 只为了标签读一遍文件。走 JSON 而不是导入器：这里不关心内容对不对，
+## 一件配错的道具照样得出现在列表里，否则作者就没法进去修它。
+func _tags_in_file(file_name: String) -> Array[String]:
+	var out: Array[String] = []
+	var parsed = JSON.parse_string(
+		FileAccess.get_file_as_string(ITEM_DIR + "/" + file_name))
+	if not (parsed is Dictionary):
+		return out
+	for t in ((parsed as Dictionary).get("tags", []) as Array):
+		out.append(String(t))
+	return out
+
+
+## 内存里那一份的标签盖掉盘上的 —— 作者刚加的标签，页签就该跟着变。
+func _tags_for(id: String) -> Array[String]:
+	var live: ItemDef = null
+	if id == _draft_key() and _def != null:
+		live = _def
+	elif _drafts.has(id):
+		live = _drafts[id]
+	if live == null:
+		return _tags_of.get(id, [] as Array[String])
+	var out: Array[String] = []
+	for t in live.tags:
+		out.append(String(t))
+	return out
+
+
+## 全部出现过的标签，按名字排序。**从内容里长出来，不是写死的枚举** ——
+## MOD 作者加一个标签，这里自己就多一页。
+func _all_tags() -> Array[String]:
+	var seen := {}
+	for id in _ids:
+		for t in _tags_for(id):
+			seen[t] = true
+	var out: Array[String] = []
+	for t in seen:
+		out.append(t)
+	out.sort()
+	return out
+
+
+func _matches_filter(id: String) -> bool:
+	match _filter:
+		Filter.ALL:
+			return true
+		Filter.UNTAGGED:
+			return _tags_for(id).is_empty()
+		_:
+			return _tags_for(id).has(_filter_tag)
+
+
+## 重建分类页签。只在标签集合真的变了时才拆重建 ——
+## 每次刷新都重建的话，点下去的那一瞬按钮就被换掉，焦点和悬停全丢。
+func _rebuild_tabs() -> void:
+	# 每一页记成 [模式, 标签名]，顺序就是显示顺序
+	var wanted: Array = [[Filter.ALL, ""]]
+	for t in _all_tags():
+		wanted.append([Filter.TAG, t])
+	for id in _ids:
+		if _tags_for(id).is_empty():
+			wanted.append([Filter.UNTAGGED, ""])
+			break
+
+	var current: Array = []
+	for child in _tab_host.get_children():
+		current.append((child as Button).get_meta("page"))
+	if current != wanted:
+		for child in _tab_host.get_children():
+			_tab_host.remove_child(child)
+			child.queue_free()
+		for page in wanted:
+			_tab_host.add_child(_tab_button(page))
+
+	# 选中的那一页可能刚刚没了（最后一件带该标签的被改了标签）
+	if not wanted.has([_filter, _filter_tag]):
+		_filter = Filter.ALL
+		_filter_tag = ""
+
+	for child in _tab_host.get_children():
+		var b := child as Button
+		var page: Array = b.get_meta("page")
+		b.button_pressed = page == [_filter, _filter_tag]
+		b.text = "%s %d" % [_tab_label(page), _count_of(page)]
+
+
+func _count_of(page: Array) -> int:
+	var n := 0
+	for id in _ids:
+		match page[0]:
+			Filter.ALL:
+				n += 1
+			Filter.UNTAGGED:
+				if _tags_for(id).is_empty():
+					n += 1
+			_:
+				if _tags_for(id).has(String(page[1])):
+					n += 1
+	return n
+
+
+func _tab_label(page: Array) -> String:
+	match page[0]:
+		Filter.ALL:
+			return "全部"
+		Filter.UNTAGGED:
+			return "无标签"
+		_:
+			return String(page[1])
+
+
+func _tab_button(page: Array) -> Button:
+	var b := Button.new()
+	b.set_meta("page", page)
+	b.toggle_mode = true
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.clip_text = true
+	b.add_theme_font_override("font", _font)
+	b.add_theme_font_size_override("font_size", 12)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.pressed.connect(func() -> void:
+		_filter = page[0]
+		_filter_tag = String(page[1])
+		_repaint_list()
+	)
+	return b
+
+
 ## 有未保存改动的条目前面加一个点。没有这个标记，作者就得靠记忆。
 func _repaint_list() -> void:
-	var keep := _list.get_selected_items()
+	_rebuild_tabs()
+	_shown.clear()
 	_list.clear()
 	for id in _ids:
-		_list.add_item(("● " if _drafts.has(id) else "") + id)
-	for i in keep:
-		if i < _list.item_count:
-			_list.select(i)
+		if _matches_filter(id):
+			_shown.append(id)
+			_list.add_item(("● " if _drafts.has(id) else "") + id)
+	# 按 id 选回去，不按行号 —— 换一页之后行号指向的是另一件东西
+	var i := _shown.find(_draft_key())
+	if i >= 0:
+		_list.select(i)
 
 
 func _on_rescan() -> void:
@@ -395,7 +571,12 @@ func _save_as() -> void:
 
 
 func _select_in_list(id: String) -> void:
-	var i := _ids.find(id)
+	# 当前分类里没有它，就退回「全部」：选中一件看不见的东西等于没选
+	if not _matches_filter(id):
+		_filter = Filter.ALL
+		_filter_tag = ""
+		_repaint_list()
+	var i := _shown.find(id)
 	if i >= 0 and i < _list.item_count:
 		_list.select(i)
 
@@ -502,6 +683,15 @@ func _refresh() -> void:
 		item.rules = _def.combat.rules
 	_dps.text = "占 %d 格　预估 DPS %.1f" % [_shape.cell_count(), item.estimated_dps()]
 #endregion
+
+
+## [DevNav] 会问这一句再决定要不要拦一下返回。
+##
+## 草稿只在内存里，切走场景就没了 —— 而「点了返回、改了一下午的东西没了」
+## 是这类工具最不能有的失败。
+func has_unsaved_changes() -> bool:
+	_stash_current()
+	return not _drafts.is_empty()
 
 
 ## 截图工具的钩子：打开一件既有邻接标记又有战斗数据的道具

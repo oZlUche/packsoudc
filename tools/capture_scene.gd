@@ -24,6 +24,10 @@ func run() -> void:
 		return
 	_scene = packed.instantiate()
 	root.add_child(_scene)
+	# 告诉 SceneTree 这就是当前场景。不设的话 current_scene 是 null，
+	# 而靠它判断「现在在哪个场景」的东西（DevNav 的返回按钮）会以为自己不该出现 ——
+	# 截图就会少掉一块真实运行时看得见的界面。
+	current_scene = _scene
 
 
 ## 覆写 tick 而不是 _process —— 基类的 _process 里有「run() 被错误中断」的兜底，

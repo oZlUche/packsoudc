@@ -134,3 +134,104 @@ static func frame_run_shape_painter(t: TestCase, root: Window) -> void:
 	t.check(ed._def.adjacency.grant_cells.has(Vector2i(0, -3)), "回写的就是那一格")
 
 	ed.queue_free()
+
+
+## 分类页签。**期望值从 data/authoring 里推出来，不写死** ——
+## 标签是作者随手会加会改的东西，写死「有 weapon 这一页」意味着
+## 别人改个标签测试就红一次。
+static func _tags_on_disk(ed) -> Array[String]:
+	var seen := {}
+	for id in ed._ids:
+		var parsed = JSON.parse_string(
+			FileAccess.get_file_as_string(ContentPaths.authoring_file("items", id)))
+		if not (parsed is Dictionary):
+			continue
+		for tag in ((parsed as Dictionary).get("tags", []) as Array):
+			seen[String(tag)] = true
+	var out: Array[String] = []
+	for tag in seen:
+		out.append(tag)
+	out.sort()
+	return out
+
+
+static func frame_run_tag_tabs(t: TestCase, root: Window) -> void:
+	t.begin("编辑器 · 按标签分类")
+
+	var ed = load(SCENE).instantiate()
+	root.add_child(ed)
+
+	var tags := _tags_on_disk(ed)
+	if tags.is_empty():
+		t.check(true, "（现有内容一个标签都没有，跳过）")
+		ed.queue_free()
+		return
+
+	# --- 页签就是内容里出现过的标签，一个不多一个不少 ---
+	var labels: Array[String] = []
+	for child in ed._tab_host.get_children():
+		labels.append(String((child as Button).get_meta("page")[1]))
+	var from_tabs: Array[String] = []
+	for s in labels:
+		if s != "":
+			from_tabs.append(s)
+	from_tabs.sort()
+	t.eq(from_tabs, tags, "页签与内容里的标签一一对应，不是写死的表")
+	t.eq(ed._shown.size(), ed._ids.size(), "默认在「全部」页，一件不少")
+
+	# --- 切到某一页，列表只剩带那个标签的 ---
+	var target := tags[0]
+	for child in ed._tab_host.get_children():
+		var b := child as Button
+		# 标签页是唯一带非空标签名的那一档，不必去够编辑器里的枚举
+		if String(b.get_meta("page")[1]) == target:
+			b.pressed.emit()
+	t.check(ed._shown.size() > 0, "%s 这一页不是空的" % target)
+	t.check(ed._shown.size() < ed._ids.size() or tags.size() == 1,
+		"筛过之后比全集少（除非所有道具都带这一个标签）")
+	for id in ed._shown:
+		t.check(ed._tags_for(id).has(target), "%s 带着 %s 标签" % [id, target])
+
+	# --- 行号走的是筛过的那一份，不是全集 ---
+	# 这条是整块筛选里唯一真正会错的地方：点第三行打开了第五件，
+	# 而且只有在加了筛选之后才错
+	var first_shown: String = ed._shown[0]
+	ed._open(ed._shown[0])
+	t.eq(ed._current_id, first_shown, "**点第一行打开的是本页第一件**")
+
+	# --- 选一件不在本页里的，自动退回「全部」 ---
+	var outsider := ""
+	for id in ed._ids:
+		if not ed._shown.has(id):
+			outsider = id
+			break
+	if outsider != "":
+		ed._select_in_list(outsider)
+		t.eq(ed._shown.size(), ed._ids.size(),
+			"选中一件本页看不见的东西时退回「全部」—— 否则等于没选")
+		t.check(ed._shown.has(outsider), "它现在看得见了")
+
+	ed.queue_free()
+
+
+static func frame_run_unsaved_hook(t: TestCase, root: Window) -> void:
+	t.begin("编辑器 · 未保存提示")
+
+	var ed = load(SCENE).instantiate()
+	root.add_child(ed)
+	if ed._ids.is_empty():
+		t.check(false, "没有可用道具")
+		ed.queue_free()
+		return
+
+	ed._open(ed._ids[0])
+	t.check(not ed.has_unsaved_changes(), "刚打开没有未保存的东西")
+
+	ed._def.display_name += "（改过）"
+	ed._refresh()
+	t.check(ed.has_unsaved_changes(), "改了一下就有了 —— DevNav 据此拦住返回")
+
+	ed._on_discard()
+	t.check(not ed.has_unsaved_changes(), "放弃改动之后又干净了")
+
+	ed.queue_free()

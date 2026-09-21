@@ -63,7 +63,7 @@ func _build() -> void:
 		col.add_child(_card(entry))
 
 	col.add_child(HSeparator.new())
-	col.add_child(_label("Esc 退出", 12, UiPalette.DIM))
+	col.add_child(_label("进去之后按 F1 或点右上角回到这里　　Esc 退出", 12, UiPalette.DIM))
 
 
 func _card(entry: Dictionary) -> Control:
@@ -96,8 +96,9 @@ func _card(entry: Dictionary) -> Control:
 
 
 func _open(scene: String) -> void:
-	# change_scene_to_file 会把本场景换掉，所以没有「返回」——
-	# 开发期够用，真需要的话重启比加一套导航便宜。
+	# change_scene_to_file 把本场景整个换掉，回来的路由 DevNav 那个 autoload 提供
+	# （右上角按钮 / F1）—— 放在 autoload 里，是因为 F6 直接跑某个场景时
+	# 也得能回来，而那时没有人替它装按钮。
 	var err := get_tree().change_scene_to_file(scene)
 	if err != OK:
 		push_error("场景切换失败：" + scene)
