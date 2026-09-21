@@ -8,7 +8,8 @@
   ],
   "rarity": 2,
   "tags": [
-    "weapon"
+    "weapon",
+    "gun"
   ],
   "combat": {
     "base_stats": {

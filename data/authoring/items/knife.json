@@ -4,8 +4,10 @@
   "shape": [
     "1"
   ],
+  "can_rotate": false,
   "tags": [
-    "weapon"
+    "weapon",
+    "melee"
   ],
   "combat": {
     "base_stats": {

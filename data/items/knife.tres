@@ -84,5 +84,6 @@ script = ExtResource("13_yos3v")
 id = &"knife"
 display_name = "匕首"
 shape = SubResource("Resource_qtyyl")
-tags = Array[StringName]([&"weapon"])
+can_rotate = false
+tags = Array[StringName]([&"weapon", &"melee"])
 combat = SubResource("Resource_nd7d3")

@@ -14,7 +14,7 @@ mult_percent = 20
 [sub_resource type="Resource" id="Resource_q5mjt"]
 script = ExtResource("2_j804i")
 grant_cells = Array[Vector2i]([Vector2i(0, -1)])
-grant_filter = Array[StringName]([&"weapon"])
+grant_filter = Array[StringName]([&"gun"])
 grant_mods = Array[ExtResource("1_j38e5")]([SubResource("Resource_u4fbs")])
 
 [sub_resource type="Resource" id="Resource_ddt8e"]
