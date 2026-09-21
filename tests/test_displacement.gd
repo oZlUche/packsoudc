@@ -199,7 +199,7 @@ static func run_drag_many(t: TestCase) -> void:
 	var row := _def("row", ["###"])
 	var src := GridInventory.new(Vector2i(4, 4), 1)
 	var dst := GridInventory.new(Vector2i(4, 4), 2)
-	var stash := GridInventory.new(Vector2i(4, 4), 3)
+	var stash := ItemStash.new(3)
 	var view_a := _view(src, Vector2.ZERO)
 	var view_b := _view(dst, Vector2(400, 0))
 
@@ -292,8 +292,8 @@ static func run_drag_full_stash(t: TestCase) -> void:
 	var row := _def("row", ["###"])
 	var src := GridInventory.new(Vector2i(4, 4), 1)
 	var dst := GridInventory.new(Vector2i(4, 4), 2)
-	# 只有一格的暂存区：装得下第一件，装不下第二件
-	var stash := GridInventory.new(Vector2i(1, 1), 3)
+	# 只放得下一件的暂存区：收得下第一件，收不下第二件
+	var stash := ItemStash.new(3, 1)
 	var view_a := _view(src, Vector2.ZERO)
 	var view_b := _view(dst, Vector2(400, 0))
 

@@ -1,26 +1,22 @@
-## 网格容器。两种模式共用本实现，只差一个 [member requires_bag] 开关：
+## 网格容器：**摆在哪儿是有意义的**那一类。两种模式共用本实现，
+## 只差一个 [member requires_bag] 开关：
 ##
 ## - **棋盘模式**（`requires_bag = true`）：玩家的作战背包。盘面固定，但**开局全部不可用**，
 ##   可用格来自玩家自己放上去的「包」。普通物品只能放进某个包覆盖的格子里。
-## - **自由容器**（`requires_bag = false`）：暂存区、敌人尸体、商店货架。整片可用，直接摆放。
+## - **自由容器**（`requires_bag = false`）：敌人尸体、商店货架。整片可用，直接摆放。
+##
+## 暂存区[b]不在此列[/b] —— 它只是个列表，见 [ItemStash]。
 ##
 ## 棋盘上有两张互相独立的占用表：[member _bag_owner] 记录每格被哪个包覆盖，
 ## [member _occ] 记录每格被哪件普通物品占据。一个格子可以同时「被包 B 覆盖」和「被物品 I 占据」。
 ##
 ## 包只有在棋盘模式下才作为包生效。一个包躺在尸体容器里时就是件普通异形物品，
 ## 不提供任何格子 —— 这条规则省掉了容器套容器的递归。
-##
-## 本类是纯 [RefCounted]，不进场景树。表现层连 [signal changed] 后
-## [b]从状态完整重建视图[/b]，不要做增量猜测。
 class_name GridInventory
-extends RefCounted
-
-## 内容发生任何变化时发出。批量操作期间会被合并成一次。
-signal changed
+extends ItemContainer
 
 const EMPTY_UID := 0
 
-var id: int = 0
 var size: Vector2i = Vector2i(8, 6)
 
 ## true = 棋盘模式，普通物品必须落在包内
@@ -34,37 +30,12 @@ var _bag_owner: PackedInt32Array = PackedInt32Array()
 var _items: Dictionary = {}  # uid -> ItemInstance
 var _blocked: PackedByteArray = PackedByteArray()
 
-var _batch_depth: int = 0
-var _dirty: bool = false
-
 
 func _init(p_size: Vector2i = Vector2i(8, 6), p_id: int = 0, p_requires_bag: bool = false) -> void:
 	id = p_id
 	size = p_size
 	requires_bag = p_requires_bag
 	_reset_cells()
-
-
-#region 批量操作
-## 成对使用，把区间内的多次改动合并成一次 [signal changed]。
-## 跨容器移动必须用它包起来，否则 UI 会看到「已从源移除、尚未放入目标」的中间态。
-func begin_batch() -> void:
-	_batch_depth += 1
-
-
-func end_batch() -> void:
-	_batch_depth = maxi(0, _batch_depth - 1)
-	if _batch_depth == 0 and _dirty:
-		_dirty = false
-		changed.emit()
-
-
-func _notify_changed() -> void:
-	if _batch_depth > 0:
-		_dirty = true
-	else:
-		changed.emit()
-#endregion
 
 
 #region 格子查询
@@ -589,6 +560,14 @@ func find_first_fit(def: ItemDef, allow_rotate: bool = true, ignore_uid: int = E
 				if can_place_def(def, origin, rot, ignore_uid):
 					return {"found": true, "origin": origin, "rotation": rot}
 	return miss
+
+
+func admit(inst: ItemInstance) -> bool:
+	return try_add(inst)
+
+
+func can_admit(def: ItemDef) -> bool:
+	return def != null and find_first_fit(def)["found"]
 
 
 ## 自动找位置放入。放不下返回 false，实例保持游离态。

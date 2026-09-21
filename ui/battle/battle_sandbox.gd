@@ -8,13 +8,14 @@
 extends Control
 
 const BOARD_SIZE := Vector2i(7, 9)
-## 暂存区。摆不下、或者暂时不想要的东西放这儿 —— 它**不参战**，
+## 暂存区是个**列表**，不是一块地方：摆不下、或者暂时不想要的东西放这儿，
+## 它不参战，摆在第几行也不承载任何信息（见 [ItemStash]）。
 ## 所以「拿下来」和「扔掉」不再是同一个动作。
-const STORAGE_SIZE := Vector2i(6, 3)
+const STORAGE_WIDTH := 200
 
 var _db: ItemDatabase
 var _board: GridInventory
-var _storage: GridInventory
+var _storage: ItemStash
 var _tracker: SetTracker
 var _drag: DragLayer
 var _view: BattleView
@@ -34,7 +35,7 @@ func _ready() -> void:
 
 	ItemInstance.reset_uid_counter()
 	_board = GridInventory.new(BOARD_SIZE, 1, true)
-	_storage = GridInventory.new(STORAGE_SIZE, 2)
+	_storage = ItemStash.new(2)
 	_tracker = SetTracker.create(SetDatabase.new())
 	_tracker.bind(_board)
 
@@ -96,12 +97,11 @@ func _build_ui() -> void:
 	_hint = _label("同一种子 → 逐条相同的回放。改变棋盘才会改变结果。", 12, UiPalette.DIM)
 	left.add_child(_hint)
 
-	left.add_child(_label("暂存区　放这儿的不参战", 13, UiPalette.DIM))
-	var storage_view := InventoryView.new()
+	left.add_child(_label("暂存区　放这儿的不参战　拖行即可取放", 13, UiPalette.DIM))
+	var storage_view := StashView.new()
 	storage_view.label_font = _font
-	storage_view.inventory = _storage
-	# 不参战的地方不画邻接标记：那里的「点亮」没有任何意义，只会误导
-	storage_view.show_adjacency = false
+	storage_view.stash = _storage
+	storage_view.custom_minimum_size.x = STORAGE_WIDTH
 	storage_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(storage_view)
 

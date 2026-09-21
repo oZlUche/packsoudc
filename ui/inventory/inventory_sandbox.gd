@@ -11,8 +11,9 @@
 extends Control
 
 const BOARD_SIZE := Vector2i(7, 9)
-const STORAGE_SIZE := Vector2i(6, 5)
 const LOOT_SIZE := Vector2i(6, 5)
+## 暂存区是列表，只有宽度
+const STORAGE_WIDTH := 240
 
 const BG := Color("101216")
 const FG := Color("dfe3ea")
@@ -20,7 +21,7 @@ const DIM := Color("8b93a1")
 
 var _db: ItemDatabase
 var _board: GridInventory
-var _storage: GridInventory
+var _storage: ItemStash
 var _loot: GridInventory
 var _drag: DragLayer
 var _status: Label
@@ -35,7 +36,7 @@ func _ready() -> void:
 
 	ItemInstance.reset_uid_counter()
 	_board = GridInventory.new(BOARD_SIZE, 1, true)
-	_storage = GridInventory.new(STORAGE_SIZE, 2)
+	_storage = ItemStash.new(2)
 	_loot = GridInventory.new(LOOT_SIZE, 3)
 
 	_build_ui()
@@ -86,7 +87,7 @@ func _build_ui() -> void:
 	side.add_theme_constant_override("separation", 16)
 	side.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(side)
-	side.add_child(_labeled_grid("暂存区　保留但不参战", _storage))
+	side.add_child(_labeled_stash("暂存区　保留但不参战　一行一件，不占格子", _storage))
 	side.add_child(_labeled_grid("战利品", _loot))
 
 	var buttons := HBoxContainer.new()
@@ -133,15 +134,31 @@ func _labeled_grid(caption: String, inv: GridInventory, adjacency: bool = false)
 	return box
 
 
-func _grid_views() -> Array[InventoryView]:
-	var found: Array[InventoryView] = []
+## 暂存区不是网格，单独搭一列。
+func _labeled_stash(caption: String, s: ItemStash) -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	box.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	box.add_child(_heading(caption, 13, DIM))
+
+	var view := StashView.new()
+	view.label_font = _font
+	view.stash = s
+	view.custom_minimum_size.x = STORAGE_WIDTH
+	view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	box.add_child(view)
+	return box
+
+
+func _grid_views() -> Array[ContainerView]:
+	var found: Array[ContainerView] = []
 	_collect_views(self, found)
 	return found
 
 
-func _collect_views(node: Node, out: Array[InventoryView]) -> void:
+func _collect_views(node: Node, out: Array[ContainerView]) -> void:
 	for child in node.get_children():
-		if child is InventoryView:
+		if child is ContainerView:
 			out.append(child)
 		_collect_views(child, out)
 
@@ -192,7 +209,7 @@ func _refill_loot() -> void:
 
 func _on_take_all() -> void:
 	var moved := InventoryService.transfer_all(_loot, _storage)
-	_flash("拾取 %d 件到暂存区，%d 件装不下" % [moved, _loot.item_count()])
+	_flash("拾取 %d 件到暂存区，剩 %d 件" % [moved, _loot.item_count()])
 
 
 func _on_refill() -> void:
@@ -234,19 +251,18 @@ func _demo_hover_displacing() -> void:
 	var views := _grid_views()
 	if views.size() < 2:
 		return
-	var board_view := views[0]
-	var storage_view := views[1]
-
-	var picked: ItemInstance = null
-	for inst in _storage.items():
-		if (inst as ItemInstance).cells().size() == 1:
-			picked = inst
-			break
-	if picked == null:
+	var board_view := views[0] as InventoryView
+	var storage_view := views[1] as StashView
+	if board_view == null or storage_view == null:
 		return
+
+	var list := _storage.items()
+	if list.is_empty():
+		return
+	var picked := list[0] as ItemInstance
 	storage_view.grab_requested.emit(
 		storage_view, picked.uid,
-		storage_view.cell_origin_px(picked.origin) + Vector2(InventoryView.CELL, 0) * 0.5
+		storage_view.row_origin_px(0) + Vector2(20, StashView.ROW_H * 0.5)
 	)
 
 	for inst in _board.items():

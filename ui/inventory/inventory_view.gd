@@ -6,11 +6,10 @@
 ##
 ## 拖拽本身不在这里处理，见 [DragLayer]。本类只负责「告诉外面哪一件被按下了」
 ## 以及「按要求显示一个落点预览」。
+##
+## 只画**空间**容器。暂存区是个列表，见 [StashView]。
 class_name InventoryView
-extends Control
-
-## 某件物品被按下，请求开始拖拽。[param local_pos] 为本控件内的像素坐标。
-signal grab_requested(view: InventoryView, uid: int, local_pos: Vector2)
+extends ContainerView
 
 const CELL := 48.0
 
@@ -48,6 +47,10 @@ var _preview_victims: Array[int] = []
 
 ## 是否画邻接标记格。战利品、商店货架这类地方不参战，画了只是噪音。
 @export var show_adjacency: bool = true
+
+
+func container() -> ItemContainer:
+	return inventory
 
 
 func set_inventory(inv: GridInventory) -> void:

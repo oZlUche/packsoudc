@@ -41,6 +41,7 @@ const SUITES: Array = [
 	preload("res://tests/test_item_contracts.gd"),
 	preload("res://tests/test_drag_layer.gd"),
 	preload("res://tests/test_displacement.gd"),
+	preload("res://tests/test_item_stash.gd"),
 ]
 
 

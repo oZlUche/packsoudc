@@ -1,5 +1,12 @@
-## 拖拽状态机。管理所有已注册的 [InventoryView]，负责跨容器拖拽、拖拽中旋转、
+## 拖拽状态机。管理所有已注册的 [ContainerView]，负责跨容器拖拽、拖拽中旋转、
 ## 落点合法性预览，以及任何失败路径下把物品放回原处。
+##
+## 视图有两类，落点规则不同，其余一律共用：
+##
+## [codeblock]
+## InventoryView  网格：落点是格坐标，可能压着别人（顶替）
+## StashView      列表：落点是插入行号，永远不会压着谁
+## [endcodeblock]
 ##
 ## 刻意不用 Godot 内置的 _get_drag_data / _can_drop_data：
 ## 那套 API 在拖拽过程中无法响应旋转键，也做不出多格落点高亮。
@@ -22,14 +29,16 @@ signal items_displaced(instances: Array, grabbed: bool)
 
 ## 顶出来一次多于一件时的去处。为空则这类落点直接拒绝 ——
 ## 宁可这一下不生效，也不能让物品没地方去。
-var stash: GridInventory = null
+var stash: ItemStash = null
 
-var _views: Array[InventoryView] = []
+var _views: Array[ContainerView] = []
 
 var _inst: ItemInstance = null
-var _source: GridInventory = null
+var _source: ItemContainer = null
 var _src_origin: Vector2i = Vector2i.ZERO
 var _src_rot: int = 0
+## 源容器是列表时的原行号，取消拖拽要按它插回去
+var _src_index: int = -1
 ## 抓取点相对物品 origin 的格偏移，拖拽时用它反推落点
 var _grab_cell: Vector2i = Vector2i.ZERO
 var _rot: int = 0
@@ -43,7 +52,7 @@ func _ready() -> void:
 	set_process_input(false)
 
 
-func register_view(view: InventoryView) -> void:
+func register_view(view: ContainerView) -> void:
 	if _views.has(view):
 		return
 	_views.append(view)
@@ -54,27 +63,38 @@ func is_dragging() -> bool:
 	return _inst != null
 
 
-func _on_grab_requested(view: InventoryView, uid: int, local_pos: Vector2) -> void:
-	if is_dragging() or view.inventory == null:
+func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> void:
+	var from := view.container()
+	if is_dragging() or from == null:
 		return
-	var inst := view.inventory.get_item(uid)
+	var inst := from.get_item(uid)
 	if inst == null:
 		return
 
-	_grab_cell = view.cell_at_local(local_pos) - inst.origin
 	_src_origin = inst.origin
 	_src_rot = inst.rotation
 	_rot = inst.rotation
-	_source = view.inventory
+	_source = from
+	_src_index = -1
 
-	if _source.is_bag_with_contents(uid):
-		_payload = _source.detach_bag(uid)
-		if _payload.is_empty():
+	if from is ItemStash:
+		# 列表里没有坐标，抓取点一律当作物品的左上角
+		_grab_cell = Vector2i.ZERO
+		_src_index = (from as ItemStash).index_of(uid)
+		if from.remove(uid) == null:
 			_source = null
 			return
-	elif _source.remove(uid) == null:
-		_source = null
-		return
+	else:
+		var grid := from as GridInventory
+		_grab_cell = (view as InventoryView).cell_at_local(local_pos) - inst.origin
+		if grid.is_bag_with_contents(uid):
+			_payload = grid.detach_bag(uid)
+			if _payload.is_empty():
+				_source = null
+				return
+		elif grid.remove(uid) == null:
+			_source = null
+			return
 
 	_inst = inst
 	set_process_input(true)
@@ -86,7 +106,7 @@ func _on_grab_requested(view: InventoryView, uid: int, local_pos: Vector2) -> vo
 ## 它此刻不在任何容器里，没有 view 可以「按下」。
 ##
 ## [param home] / [param home_rot] 只用于取消时的回退落点，不保证还回得去。
-func grab_free(inst: ItemInstance, home: GridInventory, home_at: Vector2i, home_rot: int,
+func grab_free(inst: ItemInstance, home: ItemContainer, home_at: Vector2i, home_rot: int,
 		grab_cell: Vector2i) -> void:
 	if is_dragging() or inst == null or inst.def == null:
 		return
@@ -97,6 +117,7 @@ func grab_free(inst: ItemInstance, home: GridInventory, home_at: Vector2i, home_
 	)
 	_src_origin = home_at
 	_src_rot = home_rot
+	_src_index = -1
 	_rot = inst.rotation
 	_source = home
 	_payload = {}
@@ -155,14 +176,14 @@ func rotate_dragged() -> void:
 
 
 ## 指定全局坐标下的容器视图，没有则返回 null。
-func view_at(global_pos: Vector2) -> InventoryView:
+func view_at(global_pos: Vector2) -> ContainerView:
 	for view in _views:
 		if view.visible and view.get_global_rect().has_point(global_pos):
 			return view
 	return null
 
 
-## 当前拖拽物在该视图中的落点锚点。
+## 当前拖拽物在该网格视图中的落点锚点。
 func target_origin(view: InventoryView, global_pos: Vector2) -> Vector2i:
 	return view.cell_at_global(global_pos) - _grab_cell
 
@@ -178,23 +199,46 @@ func update_preview(global_pos: Vector2) -> void:
 	for view in _views:
 		if view != target:
 			view.clear_preview()
-	if target == null or target.inventory == null:
+	if target == null or target.container() == null:
 		return
-	var inv := target.inventory
+
+	if target is StashView:
+		var sv := target as StashView
+		# 列表落点只有「插在第几行」，不存在压着谁的问题。
+		# 唯一会失败的是塞不下或标签不收 —— 那时不画插入线
+		if _stash_accepts(sv.stash, _inst):
+			sv.set_insert_preview(sv.insert_index_at_global(global_pos))
+		else:
+			sv.clear_preview()
+		return
+
+	var grid_view := target as InventoryView
+	var inv := grid_view.inventory
 	var cells := _inst.def.cells_rotated(_rot)
-	var origin := target_origin(target, global_pos)
+	var origin := target_origin(grid_view, global_pos)
 
 	if not _payload.is_empty():
-		target.set_preview(cells, origin, inv.can_attach_bag(_payload, origin, _rot))
+		grid_view.set_preview(cells, origin, inv.can_attach_bag(_payload, origin, _rot))
 		return
 
 	if inv.can_place_def(_inst.def, origin, _rot, _inst.uid):
-		target.set_preview(cells, origin, true)
+		grid_view.set_preview(cells, origin, true)
 		return
 
 	# 放不进空位，但地形允许 —— 那就是「压着别人」，可以顶替
 	var victims := _displaceable(inv, origin)
-	target.set_preview(cells, origin, not victims.is_empty(), victims)
+	grid_view.set_preview(cells, origin, not victims.is_empty(), victims)
+
+
+## 这件东西能不能进这个列表。带内容物的包不行 —— 列表没有坐标，
+## 装不下「包 + 各内容物的相对位置」，放进去就等于把摆好的一袋东西打散。
+## 要收起来先掏空，和「带东西的包不能旋转」是同一条简化。
+func _stash_accepts(target: ItemStash, inst: ItemInstance) -> bool:
+	if target == null or inst == null or inst.def == null:
+		return false
+	if not _payload.is_empty():
+		return false
+	return not target.is_full() and target.accepts(inst.def)
 
 
 ## 在指定位置放手。返回是否成功落入某个容器（否则已退回源容器）。
@@ -208,22 +252,29 @@ func drop_at(global_pos: Vector2) -> bool:
 	# 顶替留到本次拖拽收尾之后再处理：被顶出来的那一件要接着上手，
 	# 而上手的前提是当前这一次已经彻底结束
 	var pending: Array = []
-	var home: GridInventory = null
+	var home: ItemContainer = null
 
-	if target != null and target.inventory != null:
-		var at := target_origin(target, global_pos)
+	if target is StashView:
+		var sv := target as StashView
+		if _stash_accepts(sv.stash, inst):
+			dropped = sv.stash.insert(inst, sv.insert_index_at_global(global_pos))
+		if dropped:
+			home = sv.stash
+	elif target != null and (target as InventoryView).inventory != null:
+		var grid_view := target as InventoryView
+		var at := target_origin(grid_view, global_pos)
 		if not _payload.is_empty():
-			dropped = target.inventory.attach_bag(_payload, at, _rot)
-		elif target.inventory.place(inst, at, _rot):
+			dropped = grid_view.inventory.attach_bag(_payload, at, _rot)
+		elif grid_view.inventory.place(inst, at, _rot):
 			dropped = true
 		else:
 			# 「顶成功但一件没顶到」不可能发生（放不进空位才会走到这儿），
 			# 但成败不能靠数组空不空来推断 —— 那是把不变式当接口用。
-			var outcome := _drop_displacing(target.inventory, inst, at)
+			var outcome := _drop_displacing(grid_view.inventory, inst, at)
 			dropped = outcome["ok"]
 			pending = outcome["victims"]
 		if dropped:
-			home = target.inventory
+			home = grid_view.inventory
 
 	if not dropped:
 		_restore()
@@ -275,11 +326,13 @@ func _drop_displacing(inv: GridInventory, inst: ItemInstance, at: Vector2i) -> D
 ##
 ## 「一件就上手」是因为那几乎总是接下来要挪的东西 —— 顶掉它再去暂存区里翻出来，
 ## 中间那两下纯属多余。
-func _settle_displaced(victims: Array, home: GridInventory, global_pos: Vector2) -> void:
+func _settle_displaced(victims: Array, home: ItemContainer, global_pos: Vector2) -> void:
 	if victims.size() == 1:
 		var v := victims[0] as ItemInstance
 		var view := view_at(global_pos)
-		var cell := view.cell_at_global(global_pos) if view != null else v.origin
+		var cell := v.origin
+		if view is InventoryView:
+			cell = (view as InventoryView).cell_at_global(global_pos)
 		grab_free(v, home, v.origin, v.rotation, cell - v.origin)
 		items_displaced.emit(victims, true)
 		return
@@ -301,11 +354,11 @@ func _displaceable(inv: GridInventory, origin: Vector2i) -> Array[int]:
 
 
 ## 整批塞进目标容器：有一件放不下就整批退回。
-static func _admit_all(dest: GridInventory, items: Array) -> bool:
+static func _admit_all(dest: ItemContainer, items: Array) -> bool:
 	dest.begin_batch()
 	var done: Array[ItemInstance] = []
 	for it in items:
-		if dest.try_add(it):
+		if dest.admit(it):
 			done.append(it)
 			continue
 		for placed in done:
@@ -331,18 +384,23 @@ func cancel() -> void:
 func _restore() -> void:
 	if _inst == null or _source == null:
 		return
+	if _source is ItemStash:
+		if (_source as ItemStash).insert(_inst, _src_index):
+			return
+		push_error("DragLayer: uid %d 放不回暂存区，物品已丢失" % _inst.uid)
+		return
 	if not _payload.is_empty():
-		if not _source.attach_bag(_payload, _src_origin, _src_rot):
+		if not (_source as GridInventory).attach_bag(_payload, _src_origin, _src_rot):
 			push_error("DragLayer: 包 uid %d 连内容物放不回源容器，已丢失" % _inst.uid)
 		return
-	if _source.place(_inst, _src_origin, _src_rot):
+	if (_source as GridInventory).place(_inst, _src_origin, _src_rot):
 		return
 	# 原位没了（顶替之后取消，多半如此）。依次退而求其次，
 	# 每一级都比上一级更不合玩家心意，但都好过物品凭空消失。
 	push_warning("DragLayer: uid %d 无法放回原位，改为自动装填" % _inst.uid)
-	if _source.try_add(_inst):
+	if _source.admit(_inst):
 		return
-	if stash != null and stash.try_add(_inst):
+	if stash != null and stash.admit(_inst):
 		return
 	push_error("DragLayer: uid %d 放不回源容器，物品已丢失" % _inst.uid)
 
@@ -352,6 +410,7 @@ func _end_drag() -> void:
 		view.clear_preview()
 	_inst = null
 	_source = null
+	_src_index = -1
 	_payload = {}
 	set_process_input(false)
 	queue_redraw()

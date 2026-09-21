@@ -80,24 +80,39 @@ static func move_within(inv: GridInventory, uid: int, origin: Vector2i, rot: int
 	return move(inv, uid, inv, origin, rot)
 
 
-## 把 uid 从 from 自动装填进 to 的第一个可用位置。用于「全部拾取」。
-static func transfer_auto(from: GridInventory, uid: int, to: GridInventory) -> bool:
+## 把 uid 从 from 搬进 to 的任意可用位置。用于「全部拾取」。
+##
+## 收发两端都是 [ItemContainer] 而不是 [GridInventory]：暂存区是个列表，
+## 没有「位置」可言，而「全部拾取到暂存区」恰恰是这个动作最常见的用法。
+##
+## **先问 can_admit 再动手。** 先 remove 再发现目标收不下的话，就得把东西塞回源容器，
+## 而「塞回原位」在空间容器里未必还办得到。先问后动，收不下时源容器连碰都不用碰。
+static func transfer_auto(from: ItemContainer, uid: int, to: ItemContainer) -> bool:
 	if from == null or to == null:
 		return false
 	var inst := from.get_item(uid)
-	if inst == null:
+	if inst == null or not to.can_admit(inst.def):
 		return false
-	var fit := to.find_first_fit(inst.def)
-	if not fit["found"]:
-		return false
-	return move(from, uid, to, fit["origin"], fit["rotation"])
+
+	from.begin_batch()
+	to.begin_batch()
+	var taken := from.remove(uid)
+	var ok := taken != null and to.admit(taken)
+	if taken != null and not ok:
+		# can_admit 说行、admit 却失败，说明两者对不上。不该发生，
+		# 但绝不能让物品就这么消失在两个容器之间
+		if not from.admit(taken):
+			push_error("InventoryService: uid %d 搬运失败且放不回源容器，物品已丢失" % uid)
+	to.end_batch()
+	from.end_batch()
+	return ok
 
 
 ## 尽可能多地把 from 的内容搬进 to，返回成功搬运的件数。
 ##
 ## 按占格数从大到小搬 —— 先安置大件，小件更容易见缝插针，
 ## 总装入量明显优于随机顺序。
-static func transfer_all(from: GridInventory, to: GridInventory) -> int:
+static func transfer_all(from: ItemContainer, to: ItemContainer) -> int:
 	if from == null or to == null:
 		return 0
 	var sorted: Array = from.items()
