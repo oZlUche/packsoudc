@@ -9,6 +9,7 @@ extends RefCounted
 ## layout_kind → 脚本路径。加一种形态就加一行
 const LAYOUTS := {
 	&"ring": "res://ui/map/ring_map_layout.gd",
+	&"grid_script": "res://ui/map/grid_map_layout.gd",
 }
 
 

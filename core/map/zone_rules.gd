@@ -49,6 +49,45 @@ static func from_graph(graph: MapGraph) -> ZoneRules:
 	return rules
 
 
+## 高危区（danger ≥ 2 的区域）长得对不对：规模、区内相连、出入口数目。
+## 中危区不归这里管 —— 它只是一片难一点的地方，没有「只靠几个口进出」的要求。
+static func validate(graph: MapGraph, v: MapValidation) -> void:
+	var rules := from_graph(graph)
+	for zone_id in graph.zones:
+		var ids: Array = graph.zones[zone_id]["node_ids"]
+		if ids.is_empty() or graph.get_node(int(ids[0])) == null 				or graph.get_node(int(ids[0])).danger < 2:
+			continue
+		if ids.size() < rules.min_size or ids.size() > rules.max_size:
+			v.fail(&"zone_size", "高危区 %s 有 %d 个点，该在 %d～%d 之间"
+				% [zone_id, ids.size(), rules.min_size, rules.max_size])
+		var gates := crossing_edges(graph, ids).size()
+		var cap := rules.max_gates_for(ids.size())
+		if gates < 1 or gates > cap:
+			v.fail(&"zone_gate", "高危区 %s（%d 个点）有 %d 个出入口，该在 1～%d 之间"
+				% [zone_id, ids.size(), gates, cap])
+		if not is_connected_inside(graph, ids):
+			v.fail(&"zone_connected", "高危区 %s 内部断成了几片" % zone_id)
+
+
+static func is_connected_inside(graph: MapGraph, ids: Array) -> bool:
+	if ids.size() <= 1:
+		return true
+	var inside := {}
+	for id in ids:
+		inside[int(id)] = true
+	var seen := {int(ids[0]): true}
+	var queue: Array[int] = [int(ids[0])]
+	var head := 0
+	while head < queue.size():
+		var id := queue[head]
+		head += 1
+		for n in graph.neighbors(id):
+			if inside.has(n) and not seen.has(n):
+				seen[n] = true
+				queue.append(n)
+	return seen.size() == ids.size()
+
+
 ## 这片区与区外之间的全部路。
 static func crossing_edges(graph: MapGraph, member_ids: Array) -> Array[MapEdge]:
 	var inside := {}

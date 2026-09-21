@@ -91,6 +91,37 @@ static func frame_editing(t: TestCase, root: Window) -> void:
 	ed.queue_free()
 
 
+static func frame_scale_panel(t: TestCase, root: Window) -> void:
+	t.begin("地图编辑器 · 从规模选起")
+
+	var ed = load(SCENE).instantiate()
+	root.add_child(ed)
+	ed.use_generator(&"ring")
+	var cfg: RingMapConfig = ed.config()
+	for p in cfg.scales:
+		# 故意要得离谱：换规模时会被夹回这一档的范围
+		cfg.entry_count = 99
+		cfg.zone_count = 99
+		cfg.zone_soft_cap = 99
+		ed.choose_scale(p.id, 999)
+		t.eq(cfg.ring_count(), p.rings.y, "%s：环数夹到上限" % p.id)
+		t.eq(cfg.entry_count, p.entries.y, "%s：出发点夹到上限" % p.id)
+		t.eq(cfg.zone_count, p.zones.y, "%s：高危区数量夹到上限" % p.id)
+		t.eq(cfg.zone_soft_cap, p.zone_size.y, "%s：高危区规模夹到上限" % p.id)
+		t.check(ed.generate(), "%s：按这一档的上限生成得出来" % p.id)
+		if ed.graph() != null:
+			t.eq(int(ed.graph().layout_meta["ring_count"]), p.rings.y, "%s：图的环数对" % p.id)
+
+	# 不支持规模模板的生成器：面板是空的，choose_scale 什么都不做，也不报错
+	ed.use_generator(&"grid_script")
+	ed.choose_scale(&"small", 4)
+	t.check(ed.generate(), "手绘地图照常生成")
+	t.eq(ed.graph().layout_kind, MapGridText.LAYOUT_KIND, "而且是手绘的那张")
+	t.check(ed.validation()["blocking"].ok(), "手绘地图在编辑器里过校验")
+
+	ed.queue_free()
+
+
 static func frame_preset_io(t: TestCase, root: Window) -> void:
 	t.begin("地图编辑器 · 存成预设再载入")
 

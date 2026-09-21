@@ -145,11 +145,12 @@ func _draw() -> void:
 	_layout.draw_backdrop(self, graph, rect)
 	var pos := _layout.positions(graph, rect)
 
-	# 高危区：节点底下垫一圈红
+	# 危险区域：节点底下垫一圈。高危红，中危橙
 	for id in graph.node_ids():
 		var n := graph.get_node(id)
-		if n.zone != 0 and pos.has(id):
-			draw_circle(pos[id], NODE_RADIUS + 9.0, Color(UiPalette.HP, 0.18))
+		if n.danger > 0 and pos.has(id):
+			draw_circle(pos[id], NODE_RADIUS + 9.0,
+				Color(UiPalette.HP if n.danger >= 2 else UiPalette.STAMINA, 0.18))
 
 	# 路线经过的边：哪条边属于哪条路线
 	var route_of_edge := {}

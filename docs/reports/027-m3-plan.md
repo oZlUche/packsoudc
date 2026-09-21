@@ -112,7 +112,10 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
 > 计划外插入，已完成，见[报告 034](034-map-editor-and-source.md)。
 > 编辑器里的朴素环形布局（`ui/map/ring_map_layout.gd`）与 `MapView` 会被 M3-6 接着用。
 
-### M3-3b 手绘地图：网格脚本的解析与导出
+### M3-3b 手绘地图：网格脚本的解析与导出 ✅
+
+> 已完成，见[报告 037](037-grid-script-and-scale-profiles.md)。「生成图导出再解析 `to_dict()` 一致」
+> 这条验收改成了拓扑等价，理由在报告里。
 
 `core/map/map_grid_text.gd`（`parse` / `render`）+ `generators/grid_script_generator.gd`。
 格式见架构 5.4.1，两张图 `data/authoring/maps/chapter01_v0.txt`、`chapter01_v0.1.txt` 已从作者的电子表格转出

@@ -93,8 +93,8 @@ static func _check_all(g: MapGraph, cfg: RingMapConfig) -> String:
 
 	# --- 出生点：数量、都在最外环、互不相同 ---
 	var outer := (by_ring.get(cfg.ring_count(), []) as Array).size()
-	if g.entry_ids.size() != mini(cfg.entry_count, outer):
-		return "出生点有 %d 个，配置要 %d 个" % [g.entry_ids.size(), cfg.entry_count]
+	if g.entry_ids.size() != mini(cfg.effective_entry_count(), outer):
+		return "出生点有 %d 个，该有 %d 个" % [g.entry_ids.size(), cfg.effective_entry_count()]
 	var seen_entry := {}
 	for id in g.entry_ids:
 		if _ring_of(g, id) != cfg.ring_count():
@@ -113,13 +113,10 @@ static func _check_all(g: MapGraph, cfg: RingMapConfig) -> String:
 			if dist < cfg.entry_min_gap:
 				return "出生点 %d 与 %d 只隔 %d 个槽位" % [g.entry_ids[i], g.entry_ids[j], dist]
 
-	# --- 高危区：环数不够就不该有；够了且必须有，就得有 ---
-	var expected_zones := 0
-	for spec in cfg.danger_zones:
-		if spec.applies_to(cfg.ring_count()) and spec.required:
-			expected_zones += 1
-	if g.zones.size() < expected_zones:
-		return "该有 %d 片高危区，只有 %d 片" % [expected_zones, g.zones.size()]
+	# --- 高危区的片数落在规模模板给的范围里；每条路线身上岔出的不超过上限 ---
+	var zone_range := cfg.zone_count_range()
+	if g.zones.size() < zone_range.x or g.zones.size() > zone_range.y:
+		return "高危区 %d 片，规模允许 %d～%d" % [g.zones.size(), zone_range.x, zone_range.y]
 
 	# --- 路线：条数、简单路径、走得通、尽头对 ---
 	if g.routes.size() != g.entry_ids.size():
@@ -219,47 +216,79 @@ static func run_small_maps(t: TestCase) -> void:
 		t.check(bad.is_empty(), "%d 环：%s" % [rings, "全过" if bad.is_empty() else bad[0]])
 
 
-static func run_zone_rules(t: TestCase) -> void:
-	t.begin("环形生成器 · 高危区：环数门槛、可选、软上限")
+static func run_scale_profiles(t: TestCase) -> void:
+	t.begin("环形生成器 · 规模模板：出发点、高危区数量与规模都有上限")
 
-	# 门槛从配置里读，不写死
-	var spec: DangerZoneSpec = RingMapConfig.sample(5).danger_zones[0]
-	var below := RingMapConfig.sample(spec.min_rings - 1)
+	var profiles := MapScaleProfile.defaults()
+	t.check(not profiles.is_empty(), "有开箱的规模模板")
+
+	# 没有规模覆盖到的环数（小测试图）：不要高危区，也不会因此重试
+	var smallest := 999
+	for p in profiles:
+		smallest = mini(smallest, p.rings.x)
+	var below := RingMapConfig.sample(smallest - 1)
+	t.is_null(below.scale(), "%d 环不属于任何规模" % (smallest - 1))
 	for s in 8:
 		var gen := _gen()
 		var g := gen.generate(below, s)
-		t.not_null(g, "环数比门槛少一环也生成得出来（种子 %d）" % s)
+		t.not_null(g, "没有规模的小图也生成得出来（种子 %d）" % s)
 		if g != null:
-			t.eq(g.zones.size(), 0, "环数不到门槛，没有高危区")
+			t.eq(g.zones.size(), 0, "没有规模 → 没有高危区")
 			t.check(not gen.failure_tally.has(&"zone_missing"), "也不会因为「缺高危区」而重试")
 
-	# 到了门槛就有；规模不超过这个环数对应的软上限
-	for rings in [spec.min_rings, spec.min_rings + 2]:
-		var cfg := RingMapConfig.sample(rings)
-		var cap := cfg.danger_zones[0].soft_cap_for(rings)
-		for s in 12:
-			var g := _gen().generate(cfg, s)
-			t.not_null(g, "%d 环生成得出来（种子 %d）" % [rings, s])
-			if g == null:
-				continue
-			t.eq(g.zones.size(), cfg.danger_zones.size(), "配了几片就有几片")
-			for zone_id in g.zones:
-				var size: int = (g.zones[zone_id]["node_ids"] as Array).size()
-				t.check(size <= maxi(cap, cfg.zone_rules.min_size),
-					"%d 环的高危区 %d 个点，软上限 %d" % [rings, size, cap])
+	# 每一档规模的两端环数：片数、规模、出发点数都落在这一档的范围里
+	for p in profiles:
+		for rings in [p.rings.x, p.rings.y]:
+			var cfg := RingMapConfig.sample(rings)
+			t.eq(cfg.scale().id, p.id, "%d 环属于 %s" % [rings, p.id])
+			for s in 6:
+				var g := _gen().generate(cfg, s)
+				t.not_null(g, "%s · %d 环生成得出来（种子 %d）" % [p.id, rings, s])
+				if g == null:
+					continue
+				t.check(g.zones.size() >= p.zones.x and g.zones.size() <= p.zones.y,
+					"%s：高危区 %d 片，该在 %d～%d" % [p.id, g.zones.size(), p.zones.x, p.zones.y])
+				t.check(g.entry_ids.size() >= p.entries.x and g.entry_ids.size() <= p.entries.y,
+					"%s：出发点 %d 个，该在 %d～%d" % [p.id, g.entry_ids.size(), p.entries.x, p.entries.y])
+				for zone_id in g.zones:
+					var size: int = (g.zones[zone_id]["node_ids"] as Array).size()
+					t.check(size <= maxi(p.zone_size.y, cfg.zone_rules.min_size),
+						"%s：高危区 %d 个点，软上限 %d" % [p.id, size, p.zone_size.y])
+				t.check(_zones_per_route_max(g) <= p.zones_per_route,
+					"%s：每条路线身上岔出的不超过 %d 片" % [p.id, p.zones_per_route])
 
-	# 一片永远岔不出来的：要求路线走过 200% 才岔
-	var never := RingMapConfig.sample(spec.min_rings + 1)
-	never.danger_zones[0].start_after_progress = 2.0
+	# 可选项给了数就用那个数 —— 但会被夹进规模的范围
+	var medium: MapScaleProfile = profiles[mini(1, profiles.size() - 1)]
+	var picky := RingMapConfig.sample(medium.rings.y)
+	picky.zone_count = medium.zones.y
+	picky.zone_soft_cap = medium.zone_size.x
+	picky.entry_count = medium.entries.y + 5
+	t.eq(picky.effective_entry_count(), medium.entries.y, "出发点要得太多 → 夹到上限")
+	t.eq(picky.effective_zone_soft_cap(), medium.zone_size.x, "高危区规模按指定的来")
+	var want_many := _gen().generate(picky, 5)
+	t.not_null(want_many, "要满额的高危区也生成得出来")
+	if want_many != null:
+		t.check(want_many.zones.size() >= medium.zones.x, "至少有必须的那几片")
+		t.eq(want_many.zones.size() + int(want_many.layout_meta.get("zones_skipped", 0)), medium.zones.y,
+			"长成的 + 记下跳过的 = 想要的 —— 没长成的不是不声不响")
+
+	# 必须有的那一片岔不出来：要求路线走过 200% 才岔
+	var never := RingMapConfig.sample(profiles[0].rings.y)
+	never.zone_spec.start_after_progress = 2.0
 	t.is_null(_gen().generate(never, 1, 4), "必须有却岔不出来 → 这张图生成失败")
+	never.zone_spec = null
+	var plain := _gen().generate(never, 1, 4)
+	t.not_null(plain, "不配 zone_spec → 这张图不要高危区，照样生成")
+	if plain != null:
+		t.eq(plain.zones.size(), 0, "一片都没有")
 
-	never.danger_zones[0].required = false
-	var relaxed := _gen().generate(never, 1, 4)
-	t.not_null(relaxed, "改成可选 → 照样生成")
-	if relaxed != null:
-		t.eq(relaxed.zones.size(), 0, "那一片被跳过了")
-		t.eq(int(relaxed.layout_meta.get("zones_skipped", 0)), 1,
-			"跳过了几片记在 layout_meta 里 —— 不是不声不响")
+
+## 一条路线身上最多岔出了几片。生成器把它记在路线标注里。
+static func _zones_per_route_max(g: MapGraph) -> int:
+	var worst := 0
+	for route in g.routes:
+		worst = maxi(worst, (route.get("zone_ids", []) as Array).size())
+	return worst
 
 
 static func run_zone_shape_rules(t: TestCase) -> void:
@@ -486,7 +515,7 @@ static func run_gaps(t: TestCase) -> void:
 	cfg.rings[0].slots = 18
 	cfg.rings[0].node_count = 12
 	cfg.entry_count = 2
-	cfg.danger_zones = [] as Array[DangerZoneSpec]
+	cfg.zone_spec = null
 
 	var runs_seen: Array[int] = []
 	for s in 16:

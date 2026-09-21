@@ -8,6 +8,11 @@ extends Resource
 ## 由外向内，下标 0 = 最外环。环数 = rings.size()
 @export var rings: Array[RingSpec] = []
 
+@export_group("规模")
+## 规模模板：每种规模的图最多能要几个出发点、几片高危区、多大的高危区。
+## 按环数匹配；一个都不匹配（比如三环的测试图）= 不设上限、不要高危区
+@export var scales: Array[MapScaleProfile] = []
+
 @export_group("路线")
 ## 每条出生点→尽头的路线各有一种风格；出生点数 = entry_count，风格按本列表轮流分配
 @export var routes: Array[RouteStyle] = []
@@ -41,8 +46,12 @@ extends Resource
 @export var extract_every_rings: int = 2
 
 @export_group("高危区")
-## 每条一片，说的是它怎么【长出来】
-@export var danger_zones: Array[DangerZoneSpec] = []
+## 高危区怎么【长出来】。null = 这张图不要高危区
+@export var zone_spec: DangerZoneSpec = null
+## 要几片。-1 = 在规模允许的范围里随机；给了数也会被夹进那个范围
+@export var zone_count: int = -1
+## 每片长到几个点就停。-1 = 用规模允许的最大值；给了数也会被夹进那个范围
+@export var zone_soft_cap: int = -1
 ## 一片高危区长成什么样才算数（规模、出入口上限）。写进图的 layout_meta，校验从图上读
 @export var zone_rules: ZoneRules = ZoneRules.new()
 
@@ -93,23 +102,81 @@ func slots_for_ring(r: int) -> int:
 	return maxi(maxi(1, min_slots), by_radius)
 
 
-## 造一份跑得起来的默认配置。**数值是占位**，等内容定稿；
-## 结构才是要紧的。测试与沙盒用它开箱即跑。
-static func sample(ring_count_: int = 5) -> RingMapConfig:
-	var cfg := RingMapConfig.new()
+## 这张图属于哪种规模。没有匹配的返回 null。
+func scale() -> MapScaleProfile:
+	for p in scales:
+		if p != null and p.covers(ring_count()):
+			return p
+	return null
+
+
+func scale_by_id(id: StringName) -> MapScaleProfile:
+	for p in scales:
+		if p != null and p.id == id:
+			return p
+	return null
+
+
+## 实际用几个出发点：配置值夹进规模允许的范围。
+func effective_entry_count() -> int:
+	var p := scale()
+	return clampi(entry_count, p.entries.x, p.entries.y) if p != null else entry_count
+
+
+## 高危区数量的范围 [必须有的, 至多]。没有规模或没配 zone_spec 就是 0。
+func zone_count_range() -> Vector2i:
+	var p := scale()
+	if p == null or zone_spec == null:
+		return Vector2i.ZERO
+	if zone_count < 0:
+		return p.zones
+	var fixed := clampi(zone_count, p.zones.x, p.zones.y)
+	return Vector2i(mini(p.zones.x, fixed), fixed)
+
+
+func effective_zone_soft_cap() -> int:
+	var p := scale()
+	if p == null:
+		return 0
+	return p.zone_size.y if zone_soft_cap < 0 else clampi(zone_soft_cap, p.zone_size.x, p.zone_size.y)
+
+
+## 换一种规模 / 环数：重建 rings，并把几个可选项夹进新规模的范围。编辑器用。
+func apply_scale(id: StringName, ring_count_: int) -> void:
+	var p := scale_by_id(id)
+	if p == null:
+		return
+	_build_rings(clampi(ring_count_, p.rings.x, p.rings.y))
+	entry_count = clampi(entry_count, p.entries.x, p.entries.y)
+	if zone_count >= 0:
+		zone_count = clampi(zone_count, p.zones.x, p.zones.y)
+	if zone_soft_cap >= 0:
+		zone_soft_cap = clampi(zone_soft_cap, p.zone_size.x, p.zone_size.y)
+
+
+func _build_rings(ring_count_: int) -> void:
 	var kinds := [&"outskirts", &"ruins", &"depths", &"core_ring", &"inner"]
+	rings = [] as Array[RingSpec]
 	for i in ring_count_:
 		var spec := RingSpec.new()
 		spec.kind = kinds[mini(i, kinds.size() - 1)]
-		cfg.rings.append(spec)
+		rings.append(spec)
 	# 外圈各留一段空白弧 —— 参照示意图，环本来就可以断成几段。
 	# 只挖【真比 min_slots 长】的环：内圈本来就已经缩到下限了，
 	# 再挖就会比外圈还空，看着不像同心环
 	for i in mini(2, ring_count_):
 		var r := ring_count_ - i
-		var slots := cfg.slots_for_ring(r)
-		if slots > cfg.min_slots:
-			cfg.rings[i].node_count = maxi(cfg.min_slots, slots - 3)
+		var slots := slots_for_ring(r)
+		if slots > min_slots:
+			rings[i].node_count = maxi(min_slots, slots - 3)
+
+
+## 造一份跑得起来的默认配置。**数值是占位**，等内容定稿；
+## 结构才是要紧的。测试与沙盒用它开箱即跑。
+static func sample(ring_count_: int = 5) -> RingMapConfig:
+	var cfg := RingMapConfig.new()
+	cfg.scales = MapScaleProfile.defaults()
+	cfg._build_rings(ring_count_)
 
 	var combat := RouteStyle.new()
 	combat.id = &"combat"
@@ -122,6 +189,6 @@ static func sample(ring_count_: int = 5) -> RingMapConfig:
 	mixed.ends_at = &"core"
 	cfg.routes = [combat, search, mixed] as Array[RouteStyle]
 
-	# 一片高危区。环太少时它自己不生效（DangerZoneSpec.min_rings）
-	cfg.danger_zones = [DangerZoneSpec.new()] as Array[DangerZoneSpec]
+	# 要不要高危区、要几片、多大，由规模模板决定（环太少时没有匹配的规模，也就没有高危区）
+	cfg.zone_spec = DangerZoneSpec.new()
 	return cfg

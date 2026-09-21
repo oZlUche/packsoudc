@@ -24,6 +24,7 @@ var _gen_pick: OptionButton
 var _seed_box: SpinBox
 var _status: Label
 var _form_host: VBoxContainer
+var _scale_host: VBoxContainer
 var _name_edit: LineEdit
 var _preset_pick: OptionButton
 var _props: VBoxContainer
@@ -33,9 +34,12 @@ var _report: RichTextLabel
 func _ready() -> void:
 	_font = UiPalette.cjk_font()
 	_build()
-	var ids := MapGeneratorRegistry.ids()
-	if not ids.is_empty():
-		use_generator(ids[0])
+	var first := MapGeneratorRegistry.default_id()
+	if first != &"":
+		for i in _gen_pick.item_count:
+			if _gen_pick.get_item_text(i) == String(first):
+				_gen_pick.select(i)
+		use_generator(first)
 		generate()
 
 
@@ -56,10 +60,69 @@ func use_generator(id: StringName) -> void:
 	_gen_id = id
 	_gen = MapGeneratorRegistry.create(id)
 	_cfg = _gen.default_config() if _gen != null else null
+	_rebuild_form()
+	_rebuild_scale_panel()
+
+
+func _rebuild_form() -> void:
 	for child in _form_host.get_children():
 		child.queue_free()
 	if _cfg != null:
 		_form_host.add_child(PropertyForm.create(_cfg, _font))
+
+
+## 换规模 / 环数，并把出发点、高危区数量与规模夹进新规模允许的范围。
+## 配置支持规模模板（有 apply_scale）才有用；不支持的生成器这里什么都不做。
+func choose_scale(id: StringName, ring_count: int) -> void:
+	if _cfg == null or not _cfg.has_method("apply_scale"):
+		return
+	_cfg.call("apply_scale", id, ring_count)
+	_rebuild_form()
+	_rebuild_scale_panel()
+
+
+## 「从规模选起」的那几个旋钮。上限来自规模模板（[MapScaleProfile]），不是写在这里的。
+func _rebuild_scale_panel() -> void:
+	for child in _scale_host.get_children():
+		child.queue_free()
+	if _cfg == null or not _cfg.has_method("apply_scale"):
+		return
+	var profiles: Array = _cfg.get("scales")
+	var current: MapScaleProfile = _cfg.call("scale")
+	_scale_host.add_child(_label("规模", 14, UiPalette.FG))
+	var pick := OptionButton.new()
+	_style(pick)
+	for i in profiles.size():
+		var p: MapScaleProfile = profiles[i]
+		pick.add_item(p.display_name)
+		if current != null and p.id == current.id:
+			pick.select(i)
+	if current == null:
+		pick.select(-1)
+	pick.item_selected.connect(func(i: int):
+		var p: MapScaleProfile = profiles[i]
+		choose_scale(p.id, p.rings.x))
+	_scale_host.add_child(_pair("地图规模", pick))
+	if current == null:
+		_scale_host.add_child(_label("当前环数不属于任何规模：不设上限，也没有高危区", 12, UiPalette.DIM))
+		return
+	if current.placeholder:
+		_scale_host.add_child(_label("这一档的数值还没定，只是占位", 12, UiPalette.STAMINA))
+
+	_scale_host.add_child(_pair("环数 %d～%d" % [current.rings.x, current.rings.y],
+		_spin(int(_cfg.call("ring_count")), current.rings.x, current.rings.y,
+			func(v: int): choose_scale(current.id, v))))
+	_scale_host.add_child(_pair("出发点 %d～%d" % [current.entries.x, current.entries.y],
+		_spin(int(_cfg.call("effective_entry_count")), current.entries.x, current.entries.y,
+			func(v: int): _cfg.set("entry_count", v))))
+	# -1 = 交给生成器在范围里随机
+	_scale_host.add_child(_pair("高危区 %d～%d" % [current.zones.x, current.zones.y],
+		_spin(int(_cfg.get("zone_count")), -1, current.zones.y,
+			func(v: int): _cfg.set("zone_count", v))))
+	_scale_host.add_child(_pair("高危区规模 %d～%d" % [current.zone_size.x, current.zone_size.y],
+		_spin(int(_cfg.get("zone_soft_cap")), -1, current.zone_size.y,
+			func(v: int): _cfg.set("zone_soft_cap", v))))
+	_scale_host.add_child(_label("后两项填 -1 = 在范围里随机 / 用上限", 11, UiPalette.DIM))
 
 
 func config() -> Resource:
@@ -389,7 +452,12 @@ func _build_side() -> Control:
 	_refresh_presets()
 	col.add_child(HSeparator.new())
 
-	col.add_child(_label("生成参数", 14, UiPalette.FG))
+	_scale_host = VBoxContainer.new()
+	_scale_host.add_theme_constant_override("separation", 6)
+	col.add_child(_scale_host)
+	col.add_child(HSeparator.new())
+
+	col.add_child(_label("全部生成参数", 14, UiPalette.FG))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED

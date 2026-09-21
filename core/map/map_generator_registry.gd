@@ -11,16 +11,21 @@ extends RefCounted
 
 ## id → 脚本路径。**加一种形态就在这里加一行。**
 ##
-## `grid_script`（手绘网格脚本）在 M3-3b 登记。
 ## 测试会检查表里每一条都指向一个真实存在、且确实是 [MapGenerator] 子类的脚本 ——
 ## 登记了一个打错的路径，要在这里就红，而不是等某一章跑不起来。
 const GENERATORS := {
 	&"ring": "res://core/map/generators/ring_map_generator.gd",
+	&"grid_script": "res://core/map/generators/grid_script_generator.gd",
 }
 
 
 static func has(id: StringName) -> bool:
 	return GENERATORS.has(id)
+
+
+## 没有特别指定时用哪个：表里的第一条。
+static func default_id() -> StringName:
+	return GENERATORS.keys()[0] if not GENERATORS.is_empty() else &""
 
 
 ## 全部已登记的 id，升序。
