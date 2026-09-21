@@ -505,6 +505,12 @@ func _rebuild_props() -> void:
 		_props.add_child(_label("%d 个点　%d 条路　%d 个出生点　%d 片高危区"
 			% [_graph.node_count(), _graph.edges.size(), _graph.entry_ids.size(), _graph.zones.size()],
 			12, UiPalette.DIM))
+		var merge := CheckBox.new()
+		merge.text = "三点 / 四点互连画成岔路口"
+		merge.button_pressed = _view.merge_junctions
+		_style(merge)
+		merge.toggled.connect(func(on: bool): _view.merge_junctions = on)
+		_props.add_child(merge)
 		_add_route_legend()
 		return
 

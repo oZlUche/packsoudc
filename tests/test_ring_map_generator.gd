@@ -145,6 +145,13 @@ static func _check_all(g: MapGraph, cfg: RingMapConfig) -> String:
 			if b != a - 1 and b != a:
 				return "路线 %s 从第 %d 环跳到了第 %d 环" % [route["style"], a, b]
 
+	# --- 路不交叉（四个点两两相连的那种是四岔路口，不算）---
+	var crossings := RingMapGenerator.bad_crossings(g)
+	if not crossings.is_empty():
+		var x: MapEdge = crossings[0][0]
+		var y: MapEdge = crossings[0][1]
+		return "%d↔%d 与 %d↔%d 交叉了" % [x.from_id, x.to_id, y.from_id, y.to_id]
+
 	# --- 单条路径的长度上限：每一条边都守 ---
 	for e in g.edges:
 		if not RingMapGenerator.edge_within_limit(
@@ -458,10 +465,143 @@ static func run_edge_limit(t: TestCase) -> void:
 	# 断边概率拉满也散不了架：断之前先看会不会断出孤岛
 	# （用没有高危区的小图，免得「高危区没长起来」的重试混进来）
 	var brittle := RingMapConfig.sample(4)
+	brittle.zone_spec = null
 	brittle.tangential_break_chance = 1.0
 	for s in 16:
 		var gg := _gen()
 		t.not_null(gg.generate(brittle, s, 1), "切向边能断的全断，第一次尝试就连通（种子 %d）" % s)
+
+
+static func run_crossing_rules(t: TestCase) -> void:
+	t.begin("环形生成器 · 交叉的路：只有四岔路口说得清")
+
+	# 手搭一张两环的小图：外环 p、q 相邻，内环 u、t 相邻
+	var g := MapGraph.new()
+	g.layout_kind = &"ring"
+	g.layout_meta = {"ring_count": 2, "ring_slots": {2: 8, 1: 8}}
+	var spots := {1: [2, 0], 2: [2, 1], 3: [1, 0], 4: [1, 1], 9: [0, 0]}     # id -> [ring, order]
+	for id in spots:
+		var n := MapNode.new()
+		n.id = id
+		n.type = &"core" if id == 9 else &"battle"
+		n.layout = {"ring": spots[id][0], "order": spots[id][1]}
+		g.add_node(n)
+	var p_id := 1
+	var q_id := 2
+	var u_id := 3
+	var t_id := 4
+	g.connect_nodes(p_id, t_id, &"radial")      # 一条对角线
+	t.check(RingMapGenerator.bad_crossings(g).is_empty(), "一条斜路自己不算交叉")
+	g.connect_nodes(q_id, u_id, &"radial")      # 另一条对角线 → 打叉
+	t.eq(RingMapGenerator.bad_crossings(g).size(), 1, "两条对角线 → 一处交叉")
+	t.check(RingMapGenerator.edges_cross(g, p_id, t_id, q_id, u_id), "edges_cross 认得出来")
+	t.check(not RingMapGenerator.edges_cross(g, p_id, t_id, p_id, u_id), "共用一个端点的不算")
+
+	# 把四个点连满 → 它成了四岔路口，不再算交叉
+	for pair in [[p_id, q_id], [u_id, t_id], [p_id, u_id], [q_id, t_id]]:
+		g.connect_nodes(pair[0], pair[1])
+	t.check(RingMapGenerator.bad_crossings(g).is_empty(), "四个点两两相连 → 四岔路口，不算交叉")
+	var found := MapJunctions.find(g)
+	t.eq((found["quads"] as Array).size(), 1, "MapJunctions 把它认成一个四岔")
+	t.eq((found["tris"] as Array).size(), 0, "四岔占过的边，三岔不再用（先四后三）")
+	t.eq((found["edge_keys"] as Dictionary).size(), 6, "六条边都归这个路口")
+
+	# 少一条就又是交叉了
+	g.remove_edge(g.edge_between(p_id, q_id))
+	t.eq(RingMapGenerator.bad_crossings(g).size(), 1, "拆掉一条边 → 又成了说不清的交叉")
+	g.entry_ids = [p_id] as Array[int]
+	g.goal_ids = [9] as Array[int]
+	g.connect_nodes(u_id, 9)
+	var v := MapValidation.new()
+	RingMapGenerator.new().validate(g, v)
+	t.check(v.rules().has(&"edge_crossing"), "校验报 edge_crossing")
+
+	# 环上正对面的两条路不是交叉（只比先后会在这里误判）
+	var far := MapGraph.new()
+	far.layout_meta = {"ring_count": 2, "ring_slots": {2: 6, 1: 6}}
+	var far_spots := {1: [2, 1], 2: [1, 2], 3: [2, 5], 4: [1, 5]}
+	for id in far_spots:
+		var n := MapNode.new()
+		n.id = id
+		n.layout = {"ring": far_spots[id][0], "order": far_spots[id][1]}
+		far.add_node(n)
+	t.check(not RingMapGenerator.edges_cross(far, 1, 2, 3, 4), "隔着半个环的两条路不交叉")
+
+
+static func run_junctions(t: TestCase) -> void:
+	t.begin("岔路口 · 三点互连是三岔，由内向外")
+
+	var g := MapGraph.new()
+	for id in [1, 2, 3, 4, 5]:
+		var n := MapNode.new()
+		n.id = id
+		n.tier = id        # id 越大越靠里
+		g.add_node(n)
+	# 两个三角形共用 2–3 这条边：1-2-3 与 2-3-4；5 只挂在 4 上
+	for pair in [[1, 2], [2, 3], [1, 3], [2, 4], [3, 4], [4, 5]]:
+		g.connect_nodes(pair[0], pair[1])
+	var found := MapJunctions.find(g)
+	t.eq(found["quads"], [], "没有四岔")
+	t.eq(found["tris"], [[2, 3, 4]], "共用一条边的两个三角形只能成一个路口 —— 靠里的那个先得")
+	t.check(not (found["edge_keys"] as Dictionary).has(MapJunctions.edge_key(4, 5)), "不在路口里的边照常单独画")
+
+	# 生成出来的图上：路口之间不共用边
+	var map := _gen().generate(RingMapConfig.sample(6), 3)
+	if map != null:
+		var seen := {}
+		var shared := 0
+		var all := MapJunctions.find(map)
+		for clique in (all["quads"] as Array) + (all["tris"] as Array):
+			for i in clique.size():
+				for j in range(i + 1, clique.size()):
+					var key := MapJunctions.edge_key(clique[i], clique[j])
+					if seen.has(key):
+						shared += 1
+					seen[key] = true
+		t.eq(shared, 0, "一条边只归一个路口")
+
+
+static func run_pivot_budget(t: TestCase) -> void:
+	t.begin("环形生成器 · 换乘次数随规模走，相邻就直接连")
+
+	for profile in MapScaleProfile.defaults():
+		var cfg := RingMapConfig.sample(profile.rings.y)
+		var pairs := 0
+		var made := 0
+		for s in 8:
+			var g := _gen().generate(cfg, s)
+			if g == null:
+				continue
+			var route_pairs := 1 if g.routes.size() == 2 else (g.routes.size() if g.routes.size() > 2 else 0)
+			var links: Array = g.layout_meta.get("pivot_links", [])
+			pairs += route_pairs
+			made += links.size()
+			t.check(links.size() <= route_pairs * profile.pivots.y,
+				"%s：相邻直连的换乘 %d 处，不超过 %d 对 × %d 次"
+				% [profile.id, links.size(), route_pairs, profile.pivots.y])
+			for link in links:
+				t.not_null(g.edge_between(int(link[0]), int(link[1])), "%s：换乘那条路真的在" % profile.id)
+		t.check(pairs > 0, "%s：有相邻的路线对" % profile.id)
+
+
+static func run_ring_numbers_are_explicit(t: TestCase) -> void:
+	t.begin("环形配置 · 环的槽位数与节点数写明白，不留 0")
+
+	var cfg := RingMapConfig.sample(5)
+	var g := _gen().generate(cfg, 2)
+	t.not_null(g, "先有一张图")
+	if g == null:
+		return
+	var by_ring := _by_ring(g)
+	for i in cfg.rings.size():
+		var r := cfg.ring_count() - i
+		t.check(cfg.rings[i].slots > 0 and cfg.rings[i].node_count > 0, "第 %d 环的两个数都不是 0" % r)
+		t.eq(int(g.layout_meta["ring_slots"][r]), cfg.rings[i].slots, "第 %d 环：配置里写的槽位数 = 图上的" % r)
+		t.eq((by_ring[r] as Array).size(), cfg.rings[i].node_count, "第 %d 环：配置里写的节点数 = 图上的" % r)
+	# 0 仍然是合法写法：自动
+	cfg.rings[0].slots = 0
+	cfg.rings[0].node_count = 0
+	t.not_null(_gen().generate(cfg, 2), "手写配置里填 0（自动）照样能用")
 
 
 static func run_lockstep(t: TestCase) -> void:
@@ -560,7 +700,7 @@ static func run_pivots(t: TestCase) -> void:
 			var a: Dictionary = g.routes[i]
 			var b: Dictionary = g.routes[(i + 1) % g.routes.size()]
 			var linked := false
-			for r in range(cfg.ring_count(), 0, -cfg.pivot_every_rings):
+			for r in range(cfg.ring_count(), 0, -1):
 				var ia := RingMapGenerator._node_on_ring(g, a, r, ring_of)
 				var ib := RingMapGenerator._node_on_ring(g, b, r, ring_of)
 				if ia < 0 or ib < 0:

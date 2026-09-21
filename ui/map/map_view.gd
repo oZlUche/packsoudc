@@ -38,6 +38,12 @@ var show_routes: bool = true:
 		show_routes = v
 		queue_redraw()
 
+## 把两两相连的三个 / 四个点画成一个路口。关掉就是每条边一条线（编辑器里核对数据时有用）
+var merge_junctions: bool = true:
+	set(v):
+		merge_junctions = v
+		queue_redraw()
+
 var _layout: MapLayout = null
 var _font: Font
 var _hover_id: int = -1
@@ -161,15 +167,25 @@ func _draw() -> void:
 			if not route_of_edge.has(key):
 				route_of_edge[key] = i
 
+	# 四个点两两相连画成四岔路口，三个点两两相连画成三岔路口（先四后三，由内向外）。
+	# 被路口占用的边不再单独画线 —— 六条线在中间打叉，看不出那是一个路口
+	var junctions := MapJunctions.find(graph) if merge_junctions else {"quads": [], "tris": [], "edge_keys": {}}
+	var in_junction: Dictionary = junctions["edge_keys"]
+
 	for e in graph.edges:
 		if not pos.has(e.from_id) or not pos.has(e.to_id):
 			continue
 		var key := _edge_key(e.from_id, e.to_id)
+		if in_junction.has(key):
+			continue
 		if route_of_edge.has(key):
 			draw_line(pos[e.from_id], pos[e.to_id],
 				Color(MapNodeStyle.route_color(route_of_edge[key]), 0.85), 3.0, true)
 		else:
 			draw_line(pos[e.from_id], pos[e.to_id], UiPalette.DIM.darkened(0.25), 1.5, true)
+
+	for clique in (junctions["quads"] as Array) + (junctions["tris"] as Array):
+		_draw_junction(clique, pos, route_of_edge)
 
 	if show_free_slots:
 		for slot in _layout.free_slots(graph, rect):
@@ -178,6 +194,28 @@ func _draw() -> void:
 	for id in graph.node_ids():
 		if pos.has(id):
 			_draw_node(graph.get_node(id), pos[id])
+
+
+## 一个路口：中心一个小点，向每个成员伸一条腿。
+## 腿的颜色：这个成员在路口内部有路线经过的边，就用那条路线的颜色。
+func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary) -> void:
+	var center := Vector2.ZERO
+	for id in clique:
+		if not pos.has(int(id)):
+			return
+		center += pos[int(id)]
+	center /= float(clique.size())
+	for id in clique:
+		var route := -1
+		for other in clique:
+			var key := _edge_key(int(id), int(other))
+			if other != id and route_of_edge.has(key):
+				route = int(route_of_edge[key])
+		if route >= 0:
+			draw_line(center, pos[int(id)], Color(MapNodeStyle.route_color(route), 0.85), 3.0, true)
+		else:
+			draw_line(center, pos[int(id)], UiPalette.DIM.darkened(0.25), 1.5, true)
+	draw_circle(center, 3.0, UiPalette.DIM)
 
 
 func _draw_node(n: MapNode, p: Vector2) -> void:

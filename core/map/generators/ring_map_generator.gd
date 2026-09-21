@@ -34,6 +34,10 @@ var _zone_links: Array = []
 var _zone_heads: Array[Dictionary] = []
 ## 还没岔出来的高危区配置
 var _zones_pending: int = 0
+## 换乘安排在哪几环（由规模模板给的次数均分出来）
+var _pivot_rings: Array[int] = []
+## "路线i:路线j:第k次" -> true，已经换乘过的
+var _pivot_done: Dictionary = {}
 ## 这一次 build 打算要几片
 var _zone_target: int = 0
 ## 这张图必须有几片、至多几片（来自规模模板）
@@ -83,6 +87,9 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 	else:
 		_zones_pending = _rng.randi_range(_zone_range.x, _zone_range.y)
 	_zone_target = _zones_pending
+	_pivot_done = {}
+	_pivot_rings = _schedule_pivots()
+	_graph.layout_meta["pivot_links"] = []
 
 	_make_core()
 	if not _make_ring_nodes():
@@ -90,12 +97,16 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 	if not _lay_skeleton():
 		return null
 	_lay_pivots()
-	_link_candidates()
+	# 受保护的结构先建（骨架已经在了，接着是高危区的生长树），候选边后建 ——
+	# 候选边碰上会交叉的情况自己让路，不能反过来让骨架去迁就它
 	_link_zone_trees()
+	_link_candidates()
 	_isolate_zones()
 	_repair_inward()
 	_rescue_stranded()
+	_reconnect_islands()
 	_break_tangentials()
+	_fix_crossings()
 	return _graph
 
 
@@ -344,7 +355,6 @@ func _advance_ring(r: int, steps: int, active: Array[int], paths: Array) -> bool
 			pool = _filter_far(options, taken, 1, slots)   # 退一步：不重合就行
 		if pool.is_empty():
 			pool = options      # 再退一步：挤不开就合流，总好过整张图作废
-		var pick: int = pool[_rng.randi_range(0, pool.size() - 1)]
 		var path: Array[int] = paths[i]
 		# 正对着空白区时，先沿当前这环横着挪几步，挪到能向内走的地方
 		var walk: Array[int] = approaches[i]["walk"]
@@ -352,14 +362,44 @@ func _advance_ring(r: int, steps: int, active: Array[int], paths: Array) -> bool
 			_protect_edge(path[-1], side, &"tangential")
 			_protected_nodes[side] = true
 			path.append(side)
-		# 横着挪过之后，pick 得是从【挪到的那个点】够得着的
-		if not walk.is_empty() and not _within_limit(path[-1], pick):
-			pick = options[0]
-		_protect_edge(path[-1], pick, &"radial")
-		_protected_nodes[pick] = true
-		path.append(pick)
-		taken.append(int(_graph.get_node(pick).layout["order"]))
+		# 先试挑中的那个；它会和别的路交叉又让不开，就换别的候选
+		var tries: Array[int] = _shuffled(pool)
+		for other in options:
+			if not tries.has(other):
+				tries.append(other)
+		var landed := false
+		for pick in tries:
+			var via := _link(path[-1], pick, true)
+			if via.is_empty():
+				continue
+			for id in via:
+				_protected_nodes[id] = true
+				path.append(id)
+			taken.append(int(_graph.get_node(pick).layout["order"]))
+			landed = true
+			break
+		if not landed:
+			build_note = "路线走到第 %d 环，每个落点都会和别的路交叉" % r
+			return false
+	_try_adjacent_pivots(r, active, paths)
 	return true
+
+
+func _shuffled_indices(count: int) -> Array[int]:
+	var out: Array[int] = []
+	for i in count:
+		out.append(i)
+	return _shuffled(out)
+
+
+func _shuffled(ids: Array[int]) -> Array[int]:
+	var out: Array[int] = ids.duplicate()
+	for i in range(out.size() - 1, 0, -1):
+		var j := _rng.randi_range(0, i)
+		var tmp := out[i]
+		out[i] = out[j]
+		out[j] = tmp
+	return out
 
 
 ## 从 from_id 怎么走到第 to_ring 环：`{walk, cands}`。
@@ -427,25 +467,73 @@ static func _ring_dist(a: int, b: int, slots: int) -> int:
 	return mini(f, slots - f)
 
 
-## 换乘点：相邻两条路线每 pivot_every_rings 环之间连通一次。
-##
-## 做法是把那一环上两条路线之间**较短的那段弧**整条保护起来 —— 断边时不碰它。
-## 于是换乘是真的走得过去，而不是界面上给个提示。没有换乘点，
+## 换乘安排在哪几环：次数来自规模模板（小图 1 次，中图 1~2 次……），沿路线均分。
+func _schedule_pivots() -> Array[int]:
+	var out: Array[int] = []
+	var outer := _cfg.ring_count()
+	var profile := _cfg.scale()
+	var count := _rng.randi_range(profile.pivots.x, profile.pivots.y) if profile != null else 1
+	for k in count:
+		var r := clampi(roundi(float(outer) - float(k + 1) * float(outer) / float(count + 1)), 1, outer)
+		if not out.has(r):
+			out.append(r)
+	return out
+
+
+## 相邻的路线对：[[i, j], ...]。两条路线只有一对，三条以上首尾也相邻。
+func _route_pairs(route_count: int) -> Array:
+	var out: Array = []
+	if route_count == 2:
+		out.append([0, 1])
+	elif route_count > 2:
+		for i in route_count:
+			out.append([i, (i + 1) % route_count])
+	return out
+
+
+## 换乘窗口：两条路线刚落的子如果**恰好相邻**，而此刻正在某次换乘的窗口里
+## （安排的那一环 ± pivot_window，不必严格踩在那一环上）、这一次又还没换乘过 ——
+## 直接把这两个点连起来当换乘，不再另外拉一整段换乘弧。
+func _try_adjacent_pivots(r: int, active: Array[int], paths: Array) -> void:
+	var slots := maxi(1, _cfg.slots_for_ring(r))
+	for pair in _route_pairs(paths.size()):
+		var i := int(pair[0])
+		var j := int(pair[1])
+		if not active.has(i) or not active.has(j):
+			continue
+		for k in _pivot_rings.size():
+			var key := "%d:%d:%d" % [i, j, k]
+			if _pivot_done.has(key) or absi(r - _pivot_rings[k]) > _cfg.pivot_window:
+				continue
+			var a: int = (paths[i] as Array[int])[-1]
+			var b: int = (paths[j] as Array[int])[-1]
+			if a != b:
+				var sa := int(_graph.get_node(a).layout["order"])
+				var sb := int(_graph.get_node(b).layout["order"])
+				if _ring_dist(sa, sb, slots) != 1:
+					continue
+				_protect_edge(a, b, &"tangential")
+				(_graph.layout_meta["pivot_links"] as Array).append([mini(a, b), maxi(a, b)])
+			_pivot_done[key] = true     # 落在同一个点上（合流）当然也算换乘过了
+			break
+
+
+## 兜底的换乘弧：窗口里始终没碰上相邻的，就在安排的那一环上把两条路线之间
+## **较短的那段弧**整条保护起来 —— 断边时不碰它。没有换乘，
 ## 「搜到好东西转去打」「打不动了转去撤」都做不到，风格就成了开局定终身。
 func _lay_pivots() -> void:
-	var step := _cfg.pivot_every_rings
 	var routes := _graph.routes
-	if step <= 0 or routes.size() < 2:
-		return
-	for i in routes.size():
-		var a: Dictionary = routes[i]
-		var b: Dictionary = routes[(i + 1) % routes.size()]
-		for r in range(_cfg.ring_count(), 0, -step):
-			var slot_a := _route_slot_on_ring(a, r)
-			var slot_b := _route_slot_on_ring(b, r)
+	for pair in _route_pairs(routes.size()):
+		var a: Dictionary = routes[int(pair[0])]
+		var b: Dictionary = routes[int(pair[1])]
+		for k in _pivot_rings.size():
+			if _pivot_done.has("%d:%d:%d" % [pair[0], pair[1], k]):
+				continue
+			var slot_a := _route_slot_on_ring(a, _pivot_rings[k])
+			var slot_b := _route_slot_on_ring(b, _pivot_rings[k])
 			if slot_a < 0 or slot_b < 0 or slot_a == slot_b:
 				continue
-			_protect_arc(r, slot_a, slot_b)
+			_protect_arc(_pivot_rings[k], slot_a, slot_b)
 
 
 func _route_slot_on_ring(route: Dictionary, r: int) -> int:
@@ -463,12 +551,16 @@ func _protect_arc(r: int, slot_a: int, slot_b: int) -> void:
 	var backward := slots - forward
 	var dir := 1 if forward <= backward else -1
 	var span := mini(forward, backward)
+	# 短的那段被空白区或高危区挡住了，就走长的那段；两头都不通才作罢
+	if not _arc_clear(r, slot_a, dir, span) and _arc_clear(r, slot_a, -dir, slots - span):
+		dir = -dir
+		span = slots - span
 	var slot_map: Dictionary = _ring_slots[r]
 	var prev := -1
 	for k in span + 1:
 		var slot := posmod(slot_a + dir * k, slots)
 		if not slot_map.has(slot) or _graph.get_node(int(slot_map[slot])).zone != 0:
-			# 弧上有空白区或高危区，这一段连不过去；已保护的部分留着，不强求
+			# 两头都不通时走到这里：连不过去的那一段空着，已保护的部分留着，不强求
 			prev = -1
 			continue
 		var id := int(slot_map[slot])
@@ -476,6 +568,16 @@ func _protect_arc(r: int, slot_a: int, slot_b: int) -> void:
 		if prev >= 0:
 			_protect_edge(prev, id, &"tangential")
 		prev = id
+
+
+func _arc_clear(r: int, from_slot: int, dir: int, span: int) -> bool:
+	var slots := maxi(1, _cfg.slots_for_ring(r))
+	var slot_map: Dictionary = _ring_slots[r]
+	for k in span + 1:
+		var slot := posmod(from_slot + dir * k, slots)
+		if not slot_map.has(slot) or _graph.get_node(int(slot_map[slot])).zone != 0:
+			return false
+	return true
 #endregion
 
 
@@ -538,7 +640,15 @@ func _spawn_zone(active: Array[int], paths: Array) -> bool:
 					break
 	if options.is_empty():
 		return false
-	var pick: Array = options[_rng.randi_range(0, options.size() - 1)]
+	# 岔出来的那条路当场建：会和别的路交叉的不要，换一个
+	var pick: Array = []
+	for i in _shuffled_indices(options.size()):
+		var option: Array = options[i]
+		if not _link(int(option[0]), int(option[1]), true, false).is_empty():
+			pick = option
+			break
+	if pick.is_empty():
+		return false
 	var head := {
 		"id": _zone_heads.size() + 1,
 		"cap": clampi(_cfg.effective_zone_soft_cap(), _rules().min_size, _rules().max_size),
@@ -590,10 +700,16 @@ func _grow_zone_once(head: Dictionary) -> bool:
 				came_from[n_id] = id
 	if frontier.is_empty():
 		return false
-	var pick: int = frontier[_rng.randi_range(0, frontier.size() - 1)]
-	_claim(head, pick)
-	_zone_links.append([int(came_from[pick]), pick])
-	return true
+	# 每长一步，那条路当场建出来 —— 区是沿着真的路长的，不是先圈地再补路。
+	# 会和别的路交叉的那一步不走，换一个方向
+	for i in _shuffled_indices(frontier.size()):
+		var pick: int = frontier[i]
+		if _link(int(came_from[pick]), pick, true, false).is_empty():
+			continue
+		_claim(head, pick)
+		_zone_links.append([int(came_from[pick]), pick])
+		return true
+	return false
 
 
 ## 收尾。只长到两个点的，把它岔出来的那个路线节点也划进去凑成三个 ——
@@ -736,8 +852,7 @@ func _link_candidates() -> void:
 			var want := _rng.randi_range(
 				maxi(1, _cfg.radial_links.x), maxi(1, _cfg.radial_links.y))
 			for target in _nearest_inward(from_id, r - 1, want):
-				if _graph.edge_between(from_id, target) == null:
-					_graph.connect_nodes(from_id, target, &"radial")
+				_link(from_id, target, false)      # 会交叉又让不开的就不连
 
 
 ## 内侧一环里够得着的、最近的 want 个点（r-1 == 0 时就是核心）。
@@ -852,7 +967,7 @@ func _repair_inward() -> void:
 				continue
 			var target := _nearest_free_inward(id, r - 1)
 			if target >= 0:
-				_graph.connect_nodes(id, target, &"radial")
+				_link(id, target, false)
 
 
 ## 隔离之后一条边都不剩的点：它的邻居全在高危区里，跨界的边被删光了。
@@ -866,8 +981,8 @@ func _rescue_stranded() -> void:
 		var node := _graph.get_node(id)
 		var joined := false
 		for n_id in _spatial_neighbors(id):
-			if _graph.get_node(n_id).zone == 0:
-				_connect_by_rings(id, n_id)
+			# 连不上（会交叉）就试下一个邻居，不能试一个就当成功了
+			if _graph.get_node(n_id).zone == 0 and not _link(id, n_id, false).is_empty():
 				joined = true
 				break
 		if joined or node.zone != 0:
@@ -888,9 +1003,27 @@ func _rescue_stranded() -> void:
 			break
 
 
+## 「路不许交叉」之后，候选边会因为让路而少连几条，偶尔让一小撮点整个脱离主图。
+## 从核心能走到的算主图；没连上的点里，谁挨着主图上同一片区的点，就把谁接上去，
+## 一轮一轮接到接不动为止。
+func _reconnect_islands() -> void:
+	var progressed := true
+	while progressed:
+		progressed = false
+		var reached := reachable_from(_graph, [CORE_ID] as Array[int])
+		for id in _graph.node_ids():
+			if reached.has(id):
+				continue
+			for n_id in _spatial_neighbors(id):
+				if reached.has(n_id) and _graph.get_node(n_id).zone == _graph.get_node(id).zone 						and not _link(id, n_id, false).is_empty():
+					progressed = true
+					break
+			if progressed:
+				break
+
+
 func _connect_by_rings(a: int, b: int) -> void:
-	var same_ring: bool = _graph.get_node(a).layout["ring"] == _graph.get_node(b).layout["ring"]
-	_graph.connect_nodes(a, b, &"tangential" if same_ring else &"radial")
+	_link(a, b, false)
 
 
 func _has_inward_edge(id: int, r: int) -> bool:
@@ -908,6 +1041,213 @@ func _nearest_free_inward(from_id: int, to_ring: int) -> int:
 		if _graph.get_node(id).zone == 0:
 			return id
 	return -1
+
+
+#region 不交叉
+## 把 p 和 t 连起来，**不许和别的路交叉**。返回从 p 走到 t 经过的点（不含 p）：
+## `[t]` 直接连上了；`[x, t]` 绕了一个点；`[]` 连不上。
+##
+## 两条路在图上交叉，玩家看到的是一个十字，分不清那是路口还是两条互不相干的路叠在一起。
+## 只有一种交叉是说得清的：**四个点两两相连** —— 那就是一个四岔路口，渲染时画成一个路口四条腿。
+##
+## 斜着走（环与槽位都有偏移）时，拦在中间的只可能是另一条对角线 q–u：
+## q 是 p 同环、朝 t 那一侧的邻居，u 是 t 同环、朝 p 那一侧的邻居。碰上了就按这个顺序试：
+## 1. q、u 各自的路都不到 3 条 → 把四个点连满，成一个四岔路口；
+## 2. 否则轮流看 q、u 谁的路不到 4 条 → 借道：p–x、x–t 两条路代替 p–t；
+## 3. 都不行 → 连不上，调用方换别的落点。
+func _link(p: int, t: int, protect: bool, may_reroute: bool = true) -> Array[int]:
+	var none: Array[int] = []
+	if p == t:
+		return none
+	var rp := int(_graph.get_node(p).layout.get("ring", 0))
+	var rt := int(_graph.get_node(t).layout.get("ring", 0))
+	if _graph.edge_between(p, t) != null or rp == rt:
+		_join(p, t, protect)
+		return [t] as Array[int]
+	var blockers := _crossers(p, t, {})
+	if blockers.is_empty():
+		_join(p, t, protect)
+		return [t] as Array[int]
+	if blockers.size() > 1 or not may_reroute:
+		return none     # 高危区的路不许借道也不许凑四岔：借来的点不在区里，区就断了
+
+	var e: MapEdge = blockers[0]
+	var q := e.from_id if int(_graph.get_node(e.from_id).layout["ring"]) == rp else e.to_id
+	var u := e.other(q)
+	if _can_quad(p, t, q, u) and _graph.edges_of(q).size() < 3 and _graph.edges_of(u).size() < 3:
+		for pair in [[p, t], [q, u], [p, q], [u, t], [p, u], [q, t]]:
+			_join(int(pair[0]), int(pair[1]), true)     # 四岔的六条边少一条就又成了交叉，全都保护
+		for id in [q, u]:
+			_protected_nodes[id] = true
+		return [t] as Array[int]
+
+	for x in [q, u]:
+		if _graph.edges_of(x).size() >= 4 or not _zones_agree([p, t, x]):
+			continue
+		if not _within_limit(p, x) or not _within_limit(x, t):
+			continue
+		if not _crossers(p, x, {}).is_empty() or not _crossers(x, t, {}).is_empty():
+			continue
+		_join(p, x, protect)
+		_join(x, t, protect)
+		return [x, t] as Array[int]
+	return none
+
+
+func _join(a: int, b: int, protect: bool) -> void:
+	if _graph.edge_between(a, b) == null:
+		var same_ring: bool = _graph.get_node(a).layout["ring"] == _graph.get_node(b).layout["ring"]
+		_graph.connect_nodes(a, b, &"tangential" if same_ring else &"radial")
+	if protect:
+		_protected_edges[_edge_key(a, b)] = true
+
+
+## 四个点能不能连满：每条边都在长度上限之内、两条同环的边确实是相邻槽位、
+## 四个点同属一片（不跨高危区边界），而且补上的两条直边自己不会再和别的路交叉。
+func _can_quad(p: int, t: int, q: int, u: int) -> bool:
+	if not _zones_agree([p, t, q, u]):
+		return false
+	for pair in [[p, q], [u, t], [p, u], [q, t]]:
+		if not _within_limit(int(pair[0]), int(pair[1])):
+			return false
+	var own := {_edge_key(p, t): true, _edge_key(q, u): true}
+	return _crossers(p, u, own).is_empty() and _crossers(q, t, own).is_empty()
+
+
+func _zones_agree(ids: Array) -> bool:
+	var zone := _graph.get_node(int(ids[0])).zone
+	for id in ids:
+		if _graph.get_node(int(id)).zone != zone:
+			return false
+	return true
+
+
+## 如果连上 a–b，会和哪些已有的路交叉。ignore 里的边（"小id:大id"）不算。
+##
+## 生成一张图要问几千次，所以先用环号把不相干的边筛掉，剩下的才去算几何。
+func _crossers(a: int, b: int, ignore: Dictionary) -> Array[MapEdge]:
+	var out: Array[MapEdge] = []
+	var ra := int(_graph.get_node(a).layout.get("ring", 0))
+	var rb := int(_graph.get_node(b).layout.get("ring", 0))
+	if ra == rb or mini(ra, rb) == 0:
+		return out
+	var hi := maxi(ra, rb)
+	for e in _graph.edges:
+		if e.kind != &"radial":
+			continue
+		var r1 := int(_graph.get_node(e.from_id).layout.get("ring", 0))
+		if r1 != hi and r1 != hi - 1:
+			continue
+		if not ignore.has(_edge_key(e.from_id, e.to_id)) 				and edges_cross(_graph, a, b, e.from_id, e.to_id):
+			out.append(e)
+	return out
+
+
+## 两条跨环的路是否交叉：它们得夹在同一对环之间，没有公共端点，而且两条线段真的相交。
+##
+## 直接按几何算（第 r 环半径 r，角度 = 槽位 / 槽位数）。只比「在外环上的先后与在内环上的先后
+## 是否相反」是不够的：环上正对面的两条路，先后关系本身就是含糊的，会被误判成交叉。
+static func edges_cross(graph: MapGraph, a1: int, b1: int, a2: int, b2: int) -> bool:
+	if a1 == a2 or a1 == b2 or b1 == a2 or b1 == b2:
+		return false
+	# 这个函数在生成时被调几万次，所以不建中间字典，先用最便宜的判断把大多数情况筛掉
+	var na1 := graph.get_node(a1)
+	var nb1 := graph.get_node(b1)
+	var ra1 := int(na1.layout.get("ring", 0))
+	var rb1 := int(nb1.layout.get("ring", 0))
+	if ra1 == rb1 or mini(ra1, rb1) == 0:
+		return false
+	var na2 := graph.get_node(a2)
+	var nb2 := graph.get_node(b2)
+	var ra2 := int(na2.layout.get("ring", 0))
+	var rb2 := int(nb2.layout.get("ring", 0))
+	if maxi(ra1, rb1) != maxi(ra2, rb2) or mini(ra1, rb1) != mini(ra2, rb2):
+		return false
+	return Geometry2D.segment_intersects_segment(
+		_polar(ra1, _fraction(graph, na1)), _polar(rb1, _fraction(graph, nb1)),
+		_polar(ra2, _fraction(graph, na2)), _polar(rb2, _fraction(graph, nb2))) != null
+
+
+static func _polar(ring: int, fraction: float) -> Vector2:
+	return Vector2.from_angle(TAU * fraction) * float(ring)
+
+
+## 一条跨环的路：外面那头与里面那头各在第几环、各在一圈的几分之几处。同环的返回空。
+static func _outer_inner(graph: MapGraph, a: int, b: int) -> Dictionary:
+	var na := graph.get_node(a)
+	var nb := graph.get_node(b)
+	var ra := int(na.layout.get("ring", 0))
+	var rb := int(nb.layout.get("ring", 0))
+	if ra == rb:
+		return {}
+	var outer := na if ra > rb else nb
+	var inner := nb if ra > rb else na
+	return {
+		"r_out": maxi(ra, rb), "r_in": mini(ra, rb),
+		"a_out": _fraction(graph, outer), "a_in": _fraction(graph, inner),
+	}
+
+
+static func _fraction(graph: MapGraph, n: MapNode) -> float:
+	var r := int(n.layout.get("ring", 0))
+	var table: Dictionary = graph.layout_meta.get("ring_slots", {})
+	var slots := maxi(1, int(table.get(r, table.get(str(r), 1))))
+	return float(int(n.layout.get("order", 0))) / float(slots)
+
+
+## 四个点是不是两两相连（那样的交叉是个四岔路口，不算交叉）。
+static func is_full_quad(graph: MapGraph, ids: Array) -> bool:
+	for i in ids.size():
+		for j in range(i + 1, ids.size()):
+			if graph.edge_between(int(ids[i]), int(ids[j])) == null \
+					and graph.edge_between(int(ids[j]), int(ids[i])) == null:
+				return false
+	return true
+
+
+## 图上全部「说不清的交叉」：[[边, 边], ...]。
+static func bad_crossings(graph: MapGraph) -> Array:
+	# 按「夹在哪一对环之间」分桶：不同桶里的路不可能交叉，桶内才两两比
+	var buckets := {}
+	for e in graph.edges:
+		var ra := int(graph.get_node(e.from_id).layout.get("ring", 0))
+		var rb := int(graph.get_node(e.to_id).layout.get("ring", 0))
+		if ra == rb or mini(ra, rb) == 0:
+			continue
+		var key := maxi(ra, rb)
+		if not buckets.has(key):
+			buckets[key] = [] as Array[MapEdge]
+		(buckets[key] as Array[MapEdge]).append(e)
+	var out: Array = []
+	var keys: Array = buckets.keys()
+	keys.sort()
+	for key in keys:
+		var radial: Array[MapEdge] = buckets[key]
+		for i in radial.size():
+			for j in range(i + 1, radial.size()):
+				var x := radial[i]
+				var y := radial[j]
+				if edges_cross(graph, x.from_id, x.to_id, y.from_id, y.to_id) 						and not is_full_quad(graph, [x.from_id, x.to_id, y.from_id, y.to_id]):
+					out.append([x, y])
+	return out
+
+
+## 收尾：隔离高危区、断边都可能拆掉四岔路口的某一条边，剩下的两条对角线就成了真交叉。
+## 拆掉其中一条 —— 先挑没保护的；拆了会断连通就换另一条。
+func _fix_crossings() -> void:
+	for pair in bad_crossings(_graph):
+		var done := false
+		for e in pair:
+			var edge: MapEdge = e
+			if done or not _graph.edges.has(edge) \
+					or _protected_edges.has(_edge_key(edge.from_id, edge.to_id)):
+				continue
+			_graph.remove_edge(edge)
+			if reachable_from(_graph, [edge.from_id] as Array[int]).has(edge.to_id):
+				done = true
+			else:
+				_graph.add_edge(edge)
+#endregion
 
 
 ## 断边：同环弧按概率断开。**骨架边与换乘弧不碰，也不许断出孤岛。**
@@ -970,6 +1310,13 @@ func validate(graph: MapGraph, v: MapValidation) -> void:
 		if not edge_within_limit(graph, e.from_id, e.to_id, max_ring, max_slot):
 			v.fail(&"edge_length", "%d ↔ %d 这条路太长：最多差 %d 环、%d 个槽位"
 				% [e.from_id, e.to_id, max_ring, max_slot])
+
+	# --- 路不交叉。四个点两两相连的那种交叉是四岔路口，不算 ---
+	for pair in bad_crossings(graph):
+		var x: MapEdge = pair[0]
+		var y: MapEdge = pair[1]
+		v.fail(&"edge_crossing", "%d↔%d 与 %d↔%d 交叉了，而这四个点没有两两相连"
+			% [x.from_id, x.to_id, y.from_id, y.to_id])
 
 	# --- 高危区：规模、区内连通、出入口数目（规则从图上读；与手绘图共用）---
 	ZoneRules.validate(graph, v)
@@ -1073,6 +1420,9 @@ static func _edge_key(a: int, b: int) -> String:
 ## 不能只记一笔等后面的候选边去建 —— 骨架挑的落点未必落在「次序最近的那几个」里，
 ## 那条边就永远不存在，而校验会咬着「路线断了」不放，一路重试到用尽。
 func _protect_edge(a: int, b: int, kind: StringName) -> void:
+	if kind == &"radial":
+		_link(a, b, true)
+		return
 	if _graph.edge_between(a, b) == null:
 		_graph.connect_nodes(a, b, kind)
 	_protected_edges[_edge_key(a, b)] = true

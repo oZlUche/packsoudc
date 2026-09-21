@@ -25,9 +25,10 @@ extends Resource
 @export var route_drift: int = 1
 ## 走过几环之后才允许路线合流。太早合流，风格就没意义了
 @export var converge_after_ring: int = 2
-## 相邻路线之间每隔几环要有一个换乘点。0 = 不要 ——
-## 没有换乘点，风格就成了开局定终身，那不是取舍是抽签
-@export var pivot_every_rings: int = 2
+## 换乘几次由规模模板定（MapScaleProfile.pivots），均分在路线上。
+## 这里只管窗口：离安排的那一环几环之内，两条路线的点恰好相邻就直接连起来当换乘，
+## 不必严格踩在那一环上；窗口里始终没碰上，才在那一环上拉一整段换乘弧兜底
+@export var pivot_window: int = 1
 
 @export_group("类型分配（M3-3c）")
 @export var type_risk: Dictionary = {}
@@ -169,6 +170,13 @@ func _build_rings(ring_count_: int) -> void:
 		var slots := slots_for_ring(r)
 		if slots > min_slots:
 			rings[i].node_count = maxi(min_slots, slots - 3)
+	# 把算出来的数写明白。0 的意思是「自动」（槽位按半径算、节点填满），
+	# 但编辑器里看到一排 0、图上却是十几个点，只会让人以为数据没对上
+	for i in ring_count_:
+		var r := ring_count_ - i
+		rings[i].slots = slots_for_ring(r)
+		if rings[i].node_count <= 0:
+			rings[i].node_count = rings[i].slots
 
 
 ## 造一份跑得起来的默认配置。**数值是占位**，等内容定稿；
