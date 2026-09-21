@@ -44,7 +44,12 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 	_rng = rng
 	_graph = MapGraph.new()
 	_graph.layout_kind = &"ring"
-	_graph.layout_meta = {"ring_count": _cfg.ring_count(), "ring_slots": {}}
+	_graph.layout_meta = {
+		"ring_count": _cfg.ring_count(), "ring_slots": {},
+		# 这张图自己带着边长上限：校验、编辑器都从图上读，不必手上有配置
+		"edge_max_ring_offset": _cfg.edge_max_ring_offset,
+		"edge_max_slot_offset": _cfg.edge_max_slot_offset,
+	}
 	_ring_slots = []
 	_protected_nodes = {}
 	_protected_edges = {}
@@ -279,22 +284,22 @@ func _advance_ring(r: int, steps: int, active: Array[int], paths: Array) -> bool
 	if exclusive:
 		need = maxi(1, floori(float(_cfg.entry_min_gap) * float(slots) / float(outer_slots)))
 
-	var cands := {}
+	var approaches := {}
 	for i in active:
 		var from_path: Array[int] = paths[i]
-		cands[i] = _inward_candidates(from_path[-1], r)
+		approaches[i] = _approach(from_path[-1], r)
 	# 候选最少的先挑 —— 先让选择多的挑，可能正好把别人唯一的落点占掉
 	var order: Array[int] = active.duplicate()
 	order.sort_custom(func(a: int, b: int) -> bool:
-		var ca := (cands[a] as Array).size()
-		var cb := (cands[b] as Array).size()
+		var ca := (approaches[a]["cands"] as Array).size()
+		var cb := (approaches[b]["cands"] as Array).size()
 		return ca < cb or (ca == cb and a < b))
 
 	var taken: Array[int] = []      # 这一环上已经被挑走的槽位
 	for i in order:
-		var options: Array[int] = cands[i]
+		var options: Array[int] = approaches[i]["cands"]
 		if options.is_empty():
-			build_note = "路线走到第 %d 环没有落点（空白区挡住了，或 route_drift 太小）" % r
+			build_note = "路线走到第 %d 环没有落点：沿着外面那环怎么挪，正对着的都是空白区" % r
 			return false
 		var pool := _filter_far(options, taken, need, slots)
 		if pool.is_empty() and need > 1:
@@ -303,6 +308,15 @@ func _advance_ring(r: int, steps: int, active: Array[int], paths: Array) -> bool
 			pool = options      # 再退一步：挤不开就合流，总好过整张图作废
 		var pick: int = pool[_rng.randi_range(0, pool.size() - 1)]
 		var path: Array[int] = paths[i]
+		# 正对着空白区时，先沿当前这环横着挪几步，挪到能向内走的地方
+		var walk: Array[int] = approaches[i]["walk"]
+		for side in walk:
+			_protect_edge(path[-1], side, &"tangential")
+			_protected_nodes[side] = true
+			path.append(side)
+		# 横着挪过之后，pick 得是从【挪到的那个点】够得着的
+		if not walk.is_empty() and not _within_limit(path[-1], pick):
+			pick = options[0]
 		_protect_edge(path[-1], pick, &"radial")
 		_protected_nodes[pick] = true
 		path.append(pick)
@@ -310,36 +324,47 @@ func _advance_ring(r: int, steps: int, active: Array[int], paths: Array) -> bool
 	return true
 
 
-## 从 from_id 向内一环的候选落点：次序比例最接近的槽位 ± 漂移量。
+## 从 from_id 怎么走到第 to_ring 环：`{walk, cands}`。
+##
+## 正常情况 walk 为空，cands 是向内一环里够得着的点（边长上限之内，且不超过 route_drift）。
+## 正对着一段空白区时一个都够不着 —— 那就沿当前这环向两边找最近的、能向内走的点，
+## walk 是横着挪过去经过的点。**不拉一条长边跳过空白区**：单条路径有长度上限。
+func _approach(from_id: int, to_ring: int) -> Dictionary:
+	var direct := _inward_candidates(from_id, to_ring)
+	if not direct.is_empty():
+		return {"walk": [] as Array[int], "cands": direct}
+
+	var node := _graph.get_node(from_id)
+	var r := int(node.layout["ring"])
+	var slots := maxi(1, _cfg.slots_for_ring(r))
+	var map: Dictionary = _ring_slots[r]
+	var best := {"walk": [] as Array[int], "cands": [] as Array[int]}
+	for dir in [1, -1]:
+		var walk: Array[int] = []
+		var slot := int(node.layout["order"])
+		for _k in slots:
+			slot = posmod(slot + dir, slots)
+			if not map.has(slot):
+				break       # 这一边被空白区截断了
+			walk.append(int(map[slot]))
+			var cands := _inward_candidates(int(map[slot]), to_ring)
+			if not cands.is_empty():
+				if (best["cands"] as Array).is_empty() or walk.size() < (best["walk"] as Array).size():
+					best = {"walk": walk, "cands": cands}
+				break
+	return best
+
+
+## 从 from_id 向内一环够得着的点：边长上限之内，且槽位偏移不超过 route_drift。
 func _inward_candidates(from_id: int, to_ring: int) -> Array[int]:
-	var from_node := _graph.get_node(from_id)
-	var from_ring := int(from_node.layout["ring"])
-	var from_slot := int(from_node.layout["order"])
-	var from_slots := maxi(1, _cfg.slots_for_ring(from_ring))
-	var to_slots := maxi(1, _cfg.slots_for_ring(to_ring))
-	var target := roundi(float(from_slot) / float(from_slots) * float(to_slots))
-
-	# 漂移量以【最外环的槽位】为单位，随环的长度等比缩小（至少 1）。
-	# 不缩的话，内环只有六个槽位，±2 就是 ±120° —— 路线会横着穿过半张图
-	var outer_slots := maxi(1, _cfg.slots_for_ring(_cfg.ring_count()))
-	var drift := maxi(1, roundi(float(_cfg.route_drift) * float(to_slots) / float(outer_slots)))
-
-	var slot_map: Dictionary = _ring_slots[to_ring]
-	var candidates: Array[int] = []
-	for d in range(-drift, drift + 1):
-		var slot := posmod(target + d, to_slots)
-		if not slot_map.has(slot):
-			continue
-		var id := int(slot_map[slot])
-		if not candidates.has(id):
-			candidates.append(id)
-	if candidates.is_empty():
-		# 正对着一段空白区。绕到离得最近的那个点，而不是判这一次尝试作废 ——
-		# 空白区是配出来的，撞上它不是运气问题，重试也还会撞
-		var near := _nearest_in_ring(from_slot, from_slots, to_ring)
-		if near >= 0:
-			candidates.append(near)
-	return candidates
+	if to_ring <= 0:
+		return [CORE_ID] as Array[int]
+	var reach := float(mini(_cfg.route_drift, _cfg.edge_max_slot_offset)) + 0.5
+	var out: Array[int] = []
+	for id in _reachable_in_ring(from_id, to_ring):
+		if _slot_offset(from_id, id) <= reach:
+			out.append(id)
+	return out
 
 
 func _filter_far(ids: Array[int], taken: Array[int], need: int, slots: int) -> Array[int]:
@@ -491,7 +516,7 @@ func _zone_eligible(id: int, spec: DangerZoneSpec) -> bool:
 	return r >= spec.ring_range.x and r <= spec.ring_range.y
 
 
-## 空间上挨着的点：同环相邻槽位，以及相邻环次序最近的。
+## 空间上挨着的点：同环相邻槽位，以及相邻环上边长上限之内的。
 ##
 ## 用的是槽位关系而不是图上的边 —— 这一步边还没建，而「挨着」本来就是几何概念。
 func _spatial_neighbors(id: int) -> Array[int]:
@@ -507,27 +532,72 @@ func _spatial_neighbors(id: int) -> Array[int]:
 	var map: Dictionary = _ring_slots[r]
 	for d in [-1, 1]:
 		var s := posmod(slot + d, slots)
-		if map.has(s):
+		if map.has(s) and not out.has(int(map[s])):
 			out.append(int(map[s]))
 	for rr in [r - 1, r + 1]:
-		if rr < 1 or rr > _cfg.ring_count():
-			continue
-		var near := _nearest_in_ring(slot, slots, rr)
-		if near >= 0:
-			out.append(near)
+		if rr >= 1 and rr <= _cfg.ring_count():
+			out.append_array(_reachable_in_ring(id, rr))
 	return out
 
 
-func _nearest_in_ring(slot: int, from_slots: int, to_ring: int) -> int:
-	var to_slots := maxi(1, _cfg.slots_for_ring(to_ring))
-	var target := roundi(float(slot) / float(from_slots) * float(to_slots))
-	var map: Dictionary = _ring_slots[to_ring]
-	for d in to_slots:
-		for sign in [1, -1]:
-			var s := posmod(target + d * sign, to_slots)
-			if map.has(s):
-				return int(map[s])
-	return -1
+## 第 to_ring 环上，从 from_id 拉一条边过去不超长的全部点，由近到远。
+func _reachable_in_ring(from_id: int, to_ring: int) -> Array[int]:
+	var out: Array[int] = []
+	if to_ring < 1 or to_ring > _cfg.ring_count():
+		return out
+	for id in _slots_sorted(to_ring):
+		if _within_limit(from_id, id):
+			out.append(id)
+	out.sort_custom(func(a: int, b: int) -> bool:
+		var da := _slot_offset(from_id, a)
+		var db := _slot_offset(from_id, b)
+		return da < db or (da == db and a < b))
+	return out
+
+
+## 一条边的长度上限（5.4「单条路径的长度」）：环位偏移与槽位偏移各不超过配置值。
+func _within_limit(a: int, b: int) -> bool:
+	return edge_within_limit(_graph, a, b, _cfg.edge_max_ring_offset, _cfg.edge_max_slot_offset)
+
+
+func _slot_offset(a: int, b: int) -> float:
+	return slot_offset(_graph, a, b)
+
+
+## 两点之间的槽位偏移。同环 = 环上隔几个槽位；跨环 = 把【里面那个点】按比例投到外面那环上，
+## 看它与外面那个点差几个槽位（小数）。连着核心的边没有槽位可言，算 0。
+##
+## 用外环的槽位当尺子，因为它更细：内环只有六个槽位时一格就是 60°，
+## 拿它量「± 1 格」等于什么都没限制。
+static func slot_offset(graph: MapGraph, a: int, b: int) -> float:
+	var na := graph.get_node(a)
+	var nb := graph.get_node(b)
+	var ra := int(na.layout.get("ring", 0))
+	var rb := int(nb.layout.get("ring", 0))
+	if ra == 0 or rb == 0:
+		return 0.0
+	var outer := na if ra >= rb else nb
+	var inner := nb if ra >= rb else na
+	var table: Dictionary = graph.layout_meta.get("ring_slots", {})
+	var r_out := int(outer.layout["ring"])
+	var r_in := int(inner.layout["ring"])
+	var s_out := float(int(table.get(r_out, table.get(str(r_out), 1))))
+	var s_in := float(int(table.get(r_in, table.get(str(r_in), 1))))
+	var projected := float(int(inner.layout["order"])) / maxf(1.0, s_in) * s_out
+	var diff := fposmod(projected - float(int(outer.layout["order"])), s_out)
+	return minf(diff, s_out - diff)
+
+
+## 半个槽位的余量：跨环投影是小数，「正对着的那个 ± 1」量出来最多 1.5。
+static func edge_within_limit(
+	graph: MapGraph, a: int, b: int, max_ring: int, max_slot: int
+) -> bool:
+	var ra := int(graph.get_node(a).layout.get("ring", 0))
+	var rb := int(graph.get_node(b).layout.get("ring", 0))
+	if absi(ra - rb) > max_ring:
+		return false
+	var slack := 0.0 if ra == rb else 0.5
+	return slot_offset(graph, a, b) <= float(max_slot) + slack
 #endregion
 
 
@@ -549,32 +619,20 @@ func _link_candidates() -> void:
 			var from_id := int(map[slot])
 			var want := _rng.randi_range(
 				maxi(1, _cfg.radial_links.x), maxi(1, _cfg.radial_links.y))
-			for target in _nearest_inward(slot, slots, r - 1, want):
+			for target in _nearest_inward(from_id, r - 1, want):
 				if _graph.edge_between(from_id, target) == null:
 					_graph.connect_nodes(from_id, target, &"radial")
 
 
-## 内侧一环里次序最近的 want 个点（r-1 == 0 时就是核心）。
-func _nearest_inward(slot: int, from_slots: int, to_ring: int, want: int) -> Array[int]:
+## 内侧一环里够得着的、最近的 want 个点（r-1 == 0 时就是核心）。
+##
+## 一个都够不着（正对着空白区）就一条向内的边也没有 —— 它靠同环的弧连到别处，
+## 断边那一步保证不会把它断成孤岛。
+func _nearest_inward(from_id: int, to_ring: int, want: int) -> Array[int]:
 	if to_ring <= 0:
 		return [CORE_ID] as Array[int]
-	var to_slots := maxi(1, _cfg.slots_for_ring(to_ring))
-	var target := roundi(float(slot) / float(from_slots) * float(to_slots))
-	var out: Array[int] = []
-	var map: Dictionary = _ring_slots[to_ring]
-	# 第一条无论多远都要连上（连通性靠它）；多出来的只连近处的 ——
-	# 正对着空白区时「第二近」可能在环的另一头，那条边会横穿半张图
-	var reach := 1 + to_slots / 8
-	for d in to_slots:
-		if not out.is_empty() and d > reach:
-			break
-		for sign in [1, -1]:
-			if out.size() >= want:
-				return out
-			var s := posmod(target + d * sign, to_slots)
-			if map.has(s) and not out.has(int(map[s])):
-				out.append(int(map[s]))
-	return out
+	var near := _reachable_in_ring(from_id, to_ring)
+	return near.slice(0, mini(want, near.size()))
 
 
 ## 把高危区的生长树补成真的边，并保护起来 —— 区内别的边照样可断（断成死胡同没关系，
@@ -628,7 +686,7 @@ func _repair_inward() -> void:
 			var id := int(map[slot])
 			if _graph.get_node(id).zone != 0 or _has_inward_edge(id, r):
 				continue
-			var target := _nearest_free_inward(slot, slots, r - 1)
+			var target := _nearest_free_inward(id, r - 1)
 			if target >= 0:
 				_graph.connect_nodes(id, target, &"radial")
 
@@ -640,18 +698,13 @@ func _has_inward_edge(id: int, r: int) -> bool:
 	return false
 
 
-## 内侧一环里次序最近、且不在任何高危区里的点。
-func _nearest_free_inward(slot: int, from_slots: int, to_ring: int) -> int:
+## 内侧一环里够得着、且不在任何高危区里的最近的点。没有就 -1。
+func _nearest_free_inward(from_id: int, to_ring: int) -> int:
 	if to_ring <= 0:
 		return CORE_ID
-	var to_slots := maxi(1, _cfg.slots_for_ring(to_ring))
-	var target := roundi(float(slot) / float(from_slots) * float(to_slots))
-	var map: Dictionary = _ring_slots[to_ring]
-	for d in to_slots:
-		for sign in [1, -1]:
-			var s := posmod(target + d * sign, to_slots)
-			if map.has(s) and _graph.get_node(int(map[s])).zone == 0:
-				return int(map[s])
+	for id in _reachable_in_ring(from_id, to_ring):
+		if _graph.get_node(id).zone == 0:
+			return id
 	return -1
 
 
@@ -666,9 +719,11 @@ func _open_gate(inside: Dictionary) -> MapEdge:
 	return null
 
 
-## 断边：同环弧按概率断开。**骨架边与换乘弧不碰。**
+## 断边：同环弧按概率断开。**骨架边与换乘弧不碰，也不许断出孤岛。**
 ##
-## 区内的边也可断 —— 区内断成死胡同没关系，走回头路就是。
+## 边有长度上限之后，「每个点都有向内的径向边」不再成立（正对着空白区的点够不着内环），
+## 连通性不能再指望径向边兜底。所以每断一条之前先看：断了它两头还连得上吗？
+## 连不上就留着。区内断成死胡同没关系，走回头路就是 —— 但死胡同得进得去。
 func _break_tangentials() -> void:
 	var doomed: Array[MapEdge] = []
 	for e in _graph.edges:
@@ -678,6 +733,8 @@ func _break_tangentials() -> void:
 			doomed.append(e)
 	for e in doomed:
 		_graph.remove_edge(e)
+		if not reachable_from(_graph, [e.from_id] as Array[int]).has(e.to_id):
+			_graph.add_edge(e)
 #endregion
 
 
@@ -711,41 +768,25 @@ func validate(graph: MapGraph, v: MapValidation) -> void:
 				% [r, slots, prev_slots])
 		prev_slots = slots
 
-	# --- 骨架完整：每条路线仍是一条走得通的简单路径 ---
-	for route in graph.routes:
-		var ids: Array = route["node_ids"]
-		var seen := {}
-		for i in ids.size():
-			var id := int(ids[i])
-			if seen.has(id):
-				v.fail(&"skeleton", "路线 %s 上节点 %d 出现两次，不是简单路径"
-					% [route.get("style", "?"), id])
-			seen[id] = true
-			if i > 0 and graph.edge_between(int(ids[i - 1]), id) == null:
-				v.fail(&"skeleton", "路线 %s 断了：%d 与 %d 之间没有边"
-					% [route.get("style", "?"), ids[i - 1], id])
-		if ids.is_empty() or int(ids[0]) != int(route["entry_id"]):
-			v.fail(&"skeleton", "路线 %s 的起点不是它的出生点" % route.get("style", "?"))
-		elif String(route.get("ends_at", "core")) == "core" and int(ids[-1]) != CORE_ID:
-			v.fail(&"skeleton", "路线 %s 说要去核心，末端却不是核心" % route.get("style", "?"))
-		elif String(route.get("ends_at", "core")) == "extract" \
-				and int(ring_of.get(int(ids[-1]), -1)) != 1:
-			v.fail(&"skeleton", "路线 %s 该停在核心前一环" % route.get("style", "?"))
+	# 【路线不在这里查。】路线是用来生成地图的规则，不是一张图合不合格的条件 ——
+	# 它们留在 graph.routes 里只是标注（开局给玩家挑出生点时看的），
+	# 手改过的图、手绘的图完全可以没有，或者对不上。
 
-	# --- 高危区：区内连通、与区外恰好一条边、不含骨架节点 ---
-	var skeleton := {}
-	for route in graph.routes:
-		for id in (route["node_ids"] as Array):
-			skeleton[int(id)] = true
+	# --- 单条路径的长度上限 ---
+	var max_ring := int(graph.layout_meta.get("edge_max_ring_offset", 1))
+	var max_slot := int(graph.layout_meta.get("edge_max_slot_offset", 1))
+	for e in graph.edges:
+		if not edge_within_limit(graph, e.from_id, e.to_id, max_ring, max_slot):
+			v.fail(&"edge_length", "%d ↔ %d 这条路太长：最多差 %d 环、%d 个槽位"
+				% [e.from_id, e.to_id, max_ring, max_slot])
+
+	# --- 高危区：区内连通、与区外恰好一条边 ---
 	for zone_id in graph.zones:
 		var info: Dictionary = graph.zones[zone_id]
 		var ids: Array = info["node_ids"]
 		var inside := {}
 		for id in ids:
 			inside[int(id)] = true
-			if skeleton.has(int(id)):
-				v.fail(&"zone_skeleton", "高危区 %s 占了骨架节点 %d —— 它该是岔出去的诱惑，不是路障"
-					% [zone_id, id])
 		var gates := 0
 		for e in graph.edges:
 			if inside.has(e.from_id) != inside.has(e.to_id):
@@ -761,9 +802,6 @@ func validate(graph: MapGraph, v: MapValidation) -> void:
 
 	# --- 出生点间隔 ---
 	_validate_entry_gap(graph, v, ring_of)
-
-	# --- 换乘点：相邻路线每 N 环至少能在那一环上走通 ---
-	_validate_pivots(graph, v, ring_of)
 
 
 static func _zone_connected(graph: MapGraph, ids: Array, inside: Dictionary) -> bool:
@@ -801,27 +839,6 @@ func _validate_entry_gap(graph: MapGraph, v: MapValidation, ring_of: Dictionary)
 			if dist < _cfg.entry_min_gap:
 				v.fail(&"entry_gap", "出生点 %d 与 %d 只隔 %d 个槽位，要求至少 %d"
 					% [a.id, b.id, dist, _cfg.entry_min_gap])
-
-
-func _validate_pivots(graph: MapGraph, v: MapValidation, ring_of: Dictionary) -> void:
-	var step := _cfg.pivot_every_rings if _cfg != null else 0
-	if step <= 0 or graph.routes.size() < 2:
-		return
-	for i in graph.routes.size():
-		var a: Dictionary = graph.routes[i]
-		var b: Dictionary = graph.routes[(i + 1) % graph.routes.size()]
-		var linked := false
-		for r in range(int(graph.layout_meta.get("ring_count", 0)), 0, -step):
-			var id_a := _node_on_ring(graph, a, r, ring_of)
-			var id_b := _node_on_ring(graph, b, r, ring_of)
-			if id_a < 0 or id_b < 0:
-				continue
-			if id_a == id_b or _connected_within_ring(graph, id_a, id_b, r, ring_of):
-				linked = true
-				break
-		if not linked:
-			v.fail(&"pivot", "路线 %s 与 %s 之间没有换乘点 —— 风格会变成开局定终身"
-				% [a.get("style", "?"), b.get("style", "?")])
 
 
 static func _node_on_ring(graph: MapGraph, route: Dictionary, r: int, ring_of: Dictionary) -> int:

@@ -443,7 +443,7 @@ func _rebuild_props() -> void:
 		_props.add_child(_label("%d 个点　%d 条路　%d 个出生点　%d 片高危区"
 			% [_graph.node_count(), _graph.edges.size(), _graph.entry_ids.size(), _graph.zones.size()],
 			12, UiPalette.DIM))
-		_props.add_child(_button("清空路线标注（%d 条）" % _graph.routes.size(), clear_routes))
+		_add_route_legend()
 		return
 
 	var id := n.id
@@ -475,6 +475,26 @@ func _rebuild_props() -> void:
 	flags.add_child(goal)
 	_props.add_child(flags)
 	_props.add_child(_button("删除这个点", func(): delete_node(id)))
+
+
+## 彩色粗线是什么：生成器当初铺的路线。**只是标注** —— 它们是生成地图用的规则，
+## 不参与校验，手改之后对不上也无妨。
+func _add_route_legend() -> void:
+	if _graph.routes.is_empty():
+		return
+	_props.add_child(HSeparator.new())
+	var show := CheckBox.new()
+	show.text = "描出生成路线（仅标注，不参与校验）"
+	show.button_pressed = _view.show_routes
+	_style(show)
+	show.toggled.connect(func(on: bool): _view.show_routes = on)
+	_props.add_child(show)
+	for i in _graph.routes.size():
+		var route: Dictionary = _graph.routes[i]
+		_props.add_child(_label("━━  出生点 %d · %s → %s"
+			% [route.get("entry_id", -1), route.get("style", "?"), route.get("ends_at", "?")],
+			12, MapNodeStyle.route_color(i)))
+	_props.add_child(_button("清空路线标注（%d 条）" % _graph.routes.size(), clear_routes))
 
 
 func _on_node_pressed(id: int, button: int, shift: bool) -> void:

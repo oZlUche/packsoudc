@@ -141,12 +141,19 @@ static func _check_all(g: MapGraph, cfg: RingMapConfig) -> String:
 				return "路线 %s 说去核心，末端却不是" % route["style"]
 		elif _ring_of(g, int(ids[-1])) != 1:
 			return "路线 %s 该停在核心前一环" % route["style"]
-		# 逐环向内，一环不跳
+		# 每一步要么向内一环，要么沿当前这环横着挪（正对着空白区时）—— 不向外、不跳环
 		for i in range(1, ids.size()):
 			var a := _ring_of(g, int(ids[i - 1]))
 			var b := _ring_of(g, int(ids[i]))
-			if b != a - 1:
+			if b != a - 1 and b != a:
 				return "路线 %s 从第 %d 环跳到了第 %d 环" % [route["style"], a, b]
+
+	# --- 单条路径的长度上限：每一条边都守 ---
+	for e in g.edges:
+		if not RingMapGenerator.edge_within_limit(
+				g, e.from_id, e.to_id, cfg.edge_max_ring_offset, cfg.edge_max_slot_offset):
+			return "边 %d↔%d 超长：槽位偏移 %.2f" % [
+				e.from_id, e.to_id, RingMapGenerator.slot_offset(g, e.from_id, e.to_id)]
 
 	# --- 高危区：区内连通、与区外恰好一条边、不含骨架节点 ---
 	var skeleton := {}
@@ -260,6 +267,69 @@ static func run_entries(t: TestCase) -> void:
 		"而且说得出为什么：%s" % gen.build_note)
 
 
+static func run_routes_are_not_validity(t: TestCase) -> void:
+	t.begin("环形生成器 · 路线是生成规则，不是合格条件")
+
+	var gen := _gen()
+	var g := gen.generate(RingMapConfig.sample(5), 4)
+	t.not_null(g, "先有一张图")
+	if g == null:
+		return
+	t.check(not g.routes.is_empty(), "生成器留下了路线标注（开局挑出生点时给玩家看的）")
+
+	# 把标注清掉、改乱，图照样合格
+	g.routes = [] as Array[Dictionary]
+	var v := MapValidation.new()
+	gen.validate(g, v)
+	t.check(v.ok(), "没有路线标注，照样合格：%s" % v.to_text())
+
+	g.routes = [{"entry_id": g.entry_ids[0], "style": "whatever", "ends_at": "core",
+		"node_ids": [g.entry_ids[0], RingMapGenerator.CORE_ID]}] as Array[Dictionary]
+	v = MapValidation.new()
+	gen.validate(g, v)
+	t.check(v.ok(), "标注与图对不上，也照样合格：%s" % v.to_text())
+
+
+static func run_edge_limit(t: TestCase) -> void:
+	t.begin("环形生成器 · 单条路径的长度上限")
+
+	var cfg := RingMapConfig.sample(5)
+	var gen := _gen()
+	var g := gen.generate(cfg, 8)
+	t.not_null(g, "先有一张图")
+	if g == null:
+		return
+	t.eq(int(g.layout_meta["edge_max_slot_offset"]), cfg.edge_max_slot_offset,
+		"上限跟着图走 —— 校验与编辑器从图上读，不必手上有配置")
+
+	# 手动拉一条横穿半张图的边：校验说它太长
+	var outer := cfg.ring_count()
+	var slots := cfg.slots_for_ring(outer)
+	var a := -1
+	var b := -1
+	for id in g.node_ids():
+		if _ring_of(g, id) != outer:
+			continue
+		if a < 0:
+			a = id
+		elif RingMapGenerator.slot_offset(g, a, id) >= float(slots) / 3.0:
+			b = id
+			break
+	t.check(a >= 0 and b >= 0, "最外环上找得到两个隔得远的点")
+	g.connect_nodes(a, b, &"tangential")
+	var v := MapValidation.new()
+	gen.validate(g, v)
+	t.check(v.rules().has(&"edge_length"), "拉一条超长的边 → edge_length")
+
+	# 断边概率拉满也散不了架：断之前先看会不会断出孤岛
+	# （用没有高危区的小图，免得「高危区没长起来」的重试混进来）
+	var brittle := RingMapConfig.sample(4)
+	brittle.tangential_break_chance = 1.0
+	for s in 16:
+		var gg := _gen()
+		t.not_null(gg.generate(brittle, s, 1), "切向边能断的全断，第一次尝试就连通（种子 %d）" % s)
+
+
 static func run_lockstep(t: TestCase) -> void:
 	t.begin("环形生成器 · 路线同步生长，合流之前互不相撞")
 
@@ -338,7 +408,11 @@ static func run_gaps(t: TestCase) -> void:
 static func run_pivots(t: TestCase) -> void:
 	t.begin("环形生成器 · 换乘点真的走得通")
 
+	# 换乘是生成规则，不是合格条件 —— 弧上横着一段空白区时它连不过去，那张图照样合格。
+	# 所以这里把空白区去掉再测：没有空白区，换乘弧就该条条走得通
 	var cfg := RingMapConfig.sample(5)
+	for spec in cfg.rings:
+		spec.node_count = 0
 	for s in 12:
 		var g := _gen().generate(cfg, s)
 		if g == null:

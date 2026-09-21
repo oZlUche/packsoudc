@@ -31,6 +31,13 @@ var show_free_slots: bool = false:
 		show_free_slots = v
 		queue_redraw()
 
+## 把生成器留下的路线标注描出来。路线只是「这张图当初是照着什么规则长出来的」，
+## 不是图的一部分 —— 关掉它，图一点不变
+var show_routes: bool = true:
+	set(v):
+		show_routes = v
+		queue_redraw()
+
 var _layout: MapLayout = null
 var _font: Font
 var _hover_id: int = -1
@@ -146,7 +153,7 @@ func _draw() -> void:
 
 	# 路线经过的边：哪条边属于哪条路线
 	var route_of_edge := {}
-	for i in graph.routes.size():
+	for i in graph.routes.size() if show_routes else 0:
 		var ids: Array = graph.routes[i].get("node_ids", [])
 		for k in range(1, ids.size()):
 			var key := _edge_key(int(ids[k - 1]), int(ids[k]))

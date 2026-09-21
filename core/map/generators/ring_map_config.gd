@@ -17,7 +17,7 @@ extends Resource
 @export var entry_min_gap: int = 2
 ## 向内走时，下一环的候选槽位在当前次序比例的 ± 多少个槽位之内。
 ## 单位是【最外环的槽位】，到内环按环长等比缩小（至少 1）—— 和 entry_min_gap 同一把尺
-@export var route_drift: int = 2
+@export var route_drift: int = 1
 ## 走过几环之后才允许路线合流。太早合流，风格就没意义了
 @export var converge_after_ring: int = 2
 ## 相邻路线之间每隔几环要有一个换乘点。0 = 不要 ——
@@ -44,6 +44,12 @@ extends Resource
 @export var danger_zones: Array[DangerZoneSpec] = []
 
 @export_group("边与槽位")
+## 单条路径的长度上限：一条边两端最多差几环。生成器只连相邻环，所以 1 就是它会用到的最大值
+@export var edge_max_ring_offset: int = 1
+## 单条路径的长度上限：一条边两端最多差几个槽位。同环 = 相邻槽位；
+## 跨环 = 把里面那个点按比例投到外面那环上（外环的槽位更细，拿它当尺子），正对着的那个 ± 这么多。
+## 正对着空白区的点因此可以【没有】向内的边，它靠同环的弧连到别处
+@export var edge_max_slot_offset: int = 1
 ## 同环相邻边被断开的概率。骨架边与换乘弧不受影响
 @export var tangential_break_chance: float = 0.35
 ## 每个节点向内连接的邻近节点数范围
