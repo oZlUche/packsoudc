@@ -208,7 +208,7 @@ func _node(id: int) -> MapNode:
 	return _graph.get_node(id) if _graph != null else null
 
 
-## 从节点的 zone 字段重建 graph.zones；入口 = 区内唯一一个有对外边的点（不唯一则 -1）。
+## 从节点的 zone 字段重建 graph.zones；出入口 = 区内有对外边的那些点。
 func _sync_zones() -> void:
 	var members := {}
 	for id in _graph.node_ids():
@@ -219,13 +219,7 @@ func _sync_zones() -> void:
 			(members[z] as Array[int]).append(id)
 	var zones := {}
 	for z in members:
-		var gates := {}
-		for e in _graph.edges:
-			var a_in: bool = (members[z] as Array).has(e.from_id)
-			var b_in: bool = (members[z] as Array).has(e.to_id)
-			if a_in != b_in:
-				gates[e.from_id if a_in else e.to_id] = true
-		zones[z] = {"node_ids": members[z], "gate_id": int(gates.keys()[0]) if gates.size() == 1 else -1}
+		zones[z] = {"node_ids": members[z], "gate_ids": ZoneRules.gate_ids(_graph, members[z])}
 	_graph.zones = zones
 
 

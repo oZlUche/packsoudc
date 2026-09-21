@@ -26,7 +26,8 @@ var entry_ids: Array[int] = []
 ## 终点（章节核心）
 var goal_ids: Array[int] = []
 
-## 危险区域：zone_id -> {"node_ids": Array[int], "gate_id": int}
+## 危险区域：zone_id -> {"node_ids": Array[int], "gate_ids": Array[int]}。
+## gate_ids = 出入口在区内的那一头；一片区可以有好几个口（5.5）
 var zones: Dictionary = {}
 
 ## 每个出生点一条路线：{entry_id, style, node_ids, ends_at, risk, reward}。
@@ -90,8 +91,7 @@ func remove_node(id: int) -> bool:
 		var info: Dictionary = zones[zid]
 		var members: Array = info.get("node_ids", [])
 		members.erase(id)
-		if int(info.get("gate_id", -1)) == id:
-			info["gate_id"] = -1
+		(info.get("gate_ids", []) as Array).erase(id)
 		if members.is_empty():
 			zones.erase(zid)
 	_index_valid = false

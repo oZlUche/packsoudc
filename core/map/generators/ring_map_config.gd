@@ -41,7 +41,10 @@ extends Resource
 @export var extract_every_rings: int = 2
 
 @export_group("高危区")
+## 每条一片，说的是它怎么【长出来】
 @export var danger_zones: Array[DangerZoneSpec] = []
+## 一片高危区长成什么样才算数（规模、出入口上限）。写进图的 layout_meta，校验从图上读
+@export var zone_rules: ZoneRules = ZoneRules.new()
 
 @export_group("边与槽位")
 ## 单条路径的长度上限：一条边两端最多差几环。生成器只连相邻环，所以 1 就是它会用到的最大值
@@ -119,10 +122,6 @@ static func sample(ring_count_: int = 5) -> RingMapConfig:
 	mixed.ends_at = &"core"
 	cfg.routes = [combat, search, mixed] as Array[RouteStyle]
 
-	# 高危区要避开骨架与换乘弧，而换乘弧会把它所在的那一整环占掉，
-	# 所以它得落在两个换乘环【之间】。环太少时它自己会不生效（DangerZoneSpec.min_rings）
-	var zone := DangerZoneSpec.new()
-	zone.ring_range = Vector2i(2, maxi(2, ring_count_ - 1))
-	zone.size = Vector2i(3, 5)
-	cfg.danger_zones = [zone] as Array[DangerZoneSpec]
+	# 一片高危区。环太少时它自己不生效（DangerZoneSpec.min_rings）
+	cfg.danger_zones = [DangerZoneSpec.new()] as Array[DangerZoneSpec]
 	return cfg

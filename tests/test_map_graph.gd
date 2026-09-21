@@ -18,7 +18,7 @@ static func run_remove_node(t: TestCase) -> void:
 	g.connect_nodes(2, 3)
 	g.entry_ids = [2] as Array[int]
 	g.goal_ids = [2, 3] as Array[int]
-	g.zones[1] = {"node_ids": [2] as Array[int], "gate_id": 2}
+	g.zones[1] = {"node_ids": [2] as Array[int], "gate_ids": [2] as Array[int]}
 	g.routes = [{"entry_id": 2, "node_ids": [2, 3]}] as Array[Dictionary]
 
 	t.eq(g.next_free_id(), 4, "下一个空闲 id")
@@ -80,7 +80,7 @@ static func _tiny() -> MapGraph:
 
 	g.entry_ids = [1] as Array[int]
 	g.goal_ids = [3] as Array[int]
-	g.zones = {7: {"node_ids": [1], "gate_id": 1}}
+	g.zones = {7: {"node_ids": [1], "gate_ids": [1]}}
 	g.routes = [{
 		"entry_id": 1, "style": "search", "node_ids": [1, 2, 3],
 		"ends_at": "core", "risk": 0.5, "reward": 1.25,
@@ -145,7 +145,7 @@ static func run_round_trip(t: TestCase) -> void:
 	t.eq(n1.content, {"enemy_id": "rat", "count": 2}, "节点内容 —— 敌人在地图上看得见，所以它得跟着图存")
 	t.eq(typeof(n1.layout["order"]), TYPE_INT, "自由字典里的整数读回来仍是整数，不是 3.0")
 	t.eq(from_json.get_node(2).state, MapNode.State.VISITED, "走没走过")
-	t.eq(from_json.zones, {7: {"node_ids": [1], "gate_id": 1}}, "区域表（键还原成整数）")
+	t.eq(from_json.zones, {7: {"node_ids": [1], "gate_ids": [1]}}, "区域表（键还原成整数）")
 	t.eq(from_json.routes.size(), 1, "路线")
 	t.eq(from_json.routes[0]["node_ids"], [1, 2, 3], "路线经过的点")
 	t.eq(from_json.routes[0]["reward"], 1.25, "真正的小数不被误伤")

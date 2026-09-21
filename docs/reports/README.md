@@ -54,3 +54,4 @@
 | 033 | [M3-3 环形生成器：拓扑与骨架](033-ring-map-topology.md) | 阶段 4 · M3 | 完成 |
 | 034 | [地图编辑器、地图来源、路线同步生长](034-map-editor-and-source.md) | 阶段 4 · M3 | 完成 |
 | 035 | [路线是生成规则不是合格条件；单条路径的长度上限](035-routes-are-rules-edge-limit.md) | 阶段 4 · M3 | 完成 |
+| 036 | [高危区重新定义：和路线一起长出来，多出入口](036-danger-zone-redefined.md) | 阶段 4 · M3 | 完成 |
