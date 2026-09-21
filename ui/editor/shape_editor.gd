@@ -7,6 +7,13 @@
 ## 这件事在界面上根本看不出来 —— 它是一条相对偏移，脱离形状就没有意义。
 ## 标记格在物品**轮廓之外**，偏移可以是负数，所以网格四周留了边距。
 ##
+## [b]坐标系[/b]：原点 (0,0) 是物品**包围盒的左上角**，x 向右、y 向下。
+## 标记格写的是相对这个原点的偏移，所以左边和上边的格子是负数。
+##
+## 注意原点那一格**不一定被占住** —— L 形 `01/11` 的包围盒左上角是空的，
+## 但偏移仍然从那里量起。画板里颜色较亮的那块区域就是包围盒，
+## 左上角画了一个小角标。
+##
 ## 输出：形状是 0/1 数字串（[method ItemShape.to_bits]），标记格是相对原点的偏移，
 ## 与 [AdjacencyProfile] 用的是同一套坐标。
 class_name ShapeEditor
@@ -37,12 +44,17 @@ var _bits: Array = []  # _h 行，每行 _w 个 bool
 ## 相对物品原点的偏移 → true
 var _grant: Dictionary = {}
 var _receive: Dictionary = {}
+## 光标所在的格子（网格坐标），不在格子上时为 null
+var _hover = null
 
 
 func _ready() -> void:
 	if _bits.is_empty():
 		_resize(_w, _h)
 	_refit()
+	mouse_exited.connect(func():
+		_hover = null
+		queue_redraw())
 
 
 #region 取值
@@ -156,7 +168,7 @@ func _refit() -> void:
 			need = maxi(need, maxi(-v.x, -v.y))
 			need = maxi(need, maxi(v.x - _w + 1, v.y - _h + 1))
 	_pad = clampi(need, MIN_PAD, MAX_PAD)
-	custom_minimum_size = Vector2(_cols() * _step(), _rows() * _step() + 34)
+	custom_minimum_size = Vector2(_cols() * _step(), _rows() * _step() + 50)
 
 
 func _cols() -> int:
@@ -176,6 +188,15 @@ func _step() -> int:
 	return _cell() + GAP
 
 
+## 屏幕坐标 → 网格坐标；不在任何格子上则返回 null
+func _grid_at(pos: Vector2):
+	var gx := int(pos.x / _step())
+	var gy := int(pos.y / _step())
+	if gx < 0 or gy < 0 or gx >= _cols() or gy >= _rows():
+		return null
+	return Vector2i(gx, gy)
+
+
 ## 网格坐标 → 相对物品原点的偏移
 func _to_offset(gx: int, gy: int) -> Vector2i:
 	return Vector2i(gx - _pad, gy - _pad)
@@ -191,6 +212,12 @@ func _is_filled(o: Vector2i) -> bool:
 
 
 func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		var g = _grid_at((event as InputEventMouseMotion).position)
+		if g != _hover:
+			_hover = g
+			queue_redraw()
+		return
 	if not (event is InputEventMouseButton) or not event.pressed:
 		return
 	var mb := event as InputEventMouseButton
@@ -198,11 +225,10 @@ func _gui_input(event: InputEvent) -> void:
 	if not add and mb.button_index != MOUSE_BUTTON_RIGHT:
 		return
 
-	var gx := int(mb.position.x / _step())
-	var gy := int(mb.position.y / _step())
-	if gx < 0 or gy < 0 or gx >= _cols() or gy >= _rows():
+	var g = _grid_at(mb.position)
+	if g == null:
 		return
-	var o := _to_offset(gx, gy)
+	var o := _to_offset((g as Vector2i).x, (g as Vector2i).y)
 
 	match layer:
 		Layer.SHAPE:
@@ -246,6 +272,16 @@ func _draw() -> void:
 				_draw_mark(r, UiPalette.RECEIVE)
 			draw_rect(r, UiPalette.LINE, false, 1.0)
 
+			# 原点角标。**原点那一格不一定被占住**（L 形的包围盒左上角就是空的），
+			# 所以必须单独标出来，否则作者没法判断偏移从哪儿量起。
+			if o == Vector2i.ZERO:
+				var tick := cell * 0.3
+				draw_line(r.position, r.position + Vector2(tick, 0), UiPalette.RECEIVE, 2.0)
+				draw_line(r.position, r.position + Vector2(0, tick), UiPalette.RECEIVE, 2.0)
+
+			if _hover != null and _hover == Vector2i(gx, gy):
+				draw_rect(r, UiPalette.FG, false, 2.0)
+
 	if label_font == null:
 		return
 	var y := _rows() * step + 13
@@ -259,6 +295,16 @@ func _draw() -> void:
 	draw_string(
 		label_font, Vector2(0, y + 15), "左键填、右键清　当前画：" + _layer_name(),
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 12, _layer_color()
+	)
+	# 光标坐标。没有它，作者只能靠数格子反推偏移是多少 ——
+	# 而原点不一定被占住，数起来并不显然。
+	var note := "原点 ⌐ 在包围盒左上角，x 向右、y 向下"
+	if _hover != null:
+		var ho := _to_offset((_hover as Vector2i).x, (_hover as Vector2i).y)
+		note = "光标 (%d, %d)" % [ho.x, ho.y]
+	draw_string(
+		label_font, Vector2(0, y + 30), note,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiPalette.DIM
 	)
 
 
