@@ -1,9 +1,45 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
 [ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_evo7l"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_e2210"]
 [ext_resource type="Script" path="res://core/effects/effect.gd" id="2_vam15"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_3khgl"]
 [ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_x8boj"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_8m3yp"]
 [ext_resource type="Resource" path="res://data/shapes/drone.tres" id="4_vnmkr"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="5_yfql0"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_ngwdn"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_tl3v7"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_u20qc"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_tc7t7"]
+
+[sub_resource type="Resource" id="Resource_e2210"]
+script = ExtResource("3_3khgl")
+seconds = 2.5
+
+[sub_resource type="Resource" id="Resource_3khgl"]
+script = ExtResource("5_yfql0")
+resource_key = &"power"
+
+[sub_resource type="Resource" id="Resource_8m3yp"]
+script = ExtResource("7_tl3v7")
+
+[sub_resource type="Resource" id="Resource_yfql0"]
+script = ExtResource("8_u20qc")
+
+[sub_resource type="Resource" id="Resource_ngwdn"]
+script = ExtResource("2_e2210")
+trigger = SubResource("Resource_yfql0")
+cadence = SubResource("Resource_e2210")
+costs = Array[ExtResource("4_8m3yp")]([SubResource("Resource_3khgl")])
+effects = Array[ExtResource("6_ngwdn")]([SubResource("Resource_8m3yp")])
+
+[sub_resource type="Resource" id="Resource_tl3v7"]
+script = ExtResource("9_tc7t7")
+base_stats = {
+"damage": 6.0
+}
+rules = Array[ExtResource("2_e2210")]([SubResource("Resource_ngwdn")])
 
 [resource]
 script = ExtResource("3_x8boj")
@@ -12,3 +48,4 @@ display_name = "无人机"
 shape = ExtResource("4_vnmkr")
 rarity = 2
 tags = Array[StringName]([&"tool"])
+combat = SubResource("Resource_tl3v7")

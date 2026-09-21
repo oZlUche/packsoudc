@@ -2,8 +2,77 @@
 
 [ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_d6hqy"]
 [ext_resource type="Script" path="res://core/effects/effect.gd" id="2_6mwih"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="2_xiujf"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_e6evk"]
 [ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_qnnj0"]
 [ext_resource type="Resource" path="res://data/shapes/sniper.tres" id="4_etadt"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_lbiof"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_4xw6q"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="6_i83hk"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_gclyn"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="8_l46fo"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_niftu"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_y01yl"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="11_dki5p"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="12_w6xmv"]
+
+[sub_resource type="Resource" id="Resource_xiujf"]
+script = ExtResource("1_d6hqy")
+mult_category = 1
+mult_percent = 25
+
+[sub_resource type="Resource" id="Resource_e6evk"]
+script = ExtResource("2_xiujf")
+receive_cells = Array[Vector2i]([Vector2i(0, 4)])
+receive_filter = Array[StringName]([&"part"])
+receive_mods = Array[ExtResource("1_d6hqy")]([SubResource("Resource_xiujf")])
+
+[sub_resource type="Resource" id="Resource_lbiof"]
+script = ExtResource("4_lbiof")
+seconds = 3.0
+
+[sub_resource type="Resource" id="Resource_4xw6q"]
+script = ExtResource("6_i83hk")
+amount = 18.0
+
+[sub_resource type="Resource" id="Resource_i83hk"]
+script = ExtResource("8_l46fo")
+
+[sub_resource type="Resource" id="Resource_gclyn"]
+script = ExtResource("1_d6hqy")
+stat = &"armor"
+mult_category = 0
+flat = -3.0
+
+[sub_resource type="Resource" id="Resource_l46fo"]
+script = ExtResource("9_niftu")
+id = &"marked"
+display_name = "标记"
+is_debuff = true
+max_stacks = 1
+duration_sec = 8.0
+mods = Array[ExtResource("1_d6hqy")]([SubResource("Resource_gclyn")])
+
+[sub_resource type="Resource" id="Resource_niftu"]
+script = ExtResource("10_y01yl")
+buff = SubResource("Resource_l46fo")
+
+[sub_resource type="Resource" id="Resource_y01yl"]
+script = ExtResource("11_dki5p")
+
+[sub_resource type="Resource" id="Resource_dki5p"]
+script = ExtResource("3_e6evk")
+trigger = SubResource("Resource_y01yl")
+cadence = SubResource("Resource_lbiof")
+costs = Array[ExtResource("5_4xw6q")]([SubResource("Resource_4xw6q")])
+effects = Array[ExtResource("7_gclyn")]([SubResource("Resource_i83hk"), SubResource("Resource_niftu")])
+
+[sub_resource type="Resource" id="Resource_w6xmv"]
+script = ExtResource("12_w6xmv")
+base_stats = {
+"damage": 30.0
+}
+rules = Array[ExtResource("3_e6evk")]([SubResource("Resource_dki5p")])
 
 [resource]
 script = ExtResource("3_qnnj0")
@@ -12,3 +81,5 @@ display_name = "狙击枪"
 shape = ExtResource("4_etadt")
 rarity = 3
 tags = Array[StringName]([&"weapon"])
+combat = SubResource("Resource_w6xmv")
+adjacency = SubResource("Resource_e6evk")

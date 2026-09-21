@@ -2,8 +2,44 @@
 
 [ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_vsg5s"]
 [ext_resource type="Script" path="res://core/effects/effect.gd" id="2_2kg1e"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_8braq"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_1f5pl"]
 [ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_j7ogx"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_bpdb0"]
 [ext_resource type="Resource" path="res://data/shapes/rifle.tres" id="4_m7pbs"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="5_rd6ox"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_ia552"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_il1ba"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_axobc"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_kem4h"]
+
+[sub_resource type="Resource" id="Resource_8braq"]
+script = ExtResource("3_1f5pl")
+seconds = 0.8
+
+[sub_resource type="Resource" id="Resource_1f5pl"]
+script = ExtResource("5_rd6ox")
+amount = 5.0
+
+[sub_resource type="Resource" id="Resource_bpdb0"]
+script = ExtResource("7_il1ba")
+
+[sub_resource type="Resource" id="Resource_rd6ox"]
+script = ExtResource("8_axobc")
+
+[sub_resource type="Resource" id="Resource_ia552"]
+script = ExtResource("2_8braq")
+trigger = SubResource("Resource_rd6ox")
+cadence = SubResource("Resource_8braq")
+costs = Array[ExtResource("4_bpdb0")]([SubResource("Resource_1f5pl")])
+effects = Array[ExtResource("6_ia552")]([SubResource("Resource_bpdb0")])
+
+[sub_resource type="Resource" id="Resource_il1ba"]
+script = ExtResource("9_kem4h")
+base_stats = {
+"damage": 8.0
+}
+rules = Array[ExtResource("2_8braq")]([SubResource("Resource_ia552")])
 
 [resource]
 script = ExtResource("3_j7ogx")
@@ -12,3 +48,4 @@ display_name = "步枪"
 shape = ExtResource("4_m7pbs")
 rarity = 2
 tags = Array[StringName]([&"weapon"])
+combat = SubResource("Resource_il1ba")

@@ -40,6 +40,19 @@ const MAX_STAMINA := &"max_stamina"
 const MAX_MANA := &"max_mana"
 const MAX_SHIELD := &"max_shield"
 
+## 资源的每秒回复速率，统一以 regen_ 开头，与 max_ 对称。
+##
+## [b]它就是一条普通属性[/b] —— 所以「某某 buff 让耐力回得更快」不需要任何新机制，
+## 一条作用于 regen_stamina 的 StatModifier 就够了，和增伤走的是同一条公式。
+##
+## 回复是**懒结算**的：没有定时器，也没有每秒一次的事件。
+## 推进器每到一个时刻，才按「距上次结算过了多久 × 当时的速率」补上，
+## 见 [method CombatantRuntime.settle_regen]。
+const REGEN_PREFIX := "regen_"
+
+const REGEN_STAMINA := &"regen_stamina"
+const REGEN_HP := &"regen_hp"
+
 ## 耐力消耗的面板值。走 4.3 公式结算，
 ## 因此「减少耐力消耗 20%」就是一条作用于本键的普通 StatModifier。
 const STAMINA_COST := &"stamina_cost"
@@ -70,6 +83,11 @@ static func resource_of_max(stat_key: StringName) -> StringName:
 	if not s.begins_with(MAX_PREFIX):
 		return &""
 	return StringName(s.substr(MAX_PREFIX.length()))
+
+
+## xxx -> regen_xxx
+static func regen_of_resource(resource_key: StringName) -> StringName:
+	return StringName(REGEN_PREFIX + String(resource_key))
 
 
 ## xxx -> max_xxx

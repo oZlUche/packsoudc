@@ -14,9 +14,11 @@ extends Resource
 @export var base_stats: Dictionary = {}
 
 ## run 级默认值。角色系统落地前，所有单位都用这一份。
+## [b]数值是占位[/b]，等内容定稿。结构才是要紧的：多一种资源就多两行。
 const DEFAULT_STATS := {
 	"max_hp": 25.0,
 	"max_stamina": 50.0,
+	"regen_stamina": 4.0,
 }
 
 

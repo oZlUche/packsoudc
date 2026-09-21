@@ -8,6 +8,12 @@ var winner: int = -1
 var duration: int = 0
 ## 回放日志。[BattleView] 照它重演，「跳过」就是把游标推到末尾。
 var log: Array[BattleEvent] = []
+
+## 开战瞬间的状态快照。**回放的起点** ——
+## 没有它，表现层就得自己去编译棋盘才知道血条从哪儿开始，
+## 那等于让表现层认识战斗逻辑，1.1 的分离就破了。
+var initial: Dictionary = {}
+
 var final: Dictionary = {}
 
 

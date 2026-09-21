@@ -1,10 +1,10 @@
 ## 把主场景渲染几帧后截图存盘，用于在没有人盯着屏幕时验证 UI 真的画出来了。
 ## 必须在非 headless 下运行 —— headless 用的是空渲染驱动，截出来是黑的。
 ##
-##     "E:/Godot/..._console.exe" --path . --script res://tools/capture_scene.gd -- <输出路径>
+##     "E:/Godot/..._console.exe" --path . --script res://tools/capture_scene.gd -- <输出路径> [场景路径]
 extends SceneTree
 
-const SCENE := "res://ui/inventory/inventory_sandbox.tscn"
+const DEFAULT_SCENE := "res://ui/inventory/inventory_sandbox.tscn"
 const WARMUP_FRAMES := 4
 
 var _frames: int = 0
@@ -16,9 +16,10 @@ func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	if args.size() > 0:
 		_out = args[0]
-	var packed: PackedScene = load(SCENE)
+	var scene_path: String = args[1] if args.size() > 1 else DEFAULT_SCENE
+	var packed: PackedScene = load(scene_path)
 	if packed == null:
-		push_error("场景加载失败: " + SCENE)
+		push_error("场景加载失败: " + scene_path)
 		quit(1)
 		return
 	_scene = packed.instantiate()

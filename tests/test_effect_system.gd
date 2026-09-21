@@ -733,3 +733,115 @@ static func run_unit_stat_aggregation(t: TestCase) -> void:
 	# 空单位读 haste 也是 1.0，不是 0
 	var empty := CombatantRuntime.from_spec(_spec(100.0, []), 0)
 	t.eq(empty.stat(BattleStats.HASTE, StatMath.ONE), StatMath.ONE, "无物品时 haste 为 1.0")
+
+
+static func run_regen(t: TestCase) -> void:
+	t.begin("资源 · 按时间懒结算的回复")
+
+	# regen_xxx 是一条普通属性，和 max_xxx 对称。没有定时器，也没有每秒事件 ——
+	# 推进器每到一个时刻，才按「距上次结算过了多久 × 当刻速率」补上。
+	var drain := ResourceCost.new()
+	drain.resource_key = BattleStats.RES_STAMINA
+	drain.amount = 10.0
+
+	var spec := _spec(100.0, [_compiled(1, "gun", {"max_stamina": 100.0, "regen_stamina": 5.0}, [
+		_rule(OnSchedule.new(), _cooldown(2.0), [_damage(5.0)], [drain]),
+	])])
+	var ctx := _battle(spec, _spec(100.0, []))
+	BattleSim.run_context(ctx, 0.0)  # 只跑开场，把回复时钟对齐
+	var pool := ctx.sides[0].resources
+	t.eq(StatMath.to_int(pool.current(BattleStats.RES_STAMINA)), 100, "开场满耐力")
+
+	# 先手动扣掉一半，再推进时间看回了多少
+	pool.change(BattleStats.RES_STAMINA, StatMath.from_float(-60.0), BattleEvent.REASON_COST)
+	t.eq(StatMath.to_int(pool.current(BattleStats.RES_STAMINA)), 40, "扣到 40")
+
+	ctx.sides[0].settle_regen(_sec(4.0))
+	t.eq(StatMath.to_int(pool.current(BattleStats.RES_STAMINA)), 60, "4 秒 × 5/秒 = 回 20")
+
+	# --- 线性累积：勤结算不会算多 ---
+	pool.change(BattleStats.RES_STAMINA, StatMath.from_float(-60.0), BattleEvent.REASON_COST)
+	ctx.sides[0].settle_regen(_sec(5.0))
+	ctx.sides[0].settle_regen(_sec(6.0))
+	ctx.sides[0].settle_regen(_sec(8.0))
+	t.eq(StatMath.to_int(pool.current(BattleStats.RES_STAMINA)), 20,
+		"分三次结算到 8 秒，与一次结算到 8 秒等价（0 + 4 秒 × 5）")
+
+	# --- 上限截断，不攒溢出 ---
+	ctx.sides[0].settle_regen(_sec(100.0))
+	t.eq(StatMath.to_int(pool.current(BattleStats.RES_STAMINA)), 100, "回到满就停住")
+	ctx.sides[0].settle_regen(_sec(200.0))
+	t.eq(StatMath.to_int(pool.current(BattleStats.RES_STAMINA)), 100, "满了之后不再涨")
+
+	# --- 没配回复速率的资源不动 ---
+	var still := _spec(100.0, [_compiled(1, "tank", {"max_stamina": 50.0}, [])])
+	var ctx2 := _battle(still, _spec(100.0, []))
+	BattleSim.run_context(ctx2, 0.0)
+	ctx2.sides[0].resources.change(
+		BattleStats.RES_STAMINA, StatMath.from_float(-30.0), BattleEvent.REASON_COST
+	)
+	ctx2.sides[0].settle_regen(_sec(50.0))
+	t.eq(StatMath.to_int(ctx2.sides[0].resources.current(BattleStats.RES_STAMINA)), 20,
+		"没有 regen_stamina 就完全不回")
+
+
+static func run_regen_buff(t: TestCase) -> void:
+	t.begin("资源 · buff 影响回复速率")
+
+	# 「某某 buff 让耐力回得更快」不需要任何新机制 ——
+	# regen_stamina 是普通属性，一条 StatModifier 就够，走的是和增伤同一条公式。
+	var vigor := BuffDef.new()
+	vigor.id = &"vigor"
+	vigor.max_stacks = 5
+	vigor.mods = [_mod(BattleStats.REGEN_STAMINA, StatMath.Buff.EMPOWER, 100)] as Array[StatModifier]
+
+	var spec := _spec(100.0, [_compiled(1, "gear", {"max_stamina": 100.0, "regen_stamina": 5.0}, [])])
+	var ctx := _battle(spec, _spec(100.0, []))
+	BattleSim.run_context(ctx, 0.0)
+	var who := ctx.sides[0]
+	var pool := who.resources
+	pool.change(BattleStats.RES_STAMINA, StatMath.from_float(-80.0), BattleEvent.REASON_COST)
+
+	who.settle_regen(_sec(2.0))
+	t.eq(StatMath.to_int(pool.current(BattleStats.RES_STAMINA)), 30, "基础 5/秒，2 秒回 10")
+
+	# 叠一层 +100%
+	who.apply_buff(vigor, 1, _sec(2.0))
+	who.settle_regen(_sec(4.0))
+	t.eq(StatMath.to_int(pool.current(BattleStats.RES_STAMINA)), 50,
+		"+100% 后 10/秒，再 2 秒回 20")
+
+	# 再叠一层：同乘区相加，5 × (1 + 1.0 + 1.0) = 15/秒
+	who.apply_buff(vigor, 1, _sec(4.0))
+	who.settle_regen(_sec(6.0))
+	t.eq(StatMath.to_int(pool.current(BattleStats.RES_STAMINA)), 80,
+		"两层 = 15/秒，再 2 秒回 30（同乘区相加，不是相乘）")
+
+
+static func run_regen_in_battle(t: TestCase) -> void:
+	t.begin("资源 · 回复让武器打得出第二轮")
+
+	# 这一组是回归测试：没有回复时，耐力见底后整场哑火 ——
+	# 沙盒里一眼就能看见，但单元测试里只表现为伤害总量偏低。
+	var cost := ResourceCost.new()
+	cost.resource_key = BattleStats.RES_STAMINA
+	cost.amount = 10.0
+
+	var make := func(regen: float) -> CombatantSpec:
+		return _spec(100.0, [_compiled(1, "gun",
+			{"damage": 5.0, "max_stamina": 20.0, "regen_stamina": regen},
+			[_rule(OnSchedule.new(), _cooldown(1.0), [_damage()], [cost])])])
+
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1
+	var dry := BattleSim.run(make.call(0.0), _spec(500.0, []), rng, 10.0)
+	var dry_left := int(dry.final["sides"][1]["resources"][&"hp"][0])
+
+	var rng2 := RandomNumberGenerator.new()
+	rng2.seed = 1
+	var wet := BattleSim.run(make.call(10.0), _spec(500.0, []), rng2, 10.0)
+	var wet_left := int(wet.final["sides"][1]["resources"][&"hp"][0])
+
+	t.eq(500 - dry_left, 10, "不回复：20 点耐力只够打两发，之后整场哑火")
+	t.check(500 - wet_left > 40, "回复 10/秒：每秒都打得起，伤害高得多（实际 %d）" % (500 - wet_left))
+

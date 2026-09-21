@@ -2,8 +2,20 @@
 
 [ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_skdxu"]
 [ext_resource type="Script" path="res://core/effects/effect.gd" id="2_j38e5"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="2_j804i"]
 [ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_j804i"]
 [ext_resource type="Resource" path="res://data/shapes/mag.tres" id="4_acv6y"]
+
+[sub_resource type="Resource" id="Resource_j38e5"]
+script = ExtResource("1_skdxu")
+mult_category = 1
+mult_percent = 20
+
+[sub_resource type="Resource" id="Resource_j804i"]
+script = ExtResource("2_j804i")
+grant_cells = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 1)])
+grant_filter = Array[StringName]([&"weapon"])
+grant_mods = Array[ExtResource("1_skdxu")]([SubResource("Resource_j38e5")])
 
 [resource]
 script = ExtResource("3_j804i")
@@ -11,3 +23,4 @@ id = &"mag"
 display_name = "弹匣"
 shape = ExtResource("4_acv6y")
 tags = Array[StringName]([&"ammo"])
+adjacency = SubResource("Resource_j804i")

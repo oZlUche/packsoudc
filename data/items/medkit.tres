@@ -1,9 +1,42 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
 [ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_pbip6"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_i73y1"]
 [ext_resource type="Script" path="res://core/effects/effect.gd" id="2_r4ch1"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_2dtpe"]
 [ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_ctp8f"]
 [ext_resource type="Resource" path="res://data/shapes/medkit.tres" id="4_aeahq"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_ohdgn"]
+[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="5_y0k3a"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_krf6n"]
+[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="7_xqgdt"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="8_vhaw8"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_5cpy5"]
+
+[sub_resource type="Resource" id="Resource_i73y1"]
+script = ExtResource("3_2dtpe")
+
+[sub_resource type="Resource" id="Resource_2dtpe"]
+script = ExtResource("5_y0k3a")
+
+[sub_resource type="Resource" id="Resource_ohdgn"]
+script = ExtResource("7_xqgdt")
+amount = 35.0
+
+[sub_resource type="Resource" id="Resource_y0k3a"]
+script = ExtResource("8_vhaw8")
+percent = 40
+
+[sub_resource type="Resource" id="Resource_krf6n"]
+script = ExtResource("2_i73y1")
+trigger = SubResource("Resource_y0k3a")
+cadence = SubResource("Resource_i73y1")
+costs = Array[ExtResource("4_ohdgn")]([SubResource("Resource_2dtpe")])
+effects = Array[ExtResource("6_krf6n")]([SubResource("Resource_ohdgn")])
+
+[sub_resource type="Resource" id="Resource_xqgdt"]
+script = ExtResource("9_5cpy5")
+rules = Array[ExtResource("2_i73y1")]([SubResource("Resource_krf6n")])
 
 [resource]
 script = ExtResource("3_ctp8f")
@@ -12,3 +45,4 @@ display_name = "医疗包"
 shape = ExtResource("4_aeahq")
 rarity = 1
 tags = Array[StringName]([&"consumable"])
+combat = SubResource("Resource_xqgdt")

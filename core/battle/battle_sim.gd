@@ -33,6 +33,12 @@ static func run(
 static func run_context(ctx: BattleContext, time_limit_sec: float = DEFAULT_TIME_LIMIT) -> BattleResult:
 	var limit := StatMath.from_float(time_limit_sec)
 
+	for rt in ctx.sides:
+		(rt as CombatantRuntime).resources.reset_regen_clock(ctx.now)
+
+	var result := BattleResult.new()
+	result.initial = ctx.snapshot()
+
 	ctx.emit(BattleEvent.BATTLE_START, -1, {})
 	ctx.drain()
 
@@ -45,7 +51,9 @@ static func run_context(ctx: BattleContext, time_limit_sec: float = DEFAULT_TIME
 
 	if ctx.now > limit:
 		ctx.now = limit
-	var result := BattleResult.new()
+	# 把回复补到收尾时刻，否则最终快照停在最后一个事件那一刻
+	for rt in ctx.sides:
+		(rt as CombatantRuntime).settle_regen(ctx.now)
 	result.winner = _winner(ctx)
 	result.duration = ctx.now
 	result.log = ctx.log
@@ -71,6 +79,11 @@ static func _next_instant(ctx: BattleContext) -> int:
 ## 一个正好在此刻到期的增益不应该再为这一刻的出手加成 —— 否则「buff 还剩 0 秒」
 ## 这种边界会变成玩家无法预期的运气。
 static func _resolve_instant(ctx: BattleContext) -> void:
+	# 回复先补：这一段时间里 buff 还在，速率就该按它算。
+	# 放到到期之后补，等于让最后这一段用上了 buff 消失后的速率。
+	for rt in ctx.sides:
+		(rt as CombatantRuntime).settle_regen(ctx.now)
+
 	for rt in ctx.sides:
 		var owner := rt as CombatantRuntime
 		for buff in owner.expire_buffs(ctx.now):

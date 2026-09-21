@@ -2,8 +2,16 @@
 
 [ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_3saxm"]
 [ext_resource type="Script" path="res://core/effects/effect.gd" id="2_80vu7"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_c4f3n"]
 [ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_c4f3n"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_u7fuw"]
 [ext_resource type="Resource" path="res://data/shapes/core.tres" id="4_u7fuw"]
+
+[sub_resource type="Resource" id="Resource_c4f3n"]
+script = ExtResource("3_u7fuw")
+base_stats = {
+"max_power": 60.0
+}
 
 [resource]
 script = ExtResource("3_c4f3n")
@@ -12,3 +20,4 @@ display_name = "能量核心"
 shape = ExtResource("4_u7fuw")
 rarity = 3
 tags = Array[StringName]([&"part"])
+combat = SubResource("Resource_c4f3n")

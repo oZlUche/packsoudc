@@ -2,7 +2,7 @@
 ## 内容做错了（形状为空、id 重复、id 与文件名不符）应该在这里被挡住。
 extends RefCounted
 
-const EXPECTED_COUNT := 15
+const EXPECTED_COUNT := 17
 const EXPECTED_BAGS := 4
 
 

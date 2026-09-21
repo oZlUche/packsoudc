@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_oxgxj"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_7vpra"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_j2to3"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_i4yx3"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_j2to3"]
+[ext_resource type="Resource" path="res://data/shapes/ration.tres" id="4_i4yx3"]
+
+[sub_resource type="Resource" id="Resource_j2to3"]
+script = ExtResource("3_i4yx3")
+base_stats = {
+"max_stamina": 40.0,
+"regen_stamina": 2.0
+}
+
+[resource]
+script = ExtResource("3_j2to3")
+id = &"ration"
+display_name = "口粮"
+shape = ExtResource("4_i4yx3")
+tags = Array[StringName]([&"consumable"])
+combat = SubResource("Resource_j2to3")

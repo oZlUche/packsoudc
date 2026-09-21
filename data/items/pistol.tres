@@ -1,9 +1,45 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
 [ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_an2uk"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_lhupw"]
 [ext_resource type="Script" path="res://core/effects/effect.gd" id="2_qnxk1"]
 [ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_f66yl"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_xbnm2"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_mj13p"]
 [ext_resource type="Resource" path="res://data/shapes/pistol.tres" id="4_rr2dy"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="5_m7nae"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_4nerl"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_am0i0"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_s14hp"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_yhvmt"]
+
+[sub_resource type="Resource" id="Resource_lhupw"]
+script = ExtResource("3_xbnm2")
+seconds = 1.2
+
+[sub_resource type="Resource" id="Resource_xbnm2"]
+script = ExtResource("5_m7nae")
+amount = 6.0
+
+[sub_resource type="Resource" id="Resource_mj13p"]
+script = ExtResource("7_am0i0")
+
+[sub_resource type="Resource" id="Resource_m7nae"]
+script = ExtResource("8_s14hp")
+
+[sub_resource type="Resource" id="Resource_4nerl"]
+script = ExtResource("2_lhupw")
+trigger = SubResource("Resource_m7nae")
+cadence = SubResource("Resource_lhupw")
+costs = Array[ExtResource("4_mj13p")]([SubResource("Resource_xbnm2")])
+effects = Array[ExtResource("6_4nerl")]([SubResource("Resource_mj13p")])
+
+[sub_resource type="Resource" id="Resource_am0i0"]
+script = ExtResource("9_yhvmt")
+base_stats = {
+"damage": 6.0
+}
+rules = Array[ExtResource("2_lhupw")]([SubResource("Resource_4nerl")])
 
 [resource]
 script = ExtResource("3_f66yl")
@@ -12,3 +48,4 @@ display_name = "手枪"
 shape = ExtResource("4_rr2dy")
 rarity = 1
 tags = Array[StringName]([&"weapon"])
+combat = SubResource("Resource_am0i0")

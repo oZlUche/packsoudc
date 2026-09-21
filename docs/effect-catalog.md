@@ -6,7 +6,7 @@
 
 > 用这些积木拼出的**首批内容计划**见 [`item-roster.md`](item-roster.md)。
 >
-> 状态：截至架构 v1.8。`data/items/` 里的 15 个示例资产**尚未配置任何战斗数据**，
+> 状态：截至架构 v1.10。`data/items/` 里的 15 个示例资产**尚未配置任何战斗数据**，
 > 下面列的是可用积木，不是已有内容。
 
 ---
@@ -207,6 +207,7 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 | `haste` | 速度倍率，基础 1.0，越大越快 | 单件物品 |
 | `stamina_cost` / `mana_cost` | 消耗面板值 | 单件物品 |
 | `max_hp` / `max_stamina` / `max_mana` / `max_shield` | 资源上限 | 整个单位 |
+| `regen_hp` / `regen_stamina` / … | 资源每秒回复量 | 整个单位 |
 | `armor` | 减伤 | 整个单位 |
 
 **属性按物品保留粒度。** 「磨刀石只给旁边那把武器加伤害」靠的就是这一点，
@@ -215,7 +216,12 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 **资源由 `max_*` 自动派生**：配一个 `max_shield` 属性就有了 `shield` 资源，不用改代码。
 `shield` 另有一条特殊待遇 —— 伤害管线第二步会优先扣它（能不能扣由伤害类型决定）。
 
-**还有一份不属于任何道具的基线**（`CombatantBaseline`）：默认生命 25、耐力 50。
+**回复也是属性**：配一个 `regen_stamina` 就有了每秒回耐力，**按时间懒结算**，
+没有定时器。因为它只是普通属性，「某某 buff 让耐力回得更快」就是一条作用于它的
+`StatModifier`，不需要任何新机制。
+
+**还有一份不属于任何道具的基线**（`CombatantBaseline`）：默认生命 25、耐力 50、
+耐力回复 4/秒。
 没有它，玩家捡到一把枪却可能因为身上没有 `max_stamina` 道具而一发都打不出。
 这同时是角色系统的占位 —— 将来不同角色带不同的基线。
 

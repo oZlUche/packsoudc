@@ -130,6 +130,21 @@ func _sync_resource_maxes() -> void:
 #endregion
 
 
+## 把所有带回复速率的资源补算到 [param now]。
+##
+## [b]懒结算，没有定时器。[/b] 推进器每到一个时刻调一次，
+## 按「距上次结算过了多久 × 当刻速率」补上 —— 事件驱动的模拟里没有「每秒」这回事。
+##
+## 速率取自 regen_xxx 属性，因此**它自动吃 buff**：
+## 「某某 buff 让耐力回得更快」就是一条作用于 regen_stamina 的普通 StatModifier，
+## 和增伤走同一条 4.3 公式，不需要任何新机制。
+func settle_regen(now: int) -> void:
+	for key in resources.keys():
+		var rate := stat(BattleStats.regen_of_resource(key), 0)
+		if rate > 0:
+			resources.settle_regen(key, rate, now)
+
+
 ## 某件物品通过增益／受益格连结到的其他物品 uid
 func links_of(uid: int) -> Array[int]:
 	return item_links.get(uid, [] as Array[int])
@@ -262,8 +277,11 @@ func _on_resource_changed(key: StringName, delta: int, reason: StringName) -> vo
 	var ctx: BattleContext = _ctx_ref.get_ref() if _ctx_ref != null else null
 	if ctx == null:
 		return
+	# 带上变化【之后】的当前值与上限：回放层因此不必自己累加增量，
+	# 也不会因为漏掉一次上限变动（强壮之类的 buff）而让血条的分母失真。
 	ctx.emit(BattleEvent.RESOURCE_CHANGED, side, {
 		"key": String(key), "delta": delta, "reason": String(reason),
+		"current": resources.current(key), "max": resources.maximum(key),
 	})
 
 

@@ -24,6 +24,8 @@ const ITEMS: Array[Dictionary] = [
 		"accept": ["consumable"],
 	},
 	# —— 普通物品 ——
+	{"id": "knife", "name": "匕首", "bits": "1", "rarity": 0, "tags": ["weapon"]},
+	{"id": "ration", "name": "口粮", "bits": "1", "rarity": 0, "tags": ["consumable"]},
 	{"id": "mag", "name": "弹匣", "bits": "1", "rarity": 0, "tags": ["ammo"]},
 	{"id": "battery", "name": "电池", "bits": "1", "rarity": 0, "tags": ["part"]},
 	{"id": "pistol", "name": "手枪", "bits": "11", "rarity": 1, "tags": ["weapon"]},

@@ -15,6 +15,12 @@ signal changed(key: StringName, delta: int, reason: StringName)
 var _current: Dictionary = {}  # StringName -> int
 var _max: Dictionary = {}      # StringName -> int
 
+## 每种资源上一次结算回复的时刻（定点秒）。
+##
+## 回复不走定时器：推进器到达某个时刻时，才按「距这里过了多久」一次性补上。
+## 事件驱动的模拟里没有「每秒」这回事，硬造一个每秒事件等于把帧又请回来了。
+var _regen_at: Dictionary = {}  # StringName -> int
+
 
 func define(key: StringName, max_value: int, fill: bool = true) -> void:
 	_max[key] = maxi(0, max_value)
@@ -78,6 +84,33 @@ func set_max(key: StringName, new_max: int) -> void:
 	if after != before:
 		_current[key] = after
 		changed.emit(key, after - before, BattleEvent.REASON_MAX_CHANGED)
+
+
+## 把某种资源的回复补算到 [param now]，返回实际补了多少。
+##
+## [param rate] 是**每秒**回复量（定点），由调用方按当刻属性算好传进来 ——
+## 资源池不认识属性表，也就不认识 buff。
+##
+## 线性累积，所以结算得勤一点不会算多：`settle(t1)` 之后再 `settle(t2)`
+## 与直接 `settle(t2)` 等价。勤结算反而更准 —— 速率被 buff 改变的那一刻
+## 正好是一个时刻点，在那里结算，前后两段就各按各的速率算。
+func settle_regen(key: StringName, rate: int, now: int) -> int:
+	if not has(key):
+		return 0
+	var since: int = _regen_at.get(key, 0)
+	_regen_at[key] = now
+	if rate <= 0 or now <= since:
+		return 0
+	var gain := StatMath.mul(now - since, rate)
+	if gain <= 0:
+		return 0
+	return change(key, gain, BattleEvent.REASON_REGEN)
+
+
+## 把所有资源的结算起点对齐到某一时刻，不补任何量。开战时调一次。
+func reset_regen_clock(now: int) -> void:
+	for key in _max:
+		_regen_at[key] = now
 
 
 func keys() -> Array:
