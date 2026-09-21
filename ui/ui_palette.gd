@@ -16,6 +16,11 @@ const STAMINA := Color("f0ad4e")
 const MANA := Color("7a8cf0")
 const HEAL := Color("5cb85c")
 
+## 邻接标记的两个方向。**按语义分色，不是按形状** ——
+## 参照作品用星形／菱形区分，那只是两个任意符号；这里直接用颜色 + 文字。
+const GRANT := Color("6fb3f0")    ## 增益：我给站在这儿的邻居加成
+const RECEIVE := Color("f0a85c")  ## 受益：站在这儿的邻居给我加成
+
 ## 资源键 → 条的颜色。未登记的资源用 DIM，不至于看不见。
 const RESOURCE_COLORS := {
 	"hp": HP,

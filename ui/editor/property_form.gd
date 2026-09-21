@@ -17,16 +17,21 @@ signal changed
 const INDENT := 14
 
 var label_font: Font
-## 这些字段由别处专门编辑（形状有画板、id 在顶栏），表单里跳过
-var skip: Array[StringName] = []
+
+## 由别处专门编辑、表单里要跳过的字段：`类名 -> [属性名]`。
+##
+## 按**类名**而不是一张平的名字表，因为子表单也要用同一份规则 ——
+## 邻接的格子列表在画板上画，但它嵌在 adjacency 子表单里，
+## 平的名字表管不到那一层。两处能改同一个值迟早对不上。
+var skip: Dictionary = {}
 
 var _target: Object = null
 
 
-static func create(target: Object, font: Font, skip_props: Array[StringName] = []) -> PropertyForm:
+static func create(target: Object, font: Font, skip_map: Dictionary = {}) -> PropertyForm:
 	var f := PropertyForm.new()
 	f.label_font = font
-	f.skip = skip_props
+	f.skip = skip_map
 	f._target = target
 	f.add_theme_constant_override("separation", 4)
 	return f
@@ -41,8 +46,9 @@ func rebuild() -> void:
 		child.queue_free()
 	if _target == null:
 		return
+	var hidden: Array = skip.get(String(ContentSchema.class_name_of(_target)), [])
 	for prop in ContentSchema.properties_of(_target):
-		if skip.has(StringName(prop["name"])):
+		if hidden.has(String(prop["name"])):
 			continue
 		var row := _row_for(_target, prop)
 		if row != null:
@@ -331,7 +337,7 @@ func _adder(declared: StringName, on_made: Callable) -> Control:
 
 
 func _sub_form(obj: Object) -> PropertyForm:
-	var sub := PropertyForm.create(obj, label_font)
+	var sub := PropertyForm.create(obj, label_font, skip)
 	sub.changed.connect(_emit)
 	return sub
 #endregion

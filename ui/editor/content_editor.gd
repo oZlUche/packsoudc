@@ -28,6 +28,7 @@ var _id_edit: LineEdit
 var _status: RichTextLabel
 var _preview: TextEdit
 var _dps: Label
+var _layer_buttons: Array[Button] = []
 
 
 func _ready() -> void:
@@ -108,7 +109,24 @@ func _build_ui() -> void:
 	side_col.add_theme_constant_override("separation", 8)
 	right_split.add_child(side_col)
 
-	side_col.add_child(_label("形状", 14, UiPalette.FG))
+	side_col.add_child(_label("形状与邻接标记", 14, UiPalette.FG))
+
+	# 画哪一层。标记格和形状必须在同一张网格上 ——
+	# 「加成的是上下相邻那一格」是条相对偏移，脱离形状就看不出来。
+	var layer_row := HBoxContainer.new()
+	layer_row.add_theme_constant_override("separation", 4)
+	for spec in [
+		[ShapeEditor.Layer.SHAPE, "占格", UiPalette.FG],
+		[ShapeEditor.Layer.GRANT, "增益格", UiPalette.GRANT],
+		[ShapeEditor.Layer.RECEIVE, "受益格", UiPalette.RECEIVE],
+	]:
+		var which: int = spec[0]
+		var b := _button(spec[1], func(): _set_layer(which))
+		b.add_theme_color_override("font_color", spec[2])
+		_layer_buttons.append(b)
+		layer_row.add_child(b)
+	side_col.add_child(layer_row)
+
 	_shape = ShapeEditor.new()
 	_shape.label_font = _font
 	_shape.changed.connect(_refresh)
@@ -141,6 +159,13 @@ func _build_ui() -> void:
 	_preview.add_theme_font_size_override("font_size", 12)
 	side_col.add_child(_preview)
 	side_col.add_child(_button("套用上面的 JSON", _apply_json))
+
+
+func _set_layer(which: int) -> void:
+	_shape.layer = which as ShapeEditor.Layer
+	for i in _layer_buttons.size():
+		_layer_buttons[i].flat = i != which
+	_shape.queue_redraw()
 
 
 func _label(text: String, font_size: int, color: Color) -> Label:
@@ -204,7 +229,8 @@ func _load_dict(data: Dictionary, id: String) -> void:
 	_def = ContentImporter.import_item(data, ContentImporter.Context.new(), report)
 	_current_id = id
 	_id_edit.text = String(_def.id)
-	_shape.set_shape(_def.shape)
+	_shape.set_from(_def.shape, _def.adjacency)
+	_set_layer(ShapeEditor.Layer.SHAPE)
 	_rebuild_form()
 	_refresh()
 
@@ -216,7 +242,8 @@ func _new_item() -> void:
 	_def.shape = ItemShape.from_bits("1")
 	_current_id = ""
 	_id_edit.text = "new_item"
-	_shape.set_shape(_def.shape)
+	_shape.set_from(_def.shape, null)
+	_set_layer(ShapeEditor.Layer.SHAPE)
 	_rebuild_form()
 	_refresh()
 
@@ -276,11 +303,28 @@ func _rebuild_form() -> void:
 	if _def == null:
 		return
 	# id 在顶栏、形状有画板 —— 表单里跳过，免得两处能改同一个值
-	var form := PropertyForm.create(
-		_def, _font, [&"id", &"shape", &"icon"] as Array[StringName]
-	)
+	# 画板上能画的东西，表单里一律不给第二个入口
+	var form := PropertyForm.create(_def, _font, {
+		"ItemDef": ["id", "shape", "icon"],
+		"AdjacencyProfile": ["grant_cells", "receive_cells"],
+	})
 	form.changed.connect(_refresh)
 	_form_host.add_child(form)
+
+
+## 把画板上的标记格写回 adjacency。
+##
+## profile 按需创建，但**从不自动删除** —— 把标记格清空不代表作者想丢掉
+## 已经配好的 filter 与 mods，那是两件事。
+func _sync_adjacency() -> void:
+	var grant := _shape.grant_cells()
+	var receive := _shape.receive_cells()
+	if _def.adjacency == null:
+		if grant.is_empty() and receive.is_empty():
+			return
+		_def.adjacency = AdjacencyProfile.new()
+	_def.adjacency.grant_cells = grant
+	_def.adjacency.receive_cells = receive
 
 
 ## 校验走的就是导入器本身。
@@ -311,6 +355,7 @@ func _refresh() -> void:
 	if _def == null:
 		return
 	_def.shape = _shape.to_shape()
+	_sync_adjacency()
 	_preview.text = ContentExporter.to_json(ContentExporter.export_item(_def))
 	_status.text = _status_text(_validate())
 
@@ -326,8 +371,9 @@ func _refresh() -> void:
 #endregion
 
 
-## 截图工具的钩子：打开一件带嵌套规则的道具，好让截图里有东西可看
+## 截图工具的钩子：打开一件既有邻接标记又有战斗数据的道具
 func demo_fill() -> void:
-	if _ids.has("knife"):
-		_open("knife")
-		_select_in_list("knife")
+	if _ids.has("mag"):
+		_open("mag")
+		_select_in_list("mag")
+		_set_layer(ShapeEditor.Layer.GRANT)
