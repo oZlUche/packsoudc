@@ -21,6 +21,11 @@ extends Resource
 ## 稀有度档位，0 起。影响掉落权重与 UI 配色。
 @export var rarity: int = 0
 
+## 本身的价值：撤离结算、买卖、侵蚀损坏时的损失都看它（架构文档 6.4）。
+## 0 = 按稀有度与尺寸算（[method ItemValue.of]），填正数则覆盖 ——
+## 留给「小而贵」「大而贱」的特例。战斗力与价值是两回事，一件东西可以只占其一。
+@export var value: int = 0
+
 ## 准入标签。容器级与包体级的准入都拿它比对。
 @export var tags: Array[StringName] = []
 
