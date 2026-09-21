@@ -12,7 +12,11 @@ extends Resource
 ## 每条出生点→尽头的路线各有一种风格；出生点数 = entry_count，风格按本列表轮流分配
 @export var routes: Array[RouteStyle] = []
 @export var entry_count: int = 3
-## 向内走时，下一环的候选槽位在当前次序比例的 ± 多少个槽位之内
+## 出生点之间在最外环上至少隔几个槽位（环形距离）。
+## 放不下（出生点数 × 间隔 > 槽位数）是配置错误，生成器会直说
+@export var entry_min_gap: int = 2
+## 向内走时，下一环的候选槽位在当前次序比例的 ± 多少个槽位之内。
+## 单位是【最外环的槽位】，到内环按环长等比缩小（至少 1）—— 和 entry_min_gap 同一把尺
 @export var route_drift: int = 2
 ## 走过几环之后才允许路线合流。太早合流，风格就没意义了
 @export var converge_after_ring: int = 2
@@ -110,10 +114,9 @@ static func sample(ring_count_: int = 5) -> RingMapConfig:
 	cfg.routes = [combat, search, mixed] as Array[RouteStyle]
 
 	# 高危区要避开骨架与换乘弧，而换乘弧会把它所在的那一整环占掉，
-	# 所以它得落在两个换乘环【之间】。环太少就干脆不配
-	if ring_count_ >= 4:
-		var zone := DangerZoneSpec.new()
-		zone.ring_range = Vector2i(2, ring_count_ - 1)
-		zone.size = Vector2i(3, 5)
-		cfg.danger_zones = [zone] as Array[DangerZoneSpec]
+	# 所以它得落在两个换乘环【之间】。环太少时它自己会不生效（DangerZoneSpec.min_rings）
+	var zone := DangerZoneSpec.new()
+	zone.ring_range = Vector2i(2, maxi(2, ring_count_ - 1))
+	zone.size = Vector2i(3, 5)
+	cfg.danger_zones = [zone] as Array[DangerZoneSpec]
 	return cfg

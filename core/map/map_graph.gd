@@ -72,6 +72,38 @@ func connect_nodes(a: int, b: int, kind: StringName = &"", action_cost: int = 1)
 func remove_edge(edge: MapEdge) -> void:
 	edges.erase(edge)
 	_index_valid = false
+
+
+## 删一个点，连同挨着它的全部路；出生点、终点、危险区域里的登记一并清掉。
+##
+## [b]路线不动。[/b] 路线是一串有意义的节点，删掉中间一个之后该怎么接是作者的决定，
+## 这里替他接上或整条删掉都是越权 —— 留着，让校验去说「路线断了」。
+func remove_node(id: int) -> bool:
+	if not nodes.has(id):
+		return false
+	for e in edges_of(id):
+		edges.erase(e)
+	nodes.erase(id)
+	entry_ids.erase(id)
+	goal_ids.erase(id)
+	for zid in zones.keys():
+		var info: Dictionary = zones[zid]
+		var members: Array = info.get("node_ids", [])
+		members.erase(id)
+		if int(info.get("gate_id", -1)) == id:
+			info["gate_id"] = -1
+		if members.is_empty():
+			zones.erase(zid)
+	_index_valid = false
+	return true
+
+
+## 还没被用过的最小正整数 id。编辑器加点时用。
+func next_free_id() -> int:
+	var id := 1
+	while nodes.has(id):
+		id += 1
+	return id
 #endregion
 
 

@@ -26,6 +26,10 @@ var attempts_used: int = 0
 ## 成功时是上一次失败尝试的累计，全程没失败过则为空。
 var failure_tally: Dictionary = {}
 
+## [method build] 返回 null 时，子类可以在这里留一句为什么 ——
+## 「出生点放不下」这类配置错误，光说「没能造出图」等于没说。每次尝试前清空。
+var build_note: String = ""
+
 
 ## 造一张图。由子类实现。
 ##
@@ -34,6 +38,13 @@ var failure_tally: Dictionary = {}
 ##
 ## 造不出来就返回 null，当作一次失败的尝试，由 [method generate] 换种子重来。
 @abstract func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph
+
+
+## 一份开箱能跑的默认配置。编辑器靠它给每种生成器摆出参数表单 ——
+## 它不认识任何具体的配置类，只管把这个对象的导出属性反射出来。
+## 不需要配置的生成器返回 null。
+func default_config() -> Resource:
+	return null
 
 
 ## 生成一张通过校验的图；[param base_seed] 相同则结果相同。
@@ -48,11 +59,12 @@ func generate(cfg: Resource, base_seed: int, attempts: int = MAX_ATTEMPTS) -> Ma
 	for i in maxi(1, attempts):
 		attempts_used = i + 1
 		rng.seed = derive_seed(base_seed, i)
+		build_note = ""
 		var graph := build(cfg, rng)
 
 		last = MapValidation.new()
 		if graph == null:
-			last.fail(&"build", "生成器没能造出图")
+			last.fail(&"build", build_note if build_note != "" else "生成器没能造出图")
 		else:
 			validate(graph, last)
 		if last.ok():
@@ -74,6 +86,12 @@ func generate(cfg: Resource, base_seed: int, attempts: int = MAX_ATTEMPTS) -> Ma
 ## 子类重写时[b]必须先调 super[/b] —— 环形图的配额、覆盖、路线那些是它自己的规矩，
 ## 但「图得连得上、入口得有、终点得到得了」是所有形态共通的。
 func validate(graph: MapGraph, v: MapValidation) -> void:
+	validate_common(graph, v)
+
+
+## 通用校验的本体。静态的，因为**不是只有生成器要用它**：
+## 载入一张预设地图、编辑器里手改一张图，都得问同样这几条，而那时手上没有生成器。
+static func validate_common(graph: MapGraph, v: MapValidation) -> void:
 	if graph == null:
 		v.fail(&"build", "图是 null")
 		return

@@ -107,6 +107,11 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
 被侵蚀的节点照样能走，只是有代价；幸存区被切成几片困不住人。
 为它加校验，等于在生成器里偷偷禁掉一类本来合法、而且更有张力的地图。
 
+### M3-3a 地图编辑器、地图来源、生成器改动 ✅
+
+> 计划外插入，已完成，见[报告 034](034-map-editor-and-source.md)。
+> 编辑器里的朴素环形布局（`ui/map/ring_map_layout.gd`）与 `MapView` 会被 M3-6 接着用。
+
 ### M3-3b 手绘地图：网格脚本的解析与导出
 
 `core/map/map_grid_text.gd`（`parse` / `render`）+ `generators/grid_script_generator.gd`。

@@ -4,6 +4,33 @@
 ## 第三件最容易在不知不觉中坏掉，所以写成会红的检查而不是注释。
 extends RefCounted
 
+
+static func run_remove_node(t: TestCase) -> void:
+	t.begin("MapGraph · 删点")
+
+	var g := MapGraph.new()
+	for id in [1, 2, 3]:
+		var n := MapNode.new()
+		n.id = id
+		n.type = &"battle"
+		g.add_node(n)
+	g.connect_nodes(1, 2)
+	g.connect_nodes(2, 3)
+	g.entry_ids = [2] as Array[int]
+	g.goal_ids = [2, 3] as Array[int]
+	g.zones[1] = {"node_ids": [2] as Array[int], "gate_id": 2}
+	g.routes = [{"entry_id": 2, "node_ids": [2, 3]}] as Array[Dictionary]
+
+	t.eq(g.next_free_id(), 4, "下一个空闲 id")
+	t.check(g.remove_node(2), "删得掉")
+	t.check(not g.remove_node(2), "删第二次返回 false")
+	t.eq(g.edges.size(), 0, "挨着它的路一并没了")
+	t.eq(g.neighbors(1).size(), 0, "邻接索引也跟着作废重建")
+	t.check(not g.entry_ids.has(2) and not g.goal_ids.has(2), "出生点与终点里的登记清掉了")
+	t.check(not g.zones.has(1), "区里最后一个点没了，区也没了")
+	t.eq(g.routes.size(), 1, "路线不动 —— 怎么接是作者的决定，让校验去说它断了")
+	t.eq(g.next_free_id(), 2, "空出来的 id 可以再用")
+
 const SOURCES := [
 	"res://core/map/map_graph.gd",
 	"res://core/map/map_node.gd",

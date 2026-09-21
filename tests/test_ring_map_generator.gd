@@ -103,6 +103,24 @@ static func _check_all(g: MapGraph, cfg: RingMapConfig) -> String:
 			return "出生点 %d 重复了" % id
 		seen_entry[id] = true
 
+	# --- 出生点两两之间隔得够远 ---
+	var outer_slots := int(slot_table.get(cfg.ring_count(), 0))
+	for i in g.entry_ids.size():
+		for j in range(i + 1, g.entry_ids.size()):
+			var sa := int(g.get_node(g.entry_ids[i]).layout["order"])
+			var sb := int(g.get_node(g.entry_ids[j]).layout["order"])
+			var dist := mini(posmod(sa - sb, outer_slots), posmod(sb - sa, outer_slots))
+			if dist < cfg.entry_min_gap:
+				return "出生点 %d 与 %d 只隔 %d 个槽位" % [g.entry_ids[i], g.entry_ids[j], dist]
+
+	# --- 高危区：环数不够就不该有；够了且必须有，就得有 ---
+	var expected_zones := 0
+	for spec in cfg.danger_zones:
+		if spec.applies_to(cfg.ring_count()) and spec.required:
+			expected_zones += 1
+	if g.zones.size() < expected_zones:
+		return "该有 %d 片高危区，只有 %d 片" % [expected_zones, g.zones.size()]
+
 	# --- 路线：条数、简单路径、走得通、尽头对 ---
 	if g.routes.size() != g.entry_ids.size():
 		return "路线数与出生点数对不上"
@@ -173,6 +191,97 @@ static func _check_all(g: MapGraph, cfg: RingMapConfig) -> String:
 
 
 #region 单项细看
+static func run_small_maps(t: TestCase) -> void:
+	t.begin("环形生成器 · 各种环数都过不变式")
+
+	for rings in [2, 3, 4, 6]:
+		var cfg := RingMapConfig.sample(rings)
+		var bad: Array[String] = []
+		for s in 16:
+			var g := _gen().generate(cfg, s)
+			var why := "没生成出来" if g == null else _check_all(g, cfg)
+			if why != "":
+				bad.append("种子 %d：%s" % [s, why])
+		t.check(bad.is_empty(), "%d 环：%s" % [rings, "全过" if bad.is_empty() else bad[0]])
+
+
+static func run_zone_rules(t: TestCase) -> void:
+	t.begin("环形生成器 · 高危区可选、且有环数门槛")
+
+	# 门槛从配置里读，不写死是 5
+	var cfg := RingMapConfig.sample(5)
+	var spec: DangerZoneSpec = cfg.danger_zones[0]
+	var below := RingMapConfig.sample(spec.min_rings - 1)
+	for s in 8:
+		var gen := _gen()
+		var g := gen.generate(below, s)
+		t.not_null(g, "环数比门槛少一环也生成得出来（种子 %d）" % s)
+		if g != null:
+			t.eq(g.zones.size(), 0, "环数不到门槛，没有高危区")
+			t.check(not gen.failure_tally.has(&"zone_missing"), "也不会因为「缺高危区」而重试")
+
+	var at := RingMapConfig.sample(spec.min_rings)
+	var g_at := _gen().generate(at, 3)
+	t.not_null(g_at, "环数正好到门槛，生成得出来")
+	if g_at != null:
+		t.eq(g_at.zones.size(), at.danger_zones.size(), "到了门槛就有高危区")
+
+	# 一片怎么都长不起来的高危区：大到整张图放不下
+	var impossible := RingMapConfig.sample(spec.min_rings)
+	impossible.danger_zones[0].size = Vector2i(999, 999)
+	t.is_null(_gen().generate(impossible, 1, 4), "必须有却长不起来 → 这张图生成失败")
+
+	impossible.danger_zones[0].required = false
+	var relaxed := _gen().generate(impossible, 1, 4)
+	t.not_null(relaxed, "改成可选 → 照样生成")
+	if relaxed != null:
+		t.eq(relaxed.zones.size(), 0, "那一片被跳过了")
+		t.eq(int(relaxed.layout_meta.get("zones_skipped", 0)), 1,
+			"跳过了几片记在 layout_meta 里 —— 不是不声不响")
+
+
+static func run_entries(t: TestCase) -> void:
+	t.begin("环形生成器 · 出生点间隔")
+
+	var cfg := RingMapConfig.sample(5)
+	var slots := cfg.slots_for_ring(cfg.ring_count())
+	# 能放下的最大间隔：槽位数 / 出生点数（先把空白区去掉，免得碰运气）
+	cfg.rings[0].node_count = 0
+	cfg.entry_min_gap = slots / cfg.entry_count
+	var g := _gen().generate(cfg, 11)
+	t.not_null(g, "间隔拉到理论上限也放得下")
+	if g != null:
+		t.eq(_check_all(g, cfg), "", "而且不变式照样成立")
+
+	cfg.entry_min_gap = slots / cfg.entry_count + 1
+	var gen := _gen()
+	t.is_null(gen.generate(cfg, 11, 2), "再多一格就放不下了")
+	t.check(gen.build_note.contains("出生点放不下"),
+		"而且说得出为什么：%s" % gen.build_note)
+
+
+static func run_lockstep(t: TestCase) -> void:
+	t.begin("环形生成器 · 路线同步生长，合流之前互不相撞")
+
+	var cfg := RingMapConfig.sample(6)
+	var collisions := 0
+	for s in 32:
+		var g := _gen().generate(cfg, s)
+		if g == null:
+			continue
+		# 前 converge_after_ring 步之内，任何两条路线不该落在同一个点上
+		var owner := {}
+		for i in g.routes.size():
+			var ids: Array = g.routes[i]["node_ids"]
+			for step in mini(cfg.converge_after_ring + 1, ids.size()):
+				var id := int(ids[step])
+				if owner.has(id) and owner[id] != i:
+					collisions += 1
+				owner[id] = i
+	t.eq(collisions, 0, "32 个种子里没有一次提前合流")
+
+
+
 static func run_determinism(t: TestCase) -> void:
 	t.begin("环形生成器 · 同种子同一张图")
 

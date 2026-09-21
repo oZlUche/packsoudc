@@ -9,6 +9,18 @@ extends Resource
 ## 落在哪几环之间（含）。环号自内向外：1 是最内环，环数是最外环。
 @export var ring_range: Vector2i = Vector2i(1, 3)
 
+## 环数少于这个值的地图上，这一片**根本不去长**，也不算缺。
+##
+## 高危区要避开骨架与换乘弧，而换乘弧会占满它所在的那一环；环太少时能落脚的地方
+## 只剩一环，生成器就得靠反复重试去碰运气（四环时平均要试五次）。
+## 与其让重试替配置擦屁股，不如直接说清楚：小地图没有高危区。
+@export var min_rings: int = 5
+
+## false = 可选：长不起来就跳过，这一次尝试照样算数（跳过了几片记在
+## `layout_meta.zones_skipped`，不是不声不响）。
+## true = 必须有：长不起来这一次尝试作废，换种子重来。
+@export var required: bool = true
+
 ## 节点数范围 [min, max]
 @export var size: Vector2i = Vector2i(4, 6)
 
@@ -22,3 +34,8 @@ extends Resource
 ## 唯一入口优先落在精英所在的点。不强制：有时让精英守在区内更深处更有意思。
 ## [b]M3-3c 才用到[/b]（M3-3 阶段还没有精英，任挑一个有对外边的点）。
 @export var gate_prefers_elite: bool = true
+
+
+## 这张 [param ring_count] 环的图上要不要长这一片。
+func applies_to(ring_count: int) -> bool:
+	return ring_count >= min_rings

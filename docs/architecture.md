@@ -1404,14 +1404,56 @@ func ok() -> bool / rules() -> Array / tally() -> Dictionary / to_text() -> Stri
 # data/chapters/chapter_01.tres
 class_name ChapterDef extends Resource
 @export var display_name: String
-@export var generator_id: StringName        # "ring"
-@export var generator_config: Resource      # RingMapConfig
+@export var map_source: MapSource           # 随机生成（generator_id + config）或载入预设，见 5.3.1
 @export var erosion: ErosionSchedule        # 可为 null = 该难度不启用侵蚀
 @export var enemy_pool: Array[EnemyDef]
 @export var loot_tables: Array[LootTable]
 ```
 
 `MapGeneratorRegistry` 负责 `generator_id -> MapGenerator` 的映射，新增形态只需注册一行。
+
+#### 5.3.1 地图来源：随机生成还是载入预设
+
+一局游戏的地图不一定是现场算出来的。对局 / 章节配置里放一个 `MapSource`，
+开局调 `resolve(run_seed)` 拿图 —— **调用方不必知道这张图是算的还是读的**。
+
+```gdscript
+# core/map/map_source.gd
+class_name MapSource extends Resource
+enum Mode { RANDOM, PRESET }
+@export var mode: Mode = Mode.RANDOM
+# —— RANDOM ——
+@export var generator_id: StringName = &"ring"
+@export var generator_config: Resource
+# —— PRESET ——
+@export_file("*.json") var preset_path: String
+## 预设定死的是【地形】（点、路、类型）；节点里刷出什么由 content_seed 决定。
+## true = 每局按对局种子重掷（同一张图每次打法不同）；false = 连内容也原样照搬
+@export var reroll_content_seeds: bool = true
+
+func resolve(run_seed: int) -> MapGraph      # 失败返回 null，原因在 last_error
+```
+
+**预设文件就是 `MapGraph.to_dict()` 的 JSON**（`data/maps/*.json`，`MapPreset.save / load_graph`），
+不另发明格式：生成出来的图与手改过的图在这里没有区别。
+
+载入预设时**只问通用校验**（连得上、有出生点、到得了终点；`MapGenerator.validate_common`，
+静态的，因为那时手上没有生成器）。形态自己的规矩 —— 环形图的高危区单入口、换乘点、
+出生点间隔 —— 是**给生成器的约束，不是给作者的**：手绘的图有权不守。
+
+**地图编辑器**（`ui/map_editor/`）走的是「先按参数随机生成 → 手动改 → 存成预设」：
+
+- 它**不认识任何具体的生成器**。左侧参数表单是把 `MapGenerator.default_config()` 给的配置
+  用 `PropertyForm` 反射出来的（和道具编辑器同一个表单）；画法问 `MapLayout`
+  （`layout_kind → 布局`，和生成器注册表同一个套路）。新增一种形态 = 登记一行生成器 + 一行布局，
+  编辑器一行不改。
+- 改图动作：选点、改类型 / 危险等级 / 所属高危区、设为出生点 / 终点、连边 / 断边、
+  在布局给出的空位上加点、删点。`graph.zones` 每次从节点的 `zone` 字段重建，两处不会对不上。
+- 校验分两档显示：**通用规矩**（红）不过就不能当预设用；**形态规矩**（黄）只是提醒。
+- 删点**不动路线标注** —— 删掉中间一个之后怎么接是作者的决定；校验会说「路线断了」，
+  作者要么修图，要么点「清空路线标注」。
+- `MapLayout` 的环形实现是最朴素的一版（角度 = 槽位 / 槽位数）。「径向边永远垂直于切线」
+  要靠求解每个点的角度（5.9），仍是 M3-6 的事。
 
 ### 5.4 第一章：同心环形地图（RingMapGenerator）
 
@@ -1467,6 +1509,8 @@ class_name RingMapConfig extends Resource
 ## 每条入口→核心的路线各有一种风格；入口数 = entry_count，风格按本列表轮流分配
 @export var routes: Array[RouteStyle]
 @export var entry_count: int = 3
+## 出生点之间在最外环上至少隔几个槽位（环形距离）。放不下是配置错误，生成器会直说
+@export var entry_min_gap: int = 2
 ## 向内走时，下一环的候选槽位在当前次序比例的 ± 多少个槽位之内
 @export var route_drift: int = 2
 ## 几环之后才允许路线合流。太早合流，风格就没意义了
@@ -1550,6 +1594,12 @@ class_name RouteStyle extends Resource
 # core/map/generators/danger_zone_spec.gd —— 一片高危区（同前）
 class_name DangerZoneSpec extends Resource
 @export var ring_range: Vector2i = Vector2i(1, 3)
+## 环数少于它的地图上这一片【根本不去长】，也不算缺。小地图没有高危区 ——
+## 能落脚的环只剩一个时，生成器只能靠反复重试碰运气，那是让重试替配置擦屁股
+@export var min_rings: int = 5
+## false = 可选：长不起来就跳过（跳过几片记在 layout_meta.zones_skipped）；
+## true = 必须有：长不起来这一次尝试作废
+@export var required: bool = true
 @export var size: Vector2i = Vector2i(4, 6)
 @export var min_elites: int = 1
 @export var min_search: int = 2
@@ -1577,11 +1627,19 @@ class_name DangerZoneSpec extends Resource
    不算角度、不算半径 —— 点画在哪儿是渲染的事（5.9）
 
 4. 路线骨架：
-   a. 最外环按次序均匀挑 entry_count 个**出生点**；第 i 条路线的风格 = routes[i % routes.size()]。
+   a. 最外环挑 entry_count 个**出生点**，两两环形距离 ≥ entry_min_gap 个槽位：
+      大致均分、在余量内抖动、避开空白区；一个起点排不下就换下一个起点。
+      出生点数 × 间隔 > 槽位数 → 配置错误，build_note 直说。
+      第 i 条路线的风格 = routes[i % routes.size()]（i 按槽位升序，下标相邻即角度相邻）。
       出生点与路线一一对应，开局由玩家挑一个（5.4.2「出生点」）
-   b. 每条路线从入口逐环向内走到核心：
-        下一环候选 = 次序比例最接近当前节点的槽位 ± route_drift 个
-        在 converge_after_ring 之前，不选已被别的路线占用的节点；之后允许合流
+   b. **全部路线同步向内生长**：一环一环地推，每一环上所有路线一起落子 ——
+      不是一条走到底再走下一条。落子之前各条路线的位置都在手上，剩余空间当场算得出：
+        每条的候选 = 次序比例最接近当前节点的槽位 ± 漂移量；正对空白区则绕到最近的点
+        **候选最少的路线先挑**（先让选择多的挑，可能正好占掉别人唯一的落点）
+        converge_after_ring 之前，与这一环上已落的子保持间距 ≥ entry_min_gap × 本环槽位 / 最外环槽位
+        （至少 1）；挤不开先退到「不重合」，再退到合流 —— 总好过整张图作废
+        漂移量与间距同一把尺：以最外环槽位为单位，按环长等比缩小（至少 1）。
+        不缩的话，内环六个槽位时 ±2 就是 ±120°，路线会横穿半张图
         选中的节点与连接它们的径向边进骨架，标 protected
       ends_at = "extract" 的路线走到核心前一环为止，末端节点定为 extract
    c. 换乘点：相邻两条路线每 pivot_every_rings 环至少有一条边把它们连起来
@@ -1608,13 +1666,22 @@ class_name DangerZoneSpec extends Resource
       循环到达标为止，超过上限换种子
    固定节点 = core、extract、高危区里为满足 min_elites / min_search 改出来的
 
-6. 高危区（每条 DangerZoneSpec 一片）：在 ring_range 内挑起点、沿相邻节点扩张凑够 size，
+6. 高危区（每条 DangerZoneSpec 一片；环数 < min_rings 的跳过，不算缺）：
+   在 ring_range 内挑起点、沿相邻节点扩张凑够 size，
    **避开骨架节点** —— 高危区是岔出去的诱惑，不能横在必经之路上；
    区内补足 elite / search；指定 gate；写 zone 与 danger = 2
 
 7. 候选边：同环相邻槽位 → tangential（不跨空白区）；相邻环次序最近的 → radial，每节点 radial_links 条
 
-8. 高危区隔离：删掉所有跨越区域边界的候选边，只留 gate 那一条
+7b. 高危区生长树：区是沿「空间相邻」长的，候选边却按「次序最近的若干个」建，
+    两者对不上时区内根本没边相连。所以生长时走过的每一步都记下来，在这里补成真的边并保护 ——
+    区内别的边照样可断，但生长树断了区就散成几片
+
+8. 高危区隔离：删掉所有跨越区域边界的候选边，只留 gate 那一条（gate 边受保护；
+   一条跨界边都没有就开一个口）
+
+8b. 补向内的边：区外的点如果向内的边全通进了高危区，隔离时就一并删光了。
+    给它重连一条通向【区外】内环点的边 ——「每个点都有向内的径向边」是连通性的根基
 
 9. 断边：每条 tangential 候选边以 tangential_break_chance 断开。**骨架边不可断**。
    区内的边也可断 —— 区内断成死胡同没关系，走回头路就是
@@ -1624,8 +1691,9 @@ class_name DangerZoneSpec extends Resource
     - 【槽位数】随环单调不增。看的是槽位不是节点数 —— 外环挖了一段空白之后，
       它的节点可以比内环还少，那是合法的
     - 骨架完整：每条路线仍是入口→尽头的一条路径，且逐环向内一环不跳
-    - 配了几片高危区就得长出几片。长不起来（被骨架与换乘弧占满）算这一次尝试失败，
-      不是悄悄少一片 —— 缺了设计好的高危区，那也是一张降级的图
+    - 【必须有】的高危区（required 且环数够 min_rings）得长出来。长不起来算这一次尝试失败，
+      不是悄悄少一片；【可选】的长不起来就跳过，记进 layout_meta.zones_skipped
+    - 出生点两两间隔 ≥ entry_min_gap
     - 覆盖：每个节点距最近 rest ≤ coverage.rest、距最近 shop ≤ coverage.shop
     - 环配额成立
     - 每个高危区：区内连通，与区外恰好一条边，不含骨架节点
@@ -2697,7 +2765,7 @@ res://
 | **1** | M1 网格背包 + 拖拽 + 序列化 | 可玩的整理沙盒，核心手感可验证 | 完成 |
 | **2** | M2 编译 + 效果系统 + 模拟 + 极简可视化 | 两个背包能打起来，可批量跑平衡 | 完成 |
 | **3** | 内容制作管线（第 10 节） | 不写代码就能造道具，数值可迭代 | 完成 |
-| **4** | M3 环形地图生成 + 单步导航 + 渲染 + 行动计数 | run 的骨架成立 | 进行中：M3-1（030）、M3-2（032）、M3-3 拓扑与骨架（033）完成，计划见 027 |
+| **4** | M3 环形地图生成 + 单步导航 + 渲染 + 行动计数 | run 的骨架成立 | 进行中：M3-1（030）、M3-2（032）、M3-3（033）、地图编辑器与地图来源（034）完成，计划见 027 |
 | **5** | M4 掉落 + 搜刮揭示 + 撤离 | **循环闭合，第一个可玩 Demo** | |
 | **6** | M5 存档 + M6 场景流打磨 | 可对外试玩 | |
 | **7** | 侵蚀系统 + 难度档位开关 | 时间压力成立，可开始调节奏 | |
@@ -2781,6 +2849,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.33 | 2026-09-21 | **地图编辑器、地图来源、生成器四处改动**（报告 034）。（一）新增 5.3.1：`MapSource`（`RANDOM` 现场生成 / `PRESET` 载入 `data/maps/*.json`，预设可按对局种子重掷内容种子）；预设载入只问通用校验（`validate_common` 抽成静态），形态规矩是给生成器的不是给作者的。**地图编辑器**先生成再手改再存预设，不认识任何具体生成器：参数表单靠 `default_config()` + `PropertyForm` 反射，画法靠 `MapLayout` 注册表。（二）`DangerZoneSpec` 加 `min_rings`（默认 5，环数不够这一片根本不长、不算缺）与 `required`（false = 长不起来就跳过并记数）。（三）**路线改为同步生长**：所有路线一环一环一起落子，候选最少的先挑，间距与漂移量都以最外环槽位为单位按环长等比缩小；出生点之间至少隔 `entry_min_gap` 个槽位。（四）批量统计（`tools/map_stats.gd`）按规则汇总失败原因，揪出三个**被重试掩盖的算法缺陷**：高危区按空间相邻生长但区内未必有边（补生长树）、隔离会删光区外点的向内边（补边）、gate 边会被断边断掉（保护）。修完后 5 环平均尝试 2.89 → 1.50，剩下的失败全是 `zone_missing` 这一条配置层面的 |
 | v1.32 | 2026-09-21 | **M3-3 环形生成器的拓扑与骨架落地**（报告 033）。实现暴露出三处设计要补：（一）每环的**槽位数记进 `layout_meta.ring_slots`** —— 末尾槽位空着时从节点上推不出来；（二）「环越靠里越短」这条校验看的是**槽位数不是节点数**，外环挖了空白之后节点可以比内环少，那是合法的（第一版写成节点数，`sample(3)` 当场红了）；（三）**换乘弧与高危区会互相挤占**：换乘把整段弧保护起来，相邻路线两两换乘基本会占满一个环，而高危区必须避开受保护节点，所以它得落在两个换乘环之间。另外「高危区长不起来」从「悄悄少一片」改成**这一次尝试作废** —— 缺了设计好的高危区也是降级的图。`radius_step` 默认值 110 → 30：它与 `arc_per_slot` 只有比值有意义，原值会算出第五环 57 个槽位。节点类型这一步全填 `battle`，留给 M3-3c |
 | v1.31 | 2026-09-21 | **M3-2 生成器抽象落地**（5.3 与实现对齐，报告 032）。子类只实现 `build`「造一张图」，**校验与换种子重试由基类包办**；`generate(cfg, base_seed)` 同种子同结果，每次尝试的种子由 `derive_seed(base, i)` 单独算得出来，「第 7 次尝试」可单独复现。新增 `MapValidation`：失败带一个 `rule` 键，**跨尝试按规则聚合** —— 重试几十次后「30 次里 28 次是不连通」比最后一次的细节有用得多。通用校验只管与形态无关的那几条，其中**死胡同是合法的**（可以走回头路，死路不是问题），这条最容易被顺手加进校验。`MapGeneratorRegistry` 照 `EffectRegistry` 的样子来，表先空着，测试检查「登记的每一条都指向真实存在且确实是 MapGenerator 子类的脚本」|
 | v1.30 | 2026-09-21 | **体力落地为 `core/run/vitality.gd`，且不知道任何数值**（7.1 重写）。作者要求休息回复量不要写死，只给体力留一个公用方法。于是 `change` / `spend` / `restore` / `set_max` 全由调用方传数，返回**实际**变化量（打到 0 封顶、超上限截断时请求量与实际量不是一回事）；归零发 `depleted`，战败由监听者判 —— 本类不知道「战败」，也不知道 BOSS 输了要直接战败，那是调用方看一眼节点类型的事。**角色系统只留占位不建**：`PLACEHOLDER_MAX` 一个常量，将来 `RunState` 改从角色定义读，本类与调用方一行不改；与 `CombatantBaseline` 是同一种占位，刻意不建 `CharacterDef` —— 只有两个占位点，建了也是空壳 |

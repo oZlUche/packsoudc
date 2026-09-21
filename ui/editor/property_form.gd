@@ -95,6 +95,18 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 				_emit())
 			return _labeled(key, le)
 
+		TYPE_VECTOR2I, TYPE_VECTOR2:
+			# 范围 [min, max] 这类成对的数。两个数字框并排
+			var whole := type == TYPE_VECTOR2I
+			var pair := HBoxContainer.new()
+			for axis in 2:
+				var ax := axis
+				pair.add_child(_number(float(value[ax]), 1.0 if whole else 0.1, func(v: float):
+					var cur = owner.get(key)
+					cur[ax] = int(v) if whole else v
+					owner.set(key, cur)))
+			return _labeled(key, pair)
+
 		TYPE_DICTIONARY:
 			return _labeled(key, _dict_editor(owner, key, value as Dictionary))
 
