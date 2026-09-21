@@ -1354,20 +1354,49 @@ static func normalize(v) -> Variant       # JSON 读回来的 3.0 还原成 3，
 
 ```gdscript
 # core/map/map_generator.gd
-class_name MapGenerator extends RefCounted
+@abstract class_name MapGenerator extends RefCounted
 
-## 由子类实现：根据配置与随机流生成一张完整地图
-## 子类有义务为每个节点写入 tier 与 erosion_band
-func generate(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
-    push_error("abstract")
-    return null
+const MAX_ATTEMPTS := 32
 
-## 通用校验：入口可达目标、无孤立节点、无孤立子图
-func validate(graph: MapGraph) -> bool
+var attempts_used: int        # 上一次 generate 用了几次。批量调参时看它的分布
+var failure_tally: Dictionary # 规则 → 失败次数。「30 次里 28 次是不连通」直接指出该调哪个参数
+
+## 子类只实现这一个：造一张图，造不出来返回 null。
+## 【子类有义务为每个节点写入 tier 与 erosion_band】
+@abstract func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph
+
+## 校验 + 换种子重试都由基类包办。base_seed 相同则结果相同
+func generate(cfg: Resource, base_seed: int, attempts := MAX_ATTEMPTS) -> MapGraph
+
+## 通用校验。子类重写时【必须先调 super】
+func validate(graph: MapGraph, v: MapValidation) -> void
+
+static func reachable_from(graph, from_ids) -> Dictionary   # BFS，单向边只顺着走
+static func derive_seed(base: int, attempt: int) -> int     # 第 i 次尝试的种子
+
+# core/map/map_validation.gd
+class_name MapValidation extends RefCounted
+func fail(rule: StringName, message: String) -> void   # rule 是聚合用的键
+func ok() -> bool / rules() -> Array / tally() -> Dictionary / to_text() -> String
 ```
 
-生成失败时的统一策略：**换种子重新生成（最多 N 次）**，而不是写复杂的保证性算法。
-后者的实现与维护成本远高于前者，且更容易出现难以察觉的分布偏差。
+**子类只实现「造一张图」，校验与重试由基类包办** —— 每种形态不必各写一遍
+「失败了换个种子再来」。
+
+通用校验（与形态无关的那几条）：至少一个节点、每条边两端都在、每个节点有类型、
+出生点与终点非空且存在、没有一条边都不挨着的孤立节点、**全图连通**（每个节点从某个
+出生点走得到）、终点可达。**死胡同是合法的** —— 玩家可以走回头路，死路不是问题，
+这条最容易被顺手加进校验。环形图的配额、覆盖、路线那些是 `RingMapGenerator` 自己的规矩。
+
+生成失败时的统一策略：**换种子重新生成（最多 32 次）**，而不是写复杂的保证性算法。
+后者的实现与维护成本远高于前者，且更容易出现难以察觉的分布偏差 ——
+「总能生成出合法图」的算法，往往是靠悄悄偏袒某几种形状做到的。
+用尽则 `push_error` 并返回 null，**绝不降级产出一张坏图**。
+
+失败原因按 `rule` 键**跨尝试聚合**：重试几十次之后，「30 次里 28 次是全图不连通」
+远比最后一次的细节有用，它直接指出该调哪个参数。每次尝试的种子由
+`derive_seed(base, i)` 单独算得出来，所以「种子 12345 的第 7 次尝试」可以直接复现，
+不必把前六次重放一遍。
 
 章节通过 Resource 声明自己用哪个生成器：
 
@@ -2654,7 +2683,7 @@ res://
 | **1** | M1 网格背包 + 拖拽 + 序列化 | 可玩的整理沙盒，核心手感可验证 | 完成 |
 | **2** | M2 编译 + 效果系统 + 模拟 + 极简可视化 | 两个背包能打起来，可批量跑平衡 | 完成 |
 | **3** | 内容制作管线（第 10 节） | 不写代码就能造道具，数值可迭代 | 完成 |
-| **4** | M3 环形地图生成 + 单步导航 + 渲染 + 行动计数 | run 的骨架成立 | 进行中：M3-1 数据层完成（报告 030），计划见 027 |
+| **4** | M3 环形地图生成 + 单步导航 + 渲染 + 行动计数 | run 的骨架成立 | 进行中：M3-1 数据层（报告 030）、M3-2 生成器抽象（报告 032）完成，计划见 027 |
 | **5** | M4 掉落 + 搜刮揭示 + 撤离 | **循环闭合，第一个可玩 Demo** | |
 | **6** | M5 存档 + M6 场景流打磨 | 可对外试玩 | |
 | **7** | 侵蚀系统 + 难度档位开关 | 时间压力成立，可开始调节奏 | |
@@ -2738,6 +2767,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.31 | 2026-09-21 | **M3-2 生成器抽象落地**（5.3 与实现对齐，报告 032）。子类只实现 `build`「造一张图」，**校验与换种子重试由基类包办**；`generate(cfg, base_seed)` 同种子同结果，每次尝试的种子由 `derive_seed(base, i)` 单独算得出来，「第 7 次尝试」可单独复现。新增 `MapValidation`：失败带一个 `rule` 键，**跨尝试按规则聚合** —— 重试几十次后「30 次里 28 次是不连通」比最后一次的细节有用得多。通用校验只管与形态无关的那几条，其中**死胡同是合法的**（可以走回头路，死路不是问题），这条最容易被顺手加进校验。`MapGeneratorRegistry` 照 `EffectRegistry` 的样子来，表先空着，测试检查「登记的每一条都指向真实存在且确实是 MapGenerator 子类的脚本」|
 | v1.30 | 2026-09-21 | **体力落地为 `core/run/vitality.gd`，且不知道任何数值**（7.1 重写）。作者要求休息回复量不要写死，只给体力留一个公用方法。于是 `change` / `spend` / `restore` / `set_max` 全由调用方传数，返回**实际**变化量（打到 0 封顶、超上限截断时请求量与实际量不是一回事）；归零发 `depleted`，战败由监听者判 —— 本类不知道「战败」，也不知道 BOSS 输了要直接战败，那是调用方看一眼节点类型的事。**角色系统只留占位不建**：`PLACEHOLDER_MAX` 一个常量，将来 `RunState` 改从角色定义读，本类与调用方一行不改；与 `CombatantBaseline` 是同一种占位，刻意不建 `CharacterDef` —— 只有两个占位点，建了也是空壳 |
 | v1.29 | 2026-09-21 | **章节 BOSS 失败直接战败**（7.1）：别的战斗输了节点变空白人还能走，核心变空白这一局就没有终点，所以打 BOSS 是押上整局的决定 —— 偏搜索路线「可以不打 BOSS」因此是真退路。**M3-1 地图数据层落地**（报告 030）：5.2 与实现对齐 —— `seed` 改名 `content_seed`（会遮住全局函数），`MapEdge` 加 `layout` 与 `other` / `passable_from`，`MapGraph` 补构建与查询方法；序列化确定（节点按 id 升序），`normalize` 把 JSON 读回来的整数值浮点还原，保证过一遍 JSON 字节不变 |
 | v1.28 | 2026-09-21 | 作者再补四条。**一**、战斗输了节点也变空白（7.1 / 5.6）：我原先暂定「节点保留可重打」，纠正 —— 重打会让体力变成兑换尝试次数的货币；一次性消耗让每个敌人都是只答一次的题。**二**、搜索点的风险与收益都随搜索次数上升，搜几次是留给玩家的旋钮（5.4.2）：生成器只按 `reference_searches` 给路线定档，「低风险低收益」的准确含义是基准档低、上限由玩家拧。**三**、敌人在地图上看得见属性与背包（新增 5.10）：节点内容在生成地图时就定好（`MapNode.content`），`random` 是唯一看不透的点；**敌人就是一个背包**，与玩家走同一个 `BattleCompiler`，预览读数与真打一致，背包即掉落来源。**四**、多个出生点供玩家挑，每个对应一条路线：`MapGraph.routes` 记下每条路线的风格、尽头与风险收益档位，开局展示；风格由玩家看图自选而不是生成器抽签 |
