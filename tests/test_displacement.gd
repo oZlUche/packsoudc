@@ -320,3 +320,79 @@ static func run_drag_full_stash(t: TestCase) -> void:
 		v.free()
 	drag.free()
 #endregion
+
+
+#region 包旋转脱落（拖拽层）
+static func run_drag_bag_rotate_sheds(t: TestCase) -> void:
+	t.begin("顶替 · 拖着包按 R，依附不上的进暂存区")
+
+	ItemInstance.reset_uid_counter()
+	var bag_def := _bag_def("bag6", ["##", "##", "##"])
+	var dot := _def("dot", ["#"])
+
+	var board := GridInventory.new(Vector2i(6, 6), 1, true)
+	var stash := ItemStash.new(2)
+	var bv := _view(board, Vector2.ZERO)
+
+	var drag := DragLayer.new()
+	drag.register_view(bv)
+	drag.stash = stash
+
+	var bag := ItemInstance.create(bag_def)
+	board.place(bag, Vector2i(0, 0), 0)
+	var keep := ItemInstance.create(dot)
+	var drop := ItemInstance.create(dot)
+	board.place(keep, Vector2i(0, 0), 0)
+	board.place(drop, Vector2i(1, 2), 0)
+
+	var mail := {"shed": []}
+	drag.items_shed.connect(func(instances: Array) -> void: mail["shed"] = instances)
+
+	# 抓包的 (0,0) 格，转一下，原地放下
+	bv.grab_requested.emit(bv, bag.uid, Vector2(24, 24))
+	drag.rotate_dragged()
+	t.eq(drag._rot, 1, "带内容物的包拖拽中也能转")
+	drag.update_preview(_center(bv, Vector2i(0, 0)))
+	t.check(bv._preview_valid, "落点合法")
+	t.check(bv._preview_costly, "但有代价 —— 预览是黄的，放手前就看得见")
+
+	t.check(drag.drop_at(_center(bv, Vector2i(0, 0))), "放得下")
+	t.eq(bag.rotation, 1, "包转过来了")
+	t.check(board.has_item(keep.uid), "轮廓内的留下")
+	t.check(stash.has_item(drop.uid), "**轮廓外的进了暂存区**")
+	t.eq((mail["shed"] as Array).size(), 1, "上报了脱落的那件")
+
+	bv.free()
+	drag.free()
+
+
+static func run_drag_bag_rotate_no_stash(t: TestCase) -> void:
+	t.begin("顶替 · 脱落没地方去就不让放")
+
+	ItemInstance.reset_uid_counter()
+	var bag_def := _bag_def("bag6", ["##", "##", "##"])
+	var dot := _def("dot", ["#"])
+
+	var board := GridInventory.new(Vector2i(6, 6), 1, true)
+	var bv := _view(board, Vector2.ZERO)
+	var drag := DragLayer.new()
+	drag.register_view(bv)
+	# 故意不给暂存区
+
+	var bag := ItemInstance.create(bag_def)
+	board.place(bag, Vector2i(0, 0), 0)
+	var drop := ItemInstance.create(dot)
+	board.place(drop, Vector2i(1, 2), 0)
+
+	bv.grab_requested.emit(bv, bag.uid, Vector2(24, 24))
+	drag.rotate_dragged()
+	drag.update_preview(_center(bv, Vector2i(0, 0)))
+	t.check(not bv._preview_valid, "没地方接脱落的东西，预览直接判非法")
+	t.check(not drag.drop_at(_center(bv, Vector2i(0, 0))), "放手也不成立")
+	t.check(board.has_item(bag.uid) and board.has_item(drop.uid), "**包连同内容物整体退回**")
+	t.eq(bag.rotation, 0, "朝向也回到原样")
+	t.eq(drop.origin, Vector2i(1, 2), "内容物位置没变")
+
+	bv.free()
+	drag.free()
+#endregion

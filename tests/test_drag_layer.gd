@@ -244,11 +244,9 @@ static func run_bag_drag(t: TestCase) -> void:
 	t.eq(board_a.item_count(), 0, "包与内容物一起离开棋盘")
 	t.eq(board_a.usable_cell_count(), 0, "包走了，可用格归零")
 
-	# --- 带内容物时不能旋转 ---
-	drag.rotate_dragged()
 	# 抓的是包的 (0,1) 格，落到 (2,2) 则包的原点在 (2,1)
 	t.check(drag.drop_at(_center(view_b, Vector2i(2, 2))), "放到另一块棋盘应成功")
-	t.eq(bag.rotation, 0, "带内容物的包拖拽中不能旋转，朝向应保持 0")
+	t.eq(bag.rotation, 0, "没按 R，朝向保持 0")
 
 	# --- 内容物保持相对位置 ---
 	t.eq(board_b.item_count(), 3, "目标棋盘收到包与两件内容物")

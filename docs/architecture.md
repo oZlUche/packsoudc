@@ -199,7 +199,8 @@ var _blocked: PackedByteArray       # 自由容器的非矩形支持
 func can_place_item(inst, origin, rot) -> bool
 func place(inst, origin, rot) -> bool
 func remove(uid) -> ItemInstance          # 非空的包拒绝直接移除
-func rotate_item(uid, steps) -> bool      # 有内容物的包拒绝旋转
+func rotate_item(uid, steps) -> bool      # 非空的包请走 rotate_bag
+func rotate_bag(uid, steps)               # 原地转包，返回脱落的实例；失败 null
 func find_first_fit(def, allow_rotate) -> Dictionary
 func try_add(inst, allow_rotate) -> bool
 
@@ -214,7 +215,9 @@ func bag_at(c: Vector2i) -> int           # 覆盖该格的包 uid
 func bag_of(uid: int) -> int              # 该物品所属的包 uid
 func contents_of(bag_uid: int) -> Array[int]
 func detach_bag(bag_uid) -> Dictionary    # 连内容物一起摘下，记录相对偏移
-func attach_bag(payload, origin, rot) -> bool   # 原子放回，失败不留残迹
+func attach_bag(payload, origin, rot) -> bool   # 严格版：一件不能少，给「原样放回」用
+func bag_fit_report(payload, origin, rot) -> Dictionary        # {ok, fallen}，不改状态
+func attach_bag_shedding(payload, origin, rot) -> Dictionary   # 依附不上的脱落并交还
 
 # 战斗编译期使用
 func neighbors_of(uid) -> Array[int]      # 四邻相接的其他物品
@@ -246,9 +249,21 @@ func begin_batch() / end_batch()                  # 变更合批
 空间取舍，不是内容作者该替他做的决定；而一个永远为 true 的字段，
 只会让每一处旋转路径都多一层没有意义的分支。
 
-唯一的旋转限制是运行时的：**有内容物的包不能旋转。** 旋转包意味着内容物要跟着做
-坐标变换，边界情况多且玩家难以预期。要转先掏空。这是一条有意的简化，需要时再放开。
-注意它是「此刻装着东西」这个状态的限制，不是某件道具的属性。
+**包也能转，连同里面的东西。** 规则是：包转过之后，**内容物不跟着转**，仍按原来相对包
+原点的偏移留在原处；于是有些会落在新轮廓之外 —— 那些**脱落**，进暂存区。
+
+「内容物跟着包一起转」是另一条路，早先的设计也是因为它边界情况多才干脆禁止转包。
+但那条路的真正问题不是难写，是**转一下包会同时改掉包里每一件东西的朝向**，
+玩家摆好的布局被整个搅乱。脱落是局部的、看得见的（拖拽残影上就标出来）、
+放手前可以撤回的。
+
+实现上只有一条路径：`bag_fit_report` 回答「包放不放得下、哪几件会脱落」，
+`attach_bag_shedding` 照报告执行；原地转（`rotate_bag`）就是「摘下来、换个朝向放回去」，
+与拖拽中按 R 走的是同一段代码，两处不会给出不同的脱落结果。
+`attach_bag` 保留为**一件不能少**的严格版，只给「原样放回」用。
+
+脱落的东西没地方去（没有暂存区、或暂存区满了）时，整件事不成立，包连同内容物退回原处。
+预览提前判红 —— 不给做不到的承诺。
 
 #### 3.3.1 顶替式放置
 
@@ -1264,7 +1279,10 @@ class_name MapNode extends RefCounted
 enum State { UNVISITED, VISITED }   # 仅表示内容是否已消耗，与可否通行无关
 
 var id: int
-var type: StringName        # "battle"/"elite"/"shop"/"rest"/"event"/"extract"/"core"
+var type: StringName        # 节点的事件类型，见 5.4「节点类型」
+var is_extract: bool        # 中途撤离点。是叠在事件上的【属性】，不是一种事件 ——
+                            #   一个战斗点也可以同时是撤离点（打完就能走）
+var zone: int               # 所属高危区，0 = 不属于任何高危区（见 5.4）
 var tier: int               # 难度/奖励档位，数值越高越难越肥
 var erosion_band: int       # 侵蚀分档，数值越小越早被侵蚀（见 5.7）
 var seed: int               # 该节点内容生成用的独立种子
@@ -1289,6 +1307,8 @@ var nodes: Dictionary           # id -> MapNode
 var edges: Array[MapEdge]
 var entry_ids: Array[int]
 var goal_ids: Array[int]
+var zones: Dictionary           # zone_id -> {"node_ids": Array[int], "gate_id": int}
+                                #   高危区：与外界只有一条边相连的一片节点
 func edges_of(id: int) -> Array[MapEdge]
 func neighbors(id: int) -> Array[int]
 func to_dict() -> Dictionary
@@ -1338,64 +1358,137 @@ class_name ChapterDef extends Resource
 
 #### 形态描述
 
-- 以一个**核心点**为圆心，向外排布多层**同心环**
+- 以一个**核心点**为圆心，向外排布多层**同心环**，环数与每个环的类型由配置决定
 - 每个环上分布若干**节点**（可访问地点），节点之间由**线**连接：
   - **切向边（tangential）**：同环相邻节点之间的弧线
   - **径向边（radial）**：相邻两环之间的连线
 - **越靠近中心，难度越高、奖励越高**
-- **移动是自由的，可以走回头路。** 所有边双向可通行；节点内容一次性消耗，已访问节点仅可穿行，不再产生事件
-- 约束玩家的不是拓扑，而是**时间**：每次移动消耗行动点；高难度下地图会从外向内逐层被侵蚀，在侵蚀区内移动会受到损失
+- **移动是自由的，可以走回头路。** 所有边双向可通行；节点内容一次性消耗，已访问节点仅可穿行
+- 约束玩家的不是拓扑，而是**时间**：每次移动消耗行动点；高难度下地图会从外向内逐层被侵蚀
 
-玩家从最外环某个入口进入，自由深入或折返。深入 = 更肥的战利品 + 更危险的敌人；折返 = 消耗行动点，而行动点正在把出口推向腐烂。
+**因为可以走回头路，死路不是问题。** 生成器不需要保证「每个节点都有向内的边」
+或「入口到核心的最短路够长」之类的东西 —— 走进一条死胡同再走出来，
+代价是行动点，而行动点正是这一章的压力所在。生成器只需保证**整张图连通**。
+
+#### 节点类型
+
+| 类型 | 含义 | 性质 |
+|---|---|---|
+| `battle` | 普通战斗 | 普通 |
+| `elite` | 精英战斗 | **必须型** |
+| `event` | 事件 | 普通 |
+| `random` | 随机（进入时才决定是什么） | 普通 |
+| `search` | 搜索点：收益性事件，只给东西不打架 | 普通 |
+| `shop` | 商店 | **必须型** |
+| `rest` | 休息区 | **必须型** |
+| `core` | 章节核心，固定一个 | — |
+
+**必须型**指配置里要求「每 N 环至少一个」的类型。它们不能只靠权重抽取碰运气 ——
+连续五环没有休息区，玩家撑不到核心；但也不能每环都有，那就没有取舍了。
+
+**中途撤离点不是一种类型，是叠在节点上的属性**（`is_extract`），
+只叠在**非必须型**节点上。一个战斗点同时是撤离点，意思是「打完这一场就能走」；
+撤离点叠在休息区上则会让休息区变成没有代价的出口，所以不叠在必须型上。
 
 #### 配置
 
 ```gdscript
 # core/map/generators/ring_map_config.gd
 class_name RingMapConfig extends Resource
-@export var ring_count: int = 5                     # 不含核心的环数
-@export var nodes_outer: int = 18                   # 最外环节点数
-@export var nodes_inner: int = 6                    # 最内环节点数（线性插值）
+## 由外向内，下标 0 = 最外环。环数 = rings.size()
+@export var rings: Array[RingSpec]
+## 必须型：类型 → 每 N 环至少一个。例：{"rest": 2, "shop": 3, "elite": 2}
+@export var required_every: Dictionary
+## 每 N 环一个中途撤离点，叠在非必须型节点上
+@export var extract_every_rings: int = 2
+## 高危区，至少一条
+@export var danger_zones: Array[DangerZoneSpec]
+## 同环相邻边被断开的概率
+@export var tangential_break_chance: float = 0.35
+## 每个节点向内连接的邻近节点数范围
+@export var radial_links: Vector2i = Vector2i(1, 2)
+@export var entry_count: int = 3
+# 以下只影响布局，不影响拓扑
 @export var radius_step: float = 110.0
-@export var angle_jitter: float = 0.35              # 相对格位角宽的抖动比例
+@export var angle_jitter: float = 0.35
 @export var radius_jitter: float = 12.0
-@export var tangential_chance: float = 0.55         # 同环相邻连弧概率
-@export var radial_per_node: Vector2i = Vector2i(1, 2)  # 每节点向内连边数量范围
-@export var entry_count: int = 3                    # 最外环入口数量
-@export var type_weights_by_tier: Array[Dictionary] # 每档的节点类型权重表
+
+# core/map/generators/ring_spec.gd —— 一个环
+class_name RingSpec extends Resource
+## 环的类型，内容层用它选敌人池、掉落表与美术："outskirts" / "ruins" / "depths" …
+## 拓扑层不解读它，只原样写进节点的 layout
+@export var kind: StringName
+@export var node_count: int = 12
+## 节点类型 → 权重
+@export var type_weights: Dictionary
+
+# core/map/generators/danger_zone_spec.gd —— 一片高危区
+class_name DangerZoneSpec extends Resource
+## 落在哪几环之间（含），下标同 rings
+@export var ring_range: Vector2i = Vector2i(1, 3)
+## 节点数范围
+@export var size: Vector2i = Vector2i(4, 6)
+@export var min_elites: int = 1
+## 收益性事件点（search）至少几个 —— 没有收益的高危区只是惩罚，不是诱惑
+@export var min_search: int = 2
+## 唯一入口优先落在精英所在的点。不强制：有时让精英守在区内更深处更有意思
+@export var gate_prefers_elite: bool = true
 ```
 
 #### 生成步骤
 
 ```
-1. 核心节点：ring = 0，单点，type = "core"，tier = ring_count，erosion_band = ring_count
+1. 读配置：环数 = rings.size()，每个环的 kind / node_count / type_weights
 
-2. 逐环生成节点（r = 1..ring_count）：
-   N_r = lerp(nodes_inner, nodes_outer, r / ring_count)  取整
-   第 i 个节点：
-     angle        = TAU * i / N_r + rng.randf_range(-j, j) * (TAU / N_r)
-     radius       = r * radius_step + rng.randf_range(-rj, rj)
-     tier         = ring_count - r      # 越内层 tier 越高
-     erosion_band = ring_count - r      # 最外环 band = 0，最先被侵蚀
-     layout       = {ring = r, angle = angle, radius = radius}
+2. 核心节点：ring = 0，type = "core"，tier = 环数，erosion_band = 环数
 
-3. 径向边（无向）：
-   对每个 ring r 的节点，在 ring r-1 中按角度距离取最近的 k 个
-   （k 从 radial_per_node 随机），连 directed = false 的边，kind = "radial"
+3. 逐环生成节点（r = 1..环数，r = 1 为最内环，对应 rings[环数 - r]）：
+     angle        = TAU * i / N + 抖动
+     radius       = r * radius_step + 抖动
+     tier         = 环数 - r          # 越内层 tier 越高
+     erosion_band = 环数 - r          # 最外环 band = 0，最先被侵蚀
+     layout       = {ring = r, kind = spec.kind, angle = angle, radius = radius}
 
-4. 切向边（无向）：
-   对每对角度相邻节点，以 tangential_chance 连边，kind = "tangential"
+4. 节点类型：
+   a. 按所在环的 type_weights 加权抽取
+   b. 必须型修正：required_every 里每一种类型，用宽 N 的滑动窗口扫全部环，
+      窗口里一个都没有就在窗口内挑一个非必须型节点改成它
+   c. 撤离点叠加：每 extract_every_rings 环，挑一个非必须型节点标 is_extract = true
+      （type 不变）
 
-5. 入口：最外环中按角度均匀挑 entry_count 个节点写入 entry_ids
+5. 高危区（每条 DangerZoneSpec 一片）：
+   a. 在 ring_range 内挑一个起点，沿同环相邻与相邻环最近节点扩张，凑够 size 个，
+      得到一片【相连】的节点；避开已属于别的高危区的节点与入口
+   b. 区内 elite 不足 min_elites、search 不足 min_search 的，把区内普通型节点改过来
+   c. 指定唯一入口 gate：gate_prefers_elite 时从区内 elite 里挑，否则任挑一个
+   d. 给区内节点写 zone = k，写进 graph.zones[k]
 
-6. 节点类型分配：按 tier 查 type_weights_by_tier 加权抽取，再应用硬约束（见 5.5）
+6. 候选边：
+     同环相邻两点         → tangential
+     相邻环角度最近的     → radial，每节点 radial_links 条
 
-7. 校验（失败则换种子重生成）：
-   - 全图连通，每个入口都能到达核心
-   - 每个节点至少有一条径向边（不存在只能同环打转的死区）
-   - 每个入口到核心的最短路径长度 >= ring_count（不存在直通捷径）
-   - 每个 erosion_band 内部连通（侵蚀推进时不会把幸存区切成互不相通的碎片）
+7. 高危区隔离：删掉所有【一端在区内、一端在区外】的候选边，
+   只保留 gate 与区外的一条（角度最近者）。区内的边不动
+
+8. 断边：每条 tangential 候选边以 tangential_break_chance 断开。区内的边也可断 ——
+   区内断成死胡同没关系，走回头路就是
+
+9. 入口：最外环按角度均匀挑 entry_count 个，不落在高危区内
+
+10. 校验（失败换种子重生成，上限 32 次；用尽则报错返回 null，不降级产出坏图）：
+    - 全图连通：每个节点都从至少一个入口可达 —— 唯一的连通性要求
+    - 每个高危区：区内连通，且与区外恰好一条边
+    - 必须型的滑动窗口约束成立
+    - 每 extract_every_rings 环至少一个撤离点
 ```
+
+**校验里没有「每个 erosion_band 内部连通」。** 侵蚀绝不封路（5.7），
+被侵蚀的节点照样能走，只是有代价 —— 所以幸存区被切成几片不会困住玩家，
+只是从一片到另一片要穿过侵蚀区多付一点。那正是侵蚀该有的压力，不是要避免的坏图。
+
+**高危区的意义**是把「诱惑」做成拓扑：一片单入口的区域，里面有精英守着、
+有好几个搜索点。进去就得从同一条路出来，行动点花两遍。玩家看得见入口，
+看得见里面有什么类型的点，然后自己决定值不值。
 
 ### 5.5 难度与奖励的径向递进
 
@@ -1407,13 +1500,15 @@ class_name RingMapConfig extends Resource
 | 掉落质量 | `LootTable` 的稀有度曲线与掉落件数随 tier 上移 |
 | 节点类型分布 | 低 tier（外环）多普通战斗与撤离点；高 tier（内环）多精英、宝藏，撤离点稀少 |
 
-节点类型的硬约束（加权抽取后做一次修正 pass）：
+节点类型的硬约束只有三条，其余全交给每个环的 `type_weights`：
 
-- 最外环入口节点强制为 `battle`（保证开局节奏一致）
 - 核心节点固定为 `core`（章节 Boss）
-- 同一环上 `shop` 不超过 1 个，`rest` 不超过 2 个
-- 相邻节点不出现两个连续 `elite`
-- **撤离点密度随 tier 递减**：外环每环 2~3 个，中环 1~2 个，内环 0~1 个（详见 5.8）
+- 必须型（`rest` / `shop` / `elite`）满足 `required_every` 的滑动窗口
+- 高危区内满足 `min_elites` / `min_search`
+
+「同一环 shop 不超过一个」「不出现连续两个 elite」这类规则**不写死**：
+前者靠权重就能压低，后者与高危区的意图（精英扎堆守着一片区域）正好相反。
+需要的话在配置里加，不在生成器里加。
 
 ### 5.6 移动规则与行动计数
 
@@ -1564,7 +1659,7 @@ func move_penalty(node: MapNode) -> Dictionary    # {hp_damage:int, item_risk:fl
 早先版本中"不可走回头路"与"搜打撤"存在冲突（不能向外走，如何撤离）。
 **新的移动与侵蚀规则彻底解决了这个矛盾**，撤离点因此回到最符合玩法直觉的位置：
 
-- **撤离点集中分布在外环与中环**，内环稀少或没有
+- **中途撤离点每 N 环一个**，叠在普通节点上（`is_extract`），不单独占一个节点
 - 核心（章节 Boss）击破后直接结算离场，视为一种特殊撤离
 
 这形成第一章的核心张力：
@@ -2226,6 +2321,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.21 | 2026-09-21 | **两件。**（一）包也能转（3.3）：转过之后内容物不跟着转，落在新轮廓外的脱落进暂存区。早先禁止转包是因为「内容物跟着转」边界情况多，但那条路真正的问题是转一下包会改掉包里每件东西的朝向、搅乱玩家摆好的布局；脱落是局部的、残影上看得见的、放手前可撤回的。原地转与拖拽中按 R 走同一段代码。（二）地图生成逻辑按用户给的规则重写（5.4 / 5.5 / 5.8）：环由配置逐个声明（`RingSpec`：类型、节点数、事件权重）；`rest` / `shop` / `elite` 为**必须型**，每 N 环至少一个；**中途撤离点是叠在普通节点上的属性**，不是一种节点；至少一片**高危区** —— 一片相连的节点，有精英有多个搜索点，与外界只有一条边；然后按规则断同环边、连相邻环。**因为可以走回头路，死路不是问题**，校验只要求全图连通，删掉了「每节点至少一条径向边」「入口到核心最短路够长」「每个 band 内部连通」三条 —— 最后一条是因为侵蚀不封路，幸存区被切碎困不住人 |
 | v1.20 | 2026-09-21 | **删掉 `ItemDef.can_rotate`**。它本意是「钉死某些装备的朝向」，但一件占两格的东西横着还是竖着，是玩家在棋盘上的空间取舍，不是内容作者该替他做的决定 —— 而一个实际上永远为 true 的字段，代价是每一处旋转路径都多一层没有意义的分支（`GridInventory` 里有三处一模一样的 `effective_rot`，`ItemInstance` 里还有三处）。唯一保留的旋转限制是运行时的「有内容物的包不能旋转」，它是**状态**的限制，不是道具的属性 |
 | v1.19 | 2026-09-21 | 两件开发期便利。**任意场景按 F1 回启动选择器**：做成 `DevNav` autoload 而不是让每个场景自己加按钮 —— 后者漏装的表现是「F6 直接跑进去就出不来，只能关掉重开」，而那时没有人替它装。不用 Esc 当返回键：拖拽中的取消是 Esc，编辑器的输入框也可能吃掉它，手一滑回主界面在编辑器里意味着草稿全没。场景可以实现 `has_unsaved_changes()` 要一次确认（鸭子类型，不让开发期脚手架在正经场景的类型里留痕迹）。**编辑器左侧加按标签分类的竖排页签**，页签从内容里长出来而不是写死的枚举 —— MOD 作者加一个标签就自己多一页。为此把「列表里显示哪些」从 `_ids` 拆成 `_shown`：ItemList 的行号对应的是筛过的那一份，两者混用的表现是「点第三行打开了第五件」，而且只有加了筛选之后才错 |
 | v1.18 | 2026-09-21 | **暂存区改成列表容器**（3.4）。它此前和棋盘共用 `GridInventory`，于是往里放东西也要摆位置、也会「摆不下」—— 等于凭空发明一套「暂存区也要会整理」的玩法，而那正是这个区域存在的目的所反对的：它是让玩家腾手的地方，不是第二个要动脑子的棋盘。新增 `ItemStash`（无坐标无占格，`capacity` 为 0 表示不限）与 `StashView`（一列可拖动的行，显示稀有度、名字、占格数 —— 占格数留着是因为那是放回棋盘时唯一关心的信息）。为此把两类容器的共同部分抽成 `ItemContainer`，`admit` / `can_admit` 让跨容器搬运不必了解目标的空间规则；视图侧同样抽出 `ContainerView`，拖拽层因此只需在落点那一处分叉。限制一条：带内容物的包收不进列表，列表装不下「包 + 内容物的相对位置」，要收起来先掏空 |

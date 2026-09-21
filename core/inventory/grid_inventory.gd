@@ -367,14 +367,16 @@ func remove(uid: int) -> ItemInstance:
 
 ## 原地旋转。放不下则保持原样并返回 false。
 ##
-## **有内容物的包不能旋转** —— 旋转包意味着内容物要跟着做坐标变换，边界情况多且玩家难以预期。
-## 要转先掏空。这是一条有意的简化。
+## **有内容物的包请走 [method rotate_bag]**：包转了之后，依附不上的内容物要脱落，
+## 而脱落的东西必须交还给调用方安置 —— 这个方法只回一个 bool，接不住它们。
+## 在这里转一个非空的包会被拒绝并告警，而不是把内容物弄丢。
 func rotate_item(uid: int, steps: int = 1) -> bool:
 	var inst: ItemInstance = _items.get(uid, null)
 	if inst == null:
 		return false
 	var is_bag := acts_as_bag(inst.def)
 	if is_bag and not contents_of(uid).is_empty():
+		push_warning("GridInventory.rotate_item: uid %d 是非空的包，请改用 rotate_bag" % uid)
 		return false
 	var new_rot := posmod(inst.rotation + steps, 4)
 	if new_rot == inst.rotation:
@@ -488,29 +490,122 @@ func can_attach_bag(payload: Dictionary, origin: Vector2i, rot: int) -> bool:
 	if not requires_bag:
 		# 自由容器收不下带内容物的包：它没有覆盖概念，内容物无处安放
 		return contents.is_empty() and can_place_def(bag.def, origin, rot, bag.uid)
-	# 有内容物时不允许换朝向，与 rotate_item 的限制保持一致
-	if not contents.is_empty() and rot != int(payload["rotation"]):
-		return false
+	var report := bag_fit_report(payload, origin, rot)
+	return report["ok"] and (report["fallen"] as Array).is_empty()
+
+
+## 载荷落在 origin 时会发生什么：包本身放不放得下，以及**哪些内容物会脱落**。
+## 不改任何状态。
+##
+## [codeblock]
+## {"ok": bool, "fallen": Array[ItemInstance]}
+## [endcodeblock]
+##
+## 包可以换朝向。转过之后内容物**不跟着转**，仍按原来相对包原点的偏移摆 ——
+## 于是有些会落在新轮廓之外，那些就是会脱落的。让内容物跟着包一起转是另一条路，
+## 但那样「转一下包」会同时改掉包里每一件东西的朝向，玩家摆好的布局被整个搅乱；
+## 而脱落是局部的、看得见的、可以在放手前撤回的。
+func bag_fit_report(payload: Dictionary, origin: Vector2i, rot: int) -> Dictionary:
+	var failed := {"ok": false, "fallen": []}
+	if payload.is_empty():
+		return failed
+	var bag: ItemInstance = payload["bag"]
+	var contents: Array = payload["contents"]
+	if not requires_bag:
+		# 自由容器收不下带内容物的包：它没有覆盖概念，内容物无处安放
+		if not contents.is_empty() or not can_place_def(bag.def, origin, rot, bag.uid):
+			return failed
+		return {"ok": true, "fallen": []}
 	if not can_place_bag(bag.def.cells_rotated(rot), origin, bag.uid):
-		return false
+		return failed
 
 	var bag_cells := {}
 	for c in bag.def.cells_rotated(rot):
 		bag_cells[origin + c] = true
 	var offsets: Array = payload["offsets"]
+	var fallen: Array = []
 	for i in contents.size():
 		var inst: ItemInstance = contents[i]
 		var at: Vector2i = origin + offsets[i]
+		var fits := true
 		for c in inst.def.cells_rotated(inst.rotation):
 			var p: Vector2i = at + c
-			if not bag_cells.has(p):
-				return false          # 超出包的轮廓
-			if _occ[_idx(p)] != EMPTY_UID:
-				return false          # 被目标容器里已有的物品占了
-	return true
+			if not bag_cells.has(p) or _occ[_idx(p)] != EMPTY_UID:
+				fits = false  # 超出包的轮廓，或被目标容器里已有的物品占了
+				break
+		if not fits:
+			fallen.append(inst)
+	return {"ok": true, "fallen": fallen}
 
 
-## 把载荷整体放到 origin。失败时不留任何残迹，容器保持原样。
+## 把载荷放到 origin，**依附不上的内容物脱落**并交还给调用方。
+##
+## 返回与 [method bag_fit_report] 同形。`ok` 为假时容器原样不动；为真时
+## `fallen` 里的实例已处于游离态，调用方[b]必须[/b]给它们找地方（通常是暂存区）。
+func attach_bag_shedding(payload: Dictionary, origin: Vector2i, rot: int) -> Dictionary:
+	var report := bag_fit_report(payload, origin, rot)
+	if not report["ok"]:
+		return report
+	var fallen: Array = report["fallen"]
+	var bag: ItemInstance = payload["bag"]
+	var contents: Array = payload["contents"]
+	var offsets: Array = payload["offsets"]
+
+	begin_batch()
+	if not place(bag, origin, rot):
+		end_batch()
+		return {"ok": false, "fallen": []}
+	var placed: Array = []
+	for i in contents.size():
+		var inst: ItemInstance = contents[i]
+		if fallen.has(inst):
+			continue
+		if not place(inst, origin + offsets[i], inst.rotation):
+			# 报告刚验过，走到这里说明有别处改了容器状态。回滚干净。
+			push_error("GridInventory.attach_bag_shedding: 内容物 uid %d 放置失败，回滚" % inst.uid)
+			for p in placed:
+				remove((p as ItemInstance).uid)
+			remove(bag.uid)
+			end_batch()
+			return {"ok": false, "fallen": []}
+		placed.append(inst)
+	end_batch()
+	return report
+
+
+## 原地转一个包，内容物不跟着转；依附不上的脱落。
+##
+## 成功返回脱落的实例数组（可能为空），失败返回 [code]null[/code] 且容器不变。
+## 实现上就是「摘下来、换个朝向放回去」—— 与拖拽中按 R 走的是同一条路，
+## 两处不会给出不同的脱落结果。
+func rotate_bag(bag_uid: int, steps: int = 1):
+	var bag: ItemInstance = _items.get(bag_uid, null)
+	if bag == null or not acts_as_bag(bag.def):
+		return null
+	var origin := bag.origin
+	var old_rot := bag.rotation
+	var new_rot := posmod(old_rot + steps, 4)
+	if new_rot == old_rot:
+		return []
+
+	begin_batch()
+	var payload := detach_bag(bag_uid)
+	if payload.is_empty():
+		end_batch()
+		return null
+	var result := attach_bag_shedding(payload, origin, new_rot)
+	if not result["ok"]:
+		if not attach_bag(payload, origin, old_rot):
+			push_error("GridInventory.rotate_bag: uid %d 转不动，也放不回原样，物品已丢失" % bag_uid)
+		end_batch()
+		return null
+	end_batch()
+	return result["fallen"]
+
+
+## 把载荷整体放到 origin，**一件都不能少**。失败时不留任何残迹，容器保持原样。
+##
+## 这是「原样放回」用的严格版；玩家放手走的是 [method attach_bag_shedding]。
 func attach_bag(payload: Dictionary, origin: Vector2i, rot: int) -> bool:
 	if not can_attach_bag(payload, origin, rot):
 		return false

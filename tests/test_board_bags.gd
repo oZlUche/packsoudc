@@ -89,12 +89,12 @@ static func run(t: TestCase) -> void:
 	t.check(board.place(straddle, Vector2i(2, 0), 0), "整件落在第二个包内则可以")
 	t.eq(board.bag_of(straddle.uid), b2.uid, "归属于第二个包")
 
-	# --- 非空的包不能直接移除，也不能旋转 ---
+	# --- 非空的包不能直接移除；rotate_item 也接不住脱落的东西，要走 rotate_bag ---
 	t.check(board.is_bag_with_contents(b1.uid), "第一个包有内容物")
 	t.is_null(board.remove(b1.uid), "非空的包 remove 应返回 null")
 	t.check(board.has_item(b1.uid), "被拒后包仍在棋盘上")
-	t.check(not board.rotate_item(b1.uid, 1), "有内容物的包不能旋转")
-	t.eq(b1.rotation, 0, "旋转被拒后朝向不变")
+	t.check(not board.rotate_item(b1.uid, 1), "非空的包不能用 rotate_item 转（它回不了脱落的东西）")
+	t.eq(b1.rotation, 0, "被拒后朝向不变")
 
 	# --- 空包可以旋转 ---
 	var empty_board := GridInventory.new(Vector2i(6, 6), 9, true)
@@ -118,9 +118,10 @@ static func run(t: TestCase) -> void:
 	t.eq(d1.origin, Vector2i(0, 3), "内容物保持相对位置")
 	t.eq(board.item_count(), 5, "两个包 + 三件物品")
 
-	# --- 带内容物时不允许换朝向 ---
+	# --- 换朝向放回：严格版一件都不能少，所以不成立；脱落版才成立 ---
 	var p2 := board.detach_bag(b1.uid)
-	t.check(not board.can_attach_bag(p2, Vector2i(0, 3), 1), "有内容物的包不能换朝向放回")
+	t.check(not board.can_attach_bag(p2, Vector2i(0, 3), 1),
+		"换朝向后有内容物依附不上，严格版（一件不能少）放不回")
 	t.check(board.attach_bag(p2, Vector2i(0, 3), 0), "原朝向放回成功")
 
 	# --- 包体准入标签 ---
@@ -256,3 +257,57 @@ static func run_board_serialization(t: TestCase) -> void:
 	var back2 := GridInventory.from_dict(shuffled, db)
 	t.eq(back2.item_count(), 2, "存档条目顺序颠倒时仍应完整还原")
 	t.eq(back2.bag_of(a.uid), bag.uid, "顺序颠倒后容纳关系仍正确")
+
+
+## 包也能转。转过之后内容物不跟着转，依附不上的脱落并交还给调用方。
+##
+## 「内容物跟着包一起转」是另一条路，但那样转一下包会同时改掉包里每一件东西的朝向，
+## 玩家摆好的布局被整个搅乱；脱落是局部的、看得见的、放手前可以撤回的。
+static func run_rotate_shedding(t: TestCase) -> void:
+	t.begin("棋盘与包 · 包旋转与脱落")
+
+	ItemInstance.reset_uid_counter()
+	var big_bag := _bag("bag6", ["##", "##", "##"])   # 2 宽 3 高
+	var dot := _def("dot", ["#"])
+	var board := GridInventory.new(Vector2i(6, 6), 1, true)
+
+	var bag := ItemInstance.create(big_bag)
+	board.place(bag, Vector2i(0, 0), 0)
+	var keep := ItemInstance.create(dot)     # (0,0)：转成 3x2 之后仍在轮廓内
+	var drop := ItemInstance.create(dot)     # (1,2)：转成 3x2 之后落在轮廓外
+	board.place(keep, Vector2i(0, 0), 0)
+	board.place(drop, Vector2i(1, 2), 0)
+
+	# --- 先问不动手 ---
+	var payload := board.detach_bag(bag.uid)
+	var report := board.bag_fit_report(payload, Vector2i(0, 0), 1)
+	t.check(report["ok"], "包本身转得动")
+	t.eq((report["fallen"] as Array).size(), 1, "报告点名一件会脱落")
+	t.eq(((report["fallen"] as Array)[0] as ItemInstance).uid, drop.uid, "点名的就是轮廓外那件")
+	t.check(board.attach_bag(payload, Vector2i(0, 0), 0), "先原样放回")
+
+	# --- 原地转 ---
+	var fallen = board.rotate_bag(bag.uid, 1)
+	t.not_null(fallen, "非空的包能转")
+	t.eq(bag.rotation, 1, "朝向变了")
+	t.eq((fallen as Array).size(), 1, "脱落一件")
+	t.eq(((fallen as Array)[0] as ItemInstance).uid, drop.uid, "脱落的是轮廓外那件")
+	t.check(board.has_item(keep.uid), "**轮廓内那件留在原位**")
+	t.eq(keep.origin, Vector2i(0, 0), "而且没动")
+	t.eq(board.bag_of(keep.uid), bag.uid, "仍归这个包")
+	t.check(not board.has_item(drop.uid), "脱落的离开了棋盘")
+	t.eq(drop.container_id, 0, "脱落的处于游离态，等调用方安置")
+	t.check(board.is_covered(Vector2i(2, 1)), "覆盖范围跟着变成 3x2")
+	t.check(not board.is_covered(Vector2i(0, 2)), "原先的第三行不再覆盖")
+
+	# --- 转不动时原样不动，一件不掉 ---
+	# 3x3 的小棋盘，2x3 的包贴着右边放：转成 3x2 必然出界
+	var edge_bag := ItemInstance.create(big_bag)
+	var edge_board := GridInventory.new(Vector2i(3, 3), 2, true)
+	edge_board.place(edge_bag, Vector2i(1, 0), 0)      # 2x3 占 (1..2, 0..2)
+	var inside := ItemInstance.create(dot)
+	edge_board.place(inside, Vector2i(1, 0), 0)
+	t.is_null(edge_board.rotate_bag(edge_bag.uid, 1), "转成 3x2 会出界，转不动")
+	t.eq(edge_bag.rotation, 0, "朝向没变")
+	t.check(edge_board.has_item(inside.uid), "**内容物一件不掉**")
+	t.eq(inside.origin, Vector2i(1, 0), "位置也没动")

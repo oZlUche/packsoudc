@@ -44,6 +44,8 @@ var _preview_valid: bool = false
 var _preview_on: bool = false
 ## 本次落点会顶掉的物品 uid
 var _preview_victims: Array[int] = []
+## 合法但有代价：顶人或脱落
+var _preview_costly: bool = false
 
 ## 是否画邻接标记格。战利品、商店货架这类地方不参战，画了只是噪音。
 @export var show_adjacency: bool = true
@@ -84,13 +86,17 @@ func cell_origin_px(c: Vector2i) -> Vector2:
 
 
 #region 落点预览
+## [param costly] 为真表示落点合法但有代价（会顶掉别人、会有内容物脱落），画成黄的。
+## 被顶的那几件另由 [param victims] 描边；脱落的东西不在本容器里，由拖拽残影自己标。
 func set_preview(
-	cells: Array[Vector2i], origin: Vector2i, valid: bool, victims: Array[int] = []
+	cells: Array[Vector2i], origin: Vector2i, valid: bool,
+	victims: Array[int] = [], costly: bool = false
 ) -> void:
 	_preview_cells = cells
 	_preview_origin = origin
 	_preview_valid = valid
 	_preview_victims = victims
+	_preview_costly = costly or not victims.is_empty()
 	_preview_on = true
 	queue_redraw()
 
@@ -101,6 +107,7 @@ func clear_preview() -> void:
 	_preview_on = false
 	_preview_cells = []
 	_preview_victims = []
+	_preview_costly = false
 	queue_redraw()
 #endregion
 
@@ -185,7 +192,7 @@ func _draw() -> void:
 	if _preview_on:
 		var tint := COLOR_BAD
 		if _preview_valid:
-			tint = COLOR_DISPLACE if not _preview_victims.is_empty() else COLOR_OK
+			tint = COLOR_DISPLACE if _preview_costly else COLOR_OK
 		for c in _preview_cells:
 			var p := _preview_origin + c
 			if p.x < 0 or p.y < 0 or p.x >= inventory.size.x or p.y >= inventory.size.y:

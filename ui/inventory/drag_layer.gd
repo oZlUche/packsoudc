@@ -24,6 +24,8 @@ signal drag_finished(uid: int, dropped: bool)
 ## 放下时顶出来了东西。[param grabbed] 为真表示那一件已经拿在手上，
 ## 否则整批都进了 [member stash]。界面拿它写提示。
 signal items_displaced(instances: Array, grabbed: bool)
+## 包换了朝向放下，依附不上的内容物脱落进了 [member stash]。
+signal items_shed(instances: Array)
 
 @export var label_font: Font
 
@@ -158,11 +160,12 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
-## 拖拽中顺时针转一步。带内容物的包不能转，与 GridInventory.rotate_item 的限制一致。
+## 拖拽中顺时针转一步。
+##
+## 包也能转。内容物不跟着转，仍按原偏移画在残影上 —— 落到新轮廓之外的那些
+## 会在放手时脱落进暂存区，残影上先给它们打好标记，玩家放手前就看得见代价。
 func rotate_dragged() -> void:
 	if _inst == null or _inst.def == null:
-		return
-	if not _payload.is_empty():
 		return
 	_rot = posmod(_rot + 1, 4)
 	# 抓取点必须跟着落进新的包围盒，否则旋转后物品会离奇地跳开
@@ -218,7 +221,10 @@ func update_preview(global_pos: Vector2) -> void:
 	var origin := target_origin(grid_view, global_pos)
 
 	if not _payload.is_empty():
-		grid_view.set_preview(cells, origin, inv.can_attach_bag(_payload, origin, _rot))
+		var report := inv.bag_fit_report(_payload, origin, _rot)
+		var fallen: Array = report["fallen"]
+		var ok: bool = report["ok"] and _can_shed(fallen)
+		grid_view.set_preview(cells, origin, ok, [], not fallen.is_empty())
 		return
 
 	if inv.can_place_def(_inst.def, origin, _rot, _inst.uid):
@@ -264,7 +270,7 @@ func drop_at(global_pos: Vector2) -> bool:
 		var grid_view := target as InventoryView
 		var at := target_origin(grid_view, global_pos)
 		if not _payload.is_empty():
-			dropped = grid_view.inventory.attach_bag(_payload, at, _rot)
+			dropped = _drop_bag(grid_view.inventory, at)
 		elif grid_view.inventory.place(inst, at, _rot):
 			dropped = true
 		else:
@@ -285,6 +291,38 @@ func drop_at(global_pos: Vector2) -> bool:
 	if not pending.is_empty():
 		_settle_displaced(pending, home, global_pos)
 	return dropped
+
+
+## 放下一个包（可能带着内容物、可能换了朝向）。脱落的内容物进暂存区；
+## 没地方安置就整件事不成立，容器原样不动。
+func _drop_bag(inv: GridInventory, at: Vector2i) -> bool:
+	var report := inv.bag_fit_report(_payload, at, _rot)
+	var fallen: Array = report["fallen"]
+	if not report["ok"] or not _can_shed(fallen):
+		return false
+	var result := inv.attach_bag_shedding(_payload, at, _rot)
+	if not result["ok"]:
+		return false
+	var shed: Array = result["fallen"]
+	if shed.is_empty():
+		return true
+	if not _admit_all(stash, shed):
+		# 预览刚说过塞得下，走到这里说明暂存区在别处被动过。绝不能让东西悬着：
+		# 把包连同还在里面的东西摘回来，脱落的也一并塞回载荷，整件事作废。
+		push_error("DragLayer: 脱落的内容物放不进暂存区，整件事作废")
+		# 原载荷里每一件的引用都还在（脱落的从没被放下，其余的这一下摘回来），
+		# 之后 _restore 用它整体放回原处即可
+		inv.detach_bag((_payload["bag"] as ItemInstance).uid)
+		return false
+	items_shed.emit(shed)
+	return true
+
+
+## 脱落的这几件有没有地方去。为空就不需要地方。
+func _can_shed(fallen: Array) -> bool:
+	if fallen.is_empty():
+		return true
+	return stash != null and stash.room_for(fallen.size())
 
 
 ## 顶替式放下。返回 [code]{"ok": bool, "victims": Array}[/code]；
@@ -441,20 +479,29 @@ func _draw() -> void:
 		_inst.def.display_name, font, 11 if is_bag else 13, Color("f2f4f8")
 	)
 
-	# 包里的东西要跟着残影一起画，否则玩家看不出自己正拖着什么
+	# 包里的东西要跟着残影一起画，否则玩家看不出自己正拖着什么。
+	# 落在当前轮廓之外的那些（包转过之后才会有）压暗并描橙边 —— 放手它们就脱落
 	if is_bag:
+		var outline := {}
+		for c in cells:
+			outline[c] = true
 		var contents: Array = _payload["contents"]
 		var offsets: Array = _payload["offsets"]
 		for i in contents.size():
 			var item: ItemInstance = contents[i]
-			var at: Vector2 = anchor + Vector2(offsets[i]) * InventoryView.CELL
+			var off: Vector2i = offsets[i]
+			var covered := true
+			for c in item.cells():
+				if not outline.has(off + c):
+					covered = false
+					break
+			var at: Vector2 = anchor + Vector2(off) * InventoryView.CELL
 			var c_body := ItemPainter.body_color(item.def)
-			c_body.a = 0.9
-			ItemPainter.draw_item(
-				self, item.cells(), at, InventoryView.CELL,
-				c_body, ItemPainter.rarity_color(item.def)
-			)
+			c_body.a = 0.9 if covered else 0.45
+			var c_edge := ItemPainter.rarity_color(item.def) if covered \
+				else InventoryView.COLOR_VICTIM
+			ItemPainter.draw_item(self, item.cells(), at, InventoryView.CELL, c_body, c_edge)
 			ItemPainter.draw_label(
 				self, item.cells(), at, InventoryView.CELL,
-				item.def.display_name, font, 12, Color("f2f4f8")
+				item.def.display_name, font, 12, Color("f2f4f8") if covered else Color("f2f4f8", 0.6)
 			)

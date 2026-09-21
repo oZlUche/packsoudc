@@ -53,6 +53,11 @@ func is_full() -> bool:
 	return capacity > 0 and _list.size() >= capacity
 
 
+## 还装得下 n 件吗。整批塞东西之前先问这一句，免得塞到一半才发现不够。
+func room_for(n: int) -> bool:
+	return capacity <= 0 or _list.size() + n <= capacity
+
+
 func index_of(uid: int) -> int:
 	for i in _list.size():
 		if _list[i].uid == uid:
