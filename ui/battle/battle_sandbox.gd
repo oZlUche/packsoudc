@@ -26,7 +26,7 @@ func _ready() -> void:
 	_font = UiPalette.cjk_font()
 	_db = ItemDatabase.new()
 	if _db.load_dir() == 0:
-		push_error("没有加载到任何物品定义，先跑 tools/gen_sample_items.gd")
+		push_error("没有加载到任何物品定义，先跑 tools/import_content.gd 把作者数据导成资产")
 
 	ItemInstance.reset_uid_counter()
 	_board = GridInventory.new(BOARD_SIZE, 1, true)

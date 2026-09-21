@@ -27,7 +27,7 @@ const ENTRIES := [
 		"scene": "res://ui/editor/content_editor.tscn",
 		"title": "道具编辑器",
 		"desc": "给开发者与 MOD 作者：改属性、画形状与邻接标记、实时校验，存成 JSON",
-		"keys": "存盘后要跑一次 tools/import_content.gd 才会生效",
+		"keys": "存盘直接产出资产，不必再手动导入",
 	},
 ]
 
