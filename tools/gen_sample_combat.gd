@@ -15,6 +15,9 @@ const B := StatMath.Buff
 
 
 func run() -> void:
+	if _blocked_by_authoring():
+		finish(1)
+		return
 	var count := 0
 	for id in _combat_ids():
 		var path := "%s/%s.tres" % [ITEM_DIR, id]
@@ -200,3 +203,22 @@ static func _configure(def: ItemDef) -> void:
 
 		"drone":
 			def.combat = _profile({"damage": 6.0}, [_weapon_rule(2.5, &"power", 10.0)])
+
+## 内容管线落地之后，这个脚本就成了危险品：它按代码里写死的表重写资产，
+## 会把作者在编辑器里配的东西**整个冲掉**，而且不声不响。
+##
+## 所以先拦一道：作者数据目录一旦有内容，就拒绝运行。
+## 真要重新 bootstrap，先把 data/authoring/items 清空（那才是内容的正本）。
+func _blocked_by_authoring() -> bool:
+	var dir := DirAccess.open(ContentPaths.AUTHORING_ITEMS)
+	if dir == null:
+		return false
+	for f in dir.get_files():
+		if f.ends_with(".json"):
+			print("")
+			print("拒绝运行：%s 下已经有作者数据了。" % ContentPaths.AUTHORING_ITEMS)
+			print("这个脚本会按代码里写死的表重写资产，把编辑器里配的内容冲掉。")
+			print("正常流程是改 JSON（或用编辑器）再跑 tools/import_content.gd。")
+			return true
+	return false
+

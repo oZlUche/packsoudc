@@ -1,0 +1,18 @@
+{
+  "id": "high_tier_armor",
+  "display_name": "高级防弹衣",
+  "shape": [
+    "111",
+    "111",
+    "111"
+  ],
+  "rarity": 3,
+  "tags": [
+    "gear"
+  ],
+  "combat": {
+    "base_stats": {
+      "armor": 10.0
+    }
+  }
+}
