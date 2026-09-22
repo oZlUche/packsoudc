@@ -58,6 +58,8 @@ func _import(kind: String, data: Dictionary, ctx: ContentImporter.Context, repor
 			return ContentImporter.import_enemy(data, ctx, report)
 		"enemy_pools":
 			return ContentImporter.import_enemy_pool(data, ctx, report)
+		"drop_rules":
+			return ContentImporter.import_drop_rule(data, ctx, report)
 		"chapters":
 			return ContentImporter.import_chapter(data, ctx, report)
 		_:
@@ -74,6 +76,8 @@ func _export(kind: String, res: Resource) -> Dictionary:
 			return ContentExporter.export_enemy(res)
 		"enemy_pools":
 			return ContentExporter.export_enemy_pool(res)
+		"drop_rules":
+			return ContentExporter.export_drop_rule(res)
 		"chapters":
 			return ContentExporter.export_chapter(res)
 		_:

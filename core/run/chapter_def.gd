@@ -18,5 +18,8 @@ extends Resource
 ## 按 id 引用而不是内联：几章共用一个池、只改难度是常态
 @export var enemy_pool: StringName = &""
 
-## 章节难度，0 起。敌人池的 [StrengthRule] 按它抬档位；掉落与侵蚀将来也看它
+## 章节难度，0 起。敌人池的 [StrengthRule] 按它抬档位，掉落规则按它加掉落率；侵蚀将来也看它
 @export var difficulty: int = 0
+
+## 掉落规则的 id（`data/drop_rules/`，6.1）。空 = 这一章什么都不掉
+@export var drop_rule: StringName = &""

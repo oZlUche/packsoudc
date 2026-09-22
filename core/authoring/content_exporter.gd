@@ -38,6 +38,10 @@ static func export_enemy_pool(pool: EnemyPool) -> Dictionary:
 	return _dump(pool)
 
 
+static func export_drop_rule(rule: DropRule) -> Dictionary:
+	return _dump(rule)
+
+
 ## 带 type 的导出，用于抽象基类的子对象
 static func _dump(obj: Object, with_type: bool = false) -> Dictionary:
 	var out := {}

@@ -13,6 +13,7 @@ const AUTHORING_BUFFS := AUTHORING + "/buffs"
 const AUTHORING_SETS := AUTHORING + "/sets"
 const AUTHORING_ENEMIES := AUTHORING + "/enemies"
 const AUTHORING_ENEMY_POOLS := AUTHORING + "/enemy_pools"
+const AUTHORING_DROP_RULES := AUTHORING + "/drop_rules"
 const AUTHORING_CHAPTERS := AUTHORING + "/chapters"
 #endregion
 
@@ -22,6 +23,7 @@ const BUFFS := "res://data/buffs"
 const SETS := "res://data/sets"
 const ENEMIES := "res://data/enemies"
 const ENEMY_POOLS := "res://data/enemy_pools"
+const DROP_RULES := "res://data/drop_rules"
 const CHAPTERS := "res://data/chapters"
 #endregion
 
@@ -32,10 +34,11 @@ const KINDS := {
 	"items": [AUTHORING_ITEMS, ITEMS],
 	"enemies": [AUTHORING_ENEMIES, ENEMIES],
 	"enemy_pools": [AUTHORING_ENEMY_POOLS, ENEMY_POOLS],
+	"drop_rules": [AUTHORING_DROP_RULES, DROP_RULES],
 	"chapters": [AUTHORING_CHAPTERS, CHAPTERS],
 }
-## 敌人在道具之后（招牌道具、流派标签要对着道具查），池在敌人之后，章节排最后（按 id 引用池）
-const ORDER := ["buffs", "sets", "items", "enemies", "enemy_pools", "chapters"]
+## 敌人在道具之后（招牌道具、流派标签要对着道具查），池在敌人之后，掉落规则独立，章节排最后（按 id 引用池与规则）
+const ORDER := ["buffs", "sets", "items", "enemies", "enemy_pools", "drop_rules", "chapters"]
 
 
 static func authoring_file(kind: String, id: String) -> String:

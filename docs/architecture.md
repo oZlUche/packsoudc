@@ -1407,10 +1407,10 @@ class_name ChapterDef extends Resource
 @export var display_name: String
 @export var map_source: MapSource           # 随机生成（generator_id + config）或载入预设，见 5.3.1
 @export var enemy_pool: StringName          # 敌人池的 id（6.0，M4-1）。按 id 引用：几章共用一个池、只改难度是常态
-@export var difficulty: int                 # 章节难度，0 起。敌人池按它抬档位；掉落与侵蚀将来也看它
-# 之后各加一个字段，导入器、导出器、编辑器一行不改（敌人池就是这么加进来的）：
+@export var difficulty: int                 # 章节难度，0 起。敌人池按它抬档位，掉落规则按它加掉落率；侵蚀将来也看它
+@export var drop_rule: StringName           # 掉落规则的 id（6.1，M4-2）
+# 之后各加一个字段，导入器、导出器、编辑器一行不改（敌人池、掉落规则就是这么加进来的）：
 # @export var erosion: ErosionSchedule      # 第 7 阶段；可为 null = 该难度不启用侵蚀
-# @export var loot_tables: Array[StringName] # M4-2
 ```
 
 章节是**作者数据，走内容管线**（10 节）：`data/authoring/chapters/*.json` → `data/chapters/*.tres`。
@@ -2419,21 +2419,38 @@ class_name EnemyPool extends Resource             # data/authoring/enemy_pools/*
 导入顺序：items → enemies（招牌道具、流派标签对着道具查）→ enemy_pools（条目对着敌人查）→ chapters（池按 id 查）。
 「对着别的东西查」的校验只在批量导入时生效 —— 单独导一个敌人时上下文是空的，无从判断。
 
-### 6.1 掉落生成
+### 6.1 掉落规则（M4-2）
+
+作者的设想：敌人的每件道具都有一定概率掉落，稀有度越高基础掉落率越低，受难度（正面）、幸运值（增益 / 减益）、
+局外 buff（占位）、地图 buff（占位）修正；每个敌人都有概率掉一件自身未持有的高稀有度「珍宝」（红、金两档，珍宝类型未细定）。
 
 ```gdscript
-# data/loot/*.tres
-class_name LootTable extends Resource
-@export var entries: Array[LootEntry]     # {item_def, weight, min_tier, rarity}
-@export var roll_count: Vector2i          # 掉落件数范围
+# core/loot/drop_rule.gd —— data/authoring/drop_rules/*.json，章节按 id 引用（ChapterDef.drop_rule）
+class_name DropRule extends Resource
+@export var base_chance: Array[float]        # 稀有度 → 基础掉落率，非递增（导入器校验：越稀有越难掉）
+@export var difficulty_bonus: float          # 难度每 +1 加多少（只做正面加成）
+@export var luck_bonus: float                # 幸运每一点加多少，幸运可负
+@export var treasure_chance: float           # 每次尝试掉一件珍宝的概率；尝试次数 = LootContext.rolls
+@export var treasure_weights: Dictionary     # 珍宝稀有度 → 权重，{"3": 3, "4": 1}：金、红
+@export var treasure_tag: StringName         # 哪些道具算珍宝（占位：`treasure`）
+@export var treasure_modified: bool          # 珍宝概率也吃修正
 ```
 
-流程：`敌人 tier + 节点 tier → 加权抽 N 件 → 装入尸体容器`。
+**每件各掷一次**（`DropResolver.owned_chance`）：`base_chance[稀有度] + difficulty × difficulty_bonus + luck × luck_bonus
++ drop_owned_chance（道具 / 套装的战利品效果）+ Σ 来源`，夹进 0～1。修正全是加法、同一个单位，调一个数看得清另一个。
 
-**尸体容器就是一个 `GridInventory`**，尺寸由敌人档位决定（小兵 4×4、精英 6×6、Boss 8×8）。
-装填使用 `find_first_fit` + 随机旋转；装不下的物品丢弃或容器扩容。
+**珍宝**：`rolls` 次尝试，每次按 `treasure_chance` 掷；中了按权重（+ `rarity_bias`）抽稀有度，在「带珍宝标签、这个稀有度、
+敌人**没有**」的道具里抽一件（`category_bias` 加权）。哪一档都没有（珍宝还没定义）就记一笔，不掉、不报错。
 
-这里完全复用 M1 的代码，零额外成本 —— 这正是 3.2 节强调容器复用的原因。
+**修正的来源**是接口不是字段（`DropBonusSource`：`owned_bonus(ctx, def)` / `treasure_bonus(ctx)`），
+`LootContext.sources` 装它们。`MetaDropBonus`（局外）与 `MapDropBonus`（地图）是两个占位实现，现在都加 0，
+`DropResolver` 现在就调它们 —— 接上的那天规则与测试一行不改。难度与幸运是 `LootContext` 自带的两个数，谁填是 run 层的事。
+
+M2 定下的四个量各有归宿：`rolls` = 珍宝尝试次数，`rarity_bias` = 珍宝稀有度权重偏移，`category_bias` = 珍宝候选加权，
+`drop_owned_chance` = 自身道具概率加成。
+
+**尸体容器就是一个 `GridInventory`**（`DropResolver.corpse_of`）：大小照敌人的棋盘（6.0 档位表给的），
+掉下来的 + 珍宝 `try_add` 进去，塞不下就加高。这里完全复用 M1 的代码，零额外成本 —— 这正是 3.2 节强调容器复用的原因。
 
 ### 6.2 渐进揭示的搜索 UI
 
@@ -2762,12 +2779,13 @@ data/authoring/buffs/*.json         增益源数据
 data/authoring/sets/*.json          套装源数据
 data/authoring/enemies/*.json       敌人（6.0）
 data/authoring/enemy_pools/*.json   敌人池（6.0）
+data/authoring/drop_rules/*.json    掉落规则（6.1）
 data/authoring/chapters/*.json      章节（5.3）
-        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → items → enemies → enemy_pools → chapters）
+        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → items → enemies → enemy_pools → drop_rules → chapters）
         │  tools/normalize_content.gd 把作者数据重写成导出器的格式（导入 → 导出 → 不同就写回）
         ▼
 data/items/*.tres   data/buffs/*.tres   data/sets/*.tres
-data/enemies/*.tres data/enemy_pools/*.tres   data/chapters/*.tres
+data/enemies/*.tres data/enemy_pools/*.tres   data/drop_rules/*.tres   data/chapters/*.tres
 ```
 
 目录常量只在 `ContentPaths` 一处：种类 → [作者数据目录, 资产目录]，`ORDER` 就是导入顺序（后者按 id 引用前者）。
@@ -3130,6 +3148,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.45 | 2026-09-22 | **M4-2 掉落规则**（报告 046）。6.1 重写：`DropRule`（按稀有度的基础掉落率表、非递增校验；难度 / 幸运每级加多少；珍宝概率、稀有度权重、珍宝标签占位）；`DropResolver`（每件各掷、珍宝掉自身没有的、期望件数、尸体容器 = `GridInventory`）；`LootContext` 加难度、幸运与 `sources`，M2 的四个量各有归宿；`DropBonusSource` 接口 + `MetaDropBonus` / `MapDropBonus` 两个占位实现。`ChapterDef.drop_rule`；管线新种类 `drop_rules`。沙盒悬停战斗点多一句「预计掉 x 件，珍宝 y%」 |
 | v1.44 | 2026-09-22 | **M4-1 敌人池**（报告 045，含 M4 四步规划）。新增 6.0：`EnemyDef`（本色档位、流派标签可多个、基线覆盖、招牌道具）、`EnemyPool`（配置表：条目按环种类 / 节点类型 / 危险过滤、档位表 = 件数 + 棋盘 + 倍率 + 稀有度上限、`StrengthRule` 全加法：深度 + 危险 + 类型 + 难度 + 规模、默认组装规则「通用 + 流派」）、`EnemyPlacer`（生成之后的第二遍，只用节点 `content_seed`；大件先摆、放不下换小的补）、`EnemyKit`（内容 → 棋盘 → `BattleCompiler`，预览 = 编译）。`ChapterDef` 加 `enemy_pool`（按 id）与 `difficulty`；内容管线加 `enemies`、`enemy_pools` 两种；`tools/normalize_content.gd`。流派是标签：混伤 = 两个流派。沙盒悬停战斗点见敌人一行摘要 |
 | v1.43 | 2026-09-22 | **M3-6 渲染与地图沙盒**（报告 044）。角度求解器 `RingAngleSolver`（形态无关：层 + 圈上的位置；由外向内、圆周均值 + 告警、单调校验、无随机），`RingLayoutBase` 让随机生成的与手绘的图共用它，按 `MapGraph.version` 缓存；切向边画弧；`MapView` 加 VISITED 去饱和、当前点呼吸、可达提示、路线加粗、悬停信号；核心改红。`ui/map/map_sandbox`：从 `chapter_01` 开局，挑出生点（路线卡 + 悬停加粗）、一步一步走、HUD（行动点 / 距最近撤离点 / 休息区 / 核心 / 体力）、单步预览、换种子。启动选择器第五个入口 |
 | v1.42 | 2026-09-22 | **M3-5 章节定义走内容管线**（报告 043）。`ChapterDef`（id、display_name、map_source；侵蚀、敌人池、掉落表到时候各加一个字段）；`ContentPaths` 加 `chapters`、排最后；`import_chapter` + 严格校验。管线补的通用能力：`Vector2`、字典里整数值的浮点两头写成整数、声明成引擎基类的字段靠 `type` 造类。`data/authoring/chapters/chapter_01.json`（由 `RingMapConfig.sample(6)` 倒出）→ `data/chapters/chapter_01.tres`。地图编辑器加「章节」栏：载入 / 存回 |

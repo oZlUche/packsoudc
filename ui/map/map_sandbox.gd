@@ -20,6 +20,7 @@ var _seed: int = 1
 var _items: ItemDatabase = null
 var _enemies: EnemyDatabase = null
 var _pool: EnemyPool = null
+var _drop_rule: DropRule = null
 var _view: MapView
 var _status: Label
 var _hud: Label
@@ -41,6 +42,8 @@ func _ready() -> void:
 	_enemies = EnemyDatabase.new()
 	_enemies.load_all()
 	_pool = _enemies.pool(_chapter.enemy_pool)
+	if _chapter.drop_rule != &"":
+		_drop_rule = load(ContentPaths.asset_file("drop_rules", String(_chapter.drop_rule))) as DropRule
 	regenerate(_seed)
 
 
@@ -183,7 +186,17 @@ func enemy_preview(id: int) -> String:
 	var content := _graph.get_node(id).content
 	if not EnemyKit.has_enemy(content):
 		return ""
-	return EnemyKit.summary(content, _enemies, _pool, _items)
+	var line := EnemyKit.summary(content, _enemies, _pool, _items)
+	if _drop_rule != null:
+		# 幸运 0、没有 buff：沙盒里就是这一章难度下的裸期望。局外 / 地图 buff 是占位来源，接上了自然算进去
+		var ctx := LootContext.new()
+		ctx.difficulty = _chapter.difficulty
+		ctx.add_source(MetaDropBonus.new())
+		ctx.add_source(MapDropBonus.new())
+		line += "　预计掉 %.1f 件，珍宝 %.0f%%" % [
+			DropResolver.expected_count(content, _drop_rule, ctx, _items),
+			DropResolver.treasure_chance(_drop_rule, ctx) * 100.0]
+	return line
 
 
 func _refresh_hud() -> void:

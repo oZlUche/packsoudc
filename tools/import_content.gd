@@ -65,6 +65,8 @@ func _build(
 			return ContentImporter.import_enemy(data, ctx, report)
 		"enemy_pools":
 			return ContentImporter.import_enemy_pool(data, ctx, report)
+		"drop_rules":
+			return ContentImporter.import_drop_rule(data, ctx, report)
 		"chapters":
 			return ContentImporter.import_chapter(data, ctx, report)
 		_:

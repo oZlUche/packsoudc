@@ -25,6 +25,8 @@ class Context:
 	var enemies: Dictionary = {}
 	## id -> EnemyPool。章节对着它查
 	var pools: Dictionary = {}
+	## id -> DropRule。章节对着它查
+	var drop_rules: Dictionary = {}
 
 	func register_buff(def: BuffDef) -> void:
 		if def != null and def.id != &"":
@@ -41,6 +43,10 @@ class Context:
 	func register_pool(pool: EnemyPool) -> void:
 		if pool != null and pool.id != &"":
 			pools[pool.id] = pool
+
+	func register_drop_rule(rule: DropRule) -> void:
+		if rule != null and rule.id != &"":
+			drop_rules[rule.id] = rule
 
 	## 道具里带某个标签的有几件。批量导入时才有意义 —— 单独导一个敌人时上下文是空的，
 	## 这类「对着别的东西查」的校验就跳过（见 _validate_enemy）
@@ -95,6 +101,41 @@ static func import_enemy_pool(data: Dictionary, ctx: Context, report: ImportRepo
 	_validate_enemy_pool(pool, ctx, report)
 	ctx.register_pool(pool)
 	return pool
+
+
+static func import_drop_rule(data: Dictionary, ctx: Context, report: ImportReport) -> DropRule:
+	var rule := DropRule.new()
+	_fill(rule, data, "", ctx, report)
+	_validate_drop_rule(rule, report)
+	ctx.register_drop_rule(rule)
+	return rule
+
+
+## 作者定的形状写成校验：概率在 0～1，**稀有度越高基础掉落率越低**（非递增），珍宝的稀有度得是真的稀有度、权重为正。
+static func _validate_drop_rule(rule: DropRule, report: ImportReport) -> void:
+	if rule.id == &"":
+		report.error("id", "掉落规则必须有 id")
+	if rule.base_chance.is_empty():
+		report.error("base_chance", "没有基础掉落率表")
+	for i in rule.base_chance.size():
+		var p := rule.base_chance[i]
+		if p < 0.0 or p > 1.0:
+			report.error("base_chance[%d]" % i, "概率应在 0～1 之间")
+		if i > 0 and p > rule.base_chance[i - 1]:
+			report.error("base_chance[%d]" % i, "稀有度 %d 的掉落率 %.2f 高于稀有度 %d 的 %.2f —— 越稀有该越难掉"
+				% [i, p, i - 1, rule.base_chance[i - 1]])
+	if rule.treasure_chance < 0.0 or rule.treasure_chance > 1.0:
+		report.error("treasure_chance", "概率应在 0～1 之间")
+	if rule.treasure_weights.is_empty():
+		report.warn("treasure_weights", "没有珍宝档位，永远不掉珍宝")
+	for key in rule.treasure_weights:
+		var text := String(key)
+		if not text.is_valid_int() or int(text) < 0:
+			report.error("treasure_weights", "键 '%s' 不是稀有度（应为非负整数的字符串）" % text)
+		if float(rule.treasure_weights[key]) <= 0.0:
+			report.error("treasure_weights", "稀有度 %s 的权重应为正" % text)
+	if rule.treasure_tag == &"":
+		report.error("treasure_tag", "珍宝得有个标签，不然不知道哪些道具算珍宝")
 
 
 ## 比引擎严格：流派没有道具就组不出来，招牌道具得存在，档位不能为负。
@@ -188,6 +229,8 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 		report.error("difficulty", "难度不能为负")
 	if def.enemy_pool != &"" and not ctx.pools.is_empty() and not ctx.pools.has(def.enemy_pool):
 		report.error("enemy_pool", "找不到敌人池 '%s'（已知：%s）" % [def.enemy_pool, ", ".join(ctx.pools.keys())])
+	if def.drop_rule != &"" and not ctx.drop_rules.is_empty() and not ctx.drop_rules.has(def.drop_rule):
+		report.error("drop_rule", "找不到掉落规则 '%s'（已知：%s）" % [def.drop_rule, ", ".join(ctx.drop_rules.keys())])
 	if def.map_source == null:
 		report.error("map_source", "章节必须有地图来源（随机生成或载入预设）")
 		return
