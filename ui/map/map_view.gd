@@ -120,10 +120,12 @@ func free_slots() -> Array[Dictionary]:
 
 
 #region 命中
+## 节点画成固定的屏幕大小（缩小整张图时字还看得清），所以命中半径要换算回画布尺度。
 func node_at(p: Vector2) -> int:
 	var pos := positions()
+	var reach := (NODE_RADIUS + 2.0) / zoom
 	for id in pos:
-		if (pos[id] as Vector2).distance_to(p) <= NODE_RADIUS + 2.0:
+		if (pos[id] as Vector2).distance_to(p) <= reach:
 			return int(id)
 	return -1
 
@@ -137,7 +139,7 @@ func edge_at(p: Vector2) -> MapEdge:
 			continue
 		var a: Vector2 = pos[e.from_id]
 		var b: Vector2 = pos[e.to_id]
-		if Geometry2D.get_closest_point_to_segment(p, a, b).distance_to(p) <= EDGE_PICK:
+		if Geometry2D.get_closest_point_to_segment(p, a, b).distance_to(p) <= EDGE_PICK / zoom:
 			return e
 	return null
 
@@ -265,9 +267,11 @@ func _draw() -> void:
 		for slot in _layout.free_slots(graph, rect):
 			draw_arc(slot["pos"], SLOT_RADIUS, 0.0, TAU, 16, UiPalette.LINE.lightened(0.15), 1.0, true)
 
+	# 节点画在屏幕坐标里：大小不随缩放变，缩小整张图看全貌时字还看得清
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	for id in graph.node_ids():
 		if pos.has(id):
-			_draw_node(graph.get_node(id), pos[id])
+			_draw_node(graph.get_node(id), to_screen(pos[id]))
 
 
 ## 一个路口：中心一个小点，向每个成员伸一条腿。

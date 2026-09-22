@@ -8,8 +8,9 @@
 ## 鼠标只是调它们；测试也直接调它们，不必伪造输入事件。
 extends Control
 
-const SIDE_WIDTH := 340
-const INFO_WIDTH := 300
+## 两边的栏窄一点，中间的图多一点 —— 作者说图看着挤
+const SIDE_WIDTH := 300
+const INFO_WIDTH := 270
 
 var _font: Font
 var _graph: MapGraph = null
