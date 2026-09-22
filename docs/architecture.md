@@ -1409,7 +1409,8 @@ class_name ChapterDef extends Resource
 @export var enemy_pool: StringName          # 敌人池的 id（6.0，M4-1）。按 id 引用：几章共用一个池、只改难度是常态
 @export var difficulty: int                 # 章节难度，0 起。敌人池按它抬档位，掉落规则按它加掉落率；侵蚀将来也看它
 @export var drop_rule: StringName           # 掉落规则的 id（6.1，M4-2）
-# 之后各加一个字段，导入器、导出器、编辑器一行不改（敌人池、掉落规则就是这么加进来的）：
+@export var node_rules: StringName          # 节点规则的 id（6.2 / 6.5，M4-3 / M4-4）
+# 之后各加一个字段，导入器、导出器、编辑器一行不改（敌人池、掉落规则、节点规则就是这么加进来的）：
 # @export var erosion: ErosionSchedule      # 第 7 阶段；可为 null = 该难度不启用侵蚀
 ```
 
@@ -2452,7 +2453,38 @@ M2 定下的四个量各有归宿：`rolls` = 珍宝尝试次数，`rarity_bias`
 **尸体容器就是一个 `GridInventory`**（`DropResolver.corpse_of`）：大小照敌人的棋盘（6.0 档位表给的），
 掉下来的 + 珍宝 `try_add` 进去，塞不下就加高。这里完全复用 M1 的代码，零额外成本 —— 这正是 3.2 节强调容器复用的原因。
 
-### 6.2 渐进揭示的搜索 UI
+### 6.2 搜索点与随机点（M4-3）
+
+规则在 `NodeRules`（章节按 id 引用，`ChapterDef.node_rules`）里，导入器把作者的规矩写成校验：
+
+```gdscript
+# core/run/node_rules.gd —— data/authoring/node_rules/*.json
+class_name NodeRules extends Resource
+@export var random_weights: Dictionary      # 随机点变什么：只认 battle / search / shop / rest / event，不会变成精英或 BOSS（5.4）
+@export var search: SearchRules             # 见下
+@export var loss_cost: Dictionary           # 战斗输了扣多少体力：类型 → 数。core 不在这里：BOSS 输了直接战败（7.1）
+@export var rest_restore: int               # 休息区回多少
+@export var event_weights: Dictionary       # 常规事件的结果：item / restore / story（占位）
+@export var battle_time_limit: float        # 打不死判平局，平局按输算
+
+class_name SearchRules extends Resource
+@export var max_searches: int               # 至多搜几次
+@export var encounter_curve: Array[float]   # 第 k 次的遭遇概率，非递减：每搜一次该更险
+@export var items_per_search: Vector2i      # 每次找几件
+@export var rarity_weights: Array[float]    # 稀有度权重，× (1 + depth_gain × 深度 × 稀有度) × (1 + danger_gain × 危险 × 稀有度)
+@export var exclude_tags: Array[StringName] # 搜不出来的（珍宝只从敌人身上掉）
+@export var haul_board: Vector2i            # 收获摆进多大的容器
+```
+
+**随机点**（`?`）生成时内容是空的，踩上去 `NodeEvents.reveal` 按权重抽一种类型记进 `content.resolved_type`，
+再当那种类型处理；是战斗就用 `EnemyPlacer.place_one` 现造敌人。随机数由节点 `content_seed` 派生：同一局同一个点揭开的一样，只是事先看不见。
+
+**搜索点**是 `SearchSession`：搜几次是玩家的旋钮（5.4.2）。每搜一次先找几件（稀有度随深度与危险上偏），
+再按曲线掷遭遇 —— 中了才由敌人池按 `search` 类型出人（搜索点的敌人**看不见**，5.10：不预先造，存档里也没有），
+打完这一场搜索到此为止；没中可以继续，搜满或随时 `leave()`。搜过几次记进 `node.content["searches"]`，读档接着搜。
+收获摆进 `LootPacker` 的容器，与尸体容器同一套（6.1）。
+
+#### 渐进揭示的搜索 UI（表现层，M6）
 
 三角洲行动式搜刮的手感核心是**"看得见轮廓、看不清是什么"**：
 
@@ -2489,6 +2521,24 @@ M2 定下的四个量各有归宿：`rolls` = 珍宝尝试次数，`rarity_bias`
 - **侵蚀损坏**（5.7 深层惩罚）：损失的是价值，所以「背着一件占 6 格的传说品在侵蚀区里绕路」才真的疼
 
 它也是 5.4.2 里 `type_reward` 的单位：一步的收益分 = 期望拿到的价值。
+
+### 6.5 节点事件（M4-4）
+
+`NodeEvents` 是 5.6 那个 `MapTravel.on_node_event` 钩子的真正接收方（`bind(travel)`）。
+它只接「节点类型 → 发生什么」的逻辑，每种结果一个信号，界面与转场（M6）只管接；数值全从 `NodeRules` 来（7.1）。
+
+| 踩到 | 发生 |
+|---|---|
+| battle / elite / core | `BattleSim` 打一场，玩家单位由 `player_spec` 在开战那一刻编译（4.2 是纯函数）。赢：`DropResolver` 掷、装尸体容器、`loot_ready`；输：扣 `loss_cost[类型]`，归零 `defeated(vitality_depleted)`；core 输了直接 `defeated(boss_lost)`，不扣。**不论输赢点都用过** |
+| search | 开 `SearchSession`，结束（搜满 / 离开 / 遭遇）时 `search_closed(haul)`；遭遇先就地打一场；结束才算用过 |
+| random | 先 `reveal`，再按揭开的类型走 |
+| rest | `vitality.restore(rest_restore)` |
+| event | 按 `event_weights` 出 item / restore / story（占位），记进 `content.outcome` |
+| shop / extract | 只发信号：买卖、撤离是 M6 的事 |
+| junction / spawn | 只标用过 |
+
+平局按输算。没有玩家单位、或点里没有敌人：点只是走过。随机数从节点 `content_seed` 派生，每种用途一个标签
+（reveal / enemy / battle / loot / search / ambush:k / event），改一种用途的抽法不影响别的。
 偏搜索路线「低收益」的意思，是期望价值低、方差大 —— 搜到一件传说品能把整局翻过来，
 所以才有「搜到强力道具一转战斗」这条退路。
 
@@ -2780,12 +2830,13 @@ data/authoring/sets/*.json          套装源数据
 data/authoring/enemies/*.json       敌人（6.0）
 data/authoring/enemy_pools/*.json   敌人池（6.0）
 data/authoring/drop_rules/*.json    掉落规则（6.1）
+data/authoring/node_rules/*.json    节点规则（6.2 / 6.5）
 data/authoring/chapters/*.json      章节（5.3）
-        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → items → enemies → enemy_pools → drop_rules → chapters）
+        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → items → enemies → enemy_pools → drop_rules → node_rules → chapters）
         │  tools/normalize_content.gd 把作者数据重写成导出器的格式（导入 → 导出 → 不同就写回）
         ▼
 data/items/*.tres   data/buffs/*.tres   data/sets/*.tres
-data/enemies/*.tres data/enemy_pools/*.tres   data/drop_rules/*.tres   data/chapters/*.tres
+data/enemies/*.tres data/enemy_pools/*.tres   data/drop_rules/*.tres   data/node_rules/*.tres   data/chapters/*.tres
 ```
 
 目录常量只在 `ContentPaths` 一处：种类 → [作者数据目录, 资产目录]，`ORDER` 就是导入顺序（后者按 id 引用前者）。
@@ -3148,6 +3199,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.46 | 2026-09-22 | **M4-3 随机点与搜索点、M4-4 节点事件接线**（报告 047）。6.2 重写 + 新增 6.5：`NodeRules`（随机点权重只认 A/S/R/V/Q、搜索规则、`loss_cost`、`rest_restore`、事件结果权重、战斗时限；章节按 id 引用）、`SearchRules`（次数、非递减的遭遇曲线、件数、稀有度权重随深度与危险上偏）、`SearchSession`（搜几次玩家定，遭遇即止，进度记进内容，遭遇的敌人到那一刻才造）、`NodeEvents`（`on_node_event` 的接收方：打一场、掉落、扣体力、core 输了直接战败、休息、事件、商店 / 撤离信号；随机数从节点种子按用途派生）、`LootPacker`（尸体容器与收获共用）、`EnemyPlacer.place_one`。沙盒接上事件与搜索按钮 |
 | v1.45 | 2026-09-22 | **M4-2 掉落规则**（报告 046）。6.1 重写：`DropRule`（按稀有度的基础掉落率表、非递增校验；难度 / 幸运每级加多少；珍宝概率、稀有度权重、珍宝标签占位）；`DropResolver`（每件各掷、珍宝掉自身没有的、期望件数、尸体容器 = `GridInventory`）；`LootContext` 加难度、幸运与 `sources`，M2 的四个量各有归宿；`DropBonusSource` 接口 + `MetaDropBonus` / `MapDropBonus` 两个占位实现。`ChapterDef.drop_rule`；管线新种类 `drop_rules`。沙盒悬停战斗点多一句「预计掉 x 件，珍宝 y%」 |
 | v1.44 | 2026-09-22 | **M4-1 敌人池**（报告 045，含 M4 四步规划）。新增 6.0：`EnemyDef`（本色档位、流派标签可多个、基线覆盖、招牌道具）、`EnemyPool`（配置表：条目按环种类 / 节点类型 / 危险过滤、档位表 = 件数 + 棋盘 + 倍率 + 稀有度上限、`StrengthRule` 全加法：深度 + 危险 + 类型 + 难度 + 规模、默认组装规则「通用 + 流派」）、`EnemyPlacer`（生成之后的第二遍，只用节点 `content_seed`；大件先摆、放不下换小的补）、`EnemyKit`（内容 → 棋盘 → `BattleCompiler`，预览 = 编译）。`ChapterDef` 加 `enemy_pool`（按 id）与 `difficulty`；内容管线加 `enemies`、`enemy_pools` 两种；`tools/normalize_content.gd`。流派是标签：混伤 = 两个流派。沙盒悬停战斗点见敌人一行摘要 |
 | v1.43 | 2026-09-22 | **M3-6 渲染与地图沙盒**（报告 044）。角度求解器 `RingAngleSolver`（形态无关：层 + 圈上的位置；由外向内、圆周均值 + 告警、单调校验、无随机），`RingLayoutBase` 让随机生成的与手绘的图共用它，按 `MapGraph.version` 缓存；切向边画弧；`MapView` 加 VISITED 去饱和、当前点呼吸、可达提示、路线加粗、悬停信号；核心改红。`ui/map/map_sandbox`：从 `chapter_01` 开局，挑出生点（路线卡 + 悬停加粗）、一步一步走、HUD（行动点 / 距最近撤离点 / 休息区 / 核心 / 体力）、单步预览、换种子。启动选择器第五个入口 |

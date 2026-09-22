@@ -160,26 +160,11 @@ static func expected_count(content: Dictionary, rule: DropRule, ctx: LootContext
 	return total
 
 
-## 尸体容器：掉下来的东西摆进一块棋盘（大小照敌人的棋盘；珍宝塞不下就加一行，最多加到两倍高）。
+## 尸体容器：掉下来的东西摆进一块棋盘（大小照敌人的棋盘；珍宝塞不下就加高，见 [LootPacker]）。
 ## 就是一个 GridInventory —— 搜刮界面直接拿它当容器
 static func corpse_of(content: Dictionary, rolled: Dictionary, items: ItemDatabase) -> GridInventory:
 	var size_raw: Array = content.get("board", [4, 3])
-	var size := Vector2i(maxi(1, int(size_raw[0])), maxi(1, int(size_raw[1])))
 	var ids: Array[StringName] = []
 	ids.append_array(rolled.get("dropped", [] as Array[StringName]))
 	ids.append_array(rolled.get("treasure", [] as Array[StringName]))
-	var grow := 0
-	while true:
-		var board := GridInventory.new(size + Vector2i(0, grow), 0, false)
-		var all_in := true
-		for id in ids:
-			var def := items.get_def(id)
-			if def == null:
-				continue
-			if not board.try_add(ItemInstance.create(def, 0), true):
-				all_in = false
-				break
-		if all_in or grow >= size.y:
-			return board
-		grow += 1
-	return null
+	return LootPacker.board_of(ids, Vector2i(int(size_raw[0]), int(size_raw[1])), items)

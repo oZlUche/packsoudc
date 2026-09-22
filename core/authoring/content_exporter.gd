@@ -42,6 +42,10 @@ static func export_drop_rule(rule: DropRule) -> Dictionary:
 	return _dump(rule)
 
 
+static func export_node_rules(rules: NodeRules) -> Dictionary:
+	return _dump(rules)
+
+
 ## 带 type 的导出，用于抽象基类的子对象
 static func _dump(obj: Object, with_type: bool = false) -> Dictionary:
 	var out := {}

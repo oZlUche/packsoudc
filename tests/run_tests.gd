@@ -57,6 +57,9 @@ const SUITES: Array = [
 	preload("res://tests/test_map_editor.gd"),
 	preload("res://tests/test_enemy_pool.gd"),
 	preload("res://tests/test_drop_resolver.gd"),
+	preload("res://tests/test_node_rules.gd"),
+	preload("res://tests/test_search_session.gd"),
+	preload("res://tests/test_node_events.gd"),
 ]
 
 

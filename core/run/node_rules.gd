@@ -1,0 +1,69 @@
+## 节点里发生什么的规则（架构文档 5.4 / 6.2 / 7.1，M4-3 / M4-4）：随机点变成什么、搜索点怎么搜、
+## 战斗输了扣多少体力、休息回多少、常规事件的结果。章节按 id 引用（`ChapterDef.node_rules`）。
+##
+## 7.1 说得明白：体力自己不知道任何数值，「输一场扣多少」「歇一会儿回多少」由调用方从配置里拿 —— 就是从这里拿。
+## 作者数据，走内容管线：`data/authoring/node_rules/*.json` → `data/node_rules/*.tres`。
+class_name NodeRules
+extends Resource
+
+## 随机点（?）进入时可以变成的类型：**不会**变成精英或 BOSS（5.4）。导入器只认这几个键
+const RANDOM_ALLOWED: Array[StringName] = [&"battle", &"search", &"shop", &"rest", &"event"]
+## 常规事件的三种结果（占位）：给一件道具 / 回一点体力 / 一段剧情
+const EVENT_OUTCOMES: Array[StringName] = [&"item", &"restore", &"story"]
+
+@export var id: StringName = &""
+@export var display_name: String = ""
+
+## 随机点：类型 → 权重
+@export var random_weights: Dictionary = {"battle": 3, "search": 3, "event": 2, "shop": 1, "rest": 1}
+
+@export var search: SearchRules = null
+
+## 战斗输了扣多少体力：类型 → 数。core 不在这里 —— BOSS 输了直接战败（7.1），那是规则不是数值。
+## 搜索点里遭遇的按 "search" 算
+@export var loss_cost: Dictionary = {"battle": 1, "elite": 2, "search": 1}
+
+## 休息区回多少体力。不写死 —— 不同章节可以不一样
+@export var rest_restore: int = 2
+
+## 常规事件（Q）的结果权重，占位：item / restore / story
+@export var event_weights: Dictionary = {"item": 1, "restore": 1, "story": 1}
+
+## 事件结果是 restore 时回多少体力
+@export var event_restore: int = 1
+
+## 事件结果是 item 时给一件什么稀有度以下的道具（-1 不限）；找法与搜索点一样
+@export var event_item_rarity_cap: int = 1
+
+## 一场战斗的时限（秒）：打不死判平局，平局按输算
+@export var battle_time_limit: float = 60.0
+
+
+## 随机点变成什么。权重全 0 或表空返回 battle —— 一个随机点总得是点什么
+func random_pick(rng: RandomNumberGenerator) -> StringName:
+	return _weighted(random_weights, rng, &"battle")
+
+
+## 常规事件的结果
+func event_pick(rng: RandomNumberGenerator) -> StringName:
+	return _weighted(event_weights, rng, &"story")
+
+
+func loss_cost_of(type: StringName) -> int:
+	return int(loss_cost.get(String(type), 0))
+
+
+static func _weighted(table: Dictionary, rng: RandomNumberGenerator, fallback: StringName) -> StringName:
+	var keys: Array = table.keys()
+	keys.sort()   # 顺序稳定，同种子同结果
+	var total := 0.0
+	for k in keys:
+		total += maxf(0.0, float(table[k]))
+	if total <= 0.0:
+		return fallback
+	var x := rng.randf() * total
+	for k in keys:
+		x -= maxf(0.0, float(table[k]))
+		if x <= 0.0:
+			return StringName(String(k))
+	return StringName(String(keys[keys.size() - 1]))

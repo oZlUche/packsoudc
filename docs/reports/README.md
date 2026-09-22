@@ -65,3 +65,4 @@
 | 044 | [M3-6 布局求解与地图沙盒](044-layout-solver-and-sandbox.md) | 阶段 4 · M3 | 完成 |
 | 045 | [M4 规划与 M4-1 敌人池](045-m4-plan-and-enemy-pool.md) | 阶段 5 · M4 | 完成 |
 | 046 | [M4-2 掉落规则与尸体容器](046-drop-rule.md) | 阶段 5 · M4 | 完成 |
+| 047 | [M4-3 随机点与搜索点、M4-4 节点事件接线](047-random-search-node-events.md) | 阶段 5 · M4 | 完成 |

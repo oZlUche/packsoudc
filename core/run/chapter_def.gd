@@ -23,3 +23,7 @@ extends Resource
 
 ## 掉落规则的 id（`data/drop_rules/`，6.1）。空 = 这一章什么都不掉
 @export var drop_rule: StringName = &""
+
+## 节点规则的 id（`data/node_rules/`，6.2 / 7.1）：随机点变什么、搜索怎么搜、输了扣多少、休息回多少。
+## 空 = 踩到点只标用过，什么都不发生
+@export var node_rules: StringName = &""

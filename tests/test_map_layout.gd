@@ -225,7 +225,11 @@ static func frame_sandbox(t: TestCase, root: Window) -> void:
 	t.check(sb.step(to), "走一步")
 	t.eq(sb.clock_total(), g.edge_between(entry, to).action_cost if g.edge_between(entry, to) != null
 		else g.edge_between(to, entry).action_cost, "行动点 = 那条边的 action_cost")
-	t.check(g.get_node(to).is_visited(), "走到的点用过了（没接事件钩子的占位）")
+	# 事件接上了（M4-4）：踩到的点由 NodeEvents 处理完才算用过；搜索点要等玩家离开
+	if sb.events() != null and sb.events().current_search != null:
+		t.check(not g.get_node(to).is_visited(), "走到的是搜索点：搜着的时候还没用过")
+		sb.events().current_search.leave()
+	t.check(g.get_node(to).is_visited(), "走到的点处理完用过了")
 	t.check(sb.step(entry), "走回头路")
 	t.eq(sb.travel().history, [entry, to, entry] as Array[int], "走过的路")
 	t.check(not sb.step(99999), "走不到的走不了")

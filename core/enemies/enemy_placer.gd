@@ -33,19 +33,31 @@ static func fill(
 			continue
 		var rng := RandomNumberGenerator.new()
 		rng.seed = n.content_seed
-		var wanted := wanted_strength(pool, n, float(depth.get(id, 0.0)), difficulty, scale_id)
-		var entry := pick(pool, enemies, n, wanted, rng)
-		if entry == null:
+		var built := place_one(n, pool, enemies, items, float(depth.get(id, 0.0)), difficulty, scale_id, rng)
+		if built.is_empty():
 			(out["skipped"] as Array[int]).append(id)
 			continue
-		var built := build_content(enemies.enemy(entry.enemy), pool, items, wanted, rng)
 		n.content = built["content"]
 		out["dropped"] = int(out["dropped"]) + int(built["dropped"])
 		if int(built["dropped"]) > 0:
 			(out["short"] as Array[Dictionary]).append({
-				"id": id, "enemy": String(entry.enemy), "strength": wanted, "missing": int(built["dropped"])})
+				"id": id, "enemy": String(built["content"]["enemy"]), "strength": int(built["content"]["strength"]),
+				"missing": int(built["dropped"])})
 		out["placed"] = int(out["placed"]) + 1
 	return out
+
+
+## 给一个点造一个敌人：算档位 → 挑人 → 组装。返回 build_content 的结果；没挑到人返回空字典。
+## 生成时 fill 逐点调它；随机点揭成战斗、搜索点遭遇时 [NodeEvents] 现调它（那时 [param node] 是按目标类型看的视图）
+static func place_one(
+	node: MapNode, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase,
+	depth: float, difficulty: int, scale_id: StringName, rng: RandomNumberGenerator
+) -> Dictionary:
+	var wanted := wanted_strength(pool, node, depth, difficulty, scale_id)
+	var entry := pick(pool, enemies, node, wanted, rng)
+	if entry == null:
+		return {}
+	return build_content(enemies.enemy(entry.enemy), pool, items, wanted, rng)
 
 
 ## 每个点的深度 0～1：tier 在全图 tier 范围里的位置。形态无关 —— 环形图、手绘图都只看 tier

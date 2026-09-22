@@ -21,7 +21,13 @@ var _items: ItemDatabase = null
 var _enemies: EnemyDatabase = null
 var _pool: EnemyPool = null
 var _drop_rule: DropRule = null
+var _node_rules: NodeRules = null
+var _events: NodeEvents = null
 var _view: MapView
+var _search_box: HBoxContainer
+var _search_label: Label
+var _search_btn: Button
+var _leave_btn: Button
 var _status: Label
 var _hud: Label
 var _preview: Label
@@ -44,6 +50,8 @@ func _ready() -> void:
 	_pool = _enemies.pool(_chapter.enemy_pool)
 	if _chapter.drop_rule != &"":
 		_drop_rule = load(ContentPaths.asset_file("drop_rules", String(_chapter.drop_rule))) as DropRule
+	if _chapter.node_rules != &"":
+		_node_rules = load(ContentPaths.asset_file("node_rules", String(_chapter.node_rules))) as NodeRules
 	regenerate(_seed)
 
 
@@ -104,6 +112,7 @@ func pick_spawn(id: int) -> bool:
 	_travel.vitality = Vitality.new()
 	_travel.moved.connect(_on_moved)
 	_travel.refused.connect(func(_i: MoveIntent, why: String): _say("走不了：" + why))
+	_wire_events()
 	_travel.start_at(id)
 	_view.current_id = id
 	_view.bold_route = _route_index_of_entry(id)
@@ -122,6 +131,100 @@ func step(to_id: int) -> bool:
 
 func clock_total() -> int:
 	return _travel.clock.total if _travel != null else 0
+
+
+func events() -> NodeEvents:
+	return _events
+#endregion
+
+
+#region 节点事件（M4-4）
+## 节点事件接在这一局的旅程上：踩到点发生什么全是 NodeEvents 的事，这里只把结果写进日志、开关搜索面板
+func _wire_events() -> void:
+	_events = null
+	if _node_rules == null:
+		_note("这一章没有节点规则：踩到点只标用过")
+		return
+	_events = NodeEvents.new(_graph)
+	_events.vitality = _travel.vitality
+	_events.rules = _node_rules
+	_events.pool = _pool
+	_events.enemies = _enemies
+	_events.items = _items
+	_events.drop_rule = _drop_rule
+	_events.difficulty = _chapter.difficulty
+	_events.scale_id = _scale_id()
+	_events.player_spec = _player_spec
+	_events.revealed.connect(func(n: MapNode, type: StringName):
+		_note("　点 %d 是个「?」：原来是 %s" % [n.id, MapNodeStyle.of(type)["label"]]))
+	_events.battle_finished.connect(_on_battle)
+	_events.loot_ready.connect(_on_loot)
+	_events.search_opened.connect(_on_search_opened)
+	_events.search_closed.connect(_on_search_closed)
+	_events.rested.connect(func(n: MapNode, got: int): _note("　休息：体力 +%d" % got))
+	_events.shop_opened.connect(func(_n: MapNode): _note("　商店：买卖是 M6 的事"))
+	_events.event_resolved.connect(func(_n: MapNode, outcome: StringName, detail: Dictionary):
+		_note("　事件：%s %s" % [outcome, str(detail) if not detail.is_empty() else ""]))
+	_events.extract_reached.connect(func(_n: MapNode): _note("　到了撤离点：撤离动作是 M6 的事"))
+	_events.defeated.connect(func(why: StringName): _say("战败：%s。换个种子重来" % why))
+	_events.bind(_travel)
+
+
+## 沙盒里的玩家：一块固定的棋盘（手枪、步枪、护甲、医疗包），血比默认厚一点。真正的玩家棋盘是 M5 的事
+func _player_spec() -> CombatantSpec:
+	var board := GridInventory.new(Vector2i(6, 4), 0, false)
+	for id in [&"rifle", &"pistol", &"armor", &"medkit"]:
+		var d := _items.get_def(id) if _items != null else null
+		if d != null:
+			board.try_add(ItemInstance.create(d, 0), true)
+	return BattleCompiler.compile(board, CombatantBaseline.with_hp(60.0))
+
+
+func _on_battle(n: MapNode, result: BattleResult, won: bool) -> void:
+	var who := enemy_preview(n.id).get_slice("　", 0)
+	_note("　打 %s：%s，%.1f 秒%s" % [who if who != "" else "敌人", "赢了" if won else ("平局，按输算" if result.is_draw() else "输了"),
+		result.duration_sec(), "" if won else "，体力 %d/%d" % [_travel.vitality.current, _travel.vitality.maximum]])
+	_refresh_hud()
+
+
+func _on_loot(_n: MapNode, corpse: GridInventory) -> void:
+	var names: Array[String] = []
+	for inst in corpse.items():
+		names.append((inst as ItemInstance).def.display_name)
+	_note("　掉落 %d 件：%s" % [names.size(), "、".join(names) if not names.is_empty() else "什么都没有"])
+
+
+func _on_search_opened(n: MapNode, session: SearchSession) -> void:
+	_search_box.visible = true
+	session.searched.connect(func(found: Array[StringName], met: Dictionary):
+		var names: Array[String] = []
+		for id in found:
+			names.append(_items.get_def(id).display_name)
+		_note("　搜到：%s%s" % ["、".join(names) if not names.is_empty() else "空手", "　—— 有敌人！" if not met.is_empty() else ""])
+		_refresh_search_label(session))
+	_refresh_search_label(session)
+	_note("　搜索点 %d：搜几次你定，每搜一次更险" % n.id)
+
+
+func _on_search_closed(_n: MapNode, haul: GridInventory, why: StringName) -> void:
+	_search_box.visible = false
+	_note("　搜索结束（%s），收获 %d 件在容器里" % [why, haul.item_count()])
+	_refresh_hud()
+
+
+func _refresh_search_label(session: SearchSession) -> void:
+	_search_label.text = "还能搜 %d 次，下一次遭遇 %.0f%%" % [session.searches_left(), session.next_encounter_chance() * 100.0]
+	_search_btn.disabled = not session.can_search()
+
+
+func _on_search_pressed() -> void:
+	if _events != null and _events.current_search != null:
+		_events.current_search.search()
+
+
+func _on_leave_pressed() -> void:
+	if _events != null and _events.current_search != null:
+		_events.current_search.leave()
 #endregion
 
 
@@ -154,6 +257,9 @@ func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
 		if not pick_spawn(id):
 			_say("先挑一个出生点（绿圈的「生」）")
 	else:
+		# 搜着搜着走了：先离开搜索点（随时可以离开）
+		if _events != null and _events.current_search != null:
+			_events.current_search.leave()
 		step(id)
 
 
@@ -299,6 +405,16 @@ func _build() -> void:
 	_enemy_line = _label("", 13, UiPalette.DIM)
 	_enemy_line.custom_minimum_size.y = 22
 	mid.add_child(_enemy_line)
+	_search_box = HBoxContainer.new()
+	_search_box.add_theme_constant_override("separation", 8)
+	_search_box.visible = false
+	_search_label = _label("", 13, UiPalette.FG)
+	_search_box.add_child(_search_label)
+	_search_btn = _button("搜一次", _on_search_pressed)
+	_search_box.add_child(_search_btn)
+	_leave_btn = _button("离开", _on_leave_pressed)
+	_search_box.add_child(_leave_btn)
+	mid.add_child(_search_box)
 
 	var side := PanelContainer.new()
 	side.custom_minimum_size.x = SIDE_WIDTH

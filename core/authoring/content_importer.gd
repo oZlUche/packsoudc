@@ -27,6 +27,8 @@ class Context:
 	var pools: Dictionary = {}
 	## id -> DropRule。章节对着它查
 	var drop_rules: Dictionary = {}
+	## id -> NodeRules。章节对着它查
+	var node_rules: Dictionary = {}
 
 	func register_buff(def: BuffDef) -> void:
 		if def != null and def.id != &"":
@@ -47,6 +49,10 @@ class Context:
 	func register_drop_rule(rule: DropRule) -> void:
 		if rule != null and rule.id != &"":
 			drop_rules[rule.id] = rule
+
+	func register_node_rules(rules: NodeRules) -> void:
+		if rules != null and rules.id != &"":
+			node_rules[rules.id] = rules
 
 	## 道具里带某个标签的有几件。批量导入时才有意义 —— 单独导一个敌人时上下文是空的，
 	## 这类「对着别的东西查」的校验就跳过（见 _validate_enemy）
@@ -109,6 +115,63 @@ static func import_drop_rule(data: Dictionary, ctx: Context, report: ImportRepor
 	_validate_drop_rule(rule, report)
 	ctx.register_drop_rule(rule)
 	return rule
+
+
+static func import_node_rules(data: Dictionary, ctx: Context, report: ImportReport) -> NodeRules:
+	var rules := NodeRules.new()
+	_fill(rules, data, "", ctx, report)
+	_validate_node_rules(rules, report)
+	ctx.register_node_rules(rules)
+	return rules
+
+
+## 随机点只能变成 A/S/R/V/Q（5.4：不会变成精英或 BOSS）；遭遇曲线非递减、在 0～1；件数范围合法；扣的体力非负。
+static func _validate_node_rules(rules: NodeRules, report: ImportReport) -> void:
+	if rules.id == &"":
+		report.error("id", "节点规则必须有 id")
+	if rules.random_weights.is_empty():
+		report.error("random_weights", "随机点得能变成点什么")
+	for key in rules.random_weights:
+		if not NodeRules.RANDOM_ALLOWED.has(StringName(String(key))):
+			report.error("random_weights", "随机点不能变成 '%s'（只能是 %s）" % [key, ", ".join(NodeRules.RANDOM_ALLOWED)])
+		if float(rules.random_weights[key]) < 0.0:
+			report.error("random_weights", "'%s' 的权重不能为负" % key)
+	for key in rules.loss_cost:
+		if int(rules.loss_cost[key]) < 0:
+			report.error("loss_cost", "'%s' 扣的体力不能为负" % key)
+		if String(key) == "core":
+			report.error("loss_cost", "core 不在这里：BOSS 输了直接战败，那是规则不是数值（7.1）")
+	for key in rules.event_weights:
+		if not NodeRules.EVENT_OUTCOMES.has(StringName(String(key))):
+			report.error("event_weights", "认不得的事件结果 '%s'（只能是 %s）" % [key, ", ".join(NodeRules.EVENT_OUTCOMES)])
+	if rules.rest_restore < 0 or rules.event_restore < 0:
+		report.error("rest_restore", "回的体力不能为负")
+	if rules.battle_time_limit <= 0.0:
+		report.error("battle_time_limit", "战斗时限应为正")
+	if rules.search == null:
+		report.error("search", "没有搜索规则，搜索点不知道怎么搜")
+		return
+	var s := rules.search
+	if s.max_searches < 1:
+		report.error("search.max_searches", "至少能搜一次")
+	if s.encounter_curve.is_empty():
+		report.error("search.encounter_curve", "没有遭遇曲线")
+	for i in s.encounter_curve.size():
+		var p := s.encounter_curve[i]
+		if p < 0.0 or p > 1.0:
+			report.error("search.encounter_curve[%d]" % i, "概率应在 0～1 之间")
+		if i > 0 and p < s.encounter_curve[i - 1]:
+			report.error("search.encounter_curve[%d]" % i, "第 %d 次的遭遇概率 %.2f 低于第 %d 次的 %.2f —— 每搜一次该更险"
+				% [i, p, i - 1, s.encounter_curve[i - 1]])
+	if s.items_per_search.x < 0 or s.items_per_search.y < s.items_per_search.x:
+		report.error("search.items_per_search", "件数范围应为 [min, max] 且 min ≥ 0")
+	if s.rarity_weights.is_empty():
+		report.error("search.rarity_weights", "没有稀有度权重")
+	for i in s.rarity_weights.size():
+		if s.rarity_weights[i] < 0.0:
+			report.error("search.rarity_weights[%d]" % i, "权重不能为负")
+	if s.haul_board.x < 1 or s.haul_board.y < 1:
+		report.error("search.haul_board", "容器至少 1×1")
 
 
 ## 作者定的形状写成校验：概率在 0～1，**稀有度越高基础掉落率越低**（非递增），珍宝的稀有度得是真的稀有度、权重为正。
@@ -231,6 +294,8 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 		report.error("enemy_pool", "找不到敌人池 '%s'（已知：%s）" % [def.enemy_pool, ", ".join(ctx.pools.keys())])
 	if def.drop_rule != &"" and not ctx.drop_rules.is_empty() and not ctx.drop_rules.has(def.drop_rule):
 		report.error("drop_rule", "找不到掉落规则 '%s'（已知：%s）" % [def.drop_rule, ", ".join(ctx.drop_rules.keys())])
+	if def.node_rules != &"" and not ctx.node_rules.is_empty() and not ctx.node_rules.has(def.node_rules):
+		report.error("node_rules", "找不到节点规则 '%s'（已知：%s）" % [def.node_rules, ", ".join(ctx.node_rules.keys())])
 	if def.map_source == null:
 		report.error("map_source", "章节必须有地图来源（随机生成或载入预设）")
 		return
