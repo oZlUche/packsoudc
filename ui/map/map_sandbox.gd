@@ -22,8 +22,11 @@ var _enemies: EnemyDatabase = null
 var _pool: EnemyPool = null
 var _drop_rule: DropRule = null
 var _node_rules: NodeRules = null
+var _economy: EconomyRules = null
+var _wallet: Wallet = null
 var _events: NodeEvents = null
 var _view: MapView
+var _shop_box: HBoxContainer
 var _search_box: HBoxContainer
 var _search_label: Label
 var _search_btn: Button
@@ -52,6 +55,8 @@ func _ready() -> void:
 		_drop_rule = load(ContentPaths.asset_file("drop_rules", String(_chapter.drop_rule))) as DropRule
 	if _chapter.node_rules != &"":
 		_node_rules = load(ContentPaths.asset_file("node_rules", String(_chapter.node_rules))) as NodeRules
+	if _chapter.economy_rules != &"":
+		_economy = load(ContentPaths.asset_file("economy_rules", String(_chapter.economy_rules))) as EconomyRules
 	regenerate(_seed)
 
 
@@ -77,7 +82,9 @@ func regenerate(seed: int) -> bool:
 		_say("这一章生成不出图：%s" % (_chapter.map_source.last_error if _chapter != null else ""))
 		return false
 	var placed := _place_enemies()
-	_say("种子 %d：%d 个点，%d 个敌人。挑一个出生点（绿圈的「生」）开始" % [seed, _graph.node_count(), placed])
+	var paid := PaidExtracts.mark(_graph, _economy)
+	_say("种子 %d：%d 个点，%d 个敌人%s。挑一个出生点（绿圈的「生」）开始" % [seed, _graph.node_count(), placed,
+		"，付费撤离点 %s（%d 币）" % [str(paid), _economy.extract_fee] if not paid.is_empty() else ""])
 	_rebuild_routes()
 	_refresh_hud()
 	return true
@@ -152,6 +159,13 @@ func _wire_events() -> void:
 	_events.enemies = _enemies
 	_events.items = _items
 	_events.drop_rule = _drop_rule
+	_wallet = Wallet.new(_economy.starting_balance if _economy != null else 0)
+	_wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh_hud())
+	_events.wallet = _wallet
+	_events.economy = _economy
+	_events.rewarded.connect(func(_n: MapNode, amount: int): _note("　进账 %d 币" % amount))
+	_events.shop_opened.connect(_on_shop_opened)
+	_events.shop_closed.connect(func(_n: MapNode): _shop_box.visible = false)
 	_events.difficulty = _chapter.difficulty
 	_events.scale_id = _scale_id()
 	_events.player_spec = _player_spec
@@ -162,10 +176,10 @@ func _wire_events() -> void:
 	_events.search_opened.connect(_on_search_opened)
 	_events.search_closed.connect(_on_search_closed)
 	_events.rested.connect(func(n: MapNode, got: int): _note("　休息：体力 +%d" % got))
-	_events.shop_opened.connect(func(_n: MapNode): _note("　商店：买卖是 M6 的事"))
 	_events.event_resolved.connect(func(_n: MapNode, outcome: StringName, detail: Dictionary):
 		_note("　事件：%s %s" % [outcome, str(detail) if not detail.is_empty() else ""]))
-	_events.extract_reached.connect(func(_n: MapNode): _note("　到了撤离点：撤离动作是 M6 的事"))
+	_events.extract_reached.connect(func(_n: MapNode, fee: int):
+		_note("　到了撤离点%s：撤离动作是 M6 的事" % ("（付费：%d 币，%s）" % [fee, "付得起" if _wallet.can_afford(fee) else "钱不够"] if fee > 0 else "")))
 	_events.defeated.connect(func(why: StringName): _say("战败：%s。换个种子重来" % why))
 	_events.bind(_travel)
 
@@ -210,6 +224,40 @@ func _on_search_closed(_n: MapNode, haul: GridInventory, why: StringName) -> voi
 	_search_box.visible = false
 	_note("　搜索结束（%s），收获 %d 件在容器里" % [why, haul.item_count()])
 	_refresh_hud()
+
+
+## 商店：货架上每格一个按钮（名字 + 价），刷新一个按钮，离开一个按钮。买到的东西没处放（玩家棋盘是 M5 的事），只记日志
+func _on_shop_opened(n: MapNode, session: ShopSession) -> void:
+	if session == null:
+		_note("　商店 %d：这一章没有经济规则，店是空的" % n.id)
+		return
+	_note("　商店 %d：%d 件在架上，刷新 %d 币" % [n.id, session.available().size(), session.refresh_cost()])
+	session.bought.connect(func(def: ItemDef, price: int): _note("　买了 %s，花 %d 币" % [def.display_name, price]))
+	session.stock_changed.connect(func(): _rebuild_shop(session))
+	_rebuild_shop(session)
+	_shop_box.visible = true
+
+
+func _rebuild_shop(session: ShopSession) -> void:
+	for child in _shop_box.get_children():
+		child.queue_free()
+	_shop_box.add_child(_label("商店：", 13, UiPalette.FG))
+	for i in session.available():
+		var def := _items.get_def(StringName(String(session.stock[i]["id"])))
+		var idx := i
+		var b := _button("%s %d 币" % [def.display_name if def != null else "?", int(session.stock[i]["price"])],
+			func(): _on_buy(session, idx))
+		b.disabled = not session.can_buy(i)
+		_shop_box.add_child(b)
+	var refresh := _button("刷新 %d 币" % session.refresh_cost(), func(): session.refresh())
+	refresh.disabled = not session.can_refresh()
+	_shop_box.add_child(refresh)
+	_shop_box.add_child(_button("离开", func(): session.leave()))
+
+
+func _on_buy(session: ShopSession, i: int) -> void:
+	if session.buy(i) != null:
+		_rebuild_shop(session)
 
 
 func _refresh_search_label(session: SearchSession) -> void:
@@ -260,6 +308,8 @@ func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
 		# 搜着搜着走了：先离开搜索点（随时可以离开）
 		if _events != null and _events.current_search != null:
 			_events.current_search.leave()
+		if _events != null and _events.current_shop != null:
+			_events.current_shop.leave()
 		step(id)
 
 
@@ -302,6 +352,9 @@ func enemy_preview(id: int) -> String:
 		line += "　预计掉 %.1f 件，珍宝 %.0f%%" % [
 			DropResolver.expected_count(content, _drop_rule, ctx, _items),
 			DropResolver.treasure_chance(_drop_rule, ctx) * 100.0]
+	if _economy != null:
+		var depth: float = EnemyPlacer.depths_of(_graph).get(id, 0.0)
+		line += "　打赢 +%d 币" % _economy.battle_reward(int(content.get("strength", 0)), depth, _chapter.difficulty)
 	return line
 
 
@@ -315,12 +368,13 @@ func _refresh_hud() -> void:
 	var extract := MapNavigator.nearest_of_type(_graph, _travel.current_id, &"extract")
 	var rest := MapNavigator.nearest_of_type(_graph, _travel.current_id, &"rest")
 	var core := MapNavigator.nearest_of_type(_graph, _travel.current_id, &"core")
-	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d" % [
+	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d" % [
 		_travel.clock.total,
 		str(extract["steps"]) if int(extract["id"]) >= 0 else "—",
 		str(rest["steps"]) if int(rest["id"]) >= 0 else "—",
 		str(core["steps"]) if int(core["id"]) >= 0 else "—",
-		_travel.vitality.current, _travel.vitality.maximum]
+		_travel.vitality.current, _travel.vitality.maximum,
+		_wallet.balance if _wallet != null else 0]
 
 
 func _route_of_entry(id: int) -> Dictionary:
@@ -415,6 +469,10 @@ func _build() -> void:
 	_leave_btn = _button("离开", _on_leave_pressed)
 	_search_box.add_child(_leave_btn)
 	mid.add_child(_search_box)
+	_shop_box = HBoxContainer.new()
+	_shop_box.add_theme_constant_override("separation", 8)
+	_shop_box.visible = false
+	mid.add_child(_shop_box)
 
 	var side := PanelContainer.new()
 	side.custom_minimum_size.x = SIDE_WIDTH

@@ -1410,7 +1410,8 @@ class_name ChapterDef extends Resource
 @export var difficulty: int                 # 章节难度，0 起。敌人池按它抬档位，掉落规则按它加掉落率；侵蚀将来也看它
 @export var drop_rule: StringName           # 掉落规则的 id（6.1，M4-2）
 @export var node_rules: StringName          # 节点规则的 id（6.2 / 6.5，M4-3 / M4-4）
-# 之后各加一个字段，导入器、导出器、编辑器一行不改（敌人池、掉落规则、节点规则就是这么加进来的）：
+@export var economy_rules: StringName       # 经济规则的 id（6.6，M4-5）
+# 之后各加一个字段，导入器、导出器、编辑器一行不改（敌人池、掉落 / 节点 / 经济规则就是这么加进来的）：
 # @export var erosion: ErosionSchedule      # 第 7 阶段；可为 null = 该难度不启用侵蚀
 ```
 
@@ -2539,6 +2540,37 @@ class_name SearchRules extends Resource
 
 平局按输算。没有玩家单位、或点里没有敌人：点只是走过。随机数从节点 `content_seed` 派生，每种用途一个标签
 （reveal / enemy / battle / loot / search / ambush:k / event），改一种用途的抽法不影响别的。
+
+### 6.6 经济（M4-5）
+
+作者的设想：打赢战斗获得货币，数量按敌人强度、所在深度与难度；商店售卖随机稀有度道具且可以刷新，都花货币；
+一个中途撤离点是付费的，费用暂用 50 占位。
+
+```gdscript
+# core/run/economy_rules.gd —— data/authoring/economy_rules/*.json，章节按 id 引用（ChapterDef.economy_rules）
+class_name EconomyRules extends Resource
+@export var starting_balance: int
+@export var reward_base: int                  # 打赢 = (base + per_strength × 档位) × (1 + depth_gain × 深度) × (1 + difficulty_gain × 难度)
+@export var reward_per_strength: int
+@export var reward_depth_gain: float
+@export var reward_difficulty_gain: float
+@export var shop_slots: int                   # 货架几格
+@export var shop_rarity_weights: Array[float] # 上架的稀有度权重，× (1 + shop_depth_gain × 深度 × 稀有度)
+@export var shop_price_mult: float            # 售价 = 道具价值（6.4）× 倍数
+@export var shop_refresh_cost: int            # 刷新一次；每刷一次涨 shop_refresh_step
+@export var paid_extracts: int                # 几个中途撤离点收费（最深的那几个）
+@export var extract_fee: int                  # 收多少（50 占位）
+```
+
+- **`Wallet`**（`core/run/wallet.gd`）和 `Vitality` 一个做法：不知道任何数值，只管进账、花钱、够不够、发信号；不够就一分不动。
+  它就是 7 节 `RunState` 里那个 `gold`。
+- **打赢进账**在 `NodeEvents._fight` 里：档位来自节点内容的 `strength`（6.0），深度按 tier 归一化，难度是章节的。输了、平了不给。
+- **商店**是 `ShopSession`：货架由节点 `content_seed` 与刷新次数决定（第 n 次刷新摆的永远是那几件），所以存档只记
+  `content.shop = {refreshes, sold}`；候选不含包与珍宝，按稀有度权重抽、不重复；价 = `ItemValue.of` × 倍数；买了就没了；
+  刷新花钱且越刷越贵；走了才算用过。买到的东西交给谁装是 M5 的事，这里只发 `bought`。
+- **付费撤离点**由 `PaidExtracts.mark(graph, rules)` 在生成之后标（生成器不认识钱）：挑最深的 `paid_extracts` 个撤离点，
+  费用记进 `content.fee` 跟着图存；核心不是中途撤离点，不收。`NodeEvents.extract_reached(node, fee)` 报费用，
+  撤离动作（M6）先调 `pay_extract_fee(node)`：免费直接过，付不起 false、一分不动。
 偏搜索路线「低收益」的意思，是期望价值低、方差大 —— 搜到一件传说品能把整局翻过来，
 所以才有「搜到强力道具一转战斗」这条退路。
 
@@ -2561,7 +2593,7 @@ var erosion: ErosionField        # 侵蚀状态，低难度下 schedule.enabled 
 var vitality: Vitality           # 体力（7.1）：战斗失败扣它，归零才战败
 var board: GridInventory         # 作战棋盘，requires_bag = true，只有这里的物品参战
 var storage: GridInventory       # 暂存区，requires_bag = false，保留但不参战
-var gold: int
+var gold: Wallet                 # 货币（6.6）：打赢进账，商店、刷新、付费撤离点花它
 var meta_stash: GridInventory    # 跨 run 持久仓库
 ```
 
@@ -2831,12 +2863,13 @@ data/authoring/enemies/*.json       敌人（6.0）
 data/authoring/enemy_pools/*.json   敌人池（6.0）
 data/authoring/drop_rules/*.json    掉落规则（6.1）
 data/authoring/node_rules/*.json    节点规则（6.2 / 6.5）
+data/authoring/economy_rules/*.json 经济规则（6.6）
 data/authoring/chapters/*.json      章节（5.3）
-        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → items → enemies → enemy_pools → drop_rules → node_rules → chapters）
+        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → items → enemies → enemy_pools → drop_rules → node_rules → economy_rules → chapters）
         │  tools/normalize_content.gd 把作者数据重写成导出器的格式（导入 → 导出 → 不同就写回）
         ▼
 data/items/*.tres   data/buffs/*.tres   data/sets/*.tres
-data/enemies/*.tres data/enemy_pools/*.tres   data/drop_rules/*.tres   data/node_rules/*.tres   data/chapters/*.tres
+data/enemies/*.tres data/enemy_pools/*.tres   data/drop_rules/*.tres   data/node_rules/*.tres   data/economy_rules/*.tres   data/chapters/*.tres
 ```
 
 目录常量只在 `ContentPaths` 一处：种类 → [作者数据目录, 资产目录]，`ORDER` 就是导入顺序（后者按 id 引用前者）。
@@ -3199,6 +3232,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.47 | 2026-09-23 | **M4-5 经济**（报告 048）。新增 6.6：`EconomyRules`（打赢 = (基础 + 每档) × 深度 × 难度；商店格数、稀有度权重随深度上偏、价 = 价值 × 倍数、刷新费越刷越贵；付费撤离点几个、收多少 —— 50 占位）；`Wallet`（不知道任何数值，不够一分不动）；`ShopSession`（货架由节点种子 + 刷新次数定，存档只记刷新与卖掉的格子）；`PaidExtracts.mark`（生成之后标最深的撤离点，费用跟着图存）；`NodeEvents` 加 `rewarded` / `shop_opened(session)` / `shop_closed` / `extract_reached(node, fee)` / `pay_extract_fee`。沙盒：货币进 HUD、商店按钮、付费撤离点提示、预览里「打赢 +x 币」 |
 | v1.46 | 2026-09-22 | **M4-3 随机点与搜索点、M4-4 节点事件接线**（报告 047）。6.2 重写 + 新增 6.5：`NodeRules`（随机点权重只认 A/S/R/V/Q、搜索规则、`loss_cost`、`rest_restore`、事件结果权重、战斗时限；章节按 id 引用）、`SearchRules`（次数、非递减的遭遇曲线、件数、稀有度权重随深度与危险上偏）、`SearchSession`（搜几次玩家定，遭遇即止，进度记进内容，遭遇的敌人到那一刻才造）、`NodeEvents`（`on_node_event` 的接收方：打一场、掉落、扣体力、core 输了直接战败、休息、事件、商店 / 撤离信号；随机数从节点种子按用途派生）、`LootPacker`（尸体容器与收获共用）、`EnemyPlacer.place_one`。沙盒接上事件与搜索按钮 |
 | v1.45 | 2026-09-22 | **M4-2 掉落规则**（报告 046）。6.1 重写：`DropRule`（按稀有度的基础掉落率表、非递增校验；难度 / 幸运每级加多少；珍宝概率、稀有度权重、珍宝标签占位）；`DropResolver`（每件各掷、珍宝掉自身没有的、期望件数、尸体容器 = `GridInventory`）；`LootContext` 加难度、幸运与 `sources`，M2 的四个量各有归宿；`DropBonusSource` 接口 + `MetaDropBonus` / `MapDropBonus` 两个占位实现。`ChapterDef.drop_rule`；管线新种类 `drop_rules`。沙盒悬停战斗点多一句「预计掉 x 件，珍宝 y%」 |
 | v1.44 | 2026-09-22 | **M4-1 敌人池**（报告 045，含 M4 四步规划）。新增 6.0：`EnemyDef`（本色档位、流派标签可多个、基线覆盖、招牌道具）、`EnemyPool`（配置表：条目按环种类 / 节点类型 / 危险过滤、档位表 = 件数 + 棋盘 + 倍率 + 稀有度上限、`StrengthRule` 全加法：深度 + 危险 + 类型 + 难度 + 规模、默认组装规则「通用 + 流派」）、`EnemyPlacer`（生成之后的第二遍，只用节点 `content_seed`；大件先摆、放不下换小的补）、`EnemyKit`（内容 → 棋盘 → `BattleCompiler`，预览 = 编译）。`ChapterDef` 加 `enemy_pool`（按 id）与 `difficulty`；内容管线加 `enemies`、`enemy_pools` 两种；`tools/normalize_content.gd`。流派是标签：混伤 = 两个流派。沙盒悬停战斗点见敌人一行摘要 |

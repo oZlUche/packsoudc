@@ -62,6 +62,8 @@ func _import(kind: String, data: Dictionary, ctx: ContentImporter.Context, repor
 			return ContentImporter.import_drop_rule(data, ctx, report)
 		"node_rules":
 			return ContentImporter.import_node_rules(data, ctx, report)
+		"economy_rules":
+			return ContentImporter.import_economy_rules(data, ctx, report)
 		"chapters":
 			return ContentImporter.import_chapter(data, ctx, report)
 		_:
@@ -82,6 +84,8 @@ func _export(kind: String, res: Resource) -> Dictionary:
 			return ContentExporter.export_drop_rule(res)
 		"node_rules":
 			return ContentExporter.export_node_rules(res)
+		"economy_rules":
+			return ContentExporter.export_economy_rules(res)
 		"chapters":
 			return ContentExporter.export_chapter(res)
 		_:

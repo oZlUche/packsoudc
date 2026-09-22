@@ -69,6 +69,8 @@ func _build(
 			return ContentImporter.import_drop_rule(data, ctx, report)
 		"node_rules":
 			return ContentImporter.import_node_rules(data, ctx, report)
+		"economy_rules":
+			return ContentImporter.import_economy_rules(data, ctx, report)
 		"chapters":
 			return ContentImporter.import_chapter(data, ctx, report)
 		_:

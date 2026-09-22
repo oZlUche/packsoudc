@@ -1,0 +1,15 @@
+{
+  "id": "standard",
+  "display_name": "标准经济（占位）",
+  "starting_balance": 20,
+  "shop_rarity_weights": [
+    40.0,
+    30.0,
+    20.0,
+    8.0,
+    2.0
+  ],
+  "shop_exclude_tags": [
+    "treasure"
+  ]
+}

@@ -180,13 +180,14 @@ static func run_havens(t: TestCase) -> void:
 
 	w.travel.step_to(0)
 	var shops: Array = []
-	w.events.shop_opened.connect(func(n: MapNode): shops.append(n.id))
+	w.events.shop_opened.connect(func(n: MapNode, _s: ShopSession): shops.append(n.id))
 	w.travel.step_to(_node(w, &"shop").id)
-	t.eq(shops, [_node(w, &"shop").id], "商店：发信号")
+	t.eq(shops, [_node(w, &"shop").id], "商店：发信号（没有经济规则时店是空的，点直接用过）")
+	t.check(_node(w, &"shop").is_visited(), "没有经济规则：商店点直接用过")
 
 	w.travel.step_to(0)
 	var ex: Array = []
-	w.events.extract_reached.connect(func(n: MapNode): ex.append(n.id))
+	w.events.extract_reached.connect(func(n: MapNode, _fee: int): ex.append(n.id))
 	w.travel.step_to(_node(w, &"extract").id)
 	t.eq(ex, [_node(w, &"extract").id], "撤离点：发信号（撤离动作是 M6 的事）")
 

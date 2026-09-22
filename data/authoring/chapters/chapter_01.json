@@ -374,5 +374,6 @@
   },
   "enemy_pool": "standard_ruins",
   "drop_rule": "standard",
-  "node_rules": "standard"
+  "node_rules": "standard",
+  "economy_rules": "standard"
 }

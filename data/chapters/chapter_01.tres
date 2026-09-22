@@ -257,3 +257,4 @@ map_source = SubResource("Resource_mw7iv")
 enemy_pool = &"standard_ruins"
 drop_rule = &"standard"
 node_rules = &"standard"
+economy_rules = &"standard"

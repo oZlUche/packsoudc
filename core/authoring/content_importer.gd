@@ -29,6 +29,8 @@ class Context:
 	var drop_rules: Dictionary = {}
 	## id -> NodeRules。章节对着它查
 	var node_rules: Dictionary = {}
+	## id -> EconomyRules。章节对着它查
+	var economy_rules: Dictionary = {}
 
 	func register_buff(def: BuffDef) -> void:
 		if def != null and def.id != &"":
@@ -53,6 +55,10 @@ class Context:
 	func register_node_rules(rules: NodeRules) -> void:
 		if rules != null and rules.id != &"":
 			node_rules[rules.id] = rules
+
+	func register_economy_rules(rules: EconomyRules) -> void:
+		if rules != null and rules.id != &"":
+			economy_rules[rules.id] = rules
 
 	## 道具里带某个标签的有几件。批量导入时才有意义 —— 单独导一个敌人时上下文是空的，
 	## 这类「对着别的东西查」的校验就跳过（见 _validate_enemy）
@@ -115,6 +121,41 @@ static func import_drop_rule(data: Dictionary, ctx: Context, report: ImportRepor
 	_validate_drop_rule(rule, report)
 	ctx.register_drop_rule(rule)
 	return rule
+
+
+static func import_economy_rules(data: Dictionary, ctx: Context, report: ImportReport) -> EconomyRules:
+	var rules := EconomyRules.new()
+	_fill(rules, data, "", ctx, report)
+	_validate_economy_rules(rules, report)
+	ctx.register_economy_rules(rules)
+	return rules
+
+
+## 钱的数全得非负；商店至少一格、至少有一档稀有度能上架；刷新不能越刷越便宜
+static func _validate_economy_rules(rules: EconomyRules, report: ImportReport) -> void:
+	if rules.id == &"":
+		report.error("id", "经济规则必须有 id")
+	for pair in [["starting_balance", rules.starting_balance], ["reward_base", rules.reward_base],
+			["reward_per_strength", rules.reward_per_strength], ["shop_refresh_cost", rules.shop_refresh_cost],
+			["shop_refresh_step", rules.shop_refresh_step], ["paid_extracts", rules.paid_extracts], ["extract_fee", rules.extract_fee]]:
+		if int(pair[1]) < 0:
+			report.error(String(pair[0]), "不能为负")
+	for pair in [["reward_depth_gain", rules.reward_depth_gain], ["reward_difficulty_gain", rules.reward_difficulty_gain],
+			["shop_depth_gain", rules.shop_depth_gain]]:
+		if float(pair[1]) < 0.0:
+			report.error(String(pair[0]), "不能为负 —— 越深越少、越难越少不是这个字段的意思")
+	if rules.shop_price_mult <= 0.0:
+		report.error("shop_price_mult", "售价倍数应为正")
+	if rules.shop_slots < 1:
+		report.error("shop_slots", "商店至少摆一件")
+	var any_weight := false
+	for i in rules.shop_rarity_weights.size():
+		if rules.shop_rarity_weights[i] < 0.0:
+			report.error("shop_rarity_weights[%d]" % i, "权重不能为负")
+		elif rules.shop_rarity_weights[i] > 0.0:
+			any_weight = true
+	if not any_weight:
+		report.error("shop_rarity_weights", "没有一档稀有度能上架")
 
 
 static func import_node_rules(data: Dictionary, ctx: Context, report: ImportReport) -> NodeRules:
@@ -296,6 +337,8 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 		report.error("drop_rule", "找不到掉落规则 '%s'（已知：%s）" % [def.drop_rule, ", ".join(ctx.drop_rules.keys())])
 	if def.node_rules != &"" and not ctx.node_rules.is_empty() and not ctx.node_rules.has(def.node_rules):
 		report.error("node_rules", "找不到节点规则 '%s'（已知：%s）" % [def.node_rules, ", ".join(ctx.node_rules.keys())])
+	if def.economy_rules != &"" and not ctx.economy_rules.is_empty() and not ctx.economy_rules.has(def.economy_rules):
+		report.error("economy_rules", "找不到经济规则 '%s'（已知：%s）" % [def.economy_rules, ", ".join(ctx.economy_rules.keys())])
 	if def.map_source == null:
 		report.error("map_source", "章节必须有地图来源（随机生成或载入预设）")
 		return

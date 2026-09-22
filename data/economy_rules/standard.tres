@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="EconomyRules" format=3]
+
+[ext_resource type="Script" path="res://core/run/economy_rules.gd" id="1_52qeb"]
+
+[resource]
+script = ExtResource("1_52qeb")
+id = &"standard"
+display_name = "标准经济（占位）"
+starting_balance = 20

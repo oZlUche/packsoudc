@@ -20,9 +20,14 @@ signal loot_ready(node: MapNode, corpse: GridInventory)
 signal search_opened(node: MapNode, session: SearchSession)
 signal search_closed(node: MapNode, haul: GridInventory, reason: StringName)
 signal rested(node: MapNode, restored: int)
-signal shop_opened(node: MapNode)
+## 打赢了进账多少（6.6）
+signal rewarded(node: MapNode, amount: int)
+## 商店开门。session 为 null = 这一章没有经济规则，店是空的
+signal shop_opened(node: MapNode, session: ShopSession)
+signal shop_closed(node: MapNode)
 signal event_resolved(node: MapNode, outcome: StringName, detail: Dictionary)
-signal extract_reached(node: MapNode)
+## 到了撤离点。fee > 0 = 付费的（PaidExtracts），撤离动作（M6）先 pay_extract_fee
+signal extract_reached(node: MapNode, fee: int)
 ## 战败：&"boss_lost"（核心输了）/ &"vitality_depleted"（体力归零）。结局由上层判（GameDirector，7.1）
 signal defeated(reason: StringName)
 
@@ -34,6 +39,9 @@ var pool: EnemyPool = null
 var enemies: EnemyDatabase = null
 var items: ItemDatabase = null
 var drop_rule: DropRule = null
+## 钱（6.6）。null = 这一局不算钱
+var wallet: Wallet = null
+var economy: EconomyRules = null
 var difficulty: int = 0
 var scale_id: StringName = &""
 ## 玩家的战斗单位：`Callable() -> CombatantSpec`。开战那一刻编译（4.2 是纯函数）
@@ -42,6 +50,7 @@ var player_spec: Callable = Callable()
 var loot_context: Callable = Callable()
 
 var current_search: SearchSession = null
+var current_shop: ShopSession = null
 var _depths: Dictionary = {}
 
 
@@ -79,13 +88,12 @@ func handle(node: MapNode) -> void:
 			rested.emit(node, got)
 			_visited(node)
 		&"shop":
-			shop_opened.emit(node)
-			_visited(node)
+			_open_shop(node)
 		&"event":
 			_event(node)
 			_visited(node)
 		&"extract":
-			extract_reached.emit(node)
+			extract_reached.emit(node, PaidExtracts.fee_of(node))
 			_visited(node)
 		_:
 			_visited(node)
@@ -127,6 +135,10 @@ func _fight(node: MapNode, type: StringName, content: Dictionary) -> bool:
 		var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot")) \
 			if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
 		loot_ready.emit(node, DropResolver.corpse_of(content, rolled, items))
+		if wallet != null and economy != null:
+			var amount := economy.battle_reward(int(content.get("strength", 0)), float(_depths.get(node.id, 0.0)), difficulty)
+			wallet.earn(amount, &"battle")
+			rewarded.emit(node, amount)
 	elif type == &"core":
 		defeated.emit(&"boss_lost")     # 规则不是数值：BOSS 输了直接战败，连 spend 都不调（7.1）
 	elif vitality != null and rules != null:
@@ -146,6 +158,34 @@ func _open_search(node: MapNode) -> void:
 	session.ended.connect(func(reason: StringName): _close_search(node, session, reason))
 	current_search = session
 	search_opened.emit(node, session)
+
+
+## 商店：开一个会话，玩家买、刷新、走；走了才算用过
+func _open_shop(node: MapNode) -> void:
+	if economy == null or wallet == null or items == null:
+		shop_opened.emit(node, null)
+		_visited(node)
+		return
+	var session := ShopSession.new(node, economy, items, wallet, float(_depths.get(node.id, 0.0)))
+	session.closed.connect(func():
+		current_shop = null
+		shop_closed.emit(node)
+		_visited(node))
+	current_shop = session
+	shop_opened.emit(node, session)
+
+
+## 这个撤离点收多少
+func extract_fee(node: MapNode) -> int:
+	return PaidExtracts.fee_of(node)
+
+
+## 付撤离费。免费的直接 true；付不起 false、一分不动。撤离动作本身是 M6 的事，它先调这个
+func pay_extract_fee(node: MapNode) -> bool:
+	var fee := extract_fee(node)
+	if fee <= 0:
+		return true
+	return wallet != null and wallet.spend(fee, &"extract")
 
 
 func _close_search(node: MapNode, session: SearchSession, reason: StringName) -> void:

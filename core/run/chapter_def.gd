@@ -27,3 +27,6 @@ extends Resource
 ## 节点规则的 id（`data/node_rules/`，6.2 / 7.1）：随机点变什么、搜索怎么搜、输了扣多少、休息回多少。
 ## 空 = 踩到点只标用过，什么都不发生
 @export var node_rules: StringName = &""
+
+## 经济规则的 id（`data/economy_rules/`，6.6）：打赢给多少钱、商店、付费撤离点。空 = 这一章不算钱
+@export var economy_rules: StringName = &""
