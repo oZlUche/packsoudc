@@ -47,6 +47,10 @@ var _zones_on_route: Dictionary = {}
 ## 高危区岔出来的那条边 [anchor, first]：它是天然的第一个出入口，受保护
 var _zone_gate_links: Array = []
 var _zones_skipped: int = 0
+## 路线下标 -> 环 -> 这一环上要多横着走几步（route_length_factor 多出来的步数撒在各环上）
+var _extra_steps: Array[Dictionary] = []
+## 路线的尽头（去撤离点的路线停在第 1 环的那个点）：不许当高危区的岔出点、不许被吸收
+var _route_ends: Dictionary = {}
 
 
 func default_config() -> Resource:
@@ -79,6 +83,8 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 	_zone_gate_links = []
 	_zones_skipped = 0
 	_zones_on_route = {}
+	_extra_steps = []
+	_route_ends = {}
 	# 几片高危区由规模模板说了算：min 必须有，多出来的在 [min, max] 里随机
 	_zone_range = _cfg.zone_count_range()
 	# 指定了片数就要那么多（已经被夹进规模的范围了）；没指定就在范围里随机
@@ -92,6 +98,7 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 	_pivot_done = {}
 	_pivot_rings = _schedule_pivots()
 	_graph.layout_meta["pivot_links"] = []
+	_graph.layout_meta["pivot_arcs"] = []
 
 	_make_core()
 	if not _make_ring_nodes():
@@ -141,12 +148,18 @@ func _make_ring_nodes() -> bool:
 	var chosen: Array = []
 	chosen.resize(count + 1)
 	chosen[0] = [0] as Array[int]
+	# 总数在规模模板的范围里抽（是范围不是定数），各环按配置里的基准比例分；
+	# 没有规模就照配置里每环写的数
+	var counts: Array[int] = []
+	var lim := _cfg.node_range()
+	if lim.y > 0:
+		counts = _cfg.counts_for_total(_rng.randi_range(lim.x, lim.y) - 1)     # 减掉核心
 	for r in range(1, count + 1):
 		var spec := _cfg.spec_for_ring(r)
 		var slots := _cfg.slots_for_ring(r)
 		var inner_slots := _cfg.slots_for_ring(r - 1) if r > 1 else 1
-		var filled := _choose_filled_slots(slots, spec.node_count if spec != null else 0,
-			chosen[r - 1], inner_slots)
+		var want := counts[count - r] if not counts.is_empty() else (spec.node_count if spec != null else 0)
+		var filled := _choose_filled_slots(slots, want, chosen[r - 1], inner_slots)
 		if filled.is_empty():
 			return false
 		chosen[r] = filled
@@ -270,6 +283,13 @@ func _lay_skeleton() -> bool:
 		styles.append(_cfg.routes[i % _cfg.routes.size()])
 		_protected_nodes[entries[i]] = true
 		_graph.entry_ids.append(entries[i])
+		_extra_steps.append(_schedule_extra_steps(outer))
+
+	# 最外环上也可以先横着走几步再向内
+	var all_routes: Array[int] = []
+	for i in paths.size():
+		all_routes.append(i)
+	_walk_extra(outer, all_routes, paths, outer - 1 < _cfg.converge_after_ring)
 
 	for r in range(outer - 1, -1, -1):
 		# 这一环还在走的路线：去核心的走到 0，去撤离点的停在 1
@@ -282,6 +302,10 @@ func _lay_skeleton() -> bool:
 		if not _advance_ring(r, outer - 1 - r, active, paths):
 			return false
 		if r >= 1:
+			# 去撤离点的路线走到第 1 环就到头了：那个点是它的出口，高危区不许从它岔出、也不许吸收它
+			for i in active:
+				if not styles[i].is_core_route() and r == 1:
+					_route_ends[(paths[i] as Array[int])[-1]] = true
 			# 高危区也是一个「起点」：和路线同一个节拍，每推进一环长一个点
 			_grow_zones_once()
 			_maybe_spawn_zones(r, active, paths)
@@ -304,6 +328,66 @@ func _lay_skeleton() -> bool:
 	_graph.routes = routes
 	_graph.goal_ids = [CORE_ID] as Array[int]
 	return true
+
+
+## 一条路线多出来的步数（环数 × (route_length_factor - 1)）撒在哪几环：环 -> 几步。
+## 随机撒，一环可以摊到好几步 —— 同一环上横着走几步不致命，路线长一点沿路才放得下东西
+func _schedule_extra_steps(outer: int) -> Dictionary:
+	var out := {}
+	var extra := maxi(0, roundi(float(outer) * (_cfg.route_length_factor - 1.0)))
+	for _k in extra:
+		var r := _rng.randi_range(1, outer)
+		out[r] = int(out.get(r, 0)) + 1
+	return out
+
+
+## 第 r 环上，active 里各条路线按安排横着走几步：只走没人占的、不在高危区里的点，
+## 合流之前还得离别的路线在这一环上的落点够远。走不动就算了 —— 这是尽力而为，不是硬指标。
+func _walk_extra(r: int, active: Array[int], paths: Array, exclusive: bool) -> void:
+	if r < 1:
+		return
+	var slots := maxi(1, _cfg.slots_for_ring(r))
+	var outer_slots := maxi(1, _cfg.slots_for_ring(_cfg.ring_count()))
+	var need := maxi(1, floori(float(_cfg.entry_min_gap) * float(slots) / float(outer_slots))) if exclusive else 1
+	var map: Dictionary = _ring_slots[r]
+	for i in active:
+		var steps := int((_extra_steps[i] as Dictionary).get(r, 0))
+		if steps <= 0:
+			continue
+		var path: Array[int] = paths[i]
+		if int(_graph.get_node(path[-1]).layout.get("ring", -1)) != r:
+			continue
+		# 别的路线在这一环上占的槽位
+		var others: Array[int] = []
+		for j in active:
+			if j == i:
+				continue
+			for id in (paths[j] as Array[int]):
+				var n := _graph.get_node(id)
+				if int(n.layout.get("ring", -1)) == r:
+					others.append(int(n.layout["order"]))
+		var dir := 1 if _rng.randf() < 0.5 else -1
+		for _k in steps:
+			var moved := false
+			for d in [dir, -dir]:
+				var slot := _ring_next(r, int(_graph.get_node(path[-1]).layout["order"]), d)
+				if slot < 0:
+					continue
+				var id := int(map[slot])
+				if _protected_nodes.has(id) or _graph.get_node(id).zone != 0 \
+						or not _far_enough(slot, others, need, slots):
+					continue
+				# 不走进死角：挪过去之后还得有向内的落点（去撤离点的路线到了第 1 环不用再向内）
+				if r > 1 and _inward_candidates(id, r - 1).is_empty():
+					continue
+				_protect_edge(path[-1], id, &"tangential")
+				_protected_nodes[id] = true
+				path.append(id)
+				dir = d
+				moved = true
+				break
+			if not moved:
+				break
 
 
 ## 在最外环上挑出生点：两两之间的环形距离不小于 entry_min_gap 个槽位。
@@ -440,6 +524,8 @@ func _advance_ring(r: int, steps: int, active: Array[int], paths: Array) -> bool
 		if not landed:
 			build_note = "路线走到第 %d 环，每个落点都会和别的路交叉" % r
 			return false
+	# 都落好了，再各自按安排横着走几步 —— 落点是先定的，横着走不去抢别人的落点
+	_walk_extra(r, active, paths, exclusive)
 	_try_adjacent_pivots(r, active, paths)
 	return true
 
@@ -572,7 +658,8 @@ func _try_adjacent_pivots(r: int, active: Array[int], paths: Array) -> void:
 				if _ring_next(r, sa, 1) != sb and _ring_next(r, sa, -1) != sb:
 					continue        # 相邻 = 这一环上挨着的两个点（中间没有别的点，也没隔着空白区）
 				_protect_edge(a, b, &"tangential")
-				(_graph.layout_meta["pivot_links"] as Array).append([mini(a, b), maxi(a, b)])
+				# [a, b, 路线 i, 路线 j]：撤离点想落在两条路线共用的地方，得知道这是谁和谁的换乘
+				(_graph.layout_meta["pivot_links"] as Array).append([mini(a, b), maxi(a, b), i, j])
 			_pivot_done[key] = true     # 落在同一个点上（合流）当然也算换乘过了
 			break
 
@@ -592,7 +679,11 @@ func _lay_pivots() -> void:
 			var slot_b := _route_slot_on_ring(b, _pivot_rings[k])
 			if slot_a < 0 or slot_b < 0 or slot_a == slot_b:
 				continue
-			_protect_arc(_pivot_rings[k], slot_a, slot_b)
+			var arc := _protect_arc(_pivot_rings[k], slot_a, slot_b)
+			if not arc.is_empty():
+				# 撤离点想落在两条路线之间的换乘弧上，得记下这段弧是谁和谁的
+				(_graph.layout_meta["pivot_arcs"] as Array).append(
+					{"routes": [int(pair[0]), int(pair[1])], "node_ids": arc})
 
 
 func _route_slot_on_ring(route: Dictionary, r: int) -> int:
@@ -603,8 +694,9 @@ func _route_slot_on_ring(route: Dictionary, r: int) -> int:
 	return -1
 
 
-## 保护第 r 环上 slot_a → slot_b 之间较短的那段弧上的全部相邻边。
-func _protect_arc(r: int, slot_a: int, slot_b: int) -> void:
+## 保护第 r 环上 slot_a → slot_b 之间较短的那段弧上的全部相邻边。返回弧上的点（含两端）；
+## 两头都不通返回空。
+func _protect_arc(r: int, slot_a: int, slot_b: int) -> Array[int]:
 	var slots := maxi(1, _cfg.slots_for_ring(r))
 	var forward := posmod(slot_b - slot_a, slots)
 	var dir := 1 if forward <= slots - forward else -1
@@ -613,13 +705,14 @@ func _protect_arc(r: int, slot_a: int, slot_b: int) -> void:
 	if path.is_empty():
 		path = _arc_path(r, slot_a, slot_b, -dir)
 	if path.is_empty():
-		return
+		return path
 	var prev := -1
 	for id in path:
 		_protected_nodes[id] = true
 		if prev >= 0:
 			_protect_edge(prev, id, &"tangential")
 		prev = id
+	return path
 
 
 ## 沿第 r 环从 slot_a 朝 dir 走到 slot_b 经过的点（含两端）；中间断了（空白区、高危区）返回空。
@@ -686,7 +779,8 @@ func _spawn_zone(active: Array[int], paths: Array) -> bool:
 			continue
 		var path: Array[int] = paths[i]
 		var anchor := path[-1]
-		if _is_mandatory_node(anchor) or _graph.get_node(anchor).zone != 0:
+		# 路线的尽头（去撤离点的路线停下的那个点）是它的出口：不从它岔出，收尾时也就不会把它吸进去
+		if _is_mandatory_node(anchor) or _graph.get_node(anchor).zone != 0 or _route_ends.has(anchor):
 			continue
 		for first in _spatial_neighbors(anchor):
 			if not _zone_free(first):
@@ -778,7 +872,7 @@ func _finalize_zones() -> void:
 		var anchor := int(head["anchor"])
 		var absorbed := false
 		if members.size() < rules.min_size and _graph.get_node(anchor).zone == 0 \
-				and anchor != CORE_ID and not _graph.entry_ids.has(anchor):
+				and anchor != CORE_ID and not _graph.entry_ids.has(anchor) and not _route_ends.has(anchor):
 			_claim(head, anchor)
 			_zone_links.append([anchor, int(head["first"])])
 			absorbed = true
@@ -942,11 +1036,13 @@ func _link_zone_trees() -> void:
 		_protect_edge(a, b, &"tangential" if same_ring else &"radial")
 
 
-## 高危区隔离：跨区边界的边只留几条当出入口，其余删掉。
+## 高危区隔离：只留几个**出入口节点**，其余跨界的边删掉。
 ##
-## 留几条：1 到「这个规模允许的上限」之间随机。已受保护的跨界边（岔出来的那条、
-## 被吸收的路线节点原本的路线边）必须留。再要添的话，**挑区内那一头离已有出入口最远的** ——
-## 多个口挤在一起，和一个口没区别。
+## 出入口是「区内连着区外的那个点」，不是边：一个点身上有三条路通向区外，也只算一个口 ——
+## 玩家站在那个点上，出去就是出去了，从哪条路出去没差别。
+## 留几个：1 到「这个规模允许的上限」之间随机。带受保护跨界边的点（岔出来的那条边的区内头、
+## 被吸收的路线节点）必须是口。再要添的话，**挑离已有出入口最远的点** ——
+## 多个口挤在一起，和一个口没区别。定为口的点，它全部跨界的边都留。
 func _isolate_zones() -> void:
 	var rules := _rules()
 	var zone_ids: Array = _graph.zones.keys()
@@ -957,19 +1053,27 @@ func _isolate_zones() -> void:
 		var inside := {}
 		for id in members:
 			inside[int(id)] = true
-		var keep: Array[MapEdge] = []
-		var spare: Array[MapEdge] = []
+		var by_gate := {}       # 区内节点 -> 它的跨界边
+		var forced := {}        # 必须留的口
 		for e in ZoneRules.crossing_edges(_graph, members):
-			var outside := e.to_id if inside.has(e.from_id) else e.from_id
-			if _protected_edges.has(_edge_key(e.from_id, e.to_id)):
-				keep.append(e)
-			elif _graph.get_node(outside).zone != 0:
+			var gate := e.from_id if inside.has(e.from_id) else e.to_id
+			var outside := e.other(gate)
+			if _graph.get_node(outside).zone != 0 and not _protected_edges.has(_edge_key(e.from_id, e.to_id)):
 				# 两片高危区之间不直接开口：那条边两边各算一个出入口，
 				# 后处理的那片会把先处理的那片算好的数目顶破
 				_graph.remove_edge(e)
-			else:
-				spare.append(e)
+				continue
+			if not by_gate.has(gate):
+				by_gate[gate] = [] as Array[MapEdge]
+			(by_gate[gate] as Array[MapEdge]).append(e)
+			if _protected_edges.has(_edge_key(e.from_id, e.to_id)):
+				forced[gate] = true
 
+		var keep: Array[int] = _sorted_keys(forced)
+		var spare: Array[int] = []
+		for gate in _sorted_keys(by_gate):
+			if not forced.has(gate):
+				spare.append(gate)
 		var want := _rng.randi_range(1, maxi(1, rules.max_gates_for(members.size())))
 		while keep.size() < want and not spare.is_empty():
 			var best := -1
@@ -979,26 +1083,25 @@ func _isolate_zones() -> void:
 				if dist > best_dist:
 					best = i
 					best_dist = dist
-			if not keep.is_empty() and best_dist <= 0:
-				break       # 剩下的都和已有的口挤在同一个点上，添了也白添
 			keep.append(spare[best])
 			spare.remove_at(best)
 
-		for e in spare:
-			_graph.remove_edge(e)
-		for e in keep:
-			_protected_edges[_edge_key(e.from_id, e.to_id)] = true
+		for gate in spare:
+			for e in (by_gate[gate] as Array[MapEdge]):
+				_graph.remove_edge(e)
+		for gate in keep:
+			for e in (by_gate[gate] as Array[MapEdge]):
+				_protected_edges[_edge_key(e.from_id, e.to_id)] = true
 		info["gate_ids"] = ZoneRules.gate_ids(_graph, members)
 
 
-## 这条跨界边在区内的那一头，离已有出入口（区内那一头）最近的有几步 —— 只沿区内的路走。
-## 还没有任何出入口时返回一个大数：第一条随便哪条都一样远。
-func _gate_spread(edge: MapEdge, kept: Array[MapEdge], inside: Dictionary) -> int:
+## 这个区内节点离已有出入口最近的有几步 —— 只沿区内的路走。
+## 还没有任何出入口时返回一个大数：第一个随便哪个都一样远。
+func _gate_spread(gate: int, kept: Array[int], inside: Dictionary) -> int:
 	if kept.is_empty():
 		return 1 << 20
-	var start := edge.from_id if inside.has(edge.from_id) else edge.to_id
-	var dist := {start: 0}
-	var queue: Array[int] = [start]
+	var dist := {gate: 0}
+	var queue: Array[int] = [gate]
 	var head := 0
 	while head < queue.size():
 		var id := queue[head]
@@ -1008,8 +1111,7 @@ func _gate_spread(edge: MapEdge, kept: Array[MapEdge], inside: Dictionary) -> in
 				dist[n] = int(dist[id]) + 1
 				queue.append(n)
 	var nearest := 1 << 20
-	for e in kept:
-		var g := e.from_id if inside.has(e.from_id) else e.to_id
+	for g in kept:
 		nearest = mini(nearest, int(dist.get(g, 1 << 20)))
 	return nearest
 

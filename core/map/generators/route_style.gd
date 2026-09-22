@@ -33,10 +33,6 @@ extends Resource
 ## 想打还是能打：换乘点还在。
 @export var ends_at: StringName = &"core"
 
-## 每隔几环在这条路线上放一个中途撤离点（0 = 不放）。
-## 偏战斗的路线要靠它「战损过高就撤」。[b]M3-3c 才用到。[/b]
-@export var bailout_every_rings: int = 0
-
 
 func is_core_route() -> bool:
 	return ends_at != &"extract"

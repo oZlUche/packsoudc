@@ -59,8 +59,8 @@
         },
         {
           "kind": "depths",
-          "slots": 13,
-          "node_count": 8,
+          "slots": 16,
+          "node_count": 10,
           "quota": {
             "shop": [
               0,
@@ -85,8 +85,8 @@
         },
         {
           "kind": "core_ring",
-          "slots": 9,
-          "node_count": 5,
+          "slots": 12,
+          "node_count": 7,
           "quota": {
             "shop": [
               0,
@@ -189,10 +189,21 @@
         {
           "id": "small",
           "display_name": "小型（4~5 环）",
-          "nodes": [
-            28,
-            38
-          ]
+          "nodes_by_rings": {
+            "4": [
+              25,
+              30
+            ],
+            "5": [
+              35,
+              40
+            ]
+          },
+          "extract_gap": 3,
+          "haven_at": {
+            "rest": 0.5,
+            "shop": 0.5
+          }
         },
         {
           "id": "medium",
@@ -217,10 +228,24 @@
             1,
             2
           ],
-          "nodes": [
-            45,
-            50
-          ]
+          "nodes_by_rings": {
+            "6": [
+              45,
+              50
+            ],
+            "7": [
+              58,
+              66
+            ],
+            "8": [
+              74,
+              84
+            ]
+          },
+          "haven_at": {
+            "rest": 0.333333333333333,
+            "shop": 0.666666666666667
+          }
         },
         {
           "id": "large",
@@ -245,11 +270,30 @@
             2,
             3
           ],
-          "nodes": [
-            72,
-            90
-          ],
+          "nodes_by_rings": {
+            "9": [
+              86,
+              100
+            ],
+            "10": [
+              105,
+              122
+            ],
+            "11": [
+              124,
+              144
+            ],
+            "12": [
+              149,
+              174
+            ]
+          },
           "extract_gap": 5,
+          "extract_bands": 2,
+          "haven_at": {
+            "rest": 0.333333333333333,
+            "shop": 0.666666666666667
+          },
           "placeholder": true
         }
       ],
@@ -268,8 +312,7 @@
           "reward_band": [
             1.2,
             1.9
-          ],
-          "bailout_every_rings": 4
+          ]
         },
         {
           "id": "search",
@@ -361,7 +404,6 @@
           "shop"
         ]
       ],
-      "extract_every_rings": 4,
       "zone_spec": {},
       "zone_rules": {
         "max_gates_by_size": {

@@ -191,9 +191,10 @@ static func _check_all(g: MapGraph, cfg: RingMapConfig) -> String:
 		# 路线节点只会在「只长到两个点」时被划进来凑数，所以含路线节点的区一定是最小规模
 		if absorbed > 1 or (absorbed == 1 and ids.size() != rules.min_size):
 			return "高危区 %s（%d 个点）里有 %d 个路线节点" % [zone_id, ids.size(), absorbed]
-		var gates := ZoneRules.crossing_edges(g, ids).size()
+		# 出入口数的是【区内连着区外的点】，不是边
+		var gates := ZoneRules.gate_ids(g, ids).size()
 		if gates < 1 or gates > rules.max_gates_for(ids.size()):
-			return "高危区 %s（%d 个点）有 %d 个出入口，上限 %d" % [
+			return "高危区 %s（%d 个点）有 %d 个出入口节点，上限 %d" % [
 				zone_id, ids.size(), gates, rules.max_gates_for(ids.size())]
 		if info["gate_ids"] != ZoneRules.gate_ids(g, ids):
 			return "高危区 %s 记下的 gate_ids 与图上的对不上" % zone_id
@@ -276,14 +277,15 @@ static func run_scale_profiles(t: TestCase) -> void:
 					var size: int = (g.zones[zone_id]["node_ids"] as Array).size()
 					t.check(size <= maxi(p.zone_size.y, cfg.zone_rules.min_size),
 						"%s：高危区 %d 个点，软上限 %d" % [p.id, size, p.zone_size.y])
-				if p.nodes.y > 0:
-					t.check(g.node_count() >= p.nodes.x and g.node_count() <= p.nodes.y,
-						"%s · %d 环：%d 个点，该在 %d～%d" % [p.id, rings, g.node_count(), p.nodes.x, p.nodes.y])
+				var lim := p.node_range(rings)
+				if lim.y > 0:
+					t.check(g.node_count() >= lim.x and g.node_count() <= lim.y,
+						"%s · %d 环：%d 个点，该在 %d～%d" % [p.id, rings, g.node_count(), lim.x, lim.y])
 					nodes_at[rings] = int(nodes_at.get(rings, 0)) + g.node_count()
 				t.check(_zones_per_route_max(g) <= p.zones_per_route,
 					"%s：每条路线身上岔出的不超过 %d 片" % [p.id, p.zones_per_route])
 
-		if p.nodes.y > 0 and p.rings.y > p.rings.x:
+		if p.node_range(p.rings.y).y > 0 and p.rings.y > p.rings.x:
 			t.check(int(nodes_at.get(p.rings.y, 0)) >= int(nodes_at.get(p.rings.x, 0)),
 				"%s：%d 环的点数 ≥ %d 环的 —— 节点数仍随环数增长" % [p.id, p.rings.y, p.rings.x])
 
@@ -346,7 +348,7 @@ static func run_zone_shape_rules(t: TestCase) -> void:
 	for size in range(rules.min_size, rules.max_size + 1):
 		t.eq(read.max_gates_for(size), rules.max_gates_for(size), "%d 个点的出入口上限读得回" % size)
 
-	# 给一片区多开几个口，开到超过上限 → zone_gate
+	# 出入口数的是【区内连着区外的点】：给已有的那个口再多接几条通向区外的路，口还是那么多个
 	var zone_id: int = g.zones.keys()[0]
 	var ids: Array = g.zones[zone_id]["node_ids"]
 	var cap := rules.max_gates_for(ids.size())
@@ -355,16 +357,34 @@ static func run_zone_shape_rules(t: TestCase) -> void:
 		inside[int(id)] = true
 	var outsiders: Array[int] = []
 	for id in g.node_ids():
-		if not inside.has(id):
+		if not inside.has(id) and id != RingMapGenerator.CORE_ID:
 			outsiders.append(id)
-	var k := 0
-	while ZoneRules.crossing_edges(g, ids).size() <= cap and k < outsiders.size():
-		if g.edge_between(int(ids[0]), outsiders[k]) == null:
-			g.connect_nodes(int(ids[0]), outsiders[k], &"radial")
-		k += 1
+	var gate0: int = ZoneRules.gate_ids(g, ids)[0]
+	var before := ZoneRules.gate_ids(g, ids).size()
+	var added := 0
+	for out in outsiders:
+		if added >= 3:
+			break
+		if g.edge_between(gate0, out) == null and g.get_node(out).zone == 0:
+			g.connect_nodes(gate0, out, &"radial")
+			added += 1
+	t.check(added > 0 and ZoneRules.gate_ids(g, ids).size() == before, "同一个点上多开几条路，出入口数不变")
 	var v := MapValidation.new()
-	gen.validate(g, v)
-	t.check(v.rules().has(&"zone_gate"), "出入口超过上限 → zone_gate")
+	ZoneRules.validate(g, v)
+	t.check(not v.rules().has(&"zone_gate"), "所以也不算超标")
+	# 换成让【不同的】区内点各自通向区外，口就多了 → zone_gate
+	var k := 0
+	for member in ids:
+		if ZoneRules.gate_ids(g, ids).size() > cap:
+			break
+		while k < outsiders.size() and (g.edge_between(int(member), outsiders[k]) != null or g.get_node(outsiders[k]).zone != 0):
+			k += 1
+		if k < outsiders.size():
+			g.connect_nodes(int(member), outsiders[k], &"radial")
+	v = MapValidation.new()
+	ZoneRules.validate(g, v)
+	t.check(ZoneRules.gate_ids(g, ids).size() > cap and v.rules().has(&"zone_gate"),
+		"不同的点各开一个口，超过上限 → zone_gate（%d 个口，上限 %d）" % [ZoneRules.gate_ids(g, ids).size(), cap])
 
 	# 删到只剩两个点 → zone_size
 	var small := MapGraph.from_dict(back.to_dict())
@@ -379,36 +399,40 @@ static func run_zone_shape_rules(t: TestCase) -> void:
 
 
 static func run_zone_gates_spread(t: TestCase) -> void:
-	t.begin("高危区 · 多个出入口尽量分开")
+	t.begin("高危区 · 出入口是点不是边；多个口尽量分开")
 
-	# 统计：有两个以上出入口、且区内不止一个点挨着区外的那些区里，
-	# 出入口应当落在不同的点上（挤在同一个点上等于只有一个口）
+	# 每片区：gate_ids 里的每个点都真的连着区外；口数在 1～上限之间；
+	# 有两个以上口的区，口与口之间至少隔一步（挤在一起等于一个口）
 	var cfg := RingMapConfig.sample(7)
 	var multi := 0
-	var crowded := 0
+	var adjacent_gates := 0
+	var bad := 0
 	for s in 48:
 		var g := _gen().generate(cfg, s)
 		if g == null:
 			continue
-		var on_route := {}
-		for route in g.routes:
-			for id in (route["node_ids"] as Array):
-				on_route[int(id)] = true
+		var rules := ZoneRules.from_graph(g)
 		for zone_id in g.zones:
 			var ids: Array = g.zones[zone_id]["node_ids"]
-			var edges := ZoneRules.crossing_edges(g, ids)
-			# 吸收了路线节点的小区不算：它的两个口就是那个点原本的两条路线边，本来就在同一个点上
-			var absorbed := false
-			for id in ids:
-				if on_route.has(int(id)):
-					absorbed = true
-			if edges.size() < 2 or absorbed:
-				continue
-			multi += 1
-			if (g.zones[zone_id]["gate_ids"] as Array).size() < edges.size():
-				crowded += 1
+			var gates: Array = g.zones[zone_id]["gate_ids"]
+			if gates.size() < 1 or gates.size() > rules.max_gates_for(ids.size()):
+				bad += 1
+			for gate in gates:
+				var touches_outside := false
+				for n in g.neighbors(int(gate)):
+					if not ids.has(n):
+						touches_outside = true
+				if not touches_outside:
+					bad += 1
+			if gates.size() >= 2:
+				multi += 1
+				for i in gates.size():
+					for j in range(i + 1, gates.size()):
+						if g.edge_between(int(gates[i]), int(gates[j])) != null:
+							adjacent_gates += 1
 	t.check(multi > 0, "48 个种子里出现过多出入口的高危区（%d 片）" % multi)
-	t.eq(crowded, 0, "没有哪一片把两个口开在同一个点上")
+	t.eq(bad, 0, "每个口都真的通向区外，口数在 1～上限之间")
+	t.check(adjacent_gates <= multi / 2, "多个口挤在一起的少（%d / %d）" % [adjacent_gates, multi])
 
 
 static func run_entries(t: TestCase) -> void:
@@ -619,11 +643,17 @@ static func run_ring_numbers_are_explicit(t: TestCase) -> void:
 	if g == null:
 		return
 	var by_ring := _by_ring(g)
+	var baseline := 1
 	for i in cfg.rings.size():
 		var r := cfg.ring_count() - i
 		t.check(cfg.rings[i].slots > 0 and cfg.rings[i].node_count > 0, "第 %d 环的两个数都不是 0" % r)
 		t.eq(int(g.layout_meta["ring_slots"][r]), cfg.rings[i].slots, "第 %d 环：配置里写的槽位数 = 图上的" % r)
-		t.eq((by_ring[r] as Array).size(), cfg.rings[i].node_count, "第 %d 环：配置里写的节点数 = 图上的" % r)
+		t.check((by_ring[r] as Array).size() <= cfg.rings[i].slots, "第 %d 环：图上的点不多于槽位" % r)
+		baseline += cfg.rings[i].node_count
+	# 配置里的节点数是基准（范围中点）：每一局的总数在范围里抽，各环按基准的比例分
+	var lim := cfg.node_range()
+	t.check(baseline >= lim.x and baseline <= lim.y, "配置里各环节点数之和 %d 落在范围 %s 里" % [baseline, str(lim)])
+	t.check(g.node_count() >= lim.x and g.node_count() <= lim.y, "图上 %d 个点也落在范围里" % g.node_count())
 	# 0 仍然是合法写法：自动（按半径算槽位、填满）。那样算出来的点数不受规模模板管，
 	# 所以拿一份没有规模模板的配置试
 	cfg.scales = [] as Array[MapScaleProfile]
@@ -786,3 +816,74 @@ static func run_registry_wired(t: TestCase) -> void:
 	if gen != null:
 		t.not_null(gen.generate(RingMapConfig.sample(3), 1), "从注册表拿到的能直接用")
 #endregion
+
+
+static func run_route_length_and_node_spread(t: TestCase) -> void:
+	t.begin("环形生成器 · 路线随环数变长；节点数在范围里抽；中环加宽")
+
+	for rings in [4, 6, 8]:
+		var cfg := RingMapConfig.sample(rings)
+		var steps := 0.0
+		var routes := 0
+		var counts := {}
+		for s in 24:
+			var g := _gen().generate(cfg, s)
+			if g == null:
+				continue
+			counts[g.node_count()] = true
+			for route in g.routes:
+				steps += float((route["node_ids"] as Array).size() - 1)
+				routes += 1
+		var avg := steps / float(maxi(1, routes))
+		# 每环一步是底；系数多出来的那一半以上得真走出来（横着走是尽力而为，走不动就算）
+		t.check(avg >= float(rings) * (1.0 + (cfg.route_length_factor - 1.0) * 0.5),
+			"%d 环：路线平均 %.1f 步，长度系数 %.2f 至少兑现一半" % [rings, avg, cfg.route_length_factor])
+		t.check(counts.size() >= 3,
+			"%d 环：24 个种子里节点数至少 3 种（%s）—— 是范围不是定数" % [rings, str(counts.keys())])
+		t.check(cfg.node_range().y > cfg.node_range().x, "%d 环的节点数范围 %s 是个区间" % [rings, str(cfg.node_range())])
+
+	t.eq(RingMapConfig.middle_rings(4), [2, 3] as Array[int], "4 环的中环是第 2、3 环")
+	t.eq(RingMapConfig.middle_rings(5), [3] as Array[int], "5 环的中环是第 3 环")
+	t.eq(RingMapConfig.middle_rings(6), [3, 4] as Array[int], "6 环的中环是第 3、4 环")
+	t.eq(RingMapConfig.middle_rings(7), [4] as Array[int], "7 环的中环是第 4 环")
+	t.eq(RingMapConfig.middle_rings(8), [4, 5] as Array[int], "8 环的中环是第 4、5 环")
+	var cfg6 := RingMapConfig.sample(6)
+	t.check(cfg6.slots_for_ring(3) >= cfg6.slots_for_ring(2) + cfg6.mid_ring_extra_slots,
+		"中环比里面那环至少宽出加的那几个槽位（%d vs %d）" % [cfg6.slots_for_ring(3), cfg6.slots_for_ring(2)])
+	# 节点范围对着槽位数定，填充率六七成上下
+	for rings in [4, 5, 6, 7, 8]:
+		var cfg := RingMapConfig.sample(rings)
+		var slots := 0
+		for r in range(1, rings + 1):
+			slots += cfg.slots_for_ring(r)
+		var lim := cfg.node_range()
+		var lo := float(lim.x - 1) / float(slots)
+		var hi := float(lim.y - 1) / float(slots)
+		t.check(lo >= 0.55 and hi <= 0.8,
+			"%d 环：节点 %s / 槽位 %d = %.0f%%～%.0f%%，填充率在六七成上下" % [rings, str(lim), slots, lo * 100.0, hi * 100.0])
+
+
+static func run_route_ends_and_pivot_pairs(t: TestCase) -> void:
+	t.begin("环形生成器 · 路线尽头不被高危区吸收；换乘记着是谁和谁的")
+
+	var cfg := RingMapConfig.sample(6)
+	var eaten := 0
+	var links := 0
+	var arcs := 0
+	for s in 48:
+		var g := _gen().generate(cfg, s)
+		if g == null:
+			continue
+		for route in g.routes:
+			var last := g.get_node(int((route["node_ids"] as Array)[-1]))
+			if last.zone != 0:
+				eaten += 1
+		for link in (g.layout_meta.get("pivot_links", []) as Array):
+			links += 1
+			t.check((link as Array).size() == 4 and int(link[2]) != int(link[3]), "换乘直连带着两条路线的下标")
+		for arc in (g.layout_meta.get("pivot_arcs", []) as Array):
+			arcs += 1
+			t.check((arc["routes"] as Array).size() == 2 and not (arc["node_ids"] as Array).is_empty(),
+				"换乘弧带着两条路线的下标与弧上的点")
+	t.eq(eaten, 0, "48 个种子里没有一条路线的尽头被高危区吸收")
+	t.check(links + arcs > 0, "有换乘记录（直连 %d，弧 %d）" % [links, arcs])

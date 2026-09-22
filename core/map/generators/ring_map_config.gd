@@ -14,9 +14,13 @@ extends Resource
 @export var ring_template: RingSpec = null
 ## 每环 节点/槽位 的上限，严格小于 1 —— 内环也不填满，环上总有空位
 @export var fill_cap: float = 0.9
-## 规模模板：每种规模的图最多能要几个出发点、几片高危区、多大的高危区。
+## 规模模板：每种规模的图最多能要几个出发点、几片高危区、多大的高危区、几个点。
 ## 按环数匹配；一个都不匹配（比如三环的测试图）= 不设上限、不要高危区
 @export var scales: Array[MapScaleProfile] = []
+## 中环（= 撤离环间，见 [method middle_rings]）比按半径算的多几个槽位。
+## 规模模板要的节点数按六到七成填充定，内环只有 min_slots 个槽位放不下，多出来的落在中环 ——
+## 那里也正是路线换乘、撤离点要落脚的地方
+@export var mid_ring_extra_slots: int = 3
 
 @export_group("路线")
 ## 每条出生点→尽头的路线各有一种风格；出生点数 = entry_count，风格按本列表轮流分配
@@ -28,6 +32,9 @@ extends Resource
 ## 向内走时，下一环的候选槽位在当前次序比例的 ± 多少个槽位之内。
 ## 单位是【最外环的槽位】，到内环按环长等比缩小（至少 1）—— 和 entry_min_gap 同一把尺
 @export var route_drift: int = 1
+## 路线有多长：步数 = 环数 × 它。1 = 每环一步、笔直向内；多出来的步数是**同环横着走**，
+## 随机撒在各环上（一环可以横着走好几步）。路线越长，沿路能放的东西越多
+@export var route_length_factor: float = 1.5
 ## 走过几环之后才允许路线合流。太早合流，风格就没意义了
 @export var converge_after_ring: int = 2
 ## 换乘几次由规模模板定（MapScaleProfile.pivots），均分在路线上。
@@ -48,15 +55,13 @@ extends Resource
 @export var danger_risk_multiplier: Array[float] = [1.0, 1.3, 1.7]
 @export var danger_reward_multiplier: Array[float] = [1.0, 1.4, 2.0]
 @export var ev_tolerance: float = 0.2
-## 类型 → 每个节点到最近该类型节点的步数上限。例：{"rest": 4, "shop": 6}
+## 类型 → 每个节点到最近该类型节点的步数上限。例：{"rest": 4, "shop": 6}。
+## 喘气处先按路线上的步数放（MapScaleProfile.haven_at），这里是之后的补漏
 @export var coverage: Dictionary = {}
 ## danger 高于此值的区域里不放喘气的地方（= coverage 里列的那几种类型）
 @export var no_haven_in_danger_above: int = 1
-## 休息区与商店只在路径的这一段之后才出现（0～1，按环深算：最外环 0，核心前一环 1）
-@export var haven_after_progress: float = 1.0 / 3.0
 ## 不许相邻的类型对
 @export var no_adjacent: Array = []
-@export var extract_every_rings: int = 2
 ## 撤离点两两之间的最短路至少几步。-1 = 用规模模板的值（MapScaleProfile.extract_gap）
 @export var extract_min_distance: int = -1
 
@@ -111,13 +116,34 @@ func spec_for_ring(r: int) -> RingSpec:
 ##
 ## spec.slots > 0 就用它；否则按半径算 —— 同心环越靠里周长越短，
 ## 槽位数随之减少，这样每个槽位的弧长大致相等，内环不会挤成一团、
-## 外环也不会稀疏得连不上。
+## 外环也不会稀疏得连不上。中环再加 [member mid_ring_extra_slots] 个。
 func slots_for_ring(r: int) -> int:
 	var spec := spec_for_ring(r)
 	if spec != null and spec.slots > 0:
 		return spec.slots
 	var by_radius := roundi(TAU * float(r) * radius_step / maxf(1.0, arc_per_slot))
-	return maxi(maxi(1, min_slots), by_radius)
+	var extra := mid_ring_extra_slots if middle_rings(ring_count()).has(r) else 0
+	return maxi(maxi(1, min_slots), by_radius) + extra
+
+
+## 正中间的那一两环（1 = 最内环）：环数为奇数是正中那一环，偶数是中间两环。
+## 4 环 → [2, 3]，5 环 → [3]，6 环 → [3, 4]，7 环 → [4]，8 环 → [4, 5]。
+## 它就是**撤离环间**（中途撤离点只落在这里）、也是槽位加宽的中环
+static func middle_rings(ring_count_: int) -> Array[int]:
+	if ring_count_ <= 0:
+		return [] as Array[int]
+	if ring_count_ % 2 == 1:
+		return [(ring_count_ + 1) / 2] as Array[int]
+	return [ring_count_ / 2, ring_count_ / 2 + 1] as Array[int]
+
+
+## 撤离环间：中途撤离点只落在这几环上。
+## 小、中型是正中间的那一两环；大型要两道，**还没定**，先空着（= 不放中途撤离点、也不查）
+func extract_band() -> Array[int]:
+	var p := scale()
+	if p != null and p.extract_bands != 1:
+		return [] as Array[int]
+	return middle_rings(ring_count())
 
 
 ## 这张图属于哪种规模。没有匹配的返回 null。
@@ -173,6 +199,18 @@ func effective_zone_soft_cap() -> int:
 	return p.zone_size.y if zone_soft_cap < 0 else clampi(zone_soft_cap, p.zone_size.x, p.zone_size.y)
 
 
+## 这张图该有几个点 [min, max]（含核心）。没有规模、或规模没写这个环数 → (0, 0) = 不管
+func node_range() -> Vector2i:
+	var p := scale()
+	return p.node_range(ring_count()) if p != null else Vector2i.ZERO
+
+
+## 喘气处放在路线的几分之几处（类型 → 0～1）。没有规模就不按路线放，只靠 coverage 补
+func haven_at() -> Dictionary:
+	var p := scale()
+	return p.haven_at if p != null else {}
+
+
 ## 换一种规模 / 环数：重建 rings，并把几个可选项夹进新规模的范围。编辑器用。
 func apply_scale(id: StringName, ring_count_: int) -> void:
 	var p := scale_by_id(id)
@@ -198,13 +236,11 @@ func _build_rings(ring_count_: int) -> void:
 		rings.append(spec)
 	# 槽位照半径算，不动 —— 环的长度是几何，不随节点数变。规模模板要的是【节点数】：
 	# 每环只填一部分槽位，空的连成空白弧。内环只有 min_slots 个槽位，填满也就那么几个，
-	# 减的份额落在外环；二分一个填充系数，让各环 max(min_slots, 槽位 × 系数) 的总和正好是要的
-	var p := scale()
-	if p != null and p.nodes.y > 0:
-		# 节点数仍随环数增长：在这一档规模的范围里按环数插值 —— 6 环取下限、8 环取上限
-		var t := 0.0 if p.rings.y <= p.rings.x \
-			else clampf(float(ring_count_ - p.rings.x) / float(p.rings.y - p.rings.x), 0.0, 1.0)
-		var want := roundi(lerpf(float(p.nodes.x), float(p.nodes.y), t)) - 1     # 减掉核心
+	# 减的份额落在外环与中环；二分一个填充系数，让各环 max(min_slots, 槽位 × 系数) 的总和正好是要的。
+	# 写进配置的是范围中点 —— 每一局在范围里抽的总数由生成器按这个比例分（counts_for_total）
+	var lim := node_range()
+	if lim.y > 0:
+		var want := roundi(float(lim.x + lim.y) / 2.0) - 1     # 减掉核心
 		var lo := 0.0
 		var hi := 1.0
 		for _k in 24:
@@ -238,6 +274,50 @@ func fill_count(slots: int, factor: float) -> int:
 	return clampi(roundi(float(slots) * factor), mini(cap, min_slots - 1), maxi(1, cap))
 
 
+## 总共要 total 个点（不含核心）时每环放几个（下标同 rings，最外环在前）。
+##
+## 按配置里各环的 node_count 等比缩放 —— 作者把某一环写密一点，缩放之后它还是密的；
+## 每环夹进 fill_cap 允许的上限，差的份额按「谁离上限还远」补，多的从最满的环减。
+func counts_for_total(total: int) -> Array[int]:
+	var out: Array[int] = []
+	var caps: Array[int] = []
+	var base_sum := 0
+	for i in rings.size():
+		var slots := slots_for_ring(rings.size() - i)
+		var base := rings[i].node_count if rings[i].node_count > 0 else slots
+		out.append(base)
+		caps.append(fill_count(slots, 1.0))
+		base_sum += base
+	if base_sum <= 0 or total <= 0:
+		return out
+	var sum := 0
+	for i in out.size():
+		out[i] = clampi(roundi(float(out[i]) * float(total) / float(base_sum)), 1, caps[i])
+		sum += out[i]
+	# 取整与夹紧之后总数差几个：一个一个补 / 减，每次挑余量最大 / 最满的那一环
+	var guard := 0
+	while sum != total and guard < 4 * rings.size() + 8:
+		guard += 1
+		var pick := -1
+		if sum < total:
+			for i in out.size():
+				if out[i] < caps[i] and (pick < 0 or caps[i] - out[i] > caps[pick] - out[pick]):
+					pick = i
+			if pick < 0:
+				break
+			out[pick] += 1
+			sum += 1
+		else:
+			for i in out.size():
+				if out[i] > 1 and (pick < 0 or out[i] > out[pick]):
+					pick = i
+			if pick < 0:
+				break
+			out[pick] -= 1
+			sum -= 1
+	return out
+
+
 ## 造一份跑得起来的默认配置。**数值是占位**，等内容定稿；
 ## 结构才是要紧的。测试与沙盒用它开箱即跑。
 static func sample(ring_count_: int = 5) -> RingMapConfig:
@@ -255,7 +335,6 @@ static func sample(ring_count_: int = 5) -> RingMapConfig:
 	combat.mix = {"battle": 5, "elite": 1, "event": 1}
 	combat.risk_band = Vector2(1.2, 1.9)
 	combat.reward_band = Vector2(1.2, 1.9)
-	combat.bailout_every_rings = 4     # 得 ≥ 撤离点间距，不然沿路的出口自己就挤在一起
 	var search := RouteStyle.new()
 	search.id = &"search"
 	search.ends_at = &"extract"
@@ -281,9 +360,6 @@ static func sample(ring_count_: int = 5) -> RingMapConfig:
 	cfg.coverage = {"rest": 4, "shop": 6}
 	cfg.no_adjacent = [["elite", "elite"], ["shop", "shop"]]
 	cfg.ev_tolerance = 0.25
-	# 撤离点每 4 环一个：窗口跨度不小于「撤离点之间至少几步」，相邻两个窗口才放得下
-	# 两个隔得够远的出口。每 2 环一个的话，内圈只有六个点，只能靠重试碰
-	cfg.extract_every_rings = 4
 
 	# 要不要高危区、要几片、多大，由规模模板决定（环太少时没有匹配的规模，也就没有高危区）
 	cfg.zone_spec = DangerZoneSpec.new()

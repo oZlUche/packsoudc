@@ -288,9 +288,9 @@ func _draw() -> void:
 			var ri: int = route_of_edge[key]
 			_layout.draw_edge(self, graph, e, pos[e.from_id], pos[e.to_id],
 				Color(MapNodeStyle.route_color(ri), 0.9 if ri == bold_route else 0.7),
-				6.0 if ri == bold_route else 3.0)
+				6.0 if ri == bold_route else 3.0, rect)
 		else:
-			_layout.draw_edge(self, graph, e, pos[e.from_id], pos[e.to_id], UiPalette.DIM.darkened(0.25), 1.5)
+			_layout.draw_edge(self, graph, e, pos[e.from_id], pos[e.to_id], UiPalette.DIM.darkened(0.25), 1.5, rect)
 
 	for clique in (junctions["quads"] as Array) + (junctions["tris"] as Array):
 		_draw_junction(clique, pos, route_of_edge)

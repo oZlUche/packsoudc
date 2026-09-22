@@ -66,27 +66,20 @@ func edge_kind(graph: MapGraph, a: int, b: int) -> StringName:
 
 
 ## 同层的边沿圆弧走短的那一边；跨层的直线（求解之后它本来就是径向的）。
+##
+## 圆心就是画布中心（[param rect] 的中心，所有环都以它为圆心）。第一版从两端与半径反推圆心，
+## 两个候选里挑「离原点近的」—— 画布坐标的原点在左上角，不是圆心，下半张图的弧全都反着凸
 func draw_edge(
 	canvas: CanvasItem, graph: MapGraph, edge: MapEdge, a: Vector2, b: Vector2,
-	color: Color, width: float
+	color: Color, width: float, rect: Rect2 = Rect2()
 ) -> void:
 	var levels := levels_of(graph)
 	var la := int(levels.get(edge.from_id, -1))
 	if la != int(levels.get(edge.to_id, -2)) or la <= 0:
 		canvas.draw_line(a, b, color, width, true)
 		return
-	var center := (a + b) / 2.0    # 只是占位；真正的圆心从半径反推
-	var radius := RING_STEP * float(la)
-	var c := _center_from(a, b, radius)
-	var a0 := (a - c).angle()
-	var a1 := (b - c).angle()
-	var sweep := RingAngleSolver._wrap(a1 - a0)
-	var steps := maxi(2, ceili(absf(sweep) / ARC_STEP))
-	var pts := PackedVector2Array()
-	for k in steps + 1:
-		pts.append(c + Vector2.from_angle(a0 + sweep * float(k) / float(steps)) * radius)
-	canvas.draw_polyline(pts, color, width, true)
-	center = c
+	var center := rect.get_center() if rect.has_area() else canvas_size(graph) / 2.0
+	canvas.draw_polyline(arc_points(a, b, center, RING_STEP * float(la)), color, width, true)
 
 
 func draw_backdrop(canvas: CanvasItem, graph: MapGraph, rect: Rect2) -> void:
@@ -116,17 +109,14 @@ func _ensure_solved(graph: MapGraph) -> void:
 	_cache_version = graph.version
 
 
-## 两个点都在半径 r 的圆上时圆心在哪：画布里所有环同心，所以就是画布中心 ——
-## 但从两点反推不依赖 rect，画弧时手上没有 rect
-static func _center_from(a: Vector2, b: Vector2, r: float) -> Vector2:
-	var mid := (a + b) / 2.0
-	var half := a.distance_to(b) / 2.0
-	if half >= r or half < 1e-6:
-		return mid
-	var h := sqrt(r * r - half * half)
-	var dir := (b - a).normalized()
-	var normal := Vector2(-dir.y, dir.x)
-	# 两个候选圆心，取离原点（画布中心方向）近的那个：同心环的圆心在弧的内侧
-	var c1 := mid + normal * h
-	var c2 := mid - normal * h
-	return c1 if c1.length_squared() < c2.length_squared() else c2
+## 以 [param center] 为圆心、[param radius] 为半径，从 a 沿短的那一边扫到 b 的弧上的采样点。
+## 两端按各自的角度取，所以 a、b 稍微不在圆上也画得顺
+static func arc_points(a: Vector2, b: Vector2, center: Vector2, radius: float) -> PackedVector2Array:
+	var a0 := (a - center).angle()
+	var a1 := (b - center).angle()
+	var sweep := RingAngleSolver._wrap(a1 - a0)
+	var steps := maxi(2, ceili(absf(sweep) / ARC_STEP))
+	var pts := PackedVector2Array()
+	for k in steps + 1:
+		pts.append(center + Vector2.from_angle(a0 + sweep * float(k) / float(steps)) * radius)
+	return pts

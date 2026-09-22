@@ -181,16 +181,25 @@ static func run_arcs(t: TestCase) -> void:
 	t.check(on_circle, "每个点都在自己那一环的圆上，环距固定 %d 像素" % int(RingLayoutBase.RING_STEP))
 	t.eq(layout.canvas_size(g).x, 2.0 * (4 * RingLayoutBase.RING_STEP + RingLayoutBase.MARGIN), "画布按环数算")
 
-	# 弧的圆心反推：两端都在第 r 环上，圆心就是画布中心
-	var found := false
+	# 弧以画布中心为圆心：弧上每个采样点都在那一环的圆上，两端落在两个点上。
+	# 第一版从两端反推圆心、挑离原点近的那个 —— 原点是画布左上角，下半张图的弧全反着凸
+	var found := 0
+	var off_circle := 0
 	for e in g.edges:
-		if int(levels[e.from_id]) == int(levels[e.to_id]) and int(levels[e.from_id]) > 0:
-			var c := RingLayoutBase._center_from(pos[e.from_id], pos[e.to_id],
-				RingLayoutBase.RING_STEP * int(levels[e.from_id]))
-			t.check(c.distance_to(center) < 1e-3, "弧的圆心就是画布中心（%d↔%d）" % [e.from_id, e.to_id])
-			found = true
-			break
-	t.check(found, "有切向边可试")
+		var lv := int(levels[e.from_id])
+		if lv != int(levels[e.to_id]) or lv <= 0:
+			continue
+		found += 1
+		var r := RingLayoutBase.RING_STEP * float(lv)
+		var pts := RingLayoutBase.arc_points(pos[e.from_id], pos[e.to_id], center, r)
+		for p in pts:
+			if absf((p as Vector2).distance_to(center) - r) > 1e-3:
+				off_circle += 1
+		t.check((pts[0] as Vector2).distance_to(pos[e.from_id]) < 1e-3
+			and (pts[pts.size() - 1] as Vector2).distance_to(pos[e.to_id]) < 1e-3,
+			"弧的两端就是那两个点（%d↔%d）" % [e.from_id, e.to_id])
+	t.check(found > 0, "有切向边可试（%d 条）" % found)
+	t.eq(off_circle, 0, "弧上没有一个采样点离开那一环的圆 —— 上下左右的弧都朝圆心凹")
 
 
 static func frame_sandbox(t: TestCase, root: Window) -> void:

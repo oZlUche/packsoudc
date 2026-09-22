@@ -6,7 +6,9 @@
 ## 两类规矩，按 035 的教训分开放：
 ## - **图自身的性质**进校验（[method validate]，规则跟着图走，写进 `layout_meta.type_rules`）：
 ##   环配额、步数覆盖、高危区里不放休息区与商店、不许相邻的类型对、高危区里的精英与搜索点、
-##   每 N 环一个撤离点。
+##   中途撤离点只在撤离环间。
+## - **路线上的位置**是生成规则：喘气处放在路线的几分之几处、撤离点放在两条路线共用的地方，
+##   校验都不查 —— 手绘的图有权不守。
 ## - **路线相关的**只在生成时尽力（[method _calibrate_routes]）：风格的 `mix`、风险收益档位、
 ##   性价比相当。校验一条都不查 —— 路线是生成规则，不是合格条件。
 class_name RingTypeAssigner
@@ -62,6 +64,7 @@ func assign(g: MapGraph, cfg: RingMapConfig, rng: RandomNumberGenerator) -> bool
 
 	_assign_zone_content()
 	_fix_route_ends()
+	_place_route_havens()
 	_assign_route_mix()
 	_assign_by_weights()
 	_enforce_quota()
@@ -124,6 +127,48 @@ func _fix_route_ends() -> void:
 		# 一环的图上路线的末端就是出生点自己，那就不改 —— 出生点是出生点
 		if not ids.is_empty() and not _fixed.has(int(ids[-1])):
 			_put_type(int(ids[-1]), &"extract", true)
+
+
+## 喘气处按**路线上的步数**放，不看环：每条路线走到几分之几处放休息区、几分之几处放商店
+## （MapScaleProfile.haven_at：中型 1/3 与 2/3，小型两个都在一半，撞上就挨着放）。
+## 分母是路线上出生点与尽头之间的那些点。落点放不了（高危区里、配额满了、和邻居凑成禁止的一对）
+## 就往两边挪一格再试。放下的固定住，后面的 mix 与配额不再动它
+func _place_route_havens() -> void:
+	var at := _cfg.haven_at()
+	if at.is_empty():
+		return
+	for route in _g.routes:
+		var ids: Array = route["node_ids"]
+		var inner: Array[int] = []
+		for k in range(1, ids.size() - 1):
+			inner.append(int(ids[k]))
+		if inner.is_empty():
+			continue
+		var used := {}
+		for t in _sorted_keys(at):
+			if not _haven.has(t):
+				continue
+			var k := clampi(roundi(float(at[t]) * float(inner.size() - 1)), 0, inner.size() - 1)
+			# 位置撞上了（小型图两个都在一半）：紧挨着放，先往尽头那边挪
+			while used.has(k) and k < inner.size() - 1:
+				k += 1
+			for step in inner.size():
+				var placed := false
+				for j in ([k + step, k - step] if step > 0 else [k]):
+					if j < 0 or j >= inner.size() or used.has(j):
+						continue
+					var id: int = inner[j]
+					if _g.get_node(id).type == StringName(t):
+						used[j] = true
+						placed = true
+						break
+					if _can_become(id, StringName(t)):
+						_put_type(id, StringName(t), true)
+						used[j] = true
+						placed = true
+						break
+				if placed:
+					break
 
 
 ## 路线独占的节点按风格的 mix 比例分配；几条路线共用的算混合，走所在环的权重。
@@ -259,54 +304,95 @@ func _enforce_adjacency() -> void:
 				break
 
 
-## 撤离点：先按各路线的 bailout_every_rings 在路线上放，再按全图的 extract_every_rings 补。
-## 撤离点**覆盖**非必须型节点 —— 出口吃掉休息区，玩家就没地方喘气了。
+## 中途撤离点只落在**撤离环间**（正中间的那一两环，RingMapConfig.extract_band）。
+##
+## 先让相邻的两条路线共用一个：每对路线挑一个两条路都够得着的点 —— 合流后共用的点、
+## 相邻直连的换乘点、换乘弧上的点 —— 放一个撤离点，三条路线两两共享；
+## 一对都放不下时，撤离环间至少还得有一个（随便哪条路线够得着的都行）。
+## 撤离点**覆盖**非必须型节点（出口吃掉休息区，玩家就没地方喘气了），不进高危区；
 ## 两个撤离点之间的最短路至少 extract_gap 步 —— 挨得太近的两个出口等于一个。
 func _place_extracts() -> void:
-	var gap := _cfg.effective_extract_gap()
-	for route in _g.routes:
-		var style := _cfg.style_by_id(StringName(route.get("style", "")))
-		if style == null or style.bailout_every_rings <= 0:
-			continue
-		var ids: Array = route["node_ids"]
-		var outer := _ring_count()
-		var next_at := outer - style.bailout_every_rings
-		for id in ids:
-			var r := _ring(int(id))
-			if r > next_at or r <= 0:
-				continue
-			if _can_become(int(id), &"extract") and _far_from_extracts(int(id), gap):
-				_put_type(int(id), &"extract", true)
-				next_at = r - style.bailout_every_rings
-			# 这个点动不了（必须型 / 固定）就顺着路线看下一个，别硬改
-	var step := _cfg.extract_every_rings
-	if step <= 0:
+	var band := _cfg.extract_band()
+	if band.is_empty():
 		return
-	var r_hi := _ring_count()
-	while r_hi >= 1:
-		var r_lo := maxi(1, r_hi - step + 1)
-		var window: Array[int] = []
-		var has := false
-		for id in _g.node_ids():
-			var r := _ring(id)
-			if r >= r_lo and r <= r_hi:
-				if _g.get_node(id).type == &"extract":
-					has = true
-				elif _can_become(id, &"extract") and _far_from_extracts(id, gap):
-					window.append(id)
-		if not has and not window.is_empty():
-			# 挑离已有撤离点最远的那几个再随机 —— 随手挑一个，下一个窗口就可能没地方放了
-			var best := -1
-			var picks: Array[int] = []
-			for id in window:
-				var d := _distance_to_extracts(id)
-				if d > best:
-					best = d
-					picks = [id]
-				elif d == best:
-					picks.append(id)
-			_put_type(picks[_rng.randi_range(0, picks.size() - 1)], &"extract", true)
-		r_hi = r_lo - 1
+	var gap := _cfg.effective_extract_gap()
+	# 每对相邻路线：两条路都够得着的撤离环间候选
+	var route_count := _g.routes.size()
+	var pairs: Array = []
+	if route_count == 2:
+		pairs.append([0, 1])
+	elif route_count > 2:
+		for i in route_count:
+			pairs.append([i, (i + 1) % route_count])
+	for pi in _shuffled_indices(pairs.size()):
+		var pair: Array = pairs[pi]
+		var shared := _shared_band_candidates(int(pair[0]), int(pair[1]), band, gap)
+		if shared.is_empty():
+			continue
+		_put_type(_farthest_from_extracts(shared), &"extract", true)
+	# 兜底：撤离环间一个都没有，就放一个
+	for id in _g.node_ids():
+		if _g.get_node(id).type == &"extract" and band.has(_ring(id)):
+			return
+	var any: Array[int] = []
+	for id in _g.node_ids():
+		if band.has(_ring(id)) and _can_become(id, &"extract") and _far_from_extracts(id, gap):
+			any.append(id)
+	if not any.is_empty():
+		_put_type(_farthest_from_extracts(any), &"extract", true)
+
+
+## 路线 i 与 j 在撤离环间上共用的地方：两条路都经过的点、它们之间相邻直连的换乘点、
+## 换乘弧上的点。只要还能改成撤离点、且离已有的撤离点够远的
+func _shared_band_candidates(i: int, j: int, band: Array[int], gap: int) -> Array[int]:
+	var pool := {}
+	for id in _routes_of:
+		var on: Array = _routes_of[id]
+		if on.has(i) and on.has(j):
+			pool[id] = true
+	for link in (_g.layout_meta.get("pivot_links", []) as Array):
+		if link.size() >= 4 and ((int(link[2]) == i and int(link[3]) == j) or (int(link[2]) == j and int(link[3]) == i)):
+			pool[int(link[0])] = true
+			pool[int(link[1])] = true
+	for arc in (_g.layout_meta.get("pivot_arcs", []) as Array):
+		var rs: Array = arc.get("routes", [])
+		if rs.size() >= 2 and ((int(rs[0]) == i and int(rs[1]) == j) or (int(rs[0]) == j and int(rs[1]) == i)):
+			for id in (arc.get("node_ids", []) as Array):
+				pool[int(id)] = true
+	var out: Array[int] = []
+	for id in _sorted_ints(pool):
+		if band.has(_ring(id)) and _can_become(id, &"extract") and _far_from_extracts(id, gap):
+			out.append(id)
+	return out
+
+
+## 候选里离已有撤离点最远的那几个再随机挑一个 —— 随手挑一个，下一个就可能没地方放了
+func _farthest_from_extracts(pool: Array[int]) -> int:
+	var best := -1
+	var picks: Array[int] = []
+	for id in pool:
+		var d := _distance_to_extracts(id)
+		if d > best:
+			best = d
+			picks = [id]
+		elif d == best:
+			picks.append(id)
+	return picks[_rng.randi_range(0, picks.size() - 1)]
+
+
+static func _sorted_ints(d: Dictionary) -> Array[int]:
+	var out: Array[int] = []
+	for k in d:
+		out.append(int(k))
+	out.sort()
+	return out
+
+
+func _shuffled_indices(count: int) -> Array[int]:
+	var out: Array[int] = []
+	for i in count:
+		out.append(i)
+	return _shuffled(out)
 
 
 ## 到最近的已有撤离点几步；一个都没有就是很大的数。
@@ -551,20 +637,24 @@ static func rules_from_config(cfg: RingMapConfig) -> Dictionary:
 	var mandatory: Array = []
 	for t in cfg.mandatory_types:
 		mandatory.append(String(t))
+	var band: Array = []
+	for r in cfg.extract_band():
+		band.append(r)
 	var rules := {
 		"quota": quota,
 		"coverage": cfg.coverage.duplicate(),
 		"no_haven_in_danger_above": cfg.no_haven_in_danger_above,
 		"no_adjacent": cfg.no_adjacent.duplicate(true),
 		"mandatory_types": mandatory,
-		"extract_every_rings": cfg.extract_every_rings,
+		# 中途撤离点只在这几环上；空 = 不查（大型的两道撤离环间还没定）。
+		# 核心前一环例外：去撤离点的路线在那里收尾
+		"extract_band": band,
 		"extract_min_distance": cfg.effective_extract_gap(),
-		"haven_after_progress": cfg.haven_after_progress,
 		"spawn_typed_entries": true,
 	}
-	var p := cfg.scale()
-	if p != null and p.nodes.y > 0:
-		rules["node_range"] = [p.nodes.x, p.nodes.y]
+	var lim := cfg.node_range()
+	if lim.y > 0:
+		rules["node_range"] = [lim.x, lim.y]
 	if cfg.zone_spec != null:
 		rules["zone_min"] = {"elite": cfg.zone_spec.min_elites, "search": cfg.zone_spec.min_search}
 	return rules
@@ -597,7 +687,7 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 			if n < int(lim[0]) or n > int(lim[1]):
 				v.fail(&"quota", "第 %d 环有 %d 个 %s，配额是 %d～%d" % [r, n, t, lim[0], lim[1]])
 
-	# --- 步数覆盖（高危区里的点不算：那里本来就没得歇；路径前一段的点也不算，喘气处还没出现）---
+	# --- 步数覆盖（高危区里的点不算：那里本来就没得歇）---
 	var threshold := int(rules.get("no_haven_in_danger_above", 1))
 	var coverage: Dictionary = rules.get("coverage", {})
 	for t in coverage:
@@ -608,25 +698,18 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 		for id in graph.node_ids():
 			var d := int(dist.get(id, 1 << 20))
 			var n := graph.get_node(id)
-			var r := int(n.layout.get("ring", 0))
-			var early := r > 0 and progress_of(r, ring_count) < float(rules.get("haven_after_progress", 0.0)) - 1e-6
-			if d > k and n.danger <= threshold and not early:
+			if d > k and n.danger <= threshold:
 				over += 1
 				worst = maxi(worst, d)
 		if over > 0:
 			v.fail(&"coverage", "%d 个节点距最近的 %s 超过 %d 步（最远 %s）"
 				% [over, t, k, "到不了" if worst >= (1 << 20) else str(worst)])
 
-	# --- 高危区里不放喘气的地方；喘气处不在路径的前一段 ---
-	var after := float(rules.get("haven_after_progress", 0.0))
+	# --- 高危区里不放喘气的地方 ---
 	for id in graph.node_ids():
 		var n := graph.get_node(id)
 		if n.danger > threshold and coverage.has(String(n.type)):
 			v.fail(&"haven", "节点 %d 在 danger %d 的区域里，却是 %s" % [id, n.danger, n.type])
-		var r := int(n.layout.get("ring", 0))
-		if r > 0 and coverage.has(String(n.type)) and progress_of(r, ring_count) < after - 1e-6:
-			v.fail(&"haven_early", "节点 %d（第 %d 环）是 %s，太靠近起点 —— 得走过 %d%% 才能有"
-				% [id, r, n.type, roundi(after * 100.0)])
 
 	# --- 出生点是 spawn，spawn 都是出生点 ---
 	if bool(rules.get("spawn_typed_entries", false)):
@@ -681,20 +764,23 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 		if graph.node_count() < int(lim[0]) or graph.node_count() > int(lim[1]):
 			v.fail(&"node_count", "%d 个点，这个规模该是 %d～%d" % [graph.node_count(), lim[0], lim[1]])
 
-	# --- 每 N 环至少一个撤离点 ---
-	var step := int(rules.get("extract_every_rings", 0))
-	if step > 0 and ring_count > 0:
-		var r_hi := ring_count
-		while r_hi >= 1:
-			var r_lo := maxi(1, r_hi - step + 1)
-			var has := false
-			for r in range(r_lo, r_hi + 1):
-				for id in by_ring.get(r, []):
-					if graph.get_node(id).type == &"extract":
-						has = true
-			if not has:
-				v.fail(&"extract", "第 %d～%d 环之间没有撤离点" % [r_lo, r_hi])
-			r_hi = r_lo - 1
+	# --- 中途撤离点只在撤离环间，且那里至少有一个。核心前一环例外：去撤离点的路线在那里收尾 ---
+	var band: Array = rules.get("extract_band", [])
+	if not band.is_empty():
+		var in_band := 0
+		for id in graph.node_ids():
+			var n := graph.get_node(id)
+			if n.type != &"extract":
+				continue
+			var r := int(n.layout.get("ring", 0))
+			if band.has(r):
+				in_band += 1
+			elif r != 1:
+				v.fail(&"extract_band", "撤离点 %d 在第 %d 环，中途撤离点只能在撤离环间（第 %s 环）"
+					% [id, r, "～".join(PackedStringArray([str(band[0]), str(band[-1])]))])
+		if in_band == 0:
+			v.fail(&"extract_band", "撤离环间（第 %s 环）里没有撤离点"
+				% "～".join(PackedStringArray([str(band[0]), str(band[-1])])))
 
 
 ## 从一个点走 limit 步之内到得了的点：id -> 步数。
@@ -746,10 +832,9 @@ func _put_type(id: int, type: StringName, fix: bool) -> void:
 		_fixed[id] = true
 
 
-## 这个点要不要算进覆盖：高危区里的不算（那里不放喘气处），路径前一段的也不算 ——
-## 喘气处要走过 haven_after_progress 才出现，前一段没得歇是规则本身，不是覆盖没做好
+## 这个点要不要算进覆盖：高危区里的不算（那里不放喘气处）
 func _needs_haven(n: MapNode) -> bool:
-	return n.danger <= _cfg.no_haven_in_danger_above and _progress(n.id) >= _cfg.haven_after_progress
+	return n.danger <= _cfg.no_haven_in_danger_above
 
 
 func _absorbed(id: int) -> bool:
@@ -817,6 +902,8 @@ func _can_become(id: int, type: StringName, from_mandatory: bool = false) -> boo
 	var t := String(type)
 	if type == &"extract" and (_mandatory.has(String(n.type)) or _haven.has(String(n.type))):
 		return false     # 撤离点只覆盖非必须型 —— 出口吃掉休息区，玩家就没地方喘气了
+	if type == &"extract" and n.zone != 0:
+		return false     # 出口不开在高危区里
 	var r := _ring(id)
 	if _count_in_ring(r, t) >= _quota(r, t).y:
 		return false
@@ -825,8 +912,6 @@ func _can_become(id: int, type: StringName, from_mandatory: bool = false) -> boo
 		return false
 	if n.danger > _cfg.no_haven_in_danger_above and _haven.has(t):
 		return false
-	if _haven.has(t) and _progress(id) < _cfg.haven_after_progress:
-		return false     # 休息区与商店只在路径走过一段之后才出现
 	if _absorbed(id) and _mandatory.has(t):
 		return false
 	if not _share_allows_leaving(id, old):
@@ -835,18 +920,6 @@ func _can_become(id: int, type: StringName, from_mandatory: bool = false) -> boo
 		if _pair_forbidden(type, _g.get_node(other).type):
 			return false
 	return true
-
-
-## 环深：最外环 0，核心前一环 1。喘气处的门槛按它算 —— 路线一环一步，这就是「路径走过几成」
-func _progress(id: int) -> float:
-	return progress_of(_ring(id), _ring_count())
-
-
-## 环深：最外环 0，核心前一环 1；只有一环时那一环既是起点也是尽头，算 1
-static func progress_of(ring: int, ring_count: int) -> float:
-	if ring_count <= 1:
-		return 1.0
-	return clampf(float(ring_count - ring) / float(ring_count - 1), 0.0, 1.0)
 
 
 ## 把这个点从 old 类型换走之后，它所在路线的 min_share 还守得住吗。
@@ -908,8 +981,6 @@ func _weights_for(id: int) -> Dictionary:
 	var out := {}
 	for t in _sorted_keys(raw):
 		if n.danger > _cfg.no_haven_in_danger_above and _haven.has(t):
-			continue
-		if _haven.has(t) and _progress(id) < _cfg.haven_after_progress:
 			continue
 		if _absorbed(id) and _mandatory.has(t):
 			continue
