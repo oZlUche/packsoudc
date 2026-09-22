@@ -251,7 +251,9 @@ func _enforce_adjacency() -> void:
 
 ## 撤离点：先按各路线的 bailout_every_rings 在路线上放，再按全图的 extract_every_rings 补。
 ## 撤离点**覆盖**非必须型节点 —— 出口吃掉休息区，玩家就没地方喘气了。
+## 两个撤离点之间的最短路至少 extract_gap 步 —— 挨得太近的两个出口等于一个。
 func _place_extracts() -> void:
+	var gap := _cfg.effective_extract_gap()
 	for route in _g.routes:
 		var style := _cfg.style_by_id(StringName(route.get("style", "")))
 		if style == null or style.bailout_every_rings <= 0:
@@ -263,7 +265,7 @@ func _place_extracts() -> void:
 			var r := _ring(int(id))
 			if r > next_at or r <= 0:
 				continue
-			if _can_become(int(id), &"extract"):
+			if _can_become(int(id), &"extract") and _far_from_extracts(int(id), gap):
 				_put_type(int(id), &"extract", true)
 				next_at = r - style.bailout_every_rings
 			# 这个点动不了（必须型 / 固定）就顺着路线看下一个，别硬改
@@ -280,11 +282,37 @@ func _place_extracts() -> void:
 			if r >= r_lo and r <= r_hi:
 				if _g.get_node(id).type == &"extract":
 					has = true
-				elif _can_become(id, &"extract"):
+				elif _can_become(id, &"extract") and _far_from_extracts(id, gap):
 					window.append(id)
 		if not has and not window.is_empty():
-			_put_type(window[_rng.randi_range(0, window.size() - 1)], &"extract", true)
+			# 挑离已有撤离点最远的那几个再随机 —— 随手挑一个，下一个窗口就可能没地方放了
+			var best := -1
+			var picks: Array[int] = []
+			for id in window:
+				var d := _distance_to_extracts(id)
+				if d > best:
+					best = d
+					picks = [id]
+				elif d == best:
+					picks.append(id)
+			_put_type(picks[_rng.randi_range(0, picks.size() - 1)], &"extract", true)
 		r_hi = r_lo - 1
+
+
+## 到最近的已有撤离点几步；一个都没有就是很大的数。
+func _distance_to_extracts(id: int) -> int:
+	var dist := distances_to_type(_g, &"extract")
+	return int(dist.get(id, 1 << 20))
+
+
+## 这个点到已有的每个撤离点是不是都至少 gap 步。
+func _far_from_extracts(id: int, gap: int) -> bool:
+	if gap <= 1:
+		return true
+	for other in _within_steps(id, gap - 1):
+		if other != id and _g.get_node(other).type == &"extract":
+			return false
+	return true
 
 
 ## 路线风险 / 收益校准（5.4.2）。**尽力而为，不进校验。**
@@ -519,7 +547,11 @@ static func rules_from_config(cfg: RingMapConfig) -> Dictionary:
 		"no_adjacent": cfg.no_adjacent.duplicate(true),
 		"mandatory_types": mandatory,
 		"extract_every_rings": cfg.extract_every_rings,
+		"extract_min_distance": cfg.effective_extract_gap(),
 	}
+	var p := cfg.scale()
+	if p != null and p.nodes.y > 0:
+		rules["node_range"] = [p.nodes.x, p.nodes.y]
 	if cfg.zone_spec != null:
 		rules["zone_min"] = {"elite": cfg.zone_spec.min_elites, "search": cfg.zone_spec.min_search}
 	return rules
@@ -599,6 +631,26 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 				if n < int(zone_min[t]):
 					v.fail(&"zone_content", "高危区 %s 只有 %d 个 %s，至少要 %d" % [zone_id, n, t, zone_min[t]])
 
+	# --- 撤离点两两之间至少几步 ---
+	var gap := int(rules.get("extract_min_distance", 0))
+	if gap > 1:
+		var extracts: Array[int] = []
+		for id in graph.node_ids():
+			if graph.get_node(id).type == &"extract":
+				extracts.append(id)
+		for i in extracts.size():
+			var dist := _steps_from(graph, extracts[i], gap - 1)
+			for j in range(i + 1, extracts.size()):
+				if dist.has(extracts[j]):
+					v.fail(&"extract_spacing", "撤离点 %d 与 %d 只隔 %d 步，至少要 %d"
+						% [extracts[i], extracts[j], dist[extracts[j]], gap])
+
+	# --- 节点总数落在规模模板的范围里 ---
+	if rules.has("node_range"):
+		var lim: Array = rules["node_range"]
+		if graph.node_count() < int(lim[0]) or graph.node_count() > int(lim[1]):
+			v.fail(&"node_count", "%d 个点，这个规模该是 %d～%d" % [graph.node_count(), lim[0], lim[1]])
+
 	# --- 每 N 环至少一个撤离点 ---
 	var step := int(rules.get("extract_every_rings", 0))
 	if step > 0 and ring_count > 0:
@@ -613,6 +665,23 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 			if not has:
 				v.fail(&"extract", "第 %d～%d 环之间没有撤离点" % [r_lo, r_hi])
 			r_hi = r_lo - 1
+
+
+## 从一个点走 limit 步之内到得了的点：id -> 步数。
+static func _steps_from(graph: MapGraph, from_id: int, limit: int) -> Dictionary:
+	var dist := {from_id: 0}
+	var queue: Array[int] = [from_id]
+	var head := 0
+	while head < queue.size():
+		var id := queue[head]
+		head += 1
+		if int(dist[id]) >= limit:
+			continue
+		for n in graph.neighbors(id):
+			if not dist.has(n):
+				dist[n] = int(dist[id]) + 1
+				queue.append(n)
+	return dist
 
 
 ## 每个节点到最近的某类型节点的步数（多源 BFS）。到不了的不在结果里。

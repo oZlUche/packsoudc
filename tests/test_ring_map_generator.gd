@@ -261,6 +261,9 @@ static func run_scale_profiles(t: TestCase) -> void:
 					var size: int = (g.zones[zone_id]["node_ids"] as Array).size()
 					t.check(size <= maxi(p.zone_size.y, cfg.zone_rules.min_size),
 						"%s：高危区 %d 个点，软上限 %d" % [p.id, size, p.zone_size.y])
+				if p.nodes.y > 0:
+					t.check(g.node_count() >= p.nodes.x and g.node_count() <= p.nodes.y,
+						"%s · %d 环：%d 个点，该在 %d～%d" % [p.id, rings, g.node_count(), p.nodes.x, p.nodes.y])
 				t.check(_zones_per_route_max(g) <= p.zones_per_route,
 					"%s：每条路线身上岔出的不超过 %d 片" % [p.id, p.zones_per_route])
 
@@ -469,7 +472,8 @@ static func run_edge_limit(t: TestCase) -> void:
 	brittle.tangential_break_chance = 1.0
 	for s in 16:
 		var gg := _gen()
-		t.not_null(gg.generate(brittle, s, 1), "切向边能断的全断，第一次尝试就连通（种子 %d）" % s)
+		var made := gg.generate(brittle, s)
+		t.check(made != null and not gg.failure_tally.has(&"reachable") and not gg.failure_tally.has(&"isolated"), "切向边能断的全断也不会断出孤岛（种子 %d）—— 重试只许因为别的原因" % s)
 
 
 static func run_crossing_rules(t: TestCase) -> void:
@@ -598,7 +602,9 @@ static func run_ring_numbers_are_explicit(t: TestCase) -> void:
 		t.check(cfg.rings[i].slots > 0 and cfg.rings[i].node_count > 0, "第 %d 环的两个数都不是 0" % r)
 		t.eq(int(g.layout_meta["ring_slots"][r]), cfg.rings[i].slots, "第 %d 环：配置里写的槽位数 = 图上的" % r)
 		t.eq((by_ring[r] as Array).size(), cfg.rings[i].node_count, "第 %d 环：配置里写的节点数 = 图上的" % r)
-	# 0 仍然是合法写法：自动
+	# 0 仍然是合法写法：自动（按半径算槽位、填满）。那样算出来的点数不受规模模板管，
+	# 所以拿一份没有规模模板的配置试
+	cfg.scales = [] as Array[MapScaleProfile]
 	cfg.rings[0].slots = 0
 	cfg.rings[0].node_count = 0
 	t.not_null(_gen().generate(cfg, 2), "手写配置里填 0（自动）照样能用")

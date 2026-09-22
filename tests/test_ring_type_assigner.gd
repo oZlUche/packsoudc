@@ -111,6 +111,23 @@ static func _check_rules(g: MapGraph, cfg: RingMapConfig) -> String:
 				return "第 %d～%d 环没有撤离点" % [r_lo, r_hi]
 			r_hi = r_lo - 1
 
+	# 撤离点两两之间至少 extract_gap 步（值从配置 / 规模模板读）
+	var gap := cfg.effective_extract_gap()
+	var extracts: Array[int] = []
+	for id in g.node_ids():
+		if g.get_node(id).type == &"extract":
+			extracts.append(id)
+	for i in extracts.size():
+		var dist := RingTypeAssigner._steps_from(g, extracts[i], gap - 1)
+		for j in range(i + 1, extracts.size()):
+			if dist.has(extracts[j]):
+				return "撤离点 %d 与 %d 只隔 %d 步，至少要 %d" % [extracts[i], extracts[j], dist[extracts[j]], gap]
+
+	# 节点总数落在规模模板的范围里
+	var p := cfg.scale()
+	if p != null and p.nodes.y > 0 and (g.node_count() < p.nodes.x or g.node_count() > p.nodes.y):
+		return "%d 个点，规模 %s 该是 %d～%d" % [g.node_count(), p.id, p.nodes.x, p.nodes.y]
+
 	# 规则跟着图走
 	if not g.layout_meta.has("type_rules"):
 		return "layout_meta 里没有 type_rules"
@@ -179,10 +196,14 @@ static func run_route_rules(t: TestCase) -> void:
 	# mix 里最重的那种类型在【可换的类型】里占得最多。撤离点、休息区、商店是别的步骤放的，不算
 	for style_id in comp_by_style:
 		var style := cfg.style_by_id(style_id)
-		var heaviest := ""
+		# mix 里并列最重的可能不止一种（{battle 2, search 2, event 2}），哪一种最多都算数
+		var heaviest: Array[String] = []
+		var top_weight := 0.0
 		for k in style.mix:
-			if heaviest == "" or float(style.mix[k]) > float(style.mix[heaviest]):
-				heaviest = String(k)
+			top_weight = maxf(top_weight, float(style.mix[k]))
+		for k in style.mix:
+			if float(style.mix[k]) == top_weight:
+				heaviest.append(String(k))
 		var comp: Dictionary = comp_by_style[style_id]
 		var top := ""
 		for k in comp:
@@ -190,7 +211,7 @@ static func run_route_rules(t: TestCase) -> void:
 				continue
 			if top == "" or int(comp[k]) > int(comp[top]):
 				top = String(k)
-		t.eq(top, heaviest, "%s：独占节点里最多的类型是 mix 里最重的那种（累计 %s）" % [style_id, str(comp)])
+		t.check(heaviest.has(top), "%s：独占节点里最多的是 mix 里最重的那种 %s（累计 %s）" % [style_id, str(heaviest), str(comp)])
 	# 档位：多数路线落在自己的区间里
 	t.check(float(in_band) / float(maxi(1, routes_seen)) >= 0.7,
 		"%d/%d 条路线落进自己的风险收益档位（尽力而为，要多数）" % [in_band, routes_seen])

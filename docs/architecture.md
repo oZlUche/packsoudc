@@ -1555,7 +1555,9 @@ class_name RingMapConfig extends Resource
 ## 不许相邻的类型对。例：[["shop", "shop"], ["rest", "rest"]]
 @export var no_adjacent: Array = []
 ## 每 N 环一个中途撤离点，覆盖一个非必须型节点
-@export var extract_every_rings: int = 2
+@export var extract_every_rings: int = 4
+## 撤离点两两之间的最短路至少几步。-1 = 用规模模板的值（MapScaleProfile.extract_gap）
+@export var extract_min_distance: int = -1
 
 ## —— 高危区、边、槽位（同前）——
 @export var zone_spec: DangerZoneSpec        # 高危区怎么长出来；null = 不要高危区
@@ -1684,7 +1686,8 @@ class_name ZoneRules extends Resource
       进去就是知道没得歇
    e. 邻接规则：no_adjacent 里的类型对不相邻，违反的换成权重次高的
    f. 撤离点覆盖：先按各路线的 bailout_every_rings 在路线上放；再按全图的
-      extract_every_rings 补，挑非必须型、非喘气型节点改成 extract。动不了的顺着路线看下一个，不硬改
+      extract_every_rings 补，挑非必须型、非喘气型节点改成 extract。动不了的顺着路线看下一个，不硬改。
+      两个撤离点之间的最短路至少 extract_gap 步（5.4.3）；每个窗口挑离已有撤离点最远的候选
    g. 路线风险/收益校准（5.4.2）—— **尽力而为，不进校验**：算每条路线的风险分与收益分
       （type_risk / type_reward × danger 倍率，沿路线求和；搜索点 × reference_searches）；
       总违规量 = 各路线偏出自己 risk_band / reward_band 多少 + 性价比离散超出 ev_tolerance 多少
@@ -1748,7 +1751,8 @@ class_name ZoneRules extends Resource
       （以上规则从 layout_meta.type_rules 读，手绘图没有这一项就一条不查）
     - 每个高危区（ZoneRules，从图上读）：点数在 [min_size, max_size]、区内连通、
       出入口数在 1 ～ max_gates_for(点数) 之间
-    - 每 extract_every_rings 环至少一个 extract
+    - 每 extract_every_rings 环至少一个 extract；撤离点两两之间最短路 ≥ extract_gap
+    - 节点总数落在规模模板的 nodes 范围里
 ```
 
 一个环生成出来**可以断成两段、三段，甚至有一整段空白**：切向边按概率断、空白区本来就没节点，
@@ -1955,11 +1959,21 @@ class_name MapScaleProfile extends Resource
 @export var placeholder: bool         # true = 数值还没定，只是占位；界面上会标出来
 ```
 
-| 规模 | 环数 | 出发点 | 高危区 | 每条路线 | 高危区规模 | 换乘 | |
-|---|---|---|---|---|---|---|---|
-| 小型 | 4~5 | 2~3 | **有且只有 1 片** | ≤ 1 | 3~4 | 1 次 | 作者给的 |
-| 中型 | 6~8 | 3~4 | 1~3 片 | ≤ 1 | 3~6 | 1~2 次 | 片数与换乘是作者给的，出发点与规模是我填的 |
-| 大型 | 9~12 | 3~5 | 1~4 片 | ≤ 1 | 3~9 | 2~3 次 | **占位**。作者说更大的图出发点也不同、换乘「2 次以上」不具体定义 |
+| 规模 | 环数 | 节点数 | 出发点 | 高危区 | 每条路线 | 高危区规模 | 换乘 | 撤离点间距 | |
+|---|---|---|---|---|---|---|---|---|---|
+| 小型 | 4~5 | 28~38 | 2~3 | **有且只有 1 片** | ≤ 1 | 3~4 | 1 次 | 4 步 | 高危区、换乘、间距是作者给的 |
+| 中型 | 6~8 | **45~50** | 3~4 | 1~3 片 | ≤ 1 | 3~6 | 1~2 次 | 4 步 | 节点数、片数、换乘是作者给的，其余是我填的 |
+| 大型 | 9~12 | 72~90 | 3~4 | 1~4 片 | ≤ 1 | 3~9 | 2~3 次 | 5 步 | **占位**。12 环 × 最少 6 个槽位就是 72，节点数下限不能比这低 |
+
+**节点数由规模决定，不由环数决定。** 按半径算出来的密度对中型图太密（6 环 64 个点），
+所以建环时按模板要的节点数缩放每环的槽位：二分找一个系数，让「每环 max(min_slots, 半径槽位 × 系数)」
+的总和正好是要的 —— 内环被 `min_slots` 兜住之后不会跟着缩，多出来的得从外环扣，
+系数不能直接用总数之比。「越靠里越短」不受影响。图上的点数写进 `type_rules.node_range` 进校验。
+
+**撤离点之间的最短路至少 `extract_gap` 步**（`RingMapConfig.extract_min_distance` 可以覆盖，-1 = 用模板的）。
+挨得太近的两个出口等于一个。放撤离点时每个窗口挑离已有撤离点最远的候选；
+`extract_every_rings` 得不小于这个间距（相邻两个窗口才放得下两个隔得够远的出口），
+路线的 `bailout_every_rings` 同理。
 
 `RingMapConfig.scale()` 按环数匹配；一档都不匹配（三环的测试图）= 不设上限、没有高危区。
 `entry_count` / `zone_count` / `zone_soft_cap` 是作者或玩家挑的值，用之前都会被夹进这一档的范围
@@ -2996,6 +3010,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.39 | 2026-09-22 | **作者三条数值反馈**（报告 040）。（一）节点数由规模模板决定：`MapScaleProfile.nodes`，中型 45~50（原先 6 环 64 个）；建环时二分一个系数缩放槽位，内环被 `min_slots` 兜住的部分从外环扣。（二）普通战斗比例降：每环权重 battle 3 / search 3 / event 3 / random 2 / elite 1（原 5/3/2/1/1），mixed 风格的 mix 改成三者均等。（三）撤离点之间最短路至少 `extract_gap` 步（模板：小 4、中 4、大 5；`extract_min_distance` 可覆盖），进校验 `extract_spacing`；`extract_every_rings` 改 4、combat 的 `bailout_every_rings` 改 4 —— 窗口跨度小于间距时相邻窗口放不下两个出口，只能靠重试碰。顺带：合流之前挤不开改成这次作废，不再退到「合流」（那就是提前合流）；横着挪不再挪到别的路线上 |
 | v1.38 | 2026-09-22 | **M3-3c 类型分配落地**（报告 039）。`RingTypeAssigner` 按 5.4 步骤 5 的 0→g 填类型，与拓扑分开。图自身的规矩（配额、覆盖、喘气型不进高危区、不许相邻、高危区内容、每 N 环一个撤离点）进校验，规则写进 `layout_meta.type_rules` 从图上读；路线的 mix 与风险收益档位**只在生成时尽力**（035）。实现里定下的几条：覆盖不算高危区里的点；覆盖修正与撤离点都不盖掉已经是必须型的节点（第一版放商店时把休息区盖掉了，覆盖白做）；校准换进来的精英只限 mix 里列了它的路线；分数记成 `risk_x100` 整数（浮点过 JSON 会变）。`mandatory_types` 进配置；`type_risk` 的搜索点值是每搜一次的，定档时乘 `reference_searches`。批量统计多了路线表（落进档位几成、性价比离散、每种风格的类型构成、覆盖最远步数） |
 | v1.37 | 2026-09-22 | **编辑器试用反馈七条**（报告 038）。（一）`RingSpec` 的 `slots` / `node_count` 在建环时写成实数，不再留 0（0 仍是合法的「自动」）—— 编辑器里看到一排 0、图上却十几个点，只会让人以为数据没对上。（二）**路不许交叉**：新增「不交叉」小节；骨架、高危区、候选边、补边全走 `_link`，斜路碰上另一条对角线时按「凑四岔 → 借道 → 放弃」处理；校验加 `edge_crossing`；交叉按几何算。高危区改成**每长一步当场建路**。（三）（四）5.9 加岔路口画法：四点互连画四岔、三点互连画三岔，先四后三、由内向外、最后画（`MapJunctions`）。（六）换乘改成**相邻直连优先、换乘弧兜底**，窗口 `pivot_window`；`pivot_every_rings` 删除。（七）换乘次数进规模模板 `MapScaleProfile.pivots`：小型 1、中型 1~2、大型 2~3（占位）。新增 `_reconnect_islands`、换乘弧短的一段不通走长的一段 |
 | v1.36 | 2026-09-21 | **M3-3b 手绘地图落地 + 规模模板**（报告 037）。（一）`MapGridText.parse / render` 与 `GridScriptGenerator`（注册为 `grid_script`）：作者的两张图往返逐字节相同、过通用校验与 `ZoneRules`；5.4.1 补了七条实现细则（岔路口紧挨着点、v0 老格式、穿环的 `\|`、`danger_rows` 原稿、出生点占位规则、`[links]` 段）。`ZoneRules.validate` 抽成静态，环形与手绘共用，只管 danger ≥ 2 的区域。计划里「生成图导出再解析 `to_dict()` 一致」改为**拓扑等价** —— 两种形态的 layout 载荷与 id 编法本来就不同。（二）新增 5.4.3 `MapScaleProfile`：出发点 / 高危区数量 / 高危区规模的上限随规模变，是数据不是代码；小型有且只有一片高危区，中型 1~3 片且每条路线至多一片，大型占位。`danger_zones` 数组换成 `zone_spec` + `zone_count` + `zone_soft_cap`；`DangerZoneSpec` 的 `min_rings` / `required` / `soft_cap_by_rings` 删除（都归规模模板管）。路线标注多了 `zone_ids`。编辑器左栏从规模选起 |

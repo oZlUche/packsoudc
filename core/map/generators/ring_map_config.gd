@@ -50,6 +50,8 @@ extends Resource
 ## 不许相邻的类型对
 @export var no_adjacent: Array = []
 @export var extract_every_rings: int = 2
+## 撤离点两两之间的最短路至少几步。-1 = 用规模模板的值（MapScaleProfile.extract_gap）
+@export var extract_min_distance: int = -1
 
 @export_group("高危区")
 ## 高危区怎么【长出来】。null = 这张图不要高危区
@@ -147,6 +149,13 @@ func zone_count_range() -> Vector2i:
 	return Vector2i(mini(p.zones.x, fixed), fixed)
 
 
+func effective_extract_gap() -> int:
+	if extract_min_distance >= 0:
+		return extract_min_distance
+	var p := scale()
+	return p.extract_gap if p != null else 0
+
+
 func effective_zone_soft_cap() -> int:
 	var p := scale()
 	if p == null:
@@ -174,6 +183,32 @@ func _build_rings(ring_count_: int) -> void:
 		var spec := RingSpec.new()
 		spec.kind = kinds[mini(i, kinds.size() - 1)]
 		rings.append(spec)
+	# 按规模模板要的节点数缩放槽位：先按半径算一遍，再整体乘一个系数。
+	# 系数对每环一样，所以「越靠里越短」不会被打乱；内环仍受 min_slots 兜底
+	var p := scale()
+	if p != null and p.nodes.y > 0:
+		var by_radius: Array[int] = []
+		var total := 0
+		for i in ring_count_:
+			by_radius.append(slots_for_ring(ring_count_ - i))
+			total += by_radius[i]
+		var gaps := 3 * mini(2, ring_count_)      # 下面外圈要挖掉的空白
+		var want := (p.nodes.x + p.nodes.y) / 2 - 1 + gaps
+		# 系数不能直接用 want / total：内环被 min_slots 兜住之后不会跟着缩，
+		# 多出来的得从外环扣。二分找一个系数，让兜底之后的总数正好是要的
+		var lo := 0.0
+		var hi := 1.0
+		for _k in 24:
+			var mid := (lo + hi) / 2.0
+			var sum := 0
+			for i in ring_count_:
+				sum += maxi(min_slots, roundi(float(by_radius[i]) * mid))
+			if sum < want:
+				lo = mid
+			else:
+				hi = mid
+		for i in ring_count_:
+			rings[i].slots = maxi(min_slots, roundi(float(by_radius[i]) * hi))
 	# 外圈各留一段空白弧 —— 参照示意图，环本来就可以断成几段。
 	# 只挖【真比 min_slots 长】的环：内圈本来就已经缩到下限了，
 	# 再挖就会比外圈还空，看着不像同心环
@@ -204,7 +239,7 @@ static func sample(ring_count_: int = 5) -> RingMapConfig:
 	combat.mix = {"battle": 5, "elite": 1, "event": 1}
 	combat.risk_band = Vector2(1.15, 1.7)
 	combat.reward_band = Vector2(1.15, 1.7)
-	combat.bailout_every_rings = 2
+	combat.bailout_every_rings = 4     # 得 ≥ 撤离点间距，不然沿路的出口自己就挤在一起
 	var search := RouteStyle.new()
 	search.id = &"search"
 	search.ends_at = &"extract"
@@ -214,14 +249,14 @@ static func sample(ring_count_: int = 5) -> RingMapConfig:
 	var mixed := RouteStyle.new()
 	mixed.id = &"mixed"
 	mixed.ends_at = &"core"
-	mixed.mix = {"battle": 3, "search": 2, "event": 1}
+	mixed.mix = {"battle": 2, "search": 2, "event": 2}
 	mixed.risk_band = Vector2(0.8, 1.2)
 	mixed.reward_band = Vector2(0.8, 1.2)
 	cfg.routes = [combat, search, mixed] as Array[RouteStyle]
 
 	# 类型分配（M3-3c）。数值全是占位，等内容定稿；测试从这里读期望值，不写死
 	for i in cfg.rings.size():
-		cfg.rings[i].type_weights = {"battle": 5, "search": 3, "event": 2, "random": 1, "elite": 1}
+		cfg.rings[i].type_weights = {"battle": 3, "search": 3, "event": 3, "random": 2, "elite": 1}
 		cfg.rings[i].quota = {"shop": [0, 1], "rest": [0, 2], "elite": [0, 2]}
 	cfg.type_risk = {"battle": 1.0, "elite": 2.2, "event": 0.3, "random": 0.8, "search": 0.4,
 		"shop": 0.0, "rest": 0.0, "extract": 0.0, "core": 3.0}
@@ -230,7 +265,9 @@ static func sample(ring_count_: int = 5) -> RingMapConfig:
 	cfg.coverage = {"rest": 4, "shop": 6}
 	cfg.no_adjacent = [["elite", "elite"], ["shop", "shop"]]
 	cfg.ev_tolerance = 0.25
-	cfg.extract_every_rings = 2
+	# 撤离点每 4 环一个：窗口跨度不小于「撤离点之间至少几步」，相邻两个窗口才放得下
+	# 两个隔得够远的出口。每 2 环一个的话，内圈只有六个点，只能靠重试碰
+	cfg.extract_every_rings = 4
 
 	# 要不要高危区、要几片、多大，由规模模板决定（环太少时没有匹配的规模，也就没有高危区）
 	cfg.zone_spec = DangerZoneSpec.new()

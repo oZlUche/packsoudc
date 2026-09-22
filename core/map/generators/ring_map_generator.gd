@@ -359,7 +359,11 @@ func _advance_ring(r: int, steps: int, active: Array[int], paths: Array) -> bool
 		if pool.is_empty() and need > 1:
 			pool = _filter_far(options, taken, 1, slots)   # 退一步：不重合就行
 		if pool.is_empty():
-			pool = options      # 再退一步：挤不开就合流，总好过整张图作废
+			if exclusive:
+				# 合流之前挤不开 = 这一次作废。以前这里退到「合流」，结果就是提前合流
+				build_note = "路线走到第 %d 环挤不开：合流之前的几环里落点全被别的路线占了" % r
+				return false
+			pool = options      # 允许合流之后，挤不开就合流
 		var path: Array[int] = paths[i]
 		# 正对着空白区时，先沿当前这环横着挪几步，挪到能向内走的地方
 		var walk: Array[int] = approaches[i]["walk"]
@@ -369,9 +373,11 @@ func _advance_ring(r: int, steps: int, active: Array[int], paths: Array) -> bool
 			path.append(side)
 		# 先试挑中的那个；它会和别的路交叉又让不开，就换别的候选
 		var tries: Array[int] = _shuffled(pool)
-		for other in options:
-			if not tries.has(other):
-				tries.append(other)
+		if not exclusive:
+			# 合流之前不许退回到「被别人占了的落点」—— 那就是提前合流；退不了就这次作废
+			for other in options:
+				if not tries.has(other):
+					tries.append(other)
 		var landed := false
 		for pick in tries:
 			var via := _link(path[-1], pick, true)
@@ -427,8 +433,8 @@ func _approach(from_id: int, to_ring: int) -> Dictionary:
 		var slot := int(node.layout["order"])
 		for _k in slots:
 			slot = posmod(slot + dir, slots)
-			if not map.has(slot) or _graph.get_node(int(map[slot])).zone != 0:
-				break       # 这一边被空白区（或高危区）截断了
+			if not map.has(slot) or _graph.get_node(int(map[slot])).zone != 0 					or _protected_nodes.has(int(map[slot])):
+				break       # 这一边被空白区、高危区或别的路线截断了 —— 横着挪不能挪到别人的路上去
 			walk.append(int(map[slot]))
 			var cands := _inward_candidates(int(map[slot]), to_ring)
 			if not cands.is_empty():
