@@ -2,6 +2,9 @@
 ##
 ## 数据层只记「谁和谁相连」与次序，**不记坐标**；点画在哪儿是这里的事。
 ## 每种地图形态一个子类，按 `graph.layout_kind` 取 —— 和生成器注册表同一个套路。
+##
+## 同心环这一族（随机生成的、手绘的）共用一个角度求解器（[RingAngleSolver]）：
+## 子类只负责把自己的 ring/order 或 row/col 翻成「层 + 圈上的位置」，角度由求解器给。
 @abstract
 class_name MapLayout
 extends RefCounted
@@ -32,6 +35,11 @@ func canvas_size(_graph: MapGraph) -> Vector2:
 @abstract func positions(graph: MapGraph, rect: Rect2) -> Dictionary
 
 
+## 求解时的告警（画得出来但作者该知道的事）。没有求解器的形态返回空。
+func warnings(_graph: MapGraph) -> Array[String]:
+	return [] as Array[String]
+
+
 ## 还能加点的空位。编辑器用：每项 `{pos, layout, tier, erosion_band}` ——
 ## 点在这个位置上新建时该带的布局载荷与档位。形态不支持加点就返回空。
 func free_slots(_graph: MapGraph, _rect: Rect2) -> Array[Dictionary]:
@@ -41,6 +49,15 @@ func free_slots(_graph: MapGraph, _rect: Rect2) -> Array[Dictionary]:
 ## 手动连一条边时它该是什么 kind。形态不区分就返回空。
 func edge_kind(_graph: MapGraph, _a: int, _b: int) -> StringName:
 	return &""
+
+
+## 画一条边。默认直线；同心环的切向边画弧 —— 画直线会把同心环的视觉语言破坏掉，
+## 玩家看到的就是一张普通的网。
+func draw_edge(
+	canvas: CanvasItem, _graph: MapGraph, _edge: MapEdge, a: Vector2, b: Vector2,
+	color: Color, width: float
+) -> void:
+	canvas.draw_line(a, b, color, width, true)
 
 
 ## 画在节点与边底下的衬底（环形图的那几圈同心圆）。

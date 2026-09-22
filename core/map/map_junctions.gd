@@ -26,19 +26,23 @@ static func find(graph: MapGraph) -> Dictionary:
 			set[e.other(id)] = true     # 画图不分方向：单向路也是一条线
 		nbrs[id] = set
 
+	# 只沿邻居找，不是四重全图循环：每个点三五条边，这是 O(n · deg³)；
+	# 全图四重循环是 n⁴，45 个点一帧就要跑四百万次 —— 有呼吸动画之后每帧都画，那就卡死了
 	var quads: Array = []
 	var tris: Array = []
 	for a in ids:
-		for b in ids:
-			if b <= a or not nbrs[a].has(b):
+		var na: Array = (nbrs[a] as Dictionary).keys()
+		na.sort()
+		for b in na:
+			if int(b) <= a:
 				continue
-			for c in ids:
-				if c <= b or not nbrs[a].has(c) or not nbrs[b].has(c):
+			for c in na:
+				if int(c) <= int(b) or not (nbrs[b] as Dictionary).has(c):
 					continue
-				tris.append([a, b, c])
-				for d in ids:
-					if d > c and nbrs[a].has(d) and nbrs[b].has(d) and nbrs[c].has(d):
-						quads.append([a, b, c, d])
+				tris.append([a, int(b), int(c)])
+				for d in na:
+					if int(d) > int(c) and (nbrs[b] as Dictionary).has(d) and (nbrs[c] as Dictionary).has(d):
+						quads.append([a, int(b), int(c), int(d)])
 
 	var used: Dictionary = out["edge_keys"]
 	for group in [[quads, "quads"], [tris, "tris"]]:

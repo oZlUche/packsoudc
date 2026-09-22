@@ -222,7 +222,10 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
 > 这一步也是对内容管线通用性的**第一次真实检验**：它此前只喂过道具、增益、套装
 > 三种同源的东西。章节配置结构完全不同，喂得进去才算证明了「导入器不认识具体类型」。
 
-### M3-6 渲染与地图沙盒
+### M3-6 渲染与地图沙盒 ✅
+
+> 已完成，见[报告 044](044-layout-solver-and-sandbox.md)。文件名与计划里写的不同：`ui/map/map_layout.gd`（策略根）、
+> `ring_layout_base.gd`、`ring_angle_solver.gd`、`map_sandbox.tscn`。敌人预览浮窗按计划不做，标记位留了。
 
 `ui/map/map_layout_strategy.gd`、`ui/map/layouts/ring_layout.gd`、`ui/map/map_view.gd`，
 外加 `ui/map/map_sandbox.tscn` 与启动选择器的第四个入口。

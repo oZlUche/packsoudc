@@ -53,6 +53,7 @@ const SUITES: Array = [
 	preload("res://tests/test_map_source.gd"),
 	preload("res://tests/test_map_travel.gd"),
 	preload("res://tests/test_chapter_pipeline.gd"),
+	preload("res://tests/test_map_layout.gd"),
 	preload("res://tests/test_map_editor.gd"),
 ]
 

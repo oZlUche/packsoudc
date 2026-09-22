@@ -11,6 +11,8 @@ class_name MapView
 extends Control
 
 signal node_pressed(id: int, button: int, shift: bool)
+## 鼠标移到某个点上 / 离开（-1）。沙盒用它做单步预览与路线加粗
+signal node_hovered(id: int)
 signal edge_pressed(edge: MapEdge, button: int)
 signal slot_pressed(slot: Dictionary)
 signal empty_pressed
@@ -49,6 +51,24 @@ var merge_junctions: bool = true:
 		merge_junctions = v
 		queue_redraw()
 
+## 人在哪：高亮描边 + 呼吸。-1 = 没有人（编辑器）
+var current_id: int = -1:
+	set(v):
+		current_id = v
+		set_process(v >= 0)
+		queue_redraw()
+## 加粗描出哪条路线（下标），-1 = 都不加粗。挑出生点时悬停哪个就加粗哪条
+var bold_route: int = -1:
+	set(v):
+		bold_route = v
+		queue_redraw()
+## 这一步能走到的点：画一圈提示。沙盒每走一步更新
+var reachable: Dictionary = {}:
+	set(v):
+		reachable = v
+		queue_redraw()
+var _pulse: float = 0.0
+
 ## 画布 → 屏幕：screen = canvas * zoom + pan
 var zoom: float = 1.0
 var pan: Vector2 = Vector2.ZERO
@@ -59,6 +79,10 @@ var _layout: MapLayout = null
 var _font: Font
 var _hover_id: int = -1
 var _dragging := false
+## 岔路口按 graph.version 缓存：呼吸动画每帧都画，不能每帧都找一遍
+var _junction_cache: Dictionary = {}
+var _junction_version: int = -1
+var _junction_graph: MapGraph = null
 
 
 func _ready() -> void:
@@ -69,6 +93,11 @@ func _ready() -> void:
 
 func _on_resized() -> void:
 	center()
+	queue_redraw()
+
+
+func _process(delta: float) -> void:
+	_pulse = fmod(_pulse + delta * 2.0, TAU)
 	queue_redraw()
 
 
@@ -166,6 +195,7 @@ func _gui_input(event: InputEvent) -> void:
 		var h := node_at(to_canvas(mm.position))
 		if h != _hover_id:
 			_hover_id = h
+			node_hovered.emit(h)
 			queue_redraw()
 		return
 	var mb := event as InputEventMouseButton
@@ -245,7 +275,7 @@ func _draw() -> void:
 
 	# 四个点两两相连画成四岔路口，三个点两两相连画成三岔路口（先四后三，由内向外）。
 	# 被路口占用的边不再单独画线 —— 六条线在中间打叉，看不出那是一个路口
-	var junctions := MapJunctions.find(graph) if merge_junctions else {"quads": [], "tris": [], "edge_keys": {}}
+	var junctions := _junctions() if merge_junctions else {"quads": [], "tris": [], "edge_keys": {}}
 	var in_junction: Dictionary = junctions["edge_keys"]
 
 	for e in graph.edges:
@@ -255,10 +285,12 @@ func _draw() -> void:
 		if in_junction.has(key):
 			continue
 		if route_of_edge.has(key):
-			draw_line(pos[e.from_id], pos[e.to_id],
-				Color(MapNodeStyle.route_color(route_of_edge[key]), 0.85), 3.0, true)
+			var ri: int = route_of_edge[key]
+			_layout.draw_edge(self, graph, e, pos[e.from_id], pos[e.to_id],
+				Color(MapNodeStyle.route_color(ri), 0.9 if ri == bold_route else 0.7),
+				6.0 if ri == bold_route else 3.0)
 		else:
-			draw_line(pos[e.from_id], pos[e.to_id], UiPalette.DIM.darkened(0.25), 1.5, true)
+			_layout.draw_edge(self, graph, e, pos[e.from_id], pos[e.to_id], UiPalette.DIM.darkened(0.25), 1.5)
 
 	for clique in (junctions["quads"] as Array) + (junctions["tris"] as Array):
 		_draw_junction(clique, pos, route_of_edge)
@@ -272,6 +304,14 @@ func _draw() -> void:
 	for id in graph.node_ids():
 		if pos.has(id):
 			_draw_node(graph.get_node(id), to_screen(pos[id]))
+
+
+func _junctions() -> Dictionary:
+	if _junction_graph != graph or _junction_version != graph.version:
+		_junction_cache = MapJunctions.find(graph)
+		_junction_graph = graph
+		_junction_version = graph.version
+	return _junction_cache
 
 
 ## 一个路口：中心一个小点，向每个成员伸一条腿。
@@ -299,19 +339,32 @@ func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary) -
 func _draw_node(n: MapNode, p: Vector2) -> void:
 	var style := MapNodeStyle.of(n.type)
 	var color: Color = style["color"]
+	# 用过的点去饱和变灰 —— 但连线照旧、照样能点：走回头路是这一章的核心规则，
+	# 「用过」和「走不了」必须一眼分得开（5.9）。核心永远不灰，它是方向锚点
+	if n.is_visited() and n.type != &"core" and n.id != current_id:
+		var grey := color.get_luminance()
+		color = Color(grey, grey, grey).lerp(UiPalette.DIM, 0.5)
 	draw_circle(p, NODE_RADIUS, color.darkened(0.55))
 	draw_arc(p, NODE_RADIUS, 0.0, TAU, 32, color, 2.0, true)
 	if graph.entry_ids.has(n.id):
 		draw_arc(p, NODE_RADIUS + 4.0, 0.0, TAU, 32, UiPalette.HEAL, 2.0, true)
 	if graph.goal_ids.has(n.id):
 		draw_arc(p, NODE_RADIUS + 4.0, 0.0, TAU, 32, UiPalette.STAMINA, 2.0, true)
-	if n.id == selected_id:
+	if reachable.has(n.id):
+		draw_arc(p, NODE_RADIUS + 5.5, 0.0, TAU, 32, Color(UiPalette.FG, 0.55), 1.5, true)
+	if n.id == current_id:
+		var r := NODE_RADIUS + 8.0 + 2.5 * sin(_pulse)
+		draw_arc(p, r, 0.0, TAU, 40, UiPalette.FG, 2.5, true)
+	elif n.id == selected_id:
 		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, UiPalette.FG, 2.0, true)
 	elif n.id == _hover_id:
 		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, Color(UiPalette.FG, 0.35), 1.0, true)
 	var glyph: String = style["glyph"]
 	var w := _font.get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
 	draw_string(_font, p + Vector2(-w / 2.0, 5.0), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, color)
+	# 「这里有可看的内容」的标记位（5.10，内容归 M4）：random 没有 —— 那是地图上唯一看不透的点
+	if n.type != &"random" and not n.is_visited() and not MapNodeTypes.STRUCTURAL.has(n.type):
+		draw_circle(p + Vector2(-NODE_RADIUS + 3.0, -NODE_RADIUS + 3.0), 2.0, Color(UiPalette.FG, 0.6))
 	# 危险等级：右上角几个红点
 	for k in n.danger:
 		draw_circle(p + Vector2(NODE_RADIUS - 2.0 - 6.0 * k, -NODE_RADIUS + 1.0), 2.5, UiPalette.HP)

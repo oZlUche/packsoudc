@@ -2261,18 +2261,20 @@ func move_penalty(node: MapNode) -> Dictionary    # {hp_damage:int, item_risk:fl
 
 
 ```gdscript
-# ui/map/map_layout_strategy.gd
-class_name MapLayoutStrategy extends RefCounted
-func node_position(node: MapNode, meta: Dictionary, view_size: Vector2) -> Vector2
-func draw_edge(canvas: CanvasItem, edge: MapEdge, a: MapNode, b: MapNode, meta: Dictionary) -> void
+# ui/map/map_layout.gd —— 布局策略的根，按 graph.layout_kind 从 LAYOUTS 表取
+class_name MapLayout extends RefCounted
+func canvas_size(graph) -> Vector2                  # 固定间距算出来的画布，不随视口缩
+func positions(graph, rect) -> Dictionary           # id → 画布坐标
+func draw_edge(canvas, graph, edge, a, b, color, width)   # 默认直线
+func warnings(graph) -> Array[String]
 
-# ui/map/layouts/ring_layout.gd
-#   solve(graph)  → 给每个节点算出 angle；只做一次，结果缓存
-#   node_position：极坐标 → 屏幕坐标，center + Vector2(cos(a), sin(a)) * radius(ring)
-#   draw_edge：
-#     kind == "tangential" → 沿圆弧采样 N 个点用 draw_polyline 画弧
-#                            （不要画直线，直线会破坏同心环的视觉语言）
-#     kind == "radial"     → 直线，沿半径方向
+# ui/map/ring_layout_base.gd —— 同心环这一族（随机生成的、手绘的）共用：
+#   子类只回答 levels_of / fractions_of / level_count（层 = 0 圆心，圈上的位置 0～1），
+#   角度交给 RingAngleSolver，按 graph.version 缓存 —— 图没变就不重解
+#   draw_edge：同层 → 沿圆弧采样用 draw_polyline 画弧（画直线会破坏同心环的视觉语言）；
+#              跨层 → 直线，求解之后它本来就是径向的
+# ui/map/ring_angle_solver.gd —— 见下
+# ui/map/ring_map_layout.gd / grid_map_layout.gd —— 只翻译 ring/order、row/col
 ```
 
 #### 环形布局：角度是解出来的，不是配出来的
@@ -2300,6 +2302,16 @@ func draw_edge(canvas: CanvasItem, edge: MapEdge, a: MapNode, b: MapNode, meta: 
 替渲染做决定。两个生成器只产出次序，同一个求解器画它们 —— 布局只写一次。
 抖动（让图不那么规整）是求解器的参数，不是生成器的。
 
+> 已落地（报告 044），**解法换成了松弛**而不是上面写的逐层贪心：最外层按位置钉死，里面每个有径向边的点
+> 反复取径向邻居角度的圆周均值（四百轮），每轮之后按圈上的次序整理一遍（同层的点不许越过彼此、
+> 不许挤到一起，挤到一起的两个各让一半）。一条链就整条垂直；一个点接着两个外层点就落在它们中间并告警。
+> 逐层贪心在随机生成的图上会把整层的点顺着推到一边（每个点向内连一两条，「一点接着两个外层点」是常态，
+> 均值一层层叠下去，图就歪了）。求解器的输入是形态无关的「层 + 圈上的位置」，同心环图与手绘图各自翻译。
+> **两种图的目标不一样**：手绘图的 `|` 就该竖直，`anchor` = 0，简单的链解得精确；随机生成的图每个点向内
+> 连一两条 ±1 槽位的斜边是本意（5.4「不交叉」），硬拉直会把点挤成一团，所以每个点留三成半的力往名义位置拉
+> （`anchor` = 0.35），只把径向边往竖直方向带一带 —— 十二个种子平均总偏差降到名义的七成，从不更歪。
+> 没有随机，解两次逐位相同。抖动还没加。
+
 `MapView` 根据 `graph.layout_kind` 从注册表取对应策略，其余逻辑（节点按钮、路径预览、点击导航、镜头平移缩放）完全共享。
 
 必须呈现的视觉状态：
@@ -2307,11 +2319,12 @@ func draw_edge(canvas: CanvasItem, edge: MapEdge, a: MapNode, b: MapNode, meta: 
 | 状态 | 表现 |
 |---|---|
 | `UNVISITED` | 正常亮度，按类型显示图标 |
-| `VISITED` | 图标去饱和变灰，但**保持可点击、连线保持清晰** —— 必须与"不可通行"有明显区分 |
-| 当前节点 | 高亮描边 + 呼吸动画 |
+| `VISITED` | 图标去饱和变灰，但**保持可点击、连线保持清晰** —— 必须与"不可通行"有明显区分（已做） |
+| 当前节点 | 高亮描边 + 呼吸动画（已做）；这一步能走到的点画一圈提示 |
 | 已侵蚀区域 | 红紫色 overlay + 噪点 shader，band 边界做渐变过渡 |
 | 预警中的区域 | 边界闪烁 + 倒计时标签 |
-| 核心点 | 红色，始终可见，作为玩家的方向锚点 |
+| 核心点 | 红色，始终可见，作为玩家的方向锚点（已做，永远不灰） |
+| 有内容可看 | 节点左上一个小点，`random` 与结构性节点（出生点 / 撤离点 / 核心）没有 —— `random` 是地图上唯一看不透的点（标记位，内容归 M4） |
 
 常驻 HUD：**当前行动数 ／ 距下次侵蚀还有 N 步 ／ 已侵蚀层数 ／ 距最近撤离点还有 N 步**。
 
@@ -2973,7 +2986,7 @@ res://
 | **1** | M1 网格背包 + 拖拽 + 序列化 | 可玩的整理沙盒，核心手感可验证 | 完成 |
 | **2** | M2 编译 + 效果系统 + 模拟 + 极简可视化 | 两个背包能打起来，可批量跑平衡 | 完成 |
 | **3** | 内容制作管线（第 10 节） | 不写代码就能造道具，数值可迭代 | 完成 |
-| **4** | M3 环形地图生成 + 单步导航 + 渲染 + 行动计数 | run 的骨架成立 | 进行中：M3-1（030）、M3-2（032）、M3-3（033）、编辑器与地图来源（034）、高危区（036）、M3-3b 与规模模板（037）完成，M3-3c（039）、M3-4（042）、M3-5 章节走内容管线（043）完成，计划见 027 |
+| **4** | M3 环形地图生成 + 单步导航 + 渲染 + 行动计数 | run 的骨架成立 | 进行中：M3-1（030）、M3-2（032）、M3-3（033）、编辑器与地图来源（034）、高危区（036）、M3-3b 与规模模板（037）完成，M3-3c（039）、M3-4（042）、M3-5（043）、M3-6 渲染与沙盒（044）完成 —— **M3 全部落地**，计划见 027 |
 | **5** | M4 掉落 + 搜刮揭示 + 撤离 | **循环闭合，第一个可玩 Demo** | |
 | **6** | M5 存档 + M6 场景流打磨 | 可对外试玩 | |
 | **7** | 侵蚀系统 + 难度档位开关 | 时间压力成立，可开始调节奏 | |
@@ -3057,6 +3070,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.43 | 2026-09-22 | **M3-6 渲染与地图沙盒**（报告 044）。角度求解器 `RingAngleSolver`（形态无关：层 + 圈上的位置；由外向内、圆周均值 + 告警、单调校验、无随机），`RingLayoutBase` 让随机生成的与手绘的图共用它，按 `MapGraph.version` 缓存；切向边画弧；`MapView` 加 VISITED 去饱和、当前点呼吸、可达提示、路线加粗、悬停信号；核心改红。`ui/map/map_sandbox`：从 `chapter_01` 开局，挑出生点（路线卡 + 悬停加粗）、一步一步走、HUD（行动点 / 距最近撤离点 / 休息区 / 核心 / 体力）、单步预览、换种子。启动选择器第五个入口 |
 | v1.42 | 2026-09-22 | **M3-5 章节定义走内容管线**（报告 043）。`ChapterDef`（id、display_name、map_source；侵蚀、敌人池、掉落表到时候各加一个字段）；`ContentPaths` 加 `chapters`、排最后；`import_chapter` + 严格校验。管线补的通用能力：`Vector2`、字典里整数值的浮点两头写成整数、声明成引擎基类的字段靠 `type` 造类。`data/authoring/chapters/chapter_01.json`（由 `RingMapConfig.sample(6)` 倒出）→ `data/chapters/chapter_01.tres`。地图编辑器加「章节」栏：载入 / 存回 |
 | v1.41 | 2026-09-22 | **M3-4 行动计数与单步移动落地**（报告 042）：`ActionClock`、`MoveIntent`、`MapNavigator`（只读、无多步入口，测试守着公开方法清单）、`MapTravel`（五步结算顺序一处落地，侵蚀与节点事件是鸭子类型钩子，假钩子记次序）。渲染：画布按固定环距算、不随视口缩，`MapView` 加拖动与缩放 —— 作者说图看着太挤 |
 | v1.40 | 2026-09-22 | **作者六条**（报告 041）。（一）节点数仍随环数增长：规模模板的 `nodes` 范围按环数插值。（二）每环 节点/槽位 ≤ `fill_cap`（0.9，严格 < 1）：内环也不填满；`RingSpec.node_count = 0` 从「填满」改成「填到上限」。（三）出生点是一种节点 `spawn`，图上写「生」，网格符号暂定 `P`；固定、不参与 mix / 配额 / 校准；校验 `spawn`。（四）休息区与商店只在路径走过 `haven_after_progress`（1/3）之后才出现，按环深算；前一段的点不算进覆盖；校验 `haven_early`。（五）`RouteStyle.min_share`：偏搜索的路线搜索点至少八成，分配时先保底、换走前先问；搜索点的收益从 1.1 降到 0.6，不然八成搜索的路线性价比太高、校准会把别的路线也换成搜索点去追；档位跟着改。（六）非路线节点只剩战斗的根子是 `apply_scale` 新建的环没有权重表 —— 加 `ring_template`。校准只在事件点之间换，`MapNodeTypes.STRUCTURAL`（core / spawn / extract / junction）不动 |

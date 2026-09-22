@@ -13,7 +13,7 @@ const STYLES := {
 	&"rest": {"label": "休息区", "glyph": "休", "color": Color("5cb85c")},
 	&"extract": {"label": "撤离点", "glyph": "撤", "color": Color("dfe3ea")},
 	&"junction": {"label": "岔路", "glyph": "·", "color": Color("5a6270")},
-	&"core": {"label": "核心", "glyph": "核", "color": Color("f0d060")},
+	&"core": {"label": "核心", "glyph": "核", "color": Color("ff4a3d")},   # 红，始终可见：玩家的方向锚点（5.9）
 	&"spawn": {"label": "出生点", "glyph": "生", "color": Color("5cb85c")},
 }
 

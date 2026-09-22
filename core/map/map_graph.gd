@@ -34,6 +34,9 @@ var zones: Dictionary = {}
 ## 路线只是一串节点 id 加几个标签；开局给玩家看的就是这一份。
 var routes: Array[Dictionary] = []
 
+## 每改一次拓扑就加一。布局把角度按它缓存 —— 图没变就不重解
+var version: int = 0
+
 ## id -> Array[MapEdge]，懒建的邻接索引。加点加边后作废。
 var _incident: Dictionary = {}
 var _index_valid: bool = false
@@ -46,6 +49,7 @@ func add_node(node: MapNode) -> bool:
 		return false
 	nodes[node.id] = node
 	_index_valid = false
+	version += 1
 	return true
 
 
@@ -57,6 +61,7 @@ func add_edge(edge: MapEdge) -> bool:
 		return false
 	edges.append(edge)
 	_index_valid = false
+	version += 1
 	return true
 
 
@@ -73,6 +78,7 @@ func connect_nodes(a: int, b: int, kind: StringName = &"", action_cost: int = 1)
 func remove_edge(edge: MapEdge) -> void:
 	edges.erase(edge)
 	_index_valid = false
+	version += 1
 
 
 ## 删一个点，连同挨着它的全部路；出生点、终点、危险区域里的登记一并清掉。
@@ -95,6 +101,7 @@ func remove_node(id: int) -> bool:
 		if members.is_empty():
 			zones.erase(zid)
 	_index_valid = false
+	version += 1
 	return true
 
 
