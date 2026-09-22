@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_ys8gs"]
+
+[resource]
+script = ExtResource("1_ys8gs")
+id = &"marksman"
+display_name = "神射手"
+strength = 1
+schools = Array[StringName]([&"burst"])
+base_stats = {
+"max_hp": 22
+}

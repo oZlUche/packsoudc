@@ -10,11 +10,12 @@
   "rarity": 3,
   "tags": [
     "weapon",
-    "gun"
+    "gun",
+    "burst"
   ],
   "combat": {
     "base_stats": {
-      "damage": 30.0
+      "damage": 30
     },
     "rules": [
       {

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_b1i6m"]
+
+[resource]
+script = ExtResource("1_b1i6m")
+id = &"warden"
+display_name = "守卫"
+strength = 2
+schools = Array[StringName]([&"rapid", &"burst"])
+base_stats = {
+"armor": 3,
+"max_hp": 36
+}
+signature = Array[StringName]([&"armor"])

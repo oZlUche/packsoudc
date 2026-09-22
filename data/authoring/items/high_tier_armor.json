@@ -12,7 +12,7 @@
   ],
   "combat": {
     "base_stats": {
-      "armor": 10.0
+      "armor": 10
     }
   }
 }

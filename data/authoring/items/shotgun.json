@@ -1,0 +1,39 @@
+{
+  "id": "shotgun",
+  "display_name": "霰弹枪",
+  "shape": [
+    "111"
+  ],
+  "rarity": 2,
+  "tags": [
+    "weapon",
+    "gun",
+    "burst"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 22
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 2.4
+        },
+        "costs": [
+          {
+            "type": "resource"
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage"
+          }
+        ]
+      }
+    ]
+  }
+}

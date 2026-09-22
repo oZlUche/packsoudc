@@ -19,10 +19,37 @@ class Context:
 	extends RefCounted
 	## id -> BuffDef
 	var buffs: Dictionary = {}
+	## id -> ItemDef。敌人的招牌道具与流派标签对着它查
+	var items: Dictionary = {}
+	## id -> EnemyDef。池的条目对着它查
+	var enemies: Dictionary = {}
+	## id -> EnemyPool。章节对着它查
+	var pools: Dictionary = {}
 
 	func register_buff(def: BuffDef) -> void:
 		if def != null and def.id != &"":
 			buffs[def.id] = def
+
+	func register_item(def: ItemDef) -> void:
+		if def != null and def.id != &"":
+			items[def.id] = def
+
+	func register_enemy(def: EnemyDef) -> void:
+		if def != null and def.id != &"":
+			enemies[def.id] = def
+
+	func register_pool(pool: EnemyPool) -> void:
+		if pool != null and pool.id != &"":
+			pools[pool.id] = pool
+
+	## 道具里带某个标签的有几件。批量导入时才有意义 —— 单独导一个敌人时上下文是空的，
+	## 这类「对着别的东西查」的校验就跳过（见 _validate_enemy）
+	func items_tagged(tag: StringName) -> int:
+		var n := 0
+		for id in items:
+			if (items[id] as ItemDef).tags.has(tag):
+				n += 1
+		return n
 
 
 #region 顶层入口
@@ -49,7 +76,99 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	var def := ItemDef.new()
 	_fill(def, data, "", ctx, report)
 	_validate_item(def, report)
+	ctx.register_item(def)
 	return def
+
+
+## 敌人（M4-1）。校验里「对着道具查」的那几条只在批量导入（上下文里有道具）时生效。
+static func import_enemy(data: Dictionary, ctx: Context, report: ImportReport) -> EnemyDef:
+	var def := EnemyDef.new()
+	_fill(def, data, "", ctx, report)
+	_validate_enemy(def, ctx, report)
+	ctx.register_enemy(def)
+	return def
+
+
+static func import_enemy_pool(data: Dictionary, ctx: Context, report: ImportReport) -> EnemyPool:
+	var pool := EnemyPool.new()
+	_fill(pool, data, "", ctx, report)
+	_validate_enemy_pool(pool, ctx, report)
+	ctx.register_pool(pool)
+	return pool
+
+
+## 比引擎严格：流派没有道具就组不出来，招牌道具得存在，档位不能为负。
+static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -> void:
+	if def.id == &"":
+		report.error("id", "敌人必须有 id")
+	if def.strength < 0:
+		report.error("strength", "档位不能为负")
+	if def.schools.is_empty():
+		report.warn("schools", "没有流派，只会背通用道具")
+	if def.loadout != null:
+		_validate_loadout(def.loadout, "loadout", report)
+	if ctx.items.is_empty():
+		return
+	for s in def.schools:
+		if ctx.items_tagged(s) == 0:
+			report.error("schools", "流派 '%s' 没有任何道具带这个标签，组不出流派道具" % s)
+	for sid in def.signature:
+		if not ctx.items.has(sid):
+			report.error("signature", "找不到招牌道具 '%s'" % sid)
+		elif (ctx.items[sid] as ItemDef).is_bag:
+			report.error("signature", "招牌道具 '%s' 是个包 —— 敌人的棋盘不放包" % sid)
+
+
+static func _validate_loadout(rule: EnemyLoadout, at: String, report: ImportReport) -> void:
+	if rule.school_share < 0.0 or rule.school_share > 1.0:
+		report.error(at + ".school_share", "份额应在 0～1 之间")
+	if rule.min_school < 0:
+		report.error(at + ".min_school", "不能为负")
+
+
+## 池：条目指向存在的敌人、档位表不空不重、每条规则都在。
+static func _validate_enemy_pool(pool: EnemyPool, ctx: Context, report: ImportReport) -> void:
+	if pool.id == &"":
+		report.error("id", "敌人池必须有 id")
+	if pool.entries.is_empty():
+		report.error("entries", "池里一个敌人都没有")
+	if pool.tiers.is_empty():
+		report.error("tiers", "没有档位表，不知道该背几件")
+	if pool.strength_rule == null:
+		report.error("strength_rule", "没有档位规则，不知道哪个点该多强")
+	if pool.loadout == null:
+		report.error("loadout", "没有默认组装规则")
+	else:
+		_validate_loadout(pool.loadout, "loadout", report)
+	if pool.combat_types.is_empty():
+		report.error("combat_types", "没有一种节点类型放敌人")
+	var seen := {}
+	for i in pool.tiers.size():
+		var t := pool.tiers[i]
+		var at := "tiers[%d]" % i
+		if t == null:
+			report.error(at, "档位为空")
+			continue
+		if seen.has(t.strength):
+			report.error(at, "档位 %d 重复" % t.strength)
+		seen[t.strength] = true
+		if t.item_count.x < 1 or t.item_count.y < t.item_count.x:
+			report.error(at + ".item_count", "件数范围应为 [min, max] 且 min ≥ 1")
+		if t.board.x < 1 or t.board.y < 1:
+			report.error(at + ".board", "棋盘至少 1×1")
+	for i in pool.entries.size():
+		var e := pool.entries[i]
+		var at := "entries[%d]" % i
+		if e == null:
+			report.error(at, "条目为空")
+			continue
+		if e.weight <= 0.0:
+			report.error(at + ".weight", "权重应为正")
+		for nt in e.node_types:
+			if not pool.combat_types.has(nt):
+				report.error(at + ".node_types", "'%s' 不在池的 combat_types 里，永远不会出现" % nt)
+		if not ctx.enemies.is_empty() and not ctx.enemies.has(e.enemy):
+			report.error(at + ".enemy", "找不到敌人 '%s'（已知：%s）" % [e.enemy, ", ".join(ctx.enemies.keys())])
 
 
 ## 章节（M3-5）。结构和道具完全不同，走的却是同一条 _fill ——
@@ -57,14 +176,18 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 static func import_chapter(data: Dictionary, ctx: Context, report: ImportReport) -> ChapterDef:
 	var def := ChapterDef.new()
 	_fill(def, data, "", ctx, report)
-	_validate_chapter(def, report)
+	_validate_chapter(def, ctx, report)
 	return def
 
 
 ## 比引擎严格：地图来源得真的能拿出图来。生成器没登记、预设文件不在，都是内容错误。
-static func _validate_chapter(def: ChapterDef, report: ImportReport) -> void:
+static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportReport) -> void:
 	if def.id == &"":
 		report.error("id", "章节必须有 id")
+	if def.difficulty < 0:
+		report.error("difficulty", "难度不能为负")
+	if def.enemy_pool != &"" and not ctx.pools.is_empty() and not ctx.pools.has(def.enemy_pool):
+		report.error("enemy_pool", "找不到敌人池 '%s'（已知：%s）" % [def.enemy_pool, ", ".join(ctx.pools.keys())])
 	if def.map_source == null:
 		report.error("map_source", "章节必须有地图来源（随机生成或载入预设）")
 		return

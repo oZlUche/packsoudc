@@ -1,0 +1,13 @@
+{
+  "id": "brute",
+  "display_name": "蛮兵",
+  "strength": 2,
+  "schools": [
+    "burst",
+    "bleed"
+  ],
+  "base_stats": {
+    "max_hp": 40,
+    "armor": 2
+  }
+}

@@ -3,7 +3,9 @@
 ## 演示的就是这一章的骨架：生成 → 显示 → **挑一个出生点**（每条路线的风格、尽头、风险与收益都亮着，
 ## 悬停哪个出生点哪条路线加粗）→ 点相邻的点走一步 → 行动点读数变 → 用过的点变灰但仍可走 → 换种子重来。
 ##
-## 它只接线：地图来自 [ChapterDef] 的 [MapSource]，走路是 [MapTravel]，画是 [MapView]。
+## 它只接线：地图来自 [ChapterDef] 的 [MapSource]，敌人来自这一章的 [EnemyPool]（[EnemyPlacer] 在生成之后
+## 放进节点，5.10：地图一生成敌人就定了），走路是 [MapTravel]，画是 [MapView]。
+## 悬停任何战斗点，底下一行是那个敌人的预览 —— 和真打时同一个编译器算出来的数（[EnemyKit]）。
 ## 所有动作都是公开方法（[method pick_spawn]、[method step]），鼠标只是调它们；测试直接调。
 extends Control
 
@@ -15,10 +17,14 @@ var _chapter: ChapterDef = null
 var _graph: MapGraph = null
 var _travel: MapTravel = null
 var _seed: int = 1
+var _items: ItemDatabase = null
+var _enemies: EnemyDatabase = null
+var _pool: EnemyPool = null
 var _view: MapView
 var _status: Label
 var _hud: Label
 var _preview: Label
+var _enemy_line: Label
 var _routes_box: VBoxContainer
 var _log: RichTextLabel
 
@@ -30,6 +36,11 @@ func _ready() -> void:
 	if _chapter == null:
 		_say("读不到 %s —— 先跑一遍 tools/import_content.gd" % CHAPTER)
 		return
+	_items = ItemDatabase.new()
+	_items.load_dir()
+	_enemies = EnemyDatabase.new()
+	_enemies.load_all()
+	_pool = _enemies.pool(_chapter.enemy_pool)
 	regenerate(_seed)
 
 
@@ -54,10 +65,32 @@ func regenerate(seed: int) -> bool:
 	if _graph == null:
 		_say("这一章生成不出图：%s" % (_chapter.map_source.last_error if _chapter != null else ""))
 		return false
-	_say("种子 %d：%d 个点。挑一个出生点（绿圈的「生」）开始" % [seed, _graph.node_count()])
+	var placed := _place_enemies()
+	_say("种子 %d：%d 个点，%d 个敌人。挑一个出生点（绿圈的「生」）开始" % [seed, _graph.node_count(), placed])
 	_rebuild_routes()
 	_refresh_hud()
 	return true
+
+
+## 敌人在生成之后、开局之前放好（5.10）。这一章没有敌人池就什么都不放
+func _place_enemies() -> int:
+	if _pool == null or _items == null or _enemies == null:
+		return 0
+	var done := EnemyPlacer.fill(_graph, _pool, _enemies, _items, _chapter.difficulty, _scale_id())
+	if not (done["skipped"] as Array).is_empty():
+		_note("有 %d 个战斗点没挑到敌人：%s" % [(done["skipped"] as Array).size(), str(done["skipped"])])
+	if int(done["dropped"]) > 0:
+		_note("有 %d 件道具放不进棋盘，跳过了 —— 档位表的棋盘该再大点" % int(done["dropped"]))
+	return int(done["placed"])
+
+
+## 这一章的规模 id（有规模模板的生成器才有）。敌人池按它加档
+func _scale_id() -> StringName:
+	var cfg: Resource = _chapter.map_source.generator_config if _chapter != null and _chapter.map_source != null else null
+	if cfg == null or not cfg.has_method("scale"):
+		return &""
+	var p = cfg.call("scale")
+	return p.id if p != null else &""
 
 
 ## 站到某个出生点上开局。返回 false = 那不是出生点。
@@ -125,6 +158,7 @@ func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
 func _on_node_hovered(id: int) -> void:
 	if _graph == null:
 		return
+	_enemy_line.text = enemy_preview(id)
 	if _travel == null:
 		_view.bold_route = _route_index_of_entry(id) if id >= 0 else -1
 		_preview.text = ""
@@ -140,6 +174,16 @@ func _on_node_hovered(id: int) -> void:
 	_preview.text = "→ %s　花 %d 行动点%s" % [
 		MapNodeStyle.of(n.type)["label"], intent.action_cost,
 		"（用过了，只是穿行）" if n.is_visited() else ""]
+
+
+## 这个点里的敌人一行摘要；没有敌人就是空串。全图可见（5.10）—— 看不看得见的接缝在这一处
+func enemy_preview(id: int) -> String:
+	if _graph == null or id < 0 or not _graph.has_node(id):
+		return ""
+	var content := _graph.get_node(id).content
+	if not EnemyKit.has_enemy(content):
+		return ""
+	return EnemyKit.summary(content, _enemies, _pool, _items)
 
 
 func _refresh_hud() -> void:
@@ -239,6 +283,9 @@ func _build() -> void:
 	_preview = _label("", 13, UiPalette.FG)
 	_preview.custom_minimum_size.y = 22
 	mid.add_child(_preview)
+	_enemy_line = _label("", 13, UiPalette.DIM)
+	_enemy_line.custom_minimum_size.y = 22
+	mid.add_child(_enemy_line)
 
 	var side := PanelContainer.new()
 	side.custom_minimum_size.x = SIDE_WIDTH

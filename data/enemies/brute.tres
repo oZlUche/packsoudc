@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_enbfl"]
+
+[resource]
+script = ExtResource("1_enbfl")
+id = &"brute"
+display_name = "蛮兵"
+strength = 2
+schools = Array[StringName]([&"burst", &"bleed"])
+base_stats = {
+"armor": 2,
+"max_hp": 40
+}

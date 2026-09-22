@@ -1,0 +1,16 @@
+{
+  "id": "warden",
+  "display_name": "守卫",
+  "strength": 2,
+  "schools": [
+    "rapid",
+    "burst"
+  ],
+  "base_stats": {
+    "max_hp": 36,
+    "armor": 3
+  },
+  "signature": [
+    "armor"
+  ]
+}

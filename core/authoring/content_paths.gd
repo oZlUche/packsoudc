@@ -11,6 +11,8 @@ const AUTHORING := "res://data/authoring"
 const AUTHORING_ITEMS := AUTHORING + "/items"
 const AUTHORING_BUFFS := AUTHORING + "/buffs"
 const AUTHORING_SETS := AUTHORING + "/sets"
+const AUTHORING_ENEMIES := AUTHORING + "/enemies"
+const AUTHORING_ENEMY_POOLS := AUTHORING + "/enemy_pools"
 const AUTHORING_CHAPTERS := AUTHORING + "/chapters"
 #endregion
 
@@ -18,6 +20,8 @@ const AUTHORING_CHAPTERS := AUTHORING + "/chapters"
 const ITEMS := "res://data/items"
 const BUFFS := "res://data/buffs"
 const SETS := "res://data/sets"
+const ENEMIES := "res://data/enemies"
+const ENEMY_POOLS := "res://data/enemy_pools"
 const CHAPTERS := "res://data/chapters"
 #endregion
 
@@ -26,10 +30,12 @@ const KINDS := {
 	"buffs": [AUTHORING_BUFFS, BUFFS],
 	"sets": [AUTHORING_SETS, SETS],
 	"items": [AUTHORING_ITEMS, ITEMS],
+	"enemies": [AUTHORING_ENEMIES, ENEMIES],
+	"enemy_pools": [AUTHORING_ENEMY_POOLS, ENEMY_POOLS],
 	"chapters": [AUTHORING_CHAPTERS, CHAPTERS],
 }
-## 章节排最后：它将来要按 id 引用敌人池与掉落表，得先有它们
-const ORDER := ["buffs", "sets", "items", "chapters"]
+## 敌人在道具之后（招牌道具、流派标签要对着道具查），池在敌人之后，章节排最后（按 id 引用池）
+const ORDER := ["buffs", "sets", "items", "enemies", "enemy_pools", "chapters"]
 
 
 static func authoring_file(kind: String, id: String) -> String:

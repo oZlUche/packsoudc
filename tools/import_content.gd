@@ -61,6 +61,10 @@ func _build(
 			return ContentImporter.import_buff(data, ctx, report)
 		"sets":
 			return ContentImporter.import_set(data, ctx, report)
+		"enemies":
+			return ContentImporter.import_enemy(data, ctx, report)
+		"enemy_pools":
+			return ContentImporter.import_enemy_pool(data, ctx, report)
 		"chapters":
 			return ContentImporter.import_chapter(data, ctx, report)
 		_:

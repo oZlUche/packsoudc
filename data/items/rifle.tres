@@ -51,5 +51,5 @@ id = &"rifle"
 display_name = "步枪"
 shape = SubResource("Resource_olte0")
 rarity = 2
-tags = Array[StringName]([&"weapon", &"gun"])
+tags = Array[StringName]([&"weapon", &"gun", &"rapid"])
 combat = SubResource("Resource_bciuj")

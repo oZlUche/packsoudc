@@ -30,6 +30,14 @@ static func export_chapter(def: ChapterDef) -> Dictionary:
 	return _dump(def)
 
 
+static func export_enemy(def: EnemyDef) -> Dictionary:
+	return _dump(def)
+
+
+static func export_enemy_pool(pool: EnemyPool) -> Dictionary:
+	return _dump(pool)
+
+
 ## 带 type 的导出，用于抽象基类的子对象
 static func _dump(obj: Object, with_type: bool = false) -> Dictionary:
 	var out := {}

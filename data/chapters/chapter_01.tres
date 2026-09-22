@@ -254,3 +254,4 @@ script = ExtResource("8_lpqd8")
 id = &"chapter_01"
 display_name = "第一章（占位）"
 map_source = SubResource("Resource_mw7iv")
+enemy_pool = &"standard_ruins"

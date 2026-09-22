@@ -6,11 +6,13 @@
   ],
   "tags": [
     "weapon",
-    "melee"
+    "melee",
+    "rapid",
+    "bleed"
   ],
   "combat": {
     "base_stats": {
-      "damage": 3.0
+      "damage": 3
     },
     "rules": [
       {

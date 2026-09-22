@@ -1406,10 +1406,11 @@ class_name ChapterDef extends Resource
 @export var id: StringName
 @export var display_name: String
 @export var map_source: MapSource           # 随机生成（generator_id + config）或载入预设，见 5.3.1
-# 之后各加一个字段，导入器、导出器、编辑器一行不改：
+@export var enemy_pool: StringName          # 敌人池的 id（6.0，M4-1）。按 id 引用：几章共用一个池、只改难度是常态
+@export var difficulty: int                 # 章节难度，0 起。敌人池按它抬档位；掉落与侵蚀将来也看它
+# 之后各加一个字段，导入器、导出器、编辑器一行不改（敌人池就是这么加进来的）：
 # @export var erosion: ErosionSchedule      # 第 7 阶段；可为 null = 该难度不启用侵蚀
-# @export var enemy_pool: Array[EnemyDef]   # M4
-# @export var loot_tables: Array[LootTable] # M4
+# @export var loot_tables: Array[StringName] # M4-2
 ```
 
 章节是**作者数据，走内容管线**（10 节）：`data/authoring/chapters/*.json` → `data/chapters/*.tres`。
@@ -2355,15 +2356,68 @@ func warnings(graph) -> Array[String]
 - 敌人的道具就是掉落的来源：打赢了搜的就是这个背包（6.1 的尸体容器）。
   地图上看到敌人背着一件传说品，就知道这一仗值不值得打
 
-现在 `battle_sandbox.gd` 里的训练假人是手搓的 `CombatantSpec`，那是 M2 的权宜；
-真正的敌人内容（`EnemyDef`：棋盘布局 + 基线）属于 M4，走内容管线。
+M4-1 落地的形态（6.0）：`EnemyDef` **不带固定棋盘** —— 棋盘按「通用道具 + 流派道具」的规则在生成地图时组装，
+件数由强度档位定，结果写进 `MapNode.content`（敌人 id、档位、棋盘尺寸、每件道具的位置与朝向）。
+`EnemyKit.spec_of(content)` 把它重建成棋盘再编译，沙盒悬停看到的生命 / DPS / 件数就是这么来的；
+`EnemyKit.board_of(content)` 重建出来的棋盘直接是 6.1 的尸体容器。
+`battle_sandbox.gd` 里的训练假人仍是手搓的 `CombatantSpec`，是 M2 的权宜。
 
 **能看多远**：底层规则是全图可见。战争迷雾、侦察范围之类属于扩展机制，不实现，
-接缝留在 `MapView` 的「这个节点的内容给不给看」一处判断上。
+接缝留在 `MapView` 的「这个节点的内容给不给看」一处判断上（沙盒里是 `enemy_preview(id)` 这一个方法）。
 
 ---
 
-## 6. M4 · 搜刮与掉落
+## 6. M4 · 节点内容：敌人、搜刮与掉落
+
+M4 分四步（报告 045）：敌人池（6.0）→ 掉落与尸体容器（6.1）→ 随机点与搜索点（6.2 / 6.3）→ 节点事件接线（7.1）。
+
+### 6.0 敌人池
+
+作者的要求：敌人类型要丰富（高伤低频、低伤高频、混伤、流血……），有强度档位（受道具数量影响），
+敌人池持有一张配置表（名称、强度、流派标签可多个），按地图类型 / 难度 / 规模配置，道具按「通用 + 流派」组装。
+
+```gdscript
+# core/enemies/ —— 作者数据，走内容管线（10 节）
+class_name EnemyDef extends Resource            # data/authoring/enemies/*.json
+@export var id: StringName
+@export var display_name: String
+@export var strength: int                         # 本色档位：池按「想要的档位」在容差内挑本色接近的
+@export var schools: Array[StringName]            # 流派标签，可多个。混伤 = 同时带两个流派，不是第四种流派
+@export var base_stats: Dictionary                # 基线覆盖（max_hp、armor…），没写的用 CombatantBaseline 默认
+@export var signature: Array[StringName]          # 招牌道具，一定背着（屠夫总带着刀）
+@export var loadout: EnemyLoadout                 # 覆盖池的默认组装规则；null = 用池的
+@export var board: Vector2i                       # 覆盖档位表的棋盘；零 = 用档位表的
+
+class_name EnemyPool extends Resource             # data/authoring/enemy_pools/*.json，章节按 id 引用
+@export var entries: Array[EnemyPoolEntry]        # {enemy, weight, kinds, node_types, min_danger}
+@export var tiers: Array[StrengthTier]            # 档位表：{strength, item_count, board, stat_scale, rarity_cap}
+@export var strength_rule: StrengthRule           # 节点 → 想要几档
+@export var loadout: EnemyLoadout                 # 默认组装规则：{common_tags, school_share, min_school, rarity_cap, allow_repeat}
+@export var combat_types: Array[StringName]       # 哪些节点类型放敌人：battle / elite / core（random 不在：踩上去才知道）
+```
+
+**流派是标签。** 道具按 `ItemDef.tags` 里带没带流派名归到流派里（`burst` 狙击枪 / 撬棍 / 霰弹枪，
+`rapid` 手枪 / 步枪 / 冲锋枪 / 匕首，`bleed` 匕首 / 剁刀）。新增一种流派 = 给几件道具打标签 + 写一个带这个标签的敌人。
+导入器要求每个流派至少有一件道具带它。
+
+**强度 = 档位 = 道具数量。** 档位表每行：背几件、棋盘多大、基线乘多少、稀有度上限（外环小兵不背传说品）。
+敌人定义只写本色档位；实际用哪档组装记在节点内容里 —— 同一个拾荒者在外环背两件、在高危区里背五件。
+
+**哪个点该多强，全是加法**（`StrengthRule.wanted`）：
+`by_depth`（最外 → 最内，按 tier 在全图里的位置插值，形态无关）+ `danger × danger_bonus`（5.5）
++ `type_bonus[类型]`（精英、核心）+ `difficulty × difficulty_bonus`（`ChapterDef.difficulty`）+ `by_scale[规模 id]`，
+夹进档位表的范围。地图类型的过滤在条目的 `kinds`：环的种类（`RingSpec.kind`，生成器写进节点 `layout.kind`）。
+
+**放敌人是生成之后的第二遍**（`EnemyPlacer.fill`），生成器不认识敌人。对每个 `combat_types` 里的点：
+算档位 → `fits(node)` 过滤 + 容差内取（没有就取最近）→ 按权重抽 → 组装：招牌先占位，`school_share` 的份额从流派池抽
+（至少 `min_school` 件），其余从通用池抽（带 `common_tags` 且不带本敌人流派标签），大件先摆，放不下换一件从小到大补。
+随机数只用节点的 `content_seed`：同图同点永远同一个敌人。
+
+内容字典跟着图存：`{"enemy", "strength", "board": [w, h], "items": [{"id", "at": [x, y], "rot"}]}`。
+`EnemyKit` 把它重建成棋盘、走 `BattleCompiler` 编译（预览 = 编译，5.10）、给一行摘要。
+
+导入顺序：items → enemies（招牌道具、流派标签对着道具查）→ enemy_pools（条目对着敌人查）→ chapters（池按 id 查）。
+「对着别的东西查」的校验只在批量导入时生效 —— 单独导一个敌人时上下文是空的，无从判断。
 
 ### 6.1 掉落生成
 
@@ -2703,14 +2757,20 @@ haste 每件都是 1.0，逐件相加会得出「N 件物品 = N 倍速度」。
 ### 10.1 两层：作者数据与引擎资产
 
 ```
-data/authoring/items/*.json     道具源数据
-data/authoring/buffs/*.json     增益源数据
-data/authoring/sets/*.json      套装源数据
-        │  tools/import_items.gd / import_buffs.gd   校验 + 生成
+data/authoring/items/*.json         道具源数据
+data/authoring/buffs/*.json         增益源数据
+data/authoring/sets/*.json          套装源数据
+data/authoring/enemies/*.json       敌人（6.0）
+data/authoring/enemy_pools/*.json   敌人池（6.0）
+data/authoring/chapters/*.json      章节（5.3）
+        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → items → enemies → enemy_pools → chapters）
+        │  tools/normalize_content.gd 把作者数据重写成导出器的格式（导入 → 导出 → 不同就写回）
         ▼
-data/items/*.tres   data/shapes/*.tres
-data/buffs/*.tres   data/sets/*.tres
+data/items/*.tres   data/buffs/*.tres   data/sets/*.tres
+data/enemies/*.tres data/enemy_pools/*.tres   data/chapters/*.tres
 ```
+
+目录常量只在 `ContentPaths` 一处：种类 → [作者数据目录, 资产目录]，`ORDER` 就是导入顺序（后者按 id 引用前者）。
 
 **源数据用 JSON 而不是直接编辑 `.tres`**：`.tres` 的数组与子资源字面量手写极易出错，
 且改动的 diff 不可读；JSON 可以人写、可以脚本批量生成、评审时看得懂。
@@ -3070,6 +3130,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.44 | 2026-09-22 | **M4-1 敌人池**（报告 045，含 M4 四步规划）。新增 6.0：`EnemyDef`（本色档位、流派标签可多个、基线覆盖、招牌道具）、`EnemyPool`（配置表：条目按环种类 / 节点类型 / 危险过滤、档位表 = 件数 + 棋盘 + 倍率 + 稀有度上限、`StrengthRule` 全加法：深度 + 危险 + 类型 + 难度 + 规模、默认组装规则「通用 + 流派」）、`EnemyPlacer`（生成之后的第二遍，只用节点 `content_seed`；大件先摆、放不下换小的补）、`EnemyKit`（内容 → 棋盘 → `BattleCompiler`，预览 = 编译）。`ChapterDef` 加 `enemy_pool`（按 id）与 `difficulty`；内容管线加 `enemies`、`enemy_pools` 两种；`tools/normalize_content.gd`。流派是标签：混伤 = 两个流派。沙盒悬停战斗点见敌人一行摘要 |
 | v1.43 | 2026-09-22 | **M3-6 渲染与地图沙盒**（报告 044）。角度求解器 `RingAngleSolver`（形态无关：层 + 圈上的位置；由外向内、圆周均值 + 告警、单调校验、无随机），`RingLayoutBase` 让随机生成的与手绘的图共用它，按 `MapGraph.version` 缓存；切向边画弧；`MapView` 加 VISITED 去饱和、当前点呼吸、可达提示、路线加粗、悬停信号；核心改红。`ui/map/map_sandbox`：从 `chapter_01` 开局，挑出生点（路线卡 + 悬停加粗）、一步一步走、HUD（行动点 / 距最近撤离点 / 休息区 / 核心 / 体力）、单步预览、换种子。启动选择器第五个入口 |
 | v1.42 | 2026-09-22 | **M3-5 章节定义走内容管线**（报告 043）。`ChapterDef`（id、display_name、map_source；侵蚀、敌人池、掉落表到时候各加一个字段）；`ContentPaths` 加 `chapters`、排最后；`import_chapter` + 严格校验。管线补的通用能力：`Vector2`、字典里整数值的浮点两头写成整数、声明成引擎基类的字段靠 `type` 造类。`data/authoring/chapters/chapter_01.json`（由 `RingMapConfig.sample(6)` 倒出）→ `data/chapters/chapter_01.tres`。地图编辑器加「章节」栏：载入 / 存回 |
 | v1.41 | 2026-09-22 | **M3-4 行动计数与单步移动落地**（报告 042）：`ActionClock`、`MoveIntent`、`MapNavigator`（只读、无多步入口，测试守着公开方法清单）、`MapTravel`（五步结算顺序一处落地，侵蚀与节点事件是鸭子类型钩子，假钩子记次序）。渲染：画布按固定环距算、不随视口缩，`MapView` 加拖动与缩放 —— 作者说图看着太挤 |

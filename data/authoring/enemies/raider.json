@@ -1,0 +1,10 @@
+{
+  "id": "raider",
+  "display_name": "拾荒者",
+  "schools": [
+    "rapid"
+  ],
+  "base_stats": {
+    "max_hp": 20
+  }
+}

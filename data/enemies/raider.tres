@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_i240v"]
+
+[resource]
+script = ExtResource("1_i240v")
+id = &"raider"
+display_name = "拾荒者"
+schools = Array[StringName]([&"rapid"])
+base_stats = {
+"max_hp": 20
+}

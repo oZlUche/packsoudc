@@ -50,5 +50,5 @@ id = &"crowbar"
 display_name = "撬棍"
 shape = SubResource("Resource_1y71a")
 rarity = 1
-tags = Array[StringName]([&"tool"])
+tags = Array[StringName]([&"tool", &"burst"])
 combat = SubResource("Resource_bt6dh")

@@ -1,0 +1,117 @@
+{
+  "id": "standard_ruins",
+  "display_name": "标准废墟（占位）",
+  "entries": [
+    {
+      "enemy": "raider",
+      "weight": 3.0,
+      "kinds": [
+        "outskirts",
+        "ruins"
+      ]
+    },
+    {
+      "enemy": "marksman",
+      "weight": 2.0
+    },
+    {
+      "enemy": "butcher",
+      "weight": 2.0
+    },
+    {
+      "enemy": "brute"
+    },
+    {
+      "enemy": "warden",
+      "weight": 2.0,
+      "kinds": [
+        "depths",
+        "core_ring",
+        "inner",
+        "core"
+      ]
+    },
+    {
+      "enemy": "core_guardian",
+      "weight": 4.0,
+      "node_types": [
+        "core"
+      ]
+    }
+  ],
+  "tiers": [
+    {
+      "board": [
+        5,
+        3
+      ],
+      "rarity_cap": 1
+    },
+    {
+      "strength": 1,
+      "item_count": [
+        3,
+        4
+      ],
+      "board": [
+        6,
+        4
+      ],
+      "stat_scale": {
+        "max_hp": 1.25
+      },
+      "rarity_cap": 2
+    },
+    {
+      "strength": 2,
+      "item_count": [
+        4,
+        6
+      ],
+      "board": [
+        6,
+        5
+      ],
+      "stat_scale": {
+        "max_hp": 1.6
+      }
+    },
+    {
+      "strength": 3,
+      "item_count": [
+        6,
+        8
+      ],
+      "board": [
+        8,
+        5
+      ],
+      "stat_scale": {
+        "max_hp": 2,
+        "armor": 1.5
+      }
+    }
+  ],
+  "strength_rule": {
+    "type_bonus": {
+      "elite": 1,
+      "core": 1
+    },
+    "by_scale": {
+      "large": 1
+    }
+  },
+  "loadout": {
+    "common_tags": [
+      "gear",
+      "consumable",
+      "part",
+      "tool"
+    ]
+  },
+  "combat_types": [
+    "battle",
+    "elite",
+    "core"
+  ]
+}

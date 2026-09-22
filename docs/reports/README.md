@@ -63,3 +63,4 @@
 | 042 | [M3-4 行动计数与单步移动；画布不随视口缩](042-action-clock-and-travel.md) | 阶段 4 · M3 | 完成 |
 | 043 | [M3-5 章节定义走内容管线](043-chapter-pipeline.md) | 阶段 4 · M3 | 完成 |
 | 044 | [M3-6 布局求解与地图沙盒](044-layout-solver-and-sandbox.md) | 阶段 4 · M3 | 完成 |
+| 045 | [M4 规划与 M4-1 敌人池](045-m4-plan-and-enemy-pool.md) | 阶段 5 · M4 | 完成 |

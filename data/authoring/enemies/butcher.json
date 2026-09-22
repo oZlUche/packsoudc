@@ -1,0 +1,14 @@
+{
+  "id": "butcher",
+  "display_name": "屠夫",
+  "strength": 1,
+  "schools": [
+    "bleed"
+  ],
+  "base_stats": {
+    "max_hp": 30
+  },
+  "signature": [
+    "knife"
+  ]
+}

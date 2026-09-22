@@ -9,8 +9,8 @@
   ],
   "combat": {
     "base_stats": {
-      "max_stamina": 40.0,
-      "regen_stamina": 2.0
+      "max_stamina": 40,
+      "regen_stamina": 2
     }
   }
 }

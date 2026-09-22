@@ -1,0 +1,17 @@
+{
+  "id": "core_guardian",
+  "display_name": "核心守卫",
+  "strength": 3,
+  "schools": [
+    "burst",
+    "bleed",
+    "rapid"
+  ],
+  "base_stats": {
+    "max_hp": 60,
+    "armor": 4
+  },
+  "signature": [
+    "high_tier_armor"
+  ]
+}

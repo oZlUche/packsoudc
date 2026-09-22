@@ -9,11 +9,12 @@
   "rarity": 2,
   "tags": [
     "weapon",
-    "gun"
+    "gun",
+    "rapid"
   ],
   "combat": {
     "base_stats": {
-      "damage": 8.0
+      "damage": 8
     },
     "rules": [
       {

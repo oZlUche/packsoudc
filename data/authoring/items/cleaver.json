@@ -1,0 +1,71 @@
+{
+  "id": "cleaver",
+  "display_name": "剁刀",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "weapon",
+    "melee",
+    "bleed"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 5
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.0
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage"
+          },
+          {
+            "type": "apply_status",
+            "buff": {
+              "id": "bleed",
+              "display_name": "流血",
+              "max_stacks": 5,
+              "duration_sec": 6.0,
+              "rules": [
+                {
+                  "trigger": {
+                    "type": "on_schedule"
+                  },
+                  "cadence": {
+                    "type": "cooldown",
+                    "seconds": 1.0
+                  },
+                  "effects": [
+                    {
+                      "type": "deal_damage",
+                      "target": "SELF",
+                      "damage_type": "bleed",
+                      "amount": 1.0,
+                      "damage_stat": "",
+                      "per_stack": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

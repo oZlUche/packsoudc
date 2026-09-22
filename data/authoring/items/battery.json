@@ -9,7 +9,7 @@
   ],
   "combat": {
     "base_stats": {
-      "max_power": 20.0
+      "max_power": 20
     }
   }
 }
