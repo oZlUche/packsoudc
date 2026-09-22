@@ -479,7 +479,7 @@ func _build_info() -> Control:
 	spacer.custom_minimum_size.y = 26
 	col.add_child(spacer)
 	var hint := _label(
-		"左键点：选中　　空位：加点\n选中后 Shift+左键另一点：连 / 断\n右键路：断开　　Delete：删点",
+		"左键点：选中　　空位：加点\n选中后 Shift+左键另一点：连 / 断\n右键路：断开　　Delete：删点\n中键拖动　滚轮缩放　F：缩到刚好放下　1：原比例",
 		12, UiPalette.DIM)
 	col.add_child(hint)
 	col.add_child(HSeparator.new())
@@ -585,8 +585,17 @@ func _on_edge_pressed(edge: MapEdge, button: int) -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
-	if key != null and key.pressed and key.keycode == KEY_DELETE and _selected >= 0:
+	if key == null or not key.pressed:
+		return
+	if key.keycode == KEY_DELETE and _selected >= 0:
 		delete_node(_selected)
+		get_viewport().set_input_as_handled()
+	elif key.keycode == KEY_F:
+		_view.fit()
+		get_viewport().set_input_as_handled()
+	elif key.keycode == KEY_1:
+		_view.zoom = 1.0
+		_view.center()
 		get_viewport().set_input_as_handled()
 
 

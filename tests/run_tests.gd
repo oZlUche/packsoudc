@@ -51,6 +51,7 @@ const SUITES: Array = [
 	preload("res://tests/test_ring_type_assigner.gd"),
 	preload("res://tests/test_map_grid_text.gd"),
 	preload("res://tests/test_map_source.gd"),
+	preload("res://tests/test_map_travel.gd"),
 	preload("res://tests/test_map_editor.gd"),
 ]
 

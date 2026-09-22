@@ -21,7 +21,14 @@ static func for_graph(graph: MapGraph) -> MapLayout:
 	return script.new() as MapLayout if script != null else null
 
 
-## 每个节点画在哪：id → Vector2（[param rect] 之内）。
+## 画布多大：布局按自己的固定间距算出来，**不随视口缩放** ——
+## 图大了画布就大，看不全靠拖动与缩放（[MapView]），不靠把环挤到一起。
+## 默认给一个方形，形态自己覆盖。
+func canvas_size(_graph: MapGraph) -> Vector2:
+	return Vector2(800, 800)
+
+
+## 每个节点画在哪：id → Vector2（[param rect] 之内；rect 就是画布）。
 @abstract func positions(graph: MapGraph, rect: Rect2) -> Dictionary
 
 

@@ -170,7 +170,9 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
 打印每条路线的风险分、收益分、比值与类型构成、覆盖的最大步数、重试次数分布。
 重试次数一高，说明配置与约束在打架，与其调种子上限不如改配置。
 
-### M3-4 run 层：行动计数与单步移动
+### M3-4 run 层：行动计数与单步移动 ✅
+
+> 已完成，见[报告 042](042-action-clock-and-travel.md)。五步结算顺序落在 `core/run/map_travel.gd`。
 
 `core/run/action_clock.gd`、`core/run/move_intent.gd`、`core/map/map_navigator.gd`。
 

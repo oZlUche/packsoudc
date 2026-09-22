@@ -8,13 +8,20 @@
 class_name GridMapLayout
 extends MapLayout
 
-const MARGIN := 44.0
+const MARGIN := 60.0
+## 一行一圈，圈与圈之间固定这么宽（同 RingMapLayout.RING_STEP）
+const RING_STEP := 110.0
+
+
+func canvas_size(graph: MapGraph) -> Vector2:
+	var side := 2.0 * (float(maxi(1, int(graph.layout_meta.get("rows", 1)) - 1)) * RING_STEP + MARGIN)
+	return Vector2(side, side)
 
 
 func positions(graph: MapGraph, rect: Rect2) -> Dictionary:
 	var rows := int(graph.layout_meta.get("rows", 1))
 	var zero_cols: Array = graph.layout_meta.get("zero_cols", [])
-	var outer := maxf(10.0, minf(rect.size.x, rect.size.y) / 2.0 - MARGIN)
+	var outer := float(maxi(1, rows - 1)) * RING_STEP
 	# 每一行从哪一列开始。作者画的时候越靠里的行越往右缩（像个倒梯形），
 	# 所以一圈 = 这一行第一个点到行末占位，而不是从第 0 列算
 	var starts := {}
@@ -47,7 +54,7 @@ func edge_kind(graph: MapGraph, a: int, b: int) -> StringName:
 
 func draw_backdrop(canvas: CanvasItem, graph: MapGraph, rect: Rect2) -> void:
 	var rows := int(graph.layout_meta.get("rows", 1))
-	var outer := maxf(10.0, minf(rect.size.x, rect.size.y) / 2.0 - MARGIN)
+	var outer := float(maxi(1, rows - 1)) * RING_STEP
 	for row in rows - 1:
 		canvas.draw_arc(rect.get_center(), outer * float(rows - 1 - row) / float(maxi(1, rows - 1)),
 			0.0, TAU, 96, UiPalette.LINE, 1.0, true)

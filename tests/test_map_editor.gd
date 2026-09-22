@@ -177,11 +177,18 @@ static func frame_view_hit_test(t: TestCase, root: Window) -> void:
 
 	var pos := view.positions()
 	t.eq(pos.size(), g.node_count(), "每个点都有位置")
+	# 位置是画布坐标；画布由布局按固定环距算，可以比控件大 —— 看不全靠拖与缩放
 	var inside := true
 	for id in pos:
-		if not Rect2(Vector2.ZERO, view.size).has_point(pos[id]):
+		if not view.canvas_rect().has_point(pos[id]):
 			inside = false
-	t.check(inside, "全都画在控件之内")
+	t.check(inside, "全都画在画布之内")
+	t.check(view.canvas_rect().size.x > view.size.x, "四环图的画布比 800 宽 —— 环距是固定的，不随视口缩")
+	view.fit()
+	t.check(view.zoom < 1.0 and view.zoom >= view.ZOOM_MIN, "fit 缩到放得下")
+	var corner := view.to_screen(view.canvas_rect().end)
+	t.check(corner.x <= view.size.x + 1.0 and corner.y <= view.size.y + 1.0, "fit 之后画布右下角在控件之内")
+	t.eq(view.to_canvas(view.to_screen(Vector2(123, 45))), Vector2(123, 45), "画布 ⇄ 屏幕来回一致")
 
 	var hit: Array = []
 	view.node_pressed.connect(func(id: int, _b: int, _s: bool): hit.append(id))

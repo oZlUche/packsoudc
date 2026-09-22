@@ -6,7 +6,15 @@
 class_name RingMapLayout
 extends MapLayout
 
-const MARGIN := 44.0
+const MARGIN := 60.0
+## 相邻两环之间隔多远（像素）。**固定的**：不管几环，环与环之间就是这么宽 ——
+## 六环的图画布就比四环大一圈，而不是六环挤在四环的地方
+const RING_STEP := 110.0
+
+
+func canvas_size(graph: MapGraph) -> Vector2:
+	var side := 2.0 * (float(ring_count_of(graph)) * RING_STEP + MARGIN)
+	return Vector2(side, side)
 
 
 static func ring_count_of(graph: MapGraph) -> int:
@@ -70,6 +78,5 @@ func _slot_pos(graph: MapGraph, rect: Rect2, r: int, slot: int) -> Vector2:
 	return rect.get_center() + Vector2.from_angle(angle) * _radius(rect, ring_count_of(graph), r)
 
 
-static func _radius(rect: Rect2, count: int, r: int) -> float:
-	var outer := maxf(10.0, minf(rect.size.x, rect.size.y) / 2.0 - MARGIN)
-	return outer * float(r) / float(maxi(1, count))
+static func _radius(_rect: Rect2, _count: int, r: int) -> float:
+	return RING_STEP * float(r)

@@ -2,6 +2,11 @@
 ##
 ## [b]它不改图。[/b] 改图是编辑器的事，走路是导航的事；两者都只听这里的信号。
 ## 形态相关的一切（点摆在哪、衬底画什么、哪里能加点）都问 [MapLayout]。
+##
+## 画布由布局按固定间距算出来，**不随视口缩放** —— 六环的图就是比四环大。
+## 看不全靠拖（中键拖动）与缩放（滚轮，围着鼠标缩）；`fit()` 缩到刚好放下。
+## 坐标分两套：布局给的是**画布坐标**，所有命中测试与信号都用它；
+## 屏幕坐标只在 _gui_input 里出现一次，换算完就扔。
 class_name MapView
 extends Control
 
@@ -18,7 +23,7 @@ var graph: MapGraph = null:
 	set(v):
 		graph = v
 		_layout = MapLayout.for_graph(v)
-		queue_redraw()
+		fit()       # 先整张看全；要看细节滚轮放大到原比例（1 键）
 
 var selected_id: int = -1:
 	set(v):
@@ -44,15 +49,57 @@ var merge_junctions: bool = true:
 		merge_junctions = v
 		queue_redraw()
 
+## 画布 → 屏幕：screen = canvas * zoom + pan
+var zoom: float = 1.0
+var pan: Vector2 = Vector2.ZERO
+const ZOOM_MIN := 0.3
+const ZOOM_MAX := 2.5
+
 var _layout: MapLayout = null
 var _font: Font
 var _hover_id: int = -1
+var _dragging := false
 
 
 func _ready() -> void:
 	_font = UiPalette.cjk_font()
 	clip_contents = true
-	resized.connect(queue_redraw)
+	resized.connect(_on_resized)
+
+
+func _on_resized() -> void:
+	center()
+	queue_redraw()
+
+
+## 画布多大（布局说了算）。
+func canvas_rect() -> Rect2:
+	if graph == null or _layout == null:
+		return Rect2(Vector2.ZERO, size)
+	return Rect2(Vector2.ZERO, _layout.canvas_size(graph))
+
+
+## 原比例、画布居中。画布比视口大的部分靠拖。
+func center() -> void:
+	pan = (size - canvas_rect().size * zoom) / 2.0
+	queue_redraw()
+
+
+## 缩到整张图刚好放得下（只缩不放：小图不放大，免得点挤在一起变成点挤在一起的大图）。
+func fit() -> void:
+	var c := canvas_rect().size
+	if c.x <= 0.0 or c.y <= 0.0:
+		return
+	zoom = clampf(minf(size.x / c.x, size.y / c.y), ZOOM_MIN, 1.0)
+	center()
+
+
+func to_canvas(screen: Vector2) -> Vector2:
+	return (screen - pan) / zoom
+
+
+func to_screen(canvas: Vector2) -> Vector2:
+	return canvas * zoom + pan
 
 
 ## 图被外面改过之后调一下。
@@ -63,13 +110,13 @@ func refresh() -> void:
 func positions() -> Dictionary:
 	if graph == null or _layout == null:
 		return {}
-	return _layout.positions(graph, Rect2(Vector2.ZERO, size))
+	return _layout.positions(graph, canvas_rect())
 
 
 func free_slots() -> Array[Dictionary]:
 	if graph == null or _layout == null:
 		return [] as Array[Dictionary]
-	return _layout.free_slots(graph, Rect2(Vector2.ZERO, size))
+	return _layout.free_slots(graph, canvas_rect())
 
 
 #region 命中
@@ -108,19 +155,44 @@ func _gui_input(event: InputEvent) -> void:
 	if graph == null:
 		return
 	if event is InputEventMouseMotion:
-		var h := node_at((event as InputEventMouseMotion).position)
+		var mm := event as InputEventMouseMotion
+		if _dragging:
+			pan += mm.relative
+			queue_redraw()
+			accept_event()
+			return
+		var h := node_at(to_canvas(mm.position))
 		if h != _hover_id:
 			_hover_id = h
 			queue_redraw()
 		return
 	var mb := event as InputEventMouseButton
-	if mb == null or not mb.pressed:
+	if mb == null:
 		return
-	press(mb.position, mb.button_index, mb.shift_pressed)
+	# 中键拖动；滚轮围着鼠标缩放；其余按键才是「点了图上什么」
+	if mb.button_index == MOUSE_BUTTON_MIDDLE:
+		_dragging = mb.pressed
+		accept_event()
+		return
+	if not mb.pressed:
+		return
+	if mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		zoom_at(mb.position, 1.15 if mb.button_index == MOUSE_BUTTON_WHEEL_UP else 1.0 / 1.15)
+		accept_event()
+		return
+	press(to_canvas(mb.position), mb.button_index, mb.shift_pressed)
 	accept_event()
 
 
-## 在 [param p] 处按下。拆出来是为了测试能直接调，不必伪造输入事件。
+## 围着屏幕上的某一点缩放：那一点底下的东西缩放前后不动。
+func zoom_at(screen: Vector2, factor: float) -> void:
+	var anchor := to_canvas(screen)
+	zoom = clampf(zoom * factor, ZOOM_MIN, ZOOM_MAX)
+	pan = screen - anchor * zoom
+	queue_redraw()
+
+
+## 在画布坐标 [param p] 处按下。拆出来是为了测试能直接调，不必伪造输入事件。
 func press(p: Vector2, button: int = MOUSE_BUTTON_LEFT, shift: bool = false) -> void:
 	var id := node_at(p)
 	if id >= 0:
@@ -147,7 +219,9 @@ func _draw() -> void:
 		draw_string(_font, Vector2(16, 28), "没有登记布局：%s" % graph.layout_kind,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, UiPalette.DIM)
 		return
-	var rect := Rect2(Vector2.ZERO, size)
+	# 下面全用画布坐标画，变换交给画布→屏幕这一层
+	draw_set_transform(pan, 0.0, Vector2(zoom, zoom))
+	var rect := canvas_rect()
 	_layout.draw_backdrop(self, graph, rect)
 	var pos := _layout.positions(graph, rect)
 

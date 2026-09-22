@@ -60,3 +60,4 @@
 | 039 | [M3-3c 类型分配：风格、配额、覆盖、均衡](039-type-assignment.md) | 阶段 4 · M3 | 完成 |
 | 040 | [数值反馈：节点数随规模、类型比例、撤离点间距](040-scale-nodes-and-extract-gap.md) | 阶段 4 · M3 | 完成 |
 | 041 | [六条：节点随环数、不填满、出生点、喘气处门槛、搜索占比、非路线节点混合](041-spawn-fill-cap-haven-progress.md) | 阶段 4 · M3 | 完成 |
+| 042 | [M3-4 行动计数与单步移动；画布不随视口缩](042-action-clock-and-travel.md) | 阶段 4 · M3 | 完成 |
