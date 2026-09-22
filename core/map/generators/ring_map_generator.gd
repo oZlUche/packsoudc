@@ -65,6 +65,7 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 		# 这张图自己带着边长上限：校验、编辑器都从图上读，不必手上有配置
 		"edge_max_ring_offset": _cfg.edge_max_ring_offset,
 		"edge_max_slot_offset": _cfg.edge_max_slot_offset,
+		"edge_max_arc_span": _cfg.tangential_span_max,
 		"zone_rules": _rules().to_dict(),
 	}
 	_ring_slots = []
@@ -134,15 +135,26 @@ func _make_ring_nodes() -> bool:
 	var count := _cfg.ring_count()
 	for _i in count:
 		_ring_slots.append({})
-	# 外→内
-	for r in range(count, 0, -1):
+	# 先由内向外挑每环填哪些槽位：外环的点要尽量落在内环某个点「正上方」附近，
+	# 不然边长上限之内没有向内的邻居，这个点就只能靠弧连到别处
+	var chosen: Array = []
+	chosen.resize(count + 1)
+	chosen[0] = [0] as Array[int]
+	for r in range(1, count + 1):
 		var spec := _cfg.spec_for_ring(r)
 		var slots := _cfg.slots_for_ring(r)
-		var filled := _choose_filled_slots(slots, spec.node_count if spec != null else 0)
+		var inner_slots := _cfg.slots_for_ring(r - 1) if r > 1 else 1
+		var filled := _choose_filled_slots(slots, spec.node_count if spec != null else 0,
+			chosen[r - 1], inner_slots)
 		if filled.is_empty():
 			return false
+		chosen[r] = filled
+	# 再由外向内建点：id 按「外环先、槽位升序」递增，与加点顺序无关的确定性由 MapGraph 保证，
+	# 但 id 本身也得是确定的，不然同种子两次跑出来的存档对不上
+	for r in range(count, 0, -1):
+		var spec := _cfg.spec_for_ring(r)
 		var map := {}
-		for slot in filled:
+		for slot in (chosen[r] as Array[int]):
 			var n := MapNode.new()
 			n.id = _next_id
 			_next_id += 1
@@ -158,46 +170,79 @@ func _make_ring_nodes() -> bool:
 			map[slot] = n.id
 		_ring_slots[r] = map
 		# 记下槽位数。从节点上推不出来：末尾几个槽位空着时，max(order)+1 比真实值小
-		(_graph.layout_meta["ring_slots"] as Dictionary)[r] = slots
+		(_graph.layout_meta["ring_slots"] as Dictionary)[r] = _cfg.slots_for_ring(r)
 	return true
 
 
 ## 在 slots 个槽位里挑出 want 个（0 或 ≥ slots = 全填）。
 ##
-## 空槽**连成 1～2 段连续的弧**，不是撒胡椒面式的随机缺口 ——
-## 参照示意图，一环本来就可以有一整段没有东西。
-func _choose_filled_slots(slots: int, want: int) -> Array[int]:
+## **匀着放**：按 slots / want 的步长绕环一圈，随机转一个角度；每个位置再在半步之内
+## 挪到「内环有点正对着」的槽位上（边长上限之内），这样它才有向内的边可连。
+## 空槽因此散在点与点之间；隔得超过 tangential_span_max 的地方弧就断了，那就是空白区 ——
+## 空白区是稀疏的结果，不是先挖再填。
+func _choose_filled_slots(slots: int, want: int, inner: Array[int], inner_slots: int) -> Array[int]:
 	var out: Array[int] = []
 	var n := slots if want <= 0 or want >= slots else want
-	var empty_total := slots - n
-	if empty_total <= 0:
+	if n >= slots:
 		for s in slots:
 			out.append(s)
 		return out
 
-	# 先在一条直线上排好「空 · 填 · 空 · 填」，再整体旋转一个随机角度。
-	# 两段空白因此天然分得开 —— 各挑一个随机起点的话它们会压在一起，
-	# 实际空出来的槽位比要的少，而那是不声不响的
-	var two := empty_total >= 2 and n >= 2 and _rng.randf() < 0.5
-	var gap_a := _rng.randi_range(1, empty_total - 1) if two else empty_total
-	var gap_b := empty_total - gap_a
-	var fill_a := n / 2 if two else n
+	# 内环各点投到本环上的位置（本环槽位为单位）
+	var anchors: Array[float] = []
+	for s in inner:
+		anchors.append(float(s) / float(maxi(1, inner_slots)) * float(slots))
+	var reach := float(_cfg.edge_max_slot_offset) + 0.5
 
-	var pattern: Array[bool] = []          # true = 有节点
-	for _k in gap_a:
-		pattern.append(false)
-	for _k in fill_a:
-		pattern.append(true)
-	for _k in gap_b:
-		pattern.append(false)
-	while pattern.size() < slots:
-		pattern.append(true)
-
-	var offset := _rng.randi_range(0, slots - 1)
+	var stride := float(slots) / float(n)
+	var offset := _rng.randf() * stride
+	var picked := {}
+	for k in n:
+		var ideal := offset + float(k) * stride
+		var base := posmod(roundi(ideal), slots)
+		var best := -1
+		var d := 0
+		# 先在半步之内找正对着内环点的槽位，找不到再放宽到一整步 —— 挪远一点总比没有向内的边好
+		while d <= floori(stride) and best < 0:
+			for sign in [1, -1]:
+				var s := posmod(base + sign * d, slots)
+				if picked.has(s) or not _anchored(s, anchors, reach, slots):
+					continue
+				best = s
+				break
+			d += 1
+		if best < 0:
+			# 一步之内没有正对着内环点的槽位：就放在理想位置，靠弧连到别处
+			best = base
+			var tries := 0
+			while picked.has(best) and tries < slots:
+				best = posmod(best + 1, slots)
+				tries += 1
+		picked[best] = true
 	for s in slots:
-		if pattern[posmod(s - offset, slots)]:
+		if picked.has(s):
 			out.append(s)
 	return out
+
+
+static func _anchored(slot: int, anchors: Array[float], reach: float, slots: int) -> bool:
+	for a in anchors:
+		var diff := fposmod(float(slot) - a, float(slots))
+		if minf(diff, float(slots) - diff) <= reach:
+			return true
+	return false
+
+
+## 第 r 环上从 slot 出发朝 dir 方向、在 tangential_span_max 个空槽之内的下一个有点的槽位；
+## 没有（那一边是空白区）返回 -1。
+func _ring_next(r: int, slot: int, dir: int) -> int:
+	var slots := maxi(1, _cfg.slots_for_ring(r))
+	var map: Dictionary = _ring_slots[r]
+	for k in range(1, mini(slots - 1, _cfg.tangential_span_max + 1) + 1):
+		var s := posmod(slot + dir * k, slots)
+		if map.has(s):
+			return s
+	return -1
 #endregion
 
 
@@ -432,8 +477,9 @@ func _approach(from_id: int, to_ring: int) -> Dictionary:
 		var walk: Array[int] = []
 		var slot := int(node.layout["order"])
 		for _k in slots:
-			slot = posmod(slot + dir, slots)
-			if not map.has(slot) or _graph.get_node(int(map[slot])).zone != 0 					or _protected_nodes.has(int(map[slot])):
+			slot = _ring_next(r, slot, dir)
+			if slot < 0 or _graph.get_node(int(map[slot])).zone != 0 \
+					or _protected_nodes.has(int(map[slot])):
 				break       # 这一边被空白区、高危区或别的路线截断了 —— 横着挪不能挪到别人的路上去
 			walk.append(int(map[slot]))
 			var cands := _inward_candidates(int(map[slot]), to_ring)
@@ -506,7 +552,6 @@ func _route_pairs(route_count: int) -> Array:
 ## （安排的那一环 ± pivot_window，不必严格踩在那一环上）、这一次又还没换乘过 ——
 ## 直接把这两个点连起来当换乘，不再另外拉一整段换乘弧。
 func _try_adjacent_pivots(r: int, active: Array[int], paths: Array) -> void:
-	var slots := maxi(1, _cfg.slots_for_ring(r))
 	for pair in _route_pairs(paths.size()):
 		var i := int(pair[0])
 		var j := int(pair[1])
@@ -521,8 +566,8 @@ func _try_adjacent_pivots(r: int, active: Array[int], paths: Array) -> void:
 			if a != b:
 				var sa := int(_graph.get_node(a).layout["order"])
 				var sb := int(_graph.get_node(b).layout["order"])
-				if _ring_dist(sa, sb, slots) != 1:
-					continue
+				if _ring_next(r, sa, 1) != sb and _ring_next(r, sa, -1) != sb:
+					continue        # 相邻 = 这一环上挨着的两个点（中间没有别的点，也没隔着空白区）
 				_protect_edge(a, b, &"tangential")
 				(_graph.layout_meta["pivot_links"] as Array).append([mini(a, b), maxi(a, b)])
 			_pivot_done[key] = true     # 落在同一个点上（合流）当然也算换乘过了
@@ -559,36 +604,34 @@ func _route_slot_on_ring(route: Dictionary, r: int) -> int:
 func _protect_arc(r: int, slot_a: int, slot_b: int) -> void:
 	var slots := maxi(1, _cfg.slots_for_ring(r))
 	var forward := posmod(slot_b - slot_a, slots)
-	var backward := slots - forward
-	var dir := 1 if forward <= backward else -1
-	var span := mini(forward, backward)
+	var dir := 1 if forward <= slots - forward else -1
 	# 短的那段被空白区或高危区挡住了，就走长的那段；两头都不通才作罢
-	if not _arc_clear(r, slot_a, dir, span) and _arc_clear(r, slot_a, -dir, slots - span):
-		dir = -dir
-		span = slots - span
-	var slot_map: Dictionary = _ring_slots[r]
+	var path := _arc_path(r, slot_a, slot_b, dir)
+	if path.is_empty():
+		path = _arc_path(r, slot_a, slot_b, -dir)
+	if path.is_empty():
+		return
 	var prev := -1
-	for k in span + 1:
-		var slot := posmod(slot_a + dir * k, slots)
-		if not slot_map.has(slot) or _graph.get_node(int(slot_map[slot])).zone != 0:
-			# 两头都不通时走到这里：连不过去的那一段空着，已保护的部分留着，不强求
-			prev = -1
-			continue
-		var id := int(slot_map[slot])
+	for id in path:
 		_protected_nodes[id] = true
 		if prev >= 0:
 			_protect_edge(prev, id, &"tangential")
 		prev = id
 
 
-func _arc_clear(r: int, from_slot: int, dir: int, span: int) -> bool:
-	var slots := maxi(1, _cfg.slots_for_ring(r))
-	var slot_map: Dictionary = _ring_slots[r]
-	for k in span + 1:
-		var slot := posmod(from_slot + dir * k, slots)
-		if not slot_map.has(slot) or _graph.get_node(int(slot_map[slot])).zone != 0:
-			return false
-	return true
+## 沿第 r 环从 slot_a 朝 dir 走到 slot_b 经过的点（含两端）；中间断了（空白区、高危区）返回空。
+func _arc_path(r: int, slot_a: int, slot_b: int, dir: int) -> Array[int]:
+	var map: Dictionary = _ring_slots[r]
+	var out: Array[int] = [int(map[slot_a])]
+	var slot := slot_a
+	var guard := 0
+	while slot != slot_b and guard < map.size() + 1:
+		slot = _ring_next(r, slot, dir)
+		if slot < 0 or _graph.get_node(int(map[slot])).zone != 0:
+			return [] as Array[int]
+		out.append(int(map[slot]))
+		guard += 1
+	return out if slot == slot_b else [] as Array[int]
 #endregion
 
 
@@ -766,11 +809,10 @@ func _spatial_neighbors(id: int) -> Array[int]:
 	if r <= 0:
 		return out
 	var slot := int(n.layout["order"])
-	var slots := maxi(1, _cfg.slots_for_ring(r))
 	var map: Dictionary = _ring_slots[r]
 	for d in [-1, 1]:
-		var s := posmod(slot + d, slots)
-		if map.has(s) and not out.has(int(map[s])):
+		var s := _ring_next(r, slot, d)
+		if s >= 0 and not out.has(int(map[s])):
 			out.append(int(map[s]))
 	for rr in [r - 1, r + 1]:
 		if rr >= 1 and rr <= _cfg.ring_count():
@@ -839,8 +881,11 @@ static func edge_within_limit(
 	var rb := int(graph.get_node(b).layout.get("ring", 0))
 	if absi(ra - rb) > max_ring:
 		return false
-	var slack := 0.0 if ra == rb else 0.5
-	return slot_offset(graph, a, b) <= float(max_slot) + slack
+	if ra == rb:
+		# 同环的弧可以跨过几个空槽（5.4.1 的 1----1）；上限跟着图走
+		var span := int(graph.layout_meta.get("edge_max_arc_span", 0))
+		return slot_offset(graph, a, b) <= float(span + 1)
+	return slot_offset(graph, a, b) <= float(max_slot) + 0.5
 #endregion
 
 
@@ -851,10 +896,11 @@ func _link_candidates() -> void:
 	for r in range(1, count + 1):
 		var slots := maxi(1, _cfg.slots_for_ring(r))
 		var map: Dictionary = _ring_slots[r]
-		# 同环：只连【相邻槽位】—— 隔着空白区的两点不连，弧不跨空白
+		# 同环：连【挨着的两个点】—— 中间可以隔几个空槽（一段弧），
+		# 隔得超过 tangential_span_max 就是空白区，弧在那里断开
 		for slot in _sorted_keys(map):
-			var nxt := posmod(slot + 1, slots)
-			if slots > 1 and map.has(nxt) and slot != nxt \
+			var nxt := _ring_next(r, slot, 1)
+			if slots > 1 and nxt >= 0 and slot != nxt \
 					and _graph.edge_between(int(map[slot]), int(map[nxt])) == null:
 				_graph.connect_nodes(int(map[slot]), int(map[nxt]), &"tangential")
 		# 向内：次序最近的若干个

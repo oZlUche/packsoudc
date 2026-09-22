@@ -70,6 +70,9 @@ extends Resource
 ## 跨环 = 把里面那个点按比例投到外面那环上（外环的槽位更细，拿它当尺子），正对着的那个 ± 这么多。
 ## 正对着空白区的点因此可以【没有】向内的边，它靠同环的弧连到别处
 @export var edge_max_slot_offset: int = 1
+## 同环挨着的两个点之间最多隔几个空槽还连弧（5.4.1 的 1----1）；
+## 隔得更远就是空白区，环在那里断开。节点数少于槽位数时（规模模板要的），空槽散在点与点之间
+@export var tangential_span_max: int = 3
 ## 同环相邻边被断开的概率。骨架边与换乘弧不受影响
 @export var tangential_break_chance: float = 0.35
 ## 每个节点向内连接的邻近节点数范围
@@ -183,40 +186,35 @@ func _build_rings(ring_count_: int) -> void:
 		var spec := RingSpec.new()
 		spec.kind = kinds[mini(i, kinds.size() - 1)]
 		rings.append(spec)
-	# 按规模模板要的节点数缩放槽位：先按半径算一遍，再整体乘一个系数。
-	# 系数对每环一样，所以「越靠里越短」不会被打乱；内环仍受 min_slots 兜底
+	# 槽位照半径算，不动 —— 环的长度是几何，不随节点数变。规模模板要的是【节点数】：
+	# 每环只填一部分槽位，空的连成空白弧。内环只有 min_slots 个槽位，填满也就那么几个，
+	# 减的份额落在外环；二分一个填充系数，让各环 max(min_slots, 槽位 × 系数) 的总和正好是要的
 	var p := scale()
 	if p != null and p.nodes.y > 0:
-		var by_radius: Array[int] = []
-		var total := 0
-		for i in ring_count_:
-			by_radius.append(slots_for_ring(ring_count_ - i))
-			total += by_radius[i]
-		var gaps := 3 * mini(2, ring_count_)      # 下面外圈要挖掉的空白
-		var want := (p.nodes.x + p.nodes.y) / 2 - 1 + gaps
-		# 系数不能直接用 want / total：内环被 min_slots 兜住之后不会跟着缩，
-		# 多出来的得从外环扣。二分找一个系数，让兜底之后的总数正好是要的
+		var want := (p.nodes.x + p.nodes.y) / 2 - 1     # 减掉核心
 		var lo := 0.0
 		var hi := 1.0
 		for _k in 24:
 			var mid := (lo + hi) / 2.0
 			var sum := 0
 			for i in ring_count_:
-				sum += maxi(min_slots, roundi(float(by_radius[i]) * mid))
+				var slots := slots_for_ring(ring_count_ - i)
+				sum += mini(slots, maxi(min_slots, roundi(float(slots) * mid)))
 			if sum < want:
 				lo = mid
 			else:
 				hi = mid
 		for i in ring_count_:
-			rings[i].slots = maxi(min_slots, roundi(float(by_radius[i]) * hi))
-	# 外圈各留一段空白弧 —— 参照示意图，环本来就可以断成几段。
-	# 只挖【真比 min_slots 长】的环：内圈本来就已经缩到下限了，
-	# 再挖就会比外圈还空，看着不像同心环
-	for i in mini(2, ring_count_):
-		var r := ring_count_ - i
-		var slots := slots_for_ring(r)
-		if slots > min_slots:
-			rings[i].node_count = maxi(min_slots, slots - 3)
+			var slots := slots_for_ring(ring_count_ - i)
+			rings[i].node_count = mini(slots, maxi(min_slots, roundi(float(slots) * hi)))
+	else:
+		# 没有规模模板：外圈各留一段空白弧 —— 参照示意图，环本来就可以断成几段。
+		# 只挖【真比 min_slots 长】的环：内圈本来就已经缩到下限了，再挖就比外圈还空
+		for i in mini(2, ring_count_):
+			var r := ring_count_ - i
+			var slots := slots_for_ring(r)
+			if slots > min_slots:
+				rings[i].node_count = maxi(min_slots, slots - 3)
 	# 把算出来的数写明白。0 的意思是「自动」（槽位按半径算、节点填满），
 	# 但编辑器里看到一排 0、图上却是十几个点，只会让人以为数据没对上
 	for i in ring_count_:

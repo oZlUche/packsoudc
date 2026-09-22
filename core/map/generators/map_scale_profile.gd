@@ -61,6 +61,7 @@ static func defaults() -> Array[MapScaleProfile]:
 			Vector2i(45, 50), 4),
 		# 12 环 × 最少 6 个槽位就是 72 个点，节点数的下限不能比这低；
 		# 出发点 × 间隔也得放得进最外环（大图最外环也就十来个槽位）
-		make(&"large", "大型（占位）", Vector2i(9, 12), Vector2i(3, 4), Vector2i(1, 4), Vector2i(3, 9), Vector2i(2, 3),
+		# 出发点先占 3：12 环的图最外环 38 个槽位只放 9 个点，4 条路线挤不开
+		make(&"large", "大型（占位）", Vector2i(9, 12), Vector2i(3, 3), Vector2i(1, 4), Vector2i(3, 9), Vector2i(2, 3),
 			Vector2i(72, 90), 5, true),
 	] as Array[MapScaleProfile]

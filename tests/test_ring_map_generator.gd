@@ -19,6 +19,14 @@ static func _ring_of(g: MapGraph, id: int) -> int:
 	return int(g.get_node(id).layout.get("ring", -1))
 
 
+static func _slot_taken(g: MapGraph, r: int, slot: int) -> bool:
+	for id in g.node_ids():
+		var lay := g.get_node(id).layout
+		if int(lay.get("ring", -1)) == r and int(lay.get("order", -1)) == slot:
+			return true
+	return false
+
+
 ## 按环分组：ring -> Array[node_id]
 static func _by_ring(g: MapGraph) -> Dictionary:
 	var out := {}
@@ -201,8 +209,14 @@ static func _check_all(g: MapGraph, cfg: RingMapConfig) -> String:
 		var slots := cfg.slots_for_ring(ra)
 		var sa := int(g.get_node(e.from_id).layout["order"])
 		var sb := int(g.get_node(e.to_id).layout["order"])
-		if mini(posmod(sa - sb, slots), posmod(sb - sa, slots)) != 1:
-			return "切向边跨过了空白区：第 %d 环 %d↔%d" % [ra, sa, sb]
+		var dist := mini(posmod(sa - sb, slots), posmod(sb - sa, slots))
+		if dist > cfg.tangential_span_max + 1:
+			return "切向边跨过了空白区：第 %d 环 %d↔%d 隔 %d 格" % [ra, sa, sb, dist]
+		# 挨着的两个点之间不该还有别的点
+		var dir := 1 if posmod(sb - sa, slots) == dist else -1
+		for k in range(1, dist):
+			if _slot_taken(g, ra, posmod(sa + dir * k, slots)):
+				return "切向边跨过了别的点：第 %d 环 %d↔%d" % [ra, sa, sb]
 
 	return ""
 #endregion
@@ -396,7 +410,9 @@ static func run_entries(t: TestCase) -> void:
 
 	var cfg := RingMapConfig.sample(5)
 	var slots := cfg.slots_for_ring(cfg.ring_count())
-	# 能放下的最大间隔：槽位数 / 出生点数（先把空白区去掉，免得碰运气）
+	# 能放下的最大间隔：槽位数 / 出生点数（先把最外环填满，免得碰运气）。
+	# 填满之后点数超出规模模板的范围，所以把模板拿掉
+	cfg.scales = [] as Array[MapScaleProfile]
 	cfg.rings[0].node_count = 0
 	cfg.entry_min_gap = slots / cfg.entry_count
 	var g := _gen().generate(cfg, 11)
@@ -654,35 +670,35 @@ static func run_determinism(t: TestCase) -> void:
 
 
 static func run_gaps(t: TestCase) -> void:
-	t.begin("环形生成器 · 空白区连成整段")
+	t.begin("环形生成器 · 节点少于槽位时匀着放，弧不跨空白区")
 
-	# 一个环，18 个槽位只放 12 个点 —— 空出来的 6 个该连成 1～2 段，不是撒胡椒面
+	# 一个环，18 个槽位只放 6 个点：点该匀着散在一圈上，不是挤在一段里
 	var cfg := RingMapConfig.sample(2)
+	cfg.scales = [] as Array[MapScaleProfile]
 	cfg.rings[0].slots = 18
-	cfg.rings[0].node_count = 12
+	cfg.rings[0].node_count = 6
 	cfg.entry_count = 2
 	cfg.zone_spec = null
 
-	var runs_seen: Array[int] = []
+	var made := 0
 	for s in 16:
 		var g := _gen().generate(cfg, s)
 		if g == null:
 			continue
-		var filled := {}
+		made += 1
+		var filled: Array[int] = []
 		for id in g.node_ids():
 			if _ring_of(g, id) == 2:
-				filled[int(g.get_node(id).layout["order"])] = true
-		t.eq(filled.size(), 12, "第 2 环放了 12 个点（种子 %d）" % s)
-
-		# 数一数空槽连成几段
-		var runs := 0
-		for slot in 18:
-			if not filled.has(slot) and filled.has(posmod(slot - 1, 18)):
-				runs += 1
-		runs_seen.append(runs)
-		t.check(runs >= 1 and runs <= 2,
-			"空槽连成 %d 段（种子 %d）—— 该是 1～2 段整弧，不是零散缺口" % [runs, s])
-	t.check(runs_seen.size() > 0, "至少跑成了一次")
+				filled.append(int(g.get_node(id).layout["order"]))
+		filled.sort()
+		t.eq(filled.size(), 6, "第 2 环放了 6 个点（种子 %d）" % s)
+		# 最长的空段不超过步长的两倍：匀着放，允许为了对上内环挪半步
+		var worst := 0
+		for i in filled.size():
+			var nxt: int = filled[(i + 1) % filled.size()]
+			worst = maxi(worst, posmod(nxt - filled[i], 18) - 1)
+		t.check(worst <= 18 / 6 * 2, "最长空段 %d 格，不该挤成一团（种子 %d）" % [worst, s])
+	t.check(made > 0, "至少跑成了一次")
 
 
 static func run_pivots(t: TestCase) -> void:
