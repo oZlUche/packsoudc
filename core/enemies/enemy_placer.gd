@@ -51,9 +51,10 @@ static func fill(
 ## 生成时 fill 逐点调它；随机点揭成战斗、搜索点遭遇时 [NodeEvents] 现调它（那时 [param node] 是按目标类型看的视图）
 static func place_one(
 	node: MapNode, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase,
-	depth: float, difficulty: int, scale_id: StringName, rng: RandomNumberGenerator
+	depth: float, difficulty: int, scale_id: StringName, rng: RandomNumberGenerator,
+	exploration: Dictionary = {}
 ) -> Dictionary:
-	var wanted := wanted_strength(pool, node, depth, difficulty, scale_id)
+	var wanted := wanted_strength(pool, node, depth, difficulty, scale_id, exploration)
 	var entry := pick(pool, enemies, node, wanted, rng)
 	if entry == null:
 		return {}
@@ -76,9 +77,10 @@ static func depths_of(graph: MapGraph) -> Dictionary:
 
 ## 这个点想要几档（夹进档位表的范围）
 static func wanted_strength(
-	pool: EnemyPool, node: MapNode, depth: float, difficulty: int, scale_id: StringName
+	pool: EnemyPool, node: MapNode, depth: float, difficulty: int, scale_id: StringName,
+	exploration: Dictionary = {}
 ) -> int:
-	var raw := pool.strength_rule.wanted(node, depth, difficulty, scale_id) \
+	var raw := pool.strength_rule.wanted(node, depth, difficulty, scale_id, exploration) \
 		if pool.strength_rule != null else 0
 	return pool.clamp_strength(raw)
 

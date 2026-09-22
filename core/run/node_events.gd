@@ -52,6 +52,8 @@ var loot_context: Callable = Callable()
 var current_search: SearchSession = null
 var current_shop: ShopSession = null
 var _depths: Dictionary = {}
+## 已结束的搜索会话里一共搜了几次（正在搜的那个另算，见 searches_total）
+var _searches_closed: int = 0
 
 
 func _init(p_graph: MapGraph = null) -> void:
@@ -112,6 +114,19 @@ func reveal(node: MapNode) -> StringName:
 			node.content[key] = built[key]
 	revealed.emit(node, type)
 	return type
+
+
+## 本局累计搜索次数（含正在搜的这个点已经搜过的）
+func searches_total() -> int:
+	return _searches_closed + (current_search.searches_done if current_search != null else 0)
+
+
+## 探索度：总步数与累计搜索次数。踩上去才造的敌人（随机点、搜索遭遇）按它抬档（StrengthRule 的探索度那一组）
+func exploration() -> Dictionary:
+	return {
+		"steps": travel.clock.total if travel != null and travel.clock != null else 0,
+		"searches": searches_total(),
+	}
 
 
 ## 这个点现在算什么类型（随机点揭开之后）
@@ -191,6 +206,7 @@ func pay_extract_fee(node: MapNode) -> bool:
 func _close_search(node: MapNode, session: SearchSession, reason: StringName) -> void:
 	if reason == &"encounter":
 		_fight(node, &"search", session.encounter)
+	_searches_closed += session.searches_done
 	current_search = null
 	search_closed.emit(node, session.haul(), reason)
 	_visited(node)
@@ -216,7 +232,8 @@ func _enemy_for(node: MapNode, as_type: StringName, rng: RandomNumberGenerator) 
 		return {}
 	var view := MapNode.from_dict(node.to_dict())
 	view.type = as_type
-	var built := EnemyPlacer.place_one(view, pool, enemies, items, float(_depths.get(node.id, 0.0)), difficulty, scale_id, rng)
+	# 踩上去才造的敌人跟探索度挂钩：走得越远、搜得越多，遇到的越强
+	var built := EnemyPlacer.place_one(view, pool, enemies, items, float(_depths.get(node.id, 0.0)), difficulty, scale_id, rng, exploration())
 	return built.get("content", {})
 
 

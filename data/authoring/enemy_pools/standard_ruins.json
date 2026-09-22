@@ -99,7 +99,9 @@
     },
     "by_scale": {
       "large": 1
-    }
+    },
+    "steps_per_tier": 12,
+    "searches_per_tier": 4
   },
   "loadout": {
     "common_tags": [

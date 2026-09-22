@@ -51,6 +51,8 @@ type_bonus = {
 by_scale = {
 "large": 1
 }
+steps_per_tier = 12
+searches_per_tier = 4
 
 [sub_resource type="Resource" id="Resource_baqq6"]
 script = ExtResource("5_v0xwg")

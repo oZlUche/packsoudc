@@ -283,6 +283,26 @@ static func run_strength(t: TestCase) -> void:
 	t.eq(EnemyPlacer.wanted_strength(pool, inner, 1.0, 9, &"large"), pool.strengths()[pool.strengths().size() - 1],
 		"再高也夹进档位表的最高档")
 
+	# 探索度：只对踩上去才造的敌人（调用方传进来），每 N 步 / 每 N 次搜索加一档，各有上限；不传就不加
+	rule.by_scale = {}
+	rule.steps_per_tier = 10
+	rule.steps_max_bonus = 2
+	rule.searches_per_tier = 3
+	rule.searches_max_bonus = 1
+	t.eq(EnemyPlacer.wanted_strength(pool, outer, 0.0, 0, &""), lo, "不传探索度：不加")
+	t.eq(rule.exploration_bonus({"steps": 9, "searches": 2}), 0, "不够一档不加")
+	t.eq(rule.exploration_bonus({"steps": 10}), 1, "十步一档")
+	t.eq(rule.exploration_bonus({"steps": 25}), 2, "二十五步两档")
+	t.eq(rule.exploration_bonus({"steps": 99}), rule.steps_max_bonus, "步数封顶")
+	t.eq(rule.exploration_bonus({"searches": 3}), 1, "三次搜索一档")
+	t.eq(rule.exploration_bonus({"searches": 30}), rule.searches_max_bonus, "搜索封顶")
+	t.eq(rule.exploration_bonus({"steps": 10, "searches": 3}), 2, "两项相加")
+	t.eq(EnemyPlacer.wanted_strength(pool, outer, 0.0, 0, &"", {"steps": 10, "searches": 3}),
+		pool.clamp_strength(lo + 2), "想要的档位 = 原来的 + 探索度，夹进档位表")
+	rule.steps_per_tier = 0
+	rule.searches_per_tier = 0
+	t.eq(rule.exploration_bonus({"steps": 999, "searches": 999}), 0, "都是 0 = 不算探索度")
+
 	# 深度：形态无关，只看 tier 在全图里的位置
 	var g := MapGraph.new()
 	for i in 4:

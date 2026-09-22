@@ -20,6 +20,9 @@ class World:
 	var events: NodeEvents
 	var ids: Dictionary = {}   # type -> node id
 
+	func exploration_of_events() -> Dictionary:
+		return events.exploration()
+
 
 static func _world(seed_base: int = 100, vitality_max: int = 5, strong: bool = true) -> World:
 	var w := World.new()
@@ -260,6 +263,11 @@ static func run_random(t: TestCase) -> void:
 		match type:
 			&"battle":
 				t.check(EnemyKit.has_enemy(node.content), "变成战斗：现造了敌人")
+				var view := MapNode.from_dict(node.to_dict())
+				view.type = &"battle"
+				t.eq(int(node.content["strength"]), EnemyPlacer.wanted_strength(w.pool, view, EnemyPlacer.depths_of(w.graph)[node.id],
+					w.chapter.difficulty, &"", {"steps": w.travel.clock.total, "searches": 0}),
+					"现造的敌人档位 = 规则按这个点 + 当时的探索度（走了 %d 步）算的" % w.travel.clock.total)
 				t.eq(fights, [node.id], "而且打了")
 				t.check(node.is_visited(), "打完用过了")
 			&"search":
@@ -332,6 +340,65 @@ static func run_search(t: TestCase) -> void:
 	t.eq(f3.size(), 1, "曲线拉满：第一次就遭遇并打了")
 	if not f3.is_empty() and f3[0]:
 		t.eq(l3.size(), 1, "赢了有战利品")
+
+
+static func run_exploration(t: TestCase) -> void:
+	t.begin("节点事件 · 踩上去才造的敌人跟探索度挂钩：走得多、搜得多，随机点与搜索遭遇的敌人更强")
+
+	var w := _world(1200)
+	var rule: StrengthRule = w.pool.strength_rule
+	t.check(rule.steps_per_tier > 0 and rule.searches_per_tier > 0, "第一章的池配了探索度（步数每 %d 步、搜索每 %d 次一档）" % [rule.steps_per_tier, rule.searches_per_tier])
+	# 在出生点和岔路口之间来回走，把步数走上去
+	var junction := _node(w, &"junction")
+	while w.travel.clock.total < rule.steps_per_tier * rule.steps_max_bonus + 2:
+		w.travel.step_to(junction.id)
+		w.travel.step_to(0)
+	var steps := w.travel.clock.total
+	t.eq(w.exploration_of_events(), {"steps": steps, "searches": 0}, "探索度：步数 = 行动点总数，还没搜过")
+
+	# 随机点强制变成战斗
+	w.rules = w.rules.duplicate(true) as NodeRules
+	w.rules.random_weights = {"battle": 1}
+	w.events.rules = w.rules
+	var node := _node(w, &"random")
+	var depth: float = EnemyPlacer.depths_of(w.graph)[node.id]
+	w.travel.step_to(node.id)
+	var view := MapNode.from_dict(node.to_dict())
+	view.type = &"battle"
+	var steps_then := w.travel.clock.total
+	var plain := EnemyPlacer.wanted_strength(w.pool, view, depth, w.chapter.difficulty, &"")
+	var explored := EnemyPlacer.wanted_strength(w.pool, view, depth, w.chapter.difficulty, &"", {"steps": steps_then, "searches": 0})
+	t.eq(int(node.content["strength"]), explored, "随机点的敌人档位 = 规则 + 探索度")
+	t.check(explored >= plain, "不低于不算探索度的档位")
+	t.check(explored > plain or plain >= w.pool.strengths()[w.pool.strengths().size() - 1],
+		"步数够了就更高（%d → %d），除非本来就到顶了" % [plain, explored])
+
+	# 搜索遭遇：曲线拉满，第一次就遭遇；遭遇的敌人按「含这一次」的搜索次数算
+	w.rules.search.encounter_curve = [1.0] as Array[float]
+	var met: Array = []
+	w.events.search_opened.connect(func(_n: MapNode, s: SearchSession):
+		s.searched.connect(func(_f: Array[StringName], e: Dictionary): met.append(e)))
+	w.travel.step_to(0)
+	var snode := _node(w, &"search")
+	w.travel.step_to(snode.id)
+	var steps_search := w.travel.clock.total
+	w.events.current_search.search()
+	t.eq(met.size(), 1, "遭遇了")
+	if met.is_empty():
+		return
+	var sview := MapNode.from_dict(snode.to_dict())
+	sview.type = &"search"
+	var sdepth: float = EnemyPlacer.depths_of(w.graph)[snode.id]
+	t.eq(int(met[0]["strength"]),
+		EnemyPlacer.wanted_strength(w.pool, sview, sdepth, w.chapter.difficulty, &"", {"steps": steps_search, "searches": 1}),
+		"遭遇的敌人档位 = 规则 + 探索度（这是第 1 次搜索）")
+	t.eq(w.events.searches_total(), 1, "会话结束后累计搜索次数记下来了")
+
+	# 地图上看得见的敌人不随探索变：生成时定好的档位 = 不带探索度的规则值
+	var battle := _node(w, &"battle")
+	var bdepth: float = EnemyPlacer.depths_of(w.graph)[battle.id]
+	t.eq(int(battle.content["strength"]), EnemyPlacer.wanted_strength(w.pool, battle, bdepth, w.chapter.difficulty, &""),
+		"生成时放好的敌人不吃探索度 —— 地图上看到的就是打到的")
 
 
 static func _search_view(node: MapNode) -> MapNode:
