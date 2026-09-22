@@ -257,8 +257,9 @@ static func run_scale_profiles(t: TestCase) -> void:
 			t.eq(g.zones.size(), 0, "没有规模 → 没有高危区")
 			t.check(not gen.failure_tally.has(&"zone_missing"), "也不会因为「缺高危区」而重试")
 
-	# 每一档规模的两端环数：片数、规模、出发点数都落在这一档的范围里
+	# 每一档规模的两端环数：片数、规模、出发点数都落在这一档的范围里；节点数随环数增长
 	for p in profiles:
+		var nodes_at := {}
 		for rings in [p.rings.x, p.rings.y]:
 			var cfg := RingMapConfig.sample(rings)
 			t.eq(cfg.scale().id, p.id, "%d 环属于 %s" % [rings, p.id])
@@ -278,8 +279,13 @@ static func run_scale_profiles(t: TestCase) -> void:
 				if p.nodes.y > 0:
 					t.check(g.node_count() >= p.nodes.x and g.node_count() <= p.nodes.y,
 						"%s · %d 环：%d 个点，该在 %d～%d" % [p.id, rings, g.node_count(), p.nodes.x, p.nodes.y])
+					nodes_at[rings] = int(nodes_at.get(rings, 0)) + g.node_count()
 				t.check(_zones_per_route_max(g) <= p.zones_per_route,
 					"%s：每条路线身上岔出的不超过 %d 片" % [p.id, p.zones_per_route])
+
+		if p.nodes.y > 0 and p.rings.y > p.rings.x:
+			t.check(int(nodes_at.get(p.rings.y, 0)) >= int(nodes_at.get(p.rings.x, 0)),
+				"%s：%d 环的点数 ≥ %d 环的 —— 节点数仍随环数增长" % [p.id, p.rings.y, p.rings.x])
 
 	# 可选项给了数就用那个数 —— 但会被夹进规模的范围
 	var medium: MapScaleProfile = profiles[mini(1, profiles.size() - 1)]

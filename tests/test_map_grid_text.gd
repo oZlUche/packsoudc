@@ -121,6 +121,20 @@ static func run_syntax(t: TestCase) -> void:
 		"最外环首尾相连成了一整段，所以只有一个出生点")
 
 
+static func run_spawn_symbol(t: TestCase) -> void:
+	t.begin("网格脚本 · 画了 P 就是出生点")
+
+	var text := "[map]\nP-A-B0\n\n[danger]\n......\n"
+	var g := MapGridText.parse(text)
+	t.not_null(g, "解析得出来：%s" % MapGridText.last_error)
+	if g == null:
+		return
+	t.eq(MapGridText.render(g), text, "往返相同")
+	t.eq(g.entry_ids.size(), 1, "一个出生点")
+	t.eq(g.get_node(g.entry_ids[0]).type, &"spawn", "它的类型是 spawn")
+	t.eq(int(g.get_node(g.entry_ids[0]).layout["col"]), 0, "就是那个 P")
+
+
 static func run_bad_input(t: TestCase) -> void:
 	t.begin("网格脚本 · 写错了说得出错在哪")
 

@@ -9,6 +9,11 @@ extends Resource
 @export var rings: Array[RingSpec] = []
 
 @export_group("规模")
+## 新建的环（换规模 / 换环数时）从这份模板抄 quota 与 type_weights。
+## 没有它，换一次规模之后每环的权重表是空的，非路线节点就只剩战斗
+@export var ring_template: RingSpec = null
+## 每环 节点/槽位 的上限，严格小于 1 —— 内环也不填满，环上总有空位
+@export var fill_cap: float = 0.9
 ## 规模模板：每种规模的图最多能要几个出发点、几片高危区、多大的高危区。
 ## 按环数匹配；一个都不匹配（比如三环的测试图）= 不设上限、不要高危区
 @export var scales: Array[MapScaleProfile] = []
@@ -47,6 +52,8 @@ extends Resource
 @export var coverage: Dictionary = {}
 ## danger 高于此值的区域里不放喘气的地方（= coverage 里列的那几种类型）
 @export var no_haven_in_danger_above: int = 1
+## 休息区与商店只在路径的这一段之后才出现（0～1，按环深算：最外环 0，核心前一环 1）
+@export var haven_after_progress: float = 1.0 / 3.0
 ## 不许相邻的类型对
 @export var no_adjacent: Array = []
 @export var extract_every_rings: int = 2
@@ -185,36 +192,36 @@ func _build_rings(ring_count_: int) -> void:
 	for i in ring_count_:
 		var spec := RingSpec.new()
 		spec.kind = kinds[mini(i, kinds.size() - 1)]
+		if ring_template != null:
+			spec.quota = ring_template.quota.duplicate(true)
+			spec.type_weights = ring_template.type_weights.duplicate(true)
 		rings.append(spec)
 	# 槽位照半径算，不动 —— 环的长度是几何，不随节点数变。规模模板要的是【节点数】：
 	# 每环只填一部分槽位，空的连成空白弧。内环只有 min_slots 个槽位，填满也就那么几个，
 	# 减的份额落在外环；二分一个填充系数，让各环 max(min_slots, 槽位 × 系数) 的总和正好是要的
 	var p := scale()
 	if p != null and p.nodes.y > 0:
-		var want := (p.nodes.x + p.nodes.y) / 2 - 1     # 减掉核心
+		# 节点数仍随环数增长：在这一档规模的范围里按环数插值 —— 6 环取下限、8 环取上限
+		var t := 0.0 if p.rings.y <= p.rings.x \
+			else clampf(float(ring_count_ - p.rings.x) / float(p.rings.y - p.rings.x), 0.0, 1.0)
+		var want := roundi(lerpf(float(p.nodes.x), float(p.nodes.y), t)) - 1     # 减掉核心
 		var lo := 0.0
 		var hi := 1.0
 		for _k in 24:
 			var mid := (lo + hi) / 2.0
 			var sum := 0
 			for i in ring_count_:
-				var slots := slots_for_ring(ring_count_ - i)
-				sum += mini(slots, maxi(min_slots, roundi(float(slots) * mid)))
+				sum += fill_count(slots_for_ring(ring_count_ - i), mid)
 			if sum < want:
 				lo = mid
 			else:
 				hi = mid
 		for i in ring_count_:
-			var slots := slots_for_ring(ring_count_ - i)
-			rings[i].node_count = mini(slots, maxi(min_slots, roundi(float(slots) * hi)))
+			rings[i].node_count = fill_count(slots_for_ring(ring_count_ - i), hi)
 	else:
-		# 没有规模模板：外圈各留一段空白弧 —— 参照示意图，环本来就可以断成几段。
-		# 只挖【真比 min_slots 长】的环：内圈本来就已经缩到下限了，再挖就比外圈还空
-		for i in mini(2, ring_count_):
-			var r := ring_count_ - i
-			var slots := slots_for_ring(r)
-			if slots > min_slots:
-				rings[i].node_count = maxi(min_slots, slots - 3)
+		# 没有规模模板：每环留一点空位就好（fill_cap 说了内环也不填满）
+		for i in ring_count_:
+			rings[i].node_count = fill_count(slots_for_ring(ring_count_ - i), 1.0)
 	# 把算出来的数写明白。0 的意思是「自动」（槽位按半径算、节点填满），
 	# 但编辑器里看到一排 0、图上却是十几个点，只会让人以为数据没对上
 	for i in ring_count_:
@@ -224,42 +231,53 @@ func _build_rings(ring_count_: int) -> void:
 			rings[i].node_count = rings[i].slots
 
 
+## 一个 slots 个槽位的环按 factor 填几个：不少于 min_slots - 1 个（内环的下限），
+## 不多于 fill_cap 允许的 —— 严格小于槽位数，环上总有空位。
+func fill_count(slots: int, factor: float) -> int:
+	var cap := mini(slots - 1, floori(float(slots) * fill_cap))
+	return clampi(roundi(float(slots) * factor), mini(cap, min_slots - 1), maxi(1, cap))
+
+
 ## 造一份跑得起来的默认配置。**数值是占位**，等内容定稿；
 ## 结构才是要紧的。测试与沙盒用它开箱即跑。
 static func sample(ring_count_: int = 5) -> RingMapConfig:
 	var cfg := RingMapConfig.new()
 	cfg.scales = MapScaleProfile.defaults()
+	# 类型分配（M3-3c）。数值全是占位，等内容定稿；测试从这里读期望值，不写死
+	cfg.ring_template = RingSpec.new()
+	cfg.ring_template.type_weights = {"battle": 3, "search": 3, "event": 3, "random": 2, "elite": 1}
+	cfg.ring_template.quota = {"shop": [0, 1], "rest": [0, 2], "elite": [0, 2]}
 	cfg._build_rings(ring_count_)
 
 	var combat := RouteStyle.new()
 	combat.id = &"combat"
 	combat.ends_at = &"core"
 	combat.mix = {"battle": 5, "elite": 1, "event": 1}
-	combat.risk_band = Vector2(1.15, 1.7)
-	combat.reward_band = Vector2(1.15, 1.7)
+	combat.risk_band = Vector2(1.2, 1.9)
+	combat.reward_band = Vector2(1.2, 1.9)
 	combat.bailout_every_rings = 4     # 得 ≥ 撤离点间距，不然沿路的出口自己就挤在一起
 	var search := RouteStyle.new()
 	search.id = &"search"
 	search.ends_at = &"extract"
-	search.mix = {"search": 4, "event": 2, "battle": 1}
-	search.risk_band = Vector2(0.45, 0.9)
-	search.reward_band = Vector2(0.45, 0.9)
+	search.mix = {"search": 4, "event": 1}
+	search.min_share = {"search": 0.8}     # 偏搜索的路线，搜索点至少占八成
+	# 八成是搜索点的路线，风险只有平均的两三成 —— 档位得跟着 min_share 走
+	search.risk_band = Vector2(0.15, 0.6)
+	search.reward_band = Vector2(0.15, 0.6)
 	var mixed := RouteStyle.new()
 	mixed.id = &"mixed"
 	mixed.ends_at = &"core"
 	mixed.mix = {"battle": 2, "search": 2, "event": 2}
-	mixed.risk_band = Vector2(0.8, 1.2)
-	mixed.reward_band = Vector2(0.8, 1.2)
+	mixed.risk_band = Vector2(0.8, 1.3)
+	mixed.reward_band = Vector2(0.8, 1.3)
 	cfg.routes = [combat, search, mixed] as Array[RouteStyle]
 
-	# 类型分配（M3-3c）。数值全是占位，等内容定稿；测试从这里读期望值，不写死
-	for i in cfg.rings.size():
-		cfg.rings[i].type_weights = {"battle": 3, "search": 3, "event": 3, "random": 2, "elite": 1}
-		cfg.rings[i].quota = {"shop": [0, 1], "rest": [0, 2], "elite": [0, 2]}
 	cfg.type_risk = {"battle": 1.0, "elite": 2.2, "event": 0.3, "random": 0.8, "search": 0.4,
-		"shop": 0.0, "rest": 0.0, "extract": 0.0, "core": 3.0}
-	cfg.type_reward = {"battle": 1.0, "elite": 3.0, "event": 0.6, "random": 0.8, "search": 1.1,
-		"shop": 0.5, "rest": 0.3, "extract": 0.0, "core": 5.0}
+		"shop": 0.0, "rest": 0.0, "extract": 0.0, "core": 3.0, "spawn": 0.0}
+	# 搜索点每搜一次的收益不能比战斗划算太多：偏搜索的路线八成都是它，
+	# 它的性价比就是那条路线的性价比 —— 太高，校准只能把别的路线也换成搜索点去追
+	cfg.type_reward = {"battle": 1.0, "elite": 3.0, "event": 0.6, "random": 0.8, "search": 0.6,
+		"shop": 0.5, "rest": 0.3, "extract": 0.0, "core": 5.0, "spawn": 0.0}
 	cfg.coverage = {"rest": 4, "shop": 6}
 	cfg.no_adjacent = [["elite", "elite"], ["shop", "shop"]]
 	cfg.ev_tolerance = 0.25

@@ -192,9 +192,12 @@ func toggle_entry(id: int) -> void:
 		return
 	if _graph.entry_ids.has(id):
 		_graph.entry_ids.erase(id)
+		if _node(id).type == &"spawn":
+			_node(id).type = &"battle"
 	else:
 		_graph.entry_ids.append(id)
 		_graph.entry_ids.sort()
+		_node(id).type = &"spawn"       # 出生点是一种节点，不只是一个标记
 	_touch()
 
 

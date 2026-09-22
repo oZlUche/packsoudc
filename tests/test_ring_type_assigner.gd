@@ -50,22 +50,46 @@ static func _check_rules(g: MapGraph, cfg: RingMapConfig) -> String:
 			if n < int(lim[0]) or n > int(lim[1]):
 				return "第 %d 环 %s 有 %d 个，配额 %s" % [r, type, n, str(lim)]
 
-	# 覆盖：高危区外的每个点距最近的喘气处不超过 K；死胡同末端也算在内
+	# 覆盖：高危区外、走过路径前一段之后的每个点距最近的喘气处不超过 K；死胡同末端也算在内
 	for type in cfg.coverage:
 		var dist := RingTypeAssigner.distances_to_type(g, StringName(type))
 		for id in g.node_ids():
 			var n := g.get_node(id)
 			if n.danger > cfg.no_haven_in_danger_above:
 				continue
+			if RingTypeAssigner.progress_of(_ring_of(g, id), cfg.ring_count()) < cfg.haven_after_progress:
+				continue
 			if int(dist.get(id, 1 << 20)) > int(cfg.coverage[type]):
 				return "节点 %d 距最近的 %s 有 %s 步（%d 条路挨着它）" % [
 					id, type, str(dist.get(id, "∞")), g.edges_of(id).size()]
 
-	# 高危区里没有喘气的地方
+	# 高危区里没有喘气的地方；路径前一段也没有
 	for id in g.node_ids():
 		var n := g.get_node(id)
 		if n.danger > cfg.no_haven_in_danger_above and cfg.coverage.has(String(n.type)):
 			return "节点 %d 在高危区里却是 %s" % [id, n.type]
+		if _ring_of(g, id) > 0 and cfg.coverage.has(String(n.type)) \
+				and RingTypeAssigner.progress_of(_ring_of(g, id), cfg.ring_count()) < cfg.haven_after_progress:
+			return "节点 %d 是 %s，却在路径的前 %d%% 里" % [id, n.type, roundi(cfg.haven_after_progress * 100)]
+
+	# 出生点是 spawn，spawn 都是出生点
+	for id in g.node_ids():
+		var is_spawn := g.get_node(id).type == &"spawn"
+		if is_spawn != g.entry_ids.has(id):
+			return "节点 %d：spawn=%s 出生点=%s，两者该一致" % [id, is_spawn, g.entry_ids.has(id)]
+
+	# 每环都不填满
+	var slot_table: Dictionary = g.layout_meta.get("ring_slots", {})
+	var per_ring := {}
+	for id in g.node_ids():
+		var r := _ring_of(g, id)
+		per_ring[r] = int(per_ring.get(r, 0)) + 1
+	for r in per_ring:
+		if int(r) <= 0:
+			continue
+		var slots := int(slot_table.get(r, 0))
+		if int(per_ring[r]) >= slots or int(per_ring[r]) > floori(float(slots) * cfg.fill_cap):
+			return "第 %d 环 %d 个槽位放了 %d 个点，填得太满（上限 %.0f%%）" % [r, slots, per_ring[r], cfg.fill_cap * 100]
 
 	# 不许相邻
 	for e in g.edges:
@@ -174,6 +198,21 @@ static func run_route_rules(t: TestCase) -> void:
 					elif last_extract - r > style.bailout_every_rings + 1:
 						ok = false
 				t.check(ok, "%s 沿路每 %d 环左右有撤离点（种子 %d）" % [route["style"], style.bailout_every_rings, s])
+			# min_share：这条路线独占的、可换的节点里，该类型至少占那么多
+			for k in style.min_share:
+				var have := 0
+				var pool := 0
+				for id in ids:
+					if int(on[int(id)]) != 1:
+						continue
+					var ty := String(g.get_node(int(id)).type)
+					if MapNodeTypes.STRUCTURAL.has(StringName(ty)) or cfg.coverage.has(ty):
+						continue
+					pool += 1
+					if ty == String(k):
+						have += 1
+				t.check(pool == 0 or float(have) >= float(style.min_share[k]) * float(pool) - 1e-6,
+					"%s：%s 占 %d/%d，至少要 %d%%（种子 %d）" % [route["style"], k, have, pool, roundi(float(style.min_share[k]) * 100), s])
 			# 记在路线上的分数与重算一致
 			t.eq(int(route["risk_x100"]), roundi(scores[i]["risk"] * 100.0), "记账的风险分对得上（种子 %d）" % s)
 			t.eq(int(route["reward_x100"]), roundi(scores[i]["reward"] * 100.0), "记账的收益分对得上（种子 %d）" % s)

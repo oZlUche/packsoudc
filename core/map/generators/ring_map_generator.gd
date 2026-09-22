@@ -66,6 +66,7 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 		"edge_max_ring_offset": _cfg.edge_max_ring_offset,
 		"edge_max_slot_offset": _cfg.edge_max_slot_offset,
 		"edge_max_arc_span": _cfg.tangential_span_max,
+		"fill_cap": _cfg.fill_cap,
 		"zone_rules": _rules().to_dict(),
 	}
 	_ring_slots = []
@@ -182,7 +183,9 @@ func _make_ring_nodes() -> bool:
 ## 空白区是稀疏的结果，不是先挖再填。
 func _choose_filled_slots(slots: int, want: int, inner: Array[int], inner_slots: int) -> Array[int]:
 	var out: Array[int] = []
-	var n := slots if want <= 0 or want >= slots else want
+	# 0 = 自动：填到 fill_cap 允许的上限为止 —— 环上总有空位，内环也一样
+	var n := _cfg.fill_count(slots, 1.0) if want <= 0 or want >= slots else want
+	n = mini(n, _cfg.fill_count(slots, 1.0))
 	if n >= slots:
 		for s in slots:
 			out.append(s)
@@ -1355,6 +1358,19 @@ func validate(graph: MapGraph, v: MapValidation) -> void:
 			v.fail(&"ring_slots", "第 %d 环 %d 个槽位，比它外面那环的 %d 还多 —— 环越靠里越短"
 				% [r, slots, prev_slots])
 		prev_slots = slots
+
+	# --- 每环都不填满：节点 / 槽位 ≤ fill_cap（< 1），内环也一样 ---
+	var cap := float(graph.layout_meta.get("fill_cap", 1.0))
+	if cap < 1.0:
+		var per_ring := {}
+		for id in graph.node_ids():
+			var r := int(ring_of.get(id, -1))
+			per_ring[r] = int(per_ring.get(r, 0)) + 1
+		for r in per_ring:
+			var slots := int(slot_table.get(r, slot_table.get(str(r), 0)))
+			if int(r) > 0 and slots > 0 and int(per_ring[r]) > floori(float(slots) * cap):
+				v.fail(&"ring_fill", "第 %d 环 %d 个槽位放了 %d 个点，超过 %.0f%% —— 内环也不能填满"
+					% [r, slots, per_ring[r], cap * 100.0])
 
 	# 【路线不在这里查。】路线是用来生成地图的规则，不是一张图合不合格的条件 ——
 	# 它们留在 graph.routes 里只是标注（开局给玩家挑出生点时看的），

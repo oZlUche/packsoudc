@@ -14,6 +14,11 @@ extends Resource
 ## [b]M3-3c 才用到。[/b]
 @export var mix: Dictionary = {}
 
+## 类型 → 在这条路线独占节点里至少占几成（0～1）。偏搜索的路线 `{"search": 0.8}`：
+## 校准再怎么换，搜索点的份额不能掉到八成以下。分母不算出生点、撤离点、休息区、商店这些
+## 别的步骤放的固定点。[b]M3-3c 用。[/b]
+@export var min_share: Dictionary = {}
+
 ## 这条路线的风险分总和该落在哪个区间（相对全图平均）。[b]M3-3c 才用到。[/b]
 @export var risk_band: Vector2 = Vector2(0.8, 1.2)
 

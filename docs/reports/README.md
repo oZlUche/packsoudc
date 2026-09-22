@@ -59,3 +59,4 @@
 | 038 | [编辑器试用反馈：路不交叉、岔路口、相邻换乘](038-no-crossing-junctions-pivots.md) | 阶段 4 · M3 | 完成 |
 | 039 | [M3-3c 类型分配：风格、配额、覆盖、均衡](039-type-assignment.md) | 阶段 4 · M3 | 完成 |
 | 040 | [数值反馈：节点数随规模、类型比例、撤离点间距](040-scale-nodes-and-extract-gap.md) | 阶段 4 · M3 | 完成 |
+| 041 | [六条：节点随环数、不填满、出生点、喘气处门槛、搜索占比、非路线节点混合](041-spawn-fill-cap-haven-progress.md) | 阶段 4 · M3 | 完成 |

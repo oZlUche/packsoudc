@@ -112,6 +112,20 @@ static func frame_scale_panel(t: TestCase, root: Window) -> void:
 		if ed.graph() != null:
 			t.eq(int(ed.graph().layout_meta["ring_count"]), p.rings.y, "%s：图的环数对" % p.id)
 
+		# 换过规模之后，新建的环从模板抄权重：非路线的点照样是混合的，不是只剩战斗
+		if ed.graph() != null:
+			var on_route := {}
+			for route in ed.graph().routes:
+				for id in (route["node_ids"] as Array):
+					on_route[int(id)] = true
+			var kinds := {}
+			for id in ed.graph().node_ids():
+				var n: MapNode = ed.graph().get_node(id)
+				if not on_route.has(id) and n.zone == 0 and not MapNodeTypes.STRUCTURAL.has(n.type):
+					kinds[n.type] = true
+			var expect := mini(3, cfg.ring_template.type_weights.size())
+			t.check(kinds.size() >= expect, "%s：非路线节点有 %d 种类型（至少 %d）—— 换规模之后权重表没丢" % [p.id, kinds.size(), expect])
+
 	# 不支持规模模板的生成器：面板是空的，choose_scale 什么都不做，也不报错
 	ed.use_generator(&"grid_script")
 	ed.choose_scale(&"small", 4)

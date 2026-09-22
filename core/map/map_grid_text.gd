@@ -14,6 +14,7 @@ const LAYOUT_KIND := &"grid_script"
 const SYMBOL_TYPES := {
 	"A": &"battle", "E": &"elite", "Q": &"event", "?": &"random", "V": &"search",
 	"S": &"shop", "R": &"rest", "X": &"extract", "B": &"core",
+	"P": &"spawn",      # 出生点。符号是解析器先占的位，等作者在表里定
 	"1": &"random",     # v0 遗留的缺省点，按 ? 处理
 }
 ## 没有 [map] 段头的老格式（v0）里符号另有所指：E 是终点，2 是「高危的缺省点」
@@ -223,10 +224,13 @@ static func _assign_zones(g: MapGraph) -> void:
 		g.zones[zone_id] = {"node_ids": members, "gate_ids": ZoneRules.gate_ids(g, members)}
 
 
-## 出生点：最外环上每一段弧的第一个点。
-##
-## [b]占位规则。[/b] 表里还没有出生点的符号；等作者定了符号，这里改成认符号。
+## 出生点：画了 P 就是 P；一个都没画，就按最外环上每一段弧的第一个点（占位规则）。
 static func _assign_entries(g: MapGraph) -> void:
+	for id in g.node_ids():
+		if g.get_node(id).type == &"spawn":
+			g.entry_ids.append(id)
+	if not g.entry_ids.is_empty():
+		return
 	var outer: Array[int] = []
 	for id in g.node_ids():
 		if int(g.get_node(id).layout["row"]) == 0:

@@ -80,8 +80,11 @@ func _route_table(cfg: RingMapConfig, graphs: Array) -> void:
 					in_band += 1
 		for t in cfg.coverage:
 			var dist := RingTypeAssigner.distances_to_type(g, t)
+			var outer := cfg.ring_count()
 			for id in g.node_ids():
-				if g.get_node(id).danger <= cfg.no_haven_in_danger_above:
+				var n: MapNode = g.get_node(id)
+				var progress := float(outer - int(n.layout.get("ring", 0))) / float(maxi(1, outer - 1))
+				if n.danger <= cfg.no_haven_in_danger_above and progress >= cfg.haven_after_progress:
 					worst_cover[t] = maxi(int(worst_cover.get(t, 0)), int(dist.get(id, 99)))
 	print("       路线落进自己档位：%d/%d　性价比离散 平均 %.2f 最大 %.2f（容差 %.2f）　覆盖最远：%s"
 		% [in_band, routes_total, spread_sum / graphs.size(), spread_max, cfg.ev_tolerance, str(worst_cover)])

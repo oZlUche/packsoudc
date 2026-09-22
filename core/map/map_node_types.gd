@@ -7,8 +7,12 @@ extends RefCounted
 
 const ALL: Array[StringName] = [
 	&"battle", &"elite", &"event", &"random", &"search",
-	&"shop", &"rest", &"extract", &"junction", &"core",
+	&"shop", &"rest", &"extract", &"junction", &"core", &"spawn",
 ]
+
+
+## 结构性的类型：由拓扑决定，类型分配与校准不拿它们当「事件点」换来换去
+const STRUCTURAL: Array[StringName] = [&"core", &"spawn", &"extract", &"junction"]
 
 
 static func has(type: StringName) -> bool:

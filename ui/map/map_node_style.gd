@@ -14,6 +14,7 @@ const STYLES := {
 	&"extract": {"label": "撤离点", "glyph": "撤", "color": Color("dfe3ea")},
 	&"junction": {"label": "岔路", "glyph": "·", "color": Color("5a6270")},
 	&"core": {"label": "核心", "glyph": "核", "color": Color("f0d060")},
+	&"spawn": {"label": "出生点", "glyph": "生", "color": Color("5cb85c")},
 }
 
 const UNKNOWN := {"label": "未知", "glyph": "?", "color": Color("8b93a1")}
