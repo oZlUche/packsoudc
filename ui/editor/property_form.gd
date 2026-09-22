@@ -163,15 +163,37 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 		name_edit.text = String(k)
 		name_edit.custom_minimum_size.x = 130
 		_font(name_edit)
+		var old_key := String(k)
+		var raw = dict[k]
+		if not (raw is float or raw is int):
+			# 值不是数（配额的 [min, max]、禁止相邻的类型对……）：按 JSON 文本编辑
+			var te := LineEdit.new()
+			te.text = JSON.stringify(raw)
+			te.custom_minimum_size.x = 160
+			_font(te)
+			te.text_submitted.connect(func(s: String):
+				var parsed = JSON.parse_string(s)
+				if parsed != null:
+					dict[old_key] = parsed
+					owner.set(key, dict)
+					_emit())
+			row.add_child(name_edit)
+			row.add_child(te)
+			row.add_child(_small_button("删", func():
+				dict.erase(old_key)
+				owner.set(key, dict)
+				_emit()
+				rebuild()))
+			box.add_child(row)
+			continue
 		var val := SpinBox.new()
 		val.min_value = -99999
 		val.max_value = 99999
 		val.step = 0.1
 		val.allow_greater = true
 		val.allow_lesser = true
-		val.value = float(dict[k])
+		val.value = float(raw)
 		_font(val)
-		var old_key := String(k)
 		name_edit.text_submitted.connect(func(t: String):
 			var v = dict[old_key]
 			dict.erase(old_key)

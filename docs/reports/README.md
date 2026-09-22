@@ -57,3 +57,4 @@
 | 036 | [高危区重新定义：和路线一起长出来，多出入口](036-danger-zone-redefined.md) | 阶段 4 · M3 | 完成 |
 | 037 | [M3-3b 手绘地图的网格脚本；规模模板](037-grid-script-and-scale-profiles.md) | 阶段 4 · M3 | 完成 |
 | 038 | [编辑器试用反馈：路不交叉、岔路口、相邻换乘](038-no-crossing-junctions-pivots.md) | 阶段 4 · M3 | 完成 |
+| 039 | [M3-3c 类型分配：风格、配额、覆盖、均衡](039-type-assignment.md) | 阶段 4 · M3 | 完成 |

@@ -30,17 +30,22 @@ extends Resource
 ## 不必严格踩在那一环上；窗口里始终没碰上，才在那一环上拉一整段换乘弧兜底
 @export var pivot_window: int = 1
 
-@export_group("类型分配（M3-3c）")
+@export_group("类型分配")
+## 类型 → 风险分：走这一步期望损失多少体力。搜索点填的是【每搜一次】的值，
+## 定档时乘 reference_searches —— 搜几次是玩家的旋钮，生成器只按基准定档（5.4.2）
 @export var type_risk: Dictionary = {}
+## 类型 → 收益分：走这一步期望拿到多少价值。搜索点同上
 @export var type_reward: Dictionary = {}
 ## 给路线定档时假设玩家在每个搜索点搜几次。实际搜几次由玩家决定（5.4.2）
 @export var reference_searches: int = 1
+## 必须型：不靠权重碰运气、撤离点不许覆盖、被高危区吸收的路线节点不许当的那几种
+@export var mandatory_types: Array[StringName] = [&"elite", &"shop", &"rest"]
 @export var danger_risk_multiplier: Array[float] = [1.0, 1.3, 1.7]
 @export var danger_reward_multiplier: Array[float] = [1.0, 1.4, 2.0]
 @export var ev_tolerance: float = 0.2
 ## 类型 → 每个节点到最近该类型节点的步数上限。例：{"rest": 4, "shop": 6}
 @export var coverage: Dictionary = {}
-## danger 高于此值的区域里不放休息区与商店
+## danger 高于此值的区域里不放喘气的地方（= coverage 里列的那几种类型）
 @export var no_haven_in_danger_above: int = 1
 ## 不许相邻的类型对
 @export var no_adjacent: Array = []
@@ -108,6 +113,13 @@ func scale() -> MapScaleProfile:
 	for p in scales:
 		if p != null and p.covers(ring_count()):
 			return p
+	return null
+
+
+func style_by_id(id: StringName) -> RouteStyle:
+	for s in routes:
+		if s != null and s.id == id:
+			return s
 	return null
 
 
@@ -189,13 +201,36 @@ static func sample(ring_count_: int = 5) -> RingMapConfig:
 	var combat := RouteStyle.new()
 	combat.id = &"combat"
 	combat.ends_at = &"core"
+	combat.mix = {"battle": 5, "elite": 1, "event": 1}
+	combat.risk_band = Vector2(1.15, 1.7)
+	combat.reward_band = Vector2(1.15, 1.7)
+	combat.bailout_every_rings = 2
 	var search := RouteStyle.new()
 	search.id = &"search"
 	search.ends_at = &"extract"
+	search.mix = {"search": 4, "event": 2, "battle": 1}
+	search.risk_band = Vector2(0.45, 0.9)
+	search.reward_band = Vector2(0.45, 0.9)
 	var mixed := RouteStyle.new()
 	mixed.id = &"mixed"
 	mixed.ends_at = &"core"
+	mixed.mix = {"battle": 3, "search": 2, "event": 1}
+	mixed.risk_band = Vector2(0.8, 1.2)
+	mixed.reward_band = Vector2(0.8, 1.2)
 	cfg.routes = [combat, search, mixed] as Array[RouteStyle]
+
+	# 类型分配（M3-3c）。数值全是占位，等内容定稿；测试从这里读期望值，不写死
+	for i in cfg.rings.size():
+		cfg.rings[i].type_weights = {"battle": 5, "search": 3, "event": 2, "random": 1, "elite": 1}
+		cfg.rings[i].quota = {"shop": [0, 1], "rest": [0, 2], "elite": [0, 2]}
+	cfg.type_risk = {"battle": 1.0, "elite": 2.2, "event": 0.3, "random": 0.8, "search": 0.4,
+		"shop": 0.0, "rest": 0.0, "extract": 0.0, "core": 3.0}
+	cfg.type_reward = {"battle": 1.0, "elite": 3.0, "event": 0.6, "random": 0.8, "search": 1.1,
+		"shop": 0.5, "rest": 0.3, "extract": 0.0, "core": 5.0}
+	cfg.coverage = {"rest": 4, "shop": 6}
+	cfg.no_adjacent = [["elite", "elite"], ["shop", "shop"]]
+	cfg.ev_tolerance = 0.25
+	cfg.extract_every_rings = 2
 
 	# 要不要高危区、要几片、多大，由规模模板决定（环太少时没有匹配的规模，也就没有高危区）
 	cfg.zone_spec = DangerZoneSpec.new()

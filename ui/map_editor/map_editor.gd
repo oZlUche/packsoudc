@@ -559,9 +559,10 @@ func _add_route_legend() -> void:
 	_props.add_child(show)
 	for i in _graph.routes.size():
 		var route: Dictionary = _graph.routes[i]
-		_props.add_child(_label("━━  出生点 %d · %s → %s"
-			% [route.get("entry_id", -1), route.get("style", "?"), route.get("ends_at", "?")],
-			12, MapNodeStyle.route_color(i)))
+		var text := "━━  出生点 %d · %s → %s" % [route.get("entry_id", -1), route.get("style", "?"), route.get("ends_at", "?")]
+		if route.has("risk_x100"):
+			text += "　风险 %.1f  收益 %.1f" % [float(route["risk_x100"]) / 100.0, float(route["reward_x100"]) / 100.0]
+		_props.add_child(_label(text, 12, MapNodeStyle.route_color(i)))
 	_props.add_child(_button("清空路线标注（%d 条）" % _graph.routes.size(), clear_routes))
 
 

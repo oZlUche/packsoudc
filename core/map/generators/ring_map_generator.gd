@@ -4,8 +4,8 @@
 ## 再往路线周围长出地图。否则「偏战斗的路线」只能靠事后给一条碰巧存在的路径贴标签，
 ## 贴不贴得上看运气。
 ##
-## 这一步只做到拓扑：槽位、骨架、换乘点、高危区、候选边、隔离、断边。
-## [b]节点类型全部先填 `battle`[/b]（核心除外），留给 M3-3c ——
+## 本类只做拓扑：槽位、骨架、换乘、高危区、候选边、隔离、断边、不交叉。
+## 节点类型由 [RingTypeAssigner] 在拓扑齐了之后填 ——
 ## 拓扑与类型各有一套不变式，混在一起出了错分不清是路没铺好还是类型填错了。
 class_name RingMapGenerator
 extends MapGenerator
@@ -107,6 +107,11 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 	_reconnect_islands()
 	_break_tangentials()
 	_fix_crossings()
+	# 拓扑齐了，再填类型。分开两步：出了错分得清是路没铺好还是类型填错了
+	var typer := RingTypeAssigner.new()
+	if not typer.assign(_graph, _cfg, _rng):
+		build_note = "类型分配失败：" + typer.note
+		return null
 	return _graph
 
 
@@ -141,7 +146,7 @@ func _make_ring_nodes() -> bool:
 			var n := MapNode.new()
 			n.id = _next_id
 			_next_id += 1
-			n.type = &"battle"          # 类型是 M3-3c 的事，这里先占位
+			n.type = &"battle"          # 占位，RingTypeAssigner 会改
 			n.tier = count - r          # 越内层越高
 			n.erosion_band = count - r  # 最外环 0，最先被侵蚀
 			n.content_seed = _rng.randi()
@@ -596,8 +601,8 @@ func _zone_free(id: int) -> bool:
 
 ## 「连接点不能是必须存在点」（唯一的休息区、唯一的精英……）。
 ##
-## 这一步节点还没有类型，所以恒为 false；约束实际落在 M3-3c：
-## 被高危区吸收进去的路线节点，类型分配时不许拿去当必须型。留这个口子是为了那时候好接。
+## 这一步节点还没有类型，所以恒为 false；约束落在 [RingTypeAssigner]：
+## 被高危区吸收进去的路线节点，类型分配时不许拿去当必须型。
 func _is_mandatory_node(_id: int) -> bool:
 	return false
 
@@ -1320,6 +1325,9 @@ func validate(graph: MapGraph, v: MapValidation) -> void:
 
 	# --- 高危区：规模、区内连通、出入口数目（规则从图上读；与手绘图共用）---
 	ZoneRules.validate(graph, v)
+
+	# --- 类型：配额、覆盖、喘气处不进高危区、不许相邻、高危区内容、撤离点（规则从图上读）---
+	RingTypeAssigner.validate(graph, v)
 
 	if graph == _graph and _zones_missing > 0:
 		v.fail(&"zone_missing", "有 %d 片必须有的高危区没长起来 —— 路线过半程之后旁边没有空地"

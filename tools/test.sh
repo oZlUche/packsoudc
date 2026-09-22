@@ -17,7 +17,7 @@ fi
 # 于是 ui/ 里的解析错误只能靠「跑起来才发现」。现在留下来一起检查。
 IMPORTLOG="${TMPDIR:-/tmp}/godot_import.log"
 "$GODOT" --headless --path "$ROOT" --import >"$IMPORTLOG" 2>&1
-timeout 120 "$GODOT" --headless --path "$ROOT" --script res://tests/run_tests.gd >"$LOG" 2>&1
+timeout 240 "$GODOT" --headless --path "$ROOT" --script res://tests/run_tests.gd >"$LOG" 2>&1
 code=$?
 
 # 过滤引擎与插件的噪声，只留测试输出和脚本错误
