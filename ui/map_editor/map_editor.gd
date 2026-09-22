@@ -28,6 +28,7 @@ var _form_host: VBoxContainer
 var _scale_host: VBoxContainer
 var _name_edit: LineEdit
 var _preset_pick: OptionButton
+var _chapter_pick: OptionButton
 var _props: VBoxContainer
 var _report: RichTextLabel
 
@@ -376,6 +377,92 @@ func load_preset(preset_name: String) -> bool:
 	return true
 
 
+#region 章节
+func _refresh_chapters() -> void:
+	_chapter_pick.clear()
+	var dir := DirAccess.open(ContentPaths.AUTHORING_CHAPTERS)
+	if dir == null:
+		return
+	var names: Array[String] = []
+	for f in dir.get_files():
+		if f.ends_with(".json"):
+			names.append(f.get_basename())
+	names.sort()
+	for n in names:
+		_chapter_pick.add_item(n)
+
+
+## 从一章的作者数据载入生成器与配置，再生成一张。
+func load_chapter(chapter_id: String) -> bool:
+	var path := ContentPaths.authoring_file("chapters", chapter_id)
+	var report := ImportReport.new()
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not (parsed is Dictionary):
+		_say("读不了 %s" % path, true)
+		return false
+	var chapter := ContentImporter.import_chapter(parsed, ContentImporter.Context.new(), report)
+	if not report.ok():
+		_say("章节有错：%s" % report.to_text(), true)
+		return false
+	var src := chapter.map_source
+	if src.mode != MapSource.Mode.RANDOM:
+		_say("这一章载入的是预设地图，用上面的「预设」栏看它", true)
+		return false
+	use_generator(src.generator_id)
+	_cfg = src.generator_config
+	_rebuild_form()
+	_rebuild_scale_panel()
+	for i in _gen_pick.item_count:
+		if _gen_pick.get_item_text(i) == String(src.generator_id):
+			_gen_pick.select(i)
+	_say("已载入章节 %s" % chapter_id, false)
+	return generate()
+
+
+## 把当前的生成器 + 配置存回一章：作者数据 JSON 与引擎资产 .tres 一起写 ——
+## 和道具编辑器一样，存盘直接产出资产，不必再手动导入。
+func save_chapter(chapter_id: String) -> Error:
+	if _cfg == null or _gen_id == &"":
+		_say("没有可存的配置", true)
+		return ERR_INVALID_DATA
+	var path := ContentPaths.authoring_file("chapters", chapter_id)
+	var chapter: ChapterDef = null
+	if FileAccess.file_exists(path):
+		var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+		if parsed is Dictionary:
+			chapter = ContentImporter.import_chapter(parsed, ContentImporter.Context.new(), ImportReport.new())
+	if chapter == null:
+		chapter = ChapterDef.new()
+		chapter.id = StringName(chapter_id)
+		chapter.display_name = chapter_id
+	if chapter.map_source == null:
+		chapter.map_source = MapSource.new()
+	chapter.map_source.mode = MapSource.Mode.RANDOM
+	chapter.map_source.generator_id = _gen_id
+	chapter.map_source.generator_config = _cfg
+	var data := ContentExporter.export_chapter(chapter)
+	# 存之前再导一遍：和命令行导入器同一套校验，界面说没问题，命令行就一定过得去
+	var report := ImportReport.new()
+	var built := ContentImporter.import_chapter(data, ContentImporter.Context.new(), report)
+	if not report.ok():
+		_say("存不了：%s" % report.to_text(), true)
+		return ERR_INVALID_DATA
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	var err := ContentExporter.save(data, path)
+	if err != OK:
+		_say("写不了 %s" % path, true)
+		return err
+	DirAccess.make_dir_recursive_absolute(ContentPaths.CHAPTERS)
+	err = ResourceSaver.save(built, ContentPaths.asset_file("chapters", chapter_id))
+	if err != OK:
+		_say("资产写不了", true)
+		return err
+	_say("已存回章节 %s（作者数据 + 资产）" % chapter_id, false)
+	_refresh_chapters()
+	return OK
+#endregion
+
+
 func _refresh_presets() -> void:
 	_preset_pick.clear()
 	for n in MapPreset.list():
@@ -454,6 +541,23 @@ func _build_side() -> Control:
 			load_preset(_preset_pick.get_item_text(_preset_pick.selected))))
 	col.add_child(save_row)
 	_refresh_presets()
+	col.add_child(HSeparator.new())
+
+	# 章节：把当前的生成器 + 配置存成一章的作者数据（走内容管线），或从一章载入
+	col.add_child(_label("章节（走内容管线）", 14, UiPalette.FG))
+	var ch_row := HBoxContainer.new()
+	_chapter_pick = OptionButton.new()
+	_chapter_pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style(_chapter_pick)
+	ch_row.add_child(_chapter_pick)
+	ch_row.add_child(_button("载入", func():
+		if _chapter_pick.selected >= 0:
+			load_chapter(_chapter_pick.get_item_text(_chapter_pick.selected))))
+	ch_row.add_child(_button("存回", func():
+		if _chapter_pick.selected >= 0:
+			save_chapter(_chapter_pick.get_item_text(_chapter_pick.selected))))
+	col.add_child(ch_row)
+	_refresh_chapters()
 	col.add_child(HSeparator.new())
 
 	_scale_host = VBoxContainer.new()

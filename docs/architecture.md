@@ -1401,14 +1401,23 @@ func ok() -> bool / rules() -> Array / tally() -> Dictionary / to_text() -> Stri
 章节通过 Resource 声明自己用哪个生成器：
 
 ```gdscript
-# data/chapters/chapter_01.tres
+# core/run/chapter_def.gd → data/chapters/chapter_01.tres
 class_name ChapterDef extends Resource
+@export var id: StringName
 @export var display_name: String
 @export var map_source: MapSource           # 随机生成（generator_id + config）或载入预设，见 5.3.1
-@export var erosion: ErosionSchedule        # 可为 null = 该难度不启用侵蚀
-@export var enemy_pool: Array[EnemyDef]
-@export var loot_tables: Array[LootTable]
+# 之后各加一个字段，导入器、导出器、编辑器一行不改：
+# @export var erosion: ErosionSchedule      # 第 7 阶段；可为 null = 该难度不启用侵蚀
+# @export var enemy_pool: Array[EnemyDef]   # M4
+# @export var loot_tables: Array[LootTable] # M4
 ```
+
+章节是**作者数据，走内容管线**（10 节）：`data/authoring/chapters/*.json` → `data/chapters/*.tres`。
+导入器不认识它，反射填字段。管线为此补了三样通用的东西：`Vector2`；字典里整数值的浮点两头都写成整数
+（JSON 没有整数，不这样「导出→导入→再导出」的文本就变了）；字段声明成引擎基类（`generator_config: Resource`）
+时 JSON 里带 `type` 说造哪个 `class_name` 过的类，导出器反过来在类型不等于声明时写上它。
+章节的校验比引擎严格：生成器得登记过、配置得是那个生成器要的类、预设文件得在。
+地图编辑器里能把当前的生成器 + 配置存回一章（作者数据与资产一起写），也能从一章载入。
 
 `MapGeneratorRegistry` 负责 `generator_id -> MapGenerator` 的映射，新增形态只需注册一行。
 
@@ -2964,7 +2973,7 @@ res://
 | **1** | M1 网格背包 + 拖拽 + 序列化 | 可玩的整理沙盒，核心手感可验证 | 完成 |
 | **2** | M2 编译 + 效果系统 + 模拟 + 极简可视化 | 两个背包能打起来，可批量跑平衡 | 完成 |
 | **3** | 内容制作管线（第 10 节） | 不写代码就能造道具，数值可迭代 | 完成 |
-| **4** | M3 环形地图生成 + 单步导航 + 渲染 + 行动计数 | run 的骨架成立 | 进行中：M3-1（030）、M3-2（032）、M3-3（033）、编辑器与地图来源（034）、高危区（036）、M3-3b 与规模模板（037）完成，M3-3c（039）、M3-4 行动计数与单步移动（042）完成，计划见 027 |
+| **4** | M3 环形地图生成 + 单步导航 + 渲染 + 行动计数 | run 的骨架成立 | 进行中：M3-1（030）、M3-2（032）、M3-3（033）、编辑器与地图来源（034）、高危区（036）、M3-3b 与规模模板（037）完成，M3-3c（039）、M3-4（042）、M3-5 章节走内容管线（043）完成，计划见 027 |
 | **5** | M4 掉落 + 搜刮揭示 + 撤离 | **循环闭合，第一个可玩 Demo** | |
 | **6** | M5 存档 + M6 场景流打磨 | 可对外试玩 | |
 | **7** | 侵蚀系统 + 难度档位开关 | 时间压力成立，可开始调节奏 | |
@@ -3048,6 +3057,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.42 | 2026-09-22 | **M3-5 章节定义走内容管线**（报告 043）。`ChapterDef`（id、display_name、map_source；侵蚀、敌人池、掉落表到时候各加一个字段）；`ContentPaths` 加 `chapters`、排最后；`import_chapter` + 严格校验。管线补的通用能力：`Vector2`、字典里整数值的浮点两头写成整数、声明成引擎基类的字段靠 `type` 造类。`data/authoring/chapters/chapter_01.json`（由 `RingMapConfig.sample(6)` 倒出）→ `data/chapters/chapter_01.tres`。地图编辑器加「章节」栏：载入 / 存回 |
 | v1.41 | 2026-09-22 | **M3-4 行动计数与单步移动落地**（报告 042）：`ActionClock`、`MoveIntent`、`MapNavigator`（只读、无多步入口，测试守着公开方法清单）、`MapTravel`（五步结算顺序一处落地，侵蚀与节点事件是鸭子类型钩子，假钩子记次序）。渲染：画布按固定环距算、不随视口缩，`MapView` 加拖动与缩放 —— 作者说图看着太挤 |
 | v1.40 | 2026-09-22 | **作者六条**（报告 041）。（一）节点数仍随环数增长：规模模板的 `nodes` 范围按环数插值。（二）每环 节点/槽位 ≤ `fill_cap`（0.9，严格 < 1）：内环也不填满；`RingSpec.node_count = 0` 从「填满」改成「填到上限」。（三）出生点是一种节点 `spawn`，图上写「生」，网格符号暂定 `P`；固定、不参与 mix / 配额 / 校准；校验 `spawn`。（四）休息区与商店只在路径走过 `haven_after_progress`（1/3）之后才出现，按环深算；前一段的点不算进覆盖；校验 `haven_early`。（五）`RouteStyle.min_share`：偏搜索的路线搜索点至少八成，分配时先保底、换走前先问；搜索点的收益从 1.1 降到 0.6，不然八成搜索的路线性价比太高、校准会把别的路线也换成搜索点去追；档位跟着改。（六）非路线节点只剩战斗的根子是 `apply_scale` 新建的环没有权重表 —— 加 `ring_template`。校准只在事件点之间换，`MapNodeTypes.STRUCTURAL`（core / spawn / extract / junction）不动 |
 | v1.39 | 2026-09-22 | **作者三条数值反馈**（报告 040）。（一）节点数由规模模板决定：`MapScaleProfile.nodes`，中型 45~50（原先 6 环 64 个）。**槽位不动，减的是每环真有节点的槽位数**（第一版缩了槽位，作者指正）：点匀着散在一圈上、由内向外挑并尽量对上内环的点，空白区是稀疏的结果；同环的弧可以跨过至多 `tangential_span_max`（3）个空槽，再远就断开。（二）普通战斗比例降：每环权重 battle 3 / search 3 / event 3 / random 2 / elite 1（原 5/3/2/1/1），mixed 风格的 mix 改成三者均等。（三）撤离点之间最短路至少 `extract_gap` 步（模板：小 4、中 4、大 5；`extract_min_distance` 可覆盖），进校验 `extract_spacing`；`extract_every_rings` 改 4、combat 的 `bailout_every_rings` 改 4 —— 窗口跨度小于间距时相邻窗口放不下两个出口，只能靠重试碰。顺带：合流之前挤不开改成这次作废，不再退到「合流」（那就是提前合流）；横着挪不再挪到别的路线上 |

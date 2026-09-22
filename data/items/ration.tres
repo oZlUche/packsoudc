@@ -10,8 +10,8 @@
 [sub_resource type="Resource" id="Resource_76tyt"]
 script = ExtResource("3_p70ph")
 base_stats = {
-"max_stamina": 40.0,
-"regen_stamina": 2.0
+"max_stamina": 40,
+"regen_stamina": 2
 }
 
 [sub_resource type="Resource" id="Resource_huv3p"]

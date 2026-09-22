@@ -10,7 +10,7 @@
 [sub_resource type="Resource" id="Resource_5x3f4"]
 script = ExtResource("3_4phem")
 base_stats = {
-"max_power": 20.0
+"max_power": 20
 }
 
 [sub_resource type="Resource" id="Resource_ttehx"]

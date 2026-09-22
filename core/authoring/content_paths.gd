@@ -11,12 +11,14 @@ const AUTHORING := "res://data/authoring"
 const AUTHORING_ITEMS := AUTHORING + "/items"
 const AUTHORING_BUFFS := AUTHORING + "/buffs"
 const AUTHORING_SETS := AUTHORING + "/sets"
+const AUTHORING_CHAPTERS := AUTHORING + "/chapters"
 #endregion
 
 #region 引擎资产（导入器产出，游戏读这里）
 const ITEMS := "res://data/items"
 const BUFFS := "res://data/buffs"
 const SETS := "res://data/sets"
+const CHAPTERS := "res://data/chapters"
 #endregion
 
 ## 种类 → [作者数据目录, 资产目录]。顺序即导入顺序：后者可以按 id 引用前者。
@@ -24,8 +26,10 @@ const KINDS := {
 	"buffs": [AUTHORING_BUFFS, BUFFS],
 	"sets": [AUTHORING_SETS, SETS],
 	"items": [AUTHORING_ITEMS, ITEMS],
+	"chapters": [AUTHORING_CHAPTERS, CHAPTERS],
 }
-const ORDER := ["buffs", "sets", "items"]
+## 章节排最后：它将来要按 id 引用敌人池与掉落表，得先有它们
+const ORDER := ["buffs", "sets", "items", "chapters"]
 
 
 static func authoring_file(kind: String, id: String) -> String:

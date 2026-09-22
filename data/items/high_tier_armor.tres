@@ -10,7 +10,7 @@
 [sub_resource type="Resource" id="Resource_tnq1o"]
 script = ExtResource("3_1jwc3")
 base_stats = {
-"armor": 10.0
+"armor": 10
 }
 
 [sub_resource type="Resource" id="Resource_5rb47"]

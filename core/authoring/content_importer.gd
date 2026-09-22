@@ -52,6 +52,43 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	return def
 
 
+## 章节（M3-5）。结构和道具完全不同，走的却是同一条 _fill ——
+## 这是「导入器不认识具体类型」的第一次真实检验。
+static func import_chapter(data: Dictionary, ctx: Context, report: ImportReport) -> ChapterDef:
+	var def := ChapterDef.new()
+	_fill(def, data, "", ctx, report)
+	_validate_chapter(def, report)
+	return def
+
+
+## 比引擎严格：地图来源得真的能拿出图来。生成器没登记、预设文件不在，都是内容错误。
+static func _validate_chapter(def: ChapterDef, report: ImportReport) -> void:
+	if def.id == &"":
+		report.error("id", "章节必须有 id")
+	if def.map_source == null:
+		report.error("map_source", "章节必须有地图来源（随机生成或载入预设）")
+		return
+	var src := def.map_source
+	match src.mode:
+		MapSource.Mode.PRESET:
+			if src.preset_path == "" or not FileAccess.file_exists(src.preset_path):
+				report.error("map_source.preset_path", "找不到预设地图 '%s'" % src.preset_path)
+		_:
+			if not MapGeneratorRegistry.has(src.generator_id):
+				report.error("map_source.generator_id", "没有登记过的生成器 '%s'（已登记：%s）"
+					% [src.generator_id, ", ".join(MapGeneratorRegistry.ids())])
+			elif src.generator_config == null:
+				report.error("map_source.generator_config", "随机生成得有一份生成器配置")
+			else:
+				# 造一个生成器看它认不认这份配置 —— 装错类的配置到开局才炸，那时离文件已经很远了
+				var gen := MapGeneratorRegistry.create(src.generator_id)
+				var probe := gen.default_config() if gen != null else null
+				if probe != null and ContentSchema.class_name_of(probe) != ContentSchema.class_name_of(src.generator_config):
+					report.error("map_source.generator_config", "生成器 '%s' 要的是 %s，给的是 %s"
+						% [src.generator_id, ContentSchema.class_name_of(probe),
+							ContentSchema.class_name_of(src.generator_config)])
+
+
 ## 比引擎严格（10.3）：引擎能接受的半成品，这里一律拒绝。
 static func _validate_item(def: ItemDef, report: ImportReport) -> void:
 	if def.id == &"":
@@ -178,9 +215,13 @@ static func _coerce(
 			return StringName(str(value))
 		TYPE_VECTOR2I:
 			return _to_vec2i(value, path, report)
+		TYPE_VECTOR2:
+			return _to_vec2(value, path, report)
 		TYPE_DICTIONARY:
 			if value is Dictionary:
-				return (value as Dictionary).duplicate()
+				# JSON 没有整数：{"shop": [0, 1]} 读回来是 [0.0, 1.0]。还原成整数，
+				# 不然导出再导入的文本就变了（约定见 MapGraph.normalize）
+				return MapGraph.normalize((value as Dictionary).duplicate(true))
 			report.error(path, "应为对象")
 		TYPE_ARRAY:
 			return _coerce_array(current as Array, value, path, ctx, report)
@@ -194,6 +235,13 @@ static func _coerce(
 static func _to_vec2i(value: Variant, path: String, report: ImportReport) -> Variant:
 	if value is Array and (value as Array).size() == 2:
 		return Vector2i(int(value[0]), int(value[1]))
+	report.error(path, "应为 [x, y]")
+	return null
+
+
+static func _to_vec2(value: Variant, path: String, report: ImportReport) -> Variant:
+	if value is Array and (value as Array).size() == 2:
+		return Vector2(float(value[0]), float(value[1]))
 	report.error(path, "应为 [x, y]")
 	return null
 
@@ -220,6 +268,8 @@ static func _coerce_array(
 				item = str(raw)
 			TYPE_VECTOR2I:
 				item = _to_vec2i(raw, at, report)
+			TYPE_VECTOR2:
+				item = _to_vec2(raw, at, report)
 			TYPE_INT:
 				item = int(raw)
 			TYPE_FLOAT:
@@ -265,10 +315,22 @@ static func _make_object(
 		inst = _from_registry(class_id, data, path, report)
 	else:
 		var script := ContentSchema.script_of(class_id)
+		# 字段声明成引擎基类（`generator_config: Resource`）时，JSON 里的 type 说造哪个脚本类。
+		# 只认 class_name 过的类，而且造出来得真是那个基类的东西
+		if script == null and data.has("type"):
+			var wanted := StringName(str(data["type"]))
+			script = ContentSchema.script_of(wanted)
+			if script == null:
+				report.error(path, "认不得的 type '%s'" % wanted)
+				return null
 		if script == null:
 			report.error(path, "认不得的类型 %s" % class_id)
 			return null
 		inst = script.new()
+		if data.has("type") and String(class_id) != "" and not ContentSchema.instance_is(inst, class_id) \
+				and not ClassDB.is_parent_class(inst.get_class(), String(class_id)):
+			report.error(path, "'%s' 不是 %s" % [data["type"], class_id])
+			return null
 
 	if inst == null:
 		return null

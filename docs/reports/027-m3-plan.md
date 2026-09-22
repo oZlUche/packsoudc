@@ -197,7 +197,9 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
 `distance_map` 这一步就实现，但**只允许只读查询**（HUD 的「距最近撤离点 N 步」、
 生成期校验）。加一条测试断言 `MapNavigator` 不提供任何多步移动入口。
 
-### M3-5 章节定义走内容管线
+### M3-5 章节定义走内容管线 ✅
+
+> 已完成，见[报告 043](043-chapter-pipeline.md)。管线为此补了 `Vector2`、字典整数归一、按 `type` 造引擎基类字段三样通用能力。
 
 `ChapterDef` + `RingMapConfig`（含 `RingSpec[]` 与 `DangerZoneSpec[]`）的作者数据。
 

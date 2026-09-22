@@ -26,6 +26,10 @@ static func export_set(def: ItemSetDef) -> Dictionary:
 	return _dump(def)
 
 
+static func export_chapter(def: ChapterDef) -> Dictionary:
+	return _dump(def)
+
+
 ## 带 type 的导出，用于抽象基类的子对象
 static func _dump(obj: Object, with_type: bool = false) -> Dictionary:
 	var out := {}
@@ -71,8 +75,12 @@ static func _encode(owner: Object, prop: Dictionary, value: Variant) -> Variant:
 			return String(value)
 		TYPE_VECTOR2I:
 			return [(value as Vector2i).x, (value as Vector2i).y]
+		TYPE_VECTOR2:
+			return _vec2(value)
 		TYPE_DICTIONARY:
-			return (value as Dictionary).duplicate()
+			# 字典里整数值的浮点写成整数（1.0 → 1），和导入器读回来的一样 ——
+			# JSON 没有整数，不这么写「导出→导入→再导出」的文本就变了
+			return MapGraph.normalize((value as Dictionary).duplicate(true))
 		TYPE_ARRAY:
 			return _encode_array(value as Array)
 		TYPE_OBJECT:
@@ -92,9 +100,17 @@ static func _encode_array(arr: Array) -> Array:
 				out.append(String(item))
 			TYPE_VECTOR2I:
 				out.append([(item as Vector2i).x, (item as Vector2i).y])
+			TYPE_VECTOR2:
+				out.append(_vec2(item))
 			_:
 				out.append(item)
 	return out
+
+
+## Vector2 是单精度：1.2 存进去是 1.2000000476837，原样写出去 JSON 读回来的 double 就不等于它了。
+## 按六位小数写 —— 作者写的本来就是六位以内的数
+static func _vec2(v: Vector2) -> Array:
+	return [snappedf(v.x, 0.000001), snappedf(v.y, 0.000001)]
 
 
 static func _encode_object(declared: StringName, obj: Object) -> Variant:
@@ -110,7 +126,12 @@ static func _encode_object(declared: StringName, obj: Object) -> Variant:
 		for line in (obj as ItemShape).to_bits().split("\n"):
 			rows.append(String(line))
 		return rows
-	return _dump(obj, ContentSchema.ABSTRACT_ROOTS.has(declared))
+	# 带 type 的两种情况：声明的是抽象基类（按注册表名）；声明的是引擎基类如 Resource
+	# 或子类装进了父类字段（按 class_name）—— 不写的话导入器不知道该造哪个类
+	var with_type := ContentSchema.ABSTRACT_ROOTS.has(declared) \
+		or ContentSchema.script_of(declared) == null \
+		or ContentSchema.class_name_of(obj) != declared
+	return _dump(obj, with_type)
 
 
 ## 实例 → 注册表里的类型名。
@@ -126,8 +147,8 @@ static func _registry_name_of(obj: Object) -> StringName:
 			var script := load(path) as GDScript
 			if script != null and script.get_global_name() == wanted:
 				return type_name
-	push_warning("ContentExporter: %s 没有在 EffectRegistry 里登记，导出的 type 会是空的" % wanted)
-	return &""
+	# 不在效果注册表里的，就用它的 class_name —— 导入器按全局类表造得出来
+	return wanted
 
 
 #region 文件
