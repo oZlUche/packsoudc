@@ -137,7 +137,7 @@ func demo_fill() -> void:
 			setup.call("toggle_warehouse", (flow.meta.warehouse.items()[0] as ItemInstance).uid)
 		return
 	flow.new_run()
-	var next_type: StringName = &"search" if want == "search" else &"battle"
+	var next_type: StringName = &"search" if want in ["search", "event"] else &"battle"
 	var found := {}
 	for seed in range(1, 60):
 		var state := RunState.start(flow.chapters[0], seed, flow.items, flow.enemies, flow.sets)
