@@ -2587,21 +2587,38 @@ class_name EconomyRules extends Resource
 
 ## 7. M5 · 运行状态与存档
 
+M4 结束时地图、旅程、体力、钱、节点事件各自都能跑，只差一个装它们的壳。`RunState`（`core/run/run_state.gd`）就是那个壳，
+**纯 `RefCounted`，不是 autoload**（1 节：核心逻辑层没有全局状态）；M6 的 `GameDirector` 持有它、给界面看。
+
 ```gdscript
-# autoload/run_state.gd
+class_name RunState extends RefCounted
+const SAVE_VERSION := 1
+enum Phase { PICK_SPAWN, ON_MAP, DEFEATED, EXTRACTED }
+signal phase_changed(phase, reason)
+signal loot_pending(container)         # 尸体容器 / 搜索收获等着拾取
+
 var run_seed: int
-var rng: RunRNG                  # 分流随机源
 var chapter: ChapterDef
-var map: MapGraph
-var current_node_id: int
-var action_clock: ActionClock    # 行动计数（run 级）
-var erosion: ErosionField        # 侵蚀状态，低难度下 schedule.enabled = false
-var vitality: Vitality           # 体力（7.1）：战斗失败扣它，归零才战败
-var board: GridInventory         # 作战棋盘，requires_bag = true，只有这里的物品参战
-var storage: GridInventory       # 暂存区，requires_bag = false，保留但不参战
-var gold: Wallet                 # 货币（6.6）：打赢进账，商店、刷新、付费撤离点花它
-var meta_stash: GridInventory    # 跨 run 持久仓库
+var rng: RunRNG                  # 分流随机源（1.4），run 级的随机走它；节点内容按各自的 content_seed
+var map: MapGraph                # 节点内容（敌人、搜索进度、货架进度、付费撤离点）都在图里
+var travel: MapTravel            # 人在哪、走过哪、行动计数
+var vitality: Vitality           # 体力（7.1）
+var wallet: Wallet               # 货币（6.6）
+var board: GridInventory         # 作战棋盘，requires_bag = true，只有包里的东西参战
+var storage: ItemStash           # 暂存区：一个列表，保留但不参战（3.4）
+var events: NodeEvents           # 踩到点发生什么（6.5）
+var tracker: SetTracker          # 套装激活（9 节），绑在棋盘上
+var pending_loot: GridInventory  # 等着拾取的容器；take_loot / take_all_loot / discard_loot
+# erosion: ErosionField          # 第 7 阶段
+# meta_stash                     # 跨 run 的东西不在一局里（15 节）
 ```
+
+**开局**（`RunState.start(chapter, seed, items, enemies, sets, kit)`）：生成地图 → 放敌人 → 标付费撤离点 → 造棋盘
+（包放棋盘，其余先进包、放不下进暂存区）→ 把节点事件接到旅程上。`pick_spawn` 进 `ON_MAP`，`step_to` 先关掉开着的
+店 / 搜索再走（随时可以离开），`try_extract` 在撤离点上付费撤离进 `EXTRACTED`，`defeated` 进 `DEFEATED`。
+
+**接线**：打赢的尸体容器、搜到的收获落到 `pending_loot`（还没处理又来一份就并进去，一件不丢）；买到的、事件给的直接进暂存区；
+`equip` / `unequip` 在暂存区与棋盘之间搬。玩家的战斗单位在开战那一刻从棋盘编译（`compile_player`，套装效果从 tracker 取）。
 
 ### 7.1 体力与战败
 
@@ -2678,10 +2695,15 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 
 `type_risk`（5.4）就是按这张表定的：一步的风险分 = 输的概率 × 扣的体力。
 
-存档 = `RunState.to_dict()` → JSON 写入 `user://`。
-所有逻辑类实现 `to_dict()` / `static from_dict()`。因为逻辑层不继承 `Node`，这件事会非常顺畅。
+### 7.2 存档
 
-**存档从第一天就必须写版本号**（`{"version": 1, ...}`），后续加字段才有迁移余地。
+存档 = `RunState.to_dict()` → JSON 写入 `user://`（`RunSave`）。所有逻辑类实现 `to_dict()` / `static from_dict()`，
+因为逻辑层不继承 `Node`，这件事非常顺畅：地图（含每个点的内容与用没用过）、旅程、体力、钱、棋盘、暂存区、随机流的序号、
+累计搜索次数、待拾取的容器、阶段。**内容库不进存档**，只写 id（章节、道具、敌人），读档时由调用方给；
+开着的店 / 搜索会话不存 —— 存档那一刻视为离开了那个点，货架与搜索进度本来就在图里。
+
+**存档从第一天就写版本号**（`{"version": 1, ...}`），读到不认识的版本不猜、返回 null，后续加字段才有迁移余地。
+读档之后接着走，和没存过的那份走同样的路结果一样（测试守着这条；新建道具的 uid 从存档里最大的接着编，那不算状态）。
 
 ---
 
@@ -3238,6 +3260,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.49 | 2026-09-23 | **M5 运行状态与存档**（报告 051）。7 节重写：`RunState`（纯 RefCounted 的壳：开局生成 → 放敌人 → 付费撤离点 → 棋盘与暂存区 → 节点事件接线；`pick_spawn` / `step_to` / `try_extract`；战利品进 `pending_loot`、买的与事件给的进暂存区、`equip` / `unequip`；玩家开战时从棋盘编译）、`RunRNG`（1.4 的分流随机源，序号跟着存档）、`RunSave`（带版本号的 JSON，内容库不进存档，开着的会话视为离开）。地图沙盒改成 `RunState` 的一层皮：存档 / 读档 / 撤离三个按钮，拾取自动进暂存区 |
 | v1.48 | 2026-09-23 | **探索度**（报告 050）。作者要求随机点与搜索点造出来的敌人跟当前位置、总步数、搜索次数挂钩：`StrengthRule` 加探索度一组（步数每 N 步、累计搜索每 N 次各加一档、各有上限），`NodeEvents.exploration()` 只在踩上去才造敌人时传入；生成时放好的敌人不变（看到的就是打到的） |
 | v1.47 | 2026-09-23 | **M4-5 经济**（报告 048）。新增 6.6：`EconomyRules`（打赢 = (基础 + 每档) × 深度 × 难度；商店格数、稀有度权重随深度上偏、价 = 价值 × 倍数、刷新费越刷越贵；付费撤离点几个、收多少 —— 50 占位）；`Wallet`（不知道任何数值，不够一分不动）；`ShopSession`（货架由节点种子 + 刷新次数定，存档只记刷新与卖掉的格子）；`PaidExtracts.mark`（生成之后标最深的撤离点，费用跟着图存）；`NodeEvents` 加 `rewarded` / `shop_opened(session)` / `shop_closed` / `extract_reached(node, fee)` / `pay_extract_fee`。沙盒：货币进 HUD、商店按钮、付费撤离点提示、预览里「打赢 +x 币」 |
 | v1.46 | 2026-09-22 | **M4-3 随机点与搜索点、M4-4 节点事件接线**（报告 047）。6.2 重写 + 新增 6.5：`NodeRules`（随机点权重只认 A/S/R/V/Q、搜索规则、`loss_cost`、`rest_restore`、事件结果权重、战斗时限；章节按 id 引用）、`SearchRules`（次数、非递减的遭遇曲线、件数、稀有度权重随深度与危险上偏）、`SearchSession`（搜几次玩家定，遭遇即止，进度记进内容，遭遇的敌人到那一刻才造）、`NodeEvents`（`on_node_event` 的接收方：打一场、掉落、扣体力、core 输了直接战败、休息、事件、商店 / 撤离信号；随机数从节点种子按用途派生）、`LootPacker`（尸体容器与收获共用）、`EnemyPlacer.place_one`。沙盒接上事件与搜索按钮 |

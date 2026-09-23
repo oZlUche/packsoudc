@@ -1,30 +1,26 @@
-## 地图沙盒：从一章开局，挑出生点，一步一步走（架构文档 5.6 / 5.9，M3-6）。
+## 地图沙盒：从一章开一局，挑出生点，一步一步走（架构文档 5.6 / 5.9 / 7 节，M3-6 → M5）。
 ##
-## 演示的就是这一章的骨架：生成 → 显示 → **挑一个出生点**（每条路线的风格、尽头、风险与收益都亮着，
-## 悬停哪个出生点哪条路线加粗）→ 点相邻的点走一步 → 行动点读数变 → 用过的点变灰但仍可走 → 换种子重来。
+## 演示的就是这一局的骨架：生成 → 显示 → **挑一个出生点**（每条路线的风格、尽头、风险与收益都亮着，
+## 悬停哪个出生点哪条路线加粗）→ 点相邻的点走一步 → 打、掉、搜、买、休息 → 存档 / 读档 → 撤离或战败 → 换种子重来。
 ##
-## 它只接线：地图来自 [ChapterDef] 的 [MapSource]，敌人来自这一章的 [EnemyPool]（[EnemyPlacer] 在生成之后
-## 放进节点，5.10：地图一生成敌人就定了），走路是 [MapTravel]，画是 [MapView]。
-## 悬停任何战斗点，底下一行是那个敌人的预览 —— 和真打时同一个编译器算出来的数（[EnemyKit]）。
-## 所有动作都是公开方法（[method pick_spawn]、[method step]），鼠标只是调它们；测试直接调。
+## M5 之后它只是 [RunState] 的一层皮：一局的全部状态（地图、旅程、体力、钱、棋盘、暂存区、节点事件）都在那里，
+## 这里只把结果写进日志、开关搜索 / 商店面板、画图。悬停任何战斗点，底下一行是那个敌人的预览（[EnemyKit]）。
+## 所有动作都是公开方法（[method pick_spawn]、[method step]、[method save_run]……），鼠标只是调它们；测试直接调。
 extends Control
 
 const CHAPTER := "res://data/chapters/chapter_01.tres"
 const SIDE_WIDTH := 320
+## 沙盒的开局装备：两个包、两把枪、护甲、医疗包。「选初始背包」的界面是 M6 的事
+const KIT: Array[StringName] = [&"bag_leather", &"bag_leather", &"rifle", &"pistol", &"armor", &"medkit"]
+const SAVE_PATH := "user://sandbox_run.json"
 
 var _font: Font
 var _chapter: ChapterDef = null
-var _graph: MapGraph = null
-var _travel: MapTravel = null
-var _seed: int = 1
 var _items: ItemDatabase = null
 var _enemies: EnemyDatabase = null
-var _pool: EnemyPool = null
-var _drop_rule: DropRule = null
-var _node_rules: NodeRules = null
-var _economy: EconomyRules = null
-var _wallet: Wallet = null
-var _events: NodeEvents = null
+var _sets: SetDatabase = null
+var _run: RunState = null
+var _seed: int = 1
 var _view: MapView
 var _shop_box: HBoxContainer
 var _search_box: HBoxContainer
@@ -50,77 +46,56 @@ func _ready() -> void:
 	_items.load_dir()
 	_enemies = EnemyDatabase.new()
 	_enemies.load_all()
-	_pool = _enemies.pool(_chapter.enemy_pool)
-	if _chapter.drop_rule != &"":
-		_drop_rule = load(ContentPaths.asset_file("drop_rules", String(_chapter.drop_rule))) as DropRule
-	if _chapter.node_rules != &"":
-		_node_rules = load(ContentPaths.asset_file("node_rules", String(_chapter.node_rules))) as NodeRules
-	if _chapter.economy_rules != &"":
-		_economy = load(ContentPaths.asset_file("economy_rules", String(_chapter.economy_rules))) as EconomyRules
+	_sets = SetDatabase.new()
+	_sets.load_dir()
 	regenerate(_seed)
 
 
 #region 公开动作
+func run() -> RunState:
+	return _run
+
+
 func graph() -> MapGraph:
-	return _graph
+	return _run.map if _run != null else null
 
 
+## 开局之后才有旅程；挑出生点阶段返回 null
 func travel() -> MapTravel:
-	return _travel
+	return _run.travel if _run != null and _run.phase != RunState.Phase.PICK_SPAWN else null
 
 
-## 按对局种子从这一章拿一张图，回到「挑出生点」。
+func events() -> NodeEvents:
+	return _run.events if _run != null else null
+
+
+## 按对局种子从这一章开一局，回到「挑出生点」。
 func regenerate(seed: int) -> bool:
 	_seed = seed
-	_travel = null
-	_graph = _chapter.map_source.resolve(seed) if _chapter != null else null
-	_view.graph = _graph
-	_view.current_id = -1
-	_view.reachable = {}
-	_view.bold_route = -1
-	if _graph == null:
+	var state := RunState.start(_chapter, seed, _items, _enemies, _sets, KIT) if _chapter != null else null
+	if state == null:
+		_run = null
+		_view.graph = null
 		_say("这一章生成不出图：%s" % (_chapter.map_source.last_error if _chapter != null else ""))
 		return false
-	var placed := _place_enemies()
-	var paid := PaidExtracts.mark(_graph, _economy)
-	_say("种子 %d：%d 个点，%d 个敌人%s。挑一个出生点（绿圈的「生」）开始" % [seed, _graph.node_count(), placed,
-		"，付费撤离点 %s（%d 币）" % [str(paid), _economy.extract_fee] if not paid.is_empty() else ""])
-	_rebuild_routes()
-	_refresh_hud()
+	state.player_baseline = CombatantBaseline.with_hp(60.0)
+	_adopt(state)
+	var enemies_placed := 0
+	var paid: Array[int] = []
+	for id in state.map.node_ids():
+		if EnemyKit.has_enemy(state.map.get_node(id).content):
+			enemies_placed += 1
+		if PaidExtracts.fee_of(state.map.get_node(id)) > 0:
+			paid.append(id)
+	_say("种子 %d：%d 个点，%d 个敌人%s。挑一个出生点（绿圈的「生」）开始" % [seed, state.map.node_count(), enemies_placed,
+		"，付费撤离点 %s（%d 币）" % [str(paid), state.economy.extract_fee] if not paid.is_empty() else ""])
 	return true
-
-
-## 敌人在生成之后、开局之前放好（5.10）。这一章没有敌人池就什么都不放
-func _place_enemies() -> int:
-	if _pool == null or _items == null or _enemies == null:
-		return 0
-	var done := EnemyPlacer.fill(_graph, _pool, _enemies, _items, _chapter.difficulty, _scale_id())
-	if not (done["skipped"] as Array).is_empty():
-		_note("有 %d 个战斗点没挑到敌人：%s" % [(done["skipped"] as Array).size(), str(done["skipped"])])
-	if int(done["dropped"]) > 0:
-		_note("有 %d 件道具放不进棋盘，跳过了 —— 档位表的棋盘该再大点" % int(done["dropped"]))
-	return int(done["placed"])
-
-
-## 这一章的规模 id（有规模模板的生成器才有）。敌人池按它加档
-func _scale_id() -> StringName:
-	var cfg: Resource = _chapter.map_source.generator_config if _chapter != null and _chapter.map_source != null else null
-	if cfg == null or not cfg.has_method("scale"):
-		return &""
-	var p = cfg.call("scale")
-	return p.id if p != null else &""
 
 
 ## 站到某个出生点上开局。返回 false = 那不是出生点。
 func pick_spawn(id: int) -> bool:
-	if _graph == null or not _graph.entry_ids.has(id) or _travel != null:
+	if _run == null or not _run.pick_spawn(id):
 		return false
-	_travel = MapTravel.new(_graph, ActionClock.new())
-	_travel.vitality = Vitality.new()
-	_travel.moved.connect(_on_moved)
-	_travel.refused.connect(func(_i: MoveIntent, why: String): _say("走不了：" + why))
-	_wire_events()
-	_travel.start_at(id)
 	_view.current_id = id
 	_view.bold_route = _route_index_of_entry(id)
 	_after_move()
@@ -131,81 +106,106 @@ func pick_spawn(id: int) -> bool:
 
 ## 走到相邻的点。
 func step(to_id: int) -> bool:
-	if _travel == null:
-		return false
-	return _travel.step_to(to_id)
+	return _run != null and _run.step_to(to_id)
 
 
 func clock_total() -> int:
-	return _travel.clock.total if _travel != null else 0
+	return _run.travel.clock.total if travel() != null else 0
 
 
-func events() -> NodeEvents:
-	return _events
+## 存这一局。开着的店 / 搜索视为离开
+func save_run() -> bool:
+	if _run == null:
+		return false
+	var err := RunSave.write(_run, SAVE_PATH)
+	_note("　存档：%s" % ("写到 %s" % SAVE_PATH if err == OK else "失败 %d" % err))
+	return err == OK
+
+
+## 读回上次存的那一局
+func load_run() -> bool:
+	var state := RunSave.read(_items, _enemies, _sets, SAVE_PATH)
+	if state == null:
+		_note("　读档：没有存档，或存档读不了")
+		return false
+	state.player_baseline = CombatantBaseline.with_hp(60.0)
+	_seed = state.run_seed
+	_adopt(state)
+	if state.phase != RunState.Phase.PICK_SPAWN:
+		_view.current_id = state.travel.current_id
+		_view.bold_route = -1
+		_after_move()
+	_say("读档：种子 %d，行动点 %d，%s" % [state.run_seed, state.travel.clock.total,
+		"挑出生点" if state.phase == RunState.Phase.PICK_SPAWN else ("在点 %d 上" % state.travel.current_id)])
+	return true
+
+
+## 在撤离点上撤离（付费的先付钱）
+func extract() -> bool:
+	if _run == null:
+		return false
+	var node := _run.current_node()
+	if not _run.try_extract():
+		_say("撤不了：不在撤离点上，或付不起（%d 币）" % (_run.events.extract_fee(node) if node != null else 0))
+		return false
+	_say("撤离成功：行动点 %d，暂存区 %d 件，剩 %d 币。换个种子再来" % [_run.travel.clock.total, _run.storage.item_count(), _run.wallet.balance])
+	_refresh_hud()
+	return true
 #endregion
 
 
-#region 节点事件（M4-4）
-## 节点事件接在这一局的旅程上：踩到点发生什么全是 NodeEvents 的事，这里只把结果写进日志、开关搜索面板
-func _wire_events() -> void:
-	_events = null
-	if _node_rules == null:
-		_note("这一章没有节点规则：踩到点只标用过")
-		return
-	_events = NodeEvents.new(_graph)
-	_events.vitality = _travel.vitality
-	_events.rules = _node_rules
-	_events.pool = _pool
-	_events.enemies = _enemies
-	_events.items = _items
-	_events.drop_rule = _drop_rule
-	_wallet = Wallet.new(_economy.starting_balance if _economy != null else 0)
-	_wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh_hud())
-	_events.wallet = _wallet
-	_events.economy = _economy
-	_events.rewarded.connect(func(_n: MapNode, amount: int): _note("　进账 %d 币" % amount))
-	_events.shop_opened.connect(_on_shop_opened)
-	_events.shop_closed.connect(func(_n: MapNode): _shop_box.visible = false)
-	_events.difficulty = _chapter.difficulty
-	_events.scale_id = _scale_id()
-	_events.player_spec = _player_spec
-	_events.revealed.connect(func(n: MapNode, type: StringName):
+#region 接线：RunState 与 NodeEvents 的信号写进日志、开关面板
+func _adopt(state: RunState) -> void:
+	_run = state
+	_view.graph = state.map
+	_view.current_id = -1
+	_view.reachable = {}
+	_view.bold_route = -1
+	_search_box.visible = false
+	_shop_box.visible = false
+	state.travel.moved.connect(_on_moved)
+	state.travel.refused.connect(func(_i: MoveIntent, why: String): _say("走不了：" + why))
+	state.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh_hud())
+	state.loot_pending.connect(_on_loot_pending)
+	state.phase_changed.connect(func(phase: int, why: StringName):
+		if phase == RunState.Phase.DEFEATED:
+			_say("战败：%s。换个种子重来" % why)
+		_refresh_hud())
+	var ev := state.events
+	ev.rewarded.connect(func(_n: MapNode, amount: int): _note("　进账 %d 币" % amount))
+	ev.shop_opened.connect(_on_shop_opened)
+	ev.shop_closed.connect(func(_n: MapNode): _shop_box.visible = false)
+	ev.revealed.connect(func(n: MapNode, type: StringName):
 		_note("　点 %d 是个「?」：原来是 %s" % [n.id, MapNodeStyle.of(type)["label"]]))
-	_events.battle_finished.connect(_on_battle)
-	_events.loot_ready.connect(_on_loot)
-	_events.search_opened.connect(_on_search_opened)
-	_events.search_closed.connect(_on_search_closed)
-	_events.rested.connect(func(n: MapNode, got: int): _note("　休息：体力 +%d" % got))
-	_events.event_resolved.connect(func(_n: MapNode, outcome: StringName, detail: Dictionary):
+	ev.battle_finished.connect(_on_battle)
+	ev.search_opened.connect(_on_search_opened)
+	ev.search_closed.connect(func(_n: MapNode, _haul: GridInventory, why: StringName):
+		_search_box.visible = false
+		_note("　搜索结束（%s）" % why))
+	ev.rested.connect(func(_n: MapNode, got: int): _note("　休息：体力 +%d" % got))
+	ev.event_resolved.connect(func(_n: MapNode, outcome: StringName, detail: Dictionary):
 		_note("　事件：%s %s" % [outcome, str(detail) if not detail.is_empty() else ""]))
-	_events.extract_reached.connect(func(_n: MapNode, fee: int):
-		_note("　到了撤离点%s：撤离动作是 M6 的事" % ("（付费：%d 币，%s）" % [fee, "付得起" if _wallet.can_afford(fee) else "钱不够"] if fee > 0 else "")))
-	_events.defeated.connect(func(why: StringName): _say("战败：%s。换个种子重来" % why))
-	_events.bind(_travel)
-
-
-## 沙盒里的玩家：一块固定的棋盘（手枪、步枪、护甲、医疗包），血比默认厚一点。真正的玩家棋盘是 M5 的事
-func _player_spec() -> CombatantSpec:
-	var board := GridInventory.new(Vector2i(6, 4), 0, false)
-	for id in [&"rifle", &"pistol", &"armor", &"medkit"]:
-		var d := _items.get_def(id) if _items != null else null
-		if d != null:
-			board.try_add(ItemInstance.create(d, 0), true)
-	return BattleCompiler.compile(board, CombatantBaseline.with_hp(60.0))
+	ev.extract_reached.connect(func(_n: MapNode, fee: int):
+		_note("　到了撤离点%s：按「撤离」结束这一局" % ("（付费：%d 币，%s）" % [fee, "付得起" if state.wallet.can_afford(fee) else "钱不够"] if fee > 0 else "")))
+	_rebuild_routes()
+	_refresh_hud()
 
 
 func _on_battle(n: MapNode, result: BattleResult, won: bool) -> void:
 	var who := enemy_preview(n.id).get_slice("　", 0)
 	_note("　打 %s：%s，%.1f 秒%s" % [who if who != "" else "敌人", "赢了" if won else ("平局，按输算" if result.is_draw() else "输了"),
-		result.duration_sec(), "" if won else "，体力 %d/%d" % [_travel.vitality.current, _travel.vitality.maximum]])
+		result.duration_sec(), "" if won else "，体力 %d/%d" % [_run.vitality.current, _run.vitality.maximum]])
 	_refresh_hud()
 
 
-func _on_loot(_n: MapNode, corpse: GridInventory) -> void:
+## 沙盒没有拾取界面：有东西就全拿进暂存区（真正的搜刮界面是 M6 的事）
+func _on_loot_pending(box: GridInventory) -> void:
 	var names: Array[String] = []
-	for inst in corpse.items():
+	for inst in box.items():
 		names.append((inst as ItemInstance).def.display_name)
-	_note("　掉落 %d 件：%s" % [names.size(), "、".join(names) if not names.is_empty() else "什么都没有"])
+	var n := _run.take_all_loot()
+	_note("　拾取 %d 件进暂存区：%s（暂存区共 %d 件）" % [n, "、".join(names), _run.storage.item_count()])
+	_refresh_hud()
 
 
 func _on_search_opened(n: MapNode, session: SearchSession) -> void:
@@ -220,19 +220,13 @@ func _on_search_opened(n: MapNode, session: SearchSession) -> void:
 	_note("　搜索点 %d：搜几次你定，每搜一次更险" % n.id)
 
 
-func _on_search_closed(_n: MapNode, haul: GridInventory, why: StringName) -> void:
-	_search_box.visible = false
-	_note("　搜索结束（%s），收获 %d 件在容器里" % [why, haul.item_count()])
-	_refresh_hud()
-
-
-## 商店：货架上每格一个按钮（名字 + 价），刷新一个按钮，离开一个按钮。买到的东西没处放（玩家棋盘是 M5 的事），只记日志
+## 商店：货架上每格一个按钮（名字 + 价），刷新一个按钮，离开一个按钮。买到的进暂存区（RunState 接的）
 func _on_shop_opened(n: MapNode, session: ShopSession) -> void:
 	if session == null:
 		_note("　商店 %d：这一章没有经济规则，店是空的" % n.id)
 		return
 	_note("　商店 %d：%d 件在架上，刷新 %d 币" % [n.id, session.available().size(), session.refresh_cost()])
-	session.bought.connect(func(def: ItemDef, price: int): _note("　买了 %s，花 %d 币" % [def.display_name, price]))
+	session.bought.connect(func(def: ItemDef, price: int): _note("　买了 %s，花 %d 币，进暂存区" % [def.display_name, price]))
 	session.stock_changed.connect(func(): _rebuild_shop(session))
 	_rebuild_shop(session)
 	_shop_box.visible = true
@@ -266,67 +260,60 @@ func _refresh_search_label(session: SearchSession) -> void:
 
 
 func _on_search_pressed() -> void:
-	if _events != null and _events.current_search != null:
-		_events.current_search.search()
+	if events() != null and events().current_search != null:
+		events().current_search.search()
 
 
 func _on_leave_pressed() -> void:
-	if _events != null and _events.current_search != null:
-		_events.current_search.leave()
-#endregion
+	if events() != null and events().current_search != null:
+		events().current_search.leave()
 
 
-#region 接线
 func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
 	_view.current_id = intent.to_id
 	_after_move()
-	var n := _graph.get_node(intent.to_id)
+	var n := _run.map.get_node(intent.to_id)
 	var what: String = MapNodeStyle.of(n.type)["label"]
 	if first_visit:
-		_note("→ %d %s（花 %d 点）%s" % [intent.to_id, what, intent.action_cost,
-			"　到了撤离点：撤离动作是 M6 的事" if n.type == &"extract" else ""])
+		_note("→ %d %s（花 %d 点）" % [intent.to_id, what, intent.action_cost])
 	else:
 		_note("→ %d %s，穿行（花 %d 点，这里用过了）" % [intent.to_id, what, intent.action_cost])
 
 
 func _after_move() -> void:
 	var reach := {}
-	for id in _travel.available_moves():
-		reach[id] = true
+	if travel() != null:
+		for id in _run.travel.available_moves():
+			reach[id] = true
 	_view.reachable = reach
 	_view.refresh()
 	_refresh_hud()
 
 
 func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
-	if button != MOUSE_BUTTON_LEFT:
+	if button != MOUSE_BUTTON_LEFT or _run == null:
 		return
-	if _travel == null:
+	if _run.phase == RunState.Phase.PICK_SPAWN:
 		if not pick_spawn(id):
 			_say("先挑一个出生点（绿圈的「生」）")
 	else:
-		# 搜着搜着走了：先离开搜索点（随时可以离开）
-		if _events != null and _events.current_search != null:
-			_events.current_search.leave()
-		if _events != null and _events.current_shop != null:
-			_events.current_shop.leave()
 		step(id)
 
 
 ## 单步预览：悬停相邻的点，说这一步花几点、去的是什么。挑出生点阶段悬停出生点加粗它那条路线。
 func _on_node_hovered(id: int) -> void:
-	if _graph == null:
+	if _run == null:
 		return
 	_enemy_line.text = enemy_preview(id)
-	if _travel == null:
+	if travel() == null:
 		_view.bold_route = _route_index_of_entry(id) if id >= 0 else -1
 		_preview.text = ""
 		return
 	if id < 0 or not _view.reachable.has(id):
 		_preview.text = ""
 		return
-	var intent := MapNavigator.resolve_step(_graph, _travel.current_id, id)
-	var n := _graph.get_node(id)
+	var intent := MapNavigator.resolve_step(_run.map, _run.travel.current_id, id)
+	var n := _run.map.get_node(id)
 	if intent == null:
 		_preview.text = ""
 		return
@@ -337,56 +324,63 @@ func _on_node_hovered(id: int) -> void:
 
 ## 这个点里的敌人一行摘要；没有敌人就是空串。全图可见（5.10）—— 看不看得见的接缝在这一处
 func enemy_preview(id: int) -> String:
-	if _graph == null or id < 0 or not _graph.has_node(id):
+	if _run == null or id < 0 or not _run.map.has_node(id):
 		return ""
-	var content := _graph.get_node(id).content
+	var content := _run.map.get_node(id).content
 	if not EnemyKit.has_enemy(content):
 		return ""
-	var line := EnemyKit.summary(content, _enemies, _pool, _items)
-	if _drop_rule != null:
+	var line := EnemyKit.summary(content, _enemies, _run.pool, _items)
+	if _run.drop_rule != null:
 		# 幸运 0、没有 buff：沙盒里就是这一章难度下的裸期望。局外 / 地图 buff 是占位来源，接上了自然算进去
 		var ctx := LootContext.new()
 		ctx.difficulty = _chapter.difficulty
 		ctx.add_source(MetaDropBonus.new())
 		ctx.add_source(MapDropBonus.new())
 		line += "　预计掉 %.1f 件，珍宝 %.0f%%" % [
-			DropResolver.expected_count(content, _drop_rule, ctx, _items),
-			DropResolver.treasure_chance(_drop_rule, ctx) * 100.0]
-	if _economy != null:
-		var depth: float = EnemyPlacer.depths_of(_graph).get(id, 0.0)
-		line += "　打赢 +%d 币" % _economy.battle_reward(int(content.get("strength", 0)), depth, _chapter.difficulty)
+			DropResolver.expected_count(content, _run.drop_rule, ctx, _items),
+			DropResolver.treasure_chance(_run.drop_rule, ctx) * 100.0]
+	if _run.economy != null:
+		var depth: float = EnemyPlacer.depths_of(_run.map).get(id, 0.0)
+		line += "　打赢 +%d 币" % _run.economy.battle_reward(int(content.get("strength", 0)), depth, _chapter.difficulty)
 	return line
 
 
 func _refresh_hud() -> void:
-	if _graph == null:
+	if _run == null:
 		_hud.text = ""
 		return
-	if _travel == null:
-		_hud.text = "行动点 —　　挑出生点"
+	if travel() == null:
+		_hud.text = "行动点 —　　挑出生点　　暂存区 %d 件" % _run.storage.item_count()
 		return
-	var extract := MapNavigator.nearest_of_type(_graph, _travel.current_id, &"extract")
-	var rest := MapNavigator.nearest_of_type(_graph, _travel.current_id, &"rest")
-	var core := MapNavigator.nearest_of_type(_graph, _travel.current_id, &"core")
-	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d" % [
-		_travel.clock.total,
-		str(extract["steps"]) if int(extract["id"]) >= 0 else "—",
+	var t := _run.travel
+	var extract_near := MapNavigator.nearest_of_type(_run.map, t.current_id, &"extract")
+	var rest := MapNavigator.nearest_of_type(_run.map, t.current_id, &"rest")
+	var core := MapNavigator.nearest_of_type(_run.map, t.current_id, &"core")
+	var tail := ""
+	match _run.phase:
+		RunState.Phase.DEFEATED:
+			tail = "　　【战败】"
+		RunState.Phase.EXTRACTED:
+			tail = "　　【已撤离】"
+	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d　　暂存区 %d 件%s" % [
+		t.clock.total,
+		str(extract_near["steps"]) if int(extract_near["id"]) >= 0 else "—",
 		str(rest["steps"]) if int(rest["id"]) >= 0 else "—",
 		str(core["steps"]) if int(core["id"]) >= 0 else "—",
-		_travel.vitality.current, _travel.vitality.maximum,
-		_wallet.balance if _wallet != null else 0]
+		_run.vitality.current, _run.vitality.maximum,
+		_run.wallet.balance, _run.storage.item_count(), tail]
 
 
 func _route_of_entry(id: int) -> Dictionary:
-	for route in _graph.routes:
+	for route in _run.map.routes:
 		if int(route.get("entry_id", -1)) == id:
 			return route
 	return {}
 
 
 func _route_index_of_entry(id: int) -> int:
-	for i in _graph.routes.size():
-		if int(_graph.routes[i].get("entry_id", -1)) == id:
+	for i in _run.map.routes.size():
+		if int(_run.map.routes[i].get("entry_id", -1)) == id:
 			return i
 	return -1
 
@@ -396,10 +390,11 @@ func _route_index_of_entry(id: int) -> int:
 func _rebuild_routes() -> void:
 	for child in _routes_box.get_children():
 		child.queue_free()
-	if _graph == null:
+	if _run == null:
 		return
-	for i in _graph.routes.size():
-		var route: Dictionary = _graph.routes[i]
+	var g := _run.map
+	for i in g.routes.size():
+		var route: Dictionary = g.routes[i]
 		var entry := int(route.get("entry_id", -1))
 		var card := Button.new()
 		card.text = "出生点 %d · %s → %s\n风险 %.1f　收益 %.1f" % [
@@ -411,12 +406,12 @@ func _rebuild_routes() -> void:
 		card.add_theme_font_size_override("font_size", 13)
 		card.add_theme_color_override("font_color", MapNodeStyle.route_color(i))
 		var idx := i
-		card.mouse_entered.connect(func(): if _travel == null: _view.bold_route = idx)
-		card.mouse_exited.connect(func(): if _travel == null: _view.bold_route = -1)
+		card.mouse_entered.connect(func(): if travel() == null: _view.bold_route = idx)
+		card.mouse_exited.connect(func(): if travel() == null: _view.bold_route = -1)
 		card.pressed.connect(func(): pick_spawn(entry))
 		_routes_box.add_child(card)
 	# 随机生成的图每个点向内连一两条，「一个点接着两个外层点」是常态，逐条列出来是噪音；只报个数
-	var warned := MapLayout.for_graph(_graph).warnings(_graph)
+	var warned := MapLayout.for_graph(g).warnings(g)
 	if not warned.is_empty():
 		_routes_box.add_child(_label("布局：%d 处径向边画不成全垂直（一点接着两个外层点）" % warned.size(),
 			11, UiPalette.DIM))
@@ -497,6 +492,11 @@ func _build() -> void:
 	buttons.add_child(_button("换个种子（R）", func(): regenerate(randi() % 1000000)))
 	buttons.add_child(_button("重开这一局", func(): regenerate(_seed)))
 	col.add_child(buttons)
+	var buttons2 := HBoxContainer.new()
+	buttons2.add_child(_button("存档", save_run))
+	buttons2.add_child(_button("读档", load_run))
+	buttons2.add_child(_button("撤离", extract))
+	col.add_child(buttons2)
 	col.add_child(HSeparator.new())
 	col.add_child(_label("路线：挑一个出生点", 14, UiPalette.FG))
 	_routes_box = VBoxContainer.new()
