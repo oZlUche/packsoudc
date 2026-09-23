@@ -77,6 +77,8 @@ func _build(
 			return ContentImporter.import_character(data, ctx, report)
 		"difficulties":
 			return ContentImporter.import_difficulty(data, ctx, report)
+		"hunters":
+			return ContentImporter.import_hunter(data, ctx, report)
 		"meta_rules":
 			return ContentImporter.import_meta_rules(data, ctx, report)
 		"run_buffs":

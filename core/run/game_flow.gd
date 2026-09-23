@@ -31,6 +31,8 @@ var loadouts: Array[LoadoutDef] = []
 var characters: Array[CharacterDef] = []
 ## 全部进阶难度（069），按档位排；空 = 只有普通
 var difficulties: Array[DifficultyDef] = []
+## 全部猎手定义（id → HunterDef，069 / 071）；猎手机制按它造猎手
+var hunter_defs: Dictionary = {}
 var save_path: String = RunSave.DEFAULT_PATH
 var meta_path: String = MetaSave.DEFAULT_PATH
 var settings_path: String = GameSettings.DEFAULT_PATH
@@ -194,7 +196,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 			taken.append(inst)
 	if difficulty != null and difficulty.requires_unlock != &"" and not meta.has_unlock(difficulty.requires_unlock):
 		return null     # 没解锁的难度开不了（界面本来就不列，这里是兜底）
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty)
+	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs)
 	if state == null:
 		return null
 	for inst in taken:
@@ -325,6 +327,7 @@ func _adopt(state: RunState) -> void:
 	state.buff_defs = buff_defs      # 读档回来的只有 id，定义表在这里
 	state.event_defs = event_defs
 	# 基线：按角色（读档回来只有 id，在这里找回）；没角色用持有方给的
+	state.hunter_defs = hunter_defs
 	# 难度：读档回来只有 id，在这里找回定义并把机制重新接上（开局那次 RunState.start 已经装过，再装一次是幂等的）
 	if state.difficulty == null and state.difficulty_id != &"":
 		state.difficulty = difficulty_of(state.difficulty_id)
@@ -382,6 +385,8 @@ func _flush() -> void:
 		_settle_run()
 		_go(Screen.RESULT, {"result": result})
 		return
+	if run != null:
+		run.poke_hunters()     # 玩家空下来了：猎手够得着就排上开打前的事件屏（071）
 	if run != null and run.events.pending_event() != null:
 		# 队列空了还有一个等着选的事件（接着放的、或读档回来的）
 		_go(Screen.EVENT, {"node": run.events.pending_node(), "def": run.events.pending_event()})
@@ -442,6 +447,10 @@ static func load_characters() -> Array[CharacterDef]:
 
 
 ## 按档位排：普通在前
+static func load_hunters() -> Dictionary:
+	return HunterSystem.load_all()
+
+
 static func load_difficulties() -> Array[DifficultyDef]:
 	var out: Array[DifficultyDef] = []
 	for res in _load_dir(ContentPaths.DIFFICULTIES):

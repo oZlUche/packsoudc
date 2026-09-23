@@ -15,6 +15,10 @@ var extra_searches: int = 0
 var shop_price_mult: float = 1.0
 ## 幸运值加多少（掉落：每点加 DropRule.luck_bonus）
 var luck_bonus: int = 0
+## 猎手相关（069 第六节的角色技能接口）：侦察距离（隐形的猎手在这么远以内可见，0 = 不侦察）、猎手感知距离的倍率、逃跑成功率加成
+var scout_range: float = 0.0
+var sense_mult: float = 1.0
+var flee_bonus: float = 0.0
 
 
 func snapshot() -> Dictionary:
@@ -24,4 +28,7 @@ func snapshot() -> Dictionary:
 		"extra_searches": extra_searches,
 		"shop_price_mult": shop_price_mult,
 		"luck_bonus": luck_bonus,
+		"scout_range": scout_range,
+		"sense_mult": sense_mult,
+		"flee_bonus": flee_bonus,
 	}

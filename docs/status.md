@@ -1,6 +1,6 @@
 # 现状总览
 
-> 2026-09-23 ｜ `main`（M6 之后，058 / 059 实施中）｜ 架构文档 v1.67 ｜ 这是一份**活文档**：每完成一个里程碑更新一次，历史看 `docs/reports/`
+> 2026-09-23 ｜ `main`（M6 之后，058 / 059 实施中）｜ 架构文档 v1.68 ｜ 这是一份**活文档**：每完成一个里程碑更新一次，历史看 `docs/reports/`
 
 ## 一句话
 
@@ -24,7 +24,7 @@
 | 删地图沙盒 | 完成 | 066 | 只剩生成就是地图编辑器的子集，「走」正式游戏已完整；两个沙盒、三个编辑器 |
 | 事件屏改版 | 完成 | 065 | 两栏大框，左边整块是图（参考杀戮尖塔），右边标题、正文、贴底的选项 |
 | 事件编辑器 | 完成 | 064 | 写文字、导入配图、拼选项（条件 / 后果下拉来自注册表）、预览照事件屏画、挂进节点规则；存盘 = JSON + .tres；按性价比做在项目里而不是独立 exe |
-| 069 进阶难度与猎手 | **进行中** | 069（设想）、070 | 1 难度骨架 ✅（070：`DifficultyDef` + `RunMechanic` 构件 + 局外解锁 + 开局屏一栏）→ 2 猎手核心 → 3 角色技能接口 → 4 校准工具 → 5 侵蚀本体 |
+| 069 进阶难度与猎手 | **进行中** | 069（设想）、070、071 | 1 难度骨架 ✅（070）→ 2 猎手核心 ✅（071：`HunterDef` 一个等级一份、行动逻辑与战败后果构件、领地、开打前事件屏「迎战 / 逃跑」、探索度现造、掉落倍数、存档、地图标记）→ 3 角色技能接口 → 4 校准工具 → 5 侵蚀本体 |
 | 第 7 阶段 侵蚀 | 延后 | — | 作者：侵蚀是高难度才开的机制；`ErosionMechanic` 空壳占位，钩子与顺序已在 `MapTravel` 里定死 |
 | 第 8 阶段 内容扩充 | 未开始 | — | 道具、敌人、事件、新章节地图形态、扩展移动机制 |
 
@@ -39,21 +39,21 @@
 | `core/map`（+ generators） | 数据层、生成器、校验、导航、文本往返、预设 | `MapGraph`、`MapGenerator`、`RingMapGenerator`、`RingTypeAssigner`、`MapNavigator`、`MapGridText` |
 | `core/enemies` | 敌人池、档位、组装、预览编译 | `EnemyPool`、`EnemyPlacer`、`EnemyKit` |
 | `core/loot` | 掉落规则与掷骰、修正来源接缝、装箱 | `DropRule`、`DropResolver`、`DropBonusSource`、`LootPacker` |
-| `core/run`（+ effects、events） | 一局：旅程、体力、钱、节点事件、搜索 / 商店会话、规则、状态与存档；场景流状态机、开局装备、角色、进阶难度（机制清单）、结算；buff（局外 / 一局）与一局规则的构件；事件层（事件、选项、条件与后果构件、铺放） | `RunState`、`RunSave`、`MapTravel`、`NodeEvents`、`Vitality`、`Wallet`、`GameFlow`、`LoadoutDef`、`CharacterDef`、`RunResult`、`RunBuffDef`、`RunBuffs`、`RunContext`、`EventDef`、`EventPlacer` |
+| `core/run`（+ effects、events） | 一局：旅程、体力、钱、节点事件、搜索 / 商店会话、规则、状态与存档；场景流状态机、开局装备、角色、进阶难度（机制清单）、猎手（伪 PVP）、结算；buff（局外 / 一局）与一局规则的构件；事件层（事件、选项、条件与后果构件、铺放） | `RunState`、`RunSave`、`MapTravel`、`NodeEvents`、`Vitality`、`Wallet`、`GameFlow`、`LoadoutDef`、`CharacterDef`、`RunResult`、`RunBuffDef`、`RunBuffs`、`RunContext`、`EventDef`、`EventPlacer` |
 | `core/meta` | 跨局：仓库格子（大小是 `MetaRules`）、带回来的棋盘与一键置入、图鉴、钱、战绩、保留规则（`absorb()` 一处）、存档 v2 | `MetaState`、`MetaSave`、`MetaRules` |
 | `core/settings` | 玩家设置（暂存区提醒档位），`user://settings.json` | `GameSettings`（挑要提的在 `core/run/storage_warning.gd`） |
 | `ui/game` | 正式游戏（主场景）：导演 + 屏的底座 + 各屏（事件屏先过、容器屏战利品 / 搜索合一）+ 背包整理面板 + 仓库面板 + 渐进揭示的战利品视图 | `GameDirector`、`GameScreen`、`LootView`、`map_screen`、`event_screen`、`container_screen`…… |
 | `ui`（其余） | 两个沙盒、三个编辑器 + 启动选择器（开发期入口） | `launcher`、`inventory_sandbox`、`battle_sandbox`、`content_editor`、`event_editor`、`map_editor` |
 | `tools` | 命令行：导入 / 导出 / 归一化内容、脚本检查、批量统计、样例生成、截图 | `import_content`、`normalize_content`、`check_scripts`、`map_stats` |
-| `tests` | 47 个套件，`tools/test.sh` 一键跑 | `run_tests` |
+| `tests` | 48 个套件，`tools/test.sh` 一键跑 | `run_tests` |
 
 ## 数据与内容管线
 
 `data/authoring/<kind>/*.json`（人写，进 git）→ `tools/import_content.gd` → `data/<kind>/*.tres`（引擎读，也进 git）。
-种类与导入顺序：`buffs → sets → run_buffs → items → loadouts → characters → difficulties → events → enemies → enemy_pools → drop_rules → node_rules → economy_rules → meta_rules → chapters`（后者按 id 引用前者）。
+种类与导入顺序：`buffs → sets → run_buffs → items → loadouts → characters → difficulties → events → enemies → enemy_pools → hunters → drop_rules → node_rules → economy_rules → meta_rules → chapters`（后者按 id 引用前者）。
 `tools/normalize_content.gd` 把作者数据重写成导出器的格式（仓库里的 JSON 是往返不动点，测试逐字节比）。
 
-现有内容：22 件道具（三个流派标签 `burst` / `rapid` / `bleed`）、3 套开局装备（标准 / 拾荒者 / 打手；标准也是仓库空的第一套）、1 个占位角色（拾荒者：两个皮革包、生命 60）、2 档难度（普通、进阶 1 占位：侵蚀空壳 + 体力上限 -1）、6 种敌人、1 个敌人池、
+现有内容：22 件道具（三个流派标签 `burst` / `rapid` / `bleed`）、3 套开局装备（标准 / 拾荒者 / 打手；标准也是仓库空的第一套）、1 个占位角色（拾荒者：两个皮革包、生命 60）、2 档难度（普通、进阶 1 占位：侵蚀空壳 + 一个追猎者 + 体力上限 -1）、2 种猎手（追猎者、守路人，占位）、6 种敌人、1 个敌人池、
 掉落 / 节点 / 经济 / 局外规则各 1 份、4 个测试用的 buff（坚韧 / 幸运 / 被盯上了 / 虚弱）、6 个占位事件（搜索点默认、上锁的箱子、陌生人、熟面孔、歇脚处、动静）、第一章 1 份、手绘地图 2 份。
 **数值全是占位**（见下）。
 
@@ -114,5 +114,5 @@
 作者已拍板，按 059 第四节的顺序做：~~暂存区（离开发生过事的点时清）~~ 完成（060）→ ~~仓库格子化、`MetaRules`、结算屏一键置入、图鉴~~ 完成（061）→ ~~buff 骨架~~ 完成（062）→ ~~事件层与容器屏合一~~ 完成（063）→ ~~开局预选与 `CharacterDef`~~ 完成（067）→ ~~搜索揭示~~ 完成（068）→ **节点外框（可选，作者说只是观感）**。
 作者的新设想（[069](reports/069-difficulty-mechanics-and-hunters.md)，等拍板）：**进阶难度是机制清单不只是数值**（`DifficultyDef` + `RunMechanic` 构件），
 侵蚀改成高难度才开的机制、延后；**伪 PVP 猎手**：地图上移动的单位，行动逻辑是构件，强度按探索度开打那一刻现造，胜率对参考玩家调到 50%。
-八个问题作者已答（第七节），按第八节的顺序做：~~难度骨架~~ 完成（070）→ **猎手核心**（含领地、感知提示、迎战 / 逃跑事件屏、六种战败后果）→ 角色技能接口 → 校准工具（木桩）→ 侵蚀本体。
+八个问题作者已答（第七节），按第八节的顺序做：~~难度骨架~~ 完成（070）→ ~~猎手核心~~ 完成（071）→ **角色技能接口**（含领地、感知提示、迎战 / 逃跑事件屏、六种战败后果）→ 角色技能接口 → 校准工具（木桩）→ 侵蚀本体。
 再之后是第 8 阶段内容扩充（道具、敌人、事件、新章节地图形态、扩展移动机制）。053 的设想（三 + 二）仍等作者一句「做」。

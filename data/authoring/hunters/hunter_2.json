@@ -1,0 +1,20 @@
+{
+  "id": "hunter_2",
+  "display_name": "守路人（占位）",
+  "description": "它在这一带巡逻，见了你就追。输了它会把你赶回去，守在原地。",
+  "level": 2,
+  "visibility": "VISIBLE",
+  "sense_range": 4.0,
+  "behavior": {
+    "type": "patrol"
+  },
+  "loss_outcomes": [
+    {
+      "type": "spend_vitality"
+    },
+    {
+      "type": "expel_and_guard"
+    }
+  ],
+  "flee_chance": 0.3
+}

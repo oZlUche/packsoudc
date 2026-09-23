@@ -232,6 +232,24 @@ func _adopt() -> void:
 	_run.buffs_changed.connect(_refresh_hud)
 	_run.storage_dropped.connect(func(node_id: int, items: Array):
 		_note("　离开点 %d：暂存区里的 %s留在了那里" % [node_id, StorageWarning.describe(items)]))
+	# 猎手（071）：进了感知范围提示一句；动了就重画标记；被赶回上一个点
+	_run.hunter_sensed.connect(func(h: Hunter):
+		var def: HunterDef = _run.hunters.def_of(h) if _run.hunters != null else null
+		var seen := _run.hunters != null and _run.hunters.visible_hunters().has(h)
+		_note("[color=#d9534f]　附近有动静……%s[/color]" % ("（" + def.display_name + "）" if def != null and seen else "")))
+	_run.hunters_changed.connect(_refresh_hunter_marks)
+	_run.player_expelled.connect(func(to: int):
+		_note("[color=#d9534f]　被赶回了点 %d[/color]" % to)
+		_view.current_id = to
+		_after_move())
+	if _run.hunters != null and _run.hunters.metric != null and _run.hunters.metric.mode == MapMetric.ABSOLUTE:
+		# 绝对距离：把布局坐标按环距归一后交给度量（core 不认识布局）
+		var scaled := {}
+		var px := _view.positions()
+		for id in px:
+			scaled[id] = Vector2(px[id]) / RingLayoutBase.RING_STEP
+		_run.hunters.metric.set_positions(scaled)
+	_refresh_hunter_marks()
 	var ev := _run.events
 	ev.rewarded.connect(func(_n: MapNode, amount: int): _note("　进账 %d 币" % amount))
 	ev.revealed.connect(func(n: MapNode, type: StringName):
@@ -261,6 +279,18 @@ func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
 	_after_move()
 
 
+## 地图上画谁：看得见的猎手（一直可见的、进了 near_range 的、进了侦察距离的）
+func _refresh_hunter_marks() -> void:
+	if _run == null or _view == null:
+		return
+	var marks: Array = []
+	if _run.hunters != null:
+		for h in _run.hunters.visible_hunters():
+			var def: HunterDef = _run.hunters.def_of(h)
+			marks.append({"node": h.node_id, "label": def.display_name if def != null else "?"})
+	_view.hunters = marks
+
+
 func _after_move() -> void:
 	if _run == null or _view == null:
 		return
@@ -271,6 +301,7 @@ func _after_move() -> void:
 	_view.reachable = reach
 	_view.refresh()
 	_refresh_hud()
+	_refresh_hunter_marks()
 	var node := _run.current_node()
 	_extract_btn.disabled = node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract"
 

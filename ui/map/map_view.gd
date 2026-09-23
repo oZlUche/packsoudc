@@ -63,6 +63,11 @@ var bold_route: int = -1:
 		bold_route = v
 		queue_redraw()
 ## 这一步能走到的点：画一圈提示。沙盒每走一步更新
+## 猎手标记（071）：[{"node": id, "label": 名字}]，画在节点上面
+var hunters: Array = []:
+	set(v):
+		hunters = v
+		queue_redraw()
 var reachable: Dictionary = {}:
 	set(v):
 		reachable = v
@@ -304,6 +309,10 @@ func _draw() -> void:
 	for id in graph.node_ids():
 		if pos.has(id):
 			_draw_node(graph.get_node(id), to_screen(pos[id]))
+	for mark in hunters:
+		var hid := int((mark as Dictionary).get("node", -1))
+		if pos.has(hid):
+			_draw_hunter(to_screen(pos[hid]), String((mark as Dictionary).get("label", "")))
 
 
 func _junctions() -> Dictionary:
@@ -334,6 +343,13 @@ func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary) -
 		else:
 			draw_line(center, pos[int(id)], UiPalette.DIM.darkened(0.25), 1.5, true)
 	draw_circle(center, 3.0, UiPalette.DIM)
+
+
+## 猎手：节点外一圈红环 + 名字（占位画法）
+func _draw_hunter(p: Vector2, label: String) -> void:
+	draw_arc(p, NODE_RADIUS + 7.0, 0.0, TAU, 32, UiPalette.HP, 3.0, true)
+	if label != "" and _font != null:
+		draw_string(_font, p + Vector2(NODE_RADIUS + 10.0, -NODE_RADIUS), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, UiPalette.HP)
 
 
 func _draw_node(n: MapNode, p: Vector2) -> void:

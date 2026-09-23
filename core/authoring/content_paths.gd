@@ -18,6 +18,7 @@ const AUTHORING_SETS := AUTHORING + "/sets"
 const AUTHORING_RUN_BUFFS := AUTHORING + "/run_buffs"
 const AUTHORING_ENEMIES := AUTHORING + "/enemies"
 const AUTHORING_ENEMY_POOLS := AUTHORING + "/enemy_pools"
+const AUTHORING_HUNTERS := AUTHORING + "/hunters"
 const AUTHORING_DROP_RULES := AUTHORING + "/drop_rules"
 const AUTHORING_NODE_RULES := AUTHORING + "/node_rules"
 const AUTHORING_ECONOMY_RULES := AUTHORING + "/economy_rules"
@@ -36,6 +37,7 @@ const SETS := "res://data/sets"
 const RUN_BUFFS := "res://data/run_buffs"
 const ENEMIES := "res://data/enemies"
 const ENEMY_POOLS := "res://data/enemy_pools"
+const HUNTERS := "res://data/hunters"
 const DROP_RULES := "res://data/drop_rules"
 const NODE_RULES := "res://data/node_rules"
 const ECONOMY_RULES := "res://data/economy_rules"
@@ -55,6 +57,7 @@ const KINDS := {
 	"events": [AUTHORING_EVENTS, EVENTS],
 	"enemies": [AUTHORING_ENEMIES, ENEMIES],
 	"enemy_pools": [AUTHORING_ENEMY_POOLS, ENEMY_POOLS],
+	"hunters": [AUTHORING_HUNTERS, HUNTERS],
 	"drop_rules": [AUTHORING_DROP_RULES, DROP_RULES],
 	"node_rules": [AUTHORING_NODE_RULES, NODE_RULES],
 	"economy_rules": [AUTHORING_ECONOMY_RULES, ECONOMY_RULES],
@@ -63,7 +66,7 @@ const KINDS := {
 }
 ## 开局装备、角色（初始包对着道具查）与敌人都在道具之后（清单、招牌道具、流派标签要对着道具查），池在敌人之后，三种规则独立，
 ## 章节排最后（按 id 引用池与规则）
-const ORDER := ["buffs", "sets", "run_buffs", "items", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters"]
+const ORDER := ["buffs", "sets", "run_buffs", "items", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters"]
 
 
 static func authoring_file(kind: String, id: String) -> String:

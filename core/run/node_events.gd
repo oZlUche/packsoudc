@@ -60,6 +60,11 @@ var has_map_buff: Callable = Callable()
 var has_buff_tag: Callable = Callable()
 ## 正在等玩家选的事件：{"node": id, "event": id, "type": 这个点算什么类型}。跟着存档走，读档回来还在这一屏
 var pending: Dictionary = {}
+## 运行时合成的事件（猎手开打前的那一屏，071）：id → EventDef，和 event_defs 一起查。持有方装机制时登记
+var extra_defs: Dictionary = {}
+## 猎手系统接进来的两个动作（071）：`fight(node, uid, ctx) -> bool`、`flee(node, uid, ctx) -> bool`
+var fight_hunter: Callable = Callable()
+var flee_hunter: Callable = Callable()
 ## 踩上一个配了事件的点：先给玩家看，选了才往下走
 signal event_pending(node: MapNode, def: EventDef)
 
@@ -173,7 +178,13 @@ func _event_for(node: MapNode, type: StringName) -> EventDef:
 
 
 func pending_event() -> EventDef:
-	return event_defs.get(StringName(String(pending.get("event", ""))), null) if not pending.is_empty() else null
+	return def_by_id(StringName(String(pending.get("event", "")))) if not pending.is_empty() else null
+
+
+## 内容里的或运行时合成的
+func def_by_id(id: StringName) -> EventDef:
+	var def: EventDef = event_defs.get(id, null)
+	return def if def != null else extra_defs.get(id, null)
 
 
 func pending_node() -> MapNode:
@@ -202,10 +213,22 @@ func choose(i: int) -> bool:
 	if option.locked_reason(ctx) != "":
 		return false
 	var type := StringName(String(pending.get("type", String(node.type))))
+	var hunter_uid := int(pending.get("hunter", -1))
 	pending = {}
 	for o in option.outcomes:
 		if o != null:
 			(o as EventOutcome).apply(ctx)
+	# 猎手（071）：这不是节点的事，点不标用过；逃跑先掷，没逃掉照打
+	if hunter_uid >= 0:
+		if ctx.hunter_flee and flee_hunter.is_valid():
+			ctx.hunter_fight = not bool(flee_hunter.call(node, hunter_uid, ctx))
+		event_resolved.emit(node, StringName(option.label), ctx.detail())
+		if vitality != null and vitality.is_depleted():
+			defeated.emit(&"vitality_depleted")
+			return true
+		if ctx.hunter_fight and fight_hunter.is_valid():
+			fight_hunter.call(node, hunter_uid, ctx)
+		return true
 	node.content["choice"] = i
 	event_resolved.emit(node, StringName(option.label), ctx.detail())
 	if vitality != null and vitality.is_depleted():
@@ -213,7 +236,7 @@ func choose(i: int) -> bool:
 		_visited(node)
 		return true
 	if ctx.next_event != &"":
-		var next: EventDef = event_defs.get(ctx.next_event, null)
+		var next: EventDef = def_by_id(ctx.next_event)
 		if next != null:
 			pending = {"node": node.id, "event": String(next.id), "type": String(type)}
 			event_pending.emit(node, next)
@@ -268,8 +291,12 @@ static func effective_type(node: MapNode) -> StringName:
 	return StringName(resolved) if resolved != "" else node.type
 
 
-## 打一场。返回赢没赢
-func _fight(node: MapNode, type: StringName, content: Dictionary) -> bool:
+## 打一场（猎手系统也走这条路：给它自己的掉落上下文）。返回赢没赢
+func fight_content(node: MapNode, type: StringName, content: Dictionary, loot_ctx: LootContext = null) -> bool:
+	return _fight(node, type, content, loot_ctx)
+
+
+func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: LootContext = null) -> bool:
 	var enemy := EnemyKit.spec_of(content, enemies, pool, items) if not content.is_empty() else null
 	if enemy == null or not player_spec.is_valid():
 		return false     # 没有敌人（这一章没有敌人池）或没有玩家：点空着，当走过
@@ -280,7 +307,7 @@ func _fight(node: MapNode, type: StringName, content: Dictionary) -> bool:
 	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content}
 	battle_finished.emit(node, result, won)
 	if won:
-		var ctx := _loot_ctx()
+		var ctx := loot_ctx if loot_ctx != null else _loot_ctx()
 		var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot")) \
 			if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
 		loot_ready.emit(node, DropResolver.corpse_of(content, rolled, items))

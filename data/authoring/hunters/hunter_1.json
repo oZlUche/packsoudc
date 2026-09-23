@@ -1,0 +1,16 @@
+{
+  "id": "hunter_1",
+  "display_name": "追猎者（占位）",
+  "description": "有人在跟着你。它的脚步声停在了不远处。",
+  "behavior": {
+    "type": "approach"
+  },
+  "loss_outcomes": [
+    {
+      "type": "spend_vitality"
+    },
+    {
+      "type": "retreat"
+    }
+  ]
+}

@@ -27,6 +27,10 @@ signal loot_cleared()
 signal storage_dropped(node_id: int, items: Array)
 ## 地图 buff 变了（给了、到期了）
 signal buffs_changed()
+## 猎手（071）：玩家进了某个猎手的感知范围；猎手的状态变了（动了、死了、歇了）；玩家被赶回上一个点
+signal hunter_sensed(h: Hunter)
+signal hunters_changed()
+signal player_expelled(to_id: int)
 
 var run_seed: int = 0
 var chapter: ChapterDef = null
@@ -54,6 +58,10 @@ var difficulty_id: StringName = &""
 var difficulty: DifficultyDef = null
 ## 机制在一局上留的记号（`mechanic_tags[&"erosion"] = true`……），机制装的时候写，别处只读
 var mechanic_tags: Dictionary = {}
+## 猎手（069 / 071）：难度清单里的猎手机制装进来的系统；null = 这一局没有猎手。定义表由持有方给，存档里的状态读档时先放这儿等机制装
+var hunters: HunterSystem = null
+var hunter_defs: Dictionary = {}
+var hunters_saved: Dictionary = {}
 
 var pool: EnemyPool = null
 var drop_rule: DropRule = null
@@ -87,7 +95,7 @@ static func start(
 	p_chapter: ChapterDef, p_seed: int, p_items: ItemDatabase, p_enemies: EnemyDatabase,
 	p_sets: SetDatabase = null, kit: Array[StringName] = [] as Array[StringName],
 	p_buff_defs: Dictionary = {}, p_meta_buffs: Array[StringName] = [] as Array[StringName],
-	p_character: CharacterDef = null, p_layout: Array = [], p_difficulty: DifficultyDef = null
+	p_character: CharacterDef = null, p_layout: Array = [], p_difficulty: DifficultyDef = null, p_hunter_defs: Dictionary = {}
 ) -> RunState:
 	if p_chapter == null or p_chapter.map_source == null:
 		return null
@@ -116,6 +124,7 @@ static func start(
 	if p_difficulty != null:
 		s.difficulty = p_difficulty
 		s.difficulty_id = p_difficulty.id
+	s.hunter_defs = p_hunter_defs
 	var ctx := s.buff_context()
 	var vitality_max := Vitality.PLACEHOLDER_MAX
 	var board_size := BOARD_SIZE
@@ -134,10 +143,10 @@ static func start(
 	s._bind_tracker()
 	s._place_layout(p_layout)
 	s._give_kit(full_kit)
-	s.install_mechanics()
 	s.travel = MapTravel.new(s.map, ActionClock.new())
 	s.travel.vitality = s.vitality
 	s._wire_events()
+	s.install_mechanics()     # 机制要接的东西（旅程、节点事件）都造好了才装
 	s.phase = Phase.PICK_SPAWN
 	return s
 
@@ -162,7 +171,19 @@ func step_to(id: int) -> bool:
 	var ok := travel.step_to(id)
 	if ok:
 		tick_map_buffs()
+		if hunters != null:
+			hunters.on_player_step()     # 猎手的回合在这一步的事都发生之后（071）
 	return ok
+
+
+## 玩家空下来了（叠层看完、会话关了）问一声猎手够不够得着；够得着就开打前的事件屏已经排上。返回有没有
+func poke_hunters() -> bool:
+	return hunters != null and hunters.check_engagement()
+
+
+## 按 id 取一个敌人池资产（猎手可以指定自己的池）
+func pool_by_id(id: StringName) -> EnemyPool:
+	return _rule_asset("enemy_pools", id) as EnemyPool
 
 
 ## 走出现在这个点会不会清暂存区：这个点上发生过事（打了、搜了、开了店、休息了、出了事件），而且暂存区里有东西
@@ -525,6 +546,7 @@ func to_dict() -> Dictionary:
 		"chapter": String(chapter.id),
 		"character": String(character_id),
 		"difficulty": String(difficulty_id),
+		"hunters": hunters.to_dict() if hunters != null else {},
 		"phase": phase,
 		"end_reason": String(end_reason),
 		"map": map.to_dict(),
@@ -560,6 +582,7 @@ static func from_dict(
 	s.chapter = p_chapter
 	s.character_id = StringName(String(d.get("character", "")))
 	s.difficulty_id = StringName(String(d.get("difficulty", "")))
+	s.hunters_saved = d.get("hunters", {}) if d.get("hunters", {}) is Dictionary else {}
 	s.items = p_items
 	s.enemies = p_enemies
 	s.sets = p_sets
@@ -579,6 +602,8 @@ static func from_dict(
 	var pending = (d.get("events", {}) as Dictionary).get("pending", {})
 	if pending is Dictionary and not (pending as Dictionary).is_empty():
 		s.events.pending = {"node": int(pending.get("node", -1)), "event": String(pending.get("event", "")), "type": String(pending.get("type", ""))}
+		if pending.has("hunter"):
+			s.events.pending["hunter"] = int(pending["hunter"])
 	for key in d.get("tally", {}):
 		s.tally[String(key)] = int((d["tally"] as Dictionary)[key])
 	var buffs: Dictionary = d.get("buffs", {})

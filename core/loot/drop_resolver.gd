@@ -21,6 +21,7 @@ static func owned_chance(rule: DropRule, ctx: LootContext, def: ItemDef) -> floa
 		p += StatMath.to_float(ctx.drop_owned_chance)
 		for s in ctx.sources:
 			p += (s as DropBonusSource).owned_bonus(ctx, def)
+		p *= ctx.drop_mult
 	return clampf(p, 0.0, 1.0)
 
 
@@ -34,6 +35,7 @@ static func treasure_chance(rule: DropRule, ctx: LootContext) -> float:
 	if ctx != null:
 		for s in ctx.sources:
 			p += (s as DropBonusSource).treasure_bonus(ctx)
+		p *= ctx.drop_mult
 	return clampf(p, 0.0, 1.0)
 
 

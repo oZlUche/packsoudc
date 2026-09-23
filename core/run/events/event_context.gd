@@ -24,6 +24,9 @@ var open_search: bool = false
 var open_shop: bool = false
 var start_battle: bool = false
 var next_event: StringName = &""
+## 猎手（071）：迎战 / 逃跑
+var hunter_fight: bool = false
+var hunter_flee: bool = false
 
 ## 后果做了什么（给结果页与日志）
 var items_given: Array[StringName] = []

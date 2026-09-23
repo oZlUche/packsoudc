@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="HunterDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/hunters/behaviors/patrol_behavior.gd" id="1_nng7l"]
+[ext_resource type="Script" path="res://core/run/hunters/hunter_loss_outcome.gd" id="2_by7ad"]
+[ext_resource type="Script" path="res://core/run/hunters/losses/loss_spend_vitality.gd" id="3_lw132"]
+[ext_resource type="Script" path="res://core/run/hunters/losses/loss_expel_and_guard.gd" id="4_ci7kc"]
+[ext_resource type="Script" path="res://core/run/hunters/hunter_def.gd" id="5_bb1f7"]
+
+[sub_resource type="Resource" id="Resource_j6ak4"]
+script = ExtResource("1_nng7l")
+
+[sub_resource type="Resource" id="Resource_p2kd5"]
+script = ExtResource("3_lw132")
+
+[sub_resource type="Resource" id="Resource_n00tl"]
+script = ExtResource("4_ci7kc")
+
+[resource]
+script = ExtResource("5_bb1f7")
+id = &"hunter_2"
+display_name = "守路人（占位）"
+description = "它在这一带巡逻，见了你就追。输了它会把你赶回去，守在原地。"
+level = 2
+visibility = 1
+sense_range = 4.0
+behavior = SubResource("Resource_j6ak4")
+loss_outcomes = Array[ExtResource("2_by7ad")]([SubResource("Resource_p2kd5"), SubResource("Resource_n00tl")])
+flee_chance = 0.3

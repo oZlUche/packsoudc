@@ -7,6 +7,12 @@
   "mechanics": [
     {
       "type": "erosion"
+    },
+    {
+      "type": "hunters",
+      "hunter_ids": [
+        "hunter_1"
+      ]
     }
   ],
   "effects": [

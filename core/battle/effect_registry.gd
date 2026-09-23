@@ -85,11 +85,32 @@ const EVENT_OUTCOMES := {
 	&"open_shop": "res://core/run/events/outcomes/open_shop.gd",
 	&"next_event": "res://core/run/events/outcomes/next_event.gd",
 	&"say": "res://core/run/events/outcomes/say.gd",
+	&"hunter_fight": "res://core/run/events/outcomes/hunter_fight.gd",
+	&"hunter_flee": "res://core/run/events/outcomes/hunter_flee.gd",
 }
 
 ## 一局的机制（069）：难度清单里开的那些
 const RUN_MECHANICS := {
 	&"erosion": "res://core/run/mechanics/erosion_mechanic.gd",
+	&"hunters": "res://core/run/mechanics/hunter_mechanic.gd",
+}
+
+## 猎手（069 / 071）：行动逻辑与战败后果
+const HUNTER_BEHAVIORS := {
+	&"approach": "res://core/run/hunters/behaviors/approach_behavior.gd",
+	&"flee": "res://core/run/hunters/behaviors/flee_behavior.gd",
+	&"wander": "res://core/run/hunters/behaviors/wander_behavior.gd",
+	&"ambush": "res://core/run/hunters/behaviors/ambush_behavior.gd",
+	&"patrol": "res://core/run/hunters/behaviors/patrol_behavior.gd",
+}
+
+const HUNTER_LOSSES := {
+	&"spend_vitality": "res://core/run/hunters/losses/loss_spend_vitality.gd",
+	&"nothing": "res://core/run/hunters/losses/loss_nothing.gd",
+	&"kill": "res://core/run/hunters/losses/loss_kill.gd",
+	&"vanish": "res://core/run/hunters/losses/loss_vanish.gd",
+	&"retreat": "res://core/run/hunters/losses/loss_retreat.gd",
+	&"expel_and_guard": "res://core/run/hunters/losses/loss_expel_and_guard.gd",
 }
 
 const TABLES := {
@@ -103,6 +124,8 @@ const TABLES := {
 	&"event_condition": EVENT_CONDITIONS,
 	&"event_outcome": EVENT_OUTCOMES,
 	&"run_mechanic": RUN_MECHANICS,
+	&"hunter_behavior": HUNTER_BEHAVIORS,
+	&"hunter_loss": HUNTER_LOSSES,
 }
 
 

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="HunterDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/hunters/behaviors/approach_behavior.gd" id="1_0sot8"]
+[ext_resource type="Script" path="res://core/run/hunters/hunter_loss_outcome.gd" id="2_2wi5j"]
+[ext_resource type="Script" path="res://core/run/hunters/losses/loss_spend_vitality.gd" id="3_jd6ow"]
+[ext_resource type="Script" path="res://core/run/hunters/losses/loss_retreat.gd" id="4_kykxh"]
+[ext_resource type="Script" path="res://core/run/hunters/hunter_def.gd" id="5_8ialv"]
+
+[sub_resource type="Resource" id="Resource_f1fwv"]
+script = ExtResource("1_0sot8")
+
+[sub_resource type="Resource" id="Resource_5chbg"]
+script = ExtResource("3_jd6ow")
+
+[sub_resource type="Resource" id="Resource_pqrs8"]
+script = ExtResource("4_kykxh")
+
+[resource]
+script = ExtResource("5_8ialv")
+id = &"hunter_1"
+display_name = "追猎者（占位）"
+description = "有人在跟着你。它的脚步声停在了不远处。"
+behavior = SubResource("Resource_f1fwv")
+loss_outcomes = Array[ExtResource("2_2wi5j")]([SubResource("Resource_5chbg"), SubResource("Resource_pqrs8")])

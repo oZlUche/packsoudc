@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.67 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.68 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2864,7 +2864,18 @@ func grant_first_kit()                               # 仓库空的第一局发�
 开局与读档各调一次，必须幂等；`RunState` 不认识任何具体机制。**没有难度定义 = 普通 = 现在的一切。**
 难度是局外解锁的特殊选项：`requires_unlock` 指一个解锁 id，`MetaState.unlocks` 记着（占位开关在局外屏，将来是成长系统），开局屏只列能选的。
 侵蚀由此改口：不是每一局都有，是某档难度开的机制；`ErosionMechanic` 现在是空壳占位，第 7 阶段做本体时只换它的 `install`。
-`ChapterDef.difficulty`（这一章本身多难）与进阶难度是两回事。猎手（伪 PVP）是下一个机制，见 069。
+`ChapterDef.difficulty`（这一章本身多难）与进阶难度是两回事。
+
+### 8.5 猎手：伪 PVP（069 / 071）
+
+作者：地图上出现移动的单位，不和节点互动，距离够近就主动靠近并攻击（或远离，多种行动逻辑），强度按探索度实时变、胜率对参考玩家调到 50%。
+落地为难度清单里的一个机制 `HunterMechanic`（几个、第几步出现、出现距离、度量）+ 内容种类 `hunters`（`HunterDef`，一个等级一份：可视性、感知、速度、开打距离、
+领地半径、行动逻辑构件、战败后果构件、掉落倍数、逃跑、敌人池与强度规则）。`HunterSystem` 挂在 `run.hunters`：玩家一步的末尾动一回合 ——
+出现（离玩家与彼此最远）→ 每个按行动逻辑在自己领地里走几小步（不进别人的领地）→ 进感知范围提示一次 → 够得着就**开打前先过事件屏**
+（合成的 `EventDef`「迎战 / 逃跑」，登记在 `NodeEvents.extra_defs`，`pending` 多一个 `hunter` 字段跟存档）。玩家正忙时不打扰，空下来 `poke_hunters` 再问。
+迎战：按当时的探索度现造敌人（`EnemyPlacer`，可指定池与规则），打赢它死、掉落率乘 `drop_mult`；打输按定义里的后果构件依次执行
+（扣体力 / 没事 / 必杀 / 消失 / 退走并歇 / 赶回上一个点并驻守）。逃跑按成功率掷，没逃掉扣体力照打。距离度量 `MapMetric`：`steps` 或 `absolute`（地图屏注入按环距归一的坐标）。
+随机数走 `RunRNG` 的 `hunters` 流。`RunContext` 多三个字段（侦察距离、感知倍率、逃跑加成）给角色技能接（069 第六节）。校准（木桩、50%）是 069 的第 4 步。
 
 ## 9. 套装与跨域效果
 
@@ -3037,16 +3048,17 @@ data/authoring/run_buffs/*.json     buff：局外的 / 一局里的（8.2、9.2�
 data/authoring/events/*.json        事件：文字、选项、条件与后果（6.5 事件层）
 data/authoring/enemies/*.json       敌人（6.0）
 data/authoring/enemy_pools/*.json   敌人池（6.0）
+data/authoring/hunters/*.json       猎手（8.5）：一个等级一份
 data/authoring/drop_rules/*.json    掉落规则（6.1）
 data/authoring/node_rules/*.json    节点规则（6.2 / 6.5）
 data/authoring/economy_rules/*.json 经济规则（6.6）
 data/authoring/meta_rules/*.json    局外规则：仓库多大、第一套（8.2 / 8.1）
 data/authoring/chapters/*.json      章节（5.3）
-        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → run_buffs → items → loadouts → characters → difficulties → events → enemies → enemy_pools → drop_rules → node_rules → economy_rules → meta_rules → chapters）
+        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → run_buffs → items → loadouts → characters → difficulties → events → enemies → enemy_pools → hunters → drop_rules → node_rules → economy_rules → meta_rules → chapters）
         │  tools/normalize_content.gd 把作者数据重写成导出器的格式（导入 → 导出 → 不同就写回）
         ▼
 data/items/*.tres   data/buffs/*.tres   data/sets/*.tres   data/run_buffs/*.tres   data/loadouts/*.tres   data/characters/*.tres   data/difficulties/*.tres   data/events/*.tres
-data/enemies/*.tres data/enemy_pools/*.tres   data/drop_rules/*.tres   data/node_rules/*.tres   data/economy_rules/*.tres   data/meta_rules/*.tres   data/chapters/*.tres
+data/enemies/*.tres data/enemy_pools/*.tres   data/hunters/*.tres   data/drop_rules/*.tres   data/node_rules/*.tres   data/economy_rules/*.tres   data/meta_rules/*.tres   data/chapters/*.tres
 ```
 
 目录常量只在 `ContentPaths` 一处：种类 → [作者数据目录, 资产目录]，`ORDER` 就是导入顺序（后者按 id 引用前者）。
@@ -3297,7 +3309,7 @@ res://
     meta/           meta_state  meta_save  meta_rules              # 跨局（8.2）：仓库格子、带回来的棋盘、图鉴、局外 buff
     settings/       game_settings                                  # 玩家设置（3.4 的提醒档位）
   data/
-    authoring/      items/  loadouts/  characters/  difficulties/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/  maps/
+    authoring/      items/  loadouts/  characters/  difficulties/  enemies/  enemy_pools/  hunters/  hunters/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/  maps/
     items/  loadouts/  characters/  difficulties/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/     # 导入器产出，也进 git
   ui/
     launcher  dev_nav  ui_palette
@@ -3417,6 +3429,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.68 | 2026-09-23 | **猎手核心**（报告 071，069 第 2 步；新增 8.5、10.1、11）。内容种类 `hunters`（`HunterDef` 一个等级一份）；行动逻辑与战败后果各一张注册表（5 + 6 个构件）；`MapMetric`（steps / absolute）；`HunterSystem`（出现于最远点、领地互斥、按步回合、感知提示、开打前合成事件屏「迎战 / 逃跑」、探索度现造敌人、掉落倍数、存档、`hunters` 随机流）；`HunterMechanic` 是难度清单里的机制；`NodeEvents.extra_defs` + `fight_hunter` / `flee_hunter`；`RunContext` 三个技能接口字段；地图上红环标记 |
 | v1.67 | 2026-09-23 | **进阶难度骨架**（报告 070，069 第 1 步；新增 8.4、10.1、11、12）。难度是机制清单：`DifficultyDef`（内容种类 `difficulties`：`mechanics: Array[RunMechanic]`、`effects`、`requires_unlock`），`RunMechanic` 是效果树之外的新抽象根（`install(run)` 幂等、登记表 `RUN_MECHANICS`），`ErosionMechanic` 空壳占位；`RunState.difficulty_id` 跟存档、`install_mechanics()`、修饰进 `buff_context`；`MetaState.unlocks` + 局外屏占位开关；开局屏「难度」一栏只列能选的。没有难度定义 = 普通；侵蚀改口为高难度才开的机制 |
 | v1.66 | 2026-09-23 | **搜索揭示重做**（报告 068，058 / 059 顺序里的第 6 项；6.2）。揭示从「一批一条 Tween」改成**一件一件来**：当前按稀有度计时（`SearchRules.reveal_seconds`，每档几秒、非递减、和体积无关、没有角色倍率），到点亮出来，按栏位顺序挑下一件，只知道当前与下一件；`LootView.advance(delta)` 推进、`current_uid` / `next_uid` / `progress`；没亮的能拖但只能在容器里挪（`DragLayer.drop_filter` 第二道门，容器屏给规则）、正在搜的锁住；去掉光标距离 |
 | v1.65 | 2026-09-23 | **开局预选与 `CharacterDef`**（报告 067，058 / 059 顺序里的第 5 项；7.1、8、8.1、10.1、11、15 节第 5 / 8 项收掉）。新内容种类 `characters`：基线覆盖项、体力上限、棋盘尺寸、初始包、带入上限（-1 = 不限，没有搜索速度）；`RunState.start(..., character, layout)` 按角色开、开局屏摆好的棋盘原样进一局、存档记角色 id；开局屏重写：中间角色的棋盘（初始包摆好）、右边仓库格子、**从仓库往包里拖，放得进的就是带的**；包进不了仓库（`GridInventory.accept_filter` 接 `MetaState.keeps`）；`MetaRules.first_kit` 仓库空的第一局发第一套（教程关之前的占位）；没有角色定义 = 老路 |

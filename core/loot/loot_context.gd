@@ -24,6 +24,9 @@ var difficulty: int = 0
 ## 幸运值，可正可负（每点加 DropRule.luck_bonus）。谁提供幸运值是 run 层的事（角色、buff……）
 var luck: int = 0
 
+## 掉落率的倍数（猎手：作者说掉落率更高）。乘在自身携带与珍宝的概率上
+var drop_mult: float = 1.0
+
 ## 其他修正来源：局外 buff、地图 buff —— 都是 [DropBonusSource]，现在是占位实现
 var sources: Array[DropBonusSource] = []
 
@@ -57,5 +60,6 @@ func snapshot() -> Dictionary:
 		"drop_owned_chance": drop_owned_chance,
 		"difficulty": difficulty,
 		"luck": luck,
+		"drop_mult": drop_mult,
 		"sources": sources.size(),
 	}

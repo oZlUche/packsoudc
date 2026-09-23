@@ -80,6 +80,13 @@ class Context:
 		if def != null and def.id != &"":
 			difficulties[def.id] = def
 
+	## id -> HunterDef
+	var hunters: Dictionary = {}
+
+	func register_hunter(def: HunterDef) -> void:
+		if def != null and def.id != &"":
+			hunters[def.id] = def
+
 	## id -> MetaRules
 	var meta_rules: Dictionary = {}
 
@@ -227,6 +234,33 @@ static func import_difficulty(data: Dictionary, ctx: Context, report: ImportRepo
 		elif e.scope() != EffectScope.LOOT and e.scope() != EffectScope.RUN:
 			report.error("effects[%d]" % i, "难度的 effects 只放掉落或一局规则的效果")
 	ctx.register_difficulty(def)
+	return def
+
+
+## 猎手（069 / 071）：数全得合理；行动逻辑可空（= 不动）；战败后果不能是空的；指定的敌人池得存在（批量导入时）
+static func import_hunter(data: Dictionary, ctx: Context, report: ImportReport) -> HunterDef:
+	var def := HunterDef.new()
+	_fill(def, data, "", ctx, report)
+	if def.id == &"":
+		report.error("id", "猎手必须有 id")
+	if def.level < 0:
+		report.error("level", "等级不能为负")
+	if def.speed < 0:
+		report.error("speed", "速度不能为负")
+	if def.sense_range < 0.0 or def.engage_range < 0.0 or def.near_range < 0.0:
+		report.error("sense_range", "距离不能为负")
+	if def.drop_mult < 0.0:
+		report.error("drop_mult", "掉落倍数不能为负")
+	if def.flee_chance < 0.0 or def.flee_chance > 1.0:
+		report.error("flee_chance", "逃跑成功率应在 0～1 之间")
+	if def.flee_fail_vitality < 0 or def.flee_cooldown < 0:
+		report.error("flee_fail_vitality", "逃跑的代价与冷却不能为负")
+	for i in def.loss_outcomes.size():
+		if def.loss_outcomes[i] == null:
+			report.error("loss_outcomes[%d]" % i, "空的战败后果")
+	if def.enemy_pool != &"" and not ctx.pools.is_empty() and not ctx.pools.has(def.enemy_pool):
+		report.error("enemy_pool", "找不到敌人池 '%s'" % def.enemy_pool)
+	ctx.register_hunter(def)
 	return def
 
 

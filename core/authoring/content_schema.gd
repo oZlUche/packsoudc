@@ -27,6 +27,8 @@ const ABSTRACT_ROOTS := {
 	&"EventCondition": [&"event_condition"],
 	&"EventOutcome": [&"event_outcome"],
 	&"RunMechanic": [&"run_mechanic"],
+	&"HunterBehavior": [&"hunter_behavior"],
+	&"HunterLossOutcome": [&"hunter_loss"],
 }
 
 ## 声明成裸 int、但语义上是枚举的属性，键为 `类名.属性名`。

@@ -56,6 +56,7 @@ func _ready() -> void:
 	flow.loadouts = GameFlow.load_loadouts()
 	flow.characters = GameFlow.load_characters()
 	flow.difficulties = GameFlow.load_difficulties()
+	flow.hunter_defs = GameFlow.load_hunters()
 	flow.save_path = save_path
 	flow.meta_path = meta_path
 	flow.settings_path = settings_path
@@ -133,6 +134,25 @@ func demo_fill() -> void:
 		if setup != null:
 			for inst in flow.meta.warehouse.items().slice(0, 2):
 				setup.call("carry_in", (inst as ItemInstance).uid)
+		return
+	if want == "hunter":
+		# 071：一份代码里造的难度，开一个一直可见的猎手，走两步让它出现
+		var hd := DifficultyDef.new()
+		hd.id = &"demo_hunters"
+		var hm := HunterMechanic.new()
+		hm.hunter_ids = [&"hunter_2"] as Array[StringName]
+		hm.spawn_min_distance = 2.0
+		hd.mechanics.append(hm)
+		var hrun := flow.begin(flow.chapters[0], flow.loadouts[0] if not flow.loadouts.is_empty() else null, 3, [] as Array[int], null, [], hd)
+		if hrun == null:
+			return
+		flow.pick_spawn(hrun.map.entry_ids[0])
+		for i in 2:
+			var moves := hrun.travel.available_moves()
+			if moves.is_empty() or GameFlow.is_overlay(flow.screen):
+				break
+			flow.step_to(moves[0])
+			_demo_settle()
 		return
 	flow.new_run()
 	var next_type: StringName = &"search" if want in ["search", "event"] else &"battle"
