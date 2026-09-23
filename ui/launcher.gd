@@ -36,6 +36,12 @@ const ENTRIES := [
 		"keys": "存盘直接产出资产，不必再手动导入",
 	},
 	{
+		"scene": "res://ui/event_editor/event_editor.tscn",
+		"title": "事件编辑器",
+		"desc": "给作者写事件：标题、正文、导入配图、选项与它们的条件 / 后果（构件下拉来自注册表），实时校验、右边看它在事件屏上的样子，存盘直接产出资产，顺手挂进节点规则",
+		"keys": "保存 = JSON + .tres　导入的图复制到 assets/events/<id>",
+	},
+	{
 		"scene": "res://ui/map/map_sandbox.tscn",
 		"title": "地图沙盒",
 		"desc": "M3 验收：从第一章开局，挑出生点，一步一步走；行动点、距最近撤离点、用过的点变灰",

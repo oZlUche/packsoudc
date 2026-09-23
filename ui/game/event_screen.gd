@@ -78,9 +78,10 @@ func _open_result(payload: Dictionary) -> void:
 
 ## 图像占位：有文件就画，没有就一块底色写着路径（或「没有配图」）
 func _image(path: String) -> Control:
-	if path != "" and ResourceLoader.exists(path):
+	var loaded := EventImage.load_texture(path)
+	if loaded != null:
 		var tex := TextureRect.new()
-		tex.texture = load(path)
+		tex.texture = loaded
 		tex.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 		tex.custom_minimum_size = Vector2(600, 180)
 		return tex
