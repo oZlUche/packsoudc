@@ -89,4 +89,4 @@
 | 066 | [删地图沙盒](066-remove-map-sandbox.md) | 作者拍板 | 完成 |
 | 067 | [开局预选与 `CharacterDef`：角色、初始包、从仓库往包里拖、第一套](067-character-and-setup.md) | 058 / 059 第 5 项 | 完成 |
 | 068 | [搜索揭示重做：一件一件搜、耗时随稀有度、没亮的只能在容器里挪](068-search-reveal.md) | 058 / 059 第 6 项 | 完成 |
-| 069 | [设想：进阶难度 = 机制而不只是数值；伪 PVP —— 地图上移动的猎手](069-difficulty-mechanics-and-hunters.md) | 提议 | 等作者拍板 |
+| 069 | [设想：进阶难度 = 机制而不只是数值；伪 PVP —— 地图上移动的猎手](069-difficulty-mechanics-and-hunters.md) | 提议 | 已拍板，实施中 |
