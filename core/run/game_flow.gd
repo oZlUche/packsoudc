@@ -20,6 +20,7 @@ var items: ItemDatabase = null
 var enemies: EnemyDatabase = null
 var sets: SetDatabase = null
 var meta: MetaState = null
+var meta_rules: MetaRules = null
 var chapters: Array[ChapterDef] = []
 var loadouts: Array[LoadoutDef] = []
 var save_path: String = RunSave.DEFAULT_PATH
@@ -32,6 +33,8 @@ var player_baseline: CombatantBaseline = null
 
 var run: RunState = null
 var result: RunResult = null
+## 最近一次进 meta 的账（absorb 的返回：带回几件、值、钱、新点亮几条）
+var last_absorbed: Dictionary = {}
 var screen: int = Screen.MAIN_MENU
 var last_payload: Dictionary = {}
 ## 待拾取里已经在搜索屏亮过的 uid（6.2 的揭示只做一次）。拾取完清空
@@ -56,11 +59,36 @@ func to_main_menu() -> void:
 	run = null
 	result = null
 	_queue.clear()
+	save_meta()
 	_go(Screen.MAIN_MENU)
 
 
 func new_run() -> void:
+	save_meta()
 	_go(Screen.SETUP)
+
+
+## 现在能不能开新局；空串 = 能，否则是原因（带回来的背包还没清空，058 第 7 条）
+func can_begin() -> String:
+	if meta != null and meta.has_pending_board():
+		return "上一局带回来的背包还有 %d 件没清空：先在仓库里置入或不要了，再配置下一局" % meta.board.item_count()
+	return ""
+
+
+func save_meta() -> bool:
+	return meta != null and MetaSave.write(meta, meta_path) == OK
+
+
+## 仓库面板的两个动作：改了就存
+func store_all() -> Dictionary:
+	var got := meta.store_all()
+	save_meta()
+	return got
+
+
+func discard_board() -> void:
+	meta.discard_board()
+	save_meta()
 
 
 func show_meta() -> void:
@@ -78,6 +106,8 @@ func save_settings() -> bool:
 ## 从一章、一套装备、一个种子开一局；[param from_warehouse] 是从仓库带上的东西的 uid。生成不出图返回 null，停在开局屏。
 ## 带进去的就从仓库拿走（一局里是新实例，3.1 存档只写 id）并立刻存 meta：撤离了它们回来，死了就是真没了
 func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: Array[int] = [] as Array[int]) -> RunState:
+	if can_begin() != "":
+		return null
 	var kit: Array[StringName] = []
 	if loadout != null:
 		kit = loadout.items.duplicate()
@@ -130,14 +160,23 @@ func save_and_quit() -> bool:
 	return ok
 
 
-## 结算看完了：进 meta（只进一次）、存 meta、删掉这一局的存档，然后看局外
+## 结算看完了：去局外（账在进结算屏之前就记了，见 _settle_run）
 func finish_result() -> void:
-	if result != null and not _settled:
+	save_meta()
+	_go(Screen.META, {"result": result})
+
+
+## 一局结束了：算账、进 meta（只进一次）、存 meta、删掉这一局的存档。结算屏拿到的已经是记完账的局外
+func _settle_run() -> void:
+	if result != null:
+		return
+	result = RunResult.settle(run)
+	run_ended.emit(result)
+	if not _settled:
 		_settled = true
-		meta.absorb(result)
+		last_absorbed = meta.absorb(result)
 		MetaSave.write(meta, meta_path)
 		RunSave.remove(save_path)
-	_go(Screen.META, {"result": result})
 #endregion
 
 
@@ -245,9 +284,7 @@ func _flush() -> void:
 		_go(int(next["screen"]), next)
 		return
 	if run != null and run.is_over():
-		if result == null:
-			result = RunResult.settle(run)
-			run_ended.emit(result)
+		_settle_run()
 		_go(Screen.RESULT, {"result": result})
 		return
 	_go(Screen.MAP)
@@ -290,6 +327,12 @@ static func load_loadouts() -> Array[LoadoutDef]:
 		if res is LoadoutDef:
 			out.append(res)
 	return out
+
+
+## 局外规则（仓库多大）。没导入资产时 null，MetaState 用默认大小
+static func load_meta_rules(id: StringName = &"standard") -> MetaRules:
+	var path := ContentPaths.asset_file("meta_rules", String(id))
+	return load(path) as MetaRules if ResourceLoader.exists(path) else null
 
 
 static func _load_dir(dir_path: String) -> Array[Resource]:

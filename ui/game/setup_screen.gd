@@ -172,6 +172,10 @@ func depart() -> bool:
 	if c == null:
 		_status.text = "没有章节可开"
 		return false
+	var why := flow.can_begin()
+	if why != "":
+		_status.text = why
+		return false
 	if flow.begin(c, loadout(), run_seed, picked_uids()) == null:
 		_status.text = "这一章生成不出图：%s" % (c.map_source.last_error if c.map_source != null else "没有地图来源")
 		return false

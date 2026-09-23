@@ -73,6 +73,8 @@ func _build(
 			return ContentImporter.import_economy_rules(data, ctx, report)
 		"loadouts":
 			return ContentImporter.import_loadout(data, ctx, report)
+		"meta_rules":
+			return ContentImporter.import_meta_rules(data, ctx, report)
 		"chapters":
 			return ContentImporter.import_chapter(data, ctx, report)
 		_:

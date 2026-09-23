@@ -66,6 +66,13 @@ class Context:
 		if def != null and def.id != &"":
 			loadouts[def.id] = def
 
+	## id -> MetaRules
+	var meta_rules: Dictionary = {}
+
+	func register_meta_rules(rules: MetaRules) -> void:
+		if rules != null and rules.id != &"":
+			meta_rules[rules.id] = rules
+
 	## 道具里带某个标签的有几件。批量导入时才有意义 —— 单独导一个敌人时上下文是空的，
 	## 这类「对着别的东西查」的校验就跳过（见 _validate_enemy）
 	func items_tagged(tag: StringName) -> int:
@@ -144,6 +151,18 @@ static func import_loadout(data: Dictionary, ctx: Context, report: ImportReport)
 	_validate_loadout_def(def, ctx, report)
 	ctx.register_loadout(def)
 	return def
+
+
+## 局外规则（058 第 6 条）：仓库多大
+static func import_meta_rules(data: Dictionary, ctx: Context, report: ImportReport) -> MetaRules:
+	var rules := MetaRules.new()
+	_fill(rules, data, "", ctx, report)
+	if rules.id == &"":
+		report.error("id", "局外规则必须有 id")
+	if rules.warehouse_size.x < 1 or rules.warehouse_size.y < 1:
+		report.error("warehouse_size", "仓库至少 1×1")
+	ctx.register_meta_rules(rules)
+	return rules
 
 
 ## 清单不能空；每件得存在；至少一个包 —— 棋盘上只有包里的东西参战（3.2），没有包一格都用不了

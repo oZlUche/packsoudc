@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.58 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.59 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2788,11 +2788,20 @@ static func load_chapters() / load_loadouts()
 `RunResult.settle(state)` 从结束了的一局里算一份账（只读）：撤离 = 棋盘上的全部（含包）按价值（6.4）计、剩多少钱；
 暂存区里的记成「遗落」只提一句（3.4：暂存区里的道具 = 不存在）；战败 = 什么都没有。行动点、踩过几个点、打赢 / 打输几场（`RunState.tally`，跟着存档）。
 
-`MetaState`（`core/meta/meta_state.gd`）是跨局的状态：仓库（`ItemStash`，有自己的 uid 空间 —— 每局的 uid 从 1 重编，进来时重新编号）、
-钱、累计价值、几局几撤几败、最近几局。**保留规则只在 `absorb()` 一个方法里**（15 节第 4 项现在的假设：撤离 = 棋盘上的全进仓库、钱全带出；
-战败 = 全失），作者改主意时改那一处。`MetaSave` 与 `RunSave` 同一套做法：`user://meta.json`，带版本号、只写 id。
+`MetaState`（`core/meta/meta_state.gd`）是跨局的状态（作者定的形态，058 第 4 / 6 / 7 条，报告 061）：
+
+- **仓库是一块格子**（`GridInventory`，不要求包：所有格子默认可用），大小是 `MetaRules.warehouse_size`（内容种类 `meta_rules`，占位 10×8；作者：仓库也是局外成长的一部分，成长系统改这个数）。
+- **撤离不直接进仓库。** 棋盘原样带回来（`MetaState.board`：一块和棋盘一样大、不要求包的格子，非包道具按原位置 —— 作者说的「包统一替换成最大的默认背景包」），
+  玩家在结算屏 / 局外屏拖或**一键置入**（按栏位顺序逐件放，放不下就停在那一件提示）；带回来的棋盘没清空之前 `GameFlow.can_begin()` 拒绝开新局。
+- **图鉴**（`codex`）：道具 id → 累计带出件数，同一次带出多件各计一次，点亮 = 计数 > 0（本来就幂等）；不代表物品被储存，将来的制作系统读它。
+- **包只计图鉴**：什么能存进局外由 `MetaState.keeps(def)` 一处说了算（现在：不是包）。「包」只是当前的承载媒介，将来可能删掉，那时删这一个分支。
+- 钱、累计价值、几局几撤几败、最近几局。**保留规则只在 `absorb()` 一个方法里**（15 节第 4 项）：撤离 = 图鉴每件计一次、非包道具带回棋盘、钱全带出；战败 = 全失。
+- 局外有自己的 uid 空间：每局的 uid 从 1 重编，进来时重新编号。
+
+一局结束时（`GameFlow._settle_run`，进结算屏之前）就 `absorb`、存 meta、删这一局的存档；结算屏拿到的已经是记完账的局外。
+`MetaSave` 与 `RunSave` 同一套做法：`user://meta.json`，版本号 2（v1 是开发期的，作废），只写 id；仓库大小以存档里的为准（成长过的不该被规则缩回去）。
 仓库里的东西能**带进下一局**（开局屏勾上；`GameFlow.begin(..., from_warehouse)` 从仓库拿走、立刻存 meta —— 撤离了它们回来、死了就是真没了，
-这就是搜打撤的循环）；卖掉、局外成长还没定。撤离前有一道确认（地图屏）：付多少钱、棋盘上多少件会背出去、暂存区里多少件带不出去（3.4 的提示，不是挽留）。
+这就是搜打撤的循环）；卖掉、局外货币怎么花还没定。撤离前有一道确认（地图屏）：付多少钱、棋盘上多少件会背出去、暂存区里多少件带不出去（3.4 的提示，不是挽留）。
 
 ### 8.3 M6 分三步
 
@@ -2972,12 +2981,13 @@ data/authoring/enemy_pools/*.json   敌人池（6.0）
 data/authoring/drop_rules/*.json    掉落规则（6.1）
 data/authoring/node_rules/*.json    节点规则（6.2 / 6.5）
 data/authoring/economy_rules/*.json 经济规则（6.6）
+data/authoring/meta_rules/*.json    局外规则：仓库多大（8.2）
 data/authoring/chapters/*.json      章节（5.3）
-        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → items → loadouts → enemies → enemy_pools → drop_rules → node_rules → economy_rules → chapters）
+        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → items → loadouts → enemies → enemy_pools → drop_rules → node_rules → economy_rules → meta_rules → chapters）
         │  tools/normalize_content.gd 把作者数据重写成导出器的格式（导入 → 导出 → 不同就写回）
         ▼
 data/items/*.tres   data/buffs/*.tres   data/sets/*.tres   data/loadouts/*.tres
-data/enemies/*.tres data/enemy_pools/*.tres   data/drop_rules/*.tres   data/node_rules/*.tres   data/economy_rules/*.tres   data/chapters/*.tres
+data/enemies/*.tres data/enemy_pools/*.tres   data/drop_rules/*.tres   data/node_rules/*.tres   data/economy_rules/*.tres   data/meta_rules/*.tres   data/chapters/*.tres
 ```
 
 目录常量只在 `ContentPaths` 一处：种类 → [作者数据目录, 资产目录]，`ORDER` 就是导入顺序（后者按 id 引用前者）。
@@ -3211,14 +3221,16 @@ res://
     run/            chapter_def  run_state  run_save  run_rng  map_travel  move_intent  action_clock
                     vitality  wallet  node_events  node_rules  search_rules  search_session
                     shop_session  economy_rules  paid_extracts  loadout_def  game_flow  run_result
-    meta/           meta_state  meta_save                          # 跨局（8.2）
+    meta/           meta_state  meta_save  meta_rules              # 跨局（8.2）：仓库格子、带回来的棋盘、图鉴
+    settings/       game_settings                                  # 玩家设置（3.4 的提醒档位）
   data/
-    authoring/      items/  loadouts/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  chapters/  maps/
-    items/  loadouts/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  chapters/     # 导入器产出，也进 git
+    authoring/      items/  loadouts/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/  maps/
+    items/  loadouts/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/     # 导入器产出，也进 git
   ui/
     launcher  dev_nav  ui_palette
     game/           game_director  game_screen  main_menu  setup_screen  map_screen  inventory_panel   # 正式游戏（8 节），game.tscn 是主场景
                     battle_screen  loot_screen  search_screen  shop_screen  event_screen  rest_screen  result_screen  meta_screen
+                    settings_screen  warehouse_panel  loot_view
     inventory/      inventory_sandbox  inventory_view  container_view  stash_view  drag_layer  item_painter
     battle/         battle_sandbox  battle_view  combatant_panel
     editor/         content_editor  property_form  shape_editor
@@ -3306,7 +3318,7 @@ res://
 | 1 | ~~run 内是否存在持久生命值~~ 已定：**体力**（7.1），战斗失败扣 1 / 2，归零战败 | 数值一概不写死：扣多少回多少由调用方传给 `Vitality`，初始与上限等角色系统（7.1） | 无 —— 接口已经把数值挡在外面了 |
 | 2 | 侵蚀损失的具体形式 | 浅层扣生命值，深层额外损坏背包物品 | 同上，只改效果实现与参数 |
 | 3 | 节点事件的额外行动消耗 | 搜刮 +1 ／ 休息 +2 ／ 商店 +0。**未做**：现在一律只按边的 `action_cost`；加的话在 `NodeEvents` 里对 `travel.clock.spend` | 仅影响节奏调参 |
-| 4 | 撤离后的保留规则 | 背包内容全额进入仓库，死亡全失 | 影响 meta 成长曲线，不影响任何模块接口 |
+| 4 | 撤离后的保留规则 | **作者已定（058 / 061）**：撤离时棋盘原样带回局外，玩家在结算屏拖或一键置入仓库（放不下就停）、没清空开不了新局；图鉴每件计一次；包只计图鉴；钱带出；战败全失。局外货币怎么花、卖东西未定 | 影响 meta 成长曲线，不影响任何模块接口 |
 | 5 | 棋盘尺寸与开局可用格数 | 现在 `RunState.BOARD_SIZE` 8×6 占位，沙盒开局两个 2×3 的包 = 12 格 | 纯数值，不影响结构 |
 | 6 | 合成配方是否纳入第一章 | 暂缓，先跑通包体系统与战斗 | 独立子系统，可后加 |
 | 7 | ~~暂存区的清空时机~~ 已定并实施（060）：**走出发生过事的点时清**，走之前按设置档位提示（3.4） | 出生点、岔路、路过的点不清；档位与阈值是 `GameSettings` 里的数据 | 商店 / 事件 / 休息屏还没有背包按钮（事件层重做那三屏时一起加） |
@@ -3331,6 +3343,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.59 | 2026-09-23 | **仓库格子化、结算屏一键置入、图鉴**（报告 061，058 / 059 顺序里的第 2 项；8.2 重写，15 节第 4 项定案）。仓库是不要求包的格子，大小是 `MetaRules.warehouse_size`（新内容种类 `meta_rules`，随局外成长）；撤离不直接进仓库 —— 棋盘原样带回（`MetaState.board`，非包道具按原位置、包换成默认背景），结算屏 / 局外屏共用的仓库面板拖或一键置入，放不下就停在那一件提示，没清空 `can_begin()` 拒绝开新局；图鉴 `codex` 累计件数、点亮一次、包也计；`MetaState.keeps(def)` 一处决定什么能存进局外；一局结束时（进结算屏之前）就 absorb、存 meta；`MetaSave` 版本 2，仓库大小以存档为准 |
 | v1.58 | 2026-09-23 | **暂存区按点清空**（报告 060，058 / 059 顺序里的第一项；3.4 定稿，15 节第 7 项收掉）。「发生过事的点」= 踩上去时 `NodeEvents` 真的处理了什么，`last_handled_id` 记着、跟着存档；`RunState.step_to` 走出它时清暂存区、发 `storage_dropped`、清回 -1；出生点、岔路、路过的点、走不成的都不清。提醒档位是 `GameSettings`（`user://settings.json`，有就提 / 稀有度 / 价值 / 从不，表 + 阈值），`StorageWarning.at_risk` 挑要提的，地图屏走之前弹面板（照走 / 先整理背包 / 取消）；新增设置屏 |
 | v1.57 | 2026-09-23 | **059 设想：事件层、统一容器屏、局外 buff 与地图 buff**（未实施）。每个节点踩上去先过事件屏（没配事件的战斗点是转场），选项带条件与后果构件，搜索点「要不要搜」是事件、搜索与战利品是同一个容器屏；buff 是同一套构件、两种生命周期（局外 / 一局），效果树加 `RunEffect`（RUN 作用域）分支，标记型地图 buff 供事件分支查；暂存区改为**离开发生过事的点时清**（058 第五节）。顺序重排；15 节第 11 项更新 |
 | v1.56 | 2026-09-23 | **058 第二轮：作者八条回应**，设计修订：搜索速度不做属性；暂存区每走一步清空；图鉴累计件数、点亮一次；带入的限制就是初始包的空间、包只出不进；仓库大小随局外成长；撤离后保留棋盘、结算屏「一键置入」放不下就停下提示；顺序改为 3 → 4 格子化 → 7 结算置入 → 4 图鉴 → 2 开局预选 → 5 搜索 → 1 外框；15 节第 11 项更新 |

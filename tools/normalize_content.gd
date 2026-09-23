@@ -66,6 +66,8 @@ func _import(kind: String, data: Dictionary, ctx: ContentImporter.Context, repor
 			return ContentImporter.import_economy_rules(data, ctx, report)
 		"loadouts":
 			return ContentImporter.import_loadout(data, ctx, report)
+		"meta_rules":
+			return ContentImporter.import_meta_rules(data, ctx, report)
 		"chapters":
 			return ContentImporter.import_chapter(data, ctx, report)
 		_:
@@ -90,6 +92,8 @@ func _export(kind: String, res: Resource) -> Dictionary:
 			return ContentExporter.export_economy_rules(res)
 		"loadouts":
 			return ContentExporter.export_loadout(res)
+		"meta_rules":
+			return ContentExporter.export_meta_rules(res)
 		"chapters":
 			return ContentExporter.export_chapter(res)
 		_:

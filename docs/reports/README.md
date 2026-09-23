@@ -81,3 +81,4 @@
 | 058 | [作者五条提议：节点层、开局预选与带入限制、暂存区按节点清空、仓库与图鉴、搜索揭示](058-author-five-proposals.md) | 提议 | 已拍板，实施中 |
 | 059 | [设想：事件层、统一容器屏、局外 buff 与地图 buff](059-event-layer-and-buffs-proposal.md) | 提议 | 已拍板，实施中 |
 | 060 | [暂存区按点清空：走出发生过事的点时清，走之前按档位提醒](060-storage-clears-on-leaving.md) | 058 / 059 第 1 项 | 完成 |
+| 061 | [仓库格子化、撤离棋盘带回与一键置入、图鉴](061-warehouse-grid-codex-and-store.md) | 058 / 059 第 2 项 | 完成 |

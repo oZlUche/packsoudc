@@ -21,6 +21,8 @@ var battles_lost: int = 0
 var balance: int = 0
 ## 背出去的：撤离时棋盘上的全部（含包）。战败为空
 var carried: Array[ItemInstance] = []
+## 棋盘多大（带回局外时原样重建）
+var board_size: Vector2i = Vector2i.ZERO
 ## carried 的价值之和（6.4）
 var value: int = 0
 ## 暂存区里遗落的件数与价值（撤离时才有意义）
@@ -44,6 +46,7 @@ static func settle(state: RunState) -> RunResult:
 			r.visited += 1
 	r.battles_won = int(state.tally.get("battles_won", 0))
 	r.battles_lost = int(state.tally.get("battles_lost", 0))
+	r.board_size = state.board.size if state.board != null else Vector2i.ZERO
 	if r.outcome == &"extracted":
 		r.balance = state.wallet.balance if state.wallet != null else 0
 		for inst in state.board.items():

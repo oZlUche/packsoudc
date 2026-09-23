@@ -1,6 +1,12 @@
-## 局外（M6，架构文档 8 节的 MetaProgress，15 节第 4 项）：仓库、钱、战绩、最近几局。
-## 现在只是看：仓库里的东西怎么用（带进下一局、卖掉、局外成长）等作者定。
+## 局外（M6，架构文档 8.2；058 第 4 / 7 条）：仓库的格子、带回来还没清空的背包、图鉴、战绩、最近几局。
+## 带回来的背包没清空之前「再来一局」是灰的（作者：提示玩家清空背包再配置）。
 extends GameScreen
+
+const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
+
+var _wh = null
+var _new_run_btn: Button
+var _hint: Label
 
 
 func open(payload: Dictionary) -> void:
@@ -9,36 +15,50 @@ func open(payload: Dictionary) -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 40)
+		margin.add_theme_constant_override("margin_" + side, 32)
 	add_child(margin)
-	var row := _hbox(32)
+	var row := _hbox(28)
 	margin.add_child(row)
 
-	var left := _vbox(10)
-	left.custom_minimum_size.x = 420
+	var left := _vbox(8)
 	row.add_child(left)
 	left.add_child(_label("仓库与战绩", 26, UiPalette.FG))
 	var just: RunResult = payload.get("result", null)
 	if just != null:
-		left.add_child(_wrapped("刚才这一局：%s，%s" % ["撤离，%d 件进了仓库，值 %d 币，带出 %d 币" % [just.carried.size(), just.value, just.balance]
-			if just.is_extracted() else "战败，什么都没带出来", "已记账"], 13, UiPalette.HEAL if just.is_extracted() else UiPalette.HP, 400))
-	left.add_child(_label("%d 局　撤离 %d　战败 %d　累计价值 %d　单局最高 %d　钱 %d" % [
-		m.runs, m.extractions, m.deaths, m.score, m.best_value, m.funds], 14, UiPalette.FG))
-	left.add_child(_label("仓库 %d 件" % m.warehouse.item_count(), 15, UiPalette.DIM))
-	var view := StashView.new()
-	view.label_font = font
-	view.stash = m.warehouse
-	view.custom_minimum_size.x = 380
-	view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	left.add_child(view)
+		left.add_child(_wrapped("刚才这一局：%s" % ("撤离，背出来 %d 件、值 %d 币、带出 %d 币" % [just.carried.size(), just.value, just.balance]
+			if just.is_extracted() else "战败，什么都没带出来"), 13, UiPalette.HEAL if just.is_extracted() else UiPalette.HP, 500))
+	left.add_child(_label("%d 局　撤离 %d　战败 %d　累计价值 %d　单局最高 %d　钱 %d　图鉴 %d / %d" % [
+		m.runs, m.extractions, m.deaths, m.score, m.best_value, m.funds, m.codex.size(), flow.items.size()], 14, UiPalette.FG))
+	_wh = WarehousePanelScript.new()
+	_wh.setup(flow, font)
+	_wh.changed.connect(_refresh)
+	left.add_child(_wh)
+	_hint = _label("", 12, UiPalette.STAMINA)
+	left.add_child(_hint)
 	var buttons := _hbox(8)
-	buttons.add_child(_button("再来一局", flow.new_run, 16))
+	_new_run_btn = _button("再来一局", flow.new_run, 16)
+	buttons.add_child(_new_run_btn)
 	buttons.add_child(_button("回主菜单", flow.to_main_menu, 16))
 	left.add_child(buttons)
 
 	var right := _vbox(8)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(right)
+	right.add_child(_label("图鉴　带出过的点亮，记累计件数", 15, UiPalette.DIM))
+	var codex := _log_box(13)
+	codex.custom_minimum_size.y = 260
+	var ids: Array = flow.items.ids()
+	ids.sort_custom(func(a: StringName, b: StringName) -> bool:
+		var da := flow.items.get_def(a)
+		var db := flow.items.get_def(b)
+		return da.rarity < db.rarity if da.rarity != db.rarity else String(a) < String(b))
+	for id in ids:
+		var def := flow.items.get_def(id)
+		if m.codex_lit(id):
+			codex.append_text("[color=#%s]%s[/color]　×%d\n" % [ItemPainter.rarity_color(def).to_html(false), def.display_name, m.codex_count(id)])
+		else:
+			codex.append_text("[color=#4a515e]%s[/color]\n" % def.display_name)
+	right.add_child(codex)
 	right.add_child(_label("最近几局", 15, UiPalette.DIM))
 	var log := _log_box(13)
 	for h in m.history:
@@ -50,3 +70,18 @@ func open(payload: Dictionary) -> void:
 	if m.history.is_empty():
 		log.append_text("[color=#8b93a1]还没有打过[/color]")
 	right.add_child(log)
+	_refresh()
+
+
+func store_all() -> Dictionary:
+	return _wh.store_all()
+
+
+func discard_board() -> void:
+	_wh.discard_board()
+
+
+func _refresh() -> void:
+	var why := flow.can_begin()
+	_new_run_btn.disabled = why != ""
+	_hint.text = why

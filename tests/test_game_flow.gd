@@ -187,10 +187,17 @@ static func run_result_and_meta(t: TestCase) -> void:
 	t.eq(r.balance, s.wallet.balance, "钱")
 	t.eq((r.to_dict()["items"] as Array).size(), r.carried.size(), "历史只写 id")
 
+	var kept := 0
+	for inst in r.carried:
+		if MetaState.keeps(inst.def):
+			kept += 1
 	var m := MetaState.new()
 	var got := m.absorb(r)
-	t.eq(int(got["items"]), r.carried.size(), "进仓库 %d 件" % r.carried.size())
-	t.eq(m.warehouse.item_count(), r.carried.size(), "仓库里就是这些")
+	t.eq(int(got["items"]), kept, "带回来 %d 件（包只计图鉴）" % kept)
+	t.check(m.has_pending_board() and m.board.item_count() == kept, "棋盘原样带回来等着置入")
+	t.eq(m.warehouse.item_count(), 0, "仓库没自动进")
+	t.eq(int(m.store_all()["moved"]), kept, "一键置入全进了（默认仓库够大）")
+	t.eq(m.warehouse.item_count(), kept, "仓库里就是这些")
 	t.eq(m.funds, r.balance, "钱带出来了")
 	t.eq(m.score, r.value, "累计价值")
 	t.eq(m.best_value, r.value, "单局最高")
@@ -214,8 +221,9 @@ static func run_result_and_meta(t: TestCase) -> void:
 	s3.phase = RunState.Phase.EXTRACTED
 	s3.end_reason = &"extract"
 	var r3 := RunResult.settle(s3)
-	m.absorb(r3)
-	t.eq(m.warehouse.item_count(), before + r3.carried.size(), "撞号的也全进了仓库")
+	var got3 := m.absorb(r3)
+	m.store_all()
+	t.eq(m.warehouse.item_count(), before + int(got3["items"]), "撞号的也全进了仓库")
 	var uids := {}
 	for inst in m.warehouse.items():
 		uids[(inst as ItemInstance).uid] = true
@@ -412,11 +420,17 @@ static func run_flow_extract(t: TestCase) -> void:
 	t.eq(r.carried.size(), board_items, "背出去的 = 棋盘上的 %d 件" % board_items)
 	t.eq(r.value, board_value, "价值对")
 	t.eq(r.battles_won, int(run.tally["battles_won"]), "打赢的场数跟着计数")
+	var kept := 0
+	for inst in r.carried:
+		if MetaState.keeps(inst.def):
+			kept += 1
+	t.check(f.meta.has_pending_board() and f.meta.board.item_count() == kept, "棋盘原样带回来了（%d 件非包）" % kept)
 	f.finish_result()
 	t.eq(f.screen, GameFlow.Screen.META, "→ 局外")
-	t.eq(f.meta.warehouse.item_count(), board_items, "仓库里就是棋盘上的那些")
+	t.eq(int(f.store_all()["moved"]), kept, "一键置入")
+	t.eq(f.meta.warehouse.item_count(), kept, "仓库里就是棋盘上的那些")
 	t.eq(f.meta.funds, r.balance, "钱带出来了")
-	t.eq(MetaSave.read(c.items, META).warehouse.item_count(), board_items, "局外存了，读回来一样")
+	t.eq(MetaSave.read(c.items, META).warehouse.item_count(), kept, "局外存了，读回来一样")
 	_cleanup()
 #endregion
 
@@ -497,9 +511,12 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	t.eq(game.base().screen, GameFlow.Screen.RESULT, "→ 结算")
 	var result: RunResult = flow.result
 	t.check(result != null and result.is_extracted() and result.left_behind == left, "账上遗落 %d 件 = 暂存区里的" % left)
+	t.check(flow.meta.has_pending_board(), "结算屏上带回来的棋盘等着置入")
+	var stored: Dictionary = game.base().store_all()
+	t.check(int(stored["moved"]) > 0 and not flow.meta.has_pending_board(), "结算屏一键置入 %d 件" % stored["moved"])
 	game.base().proceed()
 	t.eq(game.base().screen, GameFlow.Screen.META, "→ 局外")
-	t.eq(flow.meta.warehouse.item_count(), result.carried.size(), "仓库里就是背出去的")
+	t.eq(flow.meta.warehouse.item_count(), int(stored["moved"]), "仓库里就是背出去的")
 	flow.to_main_menu()
 	game.queue_free()
 	_cleanup()
@@ -558,6 +575,7 @@ static func run_warehouse_to_run(t: TestCase) -> void:
 	first.end_reason = &"extract"
 	f.resume()
 	f.finish_result()
+	f.store_all()
 	var stock := f.meta.warehouse.item_count()
 	t.check(stock > 0, "仓库里有 %d 件" % stock)
 	var pick := f.meta.warehouse.items()[0] as ItemInstance
@@ -589,12 +607,17 @@ static func run_warehouse_to_run(t: TestCase) -> void:
 	f.finish_result()
 	t.eq(f.meta.warehouse.item_count(), stock - 2, "战败：带出去的没回来")
 	var fourth := f.begin(c.chapter, kit, 15, [ (f.meta.warehouse.items()[0] as ItemInstance).uid ] as Array[int])
-	var board_n := fourth.board.item_count()
+	var board_n := 0
+	for inst in fourth.board.items():
+		if MetaState.keeps((inst as ItemInstance).def):
+			board_n += 1
 	fourth.phase = RunState.Phase.EXTRACTED
 	fourth.end_reason = &"extract"
 	f.resume()
 	f.finish_result()
-	t.eq(f.meta.warehouse.item_count(), stock - 3 + board_n, "撤离：棋盘上的全回仓库")
+	t.check(f.can_begin() != "", "带回来的棋盘没清空开不了新局")
+	f.store_all()
+	t.eq(f.meta.warehouse.item_count(), stock - 3 + board_n, "撤离：棋盘上的非包道具置入后全回仓库")
 	_cleanup()
 #endregion
 

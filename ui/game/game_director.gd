@@ -44,8 +44,12 @@ func _ready() -> void:
 	enemies.load_all()
 	var sets := SetDatabase.new()
 	sets.load_dir()
-	var meta := MetaSave.read(items, meta_path)
+	var rules := GameFlow.load_meta_rules()
+	var meta := MetaSave.read(items, meta_path, rules)
+	if meta == null:
+		meta = MetaState.new(rules)
 	flow = GameFlow.new(items, enemies, sets, meta)
+	flow.meta_rules = rules
 	flow.chapters = GameFlow.load_chapters()
 	flow.loadouts = GameFlow.load_loadouts()
 	flow.save_path = save_path

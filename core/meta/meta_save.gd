@@ -25,13 +25,13 @@ static func to_text(meta: MetaState) -> String:
 	return JSON.stringify(meta.to_dict(), "  ", false) + "\n"
 
 
-static func read(items: ItemDatabase, path: String = DEFAULT_PATH) -> MetaState:
+static func read(items: ItemDatabase, path: String = DEFAULT_PATH, rules: MetaRules = null) -> MetaState:
 	if not FileAccess.file_exists(path):
 		return null
-	return from_text(FileAccess.get_file_as_string(path), items)
+	return from_text(FileAccess.get_file_as_string(path), items, rules)
 
 
-static func from_text(text: String, items: ItemDatabase) -> MetaState:
+static func from_text(text: String, items: ItemDatabase, rules: MetaRules = null) -> MetaState:
 	var parsed = JSON.parse_string(text)
 	if not (parsed is Dictionary):
 		push_warning("MetaSave: 存档不是合法的 JSON 对象")
@@ -40,7 +40,7 @@ static func from_text(text: String, items: ItemDatabase) -> MetaState:
 	if int(d.get("version", -1)) != MetaState.SAVE_VERSION:
 		push_warning("MetaSave: 存档版本 %s，本版只认 %d —— 迁移还没写" % [str(d.get("version", "?")), MetaState.SAVE_VERSION])
 		return null
-	return MetaState.from_dict(d, items)
+	return MetaState.from_dict(d, items, rules)
 
 
 static func remove(path: String = DEFAULT_PATH) -> void:
