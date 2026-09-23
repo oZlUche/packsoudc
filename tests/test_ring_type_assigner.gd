@@ -50,27 +50,22 @@ static func _check_rules(g: MapGraph, cfg: RingMapConfig) -> String:
 			if n < int(lim[0]) or n > int(lim[1]):
 				return "第 %d 环 %s 有 %d 个，配额 %s" % [r, type, n, str(lim)]
 
-	# 覆盖：高危区外、走过路径前一段之后的每个点距最近的喘气处不超过 K；死胡同末端也算在内
+	# 覆盖：高危区外的每个点距最近的喘气处不超过 K；死胡同末端也算在内
 	for type in cfg.coverage:
 		var dist := RingTypeAssigner.distances_to_type(g, StringName(type))
 		for id in g.node_ids():
 			var n := g.get_node(id)
 			if n.danger > cfg.no_haven_in_danger_above:
 				continue
-			if RingTypeAssigner.progress_of(_ring_of(g, id), cfg.ring_count()) < cfg.haven_after_progress:
-				continue
 			if int(dist.get(id, 1 << 20)) > int(cfg.coverage[type]):
 				return "节点 %d 距最近的 %s 有 %s 步（%d 条路挨着它）" % [
 					id, type, str(dist.get(id, "∞")), g.edges_of(id).size()]
 
-	# 高危区里没有喘气的地方；路径前一段也没有
+	# 高危区里没有喘气的地方
 	for id in g.node_ids():
 		var n := g.get_node(id)
 		if n.danger > cfg.no_haven_in_danger_above and cfg.coverage.has(String(n.type)):
 			return "节点 %d 在高危区里却是 %s" % [id, n.type]
-		if _ring_of(g, id) > 0 and cfg.coverage.has(String(n.type)) \
-				and RingTypeAssigner.progress_of(_ring_of(g, id), cfg.ring_count()) < cfg.haven_after_progress:
-			return "节点 %d 是 %s，却在路径的前 %d%% 里" % [id, n.type, roundi(cfg.haven_after_progress * 100)]
 
 	# 出生点是 spawn，spawn 都是出生点
 	for id in g.node_ids():
@@ -121,19 +116,22 @@ static func _check_rules(g: MapGraph, cfg: RingMapConfig) -> String:
 		if cfg.zone_spec != null and (elites < cfg.zone_spec.min_elites or searches < cfg.zone_spec.min_search):
 			return "高危区 %s：%d 精英 %d 搜索点" % [zone_id, elites, searches]
 
-	# 每 N 环至少一个撤离点，且撤离点没有盖掉必须型（没法直接看，看数量：必须型的最小配额仍成立即可）
-	if cfg.extract_every_rings > 0:
-		var r_hi := cfg.ring_count()
-		while r_hi >= 1:
-			var r_lo := maxi(1, r_hi - cfg.extract_every_rings + 1)
-			var has := false
-			for id in g.node_ids():
-				var r := _ring_of(g, id)
-				if r >= r_lo and r <= r_hi and g.get_node(id).type == &"extract":
-					has = true
-			if not has:
-				return "第 %d～%d 环没有撤离点" % [r_lo, r_hi]
-			r_hi = r_lo - 1
+	# 中途撤离点只在撤离环间（核心前一环例外：去撤离点的路线在那里收尾），且那里至少有一个；不在高危区里
+	var band := cfg.extract_band()
+	if not band.is_empty():
+		var in_band := 0
+		for id in g.node_ids():
+			if g.get_node(id).type != &"extract":
+				continue
+			var r := _ring_of(g, id)
+			if band.has(r):
+				in_band += 1
+			elif r != 1:
+				return "撤离点 %d 在第 %d 环，不在撤离环间 %s" % [id, r, str(band)]
+			if g.get_node(id).zone != 0:
+				return "撤离点 %d 开在高危区里" % id
+		if in_band == 0:
+			return "撤离环间 %s 里没有撤离点" % str(band)
 
 	# 撤离点两两之间至少 extract_gap 步（值从配置 / 规模模板读）
 	var gap := cfg.effective_extract_gap()
@@ -148,9 +146,9 @@ static func _check_rules(g: MapGraph, cfg: RingMapConfig) -> String:
 				return "撤离点 %d 与 %d 只隔 %d 步，至少要 %d" % [extracts[i], extracts[j], dist[extracts[j]], gap]
 
 	# 节点总数落在规模模板的范围里
-	var p := cfg.scale()
-	if p != null and p.nodes.y > 0 and (g.node_count() < p.nodes.x or g.node_count() > p.nodes.y):
-		return "%d 个点，规模 %s 该是 %d～%d" % [g.node_count(), p.id, p.nodes.x, p.nodes.y]
+	var lim := cfg.node_range()
+	if lim.y > 0 and (g.node_count() < lim.x or g.node_count() > lim.y):
+		return "%d 个点，这个环数该是 %d～%d" % [g.node_count(), lim.x, lim.y]
 
 	# 规则跟着图走
 	if not g.layout_meta.has("type_rules"):
@@ -185,19 +183,6 @@ static func run_route_rules(t: TestCase) -> void:
 			# 去撤离点的路线，末端是撤离点
 			if String(route["ends_at"]) == "extract":
 				t.eq(g.get_node(int(ids[-1])).type, &"extract", "%s 的末端是撤离点（种子 %d）" % [route["style"], s])
-			# 有 bailout 的路线，每隔那么多环有一个撤离点
-			if style.bailout_every_rings > 0:
-				var last_extract := cfg.ring_count()
-				var ok := true
-				for id in ids:
-					var r := _ring_of(g, int(id))
-					if r <= 0:
-						continue
-					if g.get_node(int(id)).type == &"extract":
-						last_extract = r
-					elif last_extract - r > style.bailout_every_rings + 1:
-						ok = false
-				t.check(ok, "%s 沿路每 %d 环左右有撤离点（种子 %d）" % [route["style"], style.bailout_every_rings, s])
 			# min_share：这条路线独占的、可换的节点里，该类型至少占那么多
 			for k in style.min_share:
 				var have := 0
@@ -346,3 +331,63 @@ static func run_determinism(t: TestCase) -> void:
 	var a := RingMapGenerator.new().generate(cfg, 77)
 	var b := RingMapGenerator.new().generate(cfg, 77)
 	t.eq(JSON.stringify(b.to_dict()), JSON.stringify(a.to_dict()), "类型分配之后仍然逐字节相同")
+
+
+static func run_band_extracts_and_step_havens(t: TestCase) -> void:
+	t.begin("类型分配 · 撤离点在撤离环间、尽量两条路线共用；喘气处按路线步数放")
+
+	for rings in [4, 6]:
+		var cfg := RingMapConfig.sample(rings)
+		var band := cfg.extract_band()
+		var at := cfg.haven_at()
+		var band_x := 0
+		var shared := 0
+		var stray := 0
+		var pos := {}
+		var n_pos := {}
+		var routes_n := 0
+		for s in SEEDS:
+			var g := RingMapGenerator.new().generate(cfg, s)
+			if g == null:
+				continue
+			var routes_of := {}
+			for route in g.routes:
+				for id in (route["node_ids"] as Array):
+					routes_of[int(id)] = int(routes_of.get(int(id), 0)) + 1
+			var pivot := {}
+			for link in (g.layout_meta.get("pivot_links", []) as Array):
+				pivot[int(link[0])] = true
+				pivot[int(link[1])] = true
+			for arc in (g.layout_meta.get("pivot_arcs", []) as Array):
+				for id in (arc["node_ids"] as Array):
+					pivot[int(id)] = true
+			for id in g.node_ids():
+				if g.get_node(id).type != &"extract":
+					continue
+				var r := _ring_of(g, id)
+				if band.has(r):
+					band_x += 1
+					if int(routes_of.get(id, 0)) >= 2 or pivot.has(id):
+						shared += 1
+				elif r != 1:
+					stray += 1
+			for route in g.routes:
+				var ids: Array = route["node_ids"]
+				var inner: Array = ids.slice(1, ids.size() - 1)
+				routes_n += 1
+				for ty in at:
+					for k in inner.size():
+						if g.get_node(int(inner[k])).type == StringName(ty):
+							pos[ty] = float(pos.get(ty, 0.0)) + float(k) / float(maxi(1, inner.size() - 1))
+							n_pos[ty] = int(n_pos.get(ty, 0)) + 1
+							break
+		t.check(band_x >= SEEDS, "%d 环：撤离环间 %s 里每张图至少一个撤离点（共 %d）" % [rings, str(band), band_x])
+		t.eq(stray, 0, "%d 环：撤离环间之外只有核心前一环有撤离点（路线收尾）" % rings)
+		t.check(float(shared) >= float(band_x) * 0.3,
+			"%d 环：撤离环间的撤离点多数落在两条路线共用的地方（%d / %d，尽力而为）" % [rings, shared, band_x])
+		for ty in at:
+			var avg := float(pos.get(ty, 0.0)) / float(maxi(1, int(n_pos.get(ty, 0))))
+			t.check(int(n_pos.get(ty, 0)) >= routes_n * 0.9,
+				"%d 环：%d/%d 条路线上有 %s" % [rings, int(n_pos.get(ty, 0)), routes_n, ty])
+			t.check(absf(avg - float(at[ty])) <= 0.2,
+				"%d 环：%s 平均在路线 %.2f 处，目标 %.2f（按步数，不看环）" % [rings, ty, avg, float(at[ty])])

@@ -14,8 +14,9 @@ const DEFAULT_MAX_SIZE := 9
 @export var min_size: int = DEFAULT_MIN_SIZE
 ## 至多几个点
 @export var max_size: int = DEFAULT_MAX_SIZE
-## 出入口（跨越区域边界的路）的上限，随规模放宽：「点数 ≤ 键」用对应的值。
-## 3~4 个点至多 2 个，5~6 至多 3 个，7~9 至多 4 个
+## 出入口的上限，随规模放宽：「点数 ≤ 键」用对应的值。3~4 个点至多 2 个，5~6 至多 3 个，7~9 至多 4 个。
+## **出入口是区内连着区外的那个【点】，不是边**：一个点身上通向区外的路再多也只算一个口 ——
+## 玩家站在那个点上，出去就是出去了，从哪条路出去没差别。至少 1 个（吸收了路线节点的小区可能 2 个）
 ## （键写成字符串，理由同 DangerZoneSpec.soft_cap_by_rings）
 @export var max_gates_by_size: Dictionary = {"4": 2, "6": 3, "9": 4}
 
@@ -49,7 +50,7 @@ static func from_graph(graph: MapGraph) -> ZoneRules:
 	return rules
 
 
-## 高危区（danger ≥ 2 的区域）长得对不对：规模、区内相连、出入口数目。
+## 高危区（danger ≥ 2 的区域）长得对不对：规模、区内相连、出入口（点）数目。
 ## 中危区不归这里管 —— 它只是一片难一点的地方，没有「只靠几个口进出」的要求。
 static func validate(graph: MapGraph, v: MapValidation) -> void:
 	var rules := from_graph(graph)
@@ -60,10 +61,10 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 		if ids.size() < rules.min_size or ids.size() > rules.max_size:
 			v.fail(&"zone_size", "高危区 %s 有 %d 个点，该在 %d～%d 之间"
 				% [zone_id, ids.size(), rules.min_size, rules.max_size])
-		var gates := crossing_edges(graph, ids).size()
+		var gates := gate_ids(graph, ids).size()
 		var cap := rules.max_gates_for(ids.size())
 		if gates < 1 or gates > cap:
-			v.fail(&"zone_gate", "高危区 %s（%d 个点）有 %d 个出入口，该在 1～%d 之间"
+			v.fail(&"zone_gate", "高危区 %s（%d 个点）有 %d 个出入口节点，该在 1～%d 之间"
 				% [zone_id, ids.size(), gates, cap])
 		if not is_connected_inside(graph, ids):
 			v.fail(&"zone_connected", "高危区 %s 内部断成了几片" % zone_id)
