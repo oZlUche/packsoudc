@@ -18,6 +18,7 @@ var _routes_box: VBoxContainer
 var _log: RichTextLabel
 var _extract_btn: Button
 var _bag: Control = null
+var _confirm: Control = null
 
 
 func open(_payload: Dictionary) -> void:
@@ -47,12 +48,81 @@ func step(to_id: int) -> bool:
 	return flow.step_to(to_id)
 
 
+## 在撤离点上按「撤离」：先确认 —— 付多少钱、暂存区里有什么带不出去（3.4）。返回 false = 不在撤离点上
 func extract() -> bool:
 	var node := _run.current_node()
+	if node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract":
+		_say("撤不了：不在撤离点上")
+		return false
+	_open_confirm(node)
+	return true
+
+
+## 确认撤离。付不起返回 false，留在地图上
+func confirm_extract() -> bool:
+	cancel_extract()
+	var node := _run.current_node()
 	if not flow.extract():
-		_say("撤不了：不在撤离点上，或付不起（%d 币）" % (_run.events.extract_fee(node) if node != null else 0))
+		_say("撤不了：付不起（%d 币）" % (_run.events.extract_fee(node) if node != null else 0))
 		return false
 	return true
+
+
+func cancel_extract() -> void:
+	if _confirm != null:
+		_confirm.queue_free()
+		_confirm = null
+
+
+func confirm_open() -> bool:
+	return _confirm != null
+
+
+func _open_confirm(node: MapNode) -> void:
+	cancel_extract()
+	var shade := ColorRect.new()
+	shade.color = Color(0.04, 0.05, 0.07, 0.7)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(shade)
+	_confirm = shade
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.add_child(center)
+	var panel := _panel(20)
+	panel.custom_minimum_size.x = 520
+	center.add_child(panel)
+	var col := _vbox(10)
+	panel.add_child(col)
+	col.add_child(_label("撤离？", 20, UiPalette.FG))
+	var fee := _run.events.extract_fee(node)
+	var affordable := fee <= 0 or _run.wallet.can_afford(fee)
+	if fee > 0:
+		col.add_child(_wrapped("这是付费撤离点：%d 币（现有 %d 币%s）" % [fee, _run.wallet.balance, "" if affordable else "，付不起"],
+			14, UiPalette.FG if affordable else UiPalette.HP, 480))
+	var carried := 0
+	var carried_value := 0
+	for inst in _run.board.items():
+		carried += 1
+		carried_value += ItemValue.of((inst as ItemInstance).def)
+	col.add_child(_wrapped("棋盘上 %d 件、值 %d 币会背出去进仓库；剩 %d 币带出" % [carried, carried_value, _run.wallet.balance - maxi(0, fee)], 14, UiPalette.FG, 480))
+	var left := _run.storage.item_count()
+	if left > 0:
+		var left_value := 0
+		var rare := 0
+		for inst in _run.storage.items():
+			var def := (inst as ItemInstance).def
+			left_value += ItemValue.of(def)
+			if def.rarity >= 2:
+				rare += 1
+		col.add_child(_wrapped("暂存区里还有 %d 件（值 %d 币%s）不会带出去 —— 暂存区不参战也不出关（3.4）。想带走先放进棋盘（B）" % [
+			left, left_value, "，其中 %d 件稀有以上" % rare if rare > 0 else ""], 14, UiPalette.STAMINA, 480))
+	var buttons := _hbox(8)
+	var go := _button("确定撤离", func(): confirm_extract(), 14)
+	go.disabled = not affordable
+	buttons.add_child(go)
+	buttons.add_child(_button("再想想", cancel_extract, 14))
+	col.add_child(buttons)
 
 
 ## 背包整理面板叠在地图上，再按一次收起
@@ -142,7 +212,7 @@ func _after_move() -> void:
 
 
 func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
-	if button != MOUSE_BUTTON_LEFT or _bag != null:
+	if button != MOUSE_BUTTON_LEFT or _bag != null or _confirm != null:
 		return
 	if _run.phase == RunState.Phase.PICK_SPAWN:
 		if not pick_spawn(id):
@@ -313,7 +383,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	match key.keycode:
 		KEY_B:
-			toggle_bag()
+			if _confirm == null:
+				toggle_bag()
 		KEY_F:
 			_view.fit()
 		KEY_1:

@@ -31,7 +31,10 @@ func open(payload: Dictionary) -> void:
 	view.custom_minimum_size.x = 380
 	view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(view)
-	left.add_child(_button("回主菜单", flow.to_main_menu, 16))
+	var buttons := _hbox(8)
+	buttons.add_child(_button("再来一局", flow.new_run, 16))
+	buttons.add_child(_button("回主菜单", flow.to_main_menu, 16))
+	left.add_child(buttons)
 
 	var right := _vbox(8)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL

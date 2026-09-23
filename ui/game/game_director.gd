@@ -113,9 +113,20 @@ func demo_fill() -> void:
 	# 演示不碰玩家真正的存档
 	flow.save_path = "user://demo_run.json"
 	flow.meta_path = "user://demo_meta.json"
-	flow.new_run()
 	if want == "setup":
+		# 先撤离一局攒个仓库，开局屏才有东西可带
+		var warm := flow.begin(flow.chapters[0], flow.loadouts[0] if not flow.loadouts.is_empty() else null, 1)
+		if warm != null:
+			warm.phase = RunState.Phase.EXTRACTED
+			warm.end_reason = &"extract"
+			flow.resume()
+			flow.finish_result()
+		flow.new_run()
+		var setup := _base
+		if setup != null and flow.meta.warehouse.item_count() > 0:
+			setup.call("toggle_warehouse", (flow.meta.warehouse.items()[0] as ItemInstance).uid)
 		return
+	flow.new_run()
 	var next_type: StringName = &"search" if want == "search" else &"battle"
 	var found := {}
 	for seed in range(1, 60):
@@ -142,6 +153,10 @@ func demo_fill() -> void:
 	if want == "bag":
 		_base.call("toggle_bag")
 		return
+	if want == "confirm":
+		_demo_walk_to_extract(run)
+		_base.call("extract")
+		return
 	flow.step_to(int(found["next"]))
 	if want == "battle":
 		return
@@ -154,14 +169,52 @@ func demo_fill() -> void:
 		if flow.screen == GameFlow.Screen.BATTLE:
 			flow.resume()
 		return
-	while GameFlow.is_overlay(flow.screen):
-		if flow.screen == GameFlow.Screen.LOOT:
-			flow.take_all_loot()
-		else:
-			flow.resume()
+	_demo_settle()
 	run.phase = RunState.Phase.EXTRACTED
 	run.end_reason = &"extract"
 	flow.resume()
 	if want == "result":
 		return
 	flow.finish_result()
+
+
+## 演示：把叠层都看完（战利品全拿、会话离开）
+func _demo_settle() -> void:
+	var guard := 0
+	while GameFlow.is_overlay(flow.screen) and guard < 30:
+		guard += 1
+		match flow.screen:
+			GameFlow.Screen.LOOT:
+				flow.take_all_loot()
+			GameFlow.Screen.SEARCH:
+				flow.run.events.current_search.leave()
+			GameFlow.Screen.SHOP:
+				flow.run.events.current_shop.leave()
+			_:
+				flow.resume()
+
+
+## 演示：一路走到最近的免费撤离点
+func _demo_walk_to_extract(run: RunState) -> void:
+	var from := run.travel.current_id
+	var dist := MapNavigator.distance_map(run.map, from)
+	var target := -1
+	var best := 999
+	for id in run.map.node_ids():
+		var n := run.map.get_node(id)
+		if n.type == &"extract" and PaidExtracts.fee_of(n) == 0 and dist.has(id) and int(dist[id]) < best:
+			best = int(dist[id])
+			target = id
+	if target < 0:
+		return
+	var to_target := MapNavigator.distance_map(run.map, target)
+	var guard := 0
+	while run.travel.current_id != target and not run.is_over() and guard < 60:
+		guard += 1
+		var next := -1
+		for id in run.travel.available_moves():
+			if to_target.has(id) and (next < 0 or int(to_target[id]) < int(to_target[next])):
+				next = id
+		if next < 0 or not flow.step_to(next):
+			return
+		_demo_settle()

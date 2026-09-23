@@ -30,6 +30,7 @@ static func _content() -> Content:
 
 
 static func _flow(c: Content, hp: float = 10000.0) -> GameFlow:
+	_cleanup()      # 上一次跑挂在半路可能留下存档，别让它影响这一次
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = [c.chapter] as Array[ChapterDef]
 	f.loadouts = c.loadouts
@@ -475,10 +476,123 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	t.check(game.base().screen == GameFlow.Screen.MAIN_MENU and game.base() != map, "存档回主菜单")
 	t.check(flow.continue_run(), "继续上次")
 	t.eq(game.base().screen, GameFlow.Screen.MAP, "→ 地图")
-	flow.show_meta()
-	t.eq(game.base().screen, GameFlow.Screen.META, "局外屏")
+
+	# M6-3：走到最近的免费撤离点，先确认再撤；暂存区里有东西就提一句遗落
+	map = game.base()
+	t.check(not map.extract(), "不在撤离点上按撤离没反应")
+	var run: RunState = flow.run
+	var target := _nearest_free_extract(run)
+	t.check(target >= 0, "有免费撤离点可走")
+	_director_walk(game, run, target)
+	t.eq(run.travel.current_id, target, "站在撤离点上")
+	var left := run.storage.item_count()
+	t.check(map.extract(), "按撤离 → 先问一句")
+	t.check(map.confirm_open(), "确认面板开着")
+	map.cancel_extract()
+	t.check(not map.confirm_open(), "再想想：面板关了，人还在")
+	t.eq(flow.screen, GameFlow.Screen.MAP, "没撤")
+	t.eq(run.travel.current_id, target, "还站在撤离点上")
+	t.check(map.extract(), "再按一次撤离")
+	t.check(map.confirm_extract(), "确定撤离")
+	t.eq(game.base().screen, GameFlow.Screen.RESULT, "→ 结算")
+	var result: RunResult = flow.result
+	t.check(result != null and result.is_extracted() and result.left_behind == left, "账上遗落 %d 件 = 暂存区里的" % left)
+	game.base().proceed()
+	t.eq(game.base().screen, GameFlow.Screen.META, "→ 局外")
+	t.eq(flow.meta.warehouse.item_count(), result.carried.size(), "仓库里就是背出去的")
 	flow.to_main_menu()
 	game.queue_free()
+	_cleanup()
+
+
+static func _nearest_free_extract(run: RunState) -> int:
+	var dist := MapNavigator.distance_map(run.map, run.travel.current_id)
+	var best := 999
+	var target := -1
+	for id in run.map.node_ids():
+		var n := run.map.get_node(id)
+		if n.type == &"extract" and PaidExtracts.fee_of(n) == 0 and dist.has(id) and int(dist[id]) < best:
+			best = int(dist[id])
+			target = id
+	return target
+
+
+## 隔着导演走：每一步把叠上来的屏按它们自己的按钮看完
+static func _director_walk(game, run: RunState, target: int) -> void:
+	var to_target := MapNavigator.distance_map(run.map, target)
+	var guard := 0
+	while run.travel.current_id != target and not run.is_over() and guard < 60:
+		guard += 1
+		var next := -1
+		for id in run.travel.available_moves():
+			if to_target.has(id) and (next < 0 or int(to_target[id]) < int(to_target[next])):
+				next = id
+		if next < 0 or not game.base().step(next):
+			return
+		var inner := 0
+		while game.overlay() != null and inner < 20:
+			inner += 1
+			var ov = game.overlay()
+			match ov.screen:
+				GameFlow.Screen.LOOT:
+					ov.take_all()
+				GameFlow.Screen.SEARCH, GameFlow.Screen.SHOP:
+					ov.leave()
+				_:
+					ov.proceed()
+#endregion
+
+
+#region M6-3 仓库带进一局
+static func run_warehouse_to_run(t: TestCase) -> void:
+	t.begin("场景流 · 从仓库带东西进一局：从仓库拿走、立刻存 meta；撤离了回来")
+
+	var c := _content()
+	var f := _flow(c)
+	var kit := _loadout(c, &"standard")
+	# 先攒一个仓库：一局撤离
+	var first := f.begin(c.chapter, kit, 11)
+	first.phase = RunState.Phase.EXTRACTED
+	first.end_reason = &"extract"
+	f.resume()
+	f.finish_result()
+	var stock := f.meta.warehouse.item_count()
+	t.check(stock > 0, "仓库里有 %d 件" % stock)
+	var pick := f.meta.warehouse.items()[0] as ItemInstance
+	var pick_def := pick.def.id
+	var pick_uid := pick.uid
+
+	var second := f.begin(c.chapter, kit, 12, [pick_uid] as Array[int])
+	t.not_null(second, "带着仓库的东西开局")
+	t.eq(f.meta.warehouse.item_count(), stock - 1, "仓库少了那一件")
+	t.is_null(f.meta.warehouse.get_item(pick_uid), "那个 uid 不在仓库了")
+	t.eq(MetaSave.read(c.items, META).warehouse.item_count(), stock - 1, "meta 立刻存了：重开游戏也拿不回来")
+	var have := 0
+	for inst in second.board.items():
+		if (inst as ItemInstance).def.id == pick_def:
+			have += 1
+	for inst in second.storage.items():
+		if (inst as ItemInstance).def.id == pick_def:
+			have += 1
+	var in_kit := kit.items.count(pick_def)
+	t.eq(have, in_kit + 1, "这一局里多了一件 %s（装备清单里 %d 件 + 仓库 1 件）" % [pick_def, in_kit])
+	t.check(f.begin(c.chapter, kit, 13, [999999] as Array[int]) != null and f.meta.warehouse.item_count() == stock - 1, "不存在的 uid 忽略，仓库不动")
+
+	# 死了就没了；撤离了回来
+	var third := f.begin(c.chapter, kit, 14, [ (f.meta.warehouse.items()[0] as ItemInstance).uid ] as Array[int])
+	t.eq(f.meta.warehouse.item_count(), stock - 2, "又带走一件")
+	third.phase = RunState.Phase.DEFEATED
+	third.end_reason = &"vitality_depleted"
+	f.resume()
+	f.finish_result()
+	t.eq(f.meta.warehouse.item_count(), stock - 2, "战败：带出去的没回来")
+	var fourth := f.begin(c.chapter, kit, 15, [ (f.meta.warehouse.items()[0] as ItemInstance).uid ] as Array[int])
+	var board_n := fourth.board.item_count()
+	fourth.phase = RunState.Phase.EXTRACTED
+	fourth.end_reason = &"extract"
+	f.resume()
+	f.finish_result()
+	t.eq(f.meta.warehouse.item_count(), stock - 3 + board_n, "撤离：棋盘上的全回仓库")
 	_cleanup()
 #endregion
 

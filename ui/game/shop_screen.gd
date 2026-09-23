@@ -53,12 +53,18 @@ func _rebuild() -> void:
 		var def := flow.items.get_def(StringName(String(_session.stock[i]["id"])))
 		var idx := i
 		var sold := _session.sold.has(i)
-		var b := _button("%s　%d 币%s" % [def.display_name if def != null else "?", int(_session.stock[i]["price"]), "　（已售）" if sold else ""],
-			func(): buy(idx), 13)
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		var row := _hbox(10)
+		var b := _button("已售" if sold else "买　%d 币" % int(_session.stock[i]["price"]), func(): buy(idx), 13)
+		b.custom_minimum_size.x = 110
 		b.disabled = not _session.can_buy(i)
-		if def != null:
-			b.add_theme_color_override("font_color", ItemPainter.rarity_color(def))
-		_shelf.add_child(b)
+		row.add_child(b)
+		var line := _log_box(13)
+		line.fit_content = true
+		line.scroll_active = false
+		line.custom_minimum_size.x = 320
+		line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		line.append_text(_item_line(def) if not sold else "[color=#8b93a1]%s[/color]" % (def.display_name if def != null else "?"))
+		row.add_child(line)
+		_shelf.add_child(row)
 	_refresh_btn.text = "刷新（%d 币）" % _session.refresh_cost()
 	_refresh_btn.disabled = not _session.can_refresh()

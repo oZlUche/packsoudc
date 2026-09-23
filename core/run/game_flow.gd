@@ -64,14 +64,25 @@ func show_meta() -> void:
 	_go(Screen.META)
 
 
-## 从一章、一套装备、一个种子开一局。生成不出图返回 null，停在开局屏
-func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int) -> RunState:
+## 从一章、一套装备、一个种子开一局；[param from_warehouse] 是从仓库带上的东西的 uid。生成不出图返回 null，停在开局屏。
+## 带进去的就从仓库拿走（一局里是新实例，3.1 存档只写 id）并立刻存 meta：撤离了它们回来，死了就是真没了
+func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: Array[int] = [] as Array[int]) -> RunState:
 	var kit: Array[StringName] = []
 	if loadout != null:
 		kit = loadout.items.duplicate()
+	var taken: Array[ItemInstance] = []
+	for uid in from_warehouse:
+		var inst := meta.warehouse.get_item(uid)
+		if inst != null and inst.def != null:
+			kit.append(inst.def.id)
+			taken.append(inst)
 	var state := RunState.start(chapter, seed, items, enemies, sets, kit)
 	if state == null:
 		return null
+	if not taken.is_empty():
+		for inst in taken:
+			meta.warehouse.remove(inst.uid)
+		MetaSave.write(meta, meta_path)
 	_adopt(state)
 	_go(Screen.MAP)
 	run_started.emit(state)
