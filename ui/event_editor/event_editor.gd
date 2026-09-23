@@ -663,7 +663,7 @@ func _rebuild_form() -> void:
 	_form_host.add_child(form)
 
 
-## 照着事件屏的样子画：标题、图、正文、选项；每个选项底下写条件与后果
+## 照着事件屏画（两栏：左边图，右边标题、正文、选项）；每个选项底下写条件与后果
 func _rebuild_preview() -> void:
 	# 先摘下来再 free：queue_free 到帧末才真的走，同一帧里数子节点会把旧的也数进去
 	for c in _preview_host.get_children():
@@ -671,21 +671,30 @@ func _rebuild_preview() -> void:
 		c.queue_free()
 	if _def == null:
 		return
-	_preview_host.add_child(_label(_def.title if _def.title != "" else String(_def.id), 18, UiPalette.FG))
-	_preview_host.add_child(_image_control(_def.image, Vector2(360, 110)))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	_preview_host.add_child(row)
+	var title := _def.title if _def.title != "" else String(_def.id)
+	row.add_child(_image_control(_def.image, title, Vector2(150, 240)))
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_theme_constant_override("separation", 8)
+	row.add_child(col)
+	col.add_child(_label(title, 17, UiPalette.FG))
+	col.add_child(HSeparator.new())
 	if _def.text != "":
-		_preview_host.add_child(_wrapped(_def.text, 13, UiPalette.FG, 360))
-	_preview_host.add_child(HSeparator.new())
+		col.add_child(_wrapped(_def.text, 12, UiPalette.FG, 190))
 	for i in _def.options.size():
 		var opt := _def.options[i] as EventOption
 		if opt == null:
 			continue
 		var b := Button.new()
 		b.text = opt.label if opt.label != "" else "（没有字）"
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.add_theme_font_override("font", _font)
-		b.add_theme_font_size_override("font_size", 14)
+		b.add_theme_font_size_override("font_size", 13)
 		b.set_meta("option", i)
-		_preview_host.add_child(b)
+		col.add_child(b)
 		var notes: Array[String] = []
 		for c in opt.requires:
 			var cond := c as EventCondition
@@ -699,7 +708,7 @@ func _rebuild_preview() -> void:
 			notes.append("条件不满足时不显示")
 		if notes.is_empty():
 			notes.append("（什么也不做，点了就走）")
-		_preview_host.add_child(_wrapped("　".join(notes), 11, UiPalette.DIM, 360))
+		col.add_child(_wrapped("　".join(notes), 11, UiPalette.DIM, 190))
 
 
 static func _describe(construct: Object) -> String:
@@ -707,26 +716,36 @@ static func _describe(construct: Object) -> String:
 	return s if s != "" else String(ContentSchema.registry_name_of(construct))
 
 
-func _image_control(path: String, size: Vector2) -> Control:
-	var tex := EventImage.load_texture(path)
-	if tex != null:
+## 左栏的图：铺满、按比例裁，和事件屏一个画法；没有图就深底色写占位
+func _image_control(path: String, title: String, size: Vector2) -> Control:
+	var area := Control.new()
+	area.clip_contents = true
+	area.custom_minimum_size = size
+	var tex2d := EventImage.load_texture(path)
+	if tex2d != null:
 		var rect := TextureRect.new()
-		rect.texture = tex
-		rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-		rect.custom_minimum_size = size
-		return rect
-	var box := PanelContainer.new()
-	var st := StyleBoxFlat.new()
-	st.bg_color = Color("14161a")
-	st.border_color = UiPalette.LINE
-	st.set_border_width_all(1)
-	box.add_theme_stylebox_override("panel", st)
-	box.custom_minimum_size = Vector2(size.x, size.y * 0.7)
-	var l := _label("（图像占位：%s）" % path if path != "" else "（没有配图）", 11, UiPalette.DIM.darkened(0.2))
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	box.add_child(l)
-	return box
+		rect.texture = tex2d
+		rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		area.add_child(rect)
+		return area
+	var bg := ColorRect.new()
+	bg.color = Color("0d0f12")
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	area.add_child(bg)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	area.add_child(center)
+	var col := VBoxContainer.new()
+	center.add_child(col)
+	var big := _label(title, 13, UiPalette.DIM.darkened(0.35))
+	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(big)
+	var hint := _label("（没有配图）" if path == "" else "（图读不到）", 10, UiPalette.DIM.darkened(0.45))
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(hint)
+	return area
 
 
 ## 校验走的就是导入器本身

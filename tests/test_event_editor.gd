@@ -21,6 +21,14 @@ static func _remove(path: String) -> void:
 		DirAccess.remove_absolute(absolute)
 
 
+## 预览是两栏的（左图右文），按钮在右栏里，递归找
+static func _collect_buttons(node: Node, out: Array[String]) -> void:
+	for c in node.get_children():
+		if c is Button:
+			out.append((c as Button).text)
+		_collect_buttons(c, out)
+
+
 static func _cleanup_probe() -> void:
 	_remove(ContentPaths.authoring_file("events", PROBE))
 	_remove(ContentPaths.asset_file("events", PROBE))
@@ -49,9 +57,7 @@ static func frame_run_smoke(t: TestCase, root: Window) -> void:
 		t.check(report.ok(), "%s 在编辑器里校验通过：%s" % [id, report.to_text()])
 		# 预览：一个选项一个按钮，顺序一致
 		var buttons: Array[String] = []
-		for c in ed._preview_host.get_children():
-			if c is Button:
-				buttons.append((c as Button).text)
+		_collect_buttons(ed._preview_host, buttons)
 		var labels: Array[String] = []
 		for o in ed._def.options:
 			labels.append((o as EventOption).label)

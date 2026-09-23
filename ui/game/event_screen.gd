@@ -4,6 +4,11 @@
 ## 两种模式由 payload 决定：带 `def` 是选项页，带 `detail` 是结果页。
 extends GameScreen
 
+## 整块框的大小（视口 1600×1000）：占大半个屏幕，左栏是图
+const PANEL_SIZE := Vector2(1320, 760)
+const IMAGE_WIDTH := 640.0
+const TEXT_WIDTH := 560.0
+
 var _def: EventDef = null
 var _node: MapNode = null
 var _option_btns: Array[Button] = []
@@ -20,14 +25,7 @@ func open(payload: Dictionary) -> void:
 
 
 func _open_options() -> void:
-	var panel := _centered_panel(Vector2(640, 0), 20)
-	var col := _vbox(10)
-	panel.add_child(col)
-	col.add_child(_label(_def.title if _def.title != "" else String(_def.id), 20, UiPalette.FG))
-	col.add_child(_image(_def.image))
-	if _def.text != "":
-		col.add_child(_wrapped(_def.text, 14, UiPalette.FG, 600))
-	col.add_child(HSeparator.new())
+	var col := _frame(_def.image, _def.title if _def.title != "" else String(_def.id), _def.text)
 	for i in _def.options.size():
 		var opt := _def.options[i] as EventOption
 		var state := flow.run.events.option_state(i)
@@ -35,19 +33,16 @@ func _open_options() -> void:
 		if not ok and opt.hide_when_locked:
 			continue
 		var idx := i
-		var b := _button(opt.label + ("　（%s）" % state["why"] if not ok else ""), func(): choose(idx), 14)
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		var b := _option_button(opt.label, func(): choose(idx))
 		b.disabled = not ok
 		_option_btns.append(b)
 		col.add_child(b)
+		if not ok:
+			col.add_child(_label("　" + String(state["why"]), 13, UiPalette.DIM))
 
 
 func _open_result(payload: Dictionary) -> void:
 	var detail: Dictionary = payload.get("detail", {})
-	var panel := _centered_panel(Vector2(560, 0), 20)
-	var col := _vbox(10)
-	panel.add_child(col)
-	col.add_child(_label(String(payload.get("outcome", "事件")), 18, UiPalette.FG))
 	var lines: Array[String] = []
 	for text in detail.get("log", []):
 		lines.append(String(text))
@@ -71,32 +66,91 @@ func _open_result(payload: Dictionary) -> void:
 		lines.append("失去「%s」" % (bd2.display_name if bd2 != null else String(id)))
 	if lines.is_empty():
 		lines.append("什么也没发生。")
-	for line in lines:
-		col.add_child(_wrapped(line, 14, UiPalette.FG, 520))
-	col.add_child(_button("继续", proceed, 14))
+	# 结果页配图沿用这个点的事件（结果只是同一件事的下一页）；老路的事件点没有定义，画占位
+	var image := ""
+	if _node != null and flow.event_defs != null:
+		var def: EventDef = flow.event_defs.get(StringName(String(_node.content.get("event", ""))), null)
+		if def != null:
+			image = def.image
+	var col := _frame(image, String(payload.get("outcome", "事件")), "\n".join(lines))
+	col.add_child(_option_button("继续", proceed))
 
 
-## 图像占位：有文件就画，没有就一块底色写着路径（或「没有配图」）
-func _image(path: String) -> Control:
+## 两栏的框（参考杀戮尖塔的事件屏）：左边整块是图，右边标题、正文、选项。占掉大半个屏幕，底下的地图压暗。
+##
+## 返回右栏底部放选项的容器，调用方往里加按钮；正文在可滚的区域里，选项贴在底部
+func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
+	var panel := _centered_panel(PANEL_SIZE, 0)
+	var row := _hbox(0)
+	panel.add_child(row)
+	row.add_child(_image_area(image_path, title))
+
+	var margin := MarginContainer.new()
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	for side in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 28)
+	row.add_child(margin)
+	var col := _vbox(14)
+	col.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	margin.add_child(col)
+
+	col.add_child(_label(title, 28, UiPalette.FG))
+	col.add_child(HSeparator.new())
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	col.add_child(scroll)
+	if body != "":
+		var text := _wrapped(body, 17, UiPalette.FG, TEXT_WIDTH)
+		text.add_theme_constant_override("line_spacing", 6)
+		scroll.add_child(text)
+	var options := _vbox(8)
+	options.name = "Options"
+	col.add_child(options)
+	return options
+
+
+## 左栏：图铺满、按比例裁；没有图就一块深底色写着占位
+func _image_area(path: String, title: String) -> Control:
+	var area := Control.new()
+	area.clip_contents = true
+	area.custom_minimum_size = Vector2(IMAGE_WIDTH, 0)
+	area.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var loaded := EventImage.load_texture(path)
 	if loaded != null:
 		var tex := TextureRect.new()
 		tex.texture = loaded
-		tex.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-		tex.custom_minimum_size = Vector2(600, 180)
-		return tex
-	var box := PanelContainer.new()
-	var st := StyleBoxFlat.new()
-	st.bg_color = Color("14161a")
-	st.border_color = UiPalette.LINE
-	st.set_border_width_all(1)
-	box.add_theme_stylebox_override("panel", st)
-	box.custom_minimum_size = Vector2(600, 120)
-	var l := _label("（图像占位：%s）" % path if path != "" else "（没有配图）", 12, UiPalette.DIM.darkened(0.2))
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	box.add_child(l)
-	return box
+		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		area.add_child(tex)
+		return area
+	var bg := ColorRect.new()
+	bg.color = Color("0d0f12")
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	area.add_child(bg)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	area.add_child(center)
+	var col := _vbox(6)
+	center.add_child(col)
+	var big := _label(title, 22, UiPalette.DIM.darkened(0.35))
+	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(big)
+	var hint := _label("（图像占位：%s）" % path if path != "" else "（没有配图）", 12, UiPalette.DIM.darkened(0.45))
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(hint)
+	return area
+
+
+## 一个选项：整行宽、左对齐、够高
+func _option_button(text: String, handler: Callable) -> Button:
+	var b := _button(text, handler, 17)
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.custom_minimum_size.y = 48
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return b
 
 
 #region 公开动作
