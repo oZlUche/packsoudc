@@ -38,6 +38,10 @@ func open(payload: Dictionary) -> void:
 	_loot = LootView.new()
 	_loot.label_font = font
 	_loot.inventory = _container
+	# 每档稀有度搜几秒是节点规则里的数（058 第 5 条）：会话有自己的规则，尸体容器用这一局的
+	var search_rules: SearchRules = _session.rules if _session != null else (flow.run.node_rules.search if flow.run != null and flow.run.node_rules != null else null)
+	if search_rules != null and not search_rules.reveal_seconds.is_empty():
+		_loot.reveal_seconds = search_rules.reveal_seconds
 	_loot.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(_loot)
 	_line = _label("", 13, UiPalette.FG)
@@ -64,6 +68,9 @@ func open(payload: Dictionary) -> void:
 	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_drag)
 	_drag.register_view(_loot)
+	# 没亮的只能在容器里挪位（换「下一个」是谁），拖出去要等亮了 —— 作者定的
+	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
+		return _loot.is_revealed(inst.uid) or target == _container
 
 	_loot.item_revealed.connect(func(_uid: int): _refresh())
 	_loot.reveal_finished.connect(_refresh)
@@ -135,9 +142,10 @@ func _refresh() -> void:
 	if _container == null or _line == null:
 		return
 	var revealed := _container.item_count() - _loot.unrevealed_count()
+	var searching := "　正在搜一件（%.1f 秒）" % _loot.current_seconds() if _loot.is_revealing() else ""
 	if _session != null:
-		_line.text = "还能搜 %d 次，下一次遭遇 %.0f%%　　收获 %d 件（亮了 %d 件）" % [
-			_session.searches_left(), _session.next_encounter_chance() * 100.0, _container.item_count(), revealed]
+		_line.text = "还能搜 %d 次，下一次遭遇 %.0f%%　　收获 %d 件（亮了 %d 件）%s" % [
+			_session.searches_left(), _session.next_encounter_chance() * 100.0, _container.item_count(), revealed, searching]
 		_search_btn.disabled = not _session.can_search()
 	else:
 		var total := 0
@@ -145,5 +153,5 @@ func _refresh() -> void:
 			var item := inst as ItemInstance
 			if _loot.is_revealed(item.uid):
 				total += ItemValue.of(item.def)
-		_line.text = "%d 件，亮了 %d 件，已知的值 %d 币" % [_container.item_count(), revealed, total]
+		_line.text = "%d 件，亮了 %d 件，已知的值 %d 币%s" % [_container.item_count(), revealed, total, searching]
 	_skip_btn.disabled = _loot.unrevealed_count() == 0

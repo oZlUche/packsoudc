@@ -32,6 +32,9 @@ signal items_shed(instances: Array)
 ## 顶出来一次多于一件时的去处。为空则这类落点直接拒绝 ——
 ## 宁可这一下不生效，也不能让物品没地方去。
 var stash: ItemStash = null
+## 「能不能放到那儿」的第二道门（第一道是视图发不发 grab_requested）：`func(inst: ItemInstance, target: ItemContainer) -> bool`，
+## 无效 = 哪儿都能放。容器屏用它把没揭示的东西圈在容器里（058 第 5 条：未搜的只能在容器内挪位）
+var drop_filter: Callable = Callable()
 
 var _views: Array[ContainerView] = []
 
@@ -211,6 +214,9 @@ func update_preview(global_pos: Vector2) -> void:
 			view.clear_preview()
 	if target == null or target.container() == null:
 		return
+	if not _drop_allowed(target.container()):
+		target.clear_preview()
+		return
 
 	if target is StashView:
 		var sv := target as StashView
@@ -243,6 +249,10 @@ func update_preview(global_pos: Vector2) -> void:
 	grid_view.set_preview(cells, origin, not victims.is_empty(), victims)
 
 
+func _drop_allowed(target: ItemContainer) -> bool:
+	return not drop_filter.is_valid() or _inst == null or bool(drop_filter.call(_inst, target))
+
+
 ## 这件东西能不能进这个列表。带内容物的包不行 —— 列表没有坐标，
 ## 装不下「包 + 各内容物的相对位置」，放进去就等于把摆好的一袋东西打散。
 ## 要收起来先掏空，和「带东西的包不能旋转」是同一条简化。
@@ -267,6 +277,8 @@ func drop_at(global_pos: Vector2) -> bool:
 	var pending: Array = []
 	var home: ItemContainer = null
 
+	if target != null and not _drop_allowed(target.container()):
+		target = null     # 那儿不许放：当没放，退回源容器
 	if target is StashView:
 		var sv := target as StashView
 		if _stash_accepts(sv.stash, inst):

@@ -672,7 +672,7 @@ static func _settle_overlays_until_loot(f: GameFlow) -> void:
 
 
 static func frame_loot_view(t: TestCase, root: Window) -> void:
-	t.begin("渐进揭示 · 没亮的抓不起来；按栏位顺序亮；快速搜索推到终点；见过的不再走时间线")
+	t.begin("渐进揭示 · 正在搜的锁住、别的没亮的能抓；按栏位顺序亮；快速搜索推到终点；见过的不再走时间线")
 
 	var c := _content()
 	var box := LootPacker.board_of([&"pistol", &"knife", &"armor"] as Array[StringName], Vector2i(6, 4), c.items)
@@ -688,16 +688,20 @@ static func frame_loot_view(t: TestCase, root: Window) -> void:
 	view.reveal_finished.connect(func(): finished.append(true))
 
 	t.eq(view.unrevealed_count(), 3, "一开始一件都没亮")
-	var first := box.items()[0] as ItemInstance
+	var first := box.get_item(view._unrevealed_in_slot_order()[0]) as ItemInstance
 	var press := InputEventMouseButton.new()
 	press.button_index = MOUSE_BUTTON_LEFT
 	press.pressed = true
 	press.position = view.cell_origin_px(first.origin) + Vector2(InventoryView.CELL, InventoryView.CELL) * 0.5
 	view._gui_input(press)
-	t.check(grabs.is_empty(), "没亮的抓不起来")
+	t.eq(grabs, [first.uid], "没在搜的时候没亮的也能抓（068：未搜的可以拖，只能在容器里挪）")
+	grabs.clear()
 
 	view.start_reveal()
 	t.check(view.is_revealing(), "时间线在跑")
+	t.eq(view.current_uid(), first.uid, "正在搜的是栏位顺序第一件")
+	view._gui_input(press)
+	t.check(grabs.is_empty(), "正在搜的那件锁住，抓不起来")
 	t.eq(view.unrevealed_count(), 3, "刚启动还没亮")
 	view.skip()
 	t.eq(view.unrevealed_count(), 0, "快速搜索：全亮")

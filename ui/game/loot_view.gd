@@ -1,33 +1,41 @@
-## 渐进揭示的战利品容器（架构文档 6.2，M6-2）：看得见轮廓、看不清是什么。
+## 渐进揭示的战利品容器（架构文档 6.2，M6-2；058 第 5 条重做，报告 068）：看得见轮廓、看不清是什么。
 ##
-## 就是一个 [InventoryView]，多了一层「揭没揭示」：没揭示的物品画成灰色剪影 + 噪点，抓不起来；
-## 一个 [Tween] 驱动一批揭示的进度，按栏位顺序（先上后下、先左后右）一件一件亮出来，
-## 「快速搜索」把 Tween 推到终点。**揭示只是表现**：容器里的东西一开始就在那儿，揭不揭示都一样 ——
-## 这也是为什么它不在 core 里。
+## 就是一个 [InventoryView]，多了一层「揭没揭示」：没揭示的物品画成灰色剪影 + 噪点。
+## 揭示**一件一件来**：当前这件按它的稀有度耗时（[SearchRules.reveal_seconds]，和体积无关），到点亮出来，
+## 再按栏位顺序（先上后下、先左后右）挑下一件 —— 只知道「当前搜谁」和「下一个搜谁」。
+## 没揭示的东西**可以拖**（挪一挪就换了「下一个」是谁），但只能在容器内挪（容器屏用 [DragLayer.drop_filter] 圈住）；
+## **当前正在搜的那件锁住**，抓不起来。「快速搜索」把没亮的全亮。
+## **揭示只是表现**：容器里的东西一开始就在那儿，揭不揭示都一样 —— 这也是为什么它不在 core 里。
 ##
-## 单件间隔是占位（6.2：0.15～0.4 秒，将来受角色「搜索速度」属性影响）。
+## 时间用 [method advance] 推进（`_process` 每帧调它），测试直接调，不必等真的几秒。
 class_name LootView
 extends InventoryView
 
 signal item_revealed(uid: int)
 signal reveal_finished
 
-## 每件揭示的间隔（秒）。占位，等角色系统
-const INTERVAL := 0.3
 const COLOR_SILHOUETTE := Color("2a2e36")
 const COLOR_SILHOUETTE_EDGE := Color("3c424d")
 const COLOR_NOISE := Color("4a515e")
+const COLOR_PROGRESS := Color("dfe3ea")
+const COLOR_NEXT := Color("8b93a1")
 const NOISE_PER_CELL := 14
+## 没给规则时的耗时表（和 SearchRules 的默认一样）
+const DEFAULT_SECONDS: Array[float] = [0.3, 0.5, 0.8, 1.2, 2.0]
 
-var reveal_interval: float = INTERVAL
+## 每档稀有度的秒数；容器屏从节点规则里给
+var reveal_seconds: Array[float] = DEFAULT_SECONDS
 
 var _revealed: Dictionary = {}      # uid -> true
-var _queue: Array[int] = []         # 这一批按顺序待揭示的 uid
-var _tween: Tween = null
+## 正在搜的那件（锁住）；EMPTY_UID = 没在搜
+var _current: int = GridInventory.EMPTY_UID
+var _progress: float = 0.0
+var _running: bool = false
 
 
 func _init() -> void:
 	show_adjacency = false     # 战利品不参战，邻接的「点亮」什么也不代表（4.8）
+	set_process(false)
 
 
 #region 揭示
@@ -37,13 +45,7 @@ func is_revealed(uid: int) -> bool:
 
 ## 还没亮出来的有几件
 func unrevealed_count() -> int:
-	var n := 0
-	if inventory == null:
-		return 0
-	for inst in inventory.items():
-		if not _revealed.has((inst as ItemInstance).uid):
-			n += 1
-	return n
+	return _unrevealed_in_slot_order().size()
 
 
 ## 这些已经见过（比如在搜索屏里亮过），不再走时间线
@@ -53,64 +55,124 @@ func mark_revealed(uids: Array) -> void:
 	queue_redraw()
 
 
-## 把容器里还没亮的按栏位顺序排成一批，启动时间线。没有要亮的直接发 reveal_finished
+## 开始（或接着）一件一件搜：当前那件锁住计时，搜完挑下一件。没有要亮的直接发 reveal_finished
 func start_reveal() -> void:
-	_stop()
-	_queue = _unrevealed_in_slot_order()
-	if _queue.is_empty():
+	if _running:
+		return
+	if not _pick_current():
 		reveal_finished.emit()
 		return
-	_tween = create_tween()
-	_tween.tween_method(_step, 0.0, 1.0, reveal_interval * _queue.size())
-	_tween.finished.connect(_on_finished)
+	_running = true
+	set_process(true)
+	queue_redraw()
 
 
-## 快速搜索：推到终点，这一批全亮
+## 快速搜索：没亮的全亮
 func skip() -> void:
-	if _tween != null and _tween.is_valid():
-		_tween.kill()
-		_tween = null
-	_step(1.0)
-	if not _queue.is_empty():
-		_on_finished()
+	var had := _running or unrevealed_count() > 0
+	_stop()
+	for uid in _unrevealed_in_slot_order():
+		_revealed[uid] = true
+		item_revealed.emit(uid)
+	queue_redraw()
+	if had:
+		reveal_finished.emit()
 
 
-## 全亮，不管在不在批次里
+## 全亮，不管在不在搜
 func reveal_all() -> void:
 	_stop()
 	if inventory != null:
 		for inst in inventory.items():
 			_revealed[(inst as ItemInstance).uid] = true
-	_queue.clear()
 	queue_redraw()
 
 
 func is_revealing() -> bool:
-	return _tween != null and _tween.is_valid() and _tween.is_running()
+	return _running
 
 
-func _step(progress: float) -> void:
-	var n := _queue.size()
-	var k := clampi(int(floor(progress * n + 1e-6)), 0, n)
-	for i in k:
-		var uid := _queue[i]
-		if not _revealed.has(uid):
-			_revealed[uid] = true
-			item_revealed.emit(uid)
+## 正在搜的那件（锁住的）；没在搜 = EMPTY_UID
+func current_uid() -> int:
+	return _current if _running else GridInventory.EMPTY_UID
+
+
+## 下一个要搜的：当前之外、栏位顺序最靠前的没亮的。挪一挪东西它就变
+func next_uid() -> int:
+	for uid in _unrevealed_in_slot_order():
+		if uid != _current:
+			return uid
+	return GridInventory.EMPTY_UID
+
+
+## 当前这件搜了几成
+func progress() -> float:
+	return _progress if _running else 0.0
+
+
+## 当前这件要几秒（按稀有度）
+func current_seconds() -> float:
+	var inst := inventory.get_item(_current) if inventory != null and _running else null
+	return _seconds_for(inst) if inst != null else 0.0
+
+
+## 时间推进。一次推进可以跨过好几件（比如卡了一帧）
+func advance(delta: float) -> void:
+	if not _running:
+		return
+	var left := maxf(0.0, delta)
+	while _running and left > 0.0:
+		var inst := inventory.get_item(_current) if inventory != null else null
+		if inst == null:
+			# 正在搜的那件不在了（不该发生：它锁着）—— 换下一件
+			if not _pick_current():
+				_finish()
+			continue
+		var need := _seconds_for(inst)
+		var remain := maxf(0.0, (1.0 - _progress) * need)
+		if left < remain and need > 0.0:
+			_progress += left / need
+			left = 0.0
+			break
+		left -= remain
+		_revealed[_current] = true
+		item_revealed.emit(_current)
+		if not _pick_current():
+			_finish()
 	queue_redraw()
 
 
-func _on_finished() -> void:
-	_step(1.0)
-	_queue.clear()
-	_tween = null
+func _process(delta: float) -> void:
+	advance(delta)
+
+
+## 挑当前要搜的：栏位顺序最靠前的没亮的。没有了返回 false
+func _pick_current() -> bool:
+	var queue := _unrevealed_in_slot_order()
+	_progress = 0.0
+	if queue.is_empty():
+		_current = GridInventory.EMPTY_UID
+		return false
+	_current = queue[0]
+	return true
+
+
+func _finish() -> void:
+	_stop()
 	reveal_finished.emit()
 
 
 func _stop() -> void:
-	if _tween != null and _tween.is_valid():
-		_tween.kill()
-	_tween = null
+	_running = false
+	_current = GridInventory.EMPTY_UID
+	_progress = 0.0
+	set_process(false)
+
+
+func _seconds_for(inst: ItemInstance) -> float:
+	if inst == null or inst.def == null or reveal_seconds.is_empty():
+		return 0.0
+	return maxf(0.0, reveal_seconds[clampi(inst.def.rarity, 0, reveal_seconds.size() - 1)])
 
 
 ## 栏位顺序：先上后下、先左后右
@@ -136,11 +198,16 @@ func _draw() -> void:
 	super._draw()
 	if inventory == null:
 		return
+	var next := next_uid()
 	for inst in inventory.items():
 		var item := inst as ItemInstance
 		if _revealed.has(item.uid):
 			continue
 		_draw_silhouette(item)
+		if _running and item.uid == _current:
+			_draw_progress(item)
+		elif _running and item.uid == next:
+			_draw_next(item)
 
 
 ## 剪影盖在物品上：只剩轮廓，看不出是什么。噪点按 uid 定死，不闪
@@ -159,16 +226,32 @@ func _draw_silhouette(item: ItemInstance) -> void:
 	ItemPainter.draw_label(self, cells, anchor, CELL, "?", font, 16, Color("6b7280"))
 
 
-## 没揭示的抓不起来
+## 当前那件：一圈进度环
+func _draw_progress(item: ItemInstance) -> void:
+	var center := cell_origin_px(item.origin) + Vector2(item.def.shape.size_rotated(item.rotation)) * CELL * 0.5
+	var radius := CELL * 0.38
+	draw_arc(center, radius, 0.0, TAU, 32, COLOR_NEXT.darkened(0.4), 2.0)
+	if _progress > 0.0:
+		draw_arc(center, radius, -PI * 0.5, -PI * 0.5 + TAU * clampf(_progress, 0.0, 1.0), 32, COLOR_PROGRESS, 3.0)
+
+
+## 下一件：左上角一个小标
+func _draw_next(item: ItemInstance) -> void:
+	var anchor := cell_origin_px(item.origin)
+	var font := label_font if label_font != null else get_theme_default_font()
+	draw_string(font, anchor + Vector2(4.0, 13.0), "下一件", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, COLOR_NEXT)
+
+
+## 正在搜的那件锁住，抓不起来；别的没亮的能抓（只能在容器里挪，那道门在拖拽层）
 func _gui_input(event: InputEvent) -> void:
-	if inventory != null and event is InputEventMouseButton:
+	if inventory != null and _running and event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
 			var c := cell_at_local(mb.position)
 			var uid := inventory.cell_uid(c)
 			if uid == GridInventory.EMPTY_UID:
 				uid = inventory.bag_at(c)
-			if uid != GridInventory.EMPTY_UID and not _revealed.has(uid):
+			if uid != GridInventory.EMPTY_UID and uid == _current:
 				accept_event()
 				return
 	super._gui_input(event)

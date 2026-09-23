@@ -384,6 +384,13 @@ static func _validate_node_rules(rules: NodeRules, ctx: Context, report: ImportR
 			report.error("search.rarity_weights[%d]" % i, "权重不能为负")
 	if s.haul_board.x < 1 or s.haul_board.y < 1:
 		report.error("search.haul_board", "容器至少 1×1")
+	if s.reveal_seconds.is_empty():
+		report.error("search.reveal_seconds", "没有揭示耗时表")
+	for i in s.reveal_seconds.size():
+		if s.reveal_seconds[i] < 0.0:
+			report.error("search.reveal_seconds[%d]" % i, "耗时不能为负")
+		if i > 0 and s.reveal_seconds[i] < s.reveal_seconds[i - 1]:
+			report.error("search.reveal_seconds[%d]" % i, "稀有度 %d 的耗时 %.2f 低于稀有度 %d 的 %.2f —— 越稀有搜得越久" % [i, s.reveal_seconds[i], i - 1, s.reveal_seconds[i - 1]])
 
 
 ## 作者定的形状写成校验：概率在 0～1，**稀有度越高基础掉落率越低**（非递增），珍宝的稀有度得是真的稀有度、权重为正。
