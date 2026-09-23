@@ -1,0 +1,18 @@
+## 事件的一个选项：一行字，若干条件（都满足才能选），若干后果（按顺序执行）。
+class_name EventOption
+extends Resource
+
+@export var label: String = ""
+## 条件不满足时：灰掉（默认）还是干脆不显示
+@export var hide_when_locked: bool = false
+@export var requires: Array[EventCondition] = []
+@export var outcomes: Array[EventOutcome] = []
+
+
+## 每一条条件都过了才能选。返回第一条没过的说明；空串 = 能选
+func locked_reason(ctx: EventContext) -> String:
+	for c in requires:
+		var cond := c as EventCondition
+		if cond != null and not cond.check(ctx):
+			return cond.describe()
+	return ""

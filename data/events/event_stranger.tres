@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_chx3k"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_doguw"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/change_money.gd" id="3_nvu4j"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/grant_map_buff.gd" id="4_xby02"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="5_dahyu"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="6_v7ers"]
+[ext_resource type="Script" path="res://core/run/events/conditions/can_afford.gd" id="7_pqjsx"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="8_g30eo"]
+
+[sub_resource type="Resource" id="Resource_o80rv"]
+script = ExtResource("3_nvu4j")
+amount = -10
+
+[sub_resource type="Resource" id="Resource_l5hy7"]
+script = ExtResource("4_xby02")
+buff = &"marked"
+
+[sub_resource type="Resource" id="Resource_40iol"]
+script = ExtResource("5_dahyu")
+text = "他记住了你的脸。"
+
+[sub_resource type="Resource" id="Resource_k8k15"]
+script = ExtResource("7_pqjsx")
+
+[sub_resource type="Resource" id="Resource_xy8ud"]
+script = ExtResource("1_chx3k")
+label = "给他 10 币"
+requires = Array[ExtResource("6_v7ers")]([SubResource("Resource_k8k15")])
+outcomes = Array[ExtResource("2_doguw")]([SubResource("Resource_o80rv"), SubResource("Resource_l5hy7"), SubResource("Resource_40iol")])
+
+[sub_resource type="Resource" id="Resource_dvpk6"]
+script = ExtResource("5_dahyu")
+text = "他缩回了手。"
+
+[sub_resource type="Resource" id="Resource_yfkhl"]
+script = ExtResource("1_chx3k")
+label = "不理他"
+outcomes = Array[ExtResource("2_doguw")]([SubResource("Resource_dvpk6")])
+
+[resource]
+script = ExtResource("8_g30eo")
+id = &"event_stranger"
+title = "陌生人"
+text = "一个瘦削的人靠在墙边，向你伸出手。"
+options = Array[ExtResource("1_chx3k")]([SubResource("Resource_xy8ud"), SubResource("Resource_yfkhl")])

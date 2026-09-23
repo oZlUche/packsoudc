@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_35w1q"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_4twy5"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/spend_vitality.gd" id="3_gwwwl"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/give_random_item.gd" id="4_pgm1k"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="5_op7e7"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="6_jlyur"]
+[ext_resource type="Script" path="res://core/run/events/conditions/vitality_at_least.gd" id="7_eybb5"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="8_i2soc"]
+
+[sub_resource type="Resource" id="Resource_1auhx"]
+script = ExtResource("3_gwwwl")
+
+[sub_resource type="Resource" id="Resource_smgla"]
+script = ExtResource("4_pgm1k")
+rarity_cap = 2
+
+[sub_resource type="Resource" id="Resource_i0dru"]
+script = ExtResource("5_op7e7")
+text = "锁应声而断。"
+
+[sub_resource type="Resource" id="Resource_w2cwq"]
+script = ExtResource("7_eybb5")
+
+[sub_resource type="Resource" id="Resource_safsw"]
+script = ExtResource("1_35w1q")
+label = "撬开（体力 -1）"
+requires = Array[ExtResource("6_jlyur")]([SubResource("Resource_w2cwq")])
+outcomes = Array[ExtResource("2_4twy5")]([SubResource("Resource_1auhx"), SubResource("Resource_smgla"), SubResource("Resource_i0dru")])
+
+[sub_resource type="Resource" id="Resource_ukd1x"]
+script = ExtResource("1_35w1q")
+label = "走开"
+
+[resource]
+script = ExtResource("8_i2soc")
+id = &"event_cache"
+title = "上锁的箱子"
+text = "角落里有一只上了锁的铁箱，锁已经锈得差不多了。"
+options = Array[ExtResource("1_35w1q")]([SubResource("Resource_safsw"), SubResource("Resource_ukd1x")])

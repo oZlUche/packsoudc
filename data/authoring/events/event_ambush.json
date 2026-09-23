@@ -1,0 +1,28 @@
+{
+  "id": "event_ambush",
+  "title": "动静",
+  "text": "前面有动静。",
+  "options": [
+    {
+      "label": "上去看看",
+      "outcomes": [
+        {
+          "type": "start_battle"
+        }
+      ]
+    },
+    {
+      "label": "绕开",
+      "outcomes": [
+        {
+          "type": "grant_map_buff",
+          "buff": "weakened"
+        },
+        {
+          "type": "say",
+          "text": "你屏着气绕了过去，手还在抖。"
+        }
+      ]
+    }
+  ]
+}

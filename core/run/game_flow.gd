@@ -23,6 +23,8 @@ var meta: MetaState = null
 var meta_rules: MetaRules = null
 ## 全部 buff 定义（id → RunBuffDef），开局给 RunState、读档后补上
 var buff_defs: Dictionary = {}
+## 全部事件定义（id → EventDef，063）。空表 = 没有事件层
+var event_defs: Dictionary = {}
 var chapters: Array[ChapterDef] = []
 var loadouts: Array[LoadoutDef] = []
 var save_path: String = RunSave.DEFAULT_PATH
@@ -149,11 +151,7 @@ func continue_run() -> bool:
 	if state == null:
 		return false
 	_adopt(state)
-	if state.is_over():
-		# 结束了的一局不该还有存档；有就直接进结算
-		_flush()
-	else:
-		_go(Screen.MAP)
+	_flush()     # 读档回来：等着选的事件还在这一屏；结束了的直接进结算；否则回地图
 	run_started.emit(state)
 	return true
 
@@ -215,6 +213,14 @@ func resume() -> void:
 	_flush()
 
 
+## 事件屏上选了第 i 项（063）。选不了返回 false 留在原地；选了按后果往下走
+func choose_event(i: int) -> bool:
+	if run == null or not run.events.choose(i):
+		return false
+	_flush()
+	return true
+
+
 func take_loot(uid: int) -> bool:
 	if run == null:
 		return false
@@ -251,6 +257,7 @@ func _adopt(state: RunState) -> void:
 	_settled = false
 	_queue.clear()
 	state.buff_defs = buff_defs      # 读档回来的只有 id，定义表在这里
+	state.event_defs = event_defs
 	if player_baseline != null:
 		state.player_baseline = player_baseline
 	var ev := state.events
@@ -275,8 +282,12 @@ func _adopt(state: RunState) -> void:
 			return
 		session.closed.connect(_flush)
 		_push({"screen": Screen.SHOP, "node": node, "session": session}))
+	ev.event_pending.connect(func(node: MapNode, def: EventDef):
+		_push({"screen": Screen.EVENT, "node": node, "def": def}))
 	ev.event_resolved.connect(func(node: MapNode, outcome: StringName, detail: Dictionary):
-		_push({"screen": Screen.EVENT, "node": node, "outcome": outcome, "detail": detail}))
+		# 结果页排在这一步别的事（回放、战利品）前面：先看「你翻出了什么」，再看接下来打的那一场。什么都没发生就不打扰
+		if not detail.is_empty():
+			_queue.push_front({"screen": Screen.EVENT, "node": node, "outcome": outcome, "detail": detail}))
 	ev.rested.connect(func(node: MapNode, restored: int):
 		_push({"screen": Screen.REST, "node": node, "restored": restored}))
 
@@ -297,6 +308,10 @@ func _flush() -> void:
 		_settle_run()
 		_go(Screen.RESULT, {"result": result})
 		return
+	if run != null and run.events.pending_event() != null:
+		# 队列空了还有一个等着选的事件（接着放的、或读档回来的）
+		_go(Screen.EVENT, {"node": run.events.pending_node(), "def": run.events.pending_event()})
+		return
 	_go(Screen.MAP)
 
 
@@ -305,6 +320,11 @@ func _skippable(entry: Dictionary) -> bool:
 	if run.is_over():
 		return s != Screen.BATTLE
 	match s:
+		Screen.EVENT:
+			# 等着选的事件：只有它还是当前待选的才显示（选过了、换了都跳过）；结果页总显示
+			if entry.has("def"):
+				return run.events.pending_event() != entry.get("def", null)
+			return false
 		Screen.LOOT:
 			return run.pending_loot == null
 		Screen.SEARCH:
@@ -341,6 +361,10 @@ static func load_loadouts() -> Array[LoadoutDef]:
 
 static func load_run_buffs() -> Dictionary:
 	return RunBuffs.load_all()
+
+
+static func load_events() -> Dictionary:
+	return EventPlacer.load_all()
 
 
 ## 局外规则（仓库多大）。没导入资产时 null，MetaState 用默认大小

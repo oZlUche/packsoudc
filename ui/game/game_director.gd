@@ -14,8 +14,8 @@ const SCREEN_SCRIPTS := {
 	GameFlow.Screen.SETUP: "res://ui/game/setup_screen.gd",
 	GameFlow.Screen.MAP: "res://ui/game/map_screen.gd",
 	GameFlow.Screen.BATTLE: "res://ui/game/battle_screen.gd",
-	GameFlow.Screen.LOOT: "res://ui/game/loot_screen.gd",
-	GameFlow.Screen.SEARCH: "res://ui/game/search_screen.gd",
+	GameFlow.Screen.LOOT: "res://ui/game/container_screen.gd",
+	GameFlow.Screen.SEARCH: "res://ui/game/container_screen.gd",
 	GameFlow.Screen.SHOP: "res://ui/game/shop_screen.gd",
 	GameFlow.Screen.EVENT: "res://ui/game/event_screen.gd",
 	GameFlow.Screen.REST: "res://ui/game/rest_screen.gd",
@@ -51,6 +51,7 @@ func _ready() -> void:
 	flow = GameFlow.new(items, enemies, sets, meta)
 	flow.meta_rules = rules
 	flow.buff_defs = GameFlow.load_run_buffs()
+	flow.event_defs = GameFlow.load_events()
 	flow.chapters = GameFlow.load_chapters()
 	flow.loadouts = GameFlow.load_loadouts()
 	flow.save_path = save_path
@@ -169,7 +170,11 @@ func demo_fill() -> void:
 	flow.step_to(int(found["next"]))
 	if want == "battle":
 		return
+	if want == "event":
+		return
 	if want == "search":
+		if _overlay != null and _overlay.screen == GameFlow.Screen.EVENT:
+			_overlay.call("choose", 0)     # 搜索点的事件：「搜索」
 		if _overlay != null and _overlay.screen == GameFlow.Screen.SEARCH:
 			_overlay.call("search")
 			_overlay.call("skip_reveal")
@@ -199,8 +204,21 @@ func _demo_settle() -> void:
 				flow.run.events.current_search.leave()
 			GameFlow.Screen.SHOP:
 				flow.run.events.current_shop.leave()
+			GameFlow.Screen.EVENT:
+				if flow.run.events.pending_event() != null:
+					flow.choose_event(_first_open_option())
+				else:
+					flow.resume()
 			_:
 				flow.resume()
+
+
+func _first_open_option() -> int:
+	var def := flow.run.events.pending_event()
+	for i in def.options.size():
+		if bool(flow.run.events.option_state(i)["ok"]):
+			return i
+	return 0
 
 
 ## 演示：一路走到最近的免费撤离点

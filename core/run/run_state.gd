@@ -64,6 +64,12 @@ var tally: Dictionary = {"battles_won": 0, "battles_lost": 0}
 var buff_defs: Dictionary = {}
 var meta_buffs: Array[StringName] = []
 var map_buffs: Array[Dictionary] = []
+## 事件层（063）：定义表由持有方给（id → EventDef，存档只写 id）。空表 = 每个点踩上去直接发生
+var event_defs: Dictionary = {}:
+	set(v):
+		event_defs = v
+		if events != null:
+			events.event_defs = v
 
 
 #region 开局
@@ -90,6 +96,7 @@ static func start(
 	if s.pool != null:
 		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id())
 	PaidExtracts.mark(s.map, s.economy)
+	EventPlacer.fill(s.map, s.node_rules)
 	s.rng = RunRNG.new(p_seed)
 	# 局外 buff 在开局那一刻定下来：体力上限、开局钱按它们改（一局里的规则见 buff_context）
 	s.buff_defs = p_buff_defs
@@ -401,6 +408,11 @@ func _wire_events() -> void:
 	events.player_spec = compile_player
 	events.loot_context = _loot_context
 	events.run_context = buff_context
+	events.event_defs = event_defs
+	events.grant_map_buff = grant_map_buff
+	events.remove_map_buff = remove_map_buff
+	events.has_map_buff = has_map_buff
+	events.has_buff_tag = has_buff_tag
 	events.battle_finished.connect(func(_n: MapNode, _r: BattleResult, won: bool):
 		var key := "battles_won" if won else "battles_lost"
 		tally[key] = int(tally.get(key, 0)) + 1)
@@ -442,7 +454,7 @@ func to_dict() -> Dictionary:
 		"board": board.to_dict(),
 		"storage": storage.to_dict(),
 		"rng": rng.to_dict(),
-		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id},
+		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id, "pending": events.pending.duplicate()},
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
 		"tally": tally.duplicate(),
 		"buffs": {"meta": _meta_buff_ids(), "map": map_buffs.duplicate(true)},
@@ -482,6 +494,9 @@ static func from_dict(
 	s._wire_events()
 	s.events.searches_closed = int((d.get("events", {}) as Dictionary).get("searches_closed", 0))
 	s.events.last_handled_id = int((d.get("events", {}) as Dictionary).get("last_handled", -1))
+	var pending = (d.get("events", {}) as Dictionary).get("pending", {})
+	if pending is Dictionary and not (pending as Dictionary).is_empty():
+		s.events.pending = {"node": int(pending.get("node", -1)), "event": String(pending.get("event", "")), "type": String(pending.get("type", ""))}
 	for key in d.get("tally", {}):
 		s.tally[String(key)] = int((d["tally"] as Dictionary)[key])
 	var buffs: Dictionary = d.get("buffs", {})

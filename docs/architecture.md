@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.60 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.61 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2570,15 +2570,34 @@ class_name SearchRules extends Resource
 | 踩到 | 发生 |
 |---|---|
 | battle / elite / core | `BattleSim` 打一场，玩家单位由 `player_spec` 在开战那一刻编译（4.2 是纯函数）。赢：`DropResolver` 掷、装尸体容器、`loot_ready`；输：扣 `loss_cost[类型]`，归零 `defeated(vitality_depleted)`；core 输了直接 `defeated(boss_lost)`，不扣。**不论输赢点都用过** |
-| search | 开 `SearchSession`，结束（搜满 / 离开 / 遭遇）时 `search_closed(haul)`；遭遇先就地打一场；结束才算用过 |
-| random | 先 `reveal`，再按揭开的类型走 |
+| search | 配了事件（默认 `search_default`：搜索 / 离开）先过事件屏；选「搜索」开 `SearchSession`，结束（搜满 / 离开 / 遭遇）时 `search_closed(haul)`；遭遇先就地打一场；结束才算用过 |
+| random | 先 `reveal`，再按揭开的类型走（揭成什么就按什么类型配事件） |
 | rest | `vitality.restore(rest_restore)` |
-| event | 按 `event_weights` 出 item / restore / story（占位），记进 `content.outcome` |
+| event | 配了事件先过事件屏，选项的后果决定发生什么（下面）；没配的按 `event_weights` 出 item / restore / story（占位老路） |
 | shop / extract | 只发信号：买卖、撤离是 M6 的事 |
 | junction / spawn | 只标用过 |
 
 平局按输算。没有玩家单位、或点里没有敌人：点只是走过。随机数从节点 `content_seed` 派生，每种用途一个标签
 （reveal / enemy / battle / loot / search / ambush:k / event），改一种用途的抽法不影响别的。
+
+#### 事件层（063）：每个点先过事件屏
+
+作者定的（059）：所有节点打开后都先跳转事件界面；没有前置剧情的战斗点事件被略过，变成转场；搜索点和标准事件点配有文字、图像、选项，选项决定后续；
+事件在生成地图时定好但可以被覆盖或替换；战斗事件暂无「绕开」的选项但结构开放。
+
+**事件是内容。** `EventDef`（内容种类 `events`）：标题、正文、图像路径（占位）、选项；每个选项若干**条件**（`EventCondition`，只读：`has_buff_tag` / `has_map_buff` /
+`can_afford` / `vitality_at_least`）与若干**后果**（`EventOutcome`：`give_item` / `give_random_item` / `restore_vitality` / `spend_vitality` / `change_money` /
+`grant_map_buff` / `remove_map_buff` / `start_battle` / `open_search` / `open_shop` / `next_event` / `say`）。两种都是构件、走注册表（`EffectRegistry` 的两张新表），
+加一种不改导入器。条件没过的选项灰掉并写原因（或按 `hide_when_locked` 不显示）。
+
+**节点怎么拿到事件。** `NodeRules.events_by_type`：类型 → {事件 id: 权重}。生成地图时 `EventPlacer.fill` 按节点 `content_seed` 抽一个写进 `node.content["event"]`，
+已经有的不覆盖（作者数据、别的系统替换过的都算数）；随机点揭开时按揭成的类型再抽。取的时候先看内容里的，没有再按表抽 —— 旧存档没这个键也照样走。
+没列的类型（多数是战斗）没有事件 = 转场。**没有事件定义（持有方没给 `event_defs`）= 老路**，每个点踩上去直接发生；沙盒与老测试就在老路上。
+
+**踩上去分两段。** `NodeEvents.handle`：取事件，有就记进 `pending`、发 `event_pending`、停下等；`choose(i)` 条件过了依次执行后果，发 `event_resolved(node, 选项, detail)`，
+然后按后果立的旗子走：接下一个事件（再发 `event_pending`）/ 开搜索 / 开店 / 开战（点自己有敌人就打它，没有就现造）/ 点用过。`pending` 跟着存档，读档回来还在这一屏。
+`GameFlow` 把 `event_pending` 排进队（事件屏），`event_resolved` 有内容时把结果页插到队首（先看「你翻出了什么」，再看接下来打的那一场）；
+队列空了还有等着选的事件就显示它。搜索屏与战利品屏合成一个**容器屏**（`ui/game/container_screen.gd`）：装的是待拾取还是搜索会话由 payload 决定。
 
 ### 6.6 经济（M4-5）
 
@@ -2746,7 +2765,7 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 MainMenu → SetupScreen(挑一章、一套开局装备、种子) → MapScreen
                                                       ⇅ 叠层（地图与镜头留着）
               ┌───────────────────────────────────────┴────────────────────────────┐
-         BattleScreen（回放）→ LootScreen（战利品）    SearchScreen / ShopScreen / EventScreen / RestScreen
+         EventScreen（先过事件，063）→ BattleScreen（回放）→ ContainerScreen（战利品 / 搜索）    ShopScreen / RestScreen
                                                       ⇅
               ResultScreen（撤离 / 战败结算）→ MetaScreen（仓库与战绩）→ MainMenu
 ```
@@ -2985,6 +3004,7 @@ data/authoring/buffs/*.json         增益源数据
 data/authoring/sets/*.json          套装源数据
 data/authoring/loadouts/*.json      开局装备（8.1）
 data/authoring/run_buffs/*.json     buff：局外的 / 一局里的（8.2、9.2）
+data/authoring/events/*.json        事件：文字、选项、条件与后果（6.5 事件层）
 data/authoring/enemies/*.json       敌人（6.0）
 data/authoring/enemy_pools/*.json   敌人池（6.0）
 data/authoring/drop_rules/*.json    掉落规则（6.1）
@@ -2992,10 +3012,10 @@ data/authoring/node_rules/*.json    节点规则（6.2 / 6.5）
 data/authoring/economy_rules/*.json 经济规则（6.6）
 data/authoring/meta_rules/*.json    局外规则：仓库多大（8.2）
 data/authoring/chapters/*.json      章节（5.3）
-        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → run_buffs → items → loadouts → enemies → enemy_pools → drop_rules → node_rules → economy_rules → meta_rules → chapters）
+        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → run_buffs → items → loadouts → events → enemies → enemy_pools → drop_rules → node_rules → economy_rules → meta_rules → chapters）
         │  tools/normalize_content.gd 把作者数据重写成导出器的格式（导入 → 导出 → 不同就写回）
         ▼
-data/items/*.tres   data/buffs/*.tres   data/sets/*.tres   data/run_buffs/*.tres   data/loadouts/*.tres
+data/items/*.tres   data/buffs/*.tres   data/sets/*.tres   data/run_buffs/*.tres   data/loadouts/*.tres   data/events/*.tres
 data/enemies/*.tres data/enemy_pools/*.tres   data/drop_rules/*.tres   data/node_rules/*.tres   data/economy_rules/*.tres   data/meta_rules/*.tres   data/chapters/*.tres
 ```
 
@@ -3231,6 +3251,10 @@ res://
                     vitality  wallet  node_events  node_rules  search_rules  search_session
                     shop_session  economy_rules  paid_extracts  loadout_def  game_flow  run_result
                     storage_warning  run_buff_def  run_buffs  run_context
+      events/       event_def  event_option  event_condition  event_outcome  event_context  event_placer   # 事件层（6.5）
+        conditions/ has_buff_tag  has_map_buff  can_afford  vitality_at_least
+        outcomes/   give_item  give_random_item  restore_vitality  spend_vitality  change_money  grant_map_buff
+                    remove_map_buff  start_battle  open_search  open_shop  next_event  say
       effects/      vitality_max_bonus  starting_funds_bonus  extra_searches  shop_price_mult  luck_bonus   # RunEffect 构件（062）
     meta/           meta_state  meta_save  meta_rules              # 跨局（8.2）：仓库格子、带回来的棋盘、图鉴、局外 buff
     settings/       game_settings                                  # 玩家设置（3.4 的提醒档位）
@@ -3240,7 +3264,7 @@ res://
   ui/
     launcher  dev_nav  ui_palette
     game/           game_director  game_screen  main_menu  setup_screen  map_screen  inventory_panel   # 正式游戏（8 节），game.tscn 是主场景
-                    battle_screen  loot_screen  search_screen  shop_screen  event_screen  rest_screen  result_screen  meta_screen
+                    battle_screen  container_screen（战利品 / 搜索合一）  shop_screen  event_screen  rest_screen  result_screen  meta_screen
                     settings_screen  warehouse_panel  loot_view
     inventory/      inventory_sandbox  inventory_view  container_view  stash_view  drag_layer  item_painter
     battle/         battle_sandbox  battle_view  combatant_panel
@@ -3354,6 +3378,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.61 | 2026-09-23 | **事件层与容器屏合一**（报告 063，058 / 059 顺序里的第 4 项；6.5 新增「事件层」、8 节流程图、10.1、11）。事件是内容（新种类 `events`：文字、图像占位、选项；选项的条件与后果是构件、走注册表两张新表）；`NodeRules.events_by_type` 按类型配，`EventPlacer` 生成时按 `content_seed` 定进节点、已有的不覆盖、随机点揭开后再配；`NodeEvents.handle` 变两段（`pending` / `event_pending` / `choose`），后果的旗子决定接下一个 / 开搜索 / 开店 / 开战 / 用过；等着选的跟着存档；**没有事件定义 = 老路**，现有套件一条不改；搜索点的「要不要搜」是默认事件 `search_default`；`GameFlow` 排事件屏、结果页插队首、队空了显示等着选的；战利品屏与搜索屏合成 `container_screen`；六个作者文件当内容占位 |
 | v1.60 | 2026-09-23 | **buff 骨架**（报告 062，058 / 059 顺序里的第 3 项；9.2、8.2、6.1、10.1）。效果树第四个分支 `RunEffect`（作用域 RUN）往 `RunContext` 里加数，五个构件（体力上限、开局钱、多搜几次、商店价、幸运）登记在注册表；`RunBuffDef`（内容种类 `run_buffs`）局外 / 一局同一套定义、`mods` / `rules` / `effects` 与套装档位同一种分法、`tags` 当标记、`duration_steps` 时限；`MetaState.active_buffs`（占位开关列表）开局记进 `RunState.meta_buffs`，`map_buffs` 每步递减；掉落上下文改由 `RunState._loot_context` 造：幸运从 buff 来，**道具 / 套装的战利品效果第一次真的接进一局**（9.2 说的那条查询此前没接） |
 | v1.59 | 2026-09-23 | **仓库格子化、结算屏一键置入、图鉴**（报告 061，058 / 059 顺序里的第 2 项；8.2 重写，15 节第 4 项定案）。仓库是不要求包的格子，大小是 `MetaRules.warehouse_size`（新内容种类 `meta_rules`，随局外成长）；撤离不直接进仓库 —— 棋盘原样带回（`MetaState.board`，非包道具按原位置、包换成默认背景），结算屏 / 局外屏共用的仓库面板拖或一键置入，放不下就停在那一件提示，没清空 `can_begin()` 拒绝开新局；图鉴 `codex` 累计件数、点亮一次、包也计；`MetaState.keeps(def)` 一处决定什么能存进局外；一局结束时（进结算屏之前）就 absorb、存 meta；`MetaSave` 版本 2，仓库大小以存档为准 |
 | v1.58 | 2026-09-23 | **暂存区按点清空**（报告 060，058 / 059 顺序里的第一项；3.4 定稿，15 节第 7 项收掉）。「发生过事的点」= 踩上去时 `NodeEvents` 真的处理了什么，`last_handled_id` 记着、跟着存档；`RunState.step_to` 走出它时清暂存区、发 `storage_dropped`、清回 -1；出生点、岔路、路过的点、走不成的都不清。提醒档位是 `GameSettings`（`user://settings.json`，有就提 / 稀有度 / 价值 / 从不，表 + 阈值），`StorageWarning.at_risk` 挑要提的，地图屏走之前弹面板（照走 / 先整理背包 / 取消）；新增设置屏 |

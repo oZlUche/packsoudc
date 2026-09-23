@@ -24,6 +24,8 @@ const ABSTRACT_ROOTS := {
 	&"MapEffect": [&"map_effect"],
 	&"RunEffect": [&"run_effect"],
 	&"Effect": [&"effect", &"loot_effect", &"map_effect", &"run_effect"],
+	&"EventCondition": [&"event_condition"],
+	&"EventOutcome": [&"event_outcome"],
 }
 
 ## 声明成裸 int、但语义上是枚举的属性，键为 `类名.属性名`。

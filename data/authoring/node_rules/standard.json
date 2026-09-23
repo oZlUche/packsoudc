@@ -34,5 +34,17 @@
     "item": 1,
     "restore": 1,
     "story": 1
+  },
+  "events_by_type": {
+    "search": {
+      "search_default": 1
+    },
+    "event": {
+      "event_cache": 2,
+      "event_stranger": 2,
+      "event_marked_reward": 1,
+      "event_rest_spot": 1,
+      "event_ambush": 1
+    }
   }
 }

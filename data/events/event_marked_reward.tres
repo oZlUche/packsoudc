@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_ffilk"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_fi8xx"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/remove_map_buff.gd" id="3_6v1j8"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/give_item.gd" id="4_mjfu0"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="5_32i03"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="6_xea7y"]
+[ext_resource type="Script" path="res://core/run/events/conditions/has_buff_tag.gd" id="7_ymhac"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="8_44km7"]
+
+[sub_resource type="Resource" id="Resource_mwi0h"]
+script = ExtResource("3_6v1j8")
+buff = &"marked"
+
+[sub_resource type="Resource" id="Resource_x5mwx"]
+script = ExtResource("4_mjfu0")
+item = &"medkit"
+
+[sub_resource type="Resource" id="Resource_f25k2"]
+script = ExtResource("5_32i03")
+text = "「上次的事，谢了。」他塞给你一个医疗包。"
+
+[sub_resource type="Resource" id="Resource_4yy8h"]
+script = ExtResource("7_ymhac")
+tag = &"marked"
+
+[sub_resource type="Resource" id="Resource_w34en"]
+script = ExtResource("1_ffilk")
+label = "他认出了你"
+requires = Array[ExtResource("6_xea7y")]([SubResource("Resource_4yy8h")])
+outcomes = Array[ExtResource("2_fi8xx")]([SubResource("Resource_mwi0h"), SubResource("Resource_x5mwx"), SubResource("Resource_f25k2")])
+
+[sub_resource type="Resource" id="Resource_qj52l"]
+script = ExtResource("1_ffilk")
+label = "走过去"
+
+[resource]
+script = ExtResource("8_44km7")
+id = &"event_marked_reward"
+title = "熟面孔"
+text = "路边坐着的人抬起头看你。"
+options = Array[ExtResource("1_ffilk")]([SubResource("Resource_w34en"), SubResource("Resource_qj52l")])

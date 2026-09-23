@@ -80,6 +80,13 @@ class Context:
 		if def != null and def.id != &"":
 			run_buffs[def.id] = def
 
+	## id -> EventDef。节点规则对着它查
+	var events: Dictionary = {}
+
+	func register_event(def: EventDef) -> void:
+		if def != null and def.id != &"":
+			events[def.id] = def
+
 	## 道具里带某个标签的有几件。批量导入时才有意义 —— 单独导一个敌人时上下文是空的，
 	## 这类「对着别的东西查」的校验就跳过（见 _validate_enemy）
 	func items_tagged(tag: StringName) -> int:
@@ -180,6 +187,42 @@ static func import_run_buff(data: Dictionary, ctx: Context, report: ImportReport
 	return def
 
 
+## 事件（063）：至少一个选项、选项得有字；给的道具得存在、给的地图 buff 得存在且是地图作用域（对着别的东西查的只在批量导入时生效）
+static func import_event(data: Dictionary, ctx: Context, report: ImportReport) -> EventDef:
+	var def := EventDef.new()
+	_fill(def, data, "", ctx, report)
+	if def.id == &"":
+		report.error("id", "事件必须有 id")
+	if def.options.is_empty():
+		report.error("options", "事件至少一个选项，不然关不掉")
+	for i in def.options.size():
+		var opt := def.options[i] as EventOption
+		if opt == null:
+			report.error("options[%d]" % i, "空的选项")
+			continue
+		if opt.label.strip_edges() == "":
+			report.error("options[%d].label" % i, "选项得有字")
+		for k in opt.outcomes.size():
+			var o := opt.outcomes[k] as EventOutcome
+			var at := "options[%d].outcomes[%d]" % [i, k]
+			if o == null:
+				report.error(at, "空的后果")
+			elif o is GiveItem and not ctx.items.is_empty() and not ctx.items.has((o as GiveItem).item):
+				report.error(at, "找不到道具 '%s'" % (o as GiveItem).item)
+			elif (o is GrantMapBuff or o is RemoveMapBuff) and not ctx.run_buffs.is_empty():
+				var bid: StringName = (o as GrantMapBuff).buff if o is GrantMapBuff else (o as RemoveMapBuff).buff
+				var b: RunBuffDef = ctx.run_buffs.get(bid, null)
+				if b == null:
+					report.error(at, "找不到 buff '%s'" % bid)
+				elif not b.is_map():
+					report.error(at, "'%s' 是局外 buff，事件只能给地图 buff" % bid)
+		for k in opt.requires.size():
+			if opt.requires[k] == null:
+				report.error("options[%d].requires[%d]" % [i, k], "空的条件")
+	ctx.register_event(def)
+	return def
+
+
 ## 局外规则（058 第 6 条）：仓库多大
 static func import_meta_rules(data: Dictionary, ctx: Context, report: ImportReport) -> MetaRules:
 	var rules := MetaRules.new()
@@ -242,13 +285,13 @@ static func _validate_economy_rules(rules: EconomyRules, report: ImportReport) -
 static func import_node_rules(data: Dictionary, ctx: Context, report: ImportReport) -> NodeRules:
 	var rules := NodeRules.new()
 	_fill(rules, data, "", ctx, report)
-	_validate_node_rules(rules, report)
+	_validate_node_rules(rules, ctx, report)
 	ctx.register_node_rules(rules)
 	return rules
 
 
 ## 随机点只能变成 A/S/R/V/Q（5.4：不会变成精英或 BOSS）；遭遇曲线非递减、在 0～1；件数范围合法；扣的体力非负。
-static func _validate_node_rules(rules: NodeRules, report: ImportReport) -> void:
+static func _validate_node_rules(rules: NodeRules, ctx: Context, report: ImportReport) -> void:
 	if rules.id == &"":
 		report.error("id", "节点规则必须有 id")
 	if rules.random_weights.is_empty():
@@ -263,6 +306,16 @@ static func _validate_node_rules(rules: NodeRules, report: ImportReport) -> void
 			report.error("loss_cost", "'%s' 扣的体力不能为负" % key)
 		if String(key) == "core":
 			report.error("loss_cost", "core 不在这里：BOSS 输了直接战败，那是规则不是数值（7.1）")
+	for type in rules.events_by_type:
+		var table = rules.events_by_type[type]
+		if not (table is Dictionary):
+			report.error("events_by_type", "'%s' 下该是 {事件 id: 权重}" % type)
+			continue
+		for eid in table:
+			if float(table[eid]) < 0.0:
+				report.error("events_by_type", "'%s' 里 '%s' 的权重不能为负" % [type, eid])
+			if not ctx.events.is_empty() and not ctx.events.has(StringName(String(eid))):
+				report.error("events_by_type", "'%s' 里找不到事件 '%s'（已知：%s）" % [type, eid, ", ".join(ctx.events.keys())])
 	for key in rules.event_weights:
 		if not NodeRules.EVENT_OUTCOMES.has(StringName(String(key))):
 			report.error("event_weights", "认不得的事件结果 '%s'（只能是 %s）" % [key, ", ".join(NodeRules.EVENT_OUTCOMES)])

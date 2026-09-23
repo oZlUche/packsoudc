@@ -1,0 +1,18 @@
+{
+  "id": "search_default",
+  "title": "搜索点",
+  "text": "这里像是能翻出点什么。翻得越久，越可能惊动附近的人。",
+  "options": [
+    {
+      "label": "搜索",
+      "outcomes": [
+        {
+          "type": "open_search"
+        }
+      ]
+    },
+    {
+      "label": "离开"
+    }
+  ]
+}

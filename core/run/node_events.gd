@@ -51,6 +51,18 @@ var loot_context: Callable = Callable()
 ## 一局的规则被 buff 改成了什么样：`Callable() -> RunContext`。没设就是默认（多搜 0 次、原价）
 var run_context: Callable = Callable()
 
+## 事件层（063）：定义表由持有方给（id → EventDef）。**空表 = 没有事件层**，每个点踩上去直接发生（老路）
+var event_defs: Dictionary = {}
+## 地图 buff 的四个回调（在 RunState 手里）：事件的条件与后果用
+var grant_map_buff: Callable = Callable()
+var remove_map_buff: Callable = Callable()
+var has_map_buff: Callable = Callable()
+var has_buff_tag: Callable = Callable()
+## 正在等玩家选的事件：{"node": id, "event": id, "type": 这个点算什么类型}。跟着存档走，读档回来还在这一屏
+var pending: Dictionary = {}
+## 踩上一个配了事件的点：先给玩家看，选了才往下走
+signal event_pending(node: MapNode, def: EventDef)
+
 var current_search: SearchSession = null
 var current_shop: ShopSession = null
 ## 最近一场的双方战斗单位：{"player": CombatantSpec, "enemy": CombatantSpec, "node": id}。
@@ -80,13 +92,24 @@ func bind(p_travel: MapTravel) -> void:
 			_depths = EnemyPlacer.depths_of(graph)
 
 
-## 踩上一个还没用过的点
+## 踩上一个还没用过的点。配了事件的先停下等玩家选（[method choose]），没配的直接发生
 func handle(node: MapNode) -> void:
 	if node == null:
 		return
 	var type := node.type
 	if type == &"random":
 		type = reveal(node)
+	var def := _event_for(node, type)
+	if def != null:
+		last_handled_id = node.id
+		pending = {"node": node.id, "event": String(def.id), "type": String(type)}
+		event_pending.emit(node, def)
+		return
+	_proceed(node, type)
+
+
+## 事件之后（或者根本没有事件）这个点按类型发生的事
+func _proceed(node: MapNode, type: StringName) -> void:
 	match type:
 		&"battle", &"elite", &"core":
 			last_handled_id = node.id
@@ -125,8 +148,105 @@ func reveal(node: MapNode) -> StringName:
 		var built := _enemy_for(node, &"battle", _rng_for(node, "enemy"))
 		for key in built:
 			node.content[key] = built[key]
+	# 揭成什么就按什么类型配事件（生成时随机点没法配）
+	if rules != null and String(node.content.get("event", "")) == "":
+		var eid := EventPlacer.pick_for(node, type, rules)
+		if eid != &"":
+			node.content["event"] = String(eid)
 	revealed.emit(node, type)
 	return type
+
+
+#region 事件层
+## 这个点配了哪个事件：先看内容里的（生成时定的、或被替换过的），没有再按规则表抽；表里没有、定义表里找不到都算没有
+func _event_for(node: MapNode, type: StringName) -> EventDef:
+	if event_defs.is_empty() or rules == null:
+		return null
+	var id := String(node.content.get("event", ""))
+	if id == "":
+		var picked := EventPlacer.pick_for(node, type, rules)
+		if picked == &"":
+			return null
+		id = String(picked)
+		node.content["event"] = id
+	return event_defs.get(StringName(id), null)
+
+
+func pending_event() -> EventDef:
+	return event_defs.get(StringName(String(pending.get("event", ""))), null) if not pending.is_empty() else null
+
+
+func pending_node() -> MapNode:
+	return graph.get_node(int(pending["node"])) if not pending.is_empty() and graph != null and graph.has_node(int(pending["node"])) else null
+
+
+## 第 i 个选项现在能不能选：{"ok": bool, "why": 不能选的原因}
+func option_state(i: int) -> Dictionary:
+	var def := pending_event()
+	var node := pending_node()
+	if def == null or node == null or i < 0 or i >= def.options.size():
+		return {"ok": false, "why": "没有这个选项"}
+	var why := (def.options[i] as EventOption).locked_reason(_event_ctx(node))
+	return {"ok": why == "", "why": why}
+
+
+## 玩家选了第 i 个选项：条件过了就依次执行后果，然后按旗子往下走（接下一个事件 / 开搜索 / 开店 / 开战 / 点用过）。
+## 返回 false = 没有待选的事件、选项不存在、条件没过
+func choose(i: int) -> bool:
+	var def := pending_event()
+	var node := pending_node()
+	if def == null or node == null or i < 0 or i >= def.options.size():
+		return false
+	var option := def.options[i] as EventOption
+	var ctx := _event_ctx(node)
+	if option.locked_reason(ctx) != "":
+		return false
+	var type := StringName(String(pending.get("type", String(node.type))))
+	pending = {}
+	for o in option.outcomes:
+		if o != null:
+			(o as EventOutcome).apply(ctx)
+	node.content["choice"] = i
+	event_resolved.emit(node, StringName(option.label), ctx.detail())
+	if vitality != null and vitality.is_depleted():
+		defeated.emit(&"vitality_depleted")
+		_visited(node)
+		return true
+	if ctx.next_event != &"":
+		var next: EventDef = event_defs.get(ctx.next_event, null)
+		if next != null:
+			pending = {"node": node.id, "event": String(next.id), "type": String(type)}
+			event_pending.emit(node, next)
+			return true
+	if ctx.open_search:
+		_open_search(node)
+	elif ctx.open_shop:
+		_open_shop(node)
+	elif ctx.start_battle:
+		var fight_type := type if type in [&"battle", &"elite", &"core"] else &"battle"
+		var content := node.content if EnemyKit.has_enemy(node.content) else _enemy_for(node, &"battle", _rng_for(node, "event_enemy"))
+		_fight(node, fight_type, content)
+		_visited(node)
+	else:
+		_visited(node)
+	return true
+
+
+func _event_ctx(node: MapNode) -> EventContext:
+	var ctx := EventContext.new()
+	ctx.node = node
+	ctx.rng = _rng_for(node, "event")
+	ctx.vitality = vitality
+	ctx.wallet = wallet
+	ctx.items = items
+	ctx.rules = rules
+	ctx.depth = float(_depths.get(node.id, 0.0))
+	ctx.grant_map_buff = grant_map_buff
+	ctx.remove_map_buff = remove_map_buff
+	ctx.has_map_buff = has_map_buff
+	ctx.has_buff_tag = has_buff_tag
+	return ctx
+#endregion
 
 
 ## 本局累计搜索次数（含正在搜的这个点已经搜过的）

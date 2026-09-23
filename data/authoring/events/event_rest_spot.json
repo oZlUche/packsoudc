@@ -1,0 +1,18 @@
+{
+  "id": "event_rest_spot",
+  "title": "歇脚处",
+  "text": "一处避风的角落，看起来能歇一会儿。",
+  "options": [
+    {
+      "label": "歇一会儿",
+      "outcomes": [
+        {
+          "type": "restore_vitality"
+        }
+      ]
+    },
+    {
+      "label": "继续走"
+    }
+  ]
+}

@@ -64,6 +64,29 @@ const RUN_EFFECTS := {
 	&"luck_bonus": "res://core/run/effects/luck_bonus.gd",
 }
 
+## 事件层（063）：选项的条件（只读）与后果（做一件事或立一面旗）
+const EVENT_CONDITIONS := {
+	&"has_buff_tag": "res://core/run/events/conditions/has_buff_tag.gd",
+	&"has_map_buff": "res://core/run/events/conditions/has_map_buff.gd",
+	&"can_afford": "res://core/run/events/conditions/can_afford.gd",
+	&"vitality_at_least": "res://core/run/events/conditions/vitality_at_least.gd",
+}
+
+const EVENT_OUTCOMES := {
+	&"give_item": "res://core/run/events/outcomes/give_item.gd",
+	&"give_random_item": "res://core/run/events/outcomes/give_random_item.gd",
+	&"restore_vitality": "res://core/run/events/outcomes/restore_vitality.gd",
+	&"spend_vitality": "res://core/run/events/outcomes/spend_vitality.gd",
+	&"change_money": "res://core/run/events/outcomes/change_money.gd",
+	&"grant_map_buff": "res://core/run/events/outcomes/grant_map_buff.gd",
+	&"remove_map_buff": "res://core/run/events/outcomes/remove_map_buff.gd",
+	&"start_battle": "res://core/run/events/outcomes/start_battle.gd",
+	&"open_search": "res://core/run/events/outcomes/open_search.gd",
+	&"open_shop": "res://core/run/events/outcomes/open_shop.gd",
+	&"next_event": "res://core/run/events/outcomes/next_event.gd",
+	&"say": "res://core/run/events/outcomes/say.gd",
+}
+
 const TABLES := {
 	&"trigger": TRIGGERS,
 	&"cadence": CADENCES,
@@ -72,6 +95,8 @@ const TABLES := {
 	&"loot_effect": LOOT_EFFECTS,
 	&"map_effect": MAP_EFFECTS,
 	&"run_effect": RUN_EFFECTS,
+	&"event_condition": EVENT_CONDITIONS,
+	&"event_outcome": EVENT_OUTCOMES,
 }
 
 

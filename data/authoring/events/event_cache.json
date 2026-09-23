@@ -1,0 +1,31 @@
+{
+  "id": "event_cache",
+  "title": "上锁的箱子",
+  "text": "角落里有一只上了锁的铁箱，锁已经锈得差不多了。",
+  "options": [
+    {
+      "label": "撬开（体力 -1）",
+      "requires": [
+        {
+          "type": "vitality_at_least"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "spend_vitality"
+        },
+        {
+          "type": "give_random_item",
+          "rarity_cap": 2
+        },
+        {
+          "type": "say",
+          "text": "锁应声而断。"
+        }
+      ]
+    },
+    {
+      "label": "走开"
+    }
+  ]
+}

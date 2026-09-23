@@ -66,6 +66,7 @@ const SUITES: Array = [
 	preload("res://tests/test_storage_rule.gd"),
 	preload("res://tests/test_meta_grid.gd"),
 	preload("res://tests/test_run_buffs.gd"),
+	preload("res://tests/test_event_layer.gd"),
 ]
 
 

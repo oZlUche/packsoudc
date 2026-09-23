@@ -11,3 +11,15 @@ script = ExtResource("1_pbgj0")
 id = &"standard"
 display_name = "标准节点规则（占位）"
 search = SubResource("Resource_4xugp")
+events_by_type = {
+"event": {
+"event_ambush": 1,
+"event_cache": 2,
+"event_marked_reward": 1,
+"event_rest_spot": 1,
+"event_stranger": 2
+},
+"search": {
+"search_default": 1
+}
+}

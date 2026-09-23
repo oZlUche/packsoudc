@@ -67,3 +67,16 @@ static func _weighted(table: Dictionary, rng: RandomNumberGenerator, fallback: S
 		if x <= 0.0:
 			return StringName(String(k))
 	return StringName(String(keys[keys.size() - 1]))
+
+
+## 事件层（063）：节点类型 → {事件 id: 权重}。生成地图时按它给每个点定一个事件（[EventPlacer]），踩上去先过事件屏。
+## 没列的类型（多数是战斗）没有事件 = 转场，踩上去直接发生。搜索点的「要不要搜」就是它的事件（选项里 OpenSearch）
+@export var events_by_type: Dictionary = {}
+
+
+## 这种类型的点该配哪个事件；没配返回空
+func event_pick_for(type: StringName, rng: RandomNumberGenerator) -> StringName:
+	var table = events_by_type.get(String(type), null)
+	if not (table is Dictionary) or (table as Dictionary).is_empty():
+		return &""
+	return _weighted(table, rng, &"")

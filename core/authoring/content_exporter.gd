@@ -62,6 +62,10 @@ static func export_run_buff(def: RunBuffDef) -> Dictionary:
 	return _dump(def)
 
 
+static func export_event(def: EventDef) -> Dictionary:
+	return _dump(def)
+
+
 ## 带 type 的导出，用于抽象基类的子对象
 static func _dump(obj: Object, with_type: bool = false) -> Dictionary:
 	var out := {}

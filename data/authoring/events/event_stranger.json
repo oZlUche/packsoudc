@@ -1,0 +1,38 @@
+{
+  "id": "event_stranger",
+  "title": "陌生人",
+  "text": "一个瘦削的人靠在墙边，向你伸出手。",
+  "options": [
+    {
+      "label": "给他 10 币",
+      "requires": [
+        {
+          "type": "can_afford"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "change_money",
+          "amount": -10
+        },
+        {
+          "type": "grant_map_buff",
+          "buff": "marked"
+        },
+        {
+          "type": "say",
+          "text": "他记住了你的脸。"
+        }
+      ]
+    },
+    {
+      "label": "不理他",
+      "outcomes": [
+        {
+          "type": "say",
+          "text": "他缩回了手。"
+        }
+      ]
+    }
+  ]
+}
