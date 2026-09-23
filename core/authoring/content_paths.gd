@@ -12,6 +12,7 @@ const AUTHORING_ITEMS := AUTHORING + "/items"
 const AUTHORING_LOADOUTS := AUTHORING + "/loadouts"
 const AUTHORING_BUFFS := AUTHORING + "/buffs"
 const AUTHORING_SETS := AUTHORING + "/sets"
+const AUTHORING_RUN_BUFFS := AUTHORING + "/run_buffs"
 const AUTHORING_ENEMIES := AUTHORING + "/enemies"
 const AUTHORING_ENEMY_POOLS := AUTHORING + "/enemy_pools"
 const AUTHORING_DROP_RULES := AUTHORING + "/drop_rules"
@@ -26,6 +27,7 @@ const ITEMS := "res://data/items"
 const LOADOUTS := "res://data/loadouts"
 const BUFFS := "res://data/buffs"
 const SETS := "res://data/sets"
+const RUN_BUFFS := "res://data/run_buffs"
 const ENEMIES := "res://data/enemies"
 const ENEMY_POOLS := "res://data/enemy_pools"
 const DROP_RULES := "res://data/drop_rules"
@@ -39,6 +41,7 @@ const CHAPTERS := "res://data/chapters"
 const KINDS := {
 	"buffs": [AUTHORING_BUFFS, BUFFS],
 	"sets": [AUTHORING_SETS, SETS],
+	"run_buffs": [AUTHORING_RUN_BUFFS, RUN_BUFFS],
 	"items": [AUTHORING_ITEMS, ITEMS],
 	"loadouts": [AUTHORING_LOADOUTS, LOADOUTS],
 	"enemies": [AUTHORING_ENEMIES, ENEMIES],
@@ -51,7 +54,7 @@ const KINDS := {
 }
 ## 开局装备与敌人都在道具之后（清单、招牌道具、流派标签要对着道具查），池在敌人之后，三种规则独立，
 ## 章节排最后（按 id 引用池与规则）
-const ORDER := ["buffs", "sets", "items", "loadouts", "enemies", "enemy_pools", "drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters"]
+const ORDER := ["buffs", "sets", "run_buffs", "items", "loadouts", "enemies", "enemy_pools", "drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters"]
 
 
 static func authoring_file(kind: String, id: String) -> String:

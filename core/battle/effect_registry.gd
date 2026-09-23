@@ -55,6 +55,15 @@ const LOOT_EFFECTS := {
 ## 地图作用域：占位，M3 再填
 const MAP_EFFECTS := {}
 
+## 一局的规则（059 的 buff 骨架）：体力上限、开局钱、多搜几次、商店价、幸运。**不依赖扳机，激活即生效。**
+const RUN_EFFECTS := {
+	&"vitality_max_bonus": "res://core/run/effects/vitality_max_bonus.gd",
+	&"starting_funds_bonus": "res://core/run/effects/starting_funds_bonus.gd",
+	&"extra_searches": "res://core/run/effects/extra_searches.gd",
+	&"shop_price_mult": "res://core/run/effects/shop_price_mult.gd",
+	&"luck_bonus": "res://core/run/effects/luck_bonus.gd",
+}
+
 const TABLES := {
 	&"trigger": TRIGGERS,
 	&"cadence": CADENCES,
@@ -62,6 +71,7 @@ const TABLES := {
 	&"effect": COMBAT_EFFECTS,
 	&"loot_effect": LOOT_EFFECTS,
 	&"map_effect": MAP_EFFECTS,
+	&"run_effect": RUN_EFFECTS,
 }
 
 

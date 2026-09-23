@@ -21,6 +21,8 @@ var enemies: EnemyDatabase = null
 var sets: SetDatabase = null
 var meta: MetaState = null
 var meta_rules: MetaRules = null
+## 全部 buff 定义（id → RunBuffDef），开局给 RunState、读档后补上
+var buff_defs: Dictionary = {}
 var chapters: Array[ChapterDef] = []
 var loadouts: Array[LoadoutDef] = []
 var save_path: String = RunSave.DEFAULT_PATH
@@ -91,6 +93,13 @@ func discard_board() -> void:
 	save_meta()
 
 
+## 局外 buff 的开关（占位：将来由任务系统、局外科技决定）。改了就存
+func toggle_meta_buff(id: StringName) -> bool:
+	var on := meta.toggle_buff(id)
+	save_meta()
+	return on
+
+
 func show_meta() -> void:
 	_go(Screen.META)
 
@@ -117,7 +126,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 		if inst != null and inst.def != null:
 			kit.append(inst.def.id)
 			taken.append(inst)
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit)
+	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs)
 	if state == null:
 		return null
 	if not taken.is_empty():
@@ -241,6 +250,7 @@ func _adopt(state: RunState) -> void:
 	result = null
 	_settled = false
 	_queue.clear()
+	state.buff_defs = buff_defs      # 读档回来的只有 id，定义表在这里
 	if player_baseline != null:
 		state.player_baseline = player_baseline
 	var ev := state.events
@@ -327,6 +337,10 @@ static func load_loadouts() -> Array[LoadoutDef]:
 		if res is LoadoutDef:
 			out.append(res)
 	return out
+
+
+static func load_run_buffs() -> Dictionary:
+	return RunBuffs.load_all()
 
 
 ## 局外规则（仓库多大）。没导入资产时 null，MetaState 用默认大小

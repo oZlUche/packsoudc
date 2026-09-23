@@ -50,6 +50,7 @@ func _ready() -> void:
 		meta = MetaState.new(rules)
 	flow = GameFlow.new(items, enemies, sets, meta)
 	flow.meta_rules = rules
+	flow.buff_defs = GameFlow.load_run_buffs()
 	flow.chapters = GameFlow.load_chapters()
 	flow.loadouts = GameFlow.load_loadouts()
 	flow.save_path = save_path

@@ -73,6 +73,13 @@ class Context:
 		if rules != null and rules.id != &"":
 			meta_rules[rules.id] = rules
 
+	## id -> RunBuffDef
+	var run_buffs: Dictionary = {}
+
+	func register_run_buff(def: RunBuffDef) -> void:
+		if def != null and def.id != &"":
+			run_buffs[def.id] = def
+
 	## 道具里带某个标签的有几件。批量导入时才有意义 —— 单独导一个敌人时上下文是空的，
 	## 这类「对着别的东西查」的校验就跳过（见 _validate_enemy）
 	func items_tagged(tag: StringName) -> int:
@@ -150,6 +157,26 @@ static func import_loadout(data: Dictionary, ctx: Context, report: ImportReport)
 	_fill(def, data, "", ctx, report)
 	_validate_loadout_def(def, ctx, report)
 	ctx.register_loadout(def)
+	return def
+
+
+## buff（059）：局外的或一局里的。战斗效果得带扳机、放 rules；effects 里只能是掉落或一局规则的效果
+static func import_run_buff(data: Dictionary, ctx: Context, report: ImportReport) -> RunBuffDef:
+	var def := RunBuffDef.new()
+	_fill(def, data, "", ctx, report)
+	if def.id == &"":
+		report.error("id", "buff 必须有 id")
+	if def.duration_steps < 0:
+		report.error("duration_steps", "时限不能为负（0 = 整局）")
+	for i in def.effects.size():
+		var e := def.effects[i] as Effect
+		if e == null:
+			report.error("effects[%d]" % i, "空的效果")
+		elif e.scope() != EffectScope.LOOT and e.scope() != EffectScope.RUN:
+			report.error("effects[%d]" % i, "buff 的 effects 只放掉落或一局规则的效果；战斗效果要带扳机，写进 rules")
+	if def.effects.is_empty() and def.mods.is_empty() and def.rules.is_empty() and def.tags.is_empty():
+		report.warn("effects", "这个 buff 什么都不改、也没有标记 —— 要当标记用至少给一个 tag")
+	ctx.register_run_buff(def)
 	return def
 
 

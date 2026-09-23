@@ -48,6 +48,8 @@ var scale_id: StringName = &""
 var player_spec: Callable = Callable()
 ## 掉落上下文：`Callable() -> LootContext`。没设就造一个只带难度的
 var loot_context: Callable = Callable()
+## 一局的规则被 buff 改成了什么样：`Callable() -> RunContext`。没设就是默认（多搜 0 次、原价）
+var run_context: Callable = Callable()
 
 var current_search: SearchSession = null
 var current_shop: ShopSession = null
@@ -180,6 +182,7 @@ func _open_search(node: MapNode) -> void:
 		_visited(node)
 		return
 	var session := SearchSession.new(node, rules.search, items, _rng_for(node, "search"), float(_depths.get(node.id, 0.0)))
+	session.extra_searches = _run_ctx().extra_searches
 	session.encounter_builder = func() -> Dictionary:
 		return _enemy_for(node, &"search", _rng_for(node, "ambush:%d" % session.searches_done))
 	session.ended.connect(func(reason: StringName): _close_search(node, session, reason))
@@ -193,7 +196,7 @@ func _open_shop(node: MapNode) -> void:
 		shop_opened.emit(node, null)
 		_visited(node)
 		return
-	var session := ShopSession.new(node, economy, items, wallet, float(_depths.get(node.id, 0.0)))
+	var session := ShopSession.new(node, economy, items, wallet, float(_depths.get(node.id, 0.0)), _run_ctx().shop_price_mult)
 	session.closed.connect(func():
 		current_shop = null
 		shop_closed.emit(node)
@@ -247,6 +250,12 @@ func _enemy_for(node: MapNode, as_type: StringName, rng: RandomNumberGenerator) 
 	# 踩上去才造的敌人跟探索度挂钩：走得越远、搜得越多，遇到的越强
 	var built := EnemyPlacer.place_one(view, pool, enemies, items, float(_depths.get(node.id, 0.0)), difficulty, scale_id, rng, exploration())
 	return built.get("content", {})
+
+
+func _run_ctx() -> RunContext:
+	if run_context.is_valid():
+		return run_context.call()
+	return RunContext.new()
 
 
 func _loot_ctx() -> LootContext:

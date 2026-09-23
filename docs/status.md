@@ -1,6 +1,6 @@
 # 现状总览
 
-> 2026-09-23 ｜ `main`（M6 之后，058 / 059 实施中）｜ 架构文档 v1.59 ｜ 这是一份**活文档**：每完成一个里程碑更新一次，历史看 `docs/reports/`
+> 2026-09-23 ｜ `main`（M6 之后，058 / 059 实施中）｜ 架构文档 v1.60 ｜ 这是一份**活文档**：每完成一个里程碑更新一次，历史看 `docs/reports/`
 
 ## 一句话
 
@@ -20,7 +20,7 @@
 | M4 节点内容 | 完成 | 045（规划）～050 | 敌人池（档位 / 流派 / 组装）、掉落（每件各掷 / 珍宝）、随机点与搜索点、节点事件接线、经济（进账 / 商店 / 付费撤离点）、探索度 |
 | M5 运行状态与存档 | 完成 | 051 | `RunState` 装壳、`RunRNG`、`RunSave`，读档之后接着走和没存过一样 |
 | M6 场景流 | 完成 | 055（规划 + M6-1）、056、057 | 纯逻辑状态机 `GameFlow` + 导演与十一屏（主场景换成正式游戏）；开局装备走管线；结算 `RunResult`、局外 `MetaState` / `MetaSave`；`LootView` 渐进揭示、亮出来的直接拖到棋盘、搜索点逐次装；仓库带进下一局（死了就没了）；撤离确认 |
-| 作者提议 058 / 059 | **进行中** | 058、059（提议）、060、061 | 1 暂存区按点清空 ✅（060）→ 2 仓库格子化、结算置入、图鉴 ✅（061）→ 3 buff 骨架 → 4 事件层与容器屏合一 → 5 开局预选与角色 → 6 搜索揭示 → 7 外框（可选） |
+| 作者提议 058 / 059 | **进行中** | 058、059（提议）、060～062 | 1 暂存区按点清空 ✅（060）→ 2 仓库格子化、结算置入、图鉴 ✅（061）→ 3 buff 骨架 ✅（062）→ 4 事件层与容器屏合一 → 5 开局预选与角色 → 6 搜索揭示 → 7 外框（可选） |
 | 第 7 阶段 侵蚀 | 未开始 | — | `ErosionField` / `ErosionSchedule`，钩子与顺序已在 `MapTravel` 里定死 |
 | 第 8 阶段 内容扩充 | 未开始 | — | 道具、敌人、事件、新章节地图形态、扩展移动机制 |
 
@@ -35,22 +35,22 @@
 | `core/map`（+ generators） | 数据层、生成器、校验、导航、文本往返、预设 | `MapGraph`、`MapGenerator`、`RingMapGenerator`、`RingTypeAssigner`、`MapNavigator`、`MapGridText` |
 | `core/enemies` | 敌人池、档位、组装、预览编译 | `EnemyPool`、`EnemyPlacer`、`EnemyKit` |
 | `core/loot` | 掉落规则与掷骰、修正来源接缝、装箱 | `DropRule`、`DropResolver`、`DropBonusSource`、`LootPacker` |
-| `core/run` | 一局：旅程、体力、钱、节点事件、搜索 / 商店会话、规则、状态与存档；场景流状态机、开局装备、结算 | `RunState`、`RunSave`、`MapTravel`、`NodeEvents`、`Vitality`、`Wallet`、`GameFlow`、`LoadoutDef`、`RunResult` |
+| `core/run`（+ effects） | 一局：旅程、体力、钱、节点事件、搜索 / 商店会话、规则、状态与存档；场景流状态机、开局装备、结算；buff（局外 / 一局）与一局规则的构件 | `RunState`、`RunSave`、`MapTravel`、`NodeEvents`、`Vitality`、`Wallet`、`GameFlow`、`LoadoutDef`、`RunResult`、`RunBuffDef`、`RunBuffs`、`RunContext` |
 | `core/meta` | 跨局：仓库格子（大小是 `MetaRules`）、带回来的棋盘与一键置入、图鉴、钱、战绩、保留规则（`absorb()` 一处）、存档 v2 | `MetaState`、`MetaSave`、`MetaRules` |
 | `core/settings` | 玩家设置（暂存区提醒档位），`user://settings.json` | `GameSettings`（挑要提的在 `core/run/storage_warning.gd`） |
 | `ui/game` | 正式游戏（主场景）：导演 + 屏的底座 + 十一屏 + 背包整理面板 + 渐进揭示的战利品视图 | `GameDirector`、`GameScreen`、`LootView`、`map_screen`、`battle_screen`、`loot_screen`…… |
 | `ui`（其余） | 五个沙盒 / 编辑器 + 启动选择器（开发期入口） | `launcher`、`inventory_sandbox`、`battle_sandbox`、`content_editor`、`map_sandbox`、`map_editor` |
 | `tools` | 命令行：导入 / 导出 / 归一化内容、脚本检查、批量统计、样例生成、截图 | `import_content`、`normalize_content`、`check_scripts`、`map_stats` |
-| `tests` | 41 个套件，`tools/test.sh` 一键跑 | `run_tests` |
+| `tests` | 42 个套件，`tools/test.sh` 一键跑 | `run_tests` |
 
 ## 数据与内容管线
 
 `data/authoring/<kind>/*.json`（人写，进 git）→ `tools/import_content.gd` → `data/<kind>/*.tres`（引擎读，也进 git）。
-种类与导入顺序：`buffs → sets → items → loadouts → enemies → enemy_pools → drop_rules → node_rules → economy_rules → meta_rules → chapters`（后者按 id 引用前者）。
+种类与导入顺序：`buffs → sets → run_buffs → items → loadouts → enemies → enemy_pools → drop_rules → node_rules → economy_rules → meta_rules → chapters`（后者按 id 引用前者）。
 `tools/normalize_content.gd` 把作者数据重写成导出器的格式（仓库里的 JSON 是往返不动点，测试逐字节比）。
 
 现有内容：22 件道具（三个流派标签 `burst` / `rapid` / `bleed`）、3 套开局装备（标准 / 拾荒者 / 打手）、6 种敌人、1 个敌人池、
-掉落 / 节点 / 经济 / 局外规则各 1 份、第一章 1 份、手绘地图 2 份。
+掉落 / 节点 / 经济 / 局外规则各 1 份、4 个测试用的 buff（坚韧 / 幸运 / 被盯上了 / 虚弱）、第一章 1 份、手绘地图 2 份。
 **数值全是占位**（见下）。
 
 ## 沙盒与工具
@@ -63,7 +63,7 @@
 
 ## 测试
 
-41 个套件、6734 项断言，机器空闲时 70～90 秒（开着别的 Godot 编辑器会到 4 分钟，超时放到 480 秒）。
+42 个套件、6798 项断言，机器空闲时 70～90 秒（开着别的 Godot 编辑器会到 4 分钟，超时放到 480 秒）。
 期望从数据推，不写死；统计类断言用千次抽样留容差；沙盒有帧测试。
 
 ## 占位数值清单（作者定数时改这些文件）
@@ -79,6 +79,7 @@
 | `data/authoring/items/*.json` | 道具数值、稀有度、价值 |
 | `data/authoring/loadouts/*.json` | 三套开局装备的清单与说明 |
 | `data/authoring/meta_rules/standard.json` | 仓库大小 10×8（局外成长改它） |
+| `data/authoring/run_buffs/*.json` | 四个测试用的 buff 的数（体力 +1、幸运 +1、虚弱 5 步 −10%） |
 | `core/meta/meta_state.gd` `absorb()` / `keeps()` | 撤离后的保留规则（棋盘带回、图鉴每件计一次、钱带出；战败全失）；什么能存进局外（现在：不是包） |
 | `core/battle/combatant_baseline.gd`、`core/run/vitality.gd`、`core/run/run_state.gd`、`ui/game/game_director.gd` | 生命 25 / 耐力 50（正式游戏里玩家 60）、体力上限 5、棋盘 8×6 —— 等角色系统 |
 | `core/inventory/item_value.gd` | 稀有度每格价 |
@@ -105,6 +106,6 @@
 
 ## 下一步
 
-作者已拍板，按 059 第四节的顺序做：~~暂存区（离开发生过事的点时清）~~ 完成（060）→ ~~仓库格子化、`MetaRules`、结算屏一键置入、图鉴~~ 完成（061）→ **buff 骨架** → 事件层与容器屏合一 → 开局预选与 `CharacterDef` → 搜索揭示 → 节点外框（可选）。
+作者已拍板，按 059 第四节的顺序做：~~暂存区（离开发生过事的点时清）~~ 完成（060）→ ~~仓库格子化、`MetaRules`、结算屏一键置入、图鉴~~ 完成（061）→ ~~buff 骨架~~ 完成（062）→ **事件层与容器屏合一** → 开局预选与 `CharacterDef` → 搜索揭示 → 节点外框（可选）。
 之后按实施顺序是**第 7 阶段侵蚀**（架构文档 5.7）：`ErosionField` / `ErosionSchedule`，钩子与顺序已在 `MapTravel.erosion`；浅层扣体力、深层损坏背包物品（按价值，6.4），
 数值走章节配置。再之后是第 8 阶段内容扩充（道具、敌人、事件、新章节地图形态、扩展移动机制）。053 的设想（三 + 二）仍等作者一句「做」。

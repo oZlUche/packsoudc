@@ -16,3 +16,6 @@ const LOOT := &"loot"
 
 ## 地图层：节点、路线、事件。占位，M3 再实现。
 const MAP := &"map"
+
+## 一局的规则：体力上限、开局钱、多搜几次、商店价、幸运…… 由 buff 携带（059），[RunState] 在对应的点查询 [RunContext]
+const RUN := &"run"

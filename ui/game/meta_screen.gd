@@ -7,6 +7,7 @@ const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
 var _wh = null
 var _new_run_btn: Button
 var _hint: Label
+var _buff_btns: Dictionary = {}
 
 
 func open(payload: Dictionary) -> void:
@@ -44,6 +45,24 @@ func open(payload: Dictionary) -> void:
 	var right := _vbox(8)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(right)
+	right.add_child(_label("局外 buff　占位：开关列表，将来由任务、局外科技决定", 15, UiPalette.DIM))
+	var ids_b: Array = flow.buff_defs.keys()
+	ids_b.sort()
+	var any_meta := false
+	for id in ids_b:
+		var def: RunBuffDef = flow.buff_defs[id]
+		if not def.is_meta():
+			continue
+		any_meta = true
+		var bid: StringName = id
+		var b := _button("%s　%s" % [def.display_name, def.summary()], func(): toggle_buff(bid), 13)
+		b.toggle_mode = true
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.set_pressed_no_signal(m.active_buffs.has(bid))
+		_buff_btns[bid] = b
+		right.add_child(b)
+	if not any_meta:
+		right.add_child(_label("（没有局外 buff 的内容）", 12, UiPalette.DIM))
 	right.add_child(_label("图鉴　带出过的点亮，记累计件数", 15, UiPalette.DIM))
 	var codex := _log_box(13)
 	codex.custom_minimum_size.y = 260
@@ -79,6 +98,13 @@ func store_all() -> Dictionary:
 
 func discard_board() -> void:
 	_wh.discard_board()
+
+
+func toggle_buff(id: StringName) -> bool:
+	var on := flow.toggle_meta_buff(id)
+	if _buff_btns.has(id):
+		(_buff_btns[id] as Button).set_pressed_no_signal(on)
+	return on
 
 
 func _refresh() -> void:

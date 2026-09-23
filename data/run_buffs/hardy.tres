@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_x5lxx"]
+[ext_resource type="Script" path="res://core/run/effects/vitality_max_bonus.gd" id="2_34ani"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_tqm2h"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_hk6dj"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_hwqf4"]
+
+[sub_resource type="Resource" id="Resource_40kx8"]
+script = ExtResource("2_34ani")
+
+[resource]
+script = ExtResource("5_hwqf4")
+id = &"hardy"
+display_name = "坚韧"
+description = "体力上限 +1（局外 buff 的测试用例）"
+scope = 0
+effects = Array[ExtResource("1_x5lxx")]([SubResource("Resource_40kx8")])

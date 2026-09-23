@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_e5ktl"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_0v5nm"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_cd4v5"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="4_0nl67"]
+
+[resource]
+script = ExtResource("4_0nl67")
+id = &"marked"
+display_name = "被盯上了"
+description = "一个标记，什么都不改：某些事件的选项只对带它的人开（地图 buff 的测试用例）"
+tags = Array[StringName]([&"marked"])

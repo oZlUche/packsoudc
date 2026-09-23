@@ -25,6 +25,8 @@ signal loot_pending(container: GridInventory)
 signal loot_cleared()
 ## 走出一个发生过事的点，暂存区里的东西留在了那里（3.4 / 058）
 signal storage_dropped(node_id: int, items: Array)
+## 地图 buff 变了（给了、到期了）
+signal buffs_changed()
 
 var run_seed: int = 0
 var chapter: ChapterDef = null
@@ -57,6 +59,11 @@ var end_reason: StringName = &""
 var pending_loot: GridInventory = null
 ## 这一局的计数（给结算看）：打赢 / 打输几场。跟着存档走
 var tally: Dictionary = {"battles_won": 0, "battles_lost": 0}
+## buff（059）：定义表由持有方给（id → RunBuffDef，存档只写 id）；局外的在开局那一刻定下来跟着存档；
+## 一局里的每条 {"id", "left"}（left = 还能走几步，-1 = 整局）
+var buff_defs: Dictionary = {}
+var meta_buffs: Array[StringName] = []
+var map_buffs: Array[Dictionary] = []
 
 
 #region 开局
@@ -64,7 +71,8 @@ var tally: Dictionary = {"battles_won": 0, "battles_lost": 0}
 ## 「选初始背包」的界面是 M6 的事，这里只收一个清单
 static func start(
 	p_chapter: ChapterDef, p_seed: int, p_items: ItemDatabase, p_enemies: EnemyDatabase,
-	p_sets: SetDatabase = null, kit: Array[StringName] = [] as Array[StringName]
+	p_sets: SetDatabase = null, kit: Array[StringName] = [] as Array[StringName],
+	p_buff_defs: Dictionary = {}, p_meta_buffs: Array[StringName] = [] as Array[StringName]
 ) -> RunState:
 	if p_chapter == null or p_chapter.map_source == null:
 		return null
@@ -83,8 +91,15 @@ static func start(
 		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id())
 	PaidExtracts.mark(s.map, s.economy)
 	s.rng = RunRNG.new(p_seed)
-	s.vitality = Vitality.new()
-	s.wallet = Wallet.new(s.economy.starting_balance if s.economy != null else 0)
+	# 局外 buff 在开局那一刻定下来：体力上限、开局钱按它们改（一局里的规则见 buff_context）
+	s.buff_defs = p_buff_defs
+	for id in p_meta_buffs:
+		var def: RunBuffDef = p_buff_defs.get(id, null)
+		if def != null and def.is_meta():
+			s.meta_buffs.append(id)
+	var ctx := s.buff_context()
+	s.vitality = Vitality.new(Vitality.PLACEHOLDER_MAX + ctx.vitality_max_bonus)
+	s.wallet = Wallet.new((s.economy.starting_balance if s.economy != null else 0) + ctx.starting_funds_bonus)
 	s.board = GridInventory.new(BOARD_SIZE, BOARD_ID, true)
 	s.storage = ItemStash.new(STORAGE_ID, 0)
 	s._bind_tracker()
@@ -113,7 +128,10 @@ func step_to(id: int) -> bool:
 		return travel.step_to(id)     # 让旅程自己拒绝、发 refused；走不成就不该清东西
 	close_sessions()
 	_drop_storage_if_leaving()
-	return travel.step_to(id)
+	var ok := travel.step_to(id)
+	if ok:
+		tick_map_buffs()
+	return ok
 
 
 ## 走出现在这个点会不会清暂存区：这个点上发生过事（打了、搜了、开了店、休息了、出了事件），而且暂存区里有东西
@@ -165,12 +183,104 @@ func is_over() -> bool:
 #endregion
 
 
+#region buff
+## 现在激活的 buff 定义：局外的 + 一局里的
+func active_buff_defs() -> Array:
+	var out: Array = []
+	for id in meta_buffs:
+		var def: RunBuffDef = buff_defs.get(id, null)
+		if def != null:
+			out.append(def)
+	for entry in map_buffs:
+		var def: RunBuffDef = buff_defs.get(StringName(String(entry["id"])), null)
+		if def != null:
+			out.append(def)
+	return out
+
+
+## 一局的规则被 buff 改成了什么样（每次算，便宜）
+func buff_context() -> RunContext:
+	return RunBuffs.context(active_buff_defs())
+
+
+## 给一个地图 buff（事件的后果）。不认识的 id、局外的 buff 给不了；已经有的刷新时限
+func grant_map_buff(id: StringName) -> bool:
+	var def: RunBuffDef = buff_defs.get(id, null)
+	if def == null or not def.is_map():
+		return false
+	var left := def.duration_steps if def.duration_steps > 0 else -1
+	for entry in map_buffs:
+		if String(entry["id"]) == String(id):
+			entry["left"] = left
+			buffs_changed.emit()
+			return true
+	map_buffs.append({"id": String(id), "left": left})
+	buffs_changed.emit()
+	return true
+
+
+func remove_map_buff(id: StringName) -> bool:
+	for i in map_buffs.size():
+		if String(map_buffs[i]["id"]) == String(id):
+			map_buffs.remove_at(i)
+			buffs_changed.emit()
+			return true
+	return false
+
+
+func has_map_buff(id: StringName) -> bool:
+	for entry in map_buffs:
+		if String(entry["id"]) == String(id):
+			return true
+	return false
+
+
+## 激活的 buff 里有没有带这个标记的（事件选项的条件查它）
+func has_buff_tag(tag: StringName) -> bool:
+	return RunBuffs.has_tag(active_buff_defs(), tag)
+
+
+## 走了一步：有时限的地图 buff 少一步，到 0 就没了
+func tick_map_buffs() -> void:
+	var changed := false
+	var i := map_buffs.size() - 1
+	while i >= 0:
+		var left := int(map_buffs[i]["left"])
+		if left > 0:
+			left -= 1
+			if left == 0:
+				map_buffs.remove_at(i)
+			else:
+				map_buffs[i]["left"] = left
+			changed = true
+		i -= 1
+	if changed:
+		buffs_changed.emit()
+#endregion
+
+
 #region 背包与战利品
-## 开战那一刻编译玩家（4.2 是纯函数；套装的战斗侧效果从 tracker 取）
+## 开战那一刻编译玩家（4.2 是纯函数；套装的战斗侧效果从 tracker 取，buff 的并进去）
 func compile_player() -> CombatantSpec:
+	var active := active_buff_defs()
 	var mods: Array[StatModifier] = tracker.combat_mods() if tracker != null else [] as Array[StatModifier]
 	var rules: Array[AbilityRule] = tracker.combat_rules() if tracker != null else [] as Array[AbilityRule]
+	mods.append_array(RunBuffs.combat_mods(active))
+	rules.append_array(RunBuffs.combat_rules(active))
 	return BattleCompiler.compile(board, player_baseline, mods, rules)
+
+
+## 掉落上下文（6.1）：难度、buff 给的幸运；道具与套装的战利品效果（9.2）、buff 的掉落效果都施加上去
+func _loot_context() -> LootContext:
+	var ctx := LootContext.new()
+	ctx.difficulty = chapter.difficulty if chapter != null else 0
+	var active := active_buff_defs()
+	ctx.luck = RunBuffs.context(active).luck_bonus
+	if tracker != null:
+		for e in tracker.effects_in_scope(EffectScope.LOOT):
+			(e as LootEffect).modify(ctx)
+	RunBuffs.apply_loot(active, ctx)
+	return ctx
 
 
 ## 从待拾取的容器里拿一件进暂存区
@@ -289,6 +399,8 @@ func _wire_events() -> void:
 	events.difficulty = chapter.difficulty
 	events.scale_id = scale_id()
 	events.player_spec = compile_player
+	events.loot_context = _loot_context
+	events.run_context = buff_context
 	events.battle_finished.connect(func(_n: MapNode, _r: BattleResult, won: bool):
 		var key := "battles_won" if won else "battles_lost"
 		tally[key] = int(tally.get(key, 0)) + 1)
@@ -333,7 +445,15 @@ func to_dict() -> Dictionary:
 		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id},
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
 		"tally": tally.duplicate(),
+		"buffs": {"meta": _meta_buff_ids(), "map": map_buffs.duplicate(true)},
 	}
+
+
+func _meta_buff_ids() -> Array:
+	var out: Array = []
+	for id in meta_buffs:
+		out.append(String(id))
+	return out
 
 
 ## 读回来。章节、内容库由调用方给（[RunSave] 按 id 取章节）。开着的商店 / 搜索会话不存：
@@ -364,6 +484,12 @@ static func from_dict(
 	s.events.last_handled_id = int((d.get("events", {}) as Dictionary).get("last_handled", -1))
 	for key in d.get("tally", {}):
 		s.tally[String(key)] = int((d["tally"] as Dictionary)[key])
+	var buffs: Dictionary = d.get("buffs", {})
+	for id in buffs.get("meta", []):
+		s.meta_buffs.append(StringName(String(id)))
+	for entry in buffs.get("map", []):
+		if entry is Dictionary:
+			s.map_buffs.append({"id": String(entry.get("id", "")), "left": int(entry.get("left", -1))})
 	var loot = d.get("pending_loot", null)
 	if loot is Dictionary:
 		s.pending_loot = GridInventory.from_dict(loot, p_items)

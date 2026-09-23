@@ -45,8 +45,17 @@ func _init(p_node: MapNode, p_rules: SearchRules, p_items: ItemDatabase, p_rng: 
 	haul_box = GridInventory.new(_haul_size(), 0, false)
 
 
+## buff 给的额外次数（[RunContext.extra_searches]），开会话时由 NodeEvents 设
+var extra_searches: int = 0
+
+
+## 一共能搜几次：规则的上限 + buff 给的
+func max_total() -> int:
+	return (rules.max_searches if rules != null else 0) + maxi(0, extra_searches)
+
+
 func can_search() -> bool:
-	return active and rules != null and searches_done < rules.max_searches
+	return active and rules != null and searches_done < max_total()
 
 
 ## 下一次搜的遭遇概率（给界面看）
@@ -55,7 +64,7 @@ func next_encounter_chance() -> float:
 
 
 func searches_left() -> int:
-	return maxi(0, rules.max_searches - searches_done) if rules != null else 0
+	return maxi(0, max_total() - searches_done) if rules != null else 0
 
 
 ## 搜一次。返回 {"found": [...], "encounter": {}}；不能搜时返回空字典
@@ -81,7 +90,7 @@ func search() -> Dictionary:
 	searched.emit(got, met)
 	if not met.is_empty():
 		_end(&"encounter")
-	elif searches_done >= rules.max_searches:
+	elif searches_done >= max_total():
 		_end(&"exhausted")
 	return {"found": got, "encounter": met}
 

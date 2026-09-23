@@ -18,6 +18,8 @@ var wallet: Wallet = null
 var depth: float = 0.0
 
 var refreshes: int = 0
+## buff 给的售价倍数（[RunContext.shop_price_mult]），乘在规则的倍数之上
+var price_mult: float = 1.0
 ## 卖掉的格子下标
 var sold: Array[int] = []
 ## 货架：每格 {"id": StringName, "price": int}
@@ -25,12 +27,15 @@ var stock: Array[Dictionary] = []
 var active: bool = true
 
 
-func _init(p_node: MapNode, p_rules: EconomyRules, p_items: ItemDatabase, p_wallet: Wallet, p_depth: float = 0.0) -> void:
+func _init(
+	p_node: MapNode, p_rules: EconomyRules, p_items: ItemDatabase, p_wallet: Wallet, p_depth: float = 0.0, p_price_mult: float = 1.0
+) -> void:
 	node = p_node
 	rules = p_rules
 	items = p_items
 	wallet = p_wallet
 	depth = p_depth
+	price_mult = maxf(0.0, p_price_mult)
 	if node != null:
 		var saved: Dictionary = node.content.get("shop", {})
 		refreshes = int(saved.get("refreshes", 0))
@@ -44,7 +49,7 @@ func refresh_cost() -> int:
 
 
 func price_of(def: ItemDef) -> int:
-	return maxi(1, roundi(float(ItemValue.of(def)) * (rules.shop_price_mult if rules != null else 1.0)))
+	return maxi(1, roundi(float(ItemValue.of(def)) * (rules.shop_price_mult if rules != null else 1.0) * price_mult))
 
 
 ## 还在架上的格子

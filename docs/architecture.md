@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.59 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.60 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2479,7 +2479,8 @@ class_name DropRule extends Resource
 敌人**没有**」的道具里抽一件（`category_bias` 加权）。哪一档都没有（珍宝还没定义）就记一笔，不掉、不报错。
 
 **修正的来源**是接口不是字段（`DropBonusSource`：`owned_bonus(ctx, def)` / `treasure_bonus(ctx)`），
-`LootContext.sources` 装它们。`MetaDropBonus`（局外）与 `MapDropBonus`（地图）是两个占位实现，现在都加 0，
+`LootContext.sources` 装它们。**062 之后局外 / 地图 buff 不走这条缝**：buff 的 `LootEffect` 直接施加到掉落上下文上、幸运从 buff 的 `RunEffect` 来（`RunState._loot_context`，
+道具与套装的战利品效果也在那里施加）。`MetaDropBonus`（局外）与 `MapDropBonus`（地图）是两个占位实现，只剩沙盒的预览还用，待清理；现在都加 0，
 `DropResolver` 现在就调它们 —— 接上的那天规则与测试一行不改。难度与幸运是 `LootContext` 自带的两个数，谁填是 run 层的事。
 
 M2 定下的四个量各有归宿：`rolls` = 珍宝尝试次数，`rarity_bias` = 珍宝稀有度权重偏移，`category_bias` = 珍宝候选加权，
@@ -2800,6 +2801,11 @@ static func load_chapters() / load_loadouts()
 
 一局结束时（`GameFlow._settle_run`，进结算屏之前）就 `absorb`、存 meta、删这一局的存档；结算屏拿到的已经是记完账的局外。
 `MetaSave` 与 `RunSave` 同一套做法：`user://meta.json`，版本号 2（v1 是开发期的，作废），只写 id；仓库大小以存档里的为准（成长过的不该被规则缩回去）。
+**buff**（059 第 3 条，062）：局外的与一局里的是同一套定义 `RunBuffDef`（内容种类 `run_buffs`：scope、时限步数、标记、`mods` / `rules` / `effects`），
+效果树多了 `RunEffect` 分支（9.2），往 `RunContext` 里加数（体力上限、开局钱、多搜几次、商店价、幸运），各系统在对应的点读。
+局外的由 `MetaState.active_buffs` 决定（占位：局外屏的开关列表；将来任务、局外科技），开局那一刻记进这一局；一局里的由事件后果给（`RunState.grant_map_buff`），
+有时限的每走一步少一步，只带 `tags` 的就是标记，事件选项的条件查 `has_buff_tag`。
+
 仓库里的东西能**带进下一局**（开局屏勾上；`GameFlow.begin(..., from_warehouse)` 从仓库拿走、立刻存 meta —— 撤离了它们回来、死了就是真没了，
 这就是搜打撤的循环）；卖掉、局外货币怎么花还没定。撤离前有一道确认（地图屏）：付多少钱、棋盘上多少件会背出去、暂存区里多少件带不出去（3.4 的提示，不是挽留）。
 
@@ -2860,6 +2866,7 @@ Effect
   CombatEffect   战斗内，【依赖扳机】       DealDamage / ApplyStatus / RemoveStatus / ChangeResource
   LootEffect     战利品，激活即生效         RarityBias / CategoryBias / ExtraRolls / DropOwnedChance
   MapEffect      地图，占位（M3 再填）
+  RunEffect      一局的规则，激活即生效     VitalityMaxBonus / StartingFundsBonus / ExtraSearches / ShopPriceMult / LuckBonus（062，buff 携带）
 ```
 
 基类**只声明作用域，不声明执行方法**。各分支的调用签名本就不同
@@ -2870,6 +2877,7 @@ Effect
 | `CombatEffect` | 扳机命中且消耗付清后 | `RuleEngine` |
 | `LootEffect` | 进入战利品计算阶段，**只要处于激活状态** | M4 掉落系统 |
 | `MapEffect` | 待定 | M3 地图系统 |
+| `RunEffect` | 一局在对应的点算 `RunContext` 时（开局、开搜索、开商店、掷掉落），**只要 buff 激活** | `RunState` / `NodeEvents`（062） |
 
 **只有战斗这一支依赖扳机。** 掉落效果不需要时机 —— 它没有「什么时候发生」可言，
 掉落计算阶段本身就是它的时机。硬给它配一个 `Trigger` 只会多出一个永远填 `Always` 的字段。
@@ -2976,6 +2984,7 @@ data/authoring/items/*.json         道具源数据
 data/authoring/buffs/*.json         增益源数据
 data/authoring/sets/*.json          套装源数据
 data/authoring/loadouts/*.json      开局装备（8.1）
+data/authoring/run_buffs/*.json     buff：局外的 / 一局里的（8.2、9.2）
 data/authoring/enemies/*.json       敌人（6.0）
 data/authoring/enemy_pools/*.json   敌人池（6.0）
 data/authoring/drop_rules/*.json    掉落规则（6.1）
@@ -2983,10 +2992,10 @@ data/authoring/node_rules/*.json    节点规则（6.2 / 6.5）
 data/authoring/economy_rules/*.json 经济规则（6.6）
 data/authoring/meta_rules/*.json    局外规则：仓库多大（8.2）
 data/authoring/chapters/*.json      章节（5.3）
-        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → items → loadouts → enemies → enemy_pools → drop_rules → node_rules → economy_rules → meta_rules → chapters）
+        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → run_buffs → items → loadouts → enemies → enemy_pools → drop_rules → node_rules → economy_rules → meta_rules → chapters）
         │  tools/normalize_content.gd 把作者数据重写成导出器的格式（导入 → 导出 → 不同就写回）
         ▼
-data/items/*.tres   data/buffs/*.tres   data/sets/*.tres   data/loadouts/*.tres
+data/items/*.tres   data/buffs/*.tres   data/sets/*.tres   data/run_buffs/*.tres   data/loadouts/*.tres
 data/enemies/*.tres data/enemy_pools/*.tres   data/drop_rules/*.tres   data/node_rules/*.tres   data/economy_rules/*.tres   data/meta_rules/*.tres   data/chapters/*.tres
 ```
 
@@ -3206,7 +3215,7 @@ res://
       cadences/     always  cooldown_cadence
       costs/        resource_cost  charge_cost  status_stack_cost  uses_cost  chance_condition
       effects/      deal_damage  modify_damage  reflect_damage  apply_status  remove_status  change_resource
-    effects/        effect  effect_scope                       # 效果树的根（9.2）
+    effects/        effect  effect_scope  run_effect           # 效果树的根（9.2）；RUN 分支的基类
     sets/           item_set_def  set_tier  set_database  set_tracker
     loot/           loot_effect  loot_context  drop_rule  drop_resolver  drop_bonus_source
                     meta_drop_bonus  map_drop_bonus  loot_packer
@@ -3221,7 +3230,9 @@ res://
     run/            chapter_def  run_state  run_save  run_rng  map_travel  move_intent  action_clock
                     vitality  wallet  node_events  node_rules  search_rules  search_session
                     shop_session  economy_rules  paid_extracts  loadout_def  game_flow  run_result
-    meta/           meta_state  meta_save  meta_rules              # 跨局（8.2）：仓库格子、带回来的棋盘、图鉴
+                    storage_warning  run_buff_def  run_buffs  run_context
+      effects/      vitality_max_bonus  starting_funds_bonus  extra_searches  shop_price_mult  luck_bonus   # RunEffect 构件（062）
+    meta/           meta_state  meta_save  meta_rules              # 跨局（8.2）：仓库格子、带回来的棋盘、图鉴、局外 buff
     settings/       game_settings                                  # 玩家设置（3.4 的提醒档位）
   data/
     authoring/      items/  loadouts/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/  maps/
@@ -3343,6 +3354,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.60 | 2026-09-23 | **buff 骨架**（报告 062，058 / 059 顺序里的第 3 项；9.2、8.2、6.1、10.1）。效果树第四个分支 `RunEffect`（作用域 RUN）往 `RunContext` 里加数，五个构件（体力上限、开局钱、多搜几次、商店价、幸运）登记在注册表；`RunBuffDef`（内容种类 `run_buffs`）局外 / 一局同一套定义、`mods` / `rules` / `effects` 与套装档位同一种分法、`tags` 当标记、`duration_steps` 时限；`MetaState.active_buffs`（占位开关列表）开局记进 `RunState.meta_buffs`，`map_buffs` 每步递减；掉落上下文改由 `RunState._loot_context` 造：幸运从 buff 来，**道具 / 套装的战利品效果第一次真的接进一局**（9.2 说的那条查询此前没接） |
 | v1.59 | 2026-09-23 | **仓库格子化、结算屏一键置入、图鉴**（报告 061，058 / 059 顺序里的第 2 项；8.2 重写，15 节第 4 项定案）。仓库是不要求包的格子，大小是 `MetaRules.warehouse_size`（新内容种类 `meta_rules`，随局外成长）；撤离不直接进仓库 —— 棋盘原样带回（`MetaState.board`，非包道具按原位置、包换成默认背景），结算屏 / 局外屏共用的仓库面板拖或一键置入，放不下就停在那一件提示，没清空 `can_begin()` 拒绝开新局；图鉴 `codex` 累计件数、点亮一次、包也计；`MetaState.keeps(def)` 一处决定什么能存进局外；一局结束时（进结算屏之前）就 absorb、存 meta；`MetaSave` 版本 2，仓库大小以存档为准 |
 | v1.58 | 2026-09-23 | **暂存区按点清空**（报告 060，058 / 059 顺序里的第一项；3.4 定稿，15 节第 7 项收掉）。「发生过事的点」= 踩上去时 `NodeEvents` 真的处理了什么，`last_handled_id` 记着、跟着存档；`RunState.step_to` 走出它时清暂存区、发 `storage_dropped`、清回 -1；出生点、岔路、路过的点、走不成的都不清。提醒档位是 `GameSettings`（`user://settings.json`，有就提 / 稀有度 / 价值 / 从不，表 + 阈值），`StorageWarning.at_risk` 挑要提的，地图屏走之前弹面板（照走 / 先整理背包 / 取消）；新增设置屏 |
 | v1.57 | 2026-09-23 | **059 设想：事件层、统一容器屏、局外 buff 与地图 buff**（未实施）。每个节点踩上去先过事件屏（没配事件的战斗点是转场），选项带条件与后果构件，搜索点「要不要搜」是事件、搜索与战利品是同一个容器屏；buff 是同一套构件、两种生命周期（局外 / 一局），效果树加 `RunEffect`（RUN 作用域）分支，标记型地图 buff 供事件分支查；暂存区改为**离开发生过事的点时清**（058 第五节）。顺序重排；15 节第 11 项更新 |

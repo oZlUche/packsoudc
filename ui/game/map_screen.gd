@@ -229,6 +229,7 @@ func _adopt() -> void:
 	_run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh_hud())
 	_run.vitality.changed.connect(func(_c: int, _m: int, _d: int, _r: StringName): _refresh_hud())
 	_run.storage.changed.connect(_refresh_hud)
+	_run.buffs_changed.connect(_refresh_hud)
 	_run.storage_dropped.connect(func(node_id: int, items: Array):
 		_note("　离开点 %d：暂存区里的 %s留在了那里" % [node_id, StorageWarning.describe(items)]))
 	var ev := _run.events
@@ -334,12 +335,25 @@ func _refresh_hud() -> void:
 	var extract_near := MapNavigator.nearest_of_type(_run.map, t.current_id, &"extract")
 	var rest := MapNavigator.nearest_of_type(_run.map, t.current_id, &"rest")
 	var core := MapNavigator.nearest_of_type(_run.map, t.current_id, &"core")
-	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d　　暂存区 %d 件" % [
+	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d　　暂存区 %d 件%s" % [
 		t.clock.total,
 		str(extract_near["steps"]) if int(extract_near["id"]) >= 0 else "—",
 		str(rest["steps"]) if int(rest["id"]) >= 0 else "—",
 		str(core["steps"]) if int(core["id"]) >= 0 else "—",
-		_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count()]
+		_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count(), _buff_line()]
+
+
+## buff 栏的占位：一行字。局外的和一局里的都列，有时限的写还剩几步
+func _buff_line() -> String:
+	var parts: Array[String] = []
+	for id in _run.meta_buffs:
+		var def: RunBuffDef = _run.buff_defs.get(id, null)
+		parts.append(def.display_name if def != null else String(id))
+	for entry in _run.map_buffs:
+		var def: RunBuffDef = _run.buff_defs.get(StringName(String(entry["id"])), null)
+		var name := def.display_name if def != null else String(entry["id"])
+		parts.append(name + ("（剩 %d 步）" % int(entry["left"]) if int(entry["left"]) > 0 else ""))
+	return "　　buff：" + "、".join(parts) if not parts.is_empty() else ""
 
 
 func _route_of_entry(id: int) -> Dictionary:

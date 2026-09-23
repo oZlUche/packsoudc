@@ -1,0 +1,8 @@
+{
+  "id": "marked",
+  "display_name": "被盯上了",
+  "description": "一个标记，什么都不改：某些事件的选项只对带它的人开（地图 buff 的测试用例）",
+  "tags": [
+    "marked"
+  ]
+}

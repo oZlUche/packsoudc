@@ -1,0 +1,11 @@
+{
+  "id": "hardy",
+  "display_name": "坚韧",
+  "description": "体力上限 +1（局外 buff 的测试用例）",
+  "scope": "META",
+  "effects": [
+    {
+      "type": "vitality_max_bonus"
+    }
+  ]
+}

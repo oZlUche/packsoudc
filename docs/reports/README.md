@@ -82,3 +82,4 @@
 | 059 | [设想：事件层、统一容器屏、局外 buff 与地图 buff](059-event-layer-and-buffs-proposal.md) | 提议 | 已拍板，实施中 |
 | 060 | [暂存区按点清空：走出发生过事的点时清，走之前按档位提醒](060-storage-clears-on-leaving.md) | 058 / 059 第 1 项 | 完成 |
 | 061 | [仓库格子化、撤离棋盘带回与一键置入、图鉴](061-warehouse-grid-codex-and-store.md) | 058 / 059 第 2 项 | 完成 |
+| 062 | [buff 骨架：局外 buff 与地图 buff、效果树的 RUN 分支](062-run-buffs-skeleton.md) | 058 / 059 第 3 项 | 完成 |

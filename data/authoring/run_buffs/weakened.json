@@ -1,0 +1,12 @@
+{
+  "id": "weakened",
+  "display_name": "虚弱",
+  "description": "走 5 步之内伤害 -10%（地图 buff 的测试用例）",
+  "duration_steps": 5,
+  "mods": [
+    {
+      "mult_category": "EMPOWER",
+      "mult_percent": -10
+    }
+  ]
+}
