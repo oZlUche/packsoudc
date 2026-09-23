@@ -73,6 +73,8 @@ func _build(
 			return ContentImporter.import_economy_rules(data, ctx, report)
 		"loadouts":
 			return ContentImporter.import_loadout(data, ctx, report)
+		"characters":
+			return ContentImporter.import_character(data, ctx, report)
 		"meta_rules":
 			return ContentImporter.import_meta_rules(data, ctx, report)
 		"run_buffs":

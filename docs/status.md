@@ -1,6 +1,6 @@
 # 现状总览
 
-> 2026-09-23 ｜ `main`（M6 之后，058 / 059 实施中）｜ 架构文档 v1.64 ｜ 这是一份**活文档**：每完成一个里程碑更新一次，历史看 `docs/reports/`
+> 2026-09-23 ｜ `main`（M6 之后，058 / 059 实施中）｜ 架构文档 v1.65 ｜ 这是一份**活文档**：每完成一个里程碑更新一次，历史看 `docs/reports/`
 
 ## 一句话
 
@@ -20,7 +20,7 @@
 | M4 节点内容 | 完成 | 045（规划）～050 | 敌人池（档位 / 流派 / 组装）、掉落（每件各掷 / 珍宝）、随机点与搜索点、节点事件接线、经济（进账 / 商店 / 付费撤离点）、探索度 |
 | M5 运行状态与存档 | 完成 | 051 | `RunState` 装壳、`RunRNG`、`RunSave`，读档之后接着走和没存过一样 |
 | M6 场景流 | 完成 | 055（规划 + M6-1）、056、057 | 纯逻辑状态机 `GameFlow` + 导演与十一屏（主场景换成正式游戏）；开局装备走管线；结算 `RunResult`、局外 `MetaState` / `MetaSave`；`LootView` 渐进揭示、亮出来的直接拖到棋盘、搜索点逐次装；仓库带进下一局（死了就没了）；撤离确认 |
-| 作者提议 058 / 059 | **进行中** | 058、059（提议）、060～063 | 1 暂存区按点清空 ✅（060）→ 2 仓库格子化、结算置入、图鉴 ✅（061）→ 3 buff 骨架 ✅（062）→ 4 事件层与容器屏合一 ✅（063）→ 5 开局预选与角色 → 6 搜索揭示 → 7 外框（可选） |
+| 作者提议 058 / 059 | **进行中** | 058、059（提议）、060～063、067 | 1 暂存区按点清空 ✅（060）→ 2 仓库格子化、结算置入、图鉴 ✅（061）→ 3 buff 骨架 ✅（062）→ 4 事件层与容器屏合一 ✅（063）→ 5 开局预选与角色 ✅（067）→ 6 搜索揭示 → 7 外框（可选） |
 | 删地图沙盒 | 完成 | 066 | 只剩生成就是地图编辑器的子集，「走」正式游戏已完整；两个沙盒、三个编辑器 |
 | 事件屏改版 | 完成 | 065 | 两栏大框，左边整块是图（参考杀戮尖塔），右边标题、正文、贴底的选项 |
 | 事件编辑器 | 完成 | 064 | 写文字、导入配图、拼选项（条件 / 后果下拉来自注册表）、预览照事件屏画、挂进节点规则；存盘 = JSON + .tres；按性价比做在项目里而不是独立 exe |
@@ -38,27 +38,27 @@
 | `core/map`（+ generators） | 数据层、生成器、校验、导航、文本往返、预设 | `MapGraph`、`MapGenerator`、`RingMapGenerator`、`RingTypeAssigner`、`MapNavigator`、`MapGridText` |
 | `core/enemies` | 敌人池、档位、组装、预览编译 | `EnemyPool`、`EnemyPlacer`、`EnemyKit` |
 | `core/loot` | 掉落规则与掷骰、修正来源接缝、装箱 | `DropRule`、`DropResolver`、`DropBonusSource`、`LootPacker` |
-| `core/run`（+ effects、events） | 一局：旅程、体力、钱、节点事件、搜索 / 商店会话、规则、状态与存档；场景流状态机、开局装备、结算；buff（局外 / 一局）与一局规则的构件；事件层（事件、选项、条件与后果构件、铺放） | `RunState`、`RunSave`、`MapTravel`、`NodeEvents`、`Vitality`、`Wallet`、`GameFlow`、`LoadoutDef`、`RunResult`、`RunBuffDef`、`RunBuffs`、`RunContext`、`EventDef`、`EventPlacer` |
+| `core/run`（+ effects、events） | 一局：旅程、体力、钱、节点事件、搜索 / 商店会话、规则、状态与存档；场景流状态机、开局装备、角色、结算；buff（局外 / 一局）与一局规则的构件；事件层（事件、选项、条件与后果构件、铺放） | `RunState`、`RunSave`、`MapTravel`、`NodeEvents`、`Vitality`、`Wallet`、`GameFlow`、`LoadoutDef`、`CharacterDef`、`RunResult`、`RunBuffDef`、`RunBuffs`、`RunContext`、`EventDef`、`EventPlacer` |
 | `core/meta` | 跨局：仓库格子（大小是 `MetaRules`）、带回来的棋盘与一键置入、图鉴、钱、战绩、保留规则（`absorb()` 一处）、存档 v2 | `MetaState`、`MetaSave`、`MetaRules` |
 | `core/settings` | 玩家设置（暂存区提醒档位），`user://settings.json` | `GameSettings`（挑要提的在 `core/run/storage_warning.gd`） |
 | `ui/game` | 正式游戏（主场景）：导演 + 屏的底座 + 各屏（事件屏先过、容器屏战利品 / 搜索合一）+ 背包整理面板 + 仓库面板 + 渐进揭示的战利品视图 | `GameDirector`、`GameScreen`、`LootView`、`map_screen`、`event_screen`、`container_screen`…… |
 | `ui`（其余） | 两个沙盒、三个编辑器 + 启动选择器（开发期入口） | `launcher`、`inventory_sandbox`、`battle_sandbox`、`content_editor`、`event_editor`、`map_editor` |
 | `tools` | 命令行：导入 / 导出 / 归一化内容、脚本检查、批量统计、样例生成、截图 | `import_content`、`normalize_content`、`check_scripts`、`map_stats` |
-| `tests` | 44 个套件，`tools/test.sh` 一键跑 | `run_tests` |
+| `tests` | 45 个套件，`tools/test.sh` 一键跑 | `run_tests` |
 
 ## 数据与内容管线
 
 `data/authoring/<kind>/*.json`（人写，进 git）→ `tools/import_content.gd` → `data/<kind>/*.tres`（引擎读，也进 git）。
-种类与导入顺序：`buffs → sets → run_buffs → items → loadouts → events → enemies → enemy_pools → drop_rules → node_rules → economy_rules → meta_rules → chapters`（后者按 id 引用前者）。
+种类与导入顺序：`buffs → sets → run_buffs → items → loadouts → characters → events → enemies → enemy_pools → drop_rules → node_rules → economy_rules → meta_rules → chapters`（后者按 id 引用前者）。
 `tools/normalize_content.gd` 把作者数据重写成导出器的格式（仓库里的 JSON 是往返不动点，测试逐字节比）。
 
-现有内容：22 件道具（三个流派标签 `burst` / `rapid` / `bleed`）、3 套开局装备（标准 / 拾荒者 / 打手）、6 种敌人、1 个敌人池、
+现有内容：22 件道具（三个流派标签 `burst` / `rapid` / `bleed`）、3 套开局装备（标准 / 拾荒者 / 打手；标准也是仓库空的第一套）、1 个占位角色（拾荒者：两个皮革包、生命 60）、6 种敌人、1 个敌人池、
 掉落 / 节点 / 经济 / 局外规则各 1 份、4 个测试用的 buff（坚韧 / 幸运 / 被盯上了 / 虚弱）、6 个占位事件（搜索点默认、上锁的箱子、陌生人、熟面孔、歇脚处、动静）、第一章 1 份、手绘地图 2 份。
 **数值全是占位**（见下）。
 
 ## 沙盒与工具
 
-**主场景是正式游戏** `ui/game/game.tscn`：主菜单（新的一局 / 继续上次 / 仓库与战绩 / 设置 / 开发工具）→ 开局（挑章、挑装备、从仓库带、种子）→ 地图（B 开背包、走出发生过事的点前提醒暂存区、撤离点上撤离、存档并回主菜单）
+**主场景是正式游戏** `ui/game/game.tscn`：主菜单（新的一局 / 继续上次 / 仓库与战绩 / 设置 / 开发工具）→ 开局（挑章、挑角色、从仓库往初始包里拖、种子）→ 地图（B 开背包、走出发生过事的点前提醒暂存区、撤离点上撤离、存档并回主菜单）
 ⇄ 叠层（战斗回放、战利品、搜索、商店、事件、休息）→ 结算 → 仓库与战绩。F1 回启动选择器。
 启动选择器（开发期入口）：正式游戏、背包沙盒、战斗沙盒、道具编辑器、事件编辑器（写文字、导入配图、拼选项、挂进节点规则）、地图编辑器（随机生成或手绘，改完存回章节）。
 命令行：`bash tools/test.sh`（全套测试，先 `--import` 重建类缓存）、`import_content`、`normalize_content`、`check_scripts`、`map_stats`、
@@ -85,7 +85,7 @@
 | `data/authoring/run_buffs/*.json` | 四个测试用的 buff 的数（体力 +1、幸运 +1、虚弱 5 步 −10%） |
 | `data/authoring/events/*.json`、`node_rules/standard.json` 的 `events_by_type` | 六个占位事件的文字、选项、数；哪种点配哪些事件、权重（用事件编辑器写，064）|
 | `core/meta/meta_state.gd` `absorb()` / `keeps()` | 撤离后的保留规则（棋盘带回、图鉴每件计一次、钱带出；战败全失）；什么能存进局外（现在：不是包） |
-| `core/battle/combatant_baseline.gd`、`core/run/vitality.gd`、`core/run/run_state.gd`、`ui/game/game_director.gd` | 生命 25 / 耐力 50（正式游戏里玩家 60）、体力上限 5、棋盘 8×6 —— 等角色系统 |
+| `data/authoring/characters/default.json`、`meta_rules/standard.json` 的 `first_kit` | 占位角色：生命 60、体力 5、棋盘 8×6、两个皮革包、带入不限；仓库空的第一局发「标准」（教程关之前的占位）。没有角色时的老路占位：生命 25 / 耐力 50、体力 5、8×6 |
 | `core/inventory/item_value.gd` | 稀有度每格价 |
 
 ## 留给作者定的
@@ -110,6 +110,6 @@
 
 ## 下一步
 
-作者已拍板，按 059 第四节的顺序做：~~暂存区（离开发生过事的点时清）~~ 完成（060）→ ~~仓库格子化、`MetaRules`、结算屏一键置入、图鉴~~ 完成（061）→ ~~buff 骨架~~ 完成（062）→ ~~事件层与容器屏合一~~ 完成（063）→ **开局预选与 `CharacterDef`** → 搜索揭示 → 节点外框（可选）。
+作者已拍板，按 059 第四节的顺序做：~~暂存区（离开发生过事的点时清）~~ 完成（060）→ ~~仓库格子化、`MetaRules`、结算屏一键置入、图鉴~~ 完成（061）→ ~~buff 骨架~~ 完成（062）→ ~~事件层与容器屏合一~~ 完成（063）→ ~~开局预选与 `CharacterDef`~~ 完成（067）→ **搜索揭示** → → 节点外框（可选）。
 之后按实施顺序是**第 7 阶段侵蚀**（架构文档 5.7）：`ErosionField` / `ErosionSchedule`，钩子与顺序已在 `MapTravel.erosion`；浅层扣体力、深层损坏背包物品（按价值，6.4），
 数值走章节配置。再之后是第 8 阶段内容扩充（道具、敌人、事件、新章节地图形态、扩展移动机制）。053 的设想（三 + 二）仍等作者一句「做」。

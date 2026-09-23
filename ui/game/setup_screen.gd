@@ -1,20 +1,28 @@
-## 开局（M6，架构文档 8 节的 RunSetup）：挑一章、挑一套开局装备、从仓库带几件、定个种子，出发。
+## 开局（M6，架构文档 8 节；058 第 2 条，报告 067）：挑一章、挑角色、往初始包里拖仓库的东西、定个种子，出发。
 ##
-## 装备是内容管线里的 [LoadoutDef]（`data/loadouts/`），这里只列出来给人挑；摆法出发之后在地图上按「背包」调整。
-## 仓库里的东西勾上就带进去 —— 带进去的从仓库拿走，撤离了回来，死了就没了（8.2）。
-## 所有动作都是公开方法（[method choose_chapter]、[method choose_loadout]、[method toggle_warehouse]、[method depart]），按钮只是调它们；测试直接调。
+## 左边章节与角色，中间是这个角色的棋盘（初始包已经摆好），右边是仓库的格子：从仓库往包里拖，**放得进的就是带的** ——
+## 带入的真正限制是初始包的空间；件数 / 稀有度上限是角色的字段（默认不限），出发时查。
+## 包不能带入：仓库里本来没有包（局外只收非包，`MetaState.keeps`），仓库的格子也不收包（同一条规则接在 `accept_filter` 上）。
+## 拖上棋盘那一刻东西就离开了仓库；出发时存 meta，回主菜单就放回去。
+## 所有动作都是公开方法（[method choose_chapter]、[method choose_character]、[method carry_in]、[method depart]、[method cancel]），按钮只是调它们；测试直接调。
+##
+## 没有角色定义（老内容、测试）时退回老路：按第一套开局装备开。
 extends GameScreen
 
 var chapter_index: int = 0
-var loadout_index: int = 0
+var character_index: int = 0
 var run_seed: int = 1
-## 勾上要带的仓库 uid
-var picked: Dictionary = {}
+## 这个角色的棋盘，初始包摆好；从仓库拖进来的东西就在上面。出发时整块记成 layout 交给 RunState
+var board: GridInventory = null
 
 var _chapter_btns: Array[Button] = []
-var _loadout_btns: Array[Button] = []
-var _warehouse_btns: Dictionary = {}
-var _preview: RichTextLabel
+var _character_btns: Array[Button] = []
+var _board_host: VBoxContainer
+var _board_view: InventoryView = null
+var _warehouse_view: InventoryView = null
+var _drag: DragLayer = null
+var _desc: Label
+var _readout: RichTextLabel = null
 var _status: Label
 var _seed_spin: SpinBox
 
@@ -25,14 +33,14 @@ func open(_payload: Dictionary) -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 40)
+		margin.add_theme_constant_override("margin_" + side, 36)
 	add_child(margin)
-	var row := _hbox(32)
+	var row := _hbox(28)
 	margin.add_child(row)
 
-	# 左：章节、装备、种子
-	var left := _vbox(10)
-	left.custom_minimum_size.x = 360
+	# 左：章节、角色、种子
+	var left := _vbox(8)
+	left.custom_minimum_size.x = 300
 	row.add_child(left)
 	left.add_child(_label("开局", 26, UiPalette.FG))
 	left.add_child(_label("章节", 15, UiPalette.DIM))
@@ -46,16 +54,18 @@ func open(_payload: Dictionary) -> void:
 		left.add_child(b)
 	if flow.chapters.is_empty():
 		left.add_child(_label("没有章节：先跑 tools/import_content.gd", 13, UiPalette.HP))
-	left.add_child(_label("开局装备", 15, UiPalette.DIM))
-	for i in flow.loadouts.size():
-		var l := flow.loadouts[i]
+	left.add_child(_label("角色", 15, UiPalette.DIM))
+	for i in flow.characters.size():
+		var ch := flow.characters[i]
 		var idx := i
-		var b := _button(l.display_name if l.display_name != "" else String(l.id), func(): choose_loadout(idx))
+		var b := _button(ch.display_name if ch.display_name != "" else String(ch.id), func(): choose_character(idx))
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		_loadout_btns.append(b)
+		_character_btns.append(b)
 		left.add_child(b)
-	if flow.loadouts.is_empty():
-		left.add_child(_label("没有开局装备：data/authoring/loadouts/ 里一份都没有", 13, UiPalette.HP))
+	if flow.characters.is_empty():
+		left.add_child(_label("没有角色定义：按第一套开局装备开（老路）", 12, UiPalette.DIM))
+	_desc = _wrapped("", 12, UiPalette.DIM, 280)
+	left.add_child(_desc)
 	var seed_row := _hbox(8)
 	seed_row.add_child(_label("种子", 13, UiPalette.DIM))
 	_seed_spin = SpinBox.new()
@@ -68,47 +78,40 @@ func open(_payload: Dictionary) -> void:
 	left.add_child(seed_row)
 	left.add_child(HSeparator.new())
 	left.add_child(_button("出发", func(): depart(), 18))
-	left.add_child(_button("回主菜单", flow.to_main_menu, 12))
-	_status = _wrapped("", 12, UiPalette.DIM, 340)
+	left.add_child(_button("回主菜单", cancel, 12))
+	_status = _wrapped("", 12, UiPalette.HP, 280)
 	left.add_child(_status)
 
-	# 中：仓库
-	var mid := _vbox(6)
-	mid.custom_minimum_size.x = 300
-	row.add_child(mid)
-	var w := flow.meta.warehouse
-	mid.add_child(_label("从仓库带上（%d 件）" % w.item_count(), 15, UiPalette.DIM))
-	mid.add_child(_wrapped("带进去的就从仓库拿走：撤离了回来，死了就没了", 12, UiPalette.DIM, 280))
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	mid.add_child(scroll)
-	var list := _vbox(4)
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(list)
-	for inst in w.items():
-		var item := inst as ItemInstance
-		var uid := item.uid
-		var cells := item.def.shape.cell_count() if item.def.shape != null else 0
-		var b := _button("%s　%d 格　%d 币" % [item.def.display_name, cells, ItemValue.of(item.def)], func(): toggle_warehouse(uid), 13)
-		b.toggle_mode = true
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.add_theme_color_override("font_color", ItemPainter.rarity_color(item.def))
-		_warehouse_btns[uid] = b
-		list.add_child(b)
-	if w.item_count() == 0:
-		list.add_child(_label("（空）", 13, UiPalette.DIM))
+	# 中 + 右：棋盘与仓库在同一块矩形里，拖拽层盖在上面
+	var play := MarginContainer.new()
+	play.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(play)
+	var grids := _hbox(28)
+	play.add_child(grids)
 
-	# 右：预览
-	var right := _vbox(8)
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(right)
-	right.add_child(_label("这一趟带什么", 15, UiPalette.DIM))
-	_preview = _log_box(14)
-	right.add_child(_preview)
+	_board_host = _vbox(6)
+	grids.add_child(_board_host)
+
+	var right := _vbox(6)
+	grids.add_child(right)
+	var w := flow.meta.warehouse
+	right.add_child(_label("仓库　%d × %d 格，%d 件" % [w.size.x, w.size.y, w.item_count()], 15, UiPalette.DIM))
+	right.add_child(_wrapped("往左边的包里拖，放得进的就是带的；带进去的从仓库拿走，撤离了回来，死了就没了", 12, UiPalette.DIM, 480))
+	_warehouse_view = InventoryView.new()
+	_warehouse_view.label_font = font
+	_warehouse_view.inventory = w
+	_warehouse_view.show_adjacency = false
+	_warehouse_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	right.add_child(_warehouse_view)
+
+	_drag = DragLayer.new()
+	_drag.label_font = font
+	play.add_child(_drag)     # 容器把它铺到和 grids 一样大，盖在两块格子上
+	_drag.register_view(_warehouse_view)
+	w.changed.connect(_refresh)
 
 	choose_chapter(0)
-	choose_loadout(0)
+	choose_character(0)
 
 
 #region 公开动作
@@ -118,37 +121,57 @@ func choose_chapter(i: int) -> void:
 	chapter_index = clampi(i, 0, flow.chapters.size() - 1)
 	for k in _chapter_btns.size():
 		_chapter_btns[k].add_theme_color_override("font_color", UiPalette.FG if k == chapter_index else UiPalette.DIM)
-	_refresh_preview()
+	_refresh()
 
 
-func choose_loadout(i: int) -> void:
-	if flow.loadouts.is_empty():
-		return
-	loadout_index = clampi(i, 0, flow.loadouts.size() - 1)
-	for k in _loadout_btns.size():
-		_loadout_btns[k].add_theme_color_override("font_color", UiPalette.FG if k == loadout_index else UiPalette.DIM)
-	_refresh_preview()
+## 换角色：带上的先放回仓库，按新角色的棋盘尺寸与初始包重摆
+func choose_character(i: int) -> void:
+	_return_carried()
+	if not flow.characters.is_empty():
+		character_index = clampi(i, 0, flow.characters.size() - 1)
+	for k in _character_btns.size():
+		_character_btns[k].add_theme_color_override("font_color", UiPalette.FG if k == character_index else UiPalette.DIM)
+	_rebuild_board()
+	_refresh()
 
 
-## 勾上 / 取消仓库里的一件。返回现在勾没勾上
-func toggle_warehouse(uid: int) -> bool:
-	if flow.meta.warehouse.get_item(uid) == null:
+func chapter() -> ChapterDef:
+	return flow.chapters[chapter_index] if chapter_index < flow.chapters.size() else null
+
+
+func character() -> CharacterDef:
+	return flow.characters[character_index] if character_index < flow.characters.size() else null
+
+
+## 把仓库里的一件带上（自动找位置，和拖进包里一样）。放不进返回 false
+func carry_in(uid: int) -> bool:
+	if board == null or flow.meta.warehouse.get_item(uid) == null:
 		return false
-	if picked.has(uid):
-		picked.erase(uid)
-	else:
-		picked[uid] = true
-	if _warehouse_btns.has(uid):
-		(_warehouse_btns[uid] as Button).set_pressed_no_signal(picked.has(uid))
-	_refresh_preview()
-	return picked.has(uid)
+	var ok := InventoryService.transfer_auto(flow.meta.warehouse, uid, board)
+	_refresh()
+	return ok
 
 
-func picked_uids() -> Array[int]:
-	var out: Array[int] = []
-	for uid in picked:
-		out.append(int(uid))
-	out.sort()
+## 把棋盘上的一件放回仓库。包不行（它是初始包，不是仓库的东西）
+func carry_out(uid: int) -> bool:
+	if board == null:
+		return false
+	var inst := board.get_item(uid)
+	if inst == null or not MetaState.keeps(inst.def):
+		return false
+	var ok := InventoryService.transfer_auto(board, uid, flow.meta.warehouse)
+	_refresh()
+	return ok
+
+
+## 现在带上的（非包）
+func carried() -> Array[ItemInstance]:
+	var out: Array[ItemInstance] = []
+	if board == null:
+		return out
+	for inst in board.items():
+		if MetaState.keeps((inst as ItemInstance).def):
+			out.append(inst)
 	return out
 
 
@@ -158,67 +181,127 @@ func set_run_seed(v: int) -> void:
 		_seed_spin.set_value_no_signal(v)
 
 
-func chapter() -> ChapterDef:
-	return flow.chapters[chapter_index] if chapter_index < flow.chapters.size() else null
-
-
-func loadout() -> LoadoutDef:
-	return flow.loadouts[loadout_index] if loadout_index < flow.loadouts.size() else null
-
-
-## 出发。生成不出图返回 false，留在这一屏说明原因
-func depart() -> bool:
-	var c := chapter()
-	if c == null:
-		_status.text = "没有章节可开"
-		return false
+## 能不能出发；空串 = 能，否则是原因
+func can_depart() -> String:
+	if chapter() == null:
+		return "没有章节可开"
 	var why := flow.can_begin()
+	if why != "":
+		return why
+	var ch := character()
+	if ch != null:
+		var defs: Array = []
+		for inst in carried():
+			defs.append(inst.def)
+		return ch.carry_problem(defs)
+	return ""
+
+
+## 出发。开不了（生成不出图、超上限）返回 false，留在这一屏说明原因
+func depart() -> bool:
+	var why := can_depart()
 	if why != "":
 		_status.text = why
 		return false
-	if flow.begin(c, loadout(), run_seed, picked_uids()) == null:
+	var c := chapter()
+	var ch := character()
+	var run: RunState = null
+	if ch != null:
+		run = flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board))
+	else:
+		run = flow.begin(c, flow.loadouts[0] if not flow.loadouts.is_empty() else null, run_seed)
+	if run == null:
 		_status.text = "这一章生成不出图：%s" % (c.map_source.last_error if c.map_source != null else "没有地图来源")
 		return false
 	return true
+
+
+## 不开了：带上的放回仓库，回主菜单
+func cancel() -> void:
+	_return_carried()
+	flow.to_main_menu()
 #endregion
 
 
-func _refresh_preview() -> void:
-	if _preview == null:
+func _return_carried() -> void:
+	if board == null:
 		return
-	_preview.clear()
+	for inst in carried():
+		board.remove(inst.uid)
+		if not flow.meta.take_back(inst):
+			push_warning("setup: %s 放不回仓库，丢弃" % inst.def.id)
+
+
+## 按角色造棋盘：初始包摆好。包的 uid 走局外的号段，免得和从仓库拖来的撞号
+func _rebuild_board() -> void:
+	for c in _board_host.get_children():
+		_board_host.remove_child(c)
+		c.queue_free()
+	if _board_view != null and _drag != null:
+		_drag.unregister_view(_board_view)
+	_board_view = null
+	_readout = null
+	board = null
+	var ch := character()
+	if ch == null:
+		_board_host.add_child(_label("（老路：按第一套开局装备开，出发后在地图上按「背包」整理）", 12, UiPalette.DIM))
+		return
+	board = GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
+	board.begin_batch()
+	for id in ch.starting_bags:
+		var def := flow.items.get_def(id)
+		if def == null:
+			continue
+		var inst := ItemInstance.create(def, 0)
+		inst.uid = flow.meta.allocate_uid()
+		board.try_add(inst, true)
+	board.end_batch()
+	_board_host.add_child(_label("棋盘　%d × %d 格，初始包 %d 个" % [ch.board_size.x, ch.board_size.y, ch.starting_bags.size()], 15, UiPalette.DIM))
+	_board_view = InventoryView.new()
+	_board_view.label_font = font
+	_board_view.inventory = board
+	_board_view.show_adjacency = true
+	_board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_board_host.add_child(_board_view)
+	_readout = _log_box(13)
+	_readout.custom_minimum_size = Vector2(ch.board_size.x * InventoryView.CELL, 140)
+	_readout.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_board_host.add_child(_readout)
+	_board_host.add_child(_label("左键拖动　R 旋转　右键 / Esc 取消", 11, UiPalette.DIM))
+	_drag.register_view(_board_view)
+	board.changed.connect(_refresh)
+
+
+func _refresh() -> void:
 	var c := chapter()
-	if c != null:
-		_preview.append_text("[b]%s[/b]　难度 %d　敌人池 %s\n\n" % [c.display_name, c.difficulty, String(c.enemy_pool) if c.enemy_pool != &"" else "无"])
-	var l := loadout()
-	var bag_cells := 0
-	var item_cells := 0
-	var value := 0
-	var defs: Array[ItemDef] = []
-	if l != null:
-		_preview.append_text("[b]%s[/b]\n%s\n\n" % [l.display_name, l.description])
-		for id in l.items:
-			var def := flow.items.get_def(id)
-			if def == null:
-				_preview.append_text("[color=#d9534f]找不到道具 %s[/color]\n" % id)
-				continue
-			defs.append(def)
-	var from_warehouse: Array[ItemDef] = []
-	for uid in picked_uids():
-		var inst := flow.meta.warehouse.get_item(uid)
-		if inst != null and inst.def != null:
-			from_warehouse.append(inst.def)
-	for def in defs + from_warehouse:
-		var cells := def.shape.cell_count() if def.shape != null else 0
-		var tag := "仓库　" if from_warehouse.has(def) and not defs.has(def) else ""
-		if def.is_bag:
-			bag_cells += cells
-			_preview.append_text("%s包　%s  %d 格\n" % [tag, def.display_name, cells])
-		else:
-			item_cells += cells
-			value += ItemValue.of(def)
-			_preview.append_text("%s　　%s\n" % [tag, _item_line(def)])
-	if not from_warehouse.is_empty():
-		_preview.append_text("\n从仓库带 %d 件\n" % from_warehouse.size())
-	_preview.append_text("\n包一共 %d 格，东西一共 %d 格%s；本身值 %d 币" % [
-		bag_cells, item_cells, "（放不下的进暂存区，出发后按「背包」整理）" if item_cells > bag_cells else "", value])
+	var ch := character()
+	if _desc != null:
+		var lines: Array[String] = []
+		if c != null:
+			lines.append("%s　难度 %d　敌人池 %s" % [c.display_name, c.difficulty, String(c.enemy_pool) if c.enemy_pool != &"" else "无"])
+		if ch != null:
+			lines.append(ch.description)
+			var caps: Array[String] = []
+			caps.append("体力 %d" % ch.vitality_max)
+			caps.append("生命 %d" % int(ch.baseline().value_of(&"max_hp")))
+			if ch.carry_max_items >= 0:
+				caps.append("最多带 %d 件" % ch.carry_max_items)
+			if ch.carry_rarity_cap >= 0:
+				caps.append("稀有度不超过 %d" % ch.carry_rarity_cap)
+			lines.append("　".join(caps))
+		_desc.text = "\n".join(lines)
+	if _readout != null and board != null:
+		_readout.clear()
+		var value := 0
+		var cells := 0
+		var taken := carried()
+		for inst in taken:
+			value += ItemValue.of(inst.def)
+			cells += inst.def.shape.cell_count() if inst.def.shape != null else 0
+			_readout.append_text("　" + _item_line(inst.def) + "\n")
+		if taken.is_empty():
+			_readout.append_text("[color=#8b93a1]什么都还没带[/color]\n")
+		_readout.append_text("\n带 %d 件，占 %d 格，值 %d 币　包里还有 %d 格" % [taken.size(), cells, value, board.free_cell_count()])
+	if _status != null:
+		var why := can_depart()
+		_status.text = why if why != "" and not carried().is_empty() else ""

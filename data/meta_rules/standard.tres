@@ -6,3 +6,4 @@
 script = ExtResource("1_dlbbx")
 id = &"standard"
 display_name = "标准"
+first_kit = &"standard"

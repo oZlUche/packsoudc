@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.64 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.65 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2731,8 +2731,9 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 
 这与 [`CombatantBaseline`](#42-编译阶段背包--战斗单位)（战斗侧的角色占位）是同一种做法：
 结构先立住，数值等内容定稿。两者将来会一起挂到同一份角色定义上 ——
-战斗基线管「开局多少血多少耐力」，体力管「这一局还剩几条命」。现在**刻意不建**那个
-`CharacterDef`：只有两个占位点，建了也是空壳，等真的有第三样东西要按角色变时再说。
+战斗基线管「开局多少血多少耐力」，体力管「这一局还剩几条命」。当初**刻意不建** `CharacterDef`：只有两个占位点，建了也是空壳，
+等真的有第三样东西要按角色变时再说 —— 第三样是带入限制（058 第 2 条），**067 建了**：`CharacterDef`（内容种类 `characters`）定棋盘尺寸、体力上限、
+基线覆盖项、初始包、带入上限，`RunState.start` 给了角色就按它来；`Vitality`、`CombatantBaseline`、编译器一行没改。
 
 **输了节点也变空白。** 战斗不论输赢，节点都消耗掉（`VISITED`）：赢了有战利品，
 输了什么都没有还扣体力。没有「再打一次」—— 所以每一场打不打是一次性的决定，
@@ -2762,7 +2763,7 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 ## 8. M6 · 场景流
 
 ```
-MainMenu → SetupScreen(挑一章、一套开局装备、种子) → MapScreen
+MainMenu → SetupScreen(挑一章、挑角色、从仓库往初始包里拖、种子) → MapScreen
                                                       ⇅ 叠层（地图与镜头留着）
               ┌───────────────────────────────────────┴────────────────────────────┐
          EventScreen（先过事件，063）→ BattleScreen（回放）→ ContainerScreen（战利品 / 搜索）    ShopScreen / RestScreen
@@ -2789,19 +2790,32 @@ enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RE
 signal screen_changed(screen, payload)
 signal run_started(state) / run_ended(result)
 func to_main_menu() / new_run() / show_meta()
-func begin(chapter, loadout, seed) -> RunState      # SETUP → MAP
+func begin(chapter, loadout, seed, from_warehouse, character, layout) -> RunState   # SETUP → MAP；老路给 loadout，角色路给 character + layout
 func continue_run() -> bool / save() / save_and_quit()
 func pick_spawn(id) / step_to(id) / extract()       # 走完 / 撤完看队里下一个
 func resume() / take_loot(uid) / take_all_loot() / discard_loot()
 func finish_result()                                 # 进 meta（只一次）、存 meta、删这一局的存档 → META
-static func load_chapters() / load_loadouts()
+static func load_chapters() / load_loadouts() / load_characters()
+func grant_first_kit()                               # 仓库空的第一局发第一套（MetaRules.first_kit）
 ```
 
-### 8.1 开局装备
+### 8.1 开局：角色、初始包、从仓库带入
 
-`LoadoutDef`（`core/run/loadout_def.gd`）是内容管线里的一种：`data/authoring/loadouts/*.json` → `data/loadouts/*.tres`，
-排在道具之后（清单对着道具查）。只是一张清单，不写位置：包先上棋盘，其余按顺序往包里放、放不下进暂存区（`RunState._give_kit`）；
-摆法出发之后在地图上按「背包」调整。校验：每件得存在，**至少一个包**（3.2：没有包一格都用不了）。现有三套占位：标准 / 拾荒者 / 打手。
+**角色**（`CharacterDef`，`core/run/character_def.gd`，内容种类 `characters`，报告 067）定开一局时按角色变的那几样：战斗基线的覆盖项（没写的沿用 4.2 的默认）、
+体力上限、棋盘尺寸、初始包、带入的件数 / 稀有度上限（-1 = 不限，作者：改成字段、默认不限）。**没有搜索速度**（作者：搜索在战斗外、不是实时的）。
+现在一个占位角色 `default`。
+
+**开局屏**：左边挑章、挑角色、定种子；中间是这个角色的棋盘，初始包已经摆好；右边是仓库的格子（8.2）；同一层拖拽。
+**从仓库往包里拖，放得进的就是带的** —— 带入的真正限制是初始包的空间，没有第二套规则去数格子。拖上棋盘那一刻东西就离开了仓库；
+出发时把棋盘记成 layout（一件一行：定义、落点、朝向），`RunState.start(..., character, layout)` 按它原样摆回一局的棋盘并存 meta；「回主菜单」放回仓库。
+**包不能带入**：局外不收包（`MetaState.keeps`），仓库的格子把同一条规则接成准入回调（`GridInventory.accept_filter`），初始包拖不进去。
+上限出发时查（`CharacterDef.carry_problem`），超了拦下说原因。读档只写角色 id，`GameFlow._adopt` 按 id 找回基线。
+
+**仓库空的第一局**：`MetaRules.first_kit` 指一套开局装备，开局屏打开时仓库空着就把它的非包道具发进仓库（`GameFlow.grant_first_kit`）。
+作者说正式游戏由新手教程关发第一套（第 8 阶段），这是那之前的配置占位。
+
+`LoadoutDef`（`core/run/loadout_def.gd`，内容种类 `loadouts`）于是只剩两件事：第一套的清单，和没有角色定义时的老路（`begin(chapter, loadout, seed)`：
+清单里的包先上棋盘，其余按顺序往包里放、放不下进暂存区，`RunState._give_kit`）。校验：每件得存在，至少一个包。现有三套占位。
 
 ### 8.2 结算与局外
 
@@ -3002,7 +3016,8 @@ haste 每件都是 1.0，逐件相加会得出「N 件物品 = N 倍速度」。
 data/authoring/items/*.json         道具源数据
 data/authoring/buffs/*.json         增益源数据
 data/authoring/sets/*.json          套装源数据
-data/authoring/loadouts/*.json      开局装备（8.1）
+data/authoring/loadouts/*.json      开局装备（8.1：第一套的清单、老路）
+data/authoring/characters/*.json    角色（8.1）：基线覆盖、体力、棋盘、初始包、带入上限
 data/authoring/run_buffs/*.json     buff：局外的 / 一局里的（8.2、9.2）
 data/authoring/events/*.json        事件：文字、选项、条件与后果（6.5 事件层）
 data/authoring/enemies/*.json       敌人（6.0）
@@ -3010,12 +3025,12 @@ data/authoring/enemy_pools/*.json   敌人池（6.0）
 data/authoring/drop_rules/*.json    掉落规则（6.1）
 data/authoring/node_rules/*.json    节点规则（6.2 / 6.5）
 data/authoring/economy_rules/*.json 经济规则（6.6）
-data/authoring/meta_rules/*.json    局外规则：仓库多大（8.2）
+data/authoring/meta_rules/*.json    局外规则：仓库多大、第一套（8.2 / 8.1）
 data/authoring/chapters/*.json      章节（5.3）
-        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → run_buffs → items → loadouts → events → enemies → enemy_pools → drop_rules → node_rules → economy_rules → meta_rules → chapters）
+        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → run_buffs → items → loadouts → characters → events → enemies → enemy_pools → drop_rules → node_rules → economy_rules → meta_rules → chapters）
         │  tools/normalize_content.gd 把作者数据重写成导出器的格式（导入 → 导出 → 不同就写回）
         ▼
-data/items/*.tres   data/buffs/*.tres   data/sets/*.tres   data/run_buffs/*.tres   data/loadouts/*.tres   data/events/*.tres
+data/items/*.tres   data/buffs/*.tres   data/sets/*.tres   data/run_buffs/*.tres   data/loadouts/*.tres   data/characters/*.tres   data/events/*.tres
 data/enemies/*.tres data/enemy_pools/*.tres   data/drop_rules/*.tres   data/node_rules/*.tres   data/economy_rules/*.tres   data/meta_rules/*.tres   data/chapters/*.tres
 ```
 
@@ -3267,8 +3282,8 @@ res://
     meta/           meta_state  meta_save  meta_rules              # 跨局（8.2）：仓库格子、带回来的棋盘、图鉴、局外 buff
     settings/       game_settings                                  # 玩家设置（3.4 的提醒档位）
   data/
-    authoring/      items/  loadouts/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/  maps/
-    items/  loadouts/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/     # 导入器产出，也进 git
+    authoring/      items/  loadouts/  characters/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/  maps/
+    items/  loadouts/  characters/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/     # 导入器产出，也进 git
   ui/
     launcher  dev_nav  ui_palette
     game/           game_director  game_screen  main_menu  setup_screen  map_screen  inventory_panel   # 正式游戏（8 节），game.tscn 是主场景
@@ -3363,10 +3378,10 @@ res://
 | 2 | 侵蚀损失的具体形式 | 浅层扣生命值，深层额外损坏背包物品 | 同上，只改效果实现与参数 |
 | 3 | 节点事件的额外行动消耗 | 搜刮 +1 ／ 休息 +2 ／ 商店 +0。**未做**：现在一律只按边的 `action_cost`；加的话在 `NodeEvents` 里对 `travel.clock.spend` | 仅影响节奏调参 |
 | 4 | 撤离后的保留规则 | **作者已定（058 / 061）**：撤离时棋盘原样带回局外，玩家在结算屏拖或一键置入仓库（放不下就停）、没清空开不了新局；图鉴每件计一次；包只计图鉴；钱带出；战败全失。局外货币怎么花、卖东西未定 | 影响 meta 成长曲线，不影响任何模块接口 |
-| 5 | 棋盘尺寸与开局可用格数 | 现在 `RunState.BOARD_SIZE` 8×6 占位，沙盒开局两个 2×3 的包 = 12 格 | 纯数值，不影响结构 |
+| 5 | ~~棋盘尺寸与开局可用格数~~ 已收进角色（067）：`CharacterDef.board_size` 与 `starting_bags`，占位角色 8×6、两个 2×3 的包 | 纯数值，改 `characters/default.json` | 无 |
 | 6 | 合成配方是否纳入第一章 | 暂缓，先跑通包体系统与战斗 | 独立子系统，可后加 |
 | 7 | ~~暂存区的清空时机~~ 已定并实施（060）：**走出发生过事的点时清**，走之前按设置档位提示（3.4） | 出生点、岔路、路过的点不清；档位与阈值是 `GameSettings` 里的数据 | 商店 / 事件 / 休息屏还没有背包按钮（事件层重做那三屏时一起加） |
-| 8 | 各角色的基线数值（见 4.2） | 全局一份：生命 25、耐力 50（正式游戏里玩家 60） | 角色系统落地后由角色定义提供 `CombatantBaseline`，编译器与战斗不改。**058 提议现在就建 `CharacterDef`**（带入限制、搜索速度成了第三、四样按角色变的东西），一并收掉第 5 项 |
+| 8 | ~~各角色的基线数值（见 4.2）~~ 已收进角色（067）：`CharacterDef.base_stats` 覆盖 4.2 的默认，占位角色生命 60；体力上限 `vitality_max` | 数值在 `characters/*.json`；编译器与战斗不改 | 无 |
 | 9 | 元素类型各自的性质 | 目前只有 `fire` 占位，性质同物理 | 加一份 `DamageTypeDef` 即可，结算管线不改 |
 | 10 | ~~耐力等资源是否回复~~ | **已定：按时间自动回复，懒结算**（见 4.5） | 速率是 `regen_xxx` 属性，因此自动吃 buff。当前数值是占位：基线 4/秒，口粮 +2/秒 |
 
@@ -3387,6 +3402,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.65 | 2026-09-23 | **开局预选与 `CharacterDef`**（报告 067，058 / 059 顺序里的第 5 项；7.1、8、8.1、10.1、11、15 节第 5 / 8 项收掉）。新内容种类 `characters`：基线覆盖项、体力上限、棋盘尺寸、初始包、带入上限（-1 = 不限，没有搜索速度）；`RunState.start(..., character, layout)` 按角色开、开局屏摆好的棋盘原样进一局、存档记角色 id；开局屏重写：中间角色的棋盘（初始包摆好）、右边仓库格子、**从仓库往包里拖，放得进的就是带的**；包进不了仓库（`GridInventory.accept_filter` 接 `MetaState.keeps`）；`MetaRules.first_kit` 仓库空的第一局发第一套（教程关之前的占位）；没有角色定义 = 老路 |
 | v1.64 | 2026-09-23 | **删地图沙盒**（报告 066，作者拍板）。它砍到只剩生成就是地图编辑器的子集，「走」正式游戏的地图屏已完整；`ui/map/map_sandbox` 与它的帧测试删除，启动选择器剩两个沙盒、三个编辑器。以后单独试地图机制在正式游戏里加「开发者开局」 |
 | v1.63 | 2026-09-23 | **事件屏改版**（报告 065，作者要求）。`event_screen` 选项页与结果页共用两栏大框（1320×760）：左栏 640 宽整块是图（铺满、按比例裁，没图就深底色占位），右栏标题、可滚正文、贴底的整行选项，锁住的原因写在按钮底下；结果页沿用该点事件的配图。编辑器预览同样两栏 |
 | v1.62 | 2026-09-23 | **事件编辑器**（报告 064，作者要求；10.5、11）。`ui/event_editor`：写文字、导入配图（复制到 `assets/events/<id>.<ext>`，`EventImage` 拿不到资源就按原始文件读，事件屏共用）、选项与条件 / 后果由 `PropertyForm` 反射生成、预览照事件屏画、挂进 `NodeRules.events_by_type`；校验与产出都走导入器（JSON + `.tres`），草稿缓存照道具编辑器。按性价比做在项目里而不是独立 exe：注册表、校验、id 表一行都不用复制，要独立就用导出预设 |

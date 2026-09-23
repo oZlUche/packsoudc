@@ -1,0 +1,12 @@
+{
+  "id": "default",
+  "display_name": "拾荒者（占位）",
+  "description": "角色系统落地前的唯一角色：两个皮革包，生命 60。带入的东西只能放进这两个包。",
+  "base_stats": {
+    "max_hp": 60
+  },
+  "starting_bags": [
+    "bag_leather",
+    "bag_leather"
+  ]
+}

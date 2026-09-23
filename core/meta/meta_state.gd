@@ -46,6 +46,7 @@ var _next_uid: int = 1
 func _init(p_rules: MetaRules = null) -> void:
 	rules = p_rules
 	warehouse = GridInventory.new(warehouse_size(), WAREHOUSE_ID, false)
+	warehouse.accept_filter = keeps
 
 
 func warehouse_size() -> Vector2i:
@@ -57,6 +58,39 @@ func warehouse_size() -> Vector2i:
 static func keeps(def: ItemDef) -> bool:
 	return def != null and not def.is_bag
 
+
+## 往仓库里发东西（局外的 uid 空间）：仓库空的第一局发第一套（[MetaRules.first_kit]）、将来的制作 / 教程关都走这里。
+## 只收 [method keeps] 认的；放不下的丢掉。返回进了几件
+func grant(defs: Array) -> int:
+	var n := 0
+	warehouse.begin_batch()
+	for d in defs:
+		var def := d as ItemDef
+		if not keeps(def):
+			continue
+		var inst := ItemInstance.create(def, 0)
+		inst.uid = _next_uid
+		_next_uid += 1
+		if warehouse.try_add(inst, true):
+			n += 1
+	warehouse.end_batch()
+	if n > 0:
+		changed.emit()
+	return n
+
+
+## 局外号段里的下一个 uid（开局屏给初始包编号，免得和仓库里的撞号）
+func allocate_uid() -> int:
+	_next_uid += 1
+	return _next_uid - 1
+
+
+## 把一件东西放回仓库（开局屏取消带入）。保留它的 uid；放不下返回 false
+func take_back(inst: ItemInstance) -> bool:
+	if inst == null or not keeps(inst.def):
+		return false
+	_next_uid = maxi(_next_uid, inst.uid + 1)
+	return warehouse.try_add(inst, true)
 
 #region 一局结束
 ## 一局结束了进来。返回这次进了什么：{"items": 带回棋盘的件数, "value", "funds", "lit": 新点亮的图鉴条目数}
@@ -190,6 +224,7 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	if w is Dictionary:
 		m.warehouse = GridInventory.from_dict(w, items)
 		m.warehouse.id = WAREHOUSE_ID
+		m.warehouse.accept_filter = keeps
 	var b = d.get("board", null)
 	if b is Dictionary:
 		m.board = GridInventory.from_dict(b, items)

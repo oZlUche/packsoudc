@@ -463,9 +463,9 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	t.check(not flow.event_defs.is_empty(), "导演装了事件定义")
 	flow.new_run()
 	var setup = game.base()
-	for i in flow.loadouts.size():
-		if flow.loadouts[i].id == &"standard":
-			setup.choose_loadout(i)
+	# 067：开局屏按角色开；把第一套（发进仓库的）全带上，和从前按 standard 开差不多
+	for inst in flow.meta.warehouse.items().duplicate():
+		setup.carry_in((inst as ItemInstance).uid)
 	setup.set_run_seed(int(found["seed"]))
 	t.check(setup.depart(), "出发")
 	var map = game.base()

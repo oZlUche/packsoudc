@@ -45,8 +45,10 @@ var storage: ItemStash = null
 var rng: RunRNG = null
 var events: NodeEvents = null
 var tracker: SetTracker = null
-## 玩家自带的基线属性（4.2）。角色系统落地前用默认的；沙盒、测试可以换
+## 玩家自带的基线属性（4.2）。开局给了角色就是角色的；没给用持有方的 / 默认的
 var player_baseline: CombatantBaseline = null
+## 这一局的角色 id（067）；跟着存档，读档后持有方按它找回基线。空 = 没按角色开（老路、测试）
+var character_id: StringName = &""
 
 var pool: EnemyPool = null
 var drop_rule: DropRule = null
@@ -73,12 +75,14 @@ var event_defs: Dictionary = {}:
 
 
 #region 开局
-## 从一章开一局。生成不出图返回 null。[param kit] 是开局带的道具 id（包放棋盘，其余先放包里、放不下进暂存区）——
-## 「选初始背包」的界面是 M6 的事，这里只收一个清单
+## 从一章开一局。生成不出图返回 null。[param kit] 是开局带的道具 id（包放棋盘，其余先放包里、放不下进暂存区）。
+## [param p_character] 给了就按角色来（棋盘尺寸、体力上限、基线、初始包）；[param p_layout] 是开局屏摆好的棋盘
+## （[method layout_of] 的产物：哪件、放哪、什么朝向），先按它摆，再发 kit
 static func start(
 	p_chapter: ChapterDef, p_seed: int, p_items: ItemDatabase, p_enemies: EnemyDatabase,
 	p_sets: SetDatabase = null, kit: Array[StringName] = [] as Array[StringName],
-	p_buff_defs: Dictionary = {}, p_meta_buffs: Array[StringName] = [] as Array[StringName]
+	p_buff_defs: Dictionary = {}, p_meta_buffs: Array[StringName] = [] as Array[StringName],
+	p_character: CharacterDef = null, p_layout: Array = []
 ) -> RunState:
 	if p_chapter == null or p_chapter.map_source == null:
 		return null
@@ -105,12 +109,23 @@ static func start(
 		if def != null and def.is_meta():
 			s.meta_buffs.append(id)
 	var ctx := s.buff_context()
-	s.vitality = Vitality.new(Vitality.PLACEHOLDER_MAX + ctx.vitality_max_bonus)
+	var vitality_max := Vitality.PLACEHOLDER_MAX
+	var board_size := BOARD_SIZE
+	var full_kit := kit.duplicate()
+	if p_character != null:
+		s.character_id = p_character.id
+		s.player_baseline = p_character.baseline()
+		vitality_max = p_character.vitality_max
+		board_size = p_character.board_size
+		if p_layout.is_empty():
+			full_kit = p_character.starting_bags + kit
+	s.vitality = Vitality.new(vitality_max + ctx.vitality_max_bonus)
 	s.wallet = Wallet.new((s.economy.starting_balance if s.economy != null else 0) + ctx.starting_funds_bonus)
-	s.board = GridInventory.new(BOARD_SIZE, BOARD_ID, true)
+	s.board = GridInventory.new(board_size, BOARD_ID, true)
 	s.storage = ItemStash.new(STORAGE_ID, 0)
 	s._bind_tracker()
-	s._give_kit(kit)
+	s._place_layout(p_layout)
+	s._give_kit(full_kit)
 	s.travel = MapTravel.new(s.map, ActionClock.new())
 	s.travel.vitality = s.vitality
 	s._wire_events()
@@ -337,6 +352,42 @@ func _offer_loot(container: GridInventory) -> void:
 	loot_pending.emit(container)
 
 
+## 开局屏摆好的棋盘怎么记：一件一行（定义 id、落点、朝向）。不记实例：一局的 uid 从 1 重编，进来时重造
+static func layout_of(board: GridInventory) -> Array:
+	var out: Array = []
+	if board == null:
+		return out
+	var rows: Array = []
+	for inst in board.items():
+		rows.append(inst)
+	# 包先摆（普通物品要落在包里），其余按 uid 顺序，稳定
+	rows.sort_custom(func(a: ItemInstance, b: ItemInstance) -> bool:
+		if a.def.is_bag != b.def.is_bag:
+			return a.def.is_bag
+		return a.uid < b.uid)
+	for inst in rows:
+		var it := inst as ItemInstance
+		out.append({"id": String(it.def.id), "origin": [it.origin.x, it.origin.y], "rot": it.rotation})
+	return out
+
+
+## 按 [method layout_of] 的记录摆回棋盘；摆不回去的（棋盘换了、定义没了）进暂存区
+func _place_layout(layout: Array) -> void:
+	if items == null or layout.is_empty():
+		return
+	board.begin_batch()
+	for row in layout:
+		if not (row is Dictionary):
+			continue
+		var d := items.get_def(StringName(String(row.get("id", ""))))
+		if d == null:
+			continue
+		var at: Array = row.get("origin", [0, 0])
+		var inst := ItemInstance.create(d, 0)
+		if not board.place(inst, Vector2i(int(at[0]), int(at[1])), int(row.get("rot", 0))) and not board.try_add(inst, true):
+			storage.admit(inst)
+	board.end_batch()
+
 func _give_kit(kit: Array[StringName]) -> void:
 	if items == null:
 		return
@@ -445,6 +496,7 @@ func to_dict() -> Dictionary:
 		"version": SAVE_VERSION,
 		"seed": run_seed,
 		"chapter": String(chapter.id),
+		"character": String(character_id),
 		"phase": phase,
 		"end_reason": String(end_reason),
 		"map": map.to_dict(),
@@ -478,6 +530,7 @@ static func from_dict(
 	var s := RunState.new()
 	s.run_seed = int(d.get("seed", 0))
 	s.chapter = p_chapter
+	s.character_id = StringName(String(d.get("character", "")))
 	s.items = p_items
 	s.enemies = p_enemies
 	s.sets = p_sets

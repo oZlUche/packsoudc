@@ -27,6 +27,8 @@ var buff_defs: Dictionary = {}
 var event_defs: Dictionary = {}
 var chapters: Array[ChapterDef] = []
 var loadouts: Array[LoadoutDef] = []
+## 全部角色（067）。开局屏列出来挑；空 = 老路（按开局装备开）
+var characters: Array[CharacterDef] = []
 var save_path: String = RunSave.DEFAULT_PATH
 var meta_path: String = MetaSave.DEFAULT_PATH
 var settings_path: String = GameSettings.DEFAULT_PATH
@@ -68,8 +70,40 @@ func to_main_menu() -> void:
 
 
 func new_run() -> void:
+	grant_first_kit()
 	save_meta()
 	_go(Screen.SETUP)
+
+
+## 仓库空的第一局发第一套（[MetaRules.first_kit]，058 第六节的占位；正式游戏由教程关发）。发了返回件数，否则 0
+func grant_first_kit() -> int:
+	if meta == null or meta_rules == null or meta_rules.first_kit == &"" or items == null:
+		return 0
+	if meta.warehouse.item_count() > 0 or meta.has_pending_board():
+		return 0
+	var kit := loadout_of(meta_rules.first_kit)
+	if kit == null:
+		return 0
+	var defs: Array = []
+	for id in kit.items:
+		var def := items.get_def(id)
+		if def != null:
+			defs.append(def)
+	return meta.grant(defs)
+
+
+func loadout_of(id: StringName) -> LoadoutDef:
+	for l in loadouts:
+		if l.id == id:
+			return l
+	return null
+
+
+func character_of(id: StringName) -> CharacterDef:
+	for c in characters:
+		if c.id == id:
+			return c
+	return null
 
 
 ## 现在能不能开新局；空串 = 能，否则是原因（带回来的背包还没清空，058 第 7 条）
@@ -114,9 +148,14 @@ func save_settings() -> bool:
 	return settings != null and settings.save_to(settings_path) == OK
 
 
-## 从一章、一套装备、一个种子开一局；[param from_warehouse] 是从仓库带上的东西的 uid。生成不出图返回 null，停在开局屏。
-## 带进去的就从仓库拿走（一局里是新实例，3.1 存档只写 id）并立刻存 meta：撤离了它们回来，死了就是真没了
-func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: Array[int] = [] as Array[int]) -> RunState:
+## 从一章、一个种子开一局。两条路：
+## - 老路（测试、没有角色）：[param loadout] 的清单 + [param from_warehouse]（仓库里的 uid）当 kit；
+## - 角色路（开局屏，067）：[param character] 定棋盘、体力、基线、初始包，[param layout] 是开局屏摆好的棋盘
+##   （仓库里的东西拖上去那一刻已经离开仓库）。
+## 两条路都在开局那一刻存 meta：带进去的从仓库拿走（一局里是新实例，3.1 存档只写 id），撤离了回来，死了就是真没了。
+## 生成不出图返回 null，停在开局屏
+func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: Array[int] = [] as Array[int],
+		character: CharacterDef = null, layout: Array = []) -> RunState:
 	if can_begin() != "":
 		return null
 	var kit: Array[StringName] = []
@@ -128,12 +167,12 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 		if inst != null and inst.def != null:
 			kit.append(inst.def.id)
 			taken.append(inst)
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs)
+	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout)
 	if state == null:
 		return null
-	if not taken.is_empty():
-		for inst in taken:
-			meta.warehouse.remove(inst.uid)
+	for inst in taken:
+		meta.warehouse.remove(inst.uid)
+	if not taken.is_empty() or character != null:
 		MetaSave.write(meta, meta_path)
 	_adopt(state)
 	_go(Screen.MAP)
@@ -258,7 +297,11 @@ func _adopt(state: RunState) -> void:
 	_queue.clear()
 	state.buff_defs = buff_defs      # 读档回来的只有 id，定义表在这里
 	state.event_defs = event_defs
-	if player_baseline != null:
+	# 基线：按角色（读档回来只有 id，在这里找回）；没角色用持有方给的
+	var ch := character_of(state.character_id)
+	if ch != null:
+		state.player_baseline = ch.baseline()
+	elif player_baseline != null:
 		state.player_baseline = player_baseline
 	var ev := state.events
 	ev.battle_finished.connect(func(node: MapNode, r: BattleResult, won: bool):
@@ -355,6 +398,14 @@ static func load_loadouts() -> Array[LoadoutDef]:
 	var out: Array[LoadoutDef] = []
 	for res in _load_dir(ContentPaths.LOADOUTS):
 		if res is LoadoutDef:
+			out.append(res)
+	return out
+
+
+static func load_characters() -> Array[CharacterDef]:
+	var out: Array[CharacterDef] = []
+	for res in _load_dir(ContentPaths.CHARACTERS):
+		if res is CharacterDef:
 			out.append(res)
 	return out
 

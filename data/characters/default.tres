@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CharacterDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/character_def.gd" id="1_dcw1w"]
+
+[resource]
+script = ExtResource("1_dcw1w")
+id = &"default"
+display_name = "拾荒者（占位）"
+description = "角色系统落地前的唯一角色：两个皮革包，生命 60。带入的东西只能放进这两个包。"
+base_stats = {
+"max_hp": 60
+}
+starting_bags = Array[StringName]([&"bag_leather", &"bag_leather"])

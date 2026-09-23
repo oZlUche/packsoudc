@@ -66,6 +66,13 @@ class Context:
 		if def != null and def.id != &"":
 			loadouts[def.id] = def
 
+	## id -> CharacterDef
+	var characters: Dictionary = {}
+
+	func register_character(def: CharacterDef) -> void:
+		if def != null and def.id != &"":
+			characters[def.id] = def
+
 	## id -> MetaRules
 	var meta_rules: Dictionary = {}
 
@@ -167,6 +174,34 @@ static func import_loadout(data: Dictionary, ctx: Context, report: ImportReport)
 	return def
 
 
+## 角色（058 第 2 条，067）：体力上限、棋盘都得是正数；初始包至少一个、每个得存在且是包（对着道具查的只在批量导入时生效）；上限 -1 = 不限
+static func import_character(data: Dictionary, ctx: Context, report: ImportReport) -> CharacterDef:
+	var def := CharacterDef.new()
+	_fill(def, data, "", ctx, report)
+	if def.id == &"":
+		report.error("id", "角色必须有 id")
+	if def.vitality_max < 1:
+		report.error("vitality_max", "体力上限至少 1")
+	if def.board_size.x < 1 or def.board_size.y < 1:
+		report.error("board_size", "棋盘至少 1×1")
+	if def.carry_max_items < -1 or def.carry_rarity_cap < -1:
+		report.error("carry_max_items", "上限只能是 -1（不限）或非负数")
+	if def.starting_bags.is_empty():
+		report.error("starting_bags", "至少一个初始包：棋盘上只有包里的东西参战（3.2），没有包一格都用不了")
+	for key in def.base_stats:
+		if not (def.base_stats[key] is float or def.base_stats[key] is int):
+			report.error("base_stats", "'%s' 的值得是数" % key)
+	if not ctx.items.is_empty():
+		for i in def.starting_bags.size():
+			var item: ItemDef = ctx.items.get(def.starting_bags[i], null)
+			if item == null:
+				report.error("starting_bags[%d]" % i, "找不到道具 '%s'" % def.starting_bags[i])
+			elif not item.is_bag:
+				report.error("starting_bags[%d]" % i, "'%s' 不是包" % def.starting_bags[i])
+	ctx.register_character(def)
+	return def
+
+
 ## buff（059）：局外的或一局里的。战斗效果得带扳机、放 rules；effects 里只能是掉落或一局规则的效果
 static func import_run_buff(data: Dictionary, ctx: Context, report: ImportReport) -> RunBuffDef:
 	var def := RunBuffDef.new()
@@ -231,6 +266,8 @@ static func import_meta_rules(data: Dictionary, ctx: Context, report: ImportRepo
 		report.error("id", "局外规则必须有 id")
 	if rules.warehouse_size.x < 1 or rules.warehouse_size.y < 1:
 		report.error("warehouse_size", "仓库至少 1×1")
+	if rules.first_kit != &"" and not ctx.loadouts.is_empty() and not ctx.loadouts.has(rules.first_kit):
+		report.error("first_kit", "找不到开局装备 '%s'" % rules.first_kit)
 	ctx.register_meta_rules(rules)
 	return rules
 

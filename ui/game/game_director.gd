@@ -54,11 +54,12 @@ func _ready() -> void:
 	flow.event_defs = GameFlow.load_events()
 	flow.chapters = GameFlow.load_chapters()
 	flow.loadouts = GameFlow.load_loadouts()
+	flow.characters = GameFlow.load_characters()
 	flow.save_path = save_path
 	flow.meta_path = meta_path
 	flow.settings_path = settings_path
 	flow.settings = GameSettings.load_from(settings_path)
-	# 占位：与沙盒一致的玩家基线，等角色系统
+	# 没有角色定义时的兜底基线（角色路上基线来自 CharacterDef，067）
 	flow.player_baseline = CombatantBaseline.with_hp(60.0)
 	flow.screen_changed.connect(_on_screen_changed)
 	flow.to_main_menu()
@@ -124,17 +125,13 @@ func demo_fill() -> void:
 	flow.save_path = "user://demo_run.json"
 	flow.meta_path = "user://demo_meta.json"
 	if want == "setup":
-		# 先撤离一局攒个仓库，开局屏才有东西可带
-		var warm := flow.begin(flow.chapters[0], flow.loadouts[0] if not flow.loadouts.is_empty() else null, 1)
-		if warm != null:
-			warm.phase = RunState.Phase.EXTRACTED
-			warm.end_reason = &"extract"
-			flow.resume()
-			flow.finish_result()
+		# 新的局外：开局屏打开时第一套发进仓库（067），带上两件给截图看
+		flow.meta = MetaState.new(flow.meta_rules)
 		flow.new_run()
 		var setup := _base
-		if setup != null and flow.meta.warehouse.item_count() > 0:
-			setup.call("toggle_warehouse", (flow.meta.warehouse.items()[0] as ItemInstance).uid)
+		if setup != null:
+			for inst in flow.meta.warehouse.items().slice(0, 2):
+				setup.call("carry_in", (inst as ItemInstance).uid)
 		return
 	flow.new_run()
 	var next_type: StringName = &"search" if want in ["search", "event"] else &"battle"

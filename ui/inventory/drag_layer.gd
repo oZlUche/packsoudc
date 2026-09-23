@@ -61,6 +61,13 @@ func register_view(view: ContainerView) -> void:
 	view.grab_requested.connect(_on_grab_requested)
 
 
+## 撤销登记（开局屏换角色重造棋盘）
+func unregister_view(view: ContainerView) -> void:
+	if view.grab_requested.is_connected(_on_grab_requested):
+		view.grab_requested.disconnect(_on_grab_requested)
+	_views.erase(view)
+
+
 func is_dragging() -> bool:
 	return _inst != null
 

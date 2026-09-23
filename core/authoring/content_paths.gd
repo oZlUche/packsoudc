@@ -10,6 +10,7 @@ extends RefCounted
 const AUTHORING := "res://data/authoring"
 const AUTHORING_ITEMS := AUTHORING + "/items"
 const AUTHORING_LOADOUTS := AUTHORING + "/loadouts"
+const AUTHORING_CHARACTERS := AUTHORING + "/characters"
 const AUTHORING_EVENTS := AUTHORING + "/events"
 const AUTHORING_BUFFS := AUTHORING + "/buffs"
 const AUTHORING_SETS := AUTHORING + "/sets"
@@ -26,6 +27,7 @@ const AUTHORING_CHAPTERS := AUTHORING + "/chapters"
 #region 引擎资产（导入器产出，游戏读这里）
 const ITEMS := "res://data/items"
 const LOADOUTS := "res://data/loadouts"
+const CHARACTERS := "res://data/characters"
 const EVENTS := "res://data/events"
 const BUFFS := "res://data/buffs"
 const SETS := "res://data/sets"
@@ -46,6 +48,7 @@ const KINDS := {
 	"run_buffs": [AUTHORING_RUN_BUFFS, RUN_BUFFS],
 	"items": [AUTHORING_ITEMS, ITEMS],
 	"loadouts": [AUTHORING_LOADOUTS, LOADOUTS],
+	"characters": [AUTHORING_CHARACTERS, CHARACTERS],
 	"events": [AUTHORING_EVENTS, EVENTS],
 	"enemies": [AUTHORING_ENEMIES, ENEMIES],
 	"enemy_pools": [AUTHORING_ENEMY_POOLS, ENEMY_POOLS],
@@ -55,9 +58,9 @@ const KINDS := {
 	"meta_rules": [AUTHORING_META_RULES, META_RULES],
 	"chapters": [AUTHORING_CHAPTERS, CHAPTERS],
 }
-## 开局装备与敌人都在道具之后（清单、招牌道具、流派标签要对着道具查），池在敌人之后，三种规则独立，
+## 开局装备、角色（初始包对着道具查）与敌人都在道具之后（清单、招牌道具、流派标签要对着道具查），池在敌人之后，三种规则独立，
 ## 章节排最后（按 id 引用池与规则）
-const ORDER := ["buffs", "sets", "run_buffs", "items", "loadouts", "events", "enemies", "enemy_pools", "drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters"]
+const ORDER := ["buffs", "sets", "run_buffs", "items", "loadouts", "characters", "events", "enemies", "enemy_pools", "drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters"]
 
 
 static func authoring_file(kind: String, id: String) -> String:

@@ -24,6 +24,8 @@ var requires_bag: bool = false
 
 ## 容器级准入标签。为空表示不限制。包体自身的准入见 [member ItemDef.bag_accept_tags]。
 var accept_tags: Array[StringName] = []
+## 容器级准入回调：`func(def: ItemDef) -> bool`，无效 = 不限。仓库用它接 [MetaState.keeps]（包进不了局外），规则只写在那一处
+var accept_filter: Callable = Callable()
 
 var _occ: PackedInt32Array = PackedInt32Array()
 var _bag_owner: PackedInt32Array = PackedInt32Array()
@@ -114,6 +116,8 @@ func _idx(c: Vector2i) -> int:
 ## 容器是否接受这件定义（仅看容器级标签，不看空间）。
 func accepts(def: ItemDef) -> bool:
 	if def == null:
+		return false
+	if accept_filter.is_valid() and not bool(accept_filter.call(def)):
 		return false
 	if accept_tags.is_empty():
 		return true

@@ -456,16 +456,15 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	var setup = game.base()
 	t.eq(setup.screen, GameFlow.Screen.SETUP, "→ 开局屏")
 	setup.choose_chapter(0)
-	setup.choose_loadout(0)
 	if found.is_empty():
 		t.check(false, "找不到种子")
 		game.queue_free()
 		return
 	setup.set_run_seed(int(found["seed"]))
-	# 开局屏的第一套装备未必是 standard：按 id 挑
-	for i in flow.loadouts.size():
-		if flow.loadouts[i].id == kit.id:
-			setup.choose_loadout(i)
+	# 067：开局屏按角色开（初始包 + 从仓库拖），不再挑装备；新的局外把第一套发进了仓库，全带上。地图只看种子，不看带了什么
+	for inst in flow.meta.warehouse.items().duplicate():
+		setup.carry_in((inst as ItemInstance).uid)
+	t.check(setup.carried().size() > 0, "从仓库带上了第一套")
 	t.check(setup.depart(), "出发")
 	var map = game.base()
 	t.eq(map.screen, GameFlow.Screen.MAP, "→ 地图")
