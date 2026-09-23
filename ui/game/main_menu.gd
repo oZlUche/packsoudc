@@ -26,6 +26,7 @@ func open(_payload: Dictionary) -> void:
 	_continue_btn.disabled = not flow.has_save()
 	col.add_child(_continue_btn)
 	col.add_child(_button("仓库与战绩", flow.show_meta, 18))
+	col.add_child(_button("设置", flow.show_settings, 14))
 	col.add_child(HSeparator.new())
 	col.add_child(_button("开发工具（沙盒与编辑器）", func(): dev_tools_requested.emit(), 13))
 	col.add_child(_button("退出", func(): get_tree().quit(), 13))

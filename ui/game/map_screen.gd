@@ -19,6 +19,8 @@ var _log: RichTextLabel
 var _extract_btn: Button
 var _bag: Control = null
 var _confirm: Control = null
+var _step_confirm: Control = null
+var _pending_step: int = -1
 
 
 func open(_payload: Dictionary) -> void:
@@ -44,8 +46,66 @@ func pick_spawn(id: int) -> bool:
 	return true
 
 
+## 走一步。要离开的是个发生过事的点、暂存区里还有值得提的东西（按设置档位），先问一句；否则直接走
 func step(to_id: int) -> bool:
+	if _run.will_clear_storage() and _run.travel.available_moves().has(to_id) \
+			and StorageWarning.should_warn(_run.storage.items(), flow.settings):
+		_open_step_confirm(to_id)
+		return true
 	return flow.step_to(to_id)
+
+
+## 提示看过了，照走（暂存区里的留在这里）
+func confirm_step() -> bool:
+	var to := _pending_step
+	cancel_step()
+	return to >= 0 and flow.step_to(to)
+
+
+func cancel_step() -> void:
+	_pending_step = -1
+	if _step_confirm != null:
+		_step_confirm.queue_free()
+		_step_confirm = null
+
+
+func step_confirm_open() -> bool:
+	return _step_confirm != null
+
+
+func _open_step_confirm(to_id: int) -> void:
+	cancel_step()
+	_pending_step = to_id
+	var at_risk := StorageWarning.at_risk(_run.storage.items(), flow.settings)
+	var shade := ColorRect.new()
+	shade.color = Color(0.04, 0.05, 0.07, 0.7)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(shade)
+	_step_confirm = shade
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.add_child(center)
+	var panel := _panel(20)
+	panel.custom_minimum_size.x = 520
+	center.add_child(panel)
+	var col := _vbox(10)
+	panel.add_child(col)
+	col.add_child(_label("暂存区里还有东西", 20, UiPalette.FG))
+	col.add_child(_wrapped("走了它们就留在这个点上了：%s。暂存区是在这个点上腾挪用的，不跟着走（3.4）。想带走先放进棋盘。" % StorageWarning.describe(_run.storage.items()),
+		14, UiPalette.STAMINA, 480))
+	var list := _log_box(13)
+	list.custom_minimum_size.y = 22 * mini(6, at_risk.size() + 1)
+	for item in at_risk:
+		list.append_text(_item_line(item.def) + "\n")
+	col.add_child(list)
+	var buttons := _hbox(8)
+	buttons.add_child(_button("照走，不要了", func(): confirm_step(), 14))
+	buttons.add_child(_button("先整理背包（B）", func():
+		cancel_step()
+		toggle_bag(), 14))
+	buttons.add_child(_button("取消", cancel_step, 14))
+	col.add_child(buttons)
 
 
 ## 在撤离点上按「撤离」：先确认 —— 付多少钱、暂存区里有什么带不出去（3.4）。返回 false = 不在撤离点上
@@ -168,6 +228,9 @@ func _adopt() -> void:
 	_run.travel.refused.connect(func(_i: MoveIntent, why: String): _say("走不了：" + why))
 	_run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh_hud())
 	_run.vitality.changed.connect(func(_c: int, _m: int, _d: int, _r: StringName): _refresh_hud())
+	_run.storage.changed.connect(_refresh_hud)
+	_run.storage_dropped.connect(func(node_id: int, items: Array):
+		_note("　离开点 %d：暂存区里的 %s留在了那里" % [node_id, StorageWarning.describe(items)]))
 	var ev := _run.events
 	ev.rewarded.connect(func(_n: MapNode, amount: int): _note("　进账 %d 币" % amount))
 	ev.revealed.connect(func(n: MapNode, type: StringName):
@@ -212,7 +275,7 @@ func _after_move() -> void:
 
 
 func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
-	if button != MOUSE_BUTTON_LEFT or _bag != null or _confirm != null:
+	if button != MOUSE_BUTTON_LEFT or _bag != null or _confirm != null or _step_confirm != null:
 		return
 	if _run.phase == RunState.Phase.PICK_SPAWN:
 		if not pick_spawn(id):
@@ -383,7 +446,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	match key.keycode:
 		KEY_B:
-			if _confirm == null:
+			if _confirm == null and _step_confirm == null:
 				toggle_bag()
 		KEY_F:
 			_view.fit()

@@ -10,7 +10,7 @@
 class_name GameFlow
 extends RefCounted
 
-enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META }
+enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS }
 
 signal screen_changed(screen: int, payload: Dictionary)
 signal run_started(state: RunState)
@@ -24,6 +24,9 @@ var chapters: Array[ChapterDef] = []
 var loadouts: Array[LoadoutDef] = []
 var save_path: String = RunSave.DEFAULT_PATH
 var meta_path: String = MetaSave.DEFAULT_PATH
+var settings_path: String = GameSettings.DEFAULT_PATH
+## 玩家的设置（提醒档位等）。持有方读进来；改了调 save_settings
+var settings: GameSettings = GameSettings.new()
 ## 玩家基线（4.2）。角色系统之前由持有方统一给；null = 编译器默认
 var player_baseline: CombatantBaseline = null
 
@@ -62,6 +65,14 @@ func new_run() -> void:
 
 func show_meta() -> void:
 	_go(Screen.META)
+
+
+func show_settings() -> void:
+	_go(Screen.SETTINGS)
+
+
+func save_settings() -> bool:
+	return settings != null and settings.save_to(settings_path) == OK
 
 
 ## 从一章、一套装备、一个种子开一局；[param from_warehouse] 是从仓库带上的东西的 uid。生成不出图返回 null，停在开局屏。

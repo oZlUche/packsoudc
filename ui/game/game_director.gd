@@ -21,12 +21,14 @@ const SCREEN_SCRIPTS := {
 	GameFlow.Screen.REST: "res://ui/game/rest_screen.gd",
 	GameFlow.Screen.RESULT: "res://ui/game/result_screen.gd",
 	GameFlow.Screen.META: "res://ui/game/meta_screen.gd",
+	GameFlow.Screen.SETTINGS: "res://ui/game/settings_screen.gd",
 }
 const LAUNCHER := "res://ui/launcher.tscn"
 
 ## 存档路径。测试在加进树之前改它，别碰玩家真正的存档
 var save_path: String = RunSave.DEFAULT_PATH
 var meta_path: String = MetaSave.DEFAULT_PATH
+var settings_path: String = GameSettings.DEFAULT_PATH
 
 var flow: GameFlow = null
 var _font: Font
@@ -48,6 +50,8 @@ func _ready() -> void:
 	flow.loadouts = GameFlow.load_loadouts()
 	flow.save_path = save_path
 	flow.meta_path = meta_path
+	flow.settings_path = settings_path
+	flow.settings = GameSettings.load_from(settings_path)
 	# 占位：与沙盒一致的玩家基线，等角色系统
 	flow.player_baseline = CombatantBaseline.with_hp(60.0)
 	flow.screen_changed.connect(_on_screen_changed)

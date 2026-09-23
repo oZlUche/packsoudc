@@ -23,6 +23,8 @@ signal phase_changed(phase: int, reason: StringName)
 ## 有东西等着拾取（尸体容器 / 搜索收获）。拿走或丢掉之前不会再来第二份
 signal loot_pending(container: GridInventory)
 signal loot_cleared()
+## 走出一个发生过事的点，暂存区里的东西留在了那里（3.4 / 058）
+signal storage_dropped(node_id: int, items: Array)
 
 var run_seed: int = 0
 var chapter: ChapterDef = null
@@ -103,12 +105,33 @@ func pick_spawn(id: int) -> bool:
 	return true
 
 
-## 走一步。开着的商店 / 搜索先关掉（随时可以离开）；不在图上走不了
+## 走一步。开着的商店 / 搜索先关掉（随时可以离开）；走出发生过事的点，暂存区连东西一起清空（3.4）；不在图上走不了
 func step_to(id: int) -> bool:
 	if phase != Phase.ON_MAP:
 		return false
+	if not travel.available_moves().has(id):
+		return travel.step_to(id)     # 让旅程自己拒绝、发 refused；走不成就不该清东西
 	close_sessions()
+	_drop_storage_if_leaving()
 	return travel.step_to(id)
+
+
+## 走出现在这个点会不会清暂存区：这个点上发生过事（打了、搜了、开了店、休息了、出了事件），而且暂存区里有东西
+func will_clear_storage() -> bool:
+	return events != null and travel != null and travel.current_id >= 0 \
+		and events.last_handled_id == travel.current_id and storage.item_count() > 0
+
+
+func _drop_storage_if_leaving() -> void:
+	if events == null or travel == null:
+		return
+	if will_clear_storage():
+		var dropped: Array = storage.items().duplicate()
+		storage.clear()
+		storage_dropped.emit(travel.current_id, dropped)
+	# 离开了就不再算「发生过事的点」：回头再路过一次不会又清一遍
+	if events.last_handled_id == travel.current_id:
+		events.last_handled_id = -1
 
 
 ## 离开正在搜的点 / 正在逛的店
@@ -307,7 +330,7 @@ func to_dict() -> Dictionary:
 		"board": board.to_dict(),
 		"storage": storage.to_dict(),
 		"rng": rng.to_dict(),
-		"events": {"searches_closed": events.searches_closed},
+		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id},
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
 		"tally": tally.duplicate(),
 	}
@@ -338,6 +361,7 @@ static func from_dict(
 	s._bind_tracker()
 	s._wire_events()
 	s.events.searches_closed = int((d.get("events", {}) as Dictionary).get("searches_closed", 0))
+	s.events.last_handled_id = int((d.get("events", {}) as Dictionary).get("last_handled", -1))
 	for key in d.get("tally", {}):
 		s.tally[String(key)] = int((d["tally"] as Dictionary)[key])
 	var loot = d.get("pending_loot", null)

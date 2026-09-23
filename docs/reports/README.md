@@ -78,5 +78,6 @@
 | 055 | [M6 规划与 M6-1 场景流骨架](055-m6-plan-and-scene-flow-skeleton.md) | 阶段 6 · M6 | 完成 |
 | 056 | [M6-2 搜刮界面：渐进揭示、拖到棋盘、搜索点逐次装](056-loot-reveal-and-search-screen.md) | 阶段 6 · M6 | 完成 |
 | 057 | [M6-3 打磨：撤离确认、仓库带进下一局；M6 完结](057-m6-polish-and-wrap-up.md) | 阶段 6 · M6 **完结** | 完成 |
-| 058 | [作者五条提议：节点层、开局预选与带入限制、暂存区按节点清空、仓库与图鉴、搜索揭示](058-author-five-proposals.md) | 提议 | 待拍板 |
-| 059 | [设想：事件层、统一容器屏、局外 buff 与地图 buff](059-event-layer-and-buffs-proposal.md) | 提议 | 待拍板 |
+| 058 | [作者五条提议：节点层、开局预选与带入限制、暂存区按节点清空、仓库与图鉴、搜索揭示](058-author-five-proposals.md) | 提议 | 已拍板，实施中 |
+| 059 | [设想：事件层、统一容器屏、局外 buff 与地图 buff](059-event-layer-and-buffs-proposal.md) | 提议 | 已拍板，实施中 |
+| 060 | [暂存区按点清空：走出发生过事的点时清，走之前按档位提醒](060-storage-clears-on-leaving.md) | 058 / 059 第 1 项 | 完成 |
