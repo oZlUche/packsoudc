@@ -51,6 +51,9 @@ var loot_context: Callable = Callable()
 
 var current_search: SearchSession = null
 var current_shop: ShopSession = null
+## 最近一场的双方战斗单位：{"player": CombatantSpec, "enemy": CombatantSpec, "node": id}。
+## 回放要把日志里的 uid 写成名字（4.8：名字是表现层的事，不进日志），从这里查
+var last_battle: Dictionary = {}
 var _depths: Dictionary = {}
 ## 已结束的搜索会话里一共搜了几次（正在搜的那个另算，见 searches_total）。跟着存档走
 var searches_closed: int = 0
@@ -144,6 +147,7 @@ func _fight(node: MapNode, type: StringName, content: Dictionary) -> bool:
 	var limit := rules.battle_time_limit if rules != null else 60.0
 	var result := BattleSim.run(me, enemy, _rng_for(node, "battle"), limit)
 	var won := result.winner == 0
+	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content}
 	battle_finished.emit(node, result, won)
 	if won:
 		var ctx := _loot_ctx()

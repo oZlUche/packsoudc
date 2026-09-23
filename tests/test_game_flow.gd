@@ -1,0 +1,479 @@
+## 场景流（M6-1，架构文档 8 节）：开局装备走管线、结算与局外、状态机的屏序列、导演真的换屏。
+## 期望从数据推：装备清单里有几个包、棋盘上就有几个包；结算的价值是棋盘上每件 ItemValue 之和。
+extends RefCounted
+
+const GAME := "res://ui/game/game.tscn"
+const SAVE := "user://test_flow_run.json"
+const META := "user://test_flow_meta.json"
+
+
+class Content:
+	extends RefCounted
+	var items: ItemDatabase
+	var enemies: EnemyDatabase
+	var sets: SetDatabase
+	var chapter: ChapterDef
+	var loadouts: Array[LoadoutDef]
+
+
+static func _content() -> Content:
+	var c := Content.new()
+	c.items = ItemDatabase.new()
+	c.items.load_dir()
+	c.enemies = EnemyDatabase.new()
+	c.enemies.load_all()
+	c.sets = SetDatabase.new()
+	c.sets.load_dir()
+	c.chapter = load(ContentPaths.asset_file("chapters", "chapter_01"))
+	c.loadouts = GameFlow.load_loadouts()
+	return c
+
+
+static func _flow(c: Content, hp: float = 10000.0) -> GameFlow:
+	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
+	f.chapters = [c.chapter] as Array[ChapterDef]
+	f.loadouts = c.loadouts
+	f.save_path = SAVE
+	f.meta_path = META
+	f.player_baseline = CombatantBaseline.with_hp(hp)
+	return f
+
+
+static func _loadout(c: Content, id: StringName) -> LoadoutDef:
+	for l in c.loadouts:
+		if l.id == id:
+			return l
+	return c.loadouts[0] if not c.loadouts.is_empty() else null
+
+
+## 找一个种子：某个出生点旁边就有某类型的点。返回 {seed, entry, next}，找不到空字典
+static func _seed_with(c: Content, type: StringName, kit: Array[StringName] = [] as Array[StringName]) -> Dictionary:
+	for seed in range(1, 80):
+		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit)
+		if s == null:
+			continue
+		for entry in s.map.entry_ids:
+			for nid in s.map.neighbors(entry):
+				if s.map.get_node(nid).type == type:
+					return {"seed": seed, "entry": entry, "next": nid}
+	return {}
+
+
+## 把叠层都看完：战斗 / 事件 / 休息按继续，战利品全拿，搜索与商店离开。返回看过的屏
+static func _settle_overlays(f: GameFlow) -> Array[int]:
+	var seen: Array[int] = []
+	var guard := 0
+	while GameFlow.is_overlay(f.screen) and guard < 30:
+		guard += 1
+		seen.append(f.screen)
+		match f.screen:
+			GameFlow.Screen.LOOT:
+				f.take_all_loot()
+			GameFlow.Screen.SEARCH:
+				f.run.events.current_search.leave()
+			GameFlow.Screen.SHOP:
+				f.run.events.current_shop.leave()
+			_:
+				f.resume()
+	return seen
+
+
+static func _sum_value(container) -> int:
+	var v := 0
+	for inst in container.items():
+		v += ItemValue.of((inst as ItemInstance).def)
+	return v
+
+
+static func _cleanup() -> void:
+	RunSave.remove(SAVE)
+	MetaSave.remove(META)
+
+
+#region 开局装备
+static func run_loadout_pipeline(t: TestCase) -> void:
+	t.begin("开局装备 · 走内容管线：往返、校验、作者文件、开局按清单发")
+
+	var c := _content()
+	var ctx := ContentImporter.Context.new()
+	for id in c.items.ids():
+		ctx.register_item(c.items.get_def(id))
+
+	# 往返
+	var sample := LoadoutDef.new()
+	sample.id = &"t_kit"
+	sample.display_name = "测试"
+	sample.items = [&"bag_leather", &"pistol"] as Array[StringName]
+	var text := ContentExporter.to_json(ContentExporter.export_loadout(sample))
+	var report := ImportReport.new()
+	var back := ContentImporter.import_loadout(JSON.parse_string(text), ctx, report)
+	t.check(report.ok(), "导得回来：%s" % report.to_text())
+	t.eq(back.items, sample.items, "清单原样")
+	t.eq(ContentExporter.to_json(ContentExporter.export_loadout(back)), text, "再导出一次，文本逐字节相同")
+
+	# 校验比引擎严格
+	var bad := ImportReport.new()
+	ContentImporter.import_loadout({"id": "x", "items": []}, ctx, bad)
+	t.check(not bad.ok(), "空清单不行")
+	bad = ImportReport.new()
+	ContentImporter.import_loadout({"id": "x", "items": ["bag_leather", "no_such_item"]}, ctx, bad)
+	t.check(not bad.ok() and bad.to_text().contains("no_such_item"), "不存在的道具不行，报出名字")
+	bad = ImportReport.new()
+	ContentImporter.import_loadout({"id": "x", "items": ["pistol", "knife"]}, ctx, bad)
+	t.check(not bad.ok() and bad.to_text().contains("包"), "没有包不行：棋盘上只有包里的东西参战")
+	bad = ImportReport.new()
+	ContentImporter.import_loadout({"id": "x", "items": ["pistol", "knife"]}, ContentImporter.Context.new(), bad)
+	t.check(bad.ok(), "单独导一份（上下文里没有道具）时对着道具查的两条跳过")
+
+	# 作者文件：导得进、是不动点、资产在、每份至少一个包
+	var dir: String = ContentPaths.KINDS["loadouts"][0]
+	var d := DirAccess.open(dir)
+	t.not_null(d, "有 %s" % dir)
+	var files := 0
+	if d != null:
+		for f in d.get_files():
+			if not f.ends_with(".json"):
+				continue
+			files += 1
+			var id := f.get_basename()
+			var raw := FileAccess.get_file_as_string(dir + "/" + f)
+			var r := ImportReport.new()
+			var res := ContentImporter.import_loadout(JSON.parse_string(raw), ctx, r)
+			t.check(r.ok(), "%s 导得进：%s" % [f, r.to_text()])
+			t.eq(ContentExporter.to_json(ContentExporter.export_loadout(res)), raw, "%s 是往返不动点（tools/normalize_content.gd）" % f)
+			t.check(ResourceLoader.exists(ContentPaths.asset_file("loadouts", id)), "%s 的资产在" % id)
+	t.check(files >= 2, "至少两套开局装备可挑（实际 %d）" % files)
+	t.eq(c.loadouts.size(), files, "GameFlow.load_loadouts 装回全部 %d 份" % files)
+
+	# 开局按清单发：清单里几个包棋盘上就几个包；其余不在棋盘就在暂存区
+	for l in c.loadouts:
+		var s := RunState.start(c.chapter, 3, c.items, c.enemies, c.sets, l.items)
+		t.not_null(s, "%s 开得了局" % l.id)
+		if s == null:
+			continue
+		var bags := 0
+		var rest := 0
+		for id in l.items:
+			if c.items.get_def(id).is_bag:
+				bags += 1
+			else:
+				rest += 1
+		t.eq(s.board.bags().size(), bags, "%s：清单里 %d 个包，棋盘上 %d 个" % [l.id, bags, s.board.bags().size()])
+		t.eq(s.board.item_count() - bags + s.storage.item_count(), rest, "%s：其余 %d 件不在棋盘就在暂存区" % [l.id, rest])
+#endregion
+
+
+#region 结算与局外
+static func run_result_and_meta(t: TestCase) -> void:
+	t.begin("结算与局外 · 撤离带出棋盘上的、战败全失；仓库、账、存档往返")
+
+	var c := _content()
+	var kit := _loadout(c, &"standard")
+	var s := RunState.start(c.chapter, 5, c.items, c.enemies, c.sets, kit.items)
+	s.pick_spawn(s.map.entry_ids[0])
+	t.is_null(RunResult.settle(s), "没结束算不出账")
+
+	# 撤离：棋盘上的全部（含包）按价值计；暂存区的只提一句
+	s.phase = RunState.Phase.EXTRACTED
+	s.end_reason = &"extract"
+	var r := RunResult.settle(s)
+	t.not_null(r, "结束了就有账")
+	t.check(r.is_extracted(), "撤离")
+	t.eq(r.carried.size(), s.board.item_count(), "背出去的 = 棋盘上的全部（含包）")
+	t.eq(r.value, _sum_value(s.board), "价值 = 每件 ItemValue 之和")
+	t.eq(r.left_behind, s.storage.item_count(), "暂存区里的记成遗落")
+	t.eq(r.left_value, _sum_value(s.storage), "遗落的价值")
+	t.eq(r.balance, s.wallet.balance, "钱")
+	t.eq((r.to_dict()["items"] as Array).size(), r.carried.size(), "历史只写 id")
+
+	var m := MetaState.new()
+	var got := m.absorb(r)
+	t.eq(int(got["items"]), r.carried.size(), "进仓库 %d 件" % r.carried.size())
+	t.eq(m.warehouse.item_count(), r.carried.size(), "仓库里就是这些")
+	t.eq(m.funds, r.balance, "钱带出来了")
+	t.eq(m.score, r.value, "累计价值")
+	t.eq(m.best_value, r.value, "单局最高")
+	t.eq([m.runs, m.extractions, m.deaths], [1, 1, 0], "一局、一撤、零败")
+	t.eq(m.history.size(), 1, "记了一条")
+
+	# 战败：什么都没有
+	var s2 := RunState.start(c.chapter, 6, c.items, c.enemies, c.sets, kit.items)
+	s2.pick_spawn(s2.map.entry_ids[0])
+	s2.phase = RunState.Phase.DEFEATED
+	s2.end_reason = &"vitality_depleted"
+	var r2 := RunResult.settle(s2)
+	t.check(not r2.is_extracted() and r2.carried.is_empty() and r2.value == 0 and r2.balance == 0, "战败：没有背出去的、没有价值、没有钱")
+	var before := m.warehouse.item_count()
+	m.absorb(r2)
+	t.eq(m.warehouse.item_count(), before, "仓库没变")
+	t.eq([m.runs, m.extractions, m.deaths], [2, 1, 1], "两局、一撤、一败")
+
+	# 第二次撤离的 uid 与第一次撞号（每局从 1 重编）：仓库重新编号，一件不丢
+	var s3 := RunState.start(c.chapter, 7, c.items, c.enemies, c.sets, kit.items)
+	s3.phase = RunState.Phase.EXTRACTED
+	s3.end_reason = &"extract"
+	var r3 := RunResult.settle(s3)
+	m.absorb(r3)
+	t.eq(m.warehouse.item_count(), before + r3.carried.size(), "撞号的也全进了仓库")
+	var uids := {}
+	for inst in m.warehouse.items():
+		uids[(inst as ItemInstance).uid] = true
+	t.eq(uids.size(), m.warehouse.item_count(), "仓库里 uid 两两不同")
+
+	# 存档往返
+	var text := MetaSave.to_text(m)
+	var back := MetaSave.from_text(text, c.items)
+	t.not_null(back, "读得回来")
+	t.eq(MetaSave.to_text(back), text, "再存逐字节相同")
+	t.eq(back.warehouse.item_count(), m.warehouse.item_count(), "仓库件数一样")
+	t.eq([back.funds, back.score, back.runs, back.deaths, back.history.size()], [m.funds, m.score, m.runs, m.deaths, m.history.size()], "账一样")
+	t.is_null(MetaSave.from_text("{\"version\": 99}", c.items), "版本不对 → null")
+	t.is_null(MetaSave.from_text("nope", c.items), "坏文件 → null")
+	t.eq(MetaSave.write(m, META), OK, "真写 user://")
+	t.check(MetaSave.exists(META), "文件在")
+	t.eq(MetaSave.read(c.items, META).warehouse.item_count(), m.warehouse.item_count(), "读回来一样")
+	MetaSave.remove(META)
+	t.check(not MetaSave.exists(META), "删掉了")
+#endregion
+
+
+#region 状态机
+static func run_flow_screens(t: TestCase) -> void:
+	t.begin("场景流 · 主菜单 → 开局 → 地图 → 打一场（回放 → 战利品）→ 地图；存档回主菜单再继续")
+
+	var c := _content()
+	var f := _flow(c)
+	var seen: Array = []
+	f.screen_changed.connect(func(s: int, _p: Dictionary): seen.append(s))
+	f.to_main_menu()
+	t.eq(f.screen, GameFlow.Screen.MAIN_MENU, "开在主菜单")
+	t.check(not f.has_save(), "还没有存档")
+	f.new_run()
+	t.eq(f.screen, GameFlow.Screen.SETUP, "新的一局 → 开局屏")
+
+	var kit := _loadout(c, &"standard")
+	var found := _seed_with(c, &"battle", kit.items)
+	t.check(not found.is_empty(), "找得到出生点旁边就是战斗点的种子")
+	if found.is_empty():
+		return
+	var started: Array = []
+	f.run_started.connect(func(st: RunState): started.append(st))
+	var run := f.begin(c.chapter, kit, int(found["seed"]))
+	t.not_null(run, "开局")
+	t.eq(f.screen, GameFlow.Screen.MAP, "→ 地图")
+	t.eq(started.size(), 1, "发了 run_started")
+	t.eq(run.phase, RunState.Phase.PICK_SPAWN, "先挑出生点")
+	t.check(f.pick_spawn(int(found["entry"])), "挑出生点")
+	t.check(not f.extract(), "不在撤离点上撤不了")
+
+	t.check(f.step_to(int(found["next"])), "走上战斗点")
+	t.eq(f.screen, GameFlow.Screen.BATTLE, "先看回放")
+	var p := f.last_payload
+	t.check(p.get("result", null) is BattleResult and bool(p.get("won", false)), "回放带着结果，赢了（血 10000）")
+	t.check(p.get("player", null) is CombatantSpec and p.get("enemy", null) is CombatantSpec, "双方的战斗单位都在（回放要按 uid 查名字）")
+	t.check((p.get("enemy_content", {}) as Dictionary).has("enemy"), "对手的内容在（叫什么、几档）")
+	t.eq(int(run.tally["battles_won"]), 1, "计了一场胜")
+	f.resume()
+	if run.pending_loot != null:
+		t.eq(f.screen, GameFlow.Screen.LOOT, "有掉落 → 战利品屏")
+		var n := f.take_all_loot()
+		t.check(n > 0 and run.pending_loot == null, "全拿了 %d 件" % n)
+	t.eq(f.screen, GameFlow.Screen.MAP, "看完回地图")
+	t.check(run.map.get_node(int(found["next"])).is_visited(), "战斗点用过了")
+
+	# 存档回主菜单，再继续
+	var at := run.travel.current_id
+	t.check(f.save_and_quit(), "存档回主菜单")
+	t.eq(f.screen, GameFlow.Screen.MAIN_MENU, "在主菜单")
+	t.is_null(f.run, "手里没有局了")
+	t.check(f.has_save(), "有存档")
+	t.check(f.continue_run(), "继续上次")
+	t.eq(f.screen, GameFlow.Screen.MAP, "→ 地图")
+	t.eq(f.run.travel.current_id, at, "还站在原地")
+	t.eq(int(f.run.tally["battles_won"]), 1, "计数跟着存档")
+	t.check(seen.has(GameFlow.Screen.SETUP) and seen.has(GameFlow.Screen.BATTLE), "屏的切换都发了信号")
+	_cleanup()
+
+
+static func run_flow_search_and_shop(t: TestCase) -> void:
+	t.begin("场景流 · 搜索点与商店是叠层，会话结束流程自己往下走")
+
+	var c := _content()
+	var kit := _loadout(c, &"standard")
+	for type in [&"search", &"shop"]:
+		var found := _seed_with(c, type, kit.items)
+		t.check(not found.is_empty(), "找得到出生点旁边就是%s的种子" % MapNodeStyle.of(type)["label"])
+		if found.is_empty():
+			continue
+		var f := _flow(c)
+		f.begin(c.chapter, kit, int(found["seed"]))
+		f.pick_spawn(int(found["entry"]))
+		f.step_to(int(found["next"]))
+		var want := GameFlow.Screen.SEARCH if type == &"search" else GameFlow.Screen.SHOP
+		t.eq(f.screen, want, "踩上去 → 叠层")
+		var session = f.last_payload.get("session", null)
+		t.not_null(session, "带着会话")
+		if type == &"search":
+			t.check(not f.run.map.get_node(int(found["next"])).is_visited(), "搜着的时候点还没用过")
+			(session as SearchSession).search()
+			# 搜一次可能遭遇 → 会话结束 → 回放；也可能没事 → 还在搜
+			if f.screen == GameFlow.Screen.SEARCH:
+				(session as SearchSession).leave()
+		else:
+			(session as ShopSession).leave()
+		var seen := _settle_overlays(f)
+		t.eq(f.screen, GameFlow.Screen.MAP, "会话结束后流程自己回到地图（经过 %s）" % str(seen))
+		t.check(f.run.map.get_node(int(found["next"])).is_visited(), "点用过了")
+
+
+static func run_flow_defeat(t: TestCase) -> void:
+	t.begin("场景流 · 打输战败：回放 → 结算（战败）→ 局外记一败，存档删掉")
+
+	var c := _content()
+	var found := _seed_with(c, &"battle")
+	if found.is_empty():
+		t.check(false, "找不到种子")
+		return
+	var f := _flow(c, 1.0)
+	var empty := LoadoutDef.new()      # 空手：肯定输
+	f.begin(c.chapter, empty, int(found["seed"]))
+	f.pick_spawn(int(found["entry"]))
+	f.run.vitality.spend(f.run.vitality.current - 1, &"test")
+	t.check(f.save(), "先存一份")
+	var ended: Array = []
+	f.run_ended.connect(func(r: RunResult): ended.append(r))
+	t.check(f.step_to(int(found["next"])), "走上战斗点")
+	t.eq(f.screen, GameFlow.Screen.BATTLE, "那一场的回放还给看")
+	t.check(not bool(f.last_payload.get("won", true)), "输了")
+	t.check(f.run.is_over(), "一局结束了")
+	f.resume()
+	t.eq(f.screen, GameFlow.Screen.RESULT, "→ 结算")
+	t.eq(ended.size(), 1, "发了 run_ended")
+	var r: RunResult = f.last_payload.get("result", null)
+	t.check(r != null and not r.is_extracted() and r.battles_lost == 1, "战败的账：输了一场")
+	t.check(not f.pick_spawn(int(found["entry"])) and not f.step_to(int(found["entry"])), "结束了走不了")
+	f.finish_result()
+	t.eq(f.screen, GameFlow.Screen.META, "→ 局外")
+	t.eq([f.meta.runs, f.meta.deaths, f.meta.warehouse.item_count()], [1, 1, 0], "局外记了一败，仓库空")
+	t.check(MetaSave.exists(META), "局外存了")
+	t.check(not f.has_save(), "这一局的存档删掉了")
+	f.finish_result()
+	t.eq(f.meta.runs, 1, "再按一次不会记两遍")
+	f.to_main_menu()
+	t.eq(f.screen, GameFlow.Screen.MAIN_MENU, "回主菜单")
+	_cleanup()
+
+
+static func run_flow_extract(t: TestCase) -> void:
+	t.begin("场景流 · 走到最近的免费撤离点撤离：结算（撤离）→ 仓库进了棋盘上的东西")
+
+	var c := _content()
+	var kit := _loadout(c, &"scavenger")
+	var f := _flow(c)
+	var run: RunState = null
+	var target := -1
+	for seed in range(1, 40):
+		run = f.begin(c.chapter, kit, seed)
+		if run == null:
+			continue
+		var entry: int = run.map.entry_ids[0]
+		f.pick_spawn(entry)
+		var dist := MapNavigator.distance_map(run.map, entry)
+		var best := 999
+		for id in run.map.node_ids():
+			var n := run.map.get_node(id)
+			if n.type == &"extract" and PaidExtracts.fee_of(n) == 0 and dist.has(id) and int(dist[id]) < best:
+				best = int(dist[id])
+				target = id
+		if target >= 0:
+			break
+	t.check(run != null and target >= 0, "找得到一张图，出生点能走到免费撤离点 %d" % target)
+	if run == null or target < 0:
+		return
+	var to_target := MapNavigator.distance_map(run.map, target)
+	var guard := 0
+	while run.travel.current_id != target and not run.is_over() and guard < 60:
+		guard += 1
+		var next := -1
+		for id in run.travel.available_moves():
+			if to_target.has(id) and (next < 0 or int(to_target[id]) < int(to_target[next])):
+				next = id
+		t.check(f.step_to(next), "走向 %d（第 %d 步）" % [next, guard])
+		_settle_overlays(f)
+	t.eq(run.travel.current_id, target, "站在撤离点上")
+	t.eq(f.screen, GameFlow.Screen.MAP, "在地图上")
+	var board_items := run.board.item_count()
+	var board_value := _sum_value(run.board)
+	t.check(f.extract(), "撤离")
+	t.eq(f.screen, GameFlow.Screen.RESULT, "→ 结算")
+	var r: RunResult = f.last_payload.get("result", null)
+	t.check(r != null and r.is_extracted(), "撤离的账")
+	t.eq(r.carried.size(), board_items, "背出去的 = 棋盘上的 %d 件" % board_items)
+	t.eq(r.value, board_value, "价值对")
+	t.eq(r.battles_won, int(run.tally["battles_won"]), "打赢的场数跟着计数")
+	f.finish_result()
+	t.eq(f.screen, GameFlow.Screen.META, "→ 局外")
+	t.eq(f.meta.warehouse.item_count(), board_items, "仓库里就是棋盘上的那些")
+	t.eq(f.meta.funds, r.balance, "钱带出来了")
+	t.eq(MetaSave.read(c.items, META).warehouse.item_count(), board_items, "局外存了，读回来一样")
+	_cleanup()
+#endregion
+
+
+#region 导演
+static func frame_director(t: TestCase, root: Window) -> void:
+	t.begin("导演 · 真的换屏：主菜单 → 开局 → 地图 → 战斗叠层 → 地图；存档回主菜单再继续")
+
+	var c := _content()
+	var kit := _loadout(c, &"standard")
+	var found := _seed_with(c, &"battle", kit.items)
+	var game = load(GAME).instantiate()
+	game.save_path = SAVE
+	game.meta_path = META
+	root.add_child(game)
+	var flow: GameFlow = game.flow
+	t.not_null(flow, "导演持有 flow")
+	t.check(game.base() != null and game.base().screen == GameFlow.Screen.MAIN_MENU, "开在主菜单")
+	t.is_null(game.overlay(), "没有叠层")
+	t.check(flow.chapters.size() >= 1 and flow.loadouts.size() >= 2, "装回了章节与开局装备")
+
+	flow.new_run()
+	var setup = game.base()
+	t.eq(setup.screen, GameFlow.Screen.SETUP, "→ 开局屏")
+	setup.choose_chapter(0)
+	setup.choose_loadout(0)
+	if found.is_empty():
+		t.check(false, "找不到种子")
+		game.queue_free()
+		return
+	setup.set_run_seed(int(found["seed"]))
+	# 开局屏的第一套装备未必是 standard：按 id 挑
+	for i in flow.loadouts.size():
+		if flow.loadouts[i].id == kit.id:
+			setup.choose_loadout(i)
+	t.check(setup.depart(), "出发")
+	var map = game.base()
+	t.eq(map.screen, GameFlow.Screen.MAP, "→ 地图")
+	t.check(map.pick_spawn(int(found["entry"])), "挑出生点")
+	map.toggle_bag()
+	t.check(map.bag_open(), "背包叠在地图上")
+	map.toggle_bag()
+	t.check(not map.bag_open(), "收起了")
+	t.check(map.step(int(found["next"])), "走上战斗点")
+	t.check(game.overlay() != null and game.overlay().screen == GameFlow.Screen.BATTLE, "战斗回放叠上来了")
+	t.eq(game.base(), map, "地图还在底下")
+	game.overlay().proceed()
+	if game.overlay() != null and game.overlay().screen == GameFlow.Screen.LOOT:
+		game.overlay().take_all()
+	t.is_null(game.overlay(), "看完了叠层撤掉")
+	t.eq(game.base(), map, "还是那张地图")
+	flow.save_and_quit()
+	t.check(game.base().screen == GameFlow.Screen.MAIN_MENU and game.base() != map, "存档回主菜单")
+	t.check(flow.continue_run(), "继续上次")
+	t.eq(game.base().screen, GameFlow.Screen.MAP, "→ 地图")
+	flow.show_meta()
+	t.eq(game.base().screen, GameFlow.Screen.META, "局外屏")
+	flow.to_main_menu()
+	game.queue_free()
+	_cleanup()
+#endregion

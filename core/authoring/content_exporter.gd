@@ -50,6 +50,10 @@ static func export_economy_rules(rules: EconomyRules) -> Dictionary:
 	return _dump(rules)
 
 
+static func export_loadout(def: LoadoutDef) -> Dictionary:
+	return _dump(def)
+
+
 ## 带 type 的导出，用于抽象基类的子对象
 static func _dump(obj: Object, with_type: bool = false) -> Dictionary:
 	var out := {}

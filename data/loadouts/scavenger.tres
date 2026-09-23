@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="LoadoutDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/loadout_def.gd" id="1_e48to"]
+
+[resource]
+script = ExtResource("1_e48to")
+id = &"scavenger"
+display_name = "拾荒者"
+description = "三个包、只带轻武器：空间大，能背更多东西出去；打不过就走，偏搜索路线的选择"
+items = Array[StringName]([&"bag_leather", &"bag_long", &"bag_small", &"knife", &"pistol", &"crowbar", &"medkit", &"ration"])

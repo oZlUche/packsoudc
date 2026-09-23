@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="背包搜打撤"
-run/main_scene="res://ui/launcher.tscn"
+run/main_scene="res://ui/game/game.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 

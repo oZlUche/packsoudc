@@ -31,6 +31,8 @@ class Context:
 	var node_rules: Dictionary = {}
 	## id -> EconomyRules。章节对着它查
 	var economy_rules: Dictionary = {}
+	## id -> LoadoutDef
+	var loadouts: Dictionary = {}
 
 	func register_buff(def: BuffDef) -> void:
 		if def != null and def.id != &"":
@@ -59,6 +61,10 @@ class Context:
 	func register_economy_rules(rules: EconomyRules) -> void:
 		if rules != null and rules.id != &"":
 			economy_rules[rules.id] = rules
+
+	func register_loadout(def: LoadoutDef) -> void:
+		if def != null and def.id != &"":
+			loadouts[def.id] = def
 
 	## 道具里带某个标签的有几件。批量导入时才有意义 —— 单独导一个敌人时上下文是空的，
 	## 这类「对着别的东西查」的校验就跳过（见 _validate_enemy）
@@ -129,6 +135,35 @@ static func import_economy_rules(data: Dictionary, ctx: Context, report: ImportR
 	_validate_economy_rules(rules, report)
 	ctx.register_economy_rules(rules)
 	return rules
+
+
+## 开局装备（M6）。「对着道具查」的两条只在批量导入（上下文里有道具）时生效
+static func import_loadout(data: Dictionary, ctx: Context, report: ImportReport) -> LoadoutDef:
+	var def := LoadoutDef.new()
+	_fill(def, data, "", ctx, report)
+	_validate_loadout_def(def, ctx, report)
+	ctx.register_loadout(def)
+	return def
+
+
+## 清单不能空；每件得存在；至少一个包 —— 棋盘上只有包里的东西参战（3.2），没有包一格都用不了
+static func _validate_loadout_def(def: LoadoutDef, ctx: Context, report: ImportReport) -> void:
+	if def.id == &"":
+		report.error("id", "开局装备必须有 id")
+	if def.items.is_empty():
+		report.error("items", "开局装备至少带一件")
+		return
+	if ctx.items.is_empty():
+		return
+	var has_bag := false
+	for i in def.items.size():
+		var item: ItemDef = ctx.items.get(def.items[i], null)
+		if item == null:
+			report.error("items[%d]" % i, "找不到道具 '%s'" % def.items[i])
+		elif item.is_bag:
+			has_bag = true
+	if not has_bag:
+		report.error("items", "开局至少带一个包：棋盘上只有包里的东西参战（3.2），没有包一格都用不了")
 
 
 ## 钱的数全得非负；商店至少一格、至少有一档稀有度能上架；刷新不能越刷越便宜

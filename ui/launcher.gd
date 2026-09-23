@@ -1,16 +1,22 @@
-## 启动选择器 —— 项目的主场景。
+## 启动选择器 —— 开发期的入口。
 ##
-## 现在有好几个能单独跑的场景，把主场景写死成其中一个，其余的就只能在 Godot 里
-## 手动挑（F6），命令行还得记住路径。这里列出来，F5 进去点一下就行。
+## 有好几个能单独跑的场景（沙盒、编辑器），命令行还得记住路径。这里列出来，点一下就行。
+## M6 之后项目的主场景是正式游戏（`ui/game/game.tscn`），这里退化成调试入口：
+## 从主菜单的「开发工具」进来，F1 回去。
 ##
-## [b]它只负责切场景，不碰任何游戏状态。[/b] 真正的场景流（进关、战斗、结算）
-## 是 M6 的事，那时候这个选择器会退化成一个调试入口，或者直接删掉。
+## [b]它只负责切场景，不碰任何游戏状态。[/b]
 extends Control
 
 ## 说明文字的折行宽度。见 _wrapped 里的注释。
 const CARD_WIDTH := 500
 
 const ENTRIES := [
+	{
+		"scene": "res://ui/game/game.tscn",
+		"title": "正式游戏",
+		"desc": "M6 场景流（也是项目的主场景）：主菜单 → 开局选装备 → 地图 ⇄ 战斗 / 搜刮 / 商店 / 事件 / 休息 → 结算 → 仓库",
+		"keys": "地图上 B 开背包　F 缩到放下　F1 回这里",
+	},
 	{
 		"scene": "res://ui/inventory/inventory_sandbox.tscn",
 		"title": "背包整理沙盒",
@@ -68,7 +74,7 @@ func _build() -> void:
 	center.add_child(col)
 
 	col.add_child(_label("背包搜打撤", 28, UiPalette.FG))
-	col.add_child(_label("开发期入口。正式场景流是 M6 的事。", 13, UiPalette.DIM))
+	col.add_child(_label("第一项是正式游戏，其余是开发期的沙盒与编辑器。", 13, UiPalette.DIM))
 	col.add_child(HSeparator.new())
 
 	for entry in ENTRIES:

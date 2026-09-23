@@ -1,0 +1,333 @@
+## 地图屏（M6）：一局的主屏。挑出生点 → 点相邻的点走一步 → 事件由 [GameFlow] 排成叠层一屏一屏来 → 撤离。
+##
+## 它是地图沙盒（M3-6 → M5）的正式版：同一个 [MapView]，同一份 HUD，日志在右栏；沙盒的换种子 / 重开 / 读档在这里没有，
+## 那些是开局屏与主菜单的事。「背包」把整理面板叠在地图上，随时开；撤离按钮只在撤离点上亮。
+## 所有动作都是公开方法，鼠标只是调它们；测试直接调。
+extends GameScreen
+
+const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
+const SIDE_WIDTH := 340
+
+var _run: RunState = null
+var _view: MapView
+var _hud: Label
+var _preview: Label
+var _enemy_line: Label
+var _status: Label
+var _routes_box: VBoxContainer
+var _log: RichTextLabel
+var _extract_btn: Button
+var _bag: Control = null
+
+
+func open(_payload: Dictionary) -> void:
+	_run = flow.run
+	_build()
+	_adopt()
+
+
+func refresh() -> void:
+	_after_move()
+
+
+#region 公开动作
+func pick_spawn(id: int) -> bool:
+	if not flow.pick_spawn(id):
+		return false
+	_view.current_id = id
+	_view.bold_route = _route_index_of_entry(id)
+	_after_move()
+	_rebuild_routes()
+	var route := _route_of_entry(id)
+	_say("从出生点 %d 出发（%s）。点相邻的点走一步；B 开背包" % [id, String(route.get("style", "?"))])
+	return true
+
+
+func step(to_id: int) -> bool:
+	return flow.step_to(to_id)
+
+
+func extract() -> bool:
+	var node := _run.current_node()
+	if not flow.extract():
+		_say("撤不了：不在撤离点上，或付不起（%d 币）" % (_run.events.extract_fee(node) if node != null else 0))
+		return false
+	return true
+
+
+## 背包整理面板叠在地图上，再按一次收起
+func toggle_bag() -> void:
+	if _bag != null:
+		_bag.queue_free()
+		_bag = null
+		return
+	var shade := ColorRect.new()
+	shade.color = Color(0.04, 0.05, 0.07, 0.7)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(shade)
+	_bag = shade
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.add_child(center)
+	var panel := _panel(16)
+	center.add_child(panel)
+	var col := _vbox(10)
+	panel.add_child(col)
+	var head := _hbox(12)
+	head.add_child(_label("背包", 18, UiPalette.FG))
+	head.add_child(_button("收起（B）", toggle_bag, 12))
+	col.add_child(head)
+	var inv := InventoryPanelScript.new()
+	inv.setup(_run, font)
+	col.add_child(inv)
+
+
+func bag_open() -> bool:
+	return _bag != null
+#endregion
+
+
+#region 接线：RunState 与 NodeEvents 的信号写进日志
+func _adopt() -> void:
+	_view.graph = _run.map
+	_view.current_id = _run.travel.current_id if _run.phase != RunState.Phase.PICK_SPAWN else -1
+	_view.reachable = {}
+	_view.bold_route = -1
+	_run.travel.moved.connect(_on_moved)
+	_run.travel.refused.connect(func(_i: MoveIntent, why: String): _say("走不了：" + why))
+	_run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh_hud())
+	_run.vitality.changed.connect(func(_c: int, _m: int, _d: int, _r: StringName): _refresh_hud())
+	var ev := _run.events
+	ev.rewarded.connect(func(_n: MapNode, amount: int): _note("　进账 %d 币" % amount))
+	ev.revealed.connect(func(n: MapNode, type: StringName):
+		_note("　点 %d 是个「?」：原来是 %s" % [n.id, MapNodeStyle.of(type)["label"]]))
+	ev.battle_finished.connect(func(n: MapNode, result: BattleResult, won: bool):
+		var who := enemy_preview(n.id).get_slice("　", 0)
+		_note("　打 %s：%s，%.1f 秒" % [who if who != "" else "敌人", "赢了" if won else ("平局，按输算" if result.is_draw() else "输了"), result.duration_sec()]))
+	ev.search_closed.connect(func(_n: MapNode, _haul: GridInventory, why: StringName): _note("　搜索结束（%s）" % why))
+	ev.rested.connect(func(_n: MapNode, got: int): _note("　休息：体力 +%d" % got))
+	ev.extract_reached.connect(func(_n: MapNode, fee: int):
+		_note("　到了撤离点%s：按「撤离」结束这一局" % ("（付费：%d 币，%s）" % [fee, "付得起" if _run.wallet.can_afford(fee) else "钱不够"] if fee > 0 else "")))
+	_run.phase_changed.connect(func(_p: int, _why: StringName): _refresh_hud())
+	_rebuild_routes()
+	_after_move()
+	if _run.phase == RunState.Phase.PICK_SPAWN:
+		_say("%s　种子 %d：%d 个点。挑一个出生点（绿圈的「生」）开始" % [
+			_run.chapter.display_name, _run.run_seed, _run.map.node_count()])
+	else:
+		_say("%s　种子 %d：在点 %d 上，行动点 %d" % [_run.chapter.display_name, _run.run_seed, _run.travel.current_id, _run.travel.clock.total])
+
+
+func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
+	_view.current_id = intent.to_id
+	var n := _run.map.get_node(intent.to_id)
+	var what: String = MapNodeStyle.of(n.type)["label"]
+	_note(("→ %d %s（花 %d 点）" if first_visit else "→ %d %s，穿行（花 %d 点，这里用过了）") % [intent.to_id, what, intent.action_cost])
+	_after_move()
+
+
+func _after_move() -> void:
+	if _run == null or _view == null:
+		return
+	var reach := {}
+	if _run.phase == RunState.Phase.ON_MAP:
+		for id in _run.travel.available_moves():
+			reach[id] = true
+	_view.reachable = reach
+	_view.refresh()
+	_refresh_hud()
+	var node := _run.current_node()
+	_extract_btn.disabled = node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract"
+
+
+func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
+	if button != MOUSE_BUTTON_LEFT or _bag != null:
+		return
+	if _run.phase == RunState.Phase.PICK_SPAWN:
+		if not pick_spawn(id):
+			_say("先挑一个出生点（绿圈的「生」）")
+	else:
+		step(id)
+
+
+func _on_node_hovered(id: int) -> void:
+	_enemy_line.text = enemy_preview(id)
+	if _run.phase == RunState.Phase.PICK_SPAWN:
+		_view.bold_route = _route_index_of_entry(id) if id >= 0 else -1
+		_preview.text = ""
+		return
+	if id < 0 or not _view.reachable.has(id):
+		_preview.text = ""
+		return
+	var intent := MapNavigator.resolve_step(_run.map, _run.travel.current_id, id)
+	var n := _run.map.get_node(id)
+	if intent == null:
+		_preview.text = ""
+		return
+	_preview.text = "→ %s　花 %d 行动点%s" % [MapNodeStyle.of(n.type)["label"], intent.action_cost, "（用过了，只是穿行）" if n.is_visited() else ""]
+
+
+## 这个点里的敌人一行摘要（5.10：全图可见）；没有敌人就是空串
+func enemy_preview(id: int) -> String:
+	if _run == null or id < 0 or not _run.map.has_node(id):
+		return ""
+	var content := _run.map.get_node(id).content
+	if not EnemyKit.has_enemy(content):
+		return ""
+	var line := EnemyKit.summary(content, flow.enemies, _run.pool, flow.items)
+	if _run.drop_rule != null:
+		var ctx := LootContext.new()
+		ctx.difficulty = _run.chapter.difficulty
+		ctx.add_source(MetaDropBonus.new())
+		ctx.add_source(MapDropBonus.new())
+		line += "　预计掉 %.1f 件，珍宝 %.0f%%" % [
+			DropResolver.expected_count(content, _run.drop_rule, ctx, flow.items),
+			DropResolver.treasure_chance(_run.drop_rule, ctx) * 100.0]
+	if _run.economy != null:
+		var depth: float = EnemyPlacer.depths_of(_run.map).get(id, 0.0)
+		line += "　打赢 +%d 币" % _run.economy.battle_reward(int(content.get("strength", 0)), depth, _run.chapter.difficulty)
+	return line
+
+
+func _refresh_hud() -> void:
+	if _run == null or _hud == null:
+		return
+	if _run.phase == RunState.Phase.PICK_SPAWN:
+		_hud.text = "行动点 —　　挑出生点　　体力 %d/%d　　货币 %d　　暂存区 %d 件" % [
+			_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count()]
+		return
+	var t := _run.travel
+	var extract_near := MapNavigator.nearest_of_type(_run.map, t.current_id, &"extract")
+	var rest := MapNavigator.nearest_of_type(_run.map, t.current_id, &"rest")
+	var core := MapNavigator.nearest_of_type(_run.map, t.current_id, &"core")
+	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d　　暂存区 %d 件" % [
+		t.clock.total,
+		str(extract_near["steps"]) if int(extract_near["id"]) >= 0 else "—",
+		str(rest["steps"]) if int(rest["id"]) >= 0 else "—",
+		str(core["steps"]) if int(core["id"]) >= 0 else "—",
+		_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count()]
+
+
+func _route_of_entry(id: int) -> Dictionary:
+	for route in _run.map.routes:
+		if int(route.get("entry_id", -1)) == id:
+			return route
+	return {}
+
+
+func _route_index_of_entry(id: int) -> int:
+	for i in _run.map.routes.size():
+		if int(_run.map.routes[i].get("entry_id", -1)) == id:
+			return i
+	return -1
+
+
+## 右栏：挑出生点阶段每条路线一张卡 —— 这是这一章第一个真正的决策；开局之后收起
+func _rebuild_routes() -> void:
+	for child in _routes_box.get_children():
+		child.queue_free()
+	if _run.phase != RunState.Phase.PICK_SPAWN:
+		return
+	_routes_box.add_child(_label("路线：挑一个出生点", 14, UiPalette.FG))
+	var g := _run.map
+	for i in g.routes.size():
+		var route: Dictionary = g.routes[i]
+		var entry := int(route.get("entry_id", -1))
+		var card := Button.new()
+		card.text = "出生点 %d · %s → %s\n风险 %.1f　收益 %.1f" % [
+			entry, route.get("style", "?"),
+			"核心（打 BOSS）" if String(route.get("ends_at", "core")) == "core" else "撤离点（可以不打）",
+			float(route.get("risk_x100", 0)) / 100.0, float(route.get("reward_x100", 0)) / 100.0]
+		card.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		card.add_theme_font_override("font", font)
+		card.add_theme_font_size_override("font_size", 13)
+		card.add_theme_color_override("font_color", MapNodeStyle.route_color(i))
+		var idx := i
+		card.mouse_entered.connect(func(): if _run.phase == RunState.Phase.PICK_SPAWN: _view.bold_route = idx)
+		card.mouse_exited.connect(func(): if _run.phase == RunState.Phase.PICK_SPAWN: _view.bold_route = -1)
+		card.pressed.connect(func(): pick_spawn(entry))
+		_routes_box.add_child(card)
+#endregion
+
+
+#region 界面
+func _build() -> void:
+	_backdrop()
+	var row := _hbox(0)
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(row)
+
+	var mid := _vbox(0)
+	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(mid)
+	_hud = _label("", 14, UiPalette.FG)
+	var hud_box := PanelContainer.new()
+	var st := StyleBoxFlat.new()
+	st.bg_color = UiPalette.PANEL
+	st.set_content_margin_all(8)
+	hud_box.add_theme_stylebox_override("panel", st)
+	hud_box.add_child(_hud)
+	mid.add_child(hud_box)
+	_view = MapView.new()
+	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_view.node_pressed.connect(_on_node_pressed)
+	_view.node_hovered.connect(_on_node_hovered)
+	mid.add_child(_view)
+	_preview = _label("", 13, UiPalette.FG)
+	_preview.custom_minimum_size.y = 22
+	mid.add_child(_preview)
+	_enemy_line = _label("", 13, UiPalette.DIM)
+	_enemy_line.custom_minimum_size.y = 22
+	mid.add_child(_enemy_line)
+
+	var side := _panel(12)
+	side.custom_minimum_size.x = SIDE_WIDTH
+	row.add_child(side)
+	var col := _vbox(8)
+	side.add_child(col)
+	var spacer := Control.new()
+	spacer.custom_minimum_size.y = 26      # 右上角是 DevNav 的按钮
+	col.add_child(spacer)
+	_status = _wrapped("", 12, UiPalette.DIM, SIDE_WIDTH - 30)
+	col.add_child(_status)
+	var buttons := _hbox(6)
+	buttons.add_child(_button("背包（B）", toggle_bag, 13))
+	_extract_btn = _button("撤离", func(): extract(), 13)
+	_extract_btn.disabled = true
+	buttons.add_child(_extract_btn)
+	col.add_child(buttons)
+	col.add_child(_button("存档并回主菜单", func(): flow.save_and_quit(), 12))
+	col.add_child(HSeparator.new())
+	_routes_box = _vbox(6)
+	col.add_child(_routes_box)
+	col.add_child(HSeparator.new())
+	col.add_child(_label("日志", 14, UiPalette.FG))
+	_log = _log_box(12)
+	col.add_child(_log)
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
+		return
+	match key.keycode:
+		KEY_B:
+			toggle_bag()
+		KEY_F:
+			_view.fit()
+		KEY_1:
+			_view.zoom = 1.0
+			_view.center()
+		_:
+			return
+	get_viewport().set_input_as_handled()
+
+
+func _say(text: String) -> void:
+	_status.text = text
+
+
+func _note(text: String) -> void:
+	_log.append_text(text + "\n")
+#endregion

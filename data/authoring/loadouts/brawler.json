@@ -1,0 +1,14 @@
+{
+  "id": "brawler",
+  "display_name": "打手",
+  "description": "霰弹枪与剁刀、防弹衣、兴奋剂：火力足，空间紧；偏战斗路线的选择",
+  "items": [
+    "bag_leather",
+    "bag_leather",
+    "shotgun",
+    "cleaver",
+    "armor",
+    "stim",
+    "mag"
+  ]
+}

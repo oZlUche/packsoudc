@@ -1,0 +1,48 @@
+## 局外状态的存档文件（M6）：`MetaState.to_dict()` → JSON → `user://meta.json`。与 [RunSave] 同一套做法：
+## 带版本号、只写 id、内容库由调用方给。读不到（第一次玩、文件坏了、版本不对）返回 null，调用方从零开始。
+class_name MetaSave
+extends RefCounted
+
+const DEFAULT_PATH := "user://meta.json"
+
+
+static func exists(path: String = DEFAULT_PATH) -> bool:
+	return FileAccess.file_exists(path)
+
+
+static func write(meta: MetaState, path: String = DEFAULT_PATH) -> Error:
+	if meta == null:
+		return ERR_INVALID_PARAMETER
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f == null:
+		return FileAccess.get_open_error()
+	f.store_string(to_text(meta))
+	f.close()
+	return OK
+
+
+static func to_text(meta: MetaState) -> String:
+	return JSON.stringify(meta.to_dict(), "  ", false) + "\n"
+
+
+static func read(items: ItemDatabase, path: String = DEFAULT_PATH) -> MetaState:
+	if not FileAccess.file_exists(path):
+		return null
+	return from_text(FileAccess.get_file_as_string(path), items)
+
+
+static func from_text(text: String, items: ItemDatabase) -> MetaState:
+	var parsed = JSON.parse_string(text)
+	if not (parsed is Dictionary):
+		push_warning("MetaSave: 存档不是合法的 JSON 对象")
+		return null
+	var d := parsed as Dictionary
+	if int(d.get("version", -1)) != MetaState.SAVE_VERSION:
+		push_warning("MetaSave: 存档版本 %s，本版只认 %d —— 迁移还没写" % [str(d.get("version", "?")), MetaState.SAVE_VERSION])
+		return null
+	return MetaState.from_dict(d, items)
+
+
+static func remove(path: String = DEFAULT_PATH) -> void:
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)

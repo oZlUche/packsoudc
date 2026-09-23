@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.51 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M5 落地、M6 场景流未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.52 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M5 落地、M6 场景流进行中（M6-1 骨架完成；现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -67,9 +67,9 @@ UI 调用服务方法（`InventoryService.move(...)`），服务改完状态后�
 
 ```
                       ┌──────────────────────────────┐
-                      │  GameDirector (autoload)      │  场景流状态机
-                      │  RunState    (autoload)       │  当前 run 全部数据
-                      │  EventBus    (autoload)       │  逻辑→UI 单向广播
+                      │  GameDirector (ui/game 场景根) │  持有 GameFlow —— 场景流状态机（纯逻辑，8 节）
+                      │  RunState / MetaState (纯逻辑)│  一局 / 跨局的全部数据，flow 持有，不是 autoload
+                      │  信号：逻辑 → UI 单向         │  没有 EventBus：每一屏订阅自己要的信号
                       └───────────────┬──────────────┘
                                       │ 持有
       ┌──────────────┬────────────────┼──────────────┬──────────────┐
@@ -2733,18 +2733,64 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 ## 8. M6 · 场景流
 
 ```
-MainMenu → RunSetup(选初始背包) → MapView
-                                    ⇅
-              ┌─────────────────────┴──────────────────┐
-         BattleView → SearchView → (回 MapView)    Shop / Event / Rest
-                                    ⇅
-              ExtractResult / DeathResult → MetaProgress → MainMenu
+MainMenu → SetupScreen(挑一章、一套开局装备、种子) → MapScreen
+                                                      ⇅ 叠层（地图与镜头留着）
+              ┌───────────────────────────────────────┴────────────────────────────┐
+         BattleScreen（回放）→ LootScreen（战利品）    SearchScreen / ShopScreen / EventScreen / RestScreen
+                                                      ⇅
+              ResultScreen（撤离 / 战败结算）→ MetaScreen（仓库与战绩）→ MainMenu
 ```
 
-`GameDirector` 用显式状态机管理。
+**状态机是纯逻辑的 `GameFlow`（`core/run/game_flow.gd`），导演 `GameDirector`（`ui/game/game_director.gd`）只是它的皮。**
+flow 只说「现在该显示哪一屏、给它什么」（`screen_changed(screen, payload)`），不认识任何 Node；测试直接驱动它，一屏都不用画。
+导演是 `ui/game/game.tscn` 的根（项目的主场景），持有 flow 与内容库，听信号换屏。**不是 autoload**：核心逻辑层没有全局状态（1 节），
+一局的状态在 `flow.run`（`RunState`，7 节）里，跨局的在 `flow.meta`（`MetaState`，8.2）里。
 
-**场景切换用 `add_child` / `queue_free` 手动管理，不要用 `change_scene_to_file`** ——
-需要在 BattleView 之上叠加 SearchView，同时保留 MapView 的状态与镜头位置。
+**屏分两层。** 底屏（主菜单、开局、地图、结算、局外）互相替换；叠层（战斗回放、战利品、搜索、商店、事件、休息）叠在地图上，
+`add_child` / `queue_free` 手动管，**不用 `change_scene_to_file`** —— 地图和镜头都留着。每一屏是一个 `GameScreen`（`ui/game/game_screen.gd`）：
+导演造它、给它 flow 与字体、`open(payload)`；屏只把 flow 的状态画出来、把玩家的动作转成 flow 的方法（1.2 命令进、信号出），不认识导演。
+
+**节点事件排成队。** 事件是同步发生的：`step_to` 一步之内可能连着来「打了一场 → 掉了东西 → 进账」，各自一个信号。flow 把它们排成队，
+走完这一步按顺序一屏一屏给玩家看；叠层看完了 `resume()` 看下一个，队空了回地图；一局结束了（战败 / 撤离）最后一定是结算屏 ——
+结束之后队里只有那一场的回放还值得看，其余（战利品、会话）跳过。搜索 / 商店会话结束由 flow 自己接着往下走（`session.ended` / `closed`），屏不必管。
+
+```gdscript
+class_name GameFlow extends RefCounted
+enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META }
+signal screen_changed(screen, payload)
+signal run_started(state) / run_ended(result)
+func to_main_menu() / new_run() / show_meta()
+func begin(chapter, loadout, seed) -> RunState      # SETUP → MAP
+func continue_run() -> bool / save() / save_and_quit()
+func pick_spawn(id) / step_to(id) / extract()       # 走完 / 撤完看队里下一个
+func resume() / take_loot(uid) / take_all_loot() / discard_loot()
+func finish_result()                                 # 进 meta（只一次）、存 meta、删这一局的存档 → META
+static func load_chapters() / load_loadouts()
+```
+
+### 8.1 开局装备
+
+`LoadoutDef`（`core/run/loadout_def.gd`）是内容管线里的一种：`data/authoring/loadouts/*.json` → `data/loadouts/*.tres`，
+排在道具之后（清单对着道具查）。只是一张清单，不写位置：包先上棋盘，其余按顺序往包里放、放不下进暂存区（`RunState._give_kit`）；
+摆法出发之后在地图上按「背包」调整。校验：每件得存在，**至少一个包**（3.2：没有包一格都用不了）。现有三套占位：标准 / 拾荒者 / 打手。
+
+### 8.2 结算与局外
+
+`RunResult.settle(state)` 从结束了的一局里算一份账（只读）：撤离 = 棋盘上的全部（含包）按价值（6.4）计、剩多少钱；
+暂存区里的记成「遗落」只提一句（3.4：暂存区里的道具 = 不存在）；战败 = 什么都没有。行动点、踩过几个点、打赢 / 打输几场（`RunState.tally`，跟着存档）。
+
+`MetaState`（`core/meta/meta_state.gd`）是跨局的状态：仓库（`ItemStash`，有自己的 uid 空间 —— 每局的 uid 从 1 重编，进来时重新编号）、
+钱、累计价值、几局几撤几败、最近几局。**保留规则只在 `absorb()` 一个方法里**（15 节第 4 项现在的假设：撤离 = 棋盘上的全进仓库、钱全带出；
+战败 = 全失），作者改主意时改那一处。`MetaSave` 与 `RunSave` 同一套做法：`user://meta.json`，带版本号、只写 id。
+仓库里的东西怎么用（带进下一局、卖掉、局外成长）还没定。
+
+### 8.3 M6 分三步
+
+| 步 | 做什么 | 状态 |
+|---|---|---|
+| M6-1 骨架 | `GameFlow`、`LoadoutDef` 走管线、`RunResult` / `MetaState` / `MetaSave`、导演与全部屏的最小版、主场景换成正式游戏 | 完成（055） |
+| M6-2 搜刮界面 | 6.2 的渐进揭示（剪影 → 逐件揭示、快速搜索）、从战利品容器拖到棋盘 / 暂存区、搜索点的收获同一套 | 未开始 |
+| M6-3 打磨 | 撤离确认与遗落提示、仓库里的东西带进下一局、商店 / 事件 / 休息屏的样子、截图验收 | 未开始 |
 
 ---
 
@@ -2910,16 +2956,17 @@ haste 每件都是 1.0，逐件相加会得出「N 件物品 = N 倍速度」。
 data/authoring/items/*.json         道具源数据
 data/authoring/buffs/*.json         增益源数据
 data/authoring/sets/*.json          套装源数据
+data/authoring/loadouts/*.json      开局装备（8.1）
 data/authoring/enemies/*.json       敌人（6.0）
 data/authoring/enemy_pools/*.json   敌人池（6.0）
 data/authoring/drop_rules/*.json    掉落规则（6.1）
 data/authoring/node_rules/*.json    节点规则（6.2 / 6.5）
 data/authoring/economy_rules/*.json 经济规则（6.6）
 data/authoring/chapters/*.json      章节（5.3）
-        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → items → enemies → enemy_pools → drop_rules → node_rules → economy_rules → chapters）
+        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → items → loadouts → enemies → enemy_pools → drop_rules → node_rules → economy_rules → chapters）
         │  tools/normalize_content.gd 把作者数据重写成导出器的格式（导入 → 导出 → 不同就写回）
         ▼
-data/items/*.tres   data/buffs/*.tres   data/sets/*.tres
+data/items/*.tres   data/buffs/*.tres   data/sets/*.tres   data/loadouts/*.tres
 data/enemies/*.tres data/enemy_pools/*.tres   data/drop_rules/*.tres   data/node_rules/*.tres   data/economy_rules/*.tres   data/chapters/*.tres
 ```
 
@@ -3153,12 +3200,15 @@ res://
                     enemy_placer  enemy_kit  enemy_database
     run/            chapter_def  run_state  run_save  run_rng  map_travel  move_intent  action_clock
                     vitality  wallet  node_events  node_rules  search_rules  search_session
-                    shop_session  economy_rules  paid_extracts
+                    shop_session  economy_rules  paid_extracts  loadout_def  game_flow  run_result
+    meta/           meta_state  meta_save                          # 跨局（8.2）
   data/
-    authoring/      items/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  chapters/  maps/
-    items/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  chapters/     # 导入器产出，也进 git
+    authoring/      items/  loadouts/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  chapters/  maps/
+    items/  loadouts/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  chapters/     # 导入器产出，也进 git
   ui/
     launcher  dev_nav  ui_palette
+    game/           game_director  game_screen  main_menu  setup_screen  map_screen  inventory_panel   # 正式游戏（8 节），game.tscn 是主场景
+                    battle_screen  loot_screen  search_screen  shop_screen  event_screen  rest_screen  result_screen  meta_screen
     inventory/      inventory_sandbox  inventory_view  container_view  stash_view  drag_layer  item_painter
     battle/         battle_sandbox  battle_view  combatant_panel
     editor/         content_editor  property_form  shape_editor
@@ -3167,11 +3217,12 @@ res://
     map_editor/     map_editor
   tools/            import_content  export_content  normalize_content  check_scripts  map_stats
                     gen_sample_items  gen_sample_combat  gen_sample_chapter  bench_battle  capture_scene  cli_tool
-  tests/            run_tests  test_case  test_*（38 个套件）
+  tests/            run_tests  test_case  test_*（39 个套件）
 ```
 
-还没有的（设计里提过、待后面的阶段）：`autoload/game_director`（M6）、`core/run/erosion_field` / `erosion_schedule`（第 7 阶段）、
-`ui/search/`（6.2 的搜刮界面，M6）。`RunState` 按 1 节的约定是纯 `RefCounted`，不是 autoload。
+还没有的（设计里提过、待后面的阶段）：6.2 的渐进揭示（M6-2，`ui/game/loot_screen` 现在是最小版）、
+`core/run/erosion_field` / `erosion_schedule`（第 7 阶段）。`RunState`、`GameFlow` 按 1 节的约定是纯 `RefCounted`，不是 autoload；
+`GameDirector` 是主场景的根，也不是 autoload。
 
 ---
 
@@ -3184,7 +3235,7 @@ res://
 | **3** | 内容制作管线（第 10 节） | 不写代码就能造道具，数值可迭代 | 完成 |
 | **4** | M3 环形地图生成 + 单步导航 + 渲染 + 行动计数 | run 的骨架成立 | 完成（030～044；作者七条 052、设想 053） | 进行中：M3-1（030）、M3-2（032）、M3-3（033）、编辑器与地图来源（034）、高危区（036）、M3-3b 与规模模板（037）完成，M3-3c（039）、M3-4（042）、M3-5（043）、M3-6 渲染与沙盒（044）完成 —— **M3 全部落地**，计划见 027 |
 | **5** | M4 节点内容：敌人池 + 掉落 + 随机点与搜索点 + 节点事件 + 经济 | **循环闭合，第一个可玩 Demo**（沙盒里） | 完成（045～050）；搜刮揭示的界面与撤离动作归 M6 |
-| **6** | M5 存档 + M6 场景流打磨 | 可对外试玩 | M5 完成（051）；M6 未开始 |
+| **6** | M5 存档 + M6 场景流打磨 | 可对外试玩 | M5 完成（051）；M6 进行中：M6-1 骨架（055）完成，M6-2 搜刮界面、M6-3 打磨待做（8.3） |
 | **7** | 侵蚀系统 + 难度档位开关 | 时间压力成立，可开始调节奏 | 未开始（钩子与顺序已在 `MapTravel`） |
 | **8** | 内容扩充（物品 / 敌人 / 事件 / 新章节地图形态 / 扩展移动机制） | 此后 90% 的时间 | 未开始 |
 
@@ -3268,6 +3319,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.52 | 2026-09-23 | **M6-1 场景流骨架**（报告 055；8 节重写，新增 8.1～8.3）。状态机是纯逻辑的 `GameFlow`（`core/run`），导演 `GameDirector` 只是它的皮、是主场景 `ui/game/game.tscn` 的根 —— **不是 autoload**（2 节的图改过来：设计稿里 GameDirector / RunState / EventBus 三个 autoload 一个都没有，核心逻辑层没有全局状态）。屏分底屏与叠层，叠层 `add_child` / `queue_free` 叠在地图上；节点事件同步发生、一步之内可能连着几个，flow 排成队一屏一屏看，结束了最后一定是结算。开局装备 `LoadoutDef` 走内容管线（`loadouts`，排在道具之后；校验至少一个包）；结算 `RunResult` 只算棋盘上的（3.4）；局外 `MetaState` / `MetaSave`，保留规则只在 `absorb()` 一处（撤离全进仓库、钱带出；战败全失 —— 15 节第 4 项的假设，等作者定）；仓库有自己的 uid 空间。`RunState.tally` 计胜负、`NodeEvents.last_battle` 给回放查名字 |
 | v1.51 | 2026-09-23 | **现状整理**（报告 054）。并入平行的地图分支（作者七条 / 设想改号 052 / 053）；头一行的版本与状态、11 节目录结构换成真实的树、12 节阶段 4～6 标完成、15 节第 3 / 5 条更新；新增活文档 `docs/status.md` |
 | v1.50 | 2026-09-23 | **作者七条**（报告 052；与 M4/M5 并行做的，合并时报告改号 045 → 052）。（一）路线长度 = 环数 × `route_length_factor`（1.5），多出来的步数同环横着走、随机撒在各环上；落点先挑下一环还有落点的。（二）中途撤离点只在**撤离环间**（`middle_rings`：正中间的一两环；大型两道占位），放在两条路线共用处（合流点 / 换乘点 / 换乘弧，`pivot_links` / `pivot_arcs` 带路线下标），三条路线两两共享；删 `extract_every_rings`、`bailout_every_rings`；校验 `extract_band`。（三）路线尽头不当高危区岔出点、不被吸收 —— 以前「只长到两个点就吸收岔出点」会把偏搜索路线的收尾撤离点吃掉。（四）高危区出入口数的是**区内连着区外的点**，不是边；隔离按点留口。（五）节点数是范围不是定数：`MapScaleProfile.nodes_by_rings` 按环数给范围、每局抽总数、各环按基准比例分（`counts_for_total`）；中环加 `mid_ring_extra_slots`（3）个槽位，填充率六七成；小型撤离间距改 3。（六）喘气处按路线步数放（`haven_at`：中型 1/3、2/3，小型都在一半）；删 `haven_after_progress` 与 `haven_early`。（七）切向弧的圆心：以前从两端反推、挑离原点近的，原点是画布左上角，下半张图的弧全反着凸 —— 圆心就是画布中心，`draw_edge` 接 rect |
 | v1.49 | 2026-09-23 | **M5 运行状态与存档**（报告 051）。7 节重写：`RunState`（纯 RefCounted 的壳：开局生成 → 放敌人 → 付费撤离点 → 棋盘与暂存区 → 节点事件接线；`pick_spawn` / `step_to` / `try_extract`；战利品进 `pending_loot`、买的与事件给的进暂存区、`equip` / `unequip`；玩家开战时从棋盘编译）、`RunRNG`（1.4 的分流随机源，序号跟着存档）、`RunSave`（带版本号的 JSON，内容库不进存档，开着的会话视为离开）。地图沙盒改成 `RunState` 的一层皮：存档 / 读档 / 撤离三个按钮，拾取自动进暂存区 |

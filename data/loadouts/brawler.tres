@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="LoadoutDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/loadout_def.gd" id="1_mh1jc"]
+
+[resource]
+script = ExtResource("1_mh1jc")
+id = &"brawler"
+display_name = "打手"
+description = "霰弹枪与剁刀、防弹衣、兴奋剂：火力足，空间紧；偏战斗路线的选择"
+items = Array[StringName]([&"bag_leather", &"bag_leather", &"shotgun", &"cleaver", &"armor", &"stim", &"mag"])

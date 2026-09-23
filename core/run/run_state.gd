@@ -53,6 +53,8 @@ var phase: int = Phase.PICK_SPAWN
 var end_reason: StringName = &""
 ## 等着拾取的容器（尸体 / 搜索收获）；null = 没有
 var pending_loot: GridInventory = null
+## 这一局的计数（给结算看）：打赢 / 打输几场。跟着存档走
+var tally: Dictionary = {"battles_won": 0, "battles_lost": 0}
 
 
 #region 开局
@@ -264,6 +266,9 @@ func _wire_events() -> void:
 	events.difficulty = chapter.difficulty
 	events.scale_id = scale_id()
 	events.player_spec = compile_player
+	events.battle_finished.connect(func(_n: MapNode, _r: BattleResult, won: bool):
+		var key := "battles_won" if won else "battles_lost"
+		tally[key] = int(tally.get(key, 0)) + 1)
 	events.loot_ready.connect(func(_n: MapNode, corpse: GridInventory): _offer_loot(corpse))
 	events.search_closed.connect(func(_n: MapNode, haul: GridInventory, _why: StringName): _offer_loot(haul))
 	events.shop_opened.connect(func(_n: MapNode, session: ShopSession):
@@ -304,6 +309,7 @@ func to_dict() -> Dictionary:
 		"rng": rng.to_dict(),
 		"events": {"searches_closed": events.searches_closed},
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
+		"tally": tally.duplicate(),
 	}
 
 
@@ -332,6 +338,8 @@ static func from_dict(
 	s._bind_tracker()
 	s._wire_events()
 	s.events.searches_closed = int((d.get("events", {}) as Dictionary).get("searches_closed", 0))
+	for key in d.get("tally", {}):
+		s.tally[String(key)] = int((d["tally"] as Dictionary)[key])
 	var loot = d.get("pending_loot", null)
 	if loot is Dictionary:
 		s.pending_loot = GridInventory.from_dict(loot, p_items)
