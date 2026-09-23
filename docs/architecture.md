@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v0.1 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：设计阶段，尚无游戏代码
+> 版本：v1.51 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M5 落地、M6 场景流未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3120,75 +3120,58 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 
 ## 11. 目录结构
 
+仓库里真实的树（2026-09-23，210 个脚本）。`core/` 纯逻辑、零 Node 依赖、可单测；`ui/` 只接线与绘制；`tools/` 命令行；`tests/` 一键全跑。
+
 ```
 res://
-  core/                          # 纯逻辑，零 Node 依赖，可单测
-    authoring/                     # 内容管线（第 10 节），JSON ⇄ 资源
-      content_schema.gd            # 反射工具：属性表、枚举、造对象
-      content_importer.gd  content_exporter.gd
-      import_report.gd             # 带定位路径的诊断
-    inventory/
-      item_container.gd          # 容器基类：变更通知 + 按 uid 取放
-      grid_inventory.gd          # 空间容器
-      item_stash.gd              # 列表容器（暂存区）
-      item_shape.gd  item_def.gd  item_instance.gd
-      inventory_service.gd
-    battle/
-      battle_sim.gd  compiler.gd  battle_context.gd
-      combatant_spec.gd  battle_event.gd  ability.gd
-      stat_math.gd  stat_value.gd  stat_set.gd  stat_modifier.gd
-      adjacency_profile.gd  combat_profile.gd  ability_rule.gd
-      effect_registry.gd           # 类型名 → 脚本路径，新增效果只登记一行
-      combat_effect.gd             # Effect 的战斗分支，依赖扳机
-      combatant_baseline.gd        # 角色自带的基线属性，角色系统的占位
-      damage/                      # 伤害结算管线（4.6）
-        damage_type_def.gd  damage_types.gd
-        damage_packet.gd  damage_resolver.gd
-      triggers/                    # Trigger 子类，每种时机一个文件
-      cadences/                    # Cadence 子类，每种频率一个文件
-      costs/                       # Cost 子类：资源、层数、充能、次数、概率
-      effects/                     # CombatEffect 子类，每种效果一个文件
-    map/
-      map_graph.gd  map_node.gd  map_edge.gd
-      map_generator.gd           # 抽象基类
-      map_generator_registry.gd
-      map_navigator.gd
-      generators/
-        ring_map_generator.gd    # 第一章
-        ring_map_config.gd
-        (未来：layered_map_generator.gd 等)
-    effects/                       # 效果树的根（第 9.2 节），三个作用域的公共祖先
-      effect.gd  effect_scope.gd
-    loot/
-      loot_roller.gd  loot_table.gd
-      loot_effect.gd  loot_context.gd
-      effects/                     # LootEffect 子类
-    sets/                          # 套装系统（第 9 节），跨战斗与掉落
-      item_set_def.gd  set_tier.gd  set_database.gd
-      set_tracker.gd             # 背包层的计数与激活
-    run/
-      vitality.gd                # 体力，一局之内还剩几条命（7.1）
-      action_clock.gd            # 行动计数
-      move_intent.gd             # 移动意图，扩展机制的接入点
-      erosion_field.gd           # 侵蚀推进与惩罚结算
-      erosion_schedule.gd
-    rng.gd
+  core/
+    authoring/      content_schema  content_importer  content_exporter  content_paths  import_report
+    inventory/      item_container  grid_inventory  item_stash  item_shape  item_def  item_instance
+                    item_database  item_value  inventory_service
+    battle/         compiler  combatant_spec  combatant_baseline  combatant_runtime  compiled_item
+                    battle_sim  battle_context  battle_event  battle_result  schedule_heap
+                    rule_engine  rule_runtime  rule_context  ability_rule  trigger  cadence  cost  combat_effect
+                    stat_math  stat_value  stat_set  stat_modifier  battle_stats  resource_pool
+                    adjacency_profile  combat_profile  buff_def  buff_instance  effect_registry
+      damage/       damage_type_def  damage_types  damage_packet  damage_resolver
+      triggers/     on_schedule  on_battle_start  on_damage  on_before_damage  on_item_fired
+                    on_resource_below  on_resource_changed  on_stacks_at_least  damage_trigger
+      cadences/     always  cooldown_cadence
+      costs/        resource_cost  charge_cost  status_stack_cost  uses_cost  chance_condition
+      effects/      deal_damage  modify_damage  reflect_damage  apply_status  remove_status  change_resource
+    effects/        effect  effect_scope                       # 效果树的根（9.2）
+    sets/           item_set_def  set_tier  set_database  set_tracker
+    loot/           loot_effect  loot_context  drop_rule  drop_resolver  drop_bonus_source
+                    meta_drop_bonus  map_drop_bonus  loot_packer
+      effects/      extra_rolls  rarity_bias  category_bias  drop_owned_chance
+    map/            map_graph  map_node  map_edge  map_node_types  map_generator  map_generator_registry
+                    map_validation  map_navigator  map_source  map_preset  map_grid_text  map_junctions
+                    zone_rules  map_effect
+      generators/   ring_map_generator  ring_map_config  ring_spec  route_style  danger_zone_spec
+                    map_scale_profile  ring_type_assigner  grid_script_generator  grid_script_config
+    enemies/        enemy_def  enemy_pool  enemy_pool_entry  strength_tier  strength_rule  enemy_loadout
+                    enemy_placer  enemy_kit  enemy_database
+    run/            chapter_def  run_state  run_save  run_rng  map_travel  move_intent  action_clock
+                    vitality  wallet  node_events  node_rules  search_rules  search_session
+                    shop_session  economy_rules  paid_extracts
   data/
-    authoring/                     # 人写的源数据，导入器的输入（第 10 节）
-      items/*.json   buffs/*.json   sets/*.json
-    items/*.tres   buffs/*.tres   sets/*.tres    # 导入器产出，形状内嵌
-    loot_tables/*.tres  enemies/*.tres
-    chapters/chapter_01.tres
+    authoring/      items/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  chapters/  maps/
+    items/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  chapters/     # 导入器产出，也进 git
   ui/
-    ui_palette.gd                  # 配色与 CJK 字体，各界面共用
-    inventory/   map/   battle/   search/
-    editor/                        # 道具编辑器（10.5），给开发者与 MOD 作者
-      content_editor.gd  property_form.gd  shape_editor.gd
-    map/layouts/ring_layout.gd   # 布局策略实现
-  autoload/
-    game_director.gd  run_state.gd  event_bus.gd
-  tests/
+    launcher  dev_nav  ui_palette
+    inventory/      inventory_sandbox  inventory_view  container_view  stash_view  drag_layer  item_painter
+    battle/         battle_sandbox  battle_view  combatant_panel
+    editor/         content_editor  property_form  shape_editor
+    map/            map_sandbox  map_view  map_layout  ring_layout_base  ring_map_layout  grid_map_layout
+                    ring_angle_solver  map_node_style
+    map_editor/     map_editor
+  tools/            import_content  export_content  normalize_content  check_scripts  map_stats
+                    gen_sample_items  gen_sample_combat  gen_sample_chapter  bench_battle  capture_scene  cli_tool
+  tests/            run_tests  test_case  test_*（38 个套件）
 ```
+
+还没有的（设计里提过、待后面的阶段）：`autoload/game_director`（M6）、`core/run/erosion_field` / `erosion_schedule`（第 7 阶段）、
+`ui/search/`（6.2 的搜刮界面，M6）。`RunState` 按 1 节的约定是纯 `RefCounted`，不是 autoload。
 
 ---
 
@@ -3199,11 +3182,11 @@ res://
 | **1** | M1 网格背包 + 拖拽 + 序列化 | 可玩的整理沙盒，核心手感可验证 | 完成 |
 | **2** | M2 编译 + 效果系统 + 模拟 + 极简可视化 | 两个背包能打起来，可批量跑平衡 | 完成 |
 | **3** | 内容制作管线（第 10 节） | 不写代码就能造道具，数值可迭代 | 完成 |
-| **4** | M3 环形地图生成 + 单步导航 + 渲染 + 行动计数 | run 的骨架成立 | 进行中：M3-1（030）、M3-2（032）、M3-3（033）、编辑器与地图来源（034）、高危区（036）、M3-3b 与规模模板（037）完成，M3-3c（039）、M3-4（042）、M3-5（043）、M3-6 渲染与沙盒（044）完成 —— **M3 全部落地**，计划见 027 |
-| **5** | M4 掉落 + 搜刮揭示 + 撤离 | **循环闭合，第一个可玩 Demo** | |
-| **6** | M5 存档 + M6 场景流打磨 | 可对外试玩 | |
-| **7** | 侵蚀系统 + 难度档位开关 | 时间压力成立，可开始调节奏 | |
-| **8** | 内容扩充（物品 / 敌人 / 事件 / 新章节地图形态 / 扩展移动机制） | 此后 90% 的时间 | |
+| **4** | M3 环形地图生成 + 单步导航 + 渲染 + 行动计数 | run 的骨架成立 | 完成（030～044；作者七条 052、设想 053） | 进行中：M3-1（030）、M3-2（032）、M3-3（033）、编辑器与地图来源（034）、高危区（036）、M3-3b 与规模模板（037）完成，M3-3c（039）、M3-4（042）、M3-5（043）、M3-6 渲染与沙盒（044）完成 —— **M3 全部落地**，计划见 027 |
+| **5** | M4 节点内容：敌人池 + 掉落 + 随机点与搜索点 + 节点事件 + 经济 | **循环闭合，第一个可玩 Demo**（沙盒里） | 完成（045～050）；搜刮揭示的界面与撤离动作归 M6 |
+| **6** | M5 存档 + M6 场景流打磨 | 可对外试玩 | M5 完成（051）；M6 未开始 |
+| **7** | 侵蚀系统 + 难度档位开关 | 时间压力成立，可开始调节奏 | 未开始（钩子与顺序已在 `MapTravel`） |
+| **8** | 内容扩充（物品 / 敌人 / 事件 / 新章节地图形态 / 扩展移动机制） | 此后 90% 的时间 | 未开始 |
 
 **内容制作管线紧跟在 M2 之后**：战斗系统一旦能跑，瓶颈立刻从「有没有机制」变成
 「有没有内容可调」。此时手写 `.tres` 会成为迭代速度的天花板，而管线本身依赖 M2
@@ -3261,9 +3244,9 @@ res://
 |---|---|---|---|
 | 1 | ~~run 内是否存在持久生命值~~ 已定：**体力**（7.1），战斗失败扣 1 / 2，归零战败 | 数值一概不写死：扣多少回多少由调用方传给 `Vitality`，初始与上限等角色系统（7.1） | 无 —— 接口已经把数值挡在外面了 |
 | 2 | 侵蚀损失的具体形式 | 浅层扣生命值，深层额外损坏背包物品 | 同上，只改效果实现与参数 |
-| 3 | 节点事件的额外行动消耗 | 搜刮 +1 ／ 休息 +2 ／ 商店 +0 | 仅影响节奏调参 |
+| 3 | 节点事件的额外行动消耗 | 搜刮 +1 ／ 休息 +2 ／ 商店 +0。**未做**：现在一律只按边的 `action_cost`；加的话在 `NodeEvents` 里对 `travel.clock.spend` | 仅影响节奏调参 |
 | 4 | 撤离后的保留规则 | 背包内容全额进入仓库，死亡全失 | 影响 meta 成长曲线，不影响任何模块接口 |
-| 5 | 棋盘尺寸与开局可用格数 | 暂定 7x9，开局由一个小包提供约 12 格 | 纯数值，不影响结构 |
+| 5 | 棋盘尺寸与开局可用格数 | 现在 `RunState.BOARD_SIZE` 8×6 占位，沙盒开局两个 2×3 的包 = 12 格 | 纯数值，不影响结构 |
 | 6 | 合成配方是否纳入第一章 | 暂缓，先跑通包体系统与战斗 | 独立子系统，可后加 |
 | 7 | 暂存区的清空时机（见 3.4） | 进入下一关即消失，连同里面的道具 | 另一案是留到一局结算时才清空。只改 UI 提示与清空时点；各系统「只看棋盘」的约定两案通用 |
 | 8 | 各角色的基线数值（见 4.2） | 全局一份：生命 25、耐力 50 | 角色系统落地后由角色定义提供 `CombatantBaseline`，编译器与战斗不改 |
@@ -3271,6 +3254,8 @@ res://
 | 10 | ~~耐力等资源是否回复~~ | **已定：按时间自动回复，懒结算**（见 4.5） | 速率是 `regen_xxx` 属性，因此自动吃 buff。当前数值是占位：基线 4/秒，口粮 +2/秒 |
 
 这几项都被刻意隔离在参数层或单个类的内部，**推迟决定不会阻塞任何模块的开工**。
+
+更完整的「留给作者定的」清单（含 M4 各报告与 053 的设想）在 [status.md](status.md)。
 
 ---
 
@@ -3283,6 +3268,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.51 | 2026-09-23 | **现状整理**（报告 054）。并入平行的地图分支（作者七条 / 设想改号 052 / 053）；头一行的版本与状态、11 节目录结构换成真实的树、12 节阶段 4～6 标完成、15 节第 3 / 5 条更新；新增活文档 `docs/status.md` |
 | v1.50 | 2026-09-23 | **作者七条**（报告 052；与 M4/M5 并行做的，合并时报告改号 045 → 052）。（一）路线长度 = 环数 × `route_length_factor`（1.5），多出来的步数同环横着走、随机撒在各环上；落点先挑下一环还有落点的。（二）中途撤离点只在**撤离环间**（`middle_rings`：正中间的一两环；大型两道占位），放在两条路线共用处（合流点 / 换乘点 / 换乘弧，`pivot_links` / `pivot_arcs` 带路线下标），三条路线两两共享；删 `extract_every_rings`、`bailout_every_rings`；校验 `extract_band`。（三）路线尽头不当高危区岔出点、不被吸收 —— 以前「只长到两个点就吸收岔出点」会把偏搜索路线的收尾撤离点吃掉。（四）高危区出入口数的是**区内连着区外的点**，不是边；隔离按点留口。（五）节点数是范围不是定数：`MapScaleProfile.nodes_by_rings` 按环数给范围、每局抽总数、各环按基准比例分（`counts_for_total`）；中环加 `mid_ring_extra_slots`（3）个槽位，填充率六七成；小型撤离间距改 3。（六）喘气处按路线步数放（`haven_at`：中型 1/3、2/3，小型都在一半）；删 `haven_after_progress` 与 `haven_early`。（七）切向弧的圆心：以前从两端反推、挑离原点近的，原点是画布左上角，下半张图的弧全反着凸 —— 圆心就是画布中心，`draw_edge` 接 rect |
 | v1.49 | 2026-09-23 | **M5 运行状态与存档**（报告 051）。7 节重写：`RunState`（纯 RefCounted 的壳：开局生成 → 放敌人 → 付费撤离点 → 棋盘与暂存区 → 节点事件接线；`pick_spawn` / `step_to` / `try_extract`；战利品进 `pending_loot`、买的与事件给的进暂存区、`equip` / `unequip`；玩家开战时从棋盘编译）、`RunRNG`（1.4 的分流随机源，序号跟着存档）、`RunSave`（带版本号的 JSON，内容库不进存档，开着的会话视为离开）。地图沙盒改成 `RunState` 的一层皮：存档 / 读档 / 撤离三个按钮，拾取自动进暂存区 |
 | v1.48 | 2026-09-23 | **探索度**（报告 050）。作者要求随机点与搜索点造出来的敌人跟当前位置、总步数、搜索次数挂钩：`StrengthRule` 加探索度一组（步数每 N 步、累计搜索每 N 次各加一档、各有上限），`NodeEvents.exploration()` 只在踩上去才造敌人时传入；生成时放好的敌人不变（看到的就是打到的） |
