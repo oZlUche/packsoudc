@@ -49,6 +49,8 @@ var screen: int = Screen.MAIN_MENU
 var last_payload: Dictionary = {}
 ## 待拾取里已经在搜索屏亮过的 uid（6.2 的揭示只做一次）。拾取完清空
 var seen_loot: Dictionary = {}
+## 校准记录（073）：装了就每走一步记一份玩家配置，木桩工具吃它；null = 不记
+var recorder: CalibrationRecorder = null
 var _queue: Array[Dictionary] = []
 var _settled: bool = false
 
@@ -264,6 +266,8 @@ func pick_spawn(id: int) -> bool:
 func step_to(id: int) -> bool:
 	if run == null or not run.step_to(id):
 		return false
+	if recorder != null:
+		recorder.record(run)
 	_flush()
 	return true
 

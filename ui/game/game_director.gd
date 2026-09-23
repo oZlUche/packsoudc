@@ -57,6 +57,8 @@ func _ready() -> void:
 	flow.characters = GameFlow.load_characters()
 	flow.difficulties = GameFlow.load_difficulties()
 	flow.hunter_defs = GameFlow.load_hunters()
+	# 校准记录（073）：正式游戏每走一步记一份玩家配置到 user://calibration/，木桩工具吃它
+	flow.recorder = CalibrationRecorder.new()
 	flow.save_path = save_path
 	flow.meta_path = meta_path
 	flow.settings_path = settings_path

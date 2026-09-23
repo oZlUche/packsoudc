@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.69 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.70 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2876,7 +2876,9 @@ func grant_first_kit()                               # 仓库空的第一局发�
 （合成的 `EventDef`「迎战 / 逃跑」，登记在 `NodeEvents.extra_defs`，`pending` 多一个 `hunter` 字段跟存档）。玩家正忙时不打扰，空下来 `poke_hunters` 再问。
 迎战：按当时的探索度现造敌人（`EnemyPlacer`，可指定池与规则），打赢它死、掉落率乘 `drop_mult`；打输按定义里的后果构件依次执行
 （扣体力 / 没事 / 必杀 / 消失 / 退走并歇 / 赶回上一个点并驻守）。逃跑按成功率掷，没逃掉扣体力照打。距离度量 `MapMetric`：`steps` 或 `absolute`（地图屏注入按环距归一的坐标）。
-随机数走 `RunRNG` 的 `hunters` 流。`RunContext` 多三个字段（侦察距离、感知倍率、逃跑加成），角色的被动技能（072）、局外 buff、难度修饰都能往里加数。校准（木桩、50%）是 069 的第 4 步。
+随机数走 `RunRNG` 的 `hunters` 流。`RunContext` 多三个字段（侦察距离、感知倍率、逃跑加成），角色的被动技能（072）、局外 buff、难度修饰都能往里加数。
+**校准**（073）：正式游戏每走一步记一份玩家配置（`CalibrationRecorder` → `user://calibration/snapshots.jsonl`），`tools/build_dummies.gd` 按段长分段、每段挑离平均读数最近的真实配置当木桩，
+`tools/bench_hunters.gd` 让木桩对猎手池里每一档打几百场，打印胜率并排「规则会给哪一档 / 最接近 50% 的哪一档」—— 工具只做统计，作者对着表改强度规则。数值等系统完整后多场测试。
 
 ## 9. 套装与跨域效果
 
@@ -3324,7 +3326,7 @@ res://
     map/            map_view  map_layout  ring_layout_base  ring_map_layout  grid_map_layout
                     ring_angle_solver  map_node_style
     map_editor/     map_editor
-  tools/            import_content  export_content  normalize_content  check_scripts  map_stats
+  tools/            import_content  export_content  normalize_content  check_scripts  map_stats  build_dummies  bench_hunters
                     gen_sample_items  gen_sample_combat  gen_sample_chapter  bench_battle  capture_scene  cli_tool
   tests/            run_tests  test_case  test_*（44 个套件）
 ```
@@ -3430,6 +3432,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.70 | 2026-09-23 | **校准工具**（报告 073，069 第 4 步；8.5、11）。`core/run/calibration`：`CalibrationRecorder`（每步记玩家配置，正式游戏默认装）、`DummyBuilder`（按段长分段、木桩 = 段里离平均读数最近的真实配置、没快照时开局装备当第 0 段）、`HunterBench`（木桩 × 池里每档打 N 场 → 胜率，并排 wanted / best，同种子可复现）；两个命令行入口。只做统计不改数；数值等多场测试 |
 | v1.69 | 2026-09-23 | **角色技能接口**（报告 072，069 第 3 步；8.1、8.5）。`CharacterDef.skills`（一局规则的效果构件）编进 `RunState.buff_context()`，三个构件侦察 / 潜行 / 逃跑（取大 / 相乘 / 相加）登记在 `RUN_EFFECTS`，猎手系统 071 已读的三个字段由此有了来源；`RunState.character` 定义读档找回；第二个占位角色「侦察兵」 |
 | v1.68 | 2026-09-23 | **猎手核心**（报告 071，069 第 2 步；新增 8.5、10.1、11）。内容种类 `hunters`（`HunterDef` 一个等级一份）；行动逻辑与战败后果各一张注册表（5 + 6 个构件）；`MapMetric`（steps / absolute）；`HunterSystem`（出现于最远点、领地互斥、按步回合、感知提示、开打前合成事件屏「迎战 / 逃跑」、探索度现造敌人、掉落倍数、存档、`hunters` 随机流）；`HunterMechanic` 是难度清单里的机制；`NodeEvents.extra_defs` + `fight_hunter` / `flee_hunter`；`RunContext` 三个技能接口字段；地图上红环标记 |
 | v1.67 | 2026-09-23 | **进阶难度骨架**（报告 070，069 第 1 步；新增 8.4、10.1、11、12）。难度是机制清单：`DifficultyDef`（内容种类 `difficulties`：`mechanics: Array[RunMechanic]`、`effects`、`requires_unlock`），`RunMechanic` 是效果树之外的新抽象根（`install(run)` 幂等、登记表 `RUN_MECHANICS`），`ErosionMechanic` 空壳占位；`RunState.difficulty_id` 跟存档、`install_mechanics()`、修饰进 `buff_context`；`MetaState.unlocks` + 局外屏占位开关；开局屏「难度」一栏只列能选的。没有难度定义 = 普通；侵蚀改口为高难度才开的机制 |
