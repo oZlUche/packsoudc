@@ -104,7 +104,7 @@ func _to_launcher() -> void:
 		push_error("GameDirector: 回不去启动选择器")
 
 
-## 截图工具的钩子（tools/capture_scene.gd）：环境变量 DEMO_SCREEN = setup / map / battle / result / meta，
+## 截图工具的钩子（tools/capture_scene.gd）：环境变量 DEMO_SCREEN = setup / map / bag / battle / loot / search / result / meta，
 ## 把流程推到那一屏，好让截图里有东西可看。不设就停在主菜单
 func demo_fill() -> void:
 	var want := OS.get_environment("DEMO_SCREEN")
@@ -116,6 +116,7 @@ func demo_fill() -> void:
 	flow.new_run()
 	if want == "setup":
 		return
+	var next_type: StringName = &"search" if want == "search" else &"battle"
 	var found := {}
 	for seed in range(1, 60):
 		var state := RunState.start(flow.chapters[0], seed, flow.items, flow.enemies, flow.sets)
@@ -123,7 +124,7 @@ func demo_fill() -> void:
 			continue
 		for entry in state.map.entry_ids:
 			for nid in state.map.neighbors(entry):
-				if state.map.get_node(nid).type == &"battle":
+				if state.map.get_node(nid).type == next_type:
 					found = {"seed": seed, "entry": entry, "next": nid}
 					break
 			if not found.is_empty():
@@ -143,6 +144,15 @@ func demo_fill() -> void:
 		return
 	flow.step_to(int(found["next"]))
 	if want == "battle":
+		return
+	if want == "search":
+		if _overlay != null and _overlay.screen == GameFlow.Screen.SEARCH:
+			_overlay.call("search")
+			_overlay.call("skip_reveal")
+		return
+	if want == "loot":
+		if flow.screen == GameFlow.Screen.BATTLE:
+			flow.resume()
 		return
 	while GameFlow.is_overlay(flow.screen):
 		if flow.screen == GameFlow.Screen.LOOT:

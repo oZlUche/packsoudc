@@ -28,3 +28,37 @@ static func pack(ids: Array[StringName], size: Vector2i, items: ItemDatabase) ->
 ## 只要棋盘，不关心装没装下
 static func board_of(ids: Array[StringName], size: Vector2i, items: ItemDatabase) -> GridInventory:
 	return pack(ids, size, items)["board"]
+
+
+## 往已有的容器里再摆几件（搜索点每搜一次装一批，M6-2）。放不下就换一个高一格的，原来的东西原位搬过去
+## （同一批实例，uid 不变），最多加到 [param base_height] 的两倍；再塞不下的报回来。
+## 返回 {"board": 可能换了的容器, "left": [没装下的 id]}
+static func add(board: GridInventory, ids: Array[StringName], items: ItemDatabase, base_height: int = -1) -> Dictionary:
+	var base_h := base_height if base_height > 0 else board.size.y
+	var current := board
+	var pending: Array[ItemInstance] = []
+	for id in ids:
+		var def := items.get_def(id) if items != null else null
+		if def != null:
+			pending.append(ItemInstance.create(def, 0))
+	while true:
+		var left: Array[ItemInstance] = []
+		current.begin_batch()
+		for inst in pending:
+			if not current.try_add(inst, true):
+				left.append(inst)
+		current.end_batch()
+		if left.is_empty() or current.size.y >= base_h * 2:
+			var left_ids: Array[StringName] = []
+			for inst in left:
+				left_ids.append(inst.def.id)
+			return {"board": current, "left": left_ids}
+		var bigger := GridInventory.new(current.size + Vector2i(0, 1), current.id, false)
+		bigger.begin_batch()
+		for inst in current.items():
+			var item := inst as ItemInstance
+			bigger.place(item, item.origin, item.rotation)
+		bigger.end_batch()
+		current = bigger
+		pending = left
+	return {"board": current, "left": [] as Array[StringName]}

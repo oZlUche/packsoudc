@@ -13,6 +13,8 @@ extends RefCounted
 signal searched(found: Array[StringName], encounter: Dictionary)
 ## 结束：&"left" 自己走的 / &"exhausted" 搜满了 / &"encounter" 遭遇了
 signal ended(reason: StringName)
+## 收获容器换了一个（原来的放不下，换了高一格的；东西原位搬过去、uid 不变）。界面重新绑
+signal haul_changed(box: GridInventory)
 
 var node: MapNode = null
 var rules: SearchRules = null
@@ -24,7 +26,10 @@ var depth: float = 0.0
 var encounter_builder: Callable = Callable()
 
 var searches_done: int = 0
+## 这个会话里找到过的全部（拿走了也还在这里记着）
 var found: Array[StringName] = []
+## 收获容器（6.1 的做法）：每搜一次找到的摆进来，亮出来的可以直接从这里拿走；会话结束时剩下的就是 [method haul]
+var haul_box: GridInventory = null
 var encounter: Dictionary = {}
 var active: bool = true
 
@@ -37,6 +42,7 @@ func _init(p_node: MapNode, p_rules: SearchRules, p_items: ItemDatabase, p_rng: 
 	depth = p_depth
 	if node != null:
 		searches_done = int(node.content.get("searches", 0))
+	haul_box = GridInventory.new(_haul_size(), 0, false)
 
 
 func can_search() -> bool:
@@ -59,6 +65,10 @@ func search() -> Dictionary:
 	var k := searches_done
 	var got := draw_items(rules, items, depth, node.danger if node != null else 0, rng)
 	found.append_array(got)
+	var packed := LootPacker.add(haul_box, got, items, _haul_size().y)
+	if packed["board"] != haul_box:
+		haul_box = packed["board"]
+		haul_changed.emit(haul_box)
 	searches_done += 1
 	if node != null:
 		node.content["searches"] = searches_done
@@ -82,9 +92,13 @@ func leave() -> void:
 		_end(&"left")
 
 
-## 搜到的东西摆进容器（6.1 的做法）
+## 收获：会话里搜到、还没拿走的都在这个容器里
 func haul() -> GridInventory:
-	return LootPacker.board_of(found, rules.haul_board if rules != null else Vector2i(6, 4), items)
+	return haul_box
+
+
+func _haul_size() -> Vector2i:
+	return rules.haul_board if rules != null else Vector2i(6, 4)
 
 
 func _end(reason: StringName) -> void:

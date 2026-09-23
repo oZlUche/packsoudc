@@ -14,11 +14,15 @@ var _font: Font
 var _drag: DragLayer
 var _readout: Label
 var _hint: Label
+var board_view: InventoryView
+var storage_view: StashView
 
 
-func setup(run: RunState, font: Font) -> void:
+## [param drag] 给了就把两个视图登记到那一层（战利品屏要一层盖住三个容器）；不给就自己造一层盖在面板上
+func setup(run: RunState, font: Font, drag: DragLayer = null) -> void:
 	_run = run
 	_font = font
+	_drag = drag
 	_build()
 	_run.board.changed.connect(_refresh_readout)
 	_refresh_readout()
@@ -33,7 +37,7 @@ func _build() -> void:
 	left.add_theme_constant_override("separation", 8)
 	row.add_child(left)
 	left.add_child(_label("作战棋盘　只有包里的东西参战", 13, UiPalette.DIM))
-	var board_view := InventoryView.new()
+	board_view = InventoryView.new()
 	board_view.label_font = _font
 	board_view.inventory = _run.board
 	board_view.show_adjacency = true
@@ -48,16 +52,17 @@ func _build() -> void:
 	right.add_theme_constant_override("separation", 8)
 	row.add_child(right)
 	right.add_child(_label("暂存区　背着但不参战，撤离时不带出去", 13, UiPalette.DIM))
-	var storage_view := StashView.new()
+	storage_view = StashView.new()
 	storage_view.label_font = _font
 	storage_view.stash = _run.storage
 	storage_view.custom_minimum_size.x = STORAGE_WIDTH
 	storage_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	right.add_child(storage_view)
 
-	_drag = DragLayer.new()
-	_drag.label_font = _font
-	add_child(_drag)     # 容器把它铺到和 row 一样大，盖在上面
+	if _drag == null:
+		_drag = DragLayer.new()
+		_drag.label_font = _font
+		add_child(_drag)     # 容器把它铺到和 row 一样大，盖在上面
 	_drag.register_view(board_view)
 	_drag.register_view(storage_view)
 	_drag.stash = _run.storage

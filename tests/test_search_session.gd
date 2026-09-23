@@ -173,3 +173,50 @@ static func run_session(t: TestCase) -> void:
 	a.search()
 	b.search()
 	t.eq(a.found, b.found, "同种子第一次找到的一样")
+
+
+static func run_haul_box(t: TestCase) -> void:
+	t.begin("搜索 · 收获容器逐次装（M6-2）：亮出来的能拿走；放不下就换高一格的容器，东西原位搬过去")
+
+	var items := _items()
+	var rules := _rules()
+	var s := SearchSession.new(_node(), rules, items, _rng(3), 0.3)
+	t.eq(s.haul_box.size, rules.haul_board, "开着的会话有一个空容器，大小按规则")
+	t.eq(s.haul_box.item_count(), 0, "开始是空的")
+	s.search()
+	t.eq(s.haul_box.item_count(), s.found.size(), "搜一次，找到的都在容器里")
+	t.eq(s.haul(), s.haul_box, "haul() 就是这个容器")
+	if s.can_search():
+		s.search()
+	t.eq(s.haul_box.item_count(), s.found.size(), "再搜，累计")
+	if s.haul_box.item_count() > 0:
+		var first := s.haul_box.items()[0] as ItemInstance
+		var stash := ItemStash.new(9)
+		t.check(InventoryService.transfer_auto(s.haul_box, first.uid, stash), "从容器里拿走一件")
+		t.eq(s.haul().item_count(), s.found.size() - 1, "haul() 少了那一件，found 照旧记着")
+
+	# 小容器：三件放不进 2×1，换高一格的；东西原位搬过去、uid 不变
+	var tiny := rules.duplicate() as SearchRules
+	tiny.haul_board = Vector2i(2, 1)
+	tiny.items_per_search = Vector2i(3, 3)
+	tiny.max_searches = 2
+	var s2 := SearchSession.new(_node(), tiny, items, _rng(5), 0.3)
+	var swaps: Array = []
+	s2.haul_changed.connect(func(box: GridInventory): swaps.append(box))
+	s2.search()
+	t.check(s2.haul_box.size.y > 1, "换了更高的容器（%s）" % str(s2.haul_box.size))
+	t.check(s2.haul_box.size.y <= tiny.haul_board.y * 2, "至多加高到两倍")
+	t.check(not swaps.is_empty() and swaps[-1] == s2.haul_box, "haul_changed 报的是现在的容器")
+	var uids_before: Array = []
+	for inst in s2.haul_box.items():
+		uids_before.append((inst as ItemInstance).uid)
+	s2.search()
+	for uid in uids_before:
+		t.check(s2.haul_box.has_item(int(uid)), "第二次搜之后，第一次的 uid %d 还在" % uid)
+
+	# LootPacker.add 直接试：加到两倍就停，装不下的报回来
+	var box := GridInventory.new(Vector2i(2, 1), 0, false)
+	var r := LootPacker.add(box, [&"armor", &"armor", &"armor"] as Array[StringName], items, 1)
+	t.eq((r["board"] as GridInventory).size, Vector2i(2, 2), "2×1 加到 2×2 就停")
+	t.eq((r["board"] as GridInventory).item_count(), 1, "装进一件防弹衣（2×2）")
+	t.eq((r["left"] as Array).size(), 2, "另两件报回来")

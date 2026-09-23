@@ -464,7 +464,11 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	t.eq(game.base(), map, "地图还在底下")
 	game.overlay().proceed()
 	if game.overlay() != null and game.overlay().screen == GameFlow.Screen.LOOT:
-		game.overlay().take_all()
+		var loot = game.overlay()
+		t.check(loot.loot_view().unrevealed_count() > 0, "战利品屏一开始是剪影")
+		loot.skip_reveal()
+		t.eq(loot.loot_view().unrevealed_count(), 0, "快速搜索全亮")
+		loot.take_all()
 	t.is_null(game.overlay(), "看完了叠层撤掉")
 	t.eq(game.base(), map, "还是那张地图")
 	flow.save_and_quit()
@@ -476,4 +480,121 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	flow.to_main_menu()
 	game.queue_free()
 	_cleanup()
+#endregion
+
+
+#region M6-2 搜刮界面
+static func run_seen_loot(t: TestCase) -> void:
+	t.begin("场景流 · 搜索屏里亮过的，到了战利品屏不再重新揭示")
+
+	var c := _content()
+	var kit := _loadout(c, &"standard")
+	var found := _seed_with(c, &"search", kit.items)
+	if found.is_empty():
+		t.check(false, "找不到种子")
+		return
+	var f := _flow(c)
+	f.begin(c.chapter, kit, int(found["seed"]))
+	f.pick_spawn(int(found["entry"]))
+	f.step_to(int(found["next"]))
+	t.eq(f.screen, GameFlow.Screen.SEARCH, "在搜")
+	var session: SearchSession = f.last_payload.get("session", null)
+	var guard := 0
+	while f.screen == GameFlow.Screen.SEARCH and session.can_search() and session.found.is_empty() and guard < 5:
+		guard += 1
+		session.search()
+	t.check(f.seen_loot.is_empty(), "还在搜的时候 flow 什么都没记")
+	var had := session.haul_box.item_count()
+	if f.screen == GameFlow.Screen.SEARCH:
+		session.leave()
+	_settle_overlays_until_loot(f)
+	if f.screen == GameFlow.Screen.LOOT:
+		t.check(had > 0, "有收获才有战利品屏")
+		for uid in f.seen_loot:
+			t.check(f.run.pending_loot.has_item(int(uid)), "记下的 uid %d 都在待拾取里" % uid)
+		t.eq(f.seen_loot.size(), had, "搜索屏里的 %d 件都记成见过了" % had)
+		f.take_all_loot()
+		t.check(f.seen_loot.is_empty(), "拾取完清空")
+	else:
+		t.eq(had, 0, "没有收获就没有战利品屏（%s）" % str(f.screen))
+
+
+## 把回放 / 事件 / 休息看完，停在战利品屏或地图
+static func _settle_overlays_until_loot(f: GameFlow) -> void:
+	var guard := 0
+	while GameFlow.is_overlay(f.screen) and f.screen != GameFlow.Screen.LOOT and guard < 10:
+		guard += 1
+		match f.screen:
+			GameFlow.Screen.SEARCH:
+				f.run.events.current_search.leave()
+			GameFlow.Screen.SHOP:
+				f.run.events.current_shop.leave()
+			_:
+				f.resume()
+
+
+static func frame_loot_view(t: TestCase, root: Window) -> void:
+	t.begin("渐进揭示 · 没亮的抓不起来；按栏位顺序亮；快速搜索推到终点；见过的不再走时间线")
+
+	var c := _content()
+	var box := LootPacker.board_of([&"pistol", &"knife", &"armor"] as Array[StringName], Vector2i(6, 4), c.items)
+	t.eq(box.item_count(), 3, "三件摆进容器")
+	var view := LootView.new()
+	view.inventory = box
+	root.add_child(view)
+	var grabs: Array = []
+	view.grab_requested.connect(func(_v: ContainerView, uid: int, _p: Vector2): grabs.append(uid))
+	var revealed: Array = []
+	view.item_revealed.connect(func(uid: int): revealed.append(uid))
+	var finished: Array = []
+	view.reveal_finished.connect(func(): finished.append(true))
+
+	t.eq(view.unrevealed_count(), 3, "一开始一件都没亮")
+	var first := box.items()[0] as ItemInstance
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	press.position = view.cell_origin_px(first.origin) + Vector2(InventoryView.CELL, InventoryView.CELL) * 0.5
+	view._gui_input(press)
+	t.check(grabs.is_empty(), "没亮的抓不起来")
+
+	view.start_reveal()
+	t.check(view.is_revealing(), "时间线在跑")
+	t.eq(view.unrevealed_count(), 3, "刚启动还没亮")
+	view.skip()
+	t.eq(view.unrevealed_count(), 0, "快速搜索：全亮")
+	t.eq(revealed.size(), 3, "每件发了一次 item_revealed")
+	t.eq(finished.size(), 1, "发了一次 reveal_finished")
+	# 栏位顺序：先上后下、先左后右
+	var ordered := true
+	for i in range(1, revealed.size()):
+		var a := box.get_item(int(revealed[i - 1]))
+		var b := box.get_item(int(revealed[i]))
+		if a.origin.y > b.origin.y or (a.origin.y == b.origin.y and a.origin.x > b.origin.x):
+			ordered = false
+	t.check(ordered, "亮的顺序是栏位顺序")
+	view._gui_input(press)
+	t.eq(grabs, [first.uid], "亮了就能抓")
+
+	# 见过的不再走时间线
+	var view2 := LootView.new()
+	var box2 := LootPacker.board_of([&"pistol", &"knife", &"armor"] as Array[StringName], Vector2i(6, 4), c.items)
+	view2.inventory = box2
+	root.add_child(view2)
+	var seen := (box2.items()[0] as ItemInstance).uid
+	view2.mark_revealed([seen])
+	t.eq(view2.unrevealed_count(), 2, "标了一件见过，还剩两件没亮")
+	view2.start_reveal()
+	view2.skip()
+	t.eq(view2.unrevealed_count(), 0, "剩下两件亮完")
+	var view3 := LootView.new()
+	view3.inventory = GridInventory.new(Vector2i(2, 2), 0, false)
+	root.add_child(view3)
+	var fin3: Array = []
+	view3.reveal_finished.connect(func(): fin3.append(true))
+	view3.start_reveal()
+	t.eq(fin3.size(), 1, "空容器直接算亮完")
+	view.queue_free()
+	view2.queue_free()
+	view3.queue_free()
 #endregion

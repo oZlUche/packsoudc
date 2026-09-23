@@ -76,3 +76,4 @@
 | 053 | [三个问题的解释与设想：路线为什么「没有空间」、搜索路线在中途撤离点结束、高危区只从非搜索路线岔出](053-space-search-end-zone-spawn.md) | 阶段 4 · M3 | 设想 |
 | 054 | [现状整理：并分支、改报告号、刷新文档](054-status-tidy-up.md) | 整理 | 完成 |
 | 055 | [M6 规划与 M6-1 场景流骨架](055-m6-plan-and-scene-flow-skeleton.md) | 阶段 6 · M6 | 完成 |
+| 056 | [M6-2 搜刮界面：渐进揭示、拖到棋盘、搜索点逐次装](056-loot-reveal-and-search-screen.md) | 阶段 6 · M6 | 完成 |

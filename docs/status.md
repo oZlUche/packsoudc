@@ -5,7 +5,7 @@
 ## 一句话
 
 背包、战斗、内容管线、地图、节点内容、一局的状态与存档都已落地并有测试；**正式游戏能从主菜单一条线玩到结算与仓库**
-（M6-1 骨架，每一屏先是最小版）。还没有的是搜刮界面的渐进揭示（M6-2）、打磨（M6-3）、侵蚀（第 7 阶段）、局外成长的内容。
+（M6-1 骨架 + M6-2 搜刮界面：战利品一件一件亮出来、拖到棋盘带走）。还没有的是打磨（M6-3：撤离确认、仓库里的东西带进下一局）、侵蚀（第 7 阶段）、局外成长的内容。
 
 ## 里程碑
 
@@ -18,7 +18,7 @@
 | M3 地图 | 完成 | 027（规划）、029～044、052、053 | 拓扑无关数据层、环形生成器（骨架先行、路线风格、高危区、换乘、撤离环间）、手绘网格脚本、类型分配、角度求解布局、地图编辑器、行动计数与单步移动 |
 | M4 节点内容 | 完成 | 045（规划）～050 | 敌人池（档位 / 流派 / 组装）、掉落（每件各掷 / 珍宝）、随机点与搜索点、节点事件接线、经济（进账 / 商店 / 付费撤离点）、探索度 |
 | M5 运行状态与存档 | 完成 | 051 | `RunState` 装壳、`RunRNG`、`RunSave`，读档之后接着走和没存过一样 |
-| M6 场景流 | **进行中** | 055（规划 + M6-1） | M6-1 骨架完成：纯逻辑状态机 `GameFlow`、导演与十一屏最小版、开局装备走管线、结算 `RunResult`、局外 `MetaState` / `MetaSave`、主场景换成正式游戏。待做 M6-2 搜刮界面（渐进揭示、拖到棋盘）、M6-3 打磨 |
+| M6 场景流 | **进行中** | 055（规划 + M6-1）、056（M6-2） | M6-1 骨架：纯逻辑状态机 `GameFlow`、导演与十一屏、开局装备走管线、结算 `RunResult`、局外 `MetaState` / `MetaSave`、主场景换成正式游戏。M6-2 搜刮界面：`LootView` 渐进揭示（剪影 + 噪点 → 按栏位亮、快速搜索）、亮出来的直接拖到棋盘 / 暂存区、搜索点逐次装。待做 M6-3 打磨 |
 | 第 7 阶段 侵蚀 | 未开始 | — | `ErosionField` / `ErosionSchedule`，钩子与顺序已在 `MapTravel` 里定死 |
 | 第 8 阶段 内容扩充 | 未开始 | — | 道具、敌人、事件、新章节地图形态、扩展移动机制 |
 
@@ -35,7 +35,7 @@
 | `core/loot` | 掉落规则与掷骰、修正来源接缝、装箱 | `DropRule`、`DropResolver`、`DropBonusSource`、`LootPacker` |
 | `core/run` | 一局：旅程、体力、钱、节点事件、搜索 / 商店会话、规则、状态与存档；场景流状态机、开局装备、结算 | `RunState`、`RunSave`、`MapTravel`、`NodeEvents`、`Vitality`、`Wallet`、`GameFlow`、`LoadoutDef`、`RunResult` |
 | `core/meta` | 跨局：仓库、钱、战绩、保留规则（`absorb()` 一处）、存档 | `MetaState`、`MetaSave` |
-| `ui/game` | 正式游戏（主场景）：导演 + 屏的底座 + 十一屏 + 背包整理面板 | `GameDirector`、`GameScreen`、`map_screen`、`battle_screen`、`loot_screen`…… |
+| `ui/game` | 正式游戏（主场景）：导演 + 屏的底座 + 十一屏 + 背包整理面板 + 渐进揭示的战利品视图 | `GameDirector`、`GameScreen`、`LootView`、`map_screen`、`battle_screen`、`loot_screen`…… |
 | `ui`（其余） | 五个沙盒 / 编辑器 + 启动选择器（开发期入口） | `launcher`、`inventory_sandbox`、`battle_sandbox`、`content_editor`、`map_sandbox`、`map_editor` |
 | `tools` | 命令行：导入 / 导出 / 归一化内容、脚本检查、批量统计、样例生成、截图 | `import_content`、`normalize_content`、`check_scripts`、`map_stats` |
 | `tests` | 39 个套件，`tools/test.sh` 一键跑 | `run_tests` |
@@ -56,11 +56,11 @@
 ⇄ 叠层（战斗回放、战利品、搜索、商店、事件、休息）→ 结算 → 仓库与战绩。F1 回启动选择器。
 启动选择器（开发期入口）：正式游戏、背包沙盒、战斗沙盒、道具编辑器、地图沙盒（`RunState` 的一层皮）、地图编辑器（随机生成或手绘，改完存回章节）。
 命令行：`bash tools/test.sh`（全套测试，先 `--import` 重建类缓存）、`import_content`、`normalize_content`、`check_scripts`、`map_stats`、
-`capture_scene`（截图；`DEMO_SCREEN=setup / map / bag / battle / result / meta` 把正式游戏推到那一屏）。
+`capture_scene`（截图；`DEMO_SCREEN=setup / map / bag / battle / loot / search / result / meta` 把正式游戏推到那一屏）。
 
 ## 测试
 
-39 个套件、6556 项断言，机器空闲时 70～90 秒（开着别的 Godot 编辑器会到 4 分钟，超时放到 480 秒）。
+39 个套件、6590 项断言，机器空闲时 70～90 秒（开着别的 Godot 编辑器会到 4 分钟，超时放到 480 秒）。
 期望从数据推，不写死；统计类断言用千次抽样留容差；沙盒有帧测试。
 
 ## 占位数值清单（作者定数时改这些文件）
@@ -97,6 +97,5 @@
 
 ## 下一步
 
-**M6-2 搜刮界面**（架构文档 6.2 / 8.3）：战利品容器里每件先是剪影 + 噪点，进入界面后按栏位依次揭示（一个 `Tween` 驱动 `reveal_progress`），
-「快速搜索」把它推到终点；从容器拖到棋盘 / 暂存区（`DragLayer` 已经会）；搜索点的收获同一套。然后 **M6-3 打磨**：撤离确认与遗落提示（3.4）、
-仓库里的东西带进下一局、商店 / 事件 / 休息屏的样子。之后是第 7 阶段侵蚀（`MapTravel.erosion` 钩子已在），再是内容扩充。
+**M6-3 打磨**（架构文档 8.3）：撤离确认与遗落提示（3.4：暂存区里的不带出去，撤离前提一句）、仓库里的东西带进下一局（开局屏从 `MetaState.warehouse` 挑，
+带进去就从仓库拿走 —— 死了就没了）、商店 / 事件 / 休息屏的样子、截图验收。之后是第 7 阶段侵蚀（`MapTravel.erosion` 钩子已在），再是内容扩充。

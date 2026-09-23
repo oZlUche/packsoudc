@@ -31,6 +31,8 @@ var run: RunState = null
 var result: RunResult = null
 var screen: int = Screen.MAIN_MENU
 var last_payload: Dictionary = {}
+## 待拾取里已经在搜索屏亮过的 uid（6.2 的揭示只做一次）。拾取完清空
+var seen_loot: Dictionary = {}
 var _queue: Array[Dictionary] = []
 var _settled: bool = false
 
@@ -147,7 +149,9 @@ func take_loot(uid: int) -> bool:
 	if run == null:
 		return false
 	var ok := run.take_loot(uid)
+	seen_loot.erase(uid)
 	if run.pending_loot == null:
+		seen_loot.clear()
 		_flush()
 	return ok
 
@@ -156,6 +160,7 @@ func take_all_loot() -> int:
 	if run == null:
 		return 0
 	var n := run.take_all_loot()
+	seen_loot.clear()
 	_flush()
 	return n
 
@@ -164,6 +169,7 @@ func discard_loot() -> void:
 	if run == null:
 		return
 	run.discard_loot()
+	seen_loot.clear()
 	_flush()
 #endregion
 
@@ -189,6 +195,10 @@ func _adopt(state: RunState) -> void:
 		# 会话结束（搜满、遭遇、离开）由这里接着往下走，屏不必管
 		session.ended.connect(func(_why: StringName): _flush())
 		_push({"screen": Screen.SEARCH, "node": node, "session": session}))
+	ev.search_closed.connect(func(_n: MapNode, haul: GridInventory, _why: StringName):
+		# 搜索屏里亮过的，到了战利品屏不再重新揭示
+		for inst in haul.items():
+			seen_loot[(inst as ItemInstance).uid] = true)
 	ev.shop_opened.connect(func(node: MapNode, session: ShopSession):
 		if session == null:
 			return
