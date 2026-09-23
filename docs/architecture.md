@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.63 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.64 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3278,7 +3278,7 @@ res://
     battle/         battle_sandbox  battle_view  combatant_panel
     editor/         content_editor  property_form  shape_editor
     event_editor/   event_editor      # 事件编辑器（10.5，报告 064）
-    map/            map_sandbox  map_view  map_layout  ring_layout_base  ring_map_layout  grid_map_layout
+    map/            map_view  map_layout  ring_layout_base  ring_map_layout  grid_map_layout
                     ring_angle_solver  map_node_style
     map_editor/     map_editor
   tools/            import_content  export_content  normalize_content  check_scripts  map_stats
@@ -3387,6 +3387,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.64 | 2026-09-23 | **删地图沙盒**（报告 066，作者拍板）。它砍到只剩生成就是地图编辑器的子集，「走」正式游戏的地图屏已完整；`ui/map/map_sandbox` 与它的帧测试删除，启动选择器剩两个沙盒、三个编辑器。以后单独试地图机制在正式游戏里加「开发者开局」 |
 | v1.63 | 2026-09-23 | **事件屏改版**（报告 065，作者要求）。`event_screen` 选项页与结果页共用两栏大框（1320×760）：左栏 640 宽整块是图（铺满、按比例裁，没图就深底色占位），右栏标题、可滚正文、贴底的整行选项，锁住的原因写在按钮底下；结果页沿用该点事件的配图。编辑器预览同样两栏 |
 | v1.62 | 2026-09-23 | **事件编辑器**（报告 064，作者要求；10.5、11）。`ui/event_editor`：写文字、导入配图（复制到 `assets/events/<id>.<ext>`，`EventImage` 拿不到资源就按原始文件读，事件屏共用）、选项与条件 / 后果由 `PropertyForm` 反射生成、预览照事件屏画、挂进 `NodeRules.events_by_type`；校验与产出都走导入器（JSON + `.tres`），草稿缓存照道具编辑器。按性价比做在项目里而不是独立 exe：注册表、校验、id 表一行都不用复制，要独立就用导出预设 |
 | v1.61 | 2026-09-23 | **事件层与容器屏合一**（报告 063，058 / 059 顺序里的第 4 项；6.5 新增「事件层」、8 节流程图、10.1、11）。事件是内容（新种类 `events`：文字、图像占位、选项；选项的条件与后果是构件、走注册表两张新表）；`NodeRules.events_by_type` 按类型配，`EventPlacer` 生成时按 `content_seed` 定进节点、已有的不覆盖、随机点揭开后再配；`NodeEvents.handle` 变两段（`pending` / `event_pending` / `choose`），后果的旗子决定接下一个 / 开搜索 / 开店 / 开战 / 用过；等着选的跟着存档；**没有事件定义 = 老路**，现有套件一条不改；搜索点的「要不要搜」是默认事件 `search_default`；`GameFlow` 排事件屏、结果页插队首、队空了显示等着选的；战利品屏与搜索屏合成 `container_screen`；六个作者文件当内容占位 |

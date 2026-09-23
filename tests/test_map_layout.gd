@@ -1,10 +1,8 @@
-## 布局求解与地图沙盒（架构文档 5.9，M3-6）。
+## 布局求解（架构文档 5.9，M3-6）。地图沙盒的帧测试随沙盒一起删了（066）：走一步的行为在 test_map_travel / test_run_state 里。
 ##
 ## 唯一的硬目标：**异环通路垂直于切线** —— 每条径向边两端角度相等。
 ## 一个内层点接着多个角度不同的外层点时画不成，那要有告警而不是静默画歪。
 extends RefCounted
-
-const SANDBOX := "res://ui/map/map_sandbox.tscn"
 
 
 ## 径向边的体检。松弛解的性质：**一条简单的链（每个点至多一上一下，只从一个外层点垂下来）整条垂直**；
@@ -201,48 +199,3 @@ static func run_arcs(t: TestCase) -> void:
 	t.check(found > 0, "有切向边可试（%d 条）" % found)
 	t.eq(off_circle, 0, "弧上没有一个采样点离开那一环的圆 —— 上下左右的弧都朝圆心凹")
 
-
-static func frame_sandbox(t: TestCase, root: Window) -> void:
-	t.begin("地图沙盒 · 从第一章开局，挑出生点，走几步")
-
-	var sb = load(SANDBOX).instantiate()
-	root.add_child(sb)
-	var g: MapGraph = sb.graph()
-	t.not_null(g, "开场从 chapter_01 生成了一张图")
-	if g == null:
-		sb.queue_free()
-		return
-	t.check(sb.travel() == null, "还没挑出生点")
-	var some_non_entry := -1
-	for id in g.node_ids():
-		if not g.entry_ids.has(id):
-			some_non_entry = id
-			break
-	t.check(not sb.pick_spawn(some_non_entry), "不是出生点的挑不了")
-	t.check(not sb.step(some_non_entry), "没开局走不了")
-
-	var entry: int = g.entry_ids[0]
-	t.check(sb.pick_spawn(entry), "挑出生点开局")
-	t.not_null(sb.travel(), "有了行程")
-	t.eq(sb.travel().current_id, entry, "人站在出生点上")
-	t.check(g.get_node(entry).is_visited(), "出生点开局就算踩过")
-	t.check(not sb.pick_spawn(g.entry_ids[-1]), "开局之后不能再挑出生点")
-
-	var moves: Array[int] = sb.travel().available_moves()
-	t.check(not moves.is_empty(), "有地方可走")
-	var to: int = moves[0]
-	t.check(sb.step(to), "走一步")
-	t.eq(sb.clock_total(), g.edge_between(entry, to).action_cost if g.edge_between(entry, to) != null
-		else g.edge_between(to, entry).action_cost, "行动点 = 那条边的 action_cost")
-	# 事件接上了（M4-4）：踩到的点由 NodeEvents 处理完才算用过；搜索点要等玩家离开
-	if sb.events() != null and sb.events().current_search != null:
-		t.check(not g.get_node(to).is_visited(), "走到的是搜索点：搜着的时候还没用过")
-		sb.events().current_search.leave()
-	t.check(g.get_node(to).is_visited(), "走到的点处理完用过了")
-	t.check(sb.step(entry), "走回头路")
-	t.eq(sb.travel().history, [entry, to, entry] as Array[int], "走过的路")
-	t.check(not sb.step(99999), "走不到的走不了")
-
-	t.check(sb.regenerate(7), "换个种子重来")
-	t.check(sb.travel() == null and sb.graph() != g, "回到挑出生点，图换了")
-	sb.queue_free()

@@ -42,12 +42,6 @@ const ENTRIES := [
 		"keys": "保存 = JSON + .tres　导入的图复制到 assets/events/<id>",
 	},
 	{
-		"scene": "res://ui/map/map_sandbox.tscn",
-		"title": "地图沙盒",
-		"desc": "M3 验收：从第一章开局，挑出生点，一步一步走；行动点、距最近撤离点、用过的点变灰",
-		"keys": "左键走一步　悬停看这一步花几点　R 换种子　中键拖动　滚轮缩放　F 缩到放下",
-	},
-	{
 		"scene": "res://ui/map_editor/map_editor.tscn",
 		"title": "地图编辑器",
 		"desc": "按参数随机生成一张地图，再手动改点、改路、改类型，存成预设给对局载入",

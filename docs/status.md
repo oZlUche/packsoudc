@@ -1,6 +1,6 @@
 # 现状总览
 
-> 2026-09-23 ｜ `main`（M6 之后，058 / 059 实施中）｜ 架构文档 v1.63 ｜ 这是一份**活文档**：每完成一个里程碑更新一次，历史看 `docs/reports/`
+> 2026-09-23 ｜ `main`（M6 之后，058 / 059 实施中）｜ 架构文档 v1.64 ｜ 这是一份**活文档**：每完成一个里程碑更新一次，历史看 `docs/reports/`
 
 ## 一句话
 
@@ -21,6 +21,7 @@
 | M5 运行状态与存档 | 完成 | 051 | `RunState` 装壳、`RunRNG`、`RunSave`，读档之后接着走和没存过一样 |
 | M6 场景流 | 完成 | 055（规划 + M6-1）、056、057 | 纯逻辑状态机 `GameFlow` + 导演与十一屏（主场景换成正式游戏）；开局装备走管线；结算 `RunResult`、局外 `MetaState` / `MetaSave`；`LootView` 渐进揭示、亮出来的直接拖到棋盘、搜索点逐次装；仓库带进下一局（死了就没了）；撤离确认 |
 | 作者提议 058 / 059 | **进行中** | 058、059（提议）、060～063 | 1 暂存区按点清空 ✅（060）→ 2 仓库格子化、结算置入、图鉴 ✅（061）→ 3 buff 骨架 ✅（062）→ 4 事件层与容器屏合一 ✅（063）→ 5 开局预选与角色 → 6 搜索揭示 → 7 外框（可选） |
+| 删地图沙盒 | 完成 | 066 | 只剩生成就是地图编辑器的子集，「走」正式游戏已完整；两个沙盒、三个编辑器 |
 | 事件屏改版 | 完成 | 065 | 两栏大框，左边整块是图（参考杀戮尖塔），右边标题、正文、贴底的选项 |
 | 事件编辑器 | 完成 | 064 | 写文字、导入配图、拼选项（条件 / 后果下拉来自注册表）、预览照事件屏画、挂进节点规则；存盘 = JSON + .tres；按性价比做在项目里而不是独立 exe |
 | 第 7 阶段 侵蚀 | 未开始 | — | `ErosionField` / `ErosionSchedule`，钩子与顺序已在 `MapTravel` 里定死 |
@@ -41,7 +42,7 @@
 | `core/meta` | 跨局：仓库格子（大小是 `MetaRules`）、带回来的棋盘与一键置入、图鉴、钱、战绩、保留规则（`absorb()` 一处）、存档 v2 | `MetaState`、`MetaSave`、`MetaRules` |
 | `core/settings` | 玩家设置（暂存区提醒档位），`user://settings.json` | `GameSettings`（挑要提的在 `core/run/storage_warning.gd`） |
 | `ui/game` | 正式游戏（主场景）：导演 + 屏的底座 + 各屏（事件屏先过、容器屏战利品 / 搜索合一）+ 背包整理面板 + 仓库面板 + 渐进揭示的战利品视图 | `GameDirector`、`GameScreen`、`LootView`、`map_screen`、`event_screen`、`container_screen`…… |
-| `ui`（其余） | 六个沙盒 / 编辑器 + 启动选择器（开发期入口） | `launcher`、`inventory_sandbox`、`battle_sandbox`、`content_editor`、`event_editor`、`map_sandbox`、`map_editor` |
+| `ui`（其余） | 两个沙盒、三个编辑器 + 启动选择器（开发期入口） | `launcher`、`inventory_sandbox`、`battle_sandbox`、`content_editor`、`event_editor`、`map_editor` |
 | `tools` | 命令行：导入 / 导出 / 归一化内容、脚本检查、批量统计、样例生成、截图 | `import_content`、`normalize_content`、`check_scripts`、`map_stats` |
 | `tests` | 44 个套件，`tools/test.sh` 一键跑 | `run_tests` |
 
@@ -59,7 +60,7 @@
 
 **主场景是正式游戏** `ui/game/game.tscn`：主菜单（新的一局 / 继续上次 / 仓库与战绩 / 设置 / 开发工具）→ 开局（挑章、挑装备、从仓库带、种子）→ 地图（B 开背包、走出发生过事的点前提醒暂存区、撤离点上撤离、存档并回主菜单）
 ⇄ 叠层（战斗回放、战利品、搜索、商店、事件、休息）→ 结算 → 仓库与战绩。F1 回启动选择器。
-启动选择器（开发期入口）：正式游戏、背包沙盒、战斗沙盒、道具编辑器、事件编辑器（写文字、导入配图、拼选项、挂进节点规则）、地图沙盒（`RunState` 的一层皮）、地图编辑器（随机生成或手绘，改完存回章节）。
+启动选择器（开发期入口）：正式游戏、背包沙盒、战斗沙盒、道具编辑器、事件编辑器（写文字、导入配图、拼选项、挂进节点规则）、地图编辑器（随机生成或手绘，改完存回章节）。
 命令行：`bash tools/test.sh`（全套测试，先 `--import` 重建类缓存）、`import_content`、`normalize_content`、`check_scripts`、`map_stats`、
 `capture_scene`（截图；`DEMO_SCREEN=setup / map / bag / battle / loot / search / result / meta` 把正式游戏推到那一屏）。
 
