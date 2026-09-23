@@ -53,6 +53,8 @@ var tracker: SetTracker = null
 var player_baseline: CombatantBaseline = null
 ## 这一局的角色 id（067）；跟着存档，读档后持有方按它找回基线。空 = 没按角色开（老路、测试）
 var character_id: StringName = &""
+## 角色定义（开局给；读档由持有方按 id 找回）。技能编进 buff_context
+var character: CharacterDef = null
 ## 这一局的进阶难度（069）：id 跟着存档，定义由持有方按 id 找回；null = 普通
 var difficulty_id: StringName = &""
 var difficulty: DifficultyDef = null
@@ -130,6 +132,7 @@ static func start(
 	var board_size := BOARD_SIZE
 	var full_kit := kit.duplicate()
 	if p_character != null:
+		s.character = p_character
 		s.character_id = p_character.id
 		s.player_baseline = p_character.baseline()
 		vitality_max = p_character.vitality_max
@@ -253,9 +256,12 @@ func active_buff_defs() -> Array:
 ## 一局的规则被 buff 改成了什么样（每次算，便宜）
 func buff_context() -> RunContext:
 	var ctx := RunBuffs.context(active_buff_defs())
-	# 进阶难度的数值修饰走同一条路（069）
+	# 进阶难度的数值修饰、角色的被动技能走同一条路（069 / 072）
 	if difficulty != null:
 		for e in difficulty.run_effects():
+			e.modify(ctx)
+	if character != null:
+		for e in character.run_effects():
 			e.modify(ctx)
 	return ctx
 
@@ -349,6 +355,9 @@ func _loot_context() -> LootContext:
 	RunBuffs.apply_loot(active, ctx)
 	if difficulty != null:
 		for e in difficulty.loot_effects():
+			e.modify(ctx)
+	if character != null:
+		for e in character.loot_effects():
 			e.modify(ctx)
 	return ctx
 

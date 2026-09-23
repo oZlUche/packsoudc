@@ -24,6 +24,8 @@ extends Resource
 @export var carry_max_items: int = -1
 ## 带入的稀有度上限（[ItemDef.rarity]），-1 = 不限
 @export var carry_rarity_cap: int = -1
+## 被动技能（069 第六节）：一局规则的效果构件（侦察、潜行、逃跑……和 buff 同一套），开局编进 RunContext；主动技能以后走事件层
+@export var skills: Array[Effect] = []
 
 
 ## 这个角色的战斗基线：默认值盖上覆盖项。编译器与战斗不认识角色，只认基线（4.2）
@@ -32,6 +34,31 @@ func baseline() -> CombatantBaseline:
 	for key in base_stats:
 		b.base_stats[StringName(String(key))] = float(base_stats[key])
 	return b
+
+
+func run_effects() -> Array[RunEffect]:
+	var out: Array[RunEffect] = []
+	for e in skills:
+		if e is RunEffect:
+			out.append(e)
+	return out
+
+
+func loot_effects() -> Array[LootEffect]:
+	var out: Array[LootEffect] = []
+	for e in skills:
+		if e is LootEffect:
+			out.append(e)
+	return out
+
+
+## 技能的一句话
+func skills_summary() -> String:
+	var parts: Array[String] = []
+	for e in skills:
+		if e != null and e.has_method("describe") and String(e.call("describe")) != "":
+			parts.append(String(e.call("describe")))
+	return "　".join(parts)
 
 
 ## 带入的东西合不合上限。[param defs] 是要带的（非包）道具定义；返回不合的原因，空串 = 合

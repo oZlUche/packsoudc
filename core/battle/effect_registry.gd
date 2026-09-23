@@ -62,6 +62,9 @@ const RUN_EFFECTS := {
 	&"extra_searches": "res://core/run/effects/extra_searches.gd",
 	&"shop_price_mult": "res://core/run/effects/shop_price_mult.gd",
 	&"luck_bonus": "res://core/run/effects/luck_bonus.gd",
+	&"scout_range": "res://core/run/effects/scout_range.gd",
+	&"stealth": "res://core/run/effects/stealth.gd",
+	&"flee_bonus": "res://core/run/effects/flee_bonus.gd",
 }
 
 ## 事件层（063）：选项的条件（只读）与后果（做一件事或立一面旗）

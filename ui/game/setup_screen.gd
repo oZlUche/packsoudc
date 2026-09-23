@@ -318,6 +318,8 @@ func _refresh() -> void:
 			if ch.carry_rarity_cap >= 0:
 				caps.append("稀有度不超过 %d" % ch.carry_rarity_cap)
 			lines.append("　".join(caps))
+			if ch.skills_summary() != "":
+				lines.append("技能：" + ch.skills_summary())
 		var d := difficulty()
 		if d != null:
 			lines.append("难度「%s」：%s" % [d.display_name, d.summary()])

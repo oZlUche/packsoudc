@@ -205,6 +205,12 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 	for key in def.base_stats:
 		if not (def.base_stats[key] is float or def.base_stats[key] is int):
 			report.error("base_stats", "'%s' 的值得是数" % key)
+	for i in def.skills.size():
+		var e := def.skills[i] as Effect
+		if e == null:
+			report.error("skills[%d]" % i, "空的技能")
+		elif e.scope() != EffectScope.LOOT and e.scope() != EffectScope.RUN:
+			report.error("skills[%d]" % i, "技能只放掉落或一局规则的效果；战斗效果写进基线或道具")
 	if not ctx.items.is_empty():
 		for i in def.starting_bags.size():
 			var item: ItemDef = ctx.items.get(def.starting_bags[i], null)

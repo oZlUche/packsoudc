@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CharacterDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/character_def.gd" id="1_87ct4"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_le3ij"]
+[ext_resource type="Script" path="res://core/run/effects/scout_range.gd" id="3_afq7e"]
+[ext_resource type="Script" path="res://core/run/effects/stealth.gd" id="4_sdk7l"]
+[ext_resource type="Script" path="res://core/run/effects/flee_bonus.gd" id="5_ojrv2"]
+
+[sub_resource type="Resource" id="Resource_fs5p6"]
+script = ExtResource("3_afq7e")
+
+[sub_resource type="Resource" id="Resource_2ih18"]
+script = ExtResource("4_sdk7l")
+
+[sub_resource type="Resource" id="Resource_gyx4w"]
+script = ExtResource("5_ojrv2")
+
+[resource]
+script = ExtResource("1_87ct4")
+id = &"scout"
+display_name = "侦察兵（占位）"
+description = "一个皮革包、一个小包，生命 50。能看见两步内的隐形猎手，更难被发现，更容易逃掉。"
+base_stats = {
+"max_hp": 50
+}
+starting_bags = Array[StringName]([&"bag_leather", &"bag_small"])
+skills = Array[ExtResource("2_le3ij")]([SubResource("Resource_fs5p6"), SubResource("Resource_2ih18"), SubResource("Resource_gyx4w")])

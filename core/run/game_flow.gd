@@ -334,6 +334,7 @@ func _adopt(state: RunState) -> void:
 		state.install_mechanics()
 	var ch := character_of(state.character_id)
 	if ch != null:
+		state.character = ch
 		state.player_baseline = ch.baseline()
 	elif player_baseline != null:
 		state.player_baseline = player_baseline
