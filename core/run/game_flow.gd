@@ -29,6 +29,8 @@ var chapters: Array[ChapterDef] = []
 var loadouts: Array[LoadoutDef] = []
 ## 全部角色（067）。开局屏列出来挑；空 = 老路（按开局装备开）
 var characters: Array[CharacterDef] = []
+## 全部进阶难度（069），按档位排；空 = 只有普通
+var difficulties: Array[DifficultyDef] = []
 var save_path: String = RunSave.DEFAULT_PATH
 var meta_path: String = MetaSave.DEFAULT_PATH
 var settings_path: String = GameSettings.DEFAULT_PATH
@@ -106,6 +108,22 @@ func character_of(id: StringName) -> CharacterDef:
 	return null
 
 
+func difficulty_of(id: StringName) -> DifficultyDef:
+	for d in difficulties:
+		if d.id == id:
+			return d
+	return null
+
+
+## 这个玩家现在能选的难度：没有解锁要求的，和已解锁的（作者：局外解锁的特殊选项）
+func available_difficulties() -> Array[DifficultyDef]:
+	var out: Array[DifficultyDef] = []
+	for d in difficulties:
+		if d.requires_unlock == &"" or (meta != null and meta.has_unlock(d.requires_unlock)):
+			out.append(d)
+	return out
+
+
 ## 现在能不能开新局；空串 = 能，否则是原因（带回来的背包还没清空，058 第 7 条）
 func can_begin() -> String:
 	if meta != null and meta.has_pending_board():
@@ -136,6 +154,13 @@ func toggle_meta_buff(id: StringName) -> bool:
 	return on
 
 
+## 局外解锁的开关（占位：将来由成长系统决定）。改了就存
+func toggle_unlock(id: StringName) -> bool:
+	var on := meta.toggle_unlock(id)
+	save_meta()
+	return on
+
+
 func show_meta() -> void:
 	_go(Screen.META)
 
@@ -155,7 +180,7 @@ func save_settings() -> bool:
 ## 两条路都在开局那一刻存 meta：带进去的从仓库拿走（一局里是新实例，3.1 存档只写 id），撤离了回来，死了就是真没了。
 ## 生成不出图返回 null，停在开局屏
 func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: Array[int] = [] as Array[int],
-		character: CharacterDef = null, layout: Array = []) -> RunState:
+		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null) -> RunState:
 	if can_begin() != "":
 		return null
 	var kit: Array[StringName] = []
@@ -167,7 +192,9 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 		if inst != null and inst.def != null:
 			kit.append(inst.def.id)
 			taken.append(inst)
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout)
+	if difficulty != null and difficulty.requires_unlock != &"" and not meta.has_unlock(difficulty.requires_unlock):
+		return null     # 没解锁的难度开不了（界面本来就不列，这里是兜底）
+	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty)
 	if state == null:
 		return null
 	for inst in taken:
@@ -298,6 +325,10 @@ func _adopt(state: RunState) -> void:
 	state.buff_defs = buff_defs      # 读档回来的只有 id，定义表在这里
 	state.event_defs = event_defs
 	# 基线：按角色（读档回来只有 id，在这里找回）；没角色用持有方给的
+	# 难度：读档回来只有 id，在这里找回定义并把机制重新接上（开局那次 RunState.start 已经装过，再装一次是幂等的）
+	if state.difficulty == null and state.difficulty_id != &"":
+		state.difficulty = difficulty_of(state.difficulty_id)
+		state.install_mechanics()
 	var ch := character_of(state.character_id)
 	if ch != null:
 		state.player_baseline = ch.baseline()
@@ -407,6 +438,17 @@ static func load_characters() -> Array[CharacterDef]:
 	for res in _load_dir(ContentPaths.CHARACTERS):
 		if res is CharacterDef:
 			out.append(res)
+	return out
+
+
+## 按档位排：普通在前
+static func load_difficulties() -> Array[DifficultyDef]:
+	var out: Array[DifficultyDef] = []
+	for res in _load_dir(ContentPaths.DIFFICULTIES):
+		if res is DifficultyDef:
+			out.append(res)
+	out.sort_custom(func(a: DifficultyDef, b: DifficultyDef) -> bool:
+		return a.level < b.level if a.level != b.level else String(a.id) < String(b.id))
 	return out
 
 

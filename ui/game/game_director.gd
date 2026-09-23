@@ -55,6 +55,7 @@ func _ready() -> void:
 	flow.chapters = GameFlow.load_chapters()
 	flow.loadouts = GameFlow.load_loadouts()
 	flow.characters = GameFlow.load_characters()
+	flow.difficulties = GameFlow.load_difficulties()
 	flow.save_path = save_path
 	flow.meta_path = meta_path
 	flow.settings_path = settings_path

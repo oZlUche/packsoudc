@@ -68,6 +68,8 @@ func _import(kind: String, data: Dictionary, ctx: ContentImporter.Context, repor
 			return ContentImporter.import_loadout(data, ctx, report)
 		"characters":
 			return ContentImporter.import_character(data, ctx, report)
+		"difficulties":
+			return ContentImporter.import_difficulty(data, ctx, report)
 		"meta_rules":
 			return ContentImporter.import_meta_rules(data, ctx, report)
 		"run_buffs":
@@ -100,6 +102,8 @@ func _export(kind: String, res: Resource) -> Dictionary:
 			return ContentExporter.export_loadout(res)
 		"characters":
 			return ContentExporter.export_character(res)
+		"difficulties":
+			return ContentExporter.export_difficulty(res)
 		"meta_rules":
 			return ContentExporter.export_meta_rules(res)
 		"run_buffs":

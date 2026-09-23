@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="DifficultyDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_jxgj7"]
+[ext_resource type="Script" path="res://core/run/run_mechanic.gd" id="2_lqu6k"]
+[ext_resource type="Script" path="res://core/run/difficulty_def.gd" id="3_tkvi5"]
+
+[resource]
+script = ExtResource("3_tkvi5")
+id = &"normal"
+display_name = "普通"
+description = "没有额外机制。"

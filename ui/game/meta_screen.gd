@@ -8,6 +8,7 @@ var _wh = null
 var _new_run_btn: Button
 var _hint: Label
 var _buff_btns: Dictionary = {}
+var _unlock_btns: Dictionary = {}
 
 
 func open(payload: Dictionary) -> void:
@@ -63,6 +64,25 @@ func open(payload: Dictionary) -> void:
 		right.add_child(b)
 	if not any_meta:
 		right.add_child(_label("（没有局外 buff 的内容）", 12, UiPalette.DIM))
+	# 局外解锁（069，占位开关）：难度定义里要求的解锁 id 各一个开关
+	var unlock_ids: Array[StringName] = []
+	for d in flow.difficulties:
+		if d.requires_unlock != &"" and not unlock_ids.has(d.requires_unlock):
+			unlock_ids.append(d.requires_unlock)
+	if not unlock_ids.is_empty():
+		right.add_child(_label("局外解锁　占位：开关列表，将来由成长系统决定", 15, UiPalette.DIM))
+		for uid in unlock_ids:
+			var names: Array[String] = []
+			for d in flow.difficulties:
+				if d.requires_unlock == uid:
+					names.append(d.display_name)
+			var key: StringName = uid
+			var ub := _button("%s　解锁难度：%s" % [uid, "、".join(names)], func(): toggle_unlock(key), 13)
+			ub.toggle_mode = true
+			ub.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			ub.set_pressed_no_signal(m.has_unlock(key))
+			_unlock_btns[key] = ub
+			right.add_child(ub)
 	right.add_child(_label("图鉴　带出过的点亮，记累计件数", 15, UiPalette.DIM))
 	var codex := _log_box(13)
 	codex.custom_minimum_size.y = 260
@@ -104,6 +124,13 @@ func toggle_buff(id: StringName) -> bool:
 	var on := flow.toggle_meta_buff(id)
 	if _buff_btns.has(id):
 		(_buff_btns[id] as Button).set_pressed_no_signal(on)
+	return on
+
+
+func toggle_unlock(id: StringName) -> bool:
+	var on := flow.toggle_unlock(id)
+	if _unlock_btns.has(id):
+		(_unlock_btns[id] as Button).set_pressed_no_signal(on)
 	return on
 
 

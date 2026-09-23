@@ -49,6 +49,11 @@ var tracker: SetTracker = null
 var player_baseline: CombatantBaseline = null
 ## 这一局的角色 id（067）；跟着存档，读档后持有方按它找回基线。空 = 没按角色开（老路、测试）
 var character_id: StringName = &""
+## 这一局的进阶难度（069）：id 跟着存档，定义由持有方按 id 找回；null = 普通
+var difficulty_id: StringName = &""
+var difficulty: DifficultyDef = null
+## 机制在一局上留的记号（`mechanic_tags[&"erosion"] = true`……），机制装的时候写，别处只读
+var mechanic_tags: Dictionary = {}
 
 var pool: EnemyPool = null
 var drop_rule: DropRule = null
@@ -82,7 +87,7 @@ static func start(
 	p_chapter: ChapterDef, p_seed: int, p_items: ItemDatabase, p_enemies: EnemyDatabase,
 	p_sets: SetDatabase = null, kit: Array[StringName] = [] as Array[StringName],
 	p_buff_defs: Dictionary = {}, p_meta_buffs: Array[StringName] = [] as Array[StringName],
-	p_character: CharacterDef = null, p_layout: Array = []
+	p_character: CharacterDef = null, p_layout: Array = [], p_difficulty: DifficultyDef = null
 ) -> RunState:
 	if p_chapter == null or p_chapter.map_source == null:
 		return null
@@ -108,6 +113,9 @@ static func start(
 		var def: RunBuffDef = p_buff_defs.get(id, null)
 		if def != null and def.is_meta():
 			s.meta_buffs.append(id)
+	if p_difficulty != null:
+		s.difficulty = p_difficulty
+		s.difficulty_id = p_difficulty.id
 	var ctx := s.buff_context()
 	var vitality_max := Vitality.PLACEHOLDER_MAX
 	var board_size := BOARD_SIZE
@@ -126,6 +134,7 @@ static func start(
 	s._bind_tracker()
 	s._place_layout(p_layout)
 	s._give_kit(full_kit)
+	s.install_mechanics()
 	s.travel = MapTravel.new(s.map, ActionClock.new())
 	s.travel.vitality = s.vitality
 	s._wire_events()
@@ -222,7 +231,22 @@ func active_buff_defs() -> Array:
 
 ## 一局的规则被 buff 改成了什么样（每次算，便宜）
 func buff_context() -> RunContext:
-	return RunBuffs.context(active_buff_defs())
+	var ctx := RunBuffs.context(active_buff_defs())
+	# 进阶难度的数值修饰走同一条路（069）
+	if difficulty != null:
+		for e in difficulty.run_effects():
+			e.modify(ctx)
+	return ctx
+
+
+## 把难度清单里的机制接进一局（开局与读档各一次；机制必须幂等）。没有难度 = 什么都不装
+func install_mechanics() -> void:
+	if difficulty == null:
+		return
+	for m in difficulty.mechanics:
+		var mech := m as RunMechanic
+		if mech != null:
+			mech.install(self)
 
 
 ## 给一个地图 buff（事件的后果）。不认识的 id、局外的 buff 给不了；已经有的刷新时限
@@ -302,6 +326,9 @@ func _loot_context() -> LootContext:
 		for e in tracker.effects_in_scope(EffectScope.LOOT):
 			(e as LootEffect).modify(ctx)
 	RunBuffs.apply_loot(active, ctx)
+	if difficulty != null:
+		for e in difficulty.loot_effects():
+			e.modify(ctx)
 	return ctx
 
 
@@ -497,6 +524,7 @@ func to_dict() -> Dictionary:
 		"seed": run_seed,
 		"chapter": String(chapter.id),
 		"character": String(character_id),
+		"difficulty": String(difficulty_id),
 		"phase": phase,
 		"end_reason": String(end_reason),
 		"map": map.to_dict(),
@@ -531,6 +559,7 @@ static func from_dict(
 	s.run_seed = int(d.get("seed", 0))
 	s.chapter = p_chapter
 	s.character_id = StringName(String(d.get("character", "")))
+	s.difficulty_id = StringName(String(d.get("difficulty", "")))
 	s.items = p_items
 	s.enemies = p_enemies
 	s.sets = p_sets

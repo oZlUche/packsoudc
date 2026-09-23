@@ -73,6 +73,13 @@ class Context:
 		if def != null and def.id != &"":
 			characters[def.id] = def
 
+	## id -> DifficultyDef
+	var difficulties: Dictionary = {}
+
+	func register_difficulty(def: DifficultyDef) -> void:
+		if def != null and def.id != &"":
+			difficulties[def.id] = def
+
 	## id -> MetaRules
 	var meta_rules: Dictionary = {}
 
@@ -199,6 +206,27 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 			elif not item.is_bag:
 				report.error("starting_bags[%d]" % i, "'%s' 不是包" % def.starting_bags[i])
 	ctx.register_character(def)
+	return def
+
+
+## 进阶难度（069）：档位非负；机制不能是空的；effects 只放掉落或一局规则的效果（和 buff 一样）
+static func import_difficulty(data: Dictionary, ctx: Context, report: ImportReport) -> DifficultyDef:
+	var def := DifficultyDef.new()
+	_fill(def, data, "", ctx, report)
+	if def.id == &"":
+		report.error("id", "难度必须有 id")
+	if def.level < 0:
+		report.error("level", "档位不能为负（0 = 普通）")
+	for i in def.mechanics.size():
+		if def.mechanics[i] == null:
+			report.error("mechanics[%d]" % i, "空的机制")
+	for i in def.effects.size():
+		var e := def.effects[i] as Effect
+		if e == null:
+			report.error("effects[%d]" % i, "空的效果")
+		elif e.scope() != EffectScope.LOOT and e.scope() != EffectScope.RUN:
+			report.error("effects[%d]" % i, "难度的 effects 只放掉落或一局规则的效果")
+	ctx.register_difficulty(def)
 	return def
 
 

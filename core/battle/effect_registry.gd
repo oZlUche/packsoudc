@@ -87,6 +87,11 @@ const EVENT_OUTCOMES := {
 	&"say": "res://core/run/events/outcomes/say.gd",
 }
 
+## 一局的机制（069）：难度清单里开的那些
+const RUN_MECHANICS := {
+	&"erosion": "res://core/run/mechanics/erosion_mechanic.gd",
+}
+
 const TABLES := {
 	&"trigger": TRIGGERS,
 	&"cadence": CADENCES,
@@ -97,6 +102,7 @@ const TABLES := {
 	&"run_effect": RUN_EFFECTS,
 	&"event_condition": EVENT_CONDITIONS,
 	&"event_outcome": EVENT_OUTCOMES,
+	&"run_mechanic": RUN_MECHANICS,
 }
 
 

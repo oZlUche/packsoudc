@@ -30,6 +30,8 @@ var board: GridInventory = null
 var codex: Dictionary = {}
 ## 激活的局外 buff（id）。谁来改它不写死：现在是局外屏的开关列表占位，将来是任务系统、局外科技
 var active_buffs: Array[StringName] = []
+## 局外解锁（069）：难度、以后的角色 / 内容按 id 查。谁来解锁不写死：现在是局外屏的占位开关，将来是成长系统
+var unlocks: Array[StringName] = []
 ## 撤离带出来的钱累计。局外货币怎么花（15 节第 4 项）还没定，先攒着
 var funds: int = 0
 ## 累计背出去的价值（6.4）
@@ -139,6 +141,13 @@ func absorb(result: RunResult) -> Dictionary:
 	return got
 
 
+func _unlock_ids() -> Array:
+	var out: Array = []
+	for id in unlocks:
+		out.append(String(id))
+	return out
+
+
 func _buff_ids() -> Array:
 	var out: Array = []
 	for id in active_buffs:
@@ -180,6 +189,20 @@ func discard_board() -> void:
 	changed.emit()
 
 
+func has_unlock(id: StringName) -> bool:
+	return unlocks.has(id)
+
+
+## 解锁 / 收回一个局外解锁（占位开关）。返回现在解没解锁
+func toggle_unlock(id: StringName) -> bool:
+	if unlocks.has(id):
+		unlocks.erase(id)
+	else:
+		unlocks.append(id)
+	changed.emit()
+	return unlocks.has(id)
+
+
 ## 开 / 关一个局外 buff。返回现在开没开
 func toggle_buff(id: StringName) -> bool:
 	if active_buffs.has(id):
@@ -207,6 +230,7 @@ func to_dict() -> Dictionary:
 		"board": board.to_dict() if board != null else null,
 		"codex": codex.duplicate(),
 		"active_buffs": _buff_ids(),
+		"unlocks": _unlock_ids(),
 		"next_uid": _next_uid,
 		"funds": funds, "score": score, "runs": runs, "extractions": extractions, "deaths": deaths,
 		"best_value": best_value,
@@ -235,6 +259,8 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		m.codex[String(key)] = int((d["codex"] as Dictionary)[key])
 	for id in d.get("active_buffs", []):
 		m.active_buffs.append(StringName(String(id)))
+	for id in d.get("unlocks", []):
+		m.unlocks.append(StringName(String(id)))
 	m._next_uid = int(d.get("next_uid", 1))
 	for inst in m.warehouse.items():
 		m._next_uid = maxi(m._next_uid, (inst as ItemInstance).uid + 1)

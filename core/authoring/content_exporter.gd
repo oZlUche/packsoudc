@@ -58,6 +58,10 @@ static func export_character(def: CharacterDef) -> Dictionary:
 	return _dump(def)
 
 
+static func export_difficulty(def: DifficultyDef) -> Dictionary:
+	return _dump(def)
+
+
 static func export_meta_rules(rules: MetaRules) -> Dictionary:
 	return _dump(rules)
 

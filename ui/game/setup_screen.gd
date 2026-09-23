@@ -11,12 +11,14 @@ extends GameScreen
 
 var chapter_index: int = 0
 var character_index: int = 0
+var difficulty_index: int = 0
 var run_seed: int = 1
 ## 这个角色的棋盘，初始包摆好；从仓库拖进来的东西就在上面。出发时整块记成 layout 交给 RunState
 var board: GridInventory = null
 
 var _chapter_btns: Array[Button] = []
 var _character_btns: Array[Button] = []
+var _difficulty_btns: Array[Button] = []
 var _board_host: VBoxContainer
 var _board_view: InventoryView = null
 var _warehouse_view: InventoryView = null
@@ -64,6 +66,16 @@ func open(_payload: Dictionary) -> void:
 		left.add_child(b)
 	if flow.characters.is_empty():
 		left.add_child(_label("没有角色定义：按第一套开局装备开（老路）", 12, UiPalette.DIM))
+	var avail := flow.available_difficulties()
+	if not avail.is_empty():
+		left.add_child(_label("难度", 15, UiPalette.DIM))
+		for i in avail.size():
+			var d := avail[i]
+			var idx := i
+			var b := _button(d.display_name if d.display_name != "" else String(d.id), func(): choose_difficulty(idx))
+			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			_difficulty_btns.append(b)
+			left.add_child(b)
 	_desc = _wrapped("", 12, UiPalette.DIM, 280)
 	left.add_child(_desc)
 	var seed_row := _hbox(8)
@@ -112,6 +124,7 @@ func open(_payload: Dictionary) -> void:
 
 	choose_chapter(0)
 	choose_character(0)
+	choose_difficulty(0)
 
 
 #region 公开动作
@@ -133,6 +146,22 @@ func choose_character(i: int) -> void:
 		_character_btns[k].add_theme_color_override("font_color", UiPalette.FG if k == character_index else UiPalette.DIM)
 	_rebuild_board()
 	_refresh()
+
+
+## 挑难度（只在能选的里挑：没有解锁要求的和已解锁的）
+func choose_difficulty(i: int) -> void:
+	var avail := flow.available_difficulties()
+	if avail.is_empty():
+		return
+	difficulty_index = clampi(i, 0, avail.size() - 1)
+	for k in _difficulty_btns.size():
+		_difficulty_btns[k].add_theme_color_override("font_color", UiPalette.FG if k == difficulty_index else UiPalette.DIM)
+	_refresh()
+
+
+func difficulty() -> DifficultyDef:
+	var avail := flow.available_difficulties()
+	return avail[difficulty_index] if difficulty_index < avail.size() else null
 
 
 func chapter() -> ChapterDef:
@@ -207,9 +236,9 @@ func depart() -> bool:
 	var ch := character()
 	var run: RunState = null
 	if ch != null:
-		run = flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board))
+		run = flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty())
 	else:
-		run = flow.begin(c, flow.loadouts[0] if not flow.loadouts.is_empty() else null, run_seed)
+		run = flow.begin(c, flow.loadouts[0] if not flow.loadouts.is_empty() else null, run_seed, [] as Array[int], null, [], difficulty())
 	if run == null:
 		_status.text = "这一章生成不出图：%s" % (c.map_source.last_error if c.map_source != null else "没有地图来源")
 		return false
@@ -289,6 +318,9 @@ func _refresh() -> void:
 			if ch.carry_rarity_cap >= 0:
 				caps.append("稀有度不超过 %d" % ch.carry_rarity_cap)
 			lines.append("　".join(caps))
+		var d := difficulty()
+		if d != null:
+			lines.append("难度「%s」：%s" % [d.display_name, d.summary()])
 		_desc.text = "\n".join(lines)
 	if _readout != null and board != null:
 		_readout.clear()
