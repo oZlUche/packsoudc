@@ -73,6 +73,9 @@ func draw_edge(
 	canvas: CanvasItem, graph: MapGraph, edge: MapEdge, a: Vector2, b: Vector2,
 	color: Color, width: float, rect: Rect2 = Rect2()
 ) -> void:
+	if edge.is_portal():
+		MapLayout.draw_portal(canvas, a, b, width)
+		return
 	var levels := levels_of(graph)
 	var la := int(levels.get(edge.from_id, -1))
 	if la != int(levels.get(edge.to_id, -2)) or la <= 0:
@@ -99,6 +102,8 @@ func _ensure_solved(graph: MapGraph) -> void:
 	var radial: Array = []
 	var levels := levels_of(graph)
 	for e in graph.edges:
+		if e.is_portal():
+			continue     # 传送点不参与角度求解：它本来就跨很远
 		if int(levels.get(e.from_id, -1)) != int(levels.get(e.to_id, -1)):
 			radial.append([e.from_id, e.to_id])
 	var solver := RingAngleSolver.new()

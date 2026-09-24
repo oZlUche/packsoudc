@@ -113,8 +113,8 @@ func mark_visited(id: int) -> void:
 func _check(intent: MoveIntent) -> String:
 	if graph == null or intent == null:
 		return "没有地图"
-	if intent.kind != MoveIntent.STEP:
-		return "还不认识 %s 这种移动方式 —— 底层现在只实现 step" % intent.kind
+	if intent.kind != MoveIntent.STEP and intent.kind != MoveIntent.TELEPORT:
+		return "还不认识 %s 这种移动方式 —— 底层现在实现 step 与 teleport（8-1）" % intent.kind
 	if intent.from_id != current_id:
 		return "意图过期：它以为在 %d，人在 %d" % [intent.from_id, current_id]
 	if MapNavigator.edge_for_step(graph, intent.from_id, intent.to_id) == null:

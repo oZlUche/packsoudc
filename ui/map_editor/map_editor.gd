@@ -19,6 +19,9 @@ var _gen: MapGenerator = null
 var _cfg: Resource = null
 var _dirty: bool = false
 var _selected: int = -1
+## 传送模式（8-1）：Shift+左键连的边是传送点，花 portal_cost 行动点
+var portal_mode: bool = false
+var portal_cost: int = 1
 
 var _view: MapView
 var _gen_pick: OptionButton
@@ -223,6 +226,8 @@ func toggle_edge(a: int, b: int) -> bool:
 		e = _graph.edge_between(b, a)
 	if e != null:
 		_graph.remove_edge(e)
+	elif portal_mode:
+		_graph.connect_nodes(a, b, MapEdge.PORTAL, maxi(0, portal_cost))
 	else:
 		var layout := MapLayout.for_graph(_graph)
 		_graph.connect_nodes(a, b, layout.edge_kind(_graph, a, b) if layout != null else &"")
@@ -518,6 +523,19 @@ func _build_side() -> Control:
 	buttons.add_child(_button("生成", func(): generate()))
 	buttons.add_child(_button("换个种子生成", func(): generate_with_new_seed()))
 	col.add_child(buttons)
+	var portal_row := HBoxContainer.new()
+	var portal_toggle := CheckButton.new()
+	portal_toggle.text = "Shift+左键连成传送点"
+	portal_toggle.add_theme_font_override("font", _font)
+	portal_toggle.toggled.connect(func(on: bool): portal_mode = on)
+	portal_row.add_child(portal_toggle)
+	var portal_spin := SpinBox.new()
+	portal_spin.min_value = 0
+	portal_spin.max_value = 9
+	portal_spin.value = portal_cost
+	portal_spin.value_changed.connect(func(v: float): portal_cost = int(v))
+	portal_row.add_child(_pair("传送花几点", portal_spin))
+	col.add_child(portal_row)
 
 	_status = _label("", 12, UiPalette.DIM)
 	_status.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY

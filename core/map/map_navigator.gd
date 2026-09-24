@@ -36,6 +36,8 @@ static func resolve_step(graph: MapGraph, from_id: int, to_id: int) -> MoveInten
 	var e := edge_for_step(graph, from_id, to_id)
 	if e == null:
 		return null
+	if e.is_portal():
+		return MoveIntent.teleport(from_id, to_id, e.action_cost)     # 传送点（8-1）：同一条路，另一种意图
 	return MoveIntent.step(from_id, to_id, e.action_cost)
 
 

@@ -296,7 +296,10 @@ func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
 	_view.current_id = intent.to_id
 	var n := _run.map.get_node(intent.to_id)
 	var what: String = MapNodeStyle.of(n.type)["label"]
-	_note(("→ %d %s（花 %d 点）" if first_visit else "→ %d %s，穿行（花 %d 点，这里用过了）") % [intent.to_id, what, intent.action_cost])
+	if intent.kind == MoveIntent.TELEPORT:
+		_note("[color=#b38cff]⇢ %d %s，传送（花 %d 点）%s[/color]" % [intent.to_id, what, intent.action_cost, "" if first_visit else "，这里用过了"])
+	else:
+		_note(("→ %d %s（花 %d 点）" if first_visit else "→ %d %s，穿行（花 %d 点，这里用过了）") % [intent.to_id, what, intent.action_cost])
 	_after_move()
 
 

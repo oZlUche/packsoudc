@@ -57,7 +57,18 @@ func draw_edge(
 	canvas: CanvasItem, _graph: MapGraph, _edge: MapEdge, a: Vector2, b: Vector2,
 	color: Color, width: float, _rect: Rect2 = Rect2()
 ) -> void:
+	if _edge.is_portal():
+		draw_portal(canvas, a, b, width)
+		return
 	canvas.draw_line(a, b, color, width, true)
+
+
+## 传送点（8-1）：虚线、紫色，两端各一个小圈 —— 和普通的路一眼能分开
+static func draw_portal(canvas: CanvasItem, a: Vector2, b: Vector2, width: float) -> void:
+	var color := Color(0.70, 0.55, 1.0, 0.85)
+	canvas.draw_dashed_line(a, b, color, maxf(width, 2.0), 10.0, true)
+	canvas.draw_arc(a, 18.0, 0.0, TAU, 24, color, 1.5, true)
+	canvas.draw_arc(b, 18.0, 0.0, TAU, 24, color, 1.5, true)
 
 
 ## 画在节点与边底下的衬底（环形图的那几圈同心圆）。

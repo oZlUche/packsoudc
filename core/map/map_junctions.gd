@@ -23,6 +23,8 @@ static func find(graph: MapGraph) -> Dictionary:
 	for id in ids:
 		var set := {}
 		for e in graph.edges_of(id):
+			if e.is_portal():
+				continue     # 传送点不算路口的腿
 			set[e.other(id)] = true     # 画图不分方向：单向路也是一条线
 		nbrs[id] = set
 

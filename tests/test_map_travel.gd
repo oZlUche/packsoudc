@@ -175,10 +175,10 @@ static func run_refusals(t: TestCase) -> void:
 	var to: int = g.neighbors(start)[0]
 	var stale := MoveIntent.step(to, g.neighbors(to)[0], 1)
 	t.check(not travel.apply(stale), "意图的起点不是人所在的点 → 拒绝")
-	# 还不认识的移动方式：留给传送 / 定点移动的缝
+	# 还不认识的移动方式：留给定点移动等的缝（传送在 8-1 已实现）
 	var tele := MoveIntent.step(start, to, 1)
-	tele.kind = &"teleport"
-	t.check(not travel.apply(tele), "teleport 还没实现 → 拒绝，不是当 step 走")
+	tele.kind = &"warp"
+	t.check(not travel.apply(tele), "认不得的移动方式 → 拒绝，不是当 step 走（teleport 已在 8-1 实现，这里用 warp 当例子）")
 	t.eq(whys.size(), 5, "每次拒绝一条原因")
 	t.eq(travel.clock.total, 0, "拒绝的一步不花行动点")
 	t.eq(travel.current_id, start, "人没动")

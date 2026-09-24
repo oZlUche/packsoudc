@@ -8,8 +8,10 @@
 class_name MoveIntent
 extends RefCounted
 
-## 底层唯一实现的一种：走一条边到相邻的点
+## 走一条边到相邻的点
 const STEP := &"step"
+## 传送（8-1，报告 076）：走一条 kind 为 portal 的边，两端可以隔很远；花的行动点是那条边说的，不经过途中任何点
+const TELEPORT := &"teleport"
 
 ## "step"；未来 "teleport" / "waypoint" / …
 var kind: StringName = STEP
@@ -28,6 +30,15 @@ var passes_through: Array[int] = []
 static func step(p_from: int, p_to: int, p_cost: int) -> MoveIntent:
 	var m := MoveIntent.new()
 	m.kind = STEP
+	m.from_id = p_from
+	m.to_id = p_to
+	m.action_cost = p_cost
+	return m
+
+
+static func teleport(p_from: int, p_to: int, p_cost: int) -> MoveIntent:
+	var m := MoveIntent.new()
+	m.kind = TELEPORT
 	m.from_id = p_from
 	m.to_id = p_to
 	m.action_cost = p_cost

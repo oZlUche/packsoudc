@@ -75,6 +75,12 @@ extends Resource
 ## 一片高危区长成什么样才算数（规模、出入口上限）。写进图的 layout_meta，校验从图上读
 @export var zone_rules: ZoneRules = ZoneRules.new()
 
+@export_group("传送点")
+## 生成时连几条传送点（8-1）：两端隔至少 portal_min_steps 步的两个普通点，走一次花 portal_cost 行动点。0 = 没有
+@export var portal_count: int = 0
+@export var portal_cost: int = 1
+@export var portal_min_steps: int = 4
+
 @export_group("边与槽位")
 ## 单条路径的长度上限：一条边两端最多差几环。生成器只连相邻环，所以 1 就是它会用到的最大值
 @export var edge_max_ring_offset: int = 1

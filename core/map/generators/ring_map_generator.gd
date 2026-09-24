@@ -121,7 +121,44 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 	if not typer.assign(_graph, _cfg, _rng):
 		build_note = "类型分配失败：" + typer.note
 		return null
+	_add_portals()
 	return _graph
+
+
+## 传送点（8-1，报告 076）：类型填完之后连几条 portal 边 —— 两个隔得够远的普通点之间，走一次花 portal_cost 行动点。
+## 它不是「路」：校验、角度求解、路口识别都把它剔掉（[method without_portals]），只有移动与距离认它
+func _add_portals() -> void:
+	if _cfg.portal_count <= 0:
+		return
+	var ids: Array[int] = []
+	for id in _graph.node_ids():
+		if not MapNodeTypes.STRUCTURAL.has(_graph.get_node(id).type):
+			ids.append(id)
+	var used := {}
+	var made := 0
+	var tries := 0
+	while made < _cfg.portal_count and tries < 400 and ids.size() >= 2:
+		tries += 1
+		var a: int = ids[_rng.randi_range(0, ids.size() - 1)]
+		var b: int = ids[_rng.randi_range(0, ids.size() - 1)]
+		if a == b or used.has(a) or used.has(b):
+			continue
+		var dist := MapNavigator.distance_map(_graph, a)
+		if not dist.has(b) or int(dist[b]) < _cfg.portal_min_steps:
+			continue
+		if _graph.connect_nodes(a, b, MapEdge.PORTAL, maxi(0, _cfg.portal_cost)) != null:
+			used[a] = true
+			used[b] = true
+			made += 1
+
+
+## 去掉传送点的副本：生成规则只管「路」，传送点本来就跨很远、可以交叉
+static func without_portals(g: MapGraph) -> MapGraph:
+	var copy := MapGraph.from_dict(g.to_dict())
+	for e in copy.edges.duplicate():
+		if (e as MapEdge).is_portal():
+			copy.remove_edge(e)
+	return copy
 
 
 #region 1–3 节点
@@ -1434,8 +1471,21 @@ func _break_tangentials() -> void:
 #region 校验
 ## 通用校验之上，再看这一章自己的拓扑规矩。类型相关的（配额、覆盖、路线风险收益）
 ## 属于 M3-3c，这里一条都不查 —— 那时候类型还全是 battle。
+## 传送点不是路（8-1）：先把 portal 边摘下来、按生成规则校验、再装回去（不复制图：复制会丢生成期挂在图上的东西）
 func validate(graph: MapGraph, v: MapValidation) -> void:
-	super(graph, v)
+	var portals: Array = []
+	if graph != null:
+		for e in graph.edges.duplicate():
+			if (e as MapEdge).is_portal():
+				graph.remove_edge(e)
+				portals.append(e)
+	_validate_roads(graph, v)
+	for e in portals:
+		graph.add_edge(e)
+
+
+func _validate_roads(graph: MapGraph, v: MapValidation) -> void:
+	super.validate(graph, v)
 	if graph == null or graph.node_count() == 0:
 		return
 

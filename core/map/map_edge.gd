@@ -5,6 +5,9 @@
 class_name MapEdge
 extends RefCounted
 
+## 传送点这一种边（8-1）：两端可以隔很远，走它是一次传送
+const PORTAL := &"portal"
+
 var from_id: int = 0
 var to_id: int = 0
 
@@ -25,6 +28,10 @@ var layout: Dictionary = {}
 
 
 ## 从 [param id] 这一头看过去，对面是谁。不挨着这条路则返回 -1。
+func is_portal() -> bool:
+	return kind == PORTAL
+
+
 func other(id: int) -> int:
 	if id == from_id:
 		return to_id
