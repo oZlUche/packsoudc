@@ -22,3 +22,5 @@ display_name = "追猎者（占位）"
 description = "有人在跟着你。它的脚步声停在了不远处。"
 behavior = SubResource("Resource_f1fwv")
 loss_outcomes = Array[ExtResource("2_2wi5j")]([SubResource("Resource_5chbg"), SubResource("Resource_pqrs8")])
+enemy_pool = &"hunters"
+strength_by_bracket = Array[int]([0, 1, 2, 3])

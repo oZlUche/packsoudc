@@ -421,3 +421,63 @@ static func run_save_and_flow(t: TestCase) -> void:
 	t.eq(f.screen, GameFlow.Screen.BATTLE, "→ 回放")
 	t.check(f.save() or run.is_over(), "存得了档")
 	_cleanup()
+
+
+static func run_brackets(t: TestCase) -> void:
+	t.begin("猎手 · 段位只看步数：机制的段位表划段，猎手按段位定档（表空退回强度规则）；专属池")
+	var c := _content()
+	var base := _first_def(c)
+	if base == null:
+		t.check(false, "没有猎手定义")
+		return
+	var m := HunterMechanic.new()
+	m.bracket_steps = [0, 3, 8] as Array[int]
+	t.eq([m.bracket_of(0), m.bracket_of(2), m.bracket_of(3), m.bracket_of(7), m.bracket_of(8), m.bracket_of(99)], [0, 0, 1, 1, 2, 2], "步数 → 段位")
+	t.eq(HunterMechanic.bracket_of_steps([0, 5] as Array[int], 5), 1, "静态版一样")
+	var bad := ImportReport.new()
+	ContentImporter.import_difficulty({"id": "x", "mechanics": [{"type": "hunters", "bracket_steps": [1, 5]}]}, ContentImporter.Context.new(), bad)
+	t.check(not bad.ok(), "段位表第一项不是 0 报错")
+	var bad2 := ImportReport.new()
+	ContentImporter.import_difficulty({"id": "x", "mechanics": [{"type": "hunters", "bracket_steps": [0, 5, 3]}]}, ContentImporter.Context.new(), bad2)
+	t.check(not bad2.ok(), "段位表递减报错")
+	var bad3 := ImportReport.new()
+	ContentImporter.import_hunter({"id": "x", "strength_by_bracket": [0, -1]}, ContentImporter.Context.new(), bad3)
+	t.check(not bad3.ok(), "档位表有负数报错")
+
+	# 作者数据：猎手指定了专属池、配了段位档位表
+	t.check(base.enemy_pool != &"", "猎手指定了自己的池（%s）" % base.enemy_pool)
+	t.check(ResourceLoader.exists(ContentPaths.asset_file("enemy_pools", String(base.enemy_pool))), "专属池的资产在")
+	t.check(not base.strength_by_bracket.is_empty(), "猎手配了按段位的档位表：%s" % str(base.strength_by_bracket))
+	t.eq(base.strength_for_bracket(0), base.strength_by_bracket[0], "第 0 段")
+	t.eq(base.strength_for_bracket(99), base.strength_by_bracket[base.strength_by_bracket.size() - 1], "超出表长按最后一档")
+	t.eq(HunterDef.new().strength_for_bracket(0), -1, "表空 = -1（走规则）")
+
+	# 一局里：档位 = 表[段位]；段位随步数变
+	var defs := _copy_defs(c.hunter_defs)
+	var diff := _difficulty([base.id] as Array[StringName])
+	(diff.mechanics[0] as HunterMechanic).bracket_steps = [0, 2] as Array[int]
+	var s := _start(c, defs, diff)
+	_step_once(s)
+	var sys := s.hunters
+	var h: Hunter = sys.alive()[0]
+	var def: HunterDef = defs[base.id]
+	var pool: EnemyPool = s.pool_by_id(def.enemy_pool)
+	t.not_null(pool, "一局里取得到专属池")
+	t.eq(sys.bracket(), 0, "走了 1 步：第 0 段")
+	t.eq(sys.strength_for(def, pool, s.current_node()), pool.clamp_strength(def.strength_by_bracket[0]), "档位 = 表[0]")
+	_step_once(s)
+	if not s.is_over() and s.events.pending.is_empty():
+		t.eq(sys.bracket(), 1, "走了 2 步：第 1 段")
+		t.eq(sys.strength_for(def, pool, s.current_node()), pool.clamp_strength(def.strength_for_bracket(1)), "档位 = 表[1]")
+	# 表空退回规则
+	def.strength_by_bracket = [] as Array[int]
+	var by_rule := sys.strength_for(def, pool, s.current_node())
+	t.check(pool.strengths().has(by_rule), "表空时退回强度规则，给的是池里有的档（%d）" % by_rule)
+	# 开打用的敌人来自专属池
+	h.node_id = s.travel.current_id
+	var content := sys.build_content(h, s.current_node())
+	var in_pool := false
+	for e in pool.entries:
+		if String((e as EnemyPoolEntry).enemy) == String(content.get("enemy", "")):
+			in_pool = true
+	t.check(in_pool, "现造的敌人是专属池里的（%s）" % content.get("enemy", ""))

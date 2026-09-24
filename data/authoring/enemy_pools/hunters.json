@@ -1,0 +1,91 @@
+{
+  "id": "hunters",
+  "display_name": "猎手专属池（占位）",
+  "entries": [
+    {
+      "enemy": "raider",
+      "weight": 2.0
+    },
+    {
+      "enemy": "marksman",
+      "weight": 2.0
+    },
+    {
+      "enemy": "butcher",
+      "weight": 2.0
+    },
+    {
+      "enemy": "brute"
+    },
+    {
+      "enemy": "warden"
+    }
+  ],
+  "tiers": [
+    {
+      "board": [
+        5,
+        3
+      ],
+      "rarity_cap": 1
+    },
+    {
+      "strength": 1,
+      "item_count": [
+        3,
+        4
+      ],
+      "board": [
+        6,
+        4
+      ],
+      "stat_scale": {
+        "max_hp": 1.25
+      },
+      "rarity_cap": 2
+    },
+    {
+      "strength": 2,
+      "item_count": [
+        4,
+        6
+      ],
+      "board": [
+        6,
+        5
+      ],
+      "stat_scale": {
+        "max_hp": 1.6
+      }
+    },
+    {
+      "strength": 3,
+      "item_count": [
+        6,
+        8
+      ],
+      "board": [
+        8,
+        5
+      ],
+      "stat_scale": {
+        "max_hp": 2,
+        "armor": 1.5
+      }
+    }
+  ],
+  "strength_rule": {
+    "steps_per_tier": 10
+  },
+  "loadout": {
+    "common_tags": [
+      "gear",
+      "consumable",
+      "part",
+      "tool"
+    ]
+  },
+  "combat_types": [
+    "battle"
+  ]
+}

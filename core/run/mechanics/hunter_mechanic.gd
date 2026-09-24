@@ -16,6 +16,25 @@ extends RunMechanic
 @export var spawn_min_distance: float = 3.0
 ## 距离度量：steps（图上的步数）/ absolute（布局坐标，持有方注入）
 @export var metric: StringName = &"steps"
+## 段位（作者：只受步数影响）：第 k 段从第几步开始，非递减、第一项 0。猎手按段位定档（HunterDef.strength_by_bracket），木桩也按它分段
+@export var bracket_steps: Array[int] = [0, 5, 10, 20]
+
+
+## 走了这么多步在第几段（0 起）
+func bracket_of(steps: int) -> int:
+	var k := 0
+	for i in bracket_steps.size():
+		if steps >= bracket_steps[i]:
+			k = i
+	return k
+
+
+static func bracket_of_steps(thresholds: Array[int], steps: int) -> int:
+	var k := 0
+	for i in thresholds.size():
+		if steps >= thresholds[i]:
+			k = i
+	return k
 
 
 func count_for(scale_id: StringName) -> int:

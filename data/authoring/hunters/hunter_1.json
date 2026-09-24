@@ -12,5 +12,12 @@
     {
       "type": "retreat"
     }
+  ],
+  "enemy_pool": "hunters",
+  "strength_by_bracket": [
+    0,
+    1,
+    2,
+    3
   ]
 }

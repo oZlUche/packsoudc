@@ -19,11 +19,26 @@ static func metrics(snap: Dictionary, items: ItemDatabase) -> Dictionary:
 	return {"hp": StatMath.to_float(spec.max_hp), "dps": dps, "items": spec.items.size()}
 
 
-## 按步数分段：段号 = steps ÷ bucket。返回 {段号(String) → 木桩}
+## 按段位分段（作者：段位只受步数影响，猎手按它定档）：[param thresholds] 是第 k 段从第几步开始（HunterMechanic.bracket_steps）
+static func build_by_brackets(snapshots: Array[Dictionary], items: ItemDatabase, thresholds: Array[int]) -> Dictionary:
+	var ranges := {}
+	for i in thresholds.size():
+		ranges[str(i)] = [thresholds[i], (thresholds[i + 1] - 1) if i + 1 < thresholds.size() else -1]
+	return _build(snapshots, items, func(snap: Dictionary) -> String:
+		return str(HunterMechanic.bracket_of_steps(thresholds, int(snap.get("steps", 0)))), ranges)
+
+
+## 按固定段长分段：段号 = steps ÷ bucket。返回 {段号(String) → 木桩}
 static func build(snapshots: Array[Dictionary], items: ItemDatabase, bucket: int = 5) -> Dictionary:
+	return _build(snapshots, items, func(snap: Dictionary) -> String:
+		return str(int(snap.get("steps", 0)) / maxi(1, bucket)), {}, bucket)
+
+
+## [param keyer] 给每份快照一个段号；[param ranges] 段号 → [起, 止]（止 -1 = 开区间），没给就按段长算
+static func _build(snapshots: Array[Dictionary], items: ItemDatabase, keyer: Callable, ranges: Dictionary, bucket: int = 0) -> Dictionary:
 	var by_bucket := {}
 	for snap in snapshots:
-		var k := str(int(snap.get("steps", 0)) / maxi(1, bucket))
+		var k: String = keyer.call(snap)
 		if not by_bucket.has(k):
 			by_bucket[k] = []
 		(by_bucket[k] as Array).append(snap)
@@ -56,7 +71,7 @@ static func build(snapshots: Array[Dictionary], items: ItemDatabase, bucket: int
 				best = row
 		var pick: Dictionary = best["snap"]
 		out[k] = {
-			"steps": [int(k) * bucket, (int(k) + 1) * bucket - 1],
+			"steps": ranges[k] if ranges.has(k) else [int(k) * bucket, (int(k) + 1) * bucket - 1],
 			"samples": n,
 			"avg_hp": avg_hp,
 			"avg_dps": avg_dps,

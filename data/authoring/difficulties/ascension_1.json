@@ -12,6 +12,12 @@
       "type": "hunters",
       "hunter_ids": [
         "hunter_1"
+      ],
+      "bracket_steps": [
+        0,
+        5,
+        10,
+        20
       ]
     }
   ],

@@ -150,3 +150,33 @@ static func run_bench(t: TestCase) -> void:
 	t.eq(JSON.stringify(again), JSON.stringify(result), "同种子结果逐字相同")
 	var text := HunterBench.report_text(result, hunter.id)
 	t.check(text.contains(String(hunter.id)) and text.contains("best"), "表里有猎手 id 与 best 列")
+
+
+static func run_brackets(t: TestCase) -> void:
+	t.begin("校准 · 木桩按段位表分段（开区间的最后一段）；胜率表的 wanted = 猎手按段位的档位")
+	var c := _content()
+	var snaps: Array[Dictionary] = []
+	for steps in [0, 1, 4, 5, 9, 10, 30]:
+		for snap in DummyBuilder.from_loadouts(c.loadouts, c.items, CombatantBaseline.with_hp(60.0)):
+			var s2: Dictionary = snap.duplicate(true)
+			s2["steps"] = steps
+			snaps.append(s2)
+	var thresholds: Array[int] = [0, 5, 10]
+	var dummies := DummyBuilder.build_by_brackets(snaps, c.items, thresholds)
+	t.eq(dummies.keys(), ["0", "1", "2"], "三段")
+	t.eq((dummies["0"] as Dictionary)["steps"], [0, 4], "第 0 段 0～4")
+	t.eq((dummies["1"] as Dictionary)["steps"], [5, 9], "第 1 段 5～9")
+	t.eq((dummies["2"] as Dictionary)["steps"], [10, -1], "最后一段开区间")
+	t.eq(int((dummies["0"] as Dictionary)["samples"]), 3 * c.loadouts.size(), "第 0 段的样本数（步数 0、1、4）")
+	var ids: Array = c.hunters.keys()
+	ids.sort()
+	if ids.is_empty():
+		return
+	var hunter: HunterDef = c.hunters[ids[0]]
+	var pool: EnemyPool = load(ContentPaths.asset_file("enemy_pools", String(hunter.enemy_pool if hunter.enemy_pool != &"" else c.chapter.enemy_pool)))
+	var result := HunterBench.run(dummies, hunter, pool, c.enemies, c.items, 6, 3, 0, &"", 0.0, thresholds)
+	for k in result:
+		var want := pool.clamp_strength(hunter.strength_for_bracket(int(k))) if not hunter.strength_by_bracket.is_empty() else int((result[k] as Dictionary)["wanted"])
+		t.eq(int((result[k] as Dictionary)["wanted"]), want, "第 %s 段的 wanted = 猎手表里那一档" % k)
+	var text := HunterBench.report_text(result, hunter.id)
+	t.check(text.contains("∞"), "开区间的最后一段打印成 ∞")

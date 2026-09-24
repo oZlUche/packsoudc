@@ -34,7 +34,8 @@ static func win_rate(dummy: CombatantSpec, pool: EnemyPool, enemies: EnemyDataba
 
 ## 全表：{段号 → {steps, samples, wanted, best, rates: {档位 → 胜率}}}
 static func run(dummies: Dictionary, hunter: HunterDef, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase,
-		fights: int = 200, seed: int = 1, difficulty: int = 0, scale_id: StringName = &"", searches_per_step: float = 0.0) -> Dictionary:
+		fights: int = 200, seed: int = 1, difficulty: int = 0, scale_id: StringName = &"", searches_per_step: float = 0.0,
+		brackets: Array[int] = [] as Array[int]) -> Dictionary:
 	var out := {}
 	var use_pool := pool
 	var rule: StrengthRule = hunter.strength_rule if hunter != null and hunter.strength_rule != null else (use_pool.strength_rule if use_pool != null else null)
@@ -47,9 +48,17 @@ static func run(dummies: Dictionary, hunter: HunterDef, pool: EnemyPool, enemies
 		var dummy: Dictionary = dummies[k]
 		var spec := DummyBuilder.compile(dummy, items)
 		var steps_raw: Array = dummy.get("steps", [0, 0])
-		var mid := (int(steps_raw[0]) + int(steps_raw[1])) / 2
+		var hi := int(steps_raw[1]) if int(steps_raw[1]) >= 0 else int(steps_raw[0]) + 5
+		var mid := (int(steps_raw[0]) + hi) / 2
 		var exploration := {"steps": mid, "searches": int(round(mid * searches_per_step))}
-		var wanted := use_pool.clamp_strength(rule.wanted(node, 0.5, difficulty, scale_id, exploration)) if rule != null and use_pool != null else 0
+		# 段位表优先（作者：按段位定档）；没有段位表或猎手没配表才走强度规则
+		var wanted := -1
+		if hunter != null and not brackets.is_empty():
+			wanted = hunter.strength_for_bracket(HunterMechanic.bracket_of_steps(brackets, mid))
+		if wanted < 0:
+			wanted = use_pool.clamp_strength(rule.wanted(node, 0.5, difficulty, scale_id, exploration)) if rule != null and use_pool != null else 0
+		elif use_pool != null:
+			wanted = use_pool.clamp_strength(wanted)
 		var rates := {}
 		var best := -1
 		var best_gap := INF
@@ -68,7 +77,7 @@ static func run(dummies: Dictionary, hunter: HunterDef, pool: EnemyPool, enemies
 ## 给人看的表
 static func report_text(result: Dictionary, hunter_id: StringName) -> String:
 	var lines: Array[String] = []
-	lines.append("猎手 %s 对各段木桩的胜率（玩家赢的比例）；wanted = 现在的规则会给哪一档，best = 最接近 50%% 的那一档" % hunter_id)
+	lines.append("猎手 %s 对各段木桩的胜率（玩家赢的比例）；wanted = 猎手表里这一段的档（没配表就是规则给的），best = 最接近 50%% 的那一档" % hunter_id)
 	var keys: Array = result.keys()
 	keys.sort_custom(func(a: String, b: String) -> bool: return int(a) < int(b))
 	for k in keys:
@@ -80,6 +89,7 @@ static func report_text(result: Dictionary, hunter_id: StringName) -> String:
 		for t in tiers:
 			var r: Dictionary = (row["rates"] as Dictionary)[t]
 			parts.append("档 %s：%.0f%%" % [t, float(r["rate"]) * 100.0])
+		var hi_text := str(int(steps[1])) if int(steps[1]) >= 0 else "∞"
 		lines.append("第 %s～%s 步（%d 份样本，生命 %.0f，DPS %.1f）　wanted 档 %d　best 档 %d　　%s" % [
-			steps[0], steps[1], int(row["samples"]), float(row["hp"]), float(row["dps"]), int(row["wanted"]), int(row["best"]), "　".join(parts)])
+			int(steps[0]), hi_text, int(row["samples"]), float(row["hp"]), float(row["dps"]), int(row["wanted"]), int(row["best"]), "　".join(parts)])
 	return "\n".join(lines)

@@ -35,8 +35,18 @@ enum Visibility { HIDDEN, VISIBLE, NEAR }
 ## 从哪个敌人池抽（空 = 这一章的池）、按哪条强度规则（null = 池自己的）
 @export var enemy_pool: StringName = &""
 @export var strength_rule: StrengthRule = null
+## 按玩家的段位定档（作者：猎手的实际配置随玩家当前段位变，段位只受步数影响）：下标 = 段位（[HunterMechanic.bracket_steps] 划的），
+## 值 = 池里的档位；超出表长按最后一档。空 = 退回强度规则
+@export var strength_by_bracket: Array[int] = []
 ## 占位：和节点的互动（作者：保留选项）。现在恒为不互动
 @export var node_interaction: StringName = &"none"
+
+
+## 这个段位该给哪一档；表空返回 -1（让调用方走规则）
+func strength_for_bracket(bracket: int) -> int:
+	if strength_by_bracket.is_empty():
+		return -1
+	return strength_by_bracket[clampi(bracket, 0, strength_by_bracket.size() - 1)]
 
 
 func can_flee() -> bool:

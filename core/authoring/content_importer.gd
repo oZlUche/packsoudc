@@ -233,6 +233,13 @@ static func import_difficulty(data: Dictionary, ctx: Context, report: ImportRepo
 	for i in def.mechanics.size():
 		if def.mechanics[i] == null:
 			report.error("mechanics[%d]" % i, "空的机制")
+		elif def.mechanics[i] is HunterMechanic:
+			var hm := def.mechanics[i] as HunterMechanic
+			if hm.bracket_steps.is_empty() or hm.bracket_steps[0] != 0:
+				report.error("mechanics[%d].bracket_steps" % i, "段位表第一项得是 0")
+			for j in range(1, hm.bracket_steps.size()):
+				if hm.bracket_steps[j] < hm.bracket_steps[j - 1]:
+					report.error("mechanics[%d].bracket_steps[%d]" % [i, j], "段位表得非递减")
 	for i in def.effects.size():
 		var e := def.effects[i] as Effect
 		if e == null:
@@ -264,6 +271,9 @@ static func import_hunter(data: Dictionary, ctx: Context, report: ImportReport) 
 	for i in def.loss_outcomes.size():
 		if def.loss_outcomes[i] == null:
 			report.error("loss_outcomes[%d]" % i, "空的战败后果")
+	for i in def.strength_by_bracket.size():
+		if def.strength_by_bracket[i] < 0:
+			report.error("strength_by_bracket[%d]" % i, "档位不能为负")
 	if def.enemy_pool != &"" and not ctx.pools.is_empty() and not ctx.pools.has(def.enemy_pool):
 		report.error("enemy_pool", "找不到敌人池 '%s'" % def.enemy_pool)
 	ctx.register_hunter(def)

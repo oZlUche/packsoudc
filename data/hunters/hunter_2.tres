@@ -26,3 +26,5 @@ sense_range = 4.0
 behavior = SubResource("Resource_j6ak4")
 loss_outcomes = Array[ExtResource("2_by7ad")]([SubResource("Resource_p2kd5"), SubResource("Resource_n00tl")])
 flee_chance = 0.3
+enemy_pool = &"hunters"
+strength_by_bracket = Array[int]([1, 2, 3, 3])

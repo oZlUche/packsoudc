@@ -16,5 +16,12 @@
       "type": "expel_and_guard"
     }
   ],
-  "flee_chance": 0.3
+  "flee_chance": 0.3,
+  "enemy_pool": "hunters",
+  "strength_by_bracket": [
+    1,
+    2,
+    3,
+    3
+  ]
 }

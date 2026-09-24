@@ -51,6 +51,22 @@ func rng() -> RandomNumberGenerator:
 	return run.rng.next(STREAM)
 
 
+## 玩家现在的段位（只看步数）
+func bracket() -> int:
+	return config.bracket_of(step_count()) if config != null else 0
+
+
+## 这个猎手现在该是几档：定义里按段位的表优先，没有就退回强度规则（探索度）
+func strength_for(def: HunterDef, pool: EnemyPool, node: MapNode) -> int:
+	var by_bracket := def.strength_for_bracket(bracket())
+	if by_bracket >= 0:
+		return pool.clamp_strength(by_bracket)
+	var depth := float(EnemyPlacer.depths_of(run.map).get(node.id, 0.0))
+	var rule: StrengthRule = def.strength_rule if def.strength_rule != null else pool.strength_rule
+	var raw := rule.wanted(node, depth, run.chapter.difficulty, run.scale_id(), run.events.exploration()) if rule != null else 0
+	return pool.clamp_strength(raw)
+
+
 func step_count() -> int:
 	return run.travel.clock.total if run.travel != null and run.travel.clock != null else 0
 
@@ -358,10 +374,7 @@ func build_content(h: Hunter, node: MapNode) -> Dictionary:
 		return {}
 	var view := MapNode.from_dict(node.to_dict())
 	view.type = &"battle"
-	var depth := float(EnemyPlacer.depths_of(run.map).get(node.id, 0.0))
-	var rule: StrengthRule = def.strength_rule if def.strength_rule != null else pool.strength_rule
-	var raw := rule.wanted(view, depth, run.chapter.difficulty, run.scale_id(), run.events.exploration()) if rule != null else 0
-	var wanted := pool.clamp_strength(raw)
+	var wanted := strength_for(def, pool, view)
 	var r := rng()
 	var entry := EnemyPlacer.pick(pool, run.enemies, view, wanted, r)
 	if entry == null:
