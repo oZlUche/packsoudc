@@ -26,5 +26,5 @@ id = &"strength_sigil"
 display_name = "力量的符号"
 shape = SubResource("Resource_6vuw4")
 rarity = 2
-tags = Array[StringName]([&"part", &"sigil"])
+tags = Array[StringName]([&"faith", &"faith:violence", &"part", &"sigil"])
 adjacency = SubResource("Resource_qevok")

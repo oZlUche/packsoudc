@@ -51,5 +51,5 @@ id = &"longsword"
 display_name = "长剑"
 shape = SubResource("Resource_yfusu")
 rarity = 1
-tags = Array[StringName]([&"weapon", &"melee", &"burst", &"imperial"])
+tags = Array[StringName]([&"faith", &"faith:war", &"weapon", &"melee", &"burst", &"imperial"])
 combat = SubResource("Resource_8s62x")

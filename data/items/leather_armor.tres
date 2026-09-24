@@ -23,5 +23,5 @@ id = &"leather_armor"
 display_name = "皮甲"
 shape = SubResource("Resource_qplil")
 rarity = 1
-tags = Array[StringName]([&"gear", &"barbarian"])
+tags = Array[StringName]([&"faith", &"faith:violence", &"gear", &"barbarian"])
 combat = SubResource("Resource_o5xav")

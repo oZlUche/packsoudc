@@ -3,14 +3,13 @@
   "display_name": "守卫",
   "strength": 2,
   "schools": [
-    "rapid",
-    "burst"
+    "faith:war"
   ],
   "base_stats": {
     "max_hp": 36,
     "armor": 3
   },
   "signature": [
-    "leather_armor"
+    "round_shield"
   ]
 }

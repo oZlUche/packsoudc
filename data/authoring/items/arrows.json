@@ -5,7 +5,9 @@
     "1"
   ],
   "tags": [
-    "ammo"
+    "ammo",
+    "faith",
+    "faith:hunt"
   ],
   "adjacency": {
     "grant_cells": [

@@ -70,6 +70,10 @@ static func export_meta_rules(rules: MetaRules) -> Dictionary:
 	return _dump(rules)
 
 
+static func export_faith(def: FaithDef) -> Dictionary:
+	return _dump(def)
+
+
 static func export_run_buff(def: RunBuffDef) -> Dictionary:
 	return _dump(def)
 

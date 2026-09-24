@@ -76,7 +76,9 @@ func _refresh_readout() -> void:
 		for set_id in _run.tracker.tracked_ids():
 			var p := _run.tracker.progress_of(set_id)
 			lines.append("%s %d/%s%s" % [set_id, p["count"], "—" if p["next"] < 0 else str(p["next"]), "　已激活" if p["active"] else ""])
-	_readout.text = "生命 %d　预估 DPS %.1f　参战 %d 件（%d 件会出手）　可用格 %d（空 %d）%s" % [
+	var dormant := FaithState.dormant_uids(_run.board).size()
+	_readout.text = "%s%s　生命 %d　预估 DPS %.1f　参战 %d 件（%d 件会出手）　可用格 %d（空 %d）%s" % [
+		_run.faith_line(), "（%d 件休眠）" % dormant if dormant > 0 else "",
 		spec.max_hp_int(), spec.rough_dps(), spec.items.size(), spec.active_items().size(),
 		_run.board.usable_cell_count(), _run.board.free_cell_count(),
 		"　套装：" + "、".join(lines) if not lines.is_empty() else ""]

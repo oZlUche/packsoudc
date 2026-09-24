@@ -6,4 +6,4 @@
 script = ExtResource("1_mh1jc")
 id = &"brawler"
 display_name = "打手"
-items = Array[StringName]([&"bag_leather", &"bag_leather", &"scimitar", &"cleaver", &"leather_armor", &"gambeson", &"salve"])
+items = Array[StringName]([&"bag_leather", &"bag_leather", &"scimitar", &"cleaver", &"leather_armor", &"salve"])

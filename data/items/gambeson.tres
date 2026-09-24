@@ -26,5 +26,5 @@ id = &"gambeson"
 display_name = "贴身内甲"
 shape = SubResource("Resource_50qjw")
 rarity = 1
-tags = Array[StringName]([&"gear_plug"])
+tags = Array[StringName]([&"faith", &"faith:war", &"gear_plug"])
 adjacency = SubResource("Resource_pe0pd")

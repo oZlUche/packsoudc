@@ -3,7 +3,7 @@
   "display_name": "神射手",
   "strength": 1,
   "schools": [
-    "burst"
+    "faith:hunt"
   ],
   "base_stats": {
     "max_hp": 22

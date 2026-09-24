@@ -33,6 +33,8 @@ var characters: Array[CharacterDef] = []
 var difficulties: Array[DifficultyDef] = []
 ## 全部猎手定义（id → HunterDef，069 / 071）；猎手机制按它造猎手
 var hunter_defs: Dictionary = {}
+## 信仰定义（8-4）：id → FaithDef，给名字与说明用；机制只看标签（[FaithState]）
+var faith_defs: Dictionary = {}
 var save_path: String = RunSave.DEFAULT_PATH
 var meta_path: String = MetaSave.DEFAULT_PATH
 var settings_path: String = GameSettings.DEFAULT_PATH
@@ -332,6 +334,7 @@ func _adopt(state: RunState) -> void:
 	state.event_defs = event_defs
 	# 基线：按角色（读档回来只有 id，在这里找回）；没角色用持有方给的
 	state.hunter_defs = hunter_defs
+	state.faith_defs = faith_defs
 	# 难度：读档回来只有 id，在这里找回定义并把机制重新接上（开局那次 RunState.start 已经装过，再装一次是幂等的）
 	if state.difficulty == null and state.difficulty_id != &"":
 		state.difficulty = difficulty_of(state.difficulty_id)
@@ -454,6 +457,10 @@ static func load_characters() -> Array[CharacterDef]:
 ## 按档位排：普通在前
 static func load_hunters() -> Dictionary:
 	return HunterSystem.load_all()
+
+
+static func load_faiths() -> Dictionary:
+	return FaithDef.load_all()
 
 
 static func load_difficulties() -> Array[DifficultyDef]:

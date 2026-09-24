@@ -94,6 +94,13 @@ class Context:
 		if rules != null and rules.id != &"":
 			meta_rules[rules.id] = rules
 
+	## id -> FaithDef（8-4）。道具的信仰对象标签对着它查
+	var faiths: Dictionary = {}
+
+	func register_faith(def: FaithDef) -> void:
+		if def != null and def.id != &"":
+			faiths[def.id] = def
+
 	## id -> RunBuffDef
 	var run_buffs: Dictionary = {}
 
@@ -142,8 +149,39 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	var def := ItemDef.new()
 	_fill(def, data, "", ctx, report)
 	_validate_item(def, report)
+	_validate_item_faith(def, ctx, report)
 	ctx.register_item(def)
 	return def
+
+
+## 信仰体系（8-4，报告 081）
+static func import_faith(data: Dictionary, ctx: Context, report: ImportReport) -> FaithDef:
+	var def := FaithDef.new()
+	_fill(def, data, "", ctx, report)
+	if def.id == &"":
+		report.error("id", "信仰必须有 id")
+	if String(def.id).begins_with(FaithDef.TAG_PREFIX) or String(def.id).contains(":"):
+		report.error("id", "id 里别带前缀或冒号：道具上的标签会自动写成 %s<id>" % FaithDef.TAG_PREFIX)
+	if def.display_name.strip_edges() == "":
+		report.error("display_name", "信仰得有名字")
+	ctx.register_faith(def)
+	return def
+
+
+## 信仰标签（作者定的机制）：信仰道具带 `faith` + 恰好一个 `faith:<id>`；对象标签得是登记过的信仰（批量导入时）
+static func _validate_item_faith(def: ItemDef, ctx: Context, report: ImportReport) -> void:
+	var objects: Array[StringName] = []
+	for t in def.tags:
+		if String(t).begins_with(FaithDef.TAG_PREFIX):
+			objects.append(t)
+	if def.has_faith() and objects.size() != 1:
+		report.error("tags", "带 faith 的道具得恰好有一个信仰对象标签（%s<id>），现在有 %d 个" % [FaithDef.TAG_PREFIX, objects.size()])
+	elif not def.has_faith() and not objects.is_empty():
+		report.error("tags", "带了信仰对象标签 %s 却没有 faith 标签" % objects[0])
+	if def.has_faith() and objects.size() == 1 and not ctx.faiths.is_empty():
+		var fid := FaithDef.id_of_tag(objects[0])
+		if not ctx.faiths.has(fid):
+			report.error("tags", "没有登记过的信仰 '%s'（已知：%s）" % [fid, ", ".join(ctx.faiths.keys())])
 
 
 ## 敌人（M4-1）。校验里「对着道具查」的那几条只在批量导入（上下文里有道具）时生效。

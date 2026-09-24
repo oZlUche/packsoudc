@@ -7,7 +7,7 @@ script = ExtResource("1_k5q1s")
 id = &"butcher"
 display_name = "屠夫"
 strength = 1
-schools = Array[StringName]([&"bleed"])
+schools = Array[StringName]([&"faith:violence"])
 base_stats = {
 "max_hp": 30
 }

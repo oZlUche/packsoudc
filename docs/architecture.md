@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.78 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.79 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -407,6 +407,23 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 此时它已经是一个可玩的"整理背包"沙盒，可以验证核心手感。
 
 ---
+
+### 3.8 信仰：最后置入的信仰道具决定激活（8-4，报告 081）
+
+作者定的道具一级分类。**靠标签**：信仰道具带 `faith`，再带恰好一个信仰对象标签 `faith:<id>`（`FaithDef.TAG_PREFIX`；新教也是 `faith` + 专属标签）；
+无信仰之物（伤药、口粮、包、材料、战利品……）人人能用。信仰的名字、阵营（诸神 / 新教）、说明是内容种类 `faiths`（`FaithDef`，加一位神 = 加一份 JSON）；
+**机制只看标签，不认具体的神**（`FaithState`，纯静态）。
+
+- **置入序号**：`GridInventory.place` 在道具从别的容器进来时（`inst.container_id != id`）把 `place_seq` +1 盖到 `ItemInstance.placed_seq`。
+  同容器内挪位置、顶替时原样放回、同容器里挪包（载荷记 `from`）都不算。跟着存档走（道具 `seq`、容器 `place_seq`）。
+- **激活** = 棋盘上带 `faith` 的道具里序号最大那件的对象标签；一件都没有 = 没激活（「不信者」现在就是这个状态）。任何时刻只激活一个，诸神与新教因此天然互斥。
+- **休眠** = 有信仰、不是激活的那个：**通常情况下完全不起作用** —— `BattleCompiler.compile` 第一步跳过它（不参战、不给也不吃邻接），`SetTracker` 不计它；占格照占、价值照算。
+- **切换** = 挪到暂存区再挪回，没有代价（将来可继承积攒的信力）。暂存区一移动就清（3.4），所以只能在一个点上换；开局屏的棋盘同一条规则。
+- **敌人只信一个神**（`EnemyLoadout.single_faith`）：信仰 = 组装偏好标签里的 `faith:xxx`，没有就是招牌 / 第一件信仰道具的，别的信仰的换掉；
+  `min_weapons` / `weapon_tag` 保证至少一件会打的 —— 流派池按信仰分之后里面有护甲与零件。都是数据。
+- **不写流派**：作者不提倡除套装以外的明确流派，道具的联动让玩家自然组成流派。信仰不是流派，`EnemyDef.schools` 只是组装偏好，不给玩家看。
+
+界面：棋盘视图把休眠的画灰标「休眠」；背包面板、地图 HUD、开局屏各一句「信仰：…」。
 
 ## 4. M2 · 自动战斗
 
@@ -2452,7 +2469,7 @@ class_name EnemyPool extends Resource             # data/authoring/enemy_pools/*
 @export var entries: Array[EnemyPoolEntry]        # {enemy, weight, kinds, node_types, min_danger}
 @export var tiers: Array[StrengthTier]            # 档位表：{strength, item_count, board, stat_scale, rarity_cap}
 @export var strength_rule: StrengthRule           # 节点 → 想要几档
-@export var loadout: EnemyLoadout                 # 默认组装规则：{common_tags, school_share, min_school, rarity_cap, allow_repeat}
+@export var loadout: EnemyLoadout                 # 默认组装规则：{common_tags, school_share, min_school, rarity_cap, allow_repeat, min_weapons, weapon_tag, single_faith}
 @export var combat_types: Array[StringName]       # 哪些节点类型放敌人：battle / elite / core（random 不在：踩上去才知道）
 ```
 
@@ -2475,7 +2492,7 @@ class_name EnemyPool extends Resource             # data/authoring/enemy_pools/*
 
 **放敌人是生成之后的第二遍**（`EnemyPlacer.fill`），生成器不认识敌人。对每个 `combat_types` 里的点：
 算档位 → `fits(node)` 过滤 + 容差内取（没有就取最近）→ 按权重抽 → 组装：招牌先占位，`school_share` 的份额从流派池抽
-（至少 `min_school` 件），其余从通用池抽（带 `common_tags` 且不带本敌人流派标签），大件先摆，放不下换一件从小到大补。
+（至少 `min_school` 件），其余从通用池抽（带 `common_tags` 且不带本敌人流派标签），再按 3.8 收成一个信仰、补足武器，大件先摆，放不下换一件从小到大补。
 随机数只用节点的 `content_seed`：同图同点永远同一个敌人。
 
 内容字典跟着图存：`{"enemy", "strength", "board": [w, h], "items": [{"id", "at": [x, y], "rot"}]}`。
@@ -3092,7 +3109,7 @@ data/authoring/node_rules/*.json    节点规则（6.2 / 6.5）
 data/authoring/economy_rules/*.json 经济规则（6.6）
 data/authoring/meta_rules/*.json    局外规则：仓库多大、第一套（8.2 / 8.1）
 data/authoring/chapters/*.json      章节（5.3）
-        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → run_buffs → items → loadouts → characters → difficulties → events → enemies → enemy_pools → hunters → drop_rules → node_rules → economy_rules → meta_rules → chapters）
+        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → run_buffs → faiths → items → loadouts → characters → difficulties → events → enemies → enemy_pools → hunters → drop_rules → node_rules → economy_rules → meta_rules → chapters）
         │  tools/normalize_content.gd 把作者数据重写成导出器的格式（导入 → 导出 → 不同就写回）
         ▼
 data/items/*.tres   data/buffs/*.tres   data/sets/*.tres   data/run_buffs/*.tres   data/loadouts/*.tres   data/characters/*.tres   data/difficulties/*.tres   data/events/*.tres
@@ -3383,7 +3400,7 @@ res://
 | **5** | M4 节点内容：敌人池 + 掉落 + 随机点与搜索点 + 节点事件 + 经济 | **循环闭合，第一个可玩 Demo**（沙盒里） | 完成（045～050）；搜刮揭示的界面与撤离动作归 M6 |
 | **6** | M5 存档 + M6 场景流打磨 | 可对外试玩 | 完成：M5（051）、M6（055～057，8.3）—— 正式游戏从主菜单一条线玩到仓库 |
 | **7** | 进阶难度（机制清单）+ 猎手 + 侵蚀本体 | 难度骨架 ✅（070）、猎手 ✅（071～074）、侵蚀本体 ✅（075） | 完成 |
-| **8** | 内容扩充（物品 / 敌人 / 事件 / 新章节地图形态 / 扩展移动机制） | 此后 90% 的时间 | 进行中：规划与 8-1 传送点 ✅（076）、8-3 事件构件 ✅（077）、8-2 沙漏与塔 ✅（078）、8-4 起步：世界观（待确认）+ 封存现代道具 + 小说里的十九件（079） |
+| **8** | 内容扩充（物品 / 敌人 / 事件 / 新章节地图形态 / 扩展移动机制） | 此后 90% 的时间 | 进行中：规划与 8-1 传送点 ✅（076）、8-3 事件构件 ✅（077）、8-2 沙漏与塔 ✅（078）、8-4 起步：世界观（待确认）+ 封存现代道具 + 小说里的十九件（079）、暂存区一移动就清（080）、信仰体系 ✅（081） |
 
 **内容制作管线紧跟在 M2 之后**：战斗系统一旦能跑，瓶颈立刻从「有没有机制」变成
 「有没有内容可调」。此时手写 `.tres` 会成为迭代速度的天花板，而管线本身依赖 M2
@@ -3467,6 +3484,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.79 | 2026-09-24 | **信仰体系**（报告 081；3.8 新、6.0、10.1、12）。作者答了 080 的七个问题：标签机制 `faith` + `faith:<id>`、最后置入决定激活、别的信仰的道具完全不起作用、不信者 = 没激活、无代价切换、敌人按出身；不写流派。新内容种类 `faiths`（六份占位）；`ItemInstance.placed_seq` / `GridInventory.place_seq`（存档）；`FaithState`；编译与套装跳过休眠；`EnemyLoadout.single_faith / min_weapons / weapon_tag`；界面三处；开局装备改成单一信仰；短弓 |
 | v1.78 | 2026-09-24 | **暂存区改成一移动就清**（报告 080；3.4、15 节第 7 项）：离开清一次、进入头一回踩上的点再清一次（在节点事件之前），`will_clear_storage` 不再看发没发生过事；**信仰体系提议**（080 第二～四节，等作者答七个问题）：信仰是道具一级分类、最后置入的信仰道具决定激活、诸神 / 新教 / 不信者互斥、别的信仰的道具休眠 |
 | v1.77 | 2026-09-24 | **世界观（待确认）、封存现代道具、小说里的第一批道具**（报告 079；0、3.1、12）。`docs/worldview.md` 三节；`ItemDef.SEALED` / `is_sealed()`，`ItemDatabase.ids()` 一处拦、`all_ids()` / `sealed_ids()`；导入器拦开局装备 / 初始包 / 招牌 / 事件给封存的；十五件现代道具封存、数据不动；十九件剑与魔法道具（数值占位）；三套开局装备、两个敌人招牌、两个事件改用它们；珍宝标签第一次有人带 |
 | v1.76 | 2026-09-24 | **078 补：作者对两个模板的定义**（5.11）。塔：横向的层、登上一层就不能向下 → `one_way` 从占位变成默认开着；沙漏：横置（`LatticeShape.orientation`，布局换轴）、撤离点在对侧那一列（`exit_count`，就是终点）、核心不是必须（`with_core`）、中途没有撤离点；形状的终点改成 `goals`（格 → 类型），校验按形状查终点类型、对侧撤离点不算中途 |

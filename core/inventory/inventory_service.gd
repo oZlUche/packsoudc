@@ -30,6 +30,8 @@ static func move(
 
 	var moved := false
 	if from.remove(uid) != null:
+		if from == to:
+			inst.container_id = to.id     # 同容器内挪位置不算重新置入（信仰的置入顺序不变）
 		if to.place(inst, origin, rot):
 			moved = true
 		else:

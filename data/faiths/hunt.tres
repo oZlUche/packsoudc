@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="FaithDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="1_smgph"]
+
+[resource]
+script = ExtResource("1_smgph")
+id = &"hunt"
+display_name = "狩猎之神"
+god = "狩猎之神"
+description = "赐福的长弓：箭矢自带追踪，对兽类效果更佳。"

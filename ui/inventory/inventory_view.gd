@@ -167,20 +167,25 @@ func _draw() -> void:
 			self, bag_cells, bag_anchor, CELL, b.def.display_name, font, 11, Color("79839a")
 		)
 
-	# 物品
+	# 物品。休眠的信仰道具（8-4：不是激活的那个信仰）画灰、标「休眠」
+	var active_faith := FaithState.active_tag(inventory) if show_adjacency else &""
 	for inst in inventory.items():
 		var item := inst as ItemInstance
 		if inventory.acts_as_bag(item.def):
 			continue
 		var cells := item.cells()
 		var anchor := cell_origin_px(item.origin)
-		ItemPainter.draw_item(
-			self, cells, anchor, CELL,
-			ItemPainter.body_color(item.def),
-			ItemPainter.rarity_color(item.def)
-		)
+		var dormant := show_adjacency and FaithState.is_dormant(item.def, active_faith)
+		var body := ItemPainter.body_color(item.def)
+		var edge := ItemPainter.rarity_color(item.def)
+		if dormant:
+			body = body.lerp(COLOR_BAG_FILL, 0.7)
+			edge = edge.lerp(COLOR_BAG_EDGE, 0.7)
+		ItemPainter.draw_item(self, cells, anchor, CELL, body, edge)
 		ItemPainter.draw_label(
-			self, cells, anchor, CELL, item.def.display_name, font, 13, COLOR_TEXT
+			self, cells, anchor, CELL, item.def.display_name + ("
+休眠" if dormant else ""), font, 13,
+			COLOR_TEXT.darkened(0.35) if dormant else COLOR_TEXT
 		)
 
 	# 邻接标记：画在物品之上、落点预览之下。

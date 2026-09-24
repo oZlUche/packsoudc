@@ -40,12 +40,15 @@ func recount() -> void:
 	var fresh := {}
 	if _board != null:
 		var seen_defs := {}
+		var active_faith := FaithState.active_tag(_board)
 		for inst in _board.items():
 			var item := inst as ItemInstance
 			if item.def == null or item.def.set_id == &"":
 				continue
 			if _board.acts_as_bag(item.def):
 				continue  # 包不算套装部件，它是承载物
+			if FaithState.is_dormant(item.def, active_faith):
+				continue  # 休眠的信仰道具不计套装（8-4）
 			var set_id := item.def.set_id
 			var def := db.get_def(set_id) if db != null else null
 			if def != null and def.count_mode == ItemSetDef.CountMode.DISTINCT_DEFS:

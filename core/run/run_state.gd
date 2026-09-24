@@ -68,6 +68,8 @@ var mechanic_tags: Dictionary = {}
 ## 猎手（069 / 071）：难度清单里的猎手机制装进来的系统；null = 这一局没有猎手。定义表由持有方给，存档里的状态读档时先放这儿等机制装
 var hunters: HunterSystem = null
 var hunter_defs: Dictionary = {}
+## 信仰定义（8-4）：持有方给，名字与说明用；激活规则只看棋盘上的标签（[FaithState]）
+var faith_defs: Dictionary = {}
 var hunters_saved: Dictionary = {}
 ## 侵蚀场的存档状态，读档时先放这儿等机制装（075）
 var erosion_saved: Dictionary = {}
@@ -375,6 +377,25 @@ func compile_player() -> CombatantSpec:
 	mods.append_array(RunBuffs.combat_mods(active))
 	rules.append_array(RunBuffs.combat_rules(active))
 	return BattleCompiler.compile(board, player_baseline, mods, rules)
+
+
+## 现在激活的信仰（8-4）：最后置入棋盘的信仰道具所属的那个；一件都没有 = null（不信者）
+func active_faith() -> FaithDef:
+	return faith_defs.get(FaithState.active_id(board), null) if board != null else null
+
+
+## 激活的信仰 id；没有返回空
+func active_faith_id() -> StringName:
+	return FaithState.active_id(board) if board != null else &""
+
+
+## 给界面的一句：「信仰：暴力之神」/「信仰：无」；定义表里没有的按 id 写
+func faith_line() -> String:
+	var id := active_faith_id()
+	if id == &"":
+		return "信仰：无"
+	var def := active_faith()
+	return "信仰：%s" % (def.display_name if def != null else String(id))
 
 
 ## 掉落上下文（6.1）：难度、buff 给的幸运；道具与套装的战利品效果（9.2）、buff 的掉落效果都施加上去

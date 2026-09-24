@@ -76,6 +76,8 @@ func _import(kind: String, data: Dictionary, ctx: ContentImporter.Context, repor
 			return ContentImporter.import_meta_rules(data, ctx, report)
 		"run_buffs":
 			return ContentImporter.import_run_buff(data, ctx, report)
+		"faiths":
+			return ContentImporter.import_faith(data, ctx, report)
 		"events":
 			return ContentImporter.import_event(data, ctx, report)
 		"chapters":
@@ -112,6 +114,8 @@ func _export(kind: String, res: Resource) -> Dictionary:
 			return ContentExporter.export_meta_rules(res)
 		"run_buffs":
 			return ContentExporter.export_run_buff(res)
+		"faiths":
+			return ContentExporter.export_faith(res)
 		"events":
 			return ContentExporter.export_event(res)
 		"chapters":

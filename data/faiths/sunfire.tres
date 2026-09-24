@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="FaithDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="1_676cl"]
+
+[resource]
+script = ExtResource("1_676cl")
+id = &"sunfire"
+display_name = "太阳与火之神"
+god = "太阳与火之神"
+description = "西方蛮族的信仰。火焰的魔法。"

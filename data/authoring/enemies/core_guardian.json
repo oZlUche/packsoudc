@@ -3,15 +3,13 @@
   "display_name": "核心守卫",
   "strength": 3,
   "schools": [
-    "burst",
-    "bleed",
-    "rapid"
+    "faith:war"
   ],
   "base_stats": {
     "max_hp": 60,
     "armor": 4
   },
   "signature": [
-    "blessed_shield"
+    "mithril_sword"
   ]
 }

@@ -83,6 +83,8 @@ func _build(
 			return ContentImporter.import_meta_rules(data, ctx, report)
 		"run_buffs":
 			return ContentImporter.import_run_buff(data, ctx, report)
+		"faiths":
+			return ContentImporter.import_faith(data, ctx, report)
 		"events":
 			return ContentImporter.import_event(data, ctx, report)
 		"chapters":

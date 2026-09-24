@@ -420,12 +420,12 @@ func _refresh_hud() -> void:
 	var extract_near := MapNavigator.nearest_of_type(_run.map, t.current_id, &"extract")
 	var rest := MapNavigator.nearest_of_type(_run.map, t.current_id, &"rest")
 	var core := MapNavigator.nearest_of_type(_run.map, t.current_id, &"core")
-	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d　　暂存区 %d 件%s%s" % [
+	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d　　暂存区 %d 件　　%s%s%s" % [
 		t.clock.total,
 		str(extract_near["steps"]) if int(extract_near["id"]) >= 0 else "—",
 		str(rest["steps"]) if int(rest["id"]) >= 0 else "—",
 		str(core["steps"]) if int(core["id"]) >= 0 else "—",
-		_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count(), _buff_line(), _erosion_line()]
+		_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count(), _run.faith_line(), _buff_line(), _erosion_line()]
 
 
 ## buff 栏的占位：一行字。局外的和一局里的都列，有时限的写还剩几步

@@ -60,5 +60,5 @@ id = &"blessed_shield"
 display_name = "技巧之神赐福的盾牌"
 shape = SubResource("Resource_u8eqt")
 rarity = 3
-tags = Array[StringName]([&"gear", &"shield", &"blessed"])
+tags = Array[StringName]([&"faith", &"faith:skill", &"gear", &"shield", &"blessed"])
 combat = SubResource("Resource_md8cq")

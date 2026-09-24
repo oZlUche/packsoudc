@@ -31,6 +31,8 @@ var _occ: PackedInt32Array = PackedInt32Array()
 var _bag_owner: PackedInt32Array = PackedInt32Array()
 var _items: Dictionary = {}  # uid -> ItemInstance
 var _blocked: PackedByteArray = PackedByteArray()
+## 置入序号的计数（8-4）：道具从别的容器进来时 +1 并盖到它身上（[member ItemInstance.placed_seq]）；同容器内挪位置不盖。跟着存档走
+var place_seq: int = 0
 
 
 func _init(p_size: Vector2i = Vector2i(8, 6), p_id: int = 0, p_requires_bag: bool = false) -> void:
@@ -322,6 +324,7 @@ func place_displacing(inst: ItemInstance, origin: Vector2i, rot: int = 0):
 ## 把一批实例放回各自的原位。这些格子刚刚才腾出来，正常必然放得回去。
 func _put_back(items: Array[ItemInstance], homes: Array[Vector2i], rots: Array[int]) -> void:
 	for i in items.size():
+		items[i].container_id = id     # 原样放回，不算重新置入
 		if not place(items[i], homes[i], rots[i]):
 			push_error("GridInventory: uid %d 放不回原位，物品已丢失" % items[i].uid)
 #endregion
@@ -342,6 +345,10 @@ func place(inst: ItemInstance, origin: Vector2i, rot: int = 0) -> bool:
 	for c in cells:
 		table[_idx(origin + c)] = inst.uid
 
+	# 从别的容器进来的才算「置入」（同容器内挪位置、原样放回都先把 container_id 设回本容器）
+	if inst.container_id != id:
+		place_seq += 1
+		inst.placed_seq = place_seq
 	inst.origin = origin
 	inst.rotation = rot
 	inst.container_id = id
@@ -546,6 +553,7 @@ func detach_bag(bag_uid: int) -> Dictionary:
 		"contents": contents,
 		"locals": locals,
 		"straddlers": straddlers,
+		"from": id,
 	}
 
 
@@ -659,6 +667,13 @@ func attach_bag_shedding(payload: Dictionary, origin: Vector2i, rot: int) -> Dic
 	var locals: Array = payload["locals"]
 	var straddlers: Array = payload.get("straddlers", [])
 
+	# 在同一个容器里挪包：包和内容物都不算重新置入（信仰的置入顺序不变）
+	if int(payload.get("from", -1)) == id:
+		bag.container_id = id
+		for c in contents:
+			(c as ItemInstance).container_id = id
+		for s in straddlers:
+			(s["inst"] as ItemInstance).container_id = id
 	begin_batch()
 	if not place(bag, origin, rot):
 		end_batch()
@@ -832,6 +847,7 @@ func to_dict() -> Dictionary:
 		"accept_tags": tags,
 		"blocked": blocked_idx,
 		"items": item_dicts,
+		"place_seq": place_seq,
 	}
 
 
@@ -863,6 +879,10 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> GridInventory:
 		else:
 			rest.append(inst)
 
+	# 放回去会盖新序号，所以先记住存档里的序号，放完再写回；计数以存档为准（没存就取最大的）
+	var saved_seq := {}
+	for inst in bags_first + rest:
+		saved_seq[inst.uid] = inst.placed_seq
 	inv.begin_batch()
 	for inst in bags_first + rest:
 		if not inv.place(inst, inst.origin, inst.rotation):
@@ -871,6 +891,11 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> GridInventory:
 				% [inst.uid, inst.origin]
 			)
 	inv.end_batch()
+	var top := 0
+	for inst in inv.items():
+		(inst as ItemInstance).placed_seq = int(saved_seq.get((inst as ItemInstance).uid, 0))
+		top = maxi(top, (inst as ItemInstance).placed_seq)
+	inv.place_seq = maxi(int(d.get("place_seq", 0)), top)
 	return inv
 
 

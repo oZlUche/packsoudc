@@ -7,7 +7,7 @@ script = ExtResource("1_enbfl")
 id = &"brute"
 display_name = "蛮兵"
 strength = 2
-schools = Array[StringName]([&"burst", &"bleed"])
+schools = Array[StringName]([&"faith:violence"])
 base_stats = {
 "armor": 2,
 "max_hp": 40

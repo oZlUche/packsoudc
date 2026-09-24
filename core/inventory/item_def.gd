@@ -30,6 +30,8 @@ extends Resource
 ## 现代道具（枪械、弹匣、电池、无人机……）全部封存 —— 不进搜索、掉落、商店、敌人的装备、图鉴与编辑器的下拉，
 ## 但按 id 仍取得到（旧存档、仓库里的还认）。[ItemDatabase.ids] 是唯一拦它的地方
 const SEALED := &"sealed"
+## 信仰（8-4，报告 081）：信仰道具带 `faith`，再带一个信仰对象标签 `faith:<id>`（[FaithDef.TAG_PREFIX]）。激活规则见 [FaithState]
+const FAITH := &"faith"
 
 ## 准入标签。容器级与包体级的准入都拿它比对。
 @export var tags: Array[StringName] = []
@@ -37,6 +39,18 @@ const SEALED := &"sealed"
 
 func is_sealed() -> bool:
 	return tags.has(SEALED)
+
+
+func has_faith() -> bool:
+	return tags.has(FAITH)
+
+
+## 信仰对象标签（`faith:violence`）；没有返回空。带 `faith` 却没有对象标签也返回空 —— 导入器不许这种道具进来
+func faith_tag() -> StringName:
+	for t in tags:
+		if String(t).begins_with(FaithDef.TAG_PREFIX):
+			return t
+	return &""
 
 
 ## 本物品是否是「包」。包只在棋盘模式的容器里作为包生效，

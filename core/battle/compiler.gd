@@ -42,10 +42,14 @@ static func compile(
 		return spec
 
 	# --- 1. 收集参战物品：棋盘上的非包物品，按 uid 升序 ---
+	# 信仰（8-4）：只激活最后置入的信仰道具所属的信仰，别的信仰的道具休眠 —— 不参战、不给邻接
+	var active_faith := FaithState.active_tag(board)
 	var fighters: Array[int] = []
 	for inst in board.items():
 		var item := inst as ItemInstance
 		if item.def == null or board.acts_as_bag(item.def):
+			continue
+		if FaithState.is_dormant(item.def, active_faith):
 			continue
 		fighters.append(item.uid)
 	fighters.sort()

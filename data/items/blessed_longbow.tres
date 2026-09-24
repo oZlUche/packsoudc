@@ -72,5 +72,5 @@ id = &"blessed_longbow"
 display_name = "狩猎之神赐福的长弓"
 shape = SubResource("Resource_yuedj")
 rarity = 3
-tags = Array[StringName]([&"weapon", &"ranged", &"rapid", &"blessed"])
+tags = Array[StringName]([&"faith", &"faith:hunt", &"weapon", &"ranged", &"rapid", &"blessed"])
 combat = SubResource("Resource_hoprw")

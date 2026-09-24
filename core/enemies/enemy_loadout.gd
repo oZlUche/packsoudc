@@ -21,3 +21,10 @@ extends Resource
 
 ## 同一件道具可否重复
 @export var allow_repeat: bool = true
+## 至少几件会打的（带 [member weapon_tag] 的）。流派按信仰分之后（8-4）流派池里有护甲、零件，纯靠抽可能抽出一个只穿甲不拿刀的敌人 ——
+## 抽完之后不够就把非招牌、非武器的换成流派池（其次通用池）里的武器。0 = 不管
+@export var min_weapons: int = 1
+@export var weapon_tag: StringName = &"weapon"
+## 一个敌人只信一个神（8-4）：抽到的信仰道具得同属一个信仰（招牌与流派里的第一件说了算），别的信仰的换掉 ——
+## 不然它自己的兵器就休眠了。false = 不管（老路）
+@export var single_faith: bool = true

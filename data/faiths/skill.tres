@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="FaithDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="1_8fl4c"]
+
+[resource]
+script = ExtResource("1_8fl4c")
+id = &"skill"
+display_name = "技巧之神"
+god = "技巧之神"
+description = "赐福的盾牌：对手的第一次攻击必定被弹开。"

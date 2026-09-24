@@ -12,7 +12,8 @@
     "weapon",
     "ranged",
     "rapid",
-    "barbarian"
+    "faith",
+    "faith:hunt"
   ],
   "combat": {
     "base_stats": {

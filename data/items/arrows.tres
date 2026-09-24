@@ -25,5 +25,5 @@ script = ExtResource("4_oghoi")
 id = &"arrows"
 display_name = "箭矢"
 shape = SubResource("Resource_nilw3")
-tags = Array[StringName]([&"ammo"])
+tags = Array[StringName]([&"ammo", &"faith", &"faith:hunt"])
 adjacency = SubResource("Resource_gdaal")

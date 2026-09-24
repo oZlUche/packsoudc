@@ -7,9 +7,9 @@ script = ExtResource("1_b1i6m")
 id = &"warden"
 display_name = "守卫"
 strength = 2
-schools = Array[StringName]([&"rapid", &"burst"])
+schools = Array[StringName]([&"faith:war"])
 base_stats = {
 "armor": 3,
 "max_hp": 36
 }
-signature = Array[StringName]([&"leather_armor"])
+signature = Array[StringName]([&"round_shield"])

@@ -248,8 +248,11 @@ static func run_authoring_files(t: TestCase) -> void:
 		for s in def.schools:
 			var pool_items := EnemyPlacer.school_items([s] as Array[StringName], items, -1)
 			t.check(pool_items.size() >= 2, "流派 '%s' 至少两件道具（实际 %d）—— 一件就没得抽" % [s, pool_items.size()])
+			# 流派按信仰分之后（8-4）池里也有护甲与零件，但至少得有一件会打的 —— 组装时保证每个敌人至少一件武器（EnemyLoadout.min_weapons）
+			var armed := false
 			for iid in pool_items:
-				t.check(items.get_def(iid).combat != null, "流派道具 '%s' 会打" % iid)
+				armed = armed or items.get_def(iid).tags.has(pool.loadout.weapon_tag if pool != null and pool.loadout != null else &"weapon")
+			t.check(armed, "流派 '%s' 的池里至少一件会打的" % s)
 			if pool != null:
 				for tier in pool.tiers:
 					var cap := EnemyPlacer.rarity_cap_of(pool.loadout, tier)

@@ -225,7 +225,81 @@ static func choose_items(
 		_draw(picks, common_pool, rest, rule.allow_repeat, rng)
 	elif not school_pool.is_empty():
 		_draw(picks, school_pool, rest, rule.allow_repeat, rng)
+	if rule.single_faith:
+		var faith := _unify_faith(picks, def.signature.size(), items, rng, school_pool, common_pool, def.schools)
+		school_pool = _same_faith(school_pool, faith, items)
+		common_pool = _same_faith(common_pool, faith, items)
+	_ensure_weapons(picks, def.signature.size(), school_pool, common_pool, rule, items, rng)
 	return picks
+
+
+## 一个敌人只信一个神：信仰 = 流派标签里的那个（`faith:xxx`），没有就是招牌 / 抽到的第一件信仰道具的；
+## 别的信仰的换成同信仰或无信仰的（先流派池再通用池），换不了就去掉。返回那个信仰标签
+static func _unify_faith(
+	picks: Array[StringName], fixed: int, items: ItemDatabase, rng: RandomNumberGenerator,
+	school_pool: Array[StringName], common_pool: Array[StringName], schools: Array[StringName] = [] as Array[StringName]
+) -> StringName:
+	var faith := &""
+	for s in schools:
+		if String(s).begins_with(FaithDef.TAG_PREFIX):
+			faith = s
+			break
+	for id in picks:
+		if faith != &"":
+			break
+		if items.get_def(id).has_faith():
+			faith = items.get_def(id).faith_tag()
+			break
+	if faith == &"":
+		return faith
+	var subs := _same_faith(school_pool, faith, items) + _same_faith(common_pool, faith, items)
+	var i := picks.size() - 1
+	while i >= fixed:
+		var d := items.get_def(picks[i])
+		if d.has_faith() and d.faith_tag() != faith:
+			if subs.is_empty():
+				picks.remove_at(i)
+			else:
+				picks[i] = subs[rng.randi_range(0, subs.size() - 1)]
+		i -= 1
+	return faith
+
+
+## 池子里和这个信仰合得来的：无信仰的、同信仰的
+static func _same_faith(pool: Array[StringName], faith: StringName, items: ItemDatabase) -> Array[StringName]:
+	if faith == &"":
+		return pool
+	var out: Array[StringName] = []
+	for id in pool:
+		var d := items.get_def(id)
+		if not d.has_faith() or d.faith_tag() == faith:
+			out.append(id)
+	return out
+
+
+## 至少 min_weapons 件会打的：不够就把末尾的非招牌、非武器换成武器（先流派池，再通用池）
+static func _ensure_weapons(
+	picks: Array[StringName], fixed: int, school_pool: Array[StringName], common_pool: Array[StringName],
+	rule: EnemyLoadout, items: ItemDatabase, rng: RandomNumberGenerator
+) -> void:
+	if rule.min_weapons <= 0 or rule.weapon_tag == &"":
+		return
+	var weapons: Array[StringName] = []
+	for id in school_pool + common_pool:
+		if items.get_def(id).tags.has(rule.weapon_tag) and not weapons.has(id):
+			weapons.append(id)
+	if weapons.is_empty():
+		return
+	var have := 0
+	for id in picks:
+		if items.get_def(id).tags.has(rule.weapon_tag):
+			have += 1
+	var i := picks.size() - 1
+	while have < rule.min_weapons and i >= fixed:
+		if not items.get_def(picks[i]).tags.has(rule.weapon_tag):
+			picks[i] = weapons[rng.randi_range(0, weapons.size() - 1)]
+			have += 1
+		i -= 1
 
 
 ## 带任一流派标签的道具（不含包），id 升序 —— 顺序稳定，抽出来的才可复现

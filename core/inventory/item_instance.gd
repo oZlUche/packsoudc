@@ -24,6 +24,9 @@ var origin: Vector2i = Vector2i.ZERO
 
 ## 所属容器的 id，0 表示游离态（拖拽途中）。
 var container_id: int = 0
+## 置入这个容器时盖的序号（[GridInventory.place] 在道具从别的容器进来时盖；同容器内挪位置不变）。
+## 信仰的激活规则看它：最后置入的信仰道具（[FaithState]）。跟着存档走
+var placed_seq: int = 0
 
 ## 运行时可变状态：耐久、充能、随机词条等。
 ## 一切「这一件独有」的数据放这里，不要写回 ItemDef。
@@ -94,6 +97,7 @@ func to_dict() -> Dictionary:
 		"def": String(def.id) if def != null else "",
 		"rot": rotation,
 		"origin": [origin.x, origin.y],
+		"seq": placed_seq,
 		"state": state.duplicate(true),
 	}
 
@@ -111,6 +115,7 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> ItemInstance:
 	inst.rotation = int(d.get("rot", 0))
 	var o: Array = d.get("origin", [0, 0])
 	inst.origin = Vector2i(int(o[0]), int(o[1]))
+	inst.placed_seq = int(d.get("seq", 0))
 	inst.state = (d.get("state", {}) as Dictionary).duplicate(true)
 	reserve_uid_above(inst.uid)
 	return inst
