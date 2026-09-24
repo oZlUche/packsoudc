@@ -1,0 +1,33 @@
+{
+  "id": "rest_default",
+  "title": "休息点",
+  "text": "一处能歇脚的地方。歇多久，你自己定。",
+  "options": [
+    {
+      "label": "歇一会儿",
+      "outcomes": [
+        {
+          "type": "proceed"
+        }
+      ]
+    },
+    {
+      "label": "扎营（多耗 2 个行动点，多回 1 点体力）",
+      "outcomes": [
+        {
+          "type": "pass_time",
+          "actions": 2
+        },
+        {
+          "type": "proceed"
+        },
+        {
+          "type": "restore_vitality"
+        }
+      ]
+    },
+    {
+      "label": "继续赶路"
+    }
+  ]
+}

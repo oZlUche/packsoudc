@@ -186,6 +186,20 @@ func step_to(id: int) -> bool:
 	return ok
 
 
+## 事件把人挪走（8-3 的传送后果）：不走边，但离开发生过事的点照样清暂存区、猎手照样得一个回合 —— 和走一步一样的壳，只是意图不同
+func relocate(intent: MoveIntent) -> bool:
+	if phase != Phase.ON_MAP or intent == null:
+		return false
+	close_sessions()
+	_drop_storage_if_leaving()
+	var ok := travel.apply(intent)
+	if ok:
+		tick_map_buffs()
+		if hunters != null:
+			hunters.on_player_step()
+	return ok
+
+
 ## 玩家空下来了（叠层看完、会话关了）问一声猎手够不够得着；够得着就开打前的事件屏已经排上。返回有没有
 func poke_hunters() -> bool:
 	return hunters != null and hunters.check_engagement()
@@ -528,6 +542,15 @@ func _wire_events() -> void:
 	events.remove_map_buff = remove_map_buff
 	events.has_map_buff = has_map_buff
 	events.has_buff_tag = has_buff_tag
+	# 8-3：条件看容器与段位，后果传送 / 耗时经这里走（清暂存区、猎手回合）
+	events.board = board
+	events.storage = storage
+	events.bracket_of = func() -> int: return hunters.bracket() if hunters != null else -1
+	events.relocate = relocate
+	events.waited.connect(func(_n: MapNode, _actions: int):
+		tick_map_buffs()
+		if hunters != null:
+			hunters.on_player_step())
 	events.battle_finished.connect(func(_n: MapNode, _r: BattleResult, won: bool):
 		var key := "battles_won" if won else "battles_lost"
 		tally[key] = int(tally.get(key, 0)) + 1)

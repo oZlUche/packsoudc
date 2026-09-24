@@ -73,6 +73,11 @@ const EVENT_CONDITIONS := {
 	&"has_map_buff": "res://core/run/events/conditions/has_map_buff.gd",
 	&"can_afford": "res://core/run/events/conditions/can_afford.gd",
 	&"vitality_at_least": "res://core/run/events/conditions/vitality_at_least.gd",
+	&"steps_within": "res://core/run/events/conditions/steps_within.gd",
+	&"bracket_within": "res://core/run/events/conditions/bracket_within.gd",
+	&"erosion_depth_within": "res://core/run/events/conditions/erosion_depth_within.gd",
+	&"has_item": "res://core/run/events/conditions/has_item.gd",
+	&"node_type_is": "res://core/run/events/conditions/node_type_is.gd",
 }
 
 const EVENT_OUTCOMES := {
@@ -90,6 +95,11 @@ const EVENT_OUTCOMES := {
 	&"say": "res://core/run/events/outcomes/say.gd",
 	&"hunter_fight": "res://core/run/events/outcomes/hunter_fight.gd",
 	&"hunter_flee": "res://core/run/events/outcomes/hunter_flee.gd",
+	&"teleport": "res://core/run/events/outcomes/teleport.gd",
+	&"change_node_type": "res://core/run/events/outcomes/change_node_type.gd",
+	&"proceed": "res://core/run/events/outcomes/proceed.gd",
+	&"pass_time": "res://core/run/events/outcomes/pass_time.gd",
+	&"lose_item": "res://core/run/events/outcomes/lose_item.gd",
 }
 
 ## 一局的机制（069）：难度清单里开的那些

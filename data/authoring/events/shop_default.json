@@ -1,0 +1,18 @@
+{
+  "id": "shop_default",
+  "title": "商店",
+  "text": "有人在这里摆了摊。",
+  "options": [
+    {
+      "label": "进去看看",
+      "outcomes": [
+        {
+          "type": "open_shop"
+        }
+      ]
+    },
+    {
+      "label": "不进"
+    }
+  ]
+}

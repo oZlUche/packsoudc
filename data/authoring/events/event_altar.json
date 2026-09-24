@@ -1,0 +1,71 @@
+{
+  "id": "event_altar",
+  "title": "祭坛",
+  "text": "一座石台，上面刻着手掌的印子。",
+  "options": [
+    {
+      "label": "献上棋盘上最值钱的一件",
+      "requires": [
+        {
+          "type": "has_item",
+          "where": "BOARD"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "lose_item",
+          "pick": "MOST_VALUABLE",
+          "where": "BOARD"
+        },
+        {
+          "type": "restore_vitality",
+          "amount": 2
+        },
+        {
+          "type": "say",
+          "text": "印子亮了一下。"
+        }
+      ]
+    },
+    {
+      "label": "用撬棍撬开石台",
+      "requires": [
+        {
+          "type": "has_item",
+          "item": "crowbar"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "lose_item",
+          "item": "crowbar"
+        },
+        {
+          "type": "give_random_item"
+        },
+        {
+          "type": "say",
+          "text": "撬棍断了，石台底下有东西。"
+        }
+      ]
+    },
+    {
+      "label": "砸了它",
+      "outcomes": [
+        {
+          "type": "change_node_type"
+        },
+        {
+          "type": "start_battle"
+        },
+        {
+          "type": "say",
+          "text": "石台碎了，有什么从底下爬了出来。"
+        }
+      ]
+    },
+    {
+      "label": "离开"
+    }
+  ]
+}

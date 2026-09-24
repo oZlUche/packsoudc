@@ -1,0 +1,83 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_iddjc"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_nmtw7"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/lose_item.gd" id="3_i1eil"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/restore_vitality.gd" id="4_hbonb"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="5_xibjb"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="6_p34rm"]
+[ext_resource type="Script" path="res://core/run/events/conditions/has_item.gd" id="7_3uf8i"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/give_random_item.gd" id="8_esh8s"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/change_node_type.gd" id="9_fkfya"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/start_battle.gd" id="10_ikocn"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="11_qknfi"]
+
+[sub_resource type="Resource" id="Resource_yh5aj"]
+script = ExtResource("3_i1eil")
+pick = 1
+where = 0
+
+[sub_resource type="Resource" id="Resource_apajt"]
+script = ExtResource("4_hbonb")
+amount = 2
+
+[sub_resource type="Resource" id="Resource_pgpwc"]
+script = ExtResource("5_xibjb")
+text = "印子亮了一下。"
+
+[sub_resource type="Resource" id="Resource_re61q"]
+script = ExtResource("7_3uf8i")
+where = 0
+
+[sub_resource type="Resource" id="Resource_kdbt3"]
+script = ExtResource("1_iddjc")
+label = "献上棋盘上最值钱的一件"
+requires = Array[ExtResource("6_p34rm")]([SubResource("Resource_re61q")])
+outcomes = Array[ExtResource("2_nmtw7")]([SubResource("Resource_yh5aj"), SubResource("Resource_apajt"), SubResource("Resource_pgpwc")])
+
+[sub_resource type="Resource" id="Resource_4jjh3"]
+script = ExtResource("3_i1eil")
+item = &"crowbar"
+
+[sub_resource type="Resource" id="Resource_ntmko"]
+script = ExtResource("8_esh8s")
+
+[sub_resource type="Resource" id="Resource_8lbh3"]
+script = ExtResource("5_xibjb")
+text = "撬棍断了，石台底下有东西。"
+
+[sub_resource type="Resource" id="Resource_3jcw6"]
+script = ExtResource("7_3uf8i")
+item = &"crowbar"
+
+[sub_resource type="Resource" id="Resource_008v4"]
+script = ExtResource("1_iddjc")
+label = "用撬棍撬开石台"
+requires = Array[ExtResource("6_p34rm")]([SubResource("Resource_3jcw6")])
+outcomes = Array[ExtResource("2_nmtw7")]([SubResource("Resource_4jjh3"), SubResource("Resource_ntmko"), SubResource("Resource_8lbh3")])
+
+[sub_resource type="Resource" id="Resource_rsdfd"]
+script = ExtResource("9_fkfya")
+
+[sub_resource type="Resource" id="Resource_bygq7"]
+script = ExtResource("10_ikocn")
+
+[sub_resource type="Resource" id="Resource_3535k"]
+script = ExtResource("5_xibjb")
+text = "石台碎了，有什么从底下爬了出来。"
+
+[sub_resource type="Resource" id="Resource_g64cf"]
+script = ExtResource("1_iddjc")
+label = "砸了它"
+outcomes = Array[ExtResource("2_nmtw7")]([SubResource("Resource_rsdfd"), SubResource("Resource_bygq7"), SubResource("Resource_3535k")])
+
+[sub_resource type="Resource" id="Resource_21gwu"]
+script = ExtResource("1_iddjc")
+label = "离开"
+
+[resource]
+script = ExtResource("11_qknfi")
+id = &"event_altar"
+title = "祭坛"
+text = "一座石台，上面刻着手掌的印子。"
+options = Array[ExtResource("1_iddjc")]([SubResource("Resource_kdbt3"), SubResource("Resource_008v4"), SubResource("Resource_g64cf"), SubResource("Resource_21gwu")])

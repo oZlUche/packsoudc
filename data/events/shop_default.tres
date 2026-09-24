@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_rfoqt"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_tqdnq"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/open_shop.gd" id="3_fmyau"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_mmrk3"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_1jtig"]
+
+[sub_resource type="Resource" id="Resource_c0lsw"]
+script = ExtResource("3_fmyau")
+
+[sub_resource type="Resource" id="Resource_c6xbw"]
+script = ExtResource("1_rfoqt")
+label = "进去看看"
+outcomes = Array[ExtResource("2_tqdnq")]([SubResource("Resource_c0lsw")])
+
+[sub_resource type="Resource" id="Resource_anofq"]
+script = ExtResource("1_rfoqt")
+label = "不进"
+
+[resource]
+script = ExtResource("5_1jtig")
+id = &"shop_default"
+title = "商店"
+text = "有人在这里摆了摊。"
+options = Array[ExtResource("1_rfoqt")]([SubResource("Resource_c6xbw"), SubResource("Resource_anofq")])

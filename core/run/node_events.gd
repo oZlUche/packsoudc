@@ -65,6 +65,19 @@ var extra_defs: Dictionary = {}
 ## 猎手系统接进来的两个动作（071）：`fight(node, uid, ctx) -> bool`、`flee(node, uid, ctx) -> bool`
 var fight_hunter: Callable = Callable()
 var flee_hunter: Callable = Callable()
+## 8-3：事件的条件与后果看得见的容器（有某道具 / 失去道具）。持有方给；null = 没有
+var board: ItemContainer = null
+var storage: ItemContainer = null
+## 段位（074）：`() -> int`，持有方接猎手系统；没接 = -1
+var bracket_of: Callable = Callable()
+## 事件把人传送走（8-3）：`(intent: MoveIntent) -> bool`。持有方接它好在挪人前清暂存区、挪人后给猎手一个回合；没接就直接交给旅程
+var relocate: Callable = Callable()
+## 这一局已经在这里判了战败：之后不再挪人、不再开打
+var over: bool = false
+## 8-3：事件把这个点改成了别的类型（地图重画）
+signal type_changed(node: MapNode, type: StringName)
+## 8-3：事件里原地耗了几个行动点
+signal waited(node: MapNode, actions: int)
 ## 踩上一个配了事件的点：先给玩家看，选了才往下走
 signal event_pending(node: MapNode, def: EventDef)
 
@@ -224,15 +237,24 @@ func choose(i: int) -> bool:
 			ctx.hunter_fight = not bool(flee_hunter.call(node, hunter_uid, ctx))
 		event_resolved.emit(node, StringName(option.label), ctx.detail())
 		if vitality != null and vitality.is_depleted():
-			defeated.emit(&"vitality_depleted")
+			_defeat(&"vitality_depleted")
 			return true
 		if ctx.hunter_fight and fight_hunter.is_valid():
 			fight_hunter.call(node, hunter_uid, ctx)
 		return true
 	node.content["choice"] = i
+	# 8-3：改类型先落账，后面的「照常发生」「开战」都按新类型走（和随机点揭开是同一个记号）
+	if ctx.new_type != &"" and ctx.new_type != type:
+		node.content["resolved_type"] = String(ctx.new_type)
+		type = ctx.new_type
+		type_changed.emit(node, type)
 	event_resolved.emit(node, StringName(option.label), ctx.detail())
+	# 8-3：原地耗时：计数、侵蚀推进、站的这个点照结算 —— 可能把体力耗光，所以在判战败之前
+	if ctx.wait_actions > 0 and travel != null:
+		travel.wait(ctx.wait_actions, &"event")
+		waited.emit(node, ctx.wait_actions)
 	if vitality != null and vitality.is_depleted():
-		defeated.emit(&"vitality_depleted")
+		_defeat(&"vitality_depleted")
 		_visited(node)
 		return true
 	if ctx.next_event != &"":
@@ -250,8 +272,19 @@ func choose(i: int) -> bool:
 		var content := node.content if EnemyKit.has_enemy(node.content) else _enemy_for(node, &"battle", _rng_for(node, "event_enemy"))
 		_fight(node, fight_type, content)
 		_visited(node)
+	elif ctx.proceed:
+		_proceed(node, type)
 	else:
 		_visited(node)
+	# 8-3 传送：这个点的事都完了才挪人（打输了、开着会话就不挪）。造一个 teleport 意图交给持有方 / 旅程，
+	# 和走一条传送点边是同一条路：计数、侵蚀、落地那个点头一回踩上就触发它的事
+	if ctx.teleport_to >= 0 and not over and travel != null and current_search == null and current_shop == null:
+		_visited(node)
+		var intent := MoveIntent.teleport(node.id, ctx.teleport_to, ctx.teleport_cost)
+		if relocate.is_valid():
+			relocate.call(intent)
+		else:
+			travel.apply(intent)
 	return true
 
 
@@ -264,6 +297,14 @@ func _event_ctx(node: MapNode) -> EventContext:
 	ctx.items = items
 	ctx.rules = rules
 	ctx.depth = float(_depths.get(node.id, 0.0))
+	ctx.graph = graph
+	ctx.steps = travel.clock.total if travel != null and travel.clock != null else 0
+	ctx.board = board
+	ctx.storage = storage
+	ctx.bracket = bracket_of
+	if travel != null and travel.erosion != null and travel.erosion.has_method("depth_of"):
+		var field: Variant = travel.erosion
+		ctx.erosion_depth = func(n: MapNode) -> int: return int(field.depth_of(n))
 	ctx.grant_map_buff = grant_map_buff
 	ctx.remove_map_buff = remove_map_buff
 	ctx.has_map_buff = has_map_buff
@@ -316,11 +357,11 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 			wallet.earn(amount, &"battle")
 			rewarded.emit(node, amount)
 	elif type == &"core":
-		defeated.emit(&"boss_lost")     # 规则不是数值：BOSS 输了直接战败，连 spend 都不调（7.1）
+		_defeat(&"boss_lost")     # 规则不是数值：BOSS 输了直接战败，连 spend 都不调（7.1）
 	elif vitality != null and rules != null:
 		vitality.spend(rules.loss_cost_of(type), &"battle_lost")
 		if vitality.is_depleted():
-			defeated.emit(&"vitality_depleted")
+			_defeat(&"vitality_depleted")
 	return won
 
 
@@ -411,6 +452,11 @@ func _loot_ctx() -> LootContext:
 	var ctx := LootContext.new()
 	ctx.difficulty = difficulty
 	return ctx
+
+
+func _defeat(reason: StringName) -> void:
+	over = true
+	defeated.emit(reason)
 
 
 func _visited(node: MapNode) -> void:

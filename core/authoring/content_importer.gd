@@ -350,9 +350,57 @@ static func import_event(data: Dictionary, ctx: Context, report: ImportReport) -
 					report.error(at, "找不到 buff '%s'" % bid)
 				elif not b.is_map():
 					report.error(at, "'%s' 是局外 buff，事件只能给地图 buff" % bid)
+			elif o is Teleport:
+				var tp := o as Teleport
+				if tp.action_cost < 0:
+					report.error(at, "传送的代价不能是负的")
+				if tp.max_steps >= 0 and tp.max_steps < tp.min_steps:
+					report.error(at, "传送的步数区间反了：%d～%d" % [tp.min_steps, tp.max_steps])
+				for nt in tp.node_types:
+					if not MapNodeTypes.has(nt):
+						report.error(at, "认不得的节点类型 '%s'" % nt)
+			elif o is ChangeNodeType:
+				var ct := (o as ChangeNodeType).node_type
+				if not MapNodeTypes.has(ct):
+					report.error(at, "认不得的节点类型 '%s'" % ct)
+				elif MapNodeTypes.STRUCTURAL.has(ct):
+					report.error(at, "'%s' 是结构性的类型（由拓扑定），事件不能把点变成它" % ct)
+			elif o is LoseItem and (o as LoseItem).pick == LoseItem.Pick.BY_ID \
+					and not ctx.items.is_empty() and not ctx.items.has((o as LoseItem).item):
+				report.error(at, "找不到道具 '%s'" % (o as LoseItem).item)
+			elif o is PassTime and (o as PassTime).actions <= 0:
+				report.error(at, "耗时得是正数")
+		# 8-3：同一个选项里挪人和留在这里的事撞车 —— 传送走了，搜索 / 商店 / 下一个事件就没了；给的东西离开时也清掉
+		var teleports := false
+		var stays := false
+		var gives := false
+		for o in opt.outcomes:
+			teleports = teleports or o is Teleport
+			stays = stays or o is OpenSearch or o is OpenShop or o is NextEvent
+			gives = gives or o is GiveItem or o is GiveRandomItem
+		if teleports and stays:
+			report.error("options[%d].outcomes" % i, "传送不能和搜索 / 开店 / 接下一个事件放在同一个选项里：人走了会话就断了")
+		if teleports and gives:
+			report.error("options[%d].outcomes" % i, "传送不能和给道具放在同一个选项里：离开发生过事的点暂存区会清空，给的东西立刻没了")
 		for k in opt.requires.size():
-			if opt.requires[k] == null:
-				report.error("options[%d].requires[%d]" % [i, k], "空的条件")
+			var cond := opt.requires[k] as EventCondition
+			var cat := "options[%d].requires[%d]" % [i, k]
+			if cond == null:
+				report.error(cat, "空的条件")
+			elif cond is HasItem and (cond as HasItem).item != &"" and not ctx.items.is_empty() and not ctx.items.has((cond as HasItem).item):
+				report.error(cat, "找不到道具 '%s'" % (cond as HasItem).item)
+			elif cond is NodeTypeIs:
+				if (cond as NodeTypeIs).types.is_empty():
+					report.error(cat, "节点类型名单是空的：永远不满足")
+				for nt in (cond as NodeTypeIs).types:
+					if not MapNodeTypes.has(nt):
+						report.error(cat, "认不得的节点类型 '%s'" % nt)
+			elif cond is StepsWithin and (cond as StepsWithin).max_steps >= 0 and (cond as StepsWithin).max_steps < (cond as StepsWithin).min_steps:
+				report.error(cat, "步数区间反了")
+			elif cond is BracketWithin and (cond as BracketWithin).max_bracket >= 0 and (cond as BracketWithin).max_bracket < (cond as BracketWithin).min_bracket:
+				report.error(cat, "段位区间反了")
+			elif cond is ErosionDepthWithin and (cond as ErosionDepthWithin).max_depth >= 0 and (cond as ErosionDepthWithin).max_depth < (cond as ErosionDepthWithin).min_depth:
+				report.error(cat, "侵蚀深度区间反了")
 	ctx.register_event(def)
 	return def
 

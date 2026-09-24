@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_f3qye"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_n3xei"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="3_2327a"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_44v1f"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/pass_time.gd" id="5_k4swn"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/restore_vitality.gd" id="6_64hfv"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="7_eejmq"]
+
+[sub_resource type="Resource" id="Resource_dp8ju"]
+script = ExtResource("3_2327a")
+
+[sub_resource type="Resource" id="Resource_wcnx5"]
+script = ExtResource("1_f3qye")
+label = "歇一会儿"
+outcomes = Array[ExtResource("2_n3xei")]([SubResource("Resource_dp8ju")])
+
+[sub_resource type="Resource" id="Resource_vey5p"]
+script = ExtResource("5_k4swn")
+actions = 2
+
+[sub_resource type="Resource" id="Resource_1p6xl"]
+script = ExtResource("3_2327a")
+
+[sub_resource type="Resource" id="Resource_vjav7"]
+script = ExtResource("6_64hfv")
+
+[sub_resource type="Resource" id="Resource_146qw"]
+script = ExtResource("1_f3qye")
+label = "扎营（多耗 2 个行动点，多回 1 点体力）"
+outcomes = Array[ExtResource("2_n3xei")]([SubResource("Resource_vey5p"), SubResource("Resource_1p6xl"), SubResource("Resource_vjav7")])
+
+[sub_resource type="Resource" id="Resource_n64np"]
+script = ExtResource("1_f3qye")
+label = "继续赶路"
+
+[resource]
+script = ExtResource("7_eejmq")
+id = &"rest_default"
+title = "休息点"
+text = "一处能歇脚的地方。歇多久，你自己定。"
+options = Array[ExtResource("1_f3qye")]([SubResource("Resource_wcnx5"), SubResource("Resource_146qw"), SubResource("Resource_n64np")])

@@ -13,13 +13,21 @@ display_name = "标准节点规则（占位）"
 search = SubResource("Resource_4xugp")
 events_by_type = {
 "event": {
+"event_altar": 1,
 "event_ambush": 1,
 "event_cache": 2,
 "event_marked_reward": 1,
 "event_rest_spot": 1,
+"event_rift": 1,
 "event_stranger": 2
+},
+"rest": {
+"rest_default": 1
 },
 "search": {
 "search_default": 1
+},
+"shop": {
+"shop_default": 1
 }
 }

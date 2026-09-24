@@ -241,8 +241,13 @@ static func run_placer(t: TestCase) -> void:
 			&"event":
 				events += 1
 				t.check((c.rules.events_by_type["event"] as Dictionary).has(eid), "事件点 %d 配的 '%s' 在表里" % [id, eid])
-			&"battle", &"elite", &"core", &"rest", &"shop", &"extract", &"random":
-				t.eq(eid, "", "%s 点 %d 没配事件（转场）" % [n.type, id])
+			_:
+				# 别的类型：规则表里挂了就得是表里的（8-3 给休息 / 商店挂了默认事件），没挂就不配（转场）
+				var table: Dictionary = c.rules.events_by_type.get(n.type, {})
+				if table.is_empty():
+					t.eq(eid, "", "%s 点 %d 没配事件（规则表没挂 → 转场）" % [n.type, id])
+				else:
+					t.check(table.has(eid), "%s 点 %d 配的 '%s' 在表里" % [n.type, id, eid])
 		t.eq(eid, String(s2.map.get_node(id).content.get("event", "")), "点 %d 同种子同事件" % id)
 	t.check(searches > 0 and events > 0, "图上有搜索点 %d 个、事件点 %d 个" % [searches, events])
 

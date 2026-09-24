@@ -20,6 +20,8 @@ extends RefCounted
 signal moved(intent: MoveIntent, first_visit: bool)
 ## 想走但走不了：不相邻、那条路不能从这头走、意图过期……
 signal refused(intent: MoveIntent, why: String)
+## 原地耗了几个行动点（8-3）
+signal waited(actions: int)
 
 var graph: MapGraph = null
 var clock: ActionClock = null
@@ -117,11 +119,27 @@ func _check(intent: MoveIntent) -> String:
 		return "还不认识 %s 这种移动方式 —— 底层现在实现 step 与 teleport（8-1）" % intent.kind
 	if intent.from_id != current_id:
 		return "意图过期：它以为在 %d，人在 %d" % [intent.from_id, current_id]
-	if MapNavigator.edge_for_step(graph, intent.from_id, intent.to_id) == null:
+	if not graph.has_node(intent.to_id) or intent.to_id == intent.from_id:
+		return "没有点 %d 可去" % intent.to_id
+	# 走一步得有那条路；传送信任解析方（传送点边、事件的后果）—— 它不需要边（8-3）
+	if intent.kind == MoveIntent.STEP and MapNavigator.edge_for_step(graph, intent.from_id, intent.to_id) == null:
 		return "从 %d 走不到 %d" % [intent.from_id, intent.to_id]
 	if intent.action_cost < 0:
 		return "行动点不能是负的"
 	return ""
+
+
+## 原地耗掉几个行动点（8-3：事件里扎营、等人）。不挪人，但时间照走：计数 → 侵蚀推进 → 站的这个点照结算。
+## 顺序和 apply 一样，出于同一个理由：等到侵蚀推进的那一步，脚下的点得立刻结算
+func wait(actions: int, reason: StringName = &"wait") -> void:
+	if actions <= 0 or graph == null:
+		return
+	clock.spend(actions, reason)
+	if erosion != null and erosion.has_method("on_action"):
+		erosion.on_action(clock, graph)
+	if erosion != null and erosion.has_method("move_penalty") and graph.has_node(current_id):
+		_settle_penalty(graph.get_node(current_id))
+	waited.emit(actions)
 
 
 func _settle_penalty(node: MapNode) -> void:

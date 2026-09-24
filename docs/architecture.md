@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.73 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.74 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2595,8 +2595,8 @@ class_name SearchRules extends Resource
 事件在生成地图时定好但可以被覆盖或替换；战斗事件暂无「绕开」的选项但结构开放。
 
 **事件是内容。** `EventDef`（内容种类 `events`）：标题、正文、图像路径（占位）、选项；每个选项若干**条件**（`EventCondition`，只读：`has_buff_tag` / `has_map_buff` /
-`can_afford` / `vitality_at_least`）与若干**后果**（`EventOutcome`：`give_item` / `give_random_item` / `restore_vitality` / `spend_vitality` / `change_money` /
-`grant_map_buff` / `remove_map_buff` / `start_battle` / `open_search` / `open_shop` / `next_event` / `say`）。两种都是构件、走注册表（`EffectRegistry` 的两张新表），
+`can_afford` / `vitality_at_least` / `steps_within` / `bracket_within` / `erosion_depth_within` / `has_item` / `node_type_is`（8-3））与若干**后果**（`EventOutcome`：`give_item` / `give_random_item` / `restore_vitality` / `spend_vitality` / `change_money` /
+`grant_map_buff` / `remove_map_buff` / `start_battle` / `open_search` / `open_shop` / `next_event` / `say` / `hunter_fight` / `hunter_flee`（071）/ `teleport` / `change_node_type` / `proceed` / `pass_time` / `lose_item`（8-3））。两种都是构件、走注册表（`EffectRegistry` 的两张新表），
 加一种不改导入器。条件没过的选项灰掉并写原因（或按 `hide_when_locked` 不显示）。
 
 **节点怎么拿到事件。** `NodeRules.events_by_type`：类型 → {事件 id: 权重}。生成地图时 `EventPlacer.fill` 按节点 `content_seed` 抽一个写进 `node.content["event"]`，
@@ -2607,6 +2607,12 @@ class_name SearchRules extends Resource
 然后按后果立的旗子走：接下一个事件（再发 `event_pending`）/ 开搜索 / 开店 / 开战（点自己有敌人就打它，没有就现造）/ 点用过。`pending` 跟着存档，读档回来还在这一屏。
 `GameFlow` 把 `event_pending` 排进队（事件屏），`event_resolved` 有内容时把结果页插到队首（先看「你翻出了什么」，再看接下来打的那一场）；
 队列空了还有等着选的事件就显示它。搜索屏与战利品屏合成一个**容器屏**（`ui/game/container_screen.gd`）：装的是待拾取还是搜索会话由 payload 决定。
+
+**构件按内容需要加（8-3，报告 077）。** 条件看得见的一局状态进了 `EventContext`：地图、步数、棋盘与暂存区、段位与侵蚀深度（两个回调，持有方接；没接 = -1，条件永远不满足）。
+后果里**传送**只挑目的地（最近 / 最远 / 随机 / 内容里指定的 id，按类型与步数区间筛）、立旗，挪人在 `choose` 的最后：这个点的事都完了才造一个 `MoveIntent.teleport` 交给持有方的 `relocate`
+（`RunState.relocate`：关会话、清暂存区、`travel.apply`、猎手回合 —— 和走一步一样的壳），落地那个点头一回踩上就触发它的事；`MapTravel` 对 teleport 不再查边（信任解析方）。
+**原地耗时**走 `MapTravel.wait`（计数 → 侵蚀推进 → 脚下结算，不挪人），在判战败之前。**改类型**写 `resolved_type`（和随机点揭开同一个记号），同一选项里后面的「照常发生」「开战」按新类型走。
+**照常发生**（`proceed`）让休息 / 商店点也能先过事件屏而数值还在 `NodeRules`；`rest_default` / `shop_default` 挂在 `events_by_type`。导入器拦撞车的组合：传送 + 搜索 / 开店 / 接下一个（会话断了）、传送 + 给道具（离开时暂存区清空）。
 
 ### 6.6 经济（M4-5）
 
@@ -3353,7 +3359,7 @@ res://
 | **5** | M4 节点内容：敌人池 + 掉落 + 随机点与搜索点 + 节点事件 + 经济 | **循环闭合，第一个可玩 Demo**（沙盒里） | 完成（045～050）；搜刮揭示的界面与撤离动作归 M6 |
 | **6** | M5 存档 + M6 场景流打磨 | 可对外试玩 | 完成：M5（051）、M6（055～057，8.3）—— 正式游戏从主菜单一条线玩到仓库 |
 | **7** | 进阶难度（机制清单）+ 猎手 + 侵蚀本体 | 难度骨架 ✅（070）、猎手 ✅（071～074）、侵蚀本体 ✅（075） | 完成 |
-| **8** | 内容扩充（物品 / 敌人 / 事件 / 新章节地图形态 / 扩展移动机制） | 此后 90% 的时间 | 进行中：规划与 8-1 传送点 ✅（076） |
+| **8** | 内容扩充（物品 / 敌人 / 事件 / 新章节地图形态 / 扩展移动机制） | 此后 90% 的时间 | 进行中：规划与 8-1 传送点 ✅（076）、8-3 事件构件 ✅（077） |
 
 **内容制作管线紧跟在 M2 之后**：战斗系统一旦能跑，瓶颈立刻从「有没有机制」变成
 「有没有内容可调」。此时手写 `.tres` 会成为迭代速度的天花板，而管线本身依赖 M2
@@ -3437,6 +3443,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.74 | 2026-09-24 | **8-3 事件构件**（报告 077；6.5、5.6、12）。五种条件（步数 / 段位 / 侵蚀深度 / 有某道具 / 点是什么）、五种后果（传送 / 改类型 / 照常发生 / 原地耗时 / 失去道具）；`EventContext` 加地图、步数、容器、段位与侵蚀深度回调；`NodeEvents.choose` 末尾挪人（`relocate` → `RunState.relocate`）、`type_changed` / `waited` 信号；`MapTravel` 对 teleport 不查边、新入口 `wait`；导入器拦撞车组合；休息 / 商店默认事件、裂隙与祭坛样例；结果页多认四样 |
 | v1.73 | 2026-09-24 | **第 8 阶段规划与 8-1 传送点**（报告 076；5.6、12）。切成 8-1 传送点、8-2 第二章形态、8-3 事件构件、8-4 道具与敌人、8-5 局外成长；8-1：`MoveIntent.TELEPORT`、`MapEdge.PORTAL`、导航解析、`MapTravel` 认 teleport、生成器配置与 `_add_portals`、校验先摘下传送点、求解与路口剔除、紫色虚线、编辑器传送模式 |
 | v1.72 | 2026-09-24 | **侵蚀本体**（报告 075，069 第 5 步 = 第 7 阶段；5.7、8.4、12）。`ErosionField`（逐层向内、预警、结算、存档）+ `ErosionMechanic`（时间表 + 效果清单）+ `ErosionEffect` 构件（扣体力 / 损坏一件 / 丢钱，基类四道门：开关、起始层、仅终局、概率 —— 作者要求都不写死）；`MapTravel._settle_penalty` 交给 `settle`；导入器把「必须预警」写成校验；地图垫色与红环、HUD 一句、日志。第 7 阶段完成 |
 | v1.71 | 2026-09-24 | **猎手专属池与段位**（报告 074，069 第九节；8.5）。段位只看步数：`HunterMechanic.bracket_steps` 划段，`HunterDef.strength_by_bracket` 每段几档（表空退回强度规则）；`HunterSystem.bracket()` / `strength_for()`；猎手专属池 `enemy_pools/hunters` 占位；木桩按同一张段位表分段（`DummyBuilder.build_by_brackets`），胜率表 wanted = 猎手表里这一段的档 |

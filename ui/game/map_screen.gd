@@ -225,6 +225,9 @@ func _adopt() -> void:
 	_view.reachable = {}
 	_view.bold_route = -1
 	_run.travel.moved.connect(_on_moved)
+	_run.travel.waited.connect(func(actions: int):
+		_note("　原地耗了 %d 个行动点" % actions)
+		_after_move())
 	_run.travel.refused.connect(func(_i: MoveIntent, why: String): _say("走不了：" + why))
 	_run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh_hud())
 	_run.vitality.changed.connect(func(_c: int, _m: int, _d: int, _r: StringName): _refresh_hud())
@@ -275,6 +278,9 @@ func _adopt() -> void:
 	ev.rewarded.connect(func(_n: MapNode, amount: int): _note("　进账 %d 币" % amount))
 	ev.revealed.connect(func(n: MapNode, type: StringName):
 		_note("　点 %d 是个「?」：原来是 %s" % [n.id, MapNodeStyle.of(type)["label"]]))
+	ev.type_changed.connect(func(n: MapNode, type: StringName):
+		_note("　点 %d 变成了%s点" % [n.id, MapNodeStyle.of(type)["label"]])
+		_view.refresh())
 	ev.battle_finished.connect(func(n: MapNode, result: BattleResult, won: bool):
 		var who := enemy_preview(n.id).get_slice("　", 0)
 		_note("　打 %s：%s，%.1f 秒" % [who if who != "" else "敌人", "赢了" if won else ("平局，按输算" if result.is_draw() else "输了"), result.duration_sec()]))

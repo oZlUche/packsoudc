@@ -64,6 +64,17 @@ func _open_result(payload: Dictionary) -> void:
 	for id in detail.get("buffs_removed", []):
 		var bd2: RunBuffDef = flow.buff_defs.get(StringName(String(id)), null)
 		lines.append("失去「%s」" % (bd2.display_name if bd2 != null else String(id)))
+	var lost: Array[String] = []
+	for name in detail.get("items_lost", []):
+		lost.append(String(name))
+	if not lost.is_empty():
+		lines.append("失去：%s" % "、".join(lost))
+	if int(detail.get("waited", 0)) > 0:
+		lines.append("耗了 %d 个行动点" % int(detail["waited"]))
+	if String(detail.get("type_changed", "")) != "":
+		lines.append("这里变成了%s点" % MapNodeStyle.of(StringName(String(detail["type_changed"])))["label"])
+	if int(detail.get("teleported", -1)) >= 0:
+		lines.append("被传送到了点 %d" % int(detail["teleported"]))
 	if lines.is_empty():
 		lines.append("什么也没发生。")
 	# 结果页配图沿用这个点的事件（结果只是同一件事的下一页）；老路的事件点没有定义，画占位

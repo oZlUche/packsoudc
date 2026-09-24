@@ -1,0 +1,44 @@
+{
+  "id": "event_rift",
+  "title": "裂隙",
+  "text": "地面裂开一道缝，底下有风。跳进去会落到别处，落在哪儿说不准。",
+  "options": [
+    {
+      "label": "跳进去",
+      "outcomes": [
+        {
+          "type": "teleport",
+          "min_steps": 2,
+          "max_steps": 5
+        },
+        {
+          "type": "say",
+          "text": "风把你卷了进去。"
+        }
+      ]
+    },
+    {
+      "label": "顺着风走到底（需要步数 ≥ 4）",
+      "requires": [
+        {
+          "type": "steps_within",
+          "min_steps": 4
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "teleport",
+          "target": "FARTHEST",
+          "min_steps": 2,
+          "action_cost": 2
+        },
+        {
+          "type": "spend_vitality"
+        }
+      ]
+    },
+    {
+      "label": "绕开"
+    }
+  ]
+}
