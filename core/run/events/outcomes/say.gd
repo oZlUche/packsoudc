@@ -11,4 +11,4 @@ func apply(ctx: EventContext) -> void:
 
 
 func describe() -> String:
-	return "说：" + text.left(20)
+	return "说一句「%s%s」" % [text.left(20), "…" if text.length() > 20 else ""]
