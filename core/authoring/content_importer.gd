@@ -320,6 +320,15 @@ static func import_event(data: Dictionary, ctx: Context, report: ImportReport) -
 		report.error("id", "事件必须有 id")
 	if def.options.is_empty():
 		report.error("options", "事件至少一个选项，不然关不掉")
+	else:
+		# 作者定的：至少一个不带条件的选项 —— 否则条件全没过时玩家被困在这一屏
+		var has_free := false
+		for o in def.options:
+			var free_opt := o as EventOption
+			if free_opt != null and free_opt.requires.is_empty():
+				has_free = true
+		if not has_free:
+			report.error("options", "至少一个不带条件的选项：条件全没过时玩家得有路走")
 	for i in def.options.size():
 		var opt := def.options[i] as EventOption
 		if opt == null:
