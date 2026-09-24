@@ -16,6 +16,8 @@ extends RefCounted
 const GENERATORS := {
 	&"ring": "res://core/map/generators/ring_map_generator.gd",
 	&"grid_script": "res://core/map/generators/grid_script_generator.gd",
+	&"hourglass": "res://core/map/generators/hourglass_map_generator.gd",
+	&"tower": "res://core/map/generators/tower_map_generator.gd",
 }
 
 

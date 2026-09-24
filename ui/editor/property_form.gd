@@ -267,6 +267,26 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 			_emit())
 		return _labeled(key, le2)
 
+	# 整数数组（哪几层放撤离点、每层的危险等级……）也用一行文本
+	if builtin == TYPE_INT:
+		var le3 := LineEdit.new()
+		var parts3: Array[String] = []
+		for v in arr:
+			parts3.append(str(int(v)))
+		le3.text = ", ".join(parts3)
+		le3.custom_minimum_size.x = 220
+		le3.placeholder_text = "1, 2, 3"
+		_font(le3)
+		le3.text_changed.connect(func(t: String):
+			var out := ContentSchema.empty_like(arr)
+			for piece in t.split(",", false):
+				var s := (piece as String).strip_edges()
+				if s.is_valid_int():
+					out.append(int(s))
+			owner.set(key, out)
+			_emit())
+		return _labeled(key, le3)
+
 	if builtin != TYPE_OBJECT:
 		return _labeled(key, _muted("（暂不支持在界面里编辑）"))
 

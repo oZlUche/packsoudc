@@ -48,6 +48,29 @@ func _ready() -> void:
 		generate()
 
 
+## 截图工具的钩子（tools/capture_scene.gd）：环境变量 DEMO_GENERATOR = 注册表里的生成器 id（hourglass / tower……），
+## DEMO_SEED = 种子。没设就是开场那张
+func demo_fill() -> void:
+	var want := StringName(OS.get_environment("DEMO_GENERATOR"))
+	if want == &"" or not MapGeneratorRegistry.has(want):
+		return
+	for i in _gen_pick.item_count:
+		if _gen_pick.get_item_text(i) == String(want):
+			_gen_pick.select(i)
+	use_generator(want)
+	# DEMO_CONFIG = "one_way=true;base_width=9"：截图前改几个配置字段
+	for pair in OS.get_environment("DEMO_CONFIG").split(";", false):
+		var kv := (pair as String).split("=")
+		if kv.size() == 2 and _cfg != null:
+			_cfg.set(kv[0].strip_edges(), str_to_var(kv[1].strip_edges()))
+	_rebuild_form()
+	var seed_text := OS.get_environment("DEMO_SEED")
+	if seed_text.is_valid_int():
+		_seed_box.value = int(seed_text)
+	generate()
+	_view.fit()
+
+
 func has_unsaved_changes() -> bool:
 	return _dirty
 

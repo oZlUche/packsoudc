@@ -13,6 +13,8 @@ extends RefCounted
 const LAYOUTS := {
 	&"ring": "res://ui/map/ring_map_layout.gd",
 	&"grid_script": "res://ui/map/grid_map_layout.gd",
+	&"hourglass": "res://ui/map/lattice_map_layout.gd",
+	&"tower": "res://ui/map/lattice_map_layout.gd",
 }
 
 
