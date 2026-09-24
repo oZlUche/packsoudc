@@ -41,8 +41,12 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 		cells_meta.append((_shape.rows[r]["cols"] as Array).duplicate())
 		if _shape.is_straight(r):
 			straight.append(r)
+	var goals_meta: Array = []
+	for c in _shape.goal_cols():
+		goals_meta.append([c, String(_shape.goals[c])])
 	_graph.layout_meta = {
 		"rows": _shape.row_count(), "cols": _shape.cols, "cells": cells_meta, "straight_rows": straight,
+		"orientation": String(_shape.orientation), "goals": goals_meta,
 		"forward_reach": _shape.forward_reach, "lateral_span": _shape.lateral_span,
 		"one_way": _shape.one_way, "one_way_from_row": _shape.one_way_from_row,
 		"erosion_reversed": _shape.erosion_reversed,
@@ -75,7 +79,8 @@ func _place_nodes() -> bool:
 				for c in _shape.rows[rr]["cols"]:
 					forced[int(c)] = true
 		if r == last:
-			forced[_shape.goal_col] = true
+			for c in _shape.goal_cols():
+				forced[c] = true
 		var picked: Array[int] = []
 		# 全填的层：第 0 层、最后一层、直上层，以及直上层两头的层 —— 那两层里不对着线段的点靠横边走到线段口，
 		# 所以它们得连成一片（横边也不断，见 _thin）
@@ -132,7 +137,7 @@ func _place_nodes() -> bool:
 			_graph.add_node(n)
 			table[int(c)] = n.id
 		_cells.append(table)
-	# 出生点匀着放在第 0 层；终点在最后一层的 goal_col
+	# 出生点匀着放在第 0 层；终点是最后一层里形状说的那几格
 	var row0: Array = _cells[0].keys()
 	row0.sort()
 	var k := _shape.entry_count
@@ -141,7 +146,9 @@ func _place_nodes() -> bool:
 		var id: int = _cells[0][row0[idx]]
 		if not _graph.entry_ids.has(id):
 			_graph.entry_ids.append(id)
-	_graph.goal_ids = [int(_cells[last][_shape.goal_col])] as Array[int]
+	_graph.goal_ids = [] as Array[int]
+	for c in _shape.goal_cols():
+		_graph.goal_ids.append(int(_cells[last][c]))
 	return true
 
 

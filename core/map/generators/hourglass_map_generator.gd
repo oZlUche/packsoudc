@@ -34,7 +34,12 @@ func shape(cfg: Resource) -> LatticeShape:
 		s.add_row(lanes.duplicate(), false, true, 1.0)
 	for _r in c.half_rows:
 		s.add_row(full.duplicate(), true, false, c.fill)
-	s.goal_col = (c.width - 1) / 2
+	# 横置：出生在左、终点在右。对侧一排撤离点；核心（BOSS）不是必须的
+	s.orientation = LatticeShape.HORIZONTAL
+	for x in c.exit_cols():
+		s.goals[x] = &"extract"
+	if c.with_core:
+		s.goals[(c.width - 1) / 2] = &"core"
 	s.entry_count = c.entry_count
 	s.forward_reach = c.forward_reach
 	s.lateral_span = c.lateral_span

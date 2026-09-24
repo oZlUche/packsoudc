@@ -99,9 +99,16 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 		for id in graph.node_ids():
 			if graph.get_node(id).type == &"spawn" and not graph.entry_ids.has(id):
 				v.fail(&"spawn", "节点 %d 是 spawn，却不是出生点" % id)
+		# 终点那一层放什么由形状说（core / extract……），核心不是必须的
+		var goal_types := {}
+		for pair in graph.layout_meta.get("goals", []):
+			goal_types[int(pair[0])] = String(pair[1])
 		for id in graph.goal_ids:
-			if graph.has_node(id) and graph.get_node(id).type != &"core":
-				v.fail(&"core", "终点 %d 的类型是 %s，不是 core" % [id, graph.get_node(id).type])
+			if not graph.has_node(id):
+				continue
+			var want := String(goal_types.get(int(graph.get_node(id).layout.get("col", -1)), "core"))
+			if String(graph.get_node(id).type) != want:
+				v.fail(&"goal", "终点 %d 的类型是 %s，形状说的是 %s" % [id, graph.get_node(id).type, want])
 
 	# --- 不许相邻 ---
 	var pairs: Array = rules.get("no_adjacent", [])
@@ -112,12 +119,12 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 			if (pair[0] == ta and pair[1] == tb) or (pair[0] == tb and pair[1] == ta):
 				v.fail(&"adjacent", "%d（%s）与 %d（%s）挨着" % [e.from_id, ta, e.to_id, tb])
 
-	# --- 中途撤离点只在允许的层、两两够远 ---
+	# --- 中途撤离点只在允许的层、两两够远（终点那一层的撤离点是终点，不算中途）---
 	var allowed: Array = rules.get("extract_rows", [])
 	var gap := int(rules.get("extract_min_distance", 0))
 	var extracts: Array[int] = []
 	for id in graph.node_ids():
-		if graph.get_node(id).type == &"extract":
+		if graph.get_node(id).type == &"extract" and not graph.goal_ids.has(id):
 			extracts.append(id)
 			var r := int(graph.get_node(id).layout.get("row", -1))
 			if not allowed.has(r):

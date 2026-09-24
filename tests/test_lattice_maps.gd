@@ -60,16 +60,41 @@ static func run_hourglass(t: TestCase) -> void:
 	t.eq(g.entry_ids.size(), cfg.entry_count, "出生点数按配置")
 	for id in g.entry_ids:
 		t.check(_row(g, id) == 0 and g.get_node(id).type == &"spawn", "出生点在第 0 层、类型 spawn")
-	t.eq(g.goal_ids.size(), 1, "一个终点")
-	var goal: int = g.goal_ids[0]
-	t.check(_row(g, goal) == cfg.row_count() - 1 and _col(g, goal) == (cfg.width - 1) / 2 and g.get_node(goal).type == &"core", "终点在顶层正中、类型 core")
-	# 咽喉：拿掉线段的点，上下两块就断开
+	# 作者定的：撤离点在和出生点相对的那一侧，核心不是必须、中途没有撤离点
+	t.eq(cfg.exit_cols(), [0, 4] as Array[int], "对侧默认两个撤离点，匀着放在两端")
+	t.eq(g.goal_ids.size(), cfg.exit_count, "终点 = 对侧的 %d 个撤离点" % cfg.exit_count)
+	var exit_cols: Array[int] = []
+	for id in g.goal_ids:
+		t.check(_row(g, id) == cfg.row_count() - 1 and g.get_node(id).type == &"extract", "终点 %d 在对侧那一列、类型 extract" % id)
+		exit_cols.append(_col(g, id))
+	exit_cols.sort()
+	t.eq(exit_cols, cfg.exit_cols(), "撤离点的格按配置")
+	var cores := 0
+	var extracts := 0
+	for id in g.node_ids():
+		cores += 1 if g.get_node(id).type == &"core" else 0
+		extracts += 1 if g.get_node(id).type == &"extract" else 0
+	t.eq(cores, 0, "核心不是必须：默认没有")
+	t.eq(extracts, cfg.exit_count, "中途没有撤离点：撤离点都在对侧")
+	var cfg_core := HourglassMapConfig.sample()
+	cfg_core.with_core = true
+	var gc := _hourglass(3, cfg_core)
+	if gc != null:
+		var core_id := -1
+		for id in gc.goal_ids:
+			if gc.get_node(id).type == &"core":
+				core_id = id
+		t.check(core_id >= 0 and _col(gc, core_id) == (cfg_core.width - 1) / 2 and gc.goal_ids.size() == cfg_core.exit_count + 1, "要核心：对侧正中多一个核心，撤离点照旧")
+	# 咽喉：拿掉线段的点，左右两块就断开
 	var cut := MapGraph.from_dict(g.to_dict())
 	for r in range(cfg.half_rows, cfg.half_rows + cfg.neck_rows):
 		for id in _nodes_in_row(cut, r):
 			cut.remove_node(id)
 	var seen := MapGenerator.reachable_from(cut, cut.entry_ids)
-	t.check(not seen.has(goal), "线段是必经之路：拿掉它们终点就到不了")
+	var any_goal := false
+	for id in g.goal_ids:
+		any_goal = any_goal or seen.has(id)
+	t.check(not any_goal, "线段是必经之路：拿掉它们对侧就到不了")
 	# tier / 侵蚀分档 = 层号
 	for id in g.node_ids():
 		t.check(g.get_node(id).tier == _row(g, id) and g.get_node(id).erosion_band == _row(g, id), "tier 与侵蚀分档都是层号")
@@ -133,11 +158,20 @@ static func run_tower(t: TestCase) -> void:
 			t.check(c >= offset and c < offset + widths[r], "第 %d 层的点都在居中的 %d 列里" % [r, widths[r]])
 	t.eq(_nodes_in_row(g, widths.size() - 1), g.goal_ids, "塔尖那一层只有终点")
 	t.eq(g.get_node(g.goal_ids[0]).type, &"core", "塔尖是 core")
+	# 作者定的：登上一层就不能向下 —— 默认就是单向的
 	for e in g.edges:
-		t.check(not e.directed, "默认不是单向")
+		t.eq(e.directed, _row(g, e.from_id) != _row(g, e.to_id), "默认：层间的路单向、同层的不")
 	var v := MapValidation.new()
 	TowerMapGenerator.new().validate(g, v)
 	t.check(v.ok(), "过校验：%s" % v.to_text())
+	var off := TowerMapConfig.sample()
+	off.one_way = false
+	var g0 := _tower(3, off)
+	if g0 != null:
+		var any_directed := false
+		for e in g0.edges:
+			any_directed = any_directed or e.directed
+		t.check(not any_directed, "关掉 one_way：一座能上下的塔")
 
 	# 不回头
 	var one := TowerMapConfig.sample()
@@ -241,6 +275,9 @@ static func run_tower(t: TestCase) -> void:
 static func run_types_and_rules(t: TestCase) -> void:
 	t.begin("格阵 · 类型规则：撤离点只在允许的层、够远、数量在范围里；每层配额；覆盖；不许相邻；规则写进图，手改就红")
 	var cfg := HourglassMapConfig.sample()
+	# 作者要在咽喉前后放中途撤离点时这么填（默认没有中途撤离点）
+	cfg.rules.extract_rows = cfg.neck_end_rows()
+	cfg.rules.extract_count = Vector2i(1, 2)
 	var g := _hourglass(11, cfg)
 	if g == null:
 		t.check(false, "生成不出")
@@ -249,7 +286,7 @@ static func run_types_and_rules(t: TestCase) -> void:
 	t.eq(rules["extract_rows"], [cfg.half_rows - 1, cfg.half_rows + cfg.neck_rows], "规则写进图：撤离点允许的层 = 颈部两头")
 	var extracts: Array[int] = []
 	for id in g.node_ids():
-		if g.get_node(id).type == &"extract":
+		if g.get_node(id).type == &"extract" and not g.goal_ids.has(id):
 			extracts.append(id)
 	t.check(extracts.size() >= cfg.rules.extract_count.x and extracts.size() <= cfg.rules.extract_count.y, "撤离点 %d 个，在 %s 里" % [extracts.size(), str(cfg.rules.extract_count)])
 	for id in extracts:
@@ -310,7 +347,10 @@ static func run_layout_and_play(t: TestCase) -> void:
 	t.check(distinct, "位置两两不同")
 	var a: int = g.entry_ids[0]
 	var goal: int = g.goal_ids[0]
-	t.check(pos[a].y > pos[goal].y, "出生在下、终点在上")
+	t.check(pos[a].x < pos[goal].x and absf(pos[a].y - pos[goal].y) < LatticeMapLayout.COL_STEP * float(g.layout_meta["cols"]), "沙漏横置：出生在左、对侧在右")
+	var tg := _tower(3)
+	var tpos := MapLayout.for_graph(tg).positions(tg, Rect2(Vector2.ZERO, MapLayout.for_graph(tg).canvas_size(tg)))
+	t.check(tpos[tg.entry_ids[0]].y > tpos[tg.goal_ids[0]].y, "塔竖着：出生在底、塔尖在顶")
 	var cells_total := 0
 	for row in g.layout_meta["cells"]:
 		cells_total += (row as Array).size()

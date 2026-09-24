@@ -1,5 +1,5 @@
-## 格阵形态（沙漏、塔）的布局（8-2，报告 078）：层画成一行行，出生那层在底下、终点那层在顶上；列是绝对列。
-## 边画直线，单向的路加箭头；衬底把每层的格子画成淡点，形状（长方形、三角）就看得出来。
+## 格阵形态（沙漏、塔）的布局（8-2，报告 078）：层画成一行行（塔：出生那层在底、终点在顶）或一列列（横置的沙漏：出生在左、终点在右），
+## 按图上的 orientation 定；格子的 col 是绝对列。边画直线，单向的路加箭头；衬底把每层的格子画成淡点，形状（蝴蝶结、三角）就看得出来。
 class_name LatticeMapLayout
 extends MapLayout
 
@@ -17,11 +17,19 @@ static func cols_of(graph: MapGraph) -> int:
 	return maxi(1, int(graph.layout_meta.get("cols", 1)))
 
 
+static func is_horizontal(graph: MapGraph) -> bool:
+	return String(graph.layout_meta.get("orientation", "vertical")) == "horizontal"
+
+
 func canvas_size(graph: MapGraph) -> Vector2:
-	return Vector2(float(cols_of(graph) - 1) * COL_STEP + 2.0 * MARGIN, float(rows_of(graph) - 1) * ROW_STEP + 2.0 * MARGIN)
+	var along := float(rows_of(graph) - 1) * ROW_STEP + 2.0 * MARGIN
+	var across := float(cols_of(graph) - 1) * COL_STEP + 2.0 * MARGIN
+	return Vector2(along, across) if is_horizontal(graph) else Vector2(across, along)
 
 
 func cell_pos(graph: MapGraph, rect: Rect2, row: int, col: int) -> Vector2:
+	if is_horizontal(graph):
+		return rect.position + Vector2(MARGIN + float(row) * ROW_STEP, MARGIN + float(col) * COL_STEP)
 	var rows := rows_of(graph)
 	return rect.position + Vector2(MARGIN + float(col) * COL_STEP, MARGIN + float(rows - 1 - row) * ROW_STEP)
 
@@ -64,7 +72,7 @@ func edge_kind(graph: MapGraph, a: int, b: int) -> StringName:
 
 
 func draw_edge(
-	canvas: CanvasItem, graph: MapGraph, edge: MapEdge, a: Vector2, b: Vector2,
+	canvas: CanvasItem, _graph: MapGraph, edge: MapEdge, a: Vector2, b: Vector2,
 	color: Color, width: float, _rect: Rect2 = Rect2()
 ) -> void:
 	if edge.is_portal():
@@ -89,9 +97,10 @@ func draw_backdrop(canvas: CanvasItem, graph: MapGraph, rect: Rect2) -> void:
 			continue
 		var lo := int(cols.min())
 		var hi := int(cols.max())
-		var y := cell_pos(graph, rect, r, 0).y
 		if not straight.has(r):
-			canvas.draw_line(Vector2(cell_pos(graph, rect, r, lo).x - COL_STEP * 0.4, y),
-				Vector2(cell_pos(graph, rect, r, hi).x + COL_STEP * 0.4, y), UiPalette.LINE, 1.0, true)
+			var a := cell_pos(graph, rect, r, lo)
+			var b := cell_pos(graph, rect, r, hi)
+			var pad := (b - a).normalized() * COL_STEP * 0.4 if hi > lo else Vector2.ZERO
+			canvas.draw_line(a - pad, b + pad, UiPalette.LINE, 1.0, true)
 		for c in cols:
 			canvas.draw_circle(cell_pos(graph, rect, r, int(c)), 3.0, UiPalette.LINE)

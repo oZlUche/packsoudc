@@ -29,8 +29,13 @@ func assign(g: MapGraph, rules: LatticeTypeRules, rng: RandomNumberGenerator) ->
 	for id in g.entry_ids:
 		g.get_node(id).type = &"spawn"
 		_fixed[id] = true
+	# 终点那一层放什么由形状说（layout_meta.goals：[列, 类型]），核心不是必须的
+	var goal_types := {}
+	for pair in g.layout_meta.get("goals", []):
+		goal_types[int(pair[0])] = StringName(String(pair[1]))
 	for id in g.goal_ids:
-		g.get_node(id).type = &"core"
+		var n := g.get_node(id)
+		n.type = goal_types.get(int(n.layout.get("col", -1)), &"core")
 		_fixed[id] = true
 	if not _place_extracts():
 		return false

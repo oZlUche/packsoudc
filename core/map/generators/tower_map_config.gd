@@ -1,6 +1,6 @@
-## 塔形（8-2，报告 078）：等腰三角形，底层最宽、一层层向上收窄到塔尖；出生在底层，终点在塔尖。
-## 「不回头」是作者要的设置，**语义还没定**：现在只做了最便宜的一种（楼层之间的路只许向上走），
-## 回不去的楼层怎么侵蚀、撤离点怎么放，等作者定了再补。数值全是占位。
+## 塔形（8-2，报告 078；作者第二轮定义）：等腰三角形，底层最宽、一层层向上收窄到塔尖；出生在底层，终点在塔尖。
+## **横向的层，登上一层就不能向下**：同层可以自由横着走，层与层之间的路只许向上（作者定的塔的规则，默认开着；
+## `one_way` 关掉就是一座能上下的塔）。数值全是占位。
 class_name TowerMapConfig
 extends Resource
 
@@ -21,9 +21,9 @@ extends Resource
 @export var forward_break_chance: float = 0.3
 @export var lateral_break_chance: float = 0.35
 
-@export_group("不回头（占位）")
-## true = 楼层之间的路只许向上走。别的语义还没定
-@export var one_way: bool = false
+@export_group("不回头")
+## 登上一层就不能向下：层与层之间的路只许向上走，同层照旧自由横着走。塔的定义，默认开着
+@export var one_way: bool = true
 ## 从第几层起单向（0 = 出生那层）
 @export var one_way_from_floor: int = 0
 
