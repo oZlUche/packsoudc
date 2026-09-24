@@ -1,0 +1,61 @@
+{
+  "id": "blessed_longbow",
+  "display_name": "狩猎之神赐福的长弓",
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "ranged",
+    "rapid",
+    "blessed"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 10
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 5.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage"
+          },
+          {
+            "type": "apply_status",
+            "buff": {
+              "id": "marked",
+              "display_name": "标记",
+              "is_debuff": true,
+              "max_stacks": 1,
+              "duration_sec": 8.0,
+              "mods": [
+                {
+                  "stat": "armor",
+                  "mult_category": "EMPOWER",
+                  "flat": -3.0
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

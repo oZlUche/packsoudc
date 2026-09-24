@@ -325,7 +325,7 @@ static func run_teleport_outcome(t: TestCase) -> void:
 		ictx.items[id] = c.items.get_def(id)
 	var bad := {"id": "x", "title": "x", "options": [
 		{"label": "a", "outcomes": [{"type": "teleport"}, {"type": "open_search"}]},
-		{"label": "b", "outcomes": [{"type": "teleport"}, {"type": "give_item", "item": "medkit"}]},
+		{"label": "b", "outcomes": [{"type": "teleport"}, {"type": "give_item", "item": "salve"}]},
 		{"label": "c", "outcomes": [{"type": "teleport", "action_cost": -1, "min_steps": 5, "max_steps": 2, "node_types": ["nope"]}]},
 		{"label": "d", "outcomes": [{"type": "change_node_type", "node_type": "spawn"}]},
 		{"label": "e", "outcomes": [{"type": "lose_item", "item": "nope"}, {"type": "pass_time", "actions": 0}]},
@@ -338,7 +338,7 @@ static func run_teleport_outcome(t: TestCase) -> void:
 		t.check(text.contains(needle), "导入器报：%s" % needle)
 	var good := {"id": "y", "title": "y", "options": [
 		{"label": "a", "outcomes": [{"type": "teleport", "target": "nearest", "node_types": ["rest"]}, {"type": "spend_vitality"}]},
-		{"label": "b", "requires": [{"type": "has_item", "item": "medkit"}], "outcomes": [{"type": "lose_item", "item": "medkit"}]},
+		{"label": "b", "requires": [{"type": "has_item", "item": "salve"}], "outcomes": [{"type": "lose_item", "item": "salve"}]},
 	]}
 	var rep2 := ImportReport.new()
 	var def := ContentImporter.import_event(good, ictx, rep2)

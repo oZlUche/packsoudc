@@ -324,7 +324,7 @@ static func run_existing_assets(t: TestCase) -> void:
 	var ctx := _ctx()
 	var checked := 0
 	var failed: Array[String] = []
-	for id in db.ids():
+	for id in db.all_ids():
 		var def := db.get_def(id)
 		if def == null:
 			continue

@@ -1,0 +1,41 @@
+{
+  "id": "strength_sigil",
+  "display_name": "力量的符号",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "part",
+    "sigil"
+  ],
+  "adjacency": {
+    "grant_cells": [
+      [
+        0,
+        -1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "grant_filter": [
+      "weapon"
+    ],
+    "grant_mods": [
+      {
+        "mult_category": "EMPOWER",
+        "mult_percent": 15
+      }
+    ]
+  }
+}

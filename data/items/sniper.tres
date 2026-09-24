@@ -84,6 +84,6 @@ id = &"sniper"
 display_name = "狙击枪"
 shape = SubResource("Resource_3wa02")
 rarity = 3
-tags = Array[StringName]([&"weapon", &"gun", &"burst"])
+tags = Array[StringName]([&"sealed", &"weapon", &"gun", &"burst"])
 combat = SubResource("Resource_g2bia")
 adjacency = SubResource("Resource_dqow0")

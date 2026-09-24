@@ -15,7 +15,7 @@ buff = &"marked"
 
 [sub_resource type="Resource" id="Resource_x5mwx"]
 script = ExtResource("4_mjfu0")
-item = &"medkit"
+item = &"salve"
 
 [sub_resource type="Resource" id="Resource_f25k2"]
 script = ExtResource("5_32i03")

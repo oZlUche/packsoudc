@@ -1,0 +1,13 @@
+{
+  "id": "warped_obsidian",
+  "display_name": "异化黑曜石",
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "value": 300,
+  "tags": [
+    "treasure",
+    "material"
+  ]
+}

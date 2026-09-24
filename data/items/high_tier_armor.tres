@@ -23,5 +23,5 @@ id = &"high_tier_armor"
 display_name = "高级防弹衣"
 shape = SubResource("Resource_5rb47")
 rarity = 3
-tags = Array[StringName]([&"gear"])
+tags = Array[StringName]([&"sealed", &"gear"])
 combat = SubResource("Resource_tnq1o")

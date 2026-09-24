@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_05ric"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_0yuiu"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_aduh3"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="4_r6jbh"]
+
+[sub_resource type="Resource" id="Resource_gjm8d"]
+script = ExtResource("4_r6jbh")
+
+[resource]
+script = ExtResource("3_aduh3")
+id = &"warped_obsidian"
+display_name = "异化黑曜石"
+shape = SubResource("Resource_gjm8d")
+rarity = 3
+value = 300
+tags = Array[StringName]([&"treasure", &"material"])

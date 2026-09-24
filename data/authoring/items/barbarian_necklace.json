@@ -1,0 +1,11 @@
+{
+  "id": "barbarian_necklace",
+  "display_name": "蛮族的项链",
+  "shape": [
+    "1"
+  ],
+  "value": 20,
+  "tags": [
+    "trophy"
+  ]
+}

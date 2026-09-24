@@ -58,5 +58,5 @@ id = &"stim"
 display_name = "兴奋剂"
 shape = SubResource("Resource_e0xm3")
 rarity = 2
-tags = Array[StringName]([&"consumable"])
+tags = Array[StringName]([&"sealed", &"consumable"])
 combat = SubResource("Resource_ywq85")

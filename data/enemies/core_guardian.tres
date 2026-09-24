@@ -12,4 +12,4 @@ base_stats = {
 "armor": 4,
 "max_hp": 60
 }
-signature = Array[StringName]([&"high_tier_armor"])
+signature = Array[StringName]([&"blessed_shield"])

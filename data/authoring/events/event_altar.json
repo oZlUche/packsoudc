@@ -28,24 +28,24 @@
       ]
     },
     {
-      "label": "用撬棍撬开石台",
+      "label": "用匕首撬开石缝",
       "requires": [
         {
           "type": "has_item",
-          "item": "crowbar"
+          "item": "knife"
         }
       ],
       "outcomes": [
         {
           "type": "lose_item",
-          "item": "crowbar"
+          "item": "knife"
         },
         {
           "type": "give_random_item"
         },
         {
           "type": "say",
-          "text": "撬棍断了，石台底下有东西。"
+          "text": "匕首断了，石缝里有东西。"
         }
       ]
     },

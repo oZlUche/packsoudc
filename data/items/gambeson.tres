@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_apad2"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="2_pqdid"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_n4rn6"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_8ki2x"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_xbhfi"]
+
+[sub_resource type="Resource" id="Resource_sl3hj"]
+script = ExtResource("1_apad2")
+stat = &"armor"
+flat = 1.0
+
+[sub_resource type="Resource" id="Resource_pe0pd"]
+script = ExtResource("2_pqdid")
+grant_cells = Array[Vector2i]([Vector2i(0, -1)])
+grant_filter = Array[StringName]([&"gear"])
+grant_mods = Array[ExtResource("1_apad2")]([SubResource("Resource_sl3hj")])
+
+[sub_resource type="Resource" id="Resource_50qjw"]
+script = ExtResource("5_xbhfi")
+
+[resource]
+script = ExtResource("4_8ki2x")
+id = &"gambeson"
+display_name = "贴身内甲"
+shape = SubResource("Resource_50qjw")
+rarity = 1
+tags = Array[StringName]([&"gear_plug"])
+adjacency = SubResource("Resource_pe0pd")

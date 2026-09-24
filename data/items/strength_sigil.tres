@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_3pw3u"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="2_b5cm1"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_2cm5y"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_npvua"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_lh1py"]
+
+[sub_resource type="Resource" id="Resource_xigdi"]
+script = ExtResource("1_3pw3u")
+mult_category = 0
+mult_percent = 15
+
+[sub_resource type="Resource" id="Resource_qevok"]
+script = ExtResource("2_b5cm1")
+grant_cells = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)])
+grant_filter = Array[StringName]([&"weapon"])
+grant_mods = Array[ExtResource("1_3pw3u")]([SubResource("Resource_xigdi")])
+
+[sub_resource type="Resource" id="Resource_6vuw4"]
+script = ExtResource("5_lh1py")
+
+[resource]
+script = ExtResource("4_npvua")
+id = &"strength_sigil"
+display_name = "力量的符号"
+shape = SubResource("Resource_6vuw4")
+rarity = 2
+tags = Array[StringName]([&"part", &"sigil"])
+adjacency = SubResource("Resource_qevok")

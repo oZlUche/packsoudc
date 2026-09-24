@@ -104,7 +104,7 @@ static func run_loadout_pipeline(t: TestCase) -> void:
 	var sample := LoadoutDef.new()
 	sample.id = &"t_kit"
 	sample.display_name = "测试"
-	sample.items = [&"bag_leather", &"pistol"] as Array[StringName]
+	sample.items = [&"bag_leather", &"shortsword"] as Array[StringName]
 	var text := ContentExporter.to_json(ContentExporter.export_loadout(sample))
 	var report := ImportReport.new()
 	var back := ContentImporter.import_loadout(JSON.parse_string(text), ctx, report)
@@ -120,10 +120,10 @@ static func run_loadout_pipeline(t: TestCase) -> void:
 	ContentImporter.import_loadout({"id": "x", "items": ["bag_leather", "no_such_item"]}, ctx, bad)
 	t.check(not bad.ok() and bad.to_text().contains("no_such_item"), "不存在的道具不行，报出名字")
 	bad = ImportReport.new()
-	ContentImporter.import_loadout({"id": "x", "items": ["pistol", "knife"]}, ctx, bad)
+	ContentImporter.import_loadout({"id": "x", "items": ["shortsword", "knife"]}, ctx, bad)
 	t.check(not bad.ok() and bad.to_text().contains("包"), "没有包不行：棋盘上只有包里的东西参战")
 	bad = ImportReport.new()
-	ContentImporter.import_loadout({"id": "x", "items": ["pistol", "knife"]}, ContentImporter.Context.new(), bad)
+	ContentImporter.import_loadout({"id": "x", "items": ["shortsword", "knife"]}, ContentImporter.Context.new(), bad)
 	t.check(bad.ok(), "单独导一份（上下文里没有道具）时对着道具查的两条跳过")
 
 	# 作者文件：导得进、是不动点、资产在、每份至少一个包

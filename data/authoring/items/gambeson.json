@@ -1,0 +1,28 @@
+{
+  "id": "gambeson",
+  "display_name": "贴身内甲",
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "gear_plug"
+  ],
+  "adjacency": {
+    "grant_cells": [
+      [
+        0,
+        -1
+      ]
+    ],
+    "grant_filter": [
+      "gear"
+    ],
+    "grant_mods": [
+      {
+        "stat": "armor",
+        "flat": 1.0
+      }
+    ]
+  }
+}

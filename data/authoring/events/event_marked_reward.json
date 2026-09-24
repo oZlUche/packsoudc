@@ -18,7 +18,7 @@
         },
         {
           "type": "give_item",
-          "item": "medkit"
+          "item": "salve"
         },
         {
           "type": "say",

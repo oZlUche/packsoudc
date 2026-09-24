@@ -26,8 +26,18 @@ extends Resource
 ## 留给「小而贵」「大而贱」的特例。战斗力与价值是两回事，一件东西可以只占其一。
 @export var value: int = 0
 
+## 封存（第 8 阶段 8-4 起）：带这个标签的道具**数据保留、不再出现**。正式游戏的世界观是剑与魔法（docs/worldview.md），
+## 现代道具（枪械、弹匣、电池、无人机……）全部封存 —— 不进搜索、掉落、商店、敌人的装备、图鉴与编辑器的下拉，
+## 但按 id 仍取得到（旧存档、仓库里的还认）。[ItemDatabase.ids] 是唯一拦它的地方
+const SEALED := &"sealed"
+
 ## 准入标签。容器级与包体级的准入都拿它比对。
 @export var tags: Array[StringName] = []
+
+
+func is_sealed() -> bool:
+	return tags.has(SEALED)
+
 
 ## 本物品是否是「包」。包只在棋盘模式的容器里作为包生效，
 ## 躺在尸体或暂存区里时就是件普通异形物品。

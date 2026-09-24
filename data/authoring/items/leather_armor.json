@@ -1,0 +1,18 @@
+{
+  "id": "leather_armor",
+  "display_name": "皮甲",
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "gear",
+    "barbarian"
+  ],
+  "combat": {
+    "base_stats": {
+      "armor": 3
+    }
+  }
+}

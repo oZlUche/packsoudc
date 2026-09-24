@@ -48,5 +48,5 @@ id = &"medkit"
 display_name = "医疗包"
 shape = SubResource("Resource_mtedr")
 rarity = 1
-tags = Array[StringName]([&"consumable"])
+tags = Array[StringName]([&"sealed", &"consumable"])
 combat = SubResource("Resource_evcgn")

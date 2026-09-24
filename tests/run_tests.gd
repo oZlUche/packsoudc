@@ -78,6 +78,7 @@ const SUITES: Array = [
 	preload("res://tests/test_portals.gd"),
 	preload("res://tests/test_event_constructs.gd"),
 	preload("res://tests/test_lattice_maps.gd"),
+	preload("res://tests/test_sealed_items.gd"),
 ]
 
 

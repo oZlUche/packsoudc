@@ -218,6 +218,8 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 				report.error("starting_bags[%d]" % i, "找不到道具 '%s'" % def.starting_bags[i])
 			elif not item.is_bag:
 				report.error("starting_bags[%d]" % i, "'%s' 不是包" % def.starting_bags[i])
+			elif item.is_sealed():
+				report.error("starting_bags[%d]" % i, "'%s' 已封存" % def.starting_bags[i])
 	ctx.register_character(def)
 	return def
 
@@ -343,6 +345,8 @@ static func import_event(data: Dictionary, ctx: Context, report: ImportReport) -
 				report.error(at, "空的后果")
 			elif o is GiveItem and not ctx.items.is_empty() and not ctx.items.has((o as GiveItem).item):
 				report.error(at, "找不到道具 '%s'" % (o as GiveItem).item)
+			elif o is GiveItem and not ctx.items.is_empty() and (ctx.items[(o as GiveItem).item] as ItemDef).is_sealed():
+				report.error(at, "'%s' 已封存，事件不能给它" % (o as GiveItem).item)
 			elif (o is GrantMapBuff or o is RemoveMapBuff) and not ctx.run_buffs.is_empty():
 				var bid: StringName = (o as GrantMapBuff).buff if o is GrantMapBuff else (o as RemoveMapBuff).buff
 				var b: RunBuffDef = ctx.run_buffs.get(bid, null)
@@ -433,6 +437,8 @@ static func _validate_loadout_def(def: LoadoutDef, ctx: Context, report: ImportR
 		var item: ItemDef = ctx.items.get(def.items[i], null)
 		if item == null:
 			report.error("items[%d]" % i, "找不到道具 '%s'" % def.items[i])
+		elif item.is_sealed():
+			report.error("items[%d]" % i, "'%s' 已封存（现代道具，世界观见 docs/worldview.md），不能进开局装备" % def.items[i])
 		elif item.is_bag:
 			has_bag = true
 	if not has_bag:
@@ -587,6 +593,8 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 			report.error("signature", "找不到招牌道具 '%s'" % sid)
 		elif (ctx.items[sid] as ItemDef).is_bag:
 			report.error("signature", "招牌道具 '%s' 是个包 —— 敌人的棋盘不放包" % sid)
+		elif (ctx.items[sid] as ItemDef).is_sealed():
+			report.error("signature", "招牌道具 '%s' 已封存" % sid)
 
 
 static func _validate_loadout(rule: EnemyLoadout, at: String, report: ImportReport) -> void:

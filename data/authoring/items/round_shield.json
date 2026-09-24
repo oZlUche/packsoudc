@@ -1,0 +1,19 @@
+{
+  "id": "round_shield",
+  "display_name": "圆盾",
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "gear",
+    "shield",
+    "imperial"
+  ],
+  "combat": {
+    "base_stats": {
+      "armor": 4
+    }
+  }
+}

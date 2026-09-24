@@ -1,0 +1,27 @@
+{
+  "id": "arrows",
+  "display_name": "箭矢",
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "ammo"
+  ],
+  "adjacency": {
+    "grant_cells": [
+      [
+        0,
+        -1
+      ]
+    ],
+    "grant_filter": [
+      "ranged"
+    ],
+    "grant_mods": [
+      {
+        "mult_category": "SHARP",
+        "mult_percent": 20
+      }
+    ]
+  }
+}

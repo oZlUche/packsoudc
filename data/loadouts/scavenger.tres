@@ -6,5 +6,4 @@
 script = ExtResource("1_e48to")
 id = &"scavenger"
 display_name = "拾荒者"
-description = "三个包、只带轻武器：空间大，能背更多东西出去；打不过就走，偏搜索路线的选择"
-items = Array[StringName]([&"bag_leather", &"bag_long", &"bag_small", &"knife", &"pistol", &"crowbar", &"medkit", &"ration"])
+items = Array[StringName]([&"bag_leather", &"bag_long", &"bag_small", &"knife", &"shortsword", &"bandage", &"ration", &"mana_shard"])

@@ -1,0 +1,13 @@
+{
+  "id": "pale_shard",
+  "display_name": "灰白色的金属碎片",
+  "shape": [
+    "1"
+  ],
+  "rarity": 4,
+  "value": 800,
+  "tags": [
+    "treasure",
+    "relic"
+  ]
+}

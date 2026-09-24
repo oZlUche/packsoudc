@@ -23,5 +23,5 @@ id = &"armor"
 display_name = "防弹衣"
 shape = SubResource("Resource_pson6")
 rarity = 2
-tags = Array[StringName]([&"gear"])
+tags = Array[StringName]([&"sealed", &"gear"])
 combat = SubResource("Resource_11q3f")

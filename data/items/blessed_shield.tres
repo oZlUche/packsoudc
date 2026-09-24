@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_axkh6"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_dkjj4"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_cf17m"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_dql6g"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_4jajr"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="6_ppj1f"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="7_o32o2"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="8_seitx"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_i8p28"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_ln6vm"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_pn5eu"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_y2exc"]
+
+[sub_resource type="Resource" id="Resource_m2fkp"]
+script = ExtResource("3_cf17m")
+
+[sub_resource type="Resource" id="Resource_382f2"]
+script = ExtResource("1_axkh6")
+stat = &"armor"
+flat = 8.0
+
+[sub_resource type="Resource" id="Resource_k5nhu"]
+script = ExtResource("6_ppj1f")
+id = &"deflect"
+display_name = "弹开"
+max_stacks = 1
+duration_sec = 4.0
+mods = Array[ExtResource("1_axkh6")]([SubResource("Resource_382f2")])
+
+[sub_resource type="Resource" id="Resource_hpahx"]
+script = ExtResource("7_o32o2")
+target = 1
+buff = SubResource("Resource_k5nhu")
+
+[sub_resource type="Resource" id="Resource_ouk8o"]
+script = ExtResource("8_seitx")
+
+[sub_resource type="Resource" id="Resource_vi1ei"]
+script = ExtResource("2_dkjj4")
+trigger = SubResource("Resource_ouk8o")
+cadence = SubResource("Resource_m2fkp")
+effects = Array[ExtResource("5_4jajr")]([SubResource("Resource_hpahx")])
+
+[sub_resource type="Resource" id="Resource_md8cq"]
+script = ExtResource("9_i8p28")
+base_stats = {
+"armor": 6
+}
+rules = Array[ExtResource("2_dkjj4")]([SubResource("Resource_vi1ei")])
+
+[sub_resource type="Resource" id="Resource_u8eqt"]
+script = ExtResource("12_y2exc")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
+
+[resource]
+script = ExtResource("11_pn5eu")
+id = &"blessed_shield"
+display_name = "技巧之神赐福的盾牌"
+shape = SubResource("Resource_u8eqt")
+rarity = 3
+tags = Array[StringName]([&"gear", &"shield", &"blessed"])
+combat = SubResource("Resource_md8cq")

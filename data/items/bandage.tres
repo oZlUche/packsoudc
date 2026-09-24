@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_def0t"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_b57w7"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_o5xng"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_cetev"]
+[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="5_xe0l5"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_jlsr4"]
+[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="7_7gwie"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="8_o0d1g"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_c4u02"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_1cilw"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_y4of4"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_mpg3r"]
+
+[sub_resource type="Resource" id="Resource_1hfie"]
+script = ExtResource("3_o5xng")
+
+[sub_resource type="Resource" id="Resource_ko1sd"]
+script = ExtResource("5_xe0l5")
+
+[sub_resource type="Resource" id="Resource_8vvq6"]
+script = ExtResource("7_7gwie")
+amount = 12.0
+
+[sub_resource type="Resource" id="Resource_6qjng"]
+script = ExtResource("8_o0d1g")
+percent = 25
+
+[sub_resource type="Resource" id="Resource_n0pek"]
+script = ExtResource("2_b57w7")
+trigger = SubResource("Resource_6qjng")
+cadence = SubResource("Resource_1hfie")
+costs = Array[ExtResource("4_cetev")]([SubResource("Resource_ko1sd")])
+effects = Array[ExtResource("6_jlsr4")]([SubResource("Resource_8vvq6")])
+
+[sub_resource type="Resource" id="Resource_7df3a"]
+script = ExtResource("9_c4u02")
+rules = Array[ExtResource("2_b57w7")]([SubResource("Resource_n0pek")])
+
+[sub_resource type="Resource" id="Resource_tn85m"]
+script = ExtResource("12_mpg3r")
+
+[resource]
+script = ExtResource("11_y4of4")
+id = &"bandage"
+display_name = "纱布"
+shape = SubResource("Resource_tn85m")
+tags = Array[StringName]([&"consumable"])
+combat = SubResource("Resource_7df3a")

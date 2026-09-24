@@ -6,5 +6,4 @@
 script = ExtResource("1_tmtgc")
 id = &"standard"
 display_name = "标准"
-description = "两个皮革包、步枪与手枪、防弹衣、口粮和弹匣：什么都能应付，什么都不突出"
-items = Array[StringName]([&"bag_leather", &"bag_leather", &"rifle", &"pistol", &"armor", &"ration", &"mag"])
+items = Array[StringName]([&"bag_leather", &"bag_leather", &"shortsword", &"leather_armor", &"salve", &"bandage", &"ration"])

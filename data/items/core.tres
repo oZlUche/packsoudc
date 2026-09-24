@@ -23,5 +23,5 @@ id = &"core"
 display_name = "能量核心"
 shape = SubResource("Resource_gygn4")
 rarity = 3
-tags = Array[StringName]([&"part"])
+tags = Array[StringName]([&"sealed", &"part"])
 combat = SubResource("Resource_dlrj8")

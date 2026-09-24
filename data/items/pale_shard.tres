@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_tswa0"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_eqqjw"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_p5psv"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="4_qvyai"]
+
+[sub_resource type="Resource" id="Resource_p3br6"]
+script = ExtResource("4_qvyai")
+
+[resource]
+script = ExtResource("3_p5psv")
+id = &"pale_shard"
+display_name = "灰白色的金属碎片"
+shape = SubResource("Resource_p3br6")
+rarity = 4
+value = 800
+tags = Array[StringName]([&"treasure", &"relic"])

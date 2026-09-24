@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_is605"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_x1vp7"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_ci7p8"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_csqxu"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_68hc5"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_3h01r"]
+
+[sub_resource type="Resource" id="Resource_o5xav"]
+script = ExtResource("3_ci7p8")
+base_stats = {
+"armor": 3
+}
+
+[sub_resource type="Resource" id="Resource_qplil"]
+script = ExtResource("6_3h01r")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
+
+[resource]
+script = ExtResource("5_68hc5")
+id = &"leather_armor"
+display_name = "皮甲"
+shape = SubResource("Resource_qplil")
+rarity = 1
+tags = Array[StringName]([&"gear", &"barbarian"])
+combat = SubResource("Resource_o5xav")

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_smngd"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_ba6l0"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_gfh5v"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_1l7ha"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_e8d1x"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_27vd3"]
+
+[sub_resource type="Resource" id="Resource_f1yrd"]
+script = ExtResource("3_gfh5v")
+base_stats = {
+"max_power": 10
+}
+
+[sub_resource type="Resource" id="Resource_gtmva"]
+script = ExtResource("6_27vd3")
+
+[resource]
+script = ExtResource("5_e8d1x")
+id = &"mana_shard"
+display_name = "破碎的魔晶石"
+shape = SubResource("Resource_gtmva")
+value = 8
+tags = Array[StringName]([&"part", &"material"])
+combat = SubResource("Resource_f1yrd")

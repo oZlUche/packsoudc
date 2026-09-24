@@ -20,7 +20,7 @@ static func run(t: TestCase) -> void:
 		"应从 data/items 至少加载到 %d 个定义（实际 %d）" % [MIN_COUNT, loaded])
 	t.eq(db.size(), loaded, "数据库条目数应与加载数一致")
 
-	for id in db.ids():
+	for id in db.all_ids():
 		var def := db.get_def(id)
 		t.check(def.is_valid(), "定义 '%s' 应合法" % id)
 		t.check(def.display_name != "", "定义 '%s' 应有显示名" % id)
@@ -47,7 +47,7 @@ static func run(t: TestCase) -> void:
 
 	# --- 包体资产 ---
 	var bag_count := 0
-	for id in db.ids():
+	for id in db.all_ids():
 		if db.get_def(id).is_bag:
 			bag_count += 1
 	t.check(bag_count >= MIN_BAGS,

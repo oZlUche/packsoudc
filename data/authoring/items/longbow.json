@@ -1,0 +1,44 @@
+{
+  "id": "longbow",
+  "display_name": "长弓",
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "weapon",
+    "ranged",
+    "rapid",
+    "barbarian"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 8
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.9
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 5.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -54,8 +54,28 @@ func has_def(id: StringName) -> bool:
 	return _defs.has(id)
 
 
+## 能用的道具：**封存的不在里面**（[constant ItemDef.SEALED]）。搜索、掉落、商店、敌人装备、图鉴、编辑器都从这里拿候选 ——
+## 封存只在这一处拦，别处不必各查一遍。要全部（导出、存档校对）用 [method all_ids]
 func ids() -> Array:
+	var out: Array = []
+	for id in _defs:
+		if not (_defs[id] as ItemDef).is_sealed():
+			out.append(id)
+	return out
+
+
+## 全部，含封存的
+func all_ids() -> Array:
 	return _defs.keys()
+
+
+## 封存的那些
+func sealed_ids() -> Array:
+	var out: Array = []
+	for id in _defs:
+		if (_defs[id] as ItemDef).is_sealed():
+			out.append(id)
+	return out
 
 
 func size() -> int:

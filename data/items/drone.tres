@@ -51,5 +51,5 @@ id = &"drone"
 display_name = "无人机"
 shape = SubResource("Resource_ia1gj")
 rarity = 2
-tags = Array[StringName]([&"tool"])
+tags = Array[StringName]([&"sealed", &"tool"])
 combat = SubResource("Resource_ut4bu")

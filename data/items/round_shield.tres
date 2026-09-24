@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_twkkv"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_jvg7r"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_g162y"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_0c35h"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_u2jma"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_jca5d"]
+
+[sub_resource type="Resource" id="Resource_7sgt3"]
+script = ExtResource("3_g162y")
+base_stats = {
+"armor": 4
+}
+
+[sub_resource type="Resource" id="Resource_rpy4p"]
+script = ExtResource("6_jca5d")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
+
+[resource]
+script = ExtResource("5_u2jma")
+id = &"round_shield"
+display_name = "圆盾"
+shape = SubResource("Resource_rpy4p")
+rarity = 1
+tags = Array[StringName]([&"gear", &"shield", &"imperial"])
+combat = SubResource("Resource_7sgt3")

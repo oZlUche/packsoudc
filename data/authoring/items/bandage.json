@@ -1,0 +1,34 @@
+{
+  "id": "bandage",
+  "display_name": "纱布",
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "consumable"
+  ],
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_resource_below",
+          "percent": 25
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "costs": [
+          {
+            "type": "uses"
+          }
+        ],
+        "effects": [
+          {
+            "type": "change_resource",
+            "amount": 12.0
+          }
+        ]
+      }
+    ]
+  }
+}

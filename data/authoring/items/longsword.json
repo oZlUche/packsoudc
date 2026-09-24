@@ -1,0 +1,43 @@
+{
+  "id": "longsword",
+  "display_name": "长剑",
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "imperial"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 12
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.6
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 9.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage"
+          }
+        ]
+      }
+    ]
+  }
+}

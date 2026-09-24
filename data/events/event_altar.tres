@@ -37,22 +37,22 @@ outcomes = Array[ExtResource("2_nmtw7")]([SubResource("Resource_yh5aj"), SubReso
 
 [sub_resource type="Resource" id="Resource_4jjh3"]
 script = ExtResource("3_i1eil")
-item = &"crowbar"
+item = &"knife"
 
 [sub_resource type="Resource" id="Resource_ntmko"]
 script = ExtResource("8_esh8s")
 
 [sub_resource type="Resource" id="Resource_8lbh3"]
 script = ExtResource("5_xibjb")
-text = "撬棍断了，石台底下有东西。"
+text = "匕首断了，石缝里有东西。"
 
 [sub_resource type="Resource" id="Resource_3jcw6"]
 script = ExtResource("7_3uf8i")
-item = &"crowbar"
+item = &"knife"
 
 [sub_resource type="Resource" id="Resource_008v4"]
 script = ExtResource("1_iddjc")
-label = "用撬棍撬开石台"
+label = "用匕首撬开石缝"
 requires = Array[ExtResource("6_p34rm")]([SubResource("Resource_3jcw6")])
 outcomes = Array[ExtResource("2_nmtw7")]([SubResource("Resource_4jjh3"), SubResource("Resource_ntmko"), SubResource("Resource_8lbh3")])
 

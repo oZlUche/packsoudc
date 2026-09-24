@@ -18,7 +18,7 @@ func run() -> void:
 		return
 
 	var count := 0
-	for id in db.ids():
+	for id in db.all_ids():
 		var def := db.get_def(id)
 		if def == null:
 			continue

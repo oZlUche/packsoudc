@@ -1,0 +1,47 @@
+{
+  "id": "blessed_shield",
+  "display_name": "技巧之神赐福的盾牌",
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 3,
+  "tags": [
+    "gear",
+    "shield",
+    "blessed"
+  ],
+  "combat": {
+    "base_stats": {
+      "armor": 6
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_battle_start"
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "target": "SELF",
+            "buff": {
+              "id": "deflect",
+              "display_name": "弹开",
+              "max_stacks": 1,
+              "duration_sec": 4.0,
+              "mods": [
+                {
+                  "stat": "armor",
+                  "flat": 8.0
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
