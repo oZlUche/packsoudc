@@ -210,22 +210,35 @@ func pool_by_id(id: StringName) -> EnemyPool:
 	return _rule_asset("enemy_pools", id) as EnemyPool
 
 
-## 走出现在这个点会不会清暂存区：这个点上发生过事（打了、搜了、开了店、休息了、出了事件），而且暂存区里有东西
+## 走出现在这个点会不会清暂存区：暂存区里有东西就清（作者 2026-09-24 改的规则，覆盖 060 的「只有发生过事的点才清」）——
+## 暂存区只是**节点内的临时区**：任何时候都能开背包把东西挪进去（换信仰道具的置入顺序就靠它），但一旦移动就没了。
+## 双重检查：离开清一次（这里），进入清一次（[method _on_arrive]，在那个点的事发生之前）
 func will_clear_storage() -> bool:
-	return events != null and travel != null and travel.current_id >= 0 \
-		and events.last_handled_id == travel.current_id and storage.item_count() > 0
+	return travel != null and travel.current_id >= 0 and storage != null and storage.item_count() > 0
 
 
 func _drop_storage_if_leaving() -> void:
 	if events == null or travel == null:
 		return
-	if will_clear_storage():
-		var dropped: Array = storage.items().duplicate()
-		storage.clear()
-		storage_dropped.emit(travel.current_id, dropped)
+	_drop_storage(travel.current_id)
 	# 离开了就不再算「发生过事的点」：回头再路过一次不会又清一遍
 	if events.last_handled_id == travel.current_id:
 		events.last_handled_id = -1
+
+
+## 头一回踩上一个点：先清暂存区（进入的那一次检查），再让那个点的事发生 —— 顺序不能反，不然事件给的东西刚进暂存区就没了
+func _on_arrive(node: MapNode) -> void:
+	if node != null:
+		_drop_storage(node.id)
+	events.handle(node)
+
+
+func _drop_storage(at_id: int) -> void:
+	if storage == null or storage.item_count() == 0:
+		return
+	var dropped: Array = storage.items().duplicate()
+	storage.clear()
+	storage_dropped.emit(at_id, dropped)
 
 
 ## 离开正在搜的点 / 正在逛的店
@@ -566,6 +579,8 @@ func _wire_events() -> void:
 				storage.admit(ItemInstance.create(d, 0)))
 	events.defeated.connect(func(why: StringName): _set_phase(Phase.DEFEATED, why))
 	events.bind(travel)
+	# 进入的那一次检查插在节点事件前面（bind 把 handle 挂上了，这里再包一层）
+	travel.on_node_event = _on_arrive
 
 
 func _set_phase(p: int, reason: StringName) -> void:

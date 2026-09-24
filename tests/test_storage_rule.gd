@@ -84,7 +84,7 @@ static func _kit(c: Content) -> LoadoutDef:
 
 
 static func run_clear_on_leave(t: TestCase) -> void:
-	t.begin("暂存区 · 走出发生过事的点才清；出生点、路过的点不清；走不成不清；存档带着")
+	t.begin("暂存区 · 只是节点内的临时区（作者 2026-09-24 改）：离开任何点都清、进入头一回踩上的点也清（在那个点的事之前）；空的不发信号；走不成不清；存档带着")
 
 	var c := _content()
 	var kit := _kit(c)
@@ -99,34 +99,59 @@ static func run_clear_on_leave(t: TestCase) -> void:
 	f.pick_spawn(entry)
 	var def := c.items.get_def(&"ration")
 	run.storage.clear()
+	t.check(not run.will_clear_storage(), "暂存区空：走了没什么可清")
 	run.storage.admit(ItemInstance.create(def))
-	t.check(not run.will_clear_storage(), "出生点上没发生过事，走了不清")
+	t.check(run.will_clear_storage(), "出生点上没发生过事，暂存区有东西也清（不再看发没发生过事）")
 	var dropped: Array = []
 	run.storage_dropped.connect(func(id: int, items: Array): dropped.append([id, items.size()]))
 
 	t.check(f.step_to(next), "走上战斗点")
-	t.eq(run.storage.item_count(), 1, "离开出生点没清")
+	t.eq(run.storage.item_count(), 0, "离开出生点：清了")
+	t.check(dropped.size() >= 1 and int(dropped[0][0]) == entry and int(dropped[0][1]) == 1, "发了 storage_dropped，点是离开的那个、件数对（%s）" % str(dropped))
+	var n_leave := dropped.size()
 	_settle(f)
 	t.eq(run.events.last_handled_id, next, "战斗点是「发生过事的点」")
-	t.check(run.will_clear_storage(), "打过了、暂存区有东西：走了会清")
+	t.eq(dropped.size(), n_leave, "进入时暂存区是空的：不再发信号")
+	# 打完之后暂存区里可能有战利品：走之前不收进棋盘就没了
+	run.storage.clear()
+	run.storage.admit(ItemInstance.create(def))
+	t.check(run.will_clear_storage(), "暂存区有东西：走了会清")
 	t.check(f.step_to(entry), "走回出生点")
 	_settle(f)
 	t.eq(run.storage.item_count(), 0, "离开战斗点：暂存区清空")
-	t.check(dropped.size() == 1 and int(dropped[0][0]) == next and int(dropped[0][1]) >= 1, "发了 storage_dropped，点对、件数对（%s）" % str(dropped))
 	t.eq(run.events.last_handled_id, -1, "离开之后不再算发生过事的点")
 
-	# 路过：用过的点上放东西，穿行来回都不清
+	# 穿行也清：用过的点上放东西，走一步就没
 	run.storage.admit(ItemInstance.create(def))
-	t.check(not run.will_clear_storage(), "出生点上这一次也没发生事")
 	t.check(f.step_to(next), "穿行到用过的战斗点")
-	t.eq(run.storage.item_count(), 1, "离开出生点不清")
-	t.check(not run.will_clear_storage(), "用过的战斗点这次没发生事，走了也不清")
-	t.check(f.step_to(entry), "走回来")
-	t.eq(run.storage.item_count(), 1, "穿行不清")
+	t.eq(run.storage.item_count(), 0, "穿行也清（暂存区不随移动）")
 
 	# 走不成不清
+	run.storage.admit(ItemInstance.create(def))
 	t.check(not f.step_to(99999), "走不到的走不了")
 	t.eq(run.storage.item_count(), 1, "走不成不清")
+
+	# 进入的那一次检查：头一回踩上的点先清暂存区、再发生事（事件给的东西不会被自己清掉）
+	run.storage.clear()
+	var fresh_id := -1
+	for id in run.map.node_ids():
+		var n := run.map.get_node(id)
+		if not n.is_visited() and n.type == &"rest":
+			fresh_id = id
+			break
+	if fresh_id >= 0:
+		run.storage.admit(ItemInstance.create(def))
+		var before_vit := run.vitality.current
+		run.vitality.spend(1, &"test")
+		dropped.clear()
+		run.travel.on_node_event.call(run.map.get_node(fresh_id))
+		t.eq(run.storage.item_count(), 0, "进入头一回踩上的点：先清暂存区")
+		t.check(dropped.size() == 1 and int(dropped[0][0]) == fresh_id, "信号的点是进入的那个")
+		t.check(run.events.pending_event() != null or run.vitality.current >= before_vit, "然后那个点的事照常发生（休息点：先过事件屏或回体力）")
+		run.events.pending = {}
+	else:
+		t.check(true, "这张图没有没用过的休息点，跳过进入检查的用例")
+	run.storage.clear()
 
 	# 存档带着「发生过事的点」：走到另一个没用过的点，存、读，读回来的也知道走了要清
 	var fresh := -1

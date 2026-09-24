@@ -463,9 +463,10 @@ static func run_type_proceed_wait_lose(t: TestCase) -> void:
 		var fl2 := _run_with(c, defs, &"t_lose")
 		var s2: RunState = fl2["run"]
 		var n2 := int(fl2["next"])
+		s2.step_to(n2)
+		# 暂存区一移动就清（080），所以站到点上再放
 		for i in 3:
 			s2.storage.admit(ItemInstance.create(c.items.get_def(&"medkit"), 0))
-		s2.step_to(n2)
 		t.check(bool(s2.events.option_state(1)["ok"]), "有三个：能交")
 		s2.events.choose(1)
 		t.eq(s2.storage.item_count(), 1, "交了两个，剩一个")
