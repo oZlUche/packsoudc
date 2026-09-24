@@ -6,7 +6,24 @@
   "requires_unlock": "ascension_1",
   "mechanics": [
     {
-      "type": "erosion"
+      "type": "erosion",
+      "effects": [
+        {
+          "type": "spend_vitality",
+          "per_depth": 1
+        },
+        {
+          "type": "damage_item",
+          "from_depth": 2,
+          "chance": 0.25
+        },
+        {
+          "type": "drain_money",
+          "amount": 10,
+          "enabled": false,
+          "only_total": true
+        }
+      ]
     },
     {
       "type": "hunters",

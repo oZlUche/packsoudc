@@ -137,6 +137,28 @@ func demo_fill() -> void:
 			for inst in flow.meta.warehouse.items().slice(0, 2):
 				setup.call("carry_in", (inst as ItemInstance).uid)
 		return
+	if want == "erosion":
+		# 075：代码里造一份只开侵蚀的难度，走几步让最外几档被侵蚀、预警亮起来
+		var ed := DifficultyDef.new()
+		ed.id = &"demo_erosion"
+		var em := ErosionMechanic.new()
+		em.first_at_action = 1
+		em.interval_actions = 2
+		em.warn_lead_actions = 1
+		var sv := ErodeSpendVitality.new()
+		em.effects.append(sv)
+		ed.mechanics.append(em)
+		var erun := flow.begin(flow.chapters[0], flow.loadouts[0] if not flow.loadouts.is_empty() else null, 3, [] as Array[int], null, [], ed)
+		if erun == null:
+			return
+		flow.pick_spawn(erun.map.entry_ids[0])
+		for i in 4:
+			var moves := erun.travel.available_moves()
+			if moves.is_empty() or erun.is_over():
+				break
+			flow.step_to(moves[0])
+			_demo_settle()
+		return
 	if want == "hunter":
 		# 071：一份代码里造的难度，开一个一直可见的猎手，走两步让它出现
 		var hd := DifficultyDef.new()

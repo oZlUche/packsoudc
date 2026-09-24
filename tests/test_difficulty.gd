@@ -77,7 +77,7 @@ static func _import(data: Dictionary) -> ImportReport:
 static func run_pipeline(t: TestCase) -> void:
 	t.begin("难度 · 走内容管线：往返、机制构件按注册表造、校验、作者文件、按档位排")
 	var sample := {"id": "probe", "display_name": "探针", "level": 2, "requires_unlock": "probe_unlock",
-		"mechanics": [{"type": "erosion", "rate": 2.0, "damage_band": 3}],
+		"mechanics": [{"type": "erosion", "first_at_action": 2, "interval_actions": 3}],
 		"effects": [{"type": "vitality_max_bonus", "amount": -2}]}
 	var report := ImportReport.new()
 	var def := ContentImporter.import_difficulty(sample, ContentImporter.Context.new(), report)
@@ -87,7 +87,7 @@ static func run_pipeline(t: TestCase) -> void:
 	t.eq(ContentExporter.to_json(ContentExporter.export_difficulty(back)), text, "导出 → 导入 → 再导出逐字节相同")
 	t.eq(back.mechanics.size(), 1, "机制在")
 	t.check(back.mechanics[0] is ErosionMechanic, "按注册表造出了侵蚀机制")
-	t.eq((back.mechanics[0] as ErosionMechanic).rate, 2.0, "机制的参数在")
+	t.eq([(back.mechanics[0] as ErosionMechanic).first_at_action, (back.mechanics[0] as ErosionMechanic).interval_actions], [2, 3], "机制的参数在")
 	t.eq(_vitality_bonus(back), -2, "数值修饰在（RunContext 里体力上限 -2）")
 	t.eq(back.requires_unlock, &"probe_unlock", "解锁要求在")
 	t.check(back.summary().contains("侵蚀") and back.summary().contains("体力上限"), "summary 把机制与修饰连起来：%s" % back.summary())
@@ -143,7 +143,7 @@ static func run_start_and_save(t: TestCase) -> void:
 	t.eq(run.difficulty_id, hard.id, "记了难度 id")
 	t.eq(run.vitality.maximum, Vitality.PLACEHOLDER_MAX + _vitality_bonus(hard), "体力上限 = 占位 + 难度的修饰（%+d）" % _vitality_bonus(hard))
 	t.eq(run.mechanic_tags.has(&"erosion"), _has_mechanic(hard, &"erosion"), "侵蚀机制装了就留记号（占位）")
-	t.is_null(run.travel.erosion, "侵蚀本体还没做：MapTravel.erosion 仍是 null")
+	t.check(run.travel.erosion is ErosionField, "侵蚀本体装到了 travel.erosion（075）")
 	var d := run.to_dict()
 	t.eq(String(d["difficulty"]), String(hard.id), "存档里有难度 id")
 	var back := RunState.from_dict(d, c.chapter, c.items, c.enemies, c.sets)

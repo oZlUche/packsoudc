@@ -127,6 +127,10 @@ func _check(intent: MoveIntent) -> String:
 func _settle_penalty(node: MapNode) -> void:
 	if node == null:
 		return
+	# 本体（075）：有 settle 的自己结算（效果构件过门）；老的鸭子接口只报浅层扣体力
+	if erosion.has_method("settle"):
+		erosion.settle(node)
+		return
 	var penalty: Dictionary = erosion.move_penalty(node)
 	var hp := int(penalty.get("hp_damage", 0))
 	if hp > 0 and vitality != null:

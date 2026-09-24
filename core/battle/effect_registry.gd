@@ -116,6 +116,13 @@ const HUNTER_LOSSES := {
 	&"expel_and_guard": "res://core/run/hunters/losses/loss_expel_and_guard.gd",
 }
 
+## 侵蚀（5.7 / 075）：被侵蚀的点结算时过门的效果
+const EROSION_EFFECTS := {
+	&"spend_vitality": "res://core/run/erosion/effects/erode_spend_vitality.gd",
+	&"damage_item": "res://core/run/erosion/effects/erode_damage_item.gd",
+	&"drain_money": "res://core/run/erosion/effects/erode_drain_money.gd",
+}
+
 const TABLES := {
 	&"trigger": TRIGGERS,
 	&"cadence": CADENCES,
@@ -129,6 +136,7 @@ const TABLES := {
 	&"run_mechanic": RUN_MECHANICS,
 	&"hunter_behavior": HUNTER_BEHAVIORS,
 	&"hunter_loss": HUNTER_LOSSES,
+	&"erosion_effect": EROSION_EFFECTS,
 }
 
 

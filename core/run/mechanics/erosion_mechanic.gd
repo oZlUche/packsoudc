@@ -1,19 +1,43 @@
-## 侵蚀（5.7，第 7 阶段的本体还没做；069 把它从「每局都有」改成「某档难度开的机制」）。
+## 侵蚀机制（5.7 的本体，报告 075）：难度清单里开它，一局里地图就逐层向内被侵蚀。时间表与效果清单都在这里，数字不写死。
 ##
-## 现在是**空壳占位**：只在一局上留一个记号（`run.mechanic_tags`），`MapTravel.erosion` 仍是 null。
-## 本体落地时在这里造 `ErosionField` / `ErosionSchedule` 接到 `run.travel.erosion`，参数就是下面这几个字段。
+## 作者：侵蚀的各种效果都要能开关、能调（是否启用、在哪个阶段启用、触发概率）—— 效果是构件（[ErosionEffect]），每个自带四道门。
+## `install` 造一个 [ErosionField] 接到 `run.travel.erosion`（读档时用存档里的状态恢复），把信号接到一局上；幂等。
 class_name ErosionMechanic
 extends RunMechanic
 
-## 每走一步侵蚀推进多少（占位）
-@export var rate: float = 1.0
-## 从第几档侵蚀带开始损坏背包物品（占位，6.4）
-@export var damage_band: int = 2
+## 第一次侵蚀发生在第几个行动点
+@export var first_at_action: int = 18
+## 之后每隔多少行动推进一层
+@export var interval_actions: int = 12
+## 预警提前量（行动点），必须 > 0（5.7：没有预警的时间压力是随机惩罚）
+@export var warn_lead_actions: int = 4
+## 在被侵蚀的点结算时依次过门的效果
+@export var effects: Array[ErosionEffect] = []
 
 
 func install(run: RunState) -> void:
 	run.mechanic_tags[&"erosion"] = true
+	if run.travel == null:
+		return
+	if run.travel.erosion is ErosionField:
+		(run.travel.erosion as ErosionField).mechanic = self
+		return
+	var field := ErosionField.new()
+	field.setup(run, self)
+	if not run.erosion_saved.is_empty():
+		field.restore(run.erosion_saved)
+	run.travel.erosion = field
+	field.warned.connect(func(band: int, left: int): run.erosion_warned.emit(band, left))
+	field.advanced.connect(func(bands: int): run.erosion_advanced.emit(bands))
+	field.applied.connect(func(node: MapNode, detail: Dictionary): run.erosion_applied.emit(node, detail))
+	field.total_reached.connect(func(): run.erosion_total.emit())
 
 
 func describe() -> String:
-	return "侵蚀（占位）：每步 %.1f，第 %d 带起损坏物品" % [rate, damage_band]
+	var parts: Array[String] = []
+	parts.append("侵蚀：第 %d 行动点起、每 %d 推进一层、提前 %d 预警" % [first_at_action, interval_actions, warn_lead_actions])
+	for e in effects:
+		var effect := e as ErosionEffect
+		if effect != null and effect.describe() != "":
+			parts.append(effect.describe())
+	return "　".join(parts)

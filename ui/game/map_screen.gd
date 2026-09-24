@@ -242,6 +242,27 @@ func _adopt() -> void:
 		_note("[color=#d9534f]　被赶回了点 %d[/color]" % to)
 		_view.current_id = to
 		_after_move())
+	# 侵蚀（075）：预警、推进、结算了、终局 —— 都写进日志，地图上垫色
+	_run.erosion_warned.connect(func(band: int, left: int):
+		_note("[color=#f0ad4e]　侵蚀预警：第 %d 档还有 %d 步就被侵蚀[/color]" % [band, left])
+		_refresh_erosion_view())
+	_run.erosion_advanced.connect(func(bands: int):
+		_note("[color=#d9534f]　侵蚀推进：最外 %d 档已被侵蚀[/color]" % (bands + 1))
+		_refresh_erosion_view()
+		_refresh_hud())
+	_run.erosion_applied.connect(func(node: MapNode, detail: Dictionary):
+		var bits: Array[String] = []
+		if int(detail.get("vitality", 0)) > 0:
+			bits.append("体力 -%d" % int(detail["vitality"]))
+		if int(detail.get("money", 0)) > 0:
+			bits.append("钱 -%d" % int(detail["money"]))
+		for name in detail.get("items", []):
+			bits.append("「%s」烂掉了" % name)
+		for line in detail.get("log", []):
+			bits.append(String(line))
+		_note("[color=#d9534f]　侵蚀区（点 %d，深 %d 层）：%s[/color]" % [node.id, int(detail.get("depth", 0)), "，".join(bits)]))
+	_run.erosion_total.connect(func(): _note("[color=#d9534f]　全图都被侵蚀了：快撤[/color]"))
+	_refresh_erosion_view()
 	if _run.hunters != null and _run.hunters.metric != null and _run.hunters.metric.mode == MapMetric.ABSOLUTE:
 		# 绝对距离：把布局坐标按环距归一后交给度量（core 不认识布局）
 		var scaled := {}
@@ -277,6 +298,30 @@ func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
 	var what: String = MapNodeStyle.of(n.type)["label"]
 	_note(("→ %d %s（花 %d 点）" if first_visit else "→ %d %s，穿行（花 %d 点，这里用过了）") % [intent.to_id, what, intent.action_cost])
 	_after_move()
+
+
+## 侵蚀在地图上：被侵蚀的档垫色、快被侵蚀的那一档闪红环
+func _refresh_erosion_view() -> void:
+	if _run == null or _view == null:
+		return
+	var f := _run.travel.erosion as ErosionField if _run.travel != null else null
+	if f == null:
+		_view.erosion = {}
+		return
+	var warn := f.next_band() if f.actions_left() >= 0 and f.actions_left() <= f.mechanic.warn_lead_actions else -1
+	_view.erosion = {"eroded": f.eroded_bands, "warn": warn}
+
+
+## HUD 里的侵蚀一句：没有 / 还没开始 / 侵蚀了几档、下一档几步
+func _erosion_line() -> String:
+	var f := _run.travel.erosion as ErosionField if _run != null and _run.travel != null else null
+	if f == null:
+		return ""
+	if f.is_total():
+		return "　　侵蚀：全图"
+	if not f.started():
+		return "　　侵蚀：%d 步后开始" % f.actions_left()
+	return "　　侵蚀 %d 档（下一档 %d 步）" % [f.eroded_bands + 1, f.actions_left()]
 
 
 ## 地图上画谁：看得见的猎手（一直可见的、进了 near_range 的、进了侦察距离的）
@@ -366,12 +411,12 @@ func _refresh_hud() -> void:
 	var extract_near := MapNavigator.nearest_of_type(_run.map, t.current_id, &"extract")
 	var rest := MapNavigator.nearest_of_type(_run.map, t.current_id, &"rest")
 	var core := MapNavigator.nearest_of_type(_run.map, t.current_id, &"core")
-	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d　　暂存区 %d 件%s" % [
+	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d　　暂存区 %d 件%s%s" % [
 		t.clock.total,
 		str(extract_near["steps"]) if int(extract_near["id"]) >= 0 else "—",
 		str(rest["steps"]) if int(rest["id"]) >= 0 else "—",
 		str(core["steps"]) if int(core["id"]) >= 0 else "—",
-		_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count(), _buff_line()]
+		_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count(), _buff_line(), _erosion_line()]
 
 
 ## buff 栏的占位：一行字。局外的和一局里的都列，有时限的写还剩几步

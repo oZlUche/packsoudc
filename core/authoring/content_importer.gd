@@ -233,6 +233,18 @@ static func import_difficulty(data: Dictionary, ctx: Context, report: ImportRepo
 	for i in def.mechanics.size():
 		if def.mechanics[i] == null:
 			report.error("mechanics[%d]" % i, "空的机制")
+		elif def.mechanics[i] is ErosionMechanic:
+			var em := def.mechanics[i] as ErosionMechanic
+			if em.first_at_action < 0 or em.interval_actions < 1:
+				report.error("mechanics[%d]" % i, "侵蚀：第一次不能为负、间隔至少 1")
+			if em.warn_lead_actions < 1:
+				report.error("mechanics[%d].warn_lead_actions" % i, "侵蚀必须预警（5.7）：提前量至少 1")
+			for j in em.effects.size():
+				var ee := em.effects[j] as ErosionEffect
+				if ee == null:
+					report.error("mechanics[%d].effects[%d]" % [i, j], "空的侵蚀效果")
+				elif ee.chance < 0.0 or ee.chance > 1.0 or ee.from_depth < 0:
+					report.error("mechanics[%d].effects[%d]" % [i, j], "概率应在 0～1、起始层非负")
 		elif def.mechanics[i] is HunterMechanic:
 			var hm := def.mechanics[i] as HunterMechanic
 			if hm.bracket_steps.is_empty() or hm.bracket_steps[0] != 0:

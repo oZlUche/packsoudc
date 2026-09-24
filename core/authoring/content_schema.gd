@@ -29,6 +29,7 @@ const ABSTRACT_ROOTS := {
 	&"RunMechanic": [&"run_mechanic"],
 	&"HunterBehavior": [&"hunter_behavior"],
 	&"HunterLossOutcome": [&"hunter_loss"],
+	&"ErosionEffect": [&"erosion_effect"],
 }
 
 ## 声明成裸 int、但语义上是枚举的属性，键为 `类名.属性名`。

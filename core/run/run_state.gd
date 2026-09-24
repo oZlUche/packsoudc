@@ -31,6 +31,11 @@ signal buffs_changed()
 signal hunter_sensed(h: Hunter)
 signal hunters_changed()
 signal player_expelled(to_id: int)
+## 侵蚀（075）：预警、推进、结算了、终局
+signal erosion_warned(next_band: int, actions_left: int)
+signal erosion_advanced(eroded_bands: int)
+signal erosion_applied(node: MapNode, detail: Dictionary)
+signal erosion_total()
 
 var run_seed: int = 0
 var chapter: ChapterDef = null
@@ -64,6 +69,8 @@ var mechanic_tags: Dictionary = {}
 var hunters: HunterSystem = null
 var hunter_defs: Dictionary = {}
 var hunters_saved: Dictionary = {}
+## 侵蚀场的存档状态，读档时先放这儿等机制装（075）
+var erosion_saved: Dictionary = {}
 
 var pool: EnemyPool = null
 var drop_rule: DropRule = null
@@ -556,6 +563,7 @@ func to_dict() -> Dictionary:
 		"character": String(character_id),
 		"difficulty": String(difficulty_id),
 		"hunters": hunters.to_dict() if hunters != null else {},
+		"erosion": travel.erosion.to_dict() if travel != null and travel.erosion != null and travel.erosion.has_method("to_dict") else {},
 		"phase": phase,
 		"end_reason": String(end_reason),
 		"map": map.to_dict(),
@@ -592,6 +600,7 @@ static func from_dict(
 	s.character_id = StringName(String(d.get("character", "")))
 	s.difficulty_id = StringName(String(d.get("difficulty", "")))
 	s.hunters_saved = d.get("hunters", {}) if d.get("hunters", {}) is Dictionary else {}
+	s.erosion_saved = d.get("erosion", {}) if d.get("erosion", {}) is Dictionary else {}
 	s.items = p_items
 	s.enemies = p_enemies
 	s.sets = p_sets

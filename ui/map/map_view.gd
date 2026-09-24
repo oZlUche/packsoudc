@@ -63,6 +63,11 @@ var bold_route: int = -1:
 		bold_route = v
 		queue_redraw()
 ## 这一步能走到的点：画一圈提示。沙盒每走一步更新
+## 侵蚀（075）：{"eroded": 最外几档已被侵蚀（-1 = 没开始）, "warn": 快被侵蚀的那一档（-1 = 没有）}
+var erosion: Dictionary = {}:
+	set(v):
+		erosion = v
+		queue_redraw()
 ## 猎手标记（071）：[{"node": id, "label": 名字}]，画在节点上面
 var hunters: Array = []:
 	set(v):
@@ -268,7 +273,6 @@ func _draw() -> void:
 		if n.danger > 0 and pos.has(id):
 			draw_circle(pos[id], NODE_RADIUS + 9.0,
 				Color(UiPalette.HP if n.danger >= 2 else UiPalette.STAMINA, 0.18))
-
 	# 路线经过的边：哪条边属于哪条路线
 	var route_of_edge := {}
 	for i in graph.routes.size() if show_routes else 0:
@@ -306,6 +310,21 @@ func _draw() -> void:
 
 	# 节点画在屏幕坐标里：大小不随缩放变，缩小整张图看全貌时字还看得清
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	# 侵蚀（075）：被侵蚀的点垫一圈锈色、快被侵蚀的那一档一圈闪的红环（必须预警）。
+	# 画在屏幕坐标里、节点底下：缩小整张图时画布坐标的圈会缩到节点底下看不见
+	if not erosion.is_empty():
+		var eroded := int(erosion.get("eroded", -1))
+		var warn := int(erosion.get("warn", -1))
+		for id in graph.node_ids():
+			if not pos.has(id):
+				continue
+			var band := graph.get_node(id).erosion_band
+			var sp := to_screen(pos[id])
+			if eroded >= 0 and band <= eroded:
+				draw_circle(sp, NODE_RADIUS + 7.0, Color(0.72, 0.36, 0.12, 0.55))
+				draw_arc(sp, NODE_RADIUS + 7.0, 0.0, TAU, 32, Color(0.95, 0.55, 0.22, 0.9), 1.5, true)
+			elif warn >= 0 and band == warn:
+				draw_arc(sp, NODE_RADIUS + 6.0, 0.0, TAU, 32, Color(UiPalette.HP, 0.35 + 0.35 * (0.5 + 0.5 * sin(_pulse * 4.0))), 2.0, true)
 	for id in graph.node_ids():
 		if pos.has(id):
 			_draw_node(graph.get_node(id), to_screen(pos[id]))

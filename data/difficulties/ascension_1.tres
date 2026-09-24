@@ -1,29 +1,49 @@
 [gd_resource type="Resource" script_class="DifficultyDef" format=3]
 
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_hft6w"]
-[ext_resource type="Script" path="res://core/run/effects/vitality_max_bonus.gd" id="2_x8oog"]
-[ext_resource type="Script" path="res://core/run/run_mechanic.gd" id="3_ge756"]
-[ext_resource type="Script" path="res://core/run/mechanics/erosion_mechanic.gd" id="4_7ojij"]
-[ext_resource type="Script" path="res://core/run/mechanics/hunter_mechanic.gd" id="5_3e38x"]
-[ext_resource type="Script" path="res://core/run/difficulty_def.gd" id="6_65ne0"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_3e38x"]
+[ext_resource type="Script" path="res://core/run/effects/vitality_max_bonus.gd" id="2_65ne0"]
+[ext_resource type="Script" path="res://core/run/run_mechanic.gd" id="3_vu18x"]
+[ext_resource type="Script" path="res://core/run/erosion/erosion_effect.gd" id="4_wwt4m"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_spend_vitality.gd" id="5_4yceo"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_damage_item.gd" id="6_lccoi"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_drain_money.gd" id="7_vrvf0"]
+[ext_resource type="Script" path="res://core/run/mechanics/erosion_mechanic.gd" id="8_j5crr"]
+[ext_resource type="Script" path="res://core/run/mechanics/hunter_mechanic.gd" id="9_ce4f2"]
+[ext_resource type="Script" path="res://core/run/difficulty_def.gd" id="10_ievqj"]
 
-[sub_resource type="Resource" id="Resource_vu18x"]
-script = ExtResource("2_x8oog")
+[sub_resource type="Resource" id="Resource_xe22d"]
+script = ExtResource("2_65ne0")
 amount = -1
 
-[sub_resource type="Resource" id="Resource_wwt4m"]
-script = ExtResource("4_7ojij")
+[sub_resource type="Resource" id="Resource_wirr1"]
+script = ExtResource("5_4yceo")
+per_depth = 1
 
-[sub_resource type="Resource" id="Resource_4yceo"]
-script = ExtResource("5_3e38x")
+[sub_resource type="Resource" id="Resource_cp3g5"]
+script = ExtResource("6_lccoi")
+from_depth = 2
+chance = 0.25
+
+[sub_resource type="Resource" id="Resource_qydna"]
+script = ExtResource("7_vrvf0")
+amount = 10
+enabled = false
+only_total = true
+
+[sub_resource type="Resource" id="Resource_beha2"]
+script = ExtResource("8_j5crr")
+effects = Array[ExtResource("4_wwt4m")]([SubResource("Resource_wirr1"), SubResource("Resource_cp3g5"), SubResource("Resource_qydna")])
+
+[sub_resource type="Resource" id="Resource_16ied"]
+script = ExtResource("9_ce4f2")
 hunter_ids = Array[StringName]([&"hunter_1"])
 
 [resource]
-script = ExtResource("6_65ne0")
+script = ExtResource("10_ievqj")
 id = &"ascension_1"
 display_name = "进阶 1（占位）"
 description = "侵蚀开启（本体第 7 阶段），体力上限 -1。局外解锁后可选。"
 level = 1
 requires_unlock = &"ascension_1"
-mechanics = Array[ExtResource("3_ge756")]([SubResource("Resource_wwt4m"), SubResource("Resource_4yceo")])
-effects = Array[ExtResource("1_hft6w")]([SubResource("Resource_vu18x")])
+mechanics = Array[ExtResource("3_vu18x")]([SubResource("Resource_beha2"), SubResource("Resource_16ied")])
+effects = Array[ExtResource("1_3e38x")]([SubResource("Resource_xe22d")])
