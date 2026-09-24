@@ -7,7 +7,7 @@ script = ExtResource("1_ys8gs")
 id = &"marksman"
 display_name = "神射手"
 strength = 1
-schools = Array[StringName]([&"faith:hunt"])
+schools = Array[StringName]([&"burst"])
 base_stats = {
 "max_hp": 22
 }

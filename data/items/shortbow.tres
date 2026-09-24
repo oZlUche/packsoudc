@@ -51,5 +51,5 @@ id = &"shortbow"
 display_name = "短弓"
 shape = SubResource("Resource_d0xda")
 rarity = 1
-tags = Array[StringName]([&"weapon", &"ranged", &"rapid", &"faith", &"faith:hunt"])
+tags = Array[StringName]([&"weapon", &"ranged", &"rapid"])
 combat = SubResource("Resource_54u8w")

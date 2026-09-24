@@ -3,7 +3,8 @@
   "display_name": "守卫",
   "strength": 2,
   "schools": [
-    "faith:war"
+    "rapid",
+    "burst"
   ],
   "base_stats": {
     "max_hp": 36,

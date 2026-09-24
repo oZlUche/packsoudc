@@ -7,7 +7,7 @@ script = ExtResource("1_aka6p")
 id = &"core_guardian"
 display_name = "核心守卫"
 strength = 3
-schools = Array[StringName]([&"faith:war"])
+schools = Array[StringName]([&"burst", &"bleed", &"rapid"])
 base_stats = {
 "armor": 4,
 "max_hp": 60

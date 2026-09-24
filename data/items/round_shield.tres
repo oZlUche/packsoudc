@@ -23,5 +23,5 @@ id = &"round_shield"
 display_name = "圆盾"
 shape = SubResource("Resource_rpy4p")
 rarity = 1
-tags = Array[StringName]([&"faith", &"faith:war", &"gear", &"shield", &"imperial"])
+tags = Array[StringName]([&"gear", &"shield", &"imperial"])
 combat = SubResource("Resource_7sgt3")

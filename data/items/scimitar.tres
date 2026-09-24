@@ -86,5 +86,5 @@ id = &"scimitar"
 display_name = "弯刀"
 shape = SubResource("Resource_gpo2j")
 rarity = 1
-tags = Array[StringName]([&"faith", &"faith:violence", &"weapon", &"melee", &"bleed", &"barbarian"])
+tags = Array[StringName]([&"weapon", &"melee", &"bleed", &"barbarian"])
 combat = SubResource("Resource_pwnbl")

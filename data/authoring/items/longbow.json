@@ -11,9 +11,7 @@
   "tags": [
     "weapon",
     "ranged",
-    "rapid",
-    "faith",
-    "faith:hunt"
+    "rapid"
   ],
   "combat": {
     "base_stats": {

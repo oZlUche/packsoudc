@@ -3,7 +3,8 @@
   "display_name": "蛮兵",
   "strength": 2,
   "schools": [
-    "faith:violence"
+    "burst",
+    "bleed"
   ],
   "base_stats": {
     "max_hp": 40,

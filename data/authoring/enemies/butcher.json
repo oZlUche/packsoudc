@@ -3,7 +3,7 @@
   "display_name": "屠夫",
   "strength": 1,
   "schools": [
-    "faith:violence"
+    "bleed"
   ],
   "base_stats": {
     "max_hp": 30
