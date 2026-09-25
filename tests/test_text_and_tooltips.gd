@@ -297,9 +297,23 @@ static func run_settings_and_double_click(t: TestCase) -> void:
 	t.begin("084 · 设置「拿走最后一件后自动关闭」默认关、存读带着；双击视图发 item_double_clicked 而不是抓")
 	var s := GameSettings.new()
 	t.check(not s.loot_auto_close, "默认不自动关")
+	t.check(not s.node_tooltips_preview, "节点浮窗预览默认关")
 	s.loot_auto_close = true
+	s.node_tooltips_preview = true
 	var back := GameSettings.from_dict(s.to_dict())
-	t.check(back.loot_auto_close, "存读带着")
+	t.check(back.loot_auto_close and back.node_tooltips_preview, "存读带着")
+	var c0 := _content()
+	var f := GameFlow.new(c0.items, c0.enemies, c0.sets, MetaState.new())
+	f.chapters = [c0.chapter] as Array[ChapterDef]
+	f.save_path = "user://test_084c_run.json"
+	f.meta_path = "user://test_084c_meta.json"
+	var run := f.begin(c0.chapter, null, 5)
+	if run != null:
+		t.check(not f.tooltips_enabled(), "第一章没开：浮窗关")
+		f.settings.node_tooltips_preview = true
+		t.check(f.tooltips_enabled(), "预览开了：不管章节")
+	RunSave.remove("user://test_084c_run.json")
+	MetaSave.remove("user://test_084c_meta.json")
 	ItemInstance.reset_uid_counter()
 	var d := ItemDef.new()
 	d.id = &"t_dbl"

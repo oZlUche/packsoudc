@@ -115,9 +115,13 @@ func show_intro() -> bool:
 	return true
 
 
-## 084：这一章开了节点浮窗没有（第二章开放的功能，做成章节开关）
+## 084：这一章开了节点浮窗没有（第二章开放的功能，做成章节开关）；设置里的「预览」开了就不看章节
 func tooltips_enabled() -> bool:
-	return run != null and run.chapter != null and run.chapter.node_tooltips
+	if run == null:
+		return false
+	if settings != null and settings.node_tooltips_preview:
+		return true
+	return run.chapter != null and run.chapter.node_tooltips
 
 
 ## 仓库空的第一局发第一套（[MetaRules.first_kit]，058 第六节的占位；正式游戏由教程关发）。发了返回件数，否则 0

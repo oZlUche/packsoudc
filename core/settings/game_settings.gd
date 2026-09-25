@@ -22,6 +22,8 @@ var storage_warn_rarity: int = 2
 var storage_warn_value: int = 100
 ## 084（作者定）：拿走战利品 / 容器里最后一件之后要不要自动关那一屏。默认不关，手动关
 var loot_auto_close: bool = false
+## 084：节点浮窗预览 —— 不管章节开没开（`ChapterDef.node_tooltips`，第二章才开）都显示。给作者与开发期看效果用，默认关
+var node_tooltips_preview: bool = false
 
 
 func to_dict() -> Dictionary:
@@ -31,6 +33,7 @@ func to_dict() -> Dictionary:
 		"storage_warn_rarity": storage_warn_rarity,
 		"storage_warn_value": storage_warn_value,
 		"loot_auto_close": loot_auto_close,
+		"node_tooltips_preview": node_tooltips_preview,
 	}
 
 
@@ -43,6 +46,7 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	s.storage_warn_rarity = int(d.get("storage_warn_rarity", 2))
 	s.storage_warn_value = int(d.get("storage_warn_value", 100))
 	s.loot_auto_close = bool(d.get("loot_auto_close", false))
+	s.node_tooltips_preview = bool(d.get("node_tooltips_preview", false))
 	return s
 
 

@@ -2,6 +2,7 @@
 extends GameScreen
 
 var _auto_close_btn: Button = null
+var _tooltip_btn: Button = null
 var _mode_btns: Dictionary = {}
 var _rarity_spin: SpinBox
 var _value_spin: SpinBox
@@ -52,7 +53,21 @@ func open(_payload: Dictionary) -> void:
 	_auto_close_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	col.add_child(_auto_close_btn)
 	col.add_child(HSeparator.new())
+	col.add_child(_label("地图", 15, UiPalette.DIM))
+	col.add_child(_wrapped("节点浮窗（鼠标停在点上显示敌人数据与背包 / 用过了 / 可能发生什么……）按章节开放，第二章才开。这里能强制打开先看效果。", 12, UiPalette.DIM, 500))
+	_tooltip_btn = _button("节点浮窗预览", toggle_node_tooltips_preview, 14)
+	_tooltip_btn.toggle_mode = true
+	_tooltip_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	col.add_child(_tooltip_btn)
+	col.add_child(HSeparator.new())
 	col.add_child(_button("回主菜单", flow.to_main_menu, 14))
+	_refresh()
+
+
+## 084：节点浮窗预览：不管章节开没开都显示
+func toggle_node_tooltips_preview() -> void:
+	flow.settings.node_tooltips_preview = not flow.settings.node_tooltips_preview
+	flow.save_settings()
 	_refresh()
 
 
@@ -81,6 +96,9 @@ func set_value_threshold(v: int) -> void:
 
 
 func _refresh() -> void:
+	if _tooltip_btn != null:
+		_tooltip_btn.set_pressed_no_signal(flow.settings.node_tooltips_preview)
+		_tooltip_btn.text = "节点浮窗预览：%s" % ("开（不管章节）" if flow.settings.node_tooltips_preview else "关（按章节：第二章开）")
 	if _auto_close_btn != null:
 		_auto_close_btn.set_pressed_no_signal(flow.settings.loot_auto_close)
 		_auto_close_btn.text = "拿走最后一件后自动关闭：%s" % ("开" if flow.settings.loot_auto_close else "关（手动关）")

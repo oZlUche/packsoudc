@@ -47,7 +47,7 @@
 
 ## 3. 节点浮窗（鼠标停在地图节点上）
 
-- **开关**：`ChapterDef.node_tooltips`（作者：第二章开放，默认关；序章、第一章都关）。
+- **开关**：`ChapterDef.node_tooltips`（作者：第二章开放，默认关；序章、第一章都关）。设置屏「节点浮窗预览」（`GameSettings.node_tooltips_preview`）开了就不看章节，给开发期看效果。
 - **内容切换**：`ChapterDef.tooltip_mode` = `"default"` 用内置模板；`"custom"` 用 `ChapterDef.tooltip_texts`（类别 → 模板，缺的类别退回内置）。
 - **单点覆盖**：节点内容 `tooltip`（这个点专有的一句），最优先。
 - **类别**（`NodeTooltip.category_of`）：`battle`（战斗 / 精英 / 核心，没用过的）、`visited`（任何用过的点）、`search`、`event`、`shop`、`rest`、`extract`、`random`、`spawn`、`other`。
