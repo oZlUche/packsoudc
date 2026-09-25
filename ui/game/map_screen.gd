@@ -254,6 +254,11 @@ func _adopt() -> void:
 	_run.storage_dropped.connect(func(node_id: int, items: Array):
 		_note("　离开点 %d：暂存区里的 %s留在了那里" % [node_id, StorageWarning.describe(items)]))
 	_run.loot_cleared.connect(_after_move)     # 084：没拿的战利品没了（拿完了、或走了），「回到这个点」跟着灰
+	_run.craft_queued.connect(func(a: ItemInstance, b: ItemInstance, out: ItemDef):
+		_note("　「%s」配到了「%s」上：走到下一个点时合成「%s」" % [a.def.display_name, b.def.display_name, out.display_name]))
+	_run.craft_done.connect(func(_id: int, detail: Dictionary):
+		for line in detail.get("log", []):
+			_note("　" + String(line)))
 	# 猎手（071）：进了感知范围提示一句；动了就重画标记；被赶回上一个点
 	_run.hunter_sensed.connect(func(h: Hunter):
 		var def: HunterDef = _run.hunters.def_of(h) if _run.hunters != null else null

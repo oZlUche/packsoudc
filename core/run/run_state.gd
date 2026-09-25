@@ -75,6 +75,12 @@ var hunter_defs: Dictionary = {}
 var faith_defs: Dictionary = {}
 ## 合成配方（084）：持有方给；两件拖到一起时问 [method craft_output]
 var recipes: Array[RecipeDef] = []
+## 配好对、等着合的（085 作者定：合成**不是立刻的**，走到下一个点时才发生）：{"a": ItemInstance（离开了容器、只在这里）, "b_uid": 棋盘上那件, "output": 产物 id}。跟着存档走
+var pending_crafts: Array[Dictionary] = []
+## 配好对了（界面提示：走到下一个点时合成）
+signal craft_queued(a: ItemInstance, b: ItemInstance, output: ItemDef)
+## 到了下一个点，合成发生了（或没成）：detail = {"log": [几句话], "output": 产物 id 或空, "where": "board" / "storage" / ""}
+signal craft_done(node_id: int, detail: Dictionary)
 ## 局内技能的账（082）：定义在角色上，这里记次数、冷却、旗子；没角色也有一份空的
 var skills: RunSkills = null
 ## 读档回来的技能账，等持有方按 id 找回角色（[method set_character]）再接上
@@ -245,10 +251,12 @@ func _drop_storage_if_leaving() -> void:
 		events.last_handled_id = -1
 
 
-## 头一回踩上一个点：先清暂存区（进入的那一次检查），再让那个点的事发生 —— 顺序不能反，不然事件给的东西刚进暂存区就没了
+## 头一回踩上一个点：先清暂存区（进入的那一次检查），再结等着的合成（产物放不下就进刚清空的暂存区），再让那个点的事发生 ——
+## 顺序不能反，不然事件给的东西刚进暂存区就没了、合成的产物也会被清掉
 func _on_arrive(node: MapNode) -> void:
 	if node != null:
 		_drop_storage(node.id)
+		resolve_crafts(node.id)
 	events.handle(node)
 
 
@@ -524,6 +532,67 @@ func craft_output(a: ItemDef, b: ItemDef) -> ItemDef:
 	return items.get_def(r.output) if r != null else null
 
 
+## 配对（085）：[param a] 是拖着的那件（此刻已经不在任何容器里，由这里保管），[param b] 是棋盘上被压的那件。走到下一个点时合。
+## 没有配方、b 不在棋盘上、b 已经配过对返回 false（a 得由调用方放回去）
+func queue_craft(a: ItemInstance, b: ItemInstance) -> bool:
+	if a == null or b == null or board == null or not board.has_item(b.uid):
+		return false
+	var out := craft_output(a.def, b.def)
+	if out == null:
+		return false
+	for pc in pending_crafts:
+		if int(pc["b_uid"]) == b.uid or (pc["a"] as ItemInstance).uid == a.uid:
+			return false
+	pending_crafts.append({"a": a, "b_uid": b.uid, "output": out.id})
+	craft_queued.emit(a, b, out)
+	return true
+
+
+## 棋盘上这件配了对没有（界面画记号）
+func craft_partner_of(b_uid: int) -> ItemInstance:
+	for pc in pending_crafts:
+		if int(pc["b_uid"]) == b_uid:
+			return pc["a"]
+	return null
+
+
+## 结等着的合成（到了下一个点，暂存区已清）：b 在棋盘上就合 —— 产物落在 b 的位置、放不下自动找位、再不行进暂存区并提醒；
+## b 不在了（被丢了）就把 a 放进暂存区。每一桩发一次 craft_done
+func resolve_crafts(at_id: int) -> void:
+	if pending_crafts.is_empty():
+		return
+	var todo := pending_crafts.duplicate()
+	pending_crafts.clear()
+	for pc in todo:
+		var a: ItemInstance = pc["a"]
+		var b := board.get_item(int(pc["b_uid"])) if board != null else null
+		var out_def := items.get_def(StringName(String(pc["output"]))) if items != null else null
+		var detail := {"log": [] as Array, "output": "", "where": ""}
+		if b == null or out_def == null:
+			storage.admit(a)
+			(detail["log"] as Array).append("「%s」要配的东西不在了，它放进了暂存区。" % a.def.display_name)
+			detail["where"] = "storage"
+			craft_done.emit(at_id, detail)
+			continue
+		var home := b.origin
+		var rot := b.rotation
+		board.begin_batch()
+		board.remove(b.uid)
+		var out := ItemInstance.create(out_def, rot)
+		var where := ""
+		if board.place(out, home, rot) or board.try_add(out, true):
+			where = "board"
+		elif storage.admit(out):
+			where = "storage"
+		board.end_batch()
+		detail["output"] = String(out_def.id)
+		detail["where"] = where
+		(detail["log"] as Array).append("「%s」和「%s」合成了「%s」。" % [a.def.display_name, b.def.display_name, out_def.display_name])
+		if where == "storage":
+			(detail["log"] as Array).append("背包里装不下它：放进了暂存区。走之前记得放回包里，暂存区一挪步就清。")
+		craft_done.emit(at_id, detail)
+
+
 ## 暂存区 → 棋盘（自动找位）
 func equip(uid: int) -> bool:
 	return InventoryService.transfer_auto(storage, uid, board)
@@ -746,9 +815,17 @@ func to_dict() -> Dictionary:
 		"skills": skills.to_dict(),
 		"faith_power": faith_power.to_dict(),
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
+		"pending_crafts": _crafts_to_dict(),
 		"tally": tally.duplicate(),
 		"buffs": {"meta": _meta_buff_ids(), "map": map_buffs.duplicate(true)},
 	}
+
+
+func _crafts_to_dict() -> Array:
+	var out: Array = []
+	for pc in pending_crafts:
+		out.append({"a": (pc["a"] as ItemInstance).to_dict(), "b_uid": int(pc["b_uid"]), "output": String(pc["output"])})
+	return out
 
 
 func _meta_buff_ids() -> Array:
@@ -813,6 +890,11 @@ static func from_dict(
 	var loot = d.get("pending_loot", null)
 	if loot is Dictionary:
 		s.pending_loot = GridInventory.from_dict(loot, p_items)
+	for raw in d.get("pending_crafts", []):
+		if raw is Dictionary and (raw as Dictionary).get("a", null) is Dictionary:
+			var a := ItemInstance.from_dict(raw["a"], p_items)
+			if a != null:
+				s.pending_crafts.append({"a": a, "b_uid": int(raw.get("b_uid", -1)), "output": String(raw.get("output", ""))})
 	s.phase = int(d.get("phase", Phase.PICK_SPAWN))
 	s.end_reason = StringName(String(d.get("end_reason", "")))
 	return s

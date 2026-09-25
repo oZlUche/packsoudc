@@ -93,5 +93,5 @@
 | `ChapterDef` | `auto_spawn` `skip_setup` `intro_event` | 开局站在出生点、不走开局屏、先过开场事件 |
 | `ChapterDef` | `hidden_by_unlock` `vitality_bonus` | 拿到某解锁后不再列（教程收起）；这一章多给的体力 |
 | 节点 `layout` | `col` `row` | `line` 布局：列从左到右，行上下错开（岔路） |
-| `recipes`（内容种类） | `inputs[2]` `output` `note` | 合成配方：两件拖到一起就合，产物落在被压那件的位置 |
+| `recipes`（内容种类） | `inputs[2]` `output` `note` | 合成配方：两件拖到一起先配对（棋盘上画「合」），走到下一个点时合成，产物落在被压那件的位置、装不下进暂存区并提醒 |
 | `ChapterDef` | `node_tooltips` `tooltip_mode` `tooltip_texts` | 节点浮窗 |

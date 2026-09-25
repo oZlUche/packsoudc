@@ -49,6 +49,8 @@ var _preview_costly: bool = false
 
 ## 是否画邻接标记格。战利品、商店货架这类地方不参战，画了只是噪音。
 @export var show_adjacency: bool = true
+## 085：物品右上角的小记号（uid → 文字），比如配了对等着合成的「合」。持有方设，改了 queue_redraw
+var badges: Dictionary = {}
 
 
 func container() -> ItemContainer:
@@ -190,6 +192,12 @@ func _draw() -> void:
 休眠" if dormant else ""), font, 13,
 			COLOR_TEXT.darkened(0.35) if dormant else COLOR_TEXT
 		)
+		if badges.has(item.uid):
+			var badge := String(badges[item.uid])
+			var box := item.def.shape.size_rotated(item.rotation)
+			var at := anchor + Vector2(box.x * CELL - 18.0, 4.0)
+			draw_rect(Rect2(at, Vector2(16, 16)), UiPalette.HEAL, true)
+			draw_string(font, at + Vector2(2.0, 13.0), badge, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("101216"))
 
 	# 邻接标记：画在物品之上、落点预览之下。
 	# 压在物品身上才看得出「这一格已经被谁占住了」—— 那正是标记点亮与否的判据。

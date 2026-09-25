@@ -84,10 +84,13 @@ func _build() -> void:
 	_drag.stash = _run.storage
 	_drag.drop_outside_to_stash = true     # 084：棋盘外的空间全都是暂存区
 	_drag.items_displaced.connect(_on_displaced)
-	# 084 合成：两件拖到一起，配方在一局里（RunState.recipes）
+	# 084 / 085 合成：两件拖到一起只是配对（RunState 保管拖着的那件），走到下一个点时才合；配了对的画「合」
 	_drag.craft = func(a: ItemInstance, b: ItemInstance) -> ItemDef: return _run.craft_output(a.def, b.def)
-	_drag.crafted.connect(func(a: ItemInstance, b: ItemInstance, out: ItemInstance):
-		_hint_text("「%s」+「%s」合成了「%s」" % [a.def.display_name, b.def.display_name, out.def.display_name]))
+	_drag.queue_craft = func(a: ItemInstance, b: ItemInstance) -> bool: return _run.queue_craft(a, b)
+	_run.craft_queued.connect(func(a: ItemInstance, b: ItemInstance, out: ItemDef):
+		_hint_text("「%s」放到了「%s」上：走到下一个点时合成「%s」" % [a.def.display_name, b.def.display_name, out.display_name])
+		_refresh_badges())
+	_refresh_badges()
 	# 084：停在道具上的悬浮说明（名、稀有度、标签、效果、武器的冷却与 DPS、槽）
 	tip = HoverTip.new(_font)
 	add_child(tip)
@@ -116,6 +119,15 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 				_hint_text("容器里放不下「%s」，放进了暂存区" % inst.def.display_name)
 			return true
 	return false
+
+
+## 配了对的画「合」
+func _refresh_badges() -> void:
+	var marks := {}
+	for pc in _run.pending_crafts:
+		marks[int(pc["b_uid"])] = "合"
+	board_view.badges = marks
+	board_view.queue_redraw()
 
 
 func _hint_text(text: String) -> void:

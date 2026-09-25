@@ -496,6 +496,10 @@ func _adopt(state: RunState) -> void:
 		_push({"screen": Screen.BATTLE, "node": node, "result": r, "won": won,
 			"player": ev.last_battle.get("player", null), "enemy": ev.last_battle.get("enemy", null),
 			"enemy_content": ev.last_battle.get("content", {})}))
+	state.craft_done.connect(func(node_id: int, detail: Dictionary):
+		# 085：合成的提示排在这一步别的事前面（先说东西怎么了，再看这个点的事）
+		var node := state.map.get_node(node_id) if state.map != null and state.map.has_node(node_id) else null
+		_queue.push_front({"screen": Screen.EVENT, "node": node, "outcome": "合成", "detail": detail}))
 	state.loot_pending.connect(func(container: GridInventory):
 		# 一步之内可能来两份（打赢的尸体 + 搜索收获），RunState 已经并成一份，队里留一个就够
 		if _queue.is_empty() or int(_queue[-1]["screen"]) != Screen.LOOT:

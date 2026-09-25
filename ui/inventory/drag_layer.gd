@@ -44,6 +44,11 @@ var drop_outside_to_stash: bool = false
 var craft: Callable = Callable()
 ## 合成了：a、b 消失，out 是产物
 signal crafted(a: ItemInstance, b: ItemInstance, out: ItemInstance)
+## 085 作者定：合成不是立刻的 —— 给了这个回调（`func(a, b) -> bool`）就只**配对**：a 交给它保管、b 留在原地，走到下一个点时才合。
+## 没给才走立刻合成的老路（沙盒 / 测试）
+var queue_craft: Callable = Callable()
+## 配了对（a 交出去了）
+signal craft_queued(a: ItemInstance, b: ItemInstance)
 
 var _views: Array[ContainerView] = []
 
@@ -341,7 +346,13 @@ func drop_at(global_pos: Vector2) -> bool:
 		elif grid_view.inventory.place(inst, at, _rot):
 			dropped = true
 		elif _craft_target(grid_view.inventory, at) != null:
-			dropped = _craft_into(grid_view.inventory, inst, at)
+			if queue_craft.is_valid():
+				var b := _craft_target(grid_view.inventory, at)
+				dropped = bool(queue_craft.call(inst, b))
+				if dropped:
+					craft_queued.emit(inst, b)
+			else:
+				dropped = _craft_into(grid_view.inventory, inst, at)
 		else:
 			# 「顶成功但一件没顶到」不可能发生（放不进空位才会走到这儿），
 			# 但成败不能靠数组空不空来推断 —— 那是把不变式当接口用。

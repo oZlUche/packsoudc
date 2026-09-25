@@ -221,8 +221,87 @@ static func run_matchups(t: TestCase) -> void:
 		t.eq(s.vitality.maximum, c.brutus.vitality_max + s.buff_context().vitality_max_bonus + c.chapter.vitality_bonus, "体力 = 角色 + 技能 + 章节加成")
 
 
+static func run_crafting_deferred(t: TestCase) -> void:
+	t.begin("序章二 · 合成不是立刻的（085 作者定）：拖到一起只配对（记号「合」、提示）→ 走到下一个点才合成、发提示；装不下进暂存区并提醒；配的那件丢了拖着的进暂存区；跟存档")
+	var c := _content()
+	var s := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
+	t.not_null(s, "开得了局")
+	if s == null:
+		return
+	s.recipes = c.recipes
+	s.event_defs = c.events
+	var knife := ItemInstance.create(c.items.get_def(&"knife"))
+	t.check(s.board.try_add(knife, true), "匕首在包里")
+	var home := knife.origin
+	var vial := ItemInstance.create(c.items.get_def(&"poison_vial"))     # 拖着的那件：不在任何容器里
+	var queued: Array = []
+	s.craft_queued.connect(func(a: ItemInstance, b: ItemInstance, out: ItemDef): queued.append([a.uid, b.uid, out.id]))
+	t.check(not s.queue_craft(vial, ItemInstance.create(c.items.get_def(&"salve"))), "没配方 / 不在棋盘上的配不了")
+	t.check(s.queue_craft(vial, knife), "毒药瓶配到匕首上")
+	t.check(not s.queue_craft(ItemInstance.create(c.items.get_def(&"poison_vial")), knife), "匕首已经配过对")
+	t.eq(queued.size(), 1, "发了 craft_queued")
+	t.check(s.craft_partner_of(knife.uid) == vial and s.pending_crafts.size() == 1, "记着这一对")
+	t.check(s.board.has_item(knife.uid) and not s.storage.has_item(vial.uid), "匕首还在棋盘上，毒药瓶不在暂存区（RunState 保管）")
+	# 存档带着
+	var back := RunState.from_dict(s.to_dict(), c.chapter, c.items, c.enemies, c.sets)
+	t.check(back != null and back.pending_crafts.size() == 1 and int(back.pending_crafts[0]["b_uid"]) == knife.uid, "存档带着配好的对")
+	# 走到下一个点：合成发生
+	var done: Array = []
+	s.craft_done.connect(func(_id: int, detail: Dictionary): done.append(detail))
+	var next: int = s.travel.available_moves()[0]
+	t.check(s.step_to(next), "走到下一个点")
+	t.eq(done.size(), 1, "发了 craft_done")
+	if done.is_empty():
+		return
+	t.eq(String(done[0]["output"]), "poisoned_knife", "产物是涂毒匕首")
+	t.eq(String(done[0]["where"]), "board", "落在棋盘上")
+	t.check(String((done[0]["log"] as Array)[0]).contains("合成了"), "提示文字")
+	var made: ItemInstance = null
+	for inst in s.board.items():
+		if (inst as ItemInstance).def.id == &"poisoned_knife":
+			made = inst
+	t.check(made != null and made.origin == home, "涂毒匕首落在匕首原来的位置")
+	t.check(not s.board.has_item(knife.uid) and s.pending_crafts.is_empty(), "匕首没了、队列清了")
+	# 装不下：把包塞满再配一对，产物进暂存区并提醒
+	var s2 := RunState.start(c.chapter, 2, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
+	s2.recipes = c.recipes
+	var knife2 := ItemInstance.create(c.items.get_def(&"knife"))
+	s2.board.try_add(knife2, true)
+	var vial2 := ItemInstance.create(c.items.get_def(&"poison_vial"))
+	t.check(s2.queue_craft(vial2, knife2), "配对")
+	# 匕首那一格被拿走之后要放得下涂毒匕首（同样 1 格）：所以先把产物换成放不下的情形 —— 用别的东西把包塞满、再把匕首挪到暂存区之外是不行的；
+	# 这里直接验「b 不在了」与「进暂存区」两条：把匕首从棋盘拿掉
+	s2.board.remove(knife2.uid)
+	var done2: Array = []
+	s2.craft_done.connect(func(_id: int, detail: Dictionary): done2.append(detail))
+	s2.step_to(s2.travel.available_moves()[0])
+	t.check(done2.size() == 1 and String(done2[0]["where"]) == "storage" and s2.storage.has_item(vial2.uid), "配的那件不在了：拖着的进暂存区、有提示（%s）" % str(done2[0]["log"] if not done2.is_empty() else []))
+	# 产物放不下：配方产物比原件大时才会发生；用一个临时配方验（1 格匕首 → 3×3 板甲），包里塞满
+	var s3 := RunState.start(c.chapter, 3, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
+	var big := RecipeDef.new()
+	big.id = &"t_big"
+	big.inputs = [&"knife", &"poison_vial"] as Array[StringName]
+	big.output = &"plate_cuirass"
+	s3.recipes = [big] as Array[RecipeDef]
+	var knife3 := ItemInstance.create(c.items.get_def(&"knife"))
+	s3.board.try_add(knife3, true)
+	while s3.board.try_add(ItemInstance.create(c.items.get_def(&"salve")), true):
+		pass     # 塞满
+	t.check(s3.queue_craft(ItemInstance.create(c.items.get_def(&"poison_vial")), knife3), "配对")
+	var done3: Array = []
+	s3.craft_done.connect(func(_id: int, detail: Dictionary): done3.append(detail))
+	s3.step_to(s3.travel.available_moves()[0])
+	t.check(done3.size() == 1 and String(done3[0]["where"]) == "storage", "产物装不下：进暂存区")
+	t.check(not done3.is_empty() and (done3[0]["log"] as Array).size() == 2 and String((done3[0]["log"] as Array)[1]).contains("装不下"), "提醒玩家装不下")
+	var in_storage := false
+	for inst in s3.storage.items():
+		if (inst as ItemInstance).def.id == &"plate_cuirass":
+			in_storage = true
+	t.check(in_storage, "产物在暂存区里")
+
+
 static func run_crafting(t: TestCase) -> void:
-	t.begin("序章二 · 合成：毒药瓶拖到匕首上 → 涂毒匕首落在匕首的位置，两件消失；没有配方的照旧顶替；RunState.craft_output 查配方")
+	t.begin("序章二 · 拖拽层的合成：没给 queue_craft 时立刻合（沙盒 / 测试）；给了就只配对、a 交出去；没有配方的照旧顶替；RunState.craft_output 查配方")
 	var c := _content()
 	ItemInstance.reset_uid_counter()
 	var board := GridInventory.new(Vector2i(6, 4), 1, true)
@@ -272,6 +351,20 @@ static func run_crafting(t: TestCase) -> void:
 	t.check(board.has_item(other.uid) and other.origin == home, "伤药占了那格")
 	t.check(drag.is_dragging() and made.size() == 1, "被顶出的涂毒匕首拿在手上，没再合成")
 	drag.cancel()
+	# 配对模式：给了 queue_craft 就不立刻合
+	var pairs: Array = []
+	drag.queue_craft = func(a: ItemInstance, b: ItemInstance) -> bool:
+		pairs.append([a.uid, b.uid])
+		return true
+	var vial2 := ItemInstance.create(c.items.get_def(&"poison_vial"))
+	stash.admit(vial2)
+	var knife2 := ItemInstance.create(c.items.get_def(&"knife"))
+	t.check(board.try_add(knife2, true), "再放一把匕首")
+	var at2 := (Vector2(knife2.origin) + Vector2(0.5, 0.5)) * InventoryView.CELL
+	sview.grab_requested.emit(sview, vial2.uid, Vector2(10, 10))
+	t.check(drag.drop_at(at2), "放到匕首上：算落入（配对）")
+	t.check(pairs == [[vial2.uid, knife2.uid]] and made.size() == 1, "只配对，没立刻合")
+	t.check(board.has_item(knife2.uid) and not stash.has_item(vial2.uid), "匕首还在、毒药瓶交出去了")
 	# RunState 的入口
 	var s := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
 	if s != null:
