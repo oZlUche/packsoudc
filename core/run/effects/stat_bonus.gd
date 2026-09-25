@@ -12,4 +12,4 @@ func modify(ctx: RunContext) -> void:
 
 func describe() -> String:
 	var names := {"max_hp": "生命", "max_stamina": "耐力", "regen_stamina": "耐力回复"}
-	return "%s %+g" % [names.get(String(stat), String(stat)), amount]
+	return "%s %+.0f" % [names.get(String(stat), String(stat)), amount]

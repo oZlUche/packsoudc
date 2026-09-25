@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.84 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.85 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2948,6 +2948,13 @@ func grant_first_kit()                               # 仓库空的第一局发�
 **校准**（073）：正式游戏每走一步记一份玩家配置（`CalibrationRecorder` → `user://calibration/snapshots.jsonl`），`tools/build_dummies.gd` 按难度的段位表分段（或固定段长）、每段挑离平均读数最近的真实配置当木桩，
 `tools/bench_hunters.gd` 让木桩对猎手池里每一档打几百场，打印胜率并排「猎手表里这一段的档 / 最接近 50% 的哪一档」—— 工具只做统计，作者对着表改强度规则。数值等系统完整后多场测试。
 
+### 8.4 序章与章节的门（083）
+
+序章 `prologue` 是一张手写的预设图（`data/maps/prologue.json`，布局 `line`）：生 → 搜 → 战 → 搜 → 精 → 撤，敌人、收获、教程事件全写在节点内容里，没有敌人池。
+`ChapterDef` 多了开局屏的门：`order`、`requires_unlock` / `grants_unlock`（局外解锁 id；撤离成功时 `GameFlow._settle_run` → `MetaState.grant_unlock`）、`characters`（能选的角色）、`allow_carry_in`。
+`GameFlow.available_chapters()` 按解锁过滤、按 order 排，一章都列不出来就全列；`characters_for(chapter)`。开局屏按它们列，章节换了角色重排、仓库栏按 `allow_carry_in` 隐藏。
+节点内容里的搜索覆盖（`SearchSession` 读）：`search_max` / `search_min`（搜够才能走）/ `search_curve` / `search_finds`（第 k 次固定收获）/ `encounter`（写死的遭遇）。`has_item` 条件多了 `tag`。事件屏上能整理背包（选项页「整理背包（B）」，收起重画选项）。
+
 ## 9. 套装与跨域效果
 
 **套装是由道具触发的独立系统，不是编译期的一步。**
@@ -3500,6 +3507,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.85 | 2026-09-25 | **序章（新手教程）**（报告 083；5.3、6.2、8.4 新）：手写预设图 + `line` 布局；`ChapterDef` 的门（order / requires_unlock / grants_unlock / characters / allow_carry_in），`GameFlow.available_chapters` / `characters_for`，撤离成功 `grant_unlock`；节点内容里的搜索覆盖（search_max / min / curve / finds、encounter）；`has_item.tag`；事件屏整理背包；第一章要序章通关解锁 |
 | v1.84 | 2026-09-25 | **局内技能与信力**（报告 082；3.8、4.2、7.3 新、10.1）：技能是构件 `RunSkill`（被动常驻 + 可选主动一击，次数 / 冷却由 `RunSkills` 记账，立旗等下一场战斗），三个作者定的初始角色（安德烈乌斯 / 布鲁图斯 / 马库斯）替换占位角色；信力 = 信仰指定的行为（`FaithDeed` 构件）攒点、阈值解锁道具上的 `faith_bonuses`（编译器多一个 `faith_tiers` 参数）；`GridInventory.placed`、`NodeEvents.option_chosen` / `before_battle` / `losses_forgiven`、`EventOption.tags`；不信者与新教留空（作者定） |
 | v1.83 | 2026-09-24 | 作者定帝国机构（worldview.md 二、六节）：**诸族元老院 Senatus Gentium**（盟会出身、按族按信仰分席、选帝 / 军团供给 / 信仰法；篡位时投降追认；尼禄死后召集贵族联军掐粮道；和谈拥立提图斯）；无信者制度保留但只能在本地聚集；魔法军团缩编为皇家禁军，协会是后来某位皇帝为扩大皇室在平民中的影响力才立的；新教无席位、当前皇帝暗中在贫民 / 奴隶 / 行商间扶持；第二任皇帝定名提图斯，中间名、当前皇帝、王朝名拟了候选 |
 | v1.82 | 2026-09-24 | 作者补世界观（worldview.md 一、二、六节）：太阳神原是恒常之神（周期循环），被推向太阳、在与元素之神的战斗中夺取了火，和融进元素之神的火神不是同一位；帝国史 —— 尼禄（「马古斯」是称号不是姓）靠军队开国、灭魔法一族（小说第三章），以新教与「允许无信者」的制度对抗贵族、遇刺、魔法军团胜而无后勤、胞弟和谈继位，第一任靠军力、第二任靠民心；第二任皇帝名字候选三个待作者挑 |

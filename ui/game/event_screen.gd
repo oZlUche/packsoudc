@@ -14,7 +14,13 @@ var _node: MapNode = null
 var _option_btns: Array[Button] = []
 
 
+const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
+var _payload: Dictionary = {}
+var _bag: Control = null
+
+
 func open(payload: Dictionary) -> void:
+	_payload = payload
 	_node = payload.get("node", null)
 	var def = payload.get("def", null)
 	if def is EventDef:
@@ -39,6 +45,9 @@ func _open_options() -> void:
 		col.add_child(b)
 		if not ok:
 			col.add_child(_label("　" + String(state["why"]), 13, UiPalette.DIM))
+	# 083：事件屏上也能整理背包（教程的「先整理再开打」要在这里做；15 节第 7 项的尾巴）
+	if flow.run != null:
+		col.add_child(_button("整理背包（B）", toggle_bag, 13))
 
 
 func _open_result(payload: Dictionary) -> void:
@@ -183,4 +192,55 @@ func proceed() -> void:
 
 func is_options_page() -> bool:
 	return _def != null
+
+
+## 背包整理面板叠在事件上；收起时重画选项（条件可能因为整理过了而满足）
+func toggle_bag() -> void:
+	if _bag != null:
+		_bag.queue_free()
+		_bag = null
+		_rebuild()
+		return
+	if flow.run == null:
+		return
+	var shade := ColorRect.new()
+	shade.color = Color(0.04, 0.05, 0.07, 0.7)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(shade)
+	_bag = shade
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.add_child(center)
+	var panel := _panel(16)
+	center.add_child(panel)
+	var col := _vbox(10)
+	panel.add_child(col)
+	var head := _hbox(12)
+	head.add_child(_label("背包", 18, UiPalette.FG))
+	head.add_child(_button("收起（B）", toggle_bag, 12))
+	col.add_child(head)
+	var inv := InventoryPanelScript.new()
+	inv.setup(flow.run, font)
+	col.add_child(inv)
+
+
+func bag_open() -> bool:
+	return _bag != null
+
+
+func _rebuild() -> void:
+	for c in get_children():
+		remove_child(c)
+		c.queue_free()
+	_option_btns.clear()
+	open(_payload)
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo or key.keycode != KEY_B or not is_options_page():
+		return
+	toggle_bag()
+	get_viewport().set_input_as_handled()
 #endregion

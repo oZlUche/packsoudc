@@ -1,0 +1,39 @@
+{
+  "id": "prologue",
+  "display_name": "序章的节点规则",
+  "random_weights": {
+    "battle": 1
+  },
+  "search": {
+    "encounter_curve": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "rarity_weights": [
+      50.0,
+      30.0,
+      15.0,
+      4.0,
+      1.0
+    ],
+    "exclude_tags": [
+      "treasure"
+    ],
+    "reveal_seconds": [
+      0.3,
+      0.5,
+      0.8,
+      1.2,
+      2.0
+    ]
+  },
+  "loss_cost": {
+    "battle": 1,
+    "elite": 2,
+    "search": 1
+  },
+  "event_weights": {
+    "story": 1
+  }
+}

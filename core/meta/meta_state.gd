@@ -193,6 +193,15 @@ func has_unlock(id: StringName) -> bool:
 	return unlocks.has(id)
 
 
+## 给一个局外解锁（序章通关解锁第一章，083）。已经有的不重复；返回是不是新给的
+func grant_unlock(id: StringName) -> bool:
+	if id == &"" or unlocks.has(id):
+		return false
+	unlocks.append(id)
+	changed.emit()
+	return true
+
+
 ## 解锁 / 收回一个局外解锁（占位开关）。返回现在解没解锁
 func toggle_unlock(id: StringName) -> bool:
 	if unlocks.has(id):

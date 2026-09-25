@@ -752,6 +752,9 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 		report.error("node_rules", "找不到节点规则 '%s'（已知：%s）" % [def.node_rules, ", ".join(ctx.node_rules.keys())])
 	if def.economy_rules != &"" and not ctx.economy_rules.is_empty() and not ctx.economy_rules.has(def.economy_rules):
 		report.error("economy_rules", "找不到经济规则 '%s'（已知：%s）" % [def.economy_rules, ", ".join(ctx.economy_rules.keys())])
+	for i in def.characters.size():
+		if not ctx.characters.is_empty() and not ctx.characters.has(def.characters[i]):
+			report.error("characters[%d]" % i, "找不到角色 '%s'（已知：%s）" % [def.characters[i], ", ".join(ctx.characters.keys())])
 	if def.map_source == null:
 		report.error("map_source", "章节必须有地图来源（随机生成或载入预设）")
 		return

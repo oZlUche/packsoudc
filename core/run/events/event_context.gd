@@ -76,12 +76,13 @@ func depth_at(n: MapNode) -> int:
 	return int(erosion_depth.call(n)) if erosion_depth.is_valid() and n != null else -1
 
 
-## 棋盘 / 暂存区里某道具有几件（id 为空 = 任何道具）。[param where]：0 棋盘、1 暂存区、2 两处
-func count_item(id: StringName, where: int = 2) -> int:
+## 棋盘 / 暂存区里某道具有几件（id 为空 = 任何道具；tag 给了就只算带这个标签的）。[param where]：0 棋盘、1 暂存区、2 两处
+func count_item(id: StringName, where: int = 2, tag: StringName = &"") -> int:
 	var n := 0
 	for c in containers(where):
 		for inst in (c as ItemContainer).items():
-			if id == &"" or (inst as ItemInstance).def.id == id:
+			var def := (inst as ItemInstance).def
+			if (id == &"" or def.id == id) and (tag == &"" or def.tags.has(tag)):
 				n += 1
 	return n
 

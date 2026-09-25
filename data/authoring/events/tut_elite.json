@@ -1,0 +1,31 @@
+{
+  "id": "tut_elite",
+  "title": "守卫",
+  "text": "最后一道门有精英守着：更硬，带的东西也更好。输给精英扣的体力更多。\n\n把新搜到的也放进包里，整理好了再进去。",
+  "options": [
+    {
+      "label": "开打",
+      "requires": [
+        {
+          "type": "has_item",
+          "tag": "weapon",
+          "where": "BOARD"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "proceed"
+        }
+      ]
+    },
+    {
+      "label": "先整理背包（B）",
+      "outcomes": [
+        {
+          "type": "next_event",
+          "event": "tut_elite"
+        }
+      ]
+    }
+  ]
+}

@@ -49,9 +49,31 @@ func _init(p_node: MapNode, p_rules: SearchRules, p_items: ItemDatabase, p_rng: 
 var extra_searches: int = 0
 
 
-## 一共能搜几次：规则的上限 + buff 给的
+## 一共能搜几次：规则的上限 + buff 给的；节点内容里的 `search_max` 覆盖规则（083 序章的教程点）
 func max_total() -> int:
-	return (rules.max_searches if rules != null else 0) + maxi(0, extra_searches)
+	var base := rules.max_searches if rules != null else 0
+	if node != null and node.content.has("search_max"):
+		base = int(node.content["search_max"])
+	return base + maxi(0, extra_searches)
+
+
+## 至少得搜几次才能走（节点内容 `search_min`，083）；0 = 随时可以走
+func min_searches() -> int:
+	return int(node.content.get("search_min", 0)) if node != null else 0
+
+
+func can_leave() -> bool:
+	return searches_done >= min_searches()
+
+
+## 第 k 次搜的遭遇概率：节点内容 `search_curve` 覆盖规则的曲线（超出的按最后一项）
+func encounter_chance_at(k: int) -> float:
+	if node != null and node.content.has("search_curve"):
+		var curve: Array = node.content["search_curve"]
+		if curve.is_empty():
+			return 0.0
+		return clampf(float(curve[mini(k, curve.size() - 1)]), 0.0, 1.0)
+	return rules.encounter_chance(k) if rules != null else 0.0
 
 
 func can_search() -> bool:
@@ -60,7 +82,7 @@ func can_search() -> bool:
 
 ## 下一次搜的遭遇概率（给界面看）
 func next_encounter_chance() -> float:
-	return rules.encounter_chance(searches_done) if rules != null else 0.0
+	return encounter_chance_at(searches_done)
 
 
 func searches_left() -> int:
@@ -72,7 +94,9 @@ func search() -> Dictionary:
 	if not can_search():
 		return {}
 	var k := searches_done
-	var got := draw_items(rules, items, depth, node.danger if node != null else 0, rng)
+	var got := _scripted_finds(k)
+	if got.is_empty():
+		got = draw_items(rules, items, depth, node.danger if node != null else 0, rng)
 	found.append_array(got)
 	var packed := LootPacker.add(haul_box, got, items, _haul_size().y)
 	if packed["board"] != haul_box:
@@ -82,7 +106,7 @@ func search() -> Dictionary:
 	if node != null:
 		node.content["searches"] = searches_done
 	var met := {}
-	if rng.randf() < rules.encounter_chance(k) and encounter_builder.is_valid():
+	if rng.randf() < encounter_chance_at(k) and encounter_builder.is_valid():
 		var built = encounter_builder.call()
 		if built is Dictionary and not (built as Dictionary).is_empty():
 			met = built
@@ -95,10 +119,25 @@ func search() -> Dictionary:
 	return {"found": got, "encounter": met}
 
 
-## 随时可以离开
+## 随时可以离开（教程点要求搜够 `search_min` 次才能走：界面按 [method can_leave] 灰掉按钮，这里不拦）
 func leave() -> void:
 	if active:
 		_end(&"left")
+
+
+## 节点内容 `search_finds`（083）：第 k 次搜固定找到什么（id 列表的列表）；没写、或超出的返回空 = 照规则抽
+func _scripted_finds(k: int) -> Array[StringName]:
+	var out: Array[StringName] = []
+	if node == null or items == null or not node.content.has("search_finds"):
+		return out
+	var finds: Array = node.content["search_finds"]
+	if k >= finds.size() or not (finds[k] is Array):
+		return out
+	for raw in finds[k]:
+		var id := StringName(String(raw))
+		if items.get_def(id) != null:
+			out.append(id)
+	return out
 
 
 ## 收获：会话里搜到、还没拿走的都在这个容器里

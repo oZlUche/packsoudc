@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="NodeRules" format=3]
+
+[ext_resource type="Script" path="res://core/run/node_rules.gd" id="1_24ju2"]
+[ext_resource type="Script" path="res://core/run/search_rules.gd" id="2_vllkm"]
+
+[sub_resource type="Resource" id="Resource_cf8xj"]
+script = ExtResource("2_vllkm")
+encounter_curve = Array[float]([0.0, 0.0, 1.0])
+
+[resource]
+script = ExtResource("1_24ju2")
+id = &"prologue"
+display_name = "序章的节点规则"
+random_weights = {
+"battle": 1
+}
+search = SubResource("Resource_cf8xj")
+event_weights = {
+"story": 1
+}

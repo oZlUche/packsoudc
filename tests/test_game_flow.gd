@@ -452,10 +452,16 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	t.is_null(game.overlay(), "没有叠层")
 	t.check(flow.chapters.size() >= 1 and flow.loadouts.size() >= 2, "装回了章节与开局装备")
 
+	# 083：这些测试要的是第一章（环形图）；序章通关才列它 —— 先把章节许诺的解锁都给上，再挑第一章
+	for gch in flow.chapters:
+		if gch.grants_unlock != &"":
+			flow.meta.grant_unlock(gch.grants_unlock)
 	flow.new_run()
 	var setup = game.base()
+	for gi in setup._chapters.size():
+		if setup._chapters[gi].id == &"chapter_01":
+			setup.choose_chapter(gi)
 	t.eq(setup.screen, GameFlow.Screen.SETUP, "→ 开局屏")
-	setup.choose_chapter(0)
 	if found.is_empty():
 		t.check(false, "找不到种子")
 		game.queue_free()

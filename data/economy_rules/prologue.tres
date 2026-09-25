@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="EconomyRules" format=3]
+
+[ext_resource type="Script" path="res://core/run/economy_rules.gd" id="1_py5v5"]
+
+[resource]
+script = ExtResource("1_py5v5")
+id = &"prologue"
+display_name = "序章的经济：没有付费撤离点"
+paid_extracts = 0

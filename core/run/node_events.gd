@@ -385,6 +385,10 @@ func _open_search(node: MapNode) -> void:
 	var session := SearchSession.new(node, rules.search, items, _rng_for(node, "search"), float(_depths.get(node.id, 0.0)))
 	session.extra_searches = _run_ctx().extra_searches
 	session.encounter_builder = func() -> Dictionary:
+		# 083：节点内容里写死的遭遇（教程点）优先；没有才按池现造
+		var fixed = node.content.get("encounter", null)
+		if fixed is Dictionary and EnemyKit.has_enemy(fixed):
+			return (fixed as Dictionary).duplicate(true)
 		return _enemy_for(node, &"search", _rng_for(node, "ambush:%d" % session.searches_done))
 	session.ended.connect(func(reason: StringName): _close_search(node, session, reason))
 	current_search = session

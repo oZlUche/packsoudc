@@ -15,6 +15,7 @@ const LAYOUTS := {
 	&"grid_script": "res://ui/map/grid_map_layout.gd",
 	&"hourglass": "res://ui/map/lattice_map_layout.gd",
 	&"tower": "res://ui/map/lattice_map_layout.gd",
+	&"line": "res://ui/map/line_map_layout.gd",
 }
 
 

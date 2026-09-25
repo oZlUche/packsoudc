@@ -130,6 +130,28 @@ func available_difficulties() -> Array[DifficultyDef]:
 	return out
 
 
+## 开局屏能列的章节（083）：没有解锁要求的和已解锁的，按 order 再按 id 排。一章都列不出来就全列（解锁 id 写错了不该把游戏锁死）
+func available_chapters() -> Array[ChapterDef]:
+	var out: Array[ChapterDef] = []
+	for c in chapters:
+		if c.requires_unlock == &"" or (meta != null and meta.has_unlock(c.requires_unlock)):
+			out.append(c)
+	if out.is_empty():
+		out = chapters.duplicate()
+	out.sort_custom(func(a: ChapterDef, b: ChapterDef) -> bool:
+		return a.order < b.order if a.order != b.order else String(a.id) < String(b.id))
+	return out
+
+
+## 这一章能选的角色（083）：章节列了就只列那些，没列就全部
+func characters_for(chapter: ChapterDef) -> Array[CharacterDef]:
+	var out: Array[CharacterDef] = []
+	for ch in characters:
+		if chapter == null or chapter.allows_character(ch.id):
+			out.append(ch)
+	return out
+
+
 ## 现在能不能开新局；空串 = 能，否则是原因（带回来的背包还没清空，058 第 7 条）
 func can_begin() -> String:
 	if meta != null and meta.has_pending_board():
@@ -254,6 +276,9 @@ func _settle_run() -> void:
 	if not _settled:
 		_settled = true
 		last_absorbed = meta.absorb(result)
+		# 083：撤离成功给这一章许诺的局外解锁（序章通关开第一章）
+		if result.is_extracted() and run != null and run.chapter != null and run.chapter.grants_unlock != &"":
+			meta.grant_unlock(run.chapter.grants_unlock)
 		MetaSave.write(meta, meta_path)
 		RunSave.remove(save_path)
 #endregion

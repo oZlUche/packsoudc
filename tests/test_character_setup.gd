@@ -289,8 +289,15 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 		game.queue_free()
 		return
 	var ch: CharacterDef = flow.characters[0]
+	# 083：这些测试要的是第一章（环形图）；序章通关才列它 —— 先把章节许诺的解锁都给上，再挑第一章
+	for gch in flow.chapters:
+		if gch.grants_unlock != &"":
+			flow.meta.grant_unlock(gch.grants_unlock)
 	flow.new_run()
 	var setup = game.base()
+	for gi in setup._chapters.size():
+		if setup._chapters[gi].id == &"chapter_01":
+			setup.choose_chapter(gi)
 	t.eq(setup.screen, GameFlow.Screen.SETUP, "→ 开局屏")
 	t.not_null(setup.board, "有这个角色的棋盘")
 	t.eq(setup.board.size, ch.board_size, "尺寸按角色")

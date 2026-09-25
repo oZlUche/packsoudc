@@ -16,6 +16,11 @@ var run_seed: int = 1
 ## 这个角色的棋盘，初始包摆好；从仓库拖进来的东西就在上面。出发时整块记成 layout 交给 RunState
 var board: GridInventory = null
 
+## 083：开局屏列的章节（按解锁过滤、按 order 排）与这一章能选的角色
+var _chapters: Array[ChapterDef] = []
+var _characters: Array[CharacterDef] = []
+var _char_box: VBoxContainer = null
+var _warehouse_box: VBoxContainer = null
 var _chapter_btns: Array[Button] = []
 var _character_btns: Array[Button] = []
 var _difficulty_btns: Array[Button] = []
@@ -46,24 +51,20 @@ func open(_payload: Dictionary) -> void:
 	row.add_child(left)
 	left.add_child(_label("开局", 26, UiPalette.FG))
 	left.add_child(_label("章节", 15, UiPalette.DIM))
-	for i in flow.chapters.size():
-		var c := flow.chapters[i]
+	_chapters = flow.available_chapters()
+	for i in _chapters.size():
+		var c := _chapters[i]
 		var idx := i
 		var b := _button("%s（难度 %d）" % [c.display_name if c.display_name != "" else String(c.id), c.difficulty],
 			func(): choose_chapter(idx))
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_chapter_btns.append(b)
 		left.add_child(b)
-	if flow.chapters.is_empty():
+	if _chapters.is_empty():
 		left.add_child(_label("没有章节：先跑 tools/import_content.gd", 13, UiPalette.HP))
 	left.add_child(_label("角色", 15, UiPalette.DIM))
-	for i in flow.characters.size():
-		var ch := flow.characters[i]
-		var idx := i
-		var b := _button(ch.display_name if ch.display_name != "" else String(ch.id), func(): choose_character(idx))
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		_character_btns.append(b)
-		left.add_child(b)
+	_char_box = _vbox(8)
+	left.add_child(_char_box)
 	if flow.characters.is_empty():
 		left.add_child(_label("没有角色定义：按第一套开局装备开（老路）", 12, UiPalette.DIM))
 	var avail := flow.available_difficulties()
@@ -104,7 +105,8 @@ func open(_payload: Dictionary) -> void:
 	_board_host = _vbox(6)
 	grids.add_child(_board_host)
 
-	var right := _vbox(6)
+	_warehouse_box = _vbox(6)
+	var right := _warehouse_box
 	grids.add_child(right)
 	var w := flow.meta.warehouse
 	right.add_child(_label("仓库　%d × %d 格，%d 件" % [w.size.x, w.size.y, w.item_count()], 15, UiPalette.DIM))
@@ -123,25 +125,46 @@ func open(_payload: Dictionary) -> void:
 	w.changed.connect(_refresh)
 
 	choose_chapter(0)
-	choose_character(0)
 	choose_difficulty(0)
 
 
 #region 公开动作
 func choose_chapter(i: int) -> void:
-	if flow.chapters.is_empty():
+	if _chapters.is_empty():
 		return
-	chapter_index = clampi(i, 0, flow.chapters.size() - 1)
+	chapter_index = clampi(i, 0, _chapters.size() - 1)
 	for k in _chapter_btns.size():
 		_chapter_btns[k].add_theme_color_override("font_color", UiPalette.FG if k == chapter_index else UiPalette.DIM)
-	_refresh()
+	# 083：这一章能选的角色、能不能从仓库带东西，都跟着章节变
+	_rebuild_characters()
+	if _warehouse_box != null:
+		_warehouse_box.visible = chapter().allow_carry_in
+	choose_character(0)
+
+
+## 角色按钮按这一章能选的重排
+func _rebuild_characters() -> void:
+	_characters = flow.characters_for(chapter())
+	_character_btns.clear()
+	if _char_box == null:
+		return
+	for c in _char_box.get_children():
+		_char_box.remove_child(c)
+		c.queue_free()
+	for i in _characters.size():
+		var ch := _characters[i]
+		var idx := i
+		var b := _button(ch.display_name if ch.display_name != "" else String(ch.id), func(): choose_character(idx))
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_character_btns.append(b)
+		_char_box.add_child(b)
 
 
 ## 换角色：带上的先放回仓库，按新角色的棋盘尺寸与初始包重摆
 func choose_character(i: int) -> void:
 	_return_carried()
-	if not flow.characters.is_empty():
-		character_index = clampi(i, 0, flow.characters.size() - 1)
+	if not _characters.is_empty():
+		character_index = clampi(i, 0, _characters.size() - 1)
 	for k in _character_btns.size():
 		_character_btns[k].add_theme_color_override("font_color", UiPalette.FG if k == character_index else UiPalette.DIM)
 	_rebuild_board()
@@ -165,11 +188,11 @@ func difficulty() -> DifficultyDef:
 
 
 func chapter() -> ChapterDef:
-	return flow.chapters[chapter_index] if chapter_index < flow.chapters.size() else null
+	return _chapters[chapter_index] if chapter_index < _chapters.size() else null
 
 
 func character() -> CharacterDef:
-	return flow.characters[character_index] if character_index < flow.characters.size() else null
+	return _characters[character_index] if character_index < _characters.size() else null
 
 
 ## 把仓库里的一件带上（自动找位置，和拖进包里一样）。放不进返回 false

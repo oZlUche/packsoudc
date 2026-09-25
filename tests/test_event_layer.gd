@@ -472,8 +472,15 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	root.add_child(game)
 	var flow: GameFlow = game.flow
 	t.check(not flow.event_defs.is_empty(), "导演装了事件定义")
+	# 083：这些测试要的是第一章（环形图）；序章通关才列它 —— 先把章节许诺的解锁都给上，再挑第一章
+	for gch in flow.chapters:
+		if gch.grants_unlock != &"":
+			flow.meta.grant_unlock(gch.grants_unlock)
 	flow.new_run()
 	var setup = game.base()
+	for gi in setup._chapters.size():
+		if setup._chapters[gi].id == &"chapter_01":
+			setup.choose_chapter(gi)
 	# 067：开局屏按角色开；把第一套（发进仓库的）全带上，和从前按 standard 开差不多
 	for inst in flow.meta.warehouse.items().duplicate():
 		setup.carry_in((inst as ItemInstance).uid)

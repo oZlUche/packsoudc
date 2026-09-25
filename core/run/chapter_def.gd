@@ -30,3 +30,20 @@ extends Resource
 
 ## 经济规则的 id（`data/economy_rules/`，6.6）：打赢给多少钱、商店、付费撤离点。空 = 这一章不算钱
 @export var economy_rules: StringName = &""
+
+@export_group("开局屏（083）")
+## 开局屏上的先后（小的在前）；序章 0、第一章 1
+@export var order: int = 0
+## 局外解锁 id（[MetaState.unlocks]）：没解锁不列。空 = 一直可选
+@export var requires_unlock: StringName = &""
+## 撤离成功给的局外解锁 id（序章通关解锁第一章）。空 = 不给
+@export var grants_unlock: StringName = &""
+## 能选的角色 id；空 = 全部
+@export var characters: Array[StringName] = []
+## 开局能不能从仓库带东西进来（序章不能：教程从空包开始）
+@export var allow_carry_in: bool = true
+
+
+## 这个角色在这一章能不能选
+func allows_character(id: StringName) -> bool:
+	return characters.is_empty() or characters.has(id)

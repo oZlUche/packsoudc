@@ -217,8 +217,15 @@ static func frame_run_screens(t: TestCase, root: Window) -> void:
 		t.check(false, "没有进阶难度或章节")
 		game.queue_free()
 		return
+	# 083：这些测试要的是第一章（环形图）；序章通关才列它 —— 先把章节许诺的解锁都给上，再挑第一章
+	for gch in flow.chapters:
+		if gch.grants_unlock != &"":
+			flow.meta.grant_unlock(gch.grants_unlock)
 	flow.new_run()
 	var setup = game.base()
+	for gi in setup._chapters.size():
+		if setup._chapters[gi].id == &"chapter_01":
+			setup.choose_chapter(gi)
 	t.eq(setup._difficulty_btns.size(), flow.available_difficulties().size(), "难度按钮 = 能选的那几档")
 	t.check(not flow.available_difficulties().has(hard), "新的局外：进阶没解锁，不列")
 	t.check(setup.difficulty() != null and setup.difficulty().requires_unlock == &"", "默认选的是普通")
@@ -231,6 +238,9 @@ static func frame_run_screens(t: TestCase, root: Window) -> void:
 	t.check(meta_screen.toggle_unlock(hard.requires_unlock), "解锁")
 	flow.new_run()
 	setup = game.base()
+	for gi2 in setup._chapters.size():
+		if setup._chapters[gi2].id == &"chapter_01":
+			setup.choose_chapter(gi2)
 	t.eq(setup._difficulty_btns.size(), flow.available_difficulties().size(), "解锁后开局屏多了一档")
 	var idx := flow.available_difficulties().find(hard)
 	t.check(idx >= 0, "进阶在能选的里")

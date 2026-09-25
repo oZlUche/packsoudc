@@ -179,6 +179,17 @@ func demo_fill() -> void:
 			flow.step_to(moves[0])
 			_demo_settle()
 		return
+	if want == "prologue":
+		# 083：序章 —— 只有布鲁图斯、一条路的教程图
+		flow.meta = MetaState.new(flow.meta_rules)
+		var pro: ChapterDef = null
+		for c in flow.chapters:
+			if c.id == &"prologue":
+				pro = c
+		var prun := flow.begin(pro, null, 1, [] as Array[int], flow.character_of(&"brutus"), []) if pro != null else null
+		if prun != null:
+			flow.pick_spawn(prun.map.entry_ids[0])
+		return
 	if want == "skills":
 		# 082：按马库斯开局（有「突击」按钮），放一件信仰道具上棋盘、记几点信力，HUD 与右栏都有东西看
 		flow.meta = MetaState.new(flow.meta_rules)

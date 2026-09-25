@@ -15,6 +15,7 @@ var _drag: DragLayer
 var _line: Label
 var _log: RichTextLabel = null
 var _skip_btn: Button
+var _leave_btn: Button = null
 var _search_btn: Button = null
 
 
@@ -57,7 +58,8 @@ func open(payload: Dictionary) -> void:
 	_skip_btn = _button("快速搜索", skip_reveal, 13)
 	buttons.add_child(_skip_btn)
 	buttons.add_child(_button("全部拾取（进暂存区）", take_all, 13))
-	buttons.add_child(_button("离开" if _session != null else "离开（剩下的不要了）", leave, 13))
+	_leave_btn = _button("离开" if _session != null else "离开（剩下的不要了）", leave, 13)
+	buttons.add_child(_leave_btn)
 	left.add_child(buttons)
 
 	var inv := InventoryPanelScript.new()
@@ -147,6 +149,10 @@ func _refresh() -> void:
 		_line.text = "还能搜 %d 次，下一次遭遇 %.0f%%　　收获 %d 件（亮了 %d 件）%s" % [
 			_session.searches_left(), _session.next_encounter_chance() * 100.0, _container.item_count(), revealed, searching]
 		_search_btn.disabled = not _session.can_search()
+		if _leave_btn != null:
+			_leave_btn.disabled = not _session.can_leave()     # 教程点：搜够次数才能走（083）
+			if not _session.can_leave():
+				_line.text += "　至少搜 %d 次" % _session.min_searches()
 	else:
 		var total := 0
 		for inst in _container.items():

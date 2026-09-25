@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_js0bp"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_7k3nk"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/open_search.gd" id="3_ybda3"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_anwty"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_fh7qp"]
+
+[sub_resource type="Resource" id="Resource_qv0fi"]
+script = ExtResource("3_ybda3")
+
+[sub_resource type="Resource" id="Resource_1ogtw"]
+script = ExtResource("1_js0bp")
+label = "搜索"
+outcomes = Array[ExtResource("2_7k3nk")]([SubResource("Resource_qv0fi")])
+
+[resource]
+script = ExtResource("5_fh7qp")
+id = &"tut_search_2"
+title = "再翻一次"
+text = "这里的东西更多，也更危险。
+
+搜索三次：前两次安全，第三次一定会惊动什么。遭遇了就地打一场，打赢了照样有战利品。
+
+打输了会扣体力，体力归零这一局就结束了。"
+options = Array[ExtResource("1_js0bp")]([SubResource("Resource_1ogtw")])

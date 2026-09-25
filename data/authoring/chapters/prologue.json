@@ -1,0 +1,16 @@
+{
+  "id": "prologue",
+  "display_name": "序章：废墟边缘",
+  "map_source": {
+    "mode": "PRESET",
+    "preset_path": "res://data/maps/prologue.json"
+  },
+  "drop_rule": "standard",
+  "node_rules": "prologue",
+  "economy_rules": "prologue",
+  "grants_unlock": "prologue_done",
+  "characters": [
+    "brutus"
+  ],
+  "allow_carry_in": false
+}

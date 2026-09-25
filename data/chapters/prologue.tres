@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ChapterDef" format=3]
+
+[ext_resource type="Script" path="res://core/map/map_source.gd" id="1_re32b"]
+[ext_resource type="Script" path="res://core/run/chapter_def.gd" id="2_ll12k"]
+
+[sub_resource type="Resource" id="Resource_0yegb"]
+script = ExtResource("1_re32b")
+mode = 1
+preset_path = "res://data/maps/prologue.json"
+
+[resource]
+script = ExtResource("2_ll12k")
+id = &"prologue"
+display_name = "序章：废墟边缘"
+map_source = SubResource("Resource_0yegb")
+drop_rule = &"standard"
+node_rules = &"prologue"
+economy_rules = &"prologue"
+grants_unlock = &"prologue_done"
+characters = Array[StringName]([&"brutus"])
+allow_carry_in = false

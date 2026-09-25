@@ -1,0 +1,31 @@
+{
+  "id": "tut_battle",
+  "title": "整理",
+  "text": "前面有人守着。\n\n战斗是自动的：只有放进包里的东西会参战，武器自己出手，护甲替你挨打。挨着放的东西之间还会互相加成。\n\n先整理背包，把搜到的武器和护甲放进包里，再开打。暂存区里的东西一挪步就会留在原地。",
+  "options": [
+    {
+      "label": "开打",
+      "requires": [
+        {
+          "type": "has_item",
+          "tag": "weapon",
+          "where": "BOARD"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "proceed"
+        }
+      ]
+    },
+    {
+      "label": "先整理背包（B）",
+      "outcomes": [
+        {
+          "type": "next_event",
+          "event": "tut_battle"
+        }
+      ]
+    }
+  ]
+}

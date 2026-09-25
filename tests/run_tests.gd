@@ -81,6 +81,7 @@ const SUITES: Array = [
 	preload("res://tests/test_sealed_items.gd"),
 	preload("res://tests/test_faith.gd"),
 	preload("res://tests/test_faith_power.gd"),
+	preload("res://tests/test_prologue.gd"),
 ]
 
 
