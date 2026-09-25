@@ -84,6 +84,10 @@ func _build() -> void:
 	_drag.stash = _run.storage
 	_drag.drop_outside_to_stash = true     # 084：棋盘外的空间全都是暂存区
 	_drag.items_displaced.connect(_on_displaced)
+	# 084 合成：两件拖到一起，配方在一局里（RunState.recipes）
+	_drag.craft = func(a: ItemInstance, b: ItemInstance) -> ItemDef: return _run.craft_output(a.def, b.def)
+	_drag.crafted.connect(func(a: ItemInstance, b: ItemInstance, out: ItemInstance):
+		_hint_text("「%s」+「%s」合成了「%s」" % [a.def.display_name, b.def.display_name, out.def.display_name]))
 	# 084：停在道具上的悬浮说明（名、稀有度、标签、效果、武器的冷却与 DPS、槽）
 	tip = HoverTip.new(_font)
 	add_child(tip)

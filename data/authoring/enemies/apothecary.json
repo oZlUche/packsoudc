@@ -1,0 +1,11 @@
+{
+  "id": "apothecary",
+  "display_name": "药师",
+  "strength": 2,
+  "schools": [
+    "rapid"
+  ],
+  "base_stats": {
+    "max_hp": 45
+  }
+}

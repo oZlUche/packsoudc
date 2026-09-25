@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_dh7ir"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_phofh"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="3_fvc87"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="4_5jwx2"]
+
+[sub_resource type="Resource" id="Resource_5p82p"]
+script = ExtResource("1_dh7ir")
+label = "继续"
+
+[resource]
+script = ExtResource("4_5jwx2")
+id = &"tut2_lesson"
+title = "对症"
+text = "两次岔路走下来该看出来了：这里没有一套万能的装备。
+
+出手快的怕固定减伤，出手重的怕一次性护盾；叠盾的怕毒，带解药的怕硬砍。每到一个岔路口，先把鼠标停在点上看对手带了什么，再决定带什么、合成什么、走哪边。带错了会输，输了扣体力，但体力够你输两场 —— 学会看对手，比一场战斗的胜负重要。
+
+前面就是撤离点。"
+options = Array[ExtResource("1_dh7ir")]([SubResource("Resource_5p82p")])

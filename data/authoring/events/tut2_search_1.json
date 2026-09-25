@@ -1,0 +1,15 @@
+{
+  "id": "tut2_search_1",
+  "title": "两件护具",
+  "text": "这里埋着两件护具。搜两次，两件都拿到手 —— 但包里装不下两件，得选一件带上。\n\n先搜。",
+  "options": [
+    {
+      "label": "搜索",
+      "outcomes": [
+        {
+          "type": "open_search"
+        }
+      ]
+    }
+  ]
+}

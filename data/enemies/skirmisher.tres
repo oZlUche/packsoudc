@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_grpoy"]
+
+[resource]
+script = ExtResource("1_grpoy")
+id = &"skirmisher"
+display_name = "游兵"
+strength = 1
+schools = Array[StringName]([&"rapid", &"bleed"])
+base_stats = {
+"max_hp": 50
+}

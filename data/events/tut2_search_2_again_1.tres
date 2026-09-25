@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_g5urj"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_t1vc6"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/open_search.gd" id="3_0imek"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_5pay4"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_rkf7e"]
+
+[sub_resource type="Resource" id="Resource_x38mc"]
+script = ExtResource("3_0imek")
+
+[sub_resource type="Resource" id="Resource_v1ilt"]
+script = ExtResource("1_g5urj")
+label = "再搜一次"
+outcomes = Array[ExtResource("2_t1vc6")]([SubResource("Resource_x38mc")])
+
+[resource]
+script = ExtResource("5_rkf7e")
+id = &"tut2_search_2_again_1"
+title = "毒药瓶"
+text = "一个{b}毒药瓶{/b}。单用没什么用 —— {c:good}把它拖到匕首上{/c}，能合成涂毒匕首：挨一刀就中毒，毒{b}无视护甲和护盾{/b}，一层层叠着掉血。
+
+再搜一次。"
+options = Array[ExtResource("1_g5urj")]([SubResource("Resource_v1ilt")])

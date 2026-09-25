@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_pbo5t"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_cnvqm"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="3_x7j5q"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_rhdlp"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_2wr02"]
+
+[sub_resource type="Resource" id="Resource_i7cw7"]
+script = ExtResource("3_x7j5q")
+
+[sub_resource type="Resource" id="Resource_jbnht"]
+script = ExtResource("1_pbo5t")
+label = "进入战前准备"
+outcomes = Array[ExtResource("2_cnvqm")]([SubResource("Resource_i7cw7")])
+
+[resource]
+script = ExtResource("5_2wr02")
+id = &"tut2_battle_swarm"
+title = "游兵"
+text = "三把匕首，一下接一下。每下不重，可一直不停。
+
+塔盾每下减 4，正好把它的刀磨成钝的；板甲的护盾会被它磨光，然后你会一直掉血。"
+options = Array[ExtResource("1_pbo5t")]([SubResource("Resource_jbnht")])

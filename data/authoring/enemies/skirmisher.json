@@ -1,0 +1,12 @@
+{
+  "id": "skirmisher",
+  "display_name": "游兵",
+  "strength": 1,
+  "schools": [
+    "rapid",
+    "bleed"
+  ],
+  "base_stats": {
+    "max_hp": 50
+  }
+}

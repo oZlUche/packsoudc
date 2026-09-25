@@ -1,0 +1,436 @@
+{
+	"version": 1,
+	"layout_kind": "line",
+	"layout_meta": {},
+	"nodes": [
+		{
+			"id": 0,
+			"type": "spawn",
+			"danger": 0,
+			"zone": 0,
+			"tier": 0,
+			"erosion_band": 0,
+			"content_seed": 100,
+			"content": {},
+			"state": 0,
+			"layout": {
+				"col": 0,
+				"row": 1
+			}
+		},
+		{
+			"id": 1,
+			"type": "search",
+			"danger": 0,
+			"zone": 0,
+			"tier": 1,
+			"erosion_band": 0,
+			"content_seed": 101,
+			"content": {
+				"event": "tut2_search_1",
+				"search_max": 2,
+				"search_curve": [
+					0.0,
+					0.0
+				],
+				"search_finds": [
+					[
+						"tower_shield"
+					],
+					[
+						"plate_cuirass"
+					]
+				],
+				"search_again_events": [
+					"tut2_search_1_again"
+				],
+				"search_done_event": "tut2_search_1_done"
+			},
+			"state": 0,
+			"layout": {
+				"col": 1,
+				"row": 1
+			}
+		},
+		{
+			"id": 2,
+			"type": "battle",
+			"danger": 0,
+			"zone": 0,
+			"tier": 2,
+			"erosion_band": 0,
+			"content_seed": 102,
+			"content": {
+				"enemy": "skirmisher",
+				"strength": 0,
+				"board": [
+					4,
+					3
+				],
+				"items": [
+					{
+						"id": "bag_leather",
+						"at": [
+							0,
+							0
+						],
+						"rot": 0
+					},
+					{
+						"id": "knife",
+						"at": [
+							0,
+							0
+						],
+						"rot": 0
+					},
+					{
+						"id": "knife",
+						"at": [
+							1,
+							0
+						],
+						"rot": 0
+					},
+					{
+						"id": "knife",
+						"at": [
+							0,
+							1
+						],
+						"rot": 0
+					}
+				],
+				"base_stats": {
+					"max_hp": 70,
+					"max_stamina": 120,
+					"regen_stamina": 20
+				},
+				"event": "tut2_battle_swarm",
+				"tooltip": "{battle_data}\n{c:dim}出手快、每一下都轻。{/c}"
+			},
+			"state": 0,
+			"layout": {
+				"col": 2,
+				"row": 0
+			}
+		},
+		{
+			"id": 3,
+			"type": "battle",
+			"danger": 0,
+			"zone": 0,
+			"tier": 2,
+			"erosion_band": 0,
+			"content_seed": 103,
+			"content": {
+				"enemy": "bruiser",
+				"strength": 0,
+				"board": [
+					4,
+					3
+				],
+				"items": [
+					{
+						"id": "bag_leather",
+						"at": [
+							0,
+							0
+						],
+						"rot": 0
+					},
+					{
+						"id": "warhammer",
+						"at": [
+							0,
+							0
+						],
+						"rot": 0
+					}
+				],
+				"base_stats": {
+					"max_hp": 45,
+					"regen_stamina": 10
+				},
+				"event": "tut2_battle_heavy",
+				"tooltip": "{battle_data}\n{c:dim}出手慢、每一下都重。{/c}"
+			},
+			"state": 0,
+			"layout": {
+				"col": 2,
+				"row": 2
+			}
+		},
+		{
+			"id": 4,
+			"type": "search",
+			"danger": 0,
+			"zone": 0,
+			"tier": 3,
+			"erosion_band": 0,
+			"content_seed": 104,
+			"content": {
+				"event": "tut2_search_2",
+				"search_max": 3,
+				"search_curve": [
+					0.0,
+					0.0,
+					0.0
+				],
+				"search_finds": [
+					[
+						"poison_vial"
+					],
+					[
+						"longsword"
+					],
+					[
+						"bag_long"
+					]
+				],
+				"search_again_events": [
+					"tut2_search_2_again_1",
+					"tut2_search_2_again_2"
+				],
+				"search_done_event": "tut2_search_2_done"
+			},
+			"state": 0,
+			"layout": {
+				"col": 3,
+				"row": 1
+			}
+		},
+		{
+			"id": 5,
+			"type": "battle",
+			"danger": 0,
+			"zone": 0,
+			"tier": 4,
+			"erosion_band": 0,
+			"content_seed": 105,
+			"content": {
+				"enemy": "shieldbearer",
+				"strength": 0,
+				"board": [
+					4,
+					3
+				],
+				"items": [
+					{
+						"id": "bag_leather",
+						"at": [
+							0,
+							0
+						],
+						"rot": 0
+					},
+					{
+						"id": "warding_charm",
+						"at": [
+							0,
+							0
+						],
+						"rot": 0
+					},
+					{
+						"id": "knife",
+						"at": [
+							1,
+							0
+						],
+						"rot": 0
+					}
+				],
+				"base_stats": {
+					"max_hp": 40,
+					"regen_hp": 6
+				},
+				"event": "tut2_battle_ward",
+				"tooltip": "{battle_data}\n{c:dim}护盾一层层往上叠。{/c}"
+			},
+			"state": 0,
+			"layout": {
+				"col": 4,
+				"row": 0
+			}
+		},
+		{
+			"id": 6,
+			"type": "battle",
+			"danger": 0,
+			"zone": 0,
+			"tier": 4,
+			"erosion_band": 0,
+			"content_seed": 106,
+			"content": {
+				"enemy": "apothecary",
+				"strength": 0,
+				"board": [
+					4,
+					3
+				],
+				"items": [
+					{
+						"id": "bag_leather",
+						"at": [
+							0,
+							0
+						],
+						"rot": 0
+					},
+					{
+						"id": "antidote_kit",
+						"at": [
+							0,
+							0
+						],
+						"rot": 0
+					},
+					{
+						"id": "shortsword",
+						"at": [
+							1,
+							0
+						],
+						"rot": 0
+					}
+				],
+				"base_stats": {
+					"max_hp": 45,
+					"armor": 3
+				},
+				"event": "tut2_battle_cure",
+				"tooltip": "{battle_data}\n{c:dim}随身带着解毒的东西。{/c}"
+			},
+			"state": 0,
+			"layout": {
+				"col": 4,
+				"row": 2
+			}
+		},
+		{
+			"id": 7,
+			"type": "event",
+			"danger": 0,
+			"zone": 0,
+			"tier": 5,
+			"erosion_band": 0,
+			"content_seed": 107,
+			"content": {
+				"event": "tut2_lesson"
+			},
+			"state": 0,
+			"layout": {
+				"col": 5,
+				"row": 1
+			}
+		},
+		{
+			"id": 8,
+			"type": "extract",
+			"danger": 0,
+			"zone": 0,
+			"tier": 6,
+			"erosion_band": 0,
+			"content_seed": 108,
+			"content": {
+				"event": "tut2_extract"
+			},
+			"state": 0,
+			"layout": {
+				"col": 6,
+				"row": 1
+			}
+		}
+	],
+	"edges": [
+		{
+			"from": 0,
+			"to": 1,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		},
+		{
+			"from": 1,
+			"to": 2,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		},
+		{
+			"from": 1,
+			"to": 3,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		},
+		{
+			"from": 2,
+			"to": 4,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		},
+		{
+			"from": 3,
+			"to": 4,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		},
+		{
+			"from": 4,
+			"to": 5,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		},
+		{
+			"from": 4,
+			"to": 6,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		},
+		{
+			"from": 5,
+			"to": 7,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		},
+		{
+			"from": 6,
+			"to": 7,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		},
+		{
+			"from": 7,
+			"to": 8,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		}
+	],
+	"entry_ids": [
+		0
+	],
+	"goal_ids": [
+		8
+	],
+	"zones": [],
+	"routes": []
+}

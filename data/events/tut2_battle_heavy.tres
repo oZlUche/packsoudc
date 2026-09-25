@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_2xv6a"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_6wq6v"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="3_fqd60"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_nhl8n"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_v6gj3"]
+
+[sub_resource type="Resource" id="Resource_2us5v"]
+script = ExtResource("3_fqd60")
+
+[sub_resource type="Resource" id="Resource_lf172"]
+script = ExtResource("1_2xv6a")
+label = "进入战前准备"
+outcomes = Array[ExtResource("2_6wq6v")]([SubResource("Resource_2us5v")])
+
+[resource]
+script = ExtResource("5_v6gj3")
+id = &"tut2_battle_heavy"
+title = "重击手"
+text = "一把战锤，三秒一下，一下二十多点。血不多。
+
+板甲的护盾能接住它头两三锤，趁这段时间把它放倒；塔盾减的那 4 点在它面前不算什么。"
+options = Array[ExtResource("1_2xv6a")]([SubResource("Resource_lf172")])

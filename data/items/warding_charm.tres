@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_oiwna"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_vn4sa"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_csx5m"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_scvck"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_cr5os"]
+[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="6_brwv4"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="7_curu6"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="8_hcix0"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="9_3yovh"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="10_3shkr"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_d2kbg"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_oem1k"]
+
+[sub_resource type="Resource" id="Resource_3qo2l"]
+script = ExtResource("3_csx5m")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_1lmby"]
+script = ExtResource("6_brwv4")
+resource_key = &"shield"
+amount = 7.0
+
+[sub_resource type="Resource" id="Resource_deyrs"]
+script = ExtResource("7_curu6")
+
+[sub_resource type="Resource" id="Resource_eatr2"]
+script = ExtResource("2_vn4sa")
+trigger = SubResource("Resource_deyrs")
+cadence = SubResource("Resource_3qo2l")
+effects = Array[ExtResource("5_cr5os")]([SubResource("Resource_1lmby")])
+
+[sub_resource type="Resource" id="Resource_7bpqt"]
+script = ExtResource("8_hcix0")
+base_stats = {
+"max_shield": 60
+}
+rules = Array[ExtResource("2_vn4sa")]([SubResource("Resource_eatr2")])
+
+[sub_resource type="Resource" id="Resource_m1gae"]
+script = ExtResource("12_oem1k")
+
+[resource]
+script = ExtResource("11_d2kbg")
+id = &"warding_charm"
+display_name = "护身符"
+shape = SubResource("Resource_m1gae")
+rarity = 2
+value = 40
+tags = Array[StringName]([&"part", &"sigil"])
+combat = SubResource("Resource_7bpqt")

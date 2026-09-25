@@ -1,0 +1,13 @@
+{
+  "id": "poison_vial",
+  "display_name": "毒药瓶",
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "value": 15,
+  "tags": [
+    "reagent",
+    "material"
+  ]
+}

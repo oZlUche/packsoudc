@@ -35,6 +35,8 @@ var difficulties: Array[DifficultyDef] = []
 var hunter_defs: Dictionary = {}
 ## 信仰定义（8-4）：id → FaithDef，给名字与说明用；机制只看标签（[FaithState]）
 var faith_defs: Dictionary = {}
+## 合成配方（084）：开局给 RunState、读档后补上
+var recipes: Array[RecipeDef] = []
 var save_path: String = RunSave.DEFAULT_PATH
 var meta_path: String = MetaSave.DEFAULT_PATH
 var settings_path: String = GameSettings.DEFAULT_PATH
@@ -175,6 +177,8 @@ func available_difficulties() -> Array[DifficultyDef]:
 func available_chapters() -> Array[ChapterDef]:
 	var out: Array[ChapterDef] = []
 	for c in chapters:
+		if c.hidden_by_unlock != &"" and meta != null and meta.has_unlock(c.hidden_by_unlock):
+			continue     # 084：通关了的教程收起
 		if c.requires_unlock == &"" or (meta != null and meta.has_unlock(c.requires_unlock)):
 			out.append(c)
 	if out.is_empty():
@@ -474,6 +478,7 @@ func _adopt(state: RunState) -> void:
 	# 基线：按角色（读档回来只有 id，在这里找回）；没角色用持有方给的
 	state.hunter_defs = hunter_defs
 	state.faith_defs = faith_defs
+	state.recipes = recipes
 	# 难度：读档回来只有 id，在这里找回定义并把机制重新接上（开局那次 RunState.start 已经装过，再装一次是幂等的）
 	if state.difficulty == null and state.difficulty_id != &"":
 		state.difficulty = difficulty_of(state.difficulty_id)
@@ -621,6 +626,10 @@ static func load_hunters() -> Dictionary:
 
 static func load_faiths() -> Dictionary:
 	return FaithDef.load_all()
+
+
+static func load_recipes() -> Array[RecipeDef]:
+	return RecipeDef.load_all()
 
 
 static func load_difficulties() -> Array[DifficultyDef]:

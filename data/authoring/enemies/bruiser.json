@@ -1,0 +1,11 @@
+{
+  "id": "bruiser",
+  "display_name": "重击手",
+  "strength": 1,
+  "schools": [
+    "burst"
+  ],
+  "base_stats": {
+    "max_hp": 30
+  }
+}

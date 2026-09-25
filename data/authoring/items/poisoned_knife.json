@@ -1,0 +1,73 @@
+{
+  "id": "poisoned_knife",
+  "display_name": "涂毒匕首",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "value": 40,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "poison"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 3
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.6
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 3.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage"
+          },
+          {
+            "type": "apply_status",
+            "buff": {
+              "id": "poison",
+              "display_name": "中毒",
+              "is_debuff": true,
+              "max_stacks": 5,
+              "duration_sec": 6.0,
+              "rules": [
+                {
+                  "trigger": {
+                    "type": "on_schedule"
+                  },
+                  "cadence": {
+                    "type": "cooldown",
+                    "seconds": 1.0
+                  },
+                  "effects": [
+                    {
+                      "type": "deal_damage",
+                      "target": "SELF",
+                      "damage_type": "poison",
+                      "amount": 2.0,
+                      "damage_stat": "",
+                      "per_stack": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

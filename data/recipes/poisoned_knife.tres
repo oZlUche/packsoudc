@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/recipe_def.gd" id="1_rdt27"]
+
+[resource]
+script = ExtResource("1_rdt27")
+id = &"poisoned_knife"
+display_name = "涂毒匕首"
+inputs = Array[StringName]([&"knife", &"poison_vial"])
+output = &"poisoned_knife"
+note = "把毒药瓶拖到匕首上：中毒无视护甲与护盾。"

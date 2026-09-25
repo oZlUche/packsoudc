@@ -78,6 +78,8 @@ func _import(kind: String, data: Dictionary, ctx: ContentImporter.Context, repor
 			return ContentImporter.import_run_buff(data, ctx, report)
 		"faiths":
 			return ContentImporter.import_faith(data, ctx, report)
+		"recipes":
+			return ContentImporter.import_recipe(data, ctx, report)
 		"events":
 			return ContentImporter.import_event(data, ctx, report)
 		"chapters":
@@ -116,6 +118,8 @@ func _export(kind: String, res: Resource) -> Dictionary:
 			return ContentExporter.export_run_buff(res)
 		"faiths":
 			return ContentExporter.export_faith(res)
+		"recipes":
+			return ContentExporter.export_recipe(res)
 		"events":
 			return ContentExporter.export_event(res)
 		"chapters":

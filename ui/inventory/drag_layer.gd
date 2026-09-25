@@ -39,6 +39,11 @@ var drop_filter: Callable = Callable()
 ## 而不是退回原处。暂存区不限大小，所以这一下总能成（带内容物的包、被 drop_filter 拦的除外）。
 ## 一局里的整理面板开它；开局屏（仓库 ↔ 棋盘）不开，那儿放到外面还是退回
 var drop_outside_to_stash: bool = false
+## 084 合成：`func(a: ItemInstance, b: ItemInstance) -> ItemDef`，拖着 a 压到恰好一件 b 上、放不进空位时先问它 ——
+## 有产物就合（两件都消失，产物落在 b 的位置，放不下自动找位、再不行进暂存区）；无效 = 没有合成
+var craft: Callable = Callable()
+## 合成了：a、b 消失，out 是产物
+signal crafted(a: ItemInstance, b: ItemInstance, out: ItemInstance)
 
 var _views: Array[ContainerView] = []
 
@@ -259,6 +264,10 @@ func update_preview(global_pos: Vector2) -> void:
 		grid_view.set_preview(cells, origin, true)
 		return
 
+	# 084：压在恰好一件上、两件有配方 → 合成（绿的，不算顶替）
+	if _craft_target(inv, origin) != null:
+		grid_view.set_preview(cells, origin, true)
+		return
 	# 放不进空位，但地形允许 —— 那就是「压着别人」，可以顶替
 	var victims := _displaceable(inv, origin)
 	grid_view.set_preview(cells, origin, not victims.is_empty(), victims)
@@ -331,6 +340,8 @@ func drop_at(global_pos: Vector2) -> bool:
 			dropped = _drop_bag(grid_view.inventory, at)
 		elif grid_view.inventory.place(inst, at, _rot):
 			dropped = true
+		elif _craft_target(grid_view.inventory, at) != null:
+			dropped = _craft_into(grid_view.inventory, inst, at)
 		else:
 			# 「顶成功但一件没顶到」不可能发生（放不进空位才会走到这儿），
 			# 但成败不能靠数组空不空来推断 —— 那是把不变式当接口用。
@@ -381,6 +392,44 @@ func _can_shed(fallen: Array) -> bool:
 	if fallen.is_empty():
 		return true
 	return stash != null and stash.room_for(fallen.size())
+
+
+## 084：拖着的这件压到这个位置上会正好压着一件、且两件有配方吗。返回被压的那件；没有 null
+func _craft_target(inv: GridInventory, origin: Vector2i) -> ItemInstance:
+	if _inst == null or not _payload.is_empty() or not craft.is_valid():
+		return null
+	var under := inv.displaced_by(_inst.def, origin, _rot, _inst.uid)
+	if under.size() != 1:
+		return null
+	var b := inv.get_item(int(under[0]))
+	if b == null or b.def == null:
+		return null
+	var out = craft.call(_inst, b)
+	return b if out is ItemDef else null
+
+
+## 合成：a（手上的）+ b（被压的）→ 产物落在 b 的位置。返回成功没有（失败时容器不动，a 退回源容器）
+func _craft_into(inv: GridInventory, a: ItemInstance, origin: Vector2i) -> bool:
+	var b := _craft_target(inv, origin)
+	if b == null:
+		return false
+	var out_def: ItemDef = craft.call(a, b)
+	var home := b.origin
+	var home_rot := b.rotation
+	inv.begin_batch()
+	inv.remove(b.uid)
+	var out := ItemInstance.create(out_def, home_rot)
+	var placed := inv.place(out, home, home_rot) or inv.try_add(out, true)
+	if not placed and stash != null:
+		placed = stash.admit(out)
+	if not placed:
+		# 产物没地方去：整件事作废，b 放回原处
+		inv.place(b, home, home_rot)
+		inv.end_batch()
+		return false
+	inv.end_batch()
+	crafted.emit(a, b, out)
+	return true
 
 
 ## 顶替式放下。返回 [code]{"ok": bool, "victims": Array}[/code]；

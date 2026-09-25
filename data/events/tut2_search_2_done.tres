@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_vavs6"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_kvkqr"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="3_w2ab6"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="4_53q2l"]
+
+[sub_resource type="Resource" id="Resource_4uwcm"]
+script = ExtResource("1_vavs6")
+label = "继续"
+
+[resource]
+script = ExtResource("4_53q2l")
+id = &"tut2_search_2_done"
+title = "小包"
+text = "一个{b}长条包{/b}，正好装得下长剑，或者装得下匕首加毒药。两套只带得走一套 —— 前面又是岔路，{c:warn}先看对手再合成、再装包{/c}。"
+options = Array[ExtResource("1_vavs6")]([SubResource("Resource_4uwcm")])

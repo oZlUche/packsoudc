@@ -1,0 +1,36 @@
+{
+  "id": "warding_charm",
+  "display_name": "护身符",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "value": 40,
+  "tags": [
+    "part",
+    "sigil"
+  ],
+  "combat": {
+    "base_stats": {
+      "max_shield": 60
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.0
+        },
+        "effects": [
+          {
+            "type": "change_resource",
+            "resource_key": "shield",
+            "amount": 7.0
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "tut2_search_2",
+  "title": "两把武器",
+  "text": "这里的东西够凑两套打法。搜三次。\n\n先搜。",
+  "options": [
+    {
+      "label": "搜索",
+      "outcomes": [
+        {
+          "type": "open_search"
+        }
+      ]
+    }
+  ]
+}

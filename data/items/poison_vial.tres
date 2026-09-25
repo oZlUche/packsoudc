@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_rnvi1"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_6pq4t"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_e4d75"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_fldjo"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_4ce7h"]
+
+[sub_resource type="Resource" id="Resource_1r856"]
+script = ExtResource("5_4ce7h")
+
+[resource]
+script = ExtResource("4_fldjo")
+id = &"poison_vial"
+display_name = "毒药瓶"
+shape = SubResource("Resource_1r856")
+rarity = 1
+value = 15
+tags = Array[StringName]([&"reagent", &"material"])

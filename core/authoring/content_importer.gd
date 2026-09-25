@@ -155,6 +155,24 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 
 
 ## 信仰体系（8-4，报告 081）
+## 合成配方（084）：恰好两件输入、一件产物，都得是道具库里有的（批量导入时道具在前，查得到）
+static func import_recipe(data: Dictionary, ctx: Context, report: ImportReport) -> RecipeDef:
+	var def := RecipeDef.new()
+	_fill(def, data, "", ctx, report)
+	if def.id == &"":
+		report.error("id", "配方必须有 id")
+	if def.inputs.size() != 2:
+		report.error("inputs", "配方是两件合一件：inputs 得恰好两个")
+	if def.output == &"":
+		report.error("output", "配方得有产物")
+	for i in def.inputs.size():
+		if not ctx.items.is_empty() and not ctx.items.has(def.inputs[i]):
+			report.error("inputs[%d]" % i, "道具库里没有 %s" % def.inputs[i])
+	if not ctx.items.is_empty() and def.output != &"" and not ctx.items.has(def.output):
+		report.error("output", "道具库里没有 %s" % def.output)
+	return def
+
+
 static func import_faith(data: Dictionary, ctx: Context, report: ImportReport) -> FaithDef:
 	var def := FaithDef.new()
 	_fill(def, data, "", ctx, report)

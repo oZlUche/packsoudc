@@ -1,0 +1,43 @@
+{
+  "id": "warhammer",
+  "display_name": "战锤",
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "value": 30,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 30
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 2.5
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 12.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage"
+          }
+        ]
+      }
+    ]
+  }
+}

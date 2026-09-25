@@ -73,6 +73,8 @@ var hunters: HunterSystem = null
 var hunter_defs: Dictionary = {}
 ## 信仰定义（8-4）：持有方给，名字与说明用；激活规则只看棋盘上的标签（[FaithState]）
 var faith_defs: Dictionary = {}
+## 合成配方（084）：持有方给；两件拖到一起时问 [method craft_output]
+var recipes: Array[RecipeDef] = []
 ## 局内技能的账（082）：定义在角色上，这里记次数、冷却、旗子；没角色也有一份空的
 var skills: RunSkills = null
 ## 读档回来的技能账，等持有方按 id 找回角色（[method set_character]）再接上
@@ -155,7 +157,7 @@ static func start(
 		if p_layout.is_empty():
 			full_kit = p_character.starting_bags + kit
 	var ctx := s.buff_context()     # 角色定了再算：技能的被动（体力上限、开局钱）也在里面（082）
-	s.vitality = Vitality.new(vitality_max + ctx.vitality_max_bonus)
+	s.vitality = Vitality.new(vitality_max + ctx.vitality_max_bonus + p_chapter.vitality_bonus)
 	s.wallet = Wallet.new((s.economy.starting_balance if s.economy != null else 0) + ctx.starting_funds_bonus)
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
 	s.storage = ItemStash.new(STORAGE_ID, 0)
@@ -512,6 +514,14 @@ func discard_loot() -> void:
 		return
 	pending_loot = null
 	loot_cleared.emit()
+
+
+## 这两件拖到一起能合成什么（084）：配方里有就返回产物的定义；没有 null
+func craft_output(a: ItemDef, b: ItemDef) -> ItemDef:
+	if a == null or b == null or items == null:
+		return null
+	var r := RecipeDef.find(recipes, a.id, b.id)
+	return items.get_def(r.output) if r != null else null
 
 
 ## 暂存区 → 棋盘（自动找位）

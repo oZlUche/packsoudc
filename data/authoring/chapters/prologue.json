@@ -12,6 +12,7 @@
   "characters": [
     "brutus"
   ],
+  "hidden_by_unlock": "prologue_done",
   "allow_carry_in": false,
   "auto_spawn": true,
   "skip_setup": true,

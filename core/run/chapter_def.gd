@@ -40,6 +40,10 @@ extends Resource
 @export var grants_unlock: StringName = &""
 ## 能选的角色 id；空 = 全部
 @export var characters: Array[StringName] = []
+## 拿到这个局外解锁之后就不再列（084：教程通关就收起，下一张教程图顶上来直接开）。空 = 一直列
+@export var hidden_by_unlock: StringName = &""
+## 这一章开局多给的体力（084：第二张教程图两场都输也死不了）
+@export var vitality_bonus: int = 0
 ## 开局能不能从仓库带东西进来（序章不能：教程从空包开始）
 @export var allow_carry_in: bool = true
 ## 开局直接站在第一个出生点上，不用挑（084：序章只有一条路、一个出生点）

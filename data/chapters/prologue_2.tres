@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="ChapterDef" format=3]
+
+[ext_resource type="Script" path="res://core/map/map_source.gd" id="1_iav07"]
+[ext_resource type="Script" path="res://core/run/chapter_def.gd" id="2_je5g8"]
+
+[sub_resource type="Resource" id="Resource_00fl8"]
+script = ExtResource("1_iav07")
+mode = 1
+preset_path = "res://data/maps/tutorial2.json"
+
+[resource]
+script = ExtResource("2_je5g8")
+id = &"prologue_2"
+display_name = "序章二：岔路"
+map_source = SubResource("Resource_00fl8")
+drop_rule = &"standard"
+node_rules = &"prologue"
+economy_rules = &"prologue"
+order = 1
+requires_unlock = &"prologue_done"
+grants_unlock = &"prologue2_done"
+characters = Array[StringName]([&"brutus"])
+hidden_by_unlock = &"prologue2_done"
+vitality_bonus = 2
+allow_carry_in = false
+auto_spawn = true
+skip_setup = true
+intro_event = &"tut2_intro"
+node_tooltips = true

@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_o58kc"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_dott4"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_0hbqd"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_vgnv5"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_7jv6f"]
+[ext_resource type="Script" path="res://core/battle/effects/remove_status.gd" id="6_6ygqc"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="7_cs6ox"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="8_2q1ck"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="9_ow1oj"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="10_hbc4t"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_pbbc5"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_050yk"]
+
+[sub_resource type="Resource" id="Resource_45af8"]
+script = ExtResource("3_0hbqd")
+seconds = 0.8
+
+[sub_resource type="Resource" id="Resource_wyxn2"]
+script = ExtResource("6_6ygqc")
+buff_id = &"poison"
+stacks = 5
+
+[sub_resource type="Resource" id="Resource_22sfj"]
+script = ExtResource("6_6ygqc")
+buff_id = &"bleed"
+stacks = 5
+
+[sub_resource type="Resource" id="Resource_5g8wp"]
+script = ExtResource("7_cs6ox")
+
+[sub_resource type="Resource" id="Resource_c2gvo"]
+script = ExtResource("2_dott4")
+trigger = SubResource("Resource_5g8wp")
+cadence = SubResource("Resource_45af8")
+effects = Array[ExtResource("5_7jv6f")]([SubResource("Resource_wyxn2"), SubResource("Resource_22sfj")])
+
+[sub_resource type="Resource" id="Resource_2rgq2"]
+script = ExtResource("8_2q1ck")
+rules = Array[ExtResource("2_dott4")]([SubResource("Resource_c2gvo")])
+
+[sub_resource type="Resource" id="Resource_s8m46"]
+script = ExtResource("12_050yk")
+
+[resource]
+script = ExtResource("11_pbbc5")
+id = &"antidote_kit"
+display_name = "解毒包"
+shape = SubResource("Resource_s8m46")
+rarity = 1
+value = 20
+tags = Array[StringName]([&"consumable", &"tool"])
+combat = SubResource("Resource_2rgq2")

@@ -61,6 +61,7 @@ func _ready() -> void:
 	flow.difficulties = GameFlow.load_difficulties()
 	flow.hunter_defs = GameFlow.load_hunters()
 	flow.faith_defs = GameFlow.load_faiths()
+	flow.recipes = GameFlow.load_recipes()
 	# 校准记录（073）：正式游戏每走一步记一份玩家配置到 user://calibration/，木桩工具吃它
 	flow.recorder = CalibrationRecorder.new()
 	flow.save_path = save_path

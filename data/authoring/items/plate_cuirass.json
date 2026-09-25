@@ -1,0 +1,21 @@
+{
+  "id": "plate_cuirass",
+  "display_name": "板甲",
+  "shape": [
+    "111",
+    "111",
+    "111"
+  ],
+  "rarity": 1,
+  "value": 40,
+  "tags": [
+    "armor",
+    "heavy",
+    "imperial"
+  ],
+  "combat": {
+    "base_stats": {
+      "max_shield": 45
+    }
+  }
+}

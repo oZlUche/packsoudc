@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_wx7fy"]
+
+[resource]
+script = ExtResource("1_wx7fy")
+id = &"shieldbearer"
+display_name = "持符者"
+strength = 2
+schools = Array[StringName]([&"rapid"])
+base_stats = {
+"max_hp": 40
+}

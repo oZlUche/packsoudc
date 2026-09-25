@@ -282,5 +282,5 @@ enemy_pool = &"standard_ruins"
 drop_rule = &"standard"
 node_rules = &"standard"
 economy_rules = &"standard"
-order = 1
-requires_unlock = &"prologue_done"
+order = 2
+requires_unlock = &"prologue2_done"
