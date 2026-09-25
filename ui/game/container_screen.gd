@@ -77,9 +77,10 @@ func open(payload: Dictionary) -> void:
 	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_drag)
 	_drag.register_view(_loot)
-	# 没亮的只能在容器里挪位（换「下一个」是谁），拖出去要等亮了 —— 作者定的
+	# 没亮的只能在容器里挪位（换「下一个」是谁），拖出去要等亮了 —— 作者定的。
+	# 只锁容器里没亮的那几件：自己棋盘上的包与道具随便挪（084 修：原来按 is_revealed 判，把玩家自己的东西也卡住了）
 	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
-		return _loot.is_revealed(inst.uid) or target == _container
+		return not _loot.is_locked(inst.uid) or target == _container
 
 	_loot.item_revealed.connect(func(uid: int):
 		flow.seen_loot[uid] = true     # 084：收起再开不重新揭示

@@ -287,6 +287,44 @@ static func run_drop_outside(t: TestCase) -> void:
 	t.check(board.has_item(a.uid), "还在棋盘上")
 
 
+static func run_loot_lock_only_container(t: TestCase) -> void:
+	t.begin("084 · 容器屏的落点过滤只锁容器里没亮的：自己棋盘上的包能挪到任意合法位置、能拖进暂存区；容器里没亮的仍只能在容器内挪")
+	var c := _content()
+	ItemInstance.reset_uid_counter()
+	var bag_def := c.items.get_def(&"bag_leather")
+	var box := LootPacker.board_of([&"knife", &"armor"] as Array[StringName], Vector2i(6, 4), c.items)
+	var loot := LootView.new()
+	loot.inventory = box
+	var board := GridInventory.new(Vector2i(8, 6), 1, true)
+	var bag := ItemInstance.create(bag_def, 0)
+	board.try_add(bag, true)
+	var filter := func(inst: ItemInstance, target: ItemContainer) -> bool:
+		return not loot.is_locked(inst.uid) or target == box
+	var stash := ItemStash.new(2, 0)
+	t.check(not loot.is_locked(bag.uid), "棋盘上的包不算「没亮」")
+	t.check(bool(filter.call(bag, board)) and bool(filter.call(bag, stash)), "包能放棋盘、能放暂存区")
+	var hidden: ItemInstance = box.items()[0]
+	t.check(loot.is_locked(hidden.uid), "容器里没亮的锁着")
+	t.check(bool(filter.call(hidden, box)) and not bool(filter.call(hidden, board)), "没亮的只能在容器内挪，放不到棋盘")
+	loot.mark_revealed([hidden.uid])
+	t.check(not loot.is_locked(hidden.uid) and bool(filter.call(hidden, board)), "亮了就能拖出来")
+	# 真挪一次：包连里面的东西从 (0,0) 挪到 (3,2)
+	var knife := ItemInstance.create(c.items.get_def(&"knife"), 0)
+	t.check(board.try_add(knife, true), "包里放一把刀")
+	var view := InventoryView.new()
+	view.inventory = board
+	view.size = Vector2(board.size) * InventoryView.CELL
+	var drag := DragLayer.new()
+	drag.register_view(view)
+	drag.drop_filter = filter
+	view.grab_requested.emit(view, bag.uid, Vector2(24, 24))
+	var at := (Vector2(3, 2) + Vector2(0.5, 0.5)) * InventoryView.CELL
+	drag.update_preview(at)
+	t.check(drag.drop_at(at), "包放到 (3,2)")
+	t.eq(bag.origin, Vector2i(3, 2), "包挪过去了")
+	t.check(board.contents_of(bag.uid).has(knife.uid), "刀跟着包走")
+
+
 static func frame_minimize_and_window(t: TestCase, root: Window) -> void:
 	t.begin("084 · 导演：收起 = 最小化（叠层藏着不销毁、恢复是同一块）；浮窗能挪、不出父控件的范围、记位置")
 	var win := FloatingWindow.new()

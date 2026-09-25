@@ -27,6 +27,8 @@ const DEFAULT_SECONDS: Array[float] = [0.3, 0.5, 0.8, 1.2, 2.0]
 var reveal_seconds: Array[float] = DEFAULT_SECONDS
 
 var _revealed: Dictionary = {}      # uid -> true
+## 在这个容器里出现过的 uid（084：判「没亮的锁在容器里」只看它们；玩家自己棋盘上的东西这里不认识，随便放）
+var _known: Dictionary = {}
 ## 正在搜的那件（锁住）；EMPTY_UID = 没在搜
 var _current: int = GridInventory.EMPTY_UID
 var _progress: float = 0.0
@@ -38,9 +40,29 @@ func _init() -> void:
 	set_process(false)
 
 
+func set_inventory(inv: GridInventory) -> void:
+	super.set_inventory(inv)
+	if inv != null:
+		inv.changed.connect(_remember_known)
+	_remember_known()
+
+
+func _remember_known() -> void:
+	if inventory == null:
+		return
+	for inst in inventory.items():
+		_known[(inst as ItemInstance).uid] = true
+
+
 #region 揭示
 func is_revealed(uid: int) -> bool:
 	return _revealed.has(uid)
+
+
+## 这件还锁在容器里（是这个容器的、还没亮出来）。不是这个容器的东西（玩家自己棋盘 / 暂存区里的）从不锁 ——
+## 容器屏的落点过滤按它判，不按 [method is_revealed]：后者对棋盘上的包也说「没亮」，把玩家自己的东西全卡住了（084）
+func is_locked(uid: int) -> bool:
+	return _known.has(uid) and not _revealed.has(uid)
 
 
 ## 还没亮出来的有几件
