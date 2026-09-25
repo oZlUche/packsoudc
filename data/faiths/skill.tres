@@ -1,10 +1,24 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="1_8fl4c"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_exvf5"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/place_item_deed.gd" id="2_40qq8"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/event_choice_deed.gd" id="3_qipfl"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="4_tp5cv"]
+
+[sub_resource type="Resource" id="Resource_h8ube"]
+script = ExtResource("2_40qq8")
+min_value = 10
+
+[sub_resource type="Resource" id="Resource_4pf53"]
+script = ExtResource("3_qipfl")
+tag = &"offering"
+amount = 2
 
 [resource]
-script = ExtResource("1_8fl4c")
+script = ExtResource("4_tp5cv")
 id = &"skill"
 display_name = "技巧之神"
 god = "技巧之神"
-description = "赐福的盾牌：对手的第一次攻击必定被弹开。"
+description = "赐福的盾牌：对手的第一次攻击必定被弹开。信力：置入值钱的东西、献祭。"
+thresholds = Array[int]([3, 8])
+deeds = Array[ExtResource("1_exvf5")]([SubResource("Resource_h8ube"), SubResource("Resource_4pf53")])

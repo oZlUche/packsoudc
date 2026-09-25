@@ -18,6 +18,10 @@ enum Camp { GODS, CHURCH }
 ## 信仰的对象（神的名字），给文字用
 @export var god: String = ""
 @export_multiline var description: String = ""
+## 信力（报告 082）：过了几道阈值就是第几阶（非递减、正数）；信仰道具上按阶解锁的功能见 [ItemDef.faith_bonuses]
+@export var thresholds: Array[int] = []
+## 攒信力的行为（[FaithDeed] 构件）：这个信仰认哪些事、各给几点
+@export var deeds: Array[FaithDeed] = []
 
 
 ## 这个信仰的道具带的标签
@@ -27,6 +31,32 @@ func tag() -> StringName:
 
 func matches(def: ItemDef) -> bool:
 	return def != null and def.tags.has(tag())
+
+
+## 这么多点数是第几阶：过了几道阈值
+func tier_of(points: int) -> int:
+	var tier := 0
+	for th in thresholds:
+		if points >= th:
+			tier += 1
+	return tier
+
+
+## 下一道阈值；都过了返回 -1
+func next_threshold(points: int) -> int:
+	for th in thresholds:
+		if points < th:
+			return th
+	return -1
+
+
+## 行为各一句
+func deeds_summary() -> String:
+	var parts: Array[String] = []
+	for d in deeds:
+		if d != null and String(d.describe()) != "":
+			parts.append(String(d.describe()))
+	return "、".join(parts)
 
 
 ## 从标签反推 id：`faith:violence` → `violence`；不是信仰对象标签返回空

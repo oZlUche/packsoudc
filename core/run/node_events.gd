@@ -80,6 +80,12 @@ signal type_changed(node: MapNode, type: StringName)
 signal waited(node: MapNode, actions: int)
 ## 踩上一个配了事件的点：先给玩家看，选了才往下走
 signal event_pending(node: MapNode, def: EventDef)
+## 082：玩家选了一个选项（条件过了、后果执行之后）；信力的「事件中选特定选项」看它的标签
+signal option_chosen(node: MapNode, option: EventOption)
+## 082：开打前给持有方改双方的战斗单位（局内技能「突击」）：`(me, enemy, type) -> void`
+var before_battle: Callable = Callable()
+## 082：已经免罚了几次败仗（RunContext.free_losses 是配额）。跟着存档走
+var losses_forgiven: int = 0
 
 var current_search: SearchSession = null
 var current_shop: ShopSession = null
@@ -231,6 +237,7 @@ func choose(i: int) -> bool:
 	for o in option.outcomes:
 		if o != null:
 			(o as EventOutcome).apply(ctx)
+	option_chosen.emit(node, option)
 	# 猎手（071）：这不是节点的事，点不标用过；逃跑先掷，没逃掉照打
 	if hunter_uid >= 0:
 		if ctx.hunter_flee and flee_hunter.is_valid():
@@ -342,6 +349,8 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 	if enemy == null or not player_spec.is_valid():
 		return false     # 没有敌人（这一章没有敌人池）或没有玩家：点空着，当走过
 	var me: CombatantSpec = player_spec.call()
+	if before_battle.is_valid():
+		before_battle.call(me, enemy, type)
 	var limit := rules.battle_time_limit if rules != null else 60.0
 	var result := BattleSim.run(me, enemy, _rng_for(node, "battle"), limit)
 	var won := result.winner == 0
@@ -359,7 +368,11 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 	elif type == &"core":
 		_defeat(&"boss_lost")     # 规则不是数值：BOSS 输了直接战败，连 spend 都不调（7.1）
 	elif vitality != null and rules != null:
-		vitality.spend(rules.loss_cost_of(type), &"battle_lost")
+		# 082：角色技能的免罚败仗 —— 只对节点敌人（猎手另有后果构件），配额在上下文里、已免几次在这里记
+		if type != HunterSystem.TYPE and losses_forgiven < _run_ctx().free_losses:
+			losses_forgiven += 1
+		else:
+			vitality.spend(rules.loss_cost_of(type), &"battle_lost")
 		if vitality.is_depleted():
 			_defeat(&"vitality_depleted")
 	return won

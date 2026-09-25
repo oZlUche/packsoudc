@@ -2,5 +2,20 @@
   "id": "skill",
   "display_name": "技巧之神",
   "god": "技巧之神",
-  "description": "赐福的盾牌：对手的第一次攻击必定被弹开。"
+  "description": "赐福的盾牌：对手的第一次攻击必定被弹开。信力：置入值钱的东西、献祭。",
+  "thresholds": [
+    3,
+    8
+  ],
+  "deeds": [
+    {
+      "type": "place_item",
+      "min_value": 10
+    },
+    {
+      "type": "event_choice",
+      "tag": "offering",
+      "amount": 2
+    }
+  ]
 }

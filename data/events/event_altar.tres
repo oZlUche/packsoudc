@@ -32,6 +32,7 @@ where = 0
 [sub_resource type="Resource" id="Resource_kdbt3"]
 script = ExtResource("1_iddjc")
 label = "献上棋盘上最值钱的一件"
+tags = Array[StringName]([&"offering"])
 requires = Array[ExtResource("6_p34rm")]([SubResource("Resource_re61q")])
 outcomes = Array[ExtResource("2_nmtw7")]([SubResource("Resource_yh5aj"), SubResource("Resource_apajt"), SubResource("Resource_pgpwc")])
 

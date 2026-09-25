@@ -1,10 +1,23 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="1_2x450"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_y7ugl"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/battle_deed.gd" id="2_0c7ri"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/spend_money_deed.gd" id="3_ljbgl"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="4_774d0"]
+
+[sub_resource type="Resource" id="Resource_wmdsj"]
+script = ExtResource("2_0c7ri")
+won_only = true
+
+[sub_resource type="Resource" id="Resource_s4xv7"]
+script = ExtResource("3_ljbgl")
+per_amount = 20
 
 [resource]
-script = ExtResource("1_2x450")
+script = ExtResource("4_774d0")
 id = &"war"
 display_name = "战争之神"
 god = "战争之神"
-description = "军团的信仰。制式的兵器与护甲。"
+description = "军团的信仰。制式的兵器与护甲。信力：打赢才算，军饷（花钱）也算。"
+thresholds = Array[int]([3, 8])
+deeds = Array[ExtResource("1_y7ugl")]([SubResource("Resource_wmdsj"), SubResource("Resource_s4xv7")])

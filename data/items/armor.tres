@@ -1,27 +1,28 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_jg5fs"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_ywc2w"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_xey43"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_xjejp"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_1nnqv"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_7c48c"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_ywc2w"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_xey43"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_xjejp"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_1nnqv"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="5_7c48c"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="6_11q3f"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="7_pson6"]
 
-[sub_resource type="Resource" id="Resource_11q3f"]
-script = ExtResource("3_xey43")
+[sub_resource type="Resource" id="Resource_8eek3"]
+script = ExtResource("3_xjejp")
 base_stats = {
 "armor": 5
 }
 
-[sub_resource type="Resource" id="Resource_pson6"]
-script = ExtResource("6_7c48c")
+[sub_resource type="Resource" id="Resource_s74pr"]
+script = ExtResource("7_pson6")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
 
 [resource]
-script = ExtResource("5_1nnqv")
+script = ExtResource("6_11q3f")
 id = &"armor"
 display_name = "防弹衣"
-shape = SubResource("Resource_pson6")
+shape = SubResource("Resource_s74pr")
 rarity = 2
 tags = Array[StringName]([&"sealed", &"gear"])
-combat = SubResource("Resource_11q3f")
+combat = SubResource("Resource_8eek3")

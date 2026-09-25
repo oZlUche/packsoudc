@@ -3,6 +3,8 @@ class_name EventOption
 extends Resource
 
 @export var label: String = ""
+## 标签（082）：信力的「在事件中选特定选项」按它认（[EventChoiceDeed.tag]）；别的机制以后也可以看
+@export var tags: Array[StringName] = []
 ## 条件不满足时：灰掉（默认）还是干脆不显示
 @export var hide_when_locked: bool = false
 @export var requires: Array[EventCondition] = []

@@ -27,10 +27,13 @@ const BASE_HP := 25.0
 ## [param baseline] 是角色自带的那份属性（生命上限、耐力上限…），
 ## 为 null 时用 [method CombatantBaseline.default_baseline]。
 ## 角色系统落地后由角色定义提供，编译器这里不用改。
+## [param faith_tiers] 是信力（082）：信仰对象标签 → 现在第几阶；信仰道具上 tier ≤ 它的 [FaithBonus] 并进来。空表 = 一阶都没过。
+## 仍是纯函数：同样的棋盘、同样的阶，永远同样的结果
 static func compile(
 	board: GridInventory, baseline: CombatantBaseline = null,
 	set_mods: Array[StatModifier] = [] as Array[StatModifier],
-	set_rules: Array[AbilityRule] = [] as Array[AbilityRule]
+	set_rules: Array[AbilityRule] = [] as Array[AbilityRule],
+	faith_tiers: Dictionary = {}
 ) -> CombatantSpec:
 	var base := baseline if baseline != null else CombatantBaseline.default_baseline()
 	var spec := CombatantSpec.new()
@@ -72,6 +75,24 @@ static func compile(
 			(mod as StatModifier).apply_to(stats[uid], 1)
 	spec.set_rules.append_array(set_rules)
 
+	# --- 4b. 信力解锁的功能（082）：这件道具的信仰现在第几阶，tier 不超过它的加成并进来（规则在第 6 步收） ---
+	var bonus_rules: Dictionary = {}  # uid -> Array[AbilityRule]
+	for uid in fighters:
+		var def := board.get_item(uid).def
+		if not def.has_faith() or def.faith_bonuses.is_empty():
+			continue
+		var tier := int(faith_tiers.get(def.faith_tag(), 0))
+		var extra: Array[AbilityRule] = []
+		for b in def.faith_bonuses:
+			var bonus := b as FaithBonus
+			if bonus == null or bonus.tier > tier:
+				continue
+			for mod in bonus.mods:
+				(mod as StatModifier).apply_to(stats[uid], 1)
+			extra.append_array(bonus.rules)
+		if not extra.is_empty():
+			bonus_rules[uid] = extra
+
 	# --- 5. 邻接标记。顺带记下连结关系，供 OnItemFired 的 LINKED 来源使用 ---
 	var links: Dictionary = {}  # uid -> {uid: true}
 	_apply_adjacency(board, fighters, stats, links)
@@ -88,6 +109,8 @@ static func compile(
 		item.stats = set
 		if def.combat != null:
 			item.rules = def.combat.rules.duplicate()
+		if bonus_rules.has(uid):
+			item.rules.append_array(bonus_rules[uid])
 		var linked: Array[int] = []
 		for other in (links.get(uid, {}) as Dictionary).keys():
 			linked.append(other)

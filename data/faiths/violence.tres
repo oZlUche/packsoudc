@@ -1,10 +1,17 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="1_2xlof"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_4hfgv"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/battle_deed.gd" id="2_0seo2"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="3_bmd4f"]
+
+[sub_resource type="Resource" id="Resource_l8mrw"]
+script = ExtResource("2_0seo2")
 
 [resource]
-script = ExtResource("1_2xlof")
+script = ExtResource("3_bmd4f")
 id = &"violence"
 display_name = "暴力之神"
 god = "暴力之神（力量之神）"
-description = "北境蛮族的信仰。赐福让人短时间内更快、更强、更耐痛，受伤会激发。"
+description = "北境蛮族的信仰。赐福让人短时间内更快、更强、更耐痛，受伤会激发。信力：打仗就给。"
+thresholds = Array[int]([3, 8])
+deeds = Array[ExtResource("1_4hfgv")]([SubResource("Resource_l8mrw")])

@@ -36,6 +36,9 @@ signal erosion_warned(next_band: int, actions_left: int)
 signal erosion_advanced(eroded_bands: int)
 signal erosion_applied(node: MapNode, detail: Dictionary)
 signal erosion_total()
+## 局内技能（082）：次数 / 冷却 / 旗子变了；信力变了
+signal skills_changed()
+signal faith_power_changed(faith_id: StringName, points: int, tier: int)
 
 var run_seed: int = 0
 var chapter: ChapterDef = null
@@ -70,6 +73,12 @@ var hunters: HunterSystem = null
 var hunter_defs: Dictionary = {}
 ## 信仰定义（8-4）：持有方给，名字与说明用；激活规则只看棋盘上的标签（[FaithState]）
 var faith_defs: Dictionary = {}
+## 局内技能的账（082）：定义在角色上，这里记次数、冷却、旗子；没角色也有一份空的
+var skills: RunSkills = null
+## 读档回来的技能账，等持有方按 id 找回角色（[method set_character]）再接上
+var skills_saved: Dictionary = {}
+## 信力（082）：每个信仰一个池子，只有激活的信仰收点；行为与阈值在信仰文件里
+var faith_power: FaithPower = null
 var hunters_saved: Dictionary = {}
 ## 侵蚀场的存档状态，读档时先放这儿等机制装（075）
 var erosion_saved: Dictionary = {}
@@ -136,18 +145,16 @@ static func start(
 		s.difficulty = p_difficulty
 		s.difficulty_id = p_difficulty.id
 	s.hunter_defs = p_hunter_defs
-	var ctx := s.buff_context()
 	var vitality_max := Vitality.PLACEHOLDER_MAX
 	var board_size := BOARD_SIZE
 	var full_kit := kit.duplicate()
 	if p_character != null:
-		s.character = p_character
-		s.character_id = p_character.id
-		s.player_baseline = p_character.baseline()
+		s.set_character(p_character)
 		vitality_max = p_character.vitality_max
 		board_size = p_character.board_size
 		if p_layout.is_empty():
 			full_kit = p_character.starting_bags + kit
+	var ctx := s.buff_context()     # 角色定了再算：技能的被动（体力上限、开局钱）也在里面（082）
 	s.vitality = Vitality.new(vitality_max + ctx.vitality_max_bonus)
 	s.wallet = Wallet.new((s.economy.starting_balance if s.economy != null else 0) + ctx.starting_funds_bonus)
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
@@ -185,6 +192,7 @@ func step_to(id: int) -> bool:
 		tick_map_buffs()
 		if hunters != null:
 			hunters.on_player_step()     # 猎手的回合在这一步的事都发生之后（071）
+		skills.on_step()     # 冷却与躲避在猎手的回合之后减：躲 3 步就是 3 个猎手回合够不着（082）
 	return ok
 
 
@@ -199,6 +207,7 @@ func relocate(intent: MoveIntent) -> bool:
 		tick_map_buffs()
 		if hunters != null:
 			hunters.on_player_step()
+		skills.on_step()
 	return ok
 
 
@@ -369,14 +378,62 @@ func tick_map_buffs() -> void:
 
 
 #region 背包与战利品
-## 开战那一刻编译玩家（4.2 是纯函数；套装的战斗侧效果从 tracker 取，buff 的并进去）
+## 开战那一刻编译玩家（4.2 是纯函数；套装的战斗侧效果从 tracker 取，buff 的并进去；
+## 082：技能的基线加成盖到基线上，信力的阶传给编译器解锁信仰道具的功能）
 func compile_player() -> CombatantSpec:
 	var active := active_buff_defs()
 	var mods: Array[StatModifier] = tracker.combat_mods() if tracker != null else [] as Array[StatModifier]
 	var rules: Array[AbilityRule] = tracker.combat_rules() if tracker != null else [] as Array[AbilityRule]
 	mods.append_array(RunBuffs.combat_mods(active))
 	rules.append_array(RunBuffs.combat_rules(active))
-	return BattleCompiler.compile(board, player_baseline, mods, rules)
+	return BattleCompiler.compile(board, effective_baseline(), mods, rules, faith_power.tiers() if faith_power != null else {})
+
+
+## 角色基线 + 技能 / buff 的基线加成（RunContext.stat_bonus）。没有加成就是原来那份
+func effective_baseline() -> CombatantBaseline:
+	var ctx := buff_context()
+	if ctx.stat_bonus.is_empty():
+		return player_baseline
+	var base := player_baseline if player_baseline != null else CombatantBaseline.default_baseline()
+	var b := CombatantBaseline.new()
+	b.base_stats = base.base_stats.duplicate()
+	for key in ctx.stat_bonus:
+		var k := StringName(String(key))
+		b.base_stats[k] = float(b.base_stats.get(k, 0.0)) + float(ctx.stat_bonus[key])
+	return b
+
+
+## 按角色来：基线、技能的账（开局与读档各一次；读档回来的账在这里接上定义）
+func set_character(ch: CharacterDef) -> void:
+	character = ch
+	character_id = ch.id if ch != null else &""
+	player_baseline = ch.baseline() if ch != null else player_baseline
+	_ensure_skills()
+	skills.setup(self, ch.skills if ch != null else [] as Array[RunSkill])
+	if not skills_saved.is_empty():
+		skills.restore(skills_saved)
+		skills_saved = {}
+	skills_changed.emit()
+
+
+func _ensure_skills() -> void:
+	if skills != null:
+		return
+	skills = RunSkills.new()
+	skills.setup(self, [] as Array[RunSkill])
+	skills.changed.connect(func(): skills_changed.emit())
+
+
+## 地图上用一个局内技能（082）。返回空串 = 用了；否则是不能用的原因
+func use_skill(id: StringName) -> String:
+	if phase != Phase.ON_MAP:
+		return "不在图上"
+	return skills.use(id)
+
+
+## 开打前：立了旗的技能改双方的战斗单位（[NodeEvents.before_battle]）
+func _before_battle(me: CombatantSpec, enemy: CombatantSpec, _type: StringName) -> void:
+	skills.prepare_battle(me, enemy)
 
 
 ## 现在激活的信仰（8-4）：最后置入棋盘的信仰道具所属的那个；一件都没有 = null（不信者）
@@ -602,6 +659,35 @@ func _wire_events() -> void:
 	events.bind(travel)
 	# 进入的那一次检查插在节点事件前面（bind 把 handle 挂上了，这里再包一层）
 	travel.on_node_event = _on_arrive
+	# 082：技能与信力
+	_ensure_skills()
+	events.before_battle = _before_battle
+	faith_power = FaithPower.new()
+	faith_power.setup(self)
+	faith_power.changed.connect(func(id: StringName, p: int, tier: int): faith_power_changed.emit(id, p, tier))
+	_wire_faith_power()
+
+
+## 信力的行为（082）：一局里的事喂给激活信仰的行为构件。哪些事、载荷长什么样见 [FaithDeed]
+func _wire_faith_power() -> void:
+	board.placed.connect(func(inst: ItemInstance):
+		if inst != null and inst.def != null:
+			faith_power.credit(&"place_item", {"value": ItemValue.of(inst.def), "id": String(inst.def.id)}))
+	wallet.changed.connect(func(_b: int, delta: int, _r: StringName):
+		if delta > 0:
+			faith_power.credit(&"earn_money", {"amount": delta})
+		elif delta < 0:
+			faith_power.credit(&"spend_money", {"amount": -delta}))
+	events.battle_finished.connect(func(_n: MapNode, _r: BattleResult, won: bool): faith_power.credit(&"battle", {"won": won}))
+	travel.moved.connect(func(_i: MoveIntent, _first: bool): faith_power.credit(&"travel", {"steps": travel.clock.total}))
+	events.search_opened.connect(func(_n: MapNode, session: SearchSession):
+		if session != null:
+			session.searched.connect(func(_found: Array[StringName], _enc: Dictionary): faith_power.credit(&"explore", {})))
+	events.option_chosen.connect(func(_n: MapNode, option: EventOption):
+		var tags: Array = []
+		for t in option.tags:
+			tags.append(String(t))
+		faith_power.credit(&"event_choice", {"tags": tags}))
 
 
 func _set_phase(p: int, reason: StringName) -> void:
@@ -632,7 +718,9 @@ func to_dict() -> Dictionary:
 		"board": board.to_dict(),
 		"storage": storage.to_dict(),
 		"rng": rng.to_dict(),
-		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id, "pending": events.pending.duplicate()},
+		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id, "pending": events.pending.duplicate(), "losses_forgiven": events.losses_forgiven},
+		"skills": skills.to_dict(),
+		"faith_power": faith_power.to_dict(),
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
 		"tally": tally.duplicate(),
 		"buffs": {"meta": _meta_buff_ids(), "map": map_buffs.duplicate(true)},
@@ -676,6 +764,9 @@ static func from_dict(
 	s._wire_events()
 	s.events.searches_closed = int((d.get("events", {}) as Dictionary).get("searches_closed", 0))
 	s.events.last_handled_id = int((d.get("events", {}) as Dictionary).get("last_handled", -1))
+	s.events.losses_forgiven = int((d.get("events", {}) as Dictionary).get("losses_forgiven", 0))
+	s.skills_saved = d.get("skills", {}) if d.get("skills", {}) is Dictionary else {}
+	s.faith_power.restore(d.get("faith_power", {}) if d.get("faith_power", {}) is Dictionary else {})
 	var pending = (d.get("events", {}) as Dictionary).get("pending", {})
 	if pending is Dictionary and not (pending as Dictionary).is_empty():
 		s.events.pending = {"node": int(pending.get("node", -1)), "event": String(pending.get("event", "")), "type": String(pending.get("type", ""))}

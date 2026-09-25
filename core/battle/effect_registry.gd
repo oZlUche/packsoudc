@@ -65,6 +65,26 @@ const RUN_EFFECTS := {
 	&"scout_range": "res://core/run/effects/scout_range.gd",
 	&"stealth": "res://core/run/effects/stealth.gd",
 	&"flee_bonus": "res://core/run/effects/flee_bonus.gd",
+	&"free_losses": "res://core/run/effects/free_losses.gd",
+	&"stat_bonus": "res://core/run/effects/stat_bonus.gd",
+}
+
+## 局内技能（082）：被动常驻 + 可选的主动一击
+const RUN_SKILLS := {
+	&"passive": "res://core/run/skills/passive_skill.gd",
+	&"assault": "res://core/run/skills/assault_skill.gd",
+	&"evade": "res://core/run/skills/evade_skill.gd",
+}
+
+## 信力（082）：信仰指定的行为
+const FAITH_DEEDS := {
+	&"place_item": "res://core/run/faith/deeds/place_item_deed.gd",
+	&"battle": "res://core/run/faith/deeds/battle_deed.gd",
+	&"travel": "res://core/run/faith/deeds/travel_deed.gd",
+	&"earn_money": "res://core/run/faith/deeds/earn_money_deed.gd",
+	&"spend_money": "res://core/run/faith/deeds/spend_money_deed.gd",
+	&"explore": "res://core/run/faith/deeds/explore_deed.gd",
+	&"event_choice": "res://core/run/faith/deeds/event_choice_deed.gd",
 }
 
 ## 事件层（063）：选项的条件（只读）与后果（做一件事或立一面旗）
@@ -147,6 +167,8 @@ const TABLES := {
 	&"hunter_behavior": HUNTER_BEHAVIORS,
 	&"hunter_loss": HUNTER_LOSSES,
 	&"erosion_effect": EROSION_EFFECTS,
+	&"run_skill": RUN_SKILLS,
+	&"faith_deed": FAITH_DEEDS,
 }
 
 

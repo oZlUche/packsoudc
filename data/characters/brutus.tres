@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="CharacterDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/character_def.gd" id="1_o4bsg"]
+[ext_resource type="Script" path="res://core/run/skills/run_skill.gd" id="2_rnths"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_40tca"]
+[ext_resource type="Script" path="res://core/run/effects/stat_bonus.gd" id="4_k5w2a"]
+[ext_resource type="Script" path="res://core/run/effects/vitality_max_bonus.gd" id="5_7sic7"]
+[ext_resource type="Script" path="res://core/run/skills/passive_skill.gd" id="6_eu30i"]
+
+[sub_resource type="Resource" id="Resource_2ndvl"]
+script = ExtResource("4_k5w2a")
+amount = 20.0
+
+[sub_resource type="Resource" id="Resource_adg58"]
+script = ExtResource("4_k5w2a")
+stat = &"max_stamina"
+amount = 15.0
+
+[sub_resource type="Resource" id="Resource_ryvlx"]
+script = ExtResource("5_7sic7")
+
+[sub_resource type="Resource" id="Resource_27se4"]
+script = ExtResource("6_eu30i")
+id = &"hardy"
+display_name = "坚韧"
+description = "常驻：生命、体力、耐力更高。"
+passive = Array[ExtResource("3_40tca")]([SubResource("Resource_2ndvl"), SubResource("Resource_adg58"), SubResource("Resource_ryvlx")])
+
+[resource]
+script = ExtResource("1_o4bsg")
+id = &"brutus"
+display_name = "布鲁图斯"
+description = "擅长生存的奴隶探索者。两个皮革包。血量、体力、耐力都更高。"
+base_stats = {
+"max_hp": 60
+}
+starting_bags = Array[StringName]([&"bag_leather", &"bag_leather"])
+skills = Array[ExtResource("2_rnths")]([SubResource("Resource_27se4")])

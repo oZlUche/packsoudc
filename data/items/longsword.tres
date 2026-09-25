@@ -1,55 +1,56 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_fv2od"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_xsidr"]
-[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_32duj"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_r0jxl"]
-[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="5_xnjgu"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_bkftq"]
-[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_svlko"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_mqpfi"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_d0kj2"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_1cocg"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_wjk31"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_yrubl"]
-
-[sub_resource type="Resource" id="Resource_ufrur"]
-script = ExtResource("3_32duj")
-seconds = 1.6
-
-[sub_resource type="Resource" id="Resource_u74ot"]
-script = ExtResource("5_xnjgu")
-amount = 9.0
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_xsidr"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_32duj"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_r0jxl"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_xnjgu"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="5_bkftq"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_svlko"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_mqpfi"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_d0kj2"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_1cocg"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_wjk31"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_yrubl"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_ufrur"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_u74ot"]
 
 [sub_resource type="Resource" id="Resource_e7hj3"]
-script = ExtResource("7_svlko")
+script = ExtResource("3_r0jxl")
+seconds = 1.6
 
 [sub_resource type="Resource" id="Resource_73x16"]
-script = ExtResource("8_mqpfi")
+script = ExtResource("5_bkftq")
+amount = 9.0
 
 [sub_resource type="Resource" id="Resource_tk0u6"]
-script = ExtResource("2_xsidr")
-trigger = SubResource("Resource_73x16")
-cadence = SubResource("Resource_ufrur")
-costs = Array[ExtResource("4_r0jxl")]([SubResource("Resource_u74ot")])
-effects = Array[ExtResource("6_bkftq")]([SubResource("Resource_e7hj3")])
+script = ExtResource("7_mqpfi")
 
 [sub_resource type="Resource" id="Resource_8s62x"]
-script = ExtResource("9_d0kj2")
+script = ExtResource("8_d0kj2")
+
+[sub_resource type="Resource" id="Resource_yfusu"]
+script = ExtResource("2_32duj")
+trigger = SubResource("Resource_8s62x")
+cadence = SubResource("Resource_e7hj3")
+costs = Array[ExtResource("4_xnjgu")]([SubResource("Resource_73x16")])
+effects = Array[ExtResource("6_svlko")]([SubResource("Resource_tk0u6")])
+
+[sub_resource type="Resource" id="Resource_vvgdk"]
+script = ExtResource("9_1cocg")
 base_stats = {
 "damage": 12
 }
-rules = Array[ExtResource("2_xsidr")]([SubResource("Resource_tk0u6")])
+rules = Array[ExtResource("2_32duj")]([SubResource("Resource_yfusu")])
 
-[sub_resource type="Resource" id="Resource_yfusu"]
-script = ExtResource("12_yrubl")
+[sub_resource type="Resource" id="Resource_ua0tp"]
+script = ExtResource("13_u74ot")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
 
 [resource]
-script = ExtResource("11_wjk31")
+script = ExtResource("12_ufrur")
 id = &"longsword"
 display_name = "长剑"
-shape = SubResource("Resource_yfusu")
+shape = SubResource("Resource_ua0tp")
 rarity = 1
 tags = Array[StringName]([&"weapon", &"melee", &"burst", &"imperial"])
-combat = SubResource("Resource_8s62x")
+combat = SubResource("Resource_vvgdk")

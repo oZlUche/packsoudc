@@ -1,6 +1,16 @@
 {
   "id": "sunfire",
   "display_name": "太阳与火之神",
-  "god": "太阳与火之神",
-  "description": "西方蛮族的信仰。火焰的魔法。"
+  "god": "太阳与火之神（原恒常之神）",
+  "description": "西方蛮族的信仰。火焰的魔法。周期循环：走路就给。",
+  "thresholds": [
+    4,
+    10
+  ],
+  "deeds": [
+    {
+      "type": "travel",
+      "every_steps": 2
+    }
+  ]
 }

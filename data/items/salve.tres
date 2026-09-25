@@ -1,51 +1,52 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_e7e37"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_2sehr"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_h0rx2"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_pc6sa"]
-[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="5_35ols"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_lutsb"]
-[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="7_l0y5u"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="8_vejxf"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_8yn0s"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_3jxnx"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_g4kqu"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_jy8jw"]
-
-[sub_resource type="Resource" id="Resource_gwytq"]
-script = ExtResource("3_h0rx2")
-
-[sub_resource type="Resource" id="Resource_7hcej"]
-script = ExtResource("5_35ols")
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_2sehr"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_h0rx2"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_pc6sa"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_35ols"]
+[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="5_lutsb"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_l0y5u"]
+[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="7_vejxf"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="8_8yn0s"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_3jxnx"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_g4kqu"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_jy8jw"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_gwytq"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_7hcej"]
 
 [sub_resource type="Resource" id="Resource_rj6c6"]
-script = ExtResource("7_l0y5u")
-amount = 25.0
+script = ExtResource("3_pc6sa")
 
 [sub_resource type="Resource" id="Resource_rf2cb"]
-script = ExtResource("8_vejxf")
-percent = 40
+script = ExtResource("5_lutsb")
 
 [sub_resource type="Resource" id="Resource_lp37o"]
-script = ExtResource("2_2sehr")
-trigger = SubResource("Resource_rf2cb")
-cadence = SubResource("Resource_gwytq")
-costs = Array[ExtResource("4_pc6sa")]([SubResource("Resource_7hcej")])
-effects = Array[ExtResource("6_lutsb")]([SubResource("Resource_rj6c6")])
+script = ExtResource("7_vejxf")
+amount = 25.0
 
 [sub_resource type="Resource" id="Resource_3x13j"]
-script = ExtResource("9_8yn0s")
-rules = Array[ExtResource("2_2sehr")]([SubResource("Resource_lp37o")])
+script = ExtResource("8_8yn0s")
+percent = 40
 
 [sub_resource type="Resource" id="Resource_3x1mt"]
-script = ExtResource("12_jy8jw")
+script = ExtResource("2_h0rx2")
+trigger = SubResource("Resource_3x13j")
+cadence = SubResource("Resource_rj6c6")
+costs = Array[ExtResource("4_35ols")]([SubResource("Resource_rf2cb")])
+effects = Array[ExtResource("6_l0y5u")]([SubResource("Resource_lp37o")])
+
+[sub_resource type="Resource" id="Resource_0h70r"]
+script = ExtResource("9_3jxnx")
+rules = Array[ExtResource("2_h0rx2")]([SubResource("Resource_3x1mt")])
+
+[sub_resource type="Resource" id="Resource_gj4q3"]
+script = ExtResource("13_7hcej")
 
 [resource]
-script = ExtResource("11_g4kqu")
+script = ExtResource("12_gwytq")
 id = &"salve"
 display_name = "伤药"
-shape = SubResource("Resource_3x1mt")
+shape = SubResource("Resource_gj4q3")
 rarity = 1
 tags = Array[StringName]([&"consumable"])
-combat = SubResource("Resource_3x13j")
+combat = SubResource("Resource_0h70r")

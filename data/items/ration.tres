@@ -1,26 +1,27 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_j2to3"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_i4yx3"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_p70ph"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_xa0ke"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_aalh1"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_7f24v"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_i4yx3"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_p70ph"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_xa0ke"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_aalh1"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="5_7f24v"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="6_76tyt"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="7_huv3p"]
 
-[sub_resource type="Resource" id="Resource_76tyt"]
-script = ExtResource("3_p70ph")
+[sub_resource type="Resource" id="Resource_bkj4y"]
+script = ExtResource("3_xa0ke")
 base_stats = {
 "max_stamina": 40,
 "regen_stamina": 2
 }
 
-[sub_resource type="Resource" id="Resource_huv3p"]
-script = ExtResource("6_7f24v")
+[sub_resource type="Resource" id="Resource_5vvs6"]
+script = ExtResource("7_huv3p")
 
 [resource]
-script = ExtResource("5_aalh1")
+script = ExtResource("6_76tyt")
 id = &"ration"
 display_name = "口粮"
-shape = SubResource("Resource_huv3p")
+shape = SubResource("Resource_5vvs6")
 tags = Array[StringName]([&"consumable"])
-combat = SubResource("Resource_76tyt")
+combat = SubResource("Resource_bkj4y")

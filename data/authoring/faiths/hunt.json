@@ -2,5 +2,18 @@
   "id": "hunt",
   "display_name": "狩猎之神",
   "god": "狩猎之神",
-  "description": "赐福的长弓：箭矢自带追踪，对兽类效果更佳。"
+  "description": "赐福的长弓：箭矢自带追踪，对兽类效果更佳。信力：探索与猎物（进账）。",
+  "thresholds": [
+    3,
+    8
+  ],
+  "deeds": [
+    {
+      "type": "explore"
+    },
+    {
+      "type": "earn_money",
+      "per_amount": 15
+    }
+  ]
 }

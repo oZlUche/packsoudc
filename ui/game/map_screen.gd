@@ -17,6 +17,7 @@ var _status: Label
 var _routes_box: VBoxContainer
 var _log: RichTextLabel
 var _extract_btn: Button
+var _skills_box: VBoxContainer
 var _bag: Control = null
 var _confirm: Control = null
 var _step_confirm: Control = null
@@ -233,6 +234,15 @@ func _adopt() -> void:
 	_run.vitality.changed.connect(func(_c: int, _m: int, _d: int, _r: StringName): _refresh_hud())
 	_run.storage.changed.connect(_refresh_hud)
 	_run.buffs_changed.connect(_refresh_hud)
+	# 082：技能按钮与信力
+	_run.skills_changed.connect(func():
+		_refresh_skills()
+		_refresh_hud())
+	_run.faith_power_changed.connect(func(id: StringName, p: int, tier: int):
+		var def: FaithDef = _run.faith_defs.get(id, null)
+		_note("　信力（%s）%d，第 %d 阶" % [def.display_name if def != null else String(id), p, tier])
+		_refresh_hud())
+	_refresh_skills()
 	_run.storage_dropped.connect(func(node_id: int, items: Array):
 		_note("　离开点 %d：暂存区里的 %s留在了那里" % [node_id, StorageWarning.describe(items)]))
 	# 猎手（071）：进了感知范围提示一句；动了就重画标记；被赶回上一个点
@@ -288,7 +298,9 @@ func _adopt() -> void:
 	ev.rested.connect(func(_n: MapNode, got: int): _note("　休息：体力 +%d" % got))
 	ev.extract_reached.connect(func(_n: MapNode, fee: int):
 		_note("　到了撤离点%s：按「撤离」结束这一局" % ("（付费：%d 币，%s）" % [fee, "付得起" if _run.wallet.can_afford(fee) else "钱不够"] if fee > 0 else "")))
-	_run.phase_changed.connect(func(_p: int, _why: StringName): _refresh_hud())
+	_run.phase_changed.connect(func(_p: int, _why: StringName):
+		_refresh_hud()
+		_refresh_skills())     # 挑完出生点技能才能用：按钮跟着阶段亮
 	_rebuild_routes()
 	_after_move()
 	if _run.phase == RunState.Phase.PICK_SPAWN:
@@ -425,7 +437,51 @@ func _refresh_hud() -> void:
 		str(extract_near["steps"]) if int(extract_near["id"]) >= 0 else "—",
 		str(rest["steps"]) if int(rest["id"]) >= 0 else "—",
 		str(core["steps"]) if int(core["id"]) >= 0 else "—",
-		_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count(), _run.faith_line(), _buff_line(), _erosion_line()]
+		_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count(), _run.faith_line() + _power_line(), _buff_line(), _erosion_line()]
+
+
+## 信力一句（082）：「　信力 12 / 30（第 1 阶）」；没激活信仰不显示
+func _power_line() -> String:
+	var line := _run.faith_power.line() if _run.faith_power != null else ""
+	return "　" + line if line != "" else ""
+
+
+## 局内技能（082）：一个技能一个按钮，能用的亮着；被动的不占按钮
+func _refresh_skills() -> void:
+	if _skills_box == null or _run == null:
+		return
+	for c in _skills_box.get_children():
+		c.queue_free()
+	if _run.skills == null:
+		return
+	for s in _run.skills.active_skills():
+		var d := s as RunSkill
+		var bits: Array[String] = []
+		if _run.skills.is_armed(d.id):
+			bits.append("已准备")
+		if _run.skills.uses_of(d.id) >= 0:
+			bits.append("剩 %d 次" % _run.skills.uses_of(d.id))
+		if _run.skills.cooldown_of(d.id) > 0:
+			bits.append("冷却 %d 步" % _run.skills.cooldown_of(d.id))
+		var btn := _button("%s%s" % [d.display_name, ("（" + "，".join(bits) + "）") if not bits.is_empty() else ""], func(): use_skill(d.id), 13)
+		btn.disabled = _run.skills.can_use(d.id) != ""
+		btn.tooltip_text = d.summary() + ("\n" + d.description if d.description != "" else "")
+		_skills_box.add_child(btn)
+	if _run.skills.evading():
+		_skills_box.add_child(_label("躲避中（剩 %d 步）" % _run.skills.evade_left, 12, UiPalette.DIM))
+
+
+## 用一个技能。用不了把原因写在状态栏；用了写进日志
+func use_skill(id: StringName) -> bool:
+	var why := flow.use_skill(id)
+	if why != "":
+		_say(why)
+		return false
+	var d := _run.skills.skill(id)
+	_note("　用了「%s」：%s" % [d.display_name if d != null else String(id), d.describe() if d != null else ""])
+	_refresh_skills()
+	_refresh_hud()
+	return true
 
 
 ## buff 栏的占位：一行字。局外的和一局里的都列，有时限的写还剩几步
@@ -529,6 +585,8 @@ func _build() -> void:
 	_extract_btn.disabled = true
 	buttons.add_child(_extract_btn)
 	col.add_child(buttons)
+	_skills_box = _vbox(4)
+	col.add_child(_skills_box)
 	col.add_child(_button("存档并回主菜单", func(): flow.save_and_quit(), 12))
 	col.add_child(HSeparator.new())
 	_routes_box = _vbox(6)

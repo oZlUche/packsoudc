@@ -32,6 +32,8 @@ var _bag_owner: PackedInt32Array = PackedInt32Array()
 var _items: Dictionary = {}  # uid -> ItemInstance
 var _blocked: PackedByteArray = PackedByteArray()
 ## 置入序号的计数（8-4）：道具从别的容器进来时 +1 并盖到它身上（[member ItemInstance.placed_seq]）；同容器内挪位置不盖。跟着存档走
+## 082：一件道具从别的容器置入了本容器（信力的「置入道具」听它；同容器内挪位置不发）
+signal placed(inst: ItemInstance)
 var place_seq: int = 0
 
 
@@ -346,7 +348,8 @@ func place(inst: ItemInstance, origin: Vector2i, rot: int = 0) -> bool:
 		table[_idx(origin + c)] = inst.uid
 
 	# 从别的容器进来的才算「置入」（同容器内挪位置、原样放回都先把 container_id 设回本容器）
-	if inst.container_id != id:
+	var arrived := inst.container_id != id
+	if arrived:
 		place_seq += 1
 		inst.placed_seq = place_seq
 	inst.origin = origin
@@ -354,6 +357,8 @@ func place(inst: ItemInstance, origin: Vector2i, rot: int = 0) -> bool:
 	inst.container_id = id
 	_items[inst.uid] = inst
 	_notify_changed()
+	if arrived:
+		placed.emit(inst)
 	return true
 
 

@@ -77,6 +77,10 @@ func faith_tag() -> StringName:
 ## 掉落效果不再是套装专有。战斗效果请写在 combat.rules 里，它们需要扳机。
 @export var effects: Array[Effect] = []
 
+## 信力（报告 082）：信仰道具在信力过了第 n 阶之后多出来的功能（属性修饰、规则），只对带信仰标签的道具有意义。
+## 编译器按「信仰 → 现在第几阶」并入（[BattleCompiler.compile] 的 faith_tiers）
+@export var faith_bonuses: Array[FaithBonus] = []
+
 @export_group("战斗")
 ## 战斗定义。为空表示本物品不参战（纯素材、纯包体）。
 @export var combat: CombatProfile

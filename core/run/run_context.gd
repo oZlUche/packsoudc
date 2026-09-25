@@ -19,6 +19,9 @@ var luck_bonus: int = 0
 var scout_range: float = 0.0
 var sense_mult: float = 1.0
 var flee_bonus: float = 0.0
+## 角色技能（082）：输给节点敌人前几次不扣体力（[NodeEvents] 读）；战斗基线加成，属性键 → 加多少（[RunState.compile_player] 读）
+var free_losses: int = 0
+var stat_bonus: Dictionary = {}
 
 
 func snapshot() -> Dictionary:
@@ -31,4 +34,6 @@ func snapshot() -> Dictionary:
 		"scout_range": scout_range,
 		"sense_mult": sense_mult,
 		"flee_bonus": flee_bonus,
+		"free_losses": free_losses,
+		"stat_bonus": stat_bonus.duplicate(),
 	}

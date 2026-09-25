@@ -13,6 +13,49 @@
     "shield",
     "blessed"
   ],
+  "faith_bonuses": [
+    {
+      "mods": [
+        {
+          "stat": "armor",
+          "flat": 4.0
+        }
+      ],
+      "note": "第一阶：护甲 +4"
+    },
+    {
+      "tier": 2,
+      "rules": [
+        {
+          "trigger": {
+            "type": "on_battle_start"
+          },
+          "cadence": {
+            "type": "always"
+          },
+          "effects": [
+            {
+              "type": "apply_status",
+              "target": "SELF",
+              "buff": {
+                "id": "deflect_long",
+                "display_name": "久弹",
+                "max_stacks": 1,
+                "duration_sec": 8.0,
+                "mods": [
+                  {
+                    "stat": "armor",
+                    "flat": 4.0
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "note": "第二阶：弹开更久"
+    }
+  ],
   "combat": {
     "base_stats": {
       "armor": 6

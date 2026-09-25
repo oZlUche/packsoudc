@@ -1,30 +1,74 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_3pw3u"]
-[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="2_b5cm1"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_2cm5y"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_npvua"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_lh1py"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_pg8ou"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="2_tqvxg"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_5rl1g"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_wha2m"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="5_korxk"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="6_ay87x"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="7_5a11b"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="8_f7moc"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_wbie5"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_sh78p"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="11_xd7xd"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_3cson"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_deew6"]
 
-[sub_resource type="Resource" id="Resource_xigdi"]
-script = ExtResource("1_3pw3u")
+[sub_resource type="Resource" id="Resource_khvcy"]
+script = ExtResource("1_pg8ou")
 mult_category = 0
 mult_percent = 15
 
-[sub_resource type="Resource" id="Resource_qevok"]
-script = ExtResource("2_b5cm1")
+[sub_resource type="Resource" id="Resource_juc65"]
+script = ExtResource("2_tqvxg")
 grant_cells = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)])
 grant_filter = Array[StringName]([&"weapon"])
-grant_mods = Array[ExtResource("1_3pw3u")]([SubResource("Resource_xigdi")])
+grant_mods = Array[ExtResource("1_pg8ou")]([SubResource("Resource_khvcy")])
 
-[sub_resource type="Resource" id="Resource_6vuw4"]
-script = ExtResource("5_lh1py")
+[sub_resource type="Resource" id="Resource_dc063"]
+script = ExtResource("6_ay87x")
+
+[sub_resource type="Resource" id="Resource_wxfjr"]
+script = ExtResource("1_pg8ou")
+mult_category = 0
+mult_percent = 10
+
+[sub_resource type="Resource" id="Resource_qshs2"]
+script = ExtResource("9_wbie5")
+id = &"blood_rage"
+display_name = "血怒"
+max_stacks = 1
+duration_sec = 10.0
+mods = Array[ExtResource("1_pg8ou")]([SubResource("Resource_wxfjr")])
+
+[sub_resource type="Resource" id="Resource_8h8a4"]
+script = ExtResource("10_sh78p")
+target = 1
+buff = SubResource("Resource_qshs2")
+
+[sub_resource type="Resource" id="Resource_61ngj"]
+script = ExtResource("11_xd7xd")
+
+[sub_resource type="Resource" id="Resource_s6b32"]
+script = ExtResource("5_korxk")
+trigger = SubResource("Resource_61ngj")
+cadence = SubResource("Resource_dc063")
+effects = Array[ExtResource("8_f7moc")]([SubResource("Resource_8h8a4")])
+
+[sub_resource type="Resource" id="Resource_8ybva"]
+script = ExtResource("4_wha2m")
+rules = Array[ExtResource("5_korxk")]([SubResource("Resource_s6b32")])
+note = "第一阶：开战时血怒（伤害 +10%）"
+
+[sub_resource type="Resource" id="Resource_nq87m"]
+script = ExtResource("13_deew6")
 
 [resource]
-script = ExtResource("4_npvua")
+script = ExtResource("12_3cson")
 id = &"strength_sigil"
 display_name = "力量的符号"
-shape = SubResource("Resource_6vuw4")
+shape = SubResource("Resource_nq87m")
 rarity = 2
 tags = Array[StringName]([&"faith", &"faith:violence", &"part", &"sigil"])
-adjacency = SubResource("Resource_qevok")
+faith_bonuses = Array[ExtResource("4_wha2m")]([SubResource("Resource_8ybva")])
+adjacency = SubResource("Resource_juc65")

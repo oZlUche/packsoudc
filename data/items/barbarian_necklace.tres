@@ -1,17 +1,18 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_dygwk"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_pcgi3"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="3_savm0"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="4_vucsi"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_pcgi3"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_savm0"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_vucsi"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_wnplo"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_6s8l8"]
 
-[sub_resource type="Resource" id="Resource_wnplo"]
-script = ExtResource("4_vucsi")
+[sub_resource type="Resource" id="Resource_qanqw"]
+script = ExtResource("5_6s8l8")
 
 [resource]
-script = ExtResource("3_savm0")
+script = ExtResource("4_wnplo")
 id = &"barbarian_necklace"
 display_name = "蛮族的项链"
-shape = SubResource("Resource_wnplo")
+shape = SubResource("Resource_qanqw")
 value = 20
 tags = Array[StringName]([&"trophy"])

@@ -179,6 +179,25 @@ func demo_fill() -> void:
 			flow.step_to(moves[0])
 			_demo_settle()
 		return
+	if want == "skills":
+		# 082：按马库斯开局（有「突击」按钮），放一件信仰道具上棋盘、记几点信力，HUD 与右栏都有东西看
+		flow.meta = MetaState.new(flow.meta_rules)
+		var marcus := flow.character_of(&"marcus")
+		var srun: RunState = null
+		for seed in range(1, 60):
+			srun = flow.begin(flow.chapters[0], null, seed, [] as Array[int], marcus, [])
+			if srun != null:
+				break
+		if srun == null:
+			return
+		flow.pick_spawn(srun.map.entry_ids[0])
+		var shield := flow.items.get_def(&"blessed_shield")
+		if shield != null:
+			var inst := ItemInstance.create(shield, 0)
+			srun.storage.admit(inst)
+			srun.equip(inst.uid)
+			srun.faith_power.credit(&"event_choice", {"tags": ["offering"]})
+		return
 	flow.new_run()
 	var next_type: StringName = &"search" if want in ["search", "event"] else &"battle"
 	var found := {}

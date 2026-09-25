@@ -1,0 +1,34 @@
+{
+  "id": "brutus",
+  "display_name": "布鲁图斯",
+  "description": "擅长生存的奴隶探索者。两个皮革包。血量、体力、耐力都更高。",
+  "base_stats": {
+    "max_hp": 60
+  },
+  "starting_bags": [
+    "bag_leather",
+    "bag_leather"
+  ],
+  "skills": [
+    {
+      "type": "passive",
+      "id": "hardy",
+      "display_name": "坚韧",
+      "description": "常驻：生命、体力、耐力更高。",
+      "passive": [
+        {
+          "type": "stat_bonus",
+          "amount": 20.0
+        },
+        {
+          "type": "stat_bonus",
+          "stat": "max_stamina",
+          "amount": 15.0
+        },
+        {
+          "type": "vitality_max_bonus"
+        }
+      ]
+    }
+  ]
+}

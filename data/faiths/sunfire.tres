@@ -1,10 +1,18 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="1_676cl"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_ubmpi"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/travel_deed.gd" id="2_mwbmw"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="3_t0qm0"]
+
+[sub_resource type="Resource" id="Resource_rvrrf"]
+script = ExtResource("2_mwbmw")
+every_steps = 2
 
 [resource]
-script = ExtResource("1_676cl")
+script = ExtResource("3_t0qm0")
 id = &"sunfire"
 display_name = "太阳与火之神"
-god = "太阳与火之神"
-description = "西方蛮族的信仰。火焰的魔法。"
+god = "太阳与火之神（原恒常之神）"
+description = "西方蛮族的信仰。火焰的魔法。周期循环：走路就给。"
+thresholds = Array[int]([4, 10])
+deeds = Array[ExtResource("1_ubmpi")]([SubResource("Resource_rvrrf")])

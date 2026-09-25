@@ -276,6 +276,8 @@ func check_engagement() -> bool:
 		return false
 	if not run.events.pending.is_empty() or run.events.current_search != null or run.events.current_shop != null:
 		return false
+	if run.skills != null and run.skills.evading():
+		return false     # 局内技能「躲避」（082）：这几步够不着
 	for h in alive():
 		var def := def_of(h)
 		if def == null or h.cooldown > 0:

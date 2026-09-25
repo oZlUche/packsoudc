@@ -5,6 +5,9 @@
   "options": [
     {
       "label": "献上棋盘上最值钱的一件",
+      "tags": [
+        "offering"
+      ],
       "requires": [
         {
           "type": "has_item",

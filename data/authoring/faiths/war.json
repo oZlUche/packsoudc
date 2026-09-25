@@ -2,5 +2,19 @@
   "id": "war",
   "display_name": "战争之神",
   "god": "战争之神",
-  "description": "军团的信仰。制式的兵器与护甲。"
+  "description": "军团的信仰。制式的兵器与护甲。信力：打赢才算，军饷（花钱）也算。",
+  "thresholds": [
+    3,
+    8
+  ],
+  "deeds": [
+    {
+      "type": "battle",
+      "won_only": true
+    },
+    {
+      "type": "spend_money",
+      "per_amount": 20
+    }
+  ]
 }

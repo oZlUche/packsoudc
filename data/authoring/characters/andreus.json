@@ -1,0 +1,31 @@
+{
+  "id": "andreus",
+  "display_name": "安德烈乌斯",
+  "description": "擅长逃跑的奴隶探索者。两个皮革包，生命 50。躲得开猎手；头一回输给节点敌人不扣体力。",
+  "base_stats": {
+    "max_hp": 50
+  },
+  "starting_bags": [
+    "bag_leather",
+    "bag_leather"
+  ],
+  "skills": [
+    {
+      "type": "evade",
+      "id": "evade",
+      "display_name": "躲避",
+      "description": "接下来几步猎手够不着你。",
+      "passive": [
+        {
+          "type": "flee_bonus",
+          "amount": 0.25
+        },
+        {
+          "type": "free_losses"
+        }
+      ],
+      "uses": 2,
+      "cooldown_steps": 4
+    }
+  ]
+}

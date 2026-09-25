@@ -1,11 +1,18 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="1_n4xg7"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_w2xk3"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/event_choice_deed.gd" id="2_kyroa"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="3_0fq14"]
+
+[sub_resource type="Resource" id="Resource_5nhb1"]
+script = ExtResource("2_kyroa")
 
 [resource]
-script = ExtResource("1_n4xg7")
+script = ExtResource("3_0fq14")
 id = &"church"
 display_name = "新教"
 camp = 1
 god = "唯一神"
-description = "皇帝扶持的一神教，用以对抗诸神信仰。完整的体系还没做，先占一个位。"
+description = "皇帝暗中扶持的一神教，在无信的贫民、奴隶与行商之间传。完整的体系还没做，先占一个位。信力：事件里的选择。"
+thresholds = Array[int]([3, 8])
+deeds = Array[ExtResource("1_w2xk3")]([SubResource("Resource_5nhb1")])

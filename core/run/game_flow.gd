@@ -287,6 +287,13 @@ func resume() -> void:
 	_flush()
 
 
+## 地图上用一个局内技能（082）。返回空串 = 用了；否则是不能用的原因
+func use_skill(id: StringName) -> String:
+	if run == null:
+		return "没有进行中的一局"
+	return run.use_skill(id)
+
+
 ## 事件屏上选了第 i 项（063）。选不了返回 false 留在原地；选了按后果往下走
 func choose_event(i: int) -> bool:
 	if run == null or not run.events.choose(i):
@@ -341,8 +348,7 @@ func _adopt(state: RunState) -> void:
 		state.install_mechanics()
 	var ch := character_of(state.character_id)
 	if ch != null:
-		state.character = ch
-		state.player_baseline = ch.baseline()
+		state.set_character(ch)     # 基线、技能的账（读档回来的状态在这里接上定义）
 	elif player_baseline != null:
 		state.player_baseline = player_baseline
 	var ev := state.events

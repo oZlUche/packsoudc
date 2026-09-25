@@ -11,6 +11,39 @@
     "part",
     "sigil"
   ],
+  "faith_bonuses": [
+    {
+      "rules": [
+        {
+          "trigger": {
+            "type": "on_battle_start"
+          },
+          "cadence": {
+            "type": "always"
+          },
+          "effects": [
+            {
+              "type": "apply_status",
+              "target": "SELF",
+              "buff": {
+                "id": "blood_rage",
+                "display_name": "血怒",
+                "max_stacks": 1,
+                "duration_sec": 10.0,
+                "mods": [
+                  {
+                    "mult_category": "EMPOWER",
+                    "mult_percent": 10
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "note": "第一阶：开战时血怒（伤害 +10%）"
+    }
+  ],
   "adjacency": {
     "grant_cells": [
       [

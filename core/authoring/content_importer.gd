@@ -164,6 +164,18 @@ static func import_faith(data: Dictionary, ctx: Context, report: ImportReport) -
 		report.error("id", "id 里别带前缀或冒号：道具上的标签会自动写成 %s<id>" % FaithDef.TAG_PREFIX)
 	if def.display_name.strip_edges() == "":
 		report.error("display_name", "信仰得有名字")
+	# 信力（082）：阈值正数、非递减；行为非空、点数正
+	for i in def.thresholds.size():
+		if def.thresholds[i] < 1:
+			report.error("thresholds[%d]" % i, "阈值得是正数")
+		elif i > 0 and def.thresholds[i] < def.thresholds[i - 1]:
+			report.error("thresholds[%d]" % i, "阈值得非递减")
+	for i in def.deeds.size():
+		var d := def.deeds[i] as FaithDeed
+		if d == null:
+			report.error("deeds[%d]" % i, "空的行为")
+		elif d.amount < 1:
+			report.error("deeds[%d].amount" % i, "每次至少给 1 点")
 	ctx.register_faith(def)
 	return def
 
@@ -182,6 +194,17 @@ static func _validate_item_faith(def: ItemDef, ctx: Context, report: ImportRepor
 		var fid := FaithDef.id_of_tag(objects[0])
 		if not ctx.faiths.has(fid):
 			report.error("tags", "没有登记过的信仰 '%s'（已知：%s）" % [fid, ", ".join(ctx.faiths.keys())])
+	# 信力解锁的功能（082）只对信仰道具有意义；阶从 1 起
+	if not def.faith_bonuses.is_empty() and not def.has_faith():
+		report.error("faith_bonuses", "只有信仰道具才有按信力解锁的功能")
+	for i in def.faith_bonuses.size():
+		var b := def.faith_bonuses[i] as FaithBonus
+		if b == null:
+			report.error("faith_bonuses[%d]" % i, "空的加成")
+		elif b.tier < 1:
+			report.error("faith_bonuses[%d].tier" % i, "阶从 1 起")
+		elif b.mods.is_empty() and b.rules.is_empty():
+			report.error("faith_bonuses[%d]" % i, "加成得有修饰或规则")
 
 
 ## 敌人（M4-1）。校验里「对着道具查」的那几条只在批量导入（上下文里有道具）时生效。
@@ -243,12 +266,31 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 	for key in def.base_stats:
 		if not (def.base_stats[key] is float or def.base_stats[key] is int):
 			report.error("base_stats", "'%s' 的值得是数" % key)
+	var seen_skills := {}
 	for i in def.skills.size():
-		var e := def.skills[i] as Effect
-		if e == null:
+		var sk := def.skills[i] as RunSkill
+		if sk == null:
 			report.error("skills[%d]" % i, "空的技能")
-		elif e.scope() != EffectScope.LOOT and e.scope() != EffectScope.RUN:
-			report.error("skills[%d]" % i, "技能只放掉落或一局规则的效果；战斗效果写进基线或道具")
+			continue
+		if sk.id == &"":
+			report.error("skills[%d].id" % i, "技能必须有 id（记次数与冷却用）")
+		elif seen_skills.has(sk.id):
+			report.error("skills[%d].id" % i, "技能 id 重复：%s" % sk.id)
+		seen_skills[sk.id] = true
+		if sk.uses < -1:
+			report.error("skills[%d].uses" % i, "次数只能是 -1（不限）或非负数")
+		if sk.cooldown_steps < 0:
+			report.error("skills[%d].cooldown_steps" % i, "冷却不能为负")
+		if sk is AssaultSkill and ((sk as AssaultSkill).hp_fraction <= 0.0 or (sk as AssaultSkill).hp_fraction > 1.0):
+			report.error("skills[%d].hp_fraction" % i, "突击扣的比例应在 (0, 1]")
+		if sk is EvadeSkill and (sk as EvadeSkill).steps < 1:
+			report.error("skills[%d].steps" % i, "躲避至少 1 步")
+		for j in sk.passive.size():
+			var e := sk.passive[j] as Effect
+			if e == null:
+				report.error("skills[%d].passive[%d]" % [i, j], "空的效果")
+			elif e.scope() != EffectScope.LOOT and e.scope() != EffectScope.RUN:
+				report.error("skills[%d].passive[%d]" % [i, j], "技能的被动只放掉落或一局规则的效果；战斗效果写进基线或道具")
 	if not ctx.items.is_empty():
 		for i in def.starting_bags.size():
 			var item: ItemDef = ctx.items.get(def.starting_bags[i], null)

@@ -1,55 +1,56 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_1j822"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_cjxo2"]
-[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_ds5e2"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_o5y0b"]
-[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="5_3mtl1"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_0gpmu"]
-[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_cuvuh"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_3hj21"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_a7m5m"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_8js17"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_hda4d"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_xn5vr"]
-
-[sub_resource type="Resource" id="Resource_hh4ty"]
-script = ExtResource("3_ds5e2")
-seconds = 1.4
-
-[sub_resource type="Resource" id="Resource_t7xa0"]
-script = ExtResource("5_3mtl1")
-amount = 7.0
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_cjxo2"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_ds5e2"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_o5y0b"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_3mtl1"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="5_0gpmu"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_cuvuh"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_3hj21"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_a7m5m"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_8js17"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_hda4d"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_xn5vr"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_hh4ty"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_t7xa0"]
 
 [sub_resource type="Resource" id="Resource_iakow"]
-script = ExtResource("7_cuvuh")
+script = ExtResource("3_o5y0b")
+seconds = 1.4
 
 [sub_resource type="Resource" id="Resource_wuetf"]
-script = ExtResource("8_3hj21")
+script = ExtResource("5_0gpmu")
+amount = 7.0
 
 [sub_resource type="Resource" id="Resource_dc42p"]
-script = ExtResource("2_cjxo2")
-trigger = SubResource("Resource_wuetf")
-cadence = SubResource("Resource_hh4ty")
-costs = Array[ExtResource("4_o5y0b")]([SubResource("Resource_t7xa0")])
-effects = Array[ExtResource("6_0gpmu")]([SubResource("Resource_iakow")])
+script = ExtResource("7_3hj21")
 
 [sub_resource type="Resource" id="Resource_1xk2q"]
-script = ExtResource("9_a7m5m")
+script = ExtResource("8_a7m5m")
+
+[sub_resource type="Resource" id="Resource_w1r46"]
+script = ExtResource("2_ds5e2")
+trigger = SubResource("Resource_1xk2q")
+cadence = SubResource("Resource_iakow")
+costs = Array[ExtResource("4_3mtl1")]([SubResource("Resource_wuetf")])
+effects = Array[ExtResource("6_cuvuh")]([SubResource("Resource_dc42p")])
+
+[sub_resource type="Resource" id="Resource_qq5wi"]
+script = ExtResource("9_8js17")
 base_stats = {
 "damage": 16
 }
-rules = Array[ExtResource("2_cjxo2")]([SubResource("Resource_dc42p")])
+rules = Array[ExtResource("2_ds5e2")]([SubResource("Resource_w1r46")])
 
-[sub_resource type="Resource" id="Resource_w1r46"]
-script = ExtResource("12_xn5vr")
+[sub_resource type="Resource" id="Resource_kdwtl"]
+script = ExtResource("13_t7xa0")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
 
 [resource]
-script = ExtResource("11_hda4d")
+script = ExtResource("12_hh4ty")
 id = &"mithril_sword"
 display_name = "秘银附魔长剑"
-shape = SubResource("Resource_w1r46")
+shape = SubResource("Resource_kdwtl")
 rarity = 3
 tags = Array[StringName]([&"weapon", &"melee", &"burst", &"enchanted"])
-combat = SubResource("Resource_1xk2q")
+combat = SubResource("Resource_qq5wi")

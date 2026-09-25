@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CharacterDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/character_def.gd" id="1_u1yx6"]
+[ext_resource type="Script" path="res://core/run/skills/run_skill.gd" id="2_df6is"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_wycgq"]
+[ext_resource type="Script" path="res://core/run/skills/assault_skill.gd" id="4_cn24h"]
+
+[sub_resource type="Resource" id="Resource_4ej68"]
+script = ExtResource("4_cn24h")
+id = &"assault"
+display_name = "突击"
+description = "下次进入战斗，先扣掉对方三成生命。"
+uses = 3
+cooldown_steps = 3
+
+[resource]
+script = ExtResource("1_u1yx6")
+id = &"marcus"
+display_name = "马库斯"
+description = "擅长战斗的军团士兵。一个皮革包、一个小包，生命 55，耐力更高。「突击」：下次进入战斗先扣对方三成血。"
+base_stats = {
+"max_hp": 55,
+"max_stamina": 65
+}
+starting_bags = Array[StringName]([&"bag_leather", &"bag_small"])
+skills = Array[ExtResource("2_df6is")]([SubResource("Resource_4ej68")])

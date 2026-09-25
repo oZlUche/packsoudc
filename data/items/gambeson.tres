@@ -1,30 +1,31 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_apad2"]
-[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="2_pqdid"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_n4rn6"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_8ki2x"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_xbhfi"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_pqdid"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="2_n4rn6"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_8ki2x"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_xbhfi"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_sl3hj"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_pe0pd"]
 
-[sub_resource type="Resource" id="Resource_sl3hj"]
-script = ExtResource("1_apad2")
+[sub_resource type="Resource" id="Resource_50qjw"]
+script = ExtResource("1_pqdid")
 stat = &"armor"
 flat = 1.0
 
-[sub_resource type="Resource" id="Resource_pe0pd"]
-script = ExtResource("2_pqdid")
+[sub_resource type="Resource" id="Resource_yo1us"]
+script = ExtResource("2_n4rn6")
 grant_cells = Array[Vector2i]([Vector2i(0, -1)])
 grant_filter = Array[StringName]([&"gear"])
-grant_mods = Array[ExtResource("1_apad2")]([SubResource("Resource_sl3hj")])
+grant_mods = Array[ExtResource("1_pqdid")]([SubResource("Resource_50qjw")])
 
-[sub_resource type="Resource" id="Resource_50qjw"]
-script = ExtResource("5_xbhfi")
+[sub_resource type="Resource" id="Resource_5db6x"]
+script = ExtResource("6_pe0pd")
 
 [resource]
-script = ExtResource("4_8ki2x")
+script = ExtResource("5_sl3hj")
 id = &"gambeson"
 display_name = "贴身内甲"
-shape = SubResource("Resource_50qjw")
+shape = SubResource("Resource_5db6x")
 rarity = 1
 tags = Array[StringName]([&"gear_plug"])
-adjacency = SubResource("Resource_pe0pd")
+adjacency = SubResource("Resource_yo1us")

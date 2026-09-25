@@ -1,29 +1,30 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_i5vll"]
-[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="2_7vlvv"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_1ptyv"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_oghoi"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_8aeci"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_7vlvv"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="2_1ptyv"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_oghoi"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_8aeci"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_hubvy"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_gdaal"]
 
-[sub_resource type="Resource" id="Resource_hubvy"]
-script = ExtResource("1_i5vll")
+[sub_resource type="Resource" id="Resource_nilw3"]
+script = ExtResource("1_7vlvv")
 mult_category = 1
 mult_percent = 20
 
-[sub_resource type="Resource" id="Resource_gdaal"]
-script = ExtResource("2_7vlvv")
+[sub_resource type="Resource" id="Resource_yvw15"]
+script = ExtResource("2_1ptyv")
 grant_cells = Array[Vector2i]([Vector2i(0, -1)])
 grant_filter = Array[StringName]([&"ranged"])
-grant_mods = Array[ExtResource("1_i5vll")]([SubResource("Resource_hubvy")])
+grant_mods = Array[ExtResource("1_7vlvv")]([SubResource("Resource_nilw3")])
 
-[sub_resource type="Resource" id="Resource_nilw3"]
-script = ExtResource("5_8aeci")
+[sub_resource type="Resource" id="Resource_rkc1q"]
+script = ExtResource("6_gdaal")
 
 [resource]
-script = ExtResource("4_oghoi")
+script = ExtResource("5_hubvy")
 id = &"arrows"
 display_name = "箭矢"
-shape = SubResource("Resource_nilw3")
+shape = SubResource("Resource_rkc1q")
 tags = Array[StringName]([&"ammo"])
-adjacency = SubResource("Resource_gdaal")
+adjacency = SubResource("Resource_yvw15")

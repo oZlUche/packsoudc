@@ -24,8 +24,8 @@ extends Resource
 @export var carry_max_items: int = -1
 ## 带入的稀有度上限（[ItemDef.rarity]），-1 = 不限
 @export var carry_rarity_cap: int = -1
-## 被动技能（069 第六节）：一局规则的效果构件（侦察、潜行、逃跑……和 buff 同一套），开局编进 RunContext；主动技能以后走事件层
-@export var skills: Array[Effect] = []
+## 局内技能（082，作者定）：[RunSkill] 构件 —— 被动常驻（一局规则 / 掉落的效果，开局编进 RunContext）+ 可选的主动一击（地图屏上用，次数与冷却由 [RunSkills] 记账）
+@export var skills: Array[RunSkill] = []
 
 
 ## 这个角色的战斗基线：默认值盖上覆盖项。编译器与战斗不认识角色，只认基线（4.2）
@@ -36,28 +36,38 @@ func baseline() -> CombatantBaseline:
 	return b
 
 
+## 全部技能的被动部分：一局规则的效果
 func run_effects() -> Array[RunEffect]:
 	var out: Array[RunEffect] = []
-	for e in skills:
-		if e is RunEffect:
-			out.append(e)
+	for s in skills:
+		if s != null:
+			out.append_array((s as RunSkill).run_effects())
 	return out
 
 
 func loot_effects() -> Array[LootEffect]:
 	var out: Array[LootEffect] = []
-	for e in skills:
-		if e is LootEffect:
-			out.append(e)
+	for s in skills:
+		if s != null:
+			out.append_array((s as RunSkill).loot_effects())
 	return out
 
 
-## 技能的一句话
+## 有主动一击的技能
+func active_skills() -> Array[RunSkill]:
+	var out: Array[RunSkill] = []
+	for s in skills:
+		if s != null and (s as RunSkill).is_active():
+			out.append(s)
+	return out
+
+
+## 技能的一句话：每个技能「名字（主动、被动各一句）」
 func skills_summary() -> String:
 	var parts: Array[String] = []
-	for e in skills:
-		if e != null and e.has_method("describe") and String(e.call("describe")) != "":
-			parts.append(String(e.call("describe")))
+	for s in skills:
+		if s != null:
+			parts.append((s as RunSkill).summary())
 	return "　".join(parts)
 
 
