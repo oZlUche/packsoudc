@@ -193,7 +193,9 @@ static func run_sessions(t: TestCase) -> void:
 	s.search()
 	t.check(s.active and s.can_search(), "搜了一次还能搜")
 	s.search()
-	t.check(not s.active, "搜满两次结束")
+	t.check(not s.can_search() and s.active, "搜满两次不能再搜，会话还开着（084）")
+	s.leave()
+	t.check(not s.active, "离开才结束")
 
 	var econ: EconomyRules = load(ContentPaths.asset_file("economy_rules", String(c.chapter.economy_rules)))
 	var shop_node := MapNode.new()

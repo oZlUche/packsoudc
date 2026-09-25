@@ -1,9 +1,11 @@
 ## 容器屏（063；作者：搜索和战利品本质上是同一个界面，只是装载的生成规则不同）。
 ##
 ## 左边是渐进揭示的容器（[LootView]），右边是自己的棋盘与暂存区，同一层拖拽盖着三块 —— 亮出来的直接拖走。
-## 装的是**尸体容器 / 待拾取**（payload 带 `container`）时按钮是「快速搜索 / 全部拾取 / 离开（剩下的不要了）」；
+## 装的是**尸体容器 / 待拾取**（payload 带 `container`）时按钮是「快速搜索 / 全部拾取 / 收起」—— 收起只是回地图，没拿的留在这个点上，
+## 地图上「回到这个点」能再开，走了才没（084）；
 ## 装的是**搜索会话**（payload 带 `session`）时容器是会话的收获箱，多一个「再搜一次」和风险行，每搜一次只对新来的走时间线；
-## 遭遇会话就结束，流程接着放回放。在搜索屏里已经亮过的（`flow.seen_loot`）到了待拾取不再重新揭示。
+## 搜满了会话不自动结束（084：最后一次的收获也要亮出来给玩家拖），按「离开」才结束；遭遇了流程接着放战前准备与回放。
+## 在这一屏亮过的（`flow.seen_loot`）再开不重新揭示。
 extends GameScreen
 
 const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
@@ -58,8 +60,13 @@ func open(payload: Dictionary) -> void:
 	_skip_btn = _button("快速搜索", skip_reveal, 13)
 	buttons.add_child(_skip_btn)
 	buttons.add_child(_button("全部拾取（进暂存区）", take_all, 13))
-	_leave_btn = _button("离开" if _session != null else "离开（剩下的不要了）", leave, 13)
-	buttons.add_child(_leave_btn)
+	if _session != null:
+		_leave_btn = _button("离开", leave, 13)
+		buttons.add_child(_leave_btn)
+		buttons.add_child(_button("收起（回地图，还能回来搜）", to_map, 13))
+	else:
+		_leave_btn = _button("收起（剩下的留在这里，走了就没）", to_map, 13)
+		buttons.add_child(_leave_btn)
 	left.add_child(buttons)
 
 	var inv := InventoryPanelScript.new()
@@ -74,7 +81,9 @@ func open(payload: Dictionary) -> void:
 	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
 		return _loot.is_revealed(inst.uid) or target == _container
 
-	_loot.item_revealed.connect(func(_uid: int): _refresh())
+	_loot.item_revealed.connect(func(uid: int):
+		flow.seen_loot[uid] = true     # 084：收起再开不重新揭示
+		_refresh())
 	_loot.reveal_finished.connect(_refresh)
 	if _session != null:
 		_session.searched.connect(_on_searched)
@@ -108,11 +117,17 @@ func take_all() -> void:
 		flow.take_all_loot()
 
 
+## 搜索会话：离开这个点的搜索（收获交到待拾取）。待拾取：同「收起」—— 剩下的留在这个点上，走了才没（084）
 func leave() -> void:
 	if _session != null:
 		_session.leave()
 	else:
-		flow.discard_loot()
+		to_map()
+
+
+## 084：收起回地图，什么都不结束：会话还开着 / 没拿的还在这个点上，地图上「回到这个点」能再开
+func to_map() -> bool:
+	return flow.hide_overlay()
 
 
 func loot_view() -> LootView:
@@ -146,8 +161,11 @@ func _refresh() -> void:
 	var revealed := _container.item_count() - _loot.unrevealed_count()
 	var searching := "　正在搜一件（%.1f 秒）" % _loot.current_seconds() if _loot.is_revealing() else ""
 	if _session != null:
-		_line.text = "还能搜 %d 次，下一次遭遇 %.0f%%　　收获 %d 件（亮了 %d 件）%s" % [
-			_session.searches_left(), _session.next_encounter_chance() * 100.0, _container.item_count(), revealed, searching]
+		if _session.is_exhausted():
+			_line.text = "搜完了　　收获 %d 件（亮了 %d 件）%s　　拖走想要的，按「离开」" % [_container.item_count(), revealed, searching]
+		else:
+			_line.text = "还能搜 %d 次，下一次遭遇 %.0f%%　　收获 %d 件（亮了 %d 件）%s" % [
+				_session.searches_left(), _session.next_encounter_chance() * 100.0, _container.item_count(), revealed, searching]
 		_search_btn.disabled = not _session.can_search()
 		if _leave_btn != null:
 			_leave_btn.disabled = not _session.can_leave()     # 教程点：搜够次数才能走（083）

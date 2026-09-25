@@ -19,3 +19,4 @@ economy_rules = &"prologue"
 grants_unlock = &"prologue_done"
 characters = Array[StringName]([&"brutus"])
 allow_carry_in = false
+auto_spawn = true

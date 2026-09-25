@@ -12,5 +12,6 @@
   "characters": [
     "brutus"
   ],
-  "allow_carry_in": false
+  "allow_carry_in": false,
+  "auto_spawn": true
 }

@@ -68,6 +68,8 @@ static func _settle_overlays(f: GameFlow) -> Array[int]:
 		guard += 1
 		seen.append(f.screen)
 		match f.screen:
+			GameFlow.Screen.PREBATTLE:
+				f.start_battle()
 			GameFlow.Screen.LOOT:
 				f.take_all_loot()
 			GameFlow.Screen.SEARCH:
@@ -276,7 +278,11 @@ static func run_flow_screens(t: TestCase) -> void:
 	t.check(not f.extract(), "不在撤离点上撤不了")
 
 	t.check(f.step_to(int(found["next"])), "走上战斗点")
-	t.eq(f.screen, GameFlow.Screen.BATTLE, "先看回放")
+	t.eq(f.screen, GameFlow.Screen.PREBATTLE, "先到战前准备屏（084）")
+	t.check(not f.run.events.pending_battle.is_empty() and int(f.run.events.pending_battle["node"]) == int(found["next"]), "等着开打的就是这个点")
+	t.check(not f.step_to(int(found["entry"])), "没开战走不了")
+	t.check(f.start_battle(), "开战")
+	t.eq(f.screen, GameFlow.Screen.BATTLE, "再看回放")
 	var p := f.last_payload
 	t.check(p.get("result", null) is BattleResult and bool(p.get("won", false)), "回放带着结果，赢了（血 10000）")
 	t.check(p.get("player", null) is CombatantSpec and p.get("enemy", null) is CombatantSpec, "双方的战斗单位都在（回放要按 uid 查名字）")
@@ -352,6 +358,8 @@ static func run_flow_defeat(t: TestCase) -> void:
 	var ended: Array = []
 	f.run_ended.connect(func(r: RunResult): ended.append(r))
 	t.check(f.step_to(int(found["next"])), "走上战斗点")
+	t.eq(f.screen, GameFlow.Screen.PREBATTLE, "先到战前准备屏")
+	t.check(f.start_battle(), "开战")
 	t.eq(f.screen, GameFlow.Screen.BATTLE, "那一场的回放还给看")
 	t.check(not bool(f.last_payload.get("won", true)), "输了")
 	t.check(f.run.is_over(), "一局结束了")
@@ -480,6 +488,9 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	map.toggle_bag()
 	t.check(not map.bag_open(), "收起了")
 	t.check(map.step(int(found["next"])), "走上战斗点")
+	t.check(game.overlay() != null and game.overlay().screen == GameFlow.Screen.PREBATTLE, "战前准备屏叠上来了（084）")
+	t.check(game.overlay().enemy_view() != null and game.overlay().enemy_view().inventory != null, "画着对手的棋盘")
+	t.check(game.overlay().start_battle(), "开战")
 	t.check(game.overlay() != null and game.overlay().screen == GameFlow.Screen.BATTLE, "战斗回放叠上来了")
 	t.eq(game.base(), map, "地图还在底下")
 	game.overlay().proceed()
@@ -558,6 +569,8 @@ static func _director_walk(game, run: RunState, target: int) -> void:
 			inner += 1
 			var ov = game.overlay()
 			match ov.screen:
+				GameFlow.Screen.PREBATTLE:
+					ov.start_battle()
 				GameFlow.Screen.LOOT:
 					ov.take_all()
 				GameFlow.Screen.SEARCH, GameFlow.Screen.SHOP:
@@ -669,6 +682,8 @@ static func _settle_overlays_until_loot(f: GameFlow) -> void:
 	while GameFlow.is_overlay(f.screen) and f.screen != GameFlow.Screen.LOOT and guard < 10:
 		guard += 1
 		match f.screen:
+			GameFlow.Screen.PREBATTLE:
+				f.start_battle()
 			GameFlow.Screen.SEARCH:
 				f.run.events.current_search.leave()
 			GameFlow.Screen.SHOP:

@@ -499,6 +499,8 @@ static func frame_director(t: TestCase, root: Window) -> void:
 		guard += 1
 		var ov = game.overlay()
 		match ov.screen:
+			GameFlow.Screen.PREBATTLE:
+				ov.start_battle()
 			GameFlow.Screen.LOOT:
 				ov.take_all()
 			_:

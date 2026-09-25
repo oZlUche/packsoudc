@@ -392,6 +392,8 @@ static func run_save_and_flow(t: TestCase) -> void:
 	while GameFlow.is_overlay(f.screen) and guard < 10:
 		guard += 1
 		match f.screen:
+			GameFlow.Screen.PREBATTLE:
+				f.start_battle()
 			GameFlow.Screen.LOOT:
 				f.take_all_loot()
 			GameFlow.Screen.SEARCH:

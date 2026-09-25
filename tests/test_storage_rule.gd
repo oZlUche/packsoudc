@@ -66,6 +66,8 @@ static func _settle(f: GameFlow) -> void:
 	while GameFlow.is_overlay(f.screen) and guard < 30:
 		guard += 1
 		match f.screen:
+			GameFlow.Screen.PREBATTLE:
+				f.start_battle()
 			GameFlow.Screen.LOOT:
 				f.take_all_loot()
 			GameFlow.Screen.SEARCH:
@@ -269,6 +271,8 @@ static func frame_map_prompt(t: TestCase, root: Window) -> void:
 		guard += 1
 		var ov = game.overlay()
 		match ov.screen:
+			GameFlow.Screen.PREBATTLE:
+				ov.start_battle()
 			GameFlow.Screen.LOOT:
 				ov.take_all()
 			_:
@@ -291,6 +295,8 @@ static func frame_map_prompt(t: TestCase, root: Window) -> void:
 		guard += 1
 		var ov2 = game.overlay()
 		match ov2.screen:
+			GameFlow.Screen.PREBATTLE:
+				ov2.start_battle()
 			GameFlow.Screen.LOOT:
 				ov2.take_all()
 			GameFlow.Screen.SEARCH, GameFlow.Screen.SHOP:

@@ -22,6 +22,7 @@ const SCREEN_SCRIPTS := {
 	GameFlow.Screen.RESULT: "res://ui/game/result_screen.gd",
 	GameFlow.Screen.META: "res://ui/game/meta_screen.gd",
 	GameFlow.Screen.SETTINGS: "res://ui/game/settings_screen.gd",
+	GameFlow.Screen.PREBATTLE: "res://ui/game/prebattle_screen.gd",
 }
 const LAUNCHER := "res://ui/launcher.tscn"
 
@@ -34,6 +35,8 @@ var flow: GameFlow = null
 var _font: Font
 var _base: GameScreen = null
 var _overlay: GameScreen = null
+## 084：最小化的叠层（作者定：收起不是关掉，是藏起来 —— 揭示进度、日志、拖到一半的状态都留着，「回到这个点」原样放回）
+var _minimized: GameScreen = null
 
 
 func _ready() -> void:
@@ -82,11 +85,28 @@ func overlay() -> GameScreen:
 func _on_screen_changed(screen: int, payload: Dictionary) -> void:
 	if GameFlow.is_overlay(screen):
 		_drop_overlay()
+		if bool(payload.get("restore", false)) and _minimized != null and _minimized.screen == screen:
+			# 084：恢复最小化的那一屏，不重造
+			_overlay = _minimized
+			_minimized = null
+			_overlay.visible = true
+			_overlay.process_mode = Node.PROCESS_MODE_INHERIT
+			return
+		_drop_minimized()
 		_overlay = _make(screen)
 		add_child(_overlay)
 		_overlay.open(payload)
 		return
-	_drop_overlay()
+	if bool(payload.get("minimized", false)) and _overlay != null:
+		# 084：收起 = 最小化：藏起来、停掉它的计时（揭示动画不在背后偷跑），流程与会话都还在
+		_drop_minimized()
+		_minimized = _overlay
+		_overlay = null
+		_minimized.visible = false
+		_minimized.process_mode = Node.PROCESS_MODE_DISABLED
+	else:
+		_drop_overlay()
+		_drop_minimized()     # 换了屏（走了一步、结算……）：藏着的那一屏也过期了
 	if _base != null and _base.screen == screen:
 		_base.refresh()
 		return
@@ -106,6 +126,17 @@ func _drop_overlay() -> void:
 		_overlay = null
 
 
+func _drop_minimized() -> void:
+	if _minimized != null:
+		_minimized.queue_free()
+		_minimized = null
+
+
+## 084：现在藏着的那一屏（测试看）；没有就 null
+func minimized() -> GameScreen:
+	return _minimized
+
+
 func _make(screen: int) -> GameScreen:
 	var script := load(String(SCREEN_SCRIPTS[screen])) as GDScript
 	var s: GameScreen = script.new()
@@ -120,7 +151,7 @@ func _to_launcher() -> void:
 		push_error("GameDirector: 回不去启动选择器")
 
 
-## 截图工具的钩子（tools/capture_scene.gd）：环境变量 DEMO_SCREEN = setup / map / bag / battle / loot / search / result / meta，
+## 截图工具的钩子（tools/capture_scene.gd）：环境变量 DEMO_SCREEN = setup / map / bag / prebattle / battle / loot / search / result / meta，
 ## 把流程推到那一屏，好让截图里有东西可看。不设就停在主菜单
 func demo_fill() -> void:
 	var want := OS.get_environment("DEMO_SCREEN")
@@ -241,7 +272,11 @@ func demo_fill() -> void:
 		_base.call("extract")
 		return
 	flow.step_to(int(found["next"]))
+	if want == "prebattle":
+		return     # 084：停在战前准备屏
 	if want == "battle":
+		if flow.screen == GameFlow.Screen.PREBATTLE:
+			flow.start_battle()
 		return
 	if want == "event":
 		return
@@ -271,6 +306,8 @@ func _demo_settle() -> void:
 	while GameFlow.is_overlay(flow.screen) and guard < 30:
 		guard += 1
 		match flow.screen:
+			GameFlow.Screen.PREBATTLE:
+				flow.start_battle()
 			GameFlow.Screen.LOOT:
 				flow.take_all_loot()
 			GameFlow.Screen.SEARCH:

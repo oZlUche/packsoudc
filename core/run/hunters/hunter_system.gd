@@ -274,7 +274,8 @@ func _update_sense() -> void:
 func check_engagement() -> bool:
 	if run == null or run.is_over() or run.events == null or player_node() < 0:
 		return false
-	if not run.events.pending.is_empty() or run.events.current_search != null or run.events.current_shop != null:
+	if not run.events.pending.is_empty() or run.events.current_search != null or run.events.current_shop != null \
+			or not run.events.pending_battle.is_empty():
 		return false
 	if run.skills != null and run.skills.evading():
 		return false     # 局内技能「躲避」（082）：这几步够不着

@@ -6,6 +6,8 @@
 ## - 战斗 / 精英 / 核心：拿玩家的战斗单位与节点里的敌人打一场 [BattleSim]（战斗中没有任何玩家操作，4.1）。
 ##   赢了掉落（[DropResolver]）装进尸体容器；输了扣体力（core 输了直接战败，不扣）；**不论输赢节点都消耗掉**（7.1）。
 ##   平局按输算：打不死也没打过。
+##   **开打前先停一下**（084，[member pause_before_battle] 开着时）：把这一场记进 [member pending_battle]、发 [signal battle_pending]，
+##   等玩家在战前准备屏整理完背包按「开战」（[method start_pending_battle]）才真打；关着（测试、批量工具、猎手）就同步打。
 ## - 搜索：开一个 [SearchSession]，搜几次玩家自己拧；遭遇了就地打一场，打完这个点就用过了。
 ## - 随机：先按权重变成一种类型（[NodeRules.random_pick]），是战斗就现造敌人，再当那种类型处理。
 ## - 休息回体力、商店与撤离只发信号、常规事件按权重出一种结果（占位）。
@@ -86,6 +88,13 @@ signal option_chosen(node: MapNode, option: EventOption)
 var before_battle: Callable = Callable()
 ## 082：已经免罚了几次败仗（RunContext.free_losses 是配额）。跟着存档走
 var losses_forgiven: int = 0
+## 084：开打前要不要停下来等玩家（战前准备屏）。正式游戏（GameFlow）开；直接驱动 RunState 的测试与批量工具关，照旧同步打
+var pause_before_battle: bool = false
+## 084：等着开打的那一场：{"node": id, "type": 按什么类型打, "content": 敌人内容, "kind": "node" / "search"}。
+## kind 决定打完接着做什么（点用过 / 收搜索会话）。跟着存档走；读档回来还停在战前准备屏
+var pending_battle: Dictionary = {}
+## 084：开打前先停下来了：战前准备屏画它（敌人的棋盘从 content 重建，[method EnemyKit.board_of]）
+signal battle_pending(node: MapNode, type: StringName, content: Dictionary)
 
 var current_search: SearchSession = null
 var current_shop: ShopSession = null
@@ -137,8 +146,7 @@ func _proceed(node: MapNode, type: StringName) -> void:
 	match type:
 		&"battle", &"elite", &"core":
 			last_handled_id = node.id
-			_fight(node, type, node.content)
-			_visited(node)
+			_battle_at(node, type, node.content, "node")
 		&"search":
 			last_handled_id = node.id
 			_open_search(node)
@@ -277,15 +285,14 @@ func choose(i: int) -> bool:
 	elif ctx.start_battle:
 		var fight_type := type if type in [&"battle", &"elite", &"core"] else &"battle"
 		var content := node.content if EnemyKit.has_enemy(node.content) else _enemy_for(node, &"battle", _rng_for(node, "event_enemy"))
-		_fight(node, fight_type, content)
-		_visited(node)
+		_battle_at(node, fight_type, content, "node")
 	elif ctx.proceed:
 		_proceed(node, type)
 	else:
 		_visited(node)
 	# 8-3 传送：这个点的事都完了才挪人（打输了、开着会话就不挪）。造一个 teleport 意图交给持有方 / 旅程，
 	# 和走一条传送点边是同一条路：计数、侵蚀、落地那个点头一回踩上就触发它的事
-	if ctx.teleport_to >= 0 and not over and travel != null and current_search == null and current_shop == null:
+	if ctx.teleport_to >= 0 and not over and travel != null and current_search == null and current_shop == null and pending_battle.is_empty():
 		_visited(node)
 		var intent := MoveIntent.teleport(node.id, ctx.teleport_to, ctx.teleport_cost)
 		if relocate.is_valid():
@@ -337,6 +344,65 @@ func exploration() -> Dictionary:
 static func effective_type(node: MapNode) -> StringName:
 	var resolved := String(node.content.get("resolved_type", ""))
 	return StringName(resolved) if resolved != "" else node.type
+
+
+#region 战前准备（084）
+## 节点上的一场：开着 [member pause_before_battle] 就先停下等玩家，否则立刻打。打完（或根本没有敌人）按 [param kind] 收尾
+func _battle_at(node: MapNode, type: StringName, content: Dictionary, kind: String) -> void:
+	if pause_before_battle and _can_fight(content):
+		pending_battle = {"node": node.id, "type": String(type), "content": content.duplicate(true), "kind": kind}
+		battle_pending.emit(node, type, content)
+		return
+	_fight(node, type, content)
+	_after_battle(node, kind)
+
+
+## 这一场打得起来吗：有敌人、有玩家（没有就当走过，_fight 也是这么判的）
+func _can_fight(content: Dictionary) -> bool:
+	if content.is_empty() or not player_spec.is_valid():
+		return false
+	return EnemyKit.spec_of(content, enemies, pool, items) != null
+
+
+## 打完这一场接着做的事：节点的战斗把点标用过；搜索遭遇的先把会话收掉（收获交出去）再标用过
+func _after_battle(node: MapNode, kind: String) -> void:
+	if kind == "search" and current_search != null:
+		var session := current_search
+		searches_closed += session.searches_done
+		current_search = null
+		search_closed.emit(node, session.haul(), &"encounter")
+	_visited(node)
+
+
+## 等着开打的那个点
+func pending_battle_node() -> MapNode:
+	return graph.get_node(int(pending_battle["node"])) if not pending_battle.is_empty() and graph != null and graph.has_node(int(pending_battle["node"])) else null
+
+
+## 等着开打的对手的战斗单位（战前准备屏的读数；和真打出来的是同一份编译）
+func pending_battle_spec() -> CombatantSpec:
+	return EnemyKit.spec_of(pending_battle.get("content", {}), enemies, pool, items) if not pending_battle.is_empty() else null
+
+
+## 等着开打的对手的棋盘（战前准备屏画它）
+func pending_battle_board() -> GridInventory:
+	return EnemyKit.board_of(pending_battle.get("content", {}), items) if not pending_battle.is_empty() and items != null else null
+
+
+## 玩家在战前准备屏按了「开战」：真打，然后按 kind 收尾。没有等着的一场返回 false
+func start_pending_battle() -> bool:
+	var node := pending_battle_node()
+	if node == null:
+		pending_battle = {}
+		return false
+	var type := StringName(String(pending_battle.get("type", "battle")))
+	var content: Dictionary = pending_battle.get("content", {})
+	var kind := String(pending_battle.get("kind", "node"))
+	pending_battle = {}
+	_fight(node, type, content)
+	_after_battle(node, kind)
+	return true
+#endregion
 
 
 ## 打一场（猎手系统也走这条路：给它自己的掉落上下文）。返回赢没赢
@@ -425,6 +491,11 @@ func pay_extract_fee(node: MapNode) -> bool:
 
 func _close_search(node: MapNode, session: SearchSession, reason: StringName) -> void:
 	if reason == &"encounter":
+		if pause_before_battle and _can_fight(session.encounter):
+			# 先停在战前准备屏；打完由 _after_battle("search") 收会话、交收获、标用过
+			pending_battle = {"node": node.id, "type": "search", "content": session.encounter.duplicate(true), "kind": "search"}
+			battle_pending.emit(node, &"search", session.encounter)
+			return
 		_fight(node, &"search", session.encounter)
 	searches_closed += session.searches_done
 	current_search = null

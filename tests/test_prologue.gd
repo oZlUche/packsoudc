@@ -159,7 +159,7 @@ static func run_data(t: TestCase) -> void:
 
 
 static func run_walkthrough(t: TestCase) -> void:
-	t.begin("序章 · 走一遍：搜两次拿到固定的收获 → 整理（开打的选项要棋盘上有东西）→ 战斗赢 → 战利品 → 搜三次第三次遭遇 → 赢 → 战利品 → 精英赢 → 撤离")
+	t.begin("序章 · 走一遍：搜两次拿到固定的收获（搜满不自动结束）→ 整理事件只有「进入战前准备」→ 战斗赢 → 战利品 → 搜三次第三次遭遇 → 赢 → 战利品 → 精英赢 → 撤离")
 	var c := _content()
 	var s := _start(c)
 	t.not_null(s, "按布鲁图斯开局")
@@ -186,29 +186,27 @@ static func run_walkthrough(t: TestCase) -> void:
 			want.append(StringName(String(id)))
 		t.eq(got["found"], want, "第 %d 次搜到写死的东西" % (k + 1))
 		t.check((got["encounter"] as Dictionary).is_empty(), "第 %d 次没遭遇" % (k + 1))
-	t.check(not session.active, "搜满了自动结束")
+	t.check(not session.can_search() and session.active, "搜满了不能再搜，但会话不自动结束（084：收获留给玩家亮出来、拖走）")
+	session.leave()
+	t.check(not session.active, "按「离开」才结束")
 	t.not_null(s.pending_loot, "收获等着拿")
 	t.eq(s.take_all_loot(), 3, "拿走三件")
-	# 整理：暂存区一挪步就清（080），所以先只把非武器放进包里 → 开打锁着（要武器）；武器放上去 → 能选
+	# 整理：暂存区一挪步就清（080），先把搜到的都放进包里（有没有武器的门在战前准备屏上，084）
 	var weapon: ItemInstance = null
 	for inst in s.storage.items().duplicate():
 		if (inst as ItemInstance).def.tags.has(&"weapon") and weapon == null:
 			weapon = inst
-		else:
-			s.equip((inst as ItemInstance).uid)
+		s.equip((inst as ItemInstance).uid)
 	t.not_null(weapon, "第一次搜到了武器")
-	s.storage.remove(weapon.uid)
+	t.eq(s.storage.item_count(), 0, "都放进包里了")
 	t.check(s.step_to(path[2].id), "走到战斗点")
 	ev = s.events.pending_event()
 	t.check(ev != null and ev.id == StringName(String(path[2].content["event"])), "先看「整理」事件")
-	t.check(not bool(s.events.option_state(0)["ok"]), "棋盘上没武器：开打锁着（%s）" % s.events.option_state(0)["why"])
-	t.check(bool(s.events.option_state(1)["ok"]), "「先整理背包」随时能选")
-	s.storage.admit(weapon)
-	t.check(s.equip(weapon.uid), "把武器放进包里")
-	t.eq(s.storage.item_count(), 0, "都放进包里了")
-	t.check(bool(s.events.option_state(0)["ok"]), "有武器了：能开打")
+	t.eq(ev.options.size() if ev != null else 0, 1, "只有「进入战前准备」一个选项（084）")
+	t.check(ev != null and (ev.options[0] as EventOption).label == "进入战前准备", "选项叫「进入战前准备」")
+	t.check(bool(s.events.option_state(0)["ok"]), "随时能选")
 	var v0 := s.vitality.current
-	t.check(s.events.choose(0), "开打")
+	t.check(s.events.choose(0), "进入战前准备（直接驱动 RunState 不停战前屏，立刻开打）")
 	t.eq(int(s.tally["battles_won"]), 1, "打赢了")
 	t.eq(s.vitality.current, v0, "没扣体力")
 	t.not_null(s.pending_loot, "战利品")

@@ -167,6 +167,9 @@ static func start(
 	s._wire_events()
 	s.install_mechanics()     # 机制要接的东西（旅程、节点事件）都造好了才装
 	s.phase = Phase.PICK_SPAWN
+	# 084：章节说了「默认已经站在出生点上」（序章只有一个出生点，没什么可挑的）就直接站上去
+	if p_chapter.auto_spawn and not s.map.entry_ids.is_empty():
+		s.pick_spawn(s.map.entry_ids[0])
 	return s
 
 
@@ -179,13 +182,15 @@ func pick_spawn(id: int) -> bool:
 	return true
 
 
-## 走一步。开着的商店 / 搜索先关掉（随时可以离开）；走出发生过事的点，暂存区连东西一起清空（3.4）；不在图上走不了
+## 走一步。开着的商店 / 搜索先关掉（随时可以离开）；没拿的战利品、暂存区里的东西都留在这个点上（3.4 / 084：离开就是清的时机）；
+## 等着开打的一场没打不能走；不在图上走不了
 func step_to(id: int) -> bool:
-	if phase != Phase.ON_MAP:
+	if phase != Phase.ON_MAP or not events.pending_battle.is_empty():
 		return false
 	if not travel.available_moves().has(id):
 		return travel.step_to(id)     # 让旅程自己拒绝、发 refused；走不成就不该清东西
 	close_sessions()
+	_drop_pending_loot()
 	_drop_storage_if_leaving()
 	var ok := travel.step_to(id)
 	if ok:
@@ -201,6 +206,7 @@ func relocate(intent: MoveIntent) -> bool:
 	if phase != Phase.ON_MAP or intent == null:
 		return false
 	close_sessions()
+	_drop_pending_loot()
 	_drop_storage_if_leaving()
 	var ok := travel.apply(intent)
 	if ok:
@@ -252,6 +258,12 @@ func _drop_storage(at_id: int) -> void:
 	storage_dropped.emit(at_id, dropped)
 
 
+## 084：没拿完的战利品（尸体 / 搜索收获）留在这个点上 —— 收起战利品屏不算丢，走了才算。和暂存区同一个时机
+func _drop_pending_loot() -> void:
+	if pending_loot != null:
+		discard_loot()
+
+
 ## 离开正在搜的点 / 正在逛的店
 func close_sessions() -> void:
 	if events == null:
@@ -274,6 +286,7 @@ func try_extract() -> bool:
 	if not events.pay_extract_fee(node):
 		return false
 	close_sessions()
+	_drop_pending_loot()
 	_set_phase(Phase.EXTRACTED, &"extract")
 	return true
 
@@ -718,7 +731,8 @@ func to_dict() -> Dictionary:
 		"board": board.to_dict(),
 		"storage": storage.to_dict(),
 		"rng": rng.to_dict(),
-		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id, "pending": events.pending.duplicate(), "losses_forgiven": events.losses_forgiven},
+		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id, "pending": events.pending.duplicate(), "losses_forgiven": events.losses_forgiven,
+			"pending_battle": events.pending_battle.duplicate(true)},
 		"skills": skills.to_dict(),
 		"faith_power": faith_power.to_dict(),
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
@@ -772,6 +786,12 @@ static func from_dict(
 		s.events.pending = {"node": int(pending.get("node", -1)), "event": String(pending.get("event", "")), "type": String(pending.get("type", ""))}
 		if pending.has("hunter"):
 			s.events.pending["hunter"] = int(pending["hunter"])
+	# 084：读档回来还停在战前准备屏（开着的搜索会话不存，遭遇那一场打完只标点用过）
+	var pb = (d.get("events", {}) as Dictionary).get("pending_battle", {})
+	if pb is Dictionary and not (pb as Dictionary).is_empty() and pb.has("node"):
+		var content = pb.get("content", {})
+		s.events.pending_battle = {"node": int(pb["node"]), "type": String(pb.get("type", "battle")),
+			"content": (content as Dictionary).duplicate(true) if content is Dictionary else {}, "kind": String(pb.get("kind", "node"))}
 	for key in d.get("tally", {}):
 		s.tally[String(key)] = int((d["tally"] as Dictionary)[key])
 	var buffs: Dictionary = d.get("buffs", {})

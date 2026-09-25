@@ -390,6 +390,7 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	if n.id == current_id:
 		var r := NODE_RADIUS + 8.0 + 2.5 * sin(_pulse)
 		draw_arc(p, r, 0.0, TAU, 40, UiPalette.FG, 2.5, true)
+		_draw_player_marker(p)
 	elif n.id == selected_id:
 		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, UiPalette.FG, 2.0, true)
 	elif n.id == _hover_id:
@@ -403,6 +404,22 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	# 危险等级：右上角几个红点
 	for k in n.danger:
 		draw_circle(p + Vector2(NODE_RADIUS - 2.0 - 6.0 * k, -NODE_RADIUS + 1.0), 2.5, UiPalette.HP)
+
+
+## 玩家在哪（084）：节点上方一个朝下的三角标，上下轻轻浮动 —— 一眼找到自己，不用在一圈圈环里找那个亮的环
+func _draw_player_marker(p: Vector2) -> void:
+	var lift := NODE_RADIUS + 14.0 + 2.0 * sin(_pulse * 1.3)
+	var tip := p + Vector2(0.0, -lift)
+	var w := 9.0
+	var h := 14.0
+	var pts := PackedVector2Array([tip, tip + Vector2(-w, -h), tip + Vector2(w, -h)])
+	draw_colored_polygon(pts, UiPalette.HEAL)
+	var outline := PackedVector2Array([tip, tip + Vector2(-w, -h), tip + Vector2(w, -h), tip])
+	draw_polyline(outline, UiPalette.FG, 1.5, true)
+	if _font != null:
+		var text := "你"
+		var tw := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+		draw_string(_font, tip + Vector2(-tw / 2.0, -h - 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, UiPalette.FG)
 
 
 static func _edge_key(a: int, b: int) -> String:

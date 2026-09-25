@@ -300,6 +300,8 @@ static func run_search(t: TestCase) -> void:
 	t.eq(s.next_encounter_chance(), w.rules.search.encounter_chance(0), "遭遇概率按曲线第 0 档")
 	while s.can_search():
 		s.search()
+	if s.active:
+		s.leave()     # 084：搜满不自动结束，玩家按「离开」
 	t.eq(closed.size(), 1, "会话结束了")
 	if closed.is_empty():
 		return

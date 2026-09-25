@@ -209,20 +209,13 @@ func toggle_bag() -> void:
 	shade.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(shade)
 	_bag = shade
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.add_child(center)
-	var panel := _panel(16)
-	center.add_child(panel)
-	var col := _vbox(10)
-	panel.add_child(col)
-	var head := _hbox(12)
-	head.add_child(_label("背包", 18, UiPalette.FG))
-	head.add_child(_button("收起（B）", toggle_bag, 12))
-	col.add_child(head)
+	# 084：背包是能拖着走的浮窗，不锁在一个地方；关掉再开还在上次放的位置
+	var win := FloatingWindow.new()
+	win.setup("bag", "背包", font, toggle_bag, "收起（B）")
+	shade.add_child(win)
 	var inv := InventoryPanelScript.new()
 	inv.setup(flow.run, font)
-	col.add_child(inv)
+	win.body().add_child(inv)
 
 
 func bag_open() -> bool:

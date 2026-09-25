@@ -107,7 +107,9 @@ static func run_session(t: TestCase) -> void:
 		k += 1
 	t.eq(k, rules.max_searches, "搜了 max_searches 次就停")
 	t.eq(searched_log.size(), k, "每次都发了 searched")
-	t.eq(ends, [&"exhausted"] as Array[StringName], "结束原因：搜满了")
+	t.check(s.active and s.is_exhausted() and ends.is_empty(), "搜满了会话不自动结束（084：最后一次的收获留给玩家亮出来、拖走）")
+	s.leave()
+	t.eq(ends, [&"exhausted"] as Array[StringName], "搜满了才走：结束原因是搜满")
 	t.check(not s.can_search() and s.search().is_empty(), "满了再搜是空")
 	t.eq(int(node.content["searches"]), k, "搜过几次记在节点内容里")
 	t.check(s.found.size() >= k * rules.items_per_search.x, "找到的东西累计（%d 件）" % s.found.size())

@@ -2,7 +2,8 @@
 ##
 ## 每搜一次：先按 [SearchRules] 找到几件（稀有度随深度与危险上偏），再按遭遇曲线掷一次 ——
 ## 中了就是遭遇，敌人由 [member encounter_builder] 现造（敌人池按 `search` 类型出人，5.10：搜到了才看得见），
-## 搜索到此为止，打完这一场就走。没中可以继续搜，搜满 [member SearchRules.max_searches] 次或随时 [method leave]。
+## 搜索到此为止，打完这一场就走。没中可以继续搜，搜满 [member SearchRules.max_searches] 次就不能再搜，
+## 但会话**不自动结束**（084：最后一次的收获要留给玩家亮出来、拖走），随时 [method leave] 才结束。
 ##
 ## 随机数只用节点的 `content_seed`：同一个点、同样的搜法，每次搜出来的一样。
 ## 搜过几次记进 `node.content["searches"]`，跟着图存。
@@ -11,7 +12,7 @@ extends RefCounted
 
 ## 搜了一次：找到了什么、有没有遭遇（遭遇 = 敌人内容，没有 = 空字典）
 signal searched(found: Array[StringName], encounter: Dictionary)
-## 结束：&"left" 自己走的 / &"exhausted" 搜满了 / &"encounter" 遭遇了
+## 结束：&"left" 自己走的 / &"exhausted" 搜满了才走的 / &"encounter" 遭遇了
 signal ended(reason: StringName)
 ## 收获容器换了一个（原来的放不下，换了高一格的；东西原位搬过去、uid 不变）。界面重新绑
 signal haul_changed(box: GridInventory)
@@ -114,15 +115,20 @@ func search() -> Dictionary:
 	searched.emit(got, met)
 	if not met.is_empty():
 		_end(&"encounter")
-	elif searches_done >= max_total():
-		_end(&"exhausted")
+	# 搜满了不在这里结束：屏还要把最后一次的收获亮出来给玩家拖，玩家按「离开」才算走（084）
 	return {"found": got, "encounter": met}
 
 
-## 随时可以离开（教程点要求搜够 `search_min` 次才能走：界面按 [method can_leave] 灰掉按钮，这里不拦）
+## 搜满了没有（满了就不能再搜，但还没走）
+func is_exhausted() -> bool:
+	return rules != null and searches_done >= max_total()
+
+
+## 随时可以离开（教程点要求搜够 `search_min` 次才能走：界面按 [method can_leave] 灰掉按钮，这里不拦）。
+## 搜满了才走的记作 &"exhausted"，没搜满就走的记作 &"left"
 func leave() -> void:
 	if active:
-		_end(&"left")
+		_end(&"exhausted" if is_exhausted() else &"left")
 
 
 ## 节点内容 `search_finds`（083）：第 k 次搜固定找到什么（id 列表的列表）；没写、或超出的返回空 = 照规则抽

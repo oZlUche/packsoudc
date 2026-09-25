@@ -21,6 +21,7 @@ func open(payload: Dictionary) -> void:
 	var row := _hbox(8)
 	_refresh_btn = _button("", refresh_stock, 14)
 	row.add_child(_refresh_btn)
+	row.add_child(_button("收起（回地图，店还开着）", to_map, 14))
 	row.add_child(_button("离开", leave, 14))
 	col.add_child(row)
 	if _session != null:
@@ -41,6 +42,11 @@ func refresh_stock() -> bool:
 func leave() -> void:
 	if _session != null:
 		_session.leave()
+
+
+## 084：收起回地图，店还开着（地图上「回到这个点」能再开）；走了才算离开
+func to_map() -> bool:
+	return flow.hide_overlay()
 
 
 func _rebuild() -> void:

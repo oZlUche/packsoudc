@@ -36,7 +36,7 @@ func _build() -> void:
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", 8)
 	row.add_child(left)
-	left.add_child(_label("作战棋盘　只有包里的东西参战", 13, UiPalette.DIM))
+	left.add_child(_label("作战棋盘　只有包里的东西参战　拖出棋盘 = 放进暂存区", 13, UiPalette.DIM))
 	board_view = InventoryView.new()
 	board_view.label_font = _font
 	board_view.inventory = _run.board
@@ -45,13 +45,13 @@ func _build() -> void:
 	left.add_child(board_view)
 	_readout = _label("", 14, UiPalette.FG)
 	left.add_child(_readout)
-	_hint = _label("左键拖动　R 旋转　右键 / Esc 取消　压着别人放手会把人顶出来", 11, UiPalette.DIM)
+	_hint = _label("左键拖动　R 旋转　右键 / Esc 取消　压着别人放手会把人顶出来　放到棋盘外就进暂存区", 11, UiPalette.DIM)
 	left.add_child(_hint)
 
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 8)
 	row.add_child(right)
-	right.add_child(_label("暂存区　背着但不参战，撤离时不带出去", 13, UiPalette.DIM))
+	right.add_child(_label("暂存区（不限大小）　不参战、一挪步就清、撤离不带出去", 13, UiPalette.DIM))
 	storage_view = StashView.new()
 	storage_view.label_font = _font
 	storage_view.stash = _run.storage
@@ -66,6 +66,7 @@ func _build() -> void:
 	_drag.register_view(board_view)
 	_drag.register_view(storage_view)
 	_drag.stash = _run.storage
+	_drag.drop_outside_to_stash = true     # 084：棋盘外的空间全都是暂存区
 	_drag.items_displaced.connect(_on_displaced)
 
 

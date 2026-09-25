@@ -35,6 +35,10 @@ var stash: ItemStash = null
 ## 「能不能放到那儿」的第二道门（第一道是视图发不发 grab_requested）：`func(inst: ItemInstance, target: ItemContainer) -> bool`，
 ## 无效 = 哪儿都能放。容器屏用它把没揭示的东西圈在容器里（058 第 5 条：未搜的只能在容器内挪位）
 var drop_filter: Callable = Callable()
+## 084（作者定）：**棋盘外的空间全都是暂存区** —— 放手时底下没有任何容器视图，就进 [member stash]（追加在末尾），
+## 而不是退回原处。暂存区不限大小，所以这一下总能成（带内容物的包、被 drop_filter 拦的除外）。
+## 一局里的整理面板开它；开局屏（仓库 ↔ 棋盘）不开，那儿放到外面还是退回
+var drop_outside_to_stash: bool = false
 
 var _views: Array[ContainerView] = []
 
@@ -212,7 +216,13 @@ func update_preview(global_pos: Vector2) -> void:
 	for view in _views:
 		if view != target:
 			view.clear_preview()
-	if target == null or target.container() == null:
+	if target == null:
+		# 棋盘外 = 暂存区（084）：在暂存区列表的末尾画插入线，玩家放手前就知道东西会去哪
+		var sv := _stash_view()
+		if sv != null and _drops_outside_to_stash() and _drop_allowed(stash) and _stash_accepts(stash, _inst):
+			sv.set_insert_preview(stash.item_count())
+		return
+	if target.container() == null:
 		return
 	if not _drop_allowed(target.container()):
 		target.clear_preview()
@@ -253,6 +263,19 @@ func _drop_allowed(target: ItemContainer) -> bool:
 	return not drop_filter.is_valid() or _inst == null or bool(drop_filter.call(_inst, target))
 
 
+## 现在这一下放到外面会不会进暂存区（开着开关、有暂存区、拖的不是带东西的包）
+func _drops_outside_to_stash() -> bool:
+	return drop_outside_to_stash and stash != null and _inst != null and _payload.is_empty()
+
+
+## 登记过的视图里画 [member stash] 的那个（没有就 null：那就不画预览，照样能放）
+func _stash_view() -> StashView:
+	for view in _views:
+		if view is StashView and (view as StashView).stash == stash:
+			return view
+	return null
+
+
 ## 这件东西能不能进这个列表。带内容物的包不行 —— 列表没有坐标，
 ## 装不下「包 + 各内容物的相对位置」，放进去就等于把摆好的一袋东西打散。
 ## 要收起来先掏空，和「带东西的包不能旋转」是同一条简化。
@@ -279,6 +302,17 @@ func drop_at(global_pos: Vector2) -> bool:
 
 	if target != null and not _drop_allowed(target.container()):
 		target = null     # 那儿不许放：当没放，退回源容器
+	elif target == null and _drops_outside_to_stash() and _drop_allowed(stash) and _stash_accepts(stash, inst):
+		# 棋盘外的空间全都是暂存区（084）：从暂存区里拖出来又放到外面 = 放回原行；别处来的追加在末尾
+		if _source == stash:
+			_restore()
+		else:
+			dropped = stash.admit(inst)
+			home = stash
+		if _source == stash or dropped:
+			_end_drag()
+			drag_finished.emit(inst.uid, dropped)
+			return dropped
 	if target is StashView:
 		var sv := target as StashView
 		if _stash_accepts(sv.stash, inst):

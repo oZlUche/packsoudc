@@ -17,6 +17,7 @@ var _status: Label
 var _routes_box: VBoxContainer
 var _log: RichTextLabel
 var _extract_btn: Button
+var _reopen_btn: Button
 var _skills_box: VBoxContainer
 var _bag: Control = null
 var _confirm: Control = null
@@ -186,7 +187,7 @@ func _open_confirm(node: MapNode) -> void:
 	col.add_child(buttons)
 
 
-## 背包整理面板叠在地图上，再按一次收起
+## 背包整理面板叠在地图上，再按一次收起。084：是能拖着走的浮窗，关掉再开还在上次放的位置
 func toggle_bag() -> void:
 	if _bag != null:
 		_bag.queue_free()
@@ -198,24 +199,30 @@ func toggle_bag() -> void:
 	shade.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(shade)
 	_bag = shade
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.add_child(center)
-	var panel := _panel(16)
-	center.add_child(panel)
-	var col := _vbox(10)
-	panel.add_child(col)
-	var head := _hbox(12)
-	head.add_child(_label("背包", 18, UiPalette.FG))
-	head.add_child(_button("收起（B）", toggle_bag, 12))
-	col.add_child(head)
+	var win := FloatingWindow.new()
+	win.setup("bag", "背包", font, toggle_bag, "收起（B）")
+	shade.add_child(win)
 	var inv := InventoryPanelScript.new()
 	inv.setup(_run, font)
-	col.add_child(inv)
+	win.body().add_child(inv)
 
 
 func bag_open() -> bool:
 	return _bag != null
+
+
+## 084：还没走，重新打开这个点的最后一个界面（没拿完的战利品 / 还开着的搜索或商店 / 等着的事件或一场）。没有可开的返回 false
+func reopen() -> bool:
+	if _bag != null or _confirm != null or _step_confirm != null:
+		return false
+	var ok := flow.reopen_node()
+	if not ok:
+		_say("这个点上没有可以再打开的界面")
+	return ok
+
+
+func can_reopen() -> bool:
+	return flow.can_reopen()
 #endregion
 
 
@@ -245,6 +252,7 @@ func _adopt() -> void:
 	_refresh_skills()
 	_run.storage_dropped.connect(func(node_id: int, items: Array):
 		_note("　离开点 %d：暂存区里的 %s留在了那里" % [node_id, StorageWarning.describe(items)]))
+	_run.loot_cleared.connect(_after_move)     # 084：没拿的战利品没了（拿完了、或走了），「回到这个点」跟着灰
 	# 猎手（071）：进了感知范围提示一句；动了就重画标记；被赶回上一个点
 	_run.hunter_sensed.connect(func(h: Hunter):
 		var def: HunterDef = _run.hunters.def_of(h) if _run.hunters != null else null
@@ -307,7 +315,8 @@ func _adopt() -> void:
 		_say("%s　种子 %d：%d 个点。挑一个出生点（绿圈的「生」）开始" % [
 			_run.chapter.display_name, _run.run_seed, _run.map.node_count()])
 	else:
-		_say("%s　种子 %d：在点 %d 上，行动点 %d" % [_run.chapter.display_name, _run.run_seed, _run.travel.current_id, _run.travel.clock.total])
+		_say("%s　种子 %d：在点 %d 上（三角标是你），行动点 %d。点相邻的点走一步；B 开背包" % [
+			_run.chapter.display_name, _run.run_seed, _run.travel.current_id, _run.travel.clock.total])
 
 
 func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
@@ -370,6 +379,7 @@ func _after_move() -> void:
 	_refresh_hunter_marks()
 	var node := _run.current_node()
 	_extract_btn.disabled = node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract"
+	_reopen_btn.disabled = not flow.can_reopen()
 
 
 func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
@@ -581,6 +591,10 @@ func _build() -> void:
 	col.add_child(_status)
 	var buttons := _hbox(6)
 	buttons.add_child(_button("背包（B）", toggle_bag, 13))
+	_reopen_btn = _button("回到这个点（N）", func(): reopen(), 13)
+	_reopen_btn.disabled = true
+	_reopen_btn.tooltip_text = "还没走的时候，重新打开这个点上最后的界面：没拿完的战利品、还开着的搜索或商店"
+	buttons.add_child(_reopen_btn)
 	_extract_btn = _button("撤离", func(): extract(), 13)
 	_extract_btn.disabled = true
 	buttons.add_child(_extract_btn)
@@ -605,6 +619,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		KEY_B:
 			if _confirm == null and _step_confirm == null:
 				toggle_bag()
+		KEY_N:
+			reopen()
 		KEY_F:
 			_view.fit()
 		KEY_1:

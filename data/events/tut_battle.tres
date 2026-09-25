@@ -1,43 +1,26 @@
 [gd_resource type="Resource" script_class="EventDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_v12vg"]
-[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_v0atl"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="3_bmll3"]
-[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_xytmh"]
-[ext_resource type="Script" path="res://core/run/events/conditions/has_item.gd" id="5_tobpy"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/next_event.gd" id="6_2xk7h"]
-[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="7_p1jvn"]
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_hinyr"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_ovqxy"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="3_v12vg"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_v0atl"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_bmll3"]
 
-[sub_resource type="Resource" id="Resource_ap0xx"]
-script = ExtResource("3_bmll3")
+[sub_resource type="Resource" id="Resource_xytmh"]
+script = ExtResource("3_v12vg")
 
-[sub_resource type="Resource" id="Resource_lyamr"]
-script = ExtResource("5_tobpy")
-tag = &"weapon"
-where = 0
-
-[sub_resource type="Resource" id="Resource_w1tc3"]
-script = ExtResource("1_v12vg")
-label = "开打"
-requires = Array[ExtResource("4_xytmh")]([SubResource("Resource_lyamr")])
-outcomes = Array[ExtResource("2_v0atl")]([SubResource("Resource_ap0xx")])
-
-[sub_resource type="Resource" id="Resource_vqrdw"]
-script = ExtResource("6_2xk7h")
-event = &"tut_battle"
-
-[sub_resource type="Resource" id="Resource_dfsg2"]
-script = ExtResource("1_v12vg")
-label = "先整理背包（B）"
-outcomes = Array[ExtResource("2_v0atl")]([SubResource("Resource_vqrdw")])
+[sub_resource type="Resource" id="Resource_tobpy"]
+script = ExtResource("1_hinyr")
+label = "进入战前准备"
+outcomes = Array[ExtResource("2_ovqxy")]([SubResource("Resource_xytmh")])
 
 [resource]
-script = ExtResource("7_p1jvn")
+script = ExtResource("5_bmll3")
 id = &"tut_battle"
 title = "整理"
 text = "前面有人守着。
 
-战斗是自动的：只有放进包里的东西会参战，武器自己出手，护甲替你挨打。挨着放的东西之间还会互相加成。
+开打之前先过一道战前准备：左边是对手的棋盘（带了什么、多少血、大概多少输出），右边是你自己的棋盘和暂存区。战斗是自动的：只有放进包里的东西参战，武器自己出手，护甲替你挨打，挨着放的东西之间还会互相加成。
 
-先整理背包，把搜到的武器和护甲放进包里，再开打。暂存区里的东西一挪步就会留在原地。"
-options = Array[ExtResource("1_v12vg")]([SubResource("Resource_w1tc3"), SubResource("Resource_dfsg2")])
+在准备屏里把搜到的武器和护甲拖进包里；拖出棋盘就是弃置，会掉进暂存区（不参战，打完还在）。整理好了按「开战」，胜负在那一瞬就定了，之后是回放。"
+options = Array[ExtResource("1_hinyr")]([SubResource("Resource_tobpy")])

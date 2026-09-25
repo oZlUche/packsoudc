@@ -10,7 +10,7 @@
 class_name GameFlow
 extends RefCounted
 
-enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS }
+enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE }
 
 signal screen_changed(screen: int, payload: Dictionary)
 signal run_started(state: RunState)
@@ -65,7 +65,7 @@ func _init(p_items: ItemDatabase = null, p_enemies: EnemyDatabase = null, p_sets
 
 
 static func is_overlay(s: int) -> bool:
-	return s in [Screen.BATTLE, Screen.LOOT, Screen.SEARCH, Screen.SHOP, Screen.EVENT, Screen.REST]
+	return s in [Screen.BATTLE, Screen.LOOT, Screen.SEARCH, Screen.SHOP, Screen.EVENT, Screen.REST, Screen.PREBATTLE]
 
 
 #region 底屏之间
@@ -312,6 +312,64 @@ func resume() -> void:
 	_flush()
 
 
+## 084：战前准备屏上按了「开战」：真打，然后接着看回放、战利品。没有等着的一场返回 false
+func start_battle() -> bool:
+	if run == null or not run.events.start_pending_battle():
+		return false
+	_flush()
+	return true
+
+
+## 084：把这个点的叠层**最小化**回地图，**什么都不结束**：搜索 / 商店会话还开着、没拿的战利品还在这个点上、暂存区还在。
+## 作者定：不是关掉再重开，而是那一屏留着（揭示进度、日志都在），只是藏起来；[method reopen_node] 把它原样放回来。
+## 载荷里的 `minimized` 告诉导演「别销毁叠层」。等着选的事件与等着开打的一场不能收（那是必须先处理的）。返回收了没有
+func hide_overlay() -> bool:
+	if run == null or run.is_over() or not is_overlay(screen):
+		return false
+	if run.events.pending_event() != null or not run.events.pending_battle.is_empty():
+		return false
+	_go(Screen.MAP, {"minimized": true})
+	return true
+
+
+## 084：还没走，这个点上有没有能重新打开的界面（等着选的事件 / 等着开打的一场 / 开着的搜索或商店 / 没拿完的战利品）
+func can_reopen() -> bool:
+	return run != null and not run.is_over() and not _reopen_entry().is_empty()
+
+
+## 084：重新打开这个点的最后一个界面（最小化的那一屏原样恢复：载荷里的 `restore` 告诉导演先找藏着的那块）。没有可开的返回 false
+func reopen_node() -> bool:
+	var entry := _reopen_entry()
+	if run == null or run.is_over() or entry.is_empty():
+		return false
+	entry["restore"] = true
+	_go(int(entry["screen"]), entry)
+	return true
+
+
+func _reopen_entry() -> Dictionary:
+	if run == null:
+		return {}
+	var ev := run.events
+	if ev.pending_event() != null:
+		return {"screen": Screen.EVENT, "node": ev.pending_node(), "def": ev.pending_event()}
+	if not ev.pending_battle.is_empty():
+		return _prebattle_payload()
+	if ev.current_search != null:
+		return {"screen": Screen.SEARCH, "node": ev.current_search.node, "session": ev.current_search}
+	if ev.current_shop != null:
+		return {"screen": Screen.SHOP, "node": ev.current_shop.node, "session": ev.current_shop}
+	if run.pending_loot != null:
+		return {"screen": Screen.LOOT, "container": run.pending_loot}
+	return {}
+
+
+func _prebattle_payload() -> Dictionary:
+	var ev := run.events
+	return {"screen": Screen.PREBATTLE, "node": ev.pending_battle_node(), "type": StringName(String(ev.pending_battle.get("type", "battle"))),
+		"content": ev.pending_battle.get("content", {})}
+
+
 ## 地图上用一个局内技能（082）。返回空串 = 用了；否则是不能用的原因
 func use_skill(id: StringName) -> String:
 	if run == null:
@@ -377,6 +435,9 @@ func _adopt(state: RunState) -> void:
 	elif player_baseline != null:
 		state.player_baseline = player_baseline
 	var ev := state.events
+	ev.pause_before_battle = true     # 084：正式游戏开打前先过战前准备屏
+	ev.battle_pending.connect(func(node: MapNode, type: StringName, content: Dictionary):
+		_push({"screen": Screen.PREBATTLE, "node": node, "type": type, "content": content}))
 	ev.battle_finished.connect(func(node: MapNode, r: BattleResult, won: bool):
 		_push({"screen": Screen.BATTLE, "node": node, "result": r, "won": won,
 			"player": ev.last_battle.get("player", null), "enemy": ev.last_battle.get("enemy", null),
@@ -430,6 +491,10 @@ func _flush() -> void:
 		# 队列空了还有一个等着选的事件（接着放的、或读档回来的）
 		_go(Screen.EVENT, {"node": run.events.pending_node(), "def": run.events.pending_event()})
 		return
+	if run != null and not run.events.pending_battle.is_empty():
+		# 084：等着开打的一场（读档回来的）：停在战前准备屏
+		_go(Screen.PREBATTLE, _prebattle_payload())
+		return
 	_go(Screen.MAP)
 
 
@@ -449,6 +514,9 @@ func _skippable(entry: Dictionary) -> bool:
 			return run.events.current_search != entry.get("session", null)
 		Screen.SHOP:
 			return run.events.current_shop != entry.get("session", null)
+		Screen.PREBATTLE:
+			var node: MapNode = entry.get("node", null)
+			return run.events.pending_battle.is_empty() or node == null or int(run.events.pending_battle["node"]) != node.id
 	return false
 
 

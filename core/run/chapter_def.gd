@@ -42,6 +42,8 @@ extends Resource
 @export var characters: Array[StringName] = []
 ## 开局能不能从仓库带东西进来（序章不能：教程从空包开始）
 @export var allow_carry_in: bool = true
+## 开局直接站在第一个出生点上，不用挑（084：序章只有一条路、一个出生点）
+@export var auto_spawn: bool = false
 
 
 ## 这个角色在这一章能不能选
