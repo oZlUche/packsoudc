@@ -45,6 +45,10 @@
         5,
         3
       ],
+      "bags": [
+        "bag_leather",
+        "bag_small"
+      ],
       "rarity_cap": 1
     },
     {
@@ -60,6 +64,10 @@
       "stat_scale": {
         "max_hp": 1.25
       },
+      "bags": [
+        "bag_leather",
+        "bag_leather"
+      ],
       "rarity_cap": 2
     },
     {
@@ -74,7 +82,12 @@
       ],
       "stat_scale": {
         "max_hp": 1.6
-      }
+      },
+      "bags": [
+        "bag_leather",
+        "bag_leather",
+        "bag_small"
+      ]
     },
     {
       "strength": 3,
@@ -89,7 +102,14 @@
       "stat_scale": {
         "max_hp": 2,
         "armor": 1.5
-      }
+      },
+      "bags": [
+        "bag_leather",
+        "bag_leather",
+        "bag_leather",
+        "bag_small",
+        "bag_small"
+      ]
     }
   ],
   "strength_rule": {

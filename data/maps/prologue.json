@@ -73,6 +73,14 @@
 				],
 				"items": [
 					{
+						"id": "bag_small",
+						"at": [
+							0,
+							0
+						],
+						"rot": 0
+					},
+					{
 						"id": "knife",
 						"at": [
 							0,
@@ -109,7 +117,8 @@
 					],
 					[
 						"bandage",
-						"ration"
+						"ration",
+						"round_shield"
 					]
 				],
 				"encounter": {
@@ -121,7 +130,7 @@
 					],
 					"items": [
 						{
-							"id": "cleaver",
+							"id": "bag_small",
 							"at": [
 								0,
 								0
@@ -129,17 +138,16 @@
 							"rot": 0
 						},
 						{
-							"id": "bag_small",
+							"id": "cleaver",
 							"at": [
-								2,
-								1
+								0,
+								0
 							],
 							"rot": 0
 						}
 					],
 					"guaranteed_drops": [
-						"bag_small",
-						"round_shield"
+						"bag_small"
 					]
 				},
 				"search_again_events": [
@@ -171,7 +179,7 @@
 				],
 				"items": [
 					{
-						"id": "shortsword",
+						"id": "bag_leather",
 						"at": [
 							0,
 							0
@@ -181,10 +189,18 @@
 					{
 						"id": "round_shield",
 						"at": [
-							1,
+							0,
 							0
 						],
 						"rot": 0
+					},
+					{
+						"id": "shortsword",
+						"at": [
+							0,
+							2
+						],
+						"rot": 1
 					}
 				]
 			}

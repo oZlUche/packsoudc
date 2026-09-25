@@ -56,6 +56,20 @@
 - **序章数据**：`tut_search_1`（只有「搜索」）→ `tut_search_1_again` → `tut_search_1_done`；`tut_search_2` → `tut_search_2_again_1` → `tut_search_2_again_2`（**包装不下的提示**）→ 第三次遭遇 `tut_search_2_encounter` → `search_destroyed`。
   第三次原来的固定收获（圆盾）挪进遭遇敌人的 `guaranteed_drops`，再加 **`bag_small`**（敌人棋盘上也揣着一个）。
 
+## 六、作者第三轮（六条 + 道具悬浮窗）
+
+| # | 作者的话 | 做法 |
+|---|---|---|
+| 1 | 战利品剩一件时刚点一下就自动关了 | 拖拽层先记「正在拖」再从容器拿走（原来顺序反了，容器发 changed 那一刻 `is_dragging()` 还是假）；容器屏在 `drag_finished` 再判一次空不空 |
+| 2 | 序章不要开局页面，用事件做 intro 直接进地图 | `ChapterDef.skip_setup` / `intro_event`：主菜单「新的一局」时只有一章可选且它跳过开局屏 → `GameFlow.begin_direct`（角色取这章列的第一个、种子随机）→ `show_intro()` 把 `tut_intro` 挂成待选事件（占位符 `{char_name}`）→ 「出发」→ 地图 |
+| 3 | 敌人的背包道具也要出现在预览里，逻辑和玩家一样 | `StrengthTier.bags` / `EnemyDef.bags`：组装先摆包、棋盘 `requires_bag`、招牌与流派道具先摆（包里地方有限）、补件流派不够先补流派；`EnemyKit.board_of` 有包就 `requires_bag`（老内容没包照旧）；序章三个敌人都改成带包；战前准备屏与地图浮窗画的就是这块棋盘 |
+| 4 | 敌人不能掉没有的东西 | `guaranteed_drops` 只认身上有的；标准掉落规则 `treasure_chance` 置 0（珍宝机制留着，数据关掉） |
+| 5 | 节点浮窗（第二章开放、默认 / 自定义可切、`{battle_data}` 这类关键词记文档） | `NodeTooltip`（类别、三级模板来源）+ `HoverTip` 控件；`ChapterDef.node_tooltips` / `tooltip_mode` / `tooltip_texts`；节点内容 `tooltip`；全部键记在 [docs/text-placeholders.md](../text-placeholders.md) |
+| 6 | 事件文本占位符与变色 | `TextTemplate`：`{key}` 从一局的状态取、不认识的原样保留；`{c:hp}…{/c}` `{b}` `{i}` 翻成 BBCode；事件屏正文改 RichTextLabel |
+| + | 道具悬浮窗 | `ItemTooltip.describe`：名 / 稀有度 / 标签 / 效果，武器的冷却与 DPS（按所在棋盘编译），增益 / 受益槽、包、信力阶；整理面板、容器屏（没亮的不说）、战前准备屏都挂了 |
+
+顺带：「回到这个点（N）」灰掉时把原因写进按钮文字（作者问没看到它 —— 它一直在右栏，只是没有可重开的界面时是灰的）。
+
 ## 三、没做的 / 留给作者
 
 - 战前准备屏只能看对手，不能预演一场（要的话是回放的子集，等作者说）。
@@ -67,4 +81,4 @@
 ## 四、测试
 
 新套件 [`tests/test_node_screens.gd`](../../tests/test_node_screens.gd)：容器屏的过滤只锁容器里没亮的（棋盘上的包能挪、能进暂存区，连内容物一起挪位）；战前准备（停、拿读数、走不了、收不起、存档读回、开战收尾）；搜索点（事件屏的两个选项、搜满不结束、最小化 → 恢复是同一个会话、离开交收获、收起战利品、走了才没）；`auto_spawn`；棋盘外 = 暂存区（开关关 / 开、回原行、被拦退回）；导演的最小化（藏着不销毁、恢复同一块、换屏销毁）与浮窗（挪、夹边、记位置）。
-既有测试按新流程改了（搜满要 `leave()`、走上战斗点先 `start_battle()`、序章「整理」事件只剩一个选项、序章走一遍按第五节的循环重写：搜索 → 关闭 → 再搜 → 翻遍了 → 继续；第二点两屏之后遭遇事件 → 迎战 → 余波 → 战利品里有包）。59 套件 9417 断言。
+既有测试按新流程改了（搜满要 `leave()`、走上战斗点先 `start_battle()`、序章「整理」事件只剩一个选项、序章走一遍按第五节的循环重写：搜索 → 关闭 → 再搜 → 翻遍了 → 继续；第二点两屏之后遭遇事件 → 迎战 → 余波 → 战利品里有包）。60 套件 9555 断言（新套件 `tests/test_text_and_tooltips.gd`：占位符、节点浮窗、道具说明、敌人背包、只掉身上的、抓最后一件、悬浮窗控件）。

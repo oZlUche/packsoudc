@@ -19,6 +19,7 @@ var _log: RichTextLabel
 var _extract_btn: Button
 var _reopen_btn: Button
 var _skills_box: VBoxContainer
+var _tip: HoverTip = null
 var _bag: Control = null
 var _confirm: Control = null
 var _step_confirm: Control = null
@@ -380,6 +381,7 @@ func _after_move() -> void:
 	var node := _run.current_node()
 	_extract_btn.disabled = node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract"
 	_reopen_btn.disabled = not flow.can_reopen()
+	_reopen_btn.text = "回到这个点（N）" if flow.can_reopen() else "回到这个点（N）　这里没有可重开的界面"
 
 
 func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
@@ -394,6 +396,7 @@ func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
 
 func _on_node_hovered(id: int) -> void:
 	_enemy_line.text = enemy_preview(id)
+	_update_tooltip(id)
 	if _run.phase == RunState.Phase.PICK_SPAWN:
 		_view.bold_route = _route_index_of_entry(id) if id >= 0 else -1
 		_preview.text = ""
@@ -407,6 +410,27 @@ func _on_node_hovered(id: int) -> void:
 		_preview.text = ""
 		return
 	_preview.text = "→ %s　花 %d 行动点%s" % [MapNodeStyle.of(n.type)["label"], intent.action_cost, "（用过了，只是穿行）" if n.is_visited() else ""]
+
+
+## 084：节点浮窗（章节开关 `node_tooltips`）：文字按 NodeTooltip 的模板渲染，没用过的战斗点下面画对手的棋盘
+func _update_tooltip(id: int) -> void:
+	if _tip == null:
+		return
+	if id < 0 or not flow.tooltips_enabled() or _bag != null or _confirm != null or _step_confirm != null or not _run.map.has_node(id):
+		_tip.hide_tip()
+		return
+	var node := _run.map.get_node(id)
+	var extra: Control = null
+	if NodeTooltip.shows_board(node):
+		var v := InventoryView.new()
+		v.label_font = font
+		v.inventory = EnemyKit.board_of(node.content, flow.items)
+		extra = v
+	_tip.show_text(NodeTooltip.text_for(_run, _run.chapter, node), get_global_mouse_position(), extra)
+
+
+func tooltip_text() -> String:
+	return _tip.text() if _tip != null and _tip.is_showing() else ""
 
 
 ## 这个点里的敌人一行摘要（5.10：全图可见）；没有敌人就是空串
@@ -578,6 +602,8 @@ func _build() -> void:
 	_enemy_line = _label("", 13, UiPalette.DIM)
 	_enemy_line.custom_minimum_size.y = 22
 	mid.add_child(_enemy_line)
+	_tip = HoverTip.new(font)
+	add_child(_tip)
 
 	var side := _panel(12)
 	side.custom_minimum_size.x = SIDE_WIDTH

@@ -8,6 +8,7 @@
     0.15,
     0.05
   ],
+  "treasure_chance": 0.0,
   "treasure_weights": {
     "3": 3,
     "4": 1

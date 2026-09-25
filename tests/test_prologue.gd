@@ -57,6 +57,36 @@ static func _start(c: Content) -> RunState:
 	return s
 
 
+## 084：敌人和玩家一样 —— 有包、道具全在包里、每件都摆得上（重建出的件数 = 写的件数）；必掉的都是身上有的
+static func _check_enemy_bags(t: TestCase, c: Content, content: Dictionary, who: String) -> void:
+	var board := EnemyKit.board_of(content, c.items)
+	var entries: Array = content.get("items", [])
+	t.eq(board.item_count(), entries.size(), "%s：%d 件都摆上了" % [who, entries.size()])
+	t.check(board.requires_bag, "%s：道具依托背包" % who)
+	var bags := 0
+	var inside := {}
+	for inst in board.items():
+		var it := inst as ItemInstance
+		if it.def.is_bag:
+			bags += 1
+			for uid in board.contents_of(it.uid):
+				inside[uid] = true
+	t.check(bags > 0, "%s：背着包" % who)
+	for inst in board.items():
+		var it := inst as ItemInstance
+		if not it.def.is_bag:
+			var covered := inside.has(it.uid)
+			if not covered:
+				covered = true
+				for cell in it.cells():
+					if board.bag_at(cell) == GridInventory.EMPTY_UID:
+						covered = false
+			t.check(covered, "%s：%s 在包里" % [who, it.def.display_name])
+	var carried := DropResolver.carried_ids(content)
+	for id in content.get("guaranteed_drops", []):
+		t.check(carried.has(StringName(String(id))), "%s：必掉的 %s 是身上有的" % [who, id])
+
+
 ## 一条路：按 tier 排的节点
 static func _path(g: MapGraph) -> Array[MapNode]:
 	var out: Array[MapNode] = []
@@ -104,6 +134,8 @@ static func run_data(t: TestCase) -> void:
 	t.eq(c.prologue.map_source.mode, MapSource.Mode.PRESET, "地图是预设")
 	t.eq(c.prologue.characters, [&"brutus"] as Array[StringName], "只有布鲁图斯")
 	t.check(not c.prologue.allow_carry_in, "不能从仓库带东西")
+	t.check(c.prologue.skip_setup and c.prologue.auto_spawn and c.prologue.intro_event == &"tut_intro", "序章不走开局屏、开局就在出生点、先过 intro 事件（084）")
+	t.not_null(c.events.get(&"tut_intro", null), "intro 事件存在")
 	t.check(c.prologue.grants_unlock != &"" and c.chapter1.requires_unlock == c.prologue.grants_unlock, "序章通关给的解锁就是第一章要的")
 	t.check(c.prologue.order < c.chapter1.order, "序章排在第一章前面")
 	var g := c.prologue.map_source.resolve(1)
@@ -128,6 +160,9 @@ static func run_data(t: TestCase) -> void:
 			t.check(EnemyKit.has_enemy(n.content) and c.enemies.enemy(StringName(String(n.content["enemy"]))) != null, "点 %d 写死了敌人 %s" % [n.id, n.content.get("enemy", "")])
 			for entry in n.content.get("items", []):
 				t.not_null(c.items.get_def(StringName(String(entry["id"]))), "敌人的道具 %s 存在" % entry["id"])
+			_check_enemy_bags(t, c, n.content, "点 %d 的敌人" % n.id)
+		if n.type == &"search" and n.content.has("encounter"):
+			_check_enemy_bags(t, c, n.content["encounter"], "点 %d 的遭遇" % n.id)
 		if n.type == &"search":
 			for round in n.content.get("search_finds", []):
 				for id in round:
@@ -253,7 +288,10 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(s.events.pause_search() and s.events.pending_event().id == &"tut_search_2_again_2", "关闭 → 「包装不下了」")
 	t.check(s.events.choose(0), "再搜一次：第三次")
 	t.eq(session.encounter, path[3].content["encounter"], "第三次遭遇 = 写死的那个")
-	t.eq(session.found.size(), 3, "遭遇那一次什么都没翻到（前两次三件）")
+	var expect_found := 0
+	for round in path[3].content["search_finds"]:
+		expect_found += (round as Array).size()
+	t.eq(session.found.size(), expect_found, "遭遇那一次什么都没翻到（前两次共 %d 件）" % expect_found)
 	t.check(not session.active, "会话结束（遭遇）")
 	ev = s.events.pending_event()
 	t.check(ev != null and ev.id == &"tut_search_2_encounter", "直接到「惊动了」事件，不开搜索屏")
@@ -312,11 +350,19 @@ static func run_gating(t: TestCase) -> void:
 	t.eq(chars.size(), 1, "序章只能选一个角色")
 	t.check(not chars.is_empty() and chars[0].id == &"brutus", "是布鲁图斯")
 	t.eq(f.characters_for(c.chapter1).size(), c.characters.size(), "第一章全部角色都能选")
-	var run := f.begin(c.prologue, null, 1, [] as Array[int], _brutus(c), [])
-	t.not_null(run, "开序章")
+	# 084：主菜单「新的一局」直接开序章（只有它可选、skip_setup），先弹 intro，「出发」之后才是地图
+	f.new_run()
+	var run := f.run
+	t.not_null(run, "「新的一局」直接开了序章，不经开局屏")
 	if run == null:
 		return
-	f.pick_spawn(run.map.entry_ids[0])
+	t.check(run.chapter == c.prologue and run.character_id == &"brutus", "章是序章、角色是布鲁图斯")
+	t.eq(run.phase, RunState.Phase.ON_MAP, "已经站在出生点上")
+	t.eq(f.screen, GameFlow.Screen.EVENT, "先过 intro 事件屏")
+	t.check((f.last_payload.get("def", null) as EventDef).id == &"tut_intro", "是 tut_intro")
+	t.check(f.choose_event(0), "出发")
+	t.eq(f.screen, GameFlow.Screen.MAP, "→ 地图")
+	t.check(not run.travel.available_moves().is_empty(), "能走")
 	# 直接站到撤离点上撤（走一遍在上一组验过了）
 	run.travel.start_at(run.map.goal_ids[0])
 	t.check(f.extract(), "撤离")

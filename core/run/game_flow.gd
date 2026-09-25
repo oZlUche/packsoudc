@@ -80,7 +80,44 @@ func to_main_menu() -> void:
 func new_run() -> void:
 	grant_first_kit()
 	save_meta()
+	# 084（作者：序章不要开局页面）：只有一章可选、它又说了跳过开局屏，就直接开 —— 角色取它列的第一个、种子随机
+	var chs := available_chapters()
+	if chs.size() == 1 and chs[0].skip_setup and begin_direct(chs[0]) != null:
+		return
 	_go(Screen.SETUP)
+
+
+## 084：不经开局屏直接开一章：角色 = 这一章能选的第一个，种子随机；开了先过 intro 事件（配了的话）。开不了返回 null
+func begin_direct(chapter: ChapterDef, seed: int = -1) -> RunState:
+	if chapter == null:
+		return null
+	var chars := characters_for(chapter)
+	var ch: CharacterDef = chars[0] if not chars.is_empty() else null
+	var s := seed if seed >= 0 else (randi() % 1_000_000) + 1
+	var state := begin(chapter, null, s, [] as Array[int], ch, [])
+	if state == null:
+		return null
+	show_intro()
+	return state
+
+
+## 084：章节的开场事件（`ChapterDef.intro_event`）：站在出生点上先弹一屏。没配、没站上去、找不到定义都不弹；返回弹了没有
+func show_intro() -> bool:
+	if run == null or run.chapter == null or run.chapter.intro_event == &"" or run.travel == null or run.travel.current_id < 0:
+		return false
+	var def := run.events.def_by_id(run.chapter.intro_event)
+	var node := run.current_node()
+	if def == null or node == null:
+		return false
+	run.events.pending = {"node": node.id, "event": String(def.id), "type": String(node.type)}
+	run.events.event_pending.emit(node, def)
+	_flush()
+	return true
+
+
+## 084：这一章开了节点浮窗没有（第二章开放的功能，做成章节开关）
+func tooltips_enabled() -> bool:
+	return run != null and run.chapter != null and run.chapter.node_tooltips
 
 
 ## 仓库空的第一局发第一套（[MetaRules.first_kit]，058 第六节的占位；正式游戏由教程关发）。发了返回件数，否则 0

@@ -16,12 +16,23 @@ static func has_enemy(content: Dictionary) -> bool:
 static func board_of(content: Dictionary, items: ItemDatabase) -> GridInventory:
 	var size_raw: Array = content.get("board", [4, 3])
 	var size := Vector2i(int(size_raw[0]), int(size_raw[1]))
-	var board := GridInventory.new(size, 0, false)
+	# 084：身上有包就和玩家一样 —— 道具只能在包里（requires_bag），包先摆；老内容（没有包）照旧直接摆
+	var entries: Array = []
+	var has_bag := false
 	for raw in content.get("items", []):
 		var entry := raw as Dictionary
 		var def := items.get_def(StringName(String(entry.get("id", ""))))
 		if def == null:
 			continue
+		entries.append([def, entry])
+		if def.is_bag:
+			has_bag = true
+	entries.sort_custom(func(a: Array, b: Array) -> bool:
+		return (a[0] as ItemDef).is_bag and not (b[0] as ItemDef).is_bag)
+	var board := GridInventory.new(size, 0, has_bag)
+	for pair in entries:
+		var def: ItemDef = pair[0]
+		var entry: Dictionary = pair[1]
 		var at: Array = entry.get("at", [0, 0])
 		var inst := ItemInstance.create(def, int(entry.get("rot", 0)))
 		board.place(inst, Vector2i(int(at[0]), int(at[1])), int(entry.get("rot", 0)))

@@ -72,6 +72,10 @@ func open(payload: Dictionary) -> void:
 	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_drag)
 	_drag.register_view(_loot)
+	var tip := HoverTip.new(font)
+	tip.can_show = func(_v: ContainerView, uid: int) -> bool: return not _loot.is_locked(uid)     # 没亮的不说是什么
+	add_child(tip)
+	tip.watch(_loot)
 	# 没亮的只能在容器里挪位（换「下一个」是谁），拖出去要等亮了 —— 作者定的。
 	# 只锁容器里没亮的那几件：自己棋盘上的包与道具随便挪（084 修：原来按 is_revealed 判，把玩家自己的东西也卡住了）
 	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
@@ -92,6 +96,8 @@ func open(payload: Dictionary) -> void:
 	elif _container != null:
 		_loot.mark_revealed(flow.seen_loot.keys())
 		_container.changed.connect(_on_container_changed)
+		# 084：最后一件拿在手上时容器已经空了，放下（或取消）之后再判一次要不要关
+		_drag.drag_finished.connect(func(_uid: int, _dropped: bool): _on_container_changed())
 		_loot.start_reveal()
 	_refresh()
 
@@ -148,9 +154,12 @@ func _on_searched(found: Array[StringName], met: Dictionary) -> void:
 	_refresh()
 
 
+## 待拾取空了才关：拿在手上的那一件不算空（拖拽层先记「正在拖」再从容器拿走），放下之后 drag_finished 再来判一次
 func _on_container_changed() -> void:
+	if _container == null or _session != null:
+		return
 	_refresh()
-	if _container.item_count() == 0 and not _drag.is_dragging():
+	if _container.item_count() == 0 and not _drag.is_dragging() and flow.run != null and flow.run.pending_loot == _container:
 		flow.discard_loot()
 
 

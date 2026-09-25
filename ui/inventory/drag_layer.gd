@@ -92,6 +92,9 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 	_rot = inst.rotation
 	_source = from
 	_src_index = -1
+	# 先记下「正在拖」再从源容器拿走：源容器发 changed 时 is_dragging() 已经是真 ——
+	# 容器屏靠它判「空了是因为拿在手上，还是真的空了」（084：剩最后一件刚点一下屏就关了，就是这一步的顺序错了）
+	_inst = inst
 
 	if from is ItemStash:
 		# 列表里没有坐标，抓取点一律当作物品的左上角
@@ -99,6 +102,7 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 		_src_index = (from as ItemStash).index_of(uid)
 		if from.remove(uid) == null:
 			_source = null
+			_inst = null
 			return
 	else:
 		var grid := from as GridInventory
@@ -107,12 +111,13 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 			_payload = grid.detach_bag(uid)
 			if _payload.is_empty():
 				_source = null
+				_inst = null
 				return
 		elif grid.remove(uid) == null:
 			_source = null
+			_inst = null
 			return
 
-	_inst = inst
 	set_process_input(true)
 	queue_redraw()
 	drag_started.emit(uid)

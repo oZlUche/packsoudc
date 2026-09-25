@@ -44,6 +44,18 @@ extends Resource
 @export var allow_carry_in: bool = true
 ## 开局直接站在第一个出生点上，不用挑（084：序章只有一条路、一个出生点）
 @export var auto_spawn: bool = false
+## 不走开局屏（084，作者：序章不要开局页面）：主菜单「新的一局」时只有这一章可选就直接开，角色取这一章列的第一个、种子随机
+@export var skip_setup: bool = false
+## 开局先过的事件（intro）：站到出生点之后、地图能动之前弹一屏事件（`data/events/` 里的 id）。空 = 不弹
+@export var intro_event: StringName = &""
+
+@export_group("节点浮窗（084，第二章开放）")
+## 鼠标移到节点上显示浮窗（敌人数据与背包 / 用过了 / 可能发生什么 / 值得搜）。作者：第二章才开，所以默认关
+@export var node_tooltips: bool = false
+## "default" 用内置模板；"custom" 用 [member tooltip_texts] 里按类别写的模板（缺的类别退回内置）
+@export var tooltip_mode: String = "default"
+## 类别 → 模板（占位符见 docs/text-placeholders.md：{battle_data}、{enemy_name}、{node_type}……）。类别：battle / visited / search / event / shop / rest / extract / random / other
+@export var tooltip_texts: Dictionary = {}
 
 
 ## 这个角色在这一章能不能选

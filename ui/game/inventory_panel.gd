@@ -16,6 +16,7 @@ var _readout: Label
 var _hint: Label
 var board_view: InventoryView
 var storage_view: StashView
+var tip: HoverTip
 
 
 ## [param drag] 给了就把两个视图登记到那一层（战利品屏要一层盖住三个容器）；不给就自己造一层盖在面板上
@@ -68,6 +69,11 @@ func _build() -> void:
 	_drag.stash = _run.storage
 	_drag.drop_outside_to_stash = true     # 084：棋盘外的空间全都是暂存区
 	_drag.items_displaced.connect(_on_displaced)
+	# 084：停在道具上的悬浮说明（名、稀有度、标签、效果、武器的冷却与 DPS、槽）
+	tip = HoverTip.new(_font)
+	add_child(tip)
+	tip.watch(board_view)
+	tip.watch(storage_view)
 
 
 func _refresh_readout() -> void:

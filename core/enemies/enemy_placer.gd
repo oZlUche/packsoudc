@@ -145,23 +145,40 @@ static func build_content(
 	var picks := choose_items(def, rule, items, count, rng, cap)
 	_sort_big_first(picks, items)
 
-	var board := GridInventory.new(size, 0, false)
+	# 084：敌人也背包 —— 先摆包（档位的，敌人自己的覆盖），道具只能摆进包里（棋盘 requires_bag，和玩家一样）
+	var bag_ids: Array[StringName] = def.bags if not def.bags.is_empty() else (tier.bags if tier != null else [] as Array[StringName])
+	var board := GridInventory.new(size, 0, not bag_ids.is_empty())
 	var placed: Array = []
+	for bag_id in bag_ids:
+		var bdef := items.get_def(bag_id)
+		if bdef != null and bdef.is_bag:
+			_try_place(board, bdef, placed)
+	var bag_count := placed.size()
+	count += bag_count     # 包不计入件数：件数说的是包里的东西
+	# 包里地方有限：招牌与流派道具（会打的那几件）先摆，护甲补给后摆 —— 不然一件 2×2 的甲先占了包，1×3 的剑就横竖都塞不进（084）
+	var first: Array[StringName] = []
+	var later: Array[StringName] = []
 	for item_id in picks:
+		var idef := items.get_def(item_id)
+		if idef != null and (def.signature.has(item_id) or _shares_tag(idef.tags, def.schools)):
+			first.append(item_id)
+		else:
+			later.append(item_id)
+	for item_id in first + later:
 		_try_place(board, items.get_def(item_id), placed)
-	# 放不下就换一件：从同一批候选里按小到大补（同样大的随机排），小件总有地方塞。
-	# 只有棋盘真的满了才会差件数，回报里看得见 —— 那是档位表的棋盘配小了
+	# 放不下就换一件：从同一批候选里按小到大补（同样大的随机排），小件总有地方塞。流派道具不够先补流派的。
+	# 只有棋盘真的满了才会差件数，回报里看得见 —— 那是档位表的棋盘 / 包配小了
 	if placed.size() < count:
-		var refill := school_items(def.schools, items, cap)
-		refill.append_array(common_items(def.schools, rule, items, cap))
-		var order := {}
-		for id in refill:
-			order[id] = [items.get_def(id).shape.cell_count(), rng.randf()]
-		refill.sort_custom(func(a: StringName, b: StringName) -> bool:
-			return order[a][0] < order[b][0] if order[a][0] != order[b][0] else order[a][1] < order[b][1])
+		var school_pool := school_items(def.schools, items, cap)
+		var refill: Array[StringName] = []
+		if _school_count(placed, items, def.schools) < rule.min_school:
+			refill.append_array(_small_first(school_pool, items, rng))
+		var general := school_pool.duplicate()
+		general.append_array(common_items(def.schools, rule, items, cap))
+		refill.append_array(_small_first(general, items, rng))
 		var tries := 0
 		for id in refill:
-			if placed.size() >= count or tries >= REFILL_TRIES:
+			if placed.size() >= count or tries >= REFILL_TRIES * 2:
 				break
 			tries += 1
 			_try_place(board, items.get_def(id), placed)
@@ -172,6 +189,27 @@ static func build_content(
 		"items": placed,
 	}
 	return {"content": content, "dropped": maxi(0, count - placed.size())}
+
+
+## 已摆上的里有几件流派道具（不含包）
+static func _school_count(placed: Array, items: ItemDatabase, schools: Array[StringName]) -> int:
+	var n := 0
+	for raw in placed:
+		var d := items.get_def(StringName(String((raw as Dictionary).get("id", ""))))
+		if d != null and not d.is_bag and _shares_tag(d.tags, schools):
+			n += 1
+	return n
+
+
+## 按占格小到大（同样大的随机排），摆得进的概率高的在前
+static func _small_first(ids: Array[StringName], items: ItemDatabase, rng: RandomNumberGenerator) -> Array[StringName]:
+	var out := ids.duplicate()
+	var order := {}
+	for id in out:
+		order[id] = [items.get_def(id).shape.cell_count(), rng.randf()]
+	out.sort_custom(func(a: StringName, b: StringName) -> bool:
+		return order[a][0] < order[b][0] if order[a][0] != order[b][0] else order[a][1] < order[b][1])
+	return out
 
 
 static func _try_place(board: GridInventory, idef: ItemDef, placed: Array) -> bool:

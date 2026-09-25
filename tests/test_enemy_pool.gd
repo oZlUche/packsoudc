@@ -418,8 +418,19 @@ static func run_placement(t: TestCase) -> void:
 			var tier := pool.tier_of(s)
 			var cap := EnemyPlacer.rarity_cap_of(rule, tier)
 			var placed: Array = c["items"]
-			t.check(placed.size() >= tier.item_count.x and placed.size() <= tier.item_count.y,
-				"点 %d：%d 件在档位 %d 的 [%d, %d] 里" % [id, placed.size(), s, tier.item_count.x, tier.item_count.y])
+			# 084：敌人也背包（档位表的 bags），包不计入件数；道具全在包里
+			var bag_n := 0
+			for raw in placed:
+				var bdef := items.get_def(StringName(String(raw["id"])))
+				if bdef != null and bdef.is_bag:
+					bag_n += 1
+			var goods := placed.size() - bag_n
+			var want_bags: Array[StringName] = def.bags if not def.bags.is_empty() else tier.bags
+			t.eq(bag_n, want_bags.size(), "点 %d：背着档位表说的 %d 个包" % [id, want_bags.size()])
+			t.check(goods >= tier.item_count.x and goods <= tier.item_count.y,
+				"点 %d：%d 件（不含包）在档位 %d 的 [%d, %d] 里" % [id, goods, s, tier.item_count.x, tier.item_count.y])
+			var rebuilt := EnemyKit.board_of(c, items)
+			t.check(rebuilt.requires_bag == (bag_n > 0), "点 %d：有包就和玩家一样 requires_bag" % id)
 			var school_n := 0
 			var ids: Array[StringName] = []
 			for raw in placed:
@@ -427,8 +438,7 @@ static func run_placement(t: TestCase) -> void:
 				ids.append(iid)
 				var idef := items.get_def(iid)
 				t.not_null(idef, "点 %d 背的 '%s' 在道具库里" % [id, iid])
-				if idef != null:
-					t.check(not idef.is_bag, "点 %d：敌人不背包" % id)
+				if idef != null and not idef.is_bag:
 					t.check(cap < 0 or idef.rarity <= cap, "点 %d：稀有度 %d 不超这一档的上限 %d" % [id, idef.rarity, cap])
 					if EnemyPlacer._shares_tag(idef.tags, def.schools):
 						school_n += 1

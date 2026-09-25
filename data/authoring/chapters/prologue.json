@@ -13,5 +13,7 @@
     "brutus"
   ],
   "allow_carry_in": false,
-  "auto_spawn": true
+  "auto_spawn": true,
+  "skip_setup": true,
+  "intro_event": "tut_intro"
 }

@@ -57,6 +57,7 @@ searches_per_tier = 4
 [sub_resource type="Resource" id="Resource_baqq6"]
 script = ExtResource("5_v0xwg")
 board = Vector2i(5, 3)
+bags = Array[StringName]([&"bag_leather", &"bag_small"])
 rarity_cap = 1
 
 [sub_resource type="Resource" id="Resource_kda3q"]
@@ -67,6 +68,7 @@ board = Vector2i(6, 4)
 stat_scale = {
 "max_hp": 1.25
 }
+bags = Array[StringName]([&"bag_leather", &"bag_leather"])
 rarity_cap = 2
 
 [sub_resource type="Resource" id="Resource_4ni8y"]
@@ -77,6 +79,7 @@ board = Vector2i(6, 5)
 stat_scale = {
 "max_hp": 1.6
 }
+bags = Array[StringName]([&"bag_leather", &"bag_leather", &"bag_small"])
 
 [sub_resource type="Resource" id="Resource_woeue"]
 script = ExtResource("5_v0xwg")
@@ -87,6 +90,7 @@ stat_scale = {
 "armor": 1.5,
 "max_hp": 2
 }
+bags = Array[StringName]([&"bag_leather", &"bag_leather", &"bag_leather", &"bag_small", &"bag_small"])
 
 [resource]
 script = ExtResource("3_sjn6r")

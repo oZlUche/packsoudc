@@ -31,7 +31,9 @@ func open(payload: Dictionary) -> void:
 
 
 func _open_options() -> void:
-	var col := _frame(_def.image, _def.title if _def.title != "" else String(_def.id), _def.text)
+	# 084：文字里的 {char_name} 这类占位符与 {c:hp}…{/c} 样式码在这里替换（docs/text-placeholders.md）
+	var ctx := TextTemplate.context_for(flow.run, _node, _payload.get("extra", {}))
+	var col := _frame(_def.image, TextTemplate.plain(_def.title if _def.title != "" else String(_def.id), ctx), TextTemplate.render(_def.text, ctx))
 	for i in _def.options.size():
 		var opt := _def.options[i] as EventOption
 		var state := flow.run.events.option_state(i)
@@ -39,7 +41,7 @@ func _open_options() -> void:
 		if not ok and opt.hide_when_locked:
 			continue
 		var idx := i
-		var b := _option_button(opt.label, func(): choose(idx))
+		var b := _option_button(TextTemplate.plain(opt.label, ctx), func(): choose(idx))
 		b.disabled = not ok
 		_option_btns.append(b)
 		col.add_child(b)
@@ -122,8 +124,22 @@ func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	col.add_child(scroll)
 	if body != "":
-		var text := _wrapped(body, 17, UiPalette.FG, TEXT_WIDTH)
-		text.add_theme_constant_override("line_spacing", 6)
+		# RichTextLabel：正文里能变色、加粗（BBCode，TextTemplate 的样式码也翻成它）
+		var text := RichTextLabel.new()
+		text.bbcode_enabled = true
+		text.fit_content = true
+		text.scroll_active = false
+		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		text.custom_minimum_size.x = TEXT_WIDTH
+		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		text.add_theme_font_override("normal_font", font)
+		text.add_theme_font_override("bold_font", font)
+		text.add_theme_font_override("italics_font", font)
+		for k in ["normal_font_size", "bold_font_size", "italics_font_size"]:
+			text.add_theme_font_size_override(k, 17)
+		text.add_theme_color_override("default_color", UiPalette.FG)
+		text.add_theme_constant_override("line_separation", 6)
+		text.text = body
 		scroll.add_child(text)
 	var options := _vbox(8)
 	options.name = "Options"

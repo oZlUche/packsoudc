@@ -36,6 +36,9 @@ extends Resource
 ## 覆盖档位表的棋盘尺寸。零 = 用档位表的
 @export var board: Vector2i = Vector2i.ZERO
 
+## 覆盖档位表的包（084）。空 = 用档位表的
+@export var bags: Array[StringName] = []
+
 
 func is_valid() -> bool:
 	return id != &"" and strength >= 0
