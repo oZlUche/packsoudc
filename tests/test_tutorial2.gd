@@ -100,6 +100,14 @@ static func run_data(t: TestCase) -> void:
 	t.check(c.chapter.skip_setup and c.chapter.auto_spawn and c.chapter.intro_event == &"tut2_intro", "不走开局屏、开局在出生点、先过 intro")
 	t.check(c.chapter.node_tooltips, "节点浮窗开着（这一张教它）")
 	t.check(c.chapter.vitality_bonus >= 2, "体力多给至少 2（两场都输也死不了）")
+	var has_weapon := false
+	for id in c.chapter.starting_items:
+		if c.items.get_def(id) != null and c.items.get_def(id).tags.has(&"weapon"):
+			has_weapon = true
+	t.check(has_weapon, "开局发一把武器（%s）" % str(c.chapter.starting_items))
+	var knife_def := c.items.get_def(&"knife")
+	t.check(not knife_def.tags.has(&"bleed") and (knife_def.combat.rules[0] as AbilityRule).effects.size() == 1, "普通匕首只是高频低伤，没有流血")
+	t.check(c.items.get_def(&"poison_vial").combat != null and not c.items.get_def(&"poison_vial").combat.rules.is_empty(), "毒药瓶自己也能下毒（慢）")
 	t.check(c.prologue.order < c.chapter.order and c.chapter.order < c.chapter1.order, "顺序：序章、序章二、第一章")
 	t.not_null(c.graph, "预设载入并过了校验：%s" % c.chapter.map_source.last_error)
 	if c.graph == null:
@@ -199,7 +207,7 @@ static func run_matchups(t: TestCase) -> void:
 	var h2 := _fight(c, [&"knife", &"plate_cuirass"], heavy)
 	t.check(int(h1["wins"]) == 5 and int(h2["wins"]) == 5, "重击手：两种护具都能赢（血不多）")
 	t.check(float(h2["hp"]) > float(h1["hp"]) + 20.0, "板甲轻伤（剩 %.0f）、塔盾重伤（剩 %.0f）" % [h2["hp"], h1["hp"]])
-	t.check(float(h2["hp"]) >= float(h2["hp_max"]) * 0.7, "板甲接住了重锤：剩七成以上的血")
+	t.check(float(h2["hp"]) >= float(h2["hp_max"]) * 0.7, "板甲接住了重锤：剩七成以上的血（%.0f/%d）" % [h2["hp"], h2["hp_max"]])
 	# 第二个岔路口时身上有第一个岔路口带的那件护具：两种都验
 	for armor in [&"tower_shield", &"plate_cuirass"]:
 		var w1 := _fight(c, [&"poisoned_knife", armor, &"bag_long"], ward)
@@ -373,6 +381,39 @@ static func run_crafting(t: TestCase) -> void:
 		t.is_null(s.craft_output(c.items.get_def(&"knife"), c.items.get_def(&"salve")), "没有的是 null")
 
 
+static func run_random_mode(t: TestCase) -> void:
+	t.begin("085 · 随机一局：第一章的规模可选（配置里的 scales），选了按那一档的环数生成；规模跟存档；预设图没有规模可选；撤离点也走对话")
+	var c := _content()
+	var options := c.chapter1.map_source.scale_options()
+	t.check(options.size() >= 2, "第一章有几种规模可选（%d）" % options.size())
+	t.check(c.chapter.map_source.scale_options().is_empty(), "预设图没有规模可选")
+	var cfg = c.chapter1.map_source.generator_config
+	var default_rings: int = cfg.ring_count()
+	for o in options:
+		var sid: StringName = o["id"]
+		var prof = cfg.scale_by_id(sid)
+		var s: RunState = null
+		for seed in range(1, 30):
+			s = RunState.start(c.chapter1, seed, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], null, [], null, {}, sid)
+			if s != null:
+				break
+		if s == null:
+			t.check(sid == &"large", "规模 %s 生成不出图（大型是占位，允许）" % sid)
+			continue
+		var rings := {}
+		for id in s.map.node_ids():
+			rings[s.map.get_node(id).tier] = true
+		t.check(prof.covers(rings.size()), "规模 %s：环数 %d 在 [%d, %d] 里" % [sid, rings.size(), prof.rings.x, prof.rings.y])
+		t.eq(s.scale_id(), sid, "这一局记着规模")
+		var back := RunState.from_dict(s.to_dict(), c.chapter1, c.items, c.enemies, c.sets)
+		t.check(back != null and back.map_scale == sid, "规模跟存档")
+	t.eq(cfg.ring_count(), default_rings, "章节资产本身没被改（复制一份再换规模）")
+	# 第一章的撤离点也有对话
+	var rules: NodeRules = load(ContentPaths.asset_file("node_rules", "standard"))
+	t.check(rules.events_by_type.has("extract") or rules.events_by_type.has(&"extract"), "标准节点规则给撤离点配了事件")
+	t.not_null(c.events.get(&"extract_default", null), "extract_default 存在")
+
+
 static func run_gating(t: TestCase) -> void:
 	t.begin("序章二 · 章节的门：序章通关 → 序章收起、只剩序章二 → 「新的一局」直接开它、先过 intro → 通关 → 第一章开、序章二收起")
 	var c := _content()
@@ -393,6 +434,11 @@ static func run_gating(t: TestCase) -> void:
 	if run == null:
 		return
 	t.check(run.chapter == c.chapter and run.character_id == &"brutus", "章是序章二、角色布鲁图斯")
+	var armed := false
+	for inst in run.board.items():
+		if (inst as ItemInstance).def.id == &"knife":
+			armed = true
+	t.check(armed, "开局包里有一把匕首")
 	t.eq(f.screen, GameFlow.Screen.EVENT, "先过 intro")
 	t.check((f.last_payload.get("def", null) as EventDef).id == &"tut2_intro", "是 tut2_intro")
 	t.check(f.tooltips_enabled(), "这一章浮窗开着")
@@ -404,6 +450,9 @@ static func run_gating(t: TestCase) -> void:
 	run.travel.start_at(run.map.goal_ids[0])
 	t.check(f.extract(), "撤离")
 	t.check(f.meta.has_unlock(c.chapter.grants_unlock), "拿到序章二的解锁")
+	t.is_null(f.next_chapter(), "序章二之后没有下一张教学图：走结算 → 局外")
+	f.finish_result()
+	t.eq(f.screen, GameFlow.Screen.META, "→ 局外")
 	avail = f.available_chapters()
 	t.check(avail.size() == 1 and avail[0].id == &"chapter_01", "序章二收起，只剩第一章：%s" % str(avail.map(func(x: ChapterDef) -> String: return String(x.id))))
 	_cleanup()

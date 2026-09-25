@@ -1,89 +1,54 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_1xds2"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_3eb88"]
-[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_2ybv0"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_fdscj"]
-[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="5_fmho5"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_ugcth"]
-[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_55yul"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_6dvgd"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_nq8je"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_cgswg"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="11_62tru"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="12_yos3v"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="13_otjp1"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="14_w3nqx"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="15_4twaa"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_2xt4q"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_pmn34"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_1xds2"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_3eb88"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="5_2ybv0"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_fdscj"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_fmho5"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_ugcth"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_55yul"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_6dvgd"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_nq8je"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_cgswg"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_62tru"]
 
-[sub_resource type="Resource" id="Resource_qs7w2"]
-script = ExtResource("3_2ybv0")
+[sub_resource type="Resource" id="Resource_yos3v"]
+script = ExtResource("3_1xds2")
 seconds = 0.6
 
-[sub_resource type="Resource" id="Resource_6a8ij"]
-script = ExtResource("5_fmho5")
+[sub_resource type="Resource" id="Resource_otjp1"]
+script = ExtResource("5_2ybv0")
 amount = 3.0
 
-[sub_resource type="Resource" id="Resource_b1i8v"]
-script = ExtResource("7_55yul")
+[sub_resource type="Resource" id="Resource_w3nqx"]
+script = ExtResource("7_fmho5")
 
-[sub_resource type="Resource" id="Resource_qob2u"]
-script = ExtResource("3_2ybv0")
-seconds = 1.0
+[sub_resource type="Resource" id="Resource_4twaa"]
+script = ExtResource("8_ugcth")
 
-[sub_resource type="Resource" id="Resource_vqxmv"]
-script = ExtResource("7_55yul")
-target = 1
-damage_type = &"bleed"
-amount = 1.0
-damage_stat = &""
-per_stack = true
+[sub_resource type="Resource" id="Resource_qs7w2"]
+script = ExtResource("2_pmn34")
+trigger = SubResource("Resource_4twaa")
+cadence = SubResource("Resource_yos3v")
+costs = Array[ExtResource("4_3eb88")]([SubResource("Resource_otjp1")])
+effects = Array[ExtResource("6_fdscj")]([SubResource("Resource_w3nqx")])
 
-[sub_resource type="Resource" id="Resource_wfove"]
-script = ExtResource("8_6dvgd")
-
-[sub_resource type="Resource" id="Resource_b1vx7"]
-script = ExtResource("2_3eb88")
-trigger = SubResource("Resource_wfove")
-cadence = SubResource("Resource_qob2u")
-effects = Array[ExtResource("6_ugcth")]([SubResource("Resource_vqxmv")])
-
-[sub_resource type="Resource" id="Resource_qyx0w"]
-script = ExtResource("9_nq8je")
-id = &"bleed"
-display_name = "流血"
-max_stacks = 5
-duration_sec = 6.0
-rules = Array[ExtResource("2_3eb88")]([SubResource("Resource_b1vx7")])
-
-[sub_resource type="Resource" id="Resource_r37tm"]
-script = ExtResource("10_cgswg")
-buff = SubResource("Resource_qyx0w")
-
-[sub_resource type="Resource" id="Resource_nd7d3"]
-script = ExtResource("8_6dvgd")
-
-[sub_resource type="Resource" id="Resource_qtyyl"]
-script = ExtResource("2_3eb88")
-trigger = SubResource("Resource_nd7d3")
-cadence = SubResource("Resource_qs7w2")
-costs = Array[ExtResource("4_fdscj")]([SubResource("Resource_6a8ij")])
-effects = Array[ExtResource("6_ugcth")]([SubResource("Resource_b1i8v"), SubResource("Resource_r37tm")])
-
-[sub_resource type="Resource" id="Resource_eylbk"]
-script = ExtResource("11_62tru")
+[sub_resource type="Resource" id="Resource_6a8ij"]
+script = ExtResource("9_55yul")
 base_stats = {
 "damage": 3
 }
-rules = Array[ExtResource("2_3eb88")]([SubResource("Resource_qtyyl")])
+rules = Array[ExtResource("2_pmn34")]([SubResource("Resource_qs7w2")])
 
-[sub_resource type="Resource" id="Resource_mdahr"]
-script = ExtResource("15_4twaa")
+[sub_resource type="Resource" id="Resource_b1i8v"]
+script = ExtResource("13_62tru")
 
 [resource]
-script = ExtResource("14_w3nqx")
+script = ExtResource("12_cgswg")
 id = &"knife"
 display_name = "匕首"
-shape = SubResource("Resource_mdahr")
-tags = Array[StringName]([&"weapon", &"melee", &"rapid", &"bleed"])
-combat = SubResource("Resource_eylbk")
+shape = SubResource("Resource_b1i8v")
+tags = Array[StringName]([&"weapon", &"melee", &"rapid"])
+combat = SubResource("Resource_6a8ij")

@@ -12,6 +12,10 @@ extends GameScreen
 var chapter_index: int = 0
 var character_index: int = 0
 var difficulty_index: int = 0
+## 085：地图规模（随机一局可选）；空 = 章节默认
+var scale_id: StringName = &""
+var _scale_btns: Dictionary = {}
+var _scale_box: VBoxContainer
 var run_seed: int = 1
 ## 这个角色的棋盘，初始包摆好；从仓库拖进来的东西就在上面。出发时整块记成 layout 交给 RunState
 var board: GridInventory = null
@@ -77,6 +81,8 @@ func open(_payload: Dictionary) -> void:
 			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 			_difficulty_btns.append(b)
 			left.add_child(b)
+	_scale_box = _vbox(6)
+	left.add_child(_scale_box)
 	_desc = _wrapped("", 12, UiPalette.DIM, 280)
 	left.add_child(_desc)
 	var seed_row := _hbox(8)
@@ -137,12 +143,47 @@ func choose_chapter(i: int) -> void:
 		_chapter_btns[k].add_theme_color_override("font_color", UiPalette.FG if k == chapter_index else UiPalette.DIM)
 	# 083：这一章能选的角色、能不能从仓库带东西，都跟着章节变
 	_rebuild_characters()
+	_rebuild_scales()
 	if _warehouse_box != null:
 		_warehouse_box.visible = chapter().allow_carry_in
 	choose_character(0)
 
 
 ## 角色按钮按这一章能选的重排
+## 085：这一章的随机图有哪些规模（环形生成器的 `scales`）；预设图没有
+func _rebuild_scales() -> void:
+	for c in _scale_box.get_children():
+		c.queue_free()
+	_scale_btns.clear()
+	scale_id = &""
+	var ch := chapter()
+	var options := ch.map_source.scale_options() if ch != null and ch.map_source != null else [] as Array[Dictionary]
+	if options.is_empty():
+		return
+	_scale_box.add_child(_label("地图规模", 15, UiPalette.DIM))
+	var def_btn := _button("默认（章节配置）", func(): choose_scale(&""), 13)
+	def_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_scale_btns[&""] = def_btn
+	_scale_box.add_child(def_btn)
+	for o in options:
+		var sid: StringName = o["id"]
+		var b := _button(String(o["display_name"]), func(): choose_scale(sid), 13)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_scale_btns[sid] = b
+		_scale_box.add_child(b)
+	choose_scale(&"")
+
+
+func choose_scale(id: StringName) -> void:
+	scale_id = id if _scale_btns.has(id) else &""
+	for k in _scale_btns:
+		(_scale_btns[k] as Button).add_theme_color_override("font_color", UiPalette.FG if k == scale_id else UiPalette.DIM)
+
+
+func scale_options() -> Array:
+	return _scale_btns.keys()
+
+
 func _rebuild_characters() -> void:
 	_characters = flow.characters_for(chapter())
 	_character_btns.clear()
@@ -259,9 +300,9 @@ func depart() -> bool:
 	var ch := character()
 	var run: RunState = null
 	if ch != null:
-		run = flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty())
+		run = flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id)
 	else:
-		run = flow.begin(c, flow.loadouts[0] if not flow.loadouts.is_empty() else null, run_seed, [] as Array[int], null, [], difficulty())
+		run = flow.begin(c, flow.loadouts[0] if not flow.loadouts.is_empty() else null, run_seed, [] as Array[int], null, [], difficulty(), scale_id)
 	if run == null:
 		_status.text = "这一章生成不出图：%s" % (c.map_source.last_error if c.map_source != null else "没有地图来源")
 		return false

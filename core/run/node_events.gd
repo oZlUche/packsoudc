@@ -77,6 +77,8 @@ var board: ItemContainer = null
 var storage: ItemContainer = null
 ## 段位（074）：`() -> int`，持有方接猎手系统；没接 = -1
 var bracket_of: Callable = Callable()
+## 085：事件里选了「撤离」：`() -> bool`，持有方接 RunState.try_extract（付费、清会话、结算）。付不起返回 false
+var request_extract: Callable = Callable()
 ## 事件把人传送走（8-3）：`(intent: MoveIntent) -> bool`。持有方接它好在挪人前清暂存区、挪人后给猎手一个回合；没接就直接交给旅程
 var relocate: Callable = Callable()
 ## 这一局已经在这里判了战败：之后不再挪人、不再开打
@@ -281,6 +283,13 @@ func choose(i: int) -> bool:
 	# 084：搜索循环里的「离开 / 搜完了」：没选再搜就是走，会话结束、收获交出去（_close_search 标用过）
 	if search_stage and not ctx.open_search and current_search != null and current_search.active:
 		current_search.leave()
+		return true
+	# 085：对话里选了「撤离」：交给持有方撤（付费点付不起就说一声、留在原地）
+	if ctx.extract:
+		_visited(node)
+		if request_extract.is_valid() and bool(request_extract.call()):
+			return true
+		event_resolved.emit(node, &"撤离", {"log": ["付不起这个撤离点的费用（%d 币），先去挣点钱，或者找别的出口。" % PaidExtracts.fee_of(node)]})
 		return true
 	if ctx.next_event != &"":
 		var next: EventDef = def_by_id(ctx.next_event)

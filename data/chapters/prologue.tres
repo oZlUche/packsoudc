@@ -19,6 +19,7 @@ economy_rules = &"prologue"
 grants_unlock = &"prologue_done"
 characters = Array[StringName]([&"brutus"])
 hidden_by_unlock = &"prologue_done"
+next_chapter = &"prologue_2"
 allow_carry_in = false
 auto_spawn = true
 skip_setup = true

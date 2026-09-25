@@ -76,21 +76,25 @@ static func roll(
 	var carried := carried_ids(content)
 	for id in carried:
 		var def := items.get_def(id)
-		if def != null and rng.randf() < owned_chance(rule, ctx, def):
+		if def == null:
+			continue
+		# 作者定：敌人身上的包必掉（bags_always_drop），不占保底名额
+		if (rule.bags_always_drop and def.is_bag) or rng.randf() < owned_chance(rule, ctx, def):
 			(out["dropped"] as Array[StringName]).append(id)
 	# 084：节点内容 `guaranteed_drops` 一定掉（教程：遭遇的敌人必掉一个包）。**只能是它身上有的**（作者：敌人不能掉没有的东西）
 	for raw in content.get("guaranteed_drops", []):
 		var gid := StringName(String(raw))
 		if carried.has(gid) and items.get_def(gid) != null and not (out["dropped"] as Array[StringName]).has(gid):
 			(out["dropped"] as Array[StringName]).append(gid)
-	# 084：至少掉 min_drops 件身上有的 —— 掷完不够，从没掉的里随机补
+	# 084：至少掉 min_drops 件身上有的（包不算数）—— 掷完不够，从没掉的非包里随机补
 	var dropped_list: Array[StringName] = out["dropped"]
-	if rule.min_drops > 0 and dropped_list.size() < rule.min_drops:
+	if rule.min_drops > 0 and _non_bag_count(dropped_list, items) < rule.min_drops:
 		var left: Array[StringName] = []
 		for id in carried:
-			if items.get_def(id) != null and not dropped_list.has(id):
+			var d := items.get_def(id)
+			if d != null and not d.is_bag and not dropped_list.has(id):
 				left.append(id)
-		while dropped_list.size() < rule.min_drops and not left.is_empty():
+		while _non_bag_count(dropped_list, items) < rule.min_drops and not left.is_empty():
 			var k := rng.randi_range(0, left.size() - 1)
 			dropped_list.append(left[k])
 			left.remove_at(k)
@@ -180,6 +184,16 @@ static func expected_count(content: Dictionary, rule: DropRule, ctx: LootContext
 
 ## 尸体容器：掉下来的东西摆进一块棋盘（大小照敌人的棋盘；珍宝塞不下就加高，见 [LootPacker]）。
 ## 就是一个 GridInventory —— 搜刮界面直接拿它当容器
+## 掉了几件不是包的（保底只数这些）
+static func _non_bag_count(ids: Array[StringName], items: ItemDatabase) -> int:
+	var n := 0
+	for id in ids:
+		var d := items.get_def(id)
+		if d != null and not d.is_bag:
+			n += 1
+	return n
+
+
 static func corpse_of(content: Dictionary, rolled: Dictionary, items: ItemDatabase) -> GridInventory:
 	var size_raw: Array = content.get("board", [4, 3])
 	var ids: Array[StringName] = []

@@ -118,6 +118,7 @@ const EVENT_OUTCOMES := {
 	&"teleport": "res://core/run/events/outcomes/teleport.gd",
 	&"change_node_type": "res://core/run/events/outcomes/change_node_type.gd",
 	&"proceed": "res://core/run/events/outcomes/proceed.gd",
+	&"extract": "res://core/run/events/outcomes/extract.gd",
 	&"pass_time": "res://core/run/events/outcomes/pass_time.gd",
 	&"lose_item": "res://core/run/events/outcomes/lose_item.gd",
 }

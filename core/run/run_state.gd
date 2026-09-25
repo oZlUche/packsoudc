@@ -61,6 +61,8 @@ var tracker: SetTracker = null
 var player_baseline: CombatantBaseline = null
 ## 这一局的角色 id（067）；跟着存档，读档后持有方按它找回基线。空 = 没按角色开（老路、测试）
 var character_id: StringName = &""
+## 这一局选的地图规模（085：随机一局可选）；空 = 章节配置里默认的。跟着存档
+var map_scale: StringName = &""
 ## 角色定义（开局给；读档由持有方按 id 找回）。技能编进 buff_context
 var character: CharacterDef = null
 ## 这一局的进阶难度（069）：id 跟着存档，定义由持有方按 id 找回；null = 普通
@@ -123,7 +125,8 @@ static func start(
 	p_chapter: ChapterDef, p_seed: int, p_items: ItemDatabase, p_enemies: EnemyDatabase,
 	p_sets: SetDatabase = null, kit: Array[StringName] = [] as Array[StringName],
 	p_buff_defs: Dictionary = {}, p_meta_buffs: Array[StringName] = [] as Array[StringName],
-	p_character: CharacterDef = null, p_layout: Array = [], p_difficulty: DifficultyDef = null, p_hunter_defs: Dictionary = {}
+	p_character: CharacterDef = null, p_layout: Array = [], p_difficulty: DifficultyDef = null, p_hunter_defs: Dictionary = {},
+	p_scale: StringName = &""
 ) -> RunState:
 	if p_chapter == null or p_chapter.map_source == null:
 		return null
@@ -133,8 +136,9 @@ static func start(
 	s.items = p_items
 	s.enemies = p_enemies
 	s.sets = p_sets
+	s.map_scale = p_scale
 	s._resolve_rules()
-	s.map = p_chapter.map_source.resolve(p_seed)
+	s.map = p_chapter.map_source.resolve(p_seed, p_scale)
 	if s.map == null:
 		return null
 	ItemInstance.reset_uid_counter()
@@ -162,6 +166,7 @@ static func start(
 		board_size = p_character.board_size
 		if p_layout.is_empty():
 			full_kit = p_character.starting_bags + kit
+	full_kit.append_array(p_chapter.starting_items)     # 章节发的（序章二：一把匕首）
 	var ctx := s.buff_context()     # 角色定了再算：技能的被动（体力上限、开局钱）也在里面（082）
 	s.vitality = Vitality.new(vitality_max + ctx.vitality_max_bonus + p_chapter.vitality_bonus)
 	s.wallet = Wallet.new((s.economy.starting_balance if s.economy != null else 0) + ctx.starting_funds_bonus)
@@ -691,6 +696,8 @@ static func _rule_asset(kind: String, id: StringName) -> Resource:
 
 ## 这一章的规模 id（有规模模板的生成器才有）
 func scale_id() -> StringName:
+	if map_scale != &"":
+		return map_scale
 	var cfg: Resource = chapter.map_source.generator_config if chapter != null and chapter.map_source != null else null
 	if cfg == null or not cfg.has_method("scale"):
 		return &""
@@ -730,6 +737,7 @@ func _wire_events() -> void:
 	events.storage = storage
 	events.bracket_of = func() -> int: return hunters.bracket() if hunters != null else -1
 	events.relocate = relocate
+	events.request_extract = try_extract     # 085：撤离点的对话里选「撤离」
 	events.waited.connect(func(_n: MapNode, _actions: int):
 		tick_map_buffs()
 		if hunters != null:
@@ -798,6 +806,7 @@ func to_dict() -> Dictionary:
 		"seed": run_seed,
 		"chapter": String(chapter.id),
 		"character": String(character_id),
+		"map_scale": String(map_scale),
 		"difficulty": String(difficulty_id),
 		"hunters": hunters.to_dict() if hunters != null else {},
 		"erosion": travel.erosion.to_dict() if travel != null and travel.erosion != null and travel.erosion.has_method("to_dict") else {},
@@ -846,6 +855,7 @@ static func from_dict(
 	s.run_seed = int(d.get("seed", 0))
 	s.chapter = p_chapter
 	s.character_id = StringName(String(d.get("character", "")))
+	s.map_scale = StringName(String(d.get("map_scale", "")))
 	s.difficulty_id = StringName(String(d.get("difficulty", "")))
 	s.hunters_saved = d.get("hunters", {}) if d.get("hunters", {}) is Dictionary else {}
 	s.erosion_saved = d.get("erosion", {}) if d.get("erosion", {}) is Dictionary else {}

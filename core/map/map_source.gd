@@ -29,21 +29,39 @@ var last_error: String = ""
 
 
 ## 拿到这一局的地图。失败返回 null，原因在 [member last_error]。
-func resolve(run_seed: int) -> MapGraph:
+## [param scale_id]（085）：随机图按这个规模生成（配置里 `scales` 的 id，环数取那一档的最少环 —— 作者要更多可再给一个环数参数）；空 = 配置里现成的
+func resolve(run_seed: int, scale_id: StringName = &"") -> MapGraph:
 	last_error = ""
 	match mode:
 		Mode.PRESET:
 			return _resolve_preset(run_seed)
 		_:
-			return _resolve_random(run_seed)
+			return _resolve_random(run_seed, scale_id)
 
 
-func _resolve_random(run_seed: int) -> MapGraph:
+## 配置里有哪些规模可选（给开局屏）：[{id, display_name}]；不是环形生成器 / 没配就空
+func scale_options() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if mode == Mode.PRESET or generator_config == null or not ("scales" in generator_config):
+		return out
+	for p in generator_config.get("scales"):
+		if p != null:
+			out.append({"id": p.id, "display_name": p.display_name if p.display_name != "" else String(p.id)})
+	return out
+
+
+func _resolve_random(run_seed: int, scale_id: StringName = &"") -> MapGraph:
 	var gen := MapGeneratorRegistry.create(generator_id)
 	if gen == null:
 		last_error = "没有登记过的生成器 '%s'" % generator_id
 		return null
-	var graph := gen.generate(generator_config, run_seed)
+	var cfg := generator_config
+	if scale_id != &"" and cfg != null and cfg.has_method("apply_scale") and cfg.has_method("scale_by_id"):
+		var p = cfg.call("scale_by_id", scale_id)
+		if p != null:
+			cfg = cfg.duplicate(true)     # 别改章节资产本身
+			cfg.call("apply_scale", scale_id, int(p.rings.x))
+	var graph := gen.generate(cfg, run_seed)
 	if graph == null:
 		last_error = "生成器 '%s' 连试 %d 次都没生成出合法地图" % [generator_id, gen.attempts_used]
 	return graph

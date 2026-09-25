@@ -253,7 +253,7 @@ func save_settings() -> bool:
 ## 两条路都在开局那一刻存 meta：带进去的从仓库拿走（一局里是新实例，3.1 存档只写 id），撤离了回来，死了就是真没了。
 ## 生成不出图返回 null，停在开局屏
 func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: Array[int] = [] as Array[int],
-		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null) -> RunState:
+		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null, scale: StringName = &"") -> RunState:
 	if can_begin() != "":
 		return null
 	var kit: Array[StringName] = []
@@ -267,7 +267,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 			taken.append(inst)
 	if difficulty != null and difficulty.requires_unlock != &"" and not meta.has_unlock(difficulty.requires_unlock):
 		return null     # 没解锁的难度开不了（界面本来就不列，这里是兜底）
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs)
+	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale)
 	if state == null:
 		return null
 	for inst in taken:
@@ -310,6 +310,39 @@ func save_and_quit() -> bool:
 func finish_result() -> void:
 	save_meta()
 	_go(Screen.META, {"result": result})
+
+
+## 085：结算之后该直接进的下一章（撤离成功、这一章配了 next_chapter、它开着）；没有 null
+func next_chapter() -> ChapterDef:
+	if result == null or not result.is_extracted() or run == null or run.chapter == null or run.chapter.next_chapter == &"":
+		return null
+	for c in available_chapters():
+		if c.id == run.chapter.next_chapter:
+			return c
+	return null
+
+
+func chapter_of(id: StringName) -> ChapterDef:
+	for c in chapters:
+		if c.id == id:
+			return c
+	return null
+
+
+## 085：从结算屏直接进下一张教学图：带回来的先全进仓库（教程不从仓库带东西），再按下一章直接开。开不了回局外
+func start_next_chapter() -> bool:
+	var next := next_chapter()
+	if next == null:
+		finish_result()
+		return false
+	meta.store_all()
+	if meta.has_pending_board():
+		meta.discard_board()
+	save_meta()
+	if begin_direct(next) == null:
+		finish_result()
+		return false
+	return true
 
 
 ## 一局结束了：算账、进 meta（只进一次）、存 meta、删掉这一局的存档。结算屏拿到的已经是记完账的局外

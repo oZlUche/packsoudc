@@ -16,6 +16,9 @@
   ],
   "hidden_by_unlock": "prologue2_done",
   "vitality_bonus": 2,
+  "starting_items": [
+    "knife"
+  ],
   "allow_carry_in": false,
   "auto_spawn": true,
   "skip_setup": true,

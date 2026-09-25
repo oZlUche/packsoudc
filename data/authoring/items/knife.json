@@ -7,8 +7,7 @@
   "tags": [
     "weapon",
     "melee",
-    "rapid",
-    "bleed"
+    "rapid"
   ],
   "combat": {
     "base_stats": {
@@ -32,36 +31,6 @@
         "effects": [
           {
             "type": "deal_damage"
-          },
-          {
-            "type": "apply_status",
-            "buff": {
-              "id": "bleed",
-              "display_name": "流血",
-              "max_stacks": 5,
-              "duration_sec": 6.0,
-              "rules": [
-                {
-                  "trigger": {
-                    "type": "on_schedule"
-                  },
-                  "cadence": {
-                    "type": "cooldown",
-                    "seconds": 1.0
-                  },
-                  "effects": [
-                    {
-                      "type": "deal_damage",
-                      "target": "SELF",
-                      "damage_type": "bleed",
-                      "amount": 1.0,
-                      "damage_stat": "",
-                      "per_stack": true
-                    }
-                  ]
-                }
-              ]
-            }
           }
         ]
       }

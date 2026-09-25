@@ -122,6 +122,14 @@ static func _stat_name(key: StringName) -> String:
 			return "急速"
 		BattleStats.COOLDOWN:
 			return "冷却"
+		BattleStats.REGEN_STAMINA:
+			return "每秒回耐力"
+		BattleStats.REGEN_HP:
+			return "每秒回血"
+		BattleStats.MAX_SHIELD:
+			return "护盾（开战时满）"
+		BattleStats.MAX_MANA:
+			return "法力"
 	return String(key)
 
 

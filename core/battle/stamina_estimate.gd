@@ -1,7 +1,8 @@
 ## 耐力消耗评估（084，作者：低 / 中 / 高 / 极高）：一套装备每秒平均花多少耐力、每秒回多少，比一比。
 ##
 ## 花的：每条会出手的规则，出手频率（[method Cadence.estimated_hz]，含急速与邻接改的冷却）× 这条规则的耐力消耗（[ResourceCost]，含扳机隐含的）。
-## 回的：基线的 `regen_stamina`。都是编译结果上的数（4.2），和真打时一致；不算触发型规则（出手频率不由自己定），只做参考。
+## 回的：**单位级**的 `regen_stamina` —— 基线 + 道具（口粮）并起来的那份，和运行时 [method CombatantRuntime.from_spec] 算的同一个数
+## （作者反馈：只读基线会让口粮的回复看不见）。都是编译结果上的数（4.2），和真打时一致；不算触发型规则，只做参考。
 class_name StaminaEstimate
 extends RefCounted
 
@@ -14,8 +15,8 @@ static func of(spec: CombatantSpec) -> Dictionary:
 	var cost := 0.0
 	var regen := 0.0
 	if spec != null:
-		if spec.baseline != null:
-			regen = StatMath.to_float(spec.baseline.total_of(BattleStats.REGEN_STAMINA))
+		var rt := CombatantRuntime.from_spec(spec, 0)     # 单位级属性：基线 + 道具（口粮的回复在这里才算进去）
+		regen = StatMath.to_float(rt.stat(BattleStats.REGEN_STAMINA))
 		for item in spec.active_items():
 			var it := item as CompiledItem
 			for r in it.rules:
@@ -58,4 +59,6 @@ static func _stamina_of(rule: AbilityRule, stats: StatSet) -> float:
 ## 给悬浮窗的几行：每秒消耗 / 回复、评级
 static func describe(spec: CombatantSpec) -> String:
 	var e := of(spec)
-	return "耐力消耗：%s\n每秒平均消耗 %.1f　每秒回复 %.1f%s" % [e["rating"], e["cost"], e["regen"], "" if e["regen"] > 0.0 else "（不回复）"]
+	var cap := StatMath.to_float(CombatantRuntime.from_spec(spec, 0).stat(BattleStats.MAX_STAMINA)) if spec != null else 0.0
+	return "耐力消耗：%s\n每秒平均消耗 %.1f　每秒回复 %.1f%s　耐力上限 %.0f\n回复与上限都算上了道具（口粮这类）" % [
+		e["rating"], e["cost"], e["regen"], "" if e["regen"] > 0.0 else "（不回复）", cap]

@@ -166,6 +166,11 @@ static func run_before_damage(t: TestCase) -> void:
 	var ctx := H._battle(_attacker(20.0), _defender({}, _before_rule(flat)))
 	_run(ctx)
 	t.eq(_hp(ctx, 1), 88, "受伤前减免 8 点")
+	var over := ModifyDamage.new()
+	over.flat = -8.0
+	var ctx_over := H._battle(_attacker(3.0), _defender({}, _before_rule(over)))
+	_run(ctx_over)
+	t.eq(_hp(ctx_over, 1), 100, "减伤减过头是 0，不是回血（作者反馈：塔盾对匕首显示成「回复」）")
 
 	# --- 百分比减伤 ---
 	var half := ModifyDamage.new()

@@ -64,6 +64,9 @@
       "event_ambush": 1,
       "event_rift": 1,
       "event_altar": 1
+    },
+    "extract": {
+      "extract_default": 1
     }
   }
 }

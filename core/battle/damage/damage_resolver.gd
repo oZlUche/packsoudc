@@ -50,6 +50,8 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	if packet.percent != 0:
 		amount = StatMath.mul(amount, StatMath.ONE + packet.percent)
 	amount += packet.flat
+	# 减伤减到头就是 0：固定减伤（塔盾 -4 挨一把 3 点的匕首）不能把伤害减成治疗 —— 变治疗只有 invert 一条路（作者反馈 085）
+	amount = maxi(0, amount)
 	if packet.inverted:
 		amount = -amount
 	# 护甲只挡伤害，不挡治疗

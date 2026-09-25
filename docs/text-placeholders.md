@@ -24,6 +24,7 @@
 | `{node_id}` | 这段文字说的那个点 | 事件所在的点、鼠标停着的点 |
 | `{node_type}` | 点的类型名（战斗 / 搜索点……） | 随机点揭开后按揭成的 |
 | `{node_danger}` | 危险等级 | |
+| `{extract_fee}` | 这个撤离点的费用 | 不是撤离点时 0 |
 | `{enemy_name}` | 对手名 | 点内容里有敌人时才有（下同） |
 | `{enemy_strength}` | 对手档位 | |
 | `{enemy_hp}` / `{enemy_dps}` | 对手生命 / 约多少 DPS | 与真打的是同一份编译 |
@@ -86,12 +87,14 @@
 | 敌人内容 | `enemy` `strength` `board` `items[{id, at, rot}]` | 谁、几档、棋盘、身上的东西。**有包就和玩家一样**：`board_of` 开 `requires_bag`，包先摆、道具只能在包上（可跨两个包） |
 | 敌人内容 | `guaranteed_drops` | 打赢必掉，**只认身上有的** |
 | 敌人内容 | `base_stats` | 这个点的敌人自己的基线（覆盖敌人定义与档位倍率之后的数；教程敌人靠它不跟全局涨） |
-| `DropRule` | `min_drops` | 打赢至少掉几件身上有的（标准规则 1） |
+| `DropRule` | `min_drops` `bags_always_drop` | 打赢至少掉几件身上有的、**包不算在名额里**（标准规则 1）；敌人的包必掉（默认开） |
 | `GameSettings` | `loot_auto_close` | 拿走最后一件后自动关战利品 / 容器屏（默认关） |
 | 档位表 `StrengthTier` / `EnemyDef` | `bags` | 这一档 / 这种敌人背的包，包不计入件数 |
 | `SearchRules` | `again_event` `done_event` `encounter_event` `destroyed_event` | 搜索循环的默认事件 |
 | `ChapterDef` | `auto_spawn` `skip_setup` `intro_event` | 开局站在出生点、不走开局屏、先过开场事件 |
-| `ChapterDef` | `hidden_by_unlock` `vitality_bonus` | 拿到某解锁后不再列（教程收起）；这一章多给的体力 |
+| `ChapterDef` | `hidden_by_unlock` `vitality_bonus` `starting_items` `next_chapter` | 拿到某解锁后不再列（教程收起）；这一章多给的体力；这一章开局发的道具；撤离成功后直接进的下一章（序章串起来） |
+| 事件后果 | `extract` | 从这个撤离点撤离（撤离点的对话里用）；付不起在结果页说 |
+| 开局 | 地图规模 | 环形配置的 `scales`（小 / 中 / 大）在开局屏可选；`RunState.map_scale` 跟存档 |
 | 节点 `layout` | `col` `row` | `line` 布局：列从左到右，行上下错开（岔路） |
 | `recipes`（内容种类） | `inputs[2]` `output` `note` | 合成配方：两件拖到一起先配对（棋盘上画「合」），走到下一个点时合成，产物落在被压那件的位置、装不下进暂存区并提醒 |
 | `ChapterDef` | `node_tooltips` `tooltip_mode` `tooltip_texts` | 节点浮窗 |

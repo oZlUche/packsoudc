@@ -106,7 +106,7 @@ static func run_item_tooltip(t: TestCase) -> void:
 	var text := ItemTooltip.describe(knife)
 	t.check(text.contains("匕首") and text.contains(ItemPainter.rarity_color(knife.def).to_html(false)), "名字按稀有度上色")
 	t.check(text.contains(ItemTooltip.rarity_name(knife.def.rarity)), "写了稀有度")
-	t.check(text.contains("weapon") and text.contains("bleed"), "写了标签")
+	t.check(text.contains("weapon") and text.contains("rapid"), "写了标签")
 	t.check(text.contains("冷却") and text.contains("DPS"), "武器：冷却与 DPS（%s）" % text.replace("\n", " | "))
 	var compiled := ItemTooltip.compiled_for(knife, null)
 	t.check(compiled != null and compiled.estimated_dps() > 0.0, "单独编译得出 DPS")
@@ -247,26 +247,39 @@ static func frame_hover_tip(t: TestCase, root: Window) -> void:
 
 
 static func run_min_drops(t: TestCase) -> void:
-	t.begin("084 · 至少掉一件身上有的（DropRule.min_drops）：概率全 0 也掉一件、只掉身上的；标准规则 min_drops = 1")
+	t.begin("084 · 至少掉 min_drops 件身上有的（数据，标准规则 1）：概率全 0 也掉、只掉身上的；包必掉（bags_always_drop）且不占保底名额；开关关了包照掷")
 	var c := _content()
 	var std: DropRule = load(ContentPaths.asset_file("drop_rules", "standard"))
 	t.eq(std.min_drops, 1, "标准规则至少掉一件")
+	t.check(std.bags_always_drop, "标准规则：包必掉")
 	var rule := DropRule.new()
 	rule.base_chance = [0.0, 0.0, 0.0, 0.0, 0.0] as Array[float]
 	rule.treasure_chance = 0.0
 	rule.min_drops = 1
 	var content := {"enemy": "raider", "strength": 0, "board": [4, 3],
-		"items": [{"id": "bag_small", "at": [0, 0], "rot": 0}, {"id": "knife", "at": [0, 0], "rot": 0}]}
+		"items": [{"id": "bag_small", "at": [0, 0], "rot": 0}, {"id": "knife", "at": [0, 0], "rot": 0}, {"id": "salve", "at": [1, 0], "rot": 0}]}
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	for i in 20:
 		var got: Array = DropResolver.roll(content, rule, LootContext.new(), c.items, rng)["dropped"]
-		t.check(got.size() == 1 and DropResolver.carried_ids(content).has(got[0]), "第 %d 次：正好一件、是身上的（%s）" % [i, str(got)])
+		var non_bag := 0
+		for id in got:
+			t.check(DropResolver.carried_ids(content).has(id), "第 %d 次：%s 是身上的" % [i, id])
+			if not c.items.get_def(id).is_bag:
+				non_bag += 1
+		t.check(got.has(&"bag_small"), "第 %d 次：包必掉" % i)
+		t.eq(non_bag, 1, "第 %d 次：包之外正好保底一件（%s）" % [i, str(got)])
+	rule.min_drops = 2
+	var two: Array = DropResolver.roll(content, rule, LootContext.new(), c.items, rng)["dropped"]
+	t.eq(two.size(), 3, "保底改成 2：包 + 两件（保底数是数据，不写死）")
 	rule.min_drops = 5
 	var all: Array = DropResolver.roll(content, rule, LootContext.new(), c.items, rng)["dropped"]
-	t.eq(all.size(), 2, "身上只有两件就掉光，不多造")
+	t.eq(all.size(), 3, "身上就三件就掉光，不多造")
 	rule.min_drops = 0
-	t.eq((DropResolver.roll(content, rule, LootContext.new(), c.items, rng)["dropped"] as Array).size(), 0, "不保底就可能一件不掉")
+	var only_bag: Array = DropResolver.roll(content, rule, LootContext.new(), c.items, rng)["dropped"]
+	t.check(only_bag.size() == 1 and only_bag[0] == &"bag_small", "不保底：只有包必掉")
+	rule.bags_always_drop = false
+	t.eq((DropResolver.roll(content, rule, LootContext.new(), c.items, rng)["dropped"] as Array).size(), 0, "包的开关关了：概率全 0 就一件不掉")
 
 
 static func run_stamina_estimate(t: TestCase) -> void:
@@ -276,6 +289,15 @@ static func run_stamina_estimate(t: TestCase) -> void:
 	var empty := StaminaEstimate.of(BattleCompiler.compile(board))
 	t.check(float(empty["cost"]) == 0.0 and String(empty["rating"]) == "低", "空棋盘：不花、评「低」")
 	t.eq(float(empty["regen"]), CombatantBaseline.DEFAULT_STATS["regen_stamina"], "回复来自基线")
+	var with_ration := GridInventory.new(Vector2i(6, 4), 1, true)
+	with_ration.try_add(ItemInstance.create(c.items.get_def(&"bag_leather")), true)
+	with_ration.try_add(ItemInstance.create(c.items.get_def(&"ration")), true)
+	var spec_r := BattleCompiler.compile(with_ration)
+	var ration_regen := float(c.items.get_def(&"ration").combat.base_stats.get("regen_stamina", 0))
+	t.eq(float(StaminaEstimate.of(spec_r)["regen"]), float(CombatantBaseline.DEFAULT_STATS["regen_stamina"]) + ration_regen, "口粮的回复算进去了（作者反馈）")
+	var rt := CombatantRuntime.from_spec(spec_r, 0)
+	t.eq(StatMath.to_float(rt.stat(BattleStats.REGEN_STAMINA)), float(CombatantBaseline.DEFAULT_STATS["regen_stamina"]) + ration_regen, "运行时的单位回复也是这个数（战斗里真生效）")
+	t.check(StaminaEstimate.describe(spec_r).contains("耐力上限"), "悬浮窗写了上限")
 	board.try_add(ItemInstance.create(c.items.get_def(&"bag_leather")), true)
 	var knife := ItemInstance.create(c.items.get_def(&"knife"))
 	board.try_add(knife, true)

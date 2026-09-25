@@ -41,6 +41,8 @@ var hunter_fight: bool = false
 var hunter_flee: bool = false
 ## 8-3：这个点照它的类型照常发生（休息就回体力、商店就开店……）
 var proceed: bool = false
+## 085：从这个撤离点撤离（事件对话里的「撤离」选项）
+var extract: bool = false
 ## 8-3：这个点从此算这种类型（空 = 不改）
 var new_type: StringName = &""
 ## 8-3：传送到哪个点（-1 = 不传）、花几点

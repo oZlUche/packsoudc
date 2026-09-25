@@ -25,6 +25,9 @@ events_by_type = {
 "event_rift": 1,
 "event_stranger": 2
 },
+"extract": {
+"extract_default": 1
+},
 "rest": {
 "rest_default": 1
 },

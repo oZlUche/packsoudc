@@ -577,6 +577,13 @@ static func _director_walk(game, run: RunState, target: int) -> void:
 					ov.to_map()     # 084：拿完不自动关，手动关
 				GameFlow.Screen.SEARCH, GameFlow.Screen.SHOP:
 					ov.leave()
+				GameFlow.Screen.EVENT:
+					# 085：撤离点也有对话了，这里要验右栏的确认面板，选「再看看」
+					var def := run.events.pending_event()
+					if def != null and def.id == &"extract_default" and def.options.size() > 1:
+						ov.choose(1)
+					else:
+						ov.proceed()
 				_:
 					ov.proceed()
 #endregion

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_wwjr2"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_8ybje"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/extract.gd" id="3_kxrt3"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_3pk44"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_3heij"]
+
+[sub_resource type="Resource" id="Resource_7rcik"]
+script = ExtResource("3_kxrt3")
+
+[sub_resource type="Resource" id="Resource_d6uot"]
+script = ExtResource("1_wwjr2")
+label = "撤离"
+outcomes = Array[ExtResource("2_8ybje")]([SubResource("Resource_7rcik")])
+
+[sub_resource type="Resource" id="Resource_vwjvj"]
+script = ExtResource("1_wwjr2")
+label = "再看看"
+
+[resource]
+script = ExtResource("5_3heij")
+id = &"extract_default"
+title = "撤离点"
+text = "能出去的地方。{c:warn}撤了这一局就结束{/c}：包里的东西带回仓库，暂存区里的留在这儿，钱带出去。
+
+费用：{extract_fee} 币（0 = 免费）。"
+options = Array[ExtResource("1_wwjr2")]([SubResource("Resource_d6uot"), SubResource("Resource_vwjvj")])

@@ -35,7 +35,12 @@ func open(payload: Dictionary) -> void:
 		col.add_child(_wh)
 	else:
 		col.add_child(_wrapped("背包、暂存区、钱，全都留在了里面。", 14, UiPalette.FG, 600))
-	col.add_child(_button("继续", proceed, 16))
+	var next := flow.next_chapter()
+	if next != null:
+		col.add_child(_wrapped("带回来的东西会进仓库。序章一张接一张：下面直接进「%s」。" % next.display_name, 13, UiPalette.DIM, 600))
+		col.add_child(_button("进入下一张：%s" % next.display_name, proceed, 16))
+	else:
+		col.add_child(_button("继续", proceed, 16))
 
 
 ## 一键置入（测试直接调）
@@ -43,8 +48,12 @@ func store_all() -> Dictionary:
 	return _wh.store_all() if _wh != null else {"moved": 0, "left": 0, "stuck": ""}
 
 
+## 「继续」：有下一张教学图就直接进（085），否则去局外
 func proceed() -> void:
-	flow.finish_result()
+	if flow.next_chapter() != null:
+		flow.start_next_chapter()
+	else:
+		flow.finish_result()
 
 
 func _reason_text(reason: StringName) -> String:

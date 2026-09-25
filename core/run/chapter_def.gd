@@ -44,6 +44,10 @@ extends Resource
 @export var hidden_by_unlock: StringName = &""
 ## 这一章开局多给的体力（084：第二张教程图两场都输也死不了）
 @export var vitality_bonus: int = 0
+## 这一章开局发的道具 id（在角色的初始包之上；序章二发一把匕首）。放不进包的进暂存区
+@export var starting_items: Array[StringName] = []
+## 撤离成功之后直接进的下一章（085 作者定：序章撤离后不是再来一局而是下一张教学图）。空 = 照常去局外
+@export var next_chapter: StringName = &""
 ## 开局能不能从仓库带东西进来（序章不能：教程从空包开始）
 @export var allow_carry_in: bool = true
 ## 开局直接站在第一个出生点上，不用挑（084：序章只有一条路、一个出生点）

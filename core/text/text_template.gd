@@ -99,6 +99,7 @@ static func context_for(run: RunState, node: MapNode = null, extra: Dictionary =
 		var type := NodeEvents.effective_type(node)
 		ctx["node_type"] = String(MapNodeStyle.of(type)["label"])
 		ctx["node_danger"] = node.danger
+		ctx["extract_fee"] = PaidExtracts.fee_of(node) if NodeEvents.effective_type(node) == &"extract" else 0
 		var content: Dictionary = node.content
 		if EnemyKit.has_enemy(content):
 			_enemy_into(ctx, content, run)

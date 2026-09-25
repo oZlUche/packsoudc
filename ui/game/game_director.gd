@@ -323,6 +323,10 @@ func _demo_settle() -> void:
 
 func _first_open_option() -> int:
 	var def := flow.run.events.pending_event()
+	# 撤离点的对话（085）：演示要看右栏的确认面板，选「再看看」而不是直接撤
+	var node := flow.run.current_node()
+	if node != null and NodeEvents.effective_type(node) == &"extract" and def.options.size() > 1:
+		return 1
 	for i in def.options.size():
 		if bool(flow.run.events.option_state(i)["ok"]):
 			return i

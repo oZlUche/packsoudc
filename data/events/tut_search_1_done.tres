@@ -13,5 +13,5 @@ label = "继续"
 script = ExtResource("4_nr0ty")
 id = &"tut_search_1_done"
 title = "翻遍了"
-text = "这里能翻的都翻过了。前面有人守着 —— 走之前把搜到的东西放进包里：只有包里的东西参战，暂存区里的一挪步就没了。"
+text = "又翻出一件皮甲：穿上就多 3 点护甲，每挨一下少掉 3 点血。这里能翻的都翻过了。前面有人守着 —— 走之前把搜到的东西放进包里：只有包里的东西参战，暂存区里的一挪步就没了。"
 options = Array[ExtResource("1_qdq2o")]([SubResource("Resource_kl3ha")])
