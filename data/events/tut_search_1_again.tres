@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_0mnyf"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_xy7ar"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/open_search.gd" id="3_o4pha"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_vann0"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_xr173"]
+
+[sub_resource type="Resource" id="Resource_keqnv"]
+script = ExtResource("3_o4pha")
+
+[sub_resource type="Resource" id="Resource_mfqjl"]
+script = ExtResource("1_0mnyf")
+label = "再搜一次"
+outcomes = Array[ExtResource("2_xy7ar")]([SubResource("Resource_keqnv")])
+
+[resource]
+script = ExtResource("5_xr173")
+id = &"tut_search_1_again"
+title = "再翻一次"
+text = "第一次翻出了一把制式短剑和一瓶伤药。这里还安静，再翻一次，看看还有什么。"
+options = Array[ExtResource("1_0mnyf")]([SubResource("Resource_mfqjl")])

@@ -142,8 +142,8 @@ static func run_prebattle(t: TestCase) -> void:
 	_cleanup()
 
 
-static func run_search_stays_open(t: TestCase) -> void:
-	t.begin("084 · 搜索点：先事件屏（搜索 / 离开）→ 搜满不自动结束 → 最小化回地图会话还在 → 恢复 → 离开才交收获；没拿的战利品留在点上，走了才没")
+static func run_search_loop(t: TestCase) -> void:
+	t.begin("084 · 搜索循环：事件屏（搜索 / 离开）→ 选搜索自动搜一次进搜索屏 → 关闭回事件屏（再搜 / 离开）→ 搜满回「翻遍了」→ 离开交收获；遭遇那一次直接到「有人来了」→ 迎战 → 战前准备 → 回放 → 「余波」→ 战利品；最小化 / 恢复的是同一个会话")
 	var c := _content()
 	var kit := _kit(c)
 	var found := _seed_with(c, &"search", kit.items)
@@ -157,65 +157,82 @@ static func run_search_stays_open(t: TestCase) -> void:
 	t.check(f.step_to(next), "走上搜索点")
 	t.eq(f.screen, GameFlow.Screen.EVENT, "先到事件屏")
 	var def: EventDef = f.last_payload.get("def", null)
-	var labels: Array = []
-	if def != null:
-		for o in def.options:
-			labels.append((o as EventOption).label)
+	var labels: Array = _labels(def)
 	t.check(labels.has("搜索") and labels.has("离开"), "选项是搜索 / 离开（%s）" % str(labels))
 	t.check(f.choose_event(labels.find("搜索")), "选「搜索」")
-	t.eq(f.screen, GameFlow.Screen.SEARCH, "→ 搜索屏")
 	var session: SearchSession = run.events.current_search
 	t.not_null(session, "会话开着")
 	if session == null:
 		return
-	# 搜到满（没遭遇的话）
-	var guard := 0
-	while session.can_search() and session.active and guard < 10:
-		guard += 1
-		session.search()
-	if not session.active:
-		# 遭遇了：战前准备 → 开战 → 收尾。这一组只验没遭遇的路
-		t.check(f.screen == GameFlow.Screen.PREBATTLE, "遭遇了先到战前准备屏")
-		_settle(f)
-		t.check(true, "（这个种子遭遇了，最小化那一段跳过）")
-		_cleanup()
-		return
-	t.check(session.is_exhausted() and session.active, "搜满了不能再搜，会话还开着")
-	t.eq(f.screen, GameFlow.Screen.SEARCH, "还在搜索屏")
-	var had := session.haul_box.item_count()
-	# 最小化
-	t.check(f.hide_overlay(), "收起回地图")
-	t.eq(f.screen, GameFlow.Screen.MAP, "→ 地图")
-	t.check(bool(f.last_payload.get("minimized", false)), "载荷说是最小化")
-	t.check(run.events.current_search == session and session.active, "会话还开着")
-	t.eq(session.haul_box.item_count(), had, "收获一件没少")
-	t.check(f.can_reopen(), "能重新打开")
-	t.check(f.reopen_node(), "重新打开")
-	t.eq(f.screen, GameFlow.Screen.SEARCH, "→ 回到搜索屏")
-	t.check(bool(f.last_payload.get("restore", false)) and f.last_payload.get("session", null) == session, "恢复的是同一个会话")
-	# 离开：收获交到待拾取
-	session.leave()
-	if had == 0:
-		t.eq(f.screen, GameFlow.Screen.MAP, "空手：直接回地图")
-		_cleanup()
-		return
-	t.eq(f.screen, GameFlow.Screen.LOOT, "有收获 → 战利品屏")
-	t.check(run.pending_loot != null and run.pending_loot.item_count() == had, "待拾取里就是收获")
-	t.check(f.hide_overlay(), "收起战利品屏")
-	t.eq(f.screen, GameFlow.Screen.MAP, "→ 地图")
-	t.check(run.pending_loot != null, "没拿的还在这个点上")
-	t.check(f.can_reopen() and f.reopen_node() and f.screen == GameFlow.Screen.LOOT, "能再打开战利品屏")
-	t.check(f.last_payload.get("container", null) == run.pending_loot, "还是那份")
-	t.check(f.hide_overlay(), "再收起")
-	# 走了才没
-	var cleared: Array = []
-	run.loot_cleared.connect(func(): cleared.append(true))
-	t.check(f.step_to(int(found["entry"])), "走回出生点")
-	t.is_null(run.pending_loot, "没拿的战利品留在了那个点上")
-	t.eq(cleared.size(), 1, "发了 loot_cleared")
-	t.check(not f.can_reopen(), "走了就没有可以再打开的界面")
+	var rounds := 1
+	var met := false
+	while true:
+		if not session.active:
+			met = true
+			break
+		t.eq(f.screen, GameFlow.Screen.SEARCH, "第 %d 次：搜索屏" % rounds)
+		t.eq(session.searches_done, rounds, "第 %d 次：自动搜了这一次" % rounds)
+		t.check(f.last_payload.get("session", null) == session, "搜索屏带着会话")
+		if rounds == 1:
+			# 最小化 / 恢复
+			var had := session.haul_box.item_count()
+			t.check(f.hide_overlay(), "收起回地图")
+			t.check(f.screen == GameFlow.Screen.MAP and bool(f.last_payload.get("minimized", false)), "→ 地图（最小化）")
+			t.check(run.events.current_search == session and session.active and session.haul_box.item_count() == had, "会话与收获都在")
+			t.check(f.can_reopen() and f.reopen_node(), "回到这个点")
+			t.check(f.screen == GameFlow.Screen.SEARCH and f.last_payload.get("session", null) == session, "恢复的是同一个会话")
+		t.check(f.close_search(), "关闭搜索屏")
+		t.eq(f.screen, GameFlow.Screen.EVENT, "第 %d 次之后：回到事件屏" % rounds)
+		var again: EventDef = f.last_payload.get("def", null)
+		var l2: Array = _labels(again)
+		if session.is_exhausted():
+			t.check(again != null and again.id == &"search_done" and l2 == ["离开"], "搜满了：「翻遍了」只能离开（%s）" % str(l2))
+			var had_all := session.haul_box.item_count()
+			t.check(f.choose_event(0), "离开")
+			t.check(not session.active and run.events.current_search == null, "会话结束")
+			t.check(run.map.get_node(next).is_visited(), "点用过了")
+			if had_all > 0:
+				t.check(f.screen == GameFlow.Screen.LOOT and run.pending_loot != null and run.pending_loot.item_count() == had_all, "收获交到待拾取 → 战利品屏")
+			else:
+				t.eq(f.screen, GameFlow.Screen.MAP, "空手：回地图")
+			break
+		t.check(again != null and again.id == &"search_again" and l2 == ["再搜一次", "离开"], "「翻过一遍」：再搜一次 / 离开（%s）" % str(l2))
+		t.check(f.choose_event(0), "再搜一次")
+		rounds += 1
+		if rounds > 10:
+			t.check(false, "循环没停")
+			break
+	if met:
+		# 遭遇那一次：没有搜索屏，直接「有人来了」→ 迎战 → 战前准备 → 回放 → 余波 → 战利品
+		t.eq(f.screen, GameFlow.Screen.EVENT, "遭遇：直接到事件屏")
+		var enc: EventDef = f.last_payload.get("def", null)
+		t.check(enc != null and enc.id == &"search_encounter" and _labels(enc) == ["迎战"], "「有人来了」只有迎战")
+		t.check(run.events.current_search == session and not session.encounter.is_empty(), "会话还挂着，遭遇在里面")
+		var before := session.haul_box.item_count()
+		t.check(f.choose_event(0), "迎战")
+		t.eq(f.screen, GameFlow.Screen.PREBATTLE, "→ 战前准备")
+		t.eq(String(run.events.pending_battle["kind"]), "search", "是搜索里的一场")
+		t.check(f.start_battle(), "开战")
+		t.eq(f.screen, GameFlow.Screen.BATTLE, "→ 回放")
+		t.check(run.events.current_search == null and run.map.get_node(next).is_visited(), "会话收了、点用过了")
+		f.resume()
+		t.check(f.screen == GameFlow.Screen.EVENT and (f.last_payload.get("def", null) as EventDef).id == &"search_destroyed", "回放之后先说「余波」，再看战利品")
+		t.check(f.choose_event(0), "继续")
+		if run.pending_loot != null:
+			t.eq(f.screen, GameFlow.Screen.LOOT, "→ 战利品（敌人掉的 + 之前的收获）")
+			t.check(run.pending_loot.item_count() >= before, "之前搜到没拿的也在里面")
+		else:
+			t.eq(f.screen, GameFlow.Screen.MAP, "什么都没掉：回地图")
 	_settle(f)
 	_cleanup()
+
+
+static func _labels(def: EventDef) -> Array:
+	var out: Array = []
+	if def != null:
+		for o in def.options:
+			out.append((o as EventOption).label)
+	return out
 
 
 static func run_auto_spawn(t: TestCase) -> void:

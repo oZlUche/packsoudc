@@ -66,13 +66,15 @@ static func _path(g: MapGraph) -> Array[MapNode]:
 	return out
 
 
-## 教程里到某个点为止能搜到的全部东西
+## 教程里到某个点为止能拿到的全部东西：搜到的 + 遭遇敌人必掉的
 static func _finds_until(path: Array[MapNode], upto: int) -> Array[StringName]:
 	var out: Array[StringName] = []
 	for i in mini(upto + 1, path.size()):
 		for round in path[i].content.get("search_finds", []):
 			for id in round:
 				out.append(StringName(String(id)))
+		for id in (path[i].content.get("encounter", {}) as Dictionary).get("guaranteed_drops", []):
+			out.append(StringName(String(id)))
 	return out
 
 
@@ -140,12 +142,29 @@ static func run_data(t: TestCase) -> void:
 			all_zero = false
 	t.check(all_zero, "第一个搜索点必不遇敌")
 	t.eq(int(s2.get("search_max", 0)), 3, "第二个搜索点搜三次")
-	t.eq(int(s2.get("search_min", 0)), 3, "第二个搜索点至少搜三次")
+	# 084：搜索循环的事件都配了、全是强制搜（没有「离开」）；遭遇的敌人必掉一个包
+	for eid in ["tut_search_1", "tut_search_1_again", "tut_search_1_done", "tut_search_2", "tut_search_2_again_1", "tut_search_2_again_2", "tut_search_2_encounter"]:
+		var d: EventDef = c.events.get(StringName(eid), null)
+		t.not_null(d, "教程事件 %s 存在" % eid)
+		if d != null:
+			t.eq(d.options.size(), 1, "%s 只有一个选项（序章不给不搜的选择）" % eid)
+	t.eq(s1.get("search_again_events", []), ["tut_search_1_again"], "第一个搜索点搜一次之后的事件")
+	t.eq(String(s1.get("search_done_event", "")), "tut_search_1_done", "第一个搜索点搜完的事件")
+	t.eq(s2.get("search_again_events", []), ["tut_search_2_again_1", "tut_search_2_again_2"], "第二个搜索点两次之后各一屏")
+	t.check(String((c.events.get(&"tut_search_2_again_2") as EventDef).text).contains("包"), "第二次之后的文字提示包装不下")
+	t.eq(String(s2.get("search_encounter_event", "")), "tut_search_2_encounter", "遭遇的事件")
+	var drops: Array = (s2["encounter"] as Dictionary).get("guaranteed_drops", [])
+	var has_bag := false
+	for id in drops:
+		var dd := c.items.get_def(StringName(String(id)))
+		if dd != null and dd.is_bag:
+			has_bag = true
+	t.check(has_bag, "遭遇的敌人必掉一个包（%s）" % str(drops))
 	var curve: Array = s2.get("search_curve", [])
 	t.check(curve.size() == 3 and float(curve[2]) >= 1.0 and float(curve[0]) == 0.0 and float(curve[1]) == 0.0, "第三次必遇敌、前两次不遇")
 	t.check(s2.has("encounter") and EnemyKit.has_enemy(s2["encounter"]), "遭遇写死了")
 	# 打得赢：用教程里到那一步为止搜到的东西对着每个敌人模拟几个种子
-	var fights := [[path[2].content, 1], [s2["encounter"], 3], [path[4].content, 3]]
+	var fights := [[path[2].content, 1], [s2["encounter"], 2], [path[4].content, 3]]     # 遭遇那一次什么都翻不到：只带到第二个点的收获
 	for f in fights:
 		var me := _player(c, _finds_until(path, int(f[1])))
 		var foe := EnemyKit.spec_of(f[0], c.enemies, null, c.items)
@@ -159,7 +178,7 @@ static func run_data(t: TestCase) -> void:
 
 
 static func run_walkthrough(t: TestCase) -> void:
-	t.begin("序章 · 走一遍：搜两次拿到固定的收获（搜满不自动结束）→ 整理事件只有「进入战前准备」→ 战斗赢 → 战利品 → 搜三次第三次遭遇 → 赢 → 战利品 → 精英赢 → 撤离")
+	t.begin("序章 · 走一遍：搜索循环（搜索 → 关闭回事件 → 再搜 → 搜完事件）→ 整理事件只有「进入战前准备」→ 战斗赢 → 战利品 → 第二点两次之后第三次遭遇事件 → 迎战赢 → 余波事件 → 战利品里有包 → 精英赢 → 撤离")
 	var c := _content()
 	var s := _start(c)
 	t.not_null(s, "按布鲁图斯开局")
@@ -171,24 +190,34 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(s.step_to(path[1].id), "走到搜索点")
 	var ev := s.events.pending_event()
 	t.check(ev != null and ev.id == StringName(String(path[1].content["event"])), "先看教程事件")
-	t.check(s.events.choose(0), "选「搜索」")
+	var shown: Array = []
+	s.events.search_shown.connect(func(_n: MapNode, _ss: SearchSession): shown.append(1))
+	t.check(s.events.choose(0), "选「搜索」：自动搜一次")
 	var session := s.events.current_search
 	t.not_null(session, "开了搜索会话")
 	if session == null:
 		return
 	t.eq(session.max_total(), 2, "能搜两次")
-	t.eq(session.next_encounter_chance(), 0.0, "遭遇 0%")
+	t.eq(session.searches_done, 1, "已经搜了一次")
+	t.eq(shown.size(), 1, "给看了一回搜索屏")
 	var finds: Array = path[1].content["search_finds"]
-	for k in 2:
-		var got: Dictionary = session.search()
-		var want: Array = []
-		for id in finds[k]:
-			want.append(StringName(String(id)))
-		t.eq(got["found"], want, "第 %d 次搜到写死的东西" % (k + 1))
-		t.check((got["encounter"] as Dictionary).is_empty(), "第 %d 次没遭遇" % (k + 1))
-	t.check(not session.can_search() and session.active, "搜满了不能再搜，但会话不自动结束（084：收获留给玩家亮出来、拖走）")
-	session.leave()
-	t.check(not session.active, "按「离开」才结束")
+	var want0: Array = []
+	for id in finds[0]:
+		want0.append(StringName(String(id)))
+	t.eq(session.found, want0, "第一次搜到写死的东西")
+	t.check(s.events.pause_search(), "关闭搜索屏")
+	ev = s.events.pending_event()
+	t.check(ev != null and ev.id == &"tut_search_1_again", "回到事件屏：「再翻一次」")
+	t.check(s.events.choose(0), "再搜一次")
+	t.eq(session.searches_done, 2, "搜了两次")
+	t.eq(shown.size(), 2, "又给看了一回搜索屏")
+	t.check(session.is_exhausted() and session.active, "搜满了不能再搜，会话还开着")
+	t.check(s.events.pause_search(), "关闭搜索屏")
+	ev = s.events.pending_event()
+	t.check(ev != null and ev.id == &"tut_search_1_done", "回到事件屏：「翻遍了」")
+	t.check(s.events.choose(0), "继续")
+	t.check(not session.active and s.events.current_search == null, "会话结束了")
+	t.check(path[1].is_visited(), "点用过了")
 	t.not_null(s.pending_loot, "收获等着拿")
 	t.eq(s.take_all_loot(), 3, "拿走三件")
 	# 整理：暂存区一挪步就清（080），先把搜到的都放进包里（有没有武器的门在战前准备屏上，084）
@@ -215,18 +244,34 @@ static func run_walkthrough(t: TestCase) -> void:
 		s.equip((inst as ItemInstance).uid)
 	# 搜索点 2
 	t.check(s.step_to(path[3].id), "走到第二个搜索点")
-	t.check(s.events.choose(0), "选「搜索」")
+	t.check(s.events.choose(0), "选「搜索」：第一次")
 	session = s.events.current_search
-	t.eq(session.min_searches(), 3, "至少搜三次")
-	t.check(not session.can_leave(), "一次没搜不能走")
-	for k in 2:
-		var got: Dictionary = session.search()
-		t.check((got["encounter"] as Dictionary).is_empty(), "第 %d 次没遭遇" % (k + 1))
-	t.check(not session.can_leave(), "搜了两次还不能走")
-	var third: Dictionary = session.search()
-	t.eq(third["encounter"], path[3].content["encounter"], "第三次遭遇 = 写死的那个")
+	t.eq(session.searches_done, 1, "搜了一次")
+	t.check(s.events.pause_search() and s.events.pending_event().id == &"tut_search_2_again_1", "关闭 → 「还有」")
+	t.check(s.events.choose(0), "再搜一次：第二次")
+	t.eq(session.searches_done, 2, "搜了两次")
+	t.check(s.events.pause_search() and s.events.pending_event().id == &"tut_search_2_again_2", "关闭 → 「包装不下了」")
+	t.check(s.events.choose(0), "再搜一次：第三次")
+	t.eq(session.encounter, path[3].content["encounter"], "第三次遭遇 = 写死的那个")
+	t.eq(session.found.size(), 3, "遭遇那一次什么都没翻到（前两次三件）")
+	t.check(not session.active, "会话结束（遭遇）")
+	ev = s.events.pending_event()
+	t.check(ev != null and ev.id == &"tut_search_2_encounter", "直接到「惊动了」事件，不开搜索屏")
+	t.eq(int(s.tally["battles_won"]), 1, "还没打")
+	t.check(s.events.choose(0), "迎战")
 	t.eq(int(s.tally["battles_won"]), 2, "遭遇也打赢了")
 	t.eq(s.phase, RunState.Phase.ON_MAP, "还在图上")
+	ev = s.events.pending_event()
+	t.check(ev != null and ev.id == &"search_destroyed", "打完过「余波」事件：不能再搜")
+	t.check(s.events.current_search == null and path[3].is_visited(), "会话收了、点用过了")
+	t.check(s.events.choose(0), "继续")
+	t.not_null(s.pending_loot, "战利品（敌人掉的 + 前两次的收获）")
+	var got_bag := false
+	if s.pending_loot != null:
+		for inst in s.pending_loot.items():
+			if (inst as ItemInstance).def.is_bag:
+				got_bag = true
+	t.check(got_bag, "战利品里有一个包")
 	if s.pending_loot != null:
 		s.take_all_loot()
 	for inst in s.storage.items().duplicate():

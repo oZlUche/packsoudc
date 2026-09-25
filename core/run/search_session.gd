@@ -1,8 +1,7 @@
 ## 在一个搜索点上搜（架构文档 6.2 / 5.4.2，M4-3）：搜几次是玩家手里的旋钮。
 ##
-## 每搜一次：先按 [SearchRules] 找到几件（稀有度随深度与危险上偏），再按遭遇曲线掷一次 ——
-## 中了就是遭遇，敌人由 [member encounter_builder] 现造（敌人池按 `search` 类型出人，5.10：搜到了才看得见），
-## 搜索到此为止，打完这一场就走。没中可以继续搜，搜满 [member SearchRules.max_searches] 次就不能再搜，
+## 每搜一次：先按遭遇曲线掷一次 —— 中了就是遭遇（084：这一次**什么都翻不到**，直接开打），敌人由 [member encounter_builder] 现造
+## （敌人池按 `search` 类型出人，5.10：搜到了才看得见），搜索到此为止；没中再按 [SearchRules] 找到几件（稀有度随深度与危险上偏）。没中可以继续搜，搜满 [member SearchRules.max_searches] 次就不能再搜，
 ## 但会话**不自动结束**（084：最后一次的收获要留给玩家亮出来、拖走），随时 [method leave] 才结束。
 ##
 ## 随机数只用节点的 `content_seed`：同一个点、同样的搜法，每次搜出来的一样。
@@ -95,22 +94,24 @@ func search() -> Dictionary:
 	if not can_search():
 		return {}
 	var k := searches_done
-	var got := _scripted_finds(k)
-	if got.is_empty():
-		got = draw_items(rules, items, depth, node.danger if node != null else 0, rng)
-	found.append_array(got)
-	var packed := LootPacker.add(haul_box, got, items, _haul_size().y)
-	if packed["board"] != haul_box:
-		haul_box = packed["board"]
-		haul_changed.emit(haul_box)
-	searches_done += 1
-	if node != null:
-		node.content["searches"] = searches_done
 	var met := {}
 	if rng.randf() < encounter_chance_at(k) and encounter_builder.is_valid():
 		var built = encounter_builder.call()
 		if built is Dictionary and not (built as Dictionary).is_empty():
 			met = built
+	var got: Array[StringName] = []
+	if met.is_empty():
+		got = _scripted_finds(k)
+		if got.is_empty():
+			got = draw_items(rules, items, depth, node.danger if node != null else 0, rng)
+		found.append_array(got)
+		var packed := LootPacker.add(haul_box, got, items, _haul_size().y)
+		if packed["board"] != haul_box:
+			haul_box = packed["board"]
+			haul_changed.emit(haul_box)
+	searches_done += 1
+	if node != null:
+		node.content["searches"] = searches_done
 	encounter = met
 	searched.emit(got, met)
 	if not met.is_empty():

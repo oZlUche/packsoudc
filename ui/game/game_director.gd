@@ -282,10 +282,7 @@ func demo_fill() -> void:
 		return
 	if want == "search":
 		if _overlay != null and _overlay.screen == GameFlow.Screen.EVENT:
-			_overlay.call("choose", 0)     # 搜索点的事件：「搜索」
-		if _overlay != null and _overlay.screen == GameFlow.Screen.SEARCH:
-			_overlay.call("search")
-			# 不快速搜索：截图里看得见正在搜的进度环与「下一件」
+			_overlay.call("choose", 0)     # 搜索点的事件：「搜索」—— 自动搜一次（084）；不快速搜索，截图里看得见进度环
 		return
 	if want == "loot":
 		if flow.screen == GameFlow.Screen.BATTLE:

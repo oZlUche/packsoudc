@@ -14,17 +14,13 @@ script = ExtResource("1_kwo4u")
 label = "搜索"
 outcomes = Array[ExtResource("2_vpa61")]([SubResource("Resource_b18nb")])
 
-[sub_resource type="Resource" id="Resource_cyphv"]
-script = ExtResource("1_kwo4u")
-label = "离开"
-
 [resource]
 script = ExtResource("5_dep0e")
 id = &"tut_search_1"
 title = "翻找"
 text = "布鲁图斯被军队送进了废墟的边缘，三天后来接。
 
-脚下这片还没人翻过。每个搜索点能搜几次，翻得越久，越可能惊动附近的东西。这里很安静，放心搜两次；也可以什么都不翻直接走。
+脚下这片还没人翻过。每个搜索点能搜几次，翻得越久，越可能惊动附近的东西。这里很安静，放心搜。
 
-搜到的东西会一件一件亮出来，直接拖进包里就行。暂存区只是这个点上的临时地方，一挪步就清空。"
-options = Array[ExtResource("1_kwo4u")]([SubResource("Resource_rrs05"), SubResource("Resource_cyphv")])
+按「搜索」翻一次：搜到的东西会一件一件亮出来，直接拖进包里就行；拖到棋盘外的都算暂存区，暂存区只是这个点上的临时地方，一挪步就清空。关掉搜索界面会回到这里，再决定搜不搜。"
+options = Array[ExtResource("1_kwo4u")]([SubResource("Resource_rrs05")])

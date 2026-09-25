@@ -2571,8 +2571,11 @@ class_name SearchRules extends Resource
 
 **搜索点**是 `SearchSession`：搜几次是玩家的旋钮（5.4.2）。每搜一次先找几件（稀有度随深度与危险上偏），
 再按曲线掷遭遇 —— 中了才由敌人池按 `search` 类型出人（搜索点的敌人**看不见**，5.10：不预先造，存档里也没有），
-打完这一场搜索到此为止；没中可以继续。搜满了只是不能再搜（`is_exhausted()`），**会话不自动结束**（084：最后一次的收获要亮出来给玩家拖），
-玩家 `leave()` 才结束（搜满了走 `exhausted`、没搜满走 `left`）。搜过几次记进 `node.content["searches"]`，读档接着搜。
+搜索到此为止。**搜索的循环**（084，作者定，所有搜索点通用）：事件屏选「搜索」= 开会话 + **自动搜一次** → 搜索屏把这一次的收获亮出来拖走 → 「关闭」回到事件屏
+（`SearchRules.again_event`：再搜一次 / 离开；搜满了是 `done_event`）→ 再选就再搜。**先掷遭遇再翻东西**：掷中的那一次空手，直接过 `encounter_event`（迎战 = `start_battle` 打会话里的遭遇）
+→ 战前准备 → 回放 → `destroyed_event`（搜索点被余波摧毁，不能再搜）→ 敌人的战利品与之前没拿的收获并成一份。四个事件 id 节点内容可覆盖（`search_again_events[k]` 等），
+`encounter.guaranteed_drops` 必掉；都没配就是老路（关闭即离开、遭遇直接开打）。搜满了只是不能再搜（`is_exhausted()`），会话不自动结束，`leave()` 才结束（`exhausted` / `left`）。
+搜过几次记进 `node.content["searches"]`，读档接着搜。
 遭遇的敌人与随机点揭成的战斗一样按**探索度**抬档（6.0：总步数、累计搜索次数）：走得越远、搜得越多，撞上的越强。
 收获摆进 `LootPacker` 的容器，与尸体容器同一套（6.1）。
 
@@ -2629,7 +2632,7 @@ class_name SearchRules extends Resource
 | 踩到 | 发生 |
 |---|---|
 | battle / elite / core | `BattleSim` 打一场，玩家单位由 `player_spec` 在开战那一刻编译（4.2 是纯函数）。赢：`DropResolver` 掷、装尸体容器、`loot_ready`；输：扣 `loss_cost[类型]`，归零 `defeated(vitality_depleted)`；core 输了直接 `defeated(boss_lost)`，不扣。**不论输赢点都用过** |
-| search | 配了事件（默认 `search_default`：搜索 / 离开）先过事件屏；选「搜索」开 `SearchSession`，玩家离开（搜满 / 没搜满）或遭遇时 `search_closed(haul)`；遭遇先过战前准备再打一场（084）；结束才算用过 |
+| search | 配了事件（默认 `search_default`：搜索 / 离开）先过事件屏；选「搜索」开 `SearchSession` 并搜一次，关闭搜索屏回 again / done 事件（084 的循环）；玩家离开或遭遇时 `search_closed(haul)`；遭遇先过遇敌事件、战前准备再打，打完过余波事件；结束才算用过 |
 | random | 先 `reveal`，再按揭开的类型走（揭成什么就按什么类型配事件） |
 | rest | `vitality.restore(rest_restore)` |
 | event | 配了事件先过事件屏，选项的后果决定发生什么（下面）；没配的按 `event_weights` 出 item / restore / story（占位老路） |
@@ -3517,7 +3520,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
-| v1.86 | 2026-09-25 | **节点界面八条**（报告 084；3.4、6.2、8）：搜索会话搜满不自动结束（`is_exhausted`，`leave` 才结束）；叠层最小化 / 恢复（`GameFlow.hide_overlay` / `reopen_node`，导演藏而不销毁）；没拿的战利品与暂存区同一时机（走出点）消失；`DragLayer.drop_outside_to_stash`（棋盘外 = 暂存区）；`MapView` 位置标；`ChapterDef.auto_spawn`；`NodeEvents.pause_before_battle` + `pending_battle`（跟存档）+ `PREBATTLE` 屏；`LootView.is_locked`（容器屏只锁容器里没亮的，修玩家自己的包在战利品屏挪不动）；`FloatingWindow` 背包浮窗；教程事件 `tut_battle` / `tut_elite` 只剩「进入战前准备」 |
+| v1.86 | 2026-09-25 | **节点界面八条**（报告 084；3.4、6.2、8）：搜索会话搜满不自动结束（`is_exhausted`，`leave` 才结束）；叠层最小化 / 恢复（`GameFlow.hide_overlay` / `reopen_node`，导演藏而不销毁）；没拿的战利品与暂存区同一时机（走出点）消失；`DragLayer.drop_outside_to_stash`（棋盘外 = 暂存区）；`MapView` 位置标；`ChapterDef.auto_spawn`；`NodeEvents.pause_before_battle` + `pending_battle`（跟存档）+ `PREBATTLE` 屏；`LootView.is_locked`（容器屏只锁容器里没亮的，修玩家自己的包在战利品屏挪不动）；搜索循环（`SearchRules` 四个事件 id、`NodeEvents.pause_search` / `search_shown`、先掷遭遇再翻、`guaranteed_drops`，序章六个教程事件）；`FloatingWindow` 背包浮窗；教程事件 `tut_battle` / `tut_elite` 只剩「进入战前准备」 |
 | v1.85 | 2026-09-25 | **序章（新手教程）**（报告 083；5.3、6.2、8.4 新）：手写预设图 + `line` 布局；`ChapterDef` 的门（order / requires_unlock / grants_unlock / characters / allow_carry_in），`GameFlow.available_chapters` / `characters_for`，撤离成功 `grant_unlock`；节点内容里的搜索覆盖（search_max / min / curve / finds、encounter）；`has_item.tag`；事件屏整理背包；第一章要序章通关解锁 |
 | v1.84 | 2026-09-25 | **局内技能与信力**（报告 082；3.8、4.2、7.3 新、10.1）：技能是构件 `RunSkill`（被动常驻 + 可选主动一击，次数 / 冷却由 `RunSkills` 记账，立旗等下一场战斗），三个作者定的初始角色（安德烈乌斯 / 布鲁图斯 / 马库斯）替换占位角色；信力 = 信仰指定的行为（`FaithDeed` 构件）攒点、阈值解锁道具上的 `faith_bonuses`（编译器多一个 `faith_tiers` 参数）；`GridInventory.placed`、`NodeEvents.option_chosen` / `before_battle` / `losses_forgiven`、`EventOption.tags`；不信者与新教留空（作者定） |
 | v1.83 | 2026-09-24 | 作者定帝国机构（worldview.md 二、六节）：**诸族元老院 Senatus Gentium**（盟会出身、按族按信仰分席、选帝 / 军团供给 / 信仰法；篡位时投降追认；尼禄死后召集贵族联军掐粮道；和谈拥立提图斯）；无信者制度保留但只能在本地聚集；魔法军团缩编为皇家禁军，协会是后来某位皇帝为扩大皇室在平民中的影响力才立的；新教无席位、当前皇帝暗中在贫民 / 奴隶 / 行商间扶持；第二任皇帝定名提图斯，中间名、当前皇帝、王朝名拟了候选 |

@@ -32,6 +32,17 @@ extends Resource
 
 ## 搜到的东西先摆进这么大的容器（塞不下会加高），搜刮界面拿它当容器
 @export var haul_board: Vector2i = Vector2i(6, 4)
+@export_group("搜索的事件（084，作者定的循环）")
+## 每搜一次之后回到的事件（选项「再搜一次」= open_search、「离开」= 什么都不选就走）。节点内容 `search_again_events[k]` 覆盖第 k+1 次之后的那一屏。
+## 空 = 没有这一屏（关闭搜索屏就是离开，老路）
+@export var again_event: StringName = &""
+## 搜满之后回到的事件（「搜完了，走」）。节点内容 `search_done_event` 覆盖。空 = 关闭即离开
+@export var done_event: StringName = &""
+## 掷中遭遇那一次：不开搜索屏，直接过这一屏（选项「迎战」= start_battle，打的是会话里的遭遇）。节点内容 `search_encounter_event` 覆盖。空 = 直接开打
+@export var encounter_event: StringName = &""
+## 遭遇的一场打完之后过的一屏（「搜索点被余波摧毁，不能再搜」）。节点内容 `search_destroyed_event` 覆盖。空 = 不提
+@export var destroyed_event: StringName = &""
+@export_group("")
 ## 揭示一件要几秒，下标即稀有度，超出表长按最后一档（058 第 5 条：耗时随稀有度、和体积无关；作者：稀有度影响耗时是正向体验的一部分）。
 ## 占位数；没有角色倍率（作者：搜索速度不做成属性）
 @export var reveal_seconds: Array[float] = [0.3, 0.5, 0.8, 1.2, 2.0]

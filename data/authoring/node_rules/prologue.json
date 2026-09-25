@@ -20,6 +20,10 @@
     "exclude_tags": [
       "treasure"
     ],
+    "again_event": "search_again",
+    "done_event": "search_done",
+    "encounter_event": "search_encounter",
+    "destroyed_event": "search_destroyed",
     "reveal_seconds": [
       0.3,
       0.5,

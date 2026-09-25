@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_yxexq"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_w70l3"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/open_search.gd" id="3_bsbfu"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_uqu82"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_6rvsp"]
+
+[sub_resource type="Resource" id="Resource_8amhn"]
+script = ExtResource("3_bsbfu")
+
+[sub_resource type="Resource" id="Resource_acvxe"]
+script = ExtResource("1_yxexq")
+label = "再搜一次"
+outcomes = Array[ExtResource("2_w70l3")]([SubResource("Resource_8amhn")])
+
+[resource]
+script = ExtResource("5_6rvsp")
+id = &"tut_search_2_again_2"
+title = "包装不下了"
+text = "纱布和口粮翻出来了，可包已经快满了 —— 放不进包里的东西只能留在暂存区，走的时候会丢在这里。
+
+取舍一下：把最有用的放进包里，用不上的就别带了。再翻一次一定会惊动什么，惊动了就打，打赢了对方身上的东西归你。"
+options = Array[ExtResource("1_yxexq")]([SubResource("Resource_acvxe")])

@@ -5,6 +5,10 @@
 
 [sub_resource type="Resource" id="Resource_4xugp"]
 script = ExtResource("2_edffo")
+again_event = &"search_again"
+done_event = &"search_done"
+encounter_event = &"search_encounter"
+destroyed_event = &"search_destroyed"
 
 [resource]
 script = ExtResource("1_pbgj0")

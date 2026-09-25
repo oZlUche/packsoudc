@@ -78,6 +78,11 @@ static func roll(
 		var def := items.get_def(id)
 		if def != null and rng.randf() < owned_chance(rule, ctx, def):
 			(out["dropped"] as Array[StringName]).append(id)
+	# 084：节点内容 `guaranteed_drops` 一定掉（教程：遭遇的敌人必掉一个包）。不必在棋盘上 —— 那是它揣着的，不是拿来打的
+	for raw in content.get("guaranteed_drops", []):
+		var gid := StringName(String(raw))
+		if items.get_def(gid) != null and not (out["dropped"] as Array[StringName]).has(gid):
+			(out["dropped"] as Array[StringName]).append(gid)
 	var tries := ctx.rolls if ctx != null else 1
 	for i in maxi(0, tries):
 		if rng.randf() >= treasure_chance(rule, ctx):

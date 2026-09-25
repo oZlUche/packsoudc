@@ -3,32 +3,257 @@
 	"layout_kind": "line",
 	"layout_meta": {},
 	"nodes": [
-		{"id": 0, "type": "spawn", "danger": 0, "zone": 0, "tier": 0, "erosion_band": 0, "content_seed": 1, "content": {}, "state": 0, "layout": {"col": 0}},
-		{"id": 1, "type": "search", "danger": 0, "zone": 0, "tier": 1, "erosion_band": 0, "content_seed": 2, "state": 0, "layout": {"col": 1},
-			"content": {"event": "tut_search_1", "search_max": 2, "search_curve": [0.0, 0.0],
-				"search_finds": [["shortsword", "salve"], ["gambeson"]]}},
-		{"id": 2, "type": "battle", "danger": 0, "zone": 0, "tier": 2, "erosion_band": 0, "content_seed": 3, "state": 0, "layout": {"col": 2},
-			"content": {"event": "tut_battle", "enemy": "raider", "strength": 0, "board": [4, 3],
-				"items": [{"id": "knife", "at": [0, 0], "rot": 0}]}},
-		{"id": 3, "type": "search", "danger": 1, "zone": 0, "tier": 3, "erosion_band": 0, "content_seed": 4, "state": 0, "layout": {"col": 3},
-			"content": {"event": "tut_search_2", "search_max": 3, "search_min": 3, "search_curve": [0.0, 0.0, 1.0],
-				"search_finds": [["scimitar"], ["bandage", "ration"], ["round_shield"]],
-				"encounter": {"enemy": "brute", "strength": 0, "board": [4, 3], "items": [{"id": "cleaver", "at": [0, 0], "rot": 0}]}}},
-		{"id": 4, "type": "elite", "danger": 1, "zone": 0, "tier": 4, "erosion_band": 0, "content_seed": 5, "state": 0, "layout": {"col": 4},
-			"content": {"event": "tut_elite", "enemy": "warden", "strength": 1, "board": [4, 3],
-				"items": [{"id": "shortsword", "at": [0, 0], "rot": 0}, {"id": "round_shield", "at": [1, 0], "rot": 0}]}},
-		{"id": 5, "type": "extract", "danger": 0, "zone": 0, "tier": 5, "erosion_band": 0, "content_seed": 6, "state": 0, "layout": {"col": 5},
-			"content": {"event": "tut_extract"}}
+		{
+			"id": 0,
+			"type": "spawn",
+			"danger": 0,
+			"zone": 0,
+			"tier": 0,
+			"erosion_band": 0,
+			"content_seed": 1,
+			"content": {},
+			"state": 0,
+			"layout": {
+				"col": 0
+			}
+		},
+		{
+			"id": 1,
+			"type": "search",
+			"danger": 0,
+			"zone": 0,
+			"tier": 1,
+			"erosion_band": 0,
+			"content_seed": 2,
+			"state": 0,
+			"layout": {
+				"col": 1
+			},
+			"content": {
+				"event": "tut_search_1",
+				"search_max": 2,
+				"search_curve": [
+					0.0,
+					0.0
+				],
+				"search_finds": [
+					[
+						"shortsword",
+						"salve"
+					],
+					[
+						"gambeson"
+					]
+				],
+				"search_again_events": [
+					"tut_search_1_again"
+				],
+				"search_done_event": "tut_search_1_done"
+			}
+		},
+		{
+			"id": 2,
+			"type": "battle",
+			"danger": 0,
+			"zone": 0,
+			"tier": 2,
+			"erosion_band": 0,
+			"content_seed": 3,
+			"state": 0,
+			"layout": {
+				"col": 2
+			},
+			"content": {
+				"event": "tut_battle",
+				"enemy": "raider",
+				"strength": 0,
+				"board": [
+					4,
+					3
+				],
+				"items": [
+					{
+						"id": "knife",
+						"at": [
+							0,
+							0
+						],
+						"rot": 0
+					}
+				]
+			}
+		},
+		{
+			"id": 3,
+			"type": "search",
+			"danger": 1,
+			"zone": 0,
+			"tier": 3,
+			"erosion_band": 0,
+			"content_seed": 4,
+			"state": 0,
+			"layout": {
+				"col": 3
+			},
+			"content": {
+				"event": "tut_search_2",
+				"search_max": 3,
+				"search_curve": [
+					0.0,
+					0.0,
+					1.0
+				],
+				"search_finds": [
+					[
+						"scimitar"
+					],
+					[
+						"bandage",
+						"ration"
+					]
+				],
+				"encounter": {
+					"enemy": "brute",
+					"strength": 0,
+					"board": [
+						4,
+						3
+					],
+					"items": [
+						{
+							"id": "cleaver",
+							"at": [
+								0,
+								0
+							],
+							"rot": 0
+						},
+						{
+							"id": "bag_small",
+							"at": [
+								2,
+								1
+							],
+							"rot": 0
+						}
+					],
+					"guaranteed_drops": [
+						"bag_small",
+						"round_shield"
+					]
+				},
+				"search_again_events": [
+					"tut_search_2_again_1",
+					"tut_search_2_again_2"
+				],
+				"search_encounter_event": "tut_search_2_encounter"
+			}
+		},
+		{
+			"id": 4,
+			"type": "elite",
+			"danger": 1,
+			"zone": 0,
+			"tier": 4,
+			"erosion_band": 0,
+			"content_seed": 5,
+			"state": 0,
+			"layout": {
+				"col": 4
+			},
+			"content": {
+				"event": "tut_elite",
+				"enemy": "warden",
+				"strength": 1,
+				"board": [
+					4,
+					3
+				],
+				"items": [
+					{
+						"id": "shortsword",
+						"at": [
+							0,
+							0
+						],
+						"rot": 0
+					},
+					{
+						"id": "round_shield",
+						"at": [
+							1,
+							0
+						],
+						"rot": 0
+					}
+				]
+			}
+		},
+		{
+			"id": 5,
+			"type": "extract",
+			"danger": 0,
+			"zone": 0,
+			"tier": 5,
+			"erosion_band": 0,
+			"content_seed": 6,
+			"state": 0,
+			"layout": {
+				"col": 5
+			},
+			"content": {
+				"event": "tut_extract"
+			}
+		}
 	],
 	"edges": [
-		{"from": 0, "to": 1, "directed": false, "kind": "", "action_cost": 1, "layout": {}},
-		{"from": 1, "to": 2, "directed": false, "kind": "", "action_cost": 1, "layout": {}},
-		{"from": 2, "to": 3, "directed": false, "kind": "", "action_cost": 1, "layout": {}},
-		{"from": 3, "to": 4, "directed": false, "kind": "", "action_cost": 1, "layout": {}},
-		{"from": 4, "to": 5, "directed": false, "kind": "", "action_cost": 1, "layout": {}}
+		{
+			"from": 0,
+			"to": 1,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		},
+		{
+			"from": 1,
+			"to": 2,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		},
+		{
+			"from": 2,
+			"to": 3,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		},
+		{
+			"from": 3,
+			"to": 4,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		},
+		{
+			"from": 4,
+			"to": 5,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		}
 	],
-	"entry_ids": [0],
-	"goal_ids": [5],
+	"entry_ids": [
+		0
+	],
+	"goal_ids": [
+		5
+	],
 	"zones": [],
 	"routes": []
 }

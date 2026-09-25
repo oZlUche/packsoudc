@@ -8,7 +8,10 @@
 ##   平局按输算：打不死也没打过。
 ##   **开打前先停一下**（084，[member pause_before_battle] 开着时）：把这一场记进 [member pending_battle]、发 [signal battle_pending]，
 ##   等玩家在战前准备屏整理完背包按「开战」（[method start_pending_battle]）才真打；关着（测试、批量工具、猎手）就同步打。
-## - 搜索：开一个 [SearchSession]，搜几次玩家自己拧；遭遇了就地打一场，打完这个点就用过了。
+## - 搜索（084 作者定的循环）：事件屏上选「搜索」= 开会话（第一次）并**搜一次**，搜索屏把这一次的收获亮出来；玩家关闭搜索屏
+##   （[method pause_search]）回到事件屏（规则 / 节点内容里定的 again / done 事件：再搜一次、或走）。掷中遭遇的那一次什么都翻不到，
+##   直接过「遇敌」事件（迎战 = start_battle 打会话里的遭遇），打完过「搜索点被余波摧毁」事件，敌人的战利品照掉；这个点就用过了。
+##   没配这些事件（老路 / 没有事件层）：关闭 = 离开、遭遇 = 直接开打。
 ## - 随机：先按权重变成一种类型（[NodeRules.random_pick]），是战斗就现造敌人，再当那种类型处理。
 ## - 休息回体力、商店与撤离只发信号、常规事件按权重出一种结果（占位）。
 ##
@@ -20,6 +23,8 @@ signal revealed(node: MapNode, type: StringName)
 signal battle_finished(node: MapNode, result: BattleResult, won: bool)
 signal loot_ready(node: MapNode, corpse: GridInventory)
 signal search_opened(node: MapNode, session: SearchSession)
+## 084：该给玩家看搜索屏了（每搜一次一回，第一次紧跟在 search_opened 后面）
+signal search_shown(node: MapNode, session: SearchSession)
 signal search_closed(node: MapNode, haul: GridInventory, reason: StringName)
 signal rested(node: MapNode, restored: int)
 ## 打赢了进账多少（6.6）
@@ -241,6 +246,7 @@ func choose(i: int) -> bool:
 		return false
 	var type := StringName(String(pending.get("type", String(node.type))))
 	var hunter_uid := int(pending.get("hunter", -1))
+	var search_stage := bool(pending.get("search_stage", false))
 	pending = {}
 	for o in option.outcomes:
 		if o != null:
@@ -272,6 +278,10 @@ func choose(i: int) -> bool:
 		_defeat(&"vitality_depleted")
 		_visited(node)
 		return true
+	# 084：搜索循环里的「离开 / 搜完了」：没选再搜就是走，会话结束、收获交出去（_close_search 标用过）
+	if search_stage and not ctx.open_search and current_search != null and current_search.active:
+		current_search.leave()
+		return true
 	if ctx.next_event != &"":
 		var next: EventDef = def_by_id(ctx.next_event)
 		if next != null:
@@ -279,13 +289,17 @@ func choose(i: int) -> bool:
 			event_pending.emit(node, next)
 			return true
 	if ctx.open_search:
-		_open_search(node)
+		_open_search(node, true)
 	elif ctx.open_shop:
 		_open_shop(node)
 	elif ctx.start_battle:
-		var fight_type := type if type in [&"battle", &"elite", &"core"] else &"battle"
-		var content := node.content if EnemyKit.has_enemy(node.content) else _enemy_for(node, &"battle", _rng_for(node, "event_enemy"))
-		_battle_at(node, fight_type, content, "node")
+		if current_search != null and not current_search.encounter.is_empty():
+			# 084：搜索里遭遇的那一场（「遇敌」事件的「迎战」）：打会话里的遭遇，打完收会话
+			_battle_at(node, &"search", current_search.encounter, "search")
+		else:
+			var fight_type := type if type in [&"battle", &"elite", &"core"] else &"battle"
+			var content := node.content if EnemyKit.has_enemy(node.content) else _enemy_for(node, &"battle", _rng_for(node, "event_enemy"))
+			_battle_at(node, fight_type, content, "node")
 	elif ctx.proceed:
 		_proceed(node, type)
 	else:
@@ -372,6 +386,12 @@ func _after_battle(node: MapNode, kind: String) -> void:
 		current_search = null
 		search_closed.emit(node, session.haul(), &"encounter")
 	_visited(node)
+	if kind == "search" and not over:
+		# 084：搜索点被余波摧毁，不能再搜 —— 配了就说一声
+		var def := _search_event(node, null, "destroyed")
+		if def != null:
+			pending = {"node": node.id, "event": String(def.id), "type": "search"}
+			event_pending.emit(node, def)
 
 
 ## 等着开打的那个点
@@ -444,21 +464,79 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 	return won
 
 
-func _open_search(node: MapNode) -> void:
+## 开搜索。[param auto] = 事件屏上选了「搜索」（084）：第一次开会话，然后**搜一次**；没遭遇就给看搜索屏，遭遇了会话自己结束、走 _close_search。
+## 没有事件层的老路（踩上去直接开）不自动搜，只开会话、给看屏
+func _open_search(node: MapNode, auto: bool = false) -> void:
 	if rules == null or rules.search == null:
 		_visited(node)
 		return
-	var session := SearchSession.new(node, rules.search, items, _rng_for(node, "search"), float(_depths.get(node.id, 0.0)))
-	session.extra_searches = _run_ctx().extra_searches
-	session.encounter_builder = func() -> Dictionary:
-		# 083：节点内容里写死的遭遇（教程点）优先；没有才按池现造
-		var fixed = node.content.get("encounter", null)
-		if fixed is Dictionary and EnemyKit.has_enemy(fixed):
-			return (fixed as Dictionary).duplicate(true)
-		return _enemy_for(node, &"search", _rng_for(node, "ambush:%d" % session.searches_done))
-	session.ended.connect(func(reason: StringName): _close_search(node, session, reason))
-	current_search = session
-	search_opened.emit(node, session)
+	var session := current_search
+	if session == null or session.node != node:
+		session = SearchSession.new(node, rules.search, items, _rng_for(node, "search"), float(_depths.get(node.id, 0.0)))
+		session.extra_searches = _run_ctx().extra_searches
+		var s := session
+		session.encounter_builder = func() -> Dictionary:
+			# 083：节点内容里写死的遭遇（教程点）优先；没有才按池现造
+			var fixed = node.content.get("encounter", null)
+			if fixed is Dictionary and EnemyKit.has_enemy(fixed):
+				return (fixed as Dictionary).duplicate(true)
+			return _enemy_for(node, &"search", _rng_for(node, "ambush:%d" % s.searches_done))
+		session.ended.connect(func(reason: StringName): _close_search(node, s, reason))
+		current_search = session
+		search_opened.emit(node, session)
+	if not auto:
+		search_shown.emit(node, session)
+		return
+	if not session.can_search():
+		return
+	session.search()
+	if session.active:
+		search_shown.emit(node, session)
+
+
+## 玩家关闭了搜索屏（084）：回到事件屏 —— 搜满了是 done 事件，没搜满是 again 事件（再搜 / 走）。
+## 没配事件就直接离开（收获交出去）。没有开着的会话返回 false
+func pause_search() -> bool:
+	var session := current_search
+	if session == null or not session.active:
+		return false
+	var def := _search_event(session.node, session, "done" if session.is_exhausted() else "again")
+	if def == null:
+		session.leave()
+		return true
+	pending = {"node": session.node.id, "event": String(def.id), "type": "search", "search_stage": true}
+	event_pending.emit(session.node, def)
+	return true
+
+
+## 搜索循环里的某一屏配的是哪个事件：节点内容覆盖（`search_again_events[k]` / `search_done_event` / `search_encounter_event` /
+## `search_destroyed_event`），没有按 [SearchRules]；都没有 = null
+func _search_event(node: MapNode, session: SearchSession, which: String) -> EventDef:
+	var id := ""
+	var sr: SearchRules = rules.search if rules != null else null
+	match which:
+		"again":
+			var list: Array = node.content.get("search_again_events", [])
+			var k := (session.searches_done - 1) if session != null else -1
+			if k >= 0 and k < list.size():
+				id = String(list[k])
+			elif not list.is_empty() and k >= list.size():
+				id = String(list[-1])
+			if id == "" and sr != null:
+				id = String(sr.again_event)
+		"done":
+			id = String(node.content.get("search_done_event", ""))
+			if id == "" and sr != null:
+				id = String(sr.done_event)
+		"encounter":
+			id = String(node.content.get("search_encounter_event", ""))
+			if id == "" and sr != null:
+				id = String(sr.encounter_event)
+		"destroyed":
+			id = String(node.content.get("search_destroyed_event", ""))
+			if id == "" and sr != null:
+				id = String(sr.destroyed_event)
+	return def_by_id(StringName(id)) if id != "" else null
 
 
 ## 商店：开一个会话，玩家买、刷新、走；走了才算用过
@@ -491,6 +569,12 @@ func pay_extract_fee(node: MapNode) -> bool:
 
 func _close_search(node: MapNode, session: SearchSession, reason: StringName) -> void:
 	if reason == &"encounter":
+		var notice := _search_event(node, session, "encounter")
+		if notice != null:
+			# 084：先过「遇敌」事件，选「迎战」（start_battle）才打；会话留在 current_search，遭遇与收获都在里面
+			pending = {"node": node.id, "event": String(notice.id), "type": "search", "search_encounter": true}
+			event_pending.emit(node, notice)
+			return
 		if pause_before_battle and _can_fight(session.encounter):
 			# 先停在战前准备屏；打完由 _after_battle("search") 收会话、交收获、标用过
 			pending_battle = {"node": node.id, "type": "search", "content": session.encounter.duplicate(true), "kind": "search"}

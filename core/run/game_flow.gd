@@ -312,6 +312,14 @@ func resume() -> void:
 	_flush()
 
 
+## 084：玩家关闭了搜索屏：回到事件屏（再搜 / 走）。没有开着的搜索返回 false
+func close_search() -> bool:
+	if run == null or not run.events.pause_search():
+		return false
+	_flush()
+	return true
+
+
 ## 084：战前准备屏上按了「开战」：真打，然后接着看回放、战利品。没有等着的一场返回 false
 func start_battle() -> bool:
 	if run == null or not run.events.start_pending_battle():
@@ -446,9 +454,11 @@ func _adopt(state: RunState) -> void:
 		# 一步之内可能来两份（打赢的尸体 + 搜索收获），RunState 已经并成一份，队里留一个就够
 		if _queue.is_empty() or int(_queue[-1]["screen"]) != Screen.LOOT:
 			_push({"screen": Screen.LOOT, "container": container}))
-	ev.search_opened.connect(func(node: MapNode, session: SearchSession):
-		# 会话结束（搜满、遭遇、离开）由这里接着往下走，屏不必管
-		session.ended.connect(func(_why: StringName): _flush())
+	ev.search_opened.connect(func(_node: MapNode, session: SearchSession):
+		# 会话结束（遭遇、离开）由这里接着往下走，屏不必管
+		session.ended.connect(func(_why: StringName): _flush()))
+	ev.search_shown.connect(func(node: MapNode, session: SearchSession):
+		# 084：每搜一次给看一回搜索屏
 		_push({"screen": Screen.SEARCH, "node": node, "session": session}))
 	ev.search_closed.connect(func(_n: MapNode, haul: GridInventory, _why: StringName):
 		# 搜索屏里亮过的，到了战利品屏不再重新揭示
@@ -460,7 +470,12 @@ func _adopt(state: RunState) -> void:
 		session.closed.connect(_flush)
 		_push({"screen": Screen.SHOP, "node": node, "session": session}))
 	ev.event_pending.connect(func(node: MapNode, def: EventDef):
-		_push({"screen": Screen.EVENT, "node": node, "def": def}))
+		var entry := {"screen": Screen.EVENT, "node": node, "def": def}
+		# 084：战利品已经排在队尾时来的事件（「搜索点被余波摧毁」）说的是刚发生的事：先说，再看战利品（东西还在）
+		if not _queue.is_empty() and int(_queue[-1]["screen"]) == Screen.LOOT:
+			_queue.insert(_queue.size() - 1, entry)
+		else:
+			_push(entry))
 	ev.event_resolved.connect(func(node: MapNode, outcome: StringName, detail: Dictionary):
 		# 结果页排在这一步别的事（回放、战利品）前面：先看「你翻出了什么」，再看接下来打的那一场。什么都没发生就不打扰
 		if not detail.is_empty():
@@ -495,6 +510,10 @@ func _flush() -> void:
 		# 084：等着开打的一场（读档回来的）：停在战前准备屏
 		_go(Screen.PREBATTLE, _prebattle_payload())
 		return
+	if run != null and run.pending_loot != null:
+		# 084：没拿完的战利品还在这个点上就接着给看（只有「收起」走 hide_overlay 才回地图不看它）
+		_go(Screen.LOOT, {"container": run.pending_loot})
+		return
 	_go(Screen.MAP)
 
 
@@ -511,7 +530,8 @@ func _skippable(entry: Dictionary) -> bool:
 		Screen.LOOT:
 			return run.pending_loot == null
 		Screen.SEARCH:
-			return run.events.current_search != entry.get("session", null)
+			var session: SearchSession = entry.get("session", null)
+			return run.events.current_search != session or session == null or not session.active
 		Screen.SHOP:
 			return run.events.current_shop != entry.get("session", null)
 		Screen.PREBATTLE:

@@ -9,9 +9,9 @@
 
 | # | 作者的话 | 做法 |
 |---|---|---|
-| 1 | 进搜索点先弹事件界面，选搜索还是离开 | 第一章本来就是（`search_default`：搜索 / 离开）。序章第一个搜索点的事件 `tut_search_1` 补了「离开」；第二个（`tut_search_2`，作者定「搜够三次才能走」）故意不加 |
+| 1 | 进搜索点先弹事件界面，选搜索还是离开 | 作者第二轮把整条搜索的流程定死了，见**第五节**：事件屏 ⇄ 搜索屏循环、每按一次「搜索」自动搜一次、遭遇那一次直接跳「遇敌」事件、打完「余波」事件。序章全部强制搜（没有「离开」） |
 | 2 | 背包（皮革包这类道具包）不要锁死在左上角，可以拖到任意合法位置 | **是个 bug，在容器屏**：战利品 / 搜索屏的落点过滤按 `LootView.is_revealed` 判，玩家自己棋盘上的包与道具不在「已亮」名单里，于是在那一屏哪儿都放不下。改成 `LootView.is_locked(uid)`（只有**容器里出现过、还没亮**的才锁），容器屏过滤按它判；核心拖拽层本来就能把包连内容物挪到任意合法位置（有测试）。顺手把整理面板做成能拖着走的浮窗 [`FloatingWindow`](../../ui/game/floating_window.gd)（作者第一次的说法我理解成了面板位置） |
-| 3 | 最后一次搜索结果出来后立刻结束了节点 | `SearchSession.search()` 搜满**不再** `_end(&"exhausted")`：会话开着、`can_search()` 假，收获照样一件件亮出来给玩家拖；按「离开」才结束，搜满了走记作 `exhausted`，没搜满走记作 `left`（`is_exhausted()`）|
+| 3 | 最后一次搜索结果出来后立刻结束了节点 | `SearchSession.search()` 搜满**不再** `_end(&"exhausted")`：会话开着、`can_search()` 假，收获照样一件件亮出来给玩家拖；关闭搜索屏回到「翻遍了」事件，选「离开」才结束（搜满了走记作 `exhausted`，没搜满走记作 `left`，`is_exhausted()`）|
 | 4 | 没选下一个节点时可以重新打开当前节点的最后一个界面（暂存区还在） | `GameFlow.hide_overlay()`：叠层**最小化**回地图（载荷 `minimized`），什么都不结束 —— 搜索 / 商店会话还开着、没拿的战利品还在这个点上（`RunState.pending_loot`）、暂存区不动；`reopen_node()`（载荷 `restore`）把它放回来。导演对最小化的叠层只 `visible = false` + 停掉 `process_mode`，恢复就是同一块节点（揭示进度、日志都在）；换了别的屏（走了一步、结算）才销毁。地图屏右栏「回到这个点（N）」。**离开与进入是同一时机**：`step_to` / `relocate` / `try_extract` 才 `discard_loot()`（`_drop_pending_loot`），与清暂存区并排 |
 | 5 | 地图上显示玩家位置；序章默认已在出生点 | `MapView._draw_player_marker`：当前点上方一个朝下的绿三角 + 「你」，轻轻浮动。`ChapterDef.auto_spawn`（序章 `true`）：`RunState.start` 末尾直接 `pick_spawn(entry_ids[0])`，开局就是 ON_MAP |
 | 6 | 暂存区不用框定范围，拖出背包就进暂存区，大小无限 | `DragLayer.drop_outside_to_stash`：放手时底下没有任何容器视图 → 进 `stash`（追加末尾）；从暂存区拖出又放到外面 = 回原行；被 `drop_filter` 拦的（没揭示的战利品）、带内容物的包照旧退回。拖到外面时暂存区列表末尾画插入线。`InventoryPanel` 开它，开局屏（仓库 ↔ 棋盘）不开。`ItemStash` 本来就 `capacity 0 = 不限` |
@@ -31,6 +31,31 @@
 - 容器屏：待拾取模式的「离开（剩下的不要了）」改成「收起（剩下的留在这里，走了就没）」；搜索模式多一个「收起（回地图，还能回来搜）」；亮过的记进 `flow.seen_loot`，恢复不重放。商店屏多「收起」。
 - 猎手 `check_engagement` 多看一眼 `pending_battle`：玩家在战前准备屏上不打扰。
 
+## 五、搜索循环（作者第二轮纠正，全部搜索点通用；写进 `SearchRules` 与节点内容）
+
+作者原话：在事件界面点开搜索后，跳转搜索界面**自动开始搜索**；玩家关闭搜索界面就跳回事件界面，告诉玩家可以再次搜索；再点又跳出搜索界面自动搜。
+掷中遭遇的那一次点了搜索直接跳到下一个事件界面通知遇敌，然后战斗；遇敌后不可再搜，但有敌人的战利品，并加一个事件告诉玩家搜索点被余波摧毁。
+序章不给不搜的选项；第二个搜索点第二次之后提示包装不下；第三次遭遇的敌人掉落里加一个背包。
+
+```
+事件屏（搜索 / 离开）──搜索──► 会话开 + 搜一次 ──► 搜索屏（这一次的收获亮出来、拖走）──关闭──► again 事件（再搜一次 / 离开）
+                                                                                           └─ 搜满 ──► done 事件（离开）──► 收获交到待拾取
+再搜一次 ──掷中遭遇（这一次什么都翻不到）──► encounter 事件（迎战）──► 战前准备 ──► 回放 ──► destroyed 事件（继续）──► 战利品（敌人掉的 + 之前没拿的收获）
+```
+
+- **规则**（`SearchRules`，节点规则文件的 `search` 段）四个事件 id：`again_event` / `done_event` / `encounter_event` / `destroyed_event`；标准与序章都指向新事件
+  `search_again`（再搜一次 / 离开）、`search_done`（离开）、`search_encounter`（迎战 = `start_battle`）、`search_destroyed`（继续）。**没配 = 老路**（关闭即离开、遭遇直接开打）。
+- **节点内容覆盖**：`search_again_events[k]`（第 k+1 次之后那一屏，超出用最后一项）、`search_done_event`、`search_encounter_event`、`search_destroyed_event`；
+  `encounter.guaranteed_drops`（打赢必掉，`DropResolver.roll` 追加；不必在敌人棋盘上）。
+- **机制**：`NodeEvents._open_search(node, auto)` —— 事件选项 `open_search` = 第一次开会话 + 搜一次 + `search_shown`（GameFlow 每次按它推搜索屏）；
+  `pause_search()`（容器屏「关闭」→ `GameFlow.close_search()`）按搜满与否挂 done / again 事件，`pending["search_stage"]`；在这种事件里选了不带 `open_search` 的选项 = 走（`session.leave()`，收获交出去）。
+  `SearchSession.search()` **先掷遭遇再翻东西**：中了这一次空手、`_end(encounter)`；`_close_search(encounter)` 配了事件就挂 encounter 事件（会话留在 `current_search`），
+  「迎战」的 `start_battle` 看到会话里有遭遇就打它（kind `search`）；`_after_battle("search")` 收会话、标用过，再挂 destroyed 事件。GameFlow 把「队尾已经是战利品」时来的事件插到战利品前面：先说余波，再看战利品。
+  `_flush()` 队空且 `pending_loot` 还在就接着给看战利品屏（`choose_event` 与 `session.ended` 各触发一次 flush，第二次不能跳回地图）。
+- **搜索屏**：只画刚搜的这一次；按钮「快速搜索 / 全部拾取 / 关闭（回到事件）/ 收起（回地图）」，「再搜一次」没了（在事件屏上）。`search_min` 不再有界面用它（序章靠强制事件）。
+- **序章数据**：`tut_search_1`（只有「搜索」）→ `tut_search_1_again` → `tut_search_1_done`；`tut_search_2` → `tut_search_2_again_1` → `tut_search_2_again_2`（**包装不下的提示**）→ 第三次遭遇 `tut_search_2_encounter` → `search_destroyed`。
+  第三次原来的固定收获（圆盾）挪进遭遇敌人的 `guaranteed_drops`，再加 **`bag_small`**（敌人棋盘上也揣着一个）。
+
 ## 三、没做的 / 留给作者
 
 - 战前准备屏只能看对手，不能预演一场（要的话是回放的子集，等作者说）。
@@ -42,4 +67,4 @@
 ## 四、测试
 
 新套件 [`tests/test_node_screens.gd`](../../tests/test_node_screens.gd)：容器屏的过滤只锁容器里没亮的（棋盘上的包能挪、能进暂存区，连内容物一起挪位）；战前准备（停、拿读数、走不了、收不起、存档读回、开战收尾）；搜索点（事件屏的两个选项、搜满不结束、最小化 → 恢复是同一个会话、离开交收获、收起战利品、走了才没）；`auto_spawn`；棋盘外 = 暂存区（开关关 / 开、回原行、被拦退回）；导演的最小化（藏着不销毁、恢复同一块、换屏销毁）与浮窗（挪、夹边、记位置）。
-既有测试按新流程改了六处（搜满要 `leave()`、走上战斗点先 `start_battle()`、序章「整理」事件只剩一个选项）。59 套件 9322 断言。
+既有测试按新流程改了（搜满要 `leave()`、走上战斗点先 `start_battle()`、序章「整理」事件只剩一个选项、序章走一遍按第五节的循环重写：搜索 → 关闭 → 再搜 → 翻遍了 → 继续；第二点两屏之后遭遇事件 → 迎战 → 余波 → 战利品里有包）。59 套件 9417 断言。

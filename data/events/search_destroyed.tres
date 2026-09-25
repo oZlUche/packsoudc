@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_dglg3"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_cpf0s"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="3_talbu"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="4_qvfvf"]
+
+[sub_resource type="Resource" id="Resource_3xqb8"]
+script = ExtResource("1_dglg3")
+label = "继续"
+
+[resource]
+script = ExtResource("4_qvfvf")
+id = &"search_destroyed"
+title = "余波"
+text = "打斗把这里翻了个底朝天，能翻的都毁了，没法再搜。对方留下的东西倒还在。"
+options = Array[ExtResource("1_dglg3")]([SubResource("Resource_3xqb8")])

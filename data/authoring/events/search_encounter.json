@@ -1,0 +1,15 @@
+{
+  "id": "search_encounter",
+  "title": "有人来了",
+  "text": "翻动的声响惊动了附近的人。什么都没来得及拿，对方已经到了跟前。",
+  "options": [
+    {
+      "label": "迎战",
+      "outcomes": [
+        {
+          "type": "start_battle"
+        }
+      ]
+    }
+  ]
+}

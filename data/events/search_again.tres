@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_vrtgg"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_scupj"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/open_search.gd" id="3_njxu2"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_rbma7"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_6nrk3"]
+
+[sub_resource type="Resource" id="Resource_x4ovi"]
+script = ExtResource("3_njxu2")
+
+[sub_resource type="Resource" id="Resource_ucwwp"]
+script = ExtResource("1_vrtgg")
+label = "再搜一次"
+outcomes = Array[ExtResource("2_scupj")]([SubResource("Resource_x4ovi")])
+
+[sub_resource type="Resource" id="Resource_vllil"]
+script = ExtResource("1_vrtgg")
+label = "离开"
+
+[resource]
+script = ExtResource("5_6nrk3")
+id = &"search_again"
+title = "翻过一遍"
+text = "翻出来的东西已经拿了。还可以再翻一遍，但翻得越久，越可能惊动附近的人。"
+options = Array[ExtResource("1_vrtgg")]([SubResource("Resource_ucwwp"), SubResource("Resource_vllil")])

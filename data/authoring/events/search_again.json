@@ -1,0 +1,18 @@
+{
+  "id": "search_again",
+  "title": "翻过一遍",
+  "text": "翻出来的东西已经拿了。还可以再翻一遍，但翻得越久，越可能惊动附近的人。",
+  "options": [
+    {
+      "label": "再搜一次",
+      "outcomes": [
+        {
+          "type": "open_search"
+        }
+      ]
+    },
+    {
+      "label": "离开"
+    }
+  ]
+}
