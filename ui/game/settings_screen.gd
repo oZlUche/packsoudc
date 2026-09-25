@@ -1,6 +1,7 @@
 ## 设置（058 第 3 条）：现在只有一项 —— 离开点时暂存区的提醒档位与阈值。改了就存。
 extends GameScreen
 
+var _auto_close_btn: Button = null
 var _mode_btns: Dictionary = {}
 var _rarity_spin: SpinBox
 var _value_spin: SpinBox
@@ -45,7 +46,20 @@ func open(_payload: Dictionary) -> void:
 	row2.add_child(_value_spin)
 	col.add_child(row2)
 	col.add_child(HSeparator.new())
+	col.add_child(_label("战利品 / 容器屏", 15, UiPalette.DIM))
+	_auto_close_btn = _button("拿走最后一件后自动关闭", toggle_loot_auto_close, 14)
+	_auto_close_btn.toggle_mode = true
+	_auto_close_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	col.add_child(_auto_close_btn)
+	col.add_child(HSeparator.new())
 	col.add_child(_button("回主菜单", flow.to_main_menu, 14))
+	_refresh()
+
+
+## 084：拿走最后一件后自动关闭战利品 / 容器屏（默认关：手动关）
+func toggle_loot_auto_close() -> void:
+	flow.settings.loot_auto_close = not flow.settings.loot_auto_close
+	flow.save_settings()
 	_refresh()
 
 
@@ -67,5 +81,8 @@ func set_value_threshold(v: int) -> void:
 
 
 func _refresh() -> void:
+	if _auto_close_btn != null:
+		_auto_close_btn.set_pressed_no_signal(flow.settings.loot_auto_close)
+		_auto_close_btn.text = "拿走最后一件后自动关闭：%s" % ("开" if flow.settings.loot_auto_close else "关（手动关）")
 	for m in _mode_btns:
 		(_mode_btns[m] as Button).set_pressed_no_signal(flow.settings.storage_warn_mode == m)

@@ -81,6 +81,12 @@ func show_text(bbcode: String, at: Vector2, extra: Control = null) -> void:
 	_place(at)
 
 
+## 跟着鼠标走（地图上的浮窗：节点不变时也要跟）
+func follow(global_at: Vector2) -> void:
+	if _panel.visible:
+		_place(global_at)
+
+
 func hide_tip() -> void:
 	_panel.visible = false
 	_uid = -1

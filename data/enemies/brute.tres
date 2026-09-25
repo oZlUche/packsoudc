@@ -9,6 +9,6 @@ display_name = "蛮兵"
 strength = 2
 schools = Array[StringName]([&"burst", &"bleed"])
 base_stats = {
-"armor": 2,
-"max_hp": 40
+"armor": 3,
+"max_hp": 50
 }

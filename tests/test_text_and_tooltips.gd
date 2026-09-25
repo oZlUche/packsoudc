@@ -244,3 +244,181 @@ static func frame_hover_tip(t: TestCase, root: Window) -> void:
 	tip.show_text("地图上的点", Vector2(100, 100))
 	t.check(tip.is_showing() and tip.text() == "地图上的点", "直接给文字也行")
 	host.queue_free()
+
+
+static func run_min_drops(t: TestCase) -> void:
+	t.begin("084 · 至少掉一件身上有的（DropRule.min_drops）：概率全 0 也掉一件、只掉身上的；标准规则 min_drops = 1")
+	var c := _content()
+	var std: DropRule = load(ContentPaths.asset_file("drop_rules", "standard"))
+	t.eq(std.min_drops, 1, "标准规则至少掉一件")
+	var rule := DropRule.new()
+	rule.base_chance = [0.0, 0.0, 0.0, 0.0, 0.0] as Array[float]
+	rule.treasure_chance = 0.0
+	rule.min_drops = 1
+	var content := {"enemy": "raider", "strength": 0, "board": [4, 3],
+		"items": [{"id": "bag_small", "at": [0, 0], "rot": 0}, {"id": "knife", "at": [0, 0], "rot": 0}]}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	for i in 20:
+		var got: Array = DropResolver.roll(content, rule, LootContext.new(), c.items, rng)["dropped"]
+		t.check(got.size() == 1 and DropResolver.carried_ids(content).has(got[0]), "第 %d 次：正好一件、是身上的（%s）" % [i, str(got)])
+	rule.min_drops = 5
+	var all: Array = DropResolver.roll(content, rule, LootContext.new(), c.items, rng)["dropped"]
+	t.eq(all.size(), 2, "身上只有两件就掉光，不多造")
+	rule.min_drops = 0
+	t.eq((DropResolver.roll(content, rule, LootContext.new(), c.items, rng)["dropped"] as Array).size(), 0, "不保底就可能一件不掉")
+
+
+static func run_stamina_estimate(t: TestCase) -> void:
+	t.begin("084 · 耐力消耗评估：每秒消耗 = Σ 频率 × 消耗，回复来自基线；空棋盘「低」；比值分档")
+	var c := _content()
+	var board := GridInventory.new(Vector2i(6, 4), 1, true)
+	var empty := StaminaEstimate.of(BattleCompiler.compile(board))
+	t.check(float(empty["cost"]) == 0.0 and String(empty["rating"]) == "低", "空棋盘：不花、评「低」")
+	t.eq(float(empty["regen"]), CombatantBaseline.DEFAULT_STATS["regen_stamina"], "回复来自基线")
+	board.try_add(ItemInstance.create(c.items.get_def(&"bag_leather")), true)
+	var knife := ItemInstance.create(c.items.get_def(&"knife"))
+	board.try_add(knife, true)
+	var spec := BattleCompiler.compile(board)
+	var e := StaminaEstimate.of(spec)
+	var rule := knife.def.combat.rules[0] as AbilityRule
+	var hz := rule.cadence.estimated_hz(spec.item_of(knife.uid).stats)
+	var amount := (rule.costs[0] as ResourceCost).amount
+	t.check(absf(float(e["cost"]) - hz * amount) < 0.001, "一把刀：每秒消耗 = 频率 %.2f × 消耗 %.1f = %.2f" % [hz, amount, float(e["cost"])])
+	t.check(["低", "中", "高", "极高"].has(String(e["rating"])), "评级是四档之一（%s）" % e["rating"])
+	t.eq(StaminaEstimate.rating_of(0.1), "低", "0.1 低")
+	t.eq(StaminaEstimate.rating_of(0.8), "中", "0.8 中")
+	t.eq(StaminaEstimate.rating_of(1.2), "高", "1.2 高")
+	t.eq(StaminaEstimate.rating_of(3.0), "极高", "3.0 极高")
+	t.check(StaminaEstimate.describe(spec).contains("每秒平均消耗"), "悬浮窗的文字")
+
+
+static func run_settings_and_double_click(t: TestCase) -> void:
+	t.begin("084 · 设置「拿走最后一件后自动关闭」默认关、存读带着；双击视图发 item_double_clicked 而不是抓")
+	var s := GameSettings.new()
+	t.check(not s.loot_auto_close, "默认不自动关")
+	s.loot_auto_close = true
+	var back := GameSettings.from_dict(s.to_dict())
+	t.check(back.loot_auto_close, "存读带着")
+	ItemInstance.reset_uid_counter()
+	var d := ItemDef.new()
+	d.id = &"t_dbl"
+	d.display_name = "dbl"
+	d.shape = ItemShape.from_ascii(["#"])
+	var box := GridInventory.new(Vector2i(3, 3), 1)
+	var a := ItemInstance.create(d)
+	box.place(a, Vector2i(0, 0), 0)
+	var view := InventoryView.new()
+	view.inventory = box
+	view.size = Vector2(box.size) * InventoryView.CELL
+	var grabs: Array = []
+	var dbls: Array = []
+	view.grab_requested.connect(func(_v: ContainerView, uid: int, _p: Vector2): grabs.append(uid))
+	view.item_double_clicked.connect(func(_v: ContainerView, uid: int): dbls.append(uid))
+	var mb := InputEventMouseButton.new()
+	mb.button_index = MOUSE_BUTTON_LEFT
+	mb.pressed = true
+	mb.double_click = true
+	mb.position = Vector2(24, 24)
+	view._gui_input(mb)
+	t.check(dbls == [a.uid] and grabs.is_empty(), "双击：发 item_double_clicked，不抓")
+	mb.double_click = false
+	view._gui_input(mb)
+	t.check(grabs == [a.uid], "单击：抓")
+	var stash := ItemStash.new(2, 0)
+	stash.admit(ItemInstance.create(d))
+	var sv := StashView.new()
+	sv.stash = stash
+	sv.size = Vector2(220, 200)
+	var sdbl: Array = []
+	sv.item_double_clicked.connect(func(_v: ContainerView, uid: int): sdbl.append(uid))
+	var mb2 := InputEventMouseButton.new()
+	mb2.button_index = MOUSE_BUTTON_LEFT
+	mb2.pressed = true
+	mb2.double_click = true
+	mb2.position = Vector2(20, 12)
+	sv._gui_input(mb2)
+	t.eq(sdbl.size(), 1, "暂存区列表双击也发")
+
+
+static func frame_loot_manual_close(t: TestCase, root: Window) -> void:
+	t.begin("084 · 战利品屏：拿完不自动关（手动关才丢）；双击容器里的进背包、双击棋盘上的回容器且不变成未知；设置开了才自动关；胜负回放完才显示")
+	var c := _content()
+	var loadouts := GameFlow.load_loadouts()
+	var kit: LoadoutDef = null
+	for l in loadouts:
+		if l.id == &"standard":
+			kit = l
+	var found := {}
+	for seed in range(1, 80):
+		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items)
+		if s == null:
+			continue
+		for entry in s.map.entry_ids:
+			for nid in s.map.neighbors(entry):
+				if s.map.get_node(nid).type == &"battle":
+					found = {"seed": seed, "entry": entry, "next": nid}
+		if not found.is_empty():
+			break
+	if found.is_empty():
+		t.check(false, "找不到种子")
+		return
+	var scene := load("res://ui/game/game.tscn") as PackedScene
+	var game = scene.instantiate()
+	game.save_path = "user://test_084b_run.json"
+	game.meta_path = "user://test_084b_meta.json"
+	game.settings_path = "user://test_084b_settings.json"
+	root.add_child(game)
+	var flow: GameFlow = game.flow
+	flow.chapters = [c.chapter] as Array[ChapterDef]
+	flow.player_baseline = CombatantBaseline.with_hp(10000.0)
+	flow.settings = GameSettings.new()
+	flow.begin(c.chapter, kit, int(found["seed"]))
+	var map = game.base()
+	map.pick_spawn(int(found["entry"]))
+	map.step(int(found["next"]))
+	if game.overlay() == null or game.overlay().screen != GameFlow.Screen.PREBATTLE:
+		t.check(false, "没到战前准备屏")
+		game.queue_free()
+		return
+	game.overlay().start_battle()
+	var battle = game.overlay()
+	t.check(battle != null and battle.screen == GameFlow.Screen.BATTLE and not battle.verdict_shown(), "回放屏一开始不写胜负")
+	battle._on_finished()
+	t.check(battle.verdict_shown(), "回放完了才写胜负")
+	battle.proceed()
+	var loot = game.overlay()
+	if loot == null or loot.screen != GameFlow.Screen.LOOT:
+		t.check(true, "（这一场没掉东西：跳过战利品屏那一段）")
+		flow.to_main_menu()
+		game.queue_free()
+		return
+	var run: RunState = flow.run
+	loot.skip_reveal()
+	var first: ItemInstance = run.pending_loot.items()[0]
+	var went: String = loot.quick_take(first.uid)
+	t.check(went == "board" or went == "storage", "双击容器里的：进了背包或暂存区（%s）" % went)
+	t.check(not run.pending_loot.has_item(first.uid), "离开了容器")
+	# 棋盘上的双击回容器：不能变成未知
+	var back_uid := -1
+	for inst in run.board.items():
+		if not (inst as ItemInstance).def.is_bag:
+			back_uid = (inst as ItemInstance).uid
+			break
+	if back_uid >= 0:
+		var moved: bool = loot._inv.quick_move(loot._inv.board_view, back_uid)
+		if moved and run.pending_loot.has_item(back_uid):
+			t.check(not loot.loot_view().is_locked(back_uid), "放回容器的自己的东西不是「未知」")
+			loot.quick_take(back_uid)
+	loot.take_all()
+	t.check(run.pending_loot != null and run.pending_loot.item_count() == 0, "拿完了：容器空着")
+	t.check(game.overlay() == loot, "默认不自动关")
+	t.check(loot.to_map(), "手动关")
+	t.check(game.overlay() == null and run.pending_loot == null, "关了才丢掉空容器、回地图")
+	flow.settings.loot_auto_close = true
+	t.check(flow.settings.loot_auto_close, "开了自动关（下一份战利品才用得上）")
+	flow.to_main_menu()
+	game.queue_free()
+	RunSave.remove("user://test_084b_run.json")
+	MetaSave.remove("user://test_084b_meta.json")
+	GameSettings.remove("user://test_084b_settings.json")

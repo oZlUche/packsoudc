@@ -20,6 +20,8 @@ const WARN_MODE_LABELS := {
 var storage_warn_mode: StringName = &"any"
 var storage_warn_rarity: int = 2
 var storage_warn_value: int = 100
+## 084（作者定）：拿走战利品 / 容器里最后一件之后要不要自动关那一屏。默认不关，手动关
+var loot_auto_close: bool = false
 
 
 func to_dict() -> Dictionary:
@@ -28,6 +30,7 @@ func to_dict() -> Dictionary:
 		"storage_warn_mode": String(storage_warn_mode),
 		"storage_warn_rarity": storage_warn_rarity,
 		"storage_warn_value": storage_warn_value,
+		"loot_auto_close": loot_auto_close,
 	}
 
 
@@ -39,6 +42,7 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	s.storage_warn_mode = mode if WARN_MODES.has(mode) else &"any"
 	s.storage_warn_rarity = int(d.get("storage_warn_rarity", 2))
 	s.storage_warn_value = int(d.get("storage_warn_value", 100))
+	s.loot_auto_close = bool(d.get("loot_auto_close", false))
 	return s
 
 

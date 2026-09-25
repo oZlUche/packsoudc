@@ -8,5 +8,5 @@ id = &"raider"
 display_name = "拾荒者"
 schools = Array[StringName]([&"rapid"])
 base_stats = {
-"max_hp": 20
+"max_hp": 26
 }

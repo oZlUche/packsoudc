@@ -7,8 +7,8 @@
     "burst"
   ],
   "base_stats": {
-    "max_hp": 36,
-    "armor": 3
+    "max_hp": 46,
+    "armor": 4
   },
   "signature": [
     "round_shield"

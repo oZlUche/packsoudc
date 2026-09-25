@@ -412,6 +412,7 @@ static func frame_minimize_and_window(t: TestCase, root: Window) -> void:
 				o.start_battle()
 			GameFlow.Screen.LOOT:
 				o.take_all()
+				o.to_map()     # 084：拿完不自动关，手动关
 			_:
 				o.proceed()
 	t.is_null(game.minimized(), "会话结束后藏着的那一屏也没了")

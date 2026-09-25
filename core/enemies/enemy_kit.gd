@@ -39,8 +39,8 @@ static func board_of(content: Dictionary, items: ItemDatabase) -> GridInventory:
 	return board
 
 
-## 基线：默认值 → 敌人自己的覆盖 → 档位倍率
-static func baseline_of(def: EnemyDef, tier: StrengthTier) -> CombatantBaseline:
+## 基线：默认值 → 敌人自己的覆盖 → 档位倍率 → 节点内容的覆盖（`content.base_stats`，084：预设图里写死的教程敌人自己定数，不跟全局敌人数值一起涨）
+static func baseline_of(def: EnemyDef, tier: StrengthTier, content: Dictionary = {}) -> CombatantBaseline:
 	var b := CombatantBaseline.default_baseline()
 	if def != null:
 		for key in def.base_stats:
@@ -49,6 +49,10 @@ static func baseline_of(def: EnemyDef, tier: StrengthTier) -> CombatantBaseline:
 		for key in tier.stat_scale:
 			var k := String(key)
 			b.base_stats[k] = tier.scaled(StringName(k), b.value_of(StringName(k), 0.0))
+	var over = content.get("base_stats", null)
+	if over is Dictionary:
+		for key in over:
+			b.base_stats[String(key)] = float(over[key])
 	return b
 
 
@@ -58,7 +62,7 @@ static func spec_of(content: Dictionary, enemies: EnemyDatabase, pool: EnemyPool
 	if def == null:
 		return null
 	var tier := pool.tier_of(int(content.get("strength", 0))) if pool != null else null
-	return BattleCompiler.compile(board_of(content, items), baseline_of(def, tier))
+	return BattleCompiler.compile(board_of(content, items), baseline_of(def, tier, content))
 
 
 ## 一行给人看的摘要：名字、档位、生命、DPS、几件、都是什么

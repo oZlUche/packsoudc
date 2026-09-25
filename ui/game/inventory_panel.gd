@@ -17,6 +17,11 @@ var _hint: Label
 var board_view: InventoryView
 var storage_view: StashView
 var tip: HoverTip
+var _stamina: Label
+## 084：棋盘上双击的东西优先去这里（容器屏设成战利品 / 收获箱）；null = 去暂存区
+var quick_target: ItemContainer = null
+## 双击之后的提示回调（容器屏想自己写）：`func(text: String)`
+var hint_sink: Callable = Callable()
 
 
 ## [param drag] 给了就把两个视图登记到那一层（战利品屏要一层盖住三个容器）；不给就自己造一层盖在面板上
@@ -46,7 +51,17 @@ func _build() -> void:
 	left.add_child(board_view)
 	_readout = _label("", 14, UiPalette.FG)
 	left.add_child(_readout)
-	_hint = _label("左键拖动　R 旋转　右键 / Esc 取消　压着别人放手会把人顶出来　放到棋盘外就进暂存区", 11, UiPalette.DIM)
+	# 084：耐力消耗评估（低 / 中 / 高 / 极高），停上去看每秒消耗与回复
+	_stamina = _label("", 13, UiPalette.STAMINA)
+	_stamina.mouse_filter = Control.MOUSE_FILTER_STOP
+	_stamina.mouse_entered.connect(func():
+		if tip != null:
+			tip.show_text(StaminaEstimate.describe(_run.compile_player()), _stamina.global_position + Vector2(0, _stamina.size.y)))
+	_stamina.mouse_exited.connect(func():
+		if tip != null:
+			tip.hide_tip())
+	left.add_child(_stamina)
+	_hint = _label("左键拖动　双击快速置入　R 旋转　右键 / Esc 取消　压着别人放手会把人顶出来　放到棋盘外就进暂存区", 11, UiPalette.DIM)
 	left.add_child(_hint)
 
 	var right := VBoxContainer.new()
@@ -74,10 +89,42 @@ func _build() -> void:
 	add_child(tip)
 	tip.watch(board_view)
 	tip.watch(storage_view)
+	board_view.item_double_clicked.connect(quick_move)
+	storage_view.item_double_clicked.connect(quick_move)
+
+
+## 084：双击快速置入。暂存区 → 棋盘（放不下就提示）；棋盘 → quick_target（容器屏的战利品 / 收获箱），没有就 → 暂存区。返回挪了没有
+func quick_move(view: ContainerView, uid: int) -> bool:
+	var from := view.container()
+	var inst := from.get_item(uid) if from != null else null
+	if inst == null:
+		return false
+	if from == _run.storage:
+		if InventoryService.transfer_auto(_run.storage, uid, _run.board):
+			return true
+		_hint_text("背包里没有空间放「%s」" % inst.def.display_name)
+		return false
+	if from == _run.board:
+		if quick_target != null and InventoryService.transfer_auto(_run.board, uid, quick_target):
+			return true
+		if InventoryService.transfer_auto(_run.board, uid, _run.storage):
+			if quick_target != null:
+				_hint_text("容器里放不下「%s」，放进了暂存区" % inst.def.display_name)
+			return true
+	return false
+
+
+func _hint_text(text: String) -> void:
+	_hint.text = text
+	if hint_sink.is_valid():
+		hint_sink.call(text)
 
 
 func _refresh_readout() -> void:
 	var spec := _run.compile_player()
+	if _stamina != null:
+		var e := StaminaEstimate.of(spec)
+		_stamina.text = "耐力消耗：%s（每秒 %.1f，回 %.1f）　停上去看细节" % [e["rating"], e["cost"], e["regen"]]
 	var lines: Array[String] = []
 	if _run.tracker != null:
 		for set_id in _run.tracker.tracked_ids():

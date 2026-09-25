@@ -9,7 +9,7 @@ display_name = "守卫"
 strength = 2
 schools = Array[StringName]([&"rapid", &"burst"])
 base_stats = {
-"armor": 3,
-"max_hp": 36
+"armor": 4,
+"max_hp": 46
 }
 signature = Array[StringName]([&"round_shield"])

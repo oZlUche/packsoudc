@@ -7,3 +7,4 @@ script = ExtResource("1_x03mw")
 id = &"standard"
 display_name = "标准掉落（占位）"
 treasure_chance = 0.0
+min_drops = 1

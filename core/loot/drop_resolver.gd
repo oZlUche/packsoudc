@@ -83,6 +83,17 @@ static func roll(
 		var gid := StringName(String(raw))
 		if carried.has(gid) and items.get_def(gid) != null and not (out["dropped"] as Array[StringName]).has(gid):
 			(out["dropped"] as Array[StringName]).append(gid)
+	# 084：至少掉 min_drops 件身上有的 —— 掷完不够，从没掉的里随机补
+	var dropped_list: Array[StringName] = out["dropped"]
+	if rule.min_drops > 0 and dropped_list.size() < rule.min_drops:
+		var left: Array[StringName] = []
+		for id in carried:
+			if items.get_def(id) != null and not dropped_list.has(id):
+				left.append(id)
+		while dropped_list.size() < rule.min_drops and not left.is_empty():
+			var k := rng.randi_range(0, left.size() - 1)
+			dropped_list.append(left[k])
+			left.remove_at(k)
 	var tries := ctx.rolls if ctx != null else 1
 	for i in maxi(0, tries):
 		if rng.randf() >= treasure_chance(rule, ctx):

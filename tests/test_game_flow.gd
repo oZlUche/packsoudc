@@ -500,6 +500,7 @@ static func frame_director(t: TestCase, root: Window) -> void:
 		loot.skip_reveal()
 		t.eq(loot.loot_view().unrevealed_count(), 0, "快速搜索全亮")
 		loot.take_all()
+		loot.to_map()     # 084：拿完不自动关，手动关
 	t.is_null(game.overlay(), "看完了叠层撤掉")
 	t.eq(game.base(), map, "还是那张地图")
 	flow.save_and_quit()
@@ -573,6 +574,7 @@ static func _director_walk(game, run: RunState, target: int) -> void:
 					ov.start_battle()
 				GameFlow.Screen.LOOT:
 					ov.take_all()
+					ov.to_map()     # 084：拿完不自动关，手动关
 				GameFlow.Screen.SEARCH, GameFlow.Screen.SHOP:
 					ov.leave()
 				_:

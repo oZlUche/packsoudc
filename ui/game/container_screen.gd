@@ -18,6 +18,7 @@ var _line: Label
 var _log: RichTextLabel = null
 var _skip_btn: Button
 var _leave_btn: Button = null
+var _inv: Control = null
 
 
 func open(payload: Dictionary) -> void:
@@ -68,7 +69,13 @@ func open(payload: Dictionary) -> void:
 	_drag = DragLayer.new()
 	_drag.label_font = font
 	inv.setup(flow.run, font, _drag)
+	inv.quick_target = _container     # 084：棋盘上双击 → 放回容器
+	inv.hint_sink = func(text: String): _log_line(text)
+	_inv = inv
 	row.add_child(inv)
+	# 084：容器里双击 → 试着放进背包（没空间就提示并进暂存区）；没亮的不动。
+	# 玩家自己的东西放回容器不会变成「未知」：LootView 把绑定之后才出现的都当亮过
+	_loot.item_double_clicked.connect(func(_v: ContainerView, uid: int): quick_take(uid))
 	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_drag)
 	_drag.register_view(_loot)
@@ -89,7 +96,10 @@ func open(payload: Dictionary) -> void:
 		_session.searched.connect(_on_searched)
 		_session.haul_changed.connect(func(box: GridInventory):
 			_container = box
-			_loot.inventory = box)
+			_loot.inventory = box
+			if _inv != null:
+				_inv.quick_target = box)
+		_container.changed.connect(_refresh)
 		# 084：这一屏打开时那一次已经搜完了：亮新来的，见过的不重放
 		_loot.mark_revealed(flow.seen_loot.keys())
 		_loot.start_reveal()
@@ -108,18 +118,38 @@ func close_search() -> bool:
 	return flow.close_search()
 
 
+## 084：容器里双击一件：亮了的才动；先试背包（自动找位），放不下提示并进暂存区。返回去了哪（"board" / "storage" / ""）
+func quick_take(uid: int) -> String:
+	if _container == null or _loot.is_locked(uid):
+		return ""
+	var inst := _container.get_item(uid)
+	if inst == null:
+		return ""
+	if InventoryService.transfer_auto(_container, uid, flow.run.board):
+		_log_line("「%s」放进了背包" % inst.def.display_name)
+		return "board"
+	if InventoryService.transfer_auto(_container, uid, flow.run.storage):
+		_log_line("背包里没有空间放「%s」，放进了暂存区" % inst.def.display_name)
+		return "storage"
+	return ""
+
+
+func _log_line(text: String) -> void:
+	if _log != null:
+		_log.append_text(text + "\n")
+	else:
+		_line.text = text
+
+
 func skip_reveal() -> void:
 	_loot.skip()
 
 
-## 全进暂存区（先全亮）。搜索会话里就是把收获箱搬空
+## 全进暂存区（先全亮）。屏不自动关（084 作者定），设置「拿走最后一件后自动关闭」开了才关（_on_container_changed 管）
 func take_all() -> void:
 	_loot.reveal_all()
-	if _session != null:
-		InventoryService.transfer_all(_container, flow.run.storage)
-		_refresh()
-	else:
-		flow.take_all_loot()
+	InventoryService.transfer_all(_container, flow.run.storage)
+	_refresh()
 
 
 ## 搜索会话：离开这个点的搜索（收获交到待拾取）。待拾取：同「收起」—— 剩下的留在这个点上，走了才没（084）
@@ -130,8 +160,12 @@ func leave() -> void:
 		to_map()
 
 
-## 084：收起回地图，什么都不结束：会话还开着 / 没拿的还在这个点上，地图上「回到这个点」能再开
+## 084：收起回地图，什么都不结束：会话还开着 / 没拿的还在这个点上，地图上「回到这个点」能再开。
+## 待拾取已经空了就不必留：直接丢掉（回地图）
 func to_map() -> bool:
+	if _session == null and _container != null and _container.item_count() == 0 and flow.run != null and flow.run.pending_loot == _container:
+		flow.discard_loot()
+		return true
 	return flow.hide_overlay()
 
 
@@ -159,7 +193,9 @@ func _on_container_changed() -> void:
 	if _container == null or _session != null:
 		return
 	_refresh()
-	if _container.item_count() == 0 and not _drag.is_dragging() and flow.run != null and flow.run.pending_loot == _container:
+	# 084（作者定）：拿完了默认**不**自动关，手动关；设置里「拿走最后一件后自动关闭」开了才关
+	if flow.settings != null and flow.settings.loot_auto_close and _container.item_count() == 0 and not _drag.is_dragging() \
+			and flow.run != null and flow.run.pending_loot == _container:
 		flow.discard_loot()
 
 

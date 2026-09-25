@@ -4,6 +4,8 @@ extends GameScreen
 
 var _view: BattleView
 var _next: Button
+var _title: Label
+var _verdict: String = ""
 var _won: bool = false
 
 
@@ -15,7 +17,10 @@ func open(payload: Dictionary) -> void:
 	var result: BattleResult = payload.get("result", null)
 	_won = bool(payload.get("won", false))
 	var enemy_name := _enemy_name(payload.get("enemy_content", {}))
-	col.add_child(_label("战斗　%s　—— %s" % [enemy_name, "赢了" if _won else ("平局，按输算" if result != null and result.is_draw() else "输了")], 18, UiPalette.FG))
+	# 084（作者定）：不提前显示胜负，看完回放（或跳过）才写
+	_title = _label("战斗　%s" % enemy_name, 18, UiPalette.FG)
+	col.add_child(_title)
+	_verdict = "赢了" if _won else ("平局，按输算" if result != null and result.is_draw() else "输了")
 
 	_view = BattleView.new()
 	_view.label_font = font
@@ -41,6 +46,12 @@ func proceed() -> void:
 func _on_finished() -> void:
 	if _next != null:
 		_next.text = "继续"
+	if _title != null:
+		_title.text += "　—— " + _verdict
+
+
+func verdict_shown() -> bool:
+	return _title != null and _title.text.contains(_verdict)
 
 
 ## 对手叫什么：从这一场的敌人内容（点里的，或搜索遭遇现造的）查定义

@@ -34,6 +34,9 @@ extends Resource
 ## 珍宝概率是否也吃难度 / 幸运 / buff 修正
 @export var treasure_modified: bool = true
 
+## 至少掉几件身上有的（084 作者定：打赢了至少掉一件敌人拥有的道具）。掷完不够就从没掉的里随机补；身上没那么多就掉光。0 = 不保底
+@export var min_drops: int = 0
+
 
 func base_of(rarity: int) -> float:
 	if base_chance.is_empty():

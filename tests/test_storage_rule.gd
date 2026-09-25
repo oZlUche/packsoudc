@@ -275,6 +275,7 @@ static func frame_map_prompt(t: TestCase, root: Window) -> void:
 				ov.start_battle()
 			GameFlow.Screen.LOOT:
 				ov.take_all()
+				ov.to_map()     # 084：拿完不自动关，手动关
 			_:
 				ov.proceed()
 	if run.storage.item_count() == 0:
@@ -299,6 +300,7 @@ static func frame_map_prompt(t: TestCase, root: Window) -> void:
 				ov2.start_battle()
 			GameFlow.Screen.LOOT:
 				ov2.take_all()
+				ov2.to_map()     # 084：拿完不自动关，手动关
 			GameFlow.Screen.SEARCH, GameFlow.Screen.SHOP:
 				ov2.leave()
 			_:

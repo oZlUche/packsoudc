@@ -45,6 +45,9 @@
         5,
         3
       ],
+      "stat_scale": {
+        "max_hp": 1.15
+      },
       "bags": [
         "bag_leather",
         "bag_small"
@@ -62,7 +65,7 @@
         4
       ],
       "stat_scale": {
-        "max_hp": 1.25
+        "max_hp": 1.5
       },
       "bags": [
         "bag_leather",
@@ -81,7 +84,8 @@
         5
       ],
       "stat_scale": {
-        "max_hp": 1.6
+        "max_hp": 1.9,
+        "armor": 1.25
       },
       "bags": [
         "bag_leather",
@@ -100,8 +104,8 @@
         5
       ],
       "stat_scale": {
-        "max_hp": 2,
-        "armor": 1.5
+        "max_hp": 2.4,
+        "armor": 1.75
       },
       "bags": [
         "bag_leather",

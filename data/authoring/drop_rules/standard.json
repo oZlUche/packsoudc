@@ -12,5 +12,6 @@
   "treasure_weights": {
     "3": 3,
     "4": 1
-  }
+  },
+  "min_drops": 1
 }

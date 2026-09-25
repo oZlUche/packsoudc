@@ -9,5 +9,5 @@ display_name = "神射手"
 strength = 1
 schools = Array[StringName]([&"burst"])
 base_stats = {
-"max_hp": 22
+"max_hp": 28
 }

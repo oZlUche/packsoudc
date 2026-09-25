@@ -42,21 +42,32 @@ func _init() -> void:
 
 func set_inventory(inv: GridInventory) -> void:
 	super.set_inventory(inv)
+	_remember_known(false)
 	if inv != null:
-		inv.changed.connect(_remember_known)
-	_remember_known()
+		inv.changed.connect(func(): _remember_known(true))
 
 
-func _remember_known() -> void:
+## 记住容器里有哪些。[param later] = 绑定之后才出现的：那是玩家从棋盘 / 暂存区放进来的自己的东西，**当亮过**
+## （084 修：放回容器的道具不能变成「未知」）；绑定那一刻就在的才是要揭示的
+func _remember_known(later: bool) -> void:
 	if inventory == null:
 		return
 	for inst in inventory.items():
-		_known[(inst as ItemInstance).uid] = true
+		var uid := (inst as ItemInstance).uid
+		if not _known.has(uid):
+			_known[uid] = true
+			if later:
+				_revealed[uid] = true
 
 
 #region 揭示
 func is_revealed(uid: int) -> bool:
 	return _revealed.has(uid)
+
+
+## 这件是不是这个容器里出现过的（玩家自己的东西放进来之前是「不认识」的）
+func knows(uid: int) -> bool:
+	return _known.has(uid)
 
 
 ## 这件还锁在容器里（是这个容器的、还没亮出来）。不是这个容器的东西（玩家自己棋盘 / 暂存区里的）从不锁 ——

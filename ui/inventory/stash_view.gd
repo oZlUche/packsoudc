@@ -110,7 +110,10 @@ func _gui_input(event: InputEvent) -> void:
 	var list := stash.items()
 	if row >= list.size():
 		return
-	grab_requested.emit(self, (list[row] as ItemInstance).uid, mb.position)
+	if mb.double_click:
+		item_double_clicked.emit(self, (list[row] as ItemInstance).uid)     # 084：双击 = 快速置入
+	else:
+		grab_requested.emit(self, (list[row] as ItemInstance).uid, mb.position)
 	accept_event()
 
 

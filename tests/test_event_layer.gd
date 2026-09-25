@@ -503,6 +503,7 @@ static func frame_director(t: TestCase, root: Window) -> void:
 				ov.start_battle()
 			GameFlow.Screen.LOOT:
 				ov.take_all()
+				ov.to_map()     # 084：拿完不自动关，手动关
 			_:
 				ov.proceed()
 	t.is_null(game.overlay(), "看完了回地图")

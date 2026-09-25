@@ -124,7 +124,10 @@ func _gui_input(event: InputEvent) -> void:
 			if uid == GridInventory.EMPTY_UID:
 				uid = inventory.bag_at(c)
 			if uid != GridInventory.EMPTY_UID:
-				grab_requested.emit(self, uid, mb.position)
+				if mb.double_click:
+					item_double_clicked.emit(self, uid)     # 084：双击 = 快速置入，不再抓
+				else:
+					grab_requested.emit(self, uid, mb.position)
 				accept_event()
 
 

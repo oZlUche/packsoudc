@@ -595,6 +595,9 @@ func _build() -> void:
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_view.node_pressed.connect(_on_node_pressed)
 	_view.node_hovered.connect(_on_node_hovered)
+	_view.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseMotion and _tip != null:
+			_tip.follow(get_global_mouse_position()))     # 084：浮窗跟着鼠标走，和道具悬浮窗一样
 	mid.add_child(_view)
 	_preview = _label("", 13, UiPalette.FG)
 	_preview.custom_minimum_size.y = 22

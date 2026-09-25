@@ -9,6 +9,6 @@ display_name = "屠夫"
 strength = 1
 schools = Array[StringName]([&"bleed"])
 base_stats = {
-"max_hp": 30
+"max_hp": 38
 }
 signature = Array[StringName]([&"knife"])
