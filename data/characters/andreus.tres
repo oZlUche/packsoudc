@@ -27,6 +27,9 @@ cooldown_steps = 4
 script = ExtResource("1_t30u4")
 id = &"andreus"
 display_name = "安德烈乌斯"
+display_names = {
+"en": "Andreus"
+}
 description = "擅长逃跑的奴隶探索者。两个皮革包，生命 50。躲得开猎手；头一回输给节点敌人不扣体力。"
 base_stats = {
 "max_hp": 50

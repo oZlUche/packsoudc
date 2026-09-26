@@ -1,6 +1,9 @@
 {
   "id": "ration",
   "display_name": "口粮",
+  "display_names": {
+    "en": "Ration"
+  },
   "shape": [
     "1"
   ],

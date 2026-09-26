@@ -1,6 +1,9 @@
 {
   "id": "plate_cuirass",
   "display_name": "板甲",
+  "display_names": {
+    "en": "Plate Cuirass"
+  },
   "shape": [
     "111",
     "111",

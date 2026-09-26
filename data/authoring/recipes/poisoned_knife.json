@@ -1,6 +1,9 @@
 {
   "id": "poisoned_knife",
   "display_name": "涂毒匕首",
+  "display_names": {
+    "en": "Poisoned Knife"
+  },
   "inputs": [
     "knife",
     "poison_vial"

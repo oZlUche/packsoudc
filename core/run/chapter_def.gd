@@ -10,6 +10,8 @@ extends Resource
 
 @export var id: StringName = &""
 @export var display_name: String = ""
+## 088：别的语言的名字，`{"en": "Knife"}`；界面用 [method Names.of] 取（当前语言没有就用 display_name）
+@export var display_names: Dictionary = {}
 
 ## 随机生成还是载入预设，见 5.3.1
 @export var map_source: MapSource = null
@@ -46,6 +48,8 @@ extends Resource
 @export var vitality_bonus: int = 0
 ## 这一章开局发的道具 id（在角色的初始包之上；序章二发一把匕首）。放不进包的进暂存区
 @export var starting_items: Array[StringName] = []
+## 088（作者定）：这一章开局发的**特殊道具**（不进背包，只是文本通知 + 图鉴点亮；序章二发望远镜 → 节点浮窗）。记在局外，以后每一局都有
+@export var starting_keepsakes: Array[StringName] = []
 ## 撤离成功之后直接进的下一章（085 作者定：序章撤离后不是再来一局而是下一张教学图）。空 = 照常去局外
 @export var next_chapter: StringName = &""
 ## 开局能不能从仓库带东西进来（序章不能：教程从空包开始）
@@ -58,7 +62,8 @@ extends Resource
 @export var intro_event: StringName = &""
 
 @export_group("节点浮窗（084，第二章开放）")
-## 鼠标移到节点上显示浮窗（敌人数据与背包 / 用过了 / 可能发生什么 / 值得搜）。作者：第二章才开，所以默认关
+## 鼠标移到节点上显示浮窗（敌人数据与背包 / 用过了 / 可能发生什么 / 值得搜）。默认关 —— 正式的开法是拿到带 `node_tooltips` 标签的
+## 特殊道具（望远镜，088）；这个开关留给不想走道具那条路的章节
 @export var node_tooltips: bool = false
 ## "default" 用内置模板；"custom" 用 [member tooltip_texts] 里按类别写的模板（缺的类别退回内置）
 @export var tooltip_mode: String = "default"

@@ -1,6 +1,9 @@
 {
   "id": "blessed_longbow",
   "display_name": "狩猎之神赐福的长弓",
+  "display_names": {
+    "en": "Hunt God's Blessed Longbow"
+  },
   "shape": [
     "1",
     "1",
@@ -64,6 +67,9 @@
             "buff": {
               "id": "marked",
               "display_name": "标记",
+              "display_names": {
+                "en": "Marked"
+              },
               "is_debuff": true,
               "max_stacks": 1,
               "duration_sec": 8.0,

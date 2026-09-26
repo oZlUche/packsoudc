@@ -1,6 +1,9 @@
 {
   "id": "warding_charm",
   "display_name": "护身符",
+  "display_names": {
+    "en": "Warding Charm"
+  },
   "shape": [
     "1"
   ],
@@ -27,6 +30,9 @@
             "buff": {
               "id": "ward",
               "display_name": "护符结界",
+              "display_names": {
+                "en": "Ward"
+              },
               "mods": [
                 {
                   "stat": "max_shield",

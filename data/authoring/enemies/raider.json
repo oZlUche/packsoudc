@@ -1,6 +1,9 @@
 {
   "id": "raider",
   "display_name": "拾荒者",
+  "display_names": {
+    "en": "Scavenger"
+  },
   "schools": [
     "rapid"
   ],

@@ -30,4 +30,4 @@ func apply(ctx: RuleContext) -> void:
 func describe() -> String:
 	if buff == null:
 		return "施加 ?"
-	return "%s%s%s" % ["施加" if target != Target.SELF else "获得", buff.display_name, ("×%d" % stacks) if stacks > 1 else ""]
+	return "%s%s%s" % ["施加" if target != Target.SELF else "获得", Names.of(buff), ("×%d" % stacks) if stacks > 1 else ""]

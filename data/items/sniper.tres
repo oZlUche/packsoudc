@@ -49,6 +49,9 @@ flat = -3.0
 script = ExtResource("9_dki5p")
 id = &"marked"
 display_name = "标记"
+display_names = {
+"en": "Marked"
+}
 is_debuff = true
 max_stacks = 1
 duration_sec = 8.0
@@ -83,6 +86,9 @@ cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2
 script = ExtResource("15_dbp17")
 id = &"sniper"
 display_name = "狙击枪"
+display_names = {
+"en": "Sniper Rifle"
+}
 shape = SubResource("Resource_caqn7")
 rarity = 3
 tags = Array[StringName]([&"sealed", &"weapon", &"gun", &"burst"])

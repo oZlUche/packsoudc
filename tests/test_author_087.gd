@@ -627,3 +627,120 @@ static func frame_auto_tooltip(t: TestCase, root: Window) -> void:
 	t.check(HoverTip.ensure_for(view3) == own, "屏自己的悬浮窗优先")
 	host.queue_free()
 	screen.queue_free()
+
+
+static func run_names_and_hunters_and_mana(t: TestCase) -> void:
+	t.begin("088 · 多语言名字 Names.of（en 有就用、没有回落 display_name）；输给猎手也扣体力；默认难度没有猎手；power 并进 mana")
+	var c := _content()
+	var knife := c.items.get_def(&"knife")
+	var before := UiText.lang
+	UiText.lang = "zh"
+	t.eq(Names.of(knife), "匕首", "中文：display_name")
+	UiText.lang = "en"
+	t.eq(Names.of(knife), "Knife", "英文：display_names.en")
+	t.eq(Names.of(knife, "zh"), "匕首", "指定语言")
+	var bare := ItemDef.new()
+	bare.display_name = "只有中文"
+	t.eq(Names.of(bare), "只有中文", "没写英文名回落 display_name")
+	t.eq(Names.of(null), "", "null 空串")
+	t.check(Names.has(knife, "en") and not Names.has(bare, "en"), "has")
+	var faiths := FaithDef.load_all()
+	t.eq(Names.of(faiths[&"skill"]), "God of Skill", "信仰也有英文名")
+	var marks := c.enemies.enemy(&"marksman")
+	t.eq(Names.of(marks), "Marksman", "敌人也有英文名")
+	var poisoned := c.items.get_def(&"poisoned_knife")
+	var buffs := Glossary.buffs_in_item(poisoned)
+	t.eq(Names.of(buffs[&"poison"]), "Poison", "道具里内联的 buff 也有英文名")
+	var full := ItemTooltip.describe_full(ItemInstance.create(poisoned))
+	var plain_en := Glossary.strip_bbcode(String(full["text"]))
+	t.check(plain_en.contains("Poisoned Knife") and plain_en.contains("施加Poison"), "悬浮窗按当前语言写名字：%s" % plain_en.replace("\n", " / "))
+	UiText.lang = before
+	# 往返
+	var back := ContentImporter.import_item(ContentExporter.export_item(knife), ContentImporter.Context.new(), ImportReport.new())
+	t.eq(back.display_names, knife.display_names, "display_names 走管线往返")
+	# 猎手
+	var rules: NodeRules = load(ContentPaths.asset_file("node_rules", "standard"))
+	t.eq(rules.loss_cost_of(&"hunter"), 1, "输给猎手扣 1 体力（数据）")
+	t.eq(NodeRules.new().loss_cost_of(&"hunter"), 1, "默认表里也有")
+	var normal: DifficultyDef = load(ContentPaths.asset_file("difficulties", "normal"))
+	var has_hunters := false
+	for m in normal.mechanics:
+		if String(ContentExporter._registry_name_of(m)) == "hunters":
+			has_hunters = true
+	t.check(not has_hunters, "普通难度没有猎手机制：猎手要在难度里额外配")
+	var diffs := GameFlow.load_difficulties()
+	t.check(not diffs.is_empty() and diffs[0].id == &"normal", "难度列表第一个是普通（开局屏默认选它）")
+	# mana
+	var crystal := c.items.get_def(&"mana_crystal")
+	t.check(crystal.combat.base_stats.has("max_mana") and not crystal.combat.base_stats.has("max_power"), "魔晶石给 max_mana")
+	t.check(not UiPalette.RESOURCE_COLORS.has("power"), "没有 power 资源的颜色了")
+
+
+static func run_spyglass_and_codex(t: TestCase) -> void:
+	t.begin("088 · 望远镜：序章二开局发的特殊道具 —— 不进背包、图鉴点亮、开节点浮窗（以后每一局都开）、不能生成；基地两个页签：仓库 / 图鉴")
+	var c := _content()
+	var spy := c.items.get_def(&"spyglass")
+	t.check(spy != null and spy.is_keepsake() and spy.tags.has(&"node_tooltips"), "望远镜是特殊道具、带 node_tooltips 标签")
+	t.check(not c.items.ids().has(&"spyglass") and c.items.keepsake_ids().has(&"spyglass"), "不在能生成的 id 里、在特殊道具里")
+	var econ: EconomyRules = load(ContentPaths.asset_file("economy_rules", "standard"))
+	t.check(not ShopSession.candidates(econ, c.items).has(&"spyglass"), "商店不卖")
+	var rules: NodeRules = load(ContentPaths.asset_file("node_rules", "standard"))
+	t.check(not SearchSession.candidates(rules.search, c.items).has(&"spyglass"), "搜不出来")
+	var p2: ChapterDef = load(ContentPaths.asset_file("chapters", "prologue_2"))
+	t.check(p2.starting_keepsakes.has(&"spyglass") and not p2.node_tooltips, "序章二靠望远镜开浮窗，不靠章节开关")
+	# 局外：拿到 → 存读 → 第一章也开着浮窗
+	var f := _flow(c)
+	f.chapters = [c.chapter, p2] as Array[ChapterDef]
+	f.characters = GameFlow.load_characters()
+	f.event_defs = c.events
+	var run := f.begin_direct(p2, 2)
+	t.not_null(run, "开序章二")
+	if run == null:
+		_cleanup()
+		return
+	t.check(f.meta.has_keepsake(&"spyglass"), "开局拿到了望远镜")
+	t.check(f.has_ability(&"node_tooltips") and f.tooltips_enabled(), "浮窗开着（靠能力）")
+	var notes := f.take_notes()
+	t.check(notes.size() == 1 and notes[0].contains("望远镜"), "有一句通知：%s" % str(notes))
+	t.check(f.take_notes().is_empty(), "通知取走就没了")
+	var board_items := 0
+	for inst in run.board.items():
+		if (inst as ItemInstance).def.id == &"spyglass":
+			board_items += 1
+	t.eq(board_items, 0, "不进背包")
+	var back := MetaState.from_dict(f.meta.to_dict(), c.items)
+	t.check(back != null and back.has_keepsake(&"spyglass"), "跟局外存档")
+	f.to_main_menu()
+	RunSave.remove(SAVE)
+	var run2 := f.begin(c.chapter, _kit(c), 3)
+	t.check(run2 != null and f.tooltips_enabled(), "之后开第一章：浮窗也开着（能力是局外的）")
+	t.check(f.take_notes().is_empty(), "已经有了不再通知")
+	# 没拿过的一张白纸：第一章关着
+	var f2 := _flow(c)
+	f2.begin(c.chapter, _kit(c), 3)
+	t.check(not f2.tooltips_enabled(), "没拿过望远镜：第一章浮窗关")
+	# 基地页签
+	f2.meta.codex["knife"] = 3
+	f2.meta.codex["longsword"] = 1
+	f2.meta.grant_keepsake(&"spyglass")
+	f2.to_main_menu()
+	var screen = load("res://ui/game/meta_screen.gd").new()
+	screen.flow = f2
+	screen.font = UiPalette.cjk_font()
+	screen.screen = GameFlow.Screen.META
+	screen.open({})
+	t.eq(screen.tab(), "warehouse", "默认在仓库页")
+	screen.show_tab("codex")
+	t.eq(screen.tab(), "codex", "切到图鉴页")
+	t.check(screen._pages["codex"].visible and not screen._pages["warehouse"].visible, "只显示图鉴页")
+	var board: GridInventory = screen.codex_board()
+	t.eq(board.item_count(), 2, "点亮的两件摆在图鉴棋盘上")
+	var knife_uid := -1
+	for inst in board.items():
+		if (inst as ItemInstance).def.id == &"knife":
+			knife_uid = (inst as ItemInstance).uid
+	t.check(knife_uid >= 0 and String(screen._codex_view.badges.get(knife_uid, "")) == "×3", "匕首角标写着 ×3")
+	screen.show_tab("nope")
+	t.eq(screen.tab(), "warehouse", "不认识的页签回仓库")
+	screen.free()
+	_cleanup()

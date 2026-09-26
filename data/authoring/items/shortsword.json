@@ -1,6 +1,9 @@
 {
   "id": "shortsword",
   "display_name": "制式短剑",
+  "display_names": {
+    "en": "Issue Shortsword"
+  },
   "shape": [
     "1",
     "1"

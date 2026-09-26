@@ -13,6 +13,9 @@ script = ExtResource("5_8lmd1")
 script = ExtResource("4_gjm8d")
 id = &"warped_obsidian"
 display_name = "异化黑曜石"
+display_names = {
+"en": "Warped Obsidian"
+}
 shape = SubResource("Resource_un53n")
 rarity = 3
 value = 300

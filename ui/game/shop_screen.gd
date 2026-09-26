@@ -73,10 +73,10 @@ func open(payload: Dictionary) -> void:
 	if _session != null:
 		_session.stock_changed.connect(_rebuild)
 		_session.bought.connect(func(def: ItemDef, price: int, _inst: ItemInstance):
-			_say("买下了「%s」，花了 %d 币" % [def.display_name, price])
+			_say("买下了「%s」，花了 %d 币" % [Names.of(def), price])
 			_refresh())
 		_session.sold_item.connect(func(def: ItemDef, gain: int):
-			_say("卖掉了「%s」，得 %d 币" % [def.display_name, gain])
+			_say("卖掉了「%s」，得 %d 币" % [Names.of(def), gain])
 			_refresh())
 		flow.run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh())
 	_rebuild()
@@ -89,7 +89,7 @@ func buy(i: int) -> bool:
 		return false
 	if not _session.can_buy(i):
 		if i >= 0 and i < _session.stock.size() and not _session.sold.has(i):
-			_say("金币不足：「%s」要 %d 币，你有 %d" % [_def_at(i).display_name if _def_at(i) != null else "?", int(_session.stock[i]["price"]), flow.run.wallet.balance])
+			_say("金币不足：「%s」要 %d 币，你有 %d" % [Names.of(_def_at(i)) if _def_at(i) != null else "?", int(_session.stock[i]["price"]), flow.run.wallet.balance])
 		return false
 	return _session.buy(i) != null
 
@@ -144,7 +144,7 @@ func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 		if target == flow.run.board or target == flow.run.storage:
 			if _session.can_buy(slot):
 				return true
-			_say("金币不足：「%s」要 %d 币，你有 %d" % [inst.def.display_name, int(_session.stock[slot]["price"]), flow.run.wallet.balance])
+			_say("金币不足：「%s」要 %d 币，你有 %d" % [Names.of(inst.def), int(_session.stock[slot]["price"]), flow.run.wallet.balance])
 			return false
 		return false
 	# 自己的东西

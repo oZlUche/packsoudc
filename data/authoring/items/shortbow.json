@@ -1,6 +1,9 @@
 {
   "id": "shortbow",
   "display_name": "短弓",
+  "display_names": {
+    "en": "Shortbow"
+  },
   "shape": [
     "1",
     "1",

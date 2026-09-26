@@ -277,6 +277,9 @@ generator_config = SubResource("Resource_lmdbv")
 script = ExtResource("8_lpqd8")
 id = &"chapter_01"
 display_name = "第一章（占位）"
+display_names = {
+"en": "Chapter One (placeholder)"
+}
 map_source = SubResource("Resource_mw7iv")
 enemy_pool = &"standard_ruins"
 drop_rule = &"standard"

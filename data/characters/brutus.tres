@@ -30,6 +30,9 @@ passive = Array[ExtResource("3_40tca")]([SubResource("Resource_2ndvl"), SubResou
 script = ExtResource("1_o4bsg")
 id = &"brutus"
 display_name = "布鲁图斯"
+display_names = {
+"en": "Brutus"
+}
 description = "擅长生存的奴隶探索者。两个皮革包。血量、体力、耐力都更高。"
 base_stats = {
 "max_hp": 60

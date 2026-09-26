@@ -1,6 +1,9 @@
 {
   "id": "battery",
   "display_name": "电池",
+  "display_names": {
+    "en": "Battery"
+  },
   "shape": [
     "1"
   ],
@@ -10,7 +13,7 @@
   ],
   "combat": {
     "base_stats": {
-      "max_power": 20
+      "max_mana": 20
     }
   }
 }

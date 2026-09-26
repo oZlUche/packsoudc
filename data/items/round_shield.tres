@@ -22,6 +22,9 @@ cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2
 script = ExtResource("6_7sgt3")
 id = &"round_shield"
 display_name = "圆盾"
+display_names = {
+"en": "Round Shield"
+}
 shape = SubResource("Resource_s32ye")
 rarity = 1
 tags = Array[StringName]([&"gear", &"shield", &"imperial"])

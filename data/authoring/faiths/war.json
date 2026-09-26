@@ -1,6 +1,9 @@
 {
   "id": "war",
   "display_name": "战争之神",
+  "display_names": {
+    "en": "God of War"
+  },
   "god": "战争之神",
   "description": "军团的信仰。制式的兵器与护甲。信力：打赢才算，军饷（花钱）也算。",
   "thresholds": [

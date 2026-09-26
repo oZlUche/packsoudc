@@ -1,6 +1,9 @@
 {
   "id": "bag_long",
   "display_name": "长条包",
+  "display_names": {
+    "en": "Long Bag"
+  },
   "shape": [
     "1111"
   ],

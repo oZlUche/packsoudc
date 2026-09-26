@@ -826,6 +826,13 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 	for i in def.characters.size():
 		if not ctx.characters.is_empty() and not ctx.characters.has(def.characters[i]):
 			report.error("characters[%d]" % i, "找不到角色 '%s'（已知：%s）" % [def.characters[i], ", ".join(ctx.characters.keys())])
+	# 088：开局发的特殊道具得存在、得是特殊道具
+	for i in def.starting_keepsakes.size():
+		var kid := def.starting_keepsakes[i]
+		if not ctx.items.is_empty() and not ctx.items.has(kid):
+			report.error("starting_keepsakes[%d]" % i, "找不到特殊道具 '%s'" % kid)
+		elif ctx.items.has(kid) and not (ctx.items[kid] as ItemDef).is_keepsake():
+			report.error("starting_keepsakes[%d]" % i, "'%s' 不是特殊道具（没有 keepsake 标签）" % kid)
 	if def.map_source == null:
 		report.error("map_source", "章节必须有地图来源（随机生成或载入预设）")
 		return

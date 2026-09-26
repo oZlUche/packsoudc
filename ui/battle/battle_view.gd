@@ -80,7 +80,7 @@ func _on_buff_hovered(id: String, at: Vector2) -> void:
 	if _tip == null:
 		return
 	var def: BuffDef = _panels[0].buff_defs.get(StringName(id), null)
-	var name := def.display_name if def != null and def.display_name != "" else id
+	var name := Names.of(def) if def != null and Names.of(def) != "" else id
 	var body := Glossary.describe_buff(def) if def != null else "（没有这个 buff 的定义）"
 	_tip.show_text("[b]%s[/b]\n%s" % [name, body], at)
 

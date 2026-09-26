@@ -32,6 +32,8 @@ var codex: Dictionary = {}
 var active_buffs: Array[StringName] = []
 ## 局外解锁（069）：难度、以后的角色 / 内容按 id 查。谁来解锁不写死：现在是局外屏的占位开关，将来是成长系统
 var unlocks: Array[StringName] = []
+## 088：拿到过的特殊道具（望远镜……）：不进背包、图鉴里点亮、代表一种能力。跟局外存档
+var keepsakes: Array[StringName] = []
 ## 撤离带出来的钱累计。局外货币怎么花（15 节第 4 项）还没定，先攒着
 var funds: int = 0
 ## 累计背出去的价值（6.4）
@@ -141,6 +143,13 @@ func absorb(result: RunResult) -> Dictionary:
 	return got
 
 
+func _keepsake_ids() -> Array:
+	var out: Array = []
+	for id in keepsakes:
+		out.append(String(id))
+	return out
+
+
 func _unlock_ids() -> Array:
 	var out: Array = []
 	for id in unlocks:
@@ -222,6 +231,19 @@ func toggle_buff(id: StringName) -> bool:
 	return active_buffs.has(id)
 
 
+## 088：拿到一件特殊道具。已经有了返回 false
+func grant_keepsake(id: StringName) -> bool:
+	if id == &"" or keepsakes.has(id):
+		return false
+	keepsakes.append(id)
+	changed.emit()
+	return true
+
+
+func has_keepsake(id: StringName) -> bool:
+	return keepsakes.has(id)
+
+
 func codex_lit(id: StringName) -> bool:
 	return int(codex.get(String(id), 0)) > 0
 
@@ -240,6 +262,7 @@ func to_dict() -> Dictionary:
 		"codex": codex.duplicate(),
 		"active_buffs": _buff_ids(),
 		"unlocks": _unlock_ids(),
+		"keepsakes": _keepsake_ids(),
 		"next_uid": _next_uid,
 		"funds": funds, "score": score, "runs": runs, "extractions": extractions, "deaths": deaths,
 		"best_value": best_value,
@@ -270,6 +293,8 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		m.active_buffs.append(StringName(String(id)))
 	for id in d.get("unlocks", []):
 		m.unlocks.append(StringName(String(id)))
+	for id in d.get("keepsakes", []):
+		m.keepsakes.append(StringName(String(id)))
 	m._next_uid = int(d.get("next_uid", 1))
 	for inst in m.warehouse.items():
 		m._next_uid = maxi(m._next_uid, (inst as ItemInstance).uid + 1)

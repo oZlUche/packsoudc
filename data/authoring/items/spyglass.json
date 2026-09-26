@@ -1,0 +1,16 @@
+{
+  "id": "spyglass",
+  "display_name": "望远镜",
+  "display_names": {
+    "en": "Spyglass"
+  },
+  "description": "一支旧军团的黄铜望远镜。不占背包：拿到之后，把鼠标停在地图的点上就能看到那个点的情报。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "keepsake",
+    "node_tooltips"
+  ]
+}

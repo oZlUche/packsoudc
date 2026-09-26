@@ -9,6 +9,8 @@ extends Resource
 
 @export var id: StringName = &""
 @export var display_name: String = ""
+## 088：别的语言的名字，`{"en": "Knife"}`；界面用 [method Names.of] 取（当前语言没有就用 display_name）
+@export var display_names: Dictionary = {}
 ## 仅影响 UI 配色与「净化」类效果的筛选，不影响结算
 @export var is_debuff: bool = false
 

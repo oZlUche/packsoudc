@@ -119,14 +119,14 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 	if from == _run.storage:
 		if InventoryService.transfer_auto(_run.storage, uid, _run.board):
 			return true
-		_hint_text("背包里没有空间放「%s」" % inst.def.display_name)
+		_hint_text("背包里没有空间放「%s」" % Names.of(inst.def))
 		return false
 	if from == _run.board:
 		if quick_target != null and InventoryService.transfer_auto(_run.board, uid, quick_target):
 			return true
 		if InventoryService.transfer_auto(_run.board, uid, _run.storage):
 			if quick_target != null:
-				_hint_text("容器里放不下「%s」，放进了暂存区" % inst.def.display_name)
+				_hint_text("容器里放不下「%s」，放进了暂存区" % Names.of(inst.def))
 			return true
 	return false
 
@@ -147,7 +147,7 @@ func _refresh_badges() -> void:
 		var key := "%d:%d" % [a.uid, b.uid]
 		keys[key] = true
 		if not _pair_keys.has(key):
-			_hint_text("「%s」和「%s」挨在一起：走到下一个点时合成「%s」" % [a.def.display_name, b.def.display_name, out.display_name])
+			_hint_text("「%s」和「%s」挨在一起：走到下一个点时合成「%s」" % [Names.of(a.def), Names.of(b.def), Names.of(out)])
 	_pair_keys = keys
 	board_view.badges = marks
 	board_view.queue_redraw()
@@ -183,7 +183,7 @@ func _on_displaced(instances: Array, grabbed: bool) -> void:
 	var names: Array[String] = []
 	for inst in instances:
 		var item := inst as ItemInstance
-		names.append(item.def.display_name if item.def != null else "?")
+		names.append(Names.of(item.def) if item.def != null else "?")
 	_hint.text = "顶出了「%s」，已经拿在手上" % names[0] if grabbed else "顶出了 %d 件（%s），都放进暂存区了" % [names.size(), "、".join(names)]
 
 

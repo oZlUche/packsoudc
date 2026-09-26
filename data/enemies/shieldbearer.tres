@@ -6,6 +6,9 @@
 script = ExtResource("1_wx7fy")
 id = &"shieldbearer"
 display_name = "持符者"
+display_names = {
+"en": "Charm Bearer"
+}
 strength = 2
 schools = Array[StringName]([&"rapid"])
 base_stats = {

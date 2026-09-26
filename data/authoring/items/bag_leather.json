@@ -1,6 +1,9 @@
 {
   "id": "bag_leather",
   "display_name": "皮革包",
+  "display_names": {
+    "en": "Leather Bag"
+  },
   "shape": [
     "11",
     "11",

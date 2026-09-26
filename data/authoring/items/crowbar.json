@@ -1,6 +1,9 @@
 {
   "id": "crowbar",
   "display_name": "撬棍",
+  "display_names": {
+    "en": "Crowbar"
+  },
   "shape": [
     "11",
     "10"

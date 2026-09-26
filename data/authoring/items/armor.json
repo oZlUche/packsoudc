@@ -1,6 +1,9 @@
 {
   "id": "armor",
   "display_name": "防弹衣",
+  "display_names": {
+    "en": "Body Armor"
+  },
   "shape": [
     "11",
     "11"

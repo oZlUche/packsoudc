@@ -1,6 +1,9 @@
 {
   "id": "shieldbearer",
   "display_name": "持符者",
+  "display_names": {
+    "en": "Charm Bearer"
+  },
   "strength": 2,
   "schools": [
     "rapid"

@@ -17,6 +17,9 @@ cooldown_steps = 3
 script = ExtResource("1_u1yx6")
 id = &"marcus"
 display_name = "马库斯"
+display_names = {
+"en": "Marcus"
+}
 description = "擅长战斗的军团士兵。一个皮革包、一个小包，生命 55，耐力更高。「突击」：下次进入战斗先扣对方三成血。"
 base_stats = {
 "max_hp": 55,

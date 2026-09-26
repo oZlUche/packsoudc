@@ -1,6 +1,9 @@
 {
   "id": "tower_shield",
   "display_name": "塔盾",
+  "display_names": {
+    "en": "Tower Shield"
+  },
   "shape": [
     "11",
     "11",

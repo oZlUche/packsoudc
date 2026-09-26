@@ -1,6 +1,9 @@
 {
   "id": "core",
   "display_name": "能量核心",
+  "display_names": {
+    "en": "Power Core"
+  },
   "shape": [
     "010",
     "111",
@@ -13,7 +16,7 @@
   ],
   "combat": {
     "base_stats": {
-      "max_power": 60
+      "max_mana": 60
     }
   }
 }

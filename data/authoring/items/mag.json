@@ -1,6 +1,9 @@
 {
   "id": "mag",
   "display_name": "弹匣",
+  "display_names": {
+    "en": "Magazine"
+  },
   "shape": [
     "1"
   ],

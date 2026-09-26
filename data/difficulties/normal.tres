@@ -8,4 +8,7 @@
 script = ExtResource("3_tkvi5")
 id = &"normal"
 display_name = "普通"
+display_names = {
+"en": "Normal"
+}
 description = "没有额外机制。"

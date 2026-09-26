@@ -1,6 +1,9 @@
 {
   "id": "core_guardian",
   "display_name": "核心守卫",
+  "display_names": {
+    "en": "Core Guardian"
+  },
   "strength": 3,
   "schools": [
     "burst",

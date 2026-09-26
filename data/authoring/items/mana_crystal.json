@@ -1,6 +1,9 @@
 {
   "id": "mana_crystal",
   "display_name": "魔晶石",
+  "display_names": {
+    "en": "Mana Crystal"
+  },
   "shape": [
     "11"
   ],
@@ -11,7 +14,7 @@
   ],
   "combat": {
     "base_stats": {
-      "max_power": 30
+      "max_mana": 30
     }
   }
 }

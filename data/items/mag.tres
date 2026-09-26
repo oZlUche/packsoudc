@@ -25,6 +25,9 @@ script = ExtResource("6_q5mjt")
 script = ExtResource("5_u4fbs")
 id = &"mag"
 display_name = "弹匣"
+display_names = {
+"en": "Magazine"
+}
 shape = SubResource("Resource_f7e41")
 tags = Array[StringName]([&"sealed", &"ammo"])
 adjacency = SubResource("Resource_fdhot")

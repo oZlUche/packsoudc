@@ -1,6 +1,9 @@
 {
   "id": "medkit",
   "display_name": "医疗包",
+  "display_names": {
+    "en": "Medkit"
+  },
   "shape": [
     "11",
     "11"

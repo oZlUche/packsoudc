@@ -92,7 +92,7 @@ func _refresh() -> void:
 		var names: Array[String] = []
 		for raw in _content.get("items", []):
 			var d := flow.items.get_def(StringName(String((raw as Dictionary).get("id", ""))))
-			names.append(d.display_name if d != null else String((raw as Dictionary).get("id", "?")))
+			names.append(Names.of(d) if d != null else String((raw as Dictionary).get("id", "?")))
 		_enemy_line.text = "生命 %d　约 %.1f DPS　%d 件：%s" % [spec.max_hp_int(), spec.rough_dps(), names.size(), "、".join(names)]
 	var why := can_start()
 	_start_btn.disabled = why != ""
@@ -103,7 +103,7 @@ func _enemy_name() -> String:
 	var def := flow.enemies.enemy(StringName(String(_content.get("enemy", "")))) if not _content.is_empty() else null
 	if def == null:
 		return "敌人"
-	return "%s（%d 档）" % [def.display_name, int(_content.get("strength", 0))]
+	return "%s（%d 档）" % [Names.of(def), int(_content.get("strength", 0))]
 
 
 func _title_of() -> String:

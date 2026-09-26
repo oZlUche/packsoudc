@@ -1,6 +1,9 @@
 {
   "id": "stim",
   "display_name": "兴奋剂",
+  "display_names": {
+    "en": "Stim"
+  },
   "shape": [
     "1"
   ],
@@ -25,6 +28,9 @@
             "buff": {
               "id": "adrenaline",
               "display_name": "肾上腺素",
+              "display_names": {
+                "en": "Adrenaline"
+              },
               "max_stacks": 3,
               "mods": [
                 {

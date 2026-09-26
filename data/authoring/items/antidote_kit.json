@@ -1,6 +1,9 @@
 {
   "id": "antidote_kit",
   "display_name": "解毒包",
+  "display_names": {
+    "en": "Antidote Kit"
+  },
   "shape": [
     "1"
   ],

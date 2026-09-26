@@ -192,7 +192,46 @@ func tooltips_enabled() -> bool:
 		return false
 	if settings != null and settings.node_tooltips_preview:
 		return true
+	if has_ability(&"node_tooltips"):
+		return true     # 088：拿到过望远镜（带 node_tooltips 标签的特殊道具）
 	return run.chapter != null and run.chapter.node_tooltips
+
+
+## 088：局外拿到过的特殊道具里有没有带这个标签的（能力由标签说明）
+func has_ability(tag: StringName) -> bool:
+	if meta == null or items == null:
+		return false
+	for id in meta.keepsakes:
+		var def := items.get_def(id)
+		if def != null and def.tags.has(tag):
+			return true
+	return false
+
+
+## 088：开局发这一章的特殊道具：记进局外、存盘，攒一句通知给地图屏（[method take_notes]）。返回新拿到的
+func _grant_keepsakes(chapter: ChapterDef) -> Array[ItemDef]:
+	var got: Array[ItemDef] = []
+	if chapter == null or meta == null or items == null:
+		return got
+	for id in chapter.starting_keepsakes:
+		var def := items.get_def(id)
+		if def == null or not meta.grant_keepsake(id):
+			continue
+		got.append(def)
+		_notes.append("获得特殊道具【%s】：不占背包，图鉴里点亮%s" % [Names.of(def), "；从现在起把鼠标停在地图的点上能看到它的情报" if def.tags.has(&"node_tooltips") else ""])
+	if not got.is_empty():
+		save_meta()
+	return got
+
+
+## 攒着的通知（地图屏开的时候取走打进日志）
+var _notes: Array[String] = []
+
+
+func take_notes() -> Array[String]:
+	var out := _notes.duplicate()
+	_notes.clear()
+	return out
 
 
 ## 仓库空的第一局发第一套（[MetaRules.first_kit]，058 第六节的占位；正式游戏由教程关发）。发了返回件数，否则 0
@@ -344,6 +383,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	if not taken.is_empty() or character != null:
 		MetaSave.write(meta, meta_path)
 	_adopt(state)
+	_grant_keepsakes(chapter)
 	_go(Screen.MAP)
 	run_started.emit(state)
 	return state

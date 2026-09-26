@@ -1,6 +1,9 @@
 {
   "id": "smg",
   "display_name": "冲锋枪",
+  "display_names": {
+    "en": "SMG"
+  },
   "shape": [
     "11"
   ],

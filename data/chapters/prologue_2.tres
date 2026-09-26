@@ -12,6 +12,9 @@ preset_path = "res://data/maps/tutorial2.json"
 script = ExtResource("2_je5g8")
 id = &"prologue_2"
 display_name = "序章二：岔路"
+display_names = {
+"en": "Prologue II: The Fork"
+}
 map_source = SubResource("Resource_00fl8")
 drop_rule = &"standard"
 node_rules = &"prologue"
@@ -23,8 +26,8 @@ characters = Array[StringName]([&"brutus"])
 hidden_by_unlock = &"prologue2_done"
 vitality_bonus = 2
 starting_items = Array[StringName]([&"knife"])
+starting_keepsakes = Array[StringName]([&"spyglass"])
 allow_carry_in = false
 auto_spawn = true
 skip_setup = true
 intro_event = &"tut2_intro"
-node_tooltips = true

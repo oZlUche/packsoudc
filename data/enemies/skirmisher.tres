@@ -6,6 +6,9 @@
 script = ExtResource("1_grpoy")
 id = &"skirmisher"
 display_name = "游兵"
+display_names = {
+"en": "Skirmisher"
+}
 strength = 1
 schools = Array[StringName]([&"rapid"])
 base_stats = {

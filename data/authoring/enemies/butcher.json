@@ -1,6 +1,9 @@
 {
   "id": "butcher",
   "display_name": "屠夫",
+  "display_names": {
+    "en": "Butcher"
+  },
   "strength": 1,
   "schools": [
     "bleed"

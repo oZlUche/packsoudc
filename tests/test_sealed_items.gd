@@ -23,7 +23,7 @@ static func run_sealed_listing(t: TestCase) -> void:
 		t.check(db.all_ids().has(id), "%s 在 all_ids() 里" % id)
 	for id in [&"knife", &"ration", &"cleaver", &"belt_potion", &"bag_leather"]:
 		t.check(db.ids().has(id) and not db.get_def(id).is_sealed(), "%s 留着" % id)
-	t.eq(db.ids().size() + sealed.size(), db.all_ids().size(), "能用的 + 封存的 = 全部")
+	t.eq(db.ids().size() + sealed.size() + db.keepsake_ids().size(), db.all_ids().size(), "能用的 + 封存的 + 特殊道具 = 全部（088）")
 	t.eq(db.size(), db.all_ids().size(), "size() 数的是全部")
 
 	var rules: NodeRules = load(ContentPaths.asset_file("node_rules", "standard"))

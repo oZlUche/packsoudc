@@ -11,7 +11,7 @@
 [sub_resource type="Resource" id="Resource_kqaoe"]
 script = ExtResource("3_1l7ha")
 base_stats = {
-"max_power": 10
+"max_mana": 10
 }
 
 [sub_resource type="Resource" id="Resource_cgew0"]
@@ -21,6 +21,9 @@ script = ExtResource("7_gtmva")
 script = ExtResource("6_f1yrd")
 id = &"mana_shard"
 display_name = "破碎的魔晶石"
+display_names = {
+"en": "Cracked Mana Shard"
+}
 shape = SubResource("Resource_cgew0")
 value = 8
 tags = Array[StringName]([&"part", &"material"])

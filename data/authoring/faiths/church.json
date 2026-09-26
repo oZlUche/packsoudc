@@ -1,6 +1,9 @@
 {
   "id": "church",
   "display_name": "新教",
+  "display_names": {
+    "en": "The New Church"
+  },
   "camp": "CHURCH",
   "god": "唯一神",
   "description": "皇帝暗中扶持的一神教，在无信的贫民、奴隶与行商之间传。完整的体系还没做，先占一个位。信力：事件里的选择。",

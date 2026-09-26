@@ -1,6 +1,9 @@
 {
   "id": "round_shield",
   "display_name": "圆盾",
+  "display_names": {
+    "en": "Round Shield"
+  },
   "shape": [
     "11",
     "11"

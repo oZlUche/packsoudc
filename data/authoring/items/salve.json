@@ -1,6 +1,9 @@
 {
   "id": "salve",
   "display_name": "伤药",
+  "display_names": {
+    "en": "Salve"
+  },
   "shape": [
     "1"
   ],

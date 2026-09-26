@@ -14,6 +14,9 @@ cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
 script = ExtResource("4_tt1ft")
 id = &"belt_potion"
 display_name = "药水带"
+display_names = {
+"en": "Potion Belt"
+}
 shape = SubResource("Resource_8sg0y")
 rarity = 2
 is_bag = true

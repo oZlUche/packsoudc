@@ -1,6 +1,9 @@
 {
   "id": "warped_obsidian",
   "display_name": "异化黑曜石",
+  "display_names": {
+    "en": "Warped Obsidian"
+  },
   "shape": [
     "1"
   ],

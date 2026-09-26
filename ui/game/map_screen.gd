@@ -248,6 +248,8 @@ func _adopt() -> void:
 	_run.skills_changed.connect(func():
 		_refresh_skills()
 		_refresh_hud())
+	for note in flow.take_notes():     # 088：开局拿到的特殊道具（望远镜）等通知
+		_note("[color=#f0ad4e]　%s[/color]" % note)
 	_run.faith_power_changed.connect(func(id: StringName, p: int, tier: int):
 		var def: FaithDef = _run.faith_defs.get(id, null)
 		_note("　信力（%s）%d，第 %d 阶" % [def.display_name if def != null else String(id), p, tier])

@@ -1,6 +1,9 @@
 {
   "id": "gambeson",
   "display_name": "贴身内甲",
+  "display_names": {
+    "en": "Gambeson"
+  },
   "shape": [
     "1"
   ],

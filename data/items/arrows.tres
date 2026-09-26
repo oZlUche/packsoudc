@@ -25,6 +25,9 @@ script = ExtResource("6_gdaal")
 script = ExtResource("5_hubvy")
 id = &"arrows"
 display_name = "箭矢"
+display_names = {
+"en": "Arrows"
+}
 shape = SubResource("Resource_rkc1q")
 tags = Array[StringName]([&"ammo"])
 adjacency = SubResource("Resource_yvw15")

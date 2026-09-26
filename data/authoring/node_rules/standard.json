@@ -40,7 +40,8 @@
   "loss_cost": {
     "battle": 1,
     "elite": 2,
-    "search": 1
+    "search": 1,
+    "hunter": 1
   },
   "event_weights": {
     "item": 1,

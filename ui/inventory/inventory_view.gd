@@ -178,7 +178,7 @@ func _draw() -> void:
 		var bag_anchor := cell_origin_px(b.origin)
 		ItemPainter.draw_item(self, bag_cells, bag_anchor, CELL, COLOR_BAG_FILL, COLOR_BAG_EDGE)
 		ItemPainter.draw_label(
-			self, bag_cells, bag_anchor, CELL, b.def.display_name, font, 11, Color("79839a")
+			self, bag_cells, bag_anchor, CELL, Names.of(b.def), font, 11, Color("79839a")
 		)
 
 	# 物品。休眠的信仰道具（8-4：不是激活的那个信仰）画灰、标「休眠」
@@ -200,7 +200,7 @@ func _draw() -> void:
 		ItemPainter.draw_item(self, cells, anchor, CELL, body, edge)
 		if _label_visible(item):
 			ItemPainter.draw_label(
-				self, cells, anchor, CELL, item.def.display_name + ("
+				self, cells, anchor, CELL, Names.of(item.def) + ("
 休眠" if dormant else ""), font, 13, text_color
 			)
 		if highlights.has(item.uid):

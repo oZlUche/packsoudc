@@ -13,6 +13,8 @@ enum Camp { GODS, CHURCH }
 
 @export var id: StringName = &""
 @export var display_name: String = ""
+## 088：别的语言的名字，`{"en": "Knife"}`；界面用 [method Names.of] 取（当前语言没有就用 display_name）
+@export var display_names: Dictionary = {}
 ## 诸神信仰 / 新教（皇帝扶持的一神教，与诸神互斥 —— 互斥由「只激活一个」天然成立）
 @export var camp: Camp = Camp.GODS
 ## 信仰的对象（神的名字），给文字用

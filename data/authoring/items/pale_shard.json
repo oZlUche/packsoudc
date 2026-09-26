@@ -1,6 +1,9 @@
 {
   "id": "pale_shard",
   "display_name": "灰白色的金属碎片",
+  "display_names": {
+    "en": "Pale Metal Shard"
+  },
   "shape": [
     "1"
   ],

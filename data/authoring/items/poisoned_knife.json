@@ -1,6 +1,9 @@
 {
   "id": "poisoned_knife",
   "display_name": "涂毒匕首",
+  "display_names": {
+    "en": "Poisoned Knife"
+  },
   "shape": [
     "1"
   ],
@@ -40,6 +43,9 @@
             "buff": {
               "id": "poison",
               "display_name": "中毒",
+              "display_names": {
+                "en": "Poison"
+              },
               "is_debuff": true,
               "rules": [
                 {

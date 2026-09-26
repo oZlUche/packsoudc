@@ -25,7 +25,9 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var def := inst.def
 	var lines: Array[String] = []
 	var rc := ItemPainter.rarity_color(def).to_html(false)
-	lines.append("[color=#%s][b]%s[/b][/color]　%s　%d 格　值 %d" % [rc, def.display_name, rarity_name(def.rarity), def.shape.cell_count() if def.shape != null else 0, ItemValue.of(def)])
+	lines.append("[color=#%s][b]%s[/b][/color]　%s　%d 格　值 %d" % [rc, Names.of(def), rarity_name(def.rarity), def.shape.cell_count() if def.shape != null else 0, ItemValue.of(def)])
+	if def.description != "":
+		lines.append("[color=#8b93a1]%s[/color]" % def.description)
 	if not def.tags.is_empty():
 		var tags: Array[String] = []
 		for t in def.tags:
@@ -90,8 +92,8 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var extra := {}
 	for id in Glossary.buffs_in_item(def):
 		var bd: BuffDef = Glossary.buffs_in_item(def)[id]
-		if bd.display_name != "":
-			extra[bd.display_name] = Glossary.describe_buff(bd)
+		if Names.of(bd) != "":
+			extra[Names.of(bd)] = Glossary.describe_buff(bd)
 	var terms := Glossary.terms_in(text, extra)
 	return {"text": Glossary.mark(text, terms), "terms": terms}
 

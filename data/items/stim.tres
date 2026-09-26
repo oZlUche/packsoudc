@@ -27,6 +27,9 @@ mult_percent = 12
 script = ExtResource("6_4xr3b")
 id = &"adrenaline"
 display_name = "肾上腺素"
+display_names = {
+"en": "Adrenaline"
+}
 max_stacks = 3
 mods = Array[ExtResource("1_83wfo")]([SubResource("Resource_5tn4f")])
 
@@ -56,6 +59,9 @@ script = ExtResource("13_r8q2q")
 script = ExtResource("12_x6x38")
 id = &"stim"
 display_name = "兴奋剂"
+display_names = {
+"en": "Stim"
+}
 shape = SubResource("Resource_p01k5")
 rarity = 2
 tags = Array[StringName]([&"sealed", &"consumable"])

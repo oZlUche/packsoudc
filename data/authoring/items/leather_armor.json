@@ -1,6 +1,9 @@
 {
   "id": "leather_armor",
   "display_name": "皮甲",
+  "display_names": {
+    "en": "Leather Armor"
+  },
   "shape": [
     "11",
     "11"

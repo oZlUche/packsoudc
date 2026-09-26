@@ -1,6 +1,9 @@
 {
   "id": "warden",
   "display_name": "守卫",
+  "display_names": {
+    "en": "Warden"
+  },
   "strength": 2,
   "schools": [
     "rapid",

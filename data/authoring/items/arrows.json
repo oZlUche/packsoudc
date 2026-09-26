@@ -1,6 +1,9 @@
 {
   "id": "arrows",
   "display_name": "箭矢",
+  "display_names": {
+    "en": "Arrows"
+  },
   "shape": [
     "1"
   ],

@@ -1,6 +1,9 @@
 {
   "id": "drone",
   "display_name": "无人机",
+  "display_names": {
+    "en": "Drone"
+  },
   "shape": [
     "111",
     "010"
@@ -26,7 +29,7 @@
         "costs": [
           {
             "type": "resource",
-            "resource_key": "power"
+            "resource_key": "mana"
           }
         ],
         "effects": [

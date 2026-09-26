@@ -1,6 +1,9 @@
 {
   "id": "mithril_sword",
   "display_name": "秘银附魔长剑",
+  "display_names": {
+    "en": "Mithril Enchanted Sword"
+  },
   "shape": [
     "1",
     "1",

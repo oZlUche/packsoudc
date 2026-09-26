@@ -22,6 +22,9 @@ script = ExtResource("7_huv3p")
 script = ExtResource("6_76tyt")
 id = &"ration"
 display_name = "口粮"
+display_names = {
+"en": "Ration"
+}
 shape = SubResource("Resource_5vvs6")
 tags = Array[StringName]([&"consumable"])
 combat = SubResource("Resource_bkj4y")

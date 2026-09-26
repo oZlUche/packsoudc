@@ -11,6 +11,8 @@ extends Resource
 
 @export var id: StringName = &""
 @export var display_name: String = ""
+## 088：别的语言的名字，`{"en": "Knife"}`；界面用 [method Names.of] 取（当前语言没有就用 display_name）
+@export var display_names: Dictionary = {}
 @export var description: String = ""
 ## 第几档，0 = 普通。开局屏按它排序
 @export var level: int = 0

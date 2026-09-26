@@ -63,7 +63,7 @@ func _enemy_name(content: Dictionary) -> String:
 	var def := flow.enemies.enemy(StringName(String(content.get("enemy", "")))) if not content.is_empty() else null
 	if def == null:
 		return "敌人"
-	return "%s（%d 档）" % [def.display_name, int(content.get("strength", 0))]
+	return "%s（%d 档）" % [Names.of(def), int(content.get("strength", 0))]
 
 
 ## uid → 显示名，回放把「uid 2 出手」写成「手枪 出手」
@@ -73,5 +73,5 @@ func _names_of(spec: CombatantSpec) -> Dictionary:
 		return out
 	for item in spec.items:
 		var def := flow.items.get_def(item.def_id)
-		out[item.source_uid] = def.display_name if def != null else String(item.def_id)
+		out[item.source_uid] = Names.of(def) if def != null else String(item.def_id)
 	return out

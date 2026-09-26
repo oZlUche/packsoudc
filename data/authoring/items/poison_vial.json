@@ -1,6 +1,9 @@
 {
   "id": "poison_vial",
   "display_name": "毒药瓶",
+  "display_names": {
+    "en": "Poison Vial"
+  },
   "shape": [
     "1"
   ],
@@ -33,6 +36,9 @@
             "buff": {
               "id": "poison",
               "display_name": "中毒",
+              "display_names": {
+                "en": "Poison"
+              },
               "is_debuff": true,
               "rules": [
                 {

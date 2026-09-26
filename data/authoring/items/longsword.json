@@ -1,6 +1,9 @@
 {
   "id": "longsword",
   "display_name": "长剑",
+  "display_names": {
+    "en": "Longsword"
+  },
   "shape": [
     "1",
     "1",

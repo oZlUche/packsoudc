@@ -13,7 +13,7 @@ const CHIP_H := 20
 const PAD := 12
 
 ## 资源条的显示顺序。没列出的排在后面，按字典序 —— 顺序稳定，界面才不会乱跳。
-const ORDER := ["hp", "shield", "stamina", "mana", "power"]
+const ORDER := ["hp", "shield", "stamina", "mana"]
 
 signal buff_hovered(buff_id: String, at: Vector2)
 signal buff_unhovered
@@ -81,7 +81,7 @@ func chip_at(local: Vector2) -> String:
 ## 图标上写的字：名字的第一个字（暂时；正式美术换成图）
 func icon_of(id: String) -> String:
 	var def: BuffDef = buff_defs.get(StringName(id), null)
-	var name := def.display_name if def != null and def.display_name != "" else id
+	var name := Names.of(def) if def != null and Names.of(def) != "" else id
 	return name.substr(0, 1)
 
 

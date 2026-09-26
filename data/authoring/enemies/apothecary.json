@@ -1,6 +1,9 @@
 {
   "id": "apothecary",
   "display_name": "药师",
+  "display_names": {
+    "en": "Apothecary"
+  },
   "strength": 2,
   "schools": [
     "rapid"

@@ -12,6 +12,10 @@ extends Resource
 @export var id: StringName = &""
 
 @export var display_name: String = ""
+## 088：别的语言的名字，`{"en": "Knife"}`；界面用 [method Names.of] 取（当前语言没有就用 display_name）
+@export var display_names: Dictionary = {}
+## 088：给玩家看的一句说明（悬浮窗、图鉴）。空 = 不写
+@export_multiline var description: String = ""
 
 ## 占格形状。为 null 时本定义不可用。
 @export var shape: ItemShape
@@ -30,6 +34,9 @@ extends Resource
 ## 现代道具（枪械、弹匣、电池、无人机……）全部封存 —— 不进搜索、掉落、商店、敌人的装备、图鉴与编辑器的下拉，
 ## 但按 id 仍取得到（旧存档、仓库里的还认）。[ItemDatabase.ids] 是唯一拦它的地方
 const SEALED := &"sealed"
+## 088（作者定）：**特殊道具** —— 不进背包、不能生成（搜索 / 掉落 / 商店 / 敌人都不出），拿到只是文本通知 + 图鉴点亮；
+## 它代表一种能力（望远镜 → 节点浮窗），能力由它别的标签说明（`node_tooltips`）
+const KEEPSAKE := &"keepsake"
 ## 信仰（8-4，报告 081）：信仰道具带 `faith`，再带一个信仰对象标签 `faith:<id>`（[FaithDef.TAG_PREFIX]）。激活规则见 [FaithState]
 const FAITH := &"faith"
 
@@ -39,6 +46,10 @@ const FAITH := &"faith"
 
 func is_sealed() -> bool:
 	return tags.has(SEALED)
+
+
+func is_keepsake() -> bool:
+	return tags.has(KEEPSAKE)
 
 
 func has_faith() -> bool:

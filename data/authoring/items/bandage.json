@@ -1,6 +1,9 @@
 {
   "id": "bandage",
   "display_name": "纱布",
+  "display_names": {
+    "en": "Bandage"
+  },
   "shape": [
     "1"
   ],

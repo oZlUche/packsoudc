@@ -50,6 +50,9 @@ cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
 script = ExtResource("12_ph77u")
 id = &"rifle"
 display_name = "步枪"
+display_names = {
+"en": "Rifle"
+}
 shape = SubResource("Resource_jsnrm")
 rarity = 2
 tags = Array[StringName]([&"sealed", &"weapon", &"gun", &"rapid"])

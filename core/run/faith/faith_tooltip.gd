@@ -11,7 +11,7 @@ static func describe(def: FaithDef, power: FaithPower = null, items: ItemDatabas
 	if def == null:
 		return "[b]没有信仰[/b]\n棋盘上放一件带信仰标签的道具就激活它的信仰；最后放进去的那件说了算。"
 	var lines: Array[String] = []
-	lines.append("[b]%s[/b]%s" % [def.display_name, ("　" + def.god) if def.god != "" and def.god != def.display_name else ""])
+	lines.append("[b]%s[/b]%s" % [Names.of(def), ("　" + def.god) if def.god != "" and def.god != def.display_name else ""])
 	if def.description != "":
 		lines.append("[color=#8b93a1]%s[/color]" % def.description)
 	# 信力怎么涨
@@ -47,6 +47,6 @@ static func describe(def: FaithDef, power: FaithPower = null, items: ItemDatabas
 					continue
 				var what := b.note if b.note != "" else Glossary.mods_text(b.mods)
 				bits.append("第 %d 阶 %s" % [b.tier, what])
-			lines.append("　%s%s" % [d.display_name, ("：" + "；".join(bits)) if not bits.is_empty() else "（没有按阶解锁的功能）"])
+			lines.append("　%s%s" % [Names.of(d), ("：" + "；".join(bits)) if not bits.is_empty() else "（没有按阶解锁的功能）"])
 	lines.append("[color=#8b93a1]别的信仰的道具休眠：只留通用效果（盾的减伤、武器的攻击力），护符彻底失效。切换 = 把道具挪到暂存区再挪回[/color]")
 	return "\n".join(lines)

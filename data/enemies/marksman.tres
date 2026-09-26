@@ -6,6 +6,9 @@
 script = ExtResource("1_ys8gs")
 id = &"marksman"
 display_name = "神射手"
+display_names = {
+"en": "Marksman"
+}
 strength = 1
 schools = Array[StringName]([&"ranged"])
 base_stats = {

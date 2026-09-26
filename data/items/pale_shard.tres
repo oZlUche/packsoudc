@@ -13,6 +13,9 @@ script = ExtResource("5_rtxkc")
 script = ExtResource("4_p3br6")
 id = &"pale_shard"
 display_name = "灰白色的金属碎片"
+display_names = {
+"en": "Pale Metal Shard"
+}
 shape = SubResource("Resource_ekf2i")
 rarity = 4
 value = 800

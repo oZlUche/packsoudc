@@ -52,6 +52,9 @@ effects = Array[ExtResource("6_jw3qc")]([SubResource("Resource_qua5m")])
 script = ExtResource("9_yh8rl")
 id = &"poison"
 display_name = "中毒"
+display_names = {
+"en": "Poison"
+}
 is_debuff = true
 rules = Array[ExtResource("2_ay27k")]([SubResource("Resource_2kplk")])
 
@@ -83,6 +86,9 @@ script = ExtResource("15_81ohm")
 script = ExtResource("14_uvsa8")
 id = &"poisoned_knife"
 display_name = "涂毒匕首"
+display_names = {
+"en": "Poisoned Knife"
+}
 shape = SubResource("Resource_cgrmu")
 rarity = 2
 value = 40

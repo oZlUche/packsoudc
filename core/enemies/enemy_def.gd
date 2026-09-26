@@ -15,6 +15,8 @@ extends Resource
 
 @export var id: StringName = &""
 @export var display_name: String = ""
+## 088：别的语言的名字，`{"en": "Knife"}`；界面用 [method Names.of] 取（当前语言没有就用 display_name）
+@export var display_names: Dictionary = {}
 
 ## 本色档位（0 起）。池按节点算出想要的档位后，在 ± tolerance 内挑本色接近的敌人；
 ## 实际用哪个档位组装，记在节点内容里（`content.strength`），不一定等于本色

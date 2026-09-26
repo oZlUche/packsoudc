@@ -89,6 +89,11 @@
 | 敌人内容 | `base_stats` | 这个点的敌人自己的基线（覆盖敌人定义与档位倍率之后的数；教程敌人靠它不跟全局涨） |
 | `DropRule` | `min_drops` `bags_always_drop` | 打赢至少掉几件身上有的、**包不算在名额里**（标准规则 1）；敌人的包必掉（默认开） |
 | `GameSettings` | `loot_auto_close` | 拿走最后一件后自动关战利品 / 容器屏（默认关） |
+| 所有内容定义 | `display_names` | 别的语言的名字 `{"en": …}`，界面走 `Names.of`（088）；`display_name` 是中文原文 |
+| `ItemDef` | `description` | 一句说明（悬浮窗第二行、图鉴） |
+| `ItemDef` 标签 | `keepsake` | 特殊道具：不进背包、不能生成、拿到只是通知 + 图鉴点亮；能力由别的标签说明（`node_tooltips` → 节点浮窗） |
+| `ChapterDef` | `starting_keepsakes` | 这一章开局发的特殊道具（序章二：望远镜），记在局外 |
+| `NodeRules` | `loss_cost.hunter` | 输给猎手扣的体力（088，1） |
 | `EnemyDef` | `item_tags` `signature_by_strength` | 身份标签（只从带任一这些标签的道具里抽）；档位 → 那一档起必带的招牌（088） |
 | `RunState` | `node_storages` | 各点留着的暂存区（离开留下、回来取回，跟存档；088） |
 | `ItemDef` | `dormant_keeps_combat` | 信仰道具休眠时保不保留自己的战斗定义（通用效果：盾的减伤、武器的攻击力；默认 true）；没有 combat 的护符休眠即彻底失效（087） |

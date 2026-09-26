@@ -6,6 +6,9 @@
 script = ExtResource("1_rdt27")
 id = &"poisoned_knife"
 display_name = "涂毒匕首"
+display_names = {
+"en": "Poisoned Knife"
+}
 inputs = Array[StringName]([&"knife", &"poison_vial"])
 output = &"poisoned_knife"
 note = "把毒药瓶拖到匕首上：中毒无视护甲与护盾。"

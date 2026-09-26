@@ -49,6 +49,9 @@ script = ExtResource("13_62tru")
 script = ExtResource("12_cgswg")
 id = &"knife"
 display_name = "匕首"
+display_names = {
+"en": "Knife"
+}
 shape = SubResource("Resource_b1i8v")
 tags = Array[StringName]([&"weapon", &"melee", &"rapid"])
 combat = SubResource("Resource_6a8ij")

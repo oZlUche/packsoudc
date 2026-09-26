@@ -1,6 +1,9 @@
 {
   "id": "prologue_2",
   "display_name": "序章二：岔路",
+  "display_names": {
+    "en": "Prologue II: The Fork"
+  },
   "map_source": {
     "mode": "PRESET",
     "preset_path": "res://data/maps/tutorial2.json"
@@ -19,9 +22,11 @@
   "starting_items": [
     "knife"
   ],
+  "starting_keepsakes": [
+    "spyglass"
+  ],
   "allow_carry_in": false,
   "auto_spawn": true,
   "skip_setup": true,
-  "intro_event": "tut2_intro",
-  "node_tooltips": true
+  "intro_event": "tut2_intro"
 }

@@ -1,6 +1,9 @@
 {
   "id": "barbarian_necklace",
   "display_name": "蛮族的项链",
+  "display_names": {
+    "en": "Barbarian Necklace"
+  },
   "shape": [
     "1"
   ],

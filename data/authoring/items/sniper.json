@@ -1,6 +1,9 @@
 {
   "id": "sniper",
   "display_name": "狙击枪",
+  "display_names": {
+    "en": "Sniper Rifle"
+  },
   "shape": [
     "1",
     "1",
@@ -42,6 +45,9 @@
             "buff": {
               "id": "marked",
               "display_name": "标记",
+              "display_names": {
+                "en": "Marked"
+              },
               "is_debuff": true,
               "max_stacks": 1,
               "duration_sec": 8.0,

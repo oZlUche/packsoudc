@@ -1,6 +1,9 @@
 {
   "id": "warhammer",
   "display_name": "战锤",
+  "display_names": {
+    "en": "Warhammer"
+  },
   "shape": [
     "1",
     "1",

@@ -12,6 +12,9 @@ every_steps = 2
 script = ExtResource("3_t0qm0")
 id = &"sunfire"
 display_name = "太阳与火之神"
+display_names = {
+"en": "God of Sun and Fire"
+}
 god = "太阳与火之神（原恒常之神）"
 description = "西方蛮族的信仰。火焰的魔法。周期循环：走路就给。"
 thresholds = Array[int]([4, 10])

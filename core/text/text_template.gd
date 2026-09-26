@@ -79,9 +79,9 @@ static func plain(text: String, ctx: Dictionary = {}) -> String:
 static func context_for(run: RunState, node: MapNode = null, extra: Dictionary = {}) -> Dictionary:
 	var ctx := {}
 	if run != null:
-		ctx["char_name"] = run.character.display_name if run.character != null else "你"
+		ctx["char_name"] = Names.of(run.character) if run.character != null else "你"
 		ctx["char_id"] = String(run.character_id)
-		ctx["chapter_name"] = run.chapter.display_name if run.chapter != null else ""
+		ctx["chapter_name"] = Names.of(run.chapter) if run.chapter != null else ""
 		ctx["seed"] = run.run_seed
 		ctx["vitality"] = run.vitality.current if run.vitality != null else 0
 		ctx["vitality_max"] = run.vitality.maximum if run.vitality != null else 0
@@ -90,7 +90,7 @@ static func context_for(run: RunState, node: MapNode = null, extra: Dictionary =
 		ctx["board_count"] = run.board.item_count() if run.board != null else 0
 		ctx["storage_count"] = run.storage.item_count() if run.storage != null else 0
 		var faith := run.active_faith()
-		ctx["faith"] = faith.display_name if faith != null else "无"
+		ctx["faith"] = Names.of(faith) if faith != null else "无"
 		ctx["difficulty"] = run.difficulty.display_name if run.difficulty != null and "display_name" in run.difficulty else "普通"
 		ctx["battles_won"] = int(run.tally.get("battles_won", 0))
 		ctx["battles_lost"] = int(run.tally.get("battles_lost", 0))
@@ -117,19 +117,19 @@ static func _enemy_into(ctx: Dictionary, content: Dictionary, run: RunState) -> 
 	var def := run.enemies.enemy(StringName(String(content.get("enemy", ""))))
 	if def == null:
 		return
-	ctx["enemy_name"] = def.display_name
+	ctx["enemy_name"] = Names.of(def)
 	ctx["enemy_strength"] = int(content.get("strength", 0))
 	var spec := EnemyKit.spec_of(content, run.enemies, run.pool, run.items)
 	var names: Array[String] = []
 	for raw in content.get("items", []):
 		var idef := run.items.get_def(StringName(String((raw as Dictionary).get("id", ""))))
-		names.append(idef.display_name if idef != null else String((raw as Dictionary).get("id", "?")))
+		names.append(Names.of(idef) if idef != null else String((raw as Dictionary).get("id", "?")))
 	ctx["enemy_items"] = "、".join(names)
 	ctx["enemy_count"] = names.size()
 	if spec != null:
 		ctx["enemy_hp"] = spec.max_hp_int()
 		ctx["enemy_dps"] = "%.1f" % spec.rough_dps()
 		ctx["battle_data"] = "%s（%d 档）　生命 %d　约 %.1f DPS　%d 件：%s" % [
-			def.display_name, int(content.get("strength", 0)), spec.max_hp_int(), spec.rough_dps(), names.size(), "、".join(names)]
+			Names.of(def), int(content.get("strength", 0)), spec.max_hp_int(), spec.rough_dps(), names.size(), "、".join(names)]
 	else:
-		ctx["battle_data"] = "%s（%d 档）" % [def.display_name, int(content.get("strength", 0))]
+		ctx["battle_data"] = "%s（%d 档）" % [Names.of(def), int(content.get("strength", 0))]

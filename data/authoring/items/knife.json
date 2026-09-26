@@ -1,6 +1,9 @@
 {
   "id": "knife",
   "display_name": "匕首",
+  "display_names": {
+    "en": "Knife"
+  },
   "shape": [
     "1"
   ],

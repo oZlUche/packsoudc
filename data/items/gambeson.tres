@@ -25,6 +25,9 @@ script = ExtResource("6_pe0pd")
 script = ExtResource("5_sl3hj")
 id = &"gambeson"
 display_name = "贴身内甲"
+display_names = {
+"en": "Gambeson"
+}
 shape = SubResource("Resource_5db6x")
 rarity = 1
 tags = Array[StringName]([&"gear_plug"])

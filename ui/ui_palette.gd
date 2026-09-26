@@ -27,7 +27,6 @@ const RESOURCE_COLORS := {
 	"shield": SHIELD,
 	"stamina": STAMINA,
 	"mana": MANA,
-	"power": Color("9b7ff0"),
 }
 
 ## 伤害类型 → 数字的颜色

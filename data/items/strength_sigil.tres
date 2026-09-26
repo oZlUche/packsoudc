@@ -37,6 +37,9 @@ mult_percent = 10
 script = ExtResource("9_wbie5")
 id = &"blood_rage"
 display_name = "血怒"
+display_names = {
+"en": "Blood Rage"
+}
 max_stacks = 1
 duration_sec = 10.0
 mods = Array[ExtResource("1_pg8ou")]([SubResource("Resource_wxfjr")])
@@ -67,6 +70,9 @@ script = ExtResource("13_deew6")
 script = ExtResource("12_3cson")
 id = &"strength_sigil"
 display_name = "力量的符号"
+display_names = {
+"en": "Sigil of Strength"
+}
 shape = SubResource("Resource_nq87m")
 rarity = 2
 tags = Array[StringName]([&"faith", &"faith:violence", &"part", &"sigil"])

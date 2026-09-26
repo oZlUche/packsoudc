@@ -1,6 +1,9 @@
 {
   "id": "cleaver",
   "display_name": "剁刀",
+  "display_names": {
+    "en": "Cleaver"
+  },
   "shape": [
     "1",
     "1"
@@ -39,6 +42,9 @@
             "buff": {
               "id": "bleed",
               "display_name": "流血",
+              "display_names": {
+                "en": "Bleed"
+              },
               "rules": [
                 {
                   "trigger": {

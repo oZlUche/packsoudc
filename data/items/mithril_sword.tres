@@ -50,6 +50,9 @@ cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
 script = ExtResource("12_hh4ty")
 id = &"mithril_sword"
 display_name = "秘银附魔长剑"
+display_names = {
+"en": "Mithril Enchanted Sword"
+}
 shape = SubResource("Resource_kdwtl")
 rarity = 3
 tags = Array[StringName]([&"weapon", &"melee", &"burst", &"enchanted"])

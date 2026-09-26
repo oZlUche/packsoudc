@@ -37,6 +37,9 @@ flat = -3.0
 script = ExtResource("8_b3xut")
 id = &"marked"
 display_name = "标记"
+display_names = {
+"en": "Marked"
+}
 is_debuff = true
 max_stacks = 1
 duration_sec = 8.0
@@ -91,6 +94,9 @@ cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2
 script = ExtResource("14_fvayp")
 id = &"blessed_longbow"
 display_name = "狩猎之神赐福的长弓"
+display_names = {
+"en": "Hunt God's Blessed Longbow"
+}
 shape = SubResource("Resource_jjmdc")
 rarity = 3
 tags = Array[StringName]([&"faith", &"faith:hunt", &"weapon", &"ranged", &"rapid", &"blessed"])

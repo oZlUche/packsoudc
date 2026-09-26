@@ -18,6 +18,9 @@ amount = 2
 script = ExtResource("4_tp5cv")
 id = &"skill"
 display_name = "技巧之神"
+display_names = {
+"en": "God of Skill"
+}
 god = "技巧之神"
 description = "赐福的盾牌：对手的第一次攻击必定被弹开。信力：置入值钱的东西、献祭。"
 thresholds = Array[int]([3, 8])

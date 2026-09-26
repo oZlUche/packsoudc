@@ -6,6 +6,9 @@
 script = ExtResource("1_ib6on")
 id = &"apothecary"
 display_name = "药师"
+display_names = {
+"en": "Apothecary"
+}
 strength = 2
 schools = Array[StringName]([&"rapid"])
 base_stats = {

@@ -11,7 +11,7 @@
 [sub_resource type="Resource" id="Resource_ta4hc"]
 script = ExtResource("3_ceue3")
 base_stats = {
-"max_power": 20
+"max_mana": 20
 }
 
 [sub_resource type="Resource" id="Resource_3caxe"]
@@ -21,6 +21,9 @@ script = ExtResource("7_ttehx")
 script = ExtResource("6_5x3f4")
 id = &"battery"
 display_name = "电池"
+display_names = {
+"en": "Battery"
+}
 shape = SubResource("Resource_3caxe")
 tags = Array[StringName]([&"sealed", &"part"])
 combat = SubResource("Resource_ta4hc")

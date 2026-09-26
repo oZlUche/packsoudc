@@ -6,6 +6,9 @@
 script = ExtResource("1_aka6p")
 id = &"core_guardian"
 display_name = "核心守卫"
+display_names = {
+"en": "Core Guardian"
+}
 strength = 3
 schools = Array[StringName]([&"burst", &"bleed", &"rapid"])
 base_stats = {

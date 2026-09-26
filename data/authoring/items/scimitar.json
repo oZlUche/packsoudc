@@ -1,6 +1,9 @@
 {
   "id": "scimitar",
   "display_name": "弯刀",
+  "display_names": {
+    "en": "Scimitar"
+  },
   "shape": [
     "1",
     "1",
@@ -41,6 +44,9 @@
             "buff": {
               "id": "bleed",
               "display_name": "流血",
+              "display_names": {
+                "en": "Bleed"
+              },
               "rules": [
                 {
                   "trigger": {

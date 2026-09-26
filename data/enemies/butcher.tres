@@ -6,6 +6,9 @@
 script = ExtResource("1_k5q1s")
 id = &"butcher"
 display_name = "屠夫"
+display_names = {
+"en": "Butcher"
+}
 strength = 1
 schools = Array[StringName]([&"bleed"])
 base_stats = {

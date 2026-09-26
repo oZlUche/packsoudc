@@ -98,7 +98,7 @@ static func run_data(t: TestCase) -> void:
 	t.check(c.chapter.grants_unlock == c.chapter1.requires_unlock, "通关解锁第一章")
 	t.check(c.chapter.hidden_by_unlock == c.chapter.grants_unlock and c.prologue.hidden_by_unlock == c.prologue.grants_unlock, "教程通关就收起")
 	t.check(c.chapter.skip_setup and c.chapter.auto_spawn and c.chapter.intro_event == &"tut2_intro", "不走开局屏、开局在出生点、先过 intro")
-	t.check(c.chapter.node_tooltips, "节点浮窗开着（这一张教它）")
+	t.check(c.chapter.starting_keepsakes.has(&"spyglass"), "开局发望远镜：节点浮窗从这一张开（088，不再用章节开关）")
 	t.check(c.chapter.vitality_bonus >= 2, "体力多给至少 2（两场都输也死不了）")
 	var has_weapon := false
 	for id in c.chapter.starting_items:

@@ -52,6 +52,9 @@ effects = Array[ExtResource("6_mqol6")]([SubResource("Resource_gx64h")])
 script = ExtResource("9_tu8p1")
 id = &"bleed"
 display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
 rules = Array[ExtResource("2_ki6wq")]([SubResource("Resource_776pt")])
 
 [sub_resource type="Resource" id="Resource_2w5kq"]
@@ -83,6 +86,9 @@ cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
 script = ExtResource("14_2bm66")
 id = &"scimitar"
 display_name = "弯刀"
+display_names = {
+"en": "Scimitar"
+}
 shape = SubResource("Resource_ufwpo")
 rarity = 1
 tags = Array[StringName]([&"weapon", &"melee", &"bleed", &"barbarian"])

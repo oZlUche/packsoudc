@@ -12,6 +12,9 @@ preset_path = "res://data/maps/prologue.json"
 script = ExtResource("2_ll12k")
 id = &"prologue"
 display_name = "序章：废墟边缘"
+display_names = {
+"en": "Prologue: Edge of the Ruins"
+}
 map_source = SubResource("Resource_0yegb")
 drop_rule = &"standard"
 node_rules = &"prologue"

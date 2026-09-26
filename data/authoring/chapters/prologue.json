@@ -1,6 +1,9 @@
 {
   "id": "prologue",
   "display_name": "序章：废墟边缘",
+  "display_names": {
+    "en": "Prologue: Edge of the Ruins"
+  },
   "map_source": {
     "mode": "PRESET",
     "preset_path": "res://data/maps/prologue.json"

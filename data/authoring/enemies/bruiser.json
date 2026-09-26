@@ -1,6 +1,9 @@
 {
   "id": "bruiser",
   "display_name": "重击手",
+  "display_names": {
+    "en": "Bruiser"
+  },
   "strength": 1,
   "schools": [
     "burst"

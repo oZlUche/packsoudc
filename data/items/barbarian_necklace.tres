@@ -13,6 +13,9 @@ script = ExtResource("5_6s8l8")
 script = ExtResource("4_wnplo")
 id = &"barbarian_necklace"
 display_name = "蛮族的项链"
+display_names = {
+"en": "Barbarian Necklace"
+}
 shape = SubResource("Resource_qanqw")
 value = 20
 tags = Array[StringName]([&"trophy"])

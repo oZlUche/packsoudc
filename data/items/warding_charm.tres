@@ -27,6 +27,9 @@ flat = 8.0
 script = ExtResource("6_curu6")
 id = &"ward"
 display_name = "护符结界"
+display_names = {
+"en": "Ward"
+}
 mods = Array[ExtResource("1_vn4sa")]([SubResource("Resource_eatr2")])
 
 [sub_resource type="Resource" id="Resource_m1gae"]
@@ -54,6 +57,9 @@ script = ExtResource("13_1lmby")
 script = ExtResource("12_3qo2l")
 id = &"warding_charm"
 display_name = "护身符"
+display_names = {
+"en": "Warding Charm"
+}
 shape = SubResource("Resource_b3bqc")
 rarity = 2
 value = 40

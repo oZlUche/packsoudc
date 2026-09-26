@@ -699,7 +699,7 @@ func _draw() -> void:
 	ItemPainter.draw_item(self, cells, anchor, InventoryView.CELL, body, edge)
 	ItemPainter.draw_label(
 		self, cells, anchor, InventoryView.CELL,
-		_inst.def.display_name, font, 11 if is_bag else 13, Color("f2f4f8")
+		Names.of(_inst.def), font, 11 if is_bag else 13, Color("f2f4f8")
 	)
 
 	# 包里的东西要跟着残影一起画，否则玩家看不出自己正拖着什么。
@@ -720,7 +720,7 @@ func _draw() -> void:
 			)
 			ItemPainter.draw_label(
 				self, item_cells, at, InventoryView.CELL,
-				item.def.display_name, font, 12, Color("f2f4f8")
+				Names.of(item.def), font, 12, Color("f2f4f8")
 			)
 		_draw_straddlers(font)
 
@@ -750,5 +750,5 @@ func _draw_straddlers(font: Font) -> void:
 		)
 		ItemPainter.draw_label(
 			self, item_cells, at, InventoryView.CELL,
-			item.def.display_name, font, 12, Color("f2f4f8", 0.6)
+			Names.of(item.def), font, 12, Color("f2f4f8", 0.6)
 		)

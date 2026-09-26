@@ -1,6 +1,9 @@
 {
   "id": "chapter_01",
   "display_name": "第一章（占位）",
+  "display_names": {
+    "en": "Chapter One (placeholder)"
+  },
   "map_source": {
     "generator_config": {
       "type": "RingMapConfig",

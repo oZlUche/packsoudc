@@ -518,7 +518,7 @@ func faith_line() -> String:
 	if id == &"":
 		return "信仰：无"
 	var def := active_faith()
-	return "信仰：%s" % (def.display_name if def != null else String(id))
+	return "信仰：%s" % (Names.of(def) if def != null else String(id))
 
 
 ## 掉落上下文（6.1）：难度、buff 给的幸运；道具与套装的战利品效果（9.2）、buff 的掉落效果都施加上去

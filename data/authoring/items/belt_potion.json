@@ -1,6 +1,9 @@
 {
   "id": "belt_potion",
   "display_name": "药水带",
+  "display_names": {
+    "en": "Potion Belt"
+  },
   "shape": [
     "1",
     "1",

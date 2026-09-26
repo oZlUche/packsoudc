@@ -1,6 +1,9 @@
 {
   "id": "ascension_1",
   "display_name": "进阶 1（占位）",
+  "display_names": {
+    "en": "Ascension I"
+  },
   "description": "侵蚀开启（本体第 7 阶段），体力上限 -1。局外解锁后可选。",
   "level": 1,
   "requires_unlock": "ascension_1",

@@ -59,7 +59,17 @@ func has_def(id: StringName) -> bool:
 func ids() -> Array:
 	var out: Array = []
 	for id in _defs:
-		if not (_defs[id] as ItemDef).is_sealed():
+		var d := _defs[id] as ItemDef
+		if not d.is_sealed() and not d.is_keepsake():     # 088：特殊道具也不能生成
+			out.append(id)
+	return out
+
+
+## 088：特殊道具（不进背包、不能生成，只在图鉴里点亮）
+func keepsake_ids() -> Array:
+	var out: Array = []
+	for id in _defs:
+		if (_defs[id] as ItemDef).is_keepsake():
 			out.append(id)
 	return out
 

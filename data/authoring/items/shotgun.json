@@ -1,6 +1,9 @@
 {
   "id": "shotgun",
   "display_name": "霰弹枪",
+  "display_names": {
+    "en": "Shotgun"
+  },
   "shape": [
     "111"
   ],

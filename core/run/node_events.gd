@@ -468,7 +468,8 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 	elif type == &"core":
 		_defeat(&"boss_lost")     # 规则不是数值：BOSS 输了直接战败，连 spend 都不调（7.1）
 	elif vitality != null and rules != null:
-		# 082：角色技能的免罚败仗 —— 只对节点敌人（猎手另有后果构件），配额在上下文里、已免几次在这里记
+		# 082：角色技能的免罚败仗 —— 只对节点敌人，配额在上下文里、已免几次在这里记。
+		# 088（作者定）：输给猎手也扣体力（loss_cost 里的 hunter），猎手定义里的战败后果另算
 		if type != HunterSystem.TYPE and losses_forgiven < _run_ctx().free_losses:
 			losses_forgiven += 1
 		else:

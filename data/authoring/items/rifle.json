@@ -1,6 +1,9 @@
 {
   "id": "rifle",
   "display_name": "步枪",
+  "display_names": {
+    "en": "Rifle"
+  },
   "shape": [
     "1",
     "1",

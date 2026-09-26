@@ -153,7 +153,7 @@ func _draw_row(index: int, inst: ItemInstance, font: Font) -> void:
 	if highlights.has(inst.uid):
 		draw_rect(Rect2(at, Vector2(w, ROW_H - 2)), COLOR_INSERT, false, 2.0)
 
-	var name := inst.def.display_name if inst.def != null else "?"
+	var name := Names.of(inst.def) if inst.def != null else "?"
 	draw_string(
 		font, at + Vector2(10, ROW_H * 0.68), name,
 		HORIZONTAL_ALIGNMENT_LEFT, w - 60, 13, COLOR_TEXT

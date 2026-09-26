@@ -1,6 +1,9 @@
 {
   "id": "pistol",
   "display_name": "手枪",
+  "display_names": {
+    "en": "Pistol"
+  },
   "shape": [
     "11"
   ],

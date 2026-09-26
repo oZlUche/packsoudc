@@ -1,6 +1,9 @@
 {
   "id": "blessed_shield",
   "display_name": "技巧之神赐福的盾牌",
+  "display_names": {
+    "en": "Skill God's Blessed Shield"
+  },
   "shape": [
     "11",
     "11"
@@ -40,6 +43,9 @@
               "buff": {
                 "id": "deflect_long",
                 "display_name": "久弹",
+                "display_names": {
+                  "en": "Long Deflect"
+                },
                 "max_stacks": 1,
                 "duration_sec": 8.0,
                 "mods": [
@@ -75,6 +81,9 @@
             "buff": {
               "id": "deflect",
               "display_name": "弹开",
+              "display_names": {
+                "en": "Deflect"
+              },
               "max_stacks": 1,
               "duration_sec": 4.0,
               "mods": [

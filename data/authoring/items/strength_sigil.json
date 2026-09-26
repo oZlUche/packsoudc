@@ -1,6 +1,9 @@
 {
   "id": "strength_sigil",
   "display_name": "力量的符号",
+  "display_names": {
+    "en": "Sigil of Strength"
+  },
   "shape": [
     "1"
   ],
@@ -28,6 +31,9 @@
               "buff": {
                 "id": "blood_rage",
                 "display_name": "血怒",
+                "display_names": {
+                  "en": "Blood Rage"
+                },
                 "max_stacks": 1,
                 "duration_sec": 10.0,
                 "mods": [

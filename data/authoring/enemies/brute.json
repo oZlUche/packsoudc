@@ -1,6 +1,9 @@
 {
   "id": "brute",
   "display_name": "蛮兵",
+  "display_names": {
+    "en": "Brute"
+  },
   "strength": 2,
   "schools": [
     "burst",
