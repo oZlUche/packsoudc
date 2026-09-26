@@ -75,12 +75,9 @@ var hunters: HunterSystem = null
 var hunter_defs: Dictionary = {}
 ## 信仰定义（8-4）：持有方给，名字与说明用；激活规则只看棋盘上的标签（[FaithState]）
 var faith_defs: Dictionary = {}
-## 合成配方（084）：持有方给；两件拖到一起时问 [method craft_output]
+## 合成配方（084 / 087）：持有方给。**相邻即合**（087 作者定）：棋盘上两件有配方的道具四邻相接，走到下一个点时自动合成，
+## 不用拖到一起、没有「配对」这一步；[method craft_pairs] 随时能问现在有哪几对（界面画「合」、提示）
 var recipes: Array[RecipeDef] = []
-## 配好对、等着合的（085 作者定：合成**不是立刻的**，走到下一个点时才发生）：{"a": ItemInstance（离开了容器、只在这里）, "b_uid": 棋盘上那件, "output": 产物 id}。跟着存档走
-var pending_crafts: Array[Dictionary] = []
-## 配好对了（界面提示：走到下一个点时合成）
-signal craft_queued(a: ItemInstance, b: ItemInstance, output: ItemDef)
 ## 到了下一个点，合成发生了（或没成）：detail = {"log": [几句话], "output": 产物 id 或空, "where": "board" / "storage" / ""}
 signal craft_done(node_id: int, detail: Dictionary)
 ## 局内技能的账（082）：定义在角色上，这里记次数、冷却、旗子；没角色也有一份空的
@@ -100,6 +97,8 @@ var economy: EconomyRules = null
 
 var phase: int = Phase.PICK_SPAWN
 var end_reason: StringName = &""
+## 087：核心点的 BOSS 打倒了（作者定：收完战利品直接撤离结算，[method extract_after_boss]）。跟存档
+var boss_cleared: bool = false
 ## 等着拾取的容器（尸体 / 搜索收获）；null = 没有
 var pending_loot: GridInventory = null
 ## 这一局的计数（给结算看）：打赢 / 打输几场。跟着存档走
@@ -303,6 +302,16 @@ func try_extract() -> bool:
 	close_sessions()
 	_drop_pending_loot()
 	_set_phase(Phase.EXTRACTED, &"extract")
+	return true
+
+
+## 087（作者定）：BOSS 倒下之后直接撤离结算 —— 不看站在哪、不付费。没打倒 BOSS / 已经结束返回 false
+func extract_after_boss() -> bool:
+	if not boss_cleared or is_over():
+		return false
+	close_sessions()
+	_drop_pending_loot()
+	_set_phase(Phase.EXTRACTED, &"boss")
 	return true
 
 
@@ -529,7 +538,7 @@ func discard_loot() -> void:
 	loot_cleared.emit()
 
 
-## 这两件拖到一起能合成什么（084）：配方里有就返回产物的定义；没有 null
+## 这两件能合成什么：配方里有就返回产物的定义；没有 null
 func craft_output(a: ItemDef, b: ItemDef) -> ItemDef:
 	if a == null or b == null or items == null:
 		return null
@@ -537,76 +546,76 @@ func craft_output(a: ItemDef, b: ItemDef) -> ItemDef:
 	return items.get_def(r.output) if r != null else null
 
 
-## 配对（085）：[param a] 是拖着的那件（此刻已经不在任何容器里，由这里保管），[param b] 是被压的那件 —— 在棋盘上就留在原地画记号；
-## 在暂存区里就一起拿出来保管（暂存区一挪步就清，留在那儿会丢）。走到下一个点时合。
-## 没有配方、b 不在棋盘 / 暂存区、b 已经配过对返回 false（a 得由调用方放回去）
-func queue_craft(a: ItemInstance, b: ItemInstance) -> bool:
-	if a == null or b == null or board == null:
-		return false
-	var on_board := board.has_item(b.uid)
-	var in_storage := storage != null and storage.has_item(b.uid)
-	if not on_board and not in_storage:
-		return false
-	var out := craft_output(a.def, b.def)
-	if out == null:
-		return false
-	for pc in pending_crafts:
-		if int(pc["b_uid"]) == b.uid or (pc["a"] as ItemInstance).uid == a.uid:
-			return false
-	var held: ItemInstance = null
-	if in_storage:
-		held = storage.remove(b.uid)
-	pending_crafts.append({"a": a, "b_uid": b.uid, "b": held, "output": out.id})
-	craft_queued.emit(a, b, out)
-	return true
+## 087：棋盘上现在相邻、有配方的对子，`[[a, b, 产物定义], …]`：a 是 uid 小的那件。每件只进一对（uid 升序先配到的算），
+## 顺序稳定 —— 同一个棋盘永远同样的结果。包不参与邻接（[method GridInventory.neighbors_of]）
+func craft_pairs() -> Array:
+	var out: Array = []
+	if board == null or recipes.is_empty():
+		return out
+	var used := {}
+	var uids: Array[int] = []
+	for inst in board.items():
+		uids.append((inst as ItemInstance).uid)
+	uids.sort()
+	for uid in uids:
+		if used.has(uid):
+			continue
+		var a := board.get_item(uid)
+		if a == null or a.def == null or board.acts_as_bag(a.def):
+			continue
+		for other in board.neighbors_of(uid):
+			if used.has(other):
+				continue
+			var b := board.get_item(other)
+			if b == null or b.def == null:
+				continue
+			var out_def := craft_output(a.def, b.def)
+			if out_def == null:
+				continue
+			used[uid] = true
+			used[b.uid] = true
+			out.append([a, b, out_def])
+			break
+	return out
 
 
-## 棋盘上这件配了对没有（界面画记号）
-func craft_partner_of(b_uid: int) -> ItemInstance:
-	for pc in pending_crafts:
-		if int(pc["b_uid"]) == b_uid:
-			return pc["a"]
+## 棋盘上这件现在配着谁（界面画「合」）；没有 null
+func craft_partner_of(uid: int) -> ItemInstance:
+	for pair in craft_pairs():
+		if (pair[0] as ItemInstance).uid == uid:
+			return pair[1]
+		if (pair[1] as ItemInstance).uid == uid:
+			return pair[0]
 	return null
 
 
-## 结等着的合成（到了下一个点，暂存区已清）：b 在棋盘上就合 —— 产物落在 b 的位置、放不下自动找位、再不行进暂存区并提醒；
-## b 不在了（被丢了）就把 a 放进暂存区。每一桩发一次 craft_done
+## 到了下一个点（暂存区已清）：把此刻相邻的每一对合掉 —— 产物落在 a 的位置（a 的朝向），放不下试 b 的位置、再自动找位，
+## 再不行进暂存区并提醒。每一桩发一次 craft_done
 func resolve_crafts(at_id: int) -> void:
-	if pending_crafts.is_empty():
+	var pairs := craft_pairs()
+	if pairs.is_empty():
 		return
-	var todo := pending_crafts.duplicate()
-	pending_crafts.clear()
-	for pc in todo:
-		var a: ItemInstance = pc["a"]
-		var held: ItemInstance = pc.get("b", null)
-		var b := board.get_item(int(pc["b_uid"])) if board != null else null
-		var out_def := items.get_def(StringName(String(pc["output"]))) if items != null else null
-		var detail := {"log": [] as Array, "output": "", "where": ""}
-		if (b == null and held == null) or out_def == null:
-			storage.admit(a)
-			(detail["log"] as Array).append("「%s」要配的东西不在了，它放进了暂存区。" % a.def.display_name)
-			detail["where"] = "storage"
-			craft_done.emit(at_id, detail)
-			continue
-		var partner := b if b != null else held
-		var out := ItemInstance.create(out_def, partner.rotation)
+	for pair in pairs:
+		var a: ItemInstance = pair[0]
+		var b: ItemInstance = pair[1]
+		var out_def: ItemDef = pair[2]
+		var detail := {"log": [] as Array, "output": String(out_def.id), "where": ""}
+		var out := ItemInstance.create(out_def, a.rotation)
 		var where := ""
 		board.begin_batch()
-		if b != null:
-			var home := b.origin
-			var rot := b.rotation
-			board.remove(b.uid)
-			if board.place(out, home, rot) or board.try_add(out, true):
-				where = "board"
-		elif board.try_add(out, true):
-			where = "board"     # 配的那件是从暂存区拿出来的：产物找地方进包
-		if where == "" and storage.admit(out):
+		var home_a := a.origin
+		var rot_a := a.rotation
+		var home_b := b.origin
+		var rot_b := b.rotation
+		board.remove(a.uid)
+		board.remove(b.uid)
+		if board.place(out, home_a, rot_a) or board.place(out, home_b, rot_b) or board.try_add(out, true):
+			where = "board"
+		elif storage.admit(out):
 			where = "storage"
 		board.end_batch()
-		b = partner
-		detail["output"] = String(out_def.id)
 		detail["where"] = where
-		(detail["log"] as Array).append("「%s」和「%s」合成了「%s」。" % [a.def.display_name, b.def.display_name, out_def.display_name])
+		(detail["log"] as Array).append("「%s」和「%s」相邻，合成了「%s」。" % [a.def.display_name, b.def.display_name, out_def.display_name])
 		if where == "storage":
 			(detail["log"] as Array).append("背包里装不下它：放进了暂存区。走之前记得放回包里，暂存区一挪步就清。")
 		craft_done.emit(at_id, detail)
@@ -763,13 +772,17 @@ func _wire_events() -> void:
 	events.search_closed.connect(func(_n: MapNode, haul: GridInventory, _why: StringName): _offer_loot(haul))
 	events.shop_opened.connect(func(_n: MapNode, session: ShopSession):
 		if session != null:
-			session.bought.connect(func(def: ItemDef, _price: int): storage.admit(ItemInstance.create(def, 0))))
+			# 087：双击 / 按钮买的（inst 由会话交出来）先试着进包、放不下进暂存区；拖着买的已经在玩家手里了（inst 为 null）
+			session.bought.connect(func(_def: ItemDef, _price: int, inst: ItemInstance):
+				if inst != null and not board.try_add(inst, true):
+					storage.admit(inst)))
 	events.event_resolved.connect(func(_n: MapNode, _outcome: StringName, detail: Dictionary):
 		for id in detail.get("items", []):
 			var d := items.get_def(StringName(String(id)))
 			if d != null:
 				storage.admit(ItemInstance.create(d, 0)))
 	events.defeated.connect(func(why: StringName): _set_phase(Phase.DEFEATED, why))
+	events.boss_defeated.connect(func(_n: MapNode): boss_cleared = true)
 	events.bind(travel)
 	# 进入的那一次检查插在节点事件前面（bind 把 handle 挂上了，这里再包一层）
 	travel.on_node_event = _on_arrive
@@ -838,19 +851,10 @@ func to_dict() -> Dictionary:
 		"skills": skills.to_dict(),
 		"faith_power": faith_power.to_dict(),
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
-		"pending_crafts": _crafts_to_dict(),
+		"boss_cleared": boss_cleared,
 		"tally": tally.duplicate(),
 		"buffs": {"meta": _meta_buff_ids(), "map": map_buffs.duplicate(true)},
 	}
-
-
-func _crafts_to_dict() -> Array:
-	var out: Array = []
-	for pc in pending_crafts:
-		var held: ItemInstance = pc.get("b", null)
-		out.append({"a": (pc["a"] as ItemInstance).to_dict(), "b_uid": int(pc["b_uid"]), "output": String(pc["output"]),
-			"b": held.to_dict() if held != null else null})
-	return out
 
 
 func _meta_buff_ids() -> Array:
@@ -916,13 +920,8 @@ static func from_dict(
 	var loot = d.get("pending_loot", null)
 	if loot is Dictionary:
 		s.pending_loot = GridInventory.from_dict(loot, p_items)
-	for raw in d.get("pending_crafts", []):
-		if raw is Dictionary and (raw as Dictionary).get("a", null) is Dictionary:
-			var a := ItemInstance.from_dict(raw["a"], p_items)
-			if a != null:
-				var held: ItemInstance = ItemInstance.from_dict(raw["b"], p_items) if raw.get("b", null) is Dictionary else null
-				s.pending_crafts.append({"a": a, "b_uid": int(raw.get("b_uid", -1)), "b": held, "output": String(raw.get("output", ""))})
 	s.phase = int(d.get("phase", Phase.PICK_SPAWN))
 	s.end_reason = StringName(String(d.get("end_reason", "")))
+	s.boss_cleared = bool(d.get("boss_cleared", false))
 	return s
 #endregion

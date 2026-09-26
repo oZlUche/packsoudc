@@ -58,7 +58,7 @@ effects = Array[ExtResource("8_f7moc")]([SubResource("Resource_8h8a4")])
 [sub_resource type="Resource" id="Resource_8ybva"]
 script = ExtResource("4_wha2m")
 rules = Array[ExtResource("5_korxk")]([SubResource("Resource_s6b32")])
-note = "第一阶：开战时血怒（伤害 +10%）"
+note = "第一阶：开战时血怒"
 
 [sub_resource type="Resource" id="Resource_nq87m"]
 script = ExtResource("13_deew6")

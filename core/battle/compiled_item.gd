@@ -27,18 +27,20 @@ func is_active() -> bool:
 
 
 ## 粗略 DPS，供玩家拖动物品时实时预估。
-## 不考虑触发顺序、消耗与状态效果，只做手感参考。
-func estimated_dps() -> float:
+## 不考虑触发顺序、消耗与状态效果，只做手感参考。[param with_stats] 给了就按那份属性算（[CombatantSpec] 把开战即上身的
+## buff 并进去再问，087：护符的「血怒」这类开战增伤要能在统计里看见）
+func estimated_dps(with_stats: StatSet = null) -> float:
+	var use := with_stats if with_stats != null else stats
 	var total := 0.0
 	for rule in rules:
 		var r := rule as AbilityRule
 		if r.cadence == null:
 			continue
-		var hz := r.cadence.estimated_hz(stats)
+		var hz := r.cadence.estimated_hz(use)
 		if hz <= 0.0:
 			continue
 		for effect in r.effects:
-			total += hz * (effect as CombatEffect).estimated_damage(stats)
+			total += hz * (effect as CombatEffect).estimated_damage(use)
 	return total
 
 

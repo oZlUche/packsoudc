@@ -36,8 +36,9 @@ func open(payload: Dictionary) -> void:
 
 	var left := _vbox(8)
 	row.add_child(left)
-	left.add_child(_label("搜索点 %d　第 %d 次翻找" % [node.id if node != null else -1, _session.searches_done] if _session != null else "战利品　拖到棋盘或暂存区带走",
-		16, UiPalette.FG))
+	var boss := _session == null and flow.run != null and flow.run.boss_cleared
+	left.add_child(_label("搜索点 %d　第 %d 次翻找" % [node.id if node != null else -1, _session.searches_done] if _session != null else
+		("BOSS 的战利品　拖到棋盘带走；收起就直接撤离结算" if boss else "战利品　拖到棋盘或暂存区带走"), 16, UiPalette.FG))
 	_loot = LootView.new()
 	_loot.label_font = font
 	_loot.inventory = _container
@@ -59,9 +60,9 @@ func open(payload: Dictionary) -> void:
 	buttons.add_child(_button("全部拾取（进暂存区）", take_all, 13))
 	if _session != null:
 		buttons.add_child(_button("关闭（回到事件：再搜 / 走）", close_search, 13))
-		buttons.add_child(_button("收起（回地图）", to_map, 13))
+		buttons.add_child(_button("回到地图（不结束：回到这个点接着搜）", to_map, 13))
 	else:
-		_leave_btn = _button("收起（剩下的留在这里，走了就没）", to_map, 13)
+		_leave_btn = _button("收起（撤离结算）" if boss else "收起（剩下的留在这里，走了就没）", to_map, 13)
 		buttons.add_child(_leave_btn)
 	left.add_child(buttons)
 

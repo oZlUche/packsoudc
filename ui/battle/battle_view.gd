@@ -32,6 +32,9 @@ var _speed_idx: int = 0
 ## 跳转时抑制飘字：一次补上几十条事件会喷一屏数字，那不是信息是噪音
 var _suppress_popups: bool = false
 
+## 087：悬浮窗（buff 图标的具体效果）
+var _tip: HoverTip = null
+
 var _clock: Label
 var _verdict: Label
 var _ticker: RichTextLabel
@@ -63,6 +66,28 @@ func play(result: BattleResult, names: Array = []) -> void:
 	_ticker.clear()
 	_verdict.text = ""
 	_sync_buttons()
+
+
+## 087：告诉回放双方会出现哪些 buff（id → 定义）：图标用名字、悬浮窗写效果。从双方的战斗单位收集（[Glossary.buffs_in_spec]）
+func set_buff_defs(defs: Dictionary) -> void:
+	for p in _panels:
+		p.buff_defs = defs
+		p.queue_redraw()
+
+
+## 停在图标上时开悬浮窗
+func _on_buff_hovered(id: String, at: Vector2) -> void:
+	if _tip == null:
+		return
+	var def: BuffDef = _panels[0].buff_defs.get(StringName(id), null)
+	var name := def.display_name if def != null and def.display_name != "" else id
+	var body := Glossary.describe_buff(def) if def != null else "（没有这个 buff 的定义）"
+	_tip.show_text("[b]%s[/b]\n%s" % [name, body], at)
+
+
+func _on_buff_unhovered() -> void:
+	if _tip != null:
+		_tip.hide_tip()
 
 
 ## 告诉回放某一方的 uid 叫什么名字。日志里只有 uid —— 名字纯属表现层的事，
@@ -255,6 +280,8 @@ func _build() -> void:
 		p.label_font = label_font
 		p.display_name = _names[i]
 		p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		p.buff_hovered.connect(_on_buff_hovered)
+		p.buff_unhovered.connect(_on_buff_unhovered)
 		arena.add_child(p)
 		_panels.append(p)
 
@@ -275,7 +302,9 @@ func _build() -> void:
 	_speed_btn = _button("1×", cycle_speed)
 	bar.add_child(_speed_btn)
 	bar.add_child(_button("跳过", skip_to_end))
-	bar.add_child(_label("战斗中只能看与跳过 —— 结果在开打那一瞬就已经算完了", 12, UiPalette.DIM))
+	bar.add_child(_label("战斗中只能看与跳过 —— 结果在开打那一瞬就已经算完了；停在 buff 图标上看效果", 12, UiPalette.DIM))
+	_tip = HoverTip.new(label_font)
+	add_child(_tip)
 
 
 func _sync_buttons() -> void:

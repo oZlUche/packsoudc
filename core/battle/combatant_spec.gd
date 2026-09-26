@@ -43,10 +43,48 @@ func max_hp_int() -> int:
 	return StatMath.to_int(max_hp)
 
 
+## 087：开战即上身、作用于自己的 buff 的属性修饰（开战时 + 必然 + apply_status 给自己）—— 血怒这类。
+## 返回 [[StatModifier, 层数], …]。运行时 [CombatantRuntime] 会把 buff 的 mods 施加到每件道具的属性上，预估也照做，
+## 否则护符的增伤在统计里看不见（作者问的：不是没生效，是统计没算）。buff 有时长也按全程算 —— 只是预估
+func opening_mods() -> Array:
+	var out: Array = []
+	var pool: Array = []
+	for it in items:
+		pool.append_array(it.rules)
+	pool.append_array(set_rules)
+	for r in pool:
+		var rule := r as AbilityRule
+		if rule == null or not (rule.trigger is OnBattleStart) or not (rule.cadence == null or rule.cadence is Always):
+			continue
+		for e in rule.effects:
+			var ap := e as ApplyStatus
+			if ap == null or ap.buff == null or ap.target != CombatEffect.Target.SELF:
+				continue
+			for m in ap.buff.mods:
+				out.append([m, maxi(1, ap.stacks)])
+	return out
+
+
+## 一件道具算上开战 buff 之后的属性
+func stats_with_opening(it: CompiledItem) -> StatSet:
+	var mods := opening_mods()
+	if mods.is_empty() or it.stats == null:
+		return it.stats
+	var copy := it.stats.clone()
+	for pair in mods:
+		(pair[0] as StatModifier).apply_to(copy, int(pair[1]))
+	return copy
+
+
+## 一件道具的预估 DPS（算上开战 buff）
+func estimated_dps_of(it: CompiledItem) -> float:
+	return it.estimated_dps(stats_with_opening(it))
+
+
 func rough_dps() -> float:
 	var total := 0.0
 	for it in items:
-		total += it.estimated_dps()
+		total += estimated_dps_of(it)
 	return total
 
 

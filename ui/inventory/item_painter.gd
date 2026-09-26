@@ -3,12 +3,14 @@
 class_name ItemPainter
 extends RefCounted
 
+## 作者定（087）：颜色代表稀有度，从低到高 白、绿、蓝、紫、金、红
 const RARITY_COLORS: Array[Color] = [
-	Color("8a8f98"),  # 0 普通
-	Color("5fa85f"),  # 1 优良
-	Color("4a86c8"),  # 2 稀有
-	Color("b06ccf"),  # 3 史诗
-	Color("d39a3c"),  # 4 传说
+	Color("d8dce3"),  # 0 普通　白
+	Color("5fa85f"),  # 1 优良　绿
+	Color("4a86c8"),  # 2 稀有　蓝
+	Color("b06ccf"),  # 3 史诗　紫
+	Color("e0b040"),  # 4 传说　金
+	Color("d9453f"),  # 5 神话　红
 ]
 
 

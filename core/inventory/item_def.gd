@@ -80,6 +80,10 @@ func faith_tag() -> StringName:
 ## 信力（报告 082）：信仰道具在信力过了第 n 阶之后多出来的功能（属性修饰、规则），只对带信仰标签的道具有意义。
 ## 编译器按「信仰 → 现在第几阶」并入（[BattleCompiler.compile] 的 faith_tiers）
 @export var faith_bonuses: Array[FaithBonus] = []
+## 087（作者定）：信仰道具**休眠**（别的信仰激活着）时还保不保留自己的战斗定义（`combat`：盾的固定减伤、武器本身的攻击力……
+## 这些是「通用效果」）。保留的只丢信力加成、邻接与套装；不保留 = 彻底失效（护符这类只靠信仰起作用的东西写 false）。
+## 没有 combat 的道具这个开关无意义（本来就没有通用效果）
+@export var dormant_keeps_combat: bool = true
 
 @export_group("战斗")
 ## 战斗定义。为空表示本物品不参战（纯素材、纯包体）。

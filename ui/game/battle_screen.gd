@@ -36,6 +36,10 @@ func open(payload: Dictionary) -> void:
 		_view.play(result, ["我", enemy_name])
 		_view.set_item_names(0, _names_of(payload.get("player", null)))
 		_view.set_item_names(1, _names_of(payload.get("enemy", null)))
+		# 087：双方会出现的 buff（图标 + 悬浮说明）
+		var defs := Glossary.buffs_in_spec(payload.get("player", null))
+		defs.merge(Glossary.buffs_in_spec(payload.get("enemy", null)))
+		_view.set_buff_defs(defs)
 
 
 ## 看完了（或不想看了）：回到流程

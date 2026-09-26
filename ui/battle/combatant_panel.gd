@@ -1,4 +1,5 @@
 ## 一方战斗单位的面板：资源条 + 增益层数 + 飘字。
+## 087（作者定）：增益 / 减益画成一排**图标**（现在暂时用名字的第一个字），鼠标停上去发 [signal buff_hovered]，回放层开悬浮窗写具体效果。
 ##
 ## [b]它只认日志喂进来的数值，不认识 [CombatantRuntime]。[/b]
 ## 回放是「照着一串事件重演」，不是「盯着一个活的模拟对象」——
@@ -14,8 +15,16 @@ const PAD := 12
 ## 资源条的显示顺序。没列出的排在后面，按字典序 —— 顺序稳定，界面才不会乱跳。
 const ORDER := ["hp", "shield", "stamina", "mana", "power"]
 
+signal buff_hovered(buff_id: String, at: Vector2)
+signal buff_unhovered
+
 var display_name: String = ""
 var label_font: Font
+## buff id → 定义（画图标用名字的第一个字、悬浮窗写效果）。回放层从双方的战斗单位里收集（[Glossary.buffs_in_spec]）
+var buff_defs: Dictionary = {}
+## 现在画着的图标：[Rect2, id]
+var _chips: Array = []
+var _hover_id: String = ""
 
 ## key -> [current, max]。
 ##
@@ -37,7 +46,47 @@ var item_names: Dictionary = {}
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(320, 190)
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_process(true)
+
+
+func _gui_input(event: InputEvent) -> void:
+	var mm := event as InputEventMouseMotion
+	if mm == null:
+		return
+	var over := chip_at(mm.position)
+	if over == _hover_id:
+		return
+	_hover_id = over
+	if over == "":
+		buff_unhovered.emit()
+	else:
+		buff_hovered.emit(over, global_position + mm.position)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_MOUSE_EXIT and _hover_id != "":
+		_hover_id = ""
+		buff_unhovered.emit()
+
+
+## 这个位置（面板内坐标）压着哪个 buff 的图标；没有空串
+func chip_at(local: Vector2) -> String:
+	for c in _chips:
+		if (c[0] as Rect2).has_point(local):
+			return String(c[1])
+	return ""
+
+
+## 图标上写的字：名字的第一个字（暂时；正式美术换成图）
+func icon_of(id: String) -> String:
+	var def: BuffDef = buff_defs.get(StringName(id), null)
+	var name := def.display_name if def != null and def.display_name != "" else id
+	return name.substr(0, 1)
+
+
+func stacks() -> Dictionary:
+	return _stacks
 
 
 #region 由回放驱动
@@ -137,22 +186,28 @@ func _draw() -> void:
 		_draw_bar(key, cur, cap, y)
 		y += BAR_H + BAR_GAP
 
+	_chips.clear()
 	if not _stacks.is_empty():
 		y += 4
 		var x := float(PAD)
 		var ids := _stacks.keys()
 		ids.sort()  # 顺序稳定，免得每帧重排
 		for id in ids:
-			var text := "%s ×%d" % [id, _stacks[id]]
+			var def: BuffDef = buff_defs.get(StringName(String(id)), null)
+			var text := "%s ×%d" % [icon_of(String(id)), _stacks[id]]
 			var w := label_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 14
 			if x + w > size.x - PAD:
 				x = PAD
 				y += CHIP_H + 4
-			draw_rect(Rect2(x, y, w, CHIP_H), UiPalette.LINE)
+			var rect := Rect2(x, y, w, CHIP_H)
+			var debuff := def != null and def.is_debuff
+			draw_rect(rect, Color(UiPalette.HP, 0.35) if debuff else Color(UiPalette.SHIELD, 0.25))
+			draw_rect(rect, UiPalette.HP if debuff else UiPalette.SHIELD, false, 1.0 if String(id) != _hover_id else 2.0)
 			draw_string(
 				label_font, Vector2(x + 7, y + 14), text,
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiPalette.FG
 			)
+			_chips.append([rect, String(id)])
 			x += w + 6
 
 	if _last_fired != "":

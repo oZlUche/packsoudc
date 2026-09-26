@@ -22,6 +22,8 @@ extends RefCounted
 signal revealed(node: MapNode, type: StringName)
 signal battle_finished(node: MapNode, result: BattleResult, won: bool)
 signal loot_ready(node: MapNode, corpse: GridInventory)
+## 087：核心点的 BOSS 倒下了（战利品已经交出去）：持有方据此直接撤离结算
+signal boss_defeated(node: MapNode)
 signal search_opened(node: MapNode, session: SearchSession)
 ## 084：该给玩家看搜索屏了（每搜一次一回，第一次紧跟在 search_opened 后面）
 signal search_shown(node: MapNode, session: SearchSession)
@@ -453,13 +455,16 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 	battle_finished.emit(node, result, won)
 	if won:
 		var ctx := loot_ctx if loot_ctx != null else _loot_ctx()
-		var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot")) \
+		# 087：核心点的 BOSS 保底一件金色（DropRule.boss_rarity）
+		var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core") \
 			if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
 		loot_ready.emit(node, DropResolver.corpse_of(content, rolled, items))
 		if wallet != null and economy != null:
 			var amount := economy.battle_reward(int(content.get("strength", 0)), float(_depths.get(node.id, 0.0)), difficulty)
 			wallet.earn(amount, &"battle")
 			rewarded.emit(node, amount)
+		if type == &"core":
+			boss_defeated.emit(node)
 	elif type == &"core":
 		_defeat(&"boss_lost")     # 规则不是数值：BOSS 输了直接战败，连 spend 都不调（7.1）
 	elif vitality != null and rules != null:

@@ -9,6 +9,7 @@ again_event = &"search_again"
 done_event = &"search_done"
 encounter_event = &"search_encounter"
 destroyed_event = &"search_destroyed"
+reveal_seconds = Array[float]([0.3, 0.5, 0.8, 1.2, 2.0, 3.0])
 
 [resource]
 script = ExtResource("1_pbgj0")

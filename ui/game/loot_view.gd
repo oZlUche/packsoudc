@@ -21,7 +21,7 @@ const COLOR_PROGRESS := Color("dfe3ea")
 const COLOR_NEXT := Color("8b93a1")
 const NOISE_PER_CELL := 14
 ## 没给规则时的耗时表（和 SearchRules 的默认一样）
-const DEFAULT_SECONDS: Array[float] = [0.3, 0.5, 0.8, 1.2, 2.0]
+const DEFAULT_SECONDS: Array[float] = [0.3, 0.5, 0.8, 1.2, 2.0, 3.0]
 
 ## 每档稀有度的秒数；容器屏从节点规则里给
 var reveal_seconds: Array[float] = DEFAULT_SECONDS

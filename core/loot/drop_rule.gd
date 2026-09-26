@@ -14,7 +14,7 @@ extends Resource
 
 ## 稀有度 → 基础掉落率（0～1），下标即稀有度。导入器要求**非递增**：越稀有越难掉。
 ## 稀有度超出表长的按最后一档
-@export var base_chance: Array[float] = [0.6, 0.45, 0.3, 0.15, 0.05]
+@export var base_chance: Array[float] = [0.6, 0.45, 0.3, 0.15, 0.05, 0.02]
 
 ## 难度每 +1，每件道具的掉落率加多少（正面加成）
 @export var difficulty_bonus: float = 0.05
@@ -25,14 +25,18 @@ extends Resource
 ## 每个敌人掉一件自身未持有的珍宝的概率（每次尝试；尝试次数 = LootContext.rolls）
 @export var treasure_chance: float = 0.05
 
-## 珍宝的稀有度 → 权重。作者定的是最高两级：红（4）、金（3）。键是稀有度的字符串形式（JSON 的键只能是字符串）
-@export var treasure_weights: Dictionary = {"3": 3, "4": 1}
+## 珍宝的稀有度 → 权重。作者定的是最高两级：金（4）、红（5）（087：稀有度六档 白 0 / 绿 1 / 蓝 2 / 紫 3 / 金 4 / 红 5）。键是稀有度的字符串形式（JSON 的键只能是字符串）
+@export var treasure_weights: Dictionary = {"4": 3, "5": 1}
 
 ## 珍宝道具的标签。「珍宝」类型作者还没细定，先用标签占位：带这个标签的道具才会当珍宝掉
 @export var treasure_tag: StringName = &"treasure"
 
 ## 珍宝概率是否也吃难度 / 幸运 / buff 修正
 @export var treasure_modified: bool = true
+
+## 087（作者定）：击败 BOSS（核心点）保底掉一件这个稀有度的道具（4 = 金），不看概率、不看它身上有没有 —— 先在带珍宝标签的里挑，
+## 没有就在这个稀有度的任何非包道具里挑，还没有就往低一档找。-1 = 不保底
+@export var boss_rarity: int = 4
 
 ## 至少掉几件身上有的（084 作者定：打赢了至少掉一件敌人拥有的道具）。掷完不够就从没掉的里随机补；身上没那么多就掉光。0 = 不保底。
 ## **包不算在这个名额里**（作者定：包另有 bags_always_drop）

@@ -32,6 +32,12 @@ static func is_dormant(def: ItemDef, active: StringName) -> bool:
 	return def != null and def.has_faith() and def.faith_tag() != active
 
 
+## 087（作者定）：休眠的这件还留着通用效果没有 —— 有战斗定义、且 [member ItemDef.dormant_keeps_combat] 开着。
+## 留着 = 编译时仍参战（基础属性 + 自己的规则 + 包体加成），只丢信力加成、邻接、套装；不留 = 彻底不参战
+static func keeps_combat_when_dormant(def: ItemDef) -> bool:
+	return def != null and def.combat != null and def.dormant_keeps_combat
+
+
 ## 棋盘上休眠的那些 uid，升序
 static func dormant_uids(container: ItemContainer) -> Array[int]:
 	var out: Array[int] = []

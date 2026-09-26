@@ -38,6 +38,9 @@ const EVENT_OUTCOMES: Array[StringName] = [&"item", &"restore", &"story"]
 ## 一场战斗的时限（秒）：打不死判平局，平局按输算
 @export var battle_time_limit: float = 60.0
 
+## 087（作者定）：击败核心点的 BOSS 之后，收完战利品就直接撤离结算（不用走到撤离点、不付费）
+@export var boss_extracts: bool = true
+
 
 ## 随机点变成什么。权重全 0 或表空返回 battle —— 一个随机点总得是点什么
 func random_pick(rng: RandomNumberGenerator) -> StringName:

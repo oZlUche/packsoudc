@@ -472,6 +472,11 @@ func hide_overlay() -> bool:
 		return false
 	if run.events.pending_event() != null or not run.events.pending_battle.is_empty():
 		return false
+	if screen == Screen.LOOT and _boss_extracts():
+		# 087：BOSS 的战利品屏「收起」= 不要剩下的，直接撤离结算
+		run.discard_loot()
+		_flush()
+		return true
 	_go(Screen.MAP, {"minimized": true})
 	return true
 
@@ -655,7 +660,17 @@ func _flush() -> void:
 		# 084：没拿完的战利品还在这个点上就接着给看（只有「收起」走 hide_overlay 才回地图不看它）
 		_go(Screen.LOOT, {"container": run.pending_loot})
 		return
+	if run != null and _boss_extracts() and run.extract_after_boss():
+		# 087（作者定）：BOSS 倒下、战利品收完 → 直接撤离结算
+		_settle_run()
+		_go(Screen.RESULT, {"result": result})
+		return
 	_go(Screen.MAP)
+
+
+## 087：这一局现在是不是「BOSS 已倒下、收完就撤」的状态
+func _boss_extracts() -> bool:
+	return run != null and run.boss_cleared and (run.node_rules == null or run.node_rules.boss_extracts)
 
 
 func _skippable(entry: Dictionary) -> bool:

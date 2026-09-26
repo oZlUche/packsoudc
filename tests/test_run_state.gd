@@ -169,14 +169,14 @@ static func run_loot_and_shop(t: TestCase) -> void:
 			shop_id = id
 			break
 	if shop_id >= 0:
-		var before := s.storage.item_count()
+		var before := s.storage.item_count() + s.board.item_count()
 		s.wallet.earn(10000, &"test")
 		s.events.handle(s.map.get_node(shop_id))
 		var session := s.events.current_shop
 		t.not_null(session, "店开了")
 		if session != null:
 			t.not_null(session.buy(session.available()[0]), "买一件")
-			t.eq(s.storage.item_count(), before + 1, "买的东西进了暂存区")
+			t.eq(s.storage.item_count() + s.board.item_count(), before + 1, "买的东西进了包（放不下进暂存区，087）")
 			s.close_sessions()
 			t.check(s.events.current_shop == null, "关门")
 

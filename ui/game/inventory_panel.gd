@@ -84,12 +84,10 @@ func _build() -> void:
 	_drag.stash = _run.storage
 	_drag.drop_outside_to_stash = true     # 084：棋盘外的空间全都是暂存区
 	_drag.items_displaced.connect(_on_displaced)
-	# 084 / 085 合成：两件拖到一起只是配对（RunState 保管拖着的那件），走到下一个点时才合；配了对的画「合」
+	# 087 合成（作者定）：相邻即合 —— 棋盘上两件有配方的挨着，走到下一个点时自动合成；拖起一件时能合的那几件高光，
+	# 挨上了画「合」并提示一句
 	_drag.craft = func(a: ItemInstance, b: ItemInstance) -> ItemDef: return _run.craft_output(a.def, b.def)
-	_drag.queue_craft = func(a: ItemInstance, b: ItemInstance) -> bool: return _run.queue_craft(a, b)
-	_run.craft_queued.connect(func(a: ItemInstance, b: ItemInstance, out: ItemDef):
-		_hint_text("「%s」放到了「%s」上：走到下一个点时合成「%s」" % [a.def.display_name, b.def.display_name, out.display_name])
-		_refresh_badges())
+	_run.board.changed.connect(_refresh_badges)
 	_refresh_badges()
 	# 084：停在道具上的悬浮说明（名、稀有度、标签、效果、武器的冷却与 DPS、槽）
 	tip = HoverTip.new(_font)
@@ -121,11 +119,24 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 	return false
 
 
-## 配了对的画「合」
+var _pair_keys: Dictionary = {}
+
+
+## 相邻、有配方的两件都画「合」；新挨上一对就提示一句
 func _refresh_badges() -> void:
 	var marks := {}
-	for pc in _run.pending_crafts:
-		marks[int(pc["b_uid"])] = "合"
+	var keys := {}
+	for pair in _run.craft_pairs():
+		var a: ItemInstance = pair[0]
+		var b: ItemInstance = pair[1]
+		var out: ItemDef = pair[2]
+		marks[a.uid] = "合"
+		marks[b.uid] = "合"
+		var key := "%d:%d" % [a.uid, b.uid]
+		keys[key] = true
+		if not _pair_keys.has(key):
+			_hint_text("「%s」和「%s」挨在一起：走到下一个点时合成「%s」" % [a.def.display_name, b.def.display_name, out.display_name])
+	_pair_keys = keys
 	board_view.badges = marks
 	board_view.queue_redraw()
 

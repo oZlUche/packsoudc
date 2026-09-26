@@ -45,15 +45,20 @@ static func compile(
 		return spec
 
 	# --- 1. 收集参战物品：棋盘上的非包物品，按 uid 升序 ---
-	# 信仰（8-4）：只激活最后置入的信仰道具所属的信仰，别的信仰的道具休眠 —— 不参战、不给邻接
+	# 信仰（8-4）：只激活最后置入的信仰道具所属的信仰，别的信仰的道具休眠。
+	# 087（作者定）：休眠的仍可能有**通用效果**（盾的固定减伤、武器的攻击力 = 它自己的 combat）：留着的照样参战，
+	# 只丢信力加成与邻接（`dormant` 记着谁是休眠的）；不留的（护符）彻底不参战
 	var active_faith := FaithState.active_tag(board)
 	var fighters: Array[int] = []
+	var dormant: Dictionary = {}     # uid -> true
 	for inst in board.items():
 		var item := inst as ItemInstance
 		if item.def == null or board.acts_as_bag(item.def):
 			continue
 		if FaithState.is_dormant(item.def, active_faith):
-			continue
+			if not FaithState.keeps_combat_when_dormant(item.def):
+				continue
+			dormant[item.uid] = true
 		fighters.append(item.uid)
 	fighters.sort()
 
@@ -79,7 +84,7 @@ static func compile(
 	var bonus_rules: Dictionary = {}  # uid -> Array[AbilityRule]
 	for uid in fighters:
 		var def := board.get_item(uid).def
-		if not def.has_faith() or def.faith_bonuses.is_empty():
+		if not def.has_faith() or def.faith_bonuses.is_empty() or dormant.has(uid):
 			continue
 		var tier := int(faith_tiers.get(def.faith_tag(), 0))
 		var extra: Array[AbilityRule] = []
@@ -95,7 +100,11 @@ static func compile(
 
 	# --- 5. 邻接标记。顺带记下连结关系，供 OnItemFired 的 LINKED 来源使用 ---
 	var links: Dictionary = {}  # uid -> {uid: true}
-	_apply_adjacency(board, fighters, stats, links)
+	var social: Array[int] = []     # 参与邻接的：休眠的不给也不收
+	for uid in fighters:
+		if not dormant.has(uid):
+			social.append(uid)
+	_apply_adjacency(board, social, stats, links)
 
 	# --- 6. 产出 ---
 	var hp := spec.baseline.total_of(BattleStats.MAX_HP)

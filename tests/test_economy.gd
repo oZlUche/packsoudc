@@ -152,20 +152,54 @@ static func run_shop(t: TestCase) -> void:
 
 	# 买
 	var bought: Array = []
-	s.bought.connect(func(def: ItemDef, price: int): bought.append([def.id, price]))
+	s.bought.connect(func(def: ItemDef, price: int, inst: ItemInstance): bought.append([def.id, price, inst]))
+	# 087：栏位是小棋盘，商品按真实尺寸摆在 (0,0)
+	t.eq(s.shelves.size(), r.shop_slots, "每格一块栏位棋盘")
+	for i in s.shelves.size():
+		var grid: GridInventory = s.shelves[i]
+		var def := items.get_def(StringName(String(s.stock[i]["id"])))
+		var size := def.shape.size_rotated(0)
+		t.check(grid.size.x >= ShopSession.SLOT_MIN.x and grid.size.y >= ShopSession.SLOT_MIN.y and grid.size.x >= size.x and grid.size.y >= size.y, "栏位至少 3×4、装得下商品")
+		var inst := s.item_at(i)
+		t.check(inst != null and inst.def == def and inst.origin == Vector2i.ZERO and s.slot_of(inst.uid) == i, "第 %d 格摆着商品" % i)
 	var price0 := int(s.stock[0]["price"])
+	var shelf_inst := s.item_at(0)
 	var got := s.buy(0)
 	t.not_null(got, "买到了")
 	t.eq(wallet.balance, 1000 - price0, "扣了标价")
 	t.eq(bought.size(), 1, "发了 bought")
+	t.check(not bought.is_empty() and bought[0][2] == shelf_inst and s.item_at(0) == null, "交出来的就是栏位上那件，栏位空了")
 	t.check(not s.can_buy(0) and s.buy(0) == null, "同一格买不了第二次")
 	t.eq(s.available().size(), r.shop_slots - 1, "架上少一件")
 	t.eq(str(node.content["shop"]["sold"]), "[0]", "卖掉的格子记进节点内容")
+
+	# 087：拖着买 —— 拖拽层先把商品挪走，再 pay_for 结账
+	var slot1_inst := s.item_at(1)
+	var price1 := int(s.stock[1]["price"])
+	s.shelves[1].remove(slot1_inst.uid)     # 拖拽层做的事
+	var before_pay := wallet.balance
+	t.check(s.pay_for(1), "结账")
+	t.eq(wallet.balance, before_pay - price1, "扣了标价")
+	t.check(s.sold.has(1) and not s.can_buy(1) and not s.pay_for(1), "记成卖掉了，不能再结一次")
+	t.check(bought.size() == 2 and bought[1][2] == null, "拖着买的 bought 里 inst 为 null（东西已经在玩家手里）")
+	# 087：卖 —— 回定价的一半
+	var sword := ItemInstance.create(items.get_def(&"longsword"))
+	t.check(s.sell_box.place(sword, Vector2i.ZERO, 0), "拖进出售区")
+	var sold_sig: Array = []
+	s.sold_item.connect(func(def: ItemDef, gain: int): sold_sig.append([def.id, gain]))
+	var before_sell := wallet.balance
+	var gain := s.sell(sword)
+	t.eq(gain, floori(float(s.price_of(sword.def)) * r.shop_sell_ratio), "得定价 × 出售比例")
+	t.eq(gain, s.sell_price_of(sword.def), "= sell_price_of")
+	t.eq(wallet.balance, before_sell + gain, "进账")
+	t.check(not s.sell_box.has_item(sword.uid), "出售区清了")
+	t.eq(sold_sig.size(), 1, "发了 sold_item")
 
 	# 钱不够
 	var poor := Wallet.new(0)
 	var sp := ShopSession.new(_shop_node(), r, items, poor, 0.3)
 	t.check(not sp.can_buy(0) and sp.buy(0) == null, "没钱买不了")
+	t.check(not sp.pay_for(0), "拖着买也结不了账")
 	t.eq(poor.balance, 0, "一分不动")
 	t.check(not sp.can_refresh() and not sp.refresh(), "没钱刷不了")
 
@@ -182,6 +216,7 @@ static func run_shop(t: TestCase) -> void:
 	t.check(s.refresh_cost() > r.refresh_cost_at(0) or r.shop_refresh_step == 0, "越刷越贵")
 	t.eq(changed.size(), 1, "发了 stock_changed")
 	t.eq(s.available().size(), r.shop_slots, "刷新后满架，卖掉的格子清了")
+	t.check(s.item_at(0) != null and s.item_at(1) != null, "刷新后栏位重新摆满")
 	t.check(s.stock != old_ids, "货换了")
 	t.eq(int(node.content["shop"]["refreshes"]), 1, "刷新次数记进节点内容")
 

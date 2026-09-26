@@ -68,12 +68,17 @@ static func treasure_candidates(rule: DropRule, items: ItemDatabase, rarity: int
 
 ## 掷：返回 {"dropped": [敌人自己掉的 id], "treasure": [珍宝 id], "treasure_missing": 中了却没有可掉的珍宝的次数}
 static func roll(
-	content: Dictionary, rule: DropRule, ctx: LootContext, items: ItemDatabase, rng: RandomNumberGenerator
+	content: Dictionary, rule: DropRule, ctx: LootContext, items: ItemDatabase, rng: RandomNumberGenerator, boss: bool = false
 ) -> Dictionary:
 	var out := {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName], "treasure_missing": 0}
 	if rule == null or items == null:
 		return out
 	var carried := carried_ids(content)
+	# 087（作者定）：BOSS 保底一件金色 —— 排在最前，别的掷骰照旧
+	if boss and rule.boss_rarity >= 0:
+		var pick := boss_guarantee(rule, items, carried, rng)
+		if pick != &"":
+			(out["treasure"] as Array[StringName]).append(pick)
 	for id in carried:
 		var def := items.get_def(id)
 		if def == null:
@@ -116,6 +121,23 @@ static func roll(
 			continue
 		(out["treasure"] as Array[StringName]).append(_pick_weighted(cands, ctx, items, rng))
 	return out
+
+
+## BOSS 的保底：这个稀有度里先挑珍宝，没有挑任何非包道具，还没有往低一档找；全没有返回空
+static func boss_guarantee(rule: DropRule, items: ItemDatabase, carried: Array[StringName], rng: RandomNumberGenerator) -> StringName:
+	var r := rule.boss_rarity
+	while r >= 0:
+		var cands := treasure_candidates(rule, items, r, carried)
+		if cands.is_empty():
+			for id in items.ids():
+				var d := items.get_def(id)
+				if d != null and d.rarity == r and not d.is_bag and not carried.has(id):
+					cands.append(id)
+			cands.sort()
+		if not cands.is_empty():
+			return cands[rng.randi_range(0, cands.size() - 1)]
+		r -= 1
+	return &""
 
 
 ## 珍宝的稀有度：表里的权重 + 战利品效果的 rarity_bias（同单位：权重）

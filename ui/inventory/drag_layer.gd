@@ -39,16 +39,9 @@ var drop_filter: Callable = Callable()
 ## 而不是退回原处。暂存区不限大小，所以这一下总能成（带内容物的包、被 drop_filter 拦的除外）。
 ## 一局里的整理面板开它；开局屏（仓库 ↔ 棋盘）不开，那儿放到外面还是退回
 var drop_outside_to_stash: bool = false
-## 084 合成：`func(a: ItemInstance, b: ItemInstance) -> ItemDef`，拖着 a 压到恰好一件 b 上、放不进空位时先问它 ——
-## 有产物就合（两件都消失，产物落在 b 的位置，放不下自动找位、再不行进暂存区）；无效 = 没有合成
+## 配方查询 `func(a: ItemInstance, b: ItemInstance) -> ItemDef`，**只用来高光**（087 作者定：合成是相邻自动的，走到下一个点时发生，
+## 拖拽层不再有「拖到一起合成 / 配对」）：拖起一件时，所有能和它合成的那几件亮一圈，提醒玩家把它放到旁边去
 var craft: Callable = Callable()
-## 合成了：a、b 消失，out 是产物
-signal crafted(a: ItemInstance, b: ItemInstance, out: ItemInstance)
-## 085 作者定：合成不是立刻的 —— 给了这个回调（`func(a, b) -> bool`）就只**配对**：a 交给它保管、b 留在原地，走到下一个点时才合。
-## 没给才走立刻合成的老路（沙盒 / 测试）
-var queue_craft: Callable = Callable()
-## 配了对（a 交出去了）
-signal craft_queued(a: ItemInstance, b: ItemInstance)
 
 var _views: Array[ContainerView] = []
 
@@ -87,6 +80,11 @@ func unregister_view(view: ContainerView) -> void:
 
 func is_dragging() -> bool:
 	return _inst != null
+
+
+## 正在拖的这件是从哪个容器拿起来的（没在拖 null）。商店屏靠它认出「这是货架上的商品」（087）
+func source() -> ItemContainer:
+	return _source if _inst != null else null
 
 
 func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> void:
@@ -247,10 +245,6 @@ func update_preview(global_pos: Vector2) -> void:
 
 	if target is StashView:
 		var sv := target as StashView
-		# 压在能配对的那一行上：不画插入线（放手是配对，不是插入）
-		if _stash_partner(sv, global_pos) != null and queue_craft.is_valid():
-			sv.clear_preview()
-			return
 		# 列表落点只有「插在第几行」，不存在压着谁的问题。
 		# 唯一会失败的是塞不下或标签不收 —— 那时不画插入线
 		if _stash_accepts(sv.stash, _inst):
@@ -275,10 +269,6 @@ func update_preview(global_pos: Vector2) -> void:
 		grid_view.set_preview(cells, origin, true)
 		return
 
-	# 084：压在恰好一件上、两件有配方 → 合成（绿的，不算顶替）
-	if _craft_target(inv, origin) != null:
-		grid_view.set_preview(cells, origin, true)
-		return
 	# 放不进空位，但地形允许 —— 那就是「压着别人」，可以顶替
 	var victims := _displaceable(inv, origin)
 	grid_view.set_preview(cells, origin, not victims.is_empty(), victims)
@@ -340,13 +330,7 @@ func drop_at(global_pos: Vector2) -> bool:
 			return dropped
 	if target is StashView:
 		var sv := target as StashView
-		# 085：压在暂存区里能配对的那件上 → 配对（两件都交给持有方保管），不插进列表
-		var partner := _stash_partner(sv, global_pos)
-		if partner != null and queue_craft.is_valid():
-			dropped = bool(queue_craft.call(inst, partner))
-			if dropped:
-				craft_queued.emit(inst, partner)
-		elif _stash_accepts(sv.stash, inst):
+		if _stash_accepts(sv.stash, inst):
 			dropped = sv.stash.insert(inst, sv.insert_index_at_global(global_pos))
 		if dropped:
 			home = sv.stash
@@ -357,14 +341,6 @@ func drop_at(global_pos: Vector2) -> bool:
 			dropped = _drop_bag(grid_view.inventory, at)
 		elif grid_view.inventory.place(inst, at, _rot):
 			dropped = true
-		elif _craft_target(grid_view.inventory, at) != null:
-			if queue_craft.is_valid():
-				var b := _craft_target(grid_view.inventory, at)
-				dropped = bool(queue_craft.call(inst, b))
-				if dropped:
-					craft_queued.emit(inst, b)
-			else:
-				dropped = _craft_into(grid_view.inventory, inst, at)
 		else:
 			# 「顶成功但一件没顶到」不可能发生（放不进空位才会走到这儿），
 			# 但成败不能靠数组空不空来推断 —— 那是把不变式当接口用。
@@ -417,34 +393,7 @@ func _can_shed(fallen: Array) -> bool:
 	return stash != null and stash.room_for(fallen.size())
 
 
-## 084：拖着的这件压到这个位置上会正好压着一件、且两件有配方吗。返回被压的那件；没有 null
-func _craft_target(inv: GridInventory, origin: Vector2i) -> ItemInstance:
-	if _inst == null or not _payload.is_empty() or not craft.is_valid():
-		return null
-	var under := inv.displaced_by(_inst.def, origin, _rot, _inst.uid)
-	if under.size() != 1:
-		return null
-	var b := inv.get_item(int(under[0]))
-	if b == null or b.def == null:
-		return null
-	var out = craft.call(_inst, b)
-	return b if out is ItemDef else null
-
-
-## 暂存区里鼠标所在那一行的道具能不能和手上的配对；不能 null
-func _stash_partner(sv: StashView, global_pos: Vector2) -> ItemInstance:
-	if _inst == null or not _payload.is_empty() or not craft.is_valid() or sv.stash == null:
-		return null
-	var row := sv.row_at_local(global_pos - sv.global_position)
-	var list := sv.stash.items()
-	if row < 0 or row >= list.size():
-		return null
-	var b := list[row] as ItemInstance
-	var out = craft.call(_inst, b)
-	return b if out is ItemDef else null
-
-
-## 085：拖起一件时，所有登记的视图里能和它配对的那几件亮一圈（放下 / 取消时熄）
+## 085 / 087：拖起一件时，所有登记的视图里能和它合成的那几件亮一圈（放下 / 取消时熄）—— 提醒「放到它旁边，走到下一个点就合」
 func _highlight_partners() -> void:
 	for view in _views:
 		var marks := {}
@@ -456,30 +405,6 @@ func _highlight_partners() -> void:
 					marks[b.uid] = true
 		view.set("highlights", marks)
 		view.queue_redraw()
-
-
-## 合成：a（手上的）+ b（被压的）→ 产物落在 b 的位置。返回成功没有（失败时容器不动，a 退回源容器）
-func _craft_into(inv: GridInventory, a: ItemInstance, origin: Vector2i) -> bool:
-	var b := _craft_target(inv, origin)
-	if b == null:
-		return false
-	var out_def: ItemDef = craft.call(a, b)
-	var home := b.origin
-	var home_rot := b.rotation
-	inv.begin_batch()
-	inv.remove(b.uid)
-	var out := ItemInstance.create(out_def, home_rot)
-	var placed := inv.place(out, home, home_rot) or inv.try_add(out, true)
-	if not placed and stash != null:
-		placed = stash.admit(out)
-	if not placed:
-		# 产物没地方去：整件事作废，b 放回原处
-		inv.place(b, home, home_rot)
-		inv.end_batch()
-		return false
-	inv.end_batch()
-	crafted.emit(a, b, out)
-	return true
 
 
 ## 顶替式放下。返回 [code]{"ok": bool, "victims": Array}[/code]；

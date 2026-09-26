@@ -89,6 +89,11 @@
 | 敌人内容 | `base_stats` | 这个点的敌人自己的基线（覆盖敌人定义与档位倍率之后的数；教程敌人靠它不跟全局涨） |
 | `DropRule` | `min_drops` `bags_always_drop` | 打赢至少掉几件身上有的、**包不算在名额里**（标准规则 1）；敌人的包必掉（默认开） |
 | `GameSettings` | `loot_auto_close` | 拿走最后一件后自动关战利品 / 容器屏（默认关） |
+| `ItemDef` | `dormant_keeps_combat` | 信仰道具休眠时保不保留自己的战斗定义（通用效果：盾的减伤、武器的攻击力；默认 true）；没有 combat 的护符休眠即彻底失效（087） |
+| `DropRule` | `boss_rarity` | 击败核心点 BOSS 保底掉一件这个稀有度的（4 = 金；-1 不保底），不看它身上有没有（087） |
+| `NodeRules` | `boss_extracts` | BOSS 倒下、收完战利品直接撤离结算（087，默认开） |
+| `EconomyRules` | `shop_sell_ratio` | 卖给店里回定价的几成（087，一半）；`shop_slots` 个栏位每格一块 ≥ 3×4 的小棋盘 |
+| 稀有度 | 0 白 / 1 绿 / 2 蓝 / 3 紫 / 4 金 / 5 红 | 087 作者定；按稀有度下标的表（掉落率、商店权重、揭示耗时）都是六档，超出按最后一档 |
 | `GameSettings` | `language` | 界面语言 `zh` / `en`（主菜单切）；界面文字走 `UiText.t(key)`，表在 `core/text/ui_text.gd`，现在覆盖主菜单与 buff 制作器 |
 | `BuffDef` | `max_stacks` `duration_sec` | `max_stacks 0 = 不限层`（通常如此）、`1 = 不可叠层`；可叠层的永续、不许填时长（导入器拦）。Buff 制作器 `ui/buff_editor` 按这套规矩联动 |
 | 档位表 `StrengthTier` / `EnemyDef` | `bags` | 这一档 / 这种敌人背的包，包不计入件数 |
@@ -98,5 +103,19 @@
 | 事件后果 | `extract` | 从这个撤离点撤离（撤离点的对话里用）；付不起在结果页说 |
 | 开局 | 地图规模 | 环形配置的 `scales`（小 / 中 / 大）在开局屏可选；`RunState.map_scale` 跟存档 |
 | 节点 `layout` | `col` `row` | `line` 布局：列从左到右，行上下错开（岔路） |
-| `recipes`（内容种类） | `inputs[2]` `output` `note` | 合成配方：两件拖到一起先配对（棋盘上画「合」），走到下一个点时合成，产物落在被压那件的位置、装不下进暂存区并提醒 |
+| `recipes`（内容种类） | `inputs[2]` `output` `note` | 合成配方：两件在棋盘上**相邻**（087 作者定，不用拖到一起）就画「合」，走到下一个点时自动合成，产物落在 uid 小的那件的位置、装不下进暂存区并提醒 |
 | `ChapterDef` | `node_tooltips` `tooltip_mode` `tooltip_texts` | 节点浮窗 |
+
+## 6. 词条（悬浮窗侧边的小窗，087）
+
+道具说明里指向名词的地方**只写名词**，每个名词在悬浮窗侧边有一块小窗写具体效果。逻辑在 `core/text/glossary.gd`（[Glossary]），画在 [HoverTip]，两者分开 —— 换正式渲染时保留这套「主文字 + 侧边词条」。
+
+| 词条来源 | 怎么来 | 例 |
+|---|---|---|
+| 固定词条 `Glossary.TERMS` | 关键词 → 解释，手写 | 自发、开战时、冷却、急速、护甲、护盾、耐力、耗耐力、永续、叠层、休眠、信力、合成、增益槽、受益槽、中毒、流血 |
+| buff 词条 | 这件道具会施加的 `BuffDef`（自己的规则、信力加成、buff 自带规则里再施加的），说明由 `describe_buff` 按定义生成 | 血怒 → 「增益　不可叠层　持续 10.0 秒 / 增伤 +10%」 |
+
+- `ItemTooltip.describe_full(inst, board)` → `{text, terms}`；主文字里的词条标成紫色下划线（`Glossary.mark`）。
+- `ApplyStatus.describe()` 只写「施加中毒」「获得血怒」；永续 / 层数 / 时长在词条里。
+- 战斗屏的 buff 图标（名字第一个字）悬浮时也用 `describe_buff`。
+- 属性修饰的中文统一走 `Glossary.mod_text`：「伤害 +10%」「护甲 +4」「急速 +20%（急速）」。

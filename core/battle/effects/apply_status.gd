@@ -26,10 +26,8 @@ func apply(ctx: RuleContext) -> void:
 			(e as CombatEffect).apply(ctx)
 
 
+## 087（作者定）：只写名词，不写细节 —— 「血怒」的「伤害 +10%」、永续与层数上限都在词条的侧窗里（[Glossary.describe_buff]）
 func describe() -> String:
 	if buff == null:
 		return "施加 ?"
-	var bits: Array[String] = [buff.duration_text()]
-	if buff.max_stacks > 0:
-		bits.append("至多 %d 层" % buff.max_stacks)
-	return "施加「%s」%s（%s）" % [buff.display_name, ("×%d" % stacks) if stacks > 1 else "", "，".join(bits)]
+	return "%s%s%s" % ["施加" if target != Target.SELF else "获得", buff.display_name, ("×%d" % stacks) if stacks > 1 else ""]

@@ -45,7 +45,7 @@ extends Resource
 @export_group("")
 ## 揭示一件要几秒，下标即稀有度，超出表长按最后一档（058 第 5 条：耗时随稀有度、和体积无关；作者：稀有度影响耗时是正向体验的一部分）。
 ## 占位数；没有角色倍率（作者：搜索速度不做成属性）
-@export var reveal_seconds: Array[float] = [0.3, 0.5, 0.8, 1.2, 2.0]
+@export var reveal_seconds: Array[float] = [0.3, 0.5, 0.8, 1.2, 2.0, 3.0]
 
 
 ## 揭示这个稀有度的一件要几秒

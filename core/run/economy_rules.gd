@@ -28,10 +28,12 @@ extends Resource
 ## 一次摆几件
 @export var shop_slots: int = 4
 ## 货架上道具的稀有度权重，下标即稀有度；× (1 + shop_depth_gain × 深度 × 稀有度)，越深越容易见到好东西
-@export var shop_rarity_weights: Array[float] = [40.0, 30.0, 20.0, 8.0, 2.0]
+@export var shop_rarity_weights: Array[float] = [40.0, 30.0, 20.0, 8.0, 2.0, 0.5]
 @export var shop_depth_gain: float = 1.0
 ## 售价 = 道具价值（6.4 的 ItemValue）× 这个倍数
 @export var shop_price_mult: float = 1.0
+## 087（作者定）：卖给店里回定价的几成（一半）
+@export var shop_sell_ratio: float = 0.5
 ## 不上架的道具标签（珍宝只从敌人身上掉）
 @export var shop_exclude_tags: Array[StringName] = [&"treasure"]
 ## 刷新一次多少钱；每刷一次涨 shop_refresh_step

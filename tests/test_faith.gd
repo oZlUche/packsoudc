@@ -123,25 +123,28 @@ static func run_activation(t: TestCase) -> void:
 
 
 static func run_compile_and_sets(t: TestCase) -> void:
-	t.begin("信仰 · 编译战斗单位跳过休眠的（不参战、不给邻接）；套装不计休眠的；切换之后另一边活过来")
+	t.begin("信仰 · 编译战斗单位：休眠的只留通用效果（087：长弓本身的攻击力照在、信力加成与邻接不给）；套装不计休眠的；切换之后另一边活过来")
 	var db := _db()
 	var b := GridInventory.new(Vector2i(8, 6), 1, false)
 	var bow := _put(b, db, &"blessed_longbow", Vector2i(0, 0))      # hunt，会打
 	var sigil := _put(b, db, &"strength_sigil", Vector2i(2, 0))     # violence
-	var spec := BattleCompiler.compile(b)
+	var spec := BattleCompiler.compile(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:hunt": 2})
 	var uids: Array = []
 	for item in spec.items:
 		uids.append((item as CompiledItem).source_uid)
-	t.check(uids.has(sigil.uid) and not uids.has(bow.uid), "只编译了激活信仰（暴力之神）的符号，长弓休眠（%s）" % str(uids))
-	t.eq(spec.rough_dps(), 0.0, "长弓休眠：没有输出")
+	t.check(uids.has(sigil.uid) and uids.has(bow.uid), "激活信仰（暴力之神）的符号与休眠的长弓都在（长弓留着通用效果：%s）" % str(uids))
+	var bow_item := spec.item_of(bow.uid)
+	t.check(bow_item != null and spec.rough_dps() > 0.0, "长弓休眠仍出手：武器本身的攻击力是通用效果")
+	if bow_item != null:
+		t.check(is_equal_approx(StatMath.to_float(bow_item.stats.total_of(BattleStats.DAMAGE)), float(bow.def.combat.base_stats["damage"])), "但信力加成（+4、+15%）没给")
 	# 切换：长弓挪出再挪回 → 狩猎之神，符号休眠
 	var stash := ItemStash.new(2, 0)
 	InventoryService.transfer_auto(b, bow.uid, stash)
 	InventoryService.transfer_auto(stash, bow.uid, b)
-	var spec2 := BattleCompiler.compile(b)
-	t.eq(spec2.items.size(), 1, "切成狩猎之神：只剩长弓参战")
+	var spec2 := BattleCompiler.compile(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:hunt": 2})
+	t.eq(spec2.items.size(), 1, "切成狩猎之神：只剩长弓参战（符号没有 combat，休眠就彻底失效）")
 	t.eq((spec2.items[0] as CompiledItem).source_uid, bow.uid, "是长弓")
-	t.check(spec2.rough_dps() > 0.0, "长弓活了：有输出")
+	t.check(spec2.rough_dps() > spec.rough_dps(), "长弓活了：吃到信力加成，输出比休眠时高")
 	# 凡物照常参战
 	var sword := _put(b, db, &"shortsword", Vector2i(4, 0))
 	var spec3 := BattleCompiler.compile(b)
