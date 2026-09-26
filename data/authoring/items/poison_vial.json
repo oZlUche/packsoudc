@@ -34,7 +34,6 @@
               "id": "poison",
               "display_name": "中毒",
               "is_debuff": true,
-              "max_stacks": 5,
               "rules": [
                 {
                   "trigger": {

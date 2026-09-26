@@ -89,6 +89,8 @@
 | 敌人内容 | `base_stats` | 这个点的敌人自己的基线（覆盖敌人定义与档位倍率之后的数；教程敌人靠它不跟全局涨） |
 | `DropRule` | `min_drops` `bags_always_drop` | 打赢至少掉几件身上有的、**包不算在名额里**（标准规则 1）；敌人的包必掉（默认开） |
 | `GameSettings` | `loot_auto_close` | 拿走最后一件后自动关战利品 / 容器屏（默认关） |
+| `GameSettings` | `language` | 界面语言 `zh` / `en`（主菜单切）；界面文字走 `UiText.t(key)`，表在 `core/text/ui_text.gd`，现在覆盖主菜单与 buff 制作器 |
+| `BuffDef` | `max_stacks` `duration_sec` | `max_stacks 0 = 不限层`（通常如此）、`1 = 不可叠层`；可叠层的永续、不许填时长（导入器拦）。Buff 制作器 `ui/buff_editor` 按这套规矩联动 |
 | 档位表 `StrengthTier` / `EnemyDef` | `bags` | 这一档 / 这种敌人背的包，包不计入件数 |
 | `SearchRules` | `again_event` `done_event` `encounter_event` `destroyed_event` | 搜索循环的默认事件 |
 | `ChapterDef` | `auto_spawn` `skip_setup` `intro_event` | 开局站在出生点、不走开局屏、先过开场事件 |

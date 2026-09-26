@@ -68,6 +68,7 @@ func _ready() -> void:
 	flow.meta_path = meta_path
 	flow.settings_path = settings_path
 	flow.settings = GameSettings.load_from(settings_path)
+	UiText.apply(flow.settings)
 	# 没有角色定义时的兜底基线（角色路上基线来自 CharacterDef，067）
 	flow.player_baseline = CombatantBaseline.with_hp(60.0)
 	flow.screen_changed.connect(_on_screen_changed)

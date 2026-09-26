@@ -43,13 +43,13 @@
 | `core/loot` | 掉落规则与掷骰、修正来源接缝、装箱 | `DropRule`、`DropResolver`、`DropBonusSource`、`LootPacker` |
 | `core/run`（+ effects、events） | 一局：旅程、体力、钱、节点事件、搜索 / 商店会话、规则、状态与存档；场景流状态机、开局装备、角色、进阶难度（机制清单）、猎手（伪 PVP）、结算；buff（局外 / 一局）与一局规则的构件；事件层（事件、选项、条件与后果构件、铺放）；局内技能（082：构件 + 一局的账）；信仰与信力（081 / 082） | `RunState`、`RunSave`、`MapTravel`、`NodeEvents`、`Vitality`、`Wallet`、`GameFlow`、`LoadoutDef`、`CharacterDef`、`RunResult`、`RunBuffDef`、`RunBuffs`、`RunContext`、`EventDef`、`EventPlacer`、`RunSkill`、`RunSkills`、`FaithDef`、`FaithPower` |
 | `core/meta` | 跨局：仓库格子（大小是 `MetaRules`）、带回来的棋盘与一键置入、图鉴、钱、战绩、保留规则（`absorb()` 一处）、存档 v2 | `MetaState`、`MetaSave`、`MetaRules` |
-| `core/text` | 文本占位符与样式码（084）：`{char_name}`、`{battle_data}`、`{c:hp}…{/c}`，全表见 `docs/text-placeholders.md` | `TextTemplate` |
-| `core/settings` | 玩家设置（暂存区提醒档位），`user://settings.json` | `GameSettings`（挑要提的在 `core/run/storage_warning.gd`） |
+| `core/text` | 文本占位符与样式码（084）：`{char_name}`、`{battle_data}`、`{c:hp}…{/c}`，全表见 `docs/text-placeholders.md`；界面语言表（085）：`UiText.t(key)`，zh / en | `TextTemplate`、`UiText` |
+| `core/settings` | 玩家设置（暂存区提醒档位、拿完自动关、浮窗预览、界面语言），`user://settings.json` | `GameSettings`（挑要提的在 `core/run/storage_warning.gd`） |
 | `ui/game` | 正式游戏（主场景）：导演（叠层可最小化）+ 屏的底座 + 各屏（事件屏先过、战前准备屏、容器屏战利品 / 搜索合一）+ 背包整理面板（浮窗）+ 仓库面板 + 渐进揭示的战利品视图 | `GameDirector`、`GameScreen`、`LootView`、`FloatingWindow`、`map_screen`、`event_screen`、`prebattle_screen`、`container_screen`…… |
 | `ui/inventory`（084 新增） | 悬浮窗控件与道具说明 | `HoverTip`、`ItemTooltip` |
-| `ui`（其余） | 两个沙盒、三个编辑器 + 启动选择器（开发期入口） | `launcher`、`inventory_sandbox`、`battle_sandbox`、`content_editor`、`event_editor`、`map_editor` |
+| `ui`（其余） | 两个沙盒、四个编辑器 + 启动选择器（开发期入口）；buff 制作器（085）界面文字走 `UiText` | `launcher`、`inventory_sandbox`、`battle_sandbox`、`content_editor`、`event_editor`、`map_editor`、`buff_editor` |
 | `tools` | 命令行：导入 / 导出 / 归一化内容、脚本检查、批量统计、样例生成、截图、校准（木桩、猎手胜率表） | `import_content`、`normalize_content`、`check_scripts`、`map_stats`、`build_dummies`、`bench_hunters` |
-| `tests` | 61 个套件，`tools/test.sh` 一键跑 | `run_tests` |
+| `tests` | 62 个套件，`tools/test.sh` 一键跑 | `run_tests` |
 
 ## 数据与内容管线
 

@@ -52,7 +52,6 @@ effects = Array[ExtResource("6_kxmj1")]([SubResource("Resource_eho8i")])
 script = ExtResource("9_uddwl")
 id = &"bleed"
 display_name = "流血"
-max_stacks = 5
 rules = Array[ExtResource("2_18d2x")]([SubResource("Resource_hafnj")])
 
 [sub_resource type="Resource" id="Resource_1gean"]

@@ -85,6 +85,7 @@ const SUITES: Array = [
 	preload("res://tests/test_node_screens.gd"),
 	preload("res://tests/test_text_and_tooltips.gd"),
 	preload("res://tests/test_tutorial2.gd"),
+	preload("res://tests/test_buff_editor.gd"),
 ]
 
 

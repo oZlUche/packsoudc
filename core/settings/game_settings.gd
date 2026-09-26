@@ -24,6 +24,8 @@ var storage_warn_value: int = 100
 var loot_auto_close: bool = false
 ## 084：节点浮窗预览 —— 不管章节开没开（`ChapterDef.node_tooltips`，第二章才开）都显示。给作者与开发期看效果用，默认关
 var node_tooltips_preview: bool = false
+## 085：界面语言 "zh" / "en"。主菜单点一下切，[UiText] 跟着读；不认识的值回落中文
+var language: String = "zh"
 
 
 func to_dict() -> Dictionary:
@@ -34,6 +36,7 @@ func to_dict() -> Dictionary:
 		"storage_warn_value": storage_warn_value,
 		"loot_auto_close": loot_auto_close,
 		"node_tooltips_preview": node_tooltips_preview,
+		"language": language,
 	}
 
 
@@ -47,6 +50,8 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	s.storage_warn_value = int(d.get("storage_warn_value", 100))
 	s.loot_auto_close = bool(d.get("loot_auto_close", false))
 	s.node_tooltips_preview = bool(d.get("node_tooltips_preview", false))
+	var lang := String(d.get("language", "zh"))
+	s.language = lang if UiText.LANGS.has(lang) else "zh"
 	return s
 
 

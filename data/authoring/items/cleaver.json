@@ -39,7 +39,6 @@
             "buff": {
               "id": "bleed",
               "display_name": "流血",
-              "max_stacks": 5,
               "rules": [
                 {
                   "trigger": {

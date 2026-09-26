@@ -42,6 +42,12 @@ const ENTRIES := [
 		"keys": "保存 = JSON + .tres　导入的图复制到 assets/events/<id>",
 	},
 	{
+		"scene": "res://ui/buff_editor/buff_editor.tscn",
+		"title": "Buff 制作器",
+		"desc": "给作者做 buff：可否叠层 / 叠层上限、永续 / 持续秒数、效果从预设里挑或直接改 JSON，实时校验，存盘直接产出资产。界面语言跟主菜单的设置走（中文 / English）",
+		"keys": "保存 = JSON + .tres　可叠层的 buff 一律永续",
+	},
+	{
 		"scene": "res://ui/map_editor/map_editor.tscn",
 		"title": "地图编辑器",
 		"desc": "按参数随机生成一张地图，再手动改点、改路、改类型，存成预设给对局载入",
