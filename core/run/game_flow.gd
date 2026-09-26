@@ -82,40 +82,80 @@ func to_main_menu() -> void:
 func new_run() -> void:
 	grant_first_kit()
 	save_meta()
-	# 084（作者：序章不要开局页面）：只有一章可选、它又说了跳过开局屏，就直接开 —— 角色取它列的第一个、种子随机
+	# 084（作者：序章不要开局页面）：教程直接开、不经开局屏 —— 角色取它列的第一个、种子随机；教程全通了才是开局屏（随机一局）
 	var target := new_run_target()
 	if target != null and begin_direct(target) != null:
 		return
 	_go(Screen.SETUP)
 
 
-## 「新的一局」会直接开哪一章（不经开局屏）；会走开局屏时返回 null。主菜单拿它把去向写在按钮上 ——
-## 教程通关后那一章收起（`hidden_by_unlock`），只剩下一张时按钮就直接开它，不写清楚玩家会以为点错了
+## 「新的一局」会直接开哪一章（不经开局屏）；会走开局屏时返回 null。
+## 作者定（085）：**新的一局 = 从头开始**。教程（带 `hidden_by_unlock` 的章）还没全通就从第一张教程开，不管前面几张通没通 ——
+## 接着往下打的是「继续」（[method continue_target]）。教程全通了就看还能选的：只剩一章又 skip_setup 才直接开，否则开局屏
 func new_run_target() -> ChapterDef:
+	var tuts := tutorial_chapters()
+	if not tuts.is_empty() and not tutorials_done():
+		return tuts[0]
 	var chs := available_chapters()
 	if chs.size() == 1 and chs[0].skip_setup:
 		return chs[0]
 	return null
 
 
-## 通关后收起了的章（教程），按顺序：主菜单的「重玩教程」从第一张开始
-func replayable_chapters() -> Array[ChapterDef]:
+## 「继续」会直接开哪一章：有局内存档时是 null（那是读档，不是开新章）；教程打到中途（有通关的、还有没通关的）
+## 就是下一张没通关的教程；别的情况 null。主菜单：有存档或这里非 null 才显示「继续」，和「新的一局」并列
+func continue_target() -> ChapterDef:
+	if has_save():
+		return null
+	var tuts := tutorial_chapters()
+	if tuts.is_empty() or tutorials_done():
+		return null
+	var any_done := false
+	for c in tuts:
+		if meta != null and meta.has_unlock(c.hidden_by_unlock):
+			any_done = true
+			break
+	if not any_done:
+		return null
+	for c in tuts:
+		if not (meta != null and meta.has_unlock(c.hidden_by_unlock)):
+			return c
+	return null
+
+
+## 有存档就读档接着玩；没有就接着打下一张教程（[method continue_target]）。两样都没有返回 false
+func continue_run() -> bool:
+	var state := RunSave.read(items, enemies, sets, save_path)
+	if state != null:
+		_adopt(state)
+		_flush()     # 读档回来：等着选的事件还在这一屏；结束了的直接进结算；否则回地图
+		run_started.emit(state)
+		return true
+	var target := continue_target()
+	if target == null:
+		return false
+	grant_first_kit()
+	save_meta()
+	return begin_direct(target) != null
+
+
+## 教程章（有 `hidden_by_unlock` 的），按顺序
+func tutorial_chapters() -> Array[ChapterDef]:
 	var out: Array[ChapterDef] = []
 	for c in chapters:
-		if c.hidden_by_unlock != &"" and meta != null and meta.has_unlock(c.hidden_by_unlock):
+		if c.hidden_by_unlock != &"":
 			out.append(c)
 	out.sort_custom(func(a: ChapterDef, b: ChapterDef) -> bool:
 		return a.order < b.order if a.order != b.order else String(a.id) < String(b.id))
 	return out
 
 
-## 重玩一张收起了的教程图：不看收起、不看门，直接开（教程都是 skip_setup）。开不了返回 false
-func replay_chapter(chapter: ChapterDef) -> bool:
-	if chapter == null:
-		return false
-	grant_first_kit()
-	save_meta()
-	return begin_direct(chapter) != null
+## 教程是不是全通了（没有教程章也算全通）
+func tutorials_done() -> bool:
+	for c in tutorial_chapters():
+		if not (meta != null and meta.has_unlock(c.hidden_by_unlock)):
+			return false
+	return true
 
 
 ## 084：不经开局屏直接开一章：角色 = 这一章能选的第一个，种子随机；开了先过 intro 事件（配了的话）。开不了返回 null
@@ -311,17 +351,6 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 
 func has_save() -> bool:
 	return RunSave.exists(save_path)
-
-
-## 读上次存的那一局接着玩。没有、读不了返回 false
-func continue_run() -> bool:
-	var state := RunSave.read(items, enemies, sets, save_path)
-	if state == null:
-		return false
-	_adopt(state)
-	_flush()     # 读档回来：等着选的事件还在这一屏；结束了的直接进结算；否则回地图
-	run_started.emit(state)
-	return true
 
 
 func save() -> bool:

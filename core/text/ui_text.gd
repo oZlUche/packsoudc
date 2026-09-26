@@ -15,8 +15,8 @@ const TEXT := {
 	# 主菜单
 	"menu.new_run": {"zh": "新的一局", "en": "New run"},
 	"menu.new_run_to": {"zh": "新的一局 · %s", "en": "New run · %s"},
-	"menu.replay": {"zh": "重玩教程（从「%s」开始）", "en": "Replay tutorial (from \"%s\")"},
 	"menu.continue": {"zh": "继续上次", "en": "Continue"},
+	"menu.continue_to": {"zh": "继续 · %s", "en": "Continue · %s"},
 	"menu.meta": {"zh": "仓库与战绩", "en": "Warehouse & records"},
 	"menu.settings": {"zh": "设置", "en": "Settings"},
 	"menu.dev_tools": {"zh": "开发工具（沙盒与编辑器）", "en": "Dev tools (sandboxes & editors)"},
