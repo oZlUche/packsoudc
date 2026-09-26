@@ -11,9 +11,6 @@
     "sigil"
   ],
   "combat": {
-    "base_stats": {
-      "max_shield": 60
-    },
     "rules": [
       {
         "trigger": {
@@ -25,9 +22,18 @@
         },
         "effects": [
           {
-            "type": "change_resource",
-            "resource_key": "shield",
-            "amount": 7.0
+            "type": "apply_status",
+            "target": "SELF",
+            "buff": {
+              "id": "ward",
+              "display_name": "护符结界",
+              "mods": [
+                {
+                  "stat": "max_shield",
+                  "flat": 8.0
+                }
+              ]
+            }
           }
         ]
       }

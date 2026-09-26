@@ -51,6 +51,9 @@ var _preview_costly: bool = false
 @export var show_adjacency: bool = true
 ## 085：物品右上角的小记号（uid → 文字），比如配了对等着合成的「合」。持有方设，改了 queue_redraw
 var badges: Dictionary = {}
+## 085：亮一圈的物品（uid → true）：拖着的那件能和它合成。拖拽层设
+var highlights: Dictionary = {}
+const COLOR_HIGHLIGHT := Color(0.42, 0.86, 0.52)
 
 
 func container() -> ItemContainer:
@@ -192,6 +195,10 @@ func _draw() -> void:
 休眠" if dormant else ""), font, 13,
 			COLOR_TEXT.darkened(0.35) if dormant else COLOR_TEXT
 		)
+		if highlights.has(item.uid):
+			var hb := item.def.shape.size_rotated(item.rotation)
+			var pulse := 0.6 + 0.4 * (0.5 + 0.5 * sin(Time.get_ticks_msec() / 180.0))
+			draw_rect(Rect2(anchor - Vector2(3, 3), Vector2(hb) * CELL + Vector2(6, 6)), Color(COLOR_HIGHLIGHT, pulse), false, 3.0)
 		if badges.has(item.uid):
 			var badge := String(badges[item.uid])
 			var box := item.def.shape.size_rotated(item.rotation)

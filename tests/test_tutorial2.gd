@@ -270,6 +270,24 @@ static func run_crafting_deferred(t: TestCase) -> void:
 			made = inst
 	t.check(made != null and made.origin == home, "涂毒匕首落在匕首原来的位置")
 	t.check(not s.board.has_item(knife.uid) and s.pending_crafts.is_empty(), "匕首没了、队列清了")
+	# 配的那件在暂存区里：两件都拿出来保管，到了下一个点产物进包
+	var s4 := RunState.start(c.chapter, 4, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
+	s4.recipes = c.recipes
+	var knife4 := ItemInstance.create(c.items.get_def(&"knife"))
+	s4.storage.admit(knife4)
+	var vial4 := ItemInstance.create(c.items.get_def(&"poison_vial"))
+	t.check(s4.queue_craft(vial4, knife4), "匕首在暂存区里也能配对")
+	t.check(not s4.storage.has_item(knife4.uid), "配对时匕首从暂存区拿出来了（不然一挪步就丢）")
+	var back4 := RunState.from_dict(s4.to_dict(), c.chapter, c.items, c.enemies, c.sets)
+	t.check(back4 != null and back4.pending_crafts.size() == 1 and back4.pending_crafts[0]["b"] != null, "保管的两件都跟存档")
+	var done4: Array = []
+	s4.craft_done.connect(func(_id: int, detail: Dictionary): done4.append(detail))
+	s4.step_to(s4.travel.available_moves()[0])
+	var made4 := false
+	for inst in s4.board.items():
+		if (inst as ItemInstance).def.id == &"poisoned_knife":
+			made4 = true
+	t.check(done4.size() == 1 and String(done4[0]["where"]) == "board" and made4, "到了下一个点：涂毒匕首进了包")
 	# 装不下：把包塞满再配一对，产物进暂存区并提醒
 	var s2 := RunState.start(c.chapter, 2, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
 	s2.recipes = c.recipes
@@ -370,9 +388,23 @@ static func run_crafting(t: TestCase) -> void:
 	t.check(board.try_add(knife2, true), "再放一把匕首")
 	var at2 := (Vector2(knife2.origin) + Vector2(0.5, 0.5)) * InventoryView.CELL
 	sview.grab_requested.emit(sview, vial2.uid, Vector2(10, 10))
+	t.check(view.highlights.has(knife2.uid) and not view.highlights.has(other.uid), "拿起毒药瓶：棋盘上的匕首亮了，伤药没亮（085）")
 	t.check(drag.drop_at(at2), "放到匕首上：算落入（配对）")
 	t.check(pairs == [[vial2.uid, knife2.uid]] and made.size() == 1, "只配对，没立刻合")
 	t.check(board.has_item(knife2.uid) and not stash.has_item(vial2.uid), "匕首还在、毒药瓶交出去了")
+	t.check(view.highlights.is_empty(), "放下之后高光熄了")
+	# 反过来：拿起匕首，暂存区里的毒药瓶亮；压到它那一行上也配对
+	var knife3 := ItemInstance.create(c.items.get_def(&"knife"))
+	t.check(board.try_add(knife3, true), "再放一把匕首")
+	var vial3 := ItemInstance.create(c.items.get_def(&"poison_vial"))
+	stash.admit(vial3)
+	view.grab_requested.emit(view, knife3.uid, (Vector2(knife3.origin) + Vector2(0.5, 0.5)) * InventoryView.CELL)
+	t.check(sview.highlights.has(vial3.uid), "拿起匕首：暂存区里的毒药瓶亮了")
+	var row := stash.index_of(vial3.uid)
+	var row_at := sview.position + sview.row_origin_px(row) + Vector2(20, 10)
+	drag.update_preview(row_at)
+	t.check(drag.drop_at(row_at), "压到毒药瓶那一行：配对")
+	t.check(pairs.size() == 2 and pairs[1] == [knife3.uid, vial3.uid], "反过来也配对")
 	# RunState 的入口
 	var s := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
 	if s != null:

@@ -129,6 +129,7 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 			return
 
 	set_process_input(true)
+	_highlight_partners()
 	queue_redraw()
 	drag_started.emit(uid)
 
@@ -154,6 +155,7 @@ func grab_free(inst: ItemInstance, home: ItemContainer, home_at: Vector2i, home_
 	_payload = {}
 	_inst = inst
 	set_process_input(true)
+	_highlight_partners()
 	if is_inside_tree():
 		update_preview(get_global_mouse_position())
 	queue_redraw()
@@ -245,6 +247,10 @@ func update_preview(global_pos: Vector2) -> void:
 
 	if target is StashView:
 		var sv := target as StashView
+		# 压在能配对的那一行上：不画插入线（放手是配对，不是插入）
+		if _stash_partner(sv, global_pos) != null and queue_craft.is_valid():
+			sv.clear_preview()
+			return
 		# 列表落点只有「插在第几行」，不存在压着谁的问题。
 		# 唯一会失败的是塞不下或标签不收 —— 那时不画插入线
 		if _stash_accepts(sv.stash, _inst):
@@ -334,7 +340,13 @@ func drop_at(global_pos: Vector2) -> bool:
 			return dropped
 	if target is StashView:
 		var sv := target as StashView
-		if _stash_accepts(sv.stash, inst):
+		# 085：压在暂存区里能配对的那件上 → 配对（两件都交给持有方保管），不插进列表
+		var partner := _stash_partner(sv, global_pos)
+		if partner != null and queue_craft.is_valid():
+			dropped = bool(queue_craft.call(inst, partner))
+			if dropped:
+				craft_queued.emit(inst, partner)
+		elif _stash_accepts(sv.stash, inst):
 			dropped = sv.stash.insert(inst, sv.insert_index_at_global(global_pos))
 		if dropped:
 			home = sv.stash
@@ -417,6 +429,33 @@ func _craft_target(inv: GridInventory, origin: Vector2i) -> ItemInstance:
 		return null
 	var out = craft.call(_inst, b)
 	return b if out is ItemDef else null
+
+
+## 暂存区里鼠标所在那一行的道具能不能和手上的配对；不能 null
+func _stash_partner(sv: StashView, global_pos: Vector2) -> ItemInstance:
+	if _inst == null or not _payload.is_empty() or not craft.is_valid() or sv.stash == null:
+		return null
+	var row := sv.row_at_local(global_pos - sv.global_position)
+	var list := sv.stash.items()
+	if row < 0 or row >= list.size():
+		return null
+	var b := list[row] as ItemInstance
+	var out = craft.call(_inst, b)
+	return b if out is ItemDef else null
+
+
+## 085：拖起一件时，所有登记的视图里能和它配对的那几件亮一圈（放下 / 取消时熄）
+func _highlight_partners() -> void:
+	for view in _views:
+		var marks := {}
+		var c := view.container()
+		if _inst != null and _payload.is_empty() and craft.is_valid() and c != null:
+			for inst in c.items():
+				var b := inst as ItemInstance
+				if b.uid != _inst.uid and craft.call(_inst, b) is ItemDef:
+					marks[b.uid] = true
+		view.set("highlights", marks)
+		view.queue_redraw()
 
 
 ## 合成：a（手上的）+ b（被压的）→ 产物落在 b 的位置。返回成功没有（失败时容器不动，a 退回源容器）
@@ -565,6 +604,7 @@ func _end_drag() -> void:
 	for view in _views:
 		view.clear_preview()
 	_inst = null
+	_highlight_partners()     # _inst 空了：全熄
 	_source = null
 	_src_index = -1
 	_payload = {}

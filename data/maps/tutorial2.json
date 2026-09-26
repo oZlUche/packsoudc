@@ -242,11 +242,10 @@
 					}
 				],
 				"base_stats": {
-					"max_hp": 40,
-					"regen_hp": 6
+					"max_hp": 40
 				},
 				"event": "tut2_battle_ward",
-				"tooltip": "{battle_data}\n{c:dim}护盾一层层往上叠。{/c}"
+				"tooltip": "{battle_data}\n{c:dim}每秒叠一层护盾，没有上限。{/c}"
 			},
 			"state": 0,
 			"layout": {

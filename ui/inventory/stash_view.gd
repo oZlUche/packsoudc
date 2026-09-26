@@ -33,6 +33,8 @@ var stash: ItemStash:
 
 ## 落点预览的插入行号，-1 表示不显示
 var _insert_at: int = -1
+## 085：亮一圈的行（uid → true）：拖着的那件能和它合成。拖拽层设
+var highlights: Dictionary = {}
 
 
 func set_stash(s: ItemStash) -> void:
@@ -148,6 +150,8 @@ func _draw_row(index: int, inst: ItemInstance, font: Font) -> void:
 
 	# 稀有度色条顶在最左边。列表里没有形状可看，颜色是唯一一眼能分出贵贱的东西
 	draw_rect(Rect2(at, Vector2(3, ROW_H - 2)), ItemPainter.rarity_color(inst.def), true)
+	if highlights.has(inst.uid):
+		draw_rect(Rect2(at, Vector2(w, ROW_H - 2)), COLOR_INSERT, false, 2.0)
 
 	var name := inst.def.display_name if inst.def != null else "?"
 	draw_string(

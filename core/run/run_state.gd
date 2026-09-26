@@ -537,10 +537,15 @@ func craft_output(a: ItemDef, b: ItemDef) -> ItemDef:
 	return items.get_def(r.output) if r != null else null
 
 
-## 配对（085）：[param a] 是拖着的那件（此刻已经不在任何容器里，由这里保管），[param b] 是棋盘上被压的那件。走到下一个点时合。
-## 没有配方、b 不在棋盘上、b 已经配过对返回 false（a 得由调用方放回去）
+## 配对（085）：[param a] 是拖着的那件（此刻已经不在任何容器里，由这里保管），[param b] 是被压的那件 —— 在棋盘上就留在原地画记号；
+## 在暂存区里就一起拿出来保管（暂存区一挪步就清，留在那儿会丢）。走到下一个点时合。
+## 没有配方、b 不在棋盘 / 暂存区、b 已经配过对返回 false（a 得由调用方放回去）
 func queue_craft(a: ItemInstance, b: ItemInstance) -> bool:
-	if a == null or b == null or board == null or not board.has_item(b.uid):
+	if a == null or b == null or board == null:
+		return false
+	var on_board := board.has_item(b.uid)
+	var in_storage := storage != null and storage.has_item(b.uid)
+	if not on_board and not in_storage:
 		return false
 	var out := craft_output(a.def, b.def)
 	if out == null:
@@ -548,7 +553,10 @@ func queue_craft(a: ItemInstance, b: ItemInstance) -> bool:
 	for pc in pending_crafts:
 		if int(pc["b_uid"]) == b.uid or (pc["a"] as ItemInstance).uid == a.uid:
 			return false
-	pending_crafts.append({"a": a, "b_uid": b.uid, "output": out.id})
+	var held: ItemInstance = null
+	if in_storage:
+		held = storage.remove(b.uid)
+	pending_crafts.append({"a": a, "b_uid": b.uid, "b": held, "output": out.id})
 	craft_queued.emit(a, b, out)
 	return true
 
@@ -570,26 +578,32 @@ func resolve_crafts(at_id: int) -> void:
 	pending_crafts.clear()
 	for pc in todo:
 		var a: ItemInstance = pc["a"]
+		var held: ItemInstance = pc.get("b", null)
 		var b := board.get_item(int(pc["b_uid"])) if board != null else null
 		var out_def := items.get_def(StringName(String(pc["output"]))) if items != null else null
 		var detail := {"log": [] as Array, "output": "", "where": ""}
-		if b == null or out_def == null:
+		if (b == null and held == null) or out_def == null:
 			storage.admit(a)
 			(detail["log"] as Array).append("「%s」要配的东西不在了，它放进了暂存区。" % a.def.display_name)
 			detail["where"] = "storage"
 			craft_done.emit(at_id, detail)
 			continue
-		var home := b.origin
-		var rot := b.rotation
-		board.begin_batch()
-		board.remove(b.uid)
-		var out := ItemInstance.create(out_def, rot)
+		var partner := b if b != null else held
+		var out := ItemInstance.create(out_def, partner.rotation)
 		var where := ""
-		if board.place(out, home, rot) or board.try_add(out, true):
-			where = "board"
-		elif storage.admit(out):
+		board.begin_batch()
+		if b != null:
+			var home := b.origin
+			var rot := b.rotation
+			board.remove(b.uid)
+			if board.place(out, home, rot) or board.try_add(out, true):
+				where = "board"
+		elif board.try_add(out, true):
+			where = "board"     # 配的那件是从暂存区拿出来的：产物找地方进包
+		if where == "" and storage.admit(out):
 			where = "storage"
 		board.end_batch()
+		b = partner
 		detail["output"] = String(out_def.id)
 		detail["where"] = where
 		(detail["log"] as Array).append("「%s」和「%s」合成了「%s」。" % [a.def.display_name, b.def.display_name, out_def.display_name])
@@ -833,7 +847,9 @@ func to_dict() -> Dictionary:
 func _crafts_to_dict() -> Array:
 	var out: Array = []
 	for pc in pending_crafts:
-		out.append({"a": (pc["a"] as ItemInstance).to_dict(), "b_uid": int(pc["b_uid"]), "output": String(pc["output"])})
+		var held: ItemInstance = pc.get("b", null)
+		out.append({"a": (pc["a"] as ItemInstance).to_dict(), "b_uid": int(pc["b_uid"]), "output": String(pc["output"]),
+			"b": held.to_dict() if held != null else null})
 	return out
 
 
@@ -904,7 +920,8 @@ static func from_dict(
 		if raw is Dictionary and (raw as Dictionary).get("a", null) is Dictionary:
 			var a := ItemInstance.from_dict(raw["a"], p_items)
 			if a != null:
-				s.pending_crafts.append({"a": a, "b_uid": int(raw.get("b_uid", -1)), "output": String(raw.get("output", ""))})
+				var held: ItemInstance = ItemInstance.from_dict(raw["b"], p_items) if raw.get("b", null) is Dictionary else null
+				s.pending_crafts.append({"a": a, "b_uid": int(raw.get("b_uid", -1)), "b": held, "output": String(raw.get("output", ""))})
 	s.phase = int(d.get("phase", Phase.PICK_SPAWN))
 	s.end_reason = StringName(String(d.get("end_reason", "")))
 	return s
