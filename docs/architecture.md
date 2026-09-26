@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.88 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.89 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -22,7 +22,7 @@
 3. **肉鸽地图**：程序化生成的点线图，可插拔多种生成形态
 4. **搜刮系统**：战后搜索敌人尸体，渐进式揭示掉落物（三角洲行动风格）
 
-**世界观**（第 8 阶段 8-4 起，报告 079）：剑与魔法；作者的小说只是参考背景，**神话背景才是重点**（作者定的主线：概念 → 神 → 物质与生物；诸神合造人类让其选信仰；信力反噬让神堕落获人性；四元素融合成元素之神、被诸神分裂击杀 → 魔法王国灭亡），**帝国是必要的背景**，角色可以有各种身份（身份定立场与开局，种族定赐福），见 [worldview.md](worldview.md)（一 神话、二 帝国与诅咒之地、三 怎么撑起游戏、四 参考背景、五 等作者拍板）。
+**世界观**（第 8 阶段 8-4 起，报告 079）：剑与魔法；作者的小说只是参考背景，**神话背景才是重点**（作者定的主线：概念 → 神 → 物质与生物；诸神合造人类让其选信仰；信力反噬让神堕落获人性；四元素融合成元素之神、被诸神分裂击杀 → 魔法王国灭亡），**帝国是必要的背景**，角色可以有各种身份（身份定立场与开局，种族定赐福），见 [worldview/worldview.md](worldview/worldview.md)（世界观文件夹 `docs/worldview/`，概念与神明的提议见同夹 concepts-and-gods.md；一 神话、二 帝国与诅咒之地、三 怎么撑起游戏、四 参考背景、五 等作者拍板）。
 开发期的现代道具（枪械等）**保留数据、封存不用**：`ItemDef.SEALED` 标签，`ItemDatabase.ids()` 一处拦（3.1），导入器拦开局装备 / 初始包 / 招牌 / 事件引用它。
 
 ---
@@ -3524,6 +3524,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.89 | 2026-09-26 | 文档：新建世界观文件夹 `docs/worldview/`（worldview.md 挪入，链接改），新增 [concepts-and-gods.md](worldview/concepts-and-gods.md)：从现有神明出发列七个跟人类活动无关的抽象概念（重量 / 腐朽 / 寒冷 / 回响 / 繁多 / 边界 / 空缺）与能做成的玩法（一族一位神的道具族、按布局算的属性、本局天象、信力亲缘继承、腐朽 = 侵蚀、造神作局外成长），等作者拍板 |
 | v1.88 | 2026-09-26 | **叠层不设上限 + Buff 制作器 + 界面语言**（报告 085 三·九）：`max_stacks 0 = 不限`成为常态（中毒 / 流血去掉 5 层上限，兴奋剂 3 层作例子）；`ui/buff_editor` 第四个编辑器（可否叠层 / 上限、永续 / 秒数联动，效果构件反射生成 + JSON 代码编辑器，校验走导入器，保存产出 JSON + .tres）；`UiText`（`core/text`）键 → zh / en 表 + `GameSettings.language`，主菜单「语言」按钮切换并存盘，编辑器跟着走 |
 | v1.87 | 2026-09-25 | **序章二「岔路」**（报告 085）：分岔再归一的预设图（`LineMapLayout` 认 `row`）；`ChapterDef.hidden_by_unlock`（教程通关收起、下一张顶上）/ `vitality_bonus`；**合成**落地（15 节第 5 项，作者定不是立刻的）：内容种类 `recipes`（`RecipeDef`），两件拖到一起只配对（`RunState.queue_craft`，跟存档），走到下一个点 `resolve_crafts` 才合、发 `craft_done` 结果屏，装不下进暂存区并提醒；七件新道具（塔盾 / 板甲 / 毒药瓶 / 涂毒匕首 / 战锤 / 护身符 / 解毒包）、四个针对性敌人、十四个教程事件；第一章改为要 `prologue2_done`；作者第二轮：`extract` 后果（撤离点走对话）、`ChapterDef.next_chapter`（序章串起来，结算屏直接进下一张）、`ChapterDef.starting_items`、开局屏可选地图规模（`MapSource.resolve(seed, scale_id)`、`RunState.map_scale`）、`DamageResolver` 减伤钳零、匕首去流血、毒药瓶自带慢毒、敌人的包必掉不占保底（`DropRule.bags_always_drop`）、耐力评估读单位级回复；**buff 的永续规矩**（4.5）：可叠层的永续、不许填时长（导入器拦），不可叠层的才可以过期（`BuffDef.is_stackable` / `is_permanent`）；持符者改成每秒叠一层护盾 buff；合成配对暂存区里也认、配对高光 |
 | v1.86 | 2026-09-25 | **节点界面八条**（报告 084；3.4、6.2、8）：搜索会话搜满不自动结束（`is_exhausted`，`leave` 才结束）；叠层最小化 / 恢复（`GameFlow.hide_overlay` / `reopen_node`，导演藏而不销毁）；没拿的战利品与暂存区同一时机（走出点）消失；`DragLayer.drop_outside_to_stash`（棋盘外 = 暂存区）；`MapView` 位置标；`ChapterDef.auto_spawn`；`NodeEvents.pause_before_battle` + `pending_battle`（跟存档）+ `PREBATTLE` 屏；`LootView.is_locked`（容器屏只锁容器里没亮的，修玩家自己的包在战利品屏挪不动）；搜索循环（`SearchRules` 四个事件 id、`NodeEvents.pause_search` / `search_shown`、先掷遭遇再翻、`guaranteed_drops` 只认身上有的，序章六个教程事件）；**敌人也背包**（`StrengthTier.bags` / `EnemyDef.bags`，`EnemyKit.board_of` 有包即 `requires_bag`，组装招牌与流派先摆）；`ChapterDef.skip_setup` / `intro_event`（序章不走开局屏）；`TextTemplate` 占位符与样式码、`NodeTooltip` 节点浮窗（章节开关）、`ItemTooltip` / `HoverTip` 道具悬浮窗（新文档 docs/text-placeholders.md）；双击快速置入（`ContainerView.item_double_clicked`）；`GameSettings.loot_auto_close`（拿完默认不关）；`StaminaEstimate` 耐力消耗评估；`DropRule.min_drops` 至少掉一件身上有的；敌人内容 `base_stats` 覆盖；敌人数值与档位倍率上调；回放完才写胜负；`FloatingWindow` 背包浮窗；教程事件 `tut_battle` / `tut_elite` 只剩「进入战前准备」 |

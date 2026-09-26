@@ -1,6 +1,6 @@
 # 080 · 信仰体系（提议，等作者拍板）与暂存区新规则（已实施）
 
-> 第 8 阶段 8-4 ｜ 架构文档 3.4、16（v1.78）｜ 前一步：[079 世界观与封存](079-worldview-and-sealed-items.md)｜ 世界观：[docs/worldview.md](../worldview.md)
+> 第 8 阶段 8-4 ｜ 架构文档 3.4、16（v1.78）｜ 前一步：[079 世界观与封存](079-worldview-and-sealed-items.md)｜ 世界观：[docs/worldview/worldview.md](../worldview/worldview.md)
 
 作者对世界观第五节的回答，一次给了道具体系的核心机制：
 

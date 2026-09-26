@@ -1,6 +1,6 @@
 # 081 · 信仰体系（作者定，已实施）：信仰标签、最后置入决定激活、休眠、敌人只信一个神
 
-> 第 8 阶段 8-4 ｜ 架构文档 3.8（新）、4.2、6.0、10.1、16（v1.79）｜ 前一步：[080 信仰提议](080-faith-system-proposal.md)｜ 世界观：[docs/worldview.md](../worldview.md) 第六节
+> 第 8 阶段 8-4 ｜ 架构文档 3.8（新）、4.2、6.0、10.1、16（v1.79）｜ 前一步：[080 信仰提议](080-faith-system-proposal.md)｜ 世界观：[docs/worldview/worldview.md](../worldview/worldview.md) 第六节
 
 作者答了 080 的七个问题，又补了一条关于「流派」的话；本报告按答案实施。
 
