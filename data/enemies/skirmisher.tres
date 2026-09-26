@@ -7,7 +7,8 @@ script = ExtResource("1_grpoy")
 id = &"skirmisher"
 display_name = "游兵"
 strength = 1
-schools = Array[StringName]([&"rapid", &"bleed"])
+schools = Array[StringName]([&"rapid"])
 base_stats = {
 "max_hp": 50
 }
+item_tags = Array[StringName]([&"rapid", &"melee"])

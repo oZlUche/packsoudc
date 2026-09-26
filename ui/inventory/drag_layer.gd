@@ -16,6 +16,8 @@
 ##
 ## 拖「包」时内容物跟着一起走：抓取走 [method GridInventory.detach_bag]，
 ## 放手走 [method GridInventory.attach_bag]，载荷存在 [member _payload] 里。
+## 087（作者定）：**包也能放进暂存区 / 容器**（列表与自由容器收不下「摆好的一袋」，包进去、内容物脱落进暂存区），
+## **包可以替换包**（压到棋盘上另一个包上：旧包连内容物摘下，内容物进暂存区、旧包拿在手上，和顶替一件道具同一套感觉）。
 class_name DragLayer
 extends Control
 
@@ -259,14 +261,31 @@ func update_preview(global_pos: Vector2) -> void:
 	var origin := target_origin(grid_view, global_pos)
 
 	if not _payload.is_empty():
+		if not inv.requires_bag:
+			# 087：自由容器收不下摆好的一袋：包进去、内容物脱落进暂存区
+			var bag: ItemInstance = _payload["bag"]
+			var fine := inv.can_place_def(bag.def, origin, _rot, bag.uid) and _can_shed(_payload_items())
+			grid_view.set_preview(cells, origin, fine, [], true)
+			return
 		var report := inv.bag_fit_report(_payload, origin, _rot)
 		var fallen: Array = report["fallen"]
 		var ok: bool = report["ok"] and _can_shed(fallen)
+		if not ok:
+			var victim := _replaceable_bag(inv, origin)
+			if victim != GridInventory.EMPTY_UID:
+				grid_view.set_preview(cells, origin, true, [victim], true)     # 087：替换那个包
+				return
 		grid_view.set_preview(cells, origin, ok, [], not fallen.is_empty())
 		return
 
 	if inv.can_place_def(_inst.def, origin, _rot, _inst.uid):
 		grid_view.set_preview(cells, origin, true)
+		return
+
+	if inv.acts_as_bag(_inst.def):
+		# 087：空包压到另一个包上 = 替换它
+		var victim := _replaceable_bag(inv, origin)
+		grid_view.set_preview(cells, origin, victim != GridInventory.EMPTY_UID, [victim] if victim != GridInventory.EMPTY_UID else [], true)
 		return
 
 	# 放不进空位，但地形允许 —— 那就是「压着别人」，可以顶替
@@ -278,9 +297,92 @@ func _drop_allowed(target: ItemContainer) -> bool:
 	return not drop_filter.is_valid() or _inst == null or bool(drop_filter.call(_inst, target))
 
 
-## 现在这一下放到外面会不会进暂存区（开着开关、有暂存区、拖的不是带东西的包）
+## 现在这一下放到外面会不会进暂存区（开着开关、有暂存区）。带东西的包也行（087）：包和内容物都进去
 func _drops_outside_to_stash() -> bool:
-	return drop_outside_to_stash and stash != null and _inst != null and _payload.is_empty()
+	return drop_outside_to_stash and stash != null and _inst != null
+
+
+## 载荷里除了包本身的全部实例：内容物 + 跨包的（087：包进列表 / 自由容器时它们脱落进暂存区）
+func _payload_items() -> Array:
+	var out: Array = []
+	if _payload.is_empty():
+		return out
+	out.append_array(_payload.get("contents", []))
+	for sd in _payload.get("straddlers", []):
+		out.append((sd as Dictionary)["inst"])
+	return out
+
+
+## 087：手上这个包放到这儿会替换掉哪个包。条件：新包每一格在界内、不是禁用格；压到的包恰好一个（不是自己）；
+## 压到的普通道具全是那个包的内容物 / 跨包物（别的包里的东西不能被压）；那个包的东西有地方去（暂存区）。不能替换返回 EMPTY_UID
+func _replaceable_bag(inv: GridInventory, origin: Vector2i) -> int:
+	if _inst == null or _inst.def == null or not inv.acts_as_bag(_inst.def):
+		return GridInventory.EMPTY_UID
+	var victim := GridInventory.EMPTY_UID
+	var pressed: Array[int] = []
+	for c in _inst.def.cells_rotated(_rot):
+		var p := origin + c
+		if not inv.in_bounds(p) or inv.is_blocked(p):
+			return GridInventory.EMPTY_UID
+		var owner := inv.bag_at(p)
+		if owner != GridInventory.EMPTY_UID and owner != _inst.uid:
+			if victim == GridInventory.EMPTY_UID:
+				victim = owner
+			elif victim != owner:
+				return GridInventory.EMPTY_UID     # 压着两个包：不替换
+		var item := inv.cell_uid(p)
+		if item != GridInventory.EMPTY_UID and item != owner and item != _inst.uid and not pressed.has(item):
+			pressed.append(item)
+	if victim == GridInventory.EMPTY_UID:
+		return GridInventory.EMPTY_UID
+	var belongs := inv.contents_of(victim)
+	belongs.append_array(inv.straddlers_of(victim))
+	for item in pressed:
+		if not belongs.has(item):
+			return GridInventory.EMPTY_UID
+	if not belongs.is_empty() and (stash == null or not stash.room_for(belongs.size())):
+		return GridInventory.EMPTY_UID
+	return victim
+
+
+## 087：用手上的包替换 [method _replaceable_bag] 找到的那个：旧包连内容物摘下，新包（连它自己的内容物）放上，
+## 旧包的东西与新包放不下的东西进暂存区，旧包拿在手上（作为顶替的那一件）。失败时容器原样不动
+func _drop_replacing_bag(inv: GridInventory, at: Vector2i) -> Dictionary:
+	var failed := {"ok": false, "victims": []}
+	var victim_uid := _replaceable_bag(inv, at)
+	if victim_uid == GridInventory.EMPTY_UID:
+		return failed
+	var old := inv.get_item(victim_uid)
+	var old_home := old.origin
+	var old_rot := old.rotation
+	var old_payload := inv.detach_bag(victim_uid)
+	if old_payload.is_empty():
+		return failed
+	var shed: Array = []
+	shed.append_array(old_payload.get("contents", []))
+	for sd in old_payload.get("straddlers", []):
+		shed.append((sd as Dictionary)["inst"])
+	var ok := false
+	if _payload.is_empty():
+		ok = inv.place(_inst, at, _rot)
+	else:
+		var report := inv.bag_fit_report(_payload, at, _rot)
+		var fallen: Array = report["fallen"]
+		if report["ok"] and (stash != null and stash.room_for(shed.size() + fallen.size()) or (shed.is_empty() and fallen.is_empty())):
+			var res := inv.attach_bag_shedding(_payload, at, _rot)
+			ok = res["ok"]
+			if ok:
+				shed.append_array(res["fallen"])
+	if not ok:
+		if not inv.attach_bag(old_payload, old_home, old_rot):
+			push_error("DragLayer: 替换失败后旧包放不回原位")
+		return failed
+	if not shed.is_empty():
+		if stash == null or not _admit_all(stash, shed):
+			push_error("DragLayer: 被替换的包里的东西放不进暂存区")
+		else:
+			items_shed.emit(shed)
+	return {"ok": true, "victims": [old]}
 
 
 ## 登记过的视图里画 [member stash] 的那个（没有就 null：那就不画预览，照样能放）
@@ -291,15 +393,15 @@ func _stash_view() -> StashView:
 	return null
 
 
-## 这件东西能不能进这个列表。带内容物的包不行 —— 列表没有坐标，
-## 装不下「包 + 各内容物的相对位置」，放进去就等于把摆好的一袋东西打散。
-## 要收起来先掏空，和「带东西的包不能旋转」是同一条简化。
+## 这件东西能不能进这个列表。列表没有坐标，装不下「包 + 各内容物的相对位置」——
+## 087 作者定：包照样能进，内容物打散成各一行（脱落）；要整袋带着走就放回棋盘
 func _stash_accepts(target: ItemStash, inst: ItemInstance) -> bool:
 	if target == null or inst == null or inst.def == null:
 		return false
-	if not _payload.is_empty():
+	if not target.accepts(inst.def):
 		return false
-	return not target.is_full() and target.accepts(inst.def)
+	# 087：带东西的包也能进列表 —— 包一行、内容物各一行（打散），得都装得下
+	return target.room_for(1 + _payload_items().size())
 
 
 ## 在指定位置放手。返回是否成功落入某个容器（否则已退回源容器）。
@@ -322,7 +424,7 @@ func drop_at(global_pos: Vector2) -> bool:
 		if _source == stash:
 			_restore()
 		else:
-			dropped = stash.admit(inst)
+			dropped = _admit_with_payload(stash, inst, -1)
 			home = stash
 		if _source == stash or dropped:
 			_end_drag()
@@ -331,7 +433,7 @@ func drop_at(global_pos: Vector2) -> bool:
 	if target is StashView:
 		var sv := target as StashView
 		if _stash_accepts(sv.stash, inst):
-			dropped = sv.stash.insert(inst, sv.insert_index_at_global(global_pos))
+			dropped = _admit_with_payload(sv.stash, inst, sv.insert_index_at_global(global_pos))
 		if dropped:
 			home = sv.stash
 	elif target != null and (target as InventoryView).inventory != null:
@@ -339,8 +441,16 @@ func drop_at(global_pos: Vector2) -> bool:
 		var at := target_origin(grid_view, global_pos)
 		if not _payload.is_empty():
 			dropped = _drop_bag(grid_view.inventory, at)
+			if not dropped and grid_view.inventory.requires_bag:
+				var swap := _drop_replacing_bag(grid_view.inventory, at)     # 087：包替换包
+				dropped = swap["ok"]
+				pending = swap["victims"]
 		elif grid_view.inventory.place(inst, at, _rot):
 			dropped = true
+		elif grid_view.inventory.acts_as_bag(inst.def):
+			var swap2 := _drop_replacing_bag(grid_view.inventory, at)     # 087：空包替换包
+			dropped = swap2["ok"]
+			pending = swap2["victims"]
 		else:
 			# 「顶成功但一件没顶到」不可能发生（放不进空位才会走到这儿），
 			# 但成败不能靠数组空不空来推断 —— 那是把不变式当接口用。
@@ -364,6 +474,20 @@ func drop_at(global_pos: Vector2) -> bool:
 ## 放下一个包（可能带着内容物、可能换了朝向）。脱落的内容物进暂存区；
 ## 没地方安置就整件事不成立，容器原样不动。
 func _drop_bag(inv: GridInventory, at: Vector2i) -> bool:
+	if not inv.requires_bag:
+		# 087：自由容器（战利品箱、出售区……）收不下摆好的一袋：包当普通物品放进去，内容物脱落进暂存区
+		var bag: ItemInstance = _payload["bag"]
+		var loose := _payload_items()
+		if not inv.can_place_def(bag.def, at, _rot, bag.uid) or not _can_shed(loose):
+			return false
+		if not inv.place(bag, at, _rot):
+			return false
+		if not loose.is_empty():
+			if not _admit_all(stash, loose):
+				inv.remove(bag.uid)
+				return false
+			items_shed.emit(loose)
+		return true
 	var report := inv.bag_fit_report(_payload, at, _rot)
 	var fallen: Array = report["fallen"]
 	if not report["ok"] or not _can_shed(fallen):
@@ -471,6 +595,22 @@ func _displaceable(inv: GridInventory, origin: Vector2i) -> Array[int]:
 	if victims.size() >= 2 and stash == null:
 		return none
 	return victims
+
+
+## 087：把手上的东西放进列表：包在 [param at] 行（-1 = 末尾），带着的内容物打散追加在后面。有一件放不下就整件事作废
+func _admit_with_payload(dest: ItemStash, inst: ItemInstance, at: int) -> bool:
+	var loose := _payload_items()
+	if not dest.room_for(1 + loose.size()):
+		return false
+	if not dest.insert(inst, at):
+		return false
+	if loose.is_empty():
+		return true
+	if not _admit_all(dest, loose):
+		dest.remove(inst.uid)
+		return false
+	items_shed.emit(loose)
+	return true
 
 
 ## 整批塞进目标容器：有一件放不下就整批退回。

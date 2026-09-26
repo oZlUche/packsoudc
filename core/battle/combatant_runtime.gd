@@ -285,8 +285,21 @@ func _on_resource_changed(key: StringName, delta: int, reason: StringName) -> vo
 	})
 
 
+## 087（作者反馈：敌人倒下两次、倒下时血没归零）：**倒下是终局**。血一到 0 就记死，之后的治疗（伤药的「濒死回血」）不再把它救回来，
+## 也不再发第二次 DIED。回放里看到的「倒下时血没归零」就是同一时刻先倒下、再被治回来、面板停在治疗后的数
+var dead: bool = false
+
+
 func is_alive() -> bool:
-	return resources.current(BattleStats.RES_HP) > 0
+	return not dead and resources.current(BattleStats.RES_HP) > 0
+
+
+## 血到 0 时由伤害管线 / 资源效果调：第一次返回 true（该发 DIED），之后 false
+func mark_dead() -> bool:
+	if dead:
+		return false
+	dead = true
+	return true
 
 
 func snapshot() -> Dictionary:

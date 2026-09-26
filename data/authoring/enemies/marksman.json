@@ -3,9 +3,34 @@
   "display_name": "神射手",
   "strength": 1,
   "schools": [
-    "burst"
+    "ranged"
   ],
   "base_stats": {
     "max_hp": 28
-  }
+  },
+  "item_tags": [
+    "ranged",
+    "ammo",
+    "consumable"
+  ],
+  "signature_by_strength": {
+    "0": [
+      "shortbow"
+    ],
+    "1": [
+      "longbow"
+    ],
+    "2": [
+      "blessed_longbow"
+    ]
+  },
+  "board": [
+    6,
+    4
+  ],
+  "bags": [
+    "bag_long",
+    "bag_long",
+    "bag_small"
+  ]
 }

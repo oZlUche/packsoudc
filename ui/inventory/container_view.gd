@@ -13,6 +13,19 @@ signal grab_requested(view: ContainerView, uid: int, local_pos: Vector2)
 signal item_double_clicked(view: ContainerView, uid: int)
 
 
+## 087（作者定）：**道具这个实体本身就有悬浮窗** —— 任何容器视图进树之后自己找（或造）一个 [HoverTip] 登记上去：
+## 仓库、结算屏、开局屏、商店栏位……停在道具上都能看属性。关掉就自己管（false）
+@export var auto_tooltip: bool = true
+
+
+func _ready() -> void:
+	if auto_tooltip:
+		# 等祖先都进了树再找；测试里视图可能下一帧前就被 free 了，所以先验还在不在
+		(func():
+			if is_instance_valid(self) and is_inside_tree():
+				HoverTip.ensure_for(self)).call_deferred()
+
+
 @abstract func container() -> ItemContainer
 
 

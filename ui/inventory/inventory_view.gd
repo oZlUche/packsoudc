@@ -11,7 +11,8 @@
 class_name InventoryView
 extends ContainerView
 
-const CELL := 48.0
+## 087（作者定）：格子放大
+const CELL := 60.0
 
 const COLOR_BG := Color("1b1e24")
 const COLOR_CELL := Color("272b33")
@@ -136,6 +137,11 @@ func _gui_input(event: InputEvent) -> void:
 				accept_event()
 
 
+## 这件要不要画名字。[LootView] 覆盖：没亮的不画（087）
+func _label_visible(_item: ItemInstance) -> bool:
+	return true
+
+
 func _draw() -> void:
 	if inventory == null:
 		return
@@ -185,16 +191,18 @@ func _draw() -> void:
 		var anchor := cell_origin_px(item.origin)
 		var dormant := show_adjacency and FaithState.is_dormant(item.def, active_faith)
 		var body := ItemPainter.body_color(item.def)
-		var edge := ItemPainter.rarity_color(item.def)
+		var edge := ItemPainter.rarity_color(item.def).lightened(0.2)
+		var text_color := ItemPainter.label_color(item.def)
 		if dormant:
 			body = body.lerp(COLOR_BAG_FILL, 0.7)
 			edge = edge.lerp(COLOR_BAG_EDGE, 0.7)
+			text_color = COLOR_TEXT.darkened(0.35)
 		ItemPainter.draw_item(self, cells, anchor, CELL, body, edge)
-		ItemPainter.draw_label(
-			self, cells, anchor, CELL, item.def.display_name + ("
-休眠" if dormant else ""), font, 13,
-			COLOR_TEXT.darkened(0.35) if dormant else COLOR_TEXT
-		)
+		if _label_visible(item):
+			ItemPainter.draw_label(
+				self, cells, anchor, CELL, item.def.display_name + ("
+休眠" if dormant else ""), font, 13, text_color
+			)
 		if highlights.has(item.uid):
 			var hb := item.def.shape.size_rotated(item.rotation)
 			var pulse := 0.6 + 0.4 * (0.5 + 0.5 * sin(Time.get_ticks_msec() / 180.0))

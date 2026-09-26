@@ -34,6 +34,8 @@ func apply(ctx: RuleContext) -> void:
 		return
 
 	for who in resolve_targets(ctx, target):
+		if who.dead:
+			continue     # 087：倒下的不吃治疗、不扣资源（倒下是终局）
 		if value < 0 and resource_key == BattleStats.RES_HP:
 			DamageResolver.resolve(ctx.battle, DamagePacket.create(
 				loss_type, -value, who, ctx.owner.side, ctx.source_uid()
@@ -48,7 +50,7 @@ func apply(ctx: RuleContext) -> void:
 				"effect": "change_resource", "uid": ctx.source_uid(),
 				"target_side": who.side, "key": String(resource_key), "amount": actual,
 			})
-		if not who.is_alive():
+		if who.resources.current(BattleStats.RES_HP) <= 0 and who.mark_dead():
 			ctx.battle.emit(BattleEvent.DIED, who.side, {})
 
 

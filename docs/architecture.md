@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.90 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.91 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3524,6 +3524,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.91 | 2026-09-26 | **作者第十二批**（报告 088）：**倒下是终局**（`CombatantRuntime.dead` / `mark_dead`，死后不治不扣、只一次 DIED）；敌人**按身份配道具**（`EnemyDef.item_tags` 过滤全部池子、`signature_by_strength` 按档位换招牌、`signature_at`，十个敌人的身份数据）；**包的去处**（进暂存区 / 自由容器内容物脱落，`DragLayer._replaceable_bag` / `_drop_replacing_bag` 包替换包，`InventoryService._transfer_bag`）；尸体容器**照敌人棋盘摆**（`DropResolver._corpse_on_bags`，`LootView` 包不揭示、没亮不画名）；**暂存区按点保留**（`RunState.node_storages` / `stored_at` / `storage_restored`，提示文本全改）；`InventoryView.CELL` 60、[InventoryPanel] 上棋盘下暂存区；稀有度 = 整格底色（`ItemPainter.body_color` / `label_color`）；容器视图自带悬浮窗（`ContainerView.auto_tooltip`、`HoverTip.ensure_for`）；`FaithTooltip` 信仰悬浮说明；`DropResolver.expected_count` 算包与保底 |
 | v1.90 | 2026-09-26 | **作者第十一批**（报告 087）：合成改**相邻自动**（`RunState.craft_pairs` / `resolve_crafts`，删配对与 `pending_crafts`，拖拽层只留合成高光）；稀有度**六档**白 / 绿 / 蓝 / 紫 / 金 / 红（各表补齐、珍宝 = 金红）；预估 DPS 算进开战即上身的自身 buff（`CombatantSpec.opening_mods`）；**商店重做**（左店右包，`ShopSession.shelves` 栏位棋盘、`pay_for` 拖着买、`sell` 半价、`bought` 带实例）；战斗面板 buff **图标栏** + 悬浮说明；**词条** `Glossary`（固定词条 + 按 buff 定义生成，`ItemTooltip.describe_full`，`HoverTip` 侧边小窗，主文字只写名词）；武器写耗耐力；信仰道具**休眠保留通用效果**（`ItemDef.dormant_keeps_combat`，编译器只丢信力加成与邻接）；**BOSS** 保底金色（`DropRule.boss_rarity`）+ 直接撤离（`NodeRules.boss_extracts`、`RunState.boss_cleared` / `extract_after_boss`）；游兵耐力数据改到看得见消耗；搜索屏收起按钮写明「不结束」 |
 | v1.89 | 2026-09-26 | 文档：新建世界观文件夹 `docs/worldview/`（worldview.md 挪入，链接改），新增 [concepts-and-gods.md](worldview/concepts-and-gods.md)：从现有神明出发列七个跟人类活动无关的抽象概念（重量 / 腐朽 / 寒冷 / 回响 / 繁多 / 边界 / 空缺）与能做成的玩法（一族一位神的道具族、按布局算的属性、本局天象、信力亲缘继承、腐朽 = 侵蚀、造神作局外成长），等作者拍板 |
 | v1.88 | 2026-09-26 | **叠层不设上限 + Buff 制作器 + 界面语言**（报告 085 三·九）：`max_stacks 0 = 不限`成为常态（中毒 / 流血去掉 5 层上限，兴奋剂 3 层作例子）；`ui/buff_editor` 第四个编辑器（可否叠层 / 上限、永续 / 秒数联动，效果构件反射生成 + JSON 代码编辑器，校验走导入器，保存产出 JSON + .tres）；`UiText`（`core/text`）键 → zh / en 表 + `GameSettings.language`，主菜单「语言」按钮切换并存盘，编辑器跟着走 |

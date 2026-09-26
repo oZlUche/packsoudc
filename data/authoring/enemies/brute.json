@@ -9,5 +9,12 @@
   "base_stats": {
     "max_hp": 50,
     "armor": 3
-  }
+  },
+  "item_tags": [
+    "barbarian",
+    "bleed",
+    "burst",
+    "gear",
+    "consumable"
+  ]
 }

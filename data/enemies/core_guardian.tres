@@ -13,3 +13,4 @@ base_stats = {
 "max_hp": 80
 }
 signature = Array[StringName]([&"mithril_sword"])
+item_tags = Array[StringName]([&"enchanted", &"imperial", &"heavy", &"shield", &"part", &"consumable"])

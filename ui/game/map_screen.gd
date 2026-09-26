@@ -11,6 +11,8 @@ const SIDE_WIDTH := 340
 var _run: RunState = null
 var _view: MapView
 var _hud: Label
+## 087：信仰那一句单独一个标签，停上去开悬浮窗（具体效果、信力怎么涨）
+var _faith_hud: Label
 var _preview: Label
 var _enemy_line: Label
 var _status: Label
@@ -95,7 +97,7 @@ func _open_step_confirm(to_id: int) -> void:
 	var col := _vbox(10)
 	panel.add_child(col)
 	col.add_child(_label("暂存区里还有东西", 20, UiPalette.FG))
-	col.add_child(_wrapped("走了它们就留在这个点上了：%s。暂存区是在这个点上腾挪用的，不跟着走（3.4）。想带走先放进棋盘。" % StorageWarning.describe(_run.storage.items()),
+	col.add_child(_wrapped("走了它们就留在这个点上：%s。回到这个点还能拿，但撤离不会带走暂存区里的东西。想带走先放进棋盘。" % StorageWarning.describe(_run.storage.items()),
 		14, UiPalette.STAMINA, 480))
 	var list := _log_box(13)
 	list.custom_minimum_size.y = 22 * mini(6, at_risk.size() + 1)
@@ -103,7 +105,7 @@ func _open_step_confirm(to_id: int) -> void:
 		list.append_text(_item_line(item.def) + "\n")
 	col.add_child(list)
 	var buttons := _hbox(8)
-	buttons.add_child(_button("照走，不要了", func(): confirm_step(), 14))
+	buttons.add_child(_button("照走，留在这里", func(): confirm_step(), 14))
 	buttons.add_child(_button("先整理背包（B）", func():
 		cancel_step()
 		toggle_bag(), 14))
@@ -252,7 +254,9 @@ func _adopt() -> void:
 		_refresh_hud())
 	_refresh_skills()
 	_run.storage_dropped.connect(func(node_id: int, items: Array):
-		_note("　离开点 %d：暂存区里的 %s留在了那里" % [node_id, StorageWarning.describe(items)]))
+		_note("　离开点 %d：暂存区里的 %s留在了那里（回来能拿）" % [node_id, StorageWarning.describe(items)]))
+	_run.storage_restored.connect(func(node_id: int, items: Array):
+		_note("　回到点 %d：留在这里的 %d 件回到了暂存区" % [node_id, items.size()]))
 	_run.loot_cleared.connect(_after_move)     # 084：没拿的战利品没了（拿完了、或走了），「回到这个点」跟着灰
 	_run.craft_done.connect(func(_id: int, detail: Dictionary):
 		for line in detail.get("log", []):
@@ -469,12 +473,14 @@ func _refresh_hud() -> void:
 	var extract_near := MapNavigator.nearest_of_type(_run.map, t.current_id, &"extract")
 	var rest := MapNavigator.nearest_of_type(_run.map, t.current_id, &"rest")
 	var core := MapNavigator.nearest_of_type(_run.map, t.current_id, &"core")
-	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d　　暂存区 %d 件　　%s%s%s" % [
+	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d　　暂存区 %d 件　　" % [
 		t.clock.total,
 		str(extract_near["steps"]) if int(extract_near["id"]) >= 0 else "—",
 		str(rest["steps"]) if int(rest["id"]) >= 0 else "—",
 		str(core["steps"]) if int(core["id"]) >= 0 else "—",
-		_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count(), _run.faith_line() + _power_line(), _buff_line(), _erosion_line()]
+		_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count()]
+	if _faith_hud != null:
+		_faith_hud.text = _run.faith_line() + _power_line() + _buff_line() + _erosion_line()
 
 
 ## 信力一句（082）：「　信力 12 / 30（第 1 阶）」；没激活信仰不显示
@@ -592,7 +598,18 @@ func _build() -> void:
 	st.bg_color = UiPalette.PANEL
 	st.set_content_margin_all(8)
 	hud_box.add_theme_stylebox_override("panel", st)
-	hud_box.add_child(_hud)
+	var hud_row := _hbox(0)
+	hud_row.add_child(_hud)
+	_faith_hud = _label("", 14, UiPalette.FG)
+	_faith_hud.mouse_filter = Control.MOUSE_FILTER_STOP
+	_faith_hud.mouse_entered.connect(func():
+		if _tip != null and _run != null:
+			_tip.show_text(FaithTooltip.describe(_run.active_faith(), _run.faith_power, flow.items), _faith_hud.global_position + Vector2(0, _faith_hud.size.y)))
+	_faith_hud.mouse_exited.connect(func():
+		if _tip != null:
+			_tip.hide_tip())
+	hud_row.add_child(_faith_hud)
+	hud_box.add_child(hud_row)
 	mid.add_child(hud_box)
 	_view = MapView.new()
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL

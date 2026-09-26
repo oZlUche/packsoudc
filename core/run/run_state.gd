@@ -23,8 +23,10 @@ signal phase_changed(phase: int, reason: StringName)
 ## 有东西等着拾取（尸体容器 / 搜索收获）。拿走或丢掉之前不会再来第二份
 signal loot_pending(container: GridInventory)
 signal loot_cleared()
-## 走出一个发生过事的点，暂存区里的东西留在了那里（3.4 / 058）
+## 走出一个点，暂存区里的东西留在了那里（3.4 / 058；087 作者定：**留在那个点、回来能拿**，见 [member node_storages]）
 signal storage_dropped(node_id: int, items: Array)
+## 087：回到一个留过东西的点，那里的东西回到了暂存区
+signal storage_restored(node_id: int, items: Array)
 ## 地图 buff 变了（给了、到期了）
 signal buffs_changed()
 ## 猎手（071）：玩家进了某个猎手的感知范围；猎手的状态变了（动了、死了、歇了）；玩家被赶回上一个点
@@ -54,6 +56,9 @@ var wallet: Wallet = null
 var board: GridInventory = null
 ## 暂存区：一个列表，保留但不参战（3.4）
 var storage: ItemStash = null
+## 087（作者定）：暂存区按点独立 —— 离开时暂存区里的东西留在那个点（`node_id → [ItemInstance]`），回到那个点又回到暂存区。跟存档。
+## 撤离仍不带走暂存区里的东西
+var node_storages: Dictionary = {}
 var rng: RunRNG = null
 var events: NodeEvents = null
 var tracker: SetTracker = null
@@ -206,6 +211,7 @@ func step_to(id: int) -> bool:
 	_drop_storage_if_leaving()
 	var ok := travel.step_to(id)
 	if ok:
+		_restore_storage(travel.current_id)     # 087：回到走过的点，留着的东西回到暂存区（头一回踩的在 _on_arrive 里已取）
 		tick_map_buffs()
 		if hunters != null:
 			hunters.on_player_step()     # 猎手的回合在这一步的事都发生之后（071）
@@ -222,6 +228,7 @@ func relocate(intent: MoveIntent) -> bool:
 	_drop_storage_if_leaving()
 	var ok := travel.apply(intent)
 	if ok:
+		_restore_storage(travel.current_id)
 		tick_map_buffs()
 		if hunters != null:
 			hunters.on_player_step()
@@ -239,11 +246,29 @@ func pool_by_id(id: StringName) -> EnemyPool:
 	return _rule_asset("enemy_pools", id) as EnemyPool
 
 
-## 走出现在这个点会不会清暂存区：暂存区里有东西就清（作者 2026-09-24 改的规则，覆盖 060 的「只有发生过事的点才清」）——
-## 暂存区只是**节点内的临时区**：任何时候都能开背包把东西挪进去（换信仰道具的置入顺序就靠它），但一旦移动就没了。
-## 双重检查：离开清一次（这里），进入清一次（[method _on_arrive]，在那个点的事发生之前）
+## 走出现在这个点会不会把暂存区留下：暂存区里有东西就留（087 作者定：留在这个点、回来能拿；不再是「清掉」）——
+## 暂存区是**节点内的临时区**：任何时候都能开背包把东西挪进去（换信仰道具的置入顺序就靠它），但一旦移动就不在身上了。
+## 离开时存进 [member node_storages]，回到那个点时取回（[method _restore_storage]）
 func will_clear_storage() -> bool:
 	return travel != null and travel.current_id >= 0 and storage != null and storage.item_count() > 0
+
+
+## 087：某个点上留着的东西（没有就空）
+func stored_at(node_id: int) -> Array:
+	return (node_storages.get(node_id, []) as Array).duplicate()
+
+
+## 087：回到一个点：那里留着的东西回到暂存区
+func _restore_storage(node_id: int) -> void:
+	if storage == null or not node_storages.has(node_id):
+		return
+	var back: Array = node_storages[node_id]
+	node_storages.erase(node_id)
+	if back.is_empty():
+		return
+	for inst in back:
+		storage.admit(inst)
+	storage_restored.emit(node_id, back)
 
 
 func _drop_storage_if_leaving() -> void:
@@ -255,20 +280,24 @@ func _drop_storage_if_leaving() -> void:
 		events.last_handled_id = -1
 
 
-## 头一回踩上一个点：先清暂存区（进入的那一次检查），再结等着的合成（产物放不下就进刚清空的暂存区），再让那个点的事发生 ——
-## 顺序不能反，不然事件给的东西刚进暂存区就没了、合成的产物也会被清掉
+## 头一回踩上一个点：先把这个点留着的东西取回暂存区，再结等着的合成（产物放不下就进暂存区），再让那个点的事发生 ——
+## 顺序不能反，不然合成的产物没地方去、事件给的东西看不见
 func _on_arrive(node: MapNode) -> void:
 	if node != null:
-		_drop_storage(node.id)
+		_restore_storage(node.id)
 		resolve_crafts(node.id)
 	events.handle(node)
 
 
+## 离开一个点：暂存区里的东西留在那个点上（087：不是丢掉，回来能拿）
 func _drop_storage(at_id: int) -> void:
 	if storage == null or storage.item_count() == 0:
 		return
 	var dropped: Array = storage.items().duplicate()
 	storage.clear()
+	var kept: Array = node_storages.get(at_id, [])
+	kept.append_array(dropped)
+	node_storages[at_id] = kept
 	storage_dropped.emit(at_id, dropped)
 
 
@@ -617,7 +646,7 @@ func resolve_crafts(at_id: int) -> void:
 		detail["where"] = where
 		(detail["log"] as Array).append("「%s」和「%s」相邻，合成了「%s」。" % [a.def.display_name, b.def.display_name, out_def.display_name])
 		if where == "storage":
-			(detail["log"] as Array).append("背包里装不下它：放进了暂存区。走之前记得放回包里，暂存区一挪步就清。")
+			(detail["log"] as Array).append("背包里装不下它：放进了暂存区。走之前记得放回包里，暂存区里的东西会留在这个点上。")
 		craft_done.emit(at_id, detail)
 
 
@@ -635,8 +664,22 @@ func _offer_loot(container: GridInventory) -> void:
 	if container == null or container.item_count() == 0:
 		return
 	if pending_loot != null:
-		# 上一份还没处理就来了新的（沙盒里一步接一步）：并进去，一件都不丢
-		InventoryService.transfer_all(pending_loot, container)
+		# 上一份还没处理就来了新的（搜索收获 + 遭遇的尸体）：并成一份，一件都不丢。
+		# 087：尸体容器可能是棋盘模式（包当背景），两边都往一块够大的自由容器里搬，放不下就加高
+		var w := maxi(pending_loot.size.x, container.size.x)
+		var h := pending_loot.size.y + container.size.y
+		var merged := GridInventory.new(Vector2i(w, h), 0, false)
+		InventoryService.transfer_all(pending_loot, merged)
+		InventoryService.transfer_all(container, merged)
+		var guard := 0
+		while (pending_loot.item_count() > 0 or container.item_count() > 0) and guard < 8:
+			guard += 1
+			var bigger := GridInventory.new(merged.size + Vector2i(0, 2), 0, false)
+			InventoryService.transfer_all(merged, bigger)
+			merged = bigger
+			InventoryService.transfer_all(pending_loot, merged)
+			InventoryService.transfer_all(container, merged)
+		container = merged
 	pending_loot = container
 	loot_pending.emit(container)
 
@@ -845,6 +888,7 @@ func to_dict() -> Dictionary:
 		"wallet": wallet.to_dict(),
 		"board": board.to_dict(),
 		"storage": storage.to_dict(),
+		"node_storages": _node_storages_to_dict(),
 		"rng": rng.to_dict(),
 		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id, "pending": events.pending.duplicate(), "losses_forgiven": events.losses_forgiven,
 			"pending_battle": events.pending_battle.duplicate(true)},
@@ -855,6 +899,16 @@ func to_dict() -> Dictionary:
 		"tally": tally.duplicate(),
 		"buffs": {"meta": _meta_buff_ids(), "map": map_buffs.duplicate(true)},
 	}
+
+
+func _node_storages_to_dict() -> Dictionary:
+	var out := {}
+	for key in node_storages:
+		var list: Array = []
+		for inst in node_storages[key]:
+			list.append((inst as ItemInstance).to_dict())
+		out[str(key)] = list
+	return out
 
 
 func _meta_buff_ids() -> Array:
@@ -889,6 +943,16 @@ static func from_dict(
 	s.wallet = Wallet.from_dict(d.get("wallet", {}))
 	s.board = GridInventory.from_dict(d.get("board", {}), p_items)
 	s.storage = ItemStash.from_dict(d.get("storage", {}), p_items)
+	var ns: Variant = d.get("node_storages", {})
+	if ns is Dictionary:
+		for key in ns:
+			var list: Array = []
+			for raw in (ns[key] as Array):
+				var inst := ItemInstance.from_dict(raw as Dictionary, p_items)
+				if inst != null:
+					list.append(inst)
+			if not list.is_empty():
+				s.node_storages[int(String(key))] = list
 	s.rng = RunRNG.from_dict(d.get("rng", {}))
 	s.travel.vitality = s.vitality
 	s._bind_tracker()

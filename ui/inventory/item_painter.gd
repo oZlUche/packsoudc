@@ -14,14 +14,17 @@ const RARITY_COLORS: Array[Color] = [
 ]
 
 
-## 物品主色：由 id 稳定散列出色相，再用稀有度决定明度饱和度。
-## 没有图标的开发期靠它区分物品，接入正式美术后这里只保留描边。
+## 物品主色（087 作者定）：**整格的底色就是稀有度的颜色**，不靠边框。往面板色压一点，字才看得清；描边同色稍亮
 static func body_color(def: ItemDef) -> Color:
 	if def == null:
 		return Color("555a63")
-	var hue := float(absi(hash(def.id)) % 360) / 360.0
-	var tier := clampi(def.rarity, 0, RARITY_COLORS.size() - 1)
-	return Color.from_hsv(hue, 0.38 + 0.04 * tier, 0.42 + 0.05 * tier)
+	return rarity_color(def).lerp(Color("171a20"), 0.28)
+
+
+## 名字的颜色：底色亮（白 / 金）就用深字，别的用浅字
+static func label_color(def: ItemDef) -> Color:
+	var b := body_color(def)
+	return Color("14161b") if b.get_luminance() > 0.5 else Color("e6e9ef")
 
 
 static func rarity_color(def: ItemDef) -> Color:

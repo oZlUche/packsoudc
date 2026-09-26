@@ -30,6 +30,43 @@ extends Resource
 ## 招牌道具：一定背着的道具 id，计入件数。屠夫总带着刀
 @export var signature: Array[StringName] = []
 
+## 087（作者定）：**身份决定能背什么** —— 名字既然叫神射手，背的就只能是弓箭。列出这个身份相关的道具标签，
+## 组装时（流派池、通用池、补件、保底武器）**只从带任一这些标签的道具里抽**；空 = 不限（老路）。
+## 流派 [member schools] 仍决定「哪几件是它的出手风格」，身份标签是外面那一圈篓子
+@export var item_tags: Array[StringName] = []
+
+## 087：按档位换招牌 —— 键是档位（JSON 里是字符串 "0" / "1" / …），值是那一档起必带的道具 id 列表；取 ≤ 实际档位的最高一档，
+## 和 [member signature] 一起算招牌。神射手：0 档短弓、1 档长弓、2 档赐福的长弓
+@export var signature_by_strength: Dictionary = {}
+
+
+## 这一档的招牌：signature + signature_by_strength 里 ≤ strength 的最高一档
+func signature_at(p_strength: int) -> Array[StringName]:
+	var out: Array[StringName] = signature.duplicate()
+	var best := -1
+	for key in signature_by_strength:
+		var k := int(String(key))
+		if k <= p_strength and k > best:
+			best = k
+	if best >= 0:
+		for raw in signature_by_strength[str(best)]:
+			var id := StringName(String(raw))
+			if not out.has(id):
+				out.append(id)
+	return out
+
+
+## 这件道具这个身份能不能背（不看流派、稀有度）：没列身份标签 = 都能
+func allows_item(def: ItemDef) -> bool:
+	if item_tags.is_empty():
+		return true
+	if def == null:
+		return false
+	for t in def.tags:
+		if item_tags.has(t):
+			return true
+	return false
+
 ## 覆盖池的默认组装规则。null = 用池的
 @export var loadout: EnemyLoadout = null
 

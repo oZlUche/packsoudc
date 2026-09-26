@@ -12,7 +12,7 @@
 ## 而界面上只是「这一下好像没反应」。所以每条失败路径都得断言容器毫发无损。
 extends RefCounted
 
-const CELL := 48.0
+const CELL := InventoryView.CELL
 
 
 static func _def(id: String, rows: Array, tags: Array = []) -> ItemDef:

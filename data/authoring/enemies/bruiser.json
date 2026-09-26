@@ -7,5 +7,10 @@
   ],
   "base_stats": {
     "max_hp": 30
-  }
+  },
+  "item_tags": [
+    "burst",
+    "heavy",
+    "consumable"
+  ]
 }

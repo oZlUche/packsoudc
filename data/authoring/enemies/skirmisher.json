@@ -3,10 +3,13 @@
   "display_name": "游兵",
   "strength": 1,
   "schools": [
-    "rapid",
-    "bleed"
+    "rapid"
   ],
   "base_stats": {
     "max_hp": 50
-  }
+  },
+  "item_tags": [
+    "rapid",
+    "melee"
+  ]
 }

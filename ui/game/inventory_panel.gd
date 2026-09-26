@@ -13,6 +13,8 @@ var _run: RunState = null
 var _font: Font
 var _drag: DragLayer
 var _readout: Label
+## 087：信仰那一句单独一个标签，停上去开悬浮窗（具体效果、信力怎么涨）
+var _faith_label: Label
 var _hint: Label
 var board_view: InventoryView
 var storage_view: StashView
@@ -35,8 +37,9 @@ func setup(run: RunState, font: Font, drag: DragLayer = null) -> void:
 
 
 func _build() -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 20)
+	# 087（作者定）：棋盘在上、暂存区在下（容器屏：左上容器、右上背包、右下暂存区）
+	var row := VBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
 	add_child(row)
 
 	var left := VBoxContainer.new()
@@ -49,6 +52,15 @@ func _build() -> void:
 	board_view.show_adjacency = true
 	board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(board_view)
+	_faith_label = _label("", 14, UiPalette.FG)
+	_faith_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	_faith_label.mouse_entered.connect(func():
+		if tip != null:
+			tip.show_text(FaithTooltip.describe(_run.active_faith(), _run.faith_power, _run.items), _faith_label.global_position + Vector2(0, _faith_label.size.y)))
+	_faith_label.mouse_exited.connect(func():
+		if tip != null:
+			tip.hide_tip())
+	left.add_child(_faith_label)
 	_readout = _label("", 14, UiPalette.FG)
 	left.add_child(_readout)
 	# 084：耐力消耗评估（低 / 中 / 高 / 极高），停上去看每秒消耗与回复
@@ -67,11 +79,11 @@ func _build() -> void:
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 8)
 	row.add_child(right)
-	right.add_child(_label("暂存区（不限大小）　不参战、一挪步就清、撤离不带出去", 13, UiPalette.DIM))
+	right.add_child(_label("暂存区（不限大小）　不参战、留在这个点（回来能拿）、撤离不带出去", 13, UiPalette.DIM))
 	storage_view = StashView.new()
 	storage_view.label_font = _font
 	storage_view.stash = _run.storage
-	storage_view.custom_minimum_size.x = STORAGE_WIDTH
+	storage_view.custom_minimum_size.x = maxf(STORAGE_WIDTH, _run.board.size.x * InventoryView.CELL)
 	storage_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	right.add_child(storage_view)
 
@@ -159,8 +171,9 @@ func _refresh_readout() -> void:
 			lines.append("%s %d/%s%s" % [set_id, p["count"], "—" if p["next"] < 0 else str(p["next"]), "　已激活" if p["active"] else ""])
 	var dormant := FaithState.dormant_uids(_run.board).size()
 	var power := _run.faith_power.line() if _run.faith_power != null else ""
-	_readout.text = "%s%s%s　生命 %d　预估 DPS %.1f　参战 %d 件（%d 件会出手）　可用格 %d（空 %d）%s" % [
-		_run.faith_line(), "（%d 件休眠）" % dormant if dormant > 0 else "", "　" + power if power != "" else "",
+	if _faith_label != null:
+		_faith_label.text = "%s%s%s　停上去看效果与信力怎么涨" % [_run.faith_line(), "（%d 件休眠）" % dormant if dormant > 0 else "", "　" + power if power != "" else ""]
+	_readout.text = "生命 %d　预估 DPS %.1f　参战 %d 件（%d 件会出手）　可用格 %d（空 %d）%s" % [
 		spec.max_hp_int(), spec.rough_dps(), spec.items.size(), spec.active_items().size(),
 		_run.board.usable_cell_count(), _run.board.free_cell_count(),
 		"　套装：" + "、".join(lines) if not lines.is_empty() else ""]

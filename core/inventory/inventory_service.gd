@@ -95,6 +95,9 @@ static func transfer_auto(from: ItemContainer, uid: int, to: ItemContainer) -> b
 	var inst := from.get_item(uid)
 	if inst == null or not to.can_admit(inst.def):
 		return false
+	# 087：带东西的包（尸体容器里包当背景、上面摆着东西）：连内容物一起搬 —— 内容物先各自进目标，包最后
+	if from is GridInventory and (from as GridInventory).is_bag_with_contents(uid):
+		return _transfer_bag(from as GridInventory, uid, to)
 
 	from.begin_batch()
 	to.begin_batch()
@@ -110,16 +113,56 @@ static func transfer_auto(from: ItemContainer, uid: int, to: ItemContainer) -> b
 	return ok
 
 
+## 087：搬一个带东西的包：摘下来（内容物 + 跨包物），内容物先各自进目标，再进包；有一件进不去就整个放回原处
+static func _transfer_bag(from: GridInventory, uid: int, to: ItemContainer) -> bool:
+	var bag := from.get_item(uid)
+	var home := bag.origin
+	var rot := bag.rotation
+	var payload := from.detach_bag(uid)
+	if payload.is_empty():
+		return false
+	var loose: Array = []
+	loose.append_array(payload.get("contents", []))
+	for sd in payload.get("straddlers", []):
+		loose.append((sd as Dictionary)["inst"])
+	to.begin_batch()
+	var done: Array = []
+	var ok := true
+	for inst in loose:
+		if to.admit(inst):
+			done.append(inst)
+		else:
+			ok = false
+			break
+	if ok:
+		ok = to.admit(bag)
+	if not ok:
+		for inst in done:
+			to.remove((inst as ItemInstance).uid)
+		to.end_batch()
+		if not from.attach_bag(payload, home, rot):
+			push_error("InventoryService: 包 uid %d 搬不动又放不回，物品已丢失" % uid)
+		return false
+	to.end_batch()
+	return true
+
+
 ## 尽可能多地把 from 的内容搬进 to，返回成功搬运的件数。
 ##
-## 按占格数从大到小搬 —— 先安置大件，小件更容易见缝插针，
-## 总装入量明显优于随机顺序。
+## 按占格数从大到小搬 —— 先安置大件，小件更容易见缝插针，总装入量明显优于随机顺序。
+## 087：作为包生效的排最后（先把包上的东西搬走，包就空了，当普通物品搬）
 static func transfer_all(from: ItemContainer, to: ItemContainer) -> int:
 	if from == null or to == null:
 		return 0
 	var sorted: Array = from.items()
+	var grid := from as GridInventory
 	sorted.sort_custom(
-		func(a, b): return (a as ItemInstance).def.shape.cell_count() > (b as ItemInstance).def.shape.cell_count()
+		func(a, b):
+			var ab := grid != null and grid.acts_as_bag((a as ItemInstance).def)
+			var bb := grid != null and grid.acts_as_bag((b as ItemInstance).def)
+			if ab != bb:
+				return bb     # 不是包的排前面
+			return (a as ItemInstance).def.shape.cell_count() > (b as ItemInstance).def.shape.cell_count()
 	)
 	var moved := 0
 	from.begin_batch()

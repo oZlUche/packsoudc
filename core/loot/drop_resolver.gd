@@ -192,8 +192,22 @@ static func expected_count(content: Dictionary, rule: DropRule, ctx: LootContext
 		return 0.0
 	var total := 0.0
 	var carried := carried_ids(content)
+	var p_none := 1.0     # 一件非包都没掉的概率（保底会补）
+	var non_bags := 0
 	for id in carried:
-		total += owned_chance(rule, ctx, items.get_def(id))
+		var d := items.get_def(id)
+		if d == null:
+			continue
+		if rule.bags_always_drop and d.is_bag:
+			total += 1.0     # 包必掉
+			continue
+		var p := owned_chance(rule, ctx, d)
+		total += p
+		p_none *= (1.0 - p)
+		non_bags += 1
+	# 保底至少 min_drops 件非包：近似按「一件都没掉」时补上的那几件算
+	if rule.min_drops > 0 and non_bags > 0:
+		total += p_none * float(mini(rule.min_drops, non_bags))
 	var any_treasure := false
 	for r in rule.treasure_rarities():
 		if not treasure_candidates(rule, items, r, carried).is_empty():
@@ -218,7 +232,65 @@ static func _non_bag_count(ids: Array[StringName], items: ItemDatabase) -> int:
 
 static func corpse_of(content: Dictionary, rolled: Dictionary, items: ItemDatabase) -> GridInventory:
 	var size_raw: Array = content.get("board", [4, 3])
-	var ids: Array[StringName] = []
-	ids.append_array(rolled.get("dropped", [] as Array[StringName]))
-	ids.append_array(rolled.get("treasure", [] as Array[StringName]))
-	return LootPacker.board_of(ids, Vector2i(int(size_raw[0]), int(size_raw[1])), items)
+	var size := Vector2i(int(size_raw[0]), int(size_raw[1]))
+	var dropped: Array[StringName] = []
+	dropped.append_array(rolled.get("dropped", [] as Array[StringName]))
+	var treasure: Array[StringName] = []
+	treasure.append_array(rolled.get("treasure", [] as Array[StringName]))
+	# 087（作者定）：敌人的包掉了就照它的棋盘摆 —— 包按原位当背景（不用探明），掉的东西回到原位（摆在包上），
+	# 珍宝与原位被占的自动找位。没有包掉下来（或摆不下）走老路：自由容器
+	var packed := _corpse_on_bags(content, dropped, treasure, size, items)
+	if packed != null:
+		return packed
+	var ids: Array[StringName] = dropped.duplicate()
+	ids.append_array(treasure)
+	return LootPacker.board_of(ids, size, items)
+
+
+## 按敌人的棋盘摆：包在原位、掉的东西在原位。全摆下了返回容器；没有包、或有东西摆不下返回 null
+static func _corpse_on_bags(content: Dictionary, dropped: Array[StringName], treasure: Array[StringName], size: Vector2i, items: ItemDatabase) -> GridInventory:
+	if items == null:
+		return null
+	var entries: Array = content.get("items", [])
+	var remaining: Array[StringName] = dropped.duplicate()
+	var has_bag := false
+	for id in remaining:
+		var d := items.get_def(id)
+		if d != null and d.is_bag:
+			has_bag = true
+	if not has_bag:
+		return null
+	var board := GridInventory.new(size, 0, true)
+	# 包先按原位
+	for e in entries:
+		var id := StringName(String((e as Dictionary).get("id", "")))
+		var def := items.get_def(id)
+		if def == null or not def.is_bag or not remaining.has(id):
+			continue
+		var at_raw: Array = (e as Dictionary).get("at", [0, 0])
+		var rot := int((e as Dictionary).get("rot", 0))
+		var inst := ItemInstance.create(def, rot)
+		if board.place(inst, Vector2i(int(at_raw[0]), int(at_raw[1])), rot) or board.try_add(inst, true):
+			remaining.erase(id)
+	# 掉的道具回原位（在包上）
+	var loose: Array[StringName] = []
+	for e in entries:
+		var id := StringName(String((e as Dictionary).get("id", "")))
+		var def := items.get_def(id)
+		if def == null or def.is_bag or not remaining.has(id):
+			continue
+		var at_raw: Array = (e as Dictionary).get("at", [0, 0])
+		var rot := int((e as Dictionary).get("rot", 0))
+		var inst := ItemInstance.create(def, rot)
+		remaining.erase(id)
+		if not board.place(inst, Vector2i(int(at_raw[0]), int(at_raw[1])), rot):
+			loose.append(id)
+	loose.append_array(remaining)     # 身上没记位置的（保底补的、数据里没有的）
+	loose.append_array(treasure)
+	for id in loose:
+		var def := items.get_def(id)
+		if def == null:
+			continue
+		if not board.try_add(ItemInstance.create(def, 0), true):
+			return null     # 摆不下：走自由容器的老路（会加高）
+	return board

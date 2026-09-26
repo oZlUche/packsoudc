@@ -5,7 +5,7 @@
 ## 不必靠手工拖拽去撞那些失败路径。
 extends RefCounted
 
-const CELL := 48.0
+const CELL := InventoryView.CELL
 
 
 static func _def(id: String, rows: Array, tags: Array = []) -> ItemDef:
@@ -256,26 +256,29 @@ static func run_bag_drag(t: TestCase) -> void:
 	t.eq(board_b.bag_of(a.uid), bag.uid, "容纳关系保持")
 	t.eq(board_b.usable_cell_count(), 6, "包在新棋盘上照常提供 6 格")
 
-	# --- 放到放不下的位置：整体退回 ---
+	# --- 压到另一个包上 = 替换它（087 作者定）：旧包被顶到手上 ---
 	var blocker := ItemInstance.create(bag_def)
 	board_a.place(blocker, Vector2i(0, 0), 0)
 	view_b.grab_requested.emit(view_b, bag.uid, _grab(Vector2i(2, 1)))  # 抓包的左上角
-	t.check(not drag.drop_at(_center(view_a, Vector2i(0, 0))), "目标已被别的包占据，应失败")
-	t.eq(board_b.item_count(), 3, "失败后包与内容物全部退回原棋盘")
-	t.eq(bag.origin, Vector2i(2, 1), "退回原位")
-	t.eq(a.origin, Vector2i(2, 1), "内容物也退回原位")
-	t.eq(board_a.item_count(), 1, "目标棋盘只剩它自己的包，无残留")
+	drag.update_preview(_center(view_a, Vector2i(0, 0)))
+	t.check(view_a._preview_valid and view_a._preview_victims.has(blocker.uid), "压在别的包上：预览合法、标着要替换谁")
+	t.check(drag.drop_at(_center(view_a, Vector2i(0, 0))), "放下：替换成功")
+	t.check(board_a.has_item(bag.uid) and bag.origin == Vector2i(0, 0), "新包落在旧包的位置")
+	t.eq(board_a.item_count(), 3, "新包连内容物都在目标棋盘上")
+	t.eq(board_b.item_count(), 0, "原棋盘空了")
+	t.check(drag.is_dragging() and not board_a.has_item(blocker.uid), "旧包被顶出来拿在手上")
+	drag.cancel()
+	t.check(board_a.has_item(blocker.uid), "取消：旧包放回目标棋盘的空处")
+	board_a.remove(blocker.uid)
 
 	# --- 落点预览 ---
-	view_b.grab_requested.emit(view_b, bag.uid, _grab(Vector2i(2, 1)))
-	drag.update_preview(_center(view_a, Vector2i(3, 0)))
-	t.check(view_a._preview_on, "光标所在棋盘显示预览")
-	t.check(view_a._preview_valid, "空处应判为合法")
-	drag.update_preview(_center(view_a, Vector2i(0, 0)))
-	t.check(not view_a._preview_valid, "与已有包重叠应判为非法")
+	view_a.grab_requested.emit(view_a, bag.uid, _grab(Vector2i(0, 1)))
+	drag.update_preview(_center(view_b, Vector2i(3, 1)))     # 抓的是 (0,1) 格：落到 (3,1) 包的原点在 (3,0)
+	t.check(view_b._preview_on, "光标所在棋盘显示预览")
+	t.check(view_b._preview_valid, "空处应判为合法")
 	drag.cancel()
-	t.eq(board_b.item_count(), 3, "取消后整体退回")
-	t.check(not view_a._preview_on, "结束拖拽清掉预览")
+	t.eq(board_a.item_count(), 3, "取消后整体退回")
+	t.check(not view_b._preview_on, "结束拖拽清掉预览")
 
 	for v in [view_a, view_b]:
 		v.free()

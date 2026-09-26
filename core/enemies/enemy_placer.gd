@@ -142,7 +142,7 @@ static func build_content(
 	var size := def.board if def.board != Vector2i.ZERO else (tier.board if tier != null else Vector2i(4, 3))
 	var count := rng.randi_range(tier.item_count.x, tier.item_count.y) if tier != null else 2
 	var cap := rarity_cap_of(rule, tier)
-	var picks := choose_items(def, rule, items, count, rng, cap)
+	var picks := choose_items(def, rule, items, count, rng, cap, strength)
 	_sort_big_first(picks, items)
 
 	# 084：敌人也背包 —— 先摆包（档位的，敌人自己的覆盖），道具只能摆进包里（棋盘 requires_bag，和玩家一样）
@@ -158,9 +158,10 @@ static func build_content(
 	# 包里地方有限：招牌与流派道具（会打的那几件）先摆，护甲补给后摆 —— 不然一件 2×2 的甲先占了包，1×3 的剑就横竖都塞不进（084）
 	var first: Array[StringName] = []
 	var later: Array[StringName] = []
+	var sig := def.signature_at(strength)
 	for item_id in picks:
 		var idef := items.get_def(item_id)
-		if idef != null and (def.signature.has(item_id) or _shares_tag(idef.tags, def.schools)):
+		if idef != null and (sig.has(item_id) or _shares_tag(idef.tags, def.schools)):
 			first.append(item_id)
 		else:
 			later.append(item_id)
@@ -169,12 +170,12 @@ static func build_content(
 	# 放不下就换一件：从同一批候选里按小到大补（同样大的随机排），小件总有地方塞。流派道具不够先补流派的。
 	# 只有棋盘真的满了才会差件数，回报里看得见 —— 那是档位表的棋盘 / 包配小了
 	if placed.size() < count:
-		var school_pool := school_items(def.schools, items, cap)
+		var school_pool := school_items(def.schools, items, cap, def)
 		var refill: Array[StringName] = []
 		if _school_count(placed, items, def.schools) < rule.min_school:
 			refill.append_array(_small_first(school_pool, items, rng))
 		var general := school_pool.duplicate()
-		general.append_array(common_items(def.schools, rule, items, cap))
+		general.append_array(common_items(def.schools, rule, items, cap, def))
 		refill.append_array(_small_first(general, items, rng))
 		var tries := 0
 		for id in refill:
@@ -239,18 +240,19 @@ static func rarity_cap_of(rule: EnemyLoadout, tier: StrengthTier) -> int:
 	return a if b < 0 else mini(a, b)
 
 
-## 挑哪几件（还没摆）：招牌先占位，再抽流派道具，剩下的抽通用道具。
-## 流派池空了就全从通用池抽，通用池也空了就从流派池补 —— 池子太小不是这里该报的错，导入器会拦
+## 挑哪几件（还没摆）：招牌先占位（含这一档的招牌，087），再抽流派道具，剩下的抽通用道具。
+## 流派池空了就全从通用池抽，通用池也空了就从流派池补 —— 池子太小不是这里该报的错，导入器会拦。
+## 087：两个池子都先过身份标签（[method EnemyDef.allows_item]）—— 神射手只在弓箭里抽
 static func choose_items(
 	def: EnemyDef, rule: EnemyLoadout, items: ItemDatabase, count: int, rng: RandomNumberGenerator,
-	rarity_cap: int = -1
+	rarity_cap: int = -1, strength: int = -1
 ) -> Array[StringName]:
 	var picks: Array[StringName] = []
-	for sid in def.signature:
+	for sid in def.signature_at(strength if strength >= 0 else def.strength):
 		if items.has_def(sid) and picks.size() < count:
 			picks.append(sid)
-	var school_pool := school_items(def.schools, items, rarity_cap)
-	var common_pool := common_items(def.schools, rule, items, rarity_cap)
+	var school_pool := school_items(def.schools, items, rarity_cap, def)
+	var common_pool := common_items(def.schools, rule, items, rarity_cap, def)
 	var room := count - picks.size()
 	var n_school := 0
 	if not school_pool.is_empty():
@@ -264,10 +266,11 @@ static func choose_items(
 	elif not school_pool.is_empty():
 		_draw(picks, school_pool, rest, rule.allow_repeat, rng)
 	if rule.single_faith:
-		var faith := _unify_faith(picks, def.signature.size(), items, rng, school_pool, common_pool, def.schools)
+		var fixed := def.signature_at(strength if strength >= 0 else def.strength).size()
+		var faith := _unify_faith(picks, fixed, items, rng, school_pool, common_pool, def.schools)
 		school_pool = _same_faith(school_pool, faith, items)
 		common_pool = _same_faith(common_pool, faith, items)
-	_ensure_weapons(picks, def.signature.size(), school_pool, common_pool, rule, items, rng)
+	_ensure_weapons(picks, def.signature_at(strength if strength >= 0 else def.strength).size(), school_pool, common_pool, rule, items, rng)
 	return picks
 
 
@@ -340,12 +343,14 @@ static func _ensure_weapons(
 		i -= 1
 
 
-## 带任一流派标签的道具（不含包），id 升序 —— 顺序稳定，抽出来的才可复现
-static func school_items(schools: Array[StringName], items: ItemDatabase, rarity_cap: int) -> Array[StringName]:
+## 带任一流派标签的道具（不含包），id 升序 —— 顺序稳定，抽出来的才可复现。[param who] 给了就再过它的身份标签（087）
+static func school_items(schools: Array[StringName], items: ItemDatabase, rarity_cap: int, who: EnemyDef = null) -> Array[StringName]:
 	var out: Array[StringName] = []
 	for id in items.ids():
 		var d := items.get_def(id)
 		if d == null or d.is_bag or (rarity_cap >= 0 and d.rarity > rarity_cap):
+			continue
+		if who != null and not who.allows_item(d):
 			continue
 		if _shares_tag(d.tags, schools):
 			out.append(id)
@@ -353,14 +358,16 @@ static func school_items(schools: Array[StringName], items: ItemDatabase, rarity
 	return out
 
 
-## 带通用标签、且不带本敌人任一流派标签的道具（不含包），id 升序
+## 带通用标签、且不带本敌人任一流派标签的道具（不含包），id 升序。[param who] 给了就再过它的身份标签（087）
 static func common_items(
-	schools: Array[StringName], rule: EnemyLoadout, items: ItemDatabase, rarity_cap: int = -1
+	schools: Array[StringName], rule: EnemyLoadout, items: ItemDatabase, rarity_cap: int = -1, who: EnemyDef = null
 ) -> Array[StringName]:
 	var out: Array[StringName] = []
 	for id in items.ids():
 		var d := items.get_def(id)
 		if d == null or d.is_bag or (rarity_cap >= 0 and d.rarity > rarity_cap):
+			continue
+		if who != null and not who.allows_item(d):
 			continue
 		if _shares_tag(d.tags, rule.common_tags) and not _shares_tag(d.tags, schools):
 			out.append(id)

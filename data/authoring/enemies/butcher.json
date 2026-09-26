@@ -10,5 +10,10 @@
   },
   "signature": [
     "knife"
+  ],
+  "item_tags": [
+    "bleed",
+    "melee",
+    "consumable"
   ]
 }

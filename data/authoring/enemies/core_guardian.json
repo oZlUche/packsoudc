@@ -13,5 +13,13 @@
   },
   "signature": [
     "mithril_sword"
+  ],
+  "item_tags": [
+    "enchanted",
+    "imperial",
+    "heavy",
+    "shield",
+    "part",
+    "consumable"
   ]
 }

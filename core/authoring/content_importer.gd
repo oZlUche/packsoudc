@@ -708,13 +708,44 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 	for s in def.schools:
 		if ctx.items_tagged(s) == 0:
 			report.error("schools", "流派 '%s' 没有任何道具带这个标签，组不出流派道具" % s)
+	var sigs: Array = []
 	for sid in def.signature:
+		sigs.append(["signature", sid])
+	for key in def.signature_by_strength:
+		if not String(key).is_valid_int() or int(String(key)) < 0:
+			report.error("signature_by_strength", "档位键 '%s' 得是非负整数" % String(key))
+		var list = def.signature_by_strength[key]
+		if not (list is Array):
+			report.error("signature_by_strength.%s" % String(key), "得是道具 id 列表")
+			continue
+		for raw in list:
+			sigs.append(["signature_by_strength.%s" % String(key), StringName(String(raw))])
+	for pair in sigs:
+		var at: String = pair[0]
+		var sid: StringName = pair[1]
 		if not ctx.items.has(sid):
-			report.error("signature", "找不到招牌道具 '%s'" % sid)
+			report.error(at, "找不到招牌道具 '%s'" % sid)
 		elif (ctx.items[sid] as ItemDef).is_bag:
-			report.error("signature", "招牌道具 '%s' 是个包 —— 敌人的棋盘不放包" % sid)
+			report.error(at, "招牌道具 '%s' 是个包 —— 敌人的棋盘不放包" % sid)
 		elif (ctx.items[sid] as ItemDef).is_sealed():
-			report.error("signature", "招牌道具 '%s' 已封存" % sid)
+			report.error(at, "招牌道具 '%s' 已封存" % sid)
+		elif not def.allows_item(ctx.items[sid]):
+			report.error(at, "招牌道具 '%s' 不带这个身份的任何标签（item_tags）" % sid)
+	# 087：身份标签得真的圈得住东西，而且圈里得有会打的
+	if not def.item_tags.is_empty():
+		var any := 0
+		var weapons := 0
+		for id in ctx.items:
+			var d := ctx.items[id] as ItemDef
+			if d == null or d.is_bag or d.is_sealed() or not def.allows_item(d):
+				continue
+			any += 1
+			if d.tags.has(&"weapon"):
+				weapons += 1
+		if any == 0:
+			report.error("item_tags", "没有任何道具带这些身份标签，组不出东西")
+		elif weapons == 0:
+			report.warn("item_tags", "身份标签圈住的道具里没有武器：这个敌人不会出手")
 
 
 static func _validate_loadout(rule: EnemyLoadout, at: String, report: ImportReport) -> void:

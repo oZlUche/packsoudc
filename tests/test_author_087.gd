@@ -384,3 +384,246 @@ static func frame_buff_chips(t: TestCase, root: Window) -> void:
 	t.check(spec_defs.has(&"poison"), "从战斗单位也收集得到")
 	panel.queue_free()
 	view.queue_free()
+
+
+static func run_death_is_final(t: TestCase) -> void:
+	t.begin("087 · 倒下是终局：血到 0 记死，伤药的濒死回血救不回来，只发一次 DIED，回放里不会倒下两次")
+	var c := _content()
+	var me := BattleCompiler.compile(LootPacker.board_of([&"longsword"] as Array[StringName], Vector2i(4, 4), c.items), CombatantBaseline.with_hp(200.0))
+	# 对手：一把匕首 + 两瓶伤药（血低于 40% 回 25），血 12 —— 长剑一下就打到 0
+	var foe := BattleCompiler.compile(LootPacker.board_of([&"knife", &"salve", &"salve"] as Array[StringName], Vector2i(4, 4), c.items), CombatantBaseline.with_hp(12.0))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3
+	var res := BattleSim.run(me, foe, rng, 60.0)
+	var died := 0
+	var died_at := -1
+	var healed_after := 0
+	for ev in res.log:
+		var e := ev as BattleEvent
+		if e.side != 1:
+			continue
+		if e.name == BattleEvent.DIED:
+			died += 1
+			died_at = e.time
+		elif died_at >= 0 and e.name == BattleEvent.RESOURCE_CHANGED and e.get_name(&"key") == &"hp" and e.get_int(&"delta") > 0:
+			healed_after += 1
+	t.eq(died, 1, "对手只倒下一次")
+	t.eq(healed_after, 0, "倒下之后没有再被治回来")
+	t.eq(res.winner, 0, "我赢")
+	var final_sides: Array = res.final.get("sides", [])
+	if final_sides.size() == 2:
+		var hp_pair: Array = (final_sides[1]["resources"] as Dictionary).get("hp", [0, 0])
+		t.eq(int(hp_pair[0]), 0, "终局快照里对手血是 0")
+	# 直接验运行时：记死之后 is_alive 假、再改血不动
+	var rt := CombatantRuntime.from_spec(foe, 1)
+	t.check(rt.is_alive(), "活着")
+	rt.resources.change(&"hp", -10000, &"test")
+	t.check(rt.mark_dead() and not rt.mark_dead(), "mark_dead 第一次真、第二次假")
+	t.check(not rt.is_alive() and rt.dead, "死了")
+
+
+static func run_enemy_identity(t: TestCase) -> void:
+	t.begin("087 · 敌人身份决定道具：只从带身份标签的道具里抽，神射手按档位换弓；导入器拦招牌不在身份圈里的")
+	var c := _content()
+	var pool := c.enemies.pool(c.chapter.enemy_pool)
+	var checked := 0
+	for eid in c.enemies.enemy_ids():
+		var def := c.enemies.enemy(eid)
+		if def == null or def.item_tags.is_empty():
+			continue
+		for strength in 4:
+			for seed in 3:
+				var rng := RandomNumberGenerator.new()
+				rng.seed = seed * 31 + strength
+				var built := EnemyPlacer.build_content(def, pool, c.items, strength, rng)
+				var content: Dictionary = built["content"]
+				var armed := false
+				for raw in content.get("items", []):
+					var idef := c.items.get_def(StringName(String(raw["id"])))
+					if idef == null or idef.is_bag:
+						continue
+					checked += 1
+					t.check(def.allows_item(idef), "%s（%d 档）背的「%s」带身份标签 %s" % [def.display_name, strength, idef.display_name, str(def.item_tags)])
+					if idef.tags.has(&"weapon"):
+						armed = true
+				t.check(armed, "%s（%d 档）有武器" % [def.display_name, strength])
+				for sid in def.signature_at(strength):
+					var has := false
+					for raw in content.get("items", []):
+						if StringName(String(raw["id"])) == sid:
+							has = true
+					t.check(has, "%s（%d 档）带着这一档的招牌「%s」" % [def.display_name, strength, sid])
+	t.check(checked > 30, "查了 %d 件" % checked)
+	var marks := c.enemies.enemy(&"marksman")
+	t.eq(marks.signature_at(0), [&"shortbow"] as Array[StringName], "神射手 0 档：短弓")
+	t.eq(marks.signature_at(1), [&"longbow"] as Array[StringName], "1 档：长弓")
+	t.eq(marks.signature_at(3), [&"blessed_longbow"] as Array[StringName], "3 档：取 ≤ 档位的最高一档 → 赐福的长弓")
+	t.check(not marks.allows_item(c.items.get_def(&"knife")) and marks.allows_item(c.items.get_def(&"arrows")), "神射手不背匕首、背箭矢")
+	# 导入器
+	var data := ContentExporter.export_enemy(marks)
+	var ctx := ContentImporter.Context.new()
+	for id in c.items.ids():
+		ctx.items[id] = c.items.get_def(id)
+	var report := ImportReport.new()
+	ContentImporter.import_enemy(data, ctx, report)
+	t.check(report.ok(), "神射手的数据校验通过：%s" % report.to_text())
+	data["signature"] = ["knife"]
+	var bad := ImportReport.new()
+	ContentImporter.import_enemy(data, ctx, bad)
+	t.check(not bad.ok(), "招牌不在身份圈里：拦")
+	var back := ContentImporter.import_enemy(ContentExporter.export_enemy(marks), ctx, ImportReport.new())
+	t.eq(back.item_tags, marks.item_tags, "item_tags 往返")
+	t.eq(back.signature_at(2), marks.signature_at(2), "signature_by_strength 往返")
+
+
+static func run_bags_move(t: TestCase) -> void:
+	t.begin("087 · 包能放进暂存区（内容物打散跟着进）、放进自由容器（内容物脱落进暂存区）")
+	var c := _content()
+	ItemInstance.reset_uid_counter()
+	var board := GridInventory.new(Vector2i(6, 4), 1, true)
+	var stash := ItemStash.new(2, 0)
+	var box := GridInventory.new(Vector2i(6, 4), 3, false)
+	var bag := ItemInstance.create(c.items.get_def(&"bag_leather"))
+	board.place(bag, Vector2i(0, 0), 0)
+	var knife := ItemInstance.create(c.items.get_def(&"knife"))
+	board.place(knife, Vector2i(0, 0), 0)
+	var view := InventoryView.new()
+	view.inventory = board
+	view.size = Vector2(board.size) * InventoryView.CELL
+	var sview := StashView.new()
+	sview.stash = stash
+	sview.position = Vector2(500, 0)
+	sview.size = Vector2(220, 300)
+	var bview := InventoryView.new()
+	bview.inventory = box
+	bview.position = Vector2(0, 400)
+	bview.size = Vector2(box.size) * InventoryView.CELL
+	var drag := DragLayer.new()
+	drag.register_view(view)
+	drag.register_view(sview)
+	drag.register_view(bview)
+	drag.stash = stash
+	var shed: Array = []
+	drag.items_shed.connect(func(items: Array): shed.append(items.size()))
+	# 包 → 暂存区
+	view.grab_requested.emit(view, bag.uid, Vector2(10, 10))
+	t.check(drag.is_dragging() and board.item_count() == 0, "抓起带东西的包")
+	var row_at := sview.position + Vector2(20, 10)
+	drag.update_preview(row_at)
+	t.check(drag.drop_at(row_at), "放进暂存区：成")
+	t.check(stash.has_item(bag.uid) and stash.has_item(knife.uid), "包和匕首都在暂存区里（打散成两行）")
+	t.eq(shed, [1], "发了 items_shed：匕首脱落")
+	# 暂存区 → 棋盘（空包）→ 再放刀 → 包 → 自由容器
+	sview.grab_requested.emit(sview, bag.uid, Vector2(10, 10))
+	var at := (Vector2(0, 0) + Vector2(0.5, 0.5)) * InventoryView.CELL
+	drag.update_preview(at)
+	t.check(drag.drop_at(at), "包放回棋盘")
+	sview.grab_requested.emit(sview, knife.uid, Vector2(10, 10))
+	drag.update_preview(at)
+	t.check(drag.drop_at(at), "匕首放回包里")
+	view.grab_requested.emit(view, bag.uid, Vector2(10, 10))
+	var box_at := bview.position + at
+	drag.update_preview(box_at)
+	t.check(bview._preview_valid and bview._preview_costly, "预览：能放进自由容器、标着有代价（内容物脱落）")
+	t.check(drag.drop_at(box_at), "放进自由容器：成")
+	t.check(box.has_item(bag.uid) and stash.has_item(knife.uid), "包在容器里、匕首脱落进了暂存区")
+	t.eq(shed.size(), 2, "又发了一次 items_shed")
+	for v in [view, sview, bview]:
+		v.free()
+	drag.free()
+
+
+static func run_loot_on_bags(t: TestCase) -> void:
+	t.begin("087 · 尸体容器照敌人的棋盘摆：包在原位当背景、道具在包上；包不用探明，上面有没亮的时拖不走；没亮的不画名字")
+	var c := _content()
+	var content := {"enemy": "raider", "strength": 0, "board": [5, 3],
+		"items": [{"id": "bag_leather", "at": [0, 0], "rot": 0}, {"id": "knife", "at": [0, 0], "rot": 0}, {"id": "shortsword", "at": [1, 0], "rot": 1}]}
+	var rolled := {"dropped": [&"bag_leather", &"knife", &"shortsword"] as Array[StringName], "treasure": [] as Array[StringName]}
+	var corpse := DropResolver.corpse_of(content, rolled, c.items)
+	t.check(corpse.requires_bag, "掉了包：容器是棋盘模式")
+	t.eq(corpse.item_count(), 3, "三件都在")
+	var bag_uid := corpse.bag_at(Vector2i(0, 0))
+	t.check(bag_uid != GridInventory.EMPTY_UID, "包在原位")
+	t.eq(corpse.contents_of(bag_uid).size(), 2, "两件道具摆在包上")
+	var view := LootView.new()
+	view.inventory = corpse
+	t.check(view.is_revealed(bag_uid), "包一开始就亮着（不用探明）")
+	t.check(view.is_locked(bag_uid), "上面有没亮的：包拖不走")
+	var hidden: ItemInstance = null
+	for inst in corpse.items():
+		if (inst as ItemInstance).uid != bag_uid:
+			hidden = inst
+			break
+	t.check(not view._label_visible(hidden), "没亮的不画名字")
+	t.check(view._label_visible(corpse.get_item(bag_uid)), "包画名字")
+	view.reveal_all()
+	t.check(not view.is_locked(bag_uid) and view._label_visible(hidden), "全亮了：包能拖走、名字画出来")
+	# 没掉包：老路（自由容器）
+	var plain := DropResolver.corpse_of(content, {"dropped": [&"knife"] as Array[StringName], "treasure": [] as Array[StringName]}, c.items)
+	t.check(not plain.requires_bag and plain.item_count() == 1, "没掉包：自由容器")
+	view.free()
+
+
+static func run_faith_tooltip(t: TestCase) -> void:
+	t.begin("087 · 信仰的悬浮说明：神、说明、信力怎么涨、阈值与现在几阶、这个信仰的道具各阶解锁什么")
+	var c := _content()
+	var defs := FaithDef.load_all()
+	var skill: FaithDef = defs.get(&"skill", null)
+	t.not_null(skill, "技巧之神")
+	if skill == null:
+		return
+	var text := FaithTooltip.describe(skill, null, c.items)
+	t.check(text.contains("技巧之神") and text.contains("信力怎么涨") and text.contains(skill.deeds_summary()), "写了名字与信力怎么涨")
+	t.check(text.contains("阈值：3、8"), "写了阈值")
+	t.check(text.contains("技巧之神赐福的盾牌") and text.contains("第 1 阶"), "列了这个信仰的道具与各阶")
+	t.check(FaithTooltip.describe(null).contains("没有信仰"), "没激活时也有话说")
+
+
+static func run_rarity_fill_and_tooltips(t: TestCase) -> void:
+	t.begin("087 · 稀有度是整格底色（不靠边框）、字色按底色明暗；容器视图自己挂悬浮窗")
+	var c := _content()
+	var white := c.items.get_def(&"knife")
+	var purple := c.items.get_def(&"blessed_shield")
+	t.check(ItemPainter.body_color(white).get_luminance() > 0.5, "白色道具底色亮")
+	t.check(ItemPainter.label_color(white).get_luminance() < 0.3, "亮底配深字")
+	t.check(ItemPainter.label_color(purple).get_luminance() > 0.6, "紫底配浅字")
+	var d := ItemPainter.body_color(purple)
+	var r := ItemPainter.rarity_color(purple)
+	t.check(absf(d.h - r.h) < 0.02, "底色就是稀有度的色相")
+	t.check(InventoryView.CELL >= 60.0, "格子放大到 %d" % int(InventoryView.CELL))
+
+
+static func frame_auto_tooltip(t: TestCase, root: Window) -> void:
+	t.begin("087 · 容器视图进树之后自己找 / 造悬浮窗：仓库、结算屏也能停上去看")
+	var c := _content()
+	var host := Control.new()
+	root.add_child(host)
+	var inner := VBoxContainer.new()
+	host.add_child(inner)
+	var box := LootPacker.board_of([&"knife"] as Array[StringName], Vector2i(4, 4), c.items)
+	var view := InventoryView.new()
+	view.inventory = box
+	inner.add_child(view)
+	var tip := HoverTip.ensure_for(view)
+	t.check(tip != null and tip.get_parent() == host, "最顶层的 Control 祖先下造了一个悬浮窗")
+	var view2 := InventoryView.new()
+	view2.inventory = box
+	inner.add_child(view2)
+	var tip2 := HoverTip.ensure_for(view2)
+	t.check(tip2 == tip, "第二个视图复用同一个，不再造")
+	var tips := 0
+	for ch in host.get_children():
+		if ch is HoverTip:
+			tips += 1
+	t.eq(tips, 1, "只有一个悬浮窗")
+	# 屏自己造了悬浮窗的：找到它，不另造
+	var screen := Control.new()
+	root.add_child(screen)
+	var own := HoverTip.new()
+	screen.add_child(own)
+	var view3 := InventoryView.new()
+	view3.inventory = box
+	screen.add_child(view3)
+	t.check(HoverTip.ensure_for(view3) == own, "屏自己的悬浮窗优先")
+	host.queue_free()
+	screen.queue_free()

@@ -89,6 +89,8 @@
 | 敌人内容 | `base_stats` | 这个点的敌人自己的基线（覆盖敌人定义与档位倍率之后的数；教程敌人靠它不跟全局涨） |
 | `DropRule` | `min_drops` `bags_always_drop` | 打赢至少掉几件身上有的、**包不算在名额里**（标准规则 1）；敌人的包必掉（默认开） |
 | `GameSettings` | `loot_auto_close` | 拿走最后一件后自动关战利品 / 容器屏（默认关） |
+| `EnemyDef` | `item_tags` `signature_by_strength` | 身份标签（只从带任一这些标签的道具里抽）；档位 → 那一档起必带的招牌（088） |
+| `RunState` | `node_storages` | 各点留着的暂存区（离开留下、回来取回，跟存档；088） |
 | `ItemDef` | `dormant_keeps_combat` | 信仰道具休眠时保不保留自己的战斗定义（通用效果：盾的减伤、武器的攻击力；默认 true）；没有 combat 的护符休眠即彻底失效（087） |
 | `DropRule` | `boss_rarity` | 击败核心点 BOSS 保底掉一件这个稀有度的（4 = 金；-1 不保底），不看它身上有没有（087） |
 | `NodeRules` | `boss_extracts` | BOSS 倒下、收完战利品直接撤离结算（087，默认开） |

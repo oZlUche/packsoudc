@@ -12,5 +12,11 @@
   },
   "signature": [
     "round_shield"
+  ],
+  "item_tags": [
+    "imperial",
+    "shield",
+    "gear",
+    "consumable"
   ]
 }

@@ -56,7 +56,8 @@ func _remember_known(later: bool) -> void:
 		var uid := (inst as ItemInstance).uid
 		if not _known.has(uid):
 			_known[uid] = true
-			if later:
+			# 087（作者定）：包不用探明 —— 直接当背景亮着；上面的东西照样一件一件搜
+			if later or inventory.acts_as_bag((inst as ItemInstance).def):
 				_revealed[uid] = true
 
 
@@ -73,6 +74,12 @@ func knows(uid: int) -> bool:
 ## 这件还锁在容器里（是这个容器的、还没亮出来）。不是这个容器的东西（玩家自己棋盘 / 暂存区里的）从不锁 ——
 ## 容器屏的落点过滤按它判，不按 [method is_revealed]：后者对棋盘上的包也说「没亮」，把玩家自己的东西全卡住了（084）
 func is_locked(uid: int) -> bool:
+	if inventory != null and inventory.has_item(uid) and inventory.acts_as_bag(inventory.get_item(uid).def):
+		# 087：包本身不锁，但上面还有没亮的东西时拖不走（不然没亮的跟着包走了）
+		for cid in inventory.contents_of(uid):
+			if _known.has(cid) and not _revealed.has(cid):
+				return true
+		return false
 	return _known.has(uid) and not _revealed.has(uid)
 
 
@@ -241,6 +248,11 @@ func _draw() -> void:
 			_draw_progress(item)
 		elif _running and item.uid == next:
 			_draw_next(item)
+
+
+## 087（作者定）：没亮的连名字都不画 —— 名字长的会先从剪影边上露出来，提前暴露身份
+func _label_visible(item: ItemInstance) -> bool:
+	return _revealed.has(item.uid)
 
 
 ## 剪影盖在物品上：只剩轮廓，看不出是什么。噪点按 uid 定死，不闪

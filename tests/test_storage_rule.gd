@@ -117,23 +117,32 @@ static func run_clear_on_leave(t: TestCase) -> void:
 	# 打完之后暂存区里可能有战利品：走之前不收进棋盘就没了
 	run.storage.clear()
 	run.storage.admit(ItemInstance.create(def))
-	t.check(run.will_clear_storage(), "暂存区有东西：走了会清")
+	t.check(run.will_clear_storage(), "暂存区有东西：走了会留在这里")
+	var restored: Array = []
+	run.storage_restored.connect(func(id: int, items: Array): restored.append([id, items.size()]))
 	t.check(f.step_to(entry), "走回出生点")
 	_settle(f)
-	t.eq(run.storage.item_count(), 0, "离开战斗点：暂存区清空")
+	t.eq(run.stored_at(next).size(), 1, "087：离开战斗点，那件留在了战斗点上")
+	t.eq(run.storage.item_count(), 1, "087：回到出生点，先前留在这儿的口粮回到了暂存区")
+	t.check(restored.size() == 1 and int(restored[0][0]) == entry, "发了 storage_restored")
 	t.eq(run.events.last_handled_id, -1, "离开之后不再算发生过事的点")
 
-	# 穿行也清：用过的点上放东西，走一步就没
+	# 穿行：用过的点上放东西，走一步就留在那里；回到有东西的点又拿回来
 	run.storage.admit(ItemInstance.create(def))
 	t.check(f.step_to(next), "穿行到用过的战斗点")
-	t.eq(run.storage.item_count(), 0, "穿行也清（暂存区不随移动）")
+	t.eq(run.storage.item_count(), 1, "087：出生点的两件留在出生点，战斗点留的那件回到暂存区")
+	t.eq(run.stored_at(entry).size(), 2, "出生点上留着两件")
+	# 存档带着各点留的东西
+	var save_back := RunState.from_dict(run.to_dict(), c.chapter, c.items, c.enemies, c.sets)
+	t.check(save_back != null and save_back.stored_at(entry).size() == 2, "node_storages 跟存档")
+	run.storage.clear()
 
 	# 走不成不清
 	run.storage.admit(ItemInstance.create(def))
 	t.check(not f.step_to(99999), "走不到的走不了")
 	t.eq(run.storage.item_count(), 1, "走不成不清")
 
-	# 进入的那一次检查：头一回踩上的点先清暂存区、再发生事（事件给的东西不会被自己清掉）
+	# 进入头一回踩上的点：暂存区里的东西照样在（087：不再进入时清），那个点的事照常发生
 	run.storage.clear()
 	var fresh_id := -1
 	for id in run.map.node_ids():
@@ -147,9 +156,9 @@ static func run_clear_on_leave(t: TestCase) -> void:
 		run.vitality.spend(1, &"test")
 		dropped.clear()
 		run.travel.on_node_event.call(run.map.get_node(fresh_id))
-		t.eq(run.storage.item_count(), 0, "进入头一回踩上的点：先清暂存区")
-		t.check(dropped.size() == 1 and int(dropped[0][0]) == fresh_id, "信号的点是进入的那个")
-		t.check(run.events.pending_event() != null or run.vitality.current >= before_vit, "然后那个点的事照常发生（休息点：先过事件屏或回体力）")
+		t.eq(run.storage.item_count(), 1, "进入头一回踩上的点：暂存区里的东西还在（087）")
+		t.check(dropped.is_empty(), "进入不发 storage_dropped")
+		t.check(run.events.pending_event() != null or run.vitality.current >= before_vit, "那个点的事照常发生（休息点：先过事件屏或回体力）")
 		run.events.pending = {}
 	else:
 		t.check(true, "这张图没有没用过的休息点，跳过进入检查的用例")

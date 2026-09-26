@@ -6,5 +6,12 @@
   ],
   "base_stats": {
     "max_hp": 26
-  }
+  },
+  "item_tags": [
+    "rapid",
+    "melee",
+    "consumable",
+    "tool",
+    "material"
+  ]
 }

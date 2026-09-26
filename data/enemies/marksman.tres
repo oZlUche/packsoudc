@@ -7,7 +7,15 @@ script = ExtResource("1_ys8gs")
 id = &"marksman"
 display_name = "神射手"
 strength = 1
-schools = Array[StringName]([&"burst"])
+schools = Array[StringName]([&"ranged"])
 base_stats = {
 "max_hp": 28
 }
+item_tags = Array[StringName]([&"ranged", &"ammo", &"consumable"])
+signature_by_strength = {
+"0": ["shortbow"],
+"1": ["longbow"],
+"2": ["blessed_longbow"]
+}
+board = Vector2i(6, 4)
+bags = Array[StringName]([&"bag_long", &"bag_long", &"bag_small"])

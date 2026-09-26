@@ -25,6 +25,8 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 		return 0
 	var victim := packet.victim
 	var td := packet.def()
+	if victim.dead:
+		return 0     # 087：倒下的不再受伤也不再被治（倒下是终局）
 
 	# --- 2. 护盾吸收 ---
 	# 放在受伤前效果之前，是因为「这一下还剩多少要扛」本身就是减伤效果的判断依据。
@@ -71,7 +73,7 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 
 	# --- 5. 受伤后 ---
 	_notify(ctx, packet, td)
-	if not victim.is_alive():
+	if victim.resources.current(BattleStats.RES_HP) <= 0 and victim.mark_dead():
 		ctx.emit(BattleEvent.DIED, victim.side, {})
 	return -packet.applied
 

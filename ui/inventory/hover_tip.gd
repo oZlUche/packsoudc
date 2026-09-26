@@ -65,6 +65,29 @@ func _init(font: Font = null) -> void:
 	add_child(_side)
 
 
+## 087：给一个容器视图找它该用的悬浮窗并登记上去：沿祖先往上找，谁的直接子节点里有 HoverTip 就用它（屏 / 面板自己造的那个）；
+## 一路没有就在最顶层的 Control 祖先下造一个。返回用的那个（视图不在树里返回 null）
+static func ensure_for(view: ContainerView) -> HoverTip:
+	if view == null or not view.is_inside_tree():
+		return null
+	var node: Node = view.get_parent()
+	var top: Control = null
+	while node != null:
+		for c in node.get_children():
+			if c is HoverTip:
+				(c as HoverTip).watch(view)
+				return c
+		if node is Control:
+			top = node
+		node = node.get_parent()
+	if top == null:
+		return null
+	var tip := HoverTip.new(UiPalette.cjk_font())
+	top.add_child(tip)
+	tip.watch(view)
+	return tip
+
+
 ## 登记一个容器视图：停在道具上就显示 [ItemTooltip]。[param board_of] 可选：`func(view) -> GridInventory`，给编译用
 func watch(view: ContainerView, board_of: Callable = Callable()) -> void:
 	if _views.has(view):

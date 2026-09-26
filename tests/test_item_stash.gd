@@ -5,7 +5,7 @@
 ## 一旦哪天有人给它加了「摆不下」这类判断，下面的用例就会红。
 extends RefCounted
 
-const CELL := 48.0
+const CELL := InventoryView.CELL
 
 
 static func _def(id: String, rows: Array, tags: Array = []) -> ItemDef:
@@ -254,7 +254,7 @@ static func run_drag_cancel(t: TestCase) -> void:
 
 
 static func run_bag_with_contents_rejected(t: TestCase) -> void:
-	t.begin("暂存区 · 带东西的包收不进来")
+	t.begin("暂存区 · 带东西的包收得进来（087 作者定）：包一行、内容物打散各一行")
 
 	ItemInstance.reset_uid_counter()
 	var bag_def := _def("bag4", ["##", "##"])
@@ -277,15 +277,17 @@ static func run_bag_with_contents_rejected(t: TestCase) -> void:
 
 	bv.grab_requested.emit(bv, bag.uid, Vector2(CELL * 1.5, CELL * 0.5))
 	t.check(drag.is_dragging(), "连内容物一起抓起来了")
-	t.check(not drag.drop_at(_row_center(sv, 0)),
-		"列表装不下「包 + 内容物的相对位置」，放进去等于把摆好的一袋打散")
-	t.eq(s.item_count(), 0, "列表里什么都没多出来")
-	t.check(board.has_item(bag.uid) and board.has_item(inside.uid), "整袋退回了棋盘")
+	t.check(drag.drop_at(_row_center(sv, 0)), "放进列表：成（087：包能进暂存区，内容物打散）")
+	t.eq(s.item_count(), 2, "列表里两行：包 + 内容物")
+	t.check(s.has_item(bag.uid) and s.has_item(inside.uid), "包和里面的东西都在列表里")
+	t.eq(board.item_count(), 0, "棋盘空了")
 
-	# 空包就没问题 —— 那时它只是件普通异形物品
-	board.remove(inside.uid)
+	# 空包照旧
+	s.remove(inside.uid)
+	sv.grab_requested.emit(sv, bag.uid, Vector2(10, 10))
+	t.check(drag.drop_at(bv.position + Vector2(CELL * 0.5, CELL * 0.5)), "空包放回棋盘")
 	bv.grab_requested.emit(bv, bag.uid, Vector2(CELL * 1.5, CELL * 0.5))
-	t.check(drag.drop_at(_row_center(sv, 0)), "掏空之后收得进去")
+	t.check(drag.drop_at(_row_center(sv, 0)), "空包也收得进去")
 	t.check(s.has_item(bag.uid), "空包在列表里")
 
 	for v in [bv, sv]:

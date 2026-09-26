@@ -12,3 +12,4 @@ base_stats = {
 "max_hp": 38
 }
 signature = Array[StringName]([&"knife"])
+item_tags = Array[StringName]([&"bleed", &"melee", &"consumable"])
