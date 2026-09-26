@@ -744,3 +744,47 @@ static func run_spyglass_and_codex(t: TestCase) -> void:
 	t.eq(screen.tab(), "warehouse", "不认识的页签回仓库")
 	screen.free()
 	_cleanup()
+
+
+static func run_loss_cost_bound_to_battle(t: TestCase) -> void:
+	t.begin("088 · 战败代价跟战斗绑定：参数写了用参数（0 无代价 / -2 必死 / 大于 1）；没写看节点内容 loss_cost；再没有核心必死、其余按规则表；跟战前准备屏的存档")
+	var W := preload("res://tests/test_node_events.gd")
+	var w = W._world(200, 9, false)     # 弱玩家：必输
+	var ev: NodeEvents = w.events
+	var battle: MapNode = W._node(w, &"battle")
+	t.eq(ev.loss_cost_for(&"battle", {}), w.rules.loss_cost_of(&"battle"), "没写：按规则表")
+	t.eq(ev.loss_cost_for(&"core", {}), NodeEvents.LOSS_DEATH, "核心没写：必死")
+	t.eq(ev.loss_cost_for(&"battle", {"loss_cost": 3}), 3, "节点内容写了：用内容的")
+	t.eq(ev.loss_cost_for(&"core", {"loss_cost": 0}), 0, "核心也能写成无代价")
+	t.eq(ev.loss_cost_for(&"battle", {"loss_cost": 3}, 5), 5, "参数写了：参数优先")
+	var lost: Array = []
+	ev.defeated.connect(func(why: StringName): lost.append(why))
+	# 无代价
+	var v0: int = w.vitality.current
+	ev.fight_content(battle, &"battle", battle.content, null, 0)
+	t.eq(w.vitality.current, v0, "写了 0：输了不扣")
+	# 大于 1
+	ev.fight_content(battle, &"battle", battle.content, null, 3)
+	t.eq(w.vitality.current, v0 - 3, "写了 3：扣 3")
+	# 节点内容里写
+	var content := battle.content.duplicate(true)
+	content["loss_cost"] = 2
+	ev.fight_content(battle, &"battle", content)
+	t.eq(w.vitality.current, v0 - 5, "内容里写 2：扣 2")
+	t.check(lost.is_empty(), "还没战败")
+	# 必死
+	ev.fight_content(battle, &"battle", battle.content, null, NodeEvents.LOSS_DEATH)
+	t.eq(lost, [&"fatal_loss"] as Array[StringName], "写了必死：直接战败（原因 fatal_loss）")
+	t.eq(w.vitality.current, v0 - 5, "必死不走 spend")
+	# 战前准备屏：代价跟着 pending_battle 存
+	var w2 = W._world(300, 9, false)
+	var ev2: NodeEvents = w2.events
+	ev2.pause_before_battle = true
+	var b2: MapNode = W._node(w2, &"battle")
+	ev2._battle_at(b2, &"battle", b2.content, "node", 4)
+	t.eq(int(ev2.pending_battle.get("loss_cost", -99)), 4, "等着开打的一场记着代价")
+	var v2: int = w2.vitality.current
+	t.check(ev2.start_pending_battle(), "开战")
+	t.eq(w2.vitality.current, v2 - 4, "打输扣的是记着的 4")
+	# 猎手定义的默认值
+	t.eq(HunterDef.new().loss_cost, -1, "猎手默认按规则表")

@@ -37,8 +37,13 @@ signal shop_closed(node: MapNode)
 signal event_resolved(node: MapNode, outcome: StringName, detail: Dictionary)
 ## 到了撤离点。fee > 0 = 付费的（PaidExtracts），撤离动作（M6）先 pay_extract_fee
 signal extract_reached(node: MapNode, fee: int)
-## 战败：&"boss_lost"（核心输了）/ &"vitality_depleted"（体力归零）。结局由上层判（GameDirector，7.1）
+## 战败：&"boss_lost"（核心输了）/ &"fatal_loss"（这一场写了必死）/ &"vitality_depleted"（体力归零）。结局由上层判（GameDirector，7.1）
 signal defeated(reason: StringName)
+
+## 088（作者定）：**战败代价跟战斗绑定**。进入战斗的函数带一个 `loss_cost`：没写（LOSS_DEFAULT = -1）按节点内容的 `loss_cost`、
+## 再按节点规则的 `loss_cost[type]`（核心点默认必死）；写了就用写的 —— 0 = 无代价，LOSS_DEATH = 必死（直接战败），大于 1 = 扣那么多体力
+const LOSS_DEFAULT := -1
+const LOSS_DEATH := -2
 
 var graph: MapGraph = null
 var travel: MapTravel = null
@@ -373,12 +378,12 @@ static func effective_type(node: MapNode) -> StringName:
 
 #region 战前准备（084）
 ## 节点上的一场：开着 [member pause_before_battle] 就先停下等玩家，否则立刻打。打完（或根本没有敌人）按 [param kind] 收尾
-func _battle_at(node: MapNode, type: StringName, content: Dictionary, kind: String) -> void:
+func _battle_at(node: MapNode, type: StringName, content: Dictionary, kind: String, loss_cost: int = LOSS_DEFAULT) -> void:
 	if pause_before_battle and _can_fight(content):
-		pending_battle = {"node": node.id, "type": String(type), "content": content.duplicate(true), "kind": kind}
+		pending_battle = {"node": node.id, "type": String(type), "content": content.duplicate(true), "kind": kind, "loss_cost": loss_cost}
 		battle_pending.emit(node, type, content)
 		return
-	_fight(node, type, content)
+	_fight(node, type, content, null, loss_cost)
 	_after_battle(node, kind)
 
 
@@ -429,19 +434,31 @@ func start_pending_battle() -> bool:
 	var type := StringName(String(pending_battle.get("type", "battle")))
 	var content: Dictionary = pending_battle.get("content", {})
 	var kind := String(pending_battle.get("kind", "node"))
+	var loss_cost := int(pending_battle.get("loss_cost", LOSS_DEFAULT))
 	pending_battle = {}
-	_fight(node, type, content)
+	_fight(node, type, content, null, loss_cost)
 	_after_battle(node, kind)
 	return true
 #endregion
 
 
-## 打一场（猎手系统也走这条路：给它自己的掉落上下文）。返回赢没赢
-func fight_content(node: MapNode, type: StringName, content: Dictionary, loot_ctx: LootContext = null) -> bool:
-	return _fight(node, type, content, loot_ctx)
+## 打一场（猎手系统也走这条路：给它自己的掉落上下文与自己的战败代价）。返回赢没赢
+func fight_content(node: MapNode, type: StringName, content: Dictionary, loot_ctx: LootContext = null, loss_cost: int = LOSS_DEFAULT) -> bool:
+	return _fight(node, type, content, loot_ctx, loss_cost)
 
 
-func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: LootContext = null) -> bool:
+## 这一场输了扣多少：参数写了就用参数；没写看节点内容的 `loss_cost`；再没有：核心点必死，其余按节点规则的表
+func loss_cost_for(type: StringName, content: Dictionary, loss_cost: int = LOSS_DEFAULT) -> int:
+	if loss_cost != LOSS_DEFAULT:
+		return loss_cost
+	if content.has("loss_cost"):
+		return int(content["loss_cost"])
+	if type == &"core":
+		return LOSS_DEATH     # 规则不是数值：BOSS 输了直接战败（7.1）
+	return rules.loss_cost_of(type) if rules != null else 1
+
+
+func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: LootContext = null, loss_cost: int = LOSS_DEFAULT) -> bool:
 	var enemy := EnemyKit.spec_of(content, enemies, pool, items) if not content.is_empty() else null
 	if enemy == null or not player_spec.is_valid():
 		return false     # 没有敌人（这一章没有敌人池）或没有玩家：点空着，当走过
@@ -465,17 +482,20 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 			rewarded.emit(node, amount)
 		if type == &"core":
 			boss_defeated.emit(node)
-	elif type == &"core":
-		_defeat(&"boss_lost")     # 规则不是数值：BOSS 输了直接战败，连 spend 都不调（7.1）
-	elif vitality != null and rules != null:
-		# 082：角色技能的免罚败仗 —— 只对节点敌人，配额在上下文里、已免几次在这里记。
-		# 088（作者定）：输给猎手也扣体力（loss_cost 里的 hunter），猎手定义里的战败后果另算
-		if type != HunterSystem.TYPE and losses_forgiven < _run_ctx().free_losses:
-			losses_forgiven += 1
-		else:
-			vitality.spend(rules.loss_cost_of(type), &"battle_lost")
-		if vitality.is_depleted():
-			_defeat(&"vitality_depleted")
+	else:
+		var cost := loss_cost_for(type, content, loss_cost)
+		if cost == LOSS_DEATH:
+			_defeat(&"boss_lost" if type == &"core" else &"fatal_loss")     # 必死：直接战败，连 spend 都不调（7.1）
+		elif cost > 0 and vitality != null:
+			# 082：角色技能的免罚败仗 —— 只对节点敌人，配额在上下文里、已免几次在这里记。
+			# 088（作者定）：输给猎手也扣体力（默认按 loss_cost 里的 hunter，猎手定义可以自己写），猎手定义里的战败后果另算
+			if type != HunterSystem.TYPE and losses_forgiven < _run_ctx().free_losses:
+				losses_forgiven += 1
+			else:
+				vitality.spend(cost, &"battle_lost")
+			if vitality.is_depleted():
+				_defeat(&"vitality_depleted")
+		# cost == 0：这一场写了无代价
 	return won
 
 

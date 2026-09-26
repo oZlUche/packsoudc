@@ -64,6 +64,8 @@ func _reason_text(reason: StringName) -> String:
 			return "体力耗尽"
 		&"boss_lost":
 			return "核心一战失利"
+		&"fatal_loss":
+			return "输了一场不能输的仗"
 		&"boss":
 			return "击败了核心的 BOSS，直接撤离"
 	return String(reason)

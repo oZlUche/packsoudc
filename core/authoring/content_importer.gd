@@ -402,6 +402,8 @@ static func import_hunter(data: Dictionary, ctx: Context, report: ImportReport) 
 		report.error("flee_chance", "逃跑成功率应在 0～1 之间")
 	if def.flee_fail_vitality < 0 or def.flee_cooldown < 0:
 		report.error("flee_fail_vitality", "逃跑的代价与冷却不能为负")
+	if def.loss_cost < -2:
+		report.error("loss_cost", "战败代价只能是 -1（按规则）、-2（必死）、0（无代价）或正数")
 	for i in def.loss_outcomes.size():
 		if def.loss_outcomes[i] == null:
 			report.error("loss_outcomes[%d]" % i, "空的战败后果")

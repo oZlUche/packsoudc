@@ -333,7 +333,7 @@ func fight(node: MapNode, uid: int, _ctx: EventContext) -> bool:
 	run.events.last_handled_id = node.id
 	var loot_ctx := run._loot_context()
 	loot_ctx.drop_mult *= def.drop_mult
-	var won := run.events.fight_content(node, TYPE, content, loot_ctx)
+	var won := run.events.fight_content(node, TYPE, content, loot_ctx, def.loss_cost)
 	if won:
 		h.alive = false
 		hunter_defeated.emit(h)

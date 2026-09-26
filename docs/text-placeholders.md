@@ -94,6 +94,7 @@
 | `ItemDef` 标签 | `keepsake` | 特殊道具：不进背包、不能生成、拿到只是通知 + 图鉴点亮；能力由别的标签说明（`node_tooltips` → 节点浮窗） |
 | `ChapterDef` | `starting_keepsakes` | 这一章开局发的特殊道具（序章二：望远镜），记在局外 |
 | `NodeRules` | `loss_cost.hunter` | 输给猎手扣的体力（088，1） |
+| 节点内容 / `HunterDef` | `loss_cost` | 这一场输了的代价：不写按规则表（核心必死）；0 无代价、-2 必死、大于 0 扣那么多（088，进入战斗的函数也能直接传） |
 | `EnemyDef` | `item_tags` `signature_by_strength` | 身份标签（只从带任一这些标签的道具里抽）；档位 → 那一档起必带的招牌（088） |
 | `RunState` | `node_storages` | 各点留着的暂存区（离开留下、回来取回，跟存档；088） |
 | `ItemDef` | `dormant_keeps_combat` | 信仰道具休眠时保不保留自己的战斗定义（通用效果：盾的减伤、武器的攻击力；默认 true）；没有 combat 的护符休眠即彻底失效（087） |

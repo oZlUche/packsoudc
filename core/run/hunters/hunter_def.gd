@@ -31,6 +31,8 @@ enum Visibility { HIDDEN, VISIBLE, NEAR }
 ## 逃跑：基础成功率（0 = 逃不掉，事件屏不给这个选项）、失败扣几点体力、逃掉之后它歇几步
 @export var flee_chance: float = 0.5
 @export var flee_fail_vitality: int = 1
+## 088：输给这个猎手扣多少体力。-1 = 按节点规则的 loss_cost.hunter；0 = 不扣；-2 = 必死；大于 0 = 扣那么多。战败后果构件另算
+@export var loss_cost: int = -1
 @export var flee_cooldown: int = 2
 ## 从哪个敌人池抽（空 = 这一章的池）、按哪条强度规则（null = 池自己的）
 @export var enemy_pool: StringName = &""

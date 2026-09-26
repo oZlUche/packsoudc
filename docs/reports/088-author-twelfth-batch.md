@@ -83,12 +83,21 @@
 - **望远镜** `spyglass`：序章二 `starting_keepsakes: ["spyglass"]`（章节的 `node_tooltips` 开关不再用，字段留给不想走道具那条路的章节）。开局 `GameFlow._grant_keepsakes` 记进局外（`MetaState.keepsakes`，跟局外存档）、存盘、攒一句通知（地图屏开的时候打进日志：「获得特殊道具【望远镜】：不占背包，图鉴里点亮；从现在起把鼠标停在地图的点上能看到它的情报」）。`tooltips_enabled()` 多看 `has_ability(&"node_tooltips")` —— 拿过一次，以后每一章都开。tut2_intro 的文字改成军团的人塞给你一支望远镜。
 - **基地两个页签**（`ui/game/meta_screen.gd` 重排）：头部「基地」+「仓库」「图鉴」两个页签 + 这一局 / 战绩 / 按钮；**仓库页**是原来的内容（格子、带回来的背包、局外 buff 与解锁、最近几局）；**图鉴页**：带出过的道具按稀有度摆在一块只读棋盘上（角标写累计件数，停上去就是道具悬浮窗 —— 容器视图自带的），没点亮的按稀有度列成灰字，特殊道具另列（拿到过的 ✓ 加说明）。`show_tab("warehouse" / "codex")`。
 
+### 16. 「战败代价应该跟战斗绑定：进入战斗的函数带自定义代价（无代价 0 / 必死 / 大于 1），不带就默认 -1」
+
+**改**：`NodeEvents` 的进入战斗函数（`_battle_at` / `fight_content` / `_fight`）多一个 `loss_cost` 参数，默认 `LOSS_DEFAULT = -1`。
+输了按 `loss_cost_for(type, content, loss_cost)` 定代价：**参数写了用参数**；没写看**节点内容的 `loss_cost`**（预设图的某个点、某场遭遇可以写死）；
+再没有：核心点 `LOSS_DEATH = -2`（必死），其余按节点规则的表。**0 = 无代价**（输了不扣、也不算免罚次数），**-2 = 必死**（直接战败，核心点原因 `boss_lost`、别处 `fatal_loss`），
+**大于 0 = 扣那么多**（免罚败仗仍先抵）。代价跟着战前准备屏的 `pending_battle` 存。猎手定义多一个 `loss_cost`（默认 -1 按规则表的 hunter），打猎手时传进去。
+核心点原来写死的「输了直接战败」变成了默认值的一种，节点内容写 `loss_cost: 0` 就能做一个「输了也没事」的 BOSS。
+
 ## 二、测试
 
 - `tests/test_author_087.gd` 新增：倒下是终局（只一次 DIED、倒下后不回血、终局血 0、`mark_dead` 幂等）；敌人身份（全部敌人 × 四档 × 三种子、神射手按档位招牌、导入器拦）；包进暂存区 / 自由容器；尸体照棋盘摆 + 包不揭示 + 没亮的不画名字；信仰悬浮说明；稀有度底色与字色、格子放大；容器视图自动挂悬浮窗（复用、屏自己的优先）。
 - `test_drag_layer`（包替换包）、`test_item_stash`（带东西的包收得进来）、`test_storage_rule`（按点保留、回来取回、跟存档、进入不清）、`test_displacement` / `test_drag_layer` / `test_item_stash` 的格子常量改读 `InventoryView.CELL`。`DropResolver.expected_count` 算上必掉的包与保底，真敌人的期望对得上。
 - 第 11～15 条：`run_names_and_hunters_and_mana`（Names.of 两种语言与回落、道具 / 信仰 / 敌人 / 内联 buff 的英文名、悬浮窗按语言写名字、管线往返、猎手扣体力、普通难度没有猎手、魔晶石给 max_mana）、`run_spyglass_and_codex`（望远镜不能生成、序章二开局拿到、通知一句、不进背包、跟局外存档、之后第一章也开浮窗、白纸关着；基地页签切换、图鉴棋盘与角标）；`test_hunters` 的扣体力期望加上节点规则的 hunter；`test_sealed_items` 数上特殊道具；`test_tutorial2` 改验 starting_keepsakes。
-- 全套 **63 个套件、11157 项断言**通过。
+- 第 16 条：`run_loss_cost_bound_to_battle`（规则表 / 核心必死 / 内容写的 / 参数优先、0 不扣、3 扣 3、必死直接战败不走 spend、跟 pending_battle 存、猎手默认 -1）。
+- 全套 **63 个套件、11172 项断言**通过。
 
 ## 三、留给作者
 
