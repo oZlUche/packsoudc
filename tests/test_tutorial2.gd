@@ -457,9 +457,22 @@ static func run_gating(t: TestCase) -> void:
 	f.recipes = c.recipes
 	f.save_path = SAVE
 	f.meta_path = META
+	var first_target := f.new_run_target()
+	t.check(first_target != null and first_target.id == &"prologue", "一张白纸：「新的一局」直接开序章一")
+	t.check(f.replayable_chapters().is_empty(), "还没通关：没有可重玩的教程")
 	f.meta.grant_unlock(c.prologue.grants_unlock)
 	var avail := f.available_chapters()
 	t.check(avail.size() == 1 and avail[0].id == &"prologue_2", "序章通关之后只列序章二（序章收起）：%s" % str(avail.map(func(x: ChapterDef) -> String: return String(x.id))))
+	var target := f.new_run_target()
+	t.check(target != null and target.id == &"prologue_2", "主菜单能问到「新的一局」会直接开序章二（按钮上写清楚）")
+	var replay := f.replayable_chapters()
+	t.check(replay.size() == 1 and replay[0].id == &"prologue", "收起了的序章列在可重玩里")
+	# 重玩：不看收起、直接开序章一
+	t.check(f.replay_chapter(replay[0]), "重玩教程开得了")
+	t.check(f.run != null and f.run.chapter == c.prologue, "重玩开的是序章一")
+	t.eq(f.screen, GameFlow.Screen.EVENT, "重玩也先过 intro")
+	f.to_main_menu()
+	RunSave.remove(SAVE)
 	f.new_run()
 	var run := f.run
 	t.not_null(run, "直接开了序章二")

@@ -83,10 +83,39 @@ func new_run() -> void:
 	grant_first_kit()
 	save_meta()
 	# 084（作者：序章不要开局页面）：只有一章可选、它又说了跳过开局屏，就直接开 —— 角色取它列的第一个、种子随机
-	var chs := available_chapters()
-	if chs.size() == 1 and chs[0].skip_setup and begin_direct(chs[0]) != null:
+	var target := new_run_target()
+	if target != null and begin_direct(target) != null:
 		return
 	_go(Screen.SETUP)
+
+
+## 「新的一局」会直接开哪一章（不经开局屏）；会走开局屏时返回 null。主菜单拿它把去向写在按钮上 ——
+## 教程通关后那一章收起（`hidden_by_unlock`），只剩下一张时按钮就直接开它，不写清楚玩家会以为点错了
+func new_run_target() -> ChapterDef:
+	var chs := available_chapters()
+	if chs.size() == 1 and chs[0].skip_setup:
+		return chs[0]
+	return null
+
+
+## 通关后收起了的章（教程），按顺序：主菜单的「重玩教程」从第一张开始
+func replayable_chapters() -> Array[ChapterDef]:
+	var out: Array[ChapterDef] = []
+	for c in chapters:
+		if c.hidden_by_unlock != &"" and meta != null and meta.has_unlock(c.hidden_by_unlock):
+			out.append(c)
+	out.sort_custom(func(a: ChapterDef, b: ChapterDef) -> bool:
+		return a.order < b.order if a.order != b.order else String(a.id) < String(b.id))
+	return out
+
+
+## 重玩一张收起了的教程图：不看收起、不看门，直接开（教程都是 skip_setup）。开不了返回 false
+func replay_chapter(chapter: ChapterDef) -> bool:
+	if chapter == null:
+		return false
+	grant_first_kit()
+	save_meta()
+	return begin_direct(chapter) != null
 
 
 ## 084：不经开局屏直接开一章：角色 = 这一章能选的第一个，种子随机；开了先过 intro 事件（配了的话）。开不了返回 null

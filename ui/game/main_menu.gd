@@ -23,7 +23,14 @@ func open(_payload: Dictionary) -> void:
 		m.runs + 1, m.extractions, m.deaths, m.warehouse.item_count(), m.score, m.funds], 13, UiPalette.DIM))
 	col.add_child(HSeparator.new())
 
-	col.add_child(_button(UiText.t("menu.new_run"), flow.new_run, 18))
+	# 085：会直接开哪一章就写在按钮上（教程收起后只剩一张时不经开局屏）；收起了的教程可以从第一张重玩
+	var target := flow.new_run_target()
+	var new_text := UiText.t("menu.new_run") if target == null else UiText.t("menu.new_run_to") % target.display_name
+	col.add_child(_button(new_text, flow.new_run, 18))
+	var replayable := flow.replayable_chapters()
+	if not replayable.is_empty():
+		var first := replayable[0]
+		col.add_child(_button(UiText.t("menu.replay") % first.display_name, func(): flow.replay_chapter(first), 14))
 	_continue_btn = _button(UiText.t("menu.continue"), func(): flow.continue_run(), 18)
 	_continue_btn.disabled = not flow.has_save()
 	col.add_child(_continue_btn)

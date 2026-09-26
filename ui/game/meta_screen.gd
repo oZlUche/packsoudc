@@ -64,20 +64,28 @@ func open(payload: Dictionary) -> void:
 		right.add_child(b)
 	if not any_meta:
 		right.add_child(_label("（没有局外 buff 的内容）", 12, UiPalette.DIM))
-	# 局外解锁（069，占位开关）：难度定义里要求的解锁 id 各一个开关
+	# 局外解锁（069，占位开关）：难度定义里要求的解锁 id 各一个开关；085：章节通关给的解锁也列（关掉 = 教程重新顶上）
 	var unlock_ids: Array[StringName] = []
 	for d in flow.difficulties:
 		if d.requires_unlock != &"" and not unlock_ids.has(d.requires_unlock):
 			unlock_ids.append(d.requires_unlock)
+	for c in flow.chapters:
+		if c.grants_unlock != &"" and not unlock_ids.has(c.grants_unlock):
+			unlock_ids.append(c.grants_unlock)
 	if not unlock_ids.is_empty():
 		right.add_child(_label("局外解锁　占位：开关列表，将来由成长系统决定", 15, UiPalette.DIM))
 		for uid in unlock_ids:
 			var names: Array[String] = []
 			for d in flow.difficulties:
 				if d.requires_unlock == uid:
-					names.append(d.display_name)
+					names.append("难度：" + d.display_name)
+			for c in flow.chapters:
+				if c.grants_unlock == uid:
+					names.append("通关：" + c.display_name)
+				elif c.requires_unlock == uid:
+					names.append("开放：" + c.display_name)
 			var key: StringName = uid
-			var ub := _button("%s　解锁难度：%s" % [uid, "、".join(names)], func(): toggle_unlock(key), 13)
+			var ub := _button("%s　%s" % [uid, "、".join(names)], func(): toggle_unlock(key), 13)
 			ub.toggle_mode = true
 			ub.alignment = HORIZONTAL_ALIGNMENT_LEFT
 			ub.set_pressed_no_signal(m.has_unlock(key))
