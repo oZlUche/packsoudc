@@ -28,9 +28,9 @@ static func run_ui_text(t: TestCase) -> void:
 	t.begin("UiText · 两种语言与设置往返")
 	var before := UiText.lang
 	UiText.lang = "zh"
-	t.eq(UiText.t("menu.new_run"), "新的一局", "中文")
+	t.eq(UiText.t("menu.new_run"), "新的游戏", "中文")
 	UiText.lang = "en"
-	t.eq(UiText.t("menu.new_run"), "New run", "英文")
+	t.eq(UiText.t("menu.new_run"), "New game", "英文")
 	t.eq(UiText.t("no.such.key"), "no.such.key", "没有的键原样返回")
 	t.eq(UiText.next_lang("zh"), "en", "zh → en")
 	t.eq(UiText.next_lang("en"), "zh", "en → zh 绕回来")
