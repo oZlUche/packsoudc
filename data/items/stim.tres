@@ -28,7 +28,6 @@ script = ExtResource("6_4xr3b")
 id = &"adrenaline"
 display_name = "肾上腺素"
 max_stacks = 3
-duration_sec = 10.0
 mods = Array[ExtResource("1_83wfo")]([SubResource("Resource_5tn4f")])
 
 [sub_resource type="Resource" id="Resource_7sf63"]

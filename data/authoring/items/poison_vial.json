@@ -35,7 +35,6 @@
               "display_name": "中毒",
               "is_debuff": true,
               "max_stacks": 5,
-              "duration_sec": 6.0,
               "rules": [
                 {
                   "trigger": {

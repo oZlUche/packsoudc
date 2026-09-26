@@ -51,7 +51,6 @@ id = &"poison"
 display_name = "中毒"
 is_debuff = true
 max_stacks = 5
-duration_sec = 6.0
 rules = Array[ExtResource("2_bu2h2")]([SubResource("Resource_n6g7y")])
 
 [sub_resource type="Resource" id="Resource_7d3sp"]

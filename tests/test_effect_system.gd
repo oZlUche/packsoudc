@@ -184,6 +184,7 @@ static func run_runtime(t: TestCase) -> void:
 	var brief := BuffDef.new()
 	brief.id = &"brief"
 	brief.duration_sec = 0.5
+	brief.max_stacks = 1     # 不可叠层的才会过期（085 作者定：可叠层的永续）
 	rt.apply_buff(brief, 1, _sec(1.0))
 	t.eq(rt.expire_buffs(_sec(1.4)).size(), 0, "1.4 秒时未过期")
 	t.eq(rt.next_expiry(), _sec(1.5), "到期时刻记为绝对时间，可直接排进时间轮")

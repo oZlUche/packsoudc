@@ -117,7 +117,7 @@ static func run_cross_scope(t: TestCase) -> void:
 	var ctx := _ctx()
 	var r := _report()
 	ContentImporter.import_buff({
-		"id": "burn", "display_name": "灼烧", "duration_sec": 5.0, "max_stacks": 10,
+		"id": "burn", "display_name": "灼烧", "max_stacks": 10,     # 可叠层的永续，不填时长（085）
 		"rules": [{
 			"trigger": {"type": "on_schedule"},
 			"cadence": {"type": "cooldown", "seconds": 1.0},
@@ -148,11 +148,41 @@ static func run_cross_scope(t: TestCase) -> void:
 		"combat": {"rules": [{
 			"trigger": {"type": "on_battle_start"},
 			"cadence": {"type": "always"},
-			"effects": [{"type": "apply_status", "buff": {"id": "rush", "duration_sec": 3.0}}],
+			"effects": [{"type": "apply_status", "buff": {"id": "rush", "max_stacks": 1, "duration_sec": 3.0}}],
 		}]},
 	})[0]
 	t.eq((inline.combat.rules[0].effects[0] as ApplyStatus).buff.id, &"rush",
 		"只被一件道具用到的增益可以内联，不必单开文件")
+
+
+static func run_buff_duration_rule(t: TestCase) -> void:
+	t.begin("内容管线 · 作者定：可叠层的 buff 永续不许填时长（独立文件与道具内联都拦）；不可叠层的可以过期；BuffDef.is_permanent 按此判")
+	var ctx := _ctx()
+	var bad := _report()
+	ContentImporter.import_buff({"id": "t_stack_timed", "display_name": "x", "max_stacks": 5, "duration_sec": 6.0}, ctx, bad)
+	t.check(not bad.ok(), "可叠层 + 时长：拦下（%s）" % bad.to_text())
+	var ok := _report()
+	ContentImporter.import_buff({"id": "t_single_timed", "display_name": "x", "max_stacks": 1, "duration_sec": 6.0}, ctx, ok)
+	t.check(ok.ok(), "不可叠层 + 时长：可以")
+	var ok2 := _report()
+	ContentImporter.import_buff({"id": "t_stack_forever", "display_name": "x", "max_stacks": 0}, ctx, ok2)
+	t.check(ok2.ok(), "不限层、没时长：可以")
+	var bad_item := _report()
+	ContentImporter.import_item({"id": "t_vial", "shape": ["1"], "combat": {"rules": [{"trigger": {"type": "on_schedule"}, "cadence": {"type": "cooldown", "seconds": 1.0},
+		"effects": [{"type": "apply_status", "buff": {"id": "t_inline", "max_stacks": 3, "duration_sec": 2.0}}]}]}}, ctx, bad_item)
+	t.check(not bad_item.ok(), "道具内联的可叠层 buff 填了时长：也拦")
+	var stack := BuffDef.new()
+	stack.max_stacks = 5
+	stack.duration_sec = 6.0
+	t.check(stack.is_stackable() and stack.is_permanent(), "可叠层的就算写了时长也永续")
+	var single := BuffDef.new()
+	single.max_stacks = 1
+	single.duration_sec = 6.0
+	t.check(not single.is_stackable() and not single.is_permanent() and single.duration_text().contains("6.0"), "不可叠层 + 时长：会过期")
+	single.duration_sec = 0.0
+	t.check(single.is_permanent() and single.duration_text() == "永续", "不可叠层没填时长：也永续")
+	var inst := BuffInstance.create(stack, 1, 0)
+	t.check(inst.is_permanent(), "实例按 is_permanent 判：可叠层的不设过期时刻")
 
 
 static func run_validation(t: TestCase) -> void:

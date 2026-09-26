@@ -27,4 +27,9 @@ func apply(ctx: RuleContext) -> void:
 
 
 func describe() -> String:
-	return "施加 %s" % (buff.display_name if buff != null else "?")
+	if buff == null:
+		return "施加 ?"
+	var bits: Array[String] = [buff.duration_text()]
+	if buff.max_stacks > 0:
+		bits.append("至多 %d 层" % buff.max_stacks)
+	return "施加「%s」%s（%s）" % [buff.display_name, ("×%d" % stacks) if stacks > 1 else "", "，".join(bits)]

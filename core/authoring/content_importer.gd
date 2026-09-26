@@ -131,8 +131,29 @@ static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_fill(def, data, "", ctx, report)
 	if def.id == &"":
 		report.error("id", "增益必须有 id")
+	validate_buff_duration(def, "", report)
 	ctx.register_buff(def)
 	return def
+
+
+## 作者定的规矩（085）：可叠层的 buff 永续，不许填时长；不可叠层的才可以过期
+static func validate_buff_duration(def: BuffDef, path: String, report: ImportReport) -> void:
+	if def != null and def.is_stackable() and def.duration_sec > 0.0:
+		report.error(path + "duration_sec", "「%s」可叠层（max_stacks %d），可叠层的 buff 永续，不填时长" % [def.id, def.max_stacks])
+
+
+## 道具里内联的 buff（apply_status.buff）也按同一条规矩查
+static func _validate_item_buffs(def: ItemDef, report: ImportReport) -> void:
+	if def.combat == null:
+		return
+	for i in def.combat.rules.size():
+		var rule := def.combat.rules[i] as AbilityRule
+		if rule == null:
+			continue
+		for j in rule.effects.size():
+			var e := rule.effects[j] as ApplyStatus
+			if e != null and e.buff != null:
+				validate_buff_duration(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
 
 
 static func import_set(data: Dictionary, ctx: Context, report: ImportReport) -> ItemSetDef:
@@ -150,6 +171,7 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_fill(def, data, "", ctx, report)
 	_validate_item(def, report)
 	_validate_item_faith(def, ctx, report)
+	_validate_item_buffs(def, report)
 	ctx.register_item(def)
 	return def
 

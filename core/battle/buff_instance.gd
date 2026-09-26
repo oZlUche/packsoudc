@@ -27,7 +27,7 @@ func is_expired_at(t: int) -> bool:
 
 
 func refresh(now: int) -> void:
-	if def.duration_sec > 0.0:
+	if not def.is_permanent():
 		expires_at = now + StatMath.from_float(def.duration_sec)
 	else:
 		expires_at = -1

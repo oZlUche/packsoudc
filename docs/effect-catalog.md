@@ -251,7 +251,7 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 |---|---|
 | `id` / `display_name` / `is_debuff` | 标识与 UI |
 | `max_stacks` | 层数上限，0 = 不限 |
-| `duration_sec` | 持续秒数（**任意小数**），0 = 到战斗结束 |
+| `duration_sec` | 作者定的规矩：**可叠层的 buff（`max_stacks != 1`）永续，不填时长（导入器拦）**—— 中毒 / 流血 / 结界叠上就一直在，直到被清除或战斗结束；**不可叠层的（`max_stacks == 1`，往往是「满足 X 条件时获得 ABC」那种复杂的）才可以过期**，0 = 也永续，秒数可任意小数 |
 | `refresh_on_restack` | 叠层时是否刷新时长 |
 | `mods` | 属性加成，**每层一份** |
 | `rules` | **buff 自己也能带规则** —— 复合效果靠它 |
