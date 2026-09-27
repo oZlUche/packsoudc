@@ -28,17 +28,17 @@ func open(_payload: Dictionary) -> void:
 	# 第三项「新的游戏」= 开一份新存档（挑空位）。只写这几个词，不写章名
 	_continue_btn = null
 	if flow.profile_exists():
-		_continue_btn = _button(UiText.t("menu.continue"), func(): flow.continue_game(), 18)
+		_continue_btn = _button(UiText.t("menu.continue"), func(): flow.continue_game(), 18, UiPalette.Tier.PRIMARY)
 		col.add_child(_continue_btn)
 	if flow.slots != null and flow.slots.any():
 		col.add_child(_button(UiText.t("menu.load"), flow.show_slots, 18))
-	col.add_child(_button(UiText.t("menu.new_run"), func(): flow.start_new_game(), 18))
+	col.add_child(_button(UiText.t("menu.new_run"), func(): flow.start_new_game(), 18, UiPalette.Tier.PRIMARY))
 	col.add_child(_button(UiText.t("menu.meta"), flow.show_meta, 18))
-	col.add_child(_button(UiText.t("menu.settings"), flow.show_settings, 14))
-	col.add_child(_button(UiText.t("menu.language"), toggle_language, 14))
+	col.add_child(_button(UiText.t("menu.settings"), flow.show_settings, 14, UiPalette.Tier.MINOR))
+	col.add_child(_button(UiText.t("menu.language"), toggle_language, 14, UiPalette.Tier.MINOR))
 	col.add_child(HSeparator.new())
-	col.add_child(_button(UiText.t("menu.dev_tools"), func(): dev_tools_requested.emit(), 13))
-	col.add_child(_button(UiText.t("menu.quit"), func(): get_tree().quit(), 13))
+	col.add_child(_button(UiText.t("menu.dev_tools"), func(): dev_tools_requested.emit(), 13, UiPalette.Tier.MINOR))
+	col.add_child(_button(UiText.t("menu.quit"), func(): get_tree().quit(), 13, UiPalette.Tier.MINOR))
 
 
 ## 切到下一种界面语言：写进设置并存盘，然后把菜单原地重建（按钮文字立刻换）

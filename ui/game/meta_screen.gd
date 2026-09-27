@@ -49,9 +49,9 @@ func open(payload: Dictionary) -> void:
 	root.add_child(_label("%d 局　撤离 %d　战败 %d　累计价值 %d　单局最高 %d　钱 %d　图鉴 %d / %d" % [
 		m.runs, m.extractions, m.deaths, m.score, m.best_value, m.funds, m.codex.size(), flow.items.ids().size()], 14, UiPalette.FG))
 	var buttons := _hbox(8)
-	_new_run_btn = _button("再来一局", flow.new_run, 16)
+	_new_run_btn = _button("再来一局", flow.new_run, 16, UiPalette.Tier.PRIMARY)
 	buttons.add_child(_new_run_btn)
-	buttons.add_child(_button("回主菜单", flow.to_main_menu, 16))
+	buttons.add_child(_button("回主菜单", flow.to_main_menu, 16, UiPalette.Tier.MINOR))
 	_hint = _label("", 12, UiPalette.STAMINA)
 	buttons.add_child(_hint)
 	root.add_child(buttons)
@@ -82,7 +82,7 @@ func open(payload: Dictionary) -> void:
 			continue
 		any_meta = true
 		var bid: StringName = id
-		var b := _button("%s　%s" % [def.display_name, def.summary()], func(): toggle_buff(bid), 13)
+		var b := _button("%s　%s" % [def.display_name, def.summary()], func(): toggle_buff(bid), 13, UiPalette.Tier.MINOR)
 		b.toggle_mode = true
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.set_pressed_no_signal(m.active_buffs.has(bid))
@@ -111,7 +111,7 @@ func open(payload: Dictionary) -> void:
 				elif c.requires_unlock == uid:
 					names.append("开放：" + c.display_name)
 			var key: StringName = uid
-			var ub := _button("%s　%s" % [uid, "、".join(names)], func(): toggle_unlock(key), 13)
+			var ub := _button("%s　%s" % [uid, "、".join(names)], func(): toggle_unlock(key), 13, UiPalette.Tier.MINOR)
 			ub.toggle_mode = true
 			ub.alignment = HORIZONTAL_ALIGNMENT_LEFT
 			ub.set_pressed_no_signal(m.has_unlock(key))
@@ -221,6 +221,12 @@ func show_tab(name: String) -> void:
 
 func tab() -> String:
 	return _tab
+
+
+## 090：Esc = 回主菜单
+func escape() -> bool:
+	flow.to_main_menu()
+	return true
 
 
 

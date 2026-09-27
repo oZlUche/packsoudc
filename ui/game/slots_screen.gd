@@ -13,7 +13,7 @@ func open(payload: Dictionary) -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	var col := _vbox(12)
-	col.custom_minimum_size.x = 640
+	col.custom_minimum_size.x = 860
 	center.add_child(col)
 	col.add_child(_label(UiText.t("slots.title"), 26, UiPalette.FG))
 	_hint = _label(UiText.t("slots.full") if bool(payload.get("full", false)) else "", 13, UiPalette.STAMINA)
@@ -21,7 +21,7 @@ func open(payload: Dictionary) -> void:
 	for n in range(1, SaveSlots.COUNT + 1):
 		col.add_child(_row(n))
 	col.add_child(HSeparator.new())
-	col.add_child(_button(UiText.t("slots.back"), flow.to_main_menu, 14))
+	col.add_child(_button(UiText.t("slots.back"), flow.to_main_menu, 14, UiPalette.Tier.MINOR))
 
 
 func _row(n: int) -> Control:
@@ -43,11 +43,11 @@ func _row(n: int) -> Control:
 	row.add_child(l)
 	var slot := n
 	if exists:
-		row.add_child(_button(UiText.t("slots.load"), func(): load_slot(slot), 14))
-		var del := _button(UiText.t("slots.delete"), func(): delete_slot(slot), 14)
+		row.add_child(_button(UiText.t("slots.load"), func(): load_slot(slot), 14, UiPalette.Tier.PRIMARY))
+		var del := _button(UiText.t("slots.delete"), func(): delete_slot(slot), 14, UiPalette.Tier.MINOR)
 		row.add_child(del)
 	else:
-		row.add_child(_button(UiText.t("slots.new_here"), func(): new_game_here(slot), 14))
+		row.add_child(_button(UiText.t("slots.new_here"), func(): new_game_here(slot), 14, UiPalette.Tier.PRIMARY))
 	_rows[n] = panel
 	return panel
 
@@ -74,6 +74,12 @@ func delete_slot(n: int) -> bool:
 
 func armed_delete() -> int:
 	return _armed_delete
+
+
+## 090：Esc = 回主菜单
+func escape() -> bool:
+	flow.to_main_menu()
+	return true
 
 
 func _rebuild() -> void:

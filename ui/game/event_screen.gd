@@ -49,7 +49,7 @@ func _open_options() -> void:
 			col.add_child(_label("　" + String(state["why"]), 13, UiPalette.DIM))
 	# 083：事件屏上也能整理背包（教程的「先整理再开打」要在这里做；15 节第 7 项的尾巴）
 	if flow.run != null:
-		col.add_child(_button("整理背包（B）", toggle_bag, 13))
+		col.add_child(_button("整理背包（B）", toggle_bag, 13, UiPalette.Tier.MINOR))
 
 
 func _open_result(payload: Dictionary) -> void:
@@ -182,9 +182,9 @@ func _image_area(path: String, title: String) -> Control:
 
 ## 一个选项：整行宽、左对齐、够高
 func _option_button(text: String, handler: Callable) -> Button:
-	var b := _button(text, handler, 17)
+	var b := _button(text, handler, 17)     # 090：200% = 34 号（选项是整行的，300% 会把长句挤成两三行）
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.custom_minimum_size.y = 48
+	b.custom_minimum_size.y = 64
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return b
 
@@ -236,6 +236,17 @@ func toggle_bag() -> void:
 
 func bag_open() -> bool:
 	return _bag != null
+
+
+## 090：Esc —— 开着背包就关背包；结果页就「继续」；等着选的事件不接（必须选）
+func escape() -> bool:
+	if _bag != null:
+		toggle_bag()
+		return true
+	if not is_options_page():
+		proceed()
+		return true
+	return false
 
 
 func _rebuild() -> void:

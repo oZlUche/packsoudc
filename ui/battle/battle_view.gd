@@ -328,6 +328,7 @@ func _button(text: String, handler: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.add_theme_font_override("font", label_font)
+	UiPalette.style_button(b, UiPalette.Tier.MINOR, UiPalette.button_font_size(13, UiPalette.Tier.MINOR))     # 090：回放控制是辅助键
 	b.pressed.connect(handler)
 	return b
 #endregion

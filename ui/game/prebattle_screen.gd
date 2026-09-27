@@ -54,7 +54,7 @@ func open(payload: Dictionary) -> void:
 	right.add_child(_inv)
 
 	var buttons := _hbox(10)
-	_start_btn = _button("开战", start_battle, 16)
+	_start_btn = _button("开战", start_battle, 16, UiPalette.Tier.PRIMARY)
 	buttons.add_child(_start_btn)
 	_why = _label("", 13, UiPalette.STAMINA)
 	buttons.add_child(_why)

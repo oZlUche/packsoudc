@@ -131,6 +131,6 @@ func _button(text: String, handler: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.add_theme_font_override("font", _font)
-	b.add_theme_font_size_override("font_size", 13)
+	UiPalette.style_button(b, UiPalette.Tier.SECONDARY, UiPalette.button_font_size(13, UiPalette.Tier.SECONDARY))     # 090
 	b.pressed.connect(handler)
 	return b

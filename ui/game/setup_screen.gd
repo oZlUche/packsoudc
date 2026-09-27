@@ -65,7 +65,7 @@ func open(_payload: Dictionary) -> void:
 
 	# 左：章节、角色、种子
 	var left := _vbox(8)
-	left.custom_minimum_size.x = 300
+	left.custom_minimum_size.x = 340
 	row.add_child(left)
 	left.add_child(_label("开局", 26, UiPalette.FG))
 	left.add_child(_label("章节", 15, UiPalette.DIM))
@@ -107,11 +107,11 @@ func open(_payload: Dictionary) -> void:
 	_seed_spin.value = run_seed
 	_seed_spin.value_changed.connect(func(v: float): run_seed = int(v))
 	seed_row.add_child(_seed_spin)
-	seed_row.add_child(_button("随机", func(): set_run_seed(randi() % 1000000), 12))
+	seed_row.add_child(_button("随机", func(): set_run_seed(randi() % 1000000), 12, UiPalette.Tier.MINOR))
 	left.add_child(seed_row)
 	left.add_child(HSeparator.new())
-	left.add_child(_button("出发", func(): depart(), 18))
-	left.add_child(_button("回主菜单", cancel, 12))
+	left.add_child(_button("出发", func(): depart(), 18, UiPalette.Tier.PRIMARY))
+	left.add_child(_button("回主菜单", cancel, 12, UiPalette.Tier.MINOR))
 	_status = _wrapped("", 12, UiPalette.HP, 280)
 	left.add_child(_status)
 
@@ -387,6 +387,12 @@ func depart() -> bool:
 func cancel() -> void:
 	_restore_pending()
 	flow.to_main_menu()
+
+
+## 090：Esc = 回主菜单（同「回主菜单」按钮）
+func escape() -> bool:
+	cancel()
+	return true
 #endregion
 
 

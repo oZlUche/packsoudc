@@ -29,6 +29,13 @@ func refresh() -> void:
 	pass
 
 
+## 090（作者定）：Esc 的通用「返回」。导演按了 Esc 先问最上面的叠层、没叠层问底屏；返回接不接。
+## 叠层：搜索 / 商店 / 战利品收起回地图（最小化），事件屏关背包、结果页继续；底屏：地图关对话框 / 背包，开局 / 基地 / 设置 / 读取存档回主菜单。
+## 默认不接（战前准备与等着选的事件必须处理，主菜单没有可回的）
+func escape() -> bool:
+	return false
+
+
 #region 控件
 func _label(text: String, font_size: int, color: Color) -> Label:
 	var l := Label.new()
@@ -48,11 +55,13 @@ func _wrapped(text: String, font_size: int, color: Color, width: float) -> Label
 	return l
 
 
-func _button(text: String, handler: Callable, font_size: int = 14) -> Button:
+## 090（作者定）：按钮按重要性分三档（[enum UiPalette.Tier]），字号是 [param font_size] 的 300% / 200% / 150%，颜色也各不同。
+## 不写档就是次要（200%）；各屏自己说哪个是主动作、哪个是辅助
+func _button(text: String, handler: Callable, font_size: int = 14, tier: int = UiPalette.Tier.SECONDARY) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.add_theme_font_override("font", font)
-	b.add_theme_font_size_override("font_size", font_size)
+	UiPalette.style_button(b, tier, UiPalette.button_font_size(font_size, tier))
 	b.pressed.connect(handler)
 	return b
 

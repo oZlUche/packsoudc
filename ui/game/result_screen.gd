@@ -38,9 +38,9 @@ func open(payload: Dictionary) -> void:
 	var next := flow.next_chapter()
 	if next != null:
 		col.add_child(_wrapped("带回来的东西会进仓库。序章一张接一张：下面直接进「%s」。" % next.display_name, 13, UiPalette.DIM, 600))
-		col.add_child(_button("进入下一张：%s" % next.display_name, proceed, 16))
+		col.add_child(_button("进入下一张：%s" % next.display_name, proceed, 16, UiPalette.Tier.PRIMARY))
 	else:
-		col.add_child(_button("继续", proceed, 16))
+		col.add_child(_button("继续", proceed, 16, UiPalette.Tier.PRIMARY))
 
 
 ## 一键置入（测试直接调）

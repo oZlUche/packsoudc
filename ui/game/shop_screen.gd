@@ -48,7 +48,9 @@ func open(payload: Dictionary) -> void:
 	var buttons := _hbox(8)
 	_refresh_btn = _button("", refresh_stock, 13)
 	buttons.add_child(_refresh_btn)
-	buttons.add_child(_button("收起（回地图，店还开着）", to_map, 13))
+	var back := _button("收起", to_map, 13)
+	back.tooltip_text = "回地图，店还开着（Esc）"
+	buttons.add_child(back)
 	buttons.add_child(_button("离开", leave, 13))
 	left.add_child(buttons)
 
@@ -111,6 +113,11 @@ func leave() -> void:
 ## 084：收起回地图，店还开着（地图上「回到这个点」能再开）；走了才算离开
 func to_map() -> bool:
 	return flow.hide_overlay()
+
+
+## 090：Esc = 收起
+func escape() -> bool:
+	return to_map()
 
 
 func drag_layer() -> DragLayer:

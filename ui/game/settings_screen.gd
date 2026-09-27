@@ -22,7 +22,7 @@ func open(_payload: Dictionary) -> void:
 	var s := flow.settings
 	for mode in GameSettings.WARN_MODES:
 		var m: StringName = mode
-		var b := _button(String(GameSettings.WARN_MODE_LABELS.get(m, String(m))), func(): set_mode(m), 14)
+		var b := _button(String(GameSettings.WARN_MODE_LABELS.get(m, String(m))), func(): set_mode(m), 14, UiPalette.Tier.MINOR)
 		b.toggle_mode = true
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_mode_btns[m] = b
@@ -48,14 +48,14 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(row2)
 	col.add_child(HSeparator.new())
 	col.add_child(_label("战利品 / 容器屏", 15, UiPalette.DIM))
-	_auto_close_btn = _button("拿走最后一件后自动关闭", toggle_loot_auto_close, 14)
+	_auto_close_btn = _button("拿走最后一件后自动关闭", toggle_loot_auto_close, 14, UiPalette.Tier.MINOR)
 	_auto_close_btn.toggle_mode = true
 	_auto_close_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	col.add_child(_auto_close_btn)
 	col.add_child(HSeparator.new())
 	col.add_child(_label("地图", 15, UiPalette.DIM))
 	col.add_child(_wrapped("节点浮窗（鼠标停在点上显示敌人数据与背包 / 用过了 / 可能发生什么……）按章节开放，第二章才开。这里能强制打开先看效果。", 12, UiPalette.DIM, 500))
-	_tooltip_btn = _button("节点浮窗预览", toggle_node_tooltips_preview, 14)
+	_tooltip_btn = _button("节点浮窗预览", toggle_node_tooltips_preview, 14, UiPalette.Tier.MINOR)
 	_tooltip_btn.toggle_mode = true
 	_tooltip_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	col.add_child(_tooltip_btn)
@@ -104,3 +104,9 @@ func _refresh() -> void:
 		_auto_close_btn.text = "拿走最后一件后自动关闭：%s" % ("开" if flow.settings.loot_auto_close else "关（手动关）")
 	for m in _mode_btns:
 		(_mode_btns[m] as Button).set_pressed_no_signal(flow.settings.storage_warn_mode == m)
+
+
+## 090：Esc = 回主菜单
+func escape() -> bool:
+	flow.to_main_menu()
+	return true

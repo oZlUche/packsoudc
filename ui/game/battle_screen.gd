@@ -29,7 +29,7 @@ func open(payload: Dictionary) -> void:
 	col.add_child(_view)
 	_view.finished.connect(_on_finished)
 
-	_next = _button("跳过并继续", proceed, 14)
+	_next = _button("跳过并继续", proceed, 14, UiPalette.Tier.PRIMARY)
 	col.add_child(_next)
 
 	if result != null:

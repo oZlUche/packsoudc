@@ -58,7 +58,7 @@ func setup(p_key: String, title: String, font: Font, on_close: Callable = Callab
 		var b := Button.new()
 		b.text = close_text
 		b.add_theme_font_override("font", font)
-		b.add_theme_font_size_override("font_size", 12)
+		UiPalette.style_button(b, UiPalette.Tier.MINOR, UiPalette.button_font_size(12, UiPalette.Tier.MINOR))     # 090
 		b.pressed.connect(on_close)
 		_header.add_child(b)
 	_body = VBoxContainer.new()

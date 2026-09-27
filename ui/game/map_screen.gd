@@ -6,7 +6,7 @@
 extends GameScreen
 
 const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
-const SIDE_WIDTH := 340
+const SIDE_WIDTH := 400     # 090：右栏三个按键放大到 300%，栏也加宽
 
 var _run: RunState = null
 var _view: MapView
@@ -109,7 +109,7 @@ func _open_step_confirm(to_id: int) -> void:
 	buttons.add_child(_button("先整理背包（B）", func():
 		cancel_step()
 		toggle_bag(), 14))
-	buttons.add_child(_button("取消", cancel_step, 14))
+	buttons.add_child(_button("取消", cancel_step, 14, UiPalette.Tier.MINOR))
 	col.add_child(buttons)
 
 
@@ -186,7 +186,7 @@ func _open_confirm(node: MapNode) -> void:
 	var go := _button("确定撤离", func(): confirm_extract(), 14)
 	go.disabled = not affordable
 	buttons.add_child(go)
-	buttons.add_child(_button("再想想", cancel_extract, 14))
+	buttons.add_child(_button("再想想", cancel_extract, 14, UiPalette.Tier.MINOR))
 	col.add_child(buttons)
 
 
@@ -226,6 +226,20 @@ func reopen() -> bool:
 
 func can_reopen() -> bool:
 	return flow.can_reopen()
+
+
+## 090：Esc —— 先关对话框（走前提醒 / 撤离确认），再关背包；都没开着就不接
+func escape() -> bool:
+	if _step_confirm != null:
+		cancel_step()
+		return true
+	if _confirm != null:
+		cancel_extract()
+		return true
+	if _bag != null:
+		toggle_bag()
+		return true
+	return false
 #endregion
 
 
@@ -390,7 +404,8 @@ func _after_move() -> void:
 	var node := _run.current_node()
 	_extract_btn.disabled = node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract"
 	_reopen_btn.disabled = not flow.can_reopen()
-	_reopen_btn.text = "回到这个点（N）" if flow.can_reopen() else "回到这个点（N）　这里没有可重开的界面"
+	_reopen_btn.tooltip_text = ("重新打开这个点上最后的界面：没拿完的战利品、还开着的搜索或商店。点地图上的当前节点也行" if flow.can_reopen()
+		else "这里没有可重开的界面")
 
 
 func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
@@ -399,6 +414,9 @@ func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
 	if _run.phase == RunState.Phase.PICK_SPAWN:
 		if not pick_spawn(id):
 			_say("先挑一个出生点（绿圈的「生」）")
+	elif id == _view.current_id:
+		# 090（作者定）：点当前节点 = 打开被收起的界面（同「回到这个点」）
+		reopen()
 	else:
 		step(id)
 
@@ -508,7 +526,7 @@ func _refresh_skills() -> void:
 			bits.append("剩 %d 次" % _run.skills.uses_of(d.id))
 		if _run.skills.cooldown_of(d.id) > 0:
 			bits.append("冷却 %d 步" % _run.skills.cooldown_of(d.id))
-		var btn := _button("%s%s" % [d.display_name, ("（" + "，".join(bits) + "）") if not bits.is_empty() else ""], func(): use_skill(d.id), 13)
+		var btn := _button("%s%s" % [d.display_name, ("（" + "，".join(bits) + "）") if not bits.is_empty() else ""], func(): use_skill(d.id), 13, UiPalette.Tier.MINOR)
 		btn.disabled = _run.skills.can_use(d.id) != ""
 		btn.tooltip_text = d.summary() + ("\n" + d.description if d.description != "" else "")
 		_skills_box.add_child(btn)
@@ -640,19 +658,20 @@ func _build() -> void:
 	col.add_child(spacer)
 	_status = _wrapped("", 12, UiPalette.DIM, SIDE_WIDTH - 30)
 	col.add_child(_status)
-	var buttons := _hbox(6)
-	buttons.add_child(_button("背包（B）", toggle_bag, 13))
-	_reopen_btn = _button("回到这个点（N）", func(): reopen(), 13)
+	# 090（作者定）：右栏的三个互动按键放大到 300%，竖着排
+	var buttons := _vbox(6)
+	buttons.add_child(_button("背包（B）", toggle_bag, 13, UiPalette.Tier.PRIMARY))
+	_reopen_btn = _button("回到这个点（N）", func(): reopen(), 13, UiPalette.Tier.PRIMARY)
 	_reopen_btn.disabled = true
-	_reopen_btn.tooltip_text = "还没走的时候，重新打开这个点上最后的界面：没拿完的战利品、还开着的搜索或商店"
+	_reopen_btn.tooltip_text = "还没走的时候，重新打开这个点上最后的界面：没拿完的战利品、还开着的搜索或商店。点地图上的当前节点也行"
 	buttons.add_child(_reopen_btn)
-	_extract_btn = _button("撤离", func(): extract(), 13)
+	_extract_btn = _button("撤离", func(): extract(), 13, UiPalette.Tier.PRIMARY)
 	_extract_btn.disabled = true
 	buttons.add_child(_extract_btn)
 	col.add_child(buttons)
 	_skills_box = _vbox(4)
 	col.add_child(_skills_box)
-	col.add_child(_button("存档并回主菜单", func(): flow.save_and_quit(), 12))
+	col.add_child(_button("存档并回主菜单", func(): flow.save_and_quit(), 12, UiPalette.Tier.MINOR))
 	col.add_child(HSeparator.new())
 	_routes_box = _vbox(6)
 	col.add_child(_routes_box)

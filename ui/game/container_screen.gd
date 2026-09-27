@@ -18,6 +18,8 @@ var _line: Label
 var _log: RichTextLabel = null
 var _skip_btn: Button
 var _leave_btn: Button = null
+## 090：这是不是 BOSS 的战利品屏（Esc 不收）
+var _boss: bool = false
 var _inv: Control = null
 
 
@@ -55,15 +57,24 @@ func open(payload: Dictionary) -> void:
 		_log.custom_minimum_size.y = 72
 		left.add_child(_log)
 	var buttons := _hbox(8)
+	# 090：按钮放大了，长说明挪进悬浮提示，按钮上只写动作
 	_skip_btn = _button("快速搜索", skip_reveal, 13)
 	buttons.add_child(_skip_btn)
-	buttons.add_child(_button("全部拾取（进暂存区）", take_all, 13))
+	var take := _button("全部拾取", take_all, 13, UiPalette.Tier.PRIMARY)
+	take.tooltip_text = "全部进暂存区"
+	buttons.add_child(take)
 	if _session != null:
-		buttons.add_child(_button("关闭（回到事件：再搜 / 走）", close_search, 13))
-		buttons.add_child(_button("回到地图（不结束：回到这个点接着搜）", to_map, 13))
+		var close := _button("关闭", close_search, 13)
+		close.tooltip_text = "回到事件：再搜 / 走"
+		buttons.add_child(close)
+		var back := _button("回到地图", to_map, 13)
+		back.tooltip_text = "不结束：回到这个点接着搜（Esc）"
+		buttons.add_child(back)
 	else:
-		_leave_btn = _button("收起（撤离结算）" if boss else "收起（剩下的留在这里，走了就没）", to_map, 13)
+		_leave_btn = _button("收起", to_map, 13)
+		_leave_btn.tooltip_text = "撤离结算" if boss else "剩下的留在这里，走了就没（Esc）"
 		buttons.add_child(_leave_btn)
+	_boss = boss
 	left.add_child(buttons)
 
 	var inv := InventoryPanelScript.new()
@@ -172,6 +183,13 @@ func to_map() -> bool:
 
 func loot_view() -> LootView:
 	return _loot
+
+
+## 090：Esc = 收起回地图（最小化）。BOSS 的战利品屏不接：那儿「收起」= 不要剩下的直接撤离，不能一个 Esc 误触
+func escape() -> bool:
+	if _boss:
+		return false
+	return to_map()
 
 
 func is_search() -> bool:

@@ -146,6 +146,23 @@ func minimized() -> GameScreen:
 	return _minimized
 
 
+## 090（作者定）：Esc 是通用「返回」—— 叠层在上面就问叠层（搜索 / 商店 / 战利品收起回地图，事件屏关背包……），
+## 没叠层问底屏（地图关对话框 / 背包；开局、基地、设置、读取存档回主菜单）。谁都不接就不管（拖拽层自己先吃掉拖着时的 Esc）
+func _unhandled_key_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo or key.keycode != KEY_ESCAPE:
+		return
+	if escape():
+		get_viewport().set_input_as_handled()
+
+
+## 按一次 Esc 该做的事；返回有没有人接（测试直接调）
+func escape() -> bool:
+	if _overlay != null:
+		return _overlay.escape()
+	return _base != null and _base.escape()
+
+
 func _make(screen: int) -> GameScreen:
 	var script := load(String(SCREEN_SCRIPTS[screen])) as GDScript
 	var s: GameScreen = script.new()
