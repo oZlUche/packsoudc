@@ -6,6 +6,7 @@
 extends GameScreen
 
 const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
+const SettingsScreenScript := preload("res://ui/game/settings_screen.gd")
 const SIDE_WIDTH := 400     # 090：右栏三个按键放大到 300%，栏也加宽
 
 var _run: RunState = null
@@ -26,6 +27,9 @@ var _bag: Control = null
 var _confirm: Control = null
 var _step_confirm: Control = null
 var _pending_step: int = -1
+## 090（作者定）：地图上按 Esc 呼出的暂停菜单（继续 / 设置 / 存档并回主菜单）；设置嵌在它里面，返回回暂停菜单、一局还在
+var _pause: Control = null
+var _pause_settings: Control = null
 
 
 func open(_payload: Dictionary) -> void:
@@ -216,7 +220,7 @@ func bag_open() -> bool:
 
 ## 084：还没走，重新打开这个点的最后一个界面（没拿完的战利品 / 还开着的搜索或商店 / 等着的事件或一场）。没有可开的返回 false
 func reopen() -> bool:
-	if _bag != null or _confirm != null or _step_confirm != null:
+	if _bag != null or _confirm != null or _step_confirm != null or _pause != null:
 		return false
 	var ok := flow.reopen_node()
 	if not ok:
@@ -228,8 +232,15 @@ func can_reopen() -> bool:
 	return flow.can_reopen()
 
 
-## 090：Esc —— 先关对话框（走前提醒 / 撤离确认），再关背包；都没开着就不接
+## 090（作者定）：Esc —— 开着什么就关什么（暂停菜单里的设置 → 暂停菜单 → 走前提醒 / 撤离确认 → 背包）；
+## 什么都没开着就呼出暂停菜单。地图上的 Esc 总有事做
 func escape() -> bool:
+	if _pause_settings != null:
+		close_pause_settings()
+		return true
+	if _pause != null:
+		toggle_pause()
+		return true
 	if _step_confirm != null:
 		cancel_step()
 		return true
@@ -239,7 +250,63 @@ func escape() -> bool:
 	if _bag != null:
 		toggle_bag()
 		return true
-	return false
+	toggle_pause()
+	return true
+
+
+## 090：暂停菜单开 / 关：继续（Esc）、设置、存档并回主菜单。开着的时候地图不响应点与快捷键
+func toggle_pause() -> void:
+	if _pause != null:
+		close_pause_settings()
+		_pause.queue_free()
+		_pause = null
+		return
+	var shade := ColorRect.new()
+	shade.color = Color(0.04, 0.05, 0.07, 0.72)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(shade)
+	_pause = shade
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.add_child(center)
+	var panel := _panel(28)
+	center.add_child(panel)
+	var col := _vbox(12)
+	panel.add_child(col)
+	col.add_child(_label("暂停", 26, UiPalette.FG))
+	col.add_child(_wrapped("一局还在：搜索 / 商店 / 没拿完的战利品都留在原地", 12, UiPalette.DIM, 360))
+	col.add_child(_button("继续（Esc）", toggle_pause, 14, UiPalette.Tier.PRIMARY))
+	col.add_child(_button("设置", pause_settings, 14))
+	col.add_child(_button("存档并回主菜单", func(): flow.save_and_quit(), 14))
+
+
+func pause_open() -> bool:
+	return _pause != null
+
+
+## 090：暂停菜单里的「设置」：设置屏嵌进暂停菜单（它的「返回」回暂停菜单，不回主菜单 —— 一局还在）
+func pause_settings() -> void:
+	if _pause == null or _pause_settings != null:
+		return
+	var s = SettingsScreenScript.new()
+	s.screen = GameFlow.Screen.SETTINGS
+	s.flow = flow
+	s.font = font
+	s.back = close_pause_settings
+	_pause.add_child(s)
+	s.open({})
+	_pause_settings = s
+
+
+func close_pause_settings() -> void:
+	if _pause_settings != null:
+		_pause_settings.queue_free()
+		_pause_settings = null
+
+
+func settings_open() -> bool:
+	return _pause_settings != null
 #endregion
 
 
@@ -409,7 +476,7 @@ func _after_move() -> void:
 
 
 func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
-	if button != MOUSE_BUTTON_LEFT or _bag != null or _confirm != null or _step_confirm != null:
+	if button != MOUSE_BUTTON_LEFT or _bag != null or _confirm != null or _step_confirm != null or _pause != null:
 		return
 	if _run.phase == RunState.Phase.PICK_SPAWN:
 		if not pick_spawn(id):
@@ -443,7 +510,7 @@ func _on_node_hovered(id: int) -> void:
 func _update_tooltip(id: int) -> void:
 	if _tip == null:
 		return
-	if id < 0 or not flow.tooltips_enabled() or _bag != null or _confirm != null or _step_confirm != null or not _run.map.has_node(id):
+	if id < 0 or not flow.tooltips_enabled() or _bag != null or _confirm != null or _step_confirm != null or _pause != null or not _run.map.has_node(id):
 		_tip.hide_tip()
 		return
 	var node := _run.map.get_node(id)
@@ -687,7 +754,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	match key.keycode:
 		KEY_B:
-			if _confirm == null and _step_confirm == null:
+			if _confirm == null and _step_confirm == null and _pause == null:
 				toggle_bag()
 		KEY_N:
 			reopen()

@@ -6,6 +6,8 @@ var _tooltip_btn: Button = null
 var _mode_btns: Dictionary = {}
 var _rarity_spin: SpinBox
 var _value_spin: SpinBox
+## 090：从地图的暂停菜单嵌进来时的「返回」（回暂停菜单，一局还在）；空 = 独立的一屏，回主菜单
+var back: Callable = Callable()
 
 
 func open(_payload: Dictionary) -> void:
@@ -60,8 +62,16 @@ func open(_payload: Dictionary) -> void:
 	_tooltip_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	col.add_child(_tooltip_btn)
 	col.add_child(HSeparator.new())
-	col.add_child(_button("回主菜单", flow.to_main_menu, 14))
+	col.add_child(_button("返回" if back.is_valid() else "回主菜单", go_back, 14))
 	_refresh()
+
+
+## 090：返回上一级 —— 嵌在暂停菜单里就回暂停菜单，独立的一屏就回主菜单
+func go_back() -> void:
+	if back.is_valid():
+		back.call()
+	else:
+		flow.to_main_menu()
 
 
 ## 084：节点浮窗预览：不管章节开没开都显示
@@ -106,7 +116,7 @@ func _refresh() -> void:
 		(_mode_btns[m] as Button).set_pressed_no_signal(flow.settings.storage_warn_mode == m)
 
 
-## 090：Esc = 回主菜单
+## 090：Esc = 返回上一级（同「返回 / 回主菜单」按钮）
 func escape() -> bool:
-	flow.to_main_menu()
+	go_back()
 	return true

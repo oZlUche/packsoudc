@@ -69,7 +69,10 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	t.check(game.escape(), "设置屏 Esc 接了")
 	t.eq(flow.screen, GameFlow.Screen.MAIN_MENU, "→ 回主菜单")
 	flow.show_meta()
-	t.check(game.escape() and flow.screen == GameFlow.Screen.MAIN_MENU, "基地屏 Esc 回主菜单")
+	var meta = game.base()
+	meta.show_tab("codex")
+	t.check(game.escape() and meta.tab() == "warehouse" and flow.screen == GameFlow.Screen.META, "基地：图鉴页 Esc 先回仓库页")
+	t.check(game.escape() and flow.screen == GameFlow.Screen.MAIN_MENU, "仓库页再 Esc 回主菜单")
 
 	flow.begin(c.chapter, kit, int(found["seed"]))
 	var map = game.base()
@@ -79,12 +82,22 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	t.eq(_bg(map._extract_btn), UiPalette.BTN_PRIMARY, "右栏按键是主动作色")
 	t.eq(map._reopen_btn.text, "回到这个点（N）", "按钮上只写动作，说明进悬浮提示")
 
-	# 地图上的 Esc：关背包；没开着什么就不接
-	t.check(not game.escape(), "地图上什么都没开着：Esc 不接")
+	# 地图上的 Esc：开着什么就关什么，什么都没开着就呼出暂停菜单；暂停菜单里的设置返回回暂停菜单、一局还在
+	t.check(game.escape() and map.pause_open(), "地图上什么都没开着：Esc 呼出暂停菜单")
+	t.check(game.escape() and not map.pause_open(), "再 Esc 关掉暂停菜单")
+	map.toggle_pause()
+	map.pause_settings()
+	t.check(map.settings_open(), "暂停菜单里开了设置")
+	t.check(game.escape() and not map.settings_open() and map.pause_open(), "设置里 Esc 回暂停菜单")
+	t.check(game.escape() and not map.pause_open(), "暂停菜单里 Esc 回地图")
+	t.check(flow.run != null and flow.screen == GameFlow.Screen.MAP and game.base() == map, "一局还在、地图还是那张")
 	map.toggle_bag()
 	t.check(map.bag_open(), "开了背包")
 	t.check(game.escape(), "Esc 接了")
-	t.check(not map.bag_open(), "背包关了")
+	t.check(not map.bag_open() and not map.pause_open(), "背包关了，没呼出暂停菜单")
+	map.toggle_pause()
+	t.check(not map.reopen(), "暂停菜单开着：N 不重开")
+	map.toggle_pause()
 
 	map.pick_spawn(int(found["entry"]))
 	t.check(map.step(int(found["next"])), "走上搜索点")

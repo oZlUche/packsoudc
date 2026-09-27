@@ -223,8 +223,11 @@ func tab() -> String:
 	return _tab
 
 
-## 090：Esc = 回主菜单
+## 090：Esc = 返回上一级 —— 在图鉴页先回仓库页，仓库页再回主菜单
 func escape() -> bool:
+	if _tab != "warehouse":
+		show_tab("warehouse")
+		return true
 	flow.to_main_menu()
 	return true
 
