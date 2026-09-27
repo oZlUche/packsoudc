@@ -1,4 +1,5 @@
-## 主菜单（M6）：新的游戏、继续（有存档或教程打到中途才显示）、仓库、开发工具、退出。局外的一行数字挂在标题下面。
+## 主菜单（M6）：继续（有存档才显示）、读取存档（有任何一位有存档才显示）、新的游戏（= 开一份新存档）、仓库、开发工具、退出（089 作者定的顺序）。
+## 局外的一行数字挂在标题下面。
 ## 085：多了一个「语言」按钮 —— 切 [GameSettings.language] 并存盘，[UiText.lang] 跟着改，菜单原地重建。
 extends GameScreen
 
@@ -23,13 +24,15 @@ func open(_payload: Dictionary) -> void:
 		m.runs + 1, m.extractions, m.deaths, m.warehouse.item_count(), m.score, m.funds], 13, UiPalette.DIM))
 	col.add_child(HSeparator.new())
 
-	# 085（作者定）：「新的游戏」= 从头开始；「继续」和它并列 —— 有局内存档就读档，教程打到中途就开下一张；
-	# 两样都没有就不显示。只写这两个词，不写章名
-	col.add_child(_button(UiText.t("menu.new_run"), flow.new_run, 18))
+	# 089（作者定）：第一项「继续」（当前位有存档才显示：读档 / 下一张教程 / 按这份存档开局）；第二项「读取存档」（换位，有任何一位有存档才显示）；
+	# 第三项「新的游戏」= 开一份新存档（挑空位）。只写这几个词，不写章名
 	_continue_btn = null
-	if flow.has_save() or flow.continue_target() != null:
-		_continue_btn = _button(UiText.t("menu.continue"), func(): flow.continue_run(), 18)
+	if flow.profile_exists():
+		_continue_btn = _button(UiText.t("menu.continue"), func(): flow.continue_game(), 18)
 		col.add_child(_continue_btn)
+	if flow.slots != null and flow.slots.any():
+		col.add_child(_button(UiText.t("menu.load"), flow.show_slots, 18))
+	col.add_child(_button(UiText.t("menu.new_run"), func(): flow.start_new_game(), 18))
 	col.add_child(_button(UiText.t("menu.meta"), flow.show_meta, 18))
 	col.add_child(_button(UiText.t("menu.settings"), flow.show_settings, 14))
 	col.add_child(_button(UiText.t("menu.language"), toggle_language, 14))

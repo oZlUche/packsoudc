@@ -26,6 +26,8 @@ var loot_auto_close: bool = false
 var node_tooltips_preview: bool = false
 ## 085：界面语言 "zh" / "en"。主菜单点一下切，[UiText] 跟着读；不认识的值回落中文
 var language: String = "zh"
+## 089：当前用的存档位（1～3）
+var save_slot: int = 1
 
 
 func to_dict() -> Dictionary:
@@ -37,6 +39,7 @@ func to_dict() -> Dictionary:
 		"loot_auto_close": loot_auto_close,
 		"node_tooltips_preview": node_tooltips_preview,
 		"language": language,
+		"save_slot": save_slot,
 	}
 
 
@@ -52,6 +55,7 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	s.node_tooltips_preview = bool(d.get("node_tooltips_preview", false))
 	var lang := String(d.get("language", "zh"))
 	s.language = lang if UiText.LANGS.has(lang) else "zh"
+	s.save_slot = clampi(int(d.get("save_slot", 1)), 1, SaveSlots.COUNT)
 	return s
 
 

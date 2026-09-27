@@ -23,6 +23,7 @@ const SCREEN_SCRIPTS := {
 	GameFlow.Screen.META: "res://ui/game/meta_screen.gd",
 	GameFlow.Screen.SETTINGS: "res://ui/game/settings_screen.gd",
 	GameFlow.Screen.PREBATTLE: "res://ui/game/prebattle_screen.gd",
+	GameFlow.Screen.SLOTS: "res://ui/game/slots_screen.gd",
 }
 const LAUNCHER := "res://ui/launcher.tscn"
 
@@ -69,6 +70,12 @@ func _ready() -> void:
 	flow.settings_path = settings_path
 	flow.settings = GameSettings.load_from(settings_path)
 	UiText.apply(flow.settings)
+	# 089：存档位 —— 用默认路径（正式游戏）时按位存：老的单文件存档先搬进第 1 位，再切到设置里记的那一位。
+	# 测试 / 演示改了路径的走单文件模式
+	if save_path == RunSave.DEFAULT_PATH and meta_path == MetaSave.DEFAULT_PATH:
+		flow.slots = SaveSlots.new()
+		flow.slots.migrate_legacy()
+		flow.use_slot(flow.settings.save_slot)
 	# 没有角色定义时的兜底基线（角色路上基线来自 CharacterDef，067）
 	flow.player_baseline = CombatantBaseline.with_hp(60.0)
 	flow.screen_changed.connect(_on_screen_changed)

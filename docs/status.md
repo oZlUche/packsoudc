@@ -6,7 +6,7 @@
 
 背包、战斗、内容管线、地图、节点内容、一局的状态与存档都已落地并有测试；**正式游戏能从主菜单一条线玩到结算与仓库**
 （M6：开局挑装备、从仓库带 → 地图 → 战利品一件一件亮出来拖走 → 撤离确认 → 结算 → 仓库 → 再来一局，循环闭合）。
-**世界观**的设定集中在 `docs/worldview/`（神话与帝国、概念与神明的提议）。**两张序章教程图**（083、085）：序章一条路教基本流程；序章二分岔教「看对手选路选装备」（节点浮窗、两件护具、四个针对性敌人、毒药瓶 + 匕首合成）；序章二通关解锁第一章。**节点界面按作者试玩后的八条改过**（084），**第十一批**（087）：合成相邻自动、稀有度六色、商店左店右包拖着买 / 卖、战斗 buff 图标栏、词条侧窗、信仰道具休眠保留通用效果、BOSS 保底金色直接撤离；**第十二批**（088）：倒下是终局、敌人按身份配道具、包可进暂存区 / 容器 / 替换包、尸体照棋盘摆、暂存区按点保留、格子放大与容器屏布局、稀有度底色、道具视图自带悬浮窗、信仰悬浮说明、内容名字多语言（`Names.of` + `display_names`）、望远镜特殊道具开节点浮窗、基地仓库 / 图鉴两页签、输给猎手也扣体力、power 并进 mana：搜索按事件屏 ⇄ 搜索屏循环、叠层收起是最小化（回到这个点再恢复）、棋盘外全是暂存区、地图上有位置标、开打前先过战前准备屏。还没有的是内容扩充（第 8 阶段）、局外成长的内容（仓库怎么花、解锁）。
+**世界观**的设定集中在 `docs/worldview/`（神话与帝国、概念与神明的提议）。**两张序章教程图**（083、085）：序章一条路教基本流程；序章二分岔教「看对手选路选装备」（节点浮窗、两件护具、四个针对性敌人、毒药瓶 + 匕首合成）；序章二通关解锁第一章。**节点界面按作者试玩后的八条改过**（084），**第十一批**（087）：合成相邻自动、稀有度六色、商店左店右包拖着买 / 卖、战斗 buff 图标栏、词条侧窗、信仰道具休眠保留通用效果、BOSS 保底金色直接撤离；**第十二批**（088）：倒下是终局、敌人按身份配道具、包可进暂存区 / 容器 / 替换包、尸体照棋盘摆、暂存区按点保留、格子放大与容器屏布局、稀有度底色、道具视图自带悬浮窗、信仰悬浮说明、内容名字多语言（`Names.of` + `display_names`）、望远镜特殊道具开节点浮窗、基地仓库 / 图鉴两页签、输给猎手也扣体力、power 并进 mana；**三个存档位**（089：新的游戏 = 新存档、继续、读取存档）、图鉴缩略图网格：搜索按事件屏 ⇄ 搜索屏循环、叠层收起是最小化（回到这个点再恢复）、棋盘外全是暂存区、地图上有位置标、开打前先过战前准备屏。还没有的是内容扩充（第 8 阶段）、局外成长的内容（仓库怎么花、解锁）。
 
 ## 里程碑
 
@@ -44,7 +44,7 @@
 | `core/run`（+ effects、events） | 一局：旅程、体力、钱、节点事件、搜索 / 商店会话、规则、状态与存档；场景流状态机、开局装备、角色、进阶难度（机制清单）、猎手（伪 PVP）、结算；buff（局外 / 一局）与一局规则的构件；事件层（事件、选项、条件与后果构件、铺放）；局内技能（082：构件 + 一局的账）；信仰与信力（081 / 082） | `RunState`、`RunSave`、`MapTravel`、`NodeEvents`、`Vitality`、`Wallet`、`GameFlow`（`new_run_target` / `continue_target`：新的一局 = 从头，继续 = 读档或下一张教程）、`LoadoutDef`、`CharacterDef`、`RunResult`、`RunBuffDef`、`RunBuffs`、`RunContext`、`EventDef`、`EventPlacer`、`RunSkill`、`RunSkills`、`FaithDef`、`FaithPower` |
 | `core/meta` | 跨局：仓库格子（大小是 `MetaRules`）、带回来的棋盘与一键置入、图鉴、钱、战绩、保留规则（`absorb()` 一处）、存档 v2 | `MetaState`、`MetaSave`、`MetaRules` |
 | `core/text` | 内容名字的多语言 `Names.of`（088）；文本占位符与样式码（084）：`{char_name}`、`{battle_data}`、`{c:hp}…{/c}`，全表见 `docs/text-placeholders.md`；界面语言表（085）：`UiText.t(key)`，zh / en；词条表（087）：固定词条 + 按 buff 定义生成的说明，悬浮窗侧边一个一个开小窗 | `TextTemplate`、`UiText`、`Glossary`、`Names` |
-| `core/settings` | 玩家设置（暂存区提醒档位、拿完自动关、浮窗预览、界面语言），`user://settings.json` | `GameSettings`（挑要提的在 `core/run/storage_warning.gd`） |
+| `core/settings` | 玩家设置（暂存区提醒档位、拿完自动关、浮窗预览、界面语言、当前存档位），`user://settings.json`；存档位（089）`user://slots/<n>/` | `GameSettings`（挑要提的在 `core/run/storage_warning.gd`）、`SaveSlots` |
 | `ui/game` | 正式游戏（主场景）：导演（叠层可最小化）+ 屏的底座 + 各屏（事件屏先过、战前准备屏、容器屏战利品 / 搜索合一）+ 背包整理面板（浮窗）+ 仓库面板 + 渐进揭示的战利品视图 | `GameDirector`、`GameScreen`、`LootView`、`FloatingWindow`、`map_screen`、`event_screen`、`prebattle_screen`、`container_screen`…… |
 | `ui/inventory`（084 新增） | 悬浮窗控件与道具说明；087：主文字 + 侧边词条小窗 | `HoverTip`、`ItemTooltip` |
 | `ui`（其余） | 两个沙盒、四个编辑器 + 启动选择器（开发期入口）；buff 制作器（085）界面文字走 `UiText` | `launcher`、`inventory_sandbox`、`battle_sandbox`、`content_editor`、`event_editor`、`map_editor`、`buff_editor` |

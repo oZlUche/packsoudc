@@ -4,8 +4,8 @@
 extends GameScreen
 
 const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
-## 图鉴棋盘一行几格
-const CODEX_COLS := 12
+## 图鉴一行几个缩略图
+const CODEX_COLS := 8
 
 var _wh = null
 var _new_run_btn: Button
@@ -16,9 +16,9 @@ var _unlock_btns: Dictionary = {}
 var _pages: Dictionary = {}
 var _tab_btns: Dictionary = {}
 var _tab: String = ""
-## 图鉴页：点亮的道具摆在这块只读棋盘上（停上去就有悬浮窗），没点亮的列在下面
-var _codex_board: GridInventory = null
-var _codex_view: InventoryView = null
+## 图鉴页的缩略图与它的悬浮窗
+var _codex_tiles: Array[CodexTile] = []
+var _codex_tip: HoverTip = null
 
 
 func open(payload: Dictionary) -> void:
@@ -135,7 +135,8 @@ func open(payload: Dictionary) -> void:
 	_refresh()
 
 
-## 088：图鉴页 —— 点亮的道具摆在一块只读棋盘上（按稀有度、再按 id），停上去就有悬浮窗；没点亮的按稀有度列成灰字；特殊道具另列
+## 088 / 089：图鉴页 —— 跟棋盘的格子无关：所有能获得的道具按稀有度排成**缩略图网格**（每行 CODEX_COLS 个，能上下滚），
+## 带出过的亮着（右上角写累计件数），没获得的灰的；停在一格上开悬浮窗看属性。特殊道具另起一段
 func _build_codex(root: Control) -> Control:
 	var m := flow.meta
 	var page := _vbox(8)
@@ -146,81 +147,65 @@ func _build_codex(root: Control) -> Control:
 		var da := flow.items.get_def(a)
 		var db := flow.items.get_def(b)
 		return da.rarity < db.rarity if da.rarity != db.rarity else String(a) < String(b))
-	var lit: Array = []
-	var dark: Array = []
+	var lit_n := 0
 	for id in ids:
 		if m.codex_lit(id):
-			lit.append(id)
-		else:
-			dark.append(id)
-	page.add_child(_label("图鉴　带出过的点亮（%d / %d），记累计件数；停在道具上看属性" % [lit.size(), ids.size()], 15, UiPalette.DIM))
-	# 点亮的摆进棋盘：宽 CODEX_COLS，行数按需要长
-	var rows := 1
-	_codex_board = null
-	while _codex_board == null and rows <= 40:
-		var board := GridInventory.new(Vector2i(CODEX_COLS, rows), 0, false)
-		var ok := true
-		for id in lit:
-			if not board.try_add(ItemInstance.create(flow.items.get_def(id), 0), true):
-				ok = false
-				break
-		if ok:
-			_codex_board = board
-		else:
-			rows += 1
-	if _codex_board == null:
-		_codex_board = GridInventory.new(Vector2i(CODEX_COLS, 1), 0, false)
+			lit_n += 1
+	page.add_child(_label("图鉴　带出过的点亮（%d / %d），右上角是累计件数；停在一格上看属性" % [lit_n, ids.size()], 15, UiPalette.DIM))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.custom_minimum_size.y = 240
+	scroll.custom_minimum_size.y = 300
 	page.add_child(scroll)
-	var inner := _vbox(8)
+	var inner := _vbox(10)
 	scroll.add_child(inner)
-	_codex_view = InventoryView.new()
-	_codex_view.label_font = font
-	_codex_view.show_adjacency = false
-	_codex_view.inventory = _codex_board
-	_codex_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_codex_view.badges = _codex_badges()
-	inner.add_child(_codex_view)
-	if lit.is_empty():
-		inner.add_child(_label("还没有带出过任何东西：撤离成功时背包里的都会点亮", 13, UiPalette.DIM))
-	var dark_box := _log_box(13)
-	dark_box.fit_content = true
-	dark_box.scroll_active = false
-	dark_box.append_text("[color=#8b93a1]没点亮的（%d）：[/color]" % dark.size())
-	for id in dark:
-		dark_box.append_text("[color=#4a515e]%s[/color]　" % Names.of(flow.items.get_def(id)))
-	inner.add_child(dark_box)
+	var grid := GridContainer.new()
+	grid.columns = CODEX_COLS
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	inner.add_child(grid)
+	_codex_tiles.clear()
+	for id in ids:
+		var def := flow.items.get_def(id)
+		var tile := CodexTile.new(def, m.codex_lit(id), m.codex_count(id), font)
+		tile.hovered.connect(_on_tile_hovered)
+		tile.unhovered.connect(func(_t: CodexTile): _codex_tip.hide_tip())
+		grid.add_child(tile)
+		_codex_tiles.append(tile)
 	# 特殊道具（088）：不进背包、不能生成，拿到过的点亮
 	var keeps: Array = flow.items.keepsake_ids()
 	if not keeps.is_empty():
 		keeps.sort()
-		var kbox := _log_box(13)
-		kbox.fit_content = true
-		kbox.scroll_active = false
-		kbox.append_text("[color=#8b93a1]特殊道具（不占背包，代表一种能力）：[/color]\n")
+		inner.add_child(_label("特殊道具　不占背包，代表一种能力", 14, UiPalette.DIM))
+		var kgrid := GridContainer.new()
+		kgrid.columns = CODEX_COLS
+		kgrid.add_theme_constant_override("h_separation", 8)
+		inner.add_child(kgrid)
 		for id in keeps:
 			var def := flow.items.get_def(id)
-			if m.has_keepsake(id):
-				kbox.append_text("[color=#%s]%s[/color]　✓　%s\n" % [ItemPainter.rarity_color(def).to_html(false), Names.of(def), def.description])
-			else:
-				kbox.append_text("[color=#4a515e]%s[/color]\n" % Names.of(def))
-		inner.add_child(kbox)
+			var tile := CodexTile.new(def, m.has_keepsake(id), 0, font)
+			tile.hovered.connect(_on_tile_hovered)
+			tile.unhovered.connect(func(_t: CodexTile): _codex_tip.hide_tip())
+			kgrid.add_child(tile)
+			_codex_tiles.append(tile)
+	_codex_tip = HoverTip.new(font)
+	add_child(_codex_tip)
 	return page
 
 
-## 图鉴棋盘上每件角标写累计件数
-func _codex_badges() -> Dictionary:
-	var marks := {}
-	if _codex_board == null:
-		return marks
-	for inst in _codex_board.items():
-		var item := inst as ItemInstance
-		var n := flow.meta.codex_count(item.def.id)
-		if n > 1:
-			marks[item.uid] = "×%d" % n
-	return marks
+## 停在一格上：点亮的开完整的道具说明；没获得的只写名字与「未获得」
+func _on_tile_hovered(tile: CodexTile) -> void:
+	if _codex_tip == null or tile.def == null:
+		return
+	var at := tile.global_position + Vector2(tile.size.x, 0)
+	if tile.lit:
+		var full := ItemTooltip.describe_full(ItemInstance.create(tile.def, 0))
+		_codex_tip.show_text(String(full["text"]), at, null, full["terms"])
+	else:
+		_codex_tip.show_text("[b]%s[/b]\n[color=#8b93a1]未获得：撤离成功时背包里的会点亮[/color]" % Names.of(tile.def), at)
+
+
+func codex_tiles() -> Array[CodexTile]:
+	return _codex_tiles
 
 
 ## 切页签："warehouse" / "codex"
@@ -237,9 +222,6 @@ func show_tab(name: String) -> void:
 func tab() -> String:
 	return _tab
 
-
-func codex_board() -> GridInventory:
-	return _codex_board
 
 
 func store_all() -> Dictionary:

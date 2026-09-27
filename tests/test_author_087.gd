@@ -733,13 +733,30 @@ static func run_spyglass_and_codex(t: TestCase) -> void:
 	screen.show_tab("codex")
 	t.eq(screen.tab(), "codex", "切到图鉴页")
 	t.check(screen._pages["codex"].visible and not screen._pages["warehouse"].visible, "只显示图鉴页")
-	var board: GridInventory = screen.codex_board()
-	t.eq(board.item_count(), 2, "点亮的两件摆在图鉴棋盘上")
-	var knife_uid := -1
-	for inst in board.items():
-		if (inst as ItemInstance).def.id == &"knife":
-			knife_uid = (inst as ItemInstance).uid
-	t.check(knife_uid >= 0 and String(screen._codex_view.badges.get(knife_uid, "")) == "×3", "匕首角标写着 ×3")
+	var tiles: Array = screen.codex_tiles()
+	t.eq(tiles.size(), c.items.ids().size() + c.items.keepsake_ids().size(), "每件能获得的道具 + 特殊道具各一格缩略图（089）")
+	var lit_n := 0
+	var knife_tile: CodexTile = null
+	var spy_tile: CodexTile = null
+	for tile in tiles:
+		if (tile as CodexTile).lit:
+			lit_n += 1
+		if (tile as CodexTile).def.id == &"knife":
+			knife_tile = tile
+		if (tile as CodexTile).def.id == &"spyglass":
+			spy_tile = tile
+	t.eq(lit_n, 3, "点亮的：匕首、长剑、望远镜；其余灰的")
+	t.check(knife_tile != null and knife_tile.lit and knife_tile.count == 3, "匕首那格亮着、累计 3")
+	t.check(spy_tile != null and spy_tile.lit, "望远镜那格亮着（特殊道具）")
+	screen._on_tile_hovered(knife_tile)
+	t.check(screen._codex_tip.is_showing() and screen._codex_tip.text().contains("匕首"), "停在亮的格子上：完整说明")
+	var dark_tile: CodexTile = null
+	for tile in tiles:
+		if not (tile as CodexTile).lit:
+			dark_tile = tile
+			break
+	screen._on_tile_hovered(dark_tile)
+	t.check(screen._codex_tip.text().contains("未获得"), "停在灰的格子上：只写未获得")
 	screen.show_tab("nope")
 	t.eq(screen.tab(), "warehouse", "不认识的页签回仓库")
 	screen.free()
@@ -788,3 +805,71 @@ static func run_loss_cost_bound_to_battle(t: TestCase) -> void:
 	t.eq(w2.vitality.current, v2 - 4, "打输扣的是记着的 4")
 	# 猎手定义的默认值
 	t.eq(HunterDef.new().loss_cost, -1, "猎手默认按规则表")
+
+
+static func run_save_slots(t: TestCase) -> void:
+	t.begin("089 · 三个存档位：新的游戏 = 挑空位开新存档；继续 = 读当前位；读取存档 = 换位；删除；老的单文件搬进第 1 位；满了去读取存档屏")
+	var c := _content()
+	var root := "user://test_089_slots"
+	var slots := SaveSlots.new(root)
+	for n in range(1, SaveSlots.COUNT + 1):
+		slots.remove(n)
+	t.check(not slots.any() and slots.first_empty() == 1, "一开始全空")
+	# 老的单文件搬家
+	var legacy_run := "user://test_089_legacy_run.json"
+	var legacy_meta := "user://test_089_legacy_meta.json"
+	var old := MetaState.new()
+	old.runs = 7
+	MetaSave.write(old, legacy_meta)
+	t.check(slots.migrate_legacy(legacy_run, legacy_meta), "搬进第 1 位")
+	t.check(slots.exists(1) and not FileAccess.file_exists(legacy_meta), "第 1 位有了、老文件没了")
+	t.eq(int(slots.summary(1, c.items)["runs"]), 7, "摘要读得出第几局")
+	t.check(not slots.migrate_legacy(legacy_run, legacy_meta), "再搬没东西")
+	# 流程
+	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
+	f.chapters = [c.chapter] as Array[ChapterDef]
+	f.loadouts = c.loadouts
+	f.event_defs = c.events
+	f.settings_path = "user://test_089_settings.json"
+	f.player_baseline = CombatantBaseline.with_hp(10000.0)
+	f.slots = slots
+	f.use_slot(1)
+	t.check(f.slot == 1 and f.meta.runs == 7 and f.save_path == slots.run_path(1), "切到第 1 位：路径与局外都是它的")
+	t.check(f.profile_exists(), "当前位有存档：主菜单显示「继续」")
+	t.check(f.settings.save_slot == 1, "设置记着当前位")
+	# 新的游戏：挑空位（第 2 位）
+	t.check(f.start_new_game(), "新的游戏")
+	t.check(f.slot == 2 and f.meta.runs == 0 and slots.exists(2), "开在第 2 位、一份新的局外、落了地")
+	t.check(f.screen == GameFlow.Screen.SETUP or f.run != null, "开了局（开局屏或直接开）")
+	t.check(slots.exists(1) and int(slots.summary(1, c.items)["runs"]) == 7, "第 1 位没被动")
+	# 读取存档：回第 1 位
+	f.to_main_menu()
+	t.check(f.load_slot(1), "读第 1 位")
+	t.check(f.slot == 1 and f.meta.runs == 7, "回到第 1 位的局外")
+	t.check(not f.load_slot(3), "空位读不了")
+	# 满了：新的游戏去读取存档屏
+	f.to_main_menu()
+	t.check(f.new_game_in(3), "第 3 位开新的")
+	f.to_main_menu()
+	t.check(not slots.any() == false and slots.first_empty() == -1, "三位都满了")
+	t.check(not f.start_new_game() and f.screen == GameFlow.Screen.SLOTS and bool(f.last_payload.get("full", false)), "新的游戏 → 读取存档屏、提示满了")
+	# 删除
+	f.delete_slot(2)
+	t.check(not slots.exists(2) and slots.first_empty() == 2, "删了第 2 位")
+	f.delete_slot(f.slot)
+	t.check(f.meta.runs == 0 and not f.profile_exists(), "删当前位：局外换成空的、菜单不显示继续")
+	# 读取存档屏
+	var screen = load("res://ui/game/slots_screen.gd").new()
+	screen.flow = f
+	screen.font = UiPalette.cjk_font()
+	screen.screen = GameFlow.Screen.SLOTS
+	screen.open({"full": true})
+	t.check(screen._hint.text.contains("满"), "满了的提示")
+	t.check(not screen.delete_slot(1), "第一次点删除只是武装")
+	t.eq(screen.armed_delete(), 1, "记着要删第 1 位")
+	t.check(screen.delete_slot(1), "第二次删了")
+	t.check(not slots.exists(1), "第 1 位空了")
+	screen.free()
+	for n in range(1, SaveSlots.COUNT + 1):
+		slots.remove(n)
+	GameSettings.remove("user://test_089_settings.json")

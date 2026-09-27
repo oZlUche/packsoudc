@@ -10,7 +10,7 @@
 class_name GameFlow
 extends RefCounted
 
-enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE }
+enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS }
 
 signal screen_changed(screen: int, payload: Dictionary)
 signal run_started(state: RunState)
@@ -39,6 +39,9 @@ var faith_defs: Dictionary = {}
 var recipes: Array[RecipeDef] = []
 var save_path: String = RunSave.DEFAULT_PATH
 var meta_path: String = MetaSave.DEFAULT_PATH
+## 089（作者定）：存档位。null = 老的单文件模式（测试、沙盒）；持有方给了就按位存：save_path / meta_path 指向当前位（[method use_slot]）
+var slots: SaveSlots = null
+var slot: int = 0
 var settings_path: String = GameSettings.DEFAULT_PATH
 ## 玩家的设置（提醒档位等）。持有方读进来；改了调 save_settings
 var settings: GameSettings = GameSettings.new()
@@ -77,6 +80,92 @@ func to_main_menu() -> void:
 	_queue.clear()
 	save_meta()
 	_go(Screen.MAIN_MENU)
+
+
+#region 存档位（089）
+## 切到第 n 位：路径指过去、局外读进来（没有就一份新的，第一次存盘时才落地）、记进设置。当前的局丢掉（调用方先存）
+func use_slot(n: int) -> void:
+	if slots == null:
+		return
+	n = clampi(n, 1, SaveSlots.COUNT)
+	slots.ensure_dir(n)
+	slot = n
+	save_path = slots.run_path(n)
+	meta_path = slots.meta_path(n)
+	var loaded := MetaSave.read(items, meta_path, meta_rules) if FileAccess.file_exists(meta_path) else null
+	meta = loaded if loaded != null else MetaState.new(meta_rules)
+	run = null
+	result = null
+	_queue.clear()
+	if settings != null and settings.save_slot != n:
+		settings.save_slot = n
+		save_settings()
+
+
+## 当前位有没有存档（局外文件落过地）。单文件模式：有局内存档或教程打到中途才算
+func profile_exists() -> bool:
+	if slots != null:
+		return slots.exists(slot)
+	return has_save() or continue_target() != null
+
+
+## 主菜单「继续」：读当前位接着玩 —— 有局内存档读档；教程打到中途开下一张；都没有就按这份存档开新的一局（教程从头 / 开局屏）
+func continue_game() -> bool:
+	if has_save() or continue_target() != null:
+		return continue_run()
+	if not profile_exists():
+		return false
+	new_run()
+	return true
+
+
+## 主菜单「新的游戏」：开一份新存档 —— 挑一个空位切过去再开局；三位都满了去读取存档屏（删一个再来）。单文件模式就是 new_run
+func start_new_game() -> bool:
+	if slots == null:
+		new_run()
+		return true
+	var n := slots.first_empty()
+	if n < 0:
+		_go(Screen.SLOTS, {"full": true})
+		return false
+	return new_game_in(n)
+
+
+## 在第 n 位开新存档（那一位有东西就先删）
+func new_game_in(n: int) -> bool:
+	if slots == null:
+		new_run()
+		return true
+	save_meta()
+	slots.remove(n)
+	use_slot(n)
+	new_run()
+	return true
+
+
+## 读第 n 位：切过去，然后和「继续」一样。空位返回 false
+func load_slot(n: int) -> bool:
+	if slots == null or not slots.exists(n):
+		return false
+	save_meta()
+	use_slot(n)
+	return continue_game()
+
+
+## 删第 n 位。删的是当前位就换成一份空的局外
+func delete_slot(n: int) -> void:
+	if slots == null:
+		return
+	slots.remove(n)
+	if n == slot:
+		meta = MetaState.new(meta_rules)
+		run = null
+		result = null
+
+
+func show_slots() -> void:
+	_go(Screen.SLOTS)
+#endregion
 
 
 func new_run() -> void:
