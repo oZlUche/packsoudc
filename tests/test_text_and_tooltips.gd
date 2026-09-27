@@ -245,6 +245,30 @@ static func frame_hover_tip(t: TestCase, root: Window) -> void:
 	t.check(tip.is_showing() and tip.text() == "地图上的点", "直接给文字也行")
 	host.queue_free()
 
+	# 090（作者：主窗贴屏幕左边时侧窗压在了主窗上）：主窗 + 词条列当一组摆，永不叠；
+	# 宿主比屏窄（背包浮窗那种）也按视口算，不按宿主
+	var narrow := Control.new()
+	narrow.size = Vector2(200, 600)
+	root.add_child(narrow)
+	var tip2 := HoverTip.new()
+	narrow.add_child(tip2)
+	var terms := [{"name": "冷却", "text": "两次出手之间的间隔（秒）"}, {"name": "耗耐力", "text": "这一下出手要花的耐力"}]
+	tip2.show_text("[b]匕首[/b]\n[自发] 冷却 0.8 秒　耗耐力 4", Vector2(20, 20), null, terms)
+	var pr := Rect2(tip2._panel.position, tip2._panel.size)
+	var sr := Rect2(tip2._side.position, tip2._side.size)
+	t.check(tip2._side.visible and sr.size.x > 0 and pr.size.x > 0, "有主窗有侧窗")
+	t.check(not pr.intersects(sr), "主窗在屏幕左边：侧窗不压主窗")
+	t.check(sr.position.x >= pr.end.x - 0.5, "侧窗在主窗右边")
+	t.check(pr.position.x >= 0 and sr.position.x >= 0, "都没出屏幕左边")
+	var vw := root.get_visible_rect().size.x
+	tip2.show_text("[b]匕首[/b]", Vector2(vw - 20, 20), null, terms)
+	pr = Rect2(tip2._panel.position, tip2._panel.size)
+	sr = Rect2(tip2._side.position, tip2._side.size)
+	t.check(not pr.intersects(sr), "鼠标靠屏幕右边：也不叠")
+	t.check(sr.end.x <= pr.position.x + 0.5 or sr.position.x >= pr.end.x - 0.5, "侧窗在主窗的某一侧")
+	t.check(pr.position.x >= 0 and sr.position.x >= 0, "都没出屏幕左边")
+	narrow.queue_free()
+
 
 static func run_min_drops(t: TestCase) -> void:
 	t.begin("084 · 至少掉 min_drops 件身上有的（数据，标准规则 1）：概率全 0 也掉、只掉身上的；包必掉（bags_always_drop）且不占保底名额；开关关了包照掷")

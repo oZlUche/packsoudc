@@ -227,22 +227,37 @@ func _uid_under(view: ContainerView, local: Vector2) -> int:
 	return -1
 
 
-## 放在鼠标右下，出屏就翻到左 / 上；词条列贴在主面板右边，右边放不下就放左边
+## 放在鼠标右下，出屏就翻到左 / 上；词条列贴在主面板右边，右边放不下就放左边。
+## 090（作者：主窗贴屏幕左边时侧窗压在了主窗上）：主窗 + 词条列当**一组**摆 —— 先试鼠标右边（主窗贴鼠标、词条列在它右边），
+## 放不下再试左边（主窗贴鼠标、词条列在更左），两边都放不下就整组夹进屏里、词条列在右；不再各自夹边，所以永远不叠。
+## 「屏」是真正的视口，不是本控件的尺寸（背包浮窗那种比屏窄的宿主里也要按屏算）
 func _place(global_at: Vector2) -> void:
 	var local := global_at - global_position
 	var s := _panel.size
-	var area := size
 	var side_w := _side.size.x if _side.visible else 0.0
-	var p := local + Vector2(16, 16)
-	if p.x + s.x + (side_w + 6 if side_w > 0 else 0) > area.x:
-		p.x = local.x - s.x - 8
-	if p.y + s.y > area.y:
-		p.y = local.y - s.y - 8
-	_panel.position = Vector2(maxf(0.0, p.x), maxf(0.0, p.y))
+	var gap := 6.0 if _side.visible else 0.0
+	var group_w := s.x + gap + side_w
+	# 视口换到本控件坐标
+	var vp_size := get_viewport_rect().size if is_inside_tree() else size
+	var lo := -global_position
+	var hi := lo + vp_size
+	var px := local.x + 16
+	var side_right := true
+	if px + group_w > hi.x:
+		var left_px := local.x - s.x - 8
+		if left_px - gap - side_w >= lo.x:
+			px = left_px
+			side_right = false
+		else:
+			px = maxf(lo.x, hi.x - group_w)
+	var py := local.y + 16
+	if py + s.y > hi.y:
+		py = local.y - s.y - 8
+	py = maxf(lo.y, py)
+	_panel.position = Vector2(px, py)
 	if _side.visible:
-		var sp := _panel.position + Vector2(s.x + 6, 0)
-		if sp.x + side_w > area.x:
-			sp.x = _panel.position.x - side_w - 6
-		if sp.y + _side.size.y > area.y:
-			sp.y = maxf(0.0, area.y - _side.size.y)
-		_side.position = Vector2(maxf(0.0, sp.x), sp.y)
+		var sx := px + s.x + gap if side_right else px - gap - side_w
+		var sy := py
+		if sy + _side.size.y > hi.y:
+			sy = maxf(lo.y, hi.y - _side.size.y)
+		_side.position = Vector2(sx, sy)
