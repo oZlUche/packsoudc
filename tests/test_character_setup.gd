@@ -379,3 +379,113 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 
 	game.queue_free()
 	_cleanup()
+
+
+## 090（作者定）：开局屏的暂存区 —— 上一局带回来、还没置入的东西进这一屏时挪进暂存区；拖上包 = 带上、拖进仓库 = 置入、
+## 换角色回暂存区；回主菜单原样放回带回来的棋盘（视为没发生过移动）；出发则留在暂存区的没了。仓库的东西进不了暂存区
+static func frame_setup_stash(t: TestCase, root: Window) -> void:
+	t.begin("开局屏 · 暂存区（090）：带回来的进暂存区、带上 / 置入 / 留着、换角色回暂存区、回主菜单原样放回、出发就没了")
+	_cleanup()
+	var game = load(GAME).instantiate()
+	game.save_path = SAVE
+	game.meta_path = META
+	root.add_child(game)
+	var flow: GameFlow = game.flow
+	if flow.characters.is_empty() or flow.chapters.is_empty():
+		t.check(false, "没有角色或章节")
+		game.queue_free()
+		return
+	for gch in flow.chapters:
+		if gch.grants_unlock != &"":
+			flow.meta.grant_unlock(gch.grants_unlock)
+	flow.meta.grant([flow.items.get_def(&"medkit")])
+	var n: int = flow.meta.warehouse.item_count()
+	t.check(n >= 1, "仓库里有东西（%d 件）" % n)
+	var wh_uid: int = (flow.meta.warehouse.items()[0] as ItemInstance).uid
+	# 上一局带回来的棋盘：三件非包
+	var back := GridInventory.new(RunState.BOARD_SIZE, MetaState.BOARD_ID, false)
+	var uids: Array[int] = []
+	var origins: Dictionary = {}
+	for id in [&"medkit", &"medkit", &"rifle"]:
+		var inst := ItemInstance.create(flow.items.get_def(id), 0)
+		inst.uid = flow.meta.allocate_uid()
+		t.check(back.try_add(inst, true), "%s 摆上带回来的棋盘" % id)
+		uids.append(inst.uid)
+		origins[inst.uid] = inst.origin
+	flow.meta.board = back
+	t.check(flow.meta.has_pending_board(), "带回来的棋盘等着")
+	t.eq(flow.can_begin(), "", "090：没清空也能开新局")
+	t.ne(flow.pending_hint(), "", "局外屏有一句提示")
+	flow.new_run()
+	var setup = game.base()
+	t.eq(setup.screen, GameFlow.Screen.SETUP, "→ 开局屏")
+	for gi in setup._chapters.size():
+		if setup._chapters[gi].id == &"chapter_01":
+			setup.choose_chapter(gi)
+	t.eq(setup.stash.item_count(), 3, "三件都进了暂存区")
+	t.check(not flow.meta.has_pending_board(), "带回来的棋盘空了（东西挪到了暂存区）")
+	t.eq(flow.meta.warehouse.item_count(), n, "仓库没动")
+	t.check(setup._stash_box.visible, "暂存区那一栏显示着")
+	t.check(setup._stash_title.text.contains("3"), "标题写着件数：%s" % setup._stash_title.text)
+
+	# 落点规则：仓库的东西进不了暂存区（会丢）；暂存区的能回暂存区、能进仓库、能上棋盘
+	var filt: Callable = setup._drag.drop_filter
+	t.check(not bool(filt.call(flow.meta.warehouse.get_item(wh_uid), setup.stash)), "仓库的东西拖不进暂存区")
+	t.check(bool(filt.call(setup.stash.get_item(uids[0]), setup.stash)), "暂存区的能放回暂存区")
+	t.check(bool(filt.call(setup.stash.get_item(uids[0]), flow.meta.warehouse)), "暂存区的能进仓库")
+	t.check(bool(filt.call(setup.stash.get_item(uids[0]), setup.board)), "暂存区的能上棋盘")
+
+	# 带上 / 置入 / 留着
+	t.check(setup.carry_in(uids[0]), "暂存区的一件带上包")
+	t.eq(setup.carried().size(), 1, "带了一件")
+	t.check(setup.store(uids[1]), "暂存区的一件收进仓库")
+	t.eq(flow.meta.warehouse.item_count(), n + 1, "仓库多了一件")
+	t.eq(setup.stash.item_count(), 1, "暂存区剩一件")
+	t.check(not setup.store(wh_uid), "仓库的东西不归 store 管")
+
+	# 换角色：从暂存区带上的回暂存区（不是仓库）
+	setup.choose_character(0)
+	t.eq(setup.stash.item_count(), 2, "换角色：从暂存区带上的回了暂存区")
+	t.eq(flow.meta.warehouse.item_count(), n + 1, "仓库没多")
+	t.check(setup.carry_in(uids[0]), "再带上")
+	t.check(setup.carry_in(wh_uid), "仓库的也带上一件")
+
+	# 回主菜单：视为没发生过移动 —— 带回来的两件按原位回带回来的棋盘；仓库来的回仓库；已经收进仓库的留在仓库
+	setup.cancel()
+	t.eq(game.base().screen, GameFlow.Screen.MAIN_MENU, "→ 主菜单")
+	t.check(flow.meta.has_pending_board() and flow.meta.board.item_count() == 2, "带回来的棋盘又是两件")
+	for uid in [uids[0], uids[2]]:
+		var it: ItemInstance = flow.meta.board.get_item(uid) if flow.meta.board != null else null
+		t.check(it != null and it.origin == origins[uid], "uid %d 回到原位 %s" % [uid, origins[uid]])
+	t.is_null(flow.meta.board.get_item(uids[1]), "收进仓库的那件没回棋盘")
+	t.eq(flow.meta.warehouse.item_count(), n + 1, "仓库：原来的 + 收进的那件")
+	t.check(MetaSave.read(flow.items, META, flow.meta_rules).has_pending_board(), "存盘里带回来的棋盘还在")
+
+	# 再进开局屏：一件带上、一件留着，出发 —— 留着的没了
+	flow.new_run()
+	setup = game.base()
+	for gi in setup._chapters.size():
+		if setup._chapters[gi].id == &"chapter_01":
+			setup.choose_chapter(gi)
+	t.eq(setup.stash.item_count(), 2, "又进了暂存区")
+	t.check(setup.carry_in(uids[0]), "带上一件")
+	var went := false
+	for seed in range(1, 30):
+		setup.set_run_seed(seed)
+		if setup.depart():
+			went = true
+			break
+	t.check(went, "出发")
+	if went:
+		t.eq(game.base().screen, GameFlow.Screen.MAP, "→ 地图")
+		var found := 0
+		for inst in flow.run.board.items():
+			if (inst as ItemInstance).def.id == &"medkit":
+				found += 1
+		t.check(found >= 1, "带上的那件进了一局")
+		t.check(flow.meta.board == null, "留在暂存区的没了：带回来的棋盘清了")
+		t.eq(setup.stash.item_count(), 0, "暂存区清空")
+		t.eq(flow.meta.warehouse.item_count(), n + 1, "仓库没被动")
+		t.check(not MetaSave.read(flow.items, META, flow.meta_rules).has_pending_board(), "存盘里也清了")
+	game.queue_free()
+	_cleanup()

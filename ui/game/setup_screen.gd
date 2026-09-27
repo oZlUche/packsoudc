@@ -4,10 +4,17 @@
 ## 带入的真正限制是初始包的空间；件数 / 稀有度上限是角色的字段（默认不限），出发时查。
 ## 包不能带入：仓库里本来没有包（局外只收非包，`MetaState.keeps`），仓库的格子也不收包（同一条规则接在 `accept_filter` 上）。
 ## 拖上棋盘那一刻东西就离开了仓库；出发时存 meta，回主菜单就放回去。
-## 所有动作都是公开方法（[method choose_chapter]、[method choose_character]、[method carry_in]、[method depart]、[method cancel]），按钮只是调它们；测试直接调。
+## 所有动作都是公开方法（[method choose_chapter]、[method choose_character]、[method carry_in]、[method store]、[method depart]、[method cancel]），按钮只是调它们；测试直接调。
+##
+## **暂存区**（090，作者定）：上一局带回来、还没置入的东西（`MetaState.board`）进这一屏时挪进中间的暂存区（记住各自原位）。
+## 往包里拖 = 带上、往仓库拖 = 置入、留着的**出发就没了**；回主菜单则原样放回带回来的棋盘（视为没发生过移动）。
+## 仓库的东西进不了暂存区（会丢）。
 ##
 ## 没有角色定义（老内容、测试）时退回老路：按第一套开局装备开。
 extends GameScreen
+
+## 暂存区容器的 id（局外的 100 / 101 之外）
+const STASH_ID := 110
 
 var chapter_index: int = 0
 var character_index: int = 0
@@ -19,6 +26,13 @@ var _scale_box: VBoxContainer
 var run_seed: int = 1
 ## 这个角色的棋盘，初始包摆好；从仓库拖进来的东西就在上面。出发时整块记成 layout 交给 RunState
 var board: GridInventory = null
+## 090：暂存区 —— 上一局带回来、还没置入的东西
+var stash: ItemStash = null
+## 090：暂存区里那些东西的来处：uid → {"origin", "rot"}（回主菜单按原位放回）
+var _pending: Dictionary = {}
+var _stash_box: VBoxContainer = null
+var _stash_view: StashView = null
+var _stash_title: Label = null
 
 ## 083：开局屏列的章节（按解锁过滤、按 order 排）与这一章能选的角色
 var _chapters: Array[ChapterDef] = []
@@ -111,6 +125,10 @@ func open(_payload: Dictionary) -> void:
 	_board_host = _vbox(6)
 	grids.add_child(_board_host)
 
+	# 090：中间是暂存区（有上一局带回来的东西才显示）
+	_stash_box = _vbox(6)
+	grids.add_child(_stash_box)
+
 	_warehouse_box = _vbox(6)
 	var right := _warehouse_box
 	grids.add_child(right)
@@ -129,9 +147,49 @@ func open(_payload: Dictionary) -> void:
 	play.add_child(_drag)     # 容器把它铺到和 grids 一样大，盖在两块格子上
 	_drag.register_view(_warehouse_view)
 	w.changed.connect(_refresh)
+	_build_stash()
 
 	choose_chapter(0)
 	choose_difficulty(0)
+
+
+## 090：暂存区那一栏。上一局带回来、还没置入的东西从带回来的棋盘挪进来，记住各自原位（回主菜单原样放回）
+func _build_stash() -> void:
+	stash = ItemStash.new(STASH_ID, 0)
+	_pending.clear()
+	var back := flow.meta.board
+	if back != null:
+		for inst in back.items():
+			var it := inst as ItemInstance
+			var origin := it.origin
+			var rot := it.rotation
+			if back.remove(it.uid) != null and stash.insert(it):
+				_pending[it.uid] = {"origin": origin, "rot": rot}
+	_stash_title = _label("", 15, UiPalette.DIM)
+	_stash_box.add_child(_stash_title)
+	_stash_box.add_child(_wrapped("上一局带回来、还没置入的东西先放在这儿。往包里拖 = 带上；往仓库拖 = 收进仓库；留在这儿的出发就没了；回主菜单则原样放回带回来的背包", 12, UiPalette.DIM, 240))
+	_stash_view = StashView.new()
+	_stash_view.label_font = font
+	_stash_view.custom_minimum_size.x = 240
+	_stash_view.stash = stash
+	_stash_view.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_stash_box.add_child(_stash_view)
+	_drag.register_view(_stash_view)
+	_drag.drop_filter = _allow_drop
+	stash.changed.connect(_refresh)
+	_stash_box.visible = not _pending.is_empty()
+
+
+## 090：落点规则。仓库的东西进不了暂存区（进去就等于出发时丢掉）；暂存区的东西上棋盘要这一章允许带入
+func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
+	if inst == null:
+		return false
+	if target == stash:
+		return _pending.has(inst.uid)
+	if target == board and _pending.has(inst.uid):
+		var c := chapter()
+		return c == null or c.allow_carry_in
+	return true
 
 
 #region 公开动作
@@ -236,11 +294,23 @@ func character() -> CharacterDef:
 	return _characters[character_index] if character_index < _characters.size() else null
 
 
-## 把仓库里的一件带上（自动找位置，和拖进包里一样）。放不进返回 false
+## 把仓库（或 090 暂存区）里的一件带上（自动找位置，和拖进包里一样）。放不进返回 false
 func carry_in(uid: int) -> bool:
-	if board == null or flow.meta.warehouse.get_item(uid) == null:
+	if board == null:
 		return false
-	var ok := InventoryService.transfer_auto(flow.meta.warehouse, uid, board)
+	var from: ItemContainer = flow.meta.warehouse if flow.meta.warehouse.get_item(uid) != null else stash
+	if from == null or from.get_item(uid) == null:
+		return false
+	var ok := InventoryService.transfer_auto(from, uid, board)
+	_refresh()
+	return ok
+
+
+## 090：把暂存区里的一件收进仓库（= 置入）。放不下返回 false
+func store(uid: int) -> bool:
+	if stash == null or stash.get_item(uid) == null:
+		return false
+	var ok := InventoryService.transfer_auto(stash, uid, flow.meta.warehouse)
 	_refresh()
 	return ok
 
@@ -306,23 +376,52 @@ func depart() -> bool:
 	if run == null:
 		_status.text = "这一章生成不出图：%s" % (c.map_source.last_error if c.map_source != null else "没有地图来源")
 		return false
+	# 090：进了游戏，留在暂存区的就没了（带回来的棋盘 begin 里已经清掉）
+	if stash != null:
+		stash.clear()
+	_pending.clear()
 	return true
 
 
-## 不开了：带上的放回仓库，回主菜单
+## 不开了：带上的放回仓库，回主菜单。090：上一局带回来的原样放回带回来的棋盘（视为没发生过移动）
 func cancel() -> void:
-	_return_carried()
+	_restore_pending()
 	flow.to_main_menu()
 #endregion
 
 
+## 棋盘上带着的都下来：仓库来的回仓库；090 暂存区来的回暂存区
 func _return_carried() -> void:
 	if board == null:
 		return
 	for inst in carried():
 		board.remove(inst.uid)
-		if not flow.meta.take_back(inst):
+		if _pending.has(inst.uid) and stash != null:
+			stash.insert(inst)
+		elif not flow.meta.take_back(inst):
 			push_warning("setup: %s 放不回仓库，丢弃" % inst.def.id)
+
+
+## 090：回主菜单 —— 上一局带回来的（不管还在暂存区还是已经拖上了棋盘）按原位放回带回来的棋盘；
+## 原位放不下（不该发生）就找位置，再不行进仓库。玩家已经拖进仓库的留在仓库（那是他自己置入的）
+func _restore_pending() -> void:
+	_return_carried()
+	if stash == null:
+		return
+	var back := flow.meta.board
+	for inst in stash.items():
+		var it := inst as ItemInstance
+		stash.remove(it.uid)
+		if back == null:
+			back = GridInventory.new(RunState.BOARD_SIZE, MetaState.BOARD_ID, false)
+			flow.meta.board = back
+		var rec: Dictionary = _pending.get(it.uid, {})
+		var placed := rec.has("origin") and back.place(it, rec["origin"], int(rec.get("rot", 0)))
+		if not placed and not back.try_add(it, true) and not flow.meta.take_back(it):
+			push_warning("setup: %s 放不回带回来的棋盘也放不进仓库，丢弃" % it.def.id)
+	_pending.clear()
+	if back != null and back.item_count() == 0:
+		flow.meta.board = null
 
 
 ## 按角色造棋盘：初始包摆好。包的 uid 走局外的号段，免得和从仓库拖来的撞号
@@ -400,6 +499,8 @@ func _refresh() -> void:
 		if taken.is_empty():
 			_readout.append_text("[color=#8b93a1]什么都还没带[/color]\n")
 		_readout.append_text("\n带 %d 件，占 %d 格，值 %d 币　包里还有 %d 格" % [taken.size(), cells, value, board.free_cell_count()])
+	if _stash_title != null and stash != null:
+		_stash_title.text = "暂存区　%d 件" % stash.item_count()
 	if _status != null:
 		var why := can_depart()
 		_status.text = why if why != "" and not carried().is_empty() else ""

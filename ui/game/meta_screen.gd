@@ -249,4 +249,5 @@ func toggle_unlock(id: StringName) -> bool:
 func _refresh() -> void:
 	var why := flow.can_begin()
 	_new_run_btn.disabled = why != ""
-	_hint.text = why
+	# 090：带回来的没清不再拦，只提示（开局屏里进暂存区，出发就没了）
+	_hint.text = why if why != "" else flow.pending_hint()

@@ -115,7 +115,7 @@ func _refresh() -> void:
 	_store_btn.disabled = not pending
 	_discard_btn.disabled = not pending
 	if _line != null and _line.text == "":
-		_line.text = "带回来的背包里还有 %d 件，清空之前开不了新局" % _meta.board.item_count() if pending else "仓库 %d 件" % _meta.warehouse.item_count()
+		_line.text = "带回来的背包里还有 %d 件：置入或不要了；不管的话开局屏里它们进暂存区，出发就没了" % _meta.board.item_count() if pending else "仓库 %d 件" % _meta.warehouse.item_count()
 
 
 func _label(text: String, font_size: int, color: Color) -> Label:

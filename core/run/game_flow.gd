@@ -394,10 +394,17 @@ func characters_for(chapter: ChapterDef) -> Array[CharacterDef]:
 	return out
 
 
-## 现在能不能开新局；空串 = 能，否则是原因（带回来的背包还没清空，058 第 7 条）
+## 现在能不能开新局；空串 = 能，否则是原因。
+## 090（作者定）：带回来的背包没清空**不再拦**（原 058 第 7 条的门）—— 开局屏把它们收进暂存区：拖上包 = 带上、拖进仓库 = 置入、
+## 留着的出发就没了、回主菜单原样放回。局外屏只提示（[method pending_hint]）
 func can_begin() -> String:
+	return ""
+
+
+## 090：上一局带回来的还没清时给局外屏的一句话；没有就空串
+func pending_hint() -> String:
 	if meta != null and meta.has_pending_board():
-		return "上一局带回来的背包还有 %d 件没清空：先在仓库里置入或不要了，再配置下一局" % meta.board.item_count()
+		return "上一局带回来的背包还有 %d 件没置入：可以现在置入或不要了；不管的话，开局屏里它们会放进暂存区，出发就没了" % meta.board.item_count()
 	return ""
 
 
@@ -469,7 +476,11 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 		return null
 	for inst in taken:
 		meta.warehouse.remove(inst.uid)
-	if not taken.is_empty() or character != null:
+	# 090：进了游戏，上一局带回来还没清的就没了（开局屏的暂存区规则；不经开局屏的路一样）
+	var lost := meta.board != null
+	if lost:
+		meta.discard_board()
+	if not taken.is_empty() or character != null or lost:
 		MetaSave.write(meta, meta_path)
 	_adopt(state)
 	_grant_keepsakes(chapter)

@@ -187,7 +187,7 @@ static func run_absorb_board_codex(t: TestCase) -> void:
 
 
 static func run_flow_gate(t: TestCase) -> void:
-	t.begin("场景流 · 一局结束就记账、存 meta；带回来的棋盘没清空开不了新局；清了才能开")
+	t.begin("场景流 · 一局结束就记账、存 meta；带回来的棋盘没清空也能开新局（090）；一键置入后能开")
 
 	var c := _content()
 	var kit := _kit(c)
@@ -200,8 +200,7 @@ static func run_flow_gate(t: TestCase) -> void:
 	t.eq(f.meta.runs, 1, "进结算屏之前账已经记了")
 	t.check(f.meta.has_pending_board(), "带回来的棋盘等着")
 	t.check(MetaSave.exists(META), "meta 已经存了")
-	t.check(f.can_begin() != "", "没清空开不了新局：%s" % f.can_begin())
-	t.is_null(f.begin(c.chapter, kit, 32), "begin 拒绝")
+	t.eq(f.can_begin(), "", "090：没清空也能开新局（开局屏把带回来的收进暂存区，出发就没了）")
 	f.finish_result()
 	t.eq(f.screen, GameFlow.Screen.META, "→ 局外")
 	t.eq(f.meta.runs, 1, "没记两遍")
