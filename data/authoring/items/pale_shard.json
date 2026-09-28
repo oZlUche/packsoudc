@@ -12,5 +12,6 @@
   "tags": [
     "treasure",
     "relic"
-  ]
+  ],
+  "requires_unlock": "ach_boss"
 }

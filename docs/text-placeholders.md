@@ -92,6 +92,9 @@
 | 所有内容定义 | `display_names` | 别的语言的名字 `{"en": …}`，界面走 `Names.of`（088）；`display_name` 是中文原文 |
 | `ItemDef` | `description` | 一句说明（悬浮窗第二行、图鉴） |
 | `ItemDef` 标签 | `keepsake` | 特殊道具：不进背包、不能生成、拿到只是通知 + 图鉴点亮；能力由别的标签说明（`node_tooltips` → 节点浮窗） |
+| `ChapterDef` | `rules` | 本图规则卡（≤ 3 条）：第一次进图弹，暂停菜单再看（091） |
+| `ItemDef` | `requires_unlock` | 成就给的解锁 id；没解锁不进池、图鉴灰着写途径（091） |
+| `AchievementDef` | `kind` `amount` `target` `grants` `description` `hidden` `order` | 成就（091）：条件种类与数 / 对象、完成给的解锁 id、解锁途径文字、隐藏、先后 |
 | `ChapterDef` | `starting_keepsakes` | 这一章开局发的特殊道具（序章二：望远镜），记在局外 |
 | `NodeRules` | `loss_cost.hunter` | 输给猎手扣的体力（088，1） |
 | 节点内容 / `HunterDef` | `loss_cost` | 这一场输了的代价：不写按规则表（核心必死）；0 无代价、-2 必死、大于 0 扣那么多（088，进入战斗的函数也能直接传） |

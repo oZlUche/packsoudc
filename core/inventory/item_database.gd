@@ -8,6 +8,28 @@ extends RefCounted
 const DEFAULT_DIR := "res://data/items"
 
 var _defs: Dictionary = {}  # StringName -> ItemDef
+## 091：现在锁着的道具（`requires_unlock` 还没解锁）。[GameFlow] 开局前按局外算好设进来；没设 = 都没锁（测试、沙盒照旧）
+var _locked: Dictionary = {}
+
+
+## 091：设一批锁着的道具 id（[method ids] 不再给它们）
+func set_locked(ids: Array) -> void:
+	_locked.clear()
+	for id in ids:
+		_locked[StringName(String(id))] = true
+
+
+func is_locked(id: StringName) -> bool:
+	return _locked.has(id)
+
+
+## 091：带解锁要求的道具（不管解没解锁）
+func gated_ids() -> Array:
+	var out: Array = []
+	for id in _defs:
+		if (_defs[id] as ItemDef).requires_unlock != &"":
+			out.append(id)
+	return out
 
 
 ## 扫描目录加载全部定义，返回成功登记的条数。
@@ -55,13 +77,17 @@ func has_def(id: StringName) -> bool:
 
 
 ## 能用的道具：**封存的不在里面**（[constant ItemDef.SEALED]）。搜索、掉落、商店、敌人装备、图鉴、编辑器都从这里拿候选 ——
-## 封存只在这一处拦，别处不必各查一遍。要全部（导出、存档校对）用 [method all_ids]
-func ids() -> Array:
+## 封存只在这一处拦，别处不必各查一遍。要全部（导出、存档校对）用 [method all_ids]。
+## 091：锁着的（成就还没解锁）也不给；图鉴要连锁着的一起列，传 [param include_locked]
+func ids(include_locked: bool = false) -> Array:
 	var out: Array = []
 	for id in _defs:
 		var d := _defs[id] as ItemDef
-		if not d.is_sealed() and not d.is_keepsake():     # 088：特殊道具也不能生成
-			out.append(id)
+		if d.is_sealed() or d.is_keepsake():     # 088：特殊道具也不能生成
+			continue
+		if not include_locked and _locked.has(id):
+			continue
+		out.append(id)
 	return out
 
 

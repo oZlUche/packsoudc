@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AchievementDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/achievement_def.gd" id="1_3mb0y"]
+
+[resource]
+script = ExtResource("1_3mb0y")
+id = &"extract_3"
+display_name = "老手"
+display_names = {
+"en": "Veteran"
+}
+description = "撤离三次。"
+order = 2
+amount = 3
+grants = Array[StringName]([&"ach_extract_3"])

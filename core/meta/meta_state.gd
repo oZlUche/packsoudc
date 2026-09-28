@@ -34,6 +34,14 @@ var active_buffs: Array[StringName] = []
 var unlocks: Array[StringName] = []
 ## 088：拿到过的特殊道具（望远镜……）：不进背包、图鉴里点亮、代表一种能力。跟局外存档
 var keepsakes: Array[StringName] = []
+## 091：成就 —— id（字符串）→ 完成时刻（unix 秒）。完成给的解锁进 [member unlocks]
+var achievements: Dictionary = {}
+## 091：成就的条件顺手多记的数：按章节的撤离次数（章节 id 字符串 → 次）、击败核心的次数、打赢的场数
+var chapter_extractions: Dictionary = {}
+var boss_kills: int = 0
+var battles_won: int = 0
+## 091：看过「本图规则」卡的章节 id（第一次进图弹，之后不弹）
+var seen_rules: Array[StringName] = []
 ## 撤离带出来的钱累计。局外货币怎么花（15 节第 4 项）还没定，先攒着
 var funds: int = 0
 ## 累计背出去的价值（6.4）
@@ -103,8 +111,13 @@ func absorb(result: RunResult) -> Dictionary:
 	if result == null:
 		return got
 	runs += 1
+	battles_won += result.battles_won
+	if result.boss_cleared:
+		boss_kills += 1
 	if result.is_extracted():
 		extractions += 1
+		if result.chapter_id != &"":
+			chapter_extractions[String(result.chapter_id)] = chapter_extractions_of(result.chapter_id) + 1
 		# 图鉴：每件各计一次（包也算），第一次带出算点亮
 		for inst in result.carried:
 			var key := String(inst.def.id)
@@ -250,6 +263,39 @@ func codex_lit(id: StringName) -> bool:
 
 func codex_count(id: StringName) -> int:
 	return int(codex.get(String(id), 0))
+
+
+#region 成就与规则卡（091）
+func chapter_extractions_of(chapter_id: StringName) -> int:
+	return int(chapter_extractions.get(String(chapter_id), 0))
+
+
+func has_achievement(id: StringName) -> bool:
+	return achievements.has(String(id))
+
+
+## 记一枚成就完成（时刻 = 现在）。已经有了返回 false
+func complete_achievement(id: StringName) -> bool:
+	if id == &"" or achievements.has(String(id)):
+		return false
+	achievements[String(id)] = int(Time.get_unix_time_from_system())
+	changed.emit()
+	return true
+
+
+## 完成时刻（unix 秒）；没完成 0
+func achievement_time(id: StringName) -> int:
+	return int(achievements.get(String(id), 0))
+
+
+func has_seen_rules(chapter_id: StringName) -> bool:
+	return seen_rules.has(chapter_id)
+
+
+func mark_rules_seen(chapter_id: StringName) -> void:
+	if chapter_id != &"" and not seen_rules.has(chapter_id):
+		seen_rules.append(chapter_id)
+#endregion
 #endregion
 
 
@@ -267,7 +313,18 @@ func to_dict() -> Dictionary:
 		"funds": funds, "score": score, "runs": runs, "extractions": extractions, "deaths": deaths,
 		"best_value": best_value,
 		"history": history.duplicate(true),
+		"achievements": achievements.duplicate(),
+		"chapter_extractions": chapter_extractions.duplicate(),
+		"boss_kills": boss_kills, "battles_won": battles_won,
+		"seen_rules": _names_of(seen_rules),
 	}
+
+
+static func _names_of(ids: Array[StringName]) -> Array:
+	var out: Array = []
+	for id in ids:
+		out.append(String(id))
+	return out
 
 
 ## 读回来。版本不对返回 null（局外存档还只有开发期的，旧的作废）；定义被删的道具由容器的 from_dict 告警后丢弃。
@@ -307,6 +364,14 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	m.extractions = int(d.get("extractions", 0))
 	m.deaths = int(d.get("deaths", 0))
 	m.best_value = int(d.get("best_value", 0))
+	for key in d.get("achievements", {}):
+		m.achievements[String(key)] = int((d["achievements"] as Dictionary)[key])
+	for key in d.get("chapter_extractions", {}):
+		m.chapter_extractions[String(key)] = int((d["chapter_extractions"] as Dictionary)[key])
+	m.boss_kills = int(d.get("boss_kills", 0))
+	m.battles_won = int(d.get("battles_won", 0))
+	for id in d.get("seen_rules", []):
+		m.seen_rules.append(StringName(String(id)))
 	for row in d.get("history", []):
 		if row is Dictionary:
 			m.history.append(MapGraph.normalize(row))

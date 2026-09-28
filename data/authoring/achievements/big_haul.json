@@ -1,0 +1,14 @@
+{
+  "id": "big_haul",
+  "display_name": "满载而归",
+  "display_names": {
+    "en": "Big Haul"
+  },
+  "description": "一局背出价值 300 币以上的东西。解锁进阶难度。",
+  "order": 3,
+  "kind": "best_value",
+  "amount": 300,
+  "grants": [
+    "ascension_1"
+  ]
+}

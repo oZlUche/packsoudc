@@ -28,6 +28,8 @@ var node_tooltips_preview: bool = false
 var language: String = "zh"
 ## 089：当前用的存档位（1～3）
 var save_slot: int = 1
+## 091（作者定 10.2 第 4 条）：老手的「全部解锁」—— 章节 / 难度 / 道具不看解锁；代价是成就不计
+var unlock_all: bool = false
 
 
 func to_dict() -> Dictionary:
@@ -40,6 +42,7 @@ func to_dict() -> Dictionary:
 		"node_tooltips_preview": node_tooltips_preview,
 		"language": language,
 		"save_slot": save_slot,
+		"unlock_all": unlock_all,
 	}
 
 
@@ -56,6 +59,7 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	var lang := String(d.get("language", "zh"))
 	s.language = lang if UiText.LANGS.has(lang) else "zh"
 	s.save_slot = clampi(int(d.get("save_slot", 1)), 1, SaveSlots.COUNT)
+	s.unlock_all = bool(d.get("unlock_all", false))
 	return s
 
 

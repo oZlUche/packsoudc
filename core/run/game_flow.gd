@@ -31,6 +31,8 @@ var loadouts: Array[LoadoutDef] = []
 var characters: Array[CharacterDef] = []
 ## 全部进阶难度（069），按档位排；空 = 只有普通
 var difficulties: Array[DifficultyDef] = []
+## 091：成就的定义（按 order 排）。什么时候算见 [method check_achievements]
+var achievement_defs: Array[AchievementDef] = []
 ## 全部猎手定义（id → HunterDef，069 / 071）；猎手机制按它造猎手
 var hunter_defs: Dictionary = {}
 ## 信仰定义（8-4）：id → FaithDef，给名字与说明用；机制只看标签（[FaithState]）
@@ -323,6 +325,100 @@ func take_notes() -> Array[String]:
 	return out
 
 
+#region 成就与解锁（091）
+## 看有没有新完成的成就：完成了记进局外、给它许诺的解锁、攒一句通知；改了就存。返回新完成的。
+## 「全部解锁」开着不计（作者定 10.2 第 4 条）；一局结算之后与读档之后各算一次
+func check_achievements() -> Array[AchievementDef]:
+	var got: Array[AchievementDef] = []
+	if meta == null or (settings != null and settings.unlock_all):
+		return got
+	for def in achievement_defs:
+		if def == null or meta.has_achievement(def.id) or not def.is_met(meta):
+			continue
+		meta.complete_achievement(def.id)
+		var opened: Array[String] = []
+		for g in def.grants:
+			meta.grant_unlock(g)
+			opened.append_array(unlock_names(g))
+		_notes.append("成就达成【%s】%s" % [Names.of(def), "：解锁 " + "、".join(opened) if not opened.is_empty() else ""])
+		got.append(def)
+	if not got.is_empty():
+		save_meta()
+	return got
+
+
+func achievement_of(id: StringName) -> AchievementDef:
+	for def in achievement_defs:
+		if def.id == id:
+			return def
+	return null
+
+
+## 哪一枚成就给这个解锁 id；没有 null
+func achievement_granting(unlock_id: StringName) -> AchievementDef:
+	for def in achievement_defs:
+		if def.grants.has(unlock_id):
+			return def
+	return null
+
+
+## 这个解锁 id 开的是什么（成就页写「解锁：道具 X、地图 Y、难度 Z」）
+func unlock_names(unlock_id: StringName) -> Array[String]:
+	var out: Array[String] = []
+	if items != null:
+		for id in items.all_ids():
+			var def := items.get_def(id)
+			if def.requires_unlock == unlock_id:
+				out.append("道具「%s」" % Names.of(def))
+	for c in chapters:
+		if c.requires_unlock == unlock_id:
+			out.append("地图「%s」" % Names.of(c))
+	for d in difficulties:
+		if d.requires_unlock == unlock_id:
+			out.append("难度「%s」" % Names.of(d))
+	return out
+
+
+## 现在锁着的道具（requires_unlock 还没解锁）
+func locked_item_ids() -> Array:
+	var out: Array = []
+	if items == null:
+		return out
+	for id in items.gated_ids():
+		if not unlocked(items.get_def(id).requires_unlock):
+			out.append(id)
+	return out
+
+
+## 把锁着的道具设进道具库（搜索 / 掉落 / 商店 / 敌人的池都从 ids() 拿）。开局前调；设置改了也调
+func apply_item_locks() -> void:
+	if items != null:
+		items.set_locked(locked_item_ids())
+
+
+## 091：老手的「全部解锁」开关。返回现在开没开
+func toggle_unlock_all() -> bool:
+	if settings == null:
+		return false
+	settings.unlock_all = not settings.unlock_all
+	save_settings()
+	apply_item_locks()
+	return settings.unlock_all
+
+
+## 091（10.2 第 3 条）：这一局的章节有「本图规则」卡、而且还没看过 → 地图屏第一次打开时弹
+func rules_card_pending() -> bool:
+	return run != null and run.chapter != null and not run.chapter.rules.is_empty() and meta != null and not meta.has_seen_rules(run.chapter.id)
+
+
+func mark_rules_seen() -> void:
+	if run == null or run.chapter == null or meta == null:
+		return
+	meta.mark_rules_seen(run.chapter.id)
+	save_meta()
+#endregion
+
+
 ## 仓库空的第一局发第一套（[MetaRules.first_kit]，058 第六节的占位；正式游戏由教程关发）。发了返回件数，否则 0
 func grant_first_kit() -> int:
 	if meta == null or meta_rules == null or meta_rules.first_kit == &"" or items == null:
@@ -361,11 +457,20 @@ func difficulty_of(id: StringName) -> DifficultyDef:
 	return null
 
 
+## 091：这个解锁 id 现在算不算解锁了 —— 空 = 一直开着；设置里「全部解锁」开着什么都算；否则看局外
+func unlocked(id: StringName) -> bool:
+	if id == &"":
+		return true
+	if settings != null and settings.unlock_all:
+		return true
+	return meta != null and meta.has_unlock(id)
+
+
 ## 这个玩家现在能选的难度：没有解锁要求的，和已解锁的（作者：局外解锁的特殊选项）
 func available_difficulties() -> Array[DifficultyDef]:
 	var out: Array[DifficultyDef] = []
 	for d in difficulties:
-		if d.requires_unlock == &"" or (meta != null and meta.has_unlock(d.requires_unlock)):
+		if unlocked(d.requires_unlock):
 			out.append(d)
 	return out
 
@@ -375,8 +480,8 @@ func available_chapters() -> Array[ChapterDef]:
 	var out: Array[ChapterDef] = []
 	for c in chapters:
 		if c.hidden_by_unlock != &"" and meta != null and meta.has_unlock(c.hidden_by_unlock):
-			continue     # 084：通关了的教程收起
-		if c.requires_unlock == &"" or (meta != null and meta.has_unlock(c.requires_unlock)):
+			continue     # 084：通关了的教程收起（只看真解锁：「全部解锁」不该把教程藏掉）
+		if unlocked(c.requires_unlock):
 			out.append(c)
 	if out.is_empty():
 		out = chapters.duplicate()
@@ -469,8 +574,9 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 		if inst != null and inst.def != null:
 			kit.append(inst.def.id)
 			taken.append(inst)
-	if difficulty != null and difficulty.requires_unlock != &"" and not meta.has_unlock(difficulty.requires_unlock):
+	if difficulty != null and not unlocked(difficulty.requires_unlock):
 		return null     # 没解锁的难度开不了（界面本来就不列，这里是兜底）
+	apply_item_locks()     # 091：成就还没开的道具这一局不出现
 	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale)
 	if state == null:
 		return null
@@ -555,6 +661,7 @@ func _settle_run() -> void:
 		# 083：撤离成功给这一章许诺的局外解锁（序章通关开第一章）
 		if result.is_extracted() and run != null and run.chapter != null and run.chapter.grants_unlock != &"":
 			meta.grant_unlock(run.chapter.grants_unlock)
+		check_achievements()     # 091：这一局的账记完了，看成就
 		MetaSave.write(meta, meta_path)
 		RunSave.remove(save_path)
 #endregion
@@ -889,6 +996,17 @@ static func load_difficulties() -> Array[DifficultyDef]:
 			out.append(res)
 	out.sort_custom(func(a: DifficultyDef, b: DifficultyDef) -> bool:
 		return a.level < b.level if a.level != b.level else String(a.id) < String(b.id))
+	return out
+
+
+## 091：成就，按 order 再按 id 排
+static func load_achievements() -> Array[AchievementDef]:
+	var out: Array[AchievementDef] = []
+	for res in _load_dir(ContentPaths.ACHIEVEMENTS):
+		if res is AchievementDef:
+			out.append(res)
+	out.sort_custom(func(a: AchievementDef, b: AchievementDef) -> bool:
+		return a.order < b.order if a.order != b.order else String(a.id) < String(b.id))
 	return out
 
 

@@ -3,6 +3,7 @@ extends GameScreen
 
 var _auto_close_btn: Button = null
 var _tooltip_btn: Button = null
+var _unlock_all_btn: Button = null
 var _mode_btns: Dictionary = {}
 var _rarity_spin: SpinBox
 var _value_spin: SpinBox
@@ -62,6 +63,13 @@ func open(_payload: Dictionary) -> void:
 	_tooltip_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	col.add_child(_tooltip_btn)
 	col.add_child(HSeparator.new())
+	col.add_child(_label("老手", 15, UiPalette.DIM))
+	col.add_child(_wrapped("全部解锁：章节、难度、道具不看解锁，直接全开；代价是成就不计（091）。", 12, UiPalette.DIM, 500))
+	_unlock_all_btn = _button("全部解锁", toggle_unlock_all, 14, UiPalette.Tier.MINOR)
+	_unlock_all_btn.toggle_mode = true
+	_unlock_all_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	col.add_child(_unlock_all_btn)
+	col.add_child(HSeparator.new())
 	col.add_child(_button("返回" if back.is_valid() else "回主菜单", go_back, 14))
 	_refresh()
 
@@ -85,6 +93,12 @@ func toggle_node_tooltips_preview() -> void:
 func toggle_loot_auto_close() -> void:
 	flow.settings.loot_auto_close = not flow.settings.loot_auto_close
 	flow.save_settings()
+	_refresh()
+
+
+## 091：老手的「全部解锁」开关（成就不计）
+func toggle_unlock_all() -> void:
+	flow.toggle_unlock_all()
 	_refresh()
 
 
@@ -114,6 +128,9 @@ func _refresh() -> void:
 		_auto_close_btn.text = "拿走最后一件后自动关闭：%s" % ("开" if flow.settings.loot_auto_close else "关（手动关）")
 	for m in _mode_btns:
 		(_mode_btns[m] as Button).set_pressed_no_signal(flow.settings.storage_warn_mode == m)
+	if _unlock_all_btn != null:
+		_unlock_all_btn.set_pressed_no_signal(flow.settings.unlock_all)
+		_unlock_all_btn.text = "全部解锁：%s" % ("开（章节 / 难度 / 道具全开，成就不计）" if flow.settings.unlock_all else "关")
 
 
 ## 090：Esc = 返回上一级（同「返回 / 回主菜单」按钮）

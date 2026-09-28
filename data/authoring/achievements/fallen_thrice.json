@@ -1,0 +1,12 @@
+{
+  "id": "fallen_thrice",
+  "display_name": "屡败屡战",
+  "display_names": {
+    "en": "Down but Not Out"
+  },
+  "description": "战败三次。",
+  "hidden": true,
+  "order": 7,
+  "kind": "deaths",
+  "amount": 3
+}

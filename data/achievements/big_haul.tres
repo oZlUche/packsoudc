@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AchievementDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/achievement_def.gd" id="1_afvr4"]
+
+[resource]
+script = ExtResource("1_afvr4")
+id = &"big_haul"
+display_name = "满载而归"
+display_names = {
+"en": "Big Haul"
+}
+description = "一局背出价值 300 币以上的东西。解锁进阶难度。"
+order = 3
+kind = &"best_value"
+amount = 300
+grants = Array[StringName]([&"ascension_1"])

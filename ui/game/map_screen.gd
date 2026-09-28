@@ -30,12 +30,17 @@ var _pending_step: int = -1
 ## 090（作者定）：地图上按 Esc 呼出的暂停菜单（继续 / 设置 / 存档并回主菜单）；设置嵌在它里面，返回回暂停菜单、一局还在
 var _pause: Control = null
 var _pause_settings: Control = null
+## 091（作者定 10.2 第 3 条）：「本图规则」卡 —— 第一次进这一章弹出来（局外记住看过了），暂停菜单里能再看
+var _rules: Control = null
+var _rules_first: bool = false
 
 
 func open(_payload: Dictionary) -> void:
 	_run = flow.run
 	_build()
 	_adopt()
+	if flow.rules_card_pending():
+		show_rules(true)     # 091：第一次进这一章：本图规则卡
 
 
 func refresh() -> void:
@@ -220,7 +225,7 @@ func bag_open() -> bool:
 
 ## 084：还没走，重新打开这个点的最后一个界面（没拿完的战利品 / 还开着的搜索或商店 / 等着的事件或一场）。没有可开的返回 false
 func reopen() -> bool:
-	if _bag != null or _confirm != null or _step_confirm != null or _pause != null:
+	if _bag != null or _confirm != null or _step_confirm != null or _pause != null or _rules != null:
 		return false
 	var ok := flow.reopen_node()
 	if not ok:
@@ -235,6 +240,9 @@ func can_reopen() -> bool:
 ## 090（作者定）：Esc —— 开着什么就关什么（暂停菜单里的设置 → 暂停菜单 → 走前提醒 / 撤离确认 → 背包）；
 ## 什么都没开着就呼出暂停菜单。地图上的 Esc 总有事做
 func escape() -> bool:
+	if _rules != null:
+		close_rules()
+		return true
 	if _pause_settings != null:
 		close_pause_settings()
 		return true
@@ -278,6 +286,8 @@ func toggle_pause() -> void:
 	col.add_child(_wrapped("一局还在：搜索 / 商店 / 没拿完的战利品都留在原地", 12, UiPalette.DIM, 360))
 	col.add_child(_button("继续（Esc）", toggle_pause, 14, UiPalette.Tier.PRIMARY))
 	col.add_child(_button("设置", pause_settings, 14))
+	if _run != null and _run.chapter != null and not _run.chapter.rules.is_empty():
+		col.add_child(_button("本图规则", func(): show_rules(), 14))     # 091：再看一遍规则卡
 	col.add_child(_button("存档并回主菜单", func(): flow.save_and_quit(), 14))
 
 
@@ -307,6 +317,45 @@ func close_pause_settings() -> void:
 
 func settings_open() -> bool:
 	return _pause_settings != null
+
+
+## 091：「本图规则」卡：章节写的 ≤ 3 条，一页；[param first] = 第一次进这一章弹的（关掉时记住看过了）
+func show_rules(first: bool = false) -> void:
+	if _rules != null or _run == null or _run.chapter == null or _run.chapter.rules.is_empty():
+		return
+	_rules_first = first
+	var shade := ColorRect.new()
+	shade.color = Color(0.04, 0.05, 0.07, 0.72)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(shade)
+	_rules = shade
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.add_child(center)
+	var panel := _panel(28)
+	center.add_child(panel)
+	var col := _vbox(12)
+	panel.add_child(col)
+	col.add_child(_label("本图规则　%s" % Names.of(_run.chapter), 24, UiPalette.FG))
+	for i in _run.chapter.rules.size():
+		col.add_child(_wrapped("%d. %s" % [i + 1, _run.chapter.rules[i]], 15, UiPalette.FG, 560))
+	col.add_child(_wrapped("暂停菜单（Esc）里能再看", 12, UiPalette.DIM, 560))
+	col.add_child(_button("知道了（Esc）", close_rules, 14, UiPalette.Tier.PRIMARY))
+
+
+func close_rules() -> void:
+	if _rules == null:
+		return
+	_rules.queue_free()
+	_rules = null
+	if _rules_first:
+		_rules_first = false
+		flow.mark_rules_seen()
+
+
+func rules_open() -> bool:
+	return _rules != null
 #endregion
 
 
@@ -476,7 +525,7 @@ func _after_move() -> void:
 
 
 func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
-	if button != MOUSE_BUTTON_LEFT or _bag != null or _confirm != null or _step_confirm != null or _pause != null:
+	if button != MOUSE_BUTTON_LEFT or _bag != null or _confirm != null or _step_confirm != null or _pause != null or _rules != null:
 		return
 	if _run.phase == RunState.Phase.PICK_SPAWN:
 		if not pick_spawn(id):
@@ -754,7 +803,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	match key.keycode:
 		KEY_B:
-			if _confirm == null and _step_confirm == null and _pause == null:
+			if _confirm == null and _step_confirm == null and _pause == null and _rules == null:
 				toggle_bag()
 		KEY_N:
 			reopen()

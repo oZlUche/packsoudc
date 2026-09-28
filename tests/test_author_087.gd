@@ -734,7 +734,7 @@ static func run_spyglass_and_codex(t: TestCase) -> void:
 	t.eq(screen.tab(), "codex", "切到图鉴页")
 	t.check(screen._pages["codex"].visible and not screen._pages["warehouse"].visible, "只显示图鉴页")
 	var tiles: Array = screen.codex_tiles()
-	t.eq(tiles.size(), c.items.ids().size() + c.items.keepsake_ids().size(), "每件能获得的道具 + 特殊道具各一格缩略图（089）")
+	t.eq(tiles.size(), c.items.ids(true).size() + c.items.keepsake_ids().size(), "每件能获得的道具（含 091 锁着的）+ 特殊道具各一格缩略图（089）")
 	var lit_n := 0
 	var knife_tile: CodexTile = null
 	var spy_tile: CodexTile = null

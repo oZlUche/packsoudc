@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="AchievementDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/achievement_def.gd" id="1_ibebf"]
+
+[resource]
+script = ExtResource("1_ibebf")
+id = &"first_extract"
+display_name = "第一次回来"
+display_names = {
+"en": "First Extraction"
+}
+description = "从诅咒之地撤离一次。"
+order = 1
+grants = Array[StringName]([&"ach_first_extract"])

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.95 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.96 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3524,6 +3524,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.96 | 2026-09-28 | **成就系统**（报告 091 十一）：内容种类 `achievements`（`AchievementDef`：条件种类 + 数 / 对象、`grants` 解锁 id、途径文字、隐藏）；`ItemDef.requires_unlock` + `ItemDatabase.set_locked / ids(include_locked)` 道具上锁；`MetaState.achievements / chapter_extractions / boss_kills / battles_won / seen_rules`，`RunResult.boss_cleared`；`GameFlow.check_achievements`（结算后、读档后）/ `unlocked` / `locked_item_ids` / `apply_item_locks` / `unlock_names`；基地第三页签「成就」（全部 / 已解锁 / 未解锁）；**本图规则卡** `ChapterDef.rules`（首次进图弹、暂停菜单再看）；**全部解锁** `GameSettings.unlock_all`（成就不计） |
 | v1.95 | 2026-09-27 | **开局屏暂存区**（报告 090）：带回来的没置入的进开局屏时挪进暂存区（`setup_screen` `stash` / `_pending` / `_build_stash` / `_allow_drop` / `store` / `_restore_pending`），拖上包 = 带上、拖进仓库 = 置入、留着的出发就没了、回主菜单原样放回；`GameFlow.can_begin()` 不再因没清空而拦、`pending_hint()` 只提示、`begin()` 清掉带回来的棋盘；基地屏 / 仓库面板提示改；**悬浮窗侧窗不再压主窗**（`HoverTip._place` 主窗 + 词条列当一组摆、按真正的视口算）；**按钮三档**（`UiPalette.Tier` / `style_button`，`GameScreen._button(…, tier)`：300% / 200% / 150%，琥珀 / 蓝灰 / 深底）、地图右栏三键 300% 竖排；**Esc 通用返回**（`GameDirector.escape()` → `GameScreen.escape()`：叠层收起；地图关对话框 / 背包、都没开着呼出**暂停菜单**（继续 / 设置嵌入 / 存档并回主菜单）；基地图鉴页 → 仓库页 → 主菜单逐级；设置 / 读取存档回主菜单）；**点当前节点恢复收起的界面** |
 | v1.94 | 2026-09-27 | **三个存档位**（报告 089）：`SaveSlots`（`user://slots/<n>/`，老存档搬进第 1 位）、`GameSettings.save_slot`、`GameFlow.slots / use_slot / profile_exists / continue_game / start_new_game / new_game_in / load_slot / delete_slot`、`Screen.SLOTS` 读取存档屏；主菜单顺序 继续 → 读取存档 → 新的游戏；**图鉴缩略图网格**（`CodexTile`，每行 8 个可滚，没获得的灰的，悬浮窗） |
 | v1.93 | 2026-09-26 | 报告 088 第 16 条：**战败代价跟战斗绑定**（`NodeEvents.LOSS_DEFAULT / LOSS_DEATH`，`_battle_at` / `fight_content` / `_fight` 带 `loss_cost`，`loss_cost_for` 参数 → 节点内容 → 核心必死 → 规则表；跟 `pending_battle` 存；`HunterDef.loss_cost`；战败原因 `fatal_loss`） |

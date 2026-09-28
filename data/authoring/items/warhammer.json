@@ -16,6 +16,7 @@
     "melee",
     "burst"
   ],
+  "requires_unlock": "ach_first_extract",
   "combat": {
     "base_stats": {
       "damage": 30

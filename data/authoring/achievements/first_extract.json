@@ -1,0 +1,12 @@
+{
+  "id": "first_extract",
+  "display_name": "第一次回来",
+  "display_names": {
+    "en": "First Extraction"
+  },
+  "description": "从诅咒之地撤离一次。",
+  "order": 1,
+  "grants": [
+    "ach_first_extract"
+  ]
+}

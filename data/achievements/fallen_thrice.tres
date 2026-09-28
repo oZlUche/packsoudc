@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AchievementDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/achievement_def.gd" id="1_1u6i7"]
+
+[resource]
+script = ExtResource("1_1u6i7")
+id = &"fallen_thrice"
+display_name = "屡败屡战"
+display_names = {
+"en": "Down but Not Out"
+}
+description = "战败三次。"
+hidden = true
+order = 7
+kind = &"deaths"
+amount = 3

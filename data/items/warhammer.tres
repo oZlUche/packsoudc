@@ -57,4 +57,5 @@ shape = SubResource("Resource_ysrwp")
 rarity = 1
 value = 30
 tags = Array[StringName]([&"weapon", &"melee", &"burst"])
+requires_unlock = &"ach_first_extract"
 combat = SubResource("Resource_dy07x")

@@ -28,6 +28,8 @@ var value: int = 0
 ## 暂存区里遗落的件数与价值（撤离时才有意义）
 var left_behind: int = 0
 var left_value: int = 0
+## 091：这一局击败了核心（BOSS）没有 —— 成就的条件看它
+var boss_cleared: bool = false
 
 
 ## 结束了的一局才算得出账；没结束返回 null
@@ -47,6 +49,7 @@ static func settle(state: RunState) -> RunResult:
 	r.battles_won = int(state.tally.get("battles_won", 0))
 	r.battles_lost = int(state.tally.get("battles_lost", 0))
 	r.board_size = state.board.size if state.board != null else Vector2i.ZERO
+	r.boss_cleared = state.boss_cleared
 	if r.outcome == &"extracted":
 		r.balance = state.wallet.balance if state.wallet != null else 0
 		for inst in state.board.items():

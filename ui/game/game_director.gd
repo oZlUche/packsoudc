@@ -63,6 +63,7 @@ func _ready() -> void:
 	flow.hunter_defs = GameFlow.load_hunters()
 	flow.faith_defs = GameFlow.load_faiths()
 	flow.recipes = GameFlow.load_recipes()
+	flow.achievement_defs = GameFlow.load_achievements()     # 091
 	# 校准记录（073）：正式游戏每走一步记一份玩家配置到 user://calibration/，木桩工具吃它
 	flow.recorder = CalibrationRecorder.new()
 	flow.save_path = save_path
@@ -79,6 +80,8 @@ func _ready() -> void:
 	# 没有角色定义时的兜底基线（角色路上基线来自 CharacterDef，067）
 	flow.player_baseline = CombatantBaseline.with_hp(60.0)
 	flow.screen_changed.connect(_on_screen_changed)
+	flow.check_achievements()     # 091：读档后补算（老存档、新加的成就）
+	flow.apply_item_locks()
 	flow.to_main_menu()
 
 

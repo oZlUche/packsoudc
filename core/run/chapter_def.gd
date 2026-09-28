@@ -60,6 +60,8 @@ extends Resource
 @export var skip_setup: bool = false
 ## 开局先过的事件（intro）：站到出生点之后、地图能动之前弹一屏事件（`data/events/` 里的 id）。空 = 不弹
 @export var intro_event: StringName = &""
+## 091（作者定 10.2 第 3 条）：这一章的「本图规则」卡（≤ 3 条）—— 第一次进图弹一页（局外记住看过了），暂停菜单里能再看。空 = 不弹
+@export var rules: Array[String] = []
 
 @export_group("节点浮窗（084，第二章开放）")
 ## 鼠标移到节点上显示浮窗（敌人数据与背包 / 用过了 / 可能发生什么 / 值得搜）。默认关 —— 正式的开法是拿到带 `node_tooltips` 标签的

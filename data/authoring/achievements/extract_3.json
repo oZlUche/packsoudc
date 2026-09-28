@@ -1,0 +1,13 @@
+{
+  "id": "extract_3",
+  "display_name": "老手",
+  "display_names": {
+    "en": "Veteran"
+  },
+  "description": "撤离三次。",
+  "order": 2,
+  "amount": 3,
+  "grants": [
+    "ach_extract_3"
+  ]
+}

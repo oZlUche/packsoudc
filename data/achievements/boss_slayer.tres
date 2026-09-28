@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AchievementDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/achievement_def.gd" id="1_8wan8"]
+
+[resource]
+script = ExtResource("1_8wan8")
+id = &"boss_slayer"
+display_name = "直捣核心"
+display_names = {
+"en": "Core Breaker"
+}
+description = "击败一次核心（BOSS）。"
+order = 4
+kind = &"boss_kills"
+grants = Array[StringName]([&"ach_boss"])

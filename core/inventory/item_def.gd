@@ -95,6 +95,9 @@ func faith_tag() -> StringName:
 ## 这些是「通用效果」）。保留的只丢信力加成、邻接与套装；不保留 = 彻底失效（护符这类只靠信仰起作用的东西写 false）。
 ## 没有 combat 的道具这个开关无意义（本来就没有通用效果）
 @export var dormant_keeps_combat: bool = true
+## 091（作者定）：局外解锁 id（成就给的）；没解锁就不出现在搜索 / 掉落 / 商店 / 敌人的池里（[method ItemDatabase.ids] 拦），
+## 图鉴里灰着写「未解锁」。空 = 一直可得。指名给的（事件 give_item、敌人招牌）不受它管
+@export var requires_unlock: StringName = &""
 
 @export_group("战斗")
 ## 战斗定义。为空表示本物品不参战（纯素材、纯包体）。

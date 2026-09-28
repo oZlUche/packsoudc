@@ -1,0 +1,11 @@
+{
+  "id": "collector_10",
+  "display_name": "收藏家",
+  "display_names": {
+    "en": "Collector"
+  },
+  "description": "图鉴点亮 10 种道具（撤离成功时背包里的会点亮）。",
+  "order": 5,
+  "kind": "codex_count",
+  "amount": 10
+}

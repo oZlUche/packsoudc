@@ -287,3 +287,4 @@ node_rules = &"standard"
 economy_rules = &"standard"
 order = 2
 requires_unlock = &"prologue2_done"
+rules = Array[String](["环形的魔法古迹：从外环的出生点进去，越往里越危险、也越值钱。", "撤离点只在外面几环；核心在最里面，打赢了直接撤离结算。", "走出一个点，那里的暂存区留在原地，能回来拿；撤离时只带走棋盘上的。"])

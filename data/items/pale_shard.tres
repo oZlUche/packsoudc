@@ -20,3 +20,4 @@ shape = SubResource("Resource_ekf2i")
 rarity = 4
 value = 800
 tags = Array[StringName]([&"treasure", &"relic"])
+requires_unlock = &"ach_boss"

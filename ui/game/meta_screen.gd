@@ -19,6 +19,12 @@ var _tab: String = ""
 ## 图鉴页的缩略图与它的悬浮窗
 var _codex_tiles: Array[CodexTile] = []
 var _codex_tip: HoverTip = null
+## 091：成就页的筛选（"all" / "done" / "todo"）、列表与现在列着的行
+var _ach_filter: String = "all"
+var _ach_filter_btns: Dictionary = {}
+var _ach_list: VBoxContainer = null
+var _ach_hint: Label = null
+var _ach_rows: Array = []
 
 
 func open(payload: Dictionary) -> void:
@@ -36,7 +42,7 @@ func open(payload: Dictionary) -> void:
 	var head := _hbox(16)
 	root.add_child(head)
 	head.add_child(_label("基地", 26, UiPalette.FG))
-	for pair in [["warehouse", "仓库"], ["codex", "图鉴"]]:
+	for pair in [["warehouse", "仓库"], ["codex", "图鉴"], ["achievements", "成就"]]:
 		var key: String = pair[0]
 		var b := _button(pair[1], func(): show_tab(key), 16)
 		b.toggle_mode = true
@@ -47,7 +53,7 @@ func open(payload: Dictionary) -> void:
 		root.add_child(_wrapped("刚才这一局：%s" % ("撤离，背出来 %d 件、值 %d 币、带出 %d 币" % [just.carried.size(), just.value, just.balance]
 			if just.is_extracted() else "战败，什么都没带出来"), 13, UiPalette.HEAL if just.is_extracted() else UiPalette.HP, 700))
 	root.add_child(_label("%d 局　撤离 %d　战败 %d　累计价值 %d　单局最高 %d　钱 %d　图鉴 %d / %d" % [
-		m.runs, m.extractions, m.deaths, m.score, m.best_value, m.funds, m.codex.size(), flow.items.ids().size()], 14, UiPalette.FG))
+		m.runs, m.extractions, m.deaths, m.score, m.best_value, m.funds, m.codex.size(), flow.items.ids(true).size()], 14, UiPalette.FG))
 	var buttons := _hbox(8)
 	_new_run_btn = _button("再来一局", flow.new_run, 16, UiPalette.Tier.PRIMARY)
 	buttons.add_child(_new_run_btn)
@@ -129,10 +135,116 @@ func open(payload: Dictionary) -> void:
 		log.append_text("[color=#8b93a1]还没有打过[/color]")
 	right.add_child(log)
 
-	# 图鉴页
+	# 图鉴页、成就页（091）
 	_pages["codex"] = _build_codex(root)
+	_pages["achievements"] = _build_achievements(root)
 	show_tab(String(payload.get("tab", "warehouse")))
 	_refresh()
+
+
+#region 成就页（091，作者定）
+## 成就页：每枚一行 —— 名字、解锁途径、进度、完成给什么；「全部 / 已解锁 / 未解锁」切
+func _build_achievements(root: Control) -> Control:
+	var page := _vbox(8)
+	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(page)
+	var head := _hbox(8)
+	page.add_child(head)
+	head.add_child(_label("成就　完成了给解锁（道具 / 地图 / 难度）；途径写在每一条上", 15, UiPalette.DIM))
+	for pair in [["all", "全部"], ["done", "已解锁"], ["todo", "未解锁"]]:
+		var key: String = pair[0]
+		var b := _button(pair[1], func(): show_achievement_filter(key), 13, UiPalette.Tier.MINOR)
+		b.toggle_mode = true
+		_ach_filter_btns[key] = b
+		head.add_child(b)
+	_ach_hint = _label("", 12, UiPalette.STAMINA)
+	page.add_child(_ach_hint)
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.custom_minimum_size.y = 300
+	page.add_child(scroll)
+	_ach_list = _vbox(8)
+	_ach_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_ach_list)
+	show_achievement_filter("all")
+	return page
+
+
+## 切「全部 / 已解锁 / 未解锁」（"all" / "done" / "todo"）并重列
+func show_achievement_filter(key: String) -> void:
+	if not _ach_filter_btns.has(key):
+		key = "all"
+	_ach_filter = key
+	for k in _ach_filter_btns:
+		(_ach_filter_btns[k] as Button).set_pressed_no_signal(k == key)
+	_fill_achievements()
+
+
+func achievement_filter() -> String:
+	return _ach_filter
+
+
+## 现在列着的：[{id, done}]（测试看）
+func achievement_rows() -> Array:
+	return _ach_rows.duplicate()
+
+
+func _fill_achievements() -> void:
+	if _ach_list == null:
+		return
+	for c in _ach_list.get_children():
+		_ach_list.remove_child(c)
+		c.queue_free()
+	_ach_rows.clear()
+	var m := flow.meta
+	var total := flow.achievement_defs.size()
+	var done_n := 0
+	for def in flow.achievement_defs:
+		if m.has_achievement(def.id):
+			done_n += 1
+	if _ach_hint != null:
+		_ach_hint.text = ("全部解锁开着：成就不计　" if flow.settings != null and flow.settings.unlock_all else "") + "完成 %d / %d" % [done_n, total]
+	if total == 0:
+		_ach_list.add_child(_label("（没有成就的内容：data/authoring/achievements/）", 12, UiPalette.DIM))
+		return
+	for def in flow.achievement_defs:
+		var done := m.has_achievement(def.id)
+		if _ach_filter == "done" and not done or _ach_filter == "todo" and done:
+			continue
+		_ach_rows.append({"id": def.id, "done": done})
+		_ach_list.add_child(_achievement_row(def, done))
+	if _ach_rows.is_empty():
+		_ach_list.add_child(_label("（这一栏空着）", 12, UiPalette.DIM))
+
+
+func _achievement_row(def: AchievementDef, done: bool) -> Control:
+	var m := flow.meta
+	var panel := _panel(10)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var col := _vbox(4)
+	panel.add_child(col)
+	var secret := def.hidden and not done
+	var head := _hbox(12)
+	col.add_child(head)
+	head.add_child(_label(("？？？" if secret else Names.of(def)), 16, UiPalette.HEAL if done else UiPalette.FG))
+	var status := ""
+	if done:
+		var t := m.achievement_time(def.id)
+		status = "✓ 已完成" + ("　%s" % Time.get_date_string_from_unix_time(t) if t > 0 else "")
+	elif secret:
+		status = "未完成"
+	else:
+		status = "未完成　进度 %s" % def.progress_text(m)
+	head.add_child(_label(status, 13, UiPalette.HEAL if done else UiPalette.DIM))
+	col.add_child(_wrapped("途径：" + ("？？？" if secret else def.description), 13, UiPalette.FG, 700))
+	var opens: Array[String] = []
+	for g in def.grants:
+		opens.append_array(flow.unlock_names(g))
+		if flow.unlock_names(g).is_empty():
+			opens.append("解锁 %s" % g)
+	col.add_child(_wrapped("解锁：" + ("、".join(opens) if not opens.is_empty() else "无（只是一枚徽章）"), 12, UiPalette.DIM, 700))
+	return panel
+#endregion
 
 
 ## 088 / 089：图鉴页 —— 跟棋盘的格子无关：所有能获得的道具按稀有度排成**缩略图网格**（每行 CODEX_COLS 个，能上下滚），
@@ -142,7 +254,7 @@ func _build_codex(root: Control) -> Control:
 	var page := _vbox(8)
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(page)
-	var ids: Array = flow.items.ids()
+	var ids: Array = flow.items.ids(true)     # 091：锁着的也列（灰的，写着怎么解锁）
 	ids.sort_custom(func(a: StringName, b: StringName) -> bool:
 		var da := flow.items.get_def(a)
 		var db := flow.items.get_def(b)
@@ -200,6 +312,11 @@ func _on_tile_hovered(tile: CodexTile) -> void:
 	if tile.lit:
 		var full := ItemTooltip.describe_full(ItemInstance.create(tile.def, 0))
 		_codex_tip.show_text(String(full["text"]), at, null, full["terms"])
+	elif tile.def.requires_unlock != &"" and not flow.unlocked(tile.def.requires_unlock):
+		# 091：锁着的写怎么解锁（哪一枚成就）
+		var ach := flow.achievement_granting(tile.def.requires_unlock)
+		var how := "完成成就「%s」：%s" % [Names.of(ach), ach.description] if ach != null else "解锁 %s" % tile.def.requires_unlock
+		_codex_tip.show_text("[b]%s[/b]\n[color=#8b93a1]未解锁：%s[/color]" % [Names.of(tile.def), how], at)
 	else:
 		_codex_tip.show_text("[b]%s[/b]\n[color=#8b93a1]未获得：撤离成功时背包里的会点亮[/color]" % Names.of(tile.def), at)
 

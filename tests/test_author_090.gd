@@ -44,6 +44,95 @@ static func run_button_tiers(t: TestCase) -> void:
 	s.free()
 
 
+## 091（作者定）：成就走管线、条件与进度、完成给解锁、道具上锁、「全部解锁」开关（成就不计）、本图规则卡的记忆
+static func run_achievements(t: TestCase) -> void:
+	t.begin("091 · 成就：管线往返、条件与进度、完成给解锁开道具 / 难度、全部解锁开关、规则卡记住看过")
+	# 管线：作者文件是往返不动点、资产在
+	var dir: String = ContentPaths.KINDS["achievements"][0]
+	var files := 0
+	var d := DirAccess.open(dir)
+	if d != null:
+		for f in d.get_files():
+			if not f.ends_with(".json"):
+				continue
+			files += 1
+			var raw := FileAccess.get_file_as_string(dir + "/" + f)
+			var r := ImportReport.new()
+			var res := ContentImporter.import_achievement(JSON.parse_string(raw), ContentImporter.Context.new(), r)
+			t.check(r.ok(), "%s 导入没有错：%s" % [f, r.to_text()])
+			t.eq(ContentExporter.to_json(ContentExporter.export_achievement(res)), raw, "%s 是往返不动点" % f)
+			t.check(ResourceLoader.exists(ContentPaths.asset_file("achievements", f.get_basename())), "%s 的资产在" % f)
+	t.check(files >= 5, "至少五枚成就（%d）" % files)
+	var bad := ImportReport.new()
+	ContentImporter.import_achievement({"id": "x", "display_name": "x", "kind": "no_such"}, ContentImporter.Context.new(), bad)
+	t.check(not bad.ok(), "认不得的条件种类报错")
+	var bad2 := ImportReport.new()
+	ContentImporter.import_achievement({"id": "x", "display_name": "x", "kind": "keepsake"}, ContentImporter.Context.new(), bad2)
+	t.check(not bad2.ok(), "要对象的种类没写 target 报错")
+
+	var defs := GameFlow.load_achievements()
+	t.eq(defs.size(), files, "GameFlow.load_achievements 装回全部")
+	var c = NodeScreens._content()
+	_cleanup()
+	var flow := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
+	flow.chapters = [c.chapter] as Array[ChapterDef]
+	flow.difficulties = GameFlow.load_difficulties()
+	flow.achievement_defs = defs
+	flow.settings = GameSettings.new()
+	flow.save_path = SAVE
+	flow.meta_path = META
+	flow.settings_path = SETTINGS
+	# 锁着的道具
+	t.check(flow.locked_item_ids().has(&"warhammer") and flow.locked_item_ids().has(&"mithril_sword"), "战锤、秘银剑锁着（数据）")
+	flow.apply_item_locks()
+	t.check(not c.items.ids().has(&"warhammer") and c.items.ids(true).has(&"warhammer"), "ids() 不给锁着的，ids(true) 给")
+	t.check(c.items.is_locked(&"warhammer"), "道具库知道它锁着")
+	t.check(flow.check_achievements().is_empty(), "什么都没做：没有成就")
+	t.check(not flow.unlocked(&"ascension_1"), "进阶 1 还没解锁")
+	# 一次撤离：背出 350 币、还打掉了核心
+	var r := RunResult.new()
+	r.outcome = &"extracted"
+	r.chapter_id = c.chapter.id
+	r.value = 350
+	r.boss_cleared = true
+	r.battles_won = 4
+	flow.meta.absorb(r)
+	t.check(flow.meta.chapter_extractions_of(c.chapter.id) == 1 and flow.meta.boss_kills == 1 and flow.meta.battles_won == 4, "局外多记的数：按章撤离 / 核心 / 打赢")
+	var got := flow.check_achievements()
+	var ids: Array[StringName] = []
+	for a in got:
+		ids.append(a.id)
+	t.check(ids.has(&"first_extract") and ids.has(&"big_haul") and ids.has(&"boss_slayer"), "达成：第一次回来、满载而归、直捣核心（%s）" % str(ids))
+	t.check(not ids.has(&"extract_3"), "撤离三次还没到")
+	t.check(flow.meta.has_achievement(&"first_extract") and flow.meta.achievement_time(&"first_extract") > 0, "记进局外、有时刻")
+	t.check(flow.meta.has_unlock(&"ach_first_extract") and flow.unlocked(&"ascension_1"), "给了解锁：战锤的、进阶 1 的")
+	t.check(not flow.available_difficulties().filter(func(x: DifficultyDef) -> bool: return x.id == &"ascension_1").is_empty(), "进阶 1 能选了")
+	flow.apply_item_locks()
+	t.check(c.items.ids().has(&"warhammer") and not c.items.ids().has(&"mithril_sword"), "战锤开了、秘银剑还锁着")
+	t.check(flow.check_achievements().is_empty(), "不重复给")
+	t.check(not flow.take_notes().is_empty(), "攒了通知")
+	var ext3 := flow.achievement_of(&"extract_3")
+	t.check(ext3 != null and ext3.progress(flow.meta) == 1 and ext3.goal() == 3 and ext3.progress_text(flow.meta) == "1 / 3", "进度 1 / 3")
+	t.check(flow.achievement_granting(&"ach_extract_3") == ext3, "秘银剑的解锁归「老手」")
+	t.check(not flow.unlock_names(&"ach_extract_3").is_empty(), "解锁的名字：%s" % str(flow.unlock_names(&"ach_extract_3")))
+	# 存档往返
+	var back := MetaState.from_dict(flow.meta.to_dict(), c.items)
+	t.check(back.has_achievement(&"first_extract") and back.boss_kills == 1 and back.chapter_extractions_of(c.chapter.id) == 1, "成就与多记的数跟存档")
+	# 全部解锁：什么都算解锁、道具不锁、成就不计
+	flow.settings.unlock_all = true
+	t.check(flow.unlocked(&"no_such_unlock") and flow.locked_item_ids().is_empty(), "全部解锁：什么都算解锁、没有锁着的道具")
+	flow.meta.extractions = 3
+	t.check(flow.check_achievements().is_empty(), "全部解锁开着：成就不计")
+	flow.settings.unlock_all = false
+	t.eq(flow.check_achievements().size(), 1, "关掉再算：「老手」达成")
+	# 规则卡
+	t.check(not c.chapter.rules.is_empty() and c.chapter.rules.size() <= 3, "第一章写了本图规则（≤ 3 条）")
+	t.check(not flow.meta.has_seen_rules(c.chapter.id), "没看过")
+	flow.meta.mark_rules_seen(c.chapter.id)
+	t.check(flow.meta.has_seen_rules(c.chapter.id) and MetaState.from_dict(flow.meta.to_dict(), c.items).has_seen_rules(c.chapter.id), "看过了，跟存档")
+	_cleanup()
+
+
 static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	t.begin("090 · Esc 通用返回（叠层收起、地图关背包 / 对话框、设置回主菜单）；点当前节点恢复收起的界面；右栏按键 300%")
 	var c = NodeScreens._content()
@@ -70,6 +159,22 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	t.eq(flow.screen, GameFlow.Screen.MAIN_MENU, "→ 回主菜单")
 	flow.show_meta()
 	var meta = game.base()
+	# 091：成就页与筛选
+	meta.show_tab("achievements")
+	t.eq(meta.tab(), "achievements", "→ 成就页")
+	var all_n: int = meta.achievement_rows().size()
+	t.check(all_n >= 5 and all_n == flow.achievement_defs.size(), "「全部」列出每一枚（%d）" % all_n)
+	meta.show_achievement_filter("done")
+	t.check(meta.achievement_rows().is_empty(), "新档：「已解锁」空着")
+	meta.show_achievement_filter("todo")
+	t.eq(meta.achievement_rows().size(), all_n, "「未解锁」= 全部")
+	flow.meta.complete_achievement(&"first_extract")
+	meta.show_achievement_filter("done")
+	t.check(meta.achievement_rows().size() == 1 and meta.achievement_rows()[0]["id"] == &"first_extract", "完成一枚后「已解锁」有它")
+	meta.show_achievement_filter("todo")
+	t.eq(meta.achievement_rows().size(), all_n - 1, "「未解锁」少一枚")
+	meta.show_achievement_filter("all")
+	t.check(game.escape() and meta.tab() == "warehouse", "成就页 Esc 回仓库页")
 	meta.show_tab("codex")
 	t.check(game.escape() and meta.tab() == "warehouse" and flow.screen == GameFlow.Screen.META, "基地：图鉴页 Esc 先回仓库页")
 	t.check(game.escape() and flow.screen == GameFlow.Screen.MAIN_MENU, "仓库页再 Esc 回主菜单")
@@ -77,6 +182,15 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	flow.begin(c.chapter, kit, int(found["seed"]))
 	var map = game.base()
 	t.eq(map.screen, GameFlow.Screen.MAP, "→ 地图")
+	# 091：第一次进这一章弹「本图规则」卡；Esc 关掉并记住；暂停菜单里能再看
+	t.check(not c.chapter.rules.is_empty() and map.rules_open(), "第一次进这一章：本图规则卡弹出来")
+	t.check(game.escape() and not map.rules_open(), "Esc 关掉规则卡")
+	t.check(flow.meta.has_seen_rules(c.chapter.id), "记住看过了")
+	map.toggle_pause()
+	map.show_rules()
+	t.check(map.rules_open(), "暂停菜单里再看规则卡")
+	t.check(game.escape() and not map.rules_open() and map.pause_open(), "Esc 先关规则卡、暂停菜单还在")
+	map.toggle_pause()
 	t.eq(map._reopen_btn.get_theme_font_size("font_size"), 39, "右栏「回到这个点」300%（13 → 39）")
 	t.eq(map._extract_btn.get_theme_font_size("font_size"), 39, "右栏「撤离」300%")
 	t.eq(_bg(map._extract_btn), UiPalette.BTN_PRIMARY, "右栏按键是主动作色")

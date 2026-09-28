@@ -16,6 +16,7 @@
     "burst",
     "enchanted"
   ],
+  "requires_unlock": "ach_extract_3",
   "combat": {
     "base_stats": {
       "damage": 16

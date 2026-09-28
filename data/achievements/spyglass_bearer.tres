@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AchievementDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/achievement_def.gd" id="1_26ify"]
+
+[resource]
+script = ExtResource("1_26ify")
+id = &"spyglass_bearer"
+display_name = "看得更远"
+display_names = {
+"en": "Far Sight"
+}
+description = "拿到望远镜（走过序章二）。"
+order = 6
+kind = &"keepsake"
+target = &"spyglass"

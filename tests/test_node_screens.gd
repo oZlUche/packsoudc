@@ -382,6 +382,8 @@ static func frame_minimize_and_window(t: TestCase, root: Window) -> void:
 	flow.player_baseline = CombatantBaseline.with_hp(10000.0)
 	flow.begin(c.chapter, kit, int(found["seed"]))
 	var map = game.base()
+	if map.rules_open():
+		map.close_rules()     # 091：第一次进这一章弹的本图规则卡，这条测的不是它
 	map.pick_spawn(int(found["entry"]))
 	t.check(map.step(int(found["next"])), "走上搜索点")
 	if game.overlay() != null and game.overlay().screen == GameFlow.Screen.EVENT:

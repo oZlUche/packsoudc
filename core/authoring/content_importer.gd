@@ -115,6 +115,13 @@ class Context:
 		if def != null and def.id != &"":
 			events[def.id] = def
 
+	## id -> AchievementDef（091）
+	var achievements: Dictionary = {}
+
+	func register_achievement(def: AchievementDef) -> void:
+		if def != null and def.id != &"":
+			achievements[def.id] = def
+
 	## 道具里带某个标签的有几件。批量导入时才有意义 —— 单独导一个敌人时上下文是空的，
 	## 这类「对着别的东西查」的校验就跳过（见 _validate_enemy）
 	func items_tagged(tag: StringName) -> int:
@@ -381,6 +388,31 @@ static func import_difficulty(data: Dictionary, ctx: Context, report: ImportRepo
 		elif e.scope() != EffectScope.LOOT and e.scope() != EffectScope.RUN:
 			report.error("effects[%d]" % i, "难度的 effects 只放掉落或一局规则的效果")
 	ctx.register_difficulty(def)
+	return def
+
+
+## 成就（091）：种类得认识；要对象的种类得写 target；数至少 1；对象是道具的批量导入时对着道具库查
+static func import_achievement(data: Dictionary, ctx: Context, report: ImportReport) -> AchievementDef:
+	var def := AchievementDef.new()
+	_fill(def, data, "", ctx, report)
+	if def.id == &"":
+		report.error("id", "成就必须有 id")
+	if def.display_name.strip_edges() == "":
+		report.error("display_name", "成就得有名字")
+	if not AchievementDef.KINDS.has(def.kind):
+		report.error("kind", "认不得的条件种类 '%s'（可用：%s）" % [def.kind, ", ".join(AchievementDef.KINDS)])
+	if AchievementDef.TARGETED.has(def.kind) and def.target == &"":
+		report.error("target", "条件 '%s' 得写对象（target）" % def.kind)
+	if not AchievementDef.TARGETED.has(def.kind) and def.target != &"":
+		report.warn("target", "条件 '%s' 不看对象，target 不会生效" % def.kind)
+	if def.amount < 1:
+		report.error("amount", "要达到的数至少 1")
+	if (def.kind == &"codex_has" or def.kind == &"keepsake") and not ctx.items.is_empty() and not ctx.items.has(def.target):
+		report.error("target", "道具库里没有 %s" % def.target)
+	for i in def.grants.size():
+		if def.grants[i] == &"":
+			report.error("grants[%d]" % i, "空的解锁 id")
+	ctx.register_achievement(def)
 	return def
 
 
@@ -835,6 +867,9 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 			report.error("starting_keepsakes[%d]" % i, "找不到特殊道具 '%s'" % kid)
 		elif ctx.items.has(kid) and not (ctx.items[kid] as ItemDef).is_keepsake():
 			report.error("starting_keepsakes[%d]" % i, "'%s' 不是特殊道具（没有 keepsake 标签）" % kid)
+	# 091：本图规则卡最多三条（作者定：≤ 3 条，一页看完）
+	if def.rules.size() > 3:
+		report.warn("rules", "本图规则卡写了 %d 条，作者定的是最多 3 条" % def.rules.size())
 	if def.map_source == null:
 		report.error("map_source", "章节必须有地图来源（随机生成或载入预设）")
 		return
