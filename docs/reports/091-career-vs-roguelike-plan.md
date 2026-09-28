@@ -266,3 +266,9 @@ Backpack Hero 在 1.0（2023-11）加了故事模式（重建小镇 + 寻母主�
 ### 11.4 测试
 
 `tests/test_author_090.gd` 新增 `run_achievements`（七个作者文件往返不动点、资产在、坏数据报错；锁着的道具 `ids()` 不给 / `ids(true)` 给；一次撤离（350 币、打掉核心）达成三枚、给了解锁、进阶 1 能选、战锤开了秘银剑还锁；不重复给；进度 1 / 3；存档往返；全部解锁开着什么都算解锁、道具不锁、成就不计，关掉再算「老手」达成；规则卡看过了跟存档）；`frame_escape_and_reopen` 补规则卡（第一次弹、Esc 关并记住、暂停菜单再看、Esc 先关卡）与成就页筛选（全部 / 已解锁 / 未解锁随完成变、Esc 回仓库页）。084 的导演测试补一句关掉规则卡。全套 **64 个套件、11370 项断言**通过。
+
+### 11.5 启动灰屏（作者截图）
+
+作者拉了这一批之后正式游戏一片灰，DevNav 的「← 主界面 F1」还在。这边用干净目录、用上一版代码生成的存档（三个位、进行中的一局）、继续 / 换位 / 成就页都跑不出错，最吻合的解释是**全局类缓存没更新**：这一批新加了 `class_name AchievementDef`，`GameFlow` 声明了 `Array[AchievementDef]`；Godot 没重新扫描时 `game_flow.gd` 解析失败，导演与全部屏跟着挂不上脚本（Output 里是 `Identifier "AchievementDef" not declared`），不依赖它的自动加载照常。`tools/test.sh` 开头的注释说的就是这个坑。
+
+处理：跑一次 `godot --headless --path . --import`（或在编辑器里「项目 → 重新加载当前项目」）再启动；新加 `tools/run_game.bat` / `tools/run_game.sh` 把这一步放在启动前面。若刷了缓存还灰，把 Output 面板第一条红字发来。
