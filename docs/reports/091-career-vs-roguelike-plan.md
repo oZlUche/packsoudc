@@ -284,3 +284,15 @@ Backpack Hero 在 1.0（2023-11）加了故事模式（重建小镇 + 寻母主�
    - **局外旗标**：`MetaState.flags`（名字 → 数；`flag / set_flag / add_flag`，跟局外存档）；`RunState.meta`（不存档，`GameFlow._adopt` 接上，透给 `NodeEvents.meta` → `EventContext.meta`）；条件 `has_flag`（`flag / min_value / absent`）、后果 `set_flag`（`flag / value / add / clear`），进注册表，编辑器下拉自动多两项；选项选完 `GameFlow.choose_event` 存 meta。沙盒没有局外时条件不满足、后果不做、不炸。这是计划书阶段 3 的那一样新机制，`Say` 的多语言与营地对话表还没做。
 
 测试：`test_map_editor.frame_editing` 补事件下拉；`test_event_editor.frame_run_chain_and_lang`（被预设图 / 节点规则引用、一跳、找不到、环、语言切换往返）；`test_author_090.run_event_flags_and_texts`（注册表、条件 / 后果各态、沙盒不炸、存档、含旗标与多语言的事件导入往返、取值回落、一局的事件上下文接着局外）。全套 **64 个套件、11412 项断言**通过。
+
+## 十三、实施：编辑器字段本地化 + 悬浮说明（作者截图）
+
+作者：编辑器里反射生成的表单满是 `display_name` / `rarity` / `reflect_damage` / `MOST_VALUABLE` 这类原名，中文模式下要显示中文；**不改字段与变量名**，只做本地化显示（作者说的 display_tag），并给每个属性加鼠标悬浮说明。
+
+- **`FieldText`**（`core/authoring/field_text.gd`），三层都只管显示：
+  1. **标签** `label(owner, key)`：字段名 → 短中文（`类名.字段` 优先，再查字段名，没登记的原样）。约 230 条。英文模式直接显示字段名。
+  2. **说明** `help / tip / doc_of`：**从脚本源码里读 `@export` 上面的 `##` 注释**（含父类；`@export_group` 行夹在中间也认），代码里本来就写着每个字段是什么，不另抄一份，注释改了说明跟着改；类顶上的 `##` 段是构件 / 定义的说明（`type_help`）。按脚本缓存；读不到源码（导出包剥了）退回标签。去掉 `[b]`、`[method x]` 这类文档标记。
+  3. **类型 / 枚举 / 类名**：`type_label`（注册表全部 107 个名字都有中文，测试会提醒新增的忘登记）、`enum_label`（SELF / BOARD / MOST_VALUABLE……）、`class_label`（AbilityRule → 规则……）。
+- **`PropertyForm`**：每一行左边的标签走 `FieldText.label`，标签与控件都带 `tooltip_text = FieldText.tip`（「稀有度（rarity）」+ 注释）；勾选框文字、数组标题「效果（2）」、对象标题、子项头「[0] 施加状态」、类型下拉（显示中文、tooltip 是原名）、枚举下拉（同样）全部换。字段本身、JSON、存档一个字不改。四个编辑器（道具 / buff / 事件 / 地图参数）共用这一份，自动全变。
+- 测试 `run_field_text`（标签、源码注释、类说明、类型 / 枚举 / 类名、注册表全覆盖、英文模式原名）与 `frame_property_form_labels`（表单行标签中文且带说明、英文模式原名）。全套 **64 个套件、11432 项断言**通过。
+- 留给作者：标签表覆盖了常见的约 230 个字段名，没登记的显示原名但仍有注释说明；要补就往 `FieldText.LABELS` 加一行。英文模式现在显示原名，要英文标签再加一张表即可。

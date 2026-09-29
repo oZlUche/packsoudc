@@ -333,3 +333,70 @@ static func run_event_flags_and_texts(t: TestCase) -> void:
 		var ectx: EventContext = run.events._event_ctx(run.current_node() if run.current_node() != null else MapNode.new())
 		t.check(ectx.meta == flow.meta, "事件上下文里的 meta 就是局外")
 	_cleanup()
+
+
+## 091（作者定）：编辑器字段 / 类型 / 枚举只在显示时换中文（FieldText），每一行带悬浮说明（读 @export 上面的注释）；字段名不改
+static func run_field_text(t: TestCase) -> void:
+	t.begin("091 · FieldText：中文标签、从源码注释读说明、类型 / 枚举 / 类名标签、英文模式显示原名、读不到的回落")
+	var saved := UiText.lang
+	UiText.lang = "zh"
+	var item := ItemDef.new()
+	t.eq(FieldText.label(item, "rarity"), "稀有度", "字段标签")
+	t.eq(FieldText.label(item, "no_such_field_zz"), "no_such_field_zz", "没登记的原样显示")
+	var doc := FieldText.doc_of(item, "rarity")
+	t.check(doc != "" and doc != "rarity", "从源码注释读到 rarity 的说明：%s" % doc.left(40))
+	t.check(FieldText.tip(item, "rarity").begins_with("稀有度（rarity）"), "悬浮窗文字 = 标签（字段名）+ 说明")
+	t.check(FieldText.doc_of(EventOption.new(), "hide_when_locked") != "", "选项字段的注释也读得到")
+	t.check(FieldText.doc_of(HasFlag.new(), "absent") != "", "新构件的字段注释读得到")
+	t.check(FieldText.doc_of(item, "") != "", "类顶上的注释 = 类的说明")
+	t.eq(FieldText.type_label(&"say"), "说一句", "注册表名的标签")
+	t.eq(FieldText.type_label(&"has_flag"), "有局外旗标", "新条件也有")
+	t.check(FieldText.type_help(Say.new()).begins_with("说一句（say）"), "构件的说明：标签（名）+ 类注释")
+	t.eq(FieldText.enum_label("MOST_VALUABLE"), "最值钱的", "枚举值")
+	t.eq(FieldText.class_label(&"AbilityRule"), "规则", "类名")
+	# 注册表里每个类型都有中文名（新增一种忘了登记，这里提醒）
+	var missing: Array[String] = []
+	for table in EffectRegistry.TABLES:
+		for name in EffectRegistry.TABLES[table]:
+			if FieldText.type_label(name) == String(name):
+				missing.append(String(name))
+	t.check(missing.is_empty(), "注册表类型都有中文标签（缺：%s）" % str(missing))
+	UiText.lang = "en"
+	t.eq(FieldText.label(item, "rarity"), "rarity", "英文模式：字段名原样")
+	t.eq(FieldText.type_label(&"say"), "say", "英文模式：类型名原样")
+	t.eq(FieldText.enum_label("SELF"), "SELF", "英文模式：枚举原样")
+	UiText.lang = saved
+
+
+## 表单里每一行的标签是中文、带悬浮说明；改语言重建后变回字段名
+static func frame_property_form_labels(t: TestCase, root: Window) -> void:
+	t.begin("091 · PropertyForm：行标签中文 + 悬浮说明；类型下拉显示中文；英文模式原名")
+	var saved := UiText.lang
+	UiText.lang = "zh"
+	var def := ItemDef.new()
+	def.id = &"probe"
+	def.shape = ItemShape.new()
+	var form := PropertyForm.create(def, UiPalette.cjk_font())
+	root.add_child(form)
+	var labels: Array[String] = []
+	var tipped: Array[String] = []     # lambda 里改数组（按引用）；int 会被按值捕获
+	var walker := func(node: Node, f: Callable) -> void:
+		for c in node.get_children():
+			if c is Label:
+				labels.append((c as Label).text)
+				if (c as Label).tooltip_text != "":
+					tipped.append((c as Label).text)
+			f.call(c, f)
+	walker.call(form, walker)
+	t.check(labels.has("稀有度") and labels.has("标签") and labels.has("名字"), "行标签是中文：%s" % str(labels.slice(0, 8)))
+	t.check(not labels.has("rarity"), "没有裸的字段名")
+	t.check(tipped.size() >= 5, "至少五行带悬浮说明（%d）" % tipped.size())
+	form.queue_free()
+	UiText.lang = "en"
+	var form_en := PropertyForm.create(def, UiPalette.cjk_font())
+	root.add_child(form_en)
+	labels.clear()
+	walker.call(form_en, walker)
+	t.check(labels.has("rarity") and not labels.has("稀有度"), "英文模式：字段名原样")
+	form_en.queue_free()
+	UiText.lang = saved

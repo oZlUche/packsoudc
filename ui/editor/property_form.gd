@@ -9,6 +9,9 @@
 ##
 ## 表单直接改传进来的对象（所见即所得），每次改动发 [signal changed]，
 ## 外壳据此重新校验并刷新 JSON 预览。
+##
+## 091（作者定）：字段名、类型名、枚举值**只在显示时**换成中文（[FieldText]），每一行都带悬浮说明（读脚本里 `@export` 上面的注释）；
+## 字段本身、JSON、存档一个字不改。英文模式显示原名
 class_name PropertyForm
 extends VBoxContainer
 
@@ -68,7 +71,8 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 	match type:
 		TYPE_BOOL:
 			var cb := CheckBox.new()
-			cb.text = key
+			cb.text = FieldText.label(owner, key)
+			cb.tooltip_text = FieldText.tip(owner, key)
 			cb.button_pressed = value
 			_font(cb)
 			cb.toggled.connect(func(on: bool):
@@ -79,11 +83,11 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 		TYPE_INT:
 			var options := ContentSchema.enum_options(owner, prop)
 			if not options.is_empty():
-				return _labeled(key, _enum_picker(owner, prop, options, int(value)))
-			return _labeled(key, _number(value, 1.0, func(v: float): owner.set(key, int(v))))
+				return _labeled(owner, key, _enum_picker(owner, prop, options, int(value)))
+			return _labeled(owner, key, _number(value, 1.0, func(v: float): owner.set(key, int(v))))
 
 		TYPE_FLOAT:
-			return _labeled(key, _number(value, 0.1, func(v: float): owner.set(key, v)))
+			return _labeled(owner, key, _number(value, 0.1, func(v: float): owner.set(key, v)))
 
 		TYPE_STRING, TYPE_STRING_NAME:
 			var le := LineEdit.new()
@@ -93,7 +97,7 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 			le.text_changed.connect(func(t: String):
 				owner.set(key, StringName(t) if type == TYPE_STRING_NAME else t)
 				_emit())
-			return _labeled(key, le)
+			return _labeled(owner, key, le)
 
 		TYPE_VECTOR2I, TYPE_VECTOR2:
 			# 范围 [min, max] 这类成对的数。两个数字框并排
@@ -105,10 +109,10 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 					var cur = owner.get(key)
 					cur[ax] = int(v) if whole else v
 					owner.set(key, cur)))
-			return _labeled(key, pair)
+			return _labeled(owner, key, pair)
 
 		TYPE_DICTIONARY:
-			return _labeled(key, _dict_editor(owner, key, value as Dictionary))
+			return _labeled(owner, key, _dict_editor(owner, key, value as Dictionary))
 
 		TYPE_ARRAY:
 			return _array_section(owner, key, value as Array)
@@ -126,7 +130,8 @@ func _enum_picker(
 	_font(ob)
 	var values: Array[int] = []
 	for i in options.size():
-		ob.add_item(options[i], i)
+		ob.add_item(FieldText.enum_label(options[i]), i)
+		ob.set_item_tooltip(i, options[i])
 		var v = ContentSchema.enum_value(owner, prop, options[i])
 		values.append(int(v) if v != null else i)
 		if values[i] == current:
@@ -246,7 +251,7 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 					out.append(StringName(s) if builtin == TYPE_STRING_NAME else s)
 			owner.set(key, out)
 			_emit())
-		return _labeled(key, le)
+		return _labeled(owner, key, le)
 
 	if builtin == TYPE_VECTOR2I:
 		var le2 := LineEdit.new()
@@ -265,7 +270,7 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 					out.append(Vector2i(int(xy[0]), int(xy[1])))
 			owner.set(key, out)
 			_emit())
-		return _labeled(key, le2)
+		return _labeled(owner, key, le2)
 
 	# 整数数组（哪几层放撤离点、每层的危险等级……）也用一行文本
 	if builtin == TYPE_INT:
@@ -285,16 +290,19 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 					out.append(int(s))
 			owner.set(key, out)
 			_emit())
-		return _labeled(key, le3)
+		return _labeled(owner, key, le3)
 
 	if builtin != TYPE_OBJECT:
-		return _labeled(key, _muted("（暂不支持在界面里编辑）"))
+		return _labeled(owner, key, _muted("（暂不支持在界面里编辑）"))
 
 	# --- 对象数组：每项一个可折叠的子表单，带类型下拉 ---
 	var element_class := ContentSchema.array_element_class(arr)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
-	box.add_child(_heading("%s（%d）" % [key, arr.size()]))
+	var heading := _heading("%s（%d）" % [FieldText.label(owner, key), arr.size()])
+	heading.tooltip_text = FieldText.tip(owner, key)
+	heading.mouse_filter = Control.MOUSE_FILTER_STOP
+	box.add_child(heading)
 
 	for i in arr.size():
 		var idx := i
@@ -302,7 +310,10 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 		var card := _card()
 		var body := _body(card)
 		var head := HBoxContainer.new()
-		head.add_child(_muted("[%d] %s" % [idx, ContentSchema.registry_name_of(item)]))
+		var item_head := _muted("[%d] %s" % [idx, FieldText.type_label(ContentSchema.registry_name_of(item))])
+		item_head.tooltip_text = FieldText.type_help(item)
+		item_head.mouse_filter = Control.MOUSE_FILTER_STOP
+		head.add_child(item_head)
 		head.add_child(_small_button("↑", func():
 			if idx > 0:
 				var tmp = arr[idx - 1]
@@ -345,14 +356,20 @@ func _object_section(owner: Object, prop: Dictionary, value: Object) -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
 	var head := HBoxContainer.new()
-	head.add_child(_heading(key))
+	var title := _heading(FieldText.label(owner, key))
+	title.tooltip_text = FieldText.tip(owner, key)
+	title.mouse_filter = Control.MOUSE_FILTER_STOP
+	head.add_child(title)
 	if value == null:
 		head.add_child(_adder(declared, func(made: Object):
 			owner.set(key, made)
 			_emit()
 			rebuild()))
 	else:
-		head.add_child(_muted(String(ContentSchema.registry_name_of(value))))
+		var kind := _muted(FieldText.type_label(ContentSchema.registry_name_of(value)))
+		kind.tooltip_text = FieldText.type_help(value)
+		kind.mouse_filter = Control.MOUSE_FILTER_STOP
+		head.add_child(kind)
 		head.add_child(_small_button("清除", func():
 			owner.set(key, null)
 			_emit()
@@ -381,7 +398,8 @@ func _adder(declared: StringName, on_made: Callable) -> Control:
 	var ob := OptionButton.new()
 	_font(ob)
 	for i in types.size():
-		ob.add_item(String(types[i]), i)
+		ob.add_item(FieldText.type_label(types[i]), i)
+		ob.set_item_tooltip(i, String(types[i]))
 	row.add_child(ob)
 	row.add_child(_small_button("+ 添加", func():
 		var made := ContentSchema.make(declared, types[ob.get_selected_id()])
@@ -406,12 +424,18 @@ func _font(c: Control) -> void:
 		c.add_theme_font_size_override("font_size", 13)
 
 
-func _labeled(text: String, control: Control) -> Control:
+## 一行：左边标签（中文模式下是 [FieldText] 的中文，鼠标停上去看说明与字段名），右边控件（同一份说明）
+func _labeled(owner: Object, key: String, control: Control) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	var l := Label.new()
-	l.text = text
+	l.text = FieldText.label(owner, key)
 	l.custom_minimum_size.x = 130
+	l.mouse_filter = Control.MOUSE_FILTER_STOP
+	var tip := FieldText.tip(owner, key)
+	l.tooltip_text = tip
+	if control.tooltip_text == "":
+		control.tooltip_text = tip
 	_font(l)
 	l.add_theme_font_size_override("font_size", 13)
 	l.add_theme_color_override("font_color", UiPalette.DIM)
