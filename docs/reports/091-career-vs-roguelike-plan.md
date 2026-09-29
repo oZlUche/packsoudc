@@ -296,3 +296,9 @@ Backpack Hero 在 1.0（2023-11）加了故事模式（重建小镇 + 寻母主�
 - **`PropertyForm`**：每一行左边的标签走 `FieldText.label`，标签与控件都带 `tooltip_text = FieldText.tip`（「稀有度（rarity）」+ 注释）；勾选框文字、数组标题「效果（2）」、对象标题、子项头「[0] 施加状态」、类型下拉（显示中文、tooltip 是原名）、枚举下拉（同样）全部换。字段本身、JSON、存档一个字不改。四个编辑器（道具 / buff / 事件 / 地图参数）共用这一份，自动全变。
 - 测试 `run_field_text`（标签、源码注释、类说明、类型 / 枚举 / 类名、注册表全覆盖、英文模式原名）与 `frame_property_form_labels`（表单行标签中文且带说明、英文模式原名）。全套 **64 个套件、11432 项断言**通过。
 - 留给作者：标签表覆盖了常见的约 230 个字段名，没登记的显示原名但仍有注释说明；要补就往 `FieldText.LABELS` 加一行。英文模式现在显示原名，要英文标签再加一张表即可。
+
+### 13.1 编辑器表单空白（作者反馈）
+
+作者拉了这一批运行后编辑器里「原本的内容全部变为空白」。这边四个编辑器与游戏里的名字都正常，原因与 11.5 的灰屏同类：新加了 `class_name FieldText`，全局类缓存没更新时 `property_form.gd` 解析失败（Output：`Identifier "FieldText" not declared`），四个编辑器共用的属性表单整块空白，外壳还在。
+
+改法：`PropertyForm` 改成 `const FieldText := preload("res://core/authoring/field_text.gd")` 直接引用，不靠全局类名。验证：把缓存里 FieldText 那条删掉、不重新导入直接拉起事件编辑器，表单照样有内容。**以后新加 class_name 的脚本，消费方一律用 preload 引用**，作者拉了就能跑；`--import`（或 `tools/run_game.bat`、编辑器「重新加载当前项目」）仍是最稳的一步。

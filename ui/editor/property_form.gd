@@ -18,6 +18,8 @@ extends VBoxContainer
 signal changed
 
 const INDENT := 14
+## 091：直接 preload 而不靠全局类名 —— 作者拉了新脚本没重新 --import 时，全局类缓存里没有 FieldText，靠名字引用会让整份表单解析失败、编辑器一片空白
+const FieldText := preload("res://core/authoring/field_text.gd")
 
 var label_font: Font
 
