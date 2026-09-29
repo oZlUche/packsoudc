@@ -290,3 +290,64 @@ static func frame_run_attach_rules(t: TestCase, root: Window) -> void:
 	f.close()
 
 	ed.queue_free()
+
+
+## 091：事件链视图（出去的 next_event、被谁引用）与语言切换（英文标题 / 正文写进 titles / texts）
+static func frame_run_chain_and_lang(t: TestCase, root: Window) -> void:
+	t.begin("事件编辑器 · 事件链（被预设图 / 节点规则引用、next_event 递归）与语言切换")
+	var ed := _make(root)
+	if not ed._ids.has("tut_search_1") or not ed._ids.has("search_default"):
+		t.check(false, "缺 tut_search_1 / search_default")
+		ed.queue_free()
+		return
+	ed._open("tut_search_1")
+	var texts: Array[String] = []
+	for line in ed.chain_lines():
+		texts.append(String(line["text"]))
+	t.check(texts[0].contains("tut_search_1"), "第一行是自己")
+	t.check(texts.any(func(s: String) -> bool: return s.contains("预设图 prologue")), "被序章预设图引用：%s" % str(texts))
+	ed._open("search_default")
+	texts.clear()
+	for line in ed.chain_lines():
+		texts.append(String(line["text"]))
+	t.check(texts.any(func(s: String) -> bool: return s.contains("节点规则 standard")), "被标准节点规则引用：%s" % str(texts))
+
+	# 链：新建一个事件，选项接 next_event → search_default → 递归列出 search_default 自己的 next_event（如果有）
+	ed._new_event()
+	var def: EventDef = ed._def
+	var ne := NextEvent.new()
+	ne.event = &"search_default"
+	(def.options[0] as EventOption).outcomes.append(ne)
+	ed._refresh()
+	var lines: Array = ed.chain_lines()
+	var hop := lines.filter(func(l: Dictionary) -> bool: return int(l["depth"]) == 1 and String(l["text"]).contains("→ search_default"))
+	t.eq(hop.size(), 1, "链里有「选项 → search_default」这一跳")
+	t.eq(String(hop[0]["id"]), "search_default", "那一行带着能跳过去的 id")
+	ne.event = &"no_such_event"
+	ed._refresh()
+	t.check(ed.chain_lines().any(func(l: Dictionary) -> bool: return String(l["text"]).contains("找不到")), "指向不存在的事件：标出来")
+	# 环：自己指自己
+	ne.event = def.id
+	ed._refresh()
+	t.check(ed.chain_lines().any(func(l: Dictionary) -> bool: return String(l["text"]).contains("环")), "自己指自己：标成环、不无限递归")
+	ed._on_discard()
+
+	# 语言
+	ed._open("tut_search_1")
+	var zh_title: String = ed._def.title
+	ed.set_lang("en")
+	t.eq(ed.lang(), "en", "切到英文")
+	t.eq(ed._title_edit.text, "", "英文标题还没写：框空着")
+	ed._title_edit.text = "Search here"
+	ed._on_title_changed("Search here")
+	t.eq(String(ed._def.titles.get("en", "")), "Search here", "英文写进 titles")
+	t.eq(ed._def.title, zh_title, "中文原文没动")
+	t.eq(ed._def.title_for("en"), "Search here", "取英文得英文")
+	t.eq(ed._def.title_for("zh"), zh_title, "取中文得原文")
+	t.eq(ed._def.title_for("fr"), zh_title, "没写的语言回落原文")
+	ed._on_title_changed("")
+	t.check(not ed._def.titles.has("en"), "清空 = 删掉那一条")
+	ed.set_lang("zh")
+	t.eq(ed._title_edit.text, zh_title, "切回中文：框里是原文")
+	ed._on_discard()
+	ed.queue_free()

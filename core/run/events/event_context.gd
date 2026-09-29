@@ -20,6 +20,8 @@ var steps: int = 0
 ## 棋盘与暂存区（可以为 null：没接容器的测试）。「有某道具」看它们，「失去道具」从它们拿
 var board: ItemContainer = null
 var storage: ItemContainer = null
+## 091：局外状态（旗标在里面）。沙盒 / 测试里可能为 null：看旗标的条件永远不满足、立旗标的后果什么也不做
+var meta: MetaState = null
 ## 段位（074）：`() -> int`。没接（这一局没有猎手机制）= -1
 var bracket: Callable = Callable()
 ## 某个点被侵蚀了几层（075）：`(node) -> int`，没被侵蚀 -1。没接（没有侵蚀）= -1

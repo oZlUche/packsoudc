@@ -19,6 +19,8 @@ var _gen: MapGenerator = null
 var _cfg: Resource = null
 var _dirty: bool = false
 var _selected: int = -1
+## 091：作者目录里的事件 id（懒加载）
+var _event_ids: Array[String] = []
 ## 传送模式（8-1）：Shift+左键连的边是传送点，花 portal_cost 行动点
 var portal_mode: bool = false
 var portal_cost: int = 1
@@ -197,6 +199,33 @@ func set_node_type(id: int, type: StringName) -> void:
 	if n != null and n.type != type:
 		n.type = type
 		_touch()
+
+
+## 091（作者定：事件独立存在、节点只存 id）：给这个点指定事件；空 = 不指定、生成 / 揭开时按节点规则抽
+func set_node_event(id: int, event_id: String) -> void:
+	var n := _node(id)
+	if n == null:
+		return
+	var clean := event_id.strip_edges()
+	if String(n.content.get("event", "")) == clean:
+		return
+	if clean == "":
+		n.content.erase("event")
+	else:
+		n.content["event"] = clean
+	_touch()
+
+
+## 作者目录里的事件 id（下拉框用）
+func event_ids() -> Array[String]:
+	if _event_ids.is_empty():
+		var d := DirAccess.open(ContentPaths.AUTHORING_EVENTS)
+		if d != null:
+			for f in d.get_files():
+				if f.ends_with(".json"):
+					_event_ids.append(f.get_basename())
+			_event_ids.sort()
+	return _event_ids
 
 
 func set_node_danger(id: int, danger: int) -> void:
@@ -674,6 +703,22 @@ func _rebuild_props() -> void:
 			type_pick.select(i)
 	type_pick.item_selected.connect(func(i: int): set_node_type(id, MapNodeTypes.ALL[i]))
 	_props.add_child(_pair("类型", type_pick))
+	# 091：这个点的事件 —— 事件独立存在（data/authoring/events），这里只挑一个 id 写进节点内容；不挑就按节点规则抽
+	var event_pick := OptionButton.new()
+	_style(event_pick)
+	event_pick.add_item("（不指定：按节点规则抽）")
+	var eids := event_ids()
+	var cur := String(n.content.get("event", ""))
+	for i in eids.size():
+		event_pick.add_item(eids[i])
+		if eids[i] == cur:
+			event_pick.select(i + 1)
+	if cur != "" and not eids.has(cur):
+		event_pick.add_item(cur + "（作者目录里没有）")
+		event_pick.select(eids.size() + 1)
+	event_pick.item_selected.connect(func(i: int):
+		set_node_event(id, "" if i == 0 else (eids[i - 1] if i - 1 < eids.size() else cur)))
+	_props.add_child(_pair("事件", event_pick))
 	_props.add_child(_pair("危险等级", _spin(n.danger, 0, 2, func(v: int): set_node_danger(id, v))))
 	_props.add_child(_pair("高危区编号", _spin(n.zone, 0, 99, func(v: int): set_node_zone(id, v))))
 

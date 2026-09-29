@@ -250,3 +250,86 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	flow.to_main_menu()
 	game.queue_free()
 	_cleanup()
+
+
+## 091（计划书阶段 3）：局外旗标进事件（条件 has_flag / 后果 set_flag）、事件文本多语言、一局接上局外
+static func run_event_flags_and_texts(t: TestCase) -> void:
+	t.begin("091 · 事件：局外旗标条件与后果、注册表、导入往返、存档；标题 / 正文 / 选项多语言；一局的事件上下文接着局外")
+	t.check(EffectRegistry.EVENT_CONDITIONS.has(&"has_flag") and EffectRegistry.EVENT_OUTCOMES.has(&"set_flag"), "注册表里有 has_flag / set_flag")
+	var meta := MetaState.new()
+	var ctx := EventContext.new()
+	ctx.meta = meta
+	var hf := HasFlag.new()
+	hf.flag = &"met_stranger"
+	t.check(not hf.check(ctx), "没立过旗：不满足")
+	t.eq(hf.describe(), "需要旗标「met_stranger」", "说明")
+	var sf := SetFlag.new()
+	sf.flag = &"met_stranger"
+	sf.apply(ctx)
+	t.eq(meta.flag(&"met_stranger"), 1, "立了旗 = 1")
+	t.check(hf.check(ctx), "立过：满足")
+	hf.absent = true
+	t.check(not hf.check(ctx), "absent：反过来不满足")
+	hf.absent = false
+	var add := SetFlag.new()
+	add.flag = &"met_stranger"
+	add.add = true
+	add.value = 2
+	add.apply(ctx)
+	t.eq(meta.flag(&"met_stranger"), 3, "累加到 3")
+	hf.min_value = 3
+	t.check(hf.check(ctx), "≥ 3 满足")
+	hf.min_value = 4
+	t.check(not hf.check(ctx), "≥ 4 不满足")
+	var cl := SetFlag.new()
+	cl.flag = &"met_stranger"
+	cl.clear = true
+	cl.apply(ctx)
+	t.check(meta.flag(&"met_stranger") == 0 and not meta.flags.has("met_stranger"), "拔掉")
+	var bare := EventContext.new()
+	t.check(not HasFlag.new().check(bare), "沙盒没有局外：条件不满足、不炸")
+	SetFlag.new().apply(bare)
+	# 存档
+	meta.set_flag(&"chapter_1_seen", 2)
+	var c = NodeScreens._content()
+	var back := MetaState.from_dict(meta.to_dict(), c.items)
+	t.eq(back.flag(&"chapter_1_seen"), 2, "旗标跟局外存档")
+	# 导入往返
+	var data := {"id": "zz_flag", "title": "旗", "titles": {"en": "Flag"}, "text": "……", "texts": {"en": "..."},
+		"options": [{"label": "去", "labels": {"en": "Go"}, "requires": [{"type": "has_flag", "flag": "a"}],
+			"outcomes": [{"type": "set_flag", "flag": "b", "value": 2}, {"type": "set_flag", "flag": "c", "clear": true}]},
+			{"label": "走", "labels": {"en": "Leave"}}]}
+	var r := ImportReport.new()
+	var def := ContentImporter.import_event(data, ContentImporter.Context.new(), r)
+	t.check(r.ok(), "带旗标构件与多语言的事件导入没有错：%s" % r.to_text())
+	var opt := def.options[0] as EventOption
+	t.check(opt.requires[0] is HasFlag and (opt.requires[0] as HasFlag).flag == &"a", "条件是 HasFlag")
+	t.check(opt.outcomes[0] is SetFlag and (opt.outcomes[0] as SetFlag).value == 2 and (opt.outcomes[1] as SetFlag).clear, "后果是 SetFlag")
+	var json := ContentExporter.to_json(ContentExporter.export_event(def))
+	var again := ContentImporter.import_event(JSON.parse_string(json), ContentImporter.Context.new(), ImportReport.new())
+	t.eq(ContentExporter.to_json(ContentExporter.export_event(again)), json, "导出 → 导入 → 再导出逐字节相同")
+	# 多语言取值
+	t.eq(def.title_for("en"), "Flag", "英文标题")
+	t.eq(def.title_for("zh"), "旗", "中文标题 = 原文")
+	t.eq(def.text_for("en"), "...", "英文正文")
+	t.eq(def.text_for("de"), "……", "没写的语言回落原文")
+	t.eq(opt.label_for("en"), "Go", "英文选项")
+	t.eq(opt.label_for("zh"), "去", "中文选项")
+	# 一局接上局外：flow.begin 之后事件上下文能看到 meta
+	_cleanup()
+	var kit: LoadoutDef = NodeScreens._kit(c)
+	var flow := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
+	flow.chapters = [c.chapter] as Array[ChapterDef]
+	flow.settings = GameSettings.new()
+	flow.save_path = SAVE
+	flow.meta_path = META
+	var run: RunState = null
+	for seed in range(1, 30):
+		run = flow.begin(c.chapter, kit, seed)
+		if run != null:
+			break
+	t.check(run != null and run.meta == flow.meta and run.events.meta == flow.meta, "一局的事件层接着局外（旗标能看能立）")
+	if run != null:
+		var ectx: EventContext = run.events._event_ctx(run.current_node() if run.current_node() != null else MapNode.new())
+		t.check(ectx.meta == flow.meta, "事件上下文里的 meta 就是局外")
+	_cleanup()

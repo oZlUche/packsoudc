@@ -112,6 +112,12 @@ var tally: Dictionary = {"battles_won": 0, "battles_lost": 0}
 ## 一局里的每条 {"id", "left"}（left = 还能走几步，-1 = 整局）
 var buff_defs: Dictionary = {}
 var meta_buffs: Array[StringName] = []
+## 091：局外状态的引用（不存档；持有方 [GameFlow] 接上）—— 事件的条件 / 后果看、立局外旗标要用
+var meta: MetaState = null:
+	set(v):
+		meta = v
+		if events != null:
+			events.meta = v
 var map_buffs: Array[Dictionary] = []
 ## 事件层（063）：定义表由持有方给（id → EventDef，存档只写 id）。空表 = 每个点踩上去直接发生
 var event_defs: Dictionary = {}:

@@ -9,8 +9,27 @@ extends Resource
 
 @export var id: StringName = &""
 @export var title: String = ""
+## 091：别的语言的标题，`{"en": "..."}`；事件屏用 [method title_for] 取（当前语言没写就用 title）
+@export var titles: Dictionary = {}
 ## 正文（多行）
 @export_multiline var text: String = ""
+## 091：别的语言的正文
+@export var texts: Dictionary = {}
 ## 图像路径，占位：没有文件就画一块底色写路径
 @export var image: String = ""
 @export var options: Array[EventOption] = []
+
+
+## 当前语言（或指定语言）下的标题；没写回落 title
+func title_for(lang: String = "") -> String:
+	return _pick(titles, title, lang)
+
+
+func text_for(lang: String = "") -> String:
+	return _pick(texts, text, lang)
+
+
+static func _pick(table: Dictionary, base: String, lang: String) -> String:
+	var l := lang if lang != "" else UiText.lang
+	var v := String(table.get(l, ""))
+	return v if v != "" else base

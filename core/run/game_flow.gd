@@ -777,6 +777,7 @@ func use_skill(id: StringName) -> String:
 func choose_event(i: int) -> bool:
 	if run == null or not run.events.choose(i):
 		return false
+	save_meta()     # 091：选项可能立了局外旗标（set_flag）
 	_flush()
 	return true
 
@@ -818,6 +819,7 @@ func _adopt(state: RunState) -> void:
 	_queue.clear()
 	state.buff_defs = buff_defs      # 读档回来的只有 id，定义表在这里
 	state.event_defs = event_defs
+	state.meta = meta     # 091：事件的条件 / 后果看、立局外旗标
 	# 基线：按角色（读档回来只有 id，在这里找回）；没角色用持有方给的
 	state.hunter_defs = hunter_defs
 	state.faith_defs = faith_defs

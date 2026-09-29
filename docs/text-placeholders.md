@@ -94,6 +94,8 @@
 | `ItemDef` 标签 | `keepsake` | 特殊道具：不进背包、不能生成、拿到只是通知 + 图鉴点亮；能力由别的标签说明（`node_tooltips` → 节点浮窗） |
 | `ChapterDef` | `rules` | 本图规则卡（≤ 3 条）：第一次进图弹，暂停菜单再看（091） |
 | `ItemDef` | `requires_unlock` | 成就给的解锁 id；没解锁不进池、图鉴灰着写途径（091） |
+| `EventDef` / `EventOption` | `titles` `texts` / `labels` | 事件标题 / 正文 / 选项的别的语言（091）；当前语言没写回落原文 |
+| 事件条件 / 后果 | `has_flag`（flag / min_value / absent）、`set_flag`（flag / value / add / clear） | 局外旗标（091）：剧情推进、见过谁，跟局外存档 |
 | `AchievementDef` | `kind` `amount` `target` `grants` `description` `hidden` `order` | 成就（091）：条件种类与数 / 对象、完成给的解锁 id、解锁途径文字、隐藏、先后 |
 | `ChapterDef` | `starting_keepsakes` | 这一章开局发的特殊道具（序章二：望远镜），记在局外 |
 | `NodeRules` | `loss_cost.hunter` | 输给猎手扣的体力（088，1） |

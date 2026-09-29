@@ -98,6 +98,7 @@ const EVENT_CONDITIONS := {
 	&"erosion_depth_within": "res://core/run/events/conditions/erosion_depth_within.gd",
 	&"has_item": "res://core/run/events/conditions/has_item.gd",
 	&"node_type_is": "res://core/run/events/conditions/node_type_is.gd",
+	&"has_flag": "res://core/run/events/conditions/has_flag.gd",
 }
 
 const EVENT_OUTCOMES := {
@@ -121,6 +122,7 @@ const EVENT_OUTCOMES := {
 	&"extract": "res://core/run/events/outcomes/extract.gd",
 	&"pass_time": "res://core/run/events/outcomes/pass_time.gd",
 	&"lose_item": "res://core/run/events/outcomes/lose_item.gd",
+	&"set_flag": "res://core/run/events/outcomes/set_flag.gd",
 }
 
 ## 一局的机制（069）：难度清单里开的那些

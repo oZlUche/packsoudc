@@ -3,12 +3,21 @@ class_name EventOption
 extends Resource
 
 @export var label: String = ""
+## 091：别的语言的选项文字，`{"en": "..."}`；事件屏用 [method label_for] 取
+@export var labels: Dictionary = {}
 ## 标签（082）：信力的「在事件中选特定选项」按它认（[EventChoiceDeed.tag]）；别的机制以后也可以看
 @export var tags: Array[StringName] = []
 ## 条件不满足时：灰掉（默认）还是干脆不显示
 @export var hide_when_locked: bool = false
 @export var requires: Array[EventCondition] = []
 @export var outcomes: Array[EventOutcome] = []
+
+
+## 当前语言（或指定语言）下的选项文字；没写回落 label
+func label_for(lang: String = "") -> String:
+	var l := lang if lang != "" else UiText.lang
+	var v := String(labels.get(l, ""))
+	return v if v != "" else label
 
 
 ## 每一条条件都过了才能选。返回第一条没过的说明；空串 = 能选

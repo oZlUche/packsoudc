@@ -272,3 +272,15 @@ Backpack Hero 在 1.0（2023-11）加了故事模式（重建小镇 + 寻母主�
 作者拉了这一批之后正式游戏一片灰，DevNav 的「← 主界面 F1」还在。这边用干净目录、用上一版代码生成的存档（三个位、进行中的一局）、继续 / 换位 / 成就页都跑不出错，最吻合的解释是**全局类缓存没更新**：这一批新加了 `class_name AchievementDef`，`GameFlow` 声明了 `Array[AchievementDef]`；Godot 没重新扫描时 `game_flow.gd` 解析失败，导演与全部屏跟着挂不上脚本（Output 里是 `Identifier "AchievementDef" not declared`），不依赖它的自动加载照常。`tools/test.sh` 开头的注释说的就是这个坑。
 
 处理：跑一次 `godot --headless --path . --import`（或在编辑器里「项目 → 重新加载当前项目」）再启动；新加 `tools/run_game.bat` / `tools/run_game.sh` 把这一步放在启动前面。若刷了缓存还灰，把 Output 面板第一条红字发来。
+
+## 十二、实施：事件独立存在的三块补齐（作者「可以，开工」）
+
+作者问：事件是存在节点里还是独立存在、节点只调用？答：**一直是后者** —— 每个事件一个文件（`data/authoring/events/<id>.json` → `data/events/<id>.tres`），节点只存 `node.content["event"] = "<id>"`；id 进节点的三条路是预设图写死、随机图按节点规则的 `events_by_type` 抽（`EventPlacer`）、`next_event` / `intro_event` / 各类默认事件串接。这一批补的是当时列的三个「还做不到」：
+
+1. **地图编辑器给节点挑事件**（`ui/map_editor/map_editor.gd`）：节点面板多一行「事件」下拉 —— 「（不指定：按节点规则抽）」+ 作者目录里全部事件 id（`event_ids()`）；选了写进 `node.content["event"]`（`set_node_event`），清掉就删键；预设图存盘照旧带着（`MapNode.to_dict` 含 content）。
+2. **事件链视图**（`ui/event_editor/event_editor.gd`）：右栏「事件链」树 —— 先列从这个事件出去的「选项 → next_event」（递归、最深 6 层、指向不存在的标「找不到」、回到前面的标「环」），再列**被引用**：别的事件的 `next_event`、节点规则的表（含权重）、预设图的节点、章节的开场；双击一行打开那个事件（`chain_lines()` / `referrers()` / `_open_from_chain`）。
+3. **事件文本多语言 + 局外旗标**：
+   - `EventDef.titles / texts`、`EventOption.labels`（`{"en": "..."}`），取值 `title_for / text_for / label_for`（当前语言没写回落原文）；事件屏改走它们。编辑器 id 行多一个「语言」下拉：中文编辑原文，别的语言写进字典（空 = 删掉那一条，用中文）；表单里跳过这两个字典免得两处能改。
+   - **局外旗标**：`MetaState.flags`（名字 → 数；`flag / set_flag / add_flag`，跟局外存档）；`RunState.meta`（不存档，`GameFlow._adopt` 接上，透给 `NodeEvents.meta` → `EventContext.meta`）；条件 `has_flag`（`flag / min_value / absent`）、后果 `set_flag`（`flag / value / add / clear`），进注册表，编辑器下拉自动多两项；选项选完 `GameFlow.choose_event` 存 meta。沙盒没有局外时条件不满足、后果不做、不炸。这是计划书阶段 3 的那一样新机制，`Say` 的多语言与营地对话表还没做。
+
+测试：`test_map_editor.frame_editing` 补事件下拉；`test_event_editor.frame_run_chain_and_lang`（被预设图 / 节点规则引用、一跳、找不到、环、语言切换往返）；`test_author_090.run_event_flags_and_texts`（注册表、条件 / 后果各态、沙盒不炸、存档、含旗标与多语言的事件导入往返、取值回落、一局的事件上下文接着局外）。全套 **64 个套件、11412 项断言**通过。

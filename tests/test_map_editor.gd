@@ -45,6 +45,15 @@ static func frame_editing(t: TestCase, root: Window) -> void:
 	t.eq(g.get_node(some).type, &"shop", "类型改得动")
 	t.check(ed.has_unsaved_changes(), "改过就是脏的")
 
+	# --- 091：给点指定事件（事件独立存在，节点只存 id） ---
+	t.check(not ed.event_ids().is_empty(), "编辑器列出了作者目录里的事件（%d）" % ed.event_ids().size())
+	var eid: String = ed.event_ids()[0]
+	ed.set_node_event(some, eid)
+	t.eq(String(g.get_node(some).content.get("event", "")), eid, "事件 id 写进节点内容")
+	ed.select(some)
+	ed.set_node_event(some, "")
+	t.check(not g.get_node(some).content.has("event"), "清掉 = 按规则抽")
+
 	# --- 连 / 断 ---
 	var ids := g.node_ids()
 	var a: int = ids[1]

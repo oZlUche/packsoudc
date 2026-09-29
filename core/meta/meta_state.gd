@@ -42,6 +42,9 @@ var boss_kills: int = 0
 var battles_won: int = 0
 ## 091：看过「本图规则」卡的章节 id（第一次进图弹，之后不弹）
 var seen_rules: Array[StringName] = []
+## 091（计划书阶段 3）：剧情 / 事件的**局外旗标**（名字 → 数）。事件的条件 `has_flag` 看它、后果 `set_flag` 立它；跟局外存档。
+## 「剧情推进到哪」「见过谁」就记在这里，营地对话、章节开场按它挑话
+var flags: Dictionary = {}
 ## 撤离带出来的钱累计。局外货币怎么花（15 节第 4 项）还没定，先攒着
 var funds: int = 0
 ## 累计背出去的价值（6.4）
@@ -295,6 +298,28 @@ func has_seen_rules(chapter_id: StringName) -> bool:
 func mark_rules_seen(chapter_id: StringName) -> void:
 	if chapter_id != &"" and not seen_rules.has(chapter_id):
 		seen_rules.append(chapter_id)
+
+
+## 旗标现在的数；没立过 0
+func flag(id: StringName) -> int:
+	return int(flags.get(String(id), 0))
+
+
+## 立 / 改一面旗；0 = 拔掉
+func set_flag(id: StringName, value: int = 1) -> void:
+	if id == &"":
+		return
+	if value == 0:
+		flags.erase(String(id))
+	else:
+		flags[String(id)] = value
+	changed.emit()
+
+
+## 旗标加减；返回现在的数
+func add_flag(id: StringName, delta: int) -> int:
+	set_flag(id, flag(id) + delta)
+	return flag(id)
 #endregion
 #endregion
 
@@ -317,6 +342,7 @@ func to_dict() -> Dictionary:
 		"chapter_extractions": chapter_extractions.duplicate(),
 		"boss_kills": boss_kills, "battles_won": battles_won,
 		"seen_rules": _names_of(seen_rules),
+		"flags": flags.duplicate(),
 	}
 
 
@@ -372,6 +398,8 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	m.battles_won = int(d.get("battles_won", 0))
 	for id in d.get("seen_rules", []):
 		m.seen_rules.append(StringName(String(id)))
+	for key in d.get("flags", {}):
+		m.flags[String(key)] = int((d["flags"] as Dictionary)[key])
 	for row in d.get("history", []):
 		if row is Dictionary:
 			m.history.append(MapGraph.normalize(row))

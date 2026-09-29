@@ -33,7 +33,7 @@ func open(payload: Dictionary) -> void:
 func _open_options() -> void:
 	# 084：文字里的 {char_name} 这类占位符与 {c:hp}…{/c} 样式码在这里替换（docs/text-placeholders.md）
 	var ctx := TextTemplate.context_for(flow.run, _node, _payload.get("extra", {}))
-	var col := _frame(_def.image, TextTemplate.plain(_def.title if _def.title != "" else String(_def.id), ctx), TextTemplate.render(_def.text, ctx))
+	var col := _frame(_def.image, TextTemplate.plain(_def.title_for() if _def.title_for() != "" else String(_def.id), ctx), TextTemplate.render(_def.text_for(), ctx))
 	for i in _def.options.size():
 		var opt := _def.options[i] as EventOption
 		var state := flow.run.events.option_state(i)
@@ -41,7 +41,7 @@ func _open_options() -> void:
 		if not ok and opt.hide_when_locked:
 			continue
 		var idx := i
-		var b := _option_button(TextTemplate.plain(opt.label, ctx), func(): choose(idx))
+		var b := _option_button(TextTemplate.plain(opt.label_for(), ctx), func(): choose(idx))
 		b.disabled = not ok
 		_option_btns.append(b)
 		col.add_child(b)

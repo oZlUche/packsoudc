@@ -55,6 +55,8 @@ var items: ItemDatabase = null
 var drop_rule: DropRule = null
 ## 钱（6.6）。null = 这一局不算钱
 var wallet: Wallet = null
+## 091：局外状态（旗标）；沙盒里 null
+var meta: MetaState = null
 var economy: EconomyRules = null
 var difficulty: int = 0
 var scale_id: StringName = &""
@@ -345,6 +347,7 @@ func _event_ctx(node: MapNode) -> EventContext:
 	ctx.steps = travel.clock.total if travel != null and travel.clock != null else 0
 	ctx.board = board
 	ctx.storage = storage
+	ctx.meta = meta
 	ctx.bracket = bracket_of
 	if travel != null and travel.erosion != null and travel.erosion.has_method("depth_of"):
 		var field: Variant = travel.erosion

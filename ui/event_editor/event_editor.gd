@@ -50,6 +50,10 @@ var _type_pick: OptionButton
 var _weight: SpinBox
 var _placement: Label
 var _file_dialog: FileDialog
+## 091：正在编辑的语言（"zh" = 原文 title / text；别的写进 titles / texts）与事件链视图
+var _lang: String = "zh"
+var _lang_pick: OptionButton
+var _chain: Tree
 
 
 func _ready() -> void:
@@ -146,6 +150,14 @@ func _build_ui() -> void:
 	id_row.add_child(_id_edit)
 	id_row.add_child(_button("保存", _save))
 	id_row.add_child(_button("另存为新 id", _save_as))
+	# 091：语言切换 —— 标题 / 正文按这个语言编辑；中文是原文，别的语言写进 titles / texts（空 = 用中文）
+	id_row.add_child(_label("语言", 13, UiPalette.DIM))
+	_lang_pick = OptionButton.new()
+	_lang_pick.add_theme_font_override("font", _font)
+	for i in UiText.LANGS.size():
+		_lang_pick.add_item(UiText.LANGS[i], i)
+	_lang_pick.item_selected.connect(func(i: int): set_lang(UiText.LANGS[i]))
+	id_row.add_child(_lang_pick)
 	mid.add_child(id_row)
 
 	var scroll := ScrollContainer.new()
@@ -237,6 +249,16 @@ func _build_ui() -> void:
 	_status.add_theme_font_override("normal_font", _font)
 	_status.add_theme_font_size_override("normal_font_size", 12)
 	side.add_child(_status)
+
+	# 091：事件链 —— 从这个事件出去的（选项 → next_event，递归）和引用它的（别的事件 / 节点规则 / 预设图 / 章节开场）；双击一行打开那个事件
+	side.add_child(_label("事件链（双击跳过去）", 14, UiPalette.FG))
+	_chain = Tree.new()
+	_chain.hide_root = true
+	_chain.custom_minimum_size.y = 150
+	_chain.add_theme_font_override("font", _font)
+	_chain.add_theme_font_size_override("font_size", 12)
+	_chain.item_activated.connect(_open_from_chain)
+	side.add_child(_chain)
 
 	side.add_child(_label("挂进节点规则（先保存）", 14, UiPalette.FG))
 	_placement = _label("", 12, UiPalette.DIM)
@@ -410,13 +432,51 @@ func _bind(def: EventDef, id: String) -> void:
 	_current_id = id
 	_syncing = true
 	_id_edit.text = String(_def.id)
-	_title_edit.text = _def.title
-	_text_edit.text = _def.text
 	_image_edit.text = _def.image
 	_syncing = false
+	_sync_fields()
 	_rebuild_form()
 	_refresh()
 	_repaint_list()
+
+
+## 091：标题 / 正文两个框按当前语言填
+func _sync_fields() -> void:
+	if _def == null:
+		return
+	_syncing = true
+	if _lang == "zh":
+		_title_edit.text = _def.title
+		_text_edit.text = _def.text
+		_title_edit.placeholder_text = ""
+		_text_edit.placeholder_text = ""
+	else:
+		_title_edit.text = String(_def.titles.get(_lang, ""))
+		_text_edit.text = String(_def.texts.get(_lang, ""))
+		_title_edit.placeholder_text = "（%s 标题，空 = 用中文：%s）" % [_lang, _def.title]
+		_text_edit.placeholder_text = "（%s 正文，空 = 用中文）" % _lang
+	_syncing = false
+
+
+## 091：切编辑的语言
+func set_lang(lang: String) -> void:
+	if not UiText.LANGS.has(lang):
+		lang = "zh"
+	_lang = lang
+	if _lang_pick != null:
+		_lang_pick.select(UiText.LANGS.find(lang))
+	_sync_fields()
+
+
+func lang() -> String:
+	return _lang
+
+
+static func _put_lang(table: Dictionary, lang: String, text: String) -> void:
+	if text == "":
+		table.erase(lang)
+	else:
+		table[lang] = text
 
 
 func _new_event() -> void:
@@ -445,14 +505,20 @@ func _on_id_changed(text: String) -> void:
 func _on_title_changed(text: String) -> void:
 	if _syncing or _def == null:
 		return
-	_def.title = text
+	if _lang == "zh":
+		_def.title = text
+	else:
+		_put_lang(_def.titles, _lang, text)
 	_refresh()
 
 
 func _on_text_changed() -> void:
 	if _syncing or _def == null:
 		return
-	_def.text = _text_edit.text
+	if _lang == "zh":
+		_def.text = _text_edit.text
+	else:
+		_put_lang(_def.texts, _lang, _text_edit.text)
 	_refresh()
 
 
@@ -658,7 +724,7 @@ func _rebuild_form() -> void:
 	if _def == null:
 		return
 	# 标题、正文、配图在上面有专门的控件，表单里跳过，免得两处能改同一个值
-	var form := PropertyForm.create(_def, _font, {"EventDef": ["id", "title", "text", "image"]})
+	var form := PropertyForm.create(_def, _font, {"EventDef": ["id", "title", "titles", "text", "texts", "image"]})
 	form.changed.connect(_refresh)
 	_form_host.add_child(form)
 
@@ -779,6 +845,122 @@ func _refresh() -> void:
 	_thumb.custom_minimum_size = Vector2(0, 120) if _thumb.texture != null else Vector2(0, 0)
 	_rebuild_preview()
 	_placement.text = _placement_text()
+	_rebuild_chain()
+#endregion
+
+
+#region 事件链（091）
+## 事件链的行：[{depth, text, id}]。先是从这个事件出去的（选项 → next_event，递归、防环、最深 6 层），再是「被引用」——
+## 别的事件的 next_event、节点规则的表、预设图的节点、章节的开场。id 空 = 不能跳
+func chain_lines() -> Array:
+	var out: Array = []
+	if _def == null:
+		return out
+	out.append({"depth": 0, "text": "%s（%s）" % [_def.title if _def.title != "" else "（无题）", _def.id], "id": String(_def.id)})
+	_walk_chain(_def, 1, [String(_def.id)], out)
+	var refs := referrers(String(_def.id))
+	out.append({"depth": 0, "text": "被引用" + ("：（没有）" if refs.is_empty() else "（%d 处）" % refs.size()), "id": ""})
+	for r in refs:
+		out.append({"depth": 1, "text": String(r["text"]), "id": String(r.get("id", ""))})
+	return out
+
+
+func _walk_chain(def: EventDef, depth: int, seen: Array, out: Array) -> void:
+	if depth > 6:
+		return
+	for i in def.options.size():
+		var opt := def.options[i] as EventOption
+		if opt == null:
+			continue
+		for o in opt.outcomes:
+			if not (o is NextEvent):
+				continue
+			var nid := String((o as NextEvent).event)
+			var target: EventDef = _def if nid == String(_def.id) else _ctx.events.get(StringName(nid), null)
+			var label := opt.label if opt.label != "" else "选项 %d" % (i + 1)
+			var line := "「%s」→ %s" % [label, nid]
+			if target == null:
+				line += "（找不到）"
+			elif seen.has(nid):
+				line += "（回到前面：环）"
+			out.append({"depth": depth, "text": line, "id": nid})
+			if target != null and not seen.has(nid):
+				var next_seen := seen.duplicate()
+				next_seen.append(nid)
+				_walk_chain(target, depth + 1, next_seen, out)
+
+
+## 谁引用了这个事件：[{text, id?}]
+func referrers(id: String) -> Array:
+	var out: Array = []
+	for eid in _ctx.events:
+		if String(eid) == id:
+			continue
+		var e := _ctx.events[eid] as EventDef
+		for opt in e.options:
+			for o in (opt as EventOption).outcomes:
+				if o is NextEvent and String((o as NextEvent).event) == id:
+					out.append({"text": "事件 %s 的「%s」" % [eid, (opt as EventOption).label], "id": String(eid)})
+	for rid in _rules_ids():
+		var parsed = JSON.parse_string(FileAccess.get_file_as_string(ContentPaths.authoring_file(RULES_KIND, rid)))
+		if not (parsed is Dictionary):
+			continue
+		var ebt = (parsed as Dictionary).get("events_by_type", {})
+		if ebt is Dictionary:
+			for type in ebt:
+				var table = ebt[type]
+				if table is Dictionary and (table as Dictionary).has(id):
+					out.append({"text": "节点规则 %s · %s（权重 %s）" % [rid, type, str(table[id])]})
+	var maps := DirAccess.open(MapPreset.DIR)
+	if maps != null:
+		for f in maps.get_files():
+			if not f.ends_with(".json"):
+				continue
+			var parsed = JSON.parse_string(FileAccess.get_file_as_string(MapPreset.DIR + "/" + f))
+			if not (parsed is Dictionary):
+				continue
+			var nodes = (parsed as Dictionary).get("nodes", [])
+			var rows: Array = nodes if nodes is Array else ((nodes as Dictionary).values() if nodes is Dictionary else [])
+			for n in rows:
+				if n is Dictionary and String(((n as Dictionary).get("content", {}) as Dictionary).get("event", "")) == id:
+					out.append({"text": "预设图 %s 的节点 %s" % [f.get_basename(), str((n as Dictionary).get("id", "?"))]})
+	var chapters := DirAccess.open(ContentPaths.AUTHORING_CHAPTERS)
+	if chapters != null:
+		for f in chapters.get_files():
+			if not f.ends_with(".json"):
+				continue
+			var parsed = JSON.parse_string(FileAccess.get_file_as_string(ContentPaths.AUTHORING_CHAPTERS + "/" + f))
+			if parsed is Dictionary and String((parsed as Dictionary).get("intro_event", "")) == id:
+				out.append({"text": "章节 %s 的开场" % f.get_basename()})
+	return out
+
+
+func _rebuild_chain() -> void:
+	if _chain == null:
+		return
+	_chain.clear()
+	var root := _chain.create_item()
+	var parents: Array = [root]
+	for line in chain_lines():
+		var depth := mini(int(line["depth"]), parents.size() - 1)
+		var it := _chain.create_item(parents[depth])
+		it.set_text(0, String(line["text"]))
+		it.set_metadata(0, String(line["id"]))
+		parents.resize(depth + 1)
+		parents.append(it)
+
+
+## 双击链里的一行：那个事件在盘上就打开它
+func _open_from_chain() -> void:
+	var it := _chain.get_selected()
+	if it == null:
+		return
+	var id := String(it.get_metadata(0))
+	if id == "" or id == _current_id or not _ids.has(id):
+		return
+	_stash_current()
+	_open(id)
+	_select_in_list(id)
 #endregion
 
 
