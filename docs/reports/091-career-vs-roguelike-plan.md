@@ -302,3 +302,39 @@ Backpack Hero 在 1.0（2023-11）加了故事模式（重建小镇 + 寻母主�
 作者拉了这一批运行后编辑器里「原本的内容全部变为空白」。这边四个编辑器与游戏里的名字都正常，原因与 11.5 的灰屏同类：新加了 `class_name FieldText`，全局类缓存没更新时 `property_form.gd` 解析失败（Output：`Identifier "FieldText" not declared`），四个编辑器共用的属性表单整块空白，外壳还在。
 
 改法：`PropertyForm` 改成 `const FieldText := preload("res://core/authoring/field_text.gd")` 直接引用，不靠全局类名。验证：把缓存里 FieldText 那条删掉、不重新导入直接拉起事件编辑器，表单照样有内容。**以后新加 class_name 的脚本，消费方一律用 preload 引用**，作者拉了就能跑；`--import`（或 `tools/run_game.bat`、编辑器「重新加载当前项目」）仍是最稳的一步。
+
+## 十四、实施：待定项拍板 + 后续修改（作者定）
+
+作者对上一节末尾列的待定项拍了板，并加了几条修改与两个 bug。
+
+### 14.1 拍板的待定项
+
+1. **搜索遭遇**：打赢了**可以继续搜**；打输了**不能再搜，但不失去体力**；整场战斗包在事件里。
+   - `SearchSession.resume()`（会话重新激活、遭遇清掉）；`NodeEvents._after_battle(node, kind, won)`：搜索里的一场打赢 → `resume` → 回到「再搜一次 / 离开」（搜满是「翻遍了」）那一屏，点还没用过；打输 → 会话收掉（`search_closed(&"encounter")`）、点用过、过 `destroyed_event`。
+   - 无代价：遭遇这一场三条路（战前准备屏 `pending_battle["loss_cost"] = 0`、直接开打 `_fight(..., 0)`）都写 `loss_cost 0`，`loss_cost_for` 见到 0 就不扣体力、不判战败。
+   - 序章与 084 的测试改成新语义（`test_prologue`：打完回到 `tut_search_2_again_2` / `search_done`；`test_node_events`：走了之前打过的都得是赢的）。
+2. **商店可以重复访问，刷新售价不重置**：`RunState.step_to` 记下这一步是不是走回用过的点，走成了且目标是商店就 `NodeEvents.reopen_shop`（新开 `ShopSession`，从 `node.content["shop"]` 读回 `refreshes / sold`，所以第 n 次刷新摆的还是那几件、刷新费接着涨）。
+3. **钱可以带出去**：一直如此（`MetaState.absorb`），维持。
+4. **进度环**：搜索屏里那一圈是「这一件揭示到几成」的表现层画法（`LootView`，按稀有度的 `reveal_seconds` 计时），不是数值系统；已在上一轮答过。
+
+### 14.2 后续修改
+
+1. **出发界面加 DPS 与耐力估算**（`ui/game/setup_screen.gd`）：读数第一行和背包面板一样 —— `BattleCompiler.compile(棋盘, 角色基线)` 得预估 DPS，`StaminaEstimate.of(spec)` 得「耐力消耗：够 / 不够（每秒 x，回 y）」与几件会出手。
+2. **信仰系统**：等作者的表格，这一批没动。
+3. **套装编辑器**（`ui/set_editor/set_editor.gd` + `.tscn`，启动选择器第七项）：左列表 / 新建 / 刷新 / 放弃改动；id、名字单独一行，其余（计数方式、档位：件数 + 属性修饰 / 规则 / 别的作用域的效果）由 `PropertyForm` 反射生成；右栏摘要（「2 件：1 修饰 / 0 规则 / 0 效果」）、**成员**（道具库里 `set_id` 等于这个 id 的道具，在道具编辑器里改）、校验（走 `ContentImporter.import_set`）、JSON 直接改再套用；保存 = `data/authoring/sets/<id>.json` + `data/sets/<id>.tres`；DevNav 问 `has_unsaved_changes`。作者目录里现在没有套装文件，打开就是「新建」。
+4. **基地商店：出售**（`ui/game/meta_screen.gd` 第四个页签「出售」）：`MetaRules.sell_ratio`（0.5 占位）；`MetaState.sell_item(uid)`（定价 × 比例向下取整进 `funds`）、`sell_where(max_rarity)` 一键卖稀有度 ≤ 档的（-1 全部）、`sell_preview` 先算会卖几件得多少；页上一个下拉「白色 / 绿色及以下 / 蓝色及以下 / 紫色及以下 / 金色及以下 / 全部」+ 预览行 + 「一键出售」（主动作档）+ 仓库视图双击卖一件；每次卖都存局外。**暂无出售效果**：钱只攒着，花处等作者定。
+5. **背景颜色浅一点、多几种可选**：`UiPalette.BG_THEMES` 六种（石墨 `#262b33` 默认 / 深黑 / 青灰 / 暮紫 / 苔绿 / 雾白），`UiPalette.bg()` 当前底色，`GameSettings.bg_theme` 存盘；设置屏一行色块按钮（`set_bg_theme` 立刻换底板 `refresh_backdrop` 并存盘）；游戏各屏（`GameScreen._backdrop`）、地图视图、四个编辑器与两个沙盒、启动选择器都改读 `UiPalette.bg()`。
+6. **属性键下拉**（作者追加）：`PropertyForm` 里「可添加的属性」改成**浏览已有属性的下拉 + 自定义**：
+   - `known_stat_keys()` = `BattleStats` 的常量 + `Glossary.STAT_NAMES` 有名字的 + **内容里用过的**（打开时扫一遍道具 / 敌人 / 角色 / buff / 套装 / 局内 buff / 信仰的作者文件里的 `base_stats` 键与 `stat / *_stat` 值），编辑器还能 `register_stat_keys` 再登记；中文模式显示「伤害 (damage)」。
+   - 属性表（`base_stats`、`stat_scale`，或键全是已知属性的字典）的「+ 加一项」变成「下拉（排除已有的）+ 自定义… 输入框 + 加一项」；已有行的键仍可直接改名（tooltip 是中文名）。
+   - 指向属性键的字段（`StatModifier.stat`、`DealDamage.damage_stat` 这类 `stat / *_stat`）同样是下拉 + 自定义，当前值不在列表里就停在「自定义…」并露出输入框。信仰加成（`FaithBonus.mods`）、套装档位、包的加成、邻接槽的加成都是 `StatModifier`，一并生效。
+7. **`damage` 重复之问**（作者：基础属性已有 `damage`，和每次出手的 `damage` 是加法关系？倾向去掉基础属性的）：**不是加法，是替代。** `DealDamage` 出手时先读 `damage_stat`（默认 `damage`）指的属性，读到了就用它；`amount` 只在不读属性（`damage_stat` 留空）或属性表里没那条时才用。武器数据里从没填过 `amount`（短剑就是 `base_stats.damage = 5` + 一条 `deal_damage`）。**建议保留 `base_stats.damage`、不要去掉**：buff、套装、邻接槽、力量护符的伤害加成全落在这条属性上（`StatModifier.stat = damage`），预估 DPS 也读它；去掉它这些加成就没有落点。`amount` 的存在是给「灼烧每层 2 点」这类不吃加成的固定伤，它本来就不该出现在武器上。这一批把 `amount` 的源码注释（即编辑器里的悬浮说明）改成「备用；与 base_stats.damage 不相加」；要不要在道具编辑器里把武器的 `amount` 行直接藏起来，等作者一句。
+
+### 14.3 两个编辑器 bug（作者截图）
+
+- **道具编辑器新建时边敲 id 每字一条**：草稿以 id 为键，敲 `t / ti / tib` 时旧键下那份还是同一个对象，被当成孤儿留在列表。`_track_draft` 现在把「值是同一个对象的旧键」清掉，盘上没有的旧名字也从列表撤掉。
+- **语言字典「+ 加一项」默认给 0.0**：`PropertyForm.TEXT_DICTS`（`display_names / titles / texts / labels / descriptions / tooltip_texts`，或已有的值全是字符串）算文字表：加一项给**空字串**、键是下一个还没写的语言码（都写了 `lang_1`…），文字值用单行框直接改（不带 JSON 引号）。
+
+### 14.4 测试
+
+新增 `tests/test_author_091.gd`（遭遇打输：无代价 / 会话收掉 / 一局不结束；商店回头：新会话、刷新次数与刷新价接着算；背景底色：六种、设置屏切换即换底板、存盘往返、瞎写的退回默认；出售页：卖价公式、预览、按档筛、双击卖一件、一键全卖、存局外；道具编辑器敲 id 只一条；语言字典加项是空字串；属性键下拉：已知属性、排除已有、挑一项 / 自定义加项、`stat` 字段下拉写回）与 `tests/test_set_editor.gd`（新建 / 改 id / 加档位 / 摘要 / 校验 / 保存 JSON + .tres / 往返 / 成员 / 空 id 拒存 / 放弃改动）；`test_character_setup` 补开局屏读数；`test_node_screens` 遭遇改成赢了接着搜；`test_prologue`、`test_node_events` 改新语义。全套 **66 个套件、11555 项断言**通过。

@@ -11,6 +11,8 @@ extends Control
 var screen: int = -1
 var flow: GameFlow = null
 var font: Font = null
+## 091：底屏 / 叠层的整块底色（跟设置里的底色走）；换了底色 [method refresh_backdrop] 刷
+var _bg_rect: ColorRect = null
 
 
 func _ready() -> void:
@@ -66,14 +68,23 @@ func _button(text: String, handler: Callable, font_size: int = 14, tier: int = U
 	return b
 
 
-## 整屏的底色（底屏用）
-func _backdrop(color: Color = UiPalette.BG) -> ColorRect:
+## 整屏的底色（底屏用）。不传颜色 = 设置里挑的底色（[method UiPalette.bg]）
+func _backdrop(color: Color = Color(0, 0, 0, 0)) -> ColorRect:
 	var bg := ColorRect.new()
-	bg.color = color
+	var themed := color.a <= 0.0
+	bg.color = UiPalette.bg() if themed else color
+	if themed:
+		_bg_rect = bg
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_STOP     # 叠层要挡住底下的地图，不然点穿了就走了一步
 	add_child(bg)
 	return bg
+
+
+## 091：设置里换了底色，这一屏立刻跟着变
+func refresh_backdrop() -> void:
+	if _bg_rect != null:
+		_bg_rect.color = UiPalette.bg()
 
 
 ## 一块带边框的面板

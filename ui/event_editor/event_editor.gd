@@ -100,7 +100,8 @@ static func _ids_on_disk() -> Array[String]:
 #region 界面
 func _build_ui() -> void:
 	var bg := ColorRect.new()
-	bg.color = UiPalette.BG
+	UiPalette.apply(GameSettings.load_from())     # 091：底色跟设置走
+	bg.color = UiPalette.bg()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)

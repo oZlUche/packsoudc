@@ -311,6 +311,7 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 	t.eq(flow.meta.warehouse.item_count(), n - 1, "仓库少了一件")
 	t.eq(setup.carried().size(), 1, "带了一件")
 	t.check(setup._readout.get_parsed_text().contains(name), "读数里写着它")
+	t.check(setup._readout.get_parsed_text().contains("预估 DPS") and setup._readout.get_parsed_text().contains("耐力消耗"), "091：开局屏读数带预估 DPS 与耐力消耗（和背包面板一样）")
 	t.check(setup.carry_out(first.uid), "放回去")
 	t.eq(flow.meta.warehouse.item_count(), n, "仓库又是 %d 件" % n)
 	t.check(setup.carry_in(first.uid), "再带上")

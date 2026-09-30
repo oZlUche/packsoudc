@@ -42,7 +42,7 @@ func open(payload: Dictionary) -> void:
 	var head := _hbox(16)
 	root.add_child(head)
 	head.add_child(_label("基地", 26, UiPalette.FG))
-	for pair in [["warehouse", "仓库"], ["codex", "图鉴"], ["achievements", "成就"]]:
+	for pair in [["warehouse", "仓库"], ["codex", "图鉴"], ["achievements", "成就"], ["sell", "出售"]]:
 		var key: String = pair[0]
 		var b := _button(pair[1], func(): show_tab(key), 16)
 		b.toggle_mode = true
@@ -138,8 +138,93 @@ func open(payload: Dictionary) -> void:
 	# 图鉴页、成就页（091）
 	_pages["codex"] = _build_codex(root)
 	_pages["achievements"] = _build_achievements(root)
+	_pages["sell"] = _build_sell(root)
 	show_tab(String(payload.get("tab", "warehouse")))
 	_refresh()
+
+
+#region 出售（091，作者定：基地内商店）
+## 「白色 / 绿色及以下 / … / 全部」→ 稀有度上限（-1 = 全部）
+const SELL_FILTERS := [["白色", 0], ["绿色及以下", 1], ["蓝色及以下", 2], ["紫色及以下", 3], ["金色及以下", 4], ["全部", -1]]
+var _sell_filter: int = 0
+var _sell_pick: OptionButton = null
+var _sell_preview: Label = null
+var _sell_line: Label = null
+var _sell_view: InventoryView = null
+
+
+## 基地商店：卖掉仓库里的东西 —— 双击一件卖一件，或按稀有度一键卖。得的钱进局外的钱（作者：暂无出售效果，先攒着）
+func _build_sell(root: Control) -> Control:
+	var page := _vbox(8)
+	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(page)
+	page.add_child(_label("出售　双击仓库里的一件卖掉；或选一档稀有度一键卖。回定价的 %d%%，钱进局外（现在还没处花）" % int(round(flow.sell_ratio() * 100)), 15, UiPalette.DIM))
+	var row := _hbox(10)
+	page.add_child(row)
+	row.add_child(_label("一键出售", 13, UiPalette.DIM))
+	_sell_pick = OptionButton.new()
+	_sell_pick.add_theme_font_override("font", font)
+	for i in SELL_FILTERS.size():
+		_sell_pick.add_item(String(SELL_FILTERS[i][0]), i)
+	_sell_pick.item_selected.connect(set_sell_filter)
+	row.add_child(_sell_pick)
+	_sell_preview = _label("", 13, UiPalette.FG)
+	row.add_child(_sell_preview)
+	row.add_child(_button("一键出售", func(): sell_filtered(), 13, UiPalette.Tier.PRIMARY))
+	_sell_line = _label("", 13, UiPalette.STAMINA)
+	page.add_child(_sell_line)
+	_sell_view = InventoryView.new()
+	_sell_view.label_font = font
+	_sell_view.inventory = flow.meta.warehouse
+	_sell_view.show_adjacency = false
+	_sell_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_sell_view.item_double_clicked.connect(func(uid: int): sell(uid))
+	page.add_child(_sell_view)
+	flow.meta.warehouse.changed.connect(_refresh_sell)
+	set_sell_filter(0)
+	return page
+
+
+## 选一档（SELL_FILTERS 的下标）
+func set_sell_filter(i: int) -> void:
+	_sell_filter = clampi(i, 0, SELL_FILTERS.size() - 1)
+	if _sell_pick != null:
+		_sell_pick.select(_sell_filter)
+	_refresh_sell()
+
+
+func sell_filter_max() -> int:
+	return int(SELL_FILTERS[_sell_filter][1])
+
+
+## 卖掉仓库里的一件；返回得了多少（没这件 -1）
+func sell(uid: int) -> int:
+	var inst := flow.meta.warehouse.get_item(uid)
+	var name := Names.of(inst.def) if inst != null else ""
+	var got := flow.sell_item(uid)
+	if got >= 0 and _sell_line != null:
+		_sell_line.text = "卖掉「%s」，得 %d 币；现在有 %d 币" % [name, got, flow.meta.funds]
+	return got
+
+
+## 按当前那一档一键卖；返回 {"count", "funds"}
+func sell_filtered() -> Dictionary:
+	var got := flow.sell_where(sell_filter_max())
+	if _sell_line != null:
+		_sell_line.text = "卖掉 %d 件，得 %d 币；现在有 %d 币" % [int(got["count"]), int(got["funds"]), flow.meta.funds] if int(got["count"]) > 0 else "这一档没有可卖的"
+	return got
+
+
+func sell_preview_text() -> String:
+	return _sell_preview.text if _sell_preview != null else ""
+
+
+func _refresh_sell() -> void:
+	if _sell_preview == null:
+		return
+	var p := flow.meta.sell_preview(sell_filter_max(), flow.sell_ratio())
+	_sell_preview.text = "会卖 %d 件，得 %d 币" % [int(p["count"]), int(p["funds"])]
+#endregion
 
 
 #region 成就页（091，作者定）

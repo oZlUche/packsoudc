@@ -14,3 +14,5 @@ const DEFAULT_SIZE := Vector2i(10, 8)
 ## 仓库空的第一局带什么（058 第六节）：一套开局装备（[LoadoutDef] 的 id）的非包道具发进仓库，开局屏再从仓库往包里拖。
 ## 占位：正式游戏由新手教程关发第一套（第 8 阶段）；空串 = 不发
 @export var first_kit: StringName = &""
+## 091（作者定）：基地商店卖掉仓库里的东西回定价的几成（和局内商店的 shop_sell_ratio 同义，局外一份）
+@export var sell_ratio: float = 0.5

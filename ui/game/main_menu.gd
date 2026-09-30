@@ -10,6 +10,7 @@ var _continue_btn: Button = null
 
 func open(_payload: Dictionary) -> void:
 	UiText.apply(flow.settings)
+	UiPalette.apply(flow.settings)
 	_backdrop()
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -48,6 +49,7 @@ func toggle_language() -> void:
 	flow.settings.language = UiText.next_lang(flow.settings.language)
 	flow.save_settings()
 	UiText.apply(flow.settings)
+	UiPalette.apply(flow.settings)
 	for c in get_children():
 		c.queue_free()
 		remove_child(c)

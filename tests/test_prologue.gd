@@ -299,10 +299,17 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(s.events.choose(0), "迎战")
 	t.eq(int(s.tally["battles_won"]), 2, "遭遇也打赢了")
 	t.eq(s.phase, RunState.Phase.ON_MAP, "还在图上")
+	# 091（作者定）：打赢了会话接着开、还能再搜 —— 回到「再搜 / 走」那一屏（这里是教程的第二段 again 事件，搜满则是 done）
 	ev = s.events.pending_event()
-	t.check(ev != null and ev.id == &"search_destroyed", "打完过「余波」事件：不能再搜")
-	t.check(s.events.current_search == null and path[3].is_visited(), "会话收了、点用过了")
-	t.check(s.events.choose(0), "继续")
+	t.check(ev != null and (ev.id == &"tut_search_2_again_2" or ev.id == &"search_done"), "打完回到「再搜 / 走」那一屏（%s）" % (ev.id if ev != null else "?"))
+	t.check(s.events.current_search == session and session.active and not path[3].is_visited(), "会话接着开、点还没用过（还能搜）")
+	var leave_at := 0
+	if ev != null:
+		for i in ev.options.size():
+			if (ev.options[i] as EventOption).label == "离开":
+				leave_at = i
+	t.check(s.events.choose(leave_at), "离开")
+	t.check(s.events.current_search == null and path[3].is_visited(), "走了：会话收了、点用过了")
 	t.not_null(s.pending_loot, "战利品（敌人掉的 + 前两次的收获）")
 	var got_bag := false
 	if s.pending_loot != null:

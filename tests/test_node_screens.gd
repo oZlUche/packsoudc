@@ -214,10 +214,14 @@ static func run_search_loop(t: TestCase) -> void:
 		t.eq(String(run.events.pending_battle["kind"]), "search", "是搜索里的一场")
 		t.check(f.start_battle(), "开战")
 		t.eq(f.screen, GameFlow.Screen.BATTLE, "→ 回放")
-		t.check(run.events.current_search == null and run.map.get_node(next).is_visited(), "会话收了、点用过了")
+		# 091（作者定）：打赢了会话接着开、还能再搜；点还没用过
+		t.check(run.events.current_search == session and session.active and session.encounter.is_empty(), "打赢了：会话接着开、遭遇清掉")
+		t.check(not run.map.get_node(next).is_visited(), "点还没用过（还能搜）")
 		f.resume()
-		t.check(f.screen == GameFlow.Screen.EVENT and (f.last_payload.get("def", null) as EventDef).id == &"search_destroyed", "回放之后先说「余波」，再看战利品")
-		t.check(f.choose_event(0), "继续")
+		var after: EventDef = f.last_payload.get("def", null)
+		t.check(f.screen == GameFlow.Screen.EVENT and after != null and (after.id == &"search_again" or after.id == &"search_done"), "回放之后回到「再搜 / 走」那一屏（%s）" % (after.id if after != null else "?"))
+		var leave_at := _labels(after).find("离开") if after != null else 0
+		t.check(f.choose_event(maxi(leave_at, 0)), "离开")
 		if run.pending_loot != null:
 			t.eq(f.screen, GameFlow.Screen.LOOT, "→ 战利品（敌人掉的 + 之前的收获）")
 			t.check(run.pending_loot.item_count() >= before, "之前搜到没拿的也在里面")

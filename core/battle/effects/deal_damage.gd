@@ -14,9 +14,11 @@ extends CombatEffect
 ## 否则伤害类型与乘区被迫一一对应，以后想加「不吃任何元素加成的真实伤害」就没法表达。
 @export var damage_type: StringName = DamageTypes.PHYSICAL
 
-## 固定伤害值；damage_stat 非空时改用属性值
+## 固定伤害值 —— **备用**：只在 damage_stat 留空、或属性表里没有那条属性时才用。
+## 和 base_stats 里的 damage **不相加**，属性有值就以属性为准（这样 buff / 套装 / 邻接的伤害加成才有落点）。
+## 武器一般不填它，只写 base_stats.damage；「灼烧每层 2 点」这类不吃加成的固定伤才填
 @export var amount: float = 0.0
-## 从属性表取伤害，通常是 damage
+## 从属性表取伤害的键，通常是 damage；留空 = 只用上面的固定值
 @export var damage_stat: StringName = &"damage"
 ## 伤害是否乘以来源 buff 的层数。「灼烧每层 2 点」用它
 @export var per_stack: bool = false

@@ -300,6 +300,48 @@ func mark_rules_seen(chapter_id: StringName) -> void:
 		seen_rules.append(chapter_id)
 
 
+## 091（作者定）：基地商店 —— 卖掉仓库里的一件，按定价的 [param ratio] 进钱（钱现在还没处花，先攒着）。返回得了多少；没这件 -1
+func sell_item(uid: int, ratio: float = 0.5) -> int:
+	var inst := warehouse.get_item(uid)
+	if inst == null:
+		return -1
+	var price := sell_price(inst.def, ratio)
+	warehouse.remove(uid)
+	funds += price
+	changed.emit()
+	return price
+
+
+static func sell_price(def: ItemDef, ratio: float = 0.5) -> int:
+	return maxi(0, floori(float(ItemValue.of(def)) * ratio)) if def != null else 0
+
+
+## 一键出售：稀有度 ≤ [param max_rarity] 的全卖（-1 = 全部）。返回 {"count", "funds"}
+func sell_where(max_rarity: int, ratio: float = 0.5) -> Dictionary:
+	var out := {"count": 0, "funds": 0}
+	for inst in warehouse.items():
+		var it := inst as ItemInstance
+		if max_rarity >= 0 and it.def.rarity > max_rarity:
+			continue
+		var got := sell_item(it.uid, ratio)
+		if got >= 0:
+			out["count"] = int(out["count"]) + 1
+			out["funds"] = int(out["funds"]) + got
+	return out
+
+
+## 一键出售会卖几件、得多少（不动仓库）
+func sell_preview(max_rarity: int, ratio: float = 0.5) -> Dictionary:
+	var out := {"count": 0, "funds": 0}
+	for inst in warehouse.items():
+		var it := inst as ItemInstance
+		if max_rarity >= 0 and it.def.rarity > max_rarity:
+			continue
+		out["count"] = int(out["count"]) + 1
+		out["funds"] = int(out["funds"]) + sell_price(it.def, ratio)
+	return out
+
+
 ## 旗标现在的数；没立过 0
 func flag(id: StringName) -> int:
 	return int(flags.get(String(id), 0))

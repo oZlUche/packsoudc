@@ -529,6 +529,25 @@ func discard_board() -> void:
 	save_meta()
 
 
+## 091（作者定）：基地商店。卖掉仓库里的一件 / 按稀有度一键卖；改了就存
+func sell_ratio() -> float:
+	return meta_rules.sell_ratio if meta_rules != null else 0.5
+
+
+func sell_item(uid: int) -> int:
+	var got := meta.sell_item(uid, sell_ratio())
+	if got >= 0:
+		save_meta()
+	return got
+
+
+func sell_where(max_rarity: int) -> Dictionary:
+	var got := meta.sell_where(max_rarity, sell_ratio())
+	if int(got["count"]) > 0:
+		save_meta()
+	return got
+
+
 ## 局外 buff 的开关（占位：将来由任务系统、局外科技决定）。改了就存
 func toggle_meta_buff(id: StringName) -> bool:
 	var on := meta.toggle_buff(id)

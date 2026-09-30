@@ -254,7 +254,7 @@ func press(p: Vector2, button: int = MOUSE_BUTTON_LEFT, shift: bool = false) -> 
 
 #region 绘制
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), UiPalette.BG)
+	draw_rect(Rect2(Vector2.ZERO, size), UiPalette.bg())
 	if graph == null:
 		return
 	if _layout == null:

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v1.98 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v1.99 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2577,7 +2577,7 @@ class_name SearchRules extends Resource
 再按曲线掷遭遇 —— 中了才由敌人池按 `search` 类型出人（搜索点的敌人**看不见**，5.10：不预先造，存档里也没有），
 搜索到此为止。**搜索的循环**（084，作者定，所有搜索点通用）：事件屏选「搜索」= 开会话 + **自动搜一次** → 搜索屏把这一次的收获亮出来拖走 → 「关闭」回到事件屏
 （`SearchRules.again_event`：再搜一次 / 离开；搜满了是 `done_event`）→ 再选就再搜。**先掷遭遇再翻东西**：掷中的那一次空手，直接过 `encounter_event`（迎战 = `start_battle` 打会话里的遭遇）
-→ 战前准备 → 回放 → `destroyed_event`（搜索点被余波摧毁，不能再搜）→ 敌人的战利品与之前没拿的收获并成一份。四个事件 id 节点内容可覆盖（`search_again_events[k]` 等），
+→ 战前准备 → 回放 → **打赢了会话接着开、回到「再搜 / 走」那一屏（091 作者定，`SearchSession.resume`）；打输了会话收掉、点用过、过 `destroyed_event`（搜索点被余波摧毁，不能再搜），这一场**无代价**（`loss_cost 0`，体力不掉、一局不结束）** → 敌人的战利品与之前没拿的收获并成一份。四个事件 id 节点内容可覆盖（`search_again_events[k]` 等），
 `encounter.guaranteed_drops` 必掉；都没配就是老路（关闭即离开、遭遇直接开打）。搜满了只是不能再搜（`is_exhausted()`），会话不自动结束，`leave()` 才结束（`exhausted` / `left`）。
 搜过几次记进 `node.content["searches"]`，读档接着搜。
 遭遇的敌人与随机点揭成的战斗一样按**探索度**抬档（6.0：总步数、累计搜索次数）：走得越远、搜得越多，撞上的越强。
@@ -2695,7 +2695,7 @@ class_name EconomyRules extends Resource
 - **`Wallet`**（`core/run/wallet.gd`）和 `Vitality` 一个做法：不知道任何数值，只管进账、花钱、够不够、发信号；不够就一分不动。
   它就是 7 节 `RunState` 里那个 `gold`。
 - **打赢进账**在 `NodeEvents._fight` 里：档位来自节点内容的 `strength`（6.0），深度按 tier 归一化，难度是章节的。输了、平了不给。
-- **商店**是 `ShopSession`：货架由节点 `content_seed` 与刷新次数决定（第 n 次刷新摆的永远是那几件），所以存档只记
+- **商店**是 `ShopSession`：货架由节点 `content_seed` 与刷新次数决定（第 n 次刷新摆的永远是那几件），所以存档只记 **商店可以回头再逛**（091 作者定）：回到走过的商店点，`RunState.step_to` 调 `NodeEvents.reopen_shop` 重开会话，刷新次数 / 卖掉的从 `node.content["shop"]` 读回，刷新价接着涨不重置。
   `content.shop = {refreshes, sold}`；候选不含包与珍宝，按稀有度权重抽、不重复；价 = `ItemValue.of` × 倍数；买了就没了；
   刷新花钱且越刷越贵；走了才算用过。买到的东西交给谁装是 M5 的事，这里只发 `bought`。
 - **付费撤离点**由 `PaidExtracts.mark(graph, rules)` 在生成之后标（生成器不认识钱）：挑最深的 `paid_extracts` 个撤离点，
@@ -3524,6 +3524,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v1.99 | 2026-09-30 | **待定项拍板 + 基地出售页 + 套装编辑器 + 背景底色**（报告 091 十四）：搜索遭遇**打赢会话接着开**（`SearchSession.resume`、`NodeEvents._after_battle(won)` 回「再搜 / 走」）、**打输不再搜但无代价**（`loss_cost 0`）、整场包在事件里；**商店回头再逛**（`RunState.step_to` → `NodeEvents.reopen_shop`，刷新次数 / 卖掉的从节点内容读回、刷新价不重置）；钱带出（维持）。开局屏读数加预估 DPS 与耐力消耗（`StaminaEstimate`）。基地「出售」页（`MetaState.sell_item / sell_where / sell_preview`、`MetaRules.sell_ratio`，筛「白色 / 绿色及以下 / … / 全部」一键卖，钱只攒着）。`UiPalette.BG_THEMES` 六种底色 + `GameSettings.bg_theme`，设置屏挑、所有屏与编辑器跟着。`ui/set_editor` 第五个编辑器（id / 名字 / 计数方式 / 档位反射表单、成员按 `set_id`、校验走 `import_set`、保存 JSON + .tres）。编辑器修：新建道具边敲 id 不再每字一条（`_track_draft` 收孤儿草稿）；语言字典加一项给空字串（`TEXT_DICTS`）。**属性键下拉**：`PropertyForm` 的 `base_stats` 加一项与 `stat / *_stat` 字段改成「已知属性（`BattleStats` 常量 + 词典 + 内容里用过的）下拉 + 自定义」（`known_stat_keys / register_stat_keys / _stat_picker`） |
 | v1.98 | 2026-09-29 | **编辑器字段本地化 + 悬浮说明**（报告 091 十三）：`FieldText`（字段 / 类型 / 枚举 / 类名的中文标签；说明**从脚本源码的 `##` 注释读**并缓存；英文模式原名），`PropertyForm` 每行标签与控件带 tooltip、类型与枚举下拉显示中文（tooltip 原名）；字段名不改 |
 | v1.97 | 2026-09-29 | **事件独立存在的三块补齐**（报告 091 十二）：地图编辑器节点面板「事件」下拉（`set_node_event / event_ids`）；事件编辑器**事件链**树（出去的 next_event 递归 + 被引用：事件 / 节点规则 / 预设图 / 章节开场，双击跳转）与**语言**下拉；`EventDef.titles / texts`、`EventOption.labels` + `title_for / text_for / label_for`；**局外旗标** `MetaState.flags`、`RunState.meta → NodeEvents.meta → EventContext.meta`、条件 `has_flag`、后果 `set_flag`（注册表）、`choose_event` 存 meta |
 | v1.96 | 2026-09-28 | **成就系统**（报告 091 十一）：内容种类 `achievements`（`AchievementDef`：条件种类 + 数 / 对象、`grants` 解锁 id、途径文字、隐藏）；`ItemDef.requires_unlock` + `ItemDatabase.set_locked / ids(include_locked)` 道具上锁；`MetaState.achievements / chapter_extractions / boss_kills / battles_won / seen_rules`，`RunResult.boss_cleared`；`GameFlow.check_achievements`（结算后、读档后）/ `unlocked` / `locked_item_ids` / `apply_item_locks` / `unlock_names`；基地第三页签「成就」（全部 / 已解锁 / 未解锁）；**本图规则卡** `ChapterDef.rules`（首次进图弹、暂停菜单再看）；**全部解锁** `GameSettings.unlock_all`（成就不计） |

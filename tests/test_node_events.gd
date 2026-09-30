@@ -314,7 +314,11 @@ static func run_search(t: TestCase) -> void:
 		t.check(EnemyKit.has_enemy(s.encounter), "遭遇的是敌人池出的人")
 		t.check(w.pool.entry_of(StringName(String(s.encounter["enemy"]))).fits(_search_view(node)), "那个敌人允许在搜索点出现")
 	else:
-		t.eq(fights.size(), 0, "没遭遇就没打")
+		# 091（作者定）：遭遇打赢了会话接着开、能搜到底 —— 所以搜满 / 走了之前可能已经打过，但都得是赢的
+		var all_won := true
+		for f in fights:
+			all_won = all_won and bool(f[1])
+		t.check(fights.size() == 0 or all_won, "没遭遇就没打；打过的都是赢了才搜下去的（%d 场）" % fights.size())
 	t.check(node.is_visited(), "结束之后点用过了")
 	t.check(w.events.current_search == null, "当前会话清了")
 

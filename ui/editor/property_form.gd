@@ -92,6 +92,11 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 			return _labeled(owner, key, _number(value, 0.1, func(v: float): owner.set(key, v)))
 
 		TYPE_STRING, TYPE_STRING_NAME:
+			if type == TYPE_STRING_NAME and _is_stat_field(key):
+				# 091（作者定）：指向属性键的字段（修饰的 stat、效果的 damage_stat）下拉浏览已有属性，也能自定义
+				return _labeled(owner, key, _stat_picker(String(value), func(k: String):
+					owner.set(key, StringName(k))
+					_emit()))
 			var le := LineEdit.new()
 			le.text = String(value)
 			le.custom_minimum_size.x = 180
@@ -159,11 +164,179 @@ func _number(value: float, step: float, apply: Callable) -> SpinBox:
 	return sb
 
 
+## 「语言 → 文字」的字典（display_names / titles / texts / labels / descriptions）：加一项默认是空字符串、键是还没写的语言，不是数字
+const TEXT_DICTS := ["display_names", "titles", "texts", "labels", "descriptions", "tooltip_texts"]
+
+
+## 这张字典是不是文字表：按字段名认，或者已有的值全是字符串
+static func _is_text_dict(key: String, dict: Dictionary) -> bool:
+	if TEXT_DICTS.has(key):
+		return true
+	if dict.is_empty():
+		return false
+	for v in dict.values():
+		if not (v is String):
+			return false
+	return true
+
+
+## 「属性键 → 数值」的字典：按字段名认，或者已有的键全是认得的属性键
+const STAT_DICTS := ["base_stats", "stat_scale"]
+const CUSTOM_STAT := "__custom__"
+## 内容里用过的属性键（编辑器打开时扫一遍作者目录；`register_stat_keys` 也能再登记）
+static var _extra_stat_keys: Array[String] = []
+static var _scanned_stats: bool = false
+
+
+static func _is_stat_dict(key: String, dict: Dictionary) -> bool:
+	if STAT_DICTS.has(key):
+		return true
+	if dict.is_empty():
+		return false
+	var known := known_stat_keys()
+	for k in dict.keys():
+		if not known.has(String(k)):
+			return false
+	return true
+
+
+## 指向属性键的字段：修饰的 stat、效果的 damage_stat / heal_stat……
+static func _is_stat_field(key: String) -> bool:
+	return key == "stat" or key.ends_with("_stat")
+
+
+## 属性键给人看：中文模式「伤害 (damage)」，英文原名
+static func stat_label(key: String) -> String:
+	var zh := Glossary.stat_name(StringName(key))
+	return "%s (%s)" % [zh, key] if FieldText.zh() and zh != key else key
+
+
+## 已知的属性键：[BattleStats] 的常量 + 词典里有名字的 + 内容里用过的（道具 / 敌人 / 角色 / buff / 套装的 base_stats 与修饰）。升序去重
+static func known_stat_keys() -> Array[String]:
+	var seen := {}
+	var consts: Dictionary = (BattleStats as Script).get_script_constant_map()
+	for name in consts:
+		var v = consts[name]
+		if v is StringName and String(v) != "":
+			seen[String(v)] = true
+	for k in Glossary.STAT_NAMES:
+		seen[String(k)] = true
+	if not _scanned_stats:
+		_scanned_stats = true
+		for kind in ["items", "enemies", "characters", "buffs", "sets", "run_buffs", "faiths"]:
+			if not ContentPaths.KINDS.has(kind):
+				continue
+			var dir := String(ContentPaths.KINDS[kind][0])
+			var d := DirAccess.open(dir)
+			if d == null:
+				continue
+			for f in d.get_files():
+				if f.ends_with(".json"):
+					var parsed = JSON.parse_string(FileAccess.get_file_as_string(dir + "/" + f))
+					_collect_stat_keys(parsed, _extra_stat_keys)
+	for k in _extra_stat_keys:
+		seen[k] = true
+	var out: Array[String] = []
+	for k in seen:
+		out.append(k)
+	out.sort()
+	return out
+
+
+## 编辑器可以把自己认得的属性键登记进来（比如刚在别的表单里自定义的）
+static func register_stat_keys(keys: Array) -> void:
+	for k in keys:
+		var s := String(k)
+		if s != "" and not _extra_stat_keys.has(s):
+			_extra_stat_keys.append(s)
+
+
+static func _collect_stat_keys(node, into: Array[String]) -> void:
+	if node is Dictionary:
+		for k in node:
+			var ks := String(k)
+			if ks == "base_stats" and node[k] is Dictionary:
+				for sk in node[k]:
+					if not into.has(String(sk)):
+						into.append(String(sk))
+			elif (ks == "stat" or ks.ends_with("_stat")) and node[k] is String and String(node[k]) != "":
+				if not into.has(String(node[k])):
+					into.append(String(node[k]))
+			else:
+				_collect_stat_keys(node[k], into)
+	elif node is Array:
+		for v in node:
+			_collect_stat_keys(v, into)
+
+
+## 属性键选择器：下拉列出已知属性（中文名 + 原键），最后一项「自定义…」露出输入框。
+## [param current] 是当前值（不在列表里就当自定义）；[param on_pick] 每次改动回调（可以是空 Callable，之后用 _picked_stat 读）；
+## [param exclude] 不列出的键（属性表里已有的）
+func _stat_picker(current: String, on_pick: Callable, exclude: Array = []) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	var ob := OptionButton.new()
+	_font(ob)
+	var keys: Array[String] = []
+	for k in known_stat_keys():
+		if not exclude.has(k) or k == current:
+			keys.append(k)
+	for i in keys.size():
+		ob.add_item(stat_label(keys[i]), i)
+		ob.set_item_tooltip(i, keys[i])
+	ob.add_item("自定义…" if FieldText.zh() else "Custom…", keys.size())
+	ob.set_item_metadata(keys.size(), CUSTOM_STAT)
+	var custom := LineEdit.new()
+	custom.custom_minimum_size.x = 140
+	custom.placeholder_text = "属性键（小写英文）" if FieldText.zh() else "stat key"
+	_font(custom)
+	var at := keys.find(current)
+	if at < 0 and current == "" and not keys.is_empty():
+		at = 0     # 加一项的选择器：没有当前值就停在第一项，不露输入框
+	if at >= 0:
+		ob.select(at)
+		custom.visible = false
+	else:
+		ob.select(keys.size())
+		custom.text = current
+		custom.visible = true
+	ob.item_selected.connect(func(idx: int):
+		custom.visible = idx >= keys.size()
+		if idx < keys.size():
+			if on_pick.is_valid():
+				on_pick.call(keys[idx])
+		elif on_pick.is_valid():
+			on_pick.call(custom.text.strip_edges()))
+	custom.text_changed.connect(func(t: String):
+		if on_pick.is_valid():
+			on_pick.call(t.strip_edges()))
+	row.add_child(ob)
+	row.add_child(custom)
+	row.set_meta("stat_options", ob)
+	row.set_meta("stat_custom", custom)
+	return row
+
+
+## 选择器当前选中的属性键（自定义就是输入框里的字）
+static func _picked_stat(picker: Control) -> String:
+	var ob: OptionButton = picker.get_meta("stat_options")
+	var custom: LineEdit = picker.get_meta("stat_custom")
+	var idx := ob.get_selected()
+	if idx < 0:
+		return ""
+	if ob.get_item_metadata(idx) is String and String(ob.get_item_metadata(idx)) == CUSTOM_STAT:
+		return custom.text.strip_edges()
+	return String(ob.get_item_tooltip(idx))
+
+
 ## 字典（base_stats 这种「属性键 → 数值」）用一行一对的写法。
 ## 键是自由文本而不是下拉框 —— 属性键本来就是可扩展的，锁死列表反而挡住新资源。
+## 091（作者反馈）：文字表的值直接编辑（不带 JSON 引号），加一项给空字符串与下一个语言码
 func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
+	var text_dict := _is_text_dict(key, dict)
+	var stat_dict := not text_dict and _is_stat_dict(key, dict)
 	for k in dict.keys():
 		var row := HBoxContainer.new()
 		var name_edit := LineEdit.new()
@@ -172,6 +345,33 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 		_font(name_edit)
 		var old_key := String(k)
 		var raw = dict[k]
+		if raw is String:
+			# 文字：直接改，不走 JSON
+			var se := LineEdit.new()
+			se.text = String(raw)
+			se.custom_minimum_size.x = 200
+			se.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			_font(se)
+			se.text_changed.connect(func(t: String):
+				dict[old_key] = t
+				owner.set(key, dict)
+				_emit())
+			name_edit.text_submitted.connect(func(t: String):
+				var v = dict[old_key]
+				dict.erase(old_key)
+				dict[t] = v
+				owner.set(key, dict)
+				_emit()
+				rebuild())
+			row.add_child(name_edit)
+			row.add_child(se)
+			row.add_child(_small_button("删", func():
+				dict.erase(old_key)
+				owner.set(key, dict)
+				_emit()
+				rebuild()))
+			box.add_child(row)
+			continue
 		if not (raw is float or raw is int):
 			# 值不是数（配额的 [min, max]、禁止相邻的类型对……）：按 JSON 文本编辑
 			var te := LineEdit.new()
@@ -201,6 +401,8 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 		val.allow_lesser = true
 		val.value = float(raw)
 		_font(val)
+		if stat_dict:
+			name_edit.tooltip_text = "%s\n（改名直接敲，回车生效）" % stat_label(old_key)
 		name_edit.text_submitted.connect(func(t: String):
 			var v = dict[old_key]
 			dict.erase(old_key)
@@ -220,13 +422,46 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 			_emit()
 			rebuild()))
 		box.add_child(row)
+	if stat_dict:
+		# 091（作者定）：属性表加一项 —— 下拉里是还没写的已有属性（战斗属性常量 + 内容里用过的），最后一项「自定义…」自己敲
+		var picker := _stat_picker("", Callable(), dict.keys())
+		var row := HBoxContainer.new()
+		row.add_child(picker)
+		row.add_child(_small_button("+ 加一项", func():
+			var k := _picked_stat(picker)
+			if k == "":
+				k = "new_stat"
+			var i := 1
+			var base := k
+			while dict.has(k):
+				k = "%s_%d" % [base, i]
+				i += 1
+			dict[k] = 0.0
+			owner.set(key, dict)
+			_emit()
+			rebuild()))
+		box.add_child(row)
+		return box
 	box.add_child(_small_button("+ 加一项", func():
-		var n := "new_stat"
-		var i := 1
-		while dict.has(n):
-			n = "new_stat_%d" % i
-			i += 1
-		dict[n] = 0.0
+		if text_dict:
+			# 下一个还没写的语言码；都写了就 lang_1、lang_2…
+			var lang := ""
+			for l in UiText.LANGS:
+				if l != "zh" and not dict.has(l):
+					lang = l
+					break
+			var j := 1
+			while lang == "" or dict.has(lang):
+				lang = "lang_%d" % j
+				j += 1
+			dict[lang] = ""
+		else:
+			var n := "new_stat"
+			var i := 1
+			while dict.has(n):
+				n = "new_stat_%d" % i
+				i += 1
+			dict[n] = 0.0
 		owner.set(key, dict)
 		_emit()
 		rebuild()))

@@ -312,8 +312,8 @@ func choose(i: int) -> bool:
 		_open_shop(node)
 	elif ctx.start_battle:
 		if current_search != null and not current_search.encounter.is_empty():
-			# 084：搜索里遭遇的那一场（「遇敌」事件的「迎战」）：打会话里的遭遇，打完收会话
-			_battle_at(node, &"search", current_search.encounter, "search")
+			# 084：搜索里遭遇的那一场（「遇敌」事件的「迎战」）：打会话里的遭遇。091：无代价（输了不扣体力），打赢接着搜
+			_battle_at(node, &"search", current_search.encounter, "search", 0)
 		else:
 			var fight_type := type if type in [&"battle", &"elite", &"core"] else &"battle"
 			var content := node.content if EnemyKit.has_enemy(node.content) else _enemy_for(node, &"battle", _rng_for(node, "event_enemy"))
@@ -386,8 +386,8 @@ func _battle_at(node: MapNode, type: StringName, content: Dictionary, kind: Stri
 		pending_battle = {"node": node.id, "type": String(type), "content": content.duplicate(true), "kind": kind, "loss_cost": loss_cost}
 		battle_pending.emit(node, type, content)
 		return
-	_fight(node, type, content, null, loss_cost)
-	_after_battle(node, kind)
+	var won := _fight(node, type, content, null, loss_cost)
+	_after_battle(node, kind, won)
 
 
 ## 这一场打得起来吗：有敌人、有玩家（没有就当走过，_fight 也是这么判的）
@@ -397,10 +397,21 @@ func _can_fight(content: Dictionary) -> bool:
 	return EnemyKit.spec_of(content, enemies, pool, items) != null
 
 
-## 打完这一场接着做的事：节点的战斗把点标用过；搜索遭遇的先把会话收掉（收获交出去）再标用过
-func _after_battle(node: MapNode, kind: String) -> void:
+## 打完这一场接着做的事：节点的战斗把点标用过。搜索遭遇（091，作者定）：**打赢了会话接着开、还能再搜** ——
+## 回到「再搜 / 走」那一屏（搜满了是「搜完了」）；**打输了不扣体力**（这一场写了无代价），但会话收掉、收获交出去、
+## 这个点用过、「余波」事件说一声不能再搜。整场战斗都包在事件里：遇敌事件 → 迎战 → 回放 → 战利品 → 回到搜索的事件屏
+func _after_battle(node: MapNode, kind: String, won: bool = false) -> void:
 	if kind == "search" and current_search != null:
 		var session := current_search
+		if won and not over:
+			session.resume()
+			var again := _search_event(node, session, "done" if session.is_exhausted() else "again")
+			if again != null:
+				pending = {"node": node.id, "event": String(again.id), "type": "search", "search_stage": true}
+				event_pending.emit(node, again)
+			else:
+				search_shown.emit(node, session)
+			return
 		searches_closed += session.searches_done
 		current_search = null
 		search_closed.emit(node, session.haul(), &"encounter")
@@ -439,8 +450,8 @@ func start_pending_battle() -> bool:
 	var kind := String(pending_battle.get("kind", "node"))
 	var loss_cost := int(pending_battle.get("loss_cost", LOSS_DEFAULT))
 	pending_battle = {}
-	_fight(node, type, content, null, loss_cost)
-	_after_battle(node, kind)
+	var won := _fight(node, type, content, null, loss_cost)
+	_after_battle(node, kind, won)
 	return true
 #endregion
 
@@ -592,6 +603,14 @@ func _open_shop(node: MapNode) -> void:
 	shop_opened.emit(node, session)
 
 
+## 091（作者定）：回到走过的商店点，店再开起来（[ShopSession] 从节点内容里接着上次的刷新次数与卖掉的记录）
+func reopen_shop(node: MapNode) -> void:
+	if node == null or current_shop != null or over:
+		return
+	last_handled_id = node.id
+	_open_shop(node)
+
+
 ## 这个撤离点收多少
 func extract_fee(node: MapNode) -> int:
 	return PaidExtracts.fee_of(node)
@@ -614,11 +633,13 @@ func _close_search(node: MapNode, session: SearchSession, reason: StringName) ->
 			event_pending.emit(node, notice)
 			return
 		if pause_before_battle and _can_fight(session.encounter):
-			# 先停在战前准备屏；打完由 _after_battle("search") 收会话、交收获、标用过
-			pending_battle = {"node": node.id, "type": "search", "content": session.encounter.duplicate(true), "kind": "search"}
+			# 先停在战前准备屏；打完由 _after_battle("search") 决定：赢了接着搜、输了收会话（091：无代价）
+			pending_battle = {"node": node.id, "type": "search", "content": session.encounter.duplicate(true), "kind": "search", "loss_cost": 0}
 			battle_pending.emit(node, &"search", session.encounter)
 			return
-		_fight(node, &"search", session.encounter)
+		var won := _fight(node, &"search", session.encounter, null, 0)
+		_after_battle(node, "search", won)
+		return
 	searches_closed += session.searches_done
 	current_search = null
 	search_closed.emit(node, session.haul(), reason)

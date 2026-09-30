@@ -215,9 +215,13 @@ func step_to(id: int) -> bool:
 	close_sessions()
 	_drop_pending_loot()
 	_drop_storage_if_leaving()
+	var was_visited := map.has_node(id) and map.get_node(id).is_visited()
 	var ok := travel.step_to(id)
 	if ok:
 		_restore_storage(travel.current_id)     # 087：回到走过的点，留着的东西回到暂存区（头一回踩的在 _on_arrive 里已取）
+		# 091（作者定）：商店可以回头再逛 —— 回到走过的商店点就把店再开起来；货架 / 刷新次数 / 卖掉的都记在节点内容里，刷新价不重置
+		if was_visited and events != null and NodeEvents.effective_type(map.get_node(id)) == &"shop":
+			events.reopen_shop(map.get_node(id))
 		tick_map_buffs()
 		if hunters != null:
 			hunters.on_player_step()     # 猎手的回合在这一步的事都发生之后（071）

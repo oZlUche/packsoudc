@@ -35,7 +35,9 @@ var _json: TextEdit
 
 func _ready() -> void:
 	_font = UiPalette.cjk_font()
-	UiText.apply(GameSettings.load_from())
+	var settings := GameSettings.load_from()
+	UiText.apply(settings)
+	UiPalette.apply(settings)
 	_ctx = ContentImporter.Context.new()
 	_build_ui()
 	_reload_list()
@@ -61,7 +63,7 @@ static func _ids_on_disk() -> Array[String]:
 #region 界面
 func _build_ui() -> void:
 	var bg := ColorRect.new()
-	bg.color = UiPalette.BG
+	bg.color = UiPalette.bg()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)

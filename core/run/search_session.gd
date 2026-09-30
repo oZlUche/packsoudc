@@ -161,6 +161,12 @@ func _end(reason: StringName) -> void:
 	ended.emit(reason)
 
 
+## 091（作者定）：遭遇打赢了接着搜 —— 会话重新开着、遭遇清掉；搜过的次数照旧累计（遭遇概率按曲线接着走）
+func resume() -> void:
+	active = true
+	encounter = {}
+
+
 ## 找几件：候选是不带排除标签、（默认）不是包的道具，按稀有度权重抽；权重随深度与危险上偏
 static func draw_items(
 	p_rules: SearchRules, p_items: ItemDatabase, p_depth: float, danger: int, p_rng: RandomNumberGenerator,

@@ -85,7 +85,8 @@ func _ready() -> void:
 #region 界面
 func _build_ui() -> void:
 	var bg := ColorRect.new()
-	bg.color = UiPalette.BG
+	UiPalette.apply(GameSettings.load_from())     # 091：底色跟设置走
+	bg.color = UiPalette.bg()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
@@ -615,13 +616,26 @@ func _track_draft() -> void:
 	var key := _draft_key()
 	if key == "":
 		return
+	var dirty := false
+	# 091（作者反馈）：新建的道具还没存盘时草稿键就是它的 id；作者边敲边改 id，旧键下那份是同一个对象，不能留成孤儿 ——
+	# 否则每敲一个字列表里就多一条「t / ti / tib…」。盘上没有的旧名字也从列表里撤掉
+	for k in _drafts.keys():
+		if k != key and _drafts[k] == _def:
+			_drafts.erase(k)
+			if not _baseline.has(k) and not FileAccess.file_exists(ITEM_DIR + "/" + k + ".json"):
+				_ids.erase(k)
+			dirty = true
 	var now := ContentExporter.to_json(ContentExporter.export_item(_def))
 	var was := _drafts.has(key)
 	if _baseline.has(key) and _baseline[key] == now:
 		_drafts.erase(key)
 	else:
 		_drafts[key] = _def
-	if was != _drafts.has(key):
+		if not _ids.has(key):
+			_ids.append(key)
+			_ids.sort()
+			dirty = true
+	if dirty or was != _drafts.has(key):
 		_repaint_list()
 
 

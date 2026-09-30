@@ -495,6 +495,12 @@ func _refresh() -> void:
 		_desc.text = "\n".join(lines)
 	if _readout != null and board != null:
 		_readout.clear()
+		# 091（作者定）：和背包面板一样的读数 —— 按这个角色的基线把棋盘编译一遍，预估 DPS 与耐力消耗实时变
+		if ch != null:
+			var spec := BattleCompiler.compile(board, ch.baseline(), [] as Array[StatModifier], [] as Array[AbilityRule], {})
+			var est := StaminaEstimate.of(spec)
+			_readout.append_text("生命 %d　预估 DPS %.1f　耐力消耗：%s（每秒 %.1f，回 %.1f）　%d 件会出手\n" % [
+				spec.max_hp_int(), spec.rough_dps(), est["rating"], est["cost"], est["regen"], spec.active_items().size()])
 		var value := 0
 		var cells := 0
 		var taken := carried()

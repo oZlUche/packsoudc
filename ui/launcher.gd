@@ -48,6 +48,12 @@ const ENTRIES := [
 		"keys": "保存 = JSON + .tres　可叠层的 buff 一律永续",
 	},
 	{
+		"scene": "res://ui/set_editor/set_editor.tscn",
+		"title": "套装编辑器",
+		"desc": "给作者做套装：id、名字、计数方式、各档位（集齐几件生效什么：属性修饰 / 规则 / 别的作用域的效果），右边看哪些道具属于这套，实时校验，存盘直接产出资产",
+		"keys": "保存 = JSON + .tres　道具的 set_id 写这个 id 就是成员",
+	},
+	{
 		"scene": "res://ui/map_editor/map_editor.tscn",
 		"title": "地图编辑器",
 		"desc": "按参数随机生成一张地图，再手动改点、改路、改类型，存成预设给对局载入",
@@ -65,7 +71,8 @@ func _ready() -> void:
 
 func _build() -> void:
 	var bg := ColorRect.new()
-	bg.color = UiPalette.BG
+	UiPalette.apply(GameSettings.load_from())     # 091：底色跟设置走
+	bg.color = UiPalette.bg()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)

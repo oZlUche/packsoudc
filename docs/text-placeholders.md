@@ -107,6 +107,8 @@
 | `NodeRules` | `boss_extracts` | BOSS 倒下、收完战利品直接撤离结算（087，默认开） |
 | `EconomyRules` | `shop_sell_ratio` | 卖给店里回定价的几成（087，一半）；`shop_slots` 个栏位每格一块 ≥ 3×4 的小棋盘 |
 | 稀有度 | 0 白 / 1 绿 / 2 蓝 / 3 紫 / 4 金 / 5 红 | 087 作者定；按稀有度下标的表（掉落率、商店权重、揭示耗时）都是六档，超出按最后一档 |
+| `MetaRules` | `sell_ratio` | 基地「出售」页卖掉仓库道具回定价的几成（091，0.5；`ItemValue.of × 比例` 向下取整）；一键出售按稀有度档筛 |
+| `GameSettings` | `bg_theme` | 背景底色（091）：`UiPalette.BG_THEMES` 的 id（graphite 石墨默认 / dark / slate / dusk / moss / mist），设置屏挑，所有屏与编辑器跟着 |
 | `GameSettings` | `language` | 界面语言 `zh` / `en`（主菜单切）；界面文字走 `UiText.t(key)`，表在 `core/text/ui_text.gd`，现在覆盖主菜单与 buff 制作器 |
 | `BuffDef` | `max_stacks` `duration_sec` | `max_stacks 0 = 不限层`（通常如此）、`1 = 不可叠层`；可叠层的永续、不许填时长（导入器拦）。Buff 制作器 `ui/buff_editor` 按这套规矩联动 |
 | 档位表 `StrengthTier` / `EnemyDef` | `bags` | 这一档 / 这种敌人背的包，包不计入件数 |

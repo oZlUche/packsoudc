@@ -313,6 +313,7 @@ func close_pause_settings() -> void:
 	if _pause_settings != null:
 		_pause_settings.queue_free()
 		_pause_settings = null
+	refresh_backdrop()     # 091：设置里可能换了底色
 
 
 func settings_open() -> bool:

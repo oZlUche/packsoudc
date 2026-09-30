@@ -4,6 +4,8 @@ extends GameScreen
 var _auto_close_btn: Button = null
 var _tooltip_btn: Button = null
 var _unlock_all_btn: Button = null
+## 091：背景底色的按钮（主题 id → 按钮）
+var _bg_btns: Dictionary = {}
 var _mode_btns: Dictionary = {}
 var _rarity_spin: SpinBox
 var _value_spin: SpinBox
@@ -63,6 +65,21 @@ func open(_payload: Dictionary) -> void:
 	_tooltip_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	col.add_child(_tooltip_btn)
 	col.add_child(HSeparator.new())
+	col.add_child(_label("背景底色", 15, UiPalette.DIM))
+	var bg_row := _hbox(8)
+	for t in UiPalette.BG_THEMES:
+		var tid := String(t["id"])
+		var b := _button(String(t["name"]), func(): set_bg_theme(tid), 13, UiPalette.Tier.MINOR)
+		b.toggle_mode = true
+		var box := b.get_theme_stylebox("normal") as StyleBoxFlat
+		if box != null:
+			var swatch := box.duplicate() as StyleBoxFlat
+			swatch.bg_color = t["color"]
+			b.add_theme_stylebox_override("normal", swatch)
+		_bg_btns[tid] = b
+		bg_row.add_child(b)
+	col.add_child(bg_row)
+	col.add_child(HSeparator.new())
 	col.add_child(_label("老手", 15, UiPalette.DIM))
 	col.add_child(_wrapped("全部解锁：章节、难度、道具不看解锁，直接全开；代价是成就不计（091）。", 12, UiPalette.DIM, 500))
 	_unlock_all_btn = _button("全部解锁", toggle_unlock_all, 14, UiPalette.Tier.MINOR)
@@ -93,6 +110,17 @@ func toggle_node_tooltips_preview() -> void:
 func toggle_loot_auto_close() -> void:
 	flow.settings.loot_auto_close = not flow.settings.loot_auto_close
 	flow.save_settings()
+	_refresh()
+
+
+## 091（作者定）：挑背景底色，立刻生效并存盘
+func set_bg_theme(id: String) -> void:
+	if not UiPalette.has_bg_theme(id):
+		return
+	flow.settings.bg_theme = id
+	UiPalette.apply(flow.settings)
+	flow.save_settings()
+	refresh_backdrop()
 	_refresh()
 
 
@@ -128,6 +156,8 @@ func _refresh() -> void:
 		_auto_close_btn.text = "拿走最后一件后自动关闭：%s" % ("开" if flow.settings.loot_auto_close else "关（手动关）")
 	for m in _mode_btns:
 		(_mode_btns[m] as Button).set_pressed_no_signal(flow.settings.storage_warn_mode == m)
+	for tid in _bg_btns:
+		(_bg_btns[tid] as Button).set_pressed_no_signal(String(tid) == flow.settings.bg_theme)
 	if _unlock_all_btn != null:
 		_unlock_all_btn.set_pressed_no_signal(flow.settings.unlock_all)
 		_unlock_all_btn.text = "全部解锁：%s" % ("开（章节 / 难度 / 道具全开，成就不计）" if flow.settings.unlock_all else "关")

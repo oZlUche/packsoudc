@@ -4,7 +4,19 @@
 class_name UiPalette
 extends RefCounted
 
+## 原来的底色（最深的那档）；运行时的底色走 [method bg]
 const BG := Color("101216")
+## 091（作者定）：背景底色可选，默认比原来浅一点。设置屏挑，存在 [GameSettings.bg_theme]
+const BG_THEMES := [
+	{"id": "graphite", "name": "石墨（默认）", "color": Color("262b33")},
+	{"id": "dark", "name": "深夜（原来的）", "color": Color("101216")},
+	{"id": "slate", "name": "石板", "color": Color("1b2028")},
+	{"id": "dusk", "name": "暮色", "color": Color("2a2733")},
+	{"id": "moss", "name": "苔绿", "color": Color("1f2a24")},
+	{"id": "mist", "name": "雾灰（最浅）", "color": Color("3a3f48")},
+]
+const BG_DEFAULT := "graphite"
+static var bg_theme: String = BG_DEFAULT
 const PANEL := Color("171a20")
 const FG := Color("dfe3ea")
 const DIM := Color("8b93a1")
@@ -55,6 +67,35 @@ static func cjk_font() -> Font:
 		["Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "SimHei", "sans-serif"]
 	)
 	return f
+
+
+#region 背景底色（091）
+static func bg() -> Color:
+	for t in BG_THEMES:
+		if String(t["id"]) == bg_theme:
+			return t["color"]
+	return BG_THEMES[0]["color"]
+
+
+static func has_bg_theme(id: String) -> bool:
+	for t in BG_THEMES:
+		if String(t["id"]) == id:
+			return true
+	return false
+
+
+static func bg_name(id: String) -> String:
+	for t in BG_THEMES:
+		if String(t["id"]) == id:
+			return String(t["name"])
+	return id
+
+
+## 从设置里读底色（和 [method UiText.apply] 一样，持有方读了设置就调一次）
+static func apply(settings: GameSettings) -> void:
+	if settings != null and has_bg_theme(settings.bg_theme):
+		bg_theme = settings.bg_theme
+#endregion
 
 
 #region 按钮（090，作者定）
