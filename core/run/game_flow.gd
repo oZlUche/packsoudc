@@ -629,6 +629,18 @@ func save_and_quit() -> bool:
 	return ok
 
 
+## 092（作者定）：关上保险箱 —— 里面有东西就锁上送回基地（不能再改），屏关掉；空着就只是收起（还能再开）。返回锁没锁
+func close_safe() -> bool:
+	if run == null:
+		return false
+	var locked := run.lock_safe()
+	if locked:
+		_go(Screen.MAP, {})
+	else:
+		hide_overlay()
+	return locked
+
+
 ## 092（作者定）：保险箱几格（局外规则，初始 3×3）
 func safe_size() -> Vector2i:
 	return meta.rules.safe_size if meta != null and meta.rules != null else Vector2i(3, 3)
@@ -806,8 +818,8 @@ func _reopen_entry() -> Dictionary:
 	if run.pending_loot != null:
 		return {"screen": Screen.LOOT, "container": run.pending_loot}
 	var here := run.current_node()
-	if here != null and NodeEvents.effective_type(here) == &"safe":
-		return {"screen": Screen.SAFE, "node": here}     # 092：站在保险箱上随时能再开
+	if here != null and NodeEvents.effective_type(here) == &"safe" and run.safe_open():
+		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开
 	return {}
 
 

@@ -1,13 +1,16 @@
 ## 保险箱点（092，作者定）：生成之后的一遍，把几个中层的普通点换成 `safe` —— 和 [PaidExtracts] 一样，生成器不认识它。
 ##
-## 放进保险箱的道具视为已带出（战败也带得出，结算屏单独一格看得见）。挑点的规矩：不是结构点（核心 / 出生 / 撤离 / 岔路）、
-## 不是商店 / 休息（安全点已经够多）、不挨着出生点；按「深度最接近一半」排，同深按 id —— 同一张图永远换同几个点，可复现。
+## 放进保险箱的道具视为已带出（战败也带得出，结算屏单独一格看得见）。作者定的挑法（和高危区一样，生成完毕之后再挑）：
+## 只覆盖**战斗或事件**点、不挨着出生点、不是终点；按「深度最接近 [constant CENTER_DEPTH]（比较靠近中央）」排，同深按 id ——
+## 同一张图永远换同几个点，可复现。
 ## 换成保险箱的点把内容清空（敌人在这之后才由 [EnemyPlacer] 放，所以调用顺序是先这里）。
 ## **别把 `safe` 写进环形配置的 type_risk / type_reward**：校准会把它当成可分配的类型往图里换。
 class_name SafePlacer
 extends RefCounted
 
-const CONVERTIBLE: Array[StringName] = [&"battle", &"event", &"random", &"search", &"elite"]
+const CONVERTIBLE: Array[StringName] = [&"battle", &"event"]
+## 想要的深度：0 是出生点那一环、1 是核心；「比较靠近中央」取 0.7
+const CENTER_DEPTH := 0.7
 
 
 ## 标好，返回换成保险箱的节点 id（按挑选顺序）
@@ -32,8 +35,8 @@ static func mark(graph: MapGraph, count: int) -> Array[int]:
 	if out.size() >= count:
 		return out
 	candidates.sort_custom(func(a: int, b: int) -> bool:
-		var da: float = absf(float(depths.get(a, 0.0)) - 0.5)
-		var db: float = absf(float(depths.get(b, 0.0)) - 0.5)
+		var da: float = absf(float(depths.get(a, 0.0)) - CENTER_DEPTH)
+		var db: float = absf(float(depths.get(b, 0.0)) - CENTER_DEPTH)
 		return da < db if not is_equal_approx(da, db) else a < b)
 	var picked: Array[int] = []
 	for id in candidates:

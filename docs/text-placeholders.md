@@ -108,7 +108,8 @@
 | `EconomyRules` | `shop_sell_ratio` | 卖给店里回定价的几成（087，一半）；`shop_slots` 个栏位每格一块 ≥ 3×4 的小棋盘 |
 | 稀有度 | 0 白 / 1 绿 / 2 蓝 / 3 紫 / 4 金 / 5 红 | 087 作者定；按稀有度下标的表（掉落率、商店权重、揭示耗时）都是六档，超出按最后一档 |
 | `ChapterDef` | `step_limit` `closing_extract` `safes` | 全局倒计时（行动点，0 = 没有；归零 = 行动失败 `time_out`）；过半关掉离出生点最近的免费撤离点（`node.content.closes_at`）；这一章几个保险箱点（092） |
-| `MetaRules` | `safe_size` | 保险箱几格（092，初始 3×3；放进去的视为已带出，战败也带得出） |
+| `MetaRules` | `safe_size` | 保险箱几格（092，初始 3×3；放进去的视为已带出，战败也带得出；**关上或走开就锁**，不能再改） |
+| `MapScaleProfile` | `step_limit` | 这个规模档的全局倒计时（092：小 36 / 中 60 / 大 90；0 = 用章节的） |
 | 节点类型 | `safe`（符号 K） | 保险箱点：不算用过，每次踩上都开保险箱屏（092） |
 | `MetaRules` | `sell_ratio` | 基地「出售」页卖掉仓库道具回定价的几成（091，0.5；`ItemValue.of × 比例` 向下取整）；一键出售按稀有度档筛 |
 | `GameSettings` | `bg_theme` | 背景底色（091）：`UiPalette.BG_THEMES` 的 id（graphite 石墨默认 / dark / slate / dusk / moss / mist），设置屏挑，所有屏与编辑器跟着 |

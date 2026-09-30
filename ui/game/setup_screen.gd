@@ -225,7 +225,8 @@ func _rebuild_scales() -> void:
 	_scale_box.add_child(def_btn)
 	for o in options:
 		var sid: StringName = o["id"]
-		var b := _button(String(o["display_name"]), func(): choose_scale(sid), 13)
+		var limit := int(o.get("step_limit", 0))
+		var b := _button(String(o["display_name"]) + ("　倒计时 %d" % limit if limit > 0 else ""), func(): choose_scale(sid), 13)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_scale_btns[sid] = b
 		_scale_box.add_child(b)

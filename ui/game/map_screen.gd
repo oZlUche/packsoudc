@@ -458,6 +458,7 @@ func _adopt() -> void:
 		_refresh_hud()
 		_refresh_skills())     # 挑完出生点技能才能用：按钮跟着阶段亮
 	_run.countdown_notice.connect(func(text: String): _note("[color=#d9534f]　" + text + "[/color]"))     # 092
+	_run.safe_closed.connect(func(n: int): _note("[color=#c8a2ff]　保险箱关上了：%d 件送回基地，不能再改[/color]" % n))
 	_rebuild_routes()
 	_after_move()
 	if _run.phase == RunState.Phase.PICK_SPAWN:

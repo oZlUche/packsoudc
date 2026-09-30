@@ -1,7 +1,8 @@
 ## 保险箱屏（092，作者定）：叠在地图上的一层。左边是保险箱的格子（大小按局外规则，初始 3×3），右边是背包（棋盘 + 暂存区）。
 ##
 ## 放进保险箱的道具**视为已带出**：结算时不管撤离还是行动失败都进局外（结算屏单独一格看得见）。包放不进去（局外不留包）。
-## 拖着放、双击放（棋盘双击 → 保险箱；保险箱双击 → 试着回棋盘，放不下进暂存区）。「收起」= 回地图，站在这个点上随时能再开。
+## 拖着放、双击放（棋盘双击 → 保险箱；保险箱双击 → 试着回棋盘，放不下进暂存区）。
+## 作者定：**关上（里面有东西）就送回基地、不能再改动**，走开也算关上；空着关只是收起，还能再开。
 extends GameScreen
 
 const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
@@ -24,6 +25,7 @@ func open(payload: Dictionary) -> void:
 	row.add_child(left)
 	left.add_child(_label("保险箱　%d × %d 格%s" % [_safe.size.x, _safe.size.y, "　点 %d" % node.id if node != null else ""], 16, UiPalette.FG))
 	left.add_child(_wrapped("放进来的东西就算带出去了：结算时不管撤离还是行动失败都进仓库。包放不进来。拖过来，或双击棋盘上的东西。", 12, UiPalette.DIM, 340))
+	left.add_child(_wrapped("关上（或走开）就送回基地，之后不能再改动；空着关上不算。", 12, UiPalette.HP, 340))
 	_view = InventoryView.new()
 	_view.label_font = font
 	_view.inventory = _safe
@@ -33,8 +35,8 @@ func open(payload: Dictionary) -> void:
 	_line = _label("", 13, UiPalette.HEAL)
 	left.add_child(_line)
 	var buttons := _hbox(8)
-	var back := _button("收起", to_map, 13, UiPalette.Tier.PRIMARY)
-	back.tooltip_text = "回到地图；站在这个点上随时能再开（Esc）"
+	var back := _button("关上保险箱", to_map, 13, UiPalette.Tier.PRIMARY)
+	back.tooltip_text = "里面有东西：锁上、送回基地，不能再改；空着：只是收起，回来还能开（Esc）"
 	buttons.add_child(back)
 	left.add_child(buttons)
 
@@ -52,7 +54,7 @@ func open(payload: Dictionary) -> void:
 	_drag.register_view(_view)
 	# 包不进保险箱（局外不留包，MetaState.keeps）
 	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
-		return target != _safe or MetaState.keeps(inst.def)
+		return flow.run.safe_open() and (target != _safe or MetaState.keeps(inst.def))
 	var tip := HoverTip.new(font)
 	add_child(tip)
 	tip.watch(_view)
@@ -64,7 +66,7 @@ func open(payload: Dictionary) -> void:
 ## 保险箱里的一件回背包（放不下进暂存区）。测试直接调
 func take_back(uid: int) -> bool:
 	var inst := _safe.get_item(uid)
-	if inst == null:
+	if inst == null or not flow.run.safe_open():
 		return false
 	if InventoryService.transfer_auto(_safe, uid, flow.run.board):
 		return true
@@ -77,6 +79,9 @@ func take_back(uid: int) -> bool:
 ## 棋盘 / 暂存区里的一件放进保险箱。测试直接调；包不收
 func put_in(uid: int) -> bool:
 	var run := flow.run
+	if not run.safe_open():
+		_line.text = "保险箱已经锁上了"
+		return false
 	var from: ItemContainer = run.board if run.board.has_item(uid) else (run.storage if run.storage.has_item(uid) else null)
 	if from == null:
 		return false
@@ -90,9 +95,10 @@ func put_in(uid: int) -> bool:
 	return false
 
 
-## 收起：回地图（站在这个点上随时能再开）
+## 关上：里面有东西就锁上送回基地（屏关掉）；空着只是收起。返回 true = 离开了这一屏
 func to_map() -> bool:
-	return flow.hide_overlay()
+	flow.close_safe()
+	return true
 
 
 func escape() -> bool:

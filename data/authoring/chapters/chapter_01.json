@@ -206,7 +206,8 @@
           "haven_at": {
             "rest": 0.5,
             "shop": 0.5
-          }
+          },
+          "step_limit": 36
         },
         {
           "id": "medium",
@@ -248,7 +249,8 @@
           "haven_at": {
             "rest": 0.333333333333333,
             "shop": 0.666666666666667
-          }
+          },
+          "step_limit": 60
         },
         {
           "id": "large",
@@ -297,7 +299,8 @@
             "rest": 0.333333333333333,
             "shop": 0.666666666666667
           },
-          "placeholder": true
+          "placeholder": true,
+          "step_limit": 90
         }
       ],
       "routes": [

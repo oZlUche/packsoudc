@@ -181,6 +181,7 @@ haven_at = {
 "rest": 0.5,
 "shop": 0.5
 }
+step_limit = 36
 
 [sub_resource type="Resource" id="Resource_d8mg8"]
 script = ExtResource("3_1hmr3")
@@ -200,6 +201,7 @@ haven_at = {
 "rest": 0.333333333333333,
 "shop": 0.666666666666667
 }
+step_limit = 60
 
 [sub_resource type="Resource" id="Resource_k5at1"]
 script = ExtResource("3_1hmr3")
@@ -223,6 +225,7 @@ haven_at = {
 "shop": 0.666666666666667
 }
 placeholder = true
+step_limit = 90
 
 [sub_resource type="Resource" id="Resource_pgj4e"]
 script = ExtResource("5_ntina")

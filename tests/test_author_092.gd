@@ -74,23 +74,24 @@ static func _settle_one(f: GameFlow) -> void:
 
 
 static func run_countdown(t: TestCase) -> void:
-	t.begin("092 · 全局倒计时：第一章 36 行动点，每走一步 -1；过半关掉离出生点最近的免费撤离点（closes_at = 18）；归零 = 行动失败（time_out），保险箱里的照样带出；序章没有倒计时")
+	t.begin("092 · 全局倒计时：按地图规模（小 36 / 中 60 / 大 90），每走一步 -1；过半关掉离出生点最近的免费撤离点；归零 = 行动失败（time_out），保险箱里的照样带出；序章没有倒计时")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
-	t.eq(c.chapter.step_limit, 36, "第一章配了 36（占位）")
+	t.eq(c.chapter.step_limit, 36, "第一章兜底 36（占位）；小图 36、中图 60、大图 90 写在规模档里")
 	var f := _flow(c)
 	var run := f.begin(c.chapter, kit, 7)
 	if run == null:
 		t.check(false, "开局")
 		return
 	f.pick_spawn(run.map.entry_ids[0])
-	t.check(run.has_countdown() and run.countdown_limit() == 36 and run.countdown_left() == 36, "开局倒计时 36")
+	var limit := run.countdown_limit()
+	t.check(run.has_countdown() and [36, 60, 90].has(limit) and run.countdown_left() == limit, "开局倒计时 = 这个规模档的数（%d）" % limit)
 	var closing := run.closing_extract_id()
 	t.check(closing >= 0, "标了一个会关的撤离点（%d）" % closing)
 	if closing >= 0:
 		var node := run.map.get_node(closing)
 		t.check(node.type == &"extract" and PaidExtracts.fee_of(node) == 0, "是免费撤离点")
-		t.eq(PaidExtracts.closes_at(node), 18, "倒计时剩 18 时关")
+		t.eq(PaidExtracts.closes_at(node), limit / 2, "倒计时剩一半时关")
 		t.check(not run.extract_closed(node), "开局没关")
 		# 离出生点最近：没有别的免费撤离点比它更近
 		var best := 1 << 30
@@ -107,13 +108,13 @@ static func run_countdown(t: TestCase) -> void:
 	var first := run.travel.available_moves()[0]
 	t.check(f.step_to(first), "走一步")
 	NodeScreens._settle(f)
-	t.eq(run.countdown_left(), 36 - run.travel.clock.total, "倒计时 = 上限 − 花掉的行动点")
-	t.check(run.countdown_left() <= 35, "走一步至少 -1")
+	t.eq(run.countdown_left(), limit - run.travel.clock.total, "倒计时 = 上限 − 花掉的行动点")
+	t.check(run.countdown_left() <= limit - 1, "走一步至少 -1")
 	if closing >= 0:
-		run.travel.clock.total = 36 - 18
-		t.check(run.extract_closed(run.map.get_node(closing)), "剩 18：关了")
-		run.travel.clock.total = 36 - 19
-		t.check(not run.extract_closed(run.map.get_node(closing)), "剩 19：还开着")
+		run.travel.clock.total = limit - limit / 2
+		t.check(run.extract_closed(run.map.get_node(closing)), "剩一半：关了")
+		run.travel.clock.total = limit - limit / 2 - 1
+		t.check(not run.extract_closed(run.map.get_node(closing)), "剩一半 + 1：还开着")
 	# 放一件进保险箱，再让倒计时归零
 	var board_item: ItemInstance = null
 	for inst in run.board.items():
@@ -122,7 +123,7 @@ static func run_countdown(t: TestCase) -> void:
 			break
 	if board_item != null:
 		t.check(InventoryService.transfer_auto(run.board, board_item.uid, run.safe), "一件进了保险箱")
-	run.travel.clock.total = 35
+	run.travel.clock.total = limit - 1
 	var moves := run.travel.available_moves()
 	t.check(not moves.is_empty() and f.step_to(moves[0]), "最后一步")
 	t.check(run.is_over() and run.phase == RunState.Phase.DEFEATED and run.end_reason == &"time_out", "归零：行动失败（time_out）")
@@ -140,6 +141,17 @@ static func run_countdown(t: TestCase) -> void:
 		t.check(f.meta.board != null and f.meta.board.item_count() == 1, "战败也有带回来的棋盘：就是保险箱那件")
 		t.check(int(f.meta.codex.get(String(board_item.def.id), 0)) >= 1, "图鉴记了")
 	t.eq(f.meta.deaths, 1, "记一败")
+	# 倒计时和地图规模正相关：小图 36、中图 60（过半 30）
+	var small := RunState.start(c.chapter, 3, c.items, c.enemies, c.sets, kit.items, {}, [] as Array[StringName], null, [], null, {}, &"small")
+	if small != null:
+		t.eq(small.countdown_limit(), 36, "小型图倒计时 36")
+	var mid := RunState.start(c.chapter, 3, c.items, c.enemies, c.sets, kit.items, {}, [] as Array[StringName], null, [], null, {}, &"medium")
+	if mid != null:
+		t.eq(mid.countdown_limit(), 60, "中型图倒计时 60")
+		var mc := mid.closing_extract_id()
+		t.check(mc >= 0 and PaidExtracts.closes_at(mid.map.get_node(mc)) == 30, "中型图的撤离点剩 30 时关")
+	else:
+		t.check(true, "（中型图这个种子生成不出，跳过）")
 	# 序章：没有倒计时、没有保险箱
 	var p := RunState.start(c.prologue, 1, c.items, c.enemies, c.sets, [] as Array[StringName])
 	if p != null:
@@ -149,7 +161,7 @@ static func run_countdown(t: TestCase) -> void:
 
 
 static func run_safe_placement(t: TestCase) -> void:
-	t.begin("092 · 保险箱点：第一章每张图恰好一个、不挨着出生点、不是结构点、没有敌人；容器 3×3；存档往返带着里面的东西；地图文字符号 K")
+	t.begin("092 · 保险箱点：第一章每张图恰好一个，覆盖的是靠近中央（深度 ≥ 0.5）的战斗 / 事件点、不挨着出生点、没有敌人；容器 3×3；存档往返带着里面的东西与锁；地图文字符号 K")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	var seen := 0
@@ -172,6 +184,7 @@ static func run_safe_placement(t: TestCase) -> void:
 				near = true
 		t.check(not near and not s.map.goal_ids.has(node.id), "不挨着出生点、不是终点")
 		t.check(not EnemyKit.has_enemy(node.content), "没有敌人")
+		t.check(float(EnemyPlacer.depths_of(s.map).get(node.id, 0.0)) >= 0.5, "比较靠近中央（深度 %.2f）" % float(EnemyPlacer.depths_of(s.map).get(node.id, 0.0)))
 		t.eq(s.safe.size, Vector2i(3, 3), "容器 3×3")
 		t.check(MapNodeTypes.has(&"safe") and MapNodeStyle.of(&"safe")["label"] == "保险箱", "类型表与样式认得")
 		if seed == 1:
@@ -183,16 +196,23 @@ static func run_safe_placement(t: TestCase) -> void:
 			if def != null:
 				var extra := ItemInstance.create(def)
 				t.check(s.safe.try_add(extra, true), "放一件进去")
+				t.check(s.lock_safe() and s.safe_locked and not s.safe_open(), "关上：锁了")
+				t.check(not s.lock_safe(), "再关不重复")
+				t.check(s.map.get_node(node.id).is_visited(), "锁了点就灰")
 				var back := RunState.from_dict(s.to_dict(), c.chapter, c.items, c.enemies, c.sets)
 				t.check(back != null and back.safe != null and back.safe.item_count() == 1 and back.safe.size == Vector2i(3, 3), "存档往返：保险箱里的还在")
+				t.check(back != null and back.safe_locked, "锁也跟着存")
 				t.eq(NodeEvents.effective_type(back.map.get_node(node.id)), &"safe", "类型跟着图存")
 	t.check(seen >= 4, "至少四个种子开得出局（%d）" % seen)
 	t.eq(MapGridText.SYMBOL_TYPES.get("K", &""), &"safe", "地图文字里 K = 保险箱")
 	t.check(SafePlacer.mark(null, 1).is_empty(), "没图不标")
+	var empty := RunState.start(c.chapter, 2, c.items, c.enemies, c.sets, kit.items)
+	if empty != null:
+		t.check(not empty.lock_safe() and empty.safe_open(), "空着关不算关")
 
 
 static func frame_safe_screen(t: TestCase, root: Window) -> void:
-	t.begin("092 · 保险箱屏：走到保险箱点就开；双击 / put_in 把棋盘上的放进去（包不收）、take_back 拿回；Esc 收起回地图、站着随时能再开；回头再踩又开")
+	t.begin("092 · 保险箱屏：走到保险箱点就开；put_in 放进去（包不收）、take_back 拿回；空着 Esc 只是收起、站着能再开；里面有东西关上就锁：屏关掉、点灰、不能再开、再踩不开")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	_cleanup()
@@ -250,23 +270,31 @@ static func frame_safe_screen(t: TestCase, root: Window) -> void:
 		t.check(screen.put_in(item.uid), "再放进去")
 	if bag != null:
 		t.check(not screen.put_in(bag.uid) and not run.safe.has_item(bag.uid), "包放不进保险箱")
-	t.check(game.escape(), "Esc 收起")
-	t.eq(flow.screen, GameFlow.Screen.MAP, "→ 地图")
-	t.check(flow.can_reopen(), "站着随时能再开")
+	# 空着关：只是收起
+	if item != null:
+		t.check(screen.take_back(item.uid), "先拿出来，空着")
+	t.check(game.escape(), "Esc（空着）")
+	t.check(flow.screen == GameFlow.Screen.MAP and not run.safe_locked, "→ 地图，没锁")
+	t.check(flow.can_reopen(), "站着能再开")
 	t.check(flow.reopen_node(), "再开")
 	t.eq(flow.screen, GameFlow.Screen.SAFE, "→ 保险箱屏")
-	flow.hide_overlay()
-	# 走开再回来：又开
+	screen = game.overlay()
+	# 放进去再关：锁
+	if item != null and screen != null:
+		t.check(screen.put_in(item.uid), "放进去")
+		t.check(game.escape(), "Esc（里面有东西）")
+		t.check(flow.screen == GameFlow.Screen.MAP and run.safe_locked and not run.safe_open(), "→ 地图，锁上了")
+		t.check(game.overlay() == null and game.minimized() == null, "屏关掉了，不是收起")
+		t.check(not flow.can_reopen(), "不能再开")
+		t.check(safe_node.is_visited(), "点灰了")
+		t.check(run.safe.has_item(item.uid), "里面的东西留着（结算进局外）")
+	# 走开再回来：不开
 	var moves := run.travel.available_moves()
 	if not moves.is_empty() and flow.step_to(moves[0]):
 		NodeScreens._settle(flow)
 		if not run.is_over() and run.travel.available_moves().has(safe_node.id) and flow.step_to(safe_node.id):
-			var g := 0
-			while GameFlow.is_overlay(flow.screen) and flow.screen != GameFlow.Screen.SAFE and g < 10:
-				g += 1
-				NodeScreens._settle(flow)
-			t.eq(flow.screen, GameFlow.Screen.SAFE, "回头再踩：又开了")
-			flow.hide_overlay()
+			NodeScreens._settle(flow)
+			t.check(flow.screen != GameFlow.Screen.SAFE, "回头再踩：锁着的不开")
 	if item != null:
 		t.check(run.safe.has_item(item.uid), "里面的东西一直在")
 	game.queue_free()

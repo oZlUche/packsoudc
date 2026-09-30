@@ -64,6 +64,9 @@ var storage: ItemStash = null
 var safe: GridInventory = null
 ## 092：倒计时归零 / 撤离点关闭这类只发一次的提醒，地图屏听
 signal countdown_notice(text: String)
+## 092（作者定）：保险箱关上了 —— 里面的送回基地、不能再改；[param count] 是几件
+signal safe_closed(count: int)
+var safe_locked: bool = false
 ## 087（作者定）：暂存区按点独立 —— 离开时暂存区里的东西留在那个点（`node_id → [ItemInstance]`），回到那个点又回到暂存区。跟存档。
 ## 撤离仍不带走暂存区里的东西
 var node_storages: Dictionary = {}
@@ -165,7 +168,7 @@ static func start(
 		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id())
 	PaidExtracts.mark(s.map, s.economy)
 	if p_chapter.closing_extract:
-		PaidExtracts.mark_closing(s.map, p_chapter.step_limit)     # 092：倒计时过半关一个撤离点
+		PaidExtracts.mark_closing(s.map, s.countdown_limit())     # 092：倒计时过半关一个撤离点（按这张图规模的倒计时）
 	EventPlacer.fill(s.map, s.node_rules)
 	s.rng = RunRNG.new(p_seed)
 	# 局外 buff 在开局那一刻定下来：体力上限、开局钱按它们改（一局里的规则见 buff_context）
@@ -227,6 +230,7 @@ func step_to(id: int) -> bool:
 	close_sessions()
 	_drop_pending_loot()
 	_drop_storage_if_leaving()
+	lock_safe()     # 092：走开 = 关上保险箱（里面有东西才算关）
 	var was_visited := map.has_node(id) and map.get_node(id).is_visited()
 	var ok := travel.step_to(id)
 	if ok:
@@ -249,6 +253,7 @@ func relocate(intent: MoveIntent) -> bool:
 	close_sessions()
 	_drop_pending_loot()
 	_drop_storage_if_leaving()
+	lock_safe()
 	var ok := travel.apply(intent)
 	if ok:
 		_restore_storage(travel.current_id)
@@ -376,9 +381,17 @@ func is_over() -> bool:
 
 
 #region 全局倒计时（092，作者定）
-## 这一章的倒计时总数（行动点）；0 = 没有
+## 这一局的倒计时总数（行动点）；0 = 没有。作者定：和地图规模正相关 —— 规模档写了 step_limit 就用它的，没写用章节的
 func countdown_limit() -> int:
-	return chapter.step_limit if chapter != null else 0
+	if chapter == null:
+		return 0
+	var cfg: Resource = chapter.map_source.generator_config if chapter.map_source != null else null
+	if cfg != null and cfg.has_method("scale_by_id"):
+		var sid := scale_id()
+		var p = cfg.call("scale_by_id", sid) if sid != &"" else (cfg.call("scale") if cfg.has_method("scale") else null)
+		if p != null and "step_limit" in p and int(p.get("step_limit")) > 0:
+			return int(p.get("step_limit"))
+	return chapter.step_limit
 
 
 func has_countdown() -> bool:
@@ -407,6 +420,24 @@ func closing_extract_id() -> int:
 func extract_closed(node: MapNode) -> bool:
 	var at := PaidExtracts.closes_at(node)
 	return has_countdown() and at >= 0 and countdown_left() <= at
+
+
+## 092（作者定）：关上保险箱 —— 里面的送回基地（结算时照样进局外），**不能再改动**；空着关不算关（还能再开）。返回这次锁没锁
+func lock_safe() -> bool:
+	if safe_locked or safe == null or safe.item_count() == 0:
+		return false
+	safe_locked = true
+	if map != null and travel != null:
+		for id in map.node_ids():
+			if map.get_node(id).type == &"safe":
+				travel.mark_visited(id)     # 锁了就灰：再踩上不开
+	safe_closed.emit(safe.item_count())
+	return true
+
+
+## 保险箱还能开（没锁）
+func safe_open() -> bool:
+	return safe != null and not safe_locked
 
 
 ## 走完一步看一眼：归零就是行动失败 —— 会话关掉、没拿的战利品丢掉、战败结算（保险箱里的照样带出）
@@ -881,6 +912,7 @@ func _wire_events() -> void:
 	events.bracket_of = func() -> int: return hunters.bracket() if hunters != null else -1
 	events.relocate = relocate
 	events.request_extract = try_extract     # 085：撤离点的对话里选「撤离」
+	events.safe_open = safe_open     # 092：锁上的保险箱不再开
 	events.waited.connect(func(_n: MapNode, _actions: int):
 		tick_map_buffs()
 		if hunters != null:
@@ -967,6 +999,7 @@ func to_dict() -> Dictionary:
 		"board": board.to_dict(),
 		"storage": storage.to_dict(),
 		"safe": safe.to_dict() if safe != null else null,
+		"safe_locked": safe_locked,
 		"node_storages": _node_storages_to_dict(),
 		"rng": rng.to_dict(),
 		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id, "pending": events.pending.duplicate(), "losses_forgiven": events.losses_forgiven,
@@ -1024,6 +1057,7 @@ static func from_dict(
 	s.storage = ItemStash.from_dict(d.get("storage", {}), p_items)
 	var safe_raw = d.get("safe", null)
 	s.safe = GridInventory.from_dict(safe_raw, p_items) if safe_raw is Dictionary else GridInventory.new(Vector2i(3, 3), SAFE_ID, false)
+	s.safe_locked = bool(d.get("safe_locked", false))
 	var ns: Variant = d.get("node_storages", {})
 	if ns is Dictionary:
 		for key in ns:

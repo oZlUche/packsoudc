@@ -34,8 +34,10 @@ signal rewarded(node: MapNode, amount: int)
 ## 商店开门。session 为 null = 这一章没有经济规则，店是空的
 signal shop_opened(node: MapNode, session: ShopSession)
 signal shop_closed(node: MapNode)
-## 092：踩上保险箱点（每次踩上都发；这个点永远不算用过）
+## 092：踩上保险箱点（没锁就发；锁上了这个点算用过）
 signal safe_opened(node: MapNode)
+## 092：保险箱还能不能开（RunState.safe_open）；没接就当能
+var safe_open: Callable = Callable()
 signal event_resolved(node: MapNode, outcome: StringName, detail: Dictionary)
 ## 到了撤离点。fee > 0 = 付费的（PaidExtracts），撤离动作（M6）先 pay_extract_fee
 signal extract_reached(node: MapNode, fee: int)
@@ -184,7 +186,10 @@ func _proceed(node: MapNode, type: StringName) -> void:
 			extract_reached.emit(node, PaidExtracts.fee_of(node))
 			_visited(node)
 		&"safe":
-			# 092：保险箱不算用过 —— 每次回来都能开，走了再回也能开
+			# 092：没锁的保险箱不算用过 —— 空着走开再回来还能开；关上（里面有东西）就锁了、点灰了
+			if safe_open.is_valid() and not safe_open.call():
+				_visited(node)
+				return
 			last_handled_id = node.id
 			safe_opened.emit(node)
 		_:

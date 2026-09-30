@@ -33,6 +33,8 @@ extends Resource
 @export var haven_at: Dictionary = {"rest": 1.0 / 3.0, "shop": 2.0 / 3.0}
 ## true = 数值还没定，只是占个位。界面上会标出来
 @export var placeholder: bool = false
+## 092（作者定）：这个规模的全局倒计时（行动点）—— 倒计时和地图规模正相关，每档自己写；0 = 用章节的 step_limit
+@export var step_limit: int = 0
 
 
 func covers(ring_count: int) -> bool:
