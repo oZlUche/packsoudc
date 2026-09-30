@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_14pxn"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_bo71p"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/give_item.gd" id="3_pa248"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="4_oe13u"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="5_woabp"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="6_w5hg8"]
+
+[sub_resource type="Resource" id="Resource_u8u5s"]
+script = ExtResource("3_pa248")
+item = &"charm_sun"
+
+[sub_resource type="Resource" id="Resource_6ktk3"]
+script = ExtResource("4_oe13u")
+text = "日神的护符温热不退。"
+
+[sub_resource type="Resource" id="Resource_5jkrl"]
+script = ExtResource("1_14pxn")
+label = "拿起铜牌"
+tags = Array[StringName]([&"offering"])
+outcomes = Array[ExtResource("2_bo71p")]([SubResource("Resource_u8u5s"), SubResource("Resource_6ktk3")])
+
+[sub_resource type="Resource" id="Resource_h5aeg"]
+script = ExtResource("1_14pxn")
+label = "不拿，离开"
+
+[resource]
+script = ExtResource("6_w5hg8")
+id = &"faith_call_sun"
+title = "日神的光"
+text = "祭坛的石面被烤得发白，正午的光从没有窗的顶上直直落下来。一枚铜牌躺在光里，热得像刚从火里夹出来。"
+options = Array[ExtResource("1_14pxn")]([SubResource("Resource_5jkrl"), SubResource("Resource_h5aeg")])

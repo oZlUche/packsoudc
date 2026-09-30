@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_mt73d"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_dwn24"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_tblmm"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_4psdk"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_65w7p"]
+
+[sub_resource type="Resource" id="Resource_6wwco"]
+script = ExtResource("5_65w7p")
+
+[resource]
+script = ExtResource("4_4psdk")
+id = &"charm_brute"
+display_name = "蛮神的护符"
+display_names = {
+"en": "Charm of the Brute"
+}
+shape = SubResource("Resource_6wwco")
+rarity = 3
+value = 200
+tags = Array[StringName]([&"treasure", &"faith", &"faith:brute", &"bone"])

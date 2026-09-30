@@ -1,0 +1,26 @@
+{
+  "id": "faith_call_earth",
+  "title": "大地之神的匣",
+  "text": "祭坛是一整块没有接缝的石头。石面上凹进去一个拳头大的洞，里面是一只空心的石匣 —— 能装一件小东西。",
+  "options": [
+    {
+      "label": "取出石匣",
+      "tags": [
+        "offering"
+      ],
+      "outcomes": [
+        {
+          "type": "give_item",
+          "item": "charm_earth"
+        },
+        {
+          "type": "say",
+          "text": "大地之神的护符沉甸甸的，是个空匣子。"
+        }
+      ]
+    },
+    {
+      "label": "不拿，离开"
+    }
+  ]
+}

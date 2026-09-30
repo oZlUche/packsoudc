@@ -8,8 +8,8 @@ extends FaithDeed
 
 
 func gain(event: StringName, payload: Dictionary) -> int:
-	if event != &"travel":
-		return 0
+	if event != &"travel" or not payload.has("first_visit"):
+		return 0     # 没说头一回还是再踩（老的喂法）：不认
 	if bool(payload.get("first_visit", false)):
 		return first_amount if String(payload.get("node_type", "")) == "junction" else 0
 	return again_amount

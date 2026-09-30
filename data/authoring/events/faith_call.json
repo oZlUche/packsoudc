@@ -1,0 +1,24 @@
+{
+  "id": "faith_call",
+  "title": "触发信仰",
+  "text": "废墟深处立着一座祭坛，看不出供的是哪位神。空气里有什么在等你。",
+  "options": [
+    {
+      "label": "靠近",
+      "outcomes": [
+        {
+          "type": "next_event_random",
+          "events": {
+            "faith_call_brute": 1,
+            "faith_call_sun": 1,
+            "faith_call_nature": 1,
+            "faith_call_earth": 1
+          }
+        }
+      ]
+    },
+    {
+      "label": "离开"
+    }
+  ]
+}

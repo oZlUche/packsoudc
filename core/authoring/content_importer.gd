@@ -660,6 +660,14 @@ static func _validate_node_rules(rules: NodeRules, ctx: Context, report: ImportR
 				report.error("events_by_type", "'%s' 里 '%s' 的权重不能为负" % [type, eid])
 			if not ctx.events.is_empty() and not ctx.events.has(StringName(String(eid))):
 				report.error("events_by_type", "'%s' 里找不到事件 '%s'（已知：%s）" % [type, eid, ", ".join(ctx.events.keys())])
+	for gname in rules.event_groups:
+		var g = rules.event_groups[gname]
+		if not (g is Dictionary) or not ((g as Dictionary).get("events", null) is Dictionary):
+			report.error("event_groups", "'%s' 下该是 {max_per_map, early, chance, events: {事件 id: 权重}}" % gname)
+			continue
+		for eid in (g as Dictionary)["events"]:
+			if not ctx.events.is_empty() and not ctx.events.has(StringName(String(eid))):
+				report.error("event_groups", "'%s' 里找不到事件 '%s'" % [gname, eid])
 	for key in rules.event_weights:
 		if not NodeRules.EVENT_OUTCOMES.has(StringName(String(key))):
 			report.error("event_weights", "认不得的事件结果 '%s'（只能是 %s）" % [key, ", ".join(NodeRules.EVENT_OUTCOMES)])

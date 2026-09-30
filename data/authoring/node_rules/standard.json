@@ -70,5 +70,15 @@
     "extract": {
       "extract_default": 1
     }
+  },
+  "event_groups": {
+    "faith_call": {
+      "max_per_map": 1,
+      "early": true,
+      "chance": 1,
+      "events": {
+        "faith_call": 1
+      }
+    }
   }
 }

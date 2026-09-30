@@ -71,7 +71,7 @@ func warehouse_size() -> Vector2i:
 ## 什么能存进局外（仓库、带回来的棋盘）。现在：不是包 —— 作者定的「包只计图鉴」。
 ## 「包」只是当前的承载媒介，将来可能删掉；那时删这一个分支，别处不要再问 is_bag
 static func keeps(def: ItemDef) -> bool:
-	return def != null and not def.is_bag
+	return def != null and (not def.is_bag or def.has_faith())     # 093：大地之神的护符是个 1 格的包，也是珍宝 —— 留
 
 
 ## 往仓库里发东西（局外的 uid 空间）：仓库空的第一局发第一套（[MetaRules.first_kit]）、将来的制作 / 教程关都走这里。

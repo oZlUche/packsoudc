@@ -75,9 +75,21 @@ static func _weighted(table: Dictionary, rng: RandomNumberGenerator, fallback: S
 ## 事件层（063）：节点类型 → {事件 id: 权重}。生成地图时按它给每个点定一个事件（[EventPlacer]），踩上去先过事件屏。
 ## 没列的类型（多数是战斗）没有事件 = 转场，踩上去直接发生。搜索点的「要不要搜」就是它的事件（选项里 OpenSearch）
 @export var events_by_type: Dictionary = {}
+## 093（作者定）：**成组限量**的事件 —— 生成时先于 events_by_type 铺：`{"组名": {"max_per_map": 1, "early": true, "chance": 1.0, "events": {"事件 id": 权重}}}`。
+## 每张图最多放 max_per_map 个（在事件点里挑）；early = 偏前期（越浅的点权重越高）；chance = 这张图有没有它的概率。「触发信仰」用它：每张图最多一位神
+@export var event_groups: Dictionary = {}
 
 
 ## 这种类型的点该配哪个事件；没配返回空
+## 093：成组事件按权重抽一个
+func group_pick(group: String, rng: RandomNumberGenerator) -> StringName:
+	var g = event_groups.get(group, null)
+	if not (g is Dictionary):
+		return &""
+	var table = (g as Dictionary).get("events", {})
+	return _weighted(table, rng, &"") if table is Dictionary and not (table as Dictionary).is_empty() else &""
+
+
 func event_pick_for(type: StringName, rng: RandomNumberGenerator) -> StringName:
 	var table = events_by_type.get(String(type), null)
 	if not (table is Dictionary) or (table as Dictionary).is_empty():

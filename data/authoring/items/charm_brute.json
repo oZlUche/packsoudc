@@ -1,0 +1,18 @@
+{
+  "id": "charm_brute",
+  "display_name": "蛮神的护符",
+  "display_names": {
+    "en": "Charm of the Brute"
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "value": 200,
+  "tags": [
+    "treasure",
+    "faith",
+    "faith:brute",
+    "bone"
+  ]
+}

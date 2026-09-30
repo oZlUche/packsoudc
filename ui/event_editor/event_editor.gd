@@ -652,6 +652,12 @@ func _placement_text() -> String:
 			if table is Dictionary and (table as Dictionary).has(id):
 				var w := float(table[id])
 				found.append("%s · %s（权重 %s）" % [rid, type, str(int(w)) if w == floorf(w) else str(w)])
+		var groups = (parsed as Dictionary).get("event_groups", {})
+		if groups is Dictionary:
+			for gname in groups:
+				var g = groups[gname]
+				if g is Dictionary and (g as Dictionary).get("events", {}) is Dictionary and ((g as Dictionary)["events"] as Dictionary).has(id):
+					found.append("%s · 组「%s」（每图最多 %d）" % [rid, gname, int((g as Dictionary).get("max_per_map", 1))])
 	return "现在挂在：" + ("、".join(found) if not found.is_empty() else "（没有）")
 
 

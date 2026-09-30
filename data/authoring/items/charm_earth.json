@@ -1,0 +1,18 @@
+{
+  "id": "charm_earth",
+  "display_name": "大地之神的护符",
+  "display_names": {
+    "en": "Charm of the Earth"
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "value": 200,
+  "tags": [
+    "treasure",
+    "faith",
+    "faith:earth"
+  ],
+  "is_bag": true
+}

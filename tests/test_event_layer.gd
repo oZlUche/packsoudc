@@ -240,7 +240,7 @@ static func run_placer(t: TestCase) -> void:
 				t.eq(eid, "search_default", "搜索点 %d 配了搜索事件" % id)
 			&"event":
 				events += 1
-				t.check((c.rules.events_by_type["event"] as Dictionary).has(eid), "事件点 %d 配的 '%s' 在表里" % [id, eid])
+				t.check((c.rules.events_by_type["event"] as Dictionary).has(eid) or (n.content.has("event_group") and (c.rules.event_groups[String(n.content["event_group"])]["events"] as Dictionary).has(eid)), "事件点 %d 配的 '%s' 在表里（或成组限量的那一个）" % [id, eid])
 			_:
 				# 别的类型：规则表里挂了就得是表里的（8-3 给休息 / 商店挂了默认事件），没挂就不配（转场）
 				var table: Dictionary = c.rules.events_by_type.get(n.type, {})

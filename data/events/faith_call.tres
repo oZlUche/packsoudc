@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_krn0e"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_ci2vb"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/next_event_random.gd" id="3_wfbc4"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_e7ias"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_eywxh"]
+
+[sub_resource type="Resource" id="Resource_inin6"]
+script = ExtResource("3_wfbc4")
+events = {
+"faith_call_brute": 1,
+"faith_call_earth": 1,
+"faith_call_nature": 1,
+"faith_call_sun": 1
+}
+
+[sub_resource type="Resource" id="Resource_rvgbf"]
+script = ExtResource("1_krn0e")
+label = "靠近"
+outcomes = Array[ExtResource("2_ci2vb")]([SubResource("Resource_inin6")])
+
+[sub_resource type="Resource" id="Resource_myi7w"]
+script = ExtResource("1_krn0e")
+label = "离开"
+
+[resource]
+script = ExtResource("5_eywxh")
+id = &"faith_call"
+title = "触发信仰"
+text = "废墟深处立着一座祭坛，看不出供的是哪位神。空气里有什么在等你。"
+options = Array[ExtResource("1_krn0e")]([SubResource("Resource_rvgbf"), SubResource("Resource_myi7w")])

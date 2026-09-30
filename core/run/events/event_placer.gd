@@ -7,11 +7,11 @@ class_name EventPlacer
 extends RefCounted
 
 
-## 全图铺一遍。返回定了事件的节点数
+## 全图铺一遍。返回定了事件的节点数。093：成组限量的事件（[NodeRules.event_groups]）先铺 —— 每张图最多几个、偏前期
 static func fill(graph: MapGraph, rules: NodeRules) -> int:
 	if graph == null or rules == null:
 		return 0
-	var n := 0
+	var n := fill_groups(graph, rules)
 	for id in graph.node_ids():
 		var node := graph.get_node(id)
 		if node.type == &"random" or String(node.content.get("event", "")) != "":
@@ -21,6 +21,63 @@ static func fill(graph: MapGraph, rules: NodeRules) -> int:
 			node.content["event"] = String(eid)
 			n += 1
 	return n
+
+
+## 093：成组限量的事件。每组：在还没配事件的**事件点**里挑 max_per_map 个（early = 越浅的点权重越高：(1 − 深度)² + 0.05），
+## 各抽一个组内事件写进去。可复现：随机数按「组名 + 图上第一个点的 content_seed」派生。返回放了几个
+static func fill_groups(graph: MapGraph, rules: NodeRules) -> int:
+	var placed := 0
+	if rules.event_groups.is_empty():
+		return 0
+	var ids := graph.node_ids()
+	if ids.is_empty():
+		return 0
+	var depths := EnemyPlacer.depths_of(graph)
+	var groups: Array = rules.event_groups.keys()
+	groups.sort()
+	for gname in groups:
+		var g = rules.event_groups[gname]
+		if not (g is Dictionary):
+			continue
+		var cfg := g as Dictionary
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash("group:%s:%d" % [gname, graph.get_node(ids[0]).content_seed])
+		if rng.randf() >= float(cfg.get("chance", 1.0)):
+			continue
+		var want := int(cfg.get("max_per_map", 1))
+		var early := bool(cfg.get("early", false))
+		var pool: Array[int] = []
+		for id in ids:
+			var node := graph.get_node(id)
+			if node.type == &"event" and String(node.content.get("event", "")) == "":
+				pool.append(id)
+		for k in want:
+			if pool.is_empty():
+				break
+			var total := 0.0
+			var weights: Array[float] = []
+			for id in pool:
+				var w := 1.0
+				if early:
+					var d := float(depths.get(id, 0.5))
+					w = (1.0 - d) * (1.0 - d) + 0.05
+				weights.append(w)
+				total += w
+			var roll := rng.randf() * total
+			var chosen := pool[-1]
+			for i in pool.size():
+				roll -= weights[i]
+				if roll <= 0.0:
+					chosen = pool[i]
+					break
+			pool.erase(chosen)
+			var eid := rules.group_pick(String(gname), rng)
+			if eid == &"":
+				break
+			graph.get_node(chosen).content["event"] = String(eid)
+			graph.get_node(chosen).content["event_group"] = String(gname)
+			placed += 1
+	return placed
 
 
 ## 这个点按 [param type] 该配哪个事件（确定的：同一个点同一种类型永远同一个）

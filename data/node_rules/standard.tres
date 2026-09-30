@@ -38,3 +38,13 @@ events_by_type = {
 "shop_default": 1
 }
 }
+event_groups = {
+"faith_call": {
+"chance": 1,
+"early": true,
+"events": {
+"faith_call": 1
+},
+"max_per_map": 1
+}
+}

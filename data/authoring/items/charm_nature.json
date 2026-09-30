@@ -1,0 +1,18 @@
+{
+  "id": "charm_nature",
+  "display_name": "自然之神的护符",
+  "display_names": {
+    "en": "Charm of Nature"
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "value": 200,
+  "tags": [
+    "treasure",
+    "faith",
+    "faith:nature",
+    "nature"
+  ]
+}

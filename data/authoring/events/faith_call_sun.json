@@ -1,0 +1,26 @@
+{
+  "id": "faith_call_sun",
+  "title": "日神的光",
+  "text": "祭坛的石面被烤得发白，正午的光从没有窗的顶上直直落下来。一枚铜牌躺在光里，热得像刚从火里夹出来。",
+  "options": [
+    {
+      "label": "拿起铜牌",
+      "tags": [
+        "offering"
+      ],
+      "outcomes": [
+        {
+          "type": "give_item",
+          "item": "charm_sun"
+        },
+        {
+          "type": "say",
+          "text": "日神的护符温热不退。"
+        }
+      ]
+    },
+    {
+      "label": "不拿，离开"
+    }
+  ]
+}

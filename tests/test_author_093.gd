@@ -482,3 +482,113 @@ static func run_undying(t: TestCase) -> void:
 	var spec := BattleCompiler.compile(null, CombatantBaseline.with_hp(10.0))
 	und.modify_spec(spec, null, null)
 	t.eq(float(spec.flags.get("undying_sec", 0.0)), 10.0, "编译后的单位带 undying_sec = 10")
+
+
+static func run_faith_call(t: TestCase) -> void:
+	t.begin("093 · 触发信仰：四枚护符（1 格、珍宝 + 信仰标签 + 流派标签；大地的是 1 格的包、局外也留）；事件链「祭坛 → 靠近 → 随机一位神 → 拿 / 不拿」；成组限量：每张图恰好一个、偏前期")
+	var db := ItemDatabase.new()
+	db.load_dir()
+	var extra := {"brute": "bone", "sun": "fire", "nature": "nature", "earth": ""}
+	for fid in ["brute", "sun", "nature", "earth"]:
+		var d := db.get_def(StringName("charm_" + fid))
+		t.check(d != null, "有 charm_%s" % fid)
+		if d == null:
+			continue
+		t.check(ItemVolume.cells_of(d) == 1 and d.tags.has(&"treasure") and d.faith_tag() == StringName("faith:" + fid), "%s：1 格、珍宝、归 %s" % [d.display_name, fid])
+		if String(extra[fid]) != "":
+			t.check(d.tags.has(StringName(extra[fid])), "带流派标签 %s" % extra[fid])
+		t.check(d.combat == null and d.faith_bonuses.is_empty(), "没有别的效果")
+		t.eq(d.is_bag, fid == "earth", "只有大地的是包")
+	t.check(MetaState.keeps(db.get_def(&"charm_earth")) and not MetaState.keeps(db.get_def(&"bag_small")), "大地的护符虽是包也留在局外；普通包不留")
+	# 事件链
+	var events := GameFlow.load_events()
+	var root: EventDef = events.get(&"faith_call", null)
+	t.check(root != null and root.options.size() == 2, "「触发信仰」：靠近 / 离开")
+	if root != null:
+		var near := root.options[0] as EventOption
+		var rnd: NextEventRandom = null
+		for o in near.outcomes:
+			if o is NextEventRandom:
+				rnd = o
+		t.check(rnd != null and rnd.events.size() == 4, "靠近 → 从四位神里随机接一个")
+		var ctx := EventContext.new()
+		ctx.rng = RandomNumberGenerator.new()
+		ctx.rng.seed = 11
+		rnd.apply(ctx)
+		var first := ctx.next_event
+		ctx.rng.seed = 11
+		ctx.next_event = &""
+		rnd.apply(ctx)
+		t.check(String(first).begins_with("faith_call_") and ctx.next_event == first, "同一个随机数同一位神（%s）" % first)
+	for fid in ["brute", "sun", "nature", "earth"]:
+		var ev: EventDef = events.get(StringName("faith_call_" + fid), null)
+		t.check(ev != null and ev.options.size() == 2, "有 faith_call_%s：拿 / 不拿" % fid)
+		if ev != null:
+			var gives := false
+			for o in (ev.options[0] as EventOption).outcomes:
+				if o is GiveItem and (o as GiveItem).item == StringName("charm_" + fid):
+					gives = true
+			t.check(gives and (ev.options[1] as EventOption).outcomes.is_empty(), "第一项给护符，第二项空手走")
+	# 成组限量的放置
+	var c = NodeScreens._content()
+	var kit: LoadoutDef = NodeScreens._kit(c)
+	var depth_sum := 0.0
+	var maps := 0
+	for seed in range(1, 9):
+		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items)
+		if s == null:
+			continue
+		var event_nodes := 0
+		var calls: Array[int] = []
+		for id in s.map.node_ids():
+			var n := s.map.get_node(id)
+			if n.type == &"event":
+				event_nodes += 1
+			if String(n.content.get("event", "")) == "faith_call":
+				calls.append(id)
+		if event_nodes == 0:
+			continue
+		maps += 1
+		t.eq(calls.size(), 1, "种子 %d：恰好一个「触发信仰」" % seed)
+		if calls.size() == 1:
+			var n := s.map.get_node(calls[0])
+			t.check(n.type == &"event" and String(n.content.get("event_group", "")) == "faith_call", "落在事件点上、记着组名")
+			depth_sum += float(EnemyPlacer.depths_of(s.map).get(calls[0], 0.0))
+	if maps > 0:
+		t.check(depth_sum / float(maps) < 0.5, "偏前期：平均深度 %.2f < 0.5" % (depth_sum / float(maps)))
+	# 走一遍：靠近 → 某位神 → 拿 → 护符进暂存区 → 放上棋盘激活那位神
+	var f := _flow(c)
+	var run := f.begin(c.chapter, kit, 2)
+	if run == null:
+		t.check(false, "开局")
+		return
+	f.pick_spawn(run.map.entry_ids[0])
+	var call_node: MapNode = null
+	for id in run.map.node_ids():
+		if String(run.map.get_node(id).content.get("event", "")) == "faith_call":
+			call_node = run.map.get_node(id)
+	if call_node == null:
+		t.check(true, "（这张图没有事件点，跳过走一遍）")
+		_cleanup()
+		return
+	run.events.handle(call_node)
+	t.check(run.events.pending_event() != null and run.events.pending_event().id == &"faith_call", "踩上：「触发信仰」")
+	t.check(f.choose_event(0), "靠近")
+	var god_ev := run.events.pending_event()
+	t.check(god_ev != null and String(god_ev.id).begins_with("faith_call_"), "→ 某位神的事件（%s）" % (god_ev.id if god_ev != null else "?"))
+	if god_ev != null:
+		var fid := String(god_ev.id).trim_prefix("faith_call_")
+		var before := run.storage.item_count()
+		t.check(f.choose_event(0), "拿护符")
+		var charm: ItemInstance = null
+		for inst in run.storage.items():
+			if String((inst as ItemInstance).def.id) == "charm_" + fid:
+				charm = inst
+		t.check(run.storage.item_count() == before + 1 and charm != null, "护符进了暂存区")
+		if charm != null:
+			t.check(InventoryService.transfer_auto(run.storage, charm.uid, run.board), "放上棋盘")
+			t.eq(String(run.active_faith_id()), fid, "激活了那位神")
+			if fid == "earth":
+				t.check(run.board.acts_as_bag(charm.def), "大地的护符在棋盘上是个包")
+	NodeScreens._settle(f)
+	_cleanup()

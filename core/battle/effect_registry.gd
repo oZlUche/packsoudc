@@ -153,6 +153,7 @@ const EVENT_OUTCOMES := {
 	&"lose_item": "res://core/run/events/outcomes/lose_item.gd",
 	&"set_flag": "res://core/run/events/outcomes/set_flag.gd",
 	&"open_altar": "res://core/run/events/outcomes/open_altar.gd",
+	&"next_event_random": "res://core/run/events/outcomes/next_event_random.gd",
 }
 
 ## 一局的机制（069）：难度清单里开的那些

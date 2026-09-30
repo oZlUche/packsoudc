@@ -36,7 +36,7 @@ const LABELS := {
 	# 章节 / 地图
 	"map_source": "地图来源", "mode": "方式", "preset_path": "预设文件", "generator_id": "生成器", "generator_config": "生成参数",
 	"enemy_pool": "敌人池", "difficulty": "难度", "drop_rule": "掉落规则", "node_rules": "节点规则", "economy_rules": "经济规则",
-	"step_limit": "全局倒计时（行动点）", "offerings": "献祭品", "perks": "信仰效果", "multiplier": "倍率", "cap": "每场上限",
+	"step_limit": "全局倒计时（行动点）", "event_groups": "成组限量的事件", "events": "事件与权重", "offerings": "献祭品", "perks": "信仰效果", "multiplier": "倍率", "cap": "每场上限",
 	"count_dealt": "算造成的", "count_taken": "算受到的", "min_cells": "最少格子数", "exact_grade": "体积恰好", "per_cell": "乘格子数", "first_amount": "首次给", "again_amount": "再次给", "closing_extract": "过半关一个撤离点", "safes": "保险箱个数", "safe_size": "保险箱大小",
 	"grants_unlock": "通关给的解锁", "hidden_by_unlock": "拿到此解锁后收起", "characters": "可选角色", "vitality_bonus": "额外体力", "starting_items": "开局道具",
 	"starting_keepsakes": "开局特殊道具", "next_chapter": "下一章", "allow_carry_in": "允许从仓库带入", "auto_spawn": "直接站在出生点", "skip_setup": "不走开局屏",
@@ -82,7 +82,7 @@ const TYPE_LABELS := {
 	"pass_time": "原地耗时", "lose_item": "失去道具", "set_flag": "立局外旗标",
 	# 093 信仰流派
 	"damage": "造成 / 受到伤害", "vitality_lost": "失去体力", "item_cycle": "道具成功循环", "heal": "战斗内回血", "item_triggered": "触发某类道具", "enter_node": "进入空白节点",
-	"faith_active": "激活了信仰", "open_altar": "打开神坛", "low_hp_empower": "低血增伤", "fire_enchant": "火焰附魔",
+	"faith_active": "激活了信仰", "open_altar": "打开神坛", "next_event_random": "随机接一个事件", "low_hp_empower": "低血增伤", "fire_enchant": "火焰附魔",
 	"stat_mod": "属性修饰（信仰级）", "enchant_weapons": "武器火焰附魔", "food_shield": "按食物给护盾", "food_double": "食物效果翻倍",
 	"altar_sacrifice_hp": "神坛：献祭生命上限", "altar_pray_fire": "神坛：祈祷火焰", "altar_food_vitality": "献祭食物回体力", "altar_train_board": "神坛：锻炼（棋盘 +1 行）",
 	"altar_reshape_node": "神坛：改造此点", "smite": "秒杀（耗体力）", "extra_drop_by_node": "按点类型必掉额外一件", "gift_on_enter": "踩上点给对应道具", "draw_is_win": "平局算胜", "undying": "血归零后坚持几秒",
