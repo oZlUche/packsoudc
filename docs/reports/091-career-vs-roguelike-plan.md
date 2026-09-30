@@ -303,6 +303,14 @@ Backpack Hero 在 1.0（2023-11）加了故事模式（重建小镇 + 寻母主�
 
 改法：`PropertyForm` 改成 `const FieldText := preload("res://core/authoring/field_text.gd")` 直接引用，不靠全局类名。验证：把缓存里 FieldText 那条删掉、不重新导入直接拉起事件编辑器，表单照样有内容。**以后新加 class_name 的脚本，消费方一律用 preload 引用**，作者拉了就能跑；`--import`（或 `tools/run_game.bat`、编辑器「重新加载当前项目」）仍是最稳的一步。
 
+### 13.2 根除（094，作者问「能否根除，还是每次改动都要加检查」）
+
+两层：
+1. **缓存文件进仓库**：`.gitignore` 从 `.godot/` 改成 `.godot/*` + `!.godot/global_script_class_cache.cfg`。这个文件只是「类名 → 脚本路径」的清单，路径都是 `res://`，跨机器一样；`tools/test.sh` 每次跑都先 `--import` 刷新它，所以每一次提交带的缓存都和代码一致 —— 作者拉下来就是对的，不用再手动导入。以后新加 class_name 的脚本照旧写，不用特意 preload。
+2. **启动自检**：`DevNav`（autoload，只用内建类型，缓存坏了它也活着）启动时扫 `core / ui / tools / tests` 里的 `class_name`，和 `ProjectSettings.get_global_class_list()` 对一遍；缺了就在顶上挂一条红字写清缺哪些、怎么修（重新加载项目 / `tools/run_game`），Output 也报。以后再遇到灰屏 / 空白，第一眼就知道是不是这个原因。
+
+会不会还出问题：只有一种情况 —— 作者本机改了脚本加了 class_name 又没让编辑器扫（编辑器开着一般会自动扫）。那时自检会说话。
+
 ## 十四、实施：待定项拍板 + 后续修改（作者定）
 
 作者对上一节末尾列的待定项拍了板，并加了几条修改与两个 bug。

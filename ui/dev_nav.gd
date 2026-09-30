@@ -22,11 +22,16 @@ var _armed_left: float = 0.0
 ## 上一帧的当前场景。用它判断「场景换了没」—— SceneTree 没有现成的信号，
 ## 而 tree_changed 每加一个节点就响一次，编辑器那种反射表单会把它打爆
 var _seen: Node = null
+## 094：全局类缓存过期时顶上那条红字（有就说明为什么一片灰 / 一片空白）
+var _cache_banner: Label = null
+## 扫哪些目录找 class_name
+const CLASS_DIRS := ["res://core", "res://ui", "res://tools", "res://tests"]
 
 
 func _ready() -> void:
 	layer = 128  # 盖在一切之上
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_check_class_cache()
 
 	_button = Button.new()
 	_button.add_theme_font_override("font", UiPalette.cjk_font())
@@ -76,6 +81,71 @@ func _request_back() -> void:
 	_armed = false
 	if get_tree().change_scene_to_file(LAUNCHER) != OK:
 		push_error("DevNav: 回不去启动选择器")
+
+
+## 094：全局类缓存里缺的类（脚本里写了 class_name、缓存里没有）。缺了就是「拉了新脚本没重新导入」——
+## 依赖它们的脚本会整体解析失败，表现为灰屏 / 编辑器空白。这里只用内建类型，不碰任何全局类，缓存坏了它也得活着
+static func stale_classes() -> Array[String]:
+	var known := {}
+	for entry in ProjectSettings.get_global_class_list():
+		known[String((entry as Dictionary).get("class", ""))] = true
+	var missing: Array[String] = []
+	var regex := RegEx.new()
+	regex.compile("^\\s*class_name\\s+([A-Za-z_][A-Za-z0-9_]*)")
+	for root in CLASS_DIRS:
+		_scan_dir(root, regex, known, missing)
+	missing.sort()
+	return missing
+
+
+static func _scan_dir(path: String, regex: RegEx, known: Dictionary, missing: Array[String]) -> void:
+	var dir := DirAccess.open(path)
+	if dir == null:
+		return
+	dir.include_hidden = false
+	for sub in dir.get_directories():
+		_scan_dir(path.path_join(sub), regex, known, missing)
+	for f in dir.get_files():
+		if not f.ends_with(".gd"):
+			continue
+		var fa := FileAccess.open(path.path_join(f), FileAccess.READ)
+		if fa == null:
+			continue
+		var lines := 0
+		while not fa.eof_reached() and lines < 40:
+			var m := regex.search(fa.get_line())
+			lines += 1
+			if m != null:
+				var cname := m.get_string(1)
+				if not known.has(cname) and not missing.has(cname):
+					missing.append(cname)
+				break
+
+
+func _check_class_cache() -> void:
+	if OS.has_feature("template"):
+		return     # 导出包里的缓存永远是对的
+	var missing := stale_classes()
+	if missing.is_empty():
+		return
+	var text := "全局类缓存过期：缺 %s —— 界面会灰屏 / 空白。修法：Godot 菜单「项目 → 重新加载当前项目」，或跑 tools/run_game（会先 --import）。缓存文件已进仓库，拉最新的 .godot/global_script_class_cache.cfg 也行" % ", ".join(missing)
+	push_error("DevNav: " + text)
+	_cache_banner = Label.new()
+	_cache_banner.text = text
+	_cache_banner.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_cache_banner.add_theme_font_size_override("font_size", 16)
+	_cache_banner.add_theme_color_override("font_color", Color(1, 0.85, 0.85))
+	var box := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.55, 0.12, 0.12, 0.95)
+	style.set_content_margin_all(10)
+	box.add_theme_stylebox_override("panel", style)
+	box.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	box.offset_top = 36
+	box.offset_left = 12
+	box.offset_right = -12
+	box.add_child(_cache_banner)
+	add_child(box)
 
 
 func _dirty() -> bool:

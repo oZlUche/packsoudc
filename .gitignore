@@ -1,5 +1,7 @@
-# Godot 4+ 引擎缓存
-.godot/
+# Godot 4+ 引擎缓存 —— 但**全局类缓存要进仓库**（094）：作者拉了带新 class_name 的脚本、没重新 --import 就跑，
+# 依赖它的脚本整体解析失败（灰屏 / 编辑器空白）。缓存跟着代码走，拉下来就是对的；tools/test.sh 每次 --import 会把它刷新
+.godot/*
+!.godot/global_script_class_cache.cfg
 /android/
 
 # 开发期插件：ziva_agent 为 1.5GB 二进制（bin / zivacode），不纳入版本控制。

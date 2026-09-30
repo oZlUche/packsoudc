@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.03 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.04 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3524,6 +3524,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v2.04 | 2026-09-30 | **类缓存根除**（091 §13.2）：`.godot/global_script_class_cache.cfg` 进仓库（`.gitignore` 放行）；`DevNav.stale_classes / _check_class_cache` 启动自检、缺类红字 |
 | v2.03 | 2026-09-30 | **带入预算**（报告 094）：`ChapterDef.carry_budget / carry_over_cost`、`MapScaleProfile.carry_budget`；`RunState.carry_in_value` + 静态 `carry_budget_for / carry_over_for / carry_penalty_for / countdown_limit_for`（超带每 50 价值倒计时 −1，至少留 1）；`GameFlow.begin(..., carry_value)`；开局屏预算一行、地图日志一句 |
 | v2.02 | 2026-09-30 | **信仰流派**（报告 093）：四位神 `brute / sun / nature / earth`（`violence / sunfire` 合并改名）；6 种按量累计的 `FaithDeed`（`damage / vitality_lost / item_cycle / heal / item_triggered / enter_node`，每场上限）+ `RunState.battle_summary` 从回放日志汇总一场的账；`ItemVolume` 体积五档；`OfferingRule` 献祭规矩（每满足一条结算一次）；`FaithPerk` 构件（`FAITH_PERKS`，编译期 / 神坛 / 献祭后 / 踩点 / 掉落 / 战前 / 平局的钩子，`RunState.compile_player` 之后套）与 14 种效果；神坛：条件 `faith_active`、后果 `open_altar`、`Screen.ALTAR` + `ui/game/altar_screen.gd`、`RunState.altar_node / altar_used / offer / altar_special`（特殊操作与常规献祭共享一次机会）；`NodeEvents.smite_pending_battle / retype`；`CombatantSpec.flags`、`LootContext.extra_drop_rarity`、`GridInventory.grow_rows`；新战斗效果 `LowHpEmpower / FireEnchant`；`FaithPower.line` 改「神 Lv.n　点 / 下一阈值」；**不死 10 秒**（蛮神 4）：`CombatantRuntime.undying_sec / mark_dead / settle_undying`、坚持期耐力无限、血停 0 伤害照记、`BattleSim` 到期判；**触发信仰**：`NodeRules.event_groups` + `EventPlacer.fill_groups`（成组限量、偏前期、chance）、后果 `next_event_random`、事件链 `faith_call → faith_call_<神>`、四枚护符 `charm_*`（大地的是 1 格的包，`MetaState.keeps` 例外） |
 | v2.01 | 2026-09-30 | **092 作者补充**：倒计时按地图规模（`MapScaleProfile.step_limit`，`RunState.countdown_limit()` 先看规模档；开局屏规模按钮写着倒计时）；保险箱关上即锁（`RunState.lock_safe / safe_locked / safe_open`，走开也算关，锁了点灰、不再开、屏直接关，`GameFlow.close_safe`，`NodeEvents.safe_open` 回调）；`SafePlacer` 只覆盖靠中央（深度 ≈ 0.7）的战斗 / 事件点 |
