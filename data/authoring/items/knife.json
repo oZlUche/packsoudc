@@ -10,7 +10,8 @@
   "tags": [
     "weapon",
     "melee",
-    "rapid"
+    "rapid",
+    "metal"
   ],
   "combat": {
     "base_stats": {

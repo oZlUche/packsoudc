@@ -29,6 +29,8 @@ var drop_mult: float = 1.0
 
 ## 其他修正来源：局外 buff、地图 buff —— 都是 [DropBonusSource]，现在是占位实现
 var sources: Array[DropBonusSource] = []
+## 093（日神 4 级）：必掉额外一件这个稀有度的（-1 = 没有）；从道具库里挑，不必是身上有的
+var extra_drop_rarity: int = -1
 
 
 func add_rolls(n: int) -> void:

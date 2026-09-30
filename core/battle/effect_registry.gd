@@ -41,6 +41,8 @@ const COMBAT_EFFECTS := {
 	&"remove_status": "res://core/battle/effects/remove_status.gd",
 	# 只在受伤前阶段有效，见 DamageResolver
 	&"modify_damage": "res://core/battle/effects/modify_damage.gd",
+	&"low_hp_empower": "res://core/battle/effects/low_hp_empower.gd",
+	&"fire_enchant": "res://core/battle/effects/fire_enchant.gd",
 	&"reflect_damage": "res://core/battle/effects/reflect_damage.gd",
 }
 
@@ -85,6 +87,31 @@ const FAITH_DEEDS := {
 	&"spend_money": "res://core/run/faith/deeds/spend_money_deed.gd",
 	&"explore": "res://core/run/faith/deeds/explore_deed.gd",
 	&"event_choice": "res://core/run/faith/deeds/event_choice_deed.gd",
+	# 093（作者表）：按量累计的行为
+	&"damage": "res://core/run/faith/deeds/damage_deed.gd",
+	&"vitality_lost": "res://core/run/faith/deeds/vitality_lost_deed.gd",
+	&"item_cycle": "res://core/run/faith/deeds/item_cycle_deed.gd",
+	&"heal": "res://core/run/faith/deeds/heal_deed.gd",
+	&"item_triggered": "res://core/run/faith/deeds/item_triggered_deed.gd",
+	&"enter_node": "res://core/run/faith/deeds/enter_node_deed.gd",
+}
+
+## 093：信仰级的效果（写在信仰上、按阶生效）
+const FAITH_PERKS := {
+	&"stat_mod": "res://core/run/faith/perks/stat_mod_perk.gd",
+	&"low_hp_empower": "res://core/run/faith/perks/low_hp_empower_perk.gd",
+	&"enchant_weapons": "res://core/run/faith/perks/enchant_weapons_perk.gd",
+	&"food_shield": "res://core/run/faith/perks/food_shield_perk.gd",
+	&"food_double": "res://core/run/faith/perks/food_double_perk.gd",
+	&"altar_sacrifice_hp": "res://core/run/faith/perks/altar_sacrifice_hp_perk.gd",
+	&"altar_pray_fire": "res://core/run/faith/perks/altar_pray_fire_perk.gd",
+	&"altar_food_vitality": "res://core/run/faith/perks/altar_food_vitality_perk.gd",
+	&"altar_train_board": "res://core/run/faith/perks/altar_train_board_perk.gd",
+	&"altar_reshape_node": "res://core/run/faith/perks/altar_reshape_node_perk.gd",
+	&"smite": "res://core/run/faith/perks/smite_perk.gd",
+	&"extra_drop_by_node": "res://core/run/faith/perks/extra_drop_by_node_perk.gd",
+	&"gift_on_enter": "res://core/run/faith/perks/gift_on_enter_perk.gd",
+	&"draw_is_win": "res://core/run/faith/perks/draw_is_win_perk.gd",
 }
 
 ## 事件层（063）：选项的条件（只读）与后果（做一件事或立一面旗）
@@ -99,6 +126,7 @@ const EVENT_CONDITIONS := {
 	&"has_item": "res://core/run/events/conditions/has_item.gd",
 	&"node_type_is": "res://core/run/events/conditions/node_type_is.gd",
 	&"has_flag": "res://core/run/events/conditions/has_flag.gd",
+	&"faith_active": "res://core/run/events/conditions/faith_active.gd",
 }
 
 const EVENT_OUTCOMES := {
@@ -123,6 +151,7 @@ const EVENT_OUTCOMES := {
 	&"pass_time": "res://core/run/events/outcomes/pass_time.gd",
 	&"lose_item": "res://core/run/events/outcomes/lose_item.gd",
 	&"set_flag": "res://core/run/events/outcomes/set_flag.gd",
+	&"open_altar": "res://core/run/events/outcomes/open_altar.gd",
 }
 
 ## 一局的机制（069）：难度清单里开的那些
@@ -172,6 +201,7 @@ const TABLES := {
 	&"erosion_effect": EROSION_EFFECTS,
 	&"run_skill": RUN_SKILLS,
 	&"faith_deed": FAITH_DEEDS,
+	&"faith_perk": FAITH_PERKS,
 }
 
 

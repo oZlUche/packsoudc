@@ -13,7 +13,8 @@
     "weapon",
     "melee",
     "rapid",
-    "poison"
+    "poison",
+    "metal"
   ],
   "combat": {
     "base_stats": {

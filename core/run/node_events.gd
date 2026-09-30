@@ -38,6 +38,9 @@ signal shop_closed(node: MapNode)
 signal safe_opened(node: MapNode)
 ## 092：保险箱还能不能开（RunState.safe_open）；没接就当能
 var safe_open: Callable = Callable()
+## 093：神坛（休息处的「神坛」选项）：开了；激活信仰第几阶（RunState.active_faith_tier）
+signal altar_opened(node: MapNode)
+var faith_tier: Callable = Callable()
 signal event_resolved(node: MapNode, outcome: StringName, detail: Dictionary)
 ## 到了撤离点。fee > 0 = 付费的（PaidExtracts），撤离动作（M6）先 pay_extract_fee
 signal extract_reached(node: MapNode, fee: int)
@@ -196,6 +199,29 @@ func _proceed(node: MapNode, type: StringName) -> void:
 			_visited(node)
 
 
+## 093（大地之神：神坛上改造此点）：这个点从此算 [param type]，当没踩过 —— 清掉旧事件与选择，是战斗 / 精英就现造敌人；
+## 站在上面的人关掉神坛就触发它（GameFlow.close_altar）
+func retype(node: MapNode, type: StringName) -> void:
+	if node == null or not MapNodeTypes.has(type):
+		return
+	node.content["resolved_type"] = String(type)
+	node.content.erase("event")
+	node.content.erase("choice")
+	node.content.erase("outcome")
+	for key in ["enemy", "items", "strength", "bags", "bag", "board"]:
+		node.content.erase(key)
+	if type in [&"battle", &"elite"]:
+		var built := _enemy_for(node, type, _rng_for(node, "retype"))
+		for key in built:
+			node.content[key] = built[key]
+	node.state = MapNode.State.UNVISITED
+	if rules != null:
+		var def := _event_for(node, type)
+		if def != null:
+			node.content["event"] = String(def.id)
+	type_changed.emit(node, type)
+
+
 ## 随机点变成什么。记进内容里（`resolved_type`），是战斗就现造敌人
 func reveal(node: MapNode) -> StringName:
 	var already := String(node.content.get("resolved_type", ""))
@@ -333,6 +359,9 @@ func choose(i: int) -> bool:
 		_proceed(node, type)
 	else:
 		_visited(node)
+	if ctx.open_altar and not over:
+		last_handled_id = node.id
+		altar_opened.emit(node)     # 093：休息完开神坛（选项里写 proceed + open_altar）
 	# 8-3 传送：这个点的事都完了才挪人（打输了、开着会话就不挪）。造一个 teleport 意图交给持有方 / 旅程，
 	# 和走一条传送点边是同一条路：计数、侵蚀、落地那个点头一回踩上就触发它的事
 	if ctx.teleport_to >= 0 and not over and travel != null and current_search == null and current_shop == null and pending_battle.is_empty():
@@ -367,6 +396,7 @@ func _event_ctx(node: MapNode) -> EventContext:
 	ctx.remove_map_buff = remove_map_buff
 	ctx.has_map_buff = has_map_buff
 	ctx.has_buff_tag = has_buff_tag
+	ctx.faith_tier = faith_tier
 	return ctx
 #endregion
 
@@ -465,6 +495,35 @@ func start_pending_battle() -> bool:
 	_after_battle(node, kind, won)
 	return true
 #endregion
+
+
+## 093（蛮神 3 级）：秒杀等着开打的这一场 —— 不模拟，直接按赢了收尾（掉落、进账、回放屏是一份空回放）。没有等着的返回 false
+func smite_pending_battle() -> bool:
+	var node := pending_battle_node()
+	if node == null:
+		return false
+	var type := StringName(String(pending_battle.get("type", "battle")))
+	var content: Dictionary = pending_battle.get("content", {})
+	var kind := String(pending_battle.get("kind", "node"))
+	pending_battle = {}
+	var enemy := EnemyKit.spec_of(content, enemies, pool, items) if not content.is_empty() else null
+	var me: CombatantSpec = player_spec.call() if player_spec.is_valid() else null
+	var result := BattleResult.new()
+	result.winner = 0
+	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content}
+	battle_finished.emit(node, result, true)
+	var ctx := _loot_ctx()
+	var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core") \
+		if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
+	loot_ready.emit(node, DropResolver.corpse_of(content, rolled, items))
+	if wallet != null and economy != null:
+		var amount := economy.battle_reward(int(content.get("strength", 0)), float(_depths.get(node.id, 0.0)), difficulty)
+		wallet.earn(amount, &"battle")
+		rewarded.emit(node, amount)
+	if type == &"core":
+		boss_defeated.emit(node)
+	_after_battle(node, kind, true)
+	return true
 
 
 ## 打一场（猎手系统也走这条路：给它自己的掉落上下文与自己的战败代价）。返回赢没赢

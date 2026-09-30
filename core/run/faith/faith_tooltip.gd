@@ -28,6 +28,18 @@ static func describe(def: FaithDef, power: FaithPower = null, items: ItemDatabas
 		var next := def.next_threshold(p)
 		now_line += "　现在 %d 点、第 %d 阶%s" % [p, tier, ("，再 %d 点到下一阶" % (next - p)) if next >= 0 else "，已满阶"]
 	lines.append(now_line)
+	# 093：献祭品与信仰级效果
+	if not def.offerings.is_empty():
+		lines.append("[color=#f0ad4e]献祭品（神坛）：[/color]%s" % def.offerings_summary())
+	if not def.perks.is_empty():
+		var tier_now := def.tier_of(power.points_of(def.id)) if power != null else -1
+		lines.append("[color=#f0ad4e]各级效果：[/color]")
+		for pk in def.perks:
+			var perk := pk as FaithPerk
+			if perk == null:
+				continue
+			var on := tier_now >= perk.tier
+			lines.append("　%sLv.%d　%s%s" % ["[color=#5cb85c]" if on else "[color=#8b93a1]", perk.tier, perk.describe(), "[/color]"])
 	# 这个信仰的道具各阶解锁什么
 	if items != null:
 		var ids: Array = items.ids()

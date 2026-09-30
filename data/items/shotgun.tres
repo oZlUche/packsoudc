@@ -54,5 +54,5 @@ display_names = {
 }
 shape = SubResource("Resource_6kcnx")
 rarity = 2
-tags = Array[StringName]([&"sealed", &"weapon", &"gun", &"burst"])
+tags = Array[StringName]([&"sealed", &"weapon", &"gun", &"burst", &"metal"])
 combat = SubResource("Resource_3on64")

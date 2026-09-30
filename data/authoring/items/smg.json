@@ -12,7 +12,8 @@
     "sealed",
     "weapon",
     "gun",
-    "rapid"
+    "rapid",
+    "metal"
   ],
   "combat": {
     "base_stats": {

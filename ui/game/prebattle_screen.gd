@@ -56,6 +56,14 @@ func open(payload: Dictionary) -> void:
 	var buttons := _hbox(10)
 	_start_btn = _button("开战", start_battle, 16, UiPalette.Tier.PRIMARY)
 	buttons.add_child(_start_btn)
+	# 093（蛮神 3 级）：信仰级效果给的额外动作（秒杀精英）
+	for p in flow.run.faith_perks():
+		var perk := p as FaithPerk
+		var text := perk.prebattle_label(flow.run, _type)
+		if text != "":
+			var pb := _button(text, func(): flow.smite(), 14)
+			pb.tooltip_text = perk.describe()
+			buttons.add_child(pb)
 	_why = _label("", 13, UiPalette.STAMINA)
 	buttons.add_child(_why)
 	col.add_child(buttons)

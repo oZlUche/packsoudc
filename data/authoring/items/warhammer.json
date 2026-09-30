@@ -14,7 +14,8 @@
   "tags": [
     "weapon",
     "melee",
-    "burst"
+    "burst",
+    "metal"
   ],
   "requires_unlock": "ach_first_extract",
   "combat": {

@@ -1,0 +1,69 @@
+{
+  "id": "brute",
+  "display_name": "蛮神",
+  "display_names": {
+    "en": "The Brute"
+  },
+  "god": "蛮神（暴力与杀戮）",
+  "description": "北境蛮族的信仰（原暴力之神）。信力：造成和受到伤害、失去体力。献祭：骨制品、大及以上体积、血肉、武器。",
+  "thresholds": [
+    30,
+    100,
+    200,
+    400
+  ],
+  "deeds": [
+    {
+      "type": "damage",
+      "multiplier": 0.2,
+      "cap": 30
+    },
+    {
+      "type": "vitality_lost"
+    }
+  ],
+  "offerings": [
+    {
+      "tags": [
+        "bone"
+      ],
+      "multiplier": 3.0,
+      "note": "骨制品（稀有度 × 3）"
+    },
+    {
+      "min_cells": 9,
+      "multiplier": 3.0,
+      "note": "大及以上体积（稀有度 × 3）"
+    },
+    {
+      "tags": [
+        "flesh"
+      ],
+      "multiplier": 3.0,
+      "note": "血肉（稀有度 × 3）"
+    },
+    {
+      "tags": [
+        "weapon"
+      ],
+      "multiplier": 3.0,
+      "note": "武器（稀有度 × 3）"
+    }
+  ],
+  "perks": [
+    {
+      "type": "low_hp_empower"
+    },
+    {
+      "type": "altar_sacrifice_hp",
+      "tier": 2
+    },
+    {
+      "type": "smite",
+      "types": [
+        "elite"
+      ],
+      "tier": 3
+    }
+  ]
+}

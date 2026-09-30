@@ -1,20 +1,22 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_y7ugl"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/battle_deed.gd" id="2_0c7ri"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/spend_money_deed.gd" id="3_ljbgl"]
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="4_774d0"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_ljbgl"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/battle_deed.gd" id="2_774d0"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/spend_money_deed.gd" id="3_wmdsj"]
+[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="4_s4xv7"]
+[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="5_vox7n"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="6_5ok7y"]
 
-[sub_resource type="Resource" id="Resource_wmdsj"]
-script = ExtResource("2_0c7ri")
+[sub_resource type="Resource" id="Resource_k4k7c"]
+script = ExtResource("2_774d0")
 won_only = true
 
-[sub_resource type="Resource" id="Resource_s4xv7"]
-script = ExtResource("3_ljbgl")
+[sub_resource type="Resource" id="Resource_m0psn"]
+script = ExtResource("3_wmdsj")
 per_amount = 20
 
 [resource]
-script = ExtResource("4_774d0")
+script = ExtResource("6_5ok7y")
 id = &"war"
 display_name = "战争之神"
 display_names = {
@@ -23,4 +25,4 @@ display_names = {
 god = "战争之神"
 description = "军团的信仰。制式的兵器与护甲。信力：打赢才算，军饷（花钱）也算。"
 thresholds = Array[int]([3, 8])
-deeds = Array[ExtResource("1_y7ugl")]([SubResource("Resource_wmdsj"), SubResource("Resource_s4xv7")])
+deeds = Array[ExtResource("1_ljbgl")]([SubResource("Resource_k4k7c"), SubResource("Resource_m0psn")])

@@ -3,6 +3,8 @@ class_name CombatantSpec
 extends RefCounted
 
 var max_hp: int = 0                  ## 定点
+## 093：信仰级效果留的旗子（draw_is_win……），编译之后由 FaithPerk 写；结算内核只读
+var flags: Dictionary = {}
 
 ## 角色自带的基础属性（生命上限、耐力上限…），不属于任何道具。
 ## 为 null 时该单位没有任何自带属性 —— 手搓的测试假人就是这样。

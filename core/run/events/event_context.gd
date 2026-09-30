@@ -43,6 +43,10 @@ var hunter_fight: bool = false
 var hunter_flee: bool = false
 ## 8-3：这个点照它的类型照常发生（休息就回体力、商店就开店……）
 var proceed: bool = false
+## 093：打开神坛
+var open_altar: bool = false
+## 093：激活信仰现在第几阶（-1 = 没激活）；RunState 接
+var faith_tier: Callable = Callable()
 ## 085：从这个撤离点撤离（事件对话里的「撤离」选项）
 var extract: bool = false
 ## 8-3：这个点从此算这种类型（空 = 不改）

@@ -14,7 +14,8 @@
     "weapon",
     "melee",
     "burst",
-    "imperial"
+    "imperial",
+    "metal"
   ],
   "combat": {
     "base_stats": {

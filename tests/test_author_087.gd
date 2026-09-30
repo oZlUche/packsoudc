@@ -136,7 +136,7 @@ static func run_glossary(t: TestCase) -> void:
 	board.place(k, Vector2i(0, 0), 0)
 	board.place(sg, Vector2i(1, 0), 0)
 	var plain := BattleCompiler.compile(board)
-	var tiered := BattleCompiler.compile(board, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:violence": 1})
+	var tiered := BattleCompiler.compile(board, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:brute": 1})
 	t.check(plain.opening_mods().is_empty(), "没过阈值：没有开战 buff")
 	t.eq(tiered.opening_mods().size(), 1, "过了一阶：一条开战增伤")
 	t.check(tiered.rough_dps() > plain.rough_dps() * 1.05, "预估 DPS 算上血怒：%.2f > %.2f" % [tiered.rough_dps(), plain.rough_dps()])

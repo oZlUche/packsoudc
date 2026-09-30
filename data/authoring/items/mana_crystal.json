@@ -10,7 +10,8 @@
   "rarity": 1,
   "tags": [
     "part",
-    "material"
+    "material",
+    "gem"
   ],
   "combat": {
     "base_stats": {

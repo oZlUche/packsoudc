@@ -141,7 +141,7 @@ static func run_credit(t: TestCase) -> void:
 	t.eq(s.faith_power.points_of(fb), 0, "%s 的池子空着" % fb)
 	if want > 0:
 		t.check(not changes.is_empty() and changes[-1][0] == fa and int(changes[-1][1]) == want, "信号报了最新点数")
-		t.check(s.faith_power.line().begins_with("信力 %d" % want), "HUD 一句：%s" % s.faith_power.line())
+		t.check(s.faith_power.line().contains("Lv.%d" % s.faith_power.tier_of(fa)) and s.faith_power.line().contains("　%d" % want), "HUD 一句（093：「神 Lv.n　点 / 下一阈值」）：%s" % s.faith_power.line())
 	# 切到 fb：fa 的池子留着
 	var ib := ItemInstance.create(b, 0)
 	s.storage.admit(ib)

@@ -8,7 +8,9 @@
     "1"
   ],
   "tags": [
-    "consumable"
+    "consumable",
+    "nature",
+    "food"
   ],
   "combat": {
     "base_stats": {

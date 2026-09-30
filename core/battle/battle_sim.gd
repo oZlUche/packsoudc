@@ -26,7 +26,10 @@ static func run(
 	var ctx := BattleContext.create(
 		CombatantRuntime.from_spec(a, 0), CombatantRuntime.from_spec(b, 1), rng
 	)
-	return run_context(ctx, time_limit_sec)
+	var result := run_context(ctx, time_limit_sec)
+	if result.winner == -1 and bool(a.flags.get("draw_is_win", false)):
+		result.winner = 0     # 093（自然之神 5 级）：平局也视为胜利
+	return result
 
 
 ## 用现成的上下文跑。测试与批量模拟用它注入特定初始状态。

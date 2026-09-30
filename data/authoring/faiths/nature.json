@@ -1,0 +1,76 @@
+{
+  "id": "nature",
+  "display_name": "自然之神",
+  "display_names": {
+    "en": "God of Nature"
+  },
+  "god": "自然之神（回归、容纳）",
+  "description": "信力：触发自然道具的效果、战斗内恢复生命。献祭：自然、食物、防具。",
+  "thresholds": [
+    25,
+    80,
+    150,
+    400,
+    800
+  ],
+  "deeds": [
+    {
+      "type": "item_triggered",
+      "tag": "nature",
+      "cap": 30,
+      "amount": 3
+    },
+    {
+      "type": "heal",
+      "cap": 30
+    }
+  ],
+  "offerings": [
+    {
+      "tags": [
+        "nature"
+      ]
+    },
+    {
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "tags": [
+        "gear",
+        "armor",
+        "shield"
+      ],
+      "note": "防具（稀有度 × 2）"
+    }
+  ],
+  "perks": [
+    {
+      "type": "stat_mod",
+      "mods": [
+        {
+          "stat": "regen_hp",
+          "flat": 1.0
+        }
+      ],
+      "note": "开战时每秒回血 +1"
+    },
+    {
+      "type": "altar_food_vitality",
+      "tier": 2
+    },
+    {
+      "type": "food_shield",
+      "tier": 3
+    },
+    {
+      "type": "food_double",
+      "tier": 4
+    },
+    {
+      "type": "draw_is_win",
+      "tier": 5
+    }
+  ]
+}

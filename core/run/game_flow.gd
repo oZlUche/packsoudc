@@ -10,7 +10,7 @@
 class_name GameFlow
 extends RefCounted
 
-enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE }
+enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR }
 
 signal screen_changed(screen: int, payload: Dictionary)
 signal run_started(state: RunState)
@@ -72,7 +72,7 @@ func _init(p_items: ItemDatabase = null, p_enemies: EnemyDatabase = null, p_sets
 
 
 static func is_overlay(s: int) -> bool:
-	return s in [Screen.BATTLE, Screen.LOOT, Screen.SEARCH, Screen.SHOP, Screen.EVENT, Screen.REST, Screen.PREBATTLE, Screen.SAFE]
+	return s in [Screen.BATTLE, Screen.LOOT, Screen.SEARCH, Screen.SHOP, Screen.EVENT, Screen.REST, Screen.PREBATTLE, Screen.SAFE, Screen.ALTAR]
 
 
 #region 底屏之间
@@ -641,6 +641,45 @@ func close_safe() -> bool:
 	return locked
 
 
+## 093：关掉神坛屏（回地图；站着还能再开，除非用过特殊操作）
+func close_altar() -> void:
+	if run == null:
+		return
+	_go(Screen.MAP, {})
+	var here := run.current_node()
+	if here != null and not here.is_visited() and not run.is_over():
+		run.events.handle(here)     # 093：神坛上把这个点改造成别的了：立刻发生
+	_flush()
+
+
+## 093：神坛上献祭 [param uids]（棋盘 / 暂存区 / 祭品台里的实例 uid）。返回 RunState.offer 的账；卖掉的实例从所在容器移除
+func offer(insts: Array, node: MapNode = null) -> Dictionary:
+	if run == null:
+		return {"points": 0, "count": 0}
+	var got := run.offer(insts, node)
+	if int(got["count"]) > 0:
+		for inst in insts:
+			var it := inst as ItemInstance
+			if it == null:
+				continue
+			for c in [run.board, run.storage]:
+				if (c as ItemContainer).has_item(it.uid):
+					(c as ItemContainer).remove(it.uid)
+		save()
+	return got
+
+
+## 093（蛮神 3 级）：战前准备屏上秒杀这一场（效果构件自己查条件、扣体力）
+func smite() -> bool:
+	if run == null:
+		return false
+	var perk := run.faith_perk(&"smite")
+	if perk == null or not perk.prebattle_apply(run):
+		return false
+	_flush()
+	return true
+
+
 ## 092（作者定）：保险箱几格（局外规则，初始 3×3）
 func safe_size() -> Vector2i:
 	return meta.rules.safe_size if meta != null and meta.rules != null else Vector2i(3, 3)
@@ -820,6 +859,8 @@ func _reopen_entry() -> Dictionary:
 	var here := run.current_node()
 	if here != null and NodeEvents.effective_type(here) == &"safe" and run.safe_open():
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开
+	if here != null and run.altar_open():
+		return {"screen": Screen.ALTAR, "node": here}     # 093：神坛还开着（这一次没用过特殊操作）
 	return {}
 
 
@@ -929,6 +970,8 @@ func _adopt(state: RunState) -> void:
 		_push({"screen": Screen.SHOP, "node": node, "session": session}))
 	ev.safe_opened.connect(func(node: MapNode):
 		_push({"screen": Screen.SAFE, "node": node}))     # 092：踩上保险箱就开
+	ev.altar_opened.connect(func(node: MapNode):
+		_push({"screen": Screen.ALTAR, "node": node}))     # 093：休息处的神坛
 	ev.event_pending.connect(func(node: MapNode, def: EventDef):
 		var entry := {"screen": Screen.EVENT, "node": node, "def": def}
 		# 084：战利品已经排在队尾时来的事件（「搜索点被余波摧毁」）说的是刚发生的事：先说，再看战利品（东西还在）

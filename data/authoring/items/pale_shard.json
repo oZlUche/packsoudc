@@ -11,7 +11,8 @@
   "value": 800,
   "tags": [
     "treasure",
-    "relic"
+    "relic",
+    "gem"
   ],
   "requires_unlock": "ach_boss"
 }

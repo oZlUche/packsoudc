@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="FaithDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_3n2nc"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/damage_deed.gd" id="2_d0k73"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/vitality_lost_deed.gd" id="3_mrsdb"]
+[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="4_mp24s"]
+[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="5_s4x4y"]
+[ext_resource type="Script" path="res://core/run/faith/perks/low_hp_empower_perk.gd" id="6_2b5af"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_sacrifice_hp_perk.gd" id="7_gp63j"]
+[ext_resource type="Script" path="res://core/run/faith/perks/smite_perk.gd" id="8_fhojw"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="9_thvtn"]
+
+[sub_resource type="Resource" id="Resource_on25b"]
+script = ExtResource("2_d0k73")
+multiplier = 0.2
+cap = 30
+
+[sub_resource type="Resource" id="Resource_7cvah"]
+script = ExtResource("3_mrsdb")
+
+[sub_resource type="Resource" id="Resource_ywd2h"]
+script = ExtResource("4_mp24s")
+tags = Array[StringName]([&"bone"])
+multiplier = 3.0
+note = "骨制品（稀有度 × 3）"
+
+[sub_resource type="Resource" id="Resource_bswie"]
+script = ExtResource("4_mp24s")
+min_cells = 9
+multiplier = 3.0
+note = "大及以上体积（稀有度 × 3）"
+
+[sub_resource type="Resource" id="Resource_yf1t8"]
+script = ExtResource("4_mp24s")
+tags = Array[StringName]([&"flesh"])
+multiplier = 3.0
+note = "血肉（稀有度 × 3）"
+
+[sub_resource type="Resource" id="Resource_c5kw4"]
+script = ExtResource("4_mp24s")
+tags = Array[StringName]([&"weapon"])
+multiplier = 3.0
+note = "武器（稀有度 × 3）"
+
+[sub_resource type="Resource" id="Resource_ymc0b"]
+script = ExtResource("6_2b5af")
+
+[sub_resource type="Resource" id="Resource_h1qlm"]
+script = ExtResource("7_gp63j")
+tier = 2
+
+[sub_resource type="Resource" id="Resource_nnwp2"]
+script = ExtResource("8_fhojw")
+tier = 3
+
+[resource]
+script = ExtResource("9_thvtn")
+id = &"brute"
+display_name = "蛮神"
+display_names = {
+"en": "The Brute"
+}
+god = "蛮神（暴力与杀戮）"
+description = "北境蛮族的信仰（原暴力之神）。信力：造成和受到伤害、失去体力。献祭：骨制品、大及以上体积、血肉、武器。"
+thresholds = Array[int]([30, 100, 200, 400])
+deeds = Array[ExtResource("1_3n2nc")]([SubResource("Resource_on25b"), SubResource("Resource_7cvah")])
+offerings = Array[ExtResource("4_mp24s")]([SubResource("Resource_ywd2h"), SubResource("Resource_bswie"), SubResource("Resource_yf1t8"), SubResource("Resource_c5kw4")])
+perks = Array[ExtResource("5_s4x4y")]([SubResource("Resource_ymc0b"), SubResource("Resource_h1qlm"), SubResource("Resource_nnwp2")])

@@ -24,6 +24,10 @@ enum Camp { GODS, CHURCH }
 @export var thresholds: Array[int] = []
 ## 攒信力的行为（[FaithDeed] 构件）：这个信仰认哪些事、各给几点
 @export var deeds: Array[FaithDeed] = []
+## 093（作者表）：献祭品 —— 满足哪些条件的道具能献到神坛上换信力，各换多少；一件满足几条结算几次
+@export var offerings: Array[OfferingRule] = []
+## 093（作者表）：信仰级的效果（[FaithPerk] 构件），各自写第几阶起生效
+@export var perks: Array[FaithPerk] = []
 
 
 ## 这个信仰的道具带的标签
@@ -50,6 +54,41 @@ func next_threshold(points: int) -> int:
 		if points < th:
 			return th
 	return -1
+
+
+## 093：这件道具能献祭吗（至少满足一条）
+func accepts_offering(def: ItemDef) -> bool:
+	for r in offerings:
+		if r != null and (r as OfferingRule).matches(def):
+			return true
+	return false
+
+
+## 093：献祭这件换多少信力（每满足一条结算一次；不能献 0）
+func offering_value(def: ItemDef) -> int:
+	var total := 0
+	for r in offerings:
+		if r != null:
+			total += (r as OfferingRule).value(def)
+	return total
+
+
+## 093：现在第 [param tier] 阶生效的效果（tier ≤ 现在的阶）
+func perks_at(tier: int) -> Array[FaithPerk]:
+	var out: Array[FaithPerk] = []
+	for p in perks:
+		if p != null and (p as FaithPerk).tier <= tier:
+			out.append(p)
+	return out
+
+
+## 献祭品各一句
+func offerings_summary() -> String:
+	var parts: Array[String] = []
+	for r in offerings:
+		if r != null:
+			parts.append((r as OfferingRule).describe())
+	return "；".join(parts)
 
 
 ## 行为各一句

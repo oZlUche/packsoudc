@@ -1,0 +1,83 @@
+{
+  "id": "earth",
+  "display_name": "大地之神",
+  "display_names": {
+    "en": "God of the Earth"
+  },
+  "god": "大地之神（结构、秩序、体积、空间）",
+  "description": "信力：触发中及以上体积道具的效果、进入空白节点（岔路 / 用过的点）。献祭：大及以上体积的道具（稀有度 × 格子数）。",
+  "thresholds": [
+    25,
+    100,
+    250,
+    500
+  ],
+  "deeds": [
+    {
+      "type": "item_triggered",
+      "min_cells": 5,
+      "cap": 40,
+      "amount": 8
+    },
+    {
+      "type": "enter_node"
+    }
+  ],
+  "offerings": [
+    {
+      "min_cells": 9,
+      "multiplier": 1.0,
+      "per_cell": true,
+      "note": "大及以上体积（稀有度 × 格子数）"
+    }
+  ],
+  "perks": [
+    {
+      "type": "stat_mod",
+      "mods": [
+        {
+          "stat": "max_stamina",
+          "flat": 20.0
+        }
+      ],
+      "note": "开战时耐力上限 +20"
+    },
+    {
+      "type": "altar_train_board",
+      "tier": 2
+    },
+    {
+      "type": "gift_on_enter",
+      "by_type": {
+        "battle": [
+          "weapon"
+        ],
+        "elite": [
+          "gear",
+          "armor",
+          "shield"
+        ],
+        "event": [
+          "sigil",
+          "part"
+        ],
+        "extract": [],
+        "core": [
+          "treasure"
+        ]
+      },
+      "tier": 3
+    },
+    {
+      "type": "altar_reshape_node",
+      "types": [
+        "battle",
+        "elite",
+        "search",
+        "event",
+        "shop"
+      ],
+      "tier": 4
+    }
+  ]
+}

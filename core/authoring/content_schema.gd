@@ -32,6 +32,7 @@ const ABSTRACT_ROOTS := {
 	&"ErosionEffect": [&"erosion_effect"],
 	&"RunSkill": [&"run_skill"],
 	&"FaithDeed": [&"faith_deed"],
+	&"FaithPerk": [&"faith_perk"],
 }
 
 ## 声明成裸 int、但语义上是枚举的属性，键为 `类名.属性名`。

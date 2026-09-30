@@ -22,10 +22,10 @@ static func _put(b: GridInventory, db: ItemDatabase, id: StringName, at: Vector2
 static func run_tags_and_defs(t: TestCase) -> void:
 	t.begin("信仰 · 定义走管线（六个，含新教占位）；信仰道具带 faith + 恰好一个 faith:<id>，对象是登记过的；凡物不归信仰；导入器拦错的标签")
 	var defs := FaithDef.load_all()
-	for id in [&"violence", &"war", &"sunfire", &"skill", &"hunt", &"church"]:
+	for id in [&"brute", &"war", &"sun", &"skill", &"hunt", &"church"]:
 		t.check(defs.has(id), "装回了 %s" % id)
 	t.eq((defs[&"church"] as FaithDef).camp, FaithDef.Camp.CHURCH, "新教的阵营是 CHURCH")
-	t.eq((defs[&"violence"] as FaithDef).tag(), &"faith:violence", "标签 = faith:<id>")
+	t.eq((defs[&"brute"] as FaithDef).tag(), &"faith:brute", "标签 = faith:<id>")
 	t.eq(FaithDef.id_of_tag(&"faith:war"), &"war", "从标签反推 id")
 	t.eq(FaithDef.id_of_tag(&"weapon"), &"", "不是信仰标签返回空")
 	var db := _db()
@@ -44,7 +44,7 @@ static func run_tags_and_defs(t: TestCase) -> void:
 	t.check(faithful >= 3, "第一批里有 %d 件信仰道具（赐福之物、符号）" % faithful)
 	t.check((defs[&"skill"] as FaithDef).matches(db.get_def(&"blessed_shield")), "技巧之神赐福的盾归技巧之神")
 	t.check((defs[&"hunt"] as FaithDef).matches(db.get_def(&"blessed_longbow")), "狩猎之神赐福的长弓归狩猎之神")
-	t.check((defs[&"violence"] as FaithDef).matches(db.get_def(&"strength_sigil")), "力量的符号归暴力之神")
+	t.check((defs[&"brute"] as FaithDef).matches(db.get_def(&"strength_sigil")), "力量的符号归暴力之神")
 	# 作者定：现实里也能存在的东西不归任何信仰
 	for id in [&"shortsword", &"longsword", &"scimitar", &"longbow", &"shortbow", &"arrows", &"round_shield", &"leather_armor", &"gambeson", &"knife", &"cleaver", &"salve", &"ration"]:
 		t.check(not db.get_def(id).has_faith(), "%s 是凡物，不归信仰" % id)
@@ -56,7 +56,7 @@ static func run_tags_and_defs(t: TestCase) -> void:
 	var cases := {
 		"faith 没对象": {"tags": ["faith"]},
 		"对象没 faith": {"tags": ["faith:war"]},
-		"两个对象": {"tags": ["faith", "faith:war", "faith:violence"]},
+		"两个对象": {"tags": ["faith", "faith:war", "faith:brute"]},
 		"没登记的信仰": {"tags": ["faith", "faith:moon"]},
 	}
 	for name in cases:
@@ -83,19 +83,19 @@ static func run_activation(t: TestCase) -> void:
 	var shield := _put(b, db, &"blessed_shield", Vector2i(0, 0))     # skill，2×2
 	t.eq(FaithState.active_id(b), &"skill", "放了技巧之神的盾：技巧之神")
 	var sigil := _put(b, db, &"strength_sigil", Vector2i(3, 0))      # violence，1×1
-	t.eq(FaithState.active_id(b), &"violence", "再放力量的符号：最后置入的是它 → 暴力之神")
+	t.eq(FaithState.active_id(b), &"brute", "再放力量的符号：最后置入的是它 → 暴力之神")
 	t.check(shield.placed_seq < sigil.placed_seq, "置入序号递增")
 	t.eq(FaithState.dormant_uids(b), [shield.uid] as Array[int], "盾休眠")
 	var sword := _put(b, db, &"shortsword", Vector2i(5, 0))
-	t.eq(FaithState.active_id(b), &"violence", "凡物（短剑）不改变激活")
+	t.eq(FaithState.active_id(b), &"brute", "凡物（短剑）不改变激活")
 	t.check(not FaithState.is_dormant(sword.def, FaithState.active_tag(b)), "凡物不休眠")
 	# 同容器挪位置：不算重新置入
 	t.check(InventoryService.move_within(b, shield.uid, Vector2i(0, 3), 0), "把盾挪个位置")
-	t.eq(FaithState.active_id(b), &"violence", "同容器挪位置不换信仰")
+	t.eq(FaithState.active_id(b), &"brute", "同容器挪位置不换信仰")
 	# 挪到暂存区再挪回：切换
 	var stash := ItemStash.new(2, 0)
 	t.check(InventoryService.transfer_auto(b, shield.uid, stash), "盾挪到暂存区")
-	t.eq(FaithState.active_id(b), &"violence", "还是暴力之神")
+	t.eq(FaithState.active_id(b), &"brute", "还是暴力之神")
 	t.check(InventoryService.transfer_auto(stash, shield.uid, b), "再挪回棋盘")
 	t.eq(FaithState.active_id(b), &"skill", "切换成技巧之神：盾成了最后置入的")
 	t.eq(FaithState.dormant_uids(b), [sigil.uid] as Array[int], "符号休眠")
@@ -114,11 +114,11 @@ static func run_activation(t: TestCase) -> void:
 	t.check(b2.place(bag, Vector2i(0, 0), 0), "放包")
 	var s2 := _put(b2, db, &"blessed_shield", Vector2i(0, 0))
 	var c2 := _put(b2, db, &"strength_sigil", Vector2i(0, 2))
-	t.eq(FaithState.active_id(b2), &"violence", "符号后放")
+	t.eq(FaithState.active_id(b2), &"brute", "符号后放")
 	var payload := b2.detach_bag(bag.uid)
 	t.check(not payload.is_empty() and int(payload["from"]) == b2.id, "摘下包，载荷记着来自哪个容器")
 	t.check(b2.attach_bag(payload, Vector2i(3, 0), 0), "整包挪到别处")
-	t.eq(FaithState.active_id(b2), &"violence", "同容器里挪包：置入顺序不变")
+	t.eq(FaithState.active_id(b2), &"brute", "同容器里挪包：置入顺序不变")
 	t.check(s2.placed_seq < c2.placed_seq, "序号也没变")
 
 
@@ -180,8 +180,8 @@ static func run_run_and_save(t: TestCase) -> void:
 	if s == null:
 		return
 	s.faith_defs = faiths
-	t.eq(s.active_faith_id(), &"violence", "开局清单里符号在盾之后：暴力之神")
-	t.eq(s.faith_line(), "信仰：暴力之神", "HUD 的那一句")
+	t.eq(s.active_faith_id(), &"brute", "开局清单里符号在盾之后：暴力之神")
+	t.eq(s.faith_line(), "信仰：蛮神", "HUD 的那一句")
 	var seqs := {}
 	for inst in s.board.items():
 		seqs[(inst as ItemInstance).uid] = (inst as ItemInstance).placed_seq
@@ -189,7 +189,7 @@ static func run_run_and_save(t: TestCase) -> void:
 	t.eq(RunSave.write(s, SAVE), OK, "存")
 	var back := RunSave.read(db, enemies, sets, SAVE)
 	back.faith_defs = faiths
-	t.eq(back.active_faith_id(), &"violence", "读回来激活的还是暴力之神")
+	t.eq(back.active_faith_id(), &"brute", "读回来激活的还是暴力之神")
 	for inst in back.board.items():
 		t.eq((inst as ItemInstance).placed_seq, int(seqs.get((inst as ItemInstance).uid, -1)), "uid %d 的置入序号原样" % (inst as ItemInstance).uid)
 	t.eq(back.board.place_seq, s.board.place_seq, "计数原样")
@@ -224,6 +224,6 @@ static func run_run_and_save(t: TestCase) -> void:
 			t.check(ok, "%s 第 %d 次：只信一个神（%s）" % [eid, round, str(picks)])
 			t.check(weapons >= rule.min_weapons, "%s 第 %d 次：至少 %d 件武器（%s）" % [eid, round, rule.min_weapons, str(picks)])
 	t.check(checked > 0, "检查了 %d 次组装" % checked)
-	var pool_items := EnemyPlacer.school_items([&"faith:violence"] as Array[StringName], db, -1)
+	var pool_items := EnemyPlacer.school_items([&"faith:brute"] as Array[StringName], db, -1)
 	for id in pool_items:
-		t.eq(db.get_def(id).faith_tag(), &"faith:violence", "%s 归暴力之神" % id)
+		t.eq(db.get_def(id).faith_tag(), &"faith:brute", "%s 归暴力之神" % id)

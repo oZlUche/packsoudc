@@ -25,6 +25,7 @@ const SCREEN_SCRIPTS := {
 	GameFlow.Screen.PREBATTLE: "res://ui/game/prebattle_screen.gd",
 	GameFlow.Screen.SLOTS: "res://ui/game/slots_screen.gd",
 	GameFlow.Screen.SAFE: "res://ui/game/safe_screen.gd",
+	GameFlow.Screen.ALTAR: "res://ui/game/altar_screen.gd",
 }
 const LAUNCHER := "res://ui/launcher.tscn"
 

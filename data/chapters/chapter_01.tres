@@ -13,7 +13,7 @@
 script = ExtResource("1_u5ik3")
 quota = {
 "elite": [0, 2],
-"rest": [0, 2],
+"rest": [1, 2],
 "shop": [0, 1]
 }
 type_weights = {
@@ -31,7 +31,7 @@ slots = 19
 node_count = 11
 quota = {
 "elite": [0, 2],
-"rest": [0, 2],
+"rest": [1, 2],
 "shop": [0, 1]
 }
 type_weights = {
@@ -49,7 +49,7 @@ slots = 16
 node_count = 10
 quota = {
 "elite": [0, 2],
-"rest": [0, 2],
+"rest": [1, 2],
 "shop": [0, 1]
 }
 type_weights = {
@@ -67,7 +67,7 @@ slots = 16
 node_count = 10
 quota = {
 "elite": [0, 2],
-"rest": [0, 2],
+"rest": [1, 2],
 "shop": [0, 1]
 }
 type_weights = {
@@ -85,7 +85,7 @@ slots = 12
 node_count = 7
 quota = {
 "elite": [0, 2],
-"rest": [0, 2],
+"rest": [1, 2],
 "shop": [0, 1]
 }
 type_weights = {
@@ -103,7 +103,7 @@ slots = 6
 node_count = 5
 quota = {
 "elite": [0, 2],
-"rest": [0, 2],
+"rest": [1, 2],
 "shop": [0, 1]
 }
 type_weights = {
@@ -121,7 +121,7 @@ slots = 6
 node_count = 5
 quota = {
 "elite": [0, 2],
-"rest": [0, 2],
+"rest": [1, 2],
 "shop": [0, 1]
 }
 type_weights = {
@@ -265,7 +265,7 @@ type_reward = {
 }
 ev_tolerance = 0.25
 coverage = {
-"rest": 4,
+"rest": 3,
 "shop": 6
 }
 no_adjacent = [["elite", "elite"], ["shop", "shop"]]

@@ -9,7 +9,8 @@
   ],
   "rarity": 1,
   "tags": [
-    "consumable"
+    "consumable",
+    "nature"
   ],
   "combat": {
     "rules": [

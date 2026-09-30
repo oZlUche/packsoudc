@@ -53,5 +53,5 @@ display_names = {
 "en": "Knife"
 }
 shape = SubResource("Resource_b1i8v")
-tags = Array[StringName]([&"weapon", &"melee", &"rapid"])
+tags = Array[StringName]([&"weapon", &"melee", &"rapid", &"metal"])
 combat = SubResource("Resource_6a8ij")

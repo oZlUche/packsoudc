@@ -27,6 +27,23 @@
       ]
     },
     {
+      "label": "神坛（献祭 / 特殊操作）",
+      "hide_when_locked": true,
+      "requires": [
+        {
+          "type": "faith_active"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "proceed"
+        },
+        {
+          "type": "open_altar"
+        }
+      ]
+    },
+    {
       "label": "继续赶路"
     }
   ]

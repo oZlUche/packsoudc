@@ -9,7 +9,8 @@
   ],
   "tags": [
     "sealed",
-    "ammo"
+    "ammo",
+    "metal"
   ],
   "adjacency": {
     "grant_cells": [

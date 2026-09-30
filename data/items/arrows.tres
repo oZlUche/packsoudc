@@ -29,5 +29,5 @@ display_names = {
 "en": "Arrows"
 }
 shape = SubResource("Resource_rkc1q")
-tags = Array[StringName]([&"ammo"])
+tags = Array[StringName]([&"ammo", &"nature"])
 adjacency = SubResource("Resource_yvw15")

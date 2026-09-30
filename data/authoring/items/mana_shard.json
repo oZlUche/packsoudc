@@ -10,7 +10,8 @@
   "value": 8,
   "tags": [
     "part",
-    "material"
+    "material",
+    "gem"
   ],
   "combat": {
     "base_stats": {

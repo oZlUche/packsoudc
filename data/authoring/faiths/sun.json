@@ -1,0 +1,74 @@
+{
+  "id": "sun",
+  "display_name": "日神",
+  "display_names": {
+    "en": "The Sun God"
+  },
+  "god": "日神（太阳、火、周期性重复）",
+  "description": "西方蛮族的信仰（原太阳与火之神）。信力：火焰伤害、道具成功循环。献祭：金属、火焰、宝石、体积正好为中的道具。",
+  "thresholds": [
+    50,
+    150,
+    300,
+    1000
+  ],
+  "deeds": [
+    {
+      "type": "damage",
+      "damage_type": "fire",
+      "count_taken": false,
+      "cap": 40
+    },
+    {
+      "type": "item_cycle",
+      "cap": 30,
+      "amount": 2
+    }
+  ],
+  "offerings": [
+    {
+      "tags": [
+        "metal"
+      ]
+    },
+    {
+      "tags": [
+        "fire"
+      ]
+    },
+    {
+      "tags": [
+        "gem"
+      ]
+    },
+    {
+      "exact_grade": 2,
+      "note": "体积正好为中（稀有度 × 2）"
+    }
+  ],
+  "perks": [
+    {
+      "type": "enchant_weapons"
+    },
+    {
+      "type": "altar_pray_fire",
+      "tier": 2
+    },
+    {
+      "type": "enchant_weapons",
+      "count": 0,
+      "stamina_cost_percent": -20,
+      "tier": 3,
+      "note": "开战时所有武器火焰附魔，武器耐力消耗 −20%"
+    },
+    {
+      "type": "extra_drop_by_node",
+      "by_type": {
+        "battle": 3,
+        "elite": 4,
+        "core": 5
+      },
+      "tier": 4
+    }
+  ]
+}

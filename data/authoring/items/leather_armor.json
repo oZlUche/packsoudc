@@ -11,7 +11,8 @@
   "rarity": 1,
   "tags": [
     "gear",
-    "barbarian"
+    "barbarian",
+    "nature"
   ],
   "combat": {
     "base_stats": {

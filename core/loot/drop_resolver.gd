@@ -79,6 +79,11 @@ static func roll(
 		var pick := boss_guarantee(rule, items, carried, rng)
 		if pick != &"":
 			(out["treasure"] as Array[StringName]).append(pick)
+	# 093（日神 4 级）：必掉额外一件某稀有度的 —— 和 BOSS 保底同一条路，从这一档往低找
+	if ctx != null and ctx.extra_drop_rarity >= 0:
+		var extra := rarity_guarantee(ctx.extra_drop_rarity, rule, items, carried, rng)
+		if extra != &"":
+			(out["treasure"] as Array[StringName]).append(extra)
 	for id in carried:
 		var def := items.get_def(id)
 		if def == null:
@@ -125,7 +130,12 @@ static func roll(
 
 ## BOSS 的保底：这个稀有度里先挑珍宝，没有挑任何非包道具，还没有往低一档找；全没有返回空
 static func boss_guarantee(rule: DropRule, items: ItemDatabase, carried: Array[StringName], rng: RandomNumberGenerator) -> StringName:
-	var r := rule.boss_rarity
+	return rarity_guarantee(rule.boss_rarity, rule, items, carried, rng)
+
+
+## 093：某个稀有度的保底一件（BOSS 保底与日神的额外掉落共用）
+static func rarity_guarantee(rarity: int, rule: DropRule, items: ItemDatabase, carried: Array[StringName], rng: RandomNumberGenerator) -> StringName:
+	var r := rarity
 	while r >= 0:
 		var cands := treasure_candidates(rule, items, r, carried)
 		if cands.is_empty():

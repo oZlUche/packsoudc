@@ -1,0 +1,71 @@
+[gd_resource type="Resource" script_class="FaithDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_dys1e"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/damage_deed.gd" id="2_k7u5t"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/item_cycle_deed.gd" id="3_reinj"]
+[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="4_yq77j"]
+[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="5_vo2x3"]
+[ext_resource type="Script" path="res://core/run/faith/perks/enchant_weapons_perk.gd" id="6_wrt77"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_pray_fire_perk.gd" id="7_umxob"]
+[ext_resource type="Script" path="res://core/run/faith/perks/extra_drop_by_node_perk.gd" id="8_vxfes"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="9_368f3"]
+
+[sub_resource type="Resource" id="Resource_d5eql"]
+script = ExtResource("2_k7u5t")
+damage_type = &"fire"
+count_taken = false
+cap = 40
+
+[sub_resource type="Resource" id="Resource_8yila"]
+script = ExtResource("3_reinj")
+cap = 30
+amount = 2
+
+[sub_resource type="Resource" id="Resource_l2ro3"]
+script = ExtResource("4_yq77j")
+tags = Array[StringName]([&"metal"])
+
+[sub_resource type="Resource" id="Resource_87kt2"]
+script = ExtResource("4_yq77j")
+tags = Array[StringName]([&"fire"])
+
+[sub_resource type="Resource" id="Resource_sqqvu"]
+script = ExtResource("4_yq77j")
+tags = Array[StringName]([&"gem"])
+
+[sub_resource type="Resource" id="Resource_fcqfh"]
+script = ExtResource("4_yq77j")
+exact_grade = 2
+note = "体积正好为中（稀有度 × 2）"
+
+[sub_resource type="Resource" id="Resource_sftoe"]
+script = ExtResource("6_wrt77")
+
+[sub_resource type="Resource" id="Resource_0jkdj"]
+script = ExtResource("7_umxob")
+tier = 2
+
+[sub_resource type="Resource" id="Resource_mdkyw"]
+script = ExtResource("6_wrt77")
+count = 0
+stamina_cost_percent = -20
+tier = 3
+note = "开战时所有武器火焰附魔，武器耐力消耗 −20%"
+
+[sub_resource type="Resource" id="Resource_8gk88"]
+script = ExtResource("8_vxfes")
+tier = 4
+
+[resource]
+script = ExtResource("9_368f3")
+id = &"sun"
+display_name = "日神"
+display_names = {
+"en": "The Sun God"
+}
+god = "日神（太阳、火、周期性重复）"
+description = "西方蛮族的信仰（原太阳与火之神）。信力：火焰伤害、道具成功循环。献祭：金属、火焰、宝石、体积正好为中的道具。"
+thresholds = Array[int]([50, 150, 300, 1000])
+deeds = Array[ExtResource("1_dys1e")]([SubResource("Resource_d5eql"), SubResource("Resource_8yila")])
+offerings = Array[ExtResource("4_yq77j")]([SubResource("Resource_l2ro3"), SubResource("Resource_87kt2"), SubResource("Resource_sqqvu"), SubResource("Resource_fcqfh")])
+perks = Array[ExtResource("5_vo2x3")]([SubResource("Resource_sftoe"), SubResource("Resource_0jkdj"), SubResource("Resource_mdkyw"), SubResource("Resource_8gk88")])

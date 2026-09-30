@@ -1,0 +1,77 @@
+[gd_resource type="Resource" script_class="FaithDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_f3akg"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/item_triggered_deed.gd" id="2_niokp"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/heal_deed.gd" id="3_leotl"]
+[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="4_7pyn0"]
+[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="5_umqo0"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="6_f54du"]
+[ext_resource type="Script" path="res://core/run/faith/perks/stat_mod_perk.gd" id="7_af1s0"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_food_vitality_perk.gd" id="8_lkjbr"]
+[ext_resource type="Script" path="res://core/run/faith/perks/food_shield_perk.gd" id="9_y45hm"]
+[ext_resource type="Script" path="res://core/run/faith/perks/food_double_perk.gd" id="10_id2kt"]
+[ext_resource type="Script" path="res://core/run/faith/perks/draw_is_win_perk.gd" id="11_ieyfc"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="12_7tdnj"]
+
+[sub_resource type="Resource" id="Resource_gh7p0"]
+script = ExtResource("2_niokp")
+tag = &"nature"
+cap = 30
+amount = 3
+
+[sub_resource type="Resource" id="Resource_r7t77"]
+script = ExtResource("3_leotl")
+cap = 30
+
+[sub_resource type="Resource" id="Resource_0s07h"]
+script = ExtResource("4_7pyn0")
+tags = Array[StringName]([&"nature"])
+
+[sub_resource type="Resource" id="Resource_kwpnb"]
+script = ExtResource("4_7pyn0")
+tags = Array[StringName]([&"food"])
+
+[sub_resource type="Resource" id="Resource_2c21y"]
+script = ExtResource("4_7pyn0")
+tags = Array[StringName]([&"gear", &"armor", &"shield"])
+note = "防具（稀有度 × 2）"
+
+[sub_resource type="Resource" id="Resource_nrib4"]
+script = ExtResource("6_f54du")
+stat = &"regen_hp"
+flat = 1.0
+
+[sub_resource type="Resource" id="Resource_28ndt"]
+script = ExtResource("7_af1s0")
+mods = Array[ExtResource("6_f54du")]([SubResource("Resource_nrib4")])
+note = "开战时每秒回血 +1"
+
+[sub_resource type="Resource" id="Resource_gx8md"]
+script = ExtResource("8_lkjbr")
+tier = 2
+
+[sub_resource type="Resource" id="Resource_p7i6f"]
+script = ExtResource("9_y45hm")
+tier = 3
+
+[sub_resource type="Resource" id="Resource_evm5s"]
+script = ExtResource("10_id2kt")
+tier = 4
+
+[sub_resource type="Resource" id="Resource_2gm7o"]
+script = ExtResource("11_ieyfc")
+tier = 5
+
+[resource]
+script = ExtResource("12_7tdnj")
+id = &"nature"
+display_name = "自然之神"
+display_names = {
+"en": "God of Nature"
+}
+god = "自然之神（回归、容纳）"
+description = "信力：触发自然道具的效果、战斗内恢复生命。献祭：自然、食物、防具。"
+thresholds = Array[int]([25, 80, 150, 400, 800])
+deeds = Array[ExtResource("1_f3akg")]([SubResource("Resource_gh7p0"), SubResource("Resource_r7t77")])
+offerings = Array[ExtResource("4_7pyn0")]([SubResource("Resource_0s07h"), SubResource("Resource_kwpnb"), SubResource("Resource_2c21y")])
+perks = Array[ExtResource("5_umqo0")]([SubResource("Resource_28ndt"), SubResource("Resource_gx8md"), SubResource("Resource_p7i6f"), SubResource("Resource_evm5s"), SubResource("Resource_2gm7o")])

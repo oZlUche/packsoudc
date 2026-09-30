@@ -55,6 +55,6 @@ display_names = {
 }
 shape = SubResource("Resource_kdwtl")
 rarity = 3
-tags = Array[StringName]([&"weapon", &"melee", &"burst", &"enchanted"])
+tags = Array[StringName]([&"weapon", &"melee", &"burst", &"enchanted", &"metal"])
 requires_unlock = &"ach_extract_3"
 combat = SubResource("Resource_qq5wi")

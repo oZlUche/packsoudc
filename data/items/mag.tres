@@ -29,5 +29,5 @@ display_names = {
 "en": "Magazine"
 }
 shape = SubResource("Resource_f7e41")
-tags = Array[StringName]([&"sealed", &"ammo"])
+tags = Array[StringName]([&"sealed", &"ammo", &"metal"])
 adjacency = SubResource("Resource_fdhot")

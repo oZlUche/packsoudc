@@ -15,7 +15,8 @@
     "sealed",
     "weapon",
     "gun",
-    "burst"
+    "burst",
+    "metal"
   ],
   "combat": {
     "base_stats": {

@@ -13,7 +13,8 @@
   "tags": [
     "weapon",
     "ranged",
-    "rapid"
+    "rapid",
+    "nature"
   ],
   "combat": {
     "base_stats": {

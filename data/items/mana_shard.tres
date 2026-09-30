@@ -26,5 +26,5 @@ display_names = {
 }
 shape = SubResource("Resource_cgew0")
 value = 8
-tags = Array[StringName]([&"part", &"material"])
+tags = Array[StringName]([&"part", &"material", &"gem"])
 combat = SubResource("Resource_kqaoe")

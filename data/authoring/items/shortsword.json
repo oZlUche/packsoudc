@@ -13,7 +13,8 @@
     "weapon",
     "melee",
     "rapid",
-    "imperial"
+    "imperial",
+    "metal"
   ],
   "combat": {
     "base_stats": {

@@ -26,5 +26,5 @@ display_names = {
 "en": "Ration"
 }
 shape = SubResource("Resource_5vvs6")
-tags = Array[StringName]([&"consumable"])
+tags = Array[StringName]([&"consumable", &"nature", &"food"])
 combat = SubResource("Resource_bkj4y")

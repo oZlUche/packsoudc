@@ -1,0 +1,26 @@
+## 自然 3 级（093）：开战时按棋盘上食物的数量与稀有度给护盾：每件 base + per_rarity × 稀有度
+class_name FoodShieldPerk
+extends FaithPerk
+
+@export var food_tag: StringName = &"food"
+@export var base: float = 2.0
+@export var per_rarity: float = 2.0
+
+
+func modify_spec(spec: CombatantSpec, board: GridInventory, _run: RunState) -> void:
+	if board == null:
+		return
+	var total := 0.0
+	for inst in board.items():
+		var it := inst as ItemInstance
+		if it.def != null and it.def.tags.has(food_tag) and not board.acts_as_bag(it.def):
+			total += base + per_rarity * float(it.def.rarity)
+	if total > 0.0:
+		var m := StatModifier.new()
+		m.stat = BattleStats.MAX_SHIELD
+		m.flat = total
+		m.apply_to(spec.baseline, 1)
+
+
+func describe() -> String:
+	return note if note != "" else "开战时每件食物给 %.0f + %.0f × 稀有度 的护盾" % [base, per_rarity]

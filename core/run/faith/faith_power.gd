@@ -60,7 +60,16 @@ func credit(event: StringName, payload: Dictionary = {}) -> int:
 	return gained
 
 
-## 给界面的一句：「信力 12 / 30（第 1 阶）」；没激活信仰返回空
+## 093：直接加点（献祭）。返回加完之后第几阶
+func add_points(id: StringName, n: int) -> int:
+	if n <= 0 or id == &"":
+		return tier_of(id)
+	points[String(id)] = points_of(id) + n
+	changed.emit(id, points_of(id), tier_of(id))
+	return tier_of(id)
+
+
+## 给界面的一句：「蛮神 Lv.1　35 / 100」；没激活信仰返回空
 func line() -> String:
 	var def := run.active_faith() if run != null else null
 	if def == null:
@@ -68,7 +77,7 @@ func line() -> String:
 	var p := points_of(def.id)
 	var tier := def.tier_of(p)
 	var next := def.next_threshold(p)
-	return "信力 %d%s（第 %d 阶）" % [p, (" / %d" % next) if next >= 0 else "", tier]
+	return "%s Lv.%d　%d%s" % [Names.of(def), tier, p, (" / %d" % next) if next >= 0 else "（满级）"]
 
 
 func to_dict() -> Dictionary:

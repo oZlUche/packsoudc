@@ -35,6 +35,25 @@ const TERMS := {
 	"流血": "每层每秒造成流血伤害，无视护甲与护盾，永续叠层。",
 }
 
+## 标签 → 中文（093：献祭品、信仰条件的说明用；没登记的原样）
+const TAG_NAMES := {
+	"weapon": "武器", "melee": "近战", "ranged": "远程", "gun": "枪械", "gear": "防具", "armor": "护甲", "shield": "盾", "heavy": "重型",
+	"consumable": "消耗品", "tool": "工具", "part": "零件", "material": "材料", "ammo": "弹药", "food": "食物", "nature": "自然",
+	"bone": "骨制品", "flesh": "血肉", "metal": "金属", "fire": "火焰", "gem": "宝石", "faith": "信仰", "sigil": "符号", "blessed": "赐福",
+	"treasure": "珍宝", "relic": "遗物", "sealed": "封印", "poison": "毒", "bleed": "流血", "imperial": "帝国", "barbarian": "蛮族",
+}
+## 伤害类型 → 中文
+const DAMAGE_TYPE_NAMES := {"physical": "物理", "fire": "火焰", "poison": "毒", "bleed": "流血", "reflect": "反射", "drain": "流失"}
+
+
+static func tag_name(tag: StringName) -> String:
+	return String(TAG_NAMES.get(String(tag), String(tag)))
+
+
+static func damage_type_name(type: StringName) -> String:
+	return String(DAMAGE_TYPE_NAMES.get(String(type), String(type)))
+
+
 ## 属性键 → 中文
 const STAT_NAMES := {
 	"damage": "伤害", "armor": "护甲", "max_hp": "生命", "max_stamina": "耐力上限", "haste": "急速", "cooldown": "冷却",

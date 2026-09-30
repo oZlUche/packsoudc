@@ -904,6 +904,23 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> GridInventory:
 	return inv
 
 
+## 093（大地之神：锻炼 +1 行）：底下加 [param n] 行，里面的东西原地不动
+func grow_rows(n: int) -> void:
+	if n <= 0:
+		return
+	size = Vector2i(size.x, size.y + n)
+	var total := maxi(0, size.x * size.y)
+	var old := _occ.size()
+	_occ.resize(total)
+	_bag_owner.resize(total)
+	_blocked.resize(total)
+	for i in range(old, total):
+		_occ[i] = EMPTY_UID
+		_bag_owner[i] = EMPTY_UID
+		_blocked[i] = 0
+	changed.emit()
+
+
 func _reset_cells() -> void:
 	var total := maxi(0, size.x * size.y)
 	_occ.resize(total)
