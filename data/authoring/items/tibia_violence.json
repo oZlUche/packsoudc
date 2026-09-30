@@ -1,0 +1,50 @@
+{
+  "id": "tibia_violence",
+  "display_name": "胫骨大棒",
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "weapon",
+    "melee",
+    "bone",
+    "faith",
+    "faith:brute"
+  ],
+  "faith_bonuses": [
+    {
+      "mods": [
+        {}
+      ]
+    }
+  ],
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 2.60000000000582,
+          "use_haste": false
+        },
+        "costs": [
+          {
+            "type": "resource"
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage",
+            "amount": 15.0
+          }
+        ]
+      }
+    ]
+  }
+}
