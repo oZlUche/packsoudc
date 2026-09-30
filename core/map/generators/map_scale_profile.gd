@@ -35,6 +35,8 @@ extends Resource
 @export var placeholder: bool = false
 ## 092（作者定）：这个规模的全局倒计时（行动点）—— 倒计时和地图规模正相关，每档自己写；0 = 用章节的 step_limit
 @export var step_limit: int = 0
+## 094：这个规模的带入预算（价值）；0 = 用章节的 carry_budget
+@export var carry_budget: int = 0
 
 
 func covers(ring_count: int) -> bool:

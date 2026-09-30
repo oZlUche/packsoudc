@@ -182,6 +182,7 @@ haven_at = {
 "shop": 0.5
 }
 step_limit = 36
+carry_budget = 600
 
 [sub_resource type="Resource" id="Resource_d8mg8"]
 script = ExtResource("3_1hmr3")
@@ -202,6 +203,7 @@ haven_at = {
 "shop": 0.666666666666667
 }
 step_limit = 60
+carry_budget = 900
 
 [sub_resource type="Resource" id="Resource_k5at1"]
 script = ExtResource("3_1hmr3")
@@ -226,6 +228,7 @@ haven_at = {
 }
 placeholder = true
 step_limit = 90
+carry_budget = 1200
 
 [sub_resource type="Resource" id="Resource_pgj4e"]
 script = ExtResource("5_ntina")
@@ -293,3 +296,4 @@ requires_unlock = &"prologue2_done"
 rules = Array[String](["环形的魔法古迹：从外环的出生点进去，越往里越危险、也越值钱。撤离点只在外面几环；核心在最里面，打赢了直接撤离结算。", "全局倒计时 36 行动点：每走一步减一，归零就是行动失败。过半时离出生点最近的免费撤离点关闭（地图上标着）。", "走出一个点，那里的暂存区留在原地，能回来拿；撤离只带走棋盘上的。地图中层有一个保险箱：放进去的就算带出，行动失败也带得出。"])
 step_limit = 36
 safes = 1
+carry_budget = 600

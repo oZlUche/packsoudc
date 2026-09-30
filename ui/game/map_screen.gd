@@ -384,6 +384,8 @@ func _adopt() -> void:
 	_run.skills_changed.connect(func():
 		_refresh_skills()
 		_refresh_hud())
+	if _run.carry_penalty_steps() > 0:     # 094：超带换的倒计时
+		_note("[color=#f0ad4e]　带入超出预算 %d：倒计时 −%d[/color]" % [RunState.carry_over_for(_run.chapter, _run.scale_id(), _run.carry_in_value), _run.carry_penalty_steps()])
 	for note in flow.take_notes():     # 088：开局拿到的特殊道具（望远镜）等通知
 		_note("[color=#f0ad4e]　%s[/color]" % note)
 	_run.faith_power_changed.connect(func(id: StringName, p: int, tier: int):

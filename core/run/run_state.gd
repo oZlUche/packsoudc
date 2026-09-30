@@ -69,6 +69,8 @@ signal safe_closed(count: int)
 var safe_locked: bool = false
 ## 093：神坛 —— 这一次在哪个点上开着（-1 = 没有；走开就关）、哪些点上已经用过特殊操作（和常规献祭共享这一次机会）
 var altar_node: int = -1
+## 094（作者定）：从仓库带进来的道具总价值（预算 / 超带换倒计时看它）
+var carry_in_value: int = 0
 var altar_used: Dictionary = {}
 ## 093：神坛特殊操作攒的账（蛮神献祭生命上限的次数、日神祈祷的次数……）：键 → 数，跟存档；效果构件自己读写
 var faith_rituals: Dictionary = {}
@@ -156,7 +158,7 @@ static func start(
 	p_sets: SetDatabase = null, kit: Array[StringName] = [] as Array[StringName],
 	p_buff_defs: Dictionary = {}, p_meta_buffs: Array[StringName] = [] as Array[StringName],
 	p_character: CharacterDef = null, p_layout: Array = [], p_difficulty: DifficultyDef = null, p_hunter_defs: Dictionary = {},
-	p_scale: StringName = &"", p_safe_size: Vector2i = Vector2i(3, 3)
+	p_scale: StringName = &"", p_safe_size: Vector2i = Vector2i(3, 3), p_carry_value: int = 0
 ) -> RunState:
 	if p_chapter == null or p_chapter.map_source == null:
 		return null
@@ -167,6 +169,7 @@ static func start(
 	s.enemies = p_enemies
 	s.sets = p_sets
 	s.map_scale = p_scale
+	s.carry_in_value = maxi(0, p_carry_value)
 	s._resolve_rules()
 	s.map = p_chapter.map_source.resolve(p_seed, p_scale)
 	if s.map == null:
@@ -394,15 +397,67 @@ func is_over() -> bool:
 #region 全局倒计时（092，作者定）
 ## 这一局的倒计时总数（行动点）；0 = 没有。作者定：和地图规模正相关 —— 规模档写了 step_limit 就用它的，没写用章节的
 func countdown_limit() -> int:
-	if chapter == null:
+	return countdown_limit_for(chapter, scale_id(), carry_in_value)
+
+
+## 这一章这个规模的规模档（没有 null）
+static func scale_profile_of(p_chapter: ChapterDef, sid: StringName) -> Resource:
+	if p_chapter == null or p_chapter.map_source == null:
+		return null
+	var cfg: Resource = p_chapter.map_source.generator_config
+	if cfg == null or not cfg.has_method("scale_by_id"):
+		return null
+	return cfg.call("scale_by_id", sid) if sid != &"" else (cfg.call("scale") if cfg.has_method("scale") else null)
+
+
+## 不算超带的倒计时（规模档写了用它的，没写用章节的）
+static func base_step_limit_for(p_chapter: ChapterDef, sid: StringName) -> int:
+	if p_chapter == null:
 		return 0
-	var cfg: Resource = chapter.map_source.generator_config if chapter.map_source != null else null
-	if cfg != null and cfg.has_method("scale_by_id"):
-		var sid := scale_id()
-		var p = cfg.call("scale_by_id", sid) if sid != &"" else (cfg.call("scale") if cfg.has_method("scale") else null)
-		if p != null and "step_limit" in p and int(p.get("step_limit")) > 0:
-			return int(p.get("step_limit"))
-	return chapter.step_limit
+	var p := scale_profile_of(p_chapter, sid)
+	if p != null and "step_limit" in p and int(p.get("step_limit")) > 0:
+		return int(p.get("step_limit"))
+	return p_chapter.step_limit
+
+
+## 094（作者定）：带入预算（规模档 > 章节；0 = 不限）
+static func carry_budget_for(p_chapter: ChapterDef, sid: StringName) -> int:
+	if p_chapter == null:
+		return 0
+	var p := scale_profile_of(p_chapter, sid)
+	if p != null and "carry_budget" in p and int(p.get("carry_budget")) > 0:
+		return int(p.get("carry_budget"))
+	return p_chapter.carry_budget
+
+
+## 094：超带多少价值（不超 0）
+static func carry_over_for(p_chapter: ChapterDef, sid: StringName, value: int) -> int:
+	var budget := carry_budget_for(p_chapter, sid)
+	return maxi(0, value - budget) if budget > 0 else 0
+
+
+## 094：超带换掉几步倒计时：每超 carry_over_cost 价值 −1
+static func carry_penalty_for(p_chapter: ChapterDef, sid: StringName, value: int) -> int:
+	if p_chapter == null or p_chapter.carry_over_cost <= 0:
+		return 0
+	@warning_ignore("integer_division")
+	return carry_over_for(p_chapter, sid, value) / p_chapter.carry_over_cost
+
+
+## 094：算上超带的倒计时；有倒计时的至少留 1
+static func countdown_limit_for(p_chapter: ChapterDef, sid: StringName, value: int) -> int:
+	var base := base_step_limit_for(p_chapter, sid)
+	if base <= 0:
+		return 0
+	return maxi(1, base - carry_penalty_for(p_chapter, sid, value))
+
+
+func carry_budget() -> int:
+	return carry_budget_for(chapter, scale_id())
+
+
+func carry_penalty_steps() -> int:
+	return carry_penalty_for(chapter, scale_id(), carry_in_value)
 
 
 func has_countdown() -> bool:
@@ -1156,6 +1211,7 @@ func to_dict() -> Dictionary:
 		"safe": safe.to_dict() if safe != null else null,
 		"safe_locked": safe_locked,
 		"faith_rituals": faith_rituals.duplicate(),
+		"carry_in_value": carry_in_value,
 		"faith_stat_bonus": faith_stat_bonus.duplicate(),
 		"altar_used": altar_used.keys(),
 		"node_storages": _node_storages_to_dict(),
@@ -1217,6 +1273,7 @@ static func from_dict(
 	s.safe = GridInventory.from_dict(safe_raw, p_items) if safe_raw is Dictionary else GridInventory.new(Vector2i(3, 3), SAFE_ID, false)
 	s.safe_locked = bool(d.get("safe_locked", false))
 	s.faith_rituals = (d.get("faith_rituals", {}) as Dictionary).duplicate() if d.get("faith_rituals", {}) is Dictionary else {}
+	s.carry_in_value = int(d.get("carry_in_value", 0))
 	s.faith_stat_bonus = (d.get("faith_stat_bonus", {}) as Dictionary).duplicate() if d.get("faith_stat_bonus", {}) is Dictionary else {}
 	for k in d.get("altar_used", []):
 		s.altar_used[int(k)] = true

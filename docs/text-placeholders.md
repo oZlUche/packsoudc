@@ -111,6 +111,7 @@
 | `NodeRules` | `event_groups` | 成组限量的事件（093）：`{组: {max_per_map, early, chance, events: {id: 权重}}}`；「触发信仰」每图最多一位神、偏前期、必出现（chance 1.0） |
 | `FaithDef` | `deeds[].multiplier / cap`、`thresholds`、`offerings[]`、`perks[].tier` | 信仰流派（093）：行为倍率与每场上限、各级阈值、献祭规矩（标签 / 格子数 / 体积档 / 倍率 / 乘格子数）、各级效果与它们的数（`low_hp_empower.min/max_percent`、`enchant_weapons.fixed/percent/pray_percent/pray_curve`、`altar_sacrifice_hp.hp_cost/stamina_gain/haste_percent`、`food_shield.base/per_rarity`、`gift_on_enter.by_type`……） |
 | `MetaRules` | `safe_size` | 保险箱几格（092，初始 3×3；放进去的视为已带出，战败也带得出；**关上或走开就锁**，不能再改） |
+| `ChapterDef` / `MapScaleProfile` | `carry_budget` `carry_over_cost` | 带入预算（094）：从仓库带进一局的总价值预算（小 600 / 中 900 / 大 1200，章节兜底 600），每超 50 价值倒计时 −1 |
 | `MapScaleProfile` | `step_limit` | 这个规模档的全局倒计时（092：小 36 / 中 60 / 大 90；0 = 用章节的） |
 | 节点类型 | `safe`（符号 K） | 保险箱点：不算用过，每次踩上都开保险箱屏（092） |
 | `MetaRules` | `sell_ratio` | 基地「出售」页卖掉仓库道具回定价的几成（091，0.5；`ItemValue.of × 比例` 向下取整）；一键出售按稀有度档筛 |

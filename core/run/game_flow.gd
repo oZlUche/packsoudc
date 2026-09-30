@@ -581,7 +581,7 @@ func save_settings() -> bool:
 ## 两条路都在开局那一刻存 meta：带进去的从仓库拿走（一局里是新实例，3.1 存档只写 id），撤离了回来，死了就是真没了。
 ## 生成不出图返回 null，停在开局屏
 func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: Array[int] = [] as Array[int],
-		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null, scale: StringName = &"") -> RunState:
+		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null, scale: StringName = &"", carry_value: int = 0) -> RunState:
 	if can_begin() != "":
 		return null
 	var kit: Array[StringName] = []
@@ -596,7 +596,11 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	if difficulty != null and not unlocked(difficulty.requires_unlock):
 		return null     # 没解锁的难度开不了（界面本来就不列，这里是兜底）
 	apply_item_locks()     # 091：成就还没开的道具这一局不出现
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale, safe_size())
+	# 094：从仓库带进来的总价值（按 uid 带的直接算；开局屏摆好的棋盘由它算好传进来）
+	var value := maxi(0, carry_value)
+	for inst in taken:
+		value += ItemValue.of(inst.def)
+	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale, safe_size(), value)
 	if state == null:
 		return null
 	for inst in taken:

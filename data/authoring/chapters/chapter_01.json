@@ -207,7 +207,8 @@
             "rest": 0.5,
             "shop": 0.5
           },
-          "step_limit": 36
+          "step_limit": 36,
+          "carry_budget": 600
         },
         {
           "id": "medium",
@@ -250,7 +251,8 @@
             "rest": 0.333333333333333,
             "shop": 0.666666666666667
           },
-          "step_limit": 60
+          "step_limit": 60,
+          "carry_budget": 900
         },
         {
           "id": "large",
@@ -300,7 +302,8 @@
             "shop": 0.666666666666667
           },
           "placeholder": true,
-          "step_limit": 90
+          "step_limit": 90,
+          "carry_budget": 1200
         }
       ],
       "routes": [
@@ -432,5 +435,6 @@
     "走出一个点，那里的暂存区留在原地，能回来拿；撤离只带走棋盘上的。地图中层有一个保险箱：放进去的就算带出，行动失败也带得出。"
   ],
   "step_limit": 36,
-  "safes": 1
+  "safes": 1,
+  "carry_budget": 600
 }
