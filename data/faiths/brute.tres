@@ -1,60 +1,65 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_3n2nc"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/damage_deed.gd" id="2_d0k73"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/vitality_lost_deed.gd" id="3_mrsdb"]
-[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="4_mp24s"]
-[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="5_s4x4y"]
-[ext_resource type="Script" path="res://core/run/faith/perks/low_hp_empower_perk.gd" id="6_2b5af"]
-[ext_resource type="Script" path="res://core/run/faith/perks/altar_sacrifice_hp_perk.gd" id="7_gp63j"]
-[ext_resource type="Script" path="res://core/run/faith/perks/smite_perk.gd" id="8_fhojw"]
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="9_thvtn"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_d0k73"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/damage_deed.gd" id="2_mrsdb"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/vitality_lost_deed.gd" id="3_mp24s"]
+[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="4_s4x4y"]
+[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="5_2b5af"]
+[ext_resource type="Script" path="res://core/run/faith/perks/low_hp_empower_perk.gd" id="6_gp63j"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_sacrifice_hp_perk.gd" id="7_fhojw"]
+[ext_resource type="Script" path="res://core/run/faith/perks/smite_perk.gd" id="8_thvtn"]
+[ext_resource type="Script" path="res://core/run/faith/perks/undying_perk.gd" id="9_on25b"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="10_7cvah"]
 
-[sub_resource type="Resource" id="Resource_on25b"]
-script = ExtResource("2_d0k73")
+[sub_resource type="Resource" id="Resource_ywd2h"]
+script = ExtResource("2_mrsdb")
 multiplier = 0.2
 cap = 30
 
-[sub_resource type="Resource" id="Resource_7cvah"]
-script = ExtResource("3_mrsdb")
+[sub_resource type="Resource" id="Resource_bswie"]
+script = ExtResource("3_mp24s")
 
-[sub_resource type="Resource" id="Resource_ywd2h"]
-script = ExtResource("4_mp24s")
+[sub_resource type="Resource" id="Resource_yf1t8"]
+script = ExtResource("4_s4x4y")
 tags = Array[StringName]([&"bone"])
 multiplier = 3.0
 note = "骨制品（稀有度 × 3）"
 
-[sub_resource type="Resource" id="Resource_bswie"]
-script = ExtResource("4_mp24s")
+[sub_resource type="Resource" id="Resource_c5kw4"]
+script = ExtResource("4_s4x4y")
 min_cells = 9
 multiplier = 3.0
 note = "大及以上体积（稀有度 × 3）"
 
-[sub_resource type="Resource" id="Resource_yf1t8"]
-script = ExtResource("4_mp24s")
+[sub_resource type="Resource" id="Resource_ymc0b"]
+script = ExtResource("4_s4x4y")
 tags = Array[StringName]([&"flesh"])
 multiplier = 3.0
 note = "血肉（稀有度 × 3）"
 
-[sub_resource type="Resource" id="Resource_c5kw4"]
-script = ExtResource("4_mp24s")
+[sub_resource type="Resource" id="Resource_h1qlm"]
+script = ExtResource("4_s4x4y")
 tags = Array[StringName]([&"weapon"])
 multiplier = 3.0
 note = "武器（稀有度 × 3）"
 
-[sub_resource type="Resource" id="Resource_ymc0b"]
-script = ExtResource("6_2b5af")
+[sub_resource type="Resource" id="Resource_nnwp2"]
+script = ExtResource("6_gp63j")
 
-[sub_resource type="Resource" id="Resource_h1qlm"]
-script = ExtResource("7_gp63j")
+[sub_resource type="Resource" id="Resource_3qeta"]
+script = ExtResource("7_fhojw")
 tier = 2
 
-[sub_resource type="Resource" id="Resource_nnwp2"]
-script = ExtResource("8_fhojw")
+[sub_resource type="Resource" id="Resource_mkgi2"]
+script = ExtResource("8_thvtn")
 tier = 3
 
+[sub_resource type="Resource" id="Resource_uvriy"]
+script = ExtResource("9_on25b")
+tier = 4
+
 [resource]
-script = ExtResource("9_thvtn")
+script = ExtResource("10_7cvah")
 id = &"brute"
 display_name = "蛮神"
 display_names = {
@@ -63,6 +68,6 @@ display_names = {
 god = "蛮神（暴力与杀戮）"
 description = "北境蛮族的信仰（原暴力之神）。信力：造成和受到伤害、失去体力。献祭：骨制品、大及以上体积、血肉、武器。"
 thresholds = Array[int]([30, 100, 200, 400])
-deeds = Array[ExtResource("1_3n2nc")]([SubResource("Resource_on25b"), SubResource("Resource_7cvah")])
-offerings = Array[ExtResource("4_mp24s")]([SubResource("Resource_ywd2h"), SubResource("Resource_bswie"), SubResource("Resource_yf1t8"), SubResource("Resource_c5kw4")])
-perks = Array[ExtResource("5_s4x4y")]([SubResource("Resource_ymc0b"), SubResource("Resource_h1qlm"), SubResource("Resource_nnwp2")])
+deeds = Array[ExtResource("1_d0k73")]([SubResource("Resource_ywd2h"), SubResource("Resource_bswie")])
+offerings = Array[ExtResource("4_s4x4y")]([SubResource("Resource_yf1t8"), SubResource("Resource_c5kw4"), SubResource("Resource_ymc0b"), SubResource("Resource_h1qlm")])
+perks = Array[ExtResource("5_2b5af")]([SubResource("Resource_nnwp2"), SubResource("Resource_3qeta"), SubResource("Resource_mkgi2"), SubResource("Resource_uvriy")])

@@ -54,6 +54,7 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 				continue
 			rt.base.ensure(key).base += it.stats.total_of(key)
 	rt.base.ensure(BattleStats.MAX_HP).base = spec.max_hp
+	rt.undying_sec = StatMath.from_float(float(spec.flags.get("undying_sec", 0.0)))     # 093：蛮神 4 级
 
 	for item in spec.items:
 		var it2 := item as CompiledItem
@@ -262,6 +263,8 @@ func next_expiry() -> int:
 			continue
 		if soonest < 0 or b.expires_at < soonest:
 			soonest = b.expires_at
+	if undying_until >= 0 and (soonest < 0 or undying_until < soonest):
+		soonest = undying_until     # 093：坚持期到期也是一个要醒来的时刻
 	return soonest
 #endregion
 
@@ -279,6 +282,9 @@ func _on_resource_changed(key: StringName, delta: int, reason: StringName) -> vo
 		return
 	# 带上变化【之后】的当前值与上限：回放层因此不必自己累加增量，
 	# 也不会因为漏掉一次上限变动（强壮之类的 buff）而让血条的分母失真。
+	# 093（蛮神 4 级）：不死期间耐力无限 —— 花掉多少立刻补回
+	if undying_active() and key == BattleStats.RES_STAMINA and delta < 0:
+		resources.change(key, -delta, BattleEvent.REASON_REGEN)
 	ctx.emit(BattleEvent.RESOURCE_CHANGED, side, {
 		"key": String(key), "delta": delta, "reason": String(reason),
 		"current": resources.current(key), "max": resources.maximum(key),
@@ -288,15 +294,45 @@ func _on_resource_changed(key: StringName, delta: int, reason: StringName) -> vo
 ## 087（作者反馈：敌人倒下两次、倒下时血没归零）：**倒下是终局**。血一到 0 就记死，之后的治疗（伤药的「濒死回血」）不再把它救回来，
 ## 也不再发第二次 DIED。回放里看到的「倒下时血没归零」就是同一时刻先倒下、再被治回来、面板停在治疗后的数
 var dead: bool = false
+## 093（蛮神 4 级）：血归零后还能坚持几秒（定点；0 = 没有这条），只用一次；不死期间 undying_until 是到期时刻
+var undying_sec: int = 0
+var undying_until: int = -1
+var undying_used: bool = false
 
 
 func is_alive() -> bool:
-	return not dead and resources.current(BattleStats.RES_HP) > 0
+	return not dead and (resources.current(BattleStats.RES_HP) > 0 or undying_active())
 
 
-## 血到 0 时由伤害管线 / 资源效果调：第一次返回 true（该发 DIED），之后 false
+func undying_active() -> bool:
+	return undying_until >= 0 and not dead
+
+
+## 血到 0 时由伤害管线 / 资源效果调：第一次返回 true（该发 DIED），之后 false。
+## 093：有「不死」且还没用过 → 不死、不发 DIED，进入坚持期（发 EFFECT_RESOLVED undying 给回放看），到期由 [method settle_undying] 判
 func mark_dead() -> bool:
 	if dead:
+		return false
+	if undying_active():
+		return false     # 坚持期里血再归零：还没到时候
+	if undying_sec > 0 and not undying_used:
+		undying_used = true
+		var ctx: BattleContext = _ctx_ref.get_ref() if _ctx_ref != null else null
+		var now := ctx.now if ctx != null else 0
+		undying_until = now + undying_sec
+		if ctx != null:
+			ctx.emit(BattleEvent.EFFECT_RESOLVED, side, {"effect": "undying", "uid": 0, "until": undying_until, "seconds": StatMath.to_float(undying_sec)})
+		return false
+	dead = true
+	return true
+
+
+## 093：坚持期到了没。到了：血还是 0 就真死（返回 true，该发 DIED）；被治回来了就活着继续
+func settle_undying(now: int) -> bool:
+	if undying_until < 0 or now < undying_until:
+		return false
+	undying_until = -1
+	if resources.current(BattleStats.RES_HP) > 0:
 		return false
 	dead = true
 	return true

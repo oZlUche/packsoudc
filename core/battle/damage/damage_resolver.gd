@@ -66,6 +66,9 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 		packet.applied = victim.resources.change(
 			BattleStats.RES_HP, -amount, BattleEvent.REASON_DAMAGE
 		)
+		# 093（蛮神 4 级）：坚持期里血停在 0，扣不动 —— 但受到的伤害**照记**（作者定），事件里的 amount 是真实伤害
+		if victim.undying_active() and -packet.applied < amount:
+			packet.applied = -amount
 	elif amount < 0:
 		packet.applied = victim.resources.change(
 			BattleStats.RES_HP, -amount, BattleEvent.REASON_HEAL

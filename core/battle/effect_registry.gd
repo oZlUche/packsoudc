@@ -112,6 +112,7 @@ const FAITH_PERKS := {
 	&"extra_drop_by_node": "res://core/run/faith/perks/extra_drop_by_node_perk.gd",
 	&"gift_on_enter": "res://core/run/faith/perks/gift_on_enter_perk.gd",
 	&"draw_is_win": "res://core/run/faith/perks/draw_is_win_perk.gd",
+	&"undying": "res://core/run/faith/perks/undying_perk.gd",
 }
 
 ## 事件层（063）：选项的条件（只读）与后果（做一件事或立一面旗）

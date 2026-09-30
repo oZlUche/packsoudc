@@ -88,6 +88,9 @@ static func _resolve_instant(ctx: BattleContext) -> void:
 		(rt as CombatantRuntime).settle_regen(ctx.now)
 
 	for rt in ctx.sides:
+		if (rt as CombatantRuntime).settle_undying(ctx.now):
+			ctx.emit(BattleEvent.DIED, (rt as CombatantRuntime).side, {})     # 093：坚持期到了、血还是 0：真倒下
+	for rt in ctx.sides:
 		var owner := rt as CombatantRuntime
 		for buff in owner.expire_buffs(ctx.now):
 			ctx.emit(BattleEvent.STATUS_UNSTACKED, owner.side, {

@@ -55,7 +55,7 @@ static func run_faith_files(t: TestCase) -> void:
 	t.eq(brute.thresholds, [30, 100, 200, 400] as Array[int], "蛮神阈值 30 / 100 / 200 / 400（表）")
 	t.eq(brute.deeds.size(), 2, "两条增长方式")
 	t.eq(brute.offerings.size(), 4, "四条献祭规矩")
-	t.eq(brute.perks.size(), 3, "三条效果（4 级「不死 10 秒」还没做）")
+	t.eq(brute.perks.size(), 4, "四条效果（含 4 级「不死 10 秒」）")
 	var db := ItemDatabase.new()
 	db.load_dir()
 	t.eq(db.get_def(&"strength_sigil").faith_tag(), &"faith:brute", "力量的符号归蛮神")
@@ -406,3 +406,79 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 		t.check(not flow.can_reopen(), "这个休息处不能再开神坛")
 	game.queue_free()
 	_cleanup()
+
+
+
+static func run_undying(t: TestCase) -> void:
+	t.begin("093 · 蛮神 4 级「不死 10 秒」：血归零不倒、进坚持期（回放里有 undying 一条）、期间耐力花了就补、伤害照记；到期血还是 0 才发 DIED；被治回来就活；一场只一次；没这条的照旧当场倒下")
+	var a := BattleCompiler.compile(null, CombatantBaseline.with_hp(10.0))
+	a.flags["undying_sec"] = 10.0
+	var b := BattleCompiler.compile(null, CombatantBaseline.with_hp(10.0))
+	var ra := CombatantRuntime.from_spec(a, 0)
+	var rb := CombatantRuntime.from_spec(b, 1)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3
+	var ctx := BattleContext.create(ra, rb, rng)
+	t.eq(ra.undying_sec, StatMath.from_float(10.0), "从 flags 读进单位")
+	ctx.now = StatMath.from_float(2.0)
+	# 打到 0
+	DamageResolver.resolve(ctx, DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(50.0), ra, 1, 0))
+	t.eq(ra.resources.current(BattleStats.RES_HP), 0, "血归零")
+	t.check(ra.is_alive() and ra.undying_active() and not ra.dead, "没倒：进坚持期")
+	t.eq(ra.undying_until, StatMath.from_float(12.0), "到 12.0 秒为止")
+	var died := 0
+	var undying_notes := 0
+	var dmg_after := 0
+	for e in ctx.log:
+		var ev := e as BattleEvent
+		if ev.name == BattleEvent.DIED and ev.side == 0:
+			died += 1
+		if ev.name == BattleEvent.EFFECT_RESOLVED and ev.side == 0 and String(ev.payload.get("effect", "")) == "undying":
+			undying_notes += 1
+	t.eq(died, 0, "没发 DIED")
+	t.eq(undying_notes, 1, "回放里有一条「不死」")
+	# 期间再挨打：伤害照记、还是不倒
+	var log_before := ctx.log.size()
+	DamageResolver.resolve(ctx, DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(7.0), ra, 1, 0))
+	for i in range(log_before, ctx.log.size()):
+		var ev := ctx.log[i] as BattleEvent
+		if ev.name == BattleEvent.DAMAGE and ev.side == 0 and int(ev.payload.get("amount", 0)) > 0:
+			dmg_after += 1
+	t.check(dmg_after == 1 and ra.is_alive(), "坚持期里挨打：伤害事件照发、还活着")
+	# 耐力无限：花掉立刻补回
+	if ra.resources.maximum(BattleStats.RES_STAMINA) > 0:
+		var full := ra.resources.maximum(BattleStats.RES_STAMINA)
+		ra.resources.change(BattleStats.RES_STAMINA, -mini(3, full), BattleEvent.REASON_COST)
+		t.eq(ra.resources.current(BattleStats.RES_STAMINA), full, "耐力花了就补满")
+	t.eq(ra.next_expiry(), ra.undying_until, "到期时刻算进「下一个要醒的时刻」")
+	# 没到期不倒；到期血还是 0 就真倒
+	t.check(not ra.settle_undying(StatMath.from_float(11.9)), "11.9 秒：还没到")
+	t.check(ra.settle_undying(StatMath.from_float(12.0)) and ra.dead and not ra.is_alive(), "12.0 秒：真倒下")
+	t.check(not ra.mark_dead(), "死了不再发第二次")
+	# 被治回来的：到期活着
+	var c2 := BattleCompiler.compile(null, CombatantBaseline.with_hp(10.0))
+	c2.flags["undying_sec"] = 10.0
+	var rc := CombatantRuntime.from_spec(c2, 0)
+	var ctx2 := BattleContext.create(rc, CombatantRuntime.from_spec(b, 1), rng)
+	DamageResolver.resolve(ctx2, DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(50.0), rc, 1, 0))
+	t.check(rc.undying_active(), "进坚持期")
+	rc.resources.change(BattleStats.RES_HP, StatMath.from_float(4.0), BattleEvent.REASON_HEAL)
+	t.check(not rc.settle_undying(StatMath.from_float(10.0)) and rc.is_alive() and not rc.undying_active(), "到期时血 > 0：活着、坚持期结束")
+	DamageResolver.resolve(ctx2, DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(50.0), rc, 1, 0))
+	t.check(rc.dead and not rc.is_alive(), "再归零：一场只一次，当场倒下")
+	# 没这条的照旧
+	var plain := CombatantRuntime.from_spec(b, 0)
+	var ctx3 := BattleContext.create(plain, CombatantRuntime.from_spec(b, 1), rng)
+	DamageResolver.resolve(ctx3, DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(50.0), plain, 1, 0))
+	t.check(plain.dead and not plain.is_alive(), "没有不死：当场倒下")
+	# 整场：蛮神 4 级的效果从信仰文件来，编译出来的单位带旗子
+	var defs := FaithDef.load_all()
+	var brute: FaithDef = defs[&"brute"]
+	var und: FaithPerk = null
+	for p in brute.perks_at(4):
+		if p is UndyingPerk:
+			und = p
+	t.check(und != null and brute.perks_at(3).find(und) < 0, "4 级才有「不死」")
+	var spec := BattleCompiler.compile(null, CombatantBaseline.with_hp(10.0))
+	und.modify_spec(spec, null, null)
+	t.eq(float(spec.flags.get("undying_sec", 0.0)), 10.0, "编译后的单位带 undying_sec = 10")

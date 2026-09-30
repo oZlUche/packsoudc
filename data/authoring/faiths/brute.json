@@ -64,6 +64,10 @@
         "elite"
       ],
       "tier": 3
+    },
+    {
+      "type": "undying",
+      "tier": 4
     }
   ]
 }
