@@ -28,6 +28,11 @@ enum Camp { GODS, CHURCH }
 @export var offerings: Array[OfferingRule] = []
 ## 093（作者表）：信仰级的效果（[FaithPerk] 构件），各自写第几阶起生效
 @export var perks: Array[FaithPerk] = []
+## 095（作者定）：赐福模板 —— 哪些道具能被这位神赐福、赐福版长什么样（加载时派生成真实道具 `<id>_<神>`）
+@export var blessings: Array[Blessing] = []
+## 095：激活这个信仰时每走一步，包里每件能被赐福的道具独立掷一次变成赐福版的概率（+ 每级 convert_per_tier）；0 = 不转化
+@export var convert_chance: float = 0.03
+@export var convert_per_tier: float = 0.01
 
 
 ## 这个信仰的道具带的标签
@@ -70,6 +75,8 @@ func offering_value(def: ItemDef) -> int:
 	for r in offerings:
 		if r != null:
 			total += (r as OfferingRule).value(def)
+	if total > 0 and def != null and def.is_blessed() and def.faith_tag() == tag():
+		total *= 2     # 095（作者定）：自己神的赐福版献回来算双倍
 	return total
 
 

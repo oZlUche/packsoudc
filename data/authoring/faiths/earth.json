@@ -33,6 +33,9 @@
   ],
   "perks": [
     {
+      "type": "altar_bless"
+    },
+    {
       "type": "stat_mod",
       "mods": [
         {
@@ -78,6 +81,36 @@
         "shop"
       ],
       "tier": 4
+    }
+  ],
+  "blessings": [
+    {
+      "min_cells": 5,
+      "name_prefix": "大地之神赐福的",
+      "name_prefix_en": "Earth-blessed ",
+      "faith_bonuses": [
+        {
+          "mode": "active",
+          "mods": [
+            {
+              "stat": "max_stamina",
+              "flat": 5.0
+            }
+          ],
+          "note": "耐力上限 +5"
+        },
+        {
+          "mode": "scaled",
+          "max_stacks": 5,
+          "mods": [
+            {
+              "stat": "armor",
+              "flat": 1.0
+            }
+          ],
+          "note": "每 50 信力护甲 +1（最多 5 份）"
+        }
+      ]
     }
   ]
 }

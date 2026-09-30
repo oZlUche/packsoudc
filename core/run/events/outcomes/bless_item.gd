@@ -1,0 +1,27 @@
+## 后果（095）：赐福一件 —— 棋盘（其次暂存区）里能被赐福的最值钱的一件换成赐福版。[member faith] 空 = 激活的信仰（没激活就不做）
+class_name BlessItem
+extends EventOutcome
+
+@export var faith: StringName = &""
+
+
+func apply(ctx: EventContext) -> void:
+	var fid := faith
+	if fid == &"" and ctx.active_faith.is_valid():
+		fid = StringName(String(ctx.active_faith.call()))
+	if fid == &"" or ctx.items == null:
+		return
+	for c in [ctx.board, ctx.storage]:
+		var inst := Blessings.best_candidate(c, ctx.items, fid)
+		if inst != null:
+			var was := Names.of(inst.def)
+			var v := Blessings.bless_instance(inst, ctx.items, fid)
+			if v != null:
+				ctx.log.append("「%s」受了赐福，成了「%s」" % [was, Names.of(v)])
+				if c != null and c.has_signal("changed"):
+					c.changed.emit()
+			return
+
+
+func describe() -> String:
+	return "赐福一件（%s）" % ("激活的信仰" if faith == &"" else String(faith))

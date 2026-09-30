@@ -32,6 +32,8 @@ var found: Array[StringName] = []
 var haul_box: GridInventory = null
 var encounter: Dictionary = {}
 var active: bool = true
+## 095：翻到的东西按概率换成赐福版 `func(ids) -> ids`（NodeEvents 接）
+var substitute: Callable = Callable()
 
 
 func _init(p_node: MapNode, p_rules: SearchRules, p_items: ItemDatabase, p_rng: RandomNumberGenerator, p_depth: float = 0.0) -> void:
@@ -104,6 +106,8 @@ func search() -> Dictionary:
 		got = _scripted_finds(k)
 		if got.is_empty():
 			got = draw_items(rules, items, depth, node.danger if node != null else 0, rng)
+			if substitute.is_valid():
+				got = substitute.call(got)
 		found.append_array(got)
 		var packed := LootPacker.add(haul_box, got, items, _haul_size().y)
 		if packed["board"] != haul_box:

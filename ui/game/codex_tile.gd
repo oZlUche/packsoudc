@@ -7,6 +7,8 @@ extends Control
 
 signal hovered(tile: CodexTile)
 signal unhovered(tile: CodexTile)
+## 095：左键点了（有异体的格子弹出异体列表）
+signal pressed(tile: CodexTile)
 
 const SIZE := Vector2(96, 112)
 const PAD := 8.0
@@ -18,6 +20,14 @@ var def: ItemDef = null
 var lit: bool = false
 var count: int = 0
 var label_font: Font
+## 095：这一格的全部异体（原件 + 各神的赐福版，原件在前）；只有一个 = 没有异体
+var variants: Array[ItemDef] = []
+## 各异体点亮没有（与 variants 对齐）
+var variant_lit: Array[bool] = []
+## 各异体的累计件数
+var variant_counts: Array[int] = []
+## 叠影每层的错位
+const STACK_OFFSET := Vector2(5, -5)
 
 
 func _init(p_def: ItemDef = null, p_lit: bool = false, p_count: int = 0, p_font: Font = null) -> void:
@@ -30,9 +40,35 @@ func _init(p_def: ItemDef = null, p_lit: bool = false, p_count: int = 0, p_font:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	mouse_entered.connect(func(): hovered.emit(self))
 	mouse_exited.connect(func(): unhovered.emit(self))
+	gui_input.connect(func(e: InputEvent):
+		if e is InputEventMouseButton and (e as InputEventMouseButton).pressed and (e as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			pressed.emit(self))
+
+
+## 095：有几个异体（原件不算）
+func variant_count() -> int:
+	return maxi(0, variants.size() - 1)
+
+
+## 095：异体里点亮了几个（含原件）
+func variants_lit() -> int:
+	var n := 0
+	for v in variant_lit:
+		if v:
+			n += 1
+	return n
 
 
 func _draw() -> void:
+	# 095：有异体的格子画成一叠 —— 后面错位垫两层，各按那位神的赐福版的稀有度描边
+	if variant_count() > 0:
+		var layers := mini(variant_count(), 2)
+		for i in range(layers, 0, -1):
+			var off := STACK_OFFSET * float(i)
+			var vdef: ItemDef = variants[mini(i, variants.size() - 1)]
+			var on := variant_lit[mini(i, variant_lit.size() - 1)] if not variant_lit.is_empty() else false
+			draw_rect(Rect2(off, size), UiPalette.PANEL.darkened(0.15))
+			draw_rect(Rect2(off, size), (ItemPainter.rarity_color(vdef).lightened(0.1) if on else COLOR_DARK_EDGE), false, 1.0)
 	draw_rect(Rect2(Vector2.ZERO, size), UiPalette.PANEL)
 	draw_rect(Rect2(Vector2.ZERO, size), UiPalette.LINE, false, 1.0)
 	if def == null:
@@ -52,6 +88,12 @@ func _draw() -> void:
 	var name := Names.of(def) if lit else Names.of(def)
 	var color := UiPalette.FG if lit else Color("4a515e")
 	draw_string(font, Vector2(PAD, size.y - PAD), name, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - PAD * 2), 12, color)
+	# 095：异体角标「1/3」（点亮几个 / 共几个）
+	if variant_count() > 0:
+		var vt := "%d/%d" % [variants_lit(), variants.size()]
+		var vw := font.get_string_size(vt, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 8
+		draw_rect(Rect2(4, 4, vw, 16), Color("6f9fe0"))
+		draw_string(font, Vector2(8, 16), vt, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("101216"))
 	# 累计件数
 	if lit and count > 1:
 		var text := "×%d" % count

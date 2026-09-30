@@ -40,7 +40,7 @@ const TAG_NAMES := {
 	"weapon": "武器", "melee": "近战", "ranged": "远程", "gun": "枪械", "gear": "防具", "armor": "护甲", "shield": "盾", "heavy": "重型",
 	"consumable": "消耗品", "tool": "工具", "part": "零件", "material": "材料", "ammo": "弹药", "food": "食物", "nature": "自然",
 	"bone": "骨制品", "flesh": "血肉", "metal": "金属", "fire": "火焰", "gem": "宝石", "faith": "信仰", "sigil": "符号", "blessed": "赐福",
-	"treasure": "珍宝", "relic": "遗物", "sealed": "封印", "poison": "毒", "bleed": "流血", "imperial": "帝国", "barbarian": "蛮族",
+	"treasure": "珍宝", "relic": "遗物", "faith_anchor": "信物", "sealed": "封印", "poison": "毒", "bleed": "流血", "imperial": "帝国", "barbarian": "蛮族",
 }
 ## 伤害类型 → 中文
 const DAMAGE_TYPE_NAMES := {"physical": "物理", "fire": "火焰", "poison": "毒", "bleed": "流血", "reflect": "反射", "drain": "流失"}

@@ -41,6 +41,9 @@ var safe_open: Callable = Callable()
 ## 093：神坛（休息处的「神坛」选项）：开了；激活信仰第几阶（RunState.active_faith_tier）
 signal altar_opened(node: MapNode)
 var faith_tier: Callable = Callable()
+## 095：激活信仰 id（RunState.active_faith_id）；战利品 / 搜索的赐福替代 `func(ids, chance_idle, chance_active) -> ids`（RunState.bless_ids）
+var active_faith_id: Callable = Callable()
+var bless_substitute: Callable = Callable()
 signal event_resolved(node: MapNode, outcome: StringName, detail: Dictionary)
 ## 到了撤离点。fee > 0 = 付费的（PaidExtracts），撤离动作（M6）先 pay_extract_fee
 signal extract_reached(node: MapNode, fee: int)
@@ -397,6 +400,7 @@ func _event_ctx(node: MapNode) -> EventContext:
 	ctx.has_map_buff = has_map_buff
 	ctx.has_buff_tag = has_buff_tag
 	ctx.faith_tier = faith_tier
+	ctx.active_faith = active_faith_id
 	return ctx
 #endregion
 
@@ -515,6 +519,7 @@ func smite_pending_battle() -> bool:
 	var ctx := _loot_ctx()
 	var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core") \
 		if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
+	_bless_rolled(node, rolled)
 	loot_ready.emit(node, DropResolver.corpse_of(content, rolled, items))
 	if wallet != null and economy != null:
 		var amount := economy.battle_reward(int(content.get("strength", 0)), float(_depths.get(node.id, 0.0)), difficulty)
@@ -524,6 +529,16 @@ func smite_pending_battle() -> bool:
 		boss_defeated.emit(node)
 	_after_battle(node, kind, true)
 	return true
+
+
+## 095：掉落定了之后按掉落规则的概率把普通道具换成赐福版（激活了信仰只换那位神的）
+func _bless_rolled(node: MapNode, rolled: Dictionary) -> void:
+	if not bless_substitute.is_valid() or drop_rule == null:
+		return
+	var dropped: Array[StringName] = rolled.get("dropped", [] as Array[StringName])
+	if dropped.is_empty():
+		return
+	rolled["dropped"] = bless_substitute.call(dropped, drop_rule.bless_chance, drop_rule.bless_chance_active, _rng_for(node, "bless"))
 
 
 ## 打一场（猎手系统也走这条路：给它自己的掉落上下文与自己的战败代价）。返回赢没赢
@@ -559,6 +574,7 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 		# 087：核心点的 BOSS 保底一件金色（DropRule.boss_rarity）
 		var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core") \
 			if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
+		_bless_rolled(node, rolled)
 		loot_ready.emit(node, DropResolver.corpse_of(content, rolled, items))
 		if wallet != null and economy != null:
 			var amount := economy.battle_reward(int(content.get("strength", 0)), float(_depths.get(node.id, 0.0)), difficulty)
@@ -594,6 +610,10 @@ func _open_search(node: MapNode, auto: bool = false) -> void:
 		session = SearchSession.new(node, rules.search, items, _rng_for(node, "search"), float(_depths.get(node.id, 0.0)))
 		session.extra_searches = _run_ctx().extra_searches
 		var s := session
+		var sr := rules.search
+		var bless_rng := _rng_for(node, "bless_search")
+		session.substitute = func(ids: Array[StringName]) -> Array[StringName]:
+			return bless_substitute.call(ids, sr.bless_chance, sr.bless_chance_active, bless_rng) if bless_substitute.is_valid() else ids     # 095
 		session.encounter_builder = func() -> Dictionary:
 			# 083：节点内容里写死的遭遇（教程点）优先；没有才按池现造
 			var fixed = node.content.get("encounter", null)

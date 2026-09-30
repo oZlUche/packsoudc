@@ -52,6 +52,9 @@
   ],
   "perks": [
     {
+      "type": "altar_bless"
+    },
+    {
       "type": "low_hp_empower"
     },
     {
@@ -68,6 +71,37 @@
     {
       "type": "undying",
       "tier": 4
+    }
+  ],
+  "blessings": [
+    {
+      "tags": [
+        "weapon"
+      ],
+      "name_prefix": "蛮神赐福的",
+      "name_prefix_en": "Brute-blessed ",
+      "faith_bonuses": [
+        {
+          "mode": "active",
+          "mods": [
+            {
+              "mult_category": "EMPOWER",
+              "mult_percent": 10
+            }
+          ],
+          "note": "伤害 +10%"
+        },
+        {
+          "mode": "scaled",
+          "max_stacks": 6,
+          "mods": [
+            {
+              "flat": 1.0
+            }
+          ],
+          "note": "每 50 信力伤害 +1（最多 6 份）"
+        }
+      ]
     }
   ]
 }

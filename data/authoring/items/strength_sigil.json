@@ -12,7 +12,8 @@
     "faith",
     "faith:brute",
     "part",
-    "sigil"
+    "sigil",
+    "faith_anchor"
   ],
   "faith_bonuses": [
     {

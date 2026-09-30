@@ -75,6 +75,6 @@ display_names = {
 }
 shape = SubResource("Resource_nq87m")
 rarity = 2
-tags = Array[StringName]([&"faith", &"faith:brute", &"part", &"sigil"])
+tags = Array[StringName]([&"faith", &"faith:brute", &"part", &"sigil", &"faith_anchor"])
 faith_bonuses = Array[ExtResource("4_wha2m")]([SubResource("Resource_8ybva")])
 adjacency = SubResource("Resource_juc65")

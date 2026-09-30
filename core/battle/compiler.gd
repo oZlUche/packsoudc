@@ -33,7 +33,7 @@ static func compile(
 	board: GridInventory, baseline: CombatantBaseline = null,
 	set_mods: Array[StatModifier] = [] as Array[StatModifier],
 	set_rules: Array[AbilityRule] = [] as Array[AbilityRule],
-	faith_tiers: Dictionary = {}
+	faith_tiers: Dictionary = {}, faith_points: Dictionary = {}
 ) -> CombatantSpec:
 	var base := baseline if baseline != null else CombatantBaseline.default_baseline()
 	var spec := CombatantSpec.new()
@@ -87,13 +87,17 @@ static func compile(
 		if not def.has_faith() or def.faith_bonuses.is_empty() or dormant.has(uid):
 			continue
 		var tier := int(faith_tiers.get(def.faith_tag(), 0))
+		var pts := int(faith_points.get(def.faith_tag(), 0))
 		var extra: Array[AbilityRule] = []
 		for b in def.faith_bonuses:
 			var bonus := b as FaithBonus
-			if bonus == null or bonus.tier > tier:
+			if bonus == null:
+				continue
+			var times := bonus.times_for(tier, pts)     # 095：按阶 / 激活即 / 按信力几份
+			if times <= 0:
 				continue
 			for mod in bonus.mods:
-				(mod as StatModifier).apply_to(stats[uid], 1)
+				(mod as StatModifier).apply_to(stats[uid], times)
 			extra.append_array(bonus.rules)
 		if not extra.is_empty():
 			bonus_rules[uid] = extra

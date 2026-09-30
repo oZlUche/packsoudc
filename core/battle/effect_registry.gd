@@ -113,6 +113,7 @@ const FAITH_PERKS := {
 	&"gift_on_enter": "res://core/run/faith/perks/gift_on_enter_perk.gd",
 	&"draw_is_win": "res://core/run/faith/perks/draw_is_win_perk.gd",
 	&"undying": "res://core/run/faith/perks/undying_perk.gd",
+	&"altar_bless": "res://core/run/faith/perks/altar_bless_perk.gd",
 }
 
 ## 事件层（063）：选项的条件（只读）与后果（做一件事或立一面旗）
@@ -154,6 +155,7 @@ const EVENT_OUTCOMES := {
 	&"set_flag": "res://core/run/events/outcomes/set_flag.gd",
 	&"open_altar": "res://core/run/events/outcomes/open_altar.gd",
 	&"next_event_random": "res://core/run/events/outcomes/next_event_random.gd",
+	&"bless_item": "res://core/run/events/outcomes/bless_item.gd",
 }
 
 ## 一局的机制（069）：难度清单里开的那些

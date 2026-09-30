@@ -26,6 +26,9 @@ extends Resource
 
 ## 不会搜出来的道具标签（珍宝只从敌人身上掉，6.1）
 @export var exclude_tags: Array[StringName] = [&"treasure"]
+## 095：翻到的普通道具换成赐福版的概率（没激活随机一位神 / 激活了只换那位神的）
+@export var bless_chance: float = 0.05
+@export var bless_chance_active: float = 0.2
 
 ## 搜出来的东西也算搜出来的包？默认不算 —— 包是玩家自己带的
 @export var include_bags: bool = false

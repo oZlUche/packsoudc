@@ -39,6 +39,9 @@ const SEALED := &"sealed"
 const KEEPSAKE := &"keepsake"
 ## 信仰（8-4，报告 081）：信仰道具带 `faith`，再带一个信仰对象标签 `faith:<id>`（[FaithDef.TAG_PREFIX]）。激活规则见 [FaithState]
 const FAITH := &"faith"
+## 095：赐福版（从普通道具派生的信仰道具）；信物（护符 / 符号 / 遗物）—— 只有信物能激活信仰
+const BLESSED := &"blessed"
+const ANCHOR := &"faith_anchor"
 
 ## 准入标签。容器级与包体级的准入都拿它比对。
 @export var tags: Array[StringName] = []
@@ -54,6 +57,16 @@ func is_keepsake() -> bool:
 
 func has_faith() -> bool:
 	return tags.has(FAITH)
+
+
+## 095：是派生出来的赐福版（手写的「赐福的长弓」不算：它有自己的文件与功能）
+func is_blessed() -> bool:
+	return blessed_of != &""
+
+
+## 能激活信仰的信物（095）：带 faith_anchor
+func is_anchor() -> bool:
+	return has_faith() and tags.has(ANCHOR)
 
 
 ## 信仰对象标签（`faith:violence`）；没有返回空。带 `faith` 却没有对象标签也返回空 —— 导入器不许这种道具进来
@@ -91,6 +104,8 @@ func faith_tag() -> StringName:
 ## 信力（报告 082）：信仰道具在信力过了第 n 阶之后多出来的功能（属性修饰、规则），只对带信仰标签的道具有意义。
 ## 编译器按「信仰 → 现在第几阶」并入（[BattleCompiler.compile] 的 faith_tiers）
 @export var faith_bonuses: Array[FaithBonus] = []
+## 095：赐福版从哪件派生（空 = 不是派生的）
+@export var blessed_of: StringName = &""
 ## 087（作者定）：信仰道具**休眠**（别的信仰激活着）时还保不保留自己的战斗定义（`combat`：盾的固定减伤、武器本身的攻击力……
 ## 这些是「通用效果」）。保留的只丢信力加成、邻接与套装；不保留 = 彻底失效（护符这类只靠信仰起作用的东西写 false）。
 ## 没有 combat 的道具这个开关无意义（本来就没有通用效果）

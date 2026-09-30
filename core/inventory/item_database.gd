@@ -35,6 +35,12 @@ func gated_ids() -> Array:
 ## 扫描目录加载全部定义，返回成功登记的条数。
 ##
 ## 导出后 .tres 可能被转成 .res 或带上 .remap 后缀，这里一并处理。
+## 095：加载完按信仰的赐福模板派生赐福版（测试想要干净的库可以关）
+static var derive_blessings: bool = true
+const BlessingsScript := preload("res://core/run/faith/blessings.gd")
+const FaithDefScript := preload("res://core/run/faith/faith_def.gd")
+
+
 func load_dir(dir_path: String = DEFAULT_DIR) -> int:
 	var dir := DirAccess.open(dir_path)
 	if dir == null:
@@ -53,6 +59,8 @@ func load_dir(dir_path: String = DEFAULT_DIR) -> int:
 				count += 1
 		else:
 			push_warning("ItemDatabase: %s 不是 ItemDef，已跳过" % name)
+	if derive_blessings:
+		count += BlessingsScript.derive_all(self, FaithDefScript.load_all())     # 095：按信仰的赐福模板派生赐福版
 	return count
 
 
@@ -83,11 +91,35 @@ func ids(include_locked: bool = false) -> Array:
 	var out: Array = []
 	for id in _defs:
 		var d := _defs[id] as ItemDef
-		if d.is_sealed() or d.is_keepsake():     # 088：特殊道具也不能生成
+		if d.is_sealed() or d.is_keepsake() or d.is_blessed():     # 088：特殊道具也不能生成；095：赐福版只从赐福来
 			continue
 		if not include_locked and _locked.has(id):
 			continue
 		out.append(id)
+	return out
+
+
+## 095：派生出来的赐福版（不进生成池，只从赐福来）
+func blessed_ids() -> Array:
+	var out: Array = []
+	for id in _defs:
+		if (_defs[id] as ItemDef).is_blessed():
+			out.append(id)
+	return out
+
+
+## 095：这件的全部异体（原件 + 各神的赐福版），按 id 升序；传赐福版进来也认原件
+func variants_of(base_id: StringName) -> Array:
+	var root := base_id
+	var d := get_def(base_id)
+	if d != null and d.is_blessed():
+		root = d.blessed_of
+	var out: Array = []
+	for id in _defs:
+		var def := _defs[id] as ItemDef
+		if id == root or (def.is_blessed() and def.blessed_of == root):
+			out.append(id)
+	out.sort()
 	return out
 
 

@@ -47,6 +47,8 @@ var proceed: bool = false
 var open_altar: bool = false
 ## 093：激活信仰现在第几阶（-1 = 没激活）；RunState 接
 var faith_tier: Callable = Callable()
+## 095：激活信仰的 id（空 = 没激活）
+var active_faith: Callable = Callable()
 ## 085：从这个撤离点撤离（事件对话里的「撤离」选项）
 var extract: bool = false
 ## 8-3：这个点从此算这种类型（空 = 不改）

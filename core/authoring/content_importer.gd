@@ -248,8 +248,12 @@ static func _validate_item_faith(def: ItemDef, ctx: Context, report: ImportRepor
 		var b := def.faith_bonuses[i] as FaithBonus
 		if b == null:
 			report.error("faith_bonuses[%d]" % i, "空的加成")
-		elif b.tier < 1:
+		elif not ["tier", "active", "scaled"].has(b.mode):
+			report.error("faith_bonuses[%d].mode" % i, "生效方式只能是 tier / active / scaled")
+		elif b.mode == "tier" and b.tier < 1:
 			report.error("faith_bonuses[%d].tier" % i, "阶从 1 起")
+		elif b.mode == "scaled" and b.per_points < 1:
+			report.error("faith_bonuses[%d].per_points" % i, "每份至少 1 信力")
 		elif b.mods.is_empty() and b.rules.is_empty():
 			report.error("faith_bonuses[%d]" % i, "加成得有修饰或规则")
 

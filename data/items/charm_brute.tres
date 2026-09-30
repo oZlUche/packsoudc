@@ -19,4 +19,4 @@ display_names = {
 shape = SubResource("Resource_6wwco")
 rarity = 3
 value = 200
-tags = Array[StringName]([&"treasure", &"faith", &"faith:brute", &"bone"])
+tags = Array[StringName]([&"treasure", &"faith", &"faith:brute", &"bone", &"faith_anchor"])

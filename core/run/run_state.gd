@@ -78,6 +78,8 @@ var faith_rituals: Dictionary = {}
 var faith_stat_bonus: Dictionary = {}
 ## 093：神坛上献祭 / 特殊操作了（给日志与屏）
 signal altar_changed(text: String)
+## 095：一件东西受了赐福（包内转化 / 神坛 / 事件）
+signal item_blessed(inst: ItemInstance, faith_id: StringName)
 ## 087（作者定）：暂存区按点独立 —— 离开时暂存区里的东西留在那个点（`node_id → [ItemInstance]`），回到那个点又回到暂存区。跟存档。
 ## 撤离仍不带走暂存区里的东西
 var node_storages: Dictionary = {}
@@ -255,6 +257,7 @@ func step_to(id: int) -> bool:
 		if hunters != null:
 			hunters.on_player_step()     # 猎手的回合在这一步的事都发生之后（071）
 		skills.on_step()     # 冷却与躲避在猎手的回合之后减：躲 3 步就是 3 个猎手回合够不着（082）
+		_bless_step()     # 095：激活信仰时包里的东西有小概率受赐福
 		_check_countdown()     # 092：倒计时归零 = 行动失败
 	return ok
 
@@ -626,7 +629,7 @@ func compile_player() -> CombatantSpec:
 	var rules: Array[AbilityRule] = tracker.combat_rules() if tracker != null else [] as Array[AbilityRule]
 	mods.append_array(RunBuffs.combat_mods(active))
 	rules.append_array(RunBuffs.combat_rules(active))
-	var spec := BattleCompiler.compile(board, effective_baseline(), mods, rules, faith_power.tiers() if faith_power != null else {})
+	var spec := BattleCompiler.compile(board, effective_baseline(), mods, rules, faith_power.tiers() if faith_power != null else {}, faith_power.points_by_tag() if faith_power != null else {})
 	for p in faith_perks():     # 093：信仰级效果在编译好的单位上做手脚（顺序 = 文件里的顺序）
 		(p as FaithPerk).modify_spec(spec, board, self)
 	return spec
@@ -689,6 +692,35 @@ func faith_perk(type_name: StringName) -> FaithPerk:
 		if ContentSchema.registry_name_of(p) == type_name:
 			return p
 	return null
+
+
+## 095：战利品 / 搜索翻到的普通道具按概率换成赐福版（激活了信仰只换那位神的，没激活随机一位有赐福版的神）
+func bless_ids(ids: Array[StringName], chance_idle: float, chance_active: float, rng: RandomNumberGenerator) -> Array[StringName]:
+	return Blessings.substitute(ids, items, active_faith_id(), faith_defs.keys(), chance_idle, chance_active, rng)
+
+
+## 095：走一步之后：激活了信仰，棋盘上每件能被赐福的道具独立掷一次（convert_chance + 每级 convert_per_tier）变成那位神的赐福版
+func _bless_step() -> void:
+	var def := active_faith()
+	if def == null or board == null or items == null:
+		return
+	var chance := def.convert_chance + def.convert_per_tier * float(maxi(0, active_faith_tier()))
+	if chance <= 0.0:
+		return
+	var steps := travel.clock.total if travel != null and travel.clock != null else 0
+	for raw in board.items().duplicate():
+		var inst := raw as ItemInstance
+		if inst == null or Blessings.variant_of(items, inst.def.id, def.id) == null:
+			continue
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash("%d:bless:%d:%d" % [run_seed, steps, inst.uid])
+		if rng.randf() < chance:
+			var was := Names.of(inst.def)
+			var v := Blessings.bless_instance(inst, items, def.id)
+			if v != null:
+				board.changed.emit()
+				item_blessed.emit(inst, def.id)
+				altar_changed.emit("%s的目光落在「%s」上：它成了「%s」" % [Names.of(def), was, Names.of(v)])
 
 
 ## 神坛可用：站在开着神坛的点上、这一次还没用过特殊操作、有激活的信仰
@@ -1111,6 +1143,8 @@ func _wire_events() -> void:
 	events.request_extract = try_extract     # 085：撤离点的对话里选「撤离」
 	events.safe_open = safe_open     # 092：锁上的保险箱不再开
 	events.faith_tier = active_faith_tier     # 093：事件条件 faith_active
+	events.active_faith_id = active_faith_id
+	events.bless_substitute = bless_ids     # 095：战利品 / 搜索的赐福替代
 	events.altar_opened.connect(func(node: MapNode): altar_node = node.id)
 	events.waited.connect(func(_n: MapNode, _actions: int):
 		tick_map_buffs()

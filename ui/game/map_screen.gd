@@ -464,6 +464,7 @@ func _adopt() -> void:
 	_run.altar_changed.connect(func(text: String):
 		_note("[color=#f0ad4e]　" + text + "[/color]")
 		_refresh_hud())     # 093
+	_run.item_blessed.connect(func(_i: ItemInstance, _f: StringName): _refresh_hud())     # 095
 	_rebuild_routes()
 	_after_move()
 	if _run.phase == RunState.Phase.PICK_SPAWN:

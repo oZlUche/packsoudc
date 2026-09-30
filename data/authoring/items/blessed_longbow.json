@@ -17,7 +17,8 @@
     "weapon",
     "ranged",
     "rapid",
-    "blessed"
+    "blessed",
+    "faith_anchor"
   ],
   "faith_bonuses": [
     {

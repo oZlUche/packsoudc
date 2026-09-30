@@ -47,6 +47,9 @@
   ],
   "perks": [
     {
+      "type": "altar_bless"
+    },
+    {
       "type": "stat_mod",
       "mods": [
         {
@@ -71,6 +74,41 @@
     {
       "type": "draw_is_win",
       "tier": 5
+    }
+  ],
+  "blessings": [
+    {
+      "tags": [
+        "gear",
+        "armor",
+        "shield",
+        "nature"
+      ],
+      "name_prefix": "自然之神赐福的",
+      "name_prefix_en": "Nature-blessed ",
+      "faith_bonuses": [
+        {
+          "mode": "active",
+          "mods": [
+            {
+              "stat": "max_hp",
+              "flat": 3.0
+            }
+          ],
+          "note": "生命 +3"
+        },
+        {
+          "mode": "scaled",
+          "max_stacks": 5,
+          "mods": [
+            {
+              "stat": "armor",
+              "flat": 1.0
+            }
+          ],
+          "note": "每 50 信力护甲 +1（最多 5 份）"
+        }
+      ]
     }
   ]
 }

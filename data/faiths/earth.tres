@@ -1,57 +1,94 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_egpao"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/item_triggered_deed.gd" id="2_vdpjj"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/enter_node_deed.gd" id="3_poydk"]
-[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="4_bwg0x"]
-[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="5_yrdk8"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="6_texte"]
-[ext_resource type="Script" path="res://core/run/faith/perks/stat_mod_perk.gd" id="7_2gic1"]
-[ext_resource type="Script" path="res://core/run/faith/perks/altar_train_board_perk.gd" id="8_gfojj"]
-[ext_resource type="Script" path="res://core/run/faith/perks/gift_on_enter_perk.gd" id="9_81xyc"]
-[ext_resource type="Script" path="res://core/run/faith/perks/altar_reshape_node_perk.gd" id="10_bd1g6"]
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="11_5xycn"]
+[ext_resource type="Script" path="res://core/run/faith/blessing.gd" id="1_yrdk8"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="2_texte"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_2gic1"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_gfojj"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="5_81xyc"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/item_triggered_deed.gd" id="6_bd1g6"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/enter_node_deed.gd" id="7_5xycn"]
+[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="8_rcova"]
+[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="9_xhs8b"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_bless_perk.gd" id="10_t8ftl"]
+[ext_resource type="Script" path="res://core/run/faith/perks/stat_mod_perk.gd" id="11_p841y"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_train_board_perk.gd" id="12_kac8c"]
+[ext_resource type="Script" path="res://core/run/faith/perks/gift_on_enter_perk.gd" id="13_da2uv"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_reshape_node_perk.gd" id="14_cb8j2"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="15_knk1t"]
 
-[sub_resource type="Resource" id="Resource_rcova"]
-script = ExtResource("2_vdpjj")
+[sub_resource type="Resource" id="Resource_rexqm"]
+script = ExtResource("3_2gic1")
+stat = &"max_stamina"
+flat = 5.0
+
+[sub_resource type="Resource" id="Resource_q5jy6"]
+script = ExtResource("2_texte")
+mode = "active"
+mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_rexqm")])
+note = "耐力上限 +5"
+
+[sub_resource type="Resource" id="Resource_bpi0t"]
+script = ExtResource("3_2gic1")
+stat = &"armor"
+flat = 1.0
+
+[sub_resource type="Resource" id="Resource_2fhbu"]
+script = ExtResource("2_texte")
+mode = "scaled"
+max_stacks = 5
+mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_bpi0t")])
+note = "每 50 信力护甲 +1（最多 5 份）"
+
+[sub_resource type="Resource" id="Resource_tr00d"]
+script = ExtResource("1_yrdk8")
+min_cells = 5
+name_prefix = "大地之神赐福的"
+name_prefix_en = "Earth-blessed "
+faith_bonuses = Array[ExtResource("2_texte")]([SubResource("Resource_q5jy6"), SubResource("Resource_2fhbu")])
+
+[sub_resource type="Resource" id="Resource_uajvw"]
+script = ExtResource("6_bd1g6")
 min_cells = 5
 cap = 40
 amount = 8
 
-[sub_resource type="Resource" id="Resource_xhs8b"]
-script = ExtResource("3_poydk")
+[sub_resource type="Resource" id="Resource_eoqlt"]
+script = ExtResource("7_5xycn")
 
-[sub_resource type="Resource" id="Resource_t8ftl"]
-script = ExtResource("4_bwg0x")
+[sub_resource type="Resource" id="Resource_iqm5g"]
+script = ExtResource("8_rcova")
 min_cells = 9
 multiplier = 1.0
 per_cell = true
 note = "大及以上体积（稀有度 × 格子数）"
 
-[sub_resource type="Resource" id="Resource_p841y"]
-script = ExtResource("6_texte")
+[sub_resource type="Resource" id="Resource_72j3p"]
+script = ExtResource("10_t8ftl")
+
+[sub_resource type="Resource" id="Resource_udmsc"]
+script = ExtResource("3_2gic1")
 stat = &"max_stamina"
 flat = 20.0
 
-[sub_resource type="Resource" id="Resource_kac8c"]
-script = ExtResource("7_2gic1")
-mods = Array[ExtResource("6_texte")]([SubResource("Resource_p841y")])
+[sub_resource type="Resource" id="Resource_mgcyf"]
+script = ExtResource("11_p841y")
+mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_udmsc")])
 note = "开战时耐力上限 +20"
 
-[sub_resource type="Resource" id="Resource_da2uv"]
-script = ExtResource("8_gfojj")
+[sub_resource type="Resource" id="Resource_7l3a5"]
+script = ExtResource("12_kac8c")
 tier = 2
 
-[sub_resource type="Resource" id="Resource_cb8j2"]
-script = ExtResource("9_81xyc")
+[sub_resource type="Resource" id="Resource_leima"]
+script = ExtResource("13_da2uv")
 tier = 3
 
-[sub_resource type="Resource" id="Resource_knk1t"]
-script = ExtResource("10_bd1g6")
+[sub_resource type="Resource" id="Resource_pnbk5"]
+script = ExtResource("14_cb8j2")
 tier = 4
 
 [resource]
-script = ExtResource("11_5xycn")
+script = ExtResource("15_knk1t")
 id = &"earth"
 display_name = "大地之神"
 display_names = {
@@ -60,6 +97,7 @@ display_names = {
 god = "大地之神（结构、秩序、体积、空间）"
 description = "信力：触发中及以上体积道具的效果、进入空白节点（岔路 / 用过的点）。献祭：大及以上体积的道具（稀有度 × 格子数）。"
 thresholds = Array[int]([25, 100, 250, 500])
-deeds = Array[ExtResource("1_egpao")]([SubResource("Resource_rcova"), SubResource("Resource_xhs8b")])
-offerings = Array[ExtResource("4_bwg0x")]([SubResource("Resource_t8ftl")])
-perks = Array[ExtResource("5_yrdk8")]([SubResource("Resource_kac8c"), SubResource("Resource_da2uv"), SubResource("Resource_cb8j2"), SubResource("Resource_knk1t")])
+deeds = Array[ExtResource("5_81xyc")]([SubResource("Resource_uajvw"), SubResource("Resource_eoqlt")])
+offerings = Array[ExtResource("8_rcova")]([SubResource("Resource_iqm5g")])
+perks = Array[ExtResource("9_xhs8b")]([SubResource("Resource_72j3p"), SubResource("Resource_mgcyf"), SubResource("Resource_7l3a5"), SubResource("Resource_leima"), SubResource("Resource_pnbk5")])
+blessings = Array[ExtResource("1_yrdk8")]([SubResource("Resource_tr00d")])

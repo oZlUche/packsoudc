@@ -18,6 +18,9 @@ var _tab_btns: Dictionary = {}
 var _tab: String = ""
 ## 图鉴页的缩略图与它的悬浮窗
 var _codex_tiles: Array[CodexTile] = []
+## 095：异体弹窗
+var _variants_popup: Control = null
+var _variant_tiles: Array[CodexTile] = []
 var _codex_tip: HoverTip = null
 ## 091：成就页的筛选（"all" / "done" / "todo"）、列表与现在列着的行
 var _ach_filter: String = "all"
@@ -348,11 +351,15 @@ func _build_codex(root: Control) -> Control:
 		var da := flow.items.get_def(a)
 		var db := flow.items.get_def(b)
 		return da.rarity < db.rarity if da.rarity != db.rarity else String(a) < String(b))
+	# 095（作者定）：派生的赐福版并进原件那一格（ids() 本来就不列赐福版），格子叠影 + 角标，点开弹异体列表
 	var lit_n := 0
+	var total_n := 0
 	for id in ids:
-		if m.codex_lit(id):
-			lit_n += 1
-	page.add_child(_label("图鉴　带出过的点亮（%d / %d），右上角是累计件数；停在一格上看属性" % [lit_n, ids.size()], 15, UiPalette.DIM))
+		for vid in flow.items.variants_of(id):
+			total_n += 1
+			if m.codex_lit(vid):
+				lit_n += 1
+	page.add_child(_label("图鉴　带出过的点亮（%d / %d，含赐福版），右上角是累计件数；停在一格上看属性，叠着的格子点开看异体" % [lit_n, total_n], 15, UiPalette.DIM))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.custom_minimum_size.y = 300
@@ -367,9 +374,7 @@ func _build_codex(root: Control) -> Control:
 	_codex_tiles.clear()
 	for id in ids:
 		var def := flow.items.get_def(id)
-		var tile := CodexTile.new(def, m.codex_lit(id), m.codex_count(id), font)
-		tile.hovered.connect(_on_tile_hovered)
-		tile.unhovered.connect(func(_t: CodexTile): _codex_tip.hide_tip())
+		var tile := _codex_tile_for(def)
 		grid.add_child(tile)
 		_codex_tiles.append(tile)
 	# 特殊道具（088）：不进背包、不能生成，拿到过的点亮
@@ -391,6 +396,81 @@ func _build_codex(root: Control) -> Control:
 	_codex_tip = HoverTip.new(font)
 	add_child(_codex_tip)
 	return page
+
+
+## 095：一件（含它的异体）的格子：原件在前、各神的赐福版按 id 排；任一点亮格子就亮
+func _codex_tile_for(def: ItemDef) -> CodexTile:
+	var m := flow.meta
+	var variants: Array[ItemDef] = [def]
+	for vid in flow.items.variants_of(def.id):
+		if vid != def.id:
+			variants.append(flow.items.get_def(vid))
+	var any_lit := false
+	var tile := CodexTile.new(def, m.codex_lit(def.id), m.codex_count(def.id), font)
+	for v in variants:
+		var on := m.codex_lit(v.id)
+		any_lit = any_lit or on
+		tile.variant_lit.append(on)
+		tile.variant_counts.append(m.codex_count(v.id))
+	tile.variants = variants
+	tile.lit = any_lit
+	tile.hovered.connect(_on_tile_hovered)
+	tile.unhovered.connect(func(_t: CodexTile): _codex_tip.hide_tip())
+	tile.pressed.connect(func(t: CodexTile): show_variants(t))
+	return tile
+
+
+## 095：点开一格：有异体就弹出列表（原件、蛮神版、日神版……各一小格，点亮的亮着），再点关闭 / 别处关掉
+func show_variants(tile: CodexTile) -> void:
+	close_variants()
+	if tile == null or tile.variant_count() == 0:
+		return
+	var box := _panel(10)
+	box.name = "VariantsPopup"
+	var col := _vbox(6)
+	box.add_child(col)
+	col.add_child(_label("%s　的异体（%d / %d 点亮）" % [Names.of(tile.def), tile.variants_lit(), tile.variants.size()], 14, UiPalette.FG))
+	var row := _hbox(8)
+	col.add_child(row)
+	_variant_tiles.clear()
+	for i in tile.variants.size():
+		var v: ItemDef = tile.variants[i]
+		var vt := CodexTile.new(v, tile.variant_lit[i] if i < tile.variant_lit.size() else false, tile.variant_counts[i] if i < tile.variant_counts.size() else 0, font)
+		vt.hovered.connect(_on_tile_hovered)
+		vt.unhovered.connect(func(_t: CodexTile): _codex_tip.hide_tip())
+		var cell := _vbox(2)
+		cell.add_child(_label(_variant_kind(v), 11, UiPalette.DIM))
+		cell.add_child(vt)
+		row.add_child(cell)
+		_variant_tiles.append(vt)
+	col.add_child(_button("关闭", close_variants, 12, UiPalette.Tier.MINOR))
+	add_child(box)
+	box.position = (tile.global_position + Vector2(0, tile.size.y + 6)).clamp(Vector2.ZERO, get_viewport_rect().size - Vector2(400, 200))
+	_variants_popup = box
+
+
+func close_variants() -> void:
+	if _variants_popup != null:
+		_variants_popup.queue_free()
+		_variants_popup = null
+	_variant_tiles.clear()
+
+
+func variants_open() -> bool:
+	return _variants_popup != null
+
+
+func variant_tiles() -> Array[CodexTile]:
+	return _variant_tiles
+
+
+## 「原件」/「蛮神版」……
+func _variant_kind(def: ItemDef) -> String:
+	if def == null or not def.is_blessed():
+		return "原件"
+	var fid := FaithDef.id_of_tag(def.faith_tag())
+	var fd: FaithDef = flow.faith_defs.get(fid, null) if flow.faith_defs != null else null
+	return "%s版" % (Names.of(fd) if fd != null else String(fid))
 
 
 ## 停在一格上：点亮的开完整的道具说明；没获得的只写名字与「未获得」

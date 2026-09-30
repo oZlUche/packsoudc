@@ -48,6 +48,9 @@
   ],
   "perks": [
     {
+      "type": "altar_bless"
+    },
+    {
       "type": "enchant_weapons"
     },
     {
@@ -69,6 +72,39 @@
         "core": 5
       },
       "tier": 4
+    }
+  ],
+  "blessings": [
+    {
+      "tags": [
+        "metal"
+      ],
+      "name_prefix": "日神赐福的",
+      "name_prefix_en": "Sun-blessed ",
+      "faith_bonuses": [
+        {
+          "mode": "active",
+          "mods": [
+            {
+              "stat": "haste",
+              "mult_category": "HASTE",
+              "mult_percent": 5
+            }
+          ],
+          "note": "急速 +5%"
+        },
+        {
+          "tier": 2,
+          "mods": [
+            {
+              "stat": "stamina_cost",
+              "mult_category": "EMPOWER",
+              "mult_percent": -10
+            }
+          ],
+          "note": "2 级：耐力消耗 −10%"
+        }
+      ]
     }
   ]
 }

@@ -1,63 +1,102 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_dys1e"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/damage_deed.gd" id="2_k7u5t"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/item_cycle_deed.gd" id="3_reinj"]
-[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="4_yq77j"]
-[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="5_vo2x3"]
-[ext_resource type="Script" path="res://core/run/faith/perks/enchant_weapons_perk.gd" id="6_wrt77"]
-[ext_resource type="Script" path="res://core/run/faith/perks/altar_pray_fire_perk.gd" id="7_umxob"]
-[ext_resource type="Script" path="res://core/run/faith/perks/extra_drop_by_node_perk.gd" id="8_vxfes"]
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="9_368f3"]
+[ext_resource type="Script" path="res://core/run/faith/blessing.gd" id="1_wrt77"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="2_umxob"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_vxfes"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_368f3"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="5_d5eql"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/damage_deed.gd" id="6_8yila"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/item_cycle_deed.gd" id="7_l2ro3"]
+[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="8_87kt2"]
+[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="9_sqqvu"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_bless_perk.gd" id="10_fcqfh"]
+[ext_resource type="Script" path="res://core/run/faith/perks/enchant_weapons_perk.gd" id="11_sftoe"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_pray_fire_perk.gd" id="12_0jkdj"]
+[ext_resource type="Script" path="res://core/run/faith/perks/extra_drop_by_node_perk.gd" id="13_mdkyw"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="14_8gk88"]
 
-[sub_resource type="Resource" id="Resource_d5eql"]
-script = ExtResource("2_k7u5t")
+[sub_resource type="Resource" id="Resource_binyk"]
+script = ExtResource("3_vxfes")
+stat = &"haste"
+mult_category = 3
+mult_percent = 5
+
+[sub_resource type="Resource" id="Resource_nxral"]
+script = ExtResource("2_umxob")
+mode = "active"
+mods = Array[ExtResource("3_vxfes")]([SubResource("Resource_binyk")])
+note = "急速 +5%"
+
+[sub_resource type="Resource" id="Resource_t1fft"]
+script = ExtResource("3_vxfes")
+stat = &"stamina_cost"
+mult_category = 0
+mult_percent = -10
+
+[sub_resource type="Resource" id="Resource_r2xcc"]
+script = ExtResource("2_umxob")
+tier = 2
+mods = Array[ExtResource("3_vxfes")]([SubResource("Resource_t1fft")])
+note = "2 级：耐力消耗 −10%"
+
+[sub_resource type="Resource" id="Resource_gdva3"]
+script = ExtResource("1_wrt77")
+tags = Array[StringName]([&"metal"])
+name_prefix = "日神赐福的"
+name_prefix_en = "Sun-blessed "
+faith_bonuses = Array[ExtResource("2_umxob")]([SubResource("Resource_nxral"), SubResource("Resource_r2xcc")])
+
+[sub_resource type="Resource" id="Resource_fmsvn"]
+script = ExtResource("6_8yila")
 damage_type = &"fire"
 count_taken = false
 cap = 40
 
-[sub_resource type="Resource" id="Resource_8yila"]
-script = ExtResource("3_reinj")
+[sub_resource type="Resource" id="Resource_72xeb"]
+script = ExtResource("7_l2ro3")
 cap = 30
 amount = 2
 
-[sub_resource type="Resource" id="Resource_l2ro3"]
-script = ExtResource("4_yq77j")
+[sub_resource type="Resource" id="Resource_shyoi"]
+script = ExtResource("8_87kt2")
 tags = Array[StringName]([&"metal"])
 
-[sub_resource type="Resource" id="Resource_87kt2"]
-script = ExtResource("4_yq77j")
+[sub_resource type="Resource" id="Resource_5bfhi"]
+script = ExtResource("8_87kt2")
 tags = Array[StringName]([&"fire"])
 
-[sub_resource type="Resource" id="Resource_sqqvu"]
-script = ExtResource("4_yq77j")
+[sub_resource type="Resource" id="Resource_vaeam"]
+script = ExtResource("8_87kt2")
 tags = Array[StringName]([&"gem"])
 
-[sub_resource type="Resource" id="Resource_fcqfh"]
-script = ExtResource("4_yq77j")
+[sub_resource type="Resource" id="Resource_65qkw"]
+script = ExtResource("8_87kt2")
 exact_grade = 2
 note = "体积正好为中（稀有度 × 2）"
 
-[sub_resource type="Resource" id="Resource_sftoe"]
-script = ExtResource("6_wrt77")
+[sub_resource type="Resource" id="Resource_kclds"]
+script = ExtResource("10_fcqfh")
 
-[sub_resource type="Resource" id="Resource_0jkdj"]
-script = ExtResource("7_umxob")
+[sub_resource type="Resource" id="Resource_xrgrx"]
+script = ExtResource("11_sftoe")
+
+[sub_resource type="Resource" id="Resource_fi3sj"]
+script = ExtResource("12_0jkdj")
 tier = 2
 
-[sub_resource type="Resource" id="Resource_mdkyw"]
-script = ExtResource("6_wrt77")
+[sub_resource type="Resource" id="Resource_sxuhu"]
+script = ExtResource("11_sftoe")
 count = 0
 stamina_cost_percent = -20
 tier = 3
 note = "开战时所有武器火焰附魔，武器耐力消耗 −20%"
 
-[sub_resource type="Resource" id="Resource_8gk88"]
-script = ExtResource("8_vxfes")
+[sub_resource type="Resource" id="Resource_sxv2w"]
+script = ExtResource("13_mdkyw")
 tier = 4
 
 [resource]
-script = ExtResource("9_368f3")
+script = ExtResource("14_8gk88")
 id = &"sun"
 display_name = "日神"
 display_names = {
@@ -66,6 +105,7 @@ display_names = {
 god = "日神（太阳、火、周期性重复）"
 description = "西方蛮族的信仰（原太阳与火之神）。信力：火焰伤害、道具成功循环。献祭：金属、火焰、宝石、体积正好为中的道具。"
 thresholds = Array[int]([50, 150, 300, 1000])
-deeds = Array[ExtResource("1_dys1e")]([SubResource("Resource_d5eql"), SubResource("Resource_8yila")])
-offerings = Array[ExtResource("4_yq77j")]([SubResource("Resource_l2ro3"), SubResource("Resource_87kt2"), SubResource("Resource_sqqvu"), SubResource("Resource_fcqfh")])
-perks = Array[ExtResource("5_vo2x3")]([SubResource("Resource_sftoe"), SubResource("Resource_0jkdj"), SubResource("Resource_mdkyw"), SubResource("Resource_8gk88")])
+deeds = Array[ExtResource("5_d5eql")]([SubResource("Resource_fmsvn"), SubResource("Resource_72xeb")])
+offerings = Array[ExtResource("8_87kt2")]([SubResource("Resource_shyoi"), SubResource("Resource_5bfhi"), SubResource("Resource_vaeam"), SubResource("Resource_65qkw")])
+perks = Array[ExtResource("9_sqqvu")]([SubResource("Resource_kclds"), SubResource("Resource_xrgrx"), SubResource("Resource_fi3sj"), SubResource("Resource_sxuhu"), SubResource("Resource_sxv2w")])
+blessings = Array[ExtResource("1_wrt77")]([SubResource("Resource_gdva3")])

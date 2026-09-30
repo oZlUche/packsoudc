@@ -14,7 +14,8 @@
     "faith:skill",
     "gear",
     "shield",
-    "blessed"
+    "blessed",
+    "faith_anchor"
   ],
   "faith_bonuses": [
     {

@@ -55,7 +55,7 @@ static func run_faith_files(t: TestCase) -> void:
 	t.eq(brute.thresholds, [30, 100, 200, 400] as Array[int], "蛮神阈值 30 / 100 / 200 / 400（表）")
 	t.eq(brute.deeds.size(), 2, "两条增长方式")
 	t.eq(brute.offerings.size(), 4, "四条献祭规矩")
-	t.eq(brute.perks.size(), 4, "四条效果（含 4 级「不死 10 秒」）")
+	t.eq(brute.perks.size(), 5, "五条效果（含 4 级「不死 10 秒」与 1 级「祈求赐福」）")
 	var db := ItemDatabase.new()
 	db.load_dir()
 	t.eq(db.get_def(&"strength_sigil").faith_tag(), &"faith:brute", "力量的符号归蛮神")
@@ -174,8 +174,11 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	# 2 级：神坛献祭生命上限
 	run.faith_power.add_points(&"brute", 30)
 	t.eq(run.active_faith_tier(), 2, "104 点：Lv.2")
-	var actions := run.altar_actions()
-	t.check(actions.size() == 1 and actions[0] is AltarSacrificeHpPerk, "神坛多一个特殊操作：献祭生命上限")
+	var actions: Array[FaithPerk] = []
+	for p in run.altar_actions():
+		if p is AltarSacrificeHpPerk:
+			actions.append(p)
+	t.check(actions.size() == 1, "神坛多一个特殊操作：献祭生命上限（祈求赐福 1 级就有）")
 	t.check(not run.altar_open(), "没站在开着的神坛上：不能做")
 	run.altar_node = run.travel.current_id     # 假装神坛在脚下开着
 	t.check(run.altar_open(), "神坛开着")
@@ -398,9 +401,13 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 	# 升到 2 级：特殊操作出现；做了就关
 	run.faith_power.add_points(&"brute", 100)
 	screen = game.overlay()
-	t.check(screen != null and screen._action_btns.size() == 1, "Lv.2：特殊操作按钮随等级刷出来（不用重开）")
-	if screen != null and screen._action_btns.size() == 1:
-		var line: String = screen.special(run.altar_actions()[0])
+	t.check(screen != null and screen._action_btns.size() == 2, "Lv.2：特殊操作按钮随等级刷出来（祈求赐福 + 献祭生命上限，不用重开）")
+	if screen != null and screen._action_btns.size() == 2:
+		var hp_perk: FaithPerk = null
+		for p in run.altar_actions():
+			if p is AltarSacrificeHpPerk:
+				hp_perk = p
+		var line: String = screen.special(hp_perk)
 		t.check(line.contains("献祭了"), "做了特殊操作：%s" % line)
 		t.check(flow.screen == GameFlow.Screen.MAP and not run.altar_open(), "神坛关了、回地图")
 		t.check(not flow.can_reopen(), "这个休息处不能再开神坛")

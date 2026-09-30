@@ -58,7 +58,7 @@ static func describe(def: FaithDef, power: FaithPower = null, items: ItemDatabas
 				if b == null:
 					continue
 				var what := b.note if b.note != "" else Glossary.mods_text(b.mods)
-				bits.append("第 %d 阶 %s" % [b.tier, what])
+				bits.append("%s %s" % [b.gate_text(), what])
 			lines.append("　%s%s" % [Names.of(d), ("：" + "；".join(bits)) if not bits.is_empty() else "（没有按阶解锁的功能）"])
 	lines.append("[color=#8b93a1]别的信仰的道具休眠：只留通用效果（盾的减伤、武器的攻击力），护符彻底失效。切换 = 把道具挪到暂存区再挪回[/color]")
 	return "\n".join(lines)

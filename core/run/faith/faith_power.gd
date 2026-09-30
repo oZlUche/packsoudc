@@ -60,6 +60,23 @@ func credit(event: StringName, payload: Dictionary = {}) -> int:
 	return gained
 
 
+## 095：给编译器：信仰对象标签 → 点数
+func points_by_tag() -> Dictionary:
+	var out := {}
+	for key in points:
+		out[StringName(FaithDef.TAG_PREFIX + String(key))] = int(points[key])
+	return out
+
+
+## 095：花信力（神坛的祈求赐福）。不够 false
+func spend_points(id: StringName, n: int) -> bool:
+	if n <= 0 or points_of(id) < n:
+		return false
+	points[String(id)] = points_of(id) - n
+	changed.emit(id, points_of(id), tier_of(id))
+	return true
+
+
 ## 093：直接加点（献祭）。返回加完之后第几阶
 func add_points(id: StringName, n: int) -> int:
 	if n <= 0 or id == &"":

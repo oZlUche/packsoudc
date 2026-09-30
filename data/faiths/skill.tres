@@ -1,23 +1,24 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_qipfl"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/place_item_deed.gd" id="2_tp5cv"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/event_choice_deed.gd" id="3_h8ube"]
-[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="4_4pf53"]
-[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="5_cjt5o"]
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="6_jvie7"]
+[ext_resource type="Script" path="res://core/run/faith/blessing.gd" id="1_tp5cv"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="2_h8ube"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/place_item_deed.gd" id="3_4pf53"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/event_choice_deed.gd" id="4_cjt5o"]
+[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="5_jvie7"]
+[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="6_qj5uc"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="7_euvoa"]
 
-[sub_resource type="Resource" id="Resource_qj5uc"]
-script = ExtResource("2_tp5cv")
+[sub_resource type="Resource" id="Resource_vjyer"]
+script = ExtResource("3_4pf53")
 min_value = 10
 
-[sub_resource type="Resource" id="Resource_euvoa"]
-script = ExtResource("3_h8ube")
+[sub_resource type="Resource" id="Resource_padec"]
+script = ExtResource("4_cjt5o")
 tag = &"offering"
 amount = 2
 
 [resource]
-script = ExtResource("6_jvie7")
+script = ExtResource("7_euvoa")
 id = &"skill"
 display_name = "技巧之神"
 display_names = {
@@ -26,4 +27,4 @@ display_names = {
 god = "技巧之神"
 description = "赐福的盾牌：对手的第一次攻击必定被弹开。信力：置入值钱的东西、献祭。"
 thresholds = Array[int]([3, 8])
-deeds = Array[ExtResource("1_qipfl")]([SubResource("Resource_qj5uc"), SubResource("Resource_euvoa")])
+deeds = Array[ExtResource("2_h8ube")]([SubResource("Resource_vjyer"), SubResource("Resource_padec")])

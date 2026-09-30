@@ -1,21 +1,22 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="1_hsvwg"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/explore_deed.gd" id="2_rs70y"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/earn_money_deed.gd" id="3_mrnmw"]
-[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="4_t1q52"]
-[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="5_t2an8"]
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="6_w22es"]
+[ext_resource type="Script" path="res://core/run/faith/blessing.gd" id="1_rs70y"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="2_mrnmw"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/explore_deed.gd" id="3_t1q52"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/earn_money_deed.gd" id="4_t2an8"]
+[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="5_w22es"]
+[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="6_ijxoi"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="7_k5tdd"]
 
-[sub_resource type="Resource" id="Resource_ijxoi"]
-script = ExtResource("2_rs70y")
+[sub_resource type="Resource" id="Resource_yrrbb"]
+script = ExtResource("3_t1q52")
 
-[sub_resource type="Resource" id="Resource_k5tdd"]
-script = ExtResource("3_mrnmw")
+[sub_resource type="Resource" id="Resource_0k2lu"]
+script = ExtResource("4_t2an8")
 per_amount = 15
 
 [resource]
-script = ExtResource("6_w22es")
+script = ExtResource("7_k5tdd")
 id = &"hunt"
 display_name = "狩猎之神"
 display_names = {
@@ -24,4 +25,4 @@ display_names = {
 god = "狩猎之神"
 description = "赐福的长弓：箭矢自带追踪，对兽类效果更佳。信力：探索与猎物（进账）。"
 thresholds = Array[int]([3, 8])
-deeds = Array[ExtResource("1_hsvwg")]([SubResource("Resource_ijxoi"), SubResource("Resource_k5tdd")])
+deeds = Array[ExtResource("2_mrnmw")]([SubResource("Resource_yrrbb"), SubResource("Resource_0k2lu")])

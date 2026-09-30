@@ -32,7 +32,7 @@ static func _start(items: ItemDatabase) -> RunState:
 static func _item_of_faith(db: ItemDatabase, fid: StringName) -> ItemDef:
 	for id in db.ids():
 		var d := db.get_def(id)
-		if d.has_faith() and FaithDef.id_of_tag(d.faith_tag()) == fid:
+		if d.is_anchor() and FaithDef.id_of_tag(d.faith_tag()) == fid:     # 095：只有信物能激活
 			return d
 	return null
 
