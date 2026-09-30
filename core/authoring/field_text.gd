@@ -36,6 +36,7 @@ const LABELS := {
 	# 章节 / 地图
 	"map_source": "地图来源", "mode": "方式", "preset_path": "预设文件", "generator_id": "生成器", "generator_config": "生成参数",
 	"enemy_pool": "敌人池", "difficulty": "难度", "drop_rule": "掉落规则", "node_rules": "节点规则", "economy_rules": "经济规则",
+	"step_limit": "全局倒计时（行动点）", "closing_extract": "过半关一个撤离点", "safes": "保险箱个数", "safe_size": "保险箱大小",
 	"grants_unlock": "通关给的解锁", "hidden_by_unlock": "拿到此解锁后收起", "characters": "可选角色", "vitality_bonus": "额外体力", "starting_items": "开局道具",
 	"starting_keepsakes": "开局特殊道具", "next_chapter": "下一章", "allow_carry_in": "允许从仓库带入", "auto_spawn": "直接站在出生点", "skip_setup": "不走开局屏",
 	"intro_event": "开场事件", "node_tooltips": "节点浮窗", "tooltip_mode": "浮窗模板", "tooltip_texts": "浮窗文字", "rings": "环", "kind": "种类",

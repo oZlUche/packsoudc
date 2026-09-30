@@ -73,6 +73,11 @@ var hunters: Array = []:
 	set(v):
 		hunters = v
 		queue_redraw()
+## 092：倒计时过半关闭的撤离点：{"id", "closed": bool, "left": 还剩几步关}；空 = 没有
+var closing: Dictionary = {}:
+	set(v):
+		closing = v
+		queue_redraw()
 var reachable: Dictionary = {}:
 	set(v):
 		reachable = v
@@ -404,6 +409,18 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	# 危险等级：右上角几个红点
 	for k in n.danger:
 		draw_circle(p + Vector2(NODE_RADIUS - 2.0 - 6.0 * k, -NODE_RADIUS + 1.0), 2.5, UiPalette.HP)
+	# 092：倒计时过半关闭的撤离点 —— 关了画红叉 + 「已关闭」，没关写着「剩 n 步关闭」
+	if not closing.is_empty() and int(closing.get("id", -1)) == n.id:
+		var closed := bool(closing.get("closed", false))
+		var text := "已关闭" if closed else "剩 %d 步关闭" % int(closing.get("left", 0))
+		var col := UiPalette.HP if closed else UiPalette.STAMINA
+		if closed:
+			var d := NODE_RADIUS * 0.8
+			draw_line(p + Vector2(-d, -d), p + Vector2(d, d), col, 3.0, true)
+			draw_line(p + Vector2(-d, d), p + Vector2(d, -d), col, 3.0, true)
+		var tw := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+		draw_rect(Rect2(p + Vector2(-tw / 2.0 - 4.0, NODE_RADIUS + 6.0), Vector2(tw + 8.0, 17.0)), Color(UiPalette.PANEL, 0.9))
+		draw_string(_font, p + Vector2(-tw / 2.0, NODE_RADIUS + 19.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, col)
 
 
 ## 玩家在哪（084）：节点上方一个朝下的三角标，上下轻轻浮动 —— 一眼找到自己，不用在一圈圈环里找那个亮的环

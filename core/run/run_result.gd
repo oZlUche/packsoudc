@@ -30,6 +30,13 @@ var left_behind: int = 0
 var left_value: int = 0
 ## 091：这一局击败了核心（BOSS）没有 —— 成就的条件看它
 var boss_cleared: bool = false
+## 092（作者定）：保险箱里的 —— **不管撤离还是战败都带出**；结算屏单独一格画它们（layout 记每件的定义 / 位置 / 朝向）
+var safe_items: Array[ItemInstance] = []
+var safe_size: Vector2i = Vector2i(3, 3)
+var safe_value: int = 0
+var safe_layout: Array[Dictionary] = []
+## 092：撤离时暂存区里没背出来的那几件（离开结算屏时一键出售）
+var left_items: Array[ItemInstance] = []
 
 
 ## 结束了的一局才算得出账；没结束返回 null
@@ -59,6 +66,14 @@ static func settle(state: RunState) -> RunResult:
 		for inst in state.storage.items():
 			r.left_behind += 1
 			r.left_value += ItemValue.of((inst as ItemInstance).def)
+			r.left_items.append(inst as ItemInstance)
+	if state.safe != null:
+		r.safe_size = state.safe.size
+		for inst in state.safe.items():
+			var item := inst as ItemInstance
+			r.safe_items.append(item)
+			r.safe_value += ItemValue.of(item.def)
+			r.safe_layout.append({"def": item.def, "origin": item.origin, "rotation": item.rotation})
 	return r
 
 
@@ -75,4 +90,5 @@ func to_dict() -> Dictionary:
 		"outcome": String(outcome), "reason": String(reason), "seed": run_seed, "chapter": String(chapter_id),
 		"steps": steps, "visited": visited, "battles_won": battles_won, "battles_lost": battles_lost,
 		"balance": balance, "value": value, "items": ids, "left_behind": left_behind, "left_value": left_value,
+		"safe": safe_items.size(), "safe_value": safe_value,
 	}

@@ -16,6 +16,10 @@ const SAVE_VERSION := 1
 const BOARD_SIZE := Vector2i(8, 6)
 const BOARD_ID := 1
 const STORAGE_ID := 2
+## 092：保险箱容器的 id
+const SAFE_ID := 3
+## 092：新加 class_name 的脚本用 preload 引用，作者拉了没重新 --import 也能跑
+const SafePlacerScript := preload("res://core/run/safe_placer.gd")
 
 enum Phase { PICK_SPAWN, ON_MAP, DEFEATED, EXTRACTED }
 
@@ -56,6 +60,10 @@ var wallet: Wallet = null
 var board: GridInventory = null
 ## 暂存区：一个列表，保留但不参战（3.4）
 var storage: ItemStash = null
+## 092（作者定）：保险箱 —— 放进去的道具视为已带出，战败也带得出；大小按局外规则（初始 3×3）
+var safe: GridInventory = null
+## 092：倒计时归零 / 撤离点关闭这类只发一次的提醒，地图屏听
+signal countdown_notice(text: String)
 ## 087（作者定）：暂存区按点独立 —— 离开时暂存区里的东西留在那个点（`node_id → [ItemInstance]`），回到那个点又回到暂存区。跟存档。
 ## 撤离仍不带走暂存区里的东西
 var node_storages: Dictionary = {}
@@ -136,7 +144,7 @@ static func start(
 	p_sets: SetDatabase = null, kit: Array[StringName] = [] as Array[StringName],
 	p_buff_defs: Dictionary = {}, p_meta_buffs: Array[StringName] = [] as Array[StringName],
 	p_character: CharacterDef = null, p_layout: Array = [], p_difficulty: DifficultyDef = null, p_hunter_defs: Dictionary = {},
-	p_scale: StringName = &""
+	p_scale: StringName = &"", p_safe_size: Vector2i = Vector2i(3, 3)
 ) -> RunState:
 	if p_chapter == null or p_chapter.map_source == null:
 		return null
@@ -152,9 +160,12 @@ static func start(
 	if s.map == null:
 		return null
 	ItemInstance.reset_uid_counter()
+	SafePlacerScript.mark(s.map, p_chapter.safes)     # 092：先换点，再放敌人（换掉的点不该带敌人）
 	if s.pool != null:
 		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id())
 	PaidExtracts.mark(s.map, s.economy)
+	if p_chapter.closing_extract:
+		PaidExtracts.mark_closing(s.map, p_chapter.step_limit)     # 092：倒计时过半关一个撤离点
 	EventPlacer.fill(s.map, s.node_rules)
 	s.rng = RunRNG.new(p_seed)
 	# 局外 buff 在开局那一刻定下来：体力上限、开局钱按它们改（一局里的规则见 buff_context）
@@ -182,6 +193,7 @@ static func start(
 	s.wallet = Wallet.new((s.economy.starting_balance if s.economy != null else 0) + ctx.starting_funds_bonus)
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
 	s.storage = ItemStash.new(STORAGE_ID, 0)
+	s.safe = GridInventory.new(p_safe_size, SAFE_ID, false)
 	s._bind_tracker()
 	s._place_layout(p_layout)
 	s._give_kit(full_kit)
@@ -226,6 +238,7 @@ func step_to(id: int) -> bool:
 		if hunters != null:
 			hunters.on_player_step()     # 猎手的回合在这一步的事都发生之后（071）
 		skills.on_step()     # 冷却与躲避在猎手的回合之后减：躲 3 步就是 3 个猎手回合够不着（082）
+		_check_countdown()     # 092：倒计时归零 = 行动失败
 	return ok
 
 
@@ -243,6 +256,7 @@ func relocate(intent: MoveIntent) -> bool:
 		if hunters != null:
 			hunters.on_player_step()
 		skills.on_step()
+		_check_countdown()
 	return ok
 
 
@@ -336,6 +350,8 @@ func try_extract() -> bool:
 	var node := current_node()
 	if phase != Phase.ON_MAP or node == null or NodeEvents.effective_type(node) != &"extract":
 		return false
+	if extract_closed(node):
+		return false     # 092：倒计时过半关掉的撤离点
 	if not events.pay_extract_fee(node):
 		return false
 	close_sessions()
@@ -356,6 +372,57 @@ func extract_after_boss() -> bool:
 
 func is_over() -> bool:
 	return phase == Phase.DEFEATED or phase == Phase.EXTRACTED
+#endregion
+
+
+#region 全局倒计时（092，作者定）
+## 这一章的倒计时总数（行动点）；0 = 没有
+func countdown_limit() -> int:
+	return chapter.step_limit if chapter != null else 0
+
+
+func has_countdown() -> bool:
+	return countdown_limit() > 0
+
+
+## 还剩几步；没有倒计时 -1。按行动点算：走一步（边的 action_cost，通常 1）减一，原地耗时也减
+func countdown_left() -> int:
+	if not has_countdown():
+		return -1
+	var spent := travel.clock.total if travel != null and travel.clock != null else 0
+	return maxi(0, countdown_limit() - spent)
+
+
+## 倒计时过半时关掉的那个撤离点的 id；没有 -1
+func closing_extract_id() -> int:
+	if map == null:
+		return -1
+	for id in map.node_ids():
+		if PaidExtracts.closes_at(map.get_node(id)) >= 0:
+			return id
+	return -1
+
+
+## 这个撤离点关了没（倒计时剩的 ≤ 它的 closes_at）
+func extract_closed(node: MapNode) -> bool:
+	var at := PaidExtracts.closes_at(node)
+	return has_countdown() and at >= 0 and countdown_left() <= at
+
+
+## 走完一步看一眼：归零就是行动失败 —— 会话关掉、没拿的战利品丢掉、战败结算（保险箱里的照样带出）
+func _check_countdown() -> void:
+	if phase != Phase.ON_MAP or not has_countdown():
+		return
+	var left := countdown_left()
+	var closing := closing_extract_id()
+	if closing >= 0 and left == PaidExtracts.closes_at(map.get_node(closing)):
+		countdown_notice.emit("撤离点 %d 关闭了：倒计时过半" % closing)
+	if left <= 0:
+		close_sessions()
+		_drop_pending_loot()
+		events.pending_battle = {}
+		events.pending = {}
+		_set_phase(Phase.DEFEATED, &"time_out")
 #endregion
 
 
@@ -817,7 +884,8 @@ func _wire_events() -> void:
 	events.waited.connect(func(_n: MapNode, _actions: int):
 		tick_map_buffs()
 		if hunters != null:
-			hunters.on_player_step())
+			hunters.on_player_step()
+		_check_countdown())
 	events.battle_finished.connect(func(_n: MapNode, _r: BattleResult, won: bool):
 		var key := "battles_won" if won else "battles_lost"
 		tally[key] = int(tally.get(key, 0)) + 1)
@@ -898,6 +966,7 @@ func to_dict() -> Dictionary:
 		"wallet": wallet.to_dict(),
 		"board": board.to_dict(),
 		"storage": storage.to_dict(),
+		"safe": safe.to_dict() if safe != null else null,
 		"node_storages": _node_storages_to_dict(),
 		"rng": rng.to_dict(),
 		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id, "pending": events.pending.duplicate(), "losses_forgiven": events.losses_forgiven,
@@ -953,6 +1022,8 @@ static func from_dict(
 	s.wallet = Wallet.from_dict(d.get("wallet", {}))
 	s.board = GridInventory.from_dict(d.get("board", {}), p_items)
 	s.storage = ItemStash.from_dict(d.get("storage", {}), p_items)
+	var safe_raw = d.get("safe", null)
+	s.safe = GridInventory.from_dict(safe_raw, p_items) if safe_raw is Dictionary else GridInventory.new(Vector2i(3, 3), SAFE_ID, false)
 	var ns: Variant = d.get("node_storages", {})
 	if ns is Dictionary:
 		for key in ns:

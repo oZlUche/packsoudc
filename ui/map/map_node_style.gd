@@ -15,6 +15,7 @@ const STYLES := {
 	&"junction": {"label": "岔路", "glyph": "·", "color": Color("5a6270")},
 	&"core": {"label": "核心", "glyph": "核", "color": Color("ff4a3d")},   # 红，始终可见：玩家的方向锚点（5.9）
 	&"spawn": {"label": "出生点", "glyph": "生", "color": Color("5cb85c")},
+	&"safe": {"label": "保险箱", "glyph": "箱", "color": Color("c8a2ff")},   # 092：放进去的就算带出去了
 }
 
 const UNKNOWN := {"label": "未知", "glyph": "?", "color": Color("8b93a1")}

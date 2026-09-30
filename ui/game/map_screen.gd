@@ -12,6 +12,8 @@ const SIDE_WIDTH := 400     # 090：右栏三个按键放大到 300%，栏也加
 var _run: RunState = null
 var _view: MapView
 var _hud: Label
+## 092：非常显眼的全局倒计时（地图顶上一行大字）
+var _countdown: Label = null
 ## 087：信仰那一句单独一个标签，停上去开悬浮窗（具体效果、信力怎么涨）
 var _faith_hud: Label
 var _preview: Label
@@ -127,6 +129,9 @@ func extract() -> bool:
 	var node := _run.current_node()
 	if node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract":
 		_say("撤不了：不在撤离点上")
+		return false
+	if _run.extract_closed(node):
+		_say("撤不了：这个撤离点已经关闭（倒计时过半）")
 		return false
 	_open_confirm(node)
 	return true
@@ -447,9 +452,12 @@ func _adopt() -> void:
 	ev.rested.connect(func(_n: MapNode, got: int): _note("　休息：体力 +%d" % got))
 	ev.extract_reached.connect(func(_n: MapNode, fee: int):
 		_note("　到了撤离点%s：按「撤离」结束这一局" % ("（付费：%d 币，%s）" % [fee, "付得起" if _run.wallet.can_afford(fee) else "钱不够"] if fee > 0 else "")))
-	_run.phase_changed.connect(func(_p: int, _why: StringName):
+	_run.phase_changed.connect(func(_p: int, why: StringName):
+		if why == &"time_out":
+			_note("[color=#d9534f]　倒计时归零：行动失败。保险箱里的照样带出[/color]")
 		_refresh_hud()
 		_refresh_skills())     # 挑完出生点技能才能用：按钮跟着阶段亮
+	_run.countdown_notice.connect(func(text: String): _note("[color=#d9534f]　" + text + "[/color]"))     # 092
 	_rebuild_routes()
 	_after_move()
 	if _run.phase == RunState.Phase.PICK_SPAWN:
@@ -468,6 +476,8 @@ func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
 		_note("[color=#b38cff]⇢ %d %s，传送（花 %d 点）%s[/color]" % [intent.to_id, what, intent.action_cost, "" if first_visit else "，这里用过了"])
 	else:
 		_note(("→ %d %s（花 %d 点）" if first_visit else "→ %d %s，穿行（花 %d 点，这里用过了）") % [intent.to_id, what, intent.action_cost])
+	if _run.has_countdown() and _run.countdown_left() > 0 and _run.countdown_left() <= 5:
+		_note("[color=#d9534f]　倒计时只剩 %d 步！[/color]" % _run.countdown_left())
 	_after_move()
 
 
@@ -519,7 +529,7 @@ func _after_move() -> void:
 	_refresh_hud()
 	_refresh_hunter_marks()
 	var node := _run.current_node()
-	_extract_btn.disabled = node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract"
+	_extract_btn.disabled = node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract" or _run.extract_closed(node)
 	_reopen_btn.disabled = not flow.can_reopen()
 	_reopen_btn.tooltip_text = ("重新打开这个点上最后的界面：没拿完的战利品、还开着的搜索或商店。点地图上的当前节点也行" if flow.can_reopen()
 		else "这里没有可重开的界面")
@@ -602,6 +612,7 @@ func enemy_preview(id: int) -> String:
 func _refresh_hud() -> void:
 	if _run == null or _hud == null:
 		return
+	_refresh_countdown()
 	if _run.phase == RunState.Phase.PICK_SPAWN:
 		_hud.text = "行动点 —　　挑出生点　　体力 %d/%d　　货币 %d　　暂存区 %d 件" % [
 			_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count()]
@@ -618,6 +629,41 @@ func _refresh_hud() -> void:
 		_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count()]
 	if _faith_hud != null:
 		_faith_hud.text = _run.faith_line() + _power_line() + _buff_line() + _erosion_line()
+
+
+## 092：倒计时那一行大字 + 地图上关闭中的撤离点的标记
+func _refresh_countdown() -> void:
+	if _countdown == null:
+		return
+	var box := _countdown.get_parent() as Control
+	if _run == null or not _run.has_countdown():
+		box.visible = false
+		_view.closing = {}
+		return
+	box.visible = true
+	var left := _run.countdown_left()
+	var limit := _run.countdown_limit()
+	var text := "倒计时 %d / %d" % [left, limit]
+	var closing := _run.closing_extract_id()
+	if closing >= 0:
+		var node := _run.map.get_node(closing)
+		var closed := _run.extract_closed(node)
+		text += "　　撤离点 %d %s" % [closing, "已关闭" if closed else "剩 %d 步关闭" % (left - PaidExtracts.closes_at(node))]
+		_view.closing = {"id": closing, "closed": closed, "left": left - PaidExtracts.closes_at(node)}
+	else:
+		_view.closing = {}
+	_countdown.text = text
+	var ratio := float(left) / float(maxi(limit, 1))
+	var col := UiPalette.HP if (ratio <= 0.25 or left <= 5) else (UiPalette.STAMINA if ratio <= 0.5 else UiPalette.FG)
+	_countdown.add_theme_color_override("font_color", col)
+	var style := (box as PanelContainer).get_theme_stylebox("panel") as StyleBoxFlat
+	if style != null:
+		style.border_color = col
+
+
+## 测试读：倒计时那一行的文字（没有倒计时是空串）
+func countdown_text() -> String:
+	return _countdown.text if _countdown != null and (_countdown.get_parent() as Control).visible else ""
 
 
 ## 信力一句（082）：「　信力 12 / 30（第 1 阶）」；没激活信仰不显示
@@ -729,6 +775,19 @@ func _build() -> void:
 	var mid := _vbox(0)
 	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(mid)
+	# 092（作者定）：全局倒计时 —— 顶上一行大字，颜色随剩余变（过半琥珀、四分之一以下红）
+	_countdown = _label("", 34, UiPalette.FG)
+	_countdown.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var cd_box := PanelContainer.new()
+	var cd_style := StyleBoxFlat.new()
+	cd_style.bg_color = UiPalette.PANEL
+	cd_style.border_color = UiPalette.STAMINA
+	cd_style.set_border_width_all(2)
+	cd_style.set_content_margin_all(6)
+	cd_box.add_theme_stylebox_override("panel", cd_style)
+	cd_box.add_child(_countdown)
+	cd_box.visible = false
+	mid.add_child(cd_box)
 	_hud = _label("", 14, UiPalette.FG)
 	var hud_box := PanelContainer.new()
 	var st := StyleBoxFlat.new()

@@ -15,6 +15,7 @@ const SYMBOL_TYPES := {
 	"A": &"battle", "E": &"elite", "Q": &"event", "?": &"random", "V": &"search",
 	"S": &"shop", "R": &"rest", "X": &"extract", "B": &"core",
 	"P": &"spawn",      # 出生点。符号是解析器先占的位，等作者在表里定
+	"K": &"safe",       # 092：保险箱
 	"1": &"random",     # v0 遗留的缺省点，按 ? 处理
 }
 ## 没有 [map] 段头的老格式（v0）里符号另有所指：E 是终点，2 是「高危的缺省点」

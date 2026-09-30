@@ -17,6 +17,7 @@ const DEFAULTS := {
 	"extract": "撤离点：站上去按「撤离」结束这一局。",
 	"random": "{c:dim}看不透的地方，踩上去才知道是什么。{/c}",
 	"spawn": "出发的地方。",
+	"safe": "保险箱：把背包里的东西放进去就算带出去了 —— 就算行动失败也带得出。站上去随时能开。",
 	"other": "{node_type}",
 }
 
@@ -31,7 +32,7 @@ static func category_of(node: MapNode) -> String:
 	match type:
 		&"battle", &"elite", &"core":
 			return "battle"
-		&"search", &"event", &"shop", &"rest", &"extract", &"random", &"spawn":
+		&"search", &"event", &"shop", &"rest", &"extract", &"random", &"spawn", &"safe":
 			return String(type)
 	return "other"
 
@@ -48,7 +49,14 @@ static func template_for(chapter: ChapterDef, node: MapNode) -> String:
 
 ## 渲染好的浮窗文字（BBCode）
 static func text_for(run: RunState, chapter: ChapterDef, node: MapNode) -> String:
-	return TextTemplate.render(template_for(chapter, node), TextTemplate.context_for(run, node))
+	var text := TextTemplate.render(template_for(chapter, node), TextTemplate.context_for(run, node))
+	# 092：倒计时过半关闭的撤离点，浮窗里说清楚
+	if run != null and node != null and PaidExtracts.closes_at(node) >= 0 and run.has_countdown():
+		if run.extract_closed(node):
+			text += "\n[color=#d9534f]这个撤离点已经关闭（倒计时过半）。[/color]"
+		else:
+			text += "\n[color=#f0ad4e]倒计时剩 %d 时关闭（还有 %d 步）。[/color]" % [PaidExtracts.closes_at(node), run.countdown_left() - PaidExtracts.closes_at(node)]
+	return text
 
 
 ## 浮窗里要不要画对手的棋盘：没用过的战斗点、内容里有敌人

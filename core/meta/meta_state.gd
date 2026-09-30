@@ -110,7 +110,7 @@ func take_back(inst: ItemInstance) -> bool:
 #region 一局结束
 ## 一局结束了进来。返回这次进了什么：{"items": 带回棋盘的件数, "value", "funds", "lit": 新点亮的图鉴条目数}
 func absorb(result: RunResult) -> Dictionary:
-	var got := {"items": 0, "value": 0, "funds": 0, "lit": 0}
+	var got := {"items": 0, "value": 0, "funds": 0, "lit": 0, "safe": 0}
 	if result == null:
 		return got
 	runs += 1
@@ -152,6 +152,27 @@ func absorb(result: RunResult) -> Dictionary:
 		got["funds"] = result.balance
 	else:
 		deaths += 1
+	# 092（作者定）：保险箱里的视为已带出 —— 战败也带得出。图鉴各计一次，进带回来的棋盘（没有就新开一块），放不下直接进仓库
+	if not result.safe_items.is_empty():
+		var size2 := result.board_size if result.board_size.x > 0 and result.board_size.y > 0 else RunState.BOARD_SIZE
+		var back2 := board if board != null else GridInventory.new(size2, BOARD_ID, false)
+		for inst in result.safe_items:
+			var key2 := String(inst.def.id)
+			if int(codex.get(key2, 0)) == 0:
+				got["lit"] = int(got["lit"]) + 1
+			codex[key2] = int(codex.get(key2, 0)) + 1
+			if not keeps(inst.def):
+				continue
+			inst.uid = _next_uid
+			_next_uid += 1
+			if back2.try_add(inst, true) or warehouse.try_add(inst, true):
+				got["items"] = int(got["items"]) + 1
+				got["safe"] = int(got["safe"]) + 1
+			else:
+				push_warning("MetaState.absorb: 保险箱里的 %s 放不下，丢弃" % inst.def.id)
+		board = back2 if back2.item_count() > 0 else null
+		score += result.safe_value
+		got["value"] = int(got["value"]) + result.safe_value
 	history.push_front(result.to_dict())
 	if history.size() > HISTORY_MAX:
 		history.resize(HISTORY_MAX)

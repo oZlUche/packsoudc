@@ -51,7 +51,11 @@ func open(payload: Dictionary) -> void:
 	var just: RunResult = payload.get("result", null)
 	if just != null:
 		root.add_child(_wrapped("刚才这一局：%s" % ("撤离，背出来 %d 件、值 %d 币、带出 %d 币" % [just.carried.size(), just.value, just.balance]
-			if just.is_extracted() else "战败，什么都没带出来"), 13, UiPalette.HEAL if just.is_extracted() else UiPalette.HP, 700))
+			if just.is_extracted() else ("战败，保险箱里的 %d 件带出来了" % just.safe_items.size() if not just.safe_items.is_empty() else "战败，什么都没带出来")), 13, UiPalette.HEAL if just.is_extracted() else UiPalette.HP, 700))
+	# 092：离开结算屏时暂存区一键出售了 —— 提示一句
+	var sold: Dictionary = payload.get("stash_sold", {})
+	if int(sold.get("count", 0)) > 0:
+		root.add_child(_wrapped("上一局暂存区里没背出来的 %d 件已一键出售，得 %d 币。" % [int(sold["count"]), int(sold["funds"])], 13, UiPalette.STAMINA, 700))
 	root.add_child(_label("%d 局　撤离 %d　战败 %d　累计价值 %d　单局最高 %d　钱 %d　图鉴 %d / %d" % [
 		m.runs, m.extractions, m.deaths, m.score, m.best_value, m.funds, m.codex.size(), flow.items.ids(true).size()], 14, UiPalette.FG))
 	var buttons := _hbox(8)
@@ -178,7 +182,7 @@ func _build_sell(root: Control) -> Control:
 	_sell_view.inventory = flow.meta.warehouse
 	_sell_view.show_adjacency = false
 	_sell_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_sell_view.item_double_clicked.connect(func(uid: int): sell(uid))
+	_sell_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): sell(uid))
 	page.add_child(_sell_view)
 	flow.meta.warehouse.changed.connect(_refresh_sell)
 	set_sell_filter(0)

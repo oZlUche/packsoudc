@@ -10,7 +10,7 @@
 class_name GameFlow
 extends RefCounted
 
-enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS }
+enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE }
 
 signal screen_changed(screen: int, payload: Dictionary)
 signal run_started(state: RunState)
@@ -72,7 +72,7 @@ func _init(p_items: ItemDatabase = null, p_enemies: EnemyDatabase = null, p_sets
 
 
 static func is_overlay(s: int) -> bool:
-	return s in [Screen.BATTLE, Screen.LOOT, Screen.SEARCH, Screen.SHOP, Screen.EVENT, Screen.REST, Screen.PREBATTLE]
+	return s in [Screen.BATTLE, Screen.LOOT, Screen.SEARCH, Screen.SHOP, Screen.EVENT, Screen.REST, Screen.PREBATTLE, Screen.SAFE]
 
 
 #region 底屏之间
@@ -596,7 +596,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	if difficulty != null and not unlocked(difficulty.requires_unlock):
 		return null     # 没解锁的难度开不了（界面本来就不列，这里是兜底）
 	apply_item_locks()     # 091：成就还没开的道具这一局不出现
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale)
+	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale, safe_size())
 	if state == null:
 		return null
 	for inst in taken:
@@ -629,10 +629,38 @@ func save_and_quit() -> bool:
 	return ok
 
 
-## 结算看完了：去局外（账在进结算屏之前就记了，见 _settle_run）
+## 092（作者定）：保险箱几格（局外规则，初始 3×3）
+func safe_size() -> Vector2i:
+	return meta.rules.safe_size if meta != null and meta.rules != null else Vector2i(3, 3)
+
+
+## 092（作者定）：离开结算屏时，暂存区里没背出来的一键出售（按基地的出售比例），钱进局外。这里只算不卖
+func stash_sale_preview() -> Dictionary:
+	var out := {"count": 0, "funds": 0}
+	if result == null or not result.is_extracted():
+		return out
+	for inst in result.left_items:
+		out["count"] = int(out["count"]) + 1
+		out["funds"] = int(out["funds"]) + MetaState.sell_price((inst as ItemInstance).def, sell_ratio())
+	return out
+
+
+## 真卖：只卖一次（卖完清单清掉），记进 last_absorbed["stash_sold"] 给局外屏提示
+func _sell_left_behind() -> Dictionary:
+	var got := stash_sale_preview()
+	if int(got["count"]) > 0:
+		meta.funds += int(got["funds"])
+		result.left_items.clear()
+		last_absorbed["stash_sold"] = got
+		meta.changed.emit()
+	return got
+
+
+## 结算看完了：去局外（账在进结算屏之前就记了，见 _settle_run）；暂存区里剩的在这一步一键出售（092）
 func finish_result() -> void:
+	_sell_left_behind()
 	save_meta()
-	_go(Screen.META, {"result": result})
+	_go(Screen.META, {"result": result, "stash_sold": last_absorbed.get("stash_sold", {})})
 
 
 ## 085：结算之后该直接进的下一章（撤离成功、这一章配了 next_chapter、它开着）；没有 null
@@ -658,6 +686,7 @@ func start_next_chapter() -> bool:
 	if next == null:
 		finish_result()
 		return false
+	_sell_left_behind()     # 092：离开结算屏就卖暂存区里剩的
 	meta.store_all()
 	if meta.has_pending_board():
 		meta.discard_board()
@@ -776,6 +805,9 @@ func _reopen_entry() -> Dictionary:
 		return {"screen": Screen.SHOP, "node": ev.current_shop.node, "session": ev.current_shop}
 	if run.pending_loot != null:
 		return {"screen": Screen.LOOT, "container": run.pending_loot}
+	var here := run.current_node()
+	if here != null and NodeEvents.effective_type(here) == &"safe":
+		return {"screen": Screen.SAFE, "node": here}     # 092：站在保险箱上随时能再开
 	return {}
 
 
@@ -883,6 +915,8 @@ func _adopt(state: RunState) -> void:
 			return
 		session.closed.connect(_flush)
 		_push({"screen": Screen.SHOP, "node": node, "session": session}))
+	ev.safe_opened.connect(func(node: MapNode):
+		_push({"screen": Screen.SAFE, "node": node}))     # 092：踩上保险箱就开
 	ev.event_pending.connect(func(node: MapNode, def: EventDef):
 		var entry := {"screen": Screen.EVENT, "node": node, "def": def}
 		# 084：战利品已经排在队尾时来的事件（「搜索点被余波摧毁」）说的是刚发生的事：先说，再看战利品（东西还在）

@@ -8,6 +8,7 @@ extends RefCounted
 const ALL: Array[StringName] = [
 	&"battle", &"elite", &"event", &"random", &"search",
 	&"shop", &"rest", &"extract", &"junction", &"core", &"spawn",
+	&"safe",     # 092（作者定）：保险箱 —— 放进去的道具视为已带出
 ]
 
 

@@ -16,3 +16,5 @@ const DEFAULT_SIZE := Vector2i(10, 8)
 @export var first_kit: StringName = &""
 ## 091（作者定）：基地商店卖掉仓库里的东西回定价的几成（和局内商店的 shop_sell_ratio 同义，局外一份）
 @export var sell_ratio: float = 0.5
+## 保险箱几格（092，作者定：初始 3×3；局外成长改它）
+@export var safe_size: Vector2i = Vector2i(3, 3)
