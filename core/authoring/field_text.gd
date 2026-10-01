@@ -84,10 +84,10 @@ const TYPE_LABELS := {
 	"pass_time": "原地耗时", "lose_item": "失去道具", "set_flag": "立局外旗标",
 	# 093 信仰流派
 	"damage": "造成 / 受到伤害", "vitality_lost": "失去体力", "item_cycle": "道具成功循环", "heal": "战斗内回血", "item_triggered": "触发某类道具", "enter_node": "进入空白节点",
-	"faith_active": "激活了信仰", "open_altar": "打开神坛", "next_event_random": "随机接一个事件", "low_hp_empower": "低血增伤", "fire_enchant": "火焰附魔",
+	"faith_active": "激活了信仰", "rest_part_unused": "休息点这一份没用过", "open_altar": "打开神坛", "next_event_random": "随机接一个事件", "low_hp_empower": "低血增伤", "fire_enchant": "火焰附魔",
 	"stat_mod": "属性修饰（信仰级）", "enchant_weapons": "武器火焰附魔", "food_shield": "按食物给护盾", "food_double": "食物效果翻倍",
 	"altar_sacrifice_hp": "神坛：献祭生命上限", "altar_pray_fire": "神坛：祈祷火焰", "altar_food_vitality": "献祭食物回体力", "altar_train_board": "神坛：锻炼（棋盘 +1 行）",
-	"altar_reshape_node": "神坛：改造此点", "smite": "秒杀（耗体力）", "extra_drop_by_node": "按点类型必掉额外一件", "gift_on_enter": "踩上点给对应道具", "draw_is_win": "平局算胜", "undying": "血归零后坚持几秒", "altar_bless": "神坛：祈求赐福", "bless_item": "赐福一件",
+	"altar_reshape_node": "神坛：改造此点", "smite": "秒杀（耗体力）", "extra_drop_by_node": "按点类型必掉额外一件", "gift_on_enter": "踩上点给对应道具", "overtime_regen": "加时阶段回春", "on_axis_at_least": "标准轴到 N 层时", "shift_axis": "改标准轴层数", "undying": "血归零后坚持几秒", "altar_bless": "神坛：祈求赐福", "bless_item": "赐福一件",
 	"erosion": "侵蚀", "hunters": "猎手", "safe": "保险箱", "node_storage": "按点暂存", "countdown": "全局倒计时", "crafting": "合成", "altar": "神坛", "buff": "一局的 buff",     # 101：一局的模块（本体功能与难度机制同一张表）
 	"approach": "逼近", "flee": "逃跑", "wander": "游荡", "ambush": "伏击", "patrol": "巡逻",
 	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫",

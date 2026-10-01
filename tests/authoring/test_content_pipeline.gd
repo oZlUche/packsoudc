@@ -185,6 +185,64 @@ static func run_buff_duration_rule(t: TestCase) -> void:
 	t.check(inst.is_permanent(), "实例按 is_permanent 判：可叠层的不设过期时刻")
 
 
+static func run_weapon_stamina_rules(t: TestCase) -> void:
+	t.begin("内容管线 · 103 作者定：武器必须造成伤害；只有武器消耗耐力；不限层 + 百分比的 buff 告警")
+	var hit := {"trigger": {"type": "on_schedule"}, "cadence": {"type": "cooldown", "seconds": 1.0}, "effects": [{"type": "deal_damage"}]}
+	var hit_cost := hit.duplicate(true)
+	hit_cost["costs"] = [{"type": "resource", "amount": 5.0}]
+	var poison := {"trigger": {"type": "on_schedule"}, "cadence": {"type": "cooldown", "seconds": 1.0},
+		"effects": [{"type": "apply_status", "target": "ENEMY", "buff": {"id": "t_poison", "is_debuff": true}}]}
+
+	var ok: ImportReport = _import_item({"id": "t_knife", "shape": ["1"], "tags": ["weapon"], "combat": {"rules": [hit_cost]}})[1]
+	t.check(ok.ok(), "武器 + 伤害 + 耗耐力：可以（%s）" % ok.to_text())
+	var free: ImportReport = _import_item({"id": "t_free", "shape": ["1"], "tags": ["weapon"], "combat": {"rules": [hit]}})[1]
+	t.check(free.ok(), "武器不耗耐力也可以（不强制武器耗耐力）")
+	var trap: ImportReport = _import_item({"id": "t_trap", "shape": ["1"], "combat": {"rules": [hit]}})[1]
+	t.check(trap.ok(), "不带武器标签也可以造成伤害")
+
+	var no_dmg: ImportReport = _import_item({"id": "t_stick", "shape": ["1"], "tags": ["weapon"]})[1]
+	t.check(not no_dmg.ok() and no_dmg.to_text().contains("不造成伤害"), "武器没有任何伤害规则：拦下（%s）" % no_dmg.to_text())
+	var only_poison: ImportReport = _import_item({"id": "t_vial", "shape": ["1"], "tags": ["weapon"], "combat": {"rules": [poison]}})[1]
+	t.check(not only_poison.ok(), "武器只施毒不直接伤害：拦下（施毒不算造成伤害）")
+
+	var tool_cost: ImportReport = _import_item({"id": "t_tool", "shape": ["1"], "tags": ["tool"], "combat": {"rules": [hit_cost]}})[1]
+	t.check(not tool_cost.ok() and tool_cost.to_text().contains("耐力只归武器"), "非武器耗耐力：拦下（%s）" % tool_cost.to_text())
+	var mana := hit.duplicate(true)
+	mana["costs"] = [{"type": "resource", "resource_key": "mana", "amount": 5.0}]
+	var drone: ImportReport = _import_item({"id": "t_drone", "shape": ["1"], "tags": ["tool"], "combat": {"rules": [mana]}})[1]
+	t.check(drone.ok(), "非武器耗法力：可以")
+
+	var warn := _report()
+	ContentImporter.import_buff({"id": "t_rage", "mods": [{"stat": "armor", "mult_category": "EMPOWER", "mult_percent": 10}]}, _ctx(), warn)
+	t.check(warn.ok() and warn.warnings.size() == 1, "不限层 + 百分比：告警不报错（%s）" % warn.to_text())
+	var capped := _report()
+	ContentImporter.import_buff({"id": "t_rage3", "max_stacks": 3, "mods": [{"stat": "armor", "mult_category": "EMPOWER", "mult_percent": 10}]}, _ctx(), capped)
+	t.check(capped.ok() and capped.warnings.is_empty(), "填了层数上限：不告警")
+	var flat := _report()
+	ContentImporter.import_buff({"id": "t_tough", "mods": [{"stat": "max_hp", "flat": 5.0}]}, _ctx(), flat)
+	t.check(flat.warnings.is_empty(), "不限层 + 固定值：不告警")
+
+	# 现有全部道具都守规矩（撬棍加了武器标签之后）
+	var bad: Array[String] = []
+	for f in DirAccess.get_files_at("res://data/authoring/items"):
+		if not f.ends_with(".json"):
+			continue
+		var data = JSON.parse_string(FileAccess.get_file_as_string("res://data/authoring/items/" + f))
+		var r := _report()
+		var def := ContentImporter.import_item(data, _ctx(), r)
+		if def.tags.has(&"weapon") or not r.ok():
+			for e in r.errors:
+				bad.append("%s %s" % [f, e["message"]])
+	t.check(bad.is_empty(), "data/authoring/items 全部满足武器 / 耐力规矩：%s" % ", ".join(bad))
+	var crowbar = JSON.parse_string(FileAccess.get_file_as_string("res://data/authoring/items/crowbar.json"))
+	t.check((crowbar["tags"] as Array).has("weapon"), "撬棍带武器标签（作者定）")
+
+	var desc := Glossary.describe_buff(ContentImporter.import_buff({"id": "t_brief", "max_stacks": 1, "duration_sec": 3.0}, _ctx(), _report()))
+	t.check(desc.contains("[color=") and desc.contains("不可叠层") and desc.contains("持续 3.0 秒"), "词条：不可叠层与会过期用例外色标出（%s）" % desc)
+	var desc2 := Glossary.describe_buff(ContentImporter.import_buff({"id": "t_stack"}, _ctx(), _report()))
+	t.check(not desc2.contains("[color="), "默认（不限层、永续）不上色")
+
+
 static func run_validation(t: TestCase) -> void:
 	t.begin("内容管线 · 校验比引擎严格")
 

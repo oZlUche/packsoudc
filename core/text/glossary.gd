@@ -118,7 +118,13 @@ static func describe_buff(def: BuffDef) -> String:
 	var lines: Array[String] = []
 	var kind := "减益" if def.is_debuff else "增益"
 	var stacks := "不可叠层" if not def.is_stackable() else ("不限层" if def.max_stacks <= 0 else "至多 %d 层" % def.max_stacks)
-	lines.append("%s　%s　%s" % [kind, stacks, def.duration_text()])
+	var duration := def.duration_text()
+	# 103：默认永续、可叠层；不可叠层与会过期是例外，用例外色标出来，作者 / 玩家一眼看出「这个不是默认」
+	if not def.is_stackable():
+		stacks = _exception(stacks)
+	if not def.is_permanent():
+		duration = _exception(duration)
+	lines.append("%s　%s　%s" % [kind, stacks, duration])
 	if not def.mods.is_empty():
 		lines.append("%s%s" % ["每层：" if def.is_stackable() else "", mods_text(def.mods)])
 	for r in def.rules:
@@ -130,6 +136,14 @@ static func describe_buff(def: BuffDef) -> String:
 	if not def.on_expire.is_empty():
 		lines.append("到期时：" + effects_text(def.on_expire))
 	return "\n".join(lines)
+
+
+## 例外色（103）：buff 的默认是永续、可叠层，不是默认的那几个字染成这个色
+const EXCEPTION_COLOR := Color("e0b45c")
+
+
+static func _exception(text: String) -> String:
+	return "[color=#%s]%s[/color]" % [EXCEPTION_COLOR.to_html(false), text]
 
 
 ## 一条规则的一句：「[自发] 每 1.0 秒　造成 poison 伤害」

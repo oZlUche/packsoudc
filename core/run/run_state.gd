@@ -459,6 +459,7 @@ func compile_player() -> CombatantSpec:
 	if altar != null:
 		for p in altar.perks():
 			(p as FaithPerk).modify_spec(spec, board, self)
+	spec.passives = BattlePassives.of(self)     # 103：常驻加成也进 buff 栏
 	return spec
 
 

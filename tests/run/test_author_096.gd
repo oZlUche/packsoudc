@@ -91,7 +91,8 @@ static func run_import_tags_and_presets(t: TestCase) -> void:
 	ContentImporter.import_tag({"id": "faith:x", "display_name": "x"}, ctx, bad2)
 	t.check(not bad2.ok(), "带冒号的 id 拦住")
 	var r2 := ImportReport.new()
-	ContentImporter.import_item({"id": "probe", "display_name": "探", "shape": ["1"], "tags": ["weapon", "zz_unknown", "faith", "faith:brute"]}, ctx, r2)
+	ContentImporter.import_item({"id": "probe", "display_name": "探", "shape": ["1"], "tags": ["weapon", "zz_unknown", "faith", "faith:brute"],
+		"combat": {"rules": [{"trigger": {"type": "on_schedule"}, "cadence": {"type": "cooldown", "seconds": 1.0}, "effects": [{"type": "deal_damage"}]}]}}, ctx, r2)
 	t.check(r2.ok(), "没登记的标签不是错误：%s" % r2.to_text())
 	t.eq(r2.warnings.size(), 1, "只对 zz_unknown 警告一次（faith:<id> 不算）：%s" % r2.to_text())
 	var r3 := ImportReport.new()

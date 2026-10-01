@@ -17,7 +17,7 @@ static func _flow(c) -> GameFlow:
 
 
 static func run_perks_and_altar_logic(t: TestCase) -> void:
-	t.begin("神坛 · 信仰级效果与那一次机会（093）：蛮神低血增伤 / 献祭生命上限 / 秒杀；日神附魔 + 祈祷非线性；自然回血 / 食物护盾 / 翻倍 / 平局算胜；大地耐力 / 锻炼加行 / 踩点赐物 / 改造此点；献祭换信力、共享一次机会")
+	t.begin("神坛 · 信仰级效果与那一次机会（093）：蛮神低血增伤 / 献祭生命上限 / 秒杀；日神附魔 + 祈祷非线性；自然回血 / 食物护盾 / 翻倍 / 加时回春；大地耐力 / 锻炼加行 / 踩点赐物 / 改造此点；献祭换信力、共享一次机会")
 	var c = NodeScreens._content()
 	var f := _flow(c)
 	var run := f.begin(c.chapter, NodeScreens._kit(c), 4)
@@ -93,7 +93,7 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 		t.eq(int(res["count"]), 1, "献祭了一件")
 		t.eq(run.faith_power.points_of(&"brute"), p0 + val, "信力 +%d（2^稀有度 × 3）" % val)
 		t.check(not run.board.has_item(sword.uid) and not run.storage.has_item(sword.uid), "祭品没了")
-		t.check(altar.is_open(), "常规献祭不占那一次机会")
+		t.check(not altar.is_open() and altar.used.has(altar.node), "反馈：献祭和特殊操作二选一 —— 献了就关")
 	# 日神：附魔 + 祈祷
 	var defs := FaithDef.load_all()
 	var sun: FaithDef = defs[&"sun"]
@@ -121,7 +121,7 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 				if e is FireEnchant:
 					enchanted += 1
 	t.eq(enchanted, mini(3, weapons_before), "随机 3 把（不够就全部）武器各挂一条火焰附魔（%d 把武器）" % weapons_before)
-	# 自然：回血 / 食物护盾 / 翻倍 / 平局算胜
+	# 自然：回血 / 食物护盾 / 翻倍 / 加时回春
 	var nature: FaithDef = defs[&"nature"]
 	var ration := ItemInstance.create(run.items.get_def(&"ration"))
 	run.storage.admit(ration)
@@ -134,20 +134,35 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	t.check(spec4.baseline.total_of(BattleStats.REGEN_HP) > regen0, "1 级：基线每秒回血 +")
 	if run.board.has_item(ration.uid):
 		t.check(spec4.baseline.total_of(BattleStats.MAX_SHIELD) > shield0, "3 级：棋盘上有口粮就有护盾")
-	var draw_perk: FaithPerk = null
+	var regen_perk: OvertimeRegenPerk = null
 	for p in nature.perks_at(5):
-		if p is DrawIsWinPerk:
-			draw_perk = p
-	t.check(draw_perk != null, "5 级：平局算胜")
-	var a := BattleCompiler.compile(null, CombatantBaseline.with_hp(10.0))
-	var b := BattleCompiler.compile(null, CombatantBaseline.with_hp(10.0))
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 1
-	var plain := BattleSim.run(a, b, rng, 1.0)
-	t.check(plain.is_draw(), "谁都不出手：平局")
-	draw_perk.modify_spec(a, null, run)
-	var blessed := BattleSim.run(a, b, rng, 1.0)
-	t.eq(blessed.winner, 0, "自然 5 级：平局判我方赢")
+		if p is OvertimeRegenPerk:
+			regen_perk = p
+	t.check(regen_perk != null and regen_perk.stacks > 0, "5 级（103 改）：加时阶段回春，数值在 nature.json 里可调")
+	# 两边都不出手、我方先掉一半血，打到第 40 秒：没有自然 5 级就停在一半，有就在加时开始后回满
+	var hp_at_40 := func(blessed: bool) -> Array:
+		var a := BattleCompiler.compile(null, CombatantBaseline.with_hp(100.0))
+		var b := BattleCompiler.compile(null, CombatantBaseline.with_hp(100.0))
+		if blessed:
+			regen_perk.modify_spec(a, null, run)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 1
+		var ctx := BattleContext.create(CombatantRuntime.from_spec(a, 0), CombatantRuntime.from_spec(b, 1), rng)
+		ctx.overtime = OvertimeRules.new()
+		ctx.sides[0].resources.change(BattleStats.RES_HP, -StatMath.from_float(50.0), BattleEvent.REASON_DAMAGE)
+		var res := BattleSim.run_context(ctx, 40.0)
+		return [ctx.sides[0].resources.current(BattleStats.RES_HP), res, ctx.sides[0].axis_stacks(StatAxes.REGEN_HP)]
+	var plain: Array = hp_at_40.call(false)
+	var blessed: Array = hp_at_40.call(true)
+	t.eq(StatMath.to_int(plain[0]), 50, "没有自然 5 级：血停在一半")
+	t.eq(StatMath.to_int(blessed[0]), 100, "自然 5 级：加时开始后回春，回满")
+	t.eq(int(blessed[2]), regen_perk.stacks, "回血轴（内容层）+%d 层，一场只加一次（第 35 秒加时再叠也不重复）" % regen_perk.stacks)
+	var first_regen := -1
+	for e in (blessed[1] as BattleResult).log:
+		if e.name == BattleEvent.AXIS_SHIFTED and e.side == 0 and e.get_name(&"axis") == StatAxes.REGEN_HP:
+			first_regen = e.time
+			break
+	t.eq(first_regen, StatMath.from_float(30.0), "第 30 秒（加时开始）回春，记一条 axis_shifted（buff 栏画「回春」）")
 	# 大地：耐力 / 锻炼 / 赐物 / 改造
 	var earth: FaithDef = defs[&"earth"]
 	var rows0 := run.board.size.y
@@ -217,7 +232,7 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 		var opt := def.options[i] as EventOption
 		if opt.locked_reason(run.events._event_ctx(run.current_node())) == "" or not opt.hide_when_locked:
 			shown.append(opt.label)
-	t.check(not shown.has("神坛（献祭 / 特殊操作）") and labels.has("神坛（献祭 / 特殊操作）"), "没信仰：神坛选项藏起来（%s）" % str(shown))
+	t.check(not shown.has("神坛（献祭或特殊操作，二选一）") and labels.has("神坛（献祭或特殊操作，二选一）"), "没信仰：神坛选项藏起来（%s）" % str(shown))
 	flow.choose_event(0)
 	NodeScreens._settle(flow)
 	flow.to_main_menu()
@@ -239,8 +254,9 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 	while GameFlow.is_overlay(flow.screen) and flow.screen != GameFlow.Screen.ALTAR and g < 6:
 		g += 1
 		flow.resume()
-	t.eq(flow.screen, GameFlow.Screen.ALTAR, "→ 神坛屏（休息也照休）")
-	t.check(run.vitality.current >= vit0, "休息回了体力（或已满）")
+	t.eq(flow.screen, GameFlow.Screen.ALTAR, "→ 神坛屏")
+	t.eq(run.vitality.current, vit0, "反馈：神坛不占休息 —— 没顺带休息")
+	t.check(not run.current_node().is_visited(), "休息那一份还留着：点没用完")
 	var screen = game.overlay()
 	t.check(screen != null and screen.has_method("put_on_table"), "叠层是神坛屏")
 	if screen == null:
@@ -268,10 +284,27 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 		t.eq(int(got["count"]), 1, "献了一件")
 		t.eq(run.faith_power.points_of(&"brute"), p0 + val, "信力进账")
 		t.check(not run.board.has_item(sword.uid) and screen._table.item_count() == 0, "祭品没了、台空了")
-		t.check(AltarModule.of(run).is_open(), "常规献祭不关神坛")
+		t.check(not AltarModule.of(run).is_open() and screen._offer_btn.disabled, "反馈：献祭和特殊操作二选一 —— 献了神坛就关")
 	t.check(game.escape(), "Esc 返回")
 	t.eq(flow.screen, GameFlow.Screen.MAP, "→ 地图")
-	t.check(flow.can_reopen() and flow.reopen_node(), "站着还能再开神坛")
+	# 反馈：神坛用了，休息那一份还在 —— 站着再打开是休息点的选项（没有神坛那一项了）
+	t.check(flow.can_reopen() and flow.reopen_node(), "站着还能再打开休息点")
+	t.eq(flow.screen, GameFlow.Screen.EVENT, "→ 休息点的事件")
+	var here := run.current_node()
+	var ectx := run.events._event_ctx(here)
+	var open_labels: Array[String] = []
+	for opt in (flow.last_payload.get("def", null) as EventDef).options:
+		if (opt as EventOption).locked_reason(ectx) == "":
+			open_labels.append((opt as EventOption).label)
+	t.check(open_labels.has("歇一会儿") and not open_labels.any(func(l): return l.begins_with("神坛")), "能歇、神坛藏起来了（%s）" % str(open_labels))
+	flow.choose_event(0)
+	NodeScreens._settle(flow)
+	t.check(here.is_visited(), "休息和神坛都用了：这个休息点才算用完")
+	# 特殊操作那一半：换一个神坛机会（测试里直接重置）
+	here.content.erase("used_altar")
+	AltarModule.of(run).used.clear()
+	AltarModule.of(run).node = here.id
+	t.check(flow.can_reopen() and flow.reopen_node(), "重开神坛")
 	t.eq(flow.screen, GameFlow.Screen.ALTAR, "→ 神坛屏")
 	# 升到 2 级：特殊操作出现；做了就关
 	run.faith_power.add_points(&"brute", 100)

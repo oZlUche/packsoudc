@@ -909,8 +909,11 @@ class_name Cost extends Resource
 `AbilityRule.costs: Array[Cost]` 是 AND 语义：**全部 `can_pay` 通过，才逐个 `pay`**。
 这一层内部仍然原子 —— 不允许出现「扣了耐力但层数不够」的半付款。
 
-默认消耗按物品类型给：武器默认耗耐力，法术书类默认耗法力。**写在物品定义里，
-不硬编码在代码中** —— 「不耗耐力的武器」只是一件 `costs` 为空的武器，不需要任何特例。
+**耐力是武器专属资源**（103，作者定）：只有带 `weapon` 标签的道具才可以消耗耐力；
+带 `weapon` 标签的道具必须至少有一条直接 `DealDamage` 的规则（施加会掉血的 buff 不算）。
+这两条是**内容规矩**，由导入器（`ContentImporter._validate_item_combat`）守着，运行时仍只认规则上的 `costs`。
+反过来不限：武器可以不耗耐力 —— 「不耗耐力的武器」只是一件 `costs` 为空的武器，不需要任何特例；
+不带武器标签的道具也可以造成伤害（陷阱、毒药瓶）。法力归法术书类，仍按物品定义给。
 
 实际消耗走 4.3 公式结算，所以「减少耐力消耗 20%」就是一条作用于 `stamina_cost` 的
 普通 `StatModifier`，与增伤减伤同一套机制。
@@ -961,6 +964,11 @@ func scope() -> StringName: return EffectScope.COMBAT
 
 **战斗中一切属性变化都由 buff 承载，包括资源上限。**
 「强壮」提供额外生命上限，「病弱」降低生命上限 —— 不为上限另开一套机制。
+
+**如无说明，buff 永续、可叠层**（103，作者定）：`BuffDef` 的默认值就是 `max_stacks = 0`（不限层）、
+`duration_sec = 0`（永续）。不可叠或会过期是**例外**，必须在定义里显式写 `max_stacks: 1`（和可选的 `duration_sec`），
+导入器守着（085：可叠层的不许填时长）；词条里这两种用例外色标出来。设计数值时按「永续 + 叠层」来算 ——
+不限层又按百分比乘的 buff 导入器会告警，提醒确认要不要封顶。
 
 buff 仅在本场战斗内存在，**战斗结束全部清空**。因此**参战属性在进入战斗时只读取一次**，
 这也正是 4.1「编译期快照，战斗中不回头读背包」的直接后果。
@@ -1081,7 +1089,7 @@ func settle_regen(now: int) -> void:      # CombatantRuntime
 1. 确认类型      这一下能不能被护盾吸收、吃不吃护甲、要不要通知
 2. 护盾吸收      能吸收则先扣护盾；中毒之类绕过
 3. 受伤前效果    【同步派发】效果在这里改写伤害包：减伤、反转、免疫
-4. 计算受伤量    百分比 → 固定增减 → 反转 → 护甲，然后落到血量
+4. 计算受伤量    百分比 → 固定增减 → 反转 → 护甲 → × 受伤倍率 damage_taken（103，只放大伤害不放大治疗），然后落到血量
 5. 受伤后效果    发 damage 事件；流失类不通知默认监听
 ```
 
@@ -1208,12 +1216,16 @@ var final: int              ## 最终结算量，正为扣血、负为回血
 在时刻之间跳跃。
 
 ```gdscript
-while 双方存活 and now < 时限:
-    next = min(所有自发规则的下次出手时刻, 所有 buff 的到期时刻)
-    if next 不存在: break            # 谁也打不死谁，判平局
+while 双方存活 and now < 安全上限:
+    next = min(所有自发规则的下次出手时刻, 所有 buff 的到期时刻, 下一个系统时刻)
     now = next
-    结算这一刻：先到期，后出手       # 正好此刻到期的增益不该再为这一刻加成
+    结算这一刻：系统时刻 → 到期 → 出手   # 正好此刻到期的增益不该再为这一刻加成
 ```
+
+**加时与衰竭（103，作者定）**：第 30 秒起每 5 秒一次「鏖战」—— 双方「受到伤害」标准轴（4.3）的**系统层**各 +4 层（每层 5%，即受到的最终伤害 +20%），
+净化只动内容层，所以不可解除；第 60 秒起每秒叠一层「衰竭」（`BuffDef.system = true` 的系统 buff，生命上限 −5），上限把当前血压到 0 就倒下
+（走 `mark_dead`，蛮神的不死照常生效）。数值在 `OvertimeRules`（`NodeRules.overtime`，没填用默认）。
+因此**没有平局**：同一刻双双倒下按「倒下前血量 → 本场总伤害 → 判玩家胜」裁决；`battle_time_limit` 只是防配置坏掉的安全上限（默认 600 秒）。
 
 三个好处：
 
@@ -1281,6 +1293,23 @@ while 双方存活 and now < 时限:
 日志载荷是**定点**，而 `ResourcePool.snapshot()` 已经取过整。
 两边混着往面板送，血条会显示 `0 / 0` 却画成满格，而且只在其中一条路径上出错。
 换算一律在 `BattleView` 做完，面板只收显示值。
+
+#### buff 栏（103，作者定：只放作用于角色本身的通用 buff）
+
+准则：**作用对象必须是这个角色本身**。使所有武器加速 → 显示，使某一件武器加速 → 不显示；角色造成的伤害 +N → 显示，
+某类型 / 某件武器的伤害 +N → 不显示；每隔几秒发作、让角色掉血 / 掉耐力 / 得到什么 → 显示，某件道具发动时让角色掉血 → 不显示
+（那是道具的规则）。以后新加一种来源，照「作用对象是不是角色本身」判。
+
+
+- **定义表由日志给**：`CombatantRuntime.apply_buff` 每次上身登记进 `BattleContext.seen_buffs`，`BattleResult.buffs` 带出去，
+  `BattleView.play` 直接用。凡是上过身的 buff 都认得，不管来自自己、对手、信仰、局外 buff 还是系统。
+- **标准轴先于一切**（4.3）：内容层 ≠ 0 的轴各画一格，正名 / 负名 `×|层数|`（`axis_shifted` 事件驱动）；加时另画一格「鏖战 ×n」（`overtime_stacked` 驱动）说明系统层的来源。
+- 战斗内的 `BuffDef` 全部符合（`StatModifier` 没有按道具筛选的字段，buff 的 mods 施加到单位与每一件道具）。
+- **常驻格**：编译期的单位级加成 —— 已激活的套装档位（施加到全部参战道具）、局外 / 一局 buff 的战斗加成、技能 / 难度 / 神坛改的基础属性、
+  作用于角色本身的信仰级效果（`FaithPerk.battle_note`）—— 不是 buff，但符合准则，也进栏：`CombatantSpec.passives: Array[PassiveNote]`
+  （`BattlePassives.of(run)` 在 `compile_player` 里填），`BattleResult.passives` 带出去，灰底、不随事件变。
+  信物自己的按阶加成（`faith_bonuses`）、包体加成、邻接增益、只给某类道具的信仰效果只作用于某几件，不进栏。
+- 顺序：系统（琥珀）→ 减益（红，含负向的轴）→ 增益（蓝，含正向的轴）→ 常驻（灰），组内按上身先后；不可叠层的不画 `×1`。
 
 #### 沙盒
 
@@ -2565,7 +2594,8 @@ class_name NodeRules extends Resource
 @export var loss_cost: Dictionary           # 战斗输了扣多少体力：类型 → 数。core 不在这里：BOSS 输了直接战败（7.1）
 @export var rest_restore: int               # 休息区回多少
 @export var event_weights: Dictionary       # 常规事件的结果：item / restore / story（占位）
-@export var battle_time_limit: float        # 打不死判平局，平局按输算
+@export var battle_time_limit: float        # 安全上限（103）：加时与衰竭保证必分胜负，到这里才判平局（按输算）
+@export var overtime: OvertimeRules         # 加时与衰竭的数值，没填用默认
 
 class_name SearchRules extends Resource
 @export var max_searches: int               # 至多搜几次
@@ -2649,7 +2679,7 @@ class_name SearchRules extends Resource
 | shop / extract | 只发信号：买卖、撤离是 M6 的事 |
 | junction / spawn | 只标用过 |
 
-平局按输算。没有玩家单位、或点里没有敌人：点只是走过。随机数从节点 `content_seed` 派生，每种用途一个标签
+平局（只在打到安全上限时出现）按输算。没有玩家单位、或点里没有敌人：点只是走过。随机数从节点 `content_seed` 派生，每种用途一个标签
 （reveal / enemy / battle / loot / search / ambush:k / event），改一种用途的抽法不影响别的。
 
 #### 事件层（063）：每个点先过事件屏

@@ -404,8 +404,9 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	var style := MapNodeStyle.of(n.type)
 	var color: Color = style["color"]
 	# 用过的点去饱和变灰 —— 但连线照旧、照样能点：走回头路是这一章的核心规则，
-	# 「用过」和「走不了」必须一眼分得开（5.9）。核心永远不灰，它是方向锚点
-	if n.is_visited() and n.type != &"core" and n.id != current_id:
+	# 「用过」和「走不了」必须一眼分得开（5.9）。核心永远不灰，它是方向锚点。
+	# 反馈：站在用过的点上（走回头路）也保持灰 —— 玩家在哪由「你」的三角标和脉动环说明，不靠把点涂回彩色
+	if n.is_visited() and n.type != &"core":
 		var grey := color.get_luminance()
 		color = Color(grey, grey, grey).lerp(UiPalette.DIM, 0.5)
 	draw_circle(p, NODE_RADIUS, color.darkened(0.55))

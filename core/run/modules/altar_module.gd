@@ -1,5 +1,6 @@
 ## 神坛与信仰级效果（093 / 095，作者定）：站在开着神坛的点上可以**献祭**（销毁道具换信力）或者做一次
-## **特殊操作**（蛮神献祭生命上限、日神祈祷……）—— 两者共享这个点上的一次机会，用掉就关；走开也关。
+## **特殊操作**（蛮神献祭生命上限、日神祈祷……）—— 两者二选一，共用这个点上的一次机会，用掉就关；走开也关。
+## 神坛和休息是休息点上两份独立的机会（见 [method NodeEvents.settle_rest]）：神坛用掉了记到节点上，两份都用完点才变灰。
 ## 激活信仰到了阶的效果（[FaithPerk]）在这里取：编译战斗单位、算战利品、踩点、献祭之后各有一处回调。
 ## 095 的赐福也在这里：走一步时棋盘上的东西可能受赐福，战利品 / 搜索翻到的普通道具按概率换成赐福版。
 ##
@@ -18,7 +19,7 @@ signal item_blessed(inst: ItemInstance, faith_id: StringName)
 
 ## 这一次在哪个点上开着（-1 = 没有；走开就关）
 var node: int = -1
-## 哪些点上已经用过那一次机会（献祭与特殊操作共享）
+## 哪些点上已经用过那一次机会（献祭和特殊操作二选一）
 var used: Dictionary = {}
 ## 093：特殊操作攒的账（蛮神献祭生命上限的次数、日神祈祷的次数……）：键 → 数，跟存档；效果构件自己读写
 var rituals: Dictionary = {}
@@ -79,7 +80,7 @@ func perk(type_name: StringName) -> FaithPerk:
 
 
 #region 神坛
-## 神坛可用：站在开着神坛的点上、这一次还没用过特殊操作、有激活的信仰
+## 神坛可用：站在开着神坛的点上、这一次还没用过（献祭和特殊操作二选一）、有激活的信仰
 func is_open() -> bool:
 	if _run == null or _run.travel == null:
 		return false
@@ -116,6 +117,7 @@ func offer(insts: Array, at_node: MapNode = null) -> Dictionary:
 		if line != "":
 			(out["log"] as Array[String]).append(line)
 	noted.emit("、".join(out["log"]))
+	_use()     # 反馈：献祭和特殊操作只能做一个 —— 献了就关
 	return out
 
 
@@ -135,9 +137,18 @@ func special(p: FaithPerk, at_node: MapNode, option: StringName = &"") -> String
 	var line := p.altar_apply(_run, at_node, option)
 	if line == "":
 		return ""
-	used[node] = true
+	_use()
 	noted.emit(line)
 	return line
+
+
+## 这个神坛这一次机会用掉了（休息那一份不受影响：休息点两份都用完才变灰，见 [method NodeEvents.settle_rest]）
+func _use() -> void:
+	if node < 0:
+		return
+	used[node] = true
+	if _run != null and _run.events != null and _run.map != null and _run.map.has_node(node):
+		_run.events.use_altar(_run.map.get_node(node))
 #endregion
 
 
@@ -191,7 +202,7 @@ func _on_altar_opened(n: MapNode) -> void:
 	node = n.id if n != null else -1
 
 
-## 走开就关神坛（下次回来这个点也不再有：休息点用过了）
+## 走开就关神坛（没用过的话回到这个休息点还能再开）
 func _on_leaving(_node_id: int) -> void:
 	node = -1
 

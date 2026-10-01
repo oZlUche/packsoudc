@@ -1,9 +1,9 @@
 ## 神坛屏（093，作者定）：休息处的「神坛」选项打开（只在激活了信仰时才有）。
 ##
 ## 上面一眼看到当前信仰、等级与信力；中间是祭品台（把道具拖上来；至少满足一条献祭规矩的才收），
-## 「献祭」按钮在台上有东西时亮起并预览信力增长与等级变化，常规献祭没有次数限制；
-## 到了等级解锁的特殊操作在右边一列按钮，**和常规献祭共享这一次机会**：做了特殊操作这个休息处的神坛就关了。
-## 「返回」= 回地图；站在这个点上、没用过特殊操作就还能再开。
+## 「献祭」按钮在台上有东西时亮起并预览信力增长与等级变化；
+## 到了等级解锁的特殊操作在右边一列按钮。反馈：**献祭和特殊操作二选一**，做了哪个这个休息处的神坛都关了；
+## 神坛和休息是两份独立的机会，互不占用。「返回」= 回地图；没用过就还能再开。
 extends GameScreen
 
 const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
@@ -32,7 +32,7 @@ func open(payload: Dictionary) -> void:
 	panel.add_child(col)
 	_head = _label("", 20, UiPalette.FG)
 	col.add_child(_head)
-	col.add_child(_wrapped("神坛：把道具拖到祭品台上献祭换信力（至少满足一条献祭规矩的才收，一件满足几条算几次）。常规献祭不限次数；特殊操作和献祭共享这一次机会，做了神坛就关了。" +
+	col.add_child(_wrapped("神坛：把道具拖到祭品台上献祭换信力（至少满足一条献祭规矩的才收，一件满足几条算几次）。献祭（一次献一批）和特殊操作只能做一个，做了神坛就关了；不占休息。" +
 		(("\n献祭品：" + def.offerings_summary()) if def != null and not def.offerings.is_empty() else ""), 12, UiPalette.DIM, 900))
 	var row := _hbox(24)
 	col.add_child(row)
@@ -54,7 +54,7 @@ func open(payload: Dictionary) -> void:
 	_offer_btn.disabled = true
 	buttons.add_child(_offer_btn)
 	var back := _button("返回", to_map, 13)
-	back.tooltip_text = "回到地图；站在这个点上、没用过特殊操作还能再来（Esc）"
+	back.tooltip_text = "回到地图；没用过神坛还能再来（Esc）"
 	buttons.add_child(back)
 	left.add_child(buttons)
 	_line = _label("", 13, UiPalette.HEAL)
@@ -193,7 +193,7 @@ func _rebuild_actions() -> void:
 	if actions.is_empty():
 		return
 	_actions_box.add_child(HSeparator.new())
-	_actions_box.add_child(_label("特殊操作（做一次就关神坛）", 14, UiPalette.FG))
+	_actions_box.add_child(_label("特殊操作（和献祭二选一，做了就关神坛）", 14, UiPalette.FG))
 	for p in actions:
 		var perk := p as FaithPerk
 		var arow := _hbox(6)
@@ -230,7 +230,7 @@ func _refresh() -> void:
 	var open := _altar_open()
 	_offer_btn.disabled = int(p["points"]) <= 0 or not open
 	if not open:
-		_preview.text = "这个休息处的神坛已经用过特殊操作，关了"
+		_preview.text = "这个休息处的神坛已经用过了，关了"
 	elif int(p["count"]) == 0:
 		_preview.text = "把祭品拖上台来"
 	else:

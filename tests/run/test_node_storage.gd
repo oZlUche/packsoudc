@@ -134,6 +134,14 @@ static func run_clear_on_leave(t: TestCase) -> void:
 	t.check(f.step_to(next), "穿行到用过的战斗点")
 	t.eq(run.storage.item_count(), 1, "087：出生点的两件留在出生点，战斗点留的那件回到暂存区")
 	t.eq(ns.stored_at(entry).size(), 2, "出生点上留着两件")
+	# 反馈：悬停看每个点的暂存区 —— 留在出生点的 2 件、站着的这个点身上暂存区的 1 件，各看各的
+	var tip_entry := NodeTooltip.stash_text(run, run.map.get_node(entry))
+	t.check(tip_entry.contains("2 件") and tip_entry.contains(Names.of(def)), "出生点浮窗：留着 2 件（%s）" % tip_entry)
+	var tip_here := NodeTooltip.stash_text(run, run.map.get_node(next))
+	t.check(tip_here.contains("1 件"), "站着的点：身上暂存区的 1 件（%s）" % tip_here)
+	run.storage.clear()
+	t.eq(NodeTooltip.stash_text(run, run.map.get_node(next)), "", "空了：没有这一行")
+	run.storage.admit(ItemInstance.create(def))
 	# 存档带着各点留的东西
 	var save_back := RunState.from_dict(run.to_dict(), c.chapter, c.items, c.enemies, c.sets)
 	t.check(save_back != null and NodeStorageModule.of(save_back).stored_at(entry).size() == 2, "按点存着的东西跟存档（modules.node_storage）")
