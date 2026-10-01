@@ -56,6 +56,9 @@ var storage: ItemStash = null
 ## 092（作者定）：保险箱关上了 —— 里面的送回基地、不能再改；[param count] 是几件
 var rng: RunRNG = null
 var events: NodeEvents = null
+## 101 第 3 刀：别人（节点事件、事件的条件与后果）要调一局的能力都经这张带类型的表。
+## 骨架自己的那几条在 [method _wire_events] 里接，模块与机制在自己的 `install` 里接
+var hooks: RunHooks = RunHooks.new()
 var tracker: SetTracker = null
 ## 玩家自带的基线属性（4.2）。开局给了角色就是角色的；没给用持有方的 / 默认的
 var player_baseline: CombatantBaseline = null
@@ -552,7 +555,7 @@ func use_skill(id: StringName) -> String:
 	return skills.use(id)
 
 
-## 开打前：立了旗的技能改双方的战斗单位（[NodeEvents.before_battle]）
+## 开打前：立了旗的技能改双方的战斗单位（[RunHooks] 的 `before_battle`）
 func _before_battle(me: CombatantSpec, enemy: CombatantSpec, _type: StringName) -> void:
 	skills.prepare_battle(me, enemy)
 
@@ -767,19 +770,21 @@ func _wire_events() -> void:
 	events.economy = economy
 	events.difficulty = chapter.difficulty
 	events.scale_id = scale_id()
-	events.player_spec = compile_player
-	events.loot_context = _loot_context
-	events.run_context = buff_context
 	events.event_defs = event_defs
-	events.has_buff_tag = has_buff_tag
-	# 8-3：条件看容器与段位，后果传送 / 耗时经这里走（清暂存区、猎手回合）
+	# 8-3：条件看容器，后果传送 / 耗时经这里走（清暂存区、猎手回合）
 	events.board = board
 	events.storage = storage
-	events.bracket_of = func() -> int: return hunters.bracket() if hunters != null else -1
-	events.relocate = relocate
-	events.request_extract = try_extract     # 085：撤离点的对话里选「撤离」
-	events.faith_tier = active_faith_tier     # 093：事件条件 faith_active
-	events.active_faith_id = active_faith_id
+	events.hooks = hooks
+	# 骨架接自己的那几条（模块与机制各接自己的，见 RunHooks.NAMES）
+	hooks.register(&"player_spec", compile_player)
+	hooks.register(&"loot_context", _loot_context)
+	hooks.register(&"run_context", buff_context)
+	hooks.register(&"has_buff_tag", has_buff_tag)
+	hooks.register(&"bracket", func() -> int: return hunters.bracket() if hunters != null else -1)
+	hooks.register(&"relocate", relocate)
+	hooks.register(&"request_extract", try_extract)     # 085：撤离点的对话里选「撤离」
+	hooks.register(&"faith_tier", active_faith_tier)     # 093：事件条件 faith_active
+	hooks.register(&"active_faith_id", active_faith_id)
 	events.waited.connect(func(_n: MapNode, _actions: int):
 		if hunters != null:
 			hunters.on_player_step()
@@ -807,7 +812,7 @@ func _wire_events() -> void:
 	travel.on_node_event = _on_arrive
 	# 082：技能与信力
 	_ensure_skills()
-	events.before_battle = _before_battle
+	hooks.register(&"before_battle", _before_battle)
 	faith_power = FaithPower.new()
 	faith_power.setup(self)
 	faith_power.changed.connect(func(id: StringName, p: int, tier: int): faith_power_changed.emit(id, p, tier))

@@ -94,7 +94,7 @@ static func run_conditions(t: TestCase) -> void:
 	var br := BracketWithin.new()
 	br.min_bracket = 0
 	t.check(not br.check(ctx), "没接段位（没有猎手机制）：永远不满足")
-	ctx.bracket = func() -> int: return 2
+	ctx.hooks.register(&"bracket", func() -> int: return 2)
 	t.check(br.check(ctx), "段位 2 ≥ 0")
 	br.min_bracket = 3
 	t.check(not br.check(ctx), "段位 2 < 3")

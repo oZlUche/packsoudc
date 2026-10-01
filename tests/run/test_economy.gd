@@ -363,7 +363,7 @@ static func run_events(t: TestCase) -> void:
 	var wealthy := CombatantBaseline.with_hp(10000.0)
 	wealthy.base_stats["regen_stamina"] = 100.0     # 只验进账：别让耐力耗尽把这一场拖成平局
 	var spec := BattleCompiler.compile(board, wealthy)
-	events.player_spec = func() -> CombatantSpec: return spec
+	events.hooks.register(&"player_spec", func() -> CombatantSpec: return spec)
 	events.bind(travel)
 
 	var rewards: Array = []
@@ -443,7 +443,7 @@ static func run_events(t: TestCase) -> void:
 	e2.pool = pool
 	e2.enemies = enemies
 	e2.items = items
-	e2.player_spec = func() -> CombatantSpec: return spec
+	e2.hooks.register(&"player_spec", func() -> CombatantSpec: return spec)
 	e2.bind(t2)
 	var r2: Array = []
 	e2.rewarded.connect(func(_n: MapNode, _a: int): r2.append(1))

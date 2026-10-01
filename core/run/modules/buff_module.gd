@@ -40,10 +40,9 @@ func install(run: RunState) -> void:
 	if run == null:
 		return
 	_run = run
-	if run.events != null:
-		run.events.grant_map_buff = grant     # 8-3：事件的后果给 / 去 / 查
-		run.events.remove_map_buff = remove
-		run.events.has_map_buff = has
+	run.hooks.register(&"grant_map_buff", grant)     # 8-3：事件的后果给 / 去 / 查
+	run.hooks.register(&"remove_map_buff", remove)
+	run.hooks.register(&"has_map_buff", has)
 	if not run.stepped.is_connected(_on_stepped):
 		run.stepped.connect(_on_stepped)
 

@@ -50,8 +50,8 @@ func install(run: RunState) -> void:
 	if run == null:
 		return
 	_run = run
+	run.hooks.register(&"bless_substitute", bless_substitute)     # 095：战利品 / 搜索的赐福替代
 	if run.events != null:
-		run.events.bless_substitute = bless_substitute     # 095：战利品 / 搜索的赐福替代
 		if not run.events.altar_opened.is_connected(_on_altar_opened):
 			run.events.altar_opened.connect(_on_altar_opened)
 	if not run.leaving.is_connected(_on_leaving):

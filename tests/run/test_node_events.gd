@@ -66,7 +66,7 @@ static func _world(seed_base: int = 100, vitality_max: int = 5, strong: bool = t
 	w.events.items = w.items
 	w.events.drop_rule = w.drop_rule
 	var spec := _strong(w.items) if strong else _weak()
-	w.events.player_spec = func() -> CombatantSpec: return spec
+	w.events.hooks.register(&"player_spec", func() -> CombatantSpec: return spec)
 	w.events.bind(w.travel)
 	return w
 
@@ -417,7 +417,7 @@ static func run_without_content(t: TestCase) -> void:
 	t.begin("节点事件 · 没有敌人池 / 没有玩家：战斗点只是走过")
 
 	var w := _world(990)
-	w.events.player_spec = Callable()
+	w.events.hooks.register(&"player_spec", Callable())     # 101 第 3 刀：接上一个无效的 Callable = 这一条没人接
 	var fights: Array = []
 	w.events.battle_finished.connect(func(_n: MapNode, _r: BattleResult, _w: bool): fights.append(1))
 	var node := _node(w, &"battle")

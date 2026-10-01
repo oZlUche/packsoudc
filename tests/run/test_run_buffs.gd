@@ -117,8 +117,8 @@ static func run_context_and_start(t: TestCase) -> void:
 	t.eq(no_such.meta_buffs.size(), 0, "不认识的、地图作用域的不算局外 buff")
 
 	# 幸运进掉落：同一件东西的掉落率高了 luck × luck_bonus
-	var lc_plain: LootContext = plain.events.loot_context.call()
-	var lc_buffed: LootContext = buffed.events.loot_context.call()
+	var lc_plain: LootContext = plain.hooks.loot_context()
+	var lc_buffed: LootContext = buffed.hooks.loot_context()
 	t.eq(lc_buffed.luck, ctx.luck_bonus, "掉落上下文里的幸运 = buff 给的")
 	if buffed.drop_rule != null:
 		var some := c.items.get_def(&"pistol")

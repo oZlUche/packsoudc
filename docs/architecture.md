@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.12 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.13 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2959,7 +2959,7 @@ func describe() -> String                # 开局屏的规则卡、编辑器
 
 | 模块 | 带走的东西 | 自己接的信号 |
 |---|---|---|
-| `SafeModule`（092） | 容器、锁、`closed` | `RunState.leaving`、`NodeEvents.safe_open` |
+| `SafeModule`（092） | 容器、锁、`closed` | `RunState.leaving`；`safe_open` 挂在 `RunHooks`（7.5） |
 | `NodeStorageModule`（087） | 哪个点上留着什么、`dropped` / `restored` | `leaving`（留下）、`arrived`（拿回） |
 | `CraftingModule`（084 / 087） | 配方表、相邻的对子、合成那一下、`done` | `arrived`（头一回踩上才合） |
 | `BuffModule`（062） | 一局里拿到的 buff（`entries`、给 / 去 / 查 / 走表）、`buffs_changed` | `stepped`（任何花行动点的方式） |
@@ -2976,6 +2976,36 @@ func describe() -> String                # 开局屏的规则卡、编辑器
 留在 `RunState` 上的是**骨架**（地图、旅程、体力、钱、棋盘、暂存区、随机流、节点事件、阶段、战斗账）
 加几样别处要在模块装上之前就用到的：`buff_defs` / `meta_buffs` / `active_buff_defs()` / `buff_context()`（开局那一刻算体力上限与开局钱，那时模块还没装）、
 信仰本身（`FaithState` / `FaithPower`：谁激活、几阶、多少信力）。行数：1359 → 962。
+
+### 7.5 一局的能力表 `RunHooks`（101 第 3 刀）
+
+信号是「发生了什么」的出口；**反过来**那一半 ——「踩上保险箱点，还能开吗」「事件里选了撤离，撤得了吗」「要开打了，玩家的战斗单位是什么」——
+以前是 `NodeEvents` 上十六个裸 `Callable` 字段加 `EventContext` 上七个，持有方逐个赋值：
+
+```gdscript
+events.player_spec = compile_player          # 谁接、签名是什么、没接会怎样，全靠注释说
+events.safe_open = safe.is_open              # 接错一个参数的表现是运行时静默报错、断言成片消失
+ctx.faith_tier = active_faith_tier           # 同一件事在两个地方各接一份
+```
+
+`RunHooks`（`core/run/run_hooks.gd`）把它们收成**带类型的方法**加一张名字登记表：
+
+```gdscript
+class_name RunHooks extends RefCounted
+const NAMES := { &"player_spec": "RunState：…", &"safe_open": "SafeModule：…", … }   # 认得的名字 → 谁接
+func register(name: StringName, fn: Callable) -> void      # 名字不在表里 → push_error，不会默默不生效
+func has(name: StringName) -> bool                         # 这条有人接吗（用来决定走默认那条路）
+func safe_open() -> bool                                   # 调用方拿到的一定是 bool；没人接就是写在这里的默认值
+func player_spec() -> CombatantSpec …
+```
+
+- **谁接**：骨架（`RunState._wire_events`）接自己的十条（编译玩家、掉落上下文、一局的规则、buff 标签、段位、传送、撤离、信仰阶与 id、开打前改单位）；
+  模块与机制在自己的 `install` 里接自己的（`SafeModule` 的 `safe_open`、`BuffModule` 的三条地图 buff、`AltarModule` 的 `bless_substitute`、`HunterSystem` 的迎战 / 逃跑）。
+  **`NodeEvents` 与 `EventContext` 都不认识任何模块**，只认这张表 —— 这是 7.4 那条「加一个玩法不改 `RunState` / `NodeEvents`」的另一半。
+- **默认值写在方法里**，所以沙盒、测试、没装那个模块的一局都能照常跑：没装保险箱 = `safe_open()` 为真（踩上去就开），没装神坛 = `bless_substitute()` 原样返回，
+  没有猎手 = `bracket()` 为 -1。`NodeEvents.hooks` / `EventContext.hooks` 默认就是一份全默认的 `RunHooks.new()`。
+- 加一条能力：`NAMES` 一行 + 一个带类型的方法。名字写错当场报错，这正是裸字段抓不到的那类错。
+- 不进这张表的：`EventContext.erosion_depth`（那是节点自己从 `travel.erosion` 现接的，和一局的能力无关）。
 
 ---
 
@@ -3653,6 +3683,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.13 | 2026-10-01 | **一局的能力表 `RunHooks`**（报告 101 第 3 刀；新增 7.5）：`NodeEvents` 的 16 个裸 `Callable` 字段与 `EventContext` 的 7 个收成一个带类型的 `RunHooks`（`register` 只认 `NAMES` 里的名字，写错当场 `push_error`；每条的默认值写在方法里，所以沙盒 / 测试 / 没装那个模块的一局照常跑）；骨架在 `_wire_events` 里接自己的十条，`SafeModule` / `BuffModule` / `AltarModule` / `HunterSystem` 在 `install` 里接自己的 —— `NodeEvents` 与 `EventContext` 都不再认识任何模块；`EventContext` 新增 `faith_tier_now()` / `active_faith_id()`，`erosion_depth` 不进表（它是节点从 `travel.erosion` 现接的）；新套件 `tests/run/test_run_hooks.gd` 守默认值、名字登记、一局里谁接了什么、以及那些裸字段真的没了 |
 | v2.12 | 2026-10-01 | **测试与工具**（报告 102；新增 11.1、改 11 的树）：套件按层分目录（`tests/inventory` / `battle` / `map` / `run` / `meta` / `ui` / `authoring`，76 个），十个 `test_author_0NN.gd` 按**被测对象**拆散归位（报告号留在用例标题里），`run_tests.gd` 改为 `DirAccess` 递归自动发现（不再维护 `preload` 清单），`bash tools/test.sh <词>` 只跑路径或标题里含它的套件（后两步全项目检查照常跑）；类缓存出仓库（`.gitignore` 收整个 `.godot/`，推翻 v2.04；编辑器自己重建、`test.sh` 与 `run_game` 先 `--import`，`DevNav` 的缺类自检只在非编辑器下提示）；`test.sh` 找不到 `timeout` 就不包超时（macOS 默认没有）；新增 `tests/support.gd`（公共装载）与 `tests/run/flow_support.gd`（跑流程的公共壳） |
 | v2.11 | 2026-10-01 | **一局的六个子系统都搬成模块**（报告 101 第 1 刀；改 7.4 / 7.2 / 8.2）：`NodeStorageModule`（087 按点暂存）、`CountdownModule`（092 / 094 倒计时与带入预算，开局屏用的那几条算式留作静态方法）、`CraftingModule`（084 / 087 相邻即合）、`BuffModule`（062 一局里拿到的 buff）、`AltarModule`（093 / 095 神坛、信仰级效果 `perks`、赐福）；`RunState` 新增通用信号 `arrived(node_id, first_time)` / `stepped(node_id, reason)` 与方法 `fail(reason)`，`start()` 去掉 `p_carry_value`（带入价值走 `module_inputs`），1359 → 962 行；`RunMigrations` 的 v1 → v2 把顶层 `node_storages` / `carry_in_value` / `faith_rituals` / `faith_stat_bonus` / `altar_used` / `buffs.map` 都搬进 `modules` |
 | v2.10 | 2026-10-01 | **一局的模块：`RunState` 的扩展点**（报告 101 第 0 刀 + 第 1 刀样板；新增 7.4、改 7.2 / 8.4）：`RunModule`（装 / 存 / 读 / 说一句，生命周期靠订阅已有信号）、`RunState.modules / install_modules / install_module / module / module_input / module_lines`、新信号 `leaving`、`ChapterDef.modules`、`RunModules.standard()`、注册表 `RUN_MODULES`（`run_mechanic` 作别名）、`RunMechanic` 变成它的子类；保险箱搬成 `SafeModule`（`RunState` 不再有 `safe` 字段，`SafeModule.of(run)` 取），一局存档升到 v2，`RunMigrations` 第一步把顶层 `safe` / `safe_locked` 搬进 `modules.safe` |

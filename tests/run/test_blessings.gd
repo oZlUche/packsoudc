@@ -108,7 +108,7 @@ static func run_blessing_paths(t: TestCase) -> void:
 	var altar := AltarModule.of(run)     # 101：赐福与神坛是一局的模块
 	var active := altar.bless_substitute([&"shortsword", &"longbow"] as Array[StringName], 0.0, 1.0, rng)
 	t.eq(active, [&"shortsword_brute", &"longbow_brute"] as Array[StringName], "激活了、概率 1：都换成蛮神的")
-	t.check(run.events.bless_substitute.is_valid() and run.events.current_search == null, "掉落 / 搜索的替代接上了")
+	t.check(run.hooks.has(&"bless_substitute") and run.events.current_search == null, "掉落 / 搜索的替代接上了")
 	# 包内转化：把蛮神的定义复制一份、转化概率 1
 	var brute := (run.faith_defs[&"brute"] as FaithDef).duplicate() as FaithDef
 	brute.convert_chance = 1.0

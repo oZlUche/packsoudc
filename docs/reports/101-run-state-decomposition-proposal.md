@@ -229,3 +229,35 @@ func describe() -> String: return ""              # 开局屏 / 规则卡 / 编�
 
 **下一刀**：第 2 刀（`start()` 收参数）等 100 第 4 步的 `ContentLibrary`；第 3 刀（`RunHooks`）、第 4 刀（`GameFlow` 抽服务）、第 6 刀（UI 里的逻辑搬回去）彼此独立。
 
+
+## 落地 · 第 3 刀：`NodeEvents` 的回调收成 `RunHooks`（2026-10-01，实现 thread）
+
+`NodeEvents` 上 16 个裸 `Callable` 字段、`EventContext` 上 7 个，全收进一个 `RunHooks`（`core/run/run_hooks.gd`，142 行）：
+一张名字登记表 `NAMES`（名字 → 这一条由谁接）加 17 个**带类型的方法**，每条的默认值写在方法里。
+
+| 原来 | 现在 |
+|---|---|
+| `events.player_spec = compile_player` 等 13 处赋值 | `hooks.register(&"player_spec", compile_player)`，调用方写 `hooks.player_spec()`，拿到的一定是 `CombatantSpec` |
+| `if safe_open.is_valid() and not safe_open.call():` | `if not hooks.safe_open():`（没装保险箱模块 = 能开） |
+| `ctx.faith_tier` / `ctx.active_faith` / `ctx.bracket` / 四个地图 buff 回调 | `ctx.hooks`，外加 `ctx.faith_tier_now()` / `ctx.active_faith_id()` 两个取法 |
+| 名字或参数写错 = 运行时静默报错、断言成片消失 | `register` 的名字不在 `NAMES` 里当场 `push_error`；签名由方法定 |
+
+**谁接**：骨架（`RunState._wire_events`）接自己的十条（`player_spec` / `loot_context` / `run_context` / `has_buff_tag` / `bracket` /
+`relocate` / `request_extract` / `faith_tier` / `active_faith_id` / `before_battle`）；模块与机制在自己的 `install` 里接自己的
+（`SafeModule.safe_open`、`BuffModule` 的三条地图 buff、`AltarModule.bless_substitute`、`HunterSystem` 的迎战 / 逃跑）。
+**`NodeEvents` 与 `EventContext` 都不再认识任何模块** —— 第 0 刀解决了「加玩法不改 `RunState`」，这一刀解决了另一半「不改 `NodeEvents`」。
+
+**和方案不同的两处**：
+
+1. 方案写的是「`RunState` 实现 `RunHooks`（或持一个实现）」。那样做模块挂的能力又得由 `RunState` 转发给模块（`safe_open` → `SafeModule.of(self).is_open()`），
+   `RunState` 就重新认识每个模块了，和第 0 刀的目标相反。所以改成**一张注册表**：骨架和模块平等地往里 `register`，`RunState` 一条模块的能力都不转发。
+2. 方案的清单里没有 `EventContext` 的那 7 个，但它们是同一件事的另一半（`ctx.faith_tier` 和 `events.faith_tier` 接的是同一个方法），
+   不一起收就等于把 hooks 又拆回 Callable。一并收了。`EventContext.erosion_depth` 没动 —— 那是节点从 `travel.erosion` 现接的，不是一局的能力。
+
+**账**：`node_events.gd` 793 → 763 行（23 个字段声明 → 1 个 `hooks`），`event_context.gd` 少 7 个字段、多 2 个取法，
+`run_state.gd` 962 → 967（`register` 比赋值多了名字那一截，换来的是写错当场报错）。
+新套件 `tests/run/test_run_hooks.gd`（103 项断言）：每个登记的名字都有同名方法、没人接时的默认值逐条、
+接一个无效 `Callable` = 取消、名字写错接不上也不误接到别条、一局里骨架与各模块各接了什么、以及那 23 个裸字段真的从两个类上消失了（防回头）。
+全套测试 **77 个套件、12456 项断言通过**。
+
+**下一刀**：第 4 刀（`GameFlow` 抽服务）、第 6 刀（UI 里的逻辑搬回去）彼此独立；第 2 刀仍等 100 第 4 步的 `ContentLibrary`。

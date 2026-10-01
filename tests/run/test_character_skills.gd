@@ -193,7 +193,7 @@ static func run_assault_and_free_loss(t: TestCase) -> void:
 		t.check(false, "开不了局")
 		return
 	var quota := s2.buff_context().free_losses
-	s2.events.player_spec = func() -> CombatantSpec: return BattleCompiler.compile(null)
+	s2.hooks.register(&"player_spec", func() -> CombatantSpec: return BattleCompiler.compile(null))
 	var node2 := _battle_node(s2)
 	var cost := s2.node_rules.loss_cost_of(&"battle")
 	var v0 := s2.vitality.current

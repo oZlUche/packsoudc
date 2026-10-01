@@ -2,7 +2,7 @@
 ## 关上（或者走开）就送回基地，不能再改动；空着关不算关（还能再开）。
 ##
 ## 101 第 0 / 1 刀的样板模块：状态（容器、锁没锁）、存档、接线全在这里，[RunState] 一行都不认识保险箱。
-## 自己接两处：走开就锁上（`RunState.leaving`）、节点事件问「还能开吗」（`NodeEvents.safe_open`）。
+## 自己接两处：走开就锁上（`RunState.leaving`）、节点事件问「还能开吗」（`RunHooks` 的 `safe_open`）。
 ## 取它用 [method of]。
 class_name SafeModule
 extends RunModule
@@ -55,8 +55,7 @@ func install(run: RunState) -> void:
 	# 作者定：走开 = 关上（里面有东西才算关）。走一步、被事件挪走都在真正动之前发 leaving
 	if not run.leaving.is_connected(_on_leaving):
 		run.leaving.connect(_on_leaving)
-	if run.events != null:
-		run.events.safe_open = is_open     # 092：锁上的保险箱再踩上去不开（刀 3 会变成 RunHooks 的一个方法）
+	run.hooks.register(&"safe_open", is_open)     # 092：锁上的保险箱再踩上去不开
 
 
 ## 还能开（装了、没锁）
