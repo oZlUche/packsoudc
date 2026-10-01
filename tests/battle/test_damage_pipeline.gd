@@ -1,7 +1,7 @@
 ## 伤害结算管线：类型性质、护盾吸收、受伤前改写、护甲、流失（架构文档 4.6）。
 extends RefCounted
 
-const H := preload("res://tests/test_effect_system.gd")
+const H := preload("res://tests/battle/test_effect_system.gd")
 
 
 #region helper

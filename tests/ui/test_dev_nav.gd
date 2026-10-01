@@ -108,11 +108,11 @@ static func frame_run_confirm(t: TestCase, root: Window) -> void:
 	another.queue_free()
 
 
-## 094：全局类缓存自检 —— 测试跑之前 --import 过，缓存该是全的；缓存文件进了仓库
+## 094 / 102 B1：全局类缓存自检 —— 测试跑之前 --import 过，缓存该是全的；缓存本身是生成物，不进仓库
 static func run_class_cache(t: TestCase) -> void:
-	t.begin("DevNav · 全局类缓存自检：脚本里的 class_name 缓存里都有；缓存文件跟仓库走")
+	t.begin("DevNav · 全局类缓存自检：脚本里的 class_name 缓存里都有；缓存是生成物、不进仓库（102 B1）")
 	var missing: Array[String] = load("res://ui/dev_nav.gd").stale_classes()
 	t.check(missing.is_empty(), "缓存里一个不缺（缺：%s）" % ", ".join(missing))
-	t.check(FileAccess.file_exists("res://.godot/global_script_class_cache.cfg"), "缓存文件在")
 	var ignore := FileAccess.get_file_as_string("res://.gitignore")
-	t.check(ignore.contains("!.godot/global_script_class_cache.cfg"), ".gitignore 放行了缓存文件")
+	t.check(ignore.contains(".godot/") and not ignore.contains("!.godot/global_script_class_cache.cfg"),
+		".gitignore 把 .godot/ 全忽略了（不再放行缓存文件）")

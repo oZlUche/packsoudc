@@ -5,7 +5,7 @@ const GAME := "res://ui/game/game.tscn"
 const SAVE := "user://test_096_run.json"
 const META := "user://test_096_meta.json"
 const SETTINGS := "user://test_096_settings.json"
-const NodeScreens := preload("res://tests/test_node_screens.gd")
+const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 
 
 static func _cleanup() -> void:

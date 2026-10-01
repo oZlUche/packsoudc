@@ -2,7 +2,7 @@
 ## 以及三个状态条件型扳机（层数、资源、伤害）。见架构文档 4.4 与第 9 节。
 extends RefCounted
 
-const H := preload("res://tests/test_effect_system.gd")
+const H := preload("res://tests/battle/test_effect_system.gd")
 
 
 #region 构造 helper

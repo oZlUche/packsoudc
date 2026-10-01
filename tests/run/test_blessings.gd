@@ -5,7 +5,7 @@ extends RefCounted
 const SAVE := "user://test_095_run.json"
 const META := "user://test_095_meta.json"
 const SETTINGS := "user://test_095_settings.json"
-const NodeScreens := preload("res://tests/test_node_screens.gd")
+const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 
 
 static func _cleanup() -> void:

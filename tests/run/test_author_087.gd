@@ -2,7 +2,7 @@
 ## BOSS 保底金色 + 直接撤离、商店拖着买 / 卖、战斗 buff 图标栏。合成改相邻自动在 test_tutorial2 里验。
 extends RefCounted
 
-const NodeScreens := preload("res://tests/test_node_screens.gd")
+const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const SAVE := "user://test_087_run.json"
 const META := "user://test_087_meta.json"
 const SETTINGS := "user://test_087_settings.json"
@@ -765,7 +765,7 @@ static func run_spyglass_and_codex(t: TestCase) -> void:
 
 static func run_loss_cost_bound_to_battle(t: TestCase) -> void:
 	t.begin("088 · 战败代价跟战斗绑定：参数写了用参数（0 无代价 / -2 必死 / 大于 1）；没写看节点内容 loss_cost；再没有核心必死、其余按规则表；跟战前准备屏的存档")
-	var W := preload("res://tests/test_node_events.gd")
+	var W := preload("res://tests/run/test_node_events.gd")
 	var w = W._world(200, 9, false)     # 弱玩家：必输
 	var ev: NodeEvents = w.events
 	var battle: MapNode = W._node(w, &"battle")

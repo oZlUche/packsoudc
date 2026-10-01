@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.11 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.12 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3523,12 +3523,43 @@ res://
     map_editor/     map_editor
   tools/            import_content  export_content  normalize_content  check_scripts  map_stats  build_dummies  bench_hunters
                     gen_sample_items  gen_sample_combat  gen_sample_chapter  bench_battle  capture_scene  cli_tool
-  tests/            run_tests  test_case  test_*（44 个套件）
+  tests/            run_tests  test_case  support（公共装载）                      # 102：按层分目录，76 个套件
+    inventory/      test_*（12）   背包、格子、拖拽
+    battle/         test_*（8）    编译、效果、伤害、数值
+    map/            test_*（10）   图生成、导航、形态、地图编辑器以外的地图逻辑
+    run/            test_*（35）   一局：流程、模块、存档、经济、事件、信仰   flow_support（跑流程的公共壳）
+    meta/           test_*（1）    跨局
+    ui/             test_*（3）    屏与控件（帧测试）
+    authoring/      test_*（7）    内容管线与各编辑器
 ```
 
 还没有的（设计里提过、待后面的阶段）：6.2 的渐进揭示（M6-2，`ui/game/loot_screen` 现在是最小版）、
 `core/run/erosion_field` / `erosion_schedule`（第 7 阶段）。`RunState`、`GameFlow` 按 1 节的约定是纯 `RefCounted`，不是 autoload；
 `GameDirector` 是主场景的根，也不是 autoload。
+
+### 11.1 测试怎么摆、怎么跑（报告 102）
+
+**一个套件 = 一个文件 = `tests/<层>/test_<被测的东西>.gd`**，按它测的那一层放目录（上面的树）。
+文件名跟着**被测对象**走，不跟着报告号走：报告号属于用例标题（`t.begin("保险箱 · …（092）")`），
+那里才是要回溯「这条是哪次改的」的地方。此前有十个 `test_author_0NN.gd`，一个文件里装着
+那一批改动顺手写的几条互不相关的用例 —— 改保险箱的人不会想到去 `test_author_092.gd` 里找它的测试，
+于是同一个东西被测两遍、或者改坏了没人发现。102 把它们按被测对象拆散归位（跟着 101 每刀一起搬）。
+
+**跑器自己发现套件**：`tests/run_tests.gd` 不再维护 `preload` 清单（加一个套件要改两个文件，
+忘了改的表现是「写了测试但从来没跑过」），改为 `DirAccess` 递归扫 `res://tests` 下所有 `test_*.gd`、
+按路径排序后加载。两阶段照旧：`run_*(t)` 直接跑，`frame_*(t, root)` 在第一帧跑（见 v1.15）。
+不想被收集的公共代码**不叫** `test_*`（`support.gd`、`run/flow_support.gd`）。
+
+**带一个词就只跑相关套件**：`bash tools/test.sh safe` → 路径或用例标题里含 `safe` 的套件。
+全套 ≈5 分钟，改一处等五分钟会让人干脆不跑。过滤只影响单元测试那一步，
+后面 `check_scripts` / `check_content` 两步全项目检查照常跑（它们和过滤无关、也快）。
+
+**类缓存不进仓库**（102 第 B1 条，推翻 v2.04 的做法）：`.godot/` 整个目录 `.gitignore`。
+全局类缓存是编辑器扫脚本生成的**生成物**，提交它等于拿版本控制当分发渠道 ——
+每加一个 `class_name` 都要记得提交、两个分支各加一个就冲突、跑完测试工作区就脏。
+三条用得到它的路各自解决：编辑器打开项目时自己重建；`tools/test.sh` 每次先 `--import`；
+不开编辑器直接跑游戏走 `tools/run_game.sh` / `.bat`（也是先 `--import`）。
+`DevNav` 的缺类自检因此只在**非编辑器**运行时提示（编辑器里缓存必然是新的，提示只会是误报）。
 
 ---
 
@@ -3622,6 +3653,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.12 | 2026-10-01 | **测试与工具**（报告 102；新增 11.1、改 11 的树）：套件按层分目录（`tests/inventory` / `battle` / `map` / `run` / `meta` / `ui` / `authoring`，76 个），十个 `test_author_0NN.gd` 按**被测对象**拆散归位（报告号留在用例标题里），`run_tests.gd` 改为 `DirAccess` 递归自动发现（不再维护 `preload` 清单），`bash tools/test.sh <词>` 只跑路径或标题里含它的套件（后两步全项目检查照常跑）；类缓存出仓库（`.gitignore` 收整个 `.godot/`，推翻 v2.04；编辑器自己重建、`test.sh` 与 `run_game` 先 `--import`，`DevNav` 的缺类自检只在非编辑器下提示）；`test.sh` 找不到 `timeout` 就不包超时（macOS 默认没有）；新增 `tests/support.gd`（公共装载）与 `tests/run/flow_support.gd`（跑流程的公共壳） |
 | v2.11 | 2026-10-01 | **一局的六个子系统都搬成模块**（报告 101 第 1 刀；改 7.4 / 7.2 / 8.2）：`NodeStorageModule`（087 按点暂存）、`CountdownModule`（092 / 094 倒计时与带入预算，开局屏用的那几条算式留作静态方法）、`CraftingModule`（084 / 087 相邻即合）、`BuffModule`（062 一局里拿到的 buff）、`AltarModule`（093 / 095 神坛、信仰级效果 `perks`、赐福）；`RunState` 新增通用信号 `arrived(node_id, first_time)` / `stepped(node_id, reason)` 与方法 `fail(reason)`，`start()` 去掉 `p_carry_value`（带入价值走 `module_inputs`），1359 → 962 行；`RunMigrations` 的 v1 → v2 把顶层 `node_storages` / `carry_in_value` / `faith_rituals` / `faith_stat_bonus` / `altar_used` / `buffs.map` 都搬进 `modules` |
 | v2.10 | 2026-10-01 | **一局的模块：`RunState` 的扩展点**（报告 101 第 0 刀 + 第 1 刀样板；新增 7.4、改 7.2 / 8.4）：`RunModule`（装 / 存 / 读 / 说一句，生命周期靠订阅已有信号）、`RunState.modules / install_modules / install_module / module / module_input / module_lines`、新信号 `leaving`、`ChapterDef.modules`、`RunModules.standard()`、注册表 `RUN_MODULES`（`run_mechanic` 作别名）、`RunMechanic` 变成它的子类；保险箱搬成 `SafeModule`（`RunState` 不再有 `safe` 字段，`SafeModule.of(run)` 取），一局存档升到 v2，`RunMigrations` 第一步把顶层 `safe` / `safe_locked` 搬进 `modules.safe` |
 | v2.09 | 2026-10-01 | **内容管线一致性检查**（报告 100 第 1 步；10.1）：`ContentCheck` + `tools/check_content.gd` 守「作者 JSON ⇄ `.tres` 一致」（导出比对、深比较不较真键顺序与 int / float；缺资产、孤儿资产、值不同各报一条），接进 `tools/test.sh` 与 `test_content_pipeline`；`buffs` / `sets` 两种从 `ContentPaths.KINDS` / `ORDER` 去掉（都是空目录，目录常量留给编辑器）；`test.sh` 的 `GODOT` 未设时先在 PATH 里找 `godot` / `godot4` |

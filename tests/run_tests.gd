@@ -23,92 +23,71 @@ var _phase1_ok: bool = false
 var _case: TestCase = null
 var _started: int = 0
 
-const SUITES: Array = [
-	preload("res://tests/test_item_shape.gd"),
-	preload("res://tests/test_item_instance.gd"),
-	preload("res://tests/test_grid_inventory.gd"),
-	preload("res://tests/test_inventory_service.gd"),
-	preload("res://tests/test_item_assets.gd"),
-	preload("res://tests/test_board_bags.gd"),
-	preload("res://tests/test_stat_math.gd"),
-	preload("res://tests/test_compiler.gd"),
-	preload("res://tests/test_effect_system.gd"),
-	preload("res://tests/test_sets.gd"),
-	preload("res://tests/test_effect_tree.gd"),
-	preload("res://tests/test_damage_pipeline.gd"),
-	preload("res://tests/test_content_pipeline.gd"),
-	preload("res://tests/test_content_editor.gd"),
-	preload("res://tests/test_item_contracts.gd"),
-	preload("res://tests/test_drag_layer.gd"),
-	preload("res://tests/test_displacement.gd"),
-	preload("res://tests/test_item_stash.gd"),
-	preload("res://tests/test_dev_nav.gd"),
-	preload("res://tests/test_item_value.gd"),
-	preload("res://tests/test_map_graph.gd"),
-	preload("res://tests/test_vitality.gd"),
-	preload("res://tests/test_map_generator.gd"),
-	preload("res://tests/test_ring_map_generator.gd"),
-	preload("res://tests/test_ring_type_assigner.gd"),
-	preload("res://tests/test_map_grid_text.gd"),
-	preload("res://tests/test_map_source.gd"),
-	preload("res://tests/test_map_travel.gd"),
-	preload("res://tests/test_chapter_pipeline.gd"),
-	preload("res://tests/test_map_layout.gd"),
-	preload("res://tests/test_map_editor.gd"),
-	preload("res://tests/test_enemy_pool.gd"),
-	preload("res://tests/test_drop_resolver.gd"),
-	preload("res://tests/test_node_rules.gd"),
-	preload("res://tests/test_search_session.gd"),
-	preload("res://tests/test_node_events.gd"),
-	preload("res://tests/test_economy.gd"),
-	preload("res://tests/test_run_state.gd"),
-	preload("res://tests/test_game_flow.gd"),
-	preload("res://tests/test_storage_rule.gd"),
-	preload("res://tests/test_meta_grid.gd"),
-	preload("res://tests/test_run_buffs.gd"),
-	preload("res://tests/test_event_layer.gd"),
-	preload("res://tests/test_event_editor.gd"),
-	preload("res://tests/test_character_setup.gd"),
-	preload("res://tests/test_search_reveal.gd"),
-	preload("res://tests/test_difficulty.gd"),
-	preload("res://tests/test_hunters.gd"),
-	preload("res://tests/test_character_skills.gd"),
-	preload("res://tests/test_calibration.gd"),
-	preload("res://tests/test_erosion.gd"),
-	preload("res://tests/test_portals.gd"),
-	preload("res://tests/test_event_constructs.gd"),
-	preload("res://tests/test_lattice_maps.gd"),
-	preload("res://tests/test_sealed_items.gd"),
-	preload("res://tests/test_faith.gd"),
-	preload("res://tests/test_faith_power.gd"),
-	preload("res://tests/test_faith_reseat.gd"),
-	preload("res://tests/test_save_migration.gd"),
-	preload("res://tests/test_run_modules.gd"),
-	preload("res://tests/test_prologue.gd"),
-	preload("res://tests/test_node_screens.gd"),
-	preload("res://tests/test_text_and_tooltips.gd"),
-	preload("res://tests/test_tutorial2.gd"),
-	preload("res://tests/test_buff_editor.gd"),
-	preload("res://tests/test_author_087.gd"),
-	preload("res://tests/test_author_090.gd"),
-	preload("res://tests/test_author_091.gd"),
-	preload("res://tests/test_set_editor.gd"),
-	preload("res://tests/test_author_092.gd"),
-	preload("res://tests/test_author_093.gd"),
-	preload("res://tests/test_author_094.gd"),
-	preload("res://tests/test_author_095.gd"),
-	preload("res://tests/test_author_096.gd"),
-]
+## 102：套件不再手写登记 —— `tests/**/test_*.gd` 扫出来（路径排序），新套件放进目录里就跑。
+## 过滤：`--script res://tests/run_tests.gd -- safe` 只跑路径或用例标题里含 `safe` 的套件（`tools/test.sh safe` 透传）
+const SUITE_ROOT := "res://tests"
+## 不是套件的：断言收集器自己
+const NOT_SUITES := ["test_case.gd"]
+
+var _suites: Array = []
+
+
+## 扫出所有套件脚本（含子目录；路径排序 —— 要先后关系就按文件名排）
+static func discover(root: String = SUITE_ROOT) -> Array[String]:
+	var out: Array[String] = []
+	var dir := DirAccess.open(root)
+	if dir == null:
+		return out
+	for f in dir.get_files():
+		if f.begins_with("test_") and f.ends_with(".gd") and not NOT_SUITES.has(f):
+			out.append(root.path_join(f))
+	for sub in dir.get_directories():
+		out.append_array(discover(root.path_join(sub)))
+	out.sort()
+	return out
+
+
+## 这个套件要不要跑：空模式全跑；否则路径或某个用例标题（`t.begin("…")`）里含这个词（不分大小写）
+static func matches(path: String, pattern: String) -> bool:
+	if pattern == "":
+		return true
+	var needle := pattern.to_lower()
+	if path.to_lower().contains(needle):
+		return true
+	var text := FileAccess.get_file_as_string(path)
+	for line in text.split("\n"):
+		if line.contains("t.begin(") and line.to_lower().contains(needle):
+			return true
+	return false
+
+
+## 命令行里 `--` 之后的第一个词就是过滤模式
+static func pattern_of_args() -> String:
+	var args := OS.get_cmdline_user_args()
+	return String(args[0]).strip_edges() if not args.is_empty() else ""
+
+
+func _load_suites() -> void:
+	var pattern := pattern_of_args()
+	for path in discover():
+		if matches(path, pattern):
+			var script: Resource = load(path)
+			if script != null:
+				_suites.append(script)
+	if pattern != "":
+		print("只跑含「%s」的套件：%d 个" % [pattern, _suites.size()])
+
 
 
 func _initialize() -> void:
 	_case = TestCase.new()
 	_started = Time.get_ticks_msec()
+	_load_suites()
 
 	# 套件用 run / run_xxx 拆分多组用例，这里自动发现并调用。
 	# run 也走自动发现而不是写死调用 —— 只有 frame_ 用例的套件没有 run，
 	# 写死会让它一加进来就崩。
-	for suite in SUITES:
+	for suite in _suites:
 		for m in suite.get_script_method_list():
 			var n: String = m["name"]
 			if (n == "run" or n.begins_with("run_")) and m["args"].size() == 1:
@@ -132,7 +111,7 @@ func _process(_delta: float) -> bool:
 		return true
 
 	# 需要场景树的用例：到这里 _ready 才派发得了
-	for suite in SUITES:
+	for suite in _suites:
 		for m in suite.get_script_method_list():
 			var n: String = m["name"]
 			if n.begins_with("frame_") and m["args"].size() == 2:
@@ -147,7 +126,7 @@ func _report() -> void:
 	print("")
 	print("======================================================")
 	if _case.passed():
-		print("通过  %d 项断言，%d 个套件，耗时 %d ms" % [_case.checks, SUITES.size(), elapsed])
+		print("通过  %d 项断言，%d 个套件，耗时 %d ms" % [_case.checks, _suites.size(), elapsed])
 		print("======================================================")
 		_finished = true
 		quit(0)

@@ -1,7 +1,7 @@
-# Godot 4+ 引擎缓存 —— 但**全局类缓存要进仓库**（094）：作者拉了带新 class_name 的脚本、没重新 --import 就跑，
-# 依赖它的脚本整体解析失败（灰屏 / 编辑器空白）。缓存跟着代码走，拉下来就是对的；tools/test.sh 每次 --import 会把它刷新
-.godot/*
-!.godot/global_script_class_cache.cfg
+# Godot 4+ 引擎缓存，全部不进仓库（102 第 B1 条，作者定）：全局类缓存是编辑器打开项目时自己扫脚本生成的生成物，
+# 把它提交进来等于用版本控制当分发渠道（每加一个类都要提交、两个分支各加一个就冲突、跑完测试工作区就脏）。
+# 不经编辑器直接跑游戏的那条路由 tools/run_game.sh / .bat 先 --import 解决；tools/test.sh 也每次 --import
+.godot/
 /android/
 
 # 开发期插件：ziva_agent 为 1.5GB 二进制（bin / zivacode），不纳入版本控制。
