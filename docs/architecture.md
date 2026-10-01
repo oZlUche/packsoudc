@@ -1089,7 +1089,7 @@ func settle_regen(now: int) -> void:      # CombatantRuntime
 1. 确认类型      这一下能不能被护盾吸收、吃不吃护甲、要不要通知
 2. 护盾吸收      能吸收则先扣护盾；中毒之类绕过
 3. 受伤前效果    【同步派发】效果在这里改写伤害包：减伤、反转、免疫
-4. 计算受伤量    百分比 → 固定增减 → 反转 → 护甲，然后落到血量
+4. 计算受伤量    百分比 → 固定增减 → 反转 → 护甲 → × 受伤倍率 damage_taken（103，只放大伤害不放大治疗），然后落到血量
 5. 受伤后效果    发 damage 事件；流失类不通知默认监听
 ```
 
@@ -1216,12 +1216,16 @@ var final: int              ## 最终结算量，正为扣血、负为回血
 在时刻之间跳跃。
 
 ```gdscript
-while 双方存活 and now < 时限:
-    next = min(所有自发规则的下次出手时刻, 所有 buff 的到期时刻)
-    if next 不存在: break            # 谁也打不死谁，判平局
+while 双方存活 and now < 安全上限:
+    next = min(所有自发规则的下次出手时刻, 所有 buff 的到期时刻, 下一个系统时刻)
     now = next
-    结算这一刻：先到期，后出手       # 正好此刻到期的增益不该再为这一刻加成
+    结算这一刻：系统时刻 → 到期 → 出手   # 正好此刻到期的增益不该再为这一刻加成
 ```
+
+**加时与衰竭（103，作者定）**：第 30 秒起双方各叠一层系统 buff「鏖战」（受到的最终伤害 +20%，属性 `damage_taken`），
+之后每 5 秒再叠一层；第 60 秒起每秒叠一层「衰竭」（生命上限 −5），上限把当前血压到 0 就倒下（走 `mark_dead`，蛮神的不死照常生效）。
+数值在 `OvertimeRules`（`NodeRules.overtime`，没填用默认），两种都是 `BuffDef.system = true` 的系统 buff：不限层、永续、**不可解除**。
+因此**没有平局**：同一刻双双倒下按「倒下前血量 → 本场总伤害 → 判玩家胜」裁决；`battle_time_limit` 只是防配置坏掉的安全上限（默认 600 秒）。
 
 三个好处：
 
@@ -1289,6 +1293,15 @@ while 双方存活 and now < 时限:
 日志载荷是**定点**，而 `ResourcePool.snapshot()` 已经取过整。
 两边混着往面板送，血条会显示 `0 / 0` 却画成满格，而且只在其中一条路径上出错。
 换算一律在 `BattleView` 做完，面板只收显示值。
+
+#### buff 栏（103，作者定：影响战斗的就显示）
+
+- **定义表由日志给**：`CombatantRuntime.apply_buff` 每次上身登记进 `BattleContext.seen_buffs`，`BattleResult.buffs` 带出去，
+  `BattleView.play` 直接用。凡是上过身的 buff 都认得，不管来自自己、对手、信仰、局外 buff 还是系统。
+- **常驻格**：信仰阶、已激活的套装档位、局外 / 一局 buff 的战斗加成、技能 / 难度 / 神坛改的基础属性是编译期数值、不是 buff，
+  但影响战斗，所以也进栏 —— `CombatantSpec.passives: Array[PassiveNote]`（`BattlePassives.of(run)` 在 `compile_player` 里填），
+  `BattleResult.passives` 带出去，灰底、不随事件变。包体加成与邻接增益不进栏（画在棋盘格子上）。
+- 顺序：系统（琥珀）→ 减益（红）→ 增益（蓝）→ 常驻（灰），组内按上身先后；不可叠层的不画 `×1`。
 
 #### 沙盒
 
@@ -2573,7 +2586,8 @@ class_name NodeRules extends Resource
 @export var loss_cost: Dictionary           # 战斗输了扣多少体力：类型 → 数。core 不在这里：BOSS 输了直接战败（7.1）
 @export var rest_restore: int               # 休息区回多少
 @export var event_weights: Dictionary       # 常规事件的结果：item / restore / story（占位）
-@export var battle_time_limit: float        # 打不死判平局，平局按输算
+@export var battle_time_limit: float        # 安全上限（103）：加时与衰竭保证必分胜负，到这里才判平局（按输算）
+@export var overtime: OvertimeRules         # 加时与衰竭的数值，没填用默认
 
 class_name SearchRules extends Resource
 @export var max_searches: int               # 至多搜几次
@@ -2657,7 +2671,7 @@ class_name SearchRules extends Resource
 | shop / extract | 只发信号：买卖、撤离是 M6 的事 |
 | junction / spawn | 只标用过 |
 
-平局按输算。没有玩家单位、或点里没有敌人：点只是走过。随机数从节点 `content_seed` 派生，每种用途一个标签
+平局（只在打到安全上限时出现）按输算。没有玩家单位、或点里没有敌人：点只是走过。随机数从节点 `content_seed` 派生，每种用途一个标签
 （reveal / enemy / battle / loot / search / ambush:k / event），改一种用途的抽法不影响别的。
 
 #### 事件层（063）：每个点先过事件屏

@@ -8,7 +8,7 @@
 ## 1. 确认类型      这一下能不能被护盾吸收、吃不吃护甲、要不要通知
 ## 2. 护盾吸收      能吸收则先扣护盾，中毒之类绕过
 ## 3. 受伤前效果    【同步派发】效果在这里改写伤害包：减伤、反转、免疫
-## 4. 计算受伤量    百分比 → 固定增减 → 反转 → 护甲，然后落到血量
+## 4. 计算受伤量    百分比 → 固定增减 → 反转 → 护甲 → 受伤倍率（103），然后落到血量
 ## 5. 受伤后效果    发 damage 事件；流失类不通知默认监听
 ## [endcodeblock]
 ##
@@ -60,6 +60,11 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	if amount > 0 and td.armor_applies:
 		packet.armor = mini(victim.stat(BattleStats.ARMOR, 0), amount)
 		amount -= packet.armor
+	# 103（作者定）：加时放大的是角色受到的「最终伤害」—— 护盾、减伤、护甲都按原值算完，扛下来的那部分再乘；治疗不放大
+	if amount > 0:
+		var taken := victim.stat(BattleStats.DAMAGE_TAKEN, StatMath.ONE)
+		if taken != StatMath.ONE:
+			amount = maxi(0, StatMath.mul(amount, taken))
 	packet.final = amount
 
 	if amount > 0:

@@ -26,6 +26,9 @@ const DAMAGE := &"damage"
 ## 它没有可观测的结果，结果体现在随后那条 damage 上。
 const BEFORE_DAMAGE := &"before_damage"
 const DIED := &"died"
+## 103：加时（鏖战）与衰竭开始，各只发一次，给回放写一行；叠层本身走普通的 status_stacked
+const OVERTIME_STARTED := &"overtime_started"
+const DECAY_STARTED := &"decay_started"
 ## 派发深度超限时记一条，便于内容配错时定位而不是直接崩
 const DISPATCH_OVERFLOW := &"dispatch_overflow"
 #endregion
@@ -48,6 +51,7 @@ const REASON_ABSORBED := &"absorbed"
 const VIEW_EVENTS: Array[StringName] = [
 	BATTLE_START, BATTLE_END, ITEM_FIRED, EFFECT_RESOLVED,
 	STATUS_STACKED, STATUS_UNSTACKED, RESOURCE_CHANGED, DAMAGE, DIED, DISPATCH_OVERFLOW,
+	OVERTIME_STARTED, DECAY_STARTED,
 ]
 
 

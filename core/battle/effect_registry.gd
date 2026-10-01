@@ -111,7 +111,7 @@ const FAITH_PERKS := {
 	&"smite": "res://core/run/faith/perks/smite_perk.gd",
 	&"extra_drop_by_node": "res://core/run/faith/perks/extra_drop_by_node_perk.gd",
 	&"gift_on_enter": "res://core/run/faith/perks/gift_on_enter_perk.gd",
-	&"draw_is_win": "res://core/run/faith/perks/draw_is_win_perk.gd",
+	&"overtime_regen": "res://core/run/faith/perks/overtime_regen_perk.gd",
 	&"undying": "res://core/run/faith/perks/undying_perk.gd",
 	&"altar_bless": "res://core/run/faith/perks/altar_bless_perk.gd",
 }

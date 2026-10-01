@@ -280,7 +280,7 @@ func _dummy() -> CombatantSpec:
 func _on_fight() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(_seed_spin.value)
-	var result := BattleSim.run(_compile(), _dummy(), rng, 30.0)
+	var result := BattleSim.run(_compile(), _dummy(), rng)     # 103：和真打一样带加时与衰竭
 	_view.play(result, ["我方", "训练假人"])
 	_view.set_item_names(0, _board_names())
 	_view.set_item_names(1, {1: "重拳"})

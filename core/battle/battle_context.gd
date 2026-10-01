@@ -15,6 +15,15 @@ var sides: Array[CombatantRuntime] = []
 ## 回放日志。内容与掩码无关。
 var log: Array[BattleEvent] = []
 
+## 103 第 6 条：这场上过身的所有 buff（id → 定义），不管来自自己、对手、信仰、局外还是系统。
+## [CombatantRuntime.apply_buff] 登记，[BattleResult.buffs] 带出去 —— 回放的 buff 栏不用再猜有哪些
+var seen_buffs: Dictionary = {}
+
+## 103 第 4 条：加时与衰竭的规则（null = 不加时，只有手搓的测试上下文会这样）；下一次叠层的序号
+var overtime: OvertimeRules = null
+var overtime_index: int = 0
+var decay_index: int = 0
+
 ## 关掉后，未被订阅的事件也照样构造并入队。
 ## 测试用它比对两条路径 —— 派发本身仍走索引，没有订阅者的事件自然是空操作，
 ## 所以结果必须完全一致。

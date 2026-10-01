@@ -777,6 +777,9 @@ static func _validate_node_rules(rules: NodeRules, ctx: Context, report: ImportR
 		report.error("rest_restore", "回的体力不能为负")
 	if rules.battle_time_limit <= 0.0:
 		report.error("battle_time_limit", "战斗时限应为正")
+	if rules.overtime != null:
+		for pr in rules.overtime.problems():
+			report.error("overtime." + String(pr[0]), String(pr[1]))
 	if rules.search == null:
 		report.error("search", "没有搜索规则，搜索点不知道怎么搜")
 		return

@@ -13,22 +13,23 @@
 class_name BattleSim
 extends RefCounted
 
-## 超时上限：打不死就判平局，防止互相无法击破时死循环
-const DEFAULT_TIME_LIMIT := 60.0
+## 安全上限（103）：加时与衰竭保证有限时间内必有人倒下，这条只防内容配坏了（比如衰竭被关掉）时死循环。
+## 到了就 push_warning、判平局 —— 正常的战斗永远到不了这里
+const DEFAULT_TIME_LIMIT := 600.0
 ## 同一时刻最多结算多少次，防止零冷却规则卡死
 const MAX_STEPS_PER_INSTANT := 64
 
 
 static func run(
 	a: CombatantSpec, b: CombatantSpec, rng: RandomNumberGenerator,
-	time_limit_sec: float = DEFAULT_TIME_LIMIT
+	time_limit_sec: float = DEFAULT_TIME_LIMIT, overtime: OvertimeRules = null
 ) -> BattleResult:
 	var ctx := BattleContext.create(
 		CombatantRuntime.from_spec(a, 0), CombatantRuntime.from_spec(b, 1), rng
 	)
+	ctx.overtime = OvertimeRules.or_default(overtime)     # 103：加时一直在 —— 没给就用默认那份
 	var result := run_context(ctx, time_limit_sec)
-	if result.winner == -1 and bool(a.flags.get("draw_is_win", false)):
-		result.winner = 0     # 093（自然之神 5 级）：平局也视为胜利
+	result.passives = [a.passives.duplicate(), b.passives.duplicate()]
 	return result
 
 
@@ -41,6 +42,7 @@ static func run_context(ctx: BattleContext, time_limit_sec: float = DEFAULT_TIME
 
 	var result := BattleResult.new()
 	result.initial = ctx.snapshot()
+	var pre_hp: Array[int] = [0, 0]
 
 	ctx.emit(BattleEvent.BATTLE_START, -1, {})
 	ctx.drain()
@@ -50,25 +52,32 @@ static func run_context(ctx: BattleContext, time_limit_sec: float = DEFAULT_TIME
 		if next < 0 or next > limit:
 			break  # 再没有任何事会发生，或已越过时限
 		ctx.now = maxi(ctx.now, next)
+		pre_hp = [_hp(ctx, 0), _hp(ctx, 1)]
 		_resolve_instant(ctx)
 
+	if _both_alive(ctx) and ctx.now >= limit and ctx.decay_index > 0:
+		push_warning("BattleSim: 打到安全上限 %.0f 秒还没分出胜负，判平局（加时 / 衰竭配置有问题？）" % time_limit_sec)
 	if ctx.now > limit:
 		ctx.now = limit
 	# 把回复补到收尾时刻，否则最终快照停在最后一个事件那一刻
 	for rt in ctx.sides:
 		(rt as CombatantRuntime).settle_regen(ctx.now)
-	result.winner = _winner(ctx)
+	result.winner = _winner(ctx, pre_hp)
 	result.duration = ctx.now
 	result.log = ctx.log
+	result.buffs = ctx.seen_buffs
 	result.final = ctx.snapshot()
 	ctx.emit(BattleEvent.BATTLE_END, -1, {"winner": result.winner})
 	ctx.drain()
 	return result
 
 
-## 下一个会发生点事的时刻：时间轮堆顶，或最近的 buff 到期。
+## 下一个会发生点事的时刻：时间轮堆顶、最近的 buff 到期，或下一个系统时刻（103：加时叠层 / 衰竭）。
 static func _next_instant(ctx: BattleContext) -> int:
 	var best := ctx.schedule.peek_time()
+	var sys := _next_system_instant(ctx)
+	if sys >= 0 and (best < 0 or sys < best):
+		best = sys
 	for rt in ctx.sides:
 		var expiry := (rt as CombatantRuntime).next_expiry()
 		if expiry >= 0 and (best < 0 or expiry < best):
@@ -90,6 +99,8 @@ static func _resolve_instant(ctx: BattleContext) -> void:
 	for rt in ctx.sides:
 		if (rt as CombatantRuntime).settle_undying(ctx.now):
 			ctx.emit(BattleEvent.DIED, (rt as CombatantRuntime).side, {})     # 093：坚持期到了、血还是 0：真倒下
+	# 103：系统时刻放在到期之前 —— 「这一刻起的出手就该吃这一层」，和「到期的不再加成」是同一条边界
+	_resolve_system(ctx)
 	for rt in ctx.sides:
 		var owner := rt as CombatantRuntime
 		for buff in owner.expire_buffs(ctx.now):
@@ -127,14 +138,78 @@ static func _resolve_instant(ctx: BattleContext) -> void:
 		push_warning("BattleSim: 同一时刻结算超过 %d 次，疑似零冷却规则" % MAX_STEPS_PER_INSTANT)
 
 
+#region 加时与衰竭（103 第 4 条）
+## 下一次加时叠层或衰竭的时刻；不加时返回 -1
+static func _next_system_instant(ctx: BattleContext) -> int:
+	if ctx.overtime == null:
+		return -1
+	return mini(ctx.overtime.overtime_at(ctx.overtime_index), ctx.overtime.decay_at(ctx.decay_index))
+
+
+## 到点的加时 / 衰竭给双方各叠一层（同一刻，先 0 后 1，规则一视同仁）
+static func _resolve_system(ctx: BattleContext) -> void:
+	var rules := ctx.overtime
+	if rules == null:
+		return
+	while rules.overtime_at(ctx.overtime_index) <= ctx.now:
+		if ctx.overtime_index == 0:
+			ctx.emit(BattleEvent.OVERTIME_STARTED, -1, {"percent": rules.damage_taken_percent})
+		ctx.overtime_index += 1
+		_stack_both(ctx, rules.overtime_buff())
+	while rules.decay_at(ctx.decay_index) <= ctx.now:
+		if ctx.decay_index == 0:
+			ctx.emit(BattleEvent.DECAY_STARTED, -1, {"amount": StatMath.from_float(rules.decay_amount)})
+		ctx.decay_index += 1
+		_stack_both(ctx, rules.decay_buff())
+	ctx.drain()
+
+
+static func _stack_both(ctx: BattleContext, def: BuffDef) -> void:
+	for rt in ctx.sides:
+		var owner := rt as CombatantRuntime
+		if owner.dead:
+			continue
+		var added := owner.apply_buff(def, 1, ctx.now)
+		owner.stat(BattleStats.MAX_HP)     # 立刻重算：上限变了当场生效（掉到 0 当场倒下）
+		if added > 0:
+			ctx.emit(BattleEvent.STATUS_STACKED, owner.side, {
+				"buff": String(def.id), "delta": added, "stacks": owner.stacks_of(def.id), "reason": "system",
+			})
+#endregion
+
+
 static func _both_alive(ctx: BattleContext) -> bool:
 	return ctx.sides[0].is_alive() and ctx.sides[1].is_alive()
 
 
-## 0 / 1 为获胜方，-1 为平局
-static func _winner(ctx: BattleContext) -> int:
+static func _hp(ctx: BattleContext, side: int) -> int:
+	return ctx.sides[side].resources.current(BattleStats.RES_HP)
+
+
+## 0 / 1 为获胜方，-1 为平局（103 起只剩「打到安全上限」这一种来源）。
+## 同一刻双双倒下（作者定）：先比这一刻之前的当前血量（多者胜），再比这场造成的总伤害，再判玩家（side 0）胜
+static func _winner(ctx: BattleContext, pre_hp: Array[int] = [0, 0] as Array[int]) -> int:
 	var a_alive := ctx.sides[0].is_alive()
 	var b_alive := ctx.sides[1].is_alive()
-	if a_alive == b_alive:
-		return -1
-	return 0 if a_alive else 1
+	if a_alive != b_alive:
+		return 0 if a_alive else 1
+	if a_alive:
+		return -1     # 都还活着：只可能是打到了安全上限
+	if pre_hp[0] != pre_hp[1]:
+		return 0 if pre_hp[0] > pre_hp[1] else 1
+	var dealt := damage_dealt(ctx.log)
+	if dealt[0] != dealt[1]:
+		return 0 if dealt[0] > dealt[1] else 1
+	return 0
+
+
+## 双方这场造成的总伤害（定点）：受害方是对手的 damage 事件里实际扣下的量
+static func damage_dealt(log: Array[BattleEvent]) -> Array[int]:
+	var out: Array[int] = [0, 0]
+	for e in log:
+		if e.name != BattleEvent.DAMAGE or e.side < 0 or e.side > 1:
+			continue
+		var amount := e.get_int(&"amount")
+		if amount > 0:
+			out[1 - e.side] += amount
+	return out

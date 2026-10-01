@@ -145,7 +145,7 @@ static func run_deeds_and_summary(t: TestCase) -> void:
 
 
 static func run_perks_and_altar_logic(t: TestCase) -> void:
-	t.begin("093 · 信仰级效果与神坛（逻辑）：蛮神低血增伤 / 献祭生命上限 / 秒杀；日神附魔 + 祈祷非线性；自然回血 / 食物护盾 / 翻倍 / 平局算胜；大地耐力 / 锻炼加行 / 踩点赐物 / 改造此点；献祭换信力、共享一次机会")
+	t.begin("093 · 信仰级效果与神坛（逻辑）：蛮神低血增伤 / 献祭生命上限 / 秒杀；日神附魔 + 祈祷非线性；自然回血 / 食物护盾 / 翻倍 / 加时回春；大地耐力 / 锻炼加行 / 踩点赐物 / 改造此点；献祭换信力、共享一次机会")
 	var c = NodeScreens._content()
 	var f := _flow(c)
 	var run := f.begin(c.chapter, NodeScreens._kit(c), 4)
@@ -246,7 +246,7 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 				if e is FireEnchant:
 					enchanted += 1
 	t.eq(enchanted, mini(3, weapons_before), "随机 3 把（不够就全部）武器各挂一条火焰附魔（%d 把武器）" % weapons_before)
-	# 自然：回血 / 食物护盾 / 翻倍 / 平局算胜
+	# 自然：回血 / 食物护盾 / 翻倍 / 加时回春
 	var nature: FaithDef = defs[&"nature"]
 	var ration := ItemInstance.create(run.items.get_def(&"ration"))
 	run.storage.admit(ration)
@@ -259,20 +259,36 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	t.check(spec4.baseline.total_of(BattleStats.REGEN_HP) > regen0, "1 级：基线每秒回血 +")
 	if run.board.has_item(ration.uid):
 		t.check(spec4.baseline.total_of(BattleStats.MAX_SHIELD) > shield0, "3 级：棋盘上有口粮就有护盾")
-	var draw_perk: FaithPerk = null
+	var regen_perk: OvertimeRegenPerk = null
 	for p in nature.perks_at(5):
-		if p is DrawIsWinPerk:
-			draw_perk = p
-	t.check(draw_perk != null, "5 级：平局算胜")
-	var a := BattleCompiler.compile(null, CombatantBaseline.with_hp(10.0))
-	var b := BattleCompiler.compile(null, CombatantBaseline.with_hp(10.0))
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 1
-	var plain := BattleSim.run(a, b, rng, 1.0)
-	t.check(plain.is_draw(), "谁都不出手：平局")
-	draw_perk.modify_spec(a, null, run)
-	var blessed := BattleSim.run(a, b, rng, 1.0)
-	t.eq(blessed.winner, 0, "自然 5 级：平局判我方赢")
+		if p is OvertimeRegenPerk:
+			regen_perk = p
+	t.check(regen_perk != null and regen_perk.amount > 0.0, "5 级（103 改）：加时阶段回春，数值在 nature.json 里可调")
+	# 两边都不出手、我方先掉一半血，打到第 40 秒：没有自然 5 级就停在一半，有就在加时开始后回满
+	var hp_at_40 := func(blessed: bool) -> Array:
+		var a := BattleCompiler.compile(null, CombatantBaseline.with_hp(100.0))
+		var b := BattleCompiler.compile(null, CombatantBaseline.with_hp(100.0))
+		if blessed:
+			regen_perk.modify_spec(a, null, run)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 1
+		var ctx := BattleContext.create(CombatantRuntime.from_spec(a, 0), CombatantRuntime.from_spec(b, 1), rng)
+		ctx.overtime = OvertimeRules.new()
+		ctx.sides[0].resources.change(BattleStats.RES_HP, -StatMath.from_float(50.0), BattleEvent.REASON_DAMAGE)
+		var res := BattleSim.run_context(ctx, 40.0)
+		return [ctx.sides[0].resources.current(BattleStats.RES_HP), res, ctx.sides[0].stacks_of(OvertimeRegenPerk.BUFF_ID)]
+	var plain: Array = hp_at_40.call(false)
+	var blessed: Array = hp_at_40.call(true)
+	t.eq(StatMath.to_int(plain[0]), 50, "没有自然 5 级：血停在一半")
+	t.eq(StatMath.to_int(blessed[0]), 100, "自然 5 级：加时开始后回春，回满")
+	t.eq(int(blessed[2]), 1, "回春上身、不可叠层")
+	t.check((blessed[1] as BattleResult).buffs.has(OvertimeRegenPerk.BUFF_ID), "回春进了这场的 buff 表（buff 栏认得）")
+	var first_regen := -1
+	for e in (blessed[1] as BattleResult).log:
+		if e.name == BattleEvent.STATUS_STACKED and e.get_name(&"buff") == OvertimeRegenPerk.BUFF_ID:
+			first_regen = e.time
+			break
+	t.eq(first_regen, StatMath.from_float(30.0), "第 30 秒（加时开始）上身")
 	# 大地：耐力 / 锻炼 / 赐物 / 改造
 	var earth: FaithDef = defs[&"earth"]
 	var rows0 := run.board.size.y

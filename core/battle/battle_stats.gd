@@ -20,6 +20,10 @@ const HASTE := &"haste"
 ## 最大生命值
 const MAX_HP := &"max_hp"
 
+## 受到的最终伤害倍率，基准 1.0（103）。伤害管线在护盾、减伤、护甲都算完之后、落到血量之前乘它；
+## 加时的「鏖战」是它的第一个用户，「易伤」减益也就是一条作用于它的普通 mod
+const DAMAGE_TAKEN := &"damage_taken"
+
 ## 护甲，减伤用
 const ARMOR := &"armor"
 
@@ -69,6 +73,7 @@ const MANA_COST := &"mana_cost"
 ## 冷却随之被放大上万倍。新增倍率类属性时记得登记在这里。
 const DEFAULT_BASE := {
 	HASTE: 1,  # 占位，实际值由 default_base() 换算成定点
+	DAMAGE_TAKEN: 1,
 }
 
 

@@ -62,27 +62,44 @@ func play(result: BattleResult, names: Array = []) -> void:
 	var sides: Array = result.initial.get("sides", [])
 	for i in _panels.size():
 		_panels[i].display_name = _names[i]
+		_panels[i].passives = result.passives[i] if i < result.passives.size() else []
 		_panels[i].reset(sides[i] if i < sides.size() else {})
+	if not result.buffs.is_empty():
+		set_buff_defs(result.buffs)     # 103：上过身的 buff 都在结果里，不用调用方猜
 	_ticker.clear()
 	_verdict.text = ""
 	_sync_buttons()
 
 
-## 087：告诉回放双方会出现哪些 buff（id → 定义）：图标用名字、悬浮窗写效果。从双方的战斗单位收集（[Glossary.buffs_in_spec]）
+## 087：告诉回放双方会出现哪些 buff（id → 定义）：图标用名字、悬浮窗写效果。
+## 103：[method play] 已经从 [member BattleResult.buffs] 拿了一份；这里传进来的并进去（老调用方、测试）
 func set_buff_defs(defs: Dictionary) -> void:
 	for p in _panels:
-		p.buff_defs = defs
+		var merged: Dictionary = p.buff_defs.duplicate()
+		merged.merge(defs, true)
+		p.buff_defs = merged
 		p.queue_redraw()
 
 
 ## 停在图标上时开悬浮窗
-func _on_buff_hovered(id: String, at: Vector2) -> void:
+func _on_buff_hovered(id: String, at: Vector2, side: int = 0) -> void:
 	if _tip == null:
 		return
-	var def: BuffDef = _panels[0].buff_defs.get(StringName(id), null)
+	_tip.show_text(buff_tip(id, side), at)
+
+
+## 悬浮窗正文：常驻格写它的加成；buff 写定义生成的说明，系统效果补一句不可解除
+func buff_tip(id: String, side: int = 0) -> String:
+	var panel := _panels[clampi(side, 0, _panels.size() - 1)]
+	var note := panel.passive_of(id)
+	if note != null:
+		return "[b]%s[/b]\n%s" % [note.name, note.describe()]
+	var def: BuffDef = panel.buff_defs.get(StringName(id), null)
 	var name := Names.of(def) if def != null and Names.of(def) != "" else id
 	var body := Glossary.describe_buff(def) if def != null else "（没有这个 buff 的定义）"
-	_tip.show_text("[b]%s[/b]\n%s" % [name, body], at)
+	if def != null and def.system:
+		body += "\n系统效果，不可解除"
+	return "[b]%s[/b]\n%s" % [name, body]
 
 
 func _on_buff_unhovered() -> void:
@@ -234,6 +251,10 @@ func _log_event(e: BattleEvent) -> void:
 				_side_name(e.side), e.get_name(&"buff"), e.get_int(&"stacks")])
 		BattleEvent.DIED:
 			_log_line(e.time, "[color=#d9534f]%s 倒下[/color]" % _side_name(e.side))
+		BattleEvent.OVERTIME_STARTED:
+			_log_line(e.time, "[color=#e0b45c]鏖战开始：双方受到的伤害每层 +%d%%，隔一段再叠一层[/color]" % e.get_int(&"percent"))
+		BattleEvent.DECAY_STARTED:
+			_log_line(e.time, "[color=#e0b45c]衰竭开始：双方的生命上限持续下降，直到一方倒下[/color]")
 
 
 ## 时间戳取【事件自己的时刻】，不是播放光标 ——
@@ -281,7 +302,7 @@ func _build() -> void:
 		p.label_font = label_font
 		p.display_name = _names[i]
 		p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		p.buff_hovered.connect(_on_buff_hovered)
+		p.buff_hovered.connect(_on_buff_hovered.bind(i))
 		p.buff_unhovered.connect(_on_buff_unhovered)
 		arena.add_child(p)
 		_panels.append(p)

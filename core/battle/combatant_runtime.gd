@@ -171,6 +171,9 @@ func find_buff(buff_id: StringName) -> BuffInstance:
 ## [b]会改变规则集[/b]（buff 可携带 rules），调用方必须随后重算事件掩码，
 ## 否则新规则订阅的事件可能尚未开启，那条规则会静默失效。
 func apply_buff(def: BuffDef, stacks: int = 1, now: int = 0) -> int:
+	var ctx: BattleContext = _ctx_ref.get_ref() if _ctx_ref != null else null
+	if ctx != null and not ctx.seen_buffs.has(def.id):
+		ctx.seen_buffs[def.id] = def     # 103 第 6 条：上过身的都登记，回放的 buff 栏靠它认得所有 buff
 	var existing := find_buff(def.id)
 	var added := 0
 	if existing != null:
@@ -192,8 +195,8 @@ func apply_buff(def: BuffDef, stacks: int = 1, now: int = 0) -> int:
 ## 移除层数，返回实际移除的层数。层数归零时整条 buff 连同其规则一并移除。
 func remove_buff_stacks(buff_id: StringName, count: int) -> int:
 	var inst := find_buff(buff_id)
-	if inst == null or count <= 0:
-		return 0
+	if inst == null or count <= 0 or inst.def.system:
+		return 0     # 103：系统效果（鏖战、衰竭）不可解除
 	var removed := mini(count, inst.stacks)
 	inst.stacks -= removed
 	if inst.stacks <= 0:
@@ -289,6 +292,10 @@ func _on_resource_changed(key: StringName, delta: int, reason: StringName) -> vo
 		"key": String(key), "delta": delta, "reason": String(reason),
 		"current": resources.current(key), "max": resources.maximum(key),
 	})
+	# 103（衰竭）：生命上限掉到把当前血压成 0 也是倒下。走 mark_dead，所以蛮神的不死照常进坚持期
+	if key == BattleStats.RES_HP and reason == BattleEvent.REASON_MAX_CHANGED \
+			and resources.current(key) <= 0 and mark_dead():
+		ctx.emit(BattleEvent.DIED, side, {})
 
 
 ## 087（作者反馈：敌人倒下两次、倒下时血没归零）：**倒下是终局**。血一到 0 就记死，之后的治疗（伤药的「濒死回血」）不再把它救回来，

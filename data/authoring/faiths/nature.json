@@ -72,7 +72,7 @@
       "tier": 4
     },
     {
-      "type": "draw_is_win",
+      "type": "overtime_regen",
       "tier": 5
     }
   ],

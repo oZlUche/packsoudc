@@ -8,7 +8,6 @@
 ## - 踩上一个点 [method on_node_entered]
 ## - 掉落 [method modify_loot]
 ## - 战前准备屏 [method prebattle_label] / [method prebattle_apply]
-## - 战斗收尾 [method draw_is_win]
 class_name FaithPerk
 extends Resource
 
@@ -69,9 +68,4 @@ func prebattle_label(_run: RunState, _type: StringName) -> String:
 
 ## 战前准备屏按了那个按钮。返回 true = 这一场按它处理了
 func prebattle_apply(_run: RunState) -> bool:
-	return false
-
-
-## 平局算赢（自然之神 5 级）
-func draw_is_win() -> bool:
 	return false
