@@ -112,6 +112,7 @@
 | 101 | [方案：RunState / GameFlow 拆分与依赖方向](101-run-state-decomposition-proposal.md) | 架构 · 提议 | 作者已确认，待执行 |
 | 102 | [方案：测试按模块归位、类缓存与 test.sh](102-tests-and-tooling-proposal.md) | 架构 · 提议 | 作者已确认，待执行 |
 | 103 | [方案：战斗规则七条（武器 / 耐力 / buff 永续 / 加时与衰竭 / 自然 5 级 / buff 栏 / 冷却动画）](103-combat-rules-proposal.md) | 架构 · 提议 | 作者已确认（七项决定已记入），待执行 |
+| 104 | [方案：神明总表落地（删战争之神、技巧 / 狩猎新定位、四条新信力行为、献祭倍率、新标签、暴击属性）](104-gods-table-landing-proposal.md) | 架构 · 提议 | 作者已确认要点，待执行（核心配置：docs/gods.xlsx） |
 
 ## 已归档（被覆盖或作废的方案，只留作历史）
 
