@@ -213,10 +213,10 @@ static func run_weapon_stamina_rules(t: TestCase) -> void:
 	t.check(drone.ok(), "非武器耗法力：可以")
 
 	var warn := _report()
-	ContentImporter.import_buff({"id": "t_rage", "mods": [{"mult_category": "EMPOWER", "mult_percent": 10}]}, _ctx(), warn)
+	ContentImporter.import_buff({"id": "t_rage", "mods": [{"stat": "armor", "mult_category": "EMPOWER", "mult_percent": 10}]}, _ctx(), warn)
 	t.check(warn.ok() and warn.warnings.size() == 1, "不限层 + 百分比：告警不报错（%s）" % warn.to_text())
 	var capped := _report()
-	ContentImporter.import_buff({"id": "t_rage3", "max_stacks": 3, "mods": [{"mult_category": "EMPOWER", "mult_percent": 10}]}, _ctx(), capped)
+	ContentImporter.import_buff({"id": "t_rage3", "max_stacks": 3, "mods": [{"stat": "armor", "mult_category": "EMPOWER", "mult_percent": 10}]}, _ctx(), capped)
 	t.check(capped.ok() and capped.warnings.is_empty(), "填了层数上限：不告警")
 	var flat := _report()
 	ContentImporter.import_buff({"id": "t_tough", "mods": [{"stat": "max_hp", "flat": 5.0}]}, _ctx(), flat)

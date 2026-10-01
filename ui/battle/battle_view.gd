@@ -91,6 +91,14 @@ func _on_buff_hovered(id: String, at: Vector2, side: int = 0) -> void:
 ## 悬浮窗正文：常驻格写它的加成；buff 写定义生成的说明，系统效果补一句不可解除
 func buff_tip(id: String, side: int = 0) -> String:
 	var panel := _panels[clampi(side, 0, _panels.size() - 1)]
+	if id == CombatantPanel.OVERTIME_CHIP:
+		var n := int(panel.stacks().get(id, 0))
+		return "[b]鏖战 ×%d[/b]\n系统效果，不可解除：加时开始后每隔一段，双方受到的最终伤害再加一截（记在「受到伤害」轴的系统层）\n%s" % [
+			n, StatAxes.describe(StatAxes.DAMAGE_TAKEN, panel.axis_value(StatAxes.DAMAGE_TAKEN), _system_of(side, StatAxes.DAMAGE_TAKEN))]
+	if id.begins_with(CombatantPanel.AXIS_PREFIX):
+		var a := CombatantPanel.axis_of(id)
+		var v := int(panel.stacks().get(id, 0))
+		return "[b]%s ×%d[/b]\n%s" % [StatAxes.name_of(a, v), absi(v), StatAxes.describe(a, v, _system_of(side, a))]
 	var note := panel.passive_of(id)
 	if note != null:
 		return "[b]%s[/b]\n%s" % [note.name, note.describe()]
@@ -100,6 +108,18 @@ func buff_tip(id: String, side: int = 0) -> String:
 	if def != null and def.system:
 		body += "\n系统效果，不可解除"
 	return "[b]%s[/b]\n%s" % [name, body]
+
+
+## 回放到当前游标为止，某一方某条轴的系统层（从日志里最近一条 axis_shifted 读）
+func _system_of(side: int, axis: StringName) -> int:
+	if _result == null:
+		return 0
+	var out := 0
+	for i in mini(_cursor, _result.log.size()):
+		var e := _result.log[i] as BattleEvent
+		if e.name == BattleEvent.AXIS_SHIFTED and e.side == side and e.get_name(&"axis") == axis:
+			out = e.get_int(&"system_stacks")
+	return out
 
 
 func _on_buff_unhovered() -> void:
@@ -205,6 +225,12 @@ func _apply(e: BattleEvent) -> void:
 				_panels[e.side].set_stacks(
 					String(e.get_name(&"buff")), e.get_int(&"stacks")
 				)
+		BattleEvent.AXIS_SHIFTED:
+			if e.side >= 0 and e.side < _panels.size():
+				_panels[e.side].set_axis(String(e.get_name(&"axis")), e.get_int(&"stacks"))
+		BattleEvent.OVERTIME_STACKED:
+			for p in _panels:
+				p.set_overtime(e.get_int(&"count"))
 		BattleEvent.ITEM_FIRED:
 			if e.side >= 0 and e.side < _panels.size():
 				_panels[e.side].note_fired(e.get_int(&"uid"), _now)
@@ -251,8 +277,13 @@ func _log_event(e: BattleEvent) -> void:
 				_side_name(e.side), e.get_name(&"buff"), e.get_int(&"stacks")])
 		BattleEvent.DIED:
 			_log_line(e.time, "[color=#d9534f]%s 倒下[/color]" % _side_name(e.side))
-		BattleEvent.OVERTIME_STARTED:
-			_log_line(e.time, "[color=#e0b45c]鏖战开始：双方受到的伤害每层 +%d%%，隔一段再叠一层[/color]" % e.get_int(&"percent"))
+		BattleEvent.OVERTIME_STACKED:
+			if e.get_int(&"count") == 1:
+				_log_line(e.time, "[color=#e0b45c]鏖战开始：双方受到的最终伤害 +%d%%，隔一段再叠一次[/color]" % e.get_int(&"percent"))
+		BattleEvent.AXIS_SHIFTED:
+			if not e.get_bool(&"system"):
+				var a := e.get_name(&"axis")
+				_log_line(e.time, "%s %s %+d 层 → %d" % [_side_name(e.side), StatAxes.name_of(a, e.get_int(&"delta")), e.get_int(&"delta"), e.get_int(&"stacks")])
 		BattleEvent.DECAY_STARTED:
 			_log_line(e.time, "[color=#e0b45c]衰竭开始：双方的生命上限持续下降，直到一方倒下[/color]")
 

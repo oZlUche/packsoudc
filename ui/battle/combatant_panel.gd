@@ -27,6 +27,9 @@ var buff_defs: Dictionary = {}
 ## 103：这一方的常驻加成（[PassiveNote]）：灰底、不随事件变，排在最后。图标 id 是 `passive:<下标>`
 var passives: Array = []
 const PASSIVE_PREFIX := "passive:"
+## 103：标准轴的格（4.3）：`axis:<轴>`，值是内容层的带符号层数；加时的「鏖战 ×n」格是 OVERTIME_CHIP
+const AXIS_PREFIX := "axis:"
+const OVERTIME_CHIP := "system:overtime"
 ## 现在画着的图标：[Rect2, id]
 var _chips: Array = []
 var _hover_id: String = ""
@@ -88,6 +91,10 @@ func chip_at(local: Vector2) -> String:
 
 ## 图标上写的字：名字的第一个字（暂时；正式美术换成图）
 func icon_of(id: String) -> String:
+	if id == OVERTIME_CHIP:
+		return "鏖"
+	if id.begins_with(AXIS_PREFIX):
+		return StatAxes.name_of(axis_of(id), int(_stacks.get(id, 0))).substr(0, 1)
 	var note := passive_of(id)
 	if note != null:
 		return note.name.substr(0, 1)
@@ -98,6 +105,11 @@ func icon_of(id: String) -> String:
 
 func stacks() -> Dictionary:
 	return _stacks
+
+
+## 轴格的轴 id；不是轴格空
+static func axis_of(id: String) -> StringName:
+	return StringName(id.substr(AXIS_PREFIX.length())) if id.begins_with(AXIS_PREFIX) else &""
 
 
 ## 图标 id 是常驻格的话给那条 [PassiveNote]，否则 null
@@ -123,6 +135,10 @@ func ordered_ids() -> Array:
 
 
 func _group_of(id: String) -> int:
+	if id == OVERTIME_CHIP:
+		return 0
+	if id.begins_with(AXIS_PREFIX):
+		return 1 if is_bad_axis(id) else 2
 	var def: BuffDef = buff_defs.get(StringName(id), null)
 	if def == null:
 		return 2
@@ -131,8 +147,16 @@ func _group_of(id: String) -> int:
 	return 1 if def.is_debuff else 2
 
 
-## 图标上的字 + 层数。不可叠层的不画 ×1（103）；常驻格的层数是阶 / 档位，一律画
+## 轴格是不是减益：受到伤害轴正层是坏事（易伤），别的轴负层是坏事
+func is_bad_axis(id: String) -> bool:
+	var v := int(_stacks.get(id, 0))
+	return v > 0 if axis_of(id) == StatAxes.DAMAGE_TAKEN else v < 0
+
+
+## 图标上的字 + 层数。不可叠层的不画 ×1（103）；常驻格的层数是阶 / 档位，一律画；轴格画 ×|层数|
 func chip_text(id: String) -> String:
+	if id.begins_with(AXIS_PREFIX):
+		return "%s ×%d" % [icon_of(id), absi(int(_stacks.get(id, 0)))]
 	if passive_of(id) != null:
 		return "%s ×%d" % [icon_of(id), passive_of(id).stacks]
 	var def: BuffDef = buff_defs.get(StringName(id), null)
@@ -171,6 +195,29 @@ func set_stacks(buff: String, stacks: int) -> void:
 			_arrival[buff] = _arrivals
 		_stacks[buff] = stacks
 	queue_redraw()
+
+
+## 103：标准轴的内容层（带符号）。0 就收起这一格
+func set_axis(axis: String, stacks: int) -> void:
+	var id := AXIS_PREFIX + axis
+	if stacks == 0:
+		_stacks.erase(id)
+		_arrival.erase(id)
+	else:
+		if not _stacks.has(id):
+			_arrivals += 1
+			_arrival[id] = _arrivals
+		_stacks[id] = stacks
+	queue_redraw()
+
+
+## 103：加时叠了几次（「鏖战 ×n」格，说明受到伤害轴系统层的来源）
+func set_overtime(count: int) -> void:
+	set_stacks(OVERTIME_CHIP, count)
+
+
+func axis_value(axis: StringName) -> int:
+	return int(_stacks.get(AXIS_PREFIX + String(axis), 0))
 
 
 func mark_dead() -> void:
@@ -258,11 +305,12 @@ func _draw() -> void:
 			var rect := Rect2(x, y, w, CHIP_H)
 			# 103：四种配色 —— 系统（琥珀）、减益（红）、增益（蓝）、常驻（灰）
 			var line := UiPalette.SHIELD
+			var group := _group_of(String(id))
 			if passive_of(String(id)) != null:
 				line = UiPalette.DIM
-			elif def != null and def.system:
+			elif group == 0:
 				line = SYSTEM_COLOR
-			elif def != null and def.is_debuff:
+			elif group == 1:
 				line = UiPalette.HP
 			draw_rect(rect, Color(line, 0.3))
 			draw_rect(rect, line, false, 1.0 if String(id) != _hover_id else 2.0)

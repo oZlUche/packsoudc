@@ -152,10 +152,10 @@ static func _resolve_system(ctx: BattleContext) -> void:
 	if rules == null:
 		return
 	while rules.overtime_at(ctx.overtime_index) <= ctx.now:
-		if ctx.overtime_index == 0:
-			ctx.emit(BattleEvent.OVERTIME_STARTED, -1, {"percent": rules.damage_taken_percent})
 		ctx.overtime_index += 1
-		_stack_both(ctx, rules.overtime_buff())
+		ctx.emit(BattleEvent.OVERTIME_STACKED, -1, {"count": ctx.overtime_index, "percent": rules.damage_taken_percent})
+		for rt in ctx.sides:     # 标准轴的系统层：净化不动它
+			ShiftAxis.shift(ctx, rt as CombatantRuntime, StatAxes.DAMAGE_TAKEN, rules.overtime_axis_stacks(), true)
 	while rules.decay_at(ctx.decay_index) <= ctx.now:
 		if ctx.decay_index == 0:
 			ctx.emit(BattleEvent.DECAY_STARTED, -1, {"amount": StatMath.from_float(rules.decay_amount)})

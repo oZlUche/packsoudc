@@ -263,7 +263,7 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	for p in nature.perks_at(5):
 		if p is OvertimeRegenPerk:
 			regen_perk = p
-	t.check(regen_perk != null and regen_perk.amount > 0.0, "5 级（103 改）：加时阶段回春，数值在 nature.json 里可调")
+	t.check(regen_perk != null and regen_perk.stacks > 0, "5 级（103 改）：加时阶段回春，数值在 nature.json 里可调")
 	# 两边都不出手、我方先掉一半血，打到第 40 秒：没有自然 5 级就停在一半，有就在加时开始后回满
 	var hp_at_40 := func(blessed: bool) -> Array:
 		var a := BattleCompiler.compile(null, CombatantBaseline.with_hp(100.0))
@@ -276,19 +276,18 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 		ctx.overtime = OvertimeRules.new()
 		ctx.sides[0].resources.change(BattleStats.RES_HP, -StatMath.from_float(50.0), BattleEvent.REASON_DAMAGE)
 		var res := BattleSim.run_context(ctx, 40.0)
-		return [ctx.sides[0].resources.current(BattleStats.RES_HP), res, ctx.sides[0].stacks_of(OvertimeRegenPerk.BUFF_ID)]
+		return [ctx.sides[0].resources.current(BattleStats.RES_HP), res, ctx.sides[0].axis_stacks(StatAxes.REGEN_HP)]
 	var plain: Array = hp_at_40.call(false)
 	var blessed: Array = hp_at_40.call(true)
 	t.eq(StatMath.to_int(plain[0]), 50, "没有自然 5 级：血停在一半")
 	t.eq(StatMath.to_int(blessed[0]), 100, "自然 5 级：加时开始后回春，回满")
-	t.eq(int(blessed[2]), 1, "回春上身、不可叠层")
-	t.check((blessed[1] as BattleResult).buffs.has(OvertimeRegenPerk.BUFF_ID), "回春进了这场的 buff 表（buff 栏认得）")
+	t.eq(int(blessed[2]), regen_perk.stacks, "回血轴（内容层）+%d 层，一场只加一次（第 35 秒加时再叠也不重复）" % regen_perk.stacks)
 	var first_regen := -1
 	for e in (blessed[1] as BattleResult).log:
-		if e.name == BattleEvent.STATUS_STACKED and e.get_name(&"buff") == OvertimeRegenPerk.BUFF_ID:
+		if e.name == BattleEvent.AXIS_SHIFTED and e.side == 0 and e.get_name(&"axis") == StatAxes.REGEN_HP:
 			first_regen = e.time
 			break
-	t.eq(first_regen, StatMath.from_float(30.0), "第 30 秒（加时开始）上身")
+	t.eq(first_regen, StatMath.from_float(30.0), "第 30 秒（加时开始）回春，记一条 axis_shifted（buff 栏画「回春」）")
 	# 大地：耐力 / 锻炼 / 赐物 / 改造
 	var earth: FaithDef = defs[&"earth"]
 	var rows0 := run.board.size.y

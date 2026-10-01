@@ -146,6 +146,7 @@ static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) ->
 		report.error("id", "增益必须有 id")
 	validate_buff_duration(def, "", report)
 	warn_unbounded_percent(def, "", report)
+	warn_axis_candidate(def, "", report)
 	ctx.register_buff(def)
 	return def
 
@@ -169,6 +170,7 @@ static func _validate_item_buffs(def: ItemDef, report: ImportReport) -> void:
 			if e != null and e.buff != null:
 				validate_buff_duration(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
 				warn_unbounded_percent(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
+				warn_axis_candidate(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
 
 
 ## 103 第 3 条：buff 没写明就是永续、不限层 —— 按百分比乘的不限层 buff 越叠越大（加时一拖更甚），
@@ -181,6 +183,16 @@ static func warn_unbounded_percent(def: BuffDef, path: String, report: ImportRep
 		if mod != null and mod.mult_percent != 0:
 			report.warn(path + "max_stacks", "「%s」不限层且按百分比乘（%+d%%），永续叠加会越叠越大，确认要不要填层数上限" % [def.id, mod.mult_percent])
 			return
+
+
+## 103 4e：能用标准轴表达的简单增减一律走轴 —— 只有一条落在轴属性上的 mod、没有规则的可叠层 buff，提示改成 shift_axis
+static func warn_axis_candidate(def: BuffDef, path: String, report: ImportReport) -> void:
+	if def == null or not def.is_stackable() or def.mods.size() != 1 or not def.rules.is_empty() \
+			or not def.on_apply.is_empty() or not def.on_expire.is_empty():
+		return
+	var axis := StatAxes.axis_for_stat((def.mods[0] as StatModifier).stat)
+	if axis != &"":
+		report.warn(path + "mods", "「%s」只是一条 %s 的增减，改用标准轴：shift_axis(%s)（增益正、减益负，直接相抵）" % [def.id, (def.mods[0] as StatModifier).stat, axis])
 
 
 ## 103 第 1、2 条（作者定）：带武器标签的道具必须造成伤害；只有带武器标签的道具才消耗耐力。

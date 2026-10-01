@@ -2,8 +2,9 @@
 ## 之后每 [member stack_every_sec] 秒再叠一层；第 [member decay_starts_at_sec] 秒起双方每 [member decay_every_sec] 秒掉
 ## [member decay_amount] 点生命上限，直到一方倒下 —— 从此没有平局。
 ##
-## [b]不在 BattleSim 里写特例[/b]：两种效果都是「系统 buff」（不限层、永续、不可解除），走 4.3 公式、4.5 叠层、面板与词条；
-## 模拟循环只多一种「系统时刻」（[method next_at]）。数值在这里，每章的 [NodeRules] 可以各给一份。
+## [b]不在 BattleSim 里写特例[/b]：加时走标准轴（4.3）—— 每叠一次给双方「受到伤害」轴的**系统层**加
+## `damage_taken_percent ÷ 轴步长` 层（净化不动系统层，这就是不可解除）；衰竭是系统 buff（生命上限是资源上限，4.5 说由 buff 承载）。
+## 模拟循环只多一种「系统时刻」。数值在这里，每章的 [NodeRules] 可以各给一份。
 class_name OvertimeRules
 extends Resource
 
@@ -23,7 +24,6 @@ const DECAY_ID := &"decay"
 ## 每次掉多少生命上限（固定值）
 @export var decay_amount: float = 5.0
 
-var _overtime: BuffDef = null
 var _decay: BuffDef = null
 
 static var _default: OvertimeRules = null
@@ -38,16 +38,10 @@ static func or_default(rules: OvertimeRules) -> OvertimeRules:
 	return _default
 
 
-## 鏖战：每层受到的最终伤害 +N%（[constant BattleStats.DAMAGE_TAKEN] 的乘区）
-func overtime_buff() -> BuffDef:
-	if _overtime == null:
-		_overtime = _system_buff(OVERTIME_ID, "鏖战", "Overtime")
-		var m := StatModifier.new()
-		m.stat = BattleStats.DAMAGE_TAKEN
-		m.mult_category = StatMath.Buff.EMPOWER
-		m.mult_percent = damage_taken_percent
-		_overtime.mods.append(m)
-	return _overtime
+## 加时每叠一次，给「受到伤害」轴的系统层加几层：+20% ÷ 每层 5% = 4 层
+func overtime_axis_stacks() -> int:
+	var step := StatAxes.step_of(StatAxes.DAMAGE_TAKEN)
+	return maxi(1, roundi(float(damage_taken_percent) / step)) if step > 0.0 else 0
 
 
 ## 衰竭：每层生命上限 −N（固定值）
@@ -89,6 +83,8 @@ func problems() -> Array:
 		out.append(["stack_every_sec", "叠层间隔应为正"])
 	if decay_every_sec <= 0.0:
 		out.append(["decay_every_sec", "衰竭间隔应为正"])
+	if damage_taken_percent <= 0:
+		out.append(["damage_taken_percent", "加时每次的受伤加成应为正"])
 	if decay_amount <= 0.0:
 		out.append(["decay_amount", "衰竭每次掉的生命上限应为正 —— 否则可能永远分不出胜负"])
 	if decay_starts_at_sec < starts_at_sec:

@@ -1,4 +1,4 @@
-## 103 第 4、6 条：加时（鏖战）与衰竭、双双倒下的裁决、系统 buff 不可解除、buff 栏日志自足。
+## 103 第 4、6 条与 4e：标准轴、加时（鏖战，受到伤害轴的系统层）与衰竭、双双倒下的裁决、系统层不可解除、buff 栏日志自足。
 extends RefCounted
 
 const FX := preload("res://tests/test_effect_system.gd")
@@ -25,17 +25,18 @@ static func _ctx(a: CombatantSpec, b: CombatantSpec) -> BattleContext:
 
 
 static func run_stacking(t: TestCase) -> void:
-	t.begin("103 · 加时：30 秒起每 5 秒叠一层鏖战，每层受到的最终伤害 +20%；60 秒起每秒掉 5 点生命上限")
+	t.begin("103 · 加时：30 秒起每 5 秒一次，受到伤害轴的系统层 +4 层（每层 5% = +20%）；60 秒起每秒掉 5 点生命上限")
 	var ctx := _ctx(_dummy(1000.0), _dummy(1000.0))
 	FX._advance_to(ctx, 29.9)
-	t.eq(ctx.sides[0].stacks_of(OvertimeRules.OVERTIME_ID), 0, "29.9 秒：0 层")
+	t.eq(ctx.sides[0].axis_total(StatAxes.DAMAGE_TAKEN), 0, "29.9 秒：0 层")
 	FX._advance_to(ctx, 30.0)
-	t.eq(ctx.sides[0].stacks_of(OvertimeRules.OVERTIME_ID), 1, "30 秒：1 层")
-	t.eq(ctx.sides[1].stacks_of(OvertimeRules.OVERTIME_ID), 1, "双方一起叠")
-	t.eq(ctx.sides[0].stat(BattleStats.DAMAGE_TAKEN, StatMath.ONE), _sec(1.2), "受伤倍率 ×1.2")
+	t.eq(ctx.sides[0].axis_system(StatAxes.DAMAGE_TAKEN), 4, "30 秒：系统层 4 层")
+	t.eq(ctx.sides[0].axis_stacks(StatAxes.DAMAGE_TAKEN), 0, "内容层不动")
+	t.eq(ctx.sides[1].axis_system(StatAxes.DAMAGE_TAKEN), 4, "双方一起叠")
+	t.eq(ctx.sides[0].axis_factor(StatAxes.DAMAGE_TAKEN), _sec(1.2), "受伤倍率 ×1.2")
 	FX._advance_to(ctx, 35.0)
-	t.eq(ctx.sides[0].stacks_of(OvertimeRules.OVERTIME_ID), 2, "35 秒：2 层")
-	t.eq(ctx.sides[0].stat(BattleStats.DAMAGE_TAKEN, StatMath.ONE), _sec(1.4), "受伤倍率 ×1.4（同一乘区相加）")
+	t.eq(ctx.sides[0].axis_system(StatAxes.DAMAGE_TAKEN), 8, "35 秒：8 层")
+	t.eq(ctx.sides[0].axis_factor(StatAxes.DAMAGE_TAKEN), _sec(1.4), "受伤倍率 ×1.4")
 	var hp0 := ctx.sides[0].resources.current(BattleStats.RES_HP)
 	DamageResolver.deal(ctx, ctx.sides[0], _sec(10.0))
 	t.eq(hp0 - ctx.sides[0].resources.current(BattleStats.RES_HP), _sec(14.0), "10 点伤害在 2 层下扣 14（定点精确）")
@@ -51,9 +52,9 @@ static func run_stacking(t: TestCase) -> void:
 	t.eq(ctx.sides[0].resources.maximum(BattleStats.RES_HP), _sec(985.0), "生命上限 −15")
 	var started := {}
 	for e in ctx.log:
-		if e.name == BattleEvent.OVERTIME_STARTED or e.name == BattleEvent.DECAY_STARTED:
+		if e.name == BattleEvent.OVERTIME_STACKED or e.name == BattleEvent.DECAY_STARTED:
 			started[e.name] = int(started.get(e.name, 0)) + 1
-	t.eq(started, {BattleEvent.OVERTIME_STARTED: 1, BattleEvent.DECAY_STARTED: 1}, "鏖战开始 / 衰竭开始各记一次")
+	t.eq(started, {BattleEvent.OVERTIME_STACKED: 7, BattleEvent.DECAY_STARTED: 1}, "加时 30～60 秒叠 7 次、衰竭开始记一次")
 
 
 static func run_shield_and_armor(t: TestCase) -> void:
@@ -109,23 +110,26 @@ static func run_decay_death(t: TestCase) -> void:
 
 
 static func run_system_buffs(t: TestCase) -> void:
-	t.begin("103 · 系统 buff 不可解除：净化、消耗层数都对它无效")
+	t.begin("103 · 系统层 / 系统 buff 不可解除：净化、消耗层数都对它无效")
 	var ctx := _ctx(_dummy(1000.0), _dummy(1000.0))
-	FX._advance_to(ctx, 40.0)
+	FX._advance_to(ctx, 62.0)
 	var me := ctx.sides[0]
-	t.eq(me.remove_buff_stacks(OvertimeRules.OVERTIME_ID, 99), 0, "remove_buff_stacks 挡住")
+	me.shift_axis(StatAxes.DAMAGE_TAKEN, 2)
+	t.eq(me.clear_axis(StatAxes.DAMAGE_TAKEN), -2, "净化轴：只清内容层的 2 层")
+	t.eq(me.axis_system(StatAxes.DAMAGE_TAKEN), 28, "系统层 28 层还在（7 次 × 4）")
+	t.eq(me.remove_buff_stacks(OvertimeRules.DECAY_ID, 99), 0, "衰竭：remove_buff_stacks 挡住")
 	var purge := RemoveStatus.new()
-	purge.buff_id = OvertimeRules.OVERTIME_ID
+	purge.buff_id = OvertimeRules.DECAY_ID
 	purge.stacks = 0
 	purge.apply(RuleContext.create(ctx, me, RuleRuntime.create(null, 0, null, 0)))
-	t.eq(me.stacks_of(OvertimeRules.OVERTIME_ID), 3, "净化全部：还是 3 层")
+	t.eq(me.stacks_of(OvertimeRules.DECAY_ID), 3, "净化全部：衰竭还是 3 层")
 	var cost := StatusStackCost.new()
-	cost.buff_id = OvertimeRules.OVERTIME_ID
+	cost.buff_id = OvertimeRules.DECAY_ID
 	cost.stacks = 1
-	t.check(not cost.can_pay(RuleContext.create(ctx, me, RuleRuntime.create(null, 0, null, 0))), "不能拿鏖战层数当消耗")
+	t.check(not cost.can_pay(RuleContext.create(ctx, me, RuleRuntime.create(null, 0, null, 0))), "不能拿衰竭层数当消耗")
 	var ot := OvertimeRules.or_default(null)
-	t.check(ot.overtime_buff().system and ot.decay_buff().system and ot.overtime_buff().is_debuff, "鏖战 / 衰竭是系统减益")
-	t.check(ot.overtime_buff().is_stackable() and ot.overtime_buff().is_permanent(), "不限层、永续（默认形态）")
+	t.check(ot.decay_buff().system and ot.decay_buff().is_debuff, "衰竭是系统减益")
+	t.check(ot.decay_buff().is_stackable() and ot.decay_buff().is_permanent(), "不限层、永续（默认形态）")
 
 
 static func run_buff_bar(t: TestCase) -> void:
@@ -149,15 +153,19 @@ static func run_buff_bar(t: TestCase) -> void:
 		if e.name == BattleEvent.STATUS_STACKED and not r.buffs.has(e.get_name(&"buff")):
 			missing.append(e.get_name(&"buff"))
 	t.check(missing.is_empty(), "日志里叠过的每个 buff 都有定义（缺 %s）" % [missing])
-	t.check(r.buffs.has(&"t_poison") and r.buffs.has(OvertimeRules.OVERTIME_ID) and r.buffs.has(OvertimeRules.DECAY_ID), "对手给的、系统给的都在")
+	t.check(r.buffs.has(&"t_poison") and r.buffs.has(OvertimeRules.DECAY_ID), "对手给的、系统给的都在")
 
 	var panel := CombatantPanel.new()
 	panel.buff_defs = r.buffs
 	panel.passives = [PassiveNote.make(&"faith:x", "信仰：自然之神", 3)]
 	panel.set_stacks("t_once", 1)
 	panel.set_stacks("t_poison", 4)
-	panel.set_stacks(String(OvertimeRules.OVERTIME_ID), 2)
-	t.eq(panel.ordered_ids(), ["overtime", "t_poison", "t_once", "passive:0"], "系统 → 减益 → 增益 → 常驻")
+	panel.set_overtime(2)
+	panel.set_axis("attack_speed", 5)
+	panel.set_axis("damage_dealt", -2)
+	t.eq(panel.ordered_ids(), ["system:overtime", "t_poison", "axis:damage_dealt", "t_once", "axis:attack_speed", "passive:0"], "系统 → 减益 → 增益（组内按上身先后）→ 常驻")
+	t.eq(panel.chip_text("axis:attack_speed"), "加 ×5", "轴格：正层用正名")
+	t.eq(panel.chip_text("axis:damage_dealt"), "虚 ×2", "轴格：负层用负名、画绝对值")
 	t.eq(panel.chip_text("t_once"), "专", "不可叠层不画 ×1")
 	t.eq(panel.chip_text("t_poison"), "t ×4", "可叠层画层数")
 	t.eq(panel.chip_text("passive:0"), "信 ×3", "常驻格画阶数")
@@ -168,7 +176,7 @@ static func run_buff_bar(t: TestCase) -> void:
 	view._ready()
 	r.passives = [[PassiveNote.make(&"set:x", "猎人套装 3 件", 1, [FX._mod(BattleStats.DAMAGE, StatMath.Buff.EMPOWER, 10)])], []]
 	view.play(r, ["我", "敌"])
-	t.check(view.buff_tip("overtime").contains("不可解除"), "系统效果的悬浮窗写着不可解除")
+	t.check(view.buff_tip(CombatantPanel.OVERTIME_CHIP).contains("不可解除"), "鏖战的悬浮窗写着不可解除")
 	t.check(view.buff_tip("passive:0", 0).contains("常驻") and view.buff_tip("passive:0", 0).contains("10%"), "常驻格的悬浮窗列出它的加成：%s" % view.buff_tip("passive:0", 0))
 	view.free()
 
@@ -186,5 +194,52 @@ static func run_general_only(t: TestCase) -> void:
 	t.eq(tagged.battle_note(null), "", "只给带武器标签的道具：不进")
 	t.eq(EnchantWeaponsPerk.new().battle_note(null), "", "随机几把武器附魔：不进")
 	t.eq(FoodDoublePerk.new().battle_note(null), "", "食物翻倍：不进")
-	t.eq(OvertimeRegenPerk.new().battle_note(null), "", "加时回春：上身时以 buff 显示，不另开常驻格")
+	t.eq(OvertimeRegenPerk.new().battle_note(null), "", "加时回春：上身时以回血轴显示，不另开常驻格")
 	t.eq(BattlePassives.of(null).size(), 0, "没有一局：没有常驻格")
+
+
+static func run_axes(t: TestCase) -> void:
+	t.begin("103 4e · 标准轴：带符号层数、增减相抵、公式最后一步、固定值轴、按上限回血、改轴效果与扳机")
+	var a := _hitter(100.0, 10.0, 1.0)
+	var ctx := _ctx(a, _dummy(1000.0))
+	var me := ctx.sides[0]
+	var haste0 := me.item_stat(1, BattleStats.HASTE)
+	me.shift_axis(StatAxes.ATTACK_SPEED, 3)
+	me.shift_axis(StatAxes.ATTACK_SPEED, -1)
+	t.eq(me.axis_stacks(StatAxes.ATTACK_SPEED), 2, "3 层加速 + 1 层减速 = +2")
+	t.eq(me.item_stat(1, BattleStats.HASTE), StatMath.mul(haste0, _sec(1.06)), "攻速 × (1 + 2 × 3%)")
+	me.shift_axis(StatAxes.DAMAGE_DEALT, 10)
+	t.eq(me.item_stat(1, BattleStats.DAMAGE), _sec(13.0), "伤害 10 × 1.3")
+	me.shift_axis(StatAxes.DAMAGE_DEALT, -50)
+	t.eq(me.item_stat(1, BattleStats.DAMAGE), 0, "因子低于 0 钳到 0")
+	me.shift_axis(StatAxes.REGEN_HP, 3)
+	t.eq(me.stat(BattleStats.REGEN_HP), _sec(3.0), "回血轴是固定值：+3 / 秒")
+	me.shift_axis(StatAxes.REGEN_HP_PCT, 2)
+	t.eq(me.stat(BattleStats.REGEN_HP), _sec(5.0), "按上限回血：100 × 2% = +2 / 秒")
+	t.eq(StatAxes.name_of(StatAxes.ATTACK_SPEED, 1), "加速", "正名")
+	t.eq(StatAxes.name_of(StatAxes.ATTACK_SPEED, -1), "减速", "负名")
+
+	var shift := ShiftAxis.new()
+	shift.axis = StatAxes.DAMAGE_TAKEN
+	shift.delta = -2
+	shift.target = CombatEffect.Target.OPPONENT
+	var trig := OnAxisAtLeast.new()
+	trig.axis = StatAxes.DAMAGE_TAKEN
+	trig.stacks = -2
+	trig.on_self = true
+	var b := FX._spec(100.0, [FX._compiled(1, "w", {"damage": 1.0}, [FX._rule(OnSchedule.new(), FX._cooldown(1.0), [shift])])])
+	var watcher := FX._spec(100.0, [FX._compiled(1, "w", {"damage": 1.0}, [FX._rule(trig, Always.new(), [FX._damage(7.0)])])])
+	var ctx2 := _ctx(b, watcher)
+	FX._advance_to(ctx2, 1.0)
+	t.eq(ctx2.sides[1].axis_stacks(StatAxes.DAMAGE_TAKEN), -2, "shift_axis 给对手 −2 层（坚韧）")
+	var shifted := 0
+	for e in ctx2.log:
+		if e.name == BattleEvent.AXIS_SHIFTED:
+			shifted += 1
+	t.eq(shifted, 1, "记一条 axis_shifted")
+	t.check(ctx2.sides[0].resources.current(BattleStats.RES_HP) < _sec(100.0), "on_axis_at_least（−2）命中：对手回击")
+	t.eq(DamageResolver.deal(ctx2, ctx2.sides[1], _sec(10.0)), _sec(9.0), "坚韧 2 层：受到伤害 × 0.9")
+
+	var warn := ImportReport.new()
+	ContentImporter.import_buff({"id": "t_fast", "mods": [{"stat": "haste", "mult_category": "HASTE", "mult_percent": 5}]}, ContentImporter.Context.new(), warn)
+	t.check(warn.to_text().contains("shift_axis"), "只有一条攻速 mod 的 buff：提示改用轴（%s）" % warn.to_text())

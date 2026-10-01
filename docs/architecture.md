@@ -1222,9 +1222,9 @@ while 双方存活 and now < 安全上限:
     结算这一刻：系统时刻 → 到期 → 出手   # 正好此刻到期的增益不该再为这一刻加成
 ```
 
-**加时与衰竭（103，作者定）**：第 30 秒起双方各叠一层系统 buff「鏖战」（受到的最终伤害 +20%，属性 `damage_taken`），
-之后每 5 秒再叠一层；第 60 秒起每秒叠一层「衰竭」（生命上限 −5），上限把当前血压到 0 就倒下（走 `mark_dead`，蛮神的不死照常生效）。
-数值在 `OvertimeRules`（`NodeRules.overtime`，没填用默认），两种都是 `BuffDef.system = true` 的系统 buff：不限层、永续、**不可解除**。
+**加时与衰竭（103，作者定）**：第 30 秒起每 5 秒一次「鏖战」—— 双方「受到伤害」标准轴（4.3）的**系统层**各 +4 层（每层 5%，即受到的最终伤害 +20%），
+净化只动内容层，所以不可解除；第 60 秒起每秒叠一层「衰竭」（`BuffDef.system = true` 的系统 buff，生命上限 −5），上限把当前血压到 0 就倒下
+（走 `mark_dead`，蛮神的不死照常生效）。数值在 `OvertimeRules`（`NodeRules.overtime`，没填用默认）。
 因此**没有平局**：同一刻双双倒下按「倒下前血量 → 本场总伤害 → 判玩家胜」裁决；`battle_time_limit` 只是防配置坏掉的安全上限（默认 600 秒）。
 
 三个好处：
@@ -1303,12 +1303,13 @@ while 双方存活 and now < 安全上限:
 
 - **定义表由日志给**：`CombatantRuntime.apply_buff` 每次上身登记进 `BattleContext.seen_buffs`，`BattleResult.buffs` 带出去，
   `BattleView.play` 直接用。凡是上过身的 buff 都认得，不管来自自己、对手、信仰、局外 buff 还是系统。
+- **标准轴先于一切**（4.3）：内容层 ≠ 0 的轴各画一格，正名 / 负名 `×|层数|`（`axis_shifted` 事件驱动）；加时另画一格「鏖战 ×n」（`overtime_stacked` 驱动）说明系统层的来源。
 - 战斗内的 `BuffDef` 全部符合（`StatModifier` 没有按道具筛选的字段，buff 的 mods 施加到单位与每一件道具）。
 - **常驻格**：编译期的单位级加成 —— 已激活的套装档位（施加到全部参战道具）、局外 / 一局 buff 的战斗加成、技能 / 难度 / 神坛改的基础属性、
   作用于角色本身的信仰级效果（`FaithPerk.battle_note`）—— 不是 buff，但符合准则，也进栏：`CombatantSpec.passives: Array[PassiveNote]`
   （`BattlePassives.of(run)` 在 `compile_player` 里填），`BattleResult.passives` 带出去，灰底、不随事件变。
   信物自己的按阶加成（`faith_bonuses`）、包体加成、邻接增益、只给某类道具的信仰效果只作用于某几件，不进栏。
-- 顺序：系统（琥珀）→ 减益（红）→ 增益（蓝）→ 常驻（灰），组内按上身先后；不可叠层的不画 `×1`。
+- 顺序：系统（琥珀）→ 减益（红，含负向的轴）→ 增益（蓝，含正向的轴）→ 常驻（灰），组内按上身先后；不可叠层的不画 `×1`。
 
 #### 沙盒
 
