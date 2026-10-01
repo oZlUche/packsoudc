@@ -45,7 +45,7 @@ func describe() -> String:
 	if not shield_absorbable:
 		parts.append("无视护盾")
 	if not armor_applies:
-		parts.append("无视护甲")
+		parts.append("无视防护")
 	if not provokes:
 		parts.append("不招致反应")
 	return "、".join(parts) if not parts.is_empty() else "常规"

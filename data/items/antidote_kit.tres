@@ -15,32 +15,25 @@
 
 [sub_resource type="Resource" id="Resource_45af8"]
 script = ExtResource("3_0hbqd")
-seconds = 0.8
 
 [sub_resource type="Resource" id="Resource_wyxn2"]
 script = ExtResource("6_6ygqc")
 buff_id = &"poison"
-stacks = 5
 
 [sub_resource type="Resource" id="Resource_22sfj"]
-script = ExtResource("6_6ygqc")
-buff_id = &"bleed"
-stacks = 5
-
-[sub_resource type="Resource" id="Resource_5g8wp"]
 script = ExtResource("7_cs6ox")
 
-[sub_resource type="Resource" id="Resource_c2gvo"]
+[sub_resource type="Resource" id="Resource_5g8wp"]
 script = ExtResource("2_dott4")
-trigger = SubResource("Resource_5g8wp")
+trigger = SubResource("Resource_22sfj")
 cadence = SubResource("Resource_45af8")
-effects = Array[ExtResource("5_7jv6f")]([SubResource("Resource_wyxn2"), SubResource("Resource_22sfj")])
+effects = Array[ExtResource("5_7jv6f")]([SubResource("Resource_wyxn2")])
+
+[sub_resource type="Resource" id="Resource_c2gvo"]
+script = ExtResource("8_2q1ck")
+rules = Array[ExtResource("2_dott4")]([SubResource("Resource_5g8wp")])
 
 [sub_resource type="Resource" id="Resource_2rgq2"]
-script = ExtResource("8_2q1ck")
-rules = Array[ExtResource("2_dott4")]([SubResource("Resource_c2gvo")])
-
-[sub_resource type="Resource" id="Resource_s8m46"]
 script = ExtResource("12_050yk")
 
 [resource]
@@ -50,8 +43,8 @@ display_name = "解毒包"
 display_names = {
 "en": "Antidote Kit"
 }
-shape = SubResource("Resource_s8m46")
+shape = SubResource("Resource_2rgq2")
 rarity = 1
 value = 20
 tags = Array[StringName]([&"consumable", &"tool"])
-combat = SubResource("Resource_2rgq2")
+combat = SubResource("Resource_c2gvo")

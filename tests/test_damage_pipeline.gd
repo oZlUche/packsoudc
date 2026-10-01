@@ -154,7 +154,7 @@ static func run_armor(t: TestCase) -> void:
 	var ctx4 := H._battle(_attacker(20.0), _defender({"max_shield": 8.0, "armor": 5.0}))
 	_run(ctx4)
 	t.eq(_shield(ctx4, 1), 0, "护盾吃掉 8")
-	t.eq(_hp(ctx4, 1), 93, "余下 12 再被护甲挡 5，实扣 7")
+	t.eq(_hp(ctx4, 1), 93, "余下 12 再被防护挡 5，实扣 7")
 
 
 static func run_before_damage(t: TestCase) -> void:

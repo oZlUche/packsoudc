@@ -21,18 +21,13 @@
         },
         "cadence": {
           "type": "cooldown",
-          "seconds": 0.8
+          "seconds": 2.0
         },
         "effects": [
           {
             "type": "remove_status",
             "buff_id": "poison",
-            "stacks": 5
-          },
-          {
-            "type": "remove_status",
-            "buff_id": "bleed",
-            "stacks": 5
+            "stacks": 1
           }
         ]
       }

@@ -38,7 +38,7 @@ script = ExtResource("2_f54du")
 mode = "scaled"
 max_stacks = 5
 mods = Array[ExtResource("3_af1s0")]([SubResource("Resource_2gm7o")])
-note = "每 50 信力护甲 +1（最多 5 份）"
+note = "每 50 信力防护 +1（最多 5 份）"
 
 [sub_resource type="Resource" id="Resource_pdjtl"]
 script = ExtResource("1_umqo0")
