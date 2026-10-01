@@ -121,3 +121,4 @@
 | 098 | [方案：存档版本迁移链](098-save-migration-proposal.md) | 架构 · 提议 | 等作者确认 |
 | 099 | [方案：在背包里切换信仰改成明确规则](099-faith-reseat-proposal.md) | 架构 · 提议 | 等作者确认 |
 | 100 | [方案：内容管线收口](100-content-pipeline-proposal.md) | 架构 · 提议 | 等作者确认 |
+| 101 | [方案：RunState / GameFlow 拆分与依赖方向](101-run-state-decomposition-proposal.md) | 架构 · 提议 | 等作者确认 |
