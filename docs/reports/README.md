@@ -120,3 +120,4 @@
 | 097 | [架构体检：现状概况与主要问题](097-architecture-audit.md) | 分析 · 无代码改动 | 待作者挑选 |
 | 098 | [方案：存档版本迁移链](098-save-migration-proposal.md) | 架构 · 提议 | 等作者确认 |
 | 099 | [方案：在背包里切换信仰改成明确规则](099-faith-reseat-proposal.md) | 架构 · 提议 | 等作者确认 |
+| 100 | [方案：内容管线收口](100-content-pipeline-proposal.md) | 架构 · 提议 | 等作者确认 |
