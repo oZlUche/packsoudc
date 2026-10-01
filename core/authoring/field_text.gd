@@ -44,7 +44,7 @@ const LABELS := {
 	"starting_keepsakes": "开局特殊道具", "next_chapter": "下一章", "allow_carry_in": "允许从仓库带入", "auto_spawn": "直接站在出生点", "skip_setup": "不走开局屏",
 	"intro_event": "开场事件", "node_tooltips": "节点浮窗", "tooltip_mode": "浮窗模板", "tooltip_texts": "浮窗文字", "rings": "环", "kind": "种类",
 	"slots": "槽位数", "node_count": "点数", "quota": "配额", "type_weights": "类型权重", "ring_template": "环模板", "scales": "规模", "routes": "路线",
-	"mix": "配比", "min_share": "最低占比", "risk_band": "风险区间", "reward_band": "回报区间", "ends_at": "终点类型", "type_risk": "类型风险", "type_reward": "类型回报",
+	"mix": "配比", "min_share": "最低占比", "risk_band": "风险区间", "reward_band": "回报区间", "ends_at": "终点类型", "spawns_zones": "岔出高危区", "type_risk": "类型风险", "type_reward": "类型回报",
 	"mandatory_types": "必有的类型", "danger_risk_multiplier": "危险等级风险倍率", "danger_reward_multiplier": "危险等级回报倍率", "ev_tolerance": "期望容差",
 	"coverage": "覆盖", "no_adjacent": "不许相邻", "zone_spec": "高危区", "zone_rules": "高危区规则", "entries": "出生点数", "zones": "高危区数", "zone_size": "高危区大小",
 	"pivots": "枢纽数", "nodes_by_rings": "按环数的点数", "extract_gap": "撤离点间距", "extract_bands": "撤离点环带", "haven_at": "安全点位置", "placeholder": "占位",

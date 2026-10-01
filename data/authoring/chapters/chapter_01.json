@@ -340,7 +340,8 @@
             0.15,
             0.6
           ],
-          "ends_at": "extract"
+          "ends_at": "extract",
+          "spawns_zones": false
         },
         {
           "id": "mixed",

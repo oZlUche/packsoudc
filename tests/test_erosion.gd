@@ -223,14 +223,17 @@ static func run_settle_save_and_pipeline(t: TestCase) -> void:
 	var applied: Array = []
 	s.erosion_applied.connect(func(node: MapNode, detail: Dictionary): applied.append([node.id, detail]))
 	var v := s.vitality.current
+	# 走进的点要是事件、抽到「恢复」会补回体力 —— 那是事件的事，算账时扣掉
+	var restored := [0]
+	s.events.event_resolved.connect(func(_n: MapNode, _o: StringName, d: Dictionary): restored[0] += int(d.get("restored", 0)))
 	t.check(_step(s), "走一步")
 	t.eq(f.eroded_bands, 0, "这一步推进了（在惩罚之前）")
 	var here := s.current_node()
 	if f.is_eroded(here):
-		t.eq(s.vitality.current, v - 1, "走进被侵蚀的点：扣了 1（推进在惩罚之前，刚被侵蚀的点这一步就有代价）")
+		t.eq(s.vitality.current - int(restored[0]), v - 1, "走进被侵蚀的点：扣了 1（推进在惩罚之前，刚被侵蚀的点这一步就有代价）")
 		t.eq(applied.size(), 1, "结算发了信号")
 	else:
-		t.eq(s.vitality.current, v, "没走进被侵蚀的点：不扣")
+		t.eq(s.vitality.current - int(restored[0]), v, "没走进被侵蚀的点：不扣")
 		t.eq(applied.size(), 0, "没结算")
 	# 存档
 	var d := s.to_dict()

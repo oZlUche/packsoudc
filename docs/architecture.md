@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.06 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.07 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1548,7 +1548,7 @@ func resolve(run_seed: int) -> MapGraph      # 失败返回 null，原因在 las
 6 环第 3、4 环，7 环第 4 环，8 环第 4、5 环；大型的两道还没定，占位）。以前是「每 N 环一个」，
 结果外侧那个窗口挑离已有撤离点最远的候选，总落在最外环、出生点旁边，开局一步就能撤。
 放的时候先让**相邻的两条路线共用一个**：合流后共用的点、换乘点、换乘弧上的点，三条路线两两共享；
-一对都放不下时环间里至少放一个。去撤离点的路线在核心前一环收尾，那个撤离点是例外。
+一对都放不下时环间里至少放两个（`extract_min_count`：一个付费、一个免费）。去撤离点的路线也在环间收尾，它的尽头就是它和一条相邻路线共用的撤离点（053），没有例外。
 
 > 第一版写成了「叠加属性」（一个战斗点同时是撤离点）。用户纠正：是覆盖，不是重叠。
 
@@ -1723,7 +1723,9 @@ class_name ZoneRules extends Resource
         converge_after_ring 之前，与这一环上已落的子保持间距 ≥ entry_min_gap × 本环槽位 / 最外环槽位
         （至少 1）；挤不开先退到「不重合」，再退到合流 —— 总好过整张图作废
         选中的节点与连接它们的径向边进骨架，标 protected
-      ends_at = "extract" 的路线走到核心前一环为止，末端节点定为 extract
+      ends_at = "extract" 的路线走到撤离环间（偶数环取内侧那环）为止，沿那一环朝空间大的那边走一段弧，
+      弧尾是尽头（定为 extract，与相邻路线共用），尽头到相邻路线之间剩下的点是换乘区（`exit_ids`，商店放第一个）。
+      没有撤离环间的规模仍走到核心前一环（053）
    c. 换乘：次数来自规模模板（小型 1 次，中型 1~2 次，大型 2 次以上），沿路线均分出「安排的环」。
       **相邻直连优先**：每推进一环，相邻两条路线刚落的子如果恰好是相邻槽位，而此刻在某次换乘的
       窗口里（安排的那一环 ± pivot_window，不必严格踩在那一环上）、这一次又还没换乘过 ——
@@ -1774,13 +1776,14 @@ class_name ZoneRules extends Resource
    类型规则写进 layout_meta.type_rules，校验从图上读。
    固定节点 = core、extract、高危区里为满足 min_elites / min_search 改出来的
 
-6. 高危区**在步骤 4b 里和路线一起长**，不是事后在图上圈一块（细节见 5.5「高危区」）：
-   每推进一环，各条路线落子之后 →（a）已经岔出来的高危区各长一个点；
-   （b）过了半程（start_after_progress）的，按 spawn_chance 从某条路线刚落子的点上岔出一片新的：
+6. 高危区**在路线与换乘都铺完之后**才长（053；以前和路线同步长，一半的失败是占走了路线自己的下一步）。
+   只从 `RouteStyle.spawns_zones` 为 true 的路线上岔（搜索路线不岔）。从过半程那一环起逐环向内 →
+   （a）已经岔出来的高危区各长一个点；
+   （b）过了半程（start_after_progress）的，按 spawn_chance 从这一环上的路线节点岔出一片新的：
    挑一个挨着它的空点当第一个点，要求那个点旁边还有空点（「周围空间充足」），
    **视作新起点并立刻再长一步** —— 一片高危区生下来就至少两个点。
    路线走完后高危区接着长，直到软上限或周围没地方。
-   路线与高危区实时抢地方：高危区不占路线节点与出生点，路线也不走已被占走的点。
+   高危区不占路线节点、换乘弧与出生点 —— 它们这时都已经铺好、受保护了。
    收尾：只长到两个点的，把它岔出来的那个路线节点也划进去凑成三个 —— 那个点原本的路线边
    就成了出入口，哪怕这让一片三个点的小区有两个口也没关系。
    「岔出点不能是必须存在点（唯一的休息区 / 精英）」这一步节点还没有类型，留了口子
@@ -1827,7 +1830,7 @@ class_name ZoneRules extends Resource
       （以上规则从 layout_meta.type_rules 读，手绘图没有这一项就一条不查）
     - 每个高危区（ZoneRules，从图上读）：点数在 [min_size, max_size]、区内连通、
       出入口【节点】数在 1 ～ max_gates_for(点数) 之间
-    - 撤离环间里至少一个 extract，环间之外只有核心前一环有（`extract_band`）；撤离点两两之间最短路 ≥ extract_gap
+    - 撤离环间里至少 `extract_min_count`（2）个 extract，环间之外没有（`extract_band`）；撤离点两两之间最短路 ≥ extract_gap
     - 节点总数落在规模模板给这个环数的范围里；**每环 节点/槽位 ≤ fill_cap（< 1），内环也不填满**
     - 出生点都是 spawn、spawn 都是出生点
 ```
@@ -1980,7 +1983,7 @@ class_name ZoneRules extends Resource
 
 - 相邻路线之间有**换乘**（次数随规模，5.4.3）：两条路线的点相邻就直接连一条边，碰不上才拉换乘弧。
   没有换乘点，风格就成了开局定终身，那不是取舍，是抽签。
-- 偏搜索路线 `ends_at = "extract"`：末端是撤离点，在核心之前一环结束。想打 BOSS 就换乘。
+- 偏搜索路线 `ends_at = "extract"`：走到撤离环间、横着走一段弧，在和相邻路线共用的撤离点结束；出口之后是换乘区，第一个点是商店。想打 BOSS 就换乘（053）。
 - 中途撤离点在**撤离环间**（正中间的一两环），放在两条路线共用的地方 —— 换乘点、换乘弧、合流点 ——
   偏战斗的路线走到半程，出口就在换乘的地方。撤离点仍然覆盖非必须型节点（不吃掉休息区与商店）。
 - 路线的长度 = 环数 × `route_length_factor`（1.5）：多出来的步数是同环横着走，随机撒在各环上。
@@ -2062,7 +2065,7 @@ class_name MapScaleProfile extends Resource
 
 **撤离点之间的最短路至少 `extract_gap` 步**（`RingMapConfig.extract_min_distance` 可以覆盖，-1 = 用模板的）。
 挨得太近的两个出口等于一个。放撤离点时挑离已有撤离点最远的候选。
-间距得对着撤离环间的位置定：小型图的环间离收尾撤离点（核心前一环）只有一两环，间距 4 会把整条环间排除掉。
+间距得对着撤离环间的位置定：小型图环间窄，间距 4 放不下两个撤离点。
 
 **喘气处放在路线的几分之几处**（`haven_at`）：中型休息区 1/3、商店 2/3；小型两个都在一半，位置撞上就挨着放。
 按路线上的步数算，不看环。
@@ -2108,8 +2111,8 @@ class_name MapScaleProfile extends Resource
 3. 有多个出入口时，尽可能让它们在区内相距最远（这条是生成时尽力，不进校验）。
 
 **怎么长出来**（`DangerZoneSpec`，生成规则，不进校验）：高危区的生成同样视为一个起点的生长。
-某条路线走过半程、旁边空间充足时，从那个路线节点上岔出一个新起点并立刻推算一次（于是至少两个点），
-之后与各条路线同一个节拍生长，直到软上限（由地图规模决定，见 5.4.3；小型 4~5 环地图是 4 个点）
+路线与换乘铺完之后，非搜索路线过半程的节点旁边空间充足时，从那个路线节点上岔出一个新起点并立刻推算一次（于是至少两个点），
+之后逐环生长，直到软上限（由地图规模决定，见 5.4.3；小型 4~5 环地图是 4 个点）
 或周围没有空间。若此时只有两个点，就把原本连接它的那个路线节点也变成高危区 ——
 即使这让 3 个点的小区有两个出入口。
 
@@ -2124,7 +2127,7 @@ class_name MapScaleProfile extends Resource
 - 休息区与商店满足**步数覆盖**（`coverage`），不是「每 N 环一个」
 - 每环每类落在 `quota` 的 `[min, max]` 内
 - 高危区内满足 `min_elites` / `min_search`
-- 撤离环间里至少一个撤离点，环间之外只有核心前一环有
+- 撤离环间里至少两个撤离点，环间之外没有
 
 各路线的风险分与收益分落在其风格区间内、收益/风险之比差不超过 `ev_tolerance` ——
 这些是**路线**的事，生成时尽力（5.4 步骤 5g），不进校验（035）。
@@ -3524,6 +3527,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v2.07 | 2026-10-01 | **053 三 + 二落地**：高危区在骨架与换乘之后才长（`RingMapGenerator._lay_zones`），只从 `RouteStyle.spawns_zones` 的路线岔（搜索风格 false）；偏搜索路线停在撤离环间内侧那环（`_exit_ring`），沿环朝空间大的那边走弧（`_lay_exit_arc`），尽头 = 与相邻路线共用的撤离点，之后的换乘区记在路线 `exit_ids`、第一个点放商店（`RingTypeAssigner._place_exit_shops`）；它的横走步数只撒在走得到的环上；校验 `extract_band` 删「核心前一环例外」、加 `extract_min_count`（2）。回头环路不做 |
 | v2.06 | 2026-10-01 | **标签 / 伤害类型是内容**（报告 096）：种类 `tags`（`TagDef`、`TagRegistry` 静态表）与 `damage_types`（`DamageTypeDef` 多 `display_names / description / descriptions`，`DamageTypes` 装回 `data/damage_types` 覆盖内置）排在 `ORDER` 最前；`Names.description_of`；`Glossary.tag_name / damage_type_name` 走数据、`STAT_NAMES / CATEGORY_NAMES` zh / en；导入器对没登记的标签只警告；`PropertyForm` 标签「加标签…」/ 伤害类型 / 标签字段下拉（`_key_picker`）；**开局预设套** `LoadoutDef.preset`（不用带包）、`GameFlow.presets / default_loadout`、开局屏 `choose_preset / preset_items`（不算带入、拖不进仓库）；**挑出生点遮罩** `MapView.spawn_mask`（只命中出生点）；悬浮窗信仰加成按 `ItemTooltip.faith_probe` 白 / 灰；`event_pending` 带 `search_stage` 的不插到战利品前面 |
 | v2.05 | 2026-09-30 | **赐福**（报告 095）：`FaithBonus.mode`（tier / active / scaled，`times_for`，编译器吃 `faith_points`）；`Blessing` 模板 + `Blessings.derive_all`（`ItemDatabase.load_dir` 派生 `<id>_<神>`，`blessed_of`，`ids()` 排掉 blessed）；来路：`DropRule / SearchRules.bless_chance(_active)` → `RunState.bless_ids`、`_bless_step`（`FaithDef.convert_chance`）、`altar_bless` 神坛操作、`bless_item` 后果；`FaithState` 只认 `faith_anchor` 信物；自己神的赐福版献祭 ×2 |
 | v2.04 | 2026-09-30 | **类缓存根除**（091 §13.2）：`.godot/global_script_class_cache.cfg` 进仓库（`.gitignore` 放行）；`DevNav.stale_classes / _check_class_cache` 启动自检、缺类红字 |
