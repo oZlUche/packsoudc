@@ -187,3 +187,36 @@ static func run_registry_and_content(t: TestCase) -> void:
 		t.check((dumped.get("modules", []) as Array).size() == 1, "导出带着 modules")
 		var again := ContentImporter.import_chapter(dumped, ContentImporter.Context.new(), ImportReport.new())
 		t.check(again != null and again.modules.size() == 1, "往返回来还在")
+
+
+static func run_module_roster(t: TestCase) -> void:
+	t.begin("101 第 1 刀 · 六个子系统都搬成了模块：默认清单里各一个、各自登记在注册表里有中文名、各自存一份在 modules[id] 下")
+	var ids: Array[StringName] = [SafeModule.ID, NodeStorageModule.ID, CraftingModule.ID, BuffModule.ID, AltarModule.ID, CountdownModule.ID]
+	var c := _content()
+	var run: RunState = null
+	for seed in range(1, 40):
+		run = RunState.start(c["chapter"], seed, c["items"], c["enemies"], c["sets"])
+		if run != null:
+			break
+	if run == null:
+		t.check(false, "开不出一局")
+		return
+	run.pick_spawn(run.map.entry_ids[0])
+	var saved: Dictionary = run.to_dict()["modules"]
+	for mid in ids:
+		t.check(run.module(mid) != null, "默认清单里有 %s" % mid)
+		t.check(EffectRegistry.has_type(&"run_module", mid), "%s 登记在 run_module 表里" % mid)
+		t.check(FieldText.TYPE_LABELS.has(String(mid)), "%s 在编辑器里有中文名" % mid)
+		t.check(saved.has(String(mid)), "%s 在存档的 modules 下有自己那一份" % mid)
+	t.eq(run.module_lines().size(), ids.size(), "规则卡上每个模块一句")
+	# 顶层不再有任何一个子系统的键（都在 modules 下了）
+	var top: Dictionary = run.to_dict()
+	for key in ["safe", "safe_locked", "node_storages", "carry_in_value", "faith_rituals", "faith_stat_bonus", "altar_used"]:
+		t.check(not top.has(key), "顶层不再有 %s" % key)
+	t.check(not (top["buffs"] as Dictionary).has("map"), "一局里拿到的 buff 也不在 buffs.map 下了")
+	# 读档：六个模块都把自己那份拿回去
+	var back := RunState.from_dict(top, c["chapter"] as ChapterDef, c["items"], c["enemies"], c["sets"])
+	t.not_null(back, "读得回来")
+	if back != null:
+		for mid in ids:
+			t.check(back.module(mid) != null, "读回来的一局里也有 %s" % mid)

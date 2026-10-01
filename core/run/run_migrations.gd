@@ -57,6 +57,13 @@ static func _v1_to_v2(d: Dictionary) -> Dictionary:
 		d.erase("faith_rituals")
 		d.erase("faith_stat_bonus")
 		d.erase("altar_used")
+	var buffs: Dictionary = d.get("buffs", {}) if d.get("buffs", {}) is Dictionary else {}
+	if buffs.has("map"):
+		var bm: Dictionary = mods.get("buff", {}) if mods.get("buff", {}) is Dictionary else {}
+		bm["map"] = buffs.get("map", [])
+		mods["buff"] = bm
+		buffs.erase("map")
+		d["buffs"] = buffs
 	if d.has("node_storages"):
 		var ns: Dictionary = mods.get("node_storage", {}) if mods.get("node_storage", {}) is Dictionary else {}
 		ns["nodes"] = d.get("node_storages", {})

@@ -25,8 +25,6 @@ signal phase_changed(phase: int, reason: StringName)
 ## 有东西等着拾取（尸体容器 / 搜索收获）。拿走或丢掉之前不会再来第二份
 signal loot_pending(container: GridInventory)
 signal loot_cleared()
-## 地图 buff 变了（给了、到期了）
-signal buffs_changed()
 ## 猎手（071）：玩家进了某个猎手的感知范围；猎手的状态变了（动了、死了、歇了）；玩家被赶回上一个点
 signal hunter_sensed(h: Hunter)
 signal hunters_changed()
@@ -129,7 +127,6 @@ var meta: MetaState = null:
 		meta = v
 		if events != null:
 			events.meta = v
-var map_buffs: Array[Dictionary] = []
 ## 事件层（063）：定义表由持有方给（id → EventDef，存档只写 id）。空表 = 每个点踩上去直接发生
 var event_defs: Dictionary = {}:
 	set(v):
@@ -237,7 +234,6 @@ func step_to(id: int) -> bool:
 		# 091（作者定）：商店可以回头再逛 —— 回到走过的商店点就把店再开起来；货架 / 刷新次数 / 卖掉的都记在节点内容里，刷新价不重置
 		if was_visited and events != null and NodeEvents.effective_type(map.get_node(id)) == &"shop":
 			events.reopen_shop(map.get_node(id))
-		tick_map_buffs()
 		if hunters != null:
 			hunters.on_player_step()     # 猎手的回合在这一步的事都发生之后（071）
 		skills.on_step()     # 冷却与躲避在猎手的回合之后减：躲 3 步就是 3 个猎手回合够不着（082）
@@ -258,7 +254,6 @@ func relocate(intent: MoveIntent) -> bool:
 	if ok:
 		if was_visited:
 			arrived.emit(travel.current_id, false)
-		tick_map_buffs()
 		if hunters != null:
 			hunters.on_player_step()
 		skills.on_step()
@@ -370,10 +365,9 @@ func active_buff_defs() -> Array:
 		var def: RunBuffDef = buff_defs.get(id, null)
 		if def != null:
 			out.append(def)
-	for entry in map_buffs:
-		var def: RunBuffDef = buff_defs.get(StringName(String(entry["id"])), null)
-		if def != null:
-			out.append(def)
+	var buff := BuffModule.of(self)     # 101：一局里拿到的 buff 在模块里
+	if buff != null:
+		out.append_array(buff.defs())
 	return out
 
 
@@ -440,59 +434,11 @@ func module_lines() -> Array[String]:
 	return out
 
 
-## 给一个地图 buff（事件的后果）。不认识的 id、局外的 buff 给不了；已经有的刷新时限
-func grant_map_buff(id: StringName) -> bool:
-	var def: RunBuffDef = buff_defs.get(id, null)
-	if def == null or not def.is_map():
-		return false
-	var left := def.duration_steps if def.duration_steps > 0 else -1
-	for entry in map_buffs:
-		if String(entry["id"]) == String(id):
-			entry["left"] = left
-			buffs_changed.emit()
-			return true
-	map_buffs.append({"id": String(id), "left": left})
-	buffs_changed.emit()
-	return true
-
-
-func remove_map_buff(id: StringName) -> bool:
-	for i in map_buffs.size():
-		if String(map_buffs[i]["id"]) == String(id):
-			map_buffs.remove_at(i)
-			buffs_changed.emit()
-			return true
-	return false
-
-
-func has_map_buff(id: StringName) -> bool:
-	for entry in map_buffs:
-		if String(entry["id"]) == String(id):
-			return true
-	return false
-
-
 ## 激活的 buff 里有没有带这个标记的（事件选项的条件查它）
 func has_buff_tag(tag: StringName) -> bool:
 	return RunBuffs.has_tag(active_buff_defs(), tag)
 
 
-## 走了一步：有时限的地图 buff 少一步，到 0 就没了
-func tick_map_buffs() -> void:
-	var changed := false
-	var i := map_buffs.size() - 1
-	while i >= 0:
-		var left := int(map_buffs[i]["left"])
-		if left > 0:
-			left -= 1
-			if left == 0:
-				map_buffs.remove_at(i)
-			else:
-				map_buffs[i]["left"] = left
-			changed = true
-		i -= 1
-	if changed:
-		buffs_changed.emit()
 #endregion
 
 
@@ -825,9 +771,6 @@ func _wire_events() -> void:
 	events.loot_context = _loot_context
 	events.run_context = buff_context
 	events.event_defs = event_defs
-	events.grant_map_buff = grant_map_buff
-	events.remove_map_buff = remove_map_buff
-	events.has_map_buff = has_map_buff
 	events.has_buff_tag = has_buff_tag
 	# 8-3：条件看容器与段位，后果传送 / 耗时经这里走（清暂存区、猎手回合）
 	events.board = board
@@ -838,7 +781,6 @@ func _wire_events() -> void:
 	events.faith_tier = active_faith_tier     # 093：事件条件 faith_active
 	events.active_faith_id = active_faith_id
 	events.waited.connect(func(_n: MapNode, _actions: int):
-		tick_map_buffs()
 		if hunters != null:
 			hunters.on_player_step()
 		stepped.emit(travel.current_id, &"wait"))
@@ -936,7 +878,7 @@ func to_dict() -> Dictionary:
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
 		"boss_cleared": boss_cleared,
 		"tally": tally.duplicate(),
-		"buffs": {"meta": _meta_buff_ids(), "map": map_buffs.duplicate(true)},
+		"buffs": {"meta": _meta_buff_ids()},     # 一局里拿到的在 modules.buff 下（101）
 		"modules": _modules_to_dict(),     # 101：每个模块自己的状态；加模块 = 新键、带默认值，不升版
 	}
 
@@ -1007,9 +949,6 @@ static func from_dict(
 	var buffs: Dictionary = d.get("buffs", {})
 	for id in buffs.get("meta", []):
 		s.meta_buffs.append(StringName(String(id)))
-	for entry in buffs.get("map", []):
-		if entry is Dictionary:
-			s.map_buffs.append({"id": String(entry.get("id", "")), "left": int(entry.get("left", -1))})
 	var loot = d.get("pending_loot", null)
 	if loot is Dictionary:
 		s.pending_loot = GridInventory.from_dict(loot, p_items)

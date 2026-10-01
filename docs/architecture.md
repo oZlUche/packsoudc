@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.10 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.11 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2925,7 +2925,7 @@ static func load_chapters() / load_loadouts() / load_characters() / load_difficu
 func grant_first_kit()                               # 仓库空的第一局发第一套（MetaRules.first_kit）
 ```
 
-### 7.4 一局的模块：`RunState` 的扩展点（101 第 0 刀，作者定）
+### 7.4 一局的模块：`RunState` 的扩展点（101 第 0 / 1 刀，作者定）
 
 作者要的是「流程控制器将来能扩展、能加东西」。做法是把 069 已经验证过的 `RunMechanic` 升级成**一局的统一插件模型**：
 本体功能（保险箱、将来的倒计时 / 神坛 / 合成……）和难度机制走同一条路。
@@ -2954,6 +2954,28 @@ func describe() -> String                # 开局屏的规则卡、编辑器
 
 第一个搬出来的样板是**保险箱**（`SafeModule`，092 的规则一条没变）：容器、锁没锁、`closed` 信号、存档、
 「走开 = 关上」与「锁上了就不再开」的接线全在它自己身上，`RunState` 不再有一个 `safe` 字段。取它用 `SafeModule.of(run)`，没装就是 null（这一局没有保险箱）。
+
+**第 1 刀：一局的六个子系统现在都是模块**（`core/run/modules/`，默认清单 `RunModules.standard()` 的顺序就是接线顺序）：
+
+| 模块 | 带走的东西 | 自己接的信号 |
+|---|---|---|
+| `SafeModule`（092） | 容器、锁、`closed` | `RunState.leaving`、`NodeEvents.safe_open` |
+| `NodeStorageModule`（087） | 哪个点上留着什么、`dropped` / `restored` | `leaving`（留下）、`arrived`（拿回） |
+| `CraftingModule`（084 / 087） | 配方表、相邻的对子、合成那一下、`done` | `arrived`（头一回踩上才合） |
+| `BuffModule`（062） | 一局里拿到的 buff（`entries`、给 / 去 / 查 / 走表）、`buffs_changed` | `stepped`（任何花行动点的方式） |
+| `AltarModule`（093 / 095） | 神坛开在哪、用过哪些点、仪式的账与改过的基线、献祭 / 特殊操作、信仰级效果（`perks`）、赐福、`noted` / `item_blessed` | `NodeEvents.altar_opened`、`leaving`（关）、`stepped`（赐福）、`MapTravel.moved`（踩点回调） |
+| `CountdownModule`（092 / 094） | 倒计时上限 / 剩余、带入价值与超带罚步、关哪个撤离点、`notice` | `stepped`（归零就 `run.fail`） |
+
+为此 `RunState` 一共多了三个**通用**生命周期信号（都不认识任何具体模块）与一个方法：
+
+- `leaving(node_id)`：要离开当前点了（走一步 / 被事件挪走，**在真正动之前**）。
+- `arrived(node_id, first_time)`：到了一个点，**在这个点的事发生之前**。
+- `stepped(node_id, reason)`：花掉了行动点、这一步该发生的事都发生完了；`reason` 是 `&"step"` / `&"relocate"` / `&"wait"`。
+- `fail(reason)`：这一局当场失败（会话关掉、没拿的战利品丢掉、排着的事清掉、阶段进战败）。倒计时归零用它。
+
+留在 `RunState` 上的是**骨架**（地图、旅程、体力、钱、棋盘、暂存区、随机流、节点事件、阶段、战斗账）
+加几样别处要在模块装上之前就用到的：`buff_defs` / `meta_buffs` / `active_buff_defs()` / `buff_context()`（开局那一刻算体力上限与开局钱，那时模块还没装）、
+信仰本身（`FaithState` / `FaithPower`：谁激活、几阶、多少信力）。行数：1359 → 962。
 
 ---
 
@@ -2995,7 +3017,7 @@ func describe() -> String                # 开局屏的规则卡、编辑器
 `MetaSave` 与 `RunSave` 同一套做法：`user://meta.json`，版本号 2（v1 是开发期的，作废），只写 id；仓库大小以存档里的为准（成长过的不该被规则缩回去）。
 **buff**（059 第 3 条，062）：局外的与一局里的是同一套定义 `RunBuffDef`（内容种类 `run_buffs`：scope、时限步数、标记、`mods` / `rules` / `effects`），
 效果树多了 `RunEffect` 分支（9.2），往 `RunContext` 里加数（体力上限、开局钱、多搜几次、商店价、幸运），各系统在对应的点读。
-局外的由 `MetaState.active_buffs` 决定（占位：局外屏的开关列表；将来任务、局外科技），开局那一刻记进这一局；一局里的由事件后果给（`RunState.grant_map_buff`），
+局外的由 `MetaState.active_buffs` 决定（占位：局外屏的开关列表；将来任务、局外科技），开局那一刻记进这一局；一局里的由事件后果给（`BuffModule.grant`，101 之后在模块里），
 有时限的每走一步少一步，只带 `tags` 的就是标记，事件选项的条件查 `has_buff_tag`。
 
 仓库里的东西能**带进下一局**（开局屏勾上；`GameFlow.begin(..., from_warehouse)` 从仓库拿走、立刻存 meta —— 撤离了它们回来、死了就是真没了，
@@ -3600,6 +3622,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.11 | 2026-10-01 | **一局的六个子系统都搬成模块**（报告 101 第 1 刀；改 7.4 / 7.2 / 8.2）：`NodeStorageModule`（087 按点暂存）、`CountdownModule`（092 / 094 倒计时与带入预算，开局屏用的那几条算式留作静态方法）、`CraftingModule`（084 / 087 相邻即合）、`BuffModule`（062 一局里拿到的 buff）、`AltarModule`（093 / 095 神坛、信仰级效果 `perks`、赐福）；`RunState` 新增通用信号 `arrived(node_id, first_time)` / `stepped(node_id, reason)` 与方法 `fail(reason)`，`start()` 去掉 `p_carry_value`（带入价值走 `module_inputs`），1359 → 962 行；`RunMigrations` 的 v1 → v2 把顶层 `node_storages` / `carry_in_value` / `faith_rituals` / `faith_stat_bonus` / `altar_used` / `buffs.map` 都搬进 `modules` |
 | v2.10 | 2026-10-01 | **一局的模块：`RunState` 的扩展点**（报告 101 第 0 刀 + 第 1 刀样板；新增 7.4、改 7.2 / 8.4）：`RunModule`（装 / 存 / 读 / 说一句，生命周期靠订阅已有信号）、`RunState.modules / install_modules / install_module / module / module_input / module_lines`、新信号 `leaving`、`ChapterDef.modules`、`RunModules.standard()`、注册表 `RUN_MODULES`（`run_mechanic` 作别名）、`RunMechanic` 变成它的子类；保险箱搬成 `SafeModule`（`RunState` 不再有 `safe` 字段，`SafeModule.of(run)` 取），一局存档升到 v2，`RunMigrations` 第一步把顶层 `safe` / `safe_locked` 搬进 `modules.safe` |
 | v2.09 | 2026-10-01 | **内容管线一致性检查**（报告 100 第 1 步；10.1）：`ContentCheck` + `tools/check_content.gd` 守「作者 JSON ⇄ `.tres` 一致」（导出比对、深比较不较真键顺序与 int / float；缺资产、孤儿资产、值不同各报一条），接进 `tools/test.sh` 与 `test_content_pipeline`；`buffs` / `sets` 两种从 `ContentPaths.KINDS` / `ORDER` 去掉（都是空目录，目录常量留给编辑器）；`test.sh` 的 `GODOT` 未设时先在 PATH 里找 `godot` / `godot4` |
 | v2.08 | 2026-10-01 | **存档迁移链与背包里切信仰**（报告 098、099）：7.2 写迁移链（`MetaMigrations` / `RunMigrations` 字典层逐级升、只在读文件那一层、升版规矩与冻结样本）、读不出来先备份（`SaveSlots.backup`、`GameFlow.meta_backup / run_backup / backup_notice`、`slots.backed_up`）、内容 id 改名表 `IdAliases`（`ItemDatabase.get_def` / `TagRegistry.get_def` / `FaithPower.restore` 找不到才查）；3.8 切换信仰改成明确规则：`GridInventory.reseat`（只盖 `placed_seq`、不发 `placed`，信力不再被棋盘内来回拖刷）、棋盘内重新落下或右键信物都切、取消拖拽不切（`DragLayer` 放回同容器前设回 `container_id`） |

@@ -194,5 +194,38 @@ func describe() -> String: return ""              # 开局屏 / 规则卡 / 编�
 **账**：`run_state.gd` 1359 → 1394 行（基类与清单那套接口先进来了，保险箱搬出去 −40；后面五个模块搬出去才会真降）。
 `grep -n "safe" core/run/run_state.gd` 只剩地图生成那两行（`SafePlacer`，属于地图不属于子系统）。全套测试 74 套件 12309 项断言通过。
 
-**下一刀**：第 1 刀的倒计时 / 合成 / 神坛 / buff / 按点暂存五个模块（照抄这个样板）；第 2 刀等 100 第 4 步（`ContentLibrary`）。
+**下一刀**：第 1 刀余下的五个模块（照抄这个样板）；第 2 刀等 100 第 4 步（`ContentLibrary`）。
+
+## 落地 · 第 1 刀：余下五个子系统（2026-10-01，实现 thread）
+
+照样板又搬了五个，`core/run/modules/` 现在是一局的全部玩法子系统：
+
+| 模块 | 从 `RunState` 带走 | 自己接的信号 |
+|---|---|---|
+| `NodeStorageModule`（087） | `node_storages` / `stored_at` / 两个信号 / 存档 | `leaving`（留下）、`arrived`（拿回） |
+| `CountdownModule`（092 / 094） | `countdown_*` / `carry_in_value` / `closing_extract_id` / `extract_closed` / 六个 `*_for` 算式 / `countdown_notice` | `stepped`（归零就 `run.fail`） |
+| `CraftingModule`（084 / 087） | `recipes` / `craft_*` / `resolve_crafts` / `craft_done` | `arrived`（`first_time` 才合） |
+| `BuffModule`（062） | `map_buffs` / `*_map_buff` / `tick_map_buffs` / `buffs_changed` | `stepped`（任何花行动点的方式） |
+| `AltarModule`（093 / 095） | `altar_*` / `faith_rituals` / `faith_stat_bonus` / `offer` / `faith_perks` / `bless_ids` / `_bless_step` / `altar_changed` / `item_blessed` | `NodeEvents.altar_opened`、`leaving`、`stepped`、`MapTravel.moved` |
+
+为此 `RunState` 多了两个**通用**生命周期信号和一个方法（都不认识任何具体模块，和第 0 刀的 `leaving` 一样）：
+`arrived(node_id, first_time)`（到了一个点，在这个点的事发生之前）、`stepped(node_id, reason)`（花掉了行动点，这一步该发生的事都发生完了；
+`reason` = `&"step"` / `&"relocate"` / `&"wait"`）、`fail(reason)`（这一局当场失败；倒计时归零用它）。
+
+**和方案不同的三处**：
+
+1. **`BuffModule` 只搬走「一局里拿到的 buff」**，`buff_defs` / `meta_buffs` / `active_buff_defs()` / `buff_context()` 留在 `RunState`。
+   原因是开局顺序：`start()` 要先用 `buff_context()` 算体力上限与开局钱，再造旅程与节点事件，**最后**才装得上模块（模块要接的信号那时才存在）。
+   把 `buff_context` 搬进模块就会出现「算的时候模块还没装」。要彻底搬得先给模块分两段生命周期（或者第 2 刀的 `RunSetup` 把开局顺序重排），不该在这一刀里偷偷改。
+2. **`start()` 去掉 `p_carry_value`**（15 → 14 → 13 个参数）：带入价值和保险箱格数一样是运行时输入，走 `module_inputs[&"countdown"]["carry_value"]`。
+3. **原地耗时（`waited`）现在也走一步 buff 表**，和原来一致；但 buff 的走表从「这一步的事之前」挪到了「这一步的事都发生完」（跟着 `stepped`）。
+   一步之内的先后，对「还剩几步」的判断没有影响。
+
+**账**：`run_state.gd` 1359 → **962** 行（signal 20 → 13，存档顶层键 29 → 22）。
+`grep -n "safe\|countdown\|altar\|craft\|map_buff\|node_storage" core/run/run_state.gd` 只剩三处 `AltarModule.of(self)`（编译单位、战利品、基线要问信仰级效果）
+和地图生成的 `SafePlacer`。一局存档的 v1 → v2 现在搬六样：`safe` / `safe_locked` / `node_storages` / `carry_in_value` / `faith_rituals` / `faith_stat_bonus` / `altar_used` / `buffs.map`。
+新套件 `test_run_modules.run_module_roster`：六个模块都在默认清单里、都登记在注册表、都有中文名、都在 `modules[id]` 下存了一份、顶层不再有它们的旧键、读档都拿得回去。
+全套测试 74 套件 **12356** 项断言通过。
+
+**下一刀**：第 2 刀（`start()` 收参数）等 100 第 4 步的 `ContentLibrary`；第 3 刀（`RunHooks`）、第 4 刀（`GameFlow` 抽服务）、第 6 刀（UI 里的逻辑搬回去）彼此独立。
 

@@ -168,6 +168,7 @@ const RUN_MODULES := {
 	&"countdown": "res://core/run/modules/countdown_module.gd",
 	&"crafting": "res://core/run/modules/crafting_module.gd",
 	&"altar": "res://core/run/modules/altar_module.gd",
+	&"buff": "res://core/run/modules/buff_module.gd",
 }
 
 ## 猎手（069 / 071）：行动逻辑与战败后果

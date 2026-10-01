@@ -130,15 +130,17 @@ static func run_context_and_start(t: TestCase) -> void:
 	# 地图 buff：给、标记、时限、到期
 	buffed.pick_spawn(buffed.map.entry_ids[0])
 	var changes: Array = []
-	buffed.buffs_changed.connect(func(): changes.append(true))
-	t.check(not buffed.grant_map_buff(&"hardy"), "局外的 buff 不能当地图 buff 给")
-	t.check(not buffed.grant_map_buff(&"nope"), "不认识的给不了")
-	t.check(buffed.grant_map_buff(&"marked"), "给一个标记")
-	t.check(buffed.has_map_buff(&"marked") and buffed.has_buff_tag(&"marked"), "有了，标记查得到")
+	var bm := BuffModule.of(buffed)     # 101：一局里拿到的 buff 在模块里
+	t.not_null(bm, "默认清单里有 buff 模块")
+	bm.buffs_changed.connect(func(): changes.append(true))
+	t.check(not bm.grant(&"hardy"), "局外的 buff 不能当地图 buff 给")
+	t.check(not bm.grant(&"nope"), "不认识的给不了")
+	t.check(bm.grant(&"marked"), "给一个标记")
+	t.check(bm.has(&"marked") and buffed.has_buff_tag(&"marked"), "有了，标记查得到")
 	t.check(not buffed.has_buff_tag(&"nope"), "没有的标记查不到")
-	t.check(buffed.grant_map_buff(&"weakened"), "给一个有时限的")
+	t.check(bm.grant(&"weakened"), "给一个有时限的")
 	var left0 := -1
-	for entry in buffed.map_buffs:
+	for entry in bm.entries:
 		if String(entry["id"]) == "weakened":
 			left0 = int(entry["left"])
 	t.eq(left0, weakened.duration_steps, "时限从定义里来（%d 步）" % weakened.duration_steps)
@@ -146,27 +148,28 @@ static func run_context_and_start(t: TestCase) -> void:
 
 	# 战斗属性并进编译：虚弱的 mods 让预估 DPS 变低
 	var dps_weak := buffed.compile_player().rough_dps()
-	buffed.remove_map_buff(&"weakened")
+	bm.remove(&"weakened")
 	var dps_norm := buffed.compile_player().rough_dps()
 	t.check(dps_weak < dps_norm, "虚弱时预估 DPS 更低（%.2f < %.2f）" % [dps_weak, dps_norm])
-	buffed.grant_map_buff(&"weakened")
+	bm.grant(&"weakened")
 
 	# 存档：id 跟着走，读回来给了定义表就一样
 	var saved := buffed.to_dict()
 	var back := RunState.from_dict(saved, c.chapter, c.items, c.enemies, c.sets)
 	back.buff_defs = c.buffs
 	t.eq(back.meta_buffs, buffed.meta_buffs, "局外 buff 跟着存档")
-	t.check(back.has_map_buff(&"marked") and back.has_map_buff(&"weakened"), "地图 buff 跟着存档")
+	var bm_back := BuffModule.of(back)
+	t.check(bm_back.has(&"marked") and bm_back.has(&"weakened"), "一局里拿到的 buff 跟着存档（modules.buff）")
 	t.eq(back.buff_context().vitality_max_bonus, ctx.vitality_max_bonus, "读回来上下文一样")
 
 	# 走几步到期：整局的不走
 	for i in weakened.duration_steps:
-		buffed.tick_map_buffs()
-	t.check(not buffed.has_map_buff(&"weakened"), "走满 %d 步虚弱没了" % weakened.duration_steps)
-	t.check(buffed.has_map_buff(&"marked"), "整局的标记还在")
-	t.check(buffed.grant_map_buff(&"weakened") and buffed.grant_map_buff(&"weakened"), "再给一次只是刷新时限")
+		bm.tick()
+	t.check(not bm.has(&"weakened"), "走满 %d 步虚弱没了" % weakened.duration_steps)
+	t.check(bm.has(&"marked"), "整局的标记还在")
+	t.check(bm.grant(&"weakened") and bm.grant(&"weakened"), "再给一次只是刷新时限")
 	var n := 0
-	for entry in buffed.map_buffs:
+	for entry in bm.entries:
 		if String(entry["id"]) == "weakened":
 			n += 1
 	t.eq(n, 1, "不重复")
@@ -233,7 +236,7 @@ static func run_sessions(t: TestCase) -> void:
 		more.scope = RunBuffDef.Scope.MAP
 		more.effects = [extra] as Array[Effect]
 		run.buff_defs[&"t_more"] = more
-		run.grant_map_buff(&"t_more")
+		BuffModule.of(run).grant(&"t_more")
 		run.step_to(found)
 		var session := run.events.current_search
 		if session != null:

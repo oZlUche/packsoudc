@@ -380,7 +380,9 @@ func _adopt() -> void:
 	_run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh_hud())
 	_run.vitality.changed.connect(func(_c: int, _m: int, _d: int, _r: StringName): _refresh_hud())
 	_run.storage.changed.connect(_refresh_hud)
-	_run.buffs_changed.connect(_refresh_hud)
+	var buff_mod := BuffModule.of(_run)     # 101：一局里拿到的 buff 在模块里
+	if buff_mod != null:
+		buff_mod.buffs_changed.connect(_refresh_hud)
 	# 082：技能按钮与信力
 	_run.skills_changed.connect(func():
 		_refresh_skills()
@@ -743,7 +745,7 @@ func _buff_line() -> String:
 	for id in _run.meta_buffs:
 		var def: RunBuffDef = _run.buff_defs.get(id, null)
 		parts.append(def.display_name if def != null else String(id))
-	for entry in _run.map_buffs:
+	for entry in BuffModule.entries_of(_run):
 		var def: RunBuffDef = _run.buff_defs.get(StringName(String(entry["id"])), null)
 		var name := def.display_name if def != null else String(entry["id"])
 		parts.append(name + ("（剩 %d 步）" % int(entry["left"]) if int(entry["left"]) > 0 else ""))

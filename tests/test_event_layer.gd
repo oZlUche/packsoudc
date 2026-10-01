@@ -341,7 +341,7 @@ static func run_two_phase(t: TestCase) -> void:
 		t.check(l.events.choose(2), "付 10")
 		t.eq(l.wallet.balance, before - 10, "钱少了 10")
 	var l2 := _start_with_custom(c, found, &"t_locked")
-	l2.grant_map_buff(&"marked")
+	BuffModule.of(l2).grant(&"marked")
 	l2.step_to(next)
 	t.check(bool(l2.events.option_state(0)["ok"]), "有标记：「认出」能选")
 	t.check(l2.events.choose(0), "认出")
