@@ -113,7 +113,7 @@ signal craft_done(node_id: int, detail: Dictionary)
 var skills: RunSkills = null
 ## 读档回来的技能账，等持有方按 id 找回角色（[method set_character]）再接上
 var skills_saved: Dictionary = {}
-## 信力（082）：每个信仰一个池子，只有激活的信仰收点；行为与阈值在信仰文件里
+## 信力（082）：每个信仰一个池子，所有信仰从开局同时收点（激活只决定谁的加成生效）；行为与阈值在信仰文件里
 var faith_power: FaithPower = null
 var hunters_saved: Dictionary = {}
 ## 侵蚀场的存档状态，读档时先放这儿等机制装（075）

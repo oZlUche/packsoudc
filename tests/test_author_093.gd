@@ -158,9 +158,12 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	t.eq(run.active_faith_tier(), 0, "0 级")
 	t.check(run.faith_perks().is_empty(), "0 级没有效果")
 	# 战斗的账喂进去
-	var got := run.faith_power.credit(&"battle", {"won": true, "dealt": {"physical": 60.0}, "taken": {"physical": 60.0}})
-	t.eq(got, 24, "一场 120 伤害 × 0.2 = 24 信力")
-	t.eq(run.faith_power.credit(&"vitality_change", {"delta": -1}), 50, "掉 1 体力 +50")
+	# 信力从开局各池同时攒：credit 返回所有池子的合计，这里只看蛮神自己的池子
+	var b0 := run.faith_power.points_of(&"brute")
+	run.faith_power.credit(&"battle", {"won": true, "dealt": {"physical": 60.0}, "taken": {"physical": 60.0}})
+	t.eq(run.faith_power.points_of(&"brute") - b0, 24, "一场 120 伤害 × 0.2 = 24 信力")
+	run.faith_power.credit(&"vitality_change", {"delta": -1})
+	t.eq(run.faith_power.points_of(&"brute") - b0, 74, "掉 1 体力 +50")
 	t.eq(run.active_faith_tier(), 1, "74 点：Lv.1")
 	t.check(run.faith_power.line().begins_with("蛮神 Lv.1"), "HUD 一句：%s" % run.faith_power.line())
 	t.check(run.faith_perk(&"low_hp_empower") != null, "1 级：低血增伤生效")

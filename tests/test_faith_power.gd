@@ -1,5 +1,5 @@
 ## 信力（作者定，报告 082）：激活了一个信仰之后，完成它指定的行为（置入值钱的道具 / 打仗 / 走路 / 进账 / 花钱 / 搜索 / 事件里选特定选项）攒点数；
-## 过了几道阈值就是第几阶，信仰道具上按阶写的功能（faith_bonuses）由编译器并入。每个信仰一个池子、只有激活的收点；跟着存档走。
+## 过了几道阈值就是第几阶，信仰道具上按阶写的功能（faith_bonuses）由编译器并入。每个信仰一个池子、从开局起都收点（与激活无关）；跟着存档走。
 ## 期望从数据推：行为构件说给几点就断言几点；阈值表推阶；道具上的加成推编译结果。
 extends RefCounted
 
@@ -150,7 +150,11 @@ static func run_credit(t: TestCase) -> void:
 	t.eq(s.faith_power.tier_of(fa), (defs[fa] as FaithDef).tier_of(want), "阶按阈值")
 	t.eq(s.faith_power.points_of(fb), want_b, "%s 没激活也在攒：%d" % [fb, want_b])
 	if want > 0:
-		t.check(not changes.is_empty() and changes[-1][0] == fa and int(changes[-1][1]) == want, "信号报了最新点数")
+		var last_fa: Array = []
+		for c in changes:
+			if c[0] == fa:
+				last_fa = c
+		t.check(not last_fa.is_empty() and int(last_fa[1]) == want, "信号报了 %s 的最新点数" % fa)
 		t.check(s.faith_power.line().contains("Lv.%d" % s.faith_power.tier_of(fa)) and s.faith_power.line().contains("　%d" % want), "HUD 一句（093：「神 Lv.n　点 / 下一阈值」）：%s" % s.faith_power.line())
 	# 切到 fb：fa 的池子留着
 	var ib := ItemInstance.create(b, 0)
@@ -164,7 +168,7 @@ static func run_credit(t: TestCase) -> void:
 	t.eq(s.faith_power.points_of(fa), kept + _expected_gain(defs[fa], &"battle", {"won": true}), "%s 的池子继续攒" % fa)
 	t.eq(s.faith_power.points_of(fb), kept_b + _expected_gain(defs[fb], &"battle", {"won": true}), "%s 自己记" % fb)
 
-	# 接线：一局里的事真的进来了（每种事都按当时激活的信仰算期望）
+	# 接线：一局里的事真的进来了（每个池子都按自己的行为算；这里看 fb 的）
 	var p0 := s.faith_power.points_of(fb)
 	s.wallet.earn(50, &"probe")
 	p0 += _expected_gain(defs[fb], &"earn_money", {"amount": 50})
