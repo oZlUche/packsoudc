@@ -89,3 +89,20 @@ static func upgrade(d: Dictionary) -> Dictionary:
 - 别名接入点：`ItemDatabase.get_def`（找不到才查）、`TagRegistry.get_def`、`FaithPower.restore`（`faith_power.gd:104`，旧键并进新键）。093 的真实改名：`violence → brute`、`sunfire → sun`（`b4c23a2`），标签同前缀。`faith:brute` 不是登记过的 TagDef，别拿它测 TagRegistry 的别名。
 - 测试样本：`tests/fixtures/meta_v1.json` 用 `knife`（存在）做仓库里的一件；`MetaState.to_dict` 的键见 `meta_state.gd:390-411`；新套件要登记进 `tests/run_tests.gd` 的 `SUITES`。新 `class_name` 记得跑 `tools/test.sh` 刷类缓存并把 `.godot/global_script_class_cache.cfg` 一起提交。
 - 「新 id 必须存在、旧 id 不得再被内容引用」用测试守（扫 `ContentPaths.AUTHORING` 下的 JSON 找 `"violence"` 等字面量），不改导入器。
+
+## 落地（2026-10-01，实现 thread）
+
+三个待定项按推荐做：**备份后从零开始**；**一局档走同一条链但允许作废**；别名表**只做道具、标签、信仰**（敌人 / 事件 id 不进）。
+
+| 改动 | 文件 |
+|---|---|
+| 迁移链（`match` 显式分派、`duplicate(true)`、`STEPS` 自检）；v1 → v2 恒等 | `core/meta/meta_migrations.gd`（新）、`core/run/run_migrations.gd`（新，链还空着） |
+| 读文件那一层先 `upgrade` 再 `from_dict`；`from_dict` 仍严格相等 | `core/meta/meta_save.gd`、`core/run/run_save.gd` |
+| `backup(n, which)` → `<名字>.<unix>.bak`；`exists / remove` 不看 `.bak` | `core/settings/save_slots.gd` |
+| 读不出来先备份再从零开始（meta 在 `use_slot`、run 在 `continue_run`）；`meta_backup / run_backup / backup_notice()` | `core/run/game_flow.gd` |
+| 提示：`slots.backed_up` / `slots.run_backed_up`，读取存档屏顶一行、主菜单战绩行下一行 | `core/text/ui_text.gd`、`ui/game/slots_screen.gd`、`ui/game/main_menu.gd` |
+| 改名表（`ITEMS` 空、`TAGS` / `FAITHS` 各两条来自 093）；找不到才查一次 | `core/authoring/id_aliases.gd`（新）、`core/inventory/item_database.gd`、`core/inventory/tag_registry.gd`、`core/run/faith/faith_power.gd` |
+| 测试：链上每一级有迁移 + 冻结样本、v1 样本读回来字段不走形、未来 / 缺级 / 坏文件都不猜、备份不被盖且 `.bak` 不算存档、别名两条规矩与信力并池 | `tests/test_save_migration.gd`、`tests/fixtures/meta_v1.json` |
+
+存档格式没改，版本号没升（`MetaState.SAVE_VERSION` 还是 2，`RunState` 还是 1）。
+`GameSettings` 不进链、自动回滚不做，都按方案。

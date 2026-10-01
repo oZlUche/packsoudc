@@ -69,3 +69,20 @@
 
 1. 拿起时「不真移除」（`lift`）还是「移除但放回前设回 container_id」（改动小，推荐先这个）？
 2. 右键是直接切，还是弹两项菜单（奉为主信仰 / 取消）？推荐直接切。
+
+## 落地（2026-10-01，实现 thread）
+
+作者选 A + B，两个待定项按推荐做：拿起仍 `remove`、**放回同容器前把 `inst.container_id` 设回该容器**（和 `InventoryService.move` 同一行）；右键直接切，不弹菜单。
+
+| 改动 | 文件 |
+|---|---|
+| `reseat(uid)`：只盖 `placed_seq`，不发 `placed`，发 `changed` | `core/inventory/grid_inventory.gd` |
+| 落回同容器不算 arrived；落下的**信物**才 `reseat`；取消 / `_restore` 不切；右键取消吃掉事件（免得被读成「奉为主信仰」） | `ui/inventory/drag_layer.gd` |
+| 右键按在一件上发 `item_context`（左键照旧抓取 / 双击照旧快速置入） | `ui/inventory/container_view.gd`、`ui/inventory/inventory_view.gd` |
+| `reseat_anchor(uid)`（只认信物） | `core/run/game_flow.gd`、`ui/game/inventory_panel.gd`、`ui/game/setup_screen.gd` |
+| 信物那行写「右键：奉为主信仰」/「当前信仰」；面板与开局屏的操作提示各补一句 | `ui/inventory/item_tooltip.gd`、`ui/game/inventory_panel.gd`、`ui/game/setup_screen.gd` |
+| 测试：reseat 的性质、棋盘内落下切信仰且信力不记（来回拖十次也不涨）、取消不切、凡物不盖序号、从暂存区进来照记、右键链路 | `tests/test_faith_reseat.gd` |
+
+**没做的一条**：方案 A 第 2 条最后那句「跨容器改走 `InventoryService.move / _move_bag`」。它的前提是拿起时**不真移除**（`lift`）——
+作者选了「移除 + 放回前设回 `container_id`」这条小改动，拖拽期间东西已经游离，`move(from, uid, ...)` 没有 `from` 可用。
+`_restore` 的「已丢失」兜底分支因此还在（3.5 的这笔债留着）。要还它就得先做 `lift`，是单独一件事。

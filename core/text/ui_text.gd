@@ -28,6 +28,11 @@ const TEXT := {
 	"slots.delete": {"zh": "删除", "en": "Delete"},
 	"slots.confirm_delete": {"zh": "再点一次确认删除", "en": "Click again to confirm"},
 	"slots.back": {"zh": "回主菜单", "en": "Back"},
+	# 098：读不出来的存档已备份（%s = 备份文件名）
+	"slots.backed_up": {"zh": "这个存档位的局外进度来自旧版本，读不回来，已备份成 %s，重新从零开始",
+		"en": "This slot's meta progress is from an older version and could not be read; backed up as %s, starting fresh"},
+	"slots.run_backed_up": {"zh": "进行中的那一局来自旧版本，读不回来，已备份成 %s；局外进度不受影响",
+		"en": "The run in progress is from an older version and could not be read; backed up as %s. Meta progress is unaffected"},
 	"menu.meta": {"zh": "仓库与战绩", "en": "Warehouse & records"},
 	"menu.settings": {"zh": "设置", "en": "Settings"},
 	"menu.dev_tools": {"zh": "开发工具（沙盒与编辑器）", "en": "Dev tools (sandboxes & editors)"},

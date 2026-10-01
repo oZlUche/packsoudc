@@ -123,14 +123,18 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
-		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
+		if mb.pressed and mb.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
 			var c := cell_at_local(mb.position)
 			# 先抓普通物品；点在包的空白处才抓包本身
 			var uid := inventory.cell_uid(c)
 			if uid == GridInventory.EMPTY_UID:
 				uid = inventory.bag_at(c)
 			if uid != GridInventory.EMPTY_UID:
-				if mb.double_click:
+				# 099：右键按在一件上 = 这一屏自己决定做什么（棋盘：信物奉为主信仰）。
+				# 拖拽中的右键是「取消」，那一下已经被 [DragLayer] 吃掉，走不到这里
+				if mb.button_index == MOUSE_BUTTON_RIGHT:
+					item_context.emit(self, uid)
+				elif mb.double_click:
 					item_double_clicked.emit(self, uid)     # 084：双击 = 快速置入，不再抓
 				else:
 					grab_requested.emit(self, uid, mb.position)

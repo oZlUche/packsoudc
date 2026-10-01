@@ -115,6 +115,11 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			var mine := def.faith_tag() == FaithDef.TAG_PREFIX + String(active) and active != &""
 			state = "　—— 现在已激活（Lv.%d）" % int(status.get("tier", 0)) if mine else ("　—— 现在休眠" if active != &"" else "　—— 还没激活（要信物）")
 		lines.append("[color=#8b93a1]信仰道具：别的信仰激活时休眠%s%s[/color]" % [("（保留通用效果）" if FaithState.keeps_combat_when_dormant(def) else "（彻底失效）"), state])
+	if def.is_anchor():
+		# 099（作者定）：切信仰不进菜单 —— 右键一下，或者在棋盘里把它重新落下
+		var now := StringName(String(status.get("active", "")))
+		var mine := now != &"" and def.faith_tag() == FaithDef.TAG_PREFIX + String(now)
+		lines.append("[color=#8b93a1]信物：%s[/color]" % ("当前信仰" if mine else "右键：奉为主信仰"))
 	if def.set_id != &"":
 		lines.append("[color=#8b93a1]套装：%s[/color]" % String(def.set_id))
 	var text := "\n".join(lines)

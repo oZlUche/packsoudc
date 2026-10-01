@@ -73,7 +73,7 @@ func _build() -> void:
 		if tip != null:
 			tip.hide_tip())
 	left.add_child(_stamina)
-	_hint = _label("左键拖动　双击快速置入　R 旋转　右键 / Esc 取消　压着别人放手会把人顶出来　放到棋盘外就进暂存区", 11, UiPalette.DIM)
+	_hint = _label("左键拖动　双击快速置入　R 旋转　右键 / Esc 取消　右键信物 = 奉为主信仰　压着别人放手会把人顶出来　放到棋盘外就进暂存区", 11, UiPalette.DIM)
 	left.add_child(_hint)
 
 	var right := VBoxContainer.new()
@@ -108,6 +108,18 @@ func _build() -> void:
 	tip.watch(storage_view)
 	board_view.item_double_clicked.connect(quick_move)
 	storage_view.item_double_clicked.connect(quick_move)
+	board_view.item_context.connect(func(_v: ContainerView, uid: int): reseat_anchor(uid))     # 099：右键信物 = 奉为主信仰
+
+
+## 099（作者定）：右键棋盘上的信物 = 奉它为主信仰（不弹菜单）。不是信物的右键什么也不做。返回切没切
+func reseat_anchor(uid: int) -> bool:
+	var inst := _run.board.get_item(uid) if _run != null and _run.board != null else null
+	if inst == null or inst.def == null or not inst.def.is_anchor():
+		return false
+	if not _run.board.reseat(uid):
+		return false
+	_hint_text("奉「%s」为主信仰" % Names.of(inst.def))
+	return true
 
 
 ## 084：双击快速置入。暂存区 → 棋盘（放不下就提示）；棋盘 → quick_target（容器屏的战利品 / 收获箱），没有就 → 暂存区。返回挪了没有

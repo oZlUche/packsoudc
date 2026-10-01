@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.07 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.08 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -420,8 +420,12 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 - **激活** = 棋盘上**信物**（带 `faith_anchor` 的道具，095）里置入序号最大那件的对象标签；序号相同取 uid 大的。赐福版的武器防具不能激活，只跟着当前信仰生效或休眠。
   一件信物都没有 = 没激活（「不信者」现在就是这个状态）。任何时刻只激活一个，诸神与新教因此天然互斥。
 - **休眠** = 有信仰、不是激活的那个：**通常情况下完全不起作用** —— `BattleCompiler.compile` 第一步跳过它（不参战、不给也不吃邻接），`SetTracker` 不计它；占格照占、价值照算。
-- **切换** = 挪到暂存区再挪回，没有代价（将来可继承积攒的信力）。暂存区一移动就清（3.4），所以只能在一个点上换；开局屏的棋盘同一条规则。
-  **现状**（097）：`DragLayer` 拿起 = `remove`、放下 = `place`，所以在棋盘内拖一下信物也会切换（含取消拖拽）——作者要的是「在背包里一下就切」，但眼下靠的是旁路，待按 097 的方案改成明确规则。
+- **切换**（099，作者定）：**在背包里一下就切，不进菜单**，两条路都是明确规则，没有代价（将来可继承积攒的信力）：
+  - 在棋盘里**把信物重新落下**（拖起来放回棋盘任意位置）→ `GridInventory.reseat(uid)`；
+  - **右键**棋盘上的信物（`InventoryView.item_context` → `GameFlow.reseat_anchor` / 开局屏的 `reseat_anchor`）。
+  `reseat` 只盖 `placed_seq`，**不发 `placed`** —— 切信仰不是「置入道具」，信力的 `place_item` 行为不记它（这就是 097 发现的「棋盘内来回拖刷信力」的根因）。
+  取消拖拽（右键 / Esc）、放不回原位都**不切**：`DragLayer` 放回同一容器前先把 `inst.container_id` 设回该容器（和 `InventoryService.move` 同一行），所以不算 arrived；
+  普通道具在棋盘内挪位置照旧不盖序号。挪到暂存区再挪回仍然算置入（从别的容器进来），信力照记。暂存区一移动就清（3.4）；开局屏的棋盘同一套。
 - **敌人只信一个神**（`EnemyLoadout.single_faith`）：信仰 = 组装偏好标签里的 `faith:xxx`，没有就是招牌 / 第一件信仰道具的，别的信仰的换掉；
   `min_weapons` / `weapon_tag` 保证至少一件会打的 —— 流派池按信仰分之后里面有护甲与零件。都是数据。
 - **不写流派**：作者不提倡除套装以外的明确流派，道具的联动让玩家自然组成流派。信仰不是流派，`EnemyDef.schools` 只是组装偏好，不给玩家看。
@@ -2844,8 +2848,19 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 累计搜索次数、待拾取的容器、阶段。**内容库不进存档**，只写 id（章节、道具、敌人），读档时由调用方给；
 开着的店 / 搜索会话不存 —— 存档那一刻视为离开了那个点，货架与搜索进度本来就在图里。
 
-**存档从第一天就写版本号**（一局 `RunState.SAVE_VERSION = 1`，局外 `MetaState.SAVE_VERSION = 2`），读到不认识的版本不猜、返回 null，后续加字段才有迁移余地。
-**现状**（097）：两边都是严格相等，**还没有迁移链**；新增字段靠 `d.get(key, default)` 隐式兼容，改字段语义会让旧档整份作废。迁移方案另开报告。
+**存档从第一天就写版本号**（一局 `RunState.SAVE_VERSION = 1`，局外 `MetaState.SAVE_VERSION = 2`），读到不认识的版本不猜、返回 null。
+
+**迁移链**（098，报告 098）：`MetaMigrations` / `RunMigrations`（纯静态）**在字典层逐级升**，一步只认 n → n+1，`match` 显式分派（不走反射）、`duplicate(true)` 不改入参；
+只在**读文件**这一层做（`MetaSave.from_text` / `RunSave.from_text`），`from_dict` 继续严格只认当前版本，对象因此永远只有一套形状。
+升版规矩：**改语义或改 id 才升版，只加带默认值的字段不升版**（那一类靠 `d.get(key, default)`）。每升一版加一步 + 一份冻结样本（`tests/fixtures/meta_v<n>.json`），链上有洞 `tests/test_save_migration.gd` 立刻红。
+`GameSettings` 不进链（设置丢了重设一次）。
+
+**读不出来先备份，绝不静默覆盖**（098，作者定）：`MetaSave.read` 返回 null 而文件还在 → `GameFlow.use_slot` 调 `SaveSlots.backup(n, "meta")` 把老文件改名成 `meta.json.<unix>.bak` 再从零开始；
+`continue_run` 对 `run.json` 同理（否则「继续」每次都撞同一面墙）。`SaveSlots.exists / remove` 不看 `.bak`；`GameFlow.meta_backup / run_backup / backup_notice()`，读取存档屏与主菜单各写一句（`slots.backed_up`）。回滚靠备份文件，不做自动回滚。
+
+**内容 id 改名表**（098）：`IdAliases`（`ITEMS / TAGS / FAITHS`，旧 → 新）是**内容层**的事，不进版本链。只在「按真名查不到」时问一次：
+`ItemDatabase.get_def`、`TagRegistry.get_def`、`FaithPower.restore`（旧信仰的点数并进新池子）。现有两条来自 093 的合并改名（`violence → brute`、`sunfire → sun`，标签同前缀）。
+测试守两条：表里的新 id 必须存在、旧 id 不许再被作者数据引用。
 
 **存档位**（089）：`SaveSlots`（`core/settings/save_slots.gd`）管 `user://slots/<n>/`，一局存档与局外 meta 都按位存；`GameSettings.save_slot` 记当前位；
 `GameFlow.slots / use_slot / profile_exists / continue_game / start_new_game / new_game_in / load_slot / delete_slot`；主菜单顺序 继续 → 读取存档（`Screen.SLOTS`）→ 新的游戏。老的单存档开游戏时搬进第 1 位。
@@ -3540,6 +3555,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.08 | 2026-10-01 | **存档迁移链与背包里切信仰**（报告 098、099）：7.2 写迁移链（`MetaMigrations` / `RunMigrations` 字典层逐级升、只在读文件那一层、升版规矩与冻结样本）、读不出来先备份（`SaveSlots.backup`、`GameFlow.meta_backup / run_backup / backup_notice`、`slots.backed_up`）、内容 id 改名表 `IdAliases`（`ItemDatabase.get_def` / `TagRegistry.get_def` / `FaithPower.restore` 找不到才查）；3.8 切换信仰改成明确规则：`GridInventory.reseat`（只盖 `placed_seq`、不发 `placed`，信力不再被棋盘内来回拖刷）、棋盘内重新落下或右键信物都切、取消拖拽不切（`DragLayer` 放回同容器前设回 `container_id`） |
 | v0.1 | 2026-09-20 | 初版：六大模块设计；地图系统确定为可插拔生成器架构，第一章采用同心环形地图 |
 | v0.2 | 2026-09-20 | 地图移动规则改为可自由折返（已访问节点仅可穿行、不再触发事件）；新增行动计数 `ActionClock` 与由外向内的侵蚀系统 `ErosionField`；撤离点回归外环与中环 |
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
