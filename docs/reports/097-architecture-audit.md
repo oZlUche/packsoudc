@@ -39,15 +39,17 @@ GameDirector (ui/game)            换屏、叠层 / 最小化、演示代码
 
 ## 二、主要问题（按严重度）
 
-### P1 · 疑似 bug：同棋盘内拖动被当成「新置入」，会误切信仰
+### P1 · 「在棋盘内拖一下信物就切信仰」是作者要的玩法，但眼下靠的是旁路
 
 - `DragLayer` 拿起时直接调 `grid.remove(uid)`（`ui/inventory/drag_layer.gd:126`），`remove` 把 `container_id` 清成 0（`core/inventory/grid_inventory.gd:383`）。
 - 放下 / 取消时再 `grid.place(...)`（`drag_layer.gd:448`、`:656`），`place` 判 `arrived := inst.container_id != id` 为真 → `place_seq += 1`、发 `placed`（`grid_inventory.gd:351-360`）。
 - 而 `InventoryService.move` 是特意处理过的：同容器先把 `container_id` 设回本容器（`core/inventory/inventory_service.gd:34`）。**UI 绕过了服务层，所以文档 3.8「同容器内挪位置不算置入」在真实拖拽路径上不成立。**
-- 后果：在棋盘上挪一下、甚至取消拖拽，都可能把休眠的信物激活（095「只有信物激活」）；凡是挂在 `placed` 信号上的信力累计也可能被刷（推断，待测试证实）。
-- 顺带：`DragLayer` 自己做「拿起 = 移除、放下 = 放置」，放不回去时走「已丢失」分支（`drag_layer.gd:645,649`），文档 3.5 要求的原子移动 / 回滚在拖拽路径上没有兑现。
+- 作者（2026-10-01）确认：**棋盘内拖动信物切换信仰是想要的功能**，不是 bug。问题只剩「靠意外实现」：取消拖拽、Esc、放不回原位也会切；凡是挂在 `placed` 信号上的信力累计可能被刷（推断）；拖拽路径没有走 3.5 要求的原子移动 / 回滚（`drag_layer.gd:645,649` 的「已丢失」分支）。
 
-**建议**：拖拽结束统一走 `InventoryService`（或给 `GridInventory` 加 `begin_move / end_move` 把 uid 挂起而不是真移除）。先补一条测试复现，再改。
+**方案（待作者挑）**：
+- A（推荐）：`GridInventory.reseat(uid)` 只盖 `placed_seq`；棋盘内真正落下信物时调它，取消 / 失败不调；`DragLayer` 改走 `InventoryService`，顺便补原子移动。
+- B：信物上右键 / 双击「奉为主信仰」，调同一个 `reseat`；与 A 并存。
+- C：棋盘上方信仰栏，点谁切谁；等信仰多了再做。
 
 ### P2 · 两个 god class：`RunState`（1359 行）与 `GameFlow`（1184 行）
 
@@ -108,7 +110,7 @@ GameDirector (ui/game)            换屏、叠层 / 最小化、演示代码
 
 ## 三、建议的处理顺序
 
-1. **P1** 先补测试复现，确认后修（小改动，影响玩法正确性）。
+1. **P1** 作者已定要保留切换手感；写 A + B 的方案报告，确认后实施。
 2. **P8** 文档对齐（无风险，我直接做）。
 3. **P3** Meta 存档迁移链（在下一次改字段语义之前做）。
 4. **P5** 导入一致性测试 + `ContentLibrary` 收口。

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.06 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.07 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -50,11 +50,12 @@ UI 调用服务方法（`InventoryService.move(...)`），服务改完状态后�
 
 增量渲染是背包类游戏 bug 的主要来源（拖拽中断、跨容器失败回滚、旋转撤销等场景下增量状态极易与真实状态脱节）。
 
-### 1.3 EventBus 只传 UI 通知
+### 1.3 信号只传 UI 通知，没有全局 EventBus
 
-逻辑层之间用直接引用（`RunState.player_inventory`），**不要**让战斗结算、掉落生成靠全局信号串起来 —— 那样既没法单步调试，也没法脱离场景批量模拟。
+逻辑层之间用直接引用（`RunState.board`、`flow.run`），**不要**让战斗结算、掉落生成靠全局信号串起来 —— 那样既没法单步调试，也没法脱离场景批量模拟。
 
-`EventBus` 的唯一职责是：逻辑层 → 表现层的单向广播。
+信号的唯一职责是：逻辑层 → 表现层的单向广播。**项目里没有全局 `EventBus`**（设计稿里有，M6 落地时去掉了，见 2 节与 v1.52）：
+每个逻辑类发自己的信号（`GridInventory.changed`、`RunState.phase_changed`、`GameFlow.screen_changed`……），每一屏只订阅自己要的。
 
 ### 1.4 随机数分流
 
@@ -380,9 +381,7 @@ func move(from: GridInventory, uid: int, to: GridInventory,
     if not to.place(inst, origin, rot):
         from.place(inst, inst.origin, inst.rotation)   # 回滚，必须有
         return false
-    EventBus.container_changed.emit(from.id)
-    EventBus.container_changed.emit(to.id)
-    return true
+    return true          # 两个容器各自发 changed 信号（1.3），不经全局总线
 ```
 
 漏掉回滚分支会导致"拖到非法位置物品消失"，这是此类系统最常见的严重 bug。
@@ -418,9 +417,11 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 
 - **置入序号**：`GridInventory.place` 在道具从别的容器进来时（`inst.container_id != id`）把 `place_seq` +1 盖到 `ItemInstance.placed_seq`。
   同容器内挪位置、顶替时原样放回、同容器里挪包（载荷记 `from`）都不算。跟着存档走（道具 `seq`、容器 `place_seq`）。
-- **激活** = 棋盘上带 `faith` 的道具里序号最大那件的对象标签；一件都没有 = 没激活（「不信者」现在就是这个状态）。任何时刻只激活一个，诸神与新教因此天然互斥。
+- **激活** = 棋盘上**信物**（带 `faith_anchor` 的道具，095）里置入序号最大那件的对象标签；序号相同取 uid 大的。赐福版的武器防具不能激活，只跟着当前信仰生效或休眠。
+  一件信物都没有 = 没激活（「不信者」现在就是这个状态）。任何时刻只激活一个，诸神与新教因此天然互斥。
 - **休眠** = 有信仰、不是激活的那个：**通常情况下完全不起作用** —— `BattleCompiler.compile` 第一步跳过它（不参战、不给也不吃邻接），`SetTracker` 不计它；占格照占、价值照算。
 - **切换** = 挪到暂存区再挪回，没有代价（将来可继承积攒的信力）。暂存区一移动就清（3.4），所以只能在一个点上换；开局屏的棋盘同一条规则。
+  **现状**（097）：`DragLayer` 拿起 = `remove`、放下 = `place`，所以在棋盘内拖一下信物也会切换（含取消拖拽）——作者要的是「在背包里一下就切」，但眼下靠的是旁路，待按 097 的方案改成明确规则。
 - **敌人只信一个神**（`EnemyLoadout.single_faith`）：信仰 = 组装偏好标签里的 `faith:xxx`，没有就是招牌 / 第一件信仰道具的，别的信仰的换掉；
   `min_weapons` / `weapon_tag` 保证至少一件会打的 —— 流派池按信仰分之后里面有护甲与零件。都是数据。
 - **不写流派**：作者不提倡除套装以外的明确流派，道具的联动让玩家自然组成流派。信仰不是流派，`EnemyDef.schools` 只是组装偏好，不给玩家看。
@@ -430,7 +431,8 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 **信力**（082，作者定）：激活了一个信仰之后，完成它指定的行为攒点数；点数过了几道阈值，信仰道具多出额外的功能。
 - 行为是构件 `FaithDeed`（注册表 `FAITH_DEEDS`）：置入一定价值的道具、打仗、走路、进账、花钱、搜索、事件里选带标签的选项；信仰文件里列 `deeds`（各给几点）与 `thresholds`（非递减）。
 - `FaithPower`（`run.faith_power`）每个信仰一个池子，只给此刻激活的信仰记；`RunState` 接线把一局里的事喂进去（`GridInventory.placed`、`Wallet.changed`、`battle_finished`、`travel.moved`、搜索会话的 `searched`、`NodeEvents.option_chosen`）。跟着存档走。
-- 道具的额外功能写在道具上：`ItemDef.faith_bonuses`（`FaithBonus`：`tier`、`mods`、`rules`），只许信仰道具有；`BattleCompiler.compile` 多一个参数 `faith_tiers`（标签 → 阶），tier ≤ 现在的并进那件道具 —— 仍是纯函数。
+- 道具的额外功能写在道具上：`ItemDef.faith_bonuses`（`FaithBonus`：`tier`、`mods`、`rules`），只许信仰道具有；`BattleCompiler.compile` 多两个参数 `faith_tiers`（标签 → 阶）与 `faith_points`（标签 → 点数，095 的 scaled 模式用），tier ≤ 现在的并进那件道具 —— 仍是纯函数。
+  编译之后 `RunState.compile_player` 还会套一次 `FaithPerk`（093，编译期钩子改 spec），所以战斗单位 = 编译器输出 + perk；这一层在 097 里列为待收口。
 - 切换信仰不清别的池子；继承（作者说可以）还没做。不信者、新教留空（作者定）。
 
 ## 4. M2 · 自动战斗
@@ -2718,26 +2720,41 @@ M4 结束时地图、旅程、体力、钱、节点事件各自都能跑，只�
 class_name RunState extends RefCounted
 const SAVE_VERSION := 1
 enum Phase { PICK_SPAWN, ON_MAP, DEFEATED, EXTRACTED }
-signal phase_changed(phase, reason)
-signal loot_pending(container)         # 尸体容器 / 搜索收获等着拾取
+signal phase_changed(phase, reason) / loot_pending(container) / countdown_notice / safe_closed / altar_changed / item_blessed / craft_done …
 
-var run_seed: int
-var chapter: ChapterDef
-var rng: RunRNG                  # 分流随机源（1.4），run 级的随机走它；节点内容按各自的 content_seed
-var map: MapGraph                # 节点内容（敌人、搜索进度、货架进度、付费撤离点）都在图里
-var travel: MapTravel            # 人在哪、走过哪、行动计数
-var vitality: Vitality           # 体力（7.1）
-var wallet: Wallet               # 货币（6.6）
-var board: GridInventory         # 作战棋盘，requires_bag = true，只有包里的东西参战
-var storage: ItemStash           # 暂存区：一个列表，保留但不参战（3.4）
-var events: NodeEvents           # 踩到点发生什么（6.5）
-var tracker: SetTracker          # 套装激活（9 节），绑在棋盘上
-var pending_loot: GridInventory  # 等着拾取的容器；take_loot / take_all_loot / discard_loot
-# erosion: ErosionField          # 第 7 阶段
-# meta_stash                     # 跨 run 的东西不在一局里（15 节）
+# —— 内容库（只按 id 进存档）——
+var chapter: ChapterDef; var items: ItemDatabase; var enemies: EnemyDatabase; var sets: SetDatabase
+var buff_defs / event_defs / hunter_defs / faith_defs: Dictionary; var recipes: Array[RecipeDef]
+var pool: EnemyPool; var drop_rule: DropRule; var node_rules: NodeRules; var economy: EconomyRules
+# —— 一局的骨架 ——
+var run_seed: int; var rng: RunRNG          # 分流随机源（1.4）
+var map: MapGraph                           # 节点内容（敌人、搜索进度、货架、付费撤离点、保险箱点、神坛）都在图里
+var travel: MapTravel                       # 人在哪、走过哪、行动计数（倒计时 = step_limit − total，092）
+var vitality: Vitality; var wallet: Wallet
+var phase: int; var end_reason: StringName; var boss_cleared: bool; var tally: Dictionary
+# —— 容器 ——
+var board: GridInventory                    # 作战棋盘，requires_bag = true
+var storage: ItemStash                      # 暂存区（3.4）；node_storages 按点保留（088）
+var safe: GridInventory; var safe_locked    # 保险箱（092）
+var pending_loot: GridInventory             # 等着拾取的容器
+var tracker: SetTracker                     # 套装激活（9 节）
+# —— 角色与难度 ——
+var character: CharacterDef; var character_id; var player_baseline: CombatantBaseline; var map_scale
+var difficulty: DifficultyDef; var difficulty_id; var mechanic_tags: Dictionary   # 069 / 070
+var carry_in_value: int                     # 带入预算（094）
+# —— 子系统 ——
+var events: NodeEvents                      # 踩到点发生什么（6.5）；靠注入的 Callable 回调本类
+var hunters: HunterSystem                   # 猎手（071）；hunters_saved 读档中转
+var skills: RunSkills                       # 局内技能（072 / 082）；skills_saved 读档中转
+var faith_power: FaithPower                 # 信力（082）
+var altar_node / altar_used / faith_rituals / faith_stat_bonus   # 神坛与献祭（093）
+var meta: MetaState; var meta_buffs; var map_buffs             # 局外 buff 与本图 buff（062）
+# erosion_saved                             # 侵蚀（075）读档中转
 ```
 
-**开局**（`RunState.start(chapter, seed, items, enemies, sets, kit)`）：生成地图 → 放敌人 → 标付费撤离点 → 造棋盘
+> 这张表按 `run_state.gd:49-147` 抄的，是现状；字段太多、`start()` 已有 15 个参数，拆分计划见报告 097（P2）。
+
+**开局**（`RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta_buffs, character, layout, difficulty, hunter_defs, scale, safe_size, carry_value)`）：生成地图 → 放敌人 → 标付费撤离点 → 造棋盘
 （包放棋盘，其余先进包、放不下进暂存区）→ 把节点事件接到旅程上。`pick_spawn` 进 `ON_MAP`，`step_to` 先关掉开着的
 店 / 搜索再走（随时可以离开），`try_extract` 在撤离点上付费撤离进 `EXTRACTED`，`defeated` 进 `DEFEATED`。
 
@@ -2827,7 +2844,11 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 累计搜索次数、待拾取的容器、阶段。**内容库不进存档**，只写 id（章节、道具、敌人），读档时由调用方给；
 开着的店 / 搜索会话不存 —— 存档那一刻视为离开了那个点，货架与搜索进度本来就在图里。
 
-**存档从第一天就写版本号**（`{"version": 1, ...}`），读到不认识的版本不猜、返回 null，后续加字段才有迁移余地。
+**存档从第一天就写版本号**（一局 `RunState.SAVE_VERSION = 1`，局外 `MetaState.SAVE_VERSION = 2`），读到不认识的版本不猜、返回 null，后续加字段才有迁移余地。
+**现状**（097）：两边都是严格相等，**还没有迁移链**；新增字段靠 `d.get(key, default)` 隐式兼容，改字段语义会让旧档整份作废。迁移方案另开报告。
+
+**存档位**（089）：`SaveSlots`（`core/settings/save_slots.gd`）管 `user://slots/<n>/`，一局存档与局外 meta 都按位存；`GameSettings.save_slot` 记当前位；
+`GameFlow.slots / use_slot / profile_exists / continue_game / start_new_game / new_game_in / load_slot / delete_slot`；主菜单顺序 继续 → 读取存档（`Screen.SLOTS`）→ 新的游戏。老的单存档开游戏时搬进第 1 位。
 读档之后接着走，和没存过的那份走同样的路结果一样（测试守着这条；新建道具的 uid 从存档里最大的接着编，那不算状态）。
 
 ---
@@ -2874,7 +2895,7 @@ flow 只说「现在该显示哪一屏、给它什么」（`screen_changed(scree
 
 ```gdscript
 class_name GameFlow extends RefCounted
-enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE }
+enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR }   # SLOTS 089、SAFE 092、ALTAR 093
 signal screen_changed(screen, payload)
 signal run_started(state) / run_ended(result)
 func to_main_menu() / new_run() / show_meta()
@@ -2884,7 +2905,7 @@ func pick_spawn(id) / step_to(id) / extract()       # 走完 / 撤完看队里�
 func resume() / take_loot(uid) / take_all_loot() / discard_loot()
 func start_battle() / hide_overlay() / can_reopen() / reopen_node()   # 084：战前准备屏开战；叠层最小化与恢复
 func finish_result()                                 # 进 meta（只一次）、存 meta、删这一局的存档 → META
-static func load_chapters() / load_loadouts() / load_characters()
+static func load_chapters() / load_loadouts() / load_characters() / load_difficulties() / …   # 各内容种类各一个（097：待收口成一个内容库）
 func grant_first_kit()                               # 仓库空的第一局发第一套（MetaRules.first_kit）
 ```
 
@@ -2893,7 +2914,7 @@ func grant_first_kit()                               # 仓库空的第一局发�
 **角色**（`CharacterDef`，`core/run/character_def.gd`，内容种类 `characters`，报告 067）定开一局时按角色变的那几样：战斗基线的覆盖项（没写的沿用 4.2 的默认）、
 体力上限、棋盘尺寸、初始包、带入的件数 / 稀有度上限（-1 = 不限，作者：改成字段、默认不限）、**被动技能** `skills`（一局规则的效果构件，和局外 buff 同一套：
 侦察 / 潜行 / 逃跑三个构件往 `RunContext` 加数，猎手系统读；主动技能以后走事件层，报告 072）。**没有搜索速度**（作者：搜索在战斗外、不是实时的）。
-现在两个占位角色 `default`、`scout`。
+三个初始角色是作者定的安德烈乌斯 / 布鲁图斯 / 马库斯（7.3，082）；早期的占位 `default` / `scout` 已删。
 
 **开局屏**：左边挑章、挑角色、定种子；中间是这个角色的棋盘，初始包已经摆好；右边是仓库的格子（8.2）；同一层拖拽。
 **从仓库往包里拖，放得进的就是带的** —— 带入的真正限制是初始包的空间，没有第二套规则去数格子。拖上棋盘那一刻东西就离开了仓库；
@@ -2965,7 +2986,7 @@ func grant_first_kit()                               # 仓库空的第一局发�
 **校准**（073）：正式游戏每走一步记一份玩家配置（`CalibrationRecorder` → `user://calibration/snapshots.jsonl`），`tools/build_dummies.gd` 按难度的段位表分段（或固定段长）、每段挑离平均读数最近的真实配置当木桩，
 `tools/bench_hunters.gd` 让木桩对猎手池里每一档打几百场，打印胜率并排「猎手表里这一段的档 / 最接近 50% 的哪一档」—— 工具只做统计，作者对着表改强度规则。数值等系统完整后多场测试。
 
-### 8.4 序章与章节的门（083）
+### 8.6 序章与章节的门（083）
 
 序章 `prologue` 是一张手写的预设图（`data/maps/prologue.json`，布局 `line`）：生 → 搜 → 战 → 搜 → 精 → 撤，敌人、收获、教程事件全写在节点内容里，没有敌人池。
 `ChapterDef` 多了开局屏的门：`order`、`requires_unlock` / `grants_unlock`（局外解锁 id；撤离成功时 `GameFlow._settle_run` → `MetaState.grant_unlock`）、`characters`（能选的角色）、`allow_carry_in`。
@@ -3524,6 +3545,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v2.07 | 2026-10-01 | **文档对齐**（报告 097，无代码改动）：1.3 改成「没有全局 EventBus」、3.5 伪代码去掉 EventBus；3.8 激活只认信物（095）并注明棋盘内拖动切换的现状；4.2 补 `faith_points` 与编译后套 perk；7 节 `RunState` 字段表重抄自代码、`start()` 签名补全；7.2 写明版本严格相等、无迁移链，补存档位（089）；8 节 `Screen` 补 SLOTS / SAFE / ALTAR；8.1 占位角色说法与 7.3 对齐；重复的 8.4 改 8.6 |
 | v2.06 | 2026-10-01 | **标签 / 伤害类型是内容**（报告 096）：种类 `tags`（`TagDef`、`TagRegistry` 静态表）与 `damage_types`（`DamageTypeDef` 多 `display_names / description / descriptions`，`DamageTypes` 装回 `data/damage_types` 覆盖内置）排在 `ORDER` 最前；`Names.description_of`；`Glossary.tag_name / damage_type_name` 走数据、`STAT_NAMES / CATEGORY_NAMES` zh / en；导入器对没登记的标签只警告；`PropertyForm` 标签「加标签…」/ 伤害类型 / 标签字段下拉（`_key_picker`）；**开局预设套** `LoadoutDef.preset`（不用带包）、`GameFlow.presets / default_loadout`、开局屏 `choose_preset / preset_items`（不算带入、拖不进仓库）；**挑出生点遮罩** `MapView.spawn_mask`（只命中出生点）；悬浮窗信仰加成按 `ItemTooltip.faith_probe` 白 / 灰；`event_pending` 带 `search_stage` 的不插到战利品前面 |
 | v2.05 | 2026-09-30 | **赐福**（报告 095）：`FaithBonus.mode`（tier / active / scaled，`times_for`，编译器吃 `faith_points`）；`Blessing` 模板 + `Blessings.derive_all`（`ItemDatabase.load_dir` 派生 `<id>_<神>`，`blessed_of`，`ids()` 排掉 blessed）；来路：`DropRule / SearchRules.bless_chance(_active)` → `RunState.bless_ids`、`_bless_step`（`FaithDef.convert_chance`）、`altar_bless` 神坛操作、`bless_item` 后果；`FaithState` 只认 `faith_anchor` 信物；自己神的赐福版献祭 ×2 |
 | v2.04 | 2026-09-30 | **类缓存根除**（091 §13.2）：`.godot/global_script_class_cache.cfg` 进仓库（`.gitignore` 放行）；`DevNav.stale_classes / _check_class_cache` 启动自检、缺类红字 |
