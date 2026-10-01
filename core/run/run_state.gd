@@ -98,18 +98,14 @@ signal leaving(node_id: int)
 ## 模块订阅它做「走完一步才算的」事 —— 倒计时看看归零没有。参数是现在站着的点
 signal stepped(node_id: int)
 ## 101：到了一个点（头一回踩上、或者回到走过的点，**在这个点的事发生之前**发）。
-## 模块订阅它做「回来就……」的事 —— 留在这个点的东西回到暂存区。参数是刚到的点
-signal arrived(node_id: int)
+## 模块订阅它做「到了就……」的事 —— 留在这个点的东西回到暂存区、相邻的道具合成。
+## [param first_time] = 头一回踩上这个点
+signal arrived(node_id: int, first_time: bool)
 ## 猎手（069 / 071）：难度清单里的猎手机制装进来的系统；null = 这一局没有猎手。定义表由持有方给，存档里的状态读档时先放这儿等机制装
 var hunters: HunterSystem = null
 var hunter_defs: Dictionary = {}
 ## 信仰定义（8-4）：持有方给，名字与说明用；激活规则只看棋盘上的标签（[FaithState]）
 var faith_defs: Dictionary = {}
-## 合成配方（084 / 087）：持有方给。**相邻即合**（087 作者定）：棋盘上两件有配方的道具四邻相接，走到下一个点时自动合成，
-## 不用拖到一起、没有「配对」这一步；[method craft_pairs] 随时能问现在有哪几对（界面画「合」、提示）
-var recipes: Array[RecipeDef] = []
-## 到了下一个点，合成发生了（或没成）：detail = {"log": [几句话], "output": 产物 id 或空, "where": "board" / "storage" / ""}
-signal craft_done(node_id: int, detail: Dictionary)
 ## 局内技能的账（082）：定义在角色上，这里记次数、冷却、旗子；没角色也有一份空的
 var skills: RunSkills = null
 ## 读档回来的技能账，等持有方按 id 找回角色（[method set_character]）再接上
@@ -248,7 +244,7 @@ func step_to(id: int) -> bool:
 	var ok := travel.step_to(id)
 	if ok:
 		if was_visited:
-			arrived.emit(travel.current_id)     # 回到走过的点（头一回踩的在 _on_arrive 里已经发过）
+			arrived.emit(travel.current_id, false)     # 回到走过的点（头一回踩的在 _on_arrive 里已经发过）
 		# 091（作者定）：商店可以回头再逛 —— 回到走过的商店点就把店再开起来；货架 / 刷新次数 / 卖掉的都记在节点内容里，刷新价不重置
 		if was_visited and events != null and NodeEvents.effective_type(map.get_node(id)) == &"shop":
 			events.reopen_shop(map.get_node(id))
@@ -274,7 +270,7 @@ func relocate(intent: MoveIntent) -> bool:
 	var ok := travel.apply(intent)
 	if ok:
 		if was_visited:
-			arrived.emit(travel.current_id)
+			arrived.emit(travel.current_id, false)
 		tick_map_buffs()
 		if hunters != null:
 			hunters.on_player_step()
@@ -310,8 +306,7 @@ func _forget_handled() -> void:
 ## 再让那个点的事发生 —— 顺序不能反，不然合成的产物没地方去、事件给的东西看不见
 func _on_arrive(node: MapNode) -> void:
 	if node != null:
-		arrived.emit(node.id)
-		resolve_crafts(node.id)
+		arrived.emit(node.id, true)     # 按点暂存先还回来，再合成（模块按清单顺序接线）—— 顺序不能反
 	events.handle(node)
 
 
@@ -796,89 +791,6 @@ func discard_loot() -> void:
 		return
 	pending_loot = null
 	loot_cleared.emit()
-
-
-## 这两件能合成什么：配方里有就返回产物的定义；没有 null
-func craft_output(a: ItemDef, b: ItemDef) -> ItemDef:
-	if a == null or b == null or items == null:
-		return null
-	var r := RecipeDef.find(recipes, a.id, b.id)
-	return items.get_def(r.output) if r != null else null
-
-
-## 087：棋盘上现在相邻、有配方的对子，`[[a, b, 产物定义], …]`：a 是 uid 小的那件。每件只进一对（uid 升序先配到的算），
-## 顺序稳定 —— 同一个棋盘永远同样的结果。包不参与邻接（[method GridInventory.neighbors_of]）
-func craft_pairs() -> Array:
-	var out: Array = []
-	if board == null or recipes.is_empty():
-		return out
-	var used := {}
-	var uids: Array[int] = []
-	for inst in board.items():
-		uids.append((inst as ItemInstance).uid)
-	uids.sort()
-	for uid in uids:
-		if used.has(uid):
-			continue
-		var a := board.get_item(uid)
-		if a == null or a.def == null or board.acts_as_bag(a.def):
-			continue
-		for other in board.neighbors_of(uid):
-			if used.has(other):
-				continue
-			var b := board.get_item(other)
-			if b == null or b.def == null:
-				continue
-			var out_def := craft_output(a.def, b.def)
-			if out_def == null:
-				continue
-			used[uid] = true
-			used[b.uid] = true
-			out.append([a, b, out_def])
-			break
-	return out
-
-
-## 棋盘上这件现在配着谁（界面画「合」）；没有 null
-func craft_partner_of(uid: int) -> ItemInstance:
-	for pair in craft_pairs():
-		if (pair[0] as ItemInstance).uid == uid:
-			return pair[1]
-		if (pair[1] as ItemInstance).uid == uid:
-			return pair[0]
-	return null
-
-
-## 到了下一个点（暂存区已清）：把此刻相邻的每一对合掉 —— 产物落在 a 的位置（a 的朝向），放不下试 b 的位置、再自动找位，
-## 再不行进暂存区并提醒。每一桩发一次 craft_done
-func resolve_crafts(at_id: int) -> void:
-	var pairs := craft_pairs()
-	if pairs.is_empty():
-		return
-	for pair in pairs:
-		var a: ItemInstance = pair[0]
-		var b: ItemInstance = pair[1]
-		var out_def: ItemDef = pair[2]
-		var detail := {"log": [] as Array, "output": String(out_def.id), "where": ""}
-		var out := ItemInstance.create(out_def, a.rotation)
-		var where := ""
-		board.begin_batch()
-		var home_a := a.origin
-		var rot_a := a.rotation
-		var home_b := b.origin
-		var rot_b := b.rotation
-		board.remove(a.uid)
-		board.remove(b.uid)
-		if board.place(out, home_a, rot_a) or board.place(out, home_b, rot_b) or board.try_add(out, true):
-			where = "board"
-		elif storage.admit(out):
-			where = "storage"
-		board.end_batch()
-		detail["where"] = where
-		(detail["log"] as Array).append("「%s」和「%s」相邻，合成了「%s」。" % [a.def.display_name, b.def.display_name, out_def.display_name])
-		if where == "storage":
-			(detail["log"] as Array).append("背包里装不下它：放进了暂存区。走之前记得放回包里，暂存区里的东西会留在这个点上。")
-		craft_done.emit(at_id, detail)
 
 
 ## 暂存区 → 棋盘（自动找位）

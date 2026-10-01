@@ -230,13 +230,15 @@ static func run_matchups(t: TestCase) -> void:
 
 
 static func run_crafting_adjacent(t: TestCase) -> void:
-	t.begin("序章二 · 合成是相邻自动的（087 作者定）：棋盘上两件有配方的挨着 → craft_pairs 报出来（界面画「合」）→ 走到下一个点自动合成、发提示；不挨着不合；装不下进暂存区并提醒")
+	t.begin("序章二 · 合成是相邻自动的（087 作者定）：棋盘上两件有配方的挨着 → CraftingModule.pairs 报出来（界面画「合」）→ 走到下一个点自动合成、发提示；不挨着不合；装不下进暂存区并提醒")
 	var c := _content()
 	var s := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
 	t.not_null(s, "开得了局")
 	if s == null:
 		return
-	s.recipes = c.recipes
+	var cm := CraftingModule.of(s)     # 101：合成是一局的模块
+	t.not_null(cm, "默认清单里有合成")
+	cm.recipes = c.recipes
 	s.event_defs = c.events
 	# 开局包里有一把匕首（starting_items）
 	var knife: ItemInstance = null
@@ -247,17 +249,17 @@ static func run_crafting_adjacent(t: TestCase) -> void:
 	if knife == null:
 		return
 	var home := knife.origin
-	t.check(s.craft_pairs().is_empty(), "只有匕首：没有对子")
+	t.check(cm.pairs().is_empty(), "只有匕首：没有对子")
 	# 把毒药瓶放到匕首旁边（右边一格）
 	var vial := ItemInstance.create(c.items.get_def(&"poison_vial"))
 	var placed := s.board.place(vial, home + Vector2i(1, 0), 0) or s.board.place(vial, home + Vector2i(0, 1), 0) or s.board.place(vial, home + Vector2i(-1, 0), 0) or s.board.place(vial, home + Vector2i(0, -1), 0)
 	t.check(placed, "毒药瓶放到匕首旁边")
-	var pairs := s.craft_pairs()
+	var pairs := cm.pairs()
 	t.eq(pairs.size(), 1, "相邻：一对")
 	if pairs.is_empty():
 		return
 	t.check((pairs[0][2] as ItemDef).id == &"poisoned_knife", "产物是涂毒匕首")
-	t.check(s.craft_partner_of(knife.uid) == vial and s.craft_partner_of(vial.uid) == knife, "两边都查得到对方")
+	t.check(cm.partner_of(knife.uid) == vial and cm.partner_of(vial.uid) == knife, "两边都查得到对方")
 	# 不挨着：拿开
 	s.board.remove(vial.uid)
 	var far := Vector2i(-1, -1)
@@ -268,15 +270,15 @@ static func run_crafting_adjacent(t: TestCase) -> void:
 				far = at
 	if far.x >= 0:
 		s.board.place(vial, far, 0)
-		t.check(s.craft_pairs().is_empty(), "不挨着：没有对子")
+		t.check(cm.pairs().is_empty(), "不挨着：没有对子")
 		s.board.remove(vial.uid)
 	t.check(s.board.place(vial, home + Vector2i(1, 0), 0) or s.board.try_add(vial, true), "放回去")
 	# 走到下一个点：合成发生
 	var done: Array = []
-	s.craft_done.connect(func(_id: int, detail: Dictionary): done.append(detail))
+	cm.done.connect(func(_id: int, detail: Dictionary): done.append(detail))
 	var next: int = s.travel.available_moves()[0]
 	t.check(s.step_to(next), "走到下一个点")
-	t.eq(done.size(), 1, "发了 craft_done")
+	t.eq(done.size(), 1, "发了 done（合成了）")
 	if done.is_empty():
 		return
 	t.eq(String(done[0]["output"]), "poisoned_knife", "产物是涂毒匕首")
@@ -287,7 +289,7 @@ static func run_crafting_adjacent(t: TestCase) -> void:
 		if (inst as ItemInstance).def.id == &"poisoned_knife":
 			made = inst
 	t.check(made != null and made.origin == home, "涂毒匕首落在匕首（uid 小的那件）原来的位置")
-	t.check(not s.board.has_item(knife.uid) and not s.board.has_item(vial.uid) and s.craft_pairs().is_empty(), "两件原料没了、没有对子了")
+	t.check(not s.board.has_item(knife.uid) and not s.board.has_item(vial.uid) and cm.pairs().is_empty(), "两件原料没了、没有对子了")
 	# 存档往返不需要记对子（相邻就是状态本身）
 	var back := RunState.from_dict(s.to_dict(), c.chapter, c.items, c.enemies, c.sets)
 	t.check(back != null and not back.to_dict().has("pending_crafts"), "存档里没有配对表")
@@ -297,7 +299,8 @@ static func run_crafting_adjacent(t: TestCase) -> void:
 	big.id = &"t_big"
 	big.inputs = [&"knife", &"poison_vial"] as Array[StringName]
 	big.output = &"plate_cuirass"
-	s3.recipes = [big] as Array[RecipeDef]
+	var cm3 := CraftingModule.of(s3)
+	cm3.recipes = [big] as Array[RecipeDef]
 	var knife3: ItemInstance = null
 	for inst in s3.board.items():
 		if (inst as ItemInstance).def.id == &"knife":
@@ -308,9 +311,9 @@ static func run_crafting_adjacent(t: TestCase) -> void:
 	t.check(ok3, "毒药瓶挨着匕首")
 	while s3.board.try_add(ItemInstance.create(c.items.get_def(&"salve")), true):
 		pass     # 塞满
-	t.eq(s3.craft_pairs().size(), 1, "一对（临时配方）")
+	t.eq(cm3.pairs().size(), 1, "一对（临时配方）")
 	var done3: Array = []
-	s3.craft_done.connect(func(_id: int, detail: Dictionary): done3.append(detail))
+	cm3.done.connect(func(_id: int, detail: Dictionary): done3.append(detail))
 	s3.step_to(s3.travel.available_moves()[0])
 	t.check(done3.size() == 1 and String(done3[0]["where"]) == "storage", "产物装不下：进暂存区")
 	t.check(not done3.is_empty() and (done3[0]["log"] as Array).size() == 2 and String((done3[0]["log"] as Array)[1]).contains("装不下"), "提醒玩家装不下")
@@ -322,7 +325,7 @@ static func run_crafting_adjacent(t: TestCase) -> void:
 
 
 static func run_crafting_drag(t: TestCase) -> void:
-	t.begin("序章二 · 拖拽层不再合成（087）：拿起一件时能和它合成的亮一圈（提示放旁边）；压到有配方的那件上只是普通顶替；RunState.craft_output 查配方")
+	t.begin("序章二 · 拖拽层不再合成（087）：拿起一件时能和它合成的亮一圈（提示放旁边）；压到有配方的那件上只是普通顶替；CraftingModule.output_of 查配方")
 	var c := _content()
 	ItemInstance.reset_uid_counter()
 	var board := GridInventory.new(Vector2i(6, 4), 1, true)
@@ -365,9 +368,10 @@ static func run_crafting_drag(t: TestCase) -> void:
 	# RunState 的入口
 	var s := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
 	if s != null:
-		s.recipes = recipes
-		t.check(s.craft_output(c.items.get_def(&"knife"), c.items.get_def(&"poison_vial")) == c.items.get_def(&"poisoned_knife"), "RunState.craft_output 查得到")
-		t.is_null(s.craft_output(c.items.get_def(&"knife"), c.items.get_def(&"salve")), "没有的是 null")
+		var cm2 := CraftingModule.of(s)
+		cm2.recipes = recipes
+		t.check(cm2.output_of(c.items.get_def(&"knife"), c.items.get_def(&"poison_vial")) == c.items.get_def(&"poisoned_knife"), "CraftingModule.output_of 查得到")
+		t.is_null(cm2.output_of(c.items.get_def(&"knife"), c.items.get_def(&"salve")), "没有的是 null")
 
 
 static func run_random_mode(t: TestCase) -> void:
@@ -456,7 +460,7 @@ static func run_gating(t: TestCase) -> void:
 	t.eq(f.screen, GameFlow.Screen.EVENT, "先过 intro")
 	t.check((f.last_payload.get("def", null) as EventDef).id == &"tut2_intro", "是 tut2_intro")
 	t.check(f.tooltips_enabled(), "这一章浮窗开着")
-	t.check(not run.recipes.is_empty(), "配方进了这一局")
+	t.check(not CraftingModule.of(run).recipes.is_empty(), "配方进了这一局")
 	t.check(f.choose_event(0), "出发")
 	t.eq(f.screen, GameFlow.Screen.MAP, "→ 地图")
 	t.eq(run.travel.available_moves().size(), 1, "出生点只通向搜索点")

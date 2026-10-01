@@ -98,7 +98,9 @@ func _build() -> void:
 	_drag.items_displaced.connect(_on_displaced)
 	# 087 合成（作者定）：相邻即合 —— 棋盘上两件有配方的挨着，走到下一个点时自动合成；拖起一件时能合的那几件高光，
 	# 挨上了画「合」并提示一句
-	_drag.craft = func(a: ItemInstance, b: ItemInstance) -> ItemDef: return _run.craft_output(a.def, b.def)
+	var crafting := CraftingModule.of(_run)     # 101：合成是一局的模块
+	_drag.craft = func(a: ItemInstance, b: ItemInstance) -> ItemDef:
+		return crafting.output_of(a.def, b.def) if crafting != null else null
 	_run.board.changed.connect(_refresh_badges)
 	_refresh_badges()
 	# 084：停在道具上的悬浮说明（名、稀有度、标签、效果、武器的冷却与 DPS、槽）
@@ -150,7 +152,7 @@ var _pair_keys: Dictionary = {}
 func _refresh_badges() -> void:
 	var marks := {}
 	var keys := {}
-	for pair in _run.craft_pairs():
+	for pair in (CraftingModule.of(_run).pairs() if CraftingModule.of(_run) != null else []):
 		var a: ItemInstance = pair[0]
 		var b: ItemInstance = pair[1]
 		var out: ItemDef = pair[2]

@@ -100,7 +100,7 @@ func _on_leaving(node_id: int) -> void:
 
 
 ## 到了一个点：那里留着的东西回到暂存区
-func _on_arrived(node_id: int) -> void:
+func _on_arrived(node_id: int, _first_time: bool) -> void:
 	if _run == null or _run.storage == null or not nodes.has(node_id):
 		return
 	var back: Array = nodes[node_id]

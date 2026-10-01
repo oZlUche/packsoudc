@@ -402,9 +402,11 @@ func _adopt() -> void:
 		node_storage.restored.connect(func(node_id: int, items: Array):
 			_note("　回到点 %d：留在这里的 %d 件回到了暂存区" % [node_id, items.size()]))
 	_run.loot_cleared.connect(_after_move)     # 084：没拿的战利品没了（拿完了、或走了），「回到这个点」跟着灰
-	_run.craft_done.connect(func(_id: int, detail: Dictionary):
-		for line in detail.get("log", []):
-			_note("　" + String(line)))
+	var crafting := CraftingModule.of(_run)     # 101：合成是一局的模块
+	if crafting != null:
+		crafting.done.connect(func(_id: int, detail: Dictionary):
+			for line in detail.get("log", []):
+				_note("　" + String(line)))
 	# 猎手（071）：进了感知范围提示一句；动了就重画标记；被赶回上一个点
 	_run.hunter_sensed.connect(func(h: Hunter):
 		var def: HunterDef = _run.hunters.def_of(h) if _run.hunters != null else null

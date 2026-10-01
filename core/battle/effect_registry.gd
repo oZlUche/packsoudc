@@ -166,6 +166,7 @@ const RUN_MODULES := {
 	&"safe": "res://core/run/modules/safe_module.gd",
 	&"node_storage": "res://core/run/modules/node_storage_module.gd",
 	&"countdown": "res://core/run/modules/countdown_module.gd",
+	&"crafting": "res://core/run/modules/crafting_module.gd",
 }
 
 ## 猎手（069 / 071）：行动逻辑与战败后果
