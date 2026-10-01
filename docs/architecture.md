@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.10 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.11 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -644,6 +644,31 @@ GDScript 里这个好处根本不存在，代价却是设计师写的每个十�
 
 冷却存在下限（快到一定程度不再变快），各乘区可各自设叠加层数上限。这些阈值写在
 配置资源里，不硬编码。
+
+#### 标准轴：单位级的带符号层数（作者定，报告 103；待实现）
+
+上面的乘区公式是**道具级**的：每件道具各算各的终值。战斗里最常见的一类增减益却是**单位级**的 ——
+「所有武器加速」「造成的伤害 +N%」「受到的伤害 +N%」「每秒回血」—— 它们作用于角色本身，而且**增益与减益是同一件事的正负**。
+为此每个战斗单位（玩家 / 敌人）有一组**标准轴**（`StatAxes`，代码里的静态表，和乘区枚举一样属于架构而不是内容）：
+
+| 轴 | 作用于 | 模式 | 每层步长（推荐起点，可调） | 正名 / 负名 |
+|---|---|---|---|---|
+| `attack_speed` | `haste`（冷却周期 ÷ 它，已有） | 百分比 | 3% | 加速 / 减速 |
+| `damage_dealt` | `damage` | 百分比 | 3% | 强攻 / 虚弱 |
+| `damage_taken` | 受到的最终伤害（4.6 第 4 步末尾） | 百分比 | 5% | 易伤 / 坚韧 |
+| `regen_hp` | `regen_hp`（每秒） | 固定值 | 1 | 回春 / 失血 |
+| `regen_hp_pct` | 每秒按生命上限的百分比回血（新属性，`settle_regen` 把它折成速率加进 `regen_hp`） | 百分比 | 1% | 再生 / 腐蚀 |
+| `regen_stamina` | `regen_stamina`（每秒） | 固定值 | 1 | 回气 / 疲乏 |
+
+规则：
+
+- **一条轴就是一个带符号的 int 层数，默认 0。** 增益 +n、减益 −n，二者直接相抵：吃了 3 层加速再中 1 层减速就是 +2。不再为「加速」「减速」各开一个 buff。
+- **结算是公式的最后一步**，在道具级终值之上：百分比轴 `终值 × (1 + 层数 × 步长)`，固定值轴 `终值 + 层数 × 步长`。百分比因子低于 0 钳到 0（和乘区同一条规矩）。攻速轴作用于 `haste` 的终值，所以 `CooldownCadence` 一行不改。
+- **层数永续、无上限（除非轴表写了上下限）**，这是 4.5「可叠层即永续」在单位级的同一条规矩；战斗结束清空。
+- **系统层单独记**：每条轴记 `stacks`（内容施加的）与 `system_stacks`（加时 / 衰竭这类系统规则施加的），结算相加，**净化 / 驱散只动 `stacks`**。这就是「不可解除」的实现，不需要 `BuffDef.system` 旗。
+- **buff 栏显示轴，不显示来源**：层数 ≠ 0 的轴画一格，正用正名、负用负名，`×|层数|`；系统层另画一格「鏖战 ×n」说明来源。`BuffDef` 仍然存在，留给带规则的复合 buff（灼烧每秒掉血、标记降护甲、攒层爆发）；**能用轴表达的简单增减一律走轴**，导入器对「只有一条作用于标准轴属性的 mod、没有规则」的 `BuffDef` 告警，提示改成轴。
+- 内容怎么写：效果 `shift_axis(axis, delta, target)`（新的 `CombatEffect`，和 `apply_status` 并列），`delta` 带符号；扳机 `on_axis_at_least(axis, n)` 与 `on_stacks_at_least` 同构。编译期修饰（包体、邻接、套装、信仰阶梯）**不走轴**，它们仍是 4.3 乘区里的 `StatModifier`：轴是战斗中会变的东西。
+- 新加一条轴 = 轴表加一行（id、作用属性、模式、步长、两个名字），结算、面板、词条、导入器校验全部自动跟上；**不改公式代码**。
 
 #### 实现
 
@@ -3630,6 +3655,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.11 | 2026-10-01 | **标准轴**（作者定，报告 103；设计先行、待实现）：4.3 新增「标准轴：单位级的带符号层数」—— 攻速 / 造成伤害 / 受到伤害 / 回血（固定）/ 回血（按上限百分比）/ 耐力回复六条轴，一条轴一个带符号 int 层数（增益为正、减益为负、直接相抵），结算在道具级终值之上（百分比 `× (1 + 层数 × 步长)`、固定值 `+ 层数 × 步长`），系统层单独记（净化不动）、buff 栏显示轴而不是来源、新轴只加表不改公式 |
 | v2.10 | 2026-10-01 | **一局的模块：`RunState` 的扩展点**（报告 101 第 0 刀 + 第 1 刀样板；新增 7.4、改 7.2 / 8.4）：`RunModule`（装 / 存 / 读 / 说一句，生命周期靠订阅已有信号）、`RunState.modules / install_modules / install_module / module / module_input / module_lines`、新信号 `leaving`、`ChapterDef.modules`、`RunModules.standard()`、注册表 `RUN_MODULES`（`run_mechanic` 作别名）、`RunMechanic` 变成它的子类；保险箱搬成 `SafeModule`（`RunState` 不再有 `safe` 字段，`SafeModule.of(run)` 取），一局存档升到 v2，`RunMigrations` 第一步把顶层 `safe` / `safe_locked` 搬进 `modules.safe` |
 | v2.09 | 2026-10-01 | **内容管线一致性检查**（报告 100 第 1 步；10.1）：`ContentCheck` + `tools/check_content.gd` 守「作者 JSON ⇄ `.tres` 一致」（导出比对、深比较不较真键顺序与 int / float；缺资产、孤儿资产、值不同各报一条），接进 `tools/test.sh` 与 `test_content_pipeline`；`buffs` / `sets` 两种从 `ContentPaths.KINDS` / `ORDER` 去掉（都是空目录，目录常量留给编辑器）；`test.sh` 的 `GODOT` 未设时先在 PATH 里找 `godot` / `godot4` |
 | v2.08 | 2026-10-01 | **存档迁移链与背包里切信仰**（报告 098、099）：7.2 写迁移链（`MetaMigrations` / `RunMigrations` 字典层逐级升、只在读文件那一层、升版规矩与冻结样本）、读不出来先备份（`SaveSlots.backup`、`GameFlow.meta_backup / run_backup / backup_notice`、`slots.backed_up`）、内容 id 改名表 `IdAliases`（`ItemDatabase.get_def` / `TagRegistry.get_def` / `FaithPower.restore` 找不到才查）；3.8 切换信仰改成明确规则：`GridInventory.reseat`（只盖 `placed_seq`、不发 `placed`，信力不再被棋盘内来回拖刷）、棋盘内重新落下或右键信物都切、取消拖拽不切（`DragLayer` 放回同容器前设回 `container_id`） |
