@@ -67,17 +67,17 @@ class_name OvertimeRules
 
 `NodeRules.overtime: OvertimeRules`（没填用默认），导入器校验正数且 `decay_starts_at >= starts_at`。`BattleSim.run(a, b, rng, time_limit, overtime)` 多收一个参数；`node_events.gd:567` 从 `rules` 传；沙盒与猎手校准传默认（**校准必须带加时**，否则猎手强度表和真打对不上）。
 
-#### 4b · 两个系统 buff
+#### 4b · 加时走标准轴的系统层，衰竭是系统 buff（见 4e）
 
 由 `OvertimeRules.buffs()` 在代码里造（不是内容文件 —— 100 已把 `buffs` 种类移出管线，而且这两个是规则不是内容）：
 
 | id | 形态 | mods |
 |---|---|---|
-| `overtime`（鏖战） | 不限层、永续、`system = true` | 每层 `damage_taken` 乘区 +20% |
-| `decay`（衰竭） | 不限层、永续、`system = true` | 每层 `max_hp` 固定 −`decay_amount` |
+| `overtime`（鏖战） | **不是 `BuffDef`**：每到一次叠层时刻，给双方 `damage_taken` 轴的 `system_stacks` 加 `20% ÷ 轴步长` 层（步长 5% 即 +4 层）；面板另画「鏖战 ×n」说明来源 | 走 4e 的轴结算 |
+| `decay`（衰竭） | 不限层、永续、`system = true` 的 `BuffDef`（上限不是轴：它是资源上限，4.5 说上限变化由 buff 承载） | 每层 `max_hp` 固定 −`decay_amount` |
 
-- `BuffDef` 加 `@export var system: bool = false`：**不可解除**（`RemoveStatus` / `StatusStackCost` 对它一律 0 层；`remove_buff_stacks` 在入口挡），面板画成第三种颜色，词条侧窗写「系统效果，不可解除」。
-- `damage_taken` 是**新属性** `BattleStats.DAMAGE_TAKEN`（倍率，基准 1.0，走 4.3 乘区）。**作者定：放大的是角色受到的「最终伤害」** —— 伤害管线第 4 步算完百分比、固定增减、反转、护甲之后，在落到血量之前：`if amount > 0: amount = mul(amount, victim.stat(DAMAGE_TAKEN))`，然后才 `packet.final = amount`。所以护盾吸收（第 2 步）、减伤 / 免疫（第 3 步）、护甲都按原值算，**最后扛下来的那部分**乘倍率；治疗（反转、负数）不放大。`damage` 事件的 `amount` 带的是放大后的实际扣血，回放飘字自然对得上。顺带，`damage_taken` 以后也能给内容用（「易伤」减益就是一条作用于它的普通 mod），不是加时专用。
+- `BuffDef` 加 `@export var system: bool = false`（衰竭用）：**不可解除**（`RemoveStatus` / `StatusStackCost` 对它一律 0 层；`remove_buff_stacks` 在入口挡），面板画成第三种颜色，词条侧窗写「系统效果，不可解除」。加时的「不可解除」靠轴的 `system_stacks`，净化只动 `stacks`。
+- `damage_taken` 是一条**标准轴**（4e），作用于**角色受到的最终伤害**（作者定）：伤害管线第 4 步算完百分比、固定增减、反转、护甲之后、落到血量之前，`if amount > 0: amount = mul(amount, ONE + stacks × step)`，然后才 `packet.final = amount`。护盾吸收、减伤 / 免疫、护甲都按原值算，**最后扛下来的那部分**乘倍率；治疗不放大。`damage` 事件的 `amount` 带的是放大后的实际扣血。顺带，内容里的「易伤」「坚韧」就是同一条轴的正负层，不是加时专用。
 - 掉生命上限走现有的 `max_hp` mod：`CombatantRuntime._rebuild` 已把 buff 的 mods 并进 `max_hp`，`_sync_resource_maxes` → `ResourcePool.set_max` 会把当前血夹到新上限（`resource_pool.gd:69-86`）。**缺的一步**：上限掉到 0 不会判死 —— `set_max` 只发 `resource_changed`，没人调 `mark_dead`。加在 `CombatantRuntime._on_resource_changed`：`key == hp` 且 `reason == max_changed` 且当前血 ≤ 0 → `mark_dead()`，并由 `_rebuild` 的调用方发 `DIED`。这样蛮神的不死照常生效：`mark_dead` 自己判「有不死且没用过 → 进坚持期」（`combatant_runtime.gd:313-324`），坚持期到了再真倒下。
 
 #### 4c · 模拟循环只加「系统时刻」
@@ -108,6 +108,7 @@ class_name OvertimeRules
 - `BattleScreen` / 沙盒不再调 `Glossary.buffs_in_spec` 拼表，直接 `view.set_buff_defs(result.buffs)`。**凡是真的上过身的 buff，定义必然在表里**，不管来自自己、对手、信仰规则、局外 buff 的规则还是系统 —— 不需要再列举来源。`buffs_in_spec` 留给开局屏的预估用。
 - 面板：`system` buff 第三种配色；不可叠层（`max_stacks == 1`）不画 `×1`，其余照画 `×n`；排序：系统 → 减益 → 增益，各组内按上身先后。
 - **作者定的准则：栏里只放「通用 buff」—— 作用对象必须是这个角色本身。** 使所有武器加速 → 显示；使某一件武器加速 → 不显示。增加角色造成的伤害 → 显示；增加某类型 / 某件武器的伤害 → 不显示。每隔几秒发作一次、让角色掉血 / 掉耐力 / 得到什么 → 显示；某件道具发动时让角色掉血 → 不显示（那是道具的规则，不是 buff）。
+  - **标准轴先于一切**：层数 ≠ 0 的轴各画一格（正名 / 负名 ×|层数|），这是「通用 buff」的主体；下面说的是轴之外还剩什么。
   - **战斗内的 `BuffDef` 全部符合**：`StatModifier` 没有「只作用于某件 / 某类道具」的字段（`stat_modifier.gd:9-18`），buff 的 mods 由 `_rebuild` 施加到单位属性与**每一件**道具上（`combatant_runtime.gd:113-117`），buff 自带的规则（灼烧每秒掉血）也是挂在单位上的 —— 所以凡是上过身的 buff 都显示，和「日志自足」正好一致。将来若给 `StatModifier` 加道具筛选（按标签 / 按件），带这种 mods 的 buff 就不进栏；现在不用做。
   - **编译期加成按同一准则分**：套装档位的 `set_mods` 施加到全部参战道具（`compiler.gd:78-80`）→ **显示**，一枚「套装名 N 件」常驻格、层数 = 档位；局外 / 一局 buff 的 `mods` 与角色技能的被动是单位级 → **显示**，各一枚、层数 1；信仰阶梯加成 `faith_bonuses` 只作用于那一件信物（`compiler.gd:85-101`）→ **不显示**；包体加成 `bag_mods` 与邻接增益 `grant_mods / receive_mods` 只作用于被圈住的那几件 → **不显示**（它们本来就画在棋盘格子上，4.8）。
   - 做法：编译器在 `CombatantSpec` 上多一张 `passives: Array[PassiveNote]`（`{id, name, stacks, mods, note}`，纯数据，只收单位级来源），`BattleResult.initial` 带上；面板画成**第四组「常驻」**，灰底、不随事件变、悬浮窗列出它的 mods（`Glossary.mods_text`）。它们不是 buff，不走净化、不进 `seen_buffs`，只是显示。
@@ -122,11 +123,25 @@ class_name OvertimeRules
 - **倍速**：进度一律从 `BattleView._now` 算，`_process` 里 `queue_redraw` —— 不用 `Tween` / `AnimationPlayer`（它们走真实时间，调倍速或 `seek` 就对不上）。`seek` 到任意时刻画面正确，因为进度是时刻的纯函数。
 - 把「进度」抽成 `CooldownClock.progress(fired_at, ready_at, now) -> float` 一个静态函数，测试它而不测画法。
 
+#### 4e · 标准轴（作者 2026-10-01 追加，已写进架构文档 4.3）
+
+作者定：单位级的增减益用**一条带符号的 int 层数**表达，增益为正、减益为负、直接相抵，`终值 × (1 + 层数 × 步长)`（固定值轴则 `+ 层数 × 步长`）；攻速、造成伤害、受到伤害、回血（固定）、回血（按上限百分比）、耐力回复都是这样的轴。完整规则在架构文档 4.3「标准轴」，这里只写要动的东西：
+
+- `core/battle/stat_axes.gd`（新，静态表）：六条轴的 id、作用属性、模式、步长、正 / 负名；步长是推荐起点（攻速 3%、造成伤害 3%、受到伤害 5%、回血 1 / 秒、按上限回血 1% / 秒、耐力回复 1 / 秒），作者可调。
+- `CombatantRuntime.axes: Dictionary`（axis → `{stacks, system_stacks}`），`shift_axis(axis, delta, system := false)`；`_rebuild` 末尾按轴表把因子乘到对应属性的终值上（`haste` / `damage` / `regen_*`），`damage_taken` 由伤害管线直接读。
+- `BattleStats.REGEN_HP_PCT`（新）：`settle_regen` 把 `max_hp × 它` 折进 `regen_hp` 的速率。
+- 效果 `ShiftAxis(axis, delta, target)`（`core/battle/effects/shift_axis.gd`，`EffectRegistry` 登记，导出器 / 导入器 / 编辑器下拉跟上）；扳机 `OnAxisAtLeast`。
+- 事件 `AXIS_SHIFTED {axis, delta, stacks, system_stacks}` 进日志，面板按它画轴格（正名 / 负名 ×|层数|）；`seen_buffs` 不需要收轴（轴表是静态的，回放层直接读 `StatAxes`）。
+- 加时：每到叠层时刻对双方 `shift_axis(damage_taken, 20% ÷ 步长, system = true)`；「鏖战 ×n」格由 `OVERTIME_STACKED` 事件驱动。
+- 自然 5 级回春（第 5 条）改成 `shift_axis(regen_hp, +N, SELF)`，不再需要「回春」`BuffDef`；它是内容层（`stacks`），可被净化 —— 和之前的决定一致。
+- 导入器：`BuffDef` 只有一条作用于轴属性的 mod 且没有规则 → 告警「改成 shift_axis」；现有内容里符合的逐个改（执行 thread 扫一遍）。
+- `StaminaEstimate` / 开局预估不读轴（轴是战斗中才会变的）。
+
 ## 关键决策
 
 - **规矩进导入器、不进运行时**（1、2、3）：和 085 的时长规矩一样，内容一导入就知道违规，战斗代码零特例。
 - **加时与衰竭是 buff，不是模拟器里的 if**（4）：复用 4.3 公式、4.5 叠层、面板、词条，`BattleSim` 只多一种「系统时刻」；数值进 `NodeRules`，每章可调。
-- **`damage_taken` 是通用属性**（4）：加时只是它的第一个用户。
+- **单位级增减益走标准轴**（4e）：一条带符号层数、公式最后一步、系统层单独记；`damage_taken` 是其中一条，加时只是它的第一个用户。
 - **自然 5 级变成一条普通规则**（5）：少一面字符串旗，和 101 第 5 刀方向一致。
 - **buff 定义表由日志给**（6）：靠「上过身就登记」而不是靠列举来源，第 6 条才能是「所有」。
 - **动画只看时刻**（7）：进度 = 时刻的纯函数，倍速与跳转免费正确。
@@ -159,6 +174,7 @@ class_name OvertimeRules
 |---|---|
 | 1、2 | `core/authoring/content_importer.gd`（`_validate_item_combat`）、`data/authoring/items/crowbar.json`、架构文档 4.4 |
 | 3 | 架构文档 4.5、`core/text/glossary.gd`（例外配色）、导入器一条告警 |
+| 4e | `core/battle/stat_axes.gd`（新）、`core/battle/effects/shift_axis.gd`（新）、`core/battle/triggers/on_axis_at_least.gd`（新）、`combatant_runtime.gd`（`axes` / `shift_axis` / `_rebuild` / `settle_regen`）、`battle_stats.gd`（`REGEN_HP_PCT`）、`battle_event.gd`（`AXIS_SHIFTED`）、`effect_registry.gd`、导入 / 导出器、`combatant_panel.gd`（轴格）、`glossary.gd`、架构文档 4.3（已写） |
 | 4 | `core/battle/overtime_rules.gd`（新）、`core/run/node_rules.gd`、`core/battle/battle_stats.gd`（`DAMAGE_TAKEN`）、`core/battle/buff_def.gd`（`system`）、`core/battle/damage/damage_resolver.gd`（一行）、`core/battle/combatant_runtime.gd`（上限归零判死、`remove_buff_stacks` 挡系统 buff）、`core/battle/battle_sim.gd`（系统时刻、裁决、安全上限）、`core/battle/battle_event.gd`（两条事件）、`core/run/node_events.gd:567`、`core/run/calibration/hunter_bench.gd`、`ui/battle/battle_sandbox.gd`、导入器校验 |
 | 5 | 删 `draw_is_win_perk.gd`，新 `overtime_regen_perk.gd`，`EffectRegistry`，`data/authoring/faiths/nature.json`，`test_author_093.gd` |
 | 6 | `core/battle/battle_context.gd`（`seen_buffs`）、`battle_result.gd`（`buffs`）、`combatant_runtime.gd`（登记）、`core/battle/compiler.gd` + `combatant_spec.gd`（`passives`）、`ui/game/battle_screen.gd`、`ui/battle/battle_sandbox.gd`、`ui/battle/combatant_panel.gd`（配色 / `×1` / 排序 / 常驻组） |
@@ -177,5 +193,6 @@ class_name OvertimeRules
 | 5 数值 | 按推荐（衰竭每 1 秒掉 5 点上限、回春 `regen_hp` +8 / 秒），**保留可调**：都在 `OvertimeRules` / `nature.json` 的字段里，不写死 | 4a、第 5 条 |
 | 6 哪些进 buff 栏 | 只放**通用 buff**：作用对象必须是角色本身（所有武器加速 → 显示，某件武器加速 → 不显示；角色造成伤害 +N → 显示，某类型 / 某件武器伤害 +N → 不显示；周期性让角色掉血 / 掉耐力 / 得到什么 → 显示，某道具发动时让角色掉血 → 不显示） | 第 6 条「通用 buff」与「常驻」组 |
 | 7 战斗屏画棋盘 | 要 | 第 7 条 |
+| 8（追加）标准轴 | 玩家有攻速字段默认 1，加速 buff / 减速 debuff 改的是同一个带符号 int，`攻速 × (1 + 层数 × 3%)`；伤害、受伤、回血（固定）、按百分比回血、耐力回复同理；**写进战斗架构核心要点** | 架构文档 4.3「标准轴」（v2.11）、本文 4e |
 
 执行顺序照「改动范围」末尾的三批：① 1、2、3 → ② 4、5、6 → ③ 7。
