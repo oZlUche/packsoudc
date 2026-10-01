@@ -219,7 +219,9 @@ static func run_matchups(t: TestCase) -> void:
 		var k1 := _fight(c, [&"longsword", armor, &"bag_long"], cure)
 		var k2 := _fight(c, [&"poisoned_knife", armor, &"bag_long"], cure)
 		t.eq(int(k1["wins"]), 5, "药师 vs 长剑 + %s：全赢" % armor)
-		t.eq(int(k2["wins"]), 0, "药师 vs 涂毒匕首 + %s：赢不了（毒一冒头就被清）" % armor)
+		t.eq(int(k2["wins"]), 5, "药师 vs 涂毒匕首 + %s：全赢（解毒包 2 秒才解 1 层，清不动涂毒匕首）" % armor)
+		var k3 := _fight(c, [&"knife", &"poison_vial", armor, &"bag_long"], cure)
+		t.eq(int(k3["wins"]), 0, "药师 vs 匕首 + 毒药瓶（没合成）+ %s：赢不了（毒药瓶太慢）" % armor)
 	# 两场都输也死不了：体力 = 角色的 + 坚韧 + 章节加成，输一场扣 loss_cost.battle
 	var s := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
 	t.not_null(s, "开得了局")

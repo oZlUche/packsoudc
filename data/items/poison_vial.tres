@@ -1,90 +1,84 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_uh40j"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_bu2h2"]
-[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_po3tl"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_h3pna"]
-[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="5_74njy"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_lhd8t"]
-[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_ig3oi"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_p0co4"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_44yl2"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_eifmv"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="11_s4pcm"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="12_452lv"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="13_ec3s8"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="14_4g5ww"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="15_rf8u1"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_mxjvg"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_uh40j"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_bu2h2"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_po3tl"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_h3pna"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="6_74njy"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="7_lhd8t"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="8_ig3oi"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="9_p0co4"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="10_44yl2"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="11_eifmv"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="12_s4pcm"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="13_452lv"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="14_ec3s8"]
 
-[sub_resource type="Resource" id="Resource_ebon1"]
-script = ExtResource("3_po3tl")
-seconds = 4.0
+[sub_resource type="Resource" id="Resource_4g5ww"]
+script = ExtResource("3_bu2h2")
+seconds = 6.0
 
-[sub_resource type="Resource" id="Resource_c82gb"]
-script = ExtResource("5_74njy")
-amount = 2.0
-
-[sub_resource type="Resource" id="Resource_l6sps"]
-script = ExtResource("3_po3tl")
+[sub_resource type="Resource" id="Resource_rf8u1"]
+script = ExtResource("3_bu2h2")
 seconds = 1.0
 
-[sub_resource type="Resource" id="Resource_y5gmk"]
-script = ExtResource("7_ig3oi")
+[sub_resource type="Resource" id="Resource_ebon1"]
+script = ExtResource("6_74njy")
 target = 1
 damage_type = &"poison"
 amount = 2.0
 damage_stat = &""
 per_stack = true
 
-[sub_resource type="Resource" id="Resource_dshra"]
-script = ExtResource("8_p0co4")
+[sub_resource type="Resource" id="Resource_c82gb"]
+script = ExtResource("7_lhd8t")
 
-[sub_resource type="Resource" id="Resource_n6g7y"]
-script = ExtResource("2_bu2h2")
-trigger = SubResource("Resource_dshra")
-cadence = SubResource("Resource_l6sps")
-effects = Array[ExtResource("6_lhd8t")]([SubResource("Resource_y5gmk")])
+[sub_resource type="Resource" id="Resource_l6sps"]
+script = ExtResource("2_uh40j")
+trigger = SubResource("Resource_c82gb")
+cadence = SubResource("Resource_rf8u1")
+effects = Array[ExtResource("5_h3pna")]([SubResource("Resource_ebon1")])
 
-[sub_resource type="Resource" id="Resource_vvtbv"]
-script = ExtResource("9_44yl2")
+[sub_resource type="Resource" id="Resource_y5gmk"]
+script = ExtResource("8_ig3oi")
 id = &"poison"
 display_name = "中毒"
 display_names = {
 "en": "Poison"
 }
 is_debuff = true
-rules = Array[ExtResource("2_bu2h2")]([SubResource("Resource_n6g7y")])
+rules = Array[ExtResource("2_uh40j")]([SubResource("Resource_l6sps")])
+
+[sub_resource type="Resource" id="Resource_dshra"]
+script = ExtResource("9_p0co4")
+buff = SubResource("Resource_y5gmk")
+
+[sub_resource type="Resource" id="Resource_n6g7y"]
+script = ExtResource("7_lhd8t")
+
+[sub_resource type="Resource" id="Resource_vvtbv"]
+script = ExtResource("2_uh40j")
+trigger = SubResource("Resource_n6g7y")
+cadence = SubResource("Resource_4g5ww")
+effects = Array[ExtResource("5_h3pna")]([SubResource("Resource_dshra")])
 
 [sub_resource type="Resource" id="Resource_7d3sp"]
-script = ExtResource("10_eifmv")
-buff = SubResource("Resource_vvtbv")
+script = ExtResource("10_44yl2")
+rules = Array[ExtResource("2_uh40j")]([SubResource("Resource_vvtbv")])
 
 [sub_resource type="Resource" id="Resource_spoee"]
-script = ExtResource("8_p0co4")
-
-[sub_resource type="Resource" id="Resource_bpk4g"]
-script = ExtResource("2_bu2h2")
-trigger = SubResource("Resource_spoee")
-cadence = SubResource("Resource_ebon1")
-costs = Array[ExtResource("4_h3pna")]([SubResource("Resource_c82gb")])
-effects = Array[ExtResource("6_lhd8t")]([SubResource("Resource_7d3sp")])
-
-[sub_resource type="Resource" id="Resource_md01x"]
-script = ExtResource("11_s4pcm")
-rules = Array[ExtResource("2_bu2h2")]([SubResource("Resource_bpk4g")])
-
-[sub_resource type="Resource" id="Resource_8tv6u"]
-script = ExtResource("15_rf8u1")
+script = ExtResource("14_ec3s8")
 
 [resource]
-script = ExtResource("14_4g5ww")
+script = ExtResource("13_452lv")
 id = &"poison_vial"
 display_name = "毒药瓶"
 display_names = {
 "en": "Poison Vial"
 }
-shape = SubResource("Resource_8tv6u")
+shape = SubResource("Resource_spoee")
 rarity = 1
 value = 15
 tags = Array[StringName]([&"reagent", &"material", &"poison"])
-combat = SubResource("Resource_md01x")
+combat = SubResource("Resource_7d3sp")
