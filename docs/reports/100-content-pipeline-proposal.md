@@ -100,3 +100,29 @@
 1. `buffs` / `sets` 两种是删掉，还是留着给将来？（推荐删，现在读到的都是空目录）
 2. 第 4 步顺手改 `RunState.start()` 签名（5 个参数换 1 个），还是等 P2 一起？（推荐顺手，正好是 P2 的第一刀）
 3. 五步一次交给一个执行 thread，还是第 1 步先单独上？（推荐先上第 1 步）
+
+## 落地（2026-10-01，实现 thread）· 只做了第 1 步
+
+作者定：**先只上第 1 步**；`buffs` / `sets` 删；第 4 步时顺手改 `start()` 签名（那一步还没做）。
+
+| 改动 | 文件 |
+|---|---|
+| 一致性检查的逻辑（导出比对、**深比较**；缺资产 / 孤儿资产 / 值不同各报一条，带键路径） | `core/authoring/content_check.gd`（新） |
+| 命令行：一致退 0、对不上退 1 | `tools/check_content.gd`（新） |
+| `tools/test.sh` 每次跑它；`GODOT` 未设时先在 PATH 里找 `godot` / `godot4` | `tools/test.sh` |
+| 测试调同一段逻辑，并守「每种内容都在这道检查里」 | `tests/test_content_pipeline.gd`（`run_assets_match_json`） |
+| `buffs` / `sets` 从 `KINDS` / `ORDER` 去掉，搬进新的 `EDITOR_ONLY_KINDS`；路径统一走 `dirs_of`（两张表都查） | `core/authoring/content_paths.gd`、`core/authoring/content_check.gd` |
+| 10.1 写这道检查与两种内容的去留；v2.09 | `docs/architecture.md` |
+
+**比方案多想了一处**：原方案写「导出字典与 JSON 字典深比较」，但一开始按逐字节比的时候有 8 份报红（事件 / 敌人 / 敌人池 / 节点规则 / 章节）——
+差的全是**字典字段的键顺序**（`max_hp` 与 `armor` 谁先、事件配额的顺序），值一模一样。那不是「内容对不上」，所以按方案深比较，
+键顺序与 `2` / `2.0` 都不算差异。当前 19 种全绿。
+
+**验证**（照方案）：改一份 JSON 不导入 → 红并指出 `display_name：JSON 是「改过的小刀」，资产是「匕首」`；把一份 `.tres` 挪走 → 红报「没有对应的资产」；恢复 → 绿。
+
+**两种内容的去留，比方案多一笔**：直接把两行从 `KINDS` 删掉会**弄坏两个编辑器** —— 它们的存盘走
+`ContentPaths.authoring_file("buffs", id)`，而那个函数查的就是 `KINDS`（全套测试里 buff 制作器与套装编辑器的 14 项断言当场红）。
+所以两行搬进了 `ContentPaths.EDITOR_ONLY_KINDS`：不进批量导入、不进这道检查，但路径仍然只在 `ContentPaths` 一处算（10.1 的原则不破）。
+**留意**：真用这两个编辑器存了第一份独立内容，批量导入与检查还是不会管它（编辑器自己写 JSON + `.tres`）——
+那时把那一行搬回 `KINDS`（`ORDER` 里排在 `items` 之前）就自动纳管。
+

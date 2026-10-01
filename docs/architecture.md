@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.08 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.09 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3185,7 +3185,8 @@ data/authoring/node_rules/*.json    节点规则（6.2 / 6.5）
 data/authoring/economy_rules/*.json 经济规则（6.6）
 data/authoring/meta_rules/*.json    局外规则：仓库多大、第一套（8.2 / 8.1）
 data/authoring/chapters/*.json      章节（5.3）
-        │  tools/import_content.gd   校验 + 生成（顺序：buffs → sets → run_buffs → faiths → items → loadouts → characters → difficulties → events → enemies → enemy_pools → hunters → drop_rules → node_rules → economy_rules → meta_rules → chapters）
+        │  tools/check_content.gd    JSON ⇄ .tres 一致（100；test.sh 每次跑）
+        │  tools/import_content.gd   校验 + 生成（顺序：tags → damage_types → run_buffs → faiths → items → loadouts → characters → difficulties → events → enemies → enemy_pools → hunters → drop_rules → node_rules → economy_rules → meta_rules → chapters）
         │  tools/normalize_content.gd 把作者数据重写成导出器的格式（导入 → 导出 → 不同就写回）
         ▼
 data/items/*.tres   data/buffs/*.tres   data/sets/*.tres   data/run_buffs/*.tres   data/loadouts/*.tres   data/characters/*.tres   data/difficulties/*.tres   data/events/*.tres
@@ -3199,6 +3200,17 @@ data/enemies/*.tres data/enemy_pools/*.tres   data/hunters/*.tres   data/drop_ru
 
 `.tres` 是生成物，但**仍然入库** —— 否则每次 clone 都要先跑一遍导入才能打开工程。
 导入器需具备幂等性：源数据未改时重复运行不产生 diff。
+
+**两份必须一致，有人守着**（100 第 1 步）：`ContentCheck`（`core/authoring/content_check.gd`）把每种内容的 `.tres` 用
+`ContentExporter` 倒成字典，和磁盘上的 JSON **深比较**（字典字段的键顺序、int / float 不算差异）；
+JSON 有资产没有 = 没跑导入，资产有 JSON 没有 = 孤儿资产（游戏会把它当内容用），对不上则打印第一处差异的键路径。
+命令行 `tools/check_content.gd`，`tools/test.sh` 每次都跑，测试 `test_content_pipeline.run_assets_match_json` 调同一段逻辑。
+**不重跑导入**：导出器对每种都现成，而重跑会把「导入器变了」和「内容变了」混在一起。
+
+`buffs` / `sets` 两种**暂时不在 `KINDS` 里**（100，作者定）：独立的 buff / 套装文件一份都还没有（buff 都写在道具里），
+所以批量导入与这道检查都不跑它们。它们在 `ContentPaths.EDITOR_ONLY_KINDS` 里 —— 路径还是只在 `ContentPaths` 一处算
+（`dirs_of / authoring_file / asset_file` 两张表都查），buff 制作器与套装编辑器照旧存得下；
+真有了第一份独立内容，把那一行搬回 `KINDS`、`ORDER` 里排在 `items` 之前，它就自动进管线与检查。
 
 ### 10.2 导入器不认识任何具体效果
 
@@ -3555,6 +3567,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.09 | 2026-10-01 | **内容管线一致性检查**（报告 100 第 1 步；10.1）：`ContentCheck` + `tools/check_content.gd` 守「作者 JSON ⇄ `.tres` 一致」（导出比对、深比较不较真键顺序与 int / float；缺资产、孤儿资产、值不同各报一条），接进 `tools/test.sh` 与 `test_content_pipeline`；`buffs` / `sets` 两种从 `ContentPaths.KINDS` / `ORDER` 去掉（都是空目录，目录常量留给编辑器）；`test.sh` 的 `GODOT` 未设时先在 PATH 里找 `godot` / `godot4` |
 | v2.08 | 2026-10-01 | **存档迁移链与背包里切信仰**（报告 098、099）：7.2 写迁移链（`MetaMigrations` / `RunMigrations` 字典层逐级升、只在读文件那一层、升版规矩与冻结样本）、读不出来先备份（`SaveSlots.backup`、`GameFlow.meta_backup / run_backup / backup_notice`、`slots.backed_up`）、内容 id 改名表 `IdAliases`（`ItemDatabase.get_def` / `TagRegistry.get_def` / `FaithPower.restore` 找不到才查）；3.8 切换信仰改成明确规则：`GridInventory.reseat`（只盖 `placed_seq`、不发 `placed`，信力不再被棋盘内来回拖刷）、棋盘内重新落下或右键信物都切、取消拖拽不切（`DragLayer` 放回同容器前设回 `container_id`） |
 | v0.1 | 2026-09-20 | 初版：六大模块设计；地图系统确定为可插拔生成器架构，第一章采用同心环形地图 |
 | v0.2 | 2026-09-20 | 地图移动规则改为可自由折返（已访问节点仅可穿行、不再触发事件）；新增行动计数 `ActionClock` 与由外向内的侵蚀系统 `ErosionField`；撤离点回归外环与中环 |
