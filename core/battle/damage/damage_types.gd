@@ -2,6 +2,9 @@
 ##
 ## 内置四种够跑通管线，内容确定后用 [method register] 追加，不改任何结算代码。
 ## 未登记的类型名会退回一份「常规」默认值并告警 —— 打错字不该静默变成无敌。
+##
+## 096（作者定）：类型也是**内容** —— `data/authoring/damage_types/*.json` → `data/damage_types/*.tres`，装回时覆盖同 id 的内置定义
+## （名字、别的语言的名字、说明、三个性质都以数据为准）；内置的只是没有数据时的兜底。[method name_of] 按当前语言给名字
 class_name DamageTypes
 extends RefCounted
 
@@ -27,11 +30,56 @@ const DRAIN := &"drain"
 
 static var _defs: Dictionary = {}
 static var _fallback: DamageTypeDef = null
+static var _content_loaded: bool = false
 
 
 static func _ensure_builtins() -> void:
 	if not _defs.is_empty():
 		return
+	_define_builtins()
+	if not _content_loaded:
+		_content_loaded = true
+		load_dir(ContentPaths.DAMAGE_TYPES)
+
+
+## 096：从目录装定义，同 id 覆盖（内置的让位给数据）。返回装了几份
+static func load_dir(dir_path: String) -> int:
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return 0
+	var names: Array[String] = []
+	for f in dir.get_files():
+		var n := f.trim_suffix(".remap")
+		if n.ends_with(".tres") or n.ends_with(".res"):
+			names.append(n)
+	names.sort()
+	var count := 0
+	for n in names:
+		var res := load(dir_path + "/" + n)
+		if res is DamageTypeDef and (res as DamageTypeDef).id != &"":
+			_defs[(res as DamageTypeDef).id] = res
+			count += 1
+	return count
+
+
+## 096：类型给人看（当前语言）；没登记的原词
+static func name_of(id: StringName, lang: String = "") -> String:
+	_ensure_builtins()
+	var d: DamageTypeDef = _defs.get(id, null)
+	if d == null:
+		return String(id)
+	var n := Names.of(d, lang)
+	return n if n != "" else String(id)
+
+
+## 096：类型的一句说明（当前语言）；没写返回空
+static func describe(id: StringName, lang: String = "") -> String:
+	_ensure_builtins()
+	var d: DamageTypeDef = _defs.get(id, null)
+	return Names.description_of(d, lang) if d != null else ""
+
+
+static func _define_builtins() -> void:
 	#            id        名称     护盾   护甲   招致反应
 	_define(PHYSICAL, "物理", true, true, true)
 	_define(FIRE, "火焰", true, true, true)
@@ -89,7 +137,8 @@ static func ids() -> Array:
 	return k
 
 
-## 仅供测试：清掉内容追加的类型，恢复到只有内置四种
+## 仅供测试：清掉运行时追加的类型，恢复到内置 + 数据里的
 static func reset_to_builtins() -> void:
 	_defs.clear()
+	_content_loaded = false
 	_ensure_builtins()

@@ -94,6 +94,7 @@ const SUITES: Array = [
 	preload("res://tests/test_author_093.gd"),
 	preload("res://tests/test_author_094.gd"),
 	preload("res://tests/test_author_095.gd"),
+	preload("res://tests/test_author_096.gd"),
 ]
 
 

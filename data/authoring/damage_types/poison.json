@@ -1,0 +1,14 @@
+{
+  "id": "poison",
+  "display_name": "中毒",
+  "display_names": {
+    "en": "Poison"
+  },
+  "description": "持续伤害，无视护盾与护甲，不招致反应。",
+  "descriptions": {
+    "en": "Damage over time; ignores shield and armor, provokes nothing."
+  },
+  "shield_absorbable": false,
+  "armor_applies": false,
+  "provokes": false
+}

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_bhwj7"]
+
+[resource]
+script = ExtResource("1_bhwj7")
+id = &"fire"
+display_name = "火焰"
+display_names = {
+"en": "Fire"
+}
+description = "带火的东西。"
+descriptions = {
+"en": "Carries fire."
+}

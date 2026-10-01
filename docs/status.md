@@ -54,7 +54,7 @@
 ## 数据与内容管线
 
 `data/authoring/<kind>/*.json`（人写，进 git）→ `tools/import_content.gd` → `data/<kind>/*.tres`（引擎读，也进 git）。
-种类与导入顺序：`buffs → sets → run_buffs → faiths → items → recipes → loadouts → characters → difficulties → events → enemies → enemy_pools → hunters → drop_rules → node_rules → economy_rules → meta_rules → chapters`（后者按 id 引用前者）。
+种类与导入顺序：`tags → damage_types → buffs → sets → run_buffs → faiths → items → recipes → loadouts → characters → difficulties → events → enemies → enemy_pools → hunters → drop_rules → node_rules → economy_rules → meta_rules → chapters → achievements`（后者按 id 引用前者）。标签与伤害类型是内容（096）：名字 / 说明中英（`display_names` / `descriptions`），道具带没登记的标签只警告。
 `tools/normalize_content.gd` 把作者数据重写成导出器的格式（仓库里的 JSON 是往返不动点，测试逐字节比）。
 
 现有内容：22 件道具（三个流派标签 `burst` / `rapid` / `bleed`）、3 套开局装备（标准 / 拾荒者 / 打手；标准也是仓库空的第一套）、3 个角色（作者定，082：安德烈乌斯 = 躲避 + 免罚一败；布鲁图斯 = 坚韧；马库斯 = 突击；数占位）、6 个信仰（各有攒信力的行为与阈值）、2 档难度（普通、进阶 1 占位：侵蚀空壳 + 一个追猎者 + 体力上限 -1）、2 种猎手（追猎者、守路人，占位，指定专属池 `hunters`、按段位定档）、6 种敌人、1 个敌人池、
@@ -85,7 +85,8 @@
 | `data/authoring/economy_rules/standard.json` | 开局钱、奖励公式系数、商店格数 / 权重 / 价格倍数 / 刷新费、付费撤离点个数与费用（50） |
 | `data/authoring/chapters/chapter_01.json` | 地图配置（环、路线风格、规模模板、高危区、类型风险收益、覆盖……）、难度 |
 | `data/authoring/items/*.json` | 道具数值、稀有度、价值 |
-| `data/authoring/loadouts/*.json` | 三套开局装备的清单与说明 |
+| `data/authoring/loadouts/*.json` | 三套开局装备的清单与说明；两套预设（`preset: true`，096：强攻 / 坚守）的清单 |
+| `data/authoring/tags/*.json`、`damage_types/*.json` | 39 个标签、6 种伤害类型的中 / 英名字与说明（096，占位尤其英文） |
 | `data/authoring/meta_rules/standard.json` | 仓库大小 10×8（局外成长改它）；`sell_ratio` 基地出售回定价的几成（0.5，091）；`safe_size` 保险箱 3×3（092） |
 | `data/authoring/chapters/chapter_01.json` | `step_limit` 36 全局倒计时、`safes` 1 个保险箱、`closing_extract` 过半关一个撤离点（092） |
 | `data/authoring/run_buffs/*.json` | 四个测试用的 buff 的数（体力 +1、幸运 +1、虚弱 5 步 −10%） |
@@ -107,6 +108,7 @@
 - **局外**（M6）：~~钱要不要带出去~~ 带（091 作者定）；局外货币怎么花（058 的图鉴 + 制作是一个答案）、卖掉仓库里的东西、局外成长（15 节第 4 项）；常规事件的内容与事件屏的文字（占位）；
   每档稀有度的揭示秒数 [0.3, 0.5, 0.8, 1.2, 2.0] 是占位（`node_rules/standard.json` 的 `search.reveal_seconds`）；进度环与「下一件」小标是占位画法。
 - **倒计时与保险箱**（092）：倒计时按规模小 36 / 中 60 / 大 90、关的是离出生点最近的免费撤离点、保险箱 1 个 3×3（关上即锁）都是占位；难度机制里「倒计时缩短」没做；保险箱要不要收费、大小怎么随局外成长，等作者定。
+- **096**（做了）：`resist_<type>` 按类型的减伤属性（现在只有规则形式）、出生点自带一次搜索（替代还是并存预设套）等作者一句；标签 / 伤害类型的英文名与说明是占位。
 - **赐福**（095，做了）：各神模板的数、替代 / 转化概率是占位；赐福版没有独立配图；敌人身上不出赐福版。
 - **带入预算**（094，做了）：预算与每档扣步是占位；盯撤离率（预设 30～40%、满预算 50～60%）再调。
 - **信仰流派**（093，做了）：四位神的增长 / 献祭 / 效果全在 `data/authoring/faiths/*.json`；各神 5 级留空（蛮神 4 级「不死 10 秒」做了）；`bone / flesh / fire` 标签的道具还没有；倍率与阈值按校准写了占位（蛮神 0.2 / 每场 30），作者试玩后调。

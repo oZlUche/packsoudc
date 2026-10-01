@@ -80,6 +80,7 @@ func to_main_menu() -> void:
 	run = null
 	result = null
 	_queue.clear()
+	ItemTooltip.faith_probe = Callable()     # 096：局外悬浮窗不按信仰状态上色
 	save_meta()
 	_go(Screen.MAIN_MENU)
 
@@ -925,6 +926,12 @@ func _adopt(state: RunState) -> void:
 	result = null
 	_settled = false
 	_queue.clear()
+	# 096：道具悬浮窗按局里的信仰状态给信仰加成上色（生效白 / 没生效灰）
+	ItemTooltip.faith_probe = func() -> Dictionary:
+		if run == null or run.faith_power == null:
+			return {}
+		var id := run.active_faith_id()
+		return {"active": id, "tier": run.active_faith_tier(), "points": run.faith_power.points_of(id) if id != &"" else 0}
 	state.buff_defs = buff_defs      # 读档回来的只有 id，定义表在这里
 	state.event_defs = event_defs
 	state.meta = meta     # 091：事件的条件 / 后果看、立局外旗标
@@ -978,8 +985,11 @@ func _adopt(state: RunState) -> void:
 		_push({"screen": Screen.ALTAR, "node": node}))     # 093：休息处的神坛
 	ev.event_pending.connect(func(node: MapNode, def: EventDef):
 		var entry := {"screen": Screen.EVENT, "node": node, "def": def}
-		# 084：战利品已经排在队尾时来的事件（「搜索点被余波摧毁」）说的是刚发生的事：先说，再看战利品（东西还在）
-		if not _queue.is_empty() and int(_queue[-1]["screen"]) == Screen.LOOT:
+		# 084：战利品已经排在队尾时来的事件（「搜索点被余波摧毁」）说的是刚发生的事：先说，再看战利品（东西还在）。
+		# 096（作者反馈）：搜索遭遇**打赢**之后接着搜的那一屏（「再搜 / 走」，pending 带 search_stage）是下一步的选择，
+		# 得排在尸体的战利品**后面** —— 否则回放一完就回到事件，玩家以为战利品被跳过了
+		var stage := bool(ev.pending.get("search_stage", false))
+		if not stage and not _queue.is_empty() and int(_queue[-1]["screen"]) == Screen.LOOT:
 			_queue.insert(_queue.size() - 1, entry)
 		else:
 			_push(entry))
@@ -1072,6 +1082,23 @@ static func load_chapters() -> Array[ChapterDef]:
 		if res is ChapterDef:
 			out.append(res)
 	return out
+
+
+## 096：开局屏可选的预设套（`LoadoutDef.preset`），按装回的顺序
+func presets() -> Array[LoadoutDef]:
+	var out: Array[LoadoutDef] = []
+	for l in loadouts:
+		if l != null and l.preset:
+			out.append(l)
+	return out
+
+
+## 老路（没有角色定义）与仓库空的第一套用的整套装备：第一套**非预设**的
+func default_loadout() -> LoadoutDef:
+	for l in loadouts:
+		if l != null and not l.preset:
+			return l
+	return null
 
 
 static func load_loadouts() -> Array[LoadoutDef]:

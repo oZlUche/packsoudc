@@ -1,0 +1,11 @@
+{
+  "id": "keepsake",
+  "display_name": "特殊道具",
+  "display_names": {
+    "en": "Keepsake"
+  },
+  "description": "不进背包、不能生成，代表一种能力。",
+  "descriptions": {
+    "en": "Does not enter the bag and never drops; stands for an ability."
+  }
+}

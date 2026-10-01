@@ -1,0 +1,11 @@
+{
+  "id": "gem",
+  "display_name": "宝石",
+  "display_names": {
+    "en": "Gem"
+  },
+  "description": "宝石、晶石。",
+  "descriptions": {
+    "en": "A gem or crystal."
+  }
+}

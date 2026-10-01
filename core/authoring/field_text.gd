@@ -24,7 +24,7 @@ const LABELS := {
 	"set_id": "套装", "effects": "效果", "faith_bonuses": "信仰加成", "dormant_keeps_combat": "休眠仍保留战斗效果", "requires_unlock": "需要的解锁",
 	"combat": "战斗", "adjacency": "邻接", "base_stats": "基础属性", "rules": "规则", "trigger": "触发", "cadence": "节奏", "costs": "消耗",
 	"use_haste": "受急速影响", "cooldown": "冷却", "resource_key": "资源", "damage_type": "伤害类型", "damage_stat": "伤害用的属性", "amount_stat": "数量用的属性",
-	"stat": "属性", "stat_scale": "属性系数", "armor_applies": "吃护甲", "shield_absorbable": "可被护盾吸收", "on_self": "对自己", "same_side": "同一边",
+	"stat": "属性", "stat_scale": "属性系数", "armor_applies": "吃护甲", "shield_absorbable": "可被护盾吸收", "provokes": "招致反应", "on_self": "对自己", "same_side": "同一边",
 	"buff": "增益", "buff_id": "增益 id", "stacks": "叠层", "max_stacks": "叠层上限（0 = 不限）", "per_stack": "按叠层", "duration_sec": "持续秒数",
 	"is_debuff": "是减益", "refresh_on_restack": "再叠刷新时长", "on_apply": "施加时", "on_expire": "到期时", "mods": "属性加成", "consume": "消耗掉",
 	"grant_cells": "增益格", "receive_cells": "受益格", "grant_mods": "给邻居的加成", "receive_mods": "邻居给的加成", "grant_filter": "只给", "receive_filter": "只收",
@@ -108,7 +108,7 @@ const CLASS_LABELS := {
 	"ItemDef": "道具", "BuffDef": "增益", "EventDef": "事件", "EventOption": "选项", "CombatProfile": "战斗", "AbilityRule": "规则", "AdjacencyProfile": "邻接",
 	"StatModifier": "属性修饰", "ItemShape": "形状", "FaithBonus": "信仰加成", "RingSpec": "环", "RingMapConfig": "环形图参数", "MapSource": "地图来源",
 	"ChapterDef": "章节", "CharacterDef": "角色", "EnemyDef": "敌人", "DifficultyDef": "难度", "HunterDef": "猎手", "FaithDef": "信仰", "RecipeDef": "配方",
-	"AchievementDef": "成就", "LoadoutDef": "开局装备", "NodeRules": "节点规则", "DropRule": "掉落规则", "EconomyRules": "经济规则", "MetaRules": "局外规则",
+	"AchievementDef": "成就", "TagDef": "标签", "DamageTypeDef": "伤害类型", "LoadoutDef": "开局装备", "NodeRules": "节点规则", "DropRule": "掉落规则", "EconomyRules": "经济规则", "MetaRules": "局外规则",
 	"SearchRules": "搜索规则", "ItemSetDef": "套装", "SetTier": "套装档位", "RunBuffDef": "局外 / 地图增益", "EnemyPool": "敌人池", "StrengthRule": "档位规则",
 }
 

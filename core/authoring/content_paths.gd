@@ -8,6 +8,8 @@ extends RefCounted
 
 #region 作者数据（人写的 JSON，进 git，MOD 作者改这里）
 const AUTHORING := "res://data/authoring"
+const AUTHORING_TAGS := AUTHORING + "/tags"
+const AUTHORING_DAMAGE_TYPES := AUTHORING + "/damage_types"
 const AUTHORING_ITEMS := AUTHORING + "/items"
 const AUTHORING_LOADOUTS := AUTHORING + "/loadouts"
 const AUTHORING_CHARACTERS := AUTHORING + "/characters"
@@ -30,6 +32,8 @@ const AUTHORING_ACHIEVEMENTS := AUTHORING + "/achievements"
 #endregion
 
 #region 引擎资产（导入器产出，游戏读这里）
+const TAGS := "res://data/tags"
+const DAMAGE_TYPES := "res://data/damage_types"
 const ITEMS := "res://data/items"
 const LOADOUTS := "res://data/loadouts"
 const CHARACTERS := "res://data/characters"
@@ -53,6 +57,8 @@ const ACHIEVEMENTS := "res://data/achievements"
 
 ## 种类 → [作者数据目录, 资产目录]。顺序即导入顺序：后者可以按 id 引用前者。
 const KINDS := {
+	"tags": [AUTHORING_TAGS, TAGS],
+	"damage_types": [AUTHORING_DAMAGE_TYPES, DAMAGE_TYPES],
 	"buffs": [AUTHORING_BUFFS, BUFFS],
 	"sets": [AUTHORING_SETS, SETS],
 	"run_buffs": [AUTHORING_RUN_BUFFS, RUN_BUFFS],
@@ -75,7 +81,8 @@ const KINDS := {
 }
 ## 开局装备、角色（初始包对着道具查）与敌人都在道具之后（清单、招牌道具、流派标签要对着道具查），池在敌人之后，三种规则独立，
 ## 章节按 id 引用池与规则；成就（091）排最后（对象可能是道具 / 章节）
-const ORDER := ["buffs", "sets", "run_buffs", "faiths", "items", "recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters", "achievements"]
+## 096：标签与伤害类型最先（道具的标签对着它提醒；没有它们也能导）
+const ORDER := ["tags", "damage_types", "buffs", "sets", "run_buffs", "faiths", "items", "recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters", "achievements"]
 
 
 static func authoring_file(kind: String, id: String) -> String:

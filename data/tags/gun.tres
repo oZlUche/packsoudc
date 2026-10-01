@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_dwxkq"]
+
+[resource]
+script = ExtResource("1_dwxkq")
+id = &"gun"
+display_name = "枪械"
+display_names = {
+"en": "Gun"
+}
+description = "现代枪械（已封存）。"
+descriptions = {
+"en": "Modern firearm (sealed)."
+}

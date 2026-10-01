@@ -33,6 +33,12 @@ class Context:
 	var economy_rules: Dictionary = {}
 	## id -> LoadoutDef
 	var loadouts: Dictionary = {}
+	## 096：id -> TagDef。道具的标签对着它提醒（没登记只是警告）
+	var tags: Dictionary = {}
+
+	func register_tag(def: TagDef) -> void:
+		if def != null and def.id != &"":
+			tags[def.id] = def
 
 	func register_buff(def: BuffDef) -> void:
 		if def != null and def.id != &"":
@@ -177,9 +183,49 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	var def := ItemDef.new()
 	_fill(def, data, "", ctx, report)
 	_validate_item(def, report)
+	_validate_item_tags(def, ctx, report)
 	_validate_item_faith(def, ctx, report)
 	_validate_item_buffs(def, report)
 	ctx.register_item(def)
+	return def
+
+
+## 096：标签是内容 —— 没登记的标签不是错（随手加的词照样能用），但提醒一句：登记了才有名字、别的语言和词条
+static func _validate_item_tags(def: ItemDef, ctx: Context, report: ImportReport) -> void:
+	if ctx.tags.is_empty():
+		return
+	for t in def.tags:
+		if String(t).begins_with(FaithDef.TAG_PREFIX):
+			continue
+		if not ctx.tags.has(t):
+			report.warn("tags", "没有登记的标签 '%s'：界面上只能显示原词（在 data/authoring/tags 里加一份就有名字与说明）" % t)
+
+
+## 096：标签定义 —— 得有 id 与名字
+static func import_tag(data: Dictionary, ctx: Context, report: ImportReport) -> TagDef:
+	var def := TagDef.new()
+	_fill(def, data, "", ctx, report)
+	if def.id == &"":
+		report.error("id", "标签必须有 id")
+	elif String(def.id).contains(":") or String(def.id).contains(" "):
+		report.error("id", "标签 id 里别带冒号或空格（`faith:<id>` 这类动态标签不用登记）")
+	if def.display_name.strip_edges() == "":
+		report.error("display_name", "标签得有名字（没名字就不用登记）")
+	for k in def.display_names:
+		if not (def.display_names[k] is String):
+			report.error("display_names", "'%s' 的值得是文字" % k)
+	ctx.register_tag(def)
+	return def
+
+
+## 096：伤害类型定义 —— 得有 id 与名字；三个性质是布尔，反射填错了导入器之前就拦
+static func import_damage_type(data: Dictionary, ctx: Context, report: ImportReport) -> DamageTypeDef:
+	var def := DamageTypeDef.new()
+	_fill(def, data, "", ctx, report)
+	if def.id == &"":
+		report.error("id", "伤害类型必须有 id")
+	if def.display_name.strip_edges() == "":
+		report.error("display_name", "伤害类型得有名字")
 	return def
 
 
@@ -599,8 +645,8 @@ static func _validate_loadout_def(def: LoadoutDef, ctx: Context, report: ImportR
 			report.error("items[%d]" % i, "'%s' 已封存（现代道具，世界观见 docs/worldview.md），不能进开局装备" % def.items[i])
 		elif item.is_bag:
 			has_bag = true
-	if not has_bag:
-		report.error("items", "开局至少带一个包：棋盘上只有包里的东西参战（3.2），没有包一格都用不了")
+	if not has_bag and not def.preset:
+		report.error("items", "开局至少带一个包：棋盘上只有包里的东西参战（3.2），没有包一格都用不了（预设套 preset=true 例外：角色的初始包装它）")
 
 
 ## 钱的数全得非负；商店至少一格、至少有一档稀有度能上架；刷新不能越刷越便宜

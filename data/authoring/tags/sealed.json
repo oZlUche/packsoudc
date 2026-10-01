@@ -1,0 +1,11 @@
+{
+  "id": "sealed",
+  "display_name": "封印",
+  "display_names": {
+    "en": "Sealed"
+  },
+  "description": "封存的现代道具：数据保留、不再出现。",
+  "descriptions": {
+    "en": "Sealed modern item: kept in data, never appears."
+  }
+}

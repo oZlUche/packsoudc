@@ -1,0 +1,11 @@
+{
+  "id": "consumable",
+  "display_name": "消耗品",
+  "display_names": {
+    "en": "Consumable"
+  },
+  "description": "用一次就没的东西。",
+  "descriptions": {
+    "en": "Used up after one use."
+  }
+}

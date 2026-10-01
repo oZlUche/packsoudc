@@ -1,0 +1,11 @@
+{
+  "id": "sigil",
+  "display_name": "符号",
+  "display_names": {
+    "en": "Sigil"
+  },
+  "description": "刻着神的符号。",
+  "descriptions": {
+    "en": "Bears a god's sigil."
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "id": "fire",
+  "display_name": "火焰",
+  "display_names": {
+    "en": "Fire"
+  },
+  "description": "带火的东西。",
+  "descriptions": {
+    "en": "Carries fire."
+  }
+}

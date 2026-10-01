@@ -1,0 +1,11 @@
+{
+  "id": "faith_anchor",
+  "display_name": "信物",
+  "display_names": {
+    "en": "Anchor"
+  },
+  "description": "只有信物能激活信仰：护符、符号、遗物。",
+  "descriptions": {
+    "en": "Only anchors activate a faith: charms, sigils, relics."
+  }
+}

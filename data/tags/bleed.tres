@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_txp6n"]
+
+[resource]
+script = ExtResource("1_txp6n")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+description = "会让对手流血。"
+descriptions = {
+"en": "Makes the target bleed."
+}

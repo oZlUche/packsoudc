@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="LoadoutDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/loadout_def.gd" id="1_r0hg3"]
+
+[resource]
+script = ExtResource("1_r0hg3")
+id = &"preset_defense"
+display_name = "坚守"
+display_names = {
+"en": "Bulwark"
+}
+description = "防御高：圆盾加皮甲把伤害压下去，制式短剑慢慢磨，纱布和伤药各一"
+descriptions = {
+"en": "High defense: round shield and leather armor soak hits, a shortsword grinds, bandage and salve."
+}
+preset = true
+items = Array[StringName]([&"round_shield", &"leather_armor", &"shortsword", &"bandage", &"salve"])

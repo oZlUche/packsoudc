@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="DamageTypeDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/damage/damage_type_def.gd" id="1_rn674"]
+
+[resource]
+script = ExtResource("1_rn674")
+id = &"drain"
+display_name = "流失"
+display_names = {
+"en": "Drain"
+}
+description = "以血为代价时扣的血：走完整管线但不触发受伤效果。"
+descriptions = {
+"en": "Life paid as a cost: full pipeline, but no on-damage effects."
+}
+shield_absorbable = false
+armor_applies = false
+provokes = false

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_agb37"]
+
+[resource]
+script = ExtResource("1_agb37")
+id = &"node_tooltips"
+display_name = "节点情报"
+display_names = {
+"en": "Node tooltips"
+}
+description = "开启地图上点的浮窗。"
+descriptions = {
+"en": "Enables tooltips on map nodes."
+}

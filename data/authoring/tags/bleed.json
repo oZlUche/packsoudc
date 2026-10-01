@@ -1,0 +1,11 @@
+{
+  "id": "bleed",
+  "display_name": "流血",
+  "display_names": {
+    "en": "Bleed"
+  },
+  "description": "会让对手流血。",
+  "descriptions": {
+    "en": "Makes the target bleed."
+  }
+}

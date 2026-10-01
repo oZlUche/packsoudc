@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_orjkd"]
+
+[resource]
+script = ExtResource("1_orjkd")
+id = &"ammo"
+display_name = "弹药"
+display_names = {
+"en": "Ammo"
+}
+description = "弹药。"
+descriptions = {
+"en": "Ammunition."
+}

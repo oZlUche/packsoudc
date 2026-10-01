@@ -1,0 +1,11 @@
+{
+  "id": "part",
+  "display_name": "零件",
+  "display_names": {
+    "en": "Part"
+  },
+  "description": "零件、构件。",
+  "descriptions": {
+    "en": "A part or component."
+  }
+}

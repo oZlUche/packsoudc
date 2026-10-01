@@ -24,12 +24,6 @@
           "type": "cooldown",
           "seconds": 4.0
         },
-        "costs": [
-          {
-            "type": "resource",
-            "amount": 2.0
-          }
-        ],
         "effects": [
           {
             "type": "apply_status",

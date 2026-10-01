@@ -1,0 +1,11 @@
+{
+  "id": "gear",
+  "display_name": "防具",
+  "display_names": {
+    "en": "Gear"
+  },
+  "description": "穿戴的防具：护甲、盾……",
+  "descriptions": {
+    "en": "Worn protection: armor, shields and the like."
+  }
+}

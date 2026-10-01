@@ -1,0 +1,11 @@
+{
+  "id": "rapid",
+  "display_name": "快攻",
+  "display_names": {
+    "en": "Rapid"
+  },
+  "description": "出手快、单下轻的打法。",
+  "descriptions": {
+    "en": "Fast, light hits."
+  }
+}

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.05 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.06 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6 落地，作者提议（058 / 059）按顺序实施中，第 7 阶段侵蚀未开始（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3524,6 +3524,7 @@ res://
 | v0.3 | 2026-09-20 | 取消自动寻路，移动一律单步；新增 `MoveIntent` 作为未来传送／定点移动的接入点；新增第 12 节「扩展机制的预留接口」与第 13 节「待确认事项」 |
 | v0.4 | 2026-09-20 | 依《背包乱斗》真实机制修正空间模型（详见报告 006）：移除装备栏；背包改为「棋盘 + 玩家放置包体」双层占用；新增暂存区（保留但不参战）；编译期邻接改为带约束的确定性插槽配对；冷却改用定点数以支持 ±2% 比例叠乘 |
 | v0.5 | 2026-09-20 | 修正 4.2：插槽点亮是**去重计数**而非二分匹配（v0.4 写复杂了）；补充插槽的数据形态与两种效果方向；新增 4.3「数值约定」，确定结算公式为「基础值 × ∏(1+乘区) + 固定加值」、乘区为可扩展枚举且只能末尾追加、全流程定点数四舍五入 |
+| v2.06 | 2026-10-01 | **标签 / 伤害类型是内容**（报告 096）：种类 `tags`（`TagDef`、`TagRegistry` 静态表）与 `damage_types`（`DamageTypeDef` 多 `display_names / description / descriptions`，`DamageTypes` 装回 `data/damage_types` 覆盖内置）排在 `ORDER` 最前；`Names.description_of`；`Glossary.tag_name / damage_type_name` 走数据、`STAT_NAMES / CATEGORY_NAMES` zh / en；导入器对没登记的标签只警告；`PropertyForm` 标签「加标签…」/ 伤害类型 / 标签字段下拉（`_key_picker`）；**开局预设套** `LoadoutDef.preset`（不用带包）、`GameFlow.presets / default_loadout`、开局屏 `choose_preset / preset_items`（不算带入、拖不进仓库）；**挑出生点遮罩** `MapView.spawn_mask`（只命中出生点）；悬浮窗信仰加成按 `ItemTooltip.faith_probe` 白 / 灰；`event_pending` 带 `search_stage` 的不插到战利品前面 |
 | v2.05 | 2026-09-30 | **赐福**（报告 095）：`FaithBonus.mode`（tier / active / scaled，`times_for`，编译器吃 `faith_points`）；`Blessing` 模板 + `Blessings.derive_all`（`ItemDatabase.load_dir` 派生 `<id>_<神>`，`blessed_of`，`ids()` 排掉 blessed）；来路：`DropRule / SearchRules.bless_chance(_active)` → `RunState.bless_ids`、`_bless_step`（`FaithDef.convert_chance`）、`altar_bless` 神坛操作、`bless_item` 后果；`FaithState` 只认 `faith_anchor` 信物；自己神的赐福版献祭 ×2 |
 | v2.04 | 2026-09-30 | **类缓存根除**（091 §13.2）：`.godot/global_script_class_cache.cfg` 进仓库（`.gitignore` 放行）；`DevNav.stale_classes / _check_class_cache` 启动自检、缺类红字 |
 | v2.03 | 2026-09-30 | **带入预算**（报告 094）：`ChapterDef.carry_budget / carry_over_cost`、`MapScaleProfile.carry_budget`；`RunState.carry_in_value` + 静态 `carry_budget_for / carry_over_for / carry_penalty_for / countdown_limit_for`（超带每 50 价值倒计时 −1，至少留 1）；`GameFlow.begin(..., carry_value)`；开局屏预算一行、地图日志一句 |

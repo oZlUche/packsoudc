@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_s3vii"]
+
+[resource]
+script = ExtResource("1_s3vii")
+id = &"weapon"
+display_name = "武器"
+display_names = {
+"en": "Weapon"
+}
+description = "会出手造成伤害的道具；包里每一件武器都各自出手。"
+descriptions = {
+"en": "An item that attacks on its own; every weapon in a bag fires independently."
+}

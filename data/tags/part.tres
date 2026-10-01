@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_a3ejl"]
+
+[resource]
+script = ExtResource("1_a3ejl")
+id = &"part"
+display_name = "零件"
+display_names = {
+"en": "Part"
+}
+description = "零件、构件。"
+descriptions = {
+"en": "A part or component."
+}

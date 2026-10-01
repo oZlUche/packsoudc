@@ -1,0 +1,11 @@
+{
+  "id": "armor",
+  "display_name": "护甲",
+  "display_names": {
+    "en": "Armor"
+  },
+  "description": "甲胄类防具。",
+  "descriptions": {
+    "en": "Body armor."
+  }
+}

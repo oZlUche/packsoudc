@@ -35,37 +35,56 @@ const TERMS := {
 	"流血": "每层每秒造成流血伤害，无视护甲与护盾，永续叠层。",
 }
 
-## 标签 → 中文（093：献祭品、信仰条件的说明用；没登记的原样）
-const TAG_NAMES := {
-	"weapon": "武器", "melee": "近战", "ranged": "远程", "gun": "枪械", "gear": "防具", "armor": "护甲", "shield": "盾", "heavy": "重型",
-	"consumable": "消耗品", "tool": "工具", "part": "零件", "material": "材料", "ammo": "弹药", "food": "食物", "nature": "自然",
-	"bone": "骨制品", "flesh": "血肉", "metal": "金属", "fire": "火焰", "gem": "宝石", "faith": "信仰", "sigil": "符号", "blessed": "赐福",
-	"treasure": "珍宝", "relic": "遗物", "faith_anchor": "信物", "sealed": "封印", "poison": "毒", "bleed": "流血", "imperial": "帝国", "barbarian": "蛮族",
-}
-## 伤害类型 → 中文
-const DAMAGE_TYPE_NAMES := {"physical": "物理", "fire": "火焰", "poison": "毒", "bleed": "流血", "reflect": "反射", "drain": "流失"}
-
-
+## 标签给人看（096：名字是数据 —— [TagRegistry]，按当前语言；`faith:<id>` 写成「信仰：神名」；没登记的原词）
 static func tag_name(tag: StringName) -> String:
-	return String(TAG_NAMES.get(String(tag), String(tag)))
+	var fid := FaithDef.id_of_tag(tag)
+	if fid != &"":
+		var defs := FaithDef.load_all()
+		var god: FaithDef = defs.get(fid, null)
+		return "%s%s%s" % [_pick(FAITH_WORD), "：" if UiText.lang == "zh" else ": ", Names.of(god) if god != null else String(fid)]
+	return TagRegistry.name_of(tag)
 
 
+## 标签的词条（096）：登记了说明的标签 → {名字: 说明}；没说明的不出
+static func tag_terms(tags: Array) -> Dictionary:
+	var out := {}
+	for t in tags:
+		var d := TagRegistry.describe(t)
+		if d != "":
+			out[tag_name(t)] = d
+	return out
+
+
+## 伤害类型给人看（096：数据 —— [DamageTypes.name_of]，按当前语言）
 static func damage_type_name(type: StringName) -> String:
-	return String(DAMAGE_TYPE_NAMES.get(String(type), String(type)))
+	return DamageTypes.name_of(type)
 
 
-## 属性键 → 中文
+const FAITH_WORD := {"zh": "信仰", "en": "Faith"}
+
+## 属性键 → 名字（096：中 / 英；按 [UiText.lang] 取，没有英文的回落中文）
 const STAT_NAMES := {
-	"damage": "伤害", "armor": "护甲", "max_hp": "生命", "max_stamina": "耐力上限", "haste": "急速", "cooldown": "冷却",
-	"regen_stamina": "每秒回耐力", "regen_hp": "每秒回血", "max_shield": "护盾", "max_mana": "法力", "regen_mana": "每秒回法力",
-	"stamina_cost": "耗耐力", "mana_cost": "耗法力",
+	"damage": {"zh": "伤害", "en": "Damage"}, "armor": {"zh": "护甲", "en": "Armor"}, "max_hp": {"zh": "生命", "en": "Health"},
+	"max_stamina": {"zh": "耐力上限", "en": "Max stamina"}, "haste": {"zh": "急速", "en": "Haste"}, "cooldown": {"zh": "冷却", "en": "Cooldown"},
+	"regen_stamina": {"zh": "每秒回耐力", "en": "Stamina regen"}, "regen_hp": {"zh": "每秒回血", "en": "Health regen"}, "max_shield": {"zh": "护盾", "en": "Shield"},
+	"max_mana": {"zh": "法力", "en": "Mana"}, "regen_mana": {"zh": "每秒回法力", "en": "Mana regen"},
+	"stamina_cost": {"zh": "耗耐力", "en": "Stamina cost"}, "mana_cost": {"zh": "耗法力", "en": "Mana cost"},
 }
-## 乘区 → 中文
-const CATEGORY_NAMES := {"EMPOWER": "增伤", "SHARP": "物理增伤", "FIRE": "火焰增伤", "HASTE": "急速"}
+## 乘区 → 名字
+const CATEGORY_NAMES := {"EMPOWER": {"zh": "增伤", "en": "Empower"}, "SHARP": {"zh": "物理增伤", "en": "Sharpness"},
+	"FIRE": {"zh": "火焰增伤", "en": "Fire power"}, "HASTE": {"zh": "急速", "en": "Haste"}}
+
+
+## 一张「语言 → 文字」的小表按当前语言取；没有就中文；传进来的不是表就原样
+static func _pick(entry: Variant, fallback: String = "") -> String:
+	if entry is Dictionary:
+		var d := entry as Dictionary
+		return String(d.get(UiText.lang, d.get("zh", fallback)))
+	return String(entry) if entry != null else fallback
 
 
 static func stat_name(key: StringName) -> String:
-	return String(STAT_NAMES.get(String(key), String(key)))
+	return _pick(STAT_NAMES.get(String(key), null), String(key))
 
 
 ## 一条属性修饰给人看：「伤害 +10%」「护甲 +4」
@@ -74,7 +93,7 @@ static func mod_text(m: StatModifier) -> String:
 		return ""
 	var parts: Array[String] = []
 	if m.mult_category >= 0 and m.mult_percent != 0:
-		var cat := String(CATEGORY_NAMES.get(StatMath.category_name(m.mult_category), StatMath.category_name(m.mult_category)))
+		var cat := _pick(CATEGORY_NAMES.get(StatMath.category_name(m.mult_category), null), StatMath.category_name(m.mult_category))
 		if m.stat == BattleStats.DAMAGE:
 			parts.append("%s %+d%%" % [cat, m.mult_percent])
 		else:

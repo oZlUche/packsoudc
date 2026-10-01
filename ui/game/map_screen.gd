@@ -371,6 +371,7 @@ func _adopt() -> void:
 	_view.current_id = _run.travel.current_id if _run.phase != RunState.Phase.PICK_SPAWN else -1
 	_view.reachable = {}
 	_view.bold_route = -1
+	_view.spawn_mask = _run.phase == RunState.Phase.PICK_SPAWN     # 096：挑出生点时全图蒙灰，只露出生点
 	_run.travel.moved.connect(_on_moved)
 	_run.travel.waited.connect(func(actions: int):
 		_note("　原地耗了 %d 个行动点" % actions)
@@ -457,6 +458,7 @@ func _adopt() -> void:
 	_run.phase_changed.connect(func(_p: int, why: StringName):
 		if why == &"time_out":
 			_note("[color=#d9534f]　倒计时归零：行动失败。保险箱里的照样带出[/color]")
+		_view.spawn_mask = _run.phase == RunState.Phase.PICK_SPAWN     # 096：挑完出生点遮罩撤掉
 		_refresh_hud()
 		_refresh_skills())     # 挑完出生点技能才能用：按钮跟着阶段亮
 	_run.countdown_notice.connect(func(text: String): _note("[color=#d9534f]　" + text + "[/color]"))     # 092

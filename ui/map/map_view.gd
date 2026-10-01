@@ -82,6 +82,11 @@ var reachable: Dictionary = {}:
 	set(v):
 		reachable = v
 		queue_redraw()
+## 096（作者定）：挑出生点阶段的遮罩 —— 出生点之外全图蒙灰、点不中、悬停不亮；挑完就撤
+var spawn_mask: bool = false:
+	set(v):
+		spawn_mask = v
+		queue_redraw()
 var _pulse: float = 0.0
 
 ## 画布 → 屏幕：screen = canvas * zoom + pan
@@ -169,6 +174,8 @@ func node_at(p: Vector2) -> int:
 	var pos := positions()
 	var reach := (NODE_RADIUS + 2.0) / zoom
 	for id in pos:
+		if spawn_mask and graph != null and not graph.entry_ids.has(int(id)):
+			continue     # 096：遮罩下只有出生点能点中
 		if (pos[id] as Vector2).distance_to(p) <= reach:
 			return int(id)
 	return -1
@@ -337,6 +344,23 @@ func _draw() -> void:
 		var hid := int((mark as Dictionary).get("node", -1))
 		if pos.has(hid):
 			_draw_hunter(to_screen(pos[hid]), String((mark as Dictionary).get("label", "")))
+	if spawn_mask:
+		_draw_spawn_mask(pos)
+
+
+## 096（作者定）：挑出生点的遮罩 —— 整张图盖一层底色，只把出生点重新画在上面（带呼吸的绿环），顶上一行字
+func _draw_spawn_mask(pos: Dictionary) -> void:
+	draw_rect(Rect2(Vector2.ZERO, size), Color(UiPalette.bg(), 0.8))
+	for id in graph.entry_ids:
+		if not pos.has(id):
+			continue
+		var sp := to_screen(pos[id])
+		draw_circle(sp, NODE_RADIUS + 18.0, Color(UiPalette.HEAL, 0.10 + 0.08 * sin(_pulse * 2.0)))
+		_draw_node(graph.get_node(id), sp)
+		draw_arc(sp, NODE_RADIUS + 10.0 + 2.0 * sin(_pulse * 2.0), 0.0, TAU, 40, UiPalette.HEAL, 2.0, true)
+	var text := "挑一个出生点" if UiText.lang == "zh" else "Pick a starting point"
+	var tw := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
+	draw_string(_font, Vector2((size.x - tw) / 2.0, 34.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, UiPalette.HEAL)
 
 
 func _junctions() -> Dictionary:

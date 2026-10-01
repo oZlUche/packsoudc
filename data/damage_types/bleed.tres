@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="DamageTypeDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/damage/damage_type_def.gd" id="1_albhi"]
+
+[resource]
+script = ExtResource("1_albhi")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+description = "持续伤害，无视护盾与护甲，不招致反应。"
+descriptions = {
+"en": "Damage over time; ignores shield and armor, provokes nothing."
+}
+shield_absorbable = false
+armor_applies = false
+provokes = false

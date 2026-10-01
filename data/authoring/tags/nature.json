@@ -1,0 +1,11 @@
+{
+  "id": "nature",
+  "display_name": "自然",
+  "display_names": {
+    "en": "Nature"
+  },
+  "description": "取自自然的东西：皮、木、草药。自然之神看重它。",
+  "descriptions": {
+    "en": "Taken from nature: hide, wood, herbs. Favoured by the god of nature."
+  }
+}

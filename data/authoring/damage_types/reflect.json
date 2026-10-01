@@ -1,0 +1,12 @@
+{
+  "id": "reflect",
+  "display_name": "反伤",
+  "display_names": {
+    "en": "Reflect"
+  },
+  "description": "反弹出去的伤害：不招致反应，两件反伤道具不会互相引燃。",
+  "descriptions": {
+    "en": "Reflected damage: provokes nothing, so two reflectors never feed each other."
+  },
+  "provokes": false
+}

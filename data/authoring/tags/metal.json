@@ -1,0 +1,11 @@
+{
+  "id": "metal",
+  "display_name": "金属",
+  "display_names": {
+    "en": "Metal"
+  },
+  "description": "金属制品。日神看重它。",
+  "descriptions": {
+    "en": "Made of metal. Favoured by the sun god."
+  }
+}

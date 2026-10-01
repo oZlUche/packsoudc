@@ -1,0 +1,11 @@
+{
+  "id": "shield",
+  "display_name": "盾",
+  "display_names": {
+    "en": "Shield"
+  },
+  "description": "盾牌。",
+  "descriptions": {
+    "en": "A shield."
+  }
+}

@@ -53,4 +53,4 @@ func estimated_damage(stats: StatSet) -> float:
 
 
 func describe() -> String:
-	return "造成 %s 伤害" % damage_type
+	return "造成 %s 伤害" % Glossary.damage_type_name(damage_type)

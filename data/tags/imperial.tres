@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_k4jyd"]
+
+[resource]
+script = ExtResource("1_k4jyd")
+id = &"imperial"
+display_name = "帝国"
+display_names = {
+"en": "Imperial"
+}
+description = "帝国制式。"
+descriptions = {
+"en": "Imperial issue."
+}

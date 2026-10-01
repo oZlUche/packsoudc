@@ -1,0 +1,11 @@
+{
+  "id": "faith",
+  "display_name": "信仰",
+  "display_names": {
+    "en": "Faith"
+  },
+  "description": "信仰道具：别的信仰激活时休眠。",
+  "descriptions": {
+    "en": "A faith item: dormant while another faith is active."
+  }
+}

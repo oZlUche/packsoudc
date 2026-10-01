@@ -106,7 +106,7 @@ static func run_item_tooltip(t: TestCase) -> void:
 	var text := ItemTooltip.describe(knife)
 	t.check(text.contains("匕首") and text.contains(ItemPainter.rarity_color(knife.def).to_html(false)), "名字按稀有度上色")
 	t.check(text.contains(ItemTooltip.rarity_name(knife.def.rarity)), "写了稀有度")
-	t.check(text.contains("weapon") and text.contains("rapid"), "写了标签")
+	t.check(text.contains("武器") and text.contains("快攻") and not text.contains("weapon"), "写了标签（096：按数据里的名字，不是原词）")
 	t.check(text.contains("冷却") and text.contains("DPS"), "武器：冷却与 DPS（%s）" % text.replace("\n", " | "))
 	var compiled := ItemTooltip.compiled_for(knife, null)
 	t.check(compiled != null and compiled.estimated_dps() > 0.0, "单独编译得出 DPS")

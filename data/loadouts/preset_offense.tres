@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="LoadoutDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/loadout_def.gd" id="1_lv47h"]
+
+[resource]
+script = ExtResource("1_lv47h")
+id = &"preset_offense"
+display_name = "强攻"
+display_names = {
+"en": "Assault"
+}
+description = "伤害高：长剑重击、剁刀放血、匕首补刀，一瓶伤药。甲薄，打得快就赢"
+descriptions = {
+"en": "High damage: longsword, cleaver and knife, one salve. Thin armor: win fast."
+}
+preset = true
+items = Array[StringName]([&"longsword", &"cleaver", &"knife", &"salve"])

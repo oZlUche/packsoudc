@@ -1,0 +1,11 @@
+{
+  "id": "melee",
+  "display_name": "近战",
+  "display_names": {
+    "en": "Melee"
+  },
+  "description": "近身武器。",
+  "descriptions": {
+    "en": "A close-quarters weapon."
+  }
+}

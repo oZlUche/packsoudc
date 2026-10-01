@@ -57,6 +57,10 @@ func _build(
 	kind: String, data: Dictionary, ctx: ContentImporter.Context, report: ImportReport
 ) -> Resource:
 	match kind:
+		"tags":
+			return ContentImporter.import_tag(data, ctx, report)
+		"damage_types":
+			return ContentImporter.import_damage_type(data, ctx, report)
 		"buffs":
 			return ContentImporter.import_buff(data, ctx, report)
 		"sets":
