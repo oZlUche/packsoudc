@@ -171,3 +171,20 @@ static func run_buff_bar(t: TestCase) -> void:
 	t.check(view.buff_tip("overtime").contains("不可解除"), "系统效果的悬浮窗写着不可解除")
 	t.check(view.buff_tip("passive:0", 0).contains("常驻") and view.buff_tip("passive:0", 0).contains("10%"), "常驻格的悬浮窗列出它的加成：%s" % view.buff_tip("passive:0", 0))
 	view.free()
+
+
+static func run_general_only(t: TestCase) -> void:
+	t.begin("103 · buff 栏只放通用 buff：作用于角色本身的信仰效果进栏，只给某件 / 某类道具的不进")
+	var low := LowHpEmpowerPerk.new()
+	t.check(low.battle_note(null) != "", "所有伤害按血量增伤：进栏")
+	var base := StatModPerk.new()
+	base.mods.append(FX._mod(BattleStats.REGEN_HP, -1, 0, 1.0))
+	t.check(base.battle_note(null) != "", "基线回血：进栏")
+	var tagged := StatModPerk.new()
+	tagged.target = "items"
+	tagged.item_tag = &"weapon"
+	t.eq(tagged.battle_note(null), "", "只给带武器标签的道具：不进")
+	t.eq(EnchantWeaponsPerk.new().battle_note(null), "", "随机几把武器附魔：不进")
+	t.eq(FoodDoublePerk.new().battle_note(null), "", "食物翻倍：不进")
+	t.eq(OvertimeRegenPerk.new().battle_note(null), "", "加时回春：上身时以 buff 显示，不另开常驻格")
+	t.eq(BattlePassives.of(null).size(), 0, "没有一局：没有常驻格")

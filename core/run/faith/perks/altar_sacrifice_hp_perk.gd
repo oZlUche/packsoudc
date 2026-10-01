@@ -41,3 +41,9 @@ func modify_spec(spec: CombatantSpec, _board: GridInventory, run: RunState) -> v
 
 func describe() -> String:
 	return note if note != "" else "神坛：献祭 %.0f 生命上限换 +%.0f 耐力上限与 +%d%% 急速，可多次" % [hp_cost, stamina_gain, haste_percent]
+
+
+## 103：所有道具一起加速 → 通用 buff，献祭过才有
+func battle_note(run: RunState) -> String:
+	var n := int(run.faith_rituals.get(KEY, 0)) if run != null else 0
+	return describe() if n > 0 and haste_percent != 0 else ""

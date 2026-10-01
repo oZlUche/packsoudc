@@ -1294,13 +1294,20 @@ while 双方存活 and now < 安全上限:
 两边混着往面板送，血条会显示 `0 / 0` 却画成满格，而且只在其中一条路径上出错。
 换算一律在 `BattleView` 做完，面板只收显示值。
 
-#### buff 栏（103，作者定：影响战斗的就显示）
+#### buff 栏（103，作者定：只放作用于角色本身的通用 buff）
+
+准则：**作用对象必须是这个角色本身**。使所有武器加速 → 显示，使某一件武器加速 → 不显示；角色造成的伤害 +N → 显示，
+某类型 / 某件武器的伤害 +N → 不显示；每隔几秒发作、让角色掉血 / 掉耐力 / 得到什么 → 显示，某件道具发动时让角色掉血 → 不显示
+（那是道具的规则）。以后新加一种来源，照「作用对象是不是角色本身」判。
+
 
 - **定义表由日志给**：`CombatantRuntime.apply_buff` 每次上身登记进 `BattleContext.seen_buffs`，`BattleResult.buffs` 带出去，
   `BattleView.play` 直接用。凡是上过身的 buff 都认得，不管来自自己、对手、信仰、局外 buff 还是系统。
-- **常驻格**：信仰阶、已激活的套装档位、局外 / 一局 buff 的战斗加成、技能 / 难度 / 神坛改的基础属性是编译期数值、不是 buff，
-  但影响战斗，所以也进栏 —— `CombatantSpec.passives: Array[PassiveNote]`（`BattlePassives.of(run)` 在 `compile_player` 里填），
-  `BattleResult.passives` 带出去，灰底、不随事件变。包体加成与邻接增益不进栏（画在棋盘格子上）。
+- 战斗内的 `BuffDef` 全部符合（`StatModifier` 没有按道具筛选的字段，buff 的 mods 施加到单位与每一件道具）。
+- **常驻格**：编译期的单位级加成 —— 已激活的套装档位（施加到全部参战道具）、局外 / 一局 buff 的战斗加成、技能 / 难度 / 神坛改的基础属性、
+  作用于角色本身的信仰级效果（`FaithPerk.battle_note`）—— 不是 buff，但符合准则，也进栏：`CombatantSpec.passives: Array[PassiveNote]`
+  （`BattlePassives.of(run)` 在 `compile_player` 里填），`BattleResult.passives` 带出去，灰底、不随事件变。
+  信物自己的按阶加成（`faith_bonuses`）、包体加成、邻接增益、只给某类道具的信仰效果只作用于某几件，不进栏。
 - 顺序：系统（琥珀）→ 减益（红）→ 增益（蓝）→ 常驻（灰），组内按上身先后；不可叠层的不画 `×1`。
 
 #### 沙盒

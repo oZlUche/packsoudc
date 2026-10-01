@@ -21,6 +21,12 @@ func describe() -> String:
 	return note
 
 
+## 103：这条效果在战斗里是不是「通用 buff」—— 作用对象是角色本身（所有道具、基线、角色受到 / 造成的伤害）。
+## 是的话返回给 buff 栏常驻格的一句（空串 = 不进栏：只作用于某件 / 某类道具的、不影响战斗的都返回空）。默认不进
+func battle_note(_run: RunState) -> String:
+	return ""
+
+
 ## 编译期：开战那一瞬在玩家的战斗单位上做手脚。[param run] 给随机数（可复现：按节点与用途取）与局内账
 func modify_spec(_spec: CombatantSpec, _board: GridInventory, _run: RunState) -> void:
 	pass
