@@ -78,3 +78,14 @@ static func upgrade(d: Dictionary) -> Dictionary:
 1. 读不到 meta 时是「备份后从零开始」（推荐），还是「拒绝进入这个存档位、提示去换版本」？
 2. 一局档是否也要迁移（推荐：走链但允许作废）。
 3. 别名表要不要同时覆盖敌人 / 事件 id（推荐先只做道具、标签、信仰）。
+
+## 给执行者的备注（架构线核实过的细节，2026-10-01）
+
+- **Meta v1 → v2 是恒等**：v2 只是 `MetaState.keeps` 放行了带信仰的 1 格包（fc0bfc2），字典形状没变，第一步迁移函数原样返回即可；Run 链现在是空的。
+- 迁移用 `match v:` 显式分派，别用 `Callable(Script, name)` 反射；`upgrade` 要 `duplicate(true)` 不改入参。
+- 读文件层接入点：`MetaSave.from_text`（`core/meta/meta_save.gd:36-39`）、`RunSave.from_text`（`core/run/run_save.gd:44-46`）。
+- 备份接入点：`GameFlow.use_slot`（`game_flow.gd:98-99`）读不到且文件存在 → `SaveSlots.backup(n, "meta")`（`DirAccess.rename_absolute` 到 `meta.json.<unix>.bak`）；`continue_run`（`:219`）对 `run.json` 同理，否则「继续」会一直撞墙。`SaveSlots.exists / remove` 不看 `.bak`。
+- 提示文案：`UiText` 加 `slots.backed_up`，读取存档屏 `_hint` 与主菜单战绩行下各显示一次，`GameFlow` 加 `meta_backup / run_backup: String`。
+- 别名接入点：`ItemDatabase.get_def`（找不到才查）、`TagRegistry.get_def`、`FaithPower.restore`（`faith_power.gd:104`，旧键并进新键）。093 的真实改名：`violence → brute`、`sunfire → sun`（`b4c23a2`），标签同前缀。`faith:brute` 不是登记过的 TagDef，别拿它测 TagRegistry 的别名。
+- 测试样本：`tests/fixtures/meta_v1.json` 用 `knife`（存在）做仓库里的一件；`MetaState.to_dict` 的键见 `meta_state.gd:390-411`；新套件要登记进 `tests/run_tests.gd` 的 `SUITES`。新 `class_name` 记得跑 `tools/test.sh` 刷类缓存并把 `.godot/global_script_class_cache.cfg` 一起提交。
+- 「新 id 必须存在、旧 id 不得再被内容引用」用测试守（扫 `ContentPaths.AUTHORING` 下的 JSON 找 `"violence"` 等字面量），不改导入器。
