@@ -179,8 +179,9 @@ func _proceed(node: MapNode, type: StringName) -> void:
 		&"rest":
 			last_handled_id = node.id
 			var got := vitality.restore(rules.rest_restore, &"rest") if vitality != null and rules != null else 0
+			node.content["used_rest"] = true
 			rested.emit(node, got)
-			_visited(node)
+			settle_rest(node)
 		&"shop":
 			last_handled_id = node.id
 			_open_shop(node)
@@ -200,6 +201,28 @@ func _proceed(node: MapNode, type: StringName) -> void:
 			safe_opened.emit(node)
 		_:
 			_visited(node)
+
+
+## 反馈（休息点）：休息与神坛是两份独立的机会 —— [param part] 是 rest / altar，用过记在节点内容里（跟存档）
+static func rest_part_used(node: MapNode, part: StringName) -> bool:
+	return node != null and bool(node.content.get("used_%s" % part, false))
+
+
+## 神坛这一份用掉了（献祭或特殊操作，二选一）
+func use_altar(node: MapNode) -> void:
+	if node == null:
+		return
+	node.content["used_altar"] = true
+	settle_rest(node)
+
+
+## 休息点两份都用完了（没激活信仰 = 神坛这一份不算数）才标用过、点变灰；否则不动，走开再回来还能用剩下的
+func settle_rest(node: MapNode) -> void:
+	if node == null or NodeEvents.effective_type(node) != &"rest":
+		return
+	var altar_done := rest_part_used(node, &"altar") or not faith_tier.is_valid() or int(faith_tier.call()) < 0
+	if rest_part_used(node, &"rest") and altar_done:
+		_visited(node)
 
 
 ## 093（大地之神：神坛上改造此点）：这个点从此算 [param type]，当没踩过 —— 清掉旧事件与选择，是战斗 / 精英就现造敌人；
@@ -360,6 +383,8 @@ func choose(i: int) -> bool:
 			_battle_at(node, fight_type, content, "node")
 	elif ctx.proceed:
 		_proceed(node, type)
+	elif type == &"rest":
+		settle_rest(node)     # 反馈：休息点上选「继续赶路」/ 只开神坛不算用掉，回头还能来
 	else:
 		_visited(node)
 	if ctx.open_altar and not over:

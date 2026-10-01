@@ -420,7 +420,7 @@ static func run_type_proceed_wait_lose(t: TestCase) -> void:
 		t.eq(waited, [3], "发了 waited")
 		t.eq(int((resolved2[0] as Dictionary).get("waited", 0)), 3, "detail 里记了")
 		t.eq(s2.travel.current_id, n2, "没挪人")
-		# 走：不休息，点也用过了
+		# 走：不休息，点也不算用过（反馈：休息点离开不消耗，回头还能来）
 		var fr3 := _run_with(c, defs, &"t_rest", &"rest")
 		var s3: RunState = fr3["run"]
 		var n3 := int(fr3["next"])
@@ -429,7 +429,7 @@ static func run_type_proceed_wait_lose(t: TestCase) -> void:
 		s3.step_to(n3)
 		s3.events.choose(2)
 		t.eq(s3.vitality.current, v3, "走了：没回")
-		t.check(s3.map.get_node(n3).is_visited(), "点用过了")
+		t.check(not s3.map.get_node(n3).is_visited(), "点没用掉，留着以后用")
 	# 照常发生：商店
 	var fs := _run_with(c, defs, &"t_shop", &"shop")
 	if not fs.is_empty():

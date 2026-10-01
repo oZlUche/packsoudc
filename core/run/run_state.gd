@@ -62,7 +62,7 @@ var storage: ItemStash = null
 ## 092：倒计时归零 / 撤离点关闭这类只发一次的提醒，地图屏听
 signal countdown_notice(text: String)
 ## 092（作者定）：保险箱关上了 —— 里面的送回基地、不能再改；[param count] 是几件
-## 093：神坛 —— 这一次在哪个点上开着（-1 = 没有；走开就关）、哪些点上已经用过特殊操作（和常规献祭共享这一次机会）
+## 093：神坛 —— 这一次在哪个点上开着（-1 = 没有；走开就关）、哪些点上已经用过神坛（献祭和特殊操作二选一）
 var altar_node: int = -1
 ## 094（作者定）：从仓库带进来的道具总价值（预算 / 超带换倒计时看它）
 var carry_in_value: int = 0
@@ -751,7 +751,7 @@ func _bless_step() -> void:
 				altar_changed.emit("%s的目光落在「%s」上：它成了「%s」" % [Names.of(def), was, Names.of(v)])
 
 
-## 神坛可用：站在开着神坛的点上、这一次还没用过特殊操作、有激活的信仰
+## 神坛可用：站在开着神坛的点上、这一次还没用过（献祭和特殊操作二选一）、有激活的信仰
 func altar_open() -> bool:
 	return altar_node >= 0 and travel != null and travel.current_id == altar_node and not altar_used.has(altar_node) and active_faith() != null
 
@@ -784,6 +784,7 @@ func offer(insts: Array, node: MapNode = null) -> Dictionary:
 		if line != "":
 			(out["log"] as Array[String]).append(line)
 	altar_changed.emit("、".join(out["log"]))
+	_use_altar()     # 反馈：献祭和特殊操作只能做一个 —— 献了就关
 	return out
 
 
@@ -803,12 +804,21 @@ func altar_special(perk: FaithPerk, node: MapNode, option: StringName = &"") -> 
 	var line := perk.altar_apply(self, node, option)
 	if line == "":
 		return ""
-	altar_used[altar_node] = true
+	_use_altar()
 	altar_changed.emit(line)
 	return line
 
 
-## 走开就关神坛（下次回来这个点也不再有：休息点用过了）
+## 这个神坛这一次机会用掉了（休息那一份不受影响：休息点两份都用完才变灰，见 NodeEvents.settle_rest）
+func _use_altar() -> void:
+	if altar_node < 0:
+		return
+	altar_used[altar_node] = true
+	if events != null and map != null and map.has_node(altar_node):
+		events.use_altar(map.get_node(altar_node))
+
+
+## 走开就关神坛（没用过的话回到这个休息点还能再开）
 func _close_altar() -> void:
 	altar_node = -1
 #endregion

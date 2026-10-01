@@ -218,7 +218,7 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 		t.eq(int(res["count"]), 1, "献祭了一件")
 		t.eq(run.faith_power.points_of(&"brute"), p0 + val, "信力 +%d（2^稀有度 × 3）" % val)
 		t.check(not run.board.has_item(sword.uid) and not run.storage.has_item(sword.uid), "祭品没了")
-		t.check(run.altar_open(), "常规献祭不占那一次机会")
+		t.check(not run.altar_open() and run.altar_used.has(run.altar_node), "反馈：献祭和特殊操作二选一 —— 献了就关")
 	# 日神：附魔 + 祈祷
 	var defs := FaithDef.load_all()
 	var sun: FaithDef = defs[&"sun"]
@@ -342,7 +342,7 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 		var opt := def.options[i] as EventOption
 		if opt.locked_reason(run.events._event_ctx(run.current_node())) == "" or not opt.hide_when_locked:
 			shown.append(opt.label)
-	t.check(not shown.has("神坛（献祭 / 特殊操作）") and labels.has("神坛（献祭 / 特殊操作）"), "没信仰：神坛选项藏起来（%s）" % str(shown))
+	t.check(not shown.has("神坛（献祭或特殊操作，二选一）") and labels.has("神坛（献祭或特殊操作，二选一）"), "没信仰：神坛选项藏起来（%s）" % str(shown))
 	flow.choose_event(0)
 	NodeScreens._settle(flow)
 	flow.to_main_menu()
@@ -364,8 +364,9 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 	while GameFlow.is_overlay(flow.screen) and flow.screen != GameFlow.Screen.ALTAR and g < 6:
 		g += 1
 		flow.resume()
-	t.eq(flow.screen, GameFlow.Screen.ALTAR, "→ 神坛屏（休息也照休）")
-	t.check(run.vitality.current >= vit0, "休息回了体力（或已满）")
+	t.eq(flow.screen, GameFlow.Screen.ALTAR, "→ 神坛屏")
+	t.eq(run.vitality.current, vit0, "反馈：神坛不占休息 —— 没顺带休息")
+	t.check(not run.current_node().is_visited(), "休息那一份还留着：点没用完")
 	var screen = game.overlay()
 	t.check(screen != null and screen.has_method("put_on_table"), "叠层是神坛屏")
 	if screen == null:
@@ -393,10 +394,27 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 		t.eq(int(got["count"]), 1, "献了一件")
 		t.eq(run.faith_power.points_of(&"brute"), p0 + val, "信力进账")
 		t.check(not run.board.has_item(sword.uid) and screen._table.item_count() == 0, "祭品没了、台空了")
-		t.check(run.altar_open(), "常规献祭不关神坛")
+		t.check(not run.altar_open() and screen._offer_btn.disabled, "反馈：献祭和特殊操作二选一 —— 献了神坛就关")
 	t.check(game.escape(), "Esc 返回")
 	t.eq(flow.screen, GameFlow.Screen.MAP, "→ 地图")
-	t.check(flow.can_reopen() and flow.reopen_node(), "站着还能再开神坛")
+	# 反馈：神坛用了，休息那一份还在 —— 站着再打开是休息点的选项（没有神坛那一项了）
+	t.check(flow.can_reopen() and flow.reopen_node(), "站着还能再打开休息点")
+	t.eq(flow.screen, GameFlow.Screen.EVENT, "→ 休息点的事件")
+	var here := run.current_node()
+	var ectx := run.events._event_ctx(here)
+	var open_labels: Array[String] = []
+	for opt in (flow.last_payload.get("def", null) as EventDef).options:
+		if (opt as EventOption).locked_reason(ectx) == "":
+			open_labels.append((opt as EventOption).label)
+	t.check(open_labels.has("歇一会儿") and not open_labels.any(func(l): return l.begins_with("神坛")), "能歇、神坛藏起来了（%s）" % str(open_labels))
+	flow.choose_event(0)
+	NodeScreens._settle(flow)
+	t.check(here.is_visited(), "休息和神坛都用了：这个休息点才算用完")
+	# 特殊操作那一半：换一个神坛机会（测试里直接重置）
+	here.content.erase("used_altar")
+	run.altar_used.clear()
+	run.altar_node = here.id
+	t.check(flow.can_reopen() and flow.reopen_node(), "重开神坛")
 	t.eq(flow.screen, GameFlow.Screen.ALTAR, "→ 神坛屏")
 	# 升到 2 级：特殊操作出现；做了就关
 	run.faith_power.add_points(&"brute", 100)

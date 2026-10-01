@@ -3,7 +3,7 @@
 ## 构件：每一条效果一个子类、注册表（EffectRegistry.FAITH_PERKS）一行；信仰文件里 `perks: [{"tier": 1, "type": "..."}]`。
 ## 基类给出几个**落点**的钩子，子类只重写自己用得到的那个；各系统在自己的点上问 [method RunState.faith_perks]：
 ## - 编译期 [method modify_spec]：开战时在编译好的玩家战斗单位上做手脚（加规则、改属性）
-## - 神坛 [method altar_label] / [method altar_apply]：休息处神坛上的特殊操作（和常规献祭共享这一次机会）
+## - 神坛 [method altar_label] / [method altar_apply]：休息处神坛上的特殊操作（和献祭二选一，共用这一次机会；不占休息）
 ## - 献祭之后 [method on_offered]
 ## - 踩上一个点 [method on_node_entered]
 ## - 掉落 [method modify_loot]

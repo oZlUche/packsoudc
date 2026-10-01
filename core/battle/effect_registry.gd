@@ -129,6 +129,7 @@ const EVENT_CONDITIONS := {
 	&"node_type_is": "res://core/run/events/conditions/node_type_is.gd",
 	&"has_flag": "res://core/run/events/conditions/has_flag.gd",
 	&"faith_active": "res://core/run/events/conditions/faith_active.gd",
+	&"rest_part_unused": "res://core/run/events/conditions/rest_part_unused.gd",
 }
 
 const EVENT_OUTCOMES := {
