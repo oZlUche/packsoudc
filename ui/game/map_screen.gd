@@ -462,7 +462,9 @@ func _adopt() -> void:
 		_refresh_hud()
 		_refresh_skills())     # 挑完出生点技能才能用：按钮跟着阶段亮
 	_run.countdown_notice.connect(func(text: String): _note("[color=#d9534f]　" + text + "[/color]"))     # 092
-	_run.safe_closed.connect(func(n: int): _note("[color=#c8a2ff]　保险箱关上了：%d 件送回基地，不能再改[/color]" % n))
+	var safe := SafeModule.of(_run)     # 101：保险箱是一局的模块，信号在它身上
+	if safe != null:
+		safe.closed.connect(func(n: int): _note("[color=#c8a2ff]　保险箱关上了：%d 件送回基地，不能再改[/color]" % n))
 	_run.altar_changed.connect(func(text: String):
 		_note("[color=#f0ad4e]　" + text + "[/color]")
 		_refresh_hud())     # 093

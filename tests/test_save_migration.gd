@@ -82,6 +82,16 @@ static func run_run_chain(t: TestCase) -> void:
 	t.is_null(RunSave.from_text(JSON.stringify(old), db, enemies), "读不回来（这一局作废）")
 	var future := {"version": RunState.SAVE_VERSION + 3, "chapter": "chapter_01"}
 	t.is_null(RunSave.from_text(JSON.stringify(future), db, enemies), "未来版本也不猜")
+	# 101：v1 → v2 把子系统的顶层键搬进 modules[id]（迁移链的第一个真实用例）
+	var v1 := {"version": 1, "chapter": "chapter_01",
+		"safe": {"id": 3, "size": [3, 3], "requires_bag": false, "accept_tags": [], "blocked": [], "items": [], "place_seq": 0},
+		"safe_locked": true}
+	var up := RunMigrations.upgrade(v1)
+	t.eq(int(up["version"]), RunState.SAVE_VERSION, "升到了当前版本")
+	t.check(not up.has("safe") and not up.has("safe_locked"), "旧的顶层键删掉了（不留两处）")
+	var safe_mod: Dictionary = (up["modules"] as Dictionary)["safe"]
+	t.check(safe_mod.has("inventory") and bool(safe_mod["locked"]), "保险箱的容器与锁搬进了 modules.safe")
+	t.eq(int(v1["version"]), 1, "不改入参")
 
 
 static func run_backup_instead_of_overwrite(t: TestCase) -> void:

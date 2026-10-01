@@ -38,22 +38,49 @@
 
 ## 方案
 
-### 第 1 刀 · `RunState` 按子系统抽状态（P2）
+### 第 0 刀 · 扩展点：一局的子系统都是 `RunModule` 插件（作者 2026-10-01 的要求）
 
-每个子系统一个 `RefCounted`：持自己的字段与信号、`to_dict / restore`、一个 `wire(run)` 把需要的回调接上。`RunState` 只剩 `var xxx: Xxx` 一行 + 存档里一个键。按改动小到大：
+作者要的是「流程控制器将来能扩展、能加东西」。仓库里**已经有一个做对了的扩展点**：`RunMechanic`（`core/run/run_mechanic.gd`）—— 难度定义列出机制清单，开局与读档时 `RunState.install_mechanics()` 逐个 `install(run)`，机制自己把自己接进一局（侵蚀、猎手就是这么装的），`RunState` 不认识任何具体机制。问题只是：它现在只给「难度开的机制」用，保险箱、倒计时、神坛、合成这些「本体功能」没走它，所以每加一个都要改 `RunState`。
 
-| 顺序 | 抽出去 | 从 RunState 带走 | 行数估 |
+方案：把这个扩展点升级成一局的**统一插件模型**，本体功能和难度机制走同一条路。
+
+```gdscript
+## 一局的模块（RunState 的扩展点）。加一种玩法 = 一个子类 + 注册表一行 + 内容清单里一条，RunState 一行都不改
+@abstract
+class_name RunModule
+extends Resource
+@abstract func id() -> StringName                 # 存档里的键、mechanic_tags 的键
+func install(run: RunState) -> void               # 开局 / 读档各一次，幂等：造自己的状态、接信号、往 run.hooks 挂回调
+func to_dict() -> Dictionary: return {}           # 自己的状态；RunState 存成 modules[id]
+func restore(d: Dictionary) -> void               # 读档：install 之前 RunState 把 modules[id] 交给它
+func describe() -> String: return ""              # 开局屏 / 规则卡 / 编辑器
+```
+
+- **生命周期的钩子不写死在基类里**，模块在 `install` 里**订阅** `RunState` / `MapTravel` / `NodeEvents` 已有的信号（`moved / waited / battle_finished / phase_changed …`），和现在侵蚀、猎手、信力的接法一样（1.2 命令进信号出；逻辑层之间直接引用）。基类只保证「装、存、读、描述」四件事。
+- **模块需要被别人调用的能力**（倒计时要拦撤离、保险箱要判还能不能开、神坛要给事件条件查信仰阶）走 `RunHooks`（第 3 刀）：模块在 `install` 里 `run.hooks.register(&"extract_closed", callable)`，`NodeEvents` 只认 `hooks`，不认模块。
+- **哪些模块装**来自内容，三层叠加：章节 `ChapterDef.modules`（本体：倒计时、保险箱、神坛…，普通一局就是 `standard` 清单）+ 难度 `DifficultyDef.mechanics`（现有）+ 角色 / 事件临时加的（`run.install_module(m)`）。开局屏的规则卡（091）把 `describe()` 列出来。
+- **存档**：`RunState.to_dict()["modules"] = {id: module.to_dict()}`；读档先把字典按 id 分给模块再 `install`。现有 `hunters / erosion / skills / faith_power` 四个键保持原键（098 规矩：格式不改不升版），`modules` 是新增键、带默认值。
+- **注册表**：`RUN_MECHANICS` 改名 `RUN_MODULES`（保留旧键名的别名一行），导入器照旧按反射装参数。
+- `RunMechanic` 变成 `RunModule` 的别名（`class_name RunMechanic extends RunModule`，一行），侵蚀 / 猎手不用改。
+
+**这意味着将来加一个玩法（比如「天气」「阵营声望」「商队」）的全部工作是：** `core/run/modules/weather_module.gd` 一个文件 + 注册表一行 + 章节 JSON 里 `"modules": [{"type": "weather", ...}]` 一条 + 一个测试。`RunState`、`GameFlow`、`NodeEvents` 零改动；UI 要显示就订阅模块自己的信号。
+
+### 第 1 刀 · `RunState` 现有的子系统搬成模块（P2）
+
+每个搬出去的东西都是一个 `RunModule` 子类，持自己的字段与信号、`to_dict / restore`、在 `install` 里接线。`RunState` 只剩 `modules: Dictionary`，访问走 `run.module(&"safe")`（常用的给一个带类型的便捷取法）。按改动小到大：
+
+| 顺序 | 模块 | 从 RunState 带走 | 行数估 |
 |---|---|---|---|
-| 1 | `RunSafe`（保险箱，092） | `safe / safe_locked / safe_closed / lock_safe / safe_open` | ~40 |
-| 2 | `RunCountdown`（倒计时 + 带入预算，092 / 094） | `countdown_* / carry_* / closing_extract_id / extract_closed / _check_countdown`、6 个 `static *_for` | ~120 |
-| 3 | `RunCrafting`（合成，084） | `recipes / craft_* / resolve_crafts / craft_done` | ~90 |
-| 4 | `RunAltar`（神坛与信仰级效果，093 / 095） | `altar_* / faith_rituals / faith_stat_bonus / offer / bless_ids / _bless_step / faith_perks / item_blessed` | ~130 |
-| 5 | `RunBuffState`（buff，062） | `buff_defs / meta_buffs / map_buffs / *_map_buff / tick_map_buffs / buff_context / install_mechanics` | ~90 |
-| 6 | `NodeStorages`（按点暂存，088） | `node_storages / stored_at / _restore_storage / _drop_storage* / storage_dropped / storage_restored` | ~60 |
+| 1 | `SafeModule`（保险箱，092） | `safe / safe_locked / safe_closed / lock_safe / safe_open` | ~40 |
+| 2 | `CountdownModule`（倒计时 + 带入预算，092 / 094） | `countdown_* / carry_* / closing_extract_id / extract_closed / _check_countdown`、6 个 `static *_for` | ~120 |
+| 3 | `CraftingModule`（合成，084） | `recipes / craft_* / resolve_crafts / craft_done` | ~90 |
+| 4 | `AltarModule`（神坛与信仰级效果，093 / 095） | `altar_* / faith_rituals / faith_stat_bonus / offer / bless_ids / _bless_step / faith_perks / item_blessed` | ~130 |
+| 5 | `BuffModule`（buff，062） | `buff_defs / meta_buffs / map_buffs / *_map_buff / tick_map_buffs / buff_context` | ~90 |
+| 6 | `NodeStorageModule`（按点暂存，088） | `node_storages / stored_at / _restore_storage / _drop_storage* / storage_dropped / storage_restored` | ~60 |
 
-每一刀的验收：`RunState` 行数下降、对应 `test_author_09x` / `test_run_state` 全绿、读档往返测试（051）全绿。六刀之后 `RunState` 约 700 行，只剩「骨架 + 容器 + 接线 + 存档」。
+第一个（保险箱）是样板：做完它，`RunModule` 基类、`modules` 存档键、`ChapterDef.modules`、`standard` 清单、注册表、导入器都通了；后面五个只是照抄。每一刀的验收：`RunState` 行数下降、对应 `test_author_09x` / `test_run_state` 全绿、读档往返测试（051）全绿。六刀之后 `RunState` 约 600 行，只剩「骨架 + 容器 + hooks + 存档」。
 
-**存档格式不变**：子系统的 `to_dict` 产出和现在同样的键（`safe`、`safe_locked`……），`RunState.to_dict` 用 `merge` 拼起来；`from_dict` 把整个 `d` 交给各子系统 `restore(d)` 自己取。版本号不升（098 的规矩）。
+**存档格式**：搬进模块的键原样保留在顶层（`safe`、`safe_locked`……）由模块自己读写，还是统一挪到 `modules[id]` 下？推荐**统一挪**，并在 098 的迁移链上加 Run v1 → v2 一步（把旧顶层键搬进 `modules`）—— 这正好是迁移链的第一个真实用例。
 
 ### 第 2 刀 · `start()` 收参数
 
@@ -113,14 +140,16 @@
 
 ## 关键决策
 
-- **抽状态而不是抽行为**：每个子系统带走自己的字段、信号和存档，`RunState` 才真的变薄；只抽函数留字段等于没拆。
-- **存档格式一个键不改**：拆分不是升版本的理由；098 的「改语义才升版」在这里要守住。
+- **扩展点只有一个，本体和难度机制走同一条路**：`RunMechanic` 已经证明「模块自己把自己接进一局」在这个仓库里行得通；把它扩成 `RunModule`，以后加玩法不改 `RunState`。
+- **抽状态而不是抽行为**：每个模块带走自己的字段、信号和存档，`RunState` 才真的变薄；只抽函数留字段等于没拆。
+- **存档：模块键统一挪到 `modules` 下，用 098 的迁移链升一版**；之后再加模块不再升版（新模块 = 新键、带默认值）。
 - **`RunHooks` 用类不用 Callable**：22 个 Callable 的问题不是多，是没类型；一个接口类让 `NodeEvents` 可以在测试里用假实现跑。
 - **信仰回到编译期**：perk 改 spec 的后门关掉，战斗层只认 `CombatantSpec`；「不死」「平局算赢」是结算规则，可以留在内核，但按类型字段读。
-- **顺序**：1 → 2 → 3 → 4 → 5 → 6。1、4、6 彼此独立，可并行给不同执行 thread；2 依赖 100 第 4 步；5 里编译器那两条依赖 1-4 完成（`RunAltar` 抽出来后 perk 才有自己的家）。
+- **顺序**：0 → 1 → 2 → 3 → 4 → 5 → 6。0 和 1 的第一个模块一起做（样板）；1 的后五个、4、6 彼此独立，可并行给不同执行 thread；2 依赖 100 第 4 步；5 里编译器那两条依赖 1 完成（`AltarModule` 出来后 perk 才有自己的家）。
 
 ## 验证
 
+- 第 0 刀：一个测试「造一个假模块、写进章节清单、开局 → 装上、存档 → `modules[id]` 在、读档 → `restore` 收到同样的字典」；`grep -n "safe\|countdown\|altar\|craft" core/run/run_state.gd` 在第 1 刀结束时为空。
 - 每一刀：`tools/test.sh` 全绿；`wc -l core/run/run_state.gd core/run/game_flow.gd` 下降并写进该刀的报告；读档往返（`test_run_state`、`test_game_flow`）不变。
 - 第 5 刀结束：`grep -rn "UiPalette\|ItemTooltip" core/` 为空；`grep -rn "core/run" core/battle core/inventory` 为空；`grep -n "spec.flags" core/battle` 为空。
 - 第 3 刀：`NodeEvents` 用 `RunHooks.new()` 默认实现跑 `test_node_events` 全绿。
@@ -131,6 +160,39 @@
 
 ## 待作者定
 
+0. 扩展点按「`RunModule` 插件 + 章节 / 难度清单」做，可以吗？（作者的要求就是这个，这里确认一下形状）
 1. 六刀的顺序按上面来，还是你有更急的子系统想先抽？
 2. 第 5 刀「perk 回到编译期」会改 14 种 `FaithPerk` 的接口（`modify_spec` → `compile_mods`），要不要和 P1（099）一起交给同一个执行 thread（都碰信仰）？推荐分开，099 先。
 3. 演示代码搬去 `tools/`，截图工具 `capture_scene.gd` 跟着改，可以吗？
+
+## 落地 · 第 0 刀 + 第 1 刀的第一个模块（2026-10-01，实现 thread）
+
+作者定：形状就按 `RunModule` 插件 + 章节 / 难度清单；刀序照方案；第 5 刀的 perk 改接口排在 099 之后（099 已落地）；演示代码搬去 `tools/`（第 6 刀，还没做）。
+这一刀交的是**扩展点本身 + 保险箱这个样板**。
+
+| 改动 | 文件 |
+|---|---|
+| `RunModule`：装 / 存 / 读 / 说一句。生命周期**不写在基类里**，模块自己订阅已有信号 | `core/run/run_module.gd`（新） |
+| `RunMechanic` 变成它的子类（侵蚀 / 猎手一行没改；`id()` 默认空 = 不进 `modules` 存档，它们各有老键） | `core/run/run_mechanic.gd` |
+| `modules` / `module_inputs` / `modules_saved`；`install_modules`（章节清单 + 难度机制两层）、`install_module`（幂等）、`module`、`module_input`、`module_lines`；新信号 `leaving(node_id)`；`to_dict()["modules"]`；`from_dict` 末尾装本体模块 | `core/run/run_state.gd` |
+| 默认清单（章节没列时用它）；每搬出一个子系统这里多一行 | `core/run/modules/run_modules.gd`（新） |
+| 保险箱：容器、锁、`closed`、存档、「走开就关上」（接 `leaving`）、「锁上了不再开」（`NodeEvents.safe_open`）全在模块里 | `core/run/modules/safe_module.gd`（新） |
+| 章节可以列模块（空 = 默认清单） | `core/run/chapter_def.gd` |
+| 注册表 `RUN_MODULES`（+`safe`；`run_mechanic` 留作别名）、抽象基类 → 表、编辑器的中文标签 | `core/battle/effect_registry.gd`、`core/authoring/content_schema.gd`、`core/authoring/field_text.gd` |
+| 一局存档升到 v2；迁移第一步把顶层 `safe` / `safe_locked` 搬进 `modules.safe` | `core/run/run_state.gd`、`core/run/run_migrations.gd` |
+| 调用方改成走模块：结算、`GameFlow`（关保险箱 / 站着能再开 / 开局传 `module_inputs`）、地图屏那一句、保险箱屏 | `core/run/run_result.gd`、`core/run/game_flow.gd`、`ui/game/map_screen.gd`、`ui/game/safe_screen.gd` |
+| 新套件：假模块走章节清单（装一次、拿到输入、收到 `leaving`、幂等、存进 `modules[id]`、读档 `restore` 收到同一份）、保险箱的行为与「没装 = 没有保险箱」、注册表与章节 JSON 往返；迁移测试加 Run v1 → v2 | `tests/test_run_modules.gd`（新）、`tests/test_save_migration.gd`、`tests/test_author_092.gd` 等 |
+
+**和方案不同的两处**（都为了不改 `RunState` 却仍能把保险箱的「走开就关上」接出去）：
+
+1. **多了一个 `RunState.leaving(node_id)` 信号**。方案说模块订阅已有信号，但「走开 = 关上」要在**真正动之前**发生（锁上会把保险箱点标成走过的）。
+   接 `MapTravel.moved` 就晚了，会和「踩上另一个保险箱点」抢顺序。所以把原来 `step_to` / `relocate` 里那两行 `lock_safe()` 换成 `leaving.emit(...)` ——
+   这是通用的生命周期信号，第 1 刀后面的 `NodeStorageModule`（走开就留下）正好也用它。
+2. **`start()` 的 `p_safe_size` 换成 `p_module_inputs: Dictionary`**（参数个数没变）。保险箱几格来自局外规则，是运行时输入而不是内容；
+   这样 `RunState` 里不剩任何「safe」字样。`GameFlow.begin` 传 `{&"safe": {"size": safe_size()}}`。刀 2 会把它并进 `RunSetup`。
+
+**账**：`run_state.gd` 1359 → 1394 行（基类与清单那套接口先进来了，保险箱搬出去 −40；后面五个模块搬出去才会真降）。
+`grep -n "safe" core/run/run_state.gd` 只剩地图生成那两行（`SafePlacer`，属于地图不属于子系统）。全套测试 74 套件 12309 项断言通过。
+
+**下一刀**：第 1 刀的倒计时 / 合成 / 神坛 / buff / 按点暂存五个模块（照抄这个样板）；第 2 刀等 100 第 4 步（`ContentLibrary`）。
+

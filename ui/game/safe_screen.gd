@@ -8,6 +8,7 @@ extends GameScreen
 const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
 
 var _safe: GridInventory = null
+var _module: SafeModule = null
 var _view: InventoryView
 var _drag: DragLayer
 var _line: Label
@@ -15,7 +16,8 @@ var _inv: Control = null
 
 
 func open(payload: Dictionary) -> void:
-	_safe = flow.run.safe
+	_module = SafeModule.of(flow.run)     # 101：保险箱是一局的模块
+	_safe = _module.inventory if _module != null else null
 	var node: MapNode = payload.get("node", null)
 	var panel := _centered_panel(Vector2(0, 0))
 	var row := _hbox(24)
@@ -54,7 +56,7 @@ func open(payload: Dictionary) -> void:
 	_drag.register_view(_view)
 	# 包不进保险箱（局外不留包，MetaState.keeps）
 	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
-		return flow.run.safe_open() and (target != _safe or MetaState.keeps(inst.def))
+		return _is_open() and (target != _safe or MetaState.keeps(inst.def))
 	var tip := HoverTip.new(font)
 	add_child(tip)
 	tip.watch(_view)
@@ -62,11 +64,16 @@ func open(payload: Dictionary) -> void:
 	_refresh()
 
 
+## 保险箱还能改动（装了、没锁）
+func _is_open() -> bool:
+	return _module != null and _module.is_open()
+
+
 #region 公开动作
 ## 保险箱里的一件回背包（放不下进暂存区）。测试直接调
 func take_back(uid: int) -> bool:
 	var inst := _safe.get_item(uid)
-	if inst == null or not flow.run.safe_open():
+	if inst == null or not _is_open():
 		return false
 	if InventoryService.transfer_auto(_safe, uid, flow.run.board):
 		return true
@@ -79,7 +86,7 @@ func take_back(uid: int) -> bool:
 ## 棋盘 / 暂存区里的一件放进保险箱。测试直接调；包不收
 func put_in(uid: int) -> bool:
 	var run := flow.run
-	if not run.safe_open():
+	if not _is_open():
 		_line.text = "保险箱已经锁上了"
 		return false
 	var from: ItemContainer = run.board if run.board.has_item(uid) else (run.storage if run.storage.has_item(uid) else null)

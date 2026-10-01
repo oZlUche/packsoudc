@@ -11,13 +11,11 @@ class_name RunState
 extends RefCounted
 
 ## 存档从第一天就写版本号（7.2）
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 ## 作战棋盘的尺寸（3.2：棋盘 + 包体）。占位，等角色系统
 const BOARD_SIZE := Vector2i(8, 6)
 const BOARD_ID := 1
 const STORAGE_ID := 2
-## 092：保险箱容器的 id
-const SAFE_ID := 3
 ## 092：新加 class_name 的脚本用 preload 引用，作者拉了没重新 --import 也能跑
 const SafePlacerScript := preload("res://core/run/safe_placer.gd")
 
@@ -61,12 +59,9 @@ var board: GridInventory = null
 ## 暂存区：一个列表，保留但不参战（3.4）
 var storage: ItemStash = null
 ## 092（作者定）：保险箱 —— 放进去的道具视为已带出，战败也带得出；大小按局外规则（初始 3×3）
-var safe: GridInventory = null
 ## 092：倒计时归零 / 撤离点关闭这类只发一次的提醒，地图屏听
 signal countdown_notice(text: String)
 ## 092（作者定）：保险箱关上了 —— 里面的送回基地、不能再改；[param count] 是几件
-signal safe_closed(count: int)
-var safe_locked: bool = false
 ## 093：神坛 —— 这一次在哪个点上开着（-1 = 没有；走开就关）、哪些点上已经用过特殊操作（和常规献祭共享这一次机会）
 var altar_node: int = -1
 ## 094（作者定）：从仓库带进来的道具总价值（预算 / 超带换倒计时看它）
@@ -99,6 +94,17 @@ var difficulty_id: StringName = &""
 var difficulty: DifficultyDef = null
 ## 机制在一局上留的记号（`mechanic_tags[&"erosion"] = true`……），机制装的时候写，别处只读
 var mechanic_tags: Dictionary = {}
+## 101 第 0 刀：这一局装了哪些模块（id → [RunModule]）。**本类不认识任何具体模块** —— 加一种玩法不用改这里。
+## 取一个用 [method module]（各模块通常还给一个带类型的 `of(run)`）
+var modules: Dictionary = {}
+## 开局时外面给模块的运行时输入（**不进存档**）：id → 字典。模块在 install 里读自己那份（[method module_input]）。
+## 来源是局外规则、角色、开局屏（比如保险箱多大来自 [member MetaRules.safe_size]）；本类不解释里面的内容
+var module_inputs: Dictionary = {}
+## 读档拿到的各模块状态，等 install 时分发给它们
+var modules_saved: Dictionary = {}
+## 101：要离开当前这个点了（走一步 / 被事件挪走，**在真正动之前**发）。模块订阅它做「走开就……」的事 ——
+## 保险箱关上、留在这个点的东西留下。参数是正要离开的点
+signal leaving(node_id: int)
 ## 猎手（069 / 071）：难度清单里的猎手机制装进来的系统；null = 这一局没有猎手。定义表由持有方给，存档里的状态读档时先放这儿等机制装
 var hunters: HunterSystem = null
 var hunter_defs: Dictionary = {}
@@ -160,7 +166,7 @@ static func start(
 	p_sets: SetDatabase = null, kit: Array[StringName] = [] as Array[StringName],
 	p_buff_defs: Dictionary = {}, p_meta_buffs: Array[StringName] = [] as Array[StringName],
 	p_character: CharacterDef = null, p_layout: Array = [], p_difficulty: DifficultyDef = null, p_hunter_defs: Dictionary = {},
-	p_scale: StringName = &"", p_safe_size: Vector2i = Vector2i(3, 3), p_carry_value: int = 0
+	p_scale: StringName = &"", p_module_inputs: Dictionary = {}, p_carry_value: int = 0
 ) -> RunState:
 	if p_chapter == null or p_chapter.map_source == null:
 		return null
@@ -171,6 +177,7 @@ static func start(
 	s.enemies = p_enemies
 	s.sets = p_sets
 	s.map_scale = p_scale
+	s.module_inputs = p_module_inputs.duplicate(true)
 	s.carry_in_value = maxi(0, p_carry_value)
 	s._resolve_rules()
 	s.map = p_chapter.map_source.resolve(p_seed, p_scale)
@@ -210,14 +217,13 @@ static func start(
 	s.wallet = Wallet.new((s.economy.starting_balance if s.economy != null else 0) + ctx.starting_funds_bonus)
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
 	s.storage = ItemStash.new(STORAGE_ID, 0)
-	s.safe = GridInventory.new(p_safe_size, SAFE_ID, false)
 	s._bind_tracker()
 	s._place_layout(p_layout)
 	s._give_kit(full_kit)
 	s.travel = MapTravel.new(s.map, ActionClock.new())
 	s.travel.vitality = s.vitality
 	s._wire_events()
-	s.install_mechanics()     # 机制要接的东西（旅程、节点事件）都造好了才装
+	s.install_modules()     # 模块要接的东西（旅程、节点事件）都造好了才装
 	s.phase = Phase.PICK_SPAWN
 	# 084：章节说了「默认已经站在出生点上」（序章只有一个出生点，没什么可挑的）就直接站上去
 	if p_chapter.auto_spawn and not s.map.entry_ids.is_empty():
@@ -244,7 +250,7 @@ func step_to(id: int) -> bool:
 	close_sessions()
 	_drop_pending_loot()
 	_drop_storage_if_leaving()
-	lock_safe()     # 092：走开 = 关上保险箱（里面有东西才算关）
+	leaving.emit(travel.current_id)     # 101：走开了 —— 模块自己接（保险箱关上）
 	_close_altar()
 	var was_visited := map.has_node(id) and map.get_node(id).is_visited()
 	var ok := travel.step_to(id)
@@ -269,7 +275,7 @@ func relocate(intent: MoveIntent) -> bool:
 	close_sessions()
 	_drop_pending_loot()
 	_drop_storage_if_leaving()
-	lock_safe()
+	leaving.emit(travel.current_id)     # 101：同上，事件把人挪走也算走开
 	_close_altar()
 	var ok := travel.apply(intent)
 	if ok:
@@ -491,24 +497,6 @@ func extract_closed(node: MapNode) -> bool:
 	return has_countdown() and at >= 0 and countdown_left() <= at
 
 
-## 092（作者定）：关上保险箱 —— 里面的送回基地（结算时照样进局外），**不能再改动**；空着关不算关（还能再开）。返回这次锁没锁
-func lock_safe() -> bool:
-	if safe_locked or safe == null or safe.item_count() == 0:
-		return false
-	safe_locked = true
-	if map != null and travel != null:
-		for id in map.node_ids():
-			if map.get_node(id).type == &"safe":
-				travel.mark_visited(id)     # 锁了就灰：再踩上不开
-	safe_closed.emit(safe.item_count())
-	return true
-
-
-## 保险箱还能开（没锁）
-func safe_open() -> bool:
-	return safe != null and not safe_locked
-
-
 ## 走完一步看一眼：归零就是行动失败 —— 会话关掉、没拿的战利品丢掉、战败结算（保险箱里的照样带出）
 func _check_countdown() -> void:
 	if phase != Phase.ON_MAP or not has_countdown():
@@ -554,14 +542,54 @@ func buff_context() -> RunContext:
 	return ctx
 
 
-## 把难度清单里的机制接进一局（开局与读档各一次；机制必须幂等）。没有难度 = 什么都不装
-func install_mechanics() -> void:
-	if difficulty == null:
-		return
-	for m in difficulty.mechanics:
-		var mech := m as RunMechanic
-		if mech != null:
-			mech.install(self)
+## 101 第 0 刀：把这一局的模块接进来（开局与读档各一次；模块必须幂等）。三层叠加：
+## 章节列的本体功能（没列就是 [method RunModules.standard]）+ 难度列的机制（069）+ 跑起来之后临时加的。
+## 本类不认识任何具体模块，顺序就是清单顺序
+func install_modules() -> void:
+	var body: Array = chapter.modules if chapter != null and not chapter.modules.is_empty() else RunModules.standard()
+	for m in body:
+		install_module(m as RunModule)
+	if difficulty != null:
+		for m in difficulty.mechanics:
+			install_module(m as RunModule)
+
+
+## 装一个模块：有存档就先交给它，再让它自己接进这一局。重复 id 不覆盖（幂等，读档会再调一遍）。返回装没装
+func install_module(m: RunModule) -> bool:
+	if m == null:
+		return false
+	var mid := m.id()
+	if mid != &"":
+		if modules.has(mid):
+			modules[mid].install(self)     # 已经装过：再 install 一次（幂等），不换对象
+			return false
+		var saved: Variant = modules_saved.get(String(mid), null)
+		if saved is Dictionary:
+			m.restore(saved as Dictionary)
+		modules[mid] = m
+	m.install(self)
+	return true
+
+
+## 这一局装着的某个模块（没装返回 null）
+func module(mid: StringName) -> RunModule:
+	return modules.get(mid, null)
+
+
+## 外面给某个模块的运行时输入（没有就是空字典）
+func module_input(mid: StringName) -> Dictionary:
+	var d: Variant = module_inputs.get(mid, null)
+	return d as Dictionary if d is Dictionary else {}
+
+
+## 装着的模块各说一句（开局屏的规则卡）
+func module_lines() -> Array[String]:
+	var out: Array[String] = []
+	for mid in modules:
+		var line := (modules[mid] as RunModule).describe()
+		if line != "":
+			out.append(line)
+	return out
 
 
 ## 给一个地图 buff（事件的后果）。不认识的 id、局外的 buff 给不了；已经有的刷新时限
@@ -1141,7 +1169,6 @@ func _wire_events() -> void:
 	events.bracket_of = func() -> int: return hunters.bracket() if hunters != null else -1
 	events.relocate = relocate
 	events.request_extract = try_extract     # 085：撤离点的对话里选「撤离」
-	events.safe_open = safe_open     # 092：锁上的保险箱不再开
 	events.faith_tier = active_faith_tier     # 093：事件条件 faith_active
 	events.active_faith_id = active_faith_id
 	events.bless_substitute = bless_ids     # 095：战利品 / 搜索的赐福替代
@@ -1242,8 +1269,6 @@ func to_dict() -> Dictionary:
 		"wallet": wallet.to_dict(),
 		"board": board.to_dict(),
 		"storage": storage.to_dict(),
-		"safe": safe.to_dict() if safe != null else null,
-		"safe_locked": safe_locked,
 		"faith_rituals": faith_rituals.duplicate(),
 		"carry_in_value": carry_in_value,
 		"faith_stat_bonus": faith_stat_bonus.duplicate(),
@@ -1258,7 +1283,15 @@ func to_dict() -> Dictionary:
 		"boss_cleared": boss_cleared,
 		"tally": tally.duplicate(),
 		"buffs": {"meta": _meta_buff_ids(), "map": map_buffs.duplicate(true)},
+		"modules": _modules_to_dict(),     # 101：每个模块自己的状态；加模块 = 新键、带默认值，不升版
 	}
+
+
+func _modules_to_dict() -> Dictionary:
+	var out := {}
+	for mid in modules:
+		out[String(mid)] = (modules[mid] as RunModule).to_dict()
+	return out
 
 
 func _node_storages_to_dict() -> Dictionary:
@@ -1303,9 +1336,8 @@ static func from_dict(
 	s.wallet = Wallet.from_dict(d.get("wallet", {}))
 	s.board = GridInventory.from_dict(d.get("board", {}), p_items)
 	s.storage = ItemStash.from_dict(d.get("storage", {}), p_items)
-	var safe_raw = d.get("safe", null)
-	s.safe = GridInventory.from_dict(safe_raw, p_items) if safe_raw is Dictionary else GridInventory.new(Vector2i(3, 3), SAFE_ID, false)
-	s.safe_locked = bool(d.get("safe_locked", false))
+	var mods_raw: Variant = d.get("modules", {})
+	s.modules_saved = (mods_raw as Dictionary).duplicate(true) if mods_raw is Dictionary else {}
 	s.faith_rituals = (d.get("faith_rituals", {}) as Dictionary).duplicate() if d.get("faith_rituals", {}) is Dictionary else {}
 	s.carry_in_value = int(d.get("carry_in_value", 0))
 	s.faith_stat_bonus = (d.get("faith_stat_bonus", {}) as Dictionary).duplicate() if d.get("faith_stat_bonus", {}) is Dictionary else {}
@@ -1355,5 +1387,8 @@ static func from_dict(
 	s.phase = int(d.get("phase", Phase.PICK_SPAWN))
 	s.end_reason = StringName(String(d.get("end_reason", "")))
 	s.boss_cleared = bool(d.get("boss_cleared", false))
+	# 101：模块（本体那一层）现在就装上，读回来的一局立刻能用；难度机制要等持有方按 id 找回难度，
+	# 它会再调一次 install_modules（模块幂等）
+	s.install_modules()
 	return s
 #endregion

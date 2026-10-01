@@ -620,7 +620,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	var value := maxi(0, carry_value)
 	for inst in taken:
 		value += ItemValue.of(inst.def)
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale, safe_size(), value)
+	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale, {SafeModule.ID: {"size": safe_size()}}, value)
 	if state == null:
 		return null
 	for inst in taken:
@@ -657,7 +657,8 @@ func save_and_quit() -> bool:
 func close_safe() -> bool:
 	if run == null:
 		return false
-	var locked := run.lock_safe()
+	var safe := SafeModule.of(run)     # 101：保险箱的状态在模块里
+	var locked := safe != null and safe.lock()
 	if locked:
 		_go(Screen.MAP, {})
 	else:
@@ -892,7 +893,8 @@ func _reopen_entry() -> Dictionary:
 	if run.pending_loot != null:
 		return {"screen": Screen.LOOT, "container": run.pending_loot}
 	var here := run.current_node()
-	if here != null and NodeEvents.effective_type(here) == &"safe" and run.safe_open():
+	var safe := SafeModule.of(run)
+	if here != null and NodeEvents.effective_type(here) == &"safe" and safe != null and safe.is_open():
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开
 	if here != null and run.altar_open():
 		return {"screen": Screen.ALTAR, "node": here}     # 093：神坛还开着（这一次没用过特殊操作）
@@ -969,10 +971,10 @@ func _adopt(state: RunState) -> void:
 	state.hunter_defs = hunter_defs
 	state.faith_defs = faith_defs
 	state.recipes = recipes
-	# 难度：读档回来只有 id，在这里找回定义并把机制重新接上（开局那次 RunState.start 已经装过，再装一次是幂等的）
+	# 难度：读档回来只有 id，在这里找回定义并把机制重新接上（本体模块在 from_dict 里已经装过，再装一次是幂等的）
 	if state.difficulty == null and state.difficulty_id != &"":
 		state.difficulty = difficulty_of(state.difficulty_id)
-		state.install_mechanics()
+		state.install_modules()
 	var ch := character_of(state.character_id)
 	if ch != null:
 		state.set_character(ch)     # 基线、技能的账（读档回来的状态在这里接上定义）

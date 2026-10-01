@@ -159,9 +159,11 @@ const EVENT_OUTCOMES := {
 }
 
 ## 一局的机制（069）：难度清单里开的那些
-const RUN_MECHANICS := {
+## 101 第 0 刀：一局的模块 —— 本体功能与难度机制同一张表（[RunModule]；[RunMechanic] 是它的子类）
+const RUN_MODULES := {
 	&"erosion": "res://core/run/mechanics/erosion_mechanic.gd",
 	&"hunters": "res://core/run/mechanics/hunter_mechanic.gd",
+	&"safe": "res://core/run/modules/safe_module.gd",
 }
 
 ## 猎手（069 / 071）：行动逻辑与战败后果
@@ -199,7 +201,8 @@ const TABLES := {
 	&"run_effect": RUN_EFFECTS,
 	&"event_condition": EVENT_CONDITIONS,
 	&"event_outcome": EVENT_OUTCOMES,
-	&"run_mechanic": RUN_MECHANICS,
+	&"run_module": RUN_MODULES,
+	&"run_mechanic": RUN_MODULES,     # 101：旧键名的别名（DifficultyDef.mechanics 还叫机制）
 	&"hunter_behavior": HUNTER_BEHAVIORS,
 	&"hunter_loss": HUNTER_LOSSES,
 	&"erosion_effect": EROSION_EFFECTS,

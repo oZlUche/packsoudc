@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.09 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.10 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2848,7 +2848,8 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 累计搜索次数、待拾取的容器、阶段。**内容库不进存档**，只写 id（章节、道具、敌人），读档时由调用方给；
 开着的店 / 搜索会话不存 —— 存档那一刻视为离开了那个点，货架与搜索进度本来就在图里。
 
-**存档从第一天就写版本号**（一局 `RunState.SAVE_VERSION = 1`，局外 `MetaState.SAVE_VERSION = 2`），读到不认识的版本不猜、返回 null。
+**存档从第一天就写版本号**（一局 `RunState.SAVE_VERSION = 2`，局外 `MetaState.SAVE_VERSION = 2`），读到不认识的版本不猜、返回 null。
+一局的 v1 → v2（101）是迁移链的第一个真实用例：子系统搬成模块之后，它们的状态从顶层键（`safe` / `safe_locked`）挪进了 `modules[id]`。
 
 **迁移链**（098，报告 098）：`MetaMigrations` / `RunMigrations`（纯静态）**在字典层逐级升**，一步只认 n → n+1，`match` 显式分派（不走反射）、`duplicate(true)` 不改入参；
 只在**读文件**这一层做（`MetaSave.from_text` / `RunSave.from_text`），`from_dict` 继续严格只认当前版本，对象因此永远只有一套形状。
@@ -2924,6 +2925,38 @@ static func load_chapters() / load_loadouts() / load_characters() / load_difficu
 func grant_first_kit()                               # 仓库空的第一局发第一套（MetaRules.first_kit）
 ```
 
+### 7.4 一局的模块：`RunState` 的扩展点（101 第 0 刀，作者定）
+
+作者要的是「流程控制器将来能扩展、能加东西」。做法是把 069 已经验证过的 `RunMechanic` 升级成**一局的统一插件模型**：
+本体功能（保险箱、将来的倒计时 / 神坛 / 合成……）和难度机制走同一条路。
+
+```gdscript
+@abstract class_name RunModule extends Resource
+@abstract func id() -> StringName        # 存档里的键、run.module(id) 的 id；空 = 不进 modules 存档
+func install(run: RunState) -> void      # 开局 / 读档各一次，必须幂等：造自己的状态、订阅信号、挂自己要被调用的能力
+func to_dict() / restore(d)              # 自己的状态，进 run.to_dict()["modules"][id]
+func describe() -> String                # 开局屏的规则卡、编辑器
+```
+
+- **生命周期的钩子不写在基类里**：写了就得在 `RunState` 里逐个调，那又回到「每加一个玩法都要改 `RunState`」。
+  模块在 `install` 里**订阅已有的信号**（`RunState.leaving` / `phase_changed`、`MapTravel.moved` / `waited`、`NodeEvents.*`），
+  和侵蚀、猎手、信力一直以来的接法一样（1.2 命令进信号出）。101 新增一个 `RunState.leaving(node_id)`：要离开当前点了（走一步 / 被事件挪走，在真正动之前），
+  「走开就……」的规则（保险箱关上，后面还有暂存区）都接它。
+- **哪些模块装**，三层叠加（`RunState.install_modules`）：章节 `ChapterDef.modules`（没列就用 `RunModules.standard()`）+ 难度 `DifficultyDef.mechanics` + 跑起来之后 `run.install_module(m)`。
+- **运行时输入**（不进存档的那些，比如保险箱几格来自 `MetaRules.safe_size`）走 `RunState.module_inputs`（id → 字典），模块在 `install` 里读 `run.module_input(id)`；
+  `RunState` 不解释里面的内容（刀 2 会把它并进 `RunSetup`）。
+- **存档**：`modules[id]`。读档先 `restore(d)` 分发、再 `install` —— 所以要内容库才能还原的东西（容器里的道具）在 `install` 里用 `run.items` 做。
+  新加模块 = 新键、带默认值，不升版（098 的规矩）。
+- **注册表**：`EffectRegistry.RUN_MODULES`（旧键名 `run_mechanic` 留作别名），导入器照旧按反射填参数。`RunMechanic` 现在是 `RunModule` 的子类，侵蚀 / 猎手一行没改。
+
+**加一个玩法（天气、声望、商队）的全部工作**：`core/run/modules/xxx_module.gd` 一个文件 + 注册表一行 + 章节 JSON 里 `"modules": [{"type": "xxx", …}]` 一条 + 一个测试。
+`RunState`、`GameFlow`、`NodeEvents` 零改动；界面要显示就订阅模块自己的信号。
+
+第一个搬出来的样板是**保险箱**（`SafeModule`，092 的规则一条没变）：容器、锁没锁、`closed` 信号、存档、
+「走开 = 关上」与「锁上了就不再开」的接线全在它自己身上，`RunState` 不再有一个 `safe` 字段。取它用 `SafeModule.of(run)`，没装就是 null（这一局没有保险箱）。
+
+---
+
 ### 8.1 开局：角色、初始包、从仓库带入
 
 **角色**（`CharacterDef`，`core/run/character_def.gd`，内容种类 `characters`，报告 067）定开一局时按角色变的那几样：战斗基线的覆盖项（没写的沿用 4.2 的默认）、
@@ -2981,9 +3014,9 @@ func grant_first_kit()                               # 仓库空的第一局发�
 ### 8.4 进阶难度：机制清单（069 / 070）
 
 作者：像杀戮尖塔的进阶，但不只提升数值，要加入机制。于是一档难度是一份**清单**（`DifficultyDef`，内容种类 `difficulties`）：
-开哪些机制（`RunMechanic` 构件，各带参数，登记在 `EffectRegistry.RUN_MECHANICS`）、顺带哪些数值修饰（`RunEffect` / `LootEffect`，和局外 buff 同一套构件，
+开哪些机制（`RunMechanic` 构件，各带参数，登记在 `EffectRegistry.RUN_MODULES`；101 之后它是 `RunModule` 的一种，见 7.4）、顺带哪些数值修饰（`RunEffect` / `LootEffect`，和局外 buff 同一套构件，
 `RunState.buff_context()` 一起算）。机制自己把自己接进一局（`install(run)`：侵蚀接 `MapTravel.erosion`，猎手接 `RunState.hunters`），
-开局与读档各调一次，必须幂等；`RunState` 不认识任何具体机制。**没有难度定义 = 普通 = 现在的一切。**
+开局与读档各调一次，必须幂等；`RunState` 不认识任何具体机制（装的入口是 `install_modules`，7.4）。**没有难度定义 = 普通 = 现在的一切。**
 难度是局外解锁的特殊选项：`requires_unlock` 指一个解锁 id，`MetaState.unlocks` 记着（占位开关在局外屏，将来是成长系统），开局屏只列能选的。
 侵蚀由此改口：不是每一局都有，是某档难度开的机制；`ErosionMechanic` 的本体在 075（5.7）。
 `ChapterDef.difficulty`（这一章本身多难）与进阶难度是两回事。侵蚀本体见 5.7（075）。
@@ -3567,6 +3600,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.10 | 2026-10-01 | **一局的模块：`RunState` 的扩展点**（报告 101 第 0 刀 + 第 1 刀样板；新增 7.4、改 7.2 / 8.4）：`RunModule`（装 / 存 / 读 / 说一句，生命周期靠订阅已有信号）、`RunState.modules / install_modules / install_module / module / module_input / module_lines`、新信号 `leaving`、`ChapterDef.modules`、`RunModules.standard()`、注册表 `RUN_MODULES`（`run_mechanic` 作别名）、`RunMechanic` 变成它的子类；保险箱搬成 `SafeModule`（`RunState` 不再有 `safe` 字段，`SafeModule.of(run)` 取），一局存档升到 v2，`RunMigrations` 第一步把顶层 `safe` / `safe_locked` 搬进 `modules.safe` |
 | v2.09 | 2026-10-01 | **内容管线一致性检查**（报告 100 第 1 步；10.1）：`ContentCheck` + `tools/check_content.gd` 守「作者 JSON ⇄ `.tres` 一致」（导出比对、深比较不较真键顺序与 int / float；缺资产、孤儿资产、值不同各报一条），接进 `tools/test.sh` 与 `test_content_pipeline`；`buffs` / `sets` 两种从 `ContentPaths.KINDS` / `ORDER` 去掉（都是空目录，目录常量留给编辑器）；`test.sh` 的 `GODOT` 未设时先在 PATH 里找 `godot` / `godot4` |
 | v2.08 | 2026-10-01 | **存档迁移链与背包里切信仰**（报告 098、099）：7.2 写迁移链（`MetaMigrations` / `RunMigrations` 字典层逐级升、只在读文件那一层、升版规矩与冻结样本）、读不出来先备份（`SaveSlots.backup`、`GameFlow.meta_backup / run_backup / backup_notice`、`slots.backed_up`）、内容 id 改名表 `IdAliases`（`ItemDatabase.get_def` / `TagRegistry.get_def` / `FaithPower.restore` 找不到才查）；3.8 切换信仰改成明确规则：`GridInventory.reseat`（只盖 `placed_seq`、不发 `placed`，信力不再被棋盘内来回拖刷）、棋盘内重新落下或右键信物都切、取消拖拽不切（`DragLayer` 放回同容器前设回 `container_id`） |
 | v0.1 | 2026-09-20 | 初版：六大模块设计；地图系统确定为可插拔生成器架构，第一章采用同心环形地图 |
