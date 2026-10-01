@@ -35,8 +35,11 @@ const EVENT_OUTCOMES: Array[StringName] = [&"item", &"restore", &"story"]
 ## 事件结果是 item 时给一件什么稀有度以下的道具（-1 不限）；找法与搜索点一样
 @export var event_item_rarity_cap: int = 1
 
-## 一场战斗的时限（秒）：打不死判平局，平局按输算
-@export var battle_time_limit: float = 60.0
+## 一场战斗的安全上限（秒，103）：加时与衰竭保证有限时间内必有人倒下，这条只防配置坏了时死循环；到了判平局（按输算）
+@export var battle_time_limit: float = 600.0
+
+## 103：加时与衰竭的数值（没填用 [OvertimeRules] 的默认：30 秒起受伤 +20%、每 5 秒再叠；60 秒起每秒掉 5 点生命上限）
+@export var overtime: OvertimeRules
 
 ## 087（作者定）：击败核心点的 BOSS 之后，收完战利品就直接撤离结算（不用走到撤离点、不付费）
 @export var boss_extracts: bool = true

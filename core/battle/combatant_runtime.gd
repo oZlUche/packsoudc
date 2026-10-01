@@ -22,6 +22,9 @@ var item_base: Dictionary = {}
 ## uid -> 与它连结的物品 uid 列表（增益／受益格）。[OnItemFired] 的 LINKED 来源查它。
 var item_links: Dictionary = {}
 
+## 标准轴（4.3，103 4e）：axis → [内容层, 系统层]，带符号；结算在 [method _rebuild] 末尾
+var axes: Dictionary = {}
+
 var _merged: StatSet = null
 var _merged_items: Dictionary = {}
 var _dirty: bool = true
@@ -114,7 +117,81 @@ func _rebuild() -> void:
 			(mod as StatModifier).apply_to(_merged, buff.stacks)
 			for uid in _merged_items:
 				(mod as StatModifier).apply_to(_merged_items[uid], buff.stacks)
+	_apply_axes()
 	_sync_resource_maxes()
+
+
+#region 标准轴
+## 内容层 / 系统层 / 合计层数
+func axis_stacks(axis: StringName) -> int:
+	return int((axes.get(axis, [0, 0]) as Array)[0])
+
+
+func axis_system(axis: StringName) -> int:
+	return int((axes.get(axis, [0, 0]) as Array)[1])
+
+
+func axis_total(axis: StringName) -> int:
+	return axis_stacks(axis) + axis_system(axis)
+
+
+## 百分比轴的当前因子（定点）。受到伤害这条由伤害管线直接读
+func axis_factor(axis: StringName) -> int:
+	return StatAxes.factor(axis, axis_total(axis))
+
+
+## 改一条轴。[param system] = 系统层（加时这类；净化不动它）。返回实际改了多少
+func shift_axis(axis: StringName, delta: int, system: bool = false) -> int:
+	if delta == 0 or not StatAxes.has(axis):
+		return 0
+	var pair: Array = axes.get(axis, [0, 0])
+	pair[1 if system else 0] = int(pair[1 if system else 0]) + delta
+	axes[axis] = pair
+	mark_dirty()
+	return delta
+
+
+## 净化：把内容层往 0 推至多 [param count] 层（0 = 清空）；[param sign] 只动正（1）/ 负（-1）/ 都动（0）。系统层不动
+func clear_axis(axis: StringName, count: int = 0, sign: int = 0) -> int:
+	var have := axis_stacks(axis)
+	if have == 0 or (sign > 0 and have < 0) or (sign < 0 and have > 0):
+		return 0
+	var n := absi(have) if count <= 0 else mini(count, absi(have))
+	return shift_axis(axis, -n if have > 0 else n)
+
+
+## 4.3 公式的最后一步：按轴表把因子 / 固定值落到单位与每件道具的属性终值上
+func _apply_axes() -> void:
+	for axis in axes:
+		var total := axis_total(axis)
+		if total == 0:
+			continue
+		var key := StatAxes.stat_of(axis)
+		if axis == StatAxes.REGEN_HP_PCT:
+			# 按生命上限的百分比每秒回血：折进 regen_hp 的速率（只落在单位上）
+			var per_sec := StatMath.mul(_merged.total_of(BattleStats.MAX_HP), StatMath.from_float(total * StatAxes.step_of(axis) / 100.0))
+			_merged.ensure(BattleStats.REGEN_HP).add_flat(per_sec)
+			continue
+		if key == &"":
+			continue
+		if StatAxes.is_percent(axis):
+			var f := StatAxes.factor(axis, total)
+			_scale_final(_merged, key, f)
+			for uid in _merged_items:
+				_scale_final(_merged_items[uid], key, f)
+		else:
+			var add := StatMath.from_float(total * StatAxes.step_of(axis))
+			_merged.ensure(key).add_flat(add)
+
+
+## 把一项属性的终值乘上 [param f]（定点）：差额补进固定值 —— 终值 = 原终值 × f
+static func _scale_final(set: StatSet, key: StringName, f: int) -> void:
+	if f == StatMath.ONE or (not set.has(key) and BattleStats.default_base(key) == 0):
+		return
+	var v := set.ensure(key)
+	var before := v.total()
+	v.add_flat(StatMath.mul(before, f) - before)
+#endregion
 
 
 ## 资源由 max_* 属性自动派生：有 max_shield 就有 shield 资源。
@@ -171,6 +248,9 @@ func find_buff(buff_id: StringName) -> BuffInstance:
 ## [b]会改变规则集[/b]（buff 可携带 rules），调用方必须随后重算事件掩码，
 ## 否则新规则订阅的事件可能尚未开启，那条规则会静默失效。
 func apply_buff(def: BuffDef, stacks: int = 1, now: int = 0) -> int:
+	var ctx: BattleContext = _ctx_ref.get_ref() if _ctx_ref != null else null
+	if ctx != null and not ctx.seen_buffs.has(def.id):
+		ctx.seen_buffs[def.id] = def     # 103 第 6 条：上过身的都登记，回放的 buff 栏靠它认得所有 buff
 	var existing := find_buff(def.id)
 	var added := 0
 	if existing != null:
@@ -192,8 +272,8 @@ func apply_buff(def: BuffDef, stacks: int = 1, now: int = 0) -> int:
 ## 移除层数，返回实际移除的层数。层数归零时整条 buff 连同其规则一并移除。
 func remove_buff_stacks(buff_id: StringName, count: int) -> int:
 	var inst := find_buff(buff_id)
-	if inst == null or count <= 0:
-		return 0
+	if inst == null or count <= 0 or inst.def.system:
+		return 0     # 103：系统效果（鏖战、衰竭）不可解除
 	var removed := mini(count, inst.stacks)
 	inst.stacks -= removed
 	if inst.stacks <= 0:
@@ -289,6 +369,10 @@ func _on_resource_changed(key: StringName, delta: int, reason: StringName) -> vo
 		"key": String(key), "delta": delta, "reason": String(reason),
 		"current": resources.current(key), "max": resources.maximum(key),
 	})
+	# 103（衰竭）：生命上限掉到把当前血压成 0 也是倒下。走 mark_dead，所以蛮神的不死照常进坚持期
+	if key == BattleStats.RES_HP and reason == BattleEvent.REASON_MAX_CHANGED \
+			and resources.current(key) <= 0 and mark_dead():
+		ctx.emit(BattleEvent.DIED, side, {})
 
 
 ## 087（作者反馈：敌人倒下两次、倒下时血没归零）：**倒下是终局**。血一到 0 就记死，之后的治疗（伤药的「濒死回血」）不再把它救回来，
@@ -342,4 +426,8 @@ func snapshot() -> Dictionary:
 	var buff_snap := {}
 	for b in buffs:
 		buff_snap[String(b.def.id)] = b.stacks
-	return {"side": side, "resources": resources.snapshot(), "buffs": buff_snap}
+	var axis_snap := {}
+	for a in axes:
+		if axis_total(a) != 0 or axis_system(a) != 0:
+			axis_snap[String(a)] = [axis_stacks(a), axis_system(a)]
+	return {"side": side, "resources": resources.snapshot(), "buffs": buff_snap, "axes": axis_snap}

@@ -31,12 +31,13 @@ static func fire_scheduled(ctx: BattleContext, owner: CombatantRuntime, rt: Rule
 		(cost as Cost).on_attempt(rc)
 	for cost in all_costs:
 		if not (cost as Cost).can_pay(rc):
+			_emit_skipped(ctx, owner, rt, rc)
 			return false
 	for cost in all_costs:
 		(cost as Cost).pay(rc)
 
 	if rt.source_uid != 0:
-		ctx.emit(BattleEvent.ITEM_FIRED, owner.side, {"uid": rt.source_uid})
+		ctx.emit(BattleEvent.ITEM_FIRED, owner.side, _fired_payload(rt, rc))
 	for effect in rule.effects:
 		(effect as Effect).apply(rc)
 	return true
@@ -88,18 +89,44 @@ static func evaluate(
 		(cost as Cost).on_attempt(rc)
 	for cost in all_costs:
 		if not (cost as Cost).can_pay(rc):
+			_emit_skipped(ctx, owner, rt, rc)
 			return false
 	for cost in all_costs:
 		(cost as Cost).pay(rc)
 
 	# 物品出手。连带触发靠监听这条事件，不需要任何特例
 	if rt.source_uid != 0:
-		ctx.emit(BattleEvent.ITEM_FIRED, owner.side, {"uid": rt.source_uid})
+		ctx.emit(BattleEvent.ITEM_FIRED, owner.side, _fired_payload(rt, rc))
 
 	# 4. 内容。同一条规则的多个效果共用上面那一次消耗
 	for effect in rule.effects:
 		(effect as Effect).apply(rc)
 	return true
+
+
+## 103 第 7 条：出手事件带上这条规则下一次就绪的时刻（定点），回放层据此画冷却遮罩；没有冷却的规则不带
+static func _fired_payload(rt: RuleRuntime, rc: RuleContext) -> Dictionary:
+	var out := {"uid": rt.source_uid}
+	var ready := ready_at_of(rt, rc)
+	if ready >= 0:
+		out["ready_at"] = ready
+	return out
+
+
+## 冷却已经走了、耐力不够没出手：也告诉回放「新一轮开始了」，否则遮罩会在这一刻断掉
+static func _emit_skipped(ctx: BattleContext, owner: CombatantRuntime, rt: RuleRuntime, rc: RuleContext) -> void:
+	if rt.source_uid == 0:
+		return
+	var ready := ready_at_of(rt, rc)
+	if ready >= 0:
+		ctx.emit(BattleEvent.ITEM_SKIPPED, owner.side, {"uid": rt.source_uid, "ready_at": ready})
+
+
+## 冷却型频率的下一次就绪时刻；不是冷却型 -1
+static func ready_at_of(rt: RuleRuntime, rc: RuleContext) -> int:
+	if rt.rule == null or not (rt.rule.cadence is CooldownCadence):
+		return -1
+	return int(rc.state().get(CooldownCadence.READY_AT, -1))
 
 
 ## 出手（或尝试出手）之后重新排队。

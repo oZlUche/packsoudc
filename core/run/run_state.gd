@@ -660,6 +660,7 @@ func compile_player() -> CombatantSpec:
 	var spec := BattleCompiler.compile(board, effective_baseline(), mods, rules, faith_power.tiers() if faith_power != null else {}, faith_power.points_by_tag() if faith_power != null else {})
 	for p in faith_perks():     # 093：信仰级效果在编译好的单位上做手脚（顺序 = 文件里的顺序）
 		(p as FaithPerk).modify_spec(spec, board, self)
+	spec.passives = BattlePassives.of(self)     # 103：常驻加成也进 buff 栏
 	return spec
 
 

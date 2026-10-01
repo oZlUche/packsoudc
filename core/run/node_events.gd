@@ -564,8 +564,8 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 	var me: CombatantSpec = player_spec.call()
 	if before_battle.is_valid():
 		before_battle.call(me, enemy, type)
-	var limit := rules.battle_time_limit if rules != null else 60.0
-	var result := BattleSim.run(me, enemy, _rng_for(node, "battle"), limit)
+	var limit := rules.battle_time_limit if rules != null else BattleSim.DEFAULT_TIME_LIMIT
+	var result := BattleSim.run(me, enemy, _rng_for(node, "battle"), limit, rules.overtime if rules != null else null)
 	var won := result.winner == 0
 	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content}
 	battle_finished.emit(node, result, won)

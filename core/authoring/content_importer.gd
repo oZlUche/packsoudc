@@ -145,6 +145,8 @@ static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) ->
 	if def.id == &"":
 		report.error("id", "增益必须有 id")
 	validate_buff_duration(def, "", report)
+	warn_unbounded_percent(def, "", report)
+	warn_axis_candidate(def, "", report)
 	ctx.register_buff(def)
 	return def
 
@@ -167,6 +169,67 @@ static func _validate_item_buffs(def: ItemDef, report: ImportReport) -> void:
 			var e := rule.effects[j] as ApplyStatus
 			if e != null and e.buff != null:
 				validate_buff_duration(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
+				warn_unbounded_percent(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
+				warn_axis_candidate(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
+
+
+## 103 第 3 条：buff 没写明就是永续、不限层 —— 按百分比乘的不限层 buff 越叠越大（加时一拖更甚），
+## 提醒作者确认要不要填 max_stacks。不是错误：有的就是故意不封顶
+static func warn_unbounded_percent(def: BuffDef, path: String, report: ImportReport) -> void:
+	if def == null or def.max_stacks != 0:
+		return
+	for m in def.mods:
+		var mod := m as StatModifier
+		if mod != null and mod.mult_percent != 0:
+			report.warn(path + "max_stacks", "「%s」不限层且按百分比乘（%+d%%），永续叠加会越叠越大，确认要不要填层数上限" % [def.id, mod.mult_percent])
+			return
+
+
+## 103 4e：能用标准轴表达的简单增减一律走轴 —— 只有一条落在轴属性上的 mod、没有规则的可叠层 buff，提示改成 shift_axis
+static func warn_axis_candidate(def: BuffDef, path: String, report: ImportReport) -> void:
+	if def == null or not def.is_stackable() or def.mods.size() != 1 or not def.rules.is_empty() \
+			or not def.on_apply.is_empty() or not def.on_expire.is_empty():
+		return
+	var axis := StatAxes.axis_for_stat((def.mods[0] as StatModifier).stat)
+	if axis != &"":
+		report.warn(path + "mods", "「%s」只是一条 %s 的增减，改用标准轴：shift_axis(%s)（增益正、减益负，直接相抵）" % [def.id, (def.mods[0] as StatModifier).stat, axis])
+
+
+## 103 第 1、2 条（作者定）：带武器标签的道具必须造成伤害；只有带武器标签的道具才消耗耐力。
+## 「造成伤害」只认道具自己规则里直接的 deal_damage —— 施加会掉血的 buff 是施毒，不算；
+## 反过来不限：不带武器标签的也可以造成伤害，武器也可以不耗耐力
+static func _validate_item_combat(def: ItemDef, report: ImportReport) -> void:
+	var is_weapon := def.tags.has(&"weapon")
+	var deals_damage := false
+	if def.combat != null:
+		for r in def.combat.rules:
+			var rule := r as AbilityRule
+			if rule == null:
+				continue
+			for e in rule.effects:
+				if e is DealDamage:
+					deals_damage = true
+	if is_weapon and not deals_damage:
+		report.error("tags", "「%s」带武器标签却不造成伤害 —— 武器至少要有一条直接造成伤害的规则" % def.id)
+	if is_weapon:
+		return
+	var groups: Array = []
+	if def.combat != null:
+		groups.append(["combat.rules", def.combat.rules])
+	for k in def.faith_bonuses.size():
+		var fb := def.faith_bonuses[k] as FaithBonus
+		if fb != null:
+			groups.append(["faith_bonuses[%d].rules" % k, fb.rules])
+	for g in groups:
+		var rules: Array = g[1]
+		for i in rules.size():
+			var rule := rules[i] as AbilityRule
+			if rule == null:
+				continue
+			for c in rule.effective_costs():
+				var rc := c as ResourceCost
+				if rc != null and rc.resource_key == &"stamina":
+					report.error("%s[%d].costs" % [g[0], i], "「%s」不带武器标签却消耗耐力 —— 耐力只归武器" % def.id)
 
 
 static func import_set(data: Dictionary, ctx: Context, report: ImportReport) -> ItemSetDef:
@@ -186,6 +249,7 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_validate_item_tags(def, ctx, report)
 	_validate_item_faith(def, ctx, report)
 	_validate_item_buffs(def, report)
+	_validate_item_combat(def, report)
 	ctx.register_item(def)
 	return def
 
@@ -725,6 +789,9 @@ static func _validate_node_rules(rules: NodeRules, ctx: Context, report: ImportR
 		report.error("rest_restore", "回的体力不能为负")
 	if rules.battle_time_limit <= 0.0:
 		report.error("battle_time_limit", "战斗时限应为正")
+	if rules.overtime != null:
+		for pr in rules.overtime.problems():
+			report.error("overtime." + String(pr[0]), String(pr[1]))
 	if rules.search == null:
 		report.error("search", "没有搜索规则，搜索点不知道怎么搜")
 		return

@@ -16,6 +16,12 @@ var initial: Dictionary = {}
 
 var final: Dictionary = {}
 
+## 103 第 6 条：这场上过身的所有 buff（id → [BuffDef]）。回放的 buff 栏直接拿它画图标、写悬浮窗
+var buffs: Dictionary = {}
+
+## 103 第 6 条：双方的常驻加成（[[PassiveNote…], [PassiveNote…]]），编译期并进属性、不是 buff，但影响战斗，所以进栏
+var passives: Array = [[], []]
+
 
 func duration_sec() -> float:
 	return StatMath.to_float(duration)

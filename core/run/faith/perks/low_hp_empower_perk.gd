@@ -22,3 +22,8 @@ func modify_spec(spec: CombatantSpec, _board: GridInventory, _run: RunState) -> 
 
 func describe() -> String:
 	return note if note != "" else "所有伤害 +%d%%～+%d%%，血越少越高" % [min_percent, max_percent]
+
+
+## 103：作用于角色本身 → 进 buff 栏
+func battle_note(_run: RunState) -> String:
+	return describe()

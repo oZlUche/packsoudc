@@ -12,3 +12,8 @@ func modify_spec(spec: CombatantSpec, _board: GridInventory, _run: RunState) -> 
 
 func describe() -> String:
 	return note if note != "" else "生命归零后仍坚持 %.0f 秒：耐力无限、伤害照记；到期血还是 0 才倒下" % seconds
+
+
+## 103：作用于角色本身 → 进 buff 栏
+func battle_note(_run: RunState) -> String:
+	return describe()

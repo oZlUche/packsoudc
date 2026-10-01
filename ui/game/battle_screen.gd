@@ -10,7 +10,7 @@ var _won: bool = false
 
 
 func open(payload: Dictionary) -> void:
-	var panel := _centered_panel(Vector2(1000, 640))
+	var panel := _centered_panel(Vector2(1200, 900))     # 103 第 7 条：要放下双方棋盘
 	var col := _vbox(8)
 	panel.add_child(col)
 	var node: MapNode = payload.get("node", null)
@@ -25,7 +25,7 @@ func open(payload: Dictionary) -> void:
 	_view = BattleView.new()
 	_view.label_font = font
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_view.custom_minimum_size = Vector2(960, 500)
+	_view.custom_minimum_size = Vector2(1160, 780)
 	col.add_child(_view)
 	_view.finished.connect(_on_finished)
 
@@ -36,10 +36,12 @@ func open(payload: Dictionary) -> void:
 		_view.play(result, ["我", enemy_name])
 		_view.set_item_names(0, _names_of(payload.get("player", null)))
 		_view.set_item_names(1, _names_of(payload.get("enemy", null)))
-		# 087：双方会出现的 buff（图标 + 悬浮说明）
-		var defs := Glossary.buffs_in_spec(payload.get("player", null))
-		defs.merge(Glossary.buffs_in_spec(payload.get("enemy", null)))
-		_view.set_buff_defs(defs)
+		# 087 / 103：双方上过身的 buff（图标 + 悬浮说明）在 result.buffs 里，play 已经接上
+		# 103 第 7 条：双方棋盘 + 冷却遮罩（编译时的那张棋盘，uid 和日志一致）
+		for side in 2:
+			var spec: CombatantSpec = payload.get("player" if side == 0 else "enemy", null)
+			if spec != null and spec.board != null:
+				_view.set_board(side, spec.board)
 
 
 ## 看完了（或不想看了）：回到流程

@@ -13,6 +13,7 @@ const TRIGGERS := {
 	&"on_resource_changed": "res://core/battle/triggers/on_resource_changed.gd",
 	# 状态条件型：条件在相关事件发生的那一刻求值
 	&"on_stacks_at_least": "res://core/battle/triggers/on_stacks_at_least.gd",
+	&"on_axis_at_least": "res://core/battle/triggers/on_axis_at_least.gd",
 	&"on_resource_below": "res://core/battle/triggers/on_resource_below.gd",
 	&"on_damage": "res://core/battle/triggers/on_damage.gd",
 	&"on_before_damage": "res://core/battle/triggers/on_before_damage.gd",
@@ -39,6 +40,8 @@ const COMBAT_EFFECTS := {
 	&"change_resource": "res://core/battle/effects/change_resource.gd",
 	&"apply_status": "res://core/battle/effects/apply_status.gd",
 	&"remove_status": "res://core/battle/effects/remove_status.gd",
+	# 标准轴（4.3，103）：单位级带符号层数
+	&"shift_axis": "res://core/battle/effects/shift_axis.gd",
 	# 只在受伤前阶段有效，见 DamageResolver
 	&"modify_damage": "res://core/battle/effects/modify_damage.gd",
 	&"low_hp_empower": "res://core/battle/effects/low_hp_empower.gd",
@@ -111,7 +114,7 @@ const FAITH_PERKS := {
 	&"smite": "res://core/run/faith/perks/smite_perk.gd",
 	&"extra_drop_by_node": "res://core/run/faith/perks/extra_drop_by_node_perk.gd",
 	&"gift_on_enter": "res://core/run/faith/perks/gift_on_enter_perk.gd",
-	&"draw_is_win": "res://core/run/faith/perks/draw_is_win_perk.gd",
+	&"overtime_regen": "res://core/run/faith/perks/overtime_regen_perk.gd",
 	&"undying": "res://core/run/faith/perks/undying_perk.gd",
 	&"altar_bless": "res://core/run/faith/perks/altar_bless_perk.gd",
 }
