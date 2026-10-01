@@ -107,12 +107,11 @@ class_name OvertimeRules
 - `BattleContext` 记 `seen_buffs: Dictionary`（id → `BuffDef`），`CombatantRuntime.apply_buff` 每次上身登记一笔；`BattleResult.buffs = ctx.seen_buffs`。
 - `BattleScreen` / 沙盒不再调 `Glossary.buffs_in_spec` 拼表，直接 `view.set_buff_defs(result.buffs)`。**凡是真的上过身的 buff，定义必然在表里**，不管来自自己、对手、信仰规则、局外 buff 的规则还是系统 —— 不需要再列举来源。`buffs_in_spec` 留给开局屏的预估用。
 - 面板：`system` buff 第三种配色；不可叠层（`max_stacks == 1`）不画 `×1`，其余照画 `×n`；排序：系统 → 减益 → 增益，各组内按上身先后。
-- **作者定的准则：影响战斗的就显示，不影响的不显示。** 据此，编译期并进属性的几种**外来加成**也要进栏，它们确实改了这场的数值，只是不是 `BuffDef`：
-  - 信仰阶梯加成（`faith_bonuses`，`compiler.gd:87-99`）→ 一枚「信仰：某神 N 阶」常驻格，层数 = 达到的阶；
-  - 套装档位（`set_mods`，`compiler.gd:79`）→ 一枚「套装名 N 件」常驻格，层数 = 档位；
-  - 局外 buff / 一局 buff 的 `mods`（`RunBuffDef`）与角色技能的被动 → 各一枚，层数 1。
-  - 做法：编译器在 `CombatantSpec` 上多一张 `passives: Array[PassiveNote]`（`{id, name, stacks, mods, note}`，纯数据），`BattleResult.initial` 带上；面板画成**第四组「常驻」**，灰底、不随事件变、悬浮窗列出它的 mods（`Glossary.mods_text`）。它们不是 buff，不走净化、不进 `seen_buffs`，只是显示。
-  - **不进栏**的：包体加成（`bag_mods`）与邻接增益（`grant_mods / receive_mods`）—— 它们是棋盘摆法本身，4.8 已规定画在棋盘的格子上（角括号 + 点亮），再进栏就是同一件事画两遍。这一条是我的判断，作者若认为「摆法也算影响战斗」就把它们也做成常驻格，代码路径相同。
+- **作者定的准则：栏里只放「通用 buff」—— 作用对象必须是这个角色本身。** 使所有武器加速 → 显示；使某一件武器加速 → 不显示。增加角色造成的伤害 → 显示；增加某类型 / 某件武器的伤害 → 不显示。每隔几秒发作一次、让角色掉血 / 掉耐力 / 得到什么 → 显示；某件道具发动时让角色掉血 → 不显示（那是道具的规则，不是 buff）。
+  - **战斗内的 `BuffDef` 全部符合**：`StatModifier` 没有「只作用于某件 / 某类道具」的字段（`stat_modifier.gd:9-18`），buff 的 mods 由 `_rebuild` 施加到单位属性与**每一件**道具上（`combatant_runtime.gd:113-117`），buff 自带的规则（灼烧每秒掉血）也是挂在单位上的 —— 所以凡是上过身的 buff 都显示，和「日志自足」正好一致。将来若给 `StatModifier` 加道具筛选（按标签 / 按件），带这种 mods 的 buff 就不进栏；现在不用做。
+  - **编译期加成按同一准则分**：套装档位的 `set_mods` 施加到全部参战道具（`compiler.gd:78-80`）→ **显示**，一枚「套装名 N 件」常驻格、层数 = 档位；局外 / 一局 buff 的 `mods` 与角色技能的被动是单位级 → **显示**，各一枚、层数 1；信仰阶梯加成 `faith_bonuses` 只作用于那一件信物（`compiler.gd:85-101`）→ **不显示**；包体加成 `bag_mods` 与邻接增益 `grant_mods / receive_mods` 只作用于被圈住的那几件 → **不显示**（它们本来就画在棋盘格子上，4.8）。
+  - 做法：编译器在 `CombatantSpec` 上多一张 `passives: Array[PassiveNote]`（`{id, name, stacks, mods, note}`，纯数据，只收单位级来源），`BattleResult.initial` 带上；面板画成**第四组「常驻」**，灰底、不随事件变、悬浮窗列出它的 mods（`Glossary.mods_text`）。它们不是 buff，不走净化、不进 `seen_buffs`，只是显示。
+  - 这条准则写进架构文档 4.8，作为 buff 栏的定义；以后新加一种来源，照「作用对象是不是角色本身」判。
 
 ### 第 7 条 · 每件道具按冷却的旋转遮罩动画（受倍速影响）
 
@@ -176,7 +175,7 @@ class_name OvertimeRules
 | 3 +20% 在哪一步 | 放大的是角色（玩家 / 敌人）受到的**最终伤害** —— 护盾、减伤、护甲都算完之后 | 4b |
 | 4 双双倒下的裁决 | 可以：先比血量，再比总伤害，再判玩家胜 | 4d |
 | 5 数值 | 按推荐（衰竭每 1 秒掉 5 点上限、回春 `regen_hp` +8 / 秒），**保留可调**：都在 `OvertimeRules` / `nature.json` 的字段里，不写死 | 4a、第 5 条 |
-| 6 哪些进 buff 栏 | 准则只有一条：**影响战斗的就显示，不影响的不显示** | 第 6 条「常驻」组 |
+| 6 哪些进 buff 栏 | 只放**通用 buff**：作用对象必须是角色本身（所有武器加速 → 显示，某件武器加速 → 不显示；角色造成伤害 +N → 显示，某类型 / 某件武器伤害 +N → 不显示；周期性让角色掉血 / 掉耐力 / 得到什么 → 显示，某道具发动时让角色掉血 → 不显示） | 第 6 条「通用 buff」与「常驻」组 |
 | 7 战斗屏画棋盘 | 要 | 第 7 条 |
 
 执行顺序照「改动范围」末尾的三批：① 1、2、3 → ② 4、5、6 → ③ 7。
