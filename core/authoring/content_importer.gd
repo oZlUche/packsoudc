@@ -145,6 +145,7 @@ static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) ->
 	if def.id == &"":
 		report.error("id", "增益必须有 id")
 	validate_buff_duration(def, "", report)
+	warn_unbounded_percent(def, "", report)
 	ctx.register_buff(def)
 	return def
 
@@ -167,6 +168,56 @@ static func _validate_item_buffs(def: ItemDef, report: ImportReport) -> void:
 			var e := rule.effects[j] as ApplyStatus
 			if e != null and e.buff != null:
 				validate_buff_duration(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
+				warn_unbounded_percent(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
+
+
+## 103 第 3 条：buff 没写明就是永续、不限层 —— 按百分比乘的不限层 buff 越叠越大（加时一拖更甚），
+## 提醒作者确认要不要填 max_stacks。不是错误：有的就是故意不封顶
+static func warn_unbounded_percent(def: BuffDef, path: String, report: ImportReport) -> void:
+	if def == null or def.max_stacks != 0:
+		return
+	for m in def.mods:
+		var mod := m as StatModifier
+		if mod != null and mod.mult_percent != 0:
+			report.warn(path + "max_stacks", "「%s」不限层且按百分比乘（%+d%%），永续叠加会越叠越大，确认要不要填层数上限" % [def.id, mod.mult_percent])
+			return
+
+
+## 103 第 1、2 条（作者定）：带武器标签的道具必须造成伤害；只有带武器标签的道具才消耗耐力。
+## 「造成伤害」只认道具自己规则里直接的 deal_damage —— 施加会掉血的 buff 是施毒，不算；
+## 反过来不限：不带武器标签的也可以造成伤害，武器也可以不耗耐力
+static func _validate_item_combat(def: ItemDef, report: ImportReport) -> void:
+	var is_weapon := def.tags.has(&"weapon")
+	var deals_damage := false
+	if def.combat != null:
+		for r in def.combat.rules:
+			var rule := r as AbilityRule
+			if rule == null:
+				continue
+			for e in rule.effects:
+				if e is DealDamage:
+					deals_damage = true
+	if is_weapon and not deals_damage:
+		report.error("tags", "「%s」带武器标签却不造成伤害 —— 武器至少要有一条直接造成伤害的规则" % def.id)
+	if is_weapon:
+		return
+	var groups: Array = []
+	if def.combat != null:
+		groups.append(["combat.rules", def.combat.rules])
+	for k in def.faith_bonuses.size():
+		var fb := def.faith_bonuses[k] as FaithBonus
+		if fb != null:
+			groups.append(["faith_bonuses[%d].rules" % k, fb.rules])
+	for g in groups:
+		var rules: Array = g[1]
+		for i in rules.size():
+			var rule := rules[i] as AbilityRule
+			if rule == null:
+				continue
+			for c in rule.effective_costs():
+				var rc := c as ResourceCost
+				if rc != null and rc.resource_key == &"stamina":
+					report.error("%s[%d].costs" % [g[0], i], "「%s」不带武器标签却消耗耐力 —— 耐力只归武器" % def.id)
 
 
 static func import_set(data: Dictionary, ctx: Context, report: ImportReport) -> ItemSetDef:
@@ -186,6 +237,7 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_validate_item_tags(def, ctx, report)
 	_validate_item_faith(def, ctx, report)
 	_validate_item_buffs(def, report)
+	_validate_item_combat(def, report)
 	ctx.register_item(def)
 	return def
 
