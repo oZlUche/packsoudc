@@ -374,3 +374,23 @@ static func run_existing_assets(t: TestCase) -> void:
 
 	t.check(checked >= 15, "过了 %d 件真实资产" % checked)
 	t.check(failed.is_empty(), "全部往返成功" if failed.is_empty() else "\n".join(failed))
+
+
+static func run_assets_match_json(t: TestCase) -> void:
+	t.begin("内容管线 · 仓库里的作者 JSON 与 .tres 一致（100 第 1 步；命令行是 tools/check_content.gd，同一段逻辑）")
+	# 每一种都得有导出器与登记，否则新种类会悄悄躲过这道检查
+	for kind in ContentPaths.ORDER:
+		t.check(ContentCheck.KINDS.has(String(kind)), "%s 在 ContentCheck.KINDS 里" % kind)
+	for kind in ContentCheck.KINDS:
+		t.check(not ContentPaths.dirs_of(kind).is_empty(), "%s 有目录（KINDS 或 EDITOR_ONLY_KINDS）" % kind)
+	var problems := ContentCheck.run_all()
+	t.check(problems.is_empty(), "198 份内容对得上" if problems.is_empty() else "\n      ".join(problems))
+	# 这道检查本身抓不抓得住：改一个值、少一份资产，都得报出来
+	var items: Array[String] = ContentCheck.check_kind("items")
+	t.check(items.is_empty(), "items 一致")
+	t.check(not ContentCheck.check_kind("根本没有这一种").is_empty(), "不认识的种类会报出来")
+	# 100（作者定）：buffs / sets 有目录、不进 KINDS，所以不走这道检查
+	for kind in ["buffs", "sets"]:
+		t.check(not ContentPaths.KINDS.has(kind), "%s 不在 KINDS 里" % kind)
+		t.check(ContentPaths.authoring_file(kind, "x") != "" and ContentPaths.asset_file(kind, "x") != "",
+			"%s 的路径照样算得出来（编辑器在用）" % kind)

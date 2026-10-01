@@ -41,6 +41,10 @@ var faith_defs: Dictionary = {}
 var recipes: Array[RecipeDef] = []
 var save_path: String = RunSave.DEFAULT_PATH
 var meta_path: String = MetaSave.DEFAULT_PATH
+## 098：最近一次「读不出来、已备份」的局外存档文件路径（空 = 没发生过）。读取存档屏与主菜单各显示一句
+var meta_backup: String = ""
+## 098：同上，进行中的那一局
+var run_backup: String = ""
 ## 089（作者定）：存档位。null = 老的单文件模式（测试、沙盒）；持有方给了就按位存：save_path / meta_path 指向当前位（[method use_slot]）
 var slots: SaveSlots = null
 var slot: int = 0
@@ -96,6 +100,10 @@ func use_slot(n: int) -> void:
 	save_path = slots.run_path(n)
 	meta_path = slots.meta_path(n)
 	var loaded := MetaSave.read(items, meta_path, meta_rules) if FileAccess.file_exists(meta_path) else null
+	if loaded == null and FileAccess.file_exists(meta_path):
+		# 098（作者定）：读不出来**先备份再从零开始** —— 版本升不上来的老档照原样留在硬盘上，
+		# 不会被下一次 save_meta 盖掉；界面上说一句，玩家知道东西还在
+		meta_backup = slots.backup(n, "meta")
 	meta = loaded if loaded != null else MetaState.new(meta_rules)
 	run = null
 	result = null
@@ -218,6 +226,8 @@ func continue_target() -> ChapterDef:
 ## 有存档就读档接着玩；没有就接着打下一张教程（[method continue_target]）。两样都没有返回 false
 func continue_run() -> bool:
 	var state := RunSave.read(items, enemies, sets, save_path)
+	if state == null and RunSave.exists(save_path) and slots != null:
+		run_backup = slots.backup(slot, "run")     # 098：读不出来的一局也先备份，否则「继续」每次都撞同一面墙
 	if state != null:
 		_adopt(state)
 		_flush()     # 读档回来：等着选的事件还在这一屏；结束了的直接进结算；否则回地图
@@ -514,6 +524,15 @@ func pending_hint() -> String:
 	return ""
 
 
+## 098：读不出来、已经备份下来的那一句（没发生过返回空）。读取存档屏与主菜单各显示一次
+func backup_notice() -> String:
+	if meta_backup != "":
+		return UiText.t("slots.backed_up") % meta_backup.get_file()
+	if run_backup != "":
+		return UiText.t("slots.run_backed_up") % run_backup.get_file()
+	return ""
+
+
 func save_meta() -> bool:
 	return meta != null and MetaSave.write(meta, meta_path) == OK
 
@@ -601,7 +620,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	var value := maxi(0, carry_value)
 	for inst in taken:
 		value += ItemValue.of(inst.def)
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale, safe_size(), value)
+	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale, {SafeModule.ID: {"size": safe_size()}}, value)
 	if state == null:
 		return null
 	for inst in taken:
@@ -638,7 +657,8 @@ func save_and_quit() -> bool:
 func close_safe() -> bool:
 	if run == null:
 		return false
-	var locked := run.lock_safe()
+	var safe := SafeModule.of(run)     # 101：保险箱的状态在模块里
+	var locked := safe != null and safe.lock()
 	if locked:
 		_go(Screen.MAP, {})
 	else:
@@ -772,6 +792,17 @@ func _settle_run() -> void:
 
 
 #region 地图上的动作
+## 099（作者定）：把棋盘上的这件信物奉为主信仰（右键 / 在棋盘里重新落下都走这里）。
+## 不是信物、不在棋盘上、这一局没开始都返回 false
+func reseat_anchor(uid: int) -> bool:
+	if run == null or run.board == null:
+		return false
+	var inst := run.board.get_item(uid)
+	if inst == null or inst.def == null or not inst.def.is_anchor():
+		return false
+	return run.board.reseat(uid)
+
+
 func pick_spawn(id: int) -> bool:
 	return run != null and run.pick_spawn(id)
 
@@ -862,7 +893,8 @@ func _reopen_entry() -> Dictionary:
 	if run.pending_loot != null:
 		return {"screen": Screen.LOOT, "container": run.pending_loot}
 	var here := run.current_node()
-	if here != null and NodeEvents.effective_type(here) == &"safe" and run.safe_open():
+	var safe := SafeModule.of(run)
+	if here != null and NodeEvents.effective_type(here) == &"safe" and safe != null and safe.is_open():
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开
 	if here != null and run.altar_open():
 		return {"screen": Screen.ALTAR, "node": here}     # 093：神坛还开着（这一次没用过特殊操作）
@@ -939,10 +971,10 @@ func _adopt(state: RunState) -> void:
 	state.hunter_defs = hunter_defs
 	state.faith_defs = faith_defs
 	state.recipes = recipes
-	# 难度：读档回来只有 id，在这里找回定义并把机制重新接上（开局那次 RunState.start 已经装过，再装一次是幂等的）
+	# 难度：读档回来只有 id，在这里找回定义并把机制重新接上（本体模块在 from_dict 里已经装过，再装一次是幂等的）
 	if state.difficulty == null and state.difficulty_id != &"":
 		state.difficulty = difficulty_of(state.difficulty_id)
-		state.install_mechanics()
+		state.install_modules()
 	var ch := character_of(state.character_id)
 	if ch != null:
 		state.set_character(ch)     # 基线、技能的账（读档回来的状态在这里接上定义）

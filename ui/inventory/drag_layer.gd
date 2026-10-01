@@ -178,6 +178,7 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		elif mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
 			cancel()
+			get_viewport().set_input_as_handled()     # 099：取消就是取消，别再被容器视图读成「右键奉为主信仰」
 			get_viewport().set_input_as_handled()
 		return
 
@@ -439,6 +440,11 @@ func drop_at(global_pos: Vector2) -> bool:
 	elif target != null and (target as InventoryView).inventory != null:
 		var grid_view := target as InventoryView
 		var at := target_origin(grid_view, global_pos)
+		# 099（作者定）：落回同一个容器不算「从别处置入」—— 置入顺序只由 reseat 改（见下），
+		# 这样普通道具在棋盘内挪位置不再刷信力，取消拖拽也不会切信仰
+		var back_home := grid_view.inventory == _source
+		if back_home:
+			inst.container_id = grid_view.inventory.id
 		if not _payload.is_empty():
 			dropped = _drop_bag(grid_view.inventory, at)
 			if not dropped and grid_view.inventory.requires_bag:
@@ -459,6 +465,9 @@ func drop_at(global_pos: Vector2) -> bool:
 			pending = outcome["victims"]
 		if dropped:
 			home = grid_view.inventory
+			# 099（作者定）：在棋盘里把信物重新落下 = 奉它为主信仰。只有信物盖序号，普通道具不盖
+			if back_home and inst.def.is_anchor():
+				grid_view.inventory.reseat(inst.uid)
 
 	if not dropped:
 		_restore()
@@ -653,6 +662,7 @@ func _restore() -> void:
 		if not (_source as GridInventory).attach_bag(_payload, _src_origin, _src_rot):
 			push_error("DragLayer: 包 uid %d 连内容物放不回源容器，已丢失" % _inst.uid)
 		return
+	_inst.container_id = (_source as GridInventory).id     # 099：原样放回不算重新置入（取消拖拽不切信仰、不记信力）
 	if (_source as GridInventory).place(_inst, _src_origin, _src_rot):
 		return
 	# 原位没了（顶替之后取消，多半如此）。依次退而求其次，

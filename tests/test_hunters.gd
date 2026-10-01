@@ -346,12 +346,12 @@ static func run_save_and_flow(t: TestCase) -> void:
 	t.is_null(s2.hunters, "读回来先没有系统（等机制装）")
 	s2.difficulty = diff
 	s2.hunter_defs = c.hunter_defs
-	s2.install_mechanics()
+	s2.install_modules()
 	t.not_null(s2.hunters, "装了机制就有")
 	t.eq(s2.hunters.alive().size(), 1, "猎手回来了")
 	var h2: Hunter = s2.hunters.alive()[0]
 	t.eq([h2.uid, h2.node_id, h2.home_id, h2.territory], [h.uid, h.node_id, h.home_id, h.territory], "位置、出生点、领地一样")
-	s2.install_mechanics()
+	s2.install_modules()
 	t.eq(s2.hunters.alive().size(), 1, "装两次幂等")
 	# 待选的遭遇跟着存档
 	h.node_id = s.travel.current_id
@@ -360,7 +360,7 @@ static func run_save_and_flow(t: TestCase) -> void:
 	var s3 := RunState.from_dict(d2, c.chapter, c.items, c.enemies, c.sets)
 	s3.difficulty = diff
 	s3.hunter_defs = c.hunter_defs
-	s3.install_mechanics()
+	s3.install_modules()
 	t.eq(int(s3.events.pending.get("hunter", -1)), h.uid, "待选的遭遇记着猎手")
 	t.not_null(s3.events.pending_event(), "合成的事件读档后找得回来（装机制时重新登记）")
 	t.check(s3.events.choose(0), "读档后能迎战")

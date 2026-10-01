@@ -67,9 +67,10 @@ static func settle(state: RunState) -> RunResult:
 			r.left_behind += 1
 			r.left_value += ItemValue.of((inst as ItemInstance).def)
 			r.left_items.append(inst as ItemInstance)
-	if state.safe != null:
-		r.safe_size = state.safe.size
-		for inst in state.safe.items():
+	var safe := SafeModule.of(state)     # 101：保险箱的状态在模块里
+	if safe != null and safe.inventory != null:
+		r.safe_size = safe.inventory.size
+		for inst in safe.inventory.items():
 			var item := inst as ItemInstance
 			r.safe_items.append(item)
 			r.safe_value += ItemValue.of(item.def)

@@ -101,7 +101,10 @@ func to_dict() -> Dictionary:
 	return points.duplicate()
 
 
+## 098：读档时旧信仰 id 并进新池子（093 的 violence → brute、sunfire → sun），两边都有就加起来 ——
+## 切换信仰不清别的池子，所以合并点数是唯一不丢信力的做法
 func restore(d: Dictionary) -> void:
 	points.clear()
 	for key in d:
-		points[String(key)] = int(d[key])
+		var id := IdAliases.faith(StringName(String(key)))
+		points[String(id)] = int(points.get(String(id), 0)) + int(d[key])

@@ -26,6 +26,7 @@ const ABSTRACT_ROOTS := {
 	&"Effect": [&"effect", &"loot_effect", &"map_effect", &"run_effect"],
 	&"EventCondition": [&"event_condition"],
 	&"EventOutcome": [&"event_outcome"],
+	&"RunModule": [&"run_module"],
 	&"RunMechanic": [&"run_mechanic"],
 	&"HunterBehavior": [&"hunter_behavior"],
 	&"HunterLossOutcome": [&"hunter_loss"],

@@ -122,7 +122,7 @@ static func run_countdown(t: TestCase) -> void:
 			board_item = inst
 			break
 	if board_item != null:
-		t.check(InventoryService.transfer_auto(run.board, board_item.uid, run.safe), "一件进了保险箱")
+		t.check(InventoryService.transfer_auto(run.board, board_item.uid, SafeModule.of(run).inventory), "一件进了保险箱")
 	run.travel.clock.total = limit - 1
 	var moves := run.travel.available_moves()
 	t.check(not moves.is_empty() and f.step_to(moves[0]), "最后一步")
@@ -185,7 +185,9 @@ static func run_safe_placement(t: TestCase) -> void:
 		t.check(not near and not s.map.goal_ids.has(node.id), "不挨着出生点、不是终点")
 		t.check(not EnemyKit.has_enemy(node.content), "没有敌人")
 		t.check(float(EnemyPlacer.depths_of(s.map).get(node.id, 0.0)) >= 0.5, "比较靠近中央（深度 %.2f）" % float(EnemyPlacer.depths_of(s.map).get(node.id, 0.0)))
-		t.eq(s.safe.size, Vector2i(3, 3), "容器 3×3")
+		var sm := SafeModule.of(s)     # 101：保险箱是一局的模块（RunModule）
+		t.check(sm != null and sm.inventory != null, "装了保险箱模块")
+		t.eq(sm.inventory.size, Vector2i(3, 3), "容器 3×3")
 		t.check(MapNodeTypes.has(&"safe") and MapNodeStyle.of(&"safe")["label"] == "保险箱", "类型表与样式认得")
 		if seed == 1:
 			var def: ItemDef = null
@@ -195,20 +197,23 @@ static func run_safe_placement(t: TestCase) -> void:
 					break
 			if def != null:
 				var extra := ItemInstance.create(def)
-				t.check(s.safe.try_add(extra, true), "放一件进去")
-				t.check(s.lock_safe() and s.safe_locked and not s.safe_open(), "关上：锁了")
-				t.check(not s.lock_safe(), "再关不重复")
+				t.check(sm.inventory.try_add(extra, true), "放一件进去")
+				t.check(sm.lock() and sm.locked and not sm.is_open(), "关上：锁了")
+				t.check(not sm.lock(), "再关不重复")
 				t.check(s.map.get_node(node.id).is_visited(), "锁了点就灰")
 				var back := RunState.from_dict(s.to_dict(), c.chapter, c.items, c.enemies, c.sets)
-				t.check(back != null and back.safe != null and back.safe.item_count() == 1 and back.safe.size == Vector2i(3, 3), "存档往返：保险箱里的还在")
-				t.check(back != null and back.safe_locked, "锁也跟着存")
+				var back_safe := SafeModule.of(back) if back != null else null
+				t.check(back_safe != null and back_safe.inventory != null and back_safe.inventory.item_count() == 1 and back_safe.inventory.size == Vector2i(3, 3),
+					"存档往返：保险箱里的还在（模块自己存自己读）")
+				t.check(back_safe != null and back_safe.locked, "锁也跟着存")
 				t.eq(NodeEvents.effective_type(back.map.get_node(node.id)), &"safe", "类型跟着图存")
 	t.check(seen >= 4, "至少四个种子开得出局（%d）" % seen)
 	t.eq(MapGridText.SYMBOL_TYPES.get("K", &""), &"safe", "地图文字里 K = 保险箱")
 	t.check(SafePlacer.mark(null, 1).is_empty(), "没图不标")
 	var empty := RunState.start(c.chapter, 2, c.items, c.enemies, c.sets, kit.items)
 	if empty != null:
-		t.check(not empty.lock_safe() and empty.safe_open(), "空着关不算关")
+		var empty_safe := SafeModule.of(empty)
+		t.check(empty_safe != null and not empty_safe.lock() and empty_safe.is_open(), "空着关不算关")
 
 
 static func frame_safe_screen(t: TestCase, root: Window) -> void:
@@ -264,17 +269,17 @@ static func frame_safe_screen(t: TestCase, root: Window) -> void:
 	t.check(item != null, "棋盘上有能放的东西")
 	if item != null:
 		t.check(screen.put_in(item.uid), "放进保险箱")
-		t.check(run.safe.has_item(item.uid) and not run.board.has_item(item.uid), "在保险箱里、不在棋盘上")
+		t.check(SafeModule.of(run).inventory.has_item(item.uid) and not run.board.has_item(item.uid), "在保险箱里、不在棋盘上")
 		t.check(screen.take_back(item.uid), "拿回来")
 		t.check(run.board.has_item(item.uid) or run.storage.has_item(item.uid), "回到棋盘（或暂存区）")
 		t.check(screen.put_in(item.uid), "再放进去")
 	if bag != null:
-		t.check(not screen.put_in(bag.uid) and not run.safe.has_item(bag.uid), "包放不进保险箱")
+		t.check(not screen.put_in(bag.uid) and not SafeModule.of(run).inventory.has_item(bag.uid), "包放不进保险箱")
 	# 空着关：只是收起
 	if item != null:
 		t.check(screen.take_back(item.uid), "先拿出来，空着")
 	t.check(game.escape(), "Esc（空着）")
-	t.check(flow.screen == GameFlow.Screen.MAP and not run.safe_locked, "→ 地图，没锁")
+	t.check(flow.screen == GameFlow.Screen.MAP and not SafeModule.of(run).locked, "→ 地图，没锁")
 	t.check(flow.can_reopen(), "站着能再开")
 	t.check(flow.reopen_node(), "再开")
 	t.eq(flow.screen, GameFlow.Screen.SAFE, "→ 保险箱屏")
@@ -283,11 +288,11 @@ static func frame_safe_screen(t: TestCase, root: Window) -> void:
 	if item != null and screen != null:
 		t.check(screen.put_in(item.uid), "放进去")
 		t.check(game.escape(), "Esc（里面有东西）")
-		t.check(flow.screen == GameFlow.Screen.MAP and run.safe_locked and not run.safe_open(), "→ 地图，锁上了")
+		t.check(flow.screen == GameFlow.Screen.MAP and SafeModule.of(run).locked and not SafeModule.of(run).is_open(), "→ 地图，锁上了")
 		t.check(game.overlay() == null and game.minimized() == null, "屏关掉了，不是收起")
 		t.check(not flow.can_reopen(), "不能再开")
 		t.check(safe_node.is_visited(), "点灰了")
-		t.check(run.safe.has_item(item.uid), "里面的东西留着（结算进局外）")
+		t.check(SafeModule.of(run).inventory.has_item(item.uid), "里面的东西留着（结算进局外）")
 	# 走开再回来：不开
 	var moves := run.travel.available_moves()
 	if not moves.is_empty() and flow.step_to(moves[0]):
@@ -296,7 +301,7 @@ static func frame_safe_screen(t: TestCase, root: Window) -> void:
 			NodeScreens._settle(flow)
 			t.check(flow.screen != GameFlow.Screen.SAFE, "回头再踩：锁着的不开")
 	if item != null:
-		t.check(run.safe.has_item(item.uid), "里面的东西一直在")
+		t.check(SafeModule.of(run).inventory.has_item(item.uid), "里面的东西一直在")
 	game.queue_free()
 	_cleanup()
 
@@ -322,7 +327,7 @@ static func frame_stash_sale_and_result(t: TestCase, root: Window) -> void:
 	if def == null:
 		_cleanup()
 		return
-	t.check(InventoryService.transfer_auto(run.board, board_item.uid, run.safe), "一件进保险箱")
+	t.check(InventoryService.transfer_auto(run.board, board_item.uid, SafeModule.of(run).inventory), "一件进保险箱")
 	# 走到最近的撤离点（出生点旁没有撤离点：环形图的撤离点在外面几环）
 	var near := MapNavigator.nearest_of_type(run.map, run.travel.current_id, &"extract")
 	t.check(int(near["id"]) >= 0 and _walk_to(f, int(near["id"]), GameFlow.Screen.EVENT), "走到了最近的撤离点（%d 步；停在它的对话上）" % int(near["steps"]))
@@ -337,7 +342,7 @@ static func frame_stash_sale_and_result(t: TestCase, root: Window) -> void:
 	var stash_funds := 0
 	for inst in run.storage.items():
 		stash_funds += MetaState.sell_price((inst as ItemInstance).def, f.sell_ratio())
-	var safe_n := run.safe.item_count()
+	var safe_n := SafeModule.of(run).inventory.item_count()
 	t.check(f.extract(), "撤离")
 	t.eq(f.screen, GameFlow.Screen.RESULT, "→ 结算")
 	var r: RunResult = f.result

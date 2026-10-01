@@ -63,6 +63,11 @@ extends Resource
 ## 091（作者定 10.2 第 3 条）：这一章的「本图规则」卡（≤ 3 条）—— 第一次进图弹一页（局外记住看过了），暂停菜单里能再看。空 = 不弹
 @export var rules: Array[String] = []
 
+@export_group("一局的模块（101）")
+## 101 第 0 刀：这一局装哪些**本体模块**（[RunModule] 构件，各带参数）。空 = 用默认清单（[method RunModules.standard]）。
+## 难度开的机制是另一层（[member DifficultyDef.mechanics]），两层叠加。加一种玩法 = 一个子类 + 注册表一行 + 这里一条
+@export var modules: Array[RunModule] = []
+
 @export_group("全局倒计时与保险箱（092，作者定）")
 ## 全局倒计时：这一局一共能花多少行动点（每走一步 -1，边的 action_cost 大于 1 就多扣）；归零 = 行动失败（战败结算，只有保险箱里的带得出）。0 = 这一章没有倒计时。
 ## 倒计时和地图规模正相关：环形配置的每个规模（`scales[].step_limit`）写了就用它的，这里是兜底

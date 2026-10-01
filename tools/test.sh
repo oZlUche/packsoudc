@@ -4,6 +4,15 @@
 #
 #   GODOT=/path/to/godot_console.exe ./tools/test.sh
 set -u
+# GODOT 没设就先在 PATH 里找（Linux / CI / 容器），都找不到才用作者机器上的 Windows 路径
+if [ -z "${GODOT:-}" ]; then
+  for candidate in godot godot4; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+      GODOT="$(command -v "$candidate")"
+      break
+    fi
+  done
+fi
 GODOT="${GODOT:-/e/Godot/Godot_v4.7.1-stable_win64_console.exe}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG="${TMPDIR:-/tmp}/godot_tests.log"
@@ -41,6 +50,16 @@ if grep -qE '加载失败|Failed to load script|Parse Error' "$CHECKLOG"; then
   echo ""
   echo "!! 有脚本加载失败"
   grep -E 'Failed to load script|Parse Error|SCRIPT ERROR' "$CHECKLOG" | head -12
+  code=1
+fi
+
+# 100 第 1 步：仓库里的作者 JSON 与导入产出的 .tres 必须一致 —— 改了 JSON 忘跑导入，这里当场红
+CONTENTLOG="${TMPDIR:-/tmp}/godot_check_content.log"
+"$GODOT" --headless --path "$ROOT" --script res://tools/check_content.gd >"$CONTENTLOG" 2>&1
+if ! grep -q '内容一致' "$CONTENTLOG"; then
+  echo ""
+  echo "!! 作者 JSON 与 .tres 对不上（跑 tools/import_content.gd）"
+  grep -E '✗|不一致|SCRIPT ERROR' "$CONTENTLOG" | head -12
   code=1
 fi
 

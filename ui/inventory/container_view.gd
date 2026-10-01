@@ -11,6 +11,8 @@ extends Control
 signal grab_requested(view: ContainerView, uid: int, local_pos: Vector2)
 ## 084：双击了一件（快速置入：棋盘 ⇄ 容器 / 暂存区，由持有这个视图的屏决定去哪）。双击时不发 grab_requested
 signal item_double_clicked(view: ContainerView, uid: int)
+## 099：右键按在一件上（没在拖的时候）。棋盘用它把信物奉为主信仰；别的屏可以不接
+signal item_context(view: ContainerView, uid: int)
 
 
 ## 087（作者定）：**道具这个实体本身就有悬浮窗** —— 任何容器视图进树之后自己找（或造）一个 [HoverTip] 登记上去：

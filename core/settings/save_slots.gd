@@ -53,6 +53,21 @@ func first_empty() -> int:
 	return -1
 
 
+## 098（作者定）：读不出来的存档**先备份再从零开始**，绝不静默覆盖。把这一位的某份文件改名成
+## `<名字>.<unix 秒>.bak`，返回备份文件的路径（没这份文件、改名失败返回空）。
+## [param which] 是 "meta" 或 "run"。备份文件不算存档：[method exists] / [method remove] 都不看 `.bak`
+func backup(n: int, which: String) -> String:
+	var from := meta_path(n) if which == "meta" else run_path(n)
+	if not FileAccess.file_exists(from):
+		return ""
+	var to := "%s.%d.bak" % [from, int(Time.get_unix_time_from_system())]
+	var err := DirAccess.rename_absolute(ProjectSettings.globalize_path(from), ProjectSettings.globalize_path(to))
+	if err != OK:
+		push_warning("SaveSlots: 备份 %s 失败（%d）" % [from, err])
+		return ""
+	return to
+
+
 ## 删掉这一位的两份文件
 func remove(n: int) -> void:
 	for p in [run_path(n), meta_path(n)]:
