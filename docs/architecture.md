@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.11 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.12 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -438,6 +438,13 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 - 道具的额外功能写在道具上：`ItemDef.faith_bonuses`（`FaithBonus`：`tier`、`mods`、`rules`），只许信仰道具有；`BattleCompiler.compile` 多两个参数 `faith_tiers`（标签 → 阶）与 `faith_points`（标签 → 点数，095 的 scaled 模式用），tier ≤ 现在的并进那件道具 —— 仍是纯函数。
   编译之后 `RunState.compile_player` 还会套一次 `FaithPerk`（093，编译期钩子改 spec），所以战斗单位 = 编译器输出 + perk；这一层在 097 里列为待收口。
 - 切换信仰不清别的池子；继承（作者说可以）还没做。不信者、新教留空（作者定）。
+- **信物里必然有一枚 1 格护符**（104，作者定）：每位诸神至少一件 1 格、带 `faith_anchor` 的道具（新教是占位，不查）；导入器批量导入完了守（`ContentImporter.validate_faith_charms`）。
+- 104：「首次」「获得」这类判断**不放在行为构件里**（构件是共享的 Resource，不能记状态）：`RunState` 记 `owned_uids`（对过账的实例）/ `acquired_ids` / `placed_ids`（种类），
+  离开一个点时对账一次（`reconcile_owned`），新出现在棋盘 / 暂存区 / 保险箱里的发 `item_acquired`；`place_item` 载荷带 `first_in_run`；战斗账带 `node_type` 与出手道具的 `id`。
+- **信力节奏的量尺**（104）：`FaithPower.history` 每次加点（含献祭）记一条 `{step, node_type, faith, event, gained, total, tier}`，跟着存档、进 `RunResult.faith_history`；
+  结算屏一行「信力节奏：第 N 步到 1 阶……」，开发版能导 `user://faith_history_<seed>.csv`。所有数都是占位，按测试重新规划。
+- **神明总表是核心配置**（104）：`docs/gods.xlsx` 机器读的列（阈值、行为、献祭、等级效果、神名与神话定位、转化概率）由 `tools/gods_xlsx_to_json.gd` 写进信仰 JSON（其余字段原样保留），
+  `GodsTable.check` 在 `tools/check_content.gd` 里对照，表与 JSON 对不上就红。读 xlsx 是 `XlsxReader`（zip + XML，只读值）。
 
 ## 4. M2 · 自动战斗
 
@@ -659,6 +666,12 @@ GDScript 里这个好处根本不存在，代价却是设计师写的每个十�
 | `regen_hp` | `regen_hp`（每秒） | 固定值 | 1 | 回春 / 失血 |
 | `regen_hp_pct` | 每秒按生命上限的百分比回血（新属性，`settle_regen` 把它折成速率加进 `regen_hp`） | 百分比 | 1% | 再生 / 腐蚀 |
 | `regen_stamina` | `regen_stamina`（每秒） | 固定值 | 1 | 回气 / 疲乏 |
+| `crit_chance`（104） | `crit_chance`（单位与每件道具） | 固定值 | 0.01（1%） | 锐目 / 失准 |
+| `crit_damage`（104） | `crit_damage`（单位与每件道具） | 固定值 | 0.05（5%） | 致命 / 钝击 |
+
+**暴击**（104，作者定）：`crit_chance` 默认 0.10、`crit_damage` 默认 1.5（`BattleStats.DEFAULT_BASE`，不跨道具累加），**所有加成一律加算**（只收 `flat`，导入器拦乘区）。
+`DealDamage` 造包时对「从属性取伤害」的那一包掷一次（战斗 RNG，定点万分比；0 与 1 两头不消耗随机数），命中则 `raw × crit_damage`、`DamagePacket.crit = true`——
+在管线之前，护盾 / 减伤 / 护甲 / 加时看到的都是暴击后的原始值；固定值伤害（灼烧这类）不暴击；双方对称。预估伤害乘期望 `1 + 暴击率 × (暴击伤害 − 1)`。
 
 规则：
 
@@ -3655,6 +3668,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.12 | 2026-10-01 | **神明总表落地**（报告 104）：删战争之神；3.8 加「每位神一枚 1 格护符」（导入器守）、获得的对账（`owned_uids` / `item_acquired`）、信力节奏量尺（`FaithPower.history`）、神明总表 ⇄ JSON（`GodsTable`、`XlsxReader`、`tools/gods_xlsx_to_json.gd`）；4.3 暴击：`crit_chance`（默认 0.10）/ `crit_damage`（默认 1.5）只加算，`BattleStats.DEFAULT_BASE` 成为真的默认值表；标准轴加「锐目 / 失准」「致命 / 钝击」两条固定值轴（也落到道具上）；`DealDamage` 造包时掷暴击（固定值伤害不暴击），`DamagePacket.crit`、`damage` 事件带 `crit`；献祭条件加 `has_stat`、倍率默认 1 |
 | v2.11 | 2026-10-01 | **标准轴**（作者定，报告 103；设计先行、待实现）：4.3 新增「标准轴：单位级的带符号层数」—— 攻速 / 造成伤害 / 受到伤害 / 回血（固定）/ 回血（按上限百分比）/ 耐力回复六条轴，一条轴一个带符号 int 层数（增益为正、减益为负、直接相抵），结算在道具级终值之上（百分比 `× (1 + 层数 × 步长)`、固定值 `+ 层数 × 步长`），系统层单独记（净化不动）、buff 栏显示轴而不是来源、新轴只加表不改公式 |
 | v2.10 | 2026-10-01 | **一局的模块：`RunState` 的扩展点**（报告 101 第 0 刀 + 第 1 刀样板；新增 7.4、改 7.2 / 8.4）：`RunModule`（装 / 存 / 读 / 说一句，生命周期靠订阅已有信号）、`RunState.modules / install_modules / install_module / module / module_input / module_lines`、新信号 `leaving`、`ChapterDef.modules`、`RunModules.standard()`、注册表 `RUN_MODULES`（`run_mechanic` 作别名）、`RunMechanic` 变成它的子类；保险箱搬成 `SafeModule`（`RunState` 不再有 `safe` 字段，`SafeModule.of(run)` 取），一局存档升到 v2，`RunMigrations` 第一步把顶层 `safe` / `safe_locked` 搬进 `modules.safe` |
 | v2.09 | 2026-10-01 | **内容管线一致性检查**（报告 100 第 1 步；10.1）：`ContentCheck` + `tools/check_content.gd` 守「作者 JSON ⇄ `.tres` 一致」（导出比对、深比较不较真键顺序与 int / float；缺资产、孤儿资产、值不同各报一条），接进 `tools/test.sh` 与 `test_content_pipeline`；`buffs` / `sets` 两种从 `ContentPaths.KINDS` / `ORDER` 去掉（都是空目录，目录常量留给编辑器）；`test.sh` 的 `GODOT` 未设时先在 PATH 里找 `godot` / `godot4` |

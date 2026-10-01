@@ -58,9 +58,9 @@ script = ExtResource("7_5xycn")
 [sub_resource type="Resource" id="Resource_iqm5g"]
 script = ExtResource("8_rcova")
 min_cells = 9
-multiplier = 1.0
+multiplier = 5.0
 per_cell = true
-note = "大及以上体积（稀有度 × 格子数）"
+note = "大及以上体积（稀有度 × 格子数）（2^稀有度 × 5 × 格子数）"
 
 [sub_resource type="Resource" id="Resource_72j3p"]
 script = ExtResource("10_t8ftl")
@@ -94,8 +94,8 @@ display_name = "大地之神"
 display_names = {
 "en": "God of the Earth"
 }
-god = "大地之神（结构、秩序、体积、空间）"
-description = "信力：触发中及以上体积道具的效果、进入空白节点（岔路 / 用过的点）。献祭：大及以上体积的道具（稀有度 × 格子数）。"
+god = "大地之神（体积、空间）"
+description = "帝国祭祀的主神之一，但信徒很少，对应种族也极为低调"
 thresholds = Array[int]([25, 100, 250, 500])
 deeds = Array[ExtResource("5_81xyc")]([SubResource("Resource_uajvw"), SubResource("Resource_eoqlt")])
 offerings = Array[ExtResource("8_rcova")]([SubResource("Resource_iqm5g")])

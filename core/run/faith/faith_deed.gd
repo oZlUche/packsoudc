@@ -3,13 +3,15 @@
 ##
 ## 构件：[FaithPower] 把一局里发生的事以「事件名 + 载荷」的形式喂给激活信仰的每个行为，行为自己说给几点（0 = 不认）。
 ## 事件名与载荷（都由 [RunState] 接线时发）：
-## - `place_item` {value, id}：一件道具从别的容器置入棋盘
-## - `battle` {won}：打了一场（节点敌人、猎手都算）
+## - `place_item` {value, id, tags, rarity, first_in_run}：一件道具从别的容器置入棋盘；first_in_run = 这一局头一回置入这种道具（按定义 id）
+## - `battle` {won, node_type, dealt, taken, healed, fired_total, fired_items: [{id, tags, cells, count}]}：打了一场（节点敌人、猎手都算），见 [method RunState.battle_summary]
+## - `item_acquired` {id, tags, cells, rarity, first_in_run}（104）：一件道具头一回出现在玩家的容器里（棋盘 / 暂存区 / 保险箱），离开一个点时对账
 ## - `travel` {steps}：走了一步，steps = 到现在为止的总步数
 ## - `earn_money` {amount} / `spend_money` {amount}
 ## - `explore` {}：搜了一次
 ## - `event_choice` {tags}：事件里选了一个选项，tags 是那个选项的标签
 ## 加一种行为 = 一个子类 + 注册表一行（EffectRegistry.FAITH_DEEDS）。数都是字段。
+## 行为是共享的 Resource，**不能自己记状态**：「首次」之类由 [RunState] 算好放进载荷（104）。
 @abstract
 class_name FaithDeed
 extends Resource

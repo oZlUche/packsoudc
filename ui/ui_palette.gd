@@ -27,6 +27,8 @@ const SHIELD := Color("5bc0de")
 const STAMINA := Color("f0ad4e")
 const MANA := Color("7a8cf0")
 const HEAL := Color("5cb85c")
+## 104：暴击的飘字
+const CRIT := Color("ffd23f")
 
 ## 邻接标记的两个方向。**按语义分色，不是按形状** ——
 ## 参照作品用星形／菱形区分，那只是两个任意符号；这里直接用颜色 + 文字。

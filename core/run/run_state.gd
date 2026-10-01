@@ -121,6 +121,11 @@ var skills: RunSkills = null
 var skills_saved: Dictionary = {}
 ## 信力（082）：每个信仰一个池子，只有激活的信仰收点；行为与阈值在信仰文件里
 var faith_power: FaithPower = null
+## 104：对过账的道具实例（uid → true）：一件道具头一回出现在棋盘 / 暂存区 / 保险箱里发一次 `item_acquired`。只增不减，跟着存档
+var owned_uids: Dictionary = {}
+## 104：这一局获得过 / 置入过棋盘的道具种类（定义 id → true），给载荷的 first_in_run。跟着存档
+var acquired_ids: Dictionary = {}
+var placed_ids: Dictionary = {}
 var hunters_saved: Dictionary = {}
 ## 侵蚀场的存档状态，读档时先放这儿等机制装（075）
 var erosion_saved: Dictionary = {}
@@ -224,6 +229,7 @@ static func start(
 	s.travel.vitality = s.vitality
 	s._wire_events()
 	s.install_modules()     # 模块要接的东西（旅程、节点事件）都造好了才装
+	s._seed_owned()     # 104：带进来的不算「获得」
 	s.phase = Phase.PICK_SPAWN
 	# 084：章节说了「默认已经站在出生点上」（序章只有一个出生点，没什么可挑的）就直接站上去
 	if p_chapter.auto_spawn and not s.map.entry_ids.is_empty():
@@ -247,6 +253,7 @@ func step_to(id: int) -> bool:
 		return false
 	if not travel.available_moves().has(id):
 		return travel.step_to(id)     # 让旅程自己拒绝、发 refused；走不成就不该清东西
+	reconcile_owned()     # 104：暂存区留下之前对账，这个点上拿到的都算获得
 	close_sessions()
 	_drop_pending_loot()
 	_drop_storage_if_leaving()
@@ -272,6 +279,7 @@ func step_to(id: int) -> bool:
 func relocate(intent: MoveIntent) -> bool:
 	if phase != Phase.ON_MAP or intent == null:
 		return false
+	reconcile_owned()
 	close_sessions()
 	_drop_pending_loot()
 	_drop_storage_if_leaving()
@@ -664,11 +672,11 @@ func compile_player() -> CombatantSpec:
 	return spec
 
 
-## 093：一场战斗的账（喂给信力的行为）：{won, dealt: {类型: 量}, taken: {类型: 量}, healed, fired_total, fired_items: [{tags, cells, count}]}。
+## 093：一场战斗的账（喂给信力的行为）：{won, node_type, dealt: {类型: 量}, taken: {类型: 量}, healed, fired_total, fired_items: [{id, tags, cells, count}]}。
 ## 量是浮点（定点换回来）。dealt = 敌方受的伤（不管谁打的，反射也算）；taken = 我方受的；healed = 我方战斗内回的血；
 ## fired = 我方道具**真的出手**的次数（因耐力 / 资源不足跳过的那次不发 ITEM_FIRED，自然不算）
-static func battle_summary(result: BattleResult, won: bool, p_board: GridInventory) -> Dictionary:
-	var out := {"won": won, "dealt": {}, "taken": {}, "healed": 0.0, "fired_total": 0, "fired_items": []}
+static func battle_summary(result: BattleResult, won: bool, p_board: GridInventory, node_type: StringName = &"") -> Dictionary:
+	var out := {"won": won, "node_type": String(node_type), "dealt": {}, "taken": {}, "healed": 0.0, "fired_total": 0, "fired_items": []}
 	if result == null:
 		return out
 	var fired := {}
@@ -698,7 +706,8 @@ static func battle_summary(result: BattleResult, won: bool, p_board: GridInvento
 		if inst != null and inst.def != null:
 			for t in inst.def.tags:
 				tags.append(String(t))
-		(out["fired_items"] as Array).append({"tags": tags, "cells": ItemVolume.cells_of(inst.def) if inst != null else 0, "count": int(fired[uid])})
+		(out["fired_items"] as Array).append({"id": String(inst.def.id) if inst != null and inst.def != null else "", "tags": tags,
+			"cells": ItemVolume.cells_of(inst.def) if inst != null else 0, "count": int(fired[uid])})
 	return out
 
 
@@ -838,7 +847,7 @@ func effective_baseline() -> CombatantBaseline:
 		b.base_stats[k] = float(b.base_stats.get(k, 0.0)) + float(ctx.stat_bonus[key])
 	for key in faith_stat_bonus:     # 093：神坛特殊操作改的基线（倍率类属性从 1.0 起）
 		var k2 := StringName(String(key))
-		b.base_stats[k2] = float(b.base_stats.get(k2, 1.0 if BattleStats.DEFAULT_BASE.has(k2) else 0.0)) + float(faith_stat_bonus[key])
+		b.base_stats[k2] = float(b.base_stats.get(k2, BattleStats.default_value(k2))) + float(faith_stat_bonus[key])
 	return b
 
 
@@ -1223,14 +1232,18 @@ func _wire_events() -> void:
 func _wire_faith_power() -> void:
 	board.placed.connect(func(inst: ItemInstance):
 		if inst != null and inst.def != null:
-			faith_power.credit(&"place_item", {"value": ItemValue.of(inst.def), "id": String(inst.def.id)}))
+			var first := not placed_ids.has(String(inst.def.id))
+			placed_ids[String(inst.def.id)] = true
+			faith_power.credit(&"place_item", {"value": ItemValue.of(inst.def), "id": String(inst.def.id), "tags": _tag_strings(inst.def),
+				"rarity": inst.def.rarity, "first_in_run": first}))
 	wallet.changed.connect(func(_b: int, delta: int, _r: StringName):
 		if delta > 0:
 			faith_power.credit(&"earn_money", {"amount": delta})
 		elif delta < 0:
 			faith_power.credit(&"spend_money", {"amount": -delta}))
 	# 093：打完一场把这一场的账汇总喂进去（造成 / 受到的伤害按类型、回血、每件出手几次）
-	events.battle_finished.connect(func(_n: MapNode, r: BattleResult, won: bool): faith_power.credit(&"battle", battle_summary(r, won, board)))
+	events.battle_finished.connect(func(n: MapNode, r: BattleResult, won: bool):
+		faith_power.credit(&"battle", battle_summary(r, won, board, NodeEvents.effective_type(n) if n != null else &"")))
 	travel.moved.connect(func(i: MoveIntent, first: bool):
 		var n := map.get_node(i.to_id) if map != null and map.has_node(i.to_id) else null
 		faith_power.credit(&"travel", {"steps": travel.clock.total, "first_visit": first, "node_type": String(n.type) if n != null else ""})
@@ -1250,6 +1263,52 @@ func _wire_faith_power() -> void:
 		for t in option.tags:
 			tags.append(String(t))
 		faith_power.credit(&"event_choice", {"tags": tags}))
+
+
+## 104：道具获得的对账 —— 棋盘 + 暂存区 + 保险箱里没对过账的实例各发一次 `item_acquired`（不逐个容器接信号，一处对账）。
+## 离开一个点（走一步 / 被挪走）时调；测试也可以直接调。返回这次新对上的件数
+func reconcile_owned() -> int:
+	var fresh := 0
+	for inst in _owned_now():
+		var item := inst as ItemInstance
+		if item == null or item.def == null or owned_uids.has(item.uid):
+			continue
+		owned_uids[item.uid] = true
+		fresh += 1
+		var first := not acquired_ids.has(String(item.def.id))
+		acquired_ids[String(item.def.id)] = true
+		if faith_power != null:
+			faith_power.credit(&"item_acquired", {"id": String(item.def.id), "tags": _tag_strings(item.def),
+				"cells": ItemVolume.cells_of(item.def), "rarity": item.def.rarity, "first_in_run": first})
+	return fresh
+
+
+## 开局（或读一份没有这笔账的老存档）：身上已有的全记成对过账，不给点
+func _seed_owned() -> void:
+	for inst in _owned_now():
+		var item := inst as ItemInstance
+		if item != null and item.def != null:
+			owned_uids[item.uid] = true
+			acquired_ids[String(item.def.id)] = true
+
+
+func _owned_now() -> Array:
+	var out: Array = []
+	if board != null:
+		out.append_array(board.items())
+	if storage != null:
+		out.append_array(storage.items())
+	var safe := SafeModule.of(self)
+	if safe != null and safe.inventory != null:
+		out.append_array(safe.inventory.items())
+	return out
+
+
+static func _tag_strings(def: ItemDef) -> Array:
+	var out: Array = []
+	for t in def.tags:
+		out.append(String(t))
+	return out
 
 
 func _set_phase(p: int, reason: StringName) -> void:
@@ -1290,6 +1349,10 @@ func to_dict() -> Dictionary:
 			"pending_battle": events.pending_battle.duplicate(true)},
 		"skills": skills.to_dict(),
 		"faith_power": faith_power.to_dict(),
+		"faith_history": faith_power.history_to_array(),     # 104
+		"owned_uids": owned_uids.keys(),
+		"acquired_ids": acquired_ids.keys(),
+		"placed_ids": placed_ids.keys(),
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
 		"boss_cleared": boss_cleared,
 		"tally": tally.duplicate(),
@@ -1401,5 +1464,16 @@ static func from_dict(
 	# 101：模块（本体那一层）现在就装上，读回来的一局立刻能用；难度机制要等持有方按 id 找回难度，
 	# 它会再调一次 install_modules（模块幂等）
 	s.install_modules()
+	# 104：获得 / 置入的账；老存档没有就把现在身上的记成对过账（不补点）
+	s.faith_power.restore_history(d.get("faith_history", []))
+	for k in d.get("acquired_ids", []):
+		s.acquired_ids[String(k)] = true
+	for k in d.get("placed_ids", []):
+		s.placed_ids[String(k)] = true
+	if d.has("owned_uids"):
+		for k in d.get("owned_uids", []):
+			s.owned_uids[int(k)] = true
+	else:
+		s._seed_owned()
 	return s
 #endregion

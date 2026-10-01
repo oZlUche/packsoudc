@@ -1,0 +1,18 @@
+{
+  "id": "charm_skill",
+  "display_name": "技巧之神的护符",
+  "display_names": {
+    "en": "Charm of Skill"
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "value": 200,
+  "tags": [
+    "treasure",
+    "faith",
+    "faith:skill",
+    "faith_anchor"
+  ]
+}

@@ -33,6 +33,9 @@ func run() -> void:
 			if res != null:
 				built[ContentPaths.asset_file(kind, id)] = res
 
+	report.source = "faiths"
+	ContentImporter.validate_faith_charms(ctx, report)     # 104：每位神一枚 1 格护符
+
 	if not report.warnings.is_empty():
 		print(report.to_text())
 	if not report.ok():

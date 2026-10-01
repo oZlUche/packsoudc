@@ -86,7 +86,7 @@ static func run_defs_and_tiers(t: TestCase) -> void:
 	ContentImporter.import_item({"id": "p", "display_name": "p", "shape": ["1"], "tags": ["gear"], "faith_bonuses": [{"tier": 1, "mods": [{"stat": "armor", "flat": 1.0}]}]}, ContentImporter.Context.new(), r2)
 	t.check(not r2.ok(), "拦下：无信仰之物不能有按信力解锁的功能")
 	var r3 := ImportReport.new()
-	ContentImporter.import_item({"id": "p", "display_name": "p", "shape": ["1"], "tags": ["faith", "faith:war", "gear"], "faith_bonuses": [{"tier": 0, "mods": [{"stat": "armor", "flat": 1.0}]}]}, ContentImporter.Context.new(), r3)
+	ContentImporter.import_item({"id": "p", "display_name": "p", "shape": ["1"], "tags": ["faith", "faith:skill", "gear"], "faith_bonuses": [{"tier": 0, "mods": [{"stat": "armor", "flat": 1.0}]}]}, ContentImporter.Context.new(), r3)
 	t.check(not r3.ok(), "拦下：阶 0")
 
 

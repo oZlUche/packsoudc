@@ -101,6 +101,7 @@ static func _notify(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef)
 		"provokes": td.provokes,
 		"source_side": packet.source_side,
 		"uid": packet.source_uid,
+		"crit": packet.crit,     # 104
 	})
 
 

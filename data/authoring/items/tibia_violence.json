@@ -15,13 +15,6 @@
     "faith",
     "faith:brute"
   ],
-  "faith_bonuses": [
-    {
-      "mods": [
-        {}
-      ]
-    }
-  ],
   "combat": {
     "rules": [
       {
