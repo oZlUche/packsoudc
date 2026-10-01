@@ -91,14 +91,19 @@ static func run_defs_and_tiers(t: TestCase) -> void:
 
 
 static func run_credit(t: TestCase) -> void:
-	t.begin("信力 · 没激活信仰不记；激活了只记它的池子；行为给几点就加几点；切换后各池各记；一局里的事真的接上了（置入、进账、花钱、走路、打仗、搜索、选项）")
+	t.begin("信力 · 所有信仰从开局同时收点（与激活无关）；行为给几点就加几点；切换不影响累积；一局里的事真的接上了（置入、进账、花钱、走路、打仗、搜索、选项）")
 	var db := _db()
 	var s := _start(db)
 	if s == null:
 		t.check(false, "开不了局")
 		return
 	var defs := FaithDef.load_all()
-	t.eq(s.faith_power.credit(&"battle", {"won": true}), 0, "没激活信仰：不记")
+	var all_gain := 0
+	for id in defs:
+		all_gain += _expected_gain(defs[id], &"battle", {"won": true})
+	t.eq(s.faith_power.credit(&"battle", {"won": true}), all_gain, "没激活信仰也照样记：每个信仰各按自己的行为")
+	for id in defs:
+		t.eq(s.faith_power.points_of(id), _expected_gain(defs[id], &"battle", {"won": true}), "%s 的池子已有点数" % id)
 	t.eq(s.faith_power.line(), "", "HUD 没有信力那一句")
 	# 找两件不同信仰的道具
 	var a: ItemDef = null
@@ -122,23 +127,28 @@ static func run_credit(t: TestCase) -> void:
 	# 置入 a：激活 fa；置入本身也是一件事（value 按 ItemValue）
 	var ia := ItemInstance.create(a, 0)
 	s.storage.admit(ia)
-	var before_place := _expected_gain(defs[fa], &"place_item", {"value": ItemValue.of(a), "id": String(a.id)})
+	var before_place := s.faith_power.points_of(fa) + _expected_gain(defs[fa], &"place_item", {"value": ItemValue.of(a), "id": String(a.id)})
 	t.check(s.equip(ia.uid), "把 %s 放上棋盘" % a.id)
 	t.eq(s.active_faith_id(), fa, "激活了 %s" % fa)
-	# 注意：置入那一刻激活信仰已经是 fa（先放上再发 placed），所以置入 a 自己也按 fa 的行为记
-	t.eq(s.faith_power.points_of(fa), before_place, "置入自己按 %s 的行为记 %d 点" % [fa, before_place])
+	t.eq(s.faith_power.points_of(fa), before_place, "置入自己按 %s 的行为记，累计 %d 点" % [fa, before_place])
 	var events := [
 		[&"battle", {"won": true}], [&"battle", {"won": false}], [&"travel", {"steps": 2}], [&"travel", {"steps": 3}],
 		[&"earn_money", {"amount": 30}], [&"spend_money", {"amount": 40}], [&"explore", {}], [&"event_choice", {"tags": ["offering"]}],
 	]
 	var want := s.faith_power.points_of(fa)
+	var want_b := s.faith_power.points_of(fb)
 	for ev in events:
 		var gain := _expected_gain(defs[fa], ev[0], ev[1])
-		t.eq(s.faith_power.credit(ev[0], ev[1]), gain, "%s：%s 给 %d" % [fa, ev[0], gain])
+		var gain_b := _expected_gain(defs[fb], ev[0], ev[1])
+		var total := 0
+		for id in defs:
+			total += _expected_gain(defs[id], ev[0], ev[1])
+		t.eq(s.faith_power.credit(ev[0], ev[1]), total, "%s：所有信仰共给 %d" % [ev[0], total])
 		want += gain
+		want_b += gain_b
 	t.eq(s.faith_power.points_of(fa), want, "累计 %d" % want)
 	t.eq(s.faith_power.tier_of(fa), (defs[fa] as FaithDef).tier_of(want), "阶按阈值")
-	t.eq(s.faith_power.points_of(fb), 0, "%s 的池子空着" % fb)
+	t.eq(s.faith_power.points_of(fb), want_b, "%s 没激活也在攒：%d" % [fb, want_b])
 	if want > 0:
 		t.check(not changes.is_empty() and changes[-1][0] == fa and int(changes[-1][1]) == want, "信号报了最新点数")
 		t.check(s.faith_power.line().contains("Lv.%d" % s.faith_power.tier_of(fa)) and s.faith_power.line().contains("　%d" % want), "HUD 一句（093：「神 Lv.n　点 / 下一阈值」）：%s" % s.faith_power.line())
@@ -147,10 +157,12 @@ static func run_credit(t: TestCase) -> void:
 	s.storage.admit(ib)
 	t.check(s.equip(ib.uid), "放上 %s" % b.id)
 	t.eq(s.active_faith_id(), fb, "切到 %s" % fb)
+	t.eq(s.faith_power.points_of(fa), want + _expected_gain(defs[fa], &"place_item", {"value": ItemValue.of(b), "id": String(b.id)}), "切换后 %s 的池子没清（置入 b 仍按行为记）" % fa)
 	var kept := s.faith_power.points_of(fa)
+	var kept_b := s.faith_power.points_of(fb)
 	s.faith_power.credit(&"battle", {"won": true})
-	t.eq(s.faith_power.points_of(fa), kept, "%s 的池子不动" % fa)
-	t.eq(s.faith_power.points_of(fb), _expected_gain(defs[fb], &"place_item", {"value": ItemValue.of(b)}) + _expected_gain(defs[fb], &"battle", {"won": true}), "%s 自己记" % fb)
+	t.eq(s.faith_power.points_of(fa), kept + _expected_gain(defs[fa], &"battle", {"won": true}), "%s 的池子继续攒" % fa)
+	t.eq(s.faith_power.points_of(fb), kept_b + _expected_gain(defs[fb], &"battle", {"won": true}), "%s 自己记" % fb)
 
 	# 接线：一局里的事真的进来了（每种事都按当时激活的信仰算期望）
 	var p0 := s.faith_power.points_of(fb)

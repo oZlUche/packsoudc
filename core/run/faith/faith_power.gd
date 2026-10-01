@@ -1,9 +1,9 @@
-## 信力（作者定，报告 082）：获得信仰道具（= 激活了一个信仰）之后，完成那个信仰指定的行为攒点数；点数过了几道阈值，
+## 信力（作者定，报告 082）：完成各信仰指定的行为攒点数（从开局就攒，不必先激活）；点数过了几道阈值，
 ## 信仰道具就多出额外的功能（道具上的 [ItemDef.faith_bonuses]，按阶解锁，编译器读 [method tiers]）。
 ##
-## 每个信仰一个池子，只有**此刻激活的信仰**收点；行为与阈值都是信仰文件里的数据（[FaithDef.deeds] / [FaithDef.thresholds]）。
+## 每个信仰一个池子，所有信仰从开局起同时收点（不看激活与否）；行为与阈值都是信仰文件里的数据（[FaithDef.deeds] / [FaithDef.thresholds]）。
 ## 一局里的事由 [RunState] 接线喂进来（[method credit]），本类不碰任何系统、不认具体的神。跟着存档走。
-## 切换信仰不清别的池子（作者：切换没有代价，甚至可以继承 —— 继承还没做，先各池各记）。
+## 切换信仰不清任何池子；激活只决定谁的阶数加成生效。
 class_name FaithPower
 extends RefCounted
 
@@ -40,24 +40,29 @@ func tiers() -> Dictionary:
 	return out
 
 
-## 一局里发生了一件事：激活信仰的每个行为各自说给几点，加起来记到它的池子里。没激活信仰 = 不记。返回加了几点
+## 一局里发生了一件事：**每个信仰**的每个行为各自说给几点，加起来记到各自的池子里 —— 与是否激活无关
+## （信力从开局就在攒，激活哪个信仰只决定哪个的加成生效）。返回所有池子一共加了几点
 func credit(event: StringName, payload: Dictionary = {}) -> int:
 	if run == null:
 		return 0
-	var def := run.active_faith()
-	if def == null:
-		return 0
-	var gained := 0
-	for d in def.deeds:
-		var deed := d as FaithDeed
-		if deed != null:
-			gained += maxi(0, deed.gain(event, payload))
-	if gained <= 0:
-		return 0
-	var key := String(def.id)
-	points[key] = points_of(def.id) + gained
-	changed.emit(def.id, points_of(def.id), tier_of(def.id))
-	return gained
+	var ids: Array = run.faith_defs.keys()
+	ids.sort()
+	var total := 0
+	for id in ids:
+		var def := run.faith_defs.get(id, null) as FaithDef
+		if def == null:
+			continue
+		var gained := 0
+		for d in def.deeds:
+			var deed := d as FaithDeed
+			if deed != null:
+				gained += maxi(0, deed.gain(event, payload))
+		if gained <= 0:
+			continue
+		points[String(def.id)] = points_of(def.id) + gained
+		total += gained
+		changed.emit(def.id, points_of(def.id), tier_of(def.id))
+	return total
 
 
 ## 095：给编译器：信仰对象标签 → 点数
