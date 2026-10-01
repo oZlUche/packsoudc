@@ -171,15 +171,7 @@ func open(_payload: Dictionary) -> void:
 ## 090：暂存区那一栏。上一局带回来、还没置入的东西从带回来的棋盘挪进来，记住各自原位（回主菜单原样放回）
 func _build_stash() -> void:
 	stash = ItemStash.new(STASH_ID, 0)
-	_pending.clear()
-	var back := flow.meta.board
-	if back != null:
-		for inst in back.items():
-			var it := inst as ItemInstance
-			var origin := it.origin
-			var rot := it.rotation
-			if back.remove(it.uid) != null and stash.insert(it):
-				_pending[it.uid] = {"origin": origin, "rot": rot}
+	_pending = flow.meta.take_board_to_stash(stash)     # 101 第 4 刀：挪与记原位的账在 MetaState 里
 	_stash_title = _label("", 15, UiPalette.DIM)
 	_stash_box.add_child(_stash_title)
 	_stash_box.add_child(_wrapped("上一局带回来、还没置入的东西先放在这儿。往包里拖 = 带上；往仓库拖 = 收进仓库；留在这儿的出发就没了；回主菜单则原样放回带回来的背包", 12, UiPalette.DIM, 240))
@@ -539,20 +531,9 @@ func _restore_pending() -> void:
 	_return_carried()
 	if stash == null:
 		return
-	var back := flow.meta.board
-	for inst in stash.items():
-		var it := inst as ItemInstance
-		stash.remove(it.uid)
-		if back == null:
-			back = GridInventory.new(RunState.BOARD_SIZE, MetaState.BOARD_ID, false)
-			flow.meta.board = back
-		var rec: Dictionary = _pending.get(it.uid, {})
-		var placed := rec.has("origin") and back.place(it, rec["origin"], int(rec.get("rot", 0)))
-		if not placed and not back.try_add(it, true) and not flow.meta.take_back(it):
-			push_warning("setup: %s 放不回带回来的棋盘也放不进仓库，丢弃" % it.def.id)
+	for id in flow.meta.return_stash(stash, _pending):     # 101 第 4 刀：放回的账在 MetaState 里
+		push_warning("setup: %s 放不回带回来的棋盘也放不进仓库，丢弃" % id)
 	_pending.clear()
-	if back != null and back.item_count() == 0:
-		flow.meta.board = null
 
 
 ## 按角色造棋盘：初始包摆好。包的 uid 走局外的号段，免得和从仓库拖来的撞号

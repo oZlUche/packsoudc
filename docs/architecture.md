@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.13 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.14 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2905,6 +2905,19 @@ flow 只说「现在该显示哪一屏、给它什么」（`screen_changed(scree
 直接驱动 `RunState` 的测试与批量工具不开这个开关，照旧同步打。每一屏是一个 `GameScreen`（`ui/game/game_screen.gd`）：
 导演造它、给它 flow 与字体、`open(payload)`；屏只把 flow 的状态画出来、把玩家的动作转成 flow 的方法（1.2 命令进、信号出），不认识导演。
 
+**flow 不自己长逻辑：能独立说清的规则抽成服务**（101 第 4 刀）。`GameFlow` 的本职是「现在该显示哪一屏」加「存盘」，
+所以能脱离屏与存盘说清的规则都搬了出去，flow 只留一行转发（界面与测试的调用处一个都不用改）：
+
+| 服务 | 管什么 | flow 还留着什么 |
+|---|---|---|
+| `Achievements`（`core/meta/achievements.gd`） | 有没有新成就、这个解锁开了什么、现在哪些道具锁着、规则卡看过没有。**纯逻辑**：看局外与内容算结果，不碰存盘、不碰转屏 | `_sync_achievements()` 把局外 / 内容 / 「全部解锁」开关同步过去，拿到结果决定要不要 `save_meta()` |
+| `SaveSlots.open(n, items, rules)` | 切存档位的文件层：建目录、算两条路径、读局外，**读不出来先备份再从零开始**（098） | 谁是当前位、设置里记哪一位、这一局怎么办 |
+| `MetaState`（已有的类，把账搬回去） | `left_behind_preview` / `sell_left_behind`（092 暂存区一键出售）、`take_board_to_stash` / `return_stash`（090 带回来的棋盘 ⇄ 开局屏那一栏） | 结算屏与开局屏只管画，不再自己算 |
+
+**不许漏接**（`tests/run/test_flow_wiring.gd`）：一局、节点事件与六个模块声明的每个 signal，在 `core/` 或 `ui/` 里都得有人接，
+否则测试红。「发了没人听」的表现是某个屏永远不弹、某句提示永远不出现，而编译与别的测试都不会红 —— 这是加了信号忘接线时唯一会响的铃。
+确实只给测试或将来留的写进白名单并写明原因（现在只有一条：`NodeEvents.shop_closed`，flow 走会话自己的 `closed`）。
+
 **节点事件排成队。** 事件是同步发生的：`step_to` 一步之内可能连着来「打了一场 → 掉了东西 → 进账」，各自一个信号。flow 把它们排成队，
 走完这一步按顺序一屏一屏给玩家看；叠层看完了 `resume()` 看下一个，队空了回地图；一局结束了（战败 / 撤离）最后一定是结算屏 ——
 结束之后队里只有那一场的回放还值得看，其余（战利品、会话）跳过。搜索 / 商店会话结束由 flow 自己接着往下走（`session.ended` / `closed`），屏不必管。
@@ -3683,6 +3696,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.14 | 2026-10-01 | **`GameFlow` 抽服务**（报告 101 第 4 刀；改 8 节）：成就与解锁抽成 `Achievements`（`core/meta/achievements.gd`，纯逻辑，不碰存盘与转屏；flow 只同步 + 决定要不要存），切存档位的文件层并进 `SaveSlots.open`（建目录 / 两条路径 / 读局外 / 读不出来先备份，098 的规矩和 `backup` 放在一起），092 的暂存区一键出售与 090 的「带回来的棋盘 ⇄ 开局屏那一栏」搬回 `MetaState`（`left_behind_preview` / `sell_left_behind` / `take_board_to_stash` / `return_stash`，开局屏少 20 行）；界面与测试的调用处一个没改（flow 留一行转发）；新套件 `tests/run/test_flow_wiring.gd`：**不许漏接** —— 一局 / 节点事件 / 六个模块的每个 signal 在 `core/` 或 `ui/` 里都得有人接（白名单一条：`shop_closed`），外加三个服务各自不造 `GameFlow` 也能测 |
 | v2.13 | 2026-10-01 | **一局的能力表 `RunHooks`**（报告 101 第 3 刀；新增 7.5）：`NodeEvents` 的 16 个裸 `Callable` 字段与 `EventContext` 的 7 个收成一个带类型的 `RunHooks`（`register` 只认 `NAMES` 里的名字，写错当场 `push_error`；每条的默认值写在方法里，所以沙盒 / 测试 / 没装那个模块的一局照常跑）；骨架在 `_wire_events` 里接自己的十条，`SafeModule` / `BuffModule` / `AltarModule` / `HunterSystem` 在 `install` 里接自己的 —— `NodeEvents` 与 `EventContext` 都不再认识任何模块；`EventContext` 新增 `faith_tier_now()` / `active_faith_id()`，`erosion_depth` 不进表（它是节点从 `travel.erosion` 现接的）；新套件 `tests/run/test_run_hooks.gd` 守默认值、名字登记、一局里谁接了什么、以及那些裸字段真的没了 |
 | v2.12 | 2026-10-01 | **测试与工具**（报告 102；新增 11.1、改 11 的树）：套件按层分目录（`tests/inventory` / `battle` / `map` / `run` / `meta` / `ui` / `authoring`，76 个），十个 `test_author_0NN.gd` 按**被测对象**拆散归位（报告号留在用例标题里），`run_tests.gd` 改为 `DirAccess` 递归自动发现（不再维护 `preload` 清单），`bash tools/test.sh <词>` 只跑路径或标题里含它的套件（后两步全项目检查照常跑）；类缓存出仓库（`.gitignore` 收整个 `.godot/`，推翻 v2.04；编辑器自己重建、`test.sh` 与 `run_game` 先 `--import`，`DevNav` 的缺类自检只在非编辑器下提示）；`test.sh` 找不到 `timeout` 就不包超时（macOS 默认没有）；新增 `tests/support.gd`（公共装载）与 `tests/run/flow_support.gd`（跑流程的公共壳） |
 | v2.11 | 2026-10-01 | **一局的六个子系统都搬成模块**（报告 101 第 1 刀；改 7.4 / 7.2 / 8.2）：`NodeStorageModule`（087 按点暂存）、`CountdownModule`（092 / 094 倒计时与带入预算，开局屏用的那几条算式留作静态方法）、`CraftingModule`（084 / 087 相邻即合）、`BuffModule`（062 一局里拿到的 buff）、`AltarModule`（093 / 095 神坛、信仰级效果 `perks`、赐福）；`RunState` 新增通用信号 `arrived(node_id, first_time)` / `stepped(node_id, reason)` 与方法 `fail(reason)`，`start()` 去掉 `p_carry_value`（带入价值走 `module_inputs`），1359 → 962 行；`RunMigrations` 的 v1 → v2 把顶层 `node_storages` / `carry_in_value` / `faith_rituals` / `faith_stat_bonus` / `altar_used` / `buffs.map` 都搬进 `modules` |

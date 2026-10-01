@@ -261,3 +261,37 @@ func describe() -> String: return ""              # 开局屏 / 规则卡 / 编�
 全套测试 **77 个套件、12456 项断言通过**。
 
 **下一刀**：第 4 刀（`GameFlow` 抽服务）、第 6 刀（UI 里的逻辑搬回去）彼此独立；第 2 刀仍等 100 第 4 步的 `ContentLibrary`。
+
+## 落地 · 第 4 刀：`GameFlow` 抽服务（2026-10-01，实现 thread）
+
+`GameFlow` 的本职是「现在该显示哪一屏、给它什么」加「存盘」。能脱离屏与存盘说清的规则都搬出去了，
+flow 只留一行转发 —— **界面与测试的调用处一个都没改**（`flow.check_achievements()` / `flow.locked_item_ids()` 照旧）。
+
+| 服务 | 带走的 | flow 还留着 |
+|---|---|---|
+| `Achievements`（`core/meta/achievements.gd`，107 行） | `check` / `of_id` / `granting` / `unlock_names` / `unlocked` / `locked_item_ids` / `apply_item_locks` / `rules_card_pending` / `mark_rules_seen`。纯逻辑：看局外与内容算结果 | `_sync_achievements()` 把局外 / 内容 / 「全部解锁」开关同步过去，按返回值决定要不要 `save_meta()`；`toggle_unlock_all` 还在 flow（它动的是 `GameSettings`） |
+| `SaveSlots.open(n, items, rules)` | 切位要做的文件层的事：建目录、算两条路径、读局外、**读不出来先备份再从零开始**（098 的规矩这下和 `backup` 放在一起了） | `use_slot` 只管当前位、设置里记哪一位、这一局怎么办（20 行 → 10 行） |
+| `MetaState`（已有的类） | `left_behind_preview` / `sell_left_behind`（092 暂存区一键出售）、`take_board_to_stash` / `return_stash`（090 带回来的棋盘 ⇄ 开局屏那一栏） | 结算屏调 `stash_sale_preview()` 照旧；开局屏少了 20 行容器搬运代码 |
+
+**和方案不同的三处**：
+
+1. **没有做 `SlotService`**，而是把那段逻辑并进了已有的 `SaveSlots`（方案里写的是「`SlotService`（或并进 `SaveSlots`）」，选了后者）：
+   能脱离 flow 说清的只有文件层那一半（建目录、读、备份），余下的 `continue_game` / `start_new_game` / `new_game_in` / `load_slot`
+   全是「接下来显示哪一屏、这一局怎么办」—— 那就是 flow 的本职，搬出去只会变成一个拿着 flow 反向调用的壳。
+2. **`_adopt` 的 20 个 `connect` 没有改成一张表**。它们接的对象各不相同（`NodeEvents`、`RunState`、模块、会话），
+   而且每个闭包都带着自己的排队规则（哪一屏插队、哪一屏并掉）—— 塞进一张 `[signal → 处理函数]` 的表只会让这些规则更难读。
+   方案真正要的是**防漏接**，所以直接做了那个测试（下面一条），表没做。
+3. **`GameFlow` 行数只从 1226 降到 1190**：抽出去的逻辑换成了同样数量的转发行。这一刀的收益不在行数，
+   在于那三块逻辑现在**不造一个 `GameFlow` 就能测**（新套件里就是这么测的），以及 098 / 090 / 092 的规矩回到了它们本来该在的类上。
+
+**不许漏接**（新套件 `tests/run/test_flow_wiring.gd`，99 项断言）：读 `run_state.gd` / `node_events.gd` / `core/run/modules/*.gd` 里声明的每个 signal，
+要求 `core/` 或 `ui/` 的源码里有人 `connect` 它，否则红。「发了没人听」的表现是某个屏永远不弹、某句提示永远不出现，
+而编译与别的测试都不会红 —— 这是加了信号忘接线时唯一会响的铃。白名单现在只有一条：`NodeEvents.shop_closed`（flow 走会话自己的 `closed` 往下走）。
+同一套件还各测了三个服务：成就（新档没有成就 → 刷满数字一枚枚达成 → 不重复给 → 「全部解锁」开着不计 → 规则卡看过就不再弹）、
+切位（空位 / 好档读得出 / 坏档先备份再交出 null、老文件改名走了不会被盖、备份不算存档）、
+卖与挪（预览只算不卖、真卖只卖一次、没撤离出来的不卖、棋盘 ⇄ 暂存那一栏按原位放回）。
+
+**账**：`game_flow.gd` 1226 → 1190 行，`setup_screen.gd` 少 20 行，新增 `achievements.gd` 107 行、`save_slots.gd` +18、`meta_state.gd` +56。
+全套测试 **78 个套件、12555 项断言通过**。
+
+**下一刀**：第 6 刀（UI 里的逻辑搬回 core、演示数据进 `tools/demo_fill.gd`）；第 5 刀（依赖方向：perk 改编译期）独立；第 2 刀仍等 100 第 4 步的 `ContentLibrary`。
