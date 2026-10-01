@@ -295,3 +295,30 @@ flow 只留一行转发 —— **界面与测试的调用处一个都没改**（
 全套测试 **78 个套件、12555 项断言通过**。
 
 **下一刀**：第 6 刀（UI 里的逻辑搬回 core、演示数据进 `tools/demo_fill.gd`）；第 5 刀（依赖方向：perk 改编译期）独立；第 2 刀仍等 100 第 4 步的 `ContentLibrary`。
+
+## 落地 · 第 6 刀：UI 里的逻辑搬回去（2026-10-01，实现 thread）
+
+方案列的三条全做了。
+
+1. **商店屏的回滚** → `ShopSession.pay_or_return(格, uid, 容器)`。
+   「拖走了就结账，结不成（钱不够 / 已卖 / 店关了）把东西从玩家那边拿回来、原样放回那一格」是一局的规则，
+   原来写在 `shop_screen.gd` 的拖拽回调里（9 行，手写两条容器分支）。现在界面只剩一句
+   `if not _session.pay_or_return(slot, uid, [board, storage]): _say("金币不足…")`。
+   顺手补了测试 `test_economy.run_shop_rollback`（15 项断言）—— 这条规则此前只有界面里有、**一条测试都没有**：
+   钱够就结账、钱不够原样回架上且钱不动、那一格不算卖出、东西在暂存区里也找得回来。
+2. **导演里的演示代码** → `tools/demo_fill.gd`（`class_name DemoFill`，221 行）。
+   `game_director.gd` **390 → 196 行**：导演只剩一句「`DEMO_SCREEN` 非空才 `load` 它、调一次 `fill(self, flow)`」，
+   所以这段代码不在正式游戏的任何路径上。它干的事（代码里造假难度、替玩家点选项、一路走到撤离点、把叠层全看完）
+   本来就是截图工具的事，不该让导演带着。搬家只换了取屏的方式：`_base` / `_overlay` 改成导演已有的 `base()` / `overlay()`。
+3. **导演直接写 `run.phase` / `run.end_reason`** → `RunState.force_extract()`（文档注释里标明**只给演示与测试用**，
+   正式游戏走 `try_extract` / `extract_after_boss`）。`grep -rn "\.phase = " ui/ tools/` 现在是空的。
+
+**验证**：全套测试 **80 个套件、12684 项断言通过**。另外实跑了截图那条路（`tools/capture_scene.gd` + 探针脚本）：
+`DEMO_SCREEN=map / result / meta / search / erosion` 五种各跑一次，流程分别停在 `MAP` / `RESULT` / `META` / `SEARCH` / `MAP`，
+和搬家前一致（截图本身在 headless 下存不出图，那是这个工具一直以来的限制，它自己的文件头就写着）。
+
+**账**：`game_director.gd` 390 → 196 行，`shop_screen.gd` 少 6 行，`shop_session.gd` +21，`run_state.gd` +11，新 `tools/demo_fill.gd` 221 行。
+
+**余下的刀**：第 2 刀（`start()` 收成 `RunSetup`）等 100 第 4 步的 `ContentLibrary`；第 5 刀（依赖方向：`ItemTooltip.faith_probe`、
+`TextTemplate` 的颜色表、perk 改编译期输入、`spec.flags` 改带类型字段、注册表拆三张）还没动 —— 它是这几刀里唯一会改战斗层接口的，
+建议单独一刀做完再合。

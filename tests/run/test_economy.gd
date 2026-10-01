@@ -452,3 +452,45 @@ static func run_events(t: TestCase) -> void:
 	t2.step_to(1)
 	t.eq(f2, [true], "没钱包照样打、照样赢")
 	t.eq(r2.size(), 0, "没钱包就不进账")
+
+
+static func run_shop_rollback(t: TestCase) -> void:
+	t.begin("经济 · 商店 · 拖走了就结账，结不成放回架上（101 第 6 刀：这条规则原来写在商店屏里）")
+	var items := _items()
+	var r := _rules()
+	var node := _shop_node()
+	# 钱刚好够第 0 格，第 1 格买不起
+	var s0 := ShopSession.new(node, r, items, Wallet.new(100000), 0.3)
+	var price0 := int(s0.stock[0]["price"])
+	var wallet := Wallet.new(price0)
+	var s := ShopSession.new(node, r, items, wallet, 0.3)
+	t.eq(int(s.stock[0]["price"]), price0, "同种子同货：第 0 格还是那个价")
+	var board := GridInventory.new(Vector2i(8, 8), 1, false)
+	# 买得起的那一格：拖拽层先把东西挪进棋盘，结账成功
+	var inst := s.item_at(0)
+	t.not_null(inst, "第 0 格有货")
+	s.shelves[0].remove(inst.uid)
+	t.check(board.try_add(inst, true), "拖进棋盘")
+	t.check(s.pay_or_return(0, inst.uid, [board]), "钱够：结账成功")
+	t.eq(wallet.balance, 0, "钱花掉了")
+	t.check(board.has_item(inst.uid) and s.item_at(0) == null, "东西留在棋盘上，架上空了")
+	# 买不起的那一格：东西从棋盘拿回来、原样回到架上，钱不变
+	var second := s.item_at(1)
+	t.not_null(second, "第 1 格有货")
+	if second == null:
+		return
+	s.shelves[1].remove(second.uid)
+	t.check(board.try_add(second, true), "也拖进棋盘")
+	t.check(not s.pay_or_return(1, second.uid, [board]), "钱不够：结不成")
+	t.check(not board.has_item(second.uid), "从玩家那边拿回来了")
+	t.check(s.item_at(1) != null and s.item_at(1).uid == second.uid, "原样回到第 1 格")
+	t.eq(wallet.balance, 0, "钱没动")
+	t.check(s.available().has(1), "第 1 格还在架上（没记成卖出）")
+	# 暂存区里的也找得回来（拖到棋盘外 = 暂存区，084）
+	var stash := ItemStash.new(2, 0)
+	var third := s.item_at(2)
+	if third != null:
+		s.shelves[2].remove(third.uid)
+		stash.admit(third)
+		t.check(not s.pay_or_return(2, third.uid, [board, stash]), "钱不够：结不成")
+		t.check(not stash.has_item(third.uid) and s.item_at(2) != null, "从暂存区拿回来、回到架上")

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.14 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.15 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3594,7 +3594,8 @@ res://
     map/            map_view  map_layout  ring_layout_base  ring_map_layout  grid_map_layout
                     ring_angle_solver  map_node_style
     map_editor/     map_editor
-  tools/            import_content  export_content  normalize_content  check_scripts  map_stats  build_dummies  bench_hunters
+  tools/            import_content  export_content  normalize_content  check_scripts  check_content  map_stats  build_dummies  bench_hunters
+                    demo_fill        # 截图演示（101 第 6 刀；只在 DEMO_SCREEN 非空时被导演 load）
                     gen_sample_items  gen_sample_combat  gen_sample_chapter  bench_battle  capture_scene  cli_tool
   tests/            run_tests  test_case  support（公共装载）                      # 102：按层分目录，76 个套件
     inventory/      test_*（12）   背包、格子、拖拽
@@ -3726,6 +3727,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.15 | 2026-10-01 | **UI 里的逻辑搬回 core**（报告 101 第 6 刀；改 8 节、11 的树）：商店屏「拖走了就结账、结不成放回架上」的回滚搬进 `ShopSession.pay_or_return(格, uid, 容器)`（界面只把 false 说成一句话）；导演里 200 行截图演示代码搬进 `tools/demo_fill.gd`（`class_name DemoFill`，导演只在 `DEMO_SCREEN` 非空时 `load` 它，正式游戏一行都不跑），`game_director.gd` 390 → 196 行；导演直接写 `run.phase` / `end_reason` 改成 `RunState.force_extract()`（标明只给演示与测试用）；新用例 `test_economy.run_shop_rollback` 守回滚规则（原来只有界面里有、没测试） |
 | v2.14 | 2026-10-01 | **`GameFlow` 抽服务**（报告 101 第 4 刀；改 8 节）：成就与解锁抽成 `Achievements`（`core/meta/achievements.gd`，纯逻辑，不碰存盘与转屏；flow 只同步 + 决定要不要存），切存档位的文件层并进 `SaveSlots.open`（建目录 / 两条路径 / 读局外 / 读不出来先备份，098 的规矩和 `backup` 放在一起），092 的暂存区一键出售与 090 的「带回来的棋盘 ⇄ 开局屏那一栏」搬回 `MetaState`（`left_behind_preview` / `sell_left_behind` / `take_board_to_stash` / `return_stash`，开局屏少 20 行）；界面与测试的调用处一个没改（flow 留一行转发）；新套件 `tests/run/test_flow_wiring.gd`：**不许漏接** —— 一局 / 节点事件 / 六个模块的每个 signal 在 `core/` 或 `ui/` 里都得有人接（白名单一条：`shop_closed`），外加三个服务各自不造 `GameFlow` 也能测 |
 | v2.13 | 2026-10-01 | **一局的能力表 `RunHooks`**（报告 101 第 3 刀；新增 7.5）：`NodeEvents` 的 16 个裸 `Callable` 字段与 `EventContext` 的 7 个收成一个带类型的 `RunHooks`（`register` 只认 `NAMES` 里的名字，写错当场 `push_error`；每条的默认值写在方法里，所以沙盒 / 测试 / 没装那个模块的一局照常跑）；骨架在 `_wire_events` 里接自己的十条，`SafeModule` / `BuffModule` / `AltarModule` / `HunterSystem` 在 `install` 里接自己的 —— `NodeEvents` 与 `EventContext` 都不再认识任何模块；`EventContext` 新增 `faith_tier_now()` / `active_faith_id()`，`erosion_depth` 不进表（它是节点从 `travel.erosion` 现接的）；新套件 `tests/run/test_run_hooks.gd` 守默认值、名字登记、一局里谁接了什么、以及那些裸字段真的没了 |
 | v2.12 | 2026-10-01 | **测试与工具**（报告 102；新增 11.1、改 11 的树）：套件按层分目录（`tests/inventory` / `battle` / `map` / `run` / `meta` / `ui` / `authoring`，76 个），十个 `test_author_0NN.gd` 按**被测对象**拆散归位（报告号留在用例标题里），`run_tests.gd` 改为 `DirAccess` 递归自动发现（不再维护 `preload` 清单），`bash tools/test.sh <词>` 只跑路径或标题里含它的套件（后两步全项目检查照常跑）；类缓存出仓库（`.gitignore` 收整个 `.godot/`，推翻 v2.04；编辑器自己重建、`test.sh` 与 `run_game` 先 `--import`，`DevNav` 的缺类自检只在非编辑器下提示）；`test.sh` 找不到 `timeout` 就不包超时（macOS 默认没有）；新增 `tests/support.gd`（公共装载）与 `tests/run/flow_support.gd`（跑流程的公共壳） |

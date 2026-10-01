@@ -341,6 +341,18 @@ func extract_after_boss() -> bool:
 	return true
 
 
+## **只给演示与测试用**（101 第 6 刀；原来是 `tools/demo_fill.gd` 的前身在导演里直接写 `phase` 与 `end_reason`）：
+## 不看站在哪、不付费、不结算撤离点，直接把这一局记成撤离成功。正式游戏走 [method try_extract] / [method extract_after_boss]。
+## 已经结束返回 false
+func force_extract() -> bool:
+	if is_over():
+		return false
+	close_sessions()
+	_drop_pending_loot()
+	_set_phase(Phase.EXTRACTED, &"extract")
+	return true
+
+
 ## 行动失败（101）：这一局当场结束 —— 开着的会话关掉、没拿的战利品丢掉、排着的事清掉，阶段进战败。
 ## 模块用它（倒计时归零就是这么失败的）；[param reason] 进结算与战绩。返回这次有没有真的失败
 func fail(reason: StringName) -> bool:
