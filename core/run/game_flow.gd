@@ -672,8 +672,8 @@ func close_altar() -> void:
 		return
 	_go(Screen.MAP, {})
 	var here := run.current_node()
-	if here != null and not here.is_visited() and not run.is_over():
-		run.events.handle(here)     # 093：神坛上把这个点改造成别的了：立刻发生
+	if here != null and not here.is_visited() and not run.is_over() and NodeEvents.effective_type(here) != &"rest":
+		run.events.handle(here)     # 093：神坛上把这个点改造成别的了：立刻发生（还是没用完的休息点就不算，回地图）
 	_flush()
 
 
@@ -873,6 +873,10 @@ func reopen_node() -> bool:
 	var entry := _reopen_entry()
 	if run == null or run.is_over() or entry.is_empty():
 		return false
+	if bool(entry.get("rest", false)):
+		run.events.handle(run.current_node())     # 反馈：没用完的休息点，站着再把选项打开
+		_flush()
+		return true
 	entry["restore"] = true
 	_go(int(entry["screen"]), entry)
 	return true
@@ -897,7 +901,9 @@ func _reopen_entry() -> Dictionary:
 	if here != null and NodeEvents.effective_type(here) == &"safe" and safe != null and safe.is_open():
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开
 	if here != null and run.altar_open():
-		return {"screen": Screen.ALTAR, "node": here}     # 093：神坛还开着（这一次没用过特殊操作）
+		return {"screen": Screen.ALTAR, "node": here}     # 093：神坛还开着（这一次没用过）
+	if here != null and not here.is_visited() and NodeEvents.effective_type(here) == &"rest":
+		return {"screen": Screen.EVENT, "node": here, "rest": true}     # 反馈：休息点还有没用的那一份
 	return {}
 
 

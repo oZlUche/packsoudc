@@ -581,17 +581,25 @@ func _on_node_hovered(id: int) -> void:
 func _update_tooltip(id: int) -> void:
 	if _tip == null:
 		return
-	if id < 0 or not flow.tooltips_enabled() or _bag != null or _confirm != null or _step_confirm != null or _pause != null or not _run.map.has_node(id):
+	if id < 0 or _bag != null or _confirm != null or _step_confirm != null or _pause != null or not _run.map.has_node(id):
 		_tip.hide_tip()
 		return
 	var node := _run.map.get_node(id)
+	var stash := NodeTooltip.stash_text(_run, node)     # 反馈：每个点的暂存区悬停就能看，不受「节点浮窗」开关管
+	if not flow.tooltips_enabled():
+		if stash == "":
+			_tip.hide_tip()
+		else:
+			_tip.show_text(stash, get_global_mouse_position(), null)
+		return
 	var extra: Control = null
 	if NodeTooltip.shows_board(node):
 		var v := InventoryView.new()
 		v.label_font = font
 		v.inventory = EnemyKit.board_of(node.content, flow.items)
 		extra = v
-	_tip.show_text(NodeTooltip.text_for(_run, _run.chapter, node), get_global_mouse_position(), extra)
+	var text := NodeTooltip.text_for(_run, _run.chapter, node)
+	_tip.show_text(text + ("\n" + stash if stash != "" else ""), get_global_mouse_position(), extra)
 
 
 func tooltip_text() -> String:
