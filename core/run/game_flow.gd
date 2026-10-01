@@ -683,7 +683,10 @@ func close_altar() -> void:
 func offer(insts: Array, node: MapNode = null) -> Dictionary:
 	if run == null:
 		return {"points": 0, "count": 0}
-	var got := run.offer(insts, node)
+	var altar := AltarModule.of(run)
+	if altar == null:
+		return {"points": 0, "count": 0}
+	var got := altar.offer(insts, node)
 	if int(got["count"]) > 0:
 		for inst in insts:
 			var it := inst as ItemInstance
@@ -700,7 +703,8 @@ func offer(insts: Array, node: MapNode = null) -> Dictionary:
 func smite() -> bool:
 	if run == null:
 		return false
-	var perk := run.faith_perk(&"smite")
+	var altar := AltarModule.of(run)     # 101：信仰级效果在神坛模块里取
+	var perk := altar.perk(&"smite") if altar != null else null
 	if perk == null or not perk.prebattle_apply(run):
 		return false
 	_flush()
@@ -898,7 +902,8 @@ func _reopen_entry() -> Dictionary:
 	var safe := SafeModule.of(run)
 	if here != null and NodeEvents.effective_type(here) == &"safe" and safe != null and safe.is_open():
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开
-	if here != null and run.altar_open():
+	var altar := AltarModule.of(run)
+	if here != null and altar != null and altar.is_open():
 		return {"screen": Screen.ALTAR, "node": here}     # 093：神坛还开着（这一次没用过特殊操作）
 	return {}
 

@@ -17,7 +17,8 @@ func on_offered(run: RunState, defs: Array, node: MapNode) -> String:
 	if n == 0:
 		return ""
 	var amount := mini(per_food * n, max_per_altar)
-	if run.faith_perk(&"food_double") != null:
+	var altar := AltarModule.of(run)
+	if altar != null and altar.perk(&"food_double") != null:
 		amount *= 2
 	node.content["altar_food_used"] = true
 	var got := run.vitality.restore(amount, &"altar")

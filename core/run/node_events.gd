@@ -41,7 +41,7 @@ var safe_open: Callable = Callable()
 ## 093：神坛（休息处的「神坛」选项）：开了；激活信仰第几阶（RunState.active_faith_tier）
 signal altar_opened(node: MapNode)
 var faith_tier: Callable = Callable()
-## 095：激活信仰 id（RunState.active_faith_id）；战利品 / 搜索的赐福替代 `func(ids, chance_idle, chance_active) -> ids`（RunState.bless_ids）
+## 095：激活信仰 id（RunState.active_faith_id）；战利品 / 搜索的赐福替代 `func(ids, chance_idle, chance_active) -> ids`（AltarModule.bless_substitute）
 var active_faith_id: Callable = Callable()
 var bless_substitute: Callable = Callable()
 signal event_resolved(node: MapNode, outcome: StringName, detail: Dictionary)

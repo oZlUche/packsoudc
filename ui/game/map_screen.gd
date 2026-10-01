@@ -471,10 +471,12 @@ func _adopt() -> void:
 	var safe := SafeModule.of(_run)     # 101：保险箱是一局的模块，信号在它身上
 	if safe != null:
 		safe.closed.connect(func(n: int): _note("[color=#c8a2ff]　保险箱关上了：%d 件送回基地，不能再改[/color]" % n))
-	_run.altar_changed.connect(func(text: String):
-		_note("[color=#f0ad4e]　" + text + "[/color]")
-		_refresh_hud())     # 093
-	_run.item_blessed.connect(func(_i: ItemInstance, _f: StringName): _refresh_hud())     # 095
+	var altar := AltarModule.of(_run)     # 101：神坛是一局的模块，信号在它身上
+	if altar != null:
+		altar.noted.connect(func(text: String):
+			_note("[color=#f0ad4e]　" + text + "[/color]")
+			_refresh_hud())     # 093
+		altar.item_blessed.connect(func(_i: ItemInstance, _f: StringName): _refresh_hud())     # 095
 	_rebuild_routes()
 	_after_move()
 	if _run.phase == RunState.Phase.PICK_SPAWN:

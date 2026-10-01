@@ -156,14 +156,16 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	var sigil := _activate(run, &"strength_sigil")
 	t.check(sigil != null and run.active_faith() != null and run.active_faith().id == &"brute", "放上力量的符号：激活蛮神")
 	t.eq(run.active_faith_tier(), 0, "0 级")
-	t.check(run.faith_perks().is_empty(), "0 级没有效果")
+	var altar := AltarModule.of(run)     # 101：神坛与信仰级效果是一局的模块
+	t.not_null(altar, "默认清单里有神坛")
+	t.check(altar.perks().is_empty(), "0 级没有效果")
 	# 战斗的账喂进去
 	var got := run.faith_power.credit(&"battle", {"won": true, "dealt": {"physical": 60.0}, "taken": {"physical": 60.0}})
 	t.eq(got, 24, "一场 120 伤害 × 0.2 = 24 信力")
 	t.eq(run.faith_power.credit(&"vitality_change", {"delta": -1}), 50, "掉 1 体力 +50")
 	t.eq(run.active_faith_tier(), 1, "74 点：Lv.1")
 	t.check(run.faith_power.line().begins_with("蛮神 Lv.1"), "HUD 一句：%s" % run.faith_power.line())
-	t.check(run.faith_perk(&"low_hp_empower") != null, "1 级：低血增伤生效")
+	t.check(altar.perk(&"low_hp_empower") != null, "1 级：低血增伤生效")
 	var spec := run.compile_player()
 	var has_rule := false
 	for rule in spec.set_rules:
@@ -175,15 +177,15 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	run.faith_power.add_points(&"brute", 30)
 	t.eq(run.active_faith_tier(), 2, "104 点：Lv.2")
 	var actions: Array[FaithPerk] = []
-	for p in run.altar_actions():
+	for p in altar.actions():
 		if p is AltarSacrificeHpPerk:
 			actions.append(p)
 	t.check(actions.size() == 1, "神坛多一个特殊操作：献祭生命上限（祈求赐福 1 级就有）")
-	t.check(not run.altar_open(), "没站在开着的神坛上：不能做")
-	run.altar_node = run.travel.current_id     # 假装神坛在脚下开着
-	t.check(run.altar_open(), "神坛开着")
+	t.check(not altar.is_open(), "没站在开着的神坛上：不能做")
+	altar.node = run.travel.current_id     # 假装神坛在脚下开着
+	t.check(altar.is_open(), "神坛开着")
 	var hp0 := run.effective_baseline().value_of(BattleStats.MAX_HP, 0.0)
-	var line := run.altar_special(actions[0], run.current_node())
+	var line := altar.special(actions[0], run.current_node())
 	t.check(line.contains("献祭了 5 点生命上限"), "做了：%s" % line)
 	t.eq(run.effective_baseline().value_of(BattleStats.MAX_HP, 0.0), hp0 - 5.0, "基线生命 −5")
 	t.eq(run.effective_baseline().value_of(BattleStats.MAX_STAMINA, 0.0), 10.0 + (run.player_baseline.value_of(BattleStats.MAX_STAMINA, 0.0) if run.player_baseline != null else 0.0), "耐力上限 +10")
@@ -193,15 +195,16 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 		if (it as CompiledItem).stats.has(BattleStats.HASTE) and (it as CompiledItem).stats.ensure(BattleStats.HASTE).mult_of(StatMath.Buff.HASTE) > 0:
 			hasted = true
 	t.check(hasted, "道具急速 +5%")
-	t.check(not run.altar_open() and run.altar_used.has(run.altar_node), "特殊操作用掉了这一次机会：神坛关了")
-	t.eq(run.altar_special(actions[0], run.current_node()), "", "再做不成")
+	t.check(not altar.is_open() and altar.used.has(altar.node), "特殊操作用掉了这一次机会：神坛关了")
+	t.eq(altar.special(actions[0], run.current_node()), "", "再做不成")
 	# 存档往返带着账
 	var back := RunState.from_dict(run.to_dict(), c.chapter, c.items, c.enemies, c.sets)
-	t.check(back != null and int(back.faith_rituals.get("sacrifice_hp", 0)) == 1 and float(back.faith_stat_bonus.get("max_hp", 0.0)) == -5.0 and back.altar_used.has(run.altar_node), "faith_rituals / faith_stat_bonus / altar_used 跟存档")
+	var back_altar := AltarModule.of(back) if back != null else null
+	t.check(back_altar != null and int(back_altar.rituals.get("sacrifice_hp", 0)) == 1 and float(back_altar.stat_bonus.get("max_hp", 0.0)) == -5.0 and back_altar.used.has(altar.node), "仪式的账、改过的基线、用过的点都跟存档（modules.altar）")
 	# 3 级：秒杀
 	run.faith_power.add_points(&"brute", 100)
 	t.eq(run.active_faith_tier(), 3, "Lv.3")
-	var smite := run.faith_perk(&"smite")
+	var smite := altar.perk(&"smite")
 	t.check(smite != null and smite.prebattle_label(run, &"elite") != "" and smite.prebattle_label(run, &"battle") == "", "秒杀只对精英")
 	# 献祭（GameFlow.offer：从棋盘上拿走、换信力）
 	var sword: ItemInstance = null
@@ -212,13 +215,13 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	if sword != null:
 		var p0 := run.faith_power.points_of(&"brute")
 		var val := run.active_faith().offering_value(sword.def)
-		run.altar_used.clear()
-		run.altar_node = run.travel.current_id
+		altar.used.clear()
+		altar.node = run.travel.current_id
 		var res := f.offer([sword], run.current_node())
 		t.eq(int(res["count"]), 1, "献祭了一件")
 		t.eq(run.faith_power.points_of(&"brute"), p0 + val, "信力 +%d（2^稀有度 × 3）" % val)
 		t.check(not run.board.has_item(sword.uid) and not run.storage.has_item(sword.uid), "祭品没了")
-		t.check(run.altar_open(), "常规献祭不占那一次机会")
+		t.check(altar.is_open(), "常规献祭不占那一次机会")
 	# 日神：附魔 + 祈祷
 	var defs := FaithDef.load_all()
 	var sun: FaithDef = defs[&"sun"]
@@ -227,11 +230,11 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 		if p is EnchantWeaponsPerk:
 			ench = p
 	t.check(ench != null and ench.fire_bonus(run) == 0, "没祈祷：火焰加成 0")
-	run.faith_rituals["pray_fire"] = 1
+	altar.rituals["pray_fire"] = 1
 	t.eq(ench.fire_bonus(run), 10, "祈祷 1 次：+10%")
-	run.faith_rituals["pray_fire"] = 4
+	altar.rituals["pray_fire"] = 4
 	t.eq(ench.fire_bonus(run), roundi(10.0 * pow(4.0, 0.7)), "4 次：10 × 4^0.7 ≈ 26%（非线性）")
-	run.faith_rituals.erase("pray_fire")
+	altar.rituals.erase("pray_fire")
 	var spec3 := run.compile_player()
 	var weapons_before := 0
 	for it in spec3.items:
@@ -393,7 +396,7 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 		t.eq(int(got["count"]), 1, "献了一件")
 		t.eq(run.faith_power.points_of(&"brute"), p0 + val, "信力进账")
 		t.check(not run.board.has_item(sword.uid) and screen._table.item_count() == 0, "祭品没了、台空了")
-		t.check(run.altar_open(), "常规献祭不关神坛")
+		t.check(AltarModule.of(run).is_open(), "常规献祭不关神坛")
 	t.check(game.escape(), "Esc 返回")
 	t.eq(flow.screen, GameFlow.Screen.MAP, "→ 地图")
 	t.check(flow.can_reopen() and flow.reopen_node(), "站着还能再开神坛")
@@ -404,12 +407,12 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 	t.check(screen != null and screen._action_btns.size() == 2, "Lv.2：特殊操作按钮随等级刷出来（祈求赐福 + 献祭生命上限，不用重开）")
 	if screen != null and screen._action_btns.size() == 2:
 		var hp_perk: FaithPerk = null
-		for p in run.altar_actions():
+		for p in AltarModule.of(run).actions():
 			if p is AltarSacrificeHpPerk:
 				hp_perk = p
 		var line: String = screen.special(hp_perk)
 		t.check(line.contains("献祭了"), "做了特殊操作：%s" % line)
-		t.check(flow.screen == GameFlow.Screen.MAP and not run.altar_open(), "神坛关了、回地图")
+		t.check(flow.screen == GameFlow.Screen.MAP and not AltarModule.of(run).is_open(), "神坛关了、回地图")
 		t.check(not flow.can_reopen(), "这个休息处不能再开神坛")
 	game.queue_free()
 	_cleanup()

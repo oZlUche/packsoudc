@@ -105,7 +105,8 @@ static func run_blessing_paths(t: TestCase) -> void:
 	var charm := ItemInstance.create(db.get_def(&"charm_brute"))
 	run.storage.admit(charm)
 	t.check(InventoryService.transfer_auto(run.storage, charm.uid, run.board) and run.active_faith_id() == &"brute", "护符上棋盘：蛮神")
-	var active := run.bless_ids([&"shortsword", &"longbow"] as Array[StringName], 0.0, 1.0, rng)
+	var altar := AltarModule.of(run)     # 101：赐福与神坛是一局的模块
+	var active := altar.bless_substitute([&"shortsword", &"longbow"] as Array[StringName], 0.0, 1.0, rng)
 	t.eq(active, [&"shortsword_brute", &"longbow_brute"] as Array[StringName], "激活了、概率 1：都换成蛮神的")
 	t.check(run.events.bless_substitute.is_valid() and run.events.current_search == null, "掉落 / 搜索的替代接上了")
 	# 包内转化：把蛮神的定义复制一份、转化概率 1
@@ -119,7 +120,7 @@ static func run_blessing_paths(t: TestCase) -> void:
 			weapons.append([inst, (inst as ItemInstance).def.id, (inst as ItemInstance).origin])
 	t.check(not weapons.is_empty(), "棋盘上有普通武器")
 	var blessed: Array = []
-	run.item_blessed.connect(func(inst: ItemInstance, fid: StringName): blessed.append([inst, fid]))
+	altar.item_blessed.connect(func(inst: ItemInstance, fid: StringName): blessed.append([inst, fid]))
 	var moves := run.travel.available_moves()
 	t.check(not moves.is_empty() and f.step_to(moves[0]), "走一步")
 	NodeScreens._settle(f)
@@ -134,13 +135,13 @@ static func run_blessing_paths(t: TestCase) -> void:
 	var fresh := ItemInstance.create(db.get_def(&"shortsword"))
 	run.storage.admit(fresh)
 	run.faith_power.add_points(&"brute", 60)
-	var bless_perk := run.faith_perk(&"altar_bless")
+	var bless_perk := altar.perk(&"altar_bless")
 	t.check(bless_perk != null, "1 级起神坛有「祈求赐福」")
 	if bless_perk != null:
-		run.altar_node = run.travel.current_id
+		altar.node = run.travel.current_id
 		t.eq(bless_perk.altar_available(run, run.current_node()), "", "信力够、包里有能赐福的（暂存区那把短剑）")
 		var p0 := run.faith_power.points_of(&"brute")
-		var line := run.altar_special(bless_perk, run.current_node())
+		var line := altar.special(bless_perk, run.current_node())
 		t.check(line.contains("成了"), "做了：%s" % line)
 		t.eq(run.faith_power.points_of(&"brute"), p0 - 40, "花了 40 信力")
 		t.eq(fresh.def.id, &"shortsword_brute", "暂存区那把短剑受了赐福")

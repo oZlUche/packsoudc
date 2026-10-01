@@ -156,7 +156,7 @@ func restore(d: Dictionary) -> void:
 
 
 ## 走完一步看一眼：归零就是行动失败
-func _on_stepped(_node_id: int) -> void:
+func _on_stepped(_node_id: int, _reason: StringName) -> void:
 	if _run == null or _run.phase != RunState.Phase.ON_MAP or not has_countdown():
 		return
 	var rest := left()

@@ -21,14 +21,17 @@ func altar_available(run: RunState, _node: MapNode) -> String:
 
 
 func altar_apply(run: RunState, _node: MapNode, _option: StringName = &"") -> String:
-	run.faith_stat_bonus[String(BattleStats.MAX_HP)] = float(run.faith_stat_bonus.get(String(BattleStats.MAX_HP), 0.0)) - hp_cost
-	run.faith_stat_bonus[String(BattleStats.MAX_STAMINA)] = float(run.faith_stat_bonus.get(String(BattleStats.MAX_STAMINA), 0.0)) + stamina_gain
-	run.faith_rituals[KEY] = int(run.faith_rituals.get(KEY, 0)) + 1
-	return "向蛮神献祭了 %.0f 点生命上限：耐力上限 +%.0f，急速 +%d%%（第 %d 次）" % [hp_cost, stamina_gain, haste_percent, int(run.faith_rituals[KEY])]
+	var altar := AltarModule.of(run)
+	if altar == null:
+		return ""
+	altar.stat_bonus[String(BattleStats.MAX_HP)] = float(altar.stat_bonus.get(String(BattleStats.MAX_HP), 0.0)) - hp_cost
+	altar.stat_bonus[String(BattleStats.MAX_STAMINA)] = float(altar.stat_bonus.get(String(BattleStats.MAX_STAMINA), 0.0)) + stamina_gain
+	altar.rituals[KEY] = int(altar.rituals.get(KEY, 0)) + 1
+	return "向蛮神献祭了 %.0f 点生命上限：耐力上限 +%.0f，急速 +%d%%（第 %d 次）" % [hp_cost, stamina_gain, haste_percent, int(altar.rituals[KEY])]
 
 
 func modify_spec(spec: CombatantSpec, _board: GridInventory, run: RunState) -> void:
-	var n := int(run.faith_rituals.get(KEY, 0)) if run != null else 0
+	var n := int(AltarModule.rituals_of(run).get(KEY, 0))
 	if n <= 0 or haste_percent == 0:
 		return
 	var m := StatModifier.new()

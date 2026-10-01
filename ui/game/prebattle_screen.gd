@@ -57,7 +57,8 @@ func open(payload: Dictionary) -> void:
 	_start_btn = _button("开战", start_battle, 16, UiPalette.Tier.PRIMARY)
 	buttons.add_child(_start_btn)
 	# 093（蛮神 3 级）：信仰级效果给的额外动作（秒杀精英）
-	for p in flow.run.faith_perks():
+	var altar := AltarModule.of(flow.run)     # 101：信仰级效果在神坛模块里取
+	for p in (altar.perks() if altar != null else []):
 		var perk := p as FaithPerk
 		var text := perk.prebattle_label(flow.run, _type)
 		if text != "":

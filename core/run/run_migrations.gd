@@ -48,6 +48,15 @@ static func _v1_to_v2(d: Dictionary) -> Dictionary:
 		cd["carry_value"] = int(d.get("carry_in_value", 0))
 		mods["countdown"] = cd
 		d.erase("carry_in_value")
+	if d.has("faith_rituals") or d.has("faith_stat_bonus") or d.has("altar_used"):
+		var al: Dictionary = mods.get("altar", {}) if mods.get("altar", {}) is Dictionary else {}
+		al["rituals"] = d.get("faith_rituals", {})
+		al["stat_bonus"] = d.get("faith_stat_bonus", {})
+		al["used"] = d.get("altar_used", [])
+		mods["altar"] = al
+		d.erase("faith_rituals")
+		d.erase("faith_stat_bonus")
+		d.erase("altar_used")
 	if d.has("node_storages"):
 		var ns: Dictionary = mods.get("node_storage", {}) if mods.get("node_storage", {}) is Dictionary else {}
 		ns["nodes"] = d.get("node_storages", {})

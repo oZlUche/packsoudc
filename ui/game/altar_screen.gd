@@ -79,7 +79,7 @@ func open(payload: Dictionary) -> void:
 		if target != _table:
 			return true
 		var d := flow.run.active_faith()
-		return d != null and d.accepts_offering(inst.def) and run.altar_open()
+		return d != null and d.accepts_offering(inst.def) and _altar_open()
 	var tip := HoverTip.new(font)
 	add_child(tip)
 	tip.watch(_table_view)
@@ -104,7 +104,7 @@ func put_on_table(uid: int) -> bool:
 	var run := flow.run
 	var def := run.active_faith()
 	var from: ItemContainer = run.board if run.board.has_item(uid) else (run.storage if run.storage.has_item(uid) else null)
-	if from == null or def == null or not run.altar_open():
+	if from == null or def == null or not _altar_open():
 		return false
 	var inst := from.get_item(uid)
 	if inst == null or not def.accepts_offering(inst.def):
@@ -129,9 +129,10 @@ func preview() -> Dictionary:
 ## 按「献祭」：台上的全部销毁换信力
 func offer() -> Dictionary:
 	var insts: Array = _table.items().duplicate()
-	if insts.is_empty() or not flow.run.altar_open():
+	if insts.is_empty() or not _altar_open():
 		return {"points": 0, "count": 0}
-	var got := flow.run.offer(insts, _node)
+	var altar := AltarModule.of(flow.run)
+	var got: Dictionary = altar.offer(insts, _node) if altar != null else {"points": 0, "count": 0}
 	if int(got["count"]) > 0:
 		for inst in insts:
 			_table.remove((inst as ItemInstance).uid)
@@ -153,7 +154,7 @@ func special(perk: FaithPerk) -> String:
 	# 台上还有东西先退回去，别把人家的东西吞了
 	for inst in _table.items().duplicate():
 		take_back((inst as ItemInstance).uid)
-	var line := flow.run.altar_special(perk, _node, option)
+	var line := AltarModule.of(flow.run).special(perk, _node, option) if AltarModule.of(flow.run) != null else ""
 	if line != "":
 		_line.text = line
 		flow.save()
@@ -188,7 +189,7 @@ func _rebuild_actions() -> void:
 	for ch in _actions_box.get_children():
 		ch.queue_free()
 	_action_btns.clear()
-	var actions := run.altar_actions()
+	var actions := (AltarModule.of(run).actions() if AltarModule.of(run) != null else [])
 	if actions.is_empty():
 		return
 	_actions_box.add_child(HSeparator.new())
@@ -198,7 +199,7 @@ func _rebuild_actions() -> void:
 		var arow := _hbox(6)
 		var b := _button(perk.altar_label(), func(): special(perk), 13)
 		var why := perk.altar_available(run, _node)
-		b.disabled = why != "" or not run.altar_open()
+		b.disabled = why != "" or not _altar_open()
 		b.tooltip_text = why if why != "" else perk.describe()
 		arow.add_child(b)
 		if not perk.altar_options().is_empty():
@@ -226,7 +227,7 @@ func _refresh() -> void:
 		return
 	_head.text = "神坛　%s　%s" % [Names.of(def), run.faith_power.line()]
 	var p := preview()
-	var open := run.altar_open()
+	var open := _altar_open()
 	_offer_btn.disabled = int(p["points"]) <= 0 or not open
 	if not open:
 		_preview.text = "这个休息处的神坛已经用过特殊操作，关了"
@@ -236,3 +237,9 @@ func _refresh() -> void:
 		_preview.text = "献祭 %d 件：信力 +%d（Lv.%d → Lv.%d）" % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
 	for b in _action_btns:
 		(b as Button).disabled = (b as Button).disabled or not open
+
+
+## 101：神坛是一局的模块（没装 = 这一局没有神坛）
+func _altar_open() -> bool:
+	var altar := AltarModule.of(flow.run)
+	return altar != null and altar.is_open()
