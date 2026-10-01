@@ -201,3 +201,18 @@ func dispatch_before_damage(packet: DamagePacket) -> void:
 
 func snapshot() -> Dictionary:
 	return {"time": now, "sides": [sides[0].snapshot(), sides[1].snapshot()]}
+
+
+## 103 第 7 条：每件道具的首个就绪时刻（定点），开局排进时间轮时已算好。
+## 一件道具多条冷却规则取最长的那条。回放的冷却遮罩从这里起第一轮
+func initial_cooldowns(side: int) -> Dictionary:
+	var out := {}
+	var owner := sides[side]
+	for r in owner.rules:
+		var rt := r as RuleRuntime
+		if rt.source_uid == 0:
+			continue
+		var ready := RuleEngine.ready_at_of(rt, RuleContext.create(self, owner, rt))
+		if ready > int(out.get(rt.source_uid, -1)):
+			out[rt.source_uid] = ready
+	return out

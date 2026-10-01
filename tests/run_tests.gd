@@ -37,6 +37,7 @@ const SUITES: Array = [
 	preload("res://tests/test_effect_tree.gd"),
 	preload("res://tests/test_damage_pipeline.gd"),
 	preload("res://tests/test_overtime.gd"),
+	preload("res://tests/test_cooldown_mask.gd"),
 	preload("res://tests/test_content_pipeline.gd"),
 	preload("res://tests/test_content_editor.gd"),
 	preload("res://tests/test_item_contracts.gd"),

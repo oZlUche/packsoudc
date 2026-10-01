@@ -10,6 +10,8 @@ const BATTLE_START := &"battle_start"
 const BATTLE_END := &"battle_end"
 const TICK := &"tick"
 const ITEM_FIRED := &"item_fired"
+## 103 第 7 条：冷却走了、但消耗付不起没出手 {uid, ready_at}。回放的冷却遮罩靠它接上新一轮
+const ITEM_SKIPPED := &"item_skipped"
 const EFFECT_RESOLVED := &"effect_resolved"
 const STATUS_STACKED := &"status_stacked"
 const STATUS_UNSTACKED := &"status_unstacked"
@@ -54,7 +56,7 @@ const REASON_ABSORBED := &"absorbed"
 const VIEW_EVENTS: Array[StringName] = [
 	BATTLE_START, BATTLE_END, ITEM_FIRED, EFFECT_RESOLVED,
 	STATUS_STACKED, STATUS_UNSTACKED, RESOURCE_CHANGED, DAMAGE, DIED, DISPATCH_OVERFLOW,
-	AXIS_SHIFTED, OVERTIME_STACKED, DECAY_STARTED,
+	AXIS_SHIFTED, OVERTIME_STACKED, DECAY_STARTED, ITEM_SKIPPED,
 ]
 
 

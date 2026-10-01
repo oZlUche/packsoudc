@@ -42,6 +42,7 @@ static func run_context(ctx: BattleContext, time_limit_sec: float = DEFAULT_TIME
 
 	var result := BattleResult.new()
 	result.initial = ctx.snapshot()
+	result.initial["cooldowns"] = [ctx.initial_cooldowns(0), ctx.initial_cooldowns(1)]
 	var pre_hp: Array[int] = [0, 0]
 
 	ctx.emit(BattleEvent.BATTLE_START, -1, {})

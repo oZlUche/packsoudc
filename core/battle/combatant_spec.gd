@@ -18,6 +18,9 @@ var set_rules: Array[AbilityRule] = []
 ## 103 第 6 条：编译期并进来的外来加成（信仰阶、套装档位、局外 buff、技能被动），给 buff 栏画「常驻」格用；结算内核不读
 var passives: Array[PassiveNote] = []
 
+## 103 第 7 条：编译它的那张棋盘（回放画双方棋盘、盖冷却遮罩用；uid 就是日志里的 uid）。结算内核不读
+var board: GridInventory = null
+
 var _by_uid: Dictionary = {}
 
 

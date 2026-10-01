@@ -25,6 +25,12 @@ var label_font: Font
 var _result: BattleResult = null
 var _names := ["我方", "敌方"]
 var _panels: Array[CombatantPanel] = []
+## 103 第 7 条：双方棋盘（只读展示）与盖在上面的冷却遮罩；没给棋盘的一方不画
+var _boards: Array[InventoryView] = []
+var _overlays: Array[CooldownOverlay] = []
+var _board_slots: Array[Control] = []
+## 棋盘在回放里缩小显示（格子 60 → 30 像素）
+const BOARD_SCALE := 0.5
 var _cursor: int = 0
 var _now: float = 0.0
 var _playing: bool = false
@@ -66,6 +72,14 @@ func play(result: BattleResult, names: Array = []) -> void:
 		_panels[i].reset(sides[i] if i < sides.size() else {})
 	if not result.buffs.is_empty():
 		set_buff_defs(result.buffs)     # 103：上过身的 buff 都在结果里，不用调用方猜
+	var cds: Array = result.initial.get("cooldowns", [])
+	for i in _overlays.size():
+		var secs := {}
+		var raw: Dictionary = cds[i] if i < cds.size() else {}
+		for uid in raw:
+			secs[uid] = StatMath.to_float(int(raw[uid]))
+		_overlays[i].reset(secs)
+		_overlays[i].now = 0.0
 	_ticker.clear()
 	_verdict.text = ""
 	_sync_buttons()
@@ -127,6 +141,25 @@ func _on_buff_unhovered() -> void:
 		_tip.hide_tip()
 
 
+## 103 第 7 条：把一方的棋盘交给回放（只读展示）。uid 和日志里的一致（就是编译它的那张，[member CombatantSpec.board]）。
+## 冷却遮罩盖在上面，跟着回放时刻（含倍速）转
+func set_board(side: int, board: GridInventory) -> void:
+	if side < 0 or side >= _board_slots.size() or board == null:
+		return
+	var view := _boards[side]
+	view.inventory = board
+	_board_slots[side].custom_minimum_size = view.custom_minimum_size * BOARD_SCALE
+	_board_slots[side].visible = true
+
+
+func board_view(side: int) -> InventoryView:
+	return _boards[side] if side >= 0 and side < _boards.size() else null
+
+
+func overlay(side: int) -> CooldownOverlay:
+	return _overlays[side] if side >= 0 and side < _overlays.size() else null
+
+
 ## 告诉回放某一方的 uid 叫什么名字。日志里只有 uid —— 名字纯属表现层的事，
 ## 塞进日志只会让每条事件都背着一串用不上的字符串。
 func set_item_names(side: int, names: Dictionary) -> void:
@@ -155,6 +188,7 @@ func seek(t: float) -> void:
 	_suppress_popups = true
 	_now = maxf(0.0, t)
 	_drain_until(_now)
+	_sync_overlays()
 	_suppress_popups = false
 	_clock.text = "%.2f 秒" % _now
 	_sync_buttons()
@@ -181,6 +215,7 @@ func _process(delta: float) -> void:
 		return
 	_now += delta * SPEEDS[_speed_idx]
 	_drain_until(_now)
+	_sync_overlays()
 	_clock.text = "%.2f 秒" % _now
 	if _cursor >= _result.log.size():
 		_finish()
@@ -194,6 +229,12 @@ func _drain_until(t: float) -> void:
 			break
 		_apply(e)
 		_cursor += 1
+
+
+## 遮罩的进度是回放时刻的纯函数：倍速、跳转都只是 _now 变了
+func _sync_overlays() -> void:
+	for o in _overlays:
+		o.now = _now
 
 
 func _finish() -> void:
@@ -231,9 +272,12 @@ func _apply(e: BattleEvent) -> void:
 		BattleEvent.OVERTIME_STACKED:
 			for p in _panels:
 				p.set_overtime(e.get_int(&"count"))
-		BattleEvent.ITEM_FIRED:
+		BattleEvent.ITEM_FIRED, BattleEvent.ITEM_SKIPPED:
 			if e.side >= 0 and e.side < _panels.size():
-				_panels[e.side].note_fired(e.get_int(&"uid"), _now)
+				if e.name == BattleEvent.ITEM_FIRED:
+					_panels[e.side].note_fired(e.get_int(&"uid"), _now)
+				if e.payload.has("ready_at") and e.side < _overlays.size():
+					_overlays[e.side].note_cycle(e.get_int(&"uid"), StatMath.to_float(e.time), StatMath.to_float(e.get_int(&"ready_at")))
 		BattleEvent.DIED:
 			if e.side >= 0 and e.side < _panels.size():
 				_panels[e.side].mark_dead()
@@ -329,19 +373,38 @@ func _build() -> void:
 	arena.add_theme_constant_override("separation", 16)
 	root.add_child(arena)
 	for i in 2:
+		var col := VBoxContainer.new()
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col.add_theme_constant_override("separation", 8)
+		arena.add_child(col)
 		var p := CombatantPanel.new()
 		p.label_font = label_font
 		p.display_name = _names[i]
 		p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		p.buff_hovered.connect(_on_buff_hovered.bind(i))
 		p.buff_unhovered.connect(_on_buff_unhovered)
-		arena.add_child(p)
+		col.add_child(p)
 		_panels.append(p)
+		# 103 第 7 条：棋盘（缩小）+ 冷却遮罩。没给棋盘就藏着
+		var slot := Control.new()
+		slot.visible = false
+		slot.mouse_filter = Control.MOUSE_FILTER_PASS
+		col.add_child(slot)
+		var board := InventoryView.new()
+		board.label_font = label_font
+		board.scale = Vector2.ONE * BOARD_SCALE
+		slot.add_child(board)
+		var o := CooldownOverlay.new()
+		o.view = board
+		board.add_child(o)
+		_board_slots.append(slot)
+		_boards.append(board)
+		_overlays.append(o)
 
 	_ticker = RichTextLabel.new()
 	_ticker.bbcode_enabled = true
 	_ticker.scroll_following = true
-	_ticker.custom_minimum_size = Vector2(0, 150)
+	_ticker.custom_minimum_size = Vector2(0, 90)
 	_ticker.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_ticker.add_theme_font_override("normal_font", label_font)
 	_ticker.add_theme_font_size_override("normal_font_size", 13)
