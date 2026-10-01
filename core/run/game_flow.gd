@@ -620,7 +620,9 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	var value := maxi(0, carry_value)
 	for inst in taken:
 		value += ItemValue.of(inst.def)
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale, {SafeModule.ID: {"size": safe_size()}}, value)
+	# 101：模块要的运行时输入（保险箱几格来自局外成长、带入价值来自这一次的选择）
+	var inputs := {SafeModule.ID: {"size": safe_size()}, CountdownModule.ID: {"carry_value": value}}
+	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale, inputs)
 	if state == null:
 		return null
 	for inst in taken:

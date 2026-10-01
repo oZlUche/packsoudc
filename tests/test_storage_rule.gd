@@ -104,8 +104,10 @@ static func run_clear_on_leave(t: TestCase) -> void:
 	t.check(not run.will_clear_storage(), "暂存区空：走了没什么可清")
 	run.storage.admit(ItemInstance.create(def))
 	t.check(run.will_clear_storage(), "出生点上没发生过事，暂存区有东西也清（不再看发没发生过事）")
+	var ns := NodeStorageModule.of(run)     # 101：按点暂存是一局的模块
+	t.not_null(ns, "默认清单里有按点暂存")
 	var dropped: Array = []
-	run.storage_dropped.connect(func(id: int, items: Array): dropped.append([id, items.size()]))
+	ns.dropped.connect(func(id: int, items: Array): dropped.append([id, items.size()]))
 
 	t.check(f.step_to(next), "走上战斗点")
 	t.eq(run.storage.item_count(), 0, "离开出生点：清了")
@@ -119,10 +121,10 @@ static func run_clear_on_leave(t: TestCase) -> void:
 	run.storage.admit(ItemInstance.create(def))
 	t.check(run.will_clear_storage(), "暂存区有东西：走了会留在这里")
 	var restored: Array = []
-	run.storage_restored.connect(func(id: int, items: Array): restored.append([id, items.size()]))
+	ns.restored.connect(func(id: int, items: Array): restored.append([id, items.size()]))
 	t.check(f.step_to(entry), "走回出生点")
 	_settle(f)
-	t.eq(run.stored_at(next).size(), 1, "087：离开战斗点，那件留在了战斗点上")
+	t.eq(ns.stored_at(next).size(), 1, "087：离开战斗点，那件留在了战斗点上")
 	t.eq(run.storage.item_count(), 1, "087：回到出生点，先前留在这儿的口粮回到了暂存区")
 	t.check(restored.size() == 1 and int(restored[0][0]) == entry, "发了 storage_restored")
 	t.eq(run.events.last_handled_id, -1, "离开之后不再算发生过事的点")
@@ -131,10 +133,10 @@ static func run_clear_on_leave(t: TestCase) -> void:
 	run.storage.admit(ItemInstance.create(def))
 	t.check(f.step_to(next), "穿行到用过的战斗点")
 	t.eq(run.storage.item_count(), 1, "087：出生点的两件留在出生点，战斗点留的那件回到暂存区")
-	t.eq(run.stored_at(entry).size(), 2, "出生点上留着两件")
+	t.eq(ns.stored_at(entry).size(), 2, "出生点上留着两件")
 	# 存档带着各点留的东西
 	var save_back := RunState.from_dict(run.to_dict(), c.chapter, c.items, c.enemies, c.sets)
-	t.check(save_back != null and save_back.stored_at(entry).size() == 2, "node_storages 跟存档")
+	t.check(save_back != null and NodeStorageModule.of(save_back).stored_at(entry).size() == 2, "按点存着的东西跟存档（modules.node_storage）")
 	run.storage.clear()
 
 	# 走不成不清

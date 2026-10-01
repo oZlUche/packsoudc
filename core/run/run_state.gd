@@ -25,10 +25,6 @@ signal phase_changed(phase: int, reason: StringName)
 ## 有东西等着拾取（尸体容器 / 搜索收获）。拿走或丢掉之前不会再来第二份
 signal loot_pending(container: GridInventory)
 signal loot_cleared()
-## 走出一个点，暂存区里的东西留在了那里（3.4 / 058；087 作者定：**留在那个点、回来能拿**，见 [member node_storages]）
-signal storage_dropped(node_id: int, items: Array)
-## 087：回到一个留过东西的点，那里的东西回到了暂存区
-signal storage_restored(node_id: int, items: Array)
 ## 地图 buff 变了（给了、到期了）
 signal buffs_changed()
 ## 猎手（071）：玩家进了某个猎手的感知范围；猎手的状态变了（动了、死了、歇了）；玩家被赶回上一个点
@@ -59,13 +55,9 @@ var board: GridInventory = null
 ## 暂存区：一个列表，保留但不参战（3.4）
 var storage: ItemStash = null
 ## 092（作者定）：保险箱 —— 放进去的道具视为已带出，战败也带得出；大小按局外规则（初始 3×3）
-## 092：倒计时归零 / 撤离点关闭这类只发一次的提醒，地图屏听
-signal countdown_notice(text: String)
 ## 092（作者定）：保险箱关上了 —— 里面的送回基地、不能再改；[param count] 是几件
 ## 093：神坛 —— 这一次在哪个点上开着（-1 = 没有；走开就关）、哪些点上已经用过特殊操作（和常规献祭共享这一次机会）
 var altar_node: int = -1
-## 094（作者定）：从仓库带进来的道具总价值（预算 / 超带换倒计时看它）
-var carry_in_value: int = 0
 var altar_used: Dictionary = {}
 ## 093：神坛特殊操作攒的账（蛮神献祭生命上限的次数、日神祈祷的次数……）：键 → 数，跟存档；效果构件自己读写
 var faith_rituals: Dictionary = {}
@@ -75,9 +67,6 @@ var faith_stat_bonus: Dictionary = {}
 signal altar_changed(text: String)
 ## 095：一件东西受了赐福（包内转化 / 神坛 / 事件）
 signal item_blessed(inst: ItemInstance, faith_id: StringName)
-## 087（作者定）：暂存区按点独立 —— 离开时暂存区里的东西留在那个点（`node_id → [ItemInstance]`），回到那个点又回到暂存区。跟存档。
-## 撤离仍不带走暂存区里的东西
-var node_storages: Dictionary = {}
 var rng: RunRNG = null
 var events: NodeEvents = null
 var tracker: SetTracker = null
@@ -105,6 +94,12 @@ var modules_saved: Dictionary = {}
 ## 101：要离开当前这个点了（走一步 / 被事件挪走，**在真正动之前**发）。模块订阅它做「走开就……」的事 ——
 ## 保险箱关上、留在这个点的东西留下。参数是正要离开的点
 signal leaving(node_id: int)
+## 101：花掉了行动点（走一步、被事件挪走、原地耗时，**这一步该发生的事都发生完之后**发）。
+## 模块订阅它做「走完一步才算的」事 —— 倒计时看看归零没有。参数是现在站着的点
+signal stepped(node_id: int)
+## 101：到了一个点（头一回踩上、或者回到走过的点，**在这个点的事发生之前**发）。
+## 模块订阅它做「回来就……」的事 —— 留在这个点的东西回到暂存区。参数是刚到的点
+signal arrived(node_id: int)
 ## 猎手（069 / 071）：难度清单里的猎手机制装进来的系统；null = 这一局没有猎手。定义表由持有方给，存档里的状态读档时先放这儿等机制装
 var hunters: HunterSystem = null
 var hunter_defs: Dictionary = {}
@@ -166,7 +161,7 @@ static func start(
 	p_sets: SetDatabase = null, kit: Array[StringName] = [] as Array[StringName],
 	p_buff_defs: Dictionary = {}, p_meta_buffs: Array[StringName] = [] as Array[StringName],
 	p_character: CharacterDef = null, p_layout: Array = [], p_difficulty: DifficultyDef = null, p_hunter_defs: Dictionary = {},
-	p_scale: StringName = &"", p_module_inputs: Dictionary = {}, p_carry_value: int = 0
+	p_scale: StringName = &"", p_module_inputs: Dictionary = {}
 ) -> RunState:
 	if p_chapter == null or p_chapter.map_source == null:
 		return null
@@ -178,7 +173,6 @@ static func start(
 	s.sets = p_sets
 	s.map_scale = p_scale
 	s.module_inputs = p_module_inputs.duplicate(true)
-	s.carry_in_value = maxi(0, p_carry_value)
 	s._resolve_rules()
 	s.map = p_chapter.map_source.resolve(p_seed, p_scale)
 	if s.map == null:
@@ -188,8 +182,6 @@ static func start(
 	if s.pool != null:
 		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id())
 	PaidExtracts.mark(s.map, s.economy)
-	if p_chapter.closing_extract:
-		PaidExtracts.mark_closing(s.map, s.countdown_limit())     # 092：倒计时过半关一个撤离点（按这张图规模的倒计时）
 	EventPlacer.fill(s.map, s.node_rules)
 	s.rng = RunRNG.new(p_seed)
 	# 局外 buff 在开局那一刻定下来：体力上限、开局钱按它们改（一局里的规则见 buff_context）
@@ -249,13 +241,14 @@ func step_to(id: int) -> bool:
 		return travel.step_to(id)     # 让旅程自己拒绝、发 refused；走不成就不该清东西
 	close_sessions()
 	_drop_pending_loot()
-	_drop_storage_if_leaving()
-	leaving.emit(travel.current_id)     # 101：走开了 —— 模块自己接（保险箱关上）
+	_forget_handled()
+	leaving.emit(travel.current_id)     # 101：走开了 —— 模块自己接（保险箱关上、暂存区留在这个点）
 	_close_altar()
 	var was_visited := map.has_node(id) and map.get_node(id).is_visited()
 	var ok := travel.step_to(id)
 	if ok:
-		_restore_storage(travel.current_id)     # 087：回到走过的点，留着的东西回到暂存区（头一回踩的在 _on_arrive 里已取）
+		if was_visited:
+			arrived.emit(travel.current_id)     # 回到走过的点（头一回踩的在 _on_arrive 里已经发过）
 		# 091（作者定）：商店可以回头再逛 —— 回到走过的商店点就把店再开起来；货架 / 刷新次数 / 卖掉的都记在节点内容里，刷新价不重置
 		if was_visited and events != null and NodeEvents.effective_type(map.get_node(id)) == &"shop":
 			events.reopen_shop(map.get_node(id))
@@ -264,7 +257,7 @@ func step_to(id: int) -> bool:
 			hunters.on_player_step()     # 猎手的回合在这一步的事都发生之后（071）
 		skills.on_step()     # 冷却与躲避在猎手的回合之后减：躲 3 步就是 3 个猎手回合够不着（082）
 		_bless_step()     # 095：激活信仰时包里的东西有小概率受赐福
-		_check_countdown()     # 092：倒计时归零 = 行动失败
+		stepped.emit(travel.current_id)     # 101：走完一步 —— 模块自己接（倒计时归零 = 行动失败）
 	return ok
 
 
@@ -274,17 +267,19 @@ func relocate(intent: MoveIntent) -> bool:
 		return false
 	close_sessions()
 	_drop_pending_loot()
-	_drop_storage_if_leaving()
+	_forget_handled()
 	leaving.emit(travel.current_id)     # 101：同上，事件把人挪走也算走开
 	_close_altar()
+	var was_visited := map.has_node(intent.to_id) and map.get_node(intent.to_id).is_visited()
 	var ok := travel.apply(intent)
 	if ok:
-		_restore_storage(travel.current_id)
+		if was_visited:
+			arrived.emit(travel.current_id)
 		tick_map_buffs()
 		if hunters != null:
 			hunters.on_player_step()
 		skills.on_step()
-		_check_countdown()
+		stepped.emit(travel.current_id)
 	return ok
 
 
@@ -298,59 +293,26 @@ func pool_by_id(id: StringName) -> EnemyPool:
 	return _rule_asset("enemy_pools", id) as EnemyPool
 
 
-## 走出现在这个点会不会把暂存区留下：暂存区里有东西就留（087 作者定：留在这个点、回来能拿；不再是「清掉」）——
-## 暂存区是**节点内的临时区**：任何时候都能开背包把东西挪进去（换信仰道具的置入顺序就靠它），但一旦移动就不在身上了。
-## 离开时存进 [member node_storages]，回到那个点时取回（[method _restore_storage]）
+## 走出现在这个点会不会把暂存区留下（087：留在这个点、回来能拿；不再是「清掉」）。
+## 规则与状态都在 [NodeStorageModule] 里；没装那个模块 = 走开什么也不留
 func will_clear_storage() -> bool:
-	return travel != null and travel.current_id >= 0 and storage != null and storage.item_count() > 0
+	var ns := NodeStorageModule.of(self)
+	return ns != null and ns.will_drop()
 
 
-## 087：某个点上留着的东西（没有就空）
-func stored_at(node_id: int) -> Array:
-	return (node_storages.get(node_id, []) as Array).duplicate()
-
-
-## 087：回到一个点：那里留着的东西回到暂存区
-func _restore_storage(node_id: int) -> void:
-	if storage == null or not node_storages.has(node_id):
-		return
-	var back: Array = node_storages[node_id]
-	node_storages.erase(node_id)
-	if back.is_empty():
-		return
-	for inst in back:
-		storage.admit(inst)
-	storage_restored.emit(node_id, back)
-
-
-func _drop_storage_if_leaving() -> void:
-	if events == null or travel == null:
-		return
-	_drop_storage(travel.current_id)
-	# 离开了就不再算「发生过事的点」：回头再路过一次不会又清一遍
-	if events.last_handled_id == travel.current_id:
+## 离开了就不再算「发生过事的点」：回头再路过一次不会又清一遍
+func _forget_handled() -> void:
+	if events != null and travel != null and events.last_handled_id == travel.current_id:
 		events.last_handled_id = -1
 
 
-## 头一回踩上一个点：先把这个点留着的东西取回暂存区，再结等着的合成（产物放不下就进暂存区），再让那个点的事发生 ——
-## 顺序不能反，不然合成的产物没地方去、事件给的东西看不见
+## 头一回踩上一个点：先发「到了」（按点暂存的东西回到暂存区），再结等着的合成（产物放不下就进暂存区），
+## 再让那个点的事发生 —— 顺序不能反，不然合成的产物没地方去、事件给的东西看不见
 func _on_arrive(node: MapNode) -> void:
 	if node != null:
-		_restore_storage(node.id)
+		arrived.emit(node.id)
 		resolve_crafts(node.id)
 	events.handle(node)
-
-
-## 离开一个点：暂存区里的东西留在那个点上（087：不是丢掉，回来能拿）
-func _drop_storage(at_id: int) -> void:
-	if storage == null or storage.item_count() == 0:
-		return
-	var dropped: Array = storage.items().duplicate()
-	storage.clear()
-	var kept: Array = node_storages.get(at_id, [])
-	kept.append_array(dropped)
-	node_storages[at_id] = kept
-	storage_dropped.emit(at_id, dropped)
 
 
 ## 084：没拿完的战利品（尸体 / 搜索收获）留在这个点上 —— 收起战利品屏不算丢，走了才算。和暂存区同一个时机
@@ -378,7 +340,8 @@ func try_extract() -> bool:
 	var node := current_node()
 	if phase != Phase.ON_MAP or node == null or NodeEvents.effective_type(node) != &"extract":
 		return false
-	if extract_closed(node):
+	var cd := CountdownModule.of(self)
+	if cd != null and cd.extract_closed(node):
 		return false     # 092：倒计时过半关掉的撤离点
 	if not events.pay_extract_fee(node):
 		return false
@@ -398,119 +361,22 @@ func extract_after_boss() -> bool:
 	return true
 
 
-func is_over() -> bool:
-	return phase == Phase.DEFEATED or phase == Phase.EXTRACTED
-#endregion
-
-
-#region 全局倒计时（092，作者定）
-## 这一局的倒计时总数（行动点）；0 = 没有。作者定：和地图规模正相关 —— 规模档写了 step_limit 就用它的，没写用章节的
-func countdown_limit() -> int:
-	return countdown_limit_for(chapter, scale_id(), carry_in_value)
-
-
-## 这一章这个规模的规模档（没有 null）
-static func scale_profile_of(p_chapter: ChapterDef, sid: StringName) -> Resource:
-	if p_chapter == null or p_chapter.map_source == null:
-		return null
-	var cfg: Resource = p_chapter.map_source.generator_config
-	if cfg == null or not cfg.has_method("scale_by_id"):
-		return null
-	return cfg.call("scale_by_id", sid) if sid != &"" else (cfg.call("scale") if cfg.has_method("scale") else null)
-
-
-## 不算超带的倒计时（规模档写了用它的，没写用章节的）
-static func base_step_limit_for(p_chapter: ChapterDef, sid: StringName) -> int:
-	if p_chapter == null:
-		return 0
-	var p := scale_profile_of(p_chapter, sid)
-	if p != null and "step_limit" in p and int(p.get("step_limit")) > 0:
-		return int(p.get("step_limit"))
-	return p_chapter.step_limit
-
-
-## 094（作者定）：带入预算（规模档 > 章节；0 = 不限）
-static func carry_budget_for(p_chapter: ChapterDef, sid: StringName) -> int:
-	if p_chapter == null:
-		return 0
-	var p := scale_profile_of(p_chapter, sid)
-	if p != null and "carry_budget" in p and int(p.get("carry_budget")) > 0:
-		return int(p.get("carry_budget"))
-	return p_chapter.carry_budget
-
-
-## 094：超带多少价值（不超 0）
-static func carry_over_for(p_chapter: ChapterDef, sid: StringName, value: int) -> int:
-	var budget := carry_budget_for(p_chapter, sid)
-	return maxi(0, value - budget) if budget > 0 else 0
-
-
-## 094：超带换掉几步倒计时：每超 carry_over_cost 价值 −1
-static func carry_penalty_for(p_chapter: ChapterDef, sid: StringName, value: int) -> int:
-	if p_chapter == null or p_chapter.carry_over_cost <= 0:
-		return 0
-	@warning_ignore("integer_division")
-	return carry_over_for(p_chapter, sid, value) / p_chapter.carry_over_cost
-
-
-## 094：算上超带的倒计时；有倒计时的至少留 1
-static func countdown_limit_for(p_chapter: ChapterDef, sid: StringName, value: int) -> int:
-	var base := base_step_limit_for(p_chapter, sid)
-	if base <= 0:
-		return 0
-	return maxi(1, base - carry_penalty_for(p_chapter, sid, value))
-
-
-func carry_budget() -> int:
-	return carry_budget_for(chapter, scale_id())
-
-
-func carry_penalty_steps() -> int:
-	return carry_penalty_for(chapter, scale_id(), carry_in_value)
-
-
-func has_countdown() -> bool:
-	return countdown_limit() > 0
-
-
-## 还剩几步；没有倒计时 -1。按行动点算：走一步（边的 action_cost，通常 1）减一，原地耗时也减
-func countdown_left() -> int:
-	if not has_countdown():
-		return -1
-	var spent := travel.clock.total if travel != null and travel.clock != null else 0
-	return maxi(0, countdown_limit() - spent)
-
-
-## 倒计时过半时关掉的那个撤离点的 id；没有 -1
-func closing_extract_id() -> int:
-	if map == null:
-		return -1
-	for id in map.node_ids():
-		if PaidExtracts.closes_at(map.get_node(id)) >= 0:
-			return id
-	return -1
-
-
-## 这个撤离点关了没（倒计时剩的 ≤ 它的 closes_at）
-func extract_closed(node: MapNode) -> bool:
-	var at := PaidExtracts.closes_at(node)
-	return has_countdown() and at >= 0 and countdown_left() <= at
-
-
-## 走完一步看一眼：归零就是行动失败 —— 会话关掉、没拿的战利品丢掉、战败结算（保险箱里的照样带出）
-func _check_countdown() -> void:
-	if phase != Phase.ON_MAP or not has_countdown():
-		return
-	var left := countdown_left()
-	var closing := closing_extract_id()
-	if closing >= 0 and left == PaidExtracts.closes_at(map.get_node(closing)):
-		countdown_notice.emit("撤离点 %d 关闭了：倒计时过半" % closing)
-	if left <= 0:
-		close_sessions()
-		_drop_pending_loot()
+## 行动失败（101）：这一局当场结束 —— 开着的会话关掉、没拿的战利品丢掉、排着的事清掉，阶段进战败。
+## 模块用它（倒计时归零就是这么失败的）；[param reason] 进结算与战绩。返回这次有没有真的失败
+func fail(reason: StringName) -> bool:
+	if is_over():
+		return false
+	close_sessions()
+	_drop_pending_loot()
+	if events != null:
 		events.pending_battle = {}
 		events.pending = {}
-		_set_phase(Phase.DEFEATED, &"time_out")
+	_set_phase(Phase.DEFEATED, reason)
+	return true
+
+
+func is_over() -> bool:
+	return phase == Phase.DEFEATED or phase == Phase.EXTRACTED
 #endregion
 
 
@@ -1177,7 +1043,7 @@ func _wire_events() -> void:
 		tick_map_buffs()
 		if hunters != null:
 			hunters.on_player_step()
-		_check_countdown())
+		stepped.emit(travel.current_id))
 	events.battle_finished.connect(func(_n: MapNode, _r: BattleResult, won: bool):
 		var key := "battles_won" if won else "battles_lost"
 		tally[key] = int(tally.get(key, 0)) + 1)
@@ -1270,10 +1136,8 @@ func to_dict() -> Dictionary:
 		"board": board.to_dict(),
 		"storage": storage.to_dict(),
 		"faith_rituals": faith_rituals.duplicate(),
-		"carry_in_value": carry_in_value,
 		"faith_stat_bonus": faith_stat_bonus.duplicate(),
 		"altar_used": altar_used.keys(),
-		"node_storages": _node_storages_to_dict(),
 		"rng": rng.to_dict(),
 		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id, "pending": events.pending.duplicate(), "losses_forgiven": events.losses_forgiven,
 			"pending_battle": events.pending_battle.duplicate(true)},
@@ -1291,16 +1155,6 @@ func _modules_to_dict() -> Dictionary:
 	var out := {}
 	for mid in modules:
 		out[String(mid)] = (modules[mid] as RunModule).to_dict()
-	return out
-
-
-func _node_storages_to_dict() -> Dictionary:
-	var out := {}
-	for key in node_storages:
-		var list: Array = []
-		for inst in node_storages[key]:
-			list.append((inst as ItemInstance).to_dict())
-		out[str(key)] = list
 	return out
 
 
@@ -1339,20 +1193,9 @@ static func from_dict(
 	var mods_raw: Variant = d.get("modules", {})
 	s.modules_saved = (mods_raw as Dictionary).duplicate(true) if mods_raw is Dictionary else {}
 	s.faith_rituals = (d.get("faith_rituals", {}) as Dictionary).duplicate() if d.get("faith_rituals", {}) is Dictionary else {}
-	s.carry_in_value = int(d.get("carry_in_value", 0))
 	s.faith_stat_bonus = (d.get("faith_stat_bonus", {}) as Dictionary).duplicate() if d.get("faith_stat_bonus", {}) is Dictionary else {}
 	for k in d.get("altar_used", []):
 		s.altar_used[int(k)] = true
-	var ns: Variant = d.get("node_storages", {})
-	if ns is Dictionary:
-		for key in ns:
-			var list: Array = []
-			for raw in (ns[key] as Array):
-				var inst := ItemInstance.from_dict(raw as Dictionary, p_items)
-				if inst != null:
-					list.append(inst)
-			if not list.is_empty():
-				s.node_storages[int(String(key))] = list
 	s.rng = RunRNG.from_dict(d.get("rng", {}))
 	s.travel.vitality = s.vitality
 	s._bind_tracker()

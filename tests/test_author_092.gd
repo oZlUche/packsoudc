@@ -84,15 +84,17 @@ static func run_countdown(t: TestCase) -> void:
 		t.check(false, "开局")
 		return
 	f.pick_spawn(run.map.entry_ids[0])
-	var limit := run.countdown_limit()
-	t.check(run.has_countdown() and [36, 60, 90].has(limit) and run.countdown_left() == limit, "开局倒计时 = 这个规模档的数（%d）" % limit)
-	var closing := run.closing_extract_id()
+	var cd := CountdownModule.of(run)     # 101：倒计时是一局的模块
+	t.not_null(cd, "默认清单里有倒计时")
+	var limit := cd.limit()
+	t.check(cd.has_countdown() and [36, 60, 90].has(limit) and cd.left() == limit, "开局倒计时 = 这个规模档的数（%d）" % limit)
+	var closing := cd.closing_extract_id()
 	t.check(closing >= 0, "标了一个会关的撤离点（%d）" % closing)
 	if closing >= 0:
 		var node := run.map.get_node(closing)
 		t.check(node.type == &"extract" and PaidExtracts.fee_of(node) == 0, "是免费撤离点")
 		t.eq(PaidExtracts.closes_at(node), limit / 2, "倒计时剩一半时关")
-		t.check(not run.extract_closed(node), "开局没关")
+		t.check(not cd.extract_closed(node), "开局没关")
 		# 离出生点最近：没有别的免费撤离点比它更近
 		var best := 1 << 30
 		var mine := 1 << 30
@@ -108,13 +110,13 @@ static func run_countdown(t: TestCase) -> void:
 	var first := run.travel.available_moves()[0]
 	t.check(f.step_to(first), "走一步")
 	NodeScreens._settle(f)
-	t.eq(run.countdown_left(), limit - run.travel.clock.total, "倒计时 = 上限 − 花掉的行动点")
-	t.check(run.countdown_left() <= limit - 1, "走一步至少 -1")
+	t.eq(cd.left(), limit - run.travel.clock.total, "倒计时 = 上限 − 花掉的行动点")
+	t.check(cd.left() <= limit - 1, "走一步至少 -1")
 	if closing >= 0:
 		run.travel.clock.total = limit - limit / 2
-		t.check(run.extract_closed(run.map.get_node(closing)), "剩一半：关了")
+		t.check(cd.extract_closed(run.map.get_node(closing)), "剩一半：关了")
 		run.travel.clock.total = limit - limit / 2 - 1
-		t.check(not run.extract_closed(run.map.get_node(closing)), "剩一半 + 1：还开着")
+		t.check(not cd.extract_closed(run.map.get_node(closing)), "剩一半 + 1：还开着")
 	# 放一件进保险箱，再让倒计时归零
 	var board_item: ItemInstance = null
 	for inst in run.board.items():
@@ -127,7 +129,7 @@ static func run_countdown(t: TestCase) -> void:
 	var moves := run.travel.available_moves()
 	t.check(not moves.is_empty() and f.step_to(moves[0]), "最后一步")
 	t.check(run.is_over() and run.phase == RunState.Phase.DEFEATED and run.end_reason == &"time_out", "归零：行动失败（time_out）")
-	t.eq(run.countdown_left(), 0, "剩 0")
+	t.eq(cd.left(), 0, "剩 0")
 	var g := 0
 	while GameFlow.is_overlay(f.screen) and g < 10:
 		g += 1
@@ -144,18 +146,19 @@ static func run_countdown(t: TestCase) -> void:
 	# 倒计时和地图规模正相关：小图 36、中图 60（过半 30）
 	var small := RunState.start(c.chapter, 3, c.items, c.enemies, c.sets, kit.items, {}, [] as Array[StringName], null, [], null, {}, &"small")
 	if small != null:
-		t.eq(small.countdown_limit(), 36, "小型图倒计时 36")
+		t.eq(CountdownModule.of(small).limit(), 36, "小型图倒计时 36")
 	var mid := RunState.start(c.chapter, 3, c.items, c.enemies, c.sets, kit.items, {}, [] as Array[StringName], null, [], null, {}, &"medium")
 	if mid != null:
-		t.eq(mid.countdown_limit(), 60, "中型图倒计时 60")
-		var mc := mid.closing_extract_id()
+		t.eq(CountdownModule.of(mid).limit(), 60, "中型图倒计时 60")
+		var mc := CountdownModule.of(mid).closing_extract_id()
 		t.check(mc >= 0 and PaidExtracts.closes_at(mid.map.get_node(mc)) == 30, "中型图的撤离点剩 30 时关")
 	else:
 		t.check(true, "（中型图这个种子生成不出，跳过）")
 	# 序章：没有倒计时、没有保险箱
 	var p := RunState.start(c.prologue, 1, c.items, c.enemies, c.sets, [] as Array[StringName])
 	if p != null:
-		t.check(not p.has_countdown() and p.countdown_left() == -1 and p.closing_extract_id() == -1, "序章没有倒计时、不关撤离点")
+		var pcd := CountdownModule.of(p)
+		t.check(not pcd.has_countdown() and pcd.left() == -1 and pcd.closing_extract_id() == -1, "序章装了倒计时模块但这一章没有倒计时：不关撤离点")
 		t.check(_safe_node(p) == null, "序章没有保险箱")
 	_cleanup()
 

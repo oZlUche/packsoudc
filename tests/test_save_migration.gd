@@ -91,6 +91,11 @@ static func run_run_chain(t: TestCase) -> void:
 	t.check(not up.has("safe") and not up.has("safe_locked"), "旧的顶层键删掉了（不留两处）")
 	var safe_mod: Dictionary = (up["modules"] as Dictionary)["safe"]
 	t.check(safe_mod.has("inventory") and bool(safe_mod["locked"]), "保险箱的容器与锁搬进了 modules.safe")
+	# 同一步还搬了按点暂存（每搬一个子系统这一步多几行）
+	var v1b := {"version": 1, "chapter": "chapter_01", "node_storages": {"7": []}}
+	var up_b := RunMigrations.upgrade(v1b)
+	t.check(not up_b.has("node_storages"), "顶层 node_storages 删掉了")
+	t.check(((up_b["modules"] as Dictionary)["node_storage"] as Dictionary).has("nodes"), "按点暂存搬进了 modules.node_storage")
 	t.eq(int(v1["version"]), 1, "不改入参")
 
 

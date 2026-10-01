@@ -51,11 +51,12 @@ static func template_for(chapter: ChapterDef, node: MapNode) -> String:
 static func text_for(run: RunState, chapter: ChapterDef, node: MapNode) -> String:
 	var text := TextTemplate.render(template_for(chapter, node), TextTemplate.context_for(run, node))
 	# 092：倒计时过半关闭的撤离点，浮窗里说清楚
-	if run != null and node != null and PaidExtracts.closes_at(node) >= 0 and run.has_countdown():
-		if run.extract_closed(node):
+	var cd := CountdownModule.of(run)     # 101：倒计时是一局的模块
+	if node != null and PaidExtracts.closes_at(node) >= 0 and cd != null and cd.has_countdown():
+		if cd.extract_closed(node):
 			text += "\n[color=#d9534f]这个撤离点已经关闭（倒计时过半）。[/color]"
 		else:
-			text += "\n[color=#f0ad4e]倒计时剩 %d 时关闭（还有 %d 步）。[/color]" % [PaidExtracts.closes_at(node), run.countdown_left() - PaidExtracts.closes_at(node)]
+			text += "\n[color=#f0ad4e]倒计时剩 %d 时关闭（还有 %d 步）。[/color]" % [PaidExtracts.closes_at(node), cd.left() - PaidExtracts.closes_at(node)]
 	return text
 
 

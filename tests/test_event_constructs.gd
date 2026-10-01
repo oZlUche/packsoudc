@@ -240,7 +240,7 @@ static func run_teleport_outcome(t: TestCase) -> void:
 	# 暂存区里先放一件：离开发生过事的点会清
 	s.storage.admit(ItemInstance.create(c.items.get_def(&"medkit"), 0))
 	var dropped: Array = []
-	s.storage_dropped.connect(func(_id: int, items: Array): dropped.append(items.size()))
+	NodeStorageModule.of(s).dropped.connect(func(_id: int, items: Array): dropped.append(items.size()))
 	var moved: Array = []
 	s.travel.moved.connect(func(i: MoveIntent, first: bool): moved.append([i.kind, i.from_id, i.to_id, i.action_cost, first]))
 	var resolved: Array = []

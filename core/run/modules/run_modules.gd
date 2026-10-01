@@ -9,4 +9,4 @@ extends RefCounted
 
 ## 默认清单。每次返回**新实例** —— 模块带自己的状态，两局不能共用一个对象
 static func standard() -> Array:
-	return [SafeModule.new()]
+	return [SafeModule.new(), NodeStorageModule.new(), CountdownModule.new()]

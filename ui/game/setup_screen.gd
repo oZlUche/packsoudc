@@ -439,16 +439,16 @@ func carry_value() -> int:
 
 ## 094：预算那一行：「带入预算 600：已带 420」/「超出 150 → 倒计时 −3（36 → 33）」
 static func carry_text(c: ChapterDef, sid: StringName, value: int) -> String:
-	var budget := RunState.carry_budget_for(c, sid)
+	var budget := CountdownModule.budget_for(c, sid)
 	if budget <= 0:
 		return ""
-	var over := RunState.carry_over_for(c, sid, value)
+	var over := CountdownModule.over_for(c, sid, value)
 	if over <= 0:
 		return "[color=#5cb85c]带入预算 %d：已带 %d[/color]" % [budget, value]
-	var penalty := RunState.carry_penalty_for(c, sid, value)
-	var base := RunState.base_step_limit_for(c, sid)
+	var penalty := CountdownModule.penalty_for(c, sid, value)
+	var base := CountdownModule.base_limit_for(c, sid)
 	if base > 0 and penalty > 0:
-		return "[color=#f0ad4e]带入预算 %d：已带 %d，超出 %d → 倒计时 −%d（%d → %d）[/color]" % [budget, value, over, penalty, base, RunState.countdown_limit_for(c, sid, value)]
+		return "[color=#f0ad4e]带入预算 %d：已带 %d，超出 %d → 倒计时 −%d（%d → %d）[/color]" % [budget, value, over, penalty, base, CountdownModule.limit_for(c, sid, value)]
 	return "[color=#f0ad4e]带入预算 %d：已带 %d，超出 %d（这一章没有倒计时，只提示）[/color]" % [budget, value, over]
 
 
@@ -652,7 +652,7 @@ func _refresh() -> void:
 		if not preset_items().is_empty():
 			_readout.append_text("[color=#8b93a1]预设套 %d 件（不算预算）[/color]\n" % preset_items().size())
 		_readout.append_text("\n带 %d 件，占 %d 格，值 %d 币　包里还有 %d 格" % [taken.size(), cells, value, board.free_cell_count()])
-		if c != null and RunState.carry_budget_for(c, scale_id) > 0:
+		if c != null and CountdownModule.budget_for(c, scale_id) > 0:
 			_readout.append_text("\n" + carry_text(c, scale_id, value))
 	if _stash_title != null and stash != null:
 		_stash_title.text = "暂存区　%d 件" % stash.item_count()
