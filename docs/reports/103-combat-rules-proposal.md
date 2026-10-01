@@ -1,6 +1,6 @@
 # 103 · 方案：战斗规则七条（武器 / 耐力 / buff 永续 / 加时与衰竭 / 自然 5 级 / buff 栏 / 冷却动画）
 
-> 2026-10-01 ｜ 提议 · 待作者确认 ｜ 对应架构文档 4.4（效果系统）、4.5（buff）、4.6（伤害管线）、4.7（模拟循环）、4.8（表现层）
+> 2026-10-01 ｜ 提议 · 作者已确认（七个待定项见末尾「作者已定」），待执行 ｜ 对应架构文档 4.4（效果系统）、4.5（buff）、4.6（伤害管线）、4.7（模拟循环）、4.8（表现层）
 
 作者给了七条战斗设计（2026-10-01）。本文逐条写清**现状**、**改法**、**要动哪里**、**和现有规矩的冲突**；数值与几处取舍留在末尾「待作者定」。
 不含实现与测试，交执行 thread。
@@ -33,7 +33,7 @@
 
 - 同一个校验函数里：任何规则的 `costs`（含扳机隐含的 `implied_costs()`）里有 `resource_key == stamina` 的 `ResourceCost` → 道具必须带 `weapon`，否则报错。角色技能、猎手定义、事件里目前没有耐力消耗（扫过 `data/authoring`，`"type": "resource"` 只出现在道具里），所以只查道具就够。
 - **不要求武器一定耗耐力**：4.4 的「不耗耐力的武器只是 `costs` 为空的武器」保留（096 已经有「毒药瓶不耗耐力」这种作者决定）。作者若要「武器必耗耐力」，是另一条规矩，见待定 1。
-- 内容：`crowbar` 二选一 —— 加 `weapon` 标签（它有 `burst`，像一把钝器）或删掉耐力消耗。推荐**删消耗**（它是 `sealed` 的工具，不该进出手循环）。
+- 内容：`crowbar` **加 `weapon` 标签**（作者定：按这件道具的本质，它是把钝器）。它已有 `deal_damage`（14 点、冷却出手、耗 12 耐力），加了标签后第 1、2 条都满足，不用再改规则。
 - `StaminaEstimate`（084 的低 / 中 / 高）不用改：它本来就只数规则上的 `ResourceCost`。
 - 架构文档 4.4「默认消耗按物品类型给」那一段改写成：**耐力是武器专属资源**；法力归法术书类，仍按物品定义给。
 
@@ -77,7 +77,7 @@ class_name OvertimeRules
 | `decay`（衰竭） | 不限层、永续、`system = true` | 每层 `max_hp` 固定 −`decay_amount` |
 
 - `BuffDef` 加 `@export var system: bool = false`：**不可解除**（`RemoveStatus` / `StatusStackCost` 对它一律 0 层；`remove_buff_stacks` 在入口挡），面板画成第三种颜色，词条侧窗写「系统效果，不可解除」。
-- `damage_taken` 是**新属性** `BattleStats.DAMAGE_TAKEN`（倍率，基准 1.0，走 4.3 乘区）。伤害管线第 4 步在百分比那一行并入：`amount = mul(amount, ONE + packet.percent + (victim.stat(DAMAGE_TAKEN) − ONE))`，和 `ModifyDamage` 的「百分比相加」同一约定。护盾吸收在它之前（护盾挡的是原始伤害，见待定 3），护甲在它之后（固定减伤减的是放大后的）。治疗（反转、负数）不受它影响：乘法发生在 `max(0, …)` 之前、`invert` 之前，所以反转后的治疗是「被放大的伤害反转」—— 这是故意的，解毒剂在加时里更值钱。顺带，`damage_taken` 以后也能给内容用（「易伤」减益就是一条作用于它的普通 mod），不是加时专用。
+- `damage_taken` 是**新属性** `BattleStats.DAMAGE_TAKEN`（倍率，基准 1.0，走 4.3 乘区）。**作者定：放大的是角色受到的「最终伤害」** —— 伤害管线第 4 步算完百分比、固定增减、反转、护甲之后，在落到血量之前：`if amount > 0: amount = mul(amount, victim.stat(DAMAGE_TAKEN))`，然后才 `packet.final = amount`。所以护盾吸收（第 2 步）、减伤 / 免疫（第 3 步）、护甲都按原值算，**最后扛下来的那部分**乘倍率；治疗（反转、负数）不放大。`damage` 事件的 `amount` 带的是放大后的实际扣血，回放飘字自然对得上。顺带，`damage_taken` 以后也能给内容用（「易伤」减益就是一条作用于它的普通 mod），不是加时专用。
 - 掉生命上限走现有的 `max_hp` mod：`CombatantRuntime._rebuild` 已把 buff 的 mods 并进 `max_hp`，`_sync_resource_maxes` → `ResourcePool.set_max` 会把当前血夹到新上限（`resource_pool.gd:69-86`）。**缺的一步**：上限掉到 0 不会判死 —— `set_max` 只发 `resource_changed`，没人调 `mark_dead`。加在 `CombatantRuntime._on_resource_changed`：`key == hp` 且 `reason == max_changed` 且当前血 ≤ 0 → `mark_dead()`，并由 `_rebuild` 的调用方发 `DIED`。这样蛮神的不死照常生效：`mark_dead` 自己判「有不死且没用过 → 进坚持期」（`combatant_runtime.gd:313-324`），坚持期到了再真倒下。
 
 #### 4c · 模拟循环只加「系统时刻」
@@ -107,7 +107,12 @@ class_name OvertimeRules
 - `BattleContext` 记 `seen_buffs: Dictionary`（id → `BuffDef`），`CombatantRuntime.apply_buff` 每次上身登记一笔；`BattleResult.buffs = ctx.seen_buffs`。
 - `BattleScreen` / 沙盒不再调 `Glossary.buffs_in_spec` 拼表，直接 `view.set_buff_defs(result.buffs)`。**凡是真的上过身的 buff，定义必然在表里**，不管来自自己、对手、信仰规则、局外 buff 的规则还是系统 —— 不需要再列举来源。`buffs_in_spec` 留给开局屏的预估用。
 - 面板：`system` buff 第三种配色；不可叠层（`max_stacks == 1`）不画 `×1`，其余照画 `×n`；排序：系统 → 减益 → 增益，各组内按上身先后。
-- 信仰阶梯加成（`faith_bonuses`）与局外 buff 的 `mods` 是**编译期数值**、不是 buff，不进栏（它们在道具悬浮窗与开局预估里）—— 这一条要作者确认（待定 6）。
+- **作者定的准则：影响战斗的就显示，不影响的不显示。** 据此，编译期并进属性的几种**外来加成**也要进栏，它们确实改了这场的数值，只是不是 `BuffDef`：
+  - 信仰阶梯加成（`faith_bonuses`，`compiler.gd:87-99`）→ 一枚「信仰：某神 N 阶」常驻格，层数 = 达到的阶；
+  - 套装档位（`set_mods`，`compiler.gd:79`）→ 一枚「套装名 N 件」常驻格，层数 = 档位；
+  - 局外 buff / 一局 buff 的 `mods`（`RunBuffDef`）与角色技能的被动 → 各一枚，层数 1。
+  - 做法：编译器在 `CombatantSpec` 上多一张 `passives: Array[PassiveNote]`（`{id, name, stacks, mods, note}`，纯数据），`BattleResult.initial` 带上；面板画成**第四组「常驻」**，灰底、不随事件变、悬浮窗列出它的 mods（`Glossary.mods_text`）。它们不是 buff，不走净化、不进 `seen_buffs`，只是显示。
+  - **不进栏**的：包体加成（`bag_mods`）与邻接增益（`grant_mods / receive_mods`）—— 它们是棋盘摆法本身，4.8 已规定画在棋盘的格子上（角括号 + 点亮），再进栏就是同一件事画两遍。这一条是我的判断，作者若认为「摆法也算影响战斗」就把它们也做成常驻格，代码路径相同。
 
 ### 第 7 条 · 每件道具按冷却的旋转遮罩动画（受倍速影响）
 
@@ -157,17 +162,21 @@ class_name OvertimeRules
 | 3 | 架构文档 4.5、`core/text/glossary.gd`（例外配色）、导入器一条告警 |
 | 4 | `core/battle/overtime_rules.gd`（新）、`core/run/node_rules.gd`、`core/battle/battle_stats.gd`（`DAMAGE_TAKEN`）、`core/battle/buff_def.gd`（`system`）、`core/battle/damage/damage_resolver.gd`（一行）、`core/battle/combatant_runtime.gd`（上限归零判死、`remove_buff_stacks` 挡系统 buff）、`core/battle/battle_sim.gd`（系统时刻、裁决、安全上限）、`core/battle/battle_event.gd`（两条事件）、`core/run/node_events.gd:567`、`core/run/calibration/hunter_bench.gd`、`ui/battle/battle_sandbox.gd`、导入器校验 |
 | 5 | 删 `draw_is_win_perk.gd`，新 `overtime_regen_perk.gd`，`EffectRegistry`，`data/authoring/faiths/nature.json`，`test_author_093.gd` |
-| 6 | `core/battle/battle_context.gd`（`seen_buffs`）、`battle_result.gd`（`buffs`）、`combatant_runtime.gd`（登记）、`ui/game/battle_screen.gd`、`ui/battle/battle_sandbox.gd`、`ui/battle/combatant_panel.gd`（配色 / `×1` / 排序） |
+| 6 | `core/battle/battle_context.gd`（`seen_buffs`）、`battle_result.gd`（`buffs`）、`combatant_runtime.gd`（登记）、`core/battle/compiler.gd` + `combatant_spec.gd`（`passives`）、`ui/game/battle_screen.gd`、`ui/battle/battle_sandbox.gd`、`ui/battle/combatant_panel.gd`（配色 / `×1` / 排序 / 常驻组） |
 | 7 | `core/battle/rule_engine.gd`（`ready_at`、`item_skipped`）、`battle_context.gd`（初始 `ready_at`）、`ui/battle/battle_view.gd`（`set_boards`）、`ui/battle/cooldown_overlay.gd`（新）、`core/battle/cooldown_clock.gd`（新）、`ui/game/battle_screen.gd`（把双方棋盘交给回放） |
 
 建议拆成三批交执行：**①** 1、2、3（导入器 + 文档，半天量）；**②** 4、5、6（新机制，一起做，因为 5 依赖 4 的 `overtime` buff、6 的日志自足是 4 的系统 buff 能显示的前提）；**③** 7。
 
-## 待作者定
+## 作者已定（2026-10-01）
 
-1. **武器是否必须耗耐力？** 第 2 条只说「只有武器才耗」。推荐**不强制**（保留 096「毒药瓶不耗耐力」那类决定的空间）。
-2. **`crowbar`**：删耐力消耗（推荐），还是加武器标签？
-3. **加时的 +20% 在护盾之前还是之后？** 推荐**之后**（护盾挡原始伤害，放大的是「扛下来的那部分」，护盾在加时里仍有价值）；要让加时也压护盾就改成之前，只是一行位置。
-4. **同一刻双双倒下的裁决**：推荐「先比倒下前血量，再比总伤害，再判玩家胜」。
-5. **数值**：加时 30 秒 / 每 5 秒一层 / 每层 +20%（作者已给）；衰竭每 **1 秒** 掉 **5 点**上限（推荐起点，按最高血量的敌人算 60 秒后再 40～60 秒内必分胜负）；自然 5 级回春 `regen_hp` 推荐 **+8 / 秒**（约等于每 5 秒回一层加时伤害的量，校准后再调）。
-6. **信仰阶梯加成与局外 buff 的属性加成要不要也画进 buff 栏？** 推荐**不画**：它们是编译期数值、全程不变、在道具悬浮窗与开局预估里已可见；栏里只放战斗内会变的东西。
-7. **第 7 条的棋盘**：战斗屏要不要真的把双方棋盘画出来（现在没有）？推荐**画**，否则遮罩无处可盖；敌方棋盘按 088「尸体照棋盘摆」已有布局数据。
+| 待定项 | 作者的决定 | 落在哪 |
+|---|---|---|
+| 1 武器是否必须耗耐力 | 「我的描述是严谨的」：规矩就是**只有带武器标签的才会耗耐力**，不加「武器必耗」这一条 | 第 2 条按原文写，导入器只查反向 |
+| 2 `crowbar` | **加武器标签**（按道具本质，它是钝器） | 第 2 条「内容」一行 |
+| 3 +20% 在哪一步 | 放大的是角色（玩家 / 敌人）受到的**最终伤害** —— 护盾、减伤、护甲都算完之后 | 4b |
+| 4 双双倒下的裁决 | 可以：先比血量，再比总伤害，再判玩家胜 | 4d |
+| 5 数值 | 按推荐（衰竭每 1 秒掉 5 点上限、回春 `regen_hp` +8 / 秒），**保留可调**：都在 `OvertimeRules` / `nature.json` 的字段里，不写死 | 4a、第 5 条 |
+| 6 哪些进 buff 栏 | 准则只有一条：**影响战斗的就显示，不影响的不显示** | 第 6 条「常驻」组 |
+| 7 战斗屏画棋盘 | 要 | 第 7 条 |
+
+执行顺序照「改动范围」末尾的三批：① 1、2、3 → ② 4、5、6 → ③ 7。

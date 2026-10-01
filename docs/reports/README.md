@@ -111,7 +111,7 @@
 | 100 | [方案：内容管线收口](100-content-pipeline-proposal.md) | 架构 · 提议 | 作者已确认，待执行 |
 | 101 | [方案：RunState / GameFlow 拆分与依赖方向](101-run-state-decomposition-proposal.md) | 架构 · 提议 | 作者已确认，待执行 |
 | 102 | [方案：测试按模块归位、类缓存与 test.sh](102-tests-and-tooling-proposal.md) | 架构 · 提议 | 作者已确认，待执行 |
-| 103 | [方案：战斗规则七条（武器 / 耐力 / buff 永续 / 加时与衰竭 / 自然 5 级 / buff 栏 / 冷却动画）](103-combat-rules-proposal.md) | 架构 · 提议 | 待作者确认（7 个待定项） |
+| 103 | [方案：战斗规则七条（武器 / 耐力 / buff 永续 / 加时与衰竭 / 自然 5 级 / buff 栏 / 冷却动画）](103-combat-rules-proposal.md) | 架构 · 提议 | 作者已确认（七项决定已记入），待执行 |
 
 ## 已归档（被覆盖或作废的方案，只留作历史）
 
