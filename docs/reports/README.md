@@ -105,12 +105,12 @@
 | 092 | [全局倒计时（每步 -1，归零 = 行动失败）、过半关闭的撤离点（地图上标着）、保险箱点（放进去的视为已带出、战败也带得出、结算屏单独一格、3×3）、离开结算屏一键出售暂存区并提示](092-countdown-safe-stash-sale.md) | demo 打磨 | 完成 |
 | 088 | [作者第十二批：倒下是终局、敌人按身份配道具、包进暂存区 / 容器 / 替换包、尸体照棋盘摆、暂存区按点保留、格子放大与容器屏布局、稀有度底色、道具自带悬浮窗、信仰悬浮说明；输给猎手也扣体力、power 并进 mana、内容名字多语言、望远镜特殊道具、基地仓库 / 图鉴页签](088-author-twelfth-batch.md) | demo 打磨 | 完成 |
 | 087 | [作者第十一批：耐力排查、搜索屏收起、相邻合成、六色稀有度、DPS 算开战 buff、商店左店右包拖着买 / 卖、战斗 buff 图标栏、词条侧窗、耗耐力、信仰通用效果、BOSS 保底金色直接撤离](087-author-eleven-fixes.md) | demo 打磨 | 完成 |
-| 097 | [架构体检：现状概况与主要问题](097-architecture-audit.md) | 分析 · 无代码改动 | 待作者挑选 |
-| 098 | [方案：存档版本迁移链](098-save-migration-proposal.md) | 架构 · 提议 | 等作者确认 |
-| 099 | [方案：在背包里切换信仰改成明确规则](099-faith-reseat-proposal.md) | 架构 · 提议 | 等作者确认 |
-| 100 | [方案：内容管线收口](100-content-pipeline-proposal.md) | 架构 · 提议 | 等作者确认 |
-| 101 | [方案：RunState / GameFlow 拆分与依赖方向](101-run-state-decomposition-proposal.md) | 架构 · 提议 | 等作者确认 |
-| 102 | [方案：测试按模块归位、类缓存与 test.sh](102-tests-and-tooling-proposal.md) | 架构 · 提议 | 等作者确认 |
+| 097 | [架构体检：现状概况与主要问题](097-architecture-audit.md) | 分析 · 无代码改动 | 八条都有方案（098～102、架构文档 v2.07） |
+| 098 | [方案：存档版本迁移链](098-save-migration-proposal.md) | 架构 · 提议 | 作者已确认，待执行 |
+| 099 | [方案：在背包里切换信仰改成明确规则](099-faith-reseat-proposal.md) | 架构 · 提议 | 作者已确认，待执行 |
+| 100 | [方案：内容管线收口](100-content-pipeline-proposal.md) | 架构 · 提议 | 作者已确认，待执行 |
+| 101 | [方案：RunState / GameFlow 拆分与依赖方向](101-run-state-decomposition-proposal.md) | 架构 · 提议 | 作者已确认，待执行 |
+| 102 | [方案：测试按模块归位、类缓存与 test.sh](102-tests-and-tooling-proposal.md) | 架构 · 提议 | 作者已确认，待执行 |
 
 ## 已归档（被覆盖或作废的方案，只留作历史）
 
