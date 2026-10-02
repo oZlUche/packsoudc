@@ -56,8 +56,8 @@
 **`note` 是补充，不覆盖**：信仰级效果、献祭、道具的按阶功能，界面上的主句一律由 `describe()` 按字段生成，`note` 接在后面，为空就没有。
 主句已经说清楚的就不要写 `note`。阶统一写 `Lv.n`。
 
-**检查**：`tools/import_content.gd` 对上面这些文字（剥掉 `{…}` 与 BBCode 之后）还含阿拉伯数字的报 warning，`tools/check_content.gd` 列出来；
-汉字数（「三秒一下」）不算。作者定先 warning 一轮，清零后把 `TextLint.STRICT` 改成 true 升为 error（`core/authoring/text_lint.gd`）。
+**检查**：上面这些文字（剥掉 `{…}` 与 BBCode 之后）还含阿拉伯数字的是 **error**：`tools/import_content.gd` 导入失败，`tools/check_content.gd`（`tools/test.sh` 每次跑）退 1。
+汉字数（「三秒一下」）不算。2026-10-02 作者定升为 error；开关是 `TextLint.STRICT`（`core/authoring/text_lint.gd`）。
 
 ## 2. 样式码
 
