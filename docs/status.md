@@ -66,12 +66,13 @@
 **主场景是正式游戏** `ui/game/game.tscn`：主菜单（新的一局 / 继续上次 / 仓库与战绩 / 设置 / 开发工具）→ 开局（挑章、挑角色、从仓库往初始包里拖、种子）→ 地图（B 开背包、走出发生过事的点前提醒暂存区、撤离点上撤离、存档并回主菜单）
 ⇄ 叠层（战斗回放、战利品、搜索、商店、事件、休息）→ 结算 → 仓库与战绩。F1 回启动选择器。
 启动选择器（开发期入口）：正式游戏、背包沙盒、战斗沙盒、道具编辑器、事件编辑器（写文字、导入配图、拼选项、挂进节点规则）、Buff 制作器、套装编辑器（091：id / 名字 / 计数方式 / 档位，成员按道具的 `set_id`）、地图编辑器（随机生成或手绘，改完存回章节）。
-**类缓存**（094）：`.godot/global_script_class_cache.cfg` 进仓库，拉下来就对；DevNav 启动自检缺类就红字提示。命令行：`bash tools/test.sh`（全套测试，先 `--import` 重建类缓存）、`import_content`、`normalize_content`、`check_scripts`、`map_stats`、
+**类缓存**（102）：`.godot/` 整个目录不进仓库（它是生成物）。编辑器打开项目时自己重建；不开编辑器直接跑游戏走 `tools/run_game.sh` / `.bat`（先 `--import`）；DevNav 在非编辑器下自检，缺类就红字提示。命令行：`bash tools/test.sh`（全套测试，先 `--import` 重建类缓存；带一个词只跑相关套件，如 `bash tools/test.sh safe`）、`import_content`、`normalize_content`、`check_scripts`、`map_stats`、
 `capture_scene`（截图；`DEMO_SCREEN=setup / map / bag / prebattle / battle / loot / search / result / meta` 把正式游戏推到那一屏）。
 
 ## 测试
 
-70 个套件、11985 项断言，机器空闲时 60～180 秒（开着别的 Godot 编辑器会到 4 分钟，超时放到 480 秒）。
+80 个套件、12684 项断言，机器空闲时 60～180 秒（开着别的 Godot 编辑器会到 4 分钟，超时放到 480 秒）。
+套件按层分目录：`tests/inventory` / `battle` / `map` / `run` / `meta` / `ui` / `authoring`，跑器自动发现（102）。
 期望从数据推，不写死；统计类断言用千次抽样留容差；沙盒有帧测试。
 
 ## 占位数值清单（作者定数时改这些文件）

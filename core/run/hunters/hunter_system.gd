@@ -39,9 +39,9 @@ func setup(p_run: RunState, p_config: HunterMechanic, p_defs: Dictionary) -> voi
 	config = p_config
 	defs = p_defs
 	metric = MapMetric.new(run.map, config.metric if config != null else MapMetric.STEPS)
+	run.hooks.register(&"fight_hunter", fight)
+	run.hooks.register(&"flee_hunter", flee)
 	if run.events != null:
-		run.events.fight_hunter = fight
-		run.events.flee_hunter = flee
 		for id in defs:
 			_encounter_def(defs[id])
 

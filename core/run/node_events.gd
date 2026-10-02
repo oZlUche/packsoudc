@@ -36,14 +36,8 @@ signal shop_opened(node: MapNode, session: ShopSession)
 signal shop_closed(node: MapNode)
 ## 092：踩上保险箱点（没锁就发；锁上了这个点算用过）
 signal safe_opened(node: MapNode)
-## 092：保险箱还能不能开（RunState.safe_open）；没接就当能
-var safe_open: Callable = Callable()
-## 093：神坛（休息处的「神坛」选项）：开了；激活信仰第几阶（RunState.active_faith_tier）
+## 093：神坛（休息处的「神坛」选项）：开了
 signal altar_opened(node: MapNode)
-var faith_tier: Callable = Callable()
-## 095：激活信仰 id（RunState.active_faith_id）；战利品 / 搜索的赐福替代 `func(ids, chance_idle, chance_active) -> ids`（RunState.bless_ids）
-var active_faith_id: Callable = Callable()
-var bless_substitute: Callable = Callable()
 signal event_resolved(node: MapNode, outcome: StringName, detail: Dictionary)
 ## 到了撤离点。fee > 0 = 付费的（PaidExtracts），撤离动作（M6）先 pay_extract_fee
 signal extract_reached(node: MapNode, fee: int)
@@ -70,36 +64,19 @@ var meta: MetaState = null
 var economy: EconomyRules = null
 var difficulty: int = 0
 var scale_id: StringName = &""
-## 玩家的战斗单位：`Callable() -> CombatantSpec`。开战那一刻编译（4.2 是纯函数）
-var player_spec: Callable = Callable()
-## 掉落上下文：`Callable() -> LootContext`。没设就造一个只带难度的
-var loot_context: Callable = Callable()
-## 一局的规则被 buff 改成了什么样：`Callable() -> RunContext`。没设就是默认（多搜 0 次、原价）
-var run_context: Callable = Callable()
+## 101 第 3 刀：一局的能力都走这张带类型的表（编译玩家、掉落上下文、地图 buff、撤离、传送、保险箱、赐福、猎手……）。
+## 默认那一份全是「没人接」的默认值，所以沙盒与测试不接也能跑；正式一局由 [RunState] 换成它自己的那份
+var hooks: RunHooks = RunHooks.new()
 
 ## 事件层（063）：定义表由持有方给（id → EventDef）。**空表 = 没有事件层**，每个点踩上去直接发生（老路）
 var event_defs: Dictionary = {}
-## 地图 buff 的四个回调（在 RunState 手里）：事件的条件与后果用
-var grant_map_buff: Callable = Callable()
-var remove_map_buff: Callable = Callable()
-var has_map_buff: Callable = Callable()
-var has_buff_tag: Callable = Callable()
 ## 正在等玩家选的事件：{"node": id, "event": id, "type": 这个点算什么类型}。跟着存档走，读档回来还在这一屏
 var pending: Dictionary = {}
 ## 运行时合成的事件（猎手开打前的那一屏，071）：id → EventDef，和 event_defs 一起查。持有方装机制时登记
 var extra_defs: Dictionary = {}
-## 猎手系统接进来的两个动作（071）：`fight(node, uid, ctx) -> bool`、`flee(node, uid, ctx) -> bool`
-var fight_hunter: Callable = Callable()
-var flee_hunter: Callable = Callable()
 ## 8-3：事件的条件与后果看得见的容器（有某道具 / 失去道具）。持有方给；null = 没有
 var board: ItemContainer = null
 var storage: ItemContainer = null
-## 段位（074）：`() -> int`，持有方接猎手系统；没接 = -1
-var bracket_of: Callable = Callable()
-## 085：事件里选了「撤离」：`() -> bool`，持有方接 RunState.try_extract（付费、清会话、结算）。付不起返回 false
-var request_extract: Callable = Callable()
-## 事件把人传送走（8-3）：`(intent: MoveIntent) -> bool`。持有方接它好在挪人前清暂存区、挪人后给猎手一个回合；没接就直接交给旅程
-var relocate: Callable = Callable()
 ## 这一局已经在这里判了战败：之后不再挪人、不再开打
 var over: bool = false
 ## 8-3：事件把这个点改成了别的类型（地图重画）
@@ -110,8 +87,6 @@ signal waited(node: MapNode, actions: int)
 signal event_pending(node: MapNode, def: EventDef)
 ## 082：玩家选了一个选项（条件过了、后果执行之后）；信力的「事件中选特定选项」看它的标签
 signal option_chosen(node: MapNode, option: EventOption)
-## 082：开打前给持有方改双方的战斗单位（局内技能「突击」）：`(me, enemy, type) -> void`
-var before_battle: Callable = Callable()
 ## 082：已经免罚了几次败仗（RunContext.free_losses 是配额）。跟着存档走
 var losses_forgiven: int = 0
 ## 084：开打前要不要停下来等玩家（战前准备屏）。正式游戏（GameFlow）开；直接驱动 RunState 的测试与批量工具关，照旧同步打
@@ -194,7 +169,7 @@ func _proceed(node: MapNode, type: StringName) -> void:
 			_visited(node)
 		&"safe":
 			# 092：没锁的保险箱不算用过 —— 空着走开再回来还能开；关上（里面有东西）就锁了、点灰了
-			if safe_open.is_valid() and not safe_open.call():
+			if not hooks.safe_open():
 				_visited(node)
 				return
 			last_handled_id = node.id
@@ -220,7 +195,7 @@ func use_altar(node: MapNode) -> void:
 func settle_rest(node: MapNode) -> void:
 	if node == null or NodeEvents.effective_type(node) != &"rest":
 		return
-	var altar_done := rest_part_used(node, &"altar") or not faith_tier.is_valid() or int(faith_tier.call()) < 0
+	var altar_done := rest_part_used(node, &"altar") or hooks.faith_tier() < 0
 	if rest_part_used(node, &"rest") and altar_done:
 		_visited(node)
 
@@ -328,14 +303,14 @@ func choose(i: int) -> bool:
 	option_chosen.emit(node, option)
 	# 猎手（071）：这不是节点的事，点不标用过；逃跑先掷，没逃掉照打
 	if hunter_uid >= 0:
-		if ctx.hunter_flee and flee_hunter.is_valid():
-			ctx.hunter_fight = not bool(flee_hunter.call(node, hunter_uid, ctx))
+		if ctx.hunter_flee:
+			ctx.hunter_fight = not hooks.flee_hunter(node, hunter_uid, ctx)
 		event_resolved.emit(node, StringName(option.label), ctx.detail())
 		if vitality != null and vitality.is_depleted():
 			_defeat(&"vitality_depleted")
 			return true
-		if ctx.hunter_fight and fight_hunter.is_valid():
-			fight_hunter.call(node, hunter_uid, ctx)
+		if ctx.hunter_fight:
+			hooks.fight_hunter(node, hunter_uid, ctx)
 		return true
 	node.content["choice"] = i
 	# 8-3：改类型先落账，后面的「照常发生」「开战」都按新类型走（和随机点揭开是同一个记号）
@@ -359,7 +334,7 @@ func choose(i: int) -> bool:
 	# 085：对话里选了「撤离」：交给持有方撤（付费点付不起就说一声、留在原地）
 	if ctx.extract:
 		_visited(node)
-		if request_extract.is_valid() and bool(request_extract.call()):
+		if hooks.request_extract():
 			return true
 		event_resolved.emit(node, &"撤离", {"log": ["付不起这个撤离点的费用（%d 币），先去挣点钱，或者找别的出口。" % PaidExtracts.fee_of(node)]})
 		return true
@@ -395,10 +370,10 @@ func choose(i: int) -> bool:
 	if ctx.teleport_to >= 0 and not over and travel != null and current_search == null and current_shop == null and pending_battle.is_empty():
 		_visited(node)
 		var intent := MoveIntent.teleport(node.id, ctx.teleport_to, ctx.teleport_cost)
-		if relocate.is_valid():
-			relocate.call(intent)
+		if hooks.has(&"relocate"):
+			hooks.relocate(intent)
 		else:
-			travel.apply(intent)
+			travel.apply(intent)     # 没人接就自己走（沙盒 / 测试）
 	return true
 
 
@@ -416,16 +391,10 @@ func _event_ctx(node: MapNode) -> EventContext:
 	ctx.board = board
 	ctx.storage = storage
 	ctx.meta = meta
-	ctx.bracket = bracket_of
+	ctx.hooks = hooks
 	if travel != null and travel.erosion != null and travel.erosion.has_method("depth_of"):
 		var field: Variant = travel.erosion
 		ctx.erosion_depth = func(n: MapNode) -> int: return int(field.depth_of(n))
-	ctx.grant_map_buff = grant_map_buff
-	ctx.remove_map_buff = remove_map_buff
-	ctx.has_map_buff = has_map_buff
-	ctx.has_buff_tag = has_buff_tag
-	ctx.faith_tier = faith_tier
-	ctx.active_faith = active_faith_id
 	return ctx
 #endregion
 
@@ -462,7 +431,7 @@ func _battle_at(node: MapNode, type: StringName, content: Dictionary, kind: Stri
 
 ## 这一场打得起来吗：有敌人、有玩家（没有就当走过，_fight 也是这么判的）
 func _can_fight(content: Dictionary) -> bool:
-	if content.is_empty() or not player_spec.is_valid():
+	if content.is_empty() or not hooks.has(&"player_spec"):
 		return false
 	return EnemyKit.spec_of(content, enemies, pool, items) != null
 
@@ -536,7 +505,7 @@ func smite_pending_battle() -> bool:
 	var kind := String(pending_battle.get("kind", "node"))
 	pending_battle = {}
 	var enemy := EnemyKit.spec_of(content, enemies, pool, items) if not content.is_empty() else null
-	var me: CombatantSpec = player_spec.call() if player_spec.is_valid() else null
+	var me: CombatantSpec = hooks.player_spec()
 	var result := BattleResult.new()
 	result.winner = 0
 	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content}
@@ -558,12 +527,12 @@ func smite_pending_battle() -> bool:
 
 ## 095：掉落定了之后按掉落规则的概率把普通道具换成赐福版（激活了信仰只换那位神的）
 func _bless_rolled(node: MapNode, rolled: Dictionary) -> void:
-	if not bless_substitute.is_valid() or drop_rule == null:
+	if not hooks.has(&"bless_substitute") or drop_rule == null:
 		return
 	var dropped: Array[StringName] = rolled.get("dropped", [] as Array[StringName])
 	if dropped.is_empty():
 		return
-	rolled["dropped"] = bless_substitute.call(dropped, drop_rule.bless_chance, drop_rule.bless_chance_active, _rng_for(node, "bless"))
+	rolled["dropped"] = hooks.bless_substitute(dropped, drop_rule.bless_chance, drop_rule.bless_chance_active, _rng_for(node, "bless"))
 
 
 ## 打一场（猎手系统也走这条路：给它自己的掉落上下文与自己的战败代价）。返回赢没赢
@@ -584,11 +553,10 @@ func loss_cost_for(type: StringName, content: Dictionary, loss_cost: int = LOSS_
 
 func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: LootContext = null, loss_cost: int = LOSS_DEFAULT) -> bool:
 	var enemy := EnemyKit.spec_of(content, enemies, pool, items) if not content.is_empty() else null
-	if enemy == null or not player_spec.is_valid():
+	if enemy == null or not hooks.has(&"player_spec"):
 		return false     # 没有敌人（这一章没有敌人池）或没有玩家：点空着，当走过
-	var me: CombatantSpec = player_spec.call()
-	if before_battle.is_valid():
-		before_battle.call(me, enemy, type)
+	var me: CombatantSpec = hooks.player_spec()
+	hooks.before_battle(me, enemy, type)
 	var limit := rules.battle_time_limit if rules != null else BattleSim.DEFAULT_TIME_LIMIT
 	var result := BattleSim.run(me, enemy, _rng_for(node, "battle"), limit, rules.overtime if rules != null else null)
 	var won := result.winner == 0
@@ -638,7 +606,7 @@ func _open_search(node: MapNode, auto: bool = false) -> void:
 		var sr := rules.search
 		var bless_rng := _rng_for(node, "bless_search")
 		session.substitute = func(ids: Array[StringName]) -> Array[StringName]:
-			return bless_substitute.call(ids, sr.bless_chance, sr.bless_chance_active, bless_rng) if bless_substitute.is_valid() else ids     # 095
+			return hooks.bless_substitute(ids, sr.bless_chance, sr.bless_chance_active, bless_rng)     # 095
 		session.encounter_builder = func() -> Dictionary:
 			# 083：节点内容里写死的遭遇（教程点）优先；没有才按池现造
 			var fixed = node.content.get("encounter", null)
@@ -787,14 +755,16 @@ func _enemy_for(node: MapNode, as_type: StringName, rng: RandomNumberGenerator) 
 
 
 func _run_ctx() -> RunContext:
-	if run_context.is_valid():
-		return run_context.call()
+	var from_hook := hooks.run_context()
+	if from_hook != null:
+		return from_hook
 	return RunContext.new()
 
 
 func _loot_ctx() -> LootContext:
-	if loot_context.is_valid():
-		return loot_context.call()
+	var from_hook := hooks.loot_context()
+	if from_hook != null:
+		return from_hook
 	var ctx := LootContext.new()
 	ctx.difficulty = difficulty
 	return ctx

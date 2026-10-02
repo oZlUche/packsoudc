@@ -43,5 +43,31 @@ static func _v1_to_v2(d: Dictionary) -> Dictionary:
 		mods["safe"] = safe
 		d.erase("safe")
 		d.erase("safe_locked")
+	if d.has("carry_in_value"):
+		var cd: Dictionary = mods.get("countdown", {}) if mods.get("countdown", {}) is Dictionary else {}
+		cd["carry_value"] = int(d.get("carry_in_value", 0))
+		mods["countdown"] = cd
+		d.erase("carry_in_value")
+	if d.has("faith_rituals") or d.has("faith_stat_bonus") or d.has("altar_used"):
+		var al: Dictionary = mods.get("altar", {}) if mods.get("altar", {}) is Dictionary else {}
+		al["rituals"] = d.get("faith_rituals", {})
+		al["stat_bonus"] = d.get("faith_stat_bonus", {})
+		al["used"] = d.get("altar_used", [])
+		mods["altar"] = al
+		d.erase("faith_rituals")
+		d.erase("faith_stat_bonus")
+		d.erase("altar_used")
+	var buffs: Dictionary = d.get("buffs", {}) if d.get("buffs", {}) is Dictionary else {}
+	if buffs.has("map"):
+		var bm: Dictionary = mods.get("buff", {}) if mods.get("buff", {}) is Dictionary else {}
+		bm["map"] = buffs.get("map", [])
+		mods["buff"] = bm
+		buffs.erase("map")
+		d["buffs"] = buffs
+	if d.has("node_storages"):
+		var ns: Dictionary = mods.get("node_storage", {}) if mods.get("node_storage", {}) is Dictionary else {}
+		ns["nodes"] = d.get("node_storages", {})
+		mods["node_storage"] = ns
+		d.erase("node_storages")
 	d["modules"] = mods
 	return d

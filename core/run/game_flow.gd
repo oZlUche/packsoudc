@@ -33,6 +33,9 @@ var characters: Array[CharacterDef] = []
 var difficulties: Array[DifficultyDef] = []
 ## 091：成就的定义（按 order 排）。什么时候算见 [method check_achievements]
 var achievement_defs: Array[AchievementDef] = []
+## 101 第 4 刀：成就与解锁的逻辑在这个服务里（纯逻辑：看局外与内容算结果，不碰存盘与转屏）。
+## 内容与「全部解锁」开关由 [method _sync_achievements] 同步过去
+var achievements: Achievements = Achievements.new()
 ## 全部猎手定义（id → HunterDef，069 / 071）；猎手机制按它造猎手
 var hunter_defs: Dictionary = {}
 ## 信仰定义（8-4）：id → FaithDef，给名字与说明用；机制只看标签（[FaithState]）
@@ -94,16 +97,14 @@ func to_main_menu() -> void:
 func use_slot(n: int) -> void:
 	if slots == null:
 		return
-	n = clampi(n, 1, SaveSlots.COUNT)
-	slots.ensure_dir(n)
-	slot = n
-	save_path = slots.run_path(n)
-	meta_path = slots.meta_path(n)
-	var loaded := MetaSave.read(items, meta_path, meta_rules) if FileAccess.file_exists(meta_path) else null
-	if loaded == null and FileAccess.file_exists(meta_path):
-		# 098（作者定）：读不出来**先备份再从零开始** —— 版本升不上来的老档照原样留在硬盘上，
-		# 不会被下一次 save_meta 盖掉；界面上说一句，玩家知道东西还在
-		meta_backup = slots.backup(n, "meta")
+	# 101 第 4 刀：建目录、算路径、读局外、读不出来先备份（098）都在 SaveSlots.open 里；这里只管当前位与这一局
+	var opened := slots.open(n, items, meta_rules)
+	slot = int(opened["slot"])
+	save_path = String(opened["run_path"])
+	meta_path = String(opened["meta_path"])
+	if String(opened["backup"]) != "":
+		meta_backup = String(opened["backup"])     # 界面上说一句，玩家知道老档还在
+	var loaded := opened["meta"] as MetaState
 	meta = loaded if loaded != null else MetaState.new(meta_rules)
 	run = null
 	result = null
@@ -336,75 +337,51 @@ func take_notes() -> Array[String]:
 	return out
 
 
-#region 成就与解锁（091）
-## 看有没有新完成的成就：完成了记进局外、给它许诺的解锁、攒一句通知；改了就存。返回新完成的。
+#region 成就与解锁（091；101 第 4 刀：逻辑在 Achievements 服务里，这里只管同步、存盘与转屏）
+## 把现在的局外、内容与「全部解锁」开关交给服务（它不认识 GameFlow / GameSettings）
+func _sync_achievements() -> Achievements:
+	achievements.meta = meta
+	achievements.defs = achievement_defs
+	achievements.items = items
+	achievements.chapters = chapters
+	achievements.difficulties = difficulties
+	achievements.unlock_all = settings != null and settings.unlock_all
+	return achievements
+
+
+## 看有没有新完成的成就（完成了记进局外、给它许诺的解锁、攒一句通知）；改了就存。返回新完成的。
 ## 「全部解锁」开着不计（作者定 10.2 第 4 条）；一局结算之后与读档之后各算一次
 func check_achievements() -> Array[AchievementDef]:
-	var got: Array[AchievementDef] = []
-	if meta == null or (settings != null and settings.unlock_all):
-		return got
-	for def in achievement_defs:
-		if def == null or meta.has_achievement(def.id) or not def.is_met(meta):
-			continue
-		meta.complete_achievement(def.id)
-		var opened: Array[String] = []
-		for g in def.grants:
-			meta.grant_unlock(g)
-			opened.append_array(unlock_names(g))
-		_notes.append("成就达成【%s】%s" % [Names.of(def), "：解锁 " + "、".join(opened) if not opened.is_empty() else ""])
-		got.append(def)
+	var got := _sync_achievements().check()
 	if not got.is_empty():
+		_notes.append_array(achievements.notes)
+		achievements.notes.clear()
 		save_meta()
 	return got
 
 
 func achievement_of(id: StringName) -> AchievementDef:
-	for def in achievement_defs:
-		if def.id == id:
-			return def
-	return null
+	return _sync_achievements().of_id(id)
 
 
 ## 哪一枚成就给这个解锁 id；没有 null
 func achievement_granting(unlock_id: StringName) -> AchievementDef:
-	for def in achievement_defs:
-		if def.grants.has(unlock_id):
-			return def
-	return null
+	return _sync_achievements().granting(unlock_id)
 
 
 ## 这个解锁 id 开的是什么（成就页写「解锁：道具 X、地图 Y、难度 Z」）
 func unlock_names(unlock_id: StringName) -> Array[String]:
-	var out: Array[String] = []
-	if items != null:
-		for id in items.all_ids():
-			var def := items.get_def(id)
-			if def.requires_unlock == unlock_id:
-				out.append("道具「%s」" % Names.of(def))
-	for c in chapters:
-		if c.requires_unlock == unlock_id:
-			out.append("地图「%s」" % Names.of(c))
-	for d in difficulties:
-		if d.requires_unlock == unlock_id:
-			out.append("难度「%s」" % Names.of(d))
-	return out
+	return _sync_achievements().unlock_names(unlock_id)
 
 
 ## 现在锁着的道具（requires_unlock 还没解锁）
 func locked_item_ids() -> Array:
-	var out: Array = []
-	if items == null:
-		return out
-	for id in items.gated_ids():
-		if not unlocked(items.get_def(id).requires_unlock):
-			out.append(id)
-	return out
+	return _sync_achievements().locked_item_ids()
 
 
 ## 把锁着的道具设进道具库（搜索 / 掉落 / 商店 / 敌人的池都从 ids() 拿）。开局前调；设置改了也调
 func apply_item_locks() -> void:
-	if items != null:
-		items.set_locked(locked_item_ids())
+	_sync_achievements().apply_item_locks()
 
 
 ## 091：老手的「全部解锁」开关。返回现在开没开
@@ -419,14 +396,12 @@ func toggle_unlock_all() -> bool:
 
 ## 091（10.2 第 3 条）：这一局的章节有「本图规则」卡、而且还没看过 → 地图屏第一次打开时弹
 func rules_card_pending() -> bool:
-	return run != null and run.chapter != null and not run.chapter.rules.is_empty() and meta != null and not meta.has_seen_rules(run.chapter.id)
+	return run != null and _sync_achievements().rules_card_pending(run.chapter)
 
 
 func mark_rules_seen() -> void:
-	if run == null or run.chapter == null or meta == null:
-		return
-	meta.mark_rules_seen(run.chapter.id)
-	save_meta()
+	if run != null and _sync_achievements().mark_rules_seen(run.chapter):
+		save_meta()
 #endregion
 
 
@@ -470,11 +445,7 @@ func difficulty_of(id: StringName) -> DifficultyDef:
 
 ## 091：这个解锁 id 现在算不算解锁了 —— 空 = 一直开着；设置里「全部解锁」开着什么都算；否则看局外
 func unlocked(id: StringName) -> bool:
-	if id == &"":
-		return true
-	if settings != null and settings.unlock_all:
-		return true
-	return meta != null and meta.has_unlock(id)
+	return _sync_achievements().unlocked(id)
 
 
 ## 这个玩家现在能选的难度：没有解锁要求的，和已解锁的（作者：局外解锁的特殊选项）
@@ -620,7 +591,9 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	var value := maxi(0, carry_value)
 	for inst in taken:
 		value += ItemValue.of(inst.def)
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale, {SafeModule.ID: {"size": safe_size()}}, value)
+	# 101：模块要的运行时输入（保险箱几格来自局外成长、带入价值来自这一次的选择）
+	var inputs := {SafeModule.ID: {"size": safe_size()}, CountdownModule.ID: {"carry_value": value}}
+	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale, inputs)
 	if state == null:
 		return null
 	for inst in taken:
@@ -681,7 +654,10 @@ func close_altar() -> void:
 func offer(insts: Array, node: MapNode = null) -> Dictionary:
 	if run == null:
 		return {"points": 0, "count": 0}
-	var got := run.offer(insts, node)
+	var altar := AltarModule.of(run)
+	if altar == null:
+		return {"points": 0, "count": 0}
+	var got := altar.offer(insts, node)
 	if int(got["count"]) > 0:
 		for inst in insts:
 			var it := inst as ItemInstance
@@ -698,7 +674,8 @@ func offer(insts: Array, node: MapNode = null) -> Dictionary:
 func smite() -> bool:
 	if run == null:
 		return false
-	var perk := run.faith_perk(&"smite")
+	var altar := AltarModule.of(run)     # 101：信仰级效果在神坛模块里取
+	var perk := altar.perk(&"smite") if altar != null else null
 	if perk == null or not perk.prebattle_apply(run):
 		return false
 	_flush()
@@ -712,23 +689,16 @@ func safe_size() -> Vector2i:
 
 ## 092（作者定）：离开结算屏时，暂存区里没背出来的一键出售（按基地的出售比例），钱进局外。这里只算不卖
 func stash_sale_preview() -> Dictionary:
-	var out := {"count": 0, "funds": 0}
-	if result == null or not result.is_extracted():
-		return out
-	for inst in result.left_items:
-		out["count"] = int(out["count"]) + 1
-		out["funds"] = int(out["funds"]) + MetaState.sell_price((inst as ItemInstance).def, sell_ratio())
-	return out
+	return MetaState.left_behind_preview(result, sell_ratio())
 
 
-## 真卖：只卖一次（卖完清单清掉），记进 last_absorbed["stash_sold"] 给局外屏提示
+## 真卖（账在 MetaState 里算，101 第 4 刀）：只卖一次，记进 last_absorbed["stash_sold"] 给局外屏提示
 func _sell_left_behind() -> Dictionary:
-	var got := stash_sale_preview()
+	if meta == null:
+		return {"count": 0, "funds": 0}
+	var got := meta.sell_left_behind(result, sell_ratio())
 	if int(got["count"]) > 0:
-		meta.funds += int(got["funds"])
-		result.left_items.clear()
 		last_absorbed["stash_sold"] = got
-		meta.changed.emit()
 	return got
 
 
@@ -900,7 +870,8 @@ func _reopen_entry() -> Dictionary:
 	var safe := SafeModule.of(run)
 	if here != null and NodeEvents.effective_type(here) == &"safe" and safe != null and safe.is_open():
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开
-	if here != null and run.altar_open():
+	var altar := AltarModule.of(run)
+	if here != null and altar != null and altar.is_open():
 		return {"screen": Screen.ALTAR, "node": here}     # 093：神坛还开着（这一次没用过）
 	if here != null and not here.is_visited() and NodeEvents.effective_type(here) == &"rest":
 		return {"screen": Screen.EVENT, "node": here, "rest": true}     # 反馈：休息点还有没用的那一份
@@ -976,7 +947,9 @@ func _adopt(state: RunState) -> void:
 	# 基线：按角色（读档回来只有 id，在这里找回）；没角色用持有方给的
 	state.hunter_defs = hunter_defs
 	state.faith_defs = faith_defs
-	state.recipes = recipes
+	var crafting := CraftingModule.of(state)     # 101：合成是一局的模块（配方表是内容，持有方给）
+	if crafting != null:
+		crafting.recipes = recipes
 	# 难度：读档回来只有 id，在这里找回定义并把机制重新接上（本体模块在 from_dict 里已经装过，再装一次是幂等的）
 	if state.difficulty == null and state.difficulty_id != &"":
 		state.difficulty = difficulty_of(state.difficulty_id)
@@ -994,10 +967,11 @@ func _adopt(state: RunState) -> void:
 		_push({"screen": Screen.BATTLE, "node": node, "result": r, "won": won,
 			"player": ev.last_battle.get("player", null), "enemy": ev.last_battle.get("enemy", null),
 			"enemy_content": ev.last_battle.get("content", {})}))
-	state.craft_done.connect(func(node_id: int, detail: Dictionary):
-		# 085：合成的提示排在这一步别的事前面（先说东西怎么了，再看这个点的事）
-		var node := state.map.get_node(node_id) if state.map != null and state.map.has_node(node_id) else null
-		_queue.push_front({"screen": Screen.EVENT, "node": node, "outcome": "合成", "detail": detail}))
+	if crafting != null:
+		crafting.done.connect(func(node_id: int, detail: Dictionary):
+			# 085：合成的提示排在这一步别的事前面（先说东西怎么了，再看这个点的事）
+			var node := state.map.get_node(node_id) if state.map != null and state.map.has_node(node_id) else null
+			_queue.push_front({"screen": Screen.EVENT, "node": node, "outcome": "合成", "detail": detail}))
 	state.loot_pending.connect(func(container: GridInventory):
 		# 一步之内可能来两份（打赢的尸体 + 搜索收获），RunState 已经并成一份，队里留一个就够
 		if _queue.is_empty() or int(_queue[-1]["screen"]) != Screen.LOOT:

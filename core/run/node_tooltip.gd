@@ -51,20 +51,23 @@ static func template_for(chapter: ChapterDef, node: MapNode) -> String:
 static func text_for(run: RunState, chapter: ChapterDef, node: MapNode) -> String:
 	var text := TextTemplate.render(template_for(chapter, node), TextTemplate.context_for(run, node))
 	# 092：倒计时过半关闭的撤离点，浮窗里说清楚
-	if run != null and node != null and PaidExtracts.closes_at(node) >= 0 and run.has_countdown():
-		if run.extract_closed(node):
+	var cd := CountdownModule.of(run)     # 101：倒计时是一局的模块
+	if node != null and PaidExtracts.closes_at(node) >= 0 and cd != null and cd.has_countdown():
+		if cd.extract_closed(node):
 			text += "\n[color=#d9534f]这个撤离点已经关闭（倒计时过半）。[/color]"
 		else:
-			text += "\n[color=#f0ad4e]倒计时剩 %d 时关闭（还有 %d 步）。[/color]" % [PaidExtracts.closes_at(node), run.countdown_left() - PaidExtracts.closes_at(node)]
+			text += "\n[color=#f0ad4e]倒计时剩 %d 时关闭（还有 %d 步）。[/color]" % [PaidExtracts.closes_at(node), cd.left() - PaidExtracts.closes_at(node)]
 	return text
 
 
 ## 反馈：每个点的暂存区各自留着 —— 这个点上放着的东西（站在上面时是身上暂存区里的，走开了是留在这里的），一行 BBCode；没有返回 ""。
-## 和 [member RunState.node_storages] 同一份账，不受章节的「节点浮窗」开关管（这是玩家自己放的东西）
+## 和 [NodeStorageModule] 同一份账，不受章节的「节点浮窗」开关管（这是玩家自己放的东西）
 static func stash_text(run: RunState, node: MapNode) -> String:
 	if run == null or node == null:
 		return ""
-	var items: Array = run.storage.items() if run.travel != null and run.travel.current_id == node.id and run.storage != null else run.stored_at(node.id)
+	var here := run.travel != null and run.travel.current_id == node.id
+	var ns := NodeStorageModule.of(run)
+	var items: Array = (run.storage.items() if run.storage != null else []) if here else (ns.stored_at(node.id) if ns != null else [])
 	if items.is_empty():
 		return ""
 	var counts := {}
