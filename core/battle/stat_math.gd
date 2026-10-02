@@ -82,6 +82,18 @@ static func mul(a: int, b: int) -> int:
 	return -((-p + ONE / 2) / ONE)
 
 
+## 定点除法，四舍五入、负数对称（和 [method mul] 同一条规矩）。
+##
+## 连乘轴的负层要它（`1 / 0.97^n`，见 [StatAxes]）。除零返回 0 —— 调用方不该走到这里，
+## 静默返回比崩掉好查
+static func div(a: int, b: int) -> int:
+	if b == 0:
+		return 0
+	var p := a * ONE
+	var q := (absi(p) + absi(b) / 2) / absi(b)
+	return -q if (p < 0) != (b < 0) else q
+
+
 ## 定点值转成用于显示或应用伤害的整数。**只在管线末端调用。**
 ## 中途反复取整会让「两个 +5%」不等于「一个 +10%」，玩家算得出来，会当成 bug。
 static func to_int(v: int) -> int:

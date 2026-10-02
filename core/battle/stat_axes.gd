@@ -21,8 +21,16 @@ const CRIT_DAMAGE := &"crit_damage"
 ## 105（作者定）：火焰伤害加成是一条普通增益轴 —— 祈祷攒的层数在这里，伤害管线按攻方读。
 ## 放大的是**所有**火焰来源（附魔、灼烧、任何火焰伤害），不是只有附魔那一下
 const FIRE_DAMAGE := &"fire_damage"
+## 105 第十节（作者定）：耐力消耗按层数**连乘** —— 5 层 = ×0.97^5 ≈ 85.9%。
+## 只有武器消耗耐力，所以是单位级的一条轴，不按件筛
+const STAMINA_COST := &"stamina_cost"
 
-enum Mode { PERCENT, FLAT }
+## PERCENT：`终值 × (1 + 层数 × 步长%)`，层数间**加算**（3 层加速 = +9%）。
+## FLAT：`终值 + 层数 × 步长`。
+## COMPOUND（105 第十节）：`终值 × (步长/100)^层数`，层数间**连乘**（5 层灵巧 = ×0.97^5）——
+## 作者给耐力消耗定的就是这条曲线：每层省掉当前的 3%，而不是各层相加。
+## 加一种模式只是多一种**因子算法**；道具级的公式（4.3 的乘区与 flat）一个字没动，轴仍是公式之后的最后一步
+enum Mode { PERCENT, FLAT, COMPOUND }
 
 ## id → {stat: 作用的属性（空 = 不直接落在属性上：受到伤害与火焰伤害由伤害管线读，按上限回血折进 regen_hp）, mode, step: 百分比轴是百分数、固定值轴是每层的量, pos, neg,
 ## items: 固定值轴也落到每件道具上（暴击按道具读，104）, pct: 固定值按百分数显示}
@@ -36,10 +44,11 @@ const TABLE := {
 	CRIT_CHANCE: {"stat": &"crit_chance", "mode": Mode.FLAT, "step": 0.01, "pos": "锐目", "neg": "失准", "items": true, "pct": true},
 	CRIT_DAMAGE: {"stat": &"crit_damage", "mode": Mode.FLAT, "step": 0.05, "pos": "致命", "neg": "钝击", "items": true, "pct": true},
 	FIRE_DAMAGE: {"stat": &"", "mode": Mode.PERCENT, "step": 3.0, "pos": "炽烈", "neg": "熄火"},
+	STAMINA_COST: {"stat": &"stamina_cost", "mode": Mode.COMPOUND, "step": 97.0, "pos": "灵巧", "neg": "笨拙"},
 }
 
 ## 显示顺序（面板）
-const ORDER: Array[StringName] = [ATTACK_SPEED, DAMAGE_DEALT, DAMAGE_TAKEN, REGEN_HP, REGEN_HP_PCT, REGEN_STAMINA, CRIT_CHANCE, CRIT_DAMAGE, FIRE_DAMAGE]
+const ORDER: Array[StringName] = [ATTACK_SPEED, DAMAGE_DEALT, DAMAGE_TAKEN, REGEN_HP, REGEN_HP_PCT, REGEN_STAMINA, CRIT_CHANCE, CRIT_DAMAGE, FIRE_DAMAGE, STAMINA_COST]
 
 
 static func has(axis: StringName) -> bool:
@@ -54,8 +63,21 @@ static func stat_of(axis: StringName) -> StringName:
 	return info(axis).get("stat", &"")
 
 
+static func mode_of(axis: StringName) -> int:
+	return int(info(axis).get("mode", Mode.PERCENT))
+
+
 static func is_percent(axis: StringName) -> bool:
-	return int(info(axis).get("mode", Mode.PERCENT)) == Mode.PERCENT
+	return mode_of(axis) == Mode.PERCENT
+
+
+static func is_compound(axis: StringName) -> bool:
+	return mode_of(axis) == Mode.COMPOUND
+
+
+## 这条轴是不是「乘一个因子」型（PERCENT 与 COMPOUND 都是）—— 结算走同一条路，只是因子算法不同
+static func is_factor(axis: StringName) -> bool:
+	return mode_of(axis) != Mode.FLAT
 
 
 ## 每层步长：百分比轴是百分数（3.0 = 3%），固定值轴是每层的量
@@ -63,8 +85,18 @@ static func step_of(axis: StringName) -> float:
 	return float(info(axis).get("step", 0.0))
 
 
-## 百分比轴的因子（定点）：1 + 层数 × 步长，低于 0 钳到 0
+## 因子型轴的因子（定点）。
+##
+## PERCENT：`1 + 层数 × 步长`，低于 0 钳到 0。
+## COMPOUND：`(步长/100)^层数` —— **不用 `pow`**：层数是小整数，逐次 [method StatMath.mul] 循环几下就完，
+## 跨平台逐位一致（4.3「全程定点」）。负层是反过来除，所以「+5 层灵巧 −2 层笨拙」= ×0.97³，和相抵一致
 static func factor(axis: StringName, stacks: int) -> int:
+	if is_compound(axis):
+		var per := StatMath.from_float(step_of(axis) / 100.0)
+		var f := StatMath.ONE
+		for _i in absi(stacks):
+			f = StatMath.mul(f, per)
+		return f if stacks >= 0 else StatMath.div(StatMath.ONE, maxi(1, f))
 	return maxi(0, StatMath.ONE + StatMath.from_float(stacks * step_of(axis) / 100.0))
 
 
@@ -83,6 +115,8 @@ static func on_items(axis: StringName) -> bool:
 
 ## 给 buff 栏悬浮窗的一句
 static func describe(axis: StringName, stacks: int, system_stacks: int = 0) -> String:
+	if is_compound(axis):
+		return _describe_compound(axis, stacks, system_stacks)
 	var step := step_of(axis)
 	var unit := "%" if is_percent(axis) else ""
 	if bool(info(axis).get("pct", false)):
@@ -97,6 +131,20 @@ static func describe(axis: StringName, stacks: int, system_stacks: int = 0) -> S
 		what, "±", _num(step), unit, String(info(axis).get("pos", "")), String(info(axis).get("neg", ""))]]
 	var total := stacks + system_stacks
 	lines.append("现在 %+d 层 → %s%s%s" % [total, "+" if total >= 0 else "−", _num(absf(total * step)), unit])
+	if system_stacks != 0:
+		lines.append("其中 %+d 层来自系统规则，不可解除" % system_stacks)
+	return "\n".join(lines)
+
+
+## 连乘轴的一句：每层乘一个因子，现在共乘了多少
+static func _describe_compound(axis: StringName, stacks: int, system_stacks: int) -> String:
+	var i := info(axis)
+	var per := step_of(axis)
+	var what: String = {STAMINA_COST: "耐力消耗"}.get(axis, String(axis))
+	var lines: Array[String] = ["%s：每层 ×%s%%（正为%s、负为%s，相抵）" % [
+		what, _num(per), String(i.get("pos", "")), String(i.get("neg", ""))]]
+	var total := stacks + system_stacks
+	lines.append("现在 %+d 层 → ×%.1f%%" % [total, StatMath.to_float(factor(axis, total)) * 100.0])
 	if system_stacks != 0:
 		lines.append("其中 %+d 层来自系统规则，不可解除" % system_stacks)
 	return "\n".join(lines)

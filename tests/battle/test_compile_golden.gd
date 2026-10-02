@@ -8,6 +8,10 @@
 ## 棋盘上只放一把武器，所以日神的「随机挑 3 把」挑的就是全部 —— 金样不依赖抽法。
 ## 抽法本身可复现是另一条验收（105 第八节第 2 条），在 `test_compile_input.gd` 里。
 ##
+## **有意重录的记录**：2026-10-02（105 第十节）日神 3 级从「给挑中的武器加 −20% 耐力消耗乘区」
+## 改成「开战获得 5 层灵巧（耐力消耗 ×97%^层数）」，所以日神那份的短剑少了 `stamina_cost` 的 −2000 乘区、
+## 多了 `axes: {stamina_cost: 5}`；同一次给四份都加了 `axes` 字段（其余三份都是空的，数值一个没动）。
+##
 ## 录制：`RECORD_GOLDEN=1 bash tools/test.sh 金样` 会把 `tests/fixtures/compile_golden/<信仰>.json`
 ## 重写一遍（并断言失败，提醒别把录制开关留在 CI 里）。平时跑是**比对**。
 extends RefCounted
@@ -95,6 +99,15 @@ static func _run_for(c: Dictionary, faith: StringName) -> RunState:
 
 
 ## 一份编译结果的快照：max_hp、undying_sec、每件 {uid, def_id, stats, rules}、set_rules
+## 轴层数：键排序后转成字符串键，JSON 往返稳定
+static func _axes(axes: Dictionary) -> Dictionary:
+	var out := {}
+	for axis in StatAxes.ORDER:
+		if axes.has(axis) and int(axes[axis]) != 0:
+			out[String(axis)] = int(axes[axis])
+	return out
+
+
 static func _shot(run: RunState) -> Dictionary:
 	var spec := run.compile_player()
 	var out := {
@@ -102,6 +115,8 @@ static func _shot(run: RunState) -> Dictionary:
 		"tier": run.active_faith_tier(),
 		"max_hp": spec.max_hp,
 		"undying_sec": spec.undying_sec,
+		# 105 第十节：开战就带的标准轴层数也是编译产物（日神 3 级的 5 层灵巧在这里）
+		"axes": _axes(spec.axes),
 		"baseline": _stats(spec.baseline),
 		"set_rules": _rules(spec.set_rules),
 		"items": [],
