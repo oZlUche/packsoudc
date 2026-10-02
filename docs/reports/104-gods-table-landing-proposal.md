@@ -91,6 +91,66 @@
 
 ③ 依赖 103 的 4e（轴表）落地；其余三批不依赖 103，可以先上。
 
+## 十、说明文本里的数字：只能读字段，不许写死（作者第 ④ 条，2026-10-02）
+
+作者问：各种说明文本里的数字，是文本的一部分还是读的字段？不是读字段的改成变量。全仓扫了一遍（`describe()`、`note`、`description`、事件 `text` / `label`、`UiText` / `Glossary` / `FieldText`、浮窗），结论分两半。
+
+### 现状
+
+**代码侧已经是读字段。** 134 处 `describe()`（deed / perk / cost / effect / cadence / trigger / `OfferingRule` / `FaithBonus.gate_text` / `Glossary.mods_text` / `describe_buff` / `stamina_estimate`）全部用 `%d`、`%.0f` 从字段拼句；GD 里没有写死数字的玩家文案。仅有的几处数字是语义常量（`"0 = 不限"`）、导入器报错，和 `map_scale_profile.gd:83` 的标签「小型（4~5 环）」——它与同一行的 `Vector2i(4, 5)` 重复，顺手改成拼。
+
+**内容侧（JSON）有三十多处写死，全在「人话」字段。**
+
+| 类 | 处 | 例子 | 字段 |
+|---|---|---|---|
+| 信仰 `note`（献祭 / 等级效果 / 赐福） | 17 | `"骨制品（稀有度 × 3）"`、`"开战时所有武器火焰附魔，武器耐力消耗 −20%"`、`"伤害 +10%"`、`"每 50 信力伤害 +1（最多 6 份）"`、`"2 级：耐力消耗 −10%"` | `multiplier`、`stamina_cost_percent`、`mult_percent`、`per_points / max_stacks / flat`、`tier` |
+| 道具 `faith_bonuses[].note` | 3 | `blessed_longbow` `"第一阶：伤害 +4"`、`"第二阶：伤害再 +15%"` | `mods[].flat / mult_percent` |
+| `description` | 8 | 角色 `"生命 50"`、局内 buff `"走 5 步之内伤害 -10%"`、成就 `"图鉴点亮 10 种"` / `"价值 300 币"`、难度 `"体力上限 -1"` | `max_hp`、`duration_steps / mult_percent`、`amount`、`effects[0].amount` |
+| 事件选项 `label` | 4 | `"给他 10 币"`、`"扎营（多耗 2 个行动点，多回 1 点体力）"`、`"撬开（体力 -1）"`、`"需要步数 ≥ 4"` | `outcomes[].amount / actions`、`requires[].min_steps` |
+| 事件 `text`（教程） | 5 | 「塔盾每下减 4」「皮甲 3 点护甲」「护身符每秒 8 点护盾」 | 别的道具的字段：`tower_shield` flat −4、`leather_armor` armor 3、`warding_charm` |
+
+两个加重的问题：
+
+1. **`note` 非空时直接覆盖 `describe()`**（`FaithPerk.describe` 只返回 `note`；`OfferingRule.describe` 先看 `note`），于是字段一改、文本不跟。已经有对不上的现成例子：蛮神献祭 note 写「稀有度 × 3」而代码是 2^稀有度 × 3（第一节已指出）；日神赐福 note 写「2 级」而 `gate_text` 说「第 2 阶」。
+2. **同一个数显示两遍**：`item_tooltip.gd:106` 把 `gate_text` + `mods_text` 和 `note` 一起拼，玩家看到「信力每 50 信力一份，最多 6 份：攻击 +1　每 50 信力伤害 +1（最多 6 份）」。
+
+`extract_default.json` 的 `"费用：{extract_fee} 币"` 是正确示范：数字来自 `TextTemplate` 的上下文。gods.xlsx 的「效果（人话）」列同样是写死的，但它不进游戏（第七节：不参与比对），见下面 C。
+
+### 改法
+
+原则一句话：**一个数只有一个来源 = 字段；文本要么由 `describe()` 生成，要么是带 `{key}` 占位符的模板。**
+
+**A. `note` 从「覆盖」改成「补充 + 模板」**
+
+- `FaithPerk` / `OfferingRule` / `FaithBonus` 的显示永远先由字段生成主句（`FaithBonus` 补一个 `describe()` = `gate_text() + mods_text + rule_text`，`faith_tooltip` 与 `item_tooltip` 都改用它，不再各拼一遍）；`note` 只是后面追加的一段补充，为空就没有。
+- `note` 过 `TextTemplate.render(note, params())`：三个基类各加 `params() -> Dictionary`，默认把自己的 @export 数值字段放进去（`per_points`、`max_stacks`、`multiplier`、`stamina_cost_percent`……子类不用写）。作者要自己措辞时写 `"每 {per_points} 信力伤害 +{flat}"`，数仍来自字段。
+- 现有 17 + 3 处 `note`：绝大多数直接删，`describe()` 已能生成等价句；生成得不够好的改 `describe()`，不写 `note`。
+- 导入器加一道**警告**：`note` / `description` / 事件 `label` / `text` 剥掉 `{…}` 之后仍含阿拉伯数字 → `report.warn`（汉字数「三秒一下」不碰）。`check_content` 把警告列出来，`tools/test.sh` 先放行；清零之后再升为 error（待作者定，见下）。
+- 阶的叫法统一：`gate_text` 的「第 %d 阶」、`faith_tooltip` 的「Lv.%d」、xlsx 的「级」三种并存，推荐全部用「Lv.%d」。
+
+**B. `description` 与事件文本过 `TextTemplate`，上下文带上定义自己的字段**
+
+- `TextTemplate.render` 现在只有 `event_screen` 与 `node_tooltip` 用。扩到六个消费点：`item_tooltip.gd:53`（道具 `description`）、`faith_tooltip.gd:16`（信仰）、`setup_screen.gd:617`（角色）、`meta_screen.gd:331 / 487`（成就、难度）、`map_screen.gd:705`（局内 buff）、`hunter_system.gd:308`（猎手）。
+- 新约定：内容定义类有 `text_ctx() -> Dictionary` 返回自己的数值字段，渲染时作为 `context_for(run, node, extra)` 的 `extra` 传入（局外屏 `run` 为 null）。首批：`CharacterDef`（`max_hp`、`bags`）、`AchievementDef`（`amount`）、`RunBuffDef`（`duration_steps`、第一条 mod 的 `mult_percent` / `flat`）、`DifficultyDef`（`vitality_delta`）、事件选项（`outcomes[0]` 的 `amount / actions / vitality`、`requires[0].min_steps`，键名 `cost_*` / `need_*`）。
+- 教程文本引用**别的道具**的数：加一个通用键 `{item_stat:tower_shield:damage_taken_flat}`，`TextTemplate` 从 `ItemDatabase` 取编译后的值；只给教程用。不想引入跨引用就把那三段改成不写数（「固定减几点伤害」），二选一，推荐前者。
+- 八处 `description` 与九处事件文本按上面改写；键全部记进 `docs/text-placeholders.md`，加「定义自身字段」一节。
+
+**C. gods.xlsx 的「效果（人话）」列变成生成列**
+
+- `tools/check_content.gd` 加一个导出模式：把每条 deed / offering / perk / blessing 的 `describe()` 输出写成 `docs/gods_text.json`；`tools/gods_xlsx_to_json.py --render` 读它回填到 xlsx 的该列。表里的人话从此由字段生成，作者只改参数列。放在 ④ 批之后，不急。
+
+### 落到改动范围
+
+新增一批 **⑤ 文本读字段（一天）**，不依赖其余四批，但**建议排在 ① 之前**：① 要改同一批信仰 JSON 的文案，照新规矩写一次就够。
+
+| 内容 | 文件 |
+|---|---|
+| `params()` / `describe()` / `text_ctx()` 约定、`note` 变补充、`TextTemplate` 扩消费点与 `{item_stat:…}` | `core/run/faith/faith_perk.gd`、`offering_rule.gd`、`core/battle/faith_bonus.gd`、`core/run/faith/faith_tooltip.gd`、`ui/inventory/item_tooltip.gd`、`core/text/text_template.gd`、六个消费点、`character_def / achievement_def / run_buff_def / difficulty_def / event_def` |
+| 导入器警告 + `check_content` 列出 | `core/authoring/content_importer.gd`、`core/authoring/content_check.gd` |
+| 清理内容 | 四份信仰 JSON 的 20 处 `note`、`blessed_longbow / blessed_shield`、8 处 `description`、9 处事件文本、`map_scale_profile.gd:83`、`docs/text-placeholders.md` |
+
+验证加一条：`check_content` 对整个 `data/authoring` 零「文本含裸数字」警告；改任一字段（如 `per_points` 50 → 40）后浮窗文字随之变化，不需要改文案。
+
 ## 作者已定（2026-10-01）
 
 | 项 | 决定 |
@@ -103,6 +163,7 @@
 | 新教 | 概念暂不引入，只占位 |
 | 胫骨大棒 | 移除 1 阶功能 |
 | xlsx ⇄ JSON 对照工具 | 可以做 |
+| 说明文本里的数字（2026-10-02） | 不读字段的全部改成变量；本文第十节 |
 
 ## 待作者定（不挡执行，按推荐先做）
 
@@ -110,3 +171,4 @@
 2. 暴击对持续伤害（灼烧、中毒）：不暴击（推荐，它们是固定值）；要让它们也暴击就把判定挪到 `DamageResolver` 第 1 步。
 3. 两条暴击轴的步长：暴击率 +1% / 层、暴击伤害 +5% / 层（推荐起点）。
 4. 技巧 / 狩猎的占位阈值先用 [3, 8] 还是照四位主神的量级先填一组（例如 [25, 80]）？推荐照主神量级填，省得第一轮测试先撞见 3 点就升级。
+5. 文本含裸数字的导入器检查：先警告一轮、清零后升为 error（推荐），还是一上来就 error？教程文本引用别的道具的数：加 `{item_stat:…}` 键（推荐）还是改成不写数？
