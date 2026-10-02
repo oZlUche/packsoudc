@@ -191,6 +191,58 @@ spec.passives = BattlePassives.of(self)
 
 ② 和 ③ 之间以 `CompileInput` 为界，可以两个人分头做；① 必须最先。
 
+## 十、补：日神 3 级 = 开战带 5 层「省力」（作者补充，2026-10-02）
+
+作者原话：日神的 3 级效果本质是「获得 5 层可叠加的 buff，后面战斗计算耐力消耗时的公式是 耐力 × 97%^层数」。
+这和第三节 3.3 是同一件事 —— 一条**标准轴**，开战时带层数 —— 只差一点：97%^层数是**连乘**，103 的轴只有「百分比（1 + 层数 × 步长）」和「固定值」两种模式。
+
+### 10.1 现状
+
+`sun.json` 3 级：`enchant_weapons{count: 0, stamina_cost_percent: -20}` → 编译期给挑中的武器加一条 `STAMINA_COST` 的 EMPOWER 乘区 −20%，一次性、不分层、只落在那几把武器上。
+作者要的：可叠层、连乘、作用于角色（所有耐力消耗），5 层 ≈ ×85.9%。
+
+### 10.2 方案：轴表加第三种模式 `COMPOUND`，加一条轴 `stamina_cost`
+
+| 轴 | 属性 | 模式 | 步长 | 正名 / 负名 |
+|---|---|---|---|---|
+| `stamina_cost` | `stamina_cost` | `COMPOUND` | 97（每层 ×97%） | 省力 / 费力 |
+
+- **公式**：`终值 × (步长/100)^层数`。正层是增益（省），负层是减益（费：×(100/步长)^|层数|），相抵照旧（+5 层省力 − 2 层费力 = +3 层）。
+- **定点实现**：不用 `pow`。`StatAxes.factor` 对 COMPOUND 做 |层数| 次 `StatMath.mul`（负层改做 `StatMath.div`），层数是小整数，循环几次就完，跨平台逐位一致（和 4.3「全程定点」一致）。
+- **落点**：`_apply_axes` 里 COMPOUND 走和 PERCENT 同一条路（`_scale_final` 乘因子到单位与每件道具），只是因子算法不同 —— 所以耐力消耗的终值 = 道具级终值（含现有的 EMPOWER 乘区）× 0.97^n。**现有 `stamina_cost` 乘区不动**：它们在 4.3 的乘区里，轴在乘区之后，两者相乘。
+- **层数记系统层**（105 作者已定：编译期带来的轴层数不被净化）。
+- **4.3 冻结**的是道具级公式；标准轴本来就是「公式之后的最后一步」（v2.11），加一种因子算法不改道具级任何数。架构文档 4.3 标准轴一节加一行模式说明与这条轴。
+
+### 10.3 给层数的构件：通用的 `AxisBoostPerk`
+
+不在 `enchant_weapons` 上加字段。新 perk `axis_boost{axis, stacks}`，`compile_into`：`input.axes[axis] += stacks`。
+它是通用的 ——「开战带 n 层 X」这类效果以后任何神都能用（和 3.3 的 `RunBuffDef.axes` 同一个入口）。
+`sun.json` 3 级改成两条：`{"type": "enchant_weapons", "count": 0, "tier": 3}` + `{"type": "axis_boost", "axis": "stamina_cost", "stacks": 5, "tier": 3}`；
+`EnchantWeaponsPerk.stamina_cost_percent` 删（没人再用）；`gods.xlsx`「等级效果」日神 3 级那行拆成两行同步。
+`battle_note` 返回空：轴本来就在 buff 栏里，不再另画一格。
+
+### 10.4 面板与词条
+
+- buff 栏：按 103 画轴 ——「省力 ×5」；悬浮窗 `StatAxes.describe` 加 COMPOUND 分支：「耐力消耗：每层 ×97%（正为省力、负为费力，相抵）／现在 +5 层 → ×85.9%」。数从表与层数算，不写死（104 第十节）。
+- `Glossary` 的属性词条给 `stamina_cost` 补一条「耐力消耗」（现在没有）。
+- 导入器：`ShiftAxis.axis` / `axis_boost.axis` 必须在 `StatAxes.TABLE`（现有校验）；表的自检测试加：COMPOUND 轴 `step` 必须在 (0, 100) 之间开区间，否则因子不收敛。
+
+### 10.5 验证与金样
+
+- `StatAxes.factor(STAMINA_COST, 5)` = `from_float(0.97^5)` ±1（定点误差）；`factor(…, -2)` = 1/0.97²；`factor(…, 0)` = ONE。
+- 一件耐力消耗 10 的武器，开战带 5 层省力：出手扣 8.59（取整按现有规矩）；另有 −20% EMPOWER 乘区时扣 6.87（0.8 × 0.859）。
+- 对手净化不动它；`shift_axis(stamina_cost, -2)` 之后显示「省力 ×3」。
+- **第八节的日神金样要有意重录**：3 级不再给武器加 −20% 乘区，改成 `spec.axes = {stamina_cost: 5}`；重录的说明写进金样文件头，其余三份不动。
+
+### 10.6 改动范围（并进第九节的 ②③④⑤ 四批，约加半天）
+
+| 批 | 加什么 | 文件 |
+|---|---|---|
+| ② 战斗层 | `Mode.COMPOUND`、`STAMINA_COST` 轴、`factor` 的连乘分支、`describe` 分支、`_apply_axes` 走 PERCENT 同路 | `core/battle/stat_axes.gd`、`combatant_runtime.gd` |
+| ③ 一局层 | `AxisBoostPerk`（新）+ `RunRegistry.FAITH_PERKS` 一行；删 `stamina_cost_percent` | `core/run/faith/perks/axis_boost_perk.gd`（新）、`run_registry.gd`、`enchant_weapons_perk.gd` |
+| ④ 内容与文档 | `sun.json` 3 级两条、`gods.xlsx` / `gods.md`、`Glossary` 词条、架构 4.3 一行、`field_text` 中文名 | `data/authoring/faiths/sun.json`、`docs/gods.xlsx`、`docs/gods.md`、`core/text/glossary.gd`、`docs/architecture.md`、`core/authoring/field_text.gd` |
+| ⑤ 验证 | 10.5 四条 + 表自检 + 重录日神金样 | `tests/battle/test_stat_axes.gd`、`tests/fixtures/compile_golden/sun.json` |
+
 ## 作者已定（2026-10-02，「架构方案执行」线程）
 
 | 项 | 决定 |
@@ -203,3 +255,9 @@ spec.passives = BattlePassives.of(self)
 | 编译期的轴层数（2026-10-02，按推荐） | 记系统层：常驻加成，对手净化洗不掉 |
 | 火焰轴的范围（2026-10-02，按推荐） | 放大所有火焰伤害（附魔、灼烧、任何火焰来源） |
 | 斐波那契的写法（2026-10-02，按推荐） | perk 字段 `gains` 为空时的默认；表里要改曲线再填数列 |
+| 日神 3 级（2026-10-02，补） | 开战获得 5 层可叠加 buff，耐力消耗 × 97%^层数（第十节：`stamina_cost` 轴，COMPOUND 模式） |
+
+## 待作者定（第十节，不挡执行，按推荐先做）
+
+1. 「省力」作用于**角色全部耐力消耗**（推荐：你说的是角色身上的 buff，所有道具的耐力消耗都 ×0.97^n）还是只作用于武器（旧 3 级的范围）？
+2. 轴的名字「省力 / 费力」可以吗？只影响显示，随时能改。
