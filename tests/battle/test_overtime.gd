@@ -67,9 +67,22 @@ static func run_shield_and_armor(t: TestCase) -> void:
 	FX._advance_to(ctx, 35.0)     # 2 层：×1.4
 	var me := ctx.sides[0]
 	var hp0 := me.resources.current(BattleStats.RES_HP)
-	DamageResolver.deal(ctx, me, _sec(16.0))
+	# 106：防护只减直接伤害，所以这一下按「武器打来的」造包（deal 的最后一个参数）
+	DamageResolver.deal(ctx, me, _sec(16.0), DamageTypes.PHYSICAL, 1, 9, true)
 	t.eq(me.resources.current(BattleStats.RES_SHIELD), 0, "护盾吸掉 4（原值）")
 	t.eq(hp0 - me.resources.current(BattleStats.RES_HP), _sec(14.0), "(16 − 4 盾 − 2 甲) × 1.4 = 14")
+
+	# 106：同一下若是 buff 造成的（非直接），防护不减它 —— (16 − 4) × 1.4 = 16.8
+	var b := _dummy(100.0)
+	b.baseline = StatSet.new()
+	b.baseline.set_base(BattleStats.MAX_SHIELD, _sec(4.0))
+	b.baseline.set_base(BattleStats.ARMOR, _sec(2.0))
+	var ctx2 := _ctx(b, _dummy(100.0))
+	FX._advance_to(ctx2, 35.0)
+	var me2 := ctx2.sides[0]
+	var hp2 := me2.resources.current(BattleStats.RES_HP)
+	DamageResolver.deal(ctx2, me2, _sec(16.0))
+	t.eq(hp2 - me2.resources.current(BattleStats.RES_HP), _sec(16.8), "非直接伤害不吃防护：(16 − 4 盾) × 1.4 = 16.8")
 
 
 static func run_decay_death(t: TestCase) -> void:

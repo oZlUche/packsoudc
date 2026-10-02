@@ -4,11 +4,10 @@
   "display_names": {
     "en": "Poison"
   },
-  "description": "持续伤害，无视护盾与防护，不招致反应。",
+  "description": "持续伤害，无视护盾，不招致反应。",
   "descriptions": {
-    "en": "Damage over time; ignores shield and armor, provokes nothing."
+    "en": "Damage over time; ignores shields, provokes nothing."
   },
   "shield_absorbable": false,
-  "armor_applies": false,
   "provokes": false
 }

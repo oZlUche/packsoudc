@@ -22,6 +22,9 @@ extends CombatEffect
 @export var damage_stat: StringName = &"damage"
 ## 伤害是否乘以来源 buff 的层数。「灼烧每层 2 点」用它
 @export var per_stack: bool = false
+## 106 第八节（作者定）：这一下算不算**直接伤害**（吃防护）。−1 = 按来源定（道具的规则 = 直接、buff 的规则 = 非直接），
+## 0 / 1 = 强制非直接 / 直接 —— 作者说的「除非另行说明」就是这个口子，现有内容都不填
+@export var direct_override: int = -1
 
 
 func apply(ctx: RuleContext) -> void:
@@ -44,7 +47,7 @@ func apply(ctx: RuleContext) -> void:
 		raw = StatMath.mul(raw, maxi(0, ctx.item_stat(BattleStats.CRIT_DAMAGE, BattleStats.default_base(BattleStats.CRIT_DAMAGE))))
 
 	for victim in resolve_targets(ctx, target):
-		var packet := DamagePacket.create(damage_type, raw, victim, ctx.owner.side, ctx.source_uid())
+		var packet := DamagePacket.create(damage_type, raw, victim, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override))
 		packet.crit = crit
 		DamageResolver.resolve(ctx.battle, packet)
 

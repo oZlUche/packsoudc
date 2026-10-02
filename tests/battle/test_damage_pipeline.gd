@@ -74,7 +74,6 @@ static func run(t: TestCase) -> void:
 
 	t.eq(DamageTypes.get_def(DamageTypes.PHYSICAL).shield_absorbable, true, "物理可被护盾吸收")
 	t.eq(DamageTypes.get_def(DamageTypes.POISON).shield_absorbable, false, "中毒绕过护盾")
-	t.eq(DamageTypes.get_def(DamageTypes.POISON).armor_applies, false, "中毒也无视护甲")
 	t.eq(DamageTypes.get_def(DamageTypes.DRAIN).provokes, false,
 		"流失不招致反应 —— 否则割自己一刀成了正收益")
 	t.eq(DamageTypes.get_def(DamageTypes.POISON).provokes, false, "中毒不招致反应")
@@ -89,11 +88,10 @@ static func run(t: TestCase) -> void:
 	corrode.id = &"corrode"
 	corrode.display_name = "腐蚀"
 	corrode.shield_absorbable = true
-	corrode.armor_applies = false
 	t.check(DamageTypes.register(corrode), "登记新类型")
 	t.check(not DamageTypes.register(corrode), "重复 id 被拒，不覆盖")
 	t.check(DamageTypes.has(&"corrode"), "登记后查得到")
-	t.eq(DamageTypes.get_def(&"corrode").armor_applies, false, "新类型的性质生效")
+	t.eq(DamageTypes.get_def(&"corrode").shield_absorbable, true, "新类型的性质生效")
 
 	# 打错字不该静默变成无敌
 	var unknown := DamageTypes.get_def(&"typo_here")
@@ -140,10 +138,11 @@ static func run_armor(t: TestCase) -> void:
 	_run(ctx)
 	t.eq(_hp(ctx, 1), 85, "护甲 5 点，20 → 15")
 
-	# 护甲挡不住中毒
+	# 106 第八节（作者定）：防护按**来源**生效，不按伤害类型 —— 武器直接打出的毒也算直接伤害，
+	# 所以照样被防护减（真实内容里的中毒 / 流血都挂在 buff 上，见 run_direct_damage）
 	var ctx2 := H._battle(_attacker(20.0, DamageTypes.POISON), _defender({"armor": 5.0}))
 	_run(ctx2)
-	t.eq(_hp(ctx2, 1), 80, "中毒无视护甲")
+	t.eq(_hp(ctx2, 1), 85, "武器直接打出的中毒也吃防护（106：按来源，不按类型）")
 
 	# 护甲高于伤害时归零，不会倒扣成治疗
 	var ctx3 := H._battle(_attacker(3.0), _defender({"armor": 5.0}))
@@ -457,3 +456,66 @@ static func run_reflect_details(t: TestCase) -> void:
 	_start(ctx3)
 	t.eq(_hp(ctx3, 0), 193, "弹回 10，被攻击方自己的 3 点护甲挡掉 3")
 
+
+## 106 第八节（作者定）：直接 / 非直接看**来源** —— 武器造成的是直接（吃防护），buff 造成的不是（不吃）。
+## 另有 `direct_override` 的「另行说明」口子
+static func run_direct_damage(t: TestCase) -> void:
+	t.begin("106 第八节 · 直接伤害按来源定：武器出手吃防护、buff 每秒掉血不吃、override 能两边强制")
+
+	# 武器出手：uid 非 0、不来自 buff → 直接伤害，防护减得动
+	var ctx := H._battle(_attacker(10.0), _defender({"armor": 3.0}))
+	_run(ctx)
+	t.eq(_hp(ctx, 1), 93, "武器 10 点，防护 3 → 扣 7")
+
+	# buff 每秒掉血：规则来自 buff → 非直接，防护不减（真实内容里的中毒 / 流血都是这一类：
+	# 武器出手时 apply_status 挂一个 buff，掉血的那条规则属于 buff 而不是武器）
+	var burn := BuffDef.new()
+	burn.id = &"poison_test"
+	burn.display_name = "中毒"
+	burn.is_debuff = true
+	var tick := CooldownCadence.new()
+	tick.seconds = 1.0
+	var self_tick := _hit(5.0, DamageTypes.POISON)
+	self_tick.target = CombatEffect.Target.SELF
+	var typed: Array[AbilityRule] = [H._rule(OnSchedule.new(), tick, [self_tick])]
+	burn.rules = typed
+
+	var poisoner := ApplyStatus.new()
+	poisoner.target = ApplyStatus.Target.OPPONENT
+	poisoner.buff = burn
+	var attacker := H._spec(100.0, [H._compiled(1, "vial", {}, [_opener([poisoner])])])
+	var ctx2 := H._battle(attacker, _defender({"armor": 3.0}))
+	_start(ctx2)
+	H._advance_to(ctx2, 1.5)
+	t.eq(_hp(ctx2, 1), 95, "buff 每秒 5 点毒伤不吃防护（非直接 —— 它来自 buff，不是武器）")
+
+	# override：强制非直接 —— 武器打出的也不吃防护
+	var soft := _hit(10.0)
+	soft.direct_override = 0
+	var cd := CooldownCadence.new()
+	cd.seconds = 1.0
+	var gun := H._spec(100.0, [H._compiled(1, "gun", {}, [H._rule(OnSchedule.new(), cd, [soft])])])
+	var ctx5 := H._battle(gun, _defender({"armor": 3.0}))
+	_run(ctx5)
+	t.eq(_hp(ctx5, 1), 90, "direct_override = 0：武器打出的也不吃防护（「另行说明」的口子）")
+
+
+## 106 第六节（作者定）：防护为负（破绽）倒贴 —— 10 点打成 13
+static func run_negative_armor(t: TestCase) -> void:
+	t.begin("106 · 格挡 / 破绽轴：+3 层 10 点打成 7，−3 层打成 13，中毒（来自 buff）不受影响")
+
+	var ctx := H._battle(_attacker(10.0), _defender())
+	ctx.sides[1].shift_axis(StatAxes.ARMOR, 3)
+	_run(ctx)
+	t.eq(_hp(ctx, 1), 93, "格挡 3 层：10 点打出 7")
+
+	var ctx2 := H._battle(_attacker(10.0), _defender())
+	ctx2.sides[1].shift_axis(StatAxes.ARMOR, -3)
+	_run(ctx2)
+	t.eq(_hp(ctx2, 1), 87, "破绽 3 层：10 点打出 13（作者定：负防护倒贴）")
+
+	# 破绽不会把治疗变成伤害，也不会把伤害放成负数：它只是加在伤害上
+	var ctx3 := H._battle(_attacker(1.0), _defender())
+	ctx3.sides[1].shift_axis(StatAxes.ARMOR, 10)
+	_run(ctx3)
+	t.eq(_hp(ctx3, 1), 100, "格挡高于伤害时归零，不倒扣成治疗")

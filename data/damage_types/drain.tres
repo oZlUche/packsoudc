@@ -14,5 +14,4 @@ descriptions = {
 "en": "Life paid as a cost: full pipeline, but no on-damage effects."
 }
 shield_absorbable = false
-armor_applies = false
 provokes = false

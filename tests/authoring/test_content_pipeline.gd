@@ -212,15 +212,24 @@ static func run_weapon_stamina_rules(t: TestCase) -> void:
 	var drone: ImportReport = _import_item({"id": "t_drone", "shape": ["1"], "tags": ["tool"], "combat": {"rules": [mana]}})[1]
 	t.check(drone.ok(), "非武器耗法力：可以")
 
+	# 106：armor / max_hp / max_mana 现在都是标准轴，单条 mod 的简单 buff 会另收一条「改用轴」的提示，
+	# 所以这里用没有对应轴的 max_shield 单测「不限层 + 百分比」那一条告警
 	var warn := _report()
-	ContentImporter.import_buff({"id": "t_rage", "mods": [{"stat": "armor", "mult_category": "EMPOWER", "mult_percent": 10}]}, _ctx(), warn)
+	ContentImporter.import_buff({"id": "t_rage", "mods": [{"stat": "max_shield", "mult_category": "EMPOWER", "mult_percent": 10}]}, _ctx(), warn)
 	t.check(warn.ok() and warn.warnings.size() == 1, "不限层 + 百分比：告警不报错（%s）" % warn.to_text())
 	var capped := _report()
-	ContentImporter.import_buff({"id": "t_rage3", "max_stacks": 3, "mods": [{"stat": "armor", "mult_category": "EMPOWER", "mult_percent": 10}]}, _ctx(), capped)
+	ContentImporter.import_buff({"id": "t_rage3", "max_stacks": 3, "mods": [{"stat": "max_shield", "mult_category": "EMPOWER", "mult_percent": 10}]}, _ctx(), capped)
 	t.check(capped.ok() and capped.warnings.is_empty(), "填了层数上限：不告警")
 	var flat := _report()
-	ContentImporter.import_buff({"id": "t_tough", "mods": [{"stat": "max_hp", "flat": 5.0}]}, _ctx(), flat)
+	ContentImporter.import_buff({"id": "t_tough", "mods": [{"stat": "max_shield", "flat": 5.0}]}, _ctx(), flat)
 	t.check(flat.warnings.is_empty(), "不限层 + 固定值：不告警")
+
+	# 106 第五节：防护 / 生命上限 / 法力上限有轴了，这类简单 buff 该被提示改成 shift_axis
+	for stat in ["armor", "max_hp", "max_mana"]:
+		var axis_hint := _report()
+		ContentImporter.import_buff({"id": "t_axis_" + stat, "max_stacks": 3, "mods": [{"stat": stat, "flat": 1.0}]}, _ctx(), axis_hint)
+		t.check(axis_hint.ok() and axis_hint.to_text().contains("shift_axis"),
+			"%s 的简单 buff 提示改用标准轴（%s）" % [stat, axis_hint.to_text()])
 
 	# 现有全部道具都守规矩（撬棍加了武器标签之后）
 	var bad: Array[String] = []

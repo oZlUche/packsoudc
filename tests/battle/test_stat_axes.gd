@@ -119,3 +119,107 @@ static func run_table_selfcheck(t: TestCase) -> void:
 		t.ne(StatAxes.stat_of(axis), &"", "连乘轴必须落在某项属性上（没有「由管线直接读」的连乘轴）")
 	t.eq(compound, 1, "目前只有耐力消耗一条连乘轴")
 	t.eq(StatAxes.ORDER.size(), StatAxes.TABLE.size(), "表里每条轴都在显示顺序里")
+
+
+## 读一次属性，顺带把轴结算与资源上限刷新（面板和结算走的也是这条路）
+static func _sync(rt: CombatantRuntime) -> void:
+	rt.stat(BattleStats.MAX_HP)
+
+
+## 106（作者定）：生命上限轴【生长 / 衰颓】与法力上限轴【充盈 / 枯竭】—— 每层 ±1，上限变了当前值跟着变
+static func run_max_resource_axes(t: TestCase) -> void:
+	t.begin("106 · 生长 / 衰颓与充盈 / 枯竭：上限每层 ±1，涨了当前值跟涨、降了夹到新上限、归零就不可用")
+	var spec := CombatantSpec.new()
+	spec.baseline = StatSet.new()
+	spec.baseline.set_base(BattleStats.MAX_MANA, StatMath.from_float(10.0))
+	spec.max_hp = StatMath.from_float(20.0)
+	var rt := CombatantRuntime.from_spec(spec, 0)
+	t.eq(StatMath.to_int(rt.resources.maximum(BattleStats.RES_HP)), 20, "起手生命上限 20")
+
+	rt.shift_axis(StatAxes.MAX_HP, 5)
+	_sync(rt)
+	t.eq(StatMath.to_int(rt.resources.maximum(BattleStats.RES_HP)), 25, "生长 5 层：上限 25")
+	t.eq(StatMath.to_int(rt.resources.current(BattleStats.RES_HP)), 25, "上限涨多少当前值涨多少（立刻多 5 点血可用）")
+
+	rt.shift_axis(StatAxes.MAX_HP, -8)
+	_sync(rt)
+	t.eq(StatMath.to_int(rt.resources.maximum(BattleStats.RES_HP)), 17, "5 − 8 = −3 层：上限 17")
+	t.eq(StatMath.to_int(rt.resources.current(BattleStats.RES_HP)), 17, "衰颓压下来会直接掉血（当前值夹到新上限）")
+
+	# 法力：枯竭把上限压到 0，不出负数
+	t.eq(StatMath.to_int(rt.resources.maximum(BattleStats.RES_MANA)), 10, "起手法力上限 10")
+	rt.shift_axis(StatAxes.MAX_MANA, -99)
+	_sync(rt)
+	t.eq(StatMath.to_int(rt.resources.maximum(BattleStats.RES_MANA)), 0, "枯竭 99 层：上限 0，不出负数")
+	t.eq(StatMath.to_int(rt.resources.current(BattleStats.RES_MANA)), 0, "当前值也是 0")
+
+	t.eq(StatAxes.name_of(StatAxes.MAX_HP, 1), "生长", "正层叫生长")
+	t.eq(StatAxes.name_of(StatAxes.MAX_HP, -1), "衰颓", "负层叫衰颓")
+	t.eq(StatAxes.name_of(StatAxes.MAX_MANA, 1), "充盈", "正层叫充盈")
+	t.eq(StatAxes.name_of(StatAxes.MAX_MANA, -1), "枯竭", "负层叫枯竭")
+	t.eq(StatAxes.name_of(StatAxes.ARMOR, 1), "格挡", "防护轴正层叫格挡（作者定）")
+	t.eq(StatAxes.name_of(StatAxes.ARMOR, -1), "破绽", "负层叫破绽")
+
+
+## 106 第五节：三条新轴的表自检 —— 它们是单位级 FLAT 轴，名字不许和别的轴撞
+static func run_new_axes_table(t: TestCase) -> void:
+	t.begin("106 第五节 · 表自检：防护 / 生命上限 / 法力上限都落在属性上、FLAT、不落到每件道具；全表名字不重复")
+	for axis in [StatAxes.ARMOR, StatAxes.MAX_HP, StatAxes.MAX_MANA]:
+		t.check(StatAxes.has(axis), "%s 在表里" % axis)
+		t.eq(StatAxes.mode_of(axis), StatAxes.Mode.FLAT, "%s 是固定值轴" % axis)
+		t.ne(StatAxes.stat_of(axis), &"", "%s 落在一项属性上" % axis)
+		t.check(not StatAxes.on_items(axis), "%s 不落到每件道具（它是角色自己的量）" % axis)
+		t.eq(StatAxes.step_of(axis), 1.0, "%s 每层 1 点" % axis)
+		t.check(StatAxes.ORDER.has(axis), "%s 在显示顺序里" % axis)
+
+	# 撞名就该在这里红：格挡 / 破绽和受伤轴的易伤 / 坚韧是两条轴，名字不能一样
+	var seen := {}
+	for axis in StatAxes.ORDER:
+		for n in [StatAxes.name_of(axis, 1), StatAxes.name_of(axis, -1)]:
+			t.check(not seen.has(n), "名字「%s」只属于一条轴（%s）" % [n, axis])
+			seen[n] = axis
+
+
+## 106 第三节（作者定）：护盾不再是独立的一条资源条，而是生命条外侧的一圈粗白框，
+## 长度 = 护盾 / 生命上限，护盾 ≥ 上限时整条框满
+static func run_shield_frame(t: TestCase) -> void:
+	t.begin("106 第三节 · 护盾画成生命条的外框：长度 = 护盾 / 生命上限，0 / 半 / 满 / 超过上限也只到满")
+	t.check(not CombatantPanel.ORDER.has("shield"), "护盾不在资源条的顺序表里（它不占一条）")
+	t.check(CombatantPanel.ORDER.has("hp"), "生命条还在")
+
+	var panel := CombatantPanel.new()
+	panel.label_font = UiPalette.cjk_font()
+	panel.reset({"resources": {"hp": [100, 100], "shield": [0, 50]}})
+	t.eq(panel.shield_frame_ratio(), 0.0, "没护盾不画框")
+
+	panel.set_resource("shield", 50, 50)
+	t.eq(panel.shield_frame_ratio(), 0.5, "护盾 50 / 生命上限 100 → 框盖半条")
+
+	panel.set_resource("shield", 100, 100)
+	t.eq(panel.shield_frame_ratio(), 1.0, "护盾等于生命上限 → 整条框满")
+
+	panel.set_resource("shield", 250, 250)
+	t.eq(panel.shield_frame_ratio(), 1.0, "护盾超过生命上限也只到满，不溢出")
+
+	# 生命上限为 0 的假人不画框
+	panel.reset({"resources": {"hp": [0, 0], "shield": [30, 30]}})
+	t.eq(panel.shield_frame_ratio(), 0.0, "生命上限 0 的假人不画框")
+
+	panel.reset({"resources": {"hp": [60, 100], "shield": [40, 40], "stamina": [10, 10]}})
+	t.eq(panel.shield_value(), 40, "护盾的数读得到（写在生命条上）")
+	panel.free()
+
+
+## 106 第三节：真的画一遍（要进场景树才能画），确认护盾不再占一条、框画得出来
+static func frame_shield_frame(t: TestCase, root: Window) -> void:
+	t.begin("106 第三节 · 带护盾的面板画一遍：生命 / 耐力各一条，护盾只有那圈框")
+	var panel := CombatantPanel.new()
+	panel.label_font = UiPalette.cjk_font()
+	panel.display_name = "我"
+	root.add_child(panel)
+	panel.size = Vector2(320, 190)
+	panel.reset({"resources": {"hp": [60, 100], "shield": [40, 40], "stamina": [10, 10]}})
+	t.eq(panel.shield_frame_ratio(), 0.4, "护盾 40 / 生命上限 100 → 框盖四成")
+	panel.queue_redraw()
+	t.eq(panel._ordered_keys(), ["hp", "stamina", "shield"], "画的条只有生命与耐力，护盾排在后面但被跳过（只画框）")
+	panel.queue_free()

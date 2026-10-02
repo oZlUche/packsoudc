@@ -19,10 +19,10 @@ extends Resource
 @export var descriptions: Dictionary = {}
 
 ## 能否被护盾吸收。中毒之类的绕过护盾直接见血。
+##
+## 106 第八节（作者定）：原来还有一列「吃不吃护甲」，已删 —— 防护按**来源**生效
+## （武器造成的直接伤害吃防护，buff 造成的不吃，见 [member DamagePacket.direct]），不按伤害类型。
 @export var shield_absorbable: bool = true
-
-## 是否吃护甲减免
-@export var armor_applies: bool = true
 
 ## 这一下会不会**招致反应** —— 反伤、吸血、格挡这类由挨打／打人触发的规则。
 ##
@@ -50,8 +50,6 @@ func describe() -> String:
 	var parts: Array[String] = []
 	if not shield_absorbable:
 		parts.append("无视护盾")
-	if not armor_applies:
-		parts.append("无视防护")
 	if not provokes:
 		parts.append("不招致反应")
 	return "、".join(parts) if not parts.is_empty() else "常规"
