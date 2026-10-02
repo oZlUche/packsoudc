@@ -365,7 +365,7 @@ flow 只留一行转发 —— **界面与测试的调用处一个都没改**（
 `ItemDatabase` 现在仍 `preload` 两个 `core/run/faith/` 的脚本来派生赐福版 —— 这是 `core/inventory` 里**唯一**剩下的反向依赖，
 已经写进 `test_layering` 的白名单（带原因与去向），100 第 4 步落地时跟着挪、顺手把白名单清空。
 
-**验证**：全套测试 **82 个套件、12880 项断言通过**。
+**验证**：全套测试 **83 个套件、12814 项断言通过**（含 main 上 #9 的那些）。
 `grep -rn "UiPalette\|ItemTooltip" core/` 只剩文档注释里的指路（`[ItemTooltip]`），没有代码；
 `grep -rn "res://core/run/" core/battle core/inventory core/sets` 只剩 `item_database.gd` 那两行（白名单那条）；
 `grep -rn "spec.flags" core/` 只剩一句解释它去哪了的注释。
