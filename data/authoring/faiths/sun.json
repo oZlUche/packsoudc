@@ -63,7 +63,12 @@
     {
       "type": "enchant_weapons",
       "count": 0,
-      "stamina_cost_percent": -20,
+      "tier": 3
+    },
+    {
+      "type": "axis_boost",
+      "axis": "stamina_cost",
+      "stacks": 5,
       "tier": 3
     },
     {

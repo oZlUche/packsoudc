@@ -177,7 +177,7 @@ func _apply_axes() -> void:
 			continue
 		if key == &"":
 			continue
-		if StatAxes.is_percent(axis):
+		if StatAxes.is_factor(axis):     # 105 第十节：连乘轴和百分比轴走同一条路，只是因子算法不同
 			var f := StatAxes.factor(axis, total)
 			_scale_final(_merged, key, f)
 			for uid in _merged_items:

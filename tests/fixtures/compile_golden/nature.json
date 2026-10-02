@@ -3,6 +3,7 @@
 	"tier": 5,
 	"max_hp": 1000000,
 	"undying_sec": 0.0,
+	"axes": {},
 	"baseline": {
 		"regen_hp": {
 			"total": 10000,
