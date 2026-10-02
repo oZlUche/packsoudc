@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.15 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.17 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -438,6 +438,13 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 - 道具的额外功能写在道具上：`ItemDef.faith_bonuses`（`FaithBonus`：`tier`、`mods`、`rules`），只许信仰道具有；`BattleCompiler.compile` 多两个参数 `faith_tiers`（标签 → 阶）与 `faith_points`（标签 → 点数，095 的 scaled 模式用），tier ≤ 现在的并进那件道具 —— 仍是纯函数。
   编译之后 `RunState.compile_player` 还会套一次 `FaithPerk`（093，编译期钩子改 spec），所以战斗单位 = 编译器输出 + perk；这一层在 097 里列为待收口。
 - 切换信仰不清别的池子；继承（作者说可以）还没做。不信者、新教留空（作者定）。
+- **信物里必然有一枚 1 格护符**（104，作者定）：每位诸神至少一件 1 格、带 `faith_anchor` 的道具（新教是占位，不查）；导入器批量导入完了守（`ContentImporter.validate_faith_charms`）。
+- 104：「首次」「获得」这类判断**不放在行为构件里**（构件是共享的 Resource，不能记状态）：`RunState` 记 `owned_uids`（对过账的实例）/ `acquired_ids` / `placed_ids`（种类），
+  离开一个点时对账一次（`reconcile_owned`），新出现在棋盘 / 暂存区 / 保险箱里的发 `item_acquired`；`place_item` 载荷带 `first_in_run`；战斗账带 `node_type` 与出手道具的 `id`。
+- **信力节奏的量尺**（104）：`FaithPower.history` 每次加点（含献祭）记一条 `{step, node_type, faith, event, gained, total, tier}`，跟着存档、进 `RunResult.faith_history`；
+  结算屏一行「信力节奏：第 N 步到 1 阶……」，开发版能导 `user://faith_history_<seed>.csv`。所有数都是占位，按测试重新规划。
+- **神明总表是核心配置**（104）：`docs/gods.xlsx` 机器读的列（阈值、行为、献祭、等级效果、神名与神话定位、转化概率）由 `tools/gods_xlsx_to_json.gd` 写进信仰 JSON（其余字段原样保留），
+  `GodsTable.check` 在 `tools/check_content.gd` 里对照，表与 JSON 对不上就红。读 xlsx 是 `XlsxReader`（zip + XML，只读值）。
 
 ## 4. M2 · 自动战斗
 
@@ -644,6 +651,37 @@ GDScript 里这个好处根本不存在，代价却是设计师写的每个十�
 
 冷却存在下限（快到一定程度不再变快），各乘区可各自设叠加层数上限。这些阈值写在
 配置资源里，不硬编码。
+
+#### 标准轴：单位级的带符号层数（作者定，报告 103；待实现）
+
+上面的乘区公式是**道具级**的：每件道具各算各的终值。战斗里最常见的一类增减益却是**单位级**的 ——
+「所有武器加速」「造成的伤害 +N%」「受到的伤害 +N%」「每秒回血」—— 它们作用于角色本身，而且**增益与减益是同一件事的正负**。
+为此每个战斗单位（玩家 / 敌人）有一组**标准轴**（`StatAxes`，代码里的静态表，和乘区枚举一样属于架构而不是内容）：
+
+| 轴 | 作用于 | 模式 | 每层步长（推荐起点，可调） | 正名 / 负名 |
+|---|---|---|---|---|
+| `attack_speed` | `haste`（冷却周期 ÷ 它，已有） | 百分比 | 3% | 加速 / 减速 |
+| `damage_dealt` | `damage` | 百分比 | 3% | 强攻 / 虚弱 |
+| `damage_taken` | 受到的最终伤害（4.6 第 4 步末尾） | 百分比 | 5% | 易伤 / 坚韧 |
+| `regen_hp` | `regen_hp`（每秒） | 固定值 | 1 | 回春 / 失血 |
+| `regen_hp_pct` | 每秒按生命上限的百分比回血（新属性，`settle_regen` 把它折成速率加进 `regen_hp`） | 百分比 | 1% | 再生 / 腐蚀 |
+| `regen_stamina` | `regen_stamina`（每秒） | 固定值 | 1 | 回气 / 疲乏 |
+| `crit_chance`（104） | `crit_chance`（单位与每件道具） | 固定值 | 0.01（1%） | 锐目 / 失准 |
+| `crit_damage`（104） | `crit_damage`（单位与每件道具） | 固定值 | 0.05（5%） | 致命 / 钝击 |
+
+**暴击**（104，作者定）：`crit_chance` 默认 0.10、`crit_damage` 默认 1.5（`BattleStats.DEFAULT_BASE`，不跨道具累加），**所有加成一律加算**（只收 `flat`，导入器拦乘区）。
+`DealDamage` 造包时对「从属性取伤害」的那一包掷一次（战斗 RNG，定点万分比；0 与 1 两头不消耗随机数），命中则 `raw × crit_damage`、`DamagePacket.crit = true`——
+在管线之前，护盾 / 减伤 / 护甲 / 加时看到的都是暴击后的原始值；固定值伤害（灼烧这类）不暴击；双方对称。预估伤害乘期望 `1 + 暴击率 × (暴击伤害 − 1)`。
+
+规则：
+
+- **一条轴就是一个带符号的 int 层数，默认 0。** 增益 +n、减益 −n，二者直接相抵：吃了 3 层加速再中 1 层减速就是 +2。不再为「加速」「减速」各开一个 buff。
+- **结算是公式的最后一步**，在道具级终值之上：百分比轴 `终值 × (1 + 层数 × 步长)`，固定值轴 `终值 + 层数 × 步长`。百分比因子低于 0 钳到 0（和乘区同一条规矩）。攻速轴作用于 `haste` 的终值，所以 `CooldownCadence` 一行不改。
+- **层数永续、无上限（除非轴表写了上下限）**，这是 4.5「可叠层即永续」在单位级的同一条规矩；战斗结束清空。
+- **系统层单独记**：每条轴记 `stacks`（内容施加的）与 `system_stacks`（加时 / 衰竭这类系统规则施加的），结算相加，**净化 / 驱散只动 `stacks`**。这就是「不可解除」的实现，不需要 `BuffDef.system` 旗。
+- **buff 栏显示轴，不显示来源**：层数 ≠ 0 的轴画一格，正用正名、负用负名，`×|层数|`；系统层另画一格「鏖战 ×n」说明来源。`BuffDef` 仍然存在，留给带规则的复合 buff（灼烧每秒掉血、标记降护甲、攒层爆发）；**能用轴表达的简单增减一律走轴**，导入器对「只有一条作用于标准轴属性的 mod、没有规则」的 `BuffDef` 告警，提示改成轴。
+- 内容怎么写：效果 `shift_axis(axis, delta, target)`（新的 `CombatEffect`，和 `apply_status` 并列），`delta` 带符号；扳机 `on_axis_at_least(axis, n)` 与 `on_stacks_at_least` 同构。编译期修饰（包体、邻接、套装、信仰阶梯）**不走轴**，它们仍是 4.3 乘区里的 `StatModifier`：轴是战斗中会变的东西。
+- 新加一条轴 = 轴表加一行（id、作用属性、模式、步长、两个名字），结算、面板、词条、导入器校验全部自动跟上；**不改公式代码**。
 
 #### 实现
 
@@ -3727,11 +3765,13 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
-| v2.15 | 2026-10-01 | **UI 里的逻辑搬回 core**（报告 101 第 6 刀；改 8 节、11 的树）：商店屏「拖走了就结账、结不成放回架上」的回滚搬进 `ShopSession.pay_or_return(格, uid, 容器)`（界面只把 false 说成一句话）；导演里 200 行截图演示代码搬进 `tools/demo_fill.gd`（`class_name DemoFill`，导演只在 `DEMO_SCREEN` 非空时 `load` 它，正式游戏一行都不跑），`game_director.gd` 390 → 196 行；导演直接写 `run.phase` / `end_reason` 改成 `RunState.force_extract()`（标明只给演示与测试用）；新用例 `test_economy.run_shop_rollback` 守回滚规则（原来只有界面里有、没测试） |
-| v2.14 | 2026-10-01 | **`GameFlow` 抽服务**（报告 101 第 4 刀；改 8 节）：成就与解锁抽成 `Achievements`（`core/meta/achievements.gd`，纯逻辑，不碰存盘与转屏；flow 只同步 + 决定要不要存），切存档位的文件层并进 `SaveSlots.open`（建目录 / 两条路径 / 读局外 / 读不出来先备份，098 的规矩和 `backup` 放在一起），092 的暂存区一键出售与 090 的「带回来的棋盘 ⇄ 开局屏那一栏」搬回 `MetaState`（`left_behind_preview` / `sell_left_behind` / `take_board_to_stash` / `return_stash`，开局屏少 20 行）；界面与测试的调用处一个没改（flow 留一行转发）；新套件 `tests/run/test_flow_wiring.gd`：**不许漏接** —— 一局 / 节点事件 / 六个模块的每个 signal 在 `core/` 或 `ui/` 里都得有人接（白名单一条：`shop_closed`），外加三个服务各自不造 `GameFlow` 也能测 |
-| v2.13 | 2026-10-01 | **一局的能力表 `RunHooks`**（报告 101 第 3 刀；新增 7.5）：`NodeEvents` 的 16 个裸 `Callable` 字段与 `EventContext` 的 7 个收成一个带类型的 `RunHooks`（`register` 只认 `NAMES` 里的名字，写错当场 `push_error`；每条的默认值写在方法里，所以沙盒 / 测试 / 没装那个模块的一局照常跑）；骨架在 `_wire_events` 里接自己的十条，`SafeModule` / `BuffModule` / `AltarModule` / `HunterSystem` 在 `install` 里接自己的 —— `NodeEvents` 与 `EventContext` 都不再认识任何模块；`EventContext` 新增 `faith_tier_now()` / `active_faith_id()`，`erosion_depth` 不进表（它是节点从 `travel.erosion` 现接的）；新套件 `tests/run/test_run_hooks.gd` 守默认值、名字登记、一局里谁接了什么、以及那些裸字段真的没了 |
-| v2.12 | 2026-10-01 | **测试与工具**（报告 102；新增 11.1、改 11 的树）：套件按层分目录（`tests/inventory` / `battle` / `map` / `run` / `meta` / `ui` / `authoring`，76 个），十个 `test_author_0NN.gd` 按**被测对象**拆散归位（报告号留在用例标题里），`run_tests.gd` 改为 `DirAccess` 递归自动发现（不再维护 `preload` 清单），`bash tools/test.sh <词>` 只跑路径或标题里含它的套件（后两步全项目检查照常跑）；类缓存出仓库（`.gitignore` 收整个 `.godot/`，推翻 v2.04；编辑器自己重建、`test.sh` 与 `run_game` 先 `--import`，`DevNav` 的缺类自检只在非编辑器下提示）；`test.sh` 找不到 `timeout` 就不包超时（macOS 默认没有）；新增 `tests/support.gd`（公共装载）与 `tests/run/flow_support.gd`（跑流程的公共壳） |
-| v2.11 | 2026-10-01 | **一局的六个子系统都搬成模块**（报告 101 第 1 刀；改 7.4 / 7.2 / 8.2）：`NodeStorageModule`（087 按点暂存）、`CountdownModule`（092 / 094 倒计时与带入预算，开局屏用的那几条算式留作静态方法）、`CraftingModule`（084 / 087 相邻即合）、`BuffModule`（062 一局里拿到的 buff）、`AltarModule`（093 / 095 神坛、信仰级效果 `perks`、赐福）；`RunState` 新增通用信号 `arrived(node_id, first_time)` / `stepped(node_id, reason)` 与方法 `fail(reason)`，`start()` 去掉 `p_carry_value`（带入价值走 `module_inputs`），1359 → 962 行；`RunMigrations` 的 v1 → v2 把顶层 `node_storages` / `carry_in_value` / `faith_rituals` / `faith_stat_bonus` / `altar_used` / `buffs.map` 都搬进 `modules` |
+| v2.17 | 2026-10-01 | **UI 里的逻辑搬回 core**（报告 101 第 6 刀；改 8 节、11 的树）：商店屏「拖走了就结账、结不成放回架上」的回滚搬进 `ShopSession.pay_or_return(格, uid, 容器)`（界面只把 false 说成一句话）；导演里 200 行截图演示代码搬进 `tools/demo_fill.gd`（`class_name DemoFill`，导演只在 `DEMO_SCREEN` 非空时 `load` 它，正式游戏一行都不跑），`game_director.gd` 390 → 196 行；导演直接写 `run.phase` / `end_reason` 改成 `RunState.force_extract()`（标明只给演示与测试用）；新用例 `test_economy.run_shop_rollback` 守回滚规则（原来只有界面里有、没测试） |
+| v2.16 | 2026-10-01 | **`GameFlow` 抽服务**（报告 101 第 4 刀；改 8 节）：成就与解锁抽成 `Achievements`（`core/meta/achievements.gd`，纯逻辑，不碰存盘与转屏；flow 只同步 + 决定要不要存），切存档位的文件层并进 `SaveSlots.open`（建目录 / 两条路径 / 读局外 / 读不出来先备份，098 的规矩和 `backup` 放在一起），092 的暂存区一键出售与 090 的「带回来的棋盘 ⇄ 开局屏那一栏」搬回 `MetaState`（`left_behind_preview` / `sell_left_behind` / `take_board_to_stash` / `return_stash`，开局屏少 20 行）；界面与测试的调用处一个没改（flow 留一行转发）；新套件 `tests/run/test_flow_wiring.gd`：**不许漏接** —— 一局 / 节点事件 / 六个模块的每个 signal 在 `core/` 或 `ui/` 里都得有人接（白名单一条：`shop_closed`），外加三个服务各自不造 `GameFlow` 也能测 |
+| v2.15 | 2026-10-01 | **一局的能力表 `RunHooks`**（报告 101 第 3 刀；新增 7.5）：`NodeEvents` 的 16 个裸 `Callable` 字段与 `EventContext` 的 7 个收成一个带类型的 `RunHooks`（`register` 只认 `NAMES` 里的名字，写错当场 `push_error`；每条的默认值写在方法里，所以沙盒 / 测试 / 没装那个模块的一局照常跑）；骨架在 `_wire_events` 里接自己的十条，`SafeModule` / `BuffModule` / `AltarModule` / `HunterSystem` 在 `install` 里接自己的 —— `NodeEvents` 与 `EventContext` 都不再认识任何模块；`EventContext` 新增 `faith_tier_now()` / `active_faith_id()`，`erosion_depth` 不进表（它是节点从 `travel.erosion` 现接的）；新套件 `tests/run/test_run_hooks.gd` 守默认值、名字登记、一局里谁接了什么、以及那些裸字段真的没了 |
+| v2.14 | 2026-10-01 | **测试与工具**（报告 102；新增 11.1、改 11 的树）：套件按层分目录（`tests/inventory` / `battle` / `map` / `run` / `meta` / `ui` / `authoring`，76 个），十个 `test_author_0NN.gd` 按**被测对象**拆散归位（报告号留在用例标题里），`run_tests.gd` 改为 `DirAccess` 递归自动发现（不再维护 `preload` 清单），`bash tools/test.sh <词>` 只跑路径或标题里含它的套件（后两步全项目检查照常跑）；类缓存出仓库（`.gitignore` 收整个 `.godot/`，推翻 v2.04；编辑器自己重建、`test.sh` 与 `run_game` 先 `--import`，`DevNav` 的缺类自检只在非编辑器下提示）；`test.sh` 找不到 `timeout` 就不包超时（macOS 默认没有）；新增 `tests/support.gd`（公共装载）与 `tests/run/flow_support.gd`（跑流程的公共壳） |
+| v2.13 | 2026-10-01 | **一局的六个子系统都搬成模块**（报告 101 第 1 刀；改 7.4 / 7.2 / 8.2）：`NodeStorageModule`（087 按点暂存）、`CountdownModule`（092 / 094 倒计时与带入预算，开局屏用的那几条算式留作静态方法）、`CraftingModule`（084 / 087 相邻即合）、`BuffModule`（062 一局里拿到的 buff）、`AltarModule`（093 / 095 神坛、信仰级效果 `perks`、赐福）；`RunState` 新增通用信号 `arrived(node_id, first_time)` / `stepped(node_id, reason)` 与方法 `fail(reason)`，`start()` 去掉 `p_carry_value`（带入价值走 `module_inputs`），1359 → 962 行；`RunMigrations` 的 v1 → v2 把顶层 `node_storages` / `carry_in_value` / `faith_rituals` / `faith_stat_bonus` / `altar_used` / `buffs.map` 都搬进 `modules` |
+| v2.12 | 2026-10-01 | **神明总表落地**（报告 104）：删战争之神；3.8 加「每位神一枚 1 格护符」（导入器守）、获得的对账（`owned_uids` / `item_acquired`）、信力节奏量尺（`FaithPower.history`）、神明总表 ⇄ JSON（`GodsTable`、`XlsxReader`、`tools/gods_xlsx_to_json.gd`）；4.3 暴击：`crit_chance`（默认 0.10）/ `crit_damage`（默认 1.5）只加算，`BattleStats.DEFAULT_BASE` 成为真的默认值表；标准轴加「锐目 / 失准」「致命 / 钝击」两条固定值轴（也落到道具上）；`DealDamage` 造包时掷暴击（固定值伤害不暴击），`DamagePacket.crit`、`damage` 事件带 `crit`；献祭条件加 `has_stat`、倍率默认 1 |
+| v2.11 | 2026-10-01 | **标准轴**（作者定，报告 103；设计先行、待实现）：4.3 新增「标准轴：单位级的带符号层数」—— 攻速 / 造成伤害 / 受到伤害 / 回血（固定）/ 回血（按上限百分比）/ 耐力回复六条轴，一条轴一个带符号 int 层数（增益为正、减益为负、直接相抵），结算在道具级终值之上（百分比 `× (1 + 层数 × 步长)`、固定值 `+ 层数 × 步长`），系统层单独记（净化不动）、buff 栏显示轴而不是来源、新轴只加表不改公式 |
 | v2.10 | 2026-10-01 | **一局的模块：`RunState` 的扩展点**（报告 101 第 0 刀 + 第 1 刀样板；新增 7.4、改 7.2 / 8.4）：`RunModule`（装 / 存 / 读 / 说一句，生命周期靠订阅已有信号）、`RunState.modules / install_modules / install_module / module / module_input / module_lines`、新信号 `leaving`、`ChapterDef.modules`、`RunModules.standard()`、注册表 `RUN_MODULES`（`run_mechanic` 作别名）、`RunMechanic` 变成它的子类；保险箱搬成 `SafeModule`（`RunState` 不再有 `safe` 字段，`SafeModule.of(run)` 取），一局存档升到 v2，`RunMigrations` 第一步把顶层 `safe` / `safe_locked` 搬进 `modules.safe` |
 | v2.09 | 2026-10-01 | **内容管线一致性检查**（报告 100 第 1 步；10.1）：`ContentCheck` + `tools/check_content.gd` 守「作者 JSON ⇄ `.tres` 一致」（导出比对、深比较不较真键顺序与 int / float；缺资产、孤儿资产、值不同各报一条），接进 `tools/test.sh` 与 `test_content_pipeline`；`buffs` / `sets` 两种从 `ContentPaths.KINDS` / `ORDER` 去掉（都是空目录，目录常量留给编辑器）；`test.sh` 的 `GODOT` 未设时先在 PATH 里找 `godot` / `godot4` |
 | v2.08 | 2026-10-01 | **存档迁移链与背包里切信仰**（报告 098、099）：7.2 写迁移链（`MetaMigrations` / `RunMigrations` 字典层逐级升、只在读文件那一层、升版规矩与冻结样本）、读不出来先备份（`SaveSlots.backup`、`GameFlow.meta_backup / run_backup / backup_notice`、`slots.backed_up`）、内容 id 改名表 `IdAliases`（`ItemDatabase.get_def` / `TagRegistry.get_def` / `FaithPower.restore` 找不到才查）；3.8 切换信仰改成明确规则：`GridInventory.reseat`（只盖 `placed_seq`、不发 `placed`，信力不再被棋盘内来回拖刷）、棋盘内重新落下或右键信物都切、取消拖拽不切（`DragLayer` 放回同容器前设回 `container_id`） |

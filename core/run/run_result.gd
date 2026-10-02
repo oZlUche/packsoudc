@@ -37,6 +37,10 @@ var safe_value: int = 0
 var safe_layout: Array[Dictionary] = []
 ## 092：撤离时暂存区里没背出来的那几件（离开结算屏时一键出售）
 var left_items: Array[ItemInstance] = []
+## 104 信力节奏的量尺：这一局每次加点的记录（[member FaithPower.history]）；结算屏一行、开发模式导 CSV
+var faith_history: Array = []
+## 结算屏那一行（「信力节奏：日神 第 3 步到 1 阶……」）；没攒过信力为空
+var faith_pace: String = ""
 
 
 ## 结束了的一局才算得出账；没结束返回 null
@@ -57,6 +61,9 @@ static func settle(state: RunState) -> RunResult:
 	r.battles_lost = int(state.tally.get("battles_lost", 0))
 	r.board_size = state.board.size if state.board != null else Vector2i.ZERO
 	r.boss_cleared = state.boss_cleared
+	if state.faith_power != null:
+		r.faith_history = state.faith_power.history_to_array()
+		r.faith_pace = FaithPower.pace_line(r.faith_history, state.faith_defs)
 	if r.outcome == &"extracted":
 		r.balance = state.wallet.balance if state.wallet != null else 0
 		for inst in state.board.items():
@@ -76,6 +83,19 @@ static func settle(state: RunState) -> RunResult:
 			r.safe_value += ItemValue.of(item.def)
 			r.safe_layout.append({"def": item.def, "origin": item.origin, "rotation": item.rotation})
 	return r
+
+
+## 104：开发模式把信力记录导成 CSV（`user://faith_history_<seed>.csv`）。返回写到的路径；没记录或写不了返回空
+func export_faith_csv(dir: String = "user://") -> String:
+	if faith_history.is_empty():
+		return ""
+	var path := dir.path_join("faith_history_%d.csv" % run_seed)
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f == null:
+		return ""
+	f.store_string(FaithPower.history_csv(faith_history))
+	f.close()
+	return path
 
 
 func is_extracted() -> bool:

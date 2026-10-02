@@ -337,6 +337,25 @@ static func import_faith(data: Dictionary, ctx: Context, report: ImportReport) -
 	return def
 
 
+## 104（作者定，架构文档 3.8）：每位神的信物里必然有一枚 **1 格护符** —— 批量导入完了检查：每个诸神信仰
+## 至少有一件 1 格、带 `faith_anchor` 的道具（新教是占位，不查）。只在上下文里道具与信仰都有时查
+static func validate_faith_charms(ctx: Context, report: ImportReport) -> void:
+	if ctx.items.is_empty() or ctx.faiths.is_empty():
+		return
+	for fid in ctx.faiths:
+		var faith := ctx.faiths[fid] as FaithDef
+		if faith == null or faith.camp == FaithDef.Camp.CHURCH:
+			continue
+		var found := false
+		for iid in ctx.items:
+			var item := ctx.items[iid] as ItemDef
+			if item != null and item.is_anchor() and item.faith_tag() == faith.tag() and ItemVolume.cells_of(item) == 1:
+				found = true
+				break
+		if not found:
+			report.error("faiths/%s" % fid, "%s 没有 1 格的信物护符（带 faith、%s、faith_anchor 的 1 格道具）—— 每位神的信物必然包含一枚" % [faith.display_name, faith.tag()])
+
+
 ## 信仰标签（作者定的机制）：信仰道具带 `faith` + 恰好一个 `faith:<id>`；对象标签得是登记过的信仰（批量导入时）
 static func _validate_item_faith(def: ItemDef, ctx: Context, report: ImportReport) -> void:
 	var objects: Array[StringName] = []
@@ -1106,6 +1125,10 @@ static func _fill(
 		var coerced = _coerce(obj, prop, obj.get(prop["name"]), data[key], at, ctx, report)
 		if coerced != null:
 			obj.set(prop["name"], coerced)
+	# 104（作者定）：暴击的加成一律加算 —— 作用于它们的修饰只能写 flat
+	if obj is StatModifier and BattleStats.additive_only((obj as StatModifier).stat) \
+			and ((obj as StatModifier).mult_category >= 0 or (obj as StatModifier).mult_percent != 0):
+		report.error(path, "%s 只接受固定值加成（flat），所有加成都是加算；不能写 mult_category / mult_percent" % (obj as StatModifier).stat)
 
 
 static func _join(path: String, key: String) -> String:

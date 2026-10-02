@@ -60,15 +60,20 @@ cap = 30
 [sub_resource type="Resource" id="Resource_4tdp6"]
 script = ExtResource("8_7tdnj")
 tags = Array[StringName]([&"nature"])
+multiplier = 5.0
+note = "自然（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_j1itm"]
 script = ExtResource("8_7tdnj")
 tags = Array[StringName]([&"food"])
+multiplier = 5.0
+note = "食物（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_crdnu"]
 script = ExtResource("8_7tdnj")
 tags = Array[StringName]([&"gear", &"armor", &"shield"])
-note = "防具（稀有度 × 2）"
+multiplier = 5.0
+note = "防具（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_iwddf"]
 script = ExtResource("10_r7t77")
@@ -106,8 +111,8 @@ display_name = "自然之神"
 display_names = {
 "en": "God of Nature"
 }
-god = "自然之神（回归、容纳）"
-description = "信力：触发自然道具的效果、战斗内恢复生命。献祭：自然、食物、防具。"
+god = "自然之神（回归、容纳、变化）"
+description = "和生命密切相关，帝国诸神之一，信徒分布极为宽广，祭祀繁多，影响力很大"
 thresholds = Array[int]([25, 80, 150, 400, 800])
 deeds = Array[ExtResource("5_y45hm")]([SubResource("Resource_iyhxd"), SubResource("Resource_rc0lb")])
 offerings = Array[ExtResource("8_7tdnj")]([SubResource("Resource_4tdp6"), SubResource("Resource_j1itm"), SubResource("Resource_crdnu")])

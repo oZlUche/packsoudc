@@ -10,6 +10,7 @@ extends CliTool
 
 func run() -> void:
 	var problems := ContentCheck.run_all()
+	problems.append_array(GodsTable.check())     # 104：神明总表是信仰的核心配置，表与 JSON 对不上同样算不一致
 	if problems.is_empty():
 		print("内容一致：%d 种都对得上" % ContentPaths.ORDER.size())
 		finish(0)

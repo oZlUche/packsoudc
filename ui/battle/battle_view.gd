@@ -292,7 +292,7 @@ func _on_damage(e: BattleEvent) -> void:
 		return
 	# amount 为负表示这一下最终是治疗（受伤前效果把它反转了）
 	_panels[e.side].popup(
-		StatMath.to_int(absi(amount)), e.get_name(&"type"), amount < 0
+		StatMath.to_int(absi(amount)), e.get_name(&"type"), amount < 0, e.get_bool(&"crit")
 	)
 
 
@@ -311,10 +311,10 @@ func _log_event(e: BattleEvent) -> void:
 				bits.append("甲挡 %d" % StatMath.to_int(e.get_int(&"armor")))
 			var tail := ("（%s）" % "、".join(bits)) if not bits.is_empty() else ""
 			var color := UiPalette.damage_color(e.get_name(&"type")).to_html(false)
-			_log_line(e.time, "[color=#%s]%s %s %d%s[/color]" % [
+			_log_line(e.time, "[color=#%s]%s %s %d%s%s[/color]" % [
 				color, _side_name(e.side),
 				"回复" if e.get_int(&"amount") < 0 else "受到",
-				amt, tail,
+				amt, "（暴击）" if e.get_bool(&"crit") else "", tail,
 			])
 		BattleEvent.STATUS_STACKED:
 			_log_line(e.time, "%s 叠加 %s → %d 层" % [

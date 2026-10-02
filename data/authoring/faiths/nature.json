@@ -4,8 +4,8 @@
   "display_names": {
     "en": "God of Nature"
   },
-  "god": "自然之神（回归、容纳）",
-  "description": "信力：触发自然道具的效果、战斗内恢复生命。献祭：自然、食物、防具。",
+  "god": "自然之神（回归、容纳、变化）",
+  "description": "和生命密切相关，帝国诸神之一，信徒分布极为宽广，祭祀繁多，影响力很大",
   "thresholds": [
     25,
     80,
@@ -29,12 +29,16 @@
     {
       "tags": [
         "nature"
-      ]
+      ],
+      "multiplier": 5.0,
+      "note": "自然（2^稀有度 × 5）"
     },
     {
       "tags": [
         "food"
-      ]
+      ],
+      "multiplier": 5.0,
+      "note": "食物（2^稀有度 × 5）"
     },
     {
       "tags": [
@@ -42,7 +46,8 @@
         "armor",
         "shield"
       ],
-      "note": "防具（稀有度 × 2）"
+      "multiplier": 5.0,
+      "note": "防具（2^稀有度 × 5）"
     }
   ],
   "perks": [

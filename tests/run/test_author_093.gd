@@ -46,8 +46,9 @@ static func _event(name: StringName, side: int, payload: Dictionary) -> BattleEv
 static func run_faith_files(t: TestCase) -> void:
 	t.begin("093 · 信仰文件：蛮神 / 日神 / 自然 / 大地各一份（旧的暴力 / 太阳与火合并改名），阈值、行为、献祭规矩、各级效果都从数据来；体积五档；力量的符号归蛮神")
 	var defs := FaithDef.load_all()
-	for id in [&"brute", &"sun", &"nature", &"earth", &"hunt", &"skill", &"war", &"church"]:
+	for id in [&"brute", &"sun", &"nature", &"earth", &"hunt", &"skill", &"church"]:
 		t.check(defs.has(id), "有 %s" % id)
+	t.check(not defs.has(&"war"), "战争之神删了（104）")
 	t.check(not defs.has(&"violence") and not defs.has(&"sunfire"), "暴力之神 / 太阳与火之神合并进蛮神 / 日神")
 	var brute: FaithDef = defs.get(&"brute", null)
 	if brute == null:
@@ -65,18 +66,18 @@ static func run_faith_files(t: TestCase) -> void:
 	t.eq(ItemVolume.grade(db.get_def(&"core")), ItemVolume.Grade.MEDIUM, "能量核心 5 格：中")
 	t.eq(ItemVolume.grade(db.get_def(&"plate_cuirass")), ItemVolume.Grade.LARGE, "板甲 9 格：大")
 	t.eq(ItemVolume.grade_of_cells(13), ItemVolume.Grade.HUGE, "13 格：极大")
-	# 献祭规矩：一件满足几条算几次；2^稀有度 × 倍率
+	# 献祭规矩：一件满足几条算几次；2^稀有度 × 倍率（104：倍率照神明总表）
 	var sword := db.get_def(&"shortsword")     # 稀有度 1、武器、金属、2 格
-	t.eq(brute.offering_value(sword), 6, "蛮神：短剑只算「武器」一条 → 2 × 3 = 6")
+	t.eq(brute.offering_value(sword), 4, "蛮神：短剑只算「武器」一条 → 2 × 2 = 4")
 	t.check(not brute.accepts_offering(db.get_def(&"ration")), "口粮不是蛮神的祭品")
 	var sun: FaithDef = defs[&"sun"]
-	t.eq(sun.offering_value(sword), 4, "日神：短剑算「金属」→ 2 × 2 = 4（体积是小不是中）")
-	t.eq(sun.offering_value(db.get_def(&"core")), 16, "日神：能量核心稀有度 3、体积正好为中、不是金属 → 只算一条：2^3 × 2 = 16")
+	t.eq(sun.offering_value(sword), 10, "日神：短剑算「金属」→ 2 × 5 = 10（体积是小不是中）")
+	t.eq(sun.offering_value(db.get_def(&"core")), 40, "日神：能量核心稀有度 3、体积正好为中、不是金属 → 只算一条：2^3 × 5 = 40")
 	var earth: FaithDef = defs[&"earth"]
-	t.eq(earth.offering_value(db.get_def(&"plate_cuirass")), 2 * 9, "大地：板甲稀有度 1 × 9 格 = 18")
+	t.eq(earth.offering_value(db.get_def(&"plate_cuirass")), 2 * 5 * 9, "大地：板甲 2^1 × 5 × 9 格 = 90")
 	t.eq(earth.offering_value(sword), 0, "大地不收小东西")
 	var nature: FaithDef = defs[&"nature"]
-	t.eq(nature.offering_value(db.get_def(&"ration")), 2 + 2, "自然：口粮既是自然又是食物 → 两条各 1 × 2")
+	t.eq(nature.offering_value(db.get_def(&"ration")), 5 + 5, "自然：口粮既是自然又是食物 → 两条各 1 × 5")
 	t.check(sun.accepts_offering(db.get_def(&"mana_crystal")), "日神收宝石")
 
 

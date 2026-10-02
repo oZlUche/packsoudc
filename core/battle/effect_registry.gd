@@ -97,6 +97,10 @@ const FAITH_DEEDS := {
 	&"heal": "res://core/run/faith/deeds/heal_deed.gd",
 	&"item_triggered": "res://core/run/faith/deeds/item_triggered_deed.gd",
 	&"enter_node": "res://core/run/faith/deeds/enter_node_deed.gd",
+	# 104（作者表）：技巧 / 狩猎的行为
+	&"item_acquired": "res://core/run/faith/deeds/item_acquired_deed.gd",
+	&"distinct_items_fired": "res://core/run/faith/deeds/distinct_items_fired_deed.gd",
+	&"first_place": "res://core/run/faith/deeds/first_place_deed.gd",
 }
 
 ## 093：信仰级的效果（写在信仰上、按阶生效）
