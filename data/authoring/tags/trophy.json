@@ -1,0 +1,11 @@
+{
+  "id": "trophy",
+  "display_name": "战利品",
+  "display_names": {
+    "en": "Trophy"
+  },
+  "description": "从敌人身上拿的纪念品。",
+  "descriptions": {
+    "en": "A trophy taken from an enemy."
+  }
+}

@@ -6,7 +6,7 @@
 ## 为什么是字段而不是 Godot 的 `tr()` / 翻译表：名字**跟着内容走** —— 道具、敌人、buff 都走同一条内容管线（JSON → .tres），
 ## 作者在编辑器里改一件道具就把它的英文名一起改了，不用再去另一张表里对键；翻译文件那套（CSV / PO）适合界面上几千条固定文字，
 ## 那是 [UiText] 的活。两套各管一边：**内容的名字在内容里，界面的文字在 UiText 里。**
-## 说明文字（`description`、事件正文）暂时还是中文，将来同样加 `descriptions` 字典。
+## 说明文字：`description` + `descriptions` 字典，[method description_of] 取（096 起标签 / 伤害类型用；事件正文有自己的 `texts`）。
 class_name Names
 extends RefCounted
 
@@ -22,6 +22,20 @@ static func of(obj: Object, lang: String = "") -> String:
 		if v != "":
 			return v
 	var base: Variant = obj.get("display_name")
+	return String(base) if base != null else ""
+
+
+## 096：说明文字（`description` / `descriptions`）同一条路：当前语言没写就回落 description
+static func description_of(obj: Object, lang: String = "") -> String:
+	if obj == null:
+		return ""
+	var l := lang if lang != "" else UiText.lang
+	var table: Variant = obj.get("descriptions")
+	if table is Dictionary and (table as Dictionary).has(l):
+		var v := String((table as Dictionary)[l])
+		if v != "":
+			return v
+	var base: Variant = obj.get("description")
 	return String(base) if base != null else ""
 
 

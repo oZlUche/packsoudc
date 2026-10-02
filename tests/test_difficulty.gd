@@ -151,8 +151,8 @@ static func run_start_and_save(t: TestCase) -> void:
 	t.is_null(back.difficulty, "定义要持有方按 id 找回")
 	t.check(back.mechanic_tags.is_empty(), "读回来还没装机制（持有方 _adopt 时装）")
 	back.difficulty = hard
-	back.install_mechanics()
-	back.install_mechanics()
+	back.install_modules()
+	back.install_modules()
 	t.check(back.mechanic_tags.has(&"erosion") or not _has_mechanic(hard, &"erosion"), "找回定义装上了；装两次幂等")
 
 	var plain := RunState.start(c.chapter, seed - 1, c.items, c.enemies, c.sets)

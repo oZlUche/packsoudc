@@ -1,0 +1,11 @@
+{
+  "id": "material",
+  "display_name": "材料",
+  "display_names": {
+    "en": "Material"
+  },
+  "description": "材料。",
+  "descriptions": {
+    "en": "A crafting material."
+  }
+}

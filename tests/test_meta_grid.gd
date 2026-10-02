@@ -183,7 +183,9 @@ static func run_absorb_board_codex(t: TestCase) -> void:
 	t.eq(back.warehouse.item_count(), m.warehouse.item_count(), "仓库件数一样")
 	t.eq(back.board.item_count(), m.board.item_count(), "带回来的棋盘也在")
 	t.eq(back.codex, m.codex, "图鉴一样")
-	t.is_null(MetaSave.from_text("{\"version\": 1}", c.items), "旧版（v1）作废 → null")
+	# 098：v1 现在走迁移链升上来（v1 → v2 是恒等），不再作废；升不上去的版本才是 null
+	t.not_null(MetaSave.from_text("{\"version\": 1}", c.items), "旧版（v1）经迁移链读得回来")
+	t.is_null(MetaSave.from_text("{\"version\": 0}", c.items), "链上没有这一级（v0）→ null")
 
 
 static func run_flow_gate(t: TestCase) -> void:

@@ -3,12 +3,11 @@
 ## 构件：每一条效果一个子类、注册表（EffectRegistry.FAITH_PERKS）一行；信仰文件里 `perks: [{"tier": 1, "type": "..."}]`。
 ## 基类给出几个**落点**的钩子，子类只重写自己用得到的那个；各系统在自己的点上问 [method RunState.faith_perks]：
 ## - 编译期 [method modify_spec]：开战时在编译好的玩家战斗单位上做手脚（加规则、改属性）
-## - 神坛 [method altar_label] / [method altar_apply]：休息处神坛上的特殊操作（和常规献祭共享这一次机会）
+## - 神坛 [method altar_label] / [method altar_apply]：休息处神坛上的特殊操作（和献祭二选一，共用这一次机会；不占休息）
 ## - 献祭之后 [method on_offered]
 ## - 踩上一个点 [method on_node_entered]
 ## - 掉落 [method modify_loot]
 ## - 战前准备屏 [method prebattle_label] / [method prebattle_apply]
-## - 战斗收尾 [method draw_is_win]
 class_name FaithPerk
 extends Resource
 
@@ -20,6 +19,12 @@ extends Resource
 
 func describe() -> String:
 	return note
+
+
+## 103：这条效果在战斗里是不是「通用 buff」—— 作用对象是角色本身（所有道具、基线、角色受到 / 造成的伤害）。
+## 是的话返回给 buff 栏常驻格的一句（空串 = 不进栏：只作用于某件 / 某类道具的、不影响战斗的都返回空）。默认不进
+func battle_note(_run: RunState) -> String:
+	return ""
 
 
 ## 编译期：开战那一瞬在玩家的战斗单位上做手脚。[param run] 给随机数（可复现：按节点与用途取）与局内账
@@ -69,9 +74,4 @@ func prebattle_label(_run: RunState, _type: StringName) -> String:
 
 ## 战前准备屏按了那个按钮。返回 true = 这一场按它处理了
 func prebattle_apply(_run: RunState) -> bool:
-	return false
-
-
-## 平局算赢（自然之神 5 级）
-func draw_is_win() -> bool:
 	return false

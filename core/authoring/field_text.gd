@@ -24,7 +24,7 @@ const LABELS := {
 	"set_id": "套装", "effects": "效果", "faith_bonuses": "信仰加成", "dormant_keeps_combat": "休眠仍保留战斗效果", "requires_unlock": "需要的解锁",
 	"combat": "战斗", "adjacency": "邻接", "base_stats": "基础属性", "rules": "规则", "trigger": "触发", "cadence": "节奏", "costs": "消耗",
 	"use_haste": "受急速影响", "cooldown": "冷却", "resource_key": "资源", "damage_type": "伤害类型", "damage_stat": "伤害用的属性", "amount_stat": "数量用的属性",
-	"stat": "属性", "stat_scale": "属性系数", "armor_applies": "吃防护", "shield_absorbable": "可被护盾吸收", "on_self": "对自己", "same_side": "同一边",
+	"stat": "属性", "stat_scale": "属性系数", "armor_applies": "吃防护", "shield_absorbable": "可被护盾吸收", "provokes": "招致反应", "on_self": "对自己", "same_side": "同一边",
 	"buff": "增益", "buff_id": "增益 id", "stacks": "叠层", "max_stacks": "叠层上限（0 = 不限）", "per_stack": "按叠层", "duration_sec": "持续秒数",
 	"is_debuff": "是减益", "refresh_on_restack": "再叠刷新时长", "on_apply": "施加时", "on_expire": "到期时", "mods": "属性加成", "consume": "消耗掉",
 	"grant_cells": "增益格", "receive_cells": "受益格", "grant_mods": "给邻居的加成", "receive_mods": "邻居给的加成", "grant_filter": "只给", "receive_filter": "只收",
@@ -39,7 +39,7 @@ const LABELS := {
 	"step_limit": "全局倒计时（行动点）", "blessings": "赐福模板", "blessed_of": "从哪件派生", "per_points": "每多少信力一份",
 	"name_prefix": "名字前缀", "name_prefix_en": "英文前缀", "add_tags": "多出的标签", "rarity_up": "稀有度加几", "value_mult": "价值倍率", "convert_chance": "包内转化概率", "convert_per_tier": "每级加的转化概率",
 	"bless_chance": "赐福替代概率（没激活）", "bless_chance_active": "赐福替代概率（激活了）", "cost": "花费", "carry_budget": "带入预算（价值）", "carry_over_cost": "每超多少价值倒计时 −1", "event_groups": "成组限量的事件", "events": "事件与权重", "offerings": "献祭品", "perks": "信仰效果", "multiplier": "倍率", "cap": "每场上限",
-	"count_dealt": "算造成的", "count_taken": "算受到的", "min_cells": "最少格子数", "exact_grade": "体积恰好", "per_cell": "乘格子数", "first_amount": "首次给", "again_amount": "再次给", "closing_extract": "过半关一个撤离点", "safes": "保险箱个数", "safe_size": "保险箱大小",
+	"count_dealt": "算造成的", "count_taken": "算受到的", "min_cells": "最少格子数", "exact_grade": "体积恰好", "per_cell": "乘格子数", "first_amount": "首次给", "again_amount": "再次给", "has_stat": "显式带有的属性", "rarity_pow": "按 2^稀有度给", "plus": "再加", "first_kind_only": "同种一局只算一次", "by_type": "按节点类型", "closing_extract": "过半关一个撤离点", "safes": "保险箱个数", "safe_size": "保险箱大小",
 	"grants_unlock": "通关给的解锁", "hidden_by_unlock": "拿到此解锁后收起", "characters": "可选角色", "vitality_bonus": "额外体力", "starting_items": "开局道具",
 	"starting_keepsakes": "开局特殊道具", "next_chapter": "下一章", "allow_carry_in": "允许从仓库带入", "auto_spawn": "直接站在出生点", "skip_setup": "不走开局屏",
 	"intro_event": "开场事件", "node_tooltips": "节点浮窗", "tooltip_mode": "浮窗模板", "tooltip_texts": "浮窗文字", "rings": "环", "kind": "种类",
@@ -84,11 +84,12 @@ const TYPE_LABELS := {
 	"pass_time": "原地耗时", "lose_item": "失去道具", "set_flag": "立局外旗标",
 	# 093 信仰流派
 	"damage": "造成 / 受到伤害", "vitality_lost": "失去体力", "item_cycle": "道具成功循环", "heal": "战斗内回血", "item_triggered": "触发某类道具", "enter_node": "进入空白节点",
-	"faith_active": "激活了信仰", "open_altar": "打开神坛", "next_event_random": "随机接一个事件", "low_hp_empower": "低血增伤", "fire_enchant": "火焰附魔",
+	"item_acquired": "获得道具", "distinct_items_fired": "不同名字的道具出手", "first_place": "每局首次置入一种道具",
+	"faith_active": "激活了信仰", "rest_part_unused": "休息点这一份没用过", "open_altar": "打开神坛", "next_event_random": "随机接一个事件", "low_hp_empower": "低血增伤", "fire_enchant": "火焰附魔",
 	"stat_mod": "属性修饰（信仰级）", "enchant_weapons": "武器火焰附魔", "food_shield": "按食物给护盾", "food_double": "食物效果翻倍",
 	"altar_sacrifice_hp": "神坛：献祭生命上限", "altar_pray_fire": "神坛：祈祷火焰", "altar_food_vitality": "献祭食物回体力", "altar_train_board": "神坛：锻炼（棋盘 +1 行）",
-	"altar_reshape_node": "神坛：改造此点", "smite": "秒杀（耗体力）", "extra_drop_by_node": "按点类型必掉额外一件", "gift_on_enter": "踩上点给对应道具", "draw_is_win": "平局算胜", "undying": "血归零后坚持几秒", "altar_bless": "神坛：祈求赐福", "bless_item": "赐福一件",
-	"erosion": "侵蚀", "hunters": "猎手",
+	"altar_reshape_node": "神坛：改造此点", "smite": "秒杀（耗体力）", "extra_drop_by_node": "按点类型必掉额外一件", "gift_on_enter": "踩上点给对应道具", "overtime_regen": "加时阶段回春", "on_axis_at_least": "标准轴到 N 层时", "shift_axis": "改标准轴层数", "undying": "血归零后坚持几秒", "altar_bless": "神坛：祈求赐福", "bless_item": "赐福一件",
+	"erosion": "侵蚀", "hunters": "猎手", "safe": "保险箱",     # 101：一局的模块（本体功能与难度机制同一张表）
 	"approach": "逼近", "flee": "逃跑", "wander": "游荡", "ambush": "伏击", "patrol": "巡逻",
 	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫",
 	"damage_item": "损坏道具", "drain_money": "掉钱",
@@ -108,7 +109,7 @@ const CLASS_LABELS := {
 	"ItemDef": "道具", "BuffDef": "增益", "EventDef": "事件", "EventOption": "选项", "CombatProfile": "战斗", "AbilityRule": "规则", "AdjacencyProfile": "邻接",
 	"StatModifier": "属性修饰", "ItemShape": "形状", "FaithBonus": "信仰加成", "RingSpec": "环", "RingMapConfig": "环形图参数", "MapSource": "地图来源",
 	"ChapterDef": "章节", "CharacterDef": "角色", "EnemyDef": "敌人", "DifficultyDef": "难度", "HunterDef": "猎手", "FaithDef": "信仰", "RecipeDef": "配方",
-	"AchievementDef": "成就", "LoadoutDef": "开局装备", "NodeRules": "节点规则", "DropRule": "掉落规则", "EconomyRules": "经济规则", "MetaRules": "局外规则",
+	"AchievementDef": "成就", "TagDef": "标签", "DamageTypeDef": "伤害类型", "LoadoutDef": "开局装备", "NodeRules": "节点规则", "DropRule": "掉落规则", "EconomyRules": "经济规则", "MetaRules": "局外规则",
 	"SearchRules": "搜索规则", "ItemSetDef": "套装", "SetTier": "套装档位", "RunBuffDef": "局外 / 地图增益", "EnemyPool": "敌人池", "StrengthRule": "档位规则",
 }
 

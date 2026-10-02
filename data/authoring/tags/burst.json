@@ -1,0 +1,11 @@
+{
+  "id": "burst",
+  "display_name": "重击",
+  "display_names": {
+    "en": "Burst"
+  },
+  "description": "出手慢、单下重的打法。",
+  "descriptions": {
+    "en": "Slow, heavy hits."
+  }
+}

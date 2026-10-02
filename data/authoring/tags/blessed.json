@@ -1,0 +1,11 @@
+{
+  "id": "blessed",
+  "display_name": "赐福",
+  "display_names": {
+    "en": "Blessed"
+  },
+  "description": "受过神的赐福的版本。",
+  "descriptions": {
+    "en": "A god-blessed variant."
+  }
+}

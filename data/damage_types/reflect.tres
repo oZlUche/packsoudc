@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="DamageTypeDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/damage/damage_type_def.gd" id="1_82s81"]
+
+[resource]
+script = ExtResource("1_82s81")
+id = &"reflect"
+display_name = "反伤"
+display_names = {
+"en": "Reflect"
+}
+description = "反弹出去的伤害：不招致反应，两件反伤道具不会互相引燃。"
+descriptions = {
+"en": "Reflected damage: provokes nothing, so two reflectors never feed each other."
+}
+provokes = false

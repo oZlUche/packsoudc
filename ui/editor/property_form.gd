@@ -97,6 +97,16 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 				return _labeled(owner, key, _stat_picker(String(value), func(k: String):
 					owner.set(key, StringName(k))
 					_emit()))
+			if type == TYPE_STRING_NAME and _is_damage_type_field(key):
+				# 096：伤害类型是数据（DamageTypes）：下拉列出登记过的，也能自定义
+				return _labeled(owner, key, _key_picker(_damage_type_keys(), Callable(PropertyForm, "damage_type_label"), String(value), func(k: String):
+					owner.set(key, StringName(k))
+					_emit()))
+			if type == TYPE_STRING_NAME and _is_tag_field(key):
+				# 096：指向一个标签的字段（信仰的 item_tag、规则的 weapon_tag）：下拉列出登记过 / 用过的标签，也能自定义
+				return _labeled(owner, key, _key_picker(known_tags(), Callable(PropertyForm, "tag_label"), String(value), func(k: String):
+					owner.set(key, StringName(k))
+					_emit()))
 			var le := LineEdit.new()
 			le.text = String(value)
 			le.custom_minimum_size.x = 180
@@ -205,6 +215,76 @@ static func _is_stat_field(key: String) -> bool:
 	return key == "stat" or key.ends_with("_stat")
 
 
+## 096：指向标签的字段：`tags` / `*_tags` / `*_filter`（邻接的只给 / 只收）/ `tag` / `*_tag`（信仰的 item_tag、规则的 weapon_tag）
+static func _is_tag_field(key: String) -> bool:
+	return key == "tags" or key.ends_with("_tags") or key.ends_with("_filter") or key == "tag" or key.ends_with("_tag")
+
+
+## 096：伤害类型字段
+static func _is_damage_type_field(key: String) -> bool:
+	return key == "damage_type"
+
+
+## 标签给人看：中文模式「武器 (weapon)」，英文模式「Weapon (weapon)」；没登记的原词
+static func tag_label(key: String) -> String:
+	var n := TagRegistry.name_of(StringName(key))
+	return "%s (%s)" % [n, key] if n != key else key
+
+
+static func damage_type_label(key: String) -> String:
+	var n := DamageTypes.name_of(StringName(key))
+	return "%s (%s)" % [n, key] if n != key else key
+
+
+static func _damage_type_keys() -> Array[String]:
+	var out: Array[String] = []
+	for k in DamageTypes.ids():
+		out.append(String(k))
+	return out
+
+
+static func _strings(arr: Array) -> Array[String]:
+	var out: Array[String] = []
+	for v in arr:
+		out.append(String(v))
+	return out
+
+
+## 096：已知的标签：登记过的（TagRegistry）+ 道具 / 敌人内容里用过的。升序去重；`faith:<id>` 不列（信仰对象标签由 faith 字段推）
+static var _extra_tags: Array[String] = []
+static var _scanned_tags: bool = false
+
+
+static func known_tags() -> Array[String]:
+	var seen := {}
+	for k in TagRegistry.ids():
+		seen[String(k)] = true
+	if not _scanned_tags:
+		_scanned_tags = true
+		for kind in ["items", "enemies"]:
+			if not ContentPaths.KINDS.has(kind):
+				continue
+			var dir := String(ContentPaths.KINDS[kind][0])
+			var d := DirAccess.open(dir)
+			if d == null:
+				continue
+			for f in d.get_files():
+				if f.ends_with(".json"):
+					var parsed = JSON.parse_string(FileAccess.get_file_as_string(dir + "/" + f))
+					if parsed is Dictionary and (parsed as Dictionary).get("tags") is Array:
+						for tg in (parsed as Dictionary)["tags"]:
+							var s := String(tg)
+							if s != "" and not s.begins_with(FaithDef.TAG_PREFIX) and not _extra_tags.has(s):
+								_extra_tags.append(s)
+	for k in _extra_tags:
+		seen[String(k)] = true
+	var out: Array[String] = []
+	for k in seen:
+		out.append(k)
+	out.sort()
+	return out
+
+
 ## 属性键给人看：中文模式「伤害 (damage)」，英文原名
 static func stat_label(key: String) -> String:
 	var zh := Glossary.stat_name(StringName(key))
@@ -273,22 +353,28 @@ static func _collect_stat_keys(node, into: Array[String]) -> void:
 ## [param current] 是当前值（不在列表里就当自定义）；[param on_pick] 每次改动回调（可以是空 Callable，之后用 _picked_stat 读）；
 ## [param exclude] 不列出的键（属性表里已有的）
 func _stat_picker(current: String, on_pick: Callable, exclude: Array = []) -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 4)
-	var ob := OptionButton.new()
-	_font(ob)
 	var keys: Array[String] = []
 	for k in known_stat_keys():
 		if not exclude.has(k) or k == current:
 			keys.append(k)
+	return _key_picker(keys, Callable(PropertyForm, "stat_label"), current, on_pick, "属性键（小写英文）" if FieldText.zh() else "stat key")
+
+
+## 096：通用的「键」选择器 —— 属性键 / 标签 / 伤害类型都是一张「已知的键 + 自定义…」下拉。
+## [param label_of] 把键变成显示文字（中文名 + 原键）；其余同 [method _stat_picker]
+func _key_picker(keys: Array[String], label_of: Callable, current: String, on_pick: Callable, placeholder: String = "") -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	var ob := OptionButton.new()
+	_font(ob)
 	for i in keys.size():
-		ob.add_item(stat_label(keys[i]), i)
+		ob.add_item(String(label_of.call(keys[i])), i)
 		ob.set_item_tooltip(i, keys[i])
 	ob.add_item("自定义…" if FieldText.zh() else "Custom…", keys.size())
 	ob.set_item_metadata(keys.size(), CUSTOM_STAT)
 	var custom := LineEdit.new()
 	custom.custom_minimum_size.x = 140
-	custom.placeholder_text = "属性键（小写英文）" if FieldText.zh() else "stat key"
+	custom.placeholder_text = placeholder if placeholder != "" else ("键（小写英文）" if FieldText.zh() else "key")
 	_font(custom)
 	var at := keys.find(current)
 	if at < 0 and current == "" and not keys.is_empty():
@@ -488,6 +574,37 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 					out.append(StringName(s) if builtin == TYPE_STRING_NAME else s)
 			owner.set(key, out)
 			_emit())
+		if builtin == TYPE_STRING_NAME and _is_tag_field(key):
+			# 096（作者定）：标签数组旁边一个「加标签…」下拉：列出登记过（TagRegistry，带中文名）与内容里用过的标签，选一个就追加到这一行
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 4)
+			row.add_child(le)
+			var ob := OptionButton.new()
+			_font(ob)
+			ob.add_item("加标签…" if FieldText.zh() else "Add tag…", 0)
+			var keys := known_tags()
+			for i in keys.size():
+				ob.add_item(tag_label(keys[i]), i + 1)
+				ob.set_item_tooltip(i + 1, keys[i])
+			ob.item_selected.connect(func(idx: int):
+				ob.select(0)
+				if idx <= 0:
+					return
+				var picked := keys[idx - 1]
+				var cur: Array = owner.get(key)
+				if cur.has(StringName(picked)):
+					return
+				var out := ContentSchema.empty_like(arr)
+				for v in cur:
+					out.append(v)
+				out.append(StringName(picked))
+				owner.set(key, out)
+				le.text = ", ".join(_strings(out))
+				_emit())
+			row.add_child(ob)
+			row.set_meta("tag_options", ob)
+			row.set_meta("tag_edit", le)
+			return _labeled(owner, key, row)
 		return _labeled(owner, key, le)
 
 	if builtin == TYPE_VECTOR2I:

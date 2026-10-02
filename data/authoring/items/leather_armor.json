@@ -13,11 +13,12 @@
     "gear",
     "armor",
     "barbarian",
-    "nature"
+    "nature",
+    "leather"
   ],
   "combat": {
     "base_stats": {
-      "max_shield": 15
+      "max_shield": 20
     }
   }
 }

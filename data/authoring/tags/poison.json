@@ -1,0 +1,11 @@
+{
+  "id": "poison",
+  "display_name": "毒",
+  "display_names": {
+    "en": "Poison"
+  },
+  "description": "带毒。",
+  "descriptions": {
+    "en": "Poisonous."
+  }
+}

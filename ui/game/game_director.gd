@@ -212,7 +212,7 @@ func demo_fill() -> void:
 		var sv := ErodeSpendVitality.new()
 		em.effects.append(sv)
 		ed.mechanics.append(em)
-		var erun := flow.begin(flow.chapters[0], flow.loadouts[0] if not flow.loadouts.is_empty() else null, 3, [] as Array[int], null, [], ed)
+		var erun := flow.begin(flow.chapters[0], flow.default_loadout(), 3, [] as Array[int], null, [], ed)
 		if erun == null:
 			return
 		flow.pick_spawn(erun.map.entry_ids[0])
@@ -231,7 +231,7 @@ func demo_fill() -> void:
 		hm.hunter_ids = [&"hunter_2"] as Array[StringName]
 		hm.spawn_min_distance = 2.0
 		hd.mechanics.append(hm)
-		var hrun := flow.begin(flow.chapters[0], flow.loadouts[0] if not flow.loadouts.is_empty() else null, 3, [] as Array[int], null, [], hd)
+		var hrun := flow.begin(flow.chapters[0], flow.default_loadout(), 3, [] as Array[int], null, [], hd)
 		if hrun == null:
 			return
 		flow.pick_spawn(hrun.map.entry_ids[0])
@@ -290,7 +290,7 @@ func demo_fill() -> void:
 			break
 	if found.is_empty():
 		return
-	var run := flow.begin(flow.chapters[0], flow.loadouts[0] if not flow.loadouts.is_empty() else null, int(found["seed"]))
+	var run := flow.begin(flow.chapters[0], flow.default_loadout(), int(found["seed"]))
 	if run == null:
 		return
 	flow.pick_spawn(int(found["entry"]))

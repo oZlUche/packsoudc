@@ -11,6 +11,10 @@
 ## 仓库的东西进不了暂存区（会丢）。
 ##
 ## 没有角色定义（老内容、测试）时退回老路：按第一套开局装备开。
+##
+## **预设装备**（096，作者定）：角色之下一栏「预设装备」—— 不带 / 强攻（伤害高）/ 坚守（防御高）……（`LoadoutDef.preset`，数据里加一份就多一套）。
+## 挑一套就把它的道具免费放进初始包：不从仓库拿、不算带入预算与件数上限、拖不进仓库 / 暂存区（只能在棋盘上挪），出发时带着走。
+## 预设是底线（094）：仓库空也有一套能打的
 extends GameScreen
 
 ## 暂存区容器的 id（局外的 100 / 101 之外）
@@ -19,6 +23,12 @@ const STASH_ID := 110
 var chapter_index: int = 0
 var character_index: int = 0
 var difficulty_index: int = 0
+## 096：挑的预设套在 [method GameFlow.presets] 里的下标；-1 = 不带
+var preset_index: int = -1
+## 096：棋盘上预设套的实例 uid → true（不算带入、不能拖去仓库）
+var _preset_uids: Dictionary = {}
+var _preset_btns: Array[Button] = []
+var _preset_box: VBoxContainer = null
 ## 085：地图规模（随机一局可选）；空 = 章节默认
 var scale_id: StringName = &""
 var _scale_btns: Dictionary = {}
@@ -85,6 +95,11 @@ func open(_payload: Dictionary) -> void:
 	left.add_child(_char_box)
 	if flow.characters.is_empty():
 		left.add_child(_label("没有角色定义：按第一套开局装备开（老路）", 12, UiPalette.DIM))
+	if not flow.presets().is_empty():
+		left.add_child(_label("预设装备", 15, UiPalette.DIM))
+		_preset_box = _vbox(6)
+		left.add_child(_preset_box)
+		_rebuild_presets()
 	var avail := flow.available_difficulties()
 	if not avail.is_empty():
 		left.add_child(_label("难度", 15, UiPalette.DIM))
@@ -189,6 +204,8 @@ func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 	if target == board and _pending.has(inst.uid):
 		var c := chapter()
 		return c == null or c.allow_carry_in
+	if _preset_uids.has(inst.uid) and target != board:
+		return false     # 096：预设套的东西只能在棋盘上挪，进不了仓库 / 暂存区
 	return true
 
 
@@ -260,6 +277,90 @@ func _rebuild_characters() -> void:
 		_char_box.add_child(b)
 
 
+## 096：预设套那一栏：「不带」+ 每套一个按钮（悬停看说明）
+func _rebuild_presets() -> void:
+	_preset_btns.clear()
+	if _preset_box == null:
+		return
+	for c in _preset_box.get_children():
+		_preset_box.remove_child(c)
+		c.queue_free()
+	var none := _button("不带预设", func(): choose_preset(-1))
+	none.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	none.tooltip_text = "只带角色的初始包，其余从仓库拖"
+	_preset_btns.append(none)
+	_preset_box.add_child(none)
+	var sets := flow.presets()
+	for i in sets.size():
+		var def := sets[i]
+		var idx := i
+		var b := _button(Names.of(def), func(): choose_preset(idx))
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.tooltip_text = Names.description_of(def)
+		_preset_btns.append(b)
+		_preset_box.add_child(b)
+	_color_presets()
+
+
+func _color_presets() -> void:
+	for k in _preset_btns.size():
+		_preset_btns[k].add_theme_color_override("font_color", UiPalette.FG if k == preset_index + 1 else UiPalette.DIM)
+
+
+## 096：挑一套预设（-1 = 不带）：棋盘上原来那套拿掉，新的免费放进初始包（放不下的在状态栏说）。从仓库带上的不动
+func choose_preset(i: int) -> void:
+	var sets := flow.presets()
+	preset_index = clampi(i, -1, sets.size() - 1)
+	_clear_preset()
+	_apply_preset()
+	_color_presets()
+	_refresh()
+
+
+func preset() -> LoadoutDef:
+	var sets := flow.presets()
+	return sets[preset_index] if preset_index >= 0 and preset_index < sets.size() else null
+
+
+func _clear_preset() -> void:
+	if board != null:
+		for uid in _preset_uids:
+			if board.get_item(int(uid)) != null:
+				board.remove(int(uid))
+	_preset_uids.clear()
+
+
+## 把预设套的道具放上棋盘（和拖进包里一样自动找位置）。放不下的记在状态栏
+func _apply_preset() -> void:
+	var def := preset()
+	if def == null or board == null:
+		return
+	var missed: Array[String] = []
+	for id in def.items:
+		var idef := flow.items.get_def(id)
+		if idef == null:
+			continue
+		var inst := ItemInstance.create(idef, 0)
+		inst.uid = flow.meta.allocate_uid()
+		if board.try_add(inst, true):
+			_preset_uids[inst.uid] = true
+		else:
+			missed.append(Names.of(idef))
+	if not missed.is_empty() and _status != null:
+		_status.text = "预设里放不下：%s（包太满；拿掉几件再选）" % "、".join(missed)
+
+
+## 096：棋盘上预设套的实例
+func preset_items() -> Array[ItemInstance]:
+	var out: Array[ItemInstance] = []
+	if board == null:
+		return out
+	for inst in board.items():
+		if _preset_uids.has((inst as ItemInstance).uid):
+			out.append(inst)
+	return out
+
+
 ## 换角色：带上的先放回仓库，按新角色的棋盘尺寸与初始包重摆
 func choose_character(i: int) -> void:
 	_return_carried()
@@ -321,8 +422,8 @@ func carry_out(uid: int) -> bool:
 	if board == null:
 		return false
 	var inst := board.get_item(uid)
-	if inst == null or not MetaState.keeps(inst.def):
-		return false
+	if inst == null or not MetaState.keeps(inst.def) or _preset_uids.has(uid):
+		return false     # 096：预设套的不进仓库
 	var ok := InventoryService.transfer_auto(board, uid, flow.meta.warehouse)
 	_refresh()
 	return ok
@@ -351,13 +452,13 @@ static func carry_text(c: ChapterDef, sid: StringName, value: int) -> String:
 	return "[color=#f0ad4e]带入预算 %d：已带 %d，超出 %d（这一章没有倒计时，只提示）[/color]" % [budget, value, over]
 
 
-## 现在带上的（非包）
+## 现在带上的（非包；096：预设套的不算 —— 它不占预算、不受件数上限）
 func carried() -> Array[ItemInstance]:
 	var out: Array[ItemInstance] = []
 	if board == null:
 		return out
 	for inst in board.items():
-		if MetaState.keeps((inst as ItemInstance).def):
+		if MetaState.keeps((inst as ItemInstance).def) and not _preset_uids.has((inst as ItemInstance).uid):
 			out.append(inst)
 	return out
 
@@ -396,7 +497,7 @@ func depart() -> bool:
 	if ch != null:
 		run = flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value())
 	else:
-		run = flow.begin(c, flow.loadouts[0] if not flow.loadouts.is_empty() else null, run_seed, [] as Array[int], null, [], difficulty(), scale_id)
+		run = flow.begin(c, flow.default_loadout(), run_seed, [] as Array[int], null, [], difficulty(), scale_id)
 	if run == null:
 		_status.text = "这一章生成不出图：%s" % (c.map_source.last_error if c.map_source != null else "没有地图来源")
 		return false
@@ -464,6 +565,7 @@ func _rebuild_board() -> void:
 	_board_view = null
 	_readout = null
 	board = null
+	_preset_uids.clear()
 	var ch := character()
 	if ch == null:
 		_board_host.add_child(_label("（老路：按第一套开局装备开，出发后在地图上按「背包」整理）", 12, UiPalette.DIM))
@@ -489,9 +591,19 @@ func _rebuild_board() -> void:
 	_readout.custom_minimum_size = Vector2(ch.board_size.x * InventoryView.CELL, 140)
 	_readout.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_board_host.add_child(_readout)
-	_board_host.add_child(_label("左键拖动　R 旋转　右键 / Esc 取消", 11, UiPalette.DIM))
+	_board_host.add_child(_label("左键拖动　R 旋转　右键 / Esc 取消　右键信物 = 奉为主信仰", 11, UiPalette.DIM))
 	_drag.register_view(_board_view)
+	_board_view.item_context.connect(func(_v: ContainerView, uid: int): reseat_anchor(uid))     # 099：开局屏的棋盘同一套
 	board.changed.connect(_refresh)
+	_apply_preset()     # 096：挑着的预设套跟着角色换过来
+
+
+## 099（作者定）：右键棋盘上的信物 = 奉它为主信仰（出发带走的就是这个顺序）。不是信物什么也不做
+func reseat_anchor(uid: int) -> bool:
+	var inst := board.get_item(uid) if board != null else null
+	if inst == null or inst.def == null or not inst.def.is_anchor():
+		return false
+	return board.reseat(uid)
 
 
 func _refresh() -> void:
@@ -513,6 +625,9 @@ func _refresh() -> void:
 			lines.append("　".join(caps))
 			if ch.skills_summary() != "":
 				lines.append("技能：" + ch.skills_summary())
+		var pre := preset()
+		if pre != null:
+			lines.append("预设「%s」：%s" % [Names.of(pre), Names.description_of(pre)])
 		var d := difficulty()
 		if d != null:
 			lines.append("难度「%s」：%s" % [d.display_name, d.summary()])
@@ -534,6 +649,8 @@ func _refresh() -> void:
 			_readout.append_text("　" + _item_line(inst.def) + "\n")
 		if taken.is_empty():
 			_readout.append_text("[color=#8b93a1]什么都还没带[/color]\n")
+		if not preset_items().is_empty():
+			_readout.append_text("[color=#8b93a1]预设套 %d 件（不算预算）[/color]\n" % preset_items().size())
 		_readout.append_text("\n带 %d 件，占 %d 格，值 %d 币　包里还有 %d 格" % [taken.size(), cells, value, board.free_cell_count()])
 		if c != null and RunState.carry_budget_for(c, scale_id) > 0:
 			_readout.append_text("\n" + carry_text(c, scale_id, value))

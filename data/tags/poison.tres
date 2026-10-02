@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_tseiu"]
+
+[resource]
+script = ExtResource("1_tseiu")
+id = &"poison"
+display_name = "毒"
+display_names = {
+"en": "Poison"
+}
+description = "带毒。"
+descriptions = {
+"en": "Poisonous."
+}

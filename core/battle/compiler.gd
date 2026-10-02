@@ -132,6 +132,7 @@ static func compile(
 		spec.add(item)
 
 	spec.max_hp = maxi(0, hp)
+	spec.board = board
 	return spec
 
 

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_84635"]
+
+[resource]
+script = ExtResource("1_84635")
+id = &"nature"
+display_name = "自然"
+display_names = {
+"en": "Nature"
+}
+description = "取自自然的东西：皮、木、草药。自然之神看重它。"
+descriptions = {
+"en": "Taken from nature: hide, wood, herbs. Favoured by the god of nature."
+}

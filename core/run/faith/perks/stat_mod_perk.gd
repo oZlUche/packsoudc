@@ -32,3 +32,8 @@ func describe() -> String:
 		return note
 	var where := "基线" if target == "baseline" else ("带「%s」的道具" % Glossary.tag_name(item_tag) if item_tag != &"" else "每件道具")
 	return "%s：%s" % [where, Glossary.mods_text(mods)]
+
+
+## 103：给基线或「每件道具」的是通用 buff，进栏；只给带某标签的道具的不进
+func battle_note(_run: RunState) -> String:
+	return describe() if target == "baseline" or item_tag == &"" else ""

@@ -1,0 +1,11 @@
+{
+  "id": "imperial",
+  "display_name": "帝国",
+  "display_names": {
+    "en": "Imperial"
+  },
+  "description": "帝国制式。",
+  "descriptions": {
+    "en": "Imperial issue."
+  }
+}

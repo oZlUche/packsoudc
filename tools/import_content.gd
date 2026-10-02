@@ -33,6 +33,9 @@ func run() -> void:
 			if res != null:
 				built[ContentPaths.asset_file(kind, id)] = res
 
+	report.source = "faiths"
+	ContentImporter.validate_faith_charms(ctx, report)     # 104：每位神一枚 1 格护符
+
 	if not report.warnings.is_empty():
 		print(report.to_text())
 	if not report.ok():
@@ -57,6 +60,10 @@ func _build(
 	kind: String, data: Dictionary, ctx: ContentImporter.Context, report: ImportReport
 ) -> Resource:
 	match kind:
+		"tags":
+			return ContentImporter.import_tag(data, ctx, report)
+		"damage_types":
+			return ContentImporter.import_damage_type(data, ctx, report)
 		"buffs":
 			return ContentImporter.import_buff(data, ctx, report)
 		"sets":

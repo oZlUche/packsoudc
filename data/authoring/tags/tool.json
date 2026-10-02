@@ -1,0 +1,11 @@
+{
+  "id": "tool",
+  "display_name": "工具",
+  "display_names": {
+    "en": "Tool"
+  },
+  "description": "工具。",
+  "descriptions": {
+    "en": "A tool."
+  }
+}

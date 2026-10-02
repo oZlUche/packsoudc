@@ -1,0 +1,11 @@
+{
+  "id": "barbarian",
+  "display_name": "蛮族",
+  "display_names": {
+    "en": "Barbarian"
+  },
+  "description": "蛮族的东西。",
+  "descriptions": {
+    "en": "Of the barbarian tribes."
+  }
+}

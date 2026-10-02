@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DamageTypeDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/damage/damage_type_def.gd" id="1_7tbnf"]
+
+[resource]
+script = ExtResource("1_7tbnf")
+id = &"physical"
+display_name = "物理"
+display_names = {
+"en": "Physical"
+}
+description = "常规伤害：吃护盾、吃防护、招致反应。"
+descriptions = {
+"en": "Ordinary damage: absorbed by shield, reduced by armor, provokes reactions."
+}

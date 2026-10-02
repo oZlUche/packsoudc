@@ -1,0 +1,11 @@
+{
+  "id": "ammo",
+  "display_name": "弹药",
+  "display_names": {
+    "en": "Ammo"
+  },
+  "description": "弹药。",
+  "descriptions": {
+    "en": "Ammunition."
+  }
+}

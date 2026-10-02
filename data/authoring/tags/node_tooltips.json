@@ -1,0 +1,11 @@
+{
+  "id": "node_tooltips",
+  "display_name": "节点情报",
+  "display_names": {
+    "en": "Node tooltips"
+  },
+  "description": "开启地图上点的浮窗。",
+  "descriptions": {
+    "en": "Enables tooltips on map nodes."
+  }
+}

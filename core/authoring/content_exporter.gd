@@ -74,6 +74,14 @@ static func export_faith(def: FaithDef) -> Dictionary:
 	return _dump(def)
 
 
+static func export_tag(def: TagDef) -> Dictionary:
+	return _dump(def)
+
+
+static func export_damage_type(def: DamageTypeDef) -> Dictionary:
+	return _dump(def)
+
+
 static func export_achievement(def: AchievementDef) -> Dictionary:
 	return _dump(def)
 

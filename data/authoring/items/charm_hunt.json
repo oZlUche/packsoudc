@@ -1,0 +1,18 @@
+{
+  "id": "charm_hunt",
+  "display_name": "狩猎之神的护符",
+  "display_names": {
+    "en": "Charm of the Hunt"
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "value": 200,
+  "tags": [
+    "treasure",
+    "faith",
+    "faith:hunt",
+    "faith_anchor"
+  ]
+}

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_ieuky"]
+
+[resource]
+script = ExtResource("1_ieuky")
+id = &"treasure"
+display_name = "珍宝"
+display_names = {
+"en": "Treasure"
+}
+description = "值钱、不参战的东西。"
+descriptions = {
+"en": "Valuable, does not fight."
+}

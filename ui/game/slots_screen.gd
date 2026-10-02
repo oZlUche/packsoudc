@@ -16,7 +16,10 @@ func open(payload: Dictionary) -> void:
 	col.custom_minimum_size.x = 860
 	center.add_child(col)
 	col.add_child(_label(UiText.t("slots.title"), 26, UiPalette.FG))
-	_hint = _label(UiText.t("slots.full") if bool(payload.get("full", false)) else "", 13, UiPalette.STAMINA)
+	# 098：读不出来的存档已备份 —— 这一句比「三位都满了」更要紧，优先写它
+	var notice := flow.backup_notice()
+	var hint_text := notice if notice != "" else (UiText.t("slots.full") if bool(payload.get("full", false)) else "")
+	_hint = _label(hint_text, 13, UiPalette.STAMINA)
 	col.add_child(_hint)
 	for n in range(1, SaveSlots.COUNT + 1):
 		col.add_child(_row(n))

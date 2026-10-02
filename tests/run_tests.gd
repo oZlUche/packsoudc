@@ -36,6 +36,8 @@ const SUITES: Array = [
 	preload("res://tests/test_sets.gd"),
 	preload("res://tests/test_effect_tree.gd"),
 	preload("res://tests/test_damage_pipeline.gd"),
+	preload("res://tests/test_overtime.gd"),
+	preload("res://tests/test_cooldown_mask.gd"),
 	preload("res://tests/test_content_pipeline.gd"),
 	preload("res://tests/test_content_editor.gd"),
 	preload("res://tests/test_item_contracts.gd"),
@@ -81,6 +83,10 @@ const SUITES: Array = [
 	preload("res://tests/test_sealed_items.gd"),
 	preload("res://tests/test_faith.gd"),
 	preload("res://tests/test_faith_power.gd"),
+	preload("res://tests/test_gods_104.gd"),
+	preload("res://tests/test_faith_reseat.gd"),
+	preload("res://tests/test_save_migration.gd"),
+	preload("res://tests/test_run_modules.gd"),
 	preload("res://tests/test_prologue.gd"),
 	preload("res://tests/test_node_screens.gd"),
 	preload("res://tests/test_text_and_tooltips.gd"),
@@ -94,6 +100,7 @@ const SUITES: Array = [
 	preload("res://tests/test_author_093.gd"),
 	preload("res://tests/test_author_094.gd"),
 	preload("res://tests/test_author_095.gd"),
+	preload("res://tests/test_author_096.gd"),
 ]
 
 

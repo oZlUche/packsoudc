@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_6cuh4"]
+
+[resource]
+script = ExtResource("1_6cuh4")
+id = &"barbarian"
+display_name = "蛮族"
+display_names = {
+"en": "Barbarian"
+}
+description = "蛮族的东西。"
+descriptions = {
+"en": "Of the barbarian tribes."
+}

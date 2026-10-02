@@ -20,14 +20,12 @@
           "type": "on_schedule"
         },
         "cadence": {
-          "type": "cooldown",
-          "seconds": 2.0
+          "type": "cooldown"
         },
         "effects": [
           {
             "type": "remove_status",
-            "buff_id": "poison",
-            "stacks": 1
+            "buff_id": "poison"
           }
         ]
       }

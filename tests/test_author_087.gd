@@ -574,7 +574,7 @@ static func run_faith_tooltip(t: TestCase) -> void:
 		return
 	var text := FaithTooltip.describe(skill, null, c.items)
 	t.check(text.contains("技巧之神") and text.contains("信力怎么涨") and text.contains(skill.deeds_summary()), "写了名字与信力怎么涨")
-	t.check(text.contains("阈值：3、8"), "写了阈值")
+	t.check(text.contains("阈值：25、80"), "写了阈值")
 	t.check(text.contains("技巧之神赐福的盾牌") and text.contains("第 1 阶"), "列了这个信仰的道具与各阶")
 	t.check(FaithTooltip.describe(null).contains("没有信仰"), "没激活时也有话说")
 

@@ -10,6 +10,9 @@ extends Cost
 
 
 func can_pay(ctx: RuleContext) -> bool:
+	var inst := ctx.owner.find_buff(buff_id)
+	if inst != null and inst.def.system:
+		return false     # 103：系统效果不可解除，也就不能拿来当消耗
 	return ctx.owner.stacks_of(buff_id) >= maxi(1, stacks)
 
 

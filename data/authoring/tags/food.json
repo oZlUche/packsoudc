@@ -1,0 +1,11 @@
+{
+  "id": "food",
+  "display_name": "食物",
+  "display_names": {
+    "en": "Food"
+  },
+  "description": "吃的。",
+  "descriptions": {
+    "en": "Something to eat."
+  }
+}

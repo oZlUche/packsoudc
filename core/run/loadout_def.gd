@@ -10,7 +10,14 @@ extends Resource
 
 @export var id: StringName = &""
 @export var display_name: String = ""
+## 别的语言的名字，`{"en": "Assault"}`；界面用 [method Names.of] 取
+@export var display_names: Dictionary = {}
 ## 给选装备的界面看的一句话：这一套的打法
 @export var description: String = ""
+## 别的语言的说明
+@export var descriptions: Dictionary = {}
+## 096（作者定）：开局屏可选的**预设套** —— 挑了角色后免费放到初始包里（不占带入预算、不从仓库拿、出发时带着走）。
+## 预设套不用带包（角色的初始包装它）；`false` 的是老路 / 仓库空的第一套用的整套装备
+@export var preset: bool = false
 ## 道具 id，可以重复（两个包就写两遍）
 @export var items: Array[StringName] = []

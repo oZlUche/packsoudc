@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_qsyru"]
+
+[resource]
+script = ExtResource("1_qsyru")
+id = &"heavy"
+display_name = "重型"
+display_names = {
+"en": "Heavy"
+}
+description = "笨重的大件。"
+descriptions = {
+"en": "Bulky, heavy equipment."
+}

@@ -3,7 +3,7 @@ class_name CombatantSpec
 extends RefCounted
 
 var max_hp: int = 0                  ## 定点
-## 093：信仰级效果留的旗子（draw_is_win……），编译之后由 FaithPerk 写；结算内核只读
+## 093：信仰级效果留的旗子（undying_sec……），编译之后由 FaithPerk 写；结算内核只读
 var flags: Dictionary = {}
 
 ## 角色自带的基础属性（生命上限、耐力上限…），不属于任何道具。
@@ -14,6 +14,12 @@ var items: Array[CompiledItem] = []
 
 ## 套装带来的规则。不属于任何物品，来源 uid 为 0，取属性时退回单位级。
 var set_rules: Array[AbilityRule] = []
+
+## 103 第 6 条：编译期并进来的外来加成（信仰阶、套装档位、局外 buff、技能被动），给 buff 栏画「常驻」格用；结算内核不读
+var passives: Array[PassiveNote] = []
+
+## 103 第 7 条：编译它的那张棋盘（回放画双方棋盘、盖冷却遮罩用；uid 就是日志里的 uid）。结算内核不读
+var board: GridInventory = null
 
 var _by_uid: Dictionary = {}
 

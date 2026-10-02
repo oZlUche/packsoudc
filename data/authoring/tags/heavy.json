@@ -1,0 +1,11 @@
+{
+  "id": "heavy",
+  "display_name": "重型",
+  "display_names": {
+    "en": "Heavy"
+  },
+  "description": "笨重的大件。",
+  "descriptions": {
+    "en": "Bulky, heavy equipment."
+  }
+}

@@ -11,6 +11,12 @@ extends Resource
 
 @export var id: StringName = &""
 @export var display_name: String = ""
+## 096：别的语言的名字，`{"en": "Fire"}`；界面用 [method Names.of] 取
+@export var display_names: Dictionary = {}
+## 096：一句说明（悬浮窗词条）。空 = 不写
+@export_multiline var description: String = ""
+## 096：别的语言的说明
+@export var descriptions: Dictionary = {}
 
 ## 能否被护盾吸收。中毒之类的绕过护盾直接见血。
 @export var shield_absorbable: bool = true

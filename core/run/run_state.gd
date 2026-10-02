@@ -11,13 +11,11 @@ class_name RunState
 extends RefCounted
 
 ## 存档从第一天就写版本号（7.2）
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 ## 作战棋盘的尺寸（3.2：棋盘 + 包体）。占位，等角色系统
 const BOARD_SIZE := Vector2i(8, 6)
 const BOARD_ID := 1
 const STORAGE_ID := 2
-## 092：保险箱容器的 id
-const SAFE_ID := 3
 ## 092：新加 class_name 的脚本用 preload 引用，作者拉了没重新 --import 也能跑
 const SafePlacerScript := preload("res://core/run/safe_placer.gd")
 
@@ -61,13 +59,10 @@ var board: GridInventory = null
 ## 暂存区：一个列表，保留但不参战（3.4）
 var storage: ItemStash = null
 ## 092（作者定）：保险箱 —— 放进去的道具视为已带出，战败也带得出；大小按局外规则（初始 3×3）
-var safe: GridInventory = null
 ## 092：倒计时归零 / 撤离点关闭这类只发一次的提醒，地图屏听
 signal countdown_notice(text: String)
 ## 092（作者定）：保险箱关上了 —— 里面的送回基地、不能再改；[param count] 是几件
-signal safe_closed(count: int)
-var safe_locked: bool = false
-## 093：神坛 —— 这一次在哪个点上开着（-1 = 没有；走开就关）、哪些点上已经用过特殊操作（和常规献祭共享这一次机会）
+## 093：神坛 —— 这一次在哪个点上开着（-1 = 没有；走开就关）、哪些点上已经用过神坛（献祭和特殊操作二选一）
 var altar_node: int = -1
 ## 094（作者定）：从仓库带进来的道具总价值（预算 / 超带换倒计时看它）
 var carry_in_value: int = 0
@@ -99,6 +94,17 @@ var difficulty_id: StringName = &""
 var difficulty: DifficultyDef = null
 ## 机制在一局上留的记号（`mechanic_tags[&"erosion"] = true`……），机制装的时候写，别处只读
 var mechanic_tags: Dictionary = {}
+## 101 第 0 刀：这一局装了哪些模块（id → [RunModule]）。**本类不认识任何具体模块** —— 加一种玩法不用改这里。
+## 取一个用 [method module]（各模块通常还给一个带类型的 `of(run)`）
+var modules: Dictionary = {}
+## 开局时外面给模块的运行时输入（**不进存档**）：id → 字典。模块在 install 里读自己那份（[method module_input]）。
+## 来源是局外规则、角色、开局屏（比如保险箱多大来自 [member MetaRules.safe_size]）；本类不解释里面的内容
+var module_inputs: Dictionary = {}
+## 读档拿到的各模块状态，等 install 时分发给它们
+var modules_saved: Dictionary = {}
+## 101：要离开当前这个点了（走一步 / 被事件挪走，**在真正动之前**发）。模块订阅它做「走开就……」的事 ——
+## 保险箱关上、留在这个点的东西留下。参数是正要离开的点
+signal leaving(node_id: int)
 ## 猎手（069 / 071）：难度清单里的猎手机制装进来的系统；null = 这一局没有猎手。定义表由持有方给，存档里的状态读档时先放这儿等机制装
 var hunters: HunterSystem = null
 var hunter_defs: Dictionary = {}
@@ -115,6 +121,11 @@ var skills: RunSkills = null
 var skills_saved: Dictionary = {}
 ## 信力（082）：每个信仰一个池子，只有激活的信仰收点；行为与阈值在信仰文件里
 var faith_power: FaithPower = null
+## 104：对过账的道具实例（uid → true）：一件道具头一回出现在棋盘 / 暂存区 / 保险箱里发一次 `item_acquired`。只增不减，跟着存档
+var owned_uids: Dictionary = {}
+## 104：这一局获得过 / 置入过棋盘的道具种类（定义 id → true），给载荷的 first_in_run。跟着存档
+var acquired_ids: Dictionary = {}
+var placed_ids: Dictionary = {}
 var hunters_saved: Dictionary = {}
 ## 侵蚀场的存档状态，读档时先放这儿等机制装（075）
 var erosion_saved: Dictionary = {}
@@ -160,7 +171,7 @@ static func start(
 	p_sets: SetDatabase = null, kit: Array[StringName] = [] as Array[StringName],
 	p_buff_defs: Dictionary = {}, p_meta_buffs: Array[StringName] = [] as Array[StringName],
 	p_character: CharacterDef = null, p_layout: Array = [], p_difficulty: DifficultyDef = null, p_hunter_defs: Dictionary = {},
-	p_scale: StringName = &"", p_safe_size: Vector2i = Vector2i(3, 3), p_carry_value: int = 0
+	p_scale: StringName = &"", p_module_inputs: Dictionary = {}, p_carry_value: int = 0
 ) -> RunState:
 	if p_chapter == null or p_chapter.map_source == null:
 		return null
@@ -171,6 +182,7 @@ static func start(
 	s.enemies = p_enemies
 	s.sets = p_sets
 	s.map_scale = p_scale
+	s.module_inputs = p_module_inputs.duplicate(true)
 	s.carry_in_value = maxi(0, p_carry_value)
 	s._resolve_rules()
 	s.map = p_chapter.map_source.resolve(p_seed, p_scale)
@@ -210,14 +222,14 @@ static func start(
 	s.wallet = Wallet.new((s.economy.starting_balance if s.economy != null else 0) + ctx.starting_funds_bonus)
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
 	s.storage = ItemStash.new(STORAGE_ID, 0)
-	s.safe = GridInventory.new(p_safe_size, SAFE_ID, false)
 	s._bind_tracker()
 	s._place_layout(p_layout)
 	s._give_kit(full_kit)
 	s.travel = MapTravel.new(s.map, ActionClock.new())
 	s.travel.vitality = s.vitality
 	s._wire_events()
-	s.install_mechanics()     # 机制要接的东西（旅程、节点事件）都造好了才装
+	s.install_modules()     # 模块要接的东西（旅程、节点事件）都造好了才装
+	s._seed_owned()     # 104：带进来的不算「获得」
 	s.phase = Phase.PICK_SPAWN
 	# 084：章节说了「默认已经站在出生点上」（序章只有一个出生点，没什么可挑的）就直接站上去
 	if p_chapter.auto_spawn and not s.map.entry_ids.is_empty():
@@ -241,10 +253,11 @@ func step_to(id: int) -> bool:
 		return false
 	if not travel.available_moves().has(id):
 		return travel.step_to(id)     # 让旅程自己拒绝、发 refused；走不成就不该清东西
+	reconcile_owned()     # 104：暂存区留下之前对账，这个点上拿到的都算获得
 	close_sessions()
 	_drop_pending_loot()
 	_drop_storage_if_leaving()
-	lock_safe()     # 092：走开 = 关上保险箱（里面有东西才算关）
+	leaving.emit(travel.current_id)     # 101：走开了 —— 模块自己接（保险箱关上）
 	_close_altar()
 	var was_visited := map.has_node(id) and map.get_node(id).is_visited()
 	var ok := travel.step_to(id)
@@ -266,10 +279,11 @@ func step_to(id: int) -> bool:
 func relocate(intent: MoveIntent) -> bool:
 	if phase != Phase.ON_MAP or intent == null:
 		return false
+	reconcile_owned()
 	close_sessions()
 	_drop_pending_loot()
 	_drop_storage_if_leaving()
-	lock_safe()
+	leaving.emit(travel.current_id)     # 101：同上，事件把人挪走也算走开
 	_close_altar()
 	var ok := travel.apply(intent)
 	if ok:
@@ -491,24 +505,6 @@ func extract_closed(node: MapNode) -> bool:
 	return has_countdown() and at >= 0 and countdown_left() <= at
 
 
-## 092（作者定）：关上保险箱 —— 里面的送回基地（结算时照样进局外），**不能再改动**；空着关不算关（还能再开）。返回这次锁没锁
-func lock_safe() -> bool:
-	if safe_locked or safe == null or safe.item_count() == 0:
-		return false
-	safe_locked = true
-	if map != null and travel != null:
-		for id in map.node_ids():
-			if map.get_node(id).type == &"safe":
-				travel.mark_visited(id)     # 锁了就灰：再踩上不开
-	safe_closed.emit(safe.item_count())
-	return true
-
-
-## 保险箱还能开（没锁）
-func safe_open() -> bool:
-	return safe != null and not safe_locked
-
-
 ## 走完一步看一眼：归零就是行动失败 —— 会话关掉、没拿的战利品丢掉、战败结算（保险箱里的照样带出）
 func _check_countdown() -> void:
 	if phase != Phase.ON_MAP or not has_countdown():
@@ -554,14 +550,54 @@ func buff_context() -> RunContext:
 	return ctx
 
 
-## 把难度清单里的机制接进一局（开局与读档各一次；机制必须幂等）。没有难度 = 什么都不装
-func install_mechanics() -> void:
-	if difficulty == null:
-		return
-	for m in difficulty.mechanics:
-		var mech := m as RunMechanic
-		if mech != null:
-			mech.install(self)
+## 101 第 0 刀：把这一局的模块接进来（开局与读档各一次；模块必须幂等）。三层叠加：
+## 章节列的本体功能（没列就是 [method RunModules.standard]）+ 难度列的机制（069）+ 跑起来之后临时加的。
+## 本类不认识任何具体模块，顺序就是清单顺序
+func install_modules() -> void:
+	var body: Array = chapter.modules if chapter != null and not chapter.modules.is_empty() else RunModules.standard()
+	for m in body:
+		install_module(m as RunModule)
+	if difficulty != null:
+		for m in difficulty.mechanics:
+			install_module(m as RunModule)
+
+
+## 装一个模块：有存档就先交给它，再让它自己接进这一局。重复 id 不覆盖（幂等，读档会再调一遍）。返回装没装
+func install_module(m: RunModule) -> bool:
+	if m == null:
+		return false
+	var mid := m.id()
+	if mid != &"":
+		if modules.has(mid):
+			modules[mid].install(self)     # 已经装过：再 install 一次（幂等），不换对象
+			return false
+		var saved: Variant = modules_saved.get(String(mid), null)
+		if saved is Dictionary:
+			m.restore(saved as Dictionary)
+		modules[mid] = m
+	m.install(self)
+	return true
+
+
+## 这一局装着的某个模块（没装返回 null）
+func module(mid: StringName) -> RunModule:
+	return modules.get(mid, null)
+
+
+## 外面给某个模块的运行时输入（没有就是空字典）
+func module_input(mid: StringName) -> Dictionary:
+	var d: Variant = module_inputs.get(mid, null)
+	return d as Dictionary if d is Dictionary else {}
+
+
+## 装着的模块各说一句（开局屏的规则卡）
+func module_lines() -> Array[String]:
+	var out: Array[String] = []
+	for mid in modules:
+		var line := (modules[mid] as RunModule).describe()
+		if line != "":
+			out.append(line)
+	return out
 
 
 ## 给一个地图 buff（事件的后果）。不认识的 id、局外的 buff 给不了；已经有的刷新时限
@@ -632,14 +668,15 @@ func compile_player() -> CombatantSpec:
 	var spec := BattleCompiler.compile(board, effective_baseline(), mods, rules, faith_power.tiers() if faith_power != null else {}, faith_power.points_by_tag() if faith_power != null else {})
 	for p in faith_perks():     # 093：信仰级效果在编译好的单位上做手脚（顺序 = 文件里的顺序）
 		(p as FaithPerk).modify_spec(spec, board, self)
+	spec.passives = BattlePassives.of(self)     # 103：常驻加成也进 buff 栏
 	return spec
 
 
-## 093：一场战斗的账（喂给信力的行为）：{won, dealt: {类型: 量}, taken: {类型: 量}, healed, fired_total, fired_items: [{tags, cells, count}]}。
+## 093：一场战斗的账（喂给信力的行为）：{won, node_type, dealt: {类型: 量}, taken: {类型: 量}, healed, fired_total, fired_items: [{id, tags, cells, count}]}。
 ## 量是浮点（定点换回来）。dealt = 敌方受的伤（不管谁打的，反射也算）；taken = 我方受的；healed = 我方战斗内回的血；
 ## fired = 我方道具**真的出手**的次数（因耐力 / 资源不足跳过的那次不发 ITEM_FIRED，自然不算）
-static func battle_summary(result: BattleResult, won: bool, p_board: GridInventory) -> Dictionary:
-	var out := {"won": won, "dealt": {}, "taken": {}, "healed": 0.0, "fired_total": 0, "fired_items": []}
+static func battle_summary(result: BattleResult, won: bool, p_board: GridInventory, node_type: StringName = &"") -> Dictionary:
+	var out := {"won": won, "node_type": String(node_type), "dealt": {}, "taken": {}, "healed": 0.0, "fired_total": 0, "fired_items": []}
 	if result == null:
 		return out
 	var fired := {}
@@ -669,7 +706,8 @@ static func battle_summary(result: BattleResult, won: bool, p_board: GridInvento
 		if inst != null and inst.def != null:
 			for t in inst.def.tags:
 				tags.append(String(t))
-		(out["fired_items"] as Array).append({"tags": tags, "cells": ItemVolume.cells_of(inst.def) if inst != null else 0, "count": int(fired[uid])})
+		(out["fired_items"] as Array).append({"id": String(inst.def.id) if inst != null and inst.def != null else "", "tags": tags,
+			"cells": ItemVolume.cells_of(inst.def) if inst != null else 0, "count": int(fired[uid])})
 	return out
 
 
@@ -723,7 +761,7 @@ func _bless_step() -> void:
 				altar_changed.emit("%s的目光落在「%s」上：它成了「%s」" % [Names.of(def), was, Names.of(v)])
 
 
-## 神坛可用：站在开着神坛的点上、这一次还没用过特殊操作、有激活的信仰
+## 神坛可用：站在开着神坛的点上、这一次还没用过（献祭和特殊操作二选一）、有激活的信仰
 func altar_open() -> bool:
 	return altar_node >= 0 and travel != null and travel.current_id == altar_node and not altar_used.has(altar_node) and active_faith() != null
 
@@ -756,6 +794,7 @@ func offer(insts: Array, node: MapNode = null) -> Dictionary:
 		if line != "":
 			(out["log"] as Array[String]).append(line)
 	altar_changed.emit("、".join(out["log"]))
+	_use_altar()     # 反馈：献祭和特殊操作只能做一个 —— 献了就关
 	return out
 
 
@@ -775,12 +814,21 @@ func altar_special(perk: FaithPerk, node: MapNode, option: StringName = &"") -> 
 	var line := perk.altar_apply(self, node, option)
 	if line == "":
 		return ""
-	altar_used[altar_node] = true
+	_use_altar()
 	altar_changed.emit(line)
 	return line
 
 
-## 走开就关神坛（下次回来这个点也不再有：休息点用过了）
+## 这个神坛这一次机会用掉了（休息那一份不受影响：休息点两份都用完才变灰，见 NodeEvents.settle_rest）
+func _use_altar() -> void:
+	if altar_node < 0:
+		return
+	altar_used[altar_node] = true
+	if events != null and map != null and map.has_node(altar_node):
+		events.use_altar(map.get_node(altar_node))
+
+
+## 走开就关神坛（没用过的话回到这个休息点还能再开）
 func _close_altar() -> void:
 	altar_node = -1
 #endregion
@@ -799,7 +847,7 @@ func effective_baseline() -> CombatantBaseline:
 		b.base_stats[k] = float(b.base_stats.get(k, 0.0)) + float(ctx.stat_bonus[key])
 	for key in faith_stat_bonus:     # 093：神坛特殊操作改的基线（倍率类属性从 1.0 起）
 		var k2 := StringName(String(key))
-		b.base_stats[k2] = float(b.base_stats.get(k2, 1.0 if BattleStats.DEFAULT_BASE.has(k2) else 0.0)) + float(faith_stat_bonus[key])
+		b.base_stats[k2] = float(b.base_stats.get(k2, BattleStats.default_value(k2))) + float(faith_stat_bonus[key])
 	return b
 
 
@@ -1141,7 +1189,6 @@ func _wire_events() -> void:
 	events.bracket_of = func() -> int: return hunters.bracket() if hunters != null else -1
 	events.relocate = relocate
 	events.request_extract = try_extract     # 085：撤离点的对话里选「撤离」
-	events.safe_open = safe_open     # 092：锁上的保险箱不再开
 	events.faith_tier = active_faith_tier     # 093：事件条件 faith_active
 	events.active_faith_id = active_faith_id
 	events.bless_substitute = bless_ids     # 095：战利品 / 搜索的赐福替代
@@ -1185,14 +1232,18 @@ func _wire_events() -> void:
 func _wire_faith_power() -> void:
 	board.placed.connect(func(inst: ItemInstance):
 		if inst != null and inst.def != null:
-			faith_power.credit(&"place_item", {"value": ItemValue.of(inst.def), "id": String(inst.def.id)}))
+			var first := not placed_ids.has(String(inst.def.id))
+			placed_ids[String(inst.def.id)] = true
+			faith_power.credit(&"place_item", {"value": ItemValue.of(inst.def), "id": String(inst.def.id), "tags": _tag_strings(inst.def),
+				"rarity": inst.def.rarity, "first_in_run": first}))
 	wallet.changed.connect(func(_b: int, delta: int, _r: StringName):
 		if delta > 0:
 			faith_power.credit(&"earn_money", {"amount": delta})
 		elif delta < 0:
 			faith_power.credit(&"spend_money", {"amount": -delta}))
 	# 093：打完一场把这一场的账汇总喂进去（造成 / 受到的伤害按类型、回血、每件出手几次）
-	events.battle_finished.connect(func(_n: MapNode, r: BattleResult, won: bool): faith_power.credit(&"battle", battle_summary(r, won, board)))
+	events.battle_finished.connect(func(n: MapNode, r: BattleResult, won: bool):
+		faith_power.credit(&"battle", battle_summary(r, won, board, NodeEvents.effective_type(n) if n != null else &"")))
 	travel.moved.connect(func(i: MoveIntent, first: bool):
 		var n := map.get_node(i.to_id) if map != null and map.has_node(i.to_id) else null
 		faith_power.credit(&"travel", {"steps": travel.clock.total, "first_visit": first, "node_type": String(n.type) if n != null else ""})
@@ -1212,6 +1263,52 @@ func _wire_faith_power() -> void:
 		for t in option.tags:
 			tags.append(String(t))
 		faith_power.credit(&"event_choice", {"tags": tags}))
+
+
+## 104：道具获得的对账 —— 棋盘 + 暂存区 + 保险箱里没对过账的实例各发一次 `item_acquired`（不逐个容器接信号，一处对账）。
+## 离开一个点（走一步 / 被挪走）时调；测试也可以直接调。返回这次新对上的件数
+func reconcile_owned() -> int:
+	var fresh := 0
+	for inst in _owned_now():
+		var item := inst as ItemInstance
+		if item == null or item.def == null or owned_uids.has(item.uid):
+			continue
+		owned_uids[item.uid] = true
+		fresh += 1
+		var first := not acquired_ids.has(String(item.def.id))
+		acquired_ids[String(item.def.id)] = true
+		if faith_power != null:
+			faith_power.credit(&"item_acquired", {"id": String(item.def.id), "tags": _tag_strings(item.def),
+				"cells": ItemVolume.cells_of(item.def), "rarity": item.def.rarity, "first_in_run": first})
+	return fresh
+
+
+## 开局（或读一份没有这笔账的老存档）：身上已有的全记成对过账，不给点
+func _seed_owned() -> void:
+	for inst in _owned_now():
+		var item := inst as ItemInstance
+		if item != null and item.def != null:
+			owned_uids[item.uid] = true
+			acquired_ids[String(item.def.id)] = true
+
+
+func _owned_now() -> Array:
+	var out: Array = []
+	if board != null:
+		out.append_array(board.items())
+	if storage != null:
+		out.append_array(storage.items())
+	var safe := SafeModule.of(self)
+	if safe != null and safe.inventory != null:
+		out.append_array(safe.inventory.items())
+	return out
+
+
+static func _tag_strings(def: ItemDef) -> Array:
+	var out: Array = []
+	for t in def.tags:
+		out.append(String(t))
+	return out
 
 
 func _set_phase(p: int, reason: StringName) -> void:
@@ -1242,8 +1339,6 @@ func to_dict() -> Dictionary:
 		"wallet": wallet.to_dict(),
 		"board": board.to_dict(),
 		"storage": storage.to_dict(),
-		"safe": safe.to_dict() if safe != null else null,
-		"safe_locked": safe_locked,
 		"faith_rituals": faith_rituals.duplicate(),
 		"carry_in_value": carry_in_value,
 		"faith_stat_bonus": faith_stat_bonus.duplicate(),
@@ -1254,11 +1349,23 @@ func to_dict() -> Dictionary:
 			"pending_battle": events.pending_battle.duplicate(true)},
 		"skills": skills.to_dict(),
 		"faith_power": faith_power.to_dict(),
+		"faith_history": faith_power.history_to_array(),     # 104
+		"owned_uids": owned_uids.keys(),
+		"acquired_ids": acquired_ids.keys(),
+		"placed_ids": placed_ids.keys(),
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
 		"boss_cleared": boss_cleared,
 		"tally": tally.duplicate(),
 		"buffs": {"meta": _meta_buff_ids(), "map": map_buffs.duplicate(true)},
+		"modules": _modules_to_dict(),     # 101：每个模块自己的状态；加模块 = 新键、带默认值，不升版
 	}
+
+
+func _modules_to_dict() -> Dictionary:
+	var out := {}
+	for mid in modules:
+		out[String(mid)] = (modules[mid] as RunModule).to_dict()
+	return out
 
 
 func _node_storages_to_dict() -> Dictionary:
@@ -1303,9 +1410,8 @@ static func from_dict(
 	s.wallet = Wallet.from_dict(d.get("wallet", {}))
 	s.board = GridInventory.from_dict(d.get("board", {}), p_items)
 	s.storage = ItemStash.from_dict(d.get("storage", {}), p_items)
-	var safe_raw = d.get("safe", null)
-	s.safe = GridInventory.from_dict(safe_raw, p_items) if safe_raw is Dictionary else GridInventory.new(Vector2i(3, 3), SAFE_ID, false)
-	s.safe_locked = bool(d.get("safe_locked", false))
+	var mods_raw: Variant = d.get("modules", {})
+	s.modules_saved = (mods_raw as Dictionary).duplicate(true) if mods_raw is Dictionary else {}
 	s.faith_rituals = (d.get("faith_rituals", {}) as Dictionary).duplicate() if d.get("faith_rituals", {}) is Dictionary else {}
 	s.carry_in_value = int(d.get("carry_in_value", 0))
 	s.faith_stat_bonus = (d.get("faith_stat_bonus", {}) as Dictionary).duplicate() if d.get("faith_stat_bonus", {}) is Dictionary else {}
@@ -1355,5 +1461,19 @@ static func from_dict(
 	s.phase = int(d.get("phase", Phase.PICK_SPAWN))
 	s.end_reason = StringName(String(d.get("end_reason", "")))
 	s.boss_cleared = bool(d.get("boss_cleared", false))
+	# 101：模块（本体那一层）现在就装上，读回来的一局立刻能用；难度机制要等持有方按 id 找回难度，
+	# 它会再调一次 install_modules（模块幂等）
+	s.install_modules()
+	# 104：获得 / 置入的账；老存档没有就把现在身上的记成对过账（不补点）
+	s.faith_power.restore_history(d.get("faith_history", []))
+	for k in d.get("acquired_ids", []):
+		s.acquired_ids[String(k)] = true
+	for k in d.get("placed_ids", []):
+		s.placed_ids[String(k)] = true
+	if d.has("owned_uids"):
+		for k in d.get("owned_uids", []):
+			s.owned_uids[int(k)] = true
+	else:
+		s._seed_owned()
 	return s
 #endregion

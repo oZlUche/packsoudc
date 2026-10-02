@@ -10,6 +10,29 @@ extends RefCounted
 ## 稀有度的名字，下标即稀有度；颜色见 [ItemPainter.RARITY_COLORS]（白 / 绿 / 蓝 / 紫 / 金 / 红）
 const RARITY_NAMES := ["普通", "优良", "稀有", "史诗", "传说", "神话"]
 
+## 096（作者定）：信仰状态的探针 —— 局里由 [GameFlow] 接上，返回 `{"active": 激活的信仰 id, "tier": 阶, "points": 信力}`；
+## 没接（基地、沙盒、测试）返回空字典。信仰加成的词条按它上色：**生效的白、没生效的灰**；没有探针一律按原色写
+static var faith_probe: Callable = Callable()
+const DIM_HEX := "8b93a1"
+
+
+## 现在的信仰状态；没探针 / 不在局里是空
+static func faith_status() -> Dictionary:
+	if not faith_probe.is_valid():
+		return {}
+	var v: Variant = faith_probe.call()
+	return v if v is Dictionary else {}
+
+
+## 096：这一条信仰加成现在生效没有：这件的神正激活着，且按 mode 算出至少一份
+static func bonus_lit(def: ItemDef, b: FaithBonus, status: Dictionary) -> bool:
+	if status.is_empty() or def == null or b == null:
+		return false
+	var active := StringName(String(status.get("active", "")))
+	if active == &"" or def.faith_tag() != FaithDef.TAG_PREFIX + String(active):
+		return false
+	return b.times_for(int(status.get("tier", 0)), int(status.get("points", 0))) > 0
+
 
 ## [param board] 给了且道具在上面就按棋盘编译；否则单独编。只要主文字；词条见 [method describe_full]
 static func describe(inst: ItemInstance, board: GridInventory = null) -> String:
@@ -29,10 +52,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	if def.description != "":
 		lines.append("[color=#8b93a1]%s[/color]" % def.description)
 	if not def.tags.is_empty():
-		var tags: Array[String] = []
-		for t in def.tags:
-			tags.append(String(t))
-		lines.append("[color=#8b93a1]标签：%s[/color]" % "、".join(tags))
+		lines.append("[color=#8b93a1]标签：%s[/color]" % "、".join(_names(def.tags)))     # 096：标签按当前语言显示名字
 	if def.is_bag:
 		var size := def.shape.size_rotated(0) if def.shape != null else Vector2i.ZERO
 		lines.append("包：%d×%d，放进去的东西才参战" % [size.x, size.y] + ("；只收 %s" % "、".join(_names(def.bag_accept_tags)) if not def.bag_accept_tags.is_empty() else ""))
@@ -73,6 +93,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		if not adj.receive_cells.is_empty():
 			lines.append("[color=#%s]受益槽 ×%d[/color]：每点亮一格%s，自己 %s" % [UiPalette.RECEIVE.to_html(false), adj.receive_cells.size(),
 				("（%s）" % "、".join(_names(adj.receive_filter))) if not adj.receive_filter.is_empty() else "", _mods(adj.receive_mods)])
+	var status := faith_status() if def.has_faith() else {}
 	for fb in def.faith_bonuses:
 		var b := fb as FaithBonus
 		if b != null:
@@ -82,14 +103,28 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			for r in b.rules:
 				if r is AbilityRule:
 					bits.append(Glossary.rule_text(r))
-			lines.append("信力第 %d 阶：%s%s" % [b.tier, "；".join(bits) if not bits.is_empty() else "", ("　" + b.note) if b.note != "" else ""])
+			var line := "信力%s：%s%s" % [b.gate_text(), "；".join(bits) if not bits.is_empty() else "", ("　" + b.note) if b.note != "" else ""]
+			# 096（作者定）：局里按状态上色 —— 生效的白、没生效（没激活 / 阶不够 / 别的神）的灰；局外原色
+			if not status.is_empty():
+				line = "[color=#%s]%s[/color]" % [UiPalette.FG.to_html(false) if bonus_lit(def, b, status) else DIM_HEX, line]
+			lines.append(line)
 	if def.has_faith():
-		lines.append("[color=#8b93a1]信仰道具：别的信仰激活时休眠%s[/color]" % ("（保留通用效果）" if FaithState.keeps_combat_when_dormant(def) else "（彻底失效）"))
+		var state := ""
+		if not status.is_empty():
+			var active := StringName(String(status.get("active", "")))
+			var mine := def.faith_tag() == FaithDef.TAG_PREFIX + String(active) and active != &""
+			state = "　—— 现在已激活（Lv.%d）" % int(status.get("tier", 0)) if mine else ("　—— 现在休眠" if active != &"" else "　—— 还没激活（要信物）")
+		lines.append("[color=#8b93a1]信仰道具：别的信仰激活时休眠%s%s[/color]" % [("（保留通用效果）" if FaithState.keeps_combat_when_dormant(def) else "（彻底失效）"), state])
+	if def.is_anchor():
+		# 099（作者定）：切信仰不进菜单 —— 右键一下，或者在棋盘里把它重新落下
+		var now := StringName(String(status.get("active", "")))
+		var mine := now != &"" and def.faith_tag() == FaithDef.TAG_PREFIX + String(now)
+		lines.append("[color=#8b93a1]信物：%s[/color]" % ("当前信仰" if mine else "右键：奉为主信仰"))
 	if def.set_id != &"":
 		lines.append("[color=#8b93a1]套装：%s[/color]" % String(def.set_id))
 	var text := "\n".join(lines)
 	# 词条：这件道具会施加的 buff（名字 → 按定义生成的说明）+ 固定词条
-	var extra := {}
+	var extra := Glossary.tag_terms(def.tags)     # 096：登记了说明的标签也是词条
 	for id in Glossary.buffs_in_item(def):
 		var bd: BuffDef = Glossary.buffs_in_item(def)[id]
 		if Names.of(bd) != "":
@@ -143,10 +178,11 @@ static func _mods(mods: Array) -> String:
 	return Glossary.mods_text(mods) if not mods.is_empty() else "无"
 
 
+## 096：标签给人看（数据里的名字，按当前语言）
 static func _names(tags: Array) -> Array[String]:
 	var out: Array[String] = []
 	for t in tags:
-		out.append(String(t))
+		out.append(Glossary.tag_name(t))
 	return out
 
 

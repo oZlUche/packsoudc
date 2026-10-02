@@ -13,6 +13,7 @@ const TRIGGERS := {
 	&"on_resource_changed": "res://core/battle/triggers/on_resource_changed.gd",
 	# 状态条件型：条件在相关事件发生的那一刻求值
 	&"on_stacks_at_least": "res://core/battle/triggers/on_stacks_at_least.gd",
+	&"on_axis_at_least": "res://core/battle/triggers/on_axis_at_least.gd",
 	&"on_resource_below": "res://core/battle/triggers/on_resource_below.gd",
 	&"on_damage": "res://core/battle/triggers/on_damage.gd",
 	&"on_before_damage": "res://core/battle/triggers/on_before_damage.gd",
@@ -39,6 +40,8 @@ const COMBAT_EFFECTS := {
 	&"change_resource": "res://core/battle/effects/change_resource.gd",
 	&"apply_status": "res://core/battle/effects/apply_status.gd",
 	&"remove_status": "res://core/battle/effects/remove_status.gd",
+	# 标准轴（4.3，103）：单位级带符号层数
+	&"shift_axis": "res://core/battle/effects/shift_axis.gd",
 	# 只在受伤前阶段有效，见 DamageResolver
 	&"modify_damage": "res://core/battle/effects/modify_damage.gd",
 	&"low_hp_empower": "res://core/battle/effects/low_hp_empower.gd",
@@ -94,6 +97,10 @@ const FAITH_DEEDS := {
 	&"heal": "res://core/run/faith/deeds/heal_deed.gd",
 	&"item_triggered": "res://core/run/faith/deeds/item_triggered_deed.gd",
 	&"enter_node": "res://core/run/faith/deeds/enter_node_deed.gd",
+	# 104（作者表）：技巧 / 狩猎的行为
+	&"item_acquired": "res://core/run/faith/deeds/item_acquired_deed.gd",
+	&"distinct_items_fired": "res://core/run/faith/deeds/distinct_items_fired_deed.gd",
+	&"first_place": "res://core/run/faith/deeds/first_place_deed.gd",
 }
 
 ## 093：信仰级的效果（写在信仰上、按阶生效）
@@ -111,7 +118,7 @@ const FAITH_PERKS := {
 	&"smite": "res://core/run/faith/perks/smite_perk.gd",
 	&"extra_drop_by_node": "res://core/run/faith/perks/extra_drop_by_node_perk.gd",
 	&"gift_on_enter": "res://core/run/faith/perks/gift_on_enter_perk.gd",
-	&"draw_is_win": "res://core/run/faith/perks/draw_is_win_perk.gd",
+	&"overtime_regen": "res://core/run/faith/perks/overtime_regen_perk.gd",
 	&"undying": "res://core/run/faith/perks/undying_perk.gd",
 	&"altar_bless": "res://core/run/faith/perks/altar_bless_perk.gd",
 }
@@ -129,6 +136,7 @@ const EVENT_CONDITIONS := {
 	&"node_type_is": "res://core/run/events/conditions/node_type_is.gd",
 	&"has_flag": "res://core/run/events/conditions/has_flag.gd",
 	&"faith_active": "res://core/run/events/conditions/faith_active.gd",
+	&"rest_part_unused": "res://core/run/events/conditions/rest_part_unused.gd",
 }
 
 const EVENT_OUTCOMES := {
@@ -159,9 +167,11 @@ const EVENT_OUTCOMES := {
 }
 
 ## 一局的机制（069）：难度清单里开的那些
-const RUN_MECHANICS := {
+## 101 第 0 刀：一局的模块 —— 本体功能与难度机制同一张表（[RunModule]；[RunMechanic] 是它的子类）
+const RUN_MODULES := {
 	&"erosion": "res://core/run/mechanics/erosion_mechanic.gd",
 	&"hunters": "res://core/run/mechanics/hunter_mechanic.gd",
+	&"safe": "res://core/run/modules/safe_module.gd",
 }
 
 ## 猎手（069 / 071）：行动逻辑与战败后果
@@ -199,7 +209,8 @@ const TABLES := {
 	&"run_effect": RUN_EFFECTS,
 	&"event_condition": EVENT_CONDITIONS,
 	&"event_outcome": EVENT_OUTCOMES,
-	&"run_mechanic": RUN_MECHANICS,
+	&"run_module": RUN_MODULES,
+	&"run_mechanic": RUN_MODULES,     # 101：旧键名的别名（DifficultyDef.mechanics 还叫机制）
 	&"hunter_behavior": HUNTER_BEHAVIORS,
 	&"hunter_loss": HUNTER_LOSSES,
 	&"erosion_effect": EROSION_EFFECTS,

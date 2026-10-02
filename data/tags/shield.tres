@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_5ymcw"]
+
+[resource]
+script = ExtResource("1_5ymcw")
+id = &"shield"
+display_name = "盾"
+display_names = {
+"en": "Shield"
+}
+description = "盾牌。"
+descriptions = {
+"en": "A shield."
+}

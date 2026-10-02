@@ -1,0 +1,11 @@
+{
+  "id": "fire",
+  "display_name": "火焰",
+  "display_names": {
+    "en": "Fire"
+  },
+  "description": "火焰伤害。目前与物理同性质，元素线的起点。",
+  "descriptions": {
+    "en": "Fire damage. Behaves like physical for now; the start of the elemental line."
+  }
+}

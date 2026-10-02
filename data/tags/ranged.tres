@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_85fpb"]
+
+[resource]
+script = ExtResource("1_85fpb")
+id = &"ranged"
+display_name = "远程"
+display_names = {
+"en": "Ranged"
+}
+description = "弓一类的远程武器。"
+descriptions = {
+"en": "A bow or other ranged weapon."
+}

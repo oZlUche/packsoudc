@@ -60,19 +60,26 @@ amount = 2
 [sub_resource type="Resource" id="Resource_shyoi"]
 script = ExtResource("8_87kt2")
 tags = Array[StringName]([&"metal"])
+multiplier = 5.0
+note = "金属（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_5bfhi"]
 script = ExtResource("8_87kt2")
 tags = Array[StringName]([&"fire"])
+multiplier = 5.0
+note = "火焰（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_vaeam"]
 script = ExtResource("8_87kt2")
 tags = Array[StringName]([&"gem"])
+multiplier = 5.0
+note = "宝石（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_65qkw"]
 script = ExtResource("8_87kt2")
 exact_grade = 2
-note = "体积正好为中（稀有度 × 2）"
+multiplier = 5.0
+note = "体积正好为中（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_kclds"]
 script = ExtResource("10_fcqfh")
@@ -103,7 +110,7 @@ display_names = {
 "en": "The Sun God"
 }
 god = "日神（太阳、火、周期性重复）"
-description = "西方蛮族的信仰（原太阳与火之神）。信力：火焰伤害、道具成功循环。献祭：金属、火焰、宝石、体积正好为中的道具。"
+description = "恒常（周期循环）被人类推向太阳、又夺了火；帝国诸神之一，日神一族地位崇高"
 thresholds = Array[int]([50, 150, 300, 1000])
 deeds = Array[ExtResource("5_d5eql")]([SubResource("Resource_fmsvn"), SubResource("Resource_72xeb")])
 offerings = Array[ExtResource("8_87kt2")]([SubResource("Resource_shyoi"), SubResource("Resource_5bfhi"), SubResource("Resource_vaeam"), SubResource("Resource_65qkw")])

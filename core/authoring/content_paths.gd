@@ -8,6 +8,8 @@ extends RefCounted
 
 #region 作者数据（人写的 JSON，进 git，MOD 作者改这里）
 const AUTHORING := "res://data/authoring"
+const AUTHORING_TAGS := AUTHORING + "/tags"
+const AUTHORING_DAMAGE_TYPES := AUTHORING + "/damage_types"
 const AUTHORING_ITEMS := AUTHORING + "/items"
 const AUTHORING_LOADOUTS := AUTHORING + "/loadouts"
 const AUTHORING_CHARACTERS := AUTHORING + "/characters"
@@ -30,6 +32,8 @@ const AUTHORING_ACHIEVEMENTS := AUTHORING + "/achievements"
 #endregion
 
 #region 引擎资产（导入器产出，游戏读这里）
+const TAGS := "res://data/tags"
+const DAMAGE_TYPES := "res://data/damage_types"
 const ITEMS := "res://data/items"
 const LOADOUTS := "res://data/loadouts"
 const CHARACTERS := "res://data/characters"
@@ -52,9 +56,12 @@ const ACHIEVEMENTS := "res://data/achievements"
 #endregion
 
 ## 种类 → [作者数据目录, 资产目录]。顺序即导入顺序：后者可以按 id 引用前者。
+##
+## 100（作者定）：**`buffs` / `sets` 不在这里**，在 [constant EDITOR_ONLY_KINDS] 里 —— 独立的 buff / 套装文件一份都还没有
+## （buff 现在都写在道具里），两边都是空目录，登记在这里只是让批量导入与一致性检查（[ContentCheck]）多跑两种空的。
 const KINDS := {
-	"buffs": [AUTHORING_BUFFS, BUFFS],
-	"sets": [AUTHORING_SETS, SETS],
+	"tags": [AUTHORING_TAGS, TAGS],
+	"damage_types": [AUTHORING_DAMAGE_TYPES, DAMAGE_TYPES],
 	"run_buffs": [AUTHORING_RUN_BUFFS, RUN_BUFFS],
 	"faiths": [AUTHORING_FAITHS, FAITHS],
 	"recipes": [AUTHORING_RECIPES, RECIPES],
@@ -75,12 +82,33 @@ const KINDS := {
 }
 ## 开局装备、角色（初始包对着道具查）与敌人都在道具之后（清单、招牌道具、流派标签要对着道具查），池在敌人之后，三种规则独立，
 ## 章节按 id 引用池与规则；成就（091）排最后（对象可能是道具 / 章节）
-const ORDER := ["buffs", "sets", "run_buffs", "faiths", "items", "recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters", "achievements"]
+## 096：标签与伤害类型最先（道具的标签对着它提醒；没有它们也能导）
+const ORDER := ["tags", "damage_types", "run_buffs", "faiths", "items", "recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters", "achievements"]
+
+
+## 100（作者定）：有目录、但独立内容一份都还没有的种类 —— **不进 [constant KINDS]**（批量导入与一致性检查都不跑它们），
+## 只有各自的编辑器在用（buff 制作器、套装编辑器自己写 JSON + `.tres`）。
+## 真有了第一份独立内容，把这一行搬回 `KINDS` 并在 `ORDER` 里排在 `items` 之前，那份内容就自动进管线与检查
+const EDITOR_ONLY_KINDS := {
+	"buffs": [AUTHORING_BUFFS, BUFFS],
+	"sets": [AUTHORING_SETS, SETS],
+}
+
+
+## 这一种的两个目录（作者数据、资产）。不认识的种类返回空数组并报错 —— 路径还是只在这一处算
+static func dirs_of(kind: String) -> Array:
+	var pair: Variant = KINDS.get(kind, EDITOR_ONLY_KINDS.get(kind, null))
+	if pair == null:
+		push_error("ContentPaths: 不认识的内容种类 '%s'" % kind)
+		return []
+	return pair as Array
 
 
 static func authoring_file(kind: String, id: String) -> String:
-	return "%s/%s.json" % [KINDS[kind][0], id]
+	var dirs := dirs_of(kind)
+	return "%s/%s.json" % [dirs[0], id] if not dirs.is_empty() else ""
 
 
 static func asset_file(kind: String, id: String) -> String:
-	return "%s/%s.tres" % [KINDS[kind][1], id]
+	var dirs := dirs_of(kind)
+	return "%s/%s.tres" % [dirs[1], id] if not dirs.is_empty() else ""

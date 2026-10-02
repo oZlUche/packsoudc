@@ -4,19 +4,50 @@
   "display_names": {
     "en": "God of the Hunt"
   },
-  "god": "狩猎之神",
-  "description": "赐福的长弓：箭矢自带追踪，对兽类效果更佳。信力：探索与猎物（进账）。",
+  "god": "狩猎之神（比较、差异、拆解）",
+  "description": "不被帝国祭祀，但在民间被猎人信奉",
   "thresholds": [
-    3,
-    8
+    25,
+    80
   ],
   "deeds": [
     {
-      "type": "explore"
+      "type": "battle",
+      "by_type": {
+        "battle": 5,
+        "elite": 20,
+        "core": 50
+      }
     },
     {
-      "type": "earn_money",
-      "per_amount": 15
+      "type": "first_place",
+      "tag": "trophy",
+      "rarity_pow": true,
+      "plus": 1
+    }
+  ],
+  "offerings": [
+    {
+      "tags": [
+        "flesh",
+        "bone"
+      ],
+      "multiplier": 5.0,
+      "note": "血肉/骨头（2^稀有度 × 5）"
+    },
+    {
+      "tags": [
+        "trophy"
+      ],
+      "multiplier": 10.0,
+      "note": "战利品（2^稀有度 × 10）"
+    },
+    {
+      "tags": [
+        "leather"
+      ],
+      "multiplier": 5.0,
+      "note": "皮革（2^稀有度 × 5）"
     }
   ]
 }

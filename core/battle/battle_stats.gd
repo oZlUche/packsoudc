@@ -58,6 +58,12 @@ const REGEN_HP := &"regen_hp"
 const STAMINA_COST := &"stamina_cost"
 const MANA_COST := &"mana_cost"
 
+## 104（作者定）：暴击。暴击率是概率（0.10 = 10%），暴击伤害是倍率（1.5 = 150%）。
+## **所有加成一律加算**：这两条只接受固定值（flat），导入器拦乘区（[method additive_only]）。
+## 判定在 [DealDamage]：只对从属性取伤害的那一包掷，固定值伤害（灼烧这类）不暴击
+const CRIT_CHANCE := &"crit_chance"
+const CRIT_DAMAGE := &"crit_damage"
+
 
 ## 属性的默认基础值。
 ##
@@ -67,14 +73,33 @@ const MANA_COST := &"mana_cost"
 ##
 ## 这条很要命：若默认 0，任何给 haste 加百分比的 buff 都会算出 0 × (1+x) = 0，
 ## 冷却随之被放大上万倍。新增倍率类属性时记得登记在这里。
+##
+## 104：这张表是**真的默认值**（不只是「单位元 1.0」）：暴击率 10%、暴击伤害 150%。
+## 表里的属性不跨物品累加（见 [CombatantRuntime]），没写的物品取到的就是这里的值
 const DEFAULT_BASE := {
-	HASTE: 1,  # 占位，实际值由 default_base() 换算成定点
+	HASTE: 1.0,
+	CRIT_CHANCE: 0.10,
+	CRIT_DAMAGE: 1.5,
 }
+
+## 104：只接受固定值加成的属性（作者定「所有加成都是加算」）
+const ADDITIVE_ONLY: Array[StringName] = [CRIT_CHANCE, CRIT_DAMAGE]
+## 104：给人看时按百分数显示的属性（0.05 → 5%）
+const PERCENT_DISPLAY: Array[StringName] = [CRIT_CHANCE, CRIT_DAMAGE]
 
 
 ## 该属性在未被显式设置时的基础值（定点）
 static func default_base(key: StringName) -> int:
-	return StatMath.ONE if DEFAULT_BASE.has(key) else 0
+	return StatMath.from_float(float(DEFAULT_BASE[key])) if DEFAULT_BASE.has(key) else 0
+
+
+## 默认值（浮点，给作者数据与界面用）
+static func default_value(key: StringName) -> float:
+	return float(DEFAULT_BASE.get(key, 0.0))
+
+
+static func additive_only(key: StringName) -> bool:
+	return ADDITIVE_ONLY.has(key)
 
 
 ## max_xxx -> xxx；不是上限属性则返回空
