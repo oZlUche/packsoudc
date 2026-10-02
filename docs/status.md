@@ -49,7 +49,7 @@
 | `ui/inventory`（084 新增） | 悬浮窗控件与道具说明；087：主文字 + 侧边词条小窗 | `HoverTip`、`ItemTooltip` |
 | `ui`（其余） | 两个沙盒、四个编辑器 + 启动选择器（开发期入口）；buff 制作器（085）界面文字走 `UiText` | `launcher`、`inventory_sandbox`、`battle_sandbox`、`content_editor`、`event_editor`、`map_editor`、`buff_editor` |
 | `tools` | 命令行：导入 / 导出 / 归一化内容、脚本检查、批量统计、样例生成、截图、校准（木桩、猎手胜率表） | `import_content`、`normalize_content`、`check_scripts`、`map_stats`、`build_dummies`、`bench_hunters` |
-| `tests` | 83 个套件，`tools/test.sh` 一键跑 | `run_tests` |
+| `tests` | 85 个套件，`tools/test.sh` 一键跑 | `run_tests` |
 
 ## 数据与内容管线
 
@@ -71,9 +71,13 @@
 
 ## 测试
 
-83 个套件、12814 项断言，机器空闲时 60～180 秒（开着别的 Godot 编辑器会到 4 分钟，超时放到 480 秒）。
+85 个套件、12935 项断言，机器空闲时 60～180 秒（开着别的 Godot 编辑器会到 4 分钟，超时放到 480 秒）。
 套件按层分目录：`tests/inventory` / `battle` / `map` / `run` / `meta` / `ui` / `authoring`，跑器自动发现（102）。
 `tests/test_layering.gd` 按源码守依赖方向（101 第 5 刀）：`core/` 里不许出现 `ui/` 的类名，`core/battle` / `inventory` / `sets` 里不许出现 `core/run` 的 —— 这类错编译不红。
+
+`tests/battle/test_compile_golden.gd` 存着四位主神最高阶的**编译金样**（`tests/fixtures/compile_golden/*.json`：
+`max_hp`、`undying_sec`、每件道具的 base / flat / 各乘区与规则表）。动编译器或信仰效果之后它会逐件逐字段比；
+有意改数值时用 `RECORD_GOLDEN=1 bash tools/test.sh 金样` 重录（录完照样报红，免得开关留在 CI 里）。
 期望从数据推，不写死；统计类断言用千次抽样留容差；沙盒有帧测试。
 
 ## 占位数值清单（作者定数时改这些文件）

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.19 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.20 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -75,6 +75,7 @@ UI 调用服务方法（`InventoryService.move(...)`），服务改完状态后�
 | 编译器与套装经 `FaithState`（`core/run`）看休眠 | `FaithState` 与标签词汇 `FaithTags` 搬进 `core/inventory` —— 这条规则只看容器与标签，本来就不认识具体的神 |
 | `CombatantSpec.flags["undying_sec"]` 字符串键 | 带类型的字段 `CombatantSpec.undying_sec`（结算规则留在内核，但拼错键名不会再默默失效） |
 | 一张 `EffectRegistry` 里装着一局的全部构件 | 按层拆三张：`EffectRegistry`（战斗）、`LootRegistry`（战利品）、`RunRegistry`（一局）；内容管线要的全表由 `core/authoring/content_registries.gd` 合起来 |
+| 信仰的 8 条 perk 拿着编译好的 `CombatantSpec` 再改一遍（101 第 5 刀停下的那条） | `FaithPerk.compile_into(input)`：perk 只往 `CompileInput`（`core/battle`）里放东西，编译器自己并（105，见 4.2）。`CompileInput` / `ScopedMod` 都在 `core/battle`，不认识 `core/run` |
 
 ### 1.4 随机数分流
 
@@ -510,13 +511,33 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 
 ```gdscript
 # core/battle/compiler.gd
-static func compile(board: GridInventory) -> CombatantSpec:
-    # 1. 只遍历棋盘容器（暂存区的物品不参战，见 3.4）
-    # 2. 包体效果：按 bag_of(uid) 聚合，把各包的效果施加给其内容物
-    # 3. 邻接标记点亮：数每件物品的增益/受益格被几个【不同的】物品占住（见下）
-    # 4. 按 4.3 的数值约定结算，得到每项属性的终值
-    # 5. 产出 abilities: [{cooldown_ticks, trigger, effect, snapshot_stats}]
+static func compile(board: GridInventory, input: CompileInput) -> CombatantSpec:
+    # 1  只遍历棋盘容器（暂存区的物品不参战，见 3.4）
+    # 2  各物品写入基础值（base 只在这里写，和第 7 步的 base_scale）
+    # 3  包体效果：按 bag_of(uid) 聚合，把各包的效果施加给其内容物
+    # 4  整单位的修饰：input.mods → 每一件参战道具（套装、一局 buff）
+    # 4b 信力按阶解锁的功能（082）
+    # 5  邻接标记点亮：数每件物品的增益/受益格被几个【不同的】物品占住（见下）
+    # 6  打包 CompiledItem（先不算 max_hp）
+    # 7  按件：input.scoped 逐条筛一批件，加修饰 / 缩放基础值 / 挂规则
+    # 8  整单位：input.baseline_mods → 基线；input.rules → 单位级规则；轴初值；结算旗子
+    # 9  max_hp = 基线生命 + Σ 每件生命（最后算，所以改基线的不用再手工补账）
 ```
+
+**战斗单位只有这一个来源（105）。** 一场战斗的全部外来加成 —— 套装、一局 buff、信力、
+信仰级效果、标准轴的开战层数、结算旗子 —— 都装进一个 `CompileInput` 再交给 `compile`。
+在 105 之前，信仰的 8 条效果是编译完再拿着 `CombatantSpec` 改一遍，于是同一个单位有两个来源，
+预估（拖动时重编译）与真打也就有了两套路径。现在 `core/run` 只负责翻译成 `CompileInput`，谁都不碰编译结果。
+
+**按件的活交给 `ScopedMod`**（`core/battle/scoped_mod.gd`）：筛标签 / 只要有规则的 / 按种子挑几件，
+然后给命中件加修饰、按因子缩放基础值（食物翻倍）、挂规则（规则里的「有道具出手」编译时绑成只听自己）。
+四条按件的信仰效果（附魔、食物翻倍、按标签的属性修饰、献祭换急速）都是它的一个实例。
+随机挑选的种子由调用方算好填进 `CompileInput.seed`（`hash(run_seed, "compile", 步数)`），
+所以 `compile` **仍是纯函数** —— 同样的棋盘 + 同样的入参永远同样的结果，拖动预估挑的和真打挑的是同一批。
+
+> **为什么搬家不改数值。** 乘区与 flat 可交换（`StatValue` 同乘区相加、乘区间按枚举顺序连乘、flat 最后加），
+> 所以第 7 步放在第 5 步之后还是之前，`total()` 一样；`base` 只有第 2 步写、第 7 步缩放，别处不碰；
+> 规则是 append 到同一条尾巴上，次序不变。落地时录了四份金样（`tests/fixtures/compile_golden/`）逐件逐字段对过。
 
 #### 邻接标记：增益与受益
 
@@ -687,6 +708,7 @@ GDScript 里这个好处根本不存在，代价却是设计师写的每个十�
 | `regen_stamina` | `regen_stamina`（每秒） | 固定值 | 1 | 回气 / 疲乏 |
 | `crit_chance`（104） | `crit_chance`（单位与每件道具） | 固定值 | 0.01（1%） | 锐目 / 失准 |
 | `crit_damage`（104） | `crit_damage`（单位与每件道具） | 固定值 | 0.05（5%） | 致命 / 钝击 |
+| `fire_damage`（105） | 造成的火焰伤害（4.6 第 1 步，防御之前乘攻方的因子） | 百分比 | 3% | 炽烈 / 熄火 |
 
 **暴击**（104，作者定）：`crit_chance` 默认 0.10、`crit_damage` 默认 1.5（`BattleStats.DEFAULT_BASE`，不跨道具累加），**所有加成一律加算**（只收 `flat`，导入器拦乘区）。
 `DealDamage` 造包时对「从属性取伤害」的那一包掷一次（战斗 RNG，定点万分比；0 与 1 两头不消耗随机数），命中则 `raw × crit_damage`、`DamagePacket.crit = true`——
@@ -699,7 +721,11 @@ GDScript 里这个好处根本不存在，代价却是设计师写的每个十�
 - **层数永续、无上限（除非轴表写了上下限）**，这是 4.5「可叠层即永续」在单位级的同一条规矩；战斗结束清空。
 - **系统层单独记**：每条轴记 `stacks`（内容施加的）与 `system_stacks`（加时 / 衰竭这类系统规则施加的），结算相加，**净化 / 驱散只动 `stacks`**。这就是「不可解除」的实现，不需要 `BuffDef.system` 旗。
 - **buff 栏显示轴，不显示来源**：层数 ≠ 0 的轴画一格，正用正名、负用负名，`×|层数|`；系统层另画一格「鏖战 ×n」说明来源。`BuffDef` 仍然存在，留给带规则的复合 buff（灼烧每秒掉血、标记降护甲、攒层爆发）；**能用轴表达的简单增减一律走轴**，导入器对「只有一条作用于标准轴属性的 mod、没有规则」的 `BuffDef` 告警，提示改成轴。
-- 内容怎么写：效果 `shift_axis(axis, delta, target)`（新的 `CombatEffect`，和 `apply_status` 并列），`delta` 带符号；扳机 `on_axis_at_least(axis, n)` 与 `on_stacks_at_least` 同构。编译期修饰（包体、邻接、套装、信仰阶梯）**不走轴**，它们仍是 4.3 乘区里的 `StatModifier`：轴是战斗中会变的东西。
+- 内容怎么写：效果 `shift_axis(axis, delta, target)`（新的 `CombatEffect`，和 `apply_status` 并列），`delta` 带符号；扳机 `on_axis_at_least(axis, n)` 与 `on_stacks_at_least` 同构。
+- **编译期的属性修饰不走轴，编译期的单位级增益走轴**（105 改了 103 原来那句「编译期修饰不走轴」）：包体、邻接、套装、信力阶梯作用于某件 / 某几件道具，它们仍是乘区里的 `StatModifier`；
+  作用于**角色本身**的常驻加成（祈祷攒的火焰加成，将来的局内 / 局外 / 套装 / 技能）填 `CompileInput.axes`，由编译器写进 `CombatantSpec.axes`，运行时种进**系统层**（`[0, stacks]`）——
+  它们是这一场的常驻加成，对手的净化不该把它洗掉。分界和 buff 栏的准则是同一条：作用于某件 / 某几件 → 乘区；作用于角色本身 → 轴。
+  系统层不发 `AXIS_SHIFTED`，所以来源写在 buff 栏的常驻格里（`BattlePassives`）。
 - 新加一条轴 = 轴表加一行（id、作用属性、模式、步长、两个名字），结算、面板、词条、导入器校验全部自动跟上；**不改公式代码**。
 
 #### 实现
@@ -3492,6 +3518,10 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 查法三家共用 `RegistryLookup`；**内容管线要的是三张合起来**，由 `ContentRegistries`（`core/authoring`）合并，
 种类名（`trigger` / `run_module` / `faith_perk`……）全局唯一，撞键会在合并时报错。导入器、导出器、校验、编辑器只认 `ContentRegistries`。
 
+`ScopedMod`（105，见 4.2）暂时**不在注册表里**：现在只有信仰 perk 程序化地造它，内容里还没有写它的字段。
+等第一个要在内容里写「这局所有武器 +10%」的用例出现（`RunBuffDef` / 套装档位加一个 `scoped` 字段），
+再在 `EffectRegistry` 登记种类 `scoped_mod` —— 反射管线自动就认得，不用改导入器。
+
 于是**新增一种效果 = 加一个脚本 + 注册表登记一行**，整条工具链自动认得：
 命令行导入器接受它、导出器倒得出来、编辑器的下拉框自动多一项。
 `ContentSchema` 是这层反射的唯一出口。
@@ -3792,6 +3822,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.20 | 2026-10-02 | **战斗单位只有一个来源**（报告 105；改 4.2 / 4.3、1.3.1 多一行）：`compile(board, input)` 只吃一个 `CompileInput`（装齐套装、一局 buff、信力、信仰效果、轴初值、结算旗子、随机种子），信仰 perk 的钩子从 `modify_spec(spec)` 换成 `compile_into(input)` —— 谁都不再碰编译结果，预估与真打同一条路径；按件的活归新构件 `ScopedMod`（筛标签 / 只要有规则的 / 按种子挑几件 → 加修饰、缩放基础值、挂只听自己的规则）；步序六步变九步，生命上限最后算（改基线的不用再补账）。火焰伤害加成变成标准轴 `fire_damage`（每层 +3%，祈祷攒的层数按斐波那契，种在系统层、净化洗不掉，伤害管线在防御之前乘攻方因子 —— 灼烧等所有火焰来源一起吃到），存档 v2 → v3。验收是改码前录的四份编译金样逐件逐字段相等。顺带：`core/ids.gd`（`Array[StringName].sort()` 比的是指针而非文本，敌人配装的候选池因此会随无关改动换顺序）|
 | v2.19 | 2026-10-02 | **依赖方向**（报告 101 第 5 刀；新增 1.3.1、改 10.4）：`core/` 不再出现 `ui/` 的类名 —— 悬浮窗的信仰探针改成 `GameFlow.run_changed(state)` + `faith_status()`（`GameDirector` 接），样式码的颜色表搬到 `UiPalette.STYLE_COLORS`（文本层只产出 `[color=@hp]`，画之前 `resolve_styles` 换），点的名字搬进 `core/text/node_text.gd`（`MapNodeStyle` 只留长相），`GameSettings.bg_theme` 只存字符串、认不认得由 `UiPalette.apply` 兜底；`FaithState` 与标签词汇 `FaithTags` 搬进 `core/inventory`（编译器与套装不再认识 `core/run`）；`CombatantSpec.flags` 换成带类型的 `undying_sec`；注册表拆成 `EffectRegistry` / `LootRegistry` / `RunRegistry` 三张，全表由 `ContentRegistries` 合（查法共用 `RegistryLookup`）；新套件 `tests/test_layering.gd` 按源码守这两条方向（含自检与白名单）。**没做的两条**：perk 回编译期（会改战斗层的数值时序，另出方案）、赐福派生进 `ContentLibrary`（等 100 第 4 步）|
 | v2.18 | 2026-10-01 | **053 三 + 二落地**：高危区在骨架与换乘之后才长（`RingMapGenerator._lay_zones`），只从 `RouteStyle.spawns_zones` 的路线岔（搜索风格 false）；偏搜索路线停在撤离环间内侧那环（`_exit_ring`），沿环朝空间大的那边走弧（`_lay_exit_arc`），尽头 = 与相邻路线共用的撤离点，之后的换乘区记在路线 `exit_ids`、第一个点放商店（`RingTypeAssigner._place_exit_shops`）；它的横走步数只撒在走得到的环上；校验 `extract_band` 删「核心前一环例外」、加 `extract_min_count`（2）。回头环路不做 |
 | v2.17 | 2026-10-01 | **UI 里的逻辑搬回 core**（报告 101 第 6 刀；改 8 节、11 的树）：商店屏「拖走了就结账、结不成放回架上」的回滚搬进 `ShopSession.pay_or_return(格, uid, 容器)`（界面只把 false 说成一句话）；导演里 200 行截图演示代码搬进 `tools/demo_fill.gd`（`class_name DemoFill`，导演只在 `DEMO_SCREEN` 非空时 `load` 它，正式游戏一行都不跑），`game_director.gd` 390 → 196 行；导演直接写 `run.phase` / `end_reason` 改成 `RunState.force_extract()`（标明只给演示与测试用）；新用例 `test_economy.run_shop_rollback` 守回滚规则（原来只有界面里有、没测试） |
