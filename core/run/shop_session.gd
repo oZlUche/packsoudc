@@ -103,6 +103,27 @@ func pay_for(i: int) -> bool:
 	return true
 
 
+## 101 第 6 刀（原来在商店屏里）：**拖走了就结账，结不成就放回架上**。
+## [param i] 是被拖走的那一格，[param uid] 是那件东西，[param from] 是现在可能拿着它的容器（棋盘、暂存区）。
+## 钱不够 / 卖掉了 / 店关了都算结不成：这里把东西从玩家那边拿回来、原样放回第 i 格，返回 false。
+## 界面只负责把 false 说成一句话 —— 回滚是一局的规则，不是画面的事
+func pay_or_return(i: int, uid: int, from: Array) -> bool:
+	if pay_for(i):
+		return true
+	if i < 0 or i >= shelves.size() or shelves[i] == null:
+		return false
+	for c in from:
+		var container := c as ItemContainer
+		if container == null or not container.has_item(uid):
+			continue
+		var inst := container.get_item(uid)
+		container.remove(uid)
+		if inst != null:
+			shelves[i].place(inst, Vector2i.ZERO, 0)
+		break
+	return false
+
+
 ## 087：卖一件（它此刻在 [member sell_box] 里、或由调用方拿着）：拿走它、进账定价的一半。店关了返回 0
 func sell(inst: ItemInstance) -> int:
 	if not active or inst == null or inst.def == null or wallet == null:

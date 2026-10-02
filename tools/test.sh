@@ -3,10 +3,15 @@
 # 否则测试会以 'Identifier "X" not declared' 失败。这里每次都做，省得记。
 #
 #   GODOT=/path/to/godot_console.exe ./tools/test.sh
+#
+# 102：带一个词就只跑那些套件（路径或用例标题里含它）：
+#
+#   bash tools/test.sh safe
 set -u
+PATTERN="${1:-}"
 # GODOT 没设就先在 PATH 里找（Linux / CI / 容器），都找不到才用作者机器上的 Windows 路径
 if [ -z "${GODOT:-}" ]; then
-  for candidate in godot godot4; do
+  for candidate in godot godot4 Godot; do
     if command -v "$candidate" >/dev/null 2>&1; then
       GODOT="$(command -v "$candidate")"
       break
@@ -26,7 +31,12 @@ fi
 # 于是 ui/ 里的解析错误只能靠「跑起来才发现」。现在留下来一起检查。
 IMPORTLOG="${TMPDIR:-/tmp}/godot_import.log"
 "$GODOT" --headless --path "$ROOT" --import >"$IMPORTLOG" 2>&1
-timeout 480 "$GODOT" --headless --path "$ROOT" --script res://tests/run_tests.gd >"$LOG" 2>&1
+# timeout 不是到处都有（macOS 默认没有）：有就包上，没有就直接跑
+TIMEOUT=""
+if command -v timeout >/dev/null 2>&1; then
+  TIMEOUT="timeout 480"
+fi
+$TIMEOUT "$GODOT" --headless --path "$ROOT" --script res://tests/run_tests.gd -- "$PATTERN" >"$LOG" 2>&1
 code=$?
 
 # 过滤引擎与插件的噪声，只留测试输出和脚本错误
@@ -41,6 +51,7 @@ if grep -q 'SCRIPT ERROR' "$LOG"; then
   code=1
 fi
 
+# 只跑了一部分套件时，后面那两步全项目检查照常跑（它们和过滤无关、也快）
 # 单元测试只加载 run_tests 够得着的脚本；ui/ 与 tools/ 下的东西改接口时最容易漏。
 # 这一步把全项目的 .gd 都 load 一遍，一次 Godot 启动搞定。
 CHECKLOG="${TMPDIR:-/tmp}/godot_check_scripts.log"

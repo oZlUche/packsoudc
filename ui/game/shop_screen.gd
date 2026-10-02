@@ -180,13 +180,8 @@ func _on_drag_finished(uid: int, dropped: bool) -> void:
 		return
 	# 商品进了玩家的容器：结账。（drop_filter 已经拦过钱不够的；这里失败只可能是同一瞬别处花了钱）
 	if slot >= 0 and (flow.run.board.has_item(uid) or flow.run.storage.has_item(uid)):
-		if not _session.pay_for(slot):
-			var inst := flow.run.board.get_item(uid) if flow.run.board.has_item(uid) else flow.run.storage.get_item(uid)
-			if flow.run.board.has_item(uid):
-				flow.run.board.remove(uid)
-			else:
-				flow.run.storage.remove(uid)
-			_session.shelves[slot].place(inst, Vector2i.ZERO, 0)
+		# 101 第 6 刀：结账与结不成时的回滚都在会话里（ShopSession.pay_or_return），这里只说一句
+		if not _session.pay_or_return(slot, uid, [flow.run.board, flow.run.storage]):
 			_say("金币不足，东西放回了栏位")
 		_refresh()
 		return

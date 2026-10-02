@@ -1,6 +1,6 @@
 # 102 · 方案：测试按模块归位、类缓存与 test.sh（097 的 P6 + P7）
 
-> 2026-10-01 ｜ 提议 · 作者已确认，待执行 ｜ 对应架构文档 12 节（测试）、13 节（工具）
+> 2026-10-01 ｜ 提议 · 作者已确认 · **已落地**（见文末「落地」）｜ 对应架构文档 11.1、11 节的树
 
 ## 目标
 
@@ -73,3 +73,67 @@ A：`tests/run_tests.gd`、`tools/test.sh`、新 `tests/support.gd`、架构文�
 1. 类缓存走 **B1**：出仓库，`.godot/` 全部忽略，启动前靠 `tools/run_game` 自动 `--import`。作者的疑问「编辑器打开时能正常读取吗」：能 —— 这个文件本来就是编辑器打开项目时扫描脚本后自己生成的，`.godot/` 被默认忽略正是因为编辑器一定会重建它；只有不经编辑器直接跑游戏才需要先 `--import`。
 2. 测试目录**分层**（`tests/inventory/`、`tests/battle/`、`tests/run/`、`tests/ui/`、`tests/authoring/`）。
 3. `test_author_*` **跟着 101 的刀顺手搬**，不单开专项。
+
+---
+
+## 落地（2026-10-01）
+
+作者确认：类缓存走 B1、测试目录分层、搬运跟着 101 的刀，其余按推荐。A / B1 / C 一次做完，
+全套测试 **12353 项断言、76 个套件通过**。
+
+### A · 测试按层归位
+
+| 目录 | 套件 | 装的是 |
+|---|---|---|
+| `tests/inventory/` | 12 | 背包、格子、拖拽 |
+| `tests/battle/` | 8 | 编译、效果、伤害、数值 |
+| `tests/map/` | 10 | 图生成、导航、形态 |
+| `tests/run/` | 35 | 一局：流程、模块、存档、经济、事件、信仰 |
+| `tests/meta/` | 1 | 跨局 |
+| `tests/ui/` | 3 | 屏与控件（帧测试） |
+| `tests/authoring/` | 7 | 内容管线与各编辑器 |
+
+- `map/` 与 `meta/` 是方案里五个目录之外加的：地图逻辑十个套件、跨局一个，都塞进 `run/`
+  会让它接近五十个，按层分的意义就没了。
+- 跟着 101 这几刀搬的：保险箱 → `tests/run/test_safe.gd`、倒计时与带入预算 →
+  `test_countdown.gd`、神坛与信仰级效果 → `test_altar.gd`、赐福（095）→ `test_blessings.gd`、
+  按点暂存 → `test_node_storage.gd`。`test_author_094.gd` 整个搬空删掉，`test_author_092.gd`
+  只剩「离开结算屏时一键出售暂存区」那一条。剩下的 `test_author_087 / 088 / 089 / 090 / 091 /
+  093 / 096` 等后面的刀碰到对应模块时顺手带走。
+- 搬运不改断言：搬前搬后都是 12353 项，套件 74 → 76。
+- 公共代码：`tests/support.gd`（`content()` / `temp_paths()` / `cleanup()`）、
+  `tests/run/flow_support.gd`（建 flow、走到某点、结一步）。**刻意不叫 `test_*`**，否则会被收集。
+
+### A-3 自动发现（比方案多做了一点）
+
+`run_tests.gd` 的 `SUITES` 清单整个删掉，改成 `DirAccess` 递归扫 `res://tests` 下的
+`test_*.gd`、按路径排序加载（`discover()` / `matches()` / `pattern_of_args()` 都是静态的，
+可被测试直接调）。加一个套件不用再登记 —— 原来忘了登记的表现是「写了测试但从来没跑过」。
+
+### C · 过滤与可移植
+
+- `bash tools/test.sh safe` → 只跑路径或 `t.begin` 标题里含 `safe` 的套件，并打印
+  「只跑含「safe」的套件：1 个」。实测 1 个套件 1087 ms，全套约 5 分钟。
+- 过滤只影响单元测试那一步；后面 `check_scripts` / `check_content` 两步全项目检查照常跑
+  （和过滤无关，也快）。
+- `GODOT` 未设时在 `PATH` 里找 `godot` / `godot4` / `Godot`；没有 `timeout` 就不包超时。
+
+### B1 · 类缓存出仓库
+
+- `.gitignore` 收整个 `.godot/`，`git rm --cached .godot/global_script_class_cache.cfg`。
+- `DevNav._check_class_cache()` 在 `Engine.is_editor_hint()` 或 `OS.has_feature("editor")`
+  时直接返回 —— 编辑器里缓存必然是新的，提示只会是误报；提示文字改成指向
+  `tools/run_game` 或「在编辑器里打开一次」。
+- **作者的疑问「编辑器打开时也能正常读取吗」**：能。编辑器打开项目时自己扫脚本重建这份缓存，
+  它本来就是编辑器的产物；仓库里有没有这个文件对编辑器没影响。三条用得到它的路都有人管：
+  编辑器自己重建、`tools/test.sh` 每次先 `--import`、不开编辑器直接跑游戏走
+  `tools/run_game.sh` / `.bat`（也先 `--import`）。
+- `tests/ui/test_dev_nav.gd` 的那条断言从「缓存文件在仓库里」改成「`.gitignore` 收了 `.godot/`
+  且没有放行行」。
+
+### 文档
+
+架构文档 v2.14（原记 v2.12，和 main 的版本号撞了，合并时顺延）：新增 **11.1「测试怎么摆、怎么跑」**（命名规矩、自动发现、过滤、类缓存 B1
+推翻 v2.04），11 节的树改成分层目录。方案里写的是「架构文档 12 节一段」，但 12 节是实施顺序表、
+测试那一段原本并不在那里，所以写在目录结构后面作 11.1。`status.md`：类缓存那段改写，
+套件数 70 → 76、断言 11985 → 12353。

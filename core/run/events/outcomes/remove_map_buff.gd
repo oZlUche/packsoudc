@@ -6,7 +6,7 @@ extends EventOutcome
 
 
 func apply(ctx: EventContext) -> void:
-	if buff != &"" and ctx.remove_map_buff.is_valid() and bool(ctx.remove_map_buff.call(buff)):
+	if buff != &"" and ctx.hooks.remove_map_buff(buff):
 		ctx.buffs_removed.append(String(buff))
 
 

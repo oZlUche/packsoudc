@@ -125,10 +125,12 @@ static func _scan_dir(path: String, regex: RegEx, known: Dictionary, missing: Ar
 func _check_class_cache() -> void:
 	if OS.has_feature("template"):
 		return     # 导出包里的缓存永远是对的
+	if Engine.is_editor_hint() or OS.has_feature("editor"):
+		return     # 102 B1：编辑器打开项目时自己就重建了缓存，这个自检只对「不经编辑器直接跑」的那条路有意义
 	var missing := stale_classes()
 	if missing.is_empty():
 		return
-	var text := "全局类缓存过期：缺 %s —— 界面会灰屏 / 空白。修法：Godot 菜单「项目 → 重新加载当前项目」，或跑 tools/run_game（会先 --import）。缓存文件已进仓库，拉最新的 .godot/global_script_class_cache.cfg 也行" % ", ".join(missing)
+	var text := "全局类缓存过期：缺 %s —— 界面会灰屏 / 空白。修法：跑 tools/run_game（会先 --import），或在编辑器里打开一次项目（编辑器自己会重建）。102 之后缓存不进仓库了，拉代码不会带来它" % ", ".join(missing)
 	push_error("DevNav: " + text)
 	_cache_banner = Label.new()
 	_cache_banner.text = text

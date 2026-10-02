@@ -12,12 +12,14 @@ func altar_label() -> String:
 
 
 func altar_available(run: RunState, _node: MapNode) -> String:
-	return "" if max_times <= 0 or int(run.faith_rituals.get(KEY, 0)) < max_times else "锻炼已到上限"
+	var rituals := AltarModule.rituals_of(run)
+	return "" if max_times <= 0 or int(rituals.get(KEY, 0)) < max_times else "锻炼已到上限"
 
 
 func altar_apply(run: RunState, _node: MapNode, _option: StringName = &"") -> String:
 	run.board.grow_rows(rows)
-	run.faith_rituals[KEY] = int(run.faith_rituals.get(KEY, 0)) + 1
+	var rituals := AltarModule.rituals_of(run)
+	rituals[KEY] = int(rituals.get(KEY, 0)) + 1
 	return "向大地之神锻炼：棋盘多了 %d 行（现在 %d × %d）" % [rows, run.board.size.x, run.board.size.y]
 
 
