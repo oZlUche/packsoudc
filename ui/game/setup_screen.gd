@@ -595,7 +595,7 @@ func _refresh() -> void:
 		if c != null:
 			lines.append("%s　难度 %d　敌人池 %s" % [c.display_name, c.difficulty, String(c.enemy_pool) if c.enemy_pool != &"" else "无"])
 		if ch != null:
-			lines.append(ch.description)
+			lines.append(Names.description_of(ch))
 			var caps: Array[String] = []
 			caps.append("体力 %d" % ch.vitality_max)
 			caps.append("生命 %d" % int(ch.baseline().value_of(&"max_hp")))

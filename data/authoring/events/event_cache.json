@@ -4,7 +4,7 @@
   "text": "角落里有一只上了锁的铁箱，锁已经锈得差不多了。",
   "options": [
     {
-      "label": "撬开（体力 -1）",
+      "label": "撬开（体力 -{spend_vitality_amount}）",
       "requires": [
         {
           "type": "vitality_at_least"

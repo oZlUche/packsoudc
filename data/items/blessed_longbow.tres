@@ -73,7 +73,6 @@ flat = 4.0
 [sub_resource type="Resource" id="Resource_qk25w"]
 script = ExtResource("13_ec1u3")
 mods = Array[ExtResource("1_8hkak")]([SubResource("Resource_5mbfv")])
-note = "第一阶：伤害 +4"
 
 [sub_resource type="Resource" id="Resource_mykjl"]
 script = ExtResource("1_8hkak")
@@ -84,7 +83,6 @@ mult_percent = 15
 script = ExtResource("13_ec1u3")
 tier = 2
 mods = Array[ExtResource("1_8hkak")]([SubResource("Resource_mykjl")])
-note = "第二阶：伤害再 +15%"
 
 [sub_resource type="Resource" id="Resource_jjmdc"]
 script = ExtResource("15_1f6sa")

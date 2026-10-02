@@ -24,5 +24,5 @@ func altar_apply(run: RunState, _node: MapNode, _option: StringName = &"") -> St
 	return "向日神祈祷（第 %d 次）：火焰伤害加成现在 +%d%%" % [int(rituals[KEY]), bonus]
 
 
-func describe() -> String:
-	return note if note != "" else "神坛：祈祷换局内永久火焰伤害加成（非线性）"
+func _summary() -> String:
+	return "神坛：祈祷换局内永久火焰伤害加成（非线性）"

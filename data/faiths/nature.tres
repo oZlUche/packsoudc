@@ -26,7 +26,6 @@ flat = 3.0
 script = ExtResource("2_f54du")
 mode = "active"
 mods = Array[ExtResource("3_af1s0")]([SubResource("Resource_p7i6f")])
-note = "生命 +3"
 
 [sub_resource type="Resource" id="Resource_2gm7o"]
 script = ExtResource("3_af1s0")
@@ -38,7 +37,6 @@ script = ExtResource("2_f54du")
 mode = "scaled"
 max_stacks = 5
 mods = Array[ExtResource("3_af1s0")]([SubResource("Resource_2gm7o")])
-note = "每 50 信力防护 +1（最多 5 份）"
 
 [sub_resource type="Resource" id="Resource_pdjtl"]
 script = ExtResource("1_umqo0")
@@ -61,19 +59,16 @@ cap = 30
 script = ExtResource("8_7tdnj")
 tags = Array[StringName]([&"nature"])
 multiplier = 5.0
-note = "自然（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_j1itm"]
 script = ExtResource("8_7tdnj")
 tags = Array[StringName]([&"food"])
 multiplier = 5.0
-note = "食物（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_crdnu"]
 script = ExtResource("8_7tdnj")
 tags = Array[StringName]([&"gear", &"armor", &"shield"])
 multiplier = 5.0
-note = "防具（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_iwddf"]
 script = ExtResource("10_r7t77")
@@ -86,7 +81,6 @@ flat = 1.0
 [sub_resource type="Resource" id="Resource_rvx17"]
 script = ExtResource("11_0s07h")
 mods = Array[ExtResource("3_af1s0")]([SubResource("Resource_y2185")])
-note = "开战时每秒回血 +1"
 
 [sub_resource type="Resource" id="Resource_4n321"]
 script = ExtResource("12_kwpnb")

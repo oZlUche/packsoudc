@@ -11,5 +11,5 @@ func modify_loot(ctx: LootContext, node_type: StringName) -> void:
 		ctx.extra_drop_rarity = maxi(ctx.extra_drop_rarity, int(by_type[key]))
 
 
-func describe() -> String:
-	return note if note != "" else "敌人必掉额外一件：普通紫 / 精英金 / BOSS 红"
+func _summary() -> String:
+	return "敌人必掉额外一件：普通紫 / 精英金 / BOSS 红"

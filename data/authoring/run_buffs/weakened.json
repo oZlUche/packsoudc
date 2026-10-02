@@ -1,7 +1,7 @@
 {
   "id": "weakened",
   "display_name": "虚弱",
-  "description": "走 5 步之内伤害 -10%（地图 buff 的测试用例）",
+  "description": "走 {duration_steps} 步之内伤害 {mult_percent|signed}%（地图 buff 的测试用例）",
   "duration_steps": 5,
   "mods": [
     {

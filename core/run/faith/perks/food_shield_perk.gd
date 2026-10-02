@@ -22,8 +22,8 @@ func modify_spec(spec: CombatantSpec, board: GridInventory, _run: RunState) -> v
 		m.apply_to(spec.baseline, 1)
 
 
-func describe() -> String:
-	return note if note != "" else "开战时每件食物给 %.0f + %.0f × 稀有度 的护盾" % [base, per_rarity]
+func _summary() -> String:
+	return "开战时每件食物给 %.0f + %.0f × 稀有度 的护盾" % [base, per_rarity]
 
 
 ## 103：作用于角色本身 → 进 buff 栏

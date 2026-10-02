@@ -27,27 +27,23 @@
       "tags": [
         "bone"
       ],
-      "multiplier": 5.0,
-      "note": "骨制品（2^稀有度 × 5）"
+      "multiplier": 5.0
     },
     {
       "min_cells": 9,
-      "multiplier": 10.0,
-      "note": "大及以上体积（2^稀有度 × 10）"
+      "multiplier": 10.0
     },
     {
       "tags": [
         "flesh"
       ],
-      "multiplier": 5.0,
-      "note": "血肉（2^稀有度 × 5）"
+      "multiplier": 5.0
     },
     {
       "tags": [
         "weapon"
       ],
-      "multiplier": 2.0,
-      "note": "武器（2^稀有度 × 2）"
+      "multiplier": 2.0
     }
   ],
   "perks": [
@@ -88,8 +84,7 @@
               "mult_category": "EMPOWER",
               "mult_percent": 10
             }
-          ],
-          "note": "伤害 +10%"
+          ]
         },
         {
           "mode": "scaled",
@@ -98,8 +93,7 @@
             {
               "flat": 1.0
             }
-          ],
-          "note": "每 50 信力伤害 +1（最多 6 份）"
+          ]
         }
       ]
     }

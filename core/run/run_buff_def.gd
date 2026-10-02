@@ -56,4 +56,4 @@ func summary() -> String:
 		parts.append("战斗属性 %d 条" % mods.size())
 	if not rules.is_empty():
 		parts.append("战斗规则 %d 条" % rules.size())
-	return "；".join(parts) if not parts.is_empty() else description
+	return "；".join(parts) if not parts.is_empty() else Names.description_of(self)

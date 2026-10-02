@@ -18,7 +18,7 @@
       ]
     },
     {
-      "label": "扎营（多耗 2 个行动点，多回 1 点体力）",
+      "label": "扎营（多耗 {pass_time_actions} 个行动点，多回 {restore_vitality_amount} 点体力）",
       "hide_when_locked": true,
       "requires": [
         {

@@ -25,7 +25,6 @@ flat = 5.0
 script = ExtResource("2_texte")
 mode = "active"
 mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_rexqm")])
-note = "耐力上限 +5"
 
 [sub_resource type="Resource" id="Resource_bpi0t"]
 script = ExtResource("3_2gic1")
@@ -37,7 +36,6 @@ script = ExtResource("2_texte")
 mode = "scaled"
 max_stacks = 5
 mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_bpi0t")])
-note = "每 50 信力防护 +1（最多 5 份）"
 
 [sub_resource type="Resource" id="Resource_tr00d"]
 script = ExtResource("1_yrdk8")
@@ -60,7 +58,6 @@ script = ExtResource("8_rcova")
 min_cells = 9
 multiplier = 5.0
 per_cell = true
-note = "大及以上体积（稀有度 × 格子数）（2^稀有度 × 5 × 格子数）"
 
 [sub_resource type="Resource" id="Resource_72j3p"]
 script = ExtResource("10_t8ftl")
@@ -73,7 +70,6 @@ flat = 20.0
 [sub_resource type="Resource" id="Resource_mgcyf"]
 script = ExtResource("11_p841y")
 mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_udmsc")])
-note = "开战时耐力上限 +20"
 
 [sub_resource type="Resource" id="Resource_7l3a5"]
 script = ExtResource("12_kac8c")

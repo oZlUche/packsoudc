@@ -20,5 +20,5 @@ func altar_apply(run: RunState, node: MapNode, option: StringName = &"") -> Stri
 	return "大地之神改造了这个点：变成%s点" % MapNodeStyle.of(option)["label"]
 
 
-func describe() -> String:
-	return note if note != "" else "神坛：把当前的点改成别的类型（核心 / 撤离以外），不限次数"
+func _summary() -> String:
+	return "神坛：把当前的点改成别的类型（核心 / 撤离以外），不限次数"

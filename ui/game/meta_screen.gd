@@ -328,7 +328,7 @@ func _achievement_row(def: AchievementDef, done: bool) -> Control:
 	else:
 		status = "未完成　进度 %s" % def.progress_text(m)
 	head.add_child(_label(status, 13, UiPalette.HEAL if done else UiPalette.DIM))
-	col.add_child(_wrapped("途径：" + ("？？？" if secret else def.description), 13, UiPalette.FG, 700))
+	col.add_child(_wrapped("途径：" + ("？？？" if secret else Names.description_of(def)), 13, UiPalette.FG, 700))
 	var opens: Array[String] = []
 	for g in def.grants:
 		opens.append_array(flow.unlock_names(g))
@@ -484,7 +484,7 @@ func _on_tile_hovered(tile: CodexTile) -> void:
 	elif tile.def.requires_unlock != &"" and not flow.unlocked(tile.def.requires_unlock):
 		# 091：锁着的写怎么解锁（哪一枚成就）
 		var ach := flow.achievement_granting(tile.def.requires_unlock)
-		var how := "完成成就「%s」：%s" % [Names.of(ach), ach.description] if ach != null else "解锁 %s" % tile.def.requires_unlock
+		var how := "完成成就「%s」：%s" % [Names.of(ach), Names.description_of(ach)] if ach != null else "解锁 %s" % tile.def.requires_unlock
 		_codex_tip.show_text("[b]%s[/b]\n[color=#8b93a1]未解锁：%s[/color]" % [Names.of(tile.def), how], at)
 	else:
 		_codex_tip.show_text("[b]%s[/b]\n[color=#8b93a1]未获得：撤离成功时背包里的会点亮[/color]" % Names.of(tile.def), at)

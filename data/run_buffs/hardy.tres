@@ -13,6 +13,6 @@ script = ExtResource("2_34ani")
 script = ExtResource("5_hwqf4")
 id = &"hardy"
 display_name = "坚韧"
-description = "体力上限 +1（局外 buff 的测试用例）"
+description = "体力上限 {vitality_max_bonus_amount|signed}（局外 buff 的测试用例）"
 scope = 0
 effects = Array[ExtResource("1_x5lxx")]([SubResource("Resource_40kx8")])

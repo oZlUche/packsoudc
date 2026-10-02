@@ -34,5 +34,5 @@ func on_node_entered(run: RunState, node: MapNode, first_visit: bool) -> String:
 	return "大地之神赐下「%s」（进了暂存区）" % Names.of(def)
 
 
-func describe() -> String:
-	return note if note != "" else "头一回踩上一个点就得一件对应类型的道具（战斗-武器 / 精英-防具 / 事件-饰品 / 撤离点-随机 / BOSS-珍宝）"
+func _summary() -> String:
+	return "头一回踩上一个点就得一件对应类型的道具（战斗-武器 / 精英-防具 / 事件-饰品 / 撤离点-随机 / BOSS-珍宝）"
