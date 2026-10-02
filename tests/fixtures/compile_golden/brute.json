@@ -3,6 +3,7 @@
 	"tier": 4,
 	"max_hp": 900000,
 	"undying_sec": 10.0,
+	"axes": {},
 	"baseline": {
 		"regen_stamina": {
 			"total": 40000,

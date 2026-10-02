@@ -120,6 +120,7 @@ const FAITH_PERKS := {
 	&"food_double": "res://core/run/faith/perks/food_double_perk.gd",
 	&"altar_sacrifice_hp": "res://core/run/faith/perks/altar_sacrifice_hp_perk.gd",
 	&"altar_pray_fire": "res://core/run/faith/perks/altar_pray_fire_perk.gd",
+	&"axis_boost": "res://core/run/faith/perks/axis_boost_perk.gd",
 	&"altar_food_vitality": "res://core/run/faith/perks/altar_food_vitality_perk.gd",
 	&"altar_train_board": "res://core/run/faith/perks/altar_train_board_perk.gd",
 	&"altar_reshape_node": "res://core/run/faith/perks/altar_reshape_node_perk.gd",
