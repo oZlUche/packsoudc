@@ -1,5 +1,5 @@
 ## 一组激活的 buff 合起来改了什么（059）：算 [RunContext]、收战斗属性与规则、往掉落上下文里加。
-## 纯函数；谁激活了什么由 [MetaState.active_buffs]（局外）与 [RunState.map_buffs]（一局）说了算。
+## 纯函数；谁激活了什么由 [MetaState.active_buffs]（局外）与 [BuffModule]（一局）说了算。
 class_name RunBuffs
 extends RefCounted
 

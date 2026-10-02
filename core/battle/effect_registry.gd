@@ -172,6 +172,11 @@ const RUN_MODULES := {
 	&"erosion": "res://core/run/mechanics/erosion_mechanic.gd",
 	&"hunters": "res://core/run/mechanics/hunter_mechanic.gd",
 	&"safe": "res://core/run/modules/safe_module.gd",
+	&"node_storage": "res://core/run/modules/node_storage_module.gd",
+	&"countdown": "res://core/run/modules/countdown_module.gd",
+	&"crafting": "res://core/run/modules/crafting_module.gd",
+	&"altar": "res://core/run/modules/altar_module.gd",
+	&"buff": "res://core/run/modules/buff_module.gd",
 }
 
 ## 猎手（069 / 071）：行动逻辑与战败后果

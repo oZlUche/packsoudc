@@ -22,16 +22,12 @@ var board: ItemContainer = null
 var storage: ItemContainer = null
 ## 091：局外状态（旗标在里面）。沙盒 / 测试里可能为 null：看旗标的条件永远不满足、立旗标的后果什么也不做
 var meta: MetaState = null
-## 段位（074）：`() -> int`。没接（这一局没有猎手机制）= -1
-var bracket: Callable = Callable()
-## 某个点被侵蚀了几层（075）：`(node) -> int`，没被侵蚀 -1。没接（没有侵蚀）= -1
+## 某个点被侵蚀了几层（075）：`(node) -> int`，没被侵蚀 -1。没接（没有侵蚀）= -1。
+## 这一条是节点自己的事（[NodeEvents] 从 `travel.erosion` 现接），不走 [RunHooks]
 var erosion_depth: Callable = Callable()
-
-## 地图 buff 的四个回调：`(id) -> bool` / `(id) -> bool` / `(id) -> bool` / `(tag) -> bool`。没接就当没有
-var grant_map_buff: Callable = Callable()
-var remove_map_buff: Callable = Callable()
-var has_map_buff: Callable = Callable()
-var has_buff_tag: Callable = Callable()
+## 一局的能力（101 第 3 刀）：地图 buff 的给 / 去 / 查、buff 标签、段位、信仰阶与 id、赐福。
+## 条件与后果经它问一局；默认那一份全是「没人接」的默认值，所以不接也能跑
+var hooks: RunHooks = RunHooks.new()
 
 ## 后果立的旗子，NodeEvents 看着走
 var open_search: bool = false
@@ -45,10 +41,6 @@ var hunter_flee: bool = false
 var proceed: bool = false
 ## 093：打开神坛
 var open_altar: bool = false
-## 093：激活信仰现在第几阶（-1 = 没激活）；RunState 接
-var faith_tier: Callable = Callable()
-## 095：激活信仰的 id（空 = 没激活）
-var active_faith: Callable = Callable()
 ## 085：从这个撤离点撤离（事件对话里的「撤离」选项）
 var extract: bool = false
 ## 8-3：这个点从此算这种类型（空 = 不改）
@@ -71,15 +63,25 @@ var log: Array[String] = []
 
 
 func tag_present(tag: StringName) -> bool:
-	return has_buff_tag.is_valid() and bool(has_buff_tag.call(tag))
+	return hooks.has_buff_tag(tag)
 
 
 func buff_present(id: StringName) -> bool:
-	return has_map_buff.is_valid() and bool(has_map_buff.call(id))
+	return hooks.has_map_buff(id)
 
 
 func bracket_now() -> int:
-	return int(bracket.call()) if bracket.is_valid() else -1
+	return hooks.bracket()
+
+
+## 093：激活信仰现在第几阶（-1 = 没激活）
+func faith_tier_now() -> int:
+	return hooks.faith_tier()
+
+
+## 095：激活信仰的 id（空 = 没激活）
+func active_faith_id() -> StringName:
+	return hooks.active_faith_id()
 
 
 func depth_at(n: MapNode) -> int:

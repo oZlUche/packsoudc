@@ -1,7 +1,7 @@
 ## 合成配方（084，作者定的第一条：毒药瓶 + 匕首 → 涂毒匕首）。架构文档 15 节第 5 项的落地。
 ##
 ## 作者数据，走内容管线：`data/authoring/recipes/*.json` → `data/recipes/*.tres`。一份配方就是「哪两件 → 哪一件」，顺序无关。
-## **相邻即合**（087 作者定）：两件在棋盘上四邻相接，走到下一个点时自动合成（[method RunState.craft_pairs] / `resolve_crafts`）；
+## **相邻即合**（087 作者定）：两件在棋盘上四邻相接，走到下一个点时自动合成（[method CraftingModule.pairs] / `resolve`）；
 ## 产物落在 uid 小的那件的位置上，放不下试另一件的位置、再自动找位，再放不下进暂存区并提醒。没有「拖到一起」「配对」这一步。
 class_name RecipeDef
 extends Resource

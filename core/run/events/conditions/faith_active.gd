@@ -6,9 +6,9 @@ extends EventCondition
 
 
 func check(ctx: EventContext) -> bool:
-	if ctx == null or not ctx.faith_tier.is_valid():
+	if ctx == null:
 		return false
-	var tier := int(ctx.faith_tier.call())
+	var tier := ctx.faith_tier_now()
 	return tier >= 0 and tier >= min_tier
 
 

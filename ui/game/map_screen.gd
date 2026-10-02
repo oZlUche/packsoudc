@@ -130,7 +130,7 @@ func extract() -> bool:
 	if node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract":
 		_say("撤不了：不在撤离点上")
 		return false
-	if _run.extract_closed(node):
+	if _countdown_closed(node):
 		_say("撤不了：这个撤离点已经关闭（倒计时过半）")
 		return false
 	_open_confirm(node)
@@ -380,13 +380,16 @@ func _adopt() -> void:
 	_run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh_hud())
 	_run.vitality.changed.connect(func(_c: int, _m: int, _d: int, _r: StringName): _refresh_hud())
 	_run.storage.changed.connect(_refresh_hud)
-	_run.buffs_changed.connect(_refresh_hud)
+	var buff_mod := BuffModule.of(_run)     # 101：一局里拿到的 buff 在模块里
+	if buff_mod != null:
+		buff_mod.buffs_changed.connect(_refresh_hud)
 	# 082：技能按钮与信力
 	_run.skills_changed.connect(func():
 		_refresh_skills()
 		_refresh_hud())
-	if _run.carry_penalty_steps() > 0:     # 094：超带换的倒计时
-		_note("[color=#f0ad4e]　带入超出预算 %d：倒计时 −%d[/color]" % [RunState.carry_over_for(_run.chapter, _run.scale_id(), _run.carry_in_value), _run.carry_penalty_steps()])
+	var countdown := CountdownModule.of(_run)     # 101：倒计时是一局的模块，数与信号都在它身上
+	if countdown != null and countdown.penalty_steps() > 0:     # 094：超带换的倒计时
+		_note("[color=#f0ad4e]　带入超出预算 %d：倒计时 −%d[/color]" % [countdown.over_value(), countdown.penalty_steps()])
 	for note in flow.take_notes():     # 088：开局拿到的特殊道具（望远镜）等通知
 		_note("[color=#f0ad4e]　%s[/color]" % note)
 	_run.faith_power_changed.connect(func(id: StringName, p: int, tier: int):
@@ -394,14 +397,18 @@ func _adopt() -> void:
 		_note("　信力（%s）%d，第 %d 阶" % [def.display_name if def != null else String(id), p, tier])
 		_refresh_hud())
 	_refresh_skills()
-	_run.storage_dropped.connect(func(node_id: int, items: Array):
-		_note("　离开点 %d：暂存区里的 %s留在了那里（回来能拿）" % [node_id, StorageWarning.describe(items)]))
-	_run.storage_restored.connect(func(node_id: int, items: Array):
-		_note("　回到点 %d：留在这里的 %d 件回到了暂存区" % [node_id, items.size()]))
+	var node_storage := NodeStorageModule.of(_run)     # 101：按点暂存是一局的模块，信号在它身上
+	if node_storage != null:
+		node_storage.dropped.connect(func(node_id: int, items: Array):
+			_note("　离开点 %d：暂存区里的 %s留在了那里（回来能拿）" % [node_id, StorageWarning.describe(items)]))
+		node_storage.restored.connect(func(node_id: int, items: Array):
+			_note("　回到点 %d：留在这里的 %d 件回到了暂存区" % [node_id, items.size()]))
 	_run.loot_cleared.connect(_after_move)     # 084：没拿的战利品没了（拿完了、或走了），「回到这个点」跟着灰
-	_run.craft_done.connect(func(_id: int, detail: Dictionary):
-		for line in detail.get("log", []):
-			_note("　" + String(line)))
+	var crafting := CraftingModule.of(_run)     # 101：合成是一局的模块
+	if crafting != null:
+		crafting.done.connect(func(_id: int, detail: Dictionary):
+			for line in detail.get("log", []):
+				_note("　" + String(line)))
 	# 猎手（071）：进了感知范围提示一句；动了就重画标记；被赶回上一个点
 	_run.hunter_sensed.connect(func(h: Hunter):
 		var def: HunterDef = _run.hunters.def_of(h) if _run.hunters != null else null
@@ -461,14 +468,17 @@ func _adopt() -> void:
 		_view.spawn_mask = _run.phase == RunState.Phase.PICK_SPAWN     # 096：挑完出生点遮罩撤掉
 		_refresh_hud()
 		_refresh_skills())     # 挑完出生点技能才能用：按钮跟着阶段亮
-	_run.countdown_notice.connect(func(text: String): _note("[color=#d9534f]　" + text + "[/color]"))     # 092
+	if countdown != null:
+		countdown.notice.connect(func(text: String): _note("[color=#d9534f]　" + text + "[/color]"))     # 092
 	var safe := SafeModule.of(_run)     # 101：保险箱是一局的模块，信号在它身上
 	if safe != null:
 		safe.closed.connect(func(n: int): _note("[color=#c8a2ff]　保险箱关上了：%d 件送回基地，不能再改[/color]" % n))
-	_run.altar_changed.connect(func(text: String):
-		_note("[color=#f0ad4e]　" + text + "[/color]")
-		_refresh_hud())     # 093
-	_run.item_blessed.connect(func(_i: ItemInstance, _f: StringName): _refresh_hud())     # 095
+	var altar := AltarModule.of(_run)     # 101：神坛是一局的模块，信号在它身上
+	if altar != null:
+		altar.noted.connect(func(text: String):
+			_note("[color=#f0ad4e]　" + text + "[/color]")
+			_refresh_hud())     # 093
+		altar.item_blessed.connect(func(_i: ItemInstance, _f: StringName): _refresh_hud())     # 095
 	_rebuild_routes()
 	_after_move()
 	if _run.phase == RunState.Phase.PICK_SPAWN:
@@ -487,8 +497,9 @@ func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
 		_note("[color=#b38cff]⇢ %d %s，传送（花 %d 点）%s[/color]" % [intent.to_id, what, intent.action_cost, "" if first_visit else "，这里用过了"])
 	else:
 		_note(("→ %d %s（花 %d 点）" if first_visit else "→ %d %s，穿行（花 %d 点，这里用过了）") % [intent.to_id, what, intent.action_cost])
-	if _run.has_countdown() and _run.countdown_left() > 0 and _run.countdown_left() <= 5:
-		_note("[color=#d9534f]　倒计时只剩 %d 步！[/color]" % _run.countdown_left())
+	var cd := CountdownModule.of(_run)
+	if cd != null and cd.has_countdown() and cd.left() > 0 and cd.left() <= 5:
+		_note("[color=#d9534f]　倒计时只剩 %d 步！[/color]" % cd.left())
 	_after_move()
 
 
@@ -540,7 +551,7 @@ func _after_move() -> void:
 	_refresh_hud()
 	_refresh_hunter_marks()
 	var node := _run.current_node()
-	_extract_btn.disabled = node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract" or _run.extract_closed(node)
+	_extract_btn.disabled = node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract" or _countdown_closed(node)
 	_reopen_btn.disabled = not flow.can_reopen()
 	_reopen_btn.tooltip_text = ("重新打开这个点上最后的界面：没拿完的战利品、还开着的搜索或商店。点地图上的当前节点也行" if flow.can_reopen()
 		else "这里没有可重开的界面")
@@ -650,23 +661,30 @@ func _refresh_hud() -> void:
 		_faith_hud.text = _run.faith_line() + _power_line() + _buff_line() + _erosion_line()
 
 
+## 这个撤离点被倒计时关掉了没（没装倒计时模块 = 不会关）
+func _countdown_closed(node: MapNode) -> bool:
+	var cd := CountdownModule.of(_run)
+	return cd != null and cd.extract_closed(node)
+
+
 ## 092：倒计时那一行大字 + 地图上关闭中的撤离点的标记
 func _refresh_countdown() -> void:
 	if _countdown == null:
 		return
 	var box := _countdown.get_parent() as Control
-	if _run == null or not _run.has_countdown():
+	var cd := CountdownModule.of(_run)
+	if cd == null or not cd.has_countdown():
 		box.visible = false
 		_view.closing = {}
 		return
 	box.visible = true
-	var left := _run.countdown_left()
-	var limit := _run.countdown_limit()
+	var left := cd.left()
+	var limit := cd.limit()
 	var text := "倒计时 %d / %d" % [left, limit]
-	var closing := _run.closing_extract_id()
+	var closing := cd.closing_extract_id()
 	if closing >= 0:
 		var node := _run.map.get_node(closing)
-		var closed := _run.extract_closed(node)
+		var closed := cd.extract_closed(node)
 		text += "　　撤离点 %d %s" % [closing, "已关闭" if closed else "剩 %d 步关闭" % (left - PaidExtracts.closes_at(node))]
 		_view.closing = {"id": closing, "closed": closed, "left": left - PaidExtracts.closes_at(node)}
 	else:
@@ -735,7 +753,7 @@ func _buff_line() -> String:
 	for id in _run.meta_buffs:
 		var def: RunBuffDef = _run.buff_defs.get(id, null)
 		parts.append(def.display_name if def != null else String(id))
-	for entry in _run.map_buffs:
+	for entry in BuffModule.entries_of(_run):
 		var def: RunBuffDef = _run.buff_defs.get(StringName(String(entry["id"])), null)
 		var name := def.display_name if def != null else String(entry["id"])
 		parts.append(name + ("（剩 %d 步）" % int(entry["left"]) if int(entry["left"]) > 0 else ""))

@@ -18,7 +18,8 @@ static func of(run: RunState) -> Array[PassiveNote]:
 	var tier := run.active_faith_tier()
 	if faith != null and tier >= 1:
 		var lines: Array[String] = []
-		for p in run.faith_perks():
+		var altar := AltarModule.of(run)
+		for p in (altar.perks() if altar != null else [] as Array[FaithPerk]):
 			var d := (p as FaithPerk).battle_note(run)
 			if d != "":
 				lines.append(d)
@@ -53,8 +54,9 @@ static func of(run: RunState) -> Array[PassiveNote]:
 			1, buff.mods, "\n".join(rules2)))
 	# --- 技能 / 难度 / 神坛改的基础属性 ---
 	var bonus := run.buff_context().stat_bonus.duplicate()
-	for k in run.faith_stat_bonus:
-		bonus[k] = float(bonus.get(k, 0.0)) + float(run.faith_stat_bonus[k])
+	var altar_bonus: Dictionary = AltarModule.of(run).stat_bonus if AltarModule.of(run) != null else {}
+	for k in altar_bonus:
+		bonus[k] = float(bonus.get(k, 0.0)) + float(altar_bonus[k])
 	if not bonus.is_empty():
 		var mods2: Array = []
 		var keys := bonus.keys()
