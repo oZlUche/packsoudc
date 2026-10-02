@@ -6,7 +6,7 @@ extends FaithPerk
 @export var max_percent: int = 50
 
 
-func modify_spec(spec: CombatantSpec, _board: GridInventory, _run: RunState) -> void:
+func compile_into(input: CompileInput, _board: GridInventory, _run: RunState) -> void:
 	var rule := AbilityRule.new()
 	var trig := EffectRegistry.instantiate(&"trigger", &"on_before_damage")
 	if trig != null:
@@ -17,7 +17,7 @@ func modify_spec(spec: CombatantSpec, _board: GridInventory, _run: RunState) -> 
 	eff.min_percent = min_percent
 	eff.max_percent = max_percent
 	rule.effects.append(eff)
-	spec.set_rules.append(rule)
+	input.rules.append(rule)
 
 
 func _summary() -> String:

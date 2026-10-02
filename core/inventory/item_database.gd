@@ -124,7 +124,7 @@ func variants_of(base_id: StringName) -> Array:
 		var def := _defs[id] as ItemDef
 		if id == root or (def.is_blessed() and def.blessed_of == root):
 			out.append(id)
-	out.sort()
+	Ids.sort(out)     # 按文本排，不是 StringName 的指针序（见 [Ids]）
 	return out
 
 

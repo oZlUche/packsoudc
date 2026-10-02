@@ -197,9 +197,9 @@ static func run_compiler_tiers(t: TestCase) -> void:
 	var top := 0
 	for b in with_bonus.faith_bonuses:
 		top = maxi(top, (b as FaithBonus).tier)
-	var base_spec := BattleCompiler.compile(board)
+	var base_spec := BattleCompiler.compile_board(board)
 	for tier in range(0, top + 1):
-		var spec := BattleCompiler.compile(board, null, [] as Array[StatModifier], [] as Array[AbilityRule], {tag: tier})
+		var spec := BattleCompiler.compile_board(board, null, [] as Array[StatModifier], [] as Array[AbilityRule], {tag: tier})
 		# 期望：从道具的战斗定义起，把 tier ≤ 现在的加成的修饰逐个施加；规则数 = 自带 + 解锁的
 		var want := StatSet.new()
 		with_bonus.combat.seed_stats(want)

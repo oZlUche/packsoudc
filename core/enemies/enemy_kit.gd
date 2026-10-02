@@ -62,7 +62,7 @@ static func spec_of(content: Dictionary, enemies: EnemyDatabase, pool: EnemyPool
 	if def == null:
 		return null
 	var tier := pool.tier_of(int(content.get("strength", 0))) if pool != null else null
-	return BattleCompiler.compile(board_of(content, items), baseline_of(def, tier, content))
+	return BattleCompiler.compile_board(board_of(content, items), baseline_of(def, tier, content))
 
 
 ## 一行给人看的摘要：名字、档位、生命、DPS、几件、都是什么

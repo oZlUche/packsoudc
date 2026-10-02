@@ -11,7 +11,7 @@ class_name RunState
 extends RefCounted
 
 ## 存档从第一天就写版本号（7.2）
-const SAVE_VERSION := 2
+const SAVE_VERSION := 3
 ## 作战棋盘的尺寸（3.2：棋盘 + 包体）。占位，等角色系统
 const BOARD_SIZE := Vector2i(8, 6)
 const BOARD_ID := 1
@@ -474,11 +474,19 @@ func compile_player() -> CombatantSpec:
 	var rules: Array[AbilityRule] = tracker.combat_rules() if tracker != null else [] as Array[AbilityRule]
 	mods.append_array(RunBuffs.combat_mods(active))
 	rules.append_array(RunBuffs.combat_rules(active))
-	var spec := BattleCompiler.compile(board, effective_baseline(), mods, rules, faith_power.tiers() if faith_power != null else {}, faith_power.points_by_tag() if faith_power != null else {})
-	var altar := AltarModule.of(self)     # 093：信仰级效果在编译好的单位上做手脚（顺序 = 文件里的顺序）
+	var input := CompileInput.of(effective_baseline(), mods, rules,
+		faith_power.tiers() if faith_power != null else {},
+		faith_power.points_by_tag() if faith_power != null else {})
+	# 105：按件随机挑选的种子。一局之内只随步数变，所以拖动预估挑的和真打挑的是同一批
+	input.seed = hash("%d:compile:%d" % [run_seed, travel.clock.total if travel != null and travel.clock != null else 0])
+	var altar := AltarModule.of(self)     # 093：信仰级效果往编译器的入参里放东西（顺序 = 文件里的顺序）
 	if altar != null:
+		var bonus := altar.axes()     # 祈祷攒的轴层数（105）
+		for axis in bonus:
+			input.shift_axis(axis, int(bonus[axis]))
 		for p in altar.perks():
-			(p as FaithPerk).modify_spec(spec, board, self)
+			(p as FaithPerk).compile_into(input, board, self)
+	var spec := BattleCompiler.compile(board, input)
 	spec.passives = BattlePassives.of(self)     # 103：常驻加成也进 buff 栏
 	return spec
 

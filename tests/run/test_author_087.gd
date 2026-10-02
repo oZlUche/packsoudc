@@ -135,8 +135,8 @@ static func run_glossary(t: TestCase) -> void:
 	var sg := ItemInstance.create(c.items.get_def(&"strength_sigil"))
 	board.place(k, Vector2i(0, 0), 0)
 	board.place(sg, Vector2i(1, 0), 0)
-	var plain := BattleCompiler.compile(board)
-	var tiered := BattleCompiler.compile(board, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:brute": 1})
+	var plain := BattleCompiler.compile_board(board)
+	var tiered := BattleCompiler.compile_board(board, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:brute": 1})
 	t.check(plain.opening_mods().is_empty(), "没过阈值：没有开战 buff")
 	t.eq(tiered.opening_mods().size(), 1, "过了一阶：一条开战增伤")
 	t.check(tiered.rough_dps() > plain.rough_dps() * 1.05, "预估 DPS 算上血怒：%.2f > %.2f" % [tiered.rough_dps(), plain.rough_dps()])
@@ -167,7 +167,7 @@ static func run_dormant_faith(t: TestCase) -> void:
 	board.try_add(bow, true)     # 后置入：狩猎之神激活，盾休眠
 	t.eq(FaithState.active_tag(board), bow_def.faith_tag(), "激活的是后置入的弓的信仰")
 	t.check(FaithState.is_dormant(shield_def, FaithState.active_tag(board)), "盾休眠")
-	var spec := BattleCompiler.compile(board, null, [] as Array[StatModifier], [] as Array[AbilityRule], {shield_def.faith_tag(): 2, bow_def.faith_tag(): 2})
+	var spec := BattleCompiler.compile_board(board, null, [] as Array[StatModifier], [] as Array[AbilityRule], {shield_def.faith_tag(): 2, bow_def.faith_tag(): 2})
 	var shield_item := spec.item_of(shield.uid)
 	t.not_null(shield_item, "休眠的盾仍参战（通用效果）")
 	if shield_item != null:
@@ -179,7 +179,7 @@ static func run_dormant_faith(t: TestCase) -> void:
 	# 反过来：盾后置入 → 弓休眠，弓照样出手（武器本身的攻击力）
 	board.remove(shield.uid)
 	board.try_add(shield, true)
-	var spec2 := BattleCompiler.compile(board)
+	var spec2 := BattleCompiler.compile_board(board)
 	var bow2 := spec2.item_of(bow.uid)
 	t.check(bow2 != null and bow2.is_active() and spec2.estimated_dps_of(bow2) > 0.0, "休眠的弓仍出手、有 DPS")
 	# 数据说不保留 → 彻底不参战
@@ -189,7 +189,7 @@ static func run_dormant_faith(t: TestCase) -> void:
 	var bow3 := ItemInstance.create(strict)
 	b3.try_add(bow3, true)
 	b3.try_add(ItemInstance.create(shield_def), true)
-	t.is_null(BattleCompiler.compile(b3).item_of(bow3.uid), "dormant_keeps_combat=false：休眠就不参战")
+	t.is_null(BattleCompiler.compile_board(b3).item_of(bow3.uid), "dormant_keeps_combat=false：休眠就不参战")
 	t.check(ItemTooltip.describe(ItemInstance.create(shield_def)).contains("保留通用效果"), "悬浮窗写着休眠时保留通用效果")
 
 
@@ -380,7 +380,7 @@ static func frame_buff_chips(t: TestCase, root: Window) -> void:
 	t.check(view._tip.is_showing() and view._tip.text().contains("中毒") and view._tip.text().contains("永续"), "悬浮窗写着中毒的效果")
 	view._on_buff_unhovered()
 	t.check(not view._tip.is_showing(), "移开就收")
-	var spec_defs := Glossary.buffs_in_spec(BattleCompiler.compile(LootPacker.board_of([&"poisoned_knife"] as Array[StringName], Vector2i(4, 4), c.items)))
+	var spec_defs := Glossary.buffs_in_spec(BattleCompiler.compile_board(LootPacker.board_of([&"poisoned_knife"] as Array[StringName], Vector2i(4, 4), c.items)))
 	t.check(spec_defs.has(&"poison"), "从战斗单位也收集得到")
 	panel.queue_free()
 	view.queue_free()
@@ -389,9 +389,9 @@ static func frame_buff_chips(t: TestCase, root: Window) -> void:
 static func run_death_is_final(t: TestCase) -> void:
 	t.begin("087 · 倒下是终局：血到 0 记死，伤药的濒死回血救不回来，只发一次 DIED，回放里不会倒下两次")
 	var c := _content()
-	var me := BattleCompiler.compile(LootPacker.board_of([&"longsword"] as Array[StringName], Vector2i(4, 4), c.items), CombatantBaseline.with_hp(200.0))
+	var me := BattleCompiler.compile_board(LootPacker.board_of([&"longsword"] as Array[StringName], Vector2i(4, 4), c.items), CombatantBaseline.with_hp(200.0))
 	# 对手：一把匕首 + 两瓶伤药（血低于 40% 回 25），血 12 —— 长剑一下就打到 0
-	var foe := BattleCompiler.compile(LootPacker.board_of([&"knife", &"salve", &"salve"] as Array[StringName], Vector2i(4, 4), c.items), CombatantBaseline.with_hp(12.0))
+	var foe := BattleCompiler.compile_board(LootPacker.board_of([&"knife", &"salve", &"salve"] as Array[StringName], Vector2i(4, 4), c.items), CombatantBaseline.with_hp(12.0))
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 3
 	var res := BattleSim.run(me, foe, rng, 60.0)

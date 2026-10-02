@@ -78,12 +78,12 @@ static func _strong(items: ItemDatabase) -> CombatantSpec:
 		var d := items.get_def(id)
 		if d != null:
 			board.try_add(ItemInstance.create(d, 0), true)
-	return BattleCompiler.compile(board, CombatantBaseline.with_hp(10000.0))
+	return BattleCompiler.compile_board(board, CombatantBaseline.with_hp(10000.0))
 
 
 ## 一血、空手：只要敌人有 DPS 就必输
 static func _weak() -> CombatantSpec:
-	return BattleCompiler.compile(null, CombatantBaseline.with_hp(1.0))
+	return BattleCompiler.compile_board(null, CombatantBaseline.with_hp(1.0))
 
 
 static func _node(w: World, type: StringName) -> MapNode:

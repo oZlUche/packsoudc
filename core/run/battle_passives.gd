@@ -2,6 +2,7 @@
 ##
 ## 作者定的准则：栏里只放**通用 buff —— 作用对象是角色本身**。所以收：作用于角色本身的信仰级效果（[method FaithPerk.battle_note]）、
 ## 已激活的套装档位（施加到全部参战道具）、局外 / 一局 buff 的战斗加成、技能 / 难度 / 神坛改的基础属性。
+## 105 也收：神坛攒的标准轴层数（祈祷的「炽烈」）—— 它种在系统层，战斗里不发 AXIS_SHIFTED，来源只能在这里说。
 ## 不收：信物自己的按阶加成（faith_bonuses 只作用于那一件）、包体与邻接（只作用于被圈住的几件，画在棋盘格子上）、
 ## 只作用于某类道具的信仰效果（附魔几把武器、食物翻倍）。
 ## 只读 RunState，不改任何东西
@@ -70,4 +71,13 @@ static func of(run: RunState) -> Array[PassiveNote]:
 			mods2.append(m)
 		if not mods2.is_empty():
 			out.append(PassiveNote.make(&"base_bonus", "基础属性加成", 1, mods2, "技能、难度、神坛改的基础属性"))
+	# --- 105：神坛攒的标准轴层数（祈祷的「炽烈」）。层数种在系统层，战斗里不会发 AXIS_SHIFTED，
+	# 所以来源靠这一格说清楚；轴格本身按 103 的规矩由面板画 ---
+	var axes: Dictionary = AltarModule.of(run).axes() if AltarModule.of(run) != null else {}
+	for axis in StatAxes.ORDER:
+		var stacks := int(axes.get(axis, 0))
+		if stacks == 0:
+			continue
+		out.append(PassiveNote.make(StringName("axis:" + String(axis)), StatAxes.name_of(axis, stacks), absi(stacks), [],
+			StatAxes.describe(axis, 0, stacks)))
 	return out

@@ -58,7 +58,7 @@ static func _player(c: Content, ids: Array[StringName]) -> CombatantSpec:
 	var base := c.brutus.baseline()
 	for key in ctx.stat_bonus:
 		base.base_stats[String(key)] = float(base.base_stats.get(String(key), 0.0)) + float(ctx.stat_bonus[key])
-	return BattleCompiler.compile(board, base)
+	return BattleCompiler.compile_board(board, base)
 
 
 ## 五个种子：赢几场、平均剩多少血

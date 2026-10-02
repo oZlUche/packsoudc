@@ -223,12 +223,15 @@ static func _try_place(board: GridInventory, idef: ItemDef, placed: Array) -> bo
 	return true
 
 
-## 占格多的先摆；同样大的按 id —— 顺序稳定，摆出来的才可复现
+## 占格多的先摆；同样大的按 id 的**文本** —— 顺序稳定，摆出来的才可复现。
+##
+## 这里不能写 `a < b`：`StringName` 比的是内部指针（见 [Ids]），那是「这个名字在进程里第几次出现」。
+## 长弓和赐福的长弓都是 4 格，谁先摆就由它决定；加一个无关的脚本就能让神射手的招牌换成普通长弓
 static func _sort_big_first(picks: Array[StringName], items: ItemDatabase) -> void:
 	picks.sort_custom(func(a: StringName, b: StringName) -> bool:
 		var ca := items.get_def(a).shape.cell_count()
 		var cb := items.get_def(b).shape.cell_count()
-		return ca > cb if ca != cb else a < b)
+		return ca > cb if ca != cb else String(a) < String(b))
 
 
 ## 实际生效的稀有度上限：组装规则与档位各给一个，取小；都不限就是 -1
@@ -354,7 +357,7 @@ static func school_items(schools: Array[StringName], items: ItemDatabase, rarity
 			continue
 		if _shares_tag(d.tags, schools):
 			out.append(id)
-	out.sort()
+	Ids.sort(out)     # 按文本排，不是 StringName 的指针序（见 [Ids]）
 	return out
 
 
@@ -371,7 +374,7 @@ static func common_items(
 			continue
 		if _shares_tag(d.tags, rule.common_tags) and not _shares_tag(d.tags, schools):
 			out.append(id)
-	out.sort()
+	Ids.sort(out)     # 按文本排，不是 StringName 的指针序（见 [Ids]）
 	return out
 
 

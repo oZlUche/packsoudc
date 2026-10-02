@@ -7,7 +7,7 @@ extends FaithPerk
 @export var per_rarity: float = 2.0
 
 
-func modify_spec(spec: CombatantSpec, board: GridInventory, _run: RunState) -> void:
+func compile_into(input: CompileInput, board: GridInventory, _run: RunState) -> void:
 	if board == null:
 		return
 	var total := 0.0
@@ -19,7 +19,7 @@ func modify_spec(spec: CombatantSpec, board: GridInventory, _run: RunState) -> v
 		var m := StatModifier.new()
 		m.stat = BattleStats.MAX_SHIELD
 		m.flat = total
-		m.apply_to(spec.baseline, 1)
+		input.baseline_mods.append(m)
 
 
 func _summary() -> String:

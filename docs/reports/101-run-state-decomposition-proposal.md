@@ -370,4 +370,10 @@ flow 只留一行转发 —— **界面与测试的调用处一个都没改**（
 `grep -rn "res://core/run/" core/battle core/inventory core/sets` 只剩 `item_database.gd` 那两行（白名单那条）；
 `grep -rn "spec.flags" core/` 只剩一句解释它去哪了的注释。
 
-**余下的刀**：第 2 刀（`start()` 收成 `RunSetup`）等 100 第 4 步的 `ContentLibrary`；第 5 刀的「perk 回编译期」等那份单独的方案。
+**余下的刀**：第 2 刀（`start()` 收成 `RunSetup`）等 100 第 4 步的 `ContentLibrary`。
+
+**收尾（2026-10-02）**：「perk 回编译期」那条已经由**报告 105** 接走并落地 —— 作者定了火焰伤害加成是一条普通增益轴、
+附魔挑武器挂本局种子、这些行为全部由编译器负责。做法不是把 perk 原样搬进去，而是给编译器开一个总入参 `CompileInput`
+（按件的活归新构件 `ScopedMod`），perk 的钩子换成 `compile_into(input)`。上面担心的「时序会改数值」最后证明不成立：
+`StatValue` 把 base / 乘区 / flat 分开存、开打才合，同乘区相加可交换，所以第几步施加都一样 ——
+这一条是靠改码前录的四份编译金样逐件逐字段相等证明的，不是靠推理。

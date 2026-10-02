@@ -30,7 +30,7 @@ func altar_apply(run: RunState, _node: MapNode, _option: StringName = &"") -> St
 	return "向蛮神献祭了 %.0f 点生命上限：耐力上限 +%.0f，急速 +%d%%（第 %d 次）" % [hp_cost, stamina_gain, haste_percent, int(altar.rituals[KEY])]
 
 
-func modify_spec(spec: CombatantSpec, _board: GridInventory, run: RunState) -> void:
+func compile_into(input: CompileInput, _board: GridInventory, run: RunState) -> void:
 	var n := int(AltarModule.rituals_of(run).get(KEY, 0))
 	if n <= 0 or haste_percent == 0:
 		return
@@ -38,8 +38,7 @@ func modify_spec(spec: CombatantSpec, _board: GridInventory, run: RunState) -> v
 	m.stat = BattleStats.HASTE
 	m.mult_category = StatMath.Buff.HASTE
 	m.mult_percent = haste_percent * n
-	for it in spec.items:
-		m.apply_to((it as CompiledItem).stats, 1)
+	input.mods.append(m)     # 不筛 = 每一件参战道具（和 input.mods 的语义一致）
 
 
 func _summary() -> String:

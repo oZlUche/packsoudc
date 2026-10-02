@@ -241,7 +241,7 @@ func _board_names() -> Dictionary:
 
 
 func _compile() -> CombatantSpec:
-	return BattleCompiler.compile(
+	return BattleCompiler.compile_board(
 		_board, null, _tracker.combat_mods(), _tracker.combat_rules()
 	)
 
