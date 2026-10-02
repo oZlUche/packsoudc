@@ -25,6 +25,12 @@ var label_font: Font
 var _result: BattleResult = null
 var _names := ["我方", "敌方"]
 var _panels: Array[CombatantPanel] = []
+## 103 第 7 条：双方棋盘（只读展示）与盖在上面的冷却遮罩；没给棋盘的一方不画
+var _boards: Array[InventoryView] = []
+var _overlays: Array[CooldownOverlay] = []
+var _board_slots: Array[Control] = []
+## 棋盘在回放里缩小显示（格子 60 → 30 像素）
+const BOARD_SCALE := 0.5
 var _cursor: int = 0
 var _now: float = 0.0
 var _playing: bool = false
@@ -62,32 +68,96 @@ func play(result: BattleResult, names: Array = []) -> void:
 	var sides: Array = result.initial.get("sides", [])
 	for i in _panels.size():
 		_panels[i].display_name = _names[i]
+		_panels[i].passives = result.passives[i] if i < result.passives.size() else []
 		_panels[i].reset(sides[i] if i < sides.size() else {})
+	if not result.buffs.is_empty():
+		set_buff_defs(result.buffs)     # 103：上过身的 buff 都在结果里，不用调用方猜
+	var cds: Array = result.initial.get("cooldowns", [])
+	for i in _overlays.size():
+		var secs := {}
+		var raw: Dictionary = cds[i] if i < cds.size() else {}
+		for uid in raw:
+			secs[uid] = StatMath.to_float(int(raw[uid]))
+		_overlays[i].reset(secs)
+		_overlays[i].now = 0.0
 	_ticker.clear()
 	_verdict.text = ""
 	_sync_buttons()
 
 
-## 087：告诉回放双方会出现哪些 buff（id → 定义）：图标用名字、悬浮窗写效果。从双方的战斗单位收集（[Glossary.buffs_in_spec]）
+## 087：告诉回放双方会出现哪些 buff（id → 定义）：图标用名字、悬浮窗写效果。
+## 103：[method play] 已经从 [member BattleResult.buffs] 拿了一份；这里传进来的并进去（老调用方、测试）
 func set_buff_defs(defs: Dictionary) -> void:
 	for p in _panels:
-		p.buff_defs = defs
+		var merged: Dictionary = p.buff_defs.duplicate()
+		merged.merge(defs, true)
+		p.buff_defs = merged
 		p.queue_redraw()
 
 
 ## 停在图标上时开悬浮窗
-func _on_buff_hovered(id: String, at: Vector2) -> void:
+func _on_buff_hovered(id: String, at: Vector2, side: int = 0) -> void:
 	if _tip == null:
 		return
-	var def: BuffDef = _panels[0].buff_defs.get(StringName(id), null)
+	_tip.show_text(buff_tip(id, side), at)
+
+
+## 悬浮窗正文：常驻格写它的加成；buff 写定义生成的说明，系统效果补一句不可解除
+func buff_tip(id: String, side: int = 0) -> String:
+	var panel := _panels[clampi(side, 0, _panels.size() - 1)]
+	if id == CombatantPanel.OVERTIME_CHIP:
+		var n := int(panel.stacks().get(id, 0))
+		return "[b]鏖战 ×%d[/b]\n系统效果，不可解除：加时开始后每隔一段，双方受到的最终伤害再加一截（记在「受到伤害」轴的系统层）\n%s" % [
+			n, StatAxes.describe(StatAxes.DAMAGE_TAKEN, panel.axis_value(StatAxes.DAMAGE_TAKEN), _system_of(side, StatAxes.DAMAGE_TAKEN))]
+	if id.begins_with(CombatantPanel.AXIS_PREFIX):
+		var a := CombatantPanel.axis_of(id)
+		var v := int(panel.stacks().get(id, 0))
+		return "[b]%s ×%d[/b]\n%s" % [StatAxes.name_of(a, v), absi(v), StatAxes.describe(a, v, _system_of(side, a))]
+	var note := panel.passive_of(id)
+	if note != null:
+		return "[b]%s[/b]\n%s" % [note.name, note.describe()]
+	var def: BuffDef = panel.buff_defs.get(StringName(id), null)
 	var name := Names.of(def) if def != null and Names.of(def) != "" else id
 	var body := Glossary.describe_buff(def) if def != null else "（没有这个 buff 的定义）"
-	_tip.show_text("[b]%s[/b]\n%s" % [name, body], at)
+	if def != null and def.system:
+		body += "\n系统效果，不可解除"
+	return "[b]%s[/b]\n%s" % [name, body]
+
+
+## 回放到当前游标为止，某一方某条轴的系统层（从日志里最近一条 axis_shifted 读）
+func _system_of(side: int, axis: StringName) -> int:
+	if _result == null:
+		return 0
+	var out := 0
+	for i in mini(_cursor, _result.log.size()):
+		var e := _result.log[i] as BattleEvent
+		if e.name == BattleEvent.AXIS_SHIFTED and e.side == side and e.get_name(&"axis") == axis:
+			out = e.get_int(&"system_stacks")
+	return out
 
 
 func _on_buff_unhovered() -> void:
 	if _tip != null:
 		_tip.hide_tip()
+
+
+## 103 第 7 条：把一方的棋盘交给回放（只读展示）。uid 和日志里的一致（就是编译它的那张，[member CombatantSpec.board]）。
+## 冷却遮罩盖在上面，跟着回放时刻（含倍速）转
+func set_board(side: int, board: GridInventory) -> void:
+	if side < 0 or side >= _board_slots.size() or board == null:
+		return
+	var view := _boards[side]
+	view.inventory = board
+	_board_slots[side].custom_minimum_size = view.custom_minimum_size * BOARD_SCALE
+	_board_slots[side].visible = true
+
+
+func board_view(side: int) -> InventoryView:
+	return _boards[side] if side >= 0 and side < _boards.size() else null
+
+
+func overlay(side: int) -> CooldownOverlay:
+	return _overlays[side] if side >= 0 and side < _overlays.size() else null
 
 
 ## 告诉回放某一方的 uid 叫什么名字。日志里只有 uid —— 名字纯属表现层的事，
@@ -118,6 +188,7 @@ func seek(t: float) -> void:
 	_suppress_popups = true
 	_now = maxf(0.0, t)
 	_drain_until(_now)
+	_sync_overlays()
 	_suppress_popups = false
 	_clock.text = "%.2f 秒" % _now
 	_sync_buttons()
@@ -144,6 +215,7 @@ func _process(delta: float) -> void:
 		return
 	_now += delta * SPEEDS[_speed_idx]
 	_drain_until(_now)
+	_sync_overlays()
 	_clock.text = "%.2f 秒" % _now
 	if _cursor >= _result.log.size():
 		_finish()
@@ -157,6 +229,12 @@ func _drain_until(t: float) -> void:
 			break
 		_apply(e)
 		_cursor += 1
+
+
+## 遮罩的进度是回放时刻的纯函数：倍速、跳转都只是 _now 变了
+func _sync_overlays() -> void:
+	for o in _overlays:
+		o.now = _now
 
 
 func _finish() -> void:
@@ -188,9 +266,18 @@ func _apply(e: BattleEvent) -> void:
 				_panels[e.side].set_stacks(
 					String(e.get_name(&"buff")), e.get_int(&"stacks")
 				)
-		BattleEvent.ITEM_FIRED:
+		BattleEvent.AXIS_SHIFTED:
 			if e.side >= 0 and e.side < _panels.size():
-				_panels[e.side].note_fired(e.get_int(&"uid"), _now)
+				_panels[e.side].set_axis(String(e.get_name(&"axis")), e.get_int(&"stacks"))
+		BattleEvent.OVERTIME_STACKED:
+			for p in _panels:
+				p.set_overtime(e.get_int(&"count"))
+		BattleEvent.ITEM_FIRED, BattleEvent.ITEM_SKIPPED:
+			if e.side >= 0 and e.side < _panels.size():
+				if e.name == BattleEvent.ITEM_FIRED:
+					_panels[e.side].note_fired(e.get_int(&"uid"), _now)
+				if e.payload.has("ready_at") and e.side < _overlays.size():
+					_overlays[e.side].note_cycle(e.get_int(&"uid"), StatMath.to_float(e.time), StatMath.to_float(e.get_int(&"ready_at")))
 		BattleEvent.DIED:
 			if e.side >= 0 and e.side < _panels.size():
 				_panels[e.side].mark_dead()
@@ -205,7 +292,7 @@ func _on_damage(e: BattleEvent) -> void:
 		return
 	# amount 为负表示这一下最终是治疗（受伤前效果把它反转了）
 	_panels[e.side].popup(
-		StatMath.to_int(absi(amount)), e.get_name(&"type"), amount < 0
+		StatMath.to_int(absi(amount)), e.get_name(&"type"), amount < 0, e.get_bool(&"crit")
 	)
 
 
@@ -224,16 +311,25 @@ func _log_event(e: BattleEvent) -> void:
 				bits.append("甲挡 %d" % StatMath.to_int(e.get_int(&"armor")))
 			var tail := ("（%s）" % "、".join(bits)) if not bits.is_empty() else ""
 			var color := UiPalette.damage_color(e.get_name(&"type")).to_html(false)
-			_log_line(e.time, "[color=#%s]%s %s %d%s[/color]" % [
+			_log_line(e.time, "[color=#%s]%s %s %d%s%s[/color]" % [
 				color, _side_name(e.side),
 				"回复" if e.get_int(&"amount") < 0 else "受到",
-				amt, tail,
+				amt, "（暴击）" if e.get_bool(&"crit") else "", tail,
 			])
 		BattleEvent.STATUS_STACKED:
 			_log_line(e.time, "%s 叠加 %s → %d 层" % [
 				_side_name(e.side), e.get_name(&"buff"), e.get_int(&"stacks")])
 		BattleEvent.DIED:
 			_log_line(e.time, "[color=#d9534f]%s 倒下[/color]" % _side_name(e.side))
+		BattleEvent.OVERTIME_STACKED:
+			if e.get_int(&"count") == 1:
+				_log_line(e.time, "[color=#e0b45c]鏖战开始：双方受到的最终伤害 +%d%%，隔一段再叠一次[/color]" % e.get_int(&"percent"))
+		BattleEvent.AXIS_SHIFTED:
+			if not e.get_bool(&"system"):
+				var a := e.get_name(&"axis")
+				_log_line(e.time, "%s %s %+d 层 → %d" % [_side_name(e.side), StatAxes.name_of(a, e.get_int(&"delta")), e.get_int(&"delta"), e.get_int(&"stacks")])
+		BattleEvent.DECAY_STARTED:
+			_log_line(e.time, "[color=#e0b45c]衰竭开始：双方的生命上限持续下降，直到一方倒下[/color]")
 
 
 ## 时间戳取【事件自己的时刻】，不是播放光标 ——
@@ -277,19 +373,38 @@ func _build() -> void:
 	arena.add_theme_constant_override("separation", 16)
 	root.add_child(arena)
 	for i in 2:
+		var col := VBoxContainer.new()
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col.add_theme_constant_override("separation", 8)
+		arena.add_child(col)
 		var p := CombatantPanel.new()
 		p.label_font = label_font
 		p.display_name = _names[i]
 		p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		p.buff_hovered.connect(_on_buff_hovered)
+		p.buff_hovered.connect(_on_buff_hovered.bind(i))
 		p.buff_unhovered.connect(_on_buff_unhovered)
-		arena.add_child(p)
+		col.add_child(p)
 		_panels.append(p)
+		# 103 第 7 条：棋盘（缩小）+ 冷却遮罩。没给棋盘就藏着
+		var slot := Control.new()
+		slot.visible = false
+		slot.mouse_filter = Control.MOUSE_FILTER_PASS
+		col.add_child(slot)
+		var board := InventoryView.new()
+		board.label_font = label_font
+		board.scale = Vector2.ONE * BOARD_SCALE
+		slot.add_child(board)
+		var o := CooldownOverlay.new()
+		o.view = board
+		board.add_child(o)
+		_board_slots.append(slot)
+		_boards.append(board)
+		_overlays.append(o)
 
 	_ticker = RichTextLabel.new()
 	_ticker.bbcode_enabled = true
 	_ticker.scroll_following = true
-	_ticker.custom_minimum_size = Vector2(0, 150)
+	_ticker.custom_minimum_size = Vector2(0, 90)
 	_ticker.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_ticker.add_theme_font_override("normal_font", label_font)
 	_ticker.add_theme_font_size_override("normal_font_size", 13)

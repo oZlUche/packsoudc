@@ -241,11 +241,11 @@ static func run_settle_save_and_pipeline(t: TestCase) -> void:
 	var s2 := RunState.from_dict(d, c.chapter, c.items, c.enemies, c.sets)
 	t.is_null(s2.travel.erosion, "读回来先没有场（等机制装）")
 	s2.difficulty = diff
-	s2.install_mechanics()
+	s2.install_modules()
 	var f2 := _field(s2)
 	t.not_null(f2, "装了机制就有")
 	t.eq([f2.eroded_bands, f2.next_at_action], [f.eroded_bands, f.next_at_action], "状态读回来一样")
-	s2.install_mechanics()
+	s2.install_modules()
 	t.eq(s2.travel.erosion, f2, "装两次幂等")
 
 	# 作者数据：进阶难度的侵蚀机制带效果清单，门都在 JSON 里

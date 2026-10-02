@@ -59,6 +59,30 @@ static func text_for(run: RunState, chapter: ChapterDef, node: MapNode) -> Strin
 	return text
 
 
+## 反馈：每个点的暂存区各自留着 —— 这个点上放着的东西（站在上面时是身上暂存区里的，走开了是留在这里的），一行 BBCode；没有返回 ""。
+## 和 [member RunState.node_storages] 同一份账，不受章节的「节点浮窗」开关管（这是玩家自己放的东西）
+static func stash_text(run: RunState, node: MapNode) -> String:
+	if run == null or node == null:
+		return ""
+	var items: Array = run.storage.items() if run.travel != null and run.travel.current_id == node.id and run.storage != null else run.stored_at(node.id)
+	if items.is_empty():
+		return ""
+	var counts := {}
+	var order: Array[String] = []
+	for inst in items:
+		var it := inst as ItemInstance
+		if it == null or it.def == null:
+			continue
+		var name := Names.of(it.def)
+		if not counts.has(name):
+			order.append(name)
+		counts[name] = int(counts.get(name, 0)) + 1
+	var parts: Array[String] = []
+	for name in order:
+		parts.append(name if int(counts[name]) == 1 else "%s ×%d" % [name, counts[name]])
+	return "[color=#f0ad4e]暂存区（%d 件）：[/color]%s" % [items.size(), "、".join(parts)]
+
+
 ## 浮窗里要不要画对手的棋盘：没用过的战斗点、内容里有敌人
 static func shows_board(node: MapNode) -> bool:
 	return node != null and category_of(node) == "battle" and EnemyKit.has_enemy(node.content)

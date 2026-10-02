@@ -9,7 +9,7 @@ extends RefCounted
 
 ## 一段木桩对一档：赢的比例
 static func win_rate(dummy: CombatantSpec, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase, node: MapNode,
-		tier: int, fights: int, seed: int, time_limit: float = 60.0) -> Dictionary:
+		tier: int, fights: int, seed: int, time_limit: float = BattleSim.DEFAULT_TIME_LIMIT) -> Dictionary:
 	var wins := 0
 	var draws := 0
 	var built := 0

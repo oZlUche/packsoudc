@@ -30,7 +30,7 @@ static func run_carry_budget(t: TestCase) -> void:
 	t.eq(RunState.countdown_limit_for(c.chapter, &"small", 600 + 50 * 100), 1, "罚到底至少留 1")
 	t.eq(RunState.countdown_limit_for(c.prologue, &"", 99999), 0, "序章没倒计时：还是 0")
 	# 一局：带入价值进开局，倒计时与关闭的撤离点按罚后的算
-	var s := RunState.start(c.chapter, 3, c.items, c.enemies, c.sets, kit.items, {}, [] as Array[StringName], null, [], null, {}, &"small", Vector2i(3, 3), 750)
+	var s := RunState.start(c.chapter, 3, c.items, c.enemies, c.sets, kit.items, {}, [] as Array[StringName], null, [], null, {}, &"small", {}, 750)
 	if s == null:
 		t.check(true, "（这个种子生成不出小图，跳过）")
 	else:

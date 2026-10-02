@@ -23,24 +23,9 @@
         },
         "effects": [
           {
-            "type": "apply_status",
-            "target": "SELF",
-            "buff": {
-              "id": "adrenaline",
-              "display_name": "肾上腺素",
-              "display_names": {
-                "en": "Adrenaline"
-              },
-              "max_stacks": 3,
-              "mods": [
-                {
-                  "stat": "haste",
-                  "mult_category": "HASTE",
-                  "mult_percent": 12
-                }
-              ]
-            },
-            "stacks": 3
+            "type": "shift_axis",
+            "axis": "attack_speed",
+            "delta": 12
           }
         ]
       }

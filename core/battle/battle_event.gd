@@ -10,6 +10,8 @@ const BATTLE_START := &"battle_start"
 const BATTLE_END := &"battle_end"
 const TICK := &"tick"
 const ITEM_FIRED := &"item_fired"
+## 103 第 7 条：冷却走了、但消耗付不起没出手 {uid, ready_at}。回放的冷却遮罩靠它接上新一轮
+const ITEM_SKIPPED := &"item_skipped"
 const EFFECT_RESOLVED := &"effect_resolved"
 const STATUS_STACKED := &"status_stacked"
 const STATUS_UNSTACKED := &"status_unstacked"
@@ -26,6 +28,12 @@ const DAMAGE := &"damage"
 ## 它没有可观测的结果，结果体现在随后那条 damage 上。
 const BEFORE_DAMAGE := &"before_damage"
 const DIED := &"died"
+## 103：标准轴的层数变了（4.3）：{axis, delta, stacks（内容层）, system_stacks（系统层）, system: 这次改的是不是系统层}
+const AXIS_SHIFTED := &"axis_shifted"
+## 103：加时叠了一次（全局，side -1）：{count: 第几次, percent: 每次受伤 +N%}。buff 栏的「鏖战 ×n」格由它驱动
+const OVERTIME_STACKED := &"overtime_stacked"
+## 103：衰竭开始，只发一次，给回放写一行；叠层本身走普通的 status_stacked
+const DECAY_STARTED := &"decay_started"
 ## 派发深度超限时记一条，便于内容配错时定位而不是直接崩
 const DISPATCH_OVERFLOW := &"dispatch_overflow"
 #endregion
@@ -48,6 +56,7 @@ const REASON_ABSORBED := &"absorbed"
 const VIEW_EVENTS: Array[StringName] = [
 	BATTLE_START, BATTLE_END, ITEM_FIRED, EFFECT_RESOLVED,
 	STATUS_STACKED, STATUS_UNSTACKED, RESOURCE_CHANGED, DAMAGE, DIED, DISPATCH_OVERFLOW,
+	AXIS_SHIFTED, OVERTIME_STACKED, DECAY_STARTED, ITEM_SKIPPED,
 ]
 
 

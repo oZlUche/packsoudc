@@ -13,6 +13,9 @@ extends Resource
 @export var display_names: Dictionary = {}
 ## 仅影响 UI 配色与「净化」类效果的筛选，不影响结算
 @export var is_debuff: bool = false
+## 103：系统效果（加时的鏖战、衰竭）—— 不可解除：移除效果与消耗层数对它一律无效；面板单独一种配色。
+## 由 [OvertimeRules] 在代码里造，不是内容
+@export var system: bool = false
 
 @export_group("叠层与时长")
 ## 0 = 不限层数

@@ -69,6 +69,7 @@ const STAT_NAMES := {
 	"regen_stamina": {"zh": "每秒回耐力", "en": "Stamina regen"}, "regen_hp": {"zh": "每秒回血", "en": "Health regen"}, "max_shield": {"zh": "护盾", "en": "Shield"},
 	"max_mana": {"zh": "法力", "en": "Mana"}, "regen_mana": {"zh": "每秒回法力", "en": "Mana regen"},
 	"stamina_cost": {"zh": "耗耐力", "en": "Stamina cost"}, "mana_cost": {"zh": "耗法力", "en": "Mana cost"},
+	"crit_chance": {"zh": "暴击率", "en": "Crit chance"}, "crit_damage": {"zh": "暴击伤害", "en": "Crit damage"},
 }
 ## 乘区 → 名字
 const CATEGORY_NAMES := {"EMPOWER": {"zh": "增伤", "en": "Empower"}, "SHARP": {"zh": "物理增伤", "en": "Sharpness"},
@@ -98,7 +99,9 @@ static func mod_text(m: StatModifier) -> String:
 			parts.append("%s %+d%%" % [cat, m.mult_percent])
 		else:
 			parts.append("%s %+d%%（%s）" % [stat_name(m.stat), m.mult_percent, cat])
-	if m.flat != 0.0:
+	if m.flat != 0.0 and BattleStats.PERCENT_DISPLAY.has(m.stat):
+		parts.append("%s %+d%%" % [stat_name(m.stat), roundi(m.flat * 100.0)])     # 104：暴击按百分数写
+	elif m.flat != 0.0:
 		var f := m.flat
 		parts.append("%s %s" % [stat_name(m.stat), ("%+d" % roundi(f)) if is_equal_approx(f, roundf(f)) else "%+.1f" % f])
 	return "、".join(parts) if not parts.is_empty() else "%s（无效果）" % stat_name(m.stat)
@@ -118,7 +121,13 @@ static func describe_buff(def: BuffDef) -> String:
 	var lines: Array[String] = []
 	var kind := "减益" if def.is_debuff else "增益"
 	var stacks := "不可叠层" if not def.is_stackable() else ("不限层" if def.max_stacks <= 0 else "至多 %d 层" % def.max_stacks)
-	lines.append("%s　%s　%s" % [kind, stacks, def.duration_text()])
+	var duration := def.duration_text()
+	# 103：默认永续、可叠层；不可叠层与会过期是例外，用例外色标出来，作者 / 玩家一眼看出「这个不是默认」
+	if not def.is_stackable():
+		stacks = _exception(stacks)
+	if not def.is_permanent():
+		duration = _exception(duration)
+	lines.append("%s　%s　%s" % [kind, stacks, duration])
 	if not def.mods.is_empty():
 		lines.append("%s%s" % ["每层：" if def.is_stackable() else "", mods_text(def.mods)])
 	for r in def.rules:
@@ -130,6 +139,14 @@ static func describe_buff(def: BuffDef) -> String:
 	if not def.on_expire.is_empty():
 		lines.append("到期时：" + effects_text(def.on_expire))
 	return "\n".join(lines)
+
+
+## 例外色（103）：buff 的默认是永续、可叠层，不是默认的那几个字染成这个色
+const EXCEPTION_COLOR := Color("e0b45c")
+
+
+static func _exception(text: String) -> String:
+	return "[color=#%s]%s[/color]" % [EXCEPTION_COLOR.to_html(false), text]
 
 
 ## 一条规则的一句：「[自发] 每 1.0 秒　造成 poison 伤害」

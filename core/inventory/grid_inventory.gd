@@ -333,6 +333,19 @@ func _put_back(items: Array[ItemInstance], homes: Array[Vector2i], rots: Array[i
 
 
 #region 放置与移除
+## 099：把这件已在本容器里的道具盖成「最新置入」（信仰切换用）。只改 [member ItemInstance.placed_seq]，
+## 不动格子、**不发 [signal placed]** —— 切换信仰不是「置入一件道具」，信力的 `place_item` 行为不该记它。
+## 发 changed 让界面重画（棋盘上谁在生效、谁休眠跟着变）。不在本容器里返回 false
+func reseat(uid: int) -> bool:
+	var inst: ItemInstance = _items.get(uid, null)
+	if inst == null:
+		return false
+	place_seq += 1
+	inst.placed_seq = place_seq
+	_notify_changed()
+	return true
+
+
 ## 放置。成功后会写回 [member ItemInstance.origin]、[member ItemInstance.rotation]
 ## 与 [member ItemInstance.container_id]，这三个字段必须与占用表一致，外部不要直接改。
 func place(inst: ItemInstance, origin: Vector2i, rot: int = 0) -> bool:

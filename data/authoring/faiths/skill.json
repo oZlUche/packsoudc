@@ -4,21 +4,47 @@
   "display_names": {
     "en": "God of Skill"
   },
-  "god": "技巧之神",
-  "description": "赐福的盾牌：对手的第一次攻击必定被弹开。信力：置入值钱的东西、献祭。",
+  "god": "技巧之神（尺度、变形、结构）",
+  "description": "锻造、战斗技巧和各种手艺，是矮人族和盗贼以及工匠信奉的神明，帝国祭祀的诸神之一",
   "thresholds": [
-    3,
-    8
+    25,
+    80
   ],
   "deeds": [
     {
-      "type": "place_item",
-      "min_value": 10
+      "type": "item_acquired",
+      "tag": "metal",
+      "per_cell": true,
+      "amount": 3
     },
     {
-      "type": "event_choice",
-      "tag": "offering",
-      "amount": 2
+      "type": "distinct_items_fired",
+      "tag": "weapon",
+      "cap": 50,
+      "amount": 10
+    }
+  ],
+  "offerings": [
+    {
+      "tags": [
+        "metal"
+      ],
+      "multiplier": 5.0,
+      "note": "金属（2^稀有度 × 5）"
+    },
+    {
+      "tags": [
+        "gear",
+        "armor",
+        "shield"
+      ],
+      "multiplier": 5.0,
+      "note": "防具（2^稀有度 × 5）"
+    },
+    {
+      "has_stat": "crit_chance",
+      "multiplier": 8.0,
+      "note": "带有暴击属性的道具（2^稀有度 × 8）"
     }
   ]
 }

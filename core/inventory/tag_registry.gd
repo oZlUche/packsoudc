@@ -43,14 +43,19 @@ static func register(def: TagDef) -> void:
 		_defs[def.id] = def
 
 
+## 098：找不到就问一次改名表（[IdAliases]）—— 标签改了名，老存档与老内容里的旧名字还查得到说明
 static func get_def(id: StringName) -> TagDef:
 	_ensure()
-	return _defs.get(id, null)
+	var d: TagDef = _defs.get(id, null)
+	if d != null:
+		return d
+	var alias := IdAliases.tag(id)
+	return _defs.get(alias, null) if alias != id else null
 
 
 static func has(id: StringName) -> bool:
 	_ensure()
-	return _defs.has(id)
+	return _defs.has(id) or _defs.has(IdAliases.tag(id))
 
 
 ## 登记过的标签，按字典序（编辑器下拉框、测试）

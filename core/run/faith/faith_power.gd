@@ -13,6 +13,9 @@ signal changed(faith_id: StringName, points: int, tier: int)
 var run: RunState = null
 ## faith id（String）→ 点数
 var points: Dictionary = {}
+## 104 信力节奏的量尺：每次加点记一条 {step, node_type, faith, event, gained, total, tier}（献祭的 event 是 `offering`）。
+## 跟着存档（RunState 的 `faith_history`），结算屏与开发模式的 CSV 读它 —— 作者打几局就能对着表调阈值与给点
+var history: Array[Dictionary] = []
 
 
 func setup(p_run: RunState) -> void:
@@ -56,6 +59,7 @@ func credit(event: StringName, payload: Dictionary = {}) -> int:
 		return 0
 	var key := String(def.id)
 	points[key] = points_of(def.id) + gained
+	_record(def.id, event, gained)
 	changed.emit(def.id, points_of(def.id), tier_of(def.id))
 	return gained
 
@@ -82,8 +86,76 @@ func add_points(id: StringName, n: int) -> int:
 	if n <= 0 or id == &"":
 		return tier_of(id)
 	points[String(id)] = points_of(id) + n
+	_record(id, &"offering", n)
 	changed.emit(id, points_of(id), tier_of(id))
 	return tier_of(id)
+
+
+func _record(id: StringName, event: StringName, gained: int) -> void:
+	var step := 0
+	var node_type := ""
+	if run != null:
+		step = run.travel.clock.total if run.travel != null and run.travel.clock != null else 0
+		var node := run.current_node() if run.map != null and run.travel != null else null
+		node_type = String(node.type) if node != null else ""
+	history.append({"step": step, "node_type": node_type, "faith": String(id), "event": String(event),
+		"gained": gained, "total": points_of(id), "tier": tier_of(id)})
+
+
+## 104：某个信仰每一阶头一回到达是第几步：[第 1 阶的步数, 第 2 阶的步数, …]，没到的不列
+static func tier_steps(p_history: Array, id: StringName) -> Array[int]:
+	var out: Array[int] = []
+	for e in p_history:
+		var entry := e as Dictionary
+		if entry == null or String(entry.get("faith", "")) != String(id):
+			continue
+		while out.size() < int(entry.get("tier", 0)):
+			out.append(int(entry.get("step", 0)))
+	return out
+
+
+## 104：结算屏的一行「信力节奏：日神 第 3 步到 1 阶、第 9 步到 2 阶」；一条记录都没有返回空
+static func pace_line(p_history: Array, defs: Dictionary = {}) -> String:
+	var order: Array[String] = []
+	for e in p_history:
+		var f := String((e as Dictionary).get("faith", ""))
+		if f != "" and not order.has(f):
+			order.append(f)
+	var parts: Array[String] = []
+	for f in order:
+		var steps := tier_steps(p_history, StringName(f))
+		var def: FaithDef = defs.get(StringName(f), null)
+		var name := Names.of(def) if def != null else f
+		if steps.is_empty():
+			parts.append("%s 没到 1 阶" % name)
+			continue
+		var bits: Array[String] = []
+		for i in steps.size():
+			bits.append("第 %d 步到 %d 阶" % [steps[i], i + 1])
+		parts.append("%s %s" % [name, "、".join(bits)])
+	return ("信力节奏：" + "；".join(parts)) if not parts.is_empty() else ""
+
+
+## 104：开发模式导出的 CSV（一行一次加点）
+static func history_csv(p_history: Array) -> String:
+	var lines: Array[String] = ["step,node_type,faith,event,gained,total,tier"]
+	for e in p_history:
+		var d := e as Dictionary
+		lines.append("%d,%s,%s,%s,%d,%d,%d" % [int(d.get("step", 0)), String(d.get("node_type", "")), String(d.get("faith", "")),
+			String(d.get("event", "")), int(d.get("gained", 0)), int(d.get("total", 0)), int(d.get("tier", 0))])
+	return "\n".join(lines) + "\n"
+
+
+func history_to_array() -> Array:
+	return history.duplicate(true)
+
+
+func restore_history(raw: Variant) -> void:
+	history.clear()
+	if raw is Array:
+		for e in raw:
+			if e is Dictionary:
+				history.append((e as Dictionary).duplicate())
 
 
 ## 给界面的一句：「蛮神 Lv.1　35 / 100」；没激活信仰返回空
@@ -101,7 +173,10 @@ func to_dict() -> Dictionary:
 	return points.duplicate()
 
 
+## 098：读档时旧信仰 id 并进新池子（093 的 violence → brute、sunfire → sun），两边都有就加起来 ——
+## 切换信仰不清别的池子，所以合并点数是唯一不丢信力的做法
 func restore(d: Dictionary) -> void:
 	points.clear()
 	for key in d:
-		points[String(key)] = int(d[key])
+		var id := IdAliases.faith(StringName(String(key)))
+		points[String(id)] = int(points.get(String(id), 0)) + int(d[key])

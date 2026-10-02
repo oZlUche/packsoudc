@@ -46,7 +46,7 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
 
 ### M3-1 拓扑无关的数据层 ✅
 
-> 已完成，见[报告 030](030-map-data-layer.md)。
+> 已完成，见[报告 030](../030-map-data-layer.md)。
 
 `core/map/`：`map_node.gd`、`map_edge.gd`、`map_graph.gd`，外加 `to_dict` / `from_dict`。
 
@@ -64,7 +64,7 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
 
 ### M3-2 生成器抽象 + 注册表 + 通用校验 ✅
 
-> 已完成，见[报告 032](032-map-generator.md)。
+> 已完成，见[报告 032](../032-map-generator.md)。
 
 `map_generator.gd`（`@abstract`）、`map_generator_registry.gd`、`MapGenerator.validate()`。
 
@@ -77,7 +77,7 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
 
 ### M3-3 环形生成器：拓扑与骨架 ✅
 
-> 已完成，见[报告 033](033-ring-map-topology.md)。
+> 已完成，见[报告 033](../033-ring-map-topology.md)。
 
 `generators/ring_map_generator.gd` + `ring_map_config.gd` + `ring_spec.gd` + `route_style.gd` +
 `danger_zone_spec.gd`，按 5.4「骨架先行」的十步走。这一步只做到**拓扑**：
@@ -109,12 +109,12 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
 
 ### M3-3a 地图编辑器、地图来源、生成器改动 ✅
 
-> 计划外插入，已完成，见[报告 034](034-map-editor-and-source.md)。
+> 计划外插入，已完成，见[报告 034](../034-map-editor-and-source.md)。
 > 编辑器里的朴素环形布局（`ui/map/ring_map_layout.gd`）与 `MapView` 会被 M3-6 接着用。
 
 ### M3-3b 手绘地图：网格脚本的解析与导出 ✅
 
-> 已完成，见[报告 037](037-grid-script-and-scale-profiles.md)。「生成图导出再解析 `to_dict()` 一致」
+> 已完成，见[报告 037](../037-grid-script-and-scale-profiles.md)。「生成图导出再解析 `to_dict()` 一致」
 > 这条验收改成了拓扑等价，理由在报告里。
 
 `core/map/map_grid_text.gd`（`parse` / `render`）+ `generators/grid_script_generator.gd`。
@@ -139,7 +139,7 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
 
 ### M3-3c 类型分配：风格、配额、覆盖、均衡 ✅
 
-> 已完成，见[报告 039](039-type-assignment.md)。下表里**路线相关的三行**（mix 偏差、风险收益档位、
+> 已完成，见[报告 039](../039-type-assignment.md)。下表里**路线相关的三行**（mix 偏差、风险收益档位、
 > `routes` 的 `risk` / `reward` 一致）按 035 改成了「生成时尽力 + 统计里看」，不进校验；
 > 换乘那一行已在 038 里改成随规模的相邻直连。
 
@@ -172,7 +172,7 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
 
 ### M3-4 run 层：行动计数与单步移动 ✅
 
-> 已完成，见[报告 042](042-action-clock-and-travel.md)。五步结算顺序落在 `core/run/map_travel.gd`。
+> 已完成，见[报告 042](../042-action-clock-and-travel.md)。五步结算顺序落在 `core/run/map_travel.gd`。
 
 `core/run/action_clock.gd`、`core/run/move_intent.gd`、`core/map/map_navigator.gd`。
 
@@ -199,7 +199,7 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
 
 ### M3-5 章节定义走内容管线 ✅
 
-> 已完成，见[报告 043](043-chapter-pipeline.md)。管线为此补了 `Vector2`、字典整数归一、按 `type` 造引擎基类字段三样通用能力。
+> 已完成，见[报告 043](../043-chapter-pipeline.md)。管线为此补了 `Vector2`、字典整数归一、按 `type` 造引擎基类字段三样通用能力。
 
 `ChapterDef` + `RingMapConfig`（含 `RingSpec[]` 与 `DangerZoneSpec[]`）的作者数据。
 
@@ -224,7 +224,7 @@ M3 只负责把「你踩到了一个 type 为 battle 的节点」这件事报出
 
 ### M3-6 渲染与地图沙盒 ✅
 
-> 已完成，见[报告 044](044-layout-solver-and-sandbox.md)。文件名与计划里写的不同：`ui/map/map_layout.gd`（策略根）、
+> 已完成，见[报告 044](../044-layout-solver-and-sandbox.md)。文件名与计划里写的不同：`ui/map/map_layout.gd`（策略根）、
 > `ring_layout_base.gd`、`ring_angle_solver.gd`、`map_sandbox.tscn`。敌人预览浮窗按计划不做，标记位留了。
 
 `ui/map/map_layout_strategy.gd`、`ui/map/layouts/ring_layout.gd`、`ui/map/map_view.gd`，

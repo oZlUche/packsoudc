@@ -23,6 +23,10 @@ func open(_payload: Dictionary) -> void:
 	var m := flow.meta
 	col.add_child(_label(UiText.t("menu.stats") % [
 		m.runs + 1, m.extractions, m.deaths, m.warehouse.item_count(), m.score, m.funds], 13, UiPalette.DIM))
+	# 098：这个存档位读不回来、已备份的那一句（战绩行下面）
+	var notice := flow.backup_notice()
+	if notice != "":
+		col.add_child(_label(notice, 13, UiPalette.STAMINA))
 	col.add_child(HSeparator.new())
 
 	# 089（作者定）：第一项「继续」（当前位有存档才显示：读档 / 下一张教程 / 按这份存档开局）；第二项「读取存档」（换位，有任何一位有存档才显示）；

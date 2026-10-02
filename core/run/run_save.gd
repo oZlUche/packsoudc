@@ -1,7 +1,7 @@
 ## 存档文件（架构文档 7.2，M5）：`RunState.to_dict()` → JSON → `user://`。
 ##
-## 从第一天就写版本号：读到不认识的版本不猜，返回 null 并说明 —— 迁移是将来加字段时的事，
-## 有版本号才有迁移的余地。内容库（道具、敌人、章节）不进存档，读档时由调用方给：
+## 从第一天就写版本号：读到旧版本先走 [RunMigrations] 的迁移链（098），升不上去才返回 null 并说明 ——
+## 一局档允许作废（作者定），但走的是同一条链，不写特例。内容库（道具、敌人、章节）不进存档，读档时由调用方给：
 ## 存档只写 id，内容改了存档照样读得回来（3.1：存档只写 id，绝不写资源路径）。
 class_name RunSave
 extends RefCounted
@@ -40,9 +40,9 @@ static func from_text(text: String, items: ItemDatabase, enemies: EnemyDatabase,
 	if not (parsed is Dictionary):
 		push_warning("RunSave: 存档不是合法的 JSON 对象")
 		return null
-	var d := parsed as Dictionary
+	var d := RunMigrations.upgrade(parsed as Dictionary)     # 098：一局档走同一条链，升不上去就作废（局外进度不受影响）
 	if int(d.get("version", -1)) != RunState.SAVE_VERSION:
-		push_warning("RunSave: 存档版本 %s，本版只认 %d —— 迁移还没写" % [str(d.get("version", "?")), RunState.SAVE_VERSION])
+		push_warning("RunSave: 存档版本 %s 升不到 %d —— 这一局作废" % [str((parsed as Dictionary).get("version", "?")), RunState.SAVE_VERSION])
 		return null
 	var chapter := load_chapter(StringName(String(d.get("chapter", ""))))
 	if chapter == null:

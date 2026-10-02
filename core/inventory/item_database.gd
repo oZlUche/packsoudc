@@ -76,12 +76,17 @@ func register(def: ItemDef) -> bool:
 	return true
 
 
+## 098：找不到就问一次改名表（[IdAliases]）—— 老存档里写的是旧 id，内容改了名不该让仓库里的东西悄悄消失
 func get_def(id: StringName) -> ItemDef:
-	return _defs.get(id, null)
+	var d: ItemDef = _defs.get(id, null)
+	if d != null:
+		return d
+	var alias := IdAliases.item(id)
+	return _defs.get(alias, null) if alias != id else null
 
 
 func has_def(id: StringName) -> bool:
-	return _defs.has(id)
+	return _defs.has(id) or _defs.has(IdAliases.item(id))
 
 
 ## 能用的道具：**封存的不在里面**（[constant ItemDef.SEALED]）。搜索、掉落、商店、敌人装备、图鉴、编辑器都从这里拿候选 ——

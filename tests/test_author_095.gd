@@ -75,9 +75,9 @@ static func run_variants_and_modes(t: TestCase) -> void:
 	t.check(absf(d999 - (base_dmg * 1.1 + 6.0)) < 0.01, "9999 点：最多 6 份（%.2f）" % d999)
 	# 献祭双倍
 	var brute: FaithDef = faiths[&"brute"]
-	t.eq(brute.offering_value(sb), 2 * roundi(pow(2.0, float(sb.rarity)) * 3.0), "蛮神赐福的短剑献给蛮神：(2^2 × 3) × 2 = 24")
+	t.eq(brute.offering_value(sb), 2 * roundi(pow(2.0, float(sb.rarity)) * 2.0), "蛮神赐福的短剑献给蛮神：(2^2 × 2) × 2 = 16")
 	var sun: FaithDef = faiths[&"sun"]
-	t.eq(sun.offering_value(sb), roundi(pow(2.0, float(sb.rarity)) * 2.0), "献给日神照普通算（金属）：8")
+	t.eq(sun.offering_value(sb), roundi(pow(2.0, float(sb.rarity)) * 5.0), "献给日神照普通算（金属）：2^2 × 5 = 20")
 
 
 static func run_blessing_paths(t: TestCase) -> void:

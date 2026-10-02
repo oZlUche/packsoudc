@@ -1,5 +1,7 @@
 ## 局外状态的存档文件（M6）：`MetaState.to_dict()` → JSON → `user://meta.json`。与 [RunSave] 同一套做法：
-## 带版本号、只写 id、内容库由调用方给。读不到（第一次玩、文件坏了、版本不对）返回 null，调用方从零开始。
+## 带版本号、只写 id、内容库由调用方给。读不到（第一次玩、文件坏了、版本升不上来）返回 null。
+## 098：旧版本在 [method from_text] 里先走 [MetaMigrations] 的迁移链；仍然升不上去才返回 null，
+## 这时调用方（[GameFlow.use_slot]）**先把文件备份下来再从零开始**，绝不静默覆盖玩家的局外进度。
 class_name MetaSave
 extends RefCounted
 
@@ -36,9 +38,9 @@ static func from_text(text: String, items: ItemDatabase, rules: MetaRules = null
 	if not (parsed is Dictionary):
 		push_warning("MetaSave: 存档不是合法的 JSON 对象")
 		return null
-	var d := parsed as Dictionary
+	var d := MetaMigrations.upgrade(parsed as Dictionary)     # 098：旧版本先按链逐级升（只在读文件这一层做）
 	if int(d.get("version", -1)) != MetaState.SAVE_VERSION:
-		push_warning("MetaSave: 存档版本 %s，本版只认 %d —— 迁移还没写" % [str(d.get("version", "?")), MetaState.SAVE_VERSION])
+		push_warning("MetaSave: 存档版本 %s 升不到 %d —— 调用方应先备份再从零开始" % [str((parsed as Dictionary).get("version", "?")), MetaState.SAVE_VERSION])
 		return null
 	return MetaState.from_dict(d, items, rules)
 

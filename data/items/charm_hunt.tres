@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_aalsc"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_wel1y"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_qj3jo"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_rvnee"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_knxp2"]
+
+[sub_resource type="Resource" id="Resource_r85hh"]
+script = ExtResource("5_knxp2")
+
+[resource]
+script = ExtResource("4_rvnee")
+id = &"charm_hunt"
+display_name = "狩猎之神的护符"
+display_names = {
+"en": "Charm of the Hunt"
+}
+shape = SubResource("Resource_r85hh")
+rarity = 3
+value = 200
+tags = Array[StringName]([&"treasure", &"faith", &"faith:hunt", &"faith_anchor"])

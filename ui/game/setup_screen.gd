@@ -591,10 +591,19 @@ func _rebuild_board() -> void:
 	_readout.custom_minimum_size = Vector2(ch.board_size.x * InventoryView.CELL, 140)
 	_readout.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_board_host.add_child(_readout)
-	_board_host.add_child(_label("左键拖动　R 旋转　右键 / Esc 取消", 11, UiPalette.DIM))
+	_board_host.add_child(_label("左键拖动　R 旋转　右键 / Esc 取消　右键信物 = 奉为主信仰", 11, UiPalette.DIM))
 	_drag.register_view(_board_view)
+	_board_view.item_context.connect(func(_v: ContainerView, uid: int): reseat_anchor(uid))     # 099：开局屏的棋盘同一套
 	board.changed.connect(_refresh)
 	_apply_preset()     # 096：挑着的预设套跟着角色换过来
+
+
+## 099（作者定）：右键棋盘上的信物 = 奉它为主信仰（出发带走的就是这个顺序）。不是信物什么也不做
+func reseat_anchor(uid: int) -> bool:
+	var inst := board.get_item(uid) if board != null else null
+	if inst == null or inst.def == null or not inst.def.is_anchor():
+		return false
+	return board.reseat(uid)
 
 
 func _refresh() -> void:
