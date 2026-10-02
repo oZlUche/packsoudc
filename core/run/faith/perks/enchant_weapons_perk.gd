@@ -59,7 +59,5 @@ func modify_spec(spec: CombatantSpec, board: GridInventory, run: RunState) -> vo
 			m.apply_to(item.stats, 1)
 
 
-func describe() -> String:
-	if note != "":
-		return note
+func _summary() -> String:
 	return "开战时%s火焰附魔（每击 max(%.0f, %d%% 武器伤害) 火焰）%s" % ["全部武器" if count <= 0 else "随机 %d 把武器" % count, fixed, percent, ("，武器耐力消耗 %d%%" % stamina_cost_percent) if stamina_cost_percent != 0 else ""]

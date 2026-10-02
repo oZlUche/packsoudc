@@ -116,7 +116,7 @@ static func _check_rules(g: MapGraph, cfg: RingMapConfig) -> String:
 		if cfg.zone_spec != null and (elites < cfg.zone_spec.min_elites or searches < cfg.zone_spec.min_search):
 			return "高危区 %s：%d 精英 %d 搜索点" % [zone_id, elites, searches]
 
-	# 中途撤离点只在撤离环间（核心前一环例外：去撤离点的路线在那里收尾），且那里至少有一个；不在高危区里
+	# 撤离点只在撤离环间（去撤离点的路线也在那里收尾，报告 053），且那里至少有一个；不在高危区里
 	var band := cfg.extract_band()
 	if not band.is_empty():
 		var in_band := 0
@@ -126,7 +126,7 @@ static func _check_rules(g: MapGraph, cfg: RingMapConfig) -> String:
 			var r := _ring_of(g, id)
 			if band.has(r):
 				in_band += 1
-			elif r != 1:
+			else:
 				return "撤离点 %d 在第 %d 环，不在撤离环间 %s" % [id, r, str(band)]
 			if g.get_node(id).zone != 0:
 				return "撤离点 %d 开在高危区里" % id
@@ -346,6 +346,8 @@ static func run_band_extracts_and_step_havens(t: TestCase) -> void:
 		var pos := {}
 		var n_pos := {}
 		var routes_n := 0
+		var search_routes := 0
+		var search_shared := 0
 		for s in SEEDS:
 			var g := RingMapGenerator.new().generate(cfg, s)
 			if g == null:
@@ -369,25 +371,38 @@ static func run_band_extracts_and_step_havens(t: TestCase) -> void:
 					band_x += 1
 					if int(routes_of.get(id, 0)) >= 2 or pivot.has(id):
 						shared += 1
-				elif r != 1:
+				else:
 					stray += 1
 			for route in g.routes:
 				var ids: Array = route["node_ids"]
 				var inner: Array = ids.slice(1, ids.size() - 1)
 				routes_n += 1
+				if String(route["ends_at"]) == "extract":
+					search_routes += 1
+					if pivot.has(int(ids[-1])):
+						search_shared += 1
 				for ty in at:
+					# 搜索路线的商店挪到了撤离点之后的换乘区（报告 053），不在路线上、也不按步数算位置
+					var tail: Array = route.get("exit_ids", [])
+					if ty == "shop" and not tail.is_empty() and g.get_node(int(tail[0])).type == &"shop":
+						n_pos[ty + "_exit"] = int(n_pos.get(ty + "_exit", 0)) + 1
+						continue
 					for k in inner.size():
 						if g.get_node(int(inner[k])).type == StringName(ty):
 							pos[ty] = float(pos.get(ty, 0.0)) + float(k) / float(maxi(1, inner.size() - 1))
 							n_pos[ty] = int(n_pos.get(ty, 0)) + 1
 							break
 		t.check(band_x >= SEEDS, "%d 环：撤离环间 %s 里每张图至少一个撤离点（共 %d）" % [rings, str(band), band_x])
-		t.eq(stray, 0, "%d 环：撤离环间之外只有核心前一环有撤离点（路线收尾）" % rings)
+		t.eq(stray, 0, "%d 环：撤离环间之外没有撤离点" % rings)
+		t.eq(search_shared, search_routes, "%d 环：搜索路线的尽头都在换乘弧上、和相邻路线共用（%d / %d）" % [rings, search_shared, search_routes])
+		t.check(int(n_pos.get("shop_exit", 0)) >= search_routes * 0.6,
+			"%d 环：多数搜索路线的商店在撤离点之后（%d / %d）" % [rings, int(n_pos.get("shop_exit", 0)), search_routes])
 		t.check(float(shared) >= float(band_x) * 0.3,
 			"%d 环：撤离环间的撤离点多数落在两条路线共用的地方（%d / %d，尽力而为）" % [rings, shared, band_x])
 		for ty in at:
 			var avg := float(pos.get(ty, 0.0)) / float(maxi(1, int(n_pos.get(ty, 0))))
-			t.check(int(n_pos.get(ty, 0)) >= routes_n * 0.9,
-				"%d 环：%d/%d 条路线上有 %s" % [rings, int(n_pos.get(ty, 0)), routes_n, ty])
+			var got := int(n_pos.get(ty, 0)) + int(n_pos.get(ty + "_exit", 0))
+			t.check(got >= routes_n * 0.9,
+				"%d 环：%d/%d 条路线上（或出口之后）有 %s" % [rings, got, routes_n, ty])
 			t.check(absf(avg - float(at[ty])) <= 0.2,
 				"%d 环：%s 平均在路线 %.2f 处，目标 %.2f（按步数，不看环）" % [rings, ty, avg, float(at[ty])])

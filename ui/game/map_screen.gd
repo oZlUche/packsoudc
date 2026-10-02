@@ -729,7 +729,7 @@ func _refresh_skills() -> void:
 			bits.append("冷却 %d 步" % _run.skills.cooldown_of(d.id))
 		var btn := _button("%s%s" % [d.display_name, ("（" + "，".join(bits) + "）") if not bits.is_empty() else ""], func(): use_skill(d.id), 13, UiPalette.Tier.MINOR)
 		btn.disabled = _run.skills.can_use(d.id) != ""
-		btn.tooltip_text = d.summary() + ("\n" + d.description if d.description != "" else "")
+		btn.tooltip_text = d.summary() + ("\n" + Names.description_of(d) if d.description != "" else "")
 		_skills_box.add_child(btn)
 	if _run.skills.evading():
 		_skills_box.add_child(_label("躲避中（剩 %d 步）" % _run.skills.evade_left, 12, UiPalette.DIM))

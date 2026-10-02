@@ -15,21 +15,15 @@
     "rules": [
       {
         "trigger": {
-          "type": "on_resource_below",
-          "percent": 25
+          "type": "on_schedule"
         },
         "cadence": {
-          "type": "always"
+          "type": "cooldown"
         },
-        "costs": [
-          {
-            "type": "uses"
-          }
-        ],
         "effects": [
           {
-            "type": "change_resource",
-            "amount": 12.0
+            "type": "remove_status",
+            "buff_id": "bleed"
           }
         ]
       }

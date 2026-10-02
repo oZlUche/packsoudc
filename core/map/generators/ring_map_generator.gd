@@ -49,8 +49,13 @@ var _zone_gate_links: Array = []
 var _zones_skipped: int = 0
 ## 路线下标 -> 环 -> 这一环上要多横着走几步（route_length_factor 多出来的步数撒在各环上）
 var _extra_steps: Array[Dictionary] = []
-## 路线的尽头（去撤离点的路线停在第 1 环的那个点）：不许当高危区的岔出点、不许被吸收
+## 路线的尽头（去撤离点的路线在撤离环间那段弧的最后一个点）：不许当高危区的岔出点、不许被吸收
 var _route_ends: Dictionary = {}
+## 骨架铺完之后高危区还要用：每条路线的点、每条路线的风格
+var _paths: Array = []
+var _styles: Array[RouteStyle] = []
+## 路线下标 -> 撤离点之后、相邻路线之前的那几个点（换乘区，商店放第一个）。只有去撤离点的路线有
+var _exit_tails: Dictionary = {}
 
 
 func default_config() -> Resource:
@@ -85,6 +90,9 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 	_zones_on_route = {}
 	_extra_steps = []
 	_route_ends = {}
+	_paths = []
+	_styles = []
+	_exit_tails = {}
 	# 几片高危区由规模模板说了算：min 必须有，多出来的在 [min, max] 里随机
 	_zone_range = _cfg.zone_count_range()
 	# 指定了片数就要那么多（已经被夹进规模的范围了）；没指定就在范围里随机
@@ -106,6 +114,9 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 	if not _lay_skeleton():
 		return null
 	_lay_pivots()
+	# 路线与换乘都铺完了，高危区才从非搜索路线的后半段岔出来、长进剩下的空位（报告 053 第三条）——
+	# 和路线同步长的时候，它一半的失败是占走了路线自己的下一步
+	_lay_zones()
 	# 受保护的结构先建（骨架已经在了，接着是高危区的生长树），候选边后建 ——
 	# 候选边碰上会交叉的情况自己让路，不能反过来让骨架去迁就它
 	_link_zone_trees()
@@ -315,12 +326,16 @@ func _lay_skeleton() -> bool:
 
 	var paths: Array = []       # 每条路线一个 Array[int]
 	var styles: Array[RouteStyle] = []
+	var stops: Array[int] = []  # 每条路线走到第几环为止
 	for i in entries.size():
 		paths.append([entries[i]] as Array[int])
 		styles.append(_cfg.routes[i % _cfg.routes.size()])
+		stops.append(0 if styles[i].is_core_route() else _exit_ring())
 		_protected_nodes[entries[i]] = true
 		_graph.entry_ids.append(entries[i])
-		_extra_steps.append(_schedule_extra_steps(outer))
+		# 去撤离点的路线只走到撤离环间：多出来的步数全撒在它走得到的那几环上（停下的那一环走的是出口弧），
+		# 不然一半步数撒进了它不去的内圈，路线短到没什么可搜
+		_extra_steps.append(_schedule_extra_steps(outer, maxi(1, stops[i] + 1)))
 
 	# 最外环上也可以先横着走几步再向内
 	var all_routes: Array[int] = []
@@ -329,51 +344,143 @@ func _lay_skeleton() -> bool:
 	_walk_extra(outer, all_routes, paths, outer - 1 < _cfg.converge_after_ring)
 
 	for r in range(outer - 1, -1, -1):
-		# 这一环还在走的路线：去核心的走到 0，去撤离点的停在 1
+		# 这一环还在走的路线：去核心的走到 0，去撤离点的停在撤离环间
 		var active: Array[int] = []
 		for i in paths.size():
-			if r >= (0 if styles[i].is_core_route() else 1):
+			if r >= stops[i]:
 				active.append(i)
 		if active.is_empty():
 			break
 		if not _advance_ring(r, outer - 1 - r, active, paths):
 			return false
-		if r >= 1:
-			# 去撤离点的路线走到第 1 环就到头了：那个点是它的出口，高危区不许从它岔出、也不许吸收它
-			for i in active:
-				if not styles[i].is_core_route() and r == 1:
-					_route_ends[(paths[i] as Array[int])[-1]] = true
-			# 高危区也是一个「起点」：和路线同一个节拍，每推进一环长一个点
-			_grow_zones_once()
-			_maybe_spawn_zones(r, active, paths)
+		for i in active:
+			if r == stops[i] and not styles[i].is_core_route():
+				_lay_exit_arc(i, r, paths)
 
-	# 路线走完了，高危区接着长到软上限或没地方为止
-	while _grow_zones_once():
-		pass
-	_finalize_zones()
-
+	_paths = paths
+	_styles = styles
 	var routes: Array[Dictionary] = []
 	for i in paths.size():
-		routes.append({
+		var route := {
 			"entry_id": entries[i],
 			"style": String(styles[i].id),
 			"ends_at": String(styles[i].ends_at),
 			"node_ids": paths[i],
-			# 这条路线身上岔出了哪几片高危区 —— 开局挑出生点时，这是玩家想知道的事
-			"zone_ids": _surviving_zones(i),
-		})
+			"zone_ids": [] as Array[int],
+		}
+		if _exit_tails.has(i):
+			# 撤离点之后到相邻路线之前的换乘区：商店放第一个，出口之后成了继续走的诱因
+			route["exit_ids"] = _exit_tails[i]
+		routes.append(route)
 	_graph.routes = routes
 	_graph.goal_ids = [CORE_ID] as Array[int]
 	return true
 
 
+## 去撤离点的路线停在哪一环：撤离环间；偶数环的图环间有两环，取内侧那环（作者定，报告 053）——
+## 4 环图向内能走两步而不是一步，6 环图正好停在换乘环上。
+## 没有撤离环间（大型图的两道还没定）就还是停在核心前一环
+func _exit_ring() -> int:
+	var band := _cfg.extract_band()
+	if band.is_empty():
+		return 1
+	var inner: int = band[0]
+	for r in band:
+		inner = mini(inner, int(r))
+	return maxi(1, inner)
+
+
+## 去撤离点的路线走到撤离环间之后，沿这一环朝一条相邻路线横着走一段弧：
+## 弧上的点归这条路线、最后一个点就是它的尽头（撤离点）；尽头到相邻路线之间剩下的点是换乘区，
+## 整段保护起来当换乘弧 —— 撤离点因此由两条路线共用。
+##
+## 朝哪边：两边都量一量，**能碰上相邻路线、且中间空着的点多的那边**（作者定，报告 053）。
+## 内圈槽位少，弧长是最紧的约束。两边都碰不上别的路线（空白区隔开了），就朝空点多的那边走，没有换乘区。
+## 弧长：大约补上不再向内走的那几环（含横着多走的步数），至少给换乘区留一个点
+func _lay_exit_arc(i: int, r: int, paths: Array) -> void:
+	var path: Array[int] = paths[i]
+	var head := path[-1]
+	var map: Dictionary = _ring_slots[r]
+	var best := {}
+	for dir in [1, -1]:
+		var free: Array[int] = []
+		var meets := -1
+		var meets_route := -1
+		var slot := int(_graph.get_node(head).layout["order"])
+		for _k in map.size():
+			slot = _ring_next(r, slot, dir)
+			if slot < 0:
+				break
+			var id := int(map[slot])
+			if id == head:
+				break
+			if _protected_nodes.has(id) or _graph.get_node(id).zone != 0:
+				meets_route = _other_route_of(id, paths, i)
+				if meets_route >= 0:
+					meets = id
+				break
+			free.append(id)
+		var option := {"free": free, "meets": meets, "route": meets_route}
+		if best.is_empty() or _better_exit(option, best):
+			best = option
+	var free: Array[int] = best["free"]
+	var meets := int(best["meets"])
+	var arc_max := roundi(float(r - 1) * _cfg.route_length_factor) + 1
+	var take := mini(arc_max, free.size() - 1) if meets >= 0 else mini(arc_max, free.size())
+	take = maxi(0, take)
+	for k in take:
+		_protect_edge(path[-1], free[k], &"tangential")
+		_protected_nodes[free[k]] = true
+		path.append(free[k])
+	var end := path[-1]
+	_route_ends[end] = true
+	if meets < 0:
+		return
+	var tail: Array[int] = []
+	var prev := end
+	for k in range(take, free.size()):
+		tail.append(free[k])
+	for id in tail + [meets]:
+		_protect_edge(prev, id, &"tangential")
+		_protected_nodes[id] = true
+		prev = id
+	_exit_tails[i] = tail
+	var j := int(best["route"])
+	var arc: Array[int] = [end]
+	arc.append_array(tail)
+	arc.append(meets)
+	(_graph.layout_meta["pivot_arcs"] as Array).append({"routes": [mini(i, j), maxi(i, j)], "node_ids": arc})
+	# 这一环上的换乘就是这段弧了，不再另外拉一段
+	for k in _pivot_rings.size():
+		if _pivot_rings[k] == r:
+			_pivot_done["%d:%d:%d" % [i, j, k]] = true
+			_pivot_done["%d:%d:%d" % [j, i, k]] = true
+
+
+## 能碰上相邻路线的优先，其次中间空着的点多的
+static func _better_exit(a: Dictionary, b: Dictionary) -> bool:
+	var ma := int(a["meets"]) >= 0
+	var mb := int(b["meets"]) >= 0
+	if ma != mb:
+		return ma
+	return (a["free"] as Array).size() > (b["free"] as Array).size()
+
+
+## id 在哪条别的路线上（不是 self_index 那条）；都不在返回 -1
+static func _other_route_of(id: int, paths: Array, self_index: int) -> int:
+	for j in paths.size():
+		if j != self_index and (paths[j] as Array[int]).has(id):
+			return j
+	return -1
+
+
 ## 一条路线多出来的步数（环数 × (route_length_factor - 1)）撒在哪几环：环 -> 几步。
 ## 随机撒，一环可以摊到好几步 —— 同一环上横着走几步不致命，路线长一点沿路才放得下东西
-func _schedule_extra_steps(outer: int) -> Dictionary:
+func _schedule_extra_steps(outer: int, lowest: int = 1) -> Dictionary:
 	var out := {}
 	var extra := maxi(0, roundi(float(outer) * (_cfg.route_length_factor - 1.0)))
 	for _k in extra:
-		var r := _rng.randi_range(1, outer)
+		var r := _rng.randi_range(mini(lowest, outer), outer)
 		out[r] = int(out.get(r, 0)) + 1
 	return out
 
@@ -789,43 +896,57 @@ func _is_mandatory_node(_id: int) -> bool:
 	return false
 
 
-## 过了半程的路线上，按概率岔出还没长的高危区。r = 各条路线刚刚落子的那一环。
-func _maybe_spawn_zones(r: int, active: Array[int], paths: Array) -> void:
-	var spec := _cfg.zone_spec
-	if spec == null or _zones_pending <= 0:
-		return
+## 路线铺完之后再长高危区（报告 053 第三条）。岔出的规矩不变，只是从「边铺边岔」挪到「铺完再挑锚点」：
+## 从过了半程的那一环起逐环向内，每环按概率从这一环上的路线节点岔出还没长的区，最内环兜底；
+## 每走一环，已经岔出的区各长一个点 —— 先岔出的区长得大些，和以前一样。
+## 只有风格允许（[member RouteStyle.spawns_zones]）的路线岔：搜索路线不岔
+func _lay_zones() -> void:
 	var outer := _cfg.ring_count()
-	var progress := float(outer - r) / float(maxi(1, outer - 1))
-	if progress < spec.start_after_progress:
-		return
-	var last_chance := r <= 1
-	for _k in _zones_pending:
-		if (last_chance or _rng.randf() < spec.spawn_chance) and _spawn_zone(active, paths):
-			_zones_pending -= 1
+	var spec := _cfg.zone_spec
+	if spec != null and _zones_pending > 0:
+		for r in range(outer - 1, 0, -1):
+			var progress := float(outer - r) / float(maxi(1, outer - 1))
+			if progress < spec.start_after_progress:
+				continue
+			_grow_zones_once()
+			var last_chance := r <= 1
+			for _k in _zones_pending:
+				if (last_chance or _rng.randf() < spec.spawn_chance) and _spawn_zone(r):
+					_zones_pending -= 1
+	# 接着长到软上限或没地方为止
+	while _grow_zones_once():
+		pass
+	_finalize_zones()
+	for i in _graph.routes.size():
+		_graph.routes[i]["zone_ids"] = _surviving_zones(i)
 
 
-## 从某条路线刚落子的那个点上岔出一片。要求「周围空间充足」：
+## 从第 r 环上某条路线的节点岔出一片。要求「周围空间充足」：
 ## 第一个点旁边至少还有一个空点，保证立刻能再长一步（一片高危区生下来就至少两个点）。
 ## 每条路线身上岔出的片数有上限（规模模板的 zones_per_route）。
-func _spawn_zone(active: Array[int], paths: Array) -> bool:
+func _spawn_zone(r: int) -> bool:
 	var profile := _cfg.scale()
 	var per_route := profile.zones_per_route if profile != null else 1
 	var options: Array = []      # [anchor, first, route]
-	for i in active:
+	for i in _paths.size():
+		if not _styles[i].spawns_zones:
+			continue
 		if (_zones_on_route.get(i, []) as Array).size() >= per_route:
 			continue
-		var path: Array[int] = paths[i]
-		var anchor := path[-1]
-		# 路线的尽头（去撤离点的路线停下的那个点）是它的出口：不从它岔出，收尾时也就不会把它吸进去
-		if _is_mandatory_node(anchor) or _graph.get_node(anchor).zone != 0 or _route_ends.has(anchor):
-			continue
-		for first in _spatial_neighbors(anchor):
-			if not _zone_free(first):
+		for anchor in (_paths[i] as Array[int]):
+			var n := _graph.get_node(anchor)
+			if anchor == CORE_ID or int(n.layout.get("ring", 0)) != r or _graph.entry_ids.has(anchor):
 				continue
-			for second in _spatial_neighbors(first):
-				if second != anchor and _zone_free(second):
-					options.append([anchor, first, i])
-					break
+			# 路线的尽头是它的出口：不从它岔出，收尾时也就不会把它吸进去
+			if _is_mandatory_node(anchor) or n.zone != 0 or _route_ends.has(anchor):
+				continue
+			for first in _spatial_neighbors(anchor):
+				if not _zone_free(first):
+					continue
+				for second in _spatial_neighbors(first):
+					if second != anchor and _zone_free(second):
+						options.append([anchor, first, i])
+						break
 	if options.is_empty():
 		return false
 	# 岔出来的那条路当场建：会和别的路交叉的不要，换一个

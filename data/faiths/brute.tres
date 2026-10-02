@@ -25,7 +25,6 @@ mult_percent = 10
 script = ExtResource("2_fhojw")
 mode = "active"
 mods = Array[ExtResource("3_thvtn")]([SubResource("Resource_1868r")])
-note = "伤害 +10%"
 
 [sub_resource type="Resource" id="Resource_umwjh"]
 script = ExtResource("3_thvtn")
@@ -36,7 +35,6 @@ script = ExtResource("2_fhojw")
 mode = "scaled"
 max_stacks = 6
 mods = Array[ExtResource("3_thvtn")]([SubResource("Resource_umwjh")])
-note = "每 50 信力伤害 +1（最多 6 份）"
 
 [sub_resource type="Resource" id="Resource_dwbhk"]
 script = ExtResource("1_gp63j")
@@ -57,25 +55,21 @@ script = ExtResource("7_bswie")
 script = ExtResource("8_yf1t8")
 tags = Array[StringName]([&"bone"])
 multiplier = 5.0
-note = "骨制品（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_47mtk"]
 script = ExtResource("8_yf1t8")
 min_cells = 9
 multiplier = 10.0
-note = "大及以上体积（2^稀有度 × 10）"
 
 [sub_resource type="Resource" id="Resource_d5och"]
 script = ExtResource("8_yf1t8")
 tags = Array[StringName]([&"flesh"])
 multiplier = 5.0
-note = "血肉（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_ffrn5"]
 script = ExtResource("8_yf1t8")
 tags = Array[StringName]([&"weapon"])
 multiplier = 2.0
-note = "武器（2^稀有度 × 2）"
 
 [sub_resource type="Resource" id="Resource_erbkk"]
 script = ExtResource("10_ymc0b")

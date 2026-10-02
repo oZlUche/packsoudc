@@ -25,18 +25,21 @@ static func of(obj: Object, lang: String = "") -> String:
 	return String(base) if base != null else ""
 
 
-## 096：说明文字（`description` / `descriptions`）同一条路：当前语言没写就回落 description
+## 096：说明文字（`description` / `descriptions`）同一条路：当前语言没写就回落 description。
+## 104：过一遍 [TextTemplate]，上下文是这个定义自己的数值字段
 static func description_of(obj: Object, lang: String = "") -> String:
 	if obj == null:
 		return ""
 	var l := lang if lang != "" else UiText.lang
+	var text := ""
 	var table: Variant = obj.get("descriptions")
 	if table is Dictionary and (table as Dictionary).has(l):
-		var v := String((table as Dictionary)[l])
-		if v != "":
-			return v
-	var base: Variant = obj.get("description")
-	return String(base) if base != null else ""
+		text = String((table as Dictionary)[l])
+	if text == "":
+		var base: Variant = obj.get("description")
+		text = String(base) if base != null else ""
+	# 104 第十节：说明里的数写成 {字段名}，按这个定义自己的字段填（[TextParams]）
+	return TextTemplate.render(text, TextParams.of(obj)) if text.contains("{") else text
 
 
 ## 有没有给这种语言写名字

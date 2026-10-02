@@ -26,8 +26,7 @@
         {
           "flat": 4.0
         }
-      ],
-      "note": "第一阶：伤害 +4"
+      ]
     },
     {
       "tier": 2,
@@ -36,8 +35,7 @@
           "mult_category": "EMPOWER",
           "mult_percent": 15
         }
-      ],
-      "note": "第二阶：伤害再 +15%"
+      ]
     }
   ],
   "combat": {

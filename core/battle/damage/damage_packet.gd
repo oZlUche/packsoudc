@@ -102,7 +102,7 @@ func snapshot() -> Dictionary:
 
 
 func _to_string() -> String:
-	return "DamagePacket(%s 原始 %.1f → 护盾 -%.1f → 护甲 -%.1f → 最终 %.1f)" % [
+	return "DamagePacket(%s 原始 %.1f → 护盾 -%.1f → 防护 -%.1f → 最终 %.1f)" % [
 		type, StatMath.to_float(raw), StatMath.to_float(absorbed),
 		StatMath.to_float(armor), StatMath.to_float(final),
 	]

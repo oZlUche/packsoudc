@@ -18,21 +18,8 @@
     "metal"
   ],
   "combat": {
-    "rules": [
-      {
-        "trigger": {
-          "type": "on_before_damage"
-        },
-        "cadence": {
-          "type": "always"
-        },
-        "effects": [
-          {
-            "type": "modify_damage",
-            "flat": -4.0
-          }
-        ]
-      }
-    ]
+    "base_stats": {
+      "armor": 4
+    }
   }
 }

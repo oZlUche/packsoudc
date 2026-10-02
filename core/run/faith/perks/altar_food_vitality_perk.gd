@@ -25,5 +25,5 @@ func on_offered(run: RunState, defs: Array, node: MapNode) -> String:
 	return "献祭食物：体力 +%d" % got
 
 
-func describe() -> String:
-	return note if note != "" else "神坛献祭食物回体力（每件 +%d，每个休息处最多 %d，一次）" % [per_food, max_per_altar]
+func _summary() -> String:
+	return "神坛献祭食物回体力（每件 +%d，每个休息处最多 %d，一次）" % [per_food, max_per_altar]

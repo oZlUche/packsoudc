@@ -11,6 +11,14 @@ extends CliTool
 func run() -> void:
 	var problems := ContentCheck.run_all()
 	problems.append_array(GodsTable.check())     # 104：神明总表是信仰的核心配置，表与 JSON 对不上同样算不一致
+	# 104 第十节：说明文本里写死的数字。先 warning 列出来（不算不一致），清零后 TextLint.STRICT 升为 error
+	var bare := TextLint.scan_all()
+	if TextLint.STRICT:
+		problems.append_array(bare)
+	elif not bare.is_empty():
+		print("警告：说明文本里有 %d 处写死的数字：" % bare.size())
+		for w in bare:
+			print("  ! %s" % w)
 	if problems.is_empty():
 		print("内容一致：%d 种都对得上" % ContentPaths.ORDER.size())
 		finish(0)

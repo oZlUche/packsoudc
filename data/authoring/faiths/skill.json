@@ -29,8 +29,7 @@
       "tags": [
         "metal"
       ],
-      "multiplier": 5.0,
-      "note": "金属（2^稀有度 × 5）"
+      "multiplier": 5.0
     },
     {
       "tags": [
@@ -38,13 +37,11 @@
         "armor",
         "shield"
       ],
-      "multiplier": 5.0,
-      "note": "防具（2^稀有度 × 5）"
+      "multiplier": 5.0
     },
     {
       "has_stat": "crit_chance",
-      "multiplier": 8.0,
-      "note": "带有暴击属性的道具（2^稀有度 × 8）"
+      "multiplier": 8.0
     }
   ]
 }

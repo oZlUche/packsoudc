@@ -49,8 +49,9 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var lines: Array[String] = []
 	var rc := ItemPainter.rarity_color(def).to_html(false)
 	lines.append("[color=#%s][b]%s[/b][/color]　%s　%d 格　值 %d" % [rc, Names.of(def), rarity_name(def.rarity), def.shape.cell_count() if def.shape != null else 0, ItemValue.of(def)])
-	if def.description != "":
-		lines.append("[color=#8b93a1]%s[/color]" % def.description)
+	var desc := Names.description_of(def)     # 104：说明里的 {字段} 按这件道具自己的字段填
+	if desc != "":
+		lines.append("[color=#8b93a1]%s[/color]" % desc)
 	if not def.tags.is_empty():
 		lines.append("[color=#8b93a1]标签：%s[/color]" % "、".join(_names(def.tags)))     # 096：标签按当前语言显示名字
 	if def.is_bag:
@@ -97,13 +98,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	for fb in def.faith_bonuses:
 		var b := fb as FaithBonus
 		if b != null:
-			var bits: Array[String] = []
-			if not b.mods.is_empty():
-				bits.append(_mods(b.mods))
-			for r in b.rules:
-				if r is AbilityRule:
-					bits.append(Glossary.rule_text(r))
-			var line := "信力%s：%s%s" % [b.gate_text(), "；".join(bits) if not bits.is_empty() else "", ("　" + b.note) if b.note != "" else ""]
+			var line := "信力 " + b.describe()
 			# 096（作者定）：局里按状态上色 —— 生效的白、没生效（没激活 / 阶不够 / 别的神）的灰；局外原色
 			if not status.is_empty():
 				line = "[color=#%s]%s[/color]" % [UiPalette.FG.to_html(false) if bonus_lit(def, b, status) else DIM_HEX, line]

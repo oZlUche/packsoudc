@@ -13,6 +13,6 @@ script = ExtResource("2_ghfsj")
 script = ExtResource("5_bh4lu")
 id = &"lucky"
 display_name = "幸运"
-description = "幸运 +1：敌人的东西更容易掉（局外 buff 的测试用例）"
+description = "幸运 {luck_bonus_amount|signed}：敌人的东西更容易掉（局外 buff 的测试用例）"
 scope = 0
 effects = Array[ExtResource("1_il820")]([SubResource("Resource_iaicn")])

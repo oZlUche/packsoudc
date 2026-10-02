@@ -11,13 +11,14 @@
   "rarity": 1,
   "tags": [
     "gear",
+    "armor",
     "barbarian",
     "nature",
     "leather"
   ],
   "combat": {
     "base_stats": {
-      "armor": 3
+      "max_shield": 20
     }
   }
 }

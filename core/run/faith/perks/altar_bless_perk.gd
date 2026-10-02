@@ -41,5 +41,5 @@ func altar_apply(run: RunState, _node: MapNode, _option: StringName = &"") -> St
 	return "花 %d 信力：「%s」成了「%s」" % [cost, was, Names.of(v)]
 
 
-func describe() -> String:
-	return note if note != "" else "神坛：花 %d 信力赐福一件" % cost
+func _summary() -> String:
+	return "神坛：花 %d 信力赐福一件" % cost

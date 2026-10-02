@@ -27,8 +27,7 @@
     {
       "min_cells": 9,
       "multiplier": 5.0,
-      "per_cell": true,
-      "note": "大及以上体积（稀有度 × 格子数）（2^稀有度 × 5 × 格子数）"
+      "per_cell": true
     }
   ],
   "perks": [
@@ -42,8 +41,7 @@
           "stat": "max_stamina",
           "flat": 20.0
         }
-      ],
-      "note": "开战时耐力上限 +20"
+      ]
     },
     {
       "type": "altar_train_board",
@@ -96,8 +94,7 @@
               "stat": "max_stamina",
               "flat": 5.0
             }
-          ],
-          "note": "耐力上限 +5"
+          ]
         },
         {
           "mode": "scaled",
@@ -107,8 +104,7 @@
               "stat": "armor",
               "flat": 1.0
             }
-          ],
-          "note": "每 50 信力护甲 +1（最多 5 份）"
+          ]
         }
       ]
     }

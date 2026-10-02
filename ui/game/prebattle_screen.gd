@@ -25,7 +25,7 @@ func open(payload: Dictionary) -> void:
 	var col := _vbox(12)
 	panel.add_child(col)
 	col.add_child(_label("战前准备　%s　—— 整理好背包再开战" % _title_of(), 20, UiPalette.FG))
-	col.add_child(_wrapped("战斗是自动的：只有棋盘上包里的东西参战，武器自己出手、护甲替你挨打，挨着放的互相加成。开战那一瞬胜负就定了，之后只是回放。拖出棋盘 = 弃置进暂存区（不参战，打完还在）。",
+	col.add_child(_wrapped("战斗是自动的：只有棋盘上包里的东西参战，武器自己出手、防具替你挨打，挨着放的互相加成。开战那一瞬胜负就定了，之后只是回放。拖出棋盘 = 弃置进暂存区（不参战，打完还在）。",
 		13, UiPalette.DIM, 1100))
 
 	var row := _hbox(28)

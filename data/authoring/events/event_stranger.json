@@ -4,7 +4,7 @@
   "text": "一个瘦削的人靠在墙边，向你伸出手。",
   "options": [
     {
-      "label": "给他 10 币",
+      "label": "给他 {change_money_amount|abs} 币",
       "requires": [
         {
           "type": "can_afford"

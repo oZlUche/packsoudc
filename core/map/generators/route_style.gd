@@ -28,10 +28,15 @@ extends Resource
 
 ## 路线的尽头。
 ##
-## [code]&"core"[/code] 走到核心打 BOSS；[code]&"extract"[/code] 在核心前一环结束，
-## 末端定为撤离点 —— **偏搜索的路线可以不打最终敌人，搜够了就走**。
-## 想打还是能打：换乘点还在。
+## [code]&"core"[/code] 走到核心打 BOSS；[code]&"extract"[/code] 走到撤离环间（偶数环取内侧那环），
+## 沿那一环朝相邻路线横着走一段弧，弧的最后一个点定为撤离点、和相邻路线共用（报告 053）——
+## **偏搜索的路线可以不打最终敌人，搜够了就从中间走**。想打还是能打：撤离点之后就是换乘区。
+## 没有撤离环间的规模（大型图，两道还没定）仍在核心前一环结束。
 @export var ends_at: StringName = &"core"
+
+## 高危区能不能从这条路线上岔出来。偏搜索的路线 false（报告 053 第三条）：
+## 它让出了内圈，高危区长在别的路线旁边。放进数据，而不是在生成器里认 ends_at
+@export var spawns_zones: bool = true
 
 
 func is_core_route() -> bool:

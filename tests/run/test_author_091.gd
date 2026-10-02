@@ -357,7 +357,7 @@ static func frame_stat_key_picker(t: TestCase, root: Window) -> void:
 	ob.select(armor_at)
 	ob.item_selected.emit(armor_at)
 	add_btn.pressed.emit()
-	t.check(profile.base_stats.has("armor") and profile.base_stats["armor"] is float and profile.base_stats["armor"] == 0.0, "挑「护甲」加一项：armor = 0.0")
+	t.check(profile.base_stats.has("armor") and profile.base_stats["armor"] is float and profile.base_stats["armor"] == 0.0, "挑「防护」加一项：armor = 0.0")
 	# 重建后再加自定义
 	box.queue_free()
 	box = form._dict_editor(profile, "base_stats", profile.base_stats)

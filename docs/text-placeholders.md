@@ -33,6 +33,32 @@
 
 `extra` 字典可覆盖 / 追加任何键；带 `enemy_content` 时按那份内容算对手的键（搜索遭遇的事件用）。
 
+## 1.1 定义自身字段（104 第十节）
+
+**说明文本里的数只能来自字段**：作者写 `{字段名}`，不写死。`description`（道具、信仰、角色、成就、难度、局内 buff、猎手）、
+信仰的 `note`（献祭 / 等级效果 / 道具的按阶功能）、事件选项的 `label` 渲染时，上下文是**这个定义自己的数值字段**（`core/text/text_params.gd`，反射出来，内容类不用写）：
+
+| 来源 | 键 | 例 |
+|---|---|---|
+| 数值字段（int / float） | 同名 | 成就 `{amount}`、局内 buff `{duration_steps}`、信仰道具按阶功能 `{per_points}` `{max_stacks}`、献祭 `{multiplier}` |
+| 值是数的字典 | 字典的键 | 角色 `base_stats` → `{max_hp}` `{max_stamina}` |
+| 数组里注册表里有名字的构件（事件结果 / 条件、局内效果、侵蚀……） | `<类型>_<字段>`，同类型取第一个 | `{change_money_amount}` `{spend_vitality_amount}` `{restore_vitality_amount}` `{pass_time_actions}` `{steps_within_min_steps}` `{vitality_max_bonus_amount}` `{luck_bonus_amount}` |
+| 数组里其余对象（属性修饰 `mods`） | 第一个元素的字段，不加前缀 | `{mult_percent}` `{flat}` |
+| 单个子对象（道具的 `combat`） | 递归进去，不加前缀 | |
+
+事件选项的键并进事件正文的上下文（第 1 节的键照样能用）。整数值的 float 显示成整数（`4.0` → `4`）。
+
+**过滤器**：`{键|abs}` 取绝对值（「给他 {change_money_amount|abs} 币」，字段是 -10）、`{键|signed}` 带正负号（「伤害 {mult_percent|signed}%」→「伤害 -10%」）。不认识的过滤器整个记号原样保留。
+
+**别的道具的数**：`{item_stat:<道具 id>:<字段>}`（教程用：「塔盾每下减 {item_stat:tower_shield:armor}」）。从那件道具的定义里找，先 `combat` 再整份定义：
+`stat` 是这个名字的属性修饰取它的 `flat`（`{item_stat:warding_charm:max_shield}`），否则取同名的数值字段或字典键（`base_stats` 的 `{item_stat:leather_armor:max_shield}`、伤害修正的 `flat`）。找不到原样保留。
+
+**`note` 是补充，不覆盖**：信仰级效果、献祭、道具的按阶功能，界面上的主句一律由 `describe()` 按字段生成，`note` 接在后面，为空就没有。
+主句已经说清楚的就不要写 `note`。阶统一写 `Lv.n`。
+
+**检查**：`tools/import_content.gd` 对上面这些文字（剥掉 `{…}` 与 BBCode 之后）还含阿拉伯数字的报 warning，`tools/check_content.gd` 列出来；
+汉字数（「三秒一下」）不算。作者定先 warning 一轮，清零后把 `TextLint.STRICT` 改成 true 升为 error（`core/authoring/text_lint.gd`）。
+
 ## 2. 样式码
 
 翻成 RichTextLabel 的 BBCode。Godot 原生 BBCode（`[color=#…]`、`[b]`、`[i]`、`[url]`……）照样能写，样式码只是简写。

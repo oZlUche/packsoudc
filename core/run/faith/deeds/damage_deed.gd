@@ -36,4 +36,4 @@ func _sum(by_type: Dictionary) -> float:
 func describe() -> String:
 	var what := "造成和受到的" if count_dealt and count_taken else ("造成的" if count_dealt else "受到的")
 	var kind := ("%s伤害" % Glossary.damage_type_name(damage_type)) if damage_type != &"" else "伤害"
-	return "%s%s × %.2g%s" % [what, kind, multiplier, ("（每场最多 %d）" % cap) if cap > 0 else ""]
+	return "%s%s × %s%s" % [what, kind, TextTemplate.num(multiplier), ("（每场最多 %d）" % cap) if cap > 0 else ""]

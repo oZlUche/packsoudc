@@ -44,7 +44,8 @@ func _open_options() -> void:
 		if not ok and opt.hide_when_locked:
 			continue
 		var idx := i
-		var b := _option_button(TextTemplate.plain(opt.label_for(), ctx), func(): choose(idx))
+		# 104：选项文字里的数写成 {change_money_amount|abs} 这类，取这个选项自己的结果 / 条件的字段（TextParams）
+		var b := _option_button(TextTemplate.plain(opt.label_for(), ctx.merged(TextParams.of(opt))), func(): choose(idx))
 		b.disabled = not ok
 		_option_btns.append(b)
 		col.add_child(b)

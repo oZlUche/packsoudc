@@ -144,8 +144,21 @@ static func _check_all(g: MapGraph, cfg: RingMapConfig) -> String:
 		if String(route["ends_at"]) == "core":
 			if int(ids[-1]) != RingMapGenerator.CORE_ID:
 				return "路线 %s 说去核心，末端却不是" % route["style"]
-		elif _ring_of(g, int(ids[-1])) != 1:
-			return "路线 %s 该停在核心前一环" % route["style"]
+		else:
+			# 去撤离点的路线停在撤离环间（偶数环取内侧那环）；没有环间的规模停在核心前一环（报告 053）
+			var band := cfg.extract_band()
+			var stop := 1 if band.is_empty() else int(band.min())
+			if _ring_of(g, int(ids[-1])) != stop:
+				return "路线 %s 该停在第 %d 环，停在了第 %d 环" % [route["style"], stop, _ring_of(g, int(ids[-1]))]
+			# 尽头之后的换乘区：同一环上、一路相连，接到别的路线上 —— 撤离点因此两条路线共用
+			var tail: Array = route.get("exit_ids", [])
+			var last := int(ids[-1])
+			for id in tail:
+				if _ring_of(g, int(id)) != stop or g.edge_between(last, int(id)) == null:
+					return "路线 %s 尽头之后的换乘区在 %d→%d 处断了或不在同一环" % [route["style"], last, id]
+				last = int(id)
+			if not (route.get("zone_ids", []) as Array).is_empty():
+				return "路线 %s 是搜索路线，却岔出了高危区" % route["style"]
 		# 每一步要么向内一环，要么沿当前这环横着挪（正对着空白区时）—— 不向外、不跳环
 		for i in range(1, ids.size()):
 			var a := _ring_of(g, int(ids[i - 1]))

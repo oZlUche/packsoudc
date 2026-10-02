@@ -4,7 +4,8 @@
 ## - 神明总表：id、名称、代表概念 / 权柄、神话定位、阈值1～5、转化概率、每阶加 → `god`（名称（概念））、`description`（神话定位）、
 ##   `thresholds`、`convert_chance`、`convert_per_tier`
 ## - 信力行为：id、类型、参数（JSON）→ `deeds`
-## - 献祭：id、条件（`tags: a / b`、`min_cells: 9`、`exact_grade: 2`、`has_stat: crit_chance`，用「；」并列）、收什么、倍率、per_cell → `offerings`
+## - 献祭：id、条件（`tags: a / b`、`min_cells: 9`、`exact_grade: 2`、`has_stat: crit_chance`，用「；」并列）、倍率、per_cell → `offerings`
+##   （「收什么（人话）」不进 JSON：界面上的一句由 [method OfferingRule.describe] 按字段拼，104 第十节）
 ## - 等级效果：id、级、构件、参数（JSON）→ `perks`（`note` 不在表里，同一位置同一构件的沿用 JSON 原有的）
 ##
 ## **只覆盖这些字段**，其余（名字、英文名、阵营、赐福模板……）原样保留；某位神在一张表里一行带类型的都没有，那一项也原样保留。
@@ -64,9 +65,6 @@ static func fields(sheets: Dictionary, problems: Array[String] = []) -> Dictiona
 		var per_cell: Variant = _first_starting(row, "再乘格子数")
 		if per_cell is bool and per_cell:
 			entry["per_cell"] = true
-		var what := _s(row.get("收什么（人话）", "")).strip_edges()
-		if what != "":
-			entry["note"] = "%s（2^稀有度 × %s%s）" % [what, _num(float(entry["multiplier"])), " × 格子数" if entry.get("per_cell", false) else ""]
 		_push(out[id], "offerings", entry)
 	for row in _table(sheets, SHEET_PERKS, problems):
 		var id := _s(row.get("id", "")).strip_edges()
@@ -228,7 +226,3 @@ static func _s(v: Variant) -> String:
 	if v is float and is_equal_approx(v, roundf(v)):
 		return str(int(v))
 	return str(v)
-
-
-static func _num(v: float) -> String:
-	return str(int(v)) if is_equal_approx(v, roundf(v)) else str(v)
