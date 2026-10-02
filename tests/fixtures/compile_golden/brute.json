@@ -1,0 +1,143 @@
+{
+	"faith": "brute",
+	"tier": 4,
+	"max_hp": 900000,
+	"undying_sec": 10.0,
+	"baseline": {
+		"regen_stamina": {
+			"total": 40000,
+			"base": 40000,
+			"flat": 0,
+			"mult": [
+				0,
+				0,
+				0,
+				0
+			]
+		},
+		"max_stamina": {
+			"total": 700000,
+			"base": 700000,
+			"flat": 0,
+			"mult": [
+				0,
+				0,
+				0,
+				0
+			]
+		},
+		"max_hp": {
+			"total": 900000,
+			"base": 900000,
+			"flat": 0,
+			"mult": [
+				0,
+				0,
+				0,
+				0
+			]
+		}
+	},
+	"set_rules": [
+		[
+			"OnBeforeDamage",
+			"Always",
+			"LowHpEmpower"
+		]
+	],
+	"items": [
+		{
+			"uid": 74,
+			"def_id": "shortsword",
+			"stats": {
+				"haste": {
+					"total": 11000,
+					"base": 10000,
+					"flat": 0,
+					"mult": [
+						0,
+						0,
+						0,
+						1000
+					]
+				},
+				"damage": {
+					"total": 50000,
+					"base": 50000,
+					"flat": 0,
+					"mult": [
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			},
+			"rules": [
+				[
+					"OnSchedule",
+					"CooldownCadence",
+					"DealDamage"
+				]
+			]
+		},
+		{
+			"uid": 75,
+			"def_id": "ration",
+			"stats": {
+				"regen_stamina": {
+					"total": 20000,
+					"base": 20000,
+					"flat": 0,
+					"mult": [
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				"max_stamina": {
+					"total": 400000,
+					"base": 400000,
+					"flat": 0,
+					"mult": [
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				"haste": {
+					"total": 11000,
+					"base": 10000,
+					"flat": 0,
+					"mult": [
+						0,
+						0,
+						0,
+						1000
+					]
+				}
+			},
+			"rules": []
+		},
+		{
+			"uid": 76,
+			"def_id": "charm_brute",
+			"stats": {
+				"haste": {
+					"total": 11000,
+					"base": 10000,
+					"flat": 0,
+					"mult": [
+						0,
+						0,
+						0,
+						1000
+					]
+				}
+			},
+			"rules": []
+		}
+	]
+}

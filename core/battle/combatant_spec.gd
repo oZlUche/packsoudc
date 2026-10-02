@@ -9,6 +9,11 @@ var max_hp: int = 0                  ## 定点
 ## 拼错键名不会再默默失效。写它的是 [UndyingPerk]，读它的是 [CombatantRuntime]
 var undying_sec: float = 0.0
 
+## 105：开战时就带着的标准轴层数（4.3）：轴 → 层数。来源是编译期的单位级增益
+## （祈祷攒的火焰加成、将来的局内 / 局外 / 套装 / 技能）。[CombatantRuntime] 把它种进**系统层** ——
+## 这一场的常驻加成，对手的净化洗不掉
+var axes: Dictionary = {}
+
 ## 角色自带的基础属性（生命上限、耐力上限…），不属于任何道具。
 ## 为 null 时该单位没有任何自带属性 —— 手搓的测试假人就是这样。
 var baseline: StatSet = null

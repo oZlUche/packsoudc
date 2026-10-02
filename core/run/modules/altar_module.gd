@@ -25,6 +25,9 @@ var used: Dictionary = {}
 var rituals: Dictionary = {}
 ## 093：特殊操作改的基线（蛮神：生命上限 −、耐力上限 +、急速 +），并进 [method RunState.effective_baseline]
 var stat_bonus: Dictionary = {}
+## 105：特殊操作攒的**标准轴层数**（轴 → 累计层数；日神祈祷攒的「炽烈」）。
+## 开战时由 [method RunState.compile_player] 填进 [member CompileInput.axes]，种在系统层（常驻，净化洗不掉）
+var axis_bonus: Dictionary = {}
 var _run: RunState = null
 
 
@@ -187,13 +190,31 @@ func bless_step() -> void:
 #endregion
 
 
+## 往一条轴上加层，返回加完的总层数
+func shift_axis(axis: StringName, stacks: int) -> int:
+	axis_bonus[String(axis)] = int(axis_bonus.get(String(axis), 0)) + stacks
+	return int(axis_bonus[String(axis)])
+
+
+## 轴 → 层数（给编译器；键是 StringName）
+func axes() -> Dictionary:
+	var out: Dictionary = {}
+	for key in axis_bonus:
+		var n := int(axis_bonus[key])
+		if n != 0:
+			out[StringName(String(key))] = n
+	return out
+
+
 func to_dict() -> Dictionary:
-	return {"rituals": rituals.duplicate(), "stat_bonus": stat_bonus.duplicate(), "used": used.keys()}
+	return {"rituals": rituals.duplicate(), "stat_bonus": stat_bonus.duplicate(),
+		"axis_bonus": axis_bonus.duplicate(), "used": used.keys()}
 
 
 func restore(d: Dictionary) -> void:
 	rituals = (d.get("rituals", {}) as Dictionary).duplicate() if d.get("rituals", {}) is Dictionary else {}
 	stat_bonus = (d.get("stat_bonus", {}) as Dictionary).duplicate() if d.get("stat_bonus", {}) is Dictionary else {}
+	axis_bonus = (d.get("axis_bonus", {}) as Dictionary).duplicate() if d.get("axis_bonus", {}) is Dictionary else {}
 	for k in d.get("used", []):
 		used[int(k)] = true
 

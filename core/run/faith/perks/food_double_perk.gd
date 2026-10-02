@@ -6,20 +6,15 @@ extends FaithPerk
 @export var factor: float = 2.0
 
 
-func modify_spec(spec: CombatantSpec, board: GridInventory, _run: RunState) -> void:
+func compile_into(input: CompileInput, _board: GridInventory, _run: RunState) -> void:
 	# 101 第 5 刀：原来还往 spec.flags 写一份 factor，没人读 —— 献祭食物回体力翻倍是
 	# [AltarFoodVitalityPerk] 自己查这条 perk 在不在（`altar.perk(&"food_double")`）
-	if board == null:
-		return
-	for it in spec.items:
-		var item := it as CompiledItem
-		var inst := board.get_item(item.source_uid)
-		if inst == null or inst.def == null or not inst.def.tags.has(food_tag):
-			continue
-		for key in item.stats.keys():
-			var v := item.stats.ensure(StringName(String(key)))
-			if String(key) != String(BattleStats.HASTE):
-				v.base = roundi(float(v.base) * factor)
+	var scope := ScopedMod.new()
+	scope.tags = [food_tag] as Array[StringName]
+	scope.base_scale = factor
+	# 急速每件都是 1.0，翻倍就成了二倍速 —— 它不是「食物给的效果」
+	scope.base_scale_except = [BattleStats.HASTE] as Array[StringName]
+	input.scoped.append(scope)
 
 
 func _summary() -> String:

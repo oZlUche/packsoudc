@@ -58,6 +58,9 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 			rt.base.ensure(key).base += it.stats.total_of(key)
 	rt.base.ensure(BattleStats.MAX_HP).base = spec.max_hp
 	rt.undying_sec = StatMath.from_float(spec.undying_sec)     # 093：蛮神 4 级
+	# 105：编译期带来的轴层数种进**系统层**（103 第 6 条：常驻加成不是 buff、不走净化）
+	for axis in spec.axes:
+		rt.shift_axis(axis, int(spec.axes[axis]), true)
 
 	for item in spec.items:
 		var it2 := item as CompiledItem

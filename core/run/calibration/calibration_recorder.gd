@@ -102,4 +102,4 @@ static func baseline_of(snap: Dictionary) -> CombatantBaseline:
 
 ## 一份快照编译成战斗单位（棋盘 + 基线；套装与 buff 的加成不记，木桩是「平均玩家」不是「这个玩家」）
 static func compile(snap: Dictionary, items: ItemDatabase) -> CombatantSpec:
-	return BattleCompiler.compile(board_of(snap, items), baseline_of(snap))
+	return BattleCompiler.compile_board(board_of(snap, items), baseline_of(snap))

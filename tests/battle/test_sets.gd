@@ -277,13 +277,13 @@ static func run_compile_integration(t: TestCase) -> void:
 	board.place(outsider, Vector2i(2, 0), 0)
 
 	# 只有 1 件，未激活
-	var spec := BattleCompiler.compile(board, CombatantBaseline.with_hp(25.0), tracker.combat_mods(), tracker.combat_rules())
+	var spec := BattleCompiler.compile_board(board, CombatantBaseline.with_hp(25.0), tracker.combat_mods(), tracker.combat_rules())
 	t.eq(spec.stats_of(piece_a.uid).total_int_of(BattleStats.DAMAGE), 10, "未激活时无加成")
 
 	# 凑齐 2 件
 	board.place(piece_b, Vector2i(1, 0), 0)
 	t.check(tracker.is_active(&"scavenger"), "已激活")
-	spec = BattleCompiler.compile(board, CombatantBaseline.with_hp(25.0), tracker.combat_mods(), tracker.combat_rules())
+	spec = BattleCompiler.compile_board(board, CombatantBaseline.with_hp(25.0), tracker.combat_mods(), tracker.combat_rules())
 	t.eq(spec.stats_of(piece_a.uid).total_int_of(BattleStats.DAMAGE), 15, "套装部件 +50%")
 	t.eq(spec.stats_of(piece_b.uid).total_int_of(BattleStats.DAMAGE), 15, "另一件部件同样")
 	t.eq(spec.stats_of(outsider.uid).total_int_of(BattleStats.DAMAGE), 15,
@@ -309,7 +309,7 @@ static func run_compile_integration(t: TestCase) -> void:
 	tr3.bind(board3)
 	board3.place(ItemInstance.create(_item("totem", "pulse", 0.0)), Vector2i(0, 0), 0)
 
-	var spec3 := BattleCompiler.compile(board3, CombatantBaseline.with_hp(100.0), tr3.combat_mods(), tr3.combat_rules())
+	var spec3 := BattleCompiler.compile_board(board3, CombatantBaseline.with_hp(100.0), tr3.combat_mods(), tr3.combat_rules())
 	t.eq(spec3.set_rules.size(), 1, "套装规则挂在 spec 上，不属于任何物品")
 
 	var foe := CombatantSpec.new()

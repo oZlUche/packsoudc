@@ -97,6 +97,19 @@ static func run_run_chain(t: TestCase) -> void:
 	t.check(not up_b.has("node_storages"), "顶层 node_storages 删掉了")
 	t.check(((up_b["modules"] as Dictionary)["node_storage"] as Dictionary).has("nodes"), "按点暂存搬进了 modules.node_storage")
 	t.eq(int(v1["version"]), 1, "不改入参")
+	# 105：v2 → v3 把祈祷次数补算成「炽烈」的层数（曲线换了是有意的，旧公式不保留）
+	var v2 := {"version": 2, "chapter": "chapter_01",
+		"modules": {"altar": {"rituals": {"pray_fire": 4}, "stat_bonus": {}, "used": []}}}
+	var up3 := RunMigrations.upgrade(v2)
+	t.eq(int(up3["version"]), RunState.SAVE_VERSION, "升到了当前版本")
+	var altar3: Dictionary = ((up3["modules"] as Dictionary)["altar"] as Dictionary)
+	t.eq(int((altar3["axis_bonus"] as Dictionary).get(String(StatAxes.FIRE_DAMAGE), 0)), 7,
+		"祈祷过 4 次的老档：按斐波那契补成 7 层（1+1+2+3）")
+	t.eq(int((altar3["rituals"] as Dictionary)["pray_fire"]), 4, "次数照留（上限还按它算）")
+	var v2_none := {"version": 2, "chapter": "chapter_01", "modules": {"altar": {"rituals": {}}}}
+	t.check(not (((RunMigrations.upgrade(v2_none)["modules"] as Dictionary)["altar"] as Dictionary).has("axis_bonus")),
+		"没祈祷过的老档不凭空多出一条轴")
+	t.eq(int(v2["version"]), 2, "不改入参")
 
 
 static func run_backup_instead_of_overwrite(t: TestCase) -> void:

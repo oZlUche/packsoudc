@@ -67,11 +67,11 @@ static func run_variants_and_modes(t: TestCase) -> void:
 	# 编译：激活即 +10%、每 50 信力 +1（最多 6）
 	var base_dmg := float(db.get_def(&"shortsword").combat.base_stats.get("damage", 0.0))     # 原件的伤害；乘区先乘、平的后加
 	var tag := &"faith:brute"
-	var d0 := _dmg(BattleCompiler.compile(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {tag: 0}, {tag: 0}), sword.uid)
+	var d0 := _dmg(BattleCompiler.compile_board(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {tag: 0}, {tag: 0}), sword.uid)
 	t.check(absf(d0 - base_dmg * 1.1) < 0.01, "0 阶 0 点：激活即 +10%%（%.2f → %.2f）" % [base_dmg, d0])
-	var d120 := _dmg(BattleCompiler.compile(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {tag: 1}, {tag: 120}), sword.uid)
+	var d120 := _dmg(BattleCompiler.compile_board(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {tag: 1}, {tag: 120}), sword.uid)
 	t.check(absf(d120 - (base_dmg * 1.1 + 2.0)) < 0.01, "120 点：再 +2 平的（%.2f）" % d120)
-	var d999 := _dmg(BattleCompiler.compile(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {tag: 4}, {tag: 9999}), sword.uid)
+	var d999 := _dmg(BattleCompiler.compile_board(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {tag: 4}, {tag: 9999}), sword.uid)
 	t.check(absf(d999 - (base_dmg * 1.1 + 6.0)) < 0.01, "9999 点：最多 6 份（%.2f）" % d999)
 	# 献祭双倍
 	var brute: FaithDef = faiths[&"brute"]

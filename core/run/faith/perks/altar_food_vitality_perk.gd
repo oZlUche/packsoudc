@@ -18,8 +18,9 @@ func on_offered(run: RunState, defs: Array, node: MapNode) -> String:
 		return ""
 	var amount := mini(per_food * n, max_per_altar)
 	var altar := AltarModule.of(run)
-	if altar != null and altar.perk(&"food_double") != null:
-		amount *= 2
+	var double := altar.perk(&"food_double") if altar != null else null
+	if double != null:     # 104 第十节：倍数读那条 perk 的字段，不写死
+		amount = roundi(float(amount) * float(double.get("factor")))
 	node.content["altar_food_used"] = true
 	var got := run.vitality.restore(amount, &"altar")
 	return "献祭食物：体力 +%d" % got

@@ -362,7 +362,7 @@ static func run_events(t: TestCase) -> void:
 		board.try_add(ItemInstance.create(items.get_def(id), 0), true)
 	var wealthy := CombatantBaseline.with_hp(10000.0)
 	wealthy.base_stats["regen_stamina"] = 100.0     # 只验进账：别让耐力耗尽把这一场拖成平局
-	var spec := BattleCompiler.compile(board, wealthy)
+	var spec := BattleCompiler.compile_board(board, wealthy)
 	events.hooks.register(&"player_spec", func() -> CombatantSpec: return spec)
 	events.bind(travel)
 

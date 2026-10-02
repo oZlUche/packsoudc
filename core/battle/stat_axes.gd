@@ -18,10 +18,13 @@ const REGEN_STAMINA := &"regen_stamina"
 ## 104：暴击的两条固定值轴（暴击只接受加算）。步长是属性本身的单位（0.01 = 1%），显示按百分数
 const CRIT_CHANCE := &"crit_chance"
 const CRIT_DAMAGE := &"crit_damage"
+## 105（作者定）：火焰伤害加成是一条普通增益轴 —— 祈祷攒的层数在这里，伤害管线按攻方读。
+## 放大的是**所有**火焰来源（附魔、灼烧、任何火焰伤害），不是只有附魔那一下
+const FIRE_DAMAGE := &"fire_damage"
 
 enum Mode { PERCENT, FLAT }
 
-## id → {stat: 作用的属性（空 = 不直接落在属性上：受到伤害由伤害管线读，按上限回血折进 regen_hp）, mode, step: 百分比轴是百分数、固定值轴是每层的量, pos, neg,
+## id → {stat: 作用的属性（空 = 不直接落在属性上：受到伤害与火焰伤害由伤害管线读，按上限回血折进 regen_hp）, mode, step: 百分比轴是百分数、固定值轴是每层的量, pos, neg,
 ## items: 固定值轴也落到每件道具上（暴击按道具读，104）, pct: 固定值按百分数显示}
 const TABLE := {
 	ATTACK_SPEED: {"stat": &"haste", "mode": Mode.PERCENT, "step": 3.0, "pos": "加速", "neg": "减速"},
@@ -32,10 +35,11 @@ const TABLE := {
 	REGEN_STAMINA: {"stat": &"regen_stamina", "mode": Mode.FLAT, "step": 1.0, "pos": "回气", "neg": "疲乏"},
 	CRIT_CHANCE: {"stat": &"crit_chance", "mode": Mode.FLAT, "step": 0.01, "pos": "锐目", "neg": "失准", "items": true, "pct": true},
 	CRIT_DAMAGE: {"stat": &"crit_damage", "mode": Mode.FLAT, "step": 0.05, "pos": "致命", "neg": "钝击", "items": true, "pct": true},
+	FIRE_DAMAGE: {"stat": &"", "mode": Mode.PERCENT, "step": 3.0, "pos": "炽烈", "neg": "熄火"},
 }
 
 ## 显示顺序（面板）
-const ORDER: Array[StringName] = [ATTACK_SPEED, DAMAGE_DEALT, DAMAGE_TAKEN, REGEN_HP, REGEN_HP_PCT, REGEN_STAMINA, CRIT_CHANCE, CRIT_DAMAGE]
+const ORDER: Array[StringName] = [ATTACK_SPEED, DAMAGE_DEALT, DAMAGE_TAKEN, REGEN_HP, REGEN_HP_PCT, REGEN_STAMINA, CRIT_CHANCE, CRIT_DAMAGE, FIRE_DAMAGE]
 
 
 static func has(axis: StringName) -> bool:
@@ -87,7 +91,7 @@ static func describe(axis: StringName, stacks: int, system_stacks: int = 0) -> S
 	var what: String = {
 		ATTACK_SPEED: "攻速", DAMAGE_DEALT: "造成的伤害", DAMAGE_TAKEN: "受到的最终伤害",
 		REGEN_HP: "每秒回血", REGEN_HP_PCT: "每秒按生命上限回血", REGEN_STAMINA: "每秒回耐力",
-		CRIT_CHANCE: "暴击率", CRIT_DAMAGE: "暴击伤害",
+		CRIT_CHANCE: "暴击率", CRIT_DAMAGE: "暴击伤害", FIRE_DAMAGE: "造成的火焰伤害",
 	}.get(axis, String(axis))
 	var lines: Array[String] = ["%s：每层 %s%s%s（正为%s、负为%s，相抵）" % [
 		what, "±", _num(step), unit, String(info(axis).get("pos", "")), String(info(axis).get("neg", ""))]]
