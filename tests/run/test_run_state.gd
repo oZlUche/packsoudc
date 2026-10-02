@@ -142,11 +142,18 @@ static func run_loot_and_shop(t: TestCase) -> void:
 		t.eq(pending.size(), 1, "发了 loot_pending")
 		var before := s.storage.item_count()
 		var n := s.pending_loot.item_count()
+		# 挑一件散的拿：带东西的包会连内容物一起搬（087），一次就不止一件
 		var first: int = (s.pending_loot.items()[0] as ItemInstance).uid
+		for inst in s.pending_loot.items():
+			if not s.pending_loot.is_bag_with_contents((inst as ItemInstance).uid):
+				first = (inst as ItemInstance).uid
+				break
+		var loose := not s.pending_loot.is_bag_with_contents(first)
 		t.check(s.take_loot(first), "拿一件")
-		t.eq(s.storage.item_count(), before + 1, "进了暂存区")
-		if n > 1:
-			t.eq(s.take_all_loot(), n - 1, "剩下的全拿")
+		var moved := s.storage.item_count() - before
+		t.check(moved == 1 if loose else moved > 1, "进了暂存区（%d 件）" % moved)
+		if n > moved:
+			t.eq(s.take_all_loot(), n - moved, "剩下的全拿")
 		t.check(s.pending_loot == null, "拿完待拾取清空")
 		t.eq(s.storage.item_count(), before + n, "一件不少")
 	t.check(not s.take_loot(1) and s.take_all_loot() == 0, "没有待拾取时拿不到东西")

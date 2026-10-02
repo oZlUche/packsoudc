@@ -67,6 +67,7 @@
 | 050 | [探索度：踩上去才造的敌人跟步数与搜索次数挂钩](050-exploration-strength.md) | 阶段 5 · M4 补充 | 完成 |
 | 051 | [M5 运行状态与存档](051-run-state-and-save.md) | 阶段 6 · M5 | 完成 |
 | 052 | [作者七条：路线加长、撤离环间、出入口是点、节点数是范围、喘气处按步数、弧的圆心](052-author-seven-map-rules.md) | 阶段 4 · M3 | 完成 |
+| 053 | [三个问题的解释与设想：路线为什么「没有空间」、搜索路线在中途撤离点结束、高危区只从非搜索路线岔出](053-space-search-end-zone-spawn.md) | 阶段 4 · M3 | 三 + 二已做（2026-10-01） |
 | 054 | [现状整理：并分支、改报告号、刷新文档](054-status-tidy-up.md) | 整理 | 完成 |
 | 055 | [M6 规划与 M6-1 场景流骨架](055-m6-plan-and-scene-flow-skeleton.md) | 阶段 6 · M6 | 完成 |
 | 056 | [M6-2 搜刮界面：渐进揭示、拖到棋盘、搜索点逐次装](056-loot-reveal-and-search-screen.md) | 阶段 6 · M6 | 完成 |
@@ -126,7 +127,6 @@
 | 013 | [消耗层与战斗内增益系统](archive/013-cost-layer-and-buffs.md) | 设计 · 无代码改动 | 完成 |
 | 027 | [M3 地图系统实施规划](archive/027-m3-plan.md) | M3 施工计划，030～044 已全部落地，现状看 status.md |
 | 029 | [地图配置表 v0.1：读表记录](archive/029-map-config-v0.1.md) | 地图配置 v0.1 读表笔记，规则已被 035 / 036 / 040 重定义 |
-| 053 | [三个问题的解释与设想：路线为什么「没有空间」、搜索路线在中途撤离点结束、高危区只从非搜索路线岔出](archive/053-space-search-end-zone-spawn.md) | 设想，作者未采纳 |
 | 058 | [作者五条提议：节点层、开局预选与带入限制、暂存区按节点清空、仓库与图鉴、搜索揭示](archive/058-author-five-proposals.md) | 五条提议已全部实施（060～068），决定已回写架构文档 |
 | 059 | [设想：事件层、统一容器屏、局外 buff 与地图 buff](archive/059-event-layer-and-buffs-proposal.md) | 三条设想已全部实施（062、063、067），决定已回写架构文档 |
 | 069 | [设想：进阶难度 = 机制而不只是数值；伪 PVP —— 地图上移动的猎手](archive/069-difficulty-mechanics-and-hunters.md) | 设想已全部实施（070～075），决定已回写架构文档 |

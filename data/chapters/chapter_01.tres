@@ -156,6 +156,7 @@ min_share = {
 risk_band = Vector2(0.15, 0.6)
 reward_band = Vector2(0.15, 0.6)
 ends_at = &"extract"
+spawns_zones = false
 
 [sub_resource type="Resource" id="Resource_0qsry"]
 script = ExtResource("2_nrers")

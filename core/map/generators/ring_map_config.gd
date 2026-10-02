@@ -344,6 +344,7 @@ static func sample(ring_count_: int = 5) -> RingMapConfig:
 	var search := RouteStyle.new()
 	search.id = &"search"
 	search.ends_at = &"extract"
+	search.spawns_zones = false
 	search.mix = {"search": 4, "event": 1}
 	search.min_share = {"search": 0.8}     # 偏搜索的路线，搜索点至少占八成
 	# 八成是搜索点的路线，风险只有平均的两三成 —— 档位得跟着 min_share 走
