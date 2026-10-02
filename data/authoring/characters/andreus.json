@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Andreus"
   },
-  "description": "擅长逃跑的奴隶探索者。两个皮革包，生命 50。躲得开猎手；头一回输给节点敌人不扣体力。",
+  "description": "擅长逃跑的奴隶探索者。两个皮革包，生命 {max_hp}。躲得开猎手；头一回输给节点敌人不扣体力。",
   "base_stats": {
     "max_hp": 50
   },

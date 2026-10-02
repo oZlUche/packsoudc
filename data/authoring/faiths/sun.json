@@ -30,27 +30,23 @@
       "tags": [
         "metal"
       ],
-      "multiplier": 5.0,
-      "note": "金属（2^稀有度 × 5）"
+      "multiplier": 5.0
     },
     {
       "tags": [
         "fire"
       ],
-      "multiplier": 5.0,
-      "note": "火焰（2^稀有度 × 5）"
+      "multiplier": 5.0
     },
     {
       "tags": [
         "gem"
       ],
-      "multiplier": 5.0,
-      "note": "宝石（2^稀有度 × 5）"
+      "multiplier": 5.0
     },
     {
       "exact_grade": 2,
-      "multiplier": 5.0,
-      "note": "体积正好为中（2^稀有度 × 5）"
+      "multiplier": 5.0
     }
   ],
   "perks": [
@@ -68,8 +64,7 @@
       "type": "enchant_weapons",
       "count": 0,
       "stamina_cost_percent": -20,
-      "tier": 3,
-      "note": "开战时所有武器火焰附魔，武器耐力消耗 −20%"
+      "tier": 3
     },
     {
       "type": "extra_drop_by_node",
@@ -97,8 +92,7 @@
               "mult_category": "HASTE",
               "mult_percent": 5
             }
-          ],
-          "note": "急速 +5%"
+          ]
         },
         {
           "tier": 2,
@@ -108,8 +102,7 @@
               "mult_category": "EMPOWER",
               "mult_percent": -10
             }
-          ],
-          "note": "2 级：耐力消耗 −10%"
+          ]
         }
       ]
     }

@@ -21,5 +21,5 @@ func altar_apply(run: RunState, _node: MapNode, _option: StringName = &"") -> St
 	return "向大地之神锻炼：棋盘多了 %d 行（现在 %d × %d）" % [rows, run.board.size.x, run.board.size.y]
 
 
-func describe() -> String:
-	return note if note != "" else "神坛：锻炼，棋盘 +%d 行（局内）" % rows
+func _summary() -> String:
+	return "神坛：锻炼，棋盘 +%d 行（局内）" % rows

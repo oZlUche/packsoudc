@@ -59,7 +59,8 @@ static func make(
 ) -> MapScaleProfile:
 	var p := MapScaleProfile.new()
 	p.id = id_
-	p.display_name = name_
+	# 104 第十节：环数只写一处 —— 标签里的「4~5 环」按 rings 拼（占位的不写）
+	p.display_name = name_ if placeholder_ else "%s（%d~%d 环）" % [name_, rings_.x, rings_.y]
 	p.rings = rings_
 	p.entries = entries_
 	p.zones = zones_
@@ -80,9 +81,9 @@ static func make(
 ## 让填充率落在六到七成。作者给的是 4 环 25～30、5 环 35～40；往上按同样的比例推
 static func defaults() -> Array[MapScaleProfile]:
 	return [
-		make(&"small", "小型（4~5 环）", Vector2i(4, 5), Vector2i(2, 3), Vector2i(1, 1), Vector2i(3, 4), Vector2i(1, 1),
+		make(&"small", "小型", Vector2i(4, 5), Vector2i(2, 3), Vector2i(1, 1), Vector2i(3, 4), Vector2i(1, 1),
 			{"4": [25, 30], "5": [35, 40]}, 3, {"rest": 0.5, "shop": 0.5}),
-		make(&"medium", "中型（6~8 环）", Vector2i(6, 8), Vector2i(3, 4), Vector2i(1, 3), Vector2i(3, 6), Vector2i(1, 2),
+		make(&"medium", "中型", Vector2i(6, 8), Vector2i(3, 4), Vector2i(1, 3), Vector2i(3, 6), Vector2i(1, 2),
 			{"6": [45, 50], "7": [58, 66], "8": [74, 84]}, 4, {"rest": 1.0 / 3.0, "shop": 2.0 / 3.0}),
 		# 出发点先占 3：12 环的图最外环 38 个槽位只放 9 个点，4 条路线挤不开。
 		# 节点数按六成填充推；两道撤离环间还没定

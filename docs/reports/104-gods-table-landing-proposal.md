@@ -182,3 +182,15 @@
 - **`CombatProfile.seed_stats` 没改**：`StatSet` 缺键时自己按 `BattleStats.DEFAULT_BASE` 取默认值，效果一样，道具的属性表里也不会凭空多出两行。
 - **获得的对账**放在「离开一个点」（`step_to` / `relocate` 清暂存区之前），没有用方案里说的 `stepped`（代码里没有这个信号）。
 - 表里补了：技巧 / 狩猎四条行为的 `type` 与参数、技巧「带有暴击属性」的条件 `has_stat: crit_chance`、新教的 `event_choice` 一行（不然生成的新教没有行为）、自然 5 级改成 `overtime_regen {"stacks": 8}`、删了等级效果表里战争之神的两行、「信物与赐福」加两枚护符、胫骨大棒标「已移除」。
+
+## 落地记录 · 第 ⑤ 批（2026-10-02，执行 thread）
+
+按第十节与作者定的两项做了。与方案不同 / 补充的地方：
+
+- **不加 `text_ctx()`**：`TextParams.of(定义)` 从导出属性反射出键（数值字段同名、字典键直用、注册表构件 `<类型>_<字段>`、`mods` 首条不加前缀），内容类一行不用写。`Names.description_of` 统一过模板，所以道具、信仰、角色、成就、难度、局内 buff、猎手的说明一处就接上了；事件选项的键并进事件正文的上下文。
+- **过滤器**：`{键|abs}`（「给他 {change_money_amount|abs} 币」，字段是 -10）、`{键|signed}`（「伤害 {mult_percent|signed}%」）。`{item_stat:…}` 也能带过滤器。
+- **献祭的 note 不再生成**：`GodsTable` 不把「收什么（人话）」写进 JSON，主句由 `OfferingRule.describe()` 按标签 / 体积 / 倍率拼；`FaithPerk` 子类的 `describe()` 改名 `_summary()`，基类拼「主句　note」。`FaithBonus.describe()` 新增，道具浮窗与信仰浮窗都用它；`gate_text` 改写 `Lv.n`。
+- **顺手修了一个旧 bug**：三条信力行为（伤害、回血、失去体力）的说明用了 `%.2g`，Godot 不认，浮窗里显示成 `%s%s × %.2g%s`。改用 `TextTemplate.num()`。
+- **裸数字检查**：`TextLint`（`core/authoring/text_lint.gd`），导入器 warning、`check_content` 列出；这一批已清零，`TextLint.STRICT` 先保持 false（作者定先 warning 一轮），改成 true 即升为 error。测试已断言整个 `data/authoring` 为零。
+- 改写内容：信仰 JSON 里献祭、等级效果、赐福模板上带数的 note 全删（主句已等价），`blessed_longbow / blessed_shield / strength_sigil` 的「第一阶：…」note 删掉或去掉阶名，8 处 description、4 个选项 label、5 段教程正文改成键；`extract_default` 的「（0 = 免费）」改成「（零即免费）」；进阶难度的「本体第 7 阶段」是对原作的引用，改写成汉字数。`map_scale_profile` 的「4~5 环」按 `rings` 拼。
+- C（xlsx「效果（人话）」列由工具生成）没做，方案里标了「不急」。

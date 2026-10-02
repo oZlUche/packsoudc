@@ -32,22 +32,19 @@
         "flesh",
         "bone"
       ],
-      "multiplier": 5.0,
-      "note": "血肉/骨头（2^稀有度 × 5）"
+      "multiplier": 5.0
     },
     {
       "tags": [
         "trophy"
       ],
-      "multiplier": 10.0,
-      "note": "战利品（2^稀有度 × 10）"
+      "multiplier": 10.0
     },
     {
       "tags": [
         "leather"
       ],
-      "multiplier": 5.0,
-      "note": "皮革（2^稀有度 × 5）"
+      "multiplier": 5.0
     }
   ]
 }

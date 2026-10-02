@@ -61,8 +61,102 @@ static func _expand(token: String, ctx: Dictionary) -> Variant:
 		if name.begins_with("#") and Color.html_is_valid(name):
 			return "[color=%s]" % name
 		return null
-	if ctx.has(token):
-		return str(ctx[token])
+	# 104：`{key|abs}` 取绝对值、`{key|signed}` 带正负号（「伤害 {mult_percent|signed}%」→「伤害 -10%」）
+	var filter := ""
+	var bar := token.find("|")
+	if bar > 0:
+		filter = token.substr(bar + 1)
+		token = token.substr(0, bar)
+	var v: Variant = null
+	if token.begins_with("item_stat:"):
+		v = _item_stat(token, ctx)
+	elif ctx.has(token):
+		v = ctx[token]
+	if v == null:
+		return null
+	return _format(v, filter)
+
+
+## 数 → 文字：整数值的 float 写成整数（`5.0` → `5`），其余照 str()。describe() 拼句用（Godot 的 % 不认 %g）
+static func num(v: float) -> String:
+	return str(int(v)) if is_equal_approx(v, roundf(v)) else str(snappedf(v, 0.01))
+
+
+## 值 → 文字：整数值的 float 写成整数；[param filter] 不认识返回 null（整个记号原样保留）
+static func _format(v: Variant, filter: String) -> Variant:
+	var num := v is int or v is float
+	if filter != "" and not num:
+		return null
+	match filter:
+		"":
+			pass
+		"abs":
+			v = absf(v) if v is float else absi(v)
+		"signed":
+			var t: Variant = _format(v, "")
+			return ("+" + String(t)) if float(v) > 0.0 else String(t)
+		_:
+			return null
+	if v is float and is_equal_approx(v, roundf(v)):
+		return str(int(v))
+	return str(v)
+
+
+## 104：`{item_stat:<道具 id>:<字段>}` —— 教程文本引用**别的道具**的数（「塔盾每下减 4」）。从道具定义里找：
+## 先 `combat` 再整份定义，深度优先；遇到 `stat` 是这个名字的属性修饰取它的 `flat`，否则取同名的数值字段 / 字典键
+## （`base_stats` 的 `armor`、伤害修正的 `flat`）。道具库用 ctx 的 `_items`（[method context_for] 放进去），没有就自己读一份
+static func _item_stat(token: String, ctx: Dictionary) -> Variant:
+	var parts := token.split(":")
+	if parts.size() != 3:
+		return null
+	var db: Variant = ctx.get("_items", null)
+	if not (db is ItemDatabase):
+		db = _default_items()
+	var def := (db as ItemDatabase).get_def(StringName(parts[1]))
+	if def == null:
+		return null
+	var found: Variant = _find_field(def.combat, parts[2], 0)
+	return found if found != null else _find_field(def, parts[2], 0)
+
+
+static var _items_cache: ItemDatabase = null
+
+
+static func _default_items() -> ItemDatabase:
+	if _items_cache == null:
+		_items_cache = ItemDatabase.new()
+		_items_cache.load_dir()
+	return _items_cache
+
+
+static func _find_field(obj: Variant, key: String, depth: int) -> Variant:
+	if depth > 12 or obj == null:
+		return null
+	if obj is Array:
+		for e in obj:
+			var r: Variant = _find_field(e, key, depth + 1)
+			if r != null:
+				return r
+		return null
+	if not (obj is Object):
+		return null
+	if obj is StatModifier and String((obj as StatModifier).stat) == key:
+		return (obj as StatModifier).flat
+	for p in ContentSchema.properties_of(obj):
+		var name := String(p["name"])
+		var v: Variant = (obj as Object).get(name)
+		if name == key and (v is int or v is float) and not (v is bool):
+			return v
+		if v is Dictionary and (v as Dictionary).has(key):
+			var x: Variant = (v as Dictionary)[key]
+			if (x is int or x is float) and not (x is bool):
+				return x
+	for p in ContentSchema.properties_of(obj):
+		var v: Variant = (obj as Object).get(String(p["name"]))
+		if v is Array or (v is Object and v is Resource):
+			var r: Variant = _find_field(v, key, depth + 1)
+			if r != null:
+				return r
 	return null
 
 
@@ -94,6 +188,7 @@ static func context_for(run: RunState, node: MapNode = null, extra: Dictionary =
 		ctx["difficulty"] = run.difficulty.display_name if run.difficulty != null and "display_name" in run.difficulty else "普通"
 		ctx["battles_won"] = int(run.tally.get("battles_won", 0))
 		ctx["battles_lost"] = int(run.tally.get("battles_lost", 0))
+		ctx["_items"] = run.items     # {item_stat:…} 用；以下划线开头的键不是给作者写的
 	if node != null:
 		ctx["node_id"] = node.id
 		var type := NodeEvents.effective_type(node)

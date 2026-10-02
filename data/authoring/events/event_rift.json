@@ -18,7 +18,7 @@
       ]
     },
     {
-      "label": "顺着风走到底（需要步数 ≥ 4）",
+      "label": "顺着风走到底（需要步数 ≥ {steps_within_min_steps}）",
       "requires": [
         {
           "type": "steps_within",

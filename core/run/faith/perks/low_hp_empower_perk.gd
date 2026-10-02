@@ -20,8 +20,8 @@ func modify_spec(spec: CombatantSpec, _board: GridInventory, _run: RunState) -> 
 	spec.set_rules.append(rule)
 
 
-func describe() -> String:
-	return note if note != "" else "所有伤害 +%d%%～+%d%%，血越少越高" % [min_percent, max_percent]
+func _summary() -> String:
+	return "所有伤害 +%d%%～+%d%%，血越少越高" % [min_percent, max_percent]
 
 
 ## 103：作用于角色本身 → 进 buff 栏

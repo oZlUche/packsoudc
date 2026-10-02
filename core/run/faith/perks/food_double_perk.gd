@@ -21,5 +21,5 @@ func modify_spec(spec: CombatantSpec, board: GridInventory, _run: RunState) -> v
 				v.base = roundi(float(v.base) * factor)
 
 
-func describe() -> String:
-	return note if note != "" else "食物给的所有效果 ×%.0f（含献祭食物回体力）" % factor
+func _summary() -> String:
+	return "食物给的所有效果 ×%.0f（含献祭食物回体力）" % factor

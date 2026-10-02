@@ -13,12 +13,28 @@ extends Resource
 
 ## 第几阶起生效（1 = 过了第一道阈值）
 @export var tier: int = 1
-## 给界面的一句（空就用 describe）
+## 给界面的补充一句，接在字段生成的主句后面（104 第十节：不再覆盖主句）。
+## 是 [TextTemplate] 模板：数要写成 `{字段名}`（[method params]），不写死
 @export var note: String = ""
 
 
+## 给界面的一句：字段生成的主句（[method _summary]）+ 作者的补充（[member note]）
 func describe() -> String:
-	return note
+	var main := _summary()
+	var extra := TextTemplate.render(note, params()) if note != "" else ""
+	if main == "" or extra == "":
+		return main + extra
+	return "%s　%s" % [main, extra]
+
+
+## 子类重写：按字段拼的主句
+func _summary() -> String:
+	return ""
+
+
+## [member note] 的占位符：自己的数值字段（[TextParams]）
+func params() -> Dictionary:
+	return TextParams.of(self)
 
 
 ## 103：这条效果在战斗里是不是「通用 buff」—— 作用对象是角色本身（所有道具、基线、角色受到 / 造成的伤害）。

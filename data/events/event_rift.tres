@@ -38,7 +38,7 @@ min_steps = 4
 
 [sub_resource type="Resource" id="Resource_3y3x1"]
 script = ExtResource("1_hwmmi")
-label = "顺着风走到底（需要步数 ≥ 4）"
+label = "顺着风走到底（需要步数 ≥ {steps_within_min_steps}）"
 requires = Array[ExtResource("5_0r53o")]([SubResource("Resource_cfrg2")])
 outcomes = Array[ExtResource("2_qt4ii")]([SubResource("Resource_w281a"), SubResource("Resource_t4lpr")])
 

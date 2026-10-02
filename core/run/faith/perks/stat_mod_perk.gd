@@ -27,10 +27,10 @@ func modify_spec(spec: CombatantSpec, board: GridInventory, _run: RunState) -> v
 			(m as StatModifier).apply_to(item.stats, 1)
 
 
-func describe() -> String:
-	if note != "":
-		return note
-	var where := "基线" if target == "baseline" else ("带「%s」的道具" % Glossary.tag_name(item_tag) if item_tag != &"" else "每件道具")
+func _summary() -> String:
+	if target == "baseline":
+		return "开战时%s" % Glossary.mods_text(mods)
+	var where := "带「%s」的道具" % Glossary.tag_name(item_tag) if item_tag != &"" else "每件道具"
 	return "%s：%s" % [where, Glossary.mods_text(mods)]
 
 

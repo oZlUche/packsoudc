@@ -25,7 +25,6 @@ mult_percent = 5
 script = ExtResource("2_umxob")
 mode = "active"
 mods = Array[ExtResource("3_vxfes")]([SubResource("Resource_binyk")])
-note = "急速 +5%"
 
 [sub_resource type="Resource" id="Resource_t1fft"]
 script = ExtResource("3_vxfes")
@@ -37,7 +36,6 @@ mult_percent = -10
 script = ExtResource("2_umxob")
 tier = 2
 mods = Array[ExtResource("3_vxfes")]([SubResource("Resource_t1fft")])
-note = "2 级：耐力消耗 −10%"
 
 [sub_resource type="Resource" id="Resource_gdva3"]
 script = ExtResource("1_wrt77")
@@ -61,25 +59,21 @@ amount = 2
 script = ExtResource("8_87kt2")
 tags = Array[StringName]([&"metal"])
 multiplier = 5.0
-note = "金属（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_5bfhi"]
 script = ExtResource("8_87kt2")
 tags = Array[StringName]([&"fire"])
 multiplier = 5.0
-note = "火焰（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_vaeam"]
 script = ExtResource("8_87kt2")
 tags = Array[StringName]([&"gem"])
 multiplier = 5.0
-note = "宝石（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_65qkw"]
 script = ExtResource("8_87kt2")
 exact_grade = 2
 multiplier = 5.0
-note = "体积正好为中（2^稀有度 × 5）"
 
 [sub_resource type="Resource" id="Resource_kclds"]
 script = ExtResource("10_fcqfh")
@@ -96,7 +90,6 @@ script = ExtResource("11_sftoe")
 count = 0
 stamina_cost_percent = -20
 tier = 3
-note = "开战时所有武器火焰附魔，武器耐力消耗 −20%"
 
 [sub_resource type="Resource" id="Resource_sxv2w"]
 script = ExtResource("13_mdkyw")

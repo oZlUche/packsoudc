@@ -13,7 +13,7 @@ extends Resource
 @export var mods: Array[StatModifier] = []
 ## 多出来的规则
 @export var rules: Array[AbilityRule] = []
-## 给界面的一句
+## 给界面的补充一句，接在按字段拼的主句后面（104 第十节：不再和主句各写一遍数）；是 [TextTemplate] 模板，数写 `{per_points}` 这类字段名
 @export var note: String = ""
 
 
@@ -30,7 +30,7 @@ func times_for(p_tier: int, points: int) -> int:
 			return 1 if p_tier >= tier else 0
 
 
-## 生效条件的一句：「激活即」「第 2 阶」「每 50 信力一份，最多 6 份」
+## 生效条件的一句：「激活即」「Lv.2」「每 50 信力一份，最多 6 份」（104：阶统一写 Lv.n）
 func gate_text() -> String:
 	match mode:
 		"active":
@@ -38,4 +38,17 @@ func gate_text() -> String:
 		"scaled":
 			return "每 %d 信力一份%s" % [per_points, ("，最多 %d 份" % max_stacks) if max_stacks > 0 else ""]
 		_:
-			return "第 %d 阶" % tier
+			return "Lv.%d" % tier
+
+
+## 给界面的一整句（104 第十节）：生效条件 + 属性修饰 + 规则 + 作者补充。道具浮窗、信仰浮窗都用它，数只来自字段
+func describe() -> String:
+	var bits: Array[String] = []
+	if not mods.is_empty():
+		bits.append(Glossary.mods_text(mods))
+	for r in rules:
+		if r is AbilityRule:
+			bits.append(Glossary.rule_text(r))
+	if note != "":
+		bits.append(TextTemplate.render(note, TextParams.of(self)))
+	return "%s：%s" % [gate_text(), "；".join(bits) if not bits.is_empty() else "（无）"]

@@ -25,7 +25,7 @@ script = ExtResource("7_eybb5")
 
 [sub_resource type="Resource" id="Resource_safsw"]
 script = ExtResource("1_35w1q")
-label = "撬开（体力 -1）"
+label = "撬开（体力 -{spend_vitality_amount}）"
 requires = Array[ExtResource("6_jlyur")]([SubResource("Resource_w2cwq")])
 outcomes = Array[ExtResource("2_4twy5")]([SubResource("Resource_1auhx"), SubResource("Resource_smgla"), SubResource("Resource_i0dru")])
 

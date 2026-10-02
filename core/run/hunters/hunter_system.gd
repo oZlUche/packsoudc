@@ -305,7 +305,7 @@ func _encounter_def(def: HunterDef) -> EventDef:
 	var ev := EventDef.new()
 	ev.id = id
 	ev.title = def.display_name if def.display_name != "" else String(def.id)
-	ev.text = def.description if def.description != "" else "它盯上了你。"
+	ev.text = Names.description_of(def) if def.description != "" else "它盯上了你。"
 	var fight_opt := EventOption.new()
 	fight_opt.label = "迎战"
 	fight_opt.outcomes.append(HunterFight.new())

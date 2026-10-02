@@ -1,7 +1,7 @@
 ## 信仰的悬浮说明（087，作者定：鼠标停在「信仰：X」上时显示具体效果与信力怎么涨）。
 ##
 ## 纯文字（BBCode）：神与说明、**信力怎么涨**（[FaithDef.deeds] 各一句）、阈值与现在几阶、这个信仰的道具各阶解锁什么
-## （从道具库里按 `faith:<id>` 标签找，[ItemDef.faith_bonuses] 的 note / 修饰）。画是 [HoverTip] 的事
+## （从道具库里按 `faith:<id>` 标签找，[method FaithBonus.describe]）。画是 [HoverTip] 的事
 class_name FaithTooltip
 extends RefCounted
 
@@ -12,8 +12,9 @@ static func describe(def: FaithDef, power: FaithPower = null, items: ItemDatabas
 		return "[b]没有信仰[/b]\n棋盘上放一件带信仰标签的道具就激活它的信仰；最后放进去的那件说了算。"
 	var lines: Array[String] = []
 	lines.append("[b]%s[/b]%s" % [Names.of(def), ("　" + def.god) if def.god != "" and def.god != def.display_name else ""])
-	if def.description != "":
-		lines.append("[color=#8b93a1]%s[/color]" % def.description)
+	var desc := Names.description_of(def)
+	if desc != "":
+		lines.append("[color=#8b93a1]%s[/color]" % desc)
 	# 信力怎么涨
 	var deeds := def.deeds_summary()
 	lines.append("[color=#f0ad4e]信力怎么涨：[/color]%s" % (deeds if deeds != "" else "（没有配行为）"))
@@ -57,8 +58,7 @@ static func describe(def: FaithDef, power: FaithPower = null, items: ItemDatabas
 				var b := fb as FaithBonus
 				if b == null:
 					continue
-				var what := b.note if b.note != "" else Glossary.mods_text(b.mods)
-				bits.append("%s %s" % [b.gate_text(), what])
+				bits.append(b.describe())
 			lines.append("　%s%s" % [Names.of(d), ("：" + "；".join(bits)) if not bits.is_empty() else "（没有按阶解锁的功能）"])
 	lines.append("[color=#8b93a1]别的信仰的道具休眠：只留通用效果（盾的减伤、武器的攻击力），护符彻底失效。切换 = 把道具挪到暂存区再挪回[/color]")
 	return "\n".join(lines)

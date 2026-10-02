@@ -20,5 +20,5 @@ id = &"tut2_battle_swarm"
 title = "游兵"
 text = "三把匕首，一下接一下。每下不重，可一直不停。
 
-塔盾每下减 4，正好把它的刀磨成钝的；板甲的护盾会被它磨光，然后你会一直掉血。"
+塔盾每下减 {item_stat:tower_shield:flat|abs}，正好把它的刀磨成钝的；板甲的护盾会被它磨光，然后你会一直掉血。"
 options = Array[ExtResource("1_pbo5t")]([SubResource("Resource_jbnht")])

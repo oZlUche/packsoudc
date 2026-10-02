@@ -16,7 +16,7 @@ extends Resource
 @export var multiplier: float = 1.0
 ## 再乘格子数（大地之神：稀有度 × 格子数）
 @export var per_cell: bool = false
-## 给界面的一句（空就按字段拼）
+## 给界面的补充一句，接在按字段拼的主句后面（104 第十节：不再覆盖）；是 [TextTemplate] 模板，数写 `{multiplier}` 这类字段名
 @export var note: String = ""
 
 
@@ -52,8 +52,6 @@ func value(def: ItemDef) -> int:
 
 
 func describe() -> String:
-	if note != "":
-		return note
 	var parts: Array[String] = []
 	if not tags.is_empty():
 		var names: Array[String] = []
@@ -66,4 +64,5 @@ func describe() -> String:
 		parts.append("体积正好为%s" % ItemVolume.grade_name(exact_grade))
 	if has_stat != &"":
 		parts.append("带有%s属性" % Glossary.stat_name(has_stat))
-	return "%s（2^稀有度 × %.2g%s）" % ["；".join(parts) if not parts.is_empty() else "任何道具", multiplier, " × 格子数" if per_cell else ""]
+	var main := "%s（2^稀有度 × %s%s）" % ["；".join(parts) if not parts.is_empty() else "任何道具", TextTemplate.num(multiplier), " × 格子数" if per_cell else ""]
+	return main if note == "" else "%s　%s" % [main, TextTemplate.render(note, TextParams.of(self))]

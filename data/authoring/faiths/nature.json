@@ -30,15 +30,13 @@
       "tags": [
         "nature"
       ],
-      "multiplier": 5.0,
-      "note": "自然（2^稀有度 × 5）"
+      "multiplier": 5.0
     },
     {
       "tags": [
         "food"
       ],
-      "multiplier": 5.0,
-      "note": "食物（2^稀有度 × 5）"
+      "multiplier": 5.0
     },
     {
       "tags": [
@@ -46,8 +44,7 @@
         "armor",
         "shield"
       ],
-      "multiplier": 5.0,
-      "note": "防具（2^稀有度 × 5）"
+      "multiplier": 5.0
     }
   ],
   "perks": [
@@ -61,8 +58,7 @@
           "stat": "regen_hp",
           "flat": 1.0
         }
-      ],
-      "note": "开战时每秒回血 +1"
+      ]
     },
     {
       "type": "altar_food_vitality",
@@ -99,8 +95,7 @@
               "stat": "max_hp",
               "flat": 3.0
             }
-          ],
-          "note": "生命 +3"
+          ]
         },
         {
           "mode": "scaled",
@@ -110,8 +105,7 @@
               "stat": "armor",
               "flat": 1.0
             }
-          ],
-          "note": "每 50 信力护甲 +1（最多 5 份）"
+          ]
         }
       ]
     }

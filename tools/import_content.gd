@@ -29,6 +29,8 @@ func run() -> void:
 			if String(data.get("id", "")) != id:
 				report.error("id", "id '%s' 与文件名 '%s' 不一致" % [data.get("id", ""), id])
 				continue
+			for hit in TextLint.scan(data):     # 104 第十节：说明文本里的数要读字段（先 warning，见 TextLint.STRICT）
+				report.warn(String(hit["path"]), "说明文本里有写死的数字「%s」—— 写成 {字段名}（docs/text-placeholders.md）" % hit["text"])
 			var res := _build(kind, data, ctx, report)
 			if res != null:
 				built[ContentPaths.asset_file(kind, id)] = res
