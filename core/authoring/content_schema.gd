@@ -5,14 +5,14 @@
 ## 1. 问 Godot「这个类有哪些导出属性、各是什么类型」——靠 [method get_property_list]
 ##    与类型化数组的 `get_typed_script()`；
 ## 2. 遇到抽象基类（Trigger / Cadence / Cost / Effect）时，按 JSON 里的 `type`
-##    去 [EffectRegistry] 查。
+##    去 [ContentRegistries] 查。
 ##
 ## 于是「新增一种效果」＝ 加一个脚本 + 在注册表登记一行。
 ## 导入器、导出器、编辑器三方都不需要改 —— 这一条是整条管线的地基。
 class_name ContentSchema
 extends RefCounted
 
-## 抽象基类 → 它在 [EffectRegistry] 里对应哪些表。
+## 抽象基类 → 它在 [ContentRegistries] 里对应哪些表。
 ##
 ## 值是**表名数组**：`Effect` 横跨三个作用域，所以要挨个找。
 const ABSTRACT_ROOTS := {
@@ -206,7 +206,7 @@ static func available_types(class_id: StringName) -> Array[StringName]:
 	var out: Array[StringName] = []
 	if ABSTRACT_ROOTS.has(class_id):
 		for table in ABSTRACT_ROOTS[class_id]:
-			for n in EffectRegistry.type_names(table):
+			for n in ContentRegistries.type_names(table):
 				out.append(n)
 		out.sort()
 		return out
@@ -218,8 +218,8 @@ static func available_types(class_id: StringName) -> Array[StringName]:
 static func make(class_id: StringName, type_name: StringName) -> Object:
 	if ABSTRACT_ROOTS.has(class_id):
 		for table in ABSTRACT_ROOTS[class_id]:
-			if EffectRegistry.has_type(table, type_name):
-				return EffectRegistry.instantiate(table, type_name)
+			if ContentRegistries.has_type(table, type_name):
+				return ContentRegistries.instantiate(table, type_name)
 		return null
 	var script := script_of(class_id)
 	return script.new() if script != null else null
@@ -228,8 +228,9 @@ static func make(class_id: StringName, type_name: StringName) -> Object:
 ## 一个实例在注册表里叫什么。抽象基类的子对象要靠它显示当前选中项。
 static func registry_name_of(inst: Object) -> StringName:
 	var wanted := class_name_of(inst)
-	for table in EffectRegistry.TABLES:
-		var t: Dictionary = EffectRegistry.TABLES[table]
+	var tables := ContentRegistries.tables()
+	for table in tables:
+		var t: Dictionary = tables[table]
 		for type_name in t:
 			var script := load(t[type_name]) as GDScript
 			if script != null and script.get_global_name() == wanted:

@@ -37,7 +37,7 @@ const SEALED := &"sealed"
 ## 088（作者定）：**特殊道具** —— 不进背包、不能生成（搜索 / 掉落 / 商店 / 敌人都不出），拿到只是文本通知 + 图鉴点亮；
 ## 它代表一种能力（望远镜 → 节点浮窗），能力由它别的标签说明（`node_tooltips`）
 const KEEPSAKE := &"keepsake"
-## 信仰（8-4，报告 081）：信仰道具带 `faith`，再带一个信仰对象标签 `faith:<id>`（[FaithDef.TAG_PREFIX]）。激活规则见 [FaithState]
+## 信仰（8-4，报告 081）：信仰道具带 `faith`，再带一个信仰对象标签 `faith:<id>`（[FaithTags.PREFIX]）。激活规则见 [FaithState]
 const FAITH := &"faith"
 ## 095：赐福版（从普通道具派生的信仰道具）；信物（护符 / 符号 / 遗物）—— 只有信物能激活信仰
 const BLESSED := &"blessed"
@@ -72,7 +72,7 @@ func is_anchor() -> bool:
 ## 信仰对象标签（`faith:violence`）；没有返回空。带 `faith` 却没有对象标签也返回空 —— 导入器不许这种道具进来
 func faith_tag() -> StringName:
 	for t in tags:
-		if String(t).begins_with(FaithDef.TAG_PREFIX):
+		if String(t).begins_with(FaithTags.PREFIX):
 			return t
 	return &""
 

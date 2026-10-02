@@ -1,4 +1,4 @@
-## 侵蚀的一种效果（构件，登记在 [EffectRegistry.EROSION_EFFECTS]；5.7，报告 075）。
+## 侵蚀的一种效果（构件，登记在 [RunRegistry.EROSION_EFFECTS]；5.7，报告 075）。
 ##
 ## 作者：侵蚀的各种效果都要能开关、能调 —— 是否启用、在哪个阶段启用、触发概率都不写死。
 ## 所以每个效果自带四个门：[member enabled]、[member from_depth]（这个点被侵蚀了至少几层才生效）、[member only_total]（只在全图侵蚀的终局生效）、

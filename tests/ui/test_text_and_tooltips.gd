@@ -30,7 +30,13 @@ static func run_text_template(t: TestCase) -> void:
 	var ctx := {"char_name": "布鲁图斯", "money": 12}
 	t.eq(TextTemplate.render("{char_name}有 {money} 币", ctx), "布鲁图斯有 12 币", "占位符替换")
 	t.eq(TextTemplate.render("{nope} 还在", ctx), "{nope} 还在", "不认识的键原样保留")
-	t.eq(TextTemplate.render("{c:hp}血{/c}{b}粗{/b}{i}斜{/i}", {}), "[color=#%s]血[/color][b]粗[/b][i]斜[/i]" % UiPalette.HP.to_html(false), "样式码 → BBCode")
+	# 101 第 5 刀：文本层只产出带颜色**名**的样式码，换成真颜色是界面的事（UiPalette.resolve_styles）
+	t.eq(TextTemplate.render("{c:hp}血{/c}{b}粗{/b}{i}斜{/i}", {}), "[color=@hp]血[/color][b]粗[/b][i]斜[/i]", "样式码 → 带颜色名的 BBCode")
+	t.eq(UiPalette.resolve_styles("[color=@hp]血[/color]"), "[color=#%s]血[/color]" % UiPalette.HP.to_html(false), "界面查表换成真颜色")
+	t.eq(UiPalette.resolve_styles("[color=@nope]x[/color]"), "[color=@nope]x[/color]", "名字对不上的原样留着（一眼看得见，也不会崩）")
+	t.eq(UiPalette.resolve_styles("没有样式码"), "没有样式码", "没样式码的原样返回")
+	for name in TextTemplate.STYLE_NAMES:
+		t.check(UiPalette.STYLE_COLORS.has(name), "认得的颜色名 %s 在调色板里有颜色" % name)
 	t.eq(TextTemplate.render("{c:#ff8800}x{/c}", {}), "[color=#ff8800]x[/color]", "十六进制颜色也行")
 	t.eq(TextTemplate.render("{c:nothing}x{/c}", {}), "{c:nothing}x[/color]", "不认识的颜色名原样保留")
 	t.eq(TextTemplate.render("没闭合的 {", {}), "没闭合的 {", "没闭合的花括号不崩")

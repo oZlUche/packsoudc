@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.18 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.19 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -56,6 +56,25 @@ UI 调用服务方法（`InventoryService.move(...)`），服务改完状态后�
 
 信号的唯一职责是：逻辑层 → 表现层的单向广播。**项目里没有全局 `EventBus`**（设计稿里有，M6 落地时去掉了，见 2 节与 v1.52）：
 每个逻辑类发自己的信号（`GridInventory.changed`、`RunState.phase_changed`、`GameFlow.screen_changed`……），每一屏只订阅自己要的。
+
+### 1.3.1 依赖方向：底下的层不认识上面的层（101 第 5 刀）
+
+`core/` 不认识 `ui/`，`core/battle`、`core/inventory`、`core/sets` 不认识 `core/run`。这不是洁癖 —— 反向依赖一旦长出来，
+逻辑层就再也不能单独跑（沙盒、无头批量模拟、将来换一套界面都得连着拖上一堆控件），而且**编译不红、测试也不红**，
+所以由 `tests/test_layering.gd` 按源码查：`core/` 里出现 `ui/` 的类名或 `res://ui/` 的路径就红，底下三棵树里出现 `core/run` 的也红；
+确有理由的写进那个套件的白名单并写原因。
+
+几条反向依赖原来长在哪、现在怎么走（101 第 5 刀）：
+
+| 原来 | 现在 |
+|---|---|
+| `GameFlow` 给 `ItemTooltip.faith_probe` 设探针 | `GameFlow` 发 `run_changed(state)` 并提供 `faith_status()`；`GameDirector` 收到信号才去设探针 |
+| `TextTemplate.COLORS` 直接引调色板 | 文本层只产出带颜色**名**的样式码（`[color=@hp]`），`UiPalette.STYLE_COLORS` + `UiPalette.resolve_styles()` 在画之前查表换成十六进制 |
+| 事件文本与神罚日志问 `MapNodeStyle` 要点的名字 | 名字是文字，住在 `core/text/node_text.gd`（`NodeText.LABELS`）；`MapNodeStyle` 只留长相，它的 `label` 从 `NodeText` 取 |
+| `GameSettings.bg_theme` 用 `UiPalette.has_bg_theme` 校验 | 设置层只存字符串；认不认得这个 id 由 `UiPalette.apply` 兜底成默认那档 |
+| 编译器与套装经 `FaithState`（`core/run`）看休眠 | `FaithState` 与标签词汇 `FaithTags` 搬进 `core/inventory` —— 这条规则只看容器与标签，本来就不认识具体的神 |
+| `CombatantSpec.flags["undying_sec"]` 字符串键 | 带类型的字段 `CombatantSpec.undying_sec`（结算规则留在内核，但拼错键名不会再默默失效） |
+| 一张 `EffectRegistry` 里装着一局的全部构件 | 按层拆三张：`EffectRegistry`（战斗）、`LootRegistry`（战利品）、`RunRegistry`（一局）；内容管线要的全表由 `core/authoring/content_registries.gd` 合起来 |
 
 ### 1.4 随机数分流
 
@@ -3466,7 +3485,12 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 1. 问 Godot「这个类有哪些导出属性、各是什么类型」（`get_property_list()`，
    类型化数组还能用 `get_typed_script()` 问出元素类）；
 2. 碰到抽象基类（`Trigger` / `Cadence` / `Cost` / `Effect`）时，
-   按 JSON 里的 `type` 去 `EffectRegistry` 查。
+   按 JSON 里的 `type` 去注册表查。
+
+注册表按层分成三张（101 第 5 刀，依赖方向见 1.3.1）：`EffectRegistry`（`core/battle`：扳机、频率、消耗、战斗效果）、
+`LootRegistry`（`core/loot`）、`RunRegistry`（`core/run`：一局的规则与模块、事件的条件与后果、局内技能、信力行为与信仰级效果、猎手、侵蚀）。
+查法三家共用 `RegistryLookup`；**内容管线要的是三张合起来**，由 `ContentRegistries`（`core/authoring`）合并，
+种类名（`trigger` / `run_module` / `faith_perk`……）全局唯一，撞键会在合并时报错。导入器、导出器、校验、编辑器只认 `ContentRegistries`。
 
 于是**新增一种效果 = 加一个脚本 + 注册表登记一行**，整条工具链自动认得：
 命令行导入器接受它、导出器倒得出来、编辑器的下拉框自动多一项。
@@ -3768,6 +3792,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.19 | 2026-10-02 | **依赖方向**（报告 101 第 5 刀；新增 1.3.1、改 10.4）：`core/` 不再出现 `ui/` 的类名 —— 悬浮窗的信仰探针改成 `GameFlow.run_changed(state)` + `faith_status()`（`GameDirector` 接），样式码的颜色表搬到 `UiPalette.STYLE_COLORS`（文本层只产出 `[color=@hp]`，画之前 `resolve_styles` 换），点的名字搬进 `core/text/node_text.gd`（`MapNodeStyle` 只留长相），`GameSettings.bg_theme` 只存字符串、认不认得由 `UiPalette.apply` 兜底；`FaithState` 与标签词汇 `FaithTags` 搬进 `core/inventory`（编译器与套装不再认识 `core/run`）；`CombatantSpec.flags` 换成带类型的 `undying_sec`；注册表拆成 `EffectRegistry` / `LootRegistry` / `RunRegistry` 三张，全表由 `ContentRegistries` 合（查法共用 `RegistryLookup`）；新套件 `tests/test_layering.gd` 按源码守这两条方向（含自检与白名单）。**没做的两条**：perk 回编译期（会改战斗层的数值时序，另出方案）、赐福派生进 `ContentLibrary`（等 100 第 4 步）|
 | v2.18 | 2026-10-01 | **053 三 + 二落地**：高危区在骨架与换乘之后才长（`RingMapGenerator._lay_zones`），只从 `RouteStyle.spawns_zones` 的路线岔（搜索风格 false）；偏搜索路线停在撤离环间内侧那环（`_exit_ring`），沿环朝空间大的那边走弧（`_lay_exit_arc`），尽头 = 与相邻路线共用的撤离点，之后的换乘区记在路线 `exit_ids`、第一个点放商店（`RingTypeAssigner._place_exit_shops`）；它的横走步数只撒在走得到的环上；校验 `extract_band` 删「核心前一环例外」、加 `extract_min_count`（2）。回头环路不做 |
 | v2.17 | 2026-10-01 | **UI 里的逻辑搬回 core**（报告 101 第 6 刀；改 8 节、11 的树）：商店屏「拖走了就结账、结不成放回架上」的回滚搬进 `ShopSession.pay_or_return(格, uid, 容器)`（界面只把 false 说成一句话）；导演里 200 行截图演示代码搬进 `tools/demo_fill.gd`（`class_name DemoFill`，导演只在 `DEMO_SCREEN` 非空时 `load` 它，正式游戏一行都不跑），`game_director.gd` 390 → 196 行；导演直接写 `run.phase` / `end_reason` 改成 `RunState.force_extract()`（标明只给演示与测试用）；新用例 `test_economy.run_shop_rollback` 守回滚规则（原来只有界面里有、没测试） |
 | v2.16 | 2026-10-01 | **`GameFlow` 抽服务**（报告 101 第 4 刀；改 8 节）：成就与解锁抽成 `Achievements`（`core/meta/achievements.gd`，纯逻辑，不碰存盘与转屏；flow 只同步 + 决定要不要存），切存档位的文件层并进 `SaveSlots.open`（建目录 / 两条路径 / 读局外 / 读不出来先备份，098 的规矩和 `backup` 放在一起），092 的暂存区一键出售与 090 的「带回来的棋盘 ⇄ 开局屏那一栏」搬回 `MetaState`（`left_behind_preview` / `sell_left_behind` / `take_board_to_stash` / `return_stash`，开局屏少 20 行）；界面与测试的调用处一个没改（flow 留一行转发）；新套件 `tests/run/test_flow_wiring.gd`：**不许漏接** —— 一局 / 节点事件 / 六个模块的每个 signal 在 `core/` 或 `ui/` 里都得有人接（白名单一条：`shop_closed`），外加三个服务各自不造 `GameFlow` 也能测 |

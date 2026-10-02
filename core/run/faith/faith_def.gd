@@ -6,8 +6,9 @@
 class_name FaithDef
 extends Resource
 
-## 信仰对象标签的前缀：`faith:violence`
-const TAG_PREFIX := "faith:"
+## 信仰对象标签的前缀：`faith:violence`。
+## 101 第 5 刀：标签这套词汇在道具层（[FaithTags]）—— 背包与编译器得读它，它们不该认识信仰体系
+const TAG_PREFIX := FaithTags.PREFIX
 
 enum Camp { GODS, CHURCH }
 
@@ -37,7 +38,7 @@ enum Camp { GODS, CHURCH }
 
 ## 这个信仰的道具带的标签
 func tag() -> StringName:
-	return StringName(TAG_PREFIX + String(id))
+	return FaithTags.tag_of(id)
 
 
 func matches(def: ItemDef) -> bool:
@@ -109,8 +110,7 @@ func deeds_summary() -> String:
 
 ## 从标签反推 id：`faith:violence` → `violence`；不是信仰对象标签返回空
 static func id_of_tag(t: StringName) -> StringName:
-	var s := String(t)
-	return StringName(s.substr(TAG_PREFIX.length())) if s.begins_with(TAG_PREFIX) and s.length() > TAG_PREFIX.length() else &""
+	return FaithTags.id_of_tag(t)
 
 
 ## 装回全部定义：id → FaithDef，按 id 升序

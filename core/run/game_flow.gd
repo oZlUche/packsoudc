@@ -14,6 +14,9 @@ enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RE
 
 signal screen_changed(screen: int, payload: Dictionary)
 signal run_started(state: RunState)
+## 101 第 5 刀：当前的这一局换了（开局 / 读档 / 回主菜单时 `null`）。UI 据此把只属于一局的东西挂上 / 摘掉
+## （[ItemTooltip] 的信仰探针就是这么接的 —— core 不认识 ui）
+signal run_changed(state: RunState)
 signal run_ended(result: RunResult)
 
 var items: ItemDatabase = null
@@ -87,7 +90,7 @@ func to_main_menu() -> void:
 	run = null
 	result = null
 	_queue.clear()
-	ItemTooltip.faith_probe = Callable()     # 096：局外悬浮窗不按信仰状态上色
+	run_changed.emit(null)     # 096：局外悬浮窗不按信仰状态上色（UI 摘掉探针）
 	save_meta()
 	_go(Screen.MAIN_MENU)
 
@@ -935,12 +938,6 @@ func _adopt(state: RunState) -> void:
 	result = null
 	_settled = false
 	_queue.clear()
-	# 096：道具悬浮窗按局里的信仰状态给信仰加成上色（生效白 / 没生效灰）
-	ItemTooltip.faith_probe = func() -> Dictionary:
-		if run == null or run.faith_power == null:
-			return {}
-		var id := run.active_faith_id()
-		return {"active": id, "tier": run.active_faith_tier(), "points": run.faith_power.points_of(id) if id != &"" else 0}
 	state.buff_defs = buff_defs      # 读档回来的只有 id，定义表在这里
 	state.event_defs = event_defs
 	state.meta = meta     # 091：事件的条件 / 后果看、立局外旗标
@@ -1011,6 +1008,18 @@ func _adopt(state: RunState) -> void:
 			_queue.push_front({"screen": Screen.EVENT, "node": node, "outcome": outcome, "detail": detail}))
 	ev.rested.connect(func(node: MapNode, restored: int):
 		_push({"screen": Screen.REST, "node": node, "restored": restored}))
+	run_changed.emit(state)     # 101 第 5 刀：UI 把只属于一局的东西挂上（信仰探针）
+
+
+## 096：现在的信仰状态 —— 激活的 id、阶、信力。不在局里是空字典。
+##
+## 101 第 5 刀：这是给 UI（[ItemTooltip] 的探针）问的那一份数据。core 不认识 ui：
+## 接线由 [GameDirector] 在 [signal run_changed] 上做
+func faith_status() -> Dictionary:
+	if run == null or run.faith_power == null:
+		return {}
+	var id := run.active_faith_id()
+	return {"active": id, "tier": run.active_faith_tier(), "points": run.faith_power.points_of(id) if id != &"" else 0}
 
 
 func _push(entry: Dictionary) -> void:

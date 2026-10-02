@@ -161,12 +161,12 @@ static func run_safe_module(t: TestCase) -> void:
 
 static func run_registry_and_content(t: TestCase) -> void:
 	t.begin("101 第 0 刀 · 注册表与内容：模块是构件（按 type 名造），章节 JSON 能列；难度机制走同一张表")
-	t.check(EffectRegistry.TABLES.has(&"run_module"), "注册表有 run_module 这张表")
-	t.check(EffectRegistry.has_type(&"run_module", &"safe"), "保险箱登记了")
+	t.check(RunRegistry.TABLES.has(&"run_module"), "注册表有 run_module 这张表")
+	t.check(RunRegistry.has_type(&"run_module", &"safe"), "保险箱登记了")
 	for type_name in [&"erosion", &"hunters"]:
-		t.check(EffectRegistry.has_type(&"run_module", type_name), "%s（069 的机制）在同一张表里" % type_name)
-		t.check(EffectRegistry.has_type(&"run_mechanic", type_name), "旧键名还认得 %s（别名）" % type_name)
-	var made := EffectRegistry.instantiate(&"run_module", &"safe")
+		t.check(RunRegistry.has_type(&"run_module", type_name), "%s（069 的机制）在同一张表里" % type_name)
+		t.check(RunRegistry.has_type(&"run_mechanic", type_name), "旧键名还认得 %s（别名）" % type_name)
+	var made := RunRegistry.instantiate(&"run_module", &"safe")
 	t.check(made is SafeModule and (made as SafeModule).id() == SafeModule.ID, "造得出来、id 对")
 	t.check(ContentSchema.ABSTRACT_ROOTS.has(&"RunModule"), "导入器认得 Array[RunModule]（抽象基类 → 表）")
 	# 章节 JSON 里列一条就能导进来
@@ -205,7 +205,7 @@ static func run_module_roster(t: TestCase) -> void:
 	var saved: Dictionary = run.to_dict()["modules"]
 	for mid in ids:
 		t.check(run.module(mid) != null, "默认清单里有 %s" % mid)
-		t.check(EffectRegistry.has_type(&"run_module", mid), "%s 登记在 run_module 表里" % mid)
+		t.check(RunRegistry.has_type(&"run_module", mid), "%s 登记在 run_module 表里" % mid)
 		t.check(FieldText.TYPE_LABELS.has(String(mid)), "%s 在编辑器里有中文名" % mid)
 		t.check(saved.has(String(mid)), "%s 在存档的 modules 下有自己那一份" % mid)
 	t.eq(run.module_lines().size(), ids.size(), "规则卡上每个模块一句")

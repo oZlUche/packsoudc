@@ -322,3 +322,52 @@ flow 只留一行转发 —— **界面与测试的调用处一个都没改**（
 **余下的刀**：第 2 刀（`start()` 收成 `RunSetup`）等 100 第 4 步的 `ContentLibrary`；第 5 刀（依赖方向：`ItemTooltip.faith_probe`、
 `TextTemplate` 的颜色表、perk 改编译期输入、`spec.flags` 改带类型字段、注册表拆三张）还没动 —— 它是这几刀里唯一会改战斗层接口的，
 建议单独一刀做完再合。
+
+## 落地 · 第 5 刀：依赖方向（2026-10-02，实现 thread）
+
+方案列了八条，**做了六条**，两条没做（理由在最后，都不是「忘了」）。架构文档新增 1.3.1、改 10.4，版本 v2.19（v2.18 被 main 上的 053 占了）。
+
+| 方案的那一条 | 落地 |
+|---|---|
+| `ItemTooltip.faith_probe` | `GameFlow` 新增 `signal run_changed(state)`（开局 / 读档发这一局，回主菜单发 `null`）与 `faith_status()`（只交数据）。`GameDirector._on_run_changed` 才去设 `ItemTooltip.faith_probe`。`core/run/game_flow.gd` 里 `ItemTooltip` 一个字都没有了 |
+| `TextTemplate` 的 `COLORS` | 文本层只产出带颜色**名**的样式码：`{c:hp}` → `[color=@hp]`（认得的名字见 `TextTemplate.STYLE_NAMES`，`{c:#ff8800}` 照旧直通）。表搬到 `UiPalette.STYLE_COLORS`，`UiPalette.resolve_styles()` 在给 `RichTextLabel` 之前换成十六进制 —— 两处调用点（事件屏的正文、地图屏的节点浮窗）。名字对不上就原样留着：一眼看得见，也不会崩 |
+| `GameSettings.bg_theme` | 设置层只存字符串（默认空 = 用界面的默认），认不认得这个 id 由 `UiPalette.apply` 兜底成默认那档；设置屏的打勾按**生效的那一档**算，不按存的字符串 |
+| `compiler.gd` 的 `FaithState` | `FaithState` 搬到 `core/inventory/faith_state.gd`，标签词汇（`faith:` 前缀、标签 ⇄ id）抽成 `core/inventory/faith_tags.gd`（`FaithDef.TAG_PREFIX` / `id_of_tag` 变成转发，调用处一个没改）。**没有**给编译器加 `dormant` 入参 —— 见下 |
+| `spec.flags` 字符串 | `CombatantSpec.flags` 整个去掉，换成带类型的 `undying_sec: float`。`draw_is_win` 没有加：103 用加时 + 衰竭替掉了「平局算赢」，这面旗子已经没有主人，加一个空字段只是死代码。另外发现 `FoodDoublePerk` 往 `flags["food_double"]` 写的那一份**没有任何人读**（献祭食物回体力翻倍是 `AltarFoodVitalityPerk` 自己查这条 perk 在不在），顺手删了 |
+| `effect_registry.gd` | 拆三张：`EffectRegistry`（`core/battle`：扳机 / 频率 / 消耗 / 战斗效果）、`LootRegistry`（`core/loot`）、`RunRegistry`（`core/run`：一局的规则与模块、事件的条件与后果、局内技能、信力行为与信仰级效果、猎手、侵蚀）。查法三家共用 `core/effects/registry_lookup.gd`；内容管线要的全表由 `core/authoring/content_registries.gd` 合（种类名全局唯一，撞键报错）。导入器 / 导出器 / 校验 / 编辑器只认 `ContentRegistries`，`core/battle` 不再出现 `res://core/run/` |
+| 另外（方案没列） | 事件文本的 `{node_type}`、神罚与改造的日志原来问 `MapNodeStyle`（`ui/map`）要点的名字。名字是文字，搬进 `core/text/node_text.gd`（`NodeText.LABELS`）；`MapNodeStyle.STYLES` 只留长相，它的 `label` 从 `NodeText` 取，调用方照旧读 `label` |
+
+**守这条方向的测试**：新套件 `tests/test_layering.gd`（12 项断言）。它按源码查两件事 ——
+`core/` 里不许出现 `ui/` 的类名或 `res://ui/` 的路径；`core/battle`、`core/inventory`、`core/sets` 里不许出现 `core/run` 的类名或路径。
+注释（`#` / `##`）里的类名不算（那只是指路），词边界也看（`FaithTags` 不会被当成 `FaithTag`）。
+这类错误编译不红、测试也不红，所以必须有人按源码查；例外写进套件里的两张白名单并写原因（现在只有一条，就是下面那条尾巴）。
+套件自己还有三条**自检**，确认这张网真的在查东西 —— 否则「全绿」可能只是什么都没查。
+
+另外两个新用例：`test_flow_wiring.run_run_changed_signal`（信号发没发、带的是不是这一局、回主菜单带 `null`、
+`faith_status` 和这一局对得上）与 `test_content_pipeline.run_registries_split`（三张各自只装自己那层、合起来 = 三张之和、
+校验表认得的每一种在注册表里都有）。
+
+**没做的第一条：perk 回到编译期**（方案：`FaithPerk.modify_spec` → 产出 `StatModifier / AbilityRule / flags`，和套装、buff 一起进 `BattleCompiler.compile`）。
+八条里只有这一条我没动，原因是方案给的形状**装不下现在的 perk**，而硬塞会动战斗数值：
+
+- 能直接变成「整个单位的 `mods` / `rules`」的只有四条（`low_hp_empower`、`overtime_regen`、`food_shield`、`stat_mod` 的 `target=baseline`）。
+- 另外四条要的是**按件**的活：`enchant_weapons` 要在编译完的武器里按种子随机挑 n 把、只挑 `is_active()` 的，给每把单独挂规则并改它的耐力消耗；
+  `food_double` 要把食物道具的**每一条属性**的 `base` ×2（除急速）；`stat_mod` 的 `target=items` 要按标签筛；`altar_sacrifice_hp` 要给每件加急速。
+  这些都得先有编译结果才知道作用在谁身上，`StatModifier` 也表达不了「所有属性的 base ×2」。
+- 要收进编译器，就得给编译器**新开一类入参**：带筛选条件（标签 / uid / 随机挑几件）的「按件修饰」，外加一个「按件缩放」构件。这是给战斗层加一个新的扩展点。
+- 更要紧的是**时序**：perk 现在跑在整条编译之后（含第 5 步把属性结算成 `abilities`），搬进编译器就会落在结算**之前**，
+  乘区的叠法与结算顺序都会变 —— 这不是重构，是改数值。
+
+所以这一条我按规矩停下来，不偷偷改设计：它值得单独一份方案（新入参长什么样、按件修饰在五步里插在哪、哪些数要对齐、怎么证明搬家前后每件道具的终值一致），
+作者点头再做。其余七条互不依赖，先落地了。
+
+**没做的第二条：赐福派生进 `ContentLibrary`**（`item_database.gd:40-41`）。这条依赖 100 第 4 步的 `ContentLibrary`，它还没落地。
+`ItemDatabase` 现在仍 `preload` 两个 `core/run/faith/` 的脚本来派生赐福版 —— 这是 `core/inventory` 里**唯一**剩下的反向依赖，
+已经写进 `test_layering` 的白名单（带原因与去向），100 第 4 步落地时跟着挪、顺手把白名单清空。
+
+**验证**：全套测试 **83 个套件、12814 项断言通过**（含 main 上 #9 的那些）。
+`grep -rn "UiPalette\|ItemTooltip" core/` 只剩文档注释里的指路（`[ItemTooltip]`），没有代码；
+`grep -rn "res://core/run/" core/battle core/inventory core/sets` 只剩 `item_database.gd` 那两行（白名单那条）；
+`grep -rn "spec.flags" core/` 只剩一句解释它去哪了的注释。
+
+**余下的刀**：第 2 刀（`start()` 收成 `RunSetup`）等 100 第 4 步的 `ContentLibrary`；第 5 刀的「perk 回编译期」等那份单独的方案。

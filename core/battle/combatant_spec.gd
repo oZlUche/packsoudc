@@ -3,8 +3,11 @@ class_name CombatantSpec
 extends RefCounted
 
 var max_hp: int = 0                  ## 定点
-## 093：信仰级效果留的旗子（undying_sec……），编译之后由 FaithPerk 写；结算内核只读
-var flags: Dictionary = {}
+## 093（蛮神 4 级）：生命归零后还能坚持几秒；0 = 没有。
+##
+## 101 第 5 刀：原来是 `flags: Dictionary` 里的一个字符串键 —— 结算规则（不是效果）留在内核，但**按带类型的字段读**：
+## 拼错键名不会再默默失效。写它的是 [UndyingPerk]，读它的是 [CombatantRuntime]
+var undying_sec: float = 0.0
 
 ## 角色自带的基础属性（生命上限、耐力上限…），不属于任何道具。
 ## 为 null 时该单位没有任何自带属性 —— 手搓的测试假人就是这样。

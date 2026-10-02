@@ -1,6 +1,6 @@
 ## 信仰级的效果（093，作者表的「1～5 级效果」）：写在信仰上、过了第 [member tier] 阶就生效，不属于某件道具（道具上的按阶功能仍是 [FaithBonus]）。
 ##
-## 构件：每一条效果一个子类、注册表（EffectRegistry.FAITH_PERKS）一行；信仰文件里 `perks: [{"tier": 1, "type": "..."}]`。
+## 构件：每一条效果一个子类、注册表（RunRegistry.FAITH_PERKS）一行；信仰文件里 `perks: [{"tier": 1, "type": "..."}]`。
 ## 基类给出几个**落点**的钩子，子类只重写自己用得到的那个；各系统在自己的点上问 [method RunState.faith_perks]：
 ## - 编译期 [method modify_spec]：开战时在编译好的玩家战斗单位上做手脚（加规则、改属性）
 ## - 神坛 [method altar_label] / [method altar_apply]：休息处神坛上的特殊操作（和献祭二选一，共用这一次机会；不占休息）

@@ -58,6 +58,31 @@ static func resource_color(key: StringName) -> Color:
 	return RESOURCE_COLORS.get(String(key), DIM)
 
 
+#region 样式码的颜色（101 第 5 刀）
+## 文本层样式码（`{c:hp}`，见 [TextTemplate.STYLE_NAMES]）的颜色名 → 颜色。
+##
+## 表在这边是因为颜色是界面的事：[TextTemplate] 只产出带名字的 `[color=@hp]`，
+## 画之前由 [method resolve_styles] 换成十六进制。名字对不上的原样留着（一眼看得见，也不会崩）
+const STYLE_COLORS := {
+	"fg": FG, "dim": DIM, "hp": HP, "shield": SHIELD,
+	"stamina": STAMINA, "mana": MANA, "heal": HEAL,
+	"grant": GRANT, "receive": RECEIVE,
+	"warn": STAMINA, "danger": HP, "good": HEAL,
+}
+
+
+## 把 BBCode 里的 `[color=@名字]` 换成真颜色。给 RichTextLabel 之前调（[TextTemplate.render] 的输出都要过这一道）
+static func resolve_styles(bbcode: String) -> String:
+	if not bbcode.contains("[color=" + TextTemplate.STYLE_PREFIX):
+		return bbcode
+	var out := bbcode
+	for name in STYLE_COLORS:
+		out = out.replace("[color=%s%s]" % [TextTemplate.STYLE_PREFIX, name],
+			"[color=#%s]" % (STYLE_COLORS[name] as Color).to_html(false))
+	return out
+#endregion
+
+
 static func damage_color(type: StringName) -> Color:
 	return DAMAGE_COLORS.get(String(type), FG)
 
@@ -93,10 +118,11 @@ static func bg_name(id: String) -> String:
 	return id
 
 
-## 从设置里读底色（和 [method UiText.apply] 一样，持有方读了设置就调一次）
+## 从设置里读底色（和 [method UiText.apply] 一样，持有方读了设置就调一次）。
+##
+## 101 第 5 刀：[GameSettings] 不认识底色的名单，存的可能是空串或旧 id —— 认不出来就回到默认那档
 static func apply(settings: GameSettings) -> void:
-	if settings != null and has_bg_theme(settings.bg_theme):
-		bg_theme = settings.bg_theme
+	bg_theme = settings.bg_theme if settings != null and has_bg_theme(settings.bg_theme) else BG_DEFAULT
 #endregion
 
 

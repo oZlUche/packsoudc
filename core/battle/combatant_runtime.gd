@@ -57,7 +57,7 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 				continue
 			rt.base.ensure(key).base += it.stats.total_of(key)
 	rt.base.ensure(BattleStats.MAX_HP).base = spec.max_hp
-	rt.undying_sec = StatMath.from_float(float(spec.flags.get("undying_sec", 0.0)))     # 093：蛮神 4 级
+	rt.undying_sec = StatMath.from_float(spec.undying_sec)     # 093：蛮神 4 级
 
 	for item in spec.items:
 		var it2 := item as CompiledItem

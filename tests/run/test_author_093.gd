@@ -149,7 +149,7 @@ static func run_deeds_and_summary(t: TestCase) -> void:
 static func run_undying(t: TestCase) -> void:
 	t.begin("093 · 蛮神 4 级「不死 10 秒」：血归零不倒、进坚持期（回放里有 undying 一条）、期间耐力花了就补、伤害照记；到期血还是 0 才发 DIED；被治回来就活；一场只一次；没这条的照旧当场倒下")
 	var a := BattleCompiler.compile(null, CombatantBaseline.with_hp(10.0))
-	a.flags["undying_sec"] = 10.0
+	a.undying_sec = 10.0
 	var b := BattleCompiler.compile(null, CombatantBaseline.with_hp(10.0))
 	var ra := CombatantRuntime.from_spec(a, 0)
 	var rb := CombatantRuntime.from_spec(b, 1)
@@ -194,7 +194,7 @@ static func run_undying(t: TestCase) -> void:
 	t.check(not ra.mark_dead(), "死了不再发第二次")
 	# 被治回来的：到期活着
 	var c2 := BattleCompiler.compile(null, CombatantBaseline.with_hp(10.0))
-	c2.flags["undying_sec"] = 10.0
+	c2.undying_sec = 10.0
 	var rc := CombatantRuntime.from_spec(c2, 0)
 	var ctx2 := BattleContext.create(rc, CombatantRuntime.from_spec(b, 1), rng)
 	DamageResolver.resolve(ctx2, DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(50.0), rc, 1, 0))
@@ -218,7 +218,7 @@ static func run_undying(t: TestCase) -> void:
 	t.check(und != null and brute.perks_at(3).find(und) < 0, "4 级才有「不死」")
 	var spec := BattleCompiler.compile(null, CombatantBaseline.with_hp(10.0))
 	und.modify_spec(spec, null, null)
-	t.eq(float(spec.flags.get("undying_sec", 0.0)), 10.0, "编译后的单位带 undying_sec = 10")
+	t.eq(spec.undying_sec, 10.0, "编译后的单位带 undying_sec = 10（带类型的字段，101 第 5 刀）")
 
 
 static func run_faith_call(t: TestCase) -> void:

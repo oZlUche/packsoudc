@@ -157,7 +157,8 @@ func _refresh() -> void:
 	for m in _mode_btns:
 		(_mode_btns[m] as Button).set_pressed_no_signal(flow.settings.storage_warn_mode == m)
 	for tid in _bg_btns:
-		(_bg_btns[tid] as Button).set_pressed_no_signal(String(tid) == flow.settings.bg_theme)
+		# 101 第 5 刀：设置里存的可能是空串或认不出来的 id，按生效的那一档打勾
+		(_bg_btns[tid] as Button).set_pressed_no_signal(String(tid) == UiPalette.bg_theme)
 	if _unlock_all_btn != null:
 		_unlock_all_btn.set_pressed_no_signal(flow.settings.unlock_all)
 		_unlock_all_btn.text = "全部解锁：%s" % ("开（章节 / 难度 / 道具全开，成就不计）" if flow.settings.unlock_all else "关")

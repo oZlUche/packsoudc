@@ -609,7 +609,8 @@ func _update_tooltip(id: int) -> void:
 		v.label_font = font
 		v.inventory = EnemyKit.board_of(node.content, flow.items)
 		extra = v
-	var text := NodeTooltip.text_for(_run, _run.chapter, node)
+	# 101 第 5 刀：浮窗文字里的样式码（`{c:hp}`）在这里换成真颜色 —— 颜色表是界面的事
+	var text := UiPalette.resolve_styles(NodeTooltip.text_for(_run, _run.chapter, node))
 	_tip.show_text(text + ("\n" + stash if stash != "" else ""), get_global_mouse_position(), extra)
 
 
