@@ -194,5 +194,131 @@ func describe() -> String: return ""              # 开局屏 / 规则卡 / 编�
 **账**：`run_state.gd` 1359 → 1394 行（基类与清单那套接口先进来了，保险箱搬出去 −40；后面五个模块搬出去才会真降）。
 `grep -n "safe" core/run/run_state.gd` 只剩地图生成那两行（`SafePlacer`，属于地图不属于子系统）。全套测试 74 套件 12309 项断言通过。
 
-**下一刀**：第 1 刀的倒计时 / 合成 / 神坛 / buff / 按点暂存五个模块（照抄这个样板）；第 2 刀等 100 第 4 步（`ContentLibrary`）。
+**下一刀**：第 1 刀余下的五个模块（照抄这个样板）；第 2 刀等 100 第 4 步（`ContentLibrary`）。
 
+## 落地 · 第 1 刀：余下五个子系统（2026-10-01，实现 thread）
+
+照样板又搬了五个，`core/run/modules/` 现在是一局的全部玩法子系统：
+
+| 模块 | 从 `RunState` 带走 | 自己接的信号 |
+|---|---|---|
+| `NodeStorageModule`（087） | `node_storages` / `stored_at` / 两个信号 / 存档 | `leaving`（留下）、`arrived`（拿回） |
+| `CountdownModule`（092 / 094） | `countdown_*` / `carry_in_value` / `closing_extract_id` / `extract_closed` / 六个 `*_for` 算式 / `countdown_notice` | `stepped`（归零就 `run.fail`） |
+| `CraftingModule`（084 / 087） | `recipes` / `craft_*` / `resolve_crafts` / `craft_done` | `arrived`（`first_time` 才合） |
+| `BuffModule`（062） | `map_buffs` / `*_map_buff` / `tick_map_buffs` / `buffs_changed` | `stepped`（任何花行动点的方式） |
+| `AltarModule`（093 / 095） | `altar_*` / `faith_rituals` / `faith_stat_bonus` / `offer` / `faith_perks` / `bless_ids` / `_bless_step` / `altar_changed` / `item_blessed` | `NodeEvents.altar_opened`、`leaving`、`stepped`、`MapTravel.moved` |
+
+为此 `RunState` 多了两个**通用**生命周期信号和一个方法（都不认识任何具体模块，和第 0 刀的 `leaving` 一样）：
+`arrived(node_id, first_time)`（到了一个点，在这个点的事发生之前）、`stepped(node_id, reason)`（花掉了行动点，这一步该发生的事都发生完了；
+`reason` = `&"step"` / `&"relocate"` / `&"wait"`）、`fail(reason)`（这一局当场失败；倒计时归零用它）。
+
+**和方案不同的三处**：
+
+1. **`BuffModule` 只搬走「一局里拿到的 buff」**，`buff_defs` / `meta_buffs` / `active_buff_defs()` / `buff_context()` 留在 `RunState`。
+   原因是开局顺序：`start()` 要先用 `buff_context()` 算体力上限与开局钱，再造旅程与节点事件，**最后**才装得上模块（模块要接的信号那时才存在）。
+   把 `buff_context` 搬进模块就会出现「算的时候模块还没装」。要彻底搬得先给模块分两段生命周期（或者第 2 刀的 `RunSetup` 把开局顺序重排），不该在这一刀里偷偷改。
+2. **`start()` 去掉 `p_carry_value`**（15 → 14 → 13 个参数）：带入价值和保险箱格数一样是运行时输入，走 `module_inputs[&"countdown"]["carry_value"]`。
+3. **原地耗时（`waited`）现在也走一步 buff 表**，和原来一致；但 buff 的走表从「这一步的事之前」挪到了「这一步的事都发生完」（跟着 `stepped`）。
+   一步之内的先后，对「还剩几步」的判断没有影响。
+
+**账**：`run_state.gd` 1359 → **962** 行（signal 20 → 13，存档顶层键 29 → 22）。
+`grep -n "safe\|countdown\|altar\|craft\|map_buff\|node_storage" core/run/run_state.gd` 只剩三处 `AltarModule.of(self)`（编译单位、战利品、基线要问信仰级效果）
+和地图生成的 `SafePlacer`。一局存档的 v1 → v2 现在搬六样：`safe` / `safe_locked` / `node_storages` / `carry_in_value` / `faith_rituals` / `faith_stat_bonus` / `altar_used` / `buffs.map`。
+新套件 `test_run_modules.run_module_roster`：六个模块都在默认清单里、都登记在注册表、都有中文名、都在 `modules[id]` 下存了一份、顶层不再有它们的旧键、读档都拿得回去。
+全套测试 74 套件 **12356** 项断言通过。
+
+**下一刀**：第 2 刀（`start()` 收参数）等 100 第 4 步的 `ContentLibrary`；第 3 刀（`RunHooks`）、第 4 刀（`GameFlow` 抽服务）、第 6 刀（UI 里的逻辑搬回去）彼此独立。
+
+
+## 落地 · 第 3 刀：`NodeEvents` 的回调收成 `RunHooks`（2026-10-01，实现 thread）
+
+`NodeEvents` 上 16 个裸 `Callable` 字段、`EventContext` 上 7 个，全收进一个 `RunHooks`（`core/run/run_hooks.gd`，142 行）：
+一张名字登记表 `NAMES`（名字 → 这一条由谁接）加 17 个**带类型的方法**，每条的默认值写在方法里。
+
+| 原来 | 现在 |
+|---|---|
+| `events.player_spec = compile_player` 等 13 处赋值 | `hooks.register(&"player_spec", compile_player)`，调用方写 `hooks.player_spec()`，拿到的一定是 `CombatantSpec` |
+| `if safe_open.is_valid() and not safe_open.call():` | `if not hooks.safe_open():`（没装保险箱模块 = 能开） |
+| `ctx.faith_tier` / `ctx.active_faith` / `ctx.bracket` / 四个地图 buff 回调 | `ctx.hooks`，外加 `ctx.faith_tier_now()` / `ctx.active_faith_id()` 两个取法 |
+| 名字或参数写错 = 运行时静默报错、断言成片消失 | `register` 的名字不在 `NAMES` 里当场 `push_error`；签名由方法定 |
+
+**谁接**：骨架（`RunState._wire_events`）接自己的十条（`player_spec` / `loot_context` / `run_context` / `has_buff_tag` / `bracket` /
+`relocate` / `request_extract` / `faith_tier` / `active_faith_id` / `before_battle`）；模块与机制在自己的 `install` 里接自己的
+（`SafeModule.safe_open`、`BuffModule` 的三条地图 buff、`AltarModule.bless_substitute`、`HunterSystem` 的迎战 / 逃跑）。
+**`NodeEvents` 与 `EventContext` 都不再认识任何模块** —— 第 0 刀解决了「加玩法不改 `RunState`」，这一刀解决了另一半「不改 `NodeEvents`」。
+
+**和方案不同的两处**：
+
+1. 方案写的是「`RunState` 实现 `RunHooks`（或持一个实现）」。那样做模块挂的能力又得由 `RunState` 转发给模块（`safe_open` → `SafeModule.of(self).is_open()`），
+   `RunState` 就重新认识每个模块了，和第 0 刀的目标相反。所以改成**一张注册表**：骨架和模块平等地往里 `register`，`RunState` 一条模块的能力都不转发。
+2. 方案的清单里没有 `EventContext` 的那 7 个，但它们是同一件事的另一半（`ctx.faith_tier` 和 `events.faith_tier` 接的是同一个方法），
+   不一起收就等于把 hooks 又拆回 Callable。一并收了。`EventContext.erosion_depth` 没动 —— 那是节点从 `travel.erosion` 现接的，不是一局的能力。
+
+**账**：`node_events.gd` 793 → 763 行（23 个字段声明 → 1 个 `hooks`），`event_context.gd` 少 7 个字段、多 2 个取法，
+`run_state.gd` 962 → 967（`register` 比赋值多了名字那一截，换来的是写错当场报错）。
+新套件 `tests/run/test_run_hooks.gd`（103 项断言）：每个登记的名字都有同名方法、没人接时的默认值逐条、
+接一个无效 `Callable` = 取消、名字写错接不上也不误接到别条、一局里骨架与各模块各接了什么、以及那 23 个裸字段真的从两个类上消失了（防回头）。
+全套测试 **77 个套件、12456 项断言通过**。
+
+**下一刀**：第 4 刀（`GameFlow` 抽服务）、第 6 刀（UI 里的逻辑搬回去）彼此独立；第 2 刀仍等 100 第 4 步的 `ContentLibrary`。
+
+## 落地 · 第 4 刀：`GameFlow` 抽服务（2026-10-01，实现 thread）
+
+`GameFlow` 的本职是「现在该显示哪一屏、给它什么」加「存盘」。能脱离屏与存盘说清的规则都搬出去了，
+flow 只留一行转发 —— **界面与测试的调用处一个都没改**（`flow.check_achievements()` / `flow.locked_item_ids()` 照旧）。
+
+| 服务 | 带走的 | flow 还留着 |
+|---|---|---|
+| `Achievements`（`core/meta/achievements.gd`，107 行） | `check` / `of_id` / `granting` / `unlock_names` / `unlocked` / `locked_item_ids` / `apply_item_locks` / `rules_card_pending` / `mark_rules_seen`。纯逻辑：看局外与内容算结果 | `_sync_achievements()` 把局外 / 内容 / 「全部解锁」开关同步过去，按返回值决定要不要 `save_meta()`；`toggle_unlock_all` 还在 flow（它动的是 `GameSettings`） |
+| `SaveSlots.open(n, items, rules)` | 切位要做的文件层的事：建目录、算两条路径、读局外、**读不出来先备份再从零开始**（098 的规矩这下和 `backup` 放在一起了） | `use_slot` 只管当前位、设置里记哪一位、这一局怎么办（20 行 → 10 行） |
+| `MetaState`（已有的类） | `left_behind_preview` / `sell_left_behind`（092 暂存区一键出售）、`take_board_to_stash` / `return_stash`（090 带回来的棋盘 ⇄ 开局屏那一栏） | 结算屏调 `stash_sale_preview()` 照旧；开局屏少了 20 行容器搬运代码 |
+
+**和方案不同的三处**：
+
+1. **没有做 `SlotService`**，而是把那段逻辑并进了已有的 `SaveSlots`（方案里写的是「`SlotService`（或并进 `SaveSlots`）」，选了后者）：
+   能脱离 flow 说清的只有文件层那一半（建目录、读、备份），余下的 `continue_game` / `start_new_game` / `new_game_in` / `load_slot`
+   全是「接下来显示哪一屏、这一局怎么办」—— 那就是 flow 的本职，搬出去只会变成一个拿着 flow 反向调用的壳。
+2. **`_adopt` 的 20 个 `connect` 没有改成一张表**。它们接的对象各不相同（`NodeEvents`、`RunState`、模块、会话），
+   而且每个闭包都带着自己的排队规则（哪一屏插队、哪一屏并掉）—— 塞进一张 `[signal → 处理函数]` 的表只会让这些规则更难读。
+   方案真正要的是**防漏接**，所以直接做了那个测试（下面一条），表没做。
+3. **`GameFlow` 行数只从 1226 降到 1190**：抽出去的逻辑换成了同样数量的转发行。这一刀的收益不在行数，
+   在于那三块逻辑现在**不造一个 `GameFlow` 就能测**（新套件里就是这么测的），以及 098 / 090 / 092 的规矩回到了它们本来该在的类上。
+
+**不许漏接**（新套件 `tests/run/test_flow_wiring.gd`，99 项断言）：读 `run_state.gd` / `node_events.gd` / `core/run/modules/*.gd` 里声明的每个 signal，
+要求 `core/` 或 `ui/` 的源码里有人 `connect` 它，否则红。「发了没人听」的表现是某个屏永远不弹、某句提示永远不出现，
+而编译与别的测试都不会红 —— 这是加了信号忘接线时唯一会响的铃。白名单现在只有一条：`NodeEvents.shop_closed`（flow 走会话自己的 `closed` 往下走）。
+同一套件还各测了三个服务：成就（新档没有成就 → 刷满数字一枚枚达成 → 不重复给 → 「全部解锁」开着不计 → 规则卡看过就不再弹）、
+切位（空位 / 好档读得出 / 坏档先备份再交出 null、老文件改名走了不会被盖、备份不算存档）、
+卖与挪（预览只算不卖、真卖只卖一次、没撤离出来的不卖、棋盘 ⇄ 暂存那一栏按原位放回）。
+
+**账**：`game_flow.gd` 1226 → 1190 行，`setup_screen.gd` 少 20 行，新增 `achievements.gd` 107 行、`save_slots.gd` +18、`meta_state.gd` +56。
+全套测试 **78 个套件、12555 项断言通过**。
+
+**下一刀**：第 6 刀（UI 里的逻辑搬回 core、演示数据进 `tools/demo_fill.gd`）；第 5 刀（依赖方向：perk 改编译期）独立；第 2 刀仍等 100 第 4 步的 `ContentLibrary`。
+
+## 落地 · 第 6 刀：UI 里的逻辑搬回去（2026-10-01，实现 thread）
+
+方案列的三条全做了。
+
+1. **商店屏的回滚** → `ShopSession.pay_or_return(格, uid, 容器)`。
+   「拖走了就结账，结不成（钱不够 / 已卖 / 店关了）把东西从玩家那边拿回来、原样放回那一格」是一局的规则，
+   原来写在 `shop_screen.gd` 的拖拽回调里（9 行，手写两条容器分支）。现在界面只剩一句
+   `if not _session.pay_or_return(slot, uid, [board, storage]): _say("金币不足…")`。
+   顺手补了测试 `test_economy.run_shop_rollback`（15 项断言）—— 这条规则此前只有界面里有、**一条测试都没有**：
+   钱够就结账、钱不够原样回架上且钱不动、那一格不算卖出、东西在暂存区里也找得回来。
+2. **导演里的演示代码** → `tools/demo_fill.gd`（`class_name DemoFill`，221 行）。
+   `game_director.gd` **390 → 196 行**：导演只剩一句「`DEMO_SCREEN` 非空才 `load` 它、调一次 `fill(self, flow)`」，
+   所以这段代码不在正式游戏的任何路径上。它干的事（代码里造假难度、替玩家点选项、一路走到撤离点、把叠层全看完）
+   本来就是截图工具的事，不该让导演带着。搬家只换了取屏的方式：`_base` / `_overlay` 改成导演已有的 `base()` / `overlay()`。
+3. **导演直接写 `run.phase` / `run.end_reason`** → `RunState.force_extract()`（文档注释里标明**只给演示与测试用**，
+   正式游戏走 `try_extract` / `extract_after_boss`）。`grep -rn "\.phase = " ui/ tools/` 现在是空的。
+
+**验证**：全套测试 **80 个套件、12684 项断言通过**。另外实跑了截图那条路（`tools/capture_scene.gd` + 探针脚本）：
+`DEMO_SCREEN=map / result / meta / search / erosion` 五种各跑一次，流程分别停在 `MAP` / `RESULT` / `META` / `SEARCH` / `MAP`，
+和搬家前一致（截图本身在 headless 下存不出图，那是这个工具一直以来的限制，它自己的文件头就写着）。
+
+**账**：`game_director.gd` 390 → 196 行，`shop_screen.gd` 少 6 行，`shop_session.gd` +21，`run_state.gd` +11，新 `tools/demo_fill.gd` 221 行。
+
+**余下的刀**：第 2 刀（`start()` 收成 `RunSetup`）等 100 第 4 步的 `ContentLibrary`；第 5 刀（依赖方向：`ItemTooltip.faith_probe`、
+`TextTemplate` 的颜色表、perk 改编译期输入、`spec.flags` 改带类型字段、注册表拆三张）还没动 —— 它是这几刀里唯一会改战斗层接口的，
+建议单独一刀做完再合。

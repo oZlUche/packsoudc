@@ -20,7 +20,7 @@ const TERMS := {
 	"资源低于时": "生命 / 耐力等降到阈值以下时触发。",
 	"冷却": "两次出手之间的间隔（秒），急速会缩短它。",
 	"急速": "出手速度的倍率，越高冷却越短。",
-	"护甲": "每次受到的伤害固定减少这个数，减到 0 为止。中毒、流血无视护甲。",
+	"防护": "每次受到的伤害固定减少这个数，减到 0 为止。中毒、流血无视防护。",
 	"护盾": "先于生命被扣的一层。开战时按护盾上限充满，之后不自己回复。中毒、流血无视护盾。",
 	"耐力": "出手要花的资源，每秒按回复速度补回；不够就出不了手，等回够再动。",
 	"耗耐力": "这一下出手要花的耐力。",
@@ -31,8 +31,8 @@ const TERMS := {
 	"合成": "两件有配方的道具在棋盘上相邻，走到下一个点时自动合成一件新的；装不下就进暂存区。",
 	"增益槽": "这件道具的一种格位：邻居占着它，邻居就得到写着的加成。",
 	"受益槽": "这件道具的一种格位：每被邻居点亮一格，自己就得一份写着的加成。",
-	"中毒": "每层每秒造成毒伤，无视护甲与护盾，永续叠层。",
-	"流血": "每层每秒造成流血伤害，无视护甲与护盾，永续叠层。",
+	"中毒": "每层每秒造成毒伤，无视防护与护盾，永续叠层。",
+	"流血": "每层每秒造成流血伤害，无视防护与护盾，永续叠层。",
 }
 
 ## 标签给人看（096：名字是数据 —— [TagRegistry]，按当前语言；`faith:<id>` 写成「信仰：神名」；没登记的原词）
@@ -64,7 +64,7 @@ const FAITH_WORD := {"zh": "信仰", "en": "Faith"}
 
 ## 属性键 → 名字（096：中 / 英；按 [UiText.lang] 取，没有英文的回落中文）
 const STAT_NAMES := {
-	"damage": {"zh": "伤害", "en": "Damage"}, "armor": {"zh": "护甲", "en": "Armor"}, "max_hp": {"zh": "生命", "en": "Health"},
+	"damage": {"zh": "伤害", "en": "Damage"}, "armor": {"zh": "防护", "en": "Armor"}, "max_hp": {"zh": "生命", "en": "Health"},
 	"max_stamina": {"zh": "耐力上限", "en": "Max stamina"}, "haste": {"zh": "急速", "en": "Haste"}, "cooldown": {"zh": "冷却", "en": "Cooldown"},
 	"regen_stamina": {"zh": "每秒回耐力", "en": "Stamina regen"}, "regen_hp": {"zh": "每秒回血", "en": "Health regen"}, "max_shield": {"zh": "护盾", "en": "Shield"},
 	"max_mana": {"zh": "法力", "en": "Mana"}, "regen_mana": {"zh": "每秒回法力", "en": "Mana regen"},
@@ -88,7 +88,7 @@ static func stat_name(key: StringName) -> String:
 	return _pick(STAT_NAMES.get(String(key), null), String(key))
 
 
-## 一条属性修饰给人看：「伤害 +10%」「护甲 +4」
+## 一条属性修饰给人看：「伤害 +10%」「防护 +4」
 static func mod_text(m: StatModifier) -> String:
 	if m == null:
 		return ""

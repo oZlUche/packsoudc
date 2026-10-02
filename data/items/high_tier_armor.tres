@@ -11,7 +11,7 @@
 [sub_resource type="Resource" id="Resource_cd4jn"]
 script = ExtResource("3_tnahu")
 base_stats = {
-"armor": 10
+"max_shield": 50
 }
 
 [sub_resource type="Resource" id="Resource_1se48"]
@@ -27,5 +27,5 @@ display_names = {
 }
 shape = SubResource("Resource_1se48")
 rarity = 3
-tags = Array[StringName]([&"sealed", &"gear"])
+tags = Array[StringName]([&"sealed", &"gear", &"armor"])
 combat = SubResource("Resource_cd4jn")

@@ -22,7 +22,7 @@
         },
         "cadence": {
           "type": "cooldown",
-          "seconds": 4.0
+          "seconds": 6.0
         },
         "effects": [
           {

@@ -1,7 +1,7 @@
 {
   "id": "tut2_search_1_again",
   "title": "塔盾",
-  "text": "翻出一面{b}塔盾{/b}：每挨一下固定减 {item_stat:tower_shield:flat|abs} 点伤害。对付出手快、每下轻的对手，几乎打不痛你；对付一锤子二十多点的，减那 {item_stat:tower_shield:flat|abs} 点等于没减。\n\n再搜一次。",
+  "text": "翻出一面{b}塔盾{/b}：每挨一下固定减 {item_stat:tower_shield:armor} 点伤害。对付出手快、每下轻的对手，几乎打不痛你；对付一锤子二十多点的，减那 {item_stat:tower_shield:armor} 点等于没减。\n\n再搜一次。",
   "options": [
     {
       "label": "再搜一次",

@@ -35,7 +35,9 @@ func altar_apply(run: RunState, _node: MapNode, _option: StringName = &"") -> St
 		return ""
 	run.faith_power.spend_points(def.id, cost)
 	where.changed.emit()
-	run.item_blessed.emit(inst, def.id)
+	var altar := AltarModule.of(run)
+	if altar != null:
+		altar.item_blessed.emit(inst, def.id)
 	return "花 %d 信力：「%s」成了「%s」" % [cost, was, Names.of(v)]
 
 

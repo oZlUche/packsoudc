@@ -13,7 +13,7 @@ extends FaithPerk
 
 
 func fire_bonus(run: RunState) -> int:
-	var n := int(run.faith_rituals.get("pray_fire", 0)) if run != null else 0
+	var n := int(AltarModule.rituals_of(run).get("pray_fire", 0))
 	return roundi(pray_percent * pow(float(n), pray_curve)) if n > 0 else 0
 
 

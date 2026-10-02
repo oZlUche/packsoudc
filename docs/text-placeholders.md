@@ -50,8 +50,8 @@
 
 **过滤器**：`{键|abs}` 取绝对值（「给他 {change_money_amount|abs} 币」，字段是 -10）、`{键|signed}` 带正负号（「伤害 {mult_percent|signed}%」→「伤害 -10%」）。不认识的过滤器整个记号原样保留。
 
-**别的道具的数**：`{item_stat:<道具 id>:<字段>}`（教程用：「塔盾每下减 {item_stat:tower_shield:flat|abs}」）。从那件道具的定义里找，先 `combat` 再整份定义：
-`stat` 是这个名字的属性修饰取它的 `flat`（`{item_stat:warding_charm:max_shield}`），否则取同名的数值字段或字典键（`base_stats` 的 `{item_stat:leather_armor:armor}`、伤害修正的 `flat`）。找不到原样保留。
+**别的道具的数**：`{item_stat:<道具 id>:<字段>}`（教程用：「塔盾每下减 {item_stat:tower_shield:armor}」）。从那件道具的定义里找，先 `combat` 再整份定义：
+`stat` 是这个名字的属性修饰取它的 `flat`（`{item_stat:warding_charm:max_shield}`），否则取同名的数值字段或字典键（`base_stats` 的 `{item_stat:leather_armor:max_shield}`、伤害修正的 `flat`）。找不到原样保留。
 
 **`note` 是补充，不覆盖**：信仰级效果、献祭、道具的按阶功能，界面上的主句一律由 `describe()` 按字段生成，`note` 接在后面，为空就没有。
 主句已经说清楚的就不要写 `note`。阶统一写 `Lv.n`。

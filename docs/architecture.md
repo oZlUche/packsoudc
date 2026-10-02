@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.12 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.18 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1621,7 +1621,7 @@ func resolve(run_seed: int) -> MapGraph      # 失败返回 null，原因在 las
 6 环第 3、4 环，7 环第 4 环，8 环第 4、5 环；大型的两道还没定，占位）。以前是「每 N 环一个」，
 结果外侧那个窗口挑离已有撤离点最远的候选，总落在最外环、出生点旁边，开局一步就能撤。
 放的时候先让**相邻的两条路线共用一个**：合流后共用的点、换乘点、换乘弧上的点，三条路线两两共享；
-一对都放不下时环间里至少放一个。去撤离点的路线在核心前一环收尾，那个撤离点是例外。
+一对都放不下时环间里至少放两个（`extract_min_count`：一个付费、一个免费）。去撤离点的路线也在环间收尾，它的尽头就是它和一条相邻路线共用的撤离点（053），没有例外。
 
 > 第一版写成了「叠加属性」（一个战斗点同时是撤离点）。用户纠正：是覆盖，不是重叠。
 
@@ -1796,7 +1796,9 @@ class_name ZoneRules extends Resource
         converge_after_ring 之前，与这一环上已落的子保持间距 ≥ entry_min_gap × 本环槽位 / 最外环槽位
         （至少 1）；挤不开先退到「不重合」，再退到合流 —— 总好过整张图作废
         选中的节点与连接它们的径向边进骨架，标 protected
-      ends_at = "extract" 的路线走到核心前一环为止，末端节点定为 extract
+      ends_at = "extract" 的路线走到撤离环间（偶数环取内侧那环）为止，沿那一环朝空间大的那边走一段弧，
+      弧尾是尽头（定为 extract，与相邻路线共用），尽头到相邻路线之间剩下的点是换乘区（`exit_ids`，商店放第一个）。
+      没有撤离环间的规模仍走到核心前一环（053）
    c. 换乘：次数来自规模模板（小型 1 次，中型 1~2 次，大型 2 次以上），沿路线均分出「安排的环」。
       **相邻直连优先**：每推进一环，相邻两条路线刚落的子如果恰好是相邻槽位，而此刻在某次换乘的
       窗口里（安排的那一环 ± pivot_window，不必严格踩在那一环上）、这一次又还没换乘过 ——
@@ -1847,13 +1849,14 @@ class_name ZoneRules extends Resource
    类型规则写进 layout_meta.type_rules，校验从图上读。
    固定节点 = core、extract、高危区里为满足 min_elites / min_search 改出来的
 
-6. 高危区**在步骤 4b 里和路线一起长**，不是事后在图上圈一块（细节见 5.5「高危区」）：
-   每推进一环，各条路线落子之后 →（a）已经岔出来的高危区各长一个点；
-   （b）过了半程（start_after_progress）的，按 spawn_chance 从某条路线刚落子的点上岔出一片新的：
+6. 高危区**在路线与换乘都铺完之后**才长（053；以前和路线同步长，一半的失败是占走了路线自己的下一步）。
+   只从 `RouteStyle.spawns_zones` 为 true 的路线上岔（搜索路线不岔）。从过半程那一环起逐环向内 →
+   （a）已经岔出来的高危区各长一个点；
+   （b）过了半程（start_after_progress）的，按 spawn_chance 从这一环上的路线节点岔出一片新的：
    挑一个挨着它的空点当第一个点，要求那个点旁边还有空点（「周围空间充足」），
    **视作新起点并立刻再长一步** —— 一片高危区生下来就至少两个点。
    路线走完后高危区接着长，直到软上限或周围没地方。
-   路线与高危区实时抢地方：高危区不占路线节点与出生点，路线也不走已被占走的点。
+   高危区不占路线节点、换乘弧与出生点 —— 它们这时都已经铺好、受保护了。
    收尾：只长到两个点的，把它岔出来的那个路线节点也划进去凑成三个 —— 那个点原本的路线边
    就成了出入口，哪怕这让一片三个点的小区有两个口也没关系。
    「岔出点不能是必须存在点（唯一的休息区 / 精英）」这一步节点还没有类型，留了口子
@@ -1900,7 +1903,7 @@ class_name ZoneRules extends Resource
       （以上规则从 layout_meta.type_rules 读，手绘图没有这一项就一条不查）
     - 每个高危区（ZoneRules，从图上读）：点数在 [min_size, max_size]、区内连通、
       出入口【节点】数在 1 ～ max_gates_for(点数) 之间
-    - 撤离环间里至少一个 extract，环间之外只有核心前一环有（`extract_band`）；撤离点两两之间最短路 ≥ extract_gap
+    - 撤离环间里至少 `extract_min_count`（2）个 extract，环间之外没有（`extract_band`）；撤离点两两之间最短路 ≥ extract_gap
     - 节点总数落在规模模板给这个环数的范围里；**每环 节点/槽位 ≤ fill_cap（< 1），内环也不填满**
     - 出生点都是 spawn、spawn 都是出生点
 ```
@@ -2053,7 +2056,7 @@ class_name ZoneRules extends Resource
 
 - 相邻路线之间有**换乘**（次数随规模，5.4.3）：两条路线的点相邻就直接连一条边，碰不上才拉换乘弧。
   没有换乘点，风格就成了开局定终身，那不是取舍，是抽签。
-- 偏搜索路线 `ends_at = "extract"`：末端是撤离点，在核心之前一环结束。想打 BOSS 就换乘。
+- 偏搜索路线 `ends_at = "extract"`：走到撤离环间、横着走一段弧，在和相邻路线共用的撤离点结束；出口之后是换乘区，第一个点是商店。想打 BOSS 就换乘（053）。
 - 中途撤离点在**撤离环间**（正中间的一两环），放在两条路线共用的地方 —— 换乘点、换乘弧、合流点 ——
   偏战斗的路线走到半程，出口就在换乘的地方。撤离点仍然覆盖非必须型节点（不吃掉休息区与商店）。
 - 路线的长度 = 环数 × `route_length_factor`（1.5）：多出来的步数是同环横着走，随机撒在各环上。
@@ -2135,7 +2138,7 @@ class_name MapScaleProfile extends Resource
 
 **撤离点之间的最短路至少 `extract_gap` 步**（`RingMapConfig.extract_min_distance` 可以覆盖，-1 = 用模板的）。
 挨得太近的两个出口等于一个。放撤离点时挑离已有撤离点最远的候选。
-间距得对着撤离环间的位置定：小型图的环间离收尾撤离点（核心前一环）只有一两环，间距 4 会把整条环间排除掉。
+间距得对着撤离环间的位置定：小型图环间窄，间距 4 放不下两个撤离点。
 
 **喘气处放在路线的几分之几处**（`haven_at`）：中型休息区 1/3、商店 2/3；小型两个都在一半，位置撞上就挨着放。
 按路线上的步数算，不看环。
@@ -2181,8 +2184,8 @@ class_name MapScaleProfile extends Resource
 3. 有多个出入口时，尽可能让它们在区内相距最远（这条是生成时尽力，不进校验）。
 
 **怎么长出来**（`DangerZoneSpec`，生成规则，不进校验）：高危区的生成同样视为一个起点的生长。
-某条路线走过半程、旁边空间充足时，从那个路线节点上岔出一个新起点并立刻推算一次（于是至少两个点），
-之后与各条路线同一个节拍生长，直到软上限（由地图规模决定，见 5.4.3；小型 4~5 环地图是 4 个点）
+路线与换乘铺完之后，非搜索路线过半程的节点旁边空间充足时，从那个路线节点上岔出一个新起点并立刻推算一次（于是至少两个点），
+之后逐环生长，直到软上限（由地图规模决定，见 5.4.3；小型 4~5 环地图是 4 个点）
 或周围没有空间。若此时只有两个点，就把原本连接它的那个路线节点也变成高危区 ——
 即使这让 3 个点的小区有两个出入口。
 
@@ -2197,7 +2200,7 @@ class_name MapScaleProfile extends Resource
 - 休息区与商店满足**步数覆盖**（`coverage`），不是「每 N 环一个」
 - 每环每类落在 `quota` 的 `[min, max]` 内
 - 高危区内满足 `min_elites` / `min_search`
-- 撤离环间里至少一个撤离点，环间之外只有核心前一环有
+- 撤离环间里至少两个撤离点，环间之外没有
 
 各路线的风险分与收益分落在其风格区间内、收益/风险之比差不超过 `ev_tolerance` ——
 这些是**路线**的事，生成时尽力（5.4 步骤 5g），不进校验（035）。
@@ -2973,6 +2976,19 @@ flow 只说「现在该显示哪一屏、给它什么」（`screen_changed(scree
 直接驱动 `RunState` 的测试与批量工具不开这个开关，照旧同步打。每一屏是一个 `GameScreen`（`ui/game/game_screen.gd`）：
 导演造它、给它 flow 与字体、`open(payload)`；屏只把 flow 的状态画出来、把玩家的动作转成 flow 的方法（1.2 命令进、信号出），不认识导演。
 
+**flow 不自己长逻辑：能独立说清的规则抽成服务**（101 第 4 刀）。`GameFlow` 的本职是「现在该显示哪一屏」加「存盘」，
+所以能脱离屏与存盘说清的规则都搬了出去，flow 只留一行转发（界面与测试的调用处一个都不用改）：
+
+| 服务 | 管什么 | flow 还留着什么 |
+|---|---|---|
+| `Achievements`（`core/meta/achievements.gd`） | 有没有新成就、这个解锁开了什么、现在哪些道具锁着、规则卡看过没有。**纯逻辑**：看局外与内容算结果，不碰存盘、不碰转屏 | `_sync_achievements()` 把局外 / 内容 / 「全部解锁」开关同步过去，拿到结果决定要不要 `save_meta()` |
+| `SaveSlots.open(n, items, rules)` | 切存档位的文件层：建目录、算两条路径、读局外，**读不出来先备份再从零开始**（098） | 谁是当前位、设置里记哪一位、这一局怎么办 |
+| `MetaState`（已有的类，把账搬回去） | `left_behind_preview` / `sell_left_behind`（092 暂存区一键出售）、`take_board_to_stash` / `return_stash`（090 带回来的棋盘 ⇄ 开局屏那一栏） | 结算屏与开局屏只管画，不再自己算 |
+
+**不许漏接**（`tests/run/test_flow_wiring.gd`）：一局、节点事件与六个模块声明的每个 signal，在 `core/` 或 `ui/` 里都得有人接，
+否则测试红。「发了没人听」的表现是某个屏永远不弹、某句提示永远不出现，而编译与别的测试都不会红 —— 这是加了信号忘接线时唯一会响的铃。
+确实只给测试或将来留的写进白名单并写明原因（现在只有一条：`NodeEvents.shop_closed`，flow 走会话自己的 `closed`）。
+
 **节点事件排成队。** 事件是同步发生的：`step_to` 一步之内可能连着来「打了一场 → 掉了东西 → 进账」，各自一个信号。flow 把它们排成队，
 走完这一步按顺序一屏一屏给玩家看；叠层看完了 `resume()` 看下一个，队空了回地图；一局结束了（战败 / 撤离）最后一定是结算屏 ——
 结束之后队里只有那一场的回放还值得看，其余（战利品、会话）跳过。搜索 / 商店会话结束由 flow 自己接着往下走（`session.ended` / `closed`），屏不必管。
@@ -2993,7 +3009,7 @@ static func load_chapters() / load_loadouts() / load_characters() / load_difficu
 func grant_first_kit()                               # 仓库空的第一局发第一套（MetaRules.first_kit）
 ```
 
-### 7.4 一局的模块：`RunState` 的扩展点（101 第 0 刀，作者定）
+### 7.4 一局的模块：`RunState` 的扩展点（101 第 0 / 1 刀，作者定）
 
 作者要的是「流程控制器将来能扩展、能加东西」。做法是把 069 已经验证过的 `RunMechanic` 升级成**一局的统一插件模型**：
 本体功能（保险箱、将来的倒计时 / 神坛 / 合成……）和难度机制走同一条路。
@@ -3022,6 +3038,58 @@ func describe() -> String                # 开局屏的规则卡、编辑器
 
 第一个搬出来的样板是**保险箱**（`SafeModule`，092 的规则一条没变）：容器、锁没锁、`closed` 信号、存档、
 「走开 = 关上」与「锁上了就不再开」的接线全在它自己身上，`RunState` 不再有一个 `safe` 字段。取它用 `SafeModule.of(run)`，没装就是 null（这一局没有保险箱）。
+
+**第 1 刀：一局的六个子系统现在都是模块**（`core/run/modules/`，默认清单 `RunModules.standard()` 的顺序就是接线顺序）：
+
+| 模块 | 带走的东西 | 自己接的信号 |
+|---|---|---|
+| `SafeModule`（092） | 容器、锁、`closed` | `RunState.leaving`；`safe_open` 挂在 `RunHooks`（7.5） |
+| `NodeStorageModule`（087） | 哪个点上留着什么、`dropped` / `restored` | `leaving`（留下）、`arrived`（拿回） |
+| `CraftingModule`（084 / 087） | 配方表、相邻的对子、合成那一下、`done` | `arrived`（头一回踩上才合） |
+| `BuffModule`（062） | 一局里拿到的 buff（`entries`、给 / 去 / 查 / 走表）、`buffs_changed` | `stepped`（任何花行动点的方式） |
+| `AltarModule`（093 / 095） | 神坛开在哪、用过哪些点、仪式的账与改过的基线、献祭 / 特殊操作、信仰级效果（`perks`）、赐福、`noted` / `item_blessed` | `NodeEvents.altar_opened`、`leaving`（关）、`stepped`（赐福）、`MapTravel.moved`（踩点回调） |
+| `CountdownModule`（092 / 094） | 倒计时上限 / 剩余、带入价值与超带罚步、关哪个撤离点、`notice` | `stepped`（归零就 `run.fail`） |
+
+为此 `RunState` 一共多了三个**通用**生命周期信号（都不认识任何具体模块）与一个方法：
+
+- `leaving(node_id)`：要离开当前点了（走一步 / 被事件挪走，**在真正动之前**）。
+- `arrived(node_id, first_time)`：到了一个点，**在这个点的事发生之前**。
+- `stepped(node_id, reason)`：花掉了行动点、这一步该发生的事都发生完了；`reason` 是 `&"step"` / `&"relocate"` / `&"wait"`。
+- `fail(reason)`：这一局当场失败（会话关掉、没拿的战利品丢掉、排着的事清掉、阶段进战败）。倒计时归零用它。
+
+留在 `RunState` 上的是**骨架**（地图、旅程、体力、钱、棋盘、暂存区、随机流、节点事件、阶段、战斗账）
+加几样别处要在模块装上之前就用到的：`buff_defs` / `meta_buffs` / `active_buff_defs()` / `buff_context()`（开局那一刻算体力上限与开局钱，那时模块还没装）、
+信仰本身（`FaithState` / `FaithPower`：谁激活、几阶、多少信力）。行数：1359 → 962。
+
+### 7.5 一局的能力表 `RunHooks`（101 第 3 刀）
+
+信号是「发生了什么」的出口；**反过来**那一半 ——「踩上保险箱点，还能开吗」「事件里选了撤离，撤得了吗」「要开打了，玩家的战斗单位是什么」——
+以前是 `NodeEvents` 上十六个裸 `Callable` 字段加 `EventContext` 上七个，持有方逐个赋值：
+
+```gdscript
+events.player_spec = compile_player          # 谁接、签名是什么、没接会怎样，全靠注释说
+events.safe_open = safe.is_open              # 接错一个参数的表现是运行时静默报错、断言成片消失
+ctx.faith_tier = active_faith_tier           # 同一件事在两个地方各接一份
+```
+
+`RunHooks`（`core/run/run_hooks.gd`）把它们收成**带类型的方法**加一张名字登记表：
+
+```gdscript
+class_name RunHooks extends RefCounted
+const NAMES := { &"player_spec": "RunState：…", &"safe_open": "SafeModule：…", … }   # 认得的名字 → 谁接
+func register(name: StringName, fn: Callable) -> void      # 名字不在表里 → push_error，不会默默不生效
+func has(name: StringName) -> bool                         # 这条有人接吗（用来决定走默认那条路）
+func safe_open() -> bool                                   # 调用方拿到的一定是 bool；没人接就是写在这里的默认值
+func player_spec() -> CombatantSpec …
+```
+
+- **谁接**：骨架（`RunState._wire_events`）接自己的十条（编译玩家、掉落上下文、一局的规则、buff 标签、段位、传送、撤离、信仰阶与 id、开打前改单位）；
+  模块与机制在自己的 `install` 里接自己的（`SafeModule` 的 `safe_open`、`BuffModule` 的三条地图 buff、`AltarModule` 的 `bless_substitute`、`HunterSystem` 的迎战 / 逃跑）。
+  **`NodeEvents` 与 `EventContext` 都不认识任何模块**，只认这张表 —— 这是 7.4 那条「加一个玩法不改 `RunState` / `NodeEvents`」的另一半。
+- **默认值写在方法里**，所以沙盒、测试、没装那个模块的一局都能照常跑：没装保险箱 = `safe_open()` 为真（踩上去就开），没装神坛 = `bless_substitute()` 原样返回，
+  没有猎手 = `bracket()` 为 -1。`NodeEvents.hooks` / `EventContext.hooks` 默认就是一份全默认的 `RunHooks.new()`。
+- 加一条能力：`NAMES` 一行 + 一个带类型的方法。名字写错当场报错，这正是裸字段抓不到的那类错。
+- 不进这张表的：`EventContext.erosion_depth`（那是节点自己从 `travel.erosion` 现接的，和一局的能力无关）。
 
 ---
 
@@ -3063,7 +3131,7 @@ func describe() -> String                # 开局屏的规则卡、编辑器
 `MetaSave` 与 `RunSave` 同一套做法：`user://meta.json`，版本号 2（v1 是开发期的，作废），只写 id；仓库大小以存档里的为准（成长过的不该被规则缩回去）。
 **buff**（059 第 3 条，062）：局外的与一局里的是同一套定义 `RunBuffDef`（内容种类 `run_buffs`：scope、时限步数、标记、`mods` / `rules` / `effects`），
 效果树多了 `RunEffect` 分支（9.2），往 `RunContext` 里加数（体力上限、开局钱、多搜几次、商店价、幸运），各系统在对应的点读。
-局外的由 `MetaState.active_buffs` 决定（占位：局外屏的开关列表；将来任务、局外科技），开局那一刻记进这一局；一局里的由事件后果给（`RunState.grant_map_buff`），
+局外的由 `MetaState.active_buffs` 决定（占位：局外屏的开关列表；将来任务、局外科技），开局那一刻记进这一局；一局里的由事件后果给（`BuffModule.grant`，101 之后在模块里），
 有时限的每走一步少一步，只带 `tags` 的就是标记，事件选项的条件查 `has_buff_tag`。
 
 仓库里的东西能**带进下一局**（开局屏勾上；`GameFlow.begin(..., from_warehouse)` 从仓库拿走、立刻存 meta —— 撤离了它们回来、死了就是真没了，
@@ -3567,14 +3635,46 @@ res://
     map/            map_view  map_layout  ring_layout_base  ring_map_layout  grid_map_layout
                     ring_angle_solver  map_node_style
     map_editor/     map_editor
-  tools/            import_content  export_content  normalize_content  check_scripts  map_stats  build_dummies  bench_hunters
+  tools/            import_content  export_content  normalize_content  check_scripts  check_content  map_stats  build_dummies  bench_hunters
+                    demo_fill        # 截图演示（101 第 6 刀；只在 DEMO_SCREEN 非空时被导演 load）
                     gen_sample_items  gen_sample_combat  gen_sample_chapter  bench_battle  capture_scene  cli_tool
-  tests/            run_tests  test_case  test_*（44 个套件）
+  tests/            run_tests  test_case  support（公共装载）                      # 102：按层分目录，76 个套件
+    inventory/      test_*（12）   背包、格子、拖拽
+    battle/         test_*（8）    编译、效果、伤害、数值
+    map/            test_*（10）   图生成、导航、形态、地图编辑器以外的地图逻辑
+    run/            test_*（35）   一局：流程、模块、存档、经济、事件、信仰   flow_support（跑流程的公共壳）
+    meta/           test_*（1）    跨局
+    ui/             test_*（3）    屏与控件（帧测试）
+    authoring/      test_*（7）    内容管线与各编辑器
 ```
 
 还没有的（设计里提过、待后面的阶段）：6.2 的渐进揭示（M6-2，`ui/game/loot_screen` 现在是最小版）、
 `core/run/erosion_field` / `erosion_schedule`（第 7 阶段）。`RunState`、`GameFlow` 按 1 节的约定是纯 `RefCounted`，不是 autoload；
 `GameDirector` 是主场景的根，也不是 autoload。
+
+### 11.1 测试怎么摆、怎么跑（报告 102）
+
+**一个套件 = 一个文件 = `tests/<层>/test_<被测的东西>.gd`**，按它测的那一层放目录（上面的树）。
+文件名跟着**被测对象**走，不跟着报告号走：报告号属于用例标题（`t.begin("保险箱 · …（092）")`），
+那里才是要回溯「这条是哪次改的」的地方。此前有十个 `test_author_0NN.gd`，一个文件里装着
+那一批改动顺手写的几条互不相关的用例 —— 改保险箱的人不会想到去 `test_author_092.gd` 里找它的测试，
+于是同一个东西被测两遍、或者改坏了没人发现。102 把它们按被测对象拆散归位（跟着 101 每刀一起搬）。
+
+**跑器自己发现套件**：`tests/run_tests.gd` 不再维护 `preload` 清单（加一个套件要改两个文件，
+忘了改的表现是「写了测试但从来没跑过」），改为 `DirAccess` 递归扫 `res://tests` 下所有 `test_*.gd`、
+按路径排序后加载。两阶段照旧：`run_*(t)` 直接跑，`frame_*(t, root)` 在第一帧跑（见 v1.15）。
+不想被收集的公共代码**不叫** `test_*`（`support.gd`、`run/flow_support.gd`）。
+
+**带一个词就只跑相关套件**：`bash tools/test.sh safe` → 路径或用例标题里含 `safe` 的套件。
+全套 ≈5 分钟，改一处等五分钟会让人干脆不跑。过滤只影响单元测试那一步，
+后面 `check_scripts` / `check_content` 两步全项目检查照常跑（它们和过滤无关、也快）。
+
+**类缓存不进仓库**（102 第 B1 条，推翻 v2.04 的做法）：`.godot/` 整个目录 `.gitignore`。
+全局类缓存是编辑器扫脚本生成的**生成物**，提交它等于拿版本控制当分发渠道 ——
+每加一个 `class_name` 都要记得提交、两个分支各加一个就冲突、跑完测试工作区就脏。
+三条用得到它的路各自解决：编辑器打开项目时自己重建；`tools/test.sh` 每次先 `--import`；
+不开编辑器直接跑游戏走 `tools/run_game.sh` / `.bat`（也是先 `--import`）。
+`DevNav` 的缺类自检因此只在**非编辑器**运行时提示（编辑器里缓存必然是新的，提示只会是误报）。
 
 ---
 
@@ -3668,6 +3768,12 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.18 | 2026-10-01 | **053 三 + 二落地**：高危区在骨架与换乘之后才长（`RingMapGenerator._lay_zones`），只从 `RouteStyle.spawns_zones` 的路线岔（搜索风格 false）；偏搜索路线停在撤离环间内侧那环（`_exit_ring`），沿环朝空间大的那边走弧（`_lay_exit_arc`），尽头 = 与相邻路线共用的撤离点，之后的换乘区记在路线 `exit_ids`、第一个点放商店（`RingTypeAssigner._place_exit_shops`）；它的横走步数只撒在走得到的环上；校验 `extract_band` 删「核心前一环例外」、加 `extract_min_count`（2）。回头环路不做 |
+| v2.17 | 2026-10-01 | **UI 里的逻辑搬回 core**（报告 101 第 6 刀；改 8 节、11 的树）：商店屏「拖走了就结账、结不成放回架上」的回滚搬进 `ShopSession.pay_or_return(格, uid, 容器)`（界面只把 false 说成一句话）；导演里 200 行截图演示代码搬进 `tools/demo_fill.gd`（`class_name DemoFill`，导演只在 `DEMO_SCREEN` 非空时 `load` 它，正式游戏一行都不跑），`game_director.gd` 390 → 196 行；导演直接写 `run.phase` / `end_reason` 改成 `RunState.force_extract()`（标明只给演示与测试用）；新用例 `test_economy.run_shop_rollback` 守回滚规则（原来只有界面里有、没测试） |
+| v2.16 | 2026-10-01 | **`GameFlow` 抽服务**（报告 101 第 4 刀；改 8 节）：成就与解锁抽成 `Achievements`（`core/meta/achievements.gd`，纯逻辑，不碰存盘与转屏；flow 只同步 + 决定要不要存），切存档位的文件层并进 `SaveSlots.open`（建目录 / 两条路径 / 读局外 / 读不出来先备份，098 的规矩和 `backup` 放在一起），092 的暂存区一键出售与 090 的「带回来的棋盘 ⇄ 开局屏那一栏」搬回 `MetaState`（`left_behind_preview` / `sell_left_behind` / `take_board_to_stash` / `return_stash`，开局屏少 20 行）；界面与测试的调用处一个没改（flow 留一行转发）；新套件 `tests/run/test_flow_wiring.gd`：**不许漏接** —— 一局 / 节点事件 / 六个模块的每个 signal 在 `core/` 或 `ui/` 里都得有人接（白名单一条：`shop_closed`），外加三个服务各自不造 `GameFlow` 也能测 |
+| v2.15 | 2026-10-01 | **一局的能力表 `RunHooks`**（报告 101 第 3 刀；新增 7.5）：`NodeEvents` 的 16 个裸 `Callable` 字段与 `EventContext` 的 7 个收成一个带类型的 `RunHooks`（`register` 只认 `NAMES` 里的名字，写错当场 `push_error`；每条的默认值写在方法里，所以沙盒 / 测试 / 没装那个模块的一局照常跑）；骨架在 `_wire_events` 里接自己的十条，`SafeModule` / `BuffModule` / `AltarModule` / `HunterSystem` 在 `install` 里接自己的 —— `NodeEvents` 与 `EventContext` 都不再认识任何模块；`EventContext` 新增 `faith_tier_now()` / `active_faith_id()`，`erosion_depth` 不进表（它是节点从 `travel.erosion` 现接的）；新套件 `tests/run/test_run_hooks.gd` 守默认值、名字登记、一局里谁接了什么、以及那些裸字段真的没了 |
+| v2.14 | 2026-10-01 | **测试与工具**（报告 102；新增 11.1、改 11 的树）：套件按层分目录（`tests/inventory` / `battle` / `map` / `run` / `meta` / `ui` / `authoring`，76 个），十个 `test_author_0NN.gd` 按**被测对象**拆散归位（报告号留在用例标题里），`run_tests.gd` 改为 `DirAccess` 递归自动发现（不再维护 `preload` 清单），`bash tools/test.sh <词>` 只跑路径或标题里含它的套件（后两步全项目检查照常跑）；类缓存出仓库（`.gitignore` 收整个 `.godot/`，推翻 v2.04；编辑器自己重建、`test.sh` 与 `run_game` 先 `--import`，`DevNav` 的缺类自检只在非编辑器下提示）；`test.sh` 找不到 `timeout` 就不包超时（macOS 默认没有）；新增 `tests/support.gd`（公共装载）与 `tests/run/flow_support.gd`（跑流程的公共壳） |
+| v2.13 | 2026-10-01 | **一局的六个子系统都搬成模块**（报告 101 第 1 刀；改 7.4 / 7.2 / 8.2）：`NodeStorageModule`（087 按点暂存）、`CountdownModule`（092 / 094 倒计时与带入预算，开局屏用的那几条算式留作静态方法）、`CraftingModule`（084 / 087 相邻即合）、`BuffModule`（062 一局里拿到的 buff）、`AltarModule`（093 / 095 神坛、信仰级效果 `perks`、赐福）；`RunState` 新增通用信号 `arrived(node_id, first_time)` / `stepped(node_id, reason)` 与方法 `fail(reason)`，`start()` 去掉 `p_carry_value`（带入价值走 `module_inputs`），1359 → 962 行；`RunMigrations` 的 v1 → v2 把顶层 `node_storages` / `carry_in_value` / `faith_rituals` / `faith_stat_bonus` / `altar_used` / `buffs.map` 都搬进 `modules` |
 | v2.12 | 2026-10-01 | **神明总表落地**（报告 104）：删战争之神；3.8 加「每位神一枚 1 格护符」（导入器守）、获得的对账（`owned_uids` / `item_acquired`）、信力节奏量尺（`FaithPower.history`）、神明总表 ⇄ JSON（`GodsTable`、`XlsxReader`、`tools/gods_xlsx_to_json.gd`）；4.3 暴击：`crit_chance`（默认 0.10）/ `crit_damage`（默认 1.5）只加算，`BattleStats.DEFAULT_BASE` 成为真的默认值表；标准轴加「锐目 / 失准」「致命 / 钝击」两条固定值轴（也落到道具上）；`DealDamage` 造包时掷暴击（固定值伤害不暴击），`DamagePacket.crit`、`damage` 事件带 `crit`；献祭条件加 `has_stat`、倍率默认 1 |
 | v2.11 | 2026-10-01 | **标准轴**（作者定，报告 103；设计先行、待实现）：4.3 新增「标准轴：单位级的带符号层数」—— 攻速 / 造成伤害 / 受到伤害 / 回血（固定）/ 回血（按上限百分比）/ 耐力回复六条轴，一条轴一个带符号 int 层数（增益为正、减益为负、直接相抵），结算在道具级终值之上（百分比 `× (1 + 层数 × 步长)`、固定值 `+ 层数 × 步长`），系统层单独记（净化不动）、buff 栏显示轴而不是来源、新轴只加表不改公式 |
 | v2.10 | 2026-10-01 | **一局的模块：`RunState` 的扩展点**（报告 101 第 0 刀 + 第 1 刀样板；新增 7.4、改 7.2 / 8.4）：`RunModule`（装 / 存 / 读 / 说一句，生命周期靠订阅已有信号）、`RunState.modules / install_modules / install_module / module / module_input / module_lines`、新信号 `leaving`、`ChapterDef.modules`、`RunModules.standard()`、注册表 `RUN_MODULES`（`run_mechanic` 作别名）、`RunMechanic` 变成它的子类；保险箱搬成 `SafeModule`（`RunState` 不再有 `safe` 字段，`SafeModule.of(run)` 取），一局存档升到 v2，`RunMigrations` 第一步把顶层 `safe` / `safe_locked` 搬进 `modules.safe` |

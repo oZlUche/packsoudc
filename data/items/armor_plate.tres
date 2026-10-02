@@ -9,8 +9,8 @@
 
 [sub_resource type="Resource" id="Resource_f6yif"]
 script = ExtResource("1_xpbid")
-stat = &"armor"
-flat = 1.0
+stat = &"max_shield"
+flat = 5.0
 
 [sub_resource type="Resource" id="Resource_kg3t3"]
 script = ExtResource("2_ql0l1")
