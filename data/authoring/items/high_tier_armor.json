@@ -12,11 +12,12 @@
   "rarity": 3,
   "tags": [
     "sealed",
-    "gear"
+    "gear",
+    "armor"
   ],
   "combat": {
     "base_stats": {
-      "armor": 10
+      "max_shield": 50
     }
   }
 }

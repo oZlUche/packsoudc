@@ -11,7 +11,7 @@
 [sub_resource type="Resource" id="Resource_v6a7g"]
 script = ExtResource("3_csqxu")
 base_stats = {
-"armor": 3
+"max_shield": 20
 }
 
 [sub_resource type="Resource" id="Resource_nqein"]
@@ -27,5 +27,5 @@ display_names = {
 }
 shape = SubResource("Resource_nqein")
 rarity = 1
-tags = Array[StringName]([&"gear", &"barbarian", &"nature", &"leather"])
+tags = Array[StringName]([&"gear", &"armor", &"barbarian", &"nature", &"leather"])
 combat = SubResource("Resource_v6a7g")
