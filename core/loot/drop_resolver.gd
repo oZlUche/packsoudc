@@ -62,7 +62,7 @@ static func treasure_candidates(rule: DropRule, items: ItemDatabase, rarity: int
 		if d == null or d.rarity != rarity or carried.has(id) or not d.tags.has(rule.treasure_tag):
 			continue
 		out.append(id)
-	out.sort()
+	Ids.sort(out)     # 按文本排，不是 StringName 的指针序（见 [Ids]）
 	return out
 
 
@@ -143,7 +143,7 @@ static func rarity_guarantee(rarity: int, rule: DropRule, items: ItemDatabase, c
 				var d := items.get_def(id)
 				if d != null and d.rarity == r and not d.is_bag and not carried.has(id):
 					cands.append(id)
-			cands.sort()
+			Ids.sort(cands)     # 按文本排，不是 StringName 的指针序（见 [Ids]）
 		if not cands.is_empty():
 			return cands[rng.randi_range(0, cands.size() - 1)]
 		r -= 1

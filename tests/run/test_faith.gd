@@ -129,7 +129,7 @@ static func run_compile_and_sets(t: TestCase) -> void:
 	var b := GridInventory.new(Vector2i(8, 6), 1, false)
 	var bow := _put(b, db, &"blessed_longbow", Vector2i(0, 0))      # hunt，会打
 	var sigil := _put(b, db, &"strength_sigil", Vector2i(2, 0))     # violence
-	var spec := BattleCompiler.compile(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:hunt": 2})
+	var spec := BattleCompiler.compile_board(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:hunt": 2})
 	var uids: Array = []
 	for item in spec.items:
 		uids.append((item as CompiledItem).source_uid)
@@ -142,13 +142,13 @@ static func run_compile_and_sets(t: TestCase) -> void:
 	var stash := ItemStash.new(2, 0)
 	InventoryService.transfer_auto(b, bow.uid, stash)
 	InventoryService.transfer_auto(stash, bow.uid, b)
-	var spec2 := BattleCompiler.compile(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:hunt": 2})
+	var spec2 := BattleCompiler.compile_board(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:hunt": 2})
 	t.eq(spec2.items.size(), 1, "切成狩猎之神：只剩长弓参战（符号没有 combat，休眠就彻底失效）")
 	t.eq((spec2.items[0] as CompiledItem).source_uid, bow.uid, "是长弓")
 	t.check(spec2.rough_dps() > spec.rough_dps(), "长弓活了：吃到信力加成，输出比休眠时高")
 	# 凡物照常参战
 	var sword := _put(b, db, &"shortsword", Vector2i(4, 0))
-	var spec3 := BattleCompiler.compile(b)
+	var spec3 := BattleCompiler.compile_board(b)
 	t.eq(spec3.items.size(), 2, "凡物短剑也参战")
 	# 套装：休眠的不计数
 	var sets := SetDatabase.new()

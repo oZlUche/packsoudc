@@ -1,16 +1,25 @@
-## 背包棋盘 → 战斗单位（架构文档 4.2）。
+## 背包棋盘 + 这一场的外来加成 → 战斗单位（架构文档 4.2）。
 ##
-## [b]必须是纯函数[/b]：同样的棋盘永远编译出同样的 [CombatantSpec]。
+## [b]必须是纯函数[/b]：同样的棋盘与同样的 [CompileInput] 永远编译出同样的 [CombatantSpec]。
 ## 玩家拖动物品时 UI 会实时重编译来显示预估 DPS，这是此类游戏的核心爽点；
-## 回放、批量模拟与存档也全都依赖这一点。
+## 回放、批量模拟与存档也全都依赖这一点。按件随机挑选（[ScopedMod.pick]）也在这一句之内 ——
+## 随机只由 [member CompileInput.seed] 决定，编译器不自己造随机、不认识 [RunState]。
 ##
-## 五步，全部与遍历顺序无关：
+## 105：战斗单位**只有这一个来源**。信仰的 8 条效果以前是编译完再 `modify_spec(spec)` 改一遍，
+## 现在一律翻译成 [CompileInput] 的字段，由这里并进来。
+##
+## 九步，全部与遍历顺序无关：
 ## [codeblock]
-## 1. 只收集棋盘上的非包物品（暂存区不参战，见 3.4）
-## 2. 各物品写入基础值
-## 3. 包体效果：按 bag_of() 聚合，施加给内容物
-## 4. 邻接标记点亮：数每件物品的增益/受益格被几个【不同的】物品占住
-## 5. 按 4.3 的数值约定结算，产出 abilities
+## 1  只收集棋盘上的非包物品（暂存区不参战，见 3.4）
+## 2  各物品写入基础值                       ← base 只在这里写，和第 7 步的 base_scale
+## 3  包体效果：按 bag_of() 聚合，施加给内容物
+## 4  整单位的修饰（套装、一局 buff）：input.mods → 每件
+## 4b 信力解锁的功能：这件道具的信仰现在第几阶
+## 5  邻接标记点亮：数每件物品的增益/受益格被几个【不同的】物品占住
+## 6  打包 CompiledItem（先不算 max_hp）
+## 7  按件：input.scoped 逐条筛一批件，加修饰 / 缩放基础值 / 挂规则
+## 8  整单位：基线修饰、单位级规则、开战时的轴层数、结算旗子
+## 9  max_hp = 基线生命 + Σ 每件生命        ← 最后算，所以改基线的不用再手工补账
 ## [endcodeblock]
 class_name BattleCompiler
 extends RefCounted
@@ -19,28 +28,33 @@ extends RefCounted
 const BASE_HP := 25.0
 
 
-## [param set_mods] 与 [param set_rules] 由 [SetTracker] 的 combat_mods() /
-## combat_rules() 取出后传入。
-##
-## 编译器不认识 [SetTracker]，也不自己去数套装件数 —— 计数与激活是背包层的事，
-## 物品一拖进棋盘就已经算好了（UI 要实时显示暗／亮）。这里只负责并入。
-## [param baseline] 是角色自带的那份属性（生命上限、耐力上限…），
-## 为 null 时用 [method CombatantBaseline.default_baseline]。
-## 角色系统落地后由角色定义提供，编译器这里不用改。
-## [param faith_tiers] 是信力（082）：信仰对象标签 → 现在第几阶；信仰道具上 tier ≤ 它的 [FaithBonus] 并进来。空表 = 一阶都没过。
-## 仍是纯函数：同样的棋盘、同样的阶，永远同样的结果
-static func compile(
+## 薄的兼容入口：只关心棋盘与这几样的调用方（大多是测试与敌人 kit）用它，内部造一份 [CompileInput]。
+## 正式的玩家编译走 [method compile] + 完整的 [CompileInput]（信仰效果、轴、按件修饰都在里面）
+static func compile_board(
 	board: GridInventory, baseline: CombatantBaseline = null,
 	set_mods: Array[StatModifier] = [] as Array[StatModifier],
 	set_rules: Array[AbilityRule] = [] as Array[AbilityRule],
 	faith_tiers: Dictionary = {}, faith_points: Dictionary = {}
 ) -> CombatantSpec:
-	var base := baseline if baseline != null else CombatantBaseline.default_baseline()
+	return compile(board, CompileInput.of(baseline, set_mods, set_rules, faith_tiers, faith_points))
+
+
+## [param input] 装齐这一场的全部外来加成（套装、一局 buff、信力、信仰效果、轴的初值）。
+##
+## 编译器不认识 [SetTracker]，也不自己去数套装件数 —— 计数与激活是背包层的事，
+## 物品一拖进棋盘就已经算好了（UI 要实时显示暗／亮）。这里只负责并入。
+static func compile(board: GridInventory, input: CompileInput = null) -> CombatantSpec:
+	var inp := input if input != null else CompileInput.new()
+	var base := inp.baseline if inp.baseline != null else CombatantBaseline.default_baseline()
 	var spec := CombatantSpec.new()
 	spec.baseline = StatSet.new()
 	base.seed_stats(spec.baseline)
+	spec.axes = inp.axes.duplicate()
+	spec.undying_sec = inp.undying_sec
 
 	if board == null:
+		_apply_baseline_mods(spec, inp)
+		spec.set_rules.append_array(inp.rules)
 		spec.max_hp = spec.baseline.total_of(BattleStats.MAX_HP)
 		return spec
 
@@ -74,11 +88,10 @@ static func compile(
 	# --- 3. 包体效果施加给内容物 ---
 	_apply_bag_effects(board, fighters, stats)
 
-	# --- 4. 套装效果（战斗作用域）---
+	# --- 4. 整单位的修饰：套装与一局 buff 给每一件参战道具（规则在第 8 步收）---
 	for uid in fighters:
-		for mod in set_mods:
+		for mod in inp.mods:
 			(mod as StatModifier).apply_to(stats[uid], 1)
-	spec.set_rules.append_array(set_rules)
 
 	# --- 4b. 信力解锁的功能（082）：这件道具的信仰现在第几阶，tier 不超过它的加成并进来（规则在第 6 步收） ---
 	var bonus_rules: Dictionary = {}  # uid -> Array[AbilityRule]
@@ -86,8 +99,8 @@ static func compile(
 		var def := board.get_item(uid).def
 		if not def.has_faith() or def.faith_bonuses.is_empty() or dormant.has(uid):
 			continue
-		var tier := int(faith_tiers.get(def.faith_tag(), 0))
-		var pts := int(faith_points.get(def.faith_tag(), 0))
+		var tier := int(inp.faith_tiers.get(def.faith_tag(), 0))
+		var pts := int(inp.faith_points.get(def.faith_tag(), 0))
 		var extra: Array[AbilityRule] = []
 		for b in def.faith_bonuses:
 			var bonus := b as FaithBonus
@@ -110,11 +123,9 @@ static func compile(
 			social.append(uid)
 	_apply_adjacency(board, social, stats, links)
 
-	# --- 6. 产出 ---
-	var hp := spec.baseline.total_of(BattleStats.MAX_HP)
+	# --- 6. 打包 ---
 	for uid in fighters:
 		var set: StatSet = stats[uid]
-		hp += set.total_of(BattleStats.MAX_HP)
 		var def := board.get_item(uid).def
 		var item := CompiledItem.new()
 		item.source_uid = uid
@@ -131,9 +142,66 @@ static func compile(
 		item.linked_uids = linked
 		spec.add(item)
 
+	# --- 7. 按件（105 3.2）---
+	_apply_scoped(spec, board, inp)
+
+	# --- 8. 整单位 ---
+	_apply_baseline_mods(spec, inp)
+	spec.set_rules.append_array(inp.rules)
+
+	# --- 9. 生命上限。放在最后，所以第 8 步改基线生命的不用再手工补一遍 ---
+	var hp := spec.baseline.total_of(BattleStats.MAX_HP)
+	for it in spec.items:
+		hp += (it as CompiledItem).stats.total_of(BattleStats.MAX_HP)
 	spec.max_hp = maxi(0, hp)
 	spec.board = board
 	return spec
+
+
+## 第 7 步：按件修饰。逐条按下标顺序 —— 随机挑选的种子里带着下标，所以两条都挑 3 把时挑的不是同一批
+static func _apply_scoped(spec: CombatantSpec, board: GridInventory, inp: CompileInput) -> void:
+	for i in inp.scoped.size():
+		var scope := inp.scoped[i] as ScopedMod
+		if scope == null or scope.is_empty():
+			continue
+		var hits: Array[int] = []
+		for it in spec.items:
+			var item := it as CompiledItem
+			var inst := board.get_item(item.source_uid)
+			if inst != null and scope.matches(inst.def, not item.rules.is_empty()):
+				hits.append(item.source_uid)
+		hits.sort()     # 候选按 uid 升序：挑的结果只由 seed 与候选集决定
+		for uid in scope.choose(hits, hash("%d:scoped:%d" % [inp.seed, i])):
+			_apply_scope_to(spec.item_of(uid), scope)
+
+
+static func _apply_scope_to(item: CompiledItem, scope: ScopedMod) -> void:
+	if item == null:
+		return
+	for mod in scope.mods:
+		(mod as StatModifier).apply_to(item.stats, 1)
+	if not is_equal_approx(scope.base_scale, 1.0):
+		for key in item.stats.keys():
+			var k := StringName(String(key))
+			if scope.scales(k):
+				var v := item.stats.ensure(k)
+				v.base = roundi(float(v.base) * scope.base_scale)
+	for r in scope.rules:
+		var rule := (r as AbilityRule).duplicate(true) as AbilityRule
+		if rule == null:
+			continue
+		# 挂到单件上的规则里的「有道具出手」绑成只听自己 —— 否则一件附魔会被全场出手都触发
+		if rule.trigger is OnItemFired:
+			var trig := rule.trigger as OnItemFired
+			trig.include_self = true
+			trig.source_uids = [item.source_uid] as Array[int]
+		item.rules.append(rule)
+
+
+## 第 8 步：基线修饰（食物护盾、`stat_mod(baseline)`）
+static func _apply_baseline_mods(spec: CombatantSpec, inp: CompileInput) -> void:
+	for mod in inp.baseline_mods:
+		(mod as StatModifier).apply_to(spec.baseline, 1)
 
 
 ## 包只作用于自己**整件**装着的东西。横跨两个包的物品 bag_of() 为空，两边的加成都拿不到 ——

@@ -115,7 +115,7 @@ static func run(t: TestCase) -> void:
 		if board.acts_as_bag(item):
 			continue  # 包不参战，属性不进编译结果
 
-		var spec := BattleCompiler.compile(board, _generous_baseline(item))
+		var spec := BattleCompiler.compile_board(board, _generous_baseline(item))
 		var stats := spec.stats_of(inst.uid)
 		t.not_null(stats, "%s 参战了" % item.id)
 		if stats == null:
@@ -159,7 +159,7 @@ static func run_rules_fire(t: TestCase) -> void:
 		if board.acts_as_bag(item):
 			continue
 
-		var spec := BattleCompiler.compile(board, _generous_baseline(item))
+		var spec := BattleCompiler.compile_board(board, _generous_baseline(item))
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 7
 		var result := BattleSim.run(spec, _dummy(), rng, 30.0)
@@ -285,7 +285,7 @@ static func _compile_pair(item: ItemDef, neighbor: ItemDef, at: Vector2i) -> Dic
 	if not board.place(other, at, 0):
 		return {}
 
-	var spec := BattleCompiler.compile(board, _generous_baseline(item))
+	var spec := BattleCompiler.compile_board(board, _generous_baseline(item))
 	var mine := spec.stats_of(me.uid)
 	var theirs := spec.stats_of(other.uid)
 	if theirs == null:

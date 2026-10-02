@@ -8,8 +8,8 @@ extends FaithPerk
 @export var stacks: int = 8
 
 
-func modify_spec(spec: CombatantSpec, _board: GridInventory, _run: RunState) -> void:
-	spec.set_rules.append(rule())
+func compile_into(input: CompileInput, _board: GridInventory, _run: RunState) -> void:
+	input.rules.append(rule())
 
 
 ## 那一条规则（测试与预估也用它）

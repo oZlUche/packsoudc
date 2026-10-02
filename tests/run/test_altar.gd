@@ -101,19 +101,27 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	for p in sun.perks_at(1):
 		if p is EnchantWeaponsPerk:
 			ench = p
-	t.check(ench != null and ench.fire_bonus(run) == 0, "没祈祷：火焰加成 0")
-	altar.rituals["pray_fire"] = 1
-	t.eq(ench.fire_bonus(run), 10, "祈祷 1 次：+10%")
-	altar.rituals["pray_fire"] = 4
-	t.eq(ench.fire_bonus(run), roundi(10.0 * pow(4.0, 0.7)), "4 次：10 × 4^0.7 ≈ 26%（非线性）")
-	altar.rituals.erase("pray_fire")
-	var spec3 := run.compile_player()
+	t.check(ench != null, "日神 1 级有火焰附魔")
+	# 105：祈祷攒的加成从「次数套公式填进 FireEnchant」变成标准轴 fire_damage 的层数（斐波那契）
+	var pray: AltarPrayFirePerk = null
+	for p in sun.perks_at(2):
+		if p is AltarPrayFirePerk:
+			pray = p
+	t.not_null(pray, "日神 2 级有祈祷")
+	t.eq(altar.axis_bonus.size(), 0, "没祈祷：一层都没有")
+	var cumulative := 0
+	for n in [1, 2, 3, 4, 5, 6]:
+		cumulative += pray.gain_at(n)
+	t.eq(cumulative, 20, "斐波那契：祈祷 6 次累计 20 层（1 / 2 / 4 / 7 / 12 / 20）")
 	var weapons_before := 0
-	for it in spec3.items:
+	for it in run.compile_player().items:
 		var inst := run.board.get_item((it as CompiledItem).source_uid)
 		if inst != null and inst.def.tags.has(&"weapon") and (it as CompiledItem).is_active():
 			weapons_before += 1
-	ench.modify_spec(spec3, run.board, run)
+	# 105：perk 不再自己改编译结果 —— 它往 CompileInput 放一条 ScopedMod，筛与挑都在编译器里
+	var input := CompileInput.of(run.effective_baseline())
+	ench.compile_into(input, run.board, run)
+	var spec3 := BattleCompiler.compile(run.board, input)
 	var enchanted := 0
 	for it in spec3.items:
 		for rule in (it as CompiledItem).rules:
@@ -126,11 +134,13 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	var ration := ItemInstance.create(run.items.get_def(&"ration"))
 	run.storage.admit(ration)
 	InventoryService.transfer_auto(run.storage, ration.uid, run.board)
-	var spec4 := run.compile_player()
-	var regen0 := spec4.baseline.total_of(BattleStats.REGEN_HP)
-	var shield0 := spec4.baseline.total_of(BattleStats.MAX_SHIELD)
+	var plain4 := run.compile_player()
+	var regen0 := plain4.baseline.total_of(BattleStats.REGEN_HP)
+	var shield0 := plain4.baseline.total_of(BattleStats.MAX_SHIELD)
+	var input4 := CompileInput.of(run.effective_baseline())
 	for p in nature.perks_at(3):
-		(p as FaithPerk).modify_spec(spec4, run.board, run)
+		(p as FaithPerk).compile_into(input4, run.board, run)
+	var spec4 := BattleCompiler.compile(run.board, input4)
 	t.check(spec4.baseline.total_of(BattleStats.REGEN_HP) > regen0, "1 级：基线每秒回血 +")
 	if run.board.has_item(ration.uid):
 		t.check(spec4.baseline.total_of(BattleStats.MAX_SHIELD) > shield0, "3 级：棋盘上有口粮就有护盾")
@@ -141,10 +151,11 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	t.check(regen_perk != null and regen_perk.stacks > 0, "5 级（103 改）：加时阶段回春，数值在 nature.json 里可调")
 	# 两边都不出手、我方先掉一半血，打到第 40 秒：没有自然 5 级就停在一半，有就在加时开始后回满
 	var hp_at_40 := func(blessed: bool) -> Array:
-		var a := BattleCompiler.compile(null, CombatantBaseline.with_hp(100.0))
-		var b := BattleCompiler.compile(null, CombatantBaseline.with_hp(100.0))
+		var input_a := CompileInput.of(CombatantBaseline.with_hp(100.0))
 		if blessed:
-			regen_perk.modify_spec(a, null, run)
+			regen_perk.compile_into(input_a, null, run)
+		var a := BattleCompiler.compile(null, input_a)
+		var b := BattleCompiler.compile_board(null, CombatantBaseline.with_hp(100.0))
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 1
 		var ctx := BattleContext.create(CombatantRuntime.from_spec(a, 0), CombatantRuntime.from_spec(b, 1), rng)

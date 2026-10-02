@@ -9,7 +9,7 @@ class_name RunMigrations
 extends RefCounted
 
 ## 有哪几步：from_version → 方法名（文档与自检用；分派走 match，不走反射）
-const STEPS := {1: "_v1_to_v2"}
+const STEPS := {1: "_v1_to_v2", 2: "_v2_to_v3"}
 
 
 ## 尽量升到 [constant RunState.SAVE_VERSION]。不改入参（深拷一份）。
@@ -21,6 +21,8 @@ static func upgrade(src: Dictionary) -> Dictionary:
 		match v:
 			1:
 				d = _v1_to_v2(d)
+			2:
+				d = _v2_to_v3(d)
 			_:
 				push_error("RunMigrations: STEPS 里有 v%d 但 match 没接上" % v)
 				return d
@@ -28,6 +30,29 @@ static func upgrade(src: Dictionary) -> Dictionary:
 		d["version"] = v
 	if int(d.get("version", -1)) != RunState.SAVE_VERSION:
 		push_warning("RunMigrations: 没有 v%s → v%d 的迁移，这一局作废（局外进度不受影响）" % [str(d.get("version", "?")), RunState.SAVE_VERSION])
+	return d
+
+
+## v2 → v3（105）：祈祷攒的火焰加成从「次数 × 旧公式」变成标准轴 `fire_damage` 的层数。
+##
+## 老档只记了祈祷次数（`modules.altar.rituals.pray_fire`），层数要按曲线补算出来 ——
+## 补的是**现在**的曲线（[AltarPrayFirePerk] 的默认斐波那契），所以老档祈祷 4 次读回来就是 7 层。
+## 旧公式（10 × n^0.7）不保留：曲线换了是作者有意的改动（105 第四节），不是存档要兼容的东西
+static func _v2_to_v3(d: Dictionary) -> Dictionary:
+	var mods: Dictionary = (d.get("modules", {}) as Dictionary).duplicate(true) if d.get("modules", {}) is Dictionary else {}
+	var altar: Dictionary = mods.get("altar", {}) if mods.get("altar", {}) is Dictionary else {}
+	var rituals: Dictionary = altar.get("rituals", {}) if altar.get("rituals", {}) is Dictionary else {}
+	var times := int(rituals.get(AltarPrayFirePerk.KEY, 0))
+	if times > 0:
+		var perk := AltarPrayFirePerk.new()     # 默认曲线：gains 为空 = 斐波那契
+		var stacks := 0
+		for n in range(1, times + 1):
+			stacks += perk.gain_at(n)
+		var axes: Dictionary = altar.get("axis_bonus", {}) if altar.get("axis_bonus", {}) is Dictionary else {}
+		axes[String(StatAxes.FIRE_DAMAGE)] = int(axes.get(String(StatAxes.FIRE_DAMAGE), 0)) + stacks
+		altar["axis_bonus"] = axes
+		mods["altar"] = altar
+		d["modules"] = mods
 	return d
 
 

@@ -151,13 +151,13 @@ static func spec_for(inst: ItemInstance, board: GridInventory) -> CombatantSpec:
 	if inst == null or inst.def == null or inst.def.combat == null:
 		return null
 	if board != null and board.has_item(inst.uid):
-		return BattleCompiler.compile(board)
+		return BattleCompiler.compile_board(board)
 	var size := inst.def.shape.size_rotated(0) if inst.def.shape != null else Vector2i.ONE
 	var scratch := GridInventory.new(size, 0, false)
 	var copy := ItemInstance.create(inst.def, 0)
 	if not scratch.place(copy, Vector2i.ZERO, 0):
 		return null
-	return BattleCompiler.compile(scratch)
+	return BattleCompiler.compile_board(scratch)
 
 
 ## 这件道具现在的编译结果（一件）

@@ -10,21 +10,16 @@ extends FaithPerk
 @export var mods: Array[StatModifier] = []
 
 
-func modify_spec(spec: CombatantSpec, board: GridInventory, _run: RunState) -> void:
+func compile_into(input: CompileInput, _board: GridInventory, _run: RunState) -> void:
 	if target == "baseline":
-		var hp_before := spec.baseline.total_of(BattleStats.MAX_HP)
-		for m in mods:
-			(m as StatModifier).apply_to(spec.baseline, 1)
-		spec.max_hp = maxi(0, spec.max_hp + spec.baseline.total_of(BattleStats.MAX_HP) - hp_before)     # 基线的生命改了，单位的总生命跟着
+		# 105：生命上限在第 9 步才算，所以改完基线不用再手工补 spec.max_hp
+		input.baseline_mods.append_array(mods)
 		return
-	for it in spec.items:
-		var item := it as CompiledItem
-		if item_tag != &"" and board != null:
-			var inst := board.get_item(item.source_uid)
-			if inst == null or inst.def == null or not inst.def.tags.has(item_tag):
-				continue
-		for m in mods:
-			(m as StatModifier).apply_to(item.stats, 1)
+	var scope := ScopedMod.new()
+	if item_tag != &"":
+		scope.tags = [item_tag] as Array[StringName]
+	scope.mods = mods.duplicate()
+	input.scoped.append(scope)
 
 
 func _summary() -> String:

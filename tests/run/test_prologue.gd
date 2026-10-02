@@ -122,7 +122,7 @@ static func _player(c: Content, ids: Array[StringName]) -> CombatantSpec:
 	var base := ch.baseline()
 	for key in ctx.stat_bonus:
 		base.base_stats[String(key)] = float(base.base_stats.get(String(key), 0.0)) + float(ctx.stat_bonus[key])
-	return BattleCompiler.compile(board, base)
+	return BattleCompiler.compile_board(board, base)
 
 
 static func run_data(t: TestCase) -> void:

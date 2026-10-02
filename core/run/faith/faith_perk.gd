@@ -2,7 +2,7 @@
 ##
 ## 构件：每一条效果一个子类、注册表（RunRegistry.FAITH_PERKS）一行；信仰文件里 `perks: [{"tier": 1, "type": "..."}]`。
 ## 基类给出几个**落点**的钩子，子类只重写自己用得到的那个；各系统在自己的点上问 [method RunState.faith_perks]：
-## - 编译期 [method modify_spec]：开战时在编译好的玩家战斗单位上做手脚（加规则、改属性）
+## - 编译期 [method compile_into]：往编译器的入参 [CompileInput] 里放东西（加规则、改属性、加轴层数）
 ## - 神坛 [method altar_label] / [method altar_apply]：休息处神坛上的特殊操作（和献祭二选一，共用这一次机会；不占休息）
 ## - 献祭之后 [method on_offered]
 ## - 踩上一个点 [method on_node_entered]
@@ -43,8 +43,13 @@ func battle_note(_run: RunState) -> String:
 	return ""
 
 
-## 编译期：开战那一瞬在玩家的战斗单位上做手脚。[param run] 给随机数（可复现：按节点与用途取）与局内账
-func modify_spec(_spec: CombatantSpec, _board: GridInventory, _run: RunState) -> void:
+## 编译期（105）：往编译器的入参里放东西。
+##
+## [b]不再见到 [CombatantSpec][/b] —— 以前是编译完再改一遍编译结果，战斗单位于是有两个来源，
+## 预估和真打也就有了两套路径。现在 perk 只会往 [CompileInput] 放：整单位的修饰 / 规则、
+## 基线修饰、按件的 [ScopedMod]、轴的开战层数、结算旗子。
+## [param board] 可以读（perk 在 `core/run`，数棋盘上的食物没问题），[param run] 给局内的账
+func compile_into(_input: CompileInput, _board: GridInventory, _run: RunState) -> void:
 	pass
 
 

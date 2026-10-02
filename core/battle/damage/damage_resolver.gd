@@ -5,7 +5,7 @@
 ##
 ## 五步，顺序不可调换：
 ## [codeblock]
-## 1. 确认类型      这一下能不能被护盾吸收、吃不吃护甲、要不要通知
+## 1. 确认类型      这一下能不能被护盾吸收、吃不吃护甲、要不要通知；攻方的伤害类型加成（火焰轴）在这里乘
 ## 2. 护盾吸收      能吸收则先扣护盾，中毒之类绕过
 ## 3. 受伤前效果    【同步派发】效果在这里改写伤害包：减伤、反转、免疫
 ## 4. 计算受伤量    百分比 → 固定增减 → 反转 → 护甲 → 「受到伤害」轴（103），然后落到血量
@@ -27,6 +27,15 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	var td := packet.def()
 	if victim.dead:
 		return 0     # 087：倒下的不再受伤也不再被治（倒下是终局）
+
+	# --- 1b. 攻方的伤害类型加成（105）：火焰加成是一条标准轴，放在**防御之前**乘原值 ——
+	# 和「受到伤害」轴在第 4 步乘守方的最终伤害对称。于是附魔、灼烧、任何火焰来源都吃它
+	if packet.raw > 0 and packet.type == DamageTypes.FIRE:
+		var attacker := _side_of(ctx, packet.source_side)
+		if attacker != null:
+			var boost := attacker.axis_factor(StatAxes.FIRE_DAMAGE)
+			if boost != StatMath.ONE:
+				packet.raw = maxi(0, StatMath.mul(packet.raw, boost))
 
 	# --- 2. 护盾吸收 ---
 	# 放在受伤前效果之前，是因为「这一下还剩多少要扛」本身就是减伤效果的判断依据。
@@ -84,6 +93,13 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	if victim.resources.current(BattleStats.RES_HP) <= 0 and victim.mark_dead():
 		ctx.emit(BattleEvent.DIED, victim.side, {})
 	return -packet.applied
+
+
+## 出手的那一方（source_side 没填 / 不在场则 null）。自伤、环境伤害都没有攻方
+static func _side_of(ctx: BattleContext, side: int) -> CombatantRuntime:
+	if ctx == null or side < 0 or side >= ctx.sides.size():
+		return null
+	return ctx.sides[side]
 
 
 ## 发出 damage 事件。
