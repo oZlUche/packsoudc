@@ -182,6 +182,9 @@ func _apply_axes() -> void:
 		else:
 			var add := StatMath.from_float(total * StatAxes.step_of(axis))
 			_merged.ensure(key).add_flat(add)
+			if StatAxes.on_items(axis):
+				for uid in _merged_items:
+					(_merged_items[uid] as StatSet).ensure(key).add_flat(add)
 
 
 ## 把一项属性的终值乘上 [param f]（定点）：差额补进固定值 —— 终值 = 原终值 × f

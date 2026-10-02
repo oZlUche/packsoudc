@@ -26,19 +26,37 @@ extends CombatEffect
 
 func apply(ctx: RuleContext) -> void:
 	var raw := StatMath.from_float(amount)
+	var from_stat := false
 	if damage_stat != &"":
 		var from_stats := ctx.item_stat(damage_stat, -1)
 		if from_stats >= 0:
 			raw = from_stats
+			from_stat = true
 	if per_stack:
 		raw *= ctx.source_stacks()
 	if raw <= 0:
 		return
 
+	# 104（作者定）：暴击 —— 只有从属性取伤害的那一包掷（固定值伤害不暴击），造包时掷、在管线之前，
+	# 所以护盾 / 减伤 / 护甲 / 加时看到的都是暴击后的原始值。双方对称。一次出手掷一次，打到几个目标都一样
+	var crit := from_stat and roll_crit(ctx)
+	if crit:
+		raw = StatMath.mul(raw, maxi(0, ctx.item_stat(BattleStats.CRIT_DAMAGE, BattleStats.default_base(BattleStats.CRIT_DAMAGE))))
+
 	for victim in resolve_targets(ctx, target):
-		DamageResolver.resolve(ctx.battle, DamagePacket.create(
-			damage_type, raw, victim, ctx.owner.side, ctx.source_uid()
-		))
+		var packet := DamagePacket.create(damage_type, raw, victim, ctx.owner.side, ctx.source_uid())
+		packet.crit = crit
+		DamageResolver.resolve(ctx.battle, packet)
+
+
+## 掷一次暴击：暴击率按定点万分比（0.10 = 1000），≤ 0 永不、≥ 1 必中 —— 两头都不消耗随机数
+static func roll_crit(ctx: RuleContext) -> bool:
+	var chance := ctx.item_stat(BattleStats.CRIT_CHANCE, BattleStats.default_base(BattleStats.CRIT_CHANCE))
+	if chance <= 0:
+		return false
+	if chance >= StatMath.ONE:
+		return true
+	return ctx.rng().randi_range(1, StatMath.ONE) <= chance
 
 
 func estimated_damage(stats: StatSet) -> float:
@@ -48,7 +66,10 @@ func estimated_damage(stats: StatSet) -> float:
 	if damage_stat != &"":
 		var from_stats := stats.total_of(damage_stat, -1)
 		if from_stats >= 0:
-			dmg = StatMath.to_float(from_stats)
+			# 104：从属性取的那一包会暴击，预估乘期望值 1 + 暴击率 × (暴击伤害 − 1)（默认 1.05）
+			var chance := clampf(StatMath.to_float(stats.total_of(BattleStats.CRIT_CHANCE)), 0.0, 1.0)
+			var mult := maxf(0.0, StatMath.to_float(stats.total_of(BattleStats.CRIT_DAMAGE)))
+			dmg = StatMath.to_float(from_stats) * (1.0 + chance * (mult - 1.0))
 	return dmg
 
 

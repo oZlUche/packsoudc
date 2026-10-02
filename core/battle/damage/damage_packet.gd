@@ -19,6 +19,8 @@ var victim: CombatantRuntime = null
 var source_side: int = -1
 ## 来源物品 uid；0 表示来自 buff 或套装
 var source_uid: int = 0
+## 104：这一包是暴击（[DealDamage] 造包时掷的，raw 已经乘过暴击伤害）
+var crit: bool = false
 #endregion
 
 #region 管线中途写入
@@ -95,6 +97,7 @@ func snapshot() -> Dictionary:
 		"applied": applied,
 		"source_side": source_side,
 		"uid": source_uid,
+		"crit": crit,
 	}
 
 

@@ -69,6 +69,7 @@ const STAT_NAMES := {
 	"regen_stamina": {"zh": "每秒回耐力", "en": "Stamina regen"}, "regen_hp": {"zh": "每秒回血", "en": "Health regen"}, "max_shield": {"zh": "护盾", "en": "Shield"},
 	"max_mana": {"zh": "法力", "en": "Mana"}, "regen_mana": {"zh": "每秒回法力", "en": "Mana regen"},
 	"stamina_cost": {"zh": "耗耐力", "en": "Stamina cost"}, "mana_cost": {"zh": "耗法力", "en": "Mana cost"},
+	"crit_chance": {"zh": "暴击率", "en": "Crit chance"}, "crit_damage": {"zh": "暴击伤害", "en": "Crit damage"},
 }
 ## 乘区 → 名字
 const CATEGORY_NAMES := {"EMPOWER": {"zh": "增伤", "en": "Empower"}, "SHARP": {"zh": "物理增伤", "en": "Sharpness"},
@@ -98,7 +99,9 @@ static func mod_text(m: StatModifier) -> String:
 			parts.append("%s %+d%%" % [cat, m.mult_percent])
 		else:
 			parts.append("%s %+d%%（%s）" % [stat_name(m.stat), m.mult_percent, cat])
-	if m.flat != 0.0:
+	if m.flat != 0.0 and BattleStats.PERCENT_DISPLAY.has(m.stat):
+		parts.append("%s %+d%%" % [stat_name(m.stat), roundi(m.flat * 100.0)])     # 104：暴击按百分数写
+	elif m.flat != 0.0:
 		var f := m.flat
 		parts.append("%s %s" % [stat_name(m.stat), ("%+d" % roundi(f)) if is_equal_approx(f, roundf(f)) else "%+.1f" % f])
 	return "、".join(parts) if not parts.is_empty() else "%s（无效果）" % stat_name(m.stat)

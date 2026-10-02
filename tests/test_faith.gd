@@ -22,11 +22,12 @@ static func _put(b: GridInventory, db: ItemDatabase, id: StringName, at: Vector2
 static func run_tags_and_defs(t: TestCase) -> void:
 	t.begin("信仰 · 定义走管线（六个，含新教占位）；信仰道具带 faith + 恰好一个 faith:<id>，对象是登记过的；凡物不归信仰；导入器拦错的标签")
 	var defs := FaithDef.load_all()
-	for id in [&"brute", &"war", &"sun", &"skill", &"hunt", &"church"]:
+	for id in [&"brute", &"sun", &"skill", &"hunt", &"church"]:
 		t.check(defs.has(id), "装回了 %s" % id)
+	t.check(not defs.has(&"war"), "战争之神删了（104）")
 	t.eq((defs[&"church"] as FaithDef).camp, FaithDef.Camp.CHURCH, "新教的阵营是 CHURCH")
 	t.eq((defs[&"brute"] as FaithDef).tag(), &"faith:brute", "标签 = faith:<id>")
-	t.eq(FaithDef.id_of_tag(&"faith:war"), &"war", "从标签反推 id")
+	t.eq(FaithDef.id_of_tag(&"faith:skill"), &"skill", "从标签反推 id")
 	t.eq(FaithDef.id_of_tag(&"weapon"), &"", "不是信仰标签返回空")
 	var db := _db()
 	var faithful := 0
@@ -55,8 +56,8 @@ static func run_tags_and_defs(t: TestCase) -> void:
 	var base := {"id": "x", "display_name": "x", "shape": ["1"]}
 	var cases := {
 		"faith 没对象": {"tags": ["faith"]},
-		"对象没 faith": {"tags": ["faith:war"]},
-		"两个对象": {"tags": ["faith", "faith:war", "faith:brute"]},
+		"对象没 faith": {"tags": ["faith:skill"]},
+		"两个对象": {"tags": ["faith", "faith:skill", "faith:brute"]},
 		"没登记的信仰": {"tags": ["faith", "faith:moon"]},
 	}
 	for name in cases:
@@ -66,7 +67,7 @@ static func run_tags_and_defs(t: TestCase) -> void:
 		ContentImporter.import_item(data, ctx, rep)
 		t.check(not rep.ok(), "导入器拦「%s」：%s" % [name, rep.to_text().strip_edges().left(60)])
 	var good := base.duplicate()
-	good["tags"] = ["faith", "faith:war"]
+	good["tags"] = ["faith", "faith:skill"]
 	var rep_ok := ImportReport.new()
 	ContentImporter.import_item(good, ctx, rep_ok)
 	t.check(rep_ok.ok(), "合法的过：%s" % rep_ok.to_text())
