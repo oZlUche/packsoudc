@@ -110,5 +110,6 @@ static func run_no_bare_numbers(t: TestCase) -> void:
 	t.check(not TextLint.has_bare_number("[color=#8b93a1]三秒一下[/color]"), "BBCode 的颜色与汉字数不算")
 	var hits := TextLint.scan({"options": [{"label": "体力 -1"}], "descriptions": {"en": "HP 50"}, "title": "第 1 章"})
 	t.eq(hits.size(), 2, "查 label 与多语言说明，不查别的键：%s" % str(hits))
+	t.check(TextLint.STRICT, "作者定（2026-10-02）：裸数字是 error")
 	var all := TextLint.scan_all()
 	t.eq(all.size(), 0, "data/authoring 里没有写死的数字：%s" % "\n".join(all))
