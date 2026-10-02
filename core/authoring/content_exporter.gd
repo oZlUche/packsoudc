@@ -208,8 +208,9 @@ static func _encode_object(declared: StringName, obj: Object) -> Variant:
 ## 而且新增效果时漏填就悄悄导不出来。
 static func _registry_name_of(obj: Object) -> StringName:
 	var wanted := ContentSchema.class_name_of(obj)
-	for table in EffectRegistry.TABLES:
-		var t: Dictionary = EffectRegistry.TABLES[table]
+	var tables := ContentRegistries.tables()
+	for table in tables:
+		var t: Dictionary = tables[table]
 		for type_name in t:
 			var path: String = t[type_name]
 			var script := load(path) as GDScript

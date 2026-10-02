@@ -255,7 +255,7 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 ## 091（计划书阶段 3）：局外旗标进事件（条件 has_flag / 后果 set_flag）、事件文本多语言、一局接上局外
 static func run_event_flags_and_texts(t: TestCase) -> void:
 	t.begin("091 · 事件：局外旗标条件与后果、注册表、导入往返、存档；标题 / 正文 / 选项多语言；一局的事件上下文接着局外")
-	t.check(EffectRegistry.EVENT_CONDITIONS.has(&"has_flag") and EffectRegistry.EVENT_OUTCOMES.has(&"set_flag"), "注册表里有 has_flag / set_flag")
+	t.check(RunRegistry.EVENT_CONDITIONS.has(&"has_flag") and RunRegistry.EVENT_OUTCOMES.has(&"set_flag"), "注册表里有 has_flag / set_flag")
 	var meta := MetaState.new()
 	var ctx := EventContext.new()
 	ctx.meta = meta
@@ -356,8 +356,8 @@ static func run_field_text(t: TestCase) -> void:
 	t.eq(FieldText.class_label(&"AbilityRule"), "规则", "类名")
 	# 注册表里每个类型都有中文名（新增一种忘了登记，这里提醒）
 	var missing: Array[String] = []
-	for table in EffectRegistry.TABLES:
-		for name in EffectRegistry.TABLES[table]:
+	for table in ContentRegistries.tables():
+		for name in ContentRegistries.tables()[table]:
 			if FieldText.type_label(name) == String(name):
 				missing.append(String(name))
 	t.check(missing.is_empty(), "注册表类型都有中文标签（缺：%s）" % str(missing))

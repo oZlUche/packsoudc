@@ -85,7 +85,7 @@ static func run_decay_death(t: TestCase) -> void:
 	t.eq(died, 1, "只倒一个")
 
 	var tough := _dummy(20.0)
-	tough.flags["undying_sec"] = 3.0
+	tough.undying_sec = 3.0
 	var r2 := BattleSim.run(tough, _dummy(40.0), RandomNumberGenerator.new())
 	t.eq(r2.winner, 1, "蛮神不死：上限归零后坚持 3 秒，对手 40 血撑到 67 秒 → 我方 66 秒真倒下")
 	t.eq(r2.duration, _sec(66.0), "63 秒归零 + 3 秒坚持 = 66 秒")

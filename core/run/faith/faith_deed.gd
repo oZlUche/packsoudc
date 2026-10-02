@@ -10,7 +10,7 @@
 ## - `earn_money` {amount} / `spend_money` {amount}
 ## - `explore` {}：搜了一次
 ## - `event_choice` {tags}：事件里选了一个选项，tags 是那个选项的标签
-## 加一种行为 = 一个子类 + 注册表一行（EffectRegistry.FAITH_DEEDS）。数都是字段。
+## 加一种行为 = 一个子类 + 注册表一行（RunRegistry.FAITH_DEEDS）。数都是字段。
 ## 行为是共享的 Resource，**不能自己记状态**：「首次」之类由 [RunState] 算好放进载荷（104）。
 @abstract
 class_name FaithDeed

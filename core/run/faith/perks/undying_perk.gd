@@ -1,5 +1,6 @@
 ## 蛮神 4 级（093）：战斗中生命归零后仍可坚持 [member seconds] 秒 —— 期间耐力无限、受到的伤害照记（喂信力）；到期血还是 0 才真倒下，被治回来就活着。
-## 落在结算内核：CombatantRuntime.undying_sec（从 spec.flags 读）、mark_dead / settle_undying；一场只一次
+## 落在结算内核：[member CombatantSpec.undying_sec]（101 第 5 刀：带类型的字段，不再是 `flags` 里的字符串键）、
+## [CombatantRuntime] 的 mark_dead / settle_undying；一场只一次
 class_name UndyingPerk
 extends FaithPerk
 
@@ -7,7 +8,7 @@ extends FaithPerk
 
 
 func modify_spec(spec: CombatantSpec, _board: GridInventory, _run: RunState) -> void:
-	spec.flags["undying_sec"] = maxf(float(spec.flags.get("undying_sec", 0.0)), seconds)
+	spec.undying_sec = maxf(spec.undying_sec, seconds)
 
 
 func describe() -> String:

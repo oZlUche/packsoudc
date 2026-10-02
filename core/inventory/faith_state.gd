@@ -2,6 +2,9 @@
 ## 别的信仰的道具**休眠**：编译战斗单位时跳过它的战斗数据与邻接，套装也不计它（占格照占、价值照算）。
 ## 无信仰之物（不带 `faith` 标签）在任何信仰下都能用；棋盘上一件信仰道具都没有 = 没激活任何信仰（「不信者」现在只是这个状态）。
 ##
+## 101 第 5 刀：这条规则**只看容器与标签**（[FaithTags]），一个字都不认具体的神，所以它住在道具层 ——
+## 套装（[SetTracker]）与编译器（[BattleCompiler]）都得读它，它们不该认识 `core/run`。
+##
 ## 「最后置入」看 [member ItemInstance.placed_seq]（[GridInventory] 在道具从别的容器进来时盖的序号），
 ## 所以把一件挪到暂存区再挪回来就是切换。全是静态函数：只看容器与标签，不认具体的神、不持有状态。
 class_name FaithState
@@ -24,7 +27,7 @@ static func active_tag(container: ItemContainer) -> StringName:
 
 ## 激活的信仰 id（`violence`）；没有返回空
 static func active_id(container: ItemContainer) -> StringName:
-	return FaithDef.id_of_tag(active_tag(container))
+	return FaithTags.id_of_tag(active_tag(container))
 
 
 ## 这件东西在这个激活信仰下是不是休眠的：有信仰、且不是激活的那个

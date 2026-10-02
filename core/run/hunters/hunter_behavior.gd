@@ -1,4 +1,4 @@
-## 猎手的行动逻辑（构件，登记在 [EffectRegistry.HUNTER_BEHAVIORS]）：每一小步回答「往哪个相邻点走」。
+## 猎手的行动逻辑（构件，登记在 [RunRegistry.HUNTER_BEHAVIORS]）：每一小步回答「往哪个相邻点走」。
 ##
 ## 只看得见 [HunterSystem] 给的信息（玩家在哪、距离、能走的相邻点 —— 已经排除了别人的领地）；不动状态。
 ## 加一种 = 一个子类、登记一行；作者在猎手文件里写 behavior 的 type 与参数。

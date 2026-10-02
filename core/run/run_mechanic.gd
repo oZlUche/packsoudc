@@ -1,4 +1,4 @@
-## 一局的机制（069：进阶难度 = 机制清单，不只是数值）。构件：登记在 [EffectRegistry.RUN_MODULES]，加一种 = 一个子类、登记一行。
+## 一局的机制（069：进阶难度 = 机制清单，不只是数值）。构件：登记在 [RunRegistry.RUN_MODULES]，加一种 = 一个子类、登记一行。
 ##
 ## 难度定义（[DifficultyDef]）列出要开的机制与各自的参数；开局（和读档）时 [RunState.install_modules] 逐个 [method install]，
 ## 机制自己把自己接进一局：侵蚀接到 `MapTravel.erosion`，猎手接到 `RunState.hunters`……本类不认识任何具体机制。

@@ -452,3 +452,29 @@ static func run_assets_match_json(t: TestCase) -> void:
 		t.check(not ContentPaths.KINDS.has(kind), "%s 不在 KINDS 里" % kind)
 		t.check(ContentPaths.authoring_file(kind, "x") != "" and ContentPaths.asset_file(kind, "x") != "",
 			"%s 的路径照样算得出来（编辑器在用）" % kind)
+
+## 101 第 5 刀：注册表拆成三张（战斗 / 战利品 / 一局），内容管线要的是合起来那一张
+static func run_registries_split(t: TestCase) -> void:
+	t.begin("注册表 · 拆成三张（101 第 5 刀）：各层只认自己的构件，内容管线按 ContentRegistries 查全部；种类名不许撞")
+	t.eq(EffectRegistry.TABLES.keys(), [&"trigger", &"cadence", &"cost", &"effect"], "战斗那张只有战斗的四种")
+	t.eq(LootRegistry.TABLES.keys(), [&"loot_effect"], "战利品那张只有掉落效果")
+	for kind in [&"run_effect", &"run_module", &"run_mechanic", &"event_condition", &"event_outcome",
+			&"run_skill", &"faith_deed", &"faith_perk", &"hunter_behavior", &"hunter_loss", &"erosion_effect", &"map_effect"]:
+		t.check(RunRegistry.TABLES.has(kind), "一局那张有 %s" % kind)
+		t.check(not EffectRegistry.TABLES.has(kind), "战斗那张没有 %s（它不认识一局的构件）" % kind)
+	var all := ContentRegistries.tables()
+	t.eq(all.size(), EffectRegistry.TABLES.size() + LootRegistry.TABLES.size() + RunRegistry.TABLES.size(),
+		"合起来 = 三张之和（种类名没撞）")
+	# 三张各自查自己的；合起来的三家都查得到
+	t.check(EffectRegistry.has_type(&"trigger", &"on_battle_start") and not EffectRegistry.has_type(&"run_module", &"safe"),
+		"战斗那张查得到扳机、查不到模块")
+	t.check(RunRegistry.has_type(&"run_module", &"safe") and RunRegistry.has_type(&"faith_perk", &"undying"), "一局那张查得到模块与 perk")
+	for pair in [[&"trigger", &"on_battle_start"], [&"loot_effect", &"extra_rolls"], [&"run_module", &"safe"], [&"faith_perk", &"undying"]]:
+		t.check(ContentRegistries.has_type(pair[0] as StringName, pair[1] as StringName), "合起来查得到 %s/%s" % pair)
+	t.not_null(ContentRegistries.instantiate(&"run_module", &"safe"), "合起来造得出一局的构件")
+	t.not_null(ContentRegistries.instantiate(&"trigger", &"on_battle_start"), "合起来造得出战斗的构件")
+	t.is_null(ContentRegistries.instantiate(&"run_module", &"no_such_module"), "没登记的造不出来（导入器据此拒绝生成资产）")
+	# 校验表（ContentSchema）认得的每一种，合起来那张都得有
+	for base in ContentSchema.ABSTRACT_ROOTS:
+		for kind in ContentSchema.ABSTRACT_ROOTS[base]:
+			t.check(all.has(kind), "校验表里的种类 %s（%s）在注册表里" % [kind, base])

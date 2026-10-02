@@ -17,7 +17,7 @@ func altar_apply(run: RunState, node: MapNode, option: StringName = &"") -> Stri
 	if node == null or option == &"" or not types.has(option) or option in [&"core", &"extract", &"spawn", &"junction"]:
 		return ""
 	run.events.retype(node, option)
-	return "大地之神改造了这个点：变成%s点" % MapNodeStyle.of(option)["label"]
+	return "大地之神改造了这个点：变成%s点" % NodeText.label_of(option)
 
 
 func describe() -> String:

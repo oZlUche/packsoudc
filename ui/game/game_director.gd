@@ -83,6 +83,7 @@ func _ready() -> void:
 	# 没有角色定义时的兜底基线（角色路上基线来自 CharacterDef，067）
 	flow.player_baseline = CombatantBaseline.with_hp(60.0)
 	flow.screen_changed.connect(_on_screen_changed)
+	flow.run_changed.connect(_on_run_changed)     # 101 第 5 刀：只属于一局的 UI 接线（信仰探针）
 	flow.check_achievements()     # 091：读档后补算（老存档、新加的成就）
 	flow.apply_item_locks()
 	flow.to_main_menu()
@@ -95,6 +96,13 @@ func base() -> GameScreen:
 
 func overlay() -> GameScreen:
 	return _overlay
+
+
+## 096：道具悬浮窗按局里的信仰状态给信仰加成上色（生效白 / 没生效灰）；回了主菜单（`null`）摘掉探针。
+##
+## 101 第 5 刀：接线在这边 —— [GameFlow] 只发 [signal GameFlow.run_changed] 并提供 [method GameFlow.faith_status]，不认识 ui
+func _on_run_changed(state: RunState) -> void:
+	ItemTooltip.faith_probe = Callable() if state == null else flow.faith_status
 
 
 func _on_screen_changed(screen: int, payload: Dictionary) -> void:

@@ -8,6 +8,8 @@
 extends RefCounted
 
 const Support := preload("res://tests/support.gd")
+const FlowSupport := preload("res://tests/run/flow_support.gd")
+const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 
 ## 发了没人接、但有正当理由的（写清理由；这张表越短越好）
 const NO_LISTENER_OK := {
@@ -228,3 +230,35 @@ static func run_meta_stash_and_sale(t: TestCase) -> void:
 	dead.outcome = &"defeated"
 	dead.left_items = [ItemInstance.create(def)] as Array[ItemInstance]
 	t.eq(int(MetaState.left_behind_preview(dead, ratio)["count"]), 0, "没撤离出来：暂存区里的不卖（东西没带出来）")
+
+## 101 第 5 刀：只属于一局的 UI 接线走信号，core 不认识 ui
+static func run_run_changed_signal(t: TestCase) -> void:
+	t.begin("接线 · 一局换了就发信号（101 第 5 刀）：悬浮窗的信仰探针由 GameDirector 在 run_changed 上接，GameFlow 不认识 ItemTooltip")
+	var flow_src := FileAccess.get_file_as_string("res://core/run/game_flow.gd")
+	t.check(flow_src.contains("signal run_changed("), "GameFlow 发 run_changed")
+	t.check(flow_src.contains("func faith_status()"), "GameFlow 只交出数据（faith_status）")
+	var director_src := FileAccess.get_file_as_string("res://ui/game/game_director.gd")
+	t.check(director_src.contains("flow.run_changed.connect("), "GameDirector 接了这条信号")
+	t.check(director_src.contains("ItemTooltip.faith_probe"), "探针在界面那侧设")
+	# 空的一局外：没有信仰状态
+	t.check(GameFlow.new().faith_status().is_empty(), "不在局里：没有信仰状态（主菜单的悬浮窗不按信仰上色）")
+	# 真开一局：发了信号、问得出状态
+	FlowSupport.cleanup("wire5")
+	var flow := FlowSupport.flow(NodeScreens._content(), "wire5")
+	var seen: Array = []
+	flow.run_changed.connect(func(state: RunState): seen.append(state))
+	var run := flow.begin_direct(flow.chapters[0] if not flow.chapters.is_empty() else null, 7)
+	if run == null:
+		t.check(false, "开局")
+		FlowSupport.cleanup("wire5")
+		return
+	t.eq(seen.size(), 1, "开了一局：发了一次")
+	t.check(seen[0] == run, "带着这一局")
+	var status := flow.faith_status()
+	t.check(status.has("active") and status.has("tier") and status.has("points"), "问得出激活的信仰、阶、信力：%s" % str(status))
+	t.eq(StringName(String(status["active"])), run.active_faith_id(), "和这一局对得上")
+	flow.to_main_menu()
+	t.eq(seen.size(), 2, "回主菜单：又发了一次")
+	t.is_null(seen[1], "带的是 null（界面据此摘掉探针）")
+	t.check(flow.faith_status().is_empty(), "回主菜单之后又问不出信仰状态了")
+	FlowSupport.cleanup("wire5")

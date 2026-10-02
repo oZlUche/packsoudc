@@ -3,7 +3,7 @@
 ## [b]本类不认识任何一种具体效果。[/b] 它只做三件事：
 ##
 ## 1. 问 Godot 目标类有哪些属性、各是什么类型（[ContentSchema]）；
-## 2. 碰到抽象基类就按 JSON 里的 `type` 去 [EffectRegistry] 查；
+## 2. 碰到抽象基类就按 JSON 里的 `type` 去 [ContentRegistries] 查；
 ## 3. 严格校验，有错就一个资产都不产出。
 ##
 ## 因此新增一种时机／频率／消耗／效果，这个文件一行都不用改。
@@ -1303,8 +1303,8 @@ static func _from_registry(
 	var tables: Array = ContentSchema.ABSTRACT_ROOTS[class_id]
 
 	for table in tables:
-		if EffectRegistry.has_type(table, type_name):
-			var inst := EffectRegistry.instantiate(table, type_name)
+		if ContentRegistries.has_type(table, type_name):
+			var inst := ContentRegistries.instantiate(table, type_name)
 			# 同名可能落在别的作用域里，确认它真的是要的那一支
 			if not ContentSchema.instance_is(inst, class_id):
 				report.error(path, "'%s' 不是 %s" % [type_name, class_id])
@@ -1313,7 +1313,7 @@ static func _from_registry(
 
 	var known: Array[String] = []
 	for table in tables:
-		for n in EffectRegistry.type_names(table):
+		for n in ContentRegistries.type_names(table):
 			known.append(String(n))
 	known.sort()
 	report.error(path, "认不得的 type '%s'（可用：%s）" % [type_name, ", ".join(known)])

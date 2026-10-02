@@ -5,7 +5,7 @@
 ## - [member passive]：常驻的效果（[RunEffect] / [LootEffect]，和 buff、难度同一套），开局编进 RunContext；
 ## - 主动部分由子类给：[method is_active] 为真的才在地图屏上有按钮，[method activate] 做那件事（或立一面旗等下一场战斗），
 ##   次数（[member uses]，-1 = 不限）与冷却（[member cooldown_steps]，走几步）由 [RunSkills] 记账。
-## 加一种技能 = 一个子类 + 注册表一行（EffectRegistry.RUN_SKILLS）；角色文件里 "skills": [{"type": "assault", ...}]。数都是字段，不写死。
+## 加一种技能 = 一个子类 + 注册表一行（RunRegistry.RUN_SKILLS）；角色文件里 "skills": [{"type": "assault", ...}]。数都是字段，不写死。
 @abstract
 class_name RunSkill
 extends Resource

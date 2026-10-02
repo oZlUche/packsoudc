@@ -7,7 +7,8 @@ extends FaithPerk
 
 
 func modify_spec(spec: CombatantSpec, board: GridInventory, _run: RunState) -> void:
-	spec.flags["food_double"] = factor
+	# 101 第 5 刀：原来还往 spec.flags 写一份 factor，没人读 —— 献祭食物回体力翻倍是
+	# [AltarFoodVitalityPerk] 自己查这条 perk 在不在（`altar.perk(&"food_double")`）
 	if board == null:
 		return
 	for it in spec.items:

@@ -3,19 +3,19 @@
 ## 一段作者写的文字 → 替换 `{key}` → 给 RichTextLabel 的 BBCode。两类记号：
 ## - **占位符** `{key}`：从上下文字典取值（[method context_for] 按一局的状态造：角色名、章节名、点、体力、钱、信仰、对手……）。
 ##   上下文里没有的键**原样保留**，写错了一眼看得见，也不会吞掉别的花括号。
-## - **样式码**：`{c:hp}…{/c}` 变色（名字见 [constant COLORS]，也可直接 `{c:#ff8800}`）、`{b}…{/b}` 粗体、`{i}…{/i}` 斜体。
+## - **样式码**：`{c:hp}…{/c}` 变色（名字见 [constant STYLE_NAMES]，也可直接 `{c:#ff8800}`）、`{b}…{/b}` 粗体、`{i}…{/i}` 斜体。
 ##   Godot 原生 BBCode（`[color=…]`、`[b]`）照样能用，样式码只是给不想记十六进制的人的简写。
 ## 全部键与样式码记在 docs/text-placeholders.md（开发手册的材料），加一个键就补一行。
 class_name TextTemplate
 extends RefCounted
 
-## 样式码里的颜色名 → 调色板
-const COLORS := {
-	"fg": UiPalette.FG, "dim": UiPalette.DIM, "hp": UiPalette.HP, "shield": UiPalette.SHIELD,
-	"stamina": UiPalette.STAMINA, "mana": UiPalette.MANA, "heal": UiPalette.HEAL,
-	"grant": UiPalette.GRANT, "receive": UiPalette.RECEIVE,
-	"warn": UiPalette.STAMINA, "danger": UiPalette.HP, "good": UiPalette.HEAL,
-}
+## 认得的颜色**名**（101 第 5 刀）：这一层只产出名字，名字对应哪个颜色是界面的事 ——
+## 表在 [constant UiPalette.STYLE_COLORS]，渲染前由 [method UiPalette.resolve_styles] 换成十六进制。
+## 文本层不认识调色板（core 不依赖 ui）
+const STYLE_NAMES := ["fg", "dim", "hp", "shield", "stamina", "mana", "heal", "grant", "receive",
+	"warn", "danger", "good"]
+## 颜色名在 BBCode 里的前缀：`[color=@hp]`。界面查表换掉；没换的话 Godot 当成无效颜色，不会崩
+const STYLE_PREFIX := "@"
 
 
 ## 替换占位符与样式码。[param ctx] 的值用 str() 转成文字
@@ -56,8 +56,8 @@ static func _expand(token: String, ctx: Dictionary) -> Variant:
 			return "[/color]"
 	if token.begins_with("c:"):
 		var name := token.substr(2)
-		if COLORS.has(name):
-			return "[color=#%s]" % (COLORS[name] as Color).to_html(false)
+		if STYLE_NAMES.has(name):
+			return "[color=%s%s]" % [STYLE_PREFIX, name]
 		if name.begins_with("#") and Color.html_is_valid(name):
 			return "[color=%s]" % name
 		return null
@@ -97,7 +97,7 @@ static func context_for(run: RunState, node: MapNode = null, extra: Dictionary =
 	if node != null:
 		ctx["node_id"] = node.id
 		var type := NodeEvents.effective_type(node)
-		ctx["node_type"] = String(MapNodeStyle.of(type)["label"])
+		ctx["node_type"] = NodeText.label_of(type)
 		ctx["node_danger"] = node.danger
 		ctx["extract_fee"] = PaidExtracts.fee_of(node) if NodeEvents.effective_type(node) == &"extract" else 0
 		var content: Dictionary = node.content

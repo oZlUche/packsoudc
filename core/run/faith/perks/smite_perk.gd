@@ -25,5 +25,5 @@ func prebattle_apply(run: RunState) -> bool:
 func describe() -> String:
 	var names: Array[String] = []
 	for t in types:
-		names.append(String(MapNodeStyle.of(t)["label"]))
+		names.append(NodeText.label_of(t))
 	return note if note != "" else "战前准备：耗 %d 体力秒杀%s敌人" % [vitality_cost, "、".join(names)]

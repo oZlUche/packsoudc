@@ -150,9 +150,9 @@ static func run_conditions(t: TestCase) -> void:
 
 	# 都在注册表里，导入器认得
 	for name in [&"steps_within", &"bracket_within", &"erosion_depth_within", &"has_item", &"node_type_is"]:
-		t.check(EffectRegistry.has_type(&"event_condition", name), "条件 %s 登记了" % name)
+		t.check(RunRegistry.has_type(&"event_condition", name), "条件 %s 登记了" % name)
 	for name in [&"teleport", &"change_node_type", &"proceed", &"pass_time", &"lose_item"]:
-		t.check(EffectRegistry.has_type(&"event_outcome", name), "后果 %s 登记了" % name)
+		t.check(RunRegistry.has_type(&"event_outcome", name), "后果 %s 登记了" % name)
 
 
 static func run_travel_teleport(t: TestCase) -> void:

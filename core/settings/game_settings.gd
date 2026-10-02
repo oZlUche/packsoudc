@@ -30,8 +30,11 @@ var language: String = "zh"
 var save_slot: int = 1
 ## 091（作者定 10.2 第 4 条）：老手的「全部解锁」—— 章节 / 难度 / 道具不看解锁；代价是成就不计
 var unlock_all: bool = false
-## 091（作者定）：背景底色（[UiPalette.BG_THEMES] 里的 id）
-var bg_theme: String = UiPalette.BG_DEFAULT
+## 091（作者定）：背景底色的 id。
+##
+## 101 第 5 刀：设置层只管「是个非空字符串」—— **哪些 id 存在是界面的事**（`UiPalette.BG_THEMES`），
+## 认不出来的 id 由界面兜底成它的默认底色（`UiPalette.apply` / `UiPalette.bg`）。空串 = 用界面的默认
+var bg_theme: String = ""
 
 
 func to_dict() -> Dictionary:
@@ -63,8 +66,7 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	s.language = lang if UiText.LANGS.has(lang) else "zh"
 	s.save_slot = clampi(int(d.get("save_slot", 1)), 1, SaveSlots.COUNT)
 	s.unlock_all = bool(d.get("unlock_all", false))
-	var theme := String(d.get("bg_theme", UiPalette.BG_DEFAULT))
-	s.bg_theme = theme if UiPalette.has_bg_theme(theme) else UiPalette.BG_DEFAULT
+	s.bg_theme = String(d.get("bg_theme", ""))     # 认不认得由界面管（101 第 5 刀）
 	return s
 
 
