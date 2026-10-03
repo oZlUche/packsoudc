@@ -175,6 +175,8 @@ func leave() -> void:
 ## 084：收起回地图，什么都不结束：会话还开着 / 没拿的还在这个点上，地图上「回到这个点」能再开。
 ## 待拾取已经空了就不必留：直接丢掉（回地图）
 func to_map() -> bool:
+	if is_locked():
+		return false
 	if _session == null and _container != null and _container.item_count() == 0 and flow.run != null and flow.run.pending_loot == _container:
 		flow.discard_loot()
 		return true
@@ -187,9 +189,15 @@ func loot_view() -> LootView:
 
 ## 090：Esc = 收起回地图（最小化）。BOSS 的战利品屏不接：那儿「收起」= 不要剩下的直接撤离，不能一个 Esc 误触
 func escape() -> bool:
-	if _boss:
+	if _boss or is_locked():
 		return false
 	return to_map()
+
+
+## 搜索遭遇打赢的战利品：没拿完不能收起 / 离开（反馈）
+func is_locked() -> bool:
+	return _session == null and _container != null and flow.run != null and flow.run.loot_locked \
+		and flow.run.pending_loot == _container and _container.item_count() > 0
 
 
 func is_search() -> bool:
@@ -234,3 +242,9 @@ func _refresh() -> void:
 				total += ItemValue.of(item.def)
 		_line.text = "%d 件，亮了 %d 件，已知的值 %d 币%s" % [_container.item_count(), revealed, total, searching]
 	_skip_btn.disabled = _loot.unrevealed_count() == 0
+	if _leave_btn != null:
+		var locked := is_locked()
+		_leave_btn.disabled = locked
+		if locked:
+			_leave_btn.tooltip_text = "遭遇战的战利品要全部拿走才能离开"
+			_line.text += "　　要全部拿走才能离开"

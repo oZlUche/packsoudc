@@ -123,6 +123,8 @@ var end_reason: StringName = &""
 var boss_cleared: bool = false
 ## 等着拾取的容器（尸体 / 搜索收获）；null = 没有
 var pending_loot: GridInventory = null
+## 搜索遭遇打赢的战利品：拿完前不能收起 / 离开（反馈）。跟存档
+var loot_locked: bool = false
 ## 这一局的计数（给结算看）：打赢 / 打输几场。跟着存档走
 var tally: Dictionary = {"battles_won": 0, "battles_lost": 0}
 ## buff（059）：定义表由持有方给（id → RunBuffDef，存档只写 id）；局外的在开局那一刻定下来跟着存档；
@@ -657,6 +659,7 @@ func discard_loot() -> void:
 	if pending_loot == null:
 		return
 	pending_loot = null
+	loot_locked = false
 	loot_cleared.emit()
 
 
@@ -823,6 +826,7 @@ func _wire_events() -> void:
 		var key := "battles_won" if won else "battles_lost"
 		tally[key] = int(tally.get(key, 0)) + 1)
 	events.loot_ready.connect(func(_n: MapNode, corpse: GridInventory): _offer_loot(corpse))
+	events.loot_lock_requested.connect(func(): loot_locked = pending_loot != null and pending_loot.item_count() > 0)
 	events.search_closed.connect(func(_n: MapNode, haul: GridInventory, _why: StringName): _offer_loot(haul))
 	events.shop_opened.connect(func(_n: MapNode, session: ShopSession):
 		if session != null:
@@ -966,6 +970,7 @@ func to_dict() -> Dictionary:
 		"placed_ids": placed_ids.keys(),
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
 		"boss_cleared": boss_cleared,
+		"loot_locked": loot_locked and pending_loot != null,
 		"tally": tally.duplicate(),
 		"buffs": {"meta": _meta_buff_ids()},     # 一局里拿到的在 modules.buff 下（101）
 		"modules": _modules_to_dict(),     # 101：每个模块自己的状态；加模块 = 新键、带默认值，不升版
@@ -1044,6 +1049,7 @@ static func from_dict(
 	s.phase = int(d.get("phase", Phase.PICK_SPAWN))
 	s.end_reason = StringName(String(d.get("end_reason", "")))
 	s.boss_cleared = bool(d.get("boss_cleared", false))
+	s.loot_locked = bool(d.get("loot_locked", false)) and s.pending_loot != null
 	# 101：模块（本体那一层）现在就装上，读回来的一局立刻能用；难度机制要等持有方按 id 找回难度，
 	# 它会再调一次 install_modules（模块幂等）
 	s.install_modules()

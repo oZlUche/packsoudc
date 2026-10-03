@@ -221,7 +221,13 @@ static func run_search_encounter_won_sees_loot(t: TestCase) -> void:
 	f.resume()
 	if had_loot:
 		t.eq(f.screen, GameFlow.Screen.LOOT, "回放之后先看战利品（不是直接回事件）")
+		t.check(run.loot_locked, "遭遇战的战利品上了锁")
+		t.check(not f.hide_overlay(), "没拿完不能收起回地图")
+		t.eq(f.screen, GameFlow.Screen.LOOT, "仍在战利品屏")
+		var back := RunState.from_dict(run.to_dict(), c.chapter, c.items, c.enemies, c.sets)
+		t.check(back != null and back.loot_locked, "锁跟着存档走")
 		f.take_all_loot()
+		t.check(not run.loot_locked, "拿完锁就解开")
 	else:
 		t.check(true, "（这一场没掉东西，直接看下一屏）")
 	t.check(f.screen == GameFlow.Screen.EVENT or f.screen == GameFlow.Screen.SEARCH, "然后回到搜索的事件屏 / 搜索屏（%d）" % f.screen)

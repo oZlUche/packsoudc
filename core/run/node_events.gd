@@ -22,6 +22,8 @@ extends RefCounted
 signal revealed(node: MapNode, type: StringName)
 signal battle_finished(node: MapNode, result: BattleResult, won: bool)
 signal loot_ready(node: MapNode, corpse: GridInventory)
+## 搜索遭遇打赢后的战利品必须拿完才能离开这一屏（反馈）：紧跟在 loot_ready 之后发
+signal loot_lock_requested()
 ## 087：核心点的 BOSS 倒下了（战利品已经交出去）：持有方据此直接撤离结算
 signal boss_defeated(node: MapNode)
 signal search_opened(node: MapNode, session: SearchSession)
@@ -443,6 +445,7 @@ func _after_battle(node: MapNode, kind: String, won: bool = false) -> void:
 	if kind == "search" and current_search != null:
 		var session := current_search
 		if won and not over:
+			loot_lock_requested.emit()
 			session.resume()
 			var again := _search_event(node, session, "done" if session.is_exhausted() else "again")
 			if again != null:
