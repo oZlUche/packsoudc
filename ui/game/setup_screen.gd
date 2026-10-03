@@ -59,6 +59,7 @@ var _drag: DragLayer = null
 var _desc: Label
 var _readout: RichTextLabel = null
 var _status: Label
+var _enter_btn: Button
 var _seed_spin: SpinBox
 
 
@@ -125,10 +126,9 @@ func open(_payload: Dictionary) -> void:
 	seed_row.add_child(_button("随机", func(): set_run_seed(randi() % 1000000), 12, UiPalette.Tier.MINOR))
 	left.add_child(seed_row)
 	left.add_child(HSeparator.new())
-	left.add_child(_button("出发", func(): depart(), 18, UiPalette.Tier.PRIMARY))
 	left.add_child(_button("回主菜单", cancel, 12, UiPalette.Tier.MINOR))
-	_status = _wrapped("", 12, UiPalette.HP, 280)
-	left.add_child(_status)
+
+	_build_enter_button()
 
 	# 中 + 右：棋盘与仓库在同一块矩形里，拖拽层盖在上面
 	var play := MarginContainer.new()
@@ -475,6 +475,25 @@ func can_depart() -> String:
 			defs.append(inst.def)
 		return ch.carry_problem(defs)
 	return ""
+
+
+## 反馈（紧急）：左边那一列比窗口还高，原来放在列尾的「出发」按钮被挤出了屏幕，开局没有入口。
+## 「进入」钉在屏幕右下角（不跟着列走），又大又醒目；开不了的原因（超上限、生成不出图）也写在它上面，窗口再矮都看得见
+func _build_enter_button() -> void:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	box.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	box.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	box.offset_right = -36
+	box.offset_bottom = -36
+	_status = _wrapped("", 13, UiPalette.HP, 320)
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	box.add_child(_status)
+	_enter_btn = _button("进入", func(): depart(), 24, UiPalette.Tier.PRIMARY)
+	_enter_btn.custom_minimum_size = Vector2(320, 76)
+	box.add_child(_enter_btn)
+	add_child(box)
 
 
 ## 出发。开不了（生成不出图、超上限）返回 false，留在这一屏说明原因
