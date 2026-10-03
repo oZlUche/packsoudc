@@ -76,7 +76,7 @@ static func tag_terms(tags: Array) -> Dictionary:
 	var out := {}
 	for t in tags:
 		var d := TagRegistry.describe(t)
-		if d != "" and TagRegistry.tip_of(t):
+		if d != "" and TagRegistry.tip_of(t) and not TagRegistry.is_internal(t):
 			out[tag_name(t)] = d
 	return out
 

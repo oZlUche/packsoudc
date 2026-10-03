@@ -14,3 +14,4 @@ descriptions = {
 "en": "Slow, heavy hits."
 }
 tip = false
+internal = true

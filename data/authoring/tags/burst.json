@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Slow, heavy hits."
   },
-  "tip": false
+  "tip": false,
+  "internal": true
 }
