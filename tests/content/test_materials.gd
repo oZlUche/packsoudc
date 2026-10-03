@@ -36,23 +36,30 @@ static func run(t: TestCase) -> void:
 	t.check(db.get_def(&"antler").tags.has(&"trophy"), "鹿角是战利品（狩猎之神 ×10）")
 	t.check(db.get_def(&"iron_ore").tags.has(&"metal"), "矿石带金属")
 
-	t.begin("122 · 每件材料都恰好带【工艺】/【自然】之一；硬木板算工艺")
+	t.begin("122 · 每件材料都恰好带【工艺】/【自然】/【魔法】之一；硬木板算工艺，魔晶石算魔法（作者补正）")
 	var materials := 0
 	for id in db.ids(true):
 		var def := db.get_def(id)
 		if def == null or not def.tags.has(&"material"):
 			continue
 		materials += 1
-		t.check(def.tags.has(&"crafted") != def.tags.has(&"nature"), "%s：工艺 / 自然二选一" % id)
+		var kinds := 0
+		for k in ContentImporter.MATERIAL_ORIGINS:
+			kinds += 1 if def.tags.has(k) else 0
+		t.eq(kinds, 1, "%s：工艺 / 自然 / 魔法三选一" % id)
 	t.check(materials >= 37, "材料 %d 件（原有 9 + 新 28）" % materials)
 	t.check(db.get_def(&"hardwood_plank").tags.has(&"crafted"), "硬木板：工艺（锯出来的）")
+	for id in [&"mana_shard", &"mana_crystal"]:
+		var def := db.get_def(id)
+		t.check(def.tags.has(&"magic") and not def.tags.has(&"nature") and not def.tags.has(&"crafted"), "%s：魔法，不算自然也不算工艺" % id)
 	t.not_null(load(ContentPaths.asset_file("tags", "crafted")), "【工艺】标签登记了")
+	t.not_null(load(ContentPaths.asset_file("tags", "magic")), "【魔法】标签登记了")
 
 	t.begin("122 · 导入器：材料缺出身标签或两个都带 → 提醒（不拦）")
 	var ctx := ContentImporter.Context.new()
-	for tag in [&"material", &"crafted", &"nature"]:
+	for tag in [&"material", &"crafted", &"nature", &"magic"]:
 		ctx.tags[tag] = true
-	for pair in [[["material"], true], [["material", "crafted", "nature"], true], [["material", "crafted"], false]]:
+	for pair in [[["material"], true], [["material", "crafted", "nature"], true], [["material", "crafted"], false], [["material", "magic"], false], [["material", "nature", "magic"], true]]:
 		var report := ImportReport.new()
 		ContentImporter.import_item({"id": "probe", "display_name": "探针", "shape": ["1"], "tags": pair[0]}, ctx, report)
 		t.check(report.ok(), "%s：不拦" % [pair[0]])
