@@ -61,8 +61,9 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var desc := Names.description_of(def)     # 104：说明里的 {字段} 按这件道具自己的字段填
 	if desc != "":
 		lines.append("[color=#8b93a1]%s[/color]" % desc)
-	if not def.tags.is_empty():
-		lines.append("[color=#8b93a1]标签：%s[/color]" % "、".join(_names(def.tags)))     # 096：标签按当前语言显示名字
+	var shown_tags := TagRegistry.shown(def.tags)     # 107 后续（作者定）：内部标签（快攻 / 重击 / 重型）不给玩家看
+	if not shown_tags.is_empty():
+		lines.append("[color=#8b93a1]标签：%s[/color]" % "、".join(_names(shown_tags)))     # 096：标签按当前语言显示名字
 	if def.is_bag:
 		var size := def.shape.size_rotated(0) if def.shape != null else Vector2i.ZERO
 		lines.append("包：%d×%d，放进去的东西才参战" % [size.x, size.y] + ("；只收 %s" % "、".join(_names(def.bag_accept_tags)) if not def.bag_accept_tags.is_empty() else ""))
@@ -122,7 +123,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		lines.append("[color=#8b93a1]套装：%s[/color]" % String(def.set_id))
 	var text := "\n".join(lines)
 	# 词条：这件道具会施加的 buff（名字 → 按定义生成的说明）+ 固定词条
-	var extra := Glossary.tag_terms(def.tags)     # 096：登记了说明的标签也是词条
+	var extra := Glossary.tag_terms(shown_tags)     # 096：登记了说明的标签也是词条
 	for id in Glossary.buffs_in_item(def):
 		var bd: BuffDef = Glossary.buffs_in_item(def)[id]
 		if Names.of(bd) != "":

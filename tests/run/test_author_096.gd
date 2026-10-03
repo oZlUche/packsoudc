@@ -123,7 +123,7 @@ static func run_tooltip_tags(t: TestCase) -> void:
 	var knife := ItemInstance.create(c.items.get_def(&"knife"))
 	var full := ItemTooltip.describe_full(knife)
 	var text := Glossary.strip_bbcode(String(full["text"]))
-	t.check(text.contains("标签：武器、近战、快攻、金属"), "标签一行照样列出全部名字（107：不弹词条不等于不显示）：%s" % text.split("\n")[1] if text.split("\n").size() > 1 else text)
+	t.check(text.contains("标签：武器、近战、金属"), "标签一行照样列出名字（107：不弹词条不等于不显示；快攻是内部标签不列）：%s" % text.split("\n")[1] if text.split("\n").size() > 1 else text)
 	var names: Array[String] = []
 	for term in full["terms"]:
 		names.append(String((term as Dictionary)["name"]))

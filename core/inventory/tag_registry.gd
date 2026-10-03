@@ -53,6 +53,21 @@ static func get_def(id: StringName) -> TagDef:
 	return _defs.get(alias, null) if alias != id else null
 
 
+## 107 后续：内部标签（玩家看不到）。没登记的标签不算内部 —— 界面照原词显示
+static func is_internal(id: StringName) -> bool:
+	var def := get_def(id)
+	return def != null and def.internal
+
+
+## 107 后续：去掉内部标签，剩下给玩家看的
+static func shown(tags: Array) -> Array:
+	var out: Array = []
+	for t in tags:
+		if not is_internal(StringName(String(t))):
+			out.append(t)
+	return out
+
+
 static func has(id: StringName) -> bool:
 	_ensure()
 	return _defs.has(id) or _defs.has(IdAliases.tag(id))
