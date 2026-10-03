@@ -121,6 +121,7 @@
 | 109 | [小改：去掉离开点时的暂存区提示；战斗倍速记成跨局字段；仓库「整理」按钮；仓库界面双击快速置入；乘区 FIRE 改名 ELEMENT](109-drop-stash-prompt-and-battle-speed-setting.md) | 架构 · 小修清单 | 一～四条已落地（PR #17）；第五条 FIRE→ELEMENT 执行中 |
 | 110 | [方案：仓库扩建（第一项局外科技）与上交界面；整理改「先同类再大小」；仓库滚动条](110-warehouse-expansion-tech-and-tidy-by-kind.md) | 架构 · 提议 | 作者放行（五项按推荐），待执行 |
 | 111 | [小改：编辑器里「方式」类字段做成下拉、按方式只显示对应的输入框](111-editor-string-choices-and-conditional-fields.md) | 架构 · 小修 | 作者已定（两项待定有推荐），待执行 |
+| 112 | [教程序章文案回顾：占位符化（带色）与指引覆盖清单](112-tutorial-text-placeholders-and-coverage.md) | 架构 · 审稿 + 提议 | 待执行（三项待定按推荐）；欠缺清单另立方案 |
 
 ## 已归档（被覆盖或作废的方案，只留作历史）
 
