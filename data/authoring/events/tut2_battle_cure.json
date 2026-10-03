@@ -1,7 +1,7 @@
 {
   "id": "tut2_battle_cure",
-  "title": "药师",
-  "text": "它随身带着解毒的东西，中毒一冒头就被清掉。\n\n毒对它没用；长剑硬砍反而最快。",
+  "title": "{enemy:apothecary}",
+  "text": "它随身带着解毒的东西，中毒一冒头就被清掉。\n\n毒对它没用；{item:longsword}硬砍反而最快。",
   "options": [
     {
       "label": "进入战前准备",

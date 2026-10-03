@@ -81,6 +81,10 @@ static func resolve_styles(bbcode: String) -> String:
 	for name in STYLE_COLORS:
 		out = out.replace("[color=%s%s]" % [TextTemplate.STYLE_PREFIX, name],
 			"[color=#%s]" % (STYLE_COLORS[name] as Color).to_html(false))
+	# 112：`{item:id}` 的名字按稀有度上色（和道具悬浮窗里的名字同色）
+	for r in ItemPainter.RARITY_COLORS.size():
+		out = out.replace("[color=%s%s%d]" % [TextTemplate.STYLE_PREFIX, TextTemplate.RARITY_STYLE, r],
+			"[color=#%s]" % (ItemPainter.RARITY_COLORS[r] as Color).to_html(false))
 	return out
 #endregion
 

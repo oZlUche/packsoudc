@@ -282,10 +282,36 @@ func show_rules(first: bool = false) -> void:
 	var col := _vbox(12)
 	panel.add_child(col)
 	col.add_child(_label("本图规则　%s" % Names.of(_run.chapter), 24, UiPalette.FG))
+	var ctx := TextTemplate.context_for(_run)     # 112：规则卡也过占位符（{item:…} 按稀有度上色）
 	for i in _run.chapter.rules.size():
-		col.add_child(_wrapped("%d. %s" % [i + 1, _run.chapter.rules[i]], 15, UiPalette.FG, 560))
+		col.add_child(_rich_line("%d. %s" % [i + 1, UiPalette.resolve_styles(TextTemplate.render(_run.chapter.rules[i], ctx))], 15, 560))
 	col.add_child(_wrapped("暂停菜单（Esc）里能再看", 12, UiPalette.DIM, 560))
 	col.add_child(_button("知道了（Esc）", close_rules, 14, UiPalette.Tier.PRIMARY))
+
+
+## 规则卡上的一条（BBCode，自动换行、高度随内容）
+func _rich_line(bbcode: String, font_size: int, width: float) -> RichTextLabel:
+	var r := RichTextLabel.new()
+	r.bbcode_enabled = true
+	r.fit_content = true
+	r.scroll_active = false
+	r.custom_minimum_size.x = width
+	r.add_theme_font_override("normal_font", font)
+	r.add_theme_font_override("bold_font", font)
+	r.add_theme_font_size_override("normal_font_size", font_size)
+	r.add_theme_font_size_override("bold_font_size", font_size)
+	r.add_theme_color_override("default_color", UiPalette.FG)
+	r.text = bbcode
+	return r
+
+
+## 规则卡上现在写着的（纯文字，测试看）
+func rules_text() -> String:
+	var out: Array[String] = []
+	if _rules != null:
+		for n in _rules.find_children("*", "RichTextLabel", true, false):
+			out.append((n as RichTextLabel).get_parsed_text())
+	return "\n".join(out)
 
 
 func close_rules() -> void:

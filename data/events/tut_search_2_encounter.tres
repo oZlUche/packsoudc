@@ -18,5 +18,5 @@ outcomes = Array[ExtResource("2_2e5oq")]([SubResource("Resource_si5df")])
 script = ExtResource("5_j6yno")
 id = &"tut_search_2_encounter"
 title = "惊动了"
-text = "翻动的声响引来了一个蛮兵。这一次什么都没来得及拿，先过战前准备：把包整理好再开战。"
+text = "翻动的声响引来了一个{enemy:brute}。这一次什么都没来得及拿，先过{ui:战前准备}：把包整理好再开战。"
 options = Array[ExtResource("1_mf2o3")]([SubResource("Resource_rpyl3")])

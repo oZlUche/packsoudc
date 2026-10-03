@@ -83,9 +83,9 @@ static func run_item_stat(t: TestCase) -> void:
 	db.load_dir()
 	var ctx := {"_items": db}
 	var leather := db.get_def(&"leather_armor")
-	t.eq(TextTemplate.render("{item_stat:leather_armor:max_shield}", ctx), TextTemplate.num(float(leather.combat.base_stats.get("max_shield", -1))), "base_stats")
+	t.eq(TextTemplate.plain("{item_stat:leather_armor:max_shield}", ctx), TextTemplate.num(float(leather.combat.base_stats.get("max_shield", -1))), "base_stats")
 	var shield := db.get_def(&"tower_shield")
-	t.eq(TextTemplate.render("{item_stat:tower_shield:armor}", ctx), TextTemplate.num(float(shield.combat.base_stats.get("armor", -1))), "塔盾的防护")
+	t.eq(TextTemplate.plain("{item_stat:tower_shield:armor}", ctx), TextTemplate.num(float(shield.combat.base_stats.get("armor", -1))), "塔盾的防护")
 	var m := ModifyDamage.new()
 	m.flat = -4.0
 	var tree := CombatProfile.new()
@@ -94,7 +94,7 @@ static func run_item_stat(t: TestCase) -> void:
 	tree.rules.append(rule)
 	t.eq(TextTemplate._find_field(tree, "flat", 0), -4.0, "规则效果里的同名字段（伤害修正的 flat）")
 	t.eq(TextTemplate.render("{x|abs}", {"x": -4.0}), "4", "abs")
-	t.check(TextTemplate.render("{item_stat:warding_charm:max_shield}", ctx).is_valid_int(), "buff 里的属性修饰：%s" % TextTemplate.render("{item_stat:warding_charm:max_shield}", ctx))
+	t.check(TextTemplate.plain("{item_stat:warding_charm:max_shield}", ctx).is_valid_int(), "buff 里的属性修饰：%s" % TextTemplate.plain("{item_stat:warding_charm:max_shield}", ctx))
 	t.eq(TextTemplate.render("{item_stat:nope:max_shield}", ctx), "{item_stat:nope:max_shield}", "找不到原样保留")
 	t.check(TextTemplate.render("{item_stat:leather_armor:max_shield}", {}) != "{item_stat:leather_armor:max_shield}", "没给道具库也能自己读一份")
 	for id in ["tut2_battle_heavy", "tut2_battle_swarm", "tut2_battle_ward", "tut2_search_1_again", "tut_search_1_done"]:

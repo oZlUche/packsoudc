@@ -13,7 +13,7 @@ label = "出发"
 script = ExtResource("4_n3sl6")
 id = &"tut_intro"
 title = "废墟边缘"
-text = "{c:hp}{char_name}{/c}被军队送进了废墟的边缘，三天后来接。
+text = "{char}被军队送进了废墟的边缘，三天后来接。
 
 这是一片没人愿意久留的地方：能翻出好东西，也随时会惊动住在里面的人。带出去的东西归你，死在里面就什么都没了。
 

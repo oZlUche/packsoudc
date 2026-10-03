@@ -458,6 +458,39 @@ static func _faith_tiers(def: ItemDef, ctx: Context) -> int:
 	return faith.thresholds.size() if faith != null else 0
 
 
+## 112：说明文本里引用的道具 / 敌人（`{item:id}` `{enemy:id}` `{item_stat:id:字段}`）得存在 —— 写错了当场报，
+## 不然游戏里原样露出一个花括号。库是空的（单件导入）就不查
+static func check_text_refs(text: String, at: String, ctx: Context, report: ImportReport) -> void:
+	for ref in TextTemplate.refs(text):
+		var id := StringName(String(ref["id"]))
+		if ref["kind"] == "enemy":
+			if not ctx.enemies.is_empty() and not ctx.enemies.has(id):
+				report.error(at, "文本里的 {enemy:%s}：敌人库里没有它" % id)
+		elif not ctx.items.is_empty() and not ctx.items.has(id):
+			report.error(at, "文本里引用的道具 %s 在道具库里没有" % id)
+
+
+## 112：事件导入时敌人还没导（事件排在敌人前面），所以事件文本的引用在全部导完后统一查
+static func validate_event_text_refs(ctx: Context, report: ImportReport) -> void:
+	var ids: Array = ctx.events.keys()
+	ids.sort()
+	for eid in ids:
+		var def := ctx.events[eid] as EventDef
+		if def == null:
+			continue
+		report.source = "events/%s.json" % eid
+		check_text_refs(def.title, "title", ctx, report)
+		check_text_refs(def.text, "text", ctx, report)
+		for lang in def.titles:
+			check_text_refs(String(def.titles[lang]), "titles.%s" % lang, ctx, report)
+		for lang in def.texts:
+			check_text_refs(String(def.texts[lang]), "texts.%s" % lang, ctx, report)
+		for i in def.options.size():
+			var opt := def.options[i] as EventOption
+			if opt != null:
+				check_text_refs(opt.label, "options[%d].label" % i, ctx, report)
+
+
 ## 敌人（M4-1）。校验里「对着道具查」的那几条只在批量导入（上下文里有道具）时生效。
 static func import_enemy(data: Dictionary, ctx: Context, report: ImportReport) -> EnemyDef:
 	var def := EnemyDef.new()
@@ -1083,6 +1116,8 @@ static func import_chapter(data: Dictionary, ctx: Context, report: ImportReport)
 	var def := ChapterDef.new()
 	_fill(def, data, "", ctx, report)
 	_validate_chapter(def, ctx, report)
+	for i in def.rules.size():     # 112：规则卡也认 {item:} {enemy:}
+		check_text_refs(def.rules[i], "rules[%d]" % i, ctx, report)
 	return def
 
 

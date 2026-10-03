@@ -747,7 +747,7 @@ func _rebuild_preview() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	_preview_host.add_child(row)
-	var title := _def.title if _def.title != "" else String(_def.id)
+	var title := TextTemplate.plain(_def.title) if _def.title != "" else String(_def.id)     # 112：{item:} {enemy:} 换成名字
 	row.add_child(_image_control(_def.image, title, Vector2(150, 240)))
 	var col := VBoxContainer.new()
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -756,7 +756,7 @@ func _rebuild_preview() -> void:
 	col.add_child(_label(title, 17, UiPalette.FG))
 	col.add_child(HSeparator.new())
 	if _def.text != "":
-		col.add_child(_wrapped(_def.text, 12, UiPalette.FG, 190))
+		col.add_child(_wrapped(TextTemplate.plain(_def.text), 12, UiPalette.FG, 190))
 	for i in _def.options.size():
 		var opt := _def.options[i] as EventOption
 		if opt == null:

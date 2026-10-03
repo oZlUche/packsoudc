@@ -95,7 +95,7 @@ static func run_core_does_not_know_ui(t: TestCase) -> void:
 			bad.append(key)
 	t.check(bad.is_empty(), "core/ 里没有界面的类名%s" % ("" if bad.is_empty() else "，但是：%s" % str(bad)))
 	# 自检：这张网抓得到东西（否则「全绿」只是没在查）
-	t.eq(_code_uses("ui/ui_palette.gd", ui_classes, ["res://ui/"]), ["UiPalette"], "查法本身有效：调色板那个文件里查得到 UiPalette")
+	t.check(_code_uses("ui/ui_palette.gd", ui_classes, ["res://ui/"]).has("UiPalette"), "查法本身有效：调色板那个文件里查得到 UiPalette")
 	t.check(_code_uses("core/text/text_template.gd", {"TextTemplate": 1}, []).has("TextTemplate"),
 		"词边界不会漏（TextTemplate 在自己文件里查得到）")
 	t.check(not _code_uses("core/run/faith/faith_def.gd", {"FaithTag": 1}, []).has("FaithTag"),

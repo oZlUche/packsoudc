@@ -1,7 +1,7 @@
 {
   "id": "tut_search_2_again_1",
   "title": "还有",
-  "text": "翻出一把弯刀。下面还压着东西，再翻一次。",
+  "text": "翻出一把{item:scimitar}。下面还压着东西，再翻一次。",
   "options": [
     {
       "label": "再搜一次",
