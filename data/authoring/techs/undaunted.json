@@ -1,0 +1,27 @@
+{
+  "id": "undaunted",
+  "display_name": "不屈",
+  "display_names": {
+    "en": "Undaunted"
+  },
+  "requires": [
+    "endurance"
+  ],
+  "column": 1,
+  "description": "输给节点敌人的头一次不扣体力。",
+  "effect": {
+    "type": "tech_run_buff",
+    "buffs": [
+      "tech_undaunted_1"
+    ]
+  },
+  "tiers": [
+    {
+      "funds": 800,
+      "items": {
+        "hardwood_plank": 2,
+        "steel_ingot": 2
+      }
+    }
+  ]
+}

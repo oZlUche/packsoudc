@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="TechDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/techs/tech_run_buff.gd" id="1_8p1qr"]
+[ext_resource type="Script" path="res://core/meta/tech_def.gd" id="2_2akh8"]
+[ext_resource type="Script" path="res://core/meta/tech_tier.gd" id="3_s3t8l"]
+
+[sub_resource type="Resource" id="Resource_qe3gl"]
+script = ExtResource("1_8p1qr")
+buffs = Array[StringName]([&"tech_sinew_1", &"tech_sinew_2", &"tech_sinew_3"])
+
+[sub_resource type="Resource" id="Resource_xa3ph"]
+script = ExtResource("3_s3t8l")
+funds = 300
+
+[sub_resource type="Resource" id="Resource_m7w3s"]
+script = ExtResource("3_s3t8l")
+funds = 700
+
+[sub_resource type="Resource" id="Resource_7qvsl"]
+script = ExtResource("3_s3t8l")
+funds = 1200
+
+[resource]
+script = ExtResource("2_2akh8")
+id = &"sinew"
+display_name = "筋骨"
+display_names = {
+"en": "Sinew"
+}
+order = 1
+requires = Array[StringName]([&"endurance"])
+column = 1
+description = "开局生命上限更高。"
+effect = SubResource("Resource_qe3gl")
+tiers = Array[ExtResource("3_s3t8l")]([SubResource("Resource_xa3ph"), SubResource("Resource_m7w3s"), SubResource("Resource_7qvsl")])

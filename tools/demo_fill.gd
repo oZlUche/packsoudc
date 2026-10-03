@@ -32,6 +32,20 @@ func fill(p_director: GameDirector, p_flow: GameFlow) -> void:
 			for inst in flow.meta.warehouse.items().slice(0, 2):
 				setup.call("carry_in", (inst as ItemInstance).uid)
 		return
+	if want == "tech":
+		# 118：科技树 —— 点亮几个、选中一个可点亮的，看左树右板
+		flow.meta = MetaState.new(flow.meta_rules)
+		flow.meta.funds = 900
+		for id in ["warehouse", "endurance", "thorough_search"]:
+			flow.meta.tech_levels[id] = 1
+		flow.meta.tech_levels["luck"] = 2
+		flow.heal_techs()
+		flow.show_meta()
+		var screen := director.base()
+		if screen != null:
+			screen.call("show_tab", "tech")
+			screen.call("tech_panel").call("select", &"safe_box")
+		return
 	if want == "erosion":
 		# 075：代码里造一份只开侵蚀的难度，走几步让最外几档被侵蚀、预警亮起来
 		var ed := DifficultyDef.new()

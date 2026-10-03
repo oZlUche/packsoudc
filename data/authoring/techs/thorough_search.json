@@ -1,0 +1,24 @@
+{
+  "id": "thorough_search",
+  "display_name": "细搜",
+  "display_names": {
+    "en": "Thorough Search"
+  },
+  "column": 2,
+  "description": "每个搜索点能多搜几次。",
+  "effect": {
+    "type": "tech_run_buff",
+    "buffs": [
+      "tech_thorough_search_1",
+      "tech_thorough_search_2"
+    ]
+  },
+  "tiers": [
+    {
+      "funds": 250
+    },
+    {
+      "funds": 700
+    }
+  ]
+}

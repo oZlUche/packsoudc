@@ -86,22 +86,33 @@ func open(payload: Dictionary) -> void:
 	var right := _vbox(8)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(right)
-	right.add_child(_label("局外 buff　占位：开关列表，将来由任务、局外科技决定", 15, UiPalette.DIM))
+	right.add_child(_label("局外 buff　开发开关：测数值时直接开关（科技点亮的不在这里算，见「科技」页）", 15, UiPalette.DIM))
 	var ids_b: Array = flow.buff_defs.keys()
 	ids_b.sort()
+	# 118（作者定）：科技每一级给的那些 buff 也是局外的，归到「科技给的」分组，排在后面
+	var from_tech := {}
+	for t in flow.tech_defs:
+		if t.effect is TechRunBuff:
+			for tid in (t.effect as TechRunBuff).buffs:
+				from_tech[tid] = true
 	var any_meta := false
-	for id in ids_b:
-		var def: RunBuffDef = flow.buff_defs[id]
-		if not def.is_meta():
-			continue
-		any_meta = true
-		var bid: StringName = id
-		var b := _button("%s　%s" % [def.display_name, def.summary()], func(): toggle_buff(bid), 13, UiPalette.Tier.MINOR)
-		b.toggle_mode = true
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.set_pressed_no_signal(m.active_buffs.has(bid))
-		_buff_btns[bid] = b
-		right.add_child(b)
+	for group in [false, true]:
+		var titled := false
+		for id in ids_b:
+			var def: RunBuffDef = flow.buff_defs[id]
+			if not def.is_meta() or from_tech.has(id) != group:
+				continue
+			if group and not titled:
+				right.add_child(_label("科技给的", 13, UiPalette.DIM))
+				titled = true
+			any_meta = true
+			var bid: StringName = id
+			var b := _button("%s　%s" % [def.display_name, def.summary()], func(): toggle_buff(bid), 13, UiPalette.Tier.MINOR)
+			b.toggle_mode = true
+			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			b.set_pressed_no_signal(m.active_buffs.has(bid))
+			_buff_btns[bid] = b
+			right.add_child(b)
 	if not any_meta:
 		right.add_child(_label("（没有局外 buff 的内容）", 12, UiPalette.DIM))
 	# 局外解锁（069，占位开关）：难度定义里要求的解锁 id 各一个开关；085：章节通关给的解锁也列（关掉 = 教程重新顶上）

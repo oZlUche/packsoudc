@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_xted3"]
+[ext_resource type="Script" path="res://core/run/effects/scout_range.gd" id="2_20qxt"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_fv4xw"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_vg7k5"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_171nh"]
+
+[sub_resource type="Resource" id="Resource_fffkx"]
+script = ExtResource("2_20qxt")
+range = 3.0
+
+[resource]
+script = ExtResource("5_171nh")
+id = &"tech_scouting_1"
+display_name = "侦察（科技）"
+description = "侦察距离 {scout_range_range}"
+scope = 0
+effects = Array[ExtResource("1_xted3")]([SubResource("Resource_fffkx")])

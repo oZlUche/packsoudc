@@ -1,0 +1,11 @@
+{
+  "id": "tech_undaunted_1",
+  "display_name": "不屈（科技）",
+  "description": "前 {free_losses_amount} 次输给节点敌人不扣体力",
+  "scope": "META",
+  "effects": [
+    {
+      "type": "free_losses"
+    }
+  ]
+}

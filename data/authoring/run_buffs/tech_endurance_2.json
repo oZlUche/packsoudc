@@ -1,0 +1,12 @@
+{
+  "id": "tech_endurance_2",
+  "display_name": "耐久（科技）",
+  "description": "体力上限 {vitality_max_bonus_amount|signed}",
+  "scope": "META",
+  "effects": [
+    {
+      "type": "vitality_max_bonus",
+      "amount": 2
+    }
+  ]
+}

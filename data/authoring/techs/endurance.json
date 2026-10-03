@@ -1,0 +1,28 @@
+{
+  "id": "endurance",
+  "display_name": "耐久",
+  "display_names": {
+    "en": "Endurance"
+  },
+  "column": 1,
+  "description": "体力上限更高，在图上走得更远。",
+  "effect": {
+    "type": "tech_run_buff",
+    "buffs": [
+      "tech_endurance_1",
+      "tech_endurance_2",
+      "tech_endurance_3"
+    ]
+  },
+  "tiers": [
+    {
+      "funds": 200
+    },
+    {
+      "funds": 500
+    },
+    {
+      "funds": 900
+    }
+  ]
+}

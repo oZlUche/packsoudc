@@ -4,6 +4,7 @@
   "display_names": {
     "en": "Warehouse Expansion"
   },
+  "description": "仓库往下长，放得下更多带回来的东西；仓库里的东西原地不动。",
   "effect": {
     "type": "warehouse_rows"
   },

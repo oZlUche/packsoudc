@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="TechDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/techs/tech_run_buff.gd" id="1_1lro8"]
+[ext_resource type="Script" path="res://core/meta/tech_def.gd" id="2_f00hk"]
+[ext_resource type="Script" path="res://core/meta/tech_tier.gd" id="3_mo3bi"]
+
+[sub_resource type="Resource" id="Resource_ekyr3"]
+script = ExtResource("1_1lro8")
+buffs = Array[StringName]([&"tech_luck_1", &"tech_luck_2", &"tech_luck_3"])
+
+[sub_resource type="Resource" id="Resource_bqae7"]
+script = ExtResource("3_mo3bi")
+funds = 400
+
+[sub_resource type="Resource" id="Resource_5lovd"]
+script = ExtResource("3_mo3bi")
+funds = 800
+
+[sub_resource type="Resource" id="Resource_8u1tc"]
+script = ExtResource("3_mo3bi")
+funds = 1300
+items = {
+"hardwood_plank": 2,
+"rivet_box": 2
+}
+
+[resource]
+script = ExtResource("2_f00hk")
+id = &"luck"
+display_name = "幸运"
+display_names = {
+"en": "Fortune"
+}
+requires = Array[StringName]([&"thorough_search"])
+column = 2
+description = "敌人的东西更容易掉。"
+effect = SubResource("Resource_ekyr3")
+tiers = Array[ExtResource("3_mo3bi")]([SubResource("Resource_bqae7"), SubResource("Resource_5lovd"), SubResource("Resource_8u1tc")])

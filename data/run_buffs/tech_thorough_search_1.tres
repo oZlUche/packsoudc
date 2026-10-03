@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_3hn3p"]
+[ext_resource type="Script" path="res://core/run/effects/extra_searches.gd" id="2_bje5h"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_dj237"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_f6w4t"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_ryd7t"]
+
+[sub_resource type="Resource" id="Resource_1jy25"]
+script = ExtResource("2_bje5h")
+
+[resource]
+script = ExtResource("5_ryd7t")
+id = &"tech_thorough_search_1"
+display_name = "细搜（科技）"
+description = "每个搜索点多搜 {extra_searches_amount} 次"
+scope = 0
+effects = Array[ExtResource("1_3hn3p")]([SubResource("Resource_1jy25")])

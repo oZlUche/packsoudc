@@ -1,0 +1,11 @@
+{
+  "id": "tech_thorough_search_1",
+  "display_name": "细搜（科技）",
+  "description": "每个搜索点多搜 {extra_searches_amount} 次",
+  "scope": "META",
+  "effects": [
+    {
+      "type": "extra_searches"
+    }
+  ]
+}

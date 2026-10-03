@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_u6h6p"]
+[ext_resource type="Script" path="res://core/run/effects/free_losses.gd" id="2_8356n"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_qulea"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_whj2n"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_7r3q6"]
+
+[sub_resource type="Resource" id="Resource_psl6o"]
+script = ExtResource("2_8356n")
+
+[resource]
+script = ExtResource("5_7r3q6")
+id = &"tech_undaunted_1"
+display_name = "不屈（科技）"
+description = "前 {free_losses_amount} 次输给节点敌人不扣体力"
+scope = 0
+effects = Array[ExtResource("1_u6h6p")]([SubResource("Resource_psl6o")])

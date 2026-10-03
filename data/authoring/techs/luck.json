@@ -1,0 +1,35 @@
+{
+  "id": "luck",
+  "display_name": "幸运",
+  "display_names": {
+    "en": "Fortune"
+  },
+  "requires": [
+    "thorough_search"
+  ],
+  "column": 2,
+  "description": "敌人的东西更容易掉。",
+  "effect": {
+    "type": "tech_run_buff",
+    "buffs": [
+      "tech_luck_1",
+      "tech_luck_2",
+      "tech_luck_3"
+    ]
+  },
+  "tiers": [
+    {
+      "funds": 400
+    },
+    {
+      "funds": 800
+    },
+    {
+      "funds": 1300,
+      "items": {
+        "hardwood_plank": 2,
+        "rivet_box": 2
+      }
+    }
+  ]
+}

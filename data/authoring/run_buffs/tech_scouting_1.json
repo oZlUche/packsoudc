@@ -1,0 +1,12 @@
+{
+  "id": "tech_scouting_1",
+  "display_name": "侦察（科技）",
+  "description": "侦察距离 {scout_range_range}",
+  "scope": "META",
+  "effects": [
+    {
+      "type": "scout_range",
+      "range": 3.0
+    }
+  ]
+}

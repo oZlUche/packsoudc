@@ -95,6 +95,7 @@ const TYPE_LABELS := {
 	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫",
 	"damage_item": "损坏道具", "drain_money": "掉钱",
 	"warehouse_rows": "仓库加行",     # 110：局外科技的效果
+	"tech_run_buff": "每级给一条局外 buff", "tech_safe_size": "保险箱扩格",     # 118
 }
 
 ## 枚举值 → 中文

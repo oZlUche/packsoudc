@@ -50,6 +50,10 @@ var flags: Dictionary = {}
 var tech_levels: Dictionary = {}
 ## 110：上交中的材料 —— 科技 id（字符串）→ {道具 id（字符串）→ 已交件数}。上交即消耗；升级成功后清这一项
 var tech_deposits: Dictionary = {}
+## 118：科技给的局外 buff（id）—— 和开发开关的 [member active_buffs] 分开记，开局两份一起传给一局。谁加谁删见 [TechRunBuff]
+var tech_buffs: Array[StringName] = []
+## 118：科技给保险箱加的列 / 行（[TechSafeSize]），开局 `GameFlow.safe_size()` 加上
+var safe_bonus: Vector2i = Vector2i.ZERO
 ## 撤离带出来的钱累计。局外货币怎么花（15 节第 4 项）还没定，先攒着
 var funds: int = 0
 ## 累计背出去的价值（6.4）
@@ -477,6 +481,8 @@ func to_dict() -> Dictionary:
 		"flags": flags.duplicate(),
 		"tech_levels": tech_levels.duplicate(),
 		"tech_deposits": tech_deposits.duplicate(true),
+		"tech_buffs": _names_of(tech_buffs),     # 118：新字段有默认值，不升存档版本（098）
+		"safe_bonus": [safe_bonus.x, safe_bonus.y],
 	}
 
 
@@ -543,6 +549,11 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 			for item_id in src:
 				got[String(item_id)] = int(src[item_id])
 		m.tech_deposits[String(key)] = got
+	for id in d.get("tech_buffs", []):
+		m.tech_buffs.append(StringName(String(id)))
+	var sb = d.get("safe_bonus", [0, 0])
+	if sb is Array and (sb as Array).size() == 2:
+		m.safe_bonus = Vector2i(int(sb[0]), int(sb[1]))
 	for row in d.get("history", []):
 		if row is Dictionary:
 			m.history.append(MapGraph.normalize(row))

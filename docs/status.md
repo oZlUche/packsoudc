@@ -42,7 +42,7 @@
 | `core/enemies` | 敌人池、档位、组装、预览编译 | `EnemyPool`、`EnemyPlacer`、`EnemyKit` |
 | `core/loot` | 掉落规则与掷骰、修正来源接缝、装箱 | `DropRule`、`DropResolver`、`DropBonusSource`、`LootPacker` |
 | `core/run`（+ effects、events） | 一局：旅程、体力、钱、节点事件、搜索 / 商店会话、规则、状态与存档；场景流状态机、开局装备、角色、进阶难度（机制清单）、猎手（伪 PVP）、结算；buff（局外 / 一局）与一局规则的构件；事件层（事件、选项、条件与后果构件、铺放）；局内技能（082：构件 + 一局的账）；信仰与信力（081 / 082） | `RunState`、`RunSave`、`MapTravel`、`NodeEvents`、`Vitality`、`Wallet`、`GameFlow`（`new_run_target` / `continue_target`：新的一局 = 从头，继续 = 读档或下一张教程）、`LoadoutDef`、`CharacterDef`、`RunResult`、`RunBuffDef`、`RunBuffs`、`RunContext`、`EventDef`、`EventPlacer`、`RunSkill`、`RunSkills`、`FaithDef`、`FaithPower` |
-| `core/meta` | 跨局：仓库格子（大小是 `MetaRules`）、带回来的棋盘与一键置入、图鉴、钱、战绩、保留规则（`absorb()` 一处）、存档 v2 | `MetaState`、`MetaSave`、`MetaRules` |
+| `core/meta` | 跨局：仓库格子（大小是 `MetaRules`）、带回来的棋盘与一键置入、图鉴、钱、战绩、保留规则（`absorb()` 一处）、局外科技树（110 / 118：前置、列、每级效果 —— 仓库加行、给一局局外 buff、保险箱扩格）、存档 v3 | `MetaState`、`MetaSave`、`MetaRules`、`TechDef`、`TechService` |
 | `core/text` | 内容名字的多语言 `Names.of`（088）；文本占位符与样式码（084）：`{char_name}`、`{battle_data}`、`{c:hp}…{/c}`，全表见 `docs/text-placeholders.md`；界面语言表（085）：`UiText.t(key)`，zh / en；词条表（087）：固定词条 + 按 buff 定义生成的说明，悬浮窗侧边一个一个开小窗 | `TextTemplate`、`UiText`、`Glossary`、`Names` |
 | `core/settings` | 玩家设置（暂存区提醒档位、拿完自动关、浮窗预览、界面语言、当前存档位），`user://settings.json`；存档位（089）`user://slots/<n>/` | `GameSettings`（挑要提的在 `core/run/storage_warning.gd`）、`SaveSlots` |
 | `ui/game` | 正式游戏（主场景）：导演（叠层可最小化）+ 屏的底座 + 各屏（事件屏先过、战前准备屏、容器屏战利品 / 搜索合一）+ 背包整理面板（浮窗）+ 仓库面板 + 渐进揭示的战利品视图 | `GameDirector`、`GameScreen`、`LootView`、`FloatingWindow`、`map_screen`、`event_screen`、`prebattle_screen`、`container_screen`…… |

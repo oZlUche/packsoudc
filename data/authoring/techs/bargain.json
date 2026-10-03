@@ -1,0 +1,28 @@
+{
+  "id": "bargain",
+  "display_name": "讨价",
+  "display_names": {
+    "en": "Haggling"
+  },
+  "order": 1,
+  "requires": [
+    "thorough_search"
+  ],
+  "column": 2,
+  "description": "商店的东西更便宜。",
+  "effect": {
+    "type": "tech_run_buff",
+    "buffs": [
+      "tech_bargain_1",
+      "tech_bargain_2"
+    ]
+  },
+  "tiers": [
+    {
+      "funds": 500
+    },
+    {
+      "funds": 1000
+    }
+  ]
+}

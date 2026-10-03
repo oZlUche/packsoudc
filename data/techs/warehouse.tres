@@ -50,5 +50,6 @@ display_name = "仓库扩建"
 display_names = {
 "en": "Warehouse Expansion"
 }
+description = "仓库往下长，放得下更多带回来的东西；仓库里的东西原地不动。"
 effect = SubResource("Resource_u1l1s")
 tiers = Array[ExtResource("3_kfasi")]([SubResource("Resource_h55m7"), SubResource("Resource_44tsh"), SubResource("Resource_11jn4"), SubResource("Resource_lq7uq"), SubResource("Resource_byk3s"), SubResource("Resource_mneyu")])

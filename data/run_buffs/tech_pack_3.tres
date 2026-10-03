@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_unkpu"]
+[ext_resource type="Script" path="res://core/run/effects/starting_funds_bonus.gd" id="2_dpw6s"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_1o21w"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_1vytk"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_y8vw2"]
+
+[sub_resource type="Resource" id="Resource_c40ll"]
+script = ExtResource("2_dpw6s")
+amount = 150
+
+[resource]
+script = ExtResource("5_y8vw2")
+id = &"tech_pack_3"
+display_name = "行囊（科技）"
+description = "开局钱 {starting_funds_bonus_amount|signed}"
+scope = 0
+effects = Array[ExtResource("1_unkpu")]([SubResource("Resource_c40ll")])

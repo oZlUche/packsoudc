@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="TechDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/techs/tech_run_buff.gd" id="1_vwpop"]
+[ext_resource type="Script" path="res://core/meta/tech_def.gd" id="2_uk6sx"]
+[ext_resource type="Script" path="res://core/meta/tech_tier.gd" id="3_xleoc"]
+
+[sub_resource type="Resource" id="Resource_2cdqy"]
+script = ExtResource("1_vwpop")
+buffs = Array[StringName]([&"tech_undaunted_1"])
+
+[sub_resource type="Resource" id="Resource_vnxmu"]
+script = ExtResource("3_xleoc")
+funds = 800
+items = {
+"hardwood_plank": 2,
+"steel_ingot": 2
+}
+
+[resource]
+script = ExtResource("2_uk6sx")
+id = &"undaunted"
+display_name = "不屈"
+display_names = {
+"en": "Undaunted"
+}
+requires = Array[StringName]([&"endurance"])
+column = 1
+description = "输给节点敌人的头一次不扣体力。"
+effect = SubResource("Resource_2cdqy")
+tiers = Array[ExtResource("3_xleoc")]([SubResource("Resource_vnxmu")])

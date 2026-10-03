@@ -1,0 +1,30 @@
+{
+  "id": "pack",
+  "display_name": "行囊",
+  "display_names": {
+    "en": "Travel Pack"
+  },
+  "requires": [
+    "safe_box"
+  ],
+  "description": "出发时多带一笔钱。",
+  "effect": {
+    "type": "tech_run_buff",
+    "buffs": [
+      "tech_pack_1",
+      "tech_pack_2",
+      "tech_pack_3"
+    ]
+  },
+  "tiers": [
+    {
+      "funds": 400
+    },
+    {
+      "funds": 800
+    },
+    {
+      "funds": 1200
+    }
+  ]
+}
