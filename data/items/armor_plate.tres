@@ -1,34 +1,35 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_xpbid"]
-[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="2_ql0l1"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_sc273"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_42m0y"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_lu2is"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_fwolk"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_ql0l1"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_sc273"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_42m0y"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_lu2is"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="5_fwolk"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="6_f6yif"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="7_kg3t3"]
 
-[sub_resource type="Resource" id="Resource_f6yif"]
-script = ExtResource("1_xpbid")
+[sub_resource type="Resource" id="Resource_p8rlq"]
+script = ExtResource("1_ql0l1")
 stat = &"max_shield"
 flat = 5.0
 
-[sub_resource type="Resource" id="Resource_kg3t3"]
-script = ExtResource("2_ql0l1")
+[sub_resource type="Resource" id="Resource_q12cm"]
+script = ExtResource("3_42m0y")
 grant_cells = Array[Vector2i]([Vector2i(0, -1)])
 grant_filter = Array[StringName]([&"gear"])
-grant_mods = Array[ExtResource("1_xpbid")]([SubResource("Resource_f6yif")])
+grant_mods = Array[ExtResource("1_ql0l1")]([SubResource("Resource_p8rlq")])
 
-[sub_resource type="Resource" id="Resource_p8rlq"]
-script = ExtResource("6_fwolk")
+[sub_resource type="Resource" id="Resource_c6pr6"]
+script = ExtResource("7_kg3t3")
 
 [resource]
-script = ExtResource("5_lu2is")
+script = ExtResource("6_f6yif")
 id = &"armor_plate"
 display_name = "防弹装甲"
 display_names = {
 "en": "Armor Plate"
 }
-shape = SubResource("Resource_p8rlq")
+shape = SubResource("Resource_c6pr6")
 rarity = 1
 tags = Array[StringName]([&"sealed", &"gear_plug", &"metal"])
-adjacency = SubResource("Resource_kg3t3")
+adjacency = SubResource("Resource_q12cm")

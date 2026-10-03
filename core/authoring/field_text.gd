@@ -27,7 +27,7 @@ const LABELS := {
 	"stat": "属性", "stat_scale": "属性系数", "direct_override": "直接伤害（−1 按来源定）", "shield_absorbable": "可被护盾吸收", "provokes": "招致反应", "on_self": "对自己", "same_side": "同一边",
 	"buff": "增益", "buff_id": "增益 id", "stacks": "叠层", "max_stacks": "叠层上限（0 = 不限）", "per_stack": "按叠层", "duration_sec": "持续秒数",
 	"is_debuff": "是减益", "refresh_on_restack": "再叠刷新时长", "on_apply": "施加时", "on_expire": "到期时", "mods": "属性加成", "consume": "消耗掉",
-	"grant_cells": "增益格", "receive_cells": "受益格", "grant_mods": "给邻居的加成", "receive_mods": "邻居给的加成", "grant_filter": "只给", "receive_filter": "只收",
+	"grant_cells": "增益格", "receive_cells": "受益格", "grant_mods": "给邻居的加成", "grant_rules": "给邻居挂的规则", "receive_mods": "邻居给的加成", "grant_filter": "只给", "receive_filter": "只收",
 	"uses": "次数", "max_uses": "最多次数", "hp_fraction": "生命比例", "direction": "方向", "source": "来源", "weapon_tag": "武器标签", "min_amount": "最少量",
 	"speed": "速度", "cells": "格", "pieces": "件", "tiers": "档位", "count_mode": "计数方式", "common_tags": "通用标签",
 	# 事件

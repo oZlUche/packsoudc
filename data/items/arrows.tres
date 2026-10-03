@@ -1,33 +1,34 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_7vlvv"]
-[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="2_1ptyv"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_oghoi"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_8aeci"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_hubvy"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_gdaal"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_1ptyv"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_oghoi"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_8aeci"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_hubvy"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="5_gdaal"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="6_nilw3"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="7_yvw15"]
 
-[sub_resource type="Resource" id="Resource_nilw3"]
-script = ExtResource("1_7vlvv")
+[sub_resource type="Resource" id="Resource_rkc1q"]
+script = ExtResource("1_1ptyv")
 mult_category = 1
 mult_percent = 20
 
-[sub_resource type="Resource" id="Resource_yvw15"]
-script = ExtResource("2_1ptyv")
+[sub_resource type="Resource" id="Resource_lkhbv"]
+script = ExtResource("3_8aeci")
 grant_cells = Array[Vector2i]([Vector2i(0, -1)])
 grant_filter = Array[StringName]([&"ranged"])
-grant_mods = Array[ExtResource("1_7vlvv")]([SubResource("Resource_nilw3")])
+grant_mods = Array[ExtResource("1_1ptyv")]([SubResource("Resource_rkc1q")])
 
-[sub_resource type="Resource" id="Resource_rkc1q"]
-script = ExtResource("6_gdaal")
+[sub_resource type="Resource" id="Resource_ybjv1"]
+script = ExtResource("7_yvw15")
 
 [resource]
-script = ExtResource("5_hubvy")
+script = ExtResource("6_nilw3")
 id = &"arrows"
 display_name = "箭矢"
 display_names = {
 "en": "Arrows"
 }
-shape = SubResource("Resource_rkc1q")
+shape = SubResource("Resource_ybjv1")
 tags = Array[StringName]([&"ammo", &"nature"])
-adjacency = SubResource("Resource_yvw15")
+adjacency = SubResource("Resource_lkhbv")

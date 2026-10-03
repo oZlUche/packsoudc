@@ -121,7 +121,8 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	for uid in fighters:
 		if not dormant.has(uid):
 			social.append(uid)
-	_apply_adjacency(board, social, stats, links)
+	var attach_pending: Dictionary = {}     # uid -> [[rule, origin], ...]（108：邻居给我挂的规则，第 6 步打包时挂上）
+	_apply_adjacency(board, social, stats, links, attach_pending)
 
 	# --- 6. 打包 ---
 	for uid in fighters:
@@ -135,6 +136,8 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 			item.rules = def.combat.rules.duplicate()
 		if bonus_rules.has(uid):
 			item.rules.append_array(bonus_rules[uid])
+		for pair in attach_pending.get(uid, []):
+			_attach(item, pair[0], pair[1])
 		var linked: Array[int] = []
 		for other in (links.get(uid, {}) as Dictionary).keys():
 			linked.append(other)
@@ -187,15 +190,24 @@ static func _apply_scope_to(item: CompiledItem, scope: ScopedMod) -> void:
 				var v := item.stats.ensure(k)
 				v.base = roundi(float(v.base) * scope.base_scale)
 	for r in scope.rules:
-		var rule := (r as AbilityRule).duplicate(true) as AbilityRule
-		if rule == null:
-			continue
-		# 挂到单件上的规则里的「有道具出手」绑成只听自己 —— 否则一件附魔会被全场出手都触发
-		if rule.trigger is OnItemFired:
-			var trig := rule.trigger as OnItemFired
-			trig.include_self = true
-			trig.source_uids = [item.source_uid] as Array[int]
-		item.rules.append(rule)
+		_attach(item, r as AbilityRule, scope.origin)
+
+
+## 108（作者定）：**附加规则的唯一入口** —— 把 [param rule] 挂到宿主 [param item] 上：深拷贝、把 [OnItemFired] 绑成只听宿主、记来源。
+## 邻接的增益规则（[member AdjacencyProfile.grant_rules]）和按件修饰（[member ScopedMod.rules]，日神附魔）都从这里进。
+## 挂上去之后它就是宿主的一条规则：以宿主身份跑（`item_stat` 读宿主、伤害来源是宿主 → 直接伤害，106 §八）
+static func _attach(item: CompiledItem, rule: AbilityRule, origin: StringName) -> void:
+	if item == null or rule == null:
+		return
+	var copy := rule.duplicate(true) as AbilityRule
+	# 挂到单件上的规则里的「有道具出手」绑成只听宿主 —— 否则一件附魔会被全场出手都触发
+	if copy.trigger is OnItemFired:
+		var trig := copy.trigger as OnItemFired
+		trig.include_self = true
+		trig.source_uids = [item.source_uid] as Array[int]
+	item.rules.append(copy)
+	if origin != &"":
+		item.attached.append({"rule_index": item.rules.size() - 1, "origin": origin})
 
 
 ## 第 8 步：基线修饰（食物护盾、`stat_mod(baseline)`）
@@ -224,7 +236,8 @@ static func _apply_bag_effects(board: GridInventory, fighters: Array[int], stats
 ## 连结是**对称**的 —— 「我给你加成」和「你给我加成」都算连着。
 ## 非对称会让内容作者踩坑：把配件贴在武器旁边，却只有一边听得见对方出手。
 static func _apply_adjacency(
-	board: GridInventory, fighters: Array[int], stats: Dictionary, links: Dictionary
+	board: GridInventory, fighters: Array[int], stats: Dictionary, links: Dictionary,
+	attach_pending: Dictionary = {}
 ) -> void:
 	for uid in fighters:
 		var holder := board.get_item(uid)
@@ -243,6 +256,11 @@ static func _apply_adjacency(
 				_link(links, uid, other)
 				for mod in profile.grant_mods:
 					(mod as StatModifier).apply_to(stats[other], 1)
+				for r in profile.grant_rules:     # 108：规则等第 6 步宿主打包好再挂（holder 按 uid 升序，挂的顺序稳定）
+					if r != null:
+						if not attach_pending.has(other):
+							attach_pending[other] = []
+						attach_pending[other].append([r, holder.def.id])
 
 		# 受益：点亮几个格，本物品就得几份
 		if profile.has_receive():

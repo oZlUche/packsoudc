@@ -17,8 +17,10 @@ extends FaithPerk
 @export var weapon_tag: StringName = &"weapon"
 
 
-func compile_into(input: CompileInput, _board: GridInventory, _run: RunState) -> void:
+func compile_into(input: CompileInput, _board: GridInventory, run: RunState) -> void:
 	var scope := ScopedMod.new()
+	var faith := run.active_faith() if run != null else null
+	scope.origin = FaithTags.tag_of(faith.id) if faith != null else &""     # 108：武器悬浮窗写「← 日神」
 	scope.tags = [weapon_tag] as Array[StringName]
 	scope.require_active = true     # 没规则的武器根本不出手，附上去也不会触发
 	scope.pick = count
