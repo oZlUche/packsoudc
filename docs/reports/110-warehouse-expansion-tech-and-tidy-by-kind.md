@@ -123,7 +123,7 @@ var tech_deposits: Dictionary = {}
 | ⑥ 界面 | 「科技」页签与卡片、上交区、双击 | `ui/game/meta_screen.gd`（页签表那行 + 一页）、`ui/game/tech_panel.gd`（新） |
 | ⑦ 测试 | 升 1～3 级只扣钱、仓库每级 +3 行且原物不动；第 4 级交 1 件后存档读回仍记着、交齐 + 钱够才 `ready`、`upgrade` 后 deposits 清空；不需要的件 `can_submit` 假；v2 存档迁到 v3；读档行数不足自动补；满级 `next_tier` 为 null；页签 smoke | `tests/meta/test_tech.gd`（新）、`tests/meta/test_meta_migrations.gd`、`tests/ui/` |
 
-## 待作者定（不挡执行，按推荐先做）
+## 待作者定（作者 2026-10-03 放行：方案完毕即执行，五项按推荐）
 
 1. 科技做成通用 `TechDef`（仓库是第一条内容）：**推荐**；否则写死一项以后再拆。
 2. 各级的钱与件数：表里是占位，**按占位先做**，数值随时改 JSON。
