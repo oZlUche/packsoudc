@@ -75,7 +75,7 @@ static func run_deeds(t: TestCase) -> void:
 	t.eq(_gain(skill, &"item_acquired", {"id": "x", "tags": ["metal", "weapon"], "cells": 4}), 12, "4 格金属 +12")
 	t.eq(_gain(skill, &"item_acquired", {"id": "x", "tags": ["weapon"], "cells": 4}), 0, "不是金属不给")
 	var two_same := {"fired_items": [{"id": "knife", "tags": ["weapon"], "count": 3}, {"id": "knife", "tags": ["weapon"], "count": 1},
-		{"id": "shortsword", "tags": ["weapon"], "count": 2}, {"id": "salve", "tags": ["consumable"], "count": 5}]}
+		{"id": "shortsword", "tags": ["weapon"], "count": 2}, {"id": "salve", "tags": ["remedy"], "count": 5}]}
 	t.eq(_gain(skill, &"battle", two_same), 20, "两把同名匕首 + 一把短剑出手 → +20（同名只算一次、不是武器不算）")
 	var six := {"fired_items": []}
 	for i in 6:

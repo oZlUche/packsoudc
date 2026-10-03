@@ -55,7 +55,7 @@ var run_backup: String = ""
 var slots: SaveSlots = null
 var slot: int = 0
 var settings_path: String = GameSettings.DEFAULT_PATH
-## 玩家的设置（提醒档位等）。持有方读进来；改了调 save_settings
+## 玩家的设置（自动关战利品屏、底色、战斗倍速……）。持有方读进来；改了调 save_settings
 var settings: GameSettings = GameSettings.new()
 ## 玩家基线（4.2）。角色系统之前由持有方统一给；null = 编译器默认
 var player_baseline: CombatantBaseline = null

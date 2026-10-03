@@ -16,4 +16,4 @@ base_stats = {
 "max_hp": 46
 }
 signature = Array[StringName]([&"round_shield"])
-item_tags = Array[StringName]([&"imperial", &"shield", &"gear", &"consumable"])
+item_tags = Array[StringName]([&"imperial", &"shield", &"gear", &"remedy"])

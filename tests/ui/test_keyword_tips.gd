@@ -11,7 +11,7 @@ const QUIET_TERMS: Array[String] = ["自发", "开战时", "出手时", "受伤�
 ## 带规则、照弹的固定词条
 const LOUD_TERMS: Array[String] = ["急速", "防护", "护盾", "直接伤害", "永续", "叠层", "合成", "增益槽", "受益槽", "中毒", "流血"]
 ## 作者点名不弹的标签
-const QUIET_TAGS: Array[StringName] = [&"melee", &"ranged", &"weapon", &"shield", &"armor", &"gear_plug", &"treasure", &"keepsake", &"fire", &"poison", &"bleed"]
+const QUIET_TAGS: Array[StringName] = [&"melee", &"ranged", &"weapon", &"shield", &"armor", &"gear_plug", &"treasure", &"keepsake", &"fire", &"poison", &"bleed", &"remedy"]
 ## 带规则（休眠 / 激活条件、献祭信息）、照弹的标签
 const LOUD_TAGS: Array[StringName] = [&"faith", &"faith_anchor", &"sealed", &"sigil", &"bone", &"metal", &"nature"]
 

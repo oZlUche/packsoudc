@@ -62,7 +62,7 @@ static func _sample_pool() -> EnemyPool:
 	pool.strength_rule.by_depth = Vector2i(0, 2)
 	pool.strength_rule.type_bonus = {"elite": 1, "core": 1}
 	pool.loadout = EnemyLoadout.new()
-	pool.loadout.common_tags = [&"gear", &"consumable"] as Array[StringName]
+	pool.loadout.common_tags = [&"gear", &"remedy"] as Array[StringName]
 	var a := EnemyPoolEntry.new()
 	a.enemy = &"t_low"
 	a.weight = 2.0

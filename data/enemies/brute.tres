@@ -15,4 +15,4 @@ base_stats = {
 "armor": 3,
 "max_hp": 50
 }
-item_tags = Array[StringName]([&"barbarian", &"bleed", &"burst", &"gear", &"consumable"])
+item_tags = Array[StringName]([&"barbarian", &"bleed", &"burst", &"gear", &"remedy"])

@@ -56,7 +56,7 @@
 | `bag_small` | 小背包 | `11`<br>`11` | 0 | — | — | ✓ |
 | `bag_leather` | 皮革包 | `11`<br>`11`<br>`11` | 1 | — | — | ✓ |
 | `bag_long` | 长条包 | `1111` | 1 | — | — | ✓ |
-| `belt_potion` | 医疗腰带 | `1`<br>`1`<br>`1` | 2 | `consumable` | 包内物品 `haste` +15% | ✓ |
+| `belt_potion` | 医疗腰带 | `1`<br>`1`<br>`1` | 2 | `remedy`、`food` | 包内物品 `haste` +15% | ✓ |
 | `rig_chest` | 战术胸挂 | `111`<br>`111` | 2 | `weapon` | 包内物品 `damage` +10% | **新** |
 | `case_hard` | 防爆箱 | `11`<br>`11` | 3 | — | 包内物品 `damage` +30%、`haste` −10% | **新** |
 
@@ -265,7 +265,7 @@ id 保持不变，改 id 会让存档失效。
 | 护盾资源 | `shield_gen` `nano_ward` |
 | 邻接 · 受益 | `sniper` |
 | 包体 `bag_mods` | `belt_potion` `rig_chest` `case_hard` |
-| 包内准入标签 | `belt_potion`（消耗品）、`rig_chest`（武器） |
+| 包内准入标签 | `belt_potion`（药剂、食物）、`rig_chest`（武器） |
 | 套装 `mods` | `assault_kit` `tesla_kit` |
 | 套装 `rules` | `assault_kit` `tesla_kit` |
 | 套装跨域 `effects` | `scav_kit` |

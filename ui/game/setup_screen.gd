@@ -161,6 +161,7 @@ func open(_payload: Dictionary) -> void:
 	_drag.label_font = font
 	play.add_child(_drag)     # 容器把它铺到和 grids 一样大，盖在两块格子上
 	_drag.register_view(_warehouse_view)
+	_warehouse_view.item_double_clicked.connect(quick_move)     # 109：双击 = 快速置入，和局内一样
 	w.changed.connect(_refresh)
 	_build_stash()
 
@@ -182,6 +183,7 @@ func _build_stash() -> void:
 	_stash_view.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_stash_box.add_child(_stash_view)
 	_drag.register_view(_stash_view)
+	_stash_view.item_double_clicked.connect(quick_move)
 	_drag.drop_filter = _allow_drop
 	stash.changed.connect(_refresh)
 	_stash_box.visible = not _pending.is_empty()
@@ -400,6 +402,36 @@ func carry_in(uid: int) -> bool:
 	return ok
 
 
+## 109（作者定）：开局屏的双击快速置入，和局内（084 [method InventoryPanel.quick_move]）同一个形状：
+## 仓库 / 暂存区 → 初始包的棋盘；棋盘 → 仓库（初始包自己、预设套的不行）。放不下原地不动，状态行说一句。拖拽那套不动
+func quick_move(view: ContainerView, uid: int) -> bool:
+	var from := view.container() if view != null else null
+	var inst := from.get_item(uid) if from != null else null
+	if inst == null:
+		return false
+	var why := ""
+	var ok := false
+	if from == flow.meta.warehouse or from == stash:
+		if board == null:
+			return false
+		if not _allow_drop(inst, board):
+			why = "这一章不许把带回来的东西带进去"
+		else:
+			ok = carry_in(uid)
+			why = "" if ok else "包里没有空间放「%s」" % Names.of(inst.def)
+	elif from == board:
+		if not MetaState.keeps(inst.def):
+			why = "「%s」是初始包，留在棋盘上" % Names.of(inst.def)
+		elif _preset_uids.has(uid):
+			why = "预设套的东西只能在棋盘上挪"
+		else:
+			ok = carry_out(uid)
+			why = "" if ok else "仓库放不下「%s」" % Names.of(inst.def)
+	if why != "" and _status != null:
+		_status.text = why
+	return ok
+
+
 ## 090：把暂存区里的一件收进仓库（= 置入）。放不下返回 false
 func store(uid: int) -> bool:
 	if stash == null or stash.get_item(uid) == null:
@@ -594,6 +626,7 @@ func _rebuild_board() -> void:
 	_board_host.add_child(_label("左键拖动　R 旋转　右键 / Esc 取消　右键信物 = 奉为主信仰", 11, UiPalette.DIM))
 	_drag.register_view(_board_view)
 	_board_view.item_context.connect(func(_v: ContainerView, uid: int): reseat_anchor(uid))     # 099：开局屏的棋盘同一套
+	_board_view.item_double_clicked.connect(quick_move)     # 109：每次重建棋盘视图都要重新接
 	board.changed.connect(_refresh)
 	_apply_preset()     # 096：挑着的预设套跟着角色换过来
 

@@ -17,8 +17,10 @@ class_name BattleView
 extends Control
 
 signal finished
+## 109：玩家切了倍速（战斗屏接它写回设置，下一场照这个速度开场）
+signal speed_changed(speed: float)
 
-const SPEEDS := [1.0, 2.0, 4.0]
+const SPEEDS := GameSettings.BATTLE_SPEEDS
 
 var label_font: Font
 
@@ -207,6 +209,18 @@ func toggle_play() -> void:
 func cycle_speed() -> void:
 	_speed_idx = (_speed_idx + 1) % SPEEDS.size()
 	_sync_buttons()
+	speed_changed.emit(speed())
+
+
+## 109：开场倍速（从设置来）；不在 [constant SPEEDS] 里的按 1×。不发 [signal speed_changed] —— 这不是玩家切的
+func set_speed(v: float) -> void:
+	_speed_idx = maxi(0, SPEEDS.find(GameSettings.normalize_speed(v)))
+	if _speed_btn != null:
+		_sync_buttons()
+
+
+func speed() -> float:
+	return SPEEDS[_speed_idx]
 #endregion
 
 

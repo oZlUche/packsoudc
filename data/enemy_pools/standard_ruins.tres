@@ -40,7 +40,7 @@ node_types = Array[StringName]([&"core"])
 
 [sub_resource type="Resource" id="Resource_vnoua"]
 script = ExtResource("2_60qvx")
-common_tags = Array[StringName]([&"gear", &"consumable", &"part", &"tool"])
+common_tags = Array[StringName]([&"gear", &"remedy", &"food", &"part", &"tool"])
 
 [sub_resource type="Resource" id="Resource_gowdh"]
 script = ExtResource("4_f422k")

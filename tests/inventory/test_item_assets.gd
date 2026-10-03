@@ -61,7 +61,7 @@ static func run(t: TestCase) -> void:
 
 	var belt := db.get_def(&"belt_potion")
 	t.check(belt.is_bag, "药水带应标记为包体")
-	t.check(belt.bag_accept_tags.has(&"consumable"), "药水带只收 consumable")
+	t.eq(belt.bag_accept_tags, [&"remedy", &"food"] as Array[StringName], "药水带收药剂与食物（107 §2.6）")
 	t.check(not db.get_def(&"rifle").is_bag, "步枪不是包体")
 
 	# --- 真实资产在棋盘上跑一遍完整流程 ---
@@ -81,17 +81,17 @@ static func run(t: TestCase) -> void:
 		"3x2 的防弹衣在只剩 2 格时放不进"
 	)
 
-	# --- 包体准入：药水带只收 consumable ---
+	# --- 包体准入：药水带只收药剂与食物 ---
 	var belt_inst := ItemInstance.create(belt)
 	t.check(board.place(belt_inst, Vector2i(4, 0), 0), "药水带放在棋盘空处")
 	t.eq(board.usable_cell_count(), 9, "两个包共 9 格")
 	t.check(
 		not board.place(ItemInstance.create(db.get_def(&"mag")), Vector2i(4, 0), 0),
-		"弹匣不带 consumable，进不了药水带"
+		"弹匣不是药剂也不是食物，进不了药水带"
 	)
 	t.check(
 		board.place(ItemInstance.create(db.get_def(&"stim")), Vector2i(4, 0), 0),
-		"兴奋剂带 consumable，可进药水带"
+		"兴奋剂是药剂，可进药水带"
 	)
 	t.check(
 		not board.place(ItemInstance.create(db.get_def(&"medkit")), Vector2i(4, 1), 0),
