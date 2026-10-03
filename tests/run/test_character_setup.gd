@@ -299,6 +299,14 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 		if setup._chapters[gi].id == &"chapter_01":
 			setup.choose_chapter(gi)
 	t.eq(setup.screen, GameFlow.Screen.SETUP, "→ 开局屏")
+	# 反馈（紧急）：左列比窗口还高，列尾的「出发」被挤出屏幕，开局没有入口 —— 「进入」钉在右下角，窗口再矮也在屏内
+	var enter: Button = setup._enter_btn
+	t.check(enter != null and enter.text == "进入" and enter.visible, "有「进入」按钮")
+	if enter != null:
+		var vp := Rect2(Vector2.ZERO, setup.get_viewport_rect().size)
+		var rect := Rect2(enter.global_position, enter.size)
+		t.check(vp.encloses(rect), "「进入」整块在屏内（%s / %s）" % [str(rect), str(vp)])
+		t.check(rect.position.x > vp.size.x * 0.5 and rect.position.y > vp.size.y * 0.5, "在右下角")
 	t.not_null(setup.board, "有这个角色的棋盘")
 	t.eq(setup.board.size, ch.board_size, "尺寸按角色")
 	t.eq(_bags_on(setup.board), ch.starting_bags.size(), "初始包摆好了")
