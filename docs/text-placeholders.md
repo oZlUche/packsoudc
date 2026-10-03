@@ -31,6 +31,7 @@
 | `{enemy_items}` / `{enemy_count}` | 对手带的东西（名字、件数） | 含包 |
 | `{battle_data}` | 一行摘要：名（档）生命 DPS 件数：清单 | 战斗点浮窗的默认写法 |
 | `{loss_cost}` | 输一场普通战斗扣几点体力 | 节点规则的 `loss_cost.battle`（112） |
+| `{faith_points}` / `{faith_tier}` | 激活信仰现在的信力 / 阶 | 没激活是 0（113） |
 
 ### 1.0 带类型的占位符（112，作者定：颜色跟着类型走）
 
@@ -45,8 +46,15 @@
 | `{zone:<文字>}` | 界面区域：暂存区、仓库、棋盘 | `grant` + 粗体 |
 | `{key:<键>}` | 按键 | `dim` + 粗体 |
 | `{item_stat:<道具 id>:<字段>}` | 那件道具的数（见 1.1） | `fg` + 粗体 |
+| `{faith:<信仰 id>}` | 信仰名（113） | `faith` + 粗体 |
+| `{faith_threshold:<信仰>:<阶>}` | 第几阶的信力阈值 | `fg` + 粗体 |
+| `{faith_deed:<信仰>:<行为类型>:<字段>}` | 行为构件的数（`{faith_deed:brute:damage:cap}`） | `fg` + 粗体 |
+| `{faith_offer:<信仰>:<标签>:<字段>}` | 认这个标签的献祭规则的数（`{faith_offer:brute:bone:multiplier}`） | `fg` + 粗体 |
+| `{faith_perk:<信仰>:<效果类型>:<字段>}` | 信仰级效果的数（`{faith_perk:brute:altar_bless:cost}`） | `fg` + 粗体 |
 
-`{item:}` `{enemy:}` `{item_stat:}` 的 id 导入时查：写错了导入失败（事件文本、章节规则卡）。标题与选项文字走纯文字（颜色剥掉、名字照换）。
+`{item:}` `{enemy:}` `{item_stat:}` `{faith…:}` 的 id 导入时查：写错了导入失败（事件文本、章节规则卡）。标题与选项文字走纯文字（颜色剥掉、名字照换）。
+
+**选项的门禁提示**（113）：选项的 `hint_when_hidden` 是一句模板。条件没过时，藏起来的选项（`hide_when_locked`）在事件屏底部灰字显示它，灰掉的选项用它替代条件的默认说明。教程用它说「为什么现在不行」。
 
 `extra` 字典可覆盖 / 追加任何键；带 `enemy_content` 时按那份内容算对手的键（搜索遭遇的事件用）。
 

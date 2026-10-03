@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_fm15x"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_qahiu"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/open_search.gd" id="3_6thxx"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_50oio"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_c2w27"]
+
+[sub_resource type="Resource" id="Resource_ymnnm"]
+script = ExtResource("3_6thxx")
+
+[sub_resource type="Resource" id="Resource_rfb7b"]
+script = ExtResource("1_fm15x")
+label = "再搜一次"
+outcomes = Array[ExtResource("2_qahiu")]([SubResource("Resource_ymnnm")])
+
+[resource]
+script = ExtResource("5_c2w27")
+id = &"tut3_search_again_2"
+title = "{item:bone_charm_bits}"
+text = "又是一串{item:bone_charm_bits}，也是骨头。前面的休息点有神坛，两件一起献上去。
+
+还有一样东西，再搜一次。"
+options = Array[ExtResource("1_fm15x")]([SubResource("Resource_rfb7b")])

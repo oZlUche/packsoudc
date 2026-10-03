@@ -428,8 +428,8 @@
   "drop_rule": "standard",
   "node_rules": "standard",
   "economy_rules": "standard",
-  "order": 2,
-  "requires_unlock": "prologue2_done",
+  "order": 3,
+  "requires_unlock": "prologue3_done",
   "rules": [
     "环形的魔法古迹：从外环的出生点进去，越往里越危险、也越值钱。撤离点只在外面几环；核心在最里面，打赢了直接撤离结算。",
     "全局倒计时 36 行动点：每走一步减一，归零就是行动失败。过半时离出生点最近的免费撤离点关闭（地图上标着）。",

@@ -1,0 +1,18 @@
+{
+  "id": "tut3_extract",
+  "title": "撤离",
+  "text": "到撤离点了。三张序章都过了。\n\n{item:charm_brute}和{item:charm_sun}跟着包回{zone:仓库}，下一局带哪枚进去，就从哪位神开始。再往上的阶（{faith_threshold:brute:3}、{faith_threshold:brute:4}）有秒杀精英和不死，正式局里慢慢攒。",
+  "options": [
+    {
+      "label": "撤离",
+      "outcomes": [
+        {
+          "type": "extract"
+        }
+      ]
+    },
+    {
+      "label": "再整理一下"
+    }
+  ]
+}

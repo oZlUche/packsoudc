@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.28 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.29 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3875,6 +3875,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.29 | 2026-10-03 | **序章三「祭坛」：教信仰全套**（报告 113，作者定）。新章 `prologue_3`（序章二通关开、撤离后直接进；第一章改为要 `prologue3_done`，排第四），预设图 `tutorial3.json` 一条线 9 个点：蛮神的低语（发护符）→ 劫匪（选项门禁 `faith_active`）→ 搜三件（骨骰子 / 碎骨串 / 胫骨大棒）→ 神坛 A 献祭过 1 阶 → 日神的低语（换神、休眠、两边信力各记各的）→ 蛮兵（门禁 `faith_active{faith: brute}`，逼一次切回）→ 神坛 B 特殊操作二选一 → 撤离。数值用真的战斗走一遍验：献祭后在 1 阶、第二场打完到 2 阶。机制：`FaithActive.faith`（只认一位神）；`EventOption.hint_when_hidden`（条件没过时说为什么，藏起来的选项在事件屏底部灰字）；信仰占位符 `{faith:id}`（新色 `faith`）、`{faith_threshold}` `{faith_deed}` `{faith_offer}` `{faith_perk}` `{faith_points}` `{faith_tier}`，导入时查信仰 id。新道具两件骨头祭品（无战斗属性，稀有度 3 / 2 —— 献祭点数按 2^稀有度 × 倍数） |
 | v2.28 | 2026-10-03 | **序章文案占位符化**（报告 112，作者定）：`TextTemplate` 加带类型的占位符，颜色跟着类型走 —— `{char}`（角色名，hp 色）、`{item:id}`（道具名，按稀有度上色 + 粗体，界面经 `UiPalette.resolve_styles` 换成 `ItemPainter` 的稀有度色）、`{enemy:id}`（danger）、`{ui:…}`（good）、`{zone:…}`（grant）、`{key:…}`（dim）；`{item_stat:…}` 也统一加粗上色；新键 `{loss_cost}`。名字读定义（跟语言、改名不漏），`{ui:}` `{zone:}` 英文查 `TextTemplate.TERMS_EN`。导入时 `{item:}` `{enemy:}` `{item_stat:}` 的 id 必须存在（事件文本在全部导完后统一查，规则卡在章节导入时查）。序章两张图 25 条事件与序章二规则卡改成占位符，写死的数（战锤节奏、长剑伤害、毒药瓶间隔、「输两场」）改读数据；规则卡与事件编辑器预览也过 `render` |
 | v2.27 | 2026-10-03 | **局外科技：仓库扩建与上交界面**（报告 110，作者定；改 8.2）与**编辑器字符串下拉 + 条件显示字段**（报告 111，改 10 节）。`TechDef / TechTier / TechEffect` 走内容管线（`techs`），`MetaState` 多 `tech_levels / tech_deposits`，**存档 v2 → v3**（迁移只补两个空字典，留冻结样本 `meta_v2.json`）；`TechService` 七个方法 + 读档自检；仓库扩建 6 级每级 +3 行，前 3 级只要钱、第 4 级起要三种新建材（`supply`【建材】，商店不卖）；基地第五个页签「科技」（双击 / 拖进上交区上交、上交即消耗、交齐且钱够【升级】才亮）。仓库视图加竖向滚动，拖拽命中只认露在外面的部分；整理改先同类（`GridTidy.KIND_ORDER`）再大小。111：`@export_enum` 的字符串字段在编辑器里是下拉（值仍是原字符串，显示名走 `FieldText.ENUM_LABELS`）；资源可声明 `FIELD_WHEN` 让字段按别的字段的值显隐（`ContentSchema.field_visible`），切走后被藏的字段归默认；`@export_range` 的数字框按范围限；`FaithBonus.mode` 改 `@export_enum("tier", "active", "scaled")`，导入时按阶写到超过信仰阶数报错 |
 | v2.26 | 2026-10-03 | **武器附加效果的统一接口**（报告 108，作者定；改 4.2）与**乘区 FIRE 改名 ELEMENT**（109 ⑤）。编译器把挂规则抽成唯一入口 `_attach`，`CompiledItem.attached` 记来源；邻接新增 `grant_rules`（毒箭：远程武器每次出手附带一层中毒），日神附魔的 `ScopedMod` 多一个 `origin`（`faith:sun`）。新道具【毒箭】（稀有度 1，和箭矢同池）。弓的悬浮窗多一行「附加：[出手时] 施加中毒 ← 毒箭」，中毒进它的侧窗。导入校验：附加规则只许出手时、不许消耗、不许直接毒伤。**顺手修了一个旧 bug**：听自己出手的规则执行时会再发一条宿主的 `ITEM_FIRED`，于是自己触发自己 —— 日神附魔一击连锁到 `max_chain` 被截断（5 秒 3 击打出 768 次附火）；现在这类规则执行不算再出手。乘区第 2 位改叫 `ELEMENT`（元素增伤；位置不变，存档与数值不受影响），内容写旧名 `FIRE` 导入报错指路 |

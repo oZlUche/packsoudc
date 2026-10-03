@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_blc65"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_h0fse"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="3_xu67q"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_tpcon"]
+[ext_resource type="Script" path="res://core/run/events/conditions/faith_active.gd" id="5_rqcrn"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/next_event.gd" id="6_tp4t6"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="7_s0p7i"]
+
+[sub_resource type="Resource" id="Resource_nwb2n"]
+script = ExtResource("3_xu67q")
+
+[sub_resource type="Resource" id="Resource_si11y"]
+script = ExtResource("5_rqcrn")
+faith = &"brute"
+
+[sub_resource type="Resource" id="Resource_c183t"]
+script = ExtResource("1_blc65")
+label = "进入战前准备"
+hide_when_locked = true
+hint_when_hidden = "你现在信的不是{faith:brute}：右键{item:charm_brute}切回来再打。"
+requires = Array[ExtResource("4_tpcon")]([SubResource("Resource_si11y")])
+outcomes = Array[ExtResource("2_h0fse")]([SubResource("Resource_nwb2n")])
+
+[sub_resource type="Resource" id="Resource_aced0"]
+script = ExtResource("6_tp4t6")
+event = &"tut3_battle_2"
+
+[sub_resource type="Resource" id="Resource_2thao"]
+script = ExtResource("1_blc65")
+label = "我先整理一下背包"
+outcomes = Array[ExtResource("2_h0fse")]([SubResource("Resource_aced0")])
+
+[resource]
+script = ExtResource("7_s0p7i")
+id = &"tut3_battle_2"
+title = "{enemy:brute}"
+text = "一个{enemy:brute}挡在路上，皮糙肉厚。
+
+带着{faith:brute}的第一阶打这一场：血掉得越多，你打得越狠，留意回放里的数字。打完信力该过 {faith_threshold:brute:2} 了。"
+options = Array[ExtResource("1_blc65")]([SubResource("Resource_c183t"), SubResource("Resource_2thao")])

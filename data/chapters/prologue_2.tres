@@ -24,6 +24,7 @@ requires_unlock = &"prologue_done"
 grants_unlock = &"prologue2_done"
 characters = Array[StringName]([&"brutus"])
 hidden_by_unlock = &"prologue2_done"
+next_chapter = &"prologue_3"
 vitality_bonus = 2
 starting_items = Array[StringName]([&"knife"])
 starting_keepsakes = Array[StringName]([&"spyglass"])

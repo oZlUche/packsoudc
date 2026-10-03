@@ -1,0 +1,15 @@
+{
+  "id": "tut3_search_again_2",
+  "title": "{item:bone_charm_bits}",
+  "text": "又是一串{item:bone_charm_bits}，也是骨头。前面的休息点有神坛，两件一起献上去。\n\n还有一样东西，再搜一次。",
+  "options": [
+    {
+      "label": "再搜一次",
+      "outcomes": [
+        {
+          "type": "open_search"
+        }
+      ]
+    }
+  ]
+}

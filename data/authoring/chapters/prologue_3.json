@@ -1,0 +1,37 @@
+{
+  "id": "prologue_3",
+  "display_name": "序章三：祭坛",
+  "display_names": {
+    "en": "Prologue III: The Altar"
+  },
+  "map_source": {
+    "mode": "PRESET",
+    "preset_path": "res://data/maps/tutorial3.json"
+  },
+  "drop_rule": "standard",
+  "node_rules": "prologue",
+  "economy_rules": "prologue",
+  "order": 2,
+  "requires_unlock": "prologue2_done",
+  "grants_unlock": "prologue3_done",
+  "characters": [
+    "brutus"
+  ],
+  "hidden_by_unlock": "prologue3_done",
+  "vitality_bonus": 2,
+  "starting_items": [
+    "shortsword"
+  ],
+  "starting_keepsakes": [
+    "spyglass"
+  ],
+  "allow_carry_in": false,
+  "auto_spawn": true,
+  "skip_setup": true,
+  "intro_event": "tut3_intro",
+  "rules": [
+    "{item:charm_brute}放进包里就是信{faith:brute}；最后放下的那枚信物说了算。",
+    "神坛上献祭和特殊操作二选一，用了这个神坛就关。",
+    "换神不花钱：放下另一枚信物，或右键它。"
+  ]
+}
