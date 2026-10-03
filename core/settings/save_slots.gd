@@ -72,14 +72,14 @@ func backup(n: int, which: String) -> String:
 ## **读不出来就先备份再从零开始**（098 作者定：版本升不上来的老档照原样留在硬盘上，不会被下一次存盘盖掉）。
 ## 返回 `{"slot", "run_path", "meta_path", "meta"（读出来的，或 null）, "backup"（备份文件的路径，没备份就空）}`。
 ## 谁是当前位、要不要存设置、这一局怎么办，都还是 [GameFlow] 的事
-func open(n: int, items: ItemDatabase, rules: MetaRules = null) -> Dictionary:
+func open(n: int, items: ItemDatabase, rules: MetaRules = null, tech_defs: Array = []) -> Dictionary:
 	n = clampi(n, 1, COUNT)
 	ensure_dir(n)
 	var mp := meta_path(n)
 	var out := {"slot": n, "run_path": run_path(n), "meta_path": mp, "meta": null, "backup": ""}
 	if not FileAccess.file_exists(mp):
 		return out
-	var loaded := MetaSave.read(items, mp, rules)
+	var loaded := MetaSave.read(items, mp, rules, tech_defs)     # 120：先按科技算容量再装仓库
 	if loaded == null:
 		out["backup"] = backup(n, "meta")
 	out["meta"] = loaded

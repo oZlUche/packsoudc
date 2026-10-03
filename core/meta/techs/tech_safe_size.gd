@@ -8,15 +8,10 @@ extends TechEffect
 @export_range(0, 5) var rows: int = 0
 
 
-func apply(meta: MetaState) -> void:
+## 120：到 [param level] 级 = 每级的格子 × 级数
+func derive(meta: MetaState, level: int) -> void:
 	if meta != null:
-		meta.safe_bonus += Vector2i(cols, rows)
-
-
-## 读档：已到 [param level] 级时加成就是每级的 × 级数（照定义算，改了数值读档即跟上）
-func heal(meta: MetaState, level: int) -> void:
-	if meta != null:
-		meta.safe_bonus = Vector2i(cols, rows) * level
+		meta.safe_bonus = Vector2i(cols, rows) * maxi(0, level)
 
 
 func describe() -> String:

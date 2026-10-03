@@ -481,8 +481,7 @@ func to_dict() -> Dictionary:
 		"flags": flags.duplicate(),
 		"tech_levels": tech_levels.duplicate(),
 		"tech_deposits": tech_deposits.duplicate(true),
-		"tech_buffs": _names_of(tech_buffs),     # 118：新字段有默认值，不升存档版本（098）
-		"safe_bonus": [safe_bonus.x, safe_bonus.y],
+		# 120：tech_buffs、safe_bonus 和仓库尺寸都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
 
@@ -494,14 +493,30 @@ static func _names_of(ids: Array[StringName]) -> Array:
 
 
 ## 读回来。版本不对返回 null（局外存档还只有开发期的，旧的作废）；定义被删的道具由容器的 from_dict 告警后丢弃。
-## 仓库大小以存档里的为准（成长过的仓库不该被规则缩回去）；没有存档时才用规则的
-static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = null) -> MetaState:
+## 120（作者定）：**先读进度表、再算容量、最后装东西** —— 给了 [param tech_defs] 时先读 `tech_levels`，
+## 在还空着的仓库上 [method TechService.derive] 出仓库尺寸、保险箱、局外 buff，再按算出的尺寸把仓库物品放回去
+## （原位放不下的找空位，再不行临时加行，不丢）。没给（测试直接读档）时仓库按存档里的尺寸建，派生值留给调用方 derive
+static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = null, tech_defs: Array = []) -> MetaState:
 	if int(d.get("version", -1)) != SAVE_VERSION:
 		return null
 	var m := MetaState.new(p_rules)
+	# 1. 进度表
+	for key in d.get("tech_levels", {}):
+		m.tech_levels[String(key)] = int((d["tech_levels"] as Dictionary)[key])
+	for key in d.get("tech_deposits", {}):
+		var got := {}
+		var src = (d["tech_deposits"] as Dictionary)[key]
+		if src is Dictionary:
+			for item_id in src:
+				got[String(item_id)] = int(src[item_id])
+		m.tech_deposits[String(key)] = got
+	# 2. 派生值（仓库还空着，长缩都不用顾忌）
+	if not tech_defs.is_empty():
+		TechService.derive(m, tech_defs)
+	# 3. 装东西
 	var w = d.get("warehouse", null)
 	if w is Dictionary:
-		m.warehouse = GridInventory.from_dict(w, items)
+		m.warehouse = GridInventory.from_dict(w, items, m.warehouse.size if not tech_defs.is_empty() else Vector2i.ZERO)
 		m.warehouse.id = WAREHOUSE_ID
 		m.warehouse.accept_filter = keeps
 	var b = d.get("board", null)
@@ -540,20 +555,6 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		m.seen_rules.append(StringName(String(id)))
 	for key in d.get("flags", {}):
 		m.flags[String(key)] = int((d["flags"] as Dictionary)[key])
-	for key in d.get("tech_levels", {}):
-		m.tech_levels[String(key)] = int((d["tech_levels"] as Dictionary)[key])
-	for key in d.get("tech_deposits", {}):
-		var got := {}
-		var src = (d["tech_deposits"] as Dictionary)[key]
-		if src is Dictionary:
-			for item_id in src:
-				got[String(item_id)] = int(src[item_id])
-		m.tech_deposits[String(key)] = got
-	for id in d.get("tech_buffs", []):
-		m.tech_buffs.append(StringName(String(id)))
-	var sb = d.get("safe_bonus", [0, 0])
-	if sb is Array and (sb as Array).size() == 2:
-		m.safe_bonus = Vector2i(int(sb[0]), int(sb[1]))
 	for row in d.get("history", []):
 		if row is Dictionary:
 			m.history.append(MapGraph.normalize(row))

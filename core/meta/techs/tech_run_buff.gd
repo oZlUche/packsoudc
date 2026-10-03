@@ -8,18 +8,8 @@ extends TechEffect
 @export var buffs: Array[StringName] = []
 
 
-## 升一级：去掉这项科技已给的那条（就是上一级的），加下一级的。从 tech_buffs 里认出到了第几级，不用另记
-func apply(meta: MetaState) -> void:
-	if meta == null or buffs.is_empty():
-		return
-	var at := _current_index(meta)
-	var next := mini(at + 1, buffs.size() - 1)
-	_strip(meta)
-	meta.tech_buffs.append(buffs[next])
-
-
-## 读档：已到 [param level] 级时 tech_buffs 里只该有第 level 条（level 0 = 一条都没有）
-func heal(meta: MetaState, level: int) -> void:
+## 120：已到 [param level] 级时 tech_buffs 里只该有这项科技的第 level 条（level 0 = 一条都没有）
+func derive(meta: MetaState, level: int) -> void:
 	if meta == null:
 		return
 	_strip(meta)
@@ -36,14 +26,6 @@ func describe_level(level: int, buff_defs: Dictionary = {}) -> String:
 		return ""
 	var def: RunBuffDef = buff_defs.get(buffs[level - 1], null)
 	return def.summary() if def != null else String(buffs[level - 1])
-
-
-## 这项科技给的那条在 tech_buffs 里的下标（在本表里的）；一条都没给 −1
-func _current_index(meta: MetaState) -> int:
-	for i in range(buffs.size() - 1, -1, -1):
-		if meta.tech_buffs.has(buffs[i]):
-			return i
-	return -1
 
 
 func _strip(meta: MetaState) -> void:
