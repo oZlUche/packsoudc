@@ -30,6 +30,7 @@ const AUTHORING_META_RULES := AUTHORING + "/meta_rules"
 const AUTHORING_CHAPTERS := AUTHORING + "/chapters"
 const AUTHORING_ACHIEVEMENTS := AUTHORING + "/achievements"
 const AUTHORING_TECHS := AUTHORING + "/techs"
+const AUTHORING_HELP_PAGES := AUTHORING + "/help_pages"
 #endregion
 
 #region 引擎资产（导入器产出，游戏读这里）
@@ -55,6 +56,7 @@ const META_RULES := "res://data/meta_rules"
 const CHAPTERS := "res://data/chapters"
 const ACHIEVEMENTS := "res://data/achievements"
 const TECHS := "res://data/techs"
+const HELP_PAGES := "res://data/help_pages"
 #endregion
 
 ## 种类 → [作者数据目录, 资产目录]。顺序即导入顺序：后者可以按 id 引用前者。
@@ -82,11 +84,12 @@ const KINDS := {
 	"chapters": [AUTHORING_CHAPTERS, CHAPTERS],
 	"achievements": [AUTHORING_ACHIEVEMENTS, ACHIEVEMENTS],
 	"techs": [AUTHORING_TECHS, TECHS],
+	"help_pages": [AUTHORING_HELP_PAGES, HELP_PAGES],
 }
 ## 开局装备、角色（初始包对着道具查）与敌人都在道具之后（清单、招牌道具、流派标签要对着道具查），池在敌人之后，三种规则独立，
 ## 章节按 id 引用池与规则；成就（091）排最后（对象可能是道具 / 章节）
-## 096：标签与伤害类型最先（道具的标签对着它提醒；没有它们也能导）；110：局外科技在道具之后（要交的材料对着道具查）
-const ORDER := ["tags", "damage_types", "run_buffs", "faiths", "items", "recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters", "achievements", "techs"]
+## 096：标签与伤害类型最先（道具的标签对着它提醒；没有它们也能导）；110：局外科技在道具之后（要交的材料对着道具查）；114：百科的机制页最后（相关道具对着道具查）
+const ORDER := ["tags", "damage_types", "run_buffs", "faiths", "items", "recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters", "achievements", "techs", "help_pages"]
 
 
 ## 100（作者定）：有目录、但独立内容一份都还没有的种类 —— **不进 [constant KINDS]**（批量导入与一致性检查都不跑它们），

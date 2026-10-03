@@ -26,6 +26,7 @@ const SCREEN_SCRIPTS := {
 	GameFlow.Screen.SLOTS: "res://ui/game/slots_screen.gd",
 	GameFlow.Screen.SAFE: "res://ui/game/safe_screen.gd",
 	GameFlow.Screen.ALTAR: "res://ui/game/altar_screen.gd",
+	GameFlow.Screen.ENCYCLOPEDIA: "res://ui/game/encyclopedia_screen.gd",
 }
 const LAUNCHER := "res://ui/launcher.tscn"
 
@@ -67,6 +68,7 @@ func _ready() -> void:
 	flow.recipes = GameFlow.load_recipes()
 	flow.achievement_defs = GameFlow.load_achievements()     # 091
 	flow.tech_defs = GameFlow.load_techs()     # 110
+	flow.help_pages = GameFlow.load_help_pages()     # 114：百科
 	# 校准记录（073）：正式游戏每走一步记一份玩家配置到 user://calibration/，木桩工具吃它
 	flow.recorder = CalibrationRecorder.new()
 	flow.save_path = save_path
