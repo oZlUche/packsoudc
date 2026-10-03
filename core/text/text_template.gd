@@ -13,7 +13,7 @@ extends RefCounted
 ## 表在 [constant UiPalette.STYLE_COLORS]，渲染前由 [method UiPalette.resolve_styles] 换成十六进制。
 ## 文本层不认识调色板（core 不依赖 ui）
 const STYLE_NAMES := ["fg", "dim", "hp", "shield", "stamina", "mana", "heal", "grant", "receive",
-	"warn", "danger", "good"]
+	"warn", "danger", "good", "faith"]
 ## 颜色名在 BBCode 里的前缀：`[color=@hp]`。界面查表换掉；没换的话 Godot 当成无效颜色，不会崩
 const STYLE_PREFIX := "@"
 ## 112：道具名按稀有度上色用的颜色名前缀（`@rarity0`～`@rarity5`），界面按 [ItemPainter] 的稀有度色换
@@ -28,6 +28,7 @@ const TYPED_STYLES := {
 	"zone": "grant",
 	"key": "dim",
 	"item_stat": "fg",
+	"faith": "faith",     # 113
 }
 ## 112：`{ui:…}` `{zone:…}` 的英文（界面切到英文时换；没登记的照原文）
 const TERMS_EN := {
@@ -131,6 +132,42 @@ static func _typed(token: String, ctx: Dictionary) -> Variant:
 			return _paint(word, String(TYPED_STYLES[kind]))
 		"key":
 			return _paint(arg, String(TYPED_STYLES["key"]))
+		"faith":
+			var f := _faiths_of(ctx).get(StringName(arg), null) as FaithDef
+			return _paint(Names.of(f), String(TYPED_STYLES["faith"])) if f != null else null
+		"faith_threshold", "faith_deed", "faith_offer", "faith_perk":
+			var n: Variant = _faith_stat(kind, arg, ctx)
+			return _paint(String(_format(n, "")), String(TYPED_STYLES["item_stat"])) if n != null else null
+	return null
+
+
+## 113：信仰定义里的数。`{faith_threshold:<神>:<阶>}` 第几阶的阈值；`{faith_deed:<神>:<行为类型>:<字段>}`、
+## `{faith_perk:<神>:<效果类型>:<字段>}` 按注册表名找构件；`{faith_offer:<神>:<标签>:<字段>}` 找认这个标签的献祭规则。
+## 字段的查找和 `{item_stat}` 同一套反射（[method _find_field]），只是起点换成那一个构件
+static func _faith_stat(kind: String, arg: String, ctx: Dictionary) -> Variant:
+	var parts := arg.split(":")
+	var def := _faiths_of(ctx).get(StringName(parts[0]), null) as FaithDef
+	if def == null:
+		return null
+	match kind:
+		"faith_threshold":
+			if parts.size() != 2 or not parts[1].is_valid_int():
+				return null
+			var n := int(parts[1])
+			return def.thresholds[n - 1] if n >= 1 and n <= def.thresholds.size() else null
+		"faith_deed", "faith_perk":
+			if parts.size() != 3:
+				return null
+			var pool: Array = def.deeds if kind == "faith_deed" else def.perks
+			for part in pool:
+				if part != null and String(ContentSchema.registry_name_of(part)) == parts[1]:
+					return _find_field(part, parts[2], 0)
+		"faith_offer":
+			if parts.size() != 3:
+				return null
+			for r in def.offerings:
+				if r != null and (r as OfferingRule).tags.has(StringName(parts[1])):
+					return _find_field(r, parts[2], 0)
 	return null
 
 
@@ -139,13 +176,14 @@ static func _paint(text: String, style: String, bold: bool = true) -> String:
 	return "[color=%s%s]%s[/color]" % [STYLE_PREFIX, style, inner]
 
 
-## 112：正文里引用了哪些道具 / 敌人（`{item:id}` `{enemy:id}` `{item_stat:id:字段}`）→ [{kind, id}]。导入器拿它查 id
+## 112：正文里引用了哪些道具 / 敌人 / 信仰（113 加 `{faith…:}`；`{item:id}` `{enemy:id}` `{item_stat:id:字段}`）→ [{kind, id}]。导入器拿它查 id
 static func refs(text: String) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var regex := RegEx.new()
-	regex.compile("\\{(item|enemy|item_stat):([^:}|]+)")
+	regex.compile("\\{(item|enemy|item_stat|faith|faith_threshold|faith_deed|faith_offer|faith_perk):([^:}|]+)")
 	for m in regex.search_all(text):
-		out.append({"kind": "enemy" if m.get_string(1) == "enemy" else "item", "id": m.get_string(2)})
+		var k := m.get_string(1)
+		out.append({"kind": "enemy" if k == "enemy" else ("faith" if k.begins_with("faith") else "item"), "id": m.get_string(2)})
 	return out
 
 
@@ -196,6 +234,19 @@ static var _enemies_cache: EnemyDatabase = null
 static func _items_of(ctx: Dictionary) -> ItemDatabase:
 	var db: Variant = ctx.get("_items", null)
 	return db if db is ItemDatabase else _default_items()
+
+
+static var _faiths_cache: Dictionary = {}
+
+
+## 113：信仰定义 id → FaithDef：ctx 的 `_faiths`，没有就自己读一份
+static func _faiths_of(ctx: Dictionary) -> Dictionary:
+	var d: Variant = ctx.get("_faiths", null)
+	if d is Dictionary and not (d as Dictionary).is_empty():
+		return d
+	if _faiths_cache.is_empty():
+		_faiths_cache = FaithDef.load_all()
+	return _faiths_cache
 
 
 static func _enemies_of(ctx: Dictionary) -> EnemyDatabase:
@@ -271,6 +322,11 @@ static func context_for(run: RunState, node: MapNode = null, extra: Dictionary =
 		ctx["storage_count"] = run.storage.item_count() if run.storage != null else 0
 		var faith := run.active_faith()
 		ctx["faith"] = Names.of(faith) if faith != null else "无"
+		# 113：激活信仰现在的信力与阶（没激活 0 / 0）
+		ctx["faith_points"] = run.faith_power.points_of(faith.id) if faith != null and run.faith_power != null else 0
+		ctx["faith_tier"] = maxi(0, run.active_faith_tier()) if faith != null else 0
+		if not run.faith_defs.is_empty():
+			ctx["_faiths"] = run.faith_defs
 		ctx["difficulty"] = run.difficulty.display_name if run.difficulty != null and "display_name" in run.difficulty else "普通"
 		ctx["battles_won"] = int(run.tally.get("battles_won", 0))
 		ctx["battles_lost"] = int(run.tally.get("battles_lost", 0))

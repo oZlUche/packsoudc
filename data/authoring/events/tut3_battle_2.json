@@ -1,0 +1,32 @@
+{
+  "id": "tut3_battle_2",
+  "title": "{enemy:brute}",
+  "text": "一个{enemy:brute}挡在路上，皮糙肉厚。\n\n带着{faith:brute}的第一阶打这一场：血掉得越多，你打得越狠，留意回放里的数字。打完信力该过 {faith_threshold:brute:2} 了。",
+  "options": [
+    {
+      "label": "进入战前准备",
+      "hide_when_locked": true,
+      "hint_when_hidden": "你现在信的不是{faith:brute}：右键{item:charm_brute}切回来再打。",
+      "requires": [
+        {
+          "type": "faith_active",
+          "faith": "brute"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "proceed"
+        }
+      ]
+    },
+    {
+      "label": "我先整理一下背包",
+      "outcomes": [
+        {
+          "type": "next_event",
+          "event": "tut3_battle_2"
+        }
+      ]
+    }
+  ]
+}

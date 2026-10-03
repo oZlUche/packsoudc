@@ -1,0 +1,42 @@
+{
+  "id": "tut3_rest_2",
+  "title": "第二座神坛",
+  "text": "到第二阶了，神坛上多了两个特殊操作：\n\n「祈求赐福」花 {faith_perk:brute:altar_bless:cost} 信力，把一件东西换成{faith:brute}赐福的版本；「献祭生命上限」每次扣 {faith_perk:brute:altar_sacrifice_hp:hp_cost} 点生命上限，换耐力上限和急速。\n\n{b}只能选一个{/b}：选了，这座神坛就关了，献祭也不能再做 —— 这就是二选一。",
+  "options": [
+    {
+      "label": "神坛（献祭或特殊操作，二选一）",
+      "hide_when_locked": true,
+      "requires": [
+        {
+          "type": "faith_active"
+        },
+        {
+          "type": "rest_part_unused",
+          "part": "altar"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "open_altar"
+        }
+      ]
+    },
+    {
+      "label": "歇一会儿",
+      "hide_when_locked": true,
+      "requires": [
+        {
+          "type": "rest_part_unused"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "proceed"
+        }
+      ]
+    },
+    {
+      "label": "继续赶路（不算用掉）"
+    }
+  ]
+}

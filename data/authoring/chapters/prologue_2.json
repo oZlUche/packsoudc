@@ -14,6 +14,7 @@
   "order": 1,
   "requires_unlock": "prologue_done",
   "grants_unlock": "prologue2_done",
+  "next_chapter": "prologue_3",
   "characters": [
     "brutus"
   ],

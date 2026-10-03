@@ -1,0 +1,312 @@
+{
+  "version": 1,
+  "layout_kind": "line",
+  "layout_meta": {},
+  "nodes": [
+    {
+      "id": 0,
+      "type": "spawn",
+      "danger": 0,
+      "zone": 0,
+      "tier": 0,
+      "erosion_band": 0,
+      "content_seed": 300,
+      "content": {},
+      "state": 0,
+      "layout": {
+        "col": 0,
+        "row": 1
+      }
+    },
+    {
+      "id": 1,
+      "type": "event",
+      "danger": 0,
+      "zone": 0,
+      "tier": 1,
+      "erosion_band": 0,
+      "content_seed": 301,
+      "content": {
+        "event": "tut3_faith_call"
+      },
+      "state": 0,
+      "layout": {
+        "col": 1,
+        "row": 1
+      }
+    },
+    {
+      "id": 2,
+      "type": "battle",
+      "danger": 0,
+      "zone": 0,
+      "tier": 2,
+      "erosion_band": 0,
+      "content_seed": 302,
+      "content": {
+        "enemy": "raider",
+        "strength": 0,
+        "board": [
+          4,
+          3
+        ],
+        "items": [
+          {
+            "id": "bag_leather",
+            "at": [
+              0,
+              0
+            ],
+            "rot": 0
+          },
+          {
+            "id": "knife",
+            "at": [
+              0,
+              0
+            ],
+            "rot": 0
+          }
+        ],
+        "base_stats": {
+          "max_hp": 40,
+          "max_stamina": 60,
+          "regen_stamina": 8
+        },
+        "event": "tut3_battle_1",
+        "tooltip": "{battle_data}\n{c:dim}一把小刀，不难对付。{/c}"
+      },
+      "state": 0,
+      "layout": {
+        "col": 2,
+        "row": 1
+      }
+    },
+    {
+      "id": 3,
+      "type": "search",
+      "danger": 0,
+      "zone": 0,
+      "tier": 3,
+      "erosion_band": 0,
+      "content_seed": 303,
+      "content": {
+        "event": "tut3_search",
+        "search_max": 3,
+        "search_curve": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "search_finds": [
+          [
+            "bone_dice"
+          ],
+          [
+            "bone_charm_bits"
+          ],
+          [
+            "tibia_violence"
+          ]
+        ],
+        "search_again_events": [
+          "tut3_search_again_1",
+          "tut3_search_again_2"
+        ],
+        "search_done_event": "tut3_search_done"
+      },
+      "state": 0,
+      "layout": {
+        "col": 3,
+        "row": 1
+      }
+    },
+    {
+      "id": 4,
+      "type": "rest",
+      "danger": 0,
+      "zone": 0,
+      "tier": 3,
+      "erosion_band": 0,
+      "content_seed": 304,
+      "content": {
+        "event": "tut3_rest_1"
+      },
+      "state": 0,
+      "layout": {
+        "col": 4,
+        "row": 1
+      }
+    },
+    {
+      "id": 5,
+      "type": "event",
+      "danger": 0,
+      "zone": 0,
+      "tier": 3,
+      "erosion_band": 0,
+      "content_seed": 305,
+      "content": {
+        "event": "tut3_faith_call_sun"
+      },
+      "state": 0,
+      "layout": {
+        "col": 5,
+        "row": 1
+      }
+    },
+    {
+      "id": 6,
+      "type": "battle",
+      "danger": 0,
+      "zone": 0,
+      "tier": 3,
+      "erosion_band": 0,
+      "content_seed": 306,
+      "content": {
+        "enemy": "brute",
+        "strength": 0,
+        "board": [
+          4,
+          3
+        ],
+        "items": [
+          {
+            "id": "bag_leather",
+            "at": [
+              0,
+              0
+            ],
+            "rot": 0
+          },
+          {
+            "id": "shortsword",
+            "at": [
+              0,
+              0
+            ],
+            "rot": 0
+          }
+        ],
+        "base_stats": {
+          "max_hp": 110
+        },
+        "event": "tut3_battle_2",
+        "tooltip": "{battle_data}\n{c:dim}皮糙肉厚，慢慢磨。{/c}"
+      },
+      "state": 0,
+      "layout": {
+        "col": 6,
+        "row": 1
+      }
+    },
+    {
+      "id": 7,
+      "type": "rest",
+      "danger": 0,
+      "zone": 0,
+      "tier": 3,
+      "erosion_band": 0,
+      "content_seed": 307,
+      "content": {
+        "event": "tut3_rest_2"
+      },
+      "state": 0,
+      "layout": {
+        "col": 7,
+        "row": 1
+      }
+    },
+    {
+      "id": 8,
+      "type": "extract",
+      "danger": 0,
+      "zone": 0,
+      "tier": 3,
+      "erosion_band": 0,
+      "content_seed": 308,
+      "content": {
+        "event": "tut3_extract"
+      },
+      "state": 0,
+      "layout": {
+        "col": 8,
+        "row": 1
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": 0,
+      "to": 1,
+      "directed": false,
+      "kind": "",
+      "action_cost": 1,
+      "layout": {}
+    },
+    {
+      "from": 1,
+      "to": 2,
+      "directed": false,
+      "kind": "",
+      "action_cost": 1,
+      "layout": {}
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "directed": false,
+      "kind": "",
+      "action_cost": 1,
+      "layout": {}
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "directed": false,
+      "kind": "",
+      "action_cost": 1,
+      "layout": {}
+    },
+    {
+      "from": 4,
+      "to": 5,
+      "directed": false,
+      "kind": "",
+      "action_cost": 1,
+      "layout": {}
+    },
+    {
+      "from": 5,
+      "to": 6,
+      "directed": false,
+      "kind": "",
+      "action_cost": 1,
+      "layout": {}
+    },
+    {
+      "from": 6,
+      "to": 7,
+      "directed": false,
+      "kind": "",
+      "action_cost": 1,
+      "layout": {}
+    },
+    {
+      "from": 7,
+      "to": 8,
+      "directed": false,
+      "kind": "",
+      "action_cost": 1,
+      "layout": {}
+    }
+  ],
+  "entry_ids": [
+    0
+  ],
+  "goal_ids": [
+    8
+  ],
+  "zones": [],
+  "routes": []
+}

@@ -466,6 +466,9 @@ static func check_text_refs(text: String, at: String, ctx: Context, report: Impo
 		if ref["kind"] == "enemy":
 			if not ctx.enemies.is_empty() and not ctx.enemies.has(id):
 				report.error(at, "文本里的 {enemy:%s}：敌人库里没有它" % id)
+		elif ref["kind"] == "faith":
+			if not ctx.faiths.is_empty() and not ctx.faiths.has(id):
+				report.error(at, "文本里引用的信仰 %s 不存在" % id)
 		elif not ctx.items.is_empty() and not ctx.items.has(id):
 			report.error(at, "文本里引用的道具 %s 在道具库里没有" % id)
 
@@ -489,6 +492,7 @@ static func validate_event_text_refs(ctx: Context, report: ImportReport) -> void
 			var opt := def.options[i] as EventOption
 			if opt != null:
 				check_text_refs(opt.label, "options[%d].label" % i, ctx, report)
+				check_text_refs(opt.hint_when_hidden, "options[%d].hint_when_hidden" % i, ctx, report)
 
 
 ## 敌人（M4-1）。校验里「对着道具查」的那几条只在批量导入（上下文里有道具）时生效。

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_e8sgj"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_5r6le"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="3_4yiec"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="4_jcjpj"]
+
+[sub_resource type="Resource" id="Resource_bc7cv"]
+script = ExtResource("1_e8sgj")
+label = "出发"
+
+[resource]
+script = ExtResource("4_jcjpj")
+id = &"tut3_intro"
+title = "祭坛"
+text = "{char}第三次被送进来。这一带的废墟里有人拜神：碎骨堆成的祭坛、没干透的血。
+
+拜对了神，神会在战斗里帮你；拜神要信物，供神要祭品。这一张图教你怎么和神打交道。
+
+先往前走。"
+options = Array[ExtResource("1_e8sgj")]([SubResource("Resource_bc7cv")])

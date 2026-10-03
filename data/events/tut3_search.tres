@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_vpoeh"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_y16ww"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/open_search.gd" id="3_30qol"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_mn2xw"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_32bbl"]
+
+[sub_resource type="Resource" id="Resource_jflll"]
+script = ExtResource("3_30qol")
+
+[sub_resource type="Resource" id="Resource_s18a7"]
+script = ExtResource("1_vpoeh")
+label = "搜索"
+outcomes = Array[ExtResource("2_y16ww")]([SubResource("Resource_jflll")])
+
+[resource]
+script = ExtResource("5_32bbl")
+id = &"tut3_search"
+title = "蛮族的埋藏"
+text = "这里埋着蛮族的东西。搜三次，都很安静。"
+options = Array[ExtResource("1_vpoeh")]([SubResource("Resource_s18a7")])

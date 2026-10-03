@@ -1,0 +1,15 @@
+{
+  "id": "tut3_search",
+  "title": "蛮族的埋藏",
+  "text": "这里埋着蛮族的东西。搜三次，都很安静。",
+  "options": [
+    {
+      "label": "搜索",
+      "outcomes": [
+        {
+          "type": "open_search"
+        }
+      ]
+    }
+  ]
+}

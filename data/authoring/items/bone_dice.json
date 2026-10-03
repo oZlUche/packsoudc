@@ -1,0 +1,15 @@
+{
+  "id": "bone_dice",
+  "display_name": "骨骰子",
+  "display_names": {
+    "en": "Bone Dice"
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "bone",
+    "material"
+  ]
+}
