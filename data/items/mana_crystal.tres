@@ -27,5 +27,5 @@ display_names = {
 }
 shape = SubResource("Resource_uadcn")
 rarity = 1
-tags = Array[StringName]([&"part", &"material", &"nature", &"gem"])
+tags = Array[StringName]([&"part", &"material", &"magic", &"gem"])
 combat = SubResource("Resource_wigom")
