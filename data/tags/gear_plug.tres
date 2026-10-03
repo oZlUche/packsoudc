@@ -13,3 +13,4 @@ description = "贴着防具放的小件。"
 descriptions = {
 "en": "A small piece that slots next to gear."
 }
+tip = false

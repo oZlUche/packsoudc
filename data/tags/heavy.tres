@@ -13,3 +13,4 @@ description = "笨重的大件。"
 descriptions = {
 "en": "Bulky, heavy equipment."
 }
+tip = false

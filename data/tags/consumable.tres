@@ -13,3 +13,4 @@ description = "用一次就没的东西。"
 descriptions = {
 "en": "Used up after one use."
 }
+tip = false

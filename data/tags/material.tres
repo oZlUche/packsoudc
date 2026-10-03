@@ -13,3 +13,4 @@ description = "材料。"
 descriptions = {
 "en": "A crafting material."
 }
+tip = false

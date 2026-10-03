@@ -13,3 +13,4 @@ description = "鞣制的兽皮做的东西。"
 descriptions = {
 "en": "Made of tanned hide."
 }
+tip = false

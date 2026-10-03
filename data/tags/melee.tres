@@ -13,3 +13,4 @@ description = "近身武器。"
 descriptions = {
 "en": "A close-quarters weapon."
 }
+tip = false

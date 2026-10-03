@@ -59,16 +59,25 @@ func variants_lit() -> int:
 	return n
 
 
+## 107：叠影垫几层（最多 2，和原来一样；没异体就 0）
+func stack_layers() -> int:
+	return mini(variant_count(), 2)
+
+
+## 107（作者定）：格子里的物品呈现堆叠 —— 后面的层先画、颜色暗一档，描边用那位神赐福版的稀有度色
+## （没点亮的用灰），最前面是原件。错位沿用 [constant STACK_OFFSET]
+func _draw_variant_stack(cells: Array[Vector2i], anchor: Vector2, cell: float, layers: int) -> void:
+	for i in range(layers, 0, -1):
+		var vdef: ItemDef = variants[mini(i, variants.size() - 1)]
+		var on := variant_lit[mini(i, variant_lit.size() - 1)] if not variant_lit.is_empty() else false
+		var body := ItemPainter.body_color(vdef).darkened(0.25) if on else COLOR_DARK
+		var edge := ItemPainter.rarity_color(vdef).lightened(0.1) if on else COLOR_DARK_EDGE
+		ItemPainter.draw_item(self, cells, anchor + STACK_OFFSET * float(i), cell, body, edge)
+
+
 func _draw() -> void:
-	# 095：有异体的格子画成一叠 —— 后面错位垫两层，各按那位神的赐福版的稀有度描边
-	if variant_count() > 0:
-		var layers := mini(variant_count(), 2)
-		for i in range(layers, 0, -1):
-			var off := STACK_OFFSET * float(i)
-			var vdef: ItemDef = variants[mini(i, variants.size() - 1)]
-			var on := variant_lit[mini(i, variant_lit.size() - 1)] if not variant_lit.is_empty() else false
-			draw_rect(Rect2(off, size), UiPalette.PANEL.darkened(0.15))
-			draw_rect(Rect2(off, size), (ItemPainter.rarity_color(vdef).lightened(0.1) if on else COLOR_DARK_EDGE), false, 1.0)
+	# 107（作者定）：**外框不动，叠的是里面的物品** —— 格子只画一个（底板 + 描边），
+	# 异体的叠影在下面画在形状上（见 `_draw_variant_stack`）
 	draw_rect(Rect2(Vector2.ZERO, size), UiPalette.PANEL)
 	draw_rect(Rect2(Vector2.ZERO, size), UiPalette.LINE, false, 1.0)
 	if def == null:
@@ -77,12 +86,16 @@ func _draw() -> void:
 	# 形状缩放进上半块
 	var cells: Array[Vector2i] = def.cells_rotated(0) if def.shape != null else [Vector2i.ZERO] as Array[Vector2i]
 	var box := def.shape.size_rotated(0) if def.shape != null else Vector2i.ONE
-	var area := Vector2(size.x - PAD * 2, size.y - PAD * 2 - NAME_H)
+	# 107：有异体时先把可用区缩小「错位量 × 层数」，整叠才落得进外框里
+	var layers := stack_layers()
+	var inset := Vector2(absf(STACK_OFFSET.x), absf(STACK_OFFSET.y)) * float(layers)
+	var area := Vector2(size.x - PAD * 2, size.y - PAD * 2 - NAME_H) - inset
 	var cell := minf(area.x / maxf(1.0, float(box.x)), area.y / maxf(1.0, float(box.y)))
 	cell = minf(cell, 40.0)
-	var anchor := Vector2(PAD + (area.x - cell * box.x) * 0.5, PAD + (area.y - cell * box.y) * 0.5)
+	var anchor := Vector2(PAD + (area.x - cell * box.x) * 0.5, PAD + inset.y + (area.y - cell * box.y) * 0.5)
 	var body := ItemPainter.body_color(def) if lit else COLOR_DARK
 	var edge := ItemPainter.rarity_color(def).lightened(0.2) if lit else COLOR_DARK_EDGE
+	_draw_variant_stack(cells, anchor, cell, layers)
 	ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
 	# 名字
 	var name := Names.of(def) if lit else Names.of(def)

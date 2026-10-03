@@ -17,3 +17,9 @@ extends Resource
 @export_multiline var description: String = ""
 ## 别的语言的说明，`{"en": "..."}`；[method Names.description_of] 取
 @export var descriptions: Dictionary = {}
+## 107（作者定）：要不要给这个标签在悬浮窗里**弹词条**。
+##
+## false = 不进侧窗、主文字里也不标色（标了色玩家就会去找解释，找不到比没有更糟）——
+## 「近战」「武器」「材料」这类一看就懂的词都是 false。**说明文字照样保留**：
+## 编辑器的词典、文档、将来的图鉴照用，标签行也照样列出名字。
+@export var tip: bool = true

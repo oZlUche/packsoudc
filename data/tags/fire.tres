@@ -13,3 +13,4 @@ description = "带火的东西。"
 descriptions = {
 "en": "Carries fire."
 }
+tip = false

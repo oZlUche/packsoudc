@@ -7,5 +7,6 @@
   "description": "蛮族的东西。",
   "descriptions": {
     "en": "Of the barbarian tribes."
-  }
+  },
+  "tip": false
 }

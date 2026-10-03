@@ -13,3 +13,4 @@ description = "穿戴的装备：盔甲、盾……"
 descriptions = {
 "en": "Worn protection: armor, shields and the like."
 }
+tip = false

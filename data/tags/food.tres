@@ -13,3 +13,4 @@ description = "吃的。"
 descriptions = {
 "en": "Something to eat."
 }
+tip = false

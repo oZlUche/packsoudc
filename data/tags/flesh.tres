@@ -13,3 +13,4 @@ description = "血肉之物。"
 descriptions = {
 "en": "Of flesh and blood."
 }
+tip = false

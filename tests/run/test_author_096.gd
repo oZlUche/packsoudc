@@ -34,8 +34,12 @@ static func run_tag_data(t: TestCase) -> void:
 	t.eq(TagRegistry.describe(&"zz_nobody"), "", "没登记的没说明")
 	t.eq(Glossary.tag_name(&"metal"), "金属", "Glossary.tag_name 走数据")
 	t.check(Glossary.tag_name(&"faith:brute").begins_with("信仰：") and Glossary.tag_name(&"faith:brute").contains("蛮神"), "信仰对象标签：%s" % Glossary.tag_name(&"faith:brute"))
-	var terms := Glossary.tag_terms([&"weapon", &"zz_nobody"])
-	t.check(terms.has("武器") and terms.size() == 1, "有说明的标签成词条，没登记的不出")
+	# 107（作者定）：武器、近战这类一看就懂的标签 tip 关了 —— 不出词条，但说明文字照在
+	var terms := Glossary.tag_terms([&"weapon", &"zz_nobody", &"metal"])
+	t.check(terms.has("金属") and not terms.has("武器") and terms.size() == 1, "只有 tip 开着的标签成词条：%s" % str(terms.keys()))
+	t.check(TagRegistry.describe(&"weapon") != "" and not TagRegistry.tip_of(&"weapon"), "武器的说明文字保留，只是不弹")
+	t.check(TagRegistry.tip_of(&"metal"), "金属写了哪位神看重它，照弹")
+	t.check(not TagRegistry.tip_of(&"zz_nobody"), "没登记的标签没有词条")
 	var saved := UiText.lang
 	UiText.lang = "en"
 	t.eq(Glossary.tag_name(&"metal"), "Metal", "英文模式：Metal")
@@ -119,11 +123,11 @@ static func run_tooltip_tags(t: TestCase) -> void:
 	var knife := ItemInstance.create(c.items.get_def(&"knife"))
 	var full := ItemTooltip.describe_full(knife)
 	var text := Glossary.strip_bbcode(String(full["text"]))
-	t.check(text.contains("标签：武器、近战、快攻、金属"), "标签一行按名字：%s" % text.split("\n")[1] if text.split("\n").size() > 1 else text)
+	t.check(text.contains("标签：武器、近战、快攻、金属"), "标签一行照样列出全部名字（107：不弹词条不等于不显示）：%s" % text.split("\n")[1] if text.split("\n").size() > 1 else text)
 	var names: Array[String] = []
 	for term in full["terms"]:
 		names.append(String((term as Dictionary)["name"]))
-	t.check(names.has("武器") and names.has("金属"), "标签的说明成了词条：%s" % str(names))
+	t.check(names.has("金属") and not names.has("武器") and not names.has("近战"), "107：只有 tip 开着的标签成词条：%s" % str(names))
 
 
 static func run_faith_bonus_lit(t: TestCase) -> void:
@@ -138,6 +142,7 @@ static func run_faith_bonus_lit(t: TestCase) -> void:
 	ItemTooltip.faith_probe = Callable()
 	var plain := ItemTooltip.describe(ItemInstance.create(bow))
 	t.check(plain.contains("信力") and not plain.contains("[color=#%s]信力" % ItemTooltip.DIM_HEX) and not plain.contains("现在"), "局外：原色，不写状态")
+	t.check(not plain.contains("休眠"), "107：道具悬浮窗里不再出现「休眠」字样")
 	var b0 := bow.faith_bonuses[0] as FaithBonus
 	t.check(not ItemTooltip.bonus_lit(bow, b0, {}), "没状态 = 不亮")
 	t.check(not ItemTooltip.bonus_lit(bow, b0, {"active": &"brute", "tier": 5, "points": 999}), "别的神激活：不亮")
@@ -148,9 +153,12 @@ static func run_faith_bonus_lit(t: TestCase) -> void:
 	var fg := "[color=#%s]" % UiPalette.FG.to_html(false)
 	var dormant := ItemTooltip.describe(ItemInstance.create(bow))
 	t.eq(dormant.count(dim), plain.count(dim) + bow.faith_bonuses.size(), "别的神激活：每条加成多一段灰")
-	t.check(Glossary.strip_bbcode(dormant).contains("现在休眠"), "写着现在休眠")
+	# 107（作者定）：不再写「现在休眠」—— 状态就是颜色
+	t.check(not Glossary.strip_bbcode(dormant).contains("休眠"), "别的神激活：不写「休眠」两个字，灰色就是状态")
+	t.check(not ItemTooltip.faith_lit(bow, ItemTooltip.faith_status()), "狩猎的弓在蛮神激活时不亮")
 	var sig_text := ItemTooltip.describe(ItemInstance.create(sigil))
-	t.check(Glossary.strip_bbcode(sig_text).contains("已激活（Lv.2）"), "蛮神的符号：写着已激活 Lv.2（%s）" % Glossary.strip_bbcode(sig_text).replace("\n", " | "))
+	t.check(ItemTooltip.faith_lit(sigil, ItemTooltip.faith_status()), "蛮神的符号在蛮神激活时亮（107：不再写「已激活（Lv.2）」，亮色就是状态）")
+	t.check(not Glossary.strip_bbcode(sig_text).contains("已激活"), "状态尾巴去掉了")
 	var lit_n := 0
 	for fb in sigil.faith_bonuses:
 		if ItemTooltip.bonus_lit(sigil, fb, ItemTooltip.faith_status()):
@@ -158,7 +166,7 @@ static func run_faith_bonus_lit(t: TestCase) -> void:
 	t.check(lit_n > 0 and sig_text.count(fg) >= lit_n, "生效的加成是白的（%d 条）" % lit_n)
 	ItemTooltip.faith_probe = func() -> Dictionary: return {"active": &"", "tier": -1, "points": 0}
 	var none := ItemTooltip.describe(ItemInstance.create(bow))
-	t.check(Glossary.strip_bbcode(none).contains("还没激活") and none.count(dim) == plain.count(dim) + bow.faith_bonuses.size(), "没激活：灰 + 「还没激活」")
+	t.check(not Glossary.strip_bbcode(none).contains("还没激活") and none.count(dim) == plain.count(dim) + bow.faith_bonuses.size(), "107：没激活也只是灰，不写「还没激活」")
 	ItemTooltip.faith_probe = saved
 
 
