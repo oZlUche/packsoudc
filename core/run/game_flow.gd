@@ -586,6 +586,24 @@ func toggle_meta_buff(id: StringName) -> bool:
 	return on
 
 
+## 119 开发区：直接改进度表（存档的 `tech_levels`）里某个科技的级数，夹在 0 ～ 满级；上交记录清掉，
+## 效果按新级数重算（走 [method TechService.heal] 同一条路：局外 buff、保险箱是按级数重设的，仓库只长不缩）。改了就存。返回实际的级数
+func dev_set_tech_level(id: StringName, level: int) -> int:
+	var def := TechService.find(tech_defs, id)
+	if def == null:
+		return 0
+	var lv := clampi(level, 0, def.max_level())
+	if lv == 0:
+		meta.tech_levels.erase(String(id))
+	else:
+		meta.tech_levels[String(id)] = lv
+	meta.tech_deposits.erase(String(id))
+	TechService.heal(meta, tech_defs)
+	meta.changed.emit()
+	save_meta()
+	return lv
+
+
 ## 局外解锁的开关（占位：将来由成长系统决定）。改了就存
 func toggle_unlock(id: StringName) -> bool:
 	var on := meta.toggle_unlock(id)

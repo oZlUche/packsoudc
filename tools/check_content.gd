@@ -11,6 +11,7 @@ extends CliTool
 func run() -> void:
 	var problems := ContentCheck.run_all()
 	problems.append_array(GodsTable.check())     # 104：神明总表是信仰的核心配置，表与 JSON 对不上同样算不一致
+	problems.append_array(TechsTable.check())     # 119：科技树配置表是科技的唯一来源，表与 JSON（及镜像 docs/techs.md）对不上同样算不一致
 	# 104 第十节：说明文本里写死的数字。TextLint.STRICT（2026-10-02 起为 true）= 算不一致；false 时只列出警告
 	var bare := TextLint.scan_all()
 	if TextLint.STRICT:
