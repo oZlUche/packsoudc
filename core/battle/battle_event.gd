@@ -81,6 +81,15 @@ static func make(p_name: StringName, p_time: int, p_side: int, p_payload: Dictio
 	return e
 
 
+## 117：存档用（回放存档 [BattleArchive]）。payload 原样 —— 类型靠 `JSON.from_native` 保住
+func to_dict() -> Dictionary:
+	return {"name": String(name), "time": time, "side": side, "payload": payload}
+
+
+static func from_dict(d: Dictionary) -> BattleEvent:
+	return make(StringName(String(d.get("name", ""))), int(d.get("time", 0)), int(d.get("side", -1)), d.get("payload", {}))
+
+
 func get_int(key: StringName, fallback: int = 0) -> int:
 	return int(payload.get(key, fallback))
 

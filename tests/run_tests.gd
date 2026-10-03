@@ -82,6 +82,7 @@ func _load_suites() -> void:
 func _initialize() -> void:
 	_case = TestCase.new()
 	_started = Time.get_ticks_msec()
+	BattleArchive.enabled = false     # 117：几百场测试战斗不写战斗日志；测日志的套件自己开、自己关
 	_load_suites()
 
 	# 套件用 run / run_xxx 拆分多组用例，这里自动发现并调用。

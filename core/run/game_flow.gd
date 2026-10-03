@@ -987,12 +987,22 @@ func discard_loot() -> void:
 
 
 #region 接线
+## 117：按设置给这一局开 / 关战斗的内部日志与回放存档（设置屏切换时也调，当场生效）
+func apply_battle_trace() -> void:
+	if run == null or run.events == null:
+		return
+	var on := settings != null and settings.battle_trace
+	run.events.trace_info = {"dir": BattleArchive.DIR, "run_seed": run.run_seed,
+		"chapter": String(run.chapter.id) if run.chapter != null else ""} if on else {}
+
+
 func _adopt(state: RunState) -> void:
 	run = state
 	result = null
 	_settled = false
 	_queue.clear()
 	state.buff_defs = buff_defs      # 读档回来的只有 id，定义表在这里
+	apply_battle_trace()     # 117：战斗日志按设置开关
 	state.event_defs = event_defs
 	state.meta = meta     # 091：事件的条件 / 后果看、立局外旗标
 	# 基线：按角色（读档回来只有 id，在这里找回）；没角色用持有方给的

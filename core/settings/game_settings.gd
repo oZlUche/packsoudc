@@ -28,6 +28,8 @@ var unlock_all: bool = false
 var bg_theme: String = ""
 ## 109（作者定）：战斗倍速跨局继承 —— 在战斗里切一次，下一场（下一局、重开游戏）照这个速度开场。只认 [constant BATTLE_SPEEDS] 里的值
 var battle_speed: float = 1.0
+## 117（作者定）：战斗的内部日志与回放存档（user://battle_logs）。非导出包默认开、导出包默认关（[method BattleArchive.default_on]）
+var battle_trace: bool = BattleArchive.default_on()
 
 
 func to_dict() -> Dictionary:
@@ -40,6 +42,7 @@ func to_dict() -> Dictionary:
 		"unlock_all": unlock_all,
 		"bg_theme": bg_theme,
 		"battle_speed": battle_speed,
+		"battle_trace": battle_trace,
 	}
 
 
@@ -55,6 +58,7 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	s.unlock_all = bool(d.get("unlock_all", false))
 	s.bg_theme = String(d.get("bg_theme", ""))     # 认不认得由界面管（101 第 5 刀）
 	s.battle_speed = normalize_speed(float(d.get("battle_speed", 1.0)))
+	s.battle_trace = bool(d.get("battle_trace", BattleArchive.default_on()))
 	return s
 
 

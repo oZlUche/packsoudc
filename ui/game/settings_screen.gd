@@ -4,6 +4,8 @@ extends GameScreen
 var _auto_close_btn: Button = null
 var _tooltip_btn: Button = null
 var _unlock_all_btn: Button = null
+## 117：开发区的「战斗日志」开关（导出包里整块不画）
+var _trace_btn: Button = null
 ## 091：背景底色的按钮（主题 id → 按钮）
 var _bg_btns: Dictionary = {}
 ## 090：从地图的暂停菜单嵌进来时的「返回」（回暂停菜单，一局还在）；空 = 独立的一屏，回主菜单
@@ -54,6 +56,17 @@ func open(_payload: Dictionary) -> void:
 	_unlock_all_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	col.add_child(_unlock_all_btn)
 	col.add_child(HSeparator.new())
+	if BattleArchive.default_on():     # 117：开发区只在非导出包里有 —— 日志是给作者看的，玩家看不到
+		col.add_child(_label("开发", 15, UiPalette.DIM))
+		col.add_child(_wrapped("战斗日志：每场战斗的内部日志（逐条、带时间）与回放存档写进 user://battle_logs，只留最近 %d 场。回放在开发工具的「战斗回放」里翻。" % BattleArchive.KEEP, 12, UiPalette.DIM, 500))
+		var row := _hbox(8)
+		_trace_btn = _button("战斗日志", toggle_battle_trace, 14, UiPalette.Tier.MINOR)
+		_trace_btn.toggle_mode = true
+		_trace_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		row.add_child(_trace_btn)
+		row.add_child(_button("打开日志文件夹", open_log_folder, 13, UiPalette.Tier.MINOR))
+		col.add_child(row)
+		col.add_child(HSeparator.new())
 	col.add_child(_button("返回" if back.is_valid() else "回主菜单", go_back, 14))
 	_refresh()
 
@@ -80,6 +93,20 @@ func toggle_loot_auto_close() -> void:
 	_refresh()
 
 
+## 117：战斗日志开关（这一局当场生效）
+func toggle_battle_trace() -> void:
+	flow.settings.battle_trace = not flow.settings.battle_trace
+	flow.save_settings()
+	flow.apply_battle_trace()
+	_refresh()
+
+
+## 117：在系统的文件管理器里打开 user://battle_logs
+func open_log_folder() -> void:
+	DirAccess.make_dir_recursive_absolute(BattleArchive.DIR)
+	OS.shell_open(ProjectSettings.globalize_path(BattleArchive.DIR))
+
+
 ## 091（作者定）：挑背景底色，立刻生效并存盘
 func set_bg_theme(id: String) -> void:
 	if not UiPalette.has_bg_theme(id):
@@ -104,6 +131,9 @@ func _refresh() -> void:
 	if _auto_close_btn != null:
 		_auto_close_btn.set_pressed_no_signal(flow.settings.loot_auto_close)
 		_auto_close_btn.text = "拿走最后一件后自动关闭：%s" % ("开" if flow.settings.loot_auto_close else "关（手动关）")
+	if _trace_btn != null:
+		_trace_btn.set_pressed_no_signal(flow.settings.battle_trace)
+		_trace_btn.text = "战斗日志：%s" % ("开" if flow.settings.battle_trace else "关")
 	for tid in _bg_btns:
 		# 101 第 5 刀：设置里存的可能是空串或认不出来的 id，按生效的那一档打勾
 		(_bg_btns[tid] as Button).set_pressed_no_signal(String(tid) == UiPalette.bg_theme)

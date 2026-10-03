@@ -67,6 +67,8 @@ var scale_id: StringName = &""
 ## 101 第 3 刀：一局的能力都走这张带类型的表（编译玩家、掉落上下文、地图 buff、撤离、传送、保险箱、赐福、猎手……）。
 ## 默认那一份全是「没人接」的默认值，所以沙盒与测试不接也能跑；正式一局由 [RunState] 换成它自己的那份
 var hooks: RunHooks = RunHooks.new()
+## 117：战斗的内部日志与回放存档。空 = 不记；[GameFlow] 按设置填 `{dir, run_seed, chapter}`（沙盒与测试不填）
+var trace_info: Dictionary = {}
 
 ## 事件层（063）：定义表由持有方给（id → EventDef）。**空表 = 没有事件层**，每个点踩上去直接发生（老路）
 var event_defs: Dictionary = {}
@@ -525,6 +527,29 @@ func smite_pending_battle() -> bool:
 	return true
 
 
+## 117：把这一场写进 user://battle_logs（内部日志 + 回放存档），名字表按道具库查
+func _write_trace(trace: BattleTrace, result: BattleResult, node: MapNode, content: Dictionary,
+		me: CombatantSpec, enemy: CombatantSpec, limit: float, rng_seed: int) -> void:
+	var info := {
+		"run_seed": trace_info.get("run_seed", 0), "chapter": String(trace_info.get("chapter", "")), "node": node.id,
+		"enemy": String(content.get("enemy", "")), "enemy_content": content.duplicate(true), "rng_seed": rng_seed, "time_limit": limit,
+		"names": [_uid_names(me), _uid_names(enemy)],
+		"boards": [me.board.to_dict() if me.board != null else {}, enemy.board.to_dict() if enemy.board != null else {}],
+	}
+	BattleTraceWriter.write(trace, result, info, String(trace_info.get("dir", BattleArchive.DIR)))
+
+
+## uid → 显示名（日志与回放把「uid 3」写成「小刀#3」）
+func _uid_names(spec: CombatantSpec) -> Dictionary:
+	var out := {}
+	if spec == null:
+		return out
+	for item in spec.items:
+		var def := items.get_def(item.def_id) if items != null else null
+		out[item.source_uid] = Names.of(def) if def != null else String(item.def_id)
+	return out
+
+
 ## 095：掉落定了之后按掉落规则的概率把普通道具换成赐福版（激活了信仰只换那位神的）
 func _bless_rolled(node: MapNode, rolled: Dictionary) -> void:
 	if not hooks.has(&"bless_substitute") or drop_rule == null:
@@ -558,7 +583,12 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 	var me: CombatantSpec = hooks.player_spec()
 	hooks.before_battle(me, enemy, type)
 	var limit := rules.battle_time_limit if rules != null else BattleSim.DEFAULT_TIME_LIMIT
-	var result := BattleSim.run(me, enemy, _rng_for(node, "battle"), limit, rules.overtime if rules != null else null)
+	var rng := _rng_for(node, "battle")
+	var rng_seed := rng.seed
+	var trace: BattleTrace = BattleTrace.new() if not trace_info.is_empty() and BattleArchive.enabled else null
+	var result := BattleSim.run(me, enemy, rng, limit, rules.overtime if rules != null else null, trace)
+	if trace != null:
+		_write_trace(trace, result, node, content, me, enemy, limit, rng_seed)
 	var won := result.winner == 0
 	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content}
 	battle_finished.emit(node, result, won)
