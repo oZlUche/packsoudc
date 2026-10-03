@@ -117,6 +117,7 @@
 | 105 | [方案：战斗单位只有一个来源 —— 信仰效果全部进编译器（CompileInput / ScopedMod / 轴初值 / 火焰轴 / 祈祷斐波那契）](105-compiler-owns-faith-perks-proposal.md) | 架构 · 提议 | 作者已确认（含第十节日神 3 级 = 5 层灵巧、COMPOUND 轴），待执行 |
 | 106 | [方案：标准轴补三条（防护 / 生命上限 / 法力上限）+ 护盾画成生命条的外框](106-axes-armor-hp-mana-and-shield-frame-proposal.md) | 架构 · 提议 | 作者已确认（格挡 / 破绽、按来源定直接伤害、负防护倒贴），待执行 |
 | 107 | [方案：关键词弹窗按字段开关、删掉「打法」类标签](107-keyword-tips-and-style-tags-proposal.md) | 架构 · 提议 | 作者已确认（2.3 词表作者定；标色一项按推荐），待执行 |
+| 108 | [方案：武器附加效果的统一接口 —— 邻居附加（毒箭）与日神附魔走同一条路](108-weapon-attachment-interface-proposal.md) | 架构 · 提议 | 待作者确认（四项待定有推荐） |
 
 ## 已归档（被覆盖或作废的方案，只留作历史）
 
