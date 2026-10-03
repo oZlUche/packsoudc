@@ -20,13 +20,16 @@ const DEFAULT_TIME_LIMIT := 600.0
 const MAX_STEPS_PER_INSTANT := 64
 
 
+##
+## 117：[param trace] 给了就记内部日志（[BattleTrace]），不给（默认）零开销。记不记同一场逐条一样
 static func run(
 	a: CombatantSpec, b: CombatantSpec, rng: RandomNumberGenerator,
-	time_limit_sec: float = DEFAULT_TIME_LIMIT, overtime: OvertimeRules = null
+	time_limit_sec: float = DEFAULT_TIME_LIMIT, overtime: OvertimeRules = null, trace: BattleTrace = null
 ) -> BattleResult:
 	var ctx := BattleContext.create(
 		CombatantRuntime.from_spec(a, 0), CombatantRuntime.from_spec(b, 1), rng
 	)
+	ctx.trace = trace
 	ctx.overtime = OvertimeRules.or_default(overtime)     # 103：加时一直在 —— 没给就用默认那份
 	var result := run_context(ctx, time_limit_sec)
 	result.passives = [a.passives.duplicate(), b.passives.duplicate()]
@@ -44,6 +47,9 @@ static func run_context(ctx: BattleContext, time_limit_sec: float = DEFAULT_TIME
 	result.initial = ctx.snapshot()
 	result.initial["cooldowns"] = [ctx.initial_cooldowns(0), ctx.initial_cooldowns(1)]
 	var pre_hp: Array[int] = [0, 0]
+	if ctx.trace != null:
+		ctx.trace.record(ctx.now, -1, BattleTrace.SNAPSHOT, {"label": "开战", "state": ctx.snapshot()})
+		ctx.trace.next_snapshot = ctx.now + BattleTrace.SNAPSHOT_EVERY
 
 	ctx.emit(BattleEvent.BATTLE_START, -1, {})
 	ctx.drain()
@@ -52,6 +58,8 @@ static func run_context(ctx: BattleContext, time_limit_sec: float = DEFAULT_TIME
 		var next := _next_instant(ctx)
 		if next < 0 or next > limit:
 			break  # 再没有任何事会发生，或已越过时限
+		if ctx.trace != null:
+			_trace_snapshots(ctx, next)
 		ctx.now = maxi(ctx.now, next)
 		pre_hp = [_hp(ctx, 0), _hp(ctx, 1)]
 		_resolve_instant(ctx)
@@ -68,6 +76,8 @@ static func run_context(ctx: BattleContext, time_limit_sec: float = DEFAULT_TIME
 	result.log = ctx.log
 	result.buffs = ctx.seen_buffs
 	result.final = ctx.snapshot()
+	if ctx.trace != null:
+		ctx.trace.record(ctx.now, -1, BattleTrace.SNAPSHOT, {"label": "结束", "state": result.final, "winner": result.winner})
 	ctx.emit(BattleEvent.BATTLE_END, -1, {"winner": result.winner})
 	ctx.drain()
 	return result
@@ -135,8 +145,17 @@ static func _resolve_instant(ctx: BattleContext) -> void:
 		steps += 1
 		if not _both_alive(ctx):
 			break
+	if ctx.trace != null and steps > 0:
+		ctx.trace.record(ctx.now, -1, BattleTrace.SCHEDULE, {"rules": steps, "heap": ctx.schedule.size()})
 	if steps >= MAX_STEPS_PER_INSTANT:
 		push_warning("BattleSim: 同一时刻结算超过 %d 次，疑似零冷却规则" % MAX_STEPS_PER_INSTANT)
+
+
+## 117：内部日志每 5 秒（定点）一张快照。时刻之间状态不变（回复在下一刻才补），所以记的是「到这个节拍为止」的样子
+static func _trace_snapshots(ctx: BattleContext, upto: int) -> void:
+	while ctx.trace.next_snapshot <= upto:
+		ctx.trace.record(ctx.trace.next_snapshot, -1, BattleTrace.SNAPSHOT, {"label": "节拍", "state": ctx.snapshot()})
+		ctx.trace.next_snapshot += BattleTrace.SNAPSHOT_EVERY
 
 
 #region 加时与衰竭（103 第 4 条）

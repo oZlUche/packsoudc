@@ -12,7 +12,8 @@ extends Cost
 
 
 func can_pay(ctx: RuleContext) -> bool:
-	return ctx.rng().randi_range(1, 100) <= clampi(percent, 0, 100)
+	var need := clampi(percent, 0, 100)
+	return ctx.roll("chance", 1, 100, need) <= need
 
 
 func pay(_ctx: RuleContext) -> void:

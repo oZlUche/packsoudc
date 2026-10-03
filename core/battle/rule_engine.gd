@@ -22,6 +22,8 @@ static func fire_scheduled(ctx: BattleContext, owner: CombatantRuntime, rt: Rule
 		# 理论上不该发生（是按就绪时刻弹出的）。保险起见也要重新入堆，
 		# 否则这条规则会永远消失
 		_reschedule(ctx, owner, rt, rc)
+		if ctx.trace != null:
+			_trace(ctx, rt, rc, BattleTrace.RULE_SKIP, {"reason": "cadence"})
 		return false
 	rule.cadence.commit(rc, ctx.now)
 	_reschedule(ctx, owner, rt, rc)
@@ -31,10 +33,14 @@ static func fire_scheduled(ctx: BattleContext, owner: CombatantRuntime, rt: Rule
 		(cost as Cost).on_attempt(rc)
 	for cost in all_costs:
 		if not (cost as Cost).can_pay(rc):
+			if ctx.trace != null:
+				_trace(ctx, rt, rc, BattleTrace.RULE_SKIP, {"reason": "cost", "cost": (cost as Cost).trace_info(rc)})
 			_emit_skipped(ctx, owner, rt, rc)
 			return false
 	for cost in all_costs:
 		(cost as Cost).pay(rc)
+	if ctx.trace != null:
+		_trace(ctx, rt, rc, BattleTrace.RULE_FIRE, {"costs": all_costs.map(func(c): return (c as Cost).trace_info(rc))})
 
 	if rt.source_uid != 0:
 		ctx.emit(BattleEvent.ITEM_FIRED, owner.side, _fired_payload(rt, rc))
@@ -80,6 +86,8 @@ static func evaluate(
 	# 2. 频率。on_match 先记账（计数类要把没执行的那几次也数上），再判是否放行
 	rule.cadence.on_match(rc)
 	if not rule.cadence.can_fire(rc, ctx.now):
+		if ctx.trace != null:
+			_trace(ctx, rt, rc, BattleTrace.RULE_SKIP, {"reason": "cadence", "event": String(event.name)})
 		return false
 	rule.cadence.commit(rc, ctx.now)
 
@@ -89,10 +97,14 @@ static func evaluate(
 		(cost as Cost).on_attempt(rc)
 	for cost in all_costs:
 		if not (cost as Cost).can_pay(rc):
+			if ctx.trace != null:
+				_trace(ctx, rt, rc, BattleTrace.RULE_SKIP, {"reason": "cost", "cost": (cost as Cost).trace_info(rc)})
 			_emit_skipped(ctx, owner, rt, rc)
 			return false
 	for cost in all_costs:
 		(cost as Cost).pay(rc)
+	if ctx.trace != null:
+		_trace(ctx, rt, rc, BattleTrace.RULE_FIRE, {"costs": all_costs.map(func(c): return (c as Cost).trace_info(rc))})
 
 	# 物品出手。连带触发靠监听这条事件，不需要任何特例。
 	# 108：**听自己出手的规则不算再出手一次** —— 附加规则（毒箭挂给弓的、日神附魔）以宿主身份跑、听的就是宿主的出手；
@@ -122,6 +134,27 @@ static func _emit_skipped(ctx: BattleContext, owner: CombatantRuntime, rt: RuleR
 	var ready := ready_at_of(rt, rc)
 	if ready >= 0:
 		ctx.emit(BattleEvent.ITEM_SKIPPED, owner.side, {"uid": rt.source_uid, "ready_at": ready})
+
+
+## 117：内部日志的一条出手 / 跳过：哪件道具（或哪个 buff）的哪条规则、什么时机、下一次就绪
+static func _trace(ctx: BattleContext, rt: RuleRuntime, rc: RuleContext, kind: String, extra: Dictionary) -> void:
+	var d := {"uid": rt.source_uid, "order": rt.order, "trigger": _class_of(rt.rule.trigger),
+		"cadence": _class_of(rt.rule.cadence)}
+	if rt.buff != null and rt.buff.def != null:
+		d["buff"] = String(rt.buff.def.id)
+	var ready := ready_at_of(rt, rc)
+	if ready >= 0:
+		d["ready_at"] = ready
+	d.merge(extra, true)
+	ctx.trace.record(ctx.now, rt.owner_side, kind, d)
+
+
+static func _class_of(o: Object) -> String:
+	if o == null:
+		return ""
+	var script := o.get_script() as Script
+	var n := String(script.get_global_name()) if script != null else ""
+	return n if n != "" else o.get_class()
 
 
 ## 冷却型频率的下一次就绪时刻；不是冷却型 -1

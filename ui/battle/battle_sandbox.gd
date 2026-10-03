@@ -280,7 +280,15 @@ func _dummy() -> CombatantSpec:
 func _on_fight() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(_seed_spin.value)
-	var result := BattleSim.run(_compile(), _dummy(), rng)     # 103：和真打一样带加时与衰竭
+	var me := _compile()
+	var dummy := _dummy()
+	# 117：沙盒也写战斗日志（设置开着时），章节记成 sandbox
+	var trace: BattleTrace = BattleTrace.new() if BattleArchive.enabled and GameSettings.load_from().battle_trace else null
+	var result := BattleSim.run(me, dummy, rng, BattleSim.DEFAULT_TIME_LIMIT, null, trace)     # 103：和真打一样带加时与衰竭
+	if trace != null:
+		BattleTraceWriter.write(trace, result, {"run_seed": int(_seed_spin.value), "chapter": "sandbox", "node": 0, "enemy": "dummy",
+			"rng_seed": int(_seed_spin.value), "time_limit": BattleSim.DEFAULT_TIME_LIMIT, "names": [_board_names(), {1: "重拳"}],
+			"boards": [me.board.to_dict() if me.board != null else {}, {}]})
 	_view.play(result, ["我方", "训练假人"])
 	_view.set_item_names(0, _board_names())
 	_view.set_item_names(1, {1: "重拳"})

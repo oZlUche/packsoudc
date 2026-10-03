@@ -35,6 +35,11 @@ func rng() -> RandomNumberGenerator:
 	return battle.rng
 
 
+## 117：取随机数并记进内部日志（[method BattleContext.roll]）。战斗里的掷骰都走它
+func roll(purpose: String, lo: int, hi: int, need: int = -1) -> int:
+	return battle.roll(purpose, lo, hi, need)
+
+
 ## 本条规则的持久状态（冷却进度、命中计数…）。
 ## 同一条 AbilityRule 资源可能被多件物品共用，状态只能存在这里。
 func state() -> Dictionary:

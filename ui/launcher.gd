@@ -30,6 +30,12 @@ const ENTRIES := [
 		"keys": "播放 / 倍速 / 跳过　战斗中只能看",
 	},
 	{
+		"scene": "res://ui/battle/replay_browser.tscn",
+		"title": "战斗回放",
+		"desc": "117：翻最近打过的战斗（user://battle_logs，设置里「战斗日志」开着时每场都存），照真打时一样重演；旁边能打开这场的逐条内部日志",
+		"keys": "左边挑一场　播放 / 倍速 / 拖动　游戏里没有这个入口",
+	},
+	{
 		"scene": "res://ui/editor/content_editor.tscn",
 		"title": "道具编辑器",
 		"desc": "给开发者与 MOD 作者：改属性、画形状与邻接标记、实时校验，存成 JSON",

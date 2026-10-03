@@ -15,6 +15,10 @@ var sides: Array[CombatantRuntime] = []
 ## 回放日志。内容与掩码无关。
 var log: Array[BattleEvent] = []
 
+## 117：内部日志（全量、带时间，写文件给作者查）。null = 关着 —— 每个记录点只多一行判断。
+## 记录不碰战斗状态、不取随机数：开不开同一场逐条一样
+var trace: BattleTrace = null
+
 ## 103 第 6 条：这场上过身的所有 buff（id → 定义），不管来自自己、对手、信仰、局外还是系统。
 ## [CombatantRuntime.apply_buff] 登记，[BattleResult.buffs] 带出去 —— 回放的 buff 栏不用再猜有哪些
 var seen_buffs: Dictionary = {}
@@ -129,6 +133,8 @@ func schedule_rule(owner: CombatantRuntime, rt: RuleRuntime) -> void:
 #region 事件
 ## 广播一条事件。没人听且回放也用不上时，连对象都不构造。
 func emit(name: StringName, side: int, payload: Dictionary = {}) -> void:
+	if trace != null:     # 117：每一条都记，不看回放要不要、有没有人听
+		trace.record(now, side, BattleTrace.EVENT, {"name": String(name), "payload": payload.duplicate(true)})
 	var for_view := BattleEvent.is_view_event(name)
 	var for_rules := is_listening(name)
 	if not for_view and not for_rules:
@@ -175,7 +181,13 @@ func current_damage() -> DamagePacket:
 ## 这一条是例外：受伤前效果必须在伤害算出来之前改到包，排队就晚了。
 ## 代价是允许有限重入，因此有 [constant MAX_DAMAGE_DEPTH] 兜底。
 func dispatch_before_damage(packet: DamagePacket) -> void:
-	if packet == null or not is_listening(BattleEvent.BEFORE_DAMAGE):
+	if packet == null:
+		return
+	if trace != null:     # 117：同步派发的这一条不进回放日志，内部日志照记（有没有人听都记）
+		trace.record(now, packet.victim_side(), BattleTrace.EVENT, {"name": String(BattleEvent.BEFORE_DAMAGE), "payload": {
+			"type": String(packet.type), "amount": packet.pending(), "source_side": packet.source_side, "uid": packet.source_uid,
+			"listened": is_listening(BattleEvent.BEFORE_DAMAGE)}})
+	if not is_listening(BattleEvent.BEFORE_DAMAGE):
 		return
 	if _damage_stack.size() >= MAX_DAMAGE_DEPTH:
 		log.append(BattleEvent.make(
@@ -197,6 +209,19 @@ func dispatch_before_damage(packet: DamagePacket) -> void:
 	))
 	_damage_stack.pop_back()
 #endregion
+
+
+## 117：取一个随机数（[lo, hi]），开着内部日志时记下用途与值。取数本身和直接 `rng.randi_range` 一模一样 ——
+## 随机序列不因记不记而变。[param need] ≥ 0 时顺带记「≤ need 算中」的结果（暴击、概率条件）
+func roll(purpose: String, lo: int, hi: int, need: int = -1) -> int:
+	var v := rng.randi_range(lo, hi)
+	if trace != null:
+		var d := {"purpose": purpose, "value": v, "lo": lo, "hi": hi}
+		if need >= 0:
+			d["need"] = need
+			d["hit"] = v <= need
+		trace.record(now, -1, BattleTrace.RNG, d)
+	return v
 
 
 func snapshot() -> Dictionary:

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.33 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.34 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1458,6 +1458,18 @@ buff 词条（`Glossary.describe_buff` 按定义生成）。原来「有说明 =
 「界面画在这一格、实际生效在那一格」这种最难查的错。
 
 不参战的容器（暂存区、战利品、货架）**不画**：那里的「点亮」什么也不代表，只会误导。
+
+#### 内部日志与回放存档（报告 117，作者定）
+
+作者要的两件：给自己查数值的**内部日志**（逐条、全量、带时间，不给玩家看），和把已有回放从「只在当场」变成「随时翻」的**回放存档**。
+
+- `BattleTrace`（`core/battle/battle_trace.gd`）挂在 `BattleContext.trace`，**默认 null**：每个记录点一行 `if trace != null`，关着零开销。记录不碰战斗状态、不取额外随机数 —— 开不开同一场逐条一样，掩码不变式照旧（测试守着）。每条 `{seq, t（定点秒）, side, kind, data}`：
+  `event`（`emit` 的每一条，不看 VIEW_EVENTS、不看有没有人听；同步派发的 `before_damage` 也记）、`rule_fire` / `rule_skip`（`RuleEngine`：道具 uid、buff、时机类、下次就绪；跳过写原因 —— 频率没放行，或哪条消耗 / 条件不过，资源消耗写要多少有多少，`Cost.trace_info`）、`damage_pipeline`（`DamageResolver`：原始值 → 火焰加成 → 护盾 → 受伤前增减 / 反转 / 取消 → 防护 → 受到伤害轴 → 最终与扣血前后）、`rng`（战斗里的掷骰都走 `BattleContext.roll(用途, lo, hi, need)`：取数和直接 `randi_range` 一模一样，记用途与值）、`buff`（叠层 / 移除 / 到期，带层数与到期时刻）、`schedule`（一刻结算了几条自发规则）、`snapshot`（开战、每 5 秒、结束）。
+  方案写的 `TracedRng`（包一层随机数生成器）改成了 `roll`：GDScript 覆盖不了原生类的非虚方法，包一层拦不住原生调用。
+- `BattleSim.run(…, trace)` 多一个可选参数；`NodeEvents._fight`（猎手也走它）在 `trace_info` 非空时建 trace，跑完由 `BattleTraceWriter` 写进 `user://battle_logs/`：`<时间>_<种子>_n<点>_<章节>_<对手>` 三份 —— `.jsonl`（首行文件头，程序读）、`.txt`（人读）、`.replay.json`（`BattleResult.to_dict` + 名字表 + 双方棋盘，`JSON.from_native` 保住 int 键与定点整数）。文件头写现实时间、种子、章节、点、敌人内容、道具名表、开战快照、时限。只留最近 50 场（`BattleArchive.prune`）。战斗沙盒同样写（章节记 `sandbox`），基准与校准不写。
+- 回放存档**不存双方编译结果**（作者定）；buff 只存 id，读回来按道具能施加的 buff + 系统衰竭查定义。
+- 开关：`GameSettings.battle_trace`，非导出包默认开、导出包默认关（`BattleArchive.default_on`）；`GameFlow.apply_battle_trace` 按它给这一局填 `NodeEvents.trace_info`。设置屏「开发」区（只在非导出包里画）一行开关 + 「打开日志文件夹」。测试入口开跑前 `BattleArchive.enabled = false`，几百场测试战斗不写文件。
+- 看：开发工具（启动选择器）的「战斗回放」（`ui/battle/replay_browser.tscn`）列存档、点一场交给 `BattleView` 重演；游戏里**没有入口**（作者定）。命令行 `tools/replay_log.gd -- <file.jsonl | --latest> [--summary]` 把日志排成人读格式打到标准输出（给无窗口环境的线程读），`--summary` 只打双方伤害、出手 / 跳过次数、暴击率、buff 层数。
 
 ---
 
@@ -3876,6 +3888,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.34 | 2026-10-03 | **战斗内部日志与回放存档**（报告 117，四项按推荐）。`BattleTrace` 挂 `BattleContext.trace`（默认 null，零开销，开不开逐条一样）：全部事件、规则出手 / 跳过与原因、伤害管线每一级、掷骰（`BattleContext.roll`，代替方案的 TracedRng）、buff、时间轮、每 5 秒快照。`NodeEvents._fight` / 沙盒写进 `user://battle_logs`（.jsonl / .txt / .replay.json，留 50 场）；`GameSettings.battle_trace` 非导出包默认开，设置屏开发区开关；开发工具「战斗回放」浏览；`tools/replay_log.gd` 命令行。见 4.8 末段 |
 | v2.33 | 2026-10-03 | **序章三信力曲线适配新胫骨大棒**（报告 116）。胫骨大棒作者改为蛮神道具：伤害走 `base_stats.damage`，激活即暴伤 +20、暴击率 +10（104 的「没有 1 阶功能」作废）。献祭点数只看稀有度与倍率（固定 60），余量改靠两场敌人血量：`tutorial3.json` 劫匪 40 → 60、蛮兵 110 → 150，第二场固定封顶 30；曲线神坛 A 后 72～88、第二场后 102～118。`test_prologue3` 加「第二场后 ≥ 2 阶阈值 + 2」 |
 | v2.32 | 2026-10-03 | **缓存过期时游戏自己重导、自己重开**（报告 115，作者定）：`DevNav._check_class_cache` 从「红字提示」改成自救（后台 `--import` → 带原参数加 `cache-rebuilt` 重开 → 再缺才红字）；纯函数 `import_args` / `relaunch_args` / `already_rebuilt`；门从 `OS.has_feature("editor")` 改成 `Engine.is_editor_hint()`（前者在编辑器版直接跑游戏时也为真，原来的自检对作者那条路从没生效）；`DevNav` 去掉对 `UiPalette` 的引用（缓存全空时它自己先解析失败，实测）。本地双击 / 快捷方式启动即可，`run_game` 改为可选 |
 | v2.31 | 2026-10-03 | **百科框架**（报告 114 第五节，作者定：框架在这里，机制页文案由别的线程写）。新内容种类 `help_pages`（`HelpPageDef`：标题、分类、正文、相关、相关道具；导入查分类、道具、文本引用，全部导完后查「相关」）；`Encyclopedia` 把机制页与自动生成的词条页（固定词条、标签、伤害类型、buff、属性 / 乘区 / 时机）排成一张目录，正文认得的词画成 `[url=页 id]` 链接，搜索标题与正文，「相关道具」按图鉴遮名字；新屏 `Screen.ENCYCLOPEDIA`（左栏搜索 + 目录、右栏一页、「上一页」浏览栈），入口在主菜单与地图的暂停菜单（嵌进遮罩，Esc 先关百科）。写法见 `docs/encyclopedia.md` |

@@ -27,6 +27,10 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	var td := packet.def()
 	if victim.dead:
 		return 0     # 087：倒下的不再受伤也不再被治（倒下是终局）
+	# 117：内部日志要「原始值 → 每一级 → 实际扣血」，进管线前先记下起点
+	var raw_in := packet.raw
+	var hp_before := victim.resources.current(BattleStats.RES_HP) if ctx.trace != null else 0
+	var taken_factor := StatMath.ONE
 
 	# --- 1b. 攻方的伤害类型加成（105）：火焰加成是一条标准轴，放在**防御之前**乘原值 ——
 	# 和「受到伤害」轴在第 4 步乘守方的最终伤害对称。于是附魔、灼烧、任何火焰来源都吃它
@@ -53,6 +57,8 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	if packet.cancelled:
 		packet.final = 0
 		packet.applied = 0
+		if ctx.trace != null:
+			_trace(ctx, packet, raw_in, hp_before, taken_factor)
 		_notify(ctx, packet, td)
 		return 0
 
@@ -75,6 +81,7 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	# 103（作者定）：加时放大的是角色受到的「最终伤害」—— 护盾、减伤、护甲都按原值算完，扛下来的那部分再乘；治疗不放大
 	if amount > 0:
 		var taken := victim.axis_factor(StatAxes.DAMAGE_TAKEN)     # 标准轴（4.3）：易伤为正、坚韧为负，加时在系统层
+		taken_factor = taken
 		if taken != StatMath.ONE:
 			amount = maxi(0, StatMath.mul(amount, taken))
 	packet.final = amount
@@ -92,6 +99,8 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 		)
 
 	# --- 5. 受伤后 ---
+	if ctx.trace != null:
+		_trace(ctx, packet, raw_in, hp_before, taken_factor)
 	_notify(ctx, packet, td)
 	if victim.resources.current(BattleStats.RES_HP) <= 0 and victim.mark_dead():
 		ctx.emit(BattleEvent.DIED, victim.side, {})
@@ -103,6 +112,18 @@ static func _side_of(ctx: BattleContext, side: int) -> CombatantRuntime:
 	if ctx == null or side < 0 or side >= ctx.sides.size():
 		return null
 	return ctx.sides[side]
+
+
+## 117：内部日志的一条伤害管线：原始值 → 火焰加成 → 护盾 → 受伤前效果 → 防护 → 受到伤害轴 → 实际扣血
+static func _trace(ctx: BattleContext, packet: DamagePacket, raw_in: int, hp_before: int, taken: int) -> void:
+	ctx.trace.record(ctx.now, packet.victim_side(), BattleTrace.DAMAGE, {
+		"type": String(packet.type), "source_side": packet.source_side, "uid": packet.source_uid, "victim": packet.victim_side(),
+		"raw_in": raw_in, "raw": packet.raw, "crit": packet.crit, "direct": packet.direct,
+		"absorbed": packet.absorbed, "flat": packet.flat, "percent": packet.percent, "inverted": packet.inverted,
+		"cancelled": packet.cancelled, "armor": packet.armor, "taken": taken, "final": packet.final,
+		"hp_before": hp_before, "hp_after": packet.victim.resources.current(BattleStats.RES_HP),
+		"hp_lost": maxi(0, -packet.applied),
+	})
 
 
 ## 发出 damage 事件。
