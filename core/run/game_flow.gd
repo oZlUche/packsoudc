@@ -36,6 +36,8 @@ var characters: Array[CharacterDef] = []
 var difficulties: Array[DifficultyDef] = []
 ## 091：成就的定义（按 order 排）。什么时候算见 [method check_achievements]
 var achievement_defs: Array[AchievementDef] = []
+## 110：局外科技的定义（按 order 排）。等级与上交记录在 [MetaState]，逻辑在 [TechService]
+var tech_defs: Array[TechDef] = []
 ## 101 第 4 刀：成就与解锁的逻辑在这个服务里（纯逻辑：看局外与内容算结果，不碰存盘与转屏）。
 ## 内容与「全部解锁」开关由 [method _sync_achievements] 同步过去
 var achievements: Achievements = Achievements.new()
@@ -109,6 +111,7 @@ func use_slot(n: int) -> void:
 		meta_backup = String(opened["backup"])     # 界面上说一句，玩家知道老档还在
 	var loaded := opened["meta"] as MetaState
 	meta = loaded if loaded != null else MetaState.new(meta_rules)
+	heal_techs()
 	run = null
 	result = null
 	_queue.clear()
@@ -509,6 +512,37 @@ func backup_notice() -> String:
 
 func save_meta() -> bool:
 	return meta != null and MetaSave.write(meta, meta_path) == OK
+
+
+#region 局外科技（110）
+## 按 id 找科技定义；没有 null
+func tech_of(id: StringName) -> TechDef:
+	for def in tech_defs:
+		if def.id == id:
+			return def
+	return null
+
+
+## 读档后让科技效果补齐（仓库行数不足就补）
+func heal_techs() -> void:
+	TechService.heal(meta, tech_defs)
+
+
+## 上交一件（上交即消耗）：成了就存
+func submit_tech(id: StringName, uid: int) -> bool:
+	var ok := TechService.submit(meta, tech_of(id), uid)
+	if ok:
+		save_meta()
+	return ok
+
+
+## 升一级：成了就存
+func upgrade_tech(id: StringName) -> bool:
+	var ok := TechService.upgrade(meta, tech_of(id))
+	if ok:
+		save_meta()
+	return ok
+#endregion
 
 
 ## 仓库面板的两个动作：改了就存
@@ -1158,6 +1192,17 @@ static func load_difficulties() -> Array[DifficultyDef]:
 			out.append(res)
 	out.sort_custom(func(a: DifficultyDef, b: DifficultyDef) -> bool:
 		return a.level < b.level if a.level != b.level else String(a.id) < String(b.id))
+	return out
+
+
+## 110：局外科技，按 order 再按 id 排
+static func load_techs() -> Array[TechDef]:
+	var out: Array[TechDef] = []
+	for res in _load_dir(ContentPaths.TECHS):
+		if res is TechDef:
+			out.append(res)
+	out.sort_custom(func(a: TechDef, b: TechDef) -> bool:
+		return a.order < b.order if a.order != b.order else String(a.id) < String(b.id))
 	return out
 
 

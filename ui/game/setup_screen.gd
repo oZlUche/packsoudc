@@ -155,7 +155,7 @@ func open(_payload: Dictionary) -> void:
 	_warehouse_view.inventory = w
 	_warehouse_view.show_adjacency = false
 	_warehouse_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	right.add_child(_warehouse_view)
+	right.add_child(ScrollBox.wrap(_warehouse_view))     # 110：竖向滚动
 
 	_drag = DragLayer.new()
 	_drag.label_font = font

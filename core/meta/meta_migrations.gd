@@ -10,7 +10,7 @@ class_name MetaMigrations
 extends RefCounted
 
 ## 有哪几步：from_version → 方法名（只做文档与自检用，分派是下面的 match，不走反射）
-const STEPS := {1: "_v1_to_v2"}
+const STEPS := {1: "_v1_to_v2", 2: "_v2_to_v3"}
 
 
 ## 尽量升到 [constant MetaState.SAVE_VERSION]。不改入参（深拷一份）。
@@ -25,6 +25,8 @@ static func upgrade(src: Dictionary) -> Dictionary:
 		match v:
 			1:
 				d = _v1_to_v2(d)
+			2:
+				d = _v2_to_v3(d)
 			_:
 				push_error("MetaMigrations: STEPS 里有 v%d 但 match 没接上" % v)
 				return d
@@ -36,4 +38,13 @@ static func upgrade(src: Dictionary) -> Dictionary:
 ## v1 → v2（恒等）：v2 只是 [method MetaState.keeps] 放行了「带信仰的 1 格包」（大地之神的护符），
 ## 字典形状一点没变 —— 老档里不会有这种东西，照原样读回来就对
 static func _v1_to_v2(d: Dictionary) -> Dictionary:
+	return d
+
+
+## v2 → v3（110）：补局外科技的两个空字典 —— 老档里谁都没升过级，什么也没交
+static func _v2_to_v3(d: Dictionary) -> Dictionary:
+	if not (d.get("tech_levels", null) is Dictionary):
+		d["tech_levels"] = {}
+	if not (d.get("tech_deposits", null) is Dictionary):
+		d["tech_deposits"] = {}
 	return d

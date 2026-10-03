@@ -157,6 +157,11 @@ const EROSION_EFFECTS := {
 	&"drain_money": "res://core/run/erosion/effects/erode_drain_money.gd",
 }
 
+## 110：局外科技每升一级做的事（[TechEffect]）。科技本身是局外的，挂在这张「一局之外」的表里是因为三张表里只有这张归 run / meta 一侧
+const TECH_EFFECTS := {
+	&"warehouse_rows": "res://core/meta/techs/warehouse_rows.gd",
+}
+
 
 const TABLES := {
 	&"map_effect": MAP_EFFECTS,
@@ -168,6 +173,7 @@ const TABLES := {
 	&"hunter_behavior": HUNTER_BEHAVIORS,
 	&"hunter_loss": HUNTER_LOSSES,
 	&"erosion_effect": EROSION_EFFECTS,
+	&"tech_effect": TECH_EFFECTS,
 	&"run_skill": RUN_SKILLS,
 	&"faith_deed": FAITH_DEEDS,
 	&"faith_perk": FAITH_PERKS,

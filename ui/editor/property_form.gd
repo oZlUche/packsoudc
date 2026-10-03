@@ -31,6 +31,8 @@ var label_font: Font
 var skip: Dictionary = {}
 
 var _target: Object = null
+## 111：本表单每个字段的那一行（字段名 → 行控件），按 `FIELD_WHEN` 显隐用
+var _rows: Dictionary = {}
 
 
 static func create(target: Object, font: Font, skip_map: Dictionary = {}) -> PropertyForm:
@@ -49,6 +51,7 @@ func _ready() -> void:
 func rebuild() -> void:
 	for child in get_children():
 		child.queue_free()
+	_rows.clear()
 	if _target == null:
 		return
 	var hidden: Array = skip.get(String(ContentSchema.class_name_of(_target)), [])
@@ -58,10 +61,34 @@ func rebuild() -> void:
 		var row := _row_for(_target, prop)
 		if row != null:
 			add_child(row)
+			_rows[String(prop["name"])] = row
+	_apply_visibility(false)
 
 
 func _emit() -> void:
+	if _apply_visibility(true):
+		rebuild.call_deferred()     # 有字段被归了默认：重画，让再显示出来时框里是新值
 	changed.emit()
+
+
+## 111：按资源的 `FIELD_WHEN` 显隐各行。[param reset] = 用户刚改过东西：变成隐藏的字段归默认值，
+## JSON 里不留看不见的旧值（打开表单时不动数据，只藏）。返回有没有字段被归了默认
+func _apply_visibility(reset: bool) -> bool:
+	var changed_any := false
+	for key in _rows:
+		var vis := ContentSchema.field_visible(_target, key)
+		(_rows[key] as Control).visible = vis
+		if not vis and reset:
+			var d = ContentSchema.default_of(_target, key)
+			if d != null and _target.get(key) != d:
+				_target.set(key, d)
+				changed_any = true
+	return changed_any
+
+
+## 111：这一行现在是否显示（测试用）
+func row_visible(key: String) -> bool:
+	return _rows.has(key) and (_rows[key] as Control).visible
 
 
 #region 每种类型一个控件
@@ -86,12 +113,15 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 			var options := ContentSchema.enum_options(owner, prop)
 			if not options.is_empty():
 				return _labeled(owner, key, _enum_picker(owner, prop, options, int(value)))
-			return _labeled(owner, key, _number(value, 1.0, func(v: float): owner.set(key, int(v))))
+			return _labeled(owner, key, _number(value, 1.0, func(v: float): owner.set(key, int(v)), prop))
 
 		TYPE_FLOAT:
-			return _labeled(owner, key, _number(value, 0.1, func(v: float): owner.set(key, v)))
+			return _labeled(owner, key, _number(value, 0.1, func(v: float): owner.set(key, v), prop))
 
 		TYPE_STRING, TYPE_STRING_NAME:
+			if int(prop["hint"]) == PROPERTY_HINT_ENUM:
+				# 111：字符串枚举（`@export_enum`）→ 下拉；值仍是字符串，显示名走 FieldText.enum_label
+				return _labeled(owner, key, _string_picker(owner, prop, ContentSchema.enum_options(owner, prop), String(value)))
 			if type == TYPE_STRING_NAME and _is_stat_field(key):
 				# 091（作者定）：指向属性键的字段（修饰的 stat、效果的 damage_stat）下拉浏览已有属性，也能自定义
 				return _labeled(owner, key, _stat_picker(String(value), func(k: String):
@@ -140,6 +170,21 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 	return null
 
 
+func _string_picker(owner: Object, prop: Dictionary, options: Array[String], current: String) -> OptionButton:
+	var ob := OptionButton.new()
+	_font(ob)
+	var string_name := int(prop["type"]) == TYPE_STRING_NAME
+	for i in options.size():
+		ob.add_item(FieldText.enum_label(options[i]), i)
+		ob.set_item_tooltip(i, options[i])
+		if options[i] == current:
+			ob.select(i)
+	ob.item_selected.connect(func(idx: int):
+		owner.set(prop["name"], StringName(options[idx]) if string_name else options[idx])
+		_emit())
+	return ob
+
+
 func _enum_picker(
 	owner: Object, prop: Dictionary, options: Array[String], current: int
 ) -> OptionButton:
@@ -159,13 +204,23 @@ func _enum_picker(
 	return ob
 
 
-func _number(value: float, step: float, apply: Callable) -> SpinBox:
+func _number(value: float, step: float, apply: Callable, prop: Dictionary = {}) -> SpinBox:
 	var sb := SpinBox.new()
 	sb.min_value = -99999
 	sb.max_value = 99999
 	sb.step = step
 	sb.allow_greater = true
 	sb.allow_lesser = true
+	# 111：带 `@export_range(min, max[, step])` 的按它来，越界关掉
+	if not prop.is_empty() and int(prop.get("hint", 0)) == PROPERTY_HINT_RANGE:
+		var bits := String(prop["hint_string"]).split(",")
+		if bits.size() >= 2 and bits[0].strip_edges().is_valid_float() and bits[1].strip_edges().is_valid_float():
+			sb.min_value = float(bits[0])
+			sb.max_value = float(bits[1])
+			sb.allow_greater = false
+			sb.allow_lesser = false
+			if bits.size() >= 3 and bits[2].strip_edges().is_valid_float():
+				sb.step = float(bits[2])
 	sb.value = value
 	_font(sb)
 	sb.value_changed.connect(func(v: float):

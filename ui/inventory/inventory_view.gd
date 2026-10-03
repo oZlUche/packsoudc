@@ -64,13 +64,22 @@ func container() -> ItemContainer:
 func set_inventory(inv: GridInventory) -> void:
 	if inventory == inv:
 		return
-	if inventory != null and inventory.changed.is_connected(queue_redraw):
-		inventory.changed.disconnect(queue_redraw)
+	if inventory != null and inventory.changed.is_connected(_on_inventory_changed):
+		inventory.changed.disconnect(_on_inventory_changed)
 	inventory = inv
 	if inventory != null:
-		inventory.changed.connect(queue_redraw)
+		inventory.changed.connect(_on_inventory_changed)
 		custom_minimum_size = Vector2(inventory.size) * CELL
 		size = custom_minimum_size
+	queue_redraw()
+
+
+## 110：容器变了就重画；格子长了（仓库扩建 `grow_rows`）视图跟着变高
+func _on_inventory_changed() -> void:
+	var want := Vector2(inventory.size) * CELL
+	if custom_minimum_size != want:
+		custom_minimum_size = want
+		size = want
 	queue_redraw()
 
 

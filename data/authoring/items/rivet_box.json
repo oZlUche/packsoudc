@@ -1,0 +1,16 @@
+{
+  "id": "rivet_box",
+  "display_name": "铆钉盒",
+  "display_names": {
+    "en": "Rivet Box"
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "metal",
+    "supply"
+  ]
+}

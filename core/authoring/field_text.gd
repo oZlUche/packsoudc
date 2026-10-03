@@ -62,6 +62,7 @@ const LABELS := {
 	"god": "神", "camp": "阵营", "thresholds": "阈值", "deeds": "行为", "single_faith": "只认一位神", "grants": "给的解锁", "level": "档",
 	"mechanics": "机制", "requires_unlock_": "需要的解锁", "warn_lead_actions": "预警提前量", "first_at_action": "第一次在第几步", "interval_actions": "间隔步数",
 	"from_depth": "从第几层起", "per_depth": "每层", "hunter_ids": "猎手", "bracket_steps": "段位表", "inputs": "输入", "output": "产物",
+	"funds": "钱", "rows": "行数", "effect": "效果",     # 110：局外科技
 }
 
 ## 注册表名 → 中文
@@ -93,6 +94,7 @@ const TYPE_LABELS := {
 	"approach": "逼近", "flee": "逃跑", "wander": "游荡", "ambush": "伏击", "patrol": "巡逻",
 	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫",
 	"damage_item": "损坏道具", "drain_money": "掉钱",
+	"warehouse_rows": "仓库加行",     # 110：局外科技的效果
 }
 
 ## 枚举值 → 中文
@@ -102,6 +104,7 @@ const ENUM_LABELS := {
 	"NEAR": "靠近才可见", "ANY": "任意", "INCREASE": "增加", "DECREASE": "减少", "GODS": "诸神", "CHURCH": "新教", "META": "局外", "MAP": "地图",
 	"PRESET": "预设", "GENERATED": "生成", "GENERATOR": "生成", "UNVISITED": "没去过", "VISITED": "去过", "TOTAL": "总数", "DISTINCT": "不重复",
 	"OWN": "自己的", "OTHER": "别人的", "ALLY": "同伴", "DEALT": "打出的", "TAKEN": "受到的",
+	"tier": "按阶", "active": "激活即", "scaled": "按信力",     # 111：信仰加成的生效方式（字符串枚举，值是小写原文）
 }
 
 ## 类名 → 中文
@@ -111,6 +114,7 @@ const CLASS_LABELS := {
 	"ChapterDef": "章节", "CharacterDef": "角色", "EnemyDef": "敌人", "DifficultyDef": "难度", "HunterDef": "猎手", "FaithDef": "信仰", "RecipeDef": "配方",
 	"AchievementDef": "成就", "TagDef": "标签", "DamageTypeDef": "伤害类型", "LoadoutDef": "开局装备", "NodeRules": "节点规则", "DropRule": "掉落规则", "EconomyRules": "经济规则", "MetaRules": "局外规则",
 	"SearchRules": "搜索规则", "ItemSetDef": "套装", "SetTier": "套装档位", "RunBuffDef": "局外 / 地图增益", "EnemyPool": "敌人池", "StrengthRule": "档位规则",
+	"TechDef": "局外科技", "TechTier": "科技一级", "TechEffect": "科技效果",
 }
 
 ## 脚本路径 → {字段名 → 说明}；"" 键 = 类的说明

@@ -9,7 +9,8 @@
     2.0
   ],
   "shop_exclude_tags": [
-    "treasure"
+    "treasure",
+    "supply"
   ],
   "paid_extracts": 0
 }

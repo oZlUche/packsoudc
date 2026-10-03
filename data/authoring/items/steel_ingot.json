@@ -1,0 +1,16 @@
+{
+  "id": "steel_ingot",
+  "display_name": "钢锭",
+  "display_names": {
+    "en": "Steel Ingot"
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "metal",
+    "supply"
+  ]
+}

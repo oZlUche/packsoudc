@@ -106,6 +106,8 @@ func _build(
 			return ContentImporter.import_chapter(data, ctx, report)
 		"achievements":
 			return ContentImporter.import_achievement(data, ctx, report)
+		"techs":
+			return ContentImporter.import_tech(data, ctx, report)
 		_:
 			return ContentImporter.import_item(data, ctx, report)
 

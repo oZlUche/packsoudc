@@ -1,0 +1,42 @@
+{
+  "id": "warehouse",
+  "display_name": "仓库扩建",
+  "display_names": {
+    "en": "Warehouse Expansion"
+  },
+  "effect": {
+    "type": "warehouse_rows"
+  },
+  "tiers": [
+    {
+      "funds": 100
+    },
+    {
+      "funds": 200
+    },
+    {
+      "funds": 400
+    },
+    {
+      "funds": 600,
+      "items": {
+        "steel_ingot": 2
+      }
+    },
+    {
+      "funds": 900,
+      "items": {
+        "hardwood_plank": 2,
+        "steel_ingot": 3
+      }
+    },
+    {
+      "funds": 1300,
+      "items": {
+        "hardwood_plank": 3,
+        "rivet_box": 2,
+        "steel_ingot": 4
+      }
+    }
+  ]
+}

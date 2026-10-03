@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_0bqj5"]
+
+[resource]
+script = ExtResource("1_0bqj5")
+id = &"supply"
+display_name = "建材"
+display_names = {
+"en": "Supply"
+}
+description = "拿回基地用来扩建的东西。"
+descriptions = {
+"en": "Brought back to base to build with."
+}
+tip = false

@@ -1,0 +1,296 @@
+## 110（作者定）：仓库扩建 = 第一项局外科技。1～3 级只要钱、每级仓库 +3 行且东西原地不动；
+## 第 4 级起要建材，分批上交（上交即消耗、跨存档记着），交齐且钱够【升级】才亮，升完清上交记录；
+## 存档 v2 → v3；读档行数不足自动补；整理先同类再大小；仓库滚动后拖拽只认露在外面的部分；基地「科技」页。
+extends RefCounted
+
+const META := "user://test_110_meta.json"
+const SETTINGS := "user://test_110_settings.json"
+const TECH_PANEL := "res://ui/game/tech_panel.gd"
+
+
+static func _db() -> ItemDatabase:
+	var db := ItemDatabase.new()
+	db.load_dir()
+	return db
+
+
+static func _tech() -> TechDef:
+	return load(ContentPaths.asset_file("techs", "warehouse")) as TechDef
+
+
+static func _meta() -> MetaState:
+	return MetaState.new(GameFlow.load_meta_rules())
+
+
+static func _add(meta: MetaState, db: ItemDatabase, id: StringName) -> ItemInstance:
+	var inst := ItemInstance.create(db.get_def(id), meta.allocate_uid())
+	return inst if meta.warehouse.try_add(inst, true) else null
+
+
+static func run_content(t: TestCase) -> void:
+	t.begin("110 · 内容：仓库扩建 6 级，前 3 级只要钱；三种建材蓝色、没有战斗属性、商店不卖")
+	var def := _tech()
+	t.not_null(def, "科技资产导出来了")
+	if def == null:
+		return
+	t.eq(def.max_level(), 6, "6 级")
+	t.check(def.effect is TechWarehouseRows and (def.effect as TechWarehouseRows).rows == 3, "每级 +3 行")
+	for i in 3:
+		t.check(def.tiers[i].items.is_empty() and def.tiers[i].funds > 0, "第 %d 级只要钱" % (i + 1))
+	for i in range(3, 6):
+		t.check(not def.tiers[i].items.is_empty(), "第 %d 级要建材" % (i + 1))
+	var db := _db()
+	for id in [&"steel_ingot", &"hardwood_plank", &"rivet_box"]:
+		var item := db.get_def(id)
+		t.not_null(item, "%s 在" % id)
+		if item == null:
+			continue
+		t.eq(item.rarity, 2, "%s 是蓝色（稀有度 2）" % id)
+		t.check(item.tags.has(&"supply") and item.tags.has(&"material"), "%s 带建材标签" % id)
+		t.check(item.combat == null or item.combat.rules.is_empty(), "%s 没有战斗规则" % id)
+	for eco in ["standard", "prologue"]:
+		var rules := load(ContentPaths.asset_file("economy_rules", eco)) as EconomyRules
+		t.check(rules.shop_exclude_tags.has(&"supply"), "%s 经济：商店不卖建材" % eco)
+	t.not_null(load(ContentPaths.asset_file("tags", "supply")), "「建材」标签在")
+
+
+static func run_money_levels(t: TestCase) -> void:
+	t.begin("110 · 1～3 级只扣钱；每级仓库 +3 行，东西原地不动；钱不够不亮")
+	ItemInstance.reset_uid_counter()
+	var db := _db()
+	var def := _tech()
+	var m := _meta()
+	var rows0 := m.warehouse.size.y
+	var knife := _add(m, db, &"knife")
+	var at := knife.origin
+	t.check(not TechService.ready(m, def), "没钱：不能升")
+	t.check(not TechService.upgrade(m, def), "没钱：升级什么也不动")
+	t.eq(TechService.level(m, def.id), 0, "还是 0 级")
+	m.funds = 100 + 200 + 400 + 5
+	for lv in 3:
+		t.check(TechService.needed(m, def).is_empty(), "第 %d 级不要材料" % (lv + 1))
+		t.check(TechService.ready(m, def), "钱够就能升到 %d 级" % (lv + 1))
+		t.check(TechService.upgrade(m, def), "升到 %d 级" % (lv + 1))
+		t.eq(m.warehouse.size.y, rows0 + 3 * (lv + 1), "仓库 %d 行" % (rows0 + 3 * (lv + 1)))
+	t.eq(m.funds, 5, "扣了 100 + 200 + 400")
+	t.eq(TechService.level(m, def.id), 3, "3 级")
+	t.check(m.warehouse.has_item(knife.uid) and knife.origin == at, "原来的那件原地不动")
+	t.check(not TechService.ready(m, def), "第 4 级要建材：没交不能升")
+
+
+static func run_deposits(t: TestCase) -> void:
+	t.begin("110 · 第 4 级起分批上交：交一件记一件、存档读回还记着；不要的交不进；交齐 + 钱够才亮；升完清记录")
+	ItemInstance.reset_uid_counter()
+	var db := _db()
+	var def := _tech()
+	var m := _meta()
+	m.tech_levels["warehouse"] = 3
+	m.warehouse.grow_rows(9)
+	var plank := _add(m, db, &"hardwood_plank")
+	t.check(not TechService.can_submit(m, def, plank.def), "第 4 级不要硬木板")
+	t.check(not TechService.submit(m, def, plank.uid), "交不进")
+	t.check(m.warehouse.has_item(plank.uid), "硬木板还在仓库")
+	var a := _add(m, db, &"steel_ingot")
+	var b := _add(m, db, &"steel_ingot")
+	t.check(TechService.can_submit(m, def, a.def), "第 4 级要钢锭")
+	t.check(TechService.submit(m, def, a.uid), "交第一块钢锭")
+	t.check(not m.warehouse.has_item(a.uid), "上交即消耗：仓库里没了")
+	t.eq(TechService.deposited(m, def.id, &"steel_ingot"), 1, "记了 1 块")
+	t.eq(int(TechService.needed(m, def)["steel_ingot"]), 1, "还差 1 块")
+
+	# 存档往返：上交记录与等级都在
+	var back := MetaSave.from_text(MetaSave.to_text(m), db, GameFlow.load_meta_rules())
+	t.not_null(back, "存档读得回来")
+	if back == null:
+		return
+	t.eq(TechService.level(back, def.id), 3, "等级还是 3")
+	t.eq(TechService.deposited(back, def.id, &"steel_ingot"), 1, "交过的 1 块还记着")
+	m = back
+	m.funds = 0
+	t.check(TechService.submit(m, def, b.uid), "下一局回来再交一块（分批）")
+	t.check(TechService.items_complete(m, def), "钢锭交齐了")
+	t.check(not TechService.ready(m, def), "钱不够（要 600）：还不能升")
+	t.check(not TechService.can_submit(m, def, b.def), "交齐了：再来钢锭不收")
+	m.funds = 600
+	t.check(TechService.ready(m, def), "交齐 + 钱够：能升")
+	var rows := m.warehouse.size.y
+	t.check(TechService.upgrade(m, def), "升到 4 级")
+	t.eq(TechService.level(m, def.id), 4, "4 级")
+	t.eq(m.funds, 0, "扣了 600")
+	t.check(not m.tech_deposits.has("warehouse"), "升级后清掉这一项的上交记录")
+	t.eq(m.warehouse.size.y, rows + 3, "仓库 +3 行")
+	t.check(TechService.can_submit(m, def, plank.def), "第 5 级要硬木板了")
+
+
+static func run_max_level(t: TestCase) -> void:
+	t.begin("110 · 满级：next_tier 为 null、不能升、什么都不收")
+	var db := _db()
+	var def := _tech()
+	var m := _meta()
+	m.tech_levels["warehouse"] = def.max_level()
+	m.funds = 99999
+	t.is_null(TechService.next_tier(m, def), "满级没有下一级")
+	t.check(not TechService.ready(m, def) and not TechService.upgrade(m, def), "满级不能升")
+	t.check(not TechService.can_submit(m, def, db.get_def(&"steel_ingot")), "满级不收建材")
+	t.eq(m.funds, 99999, "钱没动")
+
+
+static func run_migration_and_heal(t: TestCase) -> void:
+	t.begin("110 · v2 存档迁到 v3（补两个空字典）；读档时仓库行数不足按等级补齐，只补不缩")
+	var db := _db()
+	var text := FileAccess.get_file_as_string("res://tests/fixtures/meta_v2.json")
+	var raw: Dictionary = JSON.parse_string(text)
+	t.eq(int(raw["version"]), 2, "样本是 v2")
+	var up := MetaMigrations.upgrade(raw)
+	t.eq(int(up["version"]), MetaState.SAVE_VERSION, "升到当前版本")
+	t.check(up["tech_levels"] is Dictionary and (up["tech_levels"] as Dictionary).is_empty(), "补了空的科技等级")
+	t.check(up["tech_deposits"] is Dictionary and (up["tech_deposits"] as Dictionary).is_empty(), "补了空的上交记录")
+	var m := MetaSave.from_text(text, db)
+	t.not_null(m, "v2 的档读得回来")
+	if m == null:
+		return
+	t.eq(m.funds, 120, "钱还在")
+	t.eq(m.warehouse.item_count(), 1, "仓库那件还在")
+
+	# 自检：等级 2 但仓库还是基础尺寸（手改存档 / 改了基础尺寸）
+	var rules := GameFlow.load_meta_rules()
+	var m2 := MetaState.new(rules)
+	m2.tech_levels["warehouse"] = 2
+	var base := m2.warehouse.size.y
+	TechService.heal(m2, [_tech()])
+	t.eq(m2.warehouse.size.y, base + 6, "补到基础 + 2 × 3 行")
+	TechService.heal(m2, [_tech()])
+	t.eq(m2.warehouse.size.y, base + 6, "再自检一次不再长")
+	m2.warehouse.grow_rows(5)
+	TechService.heal(m2, [_tech()])
+	t.eq(m2.warehouse.size.y, base + 11, "比期望大：不缩")
+
+
+static func run_tidy_by_kind(t: TestCase) -> void:
+	t.begin("110 · 整理：先同类（武器 → 防具 → 信仰 → 药剂 → 弹药 → 材料 → 珍宝 / 其他）再大小")
+	ItemInstance.reset_uid_counter()
+	var db := _db()
+	var g := GridInventory.new(Vector2i(8, 8), 100, false)
+	var ids := [&"steel_ingot", &"bandage", &"knife", &"hardwood_plank"]
+	for id in ids:
+		t.check(g.try_add(ItemInstance.create(db.get_def(id)), true), "放 %s" % id)
+	t.check(GridTidy.tidy(g), "整理")
+	var order: Array = g.items().duplicate()
+	order.sort_custom(func(a: ItemInstance, b: ItemInstance) -> bool:
+		return a.origin.y < b.origin.y or a.origin.y == b.origin.y and a.origin.x < b.origin.x)
+	var kinds: Array[int] = []
+	for inst in order:
+		kinds.append(GridTidy.kind_of((inst as ItemInstance).def))
+	var sorted := kinds.duplicate()
+	sorted.sort()
+	t.eq(kinds, sorted, "从左上往右下，种类序不倒退：%s" % str(kinds))
+	t.eq((order[0] as ItemInstance).def.id, &"knife", "武器排最前")
+	t.eq(GridTidy.kind_of(db.get_def(&"steel_ingot")), GridTidy.kind_of(db.get_def(&"hardwood_plank")), "钢锭与硬木板同类（材料）")
+	var mats: Array = order.filter(func(i: ItemInstance) -> bool: return i.def.tags.has(&"supply"))
+	t.eq((mats[0] as ItemInstance).def.id, &"hardwood_plank", "同类里大的（2 格）在前")
+	var plain := ItemDef.new()
+	plain.id = &"odd"
+	t.eq(GridTidy.kind_of(plain), GridTidy.KIND_ORDER.size() - 1, "没命中任何一类：排最后")
+
+
+static func frame_scroll_drag(t: TestCase, root: Window) -> void:
+	t.begin("110 · 仓库滚动：视图变高、滚走的部分不接落点、露在外面的部分照常命中")
+	var inv := GridInventory.new(Vector2i(4, 20), 100, false)
+	var view := InventoryView.new()
+	view.inventory = inv
+	var sc := ScrollBox.wrap(view, 5)
+	root.add_child(sc)
+	sc.position = Vector2(10, 10)
+	sc.size = sc.custom_minimum_size
+	t.eq(sc.custom_minimum_size.y, 5.0 * InventoryView.CELL, "窗口 5 行高")
+	var drag := DragLayer.new()
+	drag.register_view(view)
+	var below := sc.global_position + Vector2(10, 6.0 * InventoryView.CELL)
+	t.is_null(drag.view_at(below), "窗口下面（被裁掉的第 7 行）不命中")
+	t.check(drag.view_at(sc.global_position + Vector2(10, 10)) == view, "窗口里命中")
+	view.position.y = -3.0 * InventoryView.CELL     # 相当于往下滚了 3 行
+	var hit := sc.global_position + Vector2(10, 10)
+	t.check(drag.view_at(hit) == view, "滚过之后窗口顶上照样命中")
+	t.eq(view.cell_at_global(hit).y, 3, "落点按当前位置换算：是第 4 行（下标 3）")
+	inv.grow_rows(3)
+	t.eq(view.custom_minimum_size.y, 23.0 * InventoryView.CELL, "格子长了 3 行：视图跟着变高")
+	drag.free()
+	sc.queue_free()
+
+
+static func frame_tech_panel(t: TestCase, root: Window) -> void:
+	t.begin("110 · 科技页：双击上交、不要的提示、拖进上交区记账、钱够才亮【升级】、升级后仓库多 3 行")
+	ItemInstance.reset_uid_counter()
+	var db := _db()
+	var m := _meta()
+	var f := GameFlow.new(db, EnemyDatabase.new(), SetDatabase.new(), m)
+	f.meta_path = META
+	f.settings_path = SETTINGS
+	f.tech_defs = GameFlow.load_techs()
+	t.eq(f.tech_defs.size(), 1, "读到一项科技")
+	m.tech_levels["warehouse"] = 3
+	f.heal_techs()
+	var panel = load(TECH_PANEL).new()
+	root.add_child(panel)
+	panel.setup(f, UiPalette.cjk_font())
+	var btn: Button = panel.upgrade_button(&"warehouse")
+	t.not_null(btn, "有【升级】按钮")
+	if btn == null:
+		panel.queue_free()
+		return
+	t.check(btn.disabled, "没交没钱：灰")
+
+	var plank := _add(m, db, &"hardwood_plank")
+	t.check(not panel.submit(plank.uid), "双击硬木板：第 4 级不要")
+	t.check(panel.line_text().contains("下一级不需要"), "提示：%s" % panel.line_text())
+	t.check(m.warehouse.has_item(plank.uid), "硬木板还在")
+
+	var a := _add(m, db, &"steel_ingot")
+	t.check(panel.submit(a.uid), "双击钢锭：交了")
+	t.eq(TechService.deposited(m, &"warehouse", &"steel_ingot"), 1, "记了 1 块")
+	t.check(MetaSave.exists(META), "交了就存盘")
+
+	# 拖进上交区：等价于把一件放进那块格子
+	var b := _add(m, db, &"steel_ingot")
+	m.warehouse.remove(b.uid)
+	t.check(panel.zone().place(b, Vector2i.ZERO, 0), "钢锭落进上交区")
+	t.eq(panel.zone().item_count(), 0, "上交区当场清空（记账拿走）")
+	t.eq(TechService.deposited(m, &"warehouse", &"steel_ingot"), 2, "记了 2 块")
+	var c := _add(m, db, &"rivet_box")
+	m.warehouse.remove(c.uid)
+	t.check(not panel.zone().place(c, Vector2i.ZERO, 0), "上交区不收不要的（铆钉盒）")
+
+	btn = panel.upgrade_button(&"warehouse")
+	t.check(btn.disabled, "材料齐了但没钱：还是灰")
+	m.funds = 600
+	m.changed.emit()
+	btn = panel.upgrade_button(&"warehouse")
+	t.check(not btn.disabled, "交齐 + 钱够：亮")
+	var rows := m.warehouse.size.y
+	btn.pressed.emit()
+	t.eq(TechService.level(m, &"warehouse"), 4, "升到 4 级")
+	t.eq(m.warehouse.size.y, rows + 3, "仓库当场多 3 行")
+	panel.queue_free()
+	MetaSave.remove(META)
+	GameSettings.remove(SETTINGS)
+
+
+static func frame_meta_tab(t: TestCase, root: Window) -> void:
+	t.begin("110 · 基地多了第五个页签「科技」")
+	var db := _db()
+	var f := GameFlow.new(db, EnemyDatabase.new(), SetDatabase.new(), _meta())
+	f.meta_path = META
+	f.settings_path = SETTINGS
+	f.tech_defs = GameFlow.load_techs()
+	var screen = load("res://ui/game/meta_screen.gd").new()
+	screen.flow = f
+	screen.font = UiPalette.cjk_font()
+	screen.screen = GameFlow.Screen.META
+	root.add_child(screen)
+	screen.open({})
+	screen.show_tab("tech")
+	t.eq(screen.tab(), "tech", "切到科技页")
+	t.not_null(screen.tech_panel(), "科技页建好了")
+	t.check(screen.tech_panel().visible, "科技页可见")
+	screen.queue_free()
+	MetaSave.remove(META)
