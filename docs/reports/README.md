@@ -118,7 +118,7 @@
 | 106 | [方案：标准轴补三条（防护 / 生命上限 / 法力上限）+ 护盾画成生命条的外框](106-axes-armor-hp-mana-and-shield-frame-proposal.md) | 架构 · 提议 | 作者已确认（格挡 / 破绽、按来源定直接伤害、负防护倒贴），待执行 |
 | 107 | [方案：关键词弹窗按字段开关、删掉「打法」类标签](107-keyword-tips-and-style-tags-proposal.md) | 架构 · 提议 | 已落地（PR #16）；2.6 删【消耗品】→【药剂】作者已定，待执行；删打法标签等流派改法 |
 | 108 | [方案：武器附加效果的统一接口 —— 邻居附加（毒箭）与日神附魔走同一条路](108-weapon-attachment-interface-proposal.md) | 架构 · 提议 | 待作者确认（四项待定有推荐） |
-| 109 | [小改：去掉离开点时的暂存区提示；战斗倍速记成跨局字段；仓库「整理」按钮；仓库界面双击快速置入](109-drop-stash-prompt-and-battle-speed-setting.md) | 架构 · 小修清单 | 作者已定（倍速放 GameSettings 为推荐），待执行 |
+| 109 | [小改：去掉离开点时的暂存区提示；战斗倍速记成跨局字段；仓库「整理」按钮；仓库界面双击快速置入；乘区 FIRE 改名 ELEMENT](109-drop-stash-prompt-and-battle-speed-setting.md) | 架构 · 小修清单 | 作者已定（倍速放 GameSettings 为推荐），待执行 |
 
 ## 已归档（被覆盖或作废的方案，只留作历史）
 
