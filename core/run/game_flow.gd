@@ -876,6 +876,9 @@ func start_battle() -> bool:
 func hide_overlay() -> bool:
 	if run == null or run.is_over() or not is_overlay(screen):
 		return false
+	if screen == Screen.LOOT and run.events.pending_event() != null and bool(run.events.pending.get("search_stage", false)):
+		_flush()     # 搜索遭遇打赢的战利品：没拿完也能关，往下走到「再搜 / 走」（剩下的留在这个点上）
+		return true
 	if run.events.pending_event() != null or not run.events.pending_battle.is_empty():
 		return false
 	if screen == Screen.LOOT and _boss_extracts():

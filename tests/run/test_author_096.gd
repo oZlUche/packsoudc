@@ -221,7 +221,10 @@ static func run_search_encounter_won_sees_loot(t: TestCase) -> void:
 	f.resume()
 	if had_loot:
 		t.eq(f.screen, GameFlow.Screen.LOOT, "回放之后先看战利品（不是直接回事件）")
-		f.take_all_loot()
+		t.check(f.hide_overlay(), "没拿完也能直接关掉战利品屏")
+		t.check(f.screen == GameFlow.Screen.EVENT or f.screen == GameFlow.Screen.SEARCH, "关掉后回到「再搜 / 走」（%d）" % f.screen)
+		t.check(run.pending_loot != null, "没拿的还留在这个点上")
+		f.discard_loot()
 	else:
 		t.check(true, "（这一场没掉东西，直接看下一屏）")
 	t.check(f.screen == GameFlow.Screen.EVENT or f.screen == GameFlow.Screen.SEARCH, "然后回到搜索的事件屏 / 搜索屏（%d）" % f.screen)

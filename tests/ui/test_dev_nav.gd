@@ -116,3 +116,29 @@ static func run_class_cache(t: TestCase) -> void:
 	var ignore := FileAccess.get_file_as_string("res://.gitignore")
 	t.check(ignore.contains(".godot/") and not ignore.contains("!.godot/global_script_class_cache.cfg"),
 		".gitignore 把 .godot/ 全忽略了（不再放行缓存文件）")
+
+
+## 115：缓存过期时自救 —— 参数拼得对；重开过一次（带 cache-rebuilt）就不再起进程；缓存齐全时什么也不做
+static func frame_self_heal(t: TestCase, root: Window) -> void:
+	t.begin("115 · DevNav 自救：后台 --headless --import、带原用户参数重开并加 cache-rebuilt；重开过还缺就回落红字、不循环；缓存齐全不动")
+	var script = load("res://ui/dev_nav.gd")
+	t.eq(script.import_args("/p/"), PackedStringArray(["--headless", "--path", "/p/", "--import"]), "导入参数")
+	t.eq(script.relaunch_args("/p/", PackedStringArray()), PackedStringArray(["--path", "/p/", "--", "cache-rebuilt"]), "没有用户参数：只加标记")
+	t.eq(script.relaunch_args("/p/", PackedStringArray(["seed=3"])), PackedStringArray(["--path", "/p/", "--", "seed=3", "cache-rebuilt"]), "原用户参数照带")
+	t.eq(script.relaunch_args("/p/", PackedStringArray(["cache-rebuilt"])), PackedStringArray(["--path", "/p/", "--", "cache-rebuilt"]), "标记不重复")
+	t.check(script.already_rebuilt(PackedStringArray(["a", "cache-rebuilt"])), "带标记 = 自救过一次")
+	t.check(not script.already_rebuilt(PackedStringArray(["a"])), "不带 = 第一次")
+	var nav = _nav(root)
+	if nav == null:
+		t.check(false, "没有 DevNav")
+		return
+	nav._check_class_cache()
+	t.check(not nav.rebuilding() and nav._rebuild_cover == null, "缓存齐全（或编辑器 / 导出包）：不起进程、不盖遮罩")
+	# 缓存全坏时它自己也得解析得了：脚本里不许引用项目里的全局类（115 实测：原来引用 UiPalette，缓存一空 DevNav 先死）
+	var code := ""
+	for line in FileAccess.get_file_as_string("res://ui/dev_nav.gd").split("\n"):
+		var body := line.split("#")[0]
+		if not line.strip_edges().begins_with("##"):
+			code += body + "\n"
+	for cls in ["UiPalette", "UiText", "GameFlow", "Names"]:
+		t.check(not code.contains(cls + "."), "dev_nav.gd 的代码不引用 %s" % cls)

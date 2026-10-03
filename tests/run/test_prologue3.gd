@@ -205,6 +205,8 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(s.events.choose(go), "开打")
 	var p3 := s.faith_power.points_of(&"brute")
 	t.check(s.active_faith_tier() >= 2, "第二场打完过了 2 阶（信力 %d，阈值 %d）" % [p3, c.faiths[&"brute"].thresholds[1]])
+	# 116：留余量，防下次改武器 / 数值又贴着线（曲线 102～118）
+	t.check(p3 >= c.faiths[&"brute"].thresholds[1] + 2, "第二场打完离 2 阶还留着余量（%d ≥ %d + 2）" % [p3, c.faiths[&"brute"].thresholds[1]])
 	if s.pending_loot != null:
 		s.take_all_loot()
 	# 7 神坛 B：特殊操作二选一

@@ -1,0 +1,13 @@
+{
+  "id": "douxing",
+  "display_name": "都行",
+  "description": "神秘的都行",
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 5,
+  "tags": [
+    "keepsake"
+  ]
+}

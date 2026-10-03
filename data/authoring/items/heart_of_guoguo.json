@@ -1,0 +1,14 @@
+{
+  "id": "heart_of_guoguo",
+  "display_name": "果果之心",
+  "description": "献给至今没有非洲之心的群友",
+  "shape": [
+    "1"
+  ],
+  "rarity": 5,
+  "value": 100000,
+  "tags": [
+    "gem",
+    "treasure"
+  ]
+}
