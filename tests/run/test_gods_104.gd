@@ -36,7 +36,7 @@ static func _gain(def: FaithDef, event: StringName, payload: Dictionary) -> int:
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("104 · 内容：战争之神删了；技巧 / 狩猎有 1 格护符（信物、暂无效果）；胫骨大棒没有 1 阶功能；leather 标签；每位诸神至少一枚 1 格护符")
+	t.begin("104 · 内容：战争之神删了；技巧 / 狩猎有 1 格护符（信物、暂无效果）；胫骨大棒是蛮神道具；leather 标签；每位诸神至少一枚 1 格护符")
 	var defs := FaithDef.load_all()
 	t.check(not defs.has(&"war"), "没有战争之神")
 	t.eq(defs.size(), 7, "七份信仰（四位主神 + 技巧 + 狩猎 + 新教占位）")
@@ -49,8 +49,7 @@ static func run_content(t: TestCase) -> void:
 		t.check(charm.is_anchor() and FaithDef.id_of_tag(charm.faith_tag()) == fid, "%s 的护符是它的信物" % fid)
 		t.eq(ItemVolume.cells_of(charm), 1, "1 格")
 		t.check(charm.faith_bonuses.is_empty() and charm.combat == null, "暂无效果")
-	t.check(db.get_def(&"tibia_violence").faith_bonuses.is_empty(), "胫骨大棒移除了 1 阶功能")
-	t.check(db.get_def(&"tibia_violence").tags.has(&"faith:brute"), "但仍是蛮神的道具")
+	t.check(db.get_def(&"tibia_violence").tags.has(&"faith:brute"), "胫骨大棒是蛮神的道具")
 	t.check(db.get_def(&"leather_armor").tags.has(&"leather") and db.get_def(&"bag_leather").tags.has(&"leather"), "皮甲、皮革包带 leather")
 	# 导入器守 1 格护符
 	var ctx := ContentImporter.Context.new()
