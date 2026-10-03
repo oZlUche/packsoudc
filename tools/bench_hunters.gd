@@ -1,6 +1,6 @@
 ## 猎手校准：木桩对着猎手的每一档打几百场，打印胜率与「规则会给哪一档 / 最接近 50% 的哪一档」（报告 073）。
 ##
-##     godot --headless --path . --script res://tools/bench_hunters.gd -- [猎手 id=hunter_1] [每档场数=200] [木桩=res://data/authoring/calibration/dummies.json] [章节=chapter_01] [难度=ascension_1（取它的段位表）]
+##     godot --headless --path . --script res://tools/bench_hunters.gd -- [猎手 id=hunter_1] [每档场数=200] [木桩=res://data/authoring/calibration/dummies.json] [章节=free_mode] [难度=ascension_1（取它的段位表）]
 ##
 ## 工具只做统计，不改数：作者对着表改猎手的强度规则或池的档位表。
 extends CliTool
@@ -11,7 +11,7 @@ func run() -> void:
 	var hunter_id := StringName(args[0]) if args.size() > 0 else &"hunter_1"
 	var fights := int(args[1]) if args.size() > 1 else 200
 	var dummies_path: String = args[2] if args.size() > 2 else DummyBuilder.DEFAULT_PATH
-	var chapter_id := String(args[3]) if args.size() > 3 else "chapter_01"
+	var chapter_id := String(args[3]) if args.size() > 3 else "free_mode"
 	var difficulty_id := String(args[4]) if args.size() > 4 else "ascension_1"
 
 	var items := ItemDatabase.new()

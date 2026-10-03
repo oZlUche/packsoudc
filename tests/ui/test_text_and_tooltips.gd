@@ -20,7 +20,7 @@ static func _content() -> Content:
 	c.enemies.load_all()
 	c.sets = SetDatabase.new()
 	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "chapter_01"))
+	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
 	c.pool = c.enemies.pool(c.chapter.enemy_pool)
 	return c
 

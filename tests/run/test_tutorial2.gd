@@ -30,7 +30,7 @@ static func _content() -> Content:
 	c.sets.load_dir()
 	c.chapter = load(ContentPaths.asset_file("chapters", "prologue_2"))
 	c.prologue = load(ContentPaths.asset_file("chapters", "prologue"))
-	c.chapter1 = load(ContentPaths.asset_file("chapters", "chapter_01"))
+	c.chapter1 = load(ContentPaths.asset_file("chapters", "free_mode"))
 	for ch in GameFlow.load_characters():
 		if ch.id == &"brutus":
 			c.brutus = ch
@@ -231,8 +231,15 @@ static func run_matchups(t: TestCase) -> void:
 		t.eq(s.vitality.maximum, c.brutus.vitality_max + s.buff_context().vitality_max_bonus + c.chapter.vitality_bonus, "体力 = 角色 + 技能 + 章节加成")
 
 
-static func run_crafting_adjacent(t: TestCase) -> void:
-	t.begin("序章二 · 合成是相邻自动的（087 作者定）：棋盘上两件有配方的挨着 → CraftingModule.pairs 报出来（界面画「合」）→ 走到下一个点自动合成、发提示；不挨着不合；装不下进暂存区并提醒")
+static func _knife_on(s: RunState) -> ItemInstance:
+	for inst in s.board.items():
+		if (inst as ItemInstance).def.id == &"knife":
+			return inst
+	return null
+
+
+static func run_crafting_drop(t: TestCase) -> void:
+	t.begin("114 · 合成是拖到上面立刻合（作者定）：CraftingModule.craft —— 产物落在被压那件的位置、发一次 done；挨着放走一步不会自动合；装不下进暂存区并提醒；没配方不合")
 	var c := _content()
 	var s := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
 	t.not_null(s, "开得了局")
@@ -242,60 +249,41 @@ static func run_crafting_adjacent(t: TestCase) -> void:
 	t.not_null(cm, "默认清单里有合成")
 	cm.recipes = c.recipes
 	s.event_defs = c.events
-	# 开局包里有一把匕首（starting_items）
-	var knife: ItemInstance = null
-	for inst in s.board.items():
-		if (inst as ItemInstance).def.id == &"knife":
-			knife = inst
+	var knife := _knife_on(s)
 	t.not_null(knife, "开局包里有匕首")
 	if knife == null:
 		return
 	var home := knife.origin
-	t.check(cm.pairs().is_empty(), "只有匕首：没有对子")
-	# 把毒药瓶放到匕首旁边（右边一格）
+	var done: Array = []
+	cm.done.connect(func(detail: Dictionary): done.append(detail))
+	# 挨着放：不再自动合（相邻是增益槽 / 受益槽的事）
 	var vial := ItemInstance.create(c.items.get_def(&"poison_vial"))
 	var placed := s.board.place(vial, home + Vector2i(1, 0), 0) or s.board.place(vial, home + Vector2i(0, 1), 0) or s.board.place(vial, home + Vector2i(-1, 0), 0) or s.board.place(vial, home + Vector2i(0, -1), 0)
 	t.check(placed, "毒药瓶放到匕首旁边")
-	var pairs := cm.pairs()
-	t.eq(pairs.size(), 1, "相邻：一对")
-	if pairs.is_empty():
-		return
-	t.check((pairs[0][2] as ItemDef).id == &"poisoned_knife", "产物是涂毒匕首")
-	t.check(cm.partner_of(knife.uid) == vial and cm.partner_of(vial.uid) == knife, "两边都查得到对方")
-	# 不挨着：拿开
-	s.board.remove(vial.uid)
-	var far := Vector2i(-1, -1)
-	for y in s.board.size.y:
-		for x in s.board.size.x:
-			var at := Vector2i(x, y)
-			if (at - home).length_squared() >= 8 and s.board.can_place_def(vial.def, at, 0):
-				far = at
-	if far.x >= 0:
-		s.board.place(vial, far, 0)
-		t.check(cm.pairs().is_empty(), "不挨着：没有对子")
-		s.board.remove(vial.uid)
-	t.check(s.board.place(vial, home + Vector2i(1, 0), 0) or s.board.try_add(vial, true), "放回去")
-	# 走到下一个点：合成发生
-	var done: Array = []
-	cm.done.connect(func(_id: int, detail: Dictionary): done.append(detail))
-	var next: int = s.travel.available_moves()[0]
-	t.check(s.step_to(next), "走到下一个点")
-	t.eq(done.size(), 1, "发了 done（合成了）")
-	if done.is_empty():
-		return
-	t.eq(String(done[0]["output"]), "poisoned_knife", "产物是涂毒匕首")
-	t.eq(String(done[0]["where"]), "board", "落在棋盘上")
-	t.check(String((done[0]["log"] as Array)[0]).contains("合成了"), "提示文字")
+	t.check(s.step_to(s.travel.available_moves()[0]), "走到下一个点")
+	t.check(done.is_empty() and s.board.has_item(knife.uid) and s.board.has_item(vial.uid), "挨着、走一步：没合成，两件都还在")
+	# 拖到上面：立刻合
+	s.board.remove(vial.uid)     # 拿在手上
+	var r := cm.craft(vial, knife.uid)
+	t.check(bool(r["ok"]), "压到匕首上：合成了")
+	t.eq(done.size(), 1, "发了一次 done")
+	t.eq(String(r["output"]), "poisoned_knife", "产物是涂毒匕首")
+	t.eq(String(r["where"]), "board", "落在棋盘上")
+	t.check(String((r["log"] as Array)[0]).contains("合成了"), "提示文字")
 	var made: ItemInstance = null
 	for inst in s.board.items():
 		if (inst as ItemInstance).def.id == &"poisoned_knife":
 			made = inst
-	t.check(made != null and made.origin == home, "涂毒匕首落在匕首（uid 小的那件）原来的位置")
-	t.check(not s.board.has_item(knife.uid) and not s.board.has_item(vial.uid) and cm.pairs().is_empty(), "两件原料没了、没有对子了")
-	# 存档往返不需要记对子（相邻就是状态本身）
+	t.check(made != null and made.origin == home, "涂毒匕首落在匕首（被压那件）原来的位置")
+	t.check(not s.board.has_item(knife.uid) and not s.board.has_item(vial.uid), "两件原料没了")
+	# 没配方：不合、棋盘不动
+	var salve := ItemInstance.create(c.items.get_def(&"salve"))
+	var before := s.board.item_count()
+	t.check(not bool(cm.craft(salve, made.uid)["ok"]) and s.board.item_count() == before and done.size() == 1, "没配方：不合、棋盘不动、不发 done")
+	# 存档往返不需要记什么
 	var back := RunState.from_dict(s.to_dict(), c.chapter, c.items, c.enemies, c.sets)
 	t.check(back != null and not back.to_dict().has("pending_crafts"), "存档里没有配对表")
-	# 产物放不下：配方产物比原件大时才会发生；用一个临时配方验（1 格 + 1 格 → 3×3 板甲），包里塞满
+	# 产物放不下：用一个临时配方（1 格 + 1 格 → 板甲），包里塞满
 	var s3 := RunState.start(c.chapter, 3, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
 	var big := RecipeDef.new()
 	big.id = &"t_big"
@@ -303,22 +291,12 @@ static func run_crafting_adjacent(t: TestCase) -> void:
 	big.output = &"plate_cuirass"
 	var cm3 := CraftingModule.of(s3)
 	cm3.recipes = [big] as Array[RecipeDef]
-	var knife3: ItemInstance = null
-	for inst in s3.board.items():
-		if (inst as ItemInstance).def.id == &"knife":
-			knife3 = inst
-	var vial3 := ItemInstance.create(c.items.get_def(&"poison_vial"))
-	var ok3 := knife3 != null and (s3.board.place(vial3, knife3.origin + Vector2i(1, 0), 0) or s3.board.place(vial3, knife3.origin + Vector2i(0, 1), 0)
-		or s3.board.place(vial3, knife3.origin + Vector2i(-1, 0), 0) or s3.board.place(vial3, knife3.origin + Vector2i(0, -1), 0))
-	t.check(ok3, "毒药瓶挨着匕首")
+	var knife3 := _knife_on(s3)
 	while s3.board.try_add(ItemInstance.create(c.items.get_def(&"salve")), true):
 		pass     # 塞满
-	t.eq(cm3.pairs().size(), 1, "一对（临时配方）")
-	var done3: Array = []
-	cm3.done.connect(func(_id: int, detail: Dictionary): done3.append(detail))
-	s3.step_to(s3.travel.available_moves()[0])
-	t.check(done3.size() == 1 and String(done3[0]["where"]) == "storage", "产物装不下：进暂存区")
-	t.check(not done3.is_empty() and (done3[0]["log"] as Array).size() == 2 and String((done3[0]["log"] as Array)[1]).contains("装不下"), "提醒玩家装不下")
+	var r3 := cm3.craft(ItemInstance.create(c.items.get_def(&"poison_vial")), knife3.uid)
+	t.check(bool(r3["ok"]) and String(r3["where"]) == "storage", "产物装不下：进暂存区")
+	t.check((r3["log"] as Array).size() == 2 and String((r3["log"] as Array)[1]).contains("装不下"), "提醒玩家装不下")
 	var in_storage := false
 	for inst in s3.storage.items():
 		if (inst as ItemInstance).def.id == &"plate_cuirass":
@@ -327,14 +305,17 @@ static func run_crafting_adjacent(t: TestCase) -> void:
 
 
 static func run_crafting_drag(t: TestCase) -> void:
-	t.begin("序章二 · 拖拽层不再合成（087）：拿起一件时能和它合成的亮一圈（提示放旁边）；压到有配方的那件上只是普通顶替；CraftingModule.output_of 查配方")
+	t.begin("114 · 拖拽层：拿起一件时能和它合成的亮一圈；压到有配方的那件上 = 合成（绿预览，不是顶替）；压到没配方的 = 顶替；没配 craft_drop 的地方照常顶替")
 	var c := _content()
-	ItemInstance.reset_uid_counter()
-	var board := GridInventory.new(Vector2i(6, 4), 1, true)
-	var stash := ItemStash.new(2, 0)
-	board.try_add(ItemInstance.create(c.items.get_def(&"bag_leather")), true)
-	var knife := ItemInstance.create(c.items.get_def(&"knife"))
-	t.check(board.try_add(knife, true), "匕首在包里")
+	var s := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
+	t.not_null(s, "开得了局")
+	if s == null:
+		return
+	var cm := CraftingModule.of(s)
+	cm.recipes = c.recipes
+	var board := s.board
+	var stash := s.storage
+	var knife := _knife_on(s)
 	var home := knife.origin
 	var vial := ItemInstance.create(c.items.get_def(&"poison_vial"))
 	stash.admit(vial)
@@ -345,35 +326,56 @@ static func run_crafting_drag(t: TestCase) -> void:
 	view.size = Vector2(board.size) * InventoryView.CELL
 	var sview := StashView.new()
 	sview.stash = stash
-	sview.position = Vector2(400, 0)
+	sview.position = Vector2(board.size.x * InventoryView.CELL + 40, 0)
 	sview.size = Vector2(220, 200)
 	var drag := DragLayer.new()
 	drag.register_view(view)
 	drag.register_view(sview)
 	drag.stash = stash
-	var recipes := c.recipes
 	drag.craft = func(a: ItemInstance, b: ItemInstance) -> ItemDef:
-		var r := RecipeDef.find(recipes, a.def.id, b.def.id)
-		return c.items.get_def(r.output) if r != null else null
+		return cm.output_of(a.def, b.def)
+	drag.craft_grid = board
+	drag.craft_drop = func(a: ItemInstance, b_uid: int) -> bool:
+		return bool(cm.craft(a, b_uid)["ok"])
 	sview.grab_requested.emit(sview, vial.uid, Vector2(10, 10))
 	t.check(drag.is_dragging(), "抓起毒药瓶")
-	t.check(view.highlights.has(knife.uid), "拿起毒药瓶：棋盘上的匕首亮了（提示放到旁边）")
+	t.check(view.highlights.has(knife.uid), "拿起毒药瓶：棋盘上的匕首亮了")
 	t.check(not sview.highlights.has(other.uid), "伤药没亮")
 	var at := (Vector2(home) + Vector2(0.5, 0.5)) * InventoryView.CELL
 	drag.update_preview(at)
-	t.check(drag.drop_at(at), "放到匕首上：普通顶替（放下了）")
-	t.check(board.has_item(vial.uid) and vial.origin == home, "毒药瓶占了那格")
-	t.check(drag.is_dragging() and board.item_count() == 2, "匕首被顶出来拿在手上，没合成")
-	t.check(view.highlights.has(vial.uid), "手上是匕首：棋盘上的毒药瓶亮了")
+	t.check(view._preview_valid and view._preview_victims.is_empty(), "压到匕首上：预览是绿的、不画顶替")
+	t.check(drag.drop_at(at), "放到匕首上：合成（算放下了）")
+	t.check(not drag.is_dragging(), "手上空了（不是顶替）")
+	var made: ItemInstance = null
+	for inst in board.items():
+		if (inst as ItemInstance).def.id == &"poisoned_knife":
+			made = inst
+	t.check(made != null and made.origin == home, "涂毒匕首落在匕首的位置")
+	t.check(not board.has_item(knife.uid) and not stash.has_item(vial.uid), "两件原料没了")
+	t.check(view.highlights.is_empty() and sview.highlights.is_empty(), "放下之后高光熄了")
+	# 没配方的：照常顶替
+	sview.grab_requested.emit(sview, other.uid, Vector2(10, 10))
+	var at2 := (Vector2(made.origin) + Vector2(0.5, 0.5)) * InventoryView.CELL
+	t.check(drag.drop_at(at2), "伤药压到涂毒匕首上：顶替")
+	t.check(board.has_item(other.uid) and drag.is_dragging(), "涂毒匕首被顶出来拿在手上")
 	drag.cancel()
-	t.check(view.highlights.is_empty() and sview.highlights.is_empty(), "取消之后高光熄了")
-	# RunState 的入口
-	var s := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
-	if s != null:
-		var cm2 := CraftingModule.of(s)
-		cm2.recipes = recipes
-		t.check(cm2.output_of(c.items.get_def(&"knife"), c.items.get_def(&"poison_vial")) == c.items.get_def(&"poisoned_knife"), "CraftingModule.output_of 查得到")
-		t.is_null(cm2.output_of(c.items.get_def(&"knife"), c.items.get_def(&"salve")), "没有的是 null")
+	# 没配 craft_drop（沙盒 / 开局屏）：压上去是顶替
+	var drag2 := DragLayer.new()
+	drag2.register_view(view)
+	drag2.register_view(sview)
+	drag2.stash = stash
+	drag2.craft = drag.craft
+	var vial2 := ItemInstance.create(c.items.get_def(&"poison_vial"))
+	var knife2 := ItemInstance.create(c.items.get_def(&"knife"))
+	t.check(board.try_add(knife2, true) and stash.admit(vial2), "再来一把匕首和一瓶毒")
+	drag.unregister_view(view)
+	drag.unregister_view(sview)
+	sview.grab_requested.emit(sview, vial2.uid, Vector2(10, 10))
+	var at3 := (Vector2(knife2.origin) + Vector2(0.5, 0.5)) * InventoryView.CELL
+	t.check(drag2.drop_at(at3) and drag2.is_dragging() and board.has_item(vial2.uid), "没有 craft_drop：普通顶替，匕首拿在手上")
+	drag2.cancel()
+	t.check(cm.output_of(c.items.get_def(&"knife"), c.items.get_def(&"poison_vial")) == c.items.get_def(&"poisoned_knife"), "CraftingModule.output_of 查得到")
+	t.is_null(cm.output_of(c.items.get_def(&"knife"), c.items.get_def(&"salve")), "没有的是 null")
 
 
 static func run_random_mode(t: TestCase) -> void:

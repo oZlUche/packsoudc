@@ -53,6 +53,8 @@ static func from_text(text: String, items: ItemDatabase, enemies: EnemyDatabase,
 
 static func load_chapter(id: StringName) -> ChapterDef:
 	var path := ContentPaths.asset_file("chapters", String(id))
+	if not ResourceLoader.exists(path):
+		path = ContentPaths.asset_file("chapters", String(IdAliases.chapter(id)))     # 114：改过名的章节
 	return load(path) as ChapterDef if ResourceLoader.exists(path) else null
 
 

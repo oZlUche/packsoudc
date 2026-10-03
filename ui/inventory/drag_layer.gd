@@ -41,9 +41,15 @@ var drop_filter: Callable = Callable()
 ## 而不是退回原处。暂存区不限大小，所以这一下总能成（带内容物的包、被 drop_filter 拦的除外）。
 ## 一局里的整理面板开它；开局屏（仓库 ↔ 棋盘）不开，那儿放到外面还是退回
 var drop_outside_to_stash: bool = false
-## 配方查询 `func(a: ItemInstance, b: ItemInstance) -> ItemDef`，**只用来高光**（087 作者定：合成是相邻自动的，走到下一个点时发生，
-## 拖拽层不再有「拖到一起合成 / 配对」）：拖起一件时，所有能和它合成的那几件亮一圈，提醒玩家把它放到旁边去
+## 配方查询 `func(a: ItemInstance, b: ItemInstance) -> ItemDef`：拖起一件时，所有能和它合成的那几件亮一圈；
+## 配了 [member craft_drop] 时也用它判「压上去是合成」（预览画绿的，不是顶替）
 var craft: Callable = Callable()
+## 114（作者定）：**拖到上面立刻合**。`func(a: ItemInstance, b_uid: int) -> bool`：手上的 a 压在 [member craft_grid] 上
+## 正好一件 b、两件有配方时放手就调它，成了算放下（a 被消耗）。不给（沙盒、开局屏、基地）= 压上去照常顶替。
+## 拖拽层仍然不认识配方，合成那一下在调用方（一局里是 [CraftingModule]）
+var craft_drop: Callable = Callable()
+## 能合成的那张棋盘（一局里的作战棋盘）。别的格子容器（战利品箱）里压上去照常顶替
+var craft_grid: GridInventory = null
 
 var _views: Array[ContainerView] = []
 
@@ -295,6 +301,11 @@ func update_preview(global_pos: Vector2) -> void:
 		grid_view.set_preview(cells, origin, true)
 		return
 
+	# 114：压在恰好一件上、两件有配方 → 合成（绿的，不算顶替）
+	if _craft_target(inv, origin) != null:
+		grid_view.set_preview(cells, origin, true)
+		return
+
 	if inv.acts_as_bag(_inst.def):
 		# 087：空包压到另一个包上 = 替换它
 		var victim := _replaceable_bag(inv, origin)
@@ -465,6 +476,10 @@ func drop_at(global_pos: Vector2) -> bool:
 				pending = swap["victims"]
 		elif grid_view.inventory.place(inst, at, _rot):
 			dropped = true
+		elif _craft_target(grid_view.inventory, at) != null:
+			# 114：压到能合的那件上 = 立刻合成（a 被消耗，不再落到任何容器里）
+			dropped = bool(craft_drop.call(inst, _craft_target(grid_view.inventory, at).uid))
+			back_home = false
 		elif grid_view.inventory.acts_as_bag(inst.def):
 			var swap2 := _drop_replacing_bag(grid_view.inventory, at)     # 087：空包替换包
 			dropped = swap2["ok"]
@@ -538,7 +553,23 @@ func _can_shed(fallen: Array) -> bool:
 	return stash != null and stash.room_for(fallen.size())
 
 
-## 085 / 087：拖起一件时，所有登记的视图里能和它合成的那几件亮一圈（放下 / 取消时熄）—— 提醒「放到它旁边，走到下一个点就合」
+## 114：拖着的这件压到这个位置上会正好压着一件、且两件有配方吗。返回被压的那件；没有 null。
+## 只在 [member craft_grid] 上、配了 [member craft_drop] 时成立
+func _craft_target(inv: GridInventory, origin: Vector2i) -> ItemInstance:
+	if _inst == null or not _payload.is_empty() or not craft.is_valid() or not craft_drop.is_valid():
+		return null
+	if inv == null or inv != craft_grid:
+		return null
+	var under := inv.displaced_by(_inst.def, origin, _rot, _inst.uid)
+	if under.size() != 1:
+		return null
+	var b := inv.get_item(int(under[0]))
+	if b == null or b.def == null:
+		return null
+	return b if craft.call(_inst, b) is ItemDef else null
+
+
+## 085 / 114：拖起一件时，所有登记的视图里能和它合成的那几件亮一圈（放下 / 取消时熄）—— 提醒「拖到它上面就合」
 func _highlight_partners() -> void:
 	for view in _views:
 		var marks := {}

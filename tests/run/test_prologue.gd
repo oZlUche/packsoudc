@@ -27,7 +27,7 @@ static func _content() -> Content:
 	c.sets = SetDatabase.new()
 	c.sets.load_dir()
 	c.prologue = load(ContentPaths.asset_file("chapters", "prologue"))
-	c.chapter1 = load(ContentPaths.asset_file("chapters", "chapter_01"))
+	c.chapter1 = load(ContentPaths.asset_file("chapters", "free_mode"))
 	c.characters = GameFlow.load_characters()
 	c.events = GameFlow.load_events()
 	c.faiths = GameFlow.load_faiths()
@@ -53,6 +53,7 @@ static func _start(c: Content) -> RunState:
 		return null
 	s.event_defs = c.events
 	s.faith_defs = c.faiths
+	CraftingModule.of(s).recipes = GameFlow.load_recipes()     # 114：序章一教合成
 	s.pick_spawn(s.map.entry_ids[0])
 	return s
 
@@ -322,9 +323,29 @@ static func run_walkthrough(t: TestCase) -> void:
 	for inst in s.storage.items().duplicate():
 		s.equip((inst as ItemInstance).uid)
 	t.eq(s.storage.item_count(), 0, "新搜到的都放进包里了（放不下的先不管）") if s.storage.item_count() == 0 else t.check(true, "（有放不下的，留在暂存区，走了就没）")
-	# 精英
+	# 精英（114）：先把毒药瓶拖到匕首上合成涂毒匕首，门才开
 	t.check(s.step_to(path[4].id), "走到精英")
-	t.check(bool(s.events.option_state(0)["ok"]), "棋盘上有东西：能开打")
+	ev = s.events.pending_event()
+	t.check(ev != null and ev.id == &"tut_elite", "精英的教程事件")
+	t.check(not bool(s.events.option_state(0)["ok"]), "还没合成：「进入战前准备」灰着")
+	t.check(not bool(s.events.option_state(1)["ok"]), "手里有匕首：退路「就这么上」不出现")
+	t.check(ev != null and (ev.options[0] as EventOption).hint_when_hidden.contains("{item:poison_vial}"), "灰着的选项有一句提示")
+	t.check(ev != null and bool(s.events.option_state(ev.options.size() - 1)["ok"]), "「我先整理一下背包」随时能选")
+	var knife := _find(s, &"knife")
+	var vial := _find(s, &"poison_vial")
+	t.check(knife != null and vial != null, "身上有匕首和毒药瓶（点 2 必掉匕首、点 3 第一次搜到毒药瓶）")
+	if knife == null or vial == null:
+		return
+	if not s.board.has_item(knife.uid):
+		s.equip(knife.uid)
+	var knife_home := knife.origin
+	(s.storage if s.storage.has_item(vial.uid) else s.board).remove(vial.uid)     # 拿在手上
+	var made := CraftingModule.of(s).craft(vial, knife.uid)
+	t.check(bool(made["ok"]) and String(made["where"]) == "board", "拖到匕首上：立刻合成，落在棋盘上")
+	var pk := _find(s, &"poisoned_knife")
+	t.check(pk != null and s.board.has_item(pk.uid) and pk.origin == knife_home, "涂毒匕首在匕首原来的位置")
+	t.check(_find(s, &"knife") == null and _find(s, &"poison_vial") == null, "两件原料没了")
+	t.check(bool(s.events.option_state(0)["ok"]), "合成了：门开了")
 	t.check(s.events.choose(0), "开打精英")
 	t.eq(int(s.tally["battles_won"]), 3, "精英也赢了")
 	if s.pending_loot != null:
@@ -338,6 +359,35 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(s.events.choose(0), "选「撤离」")
 	t.eq(s.phase, RunState.Phase.EXTRACTED, "这一局撤出来了（不用再按右栏的按钮）")
 	t.eq(int(s.tally["battles_lost"]), 0, "一场没输")
+
+
+## 棋盘或暂存区里第一件这个 id 的道具
+static func _find(s: RunState, id: StringName) -> ItemInstance:
+	for c in [s.board, s.storage]:
+		for inst in (c as ItemContainer).items():
+			if (inst as ItemInstance).def.id == id:
+				return inst
+	return null
+
+
+## 114：序章一教合成 —— 匕首必掉、毒药瓶第一次就搜到；没拿到匕首（打输了 / 没捡）有退路，不卡死
+static func run_crafting_gate(t: TestCase) -> void:
+	t.begin("114 · 序章一：拾荒者必掉匕首、点 3 第一次搜到毒药瓶；精英门要涂毒匕首（灰显 + 提示）；没有匕首时退路出现；规则卡三条")
+	var c := _content()
+	var g := c.prologue.map_source.resolve(1)
+	var path := _path(g)
+	t.eq(path[2].content.get("guaranteed_drops", []), ["knife"], "拾荒者必掉匕首")
+	t.check((path[3].content["search_finds"][0] as Array).has("poison_vial"), "第一次搜到毒药瓶")
+	t.eq(c.prologue.rules.size(), 3, "规则卡三条")
+	var s := _start(c)
+	t.check(_find(s, &"knife") == null and s.storage.item_count() == 0, "开局只有包")
+	# 直接站到精英点上看门（没匕首、没毒药瓶）
+	s.events.pending = {"node": path[4].id, "event": "tut_elite", "type": "elite"}
+	t.check(not bool(s.events.option_state(0)["ok"]), "没有涂毒匕首：进不去")
+	t.check(bool(s.events.option_state(1)["ok"]), "也没有匕首：退路「就这么上」能选")
+	s.board.try_add(ItemInstance.create(c.items.get_def(&"knife")), true)
+	t.check(not bool(s.events.option_state(1)["ok"]), "有匕首了：退路藏起来")
+	_cleanup()
 
 
 static func run_gating(t: TestCase) -> void:
@@ -388,7 +438,7 @@ static func run_gating(t: TestCase) -> void:
 	t.check(avail.size() == 1 and avail[0].id == &"prologue_3", "序章二也通关：序章三顶上（113）")
 	f.meta.grant_unlock(&"prologue3_done")
 	avail = f.available_chapters()
-	t.check(avail.size() == 1 and avail[0].id == &"chapter_01", "序章三也通关：只剩第一章")
+	t.check(avail.size() == 1 and avail[0].id == &"free_mode", "序章三也通关：只剩第一章")
 	# 解锁跟着局外存档
 	var meta2 := MetaSave.read(c.items, META)
 	t.check(meta2 != null and meta2.has_unlock(c.prologue.grants_unlock), "解锁存进了局外存档")

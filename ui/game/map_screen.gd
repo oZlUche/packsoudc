@@ -370,7 +370,7 @@ func _adopt() -> void:
 	_run.loot_cleared.connect(_after_move)     # 084：没拿的战利品没了（拿完了、或走了），「回到这个点」跟着灰
 	var crafting := CraftingModule.of(_run)     # 101：合成是一局的模块
 	if crafting != null:
-		crafting.done.connect(func(_id: int, detail: Dictionary):
+		crafting.done.connect(func(detail: Dictionary):
 			for line in detail.get("log", []):
 				_note("　" + String(line)))
 	# 猎手（071）：进了感知范围提示一句；动了就重画标记；被赶回上一个点

@@ -79,7 +79,7 @@ func open(_payload: Dictionary) -> void:
 	left.custom_minimum_size.x = 340
 	row.add_child(left)
 	left.add_child(_label("开局", 26, UiPalette.FG))
-	left.add_child(_label("章节", 15, UiPalette.DIM))
+	left.add_child(_label("模式", 15, UiPalette.DIM))     # 114：序章之后只有自由模式（将来加章再长）
 	_chapters = flow.available_chapters()
 	for i in _chapters.size():
 		var c := _chapters[i]

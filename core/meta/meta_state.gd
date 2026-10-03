@@ -244,7 +244,7 @@ func has_unlock(id: StringName) -> bool:
 	return unlocks.has(id)
 
 
-## 给一个局外解锁（序章通关解锁第一章，083）。已经有的不重复；返回是不是新给的
+## 给一个局外解锁（序章通关解锁下一张 / 自由模式，083 / 114）。已经有的不重复；返回是不是新给的
 func grant_unlock(id: StringName) -> bool:
 	if id == &"" or unlocks.has(id):
 		return false
@@ -296,7 +296,10 @@ func codex_count(id: StringName) -> int:
 
 #region 成就与规则卡（091）
 func chapter_extractions_of(chapter_id: StringName) -> int:
-	return int(chapter_extractions.get(String(chapter_id), 0))
+	var n := int(chapter_extractions.get(String(chapter_id), 0))
+	for old in IdAliases.old_names(IdAliases.CHAPTERS, chapter_id):     # 114：改名前记的账也算
+		n += int(chapter_extractions.get(String(old), 0))
+	return n
 
 
 func has_achievement(id: StringName) -> bool:
@@ -318,7 +321,12 @@ func achievement_time(id: StringName) -> int:
 
 
 func has_seen_rules(chapter_id: StringName) -> bool:
-	return seen_rules.has(chapter_id)
+	if seen_rules.has(chapter_id):
+		return true
+	for old in IdAliases.old_names(IdAliases.CHAPTERS, chapter_id):     # 114：改名前看过的也算
+		if seen_rules.has(old):
+			return true
+	return false
 
 
 func mark_rules_seen(chapter_id: StringName) -> void:

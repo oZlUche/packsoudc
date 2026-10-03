@@ -757,8 +757,9 @@ func next_chapter() -> ChapterDef:
 
 
 func chapter_of(id: StringName) -> ChapterDef:
+	var real := IdAliases.chapter(id)     # 114：老存档里的 chapter_01 = free_mode
 	for c in chapters:
-		if c.id == id:
+		if c.id == id or c.id == real:
 			return c
 	return null
 
@@ -789,7 +790,7 @@ func _settle_run() -> void:
 	if not _settled:
 		_settled = true
 		last_absorbed = meta.absorb(result)
-		# 083：撤离成功给这一章许诺的局外解锁（序章通关开第一章）
+		# 083：撤离成功给这一章许诺的局外解锁（序章通关开下一张 / 自由模式）
 		if result.is_extracted() and run != null and run.chapter != null and run.chapter.grants_unlock != &"":
 			meta.grant_unlock(run.chapter.grants_unlock)
 		check_achievements()     # 091：这一局的账记完了，看成就
@@ -998,11 +999,7 @@ func _adopt(state: RunState) -> void:
 		_push({"screen": Screen.BATTLE, "node": node, "result": r, "won": won,
 			"player": ev.last_battle.get("player", null), "enemy": ev.last_battle.get("enemy", null),
 			"enemy_content": ev.last_battle.get("content", {})}))
-	if crafting != null:
-		crafting.done.connect(func(node_id: int, detail: Dictionary):
-			# 085：合成的提示排在这一步别的事前面（先说东西怎么了，再看这个点的事）
-			var node := state.map.get_node(node_id) if state.map != null and state.map.has_node(node_id) else null
-			_queue.push_front({"screen": Screen.EVENT, "node": node, "outcome": "合成", "detail": detail}))
+	# 114：合成是拖到上面立刻发生的（整理面板里），提示就在面板上，不再排结果屏
 	state.loot_pending.connect(func(container: GridInventory):
 		# 一步之内可能来两份（打赢的尸体 + 搜索收获），RunState 已经并成一份，队里留一个就够
 		if _queue.is_empty() or int(_queue[-1]["screen"]) != Screen.LOOT:

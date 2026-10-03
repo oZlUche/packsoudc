@@ -34,11 +34,11 @@ extends Resource
 @export var economy_rules: StringName = &""
 
 @export_group("开局屏（083）")
-## 开局屏上的先后（小的在前）；序章 0、第一章 1
+## 开局屏上的先后（小的在前）；序章 0 ~ 2、自由模式 3
 @export var order: int = 0
 ## 局外解锁 id（[MetaState.unlocks]）：没解锁不列。空 = 一直可选
 @export var requires_unlock: StringName = &""
-## 撤离成功给的局外解锁 id（序章通关解锁第一章）。空 = 不给
+## 撤离成功给的局外解锁 id（序章通关解锁下一张、序章三解锁自由模式）。空 = 不给
 @export var grants_unlock: StringName = &""
 ## 能选的角色 id；空 = 全部
 @export var characters: Array[StringName] = []

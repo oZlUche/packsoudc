@@ -131,7 +131,7 @@ static func run_validation(t: TestCase) -> void:
 static func run_authoring_file(t: TestCase) -> void:
 	t.begin("章节管线 · 仓库里的第一章导得进、与资产一致")
 
-	var path := ContentPaths.authoring_file("chapters", "chapter_01")
+	var path := ContentPaths.authoring_file("chapters", "free_mode")
 	t.check(FileAccess.file_exists(path), "有 %s" % path)
 	if not FileAccess.file_exists(path):
 		return
@@ -144,7 +144,7 @@ static func run_authoring_file(t: TestCase) -> void:
 	t.eq(ContentExporter.to_json(ContentExporter.export_chapter(chapter)), text,
 		"仓库里的作者数据就是导出器的格式，往返逐字节相同")
 
-	var asset := ContentPaths.asset_file("chapters", "chapter_01")
+	var asset := ContentPaths.asset_file("chapters", "free_mode")
 	t.check(ResourceLoader.exists(asset), "有导入产出的 %s" % asset)
 	if ResourceLoader.exists(asset):
 		var loaded: ChapterDef = load(asset)

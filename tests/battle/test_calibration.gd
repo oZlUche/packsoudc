@@ -24,7 +24,7 @@ static func _content() -> Content:
 	c.enemies.load_all()
 	c.sets = SetDatabase.new()
 	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "chapter_01"))
+	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
 	c.loadouts = GameFlow.load_loadouts()
 	c.hunters = GameFlow.load_hunters()
 	return c
