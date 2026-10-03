@@ -42,7 +42,7 @@
 | `core/enemies` | 敌人池、档位、组装、预览编译 | `EnemyPool`、`EnemyPlacer`、`EnemyKit` |
 | `core/loot` | 掉落规则与掷骰、修正来源接缝、装箱 | `DropRule`、`DropResolver`、`DropBonusSource`、`LootPacker` |
 | `core/run`（+ effects、events） | 一局：旅程、体力、钱、节点事件、搜索 / 商店会话、规则、状态与存档；场景流状态机、开局装备、角色、进阶难度（机制清单）、猎手（伪 PVP）、结算；buff（局外 / 一局）与一局规则的构件；事件层（事件、选项、条件与后果构件、铺放）；局内技能（082：构件 + 一局的账）；信仰与信力（081 / 082） | `RunState`、`RunSave`、`MapTravel`、`NodeEvents`、`Vitality`、`Wallet`、`GameFlow`（`new_run_target` / `continue_target`：新的一局 = 从头，继续 = 读档或下一张教程）、`LoadoutDef`、`CharacterDef`、`RunResult`、`RunBuffDef`、`RunBuffs`、`RunContext`、`EventDef`、`EventPlacer`、`RunSkill`、`RunSkills`、`FaithDef`、`FaithPower` |
-| `core/meta` | 跨局：仓库格子（大小是 `MetaRules`）、带回来的棋盘与一键置入、图鉴、钱、战绩、保留规则（`absorb()` 一处）、存档 v2 | `MetaState`、`MetaSave`、`MetaRules` |
+| `core/meta` | 跨局：仓库格子（大小是 `MetaRules`）、带回来的棋盘与一键置入、图鉴、钱、战绩、保留规则（`absorb()` 一处）、局外科技树（110 / 118：前置、列、每级效果 —— 仓库加行、给一局局外 buff、保险箱扩格）、存档 v3 | `MetaState`、`MetaSave`、`MetaRules`、`TechDef`、`TechService` |
 | `core/text` | 内容名字的多语言 `Names.of`（088）；文本占位符与样式码（084）：`{char_name}`、`{battle_data}`、`{c:hp}…{/c}`，全表见 `docs/text-placeholders.md`；界面语言表（085）：`UiText.t(key)`，zh / en；词条表（087）：固定词条 + 按 buff 定义生成的说明，悬浮窗侧边一个一个开小窗 | `TextTemplate`、`UiText`、`Glossary`、`Names` |
 | `core/settings` | 玩家设置（暂存区提醒档位、拿完自动关、浮窗预览、界面语言、当前存档位），`user://settings.json`；存档位（089）`user://slots/<n>/` | `GameSettings`（挑要提的在 `core/run/storage_warning.gd`）、`SaveSlots` |
 | `ui/game` | 正式游戏（主场景）：导演（叠层可最小化）+ 屏的底座 + 各屏（事件屏先过、战前准备屏、容器屏战利品 / 搜索合一）+ 背包整理面板（浮窗）+ 仓库面板 + 渐进揭示的战利品视图 | `GameDirector`、`GameScreen`、`LootView`、`FloatingWindow`、`map_screen`、`event_screen`、`prebattle_screen`、`container_screen`…… |
@@ -66,7 +66,7 @@
 **主场景是正式游戏** `ui/game/game.tscn`：主菜单（新的一局 / 继续上次 / 仓库与战绩 / 设置 / 开发工具）→ 开局（挑章、挑角色、从仓库往初始包里拖、种子）→ 地图（B 开背包、走出发生过事的点前提醒暂存区、撤离点上撤离、存档并回主菜单）
 ⇄ 叠层（战斗回放、战利品、搜索、商店、事件、休息）→ 结算 → 仓库与战绩。F1 回启动选择器。
 启动选择器（开发期入口）：正式游戏、背包沙盒、战斗沙盒、道具编辑器、事件编辑器（写文字、导入配图、拼选项、挂进节点规则）、Buff 制作器、套装编辑器（091：id / 名字 / 计数方式 / 档位，成员按道具的 `set_id`）、地图编辑器（随机生成或手绘，改完存回章节）。
-**类缓存**（102）：`.godot/` 整个目录不进仓库（它是生成物）。编辑器打开项目时自己重建；不开编辑器也直接跑即可（115）：DevNav 发现缓存缺类会盖一屏「正在重建」、后台 `--headless --import`、导完带原参数自己重开；重开过还缺才红字提示。`tools/run_game.sh` / `.bat` 可选（省一次重启）。命令行：`bash tools/test.sh`（全套测试，先 `--import` 重建类缓存；带一个词只跑相关套件，如 `bash tools/test.sh safe`）、`import_content`、`normalize_content`、`check_scripts`、`map_stats`、
+**类缓存**（102）：`.godot/` 整个目录不进仓库（它是生成物）。编辑器打开项目时自己重建；不开编辑器也直接跑即可（115）：DevNav 发现缓存缺类会盖一屏「正在重建」、后台 `--headless --import`、导完带原参数自己重开；重开过还缺才红字提示。`tools/run_game.sh` / `.bat` 可选（省一次重启）。命令行：`bash tools/test.sh`（全套测试，先 `--import` 重建类缓存；带一个词只跑相关套件，如 `bash tools/test.sh safe`）、`import_content`、`normalize_content`、`check_scripts`、`map_stats`、`replay_log`（117：读一场战斗的内部日志，`-- <file.jsonl | --latest> [--summary]`）、
 `capture_scene`（截图；`DEMO_SCREEN=setup / map / bag / prebattle / battle / loot / search / result / meta` 把正式游戏推到那一屏）。
 
 ## 测试

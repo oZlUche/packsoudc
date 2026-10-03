@@ -23,3 +23,8 @@ func heal(meta: MetaState, level: int) -> void:
 
 func describe() -> String:
 	return "+%d 行" % rows
+
+
+## 118：到第 k 级一共加了几行
+func describe_level(level: int, _buff_defs: Dictionary = {}) -> String:
+	return "仓库共 +%d 行" % (rows * level)

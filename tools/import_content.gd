@@ -43,6 +43,8 @@ func run() -> void:
 	ContentImporter.validate_faith_charms(ctx, report)     # 104：每位神一枚 1 格护符
 	ContentImporter.validate_event_text_refs(ctx, report)     # 112：事件文本里的 {item:} {enemy:} 得存在
 	ContentImporter.validate_help_pages(ctx, report)     # 114：百科页的「相关」指得到
+	report.source = "techs"
+	ContentImporter.validate_techs(ctx, report)     # 118：科技树的前置存在、不成环
 
 	if not report.warnings.is_empty():
 		print(report.to_text())

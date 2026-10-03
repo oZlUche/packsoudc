@@ -272,7 +272,16 @@ func apply_buff(def: BuffDef, stacks: int = 1, now: int = 0) -> int:
 			added_rules.append(new_rt)
 		_notify_rules_changed(added_rules)
 	mark_dirty()
+	if ctx != null and ctx.trace != null:
+		var inst2 := find_buff(def.id)
+		_trace_buff(ctx, def.id, added, inst2.stacks if inst2 != null else 0, "apply", inst2.expires_at if inst2 != null else -1)
 	return added
+
+
+## 117：内部日志的一条 buff 变动（叠层、移除、到期），带剩余层数与到期时刻
+func _trace_buff(ctx: BattleContext, id: StringName, delta: int, stacks: int, reason: String, expires_at: int = -1) -> void:
+	ctx.trace.record(ctx.now, side, BattleTrace.BUFF, {"buff": String(id), "delta": delta, "stacks": stacks,
+		"reason": reason, "expires_at": expires_at})
 
 
 ## 移除层数，返回实际移除的层数。层数归零时整条 buff 连同其规则一并移除。
@@ -285,6 +294,9 @@ func remove_buff_stacks(buff_id: StringName, count: int) -> int:
 	if inst.stacks <= 0:
 		_drop_buff(inst)
 	mark_dirty()
+	var ctx: BattleContext = _ctx_ref.get_ref() if _ctx_ref != null else null
+	if ctx != null and ctx.trace != null:
+		_trace_buff(ctx, buff_id, -removed, maxi(0, inst.stacks), "remove", inst.expires_at)
 	return removed
 
 
@@ -337,6 +349,10 @@ func expire_buffs(now: int) -> Array[BuffInstance]:
 		_drop_buff(b)
 	if not expired.is_empty():
 		mark_dirty()
+		var ctx: BattleContext = _ctx_ref.get_ref() if _ctx_ref != null else null
+		if ctx != null and ctx.trace != null:
+			for b in expired:
+				_trace_buff(ctx, b.def.id, -b.stacks, 0, "expired", b.expires_at)
 	return expired
 
 

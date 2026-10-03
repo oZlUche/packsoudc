@@ -1,0 +1,29 @@
+{
+  "id": "scouting",
+  "display_name": "侦察",
+  "display_names": {
+    "en": "Scouting"
+  },
+  "requires": [
+    "luck",
+    "bargain"
+  ],
+  "column": 2,
+  "description": "隐形的猎手走近到一定距离就看得见。",
+  "effect": {
+    "type": "tech_run_buff",
+    "buffs": [
+      "tech_scouting_1"
+    ]
+  },
+  "tiers": [
+    {
+      "funds": 1500,
+      "items": {
+        "steel_ingot": 3,
+        "hardwood_plank": 2,
+        "rivet_box": 2
+      }
+    }
+  ]
+}

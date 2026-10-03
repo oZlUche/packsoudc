@@ -128,6 +128,13 @@ class Context:
 		if def != null and def.id != &"":
 			help_pages[def.id] = def
 
+	## id -> TechDef（118）。树（前置、成环、撞位）全部导完才查得全
+	var techs: Dictionary = {}
+
+	func register_tech(def: TechDef) -> void:
+		if def != null and def.id != &"":
+			techs[def.id] = def
+
 	## id -> AchievementDef（091）
 	var achievements: Dictionary = {}
 
@@ -689,7 +696,50 @@ static func import_tech(data: Dictionary, ctx: Context, report: ImportReport) ->
 				report.error("tiers[%d].items.%s" % [i, key], "件数至少 1")
 			if not ctx.items.is_empty() and not ctx.items.has(StringName(String(key))):
 				report.error("tiers[%d].items.%s" % [i, key], "道具库里没有 %s" % key)
+	# 118：树的字段
+	if def.column < 0:
+		report.error("column", "列从 0 起")
+	for i in def.requires.size():
+		if def.requires[i] == def.id:
+			report.error("requires[%d]" % i, "前置不能是自己")
+	check_text_refs(def.description, "description", ctx, report)
+	# 118：每级给一条局外 buff —— 条数等于级数，每条得存在且是局外（META）的
+	if def.effect is TechRunBuff:
+		var rb := def.effect as TechRunBuff
+		if rb.buffs.size() != def.tiers.size():
+			report.error("effect.buffs", "每一级给一条 buff：写了 %d 条，科技有 %d 级" % [rb.buffs.size(), def.tiers.size()])
+		for i in rb.buffs.size():
+			var b: RunBuffDef = ctx.run_buffs.get(rb.buffs[i], null)
+			if not ctx.run_buffs.is_empty() and b == null:
+				report.error("effect.buffs[%d]" % i, "没有局外 buff %s（data/authoring/run_buffs）" % rb.buffs[i])
+			elif b != null and not b.is_meta():
+				report.error("effect.buffs[%d]" % i, "buff %s 不是局外的（scope 得是 META）" % rb.buffs[i])
+	ctx.register_tech(def)
 	return def
+
+
+## 118：全部科技导完后查树：前置存在、没有环；同列同深度撞位只警告（按 order 左右排）
+static func validate_techs(ctx: Context, report: ImportReport) -> void:
+	var defs: Array = ctx.techs.values()
+	for def in defs:
+		var d := def as TechDef
+		for i in d.requires.size():
+			if not ctx.techs.has(d.requires[i]):
+				report.error("techs/%s.requires[%d]" % [d.id, i], "前置科技 %s 不存在" % d.requires[i])
+	var loop := TechService.cycle_members(defs)
+	if not loop.is_empty():
+		report.error("techs", "科技的前置成环：%s" % ", ".join(loop))
+		return
+	var slots := {}
+	var lay := TechService.layout(defs)
+	var ids: Array = lay.keys()
+	ids.sort()
+	for id in ids:
+		var at: Vector2i = lay[id]
+		if slots.has(at):
+			report.warn("techs/%s" % id, "和 %s 撞位（第 %d 列、深度 %d）：按 order 左右排" % [slots[at], at.x, at.y])
+		else:
+			slots[at] = id
 
 
 ## 114：百科的一页机制说明。分类在固定清单里、有标题有正文、相关道具是真道具、文本里的引用存在。

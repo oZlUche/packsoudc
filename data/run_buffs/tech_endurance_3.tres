@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_y02qy"]
+[ext_resource type="Script" path="res://core/run/effects/vitality_max_bonus.gd" id="2_32bxb"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_bgwfq"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_cvnxx"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_3ey4a"]
+
+[sub_resource type="Resource" id="Resource_6ar1r"]
+script = ExtResource("2_32bxb")
+amount = 3
+
+[resource]
+script = ExtResource("5_3ey4a")
+id = &"tech_endurance_3"
+display_name = "耐久（科技）"
+description = "体力上限 {vitality_max_bonus_amount|signed}"
+scope = 0
+effects = Array[ExtResource("1_y02qy")]([SubResource("Resource_6ar1r")])

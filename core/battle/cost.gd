@@ -31,3 +31,9 @@ func on_attempt(_ctx: RuleContext) -> void:
 ## 给 UI 用的说明，例如「耐力 10」
 func describe(_ctx: RuleContext) -> String:
 	return ""
+
+
+## 117：内部日志里这条消耗 / 条件的样子（跳过时写「什么不够、差多少」）。默认只写类名，资源消耗写需要与现有
+func trace_info(_ctx: RuleContext) -> Dictionary:
+	var script := get_script() as Script
+	return {"cost": String(script.get_global_name()) if script != null else get_class()}

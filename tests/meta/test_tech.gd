@@ -227,12 +227,13 @@ static func frame_tech_panel(t: TestCase, root: Window) -> void:
 	f.meta_path = META
 	f.settings_path = SETTINGS
 	f.tech_defs = GameFlow.load_techs()
-	t.eq(f.tech_defs.size(), 1, "读到一项科技")
+	t.check(f.tech_defs.size() >= 1 and f.tech_of(&"warehouse") != null, "读到仓库扩建（118 起还有别的科技）")
 	m.tech_levels["warehouse"] = 3
 	f.heal_techs()
 	var panel = load(TECH_PANEL).new()
 	root.add_child(panel)
 	panel.setup(f, UiPalette.cjk_font())
+	t.check(panel.select(&"warehouse"), "118：树上选中仓库扩建，右板切到它")
 	var btn: Button = panel.upgrade_button(&"warehouse")
 	t.not_null(btn, "有【升级】按钮")
 	if btn == null:
@@ -242,7 +243,7 @@ static func frame_tech_panel(t: TestCase, root: Window) -> void:
 
 	var plank := _add(m, db, &"hardwood_plank")
 	t.check(not panel.submit(plank.uid), "双击硬木板：第 4 级不要")
-	t.check(panel.line_text().contains("下一级不需要"), "提示：%s" % panel.line_text())
+	t.check(panel.line_text().contains("不是它下一级要的"), "提示：%s" % panel.line_text())
 	t.check(m.warehouse.has_item(plank.uid), "硬木板还在")
 
 	var a := _add(m, db, &"steel_ingot")

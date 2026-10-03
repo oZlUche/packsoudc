@@ -59,7 +59,7 @@ static func roll_crit(ctx: RuleContext) -> bool:
 		return false
 	if chance >= StatMath.ONE:
 		return true
-	return ctx.rng().randi_range(1, StatMath.ONE) <= chance
+	return ctx.roll("crit", 1, StatMath.ONE, chance) <= chance
 
 
 func estimated_damage(stats: StatSet) -> float:

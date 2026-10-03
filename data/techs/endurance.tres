@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="TechDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/techs/tech_run_buff.gd" id="1_ywjs2"]
+[ext_resource type="Script" path="res://core/meta/tech_def.gd" id="2_sl5kv"]
+[ext_resource type="Script" path="res://core/meta/tech_tier.gd" id="3_qqmiq"]
+
+[sub_resource type="Resource" id="Resource_2ojyd"]
+script = ExtResource("1_ywjs2")
+buffs = Array[StringName]([&"tech_endurance_1", &"tech_endurance_2", &"tech_endurance_3"])
+
+[sub_resource type="Resource" id="Resource_jxqi0"]
+script = ExtResource("3_qqmiq")
+funds = 200
+
+[sub_resource type="Resource" id="Resource_boy6c"]
+script = ExtResource("3_qqmiq")
+funds = 500
+
+[sub_resource type="Resource" id="Resource_531px"]
+script = ExtResource("3_qqmiq")
+funds = 900
+
+[resource]
+script = ExtResource("2_sl5kv")
+id = &"endurance"
+display_name = "耐久"
+display_names = {
+"en": "Endurance"
+}
+column = 1
+description = "体力上限更高，在图上走得更远。"
+effect = SubResource("Resource_2ojyd")
+tiers = Array[ExtResource("3_qqmiq")]([SubResource("Resource_jxqi0"), SubResource("Resource_boy6c"), SubResource("Resource_531px")])

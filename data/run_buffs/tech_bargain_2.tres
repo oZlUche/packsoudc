@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_t1gbg"]
+[ext_resource type="Script" path="res://core/run/effects/shop_price_mult.gd" id="2_8wohu"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_mrxem"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_bonvx"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_gnc7m"]
+
+[sub_resource type="Resource" id="Resource_fajmo"]
+script = ExtResource("2_8wohu")
+
+[resource]
+script = ExtResource("5_gnc7m")
+id = &"tech_bargain_2"
+display_name = "讨价（科技）"
+description = "商店售价 ×{shop_price_mult_factor}"
+scope = 0
+effects = Array[ExtResource("1_t1gbg")]([SubResource("Resource_fajmo")])

@@ -23,6 +23,36 @@ var buffs: Dictionary = {}
 var passives: Array = [[], []]
 
 
+## 117：回放存档。buff 只存 id（定义按 id 回查，[method from_dict] 的 [param buff_defs]），
+## 常驻加成（[member passives]）不存 —— 回放的 buff 栏少那几格，不影响重演
+func to_dict() -> Dictionary:
+	var events: Array = []
+	for e in log:
+		events.append(e.to_dict())
+	var buff_ids: Array = []
+	for id in buffs:
+		buff_ids.append(String(id))
+	buff_ids.sort()
+	return {"winner": winner, "duration": duration, "initial": initial, "final": final, "buffs": buff_ids, "log": events}
+
+
+## [param buff_defs]：buff id → [BuffDef]；查不到的 id 跳过
+static func from_dict(d: Dictionary, buff_defs: Dictionary = {}) -> BattleResult:
+	var r := BattleResult.new()
+	r.winner = int(d.get("winner", -1))
+	r.duration = int(d.get("duration", 0))
+	r.initial = d.get("initial", {})
+	r.final = d.get("final", {})
+	for e in d.get("log", []):
+		if e is Dictionary:
+			r.log.append(BattleEvent.from_dict(e))
+	for id in d.get("buffs", []):
+		var key := StringName(String(id))
+		if buff_defs.has(key):
+			r.buffs[key] = buff_defs[key]
+	return r
+
+
 func duration_sec() -> float:
 	return StatMath.to_float(duration)
 

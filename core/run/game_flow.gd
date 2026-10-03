@@ -646,7 +646,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 		value += ItemValue.of(inst.def)
 	# 101：模块要的运行时输入（保险箱几格来自局外成长、带入价值来自这一次的选择）
 	var inputs := {SafeModule.ID: {"size": safe_size()}, CountdownModule.ID: {"carry_value": value}}
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale, inputs)
+	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta_buffs(), character, layout, difficulty, hunter_defs, scale, inputs)
 	if state == null:
 		return null
 	for inst in taken:
@@ -737,7 +737,19 @@ func smite() -> bool:
 
 ## 092（作者定）：保险箱几格（局外规则，初始 3×3）
 func safe_size() -> Vector2i:
-	return meta.rules.safe_size if meta != null and meta.rules != null else Vector2i(3, 3)
+	var base := meta.rules.safe_size if meta != null and meta.rules != null else Vector2i(3, 3)
+	return base + (meta.safe_bonus if meta != null else Vector2i.ZERO)     # 118：科技「保险箱扩格」
+
+
+## 118：开局带的局外 buff = 开发开关的 + 科技给的（去重，开关在前）
+func meta_buffs() -> Array[StringName]:
+	var out: Array[StringName] = []
+	if meta == null:
+		return out
+	for id in meta.active_buffs + meta.tech_buffs:
+		if not out.has(id):
+			out.append(id)
+	return out
 
 
 ## 092（作者定）：离开结算屏时，暂存区里没背出来的一键出售（按基地的出售比例），钱进局外。这里只算不卖
@@ -987,12 +999,22 @@ func discard_loot() -> void:
 
 
 #region 接线
+## 117：按设置给这一局开 / 关战斗的内部日志与回放存档（设置屏切换时也调，当场生效）
+func apply_battle_trace() -> void:
+	if run == null or run.events == null:
+		return
+	var on := settings != null and settings.battle_trace
+	run.events.trace_info = {"dir": BattleArchive.DIR, "run_seed": run.run_seed,
+		"chapter": String(run.chapter.id) if run.chapter != null else ""} if on else {}
+
+
 func _adopt(state: RunState) -> void:
 	run = state
 	result = null
 	_settled = false
 	_queue.clear()
 	state.buff_defs = buff_defs      # 读档回来的只有 id，定义表在这里
+	apply_battle_trace()     # 117：战斗日志按设置开关
 	state.event_defs = event_defs
 	state.meta = meta     # 091：事件的条件 / 后果看、立局外旗标
 	# 基线：按角色（读档回来只有 id，在这里找回）；没角色用持有方给的
