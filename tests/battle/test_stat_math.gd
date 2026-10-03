@@ -57,7 +57,7 @@ static func run_formula(t: TestCase) -> void:
 	# --- 不同乘区相乘，而不是相加 ---
 	s = StatValue.new(StatMath.from_float(100.0))
 	s.add_percent(B.SHARP, 50)
-	s.add_percent(B.FIRE, 50)
+	s.add_percent(B.ELEMENT, 50)
 	t.eq(s.total_int(), 225, "跨区 50% 与 50% 相乘：100 × 1.5 × 1.5 = 225，不是 200")
 
 	# --- 固定加值在所有乘法之后 ---
@@ -83,13 +83,13 @@ static func run_formula(t: TestCase) -> void:
 
 	# --- 加成来源的先后顺序不影响结果 ---
 	var a := StatValue.new(StatMath.from_float(77.0))
-	a.add_percent(B.FIRE, 13)
+	a.add_percent(B.ELEMENT, 13)
 	a.add_percent(B.SHARP, 41)
 	a.add_flat(StatMath.from_float(6.0))
 	var b := StatValue.new(StatMath.from_float(77.0))
 	b.add_flat(StatMath.from_float(6.0))
 	b.add_percent(B.SHARP, 41)
-	b.add_percent(B.FIRE, 13)
+	b.add_percent(B.ELEMENT, 13)
 	t.eq(a.total(), b.total(), "加成的调用顺序不得影响终值")
 
 	# --- 未使用的乘区因子为 1，不影响结果 ---
@@ -104,7 +104,7 @@ static func run_formula(t: TestCase) -> void:
 
 	s = StatValue.new(StatMath.from_float(100.0))
 	s.add_percent(B.SHARP, -60)
-	s.add_percent(B.FIRE, -50)
+	s.add_percent(B.ELEMENT, -50)
 	t.eq(s.total_int(), 20, "跨区减益相乘：100 × 0.4 × 0.5 = 20")
 
 	# --- 减益超过 -100% 时钳到 0，绝不翻正 ---
@@ -114,7 +114,7 @@ static func run_formula(t: TestCase) -> void:
 
 	s = StatValue.new(StatMath.from_float(100.0))
 	s.add_percent(B.SHARP, -150)
-	s.add_percent(B.FIRE, -150)
+	s.add_percent(B.ELEMENT, -150)
 	t.eq(s.total_int(), 0, "两个超限减区不得相乘成正数")
 
 	# 钳零后固定加值仍然生效 —— flat 不参与乘法

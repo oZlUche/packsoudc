@@ -10,7 +10,7 @@ extends CombatEffect
 ## 伤害类型。决定能否被护盾吸收、吃不吃护甲、是否通知受伤效果，
 ## 具体性质见 [DamageTypeDef]，不写死在结算里。
 ##
-## [b]刻意不与乘区绑定。[/b] 火焰伤害吃不吃 FIRE 乘区由内容自己在属性上声明，
+## [b]刻意不与乘区绑定。[/b] 火焰伤害吃不吃 ELEMENT（元素增伤）乘区由内容自己在属性上声明，
 ## 否则伤害类型与乘区被迫一一对应，以后想加「不吃任何元素加成的真实伤害」就没法表达。
 @export var damage_type: StringName = DamageTypes.PHYSICAL
 

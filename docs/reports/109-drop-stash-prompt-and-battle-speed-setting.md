@@ -1,10 +1,11 @@
-# 小改：去掉离开点时的暂存区提示；战斗倍速记成跨局字段；仓库「整理」按钮；仓库界面双击快速置入（109）
+# 小改：去掉离开点时的暂存区提示；战斗倍速记成跨局字段；仓库「整理」按钮；仓库界面双击快速置入；乘区 FIRE 改名 ELEMENT（109）
 
 > 架构 thread，2026-10-03。作者两句话：
 > ① 「既然现在每个节点的暂存区都保留了，可以不用再跳出提示。」
 > ② 「添加一个字段用于记录战斗倍速，这个字段应该跨局继承，也就是写入整体存档。」
 > ③ 「给仓库添加一个整理按钮，点下后会进行排序保证占用和未占用空间分开。」
 > ④ 反馈：「在仓库界面也要双击物品就能快速置入背包 / 仓库。」
+> ⑤ 「FIRE 改为 ELEMENT 才对。」（乘区分类，`StatMath.Buff`）
 > 两条都是小修，本文只写清楚删什么、加什么，交「游戏反馈小修」线程做即可，不必等别的方案。
 
 ## 一、去掉「走了暂存区留在这里」的提示
@@ -110,7 +111,26 @@
 
 `tests/ui/test_node_screens.gd`（或新文件）：仓库面板上对带回来棋盘里的一件模拟双击 → 进仓库、`changed` 发了；仓库放满时双击 → 原地不动、提示行有字；开局屏双击仓库件 → 进初始包；双击初始包本体 → 不动。
 
-## 五、改动范围
+## 五、乘区 `FIRE` 改名 `ELEMENT`（作者定）
+
+乘区分类（`StatMath.Buff`：EMPOWER / SHARP / FIRE / HASTE）是 4.3 公式里「谁和谁相加、谁和谁相乘」的桶，和伤害类型、和轴都没有绑定。作者定第三个桶叫 **`ELEMENT`（元素增伤）**，不叫 FIRE —— 火焰只是元素之一，名字不该把桶占成一种元素。
+
+- **改名不改位置**：枚举值按位置存，`ELEMENT` 仍在第 2 位，乘法顺序不变，历史数值与存档不受影响（4.3「只能在末尾追加」说的是插入，改名不触碰）。
+- 内容里 `"mult_category": "FIRE"` 现在 **0 处**，所以 JSON 不用动；导入器按名字认，顺手让 `"FIRE"` 作为旧名**报 error 并提示改 ELEMENT**（没有内容用，不需要兼容别名）。
+- 要改的：`core/battle/stat_math.gd` 枚举与注释；`core/text/glossary.gd` `CATEGORY_NAMES` 的键与中英文（元素增伤 / Elemental power）；`tests/battle/test_stat_math.gd` 里 5 处 `B.FIRE`；`docs/architecture.md` 4.3 举例若提到 FIRE 同改。编辑器下拉是反射枚举键，自动跟着变。
+
+### 顺带说清：乘区 `HASTE` 和「加攻速」的 buff 是两回事
+
+| | 乘区 `HASTE` | 轴 `attack_speed`（加速 / 减速） |
+|---|---|---|
+| 是什么 | `StatValue` 内部的一个乘法桶，挂在哪个属性上就放大哪个属性 | 103 的标准轴：每层 ±3%，作用于 `haste` 属性的**终值**（`_apply_axes`） |
+| 谁在用 | 献祭生命上限 perk 给 `haste` 属性加 `HASTE` 桶百分比（1 处） | 作者设想的「加攻速 BuffDef」= `shift_axis(attack_speed, n)`，战斗中按层叠 |
+| 什么时候算 | 编译期，进 `StatValue.total()` 的连乘 | 战斗期，在 total 之外再乘一次 |
+| 互相关系 | **独立**，两者都作用于同一个 `haste` 属性时相乘叠加 | |
+
+名字撞车是真的（HASTE 桶 vs 「急速」属性 vs 「加速」轴），玩家看不到桶名，所以不急；要是作者想把桶名也按用途重排（比如 EMPOWER / SHARP / ELEMENT / HASTE 改成按来源分），单独一份方案，这里只改 FIRE。
+
+## 六、改动范围
 
 | 批 | 文件 |
 |---|---|
@@ -118,8 +138,9 @@
 | ② 倍速字段 | `core/settings/game_settings.gd`、`ui/battle/battle_view.gd`、`ui/game/battle_screen.gd`、`tests/ui/` 或 `tests/run/test_game_flow.gd` 加两条 |
 | ③ 整理 | `core/inventory/grid_tidy.gd`（新）、`ui/game/warehouse_panel.gd`、`tests/inventory/test_grid_tidy.gd`（新） |
 | ④ 双击 | `ui/game/warehouse_panel.gd`、`ui/game/setup_screen.gd`、`tests/ui/test_node_screens.gd` |
+| ⑤ 改名 | `core/battle/stat_math.gd`、`core/text/glossary.gd`、`core/authoring/content_importer.gd`（旧名报错）、`tests/battle/test_stat_math.gd`、`docs/architecture.md` 4.3 |
 
-四批合一个 PR 即可，一天左右。
+五批合一个 PR 即可，一天左右。
 
 ## 待作者定（不挡执行，按推荐先做）
 

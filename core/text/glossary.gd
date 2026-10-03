@@ -99,7 +99,7 @@ const STAT_NAMES := {
 }
 ## 乘区 → 名字
 const CATEGORY_NAMES := {"EMPOWER": {"zh": "增伤", "en": "Empower"}, "SHARP": {"zh": "物理增伤", "en": "Sharpness"},
-	"FIRE": {"zh": "火焰增伤", "en": "Fire power"}, "HASTE": {"zh": "急速", "en": "Haste"}}
+	"ELEMENT": {"zh": "元素增伤", "en": "Elemental power"}, "HASTE": {"zh": "急速", "en": "Haste"}}
 
 
 ## 一张「语言 → 文字」的小表按当前语言取；没有就中文；传进来的不是表就原样
@@ -218,6 +218,8 @@ static func buffs_in_item(def: ItemDef) -> Dictionary:
 		var b := fb as FaithBonus
 		if b != null:
 			buffs_in_rules(b.rules, out)
+	if def.adjacency != null:
+		buffs_in_rules(def.adjacency.grant_rules, out)     # 108：毒箭给邻居挂的中毒，毒箭自己的侧窗也要能解释
 	return out
 
 

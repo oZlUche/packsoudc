@@ -27,6 +27,9 @@ extends Resource
 ## 挂到每件命中。规则里的 [OnItemFired] 在编译时绑成「只听自己」（填 source_uids = [本件 uid]）
 @export var rules: Array[AbilityRule] = []
 
+## 108：挂上去的规则记在宿主的 [member CompiledItem.attached] 里的来源（`faith:sun`……）；空 = 不记
+@export var origin: StringName = &""
+
 ## 命中件**所有属性的基础值**乘它（食物翻倍）。1.0 = 不缩放
 @export var base_scale: float = 1.0
 ## 不参与 [member base_scale] 的属性（急速：每件都是 1.0，翻倍就成了二倍速）

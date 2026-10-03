@@ -94,8 +94,10 @@ static func evaluate(
 	for cost in all_costs:
 		(cost as Cost).pay(rc)
 
-	# 物品出手。连带触发靠监听这条事件，不需要任何特例
-	if rt.source_uid != 0:
+	# 物品出手。连带触发靠监听这条事件，不需要任何特例。
+	# 108：**听自己出手的规则不算再出手一次** —— 附加规则（毒箭挂给弓的、日神附魔）以宿主身份跑、听的就是宿主的出手；
+	# 它要是再发一条宿主的 ITEM_FIRED，就会再触发自己，一直连锁到 max_chain 被截断（一击挂几十层毒 / 几十次附火）
+	if rt.source_uid != 0 and not (event.name == BattleEvent.ITEM_FIRED and event.get_int(&"uid") == rt.source_uid):
 		ctx.emit(BattleEvent.ITEM_FIRED, owner.side, _fired_payload(rt, rc))
 
 	# 4. 内容。同一条规则的多个效果共用上面那一次消耗

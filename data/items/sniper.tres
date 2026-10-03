@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
 [ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_e6evk"]
-[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="2_lbiof"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_4xw6q"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_lbiof"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_4xw6q"]
 [ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_i83hk"]
 [ext_resource type="Script" path="res://core/battle/cost.gd" id="5_gclyn"]
 [ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="6_l46fo"]
@@ -23,7 +23,7 @@ mult_category = 1
 mult_percent = 25
 
 [sub_resource type="Resource" id="Resource_hmlt8"]
-script = ExtResource("2_lbiof")
+script = ExtResource("3_4xw6q")
 receive_cells = Array[Vector2i]([Vector2i(0, 4)])
 receive_filter = Array[StringName]([&"part"])
 receive_mods = Array[ExtResource("1_e6evk")]([SubResource("Resource_q5s1f")])
@@ -65,7 +65,7 @@ buff = SubResource("Resource_624fs")
 script = ExtResource("11_k3eek")
 
 [sub_resource type="Resource" id="Resource_3wa02"]
-script = ExtResource("3_4xw6q")
+script = ExtResource("2_lbiof")
 trigger = SubResource("Resource_g2bia")
 cadence = SubResource("Resource_aw08o")
 costs = Array[ExtResource("5_gclyn")]([SubResource("Resource_0xf4h")])
@@ -76,7 +76,7 @@ script = ExtResource("12_bx0g3")
 base_stats = {
 "damage": 30
 }
-rules = Array[ExtResource("3_4xw6q")]([SubResource("Resource_3wa02")])
+rules = Array[ExtResource("2_lbiof")]([SubResource("Resource_3wa02")])
 
 [sub_resource type="Resource" id="Resource_caqn7"]
 script = ExtResource("16_dqow0")
