@@ -89,6 +89,9 @@
 						"rot": 0
 					}
 				],
+				"guaranteed_drops": [
+					"knife"
+				],
 				"base_stats": {
 					"max_hp": 20
 				}
@@ -116,7 +119,8 @@
 				],
 				"search_finds": [
 					[
-						"scimitar"
+						"scimitar",
+						"poison_vial"
 					],
 					[
 						"bandage",

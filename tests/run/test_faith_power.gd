@@ -17,7 +17,7 @@ static func _start(items: ItemDatabase) -> RunState:
 	enemies.load_all()
 	var sets := SetDatabase.new()
 	sets.load_dir()
-	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "chapter_01"))
+	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
 	var chars := GameFlow.load_characters()
 	for seed in range(1, 60):
 		var s := RunState.start(chapter, seed, items, enemies, sets, [] as Array[StringName], {}, [] as Array[StringName], chars[0] if not chars.is_empty() else null)

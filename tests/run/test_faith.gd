@@ -174,7 +174,7 @@ static func run_run_and_save(t: TestCase) -> void:
 	enemies.load_all()
 	var sets := SetDatabase.new()
 	sets.load_dir()
-	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "chapter_01"))
+	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
 	var faiths := FaithDef.load_all()
 	var s := RunState.start(chapter, 5, db, enemies, sets, [&"bag_leather", &"bag_leather", &"blessed_shield", &"strength_sigil", &"salve"] as Array[StringName])
 	t.not_null(s, "开得起来")

@@ -35,6 +35,7 @@ const TEXT := {
 		"en": "The run in progress is from an older version and could not be read; backed up as %s. Meta progress is unaffected"},
 	"menu.meta": {"zh": "仓库与战绩", "en": "Warehouse & records"},
 	"menu.settings": {"zh": "设置", "en": "Settings"},
+	"menu.encyclopedia": {"zh": "百科", "en": "Encyclopedia"},
 	"menu.dev_tools": {"zh": "开发工具（沙盒与编辑器）", "en": "Dev tools (sandboxes & editors)"},
 	"menu.quit": {"zh": "退出", "en": "Quit"},
 	"menu.language": {"zh": "语言：中文（点击切换 English）", "en": "Language: English (click for 中文)"},

@@ -3,7 +3,7 @@
 ## 编辑器的下拉里能选；正式的一局能在上面跑。期望从配置推：几层、几条线段、线段在哪几列都读配置。
 extends RefCounted
 
-const CHAPTER := "res://data/chapters/chapter_01.tres"
+const CHAPTER := "res://data/chapters/free_mode.tres"
 
 
 static func _hourglass(seed: int, cfg: HourglassMapConfig = null) -> MapGraph:

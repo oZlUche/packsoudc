@@ -7,6 +7,7 @@ extends GameScreen
 
 const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
 const SettingsScreenScript := preload("res://ui/game/settings_screen.gd")
+const EncyclopediaScreenScript := preload("res://ui/game/encyclopedia_screen.gd")
 const SIDE_WIDTH := 400     # 090：右栏三个按键放大到 300%，栏也加宽
 
 var _run: RunState = null
@@ -30,6 +31,8 @@ var _confirm: Control = null
 ## 090（作者定）：地图上按 Esc 呼出的暂停菜单（继续 / 设置 / 存档并回主菜单）；设置嵌在它里面，返回回暂停菜单、一局还在
 var _pause: Control = null
 var _pause_settings: Control = null
+## 114：暂停菜单里嵌着的百科
+var _pause_book: Control = null
 ## 091（作者定 10.2 第 3 条）：「本图规则」卡 —— 第一次进这一章弹出来（局外记住看过了），暂停菜单里能再看
 var _rules: Control = null
 var _rules_first: bool = false
@@ -189,6 +192,9 @@ func escape() -> bool:
 	if _rules != null:
 		close_rules()
 		return true
+	if _pause_book != null:
+		close_pause_encyclopedia()
+		return true
 	if _pause_settings != null:
 		close_pause_settings()
 		return true
@@ -209,6 +215,7 @@ func escape() -> bool:
 func toggle_pause() -> void:
 	if _pause != null:
 		close_pause_settings()
+		close_pause_encyclopedia()
 		_pause.queue_free()
 		_pause = null
 		return
@@ -229,6 +236,7 @@ func toggle_pause() -> void:
 	col.add_child(_wrapped("一局还在：搜索 / 商店 / 没拿完的战利品都留在原地", 12, UiPalette.DIM, 360))
 	col.add_child(_button("继续（Esc）", toggle_pause, 14, UiPalette.Tier.PRIMARY))
 	col.add_child(_button("设置", pause_settings, 14))
+	col.add_child(_button("百科", func(): pause_encyclopedia(), 14))     # 114
 	if _run != null and _run.chapter != null and not _run.chapter.rules.is_empty():
 		col.add_child(_button("本图规则", func(): show_rules(), 14))     # 091：再看一遍规则卡
 	col.add_child(_button("存档并回主菜单", func(): flow.save_and_quit(), 14))
@@ -261,6 +269,30 @@ func close_pause_settings() -> void:
 
 func settings_open() -> bool:
 	return _pause_settings != null
+
+
+## 114：暂停菜单里的「百科」：和设置同款嵌法（「返回」回暂停菜单；Esc 先关它）
+func pause_encyclopedia(page: String = "") -> void:
+	if _pause == null or _pause_book != null:
+		return
+	var s = EncyclopediaScreenScript.new()
+	s.screen = GameFlow.Screen.ENCYCLOPEDIA
+	s.flow = flow
+	s.font = font
+	s.back = close_pause_encyclopedia
+	_pause.add_child(s)
+	s.open({"page": page} if page != "" else {})
+	_pause_book = s
+
+
+func close_pause_encyclopedia() -> void:
+	if _pause_book != null:
+		_pause_book.queue_free()
+		_pause_book = null
+
+
+func encyclopedia_open() -> bool:
+	return _pause_book != null
 
 
 ## 091：「本图规则」卡：章节写的 ≤ 3 条，一页；[param first] = 第一次进这一章弹的（关掉时记住看过了）
@@ -370,7 +402,7 @@ func _adopt() -> void:
 	_run.loot_cleared.connect(_after_move)     # 084：没拿的战利品没了（拿完了、或走了），「回到这个点」跟着灰
 	var crafting := CraftingModule.of(_run)     # 101：合成是一局的模块
 	if crafting != null:
-		crafting.done.connect(func(_id: int, detail: Dictionary):
+		crafting.done.connect(func(detail: Dictionary):
 			for line in detail.get("log", []):
 				_note("　" + String(line)))
 	# 猎手（071）：进了感知范围提示一句；动了就重画标记；被赶回上一个点

@@ -32,4 +32,4 @@ allow_carry_in = false
 auto_spawn = true
 skip_setup = true
 intro_event = &"tut2_intro"
-rules = Array[String](["岔路再归一：两条路各有一个对手，把鼠标停在点上先看清再选。", "搜到的护具装不下两件，按对手挑一件；{item:poison_vial}和{item:knife}挨着放会合成。"])
+rules = Array[String](["岔路再归一：两条路各有一个对手，把鼠标停在点上先看清再选。", "搜到的护具装不下两件，按对手挑一件；{item:poison_vial}拖到{item:knife}上会合成。"])

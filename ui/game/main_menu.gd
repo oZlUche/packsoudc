@@ -39,6 +39,7 @@ func open(_payload: Dictionary) -> void:
 		col.add_child(_button(UiText.t("menu.load"), flow.show_slots, 18))
 	col.add_child(_button(UiText.t("menu.new_run"), func(): flow.start_new_game(), 18, UiPalette.Tier.PRIMARY))
 	col.add_child(_button(UiText.t("menu.meta"), flow.show_meta, 18))
+	col.add_child(_button(UiText.t("menu.encyclopedia"), func(): flow.show_encyclopedia(), 14, UiPalette.Tier.MINOR))     # 114
 	col.add_child(_button(UiText.t("menu.settings"), flow.show_settings, 14, UiPalette.Tier.MINOR))
 	col.add_child(_button(UiText.t("menu.language"), toggle_language, 14, UiPalette.Tier.MINOR))
 	col.add_child(HSeparator.new())

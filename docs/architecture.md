@@ -3132,7 +3132,7 @@ func describe() -> String                # 开局屏的规则卡、编辑器
 |---|---|---|
 | `SafeModule`（092） | 容器、锁、`closed` | `RunState.leaving`；`safe_open` 挂在 `RunHooks`（7.5） |
 | `NodeStorageModule`（087） | 哪个点上留着什么、`dropped` / `restored` | `leaving`（留下）、`arrived`（拿回） |
-| `CraftingModule`（084 / 087） | 配方表、相邻的对子、合成那一下、`done` | `arrived`（头一回踩上才合） |
+| `CraftingModule`（084 / 114） | 配方表、合成那一下（`craft(a, b_uid)`：拖到上面立刻合）、`done(detail)` | 无（由整理面板的 `DragLayer.craft_drop` 调） |
 | `BuffModule`（062） | 一局里拿到的 buff（`entries`、给 / 去 / 查 / 走表）、`buffs_changed` | `stepped`（任何花行动点的方式） |
 | `AltarModule`（093 / 095） | 神坛开在哪、用过哪些点、仪式的账与改过的基线、献祭 / 特殊操作、信仰级效果（`perks`）、赐福、`noted` / `item_blessed` | `NodeEvents.altar_opened`、`leaving`（关）、`stepped`（赐福）、`MapTravel.moved`（踩点回调） |
 | `CountdownModule`（092 / 094） | 倒计时上限 / 剩余、带入价值与超带罚步、关哪个撤离点、`notice` | `stepped`（归零就 `run.fail`） |
@@ -3269,6 +3269,7 @@ func player_spec() -> CombatantSpec …
 序章 `prologue` 是一张手写的预设图（`data/maps/prologue.json`，布局 `line`）：生 → 搜 → 战 → 搜 → 精 → 撤，敌人、收获、教程事件全写在节点内容里，没有敌人池。
 `ChapterDef` 多了开局屏的门：`order`、`requires_unlock` / `grants_unlock`（局外解锁 id；撤离成功时 `GameFlow._settle_run` → `MetaState.grant_unlock`）、`characters`（能选的角色）、`allow_carry_in`。
 `GameFlow.available_chapters()` 按解锁过滤、按 order 排，一章都列不出来就全列；`characters_for(chapter)`。开局屏按它们列，章节换了角色重排、仓库栏按 `allow_carry_in` 隐藏。
+**114：序章之后只有自由模式**：三张序章（`prologue` → `prologue_2` → `prologue_3`）通关后开 `free_mode`（原 `chapter_01`，`IdAliases.CHAPTERS` 让老存档还认得），随机环形图、过开局屏；开局屏左栏标题是「模式」。
 节点内容里的搜索覆盖（`SearchSession` 读）：`search_max` / `search_min`（搜够才能走）/ `search_curve` / `search_finds`（第 k 次固定收获）/ `encounter`（写死的遭遇）。`has_item` 条件多了 `tag`。事件屏上能整理背包（选项页「整理背包（B）」，收起重画选项）。
 
 ## 9. 套装与跨域效果
@@ -3875,6 +3876,8 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.31 | 2026-10-03 | **百科框架**（报告 114 第五节，作者定：框架在这里，机制页文案由别的线程写）。新内容种类 `help_pages`（`HelpPageDef`：标题、分类、正文、相关、相关道具；导入查分类、道具、文本引用，全部导完后查「相关」）；`Encyclopedia` 把机制页与自动生成的词条页（固定词条、标签、伤害类型、buff、属性 / 乘区 / 时机）排成一张目录，正文认得的词画成 `[url=页 id]` 链接，搜索标题与正文，「相关道具」按图鉴遮名字；新屏 `Screen.ENCYCLOPEDIA`（左栏搜索 + 目录、右栏一页、「上一页」浏览栈），入口在主菜单与地图的暂停菜单（嵌进遮罩，Esc 先关百科）。写法见 `docs/encyclopedia.md` |
+| v2.30 | 2026-10-03 | **合成改「拖到上面立刻合」+ 序章一教合成 + 序章后只有自由模式**（报告 114，作者定）。合成：去掉 087 的相邻即合 / 到点结算，`CraftingModule.craft(a, b_uid)` 立刻合、产物落在被压那件的位置、装不下进暂存区，`done(detail)`；`DragLayer.craft_drop` / `craft_grid` 恢复绿预览（只在一局的作战棋盘上，别处照常顶替）；结果屏不再排「合成」页，提示在整理面板上。序章一：拾荒者必掉匕首、点 3 第一次搜到毒药瓶，精英门要涂毒匕首（灰显 + `hint_when_hidden`），没有匕首时退路选项出现（`has_item.missing`）；规则卡三条。`chapter_01` → `free_mode`（自由模式），`IdAliases.CHAPTERS`、`RunSave.load_chapter` / `GameFlow.chapter_of` / `MetaState` 按章节记的账认老名字 |
 | v2.29 | 2026-10-03 | **序章三「祭坛」：教信仰全套**（报告 113，作者定）。新章 `prologue_3`（序章二通关开、撤离后直接进；第一章改为要 `prologue3_done`，排第四），预设图 `tutorial3.json` 一条线 9 个点：蛮神的低语（发护符）→ 劫匪（选项门禁 `faith_active`）→ 搜三件（骨骰子 / 碎骨串 / 胫骨大棒）→ 神坛 A 献祭过 1 阶 → 日神的低语（换神、休眠、两边信力各记各的）→ 蛮兵（门禁 `faith_active{faith: brute}`，逼一次切回）→ 神坛 B 特殊操作二选一 → 撤离。数值用真的战斗走一遍验：献祭后在 1 阶、第二场打完到 2 阶。机制：`FaithActive.faith`（只认一位神）；`EventOption.hint_when_hidden`（条件没过时说为什么，藏起来的选项在事件屏底部灰字）；信仰占位符 `{faith:id}`（新色 `faith`）、`{faith_threshold}` `{faith_deed}` `{faith_offer}` `{faith_perk}` `{faith_points}` `{faith_tier}`，导入时查信仰 id。新道具两件骨头祭品（无战斗属性，稀有度 3 / 2 —— 献祭点数按 2^稀有度 × 倍数） |
 | v2.28 | 2026-10-03 | **序章文案占位符化**（报告 112，作者定）：`TextTemplate` 加带类型的占位符，颜色跟着类型走 —— `{char}`（角色名，hp 色）、`{item:id}`（道具名，按稀有度上色 + 粗体，界面经 `UiPalette.resolve_styles` 换成 `ItemPainter` 的稀有度色）、`{enemy:id}`（danger）、`{ui:…}`（good）、`{zone:…}`（grant）、`{key:…}`（dim）；`{item_stat:…}` 也统一加粗上色；新键 `{loss_cost}`。名字读定义（跟语言、改名不漏），`{ui:}` `{zone:}` 英文查 `TextTemplate.TERMS_EN`。导入时 `{item:}` `{enemy:}` `{item_stat:}` 的 id 必须存在（事件文本在全部导完后统一查，规则卡在章节导入时查）。序章两张图 25 条事件与序章二规则卡改成占位符，写死的数（战锤节奏、长剑伤害、毒药瓶间隔、「输两场」）改读数据；规则卡与事件编辑器预览也过 `render` |
 | v2.27 | 2026-10-03 | **局外科技：仓库扩建与上交界面**（报告 110，作者定；改 8.2）与**编辑器字符串下拉 + 条件显示字段**（报告 111，改 10 节）。`TechDef / TechTier / TechEffect` 走内容管线（`techs`），`MetaState` 多 `tech_levels / tech_deposits`，**存档 v2 → v3**（迁移只补两个空字典，留冻结样本 `meta_v2.json`）；`TechService` 七个方法 + 读档自检；仓库扩建 6 级每级 +3 行，前 3 级只要钱、第 4 级起要三种新建材（`supply`【建材】，商店不卖）；基地第五个页签「科技」（双击 / 拖进上交区上交、上交即消耗、交齐且钱够【升级】才亮）。仓库视图加竖向滚动，拖拽命中只认露在外面的部分；整理改先同类（`GridTidy.KIND_ORDER`）再大小。111：`@export_enum` 的字符串字段在编辑器里是下拉（值仍是原字符串，显示名走 `FieldText.ENUM_LABELS`）；资源可声明 `FIELD_WHEN` 让字段按别的字段的值显隐（`ContentSchema.field_visible`），切走后被藏的字段归默认；`@export_range` 的数字框按范围限；`FaithBonus.mode` 改 `@export_enum("tier", "active", "scaled")`，导入时按阶写到超过信仰阶数报错 |

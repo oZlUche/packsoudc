@@ -15,7 +15,7 @@ static func _items() -> ItemDatabase:
 
 
 static func _chapter() -> ChapterDef:
-	return load(ContentPaths.asset_file("chapters", "chapter_01")) as ChapterDef
+	return load(ContentPaths.asset_file("chapters", "free_mode")) as ChapterDef
 
 
 static func _rule() -> DropRule:

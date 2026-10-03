@@ -48,7 +48,7 @@ static func _content() -> Dictionary:
 	var sets := SetDatabase.new()
 	sets.load_dir()
 	return {"items": items, "enemies": enemies, "sets": sets,
-		"chapter": load(ContentPaths.asset_file("chapters", "chapter_01")) as ChapterDef}
+		"chapter": load(ContentPaths.asset_file("chapters", "free_mode")) as ChapterDef}
 
 
 static func run_install_and_save(t: TestCase) -> void:

@@ -10,7 +10,7 @@
 class_name GameFlow
 extends RefCounted
 
-enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR }
+enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR, ENCYCLOPEDIA }
 
 signal screen_changed(screen: int, payload: Dictionary)
 signal run_started(state: RunState)
@@ -38,6 +38,9 @@ var difficulties: Array[DifficultyDef] = []
 var achievement_defs: Array[AchievementDef] = []
 ## 110：局外科技的定义（按 order 排）。等级与上交记录在 [MetaState]，逻辑在 [TechService]
 var tech_defs: Array[TechDef] = []
+## 114：百科手写的机制页；词条页按内容自动生成（[method encyclopedia]）
+var help_pages: Array[HelpPageDef] = []
+var _encyclopedia: Encyclopedia = null
 ## 101 第 4 刀：成就与解锁的逻辑在这个服务里（纯逻辑：看局外与内容算结果，不碰存盘与转屏）。
 ## 内容与「全部解锁」开关由 [method _sync_achievements] 同步过去
 var achievements: Achievements = Achievements.new()
@@ -598,6 +601,19 @@ func show_settings() -> void:
 	_go(Screen.SETTINGS)
 
 
+## 114：百科（主菜单进是独立一屏；地图的暂停菜单把它嵌进遮罩，不走这里）。[param page] 给了就直接翻到那页
+func show_encyclopedia(page: String = "") -> void:
+	_go(Screen.ENCYCLOPEDIA, {"page": page} if page != "" else {})
+
+
+## 114：这本百科（第一次用时按手写页 + 当前内容造；「相关道具」按图鉴遮名字）
+func encyclopedia() -> Encyclopedia:
+	if _encyclopedia == null:
+		_encyclopedia = Encyclopedia.build(help_pages, items)
+	_encyclopedia.lit = func(id: StringName) -> bool: return meta == null or meta.codex_lit(id)
+	return _encyclopedia
+
+
 func save_settings() -> bool:
 	return settings != null and settings.save_to(settings_path) == OK
 
@@ -757,8 +773,9 @@ func next_chapter() -> ChapterDef:
 
 
 func chapter_of(id: StringName) -> ChapterDef:
+	var real := IdAliases.chapter(id)     # 114：老存档里的 chapter_01 = free_mode
 	for c in chapters:
-		if c.id == id:
+		if c.id == id or c.id == real:
 			return c
 	return null
 
@@ -789,7 +806,7 @@ func _settle_run() -> void:
 	if not _settled:
 		_settled = true
 		last_absorbed = meta.absorb(result)
-		# 083：撤离成功给这一章许诺的局外解锁（序章通关开第一章）
+		# 083：撤离成功给这一章许诺的局外解锁（序章通关开下一张 / 自由模式）
 		if result.is_extracted() and run != null and run.chapter != null and run.chapter.grants_unlock != &"":
 			meta.grant_unlock(run.chapter.grants_unlock)
 		check_achievements()     # 091：这一局的账记完了，看成就
@@ -998,11 +1015,7 @@ func _adopt(state: RunState) -> void:
 		_push({"screen": Screen.BATTLE, "node": node, "result": r, "won": won,
 			"player": ev.last_battle.get("player", null), "enemy": ev.last_battle.get("enemy", null),
 			"enemy_content": ev.last_battle.get("content", {})}))
-	if crafting != null:
-		crafting.done.connect(func(node_id: int, detail: Dictionary):
-			# 085：合成的提示排在这一步别的事前面（先说东西怎么了，再看这个点的事）
-			var node := state.map.get_node(node_id) if state.map != null and state.map.has_node(node_id) else null
-			_queue.push_front({"screen": Screen.EVENT, "node": node, "outcome": "合成", "detail": detail}))
+	# 114：合成是拖到上面立刻发生的（整理面板里），提示就在面板上，不再排结果屏
 	state.loot_pending.connect(func(container: GridInventory):
 		# 一步之内可能来两份（打赢的尸体 + 搜索收获），RunState 已经并成一份，队里留一个就够
 		if _queue.is_empty() or int(_queue[-1]["screen"]) != Screen.LOOT:
@@ -1192,6 +1205,15 @@ static func load_difficulties() -> Array[DifficultyDef]:
 			out.append(res)
 	out.sort_custom(func(a: DifficultyDef, b: DifficultyDef) -> bool:
 		return a.level < b.level if a.level != b.level else String(a.id) < String(b.id))
+	return out
+
+
+## 114：百科的机制页
+static func load_help_pages() -> Array[HelpPageDef]:
+	var out: Array[HelpPageDef] = []
+	for res in _load_dir(ContentPaths.HELP_PAGES):
+		if res is HelpPageDef:
+			out.append(res)
 	return out
 
 

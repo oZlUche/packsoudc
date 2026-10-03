@@ -30,7 +30,7 @@ static func _world(seed_base: int = 100, vitality_max: int = 5, strong: bool = t
 	w.items.load_dir()
 	w.enemies = EnemyDatabase.new()
 	w.enemies.load_all()
-	w.chapter = load(ContentPaths.asset_file("chapters", "chapter_01"))
+	w.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
 	w.pool = w.enemies.pool(w.chapter.enemy_pool)
 	w.drop_rule = load(ContentPaths.asset_file("drop_rules", String(w.chapter.drop_rule)))
 	w.rules = load(ContentPaths.asset_file("node_rules", String(w.chapter.node_rules)))
