@@ -86,6 +86,10 @@ static func export_achievement(def: AchievementDef) -> Dictionary:
 	return _dump(def)
 
 
+static func export_tech(def: TechDef) -> Dictionary:
+	return _dump(def)
+
+
 static func export_recipe(def: RecipeDef) -> Dictionary:
 	return _dump(def)
 

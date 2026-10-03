@@ -4,6 +4,7 @@
 extends GameScreen
 
 const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
+const TechPanelScript := preload("res://ui/game/tech_panel.gd")
 ## 图鉴一行几个缩略图
 const CODEX_COLS := 8
 
@@ -45,7 +46,7 @@ func open(payload: Dictionary) -> void:
 	var head := _hbox(16)
 	root.add_child(head)
 	head.add_child(_label("基地", 26, UiPalette.FG))
-	for pair in [["warehouse", "仓库"], ["codex", "图鉴"], ["achievements", "成就"], ["sell", "出售"]]:
+	for pair in [["warehouse", "仓库"], ["codex", "图鉴"], ["achievements", "成就"], ["sell", "出售"], ["tech", "科技"]]:
 		var key: String = pair[0]
 		var b := _button(pair[1], func(): show_tab(key), 16)
 		b.toggle_mode = true
@@ -146,8 +147,28 @@ func open(payload: Dictionary) -> void:
 	_pages["codex"] = _build_codex(root)
 	_pages["achievements"] = _build_achievements(root)
 	_pages["sell"] = _build_sell(root)
+	_pages["tech"] = _build_tech(root)     # 110：局外科技（仓库扩建）与上交
 	show_tab(String(payload.get("tab", "warehouse")))
 	_refresh()
+
+
+#region 科技（110）
+var _tech = null
+
+
+func _build_tech(root: Control) -> Control:
+	_tech = TechPanelScript.new()
+	_tech.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_tech.setup(flow, font)
+	_tech.changed.connect(_refresh)
+	root.add_child(_tech)
+	return _tech
+
+
+## 科技页（测试看）
+func tech_panel():
+	return _tech
+#endregion
 
 
 #region 出售（091，作者定：基地内商店）
@@ -186,7 +207,7 @@ func _build_sell(root: Control) -> Control:
 	_sell_view.show_adjacency = false
 	_sell_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_sell_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): sell(uid))
-	page.add_child(_sell_view)
+	page.add_child(ScrollBox.wrap(_sell_view))     # 110：竖向滚动
 	flow.meta.warehouse.changed.connect(_refresh_sell)
 	set_sell_filter(0)
 	return page

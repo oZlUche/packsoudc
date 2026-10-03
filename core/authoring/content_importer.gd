@@ -429,14 +429,33 @@ static func _validate_item_faith(def: ItemDef, ctx: Context, report: ImportRepor
 		var b := def.faith_bonuses[i] as FaithBonus
 		if b == null:
 			report.error("faith_bonuses[%d]" % i, "空的加成")
-		elif not ["tier", "active", "scaled"].has(b.mode):
-			report.error("faith_bonuses[%d].mode" % i, "生效方式只能是 tier / active / scaled")
+		elif not _string_choices(b, "mode").has(b.mode):
+			# 111：可选值读 `@export_enum`，加一种方式只改 FaithBonus 那一行
+			report.error("faith_bonuses[%d].mode" % i, "生效方式只能是 %s" % " / ".join(_string_choices(b, "mode")))
 		elif b.mode == "tier" and b.tier < 1:
 			report.error("faith_bonuses[%d].tier" % i, "阶从 1 起")
+		elif b.mode == "tier" and _faith_tiers(def, ctx) > 0 and b.tier > _faith_tiers(def, ctx):
+			report.error("faith_bonuses[%d].tier" % i, "「%s」的信仰只有 %d 阶，写了第 %d 阶永远达不到" % [def.id, _faith_tiers(def, ctx), b.tier])
 		elif b.mode == "scaled" and b.per_points < 1:
 			report.error("faith_bonuses[%d].per_points" % i, "每份至少 1 信力")
 		elif b.mods.is_empty() and b.rules.is_empty():
 			report.error("faith_bonuses[%d]" % i, "加成得有修饰或规则")
+
+
+## 111：字符串枚举字段的可选值（`@export_enum`）
+static func _string_choices(owner: Object, key: String) -> Array[String]:
+	for prop in owner.get_property_list():
+		if String(prop["name"]) == key:
+			return ContentSchema.enum_options(owner, prop)
+	return [] as Array[String]
+
+
+## 111：这件信仰道具所属信仰有几阶（阈值数）；不知道（单件导入、没登记）返回 0 = 不查
+static func _faith_tiers(def: ItemDef, ctx: Context) -> int:
+	if ctx == null or ctx.faiths.is_empty() or not def.has_faith():
+		return 0
+	var faith := ctx.faiths.get(FaithDef.id_of_tag(def.faith_tag()), null) as FaithDef
+	return faith.thresholds.size() if faith != null else 0
 
 
 ## 敌人（M4-1）。校验里「对着道具查」的那几条只在批量导入（上下文里有道具）时生效。
@@ -598,6 +617,34 @@ static func import_achievement(data: Dictionary, ctx: Context, report: ImportRep
 		if def.grants[i] == &"":
 			report.error("grants[%d]" % i, "空的解锁 id")
 	ctx.register_achievement(def)
+	return def
+
+
+## 局外科技（110）：得有 id、名字、效果、至少一级；每级的钱不为负；材料件数至少 1，批量导入时对着道具库查
+static func import_tech(data: Dictionary, ctx: Context, report: ImportReport) -> TechDef:
+	var def := TechDef.new()
+	_fill(def, data, "", ctx, report)
+	if def.id == &"":
+		report.error("id", "科技必须有 id")
+	if def.display_name.strip_edges() == "":
+		report.error("display_name", "科技得有名字")
+	if def.effect == null:
+		report.error("effect", "科技得写每升一级做什么（effect）")
+	if def.tiers.is_empty():
+		report.error("tiers", "科技至少一级")
+	for i in def.tiers.size():
+		var tier := def.tiers[i]
+		if tier == null:
+			report.error("tiers[%d]" % i, "空的一级")
+			continue
+		if tier.funds < 0:
+			report.error("tiers[%d].funds" % i, "钱不能是负的")
+		for key in tier.items:
+			var n := int(tier.items[key])
+			if n < 1:
+				report.error("tiers[%d].items.%s" % [i, key], "件数至少 1")
+			if not ctx.items.is_empty() and not ctx.items.has(StringName(String(key))):
+				report.error("tiers[%d].items.%s" % [i, key], "道具库里没有 %s" % key)
 	return def
 
 

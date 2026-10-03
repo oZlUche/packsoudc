@@ -19,6 +19,7 @@ var _line: Label
 var _store_btn: Button
 var _discard_btn: Button
 var _tidy_btn: Button
+var _size_label: Label
 
 
 func setup(flow: GameFlow, font: Font) -> void:
@@ -46,13 +47,14 @@ func _build() -> void:
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 6)
 	row.add_child(right)
-	right.add_child(_label("仓库　%d × %d 格，不需要包" % [_meta.warehouse.size.x, _meta.warehouse.size.y], 13, UiPalette.DIM))
+	_size_label = _label("", 13, UiPalette.DIM)
+	right.add_child(_size_label)
 	_warehouse_view = InventoryView.new()
 	_warehouse_view.label_font = _font
 	_warehouse_view.inventory = _meta.warehouse
 	_warehouse_view.show_adjacency = false
 	_warehouse_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	right.add_child(_warehouse_view)
+	right.add_child(ScrollBox.wrap(_warehouse_view))     # 110：扩建后仓库会很高，竖向滚动
 	_warehouse_view.item_double_clicked.connect(quick_move)
 
 	_line = _label("", 13, UiPalette.FG)
@@ -149,6 +151,7 @@ func has_pending() -> bool:
 func _refresh() -> void:
 	if _meta.board == null and _board_view != null or _meta.board != null and (_board_view == null or _board_view.inventory != _meta.board):
 		_rebuild_board_view()
+	_size_label.text = "仓库　%d × %d 格，不需要包" % [_meta.warehouse.size.x, _meta.warehouse.size.y]     # 110：扩建后跟着变
 	var pending := _meta.has_pending_board()
 	_store_btn.disabled = not pending
 	_discard_btn.disabled = not pending

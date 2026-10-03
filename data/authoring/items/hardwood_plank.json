@@ -1,0 +1,16 @@
+{
+  "id": "hardwood_plank",
+  "display_name": "硬木板",
+  "display_names": {
+    "en": "Hardwood Plank"
+  },
+  "shape": [
+    "11"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "nature",
+    "supply"
+  ]
+}

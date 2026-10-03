@@ -211,11 +211,23 @@ func rotate_dragged() -> void:
 
 
 ## 指定全局坐标下的容器视图，没有则返回 null。
+## 110：视图包在滚动容器里时，矩形按**当前**全局位置取（滚过之后会变），且被滚动区裁掉的部分不接落点
 func view_at(global_pos: Vector2) -> ContainerView:
 	for view in _views:
-		if view.visible and view.get_global_rect().has_point(global_pos):
+		if view.visible and visible_rect(view).has_point(global_pos):
 			return view
 	return null
+
+
+## 视图现在露在外面的那块（全局坐标）：自身矩形与所有裁剪祖先（滚动容器）的交集
+static func visible_rect(view: Control) -> Rect2:
+	var r := view.get_global_rect()
+	var p := view.get_parent() as Control
+	while p != null:
+		if p.clip_contents or p is ScrollContainer:
+			r = r.intersection(p.get_global_rect())
+		p = p.get_parent() as Control
+	return r
 
 
 ## 当前拖拽物在该网格视图中的落点锚点。
