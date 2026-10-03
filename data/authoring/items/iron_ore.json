@@ -1,0 +1,18 @@
+{
+  "id": "iron_ore",
+  "display_name": "铁矿石",
+  "display_names": {
+    "en": "Iron Ore"
+  },
+  "description": "沉手的黑石，铁匠的饭。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "nature",
+    "metal"
+  ]
+}

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_pc04x"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_tqpkb"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_jtsfp"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_0rcle"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_csypu"]
+
+[sub_resource type="Resource" id="Resource_lebd7"]
+script = ExtResource("5_csypu")
+
+[resource]
+script = ExtResource("4_0rcle")
+id = &"silver_ore"
+display_name = "银矿石"
+display_names = {
+"en": "Silver Ore"
+}
+description = "石头缝里一线银光。"
+shape = SubResource("Resource_lebd7")
+rarity = 2
+tags = Array[StringName]([&"material", &"nature", &"metal"])

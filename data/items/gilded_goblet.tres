@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_3uxob"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_n2qa0"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_w4i0q"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_xirtl"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_x201i"]
+
+[sub_resource type="Resource" id="Resource_bayg1"]
+script = ExtResource("5_x201i")
+
+[resource]
+script = ExtResource("4_xirtl")
+id = &"gilded_goblet"
+display_name = "鎏金酒杯"
+display_names = {
+"en": "Gilded Goblet"
+}
+description = "金皮包的杯子，贵族的。"
+shape = SubResource("Resource_bayg1")
+rarity = 3
+tags = Array[StringName]([&"material", &"crafted", &"metal"])

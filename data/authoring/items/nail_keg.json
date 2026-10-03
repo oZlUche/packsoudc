@@ -1,0 +1,19 @@
+{
+  "id": "nail_keg",
+  "display_name": "铁钉桶",
+  "display_names": {
+    "en": "Nail Keg"
+  },
+  "description": "一小桶铁钉。",
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "crafted",
+    "metal",
+    "supply"
+  ]
+}

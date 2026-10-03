@@ -22,7 +22,10 @@
       "funds": 500
     },
     {
-      "funds": 1000
+      "funds": 1000,
+      "items": {
+        "silver_ingot": 1
+      }
     }
   ]
 }

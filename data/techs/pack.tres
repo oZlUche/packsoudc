@@ -19,6 +19,10 @@ funds = 800
 [sub_resource type="Resource" id="Resource_shidj"]
 script = ExtResource("3_l4xpf")
 funds = 1200
+items = {
+"linen_bolt": 1,
+"tanned_leather": 2
+}
 
 [resource]
 script = ExtResource("2_slg58")

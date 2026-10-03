@@ -1,0 +1,16 @@
+{
+  "id": "linen_bolt",
+  "display_name": "亚麻布卷",
+  "display_names": {
+    "en": "Linen Bolt"
+  },
+  "description": "一卷素色亚麻。",
+  "shape": [
+    "111"
+  ],
+  "tags": [
+    "material",
+    "crafted",
+    "supply"
+  ]
+}

@@ -16,8 +16,8 @@ funds = 300
 script = ExtResource("3_tmqee")
 funds = 600
 items = {
-"rivet_box": 1,
-"steel_ingot": 2
+"nail_keg": 1,
+"steel_ingot": 1
 }
 
 [resource]

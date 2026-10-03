@@ -40,7 +40,7 @@ static func run(t: TestCase) -> void:
 		levels += (f[id]["tiers"] as Array).size()
 	t.eq(levels, 26, "二十六级")
 	t.eq(f["scouting"]["requires"], ["luck", "bargain"], "侦察的前置：幸运、讨价")
-	t.eq(f["safe_box"]["tiers"][1]["items"], {"steel_ingot": 2, "rivet_box": 1}, "材料按「；」拆成道具 → 件数")
+	t.eq(f["safe_box"]["tiers"][1]["items"], {"nail_keg": 1, "steel_ingot": 1}, "材料按「；」拆成道具 → 件数（122 改成铁钉桶）")
 	var out := TechsTable.build(_sheets(), problems)
 	t.eq(out.size(), 28, "生成 10 份科技 + 18 份 run_buff")
 	var same := 0

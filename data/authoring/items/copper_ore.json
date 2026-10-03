@@ -1,0 +1,16 @@
+{
+  "id": "copper_ore",
+  "display_name": "铜矿石",
+  "display_names": {
+    "en": "Copper Ore"
+  },
+  "description": "带绿锈的矿石，熔了就是铜。",
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "material",
+    "nature",
+    "metal"
+  ]
+}

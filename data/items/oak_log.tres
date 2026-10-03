@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_kssb6"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_03khw"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_j8q3o"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_addk6"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_ut0bw"]
+
+[sub_resource type="Resource" id="Resource_350l4"]
+script = ExtResource("5_ut0bw")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
+
+[resource]
+script = ExtResource("4_addk6")
+id = &"oak_log"
+display_name = "橡木原木"
+display_names = {
+"en": "Oak Log"
+}
+description = "一截还带树皮的硬木。"
+shape = SubResource("Resource_350l4")
+tags = Array[StringName]([&"material", &"nature"])

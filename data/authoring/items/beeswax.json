@@ -1,0 +1,16 @@
+{
+  "id": "beeswax",
+  "display_name": "蜂蜡块",
+  "display_names": {
+    "en": "Beeswax"
+  },
+  "description": "带蜜香的蜡。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "nature"
+  ]
+}

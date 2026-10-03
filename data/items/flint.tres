@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_sx8ur"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_fjpjg"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_hu6fw"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_fc87h"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_8p7oh"]
+
+[sub_resource type="Resource" id="Resource_sh6gg"]
+script = ExtResource("5_8p7oh")
+
+[resource]
+script = ExtResource("4_fc87h")
+id = &"flint"
+display_name = "燧石"
+display_names = {
+"en": "Flint"
+}
+description = "敲一下就出火星。"
+shape = SubResource("Resource_sh6gg")
+tags = Array[StringName]([&"material", &"nature"])

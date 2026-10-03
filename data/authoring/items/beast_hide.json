@@ -1,0 +1,18 @@
+{
+  "id": "beast_hide",
+  "display_name": "生兽皮",
+  "display_names": {
+    "en": "Raw Hide"
+  },
+  "description": "刚剥下来的皮，还得鞣。",
+  "shape": [
+    "111",
+    "111"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "nature",
+    "leather"
+  ]
+}

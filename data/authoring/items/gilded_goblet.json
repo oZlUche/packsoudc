@@ -1,0 +1,17 @@
+{
+  "id": "gilded_goblet",
+  "display_name": "鎏金酒杯",
+  "display_names": {
+    "en": "Gilded Goblet"
+  },
+  "description": "金皮包的杯子，贵族的。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "material",
+    "crafted",
+    "metal"
+  ]
+}

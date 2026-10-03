@@ -320,6 +320,10 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	return def
 
 
+## 122：材料的出身标签，二选一
+const MATERIAL_ORIGINS: Array[StringName] = [&"crafted", &"nature"]
+
+
 ## 096：标签是内容 —— 没登记的标签不是错（随手加的词照样能用），但提醒一句：登记了才有名字、别的语言和词条
 static func _validate_item_tags(def: ItemDef, ctx: Context, report: ImportReport) -> void:
 	if ctx.tags.is_empty():
@@ -329,6 +333,14 @@ static func _validate_item_tags(def: ItemDef, ctx: Context, report: ImportReport
 			continue
 		if not ctx.tags.has(t):
 			report.warn("tags", "没有登记的标签 '%s'：界面上只能显示原词（在 data/authoring/tags 里加一份就有名字与说明）" % t)
+	# 122：材料按是否人造分【工艺】/【自然】—— 必有一个、只能有一个（提醒，不拦；和「标签未登记」同级）
+	if def.tags.has(&"material"):
+		var kinds := 0
+		for k in MATERIAL_ORIGINS:
+			if def.tags.has(k):
+				kinds += 1
+		if kinds != 1:
+			report.warn("tags", "材料得在 %s 里恰好带一个（人造 / 取自自然），现在带了 %d 个" % [" / ".join(PackedStringArray(MATERIAL_ORIGINS)), kinds])
 
 
 ## 096：标签定义 —— 得有 id 与名字

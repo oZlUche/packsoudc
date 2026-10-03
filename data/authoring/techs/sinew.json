@@ -26,7 +26,10 @@
       "funds": 700
     },
     {
-      "funds": 1200
+      "funds": 1200,
+      "items": {
+        "copper_ingot": 2
+      }
     }
   ]
 }
