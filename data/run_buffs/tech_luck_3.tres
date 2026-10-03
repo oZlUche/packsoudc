@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_jpos0"]
+[ext_resource type="Script" path="res://core/run/effects/luck_bonus.gd" id="2_d72j2"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_jo7a1"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_4lwim"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_s8b3b"]
+
+[sub_resource type="Resource" id="Resource_1pmg4"]
+script = ExtResource("2_d72j2")
+amount = 3
+
+[resource]
+script = ExtResource("5_s8b3b")
+id = &"tech_luck_3"
+display_name = "幸运（科技）"
+description = "幸运 {luck_bonus_amount|signed}：敌人的东西更容易掉"
+scope = 0
+effects = Array[ExtResource("1_jpos0")]([SubResource("Resource_1pmg4")])

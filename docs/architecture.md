@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.34 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.35 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3230,13 +3230,16 @@ func player_spec() -> CombatantSpec …
 `MetaSave` 与 `RunSave` 同一套做法：`user://meta.json`，版本号 2（v1 是开发期的，作废），只写 id；仓库大小以存档里的为准（成长过的不该被规则缩回去）。
 **buff**（059 第 3 条，062）：局外的与一局里的是同一套定义 `RunBuffDef`（内容种类 `run_buffs`：scope、时限步数、标记、`mods` / `rules` / `effects`），
 效果树多了 `RunEffect` 分支（9.2），往 `RunContext` 里加数（体力上限、开局钱、多搜几次、商店价、幸运），各系统在对应的点读。
-局外的由 `MetaState.active_buffs` 决定（占位：局外屏的开关列表；将来任务、局外科技），开局那一刻记进这一局；一局里的由事件后果给（`BuffModule.grant`，101 之后在模块里），
+局外的由 `MetaState.active_buffs`（基地右栏的开发开关）+ `MetaState.tech_buffs`（科技树给的，118）决定，`GameFlow.meta_buffs()` 合并去重，开局那一刻记进这一局；一局里的由事件后果给（`BuffModule.grant`，101 之后在模块里），
 有时限的每走一步少一步，只带 `tags` 的就是标记，事件选项的条件查 `has_buff_tag`。
 
 **局外科技**（110，作者定）：一张定义 `TechDef`（内容种类 `techs`：`effect` 是 `TechEffect` 构件，登记在 `RunRegistry.TECH_EFFECTS`；`tiers` 每级 `TechTier{funds, items}`）+ `MetaState` 里通用的 `tech_levels`（id → 级）与 `tech_deposits`（id → {道具 id → 已交件数}）。
 第一条内容是**仓库扩建**（`warehouse_rows`：每级 `grow_rows(3)`，东西原地不动），6 级：前 3 级只要钱，第 4 级起要建材（钢锭 / 硬木板 / 铆钉盒，稀有度 2、标签 `supply`【建材】、无战斗规则、走掉落、商店 `shop_exclude_tags` 排除）。
 规矩：**上交即消耗**（交一件从仓库移除、记一件，可跨多局分批，没有取回）；**钱在按【升级】时一次扣**；材料交齐且钱够才能升，升完清这一项的上交记录。逻辑全在 `TechService`（纯静态：`level / next_tier / needed / can_submit / submit / deposit / ready / upgrade / heal`），`GameFlow.submit_tech / upgrade_tech` 转发并存盘。
 读档后 `TechService.heal` 让每项效果按等级自检（`TechEffect.heal`：仓库行数 < 基础 + 3 × 级数就补，只补不缩）。基地第五个页签「科技」（`ui/game/tech_panel.gd`）：左仓库格子，右每项一张卡（等级、钱、每种材料已交 / 需要、【升级】），双击或拖进「上交区」上交。
+**科技树**（118，作者定，五项按推荐）：`TechDef` 加 `requires`（前置 id，**每项至少 1 级**才能点）、`column`（手写的列）、`description`（面板「效果」区的一句总述）。深度不写，按前置算（`TechService.depth_of`：根 0，其余 = 最深前置 + 1）；`TechService.prereqs_met / missing_prereqs / layout / cycle_members`，`ready` 多一个前置条件。导入器 `validate_techs`：前置不存在、成环报错；同列同深度撞位**只警告**（按 `order` 左右并排）。
+两种新构件：`tech_run_buff`（`buffs[k−1]` = 第 k 级给的 `RunBuffDef`，`scope = META`，替换上一级那条，记进 `MetaState.tech_buffs`；导入器查条数 = 级数、buff 存在且是局外的）与 `tech_safe_size`（每级 `cols / rows` 进 `MetaState.safe_bonus`，`GameFlow.safe_size()` 加上）。两个新字段有默认值，不升存档版本；`heal` 把 `tech_buffs` 修成只留当前级那条、清掉不属于任何科技的，`safe_bonus` 按级数重算。`TechEffect.describe_level(k, buff_defs)` 给面板「现在 / 下一级」两行（buff 型的就是那条 buff 的 `summary()`）。
+基地「科技」页（`ui/game/tech_panel.gd`）改成**左树右板**：左 `TechTreeView`（`ui/game/tech_tree_view.gd`，深度 0 在最下面往上长，按前置画线，两端都点亮是橙线；节点三种样子：已点亮橙底 / 可点亮亮边呼吸 / 锁住暗字，选中的加一圈前景色边；多级一个节点写 Lv n / m，单级写已点亮 / 未点亮）；右板从上到下 名称 → 效果（总述 + 现在 / 下一级）→ 费用（钱、材料已交 / 需要、锁住的写「需要先点亮：…」、满级写已满级）→【点亮】（单级）/【升级】（多级）。下面上交区 + 默认收起的仓库格子，**上交只给选中的节点**（110 的「谁要就给谁」去掉）。首批三列十个节点（后勤 / 体魄 / 探索，数值占位），科技给的十八条局外 buff 在基地右栏的开发开关里归「科技给的」分组。
 仓库视图都包进 `ScrollBox`（只竖向，最多约 10 行高）；`DragLayer.view_at` 用视图**当前**全局矩形与裁剪祖先的交集（`visible_rect`），滚走的部分不接落点。
 仓库「整理」（`GridTidy`）改成**先同类再大小**：种类序是代码常量 `KIND_ORDER`（武器 → 盾 / 防具 / 插件 → 信仰 → 药剂 / 食物 → 弹药 / 工具 / 试剂 → 材料 / 零件 / 宝石 → 珍宝 / 其他，取第一个命中的标签）。
 
@@ -3888,6 +3891,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.35 | 2026-10-03 | **局外科技树**（报告 118，五项按推荐；改 8.2）。`TechDef.requires / column / description`，深度按前置算，导入器拦前置不存在与成环、撞位警告；新构件 `tech_run_buff`（每级换一条局外 buff → `MetaState.tech_buffs`）与 `tech_safe_size`（→ `MetaState.safe_bonus`），不升存档版本；开局合并开关与科技的 buff；科技页改左树（`TechTreeView`）右板（名称 / 效果 / 费用 / 点亮），上交只给选中节点、仓库折叠；首批三列十节点 + 十八条 `tech_*` 局外 buff（数值占位） |
 | v2.34 | 2026-10-03 | **战斗内部日志与回放存档**（报告 117，四项按推荐）。`BattleTrace` 挂 `BattleContext.trace`（默认 null，零开销，开不开逐条一样）：全部事件、规则出手 / 跳过与原因、伤害管线每一级、掷骰（`BattleContext.roll`，代替方案的 TracedRng）、buff、时间轮、每 5 秒快照。`NodeEvents._fight` / 沙盒写进 `user://battle_logs`（.jsonl / .txt / .replay.json，留 50 场）；`GameSettings.battle_trace` 非导出包默认开，设置屏开发区开关；开发工具「战斗回放」浏览；`tools/replay_log.gd` 命令行。见 4.8 末段 |
 | v2.33 | 2026-10-03 | **序章三信力曲线适配新胫骨大棒**（报告 116）。胫骨大棒作者改为蛮神道具：伤害走 `base_stats.damage`，激活即暴伤 +20、暴击率 +10（104 的「没有 1 阶功能」作废）。献祭点数只看稀有度与倍率（固定 60），余量改靠两场敌人血量：`tutorial3.json` 劫匪 40 → 60、蛮兵 110 → 150，第二场固定封顶 30；曲线神坛 A 后 72～88、第二场后 102～118。`test_prologue3` 加「第二场后 ≥ 2 阶阈值 + 2」 |
 | v2.32 | 2026-10-03 | **缓存过期时游戏自己重导、自己重开**（报告 115，作者定）：`DevNav._check_class_cache` 从「红字提示」改成自救（后台 `--import` → 带原参数加 `cache-rebuilt` 重开 → 再缺才红字）；纯函数 `import_args` / `relaunch_args` / `already_rebuilt`；门从 `OS.has_feature("editor")` 改成 `Engine.is_editor_hint()`（前者在编辑器版直接跑游戏时也为真，原来的自检对作者那条路从没生效）；`DevNav` 去掉对 `UiPalette` 的引用（缓存全空时它自己先解析失败，实测）。本地双击 / 快捷方式启动即可，`run_game` 改为可选 |

@@ -646,7 +646,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 		value += ItemValue.of(inst.def)
 	# 101：模块要的运行时输入（保险箱几格来自局外成长、带入价值来自这一次的选择）
 	var inputs := {SafeModule.ID: {"size": safe_size()}, CountdownModule.ID: {"carry_value": value}}
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta.active_buffs, character, layout, difficulty, hunter_defs, scale, inputs)
+	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta_buffs(), character, layout, difficulty, hunter_defs, scale, inputs)
 	if state == null:
 		return null
 	for inst in taken:
@@ -737,7 +737,19 @@ func smite() -> bool:
 
 ## 092（作者定）：保险箱几格（局外规则，初始 3×3）
 func safe_size() -> Vector2i:
-	return meta.rules.safe_size if meta != null and meta.rules != null else Vector2i(3, 3)
+	var base := meta.rules.safe_size if meta != null and meta.rules != null else Vector2i(3, 3)
+	return base + (meta.safe_bonus if meta != null else Vector2i.ZERO)     # 118：科技「保险箱扩格」
+
+
+## 118：开局带的局外 buff = 开发开关的 + 科技给的（去重，开关在前）
+func meta_buffs() -> Array[StringName]:
+	var out: Array[StringName] = []
+	if meta == null:
+		return out
+	for id in meta.active_buffs + meta.tech_buffs:
+		if not out.has(id):
+			out.append(id)
+	return out
 
 
 ## 092（作者定）：离开结算屏时，暂存区里没背出来的一键出售（按基地的出售比例），钱进局外。这里只算不卖

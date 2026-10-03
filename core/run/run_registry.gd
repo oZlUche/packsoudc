@@ -160,6 +160,8 @@ const EROSION_EFFECTS := {
 ## 110：局外科技每升一级做的事（[TechEffect]）。科技本身是局外的，挂在这张「一局之外」的表里是因为三张表里只有这张归 run / meta 一侧
 const TECH_EFFECTS := {
 	&"warehouse_rows": "res://core/meta/techs/warehouse_rows.gd",
+	&"tech_run_buff": "res://core/meta/techs/tech_run_buff.gd",     # 118
+	&"tech_safe_size": "res://core/meta/techs/tech_safe_size.gd",     # 118
 }
 
 

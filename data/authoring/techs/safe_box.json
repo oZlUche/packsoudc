@@ -1,0 +1,27 @@
+{
+  "id": "safe_box",
+  "display_name": "保险箱扩格",
+  "display_names": {
+    "en": "Bigger Safe"
+  },
+  "requires": [
+    "warehouse"
+  ],
+  "description": "局内的保险箱多出格子，撤不出来也能多保住几件。",
+  "effect": {
+    "type": "tech_safe_size",
+    "rows": 1
+  },
+  "tiers": [
+    {
+      "funds": 300
+    },
+    {
+      "funds": 600,
+      "items": {
+        "steel_ingot": 2,
+        "rivet_box": 1
+      }
+    }
+  ]
+}
