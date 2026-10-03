@@ -18,5 +18,5 @@ outcomes = Array[ExtResource("2_xy7ar")]([SubResource("Resource_keqnv")])
 script = ExtResource("5_xr173")
 id = &"tut_search_1_again"
 title = "再翻一次"
-text = "第一次翻出了一把制式短剑和一瓶伤药。这里还安静，再翻一次，看看还有什么。"
+text = "第一次翻出了一把{item:shortsword}和一瓶{item:salve}。这里还安静，再翻一次，看看还有什么。"
 options = Array[ExtResource("1_0mnyf")]([SubResource("Resource_mfqjl")])
