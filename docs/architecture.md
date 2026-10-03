@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.35 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.36 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -465,6 +465,8 @@ func move(from: GridInventory, uid: int, to: GridInventory,
   结算屏一行「信力节奏：第 N 步到 1 阶……」，开发版能导 `user://faith_history_<seed>.csv`。所有数都是占位，按测试重新规划。
 - **神明总表是核心配置**（104）：`docs/gods.xlsx` 机器读的列（阈值、行为、献祭、等级效果、神名与神话定位、转化概率）由 `tools/gods_xlsx_to_json.gd` 写进信仰 JSON（其余字段原样保留），
   `GodsTable.check` 在 `tools/check_content.gd` 里对照，表与 JSON 对不上就红。读 xlsx 是 `XlsxReader`（zip + XML，只读值）。
+- **科技树配置表是科技的唯一来源**（119）：`docs/techs.xlsx` 的「节点」「等级」两张表由 `tools/techs_xlsx_to_json.gd` **全量**生成 `techs/*.json` 与 `run_buffs/tech_*.json`（`tech_run_buff` 每级一条，`effect.buffs` 工具填；表里没有的删掉）和只读镜像 `docs/techs.md`，全有或全无；`TechsTable.check` 在 `tools/check_content.gd` 里对照（含镜像）。
+  **改科技先改表**，别手改那些 JSON。是否点亮不进表：读存档的 `tech_levels`；开发区（基地仓库页右列，非导出包）每个科技一个数字框直接改它（`GameFlow.dev_set_tech_level`，效果走 `TechService.heal` 重算）。
 
 ## 4. M2 · 自动战斗
 
@@ -3891,6 +3893,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.36 | 2026-10-03 | **科技树配置表**（报告 119，五项按推荐）。`docs/techs.xlsx`（节点 / 等级 / 说明）是科技唯一来源：`TechsTable`（读表、校验、生成、对照）+ `tools/techs_xlsx_to_json.gd` 全量生成 `techs/*.json`、`run_buffs/tech_*.json` 与镜像 `docs/techs.md`，坏表一份都不写；`tools/check_content.gd` 对照表与 JSON。「是否点亮」仍读存档 `tech_levels`，逻辑不变；基地开发区加「科技等级」数字框（`GameFlow.dev_set_tech_level`） |
 | v2.35 | 2026-10-03 | **局外科技树**（报告 118，五项按推荐；改 8.2）。`TechDef.requires / column / description`，深度按前置算，导入器拦前置不存在与成环、撞位警告；新构件 `tech_run_buff`（每级换一条局外 buff → `MetaState.tech_buffs`）与 `tech_safe_size`（→ `MetaState.safe_bonus`），不升存档版本；开局合并开关与科技的 buff；科技页改左树（`TechTreeView`）右板（名称 / 效果 / 费用 / 点亮），上交只给选中节点、仓库折叠；首批三列十节点 + 十八条 `tech_*` 局外 buff（数值占位） |
 | v2.34 | 2026-10-03 | **战斗内部日志与回放存档**（报告 117，四项按推荐）。`BattleTrace` 挂 `BattleContext.trace`（默认 null，零开销，开不开逐条一样）：全部事件、规则出手 / 跳过与原因、伤害管线每一级、掷骰（`BattleContext.roll`，代替方案的 TracedRng）、buff、时间轮、每 5 秒快照。`NodeEvents._fight` / 沙盒写进 `user://battle_logs`（.jsonl / .txt / .replay.json，留 50 场）；`GameSettings.battle_trace` 非导出包默认开，设置屏开发区开关；开发工具「战斗回放」浏览；`tools/replay_log.gd` 命令行。见 4.8 末段 |
 | v2.33 | 2026-10-03 | **序章三信力曲线适配新胫骨大棒**（报告 116）。胫骨大棒作者改为蛮神道具：伤害走 `base_stats.damage`，激活即暴伤 +20、暴击率 +10（104 的「没有 1 阶功能」作废）。献祭点数只看稀有度与倍率（固定 60），余量改靠两场敌人血量：`tutorial3.json` 劫匪 40 → 60、蛮兵 110 → 150，第二场固定封顶 30；曲线神坛 A 后 72～88、第二场后 102～118。`test_prologue3` 加「第二场后 ≥ 2 阶阈值 + 2」 |
