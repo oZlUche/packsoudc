@@ -283,3 +283,29 @@ static func run_bag_drag(t: TestCase) -> void:
 	for v in [view_a, view_b]:
 		v.free()
 	drag.free()
+
+
+## 反馈（开局拖物品「有时对不准格子」）：残影在格子视图上方时吸附到会落下的那一格，和落点重合；光标在格子里怎么偏都一样
+static func run_ghost_snap(t: TestCase) -> void:
+	t.begin("DragLayer · 残影吸附：在格子视图上方，残影的位置 = 会落下的那一格，不随光标在格内的偏移漂")
+	ItemInstance.reset_uid_counter()
+	var big := _def("big", ["##", "##"])
+	var inv := GridInventory.new(Vector2i(6, 6), 1)
+	var view := _view(inv, Vector2(100, 50))
+	var drag := DragLayer.new()
+	drag.register_view(view)
+	var a := ItemInstance.create(big)
+	inv.place(a, Vector2i(0, 0), 0)
+	# 抓住物品右下角那一格（cell (1,1)）
+	drag._on_grab_requested(view, a.uid, (Vector2(1, 1) + Vector2(0.5, 0.5)) * CELL)
+	t.check(drag.is_dragging(), "抓起来了")
+	# 光标落在格 (3,2) 里的不同位置：落点都是 (3,2) - (1,1) = (2,1)，残影都画在这一格
+	var want := view.global_position - drag.global_position + Vector2(2, 1) * CELL
+	for off: Vector2 in [Vector2(1, 1), Vector2(CELL * 0.5, CELL * 0.5), Vector2(CELL - 1, CELL - 1), Vector2(1, CELL - 1)]:
+		var mouse: Vector2 = view.position + Vector2(3, 2) * CELL + off
+		t.eq(drag.target_origin(view, mouse), Vector2i(2, 1), "光标在格内 %s：落点 (2,1)" % str(off))
+		t.eq(drag.ghost_anchor(mouse), want, "光标在格内 %s：残影吸附在落点上" % str(off))
+	# 不在任何视图上方：逐像素跟手，被抓的那一格压在光标下
+	var free := Vector2(700, 500)
+	t.eq(drag.ghost_anchor(free), free - drag.global_position - Vector2(1.5, 1.5) * CELL, "棋盘外：跟手")
+	drag.cancel()

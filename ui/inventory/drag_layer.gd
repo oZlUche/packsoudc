@@ -241,6 +241,20 @@ func target_origin(view: InventoryView, global_pos: Vector2) -> Vector2i:
 	return view.cell_at_global(global_pos) - _grab_cell
 
 
+## 残影的左上角（本控件内的坐标）。
+## 在格子视图上方：**吸附到真正会落下的那一格** —— 放手落在哪、残影就画在哪，和落点高亮重合。
+## 反馈（开局拖物品「有时对不准格子」）：以前残影永远让被抓的那一格正压在光标正下方（逐像素跟手），而落点按光标所在的格取整，
+## 光标靠近格子边缘时残影与落点相差近半格，看起来就是没对准。不在任何格子视图上方（暂存区 / 棋盘外）仍然跟手。
+## 本控件不在场景树里（测试）时 global_position 就是 position，换算照样成立
+func ghost_anchor(global_pos: Vector2) -> Vector2:
+	var view := view_at(global_pos)
+	if view is InventoryView and (view as InventoryView).inventory != null:
+		var grid_view := view as InventoryView
+		return grid_view.global_position - global_position + Vector2(target_origin(grid_view, global_pos)) * InventoryView.CELL
+	# 光标逐像素跟手：让被抓住的那一格正好压在光标下
+	return global_pos - global_position - (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * InventoryView.CELL
+
+
 ## 按指定鼠标位置刷新落点高亮。
 ##
 ## 鼠标位置作为入参而不是内部取，是为了让拖拽逻辑能在没有真实输入的
@@ -734,10 +748,7 @@ func _draw() -> void:
 	if not is_dragging():
 		return
 	var cells := _inst.def.cells_rotated(_rot)
-	# 让被抓住的那一格正好压在光标下。
-	# Control 没有 to_local()（那是 Node2D 的），用本控件内的鼠标坐标。
-	var anchor := get_local_mouse_position() \
-		- (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * InventoryView.CELL
+	var anchor := ghost_anchor(get_global_mouse_position())
 
 	var font := label_font if label_font != null else get_theme_default_font()
 	var is_bag := not _payload.is_empty()
