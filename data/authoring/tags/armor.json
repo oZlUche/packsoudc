@@ -7,5 +7,6 @@
   "description": "盔甲类：穿上给护盾（日后靴子、手套、头盔共用）。",
   "descriptions": {
     "en": "Body armor."
-  }
+  },
+  "tip": false
 }

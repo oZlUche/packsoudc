@@ -13,3 +13,4 @@ description = "受过神的赐福的版本。"
 descriptions = {
 "en": "A god-blessed variant."
 }
+tip = false

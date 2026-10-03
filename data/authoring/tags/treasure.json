@@ -7,5 +7,6 @@
   "description": "值钱、不参战的东西。",
   "descriptions": {
     "en": "Valuable, does not fight."
-  }
+  },
+  "tip": false
 }

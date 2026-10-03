@@ -7,5 +7,6 @@
   "description": "出手快、单下轻的打法。",
   "descriptions": {
     "en": "Fast, light hits."
-  }
+  },
+  "tip": false
 }

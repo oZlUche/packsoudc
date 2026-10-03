@@ -34,6 +34,15 @@ static func bonus_lit(def: ItemDef, b: FaithBonus, status: Dictionary) -> bool:
 	return b.times_for(int(status.get("tier", 0)), int(status.get("points", 0))) > 0
 
 
+## 107（作者定）：这件道具的信仰现在是不是激活的 —— 信仰相关的行按它上色（亮 = 生效、灰 = 休眠或还没激活）。
+## 局外（没探针）一律按没激活算，局外本来就不上色
+static func faith_lit(def: ItemDef, status: Dictionary) -> bool:
+	if status.is_empty() or def == null or not def.has_faith():
+		return false
+	var active := StringName(String(status.get("active", "")))
+	return active != &"" and def.faith_tag() == FaithDef.TAG_PREFIX + String(active)
+
+
 ## [param board] 给了且道具在上面就按棋盘编译；否则单独编。只要主文字；词条见 [method describe_full]
 static func describe(inst: ItemInstance, board: GridInventory = null) -> String:
 	return String(describe_full(inst, board)["text"])
@@ -103,18 +112,12 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			if not status.is_empty():
 				line = "[color=#%s]%s[/color]" % [UiPalette.FG.to_html(false) if bonus_lit(def, b, status) else DIM_HEX, line]
 			lines.append(line)
-	if def.has_faith():
-		var state := ""
-		if not status.is_empty():
-			var active := StringName(String(status.get("active", "")))
-			var mine := def.faith_tag() == FaithDef.TAG_PREFIX + String(active) and active != &""
-			state = "　—— 现在已激活（Lv.%d）" % int(status.get("tier", 0)) if mine else ("　—— 现在休眠" if active != &"" else "　—— 还没激活（要信物）")
-		lines.append("[color=#8b93a1]信仰道具：别的信仰激活时休眠%s%s[/color]" % [("（保留通用效果）" if FaithState.keeps_combat_when_dormant(def) else "（彻底失效）"), state])
+	# 107（作者定）：不再写「信仰道具：别的信仰激活时休眠…」那一行，也不写「—— 现在休眠 / 还没激活」的状态尾巴 ——
+	# **状态就是颜色**：这件道具的信仰激活着就亮色，休眠或还没激活就全灰
 	if def.is_anchor():
 		# 099（作者定）：切信仰不进菜单 —— 右键一下，或者在棋盘里把它重新落下
-		var now := StringName(String(status.get("active", "")))
-		var mine := now != &"" and def.faith_tag() == FaithDef.TAG_PREFIX + String(now)
-		lines.append("[color=#8b93a1]信物：%s[/color]" % ("当前信仰" if mine else "右键：奉为主信仰"))
+		var line := "信物：%s" % ("当前信仰" if faith_lit(def, status) else "右键：奉为主信仰")
+		lines.append("[color=#%s]%s[/color]" % [UiPalette.FG.to_html(false) if faith_lit(def, status) else DIM_HEX, line])
 	if def.set_id != &"":
 		lines.append("[color=#8b93a1]套装：%s[/color]" % String(def.set_id))
 	var text := "\n".join(lines)

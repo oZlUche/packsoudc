@@ -336,7 +336,8 @@ static func run_round_trip(t: TestCase) -> void:
 						{"type": "chance", "percent": 80},
 					],
 					"effects": [
-						{"type": "deal_damage", "damage_type": "poison", "per_stack": true},
+						# 107：毒与流血没有直接伤害形态（导入器拦着），这里要的只是「非默认的伤害类型能往返」，换火焰
+						{"type": "deal_damage", "damage_type": "fire", "per_stack": true},
 						{"type": "change_resource", "resource_key": "hp", "amount": -3.0},
 					],
 				},
@@ -385,7 +386,7 @@ static func run_round_trip(t: TestCase) -> void:
 	t.eq((r0.cadence as CooldownCadence).use_haste, false, "往返：非默认的布尔值")
 	t.eq(r0.costs.size(), 2, "往返：两条消耗")
 	t.eq((r0.costs[1] as ChanceCondition).percent, 80, "往返：概率")
-	t.eq((r0.effects[0] as DealDamage).damage_type, &"poison", "往返：伤害类型")
+	t.eq((r0.effects[0] as DealDamage).damage_type, &"fire", "往返：伤害类型")
 	t.eq((r0.effects[1] as ChangeResource).amount, -3.0, "往返：负数")
 
 	var r1 := def2.combat.rules[1]

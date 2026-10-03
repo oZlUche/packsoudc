@@ -13,3 +13,4 @@ description = "弓一类的远程武器。"
 descriptions = {
 "en": "A bow or other ranged weapon."
 }
+tip = false

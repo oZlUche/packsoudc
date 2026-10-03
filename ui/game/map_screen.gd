@@ -570,6 +570,14 @@ func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
 		step(id)
 
 
+## 文字再长也不撑宽所在的容器：最小宽度 0、横向铺满、超出裁成省略号
+func _pin_width(l: Label) -> void:
+	l.clip_text = true
+	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	l.custom_minimum_size.x = 0
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+
 func _on_node_hovered(id: int) -> void:
 	_enemy_line.text = enemy_preview(id)
 	_update_tooltip(id)
@@ -853,11 +861,16 @@ func _build() -> void:
 		if event is InputEventMouseMotion and _tip != null:
 			_tip.follow(get_global_mouse_position()))     # 084：浮窗跟着鼠标走，和道具悬浮窗一样
 	mid.add_child(_view)
+	# 反馈（bug：悬停节点时地图错位、闪烁）：这两行的文字随悬停的点变长变短，Label 的最小宽度跟着文字走，
+	# 把中间这一列撑宽 → 地图视图被挤窄 → 触发 resized 重新居中 → 地图位移、鼠标脱离节点 → 文字清空又缩回去 → 再悬停，如此往复。
+	# 让它们不参与布局宽度（超长就省略号裁掉），悬停就不会再改变地图的尺寸
 	_preview = _label("", 13, UiPalette.FG)
 	_preview.custom_minimum_size.y = 22
+	_pin_width(_preview)
 	mid.add_child(_preview)
 	_enemy_line = _label("", 13, UiPalette.DIM)
 	_enemy_line.custom_minimum_size.y = 22
+	_pin_width(_enemy_line)
 	mid.add_child(_enemy_line)
 	_tip = HoverTip.new(font)
 	add_child(_tip)

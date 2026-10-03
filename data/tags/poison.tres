@@ -13,3 +13,4 @@ description = "带毒。"
 descriptions = {
 "en": "Poisonous."
 }
+tip = false

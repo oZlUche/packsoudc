@@ -13,3 +13,4 @@ description = "工具。"
 descriptions = {
 "en": "A tool."
 }
+tip = false

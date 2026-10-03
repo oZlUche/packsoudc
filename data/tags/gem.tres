@@ -13,3 +13,4 @@ description = "宝石、晶石。"
 descriptions = {
 "en": "A gem or crystal."
 }
+tip = false
