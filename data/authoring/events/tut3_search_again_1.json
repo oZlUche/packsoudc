@@ -1,0 +1,15 @@
+{
+  "id": "tut3_search_again_1",
+  "title": "{item:bone_dice}",
+  "text": "翻出一副{item:bone_dice}。它不能打，但它是{b}祭品{/b}：骨头做的东西是{faith:brute}最爱的，献祭时信力按稀有度再乘 {faith_offer:brute:bone:multiplier} 倍。\n\n再搜一次。",
+  "options": [
+    {
+      "label": "再搜一次",
+      "outcomes": [
+        {
+          "type": "open_search"
+        }
+      ]
+    }
+  ]
+}

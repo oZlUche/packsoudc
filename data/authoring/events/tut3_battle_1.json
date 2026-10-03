@@ -1,0 +1,31 @@
+{
+  "id": "tut3_battle_1",
+  "title": "{enemy:raider}",
+  "text": "前面有个{enemy:raider}，一把小刀，不难对付。\n\n信力是这样涨的：{faith:brute}看你打出去和挨到的伤害，每点算 {faith_deed:brute:damage:multiplier} 信力，一场最多 {faith_deed:brute:damage:cap}；还有失去体力，每点算 {faith_deed:brute:vitality_lost:multiplier} —— 输了也不白输。\n\n打完看看地图左上那一行。",
+  "options": [
+    {
+      "label": "进入战前准备",
+      "hide_when_locked": true,
+      "hint_when_hidden": "先把{item:charm_brute}放进包里（按 {key:B} 打开背包；留在上一个点的话，回去拿），信了{faith:brute}再打。",
+      "requires": [
+        {
+          "type": "faith_active"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "proceed"
+        }
+      ]
+    },
+    {
+      "label": "我先整理一下背包",
+      "outcomes": [
+        {
+          "type": "next_event",
+          "event": "tut3_battle_1"
+        }
+      ]
+    }
+  ]
+}

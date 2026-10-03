@@ -95,7 +95,7 @@ static func run_data(t: TestCase) -> void:
 	if c.chapter == null:
 		return
 	t.check(c.chapter.requires_unlock == c.prologue.grants_unlock, "要序章通关")
-	t.check(c.chapter.grants_unlock == c.chapter1.requires_unlock, "通关解锁第一章")
+	t.check(c.chapter.next_chapter == &"prologue_3", "通关直接进序章三（113；第一章要序章三通关）")
 	t.check(c.chapter.hidden_by_unlock == c.chapter.grants_unlock and c.prologue.hidden_by_unlock == c.prologue.grants_unlock, "教程通关就收起")
 	t.check(c.chapter.skip_setup and c.chapter.auto_spawn and c.chapter.intro_event == &"tut2_intro", "不走开局屏、开局在出生点、先过 intro")
 	t.check(c.chapter.starting_keepsakes.has(&"spyglass"), "开局发望远镜：节点浮窗从这一张开（088，不再用章节开关）")
@@ -470,9 +470,9 @@ static func run_gating(t: TestCase) -> void:
 	run.travel.start_at(run.map.goal_ids[0])
 	t.check(f.extract(), "撤离")
 	t.check(f.meta.has_unlock(c.chapter.grants_unlock), "拿到序章二的解锁")
-	t.is_null(f.next_chapter(), "序章二之后没有下一张教学图：走结算 → 局外")
+	var nxt := f.next_chapter()
+	t.check(nxt != null and nxt.id == &"prologue_3", "序章二之后直接进序章三（113）")
 	f.finish_result()
-	t.eq(f.screen, GameFlow.Screen.META, "→ 局外")
 	avail = f.available_chapters()
-	t.check(avail.size() == 1 and avail[0].id == &"chapter_01", "序章二收起，只剩第一章：%s" % str(avail.map(func(x: ChapterDef) -> String: return String(x.id))))
+	t.check(avail.size() == 1 and avail[0].id == &"prologue_3", "序章二收起，只剩序章三：%s" % str(avail.map(func(x: ChapterDef) -> String: return String(x.id))))
 	_cleanup()

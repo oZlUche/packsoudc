@@ -1,7 +1,7 @@
 {
   "id": "tut2_search_2_again_2",
-  "title": "长剑",
-  "text": "一把{b}长剑{/b}：一下十二点，慢，但总伤害比匕首高得多。对付血厚、没什么花样的对手用它最省事。\n\n再搜一次，还有一样东西。",
+  "title": "{item:longsword}",
+  "text": "一把{item:longsword}：一下 {item_stat:longsword:damage} 点，慢，但总伤害比{item:knife}高得多。对付血厚、没什么花样的对手用它最省事。\n\n再搜一次，还有一样东西。",
   "options": [
     {
       "label": "再搜一次",

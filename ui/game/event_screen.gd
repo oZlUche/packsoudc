@@ -12,6 +12,8 @@ const TEXT_WIDTH := 560.0
 var _def: EventDef = null
 var _node: MapNode = null
 var _option_btns: Array[Button] = []
+## 113：藏起来的选项要说的那几句（[member EventOption.hint_when_hidden]），排在选项下面
+var _hints: Array[String] = []
 
 
 const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
@@ -33,6 +35,7 @@ func open(payload: Dictionary) -> void:
 func _open_options() -> void:
 	# 084：文字里的 {char_name} 这类占位符与 {c:hp}…{/c} 样式码在这里替换（docs/text-placeholders.md）
 	var ctx := TextTemplate.context_for(flow.run, _node, _payload.get("extra", {}))
+	_hints.clear()
 	var title := TextTemplate.plain(_def.title_for() if _def.title_for() != "" else String(_def.id), ctx)
 	# 101 第 5 刀：文本层只产出带颜色名的样式码，画之前在这里查表换成真颜色
 	var body := UiPalette.resolve_styles(TextTemplate.render(_def.text_for(), ctx))
@@ -41,7 +44,10 @@ func _open_options() -> void:
 		var opt := _def.options[i] as EventOption
 		var state := flow.run.events.option_state(i)
 		var ok := bool(state["ok"])
+		var hint := TextTemplate.plain(opt.hint_when_hidden, ctx) if opt.hint_when_hidden != "" else ""
 		if not ok and opt.hide_when_locked:
+			if hint != "":
+				_hints.append(hint)     # 113：藏起来的选项说一句为什么（排在选项之后）
 			continue
 		var idx := i
 		# 104：选项文字里的数写成 {change_money_amount|abs} 这类，取这个选项自己的结果 / 条件的字段（TextParams）
@@ -50,7 +56,9 @@ func _open_options() -> void:
 		_option_btns.append(b)
 		col.add_child(b)
 		if not ok:
-			col.add_child(_label("　" + String(state["why"]), 13, UiPalette.DIM))
+			col.add_child(_label("　" + (hint if hint != "" else String(state["why"])), 13, UiPalette.DIM))
+	for line in _hints:
+		col.add_child(_wrapped(line, 13, UiPalette.DIM, 420))
 	# 083：事件屏上也能整理背包（教程的「先整理再开打」要在这里做；15 节第 7 项的尾巴）
 	if flow.run != null:
 		col.add_child(_button("整理背包（B）", toggle_bag, 13, UiPalette.Tier.MINOR))
@@ -268,3 +276,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	toggle_bag()
 	get_viewport().set_input_as_handled()
 #endregion
+
+
+## 113：现在底部显示着的门禁提示（测试看）
+func hint_lines() -> Array[String]:
+	return _hints.duplicate()

@@ -442,13 +442,20 @@ static func run_chain_and_guard(t: TestCase) -> void:
 	t.eq(StatMath.to_int(ctx.sides[1].resources.current(BattleStats.RES_HP)), 90,
 		"主武器 4 点 + 连带触发 6 点 = 10 点")
 
-	# --- 自我循环被派发上限挡住，不会栈溢出 ---
-	var loopy := OnItemFired.new()
-	loopy.same_side = true
-	loopy.include_self = true          # 故意制造自循环
+	# --- 互相触发的环被派发上限挡住，不会栈溢出 ---
+	# 108 起「听自己出手」的规则执行时不算再出手（不发 ITEM_FIRED），自己触发自己的环已经不存在了；
+	# 两件互相听对方出手的才是真环（内容配错的典型），派发上限照样要兜住它
+	var ping := OnItemFired.new()
+	ping.same_side = true
+	ping.source_uids = [2] as Array[int]
+	var pong := OnItemFired.new()
+	pong.same_side = true
+	pong.source_uids = [1] as Array[int]
 	var bad := _spec(100.0, [
-		_compiled(1, "loop", {"damage": 0.0},
-			[_rule(loopy, Always.new(), [_damage(0.0)])]),
+		_compiled(1, "ping", {"damage": 0.0},
+			[_rule(ping, Always.new(), [_damage(0.0)])]),
+		_compiled(2, "pong", {"damage": 0.0},
+			[_rule(pong, Always.new(), [_damage(0.0)])]),
 	])
 	var ctx2 := _battle(bad, _spec(100.0, []))
 	ctx2.max_chain = 32

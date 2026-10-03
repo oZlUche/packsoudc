@@ -199,6 +199,8 @@ static func run_adjacency_grant(t: TestCase) -> void:
 			var key := (mod as StatModifier).stat
 			if near["neighbor"].total_of(key) != far["neighbor"].total_of(key):
 				changed = true
+		if int(near["attached"]) > int(far["attached"]):
+			changed = true     # 108：只挂规则不加属性（毒箭）也算真的给到了
 		t.check(changed,
 			"%s 的增益格 %s：邻居站上去属性没有任何变化" % [item.id, cell])
 
@@ -290,5 +292,7 @@ static func _compile_pair(item: ItemDef, neighbor: ItemDef, at: Vector2i) -> Dic
 	var theirs := spec.stats_of(other.uid)
 	if theirs == null:
 		return {}
-	return {"self": mine if mine != null else StatSet.new(), "neighbor": theirs}
+	var their_item := spec.item_of(other.uid)
+	return {"self": mine if mine != null else StatSet.new(), "neighbor": theirs,
+		"attached": their_item.attached.size() if their_item != null else 0}     # 108：增益格挂的规则
 #endregion

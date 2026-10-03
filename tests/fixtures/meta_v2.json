@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "warehouse": {
+    "id": 100,
+    "size": [8, 6],
+    "requires_bag": false,
+    "accept_tags": [],
+    "blocked": [],
+    "items": [
+      {
+        "uid": 1,
+        "def": "knife",
+        "rot": 0,
+        "origin": [0, 0],
+        "seq": 0,
+        "state": {}
+      }
+    ],
+    "place_seq": 0
+  },
+  "board": null,
+  "codex": {
+    "knife": 2
+  },
+  "active_buffs": [],
+  "unlocks": ["tutorial_01"],
+  "keepsakes": [],
+  "next_uid": 2,
+  "funds": 120,
+  "score": 340,
+  "runs": 3,
+  "extractions": 2,
+  "deaths": 1,
+  "best_value": 180,
+  "history": [],
+  "achievements": [],
+  "chapter_extractions": {},
+  "boss_kills": 0,
+  "battles_won": 5,
+  "seen_rules": [],
+  "flags": {}
+}

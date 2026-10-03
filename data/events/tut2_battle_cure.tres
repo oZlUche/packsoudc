@@ -17,8 +17,8 @@ outcomes = Array[ExtResource("2_353qe")]([SubResource("Resource_v1n4x")])
 [resource]
 script = ExtResource("5_jxo1u")
 id = &"tut2_battle_cure"
-title = "药师"
+title = "{enemy:apothecary}"
 text = "它随身带着解毒的东西，中毒一冒头就被清掉。
 
-毒对它没用；长剑硬砍反而最快。"
+毒对它没用；{item:longsword}硬砍反而最快。"
 options = Array[ExtResource("1_tky82")]([SubResource("Resource_2o1ax")])

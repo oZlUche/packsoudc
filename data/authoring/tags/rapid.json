@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Fast, light hits."
   },
-  "tip": false
+  "tip": false,
+  "internal": true
 }

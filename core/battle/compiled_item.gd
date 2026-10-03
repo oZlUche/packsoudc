@@ -21,6 +21,19 @@ var rules: Array[AbilityRule] = []
 ## 而且这样战斗层完全不需要认识 [GridInventory]。
 var linked_uids: Array[int] = []
 
+## 108（作者定）：**附加规则**的来源 —— 别人挂到我身上的规则（邻居的增益规则、信仰附魔），与 [member rules] 的下标对齐；
+## 自己写的规则没有条目。`{"rule_index": int, "origin": StringName}`，origin = 道具 def id（邻居给的）
+## 或 `faith:<id>`（信仰给的）。规则本身仍平铺在 [member rules] 里，战斗层不用认识它；只给悬浮窗写「← 毒箭」用
+var attached: Array[Dictionary] = []
+
+
+## 这条规则是不是别人附加的；是就返回来源，否则空
+func origin_of(rule_index: int) -> StringName:
+	for a in attached:
+		if int(a["rule_index"]) == rule_index:
+			return StringName(String(a["origin"]))
+	return &""
+
 
 func is_active() -> bool:
 	return not rules.is_empty()

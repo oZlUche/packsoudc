@@ -1,0 +1,10 @@
+{
+  "id": "tut3_search_done",
+  "title": "{item:tibia_violence}",
+  "text": "最后是一根{item:tibia_violence}。它带着{faith:brute}的印记，但{b}不是信物{/b}：放进包里不会换神，只在你信{faith:brute}的时候多出一截效果；换了别的神，它那几行字会变灰（休眠），只剩普通的那部分。\n\n前面是休息点，有神坛。",
+  "options": [
+    {
+      "label": "继续"
+    }
+  ]
+}

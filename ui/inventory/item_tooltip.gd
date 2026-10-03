@@ -61,8 +61,9 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var desc := Names.description_of(def)     # 104：说明里的 {字段} 按这件道具自己的字段填
 	if desc != "":
 		lines.append("[color=#8b93a1]%s[/color]" % desc)
-	if not def.tags.is_empty():
-		lines.append("[color=#8b93a1]标签：%s[/color]" % "、".join(_names(def.tags)))     # 096：标签按当前语言显示名字
+	var shown_tags := TagRegistry.shown(def.tags)     # 107 后续（作者定）：内部标签（快攻 / 重击 / 重型）不给玩家看
+	if not shown_tags.is_empty():
+		lines.append("[color=#8b93a1]标签：%s[/color]" % "、".join(_names(shown_tags)))     # 096：标签按当前语言显示名字
 	if def.is_bag:
 		var size := def.shape.size_rotated(0) if def.shape != null else Vector2i.ZERO
 		lines.append("包：%d×%d，放进去的东西才参战" % [size.x, size.y] + ("；只收 %s" % "、".join(_names(def.bag_accept_tags)) if not def.bag_accept_tags.is_empty() else ""))
@@ -90,6 +91,16 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			if st > 0.0:
 				line += "　耗耐力 %.0f" % st     # 087（作者定）：武器要写耐力消耗
 			lines.append(line)
+	# 108（作者定）：别人挂到我身上的规则（邻居的增益规则、信仰附魔）—— 只在棋盘上才有，来源名放句尾
+	var attached_buffs := {}
+	if compiled != null:
+		for a in compiled.attached:
+			var idx := int(a["rule_index"])
+			if idx < 0 or idx >= compiled.rules.size():
+				continue
+			var ar := compiled.rules[idx] as AbilityRule
+			lines.append("[color=#%s]附加：%s ← %s[/color]" % [UiPalette.GRANT.to_html(false), Glossary.rule_text(ar), origin_name(StringName(String(a["origin"])), board)])
+			Glossary.buffs_in_rules([ar], attached_buffs)
 	if weapon and compiled != null and spec != null:
 		lines.append("[color=#f0ad4e]约 %.1f DPS[/color]" % spec.estimated_dps_of(compiled))
 	for e in def.effects:
@@ -98,8 +109,14 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	if def.adjacency != null:
 		var adj := def.adjacency
 		if not adj.grant_cells.is_empty():
+			var gives: Array[String] = []
+			if not adj.grant_mods.is_empty() or adj.grant_rules.is_empty():
+				gives.append(_mods(adj.grant_mods))
+			for gr in adj.grant_rules:     # 108：给邻居挂的规则
+				if gr != null:
+					gives.append("附加：%s" % Glossary.rule_text(gr))
 			lines.append("[color=#%s]增益槽 ×%d[/color]：给站在那儿的邻居%s %s" % [UiPalette.GRANT.to_html(false), adj.grant_cells.size(),
-				("（%s）" % "、".join(_names(adj.grant_filter))) if not adj.grant_filter.is_empty() else "", _mods(adj.grant_mods)])
+				("（%s）" % "、".join(_names(adj.grant_filter))) if not adj.grant_filter.is_empty() else "", "；".join(gives)])
 		if not adj.receive_cells.is_empty():
 			lines.append("[color=#%s]受益槽 ×%d[/color]：每点亮一格%s，自己 %s" % [UiPalette.RECEIVE.to_html(false), adj.receive_cells.size(),
 				("（%s）" % "、".join(_names(adj.receive_filter))) if not adj.receive_filter.is_empty() else "", _mods(adj.receive_mods)])
@@ -122,9 +139,11 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		lines.append("[color=#8b93a1]套装：%s[/color]" % String(def.set_id))
 	var text := "\n".join(lines)
 	# 词条：这件道具会施加的 buff（名字 → 按定义生成的说明）+ 固定词条
-	var extra := Glossary.tag_terms(def.tags)     # 096：登记了说明的标签也是词条
-	for id in Glossary.buffs_in_item(def):
-		var bd: BuffDef = Glossary.buffs_in_item(def)[id]
+	var extra := Glossary.tag_terms(shown_tags)     # 096：登记了说明的标签也是词条
+	var item_buffs := Glossary.buffs_in_item(def)
+	item_buffs.merge(attached_buffs)     # 108：挂到我身上的规则施加的 buff（弓身上的【中毒】）也进侧窗
+	for id in item_buffs:
+		var bd: BuffDef = item_buffs[id]
 		if Names.of(bd) != "":
 			extra[Names.of(bd)] = Glossary.describe_buff(bd)
 	var terms := Glossary.terms_in(text, extra)
@@ -143,6 +162,20 @@ static func _stamina_of(rule: AbilityRule, stats: StatSet) -> float:
 		else:
 			total += rc.amount
 	return total
+
+
+## 108：附加规则的来源给人看 —— `faith:<id>` 写神名，道具 id 写道具名（在棋盘上找得到就用它的名字，否则原词）
+static func origin_name(origin: StringName, board: GridInventory = null) -> String:
+	var fid := FaithTags.id_of_tag(origin)
+	if fid != &"":
+		var god: FaithDef = FaithDef.load_all().get(fid, null)
+		return Names.of(god) if god != null else String(fid)
+	if board != null:
+		for inst in board.items():
+			var item := inst as ItemInstance
+			if item.def != null and item.def.id == origin:
+				return Names.of(item.def)
+	return String(origin)
 
 
 static func rarity_name(rarity: int) -> String:

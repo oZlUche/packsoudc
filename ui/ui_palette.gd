@@ -35,6 +35,7 @@ const CRIT := Color("ffd23f")
 ## 邻接标记的两个方向。**按语义分色，不是按形状** ——
 ## 参照作品用星形／菱形区分，那只是两个任意符号；这里直接用颜色 + 文字。
 const GRANT := Color("6fb3f0")    ## 增益：我给站在这儿的邻居加成
+const FAITH := Color("c79bf2")    ## 113：信仰名（{faith:id}）
 const RECEIVE := Color("f0a85c")  ## 受益：站在这儿的邻居给我加成
 
 ## 资源键 → 条的颜色。未登记的资源用 DIM，不至于看不见。
@@ -69,7 +70,7 @@ const STYLE_COLORS := {
 	"fg": FG, "dim": DIM, "hp": HP, "shield": SHIELD,
 	"stamina": STAMINA, "mana": MANA, "heal": HEAL,
 	"grant": GRANT, "receive": RECEIVE,
-	"warn": STAMINA, "danger": HP, "good": HEAL,
+	"warn": STAMINA, "danger": HP, "good": HEAL, "faith": FAITH,
 }
 
 
@@ -81,6 +82,10 @@ static func resolve_styles(bbcode: String) -> String:
 	for name in STYLE_COLORS:
 		out = out.replace("[color=%s%s]" % [TextTemplate.STYLE_PREFIX, name],
 			"[color=#%s]" % (STYLE_COLORS[name] as Color).to_html(false))
+	# 112：`{item:id}` 的名字按稀有度上色（和道具悬浮窗里的名字同色）
+	for r in ItemPainter.RARITY_COLORS.size():
+		out = out.replace("[color=%s%s%d]" % [TextTemplate.STYLE_PREFIX, TextTemplate.RARITY_STYLE, r],
+			"[color=#%s]" % (ItemPainter.RARITY_COLORS[r] as Color).to_html(false))
 	return out
 #endregion
 

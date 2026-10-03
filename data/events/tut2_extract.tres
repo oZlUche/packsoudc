@@ -22,7 +22,7 @@ label = "再整理一下"
 script = ExtResource("5_wsep0")
 id = &"tut2_extract"
 title = "撤离"
-text = "到撤离点了。撤了这一局就结束：包里的东西带回仓库。
+text = "到撤离点了。撤了这一局就结束：包里的东西带回{zone:仓库}。
 
-两张序章都过了。接下来是随机的一局：开局时能挑角色、挑地图规模、从仓库带东西进去。"
+撤出去直接进最后一张序章：祭坛。"
 options = Array[ExtResource("1_fs7h8")]([SubResource("Resource_kv4ym"), SubResource("Resource_3npnb")])

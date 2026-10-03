@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_44gk0"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_4040m"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_bsbpo"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_w4thb"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_hdyey"]
+
+[sub_resource type="Resource" id="Resource_jmama"]
+script = ExtResource("5_hdyey")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
+
+[resource]
+script = ExtResource("4_w4thb")
+id = &"hardwood_plank"
+display_name = "硬木板"
+display_names = {
+"en": "Hardwood Plank"
+}
+shape = SubResource("Resource_jmama")
+rarity = 2
+tags = Array[StringName]([&"material", &"nature", &"supply"])

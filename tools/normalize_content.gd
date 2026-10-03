@@ -90,6 +90,8 @@ func _import(kind: String, data: Dictionary, ctx: ContentImporter.Context, repor
 			return ContentImporter.import_chapter(data, ctx, report)
 		"achievements":
 			return ContentImporter.import_achievement(data, ctx, report)
+		"techs":
+			return ContentImporter.import_tech(data, ctx, report)
 		_:
 			return ContentImporter.import_item(data, ctx, report)
 
@@ -136,5 +138,7 @@ func _export(kind: String, res: Resource) -> Dictionary:
 			return ContentExporter.export_chapter(res)
 		"achievements":
 			return ContentExporter.export_achievement(res)
+		"techs":
+			return ContentExporter.export_tech(res)
 		_:
 			return ContentExporter.export_item(res)

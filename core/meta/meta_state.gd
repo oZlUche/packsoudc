@@ -13,7 +13,8 @@
 class_name MetaState
 extends RefCounted
 
-const SAVE_VERSION := 2
+## 110：v3 多了局外科技的等级与上交记录（[member tech_levels] / [member tech_deposits]）
+const SAVE_VERSION := 3
 const WAREHOUSE_ID := 100
 const BOARD_ID := 101
 ## 最近几局的账留几条
@@ -45,6 +46,10 @@ var seen_rules: Array[StringName] = []
 ## 091（计划书阶段 3）：剧情 / 事件的**局外旗标**（名字 → 数）。事件的条件 `has_flag` 看它、后果 `set_flag` 立它；跟局外存档。
 ## 「剧情推进到哪」「见过谁」就记在这里，营地对话、章节开场按它挑话
 var flags: Dictionary = {}
+## 110：局外科技等级 —— 科技 id（字符串）→ 已到第几级（没有 = 0）。怎么升见 [TechService]
+var tech_levels: Dictionary = {}
+## 110：上交中的材料 —— 科技 id（字符串）→ {道具 id（字符串）→ 已交件数}。上交即消耗；升级成功后清这一项
+var tech_deposits: Dictionary = {}
 ## 撤离带出来的钱累计。局外货币怎么花（15 节第 4 项）还没定，先攒着
 var funds: int = 0
 ## 累计背出去的价值（6.4）
@@ -462,6 +467,8 @@ func to_dict() -> Dictionary:
 		"boss_kills": boss_kills, "battles_won": battles_won,
 		"seen_rules": _names_of(seen_rules),
 		"flags": flags.duplicate(),
+		"tech_levels": tech_levels.duplicate(),
+		"tech_deposits": tech_deposits.duplicate(true),
 	}
 
 
@@ -519,6 +526,15 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		m.seen_rules.append(StringName(String(id)))
 	for key in d.get("flags", {}):
 		m.flags[String(key)] = int((d["flags"] as Dictionary)[key])
+	for key in d.get("tech_levels", {}):
+		m.tech_levels[String(key)] = int((d["tech_levels"] as Dictionary)[key])
+	for key in d.get("tech_deposits", {}):
+		var got := {}
+		var src = (d["tech_deposits"] as Dictionary)[key]
+		if src is Dictionary:
+			for item_id in src:
+				got[String(item_id)] = int(src[item_id])
+		m.tech_deposits[String(key)] = got
 	for row in d.get("history", []):
 		if row is Dictionary:
 			m.history.append(MapGraph.normalize(row))

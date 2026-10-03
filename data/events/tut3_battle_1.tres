@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_q8rax"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_a2eua"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="3_b2fyj"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_80eby"]
+[ext_resource type="Script" path="res://core/run/events/conditions/faith_active.gd" id="5_xd17f"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/next_event.gd" id="6_dxigf"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="7_hst1k"]
+
+[sub_resource type="Resource" id="Resource_klsow"]
+script = ExtResource("3_b2fyj")
+
+[sub_resource type="Resource" id="Resource_sioq8"]
+script = ExtResource("5_xd17f")
+
+[sub_resource type="Resource" id="Resource_12wis"]
+script = ExtResource("1_q8rax")
+label = "进入战前准备"
+hide_when_locked = true
+hint_when_hidden = "先把{item:charm_brute}放进包里（按 {key:B} 打开背包；留在上一个点的话，回去拿），信了{faith:brute}再打。"
+requires = Array[ExtResource("4_80eby")]([SubResource("Resource_sioq8")])
+outcomes = Array[ExtResource("2_a2eua")]([SubResource("Resource_klsow")])
+
+[sub_resource type="Resource" id="Resource_xvoxp"]
+script = ExtResource("6_dxigf")
+event = &"tut3_battle_1"
+
+[sub_resource type="Resource" id="Resource_1o8ha"]
+script = ExtResource("1_q8rax")
+label = "我先整理一下背包"
+outcomes = Array[ExtResource("2_a2eua")]([SubResource("Resource_xvoxp")])
+
+[resource]
+script = ExtResource("7_hst1k")
+id = &"tut3_battle_1"
+title = "{enemy:raider}"
+text = "前面有个{enemy:raider}，一把小刀，不难对付。
+
+信力是这样涨的：{faith:brute}看你打出去和挨到的伤害，每点算 {faith_deed:brute:damage:multiplier} 信力，一场最多 {faith_deed:brute:damage:cap}；还有失去体力，每点算 {faith_deed:brute:vitality_lost:multiplier} —— 输了也不白输。
+
+打完看看地图左上那一行。"
+options = Array[ExtResource("1_q8rax")]([SubResource("Resource_12wis"), SubResource("Resource_1o8ha")])

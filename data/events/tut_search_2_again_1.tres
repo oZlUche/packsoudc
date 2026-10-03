@@ -18,5 +18,5 @@ outcomes = Array[ExtResource("2_yvhdj")]([SubResource("Resource_epb37")])
 script = ExtResource("5_5t4dn")
 id = &"tut_search_2_again_1"
 title = "还有"
-text = "翻出一把弯刀。下面还压着东西，再翻一次。"
+text = "翻出一把{item:scimitar}。下面还压着东西，再翻一次。"
 options = Array[ExtResource("1_fvluw")]([SubResource("Resource_0t2gg")])

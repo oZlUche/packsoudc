@@ -9,6 +9,9 @@ extends Resource
 @export var tags: Array[StringName] = []
 ## 条件不满足时：灰掉（默认）还是干脆不显示
 @export var hide_when_locked: bool = false
+## 113：条件没过时给玩家看的一句（模板，可用占位符）。不显示的选项在事件屏底部灰字显示它；灰掉的选项用它替代条件的默认说明。
+## 教程的门禁靠它说「为什么现在不行」（「先把护符放进包里」）
+@export var hint_when_hidden: String = ""
 @export var requires: Array[EventCondition] = []
 @export var outcomes: Array[EventOutcome] = []
 

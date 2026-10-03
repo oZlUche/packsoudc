@@ -14,6 +14,7 @@
   "order": 1,
   "requires_unlock": "prologue_done",
   "grants_unlock": "prologue2_done",
+  "next_chapter": "prologue_3",
   "characters": [
     "brutus"
   ],
@@ -31,6 +32,6 @@
   "intro_event": "tut2_intro",
   "rules": [
     "岔路再归一：两条路各有一个对手，把鼠标停在点上先看清再选。",
-    "搜到的护具装不下两件，按对手挑一件；毒药瓶和匕首挨着放会合成。"
+    "搜到的护具装不下两件，按对手挑一件；{item:poison_vial}和{item:knife}挨着放会合成。"
   ]
 }

@@ -187,6 +187,8 @@ static func _validate_buff_only_damage(def: ItemDef, report: ImportReport) -> vo
 		var fb := def.faith_bonuses[k] as FaithBonus
 		if fb != null:
 			groups.append(["faith_bonuses[%d].rules" % k, fb.rules])
+	if def.adjacency != null:
+		groups.append(["adjacency.grant_rules", def.adjacency.grant_rules])     # 108：附加规则同样适用
 	for g in groups:
 		var rules: Array = g[1]
 		for i in rules.size():
@@ -198,6 +200,26 @@ static func _validate_buff_only_damage(def: ItemDef, report: ImportReport) -> vo
 				if dd != null and BUFF_ONLY_DAMAGE.has(dd.damage_type):
 					report.error("%s[%d].effects[%d].damage_type" % [g[0], i, j],
 						"「%s」直接打出 %s 伤害 —— 毒与流血没有直接伤害形态，只能由 buff 每秒造成（用 apply_status 加【中毒】/【流血】）" % [def.id, dd.damage_type])
+
+
+## 108（作者定）：附加规则（增益格挂给邻居的 `grant_rules`）的意义是「宿主出手时附带」，所以
+## 触发器必须是 `on_item_fired`（受伤 / 开战这类时机写在道具自己身上）；不许有 costs（宿主出手已经付过耐力，附带不二次扣）；
+## 必须有频率（建议 always，写冷却也行：「每 3 秒最多附带一次」）。直接毒伤 / 流血伤由 [method _validate_buff_only_damage] 一并拦
+static func validate_attached_rules(rules: Array, path: String, report: ImportReport) -> void:
+	for i in rules.size():
+		var rule := rules[i] as AbilityRule
+		var at := "%s[%d]" % [path, i]
+		if rule == null:
+			report.error(at, "空的附加规则")
+			continue
+		if not (rule.trigger is OnItemFired):
+			report.error(at + ".trigger", "附加规则听的是宿主出手（on_item_fired）；受伤 / 开战这类时机写在道具自己身上")
+		if not rule.costs.is_empty():
+			report.error(at + ".costs", "附加规则不能有消耗 —— 宿主出手已经付过耐力，附带的不再二次扣")
+		if rule.cadence == null:
+			report.error(at + ".cadence", "规则必须有频率（附加规则一般写 always）")
+		if rule.effects.is_empty():
+			report.warn(at + ".effects", "附加规则没有任何效果")
 
 
 ## 103 第 3 条：buff 没写明就是永续、不限层 —— 按百分比乘的不限层 buff 越叠越大（加时一拖更甚），
@@ -247,6 +269,8 @@ static func _validate_item_combat(def: ItemDef, report: ImportReport) -> void:
 		var fb := def.faith_bonuses[k] as FaithBonus
 		if fb != null:
 			groups.append(["faith_bonuses[%d].rules" % k, fb.rules])
+	if def.adjacency != null:
+		groups.append(["adjacency.grant_rules", def.adjacency.grant_rules])     # 108：附加规则同样适用
 	for g in groups:
 		var rules: Array = g[1]
 		for i in rules.size():
@@ -405,14 +429,70 @@ static func _validate_item_faith(def: ItemDef, ctx: Context, report: ImportRepor
 		var b := def.faith_bonuses[i] as FaithBonus
 		if b == null:
 			report.error("faith_bonuses[%d]" % i, "空的加成")
-		elif not ["tier", "active", "scaled"].has(b.mode):
-			report.error("faith_bonuses[%d].mode" % i, "生效方式只能是 tier / active / scaled")
+		elif not _string_choices(b, "mode").has(b.mode):
+			# 111：可选值读 `@export_enum`，加一种方式只改 FaithBonus 那一行
+			report.error("faith_bonuses[%d].mode" % i, "生效方式只能是 %s" % " / ".join(_string_choices(b, "mode")))
 		elif b.mode == "tier" and b.tier < 1:
 			report.error("faith_bonuses[%d].tier" % i, "阶从 1 起")
+		elif b.mode == "tier" and _faith_tiers(def, ctx) > 0 and b.tier > _faith_tiers(def, ctx):
+			report.error("faith_bonuses[%d].tier" % i, "「%s」的信仰只有 %d 阶，写了第 %d 阶永远达不到" % [def.id, _faith_tiers(def, ctx), b.tier])
 		elif b.mode == "scaled" and b.per_points < 1:
 			report.error("faith_bonuses[%d].per_points" % i, "每份至少 1 信力")
 		elif b.mods.is_empty() and b.rules.is_empty():
 			report.error("faith_bonuses[%d]" % i, "加成得有修饰或规则")
+
+
+## 111：字符串枚举字段的可选值（`@export_enum`）
+static func _string_choices(owner: Object, key: String) -> Array[String]:
+	for prop in owner.get_property_list():
+		if String(prop["name"]) == key:
+			return ContentSchema.enum_options(owner, prop)
+	return [] as Array[String]
+
+
+## 111：这件信仰道具所属信仰有几阶（阈值数）；不知道（单件导入、没登记）返回 0 = 不查
+static func _faith_tiers(def: ItemDef, ctx: Context) -> int:
+	if ctx == null or ctx.faiths.is_empty() or not def.has_faith():
+		return 0
+	var faith := ctx.faiths.get(FaithDef.id_of_tag(def.faith_tag()), null) as FaithDef
+	return faith.thresholds.size() if faith != null else 0
+
+
+## 112：说明文本里引用的道具 / 敌人（`{item:id}` `{enemy:id}` `{item_stat:id:字段}`）得存在 —— 写错了当场报，
+## 不然游戏里原样露出一个花括号。库是空的（单件导入）就不查
+static func check_text_refs(text: String, at: String, ctx: Context, report: ImportReport) -> void:
+	for ref in TextTemplate.refs(text):
+		var id := StringName(String(ref["id"]))
+		if ref["kind"] == "enemy":
+			if not ctx.enemies.is_empty() and not ctx.enemies.has(id):
+				report.error(at, "文本里的 {enemy:%s}：敌人库里没有它" % id)
+		elif ref["kind"] == "faith":
+			if not ctx.faiths.is_empty() and not ctx.faiths.has(id):
+				report.error(at, "文本里引用的信仰 %s 不存在" % id)
+		elif not ctx.items.is_empty() and not ctx.items.has(id):
+			report.error(at, "文本里引用的道具 %s 在道具库里没有" % id)
+
+
+## 112：事件导入时敌人还没导（事件排在敌人前面），所以事件文本的引用在全部导完后统一查
+static func validate_event_text_refs(ctx: Context, report: ImportReport) -> void:
+	var ids: Array = ctx.events.keys()
+	ids.sort()
+	for eid in ids:
+		var def := ctx.events[eid] as EventDef
+		if def == null:
+			continue
+		report.source = "events/%s.json" % eid
+		check_text_refs(def.title, "title", ctx, report)
+		check_text_refs(def.text, "text", ctx, report)
+		for lang in def.titles:
+			check_text_refs(String(def.titles[lang]), "titles.%s" % lang, ctx, report)
+		for lang in def.texts:
+			check_text_refs(String(def.texts[lang]), "texts.%s" % lang, ctx, report)
+		for i in def.options.size():
+			var opt := def.options[i] as EventOption
+			if opt != null:
+				check_text_refs(opt.label, "options[%d].label" % i, ctx, report)
+				check_text_refs(opt.hint_when_hidden, "options[%d].hint_when_hidden" % i, ctx, report)
 
 
 ## 敌人（M4-1）。校验里「对着道具查」的那几条只在批量导入（上下文里有道具）时生效。
@@ -574,6 +654,34 @@ static func import_achievement(data: Dictionary, ctx: Context, report: ImportRep
 		if def.grants[i] == &"":
 			report.error("grants[%d]" % i, "空的解锁 id")
 	ctx.register_achievement(def)
+	return def
+
+
+## 局外科技（110）：得有 id、名字、效果、至少一级；每级的钱不为负；材料件数至少 1，批量导入时对着道具库查
+static func import_tech(data: Dictionary, ctx: Context, report: ImportReport) -> TechDef:
+	var def := TechDef.new()
+	_fill(def, data, "", ctx, report)
+	if def.id == &"":
+		report.error("id", "科技必须有 id")
+	if def.display_name.strip_edges() == "":
+		report.error("display_name", "科技得有名字")
+	if def.effect == null:
+		report.error("effect", "科技得写每升一级做什么（effect）")
+	if def.tiers.is_empty():
+		report.error("tiers", "科技至少一级")
+	for i in def.tiers.size():
+		var tier := def.tiers[i]
+		if tier == null:
+			report.error("tiers[%d]" % i, "空的一级")
+			continue
+		if tier.funds < 0:
+			report.error("tiers[%d].funds" % i, "钱不能是负的")
+		for key in tier.items:
+			var n := int(tier.items[key])
+			if n < 1:
+				report.error("tiers[%d].items.%s" % [i, key], "件数至少 1")
+			if not ctx.items.is_empty() and not ctx.items.has(StringName(String(key))):
+				report.error("tiers[%d].items.%s" % [i, key], "道具库里没有 %s" % key)
 	return def
 
 
@@ -1012,6 +1120,8 @@ static func import_chapter(data: Dictionary, ctx: Context, report: ImportReport)
 	var def := ChapterDef.new()
 	_fill(def, data, "", ctx, report)
 	_validate_chapter(def, ctx, report)
+	for i in def.rules.size():     # 112：规则卡也认 {item:} {enemy:}
+		check_text_refs(def.rules[i], "rules[%d]" % i, ctx, report)
 	return def
 
 
@@ -1099,8 +1209,11 @@ static func _validate_item(def: ItemDef, report: ImportReport) -> void:
 
 	if def.adjacency != null:
 		var ap := def.adjacency
-		if not ap.grant_cells.is_empty() and ap.grant_mods.is_empty():
-			report.warn("adjacency.grant", "标了增益格却没有加成，不会点亮任何东西")
+		if not ap.grant_cells.is_empty() and ap.grant_mods.is_empty() and ap.grant_rules.is_empty():
+			report.warn("adjacency.grant", "标了增益格却没有加成也没有附加规则，不会点亮任何东西")
+		if not ap.grant_rules.is_empty() and ap.grant_cells.is_empty():
+			report.warn("adjacency.grant_rules", "写了附加规则却没有增益格，挂不到任何邻居身上")
+		validate_attached_rules(ap.grant_rules, "adjacency.grant_rules", report)
 		if not ap.receive_cells.is_empty() and ap.receive_mods.is_empty():
 			report.warn("adjacency.receive", "标了受益格却没有加成")
 		_warn_overlapping_markers(def, report)
@@ -1176,6 +1289,10 @@ static func _coerce(
 		TYPE_INT:
 			if value is String:
 				var resolved = ContentSchema.enum_value(owner, prop, value)
+				if resolved == null and ContentSchema.normalize_enum(value) == "FIRE" and String(prop["name"]) == "mult_category":
+					# 109（作者定）：乘区 FIRE 改名 ELEMENT（元素增伤）。没有内容在用旧名，不留别名，报错指路
+					report.error(path, "乘区 FIRE 已改名 ELEMENT（元素增伤）—— 火焰只是元素之一；请写 \"ELEMENT\"")
+					return null
 				if resolved == null:
 					var opts := ContentSchema.enum_options(owner, prop)
 					report.error(path, "认不得的取值 '%s'%s" % [

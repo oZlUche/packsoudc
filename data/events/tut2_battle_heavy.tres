@@ -17,8 +17,8 @@ outcomes = Array[ExtResource("2_6wq6v")]([SubResource("Resource_2us5v")])
 [resource]
 script = ExtResource("5_v6gj3")
 id = &"tut2_battle_heavy"
-title = "重击手"
-text = "一把战锤，三秒一下，一下二十多点。血不多。
+title = "{enemy:bruiser}"
+text = "一把{item:warhammer}，{item_stat:warhammer:seconds} 秒一下，一下 {item_stat:warhammer:damage} 点。血不多。
 
-板甲的护盾能接住它头两三锤，趁这段时间把它放倒；塔盾减的那 {item_stat:tower_shield:armor} 点在它面前不算什么。"
+{item:plate_cuirass}的护盾能接住它头两三锤，趁这段时间把它放倒；{item:tower_shield}减的那 {item_stat:tower_shield:armor} 点在它面前不算什么。"
 options = Array[ExtResource("1_2xv6a")]([SubResource("Resource_lf172")])

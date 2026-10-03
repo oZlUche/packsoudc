@@ -34,6 +34,7 @@ const ABSTRACT_ROOTS := {
 	&"RunSkill": [&"run_skill"],
 	&"FaithDeed": [&"faith_deed"],
 	&"FaithPerk": [&"faith_perk"],
+	&"TechEffect": [&"tech_effect"],
 }
 
 ## 声明成裸 int、但语义上是枚举的属性，键为 `类名.属性名`。
@@ -125,6 +126,32 @@ static func property_names(obj: Object) -> Array[StringName]:
 #endregion
 
 
+#region 条件显示（111）
+## 这个字段现在该不该显示：资源上声明 `const FIELD_WHEN := {字段: {别的字段: [允许的值]}}`，逐条比对；
+## 没有这张表、或没列这个字段 → 永远显示。纯数据规则，表单与测试都问它，不在表单里认具体类
+static func field_visible(owner: Object, key: String) -> bool:
+	if owner == null or owner.get_script() == null:
+		return true
+	var consts: Dictionary = (owner.get_script() as Script).get_script_constant_map()
+	var when = consts.get("FIELD_WHEN", null)
+	if not (when is Dictionary) or not (when as Dictionary).has(key):
+		return true
+	var conds: Dictionary = when[key]
+	for other in conds:
+		var allowed: Array = conds[other]
+		if not allowed.has(owner.get(String(other))):
+			return false
+	return true
+
+
+## 这个字段的默认值（脚本里 `@export` 写的初值）；拿不到返回 null
+static func default_of(owner: Object, key: String) -> Variant:
+	if owner == null or owner.get_script() == null:
+		return null
+	return (owner.get_script() as Script).get_property_default_value(key)
+#endregion
+
+
 #region 枚举
 ## 把枚举名解析成整数。认得两种来源：
 ## 属性自带的 ENUM 提示，以及 [constant INT_ENUMS] 里登记的裸 int 属性。
@@ -182,6 +209,11 @@ static func enum_name(owner: Object, prop: Dictionary, value: int) -> Variant:
 ## 某个属性能接受哪些枚举名，供编辑器做下拉框。不是枚举则返回空。
 static func enum_options(owner: Object, prop: Dictionary) -> Array[String]:
 	var out: Array[String] = []
+	if int(prop["hint"]) == PROPERTY_HINT_ENUM and int(prop["type"]) in [TYPE_STRING, TYPE_STRING_NAME]:
+		# 111：字符串枚举（`@export_enum("tier", "active", "scaled") var mode: String`）—— 值就是这些字符串本身，原样返回
+		for v in String(prop["hint_string"]).split(","):
+			out.append(v.strip_edges())
+		return out
 	if int(prop["hint"]) == PROPERTY_HINT_ENUM:
 		for pair in String(prop["hint_string"]).split(","):
 			var bits := pair.split(":")

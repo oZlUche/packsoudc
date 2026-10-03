@@ -32,6 +32,10 @@ extends Resource
 @export var grant_filter: Array[StringName] = []
 ## 每个符合条件的邻居各得一份
 @export var grant_mods: Array[StatModifier] = []
+## 108（作者定）：给站在增益格上的邻居**挂规则**（毒箭挨着弓：弓每次出手附带一层中毒）。每个点亮的邻居各挂一份，
+## 规则以**邻居**的身份跑（`item_stat` 读邻居的、伤害包来源是邻居），触发器只许 `on_item_fired`、编译时绑成只听那个邻居。
+## 和 [member grant_mods] 互不排斥：两样都写就是「+20% 且附毒」
+@export var grant_rules: Array[AbilityRule] = []
 
 @export_group("受益：邻居给我加成")
 @export var receive_cells: Array[Vector2i] = []
@@ -41,7 +45,7 @@ extends Resource
 
 
 func has_grant() -> bool:
-	return not grant_cells.is_empty() and not grant_mods.is_empty()
+	return not grant_cells.is_empty() and (not grant_mods.is_empty() or not grant_rules.is_empty())
 
 
 func has_receive() -> bool:

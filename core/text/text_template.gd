@@ -13,9 +13,28 @@ extends RefCounted
 ## 表在 [constant UiPalette.STYLE_COLORS]，渲染前由 [method UiPalette.resolve_styles] 换成十六进制。
 ## 文本层不认识调色板（core 不依赖 ui）
 const STYLE_NAMES := ["fg", "dim", "hp", "shield", "stamina", "mana", "heal", "grant", "receive",
-	"warn", "danger", "good"]
+	"warn", "danger", "good", "faith"]
 ## 颜色名在 BBCode 里的前缀：`[color=@hp]`。界面查表换掉；没换的话 Godot 当成无效颜色，不会崩
 const STYLE_PREFIX := "@"
+## 112：道具名按稀有度上色用的颜色名前缀（`@rarity0`～`@rarity5`），界面按 [ItemPainter] 的稀有度色换
+const RARITY_STYLE := "rarity"
+
+## 112（作者定）：**带类型的占位符，颜色跟着类型走** —— 作者只写一个记号，不用手工包 `{c:…}`。
+## 前缀 → 颜色名（`item` 例外：按那件道具的稀有度）。全表见 docs/text-placeholders.md
+const TYPED_STYLES := {
+	"char": "hp",
+	"enemy": "danger",
+	"ui": "good",
+	"zone": "grant",
+	"key": "dim",
+	"item_stat": "fg",
+	"faith": "faith",     # 113
+}
+## 112：`{ui:…}` `{zone:…}` 的英文（界面切到英文时换；没登记的照原文）
+const TERMS_EN := {
+	"搜索": "Search", "开战": "Fight", "战前准备": "Pre-battle", "迎战": "Fight", "撤离": "Extract",
+	"暂存区": "Stash", "仓库": "Warehouse", "棋盘": "Board", "包": "Bag",
+}
 
 
 ## 替换占位符与样式码。[param ctx] 的值用 str() 转成文字
@@ -70,11 +89,102 @@ static func _expand(token: String, ctx: Dictionary) -> Variant:
 	var v: Variant = null
 	if token.begins_with("item_stat:"):
 		v = _item_stat(token, ctx)
-	elif ctx.has(token):
+		if v == null:
+			return null
+		var shown: Variant = _format(v, filter)
+		return _paint(String(shown), String(TYPED_STYLES["item_stat"])) if shown != null else null
+	if filter == "":
+		var typed: Variant = _typed(token, ctx)
+		if typed != null:
+			return typed
+	if ctx.has(token):
 		v = ctx[token]
 	if v == null:
 		return null
 	return _format(v, filter)
+
+
+## 112：带类型的占位符 → 上了色、加粗的文字；不是这一类返回 null
+static func _typed(token: String, ctx: Dictionary) -> Variant:
+	if token == "char":
+		var name := String(ctx.get("char_name", ""))
+		return _paint(name if name != "" else "你", String(TYPED_STYLES["char"]), false)
+	var colon := token.find(":")
+	if colon <= 0:
+		return null
+	var kind := token.substr(0, colon)
+	var arg := token.substr(colon + 1)
+	if arg == "":
+		return null
+	match kind:
+		"item":
+			var def := _items_of(ctx).get_def(StringName(arg))
+			if def == null:
+				return null
+			return _paint(Names.of(def), "%s%d" % [RARITY_STYLE, clampi(def.rarity, 0, 5)])
+		"enemy":
+			var e := _enemies_of(ctx).enemy(StringName(arg))
+			if e == null:
+				return null
+			return _paint(Names.of(e), String(TYPED_STYLES["enemy"]))
+		"ui", "zone":
+			var word := String(TERMS_EN.get(arg, arg)) if UiText.lang == "en" else arg
+			return _paint(word, String(TYPED_STYLES[kind]))
+		"key":
+			return _paint(arg, String(TYPED_STYLES["key"]))
+		"faith":
+			var f := _faiths_of(ctx).get(StringName(arg), null) as FaithDef
+			return _paint(Names.of(f), String(TYPED_STYLES["faith"])) if f != null else null
+		"faith_threshold", "faith_deed", "faith_offer", "faith_perk":
+			var n: Variant = _faith_stat(kind, arg, ctx)
+			return _paint(String(_format(n, "")), String(TYPED_STYLES["item_stat"])) if n != null else null
+	return null
+
+
+## 113：信仰定义里的数。`{faith_threshold:<神>:<阶>}` 第几阶的阈值；`{faith_deed:<神>:<行为类型>:<字段>}`、
+## `{faith_perk:<神>:<效果类型>:<字段>}` 按注册表名找构件；`{faith_offer:<神>:<标签>:<字段>}` 找认这个标签的献祭规则。
+## 字段的查找和 `{item_stat}` 同一套反射（[method _find_field]），只是起点换成那一个构件
+static func _faith_stat(kind: String, arg: String, ctx: Dictionary) -> Variant:
+	var parts := arg.split(":")
+	var def := _faiths_of(ctx).get(StringName(parts[0]), null) as FaithDef
+	if def == null:
+		return null
+	match kind:
+		"faith_threshold":
+			if parts.size() != 2 or not parts[1].is_valid_int():
+				return null
+			var n := int(parts[1])
+			return def.thresholds[n - 1] if n >= 1 and n <= def.thresholds.size() else null
+		"faith_deed", "faith_perk":
+			if parts.size() != 3:
+				return null
+			var pool: Array = def.deeds if kind == "faith_deed" else def.perks
+			for part in pool:
+				if part != null and String(ContentSchema.registry_name_of(part)) == parts[1]:
+					return _find_field(part, parts[2], 0)
+		"faith_offer":
+			if parts.size() != 3:
+				return null
+			for r in def.offerings:
+				if r != null and (r as OfferingRule).tags.has(StringName(parts[1])):
+					return _find_field(r, parts[2], 0)
+	return null
+
+
+static func _paint(text: String, style: String, bold: bool = true) -> String:
+	var inner := "[b]%s[/b]" % text if bold else text
+	return "[color=%s%s]%s[/color]" % [STYLE_PREFIX, style, inner]
+
+
+## 112：正文里引用了哪些道具 / 敌人 / 信仰（113 加 `{faith…:}`；`{item:id}` `{enemy:id}` `{item_stat:id:字段}`）→ [{kind, id}]。导入器拿它查 id
+static func refs(text: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var regex := RegEx.new()
+	regex.compile("\\{(item|enemy|item_stat|faith|faith_threshold|faith_deed|faith_offer|faith_perk):([^:}|]+)")
+	for m in regex.search_all(text):
+		var k := m.get_string(1)
+		out.append({"kind": "enemy" if k == "enemy" else ("faith" if k.begins_with("faith") else "item"), "id": m.get_string(2)})
+	return out
 
 
 ## 数 → 文字：整数值的 float 写成整数（`5.0` → `5`），其余照 str()。describe() 拼句用（Godot 的 % 不认 %g）
@@ -109,10 +219,7 @@ static func _item_stat(token: String, ctx: Dictionary) -> Variant:
 	var parts := token.split(":")
 	if parts.size() != 3:
 		return null
-	var db: Variant = ctx.get("_items", null)
-	if not (db is ItemDatabase):
-		db = _default_items()
-	var def := (db as ItemDatabase).get_def(StringName(parts[1]))
+	var def := _items_of(ctx).get_def(StringName(parts[1]))
 	if def == null:
 		return null
 	var found: Variant = _find_field(def.combat, parts[2], 0)
@@ -120,6 +227,36 @@ static func _item_stat(token: String, ctx: Dictionary) -> Variant:
 
 
 static var _items_cache: ItemDatabase = null
+static var _enemies_cache: EnemyDatabase = null
+
+
+## 道具库：ctx 的 `_items`（[method context_for] 放进去），没有就自己读一份
+static func _items_of(ctx: Dictionary) -> ItemDatabase:
+	var db: Variant = ctx.get("_items", null)
+	return db if db is ItemDatabase else _default_items()
+
+
+static var _faiths_cache: Dictionary = {}
+
+
+## 113：信仰定义 id → FaithDef：ctx 的 `_faiths`，没有就自己读一份
+static func _faiths_of(ctx: Dictionary) -> Dictionary:
+	var d: Variant = ctx.get("_faiths", null)
+	if d is Dictionary and not (d as Dictionary).is_empty():
+		return d
+	if _faiths_cache.is_empty():
+		_faiths_cache = FaithDef.load_all()
+	return _faiths_cache
+
+
+static func _enemies_of(ctx: Dictionary) -> EnemyDatabase:
+	var db: Variant = ctx.get("_enemies", null)
+	if db is EnemyDatabase:
+		return db
+	if _enemies_cache == null:
+		_enemies_cache = EnemyDatabase.new()
+		_enemies_cache.load_all()
+	return _enemies_cache
 
 
 static func _default_items() -> ItemDatabase:
@@ -185,10 +322,19 @@ static func context_for(run: RunState, node: MapNode = null, extra: Dictionary =
 		ctx["storage_count"] = run.storage.item_count() if run.storage != null else 0
 		var faith := run.active_faith()
 		ctx["faith"] = Names.of(faith) if faith != null else "无"
+		# 113：激活信仰现在的信力与阶（没激活 0 / 0）
+		ctx["faith_points"] = run.faith_power.points_of(faith.id) if faith != null and run.faith_power != null else 0
+		ctx["faith_tier"] = maxi(0, run.active_faith_tier()) if faith != null else 0
+		if not run.faith_defs.is_empty():
+			ctx["_faiths"] = run.faith_defs
 		ctx["difficulty"] = run.difficulty.display_name if run.difficulty != null and "display_name" in run.difficulty else "普通"
 		ctx["battles_won"] = int(run.tally.get("battles_won", 0))
 		ctx["battles_lost"] = int(run.tally.get("battles_lost", 0))
-		ctx["_items"] = run.items     # {item_stat:…} 用；以下划线开头的键不是给作者写的
+		ctx["_items"] = run.items     # {item_stat:…} {item:…} 用；以下划线开头的键不是给作者写的
+		if run.enemies != null:
+			ctx["_enemies"] = run.enemies     # 112：{enemy:…} 用
+		# 112：输一场普通战斗扣几点体力（节点规则的 loss_cost.battle）
+		ctx["loss_cost"] = int(run.node_rules.loss_cost.get("battle", 1)) if run.node_rules != null else 1
 	if node != null:
 		ctx["node_id"] = node.id
 		var type := NodeEvents.effective_type(node)

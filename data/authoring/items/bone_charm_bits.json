@@ -1,0 +1,15 @@
+{
+  "id": "bone_charm_bits",
+  "display_name": "碎骨串",
+  "display_names": {
+    "en": "Bone Trinket"
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "bone",
+    "material"
+  ]
+}

@@ -161,3 +161,27 @@ static func frame_codex_stack(t: TestCase, root: Window) -> void:
 	t.eq(plain.stack_layers(), 0, "没异体就不叠")
 	tile.queue_free()
 	plain.queue_free()
+
+
+static func run_internal_style_tags(t: TestCase) -> void:
+	t.begin("107 后续（作者定）：快攻 / 重击 / 重型留作内部标签 —— 敌人照旧按它挑武器，玩家哪儿都看不到")
+	for id in [&"rapid", &"burst", &"heavy"]:
+		t.check(TagRegistry.is_internal(id), "%s 是内部标签" % id)
+		t.check(TagRegistry.has(id), "%s 还登记着（没删）" % id)
+	for id in [&"weapon", &"melee", &"metal", &"remedy"]:
+		t.check(not TagRegistry.is_internal(id), "%s 照常给玩家看" % id)
+	t.check(not TagRegistry.is_internal(&"no_such_tag"), "没登记的标签不算内部（界面照原词显示）")
+	t.eq(TagRegistry.shown([&"weapon", &"rapid", &"metal"]), [&"weapon", &"metal"], "shown 去掉内部的、顺序不变")
+	var c := NS._content()
+	var saved := ItemTooltip.faith_probe
+	ItemTooltip.faith_probe = Callable()
+	for pair in [[&"knife", "快攻"], [&"warhammer", "重击"], [&"longbow", "快攻"]]:
+		var def := c.items.get_def(pair[0])
+		t.not_null(def, "有 %s" % pair[0])
+		if def == null:
+			continue
+		var text := String(ItemTooltip.describe_full(ItemInstance.create(def))["text"])
+		t.check(not text.contains(pair[1]), "%s 的悬浮窗不写「%s」" % [pair[0], pair[1]])
+		t.check(text.contains("标签："), "%s 的标签行还在（列别的标签）" % pair[0])
+	ItemTooltip.faith_probe = saved
+	t.check(Glossary.tag_terms([&"rapid", &"burst", &"heavy"]).is_empty(), "也不进词条侧窗")

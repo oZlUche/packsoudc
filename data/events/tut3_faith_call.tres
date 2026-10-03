@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_norlb"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_e8gh1"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/give_item.gd" id="3_mbrks"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="4_76k2b"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="5_gakcg"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="6_xubpb"]
+
+[sub_resource type="Resource" id="Resource_ium5k"]
+script = ExtResource("3_mbrks")
+item = &"charm_brute"
+
+[sub_resource type="Resource" id="Resource_1iy0e"]
+script = ExtResource("4_76k2b")
+text = "蛮神的护符在掌心发烫。先把它放进包里。"
+
+[sub_resource type="Resource" id="Resource_8h5w3"]
+script = ExtResource("1_norlb")
+label = "接过护符"
+tags = Array[StringName]([&"offering"])
+outcomes = Array[ExtResource("2_e8gh1")]([SubResource("Resource_ium5k"), SubResource("Resource_1iy0e")])
+
+[resource]
+script = ExtResource("6_xubpb")
+id = &"tut3_faith_call"
+title = "蛮神的低语"
+text = "祭坛上摆着一堆碎骨，血迹还没干透。你听见有人在耳边低吼：{b}杀，再杀。{/b}一枚骨制的护符从骨堆里滚到你脚边。
+
+这是一枚{b}信物{/b}：{item:charm_brute}，只占一格。{b}把它放进包里{/b}就算信了{faith:brute}（走之前就放：{zone:暂存区}里的东西会留在这个点上）；信了之后，地图左上会多一行「信力」，打仗、受伤、献祭都会让它涨，涨够了就升阶，阶越高神给的越多。"
+options = Array[ExtResource("1_norlb")]([SubResource("Resource_8h5w3")])

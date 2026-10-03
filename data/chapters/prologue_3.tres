@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="ChapterDef" format=3]
+
+[ext_resource type="Script" path="res://core/map/map_source.gd" id="1_pcqra"]
+[ext_resource type="Script" path="res://core/run/run_module.gd" id="2_6lpb8"]
+[ext_resource type="Script" path="res://core/run/chapter_def.gd" id="3_y33pl"]
+
+[sub_resource type="Resource" id="Resource_07ocq"]
+script = ExtResource("1_pcqra")
+mode = 1
+preset_path = "res://data/maps/tutorial3.json"
+
+[resource]
+script = ExtResource("3_y33pl")
+id = &"prologue_3"
+display_name = "序章三：祭坛"
+display_names = {
+"en": "Prologue III: The Altar"
+}
+map_source = SubResource("Resource_07ocq")
+drop_rule = &"standard"
+node_rules = &"prologue"
+economy_rules = &"prologue"
+order = 2
+requires_unlock = &"prologue2_done"
+grants_unlock = &"prologue3_done"
+characters = Array[StringName]([&"brutus"])
+hidden_by_unlock = &"prologue3_done"
+vitality_bonus = 2
+starting_items = Array[StringName]([&"shortsword"])
+starting_keepsakes = Array[StringName]([&"spyglass"])
+allow_carry_in = false
+auto_spawn = true
+skip_setup = true
+intro_event = &"tut3_intro"
+rules = Array[String](["{item:charm_brute}放进包里就是信{faith:brute}；最后放下的那枚信物说了算。", "神坛上献祭和特殊操作二选一，用了这个神坛就关。", "换神不花钱：放下另一枚信物，或右键它。"])
