@@ -3781,7 +3781,7 @@ res://
 全局类缓存是编辑器扫脚本生成的**生成物**，提交它等于拿版本控制当分发渠道 ——
 每加一个 `class_name` 都要记得提交、两个分支各加一个就冲突、跑完测试工作区就脏。
 三条用得到它的路各自解决：编辑器打开项目时自己重建；`tools/test.sh` 每次先 `--import`；
-不开编辑器直接跑游戏走 `tools/run_game.sh` / `.bat`（也是先 `--import`）。
+不开编辑器也直接跑即可（115）：`DevNav`（autoload，代码里不引用任何项目全局类，缓存全坏也解析得了）发现缺类就盖一屏「正在重建」，`OS.create_process` 后台 `--headless --path <根> --import`，`_process` 里轮询，导完带原用户参数加 `cache-rebuilt` 重开自己并退出；重开过还缺（导入失败）就回落红字、不循环。门是「非导出包、`Engine.is_editor_hint()` 为假」—— 不能用 `OS.has_feature("editor")`，编辑器版 Godot 直接跑游戏时它也是真。`tools/run_game.sh` / `.bat` 可选，省一次重启。
 `DevNav` 的缺类自检因此只在**非编辑器**运行时提示（编辑器里缓存必然是新的，提示只会是误报）。
 
 ---
@@ -3876,6 +3876,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.32 | 2026-10-03 | **缓存过期时游戏自己重导、自己重开**（报告 115，作者定）：`DevNav._check_class_cache` 从「红字提示」改成自救（后台 `--import` → 带原参数加 `cache-rebuilt` 重开 → 再缺才红字）；纯函数 `import_args` / `relaunch_args` / `already_rebuilt`；门从 `OS.has_feature("editor")` 改成 `Engine.is_editor_hint()`（前者在编辑器版直接跑游戏时也为真，原来的自检对作者那条路从没生效）；`DevNav` 去掉对 `UiPalette` 的引用（缓存全空时它自己先解析失败，实测）。本地双击 / 快捷方式启动即可，`run_game` 改为可选 |
 | v2.31 | 2026-10-03 | **百科框架**（报告 114 第五节，作者定：框架在这里，机制页文案由别的线程写）。新内容种类 `help_pages`（`HelpPageDef`：标题、分类、正文、相关、相关道具；导入查分类、道具、文本引用，全部导完后查「相关」）；`Encyclopedia` 把机制页与自动生成的词条页（固定词条、标签、伤害类型、buff、属性 / 乘区 / 时机）排成一张目录，正文认得的词画成 `[url=页 id]` 链接，搜索标题与正文，「相关道具」按图鉴遮名字；新屏 `Screen.ENCYCLOPEDIA`（左栏搜索 + 目录、右栏一页、「上一页」浏览栈），入口在主菜单与地图的暂停菜单（嵌进遮罩，Esc 先关百科）。写法见 `docs/encyclopedia.md` |
 | v2.30 | 2026-10-03 | **合成改「拖到上面立刻合」+ 序章一教合成 + 序章后只有自由模式**（报告 114，作者定）。合成：去掉 087 的相邻即合 / 到点结算，`CraftingModule.craft(a, b_uid)` 立刻合、产物落在被压那件的位置、装不下进暂存区，`done(detail)`；`DragLayer.craft_drop` / `craft_grid` 恢复绿预览（只在一局的作战棋盘上，别处照常顶替）；结果屏不再排「合成」页，提示在整理面板上。序章一：拾荒者必掉匕首、点 3 第一次搜到毒药瓶，精英门要涂毒匕首（灰显 + `hint_when_hidden`），没有匕首时退路选项出现（`has_item.missing`）；规则卡三条。`chapter_01` → `free_mode`（自由模式），`IdAliases.CHAPTERS`、`RunSave.load_chapter` / `GameFlow.chapter_of` / `MetaState` 按章节记的账认老名字 |
 | v2.29 | 2026-10-03 | **序章三「祭坛」：教信仰全套**（报告 113，作者定）。新章 `prologue_3`（序章二通关开、撤离后直接进；第一章改为要 `prologue3_done`，排第四），预设图 `tutorial3.json` 一条线 9 个点：蛮神的低语（发护符）→ 劫匪（选项门禁 `faith_active`）→ 搜三件（骨骰子 / 碎骨串 / 胫骨大棒）→ 神坛 A 献祭过 1 阶 → 日神的低语（换神、休眠、两边信力各记各的）→ 蛮兵（门禁 `faith_active{faith: brute}`，逼一次切回）→ 神坛 B 特殊操作二选一 → 撤离。数值用真的战斗走一遍验：献祭后在 1 阶、第二场打完到 2 阶。机制：`FaithActive.faith`（只认一位神）；`EventOption.hint_when_hidden`（条件没过时说为什么，藏起来的选项在事件屏底部灰字）；信仰占位符 `{faith:id}`（新色 `faith`）、`{faith_threshold}` `{faith_deed}` `{faith_offer}` `{faith_perk}` `{faith_points}` `{faith_tier}`，导入时查信仰 id。新道具两件骨头祭品（无战斗属性，稀有度 3 / 2 —— 献祭点数按 2^稀有度 × 倍数） |
