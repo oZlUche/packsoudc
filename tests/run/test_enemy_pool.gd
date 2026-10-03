@@ -22,7 +22,7 @@ static func _enemies() -> EnemyDatabase:
 
 
 static func _chapter() -> ChapterDef:
-	return load(ContentPaths.asset_file("chapters", "chapter_01")) as ChapterDef
+	return load(ContentPaths.asset_file("chapters", "free_mode")) as ChapterDef
 
 
 ## 上下文里装满真道具与真敌人，好让「对着别的东西查」的校验生效

@@ -25,7 +25,7 @@ static func _content() -> Content:
 	c.enemies.load_all()
 	c.sets = SetDatabase.new()
 	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "chapter_01"))
+	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
 	c.loadouts = GameFlow.load_loadouts()
 	return c
 
@@ -255,7 +255,7 @@ static func frame_map_prompt(t: TestCase, root: Window) -> void:
 	flow.new_run()
 	var setup = game.base()
 	for gi in setup._chapters.size():
-		if setup._chapters[gi].id == &"chapter_01":
+		if setup._chapters[gi].id == &"free_mode":
 			setup.choose_chapter(gi)
 	# 067：开局屏按角色开；把第一套（发进仓库的）全带上
 	for inst in flow.meta.warehouse.items().duplicate():

@@ -1,0 +1,301 @@
+[gd_resource type="Resource" script_class="ChapterDef" format=3]
+
+[ext_resource type="Script" path="res://core/map/generators/ring_spec.gd" id="1_0rgu0"]
+[ext_resource type="Script" path="res://core/map/generators/route_style.gd" id="2_jm2xb"]
+[ext_resource type="Script" path="res://core/map/generators/map_scale_profile.gd" id="3_t1rkx"]
+[ext_resource type="Script" path="res://core/map/generators/ring_map_config.gd" id="4_s363k"]
+[ext_resource type="Script" path="res://core/map/zone_rules.gd" id="5_8lx42"]
+[ext_resource type="Script" path="res://core/map/generators/danger_zone_spec.gd" id="6_befhx"]
+[ext_resource type="Script" path="res://core/map/map_source.gd" id="7_mlnuv"]
+[ext_resource type="Script" path="res://core/run/run_module.gd" id="8_w0cgh"]
+[ext_resource type="Script" path="res://core/run/chapter_def.gd" id="9_vwuer"]
+
+[sub_resource type="Resource" id="Resource_appe0"]
+script = ExtResource("1_0rgu0")
+quota = {
+"elite": [0, 2],
+"rest": [1, 2],
+"shop": [0, 1]
+}
+type_weights = {
+"battle": 3,
+"elite": 1,
+"event": 3,
+"random": 2,
+"search": 3
+}
+
+[sub_resource type="Resource" id="Resource_5fvnt"]
+script = ExtResource("1_0rgu0")
+kind = &"outskirts"
+slots = 19
+node_count = 11
+quota = {
+"elite": [0, 2],
+"rest": [1, 2],
+"shop": [0, 1]
+}
+type_weights = {
+"battle": 3,
+"elite": 1,
+"event": 3,
+"random": 2,
+"search": 3
+}
+
+[sub_resource type="Resource" id="Resource_sst5s"]
+script = ExtResource("1_0rgu0")
+kind = &"ruins"
+slots = 16
+node_count = 10
+quota = {
+"elite": [0, 2],
+"rest": [1, 2],
+"shop": [0, 1]
+}
+type_weights = {
+"battle": 3,
+"elite": 1,
+"event": 3,
+"random": 2,
+"search": 3
+}
+
+[sub_resource type="Resource" id="Resource_2bx78"]
+script = ExtResource("1_0rgu0")
+kind = &"depths"
+slots = 16
+node_count = 10
+quota = {
+"elite": [0, 2],
+"rest": [1, 2],
+"shop": [0, 1]
+}
+type_weights = {
+"battle": 3,
+"elite": 1,
+"event": 3,
+"random": 2,
+"search": 3
+}
+
+[sub_resource type="Resource" id="Resource_kobgp"]
+script = ExtResource("1_0rgu0")
+kind = &"core_ring"
+slots = 12
+node_count = 7
+quota = {
+"elite": [0, 2],
+"rest": [1, 2],
+"shop": [0, 1]
+}
+type_weights = {
+"battle": 3,
+"elite": 1,
+"event": 3,
+"random": 2,
+"search": 3
+}
+
+[sub_resource type="Resource" id="Resource_4nn0s"]
+script = ExtResource("1_0rgu0")
+kind = &"inner"
+slots = 6
+node_count = 5
+quota = {
+"elite": [0, 2],
+"rest": [1, 2],
+"shop": [0, 1]
+}
+type_weights = {
+"battle": 3,
+"elite": 1,
+"event": 3,
+"random": 2,
+"search": 3
+}
+
+[sub_resource type="Resource" id="Resource_lq18u"]
+script = ExtResource("1_0rgu0")
+kind = &"inner"
+slots = 6
+node_count = 5
+quota = {
+"elite": [0, 2],
+"rest": [1, 2],
+"shop": [0, 1]
+}
+type_weights = {
+"battle": 3,
+"elite": 1,
+"event": 3,
+"random": 2,
+"search": 3
+}
+
+[sub_resource type="Resource" id="Resource_m5125"]
+script = ExtResource("2_jm2xb")
+id = &"combat"
+mix = {
+"battle": 5,
+"elite": 1,
+"event": 1
+}
+risk_band = Vector2(1.2, 1.9)
+reward_band = Vector2(1.2, 1.9)
+
+[sub_resource type="Resource" id="Resource_13bee"]
+script = ExtResource("2_jm2xb")
+id = &"search"
+mix = {
+"event": 1,
+"search": 4
+}
+min_share = {
+"search": 0.8
+}
+risk_band = Vector2(0.15, 0.6)
+reward_band = Vector2(0.15, 0.6)
+ends_at = &"extract"
+spawns_zones = false
+
+[sub_resource type="Resource" id="Resource_i8tco"]
+script = ExtResource("2_jm2xb")
+id = &"mixed"
+mix = {
+"battle": 2,
+"event": 2,
+"search": 2
+}
+risk_band = Vector2(0.8, 1.3)
+reward_band = Vector2(0.8, 1.3)
+
+[sub_resource type="Resource" id="Resource_414d1"]
+script = ExtResource("3_t1rkx")
+id = &"small"
+display_name = "小型（4~5 环）"
+nodes_by_rings = {
+"4": [25, 30],
+"5": [35, 40]
+}
+extract_gap = 3
+haven_at = {
+"rest": 0.5,
+"shop": 0.5
+}
+step_limit = 36
+carry_budget = 600
+
+[sub_resource type="Resource" id="Resource_qpydc"]
+script = ExtResource("3_t1rkx")
+id = &"medium"
+display_name = "中型（6~8 环）"
+rings = Vector2i(6, 8)
+entries = Vector2i(3, 4)
+zones = Vector2i(1, 3)
+zone_size = Vector2i(3, 6)
+pivots = Vector2i(1, 2)
+nodes_by_rings = {
+"6": [45, 50],
+"7": [58, 66],
+"8": [74, 84]
+}
+haven_at = {
+"rest": 0.333333333333333,
+"shop": 0.666666666666667
+}
+step_limit = 60
+carry_budget = 900
+
+[sub_resource type="Resource" id="Resource_8w064"]
+script = ExtResource("3_t1rkx")
+id = &"large"
+display_name = "大型（占位）"
+rings = Vector2i(9, 12)
+entries = Vector2i(3, 3)
+zones = Vector2i(1, 4)
+zone_size = Vector2i(3, 9)
+pivots = Vector2i(2, 3)
+nodes_by_rings = {
+"10": [105, 122],
+"11": [124, 144],
+"12": [149, 174],
+"9": [86, 100]
+}
+extract_gap = 5
+extract_bands = 2
+haven_at = {
+"rest": 0.333333333333333,
+"shop": 0.666666666666667
+}
+placeholder = true
+step_limit = 90
+carry_budget = 1200
+
+[sub_resource type="Resource" id="Resource_40h42"]
+script = ExtResource("5_8lx42")
+
+[sub_resource type="Resource" id="Resource_csf5d"]
+script = ExtResource("6_befhx")
+
+[sub_resource type="Resource" id="Resource_vjf8n"]
+script = ExtResource("4_s363k")
+rings = Array[ExtResource("1_0rgu0")]([SubResource("Resource_5fvnt"), SubResource("Resource_sst5s"), SubResource("Resource_2bx78"), SubResource("Resource_kobgp"), SubResource("Resource_4nn0s"), SubResource("Resource_lq18u")])
+ring_template = SubResource("Resource_appe0")
+scales = Array[ExtResource("3_t1rkx")]([SubResource("Resource_414d1"), SubResource("Resource_qpydc"), SubResource("Resource_8w064")])
+routes = Array[ExtResource("2_jm2xb")]([SubResource("Resource_m5125"), SubResource("Resource_13bee"), SubResource("Resource_i8tco")])
+type_risk = {
+"battle": 1,
+"core": 3,
+"elite": 2.2,
+"event": 0.3,
+"extract": 0,
+"random": 0.8,
+"rest": 0,
+"search": 0.4,
+"shop": 0,
+"spawn": 0
+}
+type_reward = {
+"battle": 1,
+"core": 5,
+"elite": 3,
+"event": 0.6,
+"extract": 0,
+"random": 0.8,
+"rest": 0.3,
+"search": 0.6,
+"shop": 0.5,
+"spawn": 0
+}
+ev_tolerance = 0.25
+coverage = {
+"rest": 3,
+"shop": 6
+}
+no_adjacent = [["elite", "elite"], ["shop", "shop"]]
+zone_spec = SubResource("Resource_csf5d")
+zone_rules = SubResource("Resource_40h42")
+
+[sub_resource type="Resource" id="Resource_rgi50"]
+script = ExtResource("7_mlnuv")
+generator_config = SubResource("Resource_vjf8n")
+
+[resource]
+script = ExtResource("9_vwuer")
+id = &"free_mode"
+display_name = "自由模式"
+display_names = {
+"en": "Free Mode"
+}
+map_source = SubResource("Resource_rgi50")
+enemy_pool = &"standard_ruins"
+drop_rule = &"standard"
+node_rules = &"standard"
+economy_rules = &"standard"
+order = 3
+requires_unlock = &"prologue3_done"
+rules = Array[String](["环形的魔法古迹：从外环的出生点进去，越往里越危险、也越值钱。撤离点只在外面几环；核心在最里面，打赢了直接撤离结算。", "地图随机，每一局都不同。全局倒计时每走一步减一，归零就是行动失败；过半时离出生点最近的免费撤离点关闭（地图上标着），留意倒计时。", "走出一个点，那里的暂存区留在原地，能回来拿；撤离只带走棋盘上的。商店、保险箱、休息点都在地图上，停上去看浮窗；保险箱里的东西行动失败也带得出。"])
+step_limit = 36
+safes = 1
+carry_budget = 600

@@ -1,13 +1,50 @@
 {
   "id": "tut_elite",
   "title": "守卫",
-  "text": "最后一道门有精英守着：更硬，带的东西也更好。输给精英扣的体力更多。\n\n和刚才一样先进{ui:战前准备}：看清对手的棋盘，把新搜到的也放进包里，调整好位置再按{ui:开战}。",
+  "text": "最后一道门有精英守着：更硬，带的东西也更好。输给精英扣的体力更多。\n\n和刚才一样先进{ui:战前准备}：看清对手的棋盘，把新搜到的也放进包里，调整好位置再按{ui:开战}。\n\n它披着甲，普通刀剑每下都要被削掉一截；{item:poisoned_knife}的毒不看这个。",
   "options": [
     {
       "label": "进入战前准备",
+      "hint_when_hidden": "先把{item:poison_vial}拖到{item:knife}上面合成{item:poisoned_knife}（按 {key:B} 打开背包）。",
+      "requires": [
+        {
+          "type": "has_item",
+          "item": "poisoned_knife"
+        }
+      ],
       "outcomes": [
         {
           "type": "proceed"
+        }
+      ]
+    },
+    {
+      "label": "手里没有{item:knife}，就这么上",
+      "hide_when_locked": true,
+      "requires": [
+        {
+          "type": "has_item",
+          "item": "knife",
+          "missing": true
+        },
+        {
+          "type": "has_item",
+          "item": "poisoned_knife",
+          "missing": true
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "proceed"
+        }
+      ]
+    },
+    {
+      "label": "我先整理一下背包",
+      "outcomes": [
+        {
+          "type": "next_event",
+          "event": "tut_elite"
         }
       ]
     }

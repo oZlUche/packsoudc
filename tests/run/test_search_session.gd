@@ -9,7 +9,7 @@ static func _items() -> ItemDatabase:
 
 
 static func _rules() -> SearchRules:
-	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "chapter_01"))
+	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
 	var nr: NodeRules = load(ContentPaths.asset_file("node_rules", String(chapter.node_rules)))
 	return nr.search
 

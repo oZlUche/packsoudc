@@ -1,24 +1,63 @@
 [gd_resource type="Resource" script_class="EventDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_ihfc4"]
-[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_x7s61"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="3_0mh2h"]
-[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_qjp6d"]
-[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_atyw6"]
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_0mh2h"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_qjp6d"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="3_atyw6"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_6gsw8"]
+[ext_resource type="Script" path="res://core/run/events/conditions/has_item.gd" id="5_3rytr"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/next_event.gd" id="6_xotvq"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="7_3yd0j"]
 
-[sub_resource type="Resource" id="Resource_6gsw8"]
-script = ExtResource("3_0mh2h")
+[sub_resource type="Resource" id="Resource_j8tyq"]
+script = ExtResource("3_atyw6")
 
-[sub_resource type="Resource" id="Resource_3rytr"]
-script = ExtResource("1_ihfc4")
+[sub_resource type="Resource" id="Resource_2bubv"]
+script = ExtResource("5_3rytr")
+item = &"poisoned_knife"
+
+[sub_resource type="Resource" id="Resource_rvsn3"]
+script = ExtResource("1_0mh2h")
 label = "进入战前准备"
-outcomes = Array[ExtResource("2_x7s61")]([SubResource("Resource_6gsw8")])
+hint_when_hidden = "先把{item:poison_vial}拖到{item:knife}上面合成{item:poisoned_knife}（按 {key:B} 打开背包）。"
+requires = Array[ExtResource("4_6gsw8")]([SubResource("Resource_2bubv")])
+outcomes = Array[ExtResource("2_qjp6d")]([SubResource("Resource_j8tyq")])
+
+[sub_resource type="Resource" id="Resource_3tq8t"]
+script = ExtResource("3_atyw6")
+
+[sub_resource type="Resource" id="Resource_y6bsp"]
+script = ExtResource("5_3rytr")
+item = &"knife"
+missing = true
+
+[sub_resource type="Resource" id="Resource_k66jj"]
+script = ExtResource("5_3rytr")
+item = &"poisoned_knife"
+missing = true
+
+[sub_resource type="Resource" id="Resource_451ot"]
+script = ExtResource("1_0mh2h")
+label = "手里没有{item:knife}，就这么上"
+hide_when_locked = true
+requires = Array[ExtResource("4_6gsw8")]([SubResource("Resource_y6bsp"), SubResource("Resource_k66jj")])
+outcomes = Array[ExtResource("2_qjp6d")]([SubResource("Resource_3tq8t")])
+
+[sub_resource type="Resource" id="Resource_ejimk"]
+script = ExtResource("6_xotvq")
+event = &"tut_elite"
+
+[sub_resource type="Resource" id="Resource_5e0yo"]
+script = ExtResource("1_0mh2h")
+label = "我先整理一下背包"
+outcomes = Array[ExtResource("2_qjp6d")]([SubResource("Resource_ejimk")])
 
 [resource]
-script = ExtResource("5_atyw6")
+script = ExtResource("7_3yd0j")
 id = &"tut_elite"
 title = "守卫"
 text = "最后一道门有精英守着：更硬，带的东西也更好。输给精英扣的体力更多。
 
-和刚才一样先进{ui:战前准备}：看清对手的棋盘，把新搜到的也放进包里，调整好位置再按{ui:开战}。"
-options = Array[ExtResource("1_ihfc4")]([SubResource("Resource_3rytr")])
+和刚才一样先进{ui:战前准备}：看清对手的棋盘，把新搜到的也放进包里，调整好位置再按{ui:开战}。
+
+它披着甲，普通刀剑每下都要被削掉一截；{item:poisoned_knife}的毒不看这个。"
+options = Array[ExtResource("1_0mh2h")]([SubResource("Resource_rvsn3"), SubResource("Resource_451ot"), SubResource("Resource_5e0yo")])

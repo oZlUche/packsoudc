@@ -29,7 +29,7 @@ static func _content() -> Content:
 	c.sets.load_dir()
 	c.chapter = load(ContentPaths.asset_file("chapters", "prologue_3"))
 	c.prologue2 = load(ContentPaths.asset_file("chapters", "prologue_2"))
-	c.chapter1 = load(ContentPaths.asset_file("chapters", "chapter_01"))
+	c.chapter1 = load(ContentPaths.asset_file("chapters", "free_mode"))
 	for ch in GameFlow.load_characters():
 		if ch.id == &"brutus":
 			c.brutus = ch
@@ -63,16 +63,16 @@ static func _option(def: EventDef, label: String) -> int:
 
 
 static func run_data(t: TestCase) -> void:
-	t.begin("序章三 · 数据：序章二通关才开、通关收起、解锁第一章；序章二撤离直接进它；一条线 9 个点；两件骨头祭品没有战斗属性")
+	t.begin("序章三 · 数据：序章二通关才开、通关收起、解锁自由模式；序章二撤离直接进它；一条线 9 个点；两件骨头祭品没有战斗属性")
 	var c := _content()
 	t.not_null(c.chapter, "有序章三")
 	if c.chapter == null:
 		return
 	t.eq(c.chapter.requires_unlock, c.prologue2.grants_unlock, "要序章二通关")
-	t.eq(c.chapter.grants_unlock, c.chapter1.requires_unlock, "通关才开第一章")
+	t.eq(c.chapter.grants_unlock, c.chapter1.requires_unlock, "通关才开自由模式")
 	t.eq(c.chapter.hidden_by_unlock, c.chapter.grants_unlock, "通关就收起")
 	t.eq(c.prologue2.next_chapter, c.chapter.id, "序章二撤离直接进序章三")
-	t.check(c.prologue2.order < c.chapter.order and c.chapter.order < c.chapter1.order, "顺序：序章二、序章三、第一章")
+	t.check(c.prologue2.order < c.chapter.order and c.chapter.order < c.chapter1.order, "顺序：序章二、序章三、自由模式")
 	t.check(c.chapter.skip_setup and c.chapter.auto_spawn and c.chapter.intro_event == &"tut3_intro", "不走开局屏、先过 intro")
 	t.eq(c.chapter.rules.size(), 3, "规则卡三条")
 	var g := c.chapter.map_source.resolve(1)
@@ -230,7 +230,7 @@ static func run_walkthrough(t: TestCase) -> void:
 
 
 static func run_gating(t: TestCase) -> void:
-	t.begin("序章三 · 教程顺序 1 → 2 → 3 → 第一章：序章二通关只列序章三，序章三通关才列第一章")
+	t.begin("序章三 · 教程顺序 1 → 2 → 3 → 自由模式（114）：序章二通关只列序章三，序章三通关只剩自由模式、新的一局进开局屏")
 	var c := _content()
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = GameFlow.load_chapters()
@@ -249,8 +249,13 @@ static func run_gating(t: TestCase) -> void:
 	t.check(not f.tutorials_done(), "教程还没全通")
 	f.meta.grant_unlock(&"prologue3_done")
 	avail = f.available_chapters()
-	t.check(avail.size() == 1 and avail[0].id == &"chapter_01", "序章三通关后只剩第一章")
+	t.check(avail.size() == 1 and avail[0].id == &"free_mode", "序章三通关后只剩自由模式")
 	t.check(f.tutorials_done(), "教程全通")
+	t.is_null(f.new_run_target(), "新的一局不直接开：进开局屏挑角色、规模")
+	t.eq(Names.of(avail[0]), "自由模式", "显示名")
+	t.eq(f.chapter_of(&"chapter_01"), avail[0], "老存档里的 chapter_01 认得出是自由模式（IdAliases）")
+	var old := RunSave.load_chapter(&"chapter_01")
+	t.check(old != null and old.id == &"free_mode", "读档按老 id 也载得到")
 	RunSave.remove(SAVE)
 	MetaSave.remove(META)
 

@@ -66,7 +66,7 @@ static func run_compile_golden(t: TestCase) -> void:
 
 ## 这位神的那一局：固定种子、固定棋盘、点满到最高阶
 static func _run_for(c: Dictionary, faith: StringName) -> RunState:
-	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "chapter_01"))
+	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
 	var items: ItemDatabase = c["items"]
 	var run := RunState.start(chapter, SEED, items, c["enemies"], c["sets"])
 	if run == null:

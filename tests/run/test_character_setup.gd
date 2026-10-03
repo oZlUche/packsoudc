@@ -27,7 +27,7 @@ static func _content() -> Content:
 	c.enemies.load_all()
 	c.sets = SetDatabase.new()
 	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "chapter_01"))
+	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
 	c.loadouts = GameFlow.load_loadouts()
 	c.characters = GameFlow.load_characters()
 	c.rules = GameFlow.load_meta_rules()
@@ -296,7 +296,7 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 	flow.new_run()
 	var setup = game.base()
 	for gi in setup._chapters.size():
-		if setup._chapters[gi].id == &"chapter_01":
+		if setup._chapters[gi].id == &"free_mode":
 			setup.choose_chapter(gi)
 	t.eq(setup.screen, GameFlow.Screen.SETUP, "→ 开局屏")
 	# 反馈（紧急）：左列比窗口还高，列尾的「出发」被挤出屏幕，开局没有入口 —— 「进入」钉在右下角，窗口再矮也在屏内
@@ -429,7 +429,7 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 	var setup = game.base()
 	t.eq(setup.screen, GameFlow.Screen.SETUP, "→ 开局屏")
 	for gi in setup._chapters.size():
-		if setup._chapters[gi].id == &"chapter_01":
+		if setup._chapters[gi].id == &"free_mode":
 			setup.choose_chapter(gi)
 	t.eq(setup.stash.item_count(), 3, "三件都进了暂存区")
 	t.check(not flow.meta.has_pending_board(), "带回来的棋盘空了（东西挪到了暂存区）")
@@ -474,7 +474,7 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 	flow.new_run()
 	setup = game.base()
 	for gi in setup._chapters.size():
-		if setup._chapters[gi].id == &"chapter_01":
+		if setup._chapters[gi].id == &"free_mode":
 			setup.choose_chapter(gi)
 	t.eq(setup.stash.item_count(), 2, "又进了暂存区")
 	t.check(setup.carry_in(uids[0]), "带上一件")

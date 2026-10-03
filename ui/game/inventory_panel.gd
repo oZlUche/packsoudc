@@ -73,7 +73,7 @@ func _build() -> void:
 		if tip != null:
 			tip.hide_tip())
 	left.add_child(_stamina)
-	_hint = _label("左键拖动　双击快速置入　R 旋转　右键 / Esc 取消　右键信物 = 奉为主信仰　压着别人放手会把人顶出来　放到棋盘外就进暂存区", 11, UiPalette.DIM)
+	_hint = _label("左键拖动　双击快速置入　R 旋转　右键 / Esc 取消　右键信物 = 奉为主信仰　拖到能合成的那件上 = 合成　压着别人放手会把人顶出来　放到棋盘外就进暂存区", 11, UiPalette.DIM)
 	left.add_child(_hint)
 
 	var right := VBoxContainer.new()
@@ -96,13 +96,15 @@ func _build() -> void:
 	_drag.stash = _run.storage
 	_drag.drop_outside_to_stash = true     # 084：棋盘外的空间全都是暂存区
 	_drag.items_displaced.connect(_on_displaced)
-	# 087 合成（作者定）：相邻即合 —— 棋盘上两件有配方的挨着，走到下一个点时自动合成；拖起一件时能合的那几件高光，
-	# 挨上了画「合」并提示一句
+	# 114 合成（作者定）：拖到上面立刻合 —— 拖起一件时能合的那几件高光；压到其中一件上放手，两件立刻变成产物
 	var crafting := CraftingModule.of(_run)     # 101：合成是一局的模块
 	_drag.craft = func(a: ItemInstance, b: ItemInstance) -> ItemDef:
 		return crafting.output_of(a.def, b.def) if crafting != null else null
-	_run.board.changed.connect(_refresh_badges)
-	_refresh_badges()
+	if crafting != null:
+		_drag.craft_grid = _run.board
+		_drag.craft_drop = func(a: ItemInstance, b_uid: int) -> bool:
+			return bool(crafting.craft(a, b_uid)["ok"])
+		crafting.done.connect(_on_crafted)
 	# 084：停在道具上的悬浮说明（名、稀有度、标签、效果、武器的冷却与 DPS、槽）
 	tip = HoverTip.new(_font)
 	add_child(tip)
@@ -145,26 +147,11 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 	return false
 
 
-var _pair_keys: Dictionary = {}
-
-
-## 相邻、有配方的两件都画「合」；新挨上一对就提示一句
-func _refresh_badges() -> void:
-	var marks := {}
-	var keys := {}
-	for pair in (CraftingModule.of(_run).pairs() if CraftingModule.of(_run) != null else []):
-		var a: ItemInstance = pair[0]
-		var b: ItemInstance = pair[1]
-		var out: ItemDef = pair[2]
-		marks[a.uid] = "合"
-		marks[b.uid] = "合"
-		var key := "%d:%d" % [a.uid, b.uid]
-		keys[key] = true
-		if not _pair_keys.has(key):
-			_hint_text("「%s」和「%s」挨在一起：走到下一个点时合成「%s」" % [Names.of(a.def), Names.of(b.def), Names.of(out)])
-	_pair_keys = keys
-	board_view.badges = marks
-	board_view.queue_redraw()
+## 114：合成了：提示一句产物（装不下进了暂存区也说）
+func _on_crafted(detail: Dictionary) -> void:
+	if not is_inside_tree():
+		return
+	_hint_text(" ".join(PackedStringArray(detail.get("log", []))))
 
 
 func _hint_text(text: String) -> void:

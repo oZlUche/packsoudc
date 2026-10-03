@@ -259,7 +259,7 @@ static func frame_run_container_screen(t: TestCase, root: Window) -> void:
 	enemies.load_all()
 	var sets := SetDatabase.new()
 	sets.load_dir()
-	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "chapter_01"))
+	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
 	var f := GameFlow.new(db, enemies, sets, MetaState.new())
 	f.chapters = [chapter] as Array[ChapterDef]
 	var run: RunState = null
