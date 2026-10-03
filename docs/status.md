@@ -71,7 +71,7 @@
 
 ## 测试
 
-86 个套件、12980 项断言，机器空闲时 60～180 秒（开着别的 Godot 编辑器会到 4 分钟，超时放到 480 秒）。
+86 个套件、13060 项断言，机器空闲时 60～180 秒（开着别的 Godot 编辑器会到 4 分钟，超时放到 480 秒）。
 套件按层分目录：`tests/inventory` / `battle` / `map` / `run` / `meta` / `ui` / `authoring`，跑器自动发现（102）。
 `tests/test_layering.gd` 按源码守依赖方向（101 第 5 刀）：`core/` 里不许出现 `ui/` 的类名，`core/battle` / `inventory` / `sets` 里不许出现 `core/run` 的 —— 这类错编译不红。
 

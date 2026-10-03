@@ -24,6 +24,8 @@ const LINE := Color("2a2f38")
 
 const HP := Color("d9534f")
 const SHIELD := Color("5bc0de")
+## 106（作者定）：护盾不再是独立的一条，而是生命条外侧的一圈粗白框 —— 这是那圈框的颜色
+const SHIELD_FRAME := Color("f2f6ff")
 const STAMINA := Color("f0ad4e")
 const MANA := Color("7a8cf0")
 const HEAL := Color("5cb85c")

@@ -9,6 +9,8 @@ extends CombatEffect
 @export var fixed: float = 3.0
 @export var percent: int = 30
 @export var target: Target = Target.OPPONENT
+## 106 第八节：附魔是武器出手带的，所以默认是直接伤害（吃防护）。−1 按来源定，0 / 1 强制
+@export var direct_override: int = -1
 
 
 func apply(ctx: RuleContext) -> void:
@@ -18,7 +20,8 @@ func apply(ctx: RuleContext) -> void:
 	if raw <= 0:
 		return
 	for victim in resolve_targets(ctx, target):
-		DamageResolver.resolve(ctx.battle, DamagePacket.create(DamageTypes.FIRE, raw, victim, ctx.owner.side, ctx.source_uid()))
+		DamageResolver.resolve(ctx.battle, DamagePacket.create(
+			DamageTypes.FIRE, raw, victim, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override)))
 
 
 func estimated_damage(_stats: StatSet) -> float:

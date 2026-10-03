@@ -20,7 +20,7 @@ const TERMS := {
 	"资源低于时": "生命 / 耐力等降到阈值以下时触发。",
 	"冷却": "两次出手之间的间隔（秒），急速会缩短它。",
 	"急速": "出手速度的倍率，越高冷却越短。",
-	"防护": "每次受到的伤害固定减少这个数，减到 0 为止。中毒、流血无视防护。",
+	"防护": "每次受到**直接伤害**（武器造成的）固定减少这个数，减到 0 为止；破绽为负时反而多挨。buff 造成的灼烧、中毒、流血不算直接伤害，防护挡不住。",
 	"护盾": "先于生命被扣的一层。开战时按护盾上限充满，之后不自己回复。中毒、流血无视护盾。",
 	"耐力": "出手要花的资源，每秒按回复速度补回；不够就出不了手，等回够再动。",
 	"耗耐力": "这一下出手要花的耐力。",
@@ -33,6 +33,7 @@ const TERMS := {
 	"受益槽": "这件道具的一种格位：每被邻居点亮一格，自己就得一份写着的加成。",
 	"中毒": "每层每秒造成毒伤，无视防护与护盾，永续叠层。",
 	"流血": "每层每秒造成流血伤害，无视防护与护盾，永续叠层。",
+	"直接伤害": "武器造成的伤害。防护（格挡 / 破绽）只减它；buff 造成的伤害（灼烧、中毒、流血）不是直接伤害。",
 }
 
 ## 标签给人看（096：名字是数据 —— [TagRegistry]，按当前语言；`faith:<id>` 写成「信仰：神名」；没登记的原词）
@@ -67,7 +68,7 @@ const STAT_NAMES := {
 	"damage": {"zh": "伤害", "en": "Damage"}, "armor": {"zh": "防护", "en": "Armor"}, "max_hp": {"zh": "生命", "en": "Health"},
 	"max_stamina": {"zh": "耐力上限", "en": "Max stamina"}, "haste": {"zh": "急速", "en": "Haste"}, "cooldown": {"zh": "冷却", "en": "Cooldown"},
 	"regen_stamina": {"zh": "每秒回耐力", "en": "Stamina regen"}, "regen_hp": {"zh": "每秒回血", "en": "Health regen"}, "max_shield": {"zh": "护盾", "en": "Shield"},
-	"max_mana": {"zh": "法力", "en": "Mana"}, "regen_mana": {"zh": "每秒回法力", "en": "Mana regen"},
+	"max_mana": {"zh": "法力上限", "en": "Max mana"}, "regen_mana": {"zh": "每秒回法力", "en": "Mana regen"},
 	"stamina_cost": {"zh": "耗耐力", "en": "Stamina cost"}, "mana_cost": {"zh": "耗法力", "en": "Mana cost"},
 	"crit_chance": {"zh": "暴击率", "en": "Crit chance"}, "crit_damage": {"zh": "暴击伤害", "en": "Crit damage"},
 }

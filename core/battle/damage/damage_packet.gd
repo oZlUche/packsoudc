@@ -21,6 +21,10 @@ var source_side: int = -1
 var source_uid: int = 0
 ## 104：这一包是暴击（[DealDamage] 造包时掷的，raw 已经乘过暴击伤害）
 var crit: bool = false
+## 106 第八节（作者定）：这一包是不是**直接伤害** —— 看来源，武器（道具的规则）造成的是直接，
+## buff 造成的（灼烧、中毒、到期爆发）是非直接，套装 / 单位级规则也算非直接。
+## **防护（格挡 / 破绽）只对直接伤害生效**；造包的效果用 [method CombatEffect.direct_of] 填它
+var direct: bool = false
 #endregion
 
 #region 管线中途写入
@@ -45,7 +49,7 @@ var applied: int = 0
 
 static func create(
 	p_type: StringName, p_raw: int, p_victim: CombatantRuntime,
-	p_source_side: int = -1, p_source_uid: int = 0
+	p_source_side: int = -1, p_source_uid: int = 0, p_direct: bool = false
 ) -> DamagePacket:
 	var p := DamagePacket.new()
 	p.type = p_type
@@ -53,6 +57,7 @@ static func create(
 	p.victim = p_victim
 	p.source_side = p_source_side
 	p.source_uid = p_source_uid
+	p.direct = p_direct
 	return p
 
 
@@ -98,6 +103,7 @@ func snapshot() -> Dictionary:
 		"source_side": source_side,
 		"uid": source_uid,
 		"crit": crit,
+		"direct": direct,
 	}
 
 

@@ -5,10 +5,10 @@
 ##
 ## 五步，顺序不可调换：
 ## [codeblock]
-## 1. 确认类型      这一下能不能被护盾吸收、吃不吃护甲、要不要通知；攻方的伤害类型加成（火焰轴）在这里乘
+## 1. 确认类型      这一下能不能被护盾吸收、要不要通知；攻方的伤害类型加成（火焰轴）在这里乘
 ## 2. 护盾吸收      能吸收则先扣护盾，中毒之类绕过
 ## 3. 受伤前效果    【同步派发】效果在这里改写伤害包：减伤、反转、免疫
-## 4. 计算受伤量    百分比 → 固定增减 → 反转 → 护甲 → 「受到伤害」轴（103），然后落到血量
+## 4. 计算受伤量    百分比 → 固定增减 → 反转 → 防护（只对直接伤害，106）→ 「受到伤害」轴（103），然后落到血量
 ## 5. 受伤后效果    发 damage 事件；流失类不通知默认监听
 ## [endcodeblock]
 ##
@@ -65,10 +65,13 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	amount = maxi(0, amount)
 	if packet.inverted:
 		amount = -amount
-	# 护甲只挡伤害，不挡治疗
-	if amount > 0 and td.armor_applies:
-		packet.armor = mini(victim.stat(BattleStats.ARMOR, 0), amount)
-		amount -= packet.armor
+	# 防护只动伤害，不动治疗。106 第八节（作者定）：**只减直接伤害**（武器造成的），
+	# buff 造成的灼烧 / 中毒 / 流血不吃防护 —— 按来源判，不再按伤害类型的护甲列。
+	# 防护为负（破绽）时倒贴：10 点打成 13（作者定），所以负值不走 min
+	if amount > 0 and packet.direct:
+		var armor := victim.stat(BattleStats.ARMOR, 0)
+		packet.armor = mini(armor, amount) if armor > 0 else armor
+		amount = maxi(0, amount - packet.armor)
 	# 103（作者定）：加时放大的是角色受到的「最终伤害」—— 护盾、减伤、护甲都按原值算完，扛下来的那部分再乘；治疗不放大
 	if amount > 0:
 		var taken := victim.axis_factor(StatAxes.DAMAGE_TAKEN)     # 标准轴（4.3）：易伤为正、坚韧为负，加时在系统层
@@ -118,6 +121,7 @@ static func _notify(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef)
 		"source_side": packet.source_side,
 		"uid": packet.source_uid,
 		"crit": packet.crit,     # 104
+		"direct": packet.direct,     # 106：直接 / 非直接（防护只减直接伤害）
 	})
 
 
@@ -125,6 +129,6 @@ static func _notify(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef)
 static func deal(
 	ctx: BattleContext, victim: CombatantRuntime, raw: int,
 	type: StringName = DamageTypes.PHYSICAL,
-	source_side: int = -1, source_uid: int = 0
+	source_side: int = -1, source_uid: int = 0, direct: bool = false
 ) -> int:
-	return resolve(ctx, DamagePacket.create(type, raw, victim, source_side, source_uid))
+	return resolve(ctx, DamagePacket.create(type, raw, victim, source_side, source_uid, direct))
