@@ -13,3 +13,4 @@ description = "炼金试剂。"
 descriptions = {
 "en": "An alchemical reagent."
 }
+tip = false

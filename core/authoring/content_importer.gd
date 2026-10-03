@@ -173,6 +173,33 @@ static func _validate_item_buffs(def: ItemDef, report: ImportReport) -> void:
 				warn_axis_candidate(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
 
 
+## 107（作者定）：**毒与流血没有「直接伤害」形态** —— 它们天生就是 buff（每层每秒掉血、无视护盾与防护），
+## 武器顶多给对手加【中毒】/【流血】。所以道具自己的出手规则（以及信力规则）里不许出现 `poison` / `bleed` 的 deal_damage；
+## buff 内部的那条照旧（内容里毒刀、毒瓶、弯刀、剁刀都是这样写的）
+const BUFF_ONLY_DAMAGE: Array[StringName] = [&"poison", &"bleed"]
+
+
+static func _validate_buff_only_damage(def: ItemDef, report: ImportReport) -> void:
+	var groups: Array = []
+	if def.combat != null:
+		groups.append(["combat.rules", def.combat.rules])
+	for k in def.faith_bonuses.size():
+		var fb := def.faith_bonuses[k] as FaithBonus
+		if fb != null:
+			groups.append(["faith_bonuses[%d].rules" % k, fb.rules])
+	for g in groups:
+		var rules: Array = g[1]
+		for i in rules.size():
+			var rule := rules[i] as AbilityRule
+			if rule == null:
+				continue
+			for j in rule.effects.size():
+				var dd := rule.effects[j] as DealDamage
+				if dd != null and BUFF_ONLY_DAMAGE.has(dd.damage_type):
+					report.error("%s[%d].effects[%d].damage_type" % [g[0], i, j],
+						"「%s」直接打出 %s 伤害 —— 毒与流血没有直接伤害形态，只能由 buff 每秒造成（用 apply_status 加【中毒】/【流血】）" % [def.id, dd.damage_type])
+
+
 ## 103 第 3 条：buff 没写明就是永续、不限层 —— 按百分比乘的不限层 buff 越叠越大（加时一拖更甚），
 ## 提醒作者确认要不要填 max_stacks。不是错误：有的就是故意不封顶
 static func warn_unbounded_percent(def: BuffDef, path: String, report: ImportReport) -> void:
@@ -249,6 +276,7 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_validate_item_tags(def, ctx, report)
 	_validate_item_faith(def, ctx, report)
 	_validate_item_buffs(def, report)
+	_validate_buff_only_damage(def, report)
 	_validate_item_combat(def, report)
 	ctx.register_item(def)
 	return def

@@ -81,6 +81,12 @@ static func describe(id: StringName, lang: String = "") -> String:
 	return Names.description_of(def, lang) if def != null else ""
 
 
+## 107：这个标签要不要弹词条（没登记的标签没有词条，返回 false）
+static func tip_of(id: StringName) -> bool:
+	var def := get_def(id)
+	return def != null and def.tip
+
+
 ## 仅供测试：清掉，下次用到重新装
 static func reset() -> void:
 	_defs.clear()

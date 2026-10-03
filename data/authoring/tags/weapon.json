@@ -7,5 +7,6 @@
   "description": "会出手造成伤害的道具；包里每一件武器都各自出手。",
   "descriptions": {
     "en": "An item that attacks on its own; every weapon in a bag fires independently."
-  }
+  },
+  "tip": false
 }

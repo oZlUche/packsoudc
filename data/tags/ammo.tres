@@ -13,3 +13,4 @@ description = "弹药。"
 descriptions = {
 "en": "Ammunition."
 }
+tip = false

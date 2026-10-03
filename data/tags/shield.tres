@@ -13,3 +13,4 @@ description = "盾牌。"
 descriptions = {
 "en": "A shield."
 }
+tip = false

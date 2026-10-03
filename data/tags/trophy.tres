@@ -13,3 +13,4 @@ description = "从敌人身上拿的纪念品。"
 descriptions = {
 "en": "A trophy taken from an enemy."
 }
+tip = false

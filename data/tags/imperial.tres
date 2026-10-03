@@ -13,3 +13,4 @@ description = "帝国制式。"
 descriptions = {
 "en": "Imperial issue."
 }
+tip = false

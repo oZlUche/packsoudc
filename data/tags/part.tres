@@ -13,3 +13,4 @@ description = "零件、构件。"
 descriptions = {
 "en": "A part or component."
 }
+tip = false

@@ -13,3 +13,4 @@ description = "附过魔。"
 descriptions = {
 "en": "Enchanted."
 }
+tip = false

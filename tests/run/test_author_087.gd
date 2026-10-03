@@ -97,7 +97,9 @@ static func run_glossary(t: TestCase) -> void:
 			blood = String(term["text"])
 	t.check(names.has("血怒"), "词条里有血怒：%s" % str(names))
 	t.check(blood.contains("+10%") and blood.contains("持续 10.0 秒"), "血怒的词条写着增伤 +10%%、持续 10 秒：%s" % blood)
-	t.check(names.has("开战时") and names.has("信力"), "固定词条也在（开战时、信力）")
+	# 107（作者定）：「开战时」「信力」这类直白的词不再弹词条（说明文字仍在表里）
+	t.check(not names.has("开战时") and not names.has("信力"), "直白的固定词条不再进侧窗：%s" % str(names))
+	t.check(Glossary.term_text("开战时") != "" and not Glossary.term_tip("开战时"), "但说明文字一字不动，只是 tip 关了")
 	t.check(text.contains("[u]血怒[/u]"), "主文字里血怒标了下划线（有解释的词）")
 	# 匕首：自发、耗耐力、DPS
 	var knife := ItemInstance.create(c.items.get_def(&"knife"))
@@ -109,7 +111,9 @@ static func run_glossary(t: TestCase) -> void:
 	var knames: Array[String] = []
 	for term in kf["terms"]:
 		knames.append(String(term["name"]))
-	t.check(knames.has("自发") and knames.has("耗耐力"), "匕首的词条：自发、耗耐力：%s" % str(knames))
+	# 107：自发、耗耐力、冷却、近战、武器、金属… 全不弹；匕首因此一个词条都不剩
+	t.check(not knames.has("自发") and not knames.has("耗耐力") and not knames.has("冷却"), "匕首的直白词条都不弹了：%s" % str(knames))
+	t.check(not ktext.contains("[u]自发[/u]") and not ktext.contains("[u]耗耐力[/u]"), "不弹的词在主文字里也不标色（标了色玩家会去找解释）")
 	# 涂毒匕首：中毒是 buff 词条，说明按定义生成
 	var pk := ItemInstance.create(c.items.get_def(&"poisoned_knife"))
 	var pf := ItemTooltip.describe_full(pk)
@@ -124,9 +128,12 @@ static func run_glossary(t: TestCase) -> void:
 	var pct := _mod(&"damage", 0.0, StatMath.Buff.EMPOWER, 10)
 	t.eq(Glossary.mod_text(pct), "增伤 +10%", "乘区")
 	t.eq(Glossary.strip_bbcode("[b]x[/b][color=#fff]y[/color]"), "xy", "剥标签")
+	# 107：「开战时」「自发」的 tip 关了，只剩传进来的血怒
 	var found := Glossary.terms_in("开战时获得血怒，自发出手", {"血怒": "详"})
-	t.eq(found.size(), 3, "找到三个词条")
-	t.eq(String(found[0]["name"]), "开战时", "按出现顺序")
+	t.eq(found.size(), 1, "只剩血怒一个词条：%s" % str(found))
+	t.eq(String(found[0]["name"]), "血怒", "传进来的（buff 词条）照旧")
+	var kept := Glossary.terms_in("护盾顶住了直接伤害", {})
+	t.eq(kept.size(), 2, "带规则的词照旧弹（护盾、直接伤害）：%s" % str(kept))
 	var marked := Glossary.mark("血怒 与 血怒", [{"name": "血怒", "text": ""}])
 	t.eq(marked.count("[u]血怒[/u]"), 2, "每处都标")
 	# 开战 buff 进预估 DPS：匕首 + 力量的符号（信力一阶）
@@ -190,7 +197,11 @@ static func run_dormant_faith(t: TestCase) -> void:
 	b3.try_add(bow3, true)
 	b3.try_add(ItemInstance.create(shield_def), true)
 	t.is_null(BattleCompiler.compile_board(b3).item_of(bow3.uid), "dormant_keeps_combat=false：休眠就不参战")
-	t.check(ItemTooltip.describe(ItemInstance.create(shield_def)).contains("保留通用效果"), "悬浮窗写着休眠时保留通用效果")
+	# 107（作者定）：悬浮窗不再写「信仰道具：别的信仰激活时休眠（保留通用效果）」那一行 ——
+	# 休眠与否只靠信仰相关行的灰 / 亮区分（那句话留在信仰自己的悬浮窗里）
+	t.check(not ItemTooltip.describe(ItemInstance.create(shield_def)).contains("保留通用效果"), "道具悬浮窗不再写休眠说明行")
+	var gods := FaithDef.load_all()
+	t.check(FaithTooltip.describe(gods.get(&"hunt", null)).contains("休眠"), "休眠的机制说明留在信仰自己的悬浮窗里")
 
 
 static func run_boss(t: TestCase) -> void:

@@ -13,3 +13,4 @@ description = "古老的遗物。"
 descriptions = {
 "en": "An ancient relic."
 }
+tip = false
