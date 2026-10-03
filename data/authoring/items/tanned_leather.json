@@ -1,0 +1,18 @@
+{
+  "id": "tanned_leather",
+  "display_name": "熟皮革",
+  "display_names": {
+    "en": "Tanned Leather"
+  },
+  "description": "鞣好的皮，能直接裁。",
+  "shape": [
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "crafted",
+    "leather",
+    "supply"
+  ]
+}

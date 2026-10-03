@@ -1,0 +1,17 @@
+{
+  "id": "tapestry",
+  "display_name": "挂毯",
+  "display_names": {
+    "en": "Tapestry"
+  },
+  "description": "织着狩猎图的整幅挂毯。",
+  "shape": [
+    "111",
+    "111"
+  ],
+  "rarity": 3,
+  "tags": [
+    "material",
+    "crafted"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "raw_salt",
+  "display_name": "粗盐块",
+  "display_names": {
+    "en": "Rock Salt"
+  },
+  "description": "没化开的盐，内陆值钱。",
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "material",
+    "nature"
+  ]
+}

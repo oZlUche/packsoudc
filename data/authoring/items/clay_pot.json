@@ -1,0 +1,16 @@
+{
+  "id": "clay_pot",
+  "display_name": "陶罐",
+  "display_names": {
+    "en": "Clay Pot"
+  },
+  "description": "粗陶烧的罐子，装什么都行。",
+  "shape": [
+    "11",
+    "11"
+  ],
+  "tags": [
+    "material",
+    "crafted"
+  ]
+}

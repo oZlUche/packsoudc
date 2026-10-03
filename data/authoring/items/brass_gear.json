@@ -1,0 +1,17 @@
+{
+  "id": "brass_gear",
+  "display_name": "黄铜齿轮",
+  "display_names": {
+    "en": "Brass Gear"
+  },
+  "description": "齿口精细的小齿轮。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "crafted",
+    "metal"
+  ]
+}

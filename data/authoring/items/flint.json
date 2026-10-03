@@ -1,0 +1,15 @@
+{
+  "id": "flint",
+  "display_name": "燧石",
+  "display_names": {
+    "en": "Flint"
+  },
+  "description": "敲一下就出火星。",
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "material",
+    "nature"
+  ]
+}

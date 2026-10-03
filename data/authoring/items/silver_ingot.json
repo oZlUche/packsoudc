@@ -1,0 +1,18 @@
+{
+  "id": "silver_ingot",
+  "display_name": "银锭",
+  "display_names": {
+    "en": "Silver Ingot"
+  },
+  "description": "打了印记的银。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "crafted",
+    "metal",
+    "supply"
+  ]
+}

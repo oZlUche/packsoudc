@@ -1,0 +1,18 @@
+{
+  "id": "copper_ingot",
+  "display_name": "铜锭",
+  "display_names": {
+    "en": "Copper Ingot"
+  },
+  "description": "熔好的铜，匀净。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "crafted",
+    "metal",
+    "supply"
+  ]
+}

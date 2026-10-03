@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_017et"]
+
+[resource]
+script = ExtResource("1_017et")
+id = &"crafted"
+display_name = "工艺"
+display_names = {
+"en": "Crafted"
+}
+description = "人手做出来的东西：陶、布、器具、锭。技巧之神看重它。"
+descriptions = {
+"en": "Made by hand: pottery, cloth, tools, ingots. Favoured by the god of skill."
+}

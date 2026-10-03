@@ -1,0 +1,17 @@
+{
+  "id": "fine_fur",
+  "display_name": "细毛皮",
+  "display_names": {
+    "en": "Fine Fur"
+  },
+  "description": "雪地兽的冬毛，又软又密。",
+  "shape": [
+    "11"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "nature",
+    "leather"
+  ]
+}

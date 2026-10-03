@@ -19,4 +19,4 @@ display_names = {
 }
 shape = SubResource("Resource_jmama")
 rarity = 2
-tags = Array[StringName]([&"material", &"nature", &"supply"])
+tags = Array[StringName]([&"material", &"crafted", &"supply"])

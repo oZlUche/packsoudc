@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_j3gd4"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_41qaf"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_cnijx"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_ktiq7"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_hfa3n"]
+
+[sub_resource type="Resource" id="Resource_fb6as"]
+script = ExtResource("5_hfa3n")
+
+[resource]
+script = ExtResource("4_ktiq7")
+id = &"beeswax"
+display_name = "蜂蜡块"
+display_names = {
+"en": "Beeswax"
+}
+description = "带蜜香的蜡。"
+shape = SubResource("Resource_fb6as")
+rarity = 1
+tags = Array[StringName]([&"material", &"nature"])

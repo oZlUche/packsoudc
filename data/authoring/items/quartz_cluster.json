@@ -1,0 +1,18 @@
+{
+  "id": "quartz_cluster",
+  "display_name": "水晶簇",
+  "display_names": {
+    "en": "Quartz Cluster"
+  },
+  "description": "一丛透亮的石英。",
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "nature",
+    "gem"
+  ]
+}

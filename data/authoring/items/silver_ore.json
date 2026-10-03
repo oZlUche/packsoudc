@@ -1,0 +1,17 @@
+{
+  "id": "silver_ore",
+  "display_name": "银矿石",
+  "display_names": {
+    "en": "Silver Ore"
+  },
+  "description": "石头缝里一线银光。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "nature",
+    "metal"
+  ]
+}

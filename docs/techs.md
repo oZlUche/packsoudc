@@ -24,14 +24,14 @@
 |---|---|---|---|---|
 | pack | 1 | 400 |  | {"amount": 50} |
 | pack | 2 | 800 |  | {"amount": 100} |
-| pack | 3 | 1200 |  | {"amount": 150} |
+| pack | 3 | 1200 | tanned_leather: 2；linen_bolt: 1 | {"amount": 150} |
 | safe_box | 1 | 300 |  |  |
-| safe_box | 2 | 600 | steel_ingot: 2；rivet_box: 1 |  |
+| safe_box | 2 | 600 | nail_keg: 1；steel_ingot: 1 |  |
 | warehouse | 1 | 100 |  |  |
 | warehouse | 2 | 200 |  |  |
 | warehouse | 3 | 400 |  |  |
 | warehouse | 4 | 600 | steel_ingot: 2 |  |
-| warehouse | 5 | 900 | hardwood_plank: 2；steel_ingot: 3 |  |
+| warehouse | 5 | 900 | hardwood_plank: 2；steel_ingot: 3；nail_keg: 1 |  |
 | warehouse | 6 | 1300 | hardwood_plank: 3；rivet_box: 2；steel_ingot: 4 |  |
 | endurance | 1 | 200 |  |  |
 | endurance | 2 | 500 |  | {"amount": 2} |
@@ -39,7 +39,7 @@
 | undaunted | 1 | 800 | hardwood_plank: 2；steel_ingot: 2 |  |
 | sinew | 1 | 300 |  | {"amount": 5} |
 | sinew | 2 | 700 |  | {"amount": 10} |
-| sinew | 3 | 1200 |  | {"amount": 15} |
+| sinew | 3 | 1200 | copper_ingot: 2 | {"amount": 15} |
 | luck | 1 | 400 |  |  |
 | luck | 2 | 800 |  | {"amount": 2} |
 | luck | 3 | 1300 | hardwood_plank: 2；rivet_box: 2 | {"amount": 3} |
@@ -47,4 +47,4 @@
 | thorough_search | 1 | 250 |  |  |
 | thorough_search | 2 | 700 |  | {"amount": 2} |
 | bargain | 1 | 500 |  | {"factor": 0.95} |
-| bargain | 2 | 1000 |  |  |
+| bargain | 2 | 1000 | silver_ingot: 1 |  |

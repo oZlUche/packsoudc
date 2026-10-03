@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_n5d6t"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_av7l7"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_letn8"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_miieo"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_8csei"]
+
+[sub_resource type="Resource" id="Resource_mcik5"]
+script = ExtResource("5_8csei")
+
+[resource]
+script = ExtResource("4_miieo")
+id = &"raw_amber"
+display_name = "琥珀原石"
+display_names = {
+"en": "Raw Amber"
+}
+description = "封着一只远古小虫。"
+shape = SubResource("Resource_mcik5")
+rarity = 2
+tags = Array[StringName]([&"material", &"nature", &"gem"])
