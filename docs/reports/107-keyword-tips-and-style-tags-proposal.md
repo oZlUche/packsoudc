@@ -35,7 +35,7 @@
 |---|---|---|---|---|
 | `rapid` 快攻 | 出手快、单下轻的打法 | 9 | 无 | **删** |
 | `burst` 重击 | 出手慢、单下重的打法 | 6 | 无 | **删**（同类） |
-| `heavy` 重型 | 笨重的大件 | 2 | 无 | 待定 1：体积已由格数表达，推荐删 |
+| `heavy` 重型 | 笨重的大件 | 2 | 无 | **删**（作者定，2026-10-03：体积已由格数表达） |
 
 删法：删 `data/authoring/tags/<id>.json`、从 15 件道具的 `tags` 里去掉、`tools/import_content.gd` 重导、`check_content` 绿；搜 `tests/` 里有没有按这两个标签断言的夹具。导入器对**未登记的标签**现在是否报错要确认（若不报，这次顺手加：道具引用了不存在的标签 → error，防止删了标签还有道具挂着）。
 
@@ -77,7 +77,7 @@
 | 批 | 内容 | 文件 |
 |---|---|---|
 | ① 字段 | `TagDef.tip`；`TERMS` 改成带 `tip` 的字典 + `term_text()`；`terms_in` / `tag_terms` / `mark` 跳过 `tip = false`；删「休眠」词条与悬浮窗里的休眠说明行，信仰行只靠灰 / 亮；编辑器标签页多一个勾 | `core/inventory/tag_def.gd`、`core/text/glossary.gd`、`ui/inventory/item_tooltip.gd`、`core/authoring/field_text.gd`（字段中文名「弹词条」）、标签编辑器 |
-| ② 内容 | 2.3 的标签 JSON 加 `"tip": false`；删 `rapid` / `burst`（待定 1 若删则含 `heavy`）并从道具里去掉；重导 | `data/authoring/tags/*.json`、`data/authoring/items/*.json`、`data/tags/*.tres`、`data/items/*.tres` |
+| ② 内容 | 2.3 的标签 JSON 加 `"tip": false`；删 `rapid` / `burst` / `heavy` 并从道具里去掉；重导 | `data/authoring/tags/*.json`、`data/authoring/items/*.json`、`data/tags/*.tres`、`data/items/*.tres` |
 | ③ 校验 | 未登记标签 → 导入 error（若现在没有）；词条表自检：`tip` 只能是 bool | `core/authoring/content_importer.gd`、`tests/authoring/*` |
 | ④ 测试 | 长弓的侧窗只剩 4 个；休眠的信仰道具信仰行全灰、无状态尾巴；`tip = false` 的词在主文字里不带 `[url]` / 颜色；标签说明文字仍可由 `term_text` 取到；往返测试覆盖新字段 | `tests/ui/test_item_tooltip.gd`（或现有词条测试） |
 
@@ -105,9 +105,9 @@
 | 自发 | 不弹窗 |
 | 休眠 | 不要词条，信仰相关文字用灰 / 亮区分即可 |
 | 图鉴异体叠影 | 黑色外框不变，格子里的物品呈现堆叠 |
+| 重型 | 和快攻、重击一起删 |
 
 ## 待作者定（不挡执行，按推荐先做）
 
-1. `heavy` 重型（2 件，无引用）：和快攻一样删（推荐），还是留着当体积以外的「笨重」属性？
-2. 2.3 两张表里的 true / false 是我的推荐，哪一个要翻过来直接说；它们是数据，执行时照表填。
-3. `tip = false` 的词在主文字里**不标色**（推荐）；还是仍标色但不弹？
+1. 2.3 节两张表（哪些固定词条 / 标签 `tip = false`）是推荐值，执行时照表填；要翻哪一个直接说。
+2. `tip = false` 的词在主文字里**不标色**（推荐）；还是仍标色但不弹？
