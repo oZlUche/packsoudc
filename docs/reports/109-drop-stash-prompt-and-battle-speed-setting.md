@@ -1,9 +1,10 @@
-# 小改：去掉离开点时的暂存区提示；战斗倍速记成跨局字段；仓库「整理」按钮（109）
+# 小改：去掉离开点时的暂存区提示；战斗倍速记成跨局字段；仓库「整理」按钮；仓库界面双击快速置入（109）
 
 > 架构 thread，2026-10-03。作者两句话：
 > ① 「既然现在每个节点的暂存区都保留了，可以不用再跳出提示。」
 > ② 「添加一个字段用于记录战斗倍速，这个字段应该跨局继承，也就是写入整体存档。」
 > ③ 「给仓库添加一个整理按钮，点下后会进行排序保证占用和未占用空间分开。」
+> ④ 反馈：「在仓库界面也要双击物品就能快速置入背包 / 仓库。」
 > 两条都是小修，本文只写清楚删什么、加什么，交「游戏反馈小修」线程做即可，不必等别的方案。
 
 ## 一、去掉「走了暂存区留在这里」的提示
@@ -81,15 +82,44 @@
 - 构造一个会放不下的异形组合（或 mock `find_first_fit` 失败）→ 返回 false，逐格与整理前相同（回滚）。
 - `changed` 只发一次；每件的 `placed_seq` 不变。
 
-## 四、改动范围
+## 四、仓库界面的双击快速置入
+
+### 现状
+
+局内已经有了（084）：`InventoryView` / `StashView` 双击发 `item_double_clicked`，`InventoryPanel.quick_move` 按「从哪来」决定去哪，搬运走 `InventoryService.transfer_auto`（自动找位，放不下返回 false）。局外三处格子**接了拖拽没接双击**：
+
+| 屏 | 格子 | 现在双击 |
+|---|---|---|
+| 结算屏 / 局外屏的仓库面板 `warehouse_panel.gd` | 带回来的棋盘 ⇄ 仓库 | 没反应 |
+| 出售页 `meta_screen.gd:188` | 仓库 | 双击 = 卖掉（已有，不动） |
+| 开局屏 `setup_screen.gd:153-184` | 仓库 ⇄ 初始包的棋盘，另有暂存列表 | 没反应 |
+
+### 做法：和局内同一个形状
+
+`warehouse_panel.gd` 加一个 `quick_move(view, uid)`，两个视图的 `item_double_clicked` 都接它：
+
+- 来自带回来的棋盘 → `transfer_auto(meta.board, uid, meta.warehouse)`；放不下 `_line` 提示「仓库放不下「X」」。
+- 来自仓库 → 有带回来的棋盘就 `transfer_auto(meta.warehouse, uid, meta.board)`（带回来的棋盘不要求包，放得进就行）；没有棋盘（局外屏平时的状态）双击不做事。
+- 搬完 `changed.emit()`，和「一键置入」一致；`_rebuild_board_view` 重建视图时记得重新接信号（它每次 `new()`）。
+
+`setup_screen.gd` 同样加一个：仓库 → 初始包的棋盘（`transfer_auto` 自带包准入判断，放不下提示「包里没有空间」）；棋盘 → 仓库（**初始包自己不能去**：`keeps` 不收包，`transfer_auto` 的 `can_admit` 会直接拒掉，提示一句即可）；暂存列表那块按局内规矩「列表 → 棋盘」。
+
+拖拽那套 `DragLayer` 完全不动；双击只是多一条进入 `transfer_auto` 的路，和 084 一样。
+
+### 测试
+
+`tests/ui/test_node_screens.gd`（或新文件）：仓库面板上对带回来棋盘里的一件模拟双击 → 进仓库、`changed` 发了；仓库放满时双击 → 原地不动、提示行有字；开局屏双击仓库件 → 进初始包；双击初始包本体 → 不动。
+
+## 五、改动范围
 
 | 批 | 文件 |
 |---|---|
 | ① 删提示 | `ui/game/map_screen.gd`、`core/run/storage_warning.gd`、`core/settings/game_settings.gd`、`ui/game/settings_screen.gd`、`tests/run/test_node_storage.gd`、`tests/run/test_game_flow.gd`、`docs/architecture.md` 3.4 |
 | ② 倍速字段 | `core/settings/game_settings.gd`、`ui/battle/battle_view.gd`、`ui/game/battle_screen.gd`、`tests/ui/` 或 `tests/run/test_game_flow.gd` 加两条 |
 | ③ 整理 | `core/inventory/grid_tidy.gd`（新）、`ui/game/warehouse_panel.gd`、`tests/inventory/test_grid_tidy.gd`（新） |
+| ④ 双击 | `ui/game/warehouse_panel.gd`、`ui/game/setup_screen.gd`、`tests/ui/test_node_screens.gd` |
 
-三批合一个 PR 即可，一天以内。
+四批合一个 PR 即可，一天左右。
 
 ## 待作者定（不挡执行，按推荐先做）
 
