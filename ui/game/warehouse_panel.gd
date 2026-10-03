@@ -1,6 +1,8 @@
 ## 仓库面板（058 第 7 条）：左边是撤离带回来的棋盘（有的话），右边是仓库的格子，同一套拖拽；「一键置入」按栏位顺序逐件放，
 ## 放不下就停在那一件提示；「剩下的不要了」清掉带回来的棋盘。结算屏与局外屏共用。
 ##
+## 109（作者定）：「整理」把仓库重排（先大后小，占用的聚左上，见 [GridTidy]）；两块格子都能双击快速置入（和局内一样）。
+##
 ## 带回来的棋盘是一块不要求包的格子：包已经不在（只计图鉴），东西位置照旧 —— 作者说的「包统一替换成最大的默认背景包」。
 extends MarginContainer
 
@@ -16,6 +18,7 @@ var _warehouse_view: InventoryView
 var _line: Label
 var _store_btn: Button
 var _discard_btn: Button
+var _tidy_btn: Button
 
 
 func setup(flow: GameFlow, font: Font) -> void:
@@ -50,6 +53,7 @@ func _build() -> void:
 	_warehouse_view.show_adjacency = false
 	_warehouse_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	right.add_child(_warehouse_view)
+	_warehouse_view.item_double_clicked.connect(quick_move)
 
 	_line = _label("", 13, UiPalette.FG)
 	col.add_child(_line)
@@ -60,6 +64,8 @@ func _build() -> void:
 	buttons.add_child(_store_btn)
 	_discard_btn = _button("剩下的不要了", discard_board)
 	buttons.add_child(_discard_btn)
+	_tidy_btn = _button("整理", tidy)
+	buttons.add_child(_tidy_btn)
 
 	_drag = DragLayer.new()
 	_drag.label_font = _font
@@ -85,6 +91,7 @@ func _rebuild_board_view() -> void:
 	_board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_board_box.add_child(_board_view)
 	_drag.register_view(_board_view)
+	_board_view.item_double_clicked.connect(quick_move)     # 视图每次新建，信号跟着重接
 
 
 #region 公开动作
@@ -103,6 +110,37 @@ func discard_board() -> void:
 	changed.emit()
 
 
+## 109：整理仓库（只动仓库，不动带回来的棋盘 —— 那块是玩家摆的阵）。排不开就原样不动
+func tidy() -> bool:
+	var ok := GridTidy.tidy(_meta.warehouse)
+	if _meta.warehouse.item_count() > 1:
+		_line.text = "仓库整理好了" if ok else "这堆东西排不开，没动"
+	changed.emit()
+	return ok
+
+
+## 109：双击快速置入 —— 带回来的棋盘 → 仓库；仓库 → 带回来的棋盘（有的话；局外平时没有，双击不做事）
+func quick_move(view: ContainerView, uid: int) -> bool:
+	var from := view.container() if view != null else null
+	var inst := from.get_item(uid) if from != null else null
+	if inst == null:
+		return false
+	var ok := false
+	if from == _meta.board:
+		ok = InventoryService.transfer_auto(_meta.board, uid, _meta.warehouse)
+		if not ok:
+			_line.text = "仓库放不下「%s」" % Names.of(inst.def)
+		elif _meta.board.item_count() == 0:
+			_meta.discard_board()     # 搬空了 = 和「一键置入」搬完一样，带回来的背包就没了
+	elif from == _meta.warehouse and _meta.board != null:
+		ok = InventoryService.transfer_auto(_meta.warehouse, uid, _meta.board)
+		if not ok:
+			_line.text = "带回来的背包里放不下「%s」" % Names.of(inst.def)
+	if ok:
+		changed.emit()
+	return ok
+
+
 func has_pending() -> bool:
 	return _meta.has_pending_board()
 #endregion
@@ -114,6 +152,7 @@ func _refresh() -> void:
 	var pending := _meta.has_pending_board()
 	_store_btn.disabled = not pending
 	_discard_btn.disabled = not pending
+	_tidy_btn.disabled = _meta.warehouse.item_count() <= 1
 	if _line != null and _line.text == "":
 		_line.text = "带回来的背包里还有 %d 件：置入或不要了；不管的话开局屏里它们进暂存区，出发就没了" % _meta.board.item_count() if pending else "仓库 %d 件" % _meta.warehouse.item_count()
 

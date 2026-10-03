@@ -12,6 +12,6 @@
   "rarity": 2,
   "is_bag": true,
   "bag_accept_tags": [
-    "consumable"
-  ]
+    "remedy",
+  "food"]
 }

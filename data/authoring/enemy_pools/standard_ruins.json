@@ -130,7 +130,8 @@
   "loadout": {
     "common_tags": [
       "gear",
-      "consumable",
+      "remedy",
+      "food",
       "part",
       "tool"
     ]

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_8lyn6"]
+
+[resource]
+script = ExtResource("1_8lyn6")
+id = &"remedy"
+display_name = "药剂"
+display_names = {
+"en": "Remedy"
+}
+description = "涂的、吃的、打的，能救命的东西。"
+descriptions = {
+"en": "Rubbed on, swallowed or injected — things that keep you alive."
+}
+tip = false

@@ -563,8 +563,6 @@ static func _director_walk(game, run: RunState, target: int) -> void:
 				next = id
 		if next < 0 or not game.base().step(next):
 			return
-		if game.base().step_confirm_open():
-			game.base().confirm_step()      # 暂存区里有东西：提示看过了，照走
 		var inner := 0
 		while game.overlay() != null and inner < 20:
 			inner += 1

@@ -93,7 +93,7 @@ static func run_tags(t: TestCase) -> void:
 
 	ItemInstance.reset_uid_counter()
 	var gun := _def("gun", ["#"], ["weapon"])
-	var food := _def("food", ["#"], ["consumable"])
+	var food := _def("food", ["#"], ["remedy"])
 
 	var s := ItemStash.new(4)
 	s.accept_tags = [&"weapon"] as Array[StringName]
