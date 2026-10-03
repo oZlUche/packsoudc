@@ -531,6 +531,7 @@ func _refresh_presets() -> void:
 func _build() -> void:
 	var bg := ColorRect.new()
 	UiPalette.apply(GameSettings.load_from())     # 091：底色跟设置走
+	UiTheme.install(self)     # 121：界面主题挂在窗口上
 	bg.color = UiPalette.bg()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE

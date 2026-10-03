@@ -420,8 +420,7 @@ func _build() -> void:
 	_ticker.scroll_following = true
 	_ticker.custom_minimum_size = Vector2(0, 90)
 	_ticker.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_ticker.add_theme_font_override("normal_font", label_font)
-	_ticker.add_theme_font_size_override("normal_font_size", 13)
+	_ticker.theme_type_variation = UiTheme.RICH_SMALL     # 121：13 号
 	root.add_child(_ticker)
 
 	var bar := HBoxContainer.new()
@@ -448,16 +447,13 @@ func _sync_buttons() -> void:
 func _label(text: String, font_size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_override("font", label_font)
-	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", color)
+	UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
 	return l
 
 
 func _button(text: String, handler: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.add_theme_font_override("font", label_font)
 	UiPalette.style_button(b, UiPalette.Tier.MINOR, UiPalette.button_font_size(13, UiPalette.Tier.MINOR))     # 090：回放控制是辅助键
 	b.pressed.connect(handler)
 	return b

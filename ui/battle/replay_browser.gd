@@ -43,6 +43,7 @@ static func _known_buffs(db: ItemDatabase) -> Dictionary:
 func _build() -> void:
 	var bg := ColorRect.new()
 	UiPalette.apply(GameSettings.load_from())
+	UiTheme.install(self)     # 121：界面主题挂在窗口上
 	bg.color = UiPalette.bg()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -160,9 +161,7 @@ static func _row_text(e: Dictionary) -> String:
 func _label(text: String, size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_override("font", _font)
-	l.add_theme_font_size_override("font_size", size)
-	l.add_theme_color_override("font_color", color)
+	UiTheme.label(l, size, color)     # 121：字体在主题里，颜色先选变体
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return l
 
@@ -170,7 +169,6 @@ func _label(text: String, size: int, color: Color) -> Label:
 func _button(text: String, cb: Callable, size: int = 13) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.add_theme_font_override("font", _font)
 	b.add_theme_font_size_override("font_size", size)
 	b.pressed.connect(cb)
 	return b

@@ -42,10 +42,7 @@ func escape() -> bool:
 func _label(text: String, font_size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_override("font", font)
-	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", color)
-	return l
+	return UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
 
 
 ## 会折行的说明文字。必须给最小宽度：中文没有词边界，容器算出的最小宽度是一个字
@@ -62,7 +59,6 @@ func _wrapped(text: String, font_size: int, color: Color, width: float) -> Label
 func _button(text: String, handler: Callable, font_size: int = 14, tier: int = UiPalette.Tier.SECONDARY) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.add_theme_font_override("font", font)
 	UiPalette.style_button(b, tier, UiPalette.button_font_size(font_size, tier))
 	b.pressed.connect(handler)
 	return b
@@ -89,14 +85,7 @@ func refresh_backdrop() -> void:
 
 ## 一块带边框的面板
 func _panel(margin: int = 16) -> PanelContainer:
-	var p := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = UiPalette.PANEL
-	style.border_color = UiPalette.LINE
-	style.set_border_width_all(1)
-	style.set_content_margin_all(margin)
-	p.add_theme_stylebox_override("panel", style)
-	return p
+	return UiTheme.panel(PanelContainer.new(), margin)     # 121：主题的 PanelDark 变体
 
 
 ## 居中的一块面板（叠层用）：半透明压暗底下的地图，面板放中间
@@ -128,9 +117,7 @@ func _log_box(font_size: int = 12) -> RichTextLabel:
 	log.bbcode_enabled = true
 	log.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	log.scroll_following = true
-	log.add_theme_font_override("normal_font", font)
-	log.add_theme_font_size_override("normal_font_size", font_size)
-	return log
+	return UiTheme.rich(log, font_size)
 
 
 ## 一件道具的一行说明：名字（按稀有度上色）、几格、值多少

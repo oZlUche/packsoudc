@@ -130,6 +130,7 @@ static func bg_name(id: String) -> String:
 ## 101 第 5 刀：[GameSettings] 不认识底色的名单，存的可能是空串或旧 id —— 认不出来就回到默认那档
 static func apply(settings: GameSettings) -> void:
 	bg_theme = settings.bg_theme if settings != null and has_bg_theme(settings.bg_theme) else BG_DEFAULT
+	UiTheme.refresh(settings)     # 121：面板底色跟着底色走，挂着的主题原地重填
 #endregion
 
 
@@ -156,51 +157,20 @@ static func button_font_size(base: int, tier: int) -> int:
 	return int(round(base * float(TIER_SCALE.get(tier, 2.0))))
 
 
-## 给一个按钮上这一档的字号与配色（普通 / 停上 / 按下 / 禁用四态；开关按钮按下 = 亮边）
+## 给一个按钮上这一档的样式。121：样式在 [UiTheme] 的按钮变体里（四态配色、内边距），这里只选变体；
+## 字号不是这一档的默认值（14 号的 300% / 200% / 150%）时才单独给字号
 static func style_button(b: Button, tier: int, font_size: int) -> void:
-	b.add_theme_font_size_override("font_size", font_size)
-	var bg: Color
-	var hover: Color
-	var edge: Color
-	var text: Color
+	b.theme_type_variation = button_variation(tier)
+	if font_size != button_font_size(UiTheme.FONT_SIZE, tier):
+		b.add_theme_font_size_override("font_size", font_size)
+
+
+## 这一档对应的按钮变体名（[UiTheme]）
+static func button_variation(tier: int) -> StringName:
 	match tier:
 		Tier.PRIMARY:
-			bg = BTN_PRIMARY
-			hover = BTN_PRIMARY_HOVER
-			edge = BTN_PRIMARY_HOVER
-			text = BTN_PRIMARY_TEXT
+			return UiTheme.BUTTON_PRIMARY
 		Tier.MINOR:
-			bg = BTN_MINOR
-			hover = BTN_MINOR_HOVER
-			edge = BTN_MINOR_EDGE
-			text = FG
-		_:
-			bg = BTN_SECONDARY
-			hover = BTN_SECONDARY_HOVER
-			edge = BTN_SECONDARY_EDGE
-			text = FG
-	var pad_h := int(round(font_size * 0.6))
-	var pad_v := int(round(font_size * 0.3))
-	b.add_theme_stylebox_override("normal", _button_box(bg, edge, pad_h, pad_v))
-	b.add_theme_stylebox_override("hover", _button_box(hover, edge.lightened(0.2), pad_h, pad_v))
-	b.add_theme_stylebox_override("pressed", _button_box(hover, Color.WHITE.lerp(edge, 0.3), pad_h, pad_v))
-	b.add_theme_stylebox_override("hover_pressed", _button_box(hover, Color.WHITE.lerp(edge, 0.2), pad_h, pad_v))
-	b.add_theme_stylebox_override("disabled", _button_box(BTN_DISABLED, LINE, pad_h, pad_v))
-	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
-		b.add_theme_color_override(state, text)
-	b.add_theme_color_override("font_disabled_color", DIM)
-
-
-static func _button_box(bg: Color, edge: Color, pad_h: int, pad_v: int) -> StyleBoxFlat:
-	var s := StyleBoxFlat.new()
-	s.bg_color = bg
-	s.border_color = edge
-	s.set_border_width_all(1)
-	s.set_corner_radius_all(4)
-	s.content_margin_left = pad_h
-	s.content_margin_right = pad_h
-	s.content_margin_top = pad_v
-	s.content_margin_bottom = pad_v
-	return s
+			return UiTheme.BUTTON_DIM
+	return UiTheme.BUTTON_SECONDARY
 #endregion

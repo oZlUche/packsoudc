@@ -38,7 +38,6 @@ func open(payload: Dictionary) -> void:
 	left.add_child(_label("百科", 26, UiPalette.FG))
 	_search = LineEdit.new()
 	_search.placeholder_text = "搜索标题或正文"
-	_search.add_theme_font_override("font", font)
 	_search.text_changed.connect(set_query)
 	left.add_child(_search)
 	var toc_scroll := ScrollContainer.new()
@@ -71,12 +70,7 @@ func open(payload: Dictionary) -> void:
 	_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_body.custom_minimum_size.x = PAGE_WIDTH - 20
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for k in ["normal_font", "bold_font", "italics_font"]:
-		_body.add_theme_font_override(k, font)
-	for k in ["normal_font_size", "bold_font_size", "italics_font_size"]:
-		_body.add_theme_font_size_override(k, 17)
-	_body.add_theme_color_override("default_color", UiPalette.FG)
-	_body.add_theme_constant_override("line_separation", 6)
+	_body.theme_type_variation = UiTheme.RICH_BODY     # 121：17 号、行距 6
 	_body.meta_clicked.connect(func(meta: Variant): open_page(String(meta)))
 	page_scroll.add_child(_body)
 
