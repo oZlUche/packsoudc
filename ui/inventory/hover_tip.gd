@@ -30,12 +30,7 @@ func _init(font: Font = null) -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_panel = PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(UiPalette.PANEL, 0.96)
-	style.border_color = UiPalette.LINE
-	style.set_border_width_all(1)
-	style.set_content_margin_all(10)
-	_panel.add_theme_stylebox_override("panel", style)
+	UiTheme.panel(_panel, 10, UiTheme.PANEL_LINE)     # 121：主题的 PanelLine 变体（半透明底细边）
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.visible = false
 	add_child(_panel)
@@ -50,13 +45,7 @@ func _init(font: Font = null) -> void:
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_text.custom_minimum_size.x = MAX_WIDTH
 	_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if _font != null:
-		_text.add_theme_font_override("normal_font", _font)
-		_text.add_theme_font_override("bold_font", _font)
-		_text.add_theme_font_override("italics_font", _font)
-	_text.add_theme_font_size_override("normal_font_size", 13)
-	_text.add_theme_font_size_override("bold_font_size", 13)
-	_text.add_theme_font_size_override("italics_font_size", 13)
+	_text.theme_type_variation = UiTheme.RICH_SMALL     # 121：13 号
 	col.add_child(_text)
 	_side = VBoxContainer.new()
 	_side.add_theme_constant_override("separation", 6)
@@ -135,7 +124,7 @@ func _set_terms(terms: Array) -> void:
 		style.border_color = Glossary.TERM_COLOR.darkened(0.3)
 		style.set_border_width_all(1)
 		style.set_content_margin_all(8)
-		p.add_theme_stylebox_override("panel", style)
+		p.add_theme_stylebox_override("panel", style)     # 121 特例：术语卡的边是术语色（和正文里的术语同色），一张一份
 		p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var l := RichTextLabel.new()
 		l.bbcode_enabled = true
@@ -144,11 +133,7 @@ func _set_terms(terms: Array) -> void:
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l.custom_minimum_size.x = SIDE_WIDTH
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		if _font != null:
-			l.add_theme_font_override("normal_font", _font)
-			l.add_theme_font_override("bold_font", _font)
-		l.add_theme_font_size_override("normal_font_size", 12)
-		l.add_theme_font_size_override("bold_font_size", 12)
+		UiTheme.rich(l, 12)
 		l.text = "[color=#%s][b]%s[/b][/color]\n%s" % [Glossary.TERM_COLOR.to_html(false), String(d["name"]), String(d["text"])]
 		p.add_child(l)
 		_side.add_child(p)

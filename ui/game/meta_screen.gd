@@ -223,7 +223,6 @@ func _build_sell(root: Control) -> Control:
 	page.add_child(row)
 	row.add_child(_label("一键出售", 13, UiPalette.DIM))
 	_sell_pick = OptionButton.new()
-	_sell_pick.add_theme_font_override("font", font)
 	for i in SELL_FILTERS.size():
 		_sell_pick.add_item(String(SELL_FILTERS[i][0]), i)
 	_sell_pick.item_selected.connect(set_sell_filter)

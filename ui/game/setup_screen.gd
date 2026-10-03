@@ -209,7 +209,7 @@ func choose_chapter(i: int) -> void:
 		return
 	chapter_index = clampi(i, 0, _chapters.size() - 1)
 	for k in _chapter_btns.size():
-		_chapter_btns[k].add_theme_color_override("font_color", UiPalette.FG if k == chapter_index else UiPalette.DIM)
+		UiTheme.mark(_chapter_btns[k], k == chapter_index)     # 121：选中的那个前景色、其余暗色
 	# 083：这一章能选的角色、能不能从仓库带东西，都跟着章节变
 	_rebuild_characters()
 	_rebuild_scales()
@@ -247,7 +247,7 @@ func _rebuild_scales() -> void:
 func choose_scale(id: StringName) -> void:
 	scale_id = id if _scale_btns.has(id) else &""
 	for k in _scale_btns:
-		(_scale_btns[k] as Button).add_theme_color_override("font_color", UiPalette.FG if k == scale_id else UiPalette.DIM)
+		UiTheme.mark((_scale_btns[k] as Button), k == scale_id)     # 121：选中的那个前景色、其余暗色
 
 
 func scale_options() -> Array:
@@ -298,7 +298,7 @@ func _rebuild_presets() -> void:
 
 func _color_presets() -> void:
 	for k in _preset_btns.size():
-		_preset_btns[k].add_theme_color_override("font_color", UiPalette.FG if k == preset_index + 1 else UiPalette.DIM)
+		UiTheme.mark(_preset_btns[k], k == preset_index + 1)     # 121：选中的那个前景色、其余暗色
 
 
 ## 096：挑一套预设（-1 = 不带）：棋盘上原来那套拿掉，新的免费放进初始包（放不下的在状态栏说）。从仓库带上的不动
@@ -361,7 +361,7 @@ func choose_character(i: int) -> void:
 	if not _characters.is_empty():
 		character_index = clampi(i, 0, _characters.size() - 1)
 	for k in _character_btns.size():
-		_character_btns[k].add_theme_color_override("font_color", UiPalette.FG if k == character_index else UiPalette.DIM)
+		UiTheme.mark(_character_btns[k], k == character_index)     # 121：选中的那个前景色、其余暗色
 	_rebuild_board()
 	_refresh()
 
@@ -373,7 +373,7 @@ func choose_difficulty(i: int) -> void:
 		return
 	difficulty_index = clampi(i, 0, avail.size() - 1)
 	for k in _difficulty_btns.size():
-		_difficulty_btns[k].add_theme_color_override("font_color", UiPalette.FG if k == difficulty_index else UiPalette.DIM)
+		UiTheme.mark(_difficulty_btns[k], k == difficulty_index)     # 121：选中的那个前景色、其余暗色
 	_refresh()
 
 

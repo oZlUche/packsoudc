@@ -20,13 +20,17 @@ static func _bg(b: Button) -> Color:
 	return box.bg_color if box != null else Color.TRANSPARENT
 
 
-static func run_button_tiers(t: TestCase) -> void:
+static func frame_button_tiers(t: TestCase, root: Window) -> void:
 	t.begin("090 · 按钮三档：字号 300% / 200% / 150%，颜色三档各不同、都不是默认灰扣；禁用态另一色")
 	var s := GameScreen.new()
 	s.font = UiPalette.cjk_font()
+	# 121：样式在主题的按钮变体里 —— 进了挂着主题的窗口才取得到（游戏里也是挂在窗口上；主题换上要等一帧，所以这条在 frame_ 档）
+	root.add_child(s)
 	var p := s._button("主", func(): pass, 14, UiPalette.Tier.PRIMARY)
 	var sec := s._button("次", func(): pass, 14)
 	var m := s._button("辅", func(): pass, 14, UiPalette.Tier.MINOR)
+	for b in [p, sec, m]:
+		s.add_child(b)
 	t.eq(p.get_theme_font_size("font_size"), 42, "主动作 300%（14 → 42）")
 	t.eq(sec.get_theme_font_size("font_size"), 28, "不写档 = 次要 200%（14 → 28）")
 	t.eq(m.get_theme_font_size("font_size"), 21, "辅助 150%（14 → 21）")

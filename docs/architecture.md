@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.37 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.38 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -72,6 +72,7 @@ UI 调用服务方法（`InventoryService.move(...)`），服务改完状态后�
 | `TextTemplate.COLORS` 直接引调色板 | 文本层只产出带颜色**名**的样式码（`[color=@hp]`），`UiPalette.STYLE_COLORS` + `UiPalette.resolve_styles()` 在画之前查表换成十六进制 |
 | 事件文本与神罚日志问 `MapNodeStyle` 要点的名字 | 名字是文字，住在 `core/text/node_text.gd`（`NodeText.LABELS`）；`MapNodeStyle` 只留长相，它的 `label` 从 `NodeText` 取 |
 | `GameSettings.bg_theme` 用 `UiPalette.has_bg_theme` 校验 | 设置层只存字符串；认不认得这个 id 由 `UiPalette.apply` 兜底成默认那档 |
+| 屏幕脚本逐个控件 `add_theme_*_override` 贴颜色字体（121 前约 300 处） | **样式走 `UiTheme` 的变体，画布色走 `UiPalette`**（121）：`UiTheme.build(settings)` 按设置生成一份 `Theme`（默认 CJK 字体与 14 号字、`ButtonPrimary / ButtonSecondary / ButtonDim`、`LabelTitle / LabelDim / LabelWarn`、`PanelDark / PanelLine`、`RichTextBody / RichTextSmall`），`install` 并进引擎默认主题、换底色 `refresh`；屏幕脚本设 `theme_type_variation` 或用 `UiTheme.label / panel / rich / mark`，剩下的覆写只有布局常量和注了「121 特例」的；`tests/ui/test_theme.gd` 的棘轮挡回潮。整套换皮只换 `UiTheme._fill` |
 | 编译器与套装经 `FaithState`（`core/run`）看休眠 | `FaithState` 与标签词汇 `FaithTags` 搬进 `core/inventory` —— 这条规则只看容器与标签，本来就不认识具体的神 |
 | `CombatantSpec.flags["undying_sec"]` 字符串键 | 带类型的字段 `CombatantSpec.undying_sec`（结算规则留在内核，但拼错键名不会再默默失效） |
 | 一张 `EffectRegistry` 里装着一局的全部构件 | 按层拆三张：`EffectRegistry`（战斗）、`LootRegistry`（战利品）、`RunRegistry`（一局）；内容管线要的全表由 `core/authoring/content_registries.gd` 合起来 |
@@ -3895,6 +3896,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.38 | 2026-10-03 | **界面样式收进一个 Theme**（报告 121，三项按推荐）。新 `ui/ui_theme.gd`（`UiTheme`）代码生成主题、并进引擎默认主题（不挂窗口：节点离树会丢主题重排字，系统缺中文字体时极慢），设置换底色原地重填；`UiPalette.style_button` 退化成选按钮变体（字号非默认才覆写）；游戏屏 / 背包 / 战斗 / 启动器的 `add_theme_*` 从 167 处降到 68 处（剩布局常量与注明的特例）；编辑器只挂主题；`tests/ui/test_theme.gd`（变体齐全、换底色跟着变、小工具零覆写、棘轮 68） |
 | v2.37 | 2026-10-03 | **读档由科技推算数值**（报告 120，三项按推荐；改 8.2）。`TechEffect.apply / heal` 合成幂等的 `derive`，`TechService.heal` → `derive`、`GameFlow.heal_techs` → `derive_techs`；`MetaState.from_dict` 先读 `tech_levels`、推算仓库尺寸等派生值，再按算出的尺寸装仓库（`GridInventory.from_dict` 的 `size_override`，放不下的找空位、再不行临时加行）；`GridInventory.shrink_rows / resize_rows`（只删空行）；存档去掉 `tech_buffs` / `safe_bonus`，不升版本 |
 | v2.36 | 2026-10-03 | **科技树配置表**（报告 119，五项按推荐）。`docs/techs.xlsx`（节点 / 等级 / 说明）是科技唯一来源：`TechsTable`（读表、校验、生成、对照）+ `tools/techs_xlsx_to_json.gd` 全量生成 `techs/*.json`、`run_buffs/tech_*.json` 与镜像 `docs/techs.md`，坏表一份都不写；`tools/check_content.gd` 对照表与 JSON。「是否点亮」仍读存档 `tech_levels`，逻辑不变；基地开发区加「科技等级」数字框（`GameFlow.dev_set_tech_level`） |
 | v2.35 | 2026-10-03 | **局外科技树**（报告 118，五项按推荐；改 8.2）。`TechDef.requires / column / description`，深度按前置算，导入器拦前置不存在与成环、撞位警告；新构件 `tech_run_buff`（每级换一条局外 buff → `MetaState.tech_buffs`）与 `tech_safe_size`（→ `MetaState.safe_bonus`），不升存档版本；开局合并开关与科技的 buff；科技页改左树（`TechTreeView`）右板（名称 / 效果 / 费用 / 点亮），上交只给选中节点、仓库折叠；首批三列十节点 + 十八条 `tech_*` 局外 buff（数值占位） |

@@ -78,6 +78,7 @@ func _ready() -> void:
 	flow.settings = GameSettings.load_from(settings_path)
 	UiText.apply(flow.settings)
 	UiPalette.apply(flow.settings)     # 091：背景底色
+	UiTheme.install(self)     # 121：界面主题挂在窗口上
 	# 089：存档位 —— 用默认路径（正式游戏）时按位存：老的单文件存档先搬进第 1 位，再切到设置里记的那一位。
 	# 测试 / 演示改了路径的走单文件模式
 	if save_path == RunSave.DEFAULT_PATH and meta_path == MetaSave.DEFAULT_PATH:

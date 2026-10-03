@@ -55,9 +55,6 @@ func rebuild() -> void:
 		b.custom_minimum_size = r.size
 		b.clip_text = true
 		b.text = "%s\n%s" % [Names.of(def), level_text(meta, def)]
-		if font != null:
-			b.add_theme_font_override("font", font)
-		b.add_theme_font_size_override("font_size", 14)
 		_style(b, def)
 		var id := def.id
 		b.pressed.connect(func(): select(id))
@@ -171,6 +168,7 @@ func _style(b: Button, def: TechDef) -> void:
 	if def.id == _selected:
 		box.border_color = UiPalette.FG
 		box.set_border_width_all(3)
+	# 121 特例：节点的样子按点亮状态实时换、可点亮的边框还要呼吸（_process 改这份底的边色），每个节点得有自己的一份
 	for k in ["normal", "hover", "pressed", "focus"]:
 		b.add_theme_stylebox_override(k, box)
 	b.add_theme_color_override("font_hover_color", b.get_theme_color("font_color"))

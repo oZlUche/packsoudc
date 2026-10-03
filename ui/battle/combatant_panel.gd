@@ -242,10 +242,9 @@ func note_fired(uid: int, now: float) -> void:
 func popup(amount: int, type: StringName, heal: bool = false, crit: bool = false) -> void:
 	var l := Label.new()
 	l.text = ("+%d" % amount) if heal else (("-%d!" if crit else "-%d") % amount)
-	if label_font != null:
-		l.add_theme_font_override("font", label_font)
 	# 104：暴击的飘字大一号、换色
 	l.add_theme_font_size_override("font_size", (28 if crit else 20) if amount >= 10 else (22 if crit else 16))
+	# 121 特例：飘字（字号按数大小、颜色按伤害类型 / 暴击 / 治疗），画布那一类，不进主题
 	l.add_theme_color_override("font_color", UiPalette.HEAL if heal else (UiPalette.CRIT if crit else UiPalette.damage_color(type)))
 	l.position = Vector2(
 		PAD + randf_range(0.0, size.x - PAD * 2 - 40), size.y * 0.45 + randf_range(-8.0, 8.0)

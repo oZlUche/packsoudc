@@ -246,4 +246,4 @@ func _refresh() -> void:
 		var price := _shelf_row.get_child(i).get_node_or_null("Price%d" % i) as Label
 		if price != null and _session.sold.has(i):
 			price.text = "已售"
-			price.add_theme_color_override("font_color", UiPalette.DIM)
+			price.theme_type_variation = UiTheme.LABEL_DIM     # 121：卖掉了换暗色变体

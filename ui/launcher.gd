@@ -78,6 +78,7 @@ func _ready() -> void:
 func _build() -> void:
 	var bg := ColorRect.new()
 	UiPalette.apply(GameSettings.load_from())     # 091：底色跟设置走
+	UiTheme.install(self)     # 121：界面主题挂在窗口上
 	bg.color = UiPalette.bg()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -105,12 +106,7 @@ func _build() -> void:
 
 func _card(entry: Dictionary) -> Control:
 	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = UiPalette.PANEL
-	style.border_color = UiPalette.LINE
-	style.set_border_width_all(1)
-	style.set_content_margin_all(12)
-	panel.add_theme_stylebox_override("panel", style)
+	UiTheme.panel(panel, 12)     # 121：主题的 PanelDark 变体
 
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
@@ -118,7 +114,6 @@ func _card(entry: Dictionary) -> Control:
 
 	var go := Button.new()
 	go.text = entry["title"]
-	go.add_theme_font_override("font", _font)
 	go.add_theme_font_size_override("font_size", 16)
 	var scene: String = entry["scene"]
 	go.pressed.connect(func(): _open(scene))
@@ -144,9 +139,7 @@ func _open(scene: String) -> void:
 func _label(text: String, font_size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_override("font", _font)
-	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", color)
+	UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
 	return l
 
 

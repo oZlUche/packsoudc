@@ -144,13 +144,7 @@ func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
 		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		text.custom_minimum_size.x = TEXT_WIDTH
 		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		text.add_theme_font_override("normal_font", font)
-		text.add_theme_font_override("bold_font", font)
-		text.add_theme_font_override("italics_font", font)
-		for k in ["normal_font_size", "bold_font_size", "italics_font_size"]:
-			text.add_theme_font_size_override(k, 17)
-		text.add_theme_color_override("default_color", UiPalette.FG)
-		text.add_theme_constant_override("line_separation", 6)
+		text.theme_type_variation = UiTheme.RICH_BODY     # 121：17 号、行距 6
 		text.text = body
 		scroll.add_child(text)
 	var options := _vbox(8)
