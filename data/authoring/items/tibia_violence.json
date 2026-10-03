@@ -15,7 +15,25 @@
     "faith",
     "faith:brute"
   ],
+  "faith_bonuses": [
+    {
+      "mode": "active",
+      "mods": [
+        {
+          "stat": "crit_damage",
+          "flat": 20.0
+        },
+        {
+          "stat": "crit_chance",
+          "flat": 10.0
+        }
+      ]
+    }
+  ],
   "combat": {
+    "base_stats": {
+      "damage": 15
+    },
     "rules": [
       {
         "trigger": {
@@ -33,8 +51,7 @@
         ],
         "effects": [
           {
-            "type": "deal_damage",
-            "amount": 15.0
+            "type": "deal_damage"
           }
         ]
       }
