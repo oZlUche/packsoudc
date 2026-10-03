@@ -17,7 +17,7 @@ extends RefCounted
 const KINDS: Array[String] = [
 	"tags", "damage_types", "run_buffs", "faiths", "recipes", "items",
 	"loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters",
-	"drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters", "achievements", "techs",
+	"drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters", "achievements", "techs", "help_pages",
 ]
 
 
@@ -68,6 +68,8 @@ static func export_of(kind: String, res: Resource):
 			return ContentExporter.export_achievement(res as AchievementDef)
 		"techs":
 			return ContentExporter.export_tech(res as TechDef)
+		"help_pages":
+			return ContentExporter.export_help_page(res as HelpPageDef)
 		_:
 			return null
 

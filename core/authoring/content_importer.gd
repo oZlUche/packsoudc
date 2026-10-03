@@ -121,6 +121,13 @@ class Context:
 		if def != null and def.id != &"":
 			events[def.id] = def
 
+	## id -> HelpPageDef（114）。「相关」对着它查
+	var help_pages: Dictionary = {}
+
+	func register_help_page(def: HelpPageDef) -> void:
+		if def != null and def.id != &"":
+			help_pages[def.id] = def
+
 	## id -> AchievementDef（091）
 	var achievements: Dictionary = {}
 
@@ -683,6 +690,44 @@ static func import_tech(data: Dictionary, ctx: Context, report: ImportReport) ->
 			if not ctx.items.is_empty() and not ctx.items.has(StringName(String(key))):
 				report.error("tiers[%d].items.%s" % [i, key], "道具库里没有 %s" % key)
 	return def
+
+
+## 114：百科的一页机制说明。分类在固定清单里、有标题有正文、相关道具是真道具、文本里的引用存在。
+## 「相关」指到的页要等全部导完才查得全（[method validate_help_pages]）
+static func import_help_page(data: Dictionary, ctx: Context, report: ImportReport) -> HelpPageDef:
+	var def := HelpPageDef.new()
+	_fill(def, data, "", ctx, report)
+	if def.id == &"":
+		report.error("id", "百科页必须有 id")
+	if def.id != &"" and String(def.id).contains(":"):
+		report.error("id", "百科页的 id 不能带冒号（冒号留给自动生成的词条页）")
+	if def.display_name.strip_edges() == "":
+		report.error("display_name", "百科页得有标题")
+	if def.text.strip_edges() == "":
+		report.error("text", "百科页得有正文")
+	if not HelpPageDef.CATEGORIES.has(String(def.category)):
+		report.error("category", "分类 %s 不在 %s 里" % [def.category, str(HelpPageDef.CATEGORIES)])
+	for i in def.see_items.size():
+		if not ctx.items.is_empty() and not ctx.items.has(def.see_items[i]):
+			report.error("see_items[%d]" % i, "道具库里没有 %s" % def.see_items[i])
+	check_text_refs(def.text, "text", ctx, report)
+	for lang in def.texts:
+		check_text_refs(String(def.texts[lang]), "texts.%s" % lang, ctx, report)
+	ctx.register_help_page(def)
+	return def
+
+
+## 114：全部导完后查百科页的「相关」：得是另一页的 id，或固定词条名
+static func validate_help_pages(ctx: Context, report: ImportReport) -> void:
+	var ids: Array = ctx.help_pages.keys()
+	ids.sort()
+	for pid in ids:
+		var def := ctx.help_pages[pid] as HelpPageDef
+		report.source = "help_pages/%s.json" % pid
+		for i in def.related.size():
+			var r := def.related[i]
+			if not ctx.help_pages.has(StringName(r)) and not Glossary.TERMS.has(r):
+				report.error("related[%d]" % i, "「%s」既不是百科页 id 也不是词条名" % r)
 
 
 ## 猎手（069 / 071）：数全得合理；行动逻辑可空（= 不动）；战败后果不能是空的；指定的敌人池得存在（批量导入时）

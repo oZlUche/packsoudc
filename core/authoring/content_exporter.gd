@@ -90,6 +90,10 @@ static func export_tech(def: TechDef) -> Dictionary:
 	return _dump(def)
 
 
+static func export_help_page(def: HelpPageDef) -> Dictionary:
+	return _dump(def)
+
+
 static func export_recipe(def: RecipeDef) -> Dictionary:
 	return _dump(def)
 
