@@ -16,6 +16,8 @@ class_name GridInventory
 extends ItemContainer
 
 const EMPTY_UID := 0
+## 120：读档时放不下的东西最多临时加几行来放（比最高的道具还高就够）
+const RESCUE_ROWS := 8
 
 var size: Vector2i = Vector2i(8, 6)
 
@@ -869,10 +871,14 @@ func to_dict() -> Dictionary:
 	}
 
 
-static func from_dict(d: Dictionary, db: ItemDatabase) -> GridInventory:
+## 120：[param size_override] 给了（非零）就按它建格子、忽略存档里的 size（仓库尺寸由科技推算）；
+## 这时原位越界或被占的物品先找个空位放（[method try_add]），还放不下就在底下临时加行放下并告警 —— 一件也不丢。
+## 没给时照旧：放不回原位的告警丢弃
+static func from_dict(d: Dictionary, db: ItemDatabase, size_override: Vector2i = Vector2i.ZERO) -> GridInventory:
 	var s: Array = d.get("size", [8, 6])
+	var overridden := size_override.x > 0 and size_override.y > 0
 	var inv := GridInventory.new(
-		Vector2i(int(s[0]), int(s[1])), int(d.get("id", 0)), bool(d.get("requires_bag", false))
+		size_override if overridden else Vector2i(int(s[0]), int(s[1])), int(d.get("id", 0)), bool(d.get("requires_bag", false))
 	)
 
 	var tags: Array[StringName] = []
@@ -902,12 +908,31 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> GridInventory:
 	for inst in bags_first + rest:
 		saved_seq[inst.uid] = inst.placed_seq
 	inv.begin_batch()
+	var homeless: Array = []
 	for inst in bags_first + rest:
-		if not inv.place(inst, inst.origin, inst.rotation):
-			push_warning(
-				"GridInventory.from_dict: uid %d 无法放回 %s，已丢弃（存档与当前定义不一致？）"
-				% [inst.uid, inst.origin]
-			)
+		if inv.place(inst, inst.origin, inst.rotation):
+			continue
+		if overridden:
+			homeless.append(inst)
+			continue
+		push_warning(
+			"GridInventory.from_dict: uid %d 无法放回 %s，已丢弃（存档与当前定义不一致？）"
+			% [inst.uid, inst.origin]
+		)
+	# 120：尺寸是算出来的（比存档里的小了）—— 原位放不下的找空位，再不行就加行
+	for inst in homeless:
+		if inv.try_add(inst):
+			continue
+		var grown := 0
+		while not inv.try_add(inst):
+			if grown >= RESCUE_ROWS:
+				break
+			inv.grow_rows(1)
+			grown += 1
+		if inv.has_item(inst.uid):
+			push_warning("GridInventory.from_dict: uid %d 在算出的 %s 里放不下，临时加了 %d 行（东西不丢；之后有空行时科技重算会收回）" % [inst.uid, size_override, grown])
+		else:
+			push_warning("GridInventory.from_dict: uid %d 加行也放不下，已丢弃（定义比仓库还宽？）" % inst.uid)
 	inv.end_batch()
 	var top := 0
 	for inst in inv.items():
@@ -932,6 +957,40 @@ func grow_rows(n: int) -> void:
 		_bag_owner[i] = EMPTY_UID
 		_blocked[i] = 0
 	changed.emit()
+
+
+## 120：从底往上删掉至多 [param n] 行**空行**（没有物品、也没有包覆盖）；碰到有东西的那一行就停下并告警。返回实际删了几行
+func shrink_rows(n: int) -> int:
+	var removed := 0
+	while removed < n and size.y > 1 and _row_empty(size.y - 1):
+		size = Vector2i(size.x, size.y - 1)
+		removed += 1
+	if removed < n and size.y > 1:
+		push_warning("GridInventory.shrink_rows: 第 %d 行有东西，只缩了 %d / %d 行" % [size.y - 1, removed, n])
+	if removed > 0:
+		var total := maxi(0, size.x * size.y)
+		_occ.resize(total)
+		_bag_owner.resize(total)
+		_blocked.resize(total)
+		changed.emit()
+	return removed
+
+
+## 120：行数变成 [param rows]：多了就 [method grow_rows]，少了就 [method shrink_rows]（只删空行）。返回变化后的行数
+func resize_rows(rows: int) -> int:
+	if rows > size.y:
+		grow_rows(rows - size.y)
+	elif rows < size.y:
+		shrink_rows(size.y - rows)
+	return size.y
+
+
+func _row_empty(y: int) -> bool:
+	for x in size.x:
+		var i := y * size.x + x
+		if _occ[i] != EMPTY_UID or _bag_owner[i] != EMPTY_UID:
+			return false
+	return true
 
 
 func _reset_cells() -> void:

@@ -1,6 +1,6 @@
 ## 110（作者定）：仓库扩建 = 第一项局外科技。1～3 级只要钱、每级仓库 +3 行且东西原地不动；
 ## 第 4 级起要建材，分批上交（上交即消耗、跨存档记着），交齐且钱够【升级】才亮，升完清上交记录；
-## 存档 v2 → v3；读档行数不足自动补；整理先同类再大小；仓库滚动后拖拽只认露在外面的部分；基地「科技」页。
+## 存档 v2 → v3；读档按进度表推算行数（120：先算容量再装仓库）；整理先同类再大小；仓库滚动后拖拽只认露在外面的部分；基地「科技」页。
 extends RefCounted
 
 const META := "user://test_110_meta.json"
@@ -152,18 +152,98 @@ static func run_migration_and_heal(t: TestCase) -> void:
 	t.eq(m.funds, 120, "钱还在")
 	t.eq(m.warehouse.item_count(), 1, "仓库那件还在")
 
-	# 自检：等级 2 但仓库还是基础尺寸（手改存档 / 改了基础尺寸）
+	# 推算：等级 2 但仓库还是基础尺寸（手改存档 / 改了基础尺寸）
 	var rules := GameFlow.load_meta_rules()
 	var m2 := MetaState.new(rules)
 	m2.tech_levels["warehouse"] = 2
 	var base := m2.warehouse.size.y
-	TechService.heal(m2, [_tech()])
+	TechService.derive(m2, [_tech()])
 	t.eq(m2.warehouse.size.y, base + 6, "补到基础 + 2 × 3 行")
-	TechService.heal(m2, [_tech()])
-	t.eq(m2.warehouse.size.y, base + 6, "再自检一次不再长")
+	TechService.derive(m2, [_tech()])
+	t.eq(m2.warehouse.size.y, base + 6, "再推算一次不再长")
 	m2.warehouse.grow_rows(5)
-	TechService.heal(m2, [_tech()])
-	t.eq(m2.warehouse.size.y, base + 11, "比期望大：不缩")
+	TechService.derive(m2, [_tech()])
+	t.eq(m2.warehouse.size.y, base + 6, "120：比期望大且多出的行是空的：缩回期望值")
+
+
+## 120（作者定）：读档先读进度表、按科技算出仓库容量，再往里装东西；存档不存科技算出来的数
+static func run_derive_on_load(t: TestCase) -> void:
+	t.begin("120 · 读档先算容量再装仓库：基础尺寸的档 + 仓库扩建 2 级 → 仓库 = 基础 + 6 行，东西还在原位")
+	ItemInstance.reset_uid_counter()
+	var db := _db()
+	var rules := GameFlow.load_meta_rules()
+	var defs := GameFlow.load_techs()
+	var m := MetaState.new(rules)
+	var base := m.warehouse.size
+	var ingot := ItemInstance.create(db.get_def(&"steel_ingot"), m.allocate_uid())
+	t.check(m.warehouse.place(ingot, Vector2i(0, 0), 0), "钢锭放在第 0 行")
+	m.tech_levels["warehouse"] = 2
+	var d := m.to_dict()
+	t.eq((d["warehouse"] as Dictionary)["size"], [base.x, base.y], "存档里仓库还是基础尺寸")
+	var back := MetaState.from_dict(d, db, rules, defs)
+	t.eq(back.warehouse.size, base + Vector2i(0, 6), "读回来：基础 + 2 × 3 行")
+	t.check(back.warehouse.has_item(ingot.uid) and back.warehouse.get_item(ingot.uid).origin == Vector2i(0, 0), "钢锭还在原位")
+	var legacy := MetaState.from_dict(d, db, rules)
+	t.eq(legacy.warehouse.size, base, "没给科技定义：按存档里的尺寸（兜底）")
+
+	t.begin("120 · 存档里仓库比科技算出的大、底下有东西：读档挪进范围内，仓库 = 算出的尺寸，一件不丢")
+	var big := MetaState.new(rules)
+	big.warehouse.grow_rows(6)     # 存档里 +6 行，但进度表里仓库扩建 0 级
+	var low := ItemInstance.create(db.get_def(&"steel_ingot"), big.allocate_uid())
+	t.check(big.warehouse.place(low, Vector2i(0, base.y + 4), 0), "钢锭放在算出的范围外")
+	var back2 := MetaState.from_dict(big.to_dict(), db, rules, defs)
+	t.eq(back2.warehouse.size, base, "仓库 = 算出的基础尺寸")
+	t.check(back2.warehouse.has_item(low.uid), "那块钢锭还在")
+	t.check(back2.warehouse.get_item(low.uid).origin.y < base.y, "挪进了范围内")
+	t.eq(back2.warehouse.item_count(), 1, "一件不丢")
+
+	t.begin("120 · 装不下（算出的仓库塞满了、还有越界的）：临时加行放下，件数不变")
+	var full := MetaState.new(rules)
+	full.warehouse.grow_rows(3)
+	var n := 0
+	while true:
+		var inst := ItemInstance.create(db.get_def(&"steel_ingot"), full.allocate_uid())
+		if not full.warehouse.try_add(inst, true):
+			break
+		n += 1
+	t.check(n > 0, "塞了 %d 件" % n)
+	var back3 := MetaState.from_dict(full.to_dict(), db, rules, defs)
+	t.eq(back3.warehouse.item_count(), n, "件数不变：%d" % n)
+	t.check(back3.warehouse.size.y > base.y and back3.warehouse.size.y <= base.y + 3, "临时加了行（%d 行，算出的是 %d）" % [back3.warehouse.size.y, base.y])
+	TechService.derive(back3, defs)
+	t.eq(back3.warehouse.item_count(), n, "再推算一次：有东西的行不删")
+
+	t.begin("120 · 存档不存 tech_buffs / safe_bonus；带这两项的旧档读回来一样（派生值来自进度表）")
+	var tm := MetaState.new(rules)
+	tm.tech_levels["luck"] = 2
+	tm.tech_levels["safe_box"] = 1
+	TechService.derive(tm, defs)
+	var td := tm.to_dict()
+	t.check(not td.has("tech_buffs") and not td.has("safe_bonus"), "to_dict 里没有这两项")
+	var fresh := MetaState.from_dict(td, db, rules, defs)
+	var old := td.duplicate(true)
+	old["tech_buffs"] = ["tech_luck_1", "tech_gone_9"]
+	old["safe_bonus"] = [5, 5]
+	var stale := MetaState.from_dict(old, db, rules, defs)
+	t.eq(fresh.tech_buffs, [&"tech_luck_2"] as Array[StringName], "派生出幸运第 2 级那条")
+	t.eq(stale.tech_buffs, fresh.tech_buffs, "旧档里存的 buff 不读")
+	t.eq(stale.safe_bonus, fresh.safe_bonus, "旧档里存的保险箱加成不读")
+	t.eq(fresh.safe_bonus, tm.safe_bonus, "保险箱加成 = 按级数算的")
+
+
+static func run_shrink_rows(t: TestCase) -> void:
+	t.begin("120 · shrink_rows：从底往上只删空行，碰到有东西的那一行停下")
+	ItemInstance.reset_uid_counter()
+	var db := _db()
+	var g := GridInventory.new(Vector2i(4, 6), 100, false)
+	var inst := ItemInstance.create(db.get_def(&"steel_ingot"), 1)
+	t.check(g.place(inst, Vector2i(0, 3), 0), "第 3 行放一块钢锭")
+	var bottom := 3 + inst.def.shape.size_rotated(0).y
+	var removed := g.shrink_rows(5)
+	t.eq(g.size.y, bottom, "缩到钢锭最底下那一行为止")
+	t.eq(removed, 6 - bottom, "只删了底下的空行")
+	t.check(g.has_item(inst.uid), "钢锭还在")
+	t.eq(g.resize_rows(bottom + 2), bottom + 2, "resize_rows 往大：长")
 
 
 static func run_tidy_by_kind(t: TestCase) -> void:
@@ -229,7 +309,7 @@ static func frame_tech_panel(t: TestCase, root: Window) -> void:
 	f.tech_defs = GameFlow.load_techs()
 	t.check(f.tech_defs.size() >= 1 and f.tech_of(&"warehouse") != null, "读到仓库扩建（118 起还有别的科技）")
 	m.tech_levels["warehouse"] = 3
-	f.heal_techs()
+	f.derive_techs()
 	var panel = load(TECH_PANEL).new()
 	root.add_child(panel)
 	panel.setup(f, UiPalette.cjk_font())

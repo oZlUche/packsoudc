@@ -52,7 +52,8 @@ func _ready() -> void:
 	var sets := SetDatabase.new()
 	sets.load_dir()
 	var rules := GameFlow.load_meta_rules()
-	var meta := MetaSave.read(items, meta_path, rules)
+	var techs := GameFlow.load_techs()     # 120：读档先按科技算仓库容量，再装仓库
+	var meta := MetaSave.read(items, meta_path, rules, techs)
 	if meta == null:
 		meta = MetaState.new(rules)
 	flow = GameFlow.new(items, enemies, sets, meta)
@@ -67,7 +68,7 @@ func _ready() -> void:
 	flow.faith_defs = GameFlow.load_faiths()
 	flow.recipes = GameFlow.load_recipes()
 	flow.achievement_defs = GameFlow.load_achievements()     # 091
-	flow.tech_defs = GameFlow.load_techs()     # 110
+	flow.tech_defs = techs     # 110
 	flow.help_pages = GameFlow.load_help_pages()     # 114：百科
 	# 校准记录（073）：正式游戏每走一步记一份玩家配置到 user://calibration/，木桩工具吃它
 	flow.recorder = CalibrationRecorder.new()
@@ -87,7 +88,7 @@ func _ready() -> void:
 	flow.player_baseline = CombatantBaseline.with_hp(60.0)
 	flow.screen_changed.connect(_on_screen_changed)
 	flow.run_changed.connect(_on_run_changed)     # 101 第 5 刀：只属于一局的 UI 接线（信仰探针）
-	flow.heal_techs()     # 110：读档后科技效果补齐（仓库行数）
+	flow.derive_techs()     # 110 / 120：新档也按进度表推算科技派生值
 	flow.check_achievements()     # 091：读档后补算（老存档、新加的成就）
 	flow.apply_item_locks()
 	flow.to_main_menu()

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.36 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.37 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -466,7 +466,7 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 - **神明总表是核心配置**（104）：`docs/gods.xlsx` 机器读的列（阈值、行为、献祭、等级效果、神名与神话定位、转化概率）由 `tools/gods_xlsx_to_json.gd` 写进信仰 JSON（其余字段原样保留），
   `GodsTable.check` 在 `tools/check_content.gd` 里对照，表与 JSON 对不上就红。读 xlsx 是 `XlsxReader`（zip + XML，只读值）。
 - **科技树配置表是科技的唯一来源**（119）：`docs/techs.xlsx` 的「节点」「等级」两张表由 `tools/techs_xlsx_to_json.gd` **全量**生成 `techs/*.json` 与 `run_buffs/tech_*.json`（`tech_run_buff` 每级一条，`effect.buffs` 工具填；表里没有的删掉）和只读镜像 `docs/techs.md`，全有或全无；`TechsTable.check` 在 `tools/check_content.gd` 里对照（含镜像）。
-  **改科技先改表**，别手改那些 JSON。是否点亮不进表：读存档的 `tech_levels`；开发区（基地仓库页右列，非导出包）每个科技一个数字框直接改它（`GameFlow.dev_set_tech_level`，效果走 `TechService.heal` 重算）。
+  **改科技先改表**，别手改那些 JSON。是否点亮不进表：读存档的 `tech_levels`；开发区（基地仓库页右列，非导出包）每个科技一个数字框直接改它（`GameFlow.dev_set_tech_level`，效果走 `TechService.derive` 重算）。
 
 ## 4. M2 · 自动战斗
 
@@ -3241,6 +3241,8 @@ func player_spec() -> CombatantSpec …
 读档后 `TechService.heal` 让每项效果按等级自检（`TechEffect.heal`：仓库行数 < 基础 + 3 × 级数就补，只补不缩）。基地第五个页签「科技」（`ui/game/tech_panel.gd`）：左仓库格子，右每项一张卡（等级、钱、每种材料已交 / 需要、【升级】），双击或拖进「上交区」上交。
 **科技树**（118，作者定，五项按推荐）：`TechDef` 加 `requires`（前置 id，**每项至少 1 级**才能点）、`column`（手写的列）、`description`（面板「效果」区的一句总述）。深度不写，按前置算（`TechService.depth_of`：根 0，其余 = 最深前置 + 1）；`TechService.prereqs_met / missing_prereqs / layout / cycle_members`，`ready` 多一个前置条件。导入器 `validate_techs`：前置不存在、成环报错；同列同深度撞位**只警告**（按 `order` 左右并排）。
 两种新构件：`tech_run_buff`（`buffs[k−1]` = 第 k 级给的 `RunBuffDef`，`scope = META`，替换上一级那条，记进 `MetaState.tech_buffs`；导入器查条数 = 级数、buff 存在且是局外的）与 `tech_safe_size`（每级 `cols / rows` 进 `MetaState.safe_bonus`，`GameFlow.safe_size()` 加上）。两个新字段有默认值，不升存档版本；`heal` 把 `tech_buffs` 修成只留当前级那条、清掉不属于任何科技的，`safe_bonus` 按级数重算。`TechEffect.describe_level(k, buff_defs)` 给面板「现在 / 下一级」两行（buff 型的就是那条 buff 的 `summary()`）。
+
+**科技派生值不入档**（120，作者定）：`tech_levels` 是唯一的进度事实，仓库行数、`safe_bonus`、`tech_buffs` 一律由它 + 科技定义推算（`TechEffect.derive(meta, level)` 幂等，`TechService.derive(meta, defs)`；升级、读档、新建空档、开发区改级数走同一条路），存档里去掉 `tech_buffs` / `safe_bonus`（不升版本）。读档顺序是**先读进度表、再算容量、最后装仓库**：`MetaState.from_dict(d, items, rules, tech_defs)` 在还空着的仓库上 derive，再 `GridInventory.from_dict(w, items, 算出的尺寸)` 放回物品 —— 原位越界 / 被占的先 `try_add` 找空位，还放不下就临时加行并告警，一件不丢；仓库缩行（`shrink_rows`）只删底下的空行。没传 `tech_defs` 时按存档里的尺寸建仓库（兜底）。
 基地「科技」页（`ui/game/tech_panel.gd`）改成**左树右板**：左 `TechTreeView`（`ui/game/tech_tree_view.gd`，深度 0 在最下面往上长，按前置画线，两端都点亮是橙线；节点三种样子：已点亮橙底 / 可点亮亮边呼吸 / 锁住暗字，选中的加一圈前景色边；多级一个节点写 Lv n / m，单级写已点亮 / 未点亮）；右板从上到下 名称 → 效果（总述 + 现在 / 下一级）→ 费用（钱、材料已交 / 需要、锁住的写「需要先点亮：…」、满级写已满级）→【点亮】（单级）/【升级】（多级）。下面上交区 + 默认收起的仓库格子，**上交只给选中的节点**（110 的「谁要就给谁」去掉）。首批三列十个节点（后勤 / 体魄 / 探索，数值占位），科技给的十八条局外 buff 在基地右栏的开发开关里归「科技给的」分组。
 仓库视图都包进 `ScrollBox`（只竖向，最多约 10 行高）；`DragLayer.view_at` 用视图**当前**全局矩形与裁剪祖先的交集（`visible_rect`），滚走的部分不接落点。
 仓库「整理」（`GridTidy`）改成**先同类再大小**：种类序是代码常量 `KIND_ORDER`（武器 → 盾 / 防具 / 插件 → 信仰 → 药剂 / 食物 → 弹药 / 工具 / 试剂 → 材料 / 零件 / 宝石 → 珍宝 / 其他，取第一个命中的标签）。
@@ -3893,6 +3895,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.37 | 2026-10-03 | **读档由科技推算数值**（报告 120，三项按推荐；改 8.2）。`TechEffect.apply / heal` 合成幂等的 `derive`，`TechService.heal` → `derive`、`GameFlow.heal_techs` → `derive_techs`；`MetaState.from_dict` 先读 `tech_levels`、推算仓库尺寸等派生值，再按算出的尺寸装仓库（`GridInventory.from_dict` 的 `size_override`，放不下的找空位、再不行临时加行）；`GridInventory.shrink_rows / resize_rows`（只删空行）；存档去掉 `tech_buffs` / `safe_bonus`，不升版本 |
 | v2.36 | 2026-10-03 | **科技树配置表**（报告 119，五项按推荐）。`docs/techs.xlsx`（节点 / 等级 / 说明）是科技唯一来源：`TechsTable`（读表、校验、生成、对照）+ `tools/techs_xlsx_to_json.gd` 全量生成 `techs/*.json`、`run_buffs/tech_*.json` 与镜像 `docs/techs.md`，坏表一份都不写；`tools/check_content.gd` 对照表与 JSON。「是否点亮」仍读存档 `tech_levels`，逻辑不变；基地开发区加「科技等级」数字框（`GameFlow.dev_set_tech_level`） |
 | v2.35 | 2026-10-03 | **局外科技树**（报告 118，五项按推荐；改 8.2）。`TechDef.requires / column / description`，深度按前置算，导入器拦前置不存在与成环、撞位警告；新构件 `tech_run_buff`（每级换一条局外 buff → `MetaState.tech_buffs`）与 `tech_safe_size`（→ `MetaState.safe_bonus`），不升存档版本；开局合并开关与科技的 buff；科技页改左树（`TechTreeView`）右板（名称 / 效果 / 费用 / 点亮），上交只给选中节点、仓库折叠；首批三列十节点 + 十八条 `tech_*` 局外 buff（数值占位） |
 | v2.34 | 2026-10-03 | **战斗内部日志与回放存档**（报告 117，四项按推荐）。`BattleTrace` 挂 `BattleContext.trace`（默认 null，零开销，开不开逐条一样）：全部事件、规则出手 / 跳过与原因、伤害管线每一级、掷骰（`BattleContext.roll`，代替方案的 TracedRng）、buff、时间轮、每 5 秒快照。`NodeEvents._fight` / 沙盒写进 `user://battle_logs`（.jsonl / .txt / .replay.json，留 50 场）；`GameSettings.battle_trace` 非导出包默认开，设置屏开发区开关；开发工具「战斗回放」浏览；`tools/replay_log.gd` 命令行。见 4.8 末段 |

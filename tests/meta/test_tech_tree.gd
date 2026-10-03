@@ -1,5 +1,5 @@
 ## 118（作者定）：局外科技树 —— 前置（至少 1 级）、列手写深度按前置算、多级一个节点；
-## 两种新构件（每级换一条局外 buff、保险箱扩格），开局一局读到科技加成；读档自检修 tech_buffs 与 safe_bonus；
+## 两种新构件（每级换一条局外 buff、保险箱扩格），开局一局读到科技加成；读档由进度表推算 tech_buffs 与 safe_bonus（120 起不入档）；
 ## 导入器拦前置不存在 / 成环、撞位只警告；首批三列十个节点；科技页左树右板、上交只给选中的节点
 extends RefCounted
 
@@ -85,13 +85,13 @@ static func run_run_buff_effect(t: TestCase) -> void:
 	t.check(not m.active_buffs.has(eff.buffs[1]), "开发开关那一栏不动")
 	m.tech_buffs.append(eff.buffs[0])
 	m.tech_buffs.append(&"tech_gone_1")
-	TechService.heal(m, defs)
-	t.eq(m.tech_buffs, [eff.buffs[1]] as Array[StringName], "读档自检：只留当前级那条、不属于科技的清掉")
+	TechService.derive(m, defs)
+	t.eq(m.tech_buffs, [eff.buffs[1]] as Array[StringName], "推算：只留当前级那条、不属于科技的清掉")
 	var text := eff.describe_level(2, buffs)
 	t.eq(text, (buffs[eff.buffs[1]] as RunBuffDef).summary(), "面板那句：%s" % text)
 	# 存档来回
-	var back := MetaState.from_dict(m.to_dict(), _db(), GameFlow.load_meta_rules())
-	t.eq(back.tech_buffs, m.tech_buffs, "tech_buffs 存档来回")
+	var back := MetaState.from_dict(m.to_dict(), _db(), GameFlow.load_meta_rules(), defs)
+	t.eq(back.tech_buffs, m.tech_buffs, "120：tech_buffs 不入档，读档由进度表推算回来")
 	t.eq(int(m.to_dict()["version"]), MetaState.SAVE_VERSION, "不升存档版本")
 
 
@@ -113,15 +113,12 @@ static func run_safe_size_effect(t: TestCase) -> void:
 	var base := m.rules.safe_size if m.rules != null else Vector2i(3, 3)
 	t.eq(f.safe_size(), base + Vector2i(eff.cols, eff.rows), "开局保险箱尺寸 = 规则 + 科技")
 	m.safe_bonus = Vector2i.ZERO
-	TechService.heal(m, defs)
-	t.eq(m.safe_bonus, Vector2i(eff.cols, eff.rows), "读档按级数重算")
-	var back := MetaState.from_dict(m.to_dict(), _db(), GameFlow.load_meta_rules())
-	t.eq(back.safe_bonus, m.safe_bonus, "存档来回")
-	var old := m.to_dict()
-	old.erase("safe_bonus")
-	old.erase("tech_buffs")
-	var legacy := MetaState.from_dict(old, _db(), GameFlow.load_meta_rules())
-	t.check(legacy != null and legacy.safe_bonus == Vector2i.ZERO and legacy.tech_buffs.is_empty(), "旧档没有这两项：默认值")
+	TechService.derive(m, defs)
+	t.eq(m.safe_bonus, Vector2i(eff.cols, eff.rows), "推算按级数重算")
+	var back := MetaState.from_dict(m.to_dict(), _db(), GameFlow.load_meta_rules(), defs)
+	t.eq(back.safe_bonus, m.safe_bonus, "120：safe_bonus 不入档，读档由进度表推算回来")
+	var bare := MetaState.from_dict(m.to_dict(), _db(), GameFlow.load_meta_rules())
+	t.check(bare != null and bare.safe_bonus == Vector2i.ZERO and bare.tech_buffs.is_empty(), "没给科技定义：派生值留给调用方推算（默认值）")
 
 
 static func run_run_reads_tech(t: TestCase) -> void:
