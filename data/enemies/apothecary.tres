@@ -14,4 +14,4 @@ schools = Array[StringName]([&"rapid"])
 base_stats = {
 "max_hp": 45
 }
-item_tags = Array[StringName]([&"consumable", &"tool", &"reagent", &"material", &"rapid", &"melee"])
+item_tags = Array[StringName]([&"remedy", &"tool", &"reagent", &"material", &"rapid", &"melee"])

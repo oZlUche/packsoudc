@@ -20,4 +20,4 @@ display_names = {
 shape = SubResource("Resource_8sg0y")
 rarity = 2
 is_bag = true
-bag_accept_tags = Array[StringName]([&"consumable"])
+bag_accept_tags = Array[StringName]([&"remedy", &"food"])

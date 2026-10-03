@@ -31,7 +31,7 @@ enemy = &"warden"
 
 [sub_resource type="Resource" id="Resource_ayh5t"]
 script = ExtResource("2_4i4ys")
-common_tags = Array[StringName]([&"gear", &"consumable", &"part", &"tool"])
+common_tags = Array[StringName]([&"gear", &"remedy", &"food", &"part", &"tool"])
 
 [sub_resource type="Resource" id="Resource_y6d4q"]
 script = ExtResource("4_8j5x1")

@@ -28,6 +28,10 @@ func open(payload: Dictionary) -> void:
 	_view.custom_minimum_size = Vector2(1160, 780)
 	col.add_child(_view)
 	_view.finished.connect(_on_finished)
+	# 109（作者定）：倍速跨局继承 —— 开场按设置里的，切了就写回去
+	if flow.settings != null:
+		_view.set_speed(flow.settings.battle_speed)
+	_view.speed_changed.connect(_on_speed_changed)
 
 	_next = _button("跳过并继续", proceed, 14, UiPalette.Tier.PRIMARY)
 	col.add_child(_next)
@@ -77,3 +81,11 @@ func _names_of(spec: CombatantSpec) -> Dictionary:
 		var def := flow.items.get_def(item.def_id)
 		out[item.source_uid] = Names.of(def) if def != null else String(item.def_id)
 	return out
+
+
+## 109：玩家在回放里切了倍速 → 记进设置并存盘（和「拿走最后一件自动关闭」同一个写法）
+func _on_speed_changed(speed: float) -> void:
+	if flow.settings == null:
+		return
+	flow.settings.battle_speed = speed
+	flow.save_settings()

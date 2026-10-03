@@ -14,7 +14,7 @@ schools = Array[StringName]([&"ranged"])
 base_stats = {
 "max_hp": 28
 }
-item_tags = Array[StringName]([&"ranged", &"ammo", &"consumable"])
+item_tags = Array[StringName]([&"ranged", &"ammo", &"remedy"])
 signature_by_strength = {
 "0": ["shortbow"],
 "1": ["longbow"],

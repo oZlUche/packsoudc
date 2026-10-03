@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.23 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.24 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -383,8 +383,8 @@ func begin_batch() / end_batch()                  # 变更合批
 头一回踩上一个点时 `_on_arrive` 再清一次，**在那个点的事发生之前**（不然事件给的东西刚进暂存区就被自己清掉）。空的不发信号；走不成（不相邻）不清。
 `NodeEvents.last_handled_id` 仍记着最近发生过事的点（事件层要用），只是不再决定清不清。
 
-提示按玩家设置的档位（`GameSettings.storage_warn_mode`，存 `user://settings.json`）：有东西就提 / 只提稀有度达到某档的 / 只提价值达到某数的 / 从不；
-挑哪些出来提由 `StorageWarning.at_risk` 算，地图屏在走之前弹一块面板（照走 / 先整理背包 / 取消）。档位是数据里的一张表，加档位不改分支。
+离开点时**不弹提示**（109，作者定）：087 起暂存区按点保留、回来能拿，提示只是在复述一件没有损失的事。原来的提醒档位
+（`GameSettings.storage_warn_*`）与地图屏的确认面板一起删了；只留地图日志里那一行「暂存区里的 N 件留在了那里」（`StorageWarning.describe`）。
 
 > 曾经的另一案是「整局保留、结算才清」（15 节第 7 项）。作者定的是按点清：暂存区是在一个点上腾出来的空间，节奏是每个点收拾一次。
 > 两案对代码的要求相同 —— 各系统坚持「只看棋盘」，所以之前推迟决定没有阻塞任何模块。
@@ -3706,7 +3706,7 @@ res://
                     remove_map_buff  start_battle  open_search  open_shop  next_event  say
       effects/      vitality_max_bonus  starting_funds_bonus  extra_searches  shop_price_mult  luck_bonus   # RunEffect 构件（062）
     meta/           meta_state  meta_save  meta_rules              # 跨局（8.2）：仓库格子、带回来的棋盘、图鉴、局外 buff
-    settings/       game_settings                                  # 玩家设置（3.4 的提醒档位）
+    settings/       game_settings                                  # 玩家设置（偏好：自动关战利品屏、底色、战斗倍速……；跨局跨存档位）
   data/
     authoring/      items/  loadouts/  characters/  difficulties/  enemies/  enemy_pools/  hunters/  hunters/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/  maps/
     items/  loadouts/  characters/  difficulties/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/     # 导入器产出，也进 git
@@ -3855,6 +3855,7 @@ res://
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v2.24 | 2026-10-03 | **删【消耗品】、四条小修**（报告 107 §2.6、109，作者定；改 3.4）：`consumable` 标签删掉（那些东西按冷却反复出手、并不会消耗，名字误导），换成 `remedy`【药剂】（抗毒包、绷带、医疗包、药膏、兴奋剂，`tip = false`）；口粮只留 `food`；药水带准入改 `["remedy", "food"]`；8 个敌人的身份标签 consumable → remedy；两个敌人池的通用标签换成 remedy + food，圈出来的道具和原来一样。离开点**不再弹暂存区提示**，提醒档位与设置屏那一块一起删。**战斗倍速记进 `GameSettings.battle_speed`**（跨局、跨存档位；只认 1 / 2 / 4，别的回 1×），回放里切一次就存，下一场照这个速度开场。仓库加「整理」（`GridTidy`：先大后小、再按稀有度 / id / uid，行优先放回；放不下整批回滚，只发一次 changed，不盖置入序号）。局外仓库面板与开局屏接上**双击快速置入**（带回来的背包 ⇄ 仓库、仓库 / 暂存区 → 初始包、棋盘 → 仓库；初始包与预设套不动），和局内同一条 `transfer_auto` |
 | v2.23 | 2026-10-03 | **关键词弹窗按字段开关**（报告 107，作者定；改 4.8）：`TagDef.tip` 与 `TERMS` 的 `tip` 决定一个词要不要弹词条 —— 能直观理解的词（时机词、冷却 / 耐力 / 耗耐力 / 信力 / 自发、近战 / 远程、武器 / 盾 / 防具 / 珍宝这类大类、火焰 / 毒 / 流血这类伤害类型）全关，带规则的（急速、防护、护盾、直接伤害、叠层、信仰 / 信物 / 封印 / 符号、骨制品 / 金属 / 自然）照弹；关掉的词**不进侧窗、主文字里也不标色**，但说明文字一字不动。buff 词条不受这个字段管。赐福长弓的侧窗从 13 个降到 3 个。「休眠」整条词条删掉：**状态就是颜色**，信仰行亮 = 生效、灰 = 休眠或没激活，悬浮窗不再写那一行与「—— 现在…」尾巴。另加一条校验：毒与流血没有直接伤害形态（天生是 buff），道具自己的规则里打毒伤 / 流血伤 → 导入 error。图鉴异体格改成**外框不动、里面的物品错位叠画**。打法标签（快攻 / 重击 / 重型）**暂未删除** —— 7 个敌人的流派与身份标签在用它们挑配装，删了组不出装，先只关掉弹窗，等作者定怎么改流派 |
 | v2.22 | 2026-10-02 | **标准轴补三条 + 护盾画成生命条外框**（报告 106，作者定；改 4.3 / 4.6 / 4.8）：轴表加 `armor`【格挡 / 破绽】、`max_hp`【生长 / 衰颓】、`max_mana`【充盈 / 枯竭】三条单位级固定值轴（每层 ±1，上限轴靠 `ResourcePool.set_max` 既有规矩：涨了当前值跟涨、降了夹到新上限、归零不可用）。**防护为负倒贴**（破绽 3 层 = 直接伤害 +3），第 4 步不再对负值取 min。**直接伤害按来源定**（第八节，作者定）：武器（道具的规则）造成的是直接、buff 造成的是非直接、以血为代价的自伤不算，`DamagePacket.direct` 记它，效果上留 `direct_override` 作「另行说明」的口子；`DamageTypeDef` 那列「吃不吃护甲」删掉（按类型判与按来源判重复，真实内容里中毒 / 流血都挂在 buff 上，所以数值没变）。表现层：护盾不再是独立的一条，画成生命条外侧的粗白框，长度 = 护盾 / 生命上限 |
 | v2.21 | 2026-10-02 | **耐力消耗按层数连乘**（报告 105 第十节，作者补；改 4.3）：轴表加第三种模式 `COMPOUND`（`终值 × (步长/100)^层数`，|层数| 次定点乘法、不用 `pow`，负层反过来除），新轴 `stamina_cost`（步长 97，正名「灵巧」负名「笨拙」，作者定），结算与百分比轴走同一条路（`is_factor`）。日神 3 级从「给挑中的武器加 −20% 耐力消耗乘区」改成「开战获得 5 层灵巧」≈ ×85.9%：新 perk `axis_boost{axis, stacks}`（通用的「开战带 n 层 X」），`EnchantWeaponsPerk.stamina_cost_percent` 删。轴是单位级的、落到每件道具的终值上（作者确认只有武器消耗耐力）；层数记系统层，净化洗不掉。日神编译金样有意重录，四份金样都多记一个 `axes` 字段 |

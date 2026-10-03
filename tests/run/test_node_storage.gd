@@ -196,63 +196,44 @@ static func run_clear_on_leave(t: TestCase) -> void:
 	_cleanup()
 
 
-static func run_warning_tiers(t: TestCase) -> void:
-	t.begin("暂存区提醒 · 四个档位：有就提 / 稀有度 / 价值 / 从不")
+static func run_left_behind_line(t: TestCase) -> void:
+	t.begin("暂存区 · 离开时留下的那句日志（109：提醒档位删了，只留描述）")
 
 	var c := _content()
-	var by_rarity := {}
+	var items: Array = []
 	for id in c.items.ids():
 		var d := c.items.get_def(id)
-		if not d.is_bag and not by_rarity.has(d.rarity):
-			by_rarity[d.rarity] = d
-	t.check(by_rarity.size() >= 3, "道具库里至少三档稀有度（实际 %d）" % by_rarity.size())
-	var items: Array = []
-	for r in by_rarity:
-		items.append(ItemInstance.create(by_rarity[r]))
-	var s := GameSettings.new()
-	s.storage_warn_mode = &"any"
-	t.eq(StorageWarning.at_risk(items, s).size(), items.size(), "有就提：全部")
-	s.storage_warn_mode = &"never"
-	t.check(StorageWarning.at_risk(items, s).is_empty() and not StorageWarning.should_warn(items, s), "从不：一件都不提")
-	s.storage_warn_mode = &"rarity"
-	s.storage_warn_rarity = 2
-	var expect_r := 0
-	for inst in items:
-		if (inst as ItemInstance).def.rarity >= 2:
-			expect_r += 1
-	t.eq(StorageWarning.at_risk(items, s).size(), expect_r, "稀有度 ≥ 2：%d 件" % expect_r)
-	s.storage_warn_mode = &"value"
-	s.storage_warn_value = 60
-	var expect_v := 0
-	for inst in items:
-		if ItemValue.of((inst as ItemInstance).def) >= 60:
-			expect_v += 1
-	t.eq(StorageWarning.at_risk(items, s).size(), expect_v, "价值 ≥ 60：%d 件" % expect_v)
+		if not d.is_bag and items.size() < 3:
+			items.append(ItemInstance.create(d))
 	t.check(StorageWarning.describe(items).contains("%d 件" % items.size()), "一句话里有件数")
-	t.eq(StorageWarning.at_risk([], s).size(), 0, "空的不提")
-	t.eq(StorageWarning.at_risk(items, null).size(), items.size(), "没给设置按默认（有就提）")
+	t.check(StorageWarning.describe([]).begins_with("0 件"), "空的也能写")
+	t.check(GameSettings.new().get("storage_warn_mode") == null, "提醒档位的设置字段删了")
 
 
 static func run_settings_round_trip(t: TestCase) -> void:
 	t.begin("设置 · 默认值、往返、坏值回默认、文件读写")
 
 	var s := GameSettings.new()
-	t.eq(s.storage_warn_mode, &"any", "默认有就提")
-	s.storage_warn_mode = &"value"
-	s.storage_warn_value = 250
+	t.eq(s.battle_speed, 1.0, "倍速默认 1×")
+	s.battle_speed = 4.0
+	s.loot_auto_close = true
 	var back := GameSettings.from_dict(s.to_dict())
-	t.eq([back.storage_warn_mode, back.storage_warn_rarity, back.storage_warn_value], [&"value", 2, 250], "往返")
-	t.eq(GameSettings.from_dict({"version": 1, "storage_warn_mode": "nope"}).storage_warn_mode, &"any", "不认识的档位回默认")
-	t.eq(GameSettings.from_dict({"version": 99, "storage_warn_mode": "never"}).storage_warn_mode, &"any", "版本不对回默认")
+	t.eq([back.battle_speed, back.loot_auto_close], [4.0, true], "往返")
+	t.eq(GameSettings.from_dict({"version": 1, "battle_speed": 3.0}).battle_speed, 1.0, "不在表里的倍速回 1×")
+	t.eq(GameSettings.from_dict({"version": 1, "battle_speed": 0.0}).battle_speed, 1.0, "0× 也回 1×")
+	t.eq(GameSettings.from_dict({"version": 99, "battle_speed": 2.0}).battle_speed, 1.0, "版本不对回默认")
+	t.eq(GameSettings.from_dict({"version": 1, "storage_warn_mode": "never", "battle_speed": 2.0}).battle_speed, 2.0,
+		"旧文件里多出来的提醒档位键不碍事（不用升版本）")
+	t.check(not s.to_dict().has("storage_warn_mode"), "提醒档位不再写进文件")
 	GameSettings.remove(SETTINGS)
-	t.eq(GameSettings.load_from(SETTINGS).storage_warn_mode, &"any", "没有文件就是默认")
+	t.eq(GameSettings.load_from(SETTINGS).battle_speed, 1.0, "没有文件就是默认")
 	t.eq(s.save_to(SETTINGS), OK, "写文件")
-	t.eq(GameSettings.load_from(SETTINGS).storage_warn_value, 250, "读回来")
+	t.eq(GameSettings.load_from(SETTINGS).battle_speed, 4.0, "读回来")
 	GameSettings.remove(SETTINGS)
 
 
 static func frame_map_prompt(t: TestCase, root: Window) -> void:
-	t.begin("地图屏 · 离开发生过事的点前先问一句；档位「从不」就直接走")
+	t.begin("地图屏 · 离开发生过事的点直接走，不再弹暂存区提示（109）")
 
 	var c := _content()
 	var kit := _kit(c)
@@ -302,12 +283,6 @@ static func frame_map_prompt(t: TestCase, root: Window) -> void:
 	t.check(run.will_clear_storage(), "在战斗点上、暂存区有东西")
 	var to: int = run.travel.available_moves()[0]
 	t.check(map.step(to), "按走")
-	t.check(map.step_confirm_open(), "先问一句")
-	t.eq(run.travel.current_id, int(found["next"]), "人还没动")
-	map.cancel_step()
-	t.check(not map.step_confirm_open() and run.travel.current_id == int(found["next"]), "取消：面板关了、人没动")
-	map.step(to)
-	t.check(map.confirm_step(), "照走")
 	t.eq(run.travel.current_id, to, "走了")
 	t.eq(run.storage.item_count(), 0, "暂存区清了")
 	guard = 0
@@ -324,14 +299,6 @@ static func frame_map_prompt(t: TestCase, root: Window) -> void:
 				ov2.leave()
 			_:
 				ov2.proceed()
-	# 「从不」：不问
-	flow.settings.storage_warn_mode = &"never"
-	if run.will_clear_storage() or run.events.last_handled_id == run.travel.current_id:
-		if run.storage.item_count() == 0:
-			run.storage.admit(ItemInstance.create(c.items.get_def(&"ration")))
-		var to2: int = run.travel.available_moves()[0]
-		map.step(to2)
-		t.check(not map.step_confirm_open(), "档位「从不」：不问直接走")
 	flow.to_main_menu()
 	game.queue_free()
 	_cleanup()

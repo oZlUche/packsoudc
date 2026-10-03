@@ -40,7 +40,7 @@ static func run(t: TestCase) -> void:
 	# --- 标签、包 ---
 	var bag: ItemDef = _import_item({
 		"id": "belt", "shape": ["1", "1", "1"], "is_bag": true,
-		"tags": ["gear"], "bag_accept_tags": ["consumable"],
+		"tags": ["gear"], "bag_accept_tags": ["remedy"],
 		"bag_mods": [{"stat": "haste", "mult_category": "HASTE", "mult_percent": 15}],
 	})[0]
 	t.check(bag.is_bag, "是包")
@@ -306,7 +306,7 @@ static func run_validation(t: TestCase) -> void:
 
 	# --- 警告不阻断 ---
 	var warn_only := _import_item({
-		"id": "x", "shape": ["1"], "bag_accept_tags": ["consumable"],
+		"id": "x", "shape": ["1"], "bag_accept_tags": ["remedy"],
 	})
 	t.check((warn_only[1] as ImportReport).ok(), "只有警告时仍然产出资产")
 	t.eq((warn_only[1] as ImportReport).warnings.size(), 1, "提醒了「不是包，准入标签不生效」")
