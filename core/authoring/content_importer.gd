@@ -650,6 +650,14 @@ static func import_difficulty(data: Dictionary, ctx: Context, report: ImportRepo
 		report.error("id", "难度必须有 id")
 	if def.level < 0:
 		report.error("level", "档位不能为负（0 = 普通）")
+	# 127：搜索保底的覆盖只有 normal / advanced 两种，值是逐件稀有度下限
+	for key in def.search_floors.keys():
+		if not ["normal", "advanced"].has(String(key)):
+			report.error("search_floors", "键只能是 normal / advanced，不认识 '%s'" % key)
+			continue
+		def.search_floors[key] = _floor_rows([def.search_floors[key]], "search_floors.%s" % key, report)[0] if def.search_floors[key] is Array else []
+		if not (def.search_floors[key] is Array) or (def.search_floors[key] as Array).is_empty():
+			report.error("search_floors.%s" % key, "应为非空的稀有度下限表，比如 [1, 0]")
 	for i in def.mechanics.size():
 		if def.mechanics[i] == null:
 			report.error("mechanics[%d]" % i, "空的机制")
@@ -1109,6 +1117,27 @@ static func _validate_node_rules(rules: NodeRules, ctx: Context, report: ImportR
 			report.error("search.reveal_seconds[%d]" % i, "耗时不能为负")
 		if i > 0 and s.reveal_seconds[i] < s.reveal_seconds[i - 1]:
 			report.error("search.reveal_seconds[%d]" % i, "稀有度 %d 的耗时 %.2f 低于稀有度 %d 的 %.2f —— 越稀有搜得越久" % [i, s.reveal_seconds[i], i - 1, s.reveal_seconds[i - 1]])
+	# 127：保底阶梯 —— 每行是逐件稀有度下限（0～5）；JSON 的数读回来是小数，还原成整数
+	s.search_floors = _floor_rows(s.search_floors, "search.search_floors", report)
+
+
+## 127：逐件稀有度下限的表（几行）—— 每行非空、每项 0～5，统一成整数
+static func _floor_rows(rows: Array, at: String, report: ImportReport) -> Array:
+	var out: Array = []
+	for i in rows.size():
+		var row: Variant = rows[i]
+		if not (row is Array) or (row as Array).is_empty():
+			report.error("%s[%d]" % [at, i], "每行得是非空的稀有度下限表，比如 [1, 0]")
+			out.append([])
+			continue
+		var clean: Array = []
+		for v in row:
+			var r := int(v)
+			if r < 0 or r > 5:
+				report.error("%s[%d]" % [at, i], "稀有度下限得在 0～5（现在 %d）" % r)
+			clean.append(r)
+		out.append(clean)
+	return out
 
 
 ## 作者定的形状写成校验：概率在 0～1，**稀有度越高基础掉落率越低**（非递增），珍宝的稀有度得是真的稀有度、权重为正。

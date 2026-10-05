@@ -59,6 +59,8 @@ var items: ItemDatabase = null
 var drop_rule: DropRule = null
 ## 126：现造的敌人（随机点揭成战斗、搜索遭遇）也按它带非战斗道具
 var carry_rule: CarryRule = null
+## 127：这一局的进阶难度（搜索保底按它的等级挑阶梯表的行）
+var difficulty_def: DifficultyDef = null
 ## 钱（6.6）。null = 这一局不算钱
 var wallet: Wallet = null
 ## 091：局外状态（旗标）；沙盒里 null
@@ -634,6 +636,7 @@ func _open_search(node: MapNode, auto: bool = false) -> void:
 	if session == null or session.node != node:
 		session = SearchSession.new(node, rules.search, items, _rng_for(node, "search"), float(_depths.get(node.id, 0.0)))
 		session.extra_searches = _run_ctx().extra_searches
+		session.search_floor = SearchSession.floor_for(node, rules.search, difficulty_def)     # 127
 		var s := session
 		var sr := rules.search
 		var bless_rng := _rng_for(node, "bless_search")

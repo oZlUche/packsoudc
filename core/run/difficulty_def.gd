@@ -22,6 +22,9 @@ extends Resource
 @export var mechanics: Array[RunMechanic] = []
 ## 数值修饰（RunEffect / LootEffect）
 @export var effects: Array[Effect] = []
+## 127：这一档的搜索保底和阶梯表（[member SearchRules.search_floors]）不一样时写这里（绝对值）：
+## `{"normal": [...], "advanced": [...]}`，没写的那种沿用阶梯
+@export var search_floors: Dictionary = {}
 
 
 func run_effects() -> Array[RunEffect]:

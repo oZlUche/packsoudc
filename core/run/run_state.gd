@@ -801,6 +801,7 @@ func _wire_events() -> void:
 	events.items = items
 	events.drop_rule = drop_rule
 	events.carry_rule = carry_rule
+	events.difficulty_def = difficulty
 	events.wallet = wallet
 	events.economy = economy
 	events.difficulty = chapter.difficulty
