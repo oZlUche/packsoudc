@@ -42,6 +42,10 @@ static func export_drop_rule(rule: DropRule) -> Dictionary:
 	return _dump(rule)
 
 
+static func export_carry_rule(rule: CarryRule) -> Dictionary:
+	return _dump(rule)
+
+
 static func export_node_rules(rules: NodeRules) -> Dictionary:
 	return _dump(rules)
 

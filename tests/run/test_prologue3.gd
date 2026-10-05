@@ -55,6 +55,12 @@ static func _find(container, id: StringName) -> ItemInstance:
 	return null
 
 
+## 123：背包里找，没有再看暂存区
+static func _find_any(s: RunState, id: StringName) -> ItemInstance:
+	var inst := _find(s.board, id)
+	return inst if inst != null else _find(s.storage, id)
+
+
 static func _option(def: EventDef, label: String) -> int:
 	for i in def.options.size():
 		if (def.options[i] as EventOption).label == label:
@@ -150,10 +156,11 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(s.events.choose(0), "继续")
 	t.not_null(s.pending_loot, "收获等着拿")
 	t.eq(s.take_all_loot(), 3, "三件到手")
-	var dice := _find(s.storage, &"bone_dice")
-	var bits := _find(s.storage, &"bone_charm_bits")
-	var tibia := _find(s.storage, &"tibia_violence")
-	t.check(dice != null and bits != null and tibia != null, "骨骰子、碎骨串、胫骨大棒都在暂存区")
+	# 123：全部拾取先进背包，放不下的才进暂存区
+	var dice := _find_any(s, &"bone_dice")
+	var bits := _find_any(s, &"bone_charm_bits")
+	var tibia := _find_any(s, &"tibia_violence")
+	t.check(dice != null and bits != null and tibia != null, "骨骰子、碎骨串、胫骨大棒都拿到了（背包或暂存区）")
 	if dice == null or bits == null or tibia == null:
 		return
 	s.equip(dice.uid)

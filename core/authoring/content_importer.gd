@@ -27,6 +27,8 @@ class Context:
 	var pools: Dictionary = {}
 	## id -> DropRule。章节对着它查
 	var drop_rules: Dictionary = {}
+	## 126：id -> CarryRule。章节对着它查
+	var carry_rules: Dictionary = {}
 	## id -> NodeRules。章节对着它查
 	var node_rules: Dictionary = {}
 	## id -> EconomyRules。章节对着它查
@@ -55,6 +57,10 @@ class Context:
 	func register_pool(pool: EnemyPool) -> void:
 		if pool != null and pool.id != &"":
 			pools[pool.id] = pool
+
+	func register_carry_rule(rule: CarryRule) -> void:
+		if rule.id != &"":
+			carry_rules[rule.id] = rule
 
 	func register_drop_rule(rule: DropRule) -> void:
 		if rule != null and rule.id != &"":
@@ -536,6 +542,24 @@ static func import_enemy_pool(data: Dictionary, ctx: Context, report: ImportRepo
 	_validate_enemy_pool(pool, ctx, report)
 	ctx.register_pool(pool)
 	return pool
+
+
+## 126：敌人携带规则 —— 件数区间非负且 min ≤ max、value_power > 0
+static func import_carry_rule(data: Dictionary, ctx: Context, report: ImportReport) -> CarryRule:
+	var rule := CarryRule.new()
+	_fill(rule, data, "", ctx, report)
+	if rule.id == &"":
+		report.error("id", "携带规则必须有 id")
+	for i in rule.count_by_strength.size():
+		var c := rule.count_by_strength[i]
+		if c.x < 0 or c.y < c.x:
+			report.error("count_by_strength[%d]" % i, "件数区间得是 [min, max]，0 ≤ min ≤ max")
+	if rule.value_power <= 0.0:
+		report.error("value_power", "得大于 0（越大越偏向便宜货）")
+	if rule.tags.is_empty():
+		report.warn("tags", "没有标签，什么都抽不到")
+	ctx.register_carry_rule(rule)
+	return rule
 
 
 static func import_drop_rule(data: Dictionary, ctx: Context, report: ImportReport) -> DropRule:
@@ -1242,6 +1266,8 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 		report.error("enemy_pool", "找不到敌人池 '%s'（已知：%s）" % [def.enemy_pool, ", ".join(ctx.pools.keys())])
 	if def.drop_rule != &"" and not ctx.drop_rules.is_empty() and not ctx.drop_rules.has(def.drop_rule):
 		report.error("drop_rule", "找不到掉落规则 '%s'（已知：%s）" % [def.drop_rule, ", ".join(ctx.drop_rules.keys())])
+	if def.carry_rule != &"" and not ctx.carry_rules.is_empty() and not ctx.carry_rules.has(def.carry_rule):
+		report.error("carry_rule", "找不到携带规则 '%s'（已知：%s）" % [def.carry_rule, ", ".join(ctx.carry_rules.keys())])
 	if def.node_rules != &"" and not ctx.node_rules.is_empty() and not ctx.node_rules.has(def.node_rules):
 		report.error("node_rules", "找不到节点规则 '%s'（已知：%s）" % [def.node_rules, ", ".join(ctx.node_rules.keys())])
 	if def.economy_rules != &"" and not ctx.economy_rules.is_empty() and not ctx.economy_rules.has(def.economy_rules):

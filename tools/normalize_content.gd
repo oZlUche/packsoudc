@@ -64,6 +64,8 @@ func _import(kind: String, data: Dictionary, ctx: ContentImporter.Context, repor
 			return ContentImporter.import_enemy_pool(data, ctx, report)
 		"drop_rules":
 			return ContentImporter.import_drop_rule(data, ctx, report)
+		"carry_rules":
+			return ContentImporter.import_carry_rule(data, ctx, report)
 		"node_rules":
 			return ContentImporter.import_node_rules(data, ctx, report)
 		"economy_rules":
@@ -114,6 +116,8 @@ func _export(kind: String, res: Resource) -> Dictionary:
 			return ContentExporter.export_enemy_pool(res)
 		"drop_rules":
 			return ContentExporter.export_drop_rule(res)
+		"carry_rules":
+			return ContentExporter.export_carry_rule(res)
 		"node_rules":
 			return ContentExporter.export_node_rules(res)
 		"economy_rules":

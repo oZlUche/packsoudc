@@ -1,0 +1,13 @@
+{
+  "id": "panacea",
+  "display_name": "万灵药",
+  "display_names": {
+    "en": "Panacea"
+  },
+  "inputs": [
+    "antidote_satchel",
+    "styptic_dressing"
+  ],
+  "output": "panacea",
+  "note": "把止血敷料拖到解毒药囊上：合成万灵药。"
+}

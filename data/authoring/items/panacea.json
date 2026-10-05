@@ -1,0 +1,44 @@
+{
+  "id": "panacea",
+  "display_name": "万灵药",
+  "display_names": {
+    "en": "Panacea"
+  },
+  "description": "传说什么毒都解，至少解得不少。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "remedy",
+    "tool"
+  ],
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown"
+        },
+        "effects": [
+          {
+            "type": "remove_status",
+            "buff_id": "poison",
+            "stacks": 2
+          },
+          {
+            "type": "remove_status",
+            "buff_id": "bleed",
+            "stacks": 2
+          },
+          {
+            "type": "change_resource"
+          }
+        ]
+      }
+    ]
+  }
+}

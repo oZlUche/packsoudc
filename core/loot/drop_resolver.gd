@@ -54,6 +54,14 @@ static func carried_ids(content: Dictionary) -> Array[StringName]:
 	return out
 
 
+## 126：每一条是不是携带品（和 [method carried_ids] 一一对应）
+static func carried_flags(content: Dictionary) -> Array[bool]:
+	var out: Array[bool] = []
+	for raw in content.get("items", []):
+		out.append(bool((raw as Dictionary).get("carried", false)))
+	return out
+
+
 ## 可以当珍宝掉的道具：带珍宝标签、是这个稀有度、敌人没有。id 升序，抽出来的才可复现
 static func treasure_candidates(rule: DropRule, items: ItemDatabase, rarity: int, carried: Array[StringName]) -> Array[StringName]:
 	var out: Array[StringName] = []
@@ -84,9 +92,16 @@ static func roll(
 		var extra := rarity_guarantee(ctx.extra_drop_rarity, rule, items, carried, rng)
 		if extra != &"":
 			(out["treasure"] as Array[StringName]).append(extra)
-	for id in carried:
+	var flags := carried_flags(content)
+	var forced := 0     # 126：必掉的携带品件数，不占保底名额
+	for i in carried.size():
+		var id := carried[i]
 		var def := items.get_def(id)
 		if def == null:
+			continue
+		if rule.carried_always_drop and flags[i]:
+			(out["dropped"] as Array[StringName]).append(id)
+			forced += 1
 			continue
 		# 作者定：敌人身上的包必掉（bags_always_drop），不占保底名额
 		if (rule.bags_always_drop and def.is_bag) or rng.randf() < owned_chance(rule, ctx, def):
@@ -98,13 +113,13 @@ static func roll(
 			(out["dropped"] as Array[StringName]).append(gid)
 	# 084：至少掉 min_drops 件身上有的（包不算数）—— 掷完不够，从没掉的非包里随机补
 	var dropped_list: Array[StringName] = out["dropped"]
-	if rule.min_drops > 0 and _non_bag_count(dropped_list, items) < rule.min_drops:
+	if rule.min_drops > 0 and _non_bag_count(dropped_list, items) - forced < rule.min_drops:
 		var left: Array[StringName] = []
 		for id in carried:
 			var d := items.get_def(id)
 			if d != null and not d.is_bag and not dropped_list.has(id):
 				left.append(id)
-		while _non_bag_count(dropped_list, items) < rule.min_drops and not left.is_empty():
+		while _non_bag_count(dropped_list, items) - forced < rule.min_drops and not left.is_empty():
 			var k := rng.randi_range(0, left.size() - 1)
 			dropped_list.append(left[k])
 			left.remove_at(k)
@@ -204,12 +219,13 @@ static func expected_count(content: Dictionary, rule: DropRule, ctx: LootContext
 	var carried := carried_ids(content)
 	var p_none := 1.0     # 一件非包都没掉的概率（保底会补）
 	var non_bags := 0
-	for id in carried:
-		var d := items.get_def(id)
+	var flags := carried_flags(content)
+	for i in carried.size():
+		var d := items.get_def(carried[i])
 		if d == null:
 			continue
-		if rule.bags_always_drop and d.is_bag:
-			total += 1.0     # 包必掉
+		if (rule.bags_always_drop and d.is_bag) or (rule.carried_always_drop and flags[i]):
+			total += 1.0     # 包与携带品必掉
 			continue
 		var p := owned_chance(rule, ctx, d)
 		total += p
