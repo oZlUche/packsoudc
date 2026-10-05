@@ -19,5 +19,6 @@ display_names = {
 }
 shape = SubResource("Resource_tj4le")
 rarity = 1
+weight = 3
 tags = Array[StringName]([&"leather"])
 is_bag = true

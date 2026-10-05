@@ -19,4 +19,5 @@ display_names = {
 description = "打了印记的银。"
 shape = SubResource("Resource_2qjqc")
 rarity = 2
+weight = 3
 tags = Array[StringName]([&"material", &"crafted", &"metal", &"supply"])

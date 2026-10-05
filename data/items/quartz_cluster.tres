@@ -20,4 +20,5 @@ display_names = {
 description = "一丛透亮的石英。"
 shape = SubResource("Resource_odjej")
 rarity = 1
+weight = 6
 tags = Array[StringName]([&"material", &"nature", &"gem"])

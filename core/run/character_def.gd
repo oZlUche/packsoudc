@@ -22,6 +22,8 @@ extends Resource
 @export var board_size: Vector2i = Vector2i(8, 6)
 ## 初始包：道具 id，可重复。开局摆在棋盘上；带入的东西只能放进它们
 @export var starting_bags: Array[StringName] = []
+## 129：负重上限（单位「重」）。0 = 不算负重
+@export var weight_capacity: int = 0
 ## 带入件数上限，-1 = 不限
 @export var carry_max_items: int = -1
 ## 带入的稀有度上限（[ItemDef.rarity]），-1 = 不限

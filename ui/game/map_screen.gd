@@ -373,6 +373,10 @@ func _adopt() -> void:
 	_run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh_hud())
 	_run.vitality.changed.connect(func(_c: int, _m: int, _d: int, _r: StringName): _refresh_hud())
 	_run.storage.changed.connect(_refresh_hud)
+	_run.encumbrance_changed.connect(func(lv: int):     # 129
+		_refresh_hud()
+		if _run.encumbrance != null:
+			_note("负重变成「%s」%s" % [_run.encumbrance.name_of(lv), "：" + _run.encumbrance.effect_text(lv) if lv > 0 else ""]))
 	var buff_mod := BuffModule.of(_run)     # 101：一局里拿到的 buff 在模块里
 	if buff_mod != null:
 		buff_mod.buffs_changed.connect(_refresh_hud)
@@ -487,9 +491,9 @@ func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
 	var n := _run.map.get_node(intent.to_id)
 	var what: String = MapNodeStyle.of(n.type)["label"]
 	if intent.kind == MoveIntent.TELEPORT:
-		_note("[color=#b38cff]⇢ %d %s，传送（花 %d 点）%s[/color]" % [intent.to_id, what, intent.action_cost, "" if first_visit else "，这里用过了"])
+		_note("[color=#b38cff]⇢ %d %s，传送（花 %d 点）%s[/color]" % [intent.to_id, what, _run.travel.cost_of(intent), "" if first_visit else "，这里用过了"])
 	else:
-		_note(("→ %d %s（花 %d 点）" if first_visit else "→ %d %s，穿行（花 %d 点，这里用过了）") % [intent.to_id, what, intent.action_cost])
+		_note(("→ %d %s（花 %d 点）" if first_visit else "→ %d %s，穿行（花 %d 点，这里用过了）") % [intent.to_id, what, _run.travel.cost_of(intent)])
 	var cd := CountdownModule.of(_run)
 	if cd != null and cd.has_countdown() and cd.left() > 0 and cd.left() <= 5:
 		_note("[color=#d9534f]　倒计时只剩 %d 步！[/color]" % cd.left())
@@ -586,7 +590,8 @@ func _on_node_hovered(id: int) -> void:
 	if intent == null:
 		_preview.text = ""
 		return
-	_preview.text = "→ %s　花 %d 行动点%s" % [MapNodeStyle.of(n.type)["label"], intent.action_cost, "（用过了，只是穿行）" if n.is_visited() else ""]
+	_preview.text = "→ %s　花 %d 行动点%s%s" % [MapNodeStyle.of(n.type)["label"], _run.travel.cost_of(intent),
+		"（负重：双倍）" if _run.travel.action_cost_mult > 1 else "", "（用过了，只是穿行）" if n.is_visited() else ""]
 
 
 ## 084：节点浮窗（章节开关 `node_tooltips`）：文字按 NodeTooltip 的模板渲染，没用过的战斗点下面画对手的棋盘
@@ -641,6 +646,18 @@ func enemy_preview(id: int) -> String:
 	return line
 
 
+## 129：顶栏的负重小标：轻装不画；吃力 / 超重 / 寸步难行，走路翻倍的那一级再注一句
+func _encumbrance_tag() -> String:
+	var lv := _run.encumbrance_level()
+	if lv <= 0 or _run.encumbrance == null:
+		return ""
+	var tag := "负重：" + _run.encumbrance.name_of(lv)
+	var mult := _run.encumbrance.travel_mult_of(lv)
+	if mult > 1:
+		tag += "（走一步花 %d 倍）" % mult
+	return tag
+
+
 func _refresh_hud() -> void:
 	if _run == null or _hud == null:
 		return
@@ -659,6 +676,7 @@ func _refresh_hud() -> void:
 		str(rest["steps"]) if int(rest["id"]) >= 0 else "—",
 		str(core["steps"]) if int(core["id"]) >= 0 else "—",
 		_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count()]
+	_hud.text += _encumbrance_tag()
 	if _faith_hud != null:
 		_faith_hud.text = _run.faith_line() + _power_line() + _buff_line() + _erosion_line()
 

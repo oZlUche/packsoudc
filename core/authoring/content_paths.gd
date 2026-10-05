@@ -25,6 +25,7 @@ const AUTHORING_ENEMY_POOLS := AUTHORING + "/enemy_pools"
 const AUTHORING_HUNTERS := AUTHORING + "/hunters"
 const AUTHORING_DROP_RULES := AUTHORING + "/drop_rules"
 const AUTHORING_CARRY_RULES := AUTHORING + "/carry_rules"
+const AUTHORING_ENCUMBRANCE_RULES := AUTHORING + "/encumbrance_rules"     # 129
 const AUTHORING_NODE_RULES := AUTHORING + "/node_rules"
 const AUTHORING_ECONOMY_RULES := AUTHORING + "/economy_rules"
 const AUTHORING_META_RULES := AUTHORING + "/meta_rules"
@@ -52,6 +53,7 @@ const ENEMY_POOLS := "res://data/enemy_pools"
 const HUNTERS := "res://data/hunters"
 const DROP_RULES := "res://data/drop_rules"
 const CARRY_RULES := "res://data/carry_rules"
+const ENCUMBRANCE_RULES := "res://data/encumbrance_rules"
 const NODE_RULES := "res://data/node_rules"
 const ECONOMY_RULES := "res://data/economy_rules"
 const META_RULES := "res://data/meta_rules"
@@ -81,6 +83,7 @@ const KINDS := {
 	"hunters": [AUTHORING_HUNTERS, HUNTERS],
 	"drop_rules": [AUTHORING_DROP_RULES, DROP_RULES],
 	"carry_rules": [AUTHORING_CARRY_RULES, CARRY_RULES],
+	"encumbrance_rules": [AUTHORING_ENCUMBRANCE_RULES, ENCUMBRANCE_RULES],
 	"node_rules": [AUTHORING_NODE_RULES, NODE_RULES],
 	"economy_rules": [AUTHORING_ECONOMY_RULES, ECONOMY_RULES],
 	"meta_rules": [AUTHORING_META_RULES, META_RULES],
@@ -92,7 +95,7 @@ const KINDS := {
 ## 开局装备、角色（初始包对着道具查）与敌人都在道具之后（清单、招牌道具、流派标签要对着道具查），池在敌人之后，三种规则独立，
 ## 章节按 id 引用池与规则；成就（091）排最后（对象可能是道具 / 章节）
 ## 096：标签与伤害类型最先（道具的标签对着它提醒；没有它们也能导）；110：局外科技在道具之后（要交的材料对着道具查）；114：百科的机制页最后（相关道具对着道具查）
-const ORDER := ["tags", "damage_types", "run_buffs", "faiths", "items", "recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "carry_rules", "node_rules", "economy_rules", "meta_rules", "chapters", "achievements", "techs", "help_pages"]
+const ORDER := ["tags", "damage_types", "run_buffs", "faiths", "items", "recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "carry_rules", "encumbrance_rules", "node_rules", "economy_rules", "meta_rules", "chapters", "achievements", "techs", "help_pages"]
 
 
 ## 100（作者定）：有目录、但独立内容一份都还没有的种类 —— **不进 [constant KINDS]**（批量导入与一致性检查都不跑它们），

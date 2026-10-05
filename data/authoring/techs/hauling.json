@@ -1,0 +1,40 @@
+{
+  "id": "hauling",
+  "display_name": "扛重",
+  "display_names": {
+    "en": "Hauling"
+  },
+  "order": 2,
+  "requires": [
+    "endurance"
+  ],
+  "column": 1,
+  "description": "背得更多再开始吃力。",
+  "effect": {
+    "type": "tech_run_buff",
+    "buffs": [
+      "tech_hauling_1",
+      "tech_hauling_2",
+      "tech_hauling_3"
+    ]
+  },
+  "tiers": [
+    {
+      "funds": 300
+    },
+    {
+      "funds": 700,
+      "items": {
+        "beast_hide": 1,
+        "rope_coil": 2
+      }
+    },
+    {
+      "funds": 1200,
+      "items": {
+        "tanned_leather": 2,
+        "hardwood_plank": 1
+      }
+    }
+  ]
+}

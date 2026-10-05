@@ -20,4 +20,5 @@ display_names = {
 description = "比铁沉的木头，难得。"
 shape = SubResource("Resource_mdlix")
 rarity = 2
+weight = 4
 tags = Array[StringName]([&"material", &"nature"])

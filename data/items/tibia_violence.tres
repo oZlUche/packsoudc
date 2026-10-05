@@ -14,50 +14,50 @@
 [ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_vjtbp"]
 [ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_5r7k2"]
 
-[sub_resource type="Resource" id="Resource_r45pg"]
+[sub_resource type="Resource" id="Resource_pd03q"]
 script = ExtResource("3_nov3r")
 seconds = 2.60000000000582
 use_haste = false
 
-[sub_resource type="Resource" id="Resource_3i5s6"]
+[sub_resource type="Resource" id="Resource_cxwy1"]
 script = ExtResource("5_wxrv7")
 
-[sub_resource type="Resource" id="Resource_nov3r"]
+[sub_resource type="Resource" id="Resource_qkmqf"]
 script = ExtResource("7_7u5no")
 
-[sub_resource type="Resource" id="Resource_j6pju"]
+[sub_resource type="Resource" id="Resource_wlecq"]
 script = ExtResource("8_oh3kl")
 
-[sub_resource type="Resource" id="Resource_wxrv7"]
+[sub_resource type="Resource" id="Resource_ius02"]
 script = ExtResource("2_3i5s6")
-trigger = SubResource("Resource_j6pju")
-cadence = SubResource("Resource_r45pg")
-costs = Array[ExtResource("4_j6pju")]([SubResource("Resource_3i5s6")])
-effects = Array[ExtResource("6_4j6k3")]([SubResource("Resource_nov3r")])
+trigger = SubResource("Resource_wlecq")
+cadence = SubResource("Resource_pd03q")
+costs = Array[ExtResource("4_j6pju")]([SubResource("Resource_cxwy1")])
+effects = Array[ExtResource("6_4j6k3")]([SubResource("Resource_qkmqf")])
 
-[sub_resource type="Resource" id="Resource_4j6k3"]
+[sub_resource type="Resource" id="Resource_6lgim"]
 script = ExtResource("9_biw3x")
 base_stats = {
 "damage": 15
 }
-rules = Array[ExtResource("2_3i5s6")]([SubResource("Resource_wxrv7")])
+rules = Array[ExtResource("2_3i5s6")]([SubResource("Resource_ius02")])
 
-[sub_resource type="Resource" id="Resource_7u5no"]
+[sub_resource type="Resource" id="Resource_evrft"]
 script = ExtResource("1_r45pg")
 stat = &"crit_damage"
 flat = 20.0
 
-[sub_resource type="Resource" id="Resource_oh3kl"]
+[sub_resource type="Resource" id="Resource_7oroj"]
 script = ExtResource("1_r45pg")
 stat = &"crit_chance"
 flat = 10.0
 
-[sub_resource type="Resource" id="Resource_biw3x"]
+[sub_resource type="Resource" id="Resource_hf36g"]
 script = ExtResource("11_038i7")
 mode = "active"
-mods = Array[ExtResource("1_r45pg")]([SubResource("Resource_7u5no"), SubResource("Resource_oh3kl")])
+mods = Array[ExtResource("1_r45pg")]([SubResource("Resource_evrft"), SubResource("Resource_7oroj")])
 
-[sub_resource type="Resource" id="Resource_mds33"]
+[sub_resource type="Resource" id="Resource_3o673"]
 script = ExtResource("13_5r7k2")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2i(0, 3)])
 
@@ -65,8 +65,9 @@ cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2
 script = ExtResource("12_vjtbp")
 id = &"tibia_violence"
 display_name = "胫骨大棒"
-shape = SubResource("Resource_mds33")
+shape = SubResource("Resource_3o673")
 rarity = 1
+weight = 6
 tags = Array[StringName]([&"weapon", &"melee", &"bone", &"faith", &"faith:brute"])
-faith_bonuses = Array[ExtResource("11_038i7")]([SubResource("Resource_biw3x")])
-combat = SubResource("Resource_4j6k3")
+faith_bonuses = Array[ExtResource("11_038i7")]([SubResource("Resource_hf36g")])
+combat = SubResource("Resource_6lgim")

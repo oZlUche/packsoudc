@@ -1,0 +1,81 @@
+[gd_resource type="Resource" script_class="EncumbranceRules" format=3]
+
+[ext_resource type="Script" path="res://core/run/encumbrance_level.gd" id="1_87n64"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_80wg4"]
+[ext_resource type="Script" path="res://core/run/encumbrance_rules.gd" id="3_eexdm"]
+
+[sub_resource type="Resource" id="Resource_7a0xn"]
+script = ExtResource("2_80wg4")
+stat = &"haste"
+mult_category = 3
+mult_percent = -10
+
+[sub_resource type="Resource" id="Resource_7q1ya"]
+script = ExtResource("2_80wg4")
+stat = &"regen_stamina"
+flat = -0.1
+
+[sub_resource type="Resource" id="Resource_7epum"]
+script = ExtResource("1_87n64")
+display_name = "吃力"
+display_names = {
+"en": "Burdened"
+}
+mods = Array[ExtResource("2_80wg4")]([SubResource("Resource_7a0xn"), SubResource("Resource_7q1ya")])
+
+[sub_resource type="Resource" id="Resource_xbcfs"]
+script = ExtResource("2_80wg4")
+stat = &"haste"
+mult_category = 3
+mult_percent = -25
+
+[sub_resource type="Resource" id="Resource_n44fw"]
+script = ExtResource("2_80wg4")
+stat = &"regen_stamina"
+flat = -0.25
+
+[sub_resource type="Resource" id="Resource_x80eh"]
+script = ExtResource("2_80wg4")
+stat = &"max_stamina"
+flat = -0.2
+
+[sub_resource type="Resource" id="Resource_vvc5f"]
+script = ExtResource("1_87n64")
+over = 1.25
+display_name = "超重"
+display_names = {
+"en": "Overloaded"
+}
+mods = Array[ExtResource("2_80wg4")]([SubResource("Resource_xbcfs"), SubResource("Resource_n44fw"), SubResource("Resource_x80eh")])
+
+[sub_resource type="Resource" id="Resource_qg40o"]
+script = ExtResource("2_80wg4")
+stat = &"haste"
+mult_category = 3
+mult_percent = -25
+
+[sub_resource type="Resource" id="Resource_63dq2"]
+script = ExtResource("2_80wg4")
+stat = &"regen_stamina"
+flat = -0.25
+
+[sub_resource type="Resource" id="Resource_pg5nm"]
+script = ExtResource("2_80wg4")
+stat = &"max_stamina"
+flat = -0.2
+
+[sub_resource type="Resource" id="Resource_u0p6d"]
+script = ExtResource("1_87n64")
+over = 1.5
+display_name = "寸步难行"
+display_names = {
+"en": "Immobile"
+}
+mods = Array[ExtResource("2_80wg4")]([SubResource("Resource_qg40o"), SubResource("Resource_63dq2"), SubResource("Resource_pg5nm")])
+travel_mult = 2
+
+[resource]
+script = ExtResource("3_eexdm")
+id = &"standard"
+display_name = "标准负重"
+levels = Array[ExtResource("1_87n64")]([SubResource("Resource_7epum"), SubResource("Resource_vvc5f"), SubResource("Resource_u0p6d")])

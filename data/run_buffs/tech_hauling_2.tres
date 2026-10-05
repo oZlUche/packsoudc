@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_nfcvb"]
+[ext_resource type="Script" path="res://core/run/effects/carry_capacity_bonus.gd" id="2_jpexr"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_7wvbk"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_5kpuw"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_meoxk"]
+
+[sub_resource type="Resource" id="Resource_wgiti"]
+script = ExtResource("2_jpexr")
+amount = 12
+
+[resource]
+script = ExtResource("5_meoxk")
+id = &"tech_hauling_2"
+display_name = "扛重（科技）"
+description = "负重上限 {carry_capacity_bonus_amount|signed}"
+scope = 0
+effects = Array[ExtResource("1_nfcvb")]([SubResource("Resource_wgiti")])

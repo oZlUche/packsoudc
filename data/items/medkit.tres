@@ -52,5 +52,6 @@ display_names = {
 }
 shape = SubResource("Resource_og5vm")
 rarity = 1
+weight = 3
 tags = Array[StringName]([&"sealed", &"remedy"])
 combat = SubResource("Resource_wraa8")

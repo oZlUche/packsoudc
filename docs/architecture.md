@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.44 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.45 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3202,6 +3202,17 @@ func player_spec() -> CombatantSpec …
 
 ---
 
+### 7.6 负重（129，作者定）
+
+作者：「增加负重系统，给道具设计重量（要符合它们的名称和占据空间），给不同角色设计不同的初始负重。增加可以提升负重上限的科技。设计多个递进的负重等级……」；补充：「不要直接降低伤害，可以降低耐力恢复、上限和急速」。
+
+- **重量**：`ItemDef.weight`（0 = 按公式），`ItemWeight.of(def)`：写死的用写死的，否则格数 × 每格重（`heavy` 3、`metal` 2、`remedy / food / ammo / keepsake / sigil / treasure / relic` 半格一重、其余 1）。名字说它沉或轻的写死在道具文件里（报告 129 附录 A）。
+- **负重** = 作战棋盘上每件（含包本身）的重量之和（`RunState.carry_weight`）；地上、保险箱、仓库不算。**上限** = `CharacterDef.weight_capacity`（安德烈乌斯 28 / 马库斯 34 / 布鲁图斯 40，0 = 不算负重）+ `RunContext.carry_capacity_bonus`（科技「扛重」，`carry_capacity_bonus` 构件）。全派生，不进存档。
+- **分级**：`EncumbranceRules`（内容种类 `encumbrance_rules`，章节 `encumbrance_rules` 引用，自由模式用 `standard`，序章不开）。负重**严格大于**上限 × `over` 才到那一级：×1 吃力（急速 −10%、耐力回复 −10%），×1.25 超重（急速 −25%、耐力回复 −25%、耐力上限 −20%），×1.5 寸步难行（超重的减益照旧 + 走一步行动点 ×2）。**不碰伤害**（导入时拦）。`regen_* / max_*` 的 `flat` 写的是基线比例，`combat_mods(level, baseline)` 折成真值进 `CompileInput.baseline_mods`；急速进 `input.mods`（每件参战道具）。
+- **接线**：`RunState.compile_player` 并入减益；`BattlePassives` 列一条「负重：<级名>」；`RunState.refresh_encumbrance` 在棋盘变了、换了角色、开局 / 读档后重算，写 `MapTravel.action_cost_mult`，级数真变了发 `encumbrance_changed`。`MapTravel.cost_of(intent)` 是唯一的「这一步花几点」（`apply` 扣它、地图屏预览与日志读它），`wait()` 不乘。
+- **界面**：背包读数一行「负重 w / c　级名」（超重警示色）、道具悬浮窗「重 n」、地图顶栏负重小标、开局屏读数也算；术语「负重 / 吃力 / 超重 / 寸步难行」，百科「背包」类一页 `encumbrance`。
+
+
 ### 8.1 开局：角色、初始包、从仓库带入
 
 **角色**（`CharacterDef`，`core/run/character_def.gd`，内容种类 `characters`，报告 067）定开一局时按角色变的那几样：战斗基线的覆盖项（没写的沿用 4.2 的默认）、
@@ -3909,6 +3920,7 @@ res://
 | v2.42 | 2026-10-05 | **搜索点保底**（127）：`SearchRules.search_floors` 是「进阶难度等级 → 逐件稀有度下限」的阶梯（行长 = 保底件数，每项 = 那一件的下限，`[2,1,1]` = 一蓝两绿）；常规搜索点用第 level 行，进阶搜索点（高危区里的，`search_tier` 可覆盖）用第 level + 1 行；超出表长取末行、第一项抬一阶。`DifficultyDef.search_floors` 可覆盖，节点内容 `search_floor` 最优先。保底位按原权重在「≥ 下限」的候选里抽，没有就往下放宽，事件的 rarity_cap 夹住地板，有保底时打乱顺序 |
 | v2.43 | 2026-10-05 | **百科机制页首批全文**（125）：六个分类四十六页（流程七、背包七、战斗七、信仰十一、地图九、局外五）写进 `data/authoring/help_pages`；「合成」补 order 4。4.7「冷却按工作量计」改口为快照语义（与 `CooldownCadence` 一致） |
 | v2.44 | 2026-10-05 | **地上取代暂存区**（128）：暂存区改名「地上」，规则不变；不画框，格子外整块屏幕就是地上，放手在哪就落在哪。`ItemStash.spots`（归一化落点，存档带着，旧档自动铺）、`NodeStorageModule.spots`（按点留着落点）；新 `GroundLayer`（导演持有一层，盖在屏栈上，各屏 `reserve` 面板、被盖住的东西推开）；`StashView` 删掉，开局屏与沙盒用不铺满屏的一块地；`DragLayer` 放到棋盘外 = 落在放手点、从地上拿起放回 = 改落点，不再画插入线。见 3.4 |
+| v2.45 | 2026-10-05 | **负重**（129）：`ItemDef.weight` + `ItemWeight`（写死 / 公式）、`CharacterDef.weight_capacity`（28 / 34 / 40）、科技「扛重」（`carry_capacity_bonus`，+6 / +12 / +20）；新内容种类 `encumbrance_rules`（三级：吃力 / 超重 / 寸步难行，只减急速、耐力回复、耐力上限，三级走一步 ×2）；`MapTravel.action_cost_mult` 与 `cost_of`。见 7.6 |
 | v2.38 | 2026-10-03 | **界面样式收进一个 Theme**（报告 121，三项按推荐）。新 `ui/ui_theme.gd`（`UiTheme`）代码生成主题、并进引擎默认主题（不挂窗口：节点离树会丢主题重排字，系统缺中文字体时极慢），设置换底色原地重填；`UiPalette.style_button` 退化成选按钮变体（字号非默认才覆写）；游戏屏 / 背包 / 战斗 / 启动器的 `add_theme_*` 从 167 处降到 68 处（剩布局常量与注明的特例）；编辑器只挂主题；`tests/ui/test_theme.gd`（变体齐全、换底色跟着变、小工具零覆写、棘轮 68） |
 | v2.37 | 2026-10-03 | **读档由科技推算数值**（报告 120，三项按推荐；改 8.2）。`TechEffect.apply / heal` 合成幂等的 `derive`，`TechService.heal` → `derive`、`GameFlow.heal_techs` → `derive_techs`；`MetaState.from_dict` 先读 `tech_levels`、推算仓库尺寸等派生值，再按算出的尺寸装仓库（`GridInventory.from_dict` 的 `size_override`，放不下的找空位、再不行临时加行）；`GridInventory.shrink_rows / resize_rows`（只删空行）；存档去掉 `tech_buffs` / `safe_bonus`，不升版本 |
 | v2.36 | 2026-10-03 | **科技树配置表**（报告 119，五项按推荐）。`docs/techs.xlsx`（节点 / 等级 / 说明）是科技唯一来源：`TechsTable`（读表、校验、生成、对照）+ `tools/techs_xlsx_to_json.gd` 全量生成 `techs/*.json`、`run_buffs/tech_*.json` 与镜像 `docs/techs.md`，坏表一份都不写；`tools/check_content.gd` 对照表与 JSON。「是否点亮」仍读存档 `tech_levels`，逻辑不变；基地开发区加「科技等级」数字框（`GameFlow.dev_set_tech_level`） |

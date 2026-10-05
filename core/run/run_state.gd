@@ -37,6 +37,8 @@ signal erosion_total()
 ## 局内技能（082）：次数 / 冷却 / 旗子变了；信力变了
 signal skills_changed()
 signal faith_power_changed(faith_id: StringName, points: int, tier: int)
+## 129：负重级数变了（0 = 轻装）。HUD 与地图屏听
+signal encumbrance_changed(level: int)
 
 var run_seed: int = 0
 var chapter: ChapterDef = null
@@ -118,6 +120,9 @@ var drop_rule: DropRule = null
 var carry_rule: CarryRule = null
 var node_rules: NodeRules = null
 var economy: EconomyRules = null
+## 129：负重规则（章节引用；空 = 这一章不算负重）
+var encumbrance: EncumbranceRules = null
+var _encumbrance_level: int = 0
 
 var phase: int = Phase.PICK_SPAWN
 var end_reason: StringName = &""
@@ -476,9 +481,15 @@ func compile_player() -> CombatantSpec:
 	var rules: Array[AbilityRule] = tracker.combat_rules() if tracker != null else [] as Array[AbilityRule]
 	mods.append_array(RunBuffs.combat_mods(active))
 	rules.append_array(RunBuffs.combat_rules(active))
-	var input := CompileInput.of(effective_baseline(), mods, rules,
+	var baseline := effective_baseline()
+	var input := CompileInput.of(baseline, mods, rules,
 		faith_power.tiers() if faith_power != null else {},
 		faith_power.points_by_tag() if faith_power != null else {})
+	# 129：负重减益（急速给每件参战道具，耐力回复 / 上限按基线折成真值给基线；不碰伤害）
+	if encumbrance != null:
+		var enc := encumbrance.combat_mods(encumbrance_level(), baseline)
+		input.mods.append_array(enc["items"])
+		input.baseline_mods.append_array(enc["baseline"])
 	# 105：按件随机挑选的种子。一局之内只随步数变，所以拖动预估挑的和真打挑的是同一批
 	input.seed = hash("%d:compile:%d" % [run_seed, travel.clock.total if travel != null and travel.clock != null else 0])
 	var altar := AltarModule.of(self)     # 093：信仰级效果往编译器的入参里放东西（顺序 = 文件里的顺序）
@@ -570,6 +581,46 @@ func set_character(ch: CharacterDef) -> void:
 		skills.restore(skills_saved)
 		skills_saved = {}
 	skills_changed.emit()
+	refresh_encumbrance()     # 129：上限跟着角色
+
+
+#region 负重（129）
+## 负重：作战棋盘上每件（含包本身）的重量之和。地上、保险箱、仓库不算。派生，不存档
+func carry_weight() -> int:
+	return ItemWeight.total(board)
+
+
+## 负重上限 = 角色的 + 科技（[member RunContext.carry_capacity_bonus]）。0 = 不算负重（没角色、角色没配）
+func carry_capacity() -> int:
+	if character == null or character.weight_capacity <= 0:
+		return 0
+	return character.weight_capacity + buff_context().carry_capacity_bonus
+
+
+## 现在第几级（0 = 轻装）。这一章没开负重恒为 0
+func encumbrance_level() -> int:
+	if encumbrance == null:
+		return 0
+	return encumbrance.level_of(carry_weight(), carry_capacity())
+
+
+## 「负重 23 / 28　吃力」；这一章不算负重返回空
+func encumbrance_line() -> String:
+	if encumbrance == null or carry_capacity() <= 0:
+		return ""
+	var lv := encumbrance_level()
+	return "负重 %d / %d　%s" % [carry_weight(), carry_capacity(), encumbrance.name_of(lv)]
+
+
+## 重算级数：写进走路的倍数，级数真变了才发 [signal encumbrance_changed]。棋盘变了、换了角色、开局 / 读档后调
+func refresh_encumbrance() -> void:
+	var lv := encumbrance_level()
+	if travel != null:
+		travel.action_cost_mult = encumbrance.travel_mult_of(lv) if encumbrance != null else 1
+	if lv != _encumbrance_level:
+		_encumbrance_level = lv
+		encumbrance_changed.emit(lv)
+#endregion
 
 
 func _ensure_skills() -> void:
@@ -766,6 +817,7 @@ func _resolve_rules() -> void:
 		pool = enemies.pool(chapter.enemy_pool)
 	drop_rule = _rule_asset("drop_rules", chapter.drop_rule) as DropRule
 	carry_rule = _rule_asset("carry_rules", chapter.carry_rule) as CarryRule
+	encumbrance = _rule_asset("encumbrance_rules", chapter.encumbrance_rules) as EncumbranceRules
 	node_rules = _rule_asset("node_rules", chapter.node_rules) as NodeRules
 	economy = _rule_asset("economy_rules", chapter.economy_rules) as EconomyRules
 
@@ -856,6 +908,9 @@ func _wire_events() -> void:
 	faith_power.setup(self)
 	faith_power.changed.connect(func(id: StringName, p: int, tier: int): faith_power_changed.emit(id, p, tier))
 	_wire_faith_power()
+	board.changed.connect(refresh_encumbrance)     # 129
+	_encumbrance_level = encumbrance_level()
+	refresh_encumbrance()
 
 
 ## 信力的行为（082）：一局里的事喂给激活信仰的行为构件。哪些事、载荷长什么样见 [FaithDeed]

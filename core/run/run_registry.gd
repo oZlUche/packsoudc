@@ -24,6 +24,7 @@ const RUN_EFFECTS := {
 	&"flee_bonus": "res://core/run/effects/flee_bonus.gd",
 	&"free_losses": "res://core/run/effects/free_losses.gd",
 	&"stat_bonus": "res://core/run/effects/stat_bonus.gd",
+	&"carry_capacity_bonus": "res://core/run/effects/carry_capacity_bonus.gd",     # 129
 }
 
 ## 一局的机制（069）：难度清单里开的那些

@@ -86,6 +86,8 @@ func _build(
 			return ContentImporter.import_drop_rule(data, ctx, report)
 		"carry_rules":
 			return ContentImporter.import_carry_rule(data, ctx, report)
+		"encumbrance_rules":
+			return ContentImporter.import_encumbrance_rules(data, ctx, report)
 		"node_rules":
 			return ContentImporter.import_node_rules(data, ctx, report)
 		"economy_rules":

@@ -185,7 +185,7 @@ static func run_first_tree(t: TestCase) -> void:
 	t.begin("118 · 首批树：三列十个节点（数值占位）；仓库扩建在第 0 列根上；侦察要幸运和讨价；每个 tech_run_buff 的 buff 都在且是局外的")
 	var defs := GameFlow.load_techs()
 	var buffs := GameFlow.load_run_buffs()
-	t.eq(defs.size(), 10, "十个节点")
+	t.eq(defs.size(), 11, "十一个节点（129 加了扛重）")
 	var cols := {}
 	for def in defs:
 		cols[def.column] = true

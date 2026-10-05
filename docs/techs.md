@@ -14,6 +14,7 @@
 | undaunted | 不屈 | Undaunted | 1 | 0 | endurance | 输给节点敌人的头一次不扣体力。 | tech_run_buff | {"effect": "free_losses"} | 前 {free_losses_amount} 次输给节点敌人不扣体力 |
 | sinew | 筋骨 | Sinew | 1 | 1 | endurance | 开局生命上限更高。 | tech_run_buff | {"effect": "stat_bonus"} | 开局生命 {stat_bonus_amount\|signed} |
 | luck | 幸运 | Fortune | 2 | 0 | thorough_search | 敌人的东西更容易掉。 | tech_run_buff | {"effect": "luck_bonus"} | 幸运 {luck_bonus_amount\|signed}：敌人的东西更容易掉 |
+| hauling | 扛重 | Hauling | 1 | 2 | endurance | 背得更多再开始吃力。 | tech_run_buff | {"effect": "carry_capacity_bonus"} | 负重上限 {carry_capacity_bonus_amount\|signed} |
 | scouting | 侦察 | Scouting | 2 | 0 | luck、bargain | 隐形的猎手走近到一定距离就看得见。 | tech_run_buff | {"effect": "scout_range"} | 侦察距离 {scout_range_range} |
 | thorough_search | 细搜 | Thorough Search | 2 | 0 |  | 每个搜索点能多搜几次。 | tech_run_buff | {"effect": "extra_searches"} | 每个搜索点多搜 {extra_searches_amount} 次 |
 | bargain | 讨价 | Haggling | 2 | 1 | thorough_search | 商店的东西更便宜。 | tech_run_buff | {"effect": "shop_price_mult"} | 商店售价 ×{shop_price_mult_factor} |
@@ -43,6 +44,9 @@
 | luck | 1 | 400 |  |  |
 | luck | 2 | 800 |  | {"amount": 2} |
 | luck | 3 | 1300 | hardwood_plank: 2；rivet_box: 2 | {"amount": 3} |
+| hauling | 1 | 300 |  | {"amount": 6} |
+| hauling | 2 | 700 | beast_hide: 1；rope_coil: 2 | {"amount": 12} |
+| hauling | 3 | 1200 | tanned_leather: 2；hardwood_plank: 1 | {"amount": 20} |
 | scouting | 1 | 1500 | steel_ingot: 3；hardwood_plank: 2；rivet_box: 2 | {"range": 3} |
 | thorough_search | 1 | 250 |  |  |
 | thorough_search | 2 | 700 |  | {"amount": 2} |

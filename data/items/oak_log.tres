@@ -19,4 +19,5 @@ display_names = {
 }
 description = "一截还带树皮的硬木。"
 shape = SubResource("Resource_350l4")
+weight = 6
 tags = Array[StringName]([&"material", &"nature"])

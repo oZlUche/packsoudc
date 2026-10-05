@@ -386,6 +386,26 @@ func chapter() -> ChapterDef:
 	return _chapters[chapter_index] if chapter_index < _chapters.size() else null
 
 
+## 129：出发前就看见负重（带太多直接显示级数，不拦）。这一章不算负重 / 角色没配上限 → 空
+func encumbrance_text() -> String:
+	var c := chapter()
+	var ch := character()
+	if c == null or ch == null or c.encumbrance_rules == &"" or ch.weight_capacity <= 0 or board == null:
+		return ""
+	var path := ContentPaths.asset_file("encumbrance_rules", String(c.encumbrance_rules))
+	var rules := load(path) as EncumbranceRules if ResourceLoader.exists(path) else null
+	if rules == null:
+		return ""
+	var defs: Array = []
+	for id in flow.meta_buffs():
+		if flow.buff_defs.has(id):
+			defs.append(flow.buff_defs[id])
+	var cap := ch.weight_capacity + RunBuffs.context(defs).carry_capacity_bonus
+	var w := ItemWeight.total(board)
+	var lv := rules.level_of(w, cap)
+	return "负重 %d / %d　%s%s" % [w, cap, rules.name_of(lv), "　" + rules.effect_text(lv) if lv > 0 else ""]
+
+
 func character() -> CharacterDef:
 	return _characters[character_index] if character_index < _characters.size() else null
 
@@ -687,6 +707,9 @@ func _refresh() -> void:
 		_readout.append_text("\n带 %d 件，占 %d 格，值 %d 币　包里还有 %d 格" % [taken.size(), cells, value, board.free_cell_count()])
 		if c != null and CountdownModule.budget_for(c, scale_id) > 0:
 			_readout.append_text("\n" + carry_text(c, scale_id, value))
+		var enc_line := encumbrance_text()
+		if enc_line != "":
+			_readout.append_text("\n" + enc_line)
 	if _stash_title != null and stash != null:
 		_stash_title.text = "地上　%d 件" % stash.item_count()
 	if _status != null:

@@ -19,4 +19,5 @@ display_names = {
 }
 shape = SubResource("Resource_cvo3f")
 rarity = 1
+weight = 2
 is_bag = true

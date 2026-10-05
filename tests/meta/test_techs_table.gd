@@ -34,15 +34,15 @@ static func run(t: TestCase) -> void:
 	var problems: Array[String] = []
 	var f := TechsTable.fields(_sheets(), problems)
 	t.eq(problems.size(), 0, "表里没问题：%s" % "；".join(PackedStringArray(problems)))
-	t.eq(f.size(), 10, "十个节点")
+	t.eq(f.size(), 11, "十一个节点（129 加了扛重）")
 	var levels := 0
 	for id in f:
 		levels += (f[id]["tiers"] as Array).size()
-	t.eq(levels, 26, "二十六级")
+	t.eq(levels, 29, "二十九级")
 	t.eq(f["scouting"]["requires"], ["luck", "bargain"], "侦察的前置：幸运、讨价")
 	t.eq(f["safe_box"]["tiers"][1]["items"], {"nail_keg": 1, "steel_ingot": 1}, "材料按「；」拆成道具 → 件数（122 改成铁钉桶）")
 	var out := TechsTable.build(_sheets(), problems)
-	t.eq(out.size(), 28, "生成 10 份科技 + 18 份 run_buff")
+	t.eq(out.size(), 32, "生成 11 份科技 + 21 份 run_buff")
 	var same := 0
 	for path in out:
 		var json := JSON.new()

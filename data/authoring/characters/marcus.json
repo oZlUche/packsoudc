@@ -13,6 +13,7 @@
     "bag_leather",
     "bag_small"
   ],
+  "weight_capacity": 34,
   "skills": [
     {
       "type": "assault",
