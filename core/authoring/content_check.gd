@@ -17,7 +17,7 @@ extends RefCounted
 const KINDS: Array[String] = [
 	"tags", "damage_types", "run_buffs", "faiths", "recipes", "items",
 	"loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters",
-	"drop_rules", "node_rules", "economy_rules", "meta_rules", "chapters", "achievements", "techs", "help_pages",
+	"drop_rules", "carry_rules", "node_rules", "economy_rules", "meta_rules", "chapters", "achievements", "techs", "help_pages",
 ]
 
 
@@ -56,6 +56,8 @@ static func export_of(kind: String, res: Resource):
 			return ContentExporter.export_hunter(res as HunterDef)
 		"drop_rules":
 			return ContentExporter.export_drop_rule(res as DropRule)
+		"carry_rules":
+			return ContentExporter.export_carry_rule(res as CarryRule)
 		"node_rules":
 			return ContentExporter.export_node_rules(res as NodeRules)
 		"economy_rules":

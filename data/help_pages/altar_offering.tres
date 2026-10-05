@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_oonu6"]
+
+[resource]
+script = ExtResource("1_oonu6")
+id = &"altar_offering"
+display_name = "神坛献祭"
+category = &"faith"
+order = 2
+text = "神坛只在休息点出现，而且只在激活了信仰时才有这个选项。献祭是把道具毁掉换信力：祭品台只收满足这位神规矩的道具，每位神爱的东西不同，有按标签的，有按体积的，也有看带不带某条属性的。一件道具满足几条规矩就结算几次，换多少看它的稀有度乘上倍率。
+
+台上有东西时「献祭」亮起，先预览能加多少、会不会升阶。常规献祭不限次数，但和特殊操作共享这个休息点上的一次机会：做过特殊操作，这个神坛就关了。「返回」把台上的东西退回背包。神坛和歇脚是两份独立的机会，走开再回来还能用没用过的那份。"
+related = Array[String](["special_rites", "rest_point", "faith_power_and_tiers"])
+see_items = Array[StringName]([&"bone_dice", &"bone_charm_bits"])

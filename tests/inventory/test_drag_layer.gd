@@ -308,4 +308,11 @@ static func run_ghost_snap(t: TestCase) -> void:
 	# 不在任何视图上方：逐像素跟手，被抓的那一格压在光标下
 	var free := Vector2(700, 500)
 	t.eq(drag.ghost_anchor(free), free - drag.global_position - Vector2(1.5, 1.5) * CELL, "棋盘外：跟手")
+	# 光标略出棋盘左上边界，但整块大半还压在棋盘上：仍算落在这个视图，落点吸进边界 (0,0)
+	drag.cancel()
+	drag._on_grab_requested(view, a.uid, Vector2(0.5, 0.5) * CELL)     # 这次抓左上格
+	var outside: Vector2 = view.position + Vector2(-3, -3)
+	t.check(drag.view_at(outside) == view, "光标略出边界：按整块压在棋盘上的面积判定")
+	t.eq(drag.target_origin(view, outside), Vector2i(0, 0), "略出边界：落点吸进边界")
+	t.check(drag.view_at(free) == null, "离得远：仍是棋盘外")
 	drag.cancel()

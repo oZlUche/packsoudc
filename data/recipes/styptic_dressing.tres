@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/recipe_def.gd" id="1_twq2y"]
+
+[resource]
+script = ExtResource("1_twq2y")
+id = &"styptic_dressing"
+display_name = "止血敷料"
+display_names = {
+"en": "Styptic Dressing"
+}
+inputs = Array[StringName]([&"bandage_roll", &"dried_herbs"])
+output = &"styptic_dressing"
+note = "把干草药束拖到绷带卷上：做成止血敷料。"

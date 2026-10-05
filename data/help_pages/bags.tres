@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_nowsk"]
+
+[resource]
+script = ExtResource("1_nowsk")
+id = &"bags"
+display_name = "包"
+category = &"bag"
+order = 1
+text = "棋盘开局全是不可用格，可用格来自放上去的包：先放包，再往包里放东西。包之间不能重叠，普通道具的每一格都得被某个包覆盖，碰到的每个包都得接受它的标签，有些包只收药剂或食物。只有包里的东西参战，没有装备栏，空间是唯一的约束。
+
+一件东西可以横跨两个相邻的包，但跨包的东西不属于任何包，两边的包体加成都拿不到，拿起包时它也不跟着走。包躺在战利品箱或{zone:暂存区}里只是件普通异形物品，到棋盘上才是包。包不进局外的仓库，所以既带不回去也带不进来。"
+related = Array[String](["drag_and_rotate", "grant_receive_slots", "warehouse"])
+see_items = Array[StringName]([&"bag_small", &"bag_leather", &"bag_long", &"belt_potion"])

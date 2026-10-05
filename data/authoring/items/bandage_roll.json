@@ -1,0 +1,39 @@
+{
+  "id": "bandage_roll",
+  "display_name": "绷带卷",
+  "display_names": {
+    "en": "Bandage Roll"
+  },
+  "description": "卷好的干净布条，裹上就止血。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "remedy",
+    "nature"
+  ],
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown"
+        },
+        "effects": [
+          {
+            "type": "remove_status",
+            "buff_id": "bleed",
+            "stacks": 2
+          },
+          {
+            "type": "change_resource",
+            "amount": 3.0
+          }
+        ]
+      }
+    ]
+  }
+}

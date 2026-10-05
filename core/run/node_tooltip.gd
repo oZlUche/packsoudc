@@ -50,6 +50,21 @@ static func template_for(chapter: ChapterDef, node: MapNode) -> String:
 ## 渲染好的浮窗文字（BBCode）
 static func text_for(run: RunState, chapter: ChapterDef, node: MapNode) -> String:
 	var text := TextTemplate.render(template_for(chapter, node), TextTemplate.context_for(run, node))
+	# 127：没用过的搜索点 —— 进阶的第一行写明；有保底就加一行「每次至少几件，其中……」
+	if node != null and category_of(node) == "search":
+		if SearchSession.is_advanced(node):
+			text = "[color=#f0ad4e]进阶搜索点[/color]\n" + text
+		var p_floor := SearchSession.floor_for(node, run.node_rules.search if run != null and run.node_rules != null else null, run.difficulty if run != null else null)
+		if not p_floor.is_empty():
+			text += "\n" + TextTemplate.render(SEARCH_FLOOR_LINE, {"search_floor_count": p_floor.size(), "search_floor_text": SearchSession.floor_text(p_floor)})
+	return _countdown_line(run, node, text)
+
+
+## 127：搜索点的保底一行（占位符：{search_floor_count} {search_floor_text}）
+const SEARCH_FLOOR_LINE := "{c:dim}每次至少 {search_floor_count} 件，其中{search_floor_text}。{/c}"
+
+
+static func _countdown_line(run: RunState, node: MapNode, text: String) -> String:
 	# 092：倒计时过半关闭的撤离点，浮窗里说清楚
 	var cd := CountdownModule.of(run)     # 101：倒计时是一局的模块
 	if node != null and PaidExtracts.closes_at(node) >= 0 and cd != null and cd.has_countdown():

@@ -1,0 +1,44 @@
+{
+  "id": "styptic_dressing",
+  "display_name": "止血敷料",
+  "display_names": {
+    "en": "Styptic Dressing"
+  },
+  "description": "药粉和布一起压在伤口上。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "remedy",
+    "nature"
+  ],
+  "combat": {
+    "base_stats": {
+      "max_hp": 10
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.5
+        },
+        "effects": [
+          {
+            "type": "remove_status",
+            "buff_id": "bleed",
+            "stacks": 3
+          },
+          {
+            "type": "change_resource",
+            "amount": 6.0
+          }
+        ]
+      }
+    ]
+  }
+}

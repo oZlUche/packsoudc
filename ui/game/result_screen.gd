@@ -17,8 +17,16 @@ func open(payload: Dictionary) -> void:
 	for side in ["left", "right", "top", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 32)
 	add_child(margin)
+	# 反馈：仓库面板按自己的最小高度占满，把底部的继续按钮挤出窗口。内容放进竖向滚动，按钮钉在底下
+	var outer := _vbox(10)
+	margin.add_child(outer)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	outer.add_child(scroll)
 	var col := _vbox(10)
-	margin.add_child(col)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(col)
 	if r == null:
 		col.add_child(_label("没有可结算的一局", 18, UiPalette.FG))
 		col.add_child(_button("回主菜单", flow.to_main_menu, 14))
@@ -66,13 +74,14 @@ func open(payload: Dictionary) -> void:
 		col.add_child(HSeparator.new())
 		_wh = WarehousePanelScript.new()
 		_wh.setup(flow, font)
+		_wh.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		col.add_child(_wh)
 	var next := flow.next_chapter()
 	if next != null:
-		col.add_child(_wrapped("带回来的东西会进仓库。序章一张接一张：下面直接进「%s」。" % next.display_name, 13, UiPalette.DIM, 600))
-		col.add_child(_button("进入下一张：%s" % next.display_name, proceed, 16, UiPalette.Tier.PRIMARY))
+		outer.add_child(_wrapped("带回来的东西会进仓库。序章一张接一张：下面直接进「%s」。" % next.display_name, 13, UiPalette.DIM, 600))
+		outer.add_child(_button("进入下一张：%s" % next.display_name, proceed, 16, UiPalette.Tier.PRIMARY))
 	else:
-		col.add_child(_button("继续", proceed, 16, UiPalette.Tier.PRIMARY))
+		outer.add_child(_button("继续", proceed, 16, UiPalette.Tier.PRIMARY))
 
 
 ## 092：结算屏上画的保险箱：按 RunResult 记下的布局重摆一份只看的（实例已经进了局外，这里另造）

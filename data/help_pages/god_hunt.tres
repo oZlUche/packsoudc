@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_ytcch"]
+
+[resource]
+script = ExtResource("1_ytcch")
+id = &"god_hunt"
+display_name = "狩猎之神"
+category = &"faith"
+order = 10
+text = "{faith:hunt}管比较、差异与拆解，帝国不祭祀祂，民间猎人信祂。信力看的是打完一场战斗，按点的类型给：普通、精英、猎手、核心一级比一级多；每局头一回把一种猎获品置入背包也给，越稀有给得越多。献祭爱血肉、骨制品、皮革，猎获品的倍率最高。
+
+这位神现在只有两道阈值，等级效果还没有加入，升阶暂时没有额外功能；赐福模板也还没有。护符能激活祂、攒信力，别的等作者定。
+
+---"
+related = Array[String](["faith_power_and_tiers", "altar_offering", "hunters"])
+see_items = Array[StringName]([&"charm_hunt"])

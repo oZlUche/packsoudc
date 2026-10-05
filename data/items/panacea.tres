@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_3uyoo"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_mjt7t"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_b4xsx"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_1llnf"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_p1v8r"]
+[ext_resource type="Script" path="res://core/battle/effects/remove_status.gd" id="6_b3v8y"]
+[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="7_11ya2"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_0qj0l"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_bytdc"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_ds2ls"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_tmipu"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_2di5r"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_cfsie"]
+
+[sub_resource type="Resource" id="Resource_4kd1h"]
+script = ExtResource("3_b4xsx")
+
+[sub_resource type="Resource" id="Resource_e1rnc"]
+script = ExtResource("6_b3v8y")
+buff_id = &"poison"
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_j7qed"]
+script = ExtResource("6_b3v8y")
+buff_id = &"bleed"
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_8r3jy"]
+script = ExtResource("7_11ya2")
+
+[sub_resource type="Resource" id="Resource_tcl3w"]
+script = ExtResource("8_0qj0l")
+
+[sub_resource type="Resource" id="Resource_fte87"]
+script = ExtResource("2_mjt7t")
+trigger = SubResource("Resource_tcl3w")
+cadence = SubResource("Resource_4kd1h")
+effects = Array[ExtResource("5_p1v8r")]([SubResource("Resource_e1rnc"), SubResource("Resource_j7qed"), SubResource("Resource_8r3jy")])
+
+[sub_resource type="Resource" id="Resource_esiq3"]
+script = ExtResource("9_bytdc")
+rules = Array[ExtResource("2_mjt7t")]([SubResource("Resource_fte87")])
+
+[sub_resource type="Resource" id="Resource_rpvpn"]
+script = ExtResource("13_cfsie")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("12_2di5r")
+id = &"panacea"
+display_name = "万灵药"
+display_names = {
+"en": "Panacea"
+}
+description = "传说什么毒都解，至少解得不少。"
+shape = SubResource("Resource_rpvpn")
+rarity = 3
+tags = Array[StringName]([&"remedy", &"tool"])
+combat = SubResource("Resource_esiq3")

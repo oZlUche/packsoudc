@@ -1,0 +1,42 @@
+{
+  "id": "healing_draught",
+  "display_name": "治愈药剂",
+  "display_names": {
+    "en": "Healing Draught"
+  },
+  "description": "琉璃瓶里淡绿的药水。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "remedy",
+    "nature"
+  ],
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_resource_below",
+          "percent": 50
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "costs": [
+          {
+            "type": "uses",
+            "max_uses": 3
+          }
+        ],
+        "effects": [
+          {
+            "type": "change_resource",
+            "amount": 60.0
+          }
+        ]
+      }
+    ]
+  }
+}

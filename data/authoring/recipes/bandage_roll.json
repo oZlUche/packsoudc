@@ -1,0 +1,13 @@
+{
+  "id": "bandage_roll",
+  "display_name": "绷带卷",
+  "display_names": {
+    "en": "Bandage Roll"
+  },
+  "inputs": [
+    "bandage",
+    "linen_bolt"
+  ],
+  "output": "bandage_roll",
+  "note": "把亚麻布卷拖到纱布上：卷成绷带。"
+}

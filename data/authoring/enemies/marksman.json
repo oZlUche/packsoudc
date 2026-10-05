@@ -29,11 +29,12 @@
   },
   "board": [
     6,
-    4
+    5
   ],
   "bags": [
     "bag_long",
     "bag_long",
+    "bag_leather",
     "bag_small"
   ]
 }

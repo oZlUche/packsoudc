@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/recipe_def.gd" id="1_qje2y"]
+
+[resource]
+script = ExtResource("1_qje2y")
+id = &"antidote_satchel"
+display_name = "解毒药囊"
+display_names = {
+"en": "Antidote Satchel"
+}
+inputs = Array[StringName]([&"antidote_kit", &"dried_herbs"])
+output = &"antidote_satchel"
+note = "把干草药束拖到解毒包上：配成解毒药囊。"

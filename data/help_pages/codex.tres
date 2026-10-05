@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_htd3t"]
+
+[resource]
+script = ExtResource("1_htd3t")
+id = &"codex"
+display_name = "图鉴"
+category = &"meta"
+order = 2
+text = "图鉴记的是带出过的道具：撤离成功时棋盘上的每件各计一次，保险箱里的也计，点亮之后右上角写着累计件数。它不代表东西还在仓库里，只是见过并带回来过。基地的图鉴页按稀有度排成缩略图网格，没获得的画灰，停在一格上看属性。
+
+赐福版算在内。特殊道具另列一段：望远镜这类不进背包、代表一种能力的东西，拿到就点亮。有些成就看图鉴点亮的数量，或有没有某一件。"
+related = Array[String](["warehouse", "achievements", "settlement_and_warehouse"])
+see_items = Array[StringName]([&"spyglass"])

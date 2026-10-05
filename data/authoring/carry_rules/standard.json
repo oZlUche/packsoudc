@@ -1,0 +1,25 @@
+{
+  "id": "standard",
+  "display_name": "标准携带（占位）",
+  "tags": [
+    "material"
+  ],
+  "count_by_strength": [
+    [
+      0,
+      1
+    ],
+    [
+      0,
+      2
+    ],
+    [
+      0,
+      3
+    ],
+    [
+      1,
+      4
+    ]
+  ]
+}

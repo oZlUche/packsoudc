@@ -27,6 +27,8 @@ class Context:
 	var pools: Dictionary = {}
 	## id -> DropRule。章节对着它查
 	var drop_rules: Dictionary = {}
+	## 126：id -> CarryRule。章节对着它查
+	var carry_rules: Dictionary = {}
 	## id -> NodeRules。章节对着它查
 	var node_rules: Dictionary = {}
 	## id -> EconomyRules。章节对着它查
@@ -55,6 +57,10 @@ class Context:
 	func register_pool(pool: EnemyPool) -> void:
 		if pool != null and pool.id != &"":
 			pools[pool.id] = pool
+
+	func register_carry_rule(rule: CarryRule) -> void:
+		if rule.id != &"":
+			carry_rules[rule.id] = rule
 
 	func register_drop_rule(rule: DropRule) -> void:
 		if rule != null and rule.id != &"":
@@ -538,6 +544,24 @@ static func import_enemy_pool(data: Dictionary, ctx: Context, report: ImportRepo
 	return pool
 
 
+## 126：敌人携带规则 —— 件数区间非负且 min ≤ max、value_power > 0
+static func import_carry_rule(data: Dictionary, ctx: Context, report: ImportReport) -> CarryRule:
+	var rule := CarryRule.new()
+	_fill(rule, data, "", ctx, report)
+	if rule.id == &"":
+		report.error("id", "携带规则必须有 id")
+	for i in rule.count_by_strength.size():
+		var c := rule.count_by_strength[i]
+		if c.x < 0 or c.y < c.x:
+			report.error("count_by_strength[%d]" % i, "件数区间得是 [min, max]，0 ≤ min ≤ max")
+	if rule.value_power <= 0.0:
+		report.error("value_power", "得大于 0（越大越偏向便宜货）")
+	if rule.tags.is_empty():
+		report.warn("tags", "没有标签，什么都抽不到")
+	ctx.register_carry_rule(rule)
+	return rule
+
+
 static func import_drop_rule(data: Dictionary, ctx: Context, report: ImportReport) -> DropRule:
 	var rule := DropRule.new()
 	_fill(rule, data, "", ctx, report)
@@ -626,6 +650,14 @@ static func import_difficulty(data: Dictionary, ctx: Context, report: ImportRepo
 		report.error("id", "难度必须有 id")
 	if def.level < 0:
 		report.error("level", "档位不能为负（0 = 普通）")
+	# 127：搜索保底的覆盖只有 normal / advanced 两种，值是逐件稀有度下限
+	for key in def.search_floors.keys():
+		if not ["normal", "advanced"].has(String(key)):
+			report.error("search_floors", "键只能是 normal / advanced，不认识 '%s'" % key)
+			continue
+		def.search_floors[key] = _floor_rows([def.search_floors[key]], "search_floors.%s" % key, report)[0] if def.search_floors[key] is Array else []
+		if not (def.search_floors[key] is Array) or (def.search_floors[key] as Array).is_empty():
+			report.error("search_floors.%s" % key, "应为非空的稀有度下限表，比如 [1, 0]")
 	for i in def.mechanics.size():
 		if def.mechanics[i] == null:
 			report.error("mechanics[%d]" % i, "空的机制")
@@ -1085,6 +1117,27 @@ static func _validate_node_rules(rules: NodeRules, ctx: Context, report: ImportR
 			report.error("search.reveal_seconds[%d]" % i, "耗时不能为负")
 		if i > 0 and s.reveal_seconds[i] < s.reveal_seconds[i - 1]:
 			report.error("search.reveal_seconds[%d]" % i, "稀有度 %d 的耗时 %.2f 低于稀有度 %d 的 %.2f —— 越稀有搜得越久" % [i, s.reveal_seconds[i], i - 1, s.reveal_seconds[i - 1]])
+	# 127：保底阶梯 —— 每行是逐件稀有度下限（0～5）；JSON 的数读回来是小数，还原成整数
+	s.search_floors = _floor_rows(s.search_floors, "search.search_floors", report)
+
+
+## 127：逐件稀有度下限的表（几行）—— 每行非空、每项 0～5，统一成整数
+static func _floor_rows(rows: Array, at: String, report: ImportReport) -> Array:
+	var out: Array = []
+	for i in rows.size():
+		var row: Variant = rows[i]
+		if not (row is Array) or (row as Array).is_empty():
+			report.error("%s[%d]" % [at, i], "每行得是非空的稀有度下限表，比如 [1, 0]")
+			out.append([])
+			continue
+		var clean: Array = []
+		for v in row:
+			var r := int(v)
+			if r < 0 or r > 5:
+				report.error("%s[%d]" % [at, i], "稀有度下限得在 0～5（现在 %d）" % r)
+			clean.append(r)
+		out.append(clean)
+	return out
 
 
 ## 作者定的形状写成校验：概率在 0～1，**稀有度越高基础掉落率越低**（非递增），珍宝的稀有度得是真的稀有度、权重为正。
@@ -1242,6 +1295,8 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 		report.error("enemy_pool", "找不到敌人池 '%s'（已知：%s）" % [def.enemy_pool, ", ".join(ctx.pools.keys())])
 	if def.drop_rule != &"" and not ctx.drop_rules.is_empty() and not ctx.drop_rules.has(def.drop_rule):
 		report.error("drop_rule", "找不到掉落规则 '%s'（已知：%s）" % [def.drop_rule, ", ".join(ctx.drop_rules.keys())])
+	if def.carry_rule != &"" and not ctx.carry_rules.is_empty() and not ctx.carry_rules.has(def.carry_rule):
+		report.error("carry_rule", "找不到携带规则 '%s'（已知：%s）" % [def.carry_rule, ", ".join(ctx.carry_rules.keys())])
 	if def.node_rules != &"" and not ctx.node_rules.is_empty() and not ctx.node_rules.has(def.node_rules):
 		report.error("node_rules", "找不到节点规则 '%s'（已知：%s）" % [def.node_rules, ", ".join(ctx.node_rules.keys())])
 	if def.economy_rules != &"" and not ctx.economy_rules.is_empty() and not ctx.economy_rules.has(def.economy_rules):

@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_1mpl4"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_bqi26"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_f0w7s"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_8qp4b"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="5_3i6cv"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="6_p0pnx"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="7_x6wgj"]
+
+[sub_resource type="Resource" id="Resource_deinb"]
+script = ExtResource("3_f0w7s")
+base_stats = {
+"max_stamina": 60,
+"regen_stamina": 3
+}
+
+[sub_resource type="Resource" id="Resource_nbdu1"]
+script = ExtResource("7_x6wgj")
+
+[resource]
+script = ExtResource("6_p0pnx")
+id = &"salted_meat"
+display_name = "腌肉干"
+display_names = {
+"en": "Salted Meat"
+}
+description = "腌透的肉，耐放也顶饿。"
+shape = SubResource("Resource_nbdu1")
+rarity = 1
+tags = Array[StringName]([&"nature", &"food"])
+combat = SubResource("Resource_deinb")

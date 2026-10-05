@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_2lue7"]
+
+[resource]
+script = ExtResource("1_2lue7")
+id = &"quick_place"
+display_name = "双击快速置入"
+category = &"bag"
+order = 2
+text = "双击一件道具，它自动找位挪到「对面」：{zone:暂存区}里的双击进棋盘，放不下会提示；棋盘上的双击进当前屏的容器，战利品箱、搜索收获箱、祭品台、保险箱都算，没有容器时进暂存区。战利品箱里双击一件，亮了的才动，先试棋盘，放不下进暂存区。
+
+商店里双击商品就是买，自动找位、先包后暂存区，钱不够没反应。基地也一样：仓库和带回来的棋盘之间双击互放，出售页双击一件卖一件，科技页双击一件交给选中的节点。自动找位按行扫过去，每个位置先试原朝向再转。"
+related = Array[String](["drag_and_rotate", "shop", "safe_box", "tidy"])

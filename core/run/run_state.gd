@@ -114,6 +114,8 @@ var erosion_saved: Dictionary = {}
 
 var pool: EnemyPool = null
 var drop_rule: DropRule = null
+## 126：敌人携带规则（章节引用；空 = 敌人不带非战斗道具）
+var carry_rule: CarryRule = null
 var node_rules: NodeRules = null
 var economy: EconomyRules = null
 
@@ -171,7 +173,7 @@ static func start(
 	ItemInstance.reset_uid_counter()
 	SafePlacerScript.mark(s.map, p_chapter.safes)     # 092：先换点，再放敌人（换掉的点不该带敌人）
 	if s.pool != null:
-		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id())
+		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id(), s.carry_rule)
 	PaidExtracts.mark(s.map, s.economy)
 	EventPlacer.fill(s.map, s.node_rules)
 	s.rng = RunRNG.new(p_seed)
@@ -643,11 +645,12 @@ func take_loot(uid: int) -> bool:
 	return ok
 
 
-## 全拿走，返回拿了几件
+## 全拿走，返回拿了几件。123：每件先试背包棋盘，放不下才进暂存区
 func take_all_loot() -> int:
 	if pending_loot == null:
 		return 0
-	var n := InventoryService.transfer_all(pending_loot, storage)
+	var got := InventoryService.transfer_all_prefer(pending_loot, board, storage)
+	var n: int = got["board"] + got["storage"]
 	discard_loot()
 	return n
 
@@ -676,15 +679,18 @@ func _offer_loot(container: GridInventory) -> void:
 	if pending_loot != null:
 		# 上一份还没处理就来了新的（搜索收获 + 遭遇的尸体）：并成一份，一件都不丢。
 		# 087：尸体容器可能是棋盘模式（包当背景），两边都往一块够大的自由容器里搬，放不下就加高
-		var w := maxi(pending_loot.size.x, container.size.x)
-		var h := pending_loot.size.y + container.size.y
+		# 反馈：两边高度直接相加会把界面撑出窗口。按搜索规则的收获箱大小起步，装不下一格一格加高；
+		# 加到两倍还没装完仍接着加（一件都不丢）
+		var haul := node_rules.search.haul_board if node_rules != null and node_rules.search != null else Vector2i(6, 4)
+		var w := maxi(maxi(pending_loot.size.x, container.size.x), haul.x)
+		var h := maxi(haul.y, 1)
 		var merged := GridInventory.new(Vector2i(w, h), 0, false)
 		InventoryService.transfer_all(pending_loot, merged)
 		InventoryService.transfer_all(container, merged)
 		var guard := 0
-		while (pending_loot.item_count() > 0 or container.item_count() > 0) and guard < 8:
+		while (pending_loot.item_count() > 0 or container.item_count() > 0) and guard < 64:
 			guard += 1
-			var bigger := GridInventory.new(merged.size + Vector2i(0, 2), 0, false)
+			var bigger := GridInventory.new(merged.size + Vector2i(0, 1), 0, false)
 			InventoryService.transfer_all(merged, bigger)
 			merged = bigger
 			InventoryService.transfer_all(pending_loot, merged)
@@ -759,6 +765,7 @@ func _resolve_rules() -> void:
 	if enemies != null and chapter.enemy_pool != &"":
 		pool = enemies.pool(chapter.enemy_pool)
 	drop_rule = _rule_asset("drop_rules", chapter.drop_rule) as DropRule
+	carry_rule = _rule_asset("carry_rules", chapter.carry_rule) as CarryRule
 	node_rules = _rule_asset("node_rules", chapter.node_rules) as NodeRules
 	economy = _rule_asset("economy_rules", chapter.economy_rules) as EconomyRules
 
@@ -796,6 +803,8 @@ func _wire_events() -> void:
 	events.enemies = enemies
 	events.items = items
 	events.drop_rule = drop_rule
+	events.carry_rule = carry_rule
+	events.difficulty_def = difficulty
 	events.wallet = wallet
 	events.economy = economy
 	events.difficulty = chapter.difficulty

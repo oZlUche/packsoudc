@@ -20,5 +20,5 @@ signature_by_strength = {
 "1": ["longbow"],
 "2": ["blessed_longbow"]
 }
-board = Vector2i(6, 4)
-bags = Array[StringName]([&"bag_long", &"bag_long", &"bag_small"])
+board = Vector2i(6, 5)
+bags = Array[StringName]([&"bag_long", &"bag_long", &"bag_leather", &"bag_small"])

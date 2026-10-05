@@ -1,0 +1,13 @@
+{
+  "id": "antidote_satchel",
+  "display_name": "解毒药囊",
+  "display_names": {
+    "en": "Antidote Satchel"
+  },
+  "inputs": [
+    "antidote_kit",
+    "dried_herbs"
+  ],
+  "output": "antidote_satchel",
+  "note": "把干草药束拖到解毒包上：配成解毒药囊。"
+}

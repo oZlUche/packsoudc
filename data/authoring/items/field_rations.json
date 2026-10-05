@@ -1,0 +1,24 @@
+{
+  "id": "field_rations",
+  "display_name": "行军军粮",
+  "display_names": {
+    "en": "Field Rations"
+  },
+  "description": "军团配的一包，吃一天不饿。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "nature",
+    "food"
+  ],
+  "combat": {
+    "base_stats": {
+      "max_stamina": 90,
+      "regen_stamina": 4,
+      "max_hp": 5
+    }
+  }
+}

@@ -50,6 +50,24 @@ extends Resource
 ## 占位数；没有角色倍率（作者：搜索速度不做成属性）
 @export var reveal_seconds: Array[float] = [0.3, 0.5, 0.8, 1.2, 2.0, 3.0]
 
+## 127（作者定）：每次搜的保底 —— 下标 = 进阶难度等级（0 = 普通），每一行是「逐件稀有度下限」：
+## 行长 = 保底件数，每项 = 那一件的稀有度下限。`[2, 1, 1]` = 三件，一蓝两绿（不是全蓝或全绿）。
+## 常规搜索点用第 level 行，进阶搜索点（高危区里的）用第 level + 1 行。空 = 不保底（序章）
+@export var search_floors: Array = []
+
+
+## 第 [param level] 行的下限表。超出表长取最后一行，再把第一项抬一阶（最高 5）
+func floor_row(level: int) -> Array[int]:
+	var out: Array[int] = []
+	if search_floors.is_empty():
+		return out
+	var i := clampi(level, 0, search_floors.size() - 1)
+	for v in search_floors[i]:
+		out.append(int(v))
+	if level >= search_floors.size() and not out.is_empty():
+		out[0] = mini(5, out[0] + 1)
+	return out
+
 
 ## 揭示这个稀有度的一件要几秒
 func reveal_time(rarity: int) -> float:
