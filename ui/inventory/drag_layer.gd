@@ -222,7 +222,38 @@ func view_at(global_pos: Vector2) -> ContainerView:
 	for view in _views:
 		if view.visible and visible_rect(view).has_point(global_pos):
 			return view
-	return null
+	return _view_under_footprint(global_pos)
+
+
+## 光标在格子视图外一点、但被拖的东西（按抓取点反推的整块）有一半以上压在视图里：算落在那个视图上（吸附范围）。
+## 反馈（开局拖物品：整体对不准，背包在左上角时最明显）：抓着物品的某一格拖向左上角时，光标先出了棋盘边界，
+## 物品其实大半还在棋盘上，却被当成「棋盘外」退回去了
+func _view_under_footprint(global_pos: Vector2) -> ContainerView:
+	if _inst == null or _inst.def == null:
+		return null
+	var cells := _inst.def.cells_rotated(_rot)
+	if cells.is_empty():
+		return null
+	var size := _footprint_cells(cells)
+	var rect := Rect2(global_pos - (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * InventoryView.CELL, Vector2(size) * InventoryView.CELL)
+	var best: ContainerView = null
+	var best_area := 0.0
+	for view in _views:
+		if not (view is InventoryView) or not view.visible or (view as InventoryView).inventory == null:
+			continue
+		var hit := visible_rect(view).intersection(rect)
+		var area := hit.size.x * hit.size.y if hit.size.x > 0.0 and hit.size.y > 0.0 else 0.0
+		if area * 2.0 > rect.size.x * rect.size.y and area > best_area:
+			best = view
+			best_area = area
+	return best
+
+
+static func _footprint_cells(cells: Array[Vector2i]) -> Vector2i:
+	var hi := Vector2i.ZERO
+	for c in cells:
+		hi = Vector2i(maxi(hi.x, c.x), maxi(hi.y, c.y))
+	return hi + Vector2i.ONE
 
 
 ## 视图现在露在外面的那块（全局坐标）：自身矩形与所有裁剪祖先（滚动容器）的交集
@@ -237,8 +268,18 @@ static func visible_rect(view: Control) -> Rect2:
 
 
 ## 当前拖拽物在该网格视图中的落点锚点。
+## 落点会吸进棋盘边界：整块能放得下就不让它伸出去（光标贴着边或略出边时落在最靠边的那一格）
 func target_origin(view: InventoryView, global_pos: Vector2) -> Vector2i:
-	return view.cell_at_global(global_pos) - _grab_cell
+	var origin := view.cell_at_global(global_pos) - _grab_cell
+	var inv := view.inventory
+	# 光标还在视图里：老老实实按格算（越界就是越界）；只有光标已出界、靠整块判定才落到这个视图时才吸进边界
+	if inv != null and _inst != null and not visible_rect(view).has_point(global_pos) and _inst.def != null:
+		var cells := _inst.def.cells_rotated(_rot)
+		if not cells.is_empty():
+			var span := _footprint_cells(cells)
+			if span.x <= inv.size.x and span.y <= inv.size.y:
+				origin = Vector2i(clampi(origin.x, 0, inv.size.x - span.x), clampi(origin.y, 0, inv.size.y - span.y))
+	return origin
 
 
 ## 残影的左上角（本控件内的坐标）。
