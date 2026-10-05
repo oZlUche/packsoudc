@@ -38,6 +38,7 @@ func _build() -> void:
 	add_child(col)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 20)
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(row)
 
 	_board_box = VBoxContainer.new()
@@ -54,7 +55,11 @@ func _build() -> void:
 	_warehouse_view.inventory = _meta.warehouse
 	_warehouse_view.show_adjacency = false
 	_warehouse_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	right.add_child(ScrollBox.wrap(_warehouse_view))     # 110：扩建后仓库会很高，竖向滚动
+	# 110：扩建后仓库会很高，竖向滚动。反馈：最小高度压到 4 行（约 240），有空间再长，别把结算屏的按钮挤出窗口
+	var wh_scroll := ScrollBox.wrap(_warehouse_view, 4)
+	wh_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.add_child(wh_scroll)
 	_warehouse_view.item_double_clicked.connect(quick_move)
 
 	_line = _label("", 13, UiPalette.FG)
@@ -91,7 +96,7 @@ func _rebuild_board_view() -> void:
 	_board_view.inventory = _meta.board
 	_board_view.show_adjacency = false
 	_board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_board_box.add_child(_board_view)
+	_board_box.add_child(ScrollBox.wrap(_board_view, 6))     # 带回来的棋盘也可能很高：同样竖向滚动
 	_drag.register_view(_board_view)
 	_board_view.item_double_clicked.connect(quick_move)     # 视图每次新建，信号跟着重接
 
