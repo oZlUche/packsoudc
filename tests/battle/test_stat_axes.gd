@@ -7,7 +7,7 @@ extends RefCounted
 const AXIS := StatAxes.STAMINA_COST
 
 
-## 一个只有一件道具的假人：那件道具的耐力消耗 = [param cost]（点数），可选一条 EMPOWER 乘区
+## 一个只有一件道具的假人：那件道具的耐力消耗 = [param cost]（点数），可选一条乘算
 static func _dummy(cost: float, empower_percent: int = 0) -> CombatantRuntime:
 	var item := CompiledItem.new()
 	item.source_uid = 7
@@ -16,7 +16,7 @@ static func _dummy(cost: float, empower_percent: int = 0) -> CombatantRuntime:
 	var v := item.stats.ensure(BattleStats.STAMINA_COST)
 	v.base = StatMath.from_float(cost)
 	if empower_percent != 0:
-		v.add_percent(StatMath.Buff.EMPOWER, empower_percent)
+		v.add_percent(empower_percent)
 	var spec := CombatantSpec.new()
 	spec.baseline = StatSet.new()
 	spec.add(item)

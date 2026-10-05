@@ -291,14 +291,14 @@ static func run_crit(t: TestCase) -> void:
 	t.check(StatAxes.describe(StatAxes.CRIT_CHANCE, 3).contains("±1%"), "说明按百分数写：%s" % StatAxes.describe(StatAxes.CRIT_CHANCE, 3))
 	# 只收 flat
 	var bad := ImportReport.new()
-	ContentImporter.import_buff({"id": "b", "display_name": "b", "mods": [{"stat": "crit_chance", "mult_category": "EMPOWER", "mult_percent": 10}]}, ContentImporter.Context.new(), bad)
+	ContentImporter.import_buff({"id": "b", "display_name": "b", "mods": [{"stat": "crit_chance", "mode": "MULT", "amount": 10}]}, ContentImporter.Context.new(), bad)
 	t.check(not bad.ok() and bad.to_text().contains("crit_chance"), "暴击率写乘区：拦（%s）" % bad.to_text().strip_edges().left(50))
 	var good := ImportReport.new()
-	ContentImporter.import_buff({"id": "b", "display_name": "b", "mods": [{"stat": "crit_chance", "flat": 0.05}]}, ContentImporter.Context.new(), good)
+	ContentImporter.import_buff({"id": "b", "display_name": "b", "mods": [{"stat": "crit_chance", "amount": 0.05}]}, ContentImporter.Context.new(), good)
 	t.check(good.ok(), "暴击率写 flat：过")
 	var m := StatModifier.new()
 	m.stat = BattleStats.CRIT_CHANCE
-	m.flat = 0.05
+	m.amount = 0.05
 	t.eq(Glossary.mod_text(m), "暴击率 +5%", "按百分数写")
 	# 预估乘期望
 	var stats := StatSet.new()

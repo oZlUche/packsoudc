@@ -38,8 +38,8 @@
               "mods": [
                 {
                   "stat": "haste",
-                  "mult_category": "HASTE",
-                  "mult_percent": 4
+                  "mode": "MULT",
+                  "amount": 4.0
                 }
               ]
             }

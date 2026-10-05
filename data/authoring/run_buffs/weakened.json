@@ -1,12 +1,12 @@
 {
   "id": "weakened",
   "display_name": "虚弱",
-  "description": "走 {duration_steps} 步之内伤害 {mult_percent|signed}%（地图 buff 的测试用例）",
+  "description": "走 {duration_steps} 步之内伤害 {amount|signed}%（地图 buff 的测试用例）",
   "duration_steps": 5,
   "mods": [
     {
-      "mult_category": "EMPOWER",
-      "mult_percent": -10
+      "mode": "MULT",
+      "amount": -10.0
     }
   ]
 }

@@ -81,8 +81,8 @@
           "mode": "active",
           "mods": [
             {
-              "mult_category": "EMPOWER",
-              "mult_percent": 10
+              "mode": "MULT",
+              "amount": 10.0
             }
           ]
         },
@@ -91,7 +91,7 @@
           "max_stacks": 6,
           "mods": [
             {
-              "flat": 1.0
+              "amount": 1.0
             }
           ]
         }

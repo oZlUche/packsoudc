@@ -50,7 +50,7 @@ func decay_buff() -> BuffDef:
 		_decay = _system_buff(DECAY_ID, "衰竭", "Decay")
 		var m := StatModifier.new()
 		m.stat = BattleStats.MAX_HP
-		m.flat = -decay_amount
+		m.amount = -decay_amount
 		_decay.mods.append(m)
 	return _decay
 

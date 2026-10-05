@@ -187,7 +187,7 @@ static func run_buff_bar(t: TestCase) -> void:
 	var view := BattleView.new()
 	view.label_font = UiPalette.cjk_font()
 	view._ready()
-	r.passives = [[PassiveNote.make(&"set:x", "猎人套装 3 件", 1, [FX._mod(BattleStats.DAMAGE, StatMath.Buff.EMPOWER, 10)])], []]
+	r.passives = [[PassiveNote.make(&"set:x", "猎人套装 3 件", 1, [FX._mod(BattleStats.DAMAGE, 10)])], []]
 	view.play(r, ["我", "敌"])
 	t.check(view.buff_tip(CombatantPanel.OVERTIME_CHIP).contains("不可解除"), "鏖战的悬浮窗写着不可解除")
 	t.check(view.buff_tip("passive:0", 0).contains("常驻") and view.buff_tip("passive:0", 0).contains("10%"), "常驻格的悬浮窗列出它的加成：%s" % view.buff_tip("passive:0", 0))
@@ -199,7 +199,7 @@ static func run_general_only(t: TestCase) -> void:
 	var low := LowHpEmpowerPerk.new()
 	t.check(low.battle_note(null) != "", "所有伤害按血量增伤：进栏")
 	var base := StatModPerk.new()
-	base.mods.append(FX._mod(BattleStats.REGEN_HP, -1, 0, 1.0))
+	base.mods.append(FX._mod(BattleStats.REGEN_HP, 0, 1.0))
 	t.check(base.battle_note(null) != "", "基线回血：进栏")
 	var tagged := StatModPerk.new()
 	tagged.target = "items"
@@ -254,5 +254,5 @@ static func run_axes(t: TestCase) -> void:
 	t.eq(DamageResolver.deal(ctx2, ctx2.sides[1], _sec(10.0)), _sec(9.0), "坚韧 2 层：受到伤害 × 0.9")
 
 	var warn := ImportReport.new()
-	ContentImporter.import_buff({"id": "t_fast", "mods": [{"stat": "haste", "mult_category": "HASTE", "mult_percent": 5}]}, ContentImporter.Context.new(), warn)
+	ContentImporter.import_buff({"id": "t_fast", "mods": [{"stat": "haste", "mode": "MULT", "amount": 5}]}, ContentImporter.Context.new(), warn)
 	t.check(warn.to_text().contains("shift_axis"), "只有一条攻速 mod 的 buff：提示改用轴（%s）" % warn.to_text())

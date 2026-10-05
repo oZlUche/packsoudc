@@ -33,6 +33,10 @@ var skip: Dictionary = {}
 var _target: Object = null
 ## 111：本表单每个字段的那一行（字段名 → 行控件），按 `FIELD_WHEN` 显隐用
 var _rows: Dictionary = {}
+## 133：资源声明了 `editor_hint() -> String` 就在字段下面画一行灰字，任何字段改了就重算（[StatModifier]：乘算还是加算、扩大还是缩小）
+var _hint: Label = null
+## 133：外层表单的对象（子表单才有）。[StatModifier] 挂在 [BuffDef] 下时，提示末尾补「每层一份」
+var parent_target: Object = null
 
 
 static func create(target: Object, font: Font, skip_map: Dictionary = {}) -> PropertyForm:
@@ -63,9 +67,31 @@ func rebuild() -> void:
 			add_child(row)
 			_rows[String(prop["name"])] = row
 	_apply_visibility(false)
+	_hint = null
+	if _target.has_method("editor_hint"):
+		_hint = _muted("")
+		_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		add_child(_hint)
+		_refresh_hint()
+
+
+## 133：灰字提示的当前文字（没有 = 空；测试用）
+func hint_text() -> String:
+	return _hint.text if _hint != null else ""
+
+
+func _refresh_hint() -> void:
+	if _hint == null or _target == null or not _target.has_method("editor_hint"):
+		return
+	var text := String(_target.call("editor_hint"))
+	if text != "" and parent_target is BuffDef:
+		text += "；在 buff 里是每层一份"
+	_hint.text = text
+	_hint.visible = text != ""
 
 
 func _emit() -> void:
+	_refresh_hint()
 	if _apply_visibility(true):
 		rebuild.call_deferred()     # 有字段被归了默认：重画，让再显示出来时框里是新值
 	changed.emit()
@@ -819,6 +845,7 @@ func _adder(declared: StringName, on_made: Callable) -> Control:
 
 func _sub_form(obj: Object) -> PropertyForm:
 	var sub := PropertyForm.create(obj, label_font, skip)
+	sub.parent_target = _target
 	sub.changed.connect(_emit)
 	return sub
 #endregion

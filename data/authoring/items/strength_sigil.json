@@ -39,8 +39,8 @@
                 "duration_sec": 10.0,
                 "mods": [
                   {
-                    "mult_category": "EMPOWER",
-                    "mult_percent": 10
+                    "mode": "MULT",
+                    "amount": 10.0
                   }
                 ]
               }
@@ -74,8 +74,8 @@
     ],
     "grant_mods": [
       {
-        "mult_category": "EMPOWER",
-        "mult_percent": 15
+        "mode": "MULT",
+        "amount": 15.0
       }
     ]
   }

@@ -20,7 +20,7 @@ script = ExtResource("3_dql6g")
 [sub_resource type="Resource" id="Resource_hpahx"]
 script = ExtResource("1_dkjj4")
 stat = &"armor"
-flat = 8.0
+amount = 8.0
 
 [sub_resource type="Resource" id="Resource_ouk8o"]
 script = ExtResource("6_o32o2")
@@ -57,7 +57,7 @@ rules = Array[ExtResource("2_cf17m")]([SubResource("Resource_u8eqt")])
 [sub_resource type="Resource" id="Resource_1m5cu"]
 script = ExtResource("1_dkjj4")
 stat = &"armor"
-flat = 4.0
+amount = 4.0
 
 [sub_resource type="Resource" id="Resource_2jowl"]
 script = ExtResource("11_y2exc")
@@ -69,7 +69,7 @@ script = ExtResource("3_dql6g")
 [sub_resource type="Resource" id="Resource_74w5y"]
 script = ExtResource("1_dkjj4")
 stat = &"armor"
-flat = 4.0
+amount = 4.0
 
 [sub_resource type="Resource" id="Resource_qo1rn"]
 script = ExtResource("6_o32o2")

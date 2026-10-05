@@ -53,9 +53,8 @@ func combat_mods(level: int, baseline: CombatantBaseline) -> Dictionary:
 		if key.begins_with(BattleStats.MAX_PREFIX) or key.begins_with(BattleStats.REGEN_PREFIX):
 			var real := StatModifier.new()
 			real.stat = m.stat
-			real.mult_category = m.mult_category
-			real.mult_percent = m.mult_percent
-			real.flat = m.flat * base.value_of(m.stat, BattleStats.default_value(m.stat))
+			real.mode = m.mode
+			real.amount = m.amount if m.is_mult() else m.amount * base.value_of(m.stat, BattleStats.default_value(m.stat))
 			(out["baseline"] as Array[StatModifier]).append(real)
 		else:
 			(out["items"] as Array[StatModifier]).append(m)
@@ -70,10 +69,10 @@ func effect_text(level: int) -> String:
 	var parts: Array[String] = []
 	for m in r.mods:
 		var what := Glossary.stat_name(m.stat)
-		if m.mult_category >= 0 and m.mult_percent != 0:
-			parts.append("%s %s%d%%" % [what, "+" if m.mult_percent > 0 else "−", absi(m.mult_percent)])
-		elif m.flat != 0.0:
-			parts.append("%s %s%d%%" % [what, "+" if m.flat > 0.0 else "−", absi(roundi(m.flat * 100.0))])
+		if m.amount == 0.0:
+			continue
+		var pct := roundi(m.amount) if m.is_mult() else roundi(m.amount * 100.0)     # 加算的上限 / 回复按基线比例写，所以也显示成百分数
+		parts.append("%s %s%d%%" % [what, "+" if pct > 0 else "−", absi(pct)])
 	if r.travel_mult > 1:
 		parts.append("走一步花 %d 倍行动点" % r.travel_mult)
 	return "、".join(parts)

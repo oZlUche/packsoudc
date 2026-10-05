@@ -124,9 +124,9 @@ static func run_glossary(t: TestCase) -> void:
 	t.check(poison.contains("减益") and poison.contains("不限层") and poison.contains("永续"), "中毒的词条按定义：减益、不限层、永续：%s" % poison)
 	t.check(Glossary.strip_bbcode(String(pf["text"])).contains("施加中毒"), "apply_status 只写「施加中毒」")
 	# Glossary 本身
-	t.eq(Glossary.mod_text(_mod(&"damage", 10, -1, 0.0)), "伤害 +10", "固定值")
-	var pct := _mod(&"damage", 0.0, StatMath.Buff.EMPOWER, 10)
-	t.eq(Glossary.mod_text(pct), "增伤 +10%", "乘区")
+	t.eq(Glossary.mod_text(StatModifier.make(&"damage", StatModifier.Mode.ADD, 10.0)), "伤害 +10", "加算")
+	var pct := StatModifier.make(&"damage", StatModifier.Mode.MULT, 10.0)
+	t.eq(Glossary.mod_text(pct), "伤害 +10%", "乘算（133：不再写乘区名）")
 	t.eq(Glossary.strip_bbcode("[b]x[/b][color=#fff]y[/color]"), "xy", "剥标签")
 	# 107：「开战时」「自发」的 tip 关了，只剩传进来的血怒
 	var found := Glossary.terms_in("开战时获得血怒，自发出手", {"血怒": "详"})
@@ -149,14 +149,6 @@ static func run_glossary(t: TestCase) -> void:
 	t.check(tiered.rough_dps() > plain.rough_dps() * 1.05, "预估 DPS 算上血怒：%.2f > %.2f" % [tiered.rough_dps(), plain.rough_dps()])
 	t.check(is_equal_approx(tiered.estimated_dps_of(tiered.item_of(k.uid)), tiered.rough_dps()), "只有匕首出手")
 
-
-static func _mod(stat: StringName, flat: float, cat: int, pct: int) -> StatModifier:
-	var m := StatModifier.new()
-	m.stat = stat
-	m.flat = flat
-	m.mult_category = cat
-	m.mult_percent = pct
-	return m
 
 
 static func run_dormant_faith(t: TestCase) -> void:
