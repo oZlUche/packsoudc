@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_oiwv3"]
+
+[resource]
+script = ExtResource("1_oiwv3")
+id = &"switch_and_dormant"
+display_name = "切换与休眠"
+category = &"faith"
+order = 4
+text = "换神不花钱：右键棋盘上另一枚信物，或者把它拿起来再放下。换了之后，原来那位神的道具进入休眠：战斗里不出手、不给也不吃邻接加成、不算套装；有通用效果的道具，比如盾的固定减伤、武器本身的攻击力，仍保留通用的那部分，只丢信力加成。只靠信仰起作用的东西休眠就彻底失效。
+
+休眠的道具在棋盘上画灰、标着「休眠」。信力按神各记一池，切出去不清零，切回来接着攒；没激活的神不记。诸神之间天然互斥，所以带几枚信物其实是带了几种随时能切的流派，代价只是它们各占的格子。"
+related = Array[String](["anchor_and_right_click", "anchor_activation"])

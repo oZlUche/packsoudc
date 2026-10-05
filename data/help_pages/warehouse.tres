@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_uo2ql"]
+
+[resource]
+script = ExtResource("1_uo2ql")
+id = &"warehouse"
+display_name = "仓库"
+category = &"meta"
+text = "{zone:仓库}是基地里的一块格子，不要求包，所有格子都能用；撤离带回来的东西在这里置入，开局时从这里拖进初始包带进下一局。放得进初始包的就是带的，没有第二套规则数件数；带回仓库的只有非包道具，包只记图鉴。
+
+仓库空着时第一局会发一套开局装备。仓库有「整理」，格子多了能上下滚动；出售页按稀有度一键卖或双击卖，钱进局外攒着。科技「仓库扩建」让它往下长，里面的东西原地不动。"
+related = Array[String](["tidy", "tech_tree", "settlement_and_warehouse", "codex"])
