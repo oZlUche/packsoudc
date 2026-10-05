@@ -206,6 +206,11 @@ func _draw() -> void:
 		var body := ItemPainter.body_color(item.def)
 		var edge := ItemPainter.rarity_color(item.def).lightened(0.2)
 		var text_color := ItemPainter.label_color(item.def)
+		if item.def.is_bag and not item.def.has_faith():
+			# 自由容器里（战利品落成一堆东西、仓库）的包也是包：画成统一的包灰，不按稀有度上色（和棋盘上当底层的包一致）
+			body = COLOR_BAG_FILL
+			edge = COLOR_BAG_EDGE
+			text_color = Color("79839a")
 		if dormant:
 			body = body.lerp(COLOR_BAG_FILL, 0.7)
 			edge = edge.lerp(COLOR_BAG_EDGE, 0.7)
