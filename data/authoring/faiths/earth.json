@@ -39,7 +39,7 @@
       "mods": [
         {
           "stat": "max_stamina",
-          "flat": 20.0
+          "amount": 20.0
         }
       ]
     },
@@ -92,7 +92,7 @@
           "mods": [
             {
               "stat": "max_stamina",
-              "flat": 5.0
+              "amount": 5.0
             }
           ]
         },
@@ -102,7 +102,7 @@
           "mods": [
             {
               "stat": "armor",
-              "flat": 1.0
+              "amount": 1.0
             }
           ]
         }

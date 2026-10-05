@@ -20,7 +20,7 @@
 [sub_resource type="Resource" id="Resource_p7i6f"]
 script = ExtResource("3_af1s0")
 stat = &"max_hp"
-flat = 3.0
+amount = 3.0
 
 [sub_resource type="Resource" id="Resource_evm5s"]
 script = ExtResource("2_f54du")
@@ -30,7 +30,7 @@ mods = Array[ExtResource("3_af1s0")]([SubResource("Resource_p7i6f")])
 [sub_resource type="Resource" id="Resource_2gm7o"]
 script = ExtResource("3_af1s0")
 stat = &"armor"
-flat = 1.0
+amount = 1.0
 
 [sub_resource type="Resource" id="Resource_b4lvr"]
 script = ExtResource("2_f54du")
@@ -76,7 +76,7 @@ script = ExtResource("10_r7t77")
 [sub_resource type="Resource" id="Resource_y2185"]
 script = ExtResource("3_af1s0")
 stat = &"regen_hp"
-flat = 1.0
+amount = 1.0
 
 [sub_resource type="Resource" id="Resource_rvx17"]
 script = ExtResource("11_0s07h")

@@ -181,13 +181,11 @@ static func run_import_checks(t: TestCase) -> void:
 	poison["adjacency"]["grant_rules"] = [{"trigger": {"type": "on_item_fired"}, "cadence": {"type": "always"},
 		"effects": [{"type": "deal_damage", "damage_type": "poison", "amount": 2.0}]}]
 	t.check(_has_error(_import(poison), "毒与流血没有直接伤害形态"), "直接毒伤 → error（107 那条同样管附加规则）")
+	# 133：乘区整个取消（109 的 FIRE → ELEMENT 改名随之作废）：旧写法只提醒、按乘算读
 	var fire_cat := {"id": "y", "shape": ["1"], "is_bag": true}
-	fire_cat["bag_mods"] = [{"stat": "damage", "mult_category": "FIRE", "mult_percent": 10}]
-	t.check(_has_error(_import(fire_cat), "ELEMENT"), "乘区写 FIRE → error 并指路 ELEMENT")
 	fire_cat["bag_mods"] = [{"stat": "damage", "mult_category": "ELEMENT", "mult_percent": 10}]
 	var good := _import(fire_cat)
-	t.check(good.ok(), "写 ELEMENT 就对了 %s" % str(good.errors))
-	t.eq(StatMath.Buff.ELEMENT, 2, "改名不改位置：仍是第 2 位")
+	t.check(good.ok() and good.to_text().contains("乘区已取消"), "旧的乘区写法：提醒、照读 %s" % good.to_text())
 
 
 static func run_enchant_fires_once_per_hit(t: TestCase) -> void:

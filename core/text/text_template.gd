@@ -80,7 +80,7 @@ static func _expand(token: String, ctx: Dictionary) -> Variant:
 		if name.begins_with("#") and Color.html_is_valid(name):
 			return "[color=%s]" % name
 		return null
-	# 104：`{key|abs}` 取绝对值、`{key|signed}` 带正负号（「伤害 {mult_percent|signed}%」→「伤害 -10%」）
+	# 104：`{key|abs}` 取绝对值、`{key|signed}` 带正负号（「伤害 {amount|signed}%」→「伤害 -10%」）
 	var filter := ""
 	var bar := token.find("|")
 	if bar > 0:
@@ -213,7 +213,7 @@ static func _format(v: Variant, filter: String) -> Variant:
 
 
 ## 104：`{item_stat:<道具 id>:<字段>}` —— 教程文本引用**别的道具**的数（「塔盾每下减 4」）。从道具定义里找：
-## 先 `combat` 再整份定义，深度优先；遇到 `stat` 是这个名字的属性修饰取它的 `flat`，否则取同名的数值字段 / 字典键
+## 先 `combat` 再整份定义，深度优先；遇到 `stat` 是这个名字的属性修饰取它的 `amount`，否则取同名的数值字段 / 字典键
 ## （`base_stats` 的 `armor`、伤害修正的 `flat`）。道具库用 ctx 的 `_items`（[method context_for] 放进去），没有就自己读一份
 static func _item_stat(token: String, ctx: Dictionary) -> Variant:
 	var parts := token.split(":")
@@ -278,7 +278,7 @@ static func _find_field(obj: Variant, key: String, depth: int) -> Variant:
 	if not (obj is Object):
 		return null
 	if obj is StatModifier and String((obj as StatModifier).stat) == key:
-		return (obj as StatModifier).flat
+		return (obj as StatModifier).amount
 	for p in ContentSchema.properties_of(obj):
 		var name := String(p["name"])
 		var v: Variant = (obj as Object).get(name)

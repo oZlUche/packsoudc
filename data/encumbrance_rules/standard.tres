@@ -7,13 +7,13 @@
 [sub_resource type="Resource" id="Resource_7a0xn"]
 script = ExtResource("2_80wg4")
 stat = &"haste"
-mult_category = 3
-mult_percent = -10
+mode = 1
+amount = -10.0
 
 [sub_resource type="Resource" id="Resource_7q1ya"]
 script = ExtResource("2_80wg4")
 stat = &"regen_stamina"
-flat = -0.1
+amount = -0.1
 
 [sub_resource type="Resource" id="Resource_7epum"]
 script = ExtResource("1_87n64")
@@ -26,18 +26,18 @@ mods = Array[ExtResource("2_80wg4")]([SubResource("Resource_7a0xn"), SubResource
 [sub_resource type="Resource" id="Resource_xbcfs"]
 script = ExtResource("2_80wg4")
 stat = &"haste"
-mult_category = 3
-mult_percent = -25
+mode = 1
+amount = -25.0
 
 [sub_resource type="Resource" id="Resource_n44fw"]
 script = ExtResource("2_80wg4")
 stat = &"regen_stamina"
-flat = -0.25
+amount = -0.25
 
 [sub_resource type="Resource" id="Resource_x80eh"]
 script = ExtResource("2_80wg4")
 stat = &"max_stamina"
-flat = -0.2
+amount = -0.2
 
 [sub_resource type="Resource" id="Resource_vvc5f"]
 script = ExtResource("1_87n64")
@@ -51,18 +51,18 @@ mods = Array[ExtResource("2_80wg4")]([SubResource("Resource_xbcfs"), SubResource
 [sub_resource type="Resource" id="Resource_qg40o"]
 script = ExtResource("2_80wg4")
 stat = &"haste"
-mult_category = 3
-mult_percent = -25
+mode = 1
+amount = -25.0
 
 [sub_resource type="Resource" id="Resource_63dq2"]
 script = ExtResource("2_80wg4")
 stat = &"regen_stamina"
-flat = -0.25
+amount = -0.25
 
 [sub_resource type="Resource" id="Resource_pg5nm"]
 script = ExtResource("2_80wg4")
 stat = &"max_stamina"
-flat = -0.2
+amount = -0.2
 
 [sub_resource type="Resource" id="Resource_u0p6d"]
 script = ExtResource("1_87n64")

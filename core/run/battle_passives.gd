@@ -67,7 +67,7 @@ static func of(run: RunState) -> Array[PassiveNote]:
 				continue
 			var m := StatModifier.new()
 			m.stat = StringName(String(k))
-			m.flat = float(bonus[k])
+			m.amount = float(bonus[k])
 			mods2.append(m)
 		if not mods2.is_empty():
 			out.append(PassiveNote.make(&"base_bonus", "基础属性加成", 1, mods2, "技能、难度、神坛改的基础属性"))

@@ -1,11 +1,11 @@
-## 定点数与乘区枚举。数值结算的全部约定集中在这里（架构文档 4.3）。
+## 定点数。数值结算的全部约定集中在这里（架构文档 4.3）。
 ##
-## 结算公式：
+## 结算公式（133，作者定：只有一个乘区）：
 ## [codeblock]
-## 终值 = 基础值 × (1 + A 类加成之和) × (1 + B 类加成之和) × … + 固定加值之和
+## 终值 = 基础值 × max(0, 1 + 乘算之和) + 加算之和
 ## [/codeblock]
 ##
-## 同一乘区内相加，不同乘区之间相乘，固定加值在所有乘法之后相加、不吃任何百分比放大。
+## 所有乘算相加后乘一次，加算在乘法之后相加、不吃任何百分比放大。
 class_name StatMath
 extends RefCounted
 
@@ -20,38 +20,6 @@ extends RefCounted
 ## ONE = 1e6 时只剩 9.2e6 —— 百万血乘十倍就溢出了。
 ## 四位小数对冷却是 0.1 毫秒、对百分比是 0.01%，远够用。
 const ONE := 10_000
-
-
-## 乘区分类。
-##
-## [b]追加只能加在末尾。[/b] 定点乘法带取整，乘法顺序会影响末位；枚举声明顺序即乘法
-## 顺序，在末尾追加一个空乘区其因子恰为 1、结果逐位不变，而在中间插入会重排乘法顺序，
-## 让所有历史数值和存档对不上。
-##
-## 这里的分类是开发期占位，正式内容确定后替换。一项属性只会收到与它相关的乘区加成，
-## 无关乘区保持 0、因子为 1，不影响结果 —— 所以不需要为每种属性各开一套枚举。
-enum Buff {
-	EMPOWER,  ## 强化：通用增伤
-	SHARP,    ## 锐利：物理系
-	ELEMENT,  ## 元素增伤（109，作者定：原名 FIRE —— 火焰只是元素之一，桶名不该占成一种元素；改名不改位置）
-	HASTE,    ## 急速：作用于冷却
-}
-
-## 缓存枚举值，避免每次结算都重建数组。顺序即乘法顺序。
-static var _categories: Array = Buff.values()
-
-
-static func categories() -> Array:
-	return _categories
-
-
-static func category_count() -> int:
-	return _categories.size()
-
-
-static func category_name(category: int) -> String:
-	var keys := Buff.keys()
-	return keys[category] if category >= 0 and category < keys.size() else "?"
 
 
 #region 定点数

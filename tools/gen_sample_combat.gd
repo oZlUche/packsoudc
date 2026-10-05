@@ -11,7 +11,6 @@ extends CliTool
 
 const ITEM_DIR := "res://data/items"
 
-const B := StatMath.Buff
 
 
 func run() -> void:
@@ -98,12 +97,8 @@ static func _weapon_rule(
 	return _rule(OnSchedule.new(), _cooldown(cd), effects, [_cost(cost_key, cost_amount)])
 
 
-static func _mod(stat: StringName, category: int, percent: int) -> StatModifier:
-	var m := StatModifier.new()
-	m.stat = stat
-	m.mult_category = category
-	m.mult_percent = percent
-	return m
+static func _mod(stat: StringName, percent: int) -> StatModifier:
+	return StatModifier.make(stat, StatModifier.Mode.MULT, float(percent))
 
 
 static func _buff(id: String, display: String, duration: float, max_stacks: int) -> BuffDef:
@@ -144,8 +139,7 @@ static func _configure(def: ItemDef) -> void:
 			# 标记：降低对手护甲，让后续伤害更疼
 			var marked := _buff("marked", "标记", 8.0, 1)
 			marked.is_debuff = true
-			marked.mods = [_mod(BattleStats.ARMOR, B.EMPOWER, 0)] as Array[StatModifier]
-			marked.mods[0].flat = -3.0
+			marked.mods = [StatModifier.make(BattleStats.ARMOR, StatModifier.Mode.ADD, -3.0)] as Array[StatModifier]
 			var mark := ApplyStatus.new()
 			mark.buff = marked
 			def.combat = _profile({"damage": 30.0}, [_weapon_rule(3.0, BattleStats.RES_STAMINA, 18.0, [mark])])
@@ -153,7 +147,7 @@ static func _configure(def: ItemDef) -> void:
 			var ap := AdjacencyProfile.new()
 			ap.receive_cells = [Vector2i(0, 4)]
 			ap.receive_filter = [&"part"] as Array[StringName]
-			ap.receive_mods = [_mod(BattleStats.DAMAGE, B.SHARP, 25)]
+			ap.receive_mods = [_mod(BattleStats.DAMAGE, 25)]
 			def.adjacency = ap
 
 		"crowbar":
@@ -173,7 +167,7 @@ static func _configure(def: ItemDef) -> void:
 
 		"stim":
 			var rush := _buff("adrenaline", "肾上腺素", 10.0, 3)
-			rush.mods = [_mod(BattleStats.HASTE, B.HASTE, 12)] as Array[StatModifier]
+			rush.mods = [_mod(BattleStats.HASTE, 12)] as Array[StatModifier]
 			var dose := ApplyStatus.new()
 			dose.target = CombatEffect.Target.SELF
 			dose.buff = rush
@@ -192,7 +186,7 @@ static func _configure(def: ItemDef) -> void:
 			var ap2 := AdjacencyProfile.new()
 			ap2.grant_cells = [Vector2i(0, -1), Vector2i(0, 1)]
 			ap2.grant_filter = [&"weapon"] as Array[StringName]
-			ap2.grant_mods = [_mod(BattleStats.DAMAGE, B.SHARP, 20)]
+			ap2.grant_mods = [_mod(BattleStats.DAMAGE, 20)]
 			def.adjacency = ap2
 
 		"battery":

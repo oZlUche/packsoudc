@@ -94,8 +94,8 @@
           "mods": [
             {
               "stat": "haste",
-              "mult_category": "HASTE",
-              "mult_percent": 5
+              "mode": "MULT",
+              "amount": 5.0
             }
           ]
         },
@@ -104,8 +104,8 @@
           "mods": [
             {
               "stat": "stamina_cost",
-              "mult_category": "EMPOWER",
-              "mult_percent": -10
+              "mode": "MULT",
+              "amount": -10.0
             }
           ]
         }

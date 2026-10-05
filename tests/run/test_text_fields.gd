@@ -30,12 +30,12 @@ static func run_params(t: TestCase) -> void:
 	var buff := RunBuffDef.new()
 	buff.duration_steps = 5
 	var m := StatModifier.new()
-	m.mult_category = StatMath.Buff.EMPOWER
-	m.mult_percent = -10
+	m.mode = StatModifier.Mode.MULT
+	m.amount = -10
 	buff.mods.append(m)
-	buff.description = "走 {duration_steps} 步之内伤害 {mult_percent|signed}%"
+	buff.description = "走 {duration_steps} 步之内伤害 {amount|signed}%"
 	t.eq(Names.description_of(buff), "走 5 步之内伤害 -10%", "mods 首条不加前缀；signed")
-	m.mult_percent = 15
+	m.amount = 15
 	t.eq(Names.description_of(buff), "走 5 步之内伤害 +15%", "signed 正数带 +")
 	t.eq(TextTemplate.render("{amount|nope}", {"amount": 3}), "{amount|nope}", "不认识的过滤器原样保留")
 	t.eq(TextTemplate.render("{x}", {"x": 4.0}), "4", "整数值的 float 写成整数")
@@ -48,7 +48,7 @@ static func run_notes(t: TestCase) -> void:
 	fb.per_points = 50
 	fb.max_stacks = 6
 	var m := StatModifier.new()
-	m.flat = 1.0
+	m.amount = 1.0
 	fb.mods.append(m)
 	var a := fb.describe()
 	t.check(a.contains("每 50 信力一份") and a.contains("最多 6 份") and a.contains("+1"), "主句按字段：%s" % a)
@@ -63,7 +63,7 @@ static func run_notes(t: TestCase) -> void:
 	var perk := StatModPerk.new()
 	var pm := StatModifier.new()
 	pm.stat = &"max_stamina"
-	pm.flat = 20.0
+	pm.amount = 20.0
 	perk.mods.append(pm)
 	t.check(perk.describe().contains("+20"), "等级效果主句按字段：%s" % perk.describe())
 	perk.note = "补一句"

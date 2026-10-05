@@ -6,7 +6,7 @@
 ## - 值是数的字典字段 → 每个键直接用：角色 `base_stats` 的 `{max_hp}`
 ## - 数组里**注册表里有名字的**构件（事件结果、条件、局内效果……）→ `<类型>_<字段>`：
 ##   `{change_money_amount}` `{pass_time_actions}` `{steps_within_min_steps}` `{vitality_max_bonus_amount}`；同类型出现几次取第一个
-## - 数组里其余对象（属性修饰 `mods`……）→ 第一个元素的字段不加前缀补进来（已有的键不覆盖）：`{mult_percent}` `{flat}`
+## - 数组里其余对象（属性修饰 `mods`……）→ 第一个元素的字段不加前缀补进来（已有的键不覆盖）：`{amount}`（133：原 `{mult_percent}` / `{flat}`）
 ## - 单个子对象（道具的 `combat`）→ 递归进去，不加前缀
 ## 整数值的 float 显示成整数（`4.0` → `4`）。键全表见 docs/text-placeholders.md「定义自身字段」
 class_name TextParams

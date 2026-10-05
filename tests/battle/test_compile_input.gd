@@ -149,19 +149,16 @@ static func run_food_double(t: TestCase) -> void:
 			ration_uid = (inst as ItemInstance).uid
 		else:
 			sword_uid = (inst as ItemInstance).uid
-	# 同时给每件加一条乘区 + flat，用来确认翻倍不碰它们
-	var extra := StatModifier.new()
-	extra.stat = BattleStats.REGEN_STAMINA
-	extra.mult_category = StatMath.Buff.EMPOWER
-	extra.mult_percent = 50
-	extra.flat = 1.0
+	# 同时给每件加一条乘算 + 一条加算，用来确认翻倍不碰它们（133：一条只做一件事，写两条）
+	var extra := StatModifier.make(BattleStats.REGEN_STAMINA, StatModifier.Mode.MULT, 50.0)
+	var extra_flat := StatModifier.make(BattleStats.REGEN_STAMINA, StatModifier.Mode.ADD, 1.0)
 
 	var plain := CompileInput.new()
-	plain.mods = [extra] as Array[StatModifier]
+	plain.mods = [extra, extra_flat] as Array[StatModifier]
 	var before := BattleCompiler.compile(board, plain)
 
 	var doubled := CompileInput.new()
-	doubled.mods = [extra] as Array[StatModifier]
+	doubled.mods = [extra, extra_flat] as Array[StatModifier]
 	FoodDoublePerk.new().compile_into(doubled, board, null)
 	var after := BattleCompiler.compile(board, doubled)
 
@@ -171,8 +168,8 @@ static func run_food_double(t: TestCase) -> void:
 	t.eq(r1.ensure(BattleStats.MAX_STAMINA).base, r0.ensure(BattleStats.MAX_STAMINA).base * 2, "耐力上限的 base 翻倍")
 	t.eq(r1.ensure(BattleStats.HASTE).base, r0.ensure(BattleStats.HASTE).base, "急速的 base 不动（每件都是 1.0，翻倍就成了二倍速）")
 	t.eq(r1.ensure(BattleStats.REGEN_STAMINA).flat, r0.ensure(BattleStats.REGEN_STAMINA).flat, "它的 flat 不动")
-	t.eq(r1.ensure(BattleStats.REGEN_STAMINA).mult_of(StatMath.Buff.EMPOWER),
-		r0.ensure(BattleStats.REGEN_STAMINA).mult_of(StatMath.Buff.EMPOWER), "它的乘区不动")
+	t.eq(r1.ensure(BattleStats.REGEN_STAMINA).percent,
+		r0.ensure(BattleStats.REGEN_STAMINA).percent, "它的乘算不动")
 	t.eq(after.stats_of(sword_uid).ensure(BattleStats.DAMAGE).base,
 		before.stats_of(sword_uid).ensure(BattleStats.DAMAGE).base, "不带 food 标签的短剑不受影响")
 
@@ -188,7 +185,7 @@ static func run_baseline_catchup(t: TestCase) -> void:
 	perk.target = "baseline"
 	var m := StatModifier.new()
 	m.stat = BattleStats.MAX_HP
-	m.flat = 10.0
+	m.amount = 10.0
 	perk.mods = [m] as Array[StatModifier]
 	var input := CompileInput.of(base)
 	perk.compile_into(input, board, null)

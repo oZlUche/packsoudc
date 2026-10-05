@@ -55,8 +55,7 @@
               "mods": [
                 {
                   "stat": "armor",
-                  "mult_category": "EMPOWER",
-                  "flat": -3.0
+                  "amount": -3.0
                 }
               ]
             }
@@ -77,8 +76,8 @@
     ],
     "receive_mods": [
       {
-        "mult_category": "SHARP",
-        "mult_percent": 25
+        "mode": "MULT",
+        "amount": 25.0
       }
     ]
   }

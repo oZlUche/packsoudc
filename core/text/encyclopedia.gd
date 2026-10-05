@@ -16,10 +16,10 @@ const TERMS_CATEGORY := "terms"
 ## 词条页的分组：来源 → 名字
 const GROUPS := {
 	"term": {"zh": "词条", "en": "Terms"}, "tag": {"zh": "标签", "en": "Tags"}, "dtype": {"zh": "伤害类型", "en": "Damage types"},
-	"buff": {"zh": "状态", "en": "Statuses"}, "stat": {"zh": "属性", "en": "Stats"}, "cat": {"zh": "乘区", "en": "Multipliers"},
+	"buff": {"zh": "状态", "en": "Statuses"}, "stat": {"zh": "属性", "en": "Stats"},
 	"trigger": {"zh": "时机", "en": "Timings"},
 }
-const GROUP_ORDER := ["term", "tag", "dtype", "buff", "stat", "cat", "trigger"]
+const GROUP_ORDER := ["term", "tag", "dtype", "buff", "stat", "trigger"]
 ## 还没有说明的词条页正文
 const NO_TEXT := "（这一页的说明还没写。）"
 
@@ -90,11 +90,9 @@ func _generate_terms() -> void:
 		var def: BuffDef = buffs[bid]["def"]
 		var name := Names.of(def) if Names.of(def) != "" else String(bid)
 		_add("buff:" + String(bid), name, "buff", Glossary.describe_buff(def), [], buffs[bid]["from"])
-	# 属性 / 乘区 / 时机：名字和固定词条同名的（急速、冷却、自发……）不另开页，那一页就是它
+	# 属性 / 时机（133：乘区取消，不再有乘区页）：名字和固定词条同名的（急速、冷却、自发……）不另开页，那一页就是它
 	for key in Glossary.STAT_NAMES:
 		_add_named("stat:" + String(key), Glossary.stat_name(StringName(key)), "stat")
-	for key in Glossary.CATEGORY_NAMES:
-		_add_named("cat:" + String(key), Glossary._pick(Glossary.CATEGORY_NAMES[key], String(key)), "cat")
 	for key in Glossary.TRIGGER_NAMES:
 		_add_named("trigger:" + String(key), String(Glossary.TRIGGER_NAMES[key]), "trigger")
 

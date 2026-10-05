@@ -372,8 +372,8 @@ static func warn_unbounded_percent(def: BuffDef, path: String, report: ImportRep
 		return
 	for m in def.mods:
 		var mod := m as StatModifier
-		if mod != null and mod.mult_percent != 0:
-			report.warn(path + "max_stacks", "「%s」不限层且按百分比乘（%+d%%），永续叠加会越叠越大，确认要不要填层数上限" % [def.id, mod.mult_percent])
+		if mod != null and mod.is_mult() and mod.amount != 0.0:
+			report.warn(path + "max_stacks", "「%s」不限层且按百分比乘（%+d%%），永续叠加会越叠越大，确认要不要填层数上限" % [def.id, roundi(mod.amount)])
 			return
 
 
@@ -1571,6 +1571,8 @@ static func _fill(
 	var props := {}
 	for p in ContentSchema.properties_of(obj):
 		props[String(p["name"])] = p
+	if obj is StatModifier:
+		data = _migrate_stat_modifier(data, path, report)
 
 	for key in data:
 		var at := _join(path, String(key))
@@ -1583,10 +1585,34 @@ static func _fill(
 		var coerced = _coerce(obj, prop, obj.get(prop["name"]), data[key], at, ctx, report)
 		if coerced != null:
 			obj.set(prop["name"], coerced)
-	# 104（作者定）：暴击的加成一律加算 —— 作用于它们的修饰只能写 flat
-	if obj is StatModifier and BattleStats.additive_only((obj as StatModifier).stat) \
-			and ((obj as StatModifier).mult_category >= 0 or (obj as StatModifier).mult_percent != 0):
-		report.error(path, "%s 只接受固定值加成（flat），所有加成都是加算；不能写 mult_category / mult_percent" % (obj as StatModifier).stat)
+	# 104（作者定）：暴击的加成一律加算 —— 作用于它们的修饰只能是 ADD
+	if obj is StatModifier and BattleStats.additive_only((obj as StatModifier).stat) and (obj as StatModifier).is_mult():
+		report.error(path, "%s 只接受加算（mode = ADD）；不能写乘算" % (obj as StatModifier).stat)
+
+
+## 133：旧格式的属性修饰（`mult_category` / `mult_percent` / `flat`）换成 `mode` + `amount`。
+## 乘区已经取消，写了 mult_category 只提醒、忽略；一条同时乘又加的拆不了，报错让作者拆成两条
+static func _migrate_stat_modifier(data: Dictionary, path: String, report: ImportReport) -> Dictionary:
+	if not (data.has("mult_category") or data.has("mult_percent") or data.has("flat")):
+		return data
+	var out := data.duplicate()
+	var pct := float(out.get("mult_percent", 0))
+	var flat := float(out.get("flat", 0.0))
+	if out.has("mult_category"):
+		report.warn(_join(path, "mult_category"), "乘区已取消（133），忽略；乘算都在同一个区里相加")
+	out.erase("mult_category")
+	out.erase("mult_percent")
+	out.erase("flat")
+	if pct != 0.0 and flat != 0.0:
+		report.error(path, "一条属性修饰只能乘或加（133）：mult_percent 与 flat 都填了，拆成两条")
+		return out
+	if pct != 0.0:
+		out["mode"] = "MULT"
+		out["amount"] = pct
+	elif flat != 0.0:
+		out["mode"] = "ADD"
+		out["amount"] = flat
+	return out
 
 
 static func _join(path: String, key: String) -> String:
@@ -1606,10 +1632,6 @@ static func _coerce(
 		TYPE_INT:
 			if value is String:
 				var resolved = ContentSchema.enum_value(owner, prop, value)
-				if resolved == null and ContentSchema.normalize_enum(value) == "FIRE" and String(prop["name"]) == "mult_category":
-					# 109（作者定）：乘区 FIRE 改名 ELEMENT（元素增伤）。没有内容在用旧名，不留别名，报错指路
-					report.error(path, "乘区 FIRE 已改名 ELEMENT（元素增伤）—— 火焰只是元素之一；请写 \"ELEMENT\"")
-					return null
 				if resolved == null:
 					var opts := ContentSchema.enum_options(owner, prop)
 					report.error(path, "认不得的取值 '%s'%s" % [

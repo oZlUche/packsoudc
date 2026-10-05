@@ -37,8 +37,8 @@
               "max_stacks": 5,
               "mods": [
                 {
-                  "mult_category": "EMPOWER",
-                  "mult_percent": 5
+                  "mode": "MULT",
+                  "amount": 5.0
                 }
               ]
             }

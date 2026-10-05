@@ -34,11 +34,7 @@ func compile_into(input: CompileInput, _board: GridInventory, run: RunState) -> 
 	var n := int(AltarModule.rituals_of(run).get(KEY, 0))
 	if n <= 0 or haste_percent == 0:
 		return
-	var m := StatModifier.new()
-	m.stat = BattleStats.HASTE
-	m.mult_category = StatMath.Buff.HASTE
-	m.mult_percent = haste_percent * n
-	input.mods.append(m)     # 不筛 = 每一件参战道具（和 input.mods 的语义一致）
+	input.mods.append(StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, float(haste_percent * n)))     # 不筛 = 每一件参战道具（和 input.mods 的语义一致）
 
 
 func _summary() -> String:

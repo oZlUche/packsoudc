@@ -7,13 +7,11 @@ static func _sec(v: float) -> int:
 
 
 #region 构造helper
-static func _mod(stat: StringName, category: int, percent: int, flat: float = 0.0) -> StatModifier:
-	var m := StatModifier.new()
-	m.stat = stat
-	m.mult_category = category
-	m.mult_percent = percent
-	m.flat = flat
-	return m
+static func _mod(stat: StringName, percent: int, flat: float = 0.0) -> StatModifier:
+	# 133：一条只乘或只加 —— percent 非 0 就是乘算，否则是加算
+	if percent != 0:
+		return StatModifier.make(stat, StatModifier.Mode.MULT, float(percent))
+	return StatModifier.make(stat, StatModifier.Mode.ADD, flat)
 
 
 static func _compiled(uid: int, id: String, stats: Dictionary, rules: Array = []) -> CompiledItem:
@@ -140,7 +138,6 @@ static func run(t: TestCase) -> void:
 static func run_runtime(t: TestCase) -> void:
 	t.begin("战斗单位运行时")
 
-	var B := StatMath.Buff
 
 	# 资源由 max_* 属性自动派生
 	var spec := _spec(50.0, [
@@ -156,7 +153,7 @@ static func run_runtime(t: TestCase) -> void:
 	# --- buff 改属性，且每层一份 ---
 	var strong := BuffDef.new()
 	strong.id = &"strong"
-	strong.mods = [_mod(BattleStats.MAX_HP, B.EMPOWER, 0, 20.0)] as Array[StatModifier]
+	strong.mods = [_mod(BattleStats.MAX_HP, 0, 20.0)] as Array[StatModifier]
 	strong.max_stacks = 3
 
 	rt.apply_buff(strong, 1)
@@ -649,10 +646,9 @@ static func run_schedule_heap(t: TestCase) -> void:
 static func run_snapshot_cooldown(t: TestCase) -> void:
 	t.begin("冷却快照语义")
 
-	var B := StatMath.Buff
 	var quicken := BuffDef.new()
 	quicken.id = &"quicken"
-	quicken.mods = [_mod(BattleStats.HASTE, B.HASTE, 100)] as Array[StatModifier]
+	quicken.mods = [_mod(BattleStats.HASTE, 100)] as Array[StatModifier]
 
 	var spec := _spec(100.0, [
 		_compiled(1, "sword", {"damage": 10.0},
@@ -801,7 +797,7 @@ static func run_regen_buff(t: TestCase) -> void:
 	var vigor := BuffDef.new()
 	vigor.id = &"vigor"
 	vigor.max_stacks = 5
-	vigor.mods = [_mod(BattleStats.REGEN_STAMINA, StatMath.Buff.EMPOWER, 100)] as Array[StatModifier]
+	vigor.mods = [_mod(BattleStats.REGEN_STAMINA, 100)] as Array[StatModifier]
 
 	var spec := _spec(100.0, [_compiled(1, "gear", {"max_stamina": 100.0, "regen_stamina": 5.0}, [])])
 	var ctx := _battle(spec, _spec(100.0, []))
