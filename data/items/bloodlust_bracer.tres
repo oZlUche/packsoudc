@@ -1,0 +1,69 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_h50at"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_pr7ns"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_6kxed"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_j21q2"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_b3fob"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="6_exjvb"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="7_vsooe"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_status_applied.gd" id="8_k1etu"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_apmft"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_6gl2w"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_7mf8g"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_4s7ik"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_kf6pq"]
+
+[sub_resource type="Resource" id="Resource_0iw71"]
+script = ExtResource("3_6kxed")
+
+[sub_resource type="Resource" id="Resource_t4ck6"]
+script = ExtResource("1_h50at")
+stat = &"haste"
+mult_category = 3
+mult_percent = 4
+
+[sub_resource type="Resource" id="Resource_5adsf"]
+script = ExtResource("6_exjvb")
+id = &"bloodlust"
+display_name = "嗜血"
+display_names = {
+"en": "Bloodlust"
+}
+max_stacks = 6
+mods = Array[ExtResource("1_h50at")]([SubResource("Resource_t4ck6")])
+
+[sub_resource type="Resource" id="Resource_0473i"]
+script = ExtResource("7_vsooe")
+target = 1
+buff = SubResource("Resource_5adsf")
+
+[sub_resource type="Resource" id="Resource_k8n4o"]
+script = ExtResource("8_k1etu")
+buff_id = &"bleed"
+
+[sub_resource type="Resource" id="Resource_05ut1"]
+script = ExtResource("2_pr7ns")
+trigger = SubResource("Resource_k8n4o")
+cadence = SubResource("Resource_0iw71")
+effects = Array[ExtResource("5_b3fob")]([SubResource("Resource_0473i")])
+
+[sub_resource type="Resource" id="Resource_vshwi"]
+script = ExtResource("9_apmft")
+rules = Array[ExtResource("2_pr7ns")]([SubResource("Resource_05ut1")])
+
+[sub_resource type="Resource" id="Resource_cv15v"]
+script = ExtResource("13_kf6pq")
+
+[resource]
+script = ExtResource("12_4s7ik")
+id = &"bloodlust_bracer"
+display_name = "嗜血护腕"
+display_names = {
+"en": "Bloodlust Bracer"
+}
+description = "闻到血腥，手就快了。"
+shape = SubResource("Resource_cv15v")
+rarity = 2
+tags = Array[StringName]([&"part", &"leather", &"bleed"])
+combat = SubResource("Resource_vshwi")

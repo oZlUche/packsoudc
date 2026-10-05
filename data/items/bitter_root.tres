@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_5twub"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_3u0yf"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_16r7f"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_bgoj1"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_ps6ts"]
+[ext_resource type="Script" path="res://core/battle/effects/modify_damage.gd" id="6_4guqf"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_before_damage.gd" id="7_crhb2"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="8_ehis2"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="9_vkwop"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="10_k2rrt"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_2h1xq"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_gwyol"]
+
+[sub_resource type="Resource" id="Resource_qq5oe"]
+script = ExtResource("3_16r7f")
+
+[sub_resource type="Resource" id="Resource_unbx3"]
+script = ExtResource("6_4guqf")
+percent = -50
+
+[sub_resource type="Resource" id="Resource_0cfpb"]
+script = ExtResource("7_crhb2")
+damage_type = &"poison"
+
+[sub_resource type="Resource" id="Resource_03mhb"]
+script = ExtResource("2_3u0yf")
+trigger = SubResource("Resource_0cfpb")
+cadence = SubResource("Resource_qq5oe")
+effects = Array[ExtResource("5_ps6ts")]([SubResource("Resource_unbx3")])
+
+[sub_resource type="Resource" id="Resource_14p2a"]
+script = ExtResource("8_ehis2")
+rules = Array[ExtResource("2_3u0yf")]([SubResource("Resource_03mhb")])
+
+[sub_resource type="Resource" id="Resource_m55ky"]
+script = ExtResource("12_gwyol")
+
+[resource]
+script = ExtResource("11_2h1xq")
+id = &"bitter_root"
+display_name = "苦艮根"
+display_names = {
+"en": "Bitter Root"
+}
+description = "嚼着苦，吃毒的时候就不那么疼了。"
+shape = SubResource("Resource_m55ky")
+rarity = 1
+tags = Array[StringName]([&"remedy", &"nature"])
+combat = SubResource("Resource_14p2a")

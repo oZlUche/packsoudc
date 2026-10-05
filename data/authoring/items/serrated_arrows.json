@@ -1,0 +1,71 @@
+{
+  "id": "serrated_arrows",
+  "display_name": "锯齿箭",
+  "display_names": {
+    "en": "Serrated Arrows"
+  },
+  "description": "倒钩的箭头，拔出来比射进去还疼。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "ammo",
+    "bleed",
+    "nature"
+  ],
+  "adjacency": {
+    "grant_cells": [
+      [
+        0,
+        -1
+      ]
+    ],
+    "grant_filter": [
+      "ranged"
+    ],
+    "grant_rules": [
+      {
+        "trigger": {
+          "type": "on_item_fired"
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "buff": {
+              "id": "bleed",
+              "display_name": "流血",
+              "display_names": {
+                "en": "Bleed"
+              },
+              "rules": [
+                {
+                  "trigger": {
+                    "type": "on_schedule"
+                  },
+                  "cadence": {
+                    "type": "cooldown",
+                    "seconds": 1.0
+                  },
+                  "effects": [
+                    {
+                      "type": "deal_damage",
+                      "target": "SELF",
+                      "damage_type": "bleed",
+                      "amount": 1.0,
+                      "damage_stat": "",
+                      "per_stack": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

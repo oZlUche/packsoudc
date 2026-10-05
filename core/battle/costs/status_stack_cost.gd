@@ -7,21 +7,31 @@ extends Cost
 
 @export var buff_id: StringName = &""
 @export var stacks: int = 1
+## 130：扣自己身上的（默认）还是对手身上的（「对手攒够六层流血就放血一刀」）
+@export var on_self: bool = true
+
+
+func _who(ctx: RuleContext) -> CombatantRuntime:
+	return ctx.owner if on_self else ctx.opponent()
 
 
 func can_pay(ctx: RuleContext) -> bool:
-	var inst := ctx.owner.find_buff(buff_id)
+	var who := _who(ctx)
+	if who == null:
+		return false
+	var inst := who.find_buff(buff_id)
 	if inst != null and inst.def.system:
 		return false     # 103：系统效果不可解除，也就不能拿来当消耗
-	return ctx.owner.stacks_of(buff_id) >= maxi(1, stacks)
+	return who.stacks_of(buff_id) >= maxi(1, stacks)
 
 
 func pay(ctx: RuleContext) -> void:
-	var removed := ctx.owner.remove_buff_stacks(buff_id, maxi(1, stacks))
+	var who := _who(ctx)
+	var removed := who.remove_buff_stacks(buff_id, maxi(1, stacks))
 	if removed > 0:
-		ctx.emit(BattleEvent.STATUS_UNSTACKED, {
+		ctx.battle.emit(BattleEvent.STATUS_UNSTACKED, who.side, {
 			"buff": String(buff_id), "delta": -removed,
-			"stacks": ctx.owner.stacks_of(buff_id),
+			"stacks": who.stacks_of(buff_id),
 		})
 
 

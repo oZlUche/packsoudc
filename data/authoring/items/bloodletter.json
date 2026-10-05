@@ -1,0 +1,96 @@
+{
+  "id": "bloodletter",
+  "display_name": "放血刀",
+  "display_names": {
+    "en": "Bloodletter"
+  },
+  "description": "一刀一刀地放，攒够了就开个大口子。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "weapon",
+    "melee",
+    "bleed",
+    "metal"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 6
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.1
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 5.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage"
+          },
+          {
+            "type": "apply_status",
+            "buff": {
+              "id": "bleed",
+              "display_name": "流血",
+              "display_names": {
+                "en": "Bleed"
+              },
+              "rules": [
+                {
+                  "trigger": {
+                    "type": "on_schedule"
+                  },
+                  "cadence": {
+                    "type": "cooldown",
+                    "seconds": 1.0
+                  },
+                  "effects": [
+                    {
+                      "type": "deal_damage",
+                      "target": "SELF",
+                      "damage_type": "bleed",
+                      "amount": 1.0,
+                      "damage_stat": "",
+                      "per_stack": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_stacks_at_least",
+          "buff_id": "bleed",
+          "stacks": 6,
+          "on_self": false,
+          "consume": true
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "effects": [
+          {
+            "type": "deal_damage",
+            "amount": 18.0,
+            "damage_stat": ""
+          }
+        ]
+      }
+    ]
+  }
+}

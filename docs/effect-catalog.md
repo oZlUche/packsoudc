@@ -56,6 +56,7 @@ Effect
 | `on_stacks_at_least` | `OnStacksAtLeast` | 身上有 **N 层**某增益减益时 | `buff_id`；`stacks`；`on_self` 看自己还是对手；`consume` **消耗型开关**，见下 |
 | `on_damage` | `OnDamage` | 受到／造成某类伤害**之后** | `direction`（TAKEN/DEALT）；`damage_type` 空=不限；`min_amount` 按实际扣除量 |
 | `on_before_damage` | `OnBeforeDamage` | 受到／造成某类伤害**之前**。减伤、免疫、反转唯一的接入点 | 同上；`min_amount` 按护盾吸收后的待结算量 |
+| `on_status_applied` | `OnStatusApplied` | 某状态**被施加**、层数增加的那一瞬（130）；叠满后只刷新时长不算 | `buff_id`；`on_self`（默认 false = 对手身上）；`by_self`（默认 true = 只认本方施加的）。施加了几层进 `per_stack` |
 
 `on_item_fired` 的 `source` 值得单独说一句：填 `LINKED` 时**只听与本物品通过
 增益／受益格连结的道具**。本作没有「主武器」的设定，「跟着某把枪一起触发」
@@ -106,10 +107,11 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 | 类型名 | 类 | 含义 | 参数 |
 |---|---|---|---|
 | `resource` | `ResourceCost` | 消耗耐力／法力等 | `resource_key`；`amount` 面板值；`amount_stat` 改从属性取（走公式，可被增减） |
-| `status_stack` | `StatusStackCost` | 消耗 N 层某增益 | `buff_id`；`stacks` |
+| `status_stack` | `StatusStackCost` | 消耗 N 层某增益 | `buff_id`；`stacks`；`on_self`（默认 true；130 起可扣对手身上的） |
 | `charge` | `ChargeCost` | 攒够 N 次机会才放一发 | `n` |
 | `uses` | `UsesCost` | 全场限用 N 次 | `max_uses`（默认 1） |
 | `chance` | `ChanceCondition` | 按概率放行，走 battle 随机流 | `percent` 0..100 |
+| `status_condition` | `StatusCondition` | 目标身上至少 N 层某状态才放行，**不扣层**（130） | `buff_id`；`on_self`（默认 false）；`stacks`（默认 1） |
 
 ---
 
@@ -125,6 +127,7 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 | `change_resource` | `ChangeResource` | **增减**资源。治疗／回耐力／抽血／耗蓝共用 | `target`；`resource_key`；`amount` **正为获得、负为失去**；`amount_stat`；`per_stack` |
 | `apply_status` | `ApplyStatus` | 施加增益／减益 | `target`；`buff`；`stacks`；`per_stack` |
 | `remove_status` | `RemoveStatus` | 减少层数。净化、驱散、削减对手蓄力 | `target`；`buff_id`；`stacks`（**0 = 全部移除**） |
+| `convert_status` | `ConvertStatus` | 把目标身上一种状态的全部层数换成另一种（130：中毒 → 剧毒）。系统 buff 不转；导入器拦 `to` 就是 `from` | `target`；`from`；`to`（buff）；`ratio`（默认 1.0，四舍五入、至少 1）；`keep_from`（默认 false） |
 | `modify_damage` | `ModifyDamage` | 改写正在结算的那一包伤害。**只在受伤前阶段有效** | `flat` 固定增减；`percent` 百分比；`invert` 反转成治疗；`cancel` 完全免疫 |
 | `reflect_damage` | `ReflectDamage` | 把这一包伤害按比例弹回施加方。**只在受伤前阶段有效** | `percent` 反弹待结算量的百分比；`flat` 额外固定值；`damage_type` 默认 `reflect` |
 

@@ -6,7 +6,8 @@
   },
   "strength": 2,
   "schools": [
-    "rapid"
+    "rapid",
+    "poison"
   ],
   "base_stats": {
     "max_hp": 45
@@ -17,6 +18,7 @@
     "reagent",
     "material",
     "rapid",
-    "melee"
+    "melee",
+    "poison"
   ]
 }

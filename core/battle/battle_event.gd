@@ -15,6 +15,9 @@ const ITEM_SKIPPED := &"item_skipped"
 const EFFECT_RESOLVED := &"effect_resolved"
 const STATUS_STACKED := &"status_stacked"
 const STATUS_UNSTACKED := &"status_unstacked"
+## 130：某方施加的状态让目标的层数增加了 {buff, delta, stacks, source_side: 施加方}；side 是被施加的一方。
+## 只给规则听（[OnStatusApplied]），不进回放 —— 回放已经有同一刻的 status_stacked。刷新时长、系统 buff 不发
+const STATUS_APPLIED := &"status_applied"
 ## 生命、耐力、法力全部走这一条，靠 payload 里的 key 区分。
 ## 新增一种资源不新增事件类型。
 const RESOURCE_CHANGED := &"resource_changed"

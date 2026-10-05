@@ -10,8 +10,8 @@ display_names = {
 "en": "Apothecary"
 }
 strength = 2
-schools = Array[StringName]([&"rapid"])
+schools = Array[StringName]([&"rapid", &"poison"])
 base_stats = {
 "max_hp": 45
 }
-item_tags = Array[StringName]([&"remedy", &"tool", &"reagent", &"material", &"rapid", &"melee"])
+item_tags = Array[StringName]([&"remedy", &"tool", &"reagent", &"material", &"rapid", &"melee", &"poison"])
