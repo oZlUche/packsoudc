@@ -91,8 +91,8 @@ static func run_pipeline(t: TestCase) -> void:
 	t.check(files >= 4, "至少四个测试用的 buff（实际 %d）" % files)
 	var c := _content()
 	t.eq(c.buffs.size(), files, "load_all 装回全部 %d 个" % files)
-	t.check(c.buffs.has(&"hardy") and c.buffs.has(&"lucky") and c.buffs.has(&"marked") and c.buffs.has(&"weakened"), "四个都在")
-	t.check((c.buffs[&"hardy"] as RunBuffDef).is_meta() and (c.buffs[&"marked"] as RunBuffDef).is_map(), "作用域按文件")
+	t.check(c.buffs.has(&"tech_endurance_1") and c.buffs.has(&"tech_luck_1") and c.buffs.has(&"marked") and c.buffs.has(&"weakened"), "四个都在")
+	t.check((c.buffs[&"tech_endurance_1"] as RunBuffDef).is_meta() and (c.buffs[&"marked"] as RunBuffDef).is_map(), "作用域按文件")
 
 
 static func run_context_and_start(t: TestCase) -> void:
@@ -100,8 +100,8 @@ static func run_context_and_start(t: TestCase) -> void:
 
 	var c := _content()
 	var kit := _kit(c)
-	var hardy: RunBuffDef = c.buffs[&"hardy"]
-	var lucky: RunBuffDef = c.buffs[&"lucky"]
+	var hardy: RunBuffDef = c.buffs[&"tech_endurance_1"]
+	var lucky: RunBuffDef = c.buffs[&"tech_luck_1"]
 	var weakened: RunBuffDef = c.buffs[&"weakened"]
 	var ctx := RunBuffs.context([hardy, lucky])
 	t.eq(ctx.vitality_max_bonus, _run_amount(hardy, "vitality_max_bonus"), "坚韧：体力上限的加成从定义里来")
@@ -109,7 +109,7 @@ static func run_context_and_start(t: TestCase) -> void:
 	t.check(ctx.vitality_max_bonus > 0 and ctx.luck_bonus > 0, "两个都是正的（作者文件写的）")
 
 	var plain := RunState.start(c.chapter, 41, c.items, c.enemies, c.sets, kit.items)
-	var buffed := RunState.start(c.chapter, 41, c.items, c.enemies, c.sets, kit.items, c.buffs, [&"hardy", &"lucky"] as Array[StringName])
+	var buffed := RunState.start(c.chapter, 41, c.items, c.enemies, c.sets, kit.items, c.buffs, [&"tech_endurance_1", &"tech_luck_1"] as Array[StringName])
 	t.eq(buffed.vitality.maximum, plain.vitality.maximum + ctx.vitality_max_bonus, "开局体力上限多了 buff 给的")
 	t.eq(buffed.wallet.balance, plain.wallet.balance + ctx.starting_funds_bonus, "开局钱按 buff（这两个不给钱就一样）")
 	t.eq(buffed.meta_buffs.size(), 2, "局外 buff 记在这一局里")
@@ -133,7 +133,7 @@ static func run_context_and_start(t: TestCase) -> void:
 	var bm := BuffModule.of(buffed)     # 101：一局里拿到的 buff 在模块里
 	t.not_null(bm, "默认清单里有 buff 模块")
 	bm.buffs_changed.connect(func(): changes.append(true))
-	t.check(not bm.grant(&"hardy"), "局外的 buff 不能当地图 buff 给")
+	t.check(not bm.grant(&"tech_endurance_1"), "局外的 buff 不能当地图 buff 给")
 	t.check(not bm.grant(&"nope"), "不认识的给不了")
 	t.check(bm.grant(&"marked"), "给一个标记")
 	t.check(bm.has(&"marked") and buffed.has_buff_tag(&"marked"), "有了，标记查得到")
@@ -217,7 +217,7 @@ static func run_sessions(t: TestCase) -> void:
 	# 走进真的节点：NodeEvents 把上下文交给会话
 	var kit := _kit(c)
 	for seed in range(1, 60):
-		var run := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items, c.buffs, [&"hardy"] as Array[StringName])
+		var run := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items, c.buffs, [&"tech_endurance_1"] as Array[StringName])
 		var found := -1
 		for entry in run.map.entry_ids:
 			for nid in run.map.neighbors(entry):
@@ -258,17 +258,17 @@ static func run_flow_toggle(t: TestCase) -> void:
 	f.save_path = SAVE
 	f.meta_path = META
 	var kit := _kit(c)
-	t.check(f.toggle_meta_buff(&"hardy"), "开坚韧")
-	t.check(MetaSave.read(c.items, META).active_buffs.has(&"hardy"), "存了")
+	t.check(f.toggle_meta_buff(&"tech_endurance_1"), "开耐久")
+	t.check(MetaSave.read(c.items, META).active_buffs.has(&"tech_endurance_1"), "存了")
 	var run := f.begin(c.chapter, kit, 51)
-	var bonus := _run_amount(c.buffs[&"hardy"], "vitality_max_bonus")
+	var bonus := _run_amount(c.buffs[&"tech_endurance_1"], "vitality_max_bonus")
 	t.eq(run.vitality.maximum, Vitality.PLACEHOLDER_MAX + bonus, "这一局体力上限多了 %d" % bonus)
 	t.check(f.save(), "存这一局")
 	f.to_main_menu()
 	t.check(f.continue_run(), "继续")
-	t.check(f.run.buff_defs == c.buffs and f.run.meta_buffs.has(&"hardy"), "读档回来定义表补上了、buff 还在")
+	t.check(f.run.buff_defs == c.buffs and f.run.meta_buffs.has(&"tech_endurance_1"), "读档回来定义表补上了、buff 还在")
 	f.to_main_menu()
-	t.check(not f.toggle_meta_buff(&"hardy"), "关坚韧")
+	t.check(not f.toggle_meta_buff(&"tech_endurance_1"), "关耐久")
 	var run2 := f.begin(c.chapter, kit, 52)
 	t.eq(run2.vitality.maximum, Vitality.PLACEHOLDER_MAX, "关了下一局没有")
 	RunSave.remove(SAVE)

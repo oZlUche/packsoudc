@@ -188,7 +188,7 @@ static func run_pipeline(t: TestCase) -> void:
 	ContentImporter.import_event({"id": "x", "options": [{"label": "拿", "outcomes": [{"type": "give_item", "item": "no_such"}]}]}, ctx, bad)
 	t.check(not bad.ok() and bad.to_text().contains("no_such"), "给不存在的道具不行")
 	bad = ImportReport.new()
-	ContentImporter.import_event({"id": "x", "options": [{"label": "拿", "outcomes": [{"type": "grant_map_buff", "buff": "hardy"}]}]}, ctx, bad)
+	ContentImporter.import_event({"id": "x", "options": [{"label": "拿", "outcomes": [{"type": "grant_map_buff", "buff": "tech_endurance_1"}]}]}, ctx, bad)
 	t.check(not bad.ok() and bad.to_text().contains("局外"), "给局外 buff 不行")
 	bad = ImportReport.new()
 	ContentImporter.import_event({"id": "x", "options": [{"label": ""}]}, ctx, bad)
