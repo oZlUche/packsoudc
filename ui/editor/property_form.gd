@@ -124,9 +124,14 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 				return _labeled(owner, key, _string_picker(owner, prop, ContentSchema.enum_options(owner, prop), String(value)))
 			if type == TYPE_STRING_NAME and _is_stat_field(key):
 				# 091（作者定）：指向属性键的字段（修饰的 stat、效果的 damage_stat）下拉浏览已有属性，也能自定义
-				return _labeled(owner, key, _stat_picker(String(value), func(k: String):
+				# 可以为空的（默认值是空串，如 amount_stat）第一项是「不用」，空值就停在它上，不再被显示成第一个属性
+				var allow_empty := _stat_field_nullable(owner, key)
+				var picker := _stat_picker(String(value), func(k: String):
 					owner.set(key, StringName(k))
-					_emit()))
+					_emit(), [], allow_empty)
+				if allow_empty:
+					picker.tooltip_text = STAT_EMPTY_TIP
+				return _labeled(owner, key, picker)
 			if type == TYPE_STRING_NAME and _is_damage_type_field(key):
 				# 096：伤害类型是数据（DamageTypes）：下拉列出登记过的，也能自定义
 				return _labeled(owner, key, _key_picker(_damage_type_keys(), Callable(PropertyForm, "damage_type_label"), String(value), func(k: String):
@@ -404,48 +409,74 @@ static func _collect_stat_keys(node, into: Array[String]) -> void:
 			_collect_stat_keys(v, into)
 
 
+const STAT_EMPTY_TIP := "填了就按这件道具属性表里的那一项取数量，走加成公式；例如武器写 stamina_cost，耐力消耗就能被加成和灵巧轴改"
+const STAT_NONE_LABEL := "不用（用上面的数量）"
+
+
+## 这个属性键字段能不能为空：脚本里它的默认值就是空串（amount_stat 这种「可选的取数来源」）；
+## 必填的（stat、默认 damage 的 damage_stat）不给「不用」这一项
+static func _stat_field_nullable(owner: Object, key: String) -> bool:
+	var script := owner.get_script() as Script
+	if script == null:
+		return false
+	var def = script.get_property_default_value(key)
+	return def != null and String(def) == ""
+
+
 ## 属性键选择器：下拉列出已知属性（中文名 + 原键），最后一项「自定义…」露出输入框。
 ## [param current] 是当前值（不在列表里就当自定义）；[param on_pick] 每次改动回调（可以是空 Callable，之后用 _picked_stat 读）；
 ## [param exclude] 不列出的键（属性表里已有的）
-func _stat_picker(current: String, on_pick: Callable, exclude: Array = []) -> Control:
+func _stat_picker(current: String, on_pick: Callable, exclude: Array = [], allow_empty: bool = false) -> Control:
 	var keys: Array[String] = []
 	for k in known_stat_keys():
 		if not exclude.has(k) or k == current:
 			keys.append(k)
-	return _key_picker(keys, Callable(PropertyForm, "stat_label"), current, on_pick, "属性键（小写英文）" if FieldText.zh() else "stat key")
+	return _key_picker(keys, Callable(PropertyForm, "stat_label"), current, on_pick, "属性键（小写英文）" if FieldText.zh() else "stat key", allow_empty)
 
 
 ## 096：通用的「键」选择器 —— 属性键 / 标签 / 伤害类型都是一张「已知的键 + 自定义…」下拉。
 ## [param label_of] 把键变成显示文字（中文名 + 原键）；其余同 [method _stat_picker]
-func _key_picker(keys: Array[String], label_of: Callable, current: String, on_pick: Callable, placeholder: String = "") -> Control:
+## [param allow_empty] 为真：第一项是「不用」（空串），值为空就选中它（可选字段；「加一项」那种选择器不传）
+func _key_picker(keys: Array[String], label_of: Callable, current: String, on_pick: Callable, placeholder: String = "", allow_empty: bool = false) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	var ob := OptionButton.new()
 	_font(ob)
+	var off := 1 if allow_empty else 0
+	if allow_empty:
+		ob.add_item(STAT_NONE_LABEL if FieldText.zh() else "None (use the amount above)", 0)
+		ob.set_item_tooltip(0, "")
 	for i in keys.size():
-		ob.add_item(String(label_of.call(keys[i])), i)
-		ob.set_item_tooltip(i, keys[i])
-	ob.add_item("自定义…" if FieldText.zh() else "Custom…", keys.size())
-	ob.set_item_metadata(keys.size(), CUSTOM_STAT)
+		ob.add_item(String(label_of.call(keys[i])), i + off)
+		ob.set_item_tooltip(i + off, keys[i])
+	ob.add_item("自定义…" if FieldText.zh() else "Custom…", keys.size() + off)
+	ob.set_item_metadata(keys.size() + off, CUSTOM_STAT)
 	var custom := LineEdit.new()
 	custom.custom_minimum_size.x = 140
 	custom.placeholder_text = placeholder if placeholder != "" else ("键（小写英文）" if FieldText.zh() else "key")
 	_font(custom)
 	var at := keys.find(current)
-	if at < 0 and current == "" and not keys.is_empty():
+	if at >= 0:
+		at += off
+	elif current == "" and allow_empty:
+		at = 0     # 可选字段：空值停在「不用」
+	elif current == "" and not keys.is_empty():
 		at = 0     # 加一项的选择器：没有当前值就停在第一项，不露输入框
 	if at >= 0:
 		ob.select(at)
 		custom.visible = false
 	else:
-		ob.select(keys.size())
+		ob.select(keys.size() + off)
 		custom.text = current
 		custom.visible = true
 	ob.item_selected.connect(func(idx: int):
-		custom.visible = idx >= keys.size()
-		if idx < keys.size():
+		custom.visible = idx >= keys.size() + off
+		if allow_empty and idx == 0:
 			if on_pick.is_valid():
-				on_pick.call(keys[idx])
+				on_pick.call("")
+		elif idx < keys.size() + off:
+			if on_pick.is_valid():
+				on_pick.call(keys[idx - off])
 		elif on_pick.is_valid():
 			on_pick.call(custom.text.strip_edges()))
 	custom.text_changed.connect(func(t: String):
