@@ -168,6 +168,21 @@ static func run_loot_and_shop(t: TestCase) -> void:
 	s._offer_loot(box_a)
 	s._offer_loot(box_b)
 	t.eq(s.pending_loot.item_count(), 2, "两份并成一份")
+	var haul_h: int = s.node_rules.search.haul_board.y if s.node_rules != null and s.node_rules.search != null else 4
+	t.check(s.pending_loot.size.y <= haul_h, "合并不把两边高度相加：%d ≤ 收获箱 %d 行" % [s.pending_loot.size.y, haul_h])
+	# 两份都装得很满：加高到装下为止，一件不丢，且不超过两份高度之和
+	s.discard_loot()
+	var full_a := GridInventory.new(Vector2i(4, 4), 0, false)
+	var full_b := GridInventory.new(Vector2i(4, 4), 0, false)
+	var packed := 0
+	for box: GridInventory in [full_a, full_b]:
+		for i in 40:
+			if box.try_add(ItemInstance.create(c.items.get_def(&"ration"), 0), true):
+				packed += 1
+	s._offer_loot(full_a)
+	s._offer_loot(full_b)
+	t.eq(s.pending_loot.item_count(), packed, "装满的两份并起来一件不丢")
+	t.check(s.pending_loot.size.y <= 8, "加高没超过两份之和：%d" % s.pending_loot.size.y)
 	s.discard_loot()
 	t.check(s.pending_loot == null, "丢掉")
 

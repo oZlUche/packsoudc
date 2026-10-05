@@ -49,7 +49,7 @@ func open(payload: Dictionary) -> void:
 	if search_rules != null and not search_rules.reveal_seconds.is_empty():
 		_loot.reveal_seconds = search_rules.reveal_seconds
 	_loot.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	left.add_child(_loot)
+	left.add_child(ScrollBox.wrap(_loot, 8))     # 反馈：容器太高时竖向滚动，不撑出窗口
 	_line = _label("", 13, UiPalette.FG)
 	left.add_child(_line)
 	if _session != null:
