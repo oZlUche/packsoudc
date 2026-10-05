@@ -13,6 +13,8 @@ var _new_run_btn: Button
 var _hint: Label
 var _buff_btns: Dictionary = {}
 var _unlock_btns: Dictionary = {}
+## 119：开发区的科技等级数字框，科技 id → SpinBox（导出包里空）
+var _tech_spins: Dictionary = {}
 ## 页签名 → 那一页的控件；`_tab_btns` 页签名 → 按钮
 var _pages: Dictionary = {}
 var _tab_btns: Dictionary = {}
@@ -142,6 +144,25 @@ func open(payload: Dictionary) -> void:
 			ub.set_pressed_no_signal(m.has_unlock(key))
 			_unlock_btns[key] = ub
 			right.add_child(ub)
+	# 119：开发区手改进度表（存档的 tech_levels）—— 每个科技一个数字框，导出包里没有
+	if not OS.has_feature("template") and not flow.tech_defs.is_empty():
+		right.add_child(_label("科技等级　开发：直接改存档里点到几级（0 = 没点亮），效果跟着重算", 15, UiPalette.DIM))
+		var grid := GridContainer.new()
+		grid.columns = 4
+		grid.add_theme_constant_override("h_separation", 12)
+		right.add_child(grid)
+		for t in flow.tech_defs:
+			var tid: StringName = t.id
+			grid.add_child(_label(Names.of(t), 13, UiPalette.FG))
+			var spin := SpinBox.new()
+			spin.min_value = 0
+			spin.max_value = t.max_level()
+			spin.step = 1
+			spin.rounded = true
+			spin.set_value_no_signal(TechService.level(m, tid))
+			spin.value_changed.connect(func(v: float): set_tech_level(tid, int(v)))
+			_tech_spins[tid] = spin
+			grid.add_child(spin)
 	right.add_child(_label("最近几局", 15, UiPalette.DIM))
 	var log := _log_box(13)
 	for h in m.history:
@@ -202,7 +223,6 @@ func _build_sell(root: Control) -> Control:
 	page.add_child(row)
 	row.add_child(_label("一键出售", 13, UiPalette.DIM))
 	_sell_pick = OptionButton.new()
-	_sell_pick.add_theme_font_override("font", font)
 	for i in SELL_FILTERS.size():
 		_sell_pick.add_item(String(SELL_FILTERS[i][0]), i)
 	_sell_pick.item_selected.connect(set_sell_filter)
@@ -566,6 +586,19 @@ func toggle_buff(id: StringName) -> bool:
 	return on
 
 
+## 119 开发区：改某个科技的级数（数字框与测试都走它）。返回实际的级数（夹在 0 ～ 满级）
+func set_tech_level(id: StringName, level: int) -> int:
+	var lv := flow.dev_set_tech_level(id, level)
+	if _tech_spins.has(id):
+		(_tech_spins[id] as SpinBox).set_value_no_signal(lv)
+	return lv
+
+
+## 开发区的科技等级数字框（测试看）；导出包里没有，返回 null
+func tech_level_spin(id: StringName) -> SpinBox:
+	return _tech_spins.get(id, null)
+
+
 func toggle_unlock(id: StringName) -> bool:
 	var on := flow.toggle_unlock(id)
 	if _unlock_btns.has(id):
@@ -578,3 +611,5 @@ func _refresh() -> void:
 	_new_run_btn.disabled = why != ""
 	# 090：带回来的没清不再拦，只提示（开局屏里进暂存区，出发就没了）
 	_hint.text = why if why != "" else flow.pending_hint()
+	for id in _tech_spins:     # 119：科技页点亮 / 升级了，开发区的数字框跟上
+		(_tech_spins[id] as SpinBox).set_value_no_signal(TechService.level(flow.meta, id))

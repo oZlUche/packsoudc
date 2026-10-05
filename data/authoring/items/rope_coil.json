@@ -1,0 +1,15 @@
+{
+  "id": "rope_coil",
+  "display_name": "麻绳卷",
+  "display_names": {
+    "en": "Rope Coil"
+  },
+  "description": "盘好的粗麻绳。",
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "material",
+    "crafted"
+  ]
+}

@@ -106,7 +106,7 @@ func use_slot(n: int) -> void:
 	if slots == null:
 		return
 	# 101 第 4 刀：建目录、算路径、读局外、读不出来先备份（098）都在 SaveSlots.open 里；这里只管当前位与这一局
-	var opened := slots.open(n, items, meta_rules)
+	var opened := slots.open(n, items, meta_rules, tech_defs)
 	slot = int(opened["slot"])
 	save_path = String(opened["run_path"])
 	meta_path = String(opened["meta_path"])
@@ -114,7 +114,7 @@ func use_slot(n: int) -> void:
 		meta_backup = String(opened["backup"])     # 界面上说一句，玩家知道老档还在
 	var loaded := opened["meta"] as MetaState
 	meta = loaded if loaded != null else MetaState.new(meta_rules)
-	heal_techs()
+	derive_techs()
 	run = null
 	result = null
 	_queue.clear()
@@ -526,9 +526,9 @@ func tech_of(id: StringName) -> TechDef:
 	return null
 
 
-## 读档后让科技效果补齐（仓库行数不足就补）
-func heal_techs() -> void:
-	TechService.heal(meta, tech_defs)
+## 120：由进度表推算科技派生值（仓库行数、保险箱、局外 buff），见 [method TechService.derive]
+func derive_techs() -> void:
+	TechService.derive(meta, tech_defs)
 
 
 ## 上交一件（上交即消耗）：成了就存
@@ -584,6 +584,24 @@ func toggle_meta_buff(id: StringName) -> bool:
 	var on := meta.toggle_buff(id)
 	save_meta()
 	return on
+
+
+## 119 开发区：直接改进度表（存档的 `tech_levels`）里某个科技的级数，夹在 0 ～ 满级；上交记录清掉，
+## 效果按新级数重算（走 [method TechService.derive] 同一条路；仓库缩行只删空行）。改了就存。返回实际的级数
+func dev_set_tech_level(id: StringName, level: int) -> int:
+	var def := TechService.find(tech_defs, id)
+	if def == null:
+		return 0
+	var lv := clampi(level, 0, def.max_level())
+	if lv == 0:
+		meta.tech_levels.erase(String(id))
+	else:
+		meta.tech_levels[String(id)] = lv
+	meta.tech_deposits.erase(String(id))
+	TechService.derive(meta, tech_defs)
+	meta.changed.emit()
+	save_meta()
+	return lv
 
 
 ## 局外解锁的开关（占位：将来由成长系统决定）。改了就存

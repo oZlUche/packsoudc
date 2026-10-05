@@ -84,7 +84,6 @@ func _build() -> void:
 	_cost = _vbox(4)
 	right.add_child(_cost)
 	_action = Button.new()
-	_action.add_theme_font_override("font", _font)
 	UiPalette.style_button(_action, UiPalette.Tier.PRIMARY, UiPalette.button_font_size(14, UiPalette.Tier.PRIMARY))
 	_action.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_action.pressed.connect(func(): upgrade(_selected))
@@ -104,7 +103,6 @@ func _build() -> void:
 	_line = _label("", 13, UiPalette.STAMINA)
 	right.add_child(_line)
 	_warehouse_toggle = Button.new()
-	_warehouse_toggle.add_theme_font_override("font", _font)
 	_warehouse_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_warehouse_toggle.pressed.connect(toggle_warehouse)
 	right.add_child(_warehouse_toggle)
@@ -330,9 +328,7 @@ func _vbox(sep: int) -> VBoxContainer:
 func _label(text: String, font_size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_override("font", _font)
-	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", color)
+	UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
 	return l
 
 

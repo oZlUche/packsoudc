@@ -1,0 +1,16 @@
+{
+  "id": "silk_bolt",
+  "display_name": "丝绸卷",
+  "display_names": {
+    "en": "Silk Bolt"
+  },
+  "description": "光滑如水的一卷丝。",
+  "shape": [
+    "111"
+  ],
+  "rarity": 3,
+  "tags": [
+    "material",
+    "crafted"
+  ]
+}

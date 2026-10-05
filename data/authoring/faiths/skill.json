@@ -42,6 +42,12 @@
     {
       "has_stat": "crit_chance",
       "multiplier": 8.0
+    },
+    {
+      "tags": [
+        "crafted"
+      ],
+      "multiplier": 5.0
     }
   ]
 }

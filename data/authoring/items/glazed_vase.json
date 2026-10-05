@@ -1,0 +1,17 @@
+{
+  "id": "glazed_vase",
+  "display_name": "彩釉瓷瓶",
+  "display_names": {
+    "en": "Glazed Vase"
+  },
+  "description": "釉色流转，别磕了。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "crafted"
+  ]
+}

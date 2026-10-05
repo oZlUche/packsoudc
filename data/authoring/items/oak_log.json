@@ -1,0 +1,17 @@
+{
+  "id": "oak_log",
+  "display_name": "橡木原木",
+  "display_names": {
+    "en": "Oak Log"
+  },
+  "description": "一截还带树皮的硬木。",
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "tags": [
+    "material",
+    "nature"
+  ]
+}

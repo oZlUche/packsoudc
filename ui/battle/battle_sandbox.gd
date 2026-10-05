@@ -49,6 +49,7 @@ func _ready() -> void:
 func _build_ui() -> void:
 	var bg := ColorRect.new()
 	UiPalette.apply(GameSettings.load_from())     # 091：底色跟设置走
+	UiTheme.install(self)     # 121：界面主题挂在窗口上
 	bg.color = UiPalette.bg()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -127,16 +128,13 @@ func _build_ui() -> void:
 func _label(text: String, font_size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_override("font", _font)
-	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", color)
+	UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
 	return l
 
 
 func _button(text: String, handler: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.add_theme_font_override("font", _font)
 	b.pressed.connect(handler)
 	return b
 #endregion

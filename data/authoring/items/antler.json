@@ -1,0 +1,19 @@
+{
+  "id": "antler",
+  "display_name": "鹿角",
+  "display_names": {
+    "en": "Antler"
+  },
+  "description": "一对分叉的角，猎人的凭证。",
+  "shape": [
+    "11",
+    "10"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "nature",
+    "bone",
+    "trophy"
+  ]
+}

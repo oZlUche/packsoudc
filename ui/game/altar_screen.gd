@@ -204,7 +204,6 @@ func _rebuild_actions() -> void:
 		arow.add_child(b)
 		if not perk.altar_options().is_empty():
 			var pick := OptionButton.new()
-			pick.add_theme_font_override("font", font)
 			for i in perk.altar_options().size():
 				var t: StringName = perk.altar_options()[i]
 				pick.add_item(String(MapNodeStyle.of(t)["label"]) if MapNodeTypes.has(t) else String(t), i)

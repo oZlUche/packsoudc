@@ -328,11 +328,7 @@ func _rich_line(bbcode: String, font_size: int, width: float) -> RichTextLabel:
 	r.fit_content = true
 	r.scroll_active = false
 	r.custom_minimum_size.x = width
-	r.add_theme_font_override("normal_font", font)
-	r.add_theme_font_override("bold_font", font)
-	r.add_theme_font_size_override("normal_font_size", font_size)
-	r.add_theme_font_size_override("bold_font_size", font_size)
-	r.add_theme_color_override("default_color", UiPalette.FG)
+	UiTheme.rich(r, font_size)
 	r.text = bbcode
 	return r
 
@@ -697,7 +693,7 @@ func _refresh_countdown() -> void:
 	_countdown.text = text
 	var ratio := float(left) / float(maxi(limit, 1))
 	var col := UiPalette.HP if (ratio <= 0.25 or left <= 5) else (UiPalette.STAMINA if ratio <= 0.5 else UiPalette.FG)
-	_countdown.add_theme_color_override("font_color", col)
+	_countdown.add_theme_color_override("font_color", col)     # 121 特例：颜色随剩余回合实时变（过半琥珀、四分之一红），不是固定样式
 	var style := (box as PanelContainer).get_theme_stylebox("panel") as StyleBoxFlat
 	if style != null:
 		style.border_color = col
@@ -796,9 +792,8 @@ func _rebuild_routes() -> void:
 			"核心（打 BOSS）" if String(route.get("ends_at", "core")) == "core" else "撤离点（可以不打）",
 			float(route.get("risk_x100", 0)) / 100.0, float(route.get("reward_x100", 0)) / 100.0]
 		card.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		card.add_theme_font_override("font", font)
 		card.add_theme_font_size_override("font_size", 13)
-		card.add_theme_color_override("font_color", MapNodeStyle.route_color(i))
+		card.add_theme_color_override("font_color", MapNodeStyle.route_color(i))     # 121 特例：路线色和地图上画的那条线同色（画布色）
 		var idx := i
 		card.mouse_entered.connect(func(): if _run.phase == RunState.Phase.PICK_SPAWN: _view.bold_route = idx)
 		card.mouse_exited.connect(func(): if _run.phase == RunState.Phase.PICK_SPAWN: _view.bold_route = -1)
@@ -826,7 +821,7 @@ func _build() -> void:
 	cd_style.border_color = UiPalette.STAMINA
 	cd_style.set_border_width_all(2)
 	cd_style.set_content_margin_all(6)
-	cd_box.add_theme_stylebox_override("panel", cd_style)
+	cd_box.add_theme_stylebox_override("panel", cd_style)     # 121 特例：边框色随倒计时实时改（见 _refresh_countdown），得是这一块自己的底
 	cd_box.add_child(_countdown)
 	cd_box.visible = false
 	mid.add_child(cd_box)
@@ -835,7 +830,7 @@ func _build() -> void:
 	var st := StyleBoxFlat.new()
 	st.bg_color = UiPalette.PANEL
 	st.set_content_margin_all(8)
-	hud_box.add_theme_stylebox_override("panel", st)
+	hud_box.add_theme_stylebox_override("panel", st)     # 121 特例：信力 / 行动点那条 HUD 的无边窄底，只此一处
 	var hud_row := _hbox(0)
 	hud_row.add_child(_hud)
 	_faith_hud = _label("", 14, UiPalette.FG)

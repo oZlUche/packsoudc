@@ -44,7 +44,7 @@ func open(_payload: Dictionary) -> void:
 		if box != null:
 			var swatch := box.duplicate() as StyleBoxFlat
 			swatch.bg_color = t["color"]
-			b.add_theme_stylebox_override("normal", swatch)
+			b.add_theme_stylebox_override("normal", swatch)     # 121 特例：底色色板，按钮底就是那档底色（画布色）
 		_bg_btns[tid] = b
 		bg_row.add_child(b)
 	col.add_child(bg_row)

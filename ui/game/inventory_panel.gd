@@ -191,7 +191,5 @@ func _on_displaced(instances: Array, grabbed: bool) -> void:
 func _label(text: String, font_size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_override("font", _font)
-	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", color)
+	UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
 	return l

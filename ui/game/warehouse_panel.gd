@@ -163,16 +163,13 @@ func _refresh() -> void:
 func _label(text: String, font_size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_override("font", _font)
-	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", color)
+	UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
 	return l
 
 
 func _button(text: String, handler: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.add_theme_font_override("font", _font)
 	UiPalette.style_button(b, UiPalette.Tier.SECONDARY, UiPalette.button_font_size(13, UiPalette.Tier.SECONDARY))     # 090
 	b.pressed.connect(handler)
 	return b

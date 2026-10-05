@@ -158,7 +158,7 @@ static func layout(defs: Array) -> Dictionary:
 #endregion
 
 
-## 升一级：扣钱、清这一项的上交记录、等级 +1、施加效果。不 [method ready] 什么也不动
+## 升一级：扣钱、清这一项的上交记录、等级 +1、按新级数推算效果（120：和读档同一条路）。不 [method ready] 什么也不动
 static func upgrade(meta: MetaState, def: TechDef) -> bool:
 	if not ready(meta, def):
 		return false
@@ -167,19 +167,20 @@ static func upgrade(meta: MetaState, def: TechDef) -> bool:
 	meta.tech_deposits.erase(String(def.id))
 	meta.tech_levels[String(def.id)] = level(meta, def.id) + 1
 	if def.effect != null:
-		def.effect.apply(meta)
+		def.effect.derive(meta, level(meta, def.id))
 	meta.changed.emit()
 	return true
 
 
-## 读档后的自检：每项科技按已到的级数让效果补齐（只补不缩，见 [method TechEffect.heal]）
-static func heal(meta: MetaState, defs: Array) -> void:
+## 120：由进度表（`tech_levels`）推算全部科技派生值 —— 每项科技按已到的级数 [method TechEffect.derive]（仓库行数、保险箱、局外 buff）。
+## 读档时在仓库装东西之前、新建空档时、开发区改级数后都调它；存档里不存这些数
+static func derive(meta: MetaState, defs: Array) -> void:
 	if meta == null:
 		return
 	for d in defs:
 		var def := d as TechDef
 		if def != null and def.effect != null:
-			def.effect.heal(meta, level(meta, def.id))
+			def.effect.derive(meta, level(meta, def.id))
 	# 118：科技给的 buff 里不属于任何科技的（科技删了 / 改了 buff id）清掉，免得一局悄悄多一条
 	var owned := {}
 	for d in defs:

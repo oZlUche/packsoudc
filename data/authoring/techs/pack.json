@@ -24,7 +24,11 @@
       "funds": 800
     },
     {
-      "funds": 1200
+      "funds": 1200,
+      "items": {
+        "tanned_leather": 2,
+        "linen_bolt": 1
+      }
     }
   ]
 }

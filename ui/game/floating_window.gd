@@ -20,14 +20,9 @@ var _placed: bool = false
 
 
 ## [param on_close] 给了就在标题栏右边放一个「收起」按钮
-func setup(p_key: String, title: String, font: Font, on_close: Callable = Callable(), close_text: String = "收起") -> void:
+func setup(p_key: String, title: String, _font: Font, on_close: Callable = Callable(), close_text: String = "收起") -> void:
 	key = p_key
-	var style := StyleBoxFlat.new()
-	style.bg_color = UiPalette.PANEL
-	style.border_color = UiPalette.LINE
-	style.set_border_width_all(1)
-	style.set_content_margin_all(12)
-	add_theme_stylebox_override("panel", style)
+	UiTheme.panel(self, 12)     # 121：主题的 PanelDark 变体
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
 	var col := VBoxContainer.new()
@@ -41,23 +36,18 @@ func setup(p_key: String, title: String, font: Font, on_close: Callable = Callab
 	col.add_child(_header)
 	_title = Label.new()
 	_title.text = title
-	_title.add_theme_font_override("font", font)
-	_title.add_theme_font_size_override("font_size", 18)
-	_title.add_theme_color_override("font_color", UiPalette.FG)
+	_title.theme_type_variation = UiTheme.LABEL_TITLE
 	_title.mouse_filter = Control.MOUSE_FILTER_PASS
 	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_header.add_child(_title)
 	var hint := Label.new()
 	hint.text = "按住标题拖动"
-	hint.add_theme_font_override("font", font)
-	hint.add_theme_font_size_override("font_size", 11)
-	hint.add_theme_color_override("font_color", UiPalette.DIM)
+	UiTheme.label(hint, 11, UiPalette.DIM)
 	hint.mouse_filter = Control.MOUSE_FILTER_PASS
 	_header.add_child(hint)
 	if on_close.is_valid():
 		var b := Button.new()
 		b.text = close_text
-		b.add_theme_font_override("font", font)
 		UiPalette.style_button(b, UiPalette.Tier.MINOR, UiPalette.button_font_size(12, UiPalette.Tier.MINOR))     # 090
 		b.pressed.connect(on_close)
 		_header.add_child(b)

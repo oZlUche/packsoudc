@@ -4,12 +4,9 @@
 class_name TechEffect
 extends Resource
 
-## 升一级时施加一次
-@abstract func apply(meta: MetaState) -> void
-
-## 读档后的自检：已到 [param level] 级时局外该是什么样，不够就补（只补不缩）。默认什么也不做
-func heal(_meta: MetaState, _level: int) -> void:
-	pass
+## 120：已到 [param level] 级时局外该是什么样，就把它变成那样（幂等）。升级后、读档时（仓库还空着、物品装进去之前）
+## 与开发区改级数后都走它 —— 局外存档里不存任何科技算出来的数
+@abstract func derive(meta: MetaState, level: int) -> void
 
 
 ## 卡片上「下一级：……」那句

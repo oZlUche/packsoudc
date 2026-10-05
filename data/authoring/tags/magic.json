@@ -1,0 +1,11 @@
+{
+  "id": "magic",
+  "display_name": "魔法",
+  "display_names": {
+    "en": "Magic"
+  },
+  "description": "带魔力的东西：魔晶石之类。既不是人手做的，也不算寻常的自然之物。",
+  "descriptions": {
+    "en": "Things that carry magic, such as mana crystals. Neither handmade nor ordinary nature."
+  }
+}

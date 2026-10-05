@@ -1,0 +1,17 @@
+{
+  "id": "raw_amber",
+  "display_name": "琥珀原石",
+  "display_names": {
+    "en": "Raw Amber"
+  },
+  "description": "封着一只远古小虫。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "nature",
+    "gem"
+  ]
+}

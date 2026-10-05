@@ -1,0 +1,16 @@
+{
+  "id": "wool_cloth",
+  "display_name": "羊毛呢",
+  "display_names": {
+    "en": "Wool Cloth"
+  },
+  "description": "厚实的呢料，御寒。",
+  "shape": [
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "crafted"
+  ]
+}

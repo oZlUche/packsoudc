@@ -30,6 +30,7 @@ var _font: Font
 
 func _ready() -> void:
 	_font = _make_cjk_font()
+	UiTheme.install(self)     # 121：界面主题挂在窗口上
 	_db = ItemDatabase.new()
 	if _db.load_dir() == 0:
 		push_error("没有加载到任何物品定义，先跑 tools/import_content.gd 把作者数据导成资产")
@@ -166,16 +167,13 @@ func _collect_views(node: Node, out: Array[ContainerView]) -> void:
 func _heading(text: String, font_size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_override("font", _font)
-	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", color)
+	UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
 	return l
 
 
 func _button(text: String, handler: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.add_theme_font_override("font", _font)
 	b.pressed.connect(handler)
 	return b
 

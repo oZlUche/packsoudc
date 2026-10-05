@@ -31,6 +31,7 @@ script = ExtResource("3_kfasi")
 funds = 900
 items = {
 "hardwood_plank": 2,
+"nail_keg": 1,
 "steel_ingot": 3
 }
 

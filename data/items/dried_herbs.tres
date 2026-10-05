@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_gsbb2"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_1e1n8"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_4dv6i"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_dmeb0"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_evb7e"]
+
+[sub_resource type="Resource" id="Resource_1nfde"]
+script = ExtResource("5_evb7e")
+
+[resource]
+script = ExtResource("4_dmeb0")
+id = &"dried_herbs"
+display_name = "干草药束"
+display_names = {
+"en": "Dried Herbs"
+}
+description = "晒干扎好的草药。"
+shape = SubResource("Resource_1nfde")
+tags = Array[StringName]([&"material", &"nature"])
