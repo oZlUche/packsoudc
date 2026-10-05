@@ -22,6 +22,8 @@ const TERMS := {
 	"出手时": {"text": "有道具出手时跟着触发（连带）。", "tip": false},
 	"受伤时": {"text": "受到伤害之后触发。", "tip": false},
 	"层数够时": {"text": "身上某个状态叠到指定层数时触发。", "tip": false},
+	# 130
+	"施加时": {"text": "某个状态被施加、层数增加的那一瞬触发；叠满后只刷新时长的那一下不算。默认只认自己施加的。", "tip": false},
 	"资源低于时": {"text": "生命 / 耐力等降到阈值以下时触发。", "tip": false},
 	"冷却": {"text": "两次出手之间的间隔（秒），急速会缩短它。", "tip": false},
 	"耐力": {"text": "出手要花的资源，每秒按回复速度补回；不够就出不了手，等回够再动。", "tip": false},
@@ -202,7 +204,8 @@ static func effects_text(effects: Array) -> String:
 
 
 const TRIGGER_NAMES := {"on_schedule": "自发", "on_battle_start": "开战时", "on_item_fired": "出手时", "on_damage": "受伤时",
-	"on_before_damage": "受伤前", "on_stacks_at_least": "层数够时", "on_resource_below": "资源低于时", "on_resource_changed": "资源变化时"}
+	"on_before_damage": "受伤前", "on_stacks_at_least": "层数够时", "on_resource_below": "资源低于时", "on_resource_changed": "资源变化时",
+	"on_status_applied": "施加时"}
 
 
 static func trigger_name(trigger: Trigger) -> String:
@@ -250,13 +253,17 @@ static func buffs_in_rules(rules: Array, out: Dictionary) -> void:
 
 static func _buffs_in_effects(effects: Array, out: Dictionary) -> void:
 	for e in effects:
-		var ap := e as ApplyStatus
-		if ap == null or ap.buff == null or out.has(ap.buff.id):
+		var buff: BuffDef = null
+		if e is ApplyStatus:
+			buff = (e as ApplyStatus).buff
+		elif e is ConvertStatus:
+			buff = (e as ConvertStatus).to     # 130：转化出来的剧毒也要能解释
+		if buff == null or out.has(buff.id):
 			continue
-		out[ap.buff.id] = ap.buff
-		buffs_in_rules(ap.buff.rules, out)
-		_buffs_in_effects(ap.buff.on_apply, out)
-		_buffs_in_effects(ap.buff.on_expire, out)
+		out[buff.id] = buff
+		buffs_in_rules(buff.rules, out)
+		_buffs_in_effects(buff.on_apply, out)
+		_buffs_in_effects(buff.on_expire, out)
 #endregion
 
 

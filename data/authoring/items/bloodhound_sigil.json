@@ -1,0 +1,50 @@
+{
+  "id": "bloodhound_sigil",
+  "display_name": "猎血者的符号",
+  "display_names": {
+    "en": "Bloodhound Sigil"
+  },
+  "description": "猎人循着血迹，越追越凶。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "part",
+    "sigil",
+    "bleed"
+  ],
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_status_applied",
+          "buff_id": "bleed"
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "target": "SELF",
+            "buff": {
+              "id": "blood_valor",
+              "display_name": "血勇",
+              "display_names": {
+                "en": "Blood Valor"
+              },
+              "max_stacks": 5,
+              "mods": [
+                {
+                  "mult_category": "EMPOWER",
+                  "mult_percent": 5
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

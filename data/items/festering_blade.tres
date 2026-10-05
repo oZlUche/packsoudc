@@ -1,0 +1,146 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_nlw8p"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_amd6d"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_lx2c5"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_dv52w"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="5_ry707"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_ee441"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_xsa10"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_8473r"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_q75nm"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_a7mhu"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="11_gt3uo"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_status_applied.gd" id="12_u3075"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="13_0es67"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="14_erq70"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="15_mtdso"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="16_qanre"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="17_2qtf3"]
+
+[sub_resource type="Resource" id="Resource_b1xit"]
+script = ExtResource("3_lx2c5")
+seconds = 1.4
+
+[sub_resource type="Resource" id="Resource_aa31o"]
+script = ExtResource("5_ry707")
+amount = 7.0
+
+[sub_resource type="Resource" id="Resource_55ixu"]
+script = ExtResource("7_xsa10")
+
+[sub_resource type="Resource" id="Resource_s73gq"]
+script = ExtResource("3_lx2c5")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_wwb65"]
+script = ExtResource("7_xsa10")
+target = 1
+damage_type = &"bleed"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_wtk3l"]
+script = ExtResource("8_8473r")
+
+[sub_resource type="Resource" id="Resource_enbml"]
+script = ExtResource("2_amd6d")
+trigger = SubResource("Resource_wtk3l")
+cadence = SubResource("Resource_s73gq")
+effects = Array[ExtResource("6_ee441")]([SubResource("Resource_wwb65")])
+
+[sub_resource type="Resource" id="Resource_l0h4m"]
+script = ExtResource("9_q75nm")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+rules = Array[ExtResource("2_amd6d")]([SubResource("Resource_enbml")])
+
+[sub_resource type="Resource" id="Resource_aa170"]
+script = ExtResource("10_a7mhu")
+buff = SubResource("Resource_l0h4m")
+
+[sub_resource type="Resource" id="Resource_oddk5"]
+script = ExtResource("8_8473r")
+
+[sub_resource type="Resource" id="Resource_cbx2s"]
+script = ExtResource("2_amd6d")
+trigger = SubResource("Resource_oddk5")
+cadence = SubResource("Resource_b1xit")
+costs = Array[ExtResource("4_dv52w")]([SubResource("Resource_aa31o")])
+effects = Array[ExtResource("6_ee441")]([SubResource("Resource_55ixu"), SubResource("Resource_aa170")])
+
+[sub_resource type="Resource" id="Resource_1ye41"]
+script = ExtResource("11_gt3uo")
+
+[sub_resource type="Resource" id="Resource_dixyd"]
+script = ExtResource("3_lx2c5")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_n0nq4"]
+script = ExtResource("7_xsa10")
+target = 1
+damage_type = &"poison"
+amount = 2.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_piny8"]
+script = ExtResource("8_8473r")
+
+[sub_resource type="Resource" id="Resource_qgpcq"]
+script = ExtResource("2_amd6d")
+trigger = SubResource("Resource_piny8")
+cadence = SubResource("Resource_dixyd")
+effects = Array[ExtResource("6_ee441")]([SubResource("Resource_n0nq4")])
+
+[sub_resource type="Resource" id="Resource_wwh6q"]
+script = ExtResource("9_q75nm")
+id = &"poison"
+display_name = "中毒"
+display_names = {
+"en": "Poison"
+}
+is_debuff = true
+rules = Array[ExtResource("2_amd6d")]([SubResource("Resource_qgpcq")])
+
+[sub_resource type="Resource" id="Resource_tjfa2"]
+script = ExtResource("10_a7mhu")
+buff = SubResource("Resource_wwh6q")
+
+[sub_resource type="Resource" id="Resource_j501u"]
+script = ExtResource("12_u3075")
+buff_id = &"bleed"
+
+[sub_resource type="Resource" id="Resource_po6bq"]
+script = ExtResource("2_amd6d")
+trigger = SubResource("Resource_j501u")
+cadence = SubResource("Resource_1ye41")
+effects = Array[ExtResource("6_ee441")]([SubResource("Resource_tjfa2")])
+
+[sub_resource type="Resource" id="Resource_po6ms"]
+script = ExtResource("13_0es67")
+base_stats = {
+"damage": 9
+}
+rules = Array[ExtResource("2_amd6d")]([SubResource("Resource_cbx2s"), SubResource("Resource_po6bq")])
+
+[sub_resource type="Resource" id="Resource_o0hhv"]
+script = ExtResource("17_2qtf3")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
+
+[resource]
+script = ExtResource("16_qanre")
+id = &"festering_blade"
+display_name = "溃烂之刃"
+display_names = {
+"en": "Festering Blade"
+}
+description = "伤口不会愈合，只会烂下去。"
+shape = SubResource("Resource_o0hhv")
+rarity = 3
+tags = Array[StringName]([&"weapon", &"melee", &"bleed", &"poison", &"metal"])
+combat = SubResource("Resource_po6ms")

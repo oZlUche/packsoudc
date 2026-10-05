@@ -20,6 +20,8 @@ const TRIGGERS := {
 	&"on_resource_below": "res://core/battle/triggers/on_resource_below.gd",
 	&"on_damage": "res://core/battle/triggers/on_damage.gd",
 	&"on_before_damage": "res://core/battle/triggers/on_before_damage.gd",
+	# 130：某状态被施加时（层数增加那一瞬）
+	&"on_status_applied": "res://core/battle/triggers/on_status_applied.gd",
 }
 
 const CADENCES := {
@@ -35,6 +37,8 @@ const COSTS := {
 	&"charge": "res://core/battle/costs/charge_cost.gd",
 	&"uses": "res://core/battle/costs/uses_cost.gd",
 	&"chance": "res://core/battle/costs/chance_condition.gd",
+	# 130：目标身上有这么多层才放行，不扣层
+	&"status_condition": "res://core/battle/costs/status_condition.gd",
 }
 
 ## 战斗作用域的效果。依赖扳机。
@@ -43,6 +47,8 @@ const COMBAT_EFFECTS := {
 	&"change_resource": "res://core/battle/effects/change_resource.gd",
 	&"apply_status": "res://core/battle/effects/apply_status.gd",
 	&"remove_status": "res://core/battle/effects/remove_status.gd",
+	# 130：把目标身上一种状态的层数换成另一种
+	&"convert_status": "res://core/battle/effects/convert_status.gd",
 	# 标准轴（4.3，103）：单位级带符号层数
 	&"shift_axis": "res://core/battle/effects/shift_axis.gd",
 	# 只在受伤前阶段有效，见 DamageResolver

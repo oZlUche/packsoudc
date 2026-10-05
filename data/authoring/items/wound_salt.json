@@ -1,0 +1,44 @@
+{
+  "id": "wound_salt",
+  "display_name": "创口盐",
+  "display_names": {
+    "en": "Wound Salt"
+  },
+  "description": "往伤口上撒的那种。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "reagent",
+    "material",
+    "crafted",
+    "bleed"
+  ],
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_before_damage",
+          "direction": "DEALT",
+          "damage_type": "physical"
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "costs": [
+          {
+            "type": "status_condition",
+            "buff_id": "bleed"
+          }
+        ],
+        "effects": [
+          {
+            "type": "modify_damage",
+            "percent": 20
+          }
+        ]
+      }
+    ]
+  }
+}

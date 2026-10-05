@@ -16,14 +16,25 @@ func apply(ctx: RuleContext) -> void:
 		return
 	var n := maxi(1, stacks) * (ctx.source_stacks() if per_stack else 1)
 	for who in resolve_targets(ctx, target):
-		var added := who.apply_buff(buff, n, ctx.battle.now)
-		if added <= 0:
-			continue
-		ctx.battle.emit(BattleEvent.STATUS_STACKED, who.side, {
-			"buff": String(buff.id), "delta": added, "stacks": who.stacks_of(buff.id),
-		})
-		for e in buff.on_apply:
-			(e as CombatEffect).apply(ctx)
+		give(ctx, who, buff, n)
+
+
+## 给 [param who] 叠 [param n] 层 [param def]，返回实际加上的层数。加上了才发 status_stacked 与 130 的 status_applied
+## （施加方 = 本规则的主人）、跑 on_apply；叠满了只刷新时长的那一下什么都不发。[ConvertStatus] 也走这里
+static func give(ctx: RuleContext, who: CombatantRuntime, def: BuffDef, n: int) -> int:
+	var added := who.apply_buff(def, n, ctx.battle.now)
+	if added <= 0:
+		return 0
+	var stacks := who.stacks_of(def.id)
+	ctx.battle.emit(BattleEvent.STATUS_STACKED, who.side, {
+		"buff": String(def.id), "delta": added, "stacks": stacks,
+	})
+	ctx.battle.emit(BattleEvent.STATUS_APPLIED, who.side, {
+		"buff": String(def.id), "delta": added, "stacks": stacks, "source_side": ctx.owner.side,
+	})
+	for e in def.on_apply:
+		(e as CombatEffect).apply(ctx)
+	return added
 
 
 ## 087（作者定）：只写名词，不写细节 —— 「血怒」的「伤害 +10%」、永续与层数上限都在词条的侧窗里（[Glossary.describe_buff]）

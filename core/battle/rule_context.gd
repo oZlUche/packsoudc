@@ -8,6 +8,8 @@ extends RefCounted
 var battle: BattleContext
 var owner: CombatantRuntime
 var runtime: RuleRuntime
+## 130：这次求值是被哪条事件触发的（自发型为 null）。[method source_stacks] 读施加了几层
+var event: BattleEvent = null
 
 
 static func create(p_battle: BattleContext, p_owner: CombatantRuntime, p_rt: RuleRuntime) -> RuleContext:
@@ -56,8 +58,13 @@ func source_buff() -> BuffInstance:
 	return runtime.buff
 
 
+## 规则来自 buff 时是该 buff 的层数；130：被「某状态被施加时」触发的是这次施加了几层；其余为 1
 func source_stacks() -> int:
-	return runtime.buff.stacks if runtime.buff != null else 1
+	if runtime.buff != null:
+		return runtime.buff.stacks
+	if event != null and event.name == BattleEvent.STATUS_APPLIED:
+		return maxi(1, event.get_int(&"delta", 1))
+	return 1
 
 
 ## 正在结算的那一包伤害；不在受伤前阶段时为 null。

@@ -78,6 +78,7 @@ static func evaluate(
 		return false
 
 	var rc := RuleContext.create(ctx, owner, rt)
+	rc.event = event
 
 	# 1. 时机
 	if not rule.trigger.matches(rc, event):

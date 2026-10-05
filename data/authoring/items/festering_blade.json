@@ -1,0 +1,122 @@
+{
+  "id": "festering_blade",
+  "display_name": "溃烂之刃",
+  "display_names": {
+    "en": "Festering Blade"
+  },
+  "description": "伤口不会愈合，只会烂下去。",
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "bleed",
+    "poison",
+    "metal"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 9
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.4
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 7.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage"
+          },
+          {
+            "type": "apply_status",
+            "buff": {
+              "id": "bleed",
+              "display_name": "流血",
+              "display_names": {
+                "en": "Bleed"
+              },
+              "rules": [
+                {
+                  "trigger": {
+                    "type": "on_schedule"
+                  },
+                  "cadence": {
+                    "type": "cooldown",
+                    "seconds": 1.0
+                  },
+                  "effects": [
+                    {
+                      "type": "deal_damage",
+                      "target": "SELF",
+                      "damage_type": "bleed",
+                      "amount": 1.0,
+                      "damage_stat": "",
+                      "per_stack": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_status_applied",
+          "buff_id": "bleed"
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "buff": {
+              "id": "poison",
+              "display_name": "中毒",
+              "display_names": {
+                "en": "Poison"
+              },
+              "is_debuff": true,
+              "rules": [
+                {
+                  "trigger": {
+                    "type": "on_schedule"
+                  },
+                  "cadence": {
+                    "type": "cooldown",
+                    "seconds": 1.0
+                  },
+                  "effects": [
+                    {
+                      "type": "deal_damage",
+                      "target": "SELF",
+                      "damage_type": "poison",
+                      "amount": 2.0,
+                      "damage_stat": "",
+                      "per_stack": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
