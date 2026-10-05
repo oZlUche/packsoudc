@@ -5,7 +5,7 @@
 ##   可用格来自玩家自己放上去的「包」。普通物品只能放进某个包覆盖的格子里。
 ## - **自由容器**（`requires_bag = false`）：敌人尸体、商店货架。整片可用，直接摆放。
 ##
-## 暂存区[b]不在此列[/b] —— 它只是个列表，见 [ItemStash]。
+## 地上[b]不在此列[/b] —— 它只是个列表，见 [ItemStash]。
 ##
 ## 棋盘上有两张互相独立的占用表：[member _bag_owner] 记录每格被哪个包覆盖，
 ## [member _occ] 记录每格被哪件普通物品占据。一个格子可以同时「被包 B 覆盖」和「被物品 I 占据」。
@@ -282,7 +282,7 @@ func displaced_by(def: ItemDef, origin: Vector2i, rot: int, ignore_uid: int = EM
 ## 一整袋内容物掀掉；反过来，拖一个包去顶掉另一个包，内容物也没有着落。
 ## 两个方向都拒绝 —— 被顶的只可能是 [member _occ] 里的普通物品。
 ##
-## 调用方拿到返回的实例后[b]必须[/b]给它们找地方（抓在手上、塞暂存区），
+## 调用方拿到返回的实例后[b]必须[/b]给它们找地方（抓在手上、塞地上），
 ## 它们此刻处于游离态，谁也不持有。
 func place_displacing(inst: ItemInstance, origin: Vector2i, rot: int = 0):
 	if inst == null or inst.def == null or acts_as_bag(inst.def):
@@ -676,7 +676,7 @@ func bag_fit_report(payload: Dictionary, origin: Vector2i, rot: int) -> Dictiona
 ## 把载荷放到 origin，**依附不上的脱落**并交还给调用方。
 ##
 ## 返回与 [method bag_fit_report] 同形。`ok` 为假时容器原样不动；为真时
-## `fallen` 里的实例已处于游离态，调用方[b]必须[/b]给它们找地方（通常是暂存区）。
+## `fallen` 里的实例已处于游离态，调用方[b]必须[/b]给它们找地方（通常是地上）。
 func attach_bag_shedding(payload: Dictionary, origin: Vector2i, rot: int) -> Dictionary:
 	var report := bag_fit_report(payload, origin, rot)
 	if not report["ok"]:

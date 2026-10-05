@@ -394,18 +394,18 @@ static func run_settings_and_double_click(t: TestCase) -> void:
 	t.check(grabs == [a.uid], "单击：抓")
 	var stash := ItemStash.new(2, 0)
 	stash.admit(ItemInstance.create(d))
-	var sv := StashView.new()
+	var sv := GroundLayer.new()     # 128：地上
 	sv.stash = stash
-	sv.size = Vector2(220, 200)
+	sv.size = Vector2(1600, 900)
 	var sdbl: Array = []
 	sv.item_double_clicked.connect(func(_v: ContainerView, uid: int): sdbl.append(uid))
 	var mb2 := InputEventMouseButton.new()
 	mb2.button_index = MOUSE_BUTTON_LEFT
 	mb2.pressed = true
 	mb2.double_click = true
-	mb2.position = Vector2(20, 12)
+	mb2.position = sv.item_rect((stash.items()[0] as ItemInstance).uid).position + Vector2(10, 10)
 	sv._gui_input(mb2)
-	t.eq(sdbl.size(), 1, "暂存区列表双击也发")
+	t.eq(sdbl.size(), 1, "地上列表双击也发")
 
 
 static func frame_loot_manual_close(t: TestCase, root: Window) -> void:
@@ -464,7 +464,7 @@ static func frame_loot_manual_close(t: TestCase, root: Window) -> void:
 	loot.skip_reveal()
 	var first: ItemInstance = run.pending_loot.items()[0]
 	var went: String = loot.quick_take(first.uid)
-	t.check(went == "board" or went == "storage", "双击容器里的：进了背包或暂存区（%s）" % went)
+	t.check(went == "board" or went == "storage", "双击容器里的：进了背包或地上（%s）" % went)
 	t.check(not run.pending_loot.has_item(first.uid), "离开了容器")
 	# 棋盘上的双击回容器：不能变成未知
 	var back_uid := -1

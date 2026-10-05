@@ -108,7 +108,7 @@ var current_shop: ShopSession = null
 ## 最近一场的双方战斗单位：{"player": CombatantSpec, "enemy": CombatantSpec, "node": id}。
 ## 回放要把日志里的 uid 写成名字（4.8：名字是表现层的事，不进日志），从这里查
 var last_battle: Dictionary = {}
-## 最近一次「发生过事」的点（打了、搜了、开了店、休息了、出了事件）：走出它时暂存区清空（3.4 / 058）。
+## 最近一次「发生过事」的点（打了、搜了、开了店、休息了、出了事件）：走出它时地上清空（3.4 / 058）。
 ## 只是路过的点、出生点、岔路、撤离点不算。跟着存档走；离开后由 RunState 清回 -1
 var last_handled_id: int = -1
 var _depths: Dictionary = {}

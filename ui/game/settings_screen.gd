@@ -1,4 +1,4 @@
-## 设置：改了就存。109：离开点时暂存区的提醒档位那一块随提示一起删了
+## 设置：改了就存。109：离开点时地上的提醒档位那一块随提示一起删了
 extends GameScreen
 
 var _auto_close_btn: Button = null

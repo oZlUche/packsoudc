@@ -5,7 +5,7 @@
 ## 事件名与载荷（都由 [RunState] 接线时发）：
 ## - `place_item` {value, id, tags, rarity, first_in_run}：一件道具从别的容器置入棋盘；first_in_run = 这一局头一回置入这种道具（按定义 id）
 ## - `battle` {won, node_type, dealt, taken, healed, fired_total, fired_items: [{id, tags, cells, count}]}：打了一场（节点敌人、猎手都算），见 [method RunState.battle_summary]
-## - `item_acquired` {id, tags, cells, rarity, first_in_run}（104）：一件道具头一回出现在玩家的容器里（棋盘 / 暂存区 / 保险箱），离开一个点时对账
+## - `item_acquired` {id, tags, cells, rarity, first_in_run}（104）：一件道具头一回出现在玩家的容器里（棋盘 / 地上 / 保险箱），离开一个点时对账
 ## - `travel` {steps}：走了一步，steps = 到现在为止的总步数
 ## - `earn_money` {amount} / `spend_money` {amount}
 ## - `explore` {}：搜了一次

@@ -320,7 +320,7 @@ static func run_two_phase(t: TestCase) -> void:
 	for inst in g.storage.items():
 		if (inst as ItemInstance).def.id == &"medkit":
 			medkits += 1
-	t.eq(medkits, 2, "给了两个医疗包，进了暂存区")
+	t.eq(medkits, 2, "给了两个医疗包，到了地上")
 	t.eq(g.vitality.current, vit + 1, "体力 +1")
 	t.check(g.map.get_node(next).is_visited(), "点用过了")
 

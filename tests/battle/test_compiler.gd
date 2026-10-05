@@ -112,11 +112,11 @@ static func run(t: TestCase) -> void:
 	t.eq(spec.items.size(), 2, "但它仍在编译结果里，因为要贡献属性")
 	t.eq(spec.max_hp_int(), 55, "被动物品的 max_hp 叠加到基础 25 上")
 
-	# --- 暂存区不参战 ---
+	# --- 地上不参战 ---
 	var storage := GridInventory.new(Vector2i(4, 4), 2)
 	storage.place(ItemInstance.create(sword), Vector2i(0, 0), 0)
 	var spec_board_only := BattleCompiler.compile_board(board, CombatantBaseline.with_hp(25.0))
-	t.eq(_active(spec_board_only), 1, "暂存区里的武器不参战")
+	t.eq(_active(spec_board_only), 1, "地上的武器不参战")
 
 	# --- 纯素材不产出能力 ---
 	var mat_board := _board()

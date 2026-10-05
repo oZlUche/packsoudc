@@ -1,4 +1,4 @@
-## 暂存区按点清空（3.4 / 058 第 3 条）：走出发生过事的点，暂存区里的东西留在那里；出生点、只是路过的点不清；
+## 地上按点清空（3.4 / 058 第 3 条）：走出发生过事的点，地上的东西留在那里；出生点、只是路过的点不清；
 ## 提醒按设置档位；设置存读。
 extends RefCounted
 
@@ -86,7 +86,7 @@ static func _kit(c: Content) -> LoadoutDef:
 
 
 static func run_clear_on_leave(t: TestCase) -> void:
-	t.begin("暂存区 · 只是节点内的临时区（作者 2026-09-24 改）：离开任何点都清、进入头一回踩上的点也清（在那个点的事之前）；空的不发信号；走不成不清；存档带着")
+	t.begin("地上 · 只是节点内的临时区（作者 2026-09-24 改）：离开任何点都清、进入头一回踩上的点也清（在那个点的事之前）；空的不发信号；走不成不清；存档带着")
 
 	var c := _content()
 	var kit := _kit(c)
@@ -101,9 +101,9 @@ static func run_clear_on_leave(t: TestCase) -> void:
 	f.pick_spawn(entry)
 	var def := c.items.get_def(&"ration")
 	run.storage.clear()
-	t.check(not run.will_clear_storage(), "暂存区空：走了没什么可清")
+	t.check(not run.will_clear_storage(), "地上空：走了没什么可清")
 	run.storage.admit(ItemInstance.create(def))
-	t.check(run.will_clear_storage(), "出生点上没发生过事，暂存区有东西也清（不再看发没发生过事）")
+	t.check(run.will_clear_storage(), "出生点上没发生过事，地上有东西也清（不再看发没发生过事）")
 	var ns := NodeStorageModule.of(run)     # 101：按点暂存是一局的模块
 	t.not_null(ns, "默认清单里有按点暂存")
 	var dropped: Array = []
@@ -115,30 +115,30 @@ static func run_clear_on_leave(t: TestCase) -> void:
 	var n_leave := dropped.size()
 	_settle(f)
 	t.eq(run.events.last_handled_id, next, "战斗点是「发生过事的点」")
-	t.eq(dropped.size(), n_leave, "进入时暂存区是空的：不再发信号")
-	# 打完之后暂存区里可能有战利品：走之前不收进棋盘就没了
+	t.eq(dropped.size(), n_leave, "进入时地上是空的：不再发信号")
+	# 打完之后地上可能有战利品：走之前不收进棋盘就没了
 	run.storage.clear()
 	run.storage.admit(ItemInstance.create(def))
-	t.check(run.will_clear_storage(), "暂存区有东西：走了会留在这里")
+	t.check(run.will_clear_storage(), "地上有东西：走了会留在这里")
 	var restored: Array = []
 	ns.restored.connect(func(id: int, items: Array): restored.append([id, items.size()]))
 	t.check(f.step_to(entry), "走回出生点")
 	_settle(f)
 	t.eq(ns.stored_at(next).size(), 1, "087：离开战斗点，那件留在了战斗点上")
-	t.eq(run.storage.item_count(), 1, "087：回到出生点，先前留在这儿的口粮回到了暂存区")
+	t.eq(run.storage.item_count(), 1, "087：回到出生点，先前留在这儿的口粮回到了地上")
 	t.check(restored.size() == 1 and int(restored[0][0]) == entry, "发了 storage_restored")
 	t.eq(run.events.last_handled_id, -1, "离开之后不再算发生过事的点")
 
 	# 穿行：用过的点上放东西，走一步就留在那里；回到有东西的点又拿回来
 	run.storage.admit(ItemInstance.create(def))
 	t.check(f.step_to(next), "穿行到用过的战斗点")
-	t.eq(run.storage.item_count(), 1, "087：出生点的两件留在出生点，战斗点留的那件回到暂存区")
+	t.eq(run.storage.item_count(), 1, "087：出生点的两件留在出生点，战斗点留的那件回到地上")
 	t.eq(ns.stored_at(entry).size(), 2, "出生点上留着两件")
-	# 反馈：悬停看每个点的暂存区 —— 留在出生点的 2 件、站着的这个点身上暂存区的 1 件，各看各的
+	# 反馈：悬停看每个点的地上 —— 留在出生点的 2 件、站着的这个点身上地上的 1 件，各看各的
 	var tip_entry := NodeTooltip.stash_text(run, run.map.get_node(entry))
 	t.check(tip_entry.contains("2 件") and tip_entry.contains(Names.of(def)), "出生点浮窗：留着 2 件（%s）" % tip_entry)
 	var tip_here := NodeTooltip.stash_text(run, run.map.get_node(next))
-	t.check(tip_here.contains("1 件"), "站着的点：身上暂存区的 1 件（%s）" % tip_here)
+	t.check(tip_here.contains("1 件"), "站着的点：身上地上的 1 件（%s）" % tip_here)
 	run.storage.clear()
 	t.eq(NodeTooltip.stash_text(run, run.map.get_node(next)), "", "空了：没有这一行")
 	run.storage.admit(ItemInstance.create(def))
@@ -152,7 +152,7 @@ static func run_clear_on_leave(t: TestCase) -> void:
 	t.check(not f.step_to(99999), "走不到的走不了")
 	t.eq(run.storage.item_count(), 1, "走不成不清")
 
-	# 进入头一回踩上的点：暂存区里的东西照样在（087：不再进入时清），那个点的事照常发生
+	# 进入头一回踩上的点：地上的东西照样在（087：不再进入时清），那个点的事照常发生
 	run.storage.clear()
 	var fresh_id := -1
 	for id in run.map.node_ids():
@@ -166,7 +166,7 @@ static func run_clear_on_leave(t: TestCase) -> void:
 		run.vitality.spend(1, &"test")
 		dropped.clear()
 		run.travel.on_node_event.call(run.map.get_node(fresh_id))
-		t.eq(run.storage.item_count(), 1, "进入头一回踩上的点：暂存区里的东西还在（087）")
+		t.eq(run.storage.item_count(), 1, "进入头一回踩上的点：地上的东西还在（087）")
 		t.check(dropped.is_empty(), "进入不发 storage_dropped")
 		t.check(run.events.pending_event() != null or run.vitality.current >= before_vit, "那个点的事照常发生（休息点：先过事件屏或回体力）")
 		run.events.pending = {}
@@ -187,7 +187,7 @@ static func run_clear_on_leave(t: TestCase) -> void:
 		if run.storage.item_count() == 0:
 			run.storage.admit(ItemInstance.create(def))
 		var before := run.will_clear_storage()
-		t.check(before, "在发生过事的点上、暂存区有东西")
+		t.check(before, "在发生过事的点上、地上有东西")
 		t.eq(RunSave.write(run, SAVE), OK, "存")
 		var back := RunSave.read(c.items, c.enemies, c.sets, SAVE)
 		t.not_null(back, "读回来")
@@ -197,7 +197,7 @@ static func run_clear_on_leave(t: TestCase) -> void:
 
 
 static func run_left_behind_line(t: TestCase) -> void:
-	t.begin("暂存区 · 离开时留下的那句日志（109：提醒档位删了，只留描述）")
+	t.begin("地上 · 离开时留下的那句日志（109：提醒档位删了，只留描述）")
 
 	var c := _content()
 	var items: Array = []
@@ -233,7 +233,7 @@ static func run_settings_round_trip(t: TestCase) -> void:
 
 
 static func frame_map_prompt(t: TestCase, root: Window) -> void:
-	t.begin("地图屏 · 离开发生过事的点直接走，不再弹暂存区提示（109）")
+	t.begin("地图屏 · 离开发生过事的点直接走，不再弹地上提示（109）")
 
 	var c := _content()
 	var kit := _kit(c)
@@ -280,11 +280,11 @@ static func frame_map_prompt(t: TestCase, root: Window) -> void:
 				ov.proceed()
 	if run.storage.item_count() == 0:
 		run.storage.admit(ItemInstance.create(c.items.get_def(&"ration")))
-	t.check(run.will_clear_storage(), "在战斗点上、暂存区有东西")
+	t.check(run.will_clear_storage(), "在战斗点上、地上有东西")
 	var to: int = run.travel.available_moves()[0]
 	t.check(map.step(to), "按走")
 	t.eq(run.travel.current_id, to, "走了")
-	t.eq(run.storage.item_count(), 0, "暂存区清了")
+	t.eq(run.storage.item_count(), 0, "地上清了")
 	guard = 0
 	while game.overlay() != null and guard < 10:
 		guard += 1

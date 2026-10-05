@@ -7,7 +7,7 @@
 ## 拖拽本身不在这里处理，见 [DragLayer]。本类只负责「告诉外面哪一件被按下了」
 ## 以及「按要求显示一个落点预览」。
 ##
-## 只画**空间**容器。暂存区是个列表，见 [StashView]。
+## 只画**空间**容器。地上是个列表，见 [StashView]。
 class_name InventoryView
 extends ContainerView
 

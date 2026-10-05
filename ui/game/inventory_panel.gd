@@ -1,4 +1,5 @@
-## 背包整理面板（M6）：一局里的作战棋盘 + 暂存区，同一套拖拽（M1 的 [DragLayer]）。
+## 背包整理面板（M6）：一局里的作战棋盘，同一套拖拽（M1 的 [DragLayer]）。
+## 128：不再画地上框 —— 棋盘外的整块屏幕就是「地上」（导演持有的那一层 [GroundLayer]），拖出棋盘放哪就落在哪。
 ##
 ## 拖一下就重新编译一次读数（生命、预估 DPS、套装进度）—— 编译是纯函数（4.2），这条读数永远和真打出来的一致。
 ## 地图屏把它叠在地图上；出发前、走到哪都能开。战斗中不会开：战斗在开打那一瞬就算完了，回放是叠层，挡着它。
@@ -6,8 +7,6 @@
 ## 是个 MarginContainer：容器按内容定大小，拖拽层作为它的第二个子节点自然铺满同一块矩形 —— 一个普通 Control
 ## 不会从子节点算最小尺寸，放进竖排布局里会被压成零高。
 extends MarginContainer
-
-const STORAGE_WIDTH := 220
 
 var _run: RunState = null
 var _font: Font
@@ -17,10 +16,11 @@ var _readout: Label
 var _faith_label: Label
 var _hint: Label
 var board_view: InventoryView
-var storage_view: StashView
+## 128：导演那一层地（没有 = null：测试里单开面板）
+var ground: GroundLayer = null
 var tip: HoverTip
 var _stamina: Label
-## 084：棋盘上双击的东西优先去这里（容器屏设成战利品 / 收获箱）；null = 去暂存区
+## 084：棋盘上双击的东西优先去这里（容器屏设成战利品 / 收获箱）；null = 放到地上
 var quick_target: ItemContainer = null
 ## 双击之后的提示回调（容器屏想自己写）：`func(text: String)`
 var hint_sink: Callable = Callable()
@@ -37,7 +37,7 @@ func setup(run: RunState, font: Font, drag: DragLayer = null) -> void:
 
 
 func _build() -> void:
-	# 087（作者定）：棋盘在上、暂存区在下（容器屏：左上容器、右上背包、右下暂存区）
+	# 128：只剩棋盘与读数；地上是整块屏幕
 	var row := VBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	add_child(row)
@@ -45,7 +45,7 @@ func _build() -> void:
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", 8)
 	row.add_child(left)
-	left.add_child(_label("作战棋盘　只有包里的东西参战　拖出棋盘 = 放进暂存区", 13, UiPalette.DIM))
+	left.add_child(_label("作战棋盘　只有包里的东西参战　拖出棋盘 = 放在地上", 13, UiPalette.DIM))
 	board_view = InventoryView.new()
 	board_view.label_font = _font
 	board_view.inventory = _run.board
@@ -73,28 +73,19 @@ func _build() -> void:
 		if tip != null:
 			tip.hide_tip())
 	left.add_child(_stamina)
-	_hint = _label("左键拖动　双击快速置入　R 旋转　右键 / Esc 取消　右键信物 = 奉为主信仰　拖到能合成的那件上 = 合成　压着别人放手会把人顶出来　放到棋盘外就进暂存区", 11, UiPalette.DIM)
+	_hint = _label("左键拖动　双击快速置入　R 旋转　右键 / Esc 取消　右键信物 = 奉为主信仰　拖到能合成的那件上 = 合成　压着别人放手会把人顶出来　放到棋盘外就放在地上（放哪落哪）", 11, UiPalette.DIM)
 	left.add_child(_hint)
 
-	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation", 8)
-	row.add_child(right)
-	right.add_child(_label("暂存区（不限大小）　不参战、留在这个点（回来能拿）、撤离不带出去", 13, UiPalette.DIM))
-	storage_view = StashView.new()
-	storage_view.label_font = _font
-	storage_view.stash = _run.storage
-	storage_view.custom_minimum_size.x = maxf(STORAGE_WIDTH, _run.board.size.x * InventoryView.CELL)
-	storage_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	right.add_child(storage_view)
+	left.add_child(_label("地上（不限件数）　不参战、留在这个点（回来还在原处）、撤离不带出去", 11, UiPalette.DIM))
 
 	if _drag == null:
 		_drag = DragLayer.new()
 		_drag.label_font = _font
 		add_child(_drag)     # 容器把它铺到和 row 一样大，盖在上面
 	_drag.register_view(board_view)
-	_drag.register_view(storage_view)
 	_drag.stash = _run.storage
-	_drag.drop_outside_to_stash = true     # 084：棋盘外的空间全都是暂存区
+	_drag.drop_outside_to_stash = true     # 084 / 128：棋盘外的空间全都是地上
+	_attach_ground()
 	_drag.items_displaced.connect(_on_displaced)
 	# 114 合成（作者定）：拖到上面立刻合 —— 拖起一件时能合的那几件高光；压到其中一件上放手，两件立刻变成产物
 	var crafting := CraftingModule.of(_run)     # 101：合成是一局的模块
@@ -109,10 +100,31 @@ func _build() -> void:
 	tip = HoverTip.new(_font)
 	add_child(tip)
 	tip.watch(board_view)
-	tip.watch(storage_view)
 	board_view.item_double_clicked.connect(quick_move)
-	storage_view.item_double_clicked.connect(quick_move)
 	board_view.item_context.connect(func(_v: ContainerView, uid: int): reseat_anchor(uid))     # 099：右键信物 = 奉为主信仰
+
+
+## 128：接上导演那一层地（画的是这一局的 storage 才接）：地上的东西能拿起来拖、双击进棋盘；面板占的地方登记上，地上的东西不压着面板
+func _attach_ground() -> void:
+	var g := GroundLayer.current()
+	if g == null or g.stash != _run.storage:
+		return
+	ground = g
+	_drag.register_view(g)
+	g.attach(_drag)
+	g.item_double_clicked.connect(_on_ground_double)
+	g.reserve(self)
+	tree_exiting.connect(func():
+		if is_instance_valid(g):
+			g.detach(_drag)
+			if g.item_double_clicked.is_connected(_on_ground_double):
+				g.item_double_clicked.disconnect(_on_ground_double))
+
+
+## 地上双击：只有最上面那块面板接（地图上的背包浮窗被叠层盖着时不抢）
+func _on_ground_double(view: ContainerView, uid: int) -> void:
+	if ground != null and ground.top_drag() == _drag:
+		quick_move(view, uid)
 
 
 ## 099（作者定）：右键棋盘上的信物 = 奉它为主信仰（不弹菜单）。不是信物的右键什么也不做。返回切没切
@@ -126,7 +138,7 @@ func reseat_anchor(uid: int) -> bool:
 	return true
 
 
-## 084：双击快速置入。暂存区 → 棋盘（放不下就提示）；棋盘 → quick_target（容器屏的战利品 / 收获箱），没有就 → 暂存区。返回挪了没有
+## 084：双击快速置入。地上 → 棋盘（放不下就提示）；棋盘 → quick_target（容器屏的战利品 / 收获箱），没有就 → 地上。返回挪了没有
 func quick_move(view: ContainerView, uid: int) -> bool:
 	var from := view.container()
 	var inst := from.get_item(uid) if from != null else null
@@ -142,12 +154,12 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 			return true
 		if InventoryService.transfer_auto(_run.board, uid, _run.storage):
 			if quick_target != null:
-				_hint_text("容器里放不下「%s」，放进了暂存区" % Names.of(inst.def))
+				_hint_text("容器里放不下「%s」，放在了地上" % Names.of(inst.def))
 			return true
 	return false
 
 
-## 114：合成了：提示一句产物（装不下进了暂存区也说）
+## 114：合成了：提示一句产物（装不下落在地上也说）
 func _on_crafted(detail: Dictionary) -> void:
 	if not is_inside_tree():
 		return
@@ -185,7 +197,7 @@ func _on_displaced(instances: Array, grabbed: bool) -> void:
 	for inst in instances:
 		var item := inst as ItemInstance
 		names.append(Names.of(item.def) if item.def != null else "?")
-	_hint.text = "顶出了「%s」，已经拿在手上" % names[0] if grabbed else "顶出了 %d 件（%s），都放进暂存区了" % [names.size(), "、".join(names)]
+	_hint.text = "顶出了「%s」，已经拿在手上" % names[0] if grabbed else "顶出了 %d 件（%s），都放在地上了" % [names.size(), "、".join(names)]
 
 
 func _label(text: String, font_size: int, color: Color) -> Label:

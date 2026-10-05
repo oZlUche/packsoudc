@@ -5,7 +5,7 @@
 ##
 ## [codeblock]
 ## InventoryView  网格：落点是格坐标，可能压着别人（顶替）
-## StashView      列表：落点是插入行号，永远不会压着谁
+## GroundLayer    地上（128）：落点是放手点（归一化屏幕坐标），永远不会压着谁
 ## [endcodeblock]
 ##
 ## 刻意不用 Godot 内置的 _get_drag_data / _can_drop_data：
@@ -16,8 +16,8 @@
 ##
 ## 拖「包」时内容物跟着一起走：抓取走 [method GridInventory.detach_bag]，
 ## 放手走 [method GridInventory.attach_bag]，载荷存在 [member _payload] 里。
-## 087（作者定）：**包也能放进暂存区 / 容器**（列表与自由容器收不下「摆好的一袋」，包进去、内容物脱落进暂存区），
-## **包可以替换包**（压到棋盘上另一个包上：旧包连内容物摘下，内容物进暂存区、旧包拿在手上，和顶替一件道具同一套感觉）。
+## 087（作者定）：**包也能放到地上 / 容器**（列表与自由容器收不下「摆好的一袋」，包进去、内容物脱落到地上），
+## **包可以替换包**（压到棋盘上另一个包上：旧包连内容物摘下，内容物到地上、旧包拿在手上，和顶替一件道具同一套感觉）。
 class_name DragLayer
 extends Control
 
@@ -37,8 +37,9 @@ var stash: ItemStash = null
 ## 「能不能放到那儿」的第二道门（第一道是视图发不发 grab_requested）：`func(inst: ItemInstance, target: ItemContainer) -> bool`，
 ## 无效 = 哪儿都能放。容器屏用它把没揭示的东西圈在容器里（058 第 5 条：未搜的只能在容器内挪位）
 var drop_filter: Callable = Callable()
-## 084（作者定）：**棋盘外的空间全都是暂存区** —— 放手时底下没有任何容器视图，就进 [member stash]（追加在末尾），
-## 而不是退回原处。暂存区不限大小，所以这一下总能成（带内容物的包、被 drop_filter 拦的除外）。
+## 084（作者定）：**棋盘外的空间全都是地上** —— 放手时底下没有任何容器视图，就进 [member stash]（追加在末尾），
+## 而不是退回原处。128：登记了铺满屏的 [GroundLayer] 时落点 = 放手点；从地上拿起又放回地上 = 改落点。
+## 地上不限大小，所以这一下总能成（被 drop_filter 拦的除外）。
 ## 一局里的整理面板开它；开局屏（仓库 ↔ 棋盘）不开，那儿放到外面还是退回
 var drop_outside_to_stash: bool = false
 ## 配方查询 `func(a: ItemInstance, b: ItemInstance) -> ItemDef`：拖起一件时，所有能和它合成的那几件亮一圈；
@@ -59,6 +60,8 @@ var _src_origin: Vector2i = Vector2i.ZERO
 var _src_rot: int = 0
 ## 源容器是列表时的原行号，取消拖拽要按它插回去
 var _src_index: int = -1
+## 128：源容器是地上时的原落点
+var _src_spot: Vector2 = ItemStash.NO_SPOT
 ## 抓取点相对物品 origin 的格偏移，拖拽时用它反推落点
 var _grab_cell: Vector2i = Vector2i.ZERO
 var _rot: int = 0
@@ -69,6 +72,7 @@ var _payload: Dictionary = {}
 func _ready() -> void:
 	# 空闲时不能挡住下面的容器接收点击
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	z_index = 50     # 128：残影画在地上（导演那一层盖在各屏上面）的东西之上
 	set_process_input(false)
 
 
@@ -99,6 +103,8 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 	var from := view.container()
 	if is_dragging() or from == null:
 		return
+	if view is GroundLayer and (view as GroundLayer).top_drag() != null and (view as GroundLayer).top_drag() != self:
+		return     # 128：同一层地接着好几块面板，只有最上面那块抓
 	var inst := from.get_item(uid)
 	if inst == null:
 		return
@@ -113,9 +119,10 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 	_inst = inst
 
 	if from is ItemStash:
-		# 列表里没有坐标，抓取点一律当作物品的左上角
-		_grab_cell = Vector2i.ZERO
+		# 列表里没有坐标；画在地上的按抓的是哪一格（128），否则一律当作物品的左上角
+		_grab_cell = (view as GroundLayer).grab_cell_at(uid, local_pos) if view is GroundLayer else Vector2i.ZERO
 		_src_index = (from as ItemStash).index_of(uid)
+		_src_spot = (from as ItemStash).spot_of(uid)
 		if from.remove(uid) == null:
 			_source = null
 			_inst = null
@@ -201,7 +208,7 @@ func _input(event: InputEvent) -> void:
 ## 拖拽中顺时针转一步。
 ##
 ## 包也能转。内容物不跟着转，仍按原偏移画在残影上 —— 落到新轮廓之外的那些
-## 会在放手时脱落进暂存区，残影上先给它们打好标记，玩家放手前就看得见代价。
+## 会在放手时脱落到地上，残影上先给它们打好标记，玩家放手前就看得见代价。
 func rotate_dragged() -> void:
 	if _inst == null or _inst.def == null:
 		return
@@ -220,6 +227,8 @@ func rotate_dragged() -> void:
 ## 110：视图包在滚动容器里时，矩形按**当前**全局位置取（滚过之后会变），且被滚动区裁掉的部分不接落点
 func view_at(global_pos: Vector2) -> ContainerView:
 	for view in _views:
+		if view is GroundLayer and (view as GroundLayer).fills_screen:
+			continue     # 128：铺满屏的地上 = 「棋盘外」，不当落点视图
 		if view.visible and visible_rect(view).has_point(global_pos):
 			return view
 	return _view_under_footprint(global_pos)
@@ -285,7 +294,7 @@ func target_origin(view: InventoryView, global_pos: Vector2) -> Vector2i:
 ## 残影的左上角（本控件内的坐标）。
 ## 在格子视图上方：**吸附到真正会落下的那一格** —— 放手落在哪、残影就画在哪，和落点高亮重合。
 ## 反馈（开局拖物品「有时对不准格子」）：以前残影永远让被抓的那一格正压在光标正下方（逐像素跟手），而落点按光标所在的格取整，
-## 光标靠近格子边缘时残影与落点相差近半格，看起来就是没对准。不在任何格子视图上方（暂存区 / 棋盘外）仍然跟手。
+## 光标靠近格子边缘时残影与落点相差近半格，看起来就是没对准。不在任何格子视图上方（地上 / 棋盘外）仍然跟手。
 ## 本控件不在场景树里（测试）时 global_position 就是 position，换算照样成立
 func ghost_anchor(global_pos: Vector2) -> Vector2:
 	var view := view_at(global_pos)
@@ -307,26 +316,12 @@ func update_preview(global_pos: Vector2) -> void:
 	for view in _views:
 		if view != target:
 			view.clear_preview()
-	if target == null:
-		# 棋盘外 = 暂存区（084）：在暂存区列表的末尾画插入线，玩家放手前就知道东西会去哪
-		var sv := _stash_view()
-		if sv != null and _drops_outside_to_stash() and _drop_allowed(stash) and _stash_accepts(stash, _inst):
-			sv.set_insert_preview(stash.item_count())
-		return
+	if target == null or target is GroundLayer:
+		return     # 128：棋盘外 = 地上，残影跟手，放手在哪就落在哪（不再画插入线）
 	if target.container() == null:
 		return
 	if not _drop_allowed(target.container()):
 		target.clear_preview()
-		return
-
-	if target is StashView:
-		var sv := target as StashView
-		# 列表落点只有「插在第几行」，不存在压着谁的问题。
-		# 唯一会失败的是塞不下或标签不收 —— 那时不画插入线
-		if _stash_accepts(sv.stash, _inst):
-			sv.set_insert_preview(sv.insert_index_at_global(global_pos))
-		else:
-			sv.clear_preview()
 		return
 
 	var grid_view := target as InventoryView
@@ -336,7 +331,7 @@ func update_preview(global_pos: Vector2) -> void:
 
 	if not _payload.is_empty():
 		if not inv.requires_bag:
-			# 087：自由容器收不下摆好的一袋：包进去、内容物脱落进暂存区
+			# 087：自由容器收不下摆好的一袋：包进去、内容物脱落到地上
 			var bag: ItemInstance = _payload["bag"]
 			var fine := inv.can_place_def(bag.def, origin, _rot, bag.uid) and _can_shed(_payload_items())
 			grid_view.set_preview(cells, origin, fine, [], true)
@@ -376,12 +371,12 @@ func _drop_allowed(target: ItemContainer) -> bool:
 	return not drop_filter.is_valid() or _inst == null or bool(drop_filter.call(_inst, target))
 
 
-## 现在这一下放到外面会不会进暂存区（开着开关、有暂存区）。带东西的包也行（087）：包和内容物都进去
+## 现在这一下放到外面会不会到地上（开着开关、有地上）。带东西的包也行（087）：包和内容物都进去
 func _drops_outside_to_stash() -> bool:
 	return drop_outside_to_stash and stash != null and _inst != null
 
 
-## 载荷里除了包本身的全部实例：内容物 + 跨包的（087：包进列表 / 自由容器时它们脱落进暂存区）
+## 载荷里除了包本身的全部实例：内容物 + 跨包的（087：包进列表 / 自由容器时它们脱落到地上）
 func _payload_items() -> Array:
 	var out: Array = []
 	if _payload.is_empty():
@@ -393,7 +388,7 @@ func _payload_items() -> Array:
 
 
 ## 087：手上这个包放到这儿会替换掉哪个包。条件：新包每一格在界内、不是禁用格；压到的包恰好一个（不是自己）；
-## 压到的普通道具全是那个包的内容物 / 跨包物（别的包里的东西不能被压）；那个包的东西有地方去（暂存区）。不能替换返回 EMPTY_UID
+## 压到的普通道具全是那个包的内容物 / 跨包物（别的包里的东西不能被压）；那个包的东西有地方去（地上）。不能替换返回 EMPTY_UID
 func _replaceable_bag(inv: GridInventory, origin: Vector2i) -> int:
 	if _inst == null or _inst.def == null or not inv.acts_as_bag(_inst.def):
 		return GridInventory.EMPTY_UID
@@ -425,7 +420,7 @@ func _replaceable_bag(inv: GridInventory, origin: Vector2i) -> int:
 
 
 ## 087：用手上的包替换 [method _replaceable_bag] 找到的那个：旧包连内容物摘下，新包（连它自己的内容物）放上，
-## 旧包的东西与新包放不下的东西进暂存区，旧包拿在手上（作为顶替的那一件）。失败时容器原样不动
+## 旧包的东西与新包放不下的东西到地上，旧包拿在手上（作为顶替的那一件）。失败时容器原样不动
 func _drop_replacing_bag(inv: GridInventory, at: Vector2i) -> Dictionary:
 	var failed := {"ok": false, "victims": []}
 	var victim_uid := _replaceable_bag(inv, at)
@@ -458,18 +453,26 @@ func _drop_replacing_bag(inv: GridInventory, at: Vector2i) -> Dictionary:
 		return failed
 	if not shed.is_empty():
 		if stash == null or not _admit_all(stash, shed):
-			push_error("DragLayer: 被替换的包里的东西放不进暂存区")
+			push_error("DragLayer: 被替换的包里的东西放不到地上")
 		else:
 			items_shed.emit(shed)
 	return {"ok": true, "victims": [old]}
 
 
-## 登记过的视图里画 [member stash] 的那个（没有就 null：那就不画预览，照样能放）
-func _stash_view() -> StashView:
+## 128：登记过的、铺满屏画 [member stash] 的那层地（没有就 null：放到外面就自动找空处）
+func _ground_view() -> GroundLayer:
 	for view in _views:
-		if view is StashView and (view as StashView).stash == stash:
+		if view is GroundLayer and (view as GroundLayer).fills_screen and (view as GroundLayer).stash == stash:
 			return view
 	return null
+
+
+## 128：放手在 [param global_pos]，这件在地 [param ground] 上落在哪（没有地 = [constant ItemStash.NO_SPOT]）
+func _drop_spot(ground: GroundLayer, global_pos: Vector2, inst: ItemInstance) -> Vector2:
+	if ground == null:
+		return ItemStash.NO_SPOT
+	var top_left := global_pos - (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * InventoryView.CELL
+	return ground.spot_for_drop(top_left, inst, _rot)
 
 
 ## 这件东西能不能进这个列表。列表没有坐标，装不下「包 + 各内容物的相对位置」——
@@ -499,22 +502,33 @@ func drop_at(global_pos: Vector2) -> bool:
 	if target != null and not _drop_allowed(target.container()):
 		target = null     # 那儿不许放：当没放，退回源容器
 	elif target == null and _drops_outside_to_stash() and _drop_allowed(stash) and _stash_accepts(stash, inst):
-		# 棋盘外的空间全都是暂存区（084）：从暂存区里拖出来又放到外面 = 放回原行；别处来的追加在末尾
-		if _source == stash:
+		# 棋盘外的空间全都是地上（084 / 128）：落点 = 放手点；从地上拿起又放回地上 = 改落点（列表里的行不变）；
+		# 没有铺满屏的地层（测试）时，地上来的放回原处，别处来的追加在末尾、自动找空处
+		var spot := _drop_spot(_ground_view(), global_pos, inst)
+		if _source == stash and ItemStash.has_spot_value(spot):
+			dropped = stash.insert(inst, _src_index, spot)
+			if not dropped:
+				_restore()
+		elif _source == stash:
 			_restore()
 		else:
-			dropped = _admit_with_payload(stash, inst, -1)
+			dropped = _admit_with_payload(stash, inst, -1, spot)
 			home = stash
 		if _source == stash or dropped:
 			_end_drag()
 			drag_finished.emit(inst.uid, dropped)
 			return dropped
-	if target is StashView:
-		var sv := target as StashView
-		if _stash_accepts(sv.stash, inst):
-			dropped = _admit_with_payload(sv.stash, inst, sv.insert_index_at_global(global_pos))
+	if target is GroundLayer:
+		# 一块地（开局屏、沙盒）：落在放手点
+		var gl := target as GroundLayer
+		if _stash_accepts(gl.stash, inst):
+			var at_spot := _drop_spot(gl, global_pos, inst)
+			if _source == gl.stash:
+				dropped = gl.stash.insert(inst, _src_index, at_spot)
+			else:
+				dropped = _admit_with_payload(gl.stash, inst, -1, at_spot)
 		if dropped:
-			home = sv.stash
+			home = gl.stash
 	elif target != null and (target as InventoryView).inventory != null:
 		var grid_view := target as InventoryView
 		var at := target_origin(grid_view, global_pos)
@@ -562,11 +576,11 @@ func drop_at(global_pos: Vector2) -> bool:
 	return dropped
 
 
-## 放下一个包（可能带着内容物、可能换了朝向）。脱落的内容物进暂存区；
+## 放下一个包（可能带着内容物、可能换了朝向）。脱落的内容物到地上；
 ## 没地方安置就整件事不成立，容器原样不动。
 func _drop_bag(inv: GridInventory, at: Vector2i) -> bool:
 	if not inv.requires_bag:
-		# 087：自由容器（战利品箱、出售区……）收不下摆好的一袋：包当普通物品放进去，内容物脱落进暂存区
+		# 087：自由容器（战利品箱、出售区……）收不下摆好的一袋：包当普通物品放进去，内容物脱落到地上
 		var bag: ItemInstance = _payload["bag"]
 		var loose := _payload_items()
 		if not inv.can_place_def(bag.def, at, _rot, bag.uid) or not _can_shed(loose):
@@ -590,9 +604,9 @@ func _drop_bag(inv: GridInventory, at: Vector2i) -> bool:
 	if shed.is_empty():
 		return true
 	if not _admit_all(stash, shed):
-		# 预览刚说过塞得下，走到这里说明暂存区在别处被动过。绝不能让东西悬着：
+		# 预览刚说过塞得下，走到这里说明地上在别处被动过。绝不能让东西悬着：
 		# 把包连同还在里面的东西摘回来，脱落的也一并塞回载荷，整件事作废。
-		push_error("DragLayer: 脱落的内容物放不进暂存区，整件事作废")
+		push_error("DragLayer: 脱落的内容物放不到地上，整件事作废")
 		# 原载荷里每一件的引用都还在（脱落的从没被放下，其余的这一下摘回来），
 		# 之后 _restore 用它整体放回原处即可
 		inv.detach_bag((_payload["bag"] as ItemInstance).uid)
@@ -658,7 +672,7 @@ func _drop_displacing(inv: GridInventory, inst: ItemInstance, at: Vector2i) -> D
 	if victims.size() < 2:
 		return {"ok": true, "victims": victims}
 
-	# 多于一件：全部进暂存区，进不去就整件事作废。
+	# 多于一件：全部到地上，进不去就整件事作废。
 	# 只塞进去一半、另一半留在手上，玩家根本追不过来。
 	if stash != null and _admit_all(stash, victims):
 		return {"ok": true, "victims": victims}
@@ -673,9 +687,9 @@ func _drop_displacing(inv: GridInventory, inst: ItemInstance, at: Vector2i) -> D
 	return failed
 
 
-## 安置被顶出来的物品：一件就直接拿在手上，多于一件已经在暂存区了。
+## 安置被顶出来的物品：一件就直接拿在手上，多于一件已经在地上了。
 ##
-## 「一件就上手」是因为那几乎总是接下来要挪的东西 —— 顶掉它再去暂存区里翻出来，
+## 「一件就上手」是因为那几乎总是接下来要挪的东西 —— 顶掉它再去地上翻出来，
 ## 中间那两下纯属多余。
 func _settle_displaced(victims: Array, home: ItemContainer, global_pos: Vector2) -> void:
 	if victims.size() == 1:
@@ -704,12 +718,13 @@ func _displaceable(inv: GridInventory, origin: Vector2i) -> Array[int]:
 	return victims
 
 
-## 087：把手上的东西放进列表：包在 [param at] 行（-1 = 末尾），带着的内容物打散追加在后面。有一件放不下就整件事作废
-func _admit_with_payload(dest: ItemStash, inst: ItemInstance, at: int) -> bool:
+## 087：把手上的东西放进列表：包在 [param at] 行（-1 = 末尾）、落点 [param spot]（128），带着的内容物打散追加在后面（自动找空处）。
+## 有一件放不下就整件事作废
+func _admit_with_payload(dest: ItemStash, inst: ItemInstance, at: int, spot: Vector2 = ItemStash.NO_SPOT) -> bool:
 	var loose := _payload_items()
 	if not dest.room_for(1 + loose.size()):
 		return false
-	if not dest.insert(inst, at):
+	if not dest.insert(inst, at, spot):
 		return false
 	if loose.is_empty():
 		return true
@@ -752,9 +767,9 @@ func _restore() -> void:
 	if _inst == null or _source == null:
 		return
 	if _source is ItemStash:
-		if (_source as ItemStash).insert(_inst, _src_index):
+		if (_source as ItemStash).insert(_inst, _src_index, _src_spot):
 			return
-		push_error("DragLayer: uid %d 放不回暂存区，物品已丢失" % _inst.uid)
+		push_error("DragLayer: uid %d 放不回地上，物品已丢失" % _inst.uid)
 		return
 	if not _payload.is_empty():
 		if not (_source as GridInventory).attach_bag(_payload, _src_origin, _src_rot):
@@ -780,6 +795,7 @@ func _end_drag() -> void:
 	_highlight_partners()     # _inst 空了：全熄
 	_source = null
 	_src_index = -1
+	_src_spot = ItemStash.NO_SPOT
 	_payload = {}
 	set_process_input(false)
 	queue_redraw()

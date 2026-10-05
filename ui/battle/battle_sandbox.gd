@@ -8,7 +8,7 @@
 extends Control
 
 const BOARD_SIZE := Vector2i(7, 9)
-## 暂存区是个**列表**，不是一块地方：摆不下、或者暂时不想要的东西放这儿，
+## 地上是个**列表**，不是一块地方：摆不下、或者暂时不想要的东西放这儿，
 ## 它不参战，摆在第几行也不承载任何信息（见 [ItemStash]）。
 ## 所以「拿下来」和「扔掉」不再是同一个动作。
 const STORAGE_WIDTH := 200
@@ -99,11 +99,11 @@ func _build_ui() -> void:
 	_hint = _label("同一种子 → 逐条相同的回放。改变棋盘才会改变结果。", 12, UiPalette.DIM)
 	left.add_child(_hint)
 
-	left.add_child(_label("暂存区　放这儿的不参战　拖行即可取放", 13, UiPalette.DIM))
-	var storage_view := StashView.new()
+	left.add_child(_label("地上　放这儿的不参战　放手在哪就落在哪", 13, UiPalette.DIM))
+	var storage_view := GroundLayer.new()     # 128：地上
 	storage_view.label_font = _font
 	storage_view.stash = _storage
-	storage_view.custom_minimum_size.x = STORAGE_WIDTH
+	storage_view.custom_minimum_size = Vector2(STORAGE_WIDTH, 240)
 	storage_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(storage_view)
 
@@ -180,7 +180,7 @@ func _seed_board() -> void:
 
 
 ## 顶掉别人之后给一句交代。不说的话，东西就是「不见了」——
-## 玩家不会去暂存区找一件自己都不知道被挤走的物品。
+## 玩家不会去地上找一件自己都不知道被挤走的物品。
 func _on_displaced(instances: Array, grabbed: bool) -> void:
 	var names: Array[String] = []
 	for inst in instances:
@@ -189,7 +189,7 @@ func _on_displaced(instances: Array, grabbed: bool) -> void:
 	if grabbed:
 		_hint.text = "顶出了「%s」，已经拿在手上。" % names[0]
 	else:
-		_hint.text = "顶出了 %d 件（%s），都放进暂存区了。" % [names.size(), "、".join(names)]
+		_hint.text = "顶出了 %d 件（%s），都放到地上了。" % [names.size(), "、".join(names)]
 
 
 func _on_reseed() -> void:

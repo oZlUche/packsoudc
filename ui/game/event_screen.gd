@@ -74,7 +74,7 @@ func _open_result(payload: Dictionary) -> void:
 		var d := flow.items.get_def(StringName(String(id)))
 		names.append(d.display_name if d != null else String(id))
 	if not names.is_empty():
-		lines.append("得到：%s（已放进暂存区）" % "、".join(names))
+		lines.append("得到：%s（已放到地上）" % "、".join(names))
 	if int(detail.get("restored", 0)) != 0:
 		lines.append("体力 +%d" % int(detail["restored"]))
 	if int(detail.get("spent", 0)) != 0:

@@ -947,7 +947,7 @@ static func import_event(data: Dictionary, ctx: Context, report: ImportReport) -
 		if teleports and stays:
 			report.error("options[%d].outcomes" % i, "传送不能和搜索 / 开店 / 接下一个事件放在同一个选项里：人走了会话就断了")
 		if teleports and gives:
-			report.error("options[%d].outcomes" % i, "传送不能和给道具放在同一个选项里：离开发生过事的点暂存区会清空，给的东西立刻没了")
+			report.error("options[%d].outcomes" % i, "传送不能和给道具放在同一个选项里：离开发生过事的点地上会清空，给的东西立刻没了")
 		for k in opt.requires.size():
 			var cond := opt.requires[k] as EventCondition
 			var cat := "options[%d].requires[%d]" % [i, k]

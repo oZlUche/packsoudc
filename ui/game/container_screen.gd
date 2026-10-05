@@ -1,6 +1,6 @@
 ## 容器屏（063；作者：搜索和战利品本质上是同一个界面，只是装载的生成规则不同）。
 ##
-## 左边是渐进揭示的容器（[LootView]），右边是自己的棋盘与暂存区，同一层拖拽盖着三块 —— 亮出来的直接拖走。
+## 左边是渐进揭示的容器（[LootView]），右边是自己的棋盘与地上，同一层拖拽盖着三块 —— 亮出来的直接拖走。
 ## 装的是**尸体容器 / 待拾取**（payload 带 `container`）时按钮是「快速搜索 / 全部拾取 / 收起」—— 收起只是回地图，没拿的留在这个点上，
 ## 地图上「回到这个点」能再开，走了才没（084）；
 ## 装的是**搜索会话**（payload 带 `session`）时容器是会话的收获箱：这一屏就是**刚搜的那一次**（084 作者定的循环：事件屏选「搜索」
@@ -40,7 +40,7 @@ func open(payload: Dictionary) -> void:
 	row.add_child(left)
 	var boss := _session == null and flow.run != null and flow.run.boss_cleared
 	left.add_child(_label("搜索点 %d　第 %d 次翻找" % [node.id if node != null else -1, _session.searches_done] if _session != null else
-		("BOSS 的战利品　拖到棋盘带走；收起就直接撤离结算" if boss else "战利品　拖到棋盘或暂存区带走"), 16, UiPalette.FG))
+		("BOSS 的战利品　拖到棋盘带走；收起就直接撤离结算" if boss else "战利品　拖到棋盘或地上带走"), 16, UiPalette.FG))
 	_loot = LootView.new()
 	_loot.label_font = font
 	_loot.inventory = _container
@@ -61,7 +61,7 @@ func open(payload: Dictionary) -> void:
 	_skip_btn = _button("快速搜索", skip_reveal, 13)
 	buttons.add_child(_skip_btn)
 	var take := _button("全部拾取", take_all, 13, UiPalette.Tier.PRIMARY)
-	take.tooltip_text = "先进背包，放不下的进暂存区"
+	take.tooltip_text = "先进背包，放不下的到地上"
 	buttons.add_child(take)
 	if _session != null:
 		var close := _button("关闭", close_search, 13)
@@ -85,7 +85,7 @@ func open(payload: Dictionary) -> void:
 	inv.hint_sink = func(text: String): _log_line(text)
 	_inv = inv
 	row.add_child(inv)
-	# 084：容器里双击 → 试着放进背包（没空间就提示并进暂存区）；没亮的不动。
+	# 084：容器里双击 → 试着放进背包（没空间就提示并到地上）；没亮的不动。
 	# 玩家自己的东西放回容器不会变成「未知」：LootView 把绑定之后才出现的都当亮过
 	_loot.item_double_clicked.connect(func(_v: ContainerView, uid: int): quick_take(uid))
 	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -130,7 +130,7 @@ func close_search() -> bool:
 	return flow.close_search()
 
 
-## 084：容器里双击一件：亮了的才动；先试背包（自动找位），放不下提示并进暂存区。返回去了哪（"board" / "storage" / ""）
+## 084：容器里双击一件：亮了的才动；先试背包（自动找位），放不下提示并到地上。返回去了哪（"board" / "storage" / ""）
 func quick_take(uid: int) -> String:
 	if _container == null or _loot.is_locked(uid):
 		return ""
@@ -141,7 +141,7 @@ func quick_take(uid: int) -> String:
 		_log_line("「%s」放进了背包" % inst.def.display_name)
 		return "board"
 	if InventoryService.transfer_auto(_container, uid, flow.run.storage):
-		_log_line("背包里没有空间放「%s」，放进了暂存区" % inst.def.display_name)
+		_log_line("背包里没有空间放「%s」，放在了地上" % inst.def.display_name)
 		return "storage"
 	return ""
 
@@ -157,7 +157,7 @@ func skip_reveal() -> void:
 	_loot.skip()
 
 
-## 全拿走（先全亮）：123 先进背包棋盘，放不下的进暂存区。屏不自动关（084 作者定），设置「拿走最后一件后自动关闭」开了才关（_on_container_changed 管）
+## 全拿走（先全亮）：123 先进背包棋盘，放不下的到地上。屏不自动关（084 作者定），设置「拿走最后一件后自动关闭」开了才关（_on_container_changed 管）
 func take_all() -> void:
 	_loot.reveal_all()
 	InventoryService.transfer_all_prefer(_container, flow.run.board, flow.run.storage)

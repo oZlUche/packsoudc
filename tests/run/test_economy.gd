@@ -486,11 +486,11 @@ static func run_shop_rollback(t: TestCase) -> void:
 	t.check(s.item_at(1) != null and s.item_at(1).uid == second.uid, "原样回到第 1 格")
 	t.eq(wallet.balance, 0, "钱没动")
 	t.check(s.available().has(1), "第 1 格还在架上（没记成卖出）")
-	# 暂存区里的也找得回来（拖到棋盘外 = 暂存区，084）
+	# 地上的也找得回来（拖到棋盘外 = 地上，084）
 	var stash := ItemStash.new(2, 0)
 	var third := s.item_at(2)
 	if third != null:
 		s.shelves[2].remove(third.uid)
 		stash.admit(third)
 		t.check(not s.pay_or_return(2, third.uid, [board, stash]), "钱不够：结不成")
-		t.check(not stash.has_item(third.uid) and s.item_at(2) != null, "从暂存区拿回来、回到架上")
+		t.check(not stash.has_item(third.uid) and s.item_at(2) != null, "从地上拿回来、回到架上")

@@ -23,7 +23,7 @@ static func run_typed_placeholders(t: TestCase) -> void:
 	t.check(TextTemplate.render("{enemy:brute}", ctx).begins_with("[color=@danger][b]"), "{enemy:}：danger 色")
 	t.eq(TextTemplate.plain("{enemy:brute}", ctx), "蛮兵", "敌人名读定义")
 	t.eq(TextTemplate.render("{ui:开战}", ctx), "[color=@good][b]开战[/b][/color]", "{ui:}：good 色")
-	t.eq(TextTemplate.render("{zone:暂存区}", ctx), "[color=@grant][b]暂存区[/b][/color]", "{zone:}：grant 色")
+	t.eq(TextTemplate.render("{zone:地上}", ctx), "[color=@grant][b]地上[/b][/color]", "{zone:}：grant 色")
 	t.eq(TextTemplate.render("{key:R}", ctx), "[color=@dim][b]R[/b][/color]", "{key:}：dim 色")
 	t.eq(TextTemplate.render("{item_stat:longsword:damage}", ctx), "[color=@fg][b]12[/b][/color]", "{item_stat:} 也上色")
 	t.eq(TextTemplate.plain("{item_stat:poison_vial:seconds}", ctx), "6", "{item_stat:} 能读规则节奏的 seconds")
@@ -32,7 +32,7 @@ static func run_typed_placeholders(t: TestCase) -> void:
 
 	var old := UiText.lang
 	UiText.lang = "en"
-	t.eq(TextTemplate.plain("{zone:暂存区}", ctx), "Stash", "英文界面：区域名换英文")
+	t.eq(TextTemplate.plain("{zone:地上}", ctx), "Ground", "英文界面：区域名换英文")
 	t.eq(TextTemplate.plain("{item:knife}", ctx), Names.of(knife, "en"), "英文界面：道具名跟语言")
 	UiText.lang = old
 

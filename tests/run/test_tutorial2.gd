@@ -239,7 +239,7 @@ static func _knife_on(s: RunState) -> ItemInstance:
 
 
 static func run_crafting_drop(t: TestCase) -> void:
-	t.begin("114 · 合成是拖到上面立刻合（作者定）：CraftingModule.craft —— 产物落在被压那件的位置、发一次 done；挨着放走一步不会自动合；装不下进暂存区并提醒；没配方不合")
+	t.begin("114 · 合成是拖到上面立刻合（作者定）：CraftingModule.craft —— 产物落在被压那件的位置、发一次 done；挨着放走一步不会自动合；装不下到地上并提醒；没配方不合")
 	var c := _content()
 	var s := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
 	t.not_null(s, "开得了局")
@@ -295,13 +295,13 @@ static func run_crafting_drop(t: TestCase) -> void:
 	while s3.board.try_add(ItemInstance.create(c.items.get_def(&"salve")), true):
 		pass     # 塞满
 	var r3 := cm3.craft(ItemInstance.create(c.items.get_def(&"poison_vial")), knife3.uid)
-	t.check(bool(r3["ok"]) and String(r3["where"]) == "storage", "产物装不下：进暂存区")
+	t.check(bool(r3["ok"]) and String(r3["where"]) == "storage", "产物装不下：到地上")
 	t.check((r3["log"] as Array).size() == 2 and String((r3["log"] as Array)[1]).contains("装不下"), "提醒玩家装不下")
 	var in_storage := false
 	for inst in s3.storage.items():
 		if (inst as ItemInstance).def.id == &"plate_cuirass":
 			in_storage = true
-	t.check(in_storage, "产物在暂存区里")
+	t.check(in_storage, "产物在地上")
 
 
 static func run_crafting_drag(t: TestCase) -> void:
@@ -324,10 +324,10 @@ static func run_crafting_drag(t: TestCase) -> void:
 	var view := InventoryView.new()
 	view.inventory = board
 	view.size = Vector2(board.size) * InventoryView.CELL
-	var sview := StashView.new()
+	var sview := GroundLayer.new()     # 128：一块地
 	sview.stash = stash
 	sview.position = Vector2(board.size.x * InventoryView.CELL + 40, 0)
-	sview.size = Vector2(220, 200)
+	sview.size = Vector2(400, 300)
 	var drag := DragLayer.new()
 	drag.register_view(view)
 	drag.register_view(sview)

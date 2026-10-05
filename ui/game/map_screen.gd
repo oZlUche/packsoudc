@@ -63,12 +63,12 @@ func pick_spawn(id: int) -> bool:
 	return true
 
 
-## 走一步。087 起暂存区按点保留（走了东西留在那个点上、回来能拿），109（作者定）：不再弹「暂存区里还有东西」的提示，直接走
+## 走一步。087 起地上按点保留（走了东西留在那个点上、回来能拿），109（作者定）：不再弹「地上还有东西」的提示，直接走
 func step(to_id: int) -> bool:
 	return flow.step_to(to_id)
 
 
-## 在撤离点上按「撤离」：先确认 —— 付多少钱、暂存区里有什么带不出去（3.4）。返回 false = 不在撤离点上
+## 在撤离点上按「撤离」：先确认 —— 付多少钱、地上有什么带不出去（3.4）。返回 false = 不在撤离点上
 func extract() -> bool:
 	var node := _run.current_node()
 	if node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract":
@@ -138,7 +138,7 @@ func _open_confirm(node: MapNode) -> void:
 			left_value += ItemValue.of(def)
 			if def.rarity >= 2:
 				rare += 1
-		col.add_child(_wrapped("暂存区里还有 %d 件（值 %d 币%s）不会带出去 —— 暂存区不参战也不出关（3.4）。想带走先放进棋盘（B）" % [
+		col.add_child(_wrapped("地上还有 %d 件（值 %d 币%s）不会带出去 —— 地上不参战也不出关（3.4）。想带走先放进棋盘（B）" % [
 			left, left_value, "，其中 %d 件稀有以上" % rare if rare > 0 else ""], 14, UiPalette.STAMINA, 480))
 	var buttons := _hbox(8)
 	var go := _button("确定撤离", func(): confirm_extract(), 14)
@@ -163,6 +163,7 @@ func toggle_bag() -> void:
 	var win := FloatingWindow.new()
 	win.setup("bag", "背包", font, toggle_bag, "收起（B）")
 	shade.add_child(win)
+	_reserve_ground(win)     # 128：背包浮窗占着的地方，地上的东西让开
 	var inv := InventoryPanelScript.new()
 	inv.setup(_run, font)
 	win.body().add_child(inv)
@@ -392,9 +393,9 @@ func _adopt() -> void:
 	var node_storage := NodeStorageModule.of(_run)     # 101：按点暂存是一局的模块，信号在它身上
 	if node_storage != null:
 		node_storage.dropped.connect(func(node_id: int, items: Array):
-			_note("　离开点 %d：暂存区里的 %s留在了那里（回来能拿）" % [node_id, StorageWarning.describe(items)]))
+			_note("　离开点 %d：地上的 %s留在了那里（回来能拿）" % [node_id, StorageWarning.describe(items)]))
 		node_storage.restored.connect(func(node_id: int, items: Array):
-			_note("　回到点 %d：留在这里的 %d 件回到了暂存区" % [node_id, items.size()]))
+			_note("　回到点 %d：留在这里的 %d 件回到了地上" % [node_id, items.size()]))
 	_run.loot_cleared.connect(_after_move)     # 084：没拿的战利品没了（拿完了、或走了），「回到这个点」跟着灰
 	var crafting := CraftingModule.of(_run)     # 101：合成是一局的模块
 	if crafting != null:
@@ -596,7 +597,7 @@ func _update_tooltip(id: int) -> void:
 		_tip.hide_tip()
 		return
 	var node := _run.map.get_node(id)
-	var stash := NodeTooltip.stash_text(_run, node)     # 反馈：每个点的暂存区悬停就能看，不受「节点浮窗」开关管
+	var stash := NodeTooltip.stash_text(_run, node)     # 反馈：每个点的地上悬停就能看，不受「节点浮窗」开关管
 	if not flow.tooltips_enabled():
 		if stash == "":
 			_tip.hide_tip()
@@ -645,14 +646,14 @@ func _refresh_hud() -> void:
 		return
 	_refresh_countdown()
 	if _run.phase == RunState.Phase.PICK_SPAWN:
-		_hud.text = "行动点 —　　挑出生点　　体力 %d/%d　　货币 %d　　暂存区 %d 件" % [
+		_hud.text = "行动点 —　　挑出生点　　体力 %d/%d　　货币 %d　　地上 %d 件" % [
 			_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count()]
 		return
 	var t := _run.travel
 	var extract_near := MapNavigator.nearest_of_type(_run.map, t.current_id, &"extract")
 	var rest := MapNavigator.nearest_of_type(_run.map, t.current_id, &"rest")
 	var core := MapNavigator.nearest_of_type(_run.map, t.current_id, &"core")
-	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d　　暂存区 %d 件　　" % [
+	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d　　地上 %d 件　　" % [
 		t.clock.total,
 		str(extract_near["steps"]) if int(extract_near["id"]) >= 0 else "—",
 		str(rest["steps"]) if int(rest["id"]) >= 0 else "—",
@@ -825,6 +826,7 @@ func _build() -> void:
 	cd_box.add_child(_countdown)
 	cd_box.visible = false
 	mid.add_child(cd_box)
+	_reserve_ground(cd_box)     # 128
 	_hud = _label("", 14, UiPalette.FG)
 	var hud_box := PanelContainer.new()
 	var st := StyleBoxFlat.new()
@@ -844,6 +846,7 @@ func _build() -> void:
 	hud_row.add_child(_faith_hud)
 	hud_box.add_child(hud_row)
 	mid.add_child(hud_box)
+	_reserve_ground(hud_box)     # 128
 	_view = MapView.new()
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_view.node_pressed.connect(_on_node_pressed)

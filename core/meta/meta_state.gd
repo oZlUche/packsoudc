@@ -380,7 +380,7 @@ func sell_preview(max_rarity: int, ratio: float = 0.5) -> Dictionary:
 	return out
 
 
-## 092（作者定；101 第 4 刀从 [GameFlow] 搬来）：离开结算屏时暂存区里没背出来的一键出售。这里只算不卖
+## 092（作者定；101 第 4 刀从 [GameFlow] 搬来）：离开结算屏时地上没背出来的一键出售。这里只算不卖
 static func left_behind_preview(result: RunResult, ratio: float = 0.5) -> Dictionary:
 	var out := {"count": 0, "funds": 0}
 	if result == null or not result.is_extracted():

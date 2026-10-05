@@ -1,7 +1,7 @@
 ## 战前准备屏（084，作者定）：踩上战斗点（或事件里选了开打、搜索遭遇了）先到这里，不是直接开打。
 ##
 ## 左边是对手：从节点内容重建的棋盘（[method EnemyKit.board_of]）与读数（生命 / DPS / 几件）—— 和真打出来的是同一份编译（4.2）；
-## 右边是自己的棋盘与暂存区（[InventoryPanel]），随便拖：拖出棋盘 = 放进暂存区（不参战，打完还在暂存区里；走了留在这个点、回来能拿）。
+## 右边是自己的棋盘与地上（[InventoryPanel]），随便拖：拖出棋盘 = 放到地上（不参战，打完还在地上；走了留在这个点、回来能拿）。
 ## 只有一个按钮「开战」：棋盘上一件会出手的东西都没有时灰掉（打不起来的仗不让开）。这一屏是**必须过的**：不能收起回地图，也走不了。
 extends GameScreen
 
@@ -25,7 +25,7 @@ func open(payload: Dictionary) -> void:
 	var col := _vbox(12)
 	panel.add_child(col)
 	col.add_child(_label("战前准备　%s　—— 整理好背包再开战" % _title_of(), 20, UiPalette.FG))
-	col.add_child(_wrapped("战斗是自动的：只有棋盘上包里的东西参战，武器自己出手、防具替你挨打，挨着放的互相加成。开战那一瞬胜负就定了，之后只是回放。拖出棋盘 = 弃置进暂存区（不参战，打完还在）。",
+	col.add_child(_wrapped("战斗是自动的：只有棋盘上包里的东西参战，武器自己出手、防具替你挨打，挨着放的互相加成。开战那一瞬胜负就定了，之后只是回放。拖出棋盘 = 弃置到地上（不参战，打完还在）。",
 		13, UiPalette.DIM, 1100))
 
 	var row := _hbox(28)
@@ -48,7 +48,7 @@ func open(payload: Dictionary) -> void:
 
 	var right := _vbox(8)
 	row.add_child(right)
-	right.add_child(_label("我的棋盘与暂存区", 14, UiPalette.FG))
+	right.add_child(_label("我的棋盘与地上", 14, UiPalette.FG))
 	_inv = InventoryPanelScript.new()
 	_inv.setup(flow.run, font)
 	right.add_child(_inv)

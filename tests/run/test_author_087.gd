@@ -332,11 +332,11 @@ static func run_shop_logic(t: TestCase) -> void:
 		t.check(not screen.quick_buy(inst.uid), "双击也买不了")
 		t.check(session.item_at(poor_slot) == inst, "商品还在栏位上")
 		run.wallet.earn(1000, &"test")
-		# 双击买：进包 / 暂存区
+		# 双击买：进包 / 地上
 		var b2 := run.wallet.balance
 		t.check(screen.quick_buy(inst.uid), "双击买")
 		t.eq(run.wallet.balance, b2 - int(session.stock[poor_slot]["price"]), "扣钱")
-		t.check(run.board.has_item(inst.uid) or run.storage.has_item(inst.uid), "东西进了包或暂存区")
+		t.check(run.board.has_item(inst.uid) or run.storage.has_item(inst.uid), "东西进了包或地上")
 		t.check(session.item_at(poor_slot) == null, "栏位空了")
 	# 卖：把自己的东西拖进出售区
 	var sell_me := ItemInstance.create(c.items.get_def(&"longsword"))
@@ -488,7 +488,7 @@ static func run_enemy_identity(t: TestCase) -> void:
 
 
 static func run_bags_move(t: TestCase) -> void:
-	t.begin("087 · 包能放进暂存区（内容物打散跟着进）、放进自由容器（内容物脱落进暂存区）")
+	t.begin("087 · 包能放到地上（内容物打散跟着进）、放进自由容器（内容物脱落到地上）")
 	var c := _content()
 	ItemInstance.reset_uid_counter()
 	var board := GridInventory.new(Vector2i(6, 4), 1, true)
@@ -501,10 +501,10 @@ static func run_bags_move(t: TestCase) -> void:
 	var view := InventoryView.new()
 	view.inventory = board
 	view.size = Vector2(board.size) * InventoryView.CELL
-	var sview := StashView.new()
+	var sview := GroundLayer.new()     # 128：一块地
 	sview.stash = stash
 	sview.position = Vector2(500, 0)
-	sview.size = Vector2(220, 300)
+	sview.size = Vector2(400, 300)
 	var bview := InventoryView.new()
 	bview.inventory = box
 	bview.position = Vector2(0, 400)
@@ -516,15 +516,15 @@ static func run_bags_move(t: TestCase) -> void:
 	drag.stash = stash
 	var shed: Array = []
 	drag.items_shed.connect(func(items: Array): shed.append(items.size()))
-	# 包 → 暂存区
+	# 包 → 地上
 	view.grab_requested.emit(view, bag.uid, Vector2(10, 10))
 	t.check(drag.is_dragging() and board.item_count() == 0, "抓起带东西的包")
 	var row_at := sview.position + Vector2(20, 10)
 	drag.update_preview(row_at)
-	t.check(drag.drop_at(row_at), "放进暂存区：成")
-	t.check(stash.has_item(bag.uid) and stash.has_item(knife.uid), "包和匕首都在暂存区里（打散成两行）")
+	t.check(drag.drop_at(row_at), "放到地上：成")
+	t.check(stash.has_item(bag.uid) and stash.has_item(knife.uid), "包和匕首都在地上（打散成两行）")
 	t.eq(shed, [1], "发了 items_shed：匕首脱落")
-	# 暂存区 → 棋盘（空包）→ 再放刀 → 包 → 自由容器
+	# 地上 → 棋盘（空包）→ 再放刀 → 包 → 自由容器
 	sview.grab_requested.emit(sview, bag.uid, Vector2(10, 10))
 	var at := (Vector2(0, 0) + Vector2(0.5, 0.5)) * InventoryView.CELL
 	drag.update_preview(at)
@@ -537,7 +537,7 @@ static func run_bags_move(t: TestCase) -> void:
 	drag.update_preview(box_at)
 	t.check(bview._preview_valid and bview._preview_costly, "预览：能放进自由容器、标着有代价（内容物脱落）")
 	t.check(drag.drop_at(box_at), "放进自由容器：成")
-	t.check(box.has_item(bag.uid) and stash.has_item(knife.uid), "包在容器里、匕首脱落进了暂存区")
+	t.check(box.has_item(bag.uid) and stash.has_item(knife.uid), "包在容器里、匕首脱落到了地上")
 	t.eq(shed.size(), 2, "又发了一次 items_shed")
 	for v in [view, sview, bview]:
 		v.free()

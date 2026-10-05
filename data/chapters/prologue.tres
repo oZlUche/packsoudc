@@ -1,21 +1,22 @@
 [gd_resource type="Resource" script_class="ChapterDef" format=3]
 
-[ext_resource type="Script" path="res://core/map/map_source.gd" id="1_re32b"]
-[ext_resource type="Script" path="res://core/run/chapter_def.gd" id="2_ll12k"]
+[ext_resource type="Script" path="res://core/map/map_source.gd" id="1_ll12k"]
+[ext_resource type="Script" path="res://core/run/run_module.gd" id="2_0yegb"]
+[ext_resource type="Script" path="res://core/run/chapter_def.gd" id="3_dnctx"]
 
-[sub_resource type="Resource" id="Resource_0yegb"]
-script = ExtResource("1_re32b")
+[sub_resource type="Resource" id="Resource_v5w8j"]
+script = ExtResource("1_ll12k")
 mode = 1
 preset_path = "res://data/maps/prologue.json"
 
 [resource]
-script = ExtResource("2_ll12k")
+script = ExtResource("3_dnctx")
 id = &"prologue"
 display_name = "序章：废墟边缘"
 display_names = {
 "en": "Prologue: Edge of the Ruins"
 }
-map_source = SubResource("Resource_0yegb")
+map_source = SubResource("Resource_v5w8j")
 drop_rule = &"standard"
 node_rules = &"prologue"
 economy_rules = &"prologue"
@@ -27,4 +28,4 @@ allow_carry_in = false
 auto_spawn = true
 skip_setup = true
 intro_event = &"tut_intro"
-rules = Array[String](["只有包里的东西参战，{zone:暂存区}里的留在这个点。", "{item:poison_vial}拖到{item:knife}上面，立刻合成{item:poisoned_knife}。", "打输了扣体力，体力归零这一局就结束。"])
+rules = Array[String](["只有包里的东西参战，{zone:地上}的留在这个点。", "{item:poison_vial}拖到{item:knife}上面，立刻合成{item:poisoned_knife}。", "打输了扣体力，体力归零这一局就结束。"])

@@ -1,4 +1,4 @@
-## 一局的壳（M5，架构文档 7 节）：开局、走、战利品进暂存区、买东西、战败与撤离、存档往返、读档之后接着走一样。
+## 一局的壳（M5，架构文档 7 节）：开局、走、战利品到地上、买东西、战败与撤离、存档往返、读档之后接着走一样。
 extends RefCounted
 
 const KIT: Array[StringName] = [&"bag_leather", &"bag_leather", &"rifle", &"pistol", &"armor", &"medkit"]
@@ -78,7 +78,7 @@ static func _signature(s: RunState) -> String:
 
 
 static func run_start(t: TestCase) -> void:
-	t.begin("一局 · 开局：图、敌人、付费撤离点、棋盘、暂存区、钱、体力都齐了")
+	t.begin("一局 · 开局：图、敌人、付费撤离点、棋盘、地上、钱、体力都齐了")
 
 	var c := _content()
 	var s := _start(c, 1)
@@ -109,7 +109,7 @@ static func run_start(t: TestCase) -> void:
 	for id in KIT:
 		if not c.items.get_def(id).is_bag:
 			non_bag_kit += 1
-	t.eq(s.board.item_count() - bags + s.storage.item_count(), non_bag_kit, "其余的东西不在棋盘就在暂存区，一件不少")
+	t.eq(s.board.item_count() - bags + s.storage.item_count(), non_bag_kit, "其余的东西不在棋盘就在地上，一件不少")
 	var me := s.compile_player()
 	t.check(me.rough_dps() > 0.0, "玩家编译出来会打（%.1f DPS）" % me.rough_dps())
 	t.check(s.tracker != null, "套装追踪器绑在棋盘上")
@@ -122,7 +122,7 @@ static func run_start(t: TestCase) -> void:
 
 
 static func run_loot_and_shop(t: TestCase) -> void:
-	t.begin("一局 · 战利品进待拾取再进暂存区；买的东西直接进暂存区；掉落合并不丢")
+	t.begin("一局 · 战利品进待拾取再到地上；买的东西直接到地上；掉落合并不丢")
 
 	var c := _content()
 	var s := _start_with_battle_next(c)
@@ -152,12 +152,12 @@ static func run_loot_and_shop(t: TestCase) -> void:
 		var loose := not s.pending_loot.is_bag_with_contents(first)
 		t.check(s.take_loot(first), "拿一件")
 		var moved := s.storage.item_count() - before
-		t.check(moved == 1 if loose else moved > 1, "进了暂存区（%d 件）" % moved)
+		t.check(moved == 1 if loose else moved > 1, "到了地上（%d 件）" % moved)
 		if n > moved:
 			t.eq(s.take_all_loot(), n - moved, "剩下的全拿")
 		t.check(s.pending_loot == null, "拿完待拾取清空")
-		# 123：全部拾取先进背包，放不下的进暂存区
-		t.eq(s.storage.item_count() + s.board.item_count(), before + before_board + n, "一件不少（背包 + 暂存区）")
+		# 123：全部拾取先进背包，放不下的到地上
+		t.eq(s.storage.item_count() + s.board.item_count(), before + before_board + n, "一件不少（背包 + 地上）")
 	t.check(not s.take_loot(1) and s.take_all_loot() == 0, "没有待拾取时拿不到东西")
 
 	# 待拾取还没处理又来一份：合并
@@ -200,17 +200,17 @@ static func run_loot_and_shop(t: TestCase) -> void:
 		t.not_null(session, "店开了")
 		if session != null:
 			t.not_null(session.buy(session.available()[0]), "买一件")
-			t.eq(s.storage.item_count() + s.board.item_count(), before + 1, "买的东西进了包（放不下进暂存区，087）")
+			t.eq(s.storage.item_count() + s.board.item_count(), before + 1, "买的东西进了包（放不下到地上，087）")
 			s.close_sessions()
 			t.check(s.events.current_shop == null, "关门")
 
-	# 暂存区 ↔ 棋盘
+	# 地上 ↔ 棋盘
 	if s.storage.item_count() > 0:
 		var uid: int = (s.storage.items()[0] as ItemInstance).uid
 		var on_board := s.board.item_count()
 		if s.equip(uid):
-			t.eq(s.board.item_count(), on_board + 1, "暂存区 → 棋盘")
-			t.check(s.unequip(uid), "棋盘 → 暂存区")
+			t.eq(s.board.item_count(), on_board + 1, "地上 → 棋盘")
+			t.check(s.unequip(uid), "棋盘 → 地上")
 			t.eq(s.board.item_count(), on_board, "回来了")
 
 
@@ -285,7 +285,7 @@ static func run_save(t: TestCase) -> void:
 	t.not_null(back, "读得回来")
 	if back == null:
 		return
-	t.eq(_signature(back), _signature(s), "语义签名一致：图、内容、旅程、体力、钱、棋盘、暂存区、待拾取、随机流")
+	t.eq(_signature(back), _signature(s), "语义签名一致：图、内容、旅程、体力、钱、棋盘、地上、待拾取、随机流")
 	t.eq(RunSave.to_text(back), text, "再存一次逐字节相同")
 	t.eq(back.phase, RunState.Phase.ON_MAP, "阶段接着")
 	t.check(back.events != null and back.events.travel == back.travel, "节点事件重新接上了旅程")

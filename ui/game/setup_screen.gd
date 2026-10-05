@@ -6,18 +6,18 @@
 ## 拖上棋盘那一刻东西就离开了仓库；出发时存 meta，回主菜单就放回去。
 ## 所有动作都是公开方法（[method choose_chapter]、[method choose_character]、[method carry_in]、[method store]、[method depart]、[method cancel]），按钮只是调它们；测试直接调。
 ##
-## **暂存区**（090，作者定）：上一局带回来、还没置入的东西（`MetaState.board`）进这一屏时挪进中间的暂存区（记住各自原位）。
+## **地上**（090，作者定）：上一局带回来、还没置入的东西（`MetaState.board`）进这一屏时挪进中间的地上（记住各自原位）。
 ## 往包里拖 = 带上、往仓库拖 = 置入、留着的**出发就没了**；回主菜单则原样放回带回来的棋盘（视为没发生过移动）。
-## 仓库的东西进不了暂存区（会丢）。
+## 仓库的东西进不了地上（会丢）。
 ##
 ## 没有角色定义（老内容、测试）时退回老路：按第一套开局装备开。
 ##
 ## **预设装备**（096，作者定）：角色之下一栏「预设装备」—— 不带 / 强攻（伤害高）/ 坚守（防御高）……（`LoadoutDef.preset`，数据里加一份就多一套）。
-## 挑一套就把它的道具免费放进初始包：不从仓库拿、不算带入预算与件数上限、拖不进仓库 / 暂存区（只能在棋盘上挪），出发时带着走。
+## 挑一套就把它的道具免费放进初始包：不从仓库拿、不算带入预算与件数上限、拖不进仓库 / 地上（只能在棋盘上挪），出发时带着走。
 ## 预设是底线（094）：仓库空也有一套能打的
 extends GameScreen
 
-## 暂存区容器的 id（局外的 100 / 101 之外）
+## 地上容器的 id（局外的 100 / 101 之外）
 const STASH_ID := 110
 
 var chapter_index: int = 0
@@ -36,12 +36,12 @@ var _scale_box: VBoxContainer
 var run_seed: int = 1
 ## 这个角色的棋盘，初始包摆好；从仓库拖进来的东西就在上面。出发时整块记成 layout 交给 RunState
 var board: GridInventory = null
-## 090：暂存区 —— 上一局带回来、还没置入的东西
+## 090：地上 —— 上一局带回来、还没置入的东西
 var stash: ItemStash = null
-## 090：暂存区里那些东西的来处：uid → {"origin", "rot"}（回主菜单按原位放回）
+## 090：地上那些东西的来处：uid → {"origin", "rot"}（回主菜单按原位放回）
 var _pending: Dictionary = {}
 var _stash_box: VBoxContainer = null
-var _stash_view: StashView = null
+var _stash_view: GroundLayer = null
 var _stash_title: Label = null
 
 ## 083：开局屏列的章节（按解锁过滤、按 order 排）与这一章能选的角色
@@ -140,7 +140,7 @@ func open(_payload: Dictionary) -> void:
 	_board_host = _vbox(6)
 	grids.add_child(_board_host)
 
-	# 090：中间是暂存区（有上一局带回来的东西才显示）
+	# 090：中间是地上（有上一局带回来的东西才显示）
 	_stash_box = _vbox(6)
 	grids.add_child(_stash_box)
 
@@ -169,16 +169,16 @@ func open(_payload: Dictionary) -> void:
 	choose_difficulty(0)
 
 
-## 090：暂存区那一栏。上一局带回来、还没置入的东西从带回来的棋盘挪进来，记住各自原位（回主菜单原样放回）
+## 090：地上那一栏。上一局带回来、还没置入的东西从带回来的棋盘挪进来，记住各自原位（回主菜单原样放回）
 func _build_stash() -> void:
 	stash = ItemStash.new(STASH_ID, 0)
 	_pending = flow.meta.take_board_to_stash(stash)     # 101 第 4 刀：挪与记原位的账在 MetaState 里
 	_stash_title = _label("", 15, UiPalette.DIM)
 	_stash_box.add_child(_stash_title)
 	_stash_box.add_child(_wrapped("上一局带回来、还没置入的东西先放在这儿。往包里拖 = 带上；往仓库拖 = 收进仓库；留在这儿的出发就没了；回主菜单则原样放回带回来的背包", 12, UiPalette.DIM, 240))
-	_stash_view = StashView.new()
+	_stash_view = GroundLayer.new()     # 128：一块地，放手在哪就落在哪
 	_stash_view.label_font = font
-	_stash_view.custom_minimum_size.x = 240
+	_stash_view.custom_minimum_size = Vector2(240, 320)
 	_stash_view.stash = stash
 	_stash_view.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_stash_box.add_child(_stash_view)
@@ -189,7 +189,7 @@ func _build_stash() -> void:
 	_stash_box.visible = not _pending.is_empty()
 
 
-## 090：落点规则。仓库的东西进不了暂存区（进去就等于出发时丢掉）；暂存区的东西上棋盘要这一章允许带入
+## 090：落点规则。仓库的东西进不了地上（进去就等于出发时丢掉）；地上的东西上棋盘要这一章允许带入
 func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 	if inst == null:
 		return false
@@ -199,7 +199,7 @@ func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 		var c := chapter()
 		return c == null or c.allow_carry_in
 	if _preset_uids.has(inst.uid) and target != board:
-		return false     # 096：预设套的东西只能在棋盘上挪，进不了仓库 / 暂存区
+		return false     # 096：预设套的东西只能在棋盘上挪，进不了仓库 / 地上
 	return true
 
 
@@ -390,7 +390,7 @@ func character() -> CharacterDef:
 	return _characters[character_index] if character_index < _characters.size() else null
 
 
-## 把仓库（或 090 暂存区）里的一件带上（自动找位置，和拖进包里一样）。放不进返回 false
+## 把仓库（或 090 地上）里的一件带上（自动找位置，和拖进包里一样）。放不进返回 false
 func carry_in(uid: int) -> bool:
 	if board == null:
 		return false
@@ -403,7 +403,7 @@ func carry_in(uid: int) -> bool:
 
 
 ## 109（作者定）：开局屏的双击快速置入，和局内（084 [method InventoryPanel.quick_move]）同一个形状：
-## 仓库 / 暂存区 → 初始包的棋盘；棋盘 → 仓库（初始包自己、预设套的不行）。放不下原地不动，状态行说一句。拖拽那套不动
+## 仓库 / 地上 → 初始包的棋盘；棋盘 → 仓库（初始包自己、预设套的不行）。放不下原地不动，状态行说一句。拖拽那套不动
 func quick_move(view: ContainerView, uid: int) -> bool:
 	var from := view.container() if view != null else null
 	var inst := from.get_item(uid) if from != null else null
@@ -432,7 +432,7 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 	return ok
 
 
-## 090：把暂存区里的一件收进仓库（= 置入）。放不下返回 false
+## 090：把地上的一件收进仓库（= 置入）。放不下返回 false
 func store(uid: int) -> bool:
 	if stash == null or stash.get_item(uid) == null:
 		return false
@@ -544,7 +544,7 @@ func depart() -> bool:
 	if run == null:
 		_status.text = "这一章生成不出图：%s" % (c.map_source.last_error if c.map_source != null else "没有地图来源")
 		return false
-	# 090：进了游戏，留在暂存区的就没了（带回来的棋盘 begin 里已经清掉）
+	# 090：进了游戏，留在地上的就没了（带回来的棋盘 begin 里已经清掉）
 	if stash != null:
 		stash.clear()
 	_pending.clear()
@@ -564,7 +564,7 @@ func escape() -> bool:
 #endregion
 
 
-## 棋盘上带着的都下来：仓库来的回仓库；090 暂存区来的回暂存区
+## 棋盘上带着的都下来：仓库来的回仓库；090 地上来的回地上
 func _return_carried() -> void:
 	if board == null:
 		return
@@ -576,7 +576,7 @@ func _return_carried() -> void:
 			push_warning("setup: %s 放不回仓库，丢弃" % inst.def.id)
 
 
-## 090：回主菜单 —— 上一局带回来的（不管还在暂存区还是已经拖上了棋盘）按原位放回带回来的棋盘；
+## 090：回主菜单 —— 上一局带回来的（不管还在地上还是已经拖上了棋盘）按原位放回带回来的棋盘；
 ## 原位放不下（不该发生）就找位置，再不行进仓库。玩家已经拖进仓库的留在仓库（那是他自己置入的）
 func _restore_pending() -> void:
 	_return_carried()
@@ -688,7 +688,7 @@ func _refresh() -> void:
 		if c != null and CountdownModule.budget_for(c, scale_id) > 0:
 			_readout.append_text("\n" + carry_text(c, scale_id, value))
 	if _stash_title != null and stash != null:
-		_stash_title.text = "暂存区　%d 件" % stash.item_count()
+		_stash_title.text = "地上　%d 件" % stash.item_count()
 	if _status != null:
 		var why := can_depart()
 		_status.text = why if why != "" and not carried().is_empty() else ""

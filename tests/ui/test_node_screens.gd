@@ -1,5 +1,5 @@
 ## 084（作者八条）：搜满不自动结束；开打前先过战前准备屏（等着的一场跟存档、走不了）；节点的叠层能最小化再恢复（会话、
-## 没拿的战利品、暂存区都留着，走了才没）；棋盘外的空间全是暂存区；序章开局就站在出生点上；浮窗能挪、不出边。
+## 没拿的战利品、地上都留着，走了才没）；棋盘外的空间全是地上；序章开局就站在出生点上；浮窗能挪、不出边。
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
@@ -262,7 +262,7 @@ static func run_auto_spawn(t: TestCase) -> void:
 
 
 static func run_drop_outside(t: TestCase) -> void:
-	t.begin("084 · 棋盘外的空间全是暂存区：放到空白处进暂存区（末尾）；从暂存区拖出又放到外面回原行；带东西的包不行；开关关着照旧退回")
+	t.begin("084 · 棋盘外的空间全是地上：放到空白处到地上（末尾）；从地上拖出又放到外面回原行；带东西的包不行；开关关着照旧退回")
 	ItemInstance.reset_uid_counter()
 	var gun := ItemDef.new()
 	gun.id = &"t_gun"
@@ -274,10 +274,10 @@ static func run_drop_outside(t: TestCase) -> void:
 	view.inventory = board
 	view.position = Vector2.ZERO
 	view.size = Vector2(board.size) * InventoryView.CELL
-	var sview := StashView.new()
+	var sview := GroundLayer.new()     # 128：铺满屏的地
+	sview.fills_screen = true
 	sview.stash = stash
-	sview.position = Vector2(400, 0)
-	sview.size = Vector2(220, 200)
+	sview.size = Vector2(1600, 900)
 	var drag := DragLayer.new()
 	drag.register_view(view)
 	drag.register_view(sview)
@@ -289,20 +289,21 @@ static func run_drop_outside(t: TestCase) -> void:
 	t.check(drag.is_dragging(), "抓起来了")
 	t.check(not drag.drop_at(Vector2(300, 300)), "开关关着：放到空白处不算落入")
 	t.check(board.has_item(a.uid), "退回棋盘")
-	# 开关开着：进暂存区
+	# 开关开着：到地上
 	drag.drop_outside_to_stash = true
 	var first := ItemInstance.create(gun)
 	stash.admit(first)
 	view.grab_requested.emit(view, a.uid, Vector2(24, 24))
 	drag.update_preview(Vector2(300, 300))
 	t.check(drag.drop_at(Vector2(300, 300)), "开关开着：放到空白处算落入")
-	t.check(stash.has_item(a.uid) and not board.has_item(a.uid), "进了暂存区")
+	t.check(stash.has_item(a.uid) and not board.has_item(a.uid), "到了地上")
 	t.eq(stash.index_of(a.uid), 1, "追加在末尾")
-	# 从暂存区拖出又放到外面：回原行
-	sview.grab_requested.emit(sview, first.uid, Vector2(10, 10))
-	t.check(drag.is_dragging(), "从暂存区抓起第一行")
-	t.check(not drag.drop_at(Vector2(300, 300)), "放回外面 = 没动")
-	t.eq(stash.index_of(first.uid), 0, "还在第一行")
+	# 从地上拿起又放回地上：改落点（128），列表里还是第一件
+	sview.grab_requested.emit(sview, first.uid, sview.item_rect(first.uid).position + Vector2(10, 10))
+	t.check(drag.is_dragging(), "从地上抓起第一件")
+	t.check(drag.drop_at(Vector2(300, 300)), "放回地上 = 改落点")
+	t.check(stash.spot_of(first.uid).is_equal_approx(sview.to_spot(Vector2(300, 300) - Vector2(0.5, 0.5) * InventoryView.CELL)), "落在放手点（%s）" % str(stash.spot_of(first.uid)))
+	t.eq(stash.index_of(first.uid), 0, "还是第一件")
 	t.eq(stash.item_count(), 2, "一件没多没少")
 	# drop_filter 拦住的照旧退回
 	drag.drop_filter = func(_inst: ItemInstance, _target: ItemContainer) -> bool: return false
@@ -314,7 +315,7 @@ static func run_drop_outside(t: TestCase) -> void:
 
 
 static func run_loot_lock_only_container(t: TestCase) -> void:
-	t.begin("084 · 容器屏的落点过滤只锁容器里没亮的：自己棋盘上的包能挪到任意合法位置、能拖进暂存区；容器里没亮的仍只能在容器内挪")
+	t.begin("084 · 容器屏的落点过滤只锁容器里没亮的：自己棋盘上的包能挪到任意合法位置、能拖到地上；容器里没亮的仍只能在容器内挪")
 	var c := _content()
 	ItemInstance.reset_uid_counter()
 	var bag_def := c.items.get_def(&"bag_leather")
@@ -328,7 +329,7 @@ static func run_loot_lock_only_container(t: TestCase) -> void:
 		return not loot.is_locked(inst.uid) or target == box
 	var stash := ItemStash.new(2, 0)
 	t.check(not loot.is_locked(bag.uid), "棋盘上的包不算「没亮」")
-	t.check(bool(filter.call(bag, board)) and bool(filter.call(bag, stash)), "包能放棋盘、能放暂存区")
+	t.check(bool(filter.call(bag, board)) and bool(filter.call(bag, stash)), "包能放棋盘、能放地上")
 	var hidden: ItemInstance = box.items()[0]
 	t.check(loot.is_locked(hidden.uid), "容器里没亮的锁着")
 	t.check(bool(filter.call(hidden, box)) and not bool(filter.call(hidden, board)), "没亮的只能在容器内挪，放不到棋盘")

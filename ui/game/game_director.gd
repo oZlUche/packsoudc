@@ -41,6 +41,13 @@ var _base: GameScreen = null
 var _overlay: GameScreen = null
 ## 084：最小化的叠层（作者定：收起不是关掉，是藏起来 —— 揭示进度、日志、拖到一半的状态都留着，「回到这个点」原样放回）
 var _minimized: GameScreen = null
+## 128：地上 —— 一个节点一层，导演持有唯一一份，盖在整个屏栈上面（只有道具本身接鼠标，各屏的面板登记了地方、东西会让开）
+var ground: GroundLayer = null
+## 地上在这些屏里画（一局里、在某个点上的界面）；战斗回放、结算、局外都不画
+const GROUND_SCREENS := [
+	GameFlow.Screen.MAP, GameFlow.Screen.LOOT, GameFlow.Screen.SEARCH, GameFlow.Screen.SHOP, GameFlow.Screen.EVENT,
+	GameFlow.Screen.REST, GameFlow.Screen.PREBATTLE, GameFlow.Screen.SAFE, GameFlow.Screen.ALTAR,
+]
 
 
 func _ready() -> void:
@@ -79,6 +86,13 @@ func _ready() -> void:
 	UiText.apply(flow.settings)
 	UiPalette.apply(flow.settings)     # 091：背景底色
 	UiTheme.install(self)     # 121：界面主题挂在窗口上
+	ground = GroundLayer.new()
+	ground.fills_screen = true
+	ground.label_font = _font
+	ground.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ground.visible = false
+	add_child(ground)
+	GroundLayer.set_current(ground)
 	# 089：存档位 —— 用默认路径（正式游戏）时按位存：老的单文件存档先搬进第 1 位，再切到设置里记的那一位。
 	# 测试 / 演示改了路径的走单文件模式
 	if save_path == RunSave.DEFAULT_PATH and meta_path == MetaSave.DEFAULT_PATH:
@@ -112,6 +126,28 @@ func _on_run_changed(state: RunState) -> void:
 
 
 func _on_screen_changed(screen: int, payload: Dictionary) -> void:
+	# 128：先把地接到这一局的 storage 上（各屏开面板时要找它），换完屏再决定画不画、挪到最上面
+	ground.stash = flow.run.storage if flow.run != null else null
+	_switch_screen(screen, payload)
+	_sync_ground()
+
+
+## 128：地上画不画（最上面那一屏是一局里某个点上的界面才画），并保持在屏栈之上
+func _sync_ground() -> void:
+	var top := _overlay if _overlay != null else _base
+	ground.stash = flow.run.storage if flow.run != null else null
+	ground.visible = flow.run != null and top != null and GROUND_SCREENS.has(top.screen)
+	move_child(ground, -1)
+	if ground.visible:
+		ground.settle.call_deferred()
+
+
+func _exit_tree() -> void:
+	if GroundLayer.current() == ground:
+		GroundLayer.set_current(null)
+
+
+func _switch_screen(screen: int, payload: Dictionary) -> void:
 	if GameFlow.is_overlay(screen):
 		_drop_overlay()
 		if bool(payload.get("restore", false)) and _minimized != null and _minimized.screen == screen:

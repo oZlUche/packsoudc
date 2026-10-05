@@ -1,7 +1,7 @@
 ## 事件的条件与后果看得见的那一部分一局状态（063；8-3 加了地图、步数、容器、段位与侵蚀深度）。[NodeEvents] 造它、把后果的旗子接着走。
 ##
-## 直接动的：体力、钱、棋盘与暂存区里的东西。经由回调动的：地图 buff（在 [RunState] 手里）。给东西不在这里发 —— 记在 [member items_given]，
-## [NodeEvents] 用 `event_resolved` 的 detail 报出去，[RunState] 收进暂存区（和以前的事件一样）。
+## 直接动的：体力、钱、棋盘与地上的东西。经由回调动的：地图 buff（在 [RunState] 手里）。给东西不在这里发 —— 记在 [member items_given]，
+## [NodeEvents] 用 `event_resolved` 的 detail 报出去，[RunState] 收到地上（和以前的事件一样）。
 ## 挪人、等时间、改类型、照常发生这几件事也只立旗：怎么走由 [NodeEvents] 定（顺序、计数、猎手的回合都在它与持有方手里）。
 class_name EventContext
 extends RefCounted
@@ -17,7 +17,7 @@ var depth: float = 0.0
 var graph: MapGraph = null
 ## 到现在为止花了多少行动点
 var steps: int = 0
-## 棋盘与暂存区（可以为 null：没接容器的测试）。「有某道具」看它们，「失去道具」从它们拿
+## 棋盘与地上（可以为 null：没接容器的测试）。「有某道具」看它们，「失去道具」从它们拿
 var board: ItemContainer = null
 var storage: ItemContainer = null
 ## 091：局外状态（旗标在里面）。沙盒 / 测试里可能为 null：看旗标的条件永远不满足、立旗标的后果什么也不做
@@ -88,7 +88,7 @@ func depth_at(n: MapNode) -> int:
 	return int(erosion_depth.call(n)) if erosion_depth.is_valid() and n != null else -1
 
 
-## 棋盘 / 暂存区里某道具有几件（id 为空 = 任何道具；tag 给了就只算带这个标签的）。[param where]：0 棋盘、1 暂存区、2 两处
+## 棋盘 / 地上某道具有几件（id 为空 = 任何道具；tag 给了就只算带这个标签的）。[param where]：0 棋盘、1 地上、2 两处
 func count_item(id: StringName, where: int = 2, tag: StringName = &"") -> int:
 	var n := 0
 	for c in containers(where):

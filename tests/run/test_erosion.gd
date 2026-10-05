@@ -197,7 +197,7 @@ static func run_gates_and_effects(t: TestCase) -> void:
 	ds.target = ErodeDamageItem.Target.STORAGE
 	ds.pick = ErodeDamageItem.Pick.RANDOM
 	ds.apply(ctx)
-	t.eq(s.storage.item_count(), storage_before, "暂存区那件被损坏了")
+	t.eq(s.storage.item_count(), storage_before, "地上那件被损坏了")
 
 	var money := s.wallet.balance
 	var dm := ErodeDrainMoney.new()

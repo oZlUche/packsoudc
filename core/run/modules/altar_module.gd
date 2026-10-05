@@ -90,7 +90,7 @@ func is_open() -> bool:
 	return node >= 0 and _run.travel.current_id == node and not used.has(node) and _run.active_faith() != null
 
 
-## 献祭：这些道具（从棋盘 / 暂存区 / 祭品台拿来的实例）销毁换信力。
+## 献祭：这些道具（从棋盘 / 地上 / 祭品台拿来的实例）销毁换信力。
 ## 返回 {"points", "tier_before", "tier_after", "log", "count"}；不能献的跳过
 func offer(insts: Array, at_node: MapNode = null) -> Dictionary:
 	var def := _run.active_faith() if _run != null else null

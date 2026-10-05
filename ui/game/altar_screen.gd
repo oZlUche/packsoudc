@@ -89,7 +89,7 @@ func open(payload: Dictionary) -> void:
 
 
 #region 公开动作
-## 祭品台上的东西回棋盘（放不下进暂存区）
+## 祭品台上的东西回棋盘（放不下到地上）
 func take_back(uid: int) -> bool:
 	var inst := _table.get_item(uid)
 	if inst == null:
@@ -99,7 +99,7 @@ func take_back(uid: int) -> bool:
 	return InventoryService.transfer_auto(_table, uid, flow.run.storage)
 
 
-## 把棋盘 / 暂存区里的一件放上祭品台（不能献的不收）。测试直接调
+## 把棋盘 / 地上的一件放上祭品台（不能献的不收）。测试直接调
 func put_on_table(uid: int) -> bool:
 	var run := flow.run
 	var def := run.active_faith()

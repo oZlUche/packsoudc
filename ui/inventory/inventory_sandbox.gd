@@ -4,7 +4,7 @@
 ##
 ## - **作战棋盘**：`requires_bag = true`。开局一格都不能用，可用区来自玩家自己放上去的包。
 ##   包本身是异形物品，可拖可转，拖动时内容物跟着走。只有这里的物品会参战。
-## - **暂存区**：自由容器。东西放这儿保留但不参战 —— 「背着但没装进包 = 占位置不出力」。
+## - **地上**：自由容器。东西放这儿保留但不参战 —— 「背着但没装进包 = 占位置不出力」。
 ## - **战利品**：自由容器，模拟敌人尸体。
 ##
 ## 没有装备栏：武器护甲药水统统占棋盘格子，空间是唯一的约束。
@@ -12,7 +12,7 @@ extends Control
 
 const BOARD_SIZE := Vector2i(7, 9)
 const LOOT_SIZE := Vector2i(6, 5)
-## 暂存区是列表，只有宽度
+## 地上是列表，只有宽度
 const STORAGE_WIDTH := 240
 
 const BG := Color("101216")
@@ -88,13 +88,13 @@ func _build_ui() -> void:
 	side.add_theme_constant_override("separation", 16)
 	side.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(side)
-	side.add_child(_labeled_stash("暂存区　保留但不参战　一行一件，不占格子", _storage))
+	side.add_child(_labeled_stash("地上　保留但不参战　一行一件，不占格子", _storage))
 	side.add_child(_labeled_grid("战利品", _loot))
 
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 10)
 	root.add_child(buttons)
-	buttons.add_child(_button("全部拾取到暂存区", _on_take_all))
+	buttons.add_child(_button("全部拾取到地上", _on_take_all))
 	buttons.add_child(_button("刷新战利品", _on_refill))
 	buttons.add_child(_button("清空棋盘", _on_clear_board))
 
@@ -103,7 +103,7 @@ func _build_ui() -> void:
 	root.add_child(
 		_heading(
 			"左键拖动　R 旋转　右键 / Esc 取消　　拖包时内容物跟着走；包转了之后"
-			+ "依附不上的东西会脱落进暂存区　　压着别人放手会把人顶出来：一件直接上手，多件进暂存区",
+			+ "依附不上的东西会脱落到地上　　压着别人放手会把人顶出来：一件直接上手，多件到地上",
 			14, DIM
 		)
 	)
@@ -118,7 +118,7 @@ func _build_ui() -> void:
 		_drag.register_view(view)
 
 
-## [param adjacency] 只对棋盘开。暂存区与战利品里的东西不参战，
+## [param adjacency] 只对棋盘开。地上与战利品里的东西不参战，
 ## 那里的邻接「点亮」什么也不代表 —— 画出来只会让人以为摆对了。
 func _labeled_grid(caption: String, inv: GridInventory, adjacency: bool = false) -> Control:
 	var box := VBoxContainer.new()
@@ -135,17 +135,17 @@ func _labeled_grid(caption: String, inv: GridInventory, adjacency: bool = false)
 	return box
 
 
-## 暂存区不是网格，单独搭一列。
+## 地上不是网格（128）：单独搭一块，放手在哪就落在哪。
 func _labeled_stash(caption: String, s: ItemStash) -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	box.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	box.add_child(_heading(caption, 13, DIM))
 
-	var view := StashView.new()
+	var view := GroundLayer.new()
 	view.label_font = _font
 	view.stash = s
-	view.custom_minimum_size.x = STORAGE_WIDTH
+	view.custom_minimum_size = Vector2(STORAGE_WIDTH, 320)
 	view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	box.add_child(view)
 	return box
@@ -207,7 +207,7 @@ func _refill_loot() -> void:
 
 func _on_take_all() -> void:
 	var moved := InventoryService.transfer_all(_loot, _storage)
-	_flash("拾取 %d 件到暂存区，剩 %d 件" % [moved, _loot.item_count()])
+	_flash("拾取 %d 件到地上，剩 %d 件" % [moved, _loot.item_count()])
 
 
 func _on_refill() -> void:
@@ -250,7 +250,7 @@ func _demo_hover_displacing() -> void:
 	if views.size() < 2:
 		return
 	var board_view := views[0] as InventoryView
-	var storage_view := views[1] as StashView
+	var storage_view := views[1] as GroundLayer
 	if board_view == null or storage_view == null:
 		return
 
@@ -260,7 +260,7 @@ func _demo_hover_displacing() -> void:
 	var picked := list[0] as ItemInstance
 	storage_view.grab_requested.emit(
 		storage_view, picked.uid,
-		storage_view.row_origin_px(0) + Vector2(20, StashView.ROW_H * 0.5)
+		storage_view.item_rect(picked.uid).position + Vector2(InventoryView.CELL, InventoryView.CELL) * 0.5
 	)
 
 	for inst in _board.items():
@@ -278,7 +278,7 @@ func _update_status() -> void:
 	if _status == null:
 		return
 	var bag_count := _board.bags().size()
-	_status.text = "棋盘 %d 件　可用格 %d（空闲 %d）　包 %d 个　　暂存区 %d 件　　战利品 %d 件" % [
+	_status.text = "棋盘 %d 件　可用格 %d（空闲 %d）　包 %d 个　　地上 %d 件　　战利品 %d 件" % [
 		_board.item_count() - bag_count,
 		_board.usable_cell_count(),
 		_board.free_cell_count(),

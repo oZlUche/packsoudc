@@ -491,7 +491,7 @@ func characters_for(chapter: ChapterDef) -> Array[CharacterDef]:
 
 
 ## 现在能不能开新局；空串 = 能，否则是原因。
-## 090（作者定）：带回来的背包没清空**不再拦**（原 058 第 7 条的门）—— 开局屏把它们收进暂存区：拖上包 = 带上、拖进仓库 = 置入、
+## 090（作者定）：带回来的背包没清空**不再拦**（原 058 第 7 条的门）—— 开局屏把它们收到地上：拖上包 = 带上、拖进仓库 = 置入、
 ## 留着的出发就没了、回主菜单原样放回。局外屏只提示（[method pending_hint]）
 func can_begin() -> String:
 	return ""
@@ -500,7 +500,7 @@ func can_begin() -> String:
 ## 090：上一局带回来的还没清时给局外屏的一句话；没有就空串
 func pending_hint() -> String:
 	if meta != null and meta.has_pending_board():
-		return "上一局带回来的背包还有 %d 件没置入：可以现在置入或不要了；不管的话，开局屏里它们会放进暂存区，出发就没了" % meta.board.item_count()
+		return "上一局带回来的背包还有 %d 件没置入：可以现在置入或不要了；不管的话，开局屏里它们会放到地上，出发就没了" % meta.board.item_count()
 	return ""
 
 
@@ -669,7 +669,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 		return null
 	for inst in taken:
 		meta.warehouse.remove(inst.uid)
-	# 090：进了游戏，上一局带回来还没清的就没了（开局屏的暂存区规则；不经开局屏的路一样）
+	# 090：进了游戏，上一局带回来还没清的就没了（开局屏的地上规则；不经开局屏的路一样）
 	var lost := meta.board != null
 	if lost:
 		meta.discard_board()
@@ -721,7 +721,7 @@ func close_altar() -> void:
 	_flush()
 
 
-## 093：神坛上献祭 [param uids]（棋盘 / 暂存区 / 祭品台里的实例 uid）。返回 RunState.offer 的账；卖掉的实例从所在容器移除
+## 093：神坛上献祭 [param uids]（棋盘 / 地上 / 祭品台里的实例 uid）。返回 RunState.offer 的账；卖掉的实例从所在容器移除
 func offer(insts: Array, node: MapNode = null) -> Dictionary:
 	if run == null:
 		return {"points": 0, "count": 0}
@@ -770,7 +770,7 @@ func meta_buffs() -> Array[StringName]:
 	return out
 
 
-## 092（作者定）：离开结算屏时，暂存区里没背出来的一键出售（按基地的出售比例），钱进局外。这里只算不卖
+## 092（作者定）：离开结算屏时，地上没背出来的一键出售（按基地的出售比例），钱进局外。这里只算不卖
 func stash_sale_preview() -> Dictionary:
 	return MetaState.left_behind_preview(result, sell_ratio())
 
@@ -785,7 +785,7 @@ func _sell_left_behind() -> Dictionary:
 	return got
 
 
-## 结算看完了：去局外（账在进结算屏之前就记了，见 _settle_run）；暂存区里剩的在这一步一键出售（092）
+## 结算看完了：去局外（账在进结算屏之前就记了，见 _settle_run）；地上剩的在这一步一键出售（092）
 func finish_result() -> void:
 	_sell_left_behind()
 	save_meta()
@@ -816,7 +816,7 @@ func start_next_chapter() -> bool:
 	if next == null:
 		finish_result()
 		return false
-	_sell_left_behind()     # 092：离开结算屏就卖暂存区里剩的
+	_sell_left_behind()     # 092：离开结算屏就卖地上剩的
 	meta.store_all()
 	if meta.has_pending_board():
 		meta.discard_board()
@@ -900,7 +900,7 @@ func start_battle() -> bool:
 	return true
 
 
-## 084：把这个点的叠层**最小化**回地图，**什么都不结束**：搜索 / 商店会话还开着、没拿的战利品还在这个点上、暂存区还在。
+## 084：把这个点的叠层**最小化**回地图，**什么都不结束**：搜索 / 商店会话还开着、没拿的战利品还在这个点上、地上还在。
 ## 作者定：不是关掉再重开，而是那一屏留着（揭示进度、日志都在），只是藏起来；[method reopen_node] 把它原样放回来。
 ## 载荷里的 `minimized` 告诉导演「别销毁叠层」。等着选的事件与等着开打的一场不能收（那是必须先处理的）。返回收了没有
 func hide_overlay() -> bool:

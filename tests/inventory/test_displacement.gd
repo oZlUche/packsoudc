@@ -4,7 +4,7 @@
 ##
 ## - **容器层**（[method GridInventory.place_displacing]）：谁会被顶、顶不动时
 ##   容器有没有原样留住。这层只管腾地方，不管腾出来的东西归谁。
-## - **拖拽层**（[DragLayer]）：顶出来一件就接着上手，多于一件全进暂存区，
+## - **拖拽层**（[DragLayer]）：顶出来一件就接着上手，多于一件全到地上，
 ##   没地方安置就整件事作废。
 ##
 ## [b]重点在失败路径。[/b] 顶替这类操作，成功时一眼就能看出对不对，
@@ -192,7 +192,7 @@ static func run_drag_single(t: TestCase) -> void:
 
 
 static func run_drag_many(t: TestCase) -> void:
-	t.begin("顶替 · 顶出多件全进暂存区")
+	t.begin("顶替 · 顶出多件全到地上")
 
 	ItemInstance.reset_uid_counter()
 	var dot := _def("dot", ["#"])
@@ -224,9 +224,9 @@ static func run_drag_many(t: TestCase) -> void:
 	t.check(drag.drop_at(_center(view_b, Vector2i(0, 0))), "压着两件放手，落地成功")
 	t.check(dst.has_item(comer.uid), "新来的进去了")
 	t.check(stash.has_item(v1.uid) and stash.has_item(v2.uid),
-		"**两件都进了暂存区**，一件都不能丢")
+		"**两件都到了地上**，一件都不能丢")
 	t.check(not drag.is_dragging(), "多于一件时不自动上手 —— 手只有一只")
-	t.check(not mail["grabbed"], "上报说的是「都进暂存区了」")
+	t.check(not mail["grabbed"], "上报说的是「都到地上了」")
 
 	for v in [view_a, view_b]:
 		v.free()
@@ -247,7 +247,7 @@ static func run_drag_no_stash(t: TestCase) -> void:
 	var drag := DragLayer.new()
 	drag.register_view(view_a)
 	drag.register_view(view_b)
-	# 故意不给暂存区
+	# 故意不给地上
 
 	var v1 := ItemInstance.create(dot)
 	var v2 := ItemInstance.create(dot)
@@ -260,7 +260,7 @@ static func run_drag_no_stash(t: TestCase) -> void:
 	view_a.grab_requested.emit(view_a, comer.uid, Vector2(24, 24))
 	drag.update_preview(_center(view_b, Vector2i(0, 0)))
 	t.check(not view_b._preview_valid,
-		"没有暂存区时，会顶出多件的落点直接判非法 —— 不给做不到的承诺")
+		"没有地上时，会顶出多件的落点直接判非法 —— 不给做不到的承诺")
 
 	t.check(not drag.drop_at(_center(view_b, Vector2i(0, 0))), "放手也不成立")
 	t.check(src.has_item(comer.uid), "拖着的那件退回了源容器")
@@ -269,13 +269,13 @@ static func run_drag_no_stash(t: TestCase) -> void:
 	t.eq(dst.cell_uid(Vector2i(0, 0)), v1.uid, "占用表也复原了")
 	t.eq(dst.cell_uid(Vector2i(2, 0)), v2.uid, "两格都复原了")
 
-	# 单件仍然可以顶：没有暂存区只挡住「多件」这一种情况
+	# 单件仍然可以顶：没有地上只挡住「多件」这一种情况
 	drag.cancel()
 	var single := ItemInstance.create(dot)
 	src.place(single, Vector2i(3, 3), 0)
 	view_a.grab_requested.emit(view_a, single.uid, Vector2(24 + CELL * 3, 24 + CELL * 3))
 	t.check(drag.drop_at(_center(view_b, Vector2i(0, 0))),
-		"顶一件不需要暂存区，它直接上手")
+		"顶一件不需要地上，它直接上手")
 	t.check(drag.is_dragging(), "确实上手了")
 	drag.cancel()
 
@@ -285,14 +285,14 @@ static func run_drag_no_stash(t: TestCase) -> void:
 
 
 static func run_drag_full_stash(t: TestCase) -> void:
-	t.begin("顶替 · 暂存区塞不下就整批退回")
+	t.begin("顶替 · 地上塞不下就整批退回")
 
 	ItemInstance.reset_uid_counter()
 	var dot := _def("dot", ["#"])
 	var row := _def("row", ["###"])
 	var src := GridInventory.new(Vector2i(4, 4), 1)
 	var dst := GridInventory.new(Vector2i(4, 4), 2)
-	# 只放得下一件的暂存区：收得下第一件，收不下第二件
+	# 只放得下一件的地上：收得下第一件，收不下第二件
 	var stash := ItemStash.new(3, 1)
 	var view_a := _view(src, Vector2.ZERO)
 	var view_b := _view(dst, Vector2(400, 0))
@@ -312,7 +312,7 @@ static func run_drag_full_stash(t: TestCase) -> void:
 	view_a.grab_requested.emit(view_a, comer.uid, Vector2(24, 24))
 	t.check(not drag.drop_at(_center(view_b, Vector2i(0, 0))), "塞不下，这一下不成立")
 	t.eq(stash.item_count(), 0,
-		"**暂存区一件都没留下** —— 进了一半是比不生效更糟的结果")
+		"**地上一件都没留下** —— 进了一半是比不生效更糟的结果")
 	t.check(dst.has_item(v1.uid) and dst.has_item(v2.uid), "棋盘上的两件都回到了原位")
 	t.check(src.has_item(comer.uid), "拖着的那件退回了源容器")
 
@@ -324,7 +324,7 @@ static func run_drag_full_stash(t: TestCase) -> void:
 
 #region 包旋转脱落（拖拽层）
 static func run_drag_bag_rotate_sheds(t: TestCase) -> void:
-	t.begin("顶替 · 拖着包按 R，内容物跟着转，跨包的进暂存区")
+	t.begin("顶替 · 拖着包按 R，内容物跟着转，跨包的到地上")
 
 	ItemInstance.reset_uid_counter()
 	var bag_def := _bag_def("bag6", ["##", "##", "##"])
@@ -364,7 +364,7 @@ static func run_drag_bag_rotate_sheds(t: TestCase) -> void:
 	t.eq(bag.rotation, 1, "包转过来了")
 	t.check(board.has_item(inside.uid), "整件在里面的跟着转，留下")
 	t.eq(board.bag_of(inside.uid), bag.uid, "仍归这个包")
-	t.check(stash.has_item(bridge.uid), "**跨包的进了暂存区**")
+	t.check(stash.has_item(bridge.uid), "**跨包的到了地上**")
 	t.eq((mail["shed"] as Array).size(), 1, "上报了脱落的那件")
 
 	bv.free()
@@ -410,7 +410,7 @@ static func run_drag_bag_rotate_no_stash(t: TestCase) -> void:
 	var bv := _view(board, Vector2.ZERO)
 	var drag := DragLayer.new()
 	drag.register_view(bv)
-	# 故意不给暂存区
+	# 故意不给地上
 
 	var bag := ItemInstance.create(bag_def)
 	board.place(bag, Vector2i(1, 1), 0)

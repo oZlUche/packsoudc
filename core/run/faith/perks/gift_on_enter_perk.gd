@@ -1,4 +1,4 @@
-## 大地 3 级（093）：头一回踩上一个点立刻得到一件对应类型的道具（战斗-武器 / 精英-防具 / 事件-饰品 / 撤离点-随机 / BOSS-珍宝），进暂存区
+## 大地 3 级（093）：头一回踩上一个点立刻得到一件对应类型的道具（战斗-武器 / 精英-防具 / 事件-饰品 / 撤离点-随机 / BOSS-珍宝），到地上
 class_name GiftOnEnterPerk
 extends FaithPerk
 
@@ -31,7 +31,7 @@ func on_node_entered(run: RunState, node: MapNode, first_visit: bool) -> String:
 	rng.seed = hash("%d:gift:%d" % [run.run_seed, node.id])
 	var def := run.items.get_def(cands[rng.randi_range(0, cands.size() - 1)])
 	run.storage.admit(ItemInstance.create(def))
-	return "大地之神赐下「%s」（进了暂存区）" % Names.of(def)
+	return "大地之神赐下「%s」（到了地上）" % Names.of(def)
 
 
 func _summary() -> String:

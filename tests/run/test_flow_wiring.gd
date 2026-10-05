@@ -4,7 +4,7 @@
 ##   在 `core/` 或 `ui/` 里都得有人接 —— 否则就是「发了没人听」，表现是某个屏永远不弹、某句提示永远不出现，
 ##   而测试与编译都不会红。新加一个 signal 忘了接线，这条当场抓住；确实只给测试或将来留的，写进白名单并写原因。
 ## - **服务各自独立可测**：成就与解锁（[Achievements]）、切存档位的文件层（[method SaveSlots.open]）、
-##   卖暂存区与带回来的棋盘（[MetaState]）都不再长在 `GameFlow` 身上，不造一个 `GameFlow` 也能测。
+##   卖地上与带回来的棋盘（[MetaState]）都不再长在 `GameFlow` 身上，不造一个 `GameFlow` 也能测。
 extends RefCounted
 
 const Support := preload("res://tests/support.gd")
@@ -187,7 +187,7 @@ static func run_slot_open(t: TestCase) -> void:
 
 
 static func run_meta_stash_and_sale(t: TestCase) -> void:
-	t.begin("服务 · 卖暂存区与带回来的棋盘（101 第 4 刀）：账在 MetaState 里，开局屏与结算屏只管画")
+	t.begin("服务 · 卖地上与带回来的棋盘（101 第 4 刀）：账在 MetaState 里，开局屏与结算屏只管画")
 	var items := ItemDatabase.new()
 	items.load_dir()
 	var meta := MetaState.new()
@@ -209,7 +209,7 @@ static func run_meta_stash_and_sale(t: TestCase) -> void:
 	t.check(meta.board != null and meta.board.item_count() == 1, "回到带回来的棋盘上")
 	var put_back := meta.board.items()[0] as ItemInstance
 	t.eq(put_back.origin, origin, "按原位放回")
-	# 暂存区里没背出来的一键出售：只算 / 真卖 / 只卖一次
+	# 地上没背出来的一键出售：只算 / 真卖 / 只卖一次
 	var r := RunResult.new()
 	r.outcome = &"extracted"
 	var left: Array[ItemInstance] = [ItemInstance.create(def), ItemInstance.create(def)]
@@ -229,7 +229,7 @@ static func run_meta_stash_and_sale(t: TestCase) -> void:
 	var dead := RunResult.new()
 	dead.outcome = &"defeated"
 	dead.left_items = [ItemInstance.create(def)] as Array[ItemInstance]
-	t.eq(int(MetaState.left_behind_preview(dead, ratio)["count"]), 0, "没撤离出来：暂存区里的不卖（东西没带出来）")
+	t.eq(int(MetaState.left_behind_preview(dead, ratio)["count"]), 0, "没撤离出来：地上的不卖（东西没带出来）")
 
 ## 101 第 5 刀：只属于一局的 UI 接线走信号，core 不认识 ui
 static func run_run_changed_signal(t: TestCase) -> void:

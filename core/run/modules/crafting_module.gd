@@ -1,5 +1,5 @@
 ## 合成（114，作者定）：**拖到上面立刻合** —— 一局里把一件道具拖到棋盘上另一件上面（正好只压着这一件）、两件有配方，
-## 两件消失、产物立刻出现在被压那件的位置。放不下自动找位，再不行进暂存区并提醒。
+## 两件消失、产物立刻出现在被压那件的位置。放不下自动找位，再不行到地上并提醒。
 ## 不再有 087 的「相邻即合 / 走到下一个点结算」：相邻是增益槽 / 受益槽的事，挨着放不该把东西变掉。
 ##
 ## 101 第 1 刀：配方表、配对规则、合成那一下全在这里，[RunState] 不认识合成。取它用 [method of]。
@@ -51,7 +51,7 @@ func output_of(a: ItemDef, b: ItemDef) -> ItemDef:
 
 
 ## 114（作者定）：**拖到上面立刻合** —— 手上的 [param a]（拖拽中，不在任何容器里）压在棋盘上的 [param b_uid] 那件上、
-## 两件有配方：b 拆下，产物落在 b 的位置（b 的朝向），放不下自动找位，再不行进暂存区并提醒。a 就此消耗。
+## 两件有配方：b 拆下，产物落在 b 的位置（b 的朝向），放不下自动找位，再不行到地上并提醒。a 就此消耗。
 ## 返回 `{"ok": bool, "output": 产物 id, "where": "board" / "storage", "log": [几句话]}`；不成（没配方、b 不在棋盘上、产物没地方去）
 ## 时棋盘原样不动、a 仍在调用方手上。成了发一次 [signal done]
 func craft(a: ItemInstance, b_uid: int) -> Dictionary:
@@ -82,7 +82,7 @@ func craft(a: ItemInstance, b_uid: int) -> Dictionary:
 	board.end_batch()
 	var lines: Array = ["「%s」和「%s」合成了「%s」。" % [Names.of(a.def), Names.of(b.def), Names.of(out_def)]]
 	if where == "storage":
-		lines.append("背包里装不下它：放进了暂存区。走之前记得放回包里，暂存区里的东西会留在这个点上。")
+		lines.append("背包里装不下它：放在了地上。走之前记得放回包里，地上的东西会留在这个点上。")
 	var detail := {"ok": true, "output": String(out_def.id), "where": where, "log": lines}
 	done.emit(detail)
 	return detail

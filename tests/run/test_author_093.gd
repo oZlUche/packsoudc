@@ -294,7 +294,7 @@ static func run_faith_call(t: TestCase) -> void:
 			depth_sum += float(EnemyPlacer.depths_of(s.map).get(calls[0], 0.0))
 	if maps > 0:
 		t.check(depth_sum / float(maps) < 0.5, "偏前期：平均深度 %.2f < 0.5" % (depth_sum / float(maps)))
-	# 走一遍：靠近 → 某位神 → 拿 → 护符进暂存区 → 放上棋盘激活那位神
+	# 走一遍：靠近 → 某位神 → 拿 → 护符到地上 → 放上棋盘激活那位神
 	var f := _flow(c)
 	var run := f.begin(c.chapter, kit, 2)
 	if run == null:
@@ -322,7 +322,7 @@ static func run_faith_call(t: TestCase) -> void:
 		for inst in run.storage.items():
 			if String((inst as ItemInstance).def.id) == "charm_" + fid:
 				charm = inst
-		t.check(run.storage.item_count() == before + 1 and charm != null, "护符进了暂存区")
+		t.check(run.storage.item_count() == before + 1 and charm != null, "护符到了地上")
 		if charm != null:
 			t.check(InventoryService.transfer_auto(run.storage, charm.uid, run.board), "放上棋盘")
 			t.eq(String(run.active_faith_id()), fid, "激活了那位神")

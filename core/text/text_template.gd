@@ -33,7 +33,7 @@ const TYPED_STYLES := {
 ## 112：`{ui:…}` `{zone:…}` 的英文（界面切到英文时换；没登记的照原文）
 const TERMS_EN := {
 	"搜索": "Search", "开战": "Fight", "战前准备": "Pre-battle", "迎战": "Fight", "撤离": "Extract",
-	"暂存区": "Stash", "仓库": "Warehouse", "棋盘": "Board", "包": "Bag",
+	"地上": "Ground", "仓库": "Warehouse", "棋盘": "Board", "包": "Bag",
 }
 
 
