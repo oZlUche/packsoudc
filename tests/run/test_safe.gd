@@ -120,7 +120,7 @@ static func frame_safe_screen(t: TestCase, root: Window) -> void:
 		t.check(screen.put_in(item.uid), "放进保险箱")
 		t.check(SafeModule.of(run).inventory.has_item(item.uid) and not run.board.has_item(item.uid), "在保险箱里、不在棋盘上")
 		t.check(screen.take_back(item.uid), "拿回来")
-		t.check(run.board.has_item(item.uid) or run.storage.has_item(item.uid), "回到棋盘（或暂存区）")
+		t.check(run.board.has_item(item.uid) or run.storage.has_item(item.uid), "回到棋盘（或地上）")
 		t.check(screen.put_in(item.uid), "再放进去")
 	if bag != null:
 		t.check(not screen.put_in(bag.uid) and not SafeModule.of(run).inventory.has_item(bag.uid), "包放不进保险箱")

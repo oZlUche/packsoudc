@@ -5,7 +5,7 @@
 ## [codeblock]
 ## ItemContainer
 ##   GridInventory  空间容器：棋盘、敌人尸体、商店货架 —— 摆在哪儿是有意义的
-##   ItemStash      列表容器：暂存区 —— 只是「先放着」，位置不承载任何信息
+##   ItemStash      列表容器：地上 —— 只是「先放着」，位置不承载任何信息
 ## [endcodeblock]
 ##
 ## 基类只收两样东西：**变更通知**与**按 uid 取放**。空间语义（占格、旋转、包体覆盖）

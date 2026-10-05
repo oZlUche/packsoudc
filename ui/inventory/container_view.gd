@@ -9,7 +9,7 @@ extends Control
 
 ## 某件物品被按下，请求开始拖拽。[param local_pos] 为本控件内的像素坐标。
 signal grab_requested(view: ContainerView, uid: int, local_pos: Vector2)
-## 084：双击了一件（快速置入：棋盘 ⇄ 容器 / 暂存区，由持有这个视图的屏决定去哪）。双击时不发 grab_requested
+## 084：双击了一件（快速置入：棋盘 ⇄ 容器 / 地上，由持有这个视图的屏决定去哪）。双击时不发 grab_requested
 signal item_double_clicked(view: ContainerView, uid: int)
 ## 099：右键按在一件上（没在拖的时候）。棋盘用它把信物奉为主信仰；别的屏可以不接
 signal item_context(view: ContainerView, uid: int)

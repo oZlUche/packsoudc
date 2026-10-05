@@ -139,9 +139,9 @@ static func run_blessing_paths(t: TestCase) -> void:
 	t.check(bless_perk != null, "1 级起神坛有「祈求赐福」")
 	if bless_perk != null:
 		altar.node = run.travel.current_id
-		t.eq(bless_perk.altar_available(run, run.current_node()), "", "信力够、包里有能赐福的（暂存区那把短剑）")
+		t.eq(bless_perk.altar_available(run, run.current_node()), "", "信力够、包里有能赐福的（地上那把短剑）")
 		var p0 := run.faith_power.points_of(&"brute")
-		# 赐福的是最值钱的那件（棋盘优先、其次暂存区）：走的那一步可能捡到了比短剑更值钱的
+		# 赐福的是最值钱的那件（棋盘优先、其次地上）：走的那一步可能捡到了比短剑更值钱的
 		var target := Blessings.best_candidate(run.board, db, &"brute")
 		if target == null:
 			target = Blessings.best_candidate(run.storage, db, &"brute")
@@ -150,7 +150,7 @@ static func run_blessing_paths(t: TestCase) -> void:
 		t.check(line.contains("成了"), "做了：%s" % line)
 		t.eq(run.faith_power.points_of(&"brute"), p0 - 40, "花了 40 信力")
 		if target == fresh:
-			t.eq(fresh.def.id, &"shortsword_brute", "暂存区那把短剑受了赐福")
+			t.eq(fresh.def.id, &"shortsword_brute", "地上那把短剑受了赐福")
 		else:
 			t.eq(target.def.id, Blessings.variant_id(target_id, &"brute"), "最值钱的那件（%s）受了赐福" % target_id)
 		run.faith_power.spend_points(&"brute", run.faith_power.points_of(&"brute"))
@@ -161,7 +161,7 @@ static func run_blessing_paths(t: TestCase) -> void:
 	run.storage.admit(another)
 	var o := BlessItem.new()
 	o.apply(ctx)
-	t.check(another.def.id == &"longsword_brute" and not ctx.log.is_empty(), "事件「赐福一件」：暂存区里那把长剑成了蛮神赐福版（%s）" % (ctx.log[0] if not ctx.log.is_empty() else ""))
+	t.check(another.def.id == &"longsword_brute" and not ctx.log.is_empty(), "事件「赐福一件」：地上那把长剑成了蛮神赐福版（%s）" % (ctx.log[0] if not ctx.log.is_empty() else ""))
 	_cleanup()
 
 

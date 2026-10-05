@@ -20,7 +20,7 @@ const ENTRIES := [
 	{
 		"scene": "res://ui/inventory/inventory_sandbox.tscn",
 		"title": "背包整理沙盒",
-		"desc": "M1 验收：棋盘 + 包体、异形拖拽、暂存区与战利品",
+		"desc": "M1 验收：棋盘 + 包体、异形拖拽、地上与战利品",
 		"keys": "左键拖动　R 旋转　右键 / Esc 取消",
 	},
 	{

@@ -16,7 +16,7 @@ const SLOT_MIN := Vector2i(3, 4)
 
 ## 货架变了（刷新之后）
 signal stock_changed()
-## 买到了：inst 是那件实例。走 [method buy] 时它还不在任何容器里（持有方装进暂存区）；走 [method pay_for] 时它已经被拖进玩家的容器，inst 为 null
+## 买到了：inst 是那件实例。走 [method buy] 时它还不在任何容器里（持有方装到地上）；走 [method pay_for] 时它已经被拖进玩家的容器，inst 为 null
 signal bought(def: ItemDef, price: int, inst: ItemInstance)
 ## 卖掉了一件
 signal sold_item(def: ItemDef, gain: int)
@@ -104,7 +104,7 @@ func pay_for(i: int) -> bool:
 
 
 ## 101 第 6 刀（原来在商店屏里）：**拖走了就结账，结不成就放回架上**。
-## [param i] 是被拖走的那一格，[param uid] 是那件东西，[param from] 是现在可能拿着它的容器（棋盘、暂存区）。
+## [param i] 是被拖走的那一格，[param uid] 是那件东西，[param from] 是现在可能拿着它的容器（棋盘、地上）。
 ## 钱不够 / 卖掉了 / 店关了都算结不成：这里把东西从玩家那边拿回来、原样放回第 i 格，返回 false。
 ## 界面只负责把 false 说成一句话 —— 回滚是一局的规则，不是画面的事
 func pay_or_return(i: int, uid: int, from: Array) -> bool:

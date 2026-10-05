@@ -148,7 +148,7 @@ static func run_loadout_pipeline(t: TestCase) -> void:
 	t.check(files >= 2, "至少两套开局装备可挑（实际 %d）" % files)
 	t.eq(c.loadouts.size(), files, "GameFlow.load_loadouts 装回全部 %d 份" % files)
 
-	# 开局按清单发：清单里几个包棋盘上就几个包；其余不在棋盘就在暂存区
+	# 开局按清单发：清单里几个包棋盘上就几个包；其余不在棋盘就在地上
 	for l in c.loadouts:
 		var s := RunState.start(c.chapter, 3, c.items, c.enemies, c.sets, l.items)
 		t.not_null(s, "%s 开得了局" % l.id)
@@ -162,7 +162,7 @@ static func run_loadout_pipeline(t: TestCase) -> void:
 			else:
 				rest += 1
 		t.eq(s.board.bags().size(), bags, "%s：清单里 %d 个包，棋盘上 %d 个" % [l.id, bags, s.board.bags().size()])
-		t.eq(s.board.item_count() - bags + s.storage.item_count(), rest, "%s：其余 %d 件不在棋盘就在暂存区" % [l.id, rest])
+		t.eq(s.board.item_count() - bags + s.storage.item_count(), rest, "%s：其余 %d 件不在棋盘就在地上" % [l.id, rest])
 #endregion
 
 
@@ -176,7 +176,7 @@ static func run_result_and_meta(t: TestCase) -> void:
 	s.pick_spawn(s.map.entry_ids[0])
 	t.is_null(RunResult.settle(s), "没结束算不出账")
 
-	# 撤离：棋盘上的全部（含包）按价值计；暂存区的只提一句
+	# 撤离：棋盘上的全部（含包）按价值计；地上的只提一句
 	s.phase = RunState.Phase.EXTRACTED
 	s.end_reason = &"extract"
 	var r := RunResult.settle(s)
@@ -184,7 +184,7 @@ static func run_result_and_meta(t: TestCase) -> void:
 	t.check(r.is_extracted(), "撤离")
 	t.eq(r.carried.size(), s.board.item_count(), "背出去的 = 棋盘上的全部（含包）")
 	t.eq(r.value, _sum_value(s.board), "价值 = 每件 ItemValue 之和")
-	t.eq(r.left_behind, s.storage.item_count(), "暂存区里的记成遗落")
+	t.eq(r.left_behind, s.storage.item_count(), "地上的记成遗落")
 	t.eq(r.left_value, _sum_value(s.storage), "遗落的价值")
 	t.eq(r.balance, s.wallet.balance, "钱")
 	t.eq((r.to_dict()["items"] as Array).size(), r.carried.size(), "历史只写 id")
@@ -508,7 +508,7 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	t.check(flow.continue_run(), "继续上次")
 	t.eq(game.base().screen, GameFlow.Screen.MAP, "→ 地图")
 
-	# M6-3：走到最近的免费撤离点，先确认再撤；暂存区里有东西就提一句遗落
+	# M6-3：走到最近的免费撤离点，先确认再撤；地上有东西就提一句遗落
 	map = game.base()
 	t.check(not map.extract(), "不在撤离点上按撤离没反应")
 	var run: RunState = flow.run
@@ -527,7 +527,7 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	t.check(map.confirm_extract(), "确定撤离")
 	t.eq(game.base().screen, GameFlow.Screen.RESULT, "→ 结算")
 	var result: RunResult = flow.result
-	t.check(result != null and result.is_extracted() and result.left_behind == left, "账上遗落 %d 件 = 暂存区里的" % left)
+	t.check(result != null and result.is_extracted() and result.left_behind == left, "账上遗落 %d 件 = 地上的" % left)
 	t.check(flow.meta.has_pending_board(), "结算屏上带回来的棋盘等着置入")
 	var stored: Dictionary = game.base().store_all()
 	t.check(int(stored["moved"]) > 0 and not flow.meta.has_pending_board(), "结算屏一键置入 %d 件" % stored["moved"])
@@ -640,7 +640,7 @@ static func run_warehouse_to_run(t: TestCase) -> void:
 	fourth.end_reason = &"extract"
 	f.resume()
 	f.finish_result()
-	t.eq(f.can_begin(), "", "090：带回来的棋盘没清空也能开新局（开局屏里进暂存区）")
+	t.eq(f.can_begin(), "", "090：带回来的棋盘没清空也能开新局（开局屏里到地上）")
 	f.store_all()
 	t.eq(f.meta.warehouse.item_count(), stock - 3 + board_n, "撤离：棋盘上的非包道具置入后全回仓库")
 	_cleanup()

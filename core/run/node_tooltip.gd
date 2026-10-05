@@ -75,7 +75,7 @@ static func _countdown_line(run: RunState, node: MapNode, text: String) -> Strin
 	return text
 
 
-## 反馈：每个点的暂存区各自留着 —— 这个点上放着的东西（站在上面时是身上暂存区里的，走开了是留在这里的），一行 BBCode；没有返回 ""。
+## 反馈：每个点的地上各自留着 —— 这个点上放着的东西（站在上面时是身上地上的，走开了是留在这里的），一行 BBCode；没有返回 ""。
 ## 和 [NodeStorageModule] 同一份账，不受章节的「节点浮窗」开关管（这是玩家自己放的东西）
 static func stash_text(run: RunState, node: MapNode) -> String:
 	if run == null or node == null:
@@ -98,7 +98,7 @@ static func stash_text(run: RunState, node: MapNode) -> String:
 	var parts: Array[String] = []
 	for name in order:
 		parts.append(name if int(counts[name]) == 1 else "%s ×%d" % [name, counts[name]])
-	return "[color=#f0ad4e]暂存区（%d 件）：[/color]%s" % [items.size(), "、".join(parts)]
+	return "[color=#f0ad4e]地上（%d 件）：[/color]%s" % [items.size(), "、".join(parts)]
 
 
 ## 浮窗里要不要画对手的棋盘：没用过的战斗点、内容里有敌人

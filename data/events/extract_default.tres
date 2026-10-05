@@ -22,7 +22,7 @@ label = "再看看"
 script = ExtResource("5_3heij")
 id = &"extract_default"
 title = "撤离点"
-text = "能出去的地方。{c:warn}撤了这一局就结束{/c}：包里的东西带回仓库，暂存区里的留在这儿，钱带出去。
+text = "能出去的地方。{c:warn}撤了这一局就结束{/c}：包里的东西带回仓库，地上的留在这儿，钱带出去。
 
 费用：{extract_fee} 币（零即免费）。"
 options = Array[ExtResource("1_wwjr2")]([SubResource("Resource_d6uot"), SubResource("Resource_vwjvj")])

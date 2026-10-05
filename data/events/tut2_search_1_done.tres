@@ -15,5 +15,5 @@ id = &"tut2_search_1_done"
 title = "{item:plate_cuirass}"
 text = "又翻出一件{item:plate_cuirass}：开战时给一大截一次性护盾，先替你挨，挨完就没了。几下重击它接得住；绵绵不断的小刀会把它磨光，然后就是你自己挨。
 
-前面分岔：{c:warn}把鼠标停在两个战斗点上看看对手{/c}，再决定带盾还是带甲、走哪一边。装不下的那件留在{zone:暂存区}：走了它留在这个点上，回来还能拿，但撤离不带走。"
+前面分岔：{c:warn}把鼠标停在两个战斗点上看看对手{/c}，再决定带盾还是带甲、走哪一边。装不下的那件留在{zone:地上}：走了它留在这个点上，回来还能拿，但撤离不带走。"
 options = Array[ExtResource("1_dyv0g")]([SubResource("Resource_laii8")])

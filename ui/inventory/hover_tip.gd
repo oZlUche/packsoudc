@@ -17,7 +17,7 @@ var _extra: Control = null
 var _side: VBoxContainer
 var _terms: Array = []
 var _views: Array[ContainerView] = []
-var _board_of: Callable = Callable()     # view → 拿来编译的棋盘（暂存区里的道具单独编）
+var _board_of: Callable = Callable()     # view → 拿来编译的棋盘（地上的道具单独编）
 ## 可选：`func(view, uid) -> bool`，假就不显示（容器屏：没亮出来的不说）
 var can_show: Callable = Callable()
 var _font: Font
@@ -28,6 +28,7 @@ var _for_view: ContainerView = null
 func _init(font: Font = null) -> void:
 	_font = font
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	z_index = 60     # 128：画在地上（盖在各屏上面的那一层）的东西之上
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_panel = PanelContainer.new()
 	UiTheme.panel(_panel, 10, UiTheme.PANEL_LINE)     # 121：主题的 PanelLine 变体（半透明底细边）
@@ -202,13 +203,8 @@ func _uid_under(view: ContainerView, local: Vector2) -> int:
 		var c := iv.cell_at_local(local)
 		var uid := iv.inventory.cell_uid(c)
 		return uid if uid != GridInventory.EMPTY_UID else iv.inventory.bag_at(c)
-	if view is StashView:
-		var sv := view as StashView
-		if sv.stash == null:
-			return -1
-		var row := sv.row_at_local(local)
-		var list := sv.stash.items()
-		return (list[row] as ItemInstance).uid if row < list.size() else -1
+	if view is GroundLayer:
+		return (view as GroundLayer).uid_at_local(local)     # 128：地上
 	return -1
 
 

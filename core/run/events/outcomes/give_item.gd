@@ -1,4 +1,4 @@
-## 后果：给一件指定的道具（进暂存区，和以前的事件一样由 RunState 收）
+## 后果：给一件指定的道具（到地上，和以前的事件一样由 RunState 收）
 class_name GiveItem
 extends EventOutcome
 

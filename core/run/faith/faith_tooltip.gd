@@ -60,5 +60,5 @@ static func describe(def: FaithDef, power: FaithPower = null, items: ItemDatabas
 					continue
 				bits.append(b.describe())
 			lines.append("　%s%s" % [Names.of(d), ("：" + "；".join(bits)) if not bits.is_empty() else "（没有按阶解锁的功能）"])
-	lines.append("[color=#8b93a1]别的信仰的道具休眠：只留通用效果（盾的减伤、武器的攻击力），护符彻底失效。切换 = 把道具挪到暂存区再挪回[/color]")
+	lines.append("[color=#8b93a1]别的信仰的道具休眠：只留通用效果（盾的减伤、武器的攻击力），护符彻底失效。切换 = 把道具挪到地上再挪回[/color]")
 	return "\n".join(lines)

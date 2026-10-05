@@ -64,8 +64,8 @@ static func run(t: TestCase) -> void:
 		t.eq(TextLint.scan({"text": def.text}).size(), 0, "%s：正文没有裸数字" % def.id)
 		t.check(not def.text.contains("<!--") and not def.text.contains("待核"), "%s：没有待核注释" % def.id)
 
-	t.begin("125 · 搜索：「护盾」命中护盾页与词条页；「暂存区」命中暂存区页")
+	t.begin("125 · 搜索：「护盾」命中护盾页与词条页；「地上」命中地上页")
 	var hits := book.search("护盾", {"_items": db})
 	t.check(hits.has("shield"), "护盾页")
 	t.check(hits.has("term:护盾"), "护盾词条")
-	t.check(book.search("暂存区", {"_items": db}).has("staging_zone"), "暂存区页")
+	t.check(book.search("地上", {"_items": db}).has("staging_zone"), "地上页")

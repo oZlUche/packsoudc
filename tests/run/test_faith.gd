@@ -1,6 +1,6 @@
 ## 信仰体系（第 8 阶段 8-4，报告 081；作者定）：信仰道具带 faith + faith:<id>；**现实里也能存在的东西（皮甲、短刀……）不归任何信仰**；
 ## 任何时刻只激活最后置入棋盘的信仰道具所属的信仰；别的信仰的道具休眠（不参战、不给邻接、不计套装，占格照占）；无信仰之物随便用；
-## 一件信仰道具都没有 = 没激活（不信者）；挪到暂存区再挪回 = 切换；同容器内挪位置、原样放回、同容器里挪包都不算重新置入；存档带着置入序号；
+## 一件信仰道具都没有 = 没激活（不信者）；挪到地上再挪回 = 切换；同容器内挪位置、原样放回、同容器里挪包都不算重新置入；存档带着置入序号；
 ## 定义走管线、导入器校验标签；敌人只信一个神、至少一件武器。期望从数据推：哪些道具有信仰、各归哪个都读标签。
 extends RefCounted
 
@@ -77,7 +77,7 @@ static func run_tags_and_defs(t: TestCase) -> void:
 
 
 static func run_activation(t: TestCase) -> void:
-	t.begin("信仰 · 最后置入的信仰道具决定激活；挪到暂存区再挪回 = 切换；同容器挪位置 / 原样放回 / 挪包不算；没有信仰道具 = 无；凡物不受影响")
+	t.begin("信仰 · 最后置入的信仰道具决定激活；挪到地上再挪回 = 切换；同容器挪位置 / 原样放回 / 挪包不算；没有信仰道具 = 无；凡物不受影响")
 	var db := _db()
 	var b := GridInventory.new(Vector2i(8, 6), 1, false)
 	t.eq(FaithState.active_tag(b), &"", "空棋盘：没激活")
@@ -93,9 +93,9 @@ static func run_activation(t: TestCase) -> void:
 	# 同容器挪位置：不算重新置入
 	t.check(InventoryService.move_within(b, shield.uid, Vector2i(0, 3), 0), "把盾挪个位置")
 	t.eq(FaithState.active_id(b), &"brute", "同容器挪位置不换信仰")
-	# 挪到暂存区再挪回：切换
+	# 挪到地上再挪回：切换
 	var stash := ItemStash.new(2, 0)
-	t.check(InventoryService.transfer_auto(b, shield.uid, stash), "盾挪到暂存区")
+	t.check(InventoryService.transfer_auto(b, shield.uid, stash), "盾挪到地上")
 	t.eq(FaithState.active_id(b), &"brute", "还是暴力之神")
 	t.check(InventoryService.transfer_auto(stash, shield.uid, b), "再挪回棋盘")
 	t.eq(FaithState.active_id(b), &"skill", "切换成技巧之神：盾成了最后置入的")

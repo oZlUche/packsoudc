@@ -1,7 +1,7 @@
-## 保险箱屏（092，作者定）：叠在地图上的一层。左边是保险箱的格子（大小按局外规则，初始 3×3），右边是背包（棋盘 + 暂存区）。
+## 保险箱屏（092，作者定）：叠在地图上的一层。左边是保险箱的格子（大小按局外规则，初始 3×3），右边是背包（棋盘 + 地上）。
 ##
 ## 放进保险箱的道具**视为已带出**：结算时不管撤离还是行动失败都进局外（结算屏单独一格看得见）。包放不进去（局外不留包）。
-## 拖着放、双击放（棋盘双击 → 保险箱；保险箱双击 → 试着回棋盘，放不下进暂存区）。
+## 拖着放、双击放（棋盘双击 → 保险箱；保险箱双击 → 试着回棋盘，放不下到地上）。
 ## 作者定：**关上（里面有东西）就送回基地、不能再改动**，走开也算关上；空着关只是收起，还能再开。
 extends GameScreen
 
@@ -70,7 +70,7 @@ func _is_open() -> bool:
 
 
 #region 公开动作
-## 保险箱里的一件回背包（放不下进暂存区）。测试直接调
+## 保险箱里的一件回背包（放不下到地上）。测试直接调
 func take_back(uid: int) -> bool:
 	var inst := _safe.get_item(uid)
 	if inst == null or not _is_open():
@@ -78,12 +78,12 @@ func take_back(uid: int) -> bool:
 	if InventoryService.transfer_auto(_safe, uid, flow.run.board):
 		return true
 	if InventoryService.transfer_auto(_safe, uid, flow.run.storage):
-		_line.text = "背包放不下「%s」，放进了暂存区" % Names.of(inst.def)
+		_line.text = "背包放不下「%s」，放在了地上" % Names.of(inst.def)
 		return true
 	return false
 
 
-## 棋盘 / 暂存区里的一件放进保险箱。测试直接调；包不收
+## 棋盘 / 地上的一件放进保险箱。测试直接调；包不收
 func put_in(uid: int) -> bool:
 	var run := flow.run
 	if not _is_open():

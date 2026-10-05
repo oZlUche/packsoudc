@@ -25,7 +25,7 @@ static func create(p_db: SetDatabase) -> SetTracker:
 	return t
 
 
-## 绑定作战棋盘。**只数棋盘上的** —— 暂存区的物品不参战，也不该凑套装，
+## 绑定作战棋盘。**只数棋盘上的** —— 地上的物品不参战，也不该凑套装，
 ## 与 3.4 的参战规则一致。
 func bind(board: GridInventory) -> void:
 	if _board != null and _board.changed.is_connected(recount):
@@ -78,7 +78,7 @@ func tracked_ids() -> Array:
 
 ## 棋盘上所有道具自带的跨域效果（战利品、地图…）。
 ##
-## **道具的跨域效果不需要凑套装，在棋盘上就算激活。** 暂存区不算 ——
+## **道具的跨域效果不需要凑套装，在棋盘上就算激活。** 地上不算 ——
 ## 那里的东西视同不存在，过关即连同道具一起消失。
 func item_effects_in_scope(scope: StringName) -> Array[Effect]:
 	var out: Array[Effect] = []

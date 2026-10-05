@@ -1,4 +1,4 @@
-## 神坛特殊操作（095，各神都有）：花 [member cost] 信力，赐福包里能被赐福的最值钱的一件（棋盘优先，其次暂存区）
+## 神坛特殊操作（095，各神都有）：花 [member cost] 信力，赐福包里能被赐福的最值钱的一件（棋盘优先，其次地上）
 class_name AltarBlessPerk
 extends FaithPerk
 

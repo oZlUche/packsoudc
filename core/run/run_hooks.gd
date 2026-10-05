@@ -23,7 +23,7 @@ const NAMES := {
 	&"has_map_buff": "BuffModule：有这个地图 buff 吗",
 	&"bracket": "HunterSystem / RunState：现在第几段位",
 	&"request_extract": "RunState：从这个撤离点撤离（付不起返回 false）",
-	&"relocate": "RunState：把人挪到别处（清暂存区、给猎手一个回合）",
+	&"relocate": "RunState：把人挪到别处（清地上、给猎手一个回合）",
 	&"safe_open": "SafeModule：保险箱还能开吗",
 	&"faith_tier": "RunState：激活信仰现在第几阶（-1 = 没激活）",
 	&"active_faith_id": "RunState：激活信仰的 id（空 = 没激活）",

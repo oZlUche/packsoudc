@@ -1,5 +1,5 @@
 ## 后果：失去身上的道具（8-3）—— 献祭、被偷、交钥匙。挑法与 [ErodeDamageItem] 一样：随机 / 最值钱 / 最不值钱，
-## 再加「指定 id」；从棋盘、暂存区或两处拿；一次拿几件。没得拿就什么也不发生（条件层该先用 HasItem 挡住）
+## 再加「指定 id」；从棋盘、地上或两处拿；一次拿几件。没得拿就什么也不发生（条件层该先用 HasItem 挡住）
 class_name LoseItem
 extends EventOutcome
 
@@ -54,5 +54,5 @@ func _choose(ctx: EventContext) -> Dictionary:
 
 func describe() -> String:
 	var what: String = ["随机一件", "最值钱的一件", "最不值钱的一件", String(item)][pick]
-	var from: String = ["棋盘上", "暂存区里", ""][where]
+	var from: String = ["棋盘上", "地上", ""][where]
 	return "失去%s%s%s" % [from, what, " ×%d" % count if count != 1 else ""]

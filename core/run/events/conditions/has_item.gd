@@ -1,4 +1,4 @@
-## 条件：身上有某道具（8-3）。item 为空 = 任何道具都算；tag 给了就只算带这个标签的（083 教程：棋盘上得有武器）；看棋盘、暂存区或两处
+## 条件：身上有某道具（8-3）。item 为空 = 任何道具都算；tag 给了就只算带这个标签的（083 教程：棋盘上得有武器）；看棋盘、地上或两处
 class_name HasItem
 extends EventCondition
 
@@ -19,5 +19,5 @@ func check(ctx: EventContext) -> bool:
 func describe() -> String:
 	var what := String(item) if item != &"" else ("带「%s」的道具" % tag if tag != &"" else "任何道具")
 	if missing:
-		return "身上没有%s%s" % [what, ["（棋盘上）", "（暂存区里）", ""][where]]
-	return "需要%s ×%d%s" % [what, maxi(1, count), ["（棋盘上）", "（暂存区里）", ""][where]]
+		return "身上没有%s%s" % [what, ["（棋盘上）", "（地上）", ""][where]]
+	return "需要%s ×%d%s" % [what, maxi(1, count), ["（棋盘上）", "（地上）", ""][where]]

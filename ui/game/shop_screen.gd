@@ -1,8 +1,8 @@
-## 商店（087，作者定重做）：**左边是店，右边是自己的背包**（棋盘 + 暂存区，[InventoryPanel]），同一层拖拽盖着全部。
+## 商店（087，作者定重做）：**左边是店，右边是自己的背包**（棋盘 + 地上，[InventoryPanel]），同一层拖拽盖着全部。
 ##
 ## 店里摆四个**栏位**（[ShopSession.shelves]，每格一块至少 3×4 的小棋盘，商品更大就跟着大），商品按真实尺寸摆在里面，底下写价。
 ## **买**：把商品拖进自己的棋盘 = 买（放手时收钱，[method ShopSession.pay_for]）；钱不够放手就弹回栏位、提示一句；双击商品也是买
-## （自动找位，先包后暂存区），钱不够双击没反应、提示一句。**卖**：把包里 / 暂存区里的东西拖进「出售区」= 卖，回定价的一半。
+## （自动找位，先包后地上），钱不够双击没反应、提示一句。**卖**：把包里 / 地上的东西拖进「出售区」= 卖，回定价的一半。
 ## 刷新、收起（回地图，店还开着）、离开照旧。
 extends GameScreen
 
@@ -54,7 +54,7 @@ func open(payload: Dictionary) -> void:
 	buttons.add_child(_button("离开", leave, 13))
 	left.add_child(buttons)
 
-	# 右边：自己的背包（棋盘 + 暂存区），和店共用一层拖拽
+	# 右边：自己的背包（棋盘 + 地上），和店共用一层拖拽
 	var inv := InventoryPanelScript.new()
 	_drag = DragLayer.new()
 	_drag.label_font = font
@@ -85,7 +85,7 @@ func open(payload: Dictionary) -> void:
 
 
 #region 公开动作
-## 双击 / 按钮买第 i 格：钱不够没反应、提示一句；买到的先进包、放不下进暂存区（RunState 接 bought）
+## 双击 / 按钮买第 i 格：钱不够没反应、提示一句；买到的先进包、放不下到地上（RunState 接 bought）
 func buy(i: int) -> bool:
 	if _session == null:
 		return false
@@ -137,7 +137,7 @@ func line_text() -> String:
 #endregion
 
 
-## 「能不能放到那儿」：商品只能进自己的棋盘（暂存区也行）且钱够；自己的东西不能放到栏位上、能放进出售区
+## 「能不能放到那儿」：商品只能进自己的棋盘（地上也行）且钱够；自己的东西不能放到栏位上、能放进出售区
 func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 	if _session == null or inst == null:
 		return false
@@ -239,7 +239,7 @@ func _rebuild() -> void:
 func _refresh() -> void:
 	if _session == null:
 		return
-	_wallet_line.text = "货币 %d　商品按真实尺寸摆着；拖进棋盘或暂存区就买下" % flow.run.wallet.balance
+	_wallet_line.text = "货币 %d　商品按真实尺寸摆着；拖进棋盘或地上就买下" % flow.run.wallet.balance
 	_refresh_btn.text = "刷新（%d 币）" % _session.refresh_cost()
 	_refresh_btn.disabled = not _session.can_refresh()
 	for i in _shelf_views.size():

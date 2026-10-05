@@ -100,7 +100,7 @@ const TYPE_LABELS := {
 
 ## 枚举值 → 中文
 const ENUM_LABELS := {
-	"SELF": "自己", "OPPONENT": "对手", "BOTH": "两边", "BOARD": "棋盘", "STORAGE": "暂存区", "RANDOM": "随机", "MOST_VALUABLE": "最值钱的",
+	"SELF": "自己", "OPPONENT": "对手", "BOTH": "两边", "BOARD": "棋盘", "STORAGE": "地上", "RANDOM": "随机", "MOST_VALUABLE": "最值钱的",
 	"LEAST_VALUABLE": "最不值钱的", "BY_ID": "指定 id", "NEAREST": "最近的", "FARTHEST": "最远的", "FIXED": "指定的", "HIDDEN": "隐藏", "VISIBLE": "可见",
 	"NEAR": "靠近才可见", "ANY": "任意", "INCREASE": "增加", "DECREASE": "减少", "GODS": "诸神", "CHURCH": "新教", "META": "局外", "MAP": "地图",
 	"PRESET": "预设", "GENERATED": "生成", "GENERATOR": "生成", "UNVISITED": "没去过", "VISITED": "去过", "TOTAL": "总数", "DISTINCT": "不重复",

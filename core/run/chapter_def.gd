@@ -49,7 +49,7 @@ extends Resource
 @export var hidden_by_unlock: StringName = &""
 ## 这一章开局多给的体力（084：第二张教程图两场都输也死不了）
 @export var vitality_bonus: int = 0
-## 这一章开局发的道具 id（在角色的初始包之上；序章二发一把匕首）。放不进包的进暂存区
+## 这一章开局发的道具 id（在角色的初始包之上；序章二发一把匕首）。放不进包的到地上
 @export var starting_items: Array[StringName] = []
 ## 088（作者定）：这一章开局发的**特殊道具**（不进背包，只是文本通知 + 图鉴点亮；序章二发望远镜 → 节点浮窗）。记在局外，以后每一局都有
 @export var starting_keepsakes: Array[StringName] = []

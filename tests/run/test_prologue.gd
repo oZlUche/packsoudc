@@ -256,8 +256,8 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(path[1].is_visited(), "点用过了")
 	t.not_null(s.pending_loot, "收获等着拿")
 	t.eq(s.take_all_loot(), 3, "拿走三件")
-	# 整理：暂存区一挪步就清（080），先把搜到的都放进包里（有没有武器的门在战前准备屏上，084）
-	# 123：全部拾取先进背包，放不下的才进暂存区 —— 两边都看
+	# 整理：地上一挪步就清（080），先把搜到的都放进包里（有没有武器的门在战前准备屏上，084）
+	# 123：全部拾取先进背包，放不下的才到地上 —— 两边都看
 	var weapon: ItemInstance = null
 	for inst in s.board.items() + s.storage.items():
 		if (inst as ItemInstance).def.tags.has(&"weapon") and weapon == null:
@@ -324,7 +324,7 @@ static func run_walkthrough(t: TestCase) -> void:
 		s.take_all_loot()
 	for inst in s.storage.items().duplicate():
 		s.equip((inst as ItemInstance).uid)
-	t.eq(s.storage.item_count(), 0, "新搜到的都放进包里了（放不下的先不管）") if s.storage.item_count() == 0 else t.check(true, "（有放不下的，留在暂存区，走了就没）")
+	t.eq(s.storage.item_count(), 0, "新搜到的都放进包里了（放不下的先不管）") if s.storage.item_count() == 0 else t.check(true, "（有放不下的，留在地上，走了就没）")
 	# 精英（114）：先把毒药瓶拖到匕首上合成涂毒匕首，门才开
 	t.check(s.step_to(path[4].id), "走到精英")
 	ev = s.events.pending_event()
@@ -363,7 +363,7 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.eq(int(s.tally["battles_lost"]), 0, "一场没输")
 
 
-## 棋盘或暂存区里第一件这个 id 的道具
+## 棋盘或地上第一件这个 id 的道具
 static func _find(s: RunState, id: StringName) -> ItemInstance:
 	for c in [s.board, s.storage]:
 		for inst in (c as ItemContainer).items():

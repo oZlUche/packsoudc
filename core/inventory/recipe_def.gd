@@ -2,7 +2,7 @@
 ##
 ## 作者数据，走内容管线：`data/authoring/recipes/*.json` → `data/recipes/*.tres`。一份配方就是「哪两件 → 哪一件」，顺序无关。
 ## **拖到上面立刻合**（114 作者定）：一局里把一件拖到棋盘上另一件上面，有配方就立刻合成（[method CraftingModule.craft]）；
-## 产物落在被压那件的位置上，放不下自动找位，再放不下进暂存区并提醒。
+## 产物落在被压那件的位置上，放不下自动找位，再放不下到地上并提醒。
 class_name RecipeDef
 extends Resource
 

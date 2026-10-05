@@ -83,9 +83,18 @@ func refresh_backdrop() -> void:
 		_bg_rect.color = UiPalette.bg()
 
 
-## 一块带边框的面板
+## 一块带边框的面板。128：它占着地上的地方 —— 地上的东西被它盖住就推到最近的空处
 func _panel(margin: int = 16) -> PanelContainer:
-	return UiTheme.panel(PanelContainer.new(), margin)     # 121：主题的 PanelDark 变体
+	var p := UiTheme.panel(PanelContainer.new(), margin)     # 121：主题的 PanelDark 变体
+	_reserve_ground(p)
+	return p
+
+
+## 128：登记一块占着地上的面板（关了自动撤销）。没有地层（局外、测试）什么也不做
+func _reserve_ground(c: Control) -> void:
+	var g := GroundLayer.current()
+	if g != null:
+		g.reserve(c)
 
 
 ## 居中的一块面板（叠层用）：半透明压暗底下的地图，面板放中间

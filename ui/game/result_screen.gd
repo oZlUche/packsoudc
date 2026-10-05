@@ -50,13 +50,13 @@ func open(payload: Dictionary) -> void:
 	if extracted:
 		col.add_child(_label("背出来 %d 件、值 %d 币、带出 %d 币；图鉴新点亮 %d 条" % [
 			r.carried.size(), r.value, r.balance, int(flow.last_absorbed.get("lit", 0))], 13, UiPalette.DIM))
-		# 092（作者定）：暂存区里没背出来的，离开这一屏时一键出售 —— 先说清楚
+		# 092（作者定）：地上没背出来的，离开这一屏时一键出售 —— 先说清楚
 		var sale := flow.stash_sale_preview()
 		if r.left_behind > 0:
-			_stash_line = _wrapped("暂存区里还有 %d 件（值 %d 币）没背出来：离开这一屏时会一键出售，得 %d 币（按基地出售比例）。" % [r.left_behind, r.left_value, int(sale["funds"])], 13, UiPalette.STAMINA, 700)
+			_stash_line = _wrapped("地上还有 %d 件（值 %d 币）没背出来：离开这一屏时会一键出售，得 %d 币（按基地出售比例）。" % [r.left_behind, r.left_value, int(sale["funds"])], 13, UiPalette.STAMINA, 700)
 			col.add_child(_stash_line)
 	else:
-		col.add_child(_wrapped("背包、暂存区、钱，全都留在了里面。" + ("保险箱里的 %d 件带出来了。" % r.safe_items.size() if not r.safe_items.is_empty() else ""), 14, UiPalette.FG, 600))
+		col.add_child(_wrapped("背包、地上、钱，全都留在了里面。" + ("保险箱里的 %d 件带出来了。" % r.safe_items.size() if not r.safe_items.is_empty() else ""), 14, UiPalette.FG, 600))
 	# 092：保险箱单独一格（放进去的视为已带出，战败也在）
 	if not r.safe_items.is_empty():
 		var safe_row := _hbox(16)

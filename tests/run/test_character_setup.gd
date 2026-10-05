@@ -188,7 +188,7 @@ static func run_start_with_character(t: TestCase) -> void:
 	t.not_null(run2, "带着 layout 开局")
 	if run2 != null:
 		t.eq(RunState.layout_of(run2.board), layout, "一局里的棋盘和开局屏摆的逐件相同（定义、落点、朝向）")
-		t.eq(run2.storage.item_count(), 0, "没有东西掉进暂存区")
+		t.eq(run2.storage.item_count(), 0, "没有东西掉到地上")
 		t.eq(run2.board.item_count(), layout.size(), "件数一样")
 		# 存档带着角色
 		var d := run2.to_dict()
@@ -390,10 +390,10 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 	_cleanup()
 
 
-## 090（作者定）：开局屏的暂存区 —— 上一局带回来、还没置入的东西进这一屏时挪进暂存区；拖上包 = 带上、拖进仓库 = 置入、
-## 换角色回暂存区；回主菜单原样放回带回来的棋盘（视为没发生过移动）；出发则留在暂存区的没了。仓库的东西进不了暂存区
+## 090（作者定）：开局屏的地上 —— 上一局带回来、还没置入的东西进这一屏时挪到地上；拖上包 = 带上、拖进仓库 = 置入、
+## 换角色回地上；回主菜单原样放回带回来的棋盘（视为没发生过移动）；出发则留在地上的没了。仓库的东西进不了地上
 static func frame_setup_stash(t: TestCase, root: Window) -> void:
-	t.begin("开局屏 · 暂存区（090）：带回来的进暂存区、带上 / 置入 / 留着、换角色回暂存区、回主菜单原样放回、出发就没了")
+	t.begin("开局屏 · 地上（090）：带回来的到地上、带上 / 置入 / 留着、换角色回地上、回主菜单原样放回、出发就没了")
 	_cleanup()
 	var game = load(GAME).instantiate()
 	game.save_path = SAVE
@@ -431,30 +431,30 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 	for gi in setup._chapters.size():
 		if setup._chapters[gi].id == &"free_mode":
 			setup.choose_chapter(gi)
-	t.eq(setup.stash.item_count(), 3, "三件都进了暂存区")
-	t.check(not flow.meta.has_pending_board(), "带回来的棋盘空了（东西挪到了暂存区）")
+	t.eq(setup.stash.item_count(), 3, "三件都到了地上")
+	t.check(not flow.meta.has_pending_board(), "带回来的棋盘空了（东西挪到了地上）")
 	t.eq(flow.meta.warehouse.item_count(), n, "仓库没动")
-	t.check(setup._stash_box.visible, "暂存区那一栏显示着")
+	t.check(setup._stash_box.visible, "地上那一栏显示着")
 	t.check(setup._stash_title.text.contains("3"), "标题写着件数：%s" % setup._stash_title.text)
 
-	# 落点规则：仓库的东西进不了暂存区（会丢）；暂存区的能回暂存区、能进仓库、能上棋盘
+	# 落点规则：仓库的东西进不了地上（会丢）；地上的能回地上、能进仓库、能上棋盘
 	var filt: Callable = setup._drag.drop_filter
-	t.check(not bool(filt.call(flow.meta.warehouse.get_item(wh_uid), setup.stash)), "仓库的东西拖不进暂存区")
-	t.check(bool(filt.call(setup.stash.get_item(uids[0]), setup.stash)), "暂存区的能放回暂存区")
-	t.check(bool(filt.call(setup.stash.get_item(uids[0]), flow.meta.warehouse)), "暂存区的能进仓库")
-	t.check(bool(filt.call(setup.stash.get_item(uids[0]), setup.board)), "暂存区的能上棋盘")
+	t.check(not bool(filt.call(flow.meta.warehouse.get_item(wh_uid), setup.stash)), "仓库的东西拖不到地上")
+	t.check(bool(filt.call(setup.stash.get_item(uids[0]), setup.stash)), "地上的能放回地上")
+	t.check(bool(filt.call(setup.stash.get_item(uids[0]), flow.meta.warehouse)), "地上的能进仓库")
+	t.check(bool(filt.call(setup.stash.get_item(uids[0]), setup.board)), "地上的能上棋盘")
 
 	# 带上 / 置入 / 留着
-	t.check(setup.carry_in(uids[0]), "暂存区的一件带上包")
+	t.check(setup.carry_in(uids[0]), "地上的一件带上包")
 	t.eq(setup.carried().size(), 1, "带了一件")
-	t.check(setup.store(uids[1]), "暂存区的一件收进仓库")
+	t.check(setup.store(uids[1]), "地上的一件收进仓库")
 	t.eq(flow.meta.warehouse.item_count(), n + 1, "仓库多了一件")
-	t.eq(setup.stash.item_count(), 1, "暂存区剩一件")
+	t.eq(setup.stash.item_count(), 1, "地上剩一件")
 	t.check(not setup.store(wh_uid), "仓库的东西不归 store 管")
 
-	# 换角色：从暂存区带上的回暂存区（不是仓库）
+	# 换角色：从地上带上的回地上（不是仓库）
 	setup.choose_character(0)
-	t.eq(setup.stash.item_count(), 2, "换角色：从暂存区带上的回了暂存区")
+	t.eq(setup.stash.item_count(), 2, "换角色：从地上带上的回了地上")
 	t.eq(flow.meta.warehouse.item_count(), n + 1, "仓库没多")
 	t.check(setup.carry_in(uids[0]), "再带上")
 	t.check(setup.carry_in(wh_uid), "仓库的也带上一件")
@@ -476,7 +476,7 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 	for gi in setup._chapters.size():
 		if setup._chapters[gi].id == &"free_mode":
 			setup.choose_chapter(gi)
-	t.eq(setup.stash.item_count(), 2, "又进了暂存区")
+	t.eq(setup.stash.item_count(), 2, "又到了地上")
 	t.check(setup.carry_in(uids[0]), "带上一件")
 	var went := false
 	for seed in range(1, 30):
@@ -492,8 +492,8 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 			if (inst as ItemInstance).def.id == &"medkit":
 				found += 1
 		t.check(found >= 1, "带上的那件进了一局")
-		t.check(flow.meta.board == null, "留在暂存区的没了：带回来的棋盘清了")
-		t.eq(setup.stash.item_count(), 0, "暂存区清空")
+		t.check(flow.meta.board == null, "留在地上的没了：带回来的棋盘清了")
+		t.eq(setup.stash.item_count(), 0, "地上清空")
 		t.eq(flow.meta.warehouse.item_count(), n + 1, "仓库没被动")
 		t.check(not MetaSave.read(flow.items, META, flow.meta_rules).has_pending_board(), "存盘里也清了")
 	game.queue_free()

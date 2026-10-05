@@ -32,7 +32,7 @@ static func cleanup(prefix: String) -> void:
 	GameSettings.remove(String(p["settings"]))
 
 
-## 把一件信仰道具放上棋盘（激活那个信仰）；放不下就进暂存区并返回 null
+## 把一件信仰道具放上棋盘（激活那个信仰）；放不下就到地上并返回 null
 static func activate(run: RunState, item_id: StringName) -> ItemInstance:
 	var def := run.items.get_def(item_id)
 	if def == null:

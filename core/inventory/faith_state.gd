@@ -6,7 +6,7 @@
 ## 套装（[SetTracker]）与编译器（[BattleCompiler]）都得读它，它们不该认识 `core/run`。
 ##
 ## 「最后置入」看 [member ItemInstance.placed_seq]（[GridInventory] 在道具从别的容器进来时盖的序号），
-## 所以把一件挪到暂存区再挪回来就是切换。全是静态函数：只看容器与标签，不认具体的神、不持有状态。
+## 所以把一件挪到地上再挪回来就是切换。全是静态函数：只看容器与标签，不认具体的神、不持有状态。
 class_name FaithState
 extends RefCounted
 

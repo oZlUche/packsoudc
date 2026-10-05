@@ -1,6 +1,6 @@
-## 暂存区：一个列表容器，以及它怎么接进拖拽层（架构文档 3.4）。
+## 地上：一个列表容器，以及它怎么接进拖拽层（架构文档 3.4）。
 ##
-## 这一组要守住的核心不变式是：**暂存区里没有空间语义**。
+## 这一组要守住的核心不变式是：**地上没有空间语义**。
 ## 异形、旋转、占格、邻接，一样都不认 —— 3×1 的长条和 1×1 的钉子占一样的位置。
 ## 一旦哪天有人给它加了「摆不下」这类判断，下面的用例就会红。
 extends RefCounted
@@ -22,7 +22,7 @@ static func _def(id: String, rows: Array, tags: Array = []) -> ItemDef:
 
 #region 容器层
 static func run(t: TestCase) -> void:
-	t.begin("暂存区 · 列表语义")
+	t.begin("地上 · 列表语义")
 
 	ItemInstance.reset_uid_counter()
 	var dot := _def("dot", ["#"])
@@ -69,7 +69,7 @@ static func run(t: TestCase) -> void:
 
 
 static func run_capacity(t: TestCase) -> void:
-	t.begin("暂存区 · 上限")
+	t.begin("地上 · 上限")
 
 	ItemInstance.reset_uid_counter()
 	var dot := _def("dot", ["#"])
@@ -89,7 +89,7 @@ static func run_capacity(t: TestCase) -> void:
 
 
 static func run_tags(t: TestCase) -> void:
-	t.begin("暂存区 · 准入标签")
+	t.begin("地上 · 准入标签")
 
 	ItemInstance.reset_uid_counter()
 	var gun := _def("gun", ["#"], ["weapon"])
@@ -106,7 +106,7 @@ static func run_tags(t: TestCase) -> void:
 
 #region 搬运
 static func run_transfer(t: TestCase) -> void:
-	t.begin("暂存区 · 从网格搬进列表")
+	t.begin("地上 · 从网格搬进列表")
 
 	ItemInstance.reset_uid_counter()
 	var dot := _def("dot", ["#"])
@@ -120,7 +120,7 @@ static func run_transfer(t: TestCase) -> void:
 	var moved := InventoryService.transfer_all(loot, s)
 	t.eq(moved, 5, "全部搬进了列表 —— 列表不限容量，不存在「装不下」")
 	t.eq(loot.item_count(), 0, "战利品空了")
-	t.eq(s.item_count(), 5, "暂存区五件")
+	t.eq(s.item_count(), 5, "地上五件")
 
 	# --- 目标收不下时，源容器一个字都不能动 ---
 	var full := ItemStash.new(3, 0)
@@ -146,21 +146,22 @@ static func _grid_view(inv: GridInventory, at: Vector2) -> InventoryView:
 	return v
 
 
-static func _stash_view(s: ItemStash, at: Vector2) -> StashView:
-	var v := StashView.new()
+## 128：一块地（不铺满屏的 [GroundLayer]），放进这块就落在放手点
+static func _stash_view(s: ItemStash, at: Vector2) -> GroundLayer:
+	var v := GroundLayer.new()
 	v.stash = s
 	v.position = at
-	v.size = Vector2(200, 240)
+	v.size = Vector2(400, 400)
 	return v
 
 
-## 第 row 行中心的全局坐标
-static func _row_center(view: StashView, row: int) -> Vector2:
-	return view.position + view.row_origin_px(row) + Vector2(20, StashView.ROW_H * 0.5)
+## 这块地里的一个点（全局坐标）
+static func _row_center(view: GroundLayer, row: int) -> Vector2:
+	return view.position + Vector2(100 + row * 60, 100)
 
 
 static func run_drag_to_and_from(t: TestCase) -> void:
-	t.begin("暂存区 · 与棋盘之间来回拖")
+	t.begin("地上 · 与棋盘之间来回拖")
 
 	ItemInstance.reset_uid_counter()
 	var dot := _def("dot", ["#"])
@@ -178,13 +179,13 @@ static func run_drag_to_and_from(t: TestCase) -> void:
 	var item := ItemInstance.create(dot)
 	board.place(item, Vector2i(1, 1), 0)
 	bv.grab_requested.emit(bv, item.uid, Vector2(CELL * 1.5, CELL * 1.5))
-	t.check(drag.drop_at(_row_center(sv, 0)), "拖进暂存区")
+	t.check(drag.drop_at(_row_center(sv, 0)), "拖到地上")
 	t.check(s.has_item(item.uid), "它在列表里")
 	t.check(not board.has_item(item.uid), "不在棋盘上了")
 	t.eq(board.cell_uid(Vector2i(1, 1)), GridInventory.EMPTY_UID, "棋盘那一格空了")
 
 	# --- 列表 → 棋盘 ---
-	sv.grab_requested.emit(sv, item.uid, Vector2(20, StashView.ROW_H * 0.5))
+	sv.grab_requested.emit(sv, item.uid, sv.item_rect(item.uid).position + Vector2(10, 10))
 	t.check(drag.is_dragging(), "从列表里也抓得起来")
 	t.check(drag.drop_at(bv.position + Vector2(CELL * 2.5, CELL * 2.5)), "拖回棋盘")
 	t.check(board.has_item(item.uid), "回到棋盘")
@@ -197,7 +198,7 @@ static func run_drag_to_and_from(t: TestCase) -> void:
 
 
 static func run_drag_reorder(t: TestCase) -> void:
-	t.begin("暂存区 · 列表内调序")
+	t.begin("地上 · 地上挪位置（128）：只改落点，列表顺序不变")
 
 	ItemInstance.reset_uid_counter()
 	var dot := _def("dot", ["#"])
@@ -214,13 +215,13 @@ static func run_drag_reorder(t: TestCase) -> void:
 	for inst in [a, b, c]:
 		s.insert(inst, -1)
 
-	# 把最后一件拖到最前面
-	sv.grab_requested.emit(sv, c.uid, Vector2(20, StashView.ROW_H * 2.5))
+	var before := s.spot_of(c.uid)
+	sv.grab_requested.emit(sv, c.uid, sv.item_rect(c.uid).position + Vector2(10, 10))
 	t.check(drag.is_dragging(), "抓起来了")
 	t.eq(s.item_count(), 2, "抓取期间它不在列表里")
-	t.check(drag.drop_at(sv.position + Vector2(20, StashView.PAD)), "放到第一行之前")
-	t.eq(s.index_of(c.uid), 0, "**它现在排在最前面**")
-	t.eq(s.index_of(a.uid), 1, "原来的依次后移")
+	t.check(drag.drop_at(sv.position + Vector2(200, 60)), "放到这块地的另一处")
+	t.eq(s.index_of(c.uid), 2, "列表里还是最后一件")
+	t.check(not s.spot_of(c.uid).is_equal_approx(before), "落点改了")
 	t.eq(s.item_count(), 3, "件数不变")
 
 	sv.free()
@@ -228,7 +229,7 @@ static func run_drag_reorder(t: TestCase) -> void:
 
 
 static func run_drag_cancel(t: TestCase) -> void:
-	t.begin("暂存区 · 取消拖拽回到原行")
+	t.begin("地上 · 取消拖拽回到原行")
 
 	ItemInstance.reset_uid_counter()
 	var dot := _def("dot", ["#"])
@@ -244,8 +245,10 @@ static func run_drag_cancel(t: TestCase) -> void:
 	for inst in [a, b, c]:
 		s.insert(inst, -1)
 
-	sv.grab_requested.emit(sv, b.uid, Vector2(20, StashView.ROW_H * 1.5))
+	var spot_b := s.spot_of(b.uid)
+	sv.grab_requested.emit(sv, b.uid, Vector2(20, 15))
 	drag.cancel()
+	t.check(s.spot_of(b.uid).is_equal_approx(spot_b), "落点也回到原处（128）")
 	t.eq(s.item_count(), 3, "取消后件数复原")
 	t.eq(s.index_of(b.uid), 1, "**回到原来那一行**，而不是被追加到末尾")
 
@@ -254,7 +257,7 @@ static func run_drag_cancel(t: TestCase) -> void:
 
 
 static func run_bag_with_contents_rejected(t: TestCase) -> void:
-	t.begin("暂存区 · 带东西的包收得进来（087 作者定）：包一行、内容物打散各一行")
+	t.begin("地上 · 带东西的包收得进来（087 作者定）：包一行、内容物打散各一行")
 
 	ItemInstance.reset_uid_counter()
 	var bag_def := _def("bag4", ["##", "##"])
@@ -277,7 +280,7 @@ static func run_bag_with_contents_rejected(t: TestCase) -> void:
 
 	bv.grab_requested.emit(bv, bag.uid, Vector2(CELL * 1.5, CELL * 0.5))
 	t.check(drag.is_dragging(), "连内容物一起抓起来了")
-	t.check(drag.drop_at(_row_center(sv, 0)), "放进列表：成（087：包能进暂存区，内容物打散）")
+	t.check(drag.drop_at(_row_center(sv, 0)), "放进列表：成（087：包能到地上，内容物打散）")
 	t.eq(s.item_count(), 2, "列表里两行：包 + 内容物")
 	t.check(s.has_item(bag.uid) and s.has_item(inside.uid), "包和里面的东西都在列表里")
 	t.eq(board.item_count(), 0, "棋盘空了")

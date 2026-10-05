@@ -202,7 +202,7 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	if battle_node != null:
 		var st0 := run.storage.item_count()
 		var line2 := gift.on_node_entered(run, battle_node, true)
-		t.check(line2.contains("赐下") and run.storage.item_count() == st0 + 1 and (run.storage.items()[-1] as ItemInstance).def.tags.has(&"weapon"), "头一回踩战斗点：暂存区多一件武器（%s）" % line2)
+		t.check(line2.contains("赐下") and run.storage.item_count() == st0 + 1 and (run.storage.items()[-1] as ItemInstance).def.tags.has(&"weapon"), "头一回踩战斗点：地上多一件武器（%s）" % line2)
 		t.eq(gift.on_node_entered(run, battle_node, false), "", "再踩不给")
 	if rest_node != null:
 		rest_node.state = MapNode.State.VISITED

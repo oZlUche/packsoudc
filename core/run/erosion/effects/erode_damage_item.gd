@@ -41,5 +41,5 @@ func apply(ctx: ErosionContext) -> void:
 
 func describe() -> String:
 	var how: String = ["随机一件", "最值钱的一件", "最不值钱的一件"][pick]
-	var where: String = ["棋盘上", "暂存区里", "棋盘或暂存区里"][target]
+	var where: String = ["棋盘上", "地上", "棋盘或地上"][target]
 	return "损坏%s%s%s" % [where, how, gate_text()]

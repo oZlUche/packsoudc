@@ -2,7 +2,7 @@
 ##
 ## 只读：从结束了的 [RunState] 里算一份账，不动它。谁保留、谁进仓库是 [MetaState.absorb] 的事（保留规则在那一处）。
 ##
-## **只算棋盘上的。** 暂存区里的道具 = 不存在（3.4）：它是关卡内的临时摆放区，撤离时连同里面的东西一起消失。
+## **只算棋盘上的。** 地上的道具 = 不存在（3.4）：它是关卡内的临时摆放区，撤离时连同里面的东西一起消失。
 ## 这里把它记成 `left_behind`，只为了结算界面能提一句「遗落了 n 件」——那是提示，不是挽留。
 class_name RunResult
 extends RefCounted
@@ -25,7 +25,7 @@ var carried: Array[ItemInstance] = []
 var board_size: Vector2i = Vector2i.ZERO
 ## carried 的价值之和（6.4）
 var value: int = 0
-## 暂存区里遗落的件数与价值（撤离时才有意义）
+## 地上遗落的件数与价值（撤离时才有意义）
 var left_behind: int = 0
 var left_value: int = 0
 ## 091：这一局击败了核心（BOSS）没有 —— 成就的条件看它
@@ -35,7 +35,7 @@ var safe_items: Array[ItemInstance] = []
 var safe_size: Vector2i = Vector2i(3, 3)
 var safe_value: int = 0
 var safe_layout: Array[Dictionary] = []
-## 092：撤离时暂存区里没背出来的那几件（离开结算屏时一键出售）
+## 092：撤离时地上没背出来的那几件（离开结算屏时一键出售）
 var left_items: Array[ItemInstance] = []
 ## 104 信力节奏的量尺：这一局每次加点的记录（[member FaithPower.history]）；结算屏一行、开发模式导 CSV
 var faith_history: Array = []

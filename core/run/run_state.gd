@@ -1,8 +1,8 @@
-## 一局游戏的全部状态（架构文档 7 节，M5）：地图、旅程、体力、钱、棋盘、暂存区、节点事件、随机流。
+## 一局游戏的全部状态（架构文档 7 节，M5）：地图、旅程、体力、钱、棋盘、地上、节点事件、随机流。
 ##
 ## M4 结束时这些东西各自都能跑，只差一个装它们的壳 —— 这就是那个壳。它做三件事：
-## 1. **开局**（[method start]）：从一章生成地图、放敌人、标付费撤离点、造棋盘与暂存区、把节点事件接到旅程上；
-## 2. **接线**：打赢的战利品、搜到的东西、买到的东西、事件给的东西，都落到「待拾取」或暂存区；战败、撤离改阶段；
+## 1. **开局**（[method start]）：从一章生成地图、放敌人、标付费撤离点、造棋盘与地上、把节点事件接到旅程上；
+## 2. **接线**：打赢的战利品、搜到的东西、买到的东西、事件给的东西，都落到「待拾取」或地上；战败、撤离改阶段；
 ## 3. **存档**（[method to_dict] / [method from_dict]）：所有逻辑类都有 to_dict，这里只是把它们装进一个带版本号的字典。
 ##
 ## 纯 [RefCounted]，不是 autoload：核心逻辑层没有全局状态（1 节）。M6 的 GameDirector 持有它、给界面看。
@@ -50,7 +50,7 @@ var vitality: Vitality = null
 var wallet: Wallet = null
 ## 作战棋盘：requires_bag，只有包里的东西参战（3.2）
 var board: GridInventory = null
-## 暂存区：一个列表，保留但不参战（3.4）
+## 地上：一个列表，保留但不参战（3.4）
 var storage: ItemStash = null
 ## 092（作者定）：保险箱 —— 放进去的道具视为已带出，战败也带得出；大小按局外规则（初始 3×3）
 ## 092（作者定）：保险箱关上了 —— 里面的送回基地、不能再改；[param count] 是几件
@@ -89,7 +89,7 @@ signal leaving(node_id: int)
 ## [param reason] 是花在什么上：&"step" 自己走一步、&"relocate" 被事件挪走、&"wait" 原地耗时
 signal stepped(node_id: int, reason: StringName)
 ## 101：到了一个点（头一回踩上、或者回到走过的点，**在这个点的事发生之前**发）。
-## 模块订阅它做「到了就……」的事 —— 留在这个点的东西回到暂存区、相邻的道具合成。
+## 模块订阅它做「到了就……」的事 —— 留在这个点的东西回到地上、相邻的道具合成。
 ## [param first_time] = 头一回踩上这个点
 signal arrived(node_id: int, first_time: bool)
 ## 猎手（069 / 071）：难度清单里的猎手机制装进来的系统；null = 这一局没有猎手。定义表由持有方给，存档里的状态读档时先放这儿等机制装
@@ -103,7 +103,7 @@ var skills: RunSkills = null
 var skills_saved: Dictionary = {}
 ## 信力（082）：每个信仰一个池子，只有激活的信仰收点；行为与阈值在信仰文件里
 var faith_power: FaithPower = null
-## 104：对过账的道具实例（uid → true）：一件道具头一回出现在棋盘 / 暂存区 / 保险箱里发一次 `item_acquired`。只增不减，跟着存档
+## 104：对过账的道具实例（uid → true）：一件道具头一回出现在棋盘 / 地上 / 保险箱里发一次 `item_acquired`。只增不减，跟着存档
 var owned_uids: Dictionary = {}
 ## 104：这一局获得过 / 置入过棋盘的道具种类（定义 id → true），给载荷的 first_in_run。跟着存档
 var acquired_ids: Dictionary = {}
@@ -146,7 +146,7 @@ var event_defs: Dictionary = {}:
 
 
 #region 开局
-## 从一章开一局。生成不出图返回 null。[param kit] 是开局带的道具 id（包放棋盘，其余先放包里、放不下进暂存区）。
+## 从一章开一局。生成不出图返回 null。[param kit] 是开局带的道具 id（包放棋盘，其余先放包里、放不下到地上）。
 ## [param p_character] 给了就按角色来（棋盘尺寸、体力上限、基线、初始包）；[param p_layout] 是开局屏摆好的棋盘
 ## （[method layout_of] 的产物：哪件、放哪、什么朝向），先按它摆，再发 kit
 static func start(
@@ -226,18 +226,18 @@ func pick_spawn(id: int) -> bool:
 	return true
 
 
-## 走一步。开着的商店 / 搜索先关掉（随时可以离开）；没拿的战利品、暂存区里的东西都留在这个点上（3.4 / 084：离开就是清的时机）；
+## 走一步。开着的商店 / 搜索先关掉（随时可以离开）；没拿的战利品、地上的东西都留在这个点上（3.4 / 084：离开就是清的时机）；
 ## 等着开打的一场没打不能走；不在图上走不了
 func step_to(id: int) -> bool:
 	if phase != Phase.ON_MAP or not events.pending_battle.is_empty():
 		return false
 	if not travel.available_moves().has(id):
 		return travel.step_to(id)     # 让旅程自己拒绝、发 refused；走不成就不该清东西
-	reconcile_owned()     # 104：暂存区留下之前对账，这个点上拿到的都算获得
+	reconcile_owned()     # 104：地上留下之前对账，这个点上拿到的都算获得
 	close_sessions()
 	_drop_pending_loot()
 	_forget_handled()
-	leaving.emit(travel.current_id)     # 101：走开了 —— 模块自己接（保险箱关上、暂存区留在这个点）
+	leaving.emit(travel.current_id)     # 101：走开了 —— 模块自己接（保险箱关上、地上留在这个点）
 	var was_visited := map.has_node(id) and map.get_node(id).is_visited()
 	var ok := travel.step_to(id)
 	if ok:
@@ -253,7 +253,7 @@ func step_to(id: int) -> bool:
 	return ok
 
 
-## 事件把人挪走（8-3 的传送后果）：不走边，但离开发生过事的点照样清暂存区、猎手照样得一个回合 —— 和走一步一样的壳，只是意图不同
+## 事件把人挪走（8-3 的传送后果）：不走边，但离开发生过事的点照样清地上、猎手照样得一个回合 —— 和走一步一样的壳，只是意图不同
 func relocate(intent: MoveIntent) -> bool:
 	if phase != Phase.ON_MAP or intent == null:
 		return false
@@ -284,7 +284,7 @@ func pool_by_id(id: StringName) -> EnemyPool:
 	return _rule_asset("enemy_pools", id) as EnemyPool
 
 
-## 走出现在这个点会不会把暂存区留下（087：留在这个点、回来能拿；不再是「清掉」）。
+## 走出现在这个点会不会把地上留下（087：留在这个点、回来能拿；不再是「清掉」）。
 ## 规则与状态都在 [NodeStorageModule] 里；没装那个模块 = 走开什么也不留
 func will_clear_storage() -> bool:
 	var ns := NodeStorageModule.of(self)
@@ -297,7 +297,7 @@ func _forget_handled() -> void:
 		events.last_handled_id = -1
 
 
-## 头一回踩上一个点：先发「到了」（按点暂存的东西回到暂存区），再结等着的合成（产物放不下就进暂存区），
+## 头一回踩上一个点：先发「到了」（按点暂存的东西回到地上），再结等着的合成（产物放不下就到地上），
 ## 再让那个点的事发生 —— 顺序不能反，不然合成的产物没地方去、事件给的东西看不见
 func _on_arrive(node: MapNode) -> void:
 	if node != null:
@@ -305,7 +305,7 @@ func _on_arrive(node: MapNode) -> void:
 	events.handle(node)
 
 
-## 084：没拿完的战利品（尸体 / 搜索收获）留在这个点上 —— 收起战利品屏不算丢，走了才算。和暂存区同一个时机
+## 084：没拿完的战利品（尸体 / 搜索收获）留在这个点上 —— 收起战利品屏不算丢，走了才算。和地上同一个时机
 func _drop_pending_loot() -> void:
 	if pending_loot != null:
 		discard_loot()
@@ -635,7 +635,7 @@ func _loot_context() -> LootContext:
 	return ctx
 
 
-## 从待拾取的容器里拿一件进暂存区
+## 从待拾取的容器里拿一件到地上
 func take_loot(uid: int) -> bool:
 	if pending_loot == null:
 		return false
@@ -645,7 +645,7 @@ func take_loot(uid: int) -> bool:
 	return ok
 
 
-## 全拿走，返回拿了几件。123：每件先试背包棋盘，放不下才进暂存区
+## 全拿走，返回拿了几件。123：每件先试背包棋盘，放不下才到地上
 func take_all_loot() -> int:
 	if pending_loot == null:
 		return 0
@@ -663,12 +663,12 @@ func discard_loot() -> void:
 	loot_cleared.emit()
 
 
-## 暂存区 → 棋盘（自动找位）
+## 地上 → 棋盘（自动找位）
 func equip(uid: int) -> bool:
 	return InventoryService.transfer_auto(storage, uid, board)
 
 
-## 棋盘 → 暂存区
+## 棋盘 → 地上
 func unequip(uid: int) -> bool:
 	return InventoryService.transfer_auto(board, uid, storage)
 
@@ -719,7 +719,7 @@ static func layout_of(board: GridInventory) -> Array:
 	return out
 
 
-## 按 [method layout_of] 的记录摆回棋盘；摆不回去的（棋盘换了、定义没了）进暂存区
+## 按 [method layout_of] 的记录摆回棋盘；摆不回去的（棋盘换了、定义没了）到地上
 func _place_layout(layout: Array) -> void:
 	if items == null or layout.is_empty():
 		return
@@ -810,7 +810,7 @@ func _wire_events() -> void:
 	events.difficulty = chapter.difficulty
 	events.scale_id = scale_id()
 	events.event_defs = event_defs
-	# 8-3：条件看容器，后果传送 / 耗时经这里走（清暂存区、猎手回合）
+	# 8-3：条件看容器，后果传送 / 耗时经这里走（清地上、猎手回合）
 	events.board = board
 	events.storage = storage
 	events.hooks = hooks
@@ -835,7 +835,7 @@ func _wire_events() -> void:
 	events.search_closed.connect(func(_n: MapNode, haul: GridInventory, _why: StringName): _offer_loot(haul))
 	events.shop_opened.connect(func(_n: MapNode, session: ShopSession):
 		if session != null:
-			# 087：双击 / 按钮买的（inst 由会话交出来）先试着进包、放不下进暂存区；拖着买的已经在玩家手里了（inst 为 null）
+			# 087：双击 / 按钮买的（inst 由会话交出来）先试着进包、放不下到地上；拖着买的已经在玩家手里了（inst 为 null）
 			session.bought.connect(func(_def: ItemDef, _price: int, inst: ItemInstance):
 				if inst != null and not board.try_add(inst, true):
 					storage.admit(inst)))
@@ -890,7 +890,7 @@ func _wire_faith_power() -> void:
 		faith_power.credit(&"event_choice", {"tags": tags}))
 
 
-## 104：道具获得的对账 —— 棋盘 + 暂存区 + 保险箱里没对过账的实例各发一次 `item_acquired`（不逐个容器接信号，一处对账）。
+## 104：道具获得的对账 —— 棋盘 + 地上 + 保险箱里没对过账的实例各发一次 `item_acquired`（不逐个容器接信号，一处对账）。
 ## 离开一个点（走一步 / 被挪走）时调；测试也可以直接调。返回这次新对上的件数
 func reconcile_owned() -> int:
 	var fresh := 0

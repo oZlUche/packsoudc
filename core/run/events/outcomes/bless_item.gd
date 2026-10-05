@@ -1,4 +1,4 @@
-## 后果（095）：赐福一件 —— 棋盘（其次暂存区）里能被赐福的最值钱的一件换成赐福版。[member faith] 空 = 激活的信仰（没激活就不做）
+## 后果（095）：赐福一件 —— 棋盘（其次地上）里能被赐福的最值钱的一件换成赐福版。[member faith] 空 = 激活的信仰（没激活就不做）
 class_name BlessItem
 extends EventOutcome
 

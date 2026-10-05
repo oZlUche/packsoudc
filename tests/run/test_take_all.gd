@@ -1,4 +1,4 @@
-## 123（作者定）：【全部拾取】先往背包棋盘放（自动找位、可旋转），放不下的才进暂存区
+## 123（作者定）：【全部拾取】先往背包棋盘放（自动找位、可旋转），放不下的才到地上
 extends RefCounted
 
 
@@ -25,7 +25,7 @@ static func run(t: TestCase) -> void:
 	var four := _of_cells(db, 4)
 	t.not_null(four, "库里有一件 4 格的道具")
 
-	t.begin("123 · 棋盘放得下：三件全进棋盘，暂存区空")
+	t.begin("123 · 棋盘放得下：三件全进棋盘，地上空")
 	ItemInstance.reset_uid_counter()
 	var loot := GridInventory.new(Vector2i(6, 6), 1)
 	for i in 3:
@@ -35,21 +35,21 @@ static func run(t: TestCase) -> void:
 	var got := InventoryService.transfer_all_prefer(loot, board, storage)
 	t.eq(got, {"board": 3, "storage": 0}, "三件进棋盘")
 	t.eq(board.item_count(), 3, "棋盘三件")
-	t.eq(storage.item_count(), 0, "暂存区空")
+	t.eq(storage.item_count(), 0, "地上空")
 	t.eq(loot.item_count(), 0, "战利品空了")
 
-	t.begin("123 · 棋盘只剩一格：1 格的进棋盘，4 格的进暂存区")
+	t.begin("123 · 棋盘只剩一格：1 格的进棋盘，4 格的到地上")
 	loot = GridInventory.new(Vector2i(6, 6), 1)
 	loot.try_add(ItemInstance.create(one))
 	loot.try_add(ItemInstance.create(four))
 	board = GridInventory.new(Vector2i(1, 1), 2)
 	storage = ItemStash.new(3)
 	got = InventoryService.transfer_all_prefer(loot, board, storage)
-	t.eq(got, {"board": 1, "storage": 1}, "一件进棋盘、一件进暂存区")
+	t.eq(got, {"board": 1, "storage": 1}, "一件进棋盘、一件到地上")
 	t.eq((board.items()[0] as ItemInstance).def.id, one.id, "棋盘上的是 1 格那件")
-	t.eq((storage.items()[0] as ItemInstance).def.id, four.id, "暂存区里的是 4 格那件")
+	t.eq((storage.items()[0] as ItemInstance).def.id, four.id, "地上的是 4 格那件")
 
-	t.begin("123 · 带东西的包：棋盘放不下包就进暂存区，包里的东西跟着包走")
+	t.begin("123 · 带东西的包：棋盘放不下包就到地上，包里的东西跟着包走")
 	var bag := db.get_def(&"bag_leather")
 	loot = GridInventory.new(Vector2i(6, 6), 1, true)
 	t.check(loot.try_add(ItemInstance.create(bag)), "包摆进战利品")
@@ -63,7 +63,7 @@ static func run(t: TestCase) -> void:
 	for inst in storage.items():
 		if (inst as ItemInstance).def.id == bag.id:
 			bag_in_storage = true
-	t.check(bag_in_storage, "包进了暂存区")
+	t.check(bag_in_storage, "包到了地上")
 
 	t.begin("123 · 顺序稳定：同样的战利品两次结果一样")
 	var runs: Array = []
@@ -100,6 +100,6 @@ static func run(t: TestCase) -> void:
 	t.check(s.board.can_admit(one), "背包有空位")
 	t.eq(s.take_all_loot(), 1, "拿了一件")
 	t.eq(s.board.item_count(), before_board + 1, "进了背包")
-	t.eq(s.storage.item_count(), before_storage, "暂存区没多")
+	t.eq(s.storage.item_count(), before_storage, "地上没多")
 	t.eq(cleared[0], 1, "发了 loot_cleared")
 	t.check(s.pending_loot == null, "待拾取清空")

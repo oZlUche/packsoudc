@@ -90,7 +90,7 @@ static func run_reseat_rules(t: TestCase) -> void:
 
 
 static func run_drag_board_reseat(t: TestCase) -> void:
-	t.begin("099 · 棋盘内落下信物 = 切信仰且信力不记；取消不切；凡物在棋盘内挪不盖序号；从暂存区进来照记")
+	t.begin("099 · 棋盘内落下信物 = 切信仰且信力不记；取消不切；凡物在棋盘内挪不盖序号；从地上进来照记")
 	var db := _db()
 	var run := _start(db)
 	if run == null:
@@ -143,11 +143,11 @@ static func run_drag_board_reseat(t: TestCase) -> void:
 		t.eq(board.get_item(sword.uid).placed_seq, seq, "普通道具不盖置入序号")
 		t.eq(FaithState.active_id(board), &"skill", "也不动信仰")
 
-	# 4 · 从暂存区进来：仍然算置入，信力照记（原行为不变）
+	# 4 · 从地上进来：仍然算置入，信力照记（原行为不变）
 	var fresh := ItemInstance.create(brute_def, 0)
 	run.storage.insert(fresh, -1)
 	var pts := run.faith_power.points_of(&"brute")
-	t.check(InventoryService.transfer_auto(run.storage, fresh.uid, board), "从暂存区置入第二件暴力之神的信物")
+	t.check(InventoryService.transfer_auto(run.storage, fresh.uid, board), "从地上置入第二件暴力之神的信物")
 	t.eq(FaithState.active_id(board), &"brute", "从别的容器进来照旧切信仰")
 	var def_brute := run.faith_defs.get(&"brute", null) as FaithDef
 	var want := _expected_place_gain(def_brute, brute_def) if def_brute != null else 0

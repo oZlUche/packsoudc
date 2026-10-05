@@ -84,8 +84,8 @@ static func move_within(inv: GridInventory, uid: int, origin: Vector2i, rot: int
 
 ## 把 uid 从 from 搬进 to 的任意可用位置。用于「全部拾取」。
 ##
-## 收发两端都是 [ItemContainer] 而不是 [GridInventory]：暂存区是个列表，
-## 没有「位置」可言，而「全部拾取到暂存区」恰恰是这个动作最常见的用法。
+## 收发两端都是 [ItemContainer] 而不是 [GridInventory]：地上是个列表，
+## 没有「位置」可言，而「全部拾取到地上」恰恰是这个动作最常见的用法。
 ##
 ## **先问 can_admit 再动手。** 先 remove 再发现目标收不下的话，就得把东西塞回源容器，
 ## 而「塞回原位」在空间容器里未必还办得到。先问后动，收不下时源容器连碰都不用碰。
@@ -165,7 +165,7 @@ static func transfer_all(from: ItemContainer, to: ItemContainer) -> int:
 	return moved
 
 
-## 084 / 123：全拿走 —— 每件先试 first（棋盘，自动找位），放不下才进 fallback（暂存区）。
+## 084 / 123：全拿走 —— 每件先试 first（棋盘，自动找位），放不下才进 fallback（地上）。
 ## 顺序同 transfer_all（非包先、大件先；包最后，不替玩家决定棋盘布局）。返回 {board: n, storage: n}
 static func transfer_all_prefer(from: ItemContainer, first: ItemContainer, fallback: ItemContainer) -> Dictionary:
 	var out := {"board": 0, "storage": 0}

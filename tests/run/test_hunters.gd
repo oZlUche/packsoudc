@@ -218,7 +218,7 @@ static func run_engage_fight_flee(t: TestCase) -> void:
 	var node_before := s.travel.current_id
 	t.check(s.events.choose(0), "选迎战")
 	t.eq(fights.size(), 1, "打了一场")
-	t.eq(s.events.last_handled_id, node_before, "这个点算发生过事（离开时暂存区会清）")
+	t.eq(s.events.last_handled_id, node_before, "这个点算发生过事（离开时地上会清）")
 	t.check(not s.map.get_node(node_before).is_visited() or s.map.get_node(node_before).id == s.map.entry_ids[0] or true, "点没被猎手用掉（不和节点互动）")
 	if fights[0]:
 		t.check(not h.alive, "赢了它死")

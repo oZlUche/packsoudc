@@ -125,8 +125,8 @@ static func run_conditions(t: TestCase) -> void:
 	var hi := HasItem.new()
 	hi.item = &"medkit"
 	t.check(not hi.check(ctx), "两处都空：没有医疗包")
-	t.check(stash.admit(ItemInstance.create(items.get_def(&"medkit"), 0)), "暂存区放一个")
-	t.check(hi.check(ctx), "暂存区里有：两处任一算")
+	t.check(stash.admit(ItemInstance.create(items.get_def(&"medkit"), 0)), "地上放一个")
+	t.check(hi.check(ctx), "地上有：两处任一算")
 	hi.where = HasItem.Where.BOARD
 	t.check(not hi.check(ctx), "只看棋盘：没有")
 	t.check(board.admit(ItemInstance.create(items.get_def(&"medkit"), 0)), "棋盘放一个")
@@ -202,7 +202,7 @@ static func run_travel_teleport(t: TestCase) -> void:
 
 
 static func run_teleport_outcome(t: TestCase) -> void:
-	t.begin("事件 · 传送后果：随机 / 最近 / 最远 / 指定，按类型与步数区间挑，挑不到不传；走 RunState：清暂存区、花后果说的点、落地触发事件；给东西 + 传送在导入器里撞车")
+	t.begin("事件 · 传送后果：随机 / 最近 / 最远 / 指定，按类型与步数区间挑，挑不到不传；走 RunState：清地上、花后果说的点、落地触发事件；给东西 + 传送在导入器里撞车")
 	var c := _content()
 	var tp := Teleport.new()
 	tp.target = Teleport.Target.RANDOM
@@ -237,7 +237,7 @@ static func run_teleport_outcome(t: TestCase) -> void:
 		return
 	var s: RunState = found["run"]
 	var next := int(found["next"])
-	# 暂存区里先放一件：离开发生过事的点会清
+	# 地上先放一件：离开发生过事的点会清
 	s.storage.admit(ItemInstance.create(c.items.get_def(&"medkit"), 0))
 	var dropped: Array = []
 	NodeStorageModule.of(s).dropped.connect(func(_id: int, items: Array): dropped.append(items.size()))
@@ -260,7 +260,7 @@ static func run_teleport_outcome(t: TestCase) -> void:
 		t.eq(int((resolved[0] as Dictionary).get("teleported", -1)), to, "detail 里记了传到哪")
 	t.eq(s.travel.clock.total, before + 2, "行动点 = 传送的代价")
 	t.check(s.map.get_node(next).is_visited(), "事件点用过了")
-	t.eq(dropped, [1], "离开发生过事的点：暂存区清了（规则一致，导入器因此不许「给东西 + 传送」）")
+	t.eq(dropped, [1], "离开发生过事的点：地上清了（规则一致，导入器因此不许「给东西 + 传送」）")
 	t.check(s.events.pending_event() != null or s.map.get_node(s.travel.current_id).is_visited() or s.events.current_search != null or s.events.current_shop != null,
 		"落地的点已经发生了：等着选、或用过了、或开了会话")
 
@@ -334,7 +334,7 @@ static func run_teleport_outcome(t: TestCase) -> void:
 	var rep := ImportReport.new()
 	ContentImporter.import_event(bad, ictx, rep)
 	var text := rep.to_text()
-	for needle in ["会话就断了", "暂存区会清空", "代价不能是负的", "步数区间反了", "认不得的节点类型 'nope'", "结构性的类型", "找不到道具 'nope'", "耗时得是正数", "名单是空的"]:
+	for needle in ["会话就断了", "地上会清空", "代价不能是负的", "步数区间反了", "认不得的节点类型 'nope'", "结构性的类型", "找不到道具 'nope'", "耗时得是正数", "名单是空的"]:
 		t.check(text.contains(needle), "导入器报：%s" % needle)
 	var good := {"id": "y", "title": "y", "options": [
 		{"label": "a", "outcomes": [{"type": "teleport", "target": "nearest", "node_types": ["rest"]}, {"type": "spend_vitality"}]},
@@ -464,7 +464,7 @@ static func run_type_proceed_wait_lose(t: TestCase) -> void:
 		var s2: RunState = fl2["run"]
 		var n2 := int(fl2["next"])
 		s2.step_to(n2)
-		# 暂存区一移动就清（080），所以站到点上再放
+		# 地上一移动就清（080），所以站到点上再放
 		for i in 3:
 			s2.storage.admit(ItemInstance.create(c.items.get_def(&"medkit"), 0))
 		t.check(bool(s2.events.option_state(1)["ok"]), "有三个：能交")

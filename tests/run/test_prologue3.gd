@@ -55,7 +55,7 @@ static func _find(container, id: StringName) -> ItemInstance:
 	return null
 
 
-## 123：背包里找，没有再看暂存区
+## 123：背包里找，没有再看地上
 static func _find_any(s: RunState, id: StringName) -> ItemInstance:
 	var inst := _find(s.board, id)
 	return inst if inst != null else _find(s.storage, id)
@@ -116,10 +116,10 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.eq(ev.options.size(), 1, "只有「接过护符」（教程不给跳过）")
 	t.check(s.events.choose(0), "接过护符")
 	var charm := _find(s.storage, &"charm_brute")
-	t.not_null(charm, "护符进了暂存区")
+	t.not_null(charm, "护符到了地上")
 	t.is_null(s.active_faith(), "还没放进包里：没信仰")
 	# 2 战斗：门禁
-	t.check(s.step_to(2), "走到战斗点（护符还在暂存区）")
+	t.check(s.step_to(2), "走到战斗点（护符还在地上）")
 	ev = s.events.pending_event()
 	t.check(ev != null and ev.id == &"tut3_battle_1", "第一场的事件")
 	var go := _option(ev, "进入战前准备")
@@ -127,10 +127,10 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check((ev.options[go] as EventOption).hide_when_locked and (ev.options[go] as EventOption).hint_when_hidden != "", "锁着时藏起来、底下说一句为什么")
 	t.check(s.events.choose(_option(ev, "我先整理一下背包")), "选「先整理一下」")
 	t.check(s.events.pending_event() != null and s.events.pending_event().id == &"tut3_battle_1", "还是这个事件（没跳过战斗）")
-	t.is_null(_find(s.storage, &"charm_brute"), "护符没跟过来：留在上一个点的暂存区（教程提示里说了回去拿）")
+	t.is_null(_find(s.storage, &"charm_brute"), "护符没跟过来：留在上一个点的地上（教程提示里说了回去拿）")
 	t.check(s.step_to(1), "回上一个点")
 	charm = _find(s.storage, &"charm_brute")
-	t.not_null(charm, "护符还在那个点的暂存区")
+	t.not_null(charm, "护符还在那个点的地上")
 	if charm == null:
 		return
 	s.equip(charm.uid)
@@ -156,11 +156,11 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(s.events.choose(0), "继续")
 	t.not_null(s.pending_loot, "收获等着拿")
 	t.eq(s.take_all_loot(), 3, "三件到手")
-	# 123：全部拾取先进背包，放不下的才进暂存区
+	# 123：全部拾取先进背包，放不下的才到地上
 	var dice := _find_any(s, &"bone_dice")
 	var bits := _find_any(s, &"bone_charm_bits")
 	var tibia := _find_any(s, &"tibia_violence")
-	t.check(dice != null and bits != null and tibia != null, "骨骰子、碎骨串、胫骨大棒都拿到了（背包或暂存区）")
+	t.check(dice != null and bits != null and tibia != null, "骨骰子、碎骨串、胫骨大棒都拿到了（背包或地上）")
 	if dice == null or bits == null or tibia == null:
 		return
 	s.equip(dice.uid)
@@ -194,7 +194,7 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(ev != null and ev.id == &"tut3_faith_call_sun", "日神的低语")
 	t.check(s.events.choose(0), "接过日神的护符")
 	var sun := _find(s.storage, &"charm_sun")
-	t.not_null(sun, "日神护符在暂存区")
+	t.not_null(sun, "日神护符在地上")
 	if sun == null:
 		return
 	s.equip(sun.uid)
