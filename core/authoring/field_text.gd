@@ -23,7 +23,7 @@ const LABELS := {
 	"shape": "形状", "rarity": "稀有度", "rarity_cap": "稀有度上限", "is_bag": "是包", "bag_accept_tags": "包只收的标签", "bag_mods": "包体加成",
 	"set_id": "套装", "effects": "效果", "faith_bonuses": "信仰加成", "dormant_keeps_combat": "休眠仍保留战斗效果", "requires_unlock": "需要的解锁",
 	"combat": "战斗", "adjacency": "邻接", "base_stats": "基础属性", "rules": "规则", "trigger": "触发", "cadence": "节奏", "costs": "消耗",
-	"use_haste": "受急速影响", "cooldown": "冷却", "resource_key": "资源", "damage_type": "伤害类型", "damage_stat": "伤害用的属性", "amount_stat": "数量用的属性",
+	"use_haste": "受急速影响", "cooldown": "冷却", "resource_key": "资源", "damage_type": "伤害类型", "damage_stat": "伤害用的属性", "amount_stat": "数量改从属性取（留空 = 用上面的数量）",
 	"stat": "属性", "stat_scale": "属性系数", "direct_override": "直接伤害（−1 按来源定）", "shield_absorbable": "可被护盾吸收", "provokes": "招致反应", "on_self": "对自己", "same_side": "同一边",
 	"buff": "增益", "buff_id": "增益 id", "stacks": "叠层", "max_stacks": "叠层上限（0 = 不限）", "per_stack": "按叠层", "duration_sec": "持续秒数",
 	"by_self": "只认本方施加", "from": "转化前", "to": "转化成", "ratio": "换算比例", "keep_from": "保留原状态",     # 130
