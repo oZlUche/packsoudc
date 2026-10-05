@@ -42,6 +42,9 @@ extends Resource
 @export var receive_filter: Array[StringName] = []
 ## 点亮几个格，本物品就得几份
 @export var receive_mods: Array[StatModifier] = []
+## 132：受益规则 —— 每点亮一个受益格，**本件**多挂一份（以本件为来源，悬浮窗写「附加：… ← 邻居」）。
+## 跑在本件身上，所以时机不限；不许有 costs（同附加规则）
+@export var receive_rules: Array[AbilityRule] = []
 
 
 func has_grant() -> bool:
@@ -49,7 +52,7 @@ func has_grant() -> bool:
 
 
 func has_receive() -> bool:
-	return not receive_cells.is_empty() and not receive_mods.is_empty()
+	return not receive_cells.is_empty() and (not receive_mods.is_empty() or not receive_rules.is_empty())
 
 
 ## 某个定义是否满足标记的过滤条件。

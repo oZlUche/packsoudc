@@ -205,7 +205,7 @@ static func effects_text(effects: Array) -> String:
 
 const TRIGGER_NAMES := {"on_schedule": "自发", "on_battle_start": "开战时", "on_item_fired": "出手时", "on_damage": "受伤时",
 	"on_before_damage": "受伤前", "on_stacks_at_least": "层数够时", "on_resource_below": "资源低于时", "on_resource_changed": "资源变化时",
-	"on_status_applied": "施加时"}
+	"on_status_applied": "施加时", "on_status_removed": "状态掉光时", "on_overtime": "加时开始时"}
 
 
 static func trigger_name(trigger: Trigger) -> String:
