@@ -431,6 +431,10 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	# 「这里有可看的内容」的标记位（5.10，内容归 M4）：random 没有 —— 那是地图上唯一看不透的点
 	if n.type != &"random" and not n.is_visited() and not MapNodeTypes.STRUCTURAL.has(n.type):
 		draw_circle(p + Vector2(-NODE_RADIUS + 3.0, -NODE_RADIUS + 3.0), 2.0, Color(UiPalette.FG, 0.6))
+	# 127：进阶搜索点 —— 左下角一个琥珀色角标
+	if n.type == &"search" and not n.is_visited() and SearchSession.is_advanced(n):
+		var c := p + Vector2(-NODE_RADIUS + 2.0, NODE_RADIUS - 2.0)
+		draw_colored_polygon(PackedVector2Array([c + Vector2(-4, 4), c + Vector2(4, 4), c + Vector2(0, -4)]), UiPalette.STAMINA)
 	# 危险等级：右上角几个红点
 	for k in n.danger:
 		draw_circle(p + Vector2(NODE_RADIUS - 2.0 - 6.0 * k, -NODE_RADIUS + 1.0), 2.5, UiPalette.HP)

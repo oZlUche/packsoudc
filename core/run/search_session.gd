@@ -34,6 +34,8 @@ var encounter: Dictionary = {}
 var active: bool = true
 ## 095：翻到的东西按概率换成赐福版 `func(ids) -> ids`（NodeEvents 接）
 var substitute: Callable = Callable()
+## 127：每次搜的逐件稀有度下限（[method floor_for]，开会话时由 NodeEvents 设）；空 = 不保底
+var search_floor: Array[int] = []
 
 
 func _init(p_node: MapNode, p_rules: SearchRules, p_items: ItemDatabase, p_rng: RandomNumberGenerator, p_depth: float = 0.0) -> void:
@@ -105,7 +107,7 @@ func search() -> Dictionary:
 	if met.is_empty():
 		got = _scripted_finds(k)
 		if got.is_empty():
-			got = draw_items(rules, items, depth, node.danger if node != null else 0, rng)
+			got = draw_items(rules, items, depth, node.danger if node != null else 0, rng, -1, search_floor)
 			if substitute.is_valid():
 				got = substitute.call(got)
 		found.append_array(got)
@@ -171,10 +173,61 @@ func resume() -> void:
 	encounter = {}
 
 
-## 找几件：候选是不带排除标签、（默认）不是包的道具，按稀有度权重抽；权重随深度与危险上偏
+## 127：是不是进阶搜索点 —— 节点内容 `search_tier`（"advanced" / "normal"）优先，否则高危区里的（danger ≥ 1）
+static func is_advanced(node: MapNode) -> bool:
+	if node == null:
+		return false
+	if node.content.has("search_tier"):
+		return String(node.content["search_tier"]) == "advanced"
+	return node.danger >= 1
+
+
+## 127：这个点每次搜的逐件稀有度下限。优先级：节点内容 `search_floor` > 难度覆盖 > 阶梯表（常规用第 level 行、进阶用第 level + 1 行）
+static func floor_for(node: MapNode, p_rules: SearchRules, difficulty: DifficultyDef) -> Array[int]:
+	var out: Array[int] = []
+	if node != null and node.content.has("search_floor"):
+		for v in node.content["search_floor"]:
+			out.append(int(v))
+		return out
+	var adv := is_advanced(node)
+	var key := "advanced" if adv else "normal"
+	if difficulty != null and difficulty.search_floors.has(key):
+		for v in difficulty.search_floors[key]:
+			out.append(int(v))
+		return out
+	if p_rules == null:
+		return out
+	return p_rules.floor_row((difficulty.level if difficulty != null else 0) + (1 if adv else 0))
+
+
+## 127：给人看的保底说明：「一件绿及以上、两件任意」。空表返回 ""
+const FLOOR_COLORS := ["白", "绿", "蓝", "紫", "金", "红"]
+const COUNT_WORDS := ["零", "一", "两", "三", "四", "五", "六", "七", "八", "九"]
+
+
+static func floor_text(p_floor: Array[int]) -> String:
+	if p_floor.is_empty():
+		return ""
+	var counts := {}
+	for v in p_floor:
+		counts[v] = int(counts.get(v, 0)) + 1
+	var keys := counts.keys()
+	keys.sort()
+	keys.reverse()
+	var parts: Array[String] = []
+	for k in keys:
+		var n: int = counts[k]
+		var word: String = COUNT_WORDS[n] if n < COUNT_WORDS.size() else str(n)
+		parts.append("%s件%s" % [word, "任意" if int(k) <= 0 else FLOOR_COLORS[clampi(int(k), 0, 5)] + "及以上"])
+	return "、".join(parts)
+
+
+## 找几件：候选是不带排除标签、（默认）不是包的道具，按稀有度权重抽；权重随深度与危险上偏。
+## 127：[param p_floor] 是逐件稀有度下限 —— 件数至少是它的长度，第 i 个保底位只在稀有度 ≥ p_floor[i] 的候选里抽
+## （那一档以上没有就逐级往下放宽；先夹到 rarity_cap），其余照旧全池抽；有保底时打乱顺序再返回
 static func draw_items(
 	p_rules: SearchRules, p_items: ItemDatabase, p_depth: float, danger: int, p_rng: RandomNumberGenerator,
-	rarity_cap: int = -1
+	rarity_cap: int = -1, p_floor: Array[int] = []
 ) -> Array[StringName]:
 	var out: Array[StringName] = []
 	if p_rules == null or p_items == null:
@@ -189,6 +242,11 @@ static func draw_items(
 		weights.append(w)
 		total += w
 	var n := p_rng.randi_range(p_rules.items_per_search.x, p_rules.items_per_search.y)
+	if not p_floor.is_empty():
+		n = maxi(n, p_floor.size())
+		for f in p_floor:
+			out.append(_draw_at_least(cands, weights, p_items, f if rarity_cap < 0 else mini(f, rarity_cap), p_rng))
+		n -= p_floor.size()
 	for i in maxi(0, n):
 		if total <= 0.0:
 			out.append(cands[p_rng.randi_range(0, cands.size() - 1)])
@@ -201,7 +259,40 @@ static func draw_items(
 				picked = cands[j]
 				break
 		out.append(picked)
+	if not p_floor.is_empty():
+		_shuffle(out, p_rng)     # 别让玩家从揭示顺序猜哪件是保底
 	return out
+
+
+## 127：在稀有度 ≥ [param at_least] 的候选里按原权重抽一件；那一档以上一件都没有就逐级往下放宽
+static func _draw_at_least(cands: Array[StringName], weights: Array[float], p_items: ItemDatabase, at_least: int, p_rng: RandomNumberGenerator) -> StringName:
+	for floor_r in range(maxi(0, at_least), -1, -1):
+		var idx: Array[int] = []
+		var total := 0.0
+		for j in cands.size():
+			if p_items.get_def(cands[j]).rarity >= floor_r:
+				idx.append(j)
+				total += weights[j]
+		if idx.is_empty():
+			continue
+		if total <= 0.0:
+			return cands[idx[p_rng.randi_range(0, idx.size() - 1)]]
+		var x := p_rng.randf() * total
+		for j in idx:
+			x -= weights[j]
+			if x <= 0.0:
+				return cands[j]
+		return cands[idx[idx.size() - 1]]
+	return cands[p_rng.randi_range(0, cands.size() - 1)]
+
+
+## 用给定的随机数洗牌（Array.shuffle 用的是全局随机数，不可复现）
+static func _shuffle(arr: Array[StringName], p_rng: RandomNumberGenerator) -> void:
+	for i in range(arr.size() - 1, 0, -1):
+		var j := p_rng.randi_range(0, i)
+		var tmp := arr[i]
+		arr[i] = arr[j]
+		arr[j] = tmp
 
 
 ## 能搜出来的道具，id 升序

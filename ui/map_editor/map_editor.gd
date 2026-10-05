@@ -228,6 +228,22 @@ func event_ids() -> Array[String]:
 	return _event_ids
 
 
+## 127：搜索点的档：""（跟高危区：危险等级 ≥ 1 就是进阶）/ "advanced" / "normal"
+const SEARCH_TIERS := ["", "advanced", "normal"]
+const SEARCH_TIER_LABELS := ["跟高危区", "进阶", "常规"]
+
+
+func set_node_search_tier(id: int, tier: String) -> void:
+	var n := _node(id)
+	if n == null or String(n.content.get("search_tier", "")) == tier:
+		return
+	if tier == "":
+		n.content.erase("search_tier")
+	else:
+		n.content["search_tier"] = tier
+	_touch()
+
+
 func set_node_danger(id: int, danger: int) -> void:
 	var n := _node(id)
 	if n != null:
@@ -722,6 +738,15 @@ func _rebuild_props() -> void:
 		set_node_event(id, "" if i == 0 else (eids[i - 1] if i - 1 < eids.size() else cur)))
 	_props.add_child(_pair("事件", event_pick))
 	_props.add_child(_pair("危险等级", _spin(n.danger, 0, 2, func(v: int): set_node_danger(id, v))))
+	# 127：搜索点算常规还是进阶（保底不同）：跟高危区（默认）/ 进阶 / 常规
+	if n.type == &"search":
+		var tier_pick := OptionButton.new()
+		_style(tier_pick)
+		for label in SEARCH_TIER_LABELS:
+			tier_pick.add_item(label)
+		tier_pick.select(SEARCH_TIERS.find(String(n.content.get("search_tier", ""))))
+		tier_pick.item_selected.connect(func(i: int): set_node_search_tier(id, SEARCH_TIERS[i]))
+		_props.add_child(_pair("搜索点", tier_pick))
 	_props.add_child(_pair("高危区编号", _spin(n.zone, 0, 99, func(v: int): set_node_zone(id, v))))
 
 	var entry := CheckBox.new()
