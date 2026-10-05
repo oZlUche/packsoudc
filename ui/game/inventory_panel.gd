@@ -20,6 +20,8 @@ var board_view: InventoryView
 var ground: GroundLayer = null
 var tip: HoverTip
 var _stamina: Label
+## 129：负重那一行（这一章不算负重就藏着）
+var _weight: Label
 ## 084：棋盘上双击的东西优先去这里（容器屏设成战利品 / 收获箱）；null = 放到地上
 var quick_target: ItemContainer = null
 ## 双击之后的提示回调（容器屏想自己写）：`func(text: String)`
@@ -73,6 +75,8 @@ func _build() -> void:
 		if tip != null:
 			tip.hide_tip())
 	left.add_child(_stamina)
+	_weight = _label("", 13, UiPalette.FG)
+	left.add_child(_weight)
 	_hint = _label("左键拖动　双击快速置入　R 旋转　右键 / Esc 取消　右键信物 = 奉为主信仰　拖到能合成的那件上 = 合成　压着别人放手会把人顶出来　放到棋盘外就放在地上（放哪落哪）", 11, UiPalette.DIM)
 	left.add_child(_hint)
 
@@ -177,6 +181,12 @@ func _refresh_readout() -> void:
 	if _stamina != null:
 		var e := StaminaEstimate.of(spec)
 		_stamina.text = "耐力消耗：%s（每秒 %.1f，回 %.1f）　停上去看细节" % [e["rating"], e["cost"], e["regen"]]
+	if _weight != null:
+		var line := _run.encumbrance_line()
+		var lv := _run.encumbrance_level()
+		_weight.visible = line != ""
+		_weight.text = line + ("　" + _run.encumbrance.effect_text(lv) if lv > 0 else "")
+		_weight.add_theme_color_override("font_color", UiPalette.HP if lv >= 2 else (UiPalette.STAMINA if lv == 1 else UiPalette.FG))     # 129：超重整行警示色
 	var lines: Array[String] = []
 	if _run.tracker != null:
 		for set_id in _run.tracker.tracked_ids():

@@ -35,7 +35,7 @@ const LABELS := {
 	"min_bracket": "最低段位", "max_bracket": "最高段位", "min_depth": "最浅", "max_depth": "最深", "action_cost": "行动点", "actions": "行动点",
 	# 章节 / 地图
 	"map_source": "地图来源", "mode": "方式", "preset_path": "预设文件", "generator_id": "生成器", "generator_config": "生成参数",
-	"enemy_pool": "敌人池", "difficulty": "难度", "drop_rule": "掉落规则", "carry_rule": "携带规则", "node_rules": "节点规则", "economy_rules": "经济规则",
+	"enemy_pool": "敌人池", "difficulty": "难度", "drop_rule": "掉落规则", "carry_rule": "携带规则", "encumbrance_rules": "负重规则", "weight": "重量", "weight_capacity": "负重上限", "node_rules": "节点规则", "economy_rules": "经济规则",
 	"step_limit": "全局倒计时（行动点）", "blessings": "赐福模板", "blessed_of": "从哪件派生", "per_points": "每多少信力一份",
 	"name_prefix": "名字前缀", "name_prefix_en": "英文前缀", "add_tags": "多出的标签", "rarity_up": "稀有度加几", "value_mult": "价值倍率", "convert_chance": "包内转化概率", "convert_per_tier": "每级加的转化概率",
 	"bless_chance": "赐福替代概率（没激活）", "bless_chance_active": "赐福替代概率（激活了）", "cost": "花费", "carry_budget": "带入预算（价值）", "carry_over_cost": "每超多少价值倒计时 −1", "event_groups": "成组限量的事件", "events": "事件与权重", "offerings": "献祭品", "perks": "信仰效果", "multiplier": "倍率", "cap": "每场上限",
@@ -74,7 +74,7 @@ const TYPE_LABELS := {
 	"deal_damage": "造成伤害", "change_resource": "改资源", "apply_status": "施加状态", "remove_status": "移除状态", "modify_damage": "改伤害", "reflect_damage": "反弹伤害",
 	"extra_rolls": "额外掉落次数", "rarity_bias": "稀有度偏移", "category_bias": "类别偏移", "drop_owned_chance": "掉身上有的概率",
 	"vitality_max_bonus": "体力上限加成", "starting_funds_bonus": "开局钱加成", "extra_searches": "额外搜索次数", "shop_price_mult": "商店价格倍率",
-	"luck_bonus": "幸运加成", "scout_range": "侦察范围", "stealth": "潜行", "flee_bonus": "逃跑加成", "free_losses": "免扣体力次数", "stat_bonus": "属性加成",
+	"luck_bonus": "幸运加成", "scout_range": "侦察范围", "stealth": "潜行", "flee_bonus": "逃跑加成", "free_losses": "免扣体力次数", "stat_bonus": "属性加成", "carry_capacity_bonus": "负重上限加成",
 	"passive": "被动", "assault": "突击", "evade": "躲避",
 	"place_item": "置入道具", "battle": "打仗", "travel": "走路", "earn_money": "进账", "spend_money": "花钱", "explore": "搜索", "event_choice": "事件里选特定选项",
 	"has_buff_tag": "有带标记的增益", "has_map_buff": "有某地图增益", "can_afford": "钱够", "vitality_at_least": "体力至少", "steps_within": "步数在区间",

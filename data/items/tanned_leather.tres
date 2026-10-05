@@ -20,4 +20,5 @@ display_names = {
 description = "鞣好的皮，能直接裁。"
 shape = SubResource("Resource_nghd5")
 rarity = 1
+weight = 1
 tags = Array[StringName]([&"material", &"crafted", &"leather", &"supply"])

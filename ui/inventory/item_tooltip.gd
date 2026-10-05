@@ -57,7 +57,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var def := inst.def
 	var lines: Array[String] = []
 	var rc := ItemPainter.rarity_color(def).to_html(false)
-	lines.append("[color=#%s][b]%s[/b][/color]　%s　%d 格　值 %d" % [rc, Names.of(def), rarity_name(def.rarity), def.shape.cell_count() if def.shape != null else 0, ItemValue.of(def)])
+	lines.append("[color=#%s][b]%s[/b][/color]　%s　%d 格　值 %d　重 %d" % [rc, Names.of(def), rarity_name(def.rarity), def.shape.cell_count() if def.shape != null else 0, ItemValue.of(def), ItemWeight.of(def)])     # 129：重
 	var desc := Names.description_of(def)     # 104：说明里的 {字段} 按这件道具自己的字段填
 	if desc != "":
 		lines.append("[color=#8b93a1]%s[/color]" % desc)

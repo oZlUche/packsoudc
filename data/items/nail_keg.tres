@@ -20,4 +20,5 @@ display_names = {
 description = "一小桶铁钉。"
 shape = SubResource("Resource_kgom4")
 rarity = 1
+weight = 12
 tags = Array[StringName]([&"material", &"crafted", &"metal", &"supply"])

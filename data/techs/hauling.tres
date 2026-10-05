@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="TechDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/techs/tech_run_buff.gd" id="1_1246q"]
+[ext_resource type="Script" path="res://core/meta/tech_def.gd" id="2_1jcip"]
+[ext_resource type="Script" path="res://core/meta/tech_tier.gd" id="3_labor"]
+
+[sub_resource type="Resource" id="Resource_cmqce"]
+script = ExtResource("1_1246q")
+buffs = Array[StringName]([&"tech_hauling_1", &"tech_hauling_2", &"tech_hauling_3"])
+
+[sub_resource type="Resource" id="Resource_y5are"]
+script = ExtResource("3_labor")
+funds = 300
+
+[sub_resource type="Resource" id="Resource_ww64o"]
+script = ExtResource("3_labor")
+funds = 700
+items = {
+"beast_hide": 1,
+"rope_coil": 2
+}
+
+[sub_resource type="Resource" id="Resource_ksjuv"]
+script = ExtResource("3_labor")
+funds = 1200
+items = {
+"hardwood_plank": 1,
+"tanned_leather": 2
+}
+
+[resource]
+script = ExtResource("2_1jcip")
+id = &"hauling"
+display_name = "扛重"
+display_names = {
+"en": "Hauling"
+}
+order = 2
+requires = Array[StringName]([&"endurance"])
+column = 1
+description = "背得更多再开始吃力。"
+effect = SubResource("Resource_cmqce")
+tiers = Array[ExtResource("3_labor")]([SubResource("Resource_y5are"), SubResource("Resource_ww64o"), SubResource("Resource_ksjuv")])

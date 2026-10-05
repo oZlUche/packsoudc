@@ -30,6 +30,9 @@ var vitality: Vitality = null
 var erosion = null
 var on_node_event: Callable = Callable()
 
+## 129：走一步（含传送）花的行动点乘几 —— 负重第三级是 2。原地等待不乘。[RunState] 按负重级数写
+var action_cost_mult: int = 1
+
 var current_id: int = -1
 ## 走过的路：每次移动的目的地，按顺序。存档与回放用
 var history: Array[int] = []
@@ -80,8 +83,8 @@ func apply(intent: MoveIntent) -> bool:
 	var dest := graph.get_node(intent.to_id)
 	var first_visit := dest.state == MapNode.State.UNVISITED
 
-	# 2. 行动点
-	clock.spend(intent.action_cost, intent.kind)
+	# 2. 行动点（129：负重的倍数乘在这里，预览读同一个 cost_of）
+	clock.spend(cost_of(intent), intent.kind)
 
 	# 3. 侵蚀推进 —— 必须在惩罚结算之前
 	if erosion != null and erosion.has_method("on_action"):
@@ -103,6 +106,11 @@ func apply(intent: MoveIntent) -> bool:
 			dest.state = MapNode.State.VISITED     # 占位：没人接事件，就当到了即用过
 	moved.emit(intent, first_visit)
 	return true
+
+
+## 129：这一步真正花几点（边上写的 × 负重倍数）。地图屏的预览与日志读它
+func cost_of(intent: MoveIntent) -> int:
+	return (intent.action_cost if intent != null else 0) * maxi(1, action_cost_mult)
 
 
 ## 节点事件结束后由事件系统调：这个点用过了，以后只能穿行。

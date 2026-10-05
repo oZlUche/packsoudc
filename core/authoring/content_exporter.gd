@@ -46,6 +46,10 @@ static func export_carry_rule(rule: CarryRule) -> Dictionary:
 	return _dump(rule)
 
 
+static func export_encumbrance_rules(rules: EncumbranceRules) -> Dictionary:
+	return _dump(rules)
+
+
 static func export_node_rules(rules: NodeRules) -> Dictionary:
 	return _dump(rules)
 

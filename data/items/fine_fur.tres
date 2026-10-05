@@ -20,4 +20,5 @@ display_names = {
 description = "雪地兽的冬毛，又软又密。"
 shape = SubResource("Resource_rhvsl")
 rarity = 2
+weight = 1
 tags = Array[StringName]([&"material", &"nature", &"leather"])

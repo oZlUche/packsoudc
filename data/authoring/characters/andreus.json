@@ -12,6 +12,7 @@
     "bag_leather",
     "bag_leather"
   ],
+  "weight_capacity": 28,
   "skills": [
     {
       "type": "evade",

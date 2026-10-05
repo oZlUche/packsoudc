@@ -20,4 +20,5 @@ display_names = {
 description = "厚实的呢料，御寒。"
 shape = SubResource("Resource_acanc")
 rarity = 1
+weight = 1
 tags = Array[StringName]([&"material", &"crafted"])

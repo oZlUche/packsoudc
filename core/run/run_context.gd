@@ -22,6 +22,8 @@ var flee_bonus: float = 0.0
 ## 角色技能（082）：输给节点敌人前几次不扣体力（[NodeEvents] 读）；战斗基线加成，属性键 → 加多少（[RunState.compile_player] 读）
 var free_losses: int = 0
 var stat_bonus: Dictionary = {}
+## 129：负重上限加多少（科技「扛重」）
+var carry_capacity_bonus: int = 0
 
 
 func snapshot() -> Dictionary:
@@ -36,4 +38,5 @@ func snapshot() -> Dictionary:
 		"flee_bonus": flee_bonus,
 		"free_losses": free_losses,
 		"stat_bonus": stat_bonus.duplicate(),
+		"carry_capacity_bonus": carry_capacity_bonus,
 	}

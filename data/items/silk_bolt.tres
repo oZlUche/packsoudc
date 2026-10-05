@@ -20,4 +20,5 @@ display_names = {
 description = "光滑如水的一卷丝。"
 shape = SubResource("Resource_eq6nb")
 rarity = 3
+weight = 2
 tags = Array[StringName]([&"material", &"crafted"])

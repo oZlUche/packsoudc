@@ -80,4 +80,9 @@ static func of(run: RunState) -> Array[PassiveNote]:
 			continue
 		out.append(PassiveNote.make(StringName("axis:" + String(axis)), StatAxes.name_of(axis, stacks), absi(stacks), [],
 			StatAxes.describe(axis, 0, stacks)))
+	# --- 129：负重减益（层数 = 级数）。说清楚为什么出手慢了、耐力少了 ---
+	var enc_level := run.encumbrance_level()
+	if run.encumbrance != null and enc_level > 0:
+		out.append(PassiveNote.make(&"encumbrance", "负重：%s" % run.encumbrance.name_of(enc_level), enc_level, [],
+			"负重 %d / %d：%s" % [run.carry_weight(), run.carry_capacity(), run.encumbrance.effect_text(enc_level)]))
 	return out

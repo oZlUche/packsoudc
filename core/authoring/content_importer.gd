@@ -29,6 +29,8 @@ class Context:
 	var drop_rules: Dictionary = {}
 	## 126：id -> CarryRule。章节对着它查
 	var carry_rules: Dictionary = {}
+	## 129：id -> EncumbranceRules。章节对着它查
+	var encumbrance_rules: Dictionary = {}
 	## id -> NodeRules。章节对着它查
 	var node_rules: Dictionary = {}
 	## id -> EconomyRules。章节对着它查
@@ -57,6 +59,10 @@ class Context:
 	func register_pool(pool: EnemyPool) -> void:
 		if pool != null and pool.id != &"":
 			pools[pool.id] = pool
+
+	func register_encumbrance_rules(rules: EncumbranceRules) -> void:
+		if rules.id != &"":
+			encumbrance_rules[rules.id] = rules
 
 	func register_carry_rule(rule: CarryRule) -> void:
 		if rule.id != &"":
@@ -560,6 +566,30 @@ static func import_carry_rule(data: Dictionary, ctx: Context, report: ImportRepo
 		report.warn("tags", "没有标签，什么都抽不到")
 	ctx.register_carry_rule(rule)
 	return rule
+
+
+## 129：负重规则 —— 每级 over ≥ 1 且严格递增、travel_mult ≥ 1、减益不碰伤害（作者定）
+static func import_encumbrance_rules(data: Dictionary, ctx: Context, report: ImportReport) -> EncumbranceRules:
+	var rules := EncumbranceRules.new()
+	_fill(rules, data, "", ctx, report)
+	if rules.id == &"":
+		report.error("id", "负重规则必须有 id")
+	var last := 0.0
+	for i in rules.levels.size():
+		var lv := rules.levels[i]
+		if lv == null:
+			report.error("levels[%d]" % i, "空的一级")
+			continue
+		if lv.over < 1.0 or lv.over < last:
+			report.error("levels[%d].over" % i, "得 ≥ 1 且不比上一级小（超过上限的倍数）")
+		last = lv.over
+		if lv.travel_mult < 1:
+			report.error("levels[%d].travel_mult" % i, "走路倍数至少 1")
+		for m in lv.mods:
+			if m != null and m.stat == BattleStats.DAMAGE:
+				report.error("levels[%d].mods" % i, "负重不直接减伤害（作者定：只减耐力回复、耐力上限、急速）")
+	ctx.register_encumbrance_rules(rules)
+	return rules
 
 
 static func import_drop_rule(data: Dictionary, ctx: Context, report: ImportReport) -> DropRule:
@@ -1297,6 +1327,8 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 		report.error("drop_rule", "找不到掉落规则 '%s'（已知：%s）" % [def.drop_rule, ", ".join(ctx.drop_rules.keys())])
 	if def.carry_rule != &"" and not ctx.carry_rules.is_empty() and not ctx.carry_rules.has(def.carry_rule):
 		report.error("carry_rule", "找不到携带规则 '%s'（已知：%s）" % [def.carry_rule, ", ".join(ctx.carry_rules.keys())])
+	if def.encumbrance_rules != &"" and not ctx.encumbrance_rules.is_empty() and not ctx.encumbrance_rules.has(def.encumbrance_rules):
+		report.error("encumbrance_rules", "找不到负重规则 '%s'（已知：%s）" % [def.encumbrance_rules, ", ".join(ctx.encumbrance_rules.keys())])
 	if def.node_rules != &"" and not ctx.node_rules.is_empty() and not ctx.node_rules.has(def.node_rules):
 		report.error("node_rules", "找不到节点规则 '%s'（已知：%s）" % [def.node_rules, ", ".join(ctx.node_rules.keys())])
 	if def.economy_rules != &"" and not ctx.economy_rules.is_empty() and not ctx.economy_rules.has(def.economy_rules):
