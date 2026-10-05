@@ -83,6 +83,8 @@ func open(payload: Dictionary) -> void:
 	_wh = WarehousePanelScript.new()
 	_wh.setup(flow, font)
 	_wh.changed.connect(_refresh)
+	_wh.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(_wh)
 
 	var right := _vbox(8)

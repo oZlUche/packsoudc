@@ -63,6 +63,27 @@ static func frame_stash_sale_and_result(t: TestCase, root: Window) -> void:
 	t.check(screen._stash_line != null and screen._stash_line.text.contains("一键出售") and screen._stash_line.text.contains("得 %d 币" % price), "结算屏说了离开时一键出售、得多少（%s）" % (screen._stash_line.text if screen._stash_line != null else "无"))
 	t.check(screen.safe_view() != null and screen.safe_view().inventory.item_count() == safe_n and screen.safe_view().inventory.size == Vector2i(3, 3), "保险箱那格画出来了：%d 件、3×3" % safe_n)
 	t.check(f.meta.board != null and f.meta.board.item_count() >= safe_n, "带回来的棋盘里有保险箱那件")
+	# 反馈：结算屏的继续按钮不能被仓库挤出窗口 —— 按钮在滚动区外，仓库区最小高度压在 4 行
+	var cont: Button = null
+	var stack: Array[Node] = [screen]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		if n is Button and (n as Button).text.begins_with("继续"):
+			cont = n
+		stack.append_array(n.get_children())
+	t.not_null(cont, "有继续按钮")
+	if cont != null:
+		var inside_scroll := false
+		var up: Node = cont.get_parent()
+		while up != null and up != screen:
+			inside_scroll = inside_scroll or up is ScrollContainer
+			up = up.get_parent()
+		t.check(not inside_scroll, "继续按钮钉在滚动区外")
+	var wh_min := 0.0
+	for sc: ScrollContainer in screen.find_children("*", "ScrollContainer", true, false):
+		if sc.get_child_count() > 0 and sc.get_child(0) is InventoryView and (sc.get_child(0) as InventoryView).inventory == f.meta.warehouse:
+			wh_min = maxf(wh_min, sc.custom_minimum_size.y)
+	t.check(wh_min <= 4.0 * InventoryView.CELL, "仓库区最小高度不超过 4 行（%.0f）" % wh_min)
 	screen.proceed()
 	t.eq(f.screen, GameFlow.Screen.META, "→ 局外")
 	t.eq(f.meta.funds, funds0 + price, "暂存区里的卖了，钱进局外")
