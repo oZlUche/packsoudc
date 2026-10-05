@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_qdpdk"]
+
+[resource]
+script = ExtResource("1_qdpdk")
+id = &"safe_box"
+display_name = "保险箱"
+category = &"map"
+order = 4
+text = "保险箱点上有一只小格子，放进去的东西视为已带出：不管这一局撤离还是失败，结算时都送回基地，结算屏单独一格画着它们。拖着放或棋盘上双击进箱，箱里双击回棋盘；包放不进去，局外不留包。
+
+关上保险箱或走开，里面有东西就锁上，送回基地、不能再改，这个点随之变灰；空着关不算关，回来还能开。箱子的大小由局外规则定，科技能扩格。保险箱点落在地图偏中央的位置，那里没有敌人。"
+related = Array[String](["extraction_and_defeat", "quick_place", "tech_tree"])

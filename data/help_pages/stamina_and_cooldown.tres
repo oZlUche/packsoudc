@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_md5pl"]
+
+[resource]
+script = ExtResource("1_md5pl")
+id = &"stamina_and_cooldown"
+display_name = "耐力与冷却"
+category = &"combat"
+order = 4
+text = "武器出手要花耐力，耐力按每秒回复速度自动补回，回复按时间线性结算。冷却到点时看当前耐力够不够实际消耗：不够就跳过这一次出手，冷却照常清零重走，等于实打实丢掉一次机会。带几把耗耐力的武器就是这样被耐力管着。
+
+攒次数、每场限次、按概率这些门和耐力一样都在消耗层，不过就跳过、冷却照走。开战时每件道具从头起算一个完整冷却。耐力消耗有一条连乘轴：每层灵巧把当前消耗再省掉一小截，层数之间相乘而不是相加。"
+related = Array[String](["haste", "auto_battle", "耐力", "耗耐力", "冷却"])
