@@ -289,4 +289,7 @@ static func frame_run_container_screen(t: TestCase, root: Window) -> void:
 	view.skip()
 	t.check(not screen._line.text.contains("正在搜"), "搜完读数不再写正在搜")
 	t.check(bool(screen._drag.drop_filter.call(unrevealed, run.board)), "亮了许放到棋盘")
+	t.check(view.get_parent() is ScrollContainer, "格子包在竖向滚动容器里（容器太高不撑出窗口）")
+	screen.take_all()
+	t.eq(box.item_count(), 0, "滚动容器里全部拾取照样拿完")
 	screen.queue_free()

@@ -679,15 +679,18 @@ func _offer_loot(container: GridInventory) -> void:
 	if pending_loot != null:
 		# 上一份还没处理就来了新的（搜索收获 + 遭遇的尸体）：并成一份，一件都不丢。
 		# 087：尸体容器可能是棋盘模式（包当背景），两边都往一块够大的自由容器里搬，放不下就加高
-		var w := maxi(pending_loot.size.x, container.size.x)
-		var h := pending_loot.size.y + container.size.y
+		# 反馈：两边高度直接相加会把界面撑出窗口。按搜索规则的收获箱大小起步，装不下一格一格加高；
+		# 加到两倍还没装完仍接着加（一件都不丢）
+		var haul := node_rules.search.haul_board if node_rules != null and node_rules.search != null else Vector2i(6, 4)
+		var w := maxi(maxi(pending_loot.size.x, container.size.x), haul.x)
+		var h := maxi(haul.y, 1)
 		var merged := GridInventory.new(Vector2i(w, h), 0, false)
 		InventoryService.transfer_all(pending_loot, merged)
 		InventoryService.transfer_all(container, merged)
 		var guard := 0
-		while (pending_loot.item_count() > 0 or container.item_count() > 0) and guard < 8:
+		while (pending_loot.item_count() > 0 or container.item_count() > 0) and guard < 64:
 			guard += 1
-			var bigger := GridInventory.new(merged.size + Vector2i(0, 2), 0, false)
+			var bigger := GridInventory.new(merged.size + Vector2i(0, 1), 0, false)
 			InventoryService.transfer_all(merged, bigger)
 			merged = bigger
 			InventoryService.transfer_all(pending_loot, merged)
