@@ -21,7 +21,7 @@ extends RefCounted
 ## "dropped": 补完之后总共还差几件, "short": [差了件的点：{id, enemy, strength, missing}]}
 static func fill(
 	graph: MapGraph, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase,
-	difficulty: int = 0, scale_id: StringName = &""
+	difficulty: int = 0, scale_id: StringName = &"", carry: CarryRule = null
 ) -> Dictionary:
 	var out := {"placed": 0, "skipped": [] as Array[int], "dropped": 0, "short": [] as Array[Dictionary]}
 	if graph == null or pool == null or enemies == null or items == null:
@@ -33,7 +33,7 @@ static func fill(
 			continue
 		var rng := RandomNumberGenerator.new()
 		rng.seed = n.content_seed
-		var built := place_one(n, pool, enemies, items, float(depth.get(id, 0.0)), difficulty, scale_id, rng)
+		var built := place_one(n, pool, enemies, items, float(depth.get(id, 0.0)), difficulty, scale_id, rng, {}, carry)
 		if built.is_empty():
 			(out["skipped"] as Array[int]).append(id)
 			continue
@@ -52,13 +52,13 @@ static func fill(
 static func place_one(
 	node: MapNode, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase,
 	depth: float, difficulty: int, scale_id: StringName, rng: RandomNumberGenerator,
-	exploration: Dictionary = {}
+	exploration: Dictionary = {}, carry: CarryRule = null
 ) -> Dictionary:
 	var wanted := wanted_strength(pool, node, depth, difficulty, scale_id, exploration)
 	var entry := pick(pool, enemies, node, wanted, rng)
 	if entry == null:
 		return {}
-	return build_content(enemies.enemy(entry.enemy), pool, items, wanted, rng)
+	return build_content(enemies.enemy(entry.enemy), pool, items, wanted, rng, carry)
 
 
 ## 每个点的深度 0～1：tier 在全图 tier 范围里的位置。形态无关 —— 环形图、手绘图都只看 tier
@@ -131,9 +131,10 @@ const REFILL_TRIES := 12
 
 
 ## 组装：招牌 → 流派 → 通用，摆上棋盘。大件先摆（摆得下的概率高），放不下的换一件再试。
-## 返回 {"content": Dictionary, "dropped": 补完之后还差几件}
+## 返回 {"content": Dictionary, "dropped": 补完之后还差几件（战斗道具）, "carry_short": 126 携带品放不下跳过了几件}
 static func build_content(
-	def: EnemyDef, pool: EnemyPool, items: ItemDatabase, strength: int, rng: RandomNumberGenerator
+	def: EnemyDef, pool: EnemyPool, items: ItemDatabase, strength: int, rng: RandomNumberGenerator,
+	carry: CarryRule = null
 ) -> Dictionary:
 	var tier := pool.tier_of(strength)
 	var rule := def.loadout if def.loadout != null else pool.loadout
@@ -183,13 +184,37 @@ static func build_content(
 				break
 			tries += 1
 			_try_place(board, items.get_def(id), placed)
+	# 126：战斗道具摆完再摆携带品（非战斗道具，越值钱越少见）—— 同一块棋盘 / 同一些包，小件先摆，放不下的跳过（计入差件）。
+	# 随机数另起一条（由主随机数的当前状态派生、不消耗它）：加不加携带规则，敌人本身与战斗道具都不变
+	var carry_short := 0
+	if carry != null:
+		# 摆的是草稿实例（内容只记 id 与位置），uid 计数原样还回去 —— 同上，带不带携带品不影响之后的编号
+		var uid_mark := ItemInstance._next_uid
+		var crng := RandomNumberGenerator.new()
+		crng.seed = hash([rng.state, String(def.id), strength, "carry"])
+		var carried := carry.roll(items, strength, cap, crng)
+		for id in _small_first(carried, items, crng):
+			if _try_place(board, items.get_def(id), placed):
+				(placed[placed.size() - 1] as Dictionary)["carried"] = true
+			else:
+				carry_short += 1
+		ItemInstance._next_uid = uid_mark
 	var content := {
 		"enemy": String(def.id),
 		"strength": strength,
 		"board": [size.x, size.y],
 		"items": placed,
 	}
-	return {"content": content, "dropped": maxi(0, count - placed.size())}
+	return {"content": content, "dropped": maxi(0, count - (placed.size() - _carried_count(placed))), "carry_short": carry_short}
+
+
+## 126：已摆上的里有几件是携带品
+static func _carried_count(placed: Array) -> int:
+	var n := 0
+	for raw in placed:
+		if bool((raw as Dictionary).get("carried", false)):
+			n += 1
+	return n
 
 
 ## 已摆上的里有几件流派道具（不含包）

@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_y2yyh"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_4b61v"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_uydkd"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_jt06m"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_fhs0h"]
+[ext_resource type="Script" path="res://core/battle/effects/remove_status.gd" id="6_3eopb"]
+[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="7_gscbu"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_lv4ya"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_3uyln"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_ytn6i"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_omlyq"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_gn6ch"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_bef1l"]
+
+[sub_resource type="Resource" id="Resource_l77ta"]
+script = ExtResource("3_uydkd")
+
+[sub_resource type="Resource" id="Resource_y1kqw"]
+script = ExtResource("6_3eopb")
+buff_id = &"poison"
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_xpm7m"]
+script = ExtResource("7_gscbu")
+amount = 3.0
+
+[sub_resource type="Resource" id="Resource_atjjj"]
+script = ExtResource("8_lv4ya")
+
+[sub_resource type="Resource" id="Resource_b4txh"]
+script = ExtResource("2_4b61v")
+trigger = SubResource("Resource_atjjj")
+cadence = SubResource("Resource_l77ta")
+effects = Array[ExtResource("5_fhs0h")]([SubResource("Resource_y1kqw"), SubResource("Resource_xpm7m")])
+
+[sub_resource type="Resource" id="Resource_2v3vf"]
+script = ExtResource("9_3uyln")
+rules = Array[ExtResource("2_4b61v")]([SubResource("Resource_b4txh")])
+
+[sub_resource type="Resource" id="Resource_tw7rm"]
+script = ExtResource("13_bef1l")
+
+[resource]
+script = ExtResource("12_gn6ch")
+id = &"antidote_satchel"
+display_name = "解毒药囊"
+display_names = {
+"en": "Antidote Satchel"
+}
+description = "几味解毒草装一囊。"
+shape = SubResource("Resource_tw7rm")
+rarity = 2
+tags = Array[StringName]([&"remedy", &"tool"])
+combat = SubResource("Resource_2v3vf")

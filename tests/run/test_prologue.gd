@@ -257,10 +257,12 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.not_null(s.pending_loot, "收获等着拿")
 	t.eq(s.take_all_loot(), 3, "拿走三件")
 	# 整理：暂存区一挪步就清（080），先把搜到的都放进包里（有没有武器的门在战前准备屏上，084）
+	# 123：全部拾取先进背包，放不下的才进暂存区 —— 两边都看
 	var weapon: ItemInstance = null
-	for inst in s.storage.items().duplicate():
+	for inst in s.board.items() + s.storage.items():
 		if (inst as ItemInstance).def.tags.has(&"weapon") and weapon == null:
 			weapon = inst
+	for inst in s.storage.items().duplicate():
 		s.equip((inst as ItemInstance).uid)
 	t.not_null(weapon, "第一次搜到了武器")
 	t.eq(s.storage.item_count(), 0, "都放进包里了")

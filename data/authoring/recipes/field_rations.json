@@ -1,0 +1,13 @@
+{
+  "id": "field_rations",
+  "display_name": "行军军粮",
+  "display_names": {
+    "en": "Field Rations"
+  },
+  "inputs": [
+    "salted_meat",
+    "beeswax"
+  ],
+  "output": "field_rations",
+  "note": "把蜂蜡块拖到腌肉干上：封成军粮。"
+}

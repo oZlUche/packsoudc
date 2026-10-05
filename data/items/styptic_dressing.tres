@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_terfd"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_ly8yx"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_8q17t"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_mqy6c"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_ed515"]
+[ext_resource type="Script" path="res://core/battle/effects/remove_status.gd" id="6_pjep5"]
+[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="7_fydot"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_51y3s"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_pjy66"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_pb1nu"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_vo06o"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_j74mi"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_gqljt"]
+
+[sub_resource type="Resource" id="Resource_otrn1"]
+script = ExtResource("3_8q17t")
+seconds = 1.5
+
+[sub_resource type="Resource" id="Resource_418jh"]
+script = ExtResource("6_pjep5")
+buff_id = &"bleed"
+stacks = 3
+
+[sub_resource type="Resource" id="Resource_xd2j7"]
+script = ExtResource("7_fydot")
+amount = 6.0
+
+[sub_resource type="Resource" id="Resource_kca66"]
+script = ExtResource("8_51y3s")
+
+[sub_resource type="Resource" id="Resource_m3qyf"]
+script = ExtResource("2_ly8yx")
+trigger = SubResource("Resource_kca66")
+cadence = SubResource("Resource_otrn1")
+effects = Array[ExtResource("5_ed515")]([SubResource("Resource_418jh"), SubResource("Resource_xd2j7")])
+
+[sub_resource type="Resource" id="Resource_2eeux"]
+script = ExtResource("9_pjy66")
+base_stats = {
+"max_hp": 10
+}
+rules = Array[ExtResource("2_ly8yx")]([SubResource("Resource_m3qyf")])
+
+[sub_resource type="Resource" id="Resource_wo21h"]
+script = ExtResource("13_gqljt")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("12_j74mi")
+id = &"styptic_dressing"
+display_name = "止血敷料"
+display_names = {
+"en": "Styptic Dressing"
+}
+description = "药粉和布一起压在伤口上。"
+shape = SubResource("Resource_wo21h")
+rarity = 2
+tags = Array[StringName]([&"remedy", &"nature"])
+combat = SubResource("Resource_2eeux")

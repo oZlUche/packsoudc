@@ -1,0 +1,13 @@
+{
+  "id": "salted_meat",
+  "display_name": "腌肉干",
+  "display_names": {
+    "en": "Salted Meat"
+  },
+  "inputs": [
+    "ration",
+    "raw_salt"
+  ],
+  "output": "salted_meat",
+  "note": "把粗盐块拖到口粮上：腌成肉干。"
+}

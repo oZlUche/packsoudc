@@ -1,0 +1,22 @@
+{
+  "id": "salted_meat",
+  "display_name": "腌肉干",
+  "display_names": {
+    "en": "Salted Meat"
+  },
+  "description": "腌透的肉，耐放也顶饿。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "nature",
+    "food"
+  ],
+  "combat": {
+    "base_stats": {
+      "max_stamina": 60,
+      "regen_stamina": 3
+    }
+  }
+}

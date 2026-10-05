@@ -426,6 +426,7 @@
   },
   "enemy_pool": "standard_ruins",
   "drop_rule": "standard",
+  "carry_rule": "standard",
   "node_rules": "standard",
   "economy_rules": "standard",
   "order": 3,

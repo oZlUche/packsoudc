@@ -43,6 +43,9 @@ extends Resource
 @export var min_drops: int = 0
 ## 敌人身上的包必掉（作者定），且不占 min_drops 的名额。false = 包和别的东西一样按稀有度掷
 @export var bags_always_drop: bool = true
+## 126（作者定）：敌人身上的携带品（内容里 `carried: true` 的非战斗道具）必掉 —— 战前看见了才有「为了它多打一场」的决定。
+## 不占 min_drops 的名额。false = 和别的东西一样按稀有度掷
+@export var carried_always_drop: bool = true
 ## 095（作者定）：掉下来的普通道具换成赐福版的概率 —— 没激活信仰随机一位神（bless_chance）、激活了只换那位神的（bless_chance_active）
 @export var bless_chance: float = 0.05
 @export var bless_chance_active: float = 0.2

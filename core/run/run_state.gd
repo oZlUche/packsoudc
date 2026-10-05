@@ -114,6 +114,8 @@ var erosion_saved: Dictionary = {}
 
 var pool: EnemyPool = null
 var drop_rule: DropRule = null
+## 126：敌人携带规则（章节引用；空 = 敌人不带非战斗道具）
+var carry_rule: CarryRule = null
 var node_rules: NodeRules = null
 var economy: EconomyRules = null
 
@@ -171,7 +173,7 @@ static func start(
 	ItemInstance.reset_uid_counter()
 	SafePlacerScript.mark(s.map, p_chapter.safes)     # 092：先换点，再放敌人（换掉的点不该带敌人）
 	if s.pool != null:
-		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id())
+		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id(), s.carry_rule)
 	PaidExtracts.mark(s.map, s.economy)
 	EventPlacer.fill(s.map, s.node_rules)
 	s.rng = RunRNG.new(p_seed)
@@ -643,11 +645,12 @@ func take_loot(uid: int) -> bool:
 	return ok
 
 
-## 全拿走，返回拿了几件
+## 全拿走，返回拿了几件。123：每件先试背包棋盘，放不下才进暂存区
 func take_all_loot() -> int:
 	if pending_loot == null:
 		return 0
-	var n := InventoryService.transfer_all(pending_loot, storage)
+	var got := InventoryService.transfer_all_prefer(pending_loot, board, storage)
+	var n: int = got["board"] + got["storage"]
 	discard_loot()
 	return n
 
@@ -759,6 +762,7 @@ func _resolve_rules() -> void:
 	if enemies != null and chapter.enemy_pool != &"":
 		pool = enemies.pool(chapter.enemy_pool)
 	drop_rule = _rule_asset("drop_rules", chapter.drop_rule) as DropRule
+	carry_rule = _rule_asset("carry_rules", chapter.carry_rule) as CarryRule
 	node_rules = _rule_asset("node_rules", chapter.node_rules) as NodeRules
 	economy = _rule_asset("economy_rules", chapter.economy_rules) as EconomyRules
 
@@ -796,6 +800,7 @@ func _wire_events() -> void:
 	events.enemies = enemies
 	events.items = items
 	events.drop_rule = drop_rule
+	events.carry_rule = carry_rule
 	events.wallet = wallet
 	events.economy = economy
 	events.difficulty = chapter.difficulty

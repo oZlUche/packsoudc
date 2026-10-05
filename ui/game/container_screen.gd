@@ -61,7 +61,7 @@ func open(payload: Dictionary) -> void:
 	_skip_btn = _button("快速搜索", skip_reveal, 13)
 	buttons.add_child(_skip_btn)
 	var take := _button("全部拾取", take_all, 13, UiPalette.Tier.PRIMARY)
-	take.tooltip_text = "全部进暂存区"
+	take.tooltip_text = "先进背包，放不下的进暂存区"
 	buttons.add_child(take)
 	if _session != null:
 		var close := _button("关闭", close_search, 13)
@@ -157,10 +157,10 @@ func skip_reveal() -> void:
 	_loot.skip()
 
 
-## 全进暂存区（先全亮）。屏不自动关（084 作者定），设置「拿走最后一件后自动关闭」开了才关（_on_container_changed 管）
+## 全拿走（先全亮）：123 先进背包棋盘，放不下的进暂存区。屏不自动关（084 作者定），设置「拿走最后一件后自动关闭」开了才关（_on_container_changed 管）
 func take_all() -> void:
 	_loot.reveal_all()
-	InventoryService.transfer_all(_container, flow.run.storage)
+	InventoryService.transfer_all_prefer(_container, flow.run.board, flow.run.storage)
 	_refresh()
 
 

@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="CarryRule" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/carry_rule.gd" id="1_qfjok"]
+
+[resource]
+script = ExtResource("1_qfjok")
+id = &"standard"
+display_name = "标准携带（占位）"

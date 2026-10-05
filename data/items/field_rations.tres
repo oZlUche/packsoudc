@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_yas60"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_uo36u"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_tqq5w"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_5p3xn"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="5_4lgso"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="6_rqhld"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="7_d2jub"]
+
+[sub_resource type="Resource" id="Resource_uui8q"]
+script = ExtResource("3_tqq5w")
+base_stats = {
+"max_hp": 5,
+"max_stamina": 90,
+"regen_stamina": 4
+}
+
+[sub_resource type="Resource" id="Resource_qh8o8"]
+script = ExtResource("7_d2jub")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("6_rqhld")
+id = &"field_rations"
+display_name = "行军军粮"
+display_names = {
+"en": "Field Rations"
+}
+description = "军团配的一包，吃一天不饿。"
+shape = SubResource("Resource_qh8o8")
+rarity = 2
+tags = Array[StringName]([&"nature", &"food"])
+combat = SubResource("Resource_uui8q")

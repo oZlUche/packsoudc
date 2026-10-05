@@ -26,6 +26,9 @@ extends Resource
 ## 掉落规则的 id（`data/drop_rules/`，6.1）。空 = 这一章什么都不掉
 @export var drop_rule: StringName = &""
 
+## 126：敌人携带规则的 id（`data/carry_rules/`）：敌人身上随机带几件非战斗道具。空 = 不带（序章不带：教程敌人身上的东西是设计好的）
+@export var carry_rule: StringName = &""
+
 ## 节点规则的 id（`data/node_rules/`，6.2 / 7.1）：随机点变什么、搜索怎么搜、输了扣多少、休息回多少。
 ## 空 = 踩到点只标用过，什么都不发生
 @export var node_rules: StringName = &""

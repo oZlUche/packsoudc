@@ -57,6 +57,8 @@ var pool: EnemyPool = null
 var enemies: EnemyDatabase = null
 var items: ItemDatabase = null
 var drop_rule: DropRule = null
+## 126：现造的敌人（随机点揭成战斗、搜索遭遇）也按它带非战斗道具
+var carry_rule: CarryRule = null
 ## 钱（6.6）。null = 这一局不算钱
 var wallet: Wallet = null
 ## 091：局外状态（旗标）；沙盒里 null
@@ -780,7 +782,7 @@ func _enemy_for(node: MapNode, as_type: StringName, rng: RandomNumberGenerator) 
 	var view := MapNode.from_dict(node.to_dict())
 	view.type = as_type
 	# 踩上去才造的敌人跟探索度挂钩：走得越远、搜得越多，遇到的越强
-	var built := EnemyPlacer.place_one(view, pool, enemies, items, float(_depths.get(node.id, 0.0)), difficulty, scale_id, rng, exploration())
+	var built := EnemyPlacer.place_one(view, pool, enemies, items, float(_depths.get(node.id, 0.0)), difficulty, scale_id, rng, exploration(), carry_rule)
 	return built.get("content", {})
 
 

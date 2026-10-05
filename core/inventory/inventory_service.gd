@@ -154,6 +154,44 @@ static func _transfer_bag(from: GridInventory, uid: int, to: ItemContainer) -> b
 static func transfer_all(from: ItemContainer, to: ItemContainer) -> int:
 	if from == null or to == null:
 		return 0
+	var moved := 0
+	from.begin_batch()
+	to.begin_batch()
+	for inst in _take_order(from):
+		if transfer_auto(from, (inst as ItemInstance).uid, to):
+			moved += 1
+	to.end_batch()
+	from.end_batch()
+	return moved
+
+
+## 084 / 123：全拿走 —— 每件先试 first（棋盘，自动找位），放不下才进 fallback（暂存区）。
+## 顺序同 transfer_all（非包先、大件先；包最后，不替玩家决定棋盘布局）。返回 {board: n, storage: n}
+static func transfer_all_prefer(from: ItemContainer, first: ItemContainer, fallback: ItemContainer) -> Dictionary:
+	var out := {"board": 0, "storage": 0}
+	if from == null:
+		return out
+	from.begin_batch()
+	if first != null:
+		first.begin_batch()
+	if fallback != null:
+		fallback.begin_batch()
+	for inst in _take_order(from):
+		var uid := (inst as ItemInstance).uid
+		if first != null and transfer_auto(from, uid, first):
+			out["board"] += 1
+		elif fallback != null and transfer_auto(from, uid, fallback):
+			out["storage"] += 1
+	if fallback != null:
+		fallback.end_batch()
+	if first != null:
+		first.end_batch()
+	from.end_batch()
+	return out
+
+
+## 搬运顺序：按占格数从大到小；作为包生效的排最后
+static func _take_order(from: ItemContainer) -> Array:
 	var sorted: Array = from.items()
 	var grid := from as GridInventory
 	sorted.sort_custom(
@@ -164,12 +202,4 @@ static func transfer_all(from: ItemContainer, to: ItemContainer) -> int:
 				return bb     # 不是包的排前面
 			return (a as ItemInstance).def.shape.cell_count() > (b as ItemInstance).def.shape.cell_count()
 	)
-	var moved := 0
-	from.begin_batch()
-	to.begin_batch()
-	for inst in sorted:
-		if transfer_auto(from, (inst as ItemInstance).uid, to):
-			moved += 1
-	to.end_batch()
-	from.end_batch()
-	return moved
+	return sorted

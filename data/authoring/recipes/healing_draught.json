@@ -1,0 +1,13 @@
+{
+  "id": "healing_draught",
+  "display_name": "治愈药剂",
+  "display_names": {
+    "en": "Healing Draught"
+  },
+  "inputs": [
+    "strong_salve",
+    "quartz_cluster"
+  ],
+  "output": "healing_draught",
+  "note": "把水晶簇拖到浓缩伤药上：装成治愈药剂。"
+}

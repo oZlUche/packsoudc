@@ -1,0 +1,39 @@
+{
+  "id": "antidote_satchel",
+  "display_name": "解毒药囊",
+  "display_names": {
+    "en": "Antidote Satchel"
+  },
+  "description": "几味解毒草装一囊。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "remedy",
+    "tool"
+  ],
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_schedule"
+        },
+        "cadence": {
+          "type": "cooldown"
+        },
+        "effects": [
+          {
+            "type": "remove_status",
+            "buff_id": "poison",
+            "stacks": 2
+          },
+          {
+            "type": "change_resource",
+            "amount": 3.0
+          }
+        ]
+      }
+    ]
+  }
+}
