@@ -215,6 +215,7 @@ static func _validate_buff_only_damage(def: ItemDef, report: ImportReport) -> vo
 			groups.append(["faith_bonuses[%d].rules" % k, fb.rules])
 	if def.adjacency != null:
 		groups.append(["adjacency.grant_rules", def.adjacency.grant_rules])     # 108：附加规则同样适用
+		groups.append(["adjacency.receive_rules", def.adjacency.receive_rules])     # 132
 	for g in groups:
 		var rules: Array = g[1]
 		for i in rules.size():
@@ -241,6 +242,7 @@ static func _validate_status_loops(def: ItemDef, report: ImportReport) -> void:
 			groups.append(["faith_bonuses[%d].rules" % k, fb.rules])
 	if def.adjacency != null:
 		groups.append(["adjacency.grant_rules", def.adjacency.grant_rules])
+		groups.append(["adjacency.receive_rules", def.adjacency.receive_rules])     # 132
 	for g in groups:
 		validate_status_loops(g[1], g[0], report)
 
@@ -266,17 +268,94 @@ static func validate_status_loops(rules: Array, path: String, report: ImportRepo
 				report.error(at, "「%s被施加时」又施加 %s —— 自己点燃自己，会一直连锁到派发上限" % [listen.buff_id, gives])
 
 
+## 132：规则的「配了也没用」与各构件自己的校验。
+## 警告（不拦）：改写伤害包的效果不在受伤前；`per_stack` 写在道具自己的规则里（只有 buff 规则与「施加时」才有层数可读）；
+## 自发配 always；按伤害比例的回复不在受伤后；「只在暴击时」配受到。错误：比例伤害没填比例、资源条件一个界都没填、
+## 轴不存在、改伤害类型改成不存在的或毒 / 血
+const PACKET_EFFECTS := ["ModifyDamage", "ReflectDamage", "LowHpEmpower", "ConvertDamageType"]
+
+
+static func _validate_rule_shapes(def: ItemDef, ctx: Context, report: ImportReport) -> void:
+	var groups: Array = []
+	if def.combat != null:
+		groups.append(["combat.rules", def.combat.rules])
+	for k in def.faith_bonuses.size():
+		var fb := def.faith_bonuses[k] as FaithBonus
+		if fb != null:
+			groups.append(["faith_bonuses[%d].rules" % k, fb.rules])
+	if def.adjacency != null:
+		groups.append(["adjacency.grant_rules", def.adjacency.grant_rules])
+		groups.append(["adjacency.receive_rules", def.adjacency.receive_rules])
+	for g in groups:
+		validate_rule_shapes(g[1], g[0], report, true, ctx)
+
+
+static func validate_rule_shapes(rules: Array, path: String, report: ImportReport, item_level: bool, ctx: Context = null, depth: int = 0) -> void:
+	for i in rules.size():
+		var rule := rules[i] as AbilityRule
+		if rule == null:
+			continue
+		var at := "%s[%d]" % [path, i]
+		if rule.trigger is OnSchedule and rule.cadence is Always:
+			report.warn(at + ".cadence", "自发配「每次都行」：没有冷却就排不出下一次出手，改成 cooldown")
+		if rule.trigger is OnDamage and (rule.trigger as OnDamage).crit_only \
+				and (rule.trigger as OnDamage).direction == DamageTrigger.Direction.TAKEN:
+			report.warn(at + ".trigger.crit_only", "「只在暴击时」配「受到」：暴击旗说的是这一下是不是暴击，挨打一方一般不该听它，确认一下")
+		if rule.trigger is OnItemFired and ctx != null and not ctx.tags.is_empty():
+			for tag in (rule.trigger as OnItemFired).source_tags:
+				if not ctx.tags.has(tag):
+					report.warn(at + ".trigger.source_tags", "没有登记的标签 '%s'：确认没拼错" % tag)
+		for c in rule.costs:
+			if c is ResourceCondition and not (c as ResourceCondition).has_bounds():
+				report.error(at + ".costs", "资源条件一个界都没填（min_percent / max_percent / absolute_min / absolute_max 至少一个）")
+			if c is AxisCondition and not StatAxes.has((c as AxisCondition).axis):
+				report.error(at + ".costs", "没有这条标准轴：%s" % (c as AxisCondition).axis)
+			if c is AxisCost and not StatAxes.has((c as AxisCost).axis):
+				report.error(at + ".costs", "没有这条标准轴：%s" % (c as AxisCost).axis)
+		for j in rule.effects.size():
+			var e = rule.effects[j]
+			var eat := "%s.effects[%d]" % [at, j]
+			var scr: Script = e.get_script() if e is Object else null
+			var cls := String(scr.get_global_name()) if scr != null else ""
+			if PACKET_EFFECTS.has(cls) and not (rule.trigger is OnBeforeDamage):
+				report.warn(eat, "%s 只在受伤前阶段有效，这条规则的时机不是 on_before_damage，触发了也改不到伤害" % cls)
+			if item_level and not (rule.trigger is OnStatusApplied) and _effect_per_stack(e):
+				report.warn(eat + ".per_stack", "per_stack 读的是来源 buff 的层数，写在道具自己的规则里恒为 1（只有 buff 的规则与「施加时」读得到层数）")
+			if e is ChangeResource and (e as ChangeResource).percent_of_damage > 0 and not (rule.trigger is OnDamage):
+				report.warn(eat + ".percent_of_damage", "按伤害比例回复只在受伤后（on_damage）有那一包伤害，别的时机这部分恒为 0")
+			if e is DealDamage and (e as DealDamage).percent_of != &"":
+				var dd := e as DealDamage
+				if not DealDamage.PERCENT_OF.has(dd.percent_of):
+					report.error(eat + ".percent_of", "percent_of 只能是 max_hp / current_hp / missing_hp")
+				elif dd.percent <= 0:
+					report.error(eat + ".percent", "填了 percent_of 就得填 percent（> 0）")
+			if e is ConvertDamageType:
+				var to := (e as ConvertDamageType).to
+				if BUFF_ONLY_DAMAGE.has(to):
+					report.error(eat + ".to", "不能改成 %s —— 毒与流血只由 buff 造成" % to)
+				elif to == &"" or not DamageTypes.has(to):
+					report.error(eat + ".to", "没有这种伤害类型：%s" % to)
+			if e is ApplyStatus and (e as ApplyStatus).buff != null and depth < 3:     # buff 的规则可以再施加 buff：限深，防自引用
+				validate_rule_shapes((e as ApplyStatus).buff.rules, eat + ".buff.rules", report, false, ctx, depth + 1)
+
+
+static func _effect_per_stack(e) -> bool:
+	return (e is DealDamage and (e as DealDamage).per_stack) or (e is ChangeResource and (e as ChangeResource).per_stack) \
+		or (e is ApplyStatus and (e as ApplyStatus).per_stack) or (e is ShiftAxis and (e as ShiftAxis).per_stack)
+
+
 ## 108（作者定）：附加规则（增益格挂给邻居的 `grant_rules`）的意义是「宿主出手时附带」，所以
 ## 触发器必须是 `on_item_fired`（受伤 / 开战这类时机写在道具自己身上）；不许有 costs（宿主出手已经付过耐力，附带不二次扣）；
 ## 必须有频率（建议 always，写冷却也行：「每 3 秒最多附带一次」）。直接毒伤 / 流血伤由 [method _validate_buff_only_damage] 一并拦
-static func validate_attached_rules(rules: Array, path: String, report: ImportReport) -> void:
+## 132：[param strict] = false 是受益规则（`receive_rules`）—— 跑在本件身上，时机不限，只保留「不许 costs」与「要有频率」
+static func validate_attached_rules(rules: Array, path: String, report: ImportReport, strict: bool = true) -> void:
 	for i in rules.size():
 		var rule := rules[i] as AbilityRule
 		var at := "%s[%d]" % [path, i]
 		if rule == null:
 			report.error(at, "空的附加规则")
 			continue
-		if not (rule.trigger is OnItemFired):
+		if strict and not (rule.trigger is OnItemFired):
 			report.error(at + ".trigger", "附加规则听的是宿主出手（on_item_fired）；受伤 / 开战这类时机写在道具自己身上")
 		if not rule.costs.is_empty():
 			report.error(at + ".costs", "附加规则不能有消耗 —— 宿主出手已经付过耐力，附带的不再二次扣")
@@ -335,6 +414,7 @@ static func _validate_item_combat(def: ItemDef, report: ImportReport) -> void:
 			groups.append(["faith_bonuses[%d].rules" % k, fb.rules])
 	if def.adjacency != null:
 		groups.append(["adjacency.grant_rules", def.adjacency.grant_rules])     # 108：附加规则同样适用
+		groups.append(["adjacency.receive_rules", def.adjacency.receive_rules])     # 132
 	for g in groups:
 		var rules: Array = g[1]
 		for i in rules.size():
@@ -367,6 +447,7 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_validate_buff_only_damage(def, report)
 	_validate_item_combat(def, report)
 	_validate_status_loops(def, report)
+	_validate_rule_shapes(def, ctx, report)
 	ctx.register_item(def)
 	return def
 
@@ -1447,8 +1528,11 @@ static func _validate_item(def: ItemDef, report: ImportReport) -> void:
 		if not ap.grant_rules.is_empty() and ap.grant_cells.is_empty():
 			report.warn("adjacency.grant_rules", "写了附加规则却没有增益格，挂不到任何邻居身上")
 		validate_attached_rules(ap.grant_rules, "adjacency.grant_rules", report)
-		if not ap.receive_cells.is_empty() and ap.receive_mods.is_empty():
-			report.warn("adjacency.receive", "标了受益格却没有加成")
+		if not ap.receive_cells.is_empty() and ap.receive_mods.is_empty() and ap.receive_rules.is_empty():
+			report.warn("adjacency.receive", "标了受益格却没有加成也没有受益规则")
+		if not ap.receive_rules.is_empty() and ap.receive_cells.is_empty():
+			report.warn("adjacency.receive_rules", "写了受益规则却没有受益格，永远挂不上")
+		validate_attached_rules(ap.receive_rules, "adjacency.receive_rules", report, false)
 		_warn_overlapping_markers(def, report)
 
 

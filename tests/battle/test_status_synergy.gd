@@ -169,7 +169,7 @@ static func run_items(t: TestCase) -> void:
 	var bleed_buff := ((db.get_def(&"scimitar").combat.rules[0] as AbilityRule).effects[1] as ApplyStatus).buff
 	var poison_buff := ((db.get_def(&"poisoned_knife").combat.rules[0] as AbilityRule).effects[1] as ApplyStatus).buff
 
-	# 放血刀第二条：对手攒够六层流血 → 扣六层、打 18 点物理
+	# 放血刀第二条（132 起按目标层数 ×3）：对手攒够六层流血 → 每层 3 点、打完清掉流血
 	var burst := db.get_def(&"bloodletter").combat.rules[1] as AbilityRule
 	var ctx := _ctx([_opener([_apply(bleed_buff, 5)]), burst])
 	_start(ctx)
@@ -178,7 +178,7 @@ static func run_items(t: TestCase) -> void:
 	ctx = _ctx([_opener([_apply(bleed_buff, 6)]), burst])
 	_start(ctx)
 	t.eq(ctx.sides[1].stacks_of(&"bleed"), 0, "六层全扣")
-	t.eq(_hp(ctx, 1), 82, "放血一刀 18 点")
+	t.eq(_hp(ctx, 1), 82, "放血一刀 6 × 3 = 18 点")
 
 	# 蝰蛇毒腺：自己施加的中毒立刻变剧毒；剧毒每层每秒 5 点
 	var gland := db.get_def(&"viper_gland").combat.rules[0] as AbilityRule

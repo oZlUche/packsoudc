@@ -7,10 +7,15 @@
 class_name OnDamage
 extends DamageTrigger
 
+## 132：只在这一包是暴击时（104 的 `crit` 旗）。只对「造成」有意义 —— 配「受到」导入器给警告
+@export var crit_only: bool = false
+
 
 func subscribed_events() -> Array[StringName]:
 	return [BattleEvent.DAMAGE] as Array[StringName]
 
 
 func matches(ctx: RuleContext, event: BattleEvent) -> bool:
+	if crit_only and not event.get_bool(&"crit"):
+		return false
 	return matches_damage(ctx, event)

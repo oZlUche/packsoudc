@@ -22,6 +22,9 @@ const TRIGGERS := {
 	&"on_before_damage": "res://core/battle/triggers/on_before_damage.gd",
 	# 130：某状态被施加时（层数增加那一瞬）
 	&"on_status_applied": "res://core/battle/triggers/on_status_applied.gd",
+	# 132：某状态掉光时；加时开始时
+	&"on_status_removed": "res://core/battle/triggers/on_status_removed.gd",
+	&"on_overtime": "res://core/battle/triggers/on_overtime.gd",
 }
 
 const CADENCES := {
@@ -39,6 +42,10 @@ const COSTS := {
 	&"chance": "res://core/battle/costs/chance_condition.gd",
 	# 130：目标身上有这么多层才放行，不扣层
 	&"status_condition": "res://core/battle/costs/status_condition.gd",
+	# 132：资源 / 标准轴条件（不扣），扣自己的轴层数
+	&"resource_condition": "res://core/battle/costs/resource_condition.gd",
+	&"axis_condition": "res://core/battle/costs/axis_condition.gd",
+	&"axis_cost": "res://core/battle/costs/axis_cost.gd",
 }
 
 ## 战斗作用域的效果。依赖扳机。
@@ -56,6 +63,8 @@ const COMBAT_EFFECTS := {
 	&"low_hp_empower": "res://core/battle/effects/low_hp_empower.gd",
 	&"fire_enchant": "res://core/battle/effects/fire_enchant.gd",
 	&"reflect_damage": "res://core/battle/effects/reflect_damage.gd",
+	# 132：只在受伤前阶段有效，把这一包换成另一种类型
+	&"convert_damage_type": "res://core/battle/effects/convert_damage_type.gd",
 }
 
 const TABLES := {

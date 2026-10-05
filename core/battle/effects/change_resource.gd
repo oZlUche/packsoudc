@@ -21,6 +21,10 @@ extends CombatEffect
 ## 否则割自己一刀会变成正收益。想让它算作真正的伤害就改成别的类型。
 @export var loss_type: StringName = DamageTypes.DRAIN
 
+## 132：这一包伤害**实际扣除量**的百分之几（0..100），和 [member amount] 相加；符号跟 amount（amount 为负就是扣）。
+## 只在 [OnDamage] 触发时有包（吸血）；别的时机这部分是 0，导入器给警告
+@export var percent_of_damage: int = 0
+
 
 func apply(ctx: RuleContext) -> void:
 	var value := StatMath.from_float(amount)
@@ -30,6 +34,10 @@ func apply(ctx: RuleContext) -> void:
 			value = from_stats if amount >= 0.0 else -from_stats
 	if per_stack:
 		value *= ctx.source_stacks()
+	if percent_of_damage > 0 and ctx.event != null and ctx.event.name == BattleEvent.DAMAGE:
+		var hit := maxi(0, ctx.event.get_int(&"amount"))
+		var part := StatMath.mul(hit, StatMath.from_percent(clampi(percent_of_damage, 0, 100)))
+		value += -part if amount < 0.0 else part
 	if value == 0:
 		return
 

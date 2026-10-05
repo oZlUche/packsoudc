@@ -53,6 +53,7 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 
 	# --- 3. 受伤前效果。同步派发，不入队 —— 排队就赶不上这次结算了 ---
 	ctx.dispatch_before_damage(packet)
+	td = packet.def()     # 132：受伤前可能改了类型（convert_damage_type）；之后按新类型通知
 
 	if packet.cancelled:
 		packet.final = 0

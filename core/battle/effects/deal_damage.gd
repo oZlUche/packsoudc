@@ -26,6 +26,17 @@ extends CombatEffect
 ## 0 / 1 = 强制非直接 / 直接 —— 作者说的「除非另行说明」就是这个口子，现有内容都不填
 @export var direct_override: int = -1
 
+## 132：按生命比例的那部分 —— `max_hp` / `current_hp` / `missing_hp`，空 = 不用。**和上面的固定值 / 属性相加**（处决 = 固定 + 比例）
+@export var percent_of: StringName = &""
+## 132：比例（0..100）
+@export var percent: int = 0
+## 132：比例按谁的生命算（默认对手；BOTH = 按挨打的那一方自己的）
+@export var percent_of_target: Target = Target.OPPONENT
+## 132：伤害乘以**目标身上**这个状态的层数（0 层 = 不打）；和 [member per_stack]（来源层数）可同时写
+@export var per_target_stack: StringName = &""
+
+const PERCENT_OF := [&"max_hp", &"current_hp", &"missing_hp"]
+
 
 func apply(ctx: RuleContext) -> void:
 	var raw := StatMath.from_float(amount)
@@ -37,7 +48,8 @@ func apply(ctx: RuleContext) -> void:
 			from_stat = true
 	if per_stack:
 		raw *= ctx.source_stacks()
-	if raw <= 0:
+	var by_hp := percent_of != &"" and percent > 0
+	if raw <= 0 and not by_hp:
 		return
 
 	# 104（作者定）：暴击 —— 只有从属性取伤害的那一包掷（固定值伤害不暴击），造包时掷、在管线之前，
@@ -47,9 +59,39 @@ func apply(ctx: RuleContext) -> void:
 		raw = StatMath.mul(raw, maxi(0, ctx.item_stat(BattleStats.CRIT_DAMAGE, BattleStats.default_base(BattleStats.CRIT_DAMAGE))))
 
 	for victim in resolve_targets(ctx, target):
-		var packet := DamagePacket.create(damage_type, raw, victim, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override))
+		var dmg := raw
+		if by_hp:
+			dmg += hp_part(ctx, victim)
+		if per_target_stack != &"":
+			dmg *= victim.stacks_of(per_target_stack)
+		if dmg <= 0:
+			continue
+		var packet := DamagePacket.create(damage_type, dmg, victim, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override))
 		packet.crit = crit
 		DamageResolver.resolve(ctx.battle, packet)
+
+
+## 132：按生命比例的那部分（定点）
+func hp_part(ctx: RuleContext, victim: CombatantRuntime) -> int:
+	var who: CombatantRuntime = victim
+	match percent_of_target:
+		Target.SELF:
+			who = ctx.owner
+		Target.OPPONENT:
+			who = ctx.opponent()
+	if who == null:
+		return 0
+	var mx := who.resources.maximum(BattleStats.RES_HP)
+	var cur := who.resources.current(BattleStats.RES_HP)
+	var base := 0
+	match percent_of:
+		&"max_hp":
+			base = mx
+		&"current_hp":
+			base = cur
+		&"missing_hp":
+			base = maxi(0, mx - cur)
+	return maxi(0, StatMath.mul(base, StatMath.from_percent(clampi(percent, 0, 100))))
 
 
 ## 掷一次暴击：暴击率按定点万分比（0.10 = 1000），≤ 0 永不、≥ 1 必中 —— 两头都不消耗随机数
