@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.45 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.46 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -804,6 +804,7 @@ class_name AbilityRule extends Resource
 | 出手 | `item_fired` | 来源 uid、命中的规则序号 |
 | 效果 | `effect_resolved` | 效果类型、来源、目标、结果摘要 |
 | 层数 | `status_stacked` / `status_unstacked` | 状态键、变化量、变化后层数 |
+| 层数 | `status_applied`（130） | 某方施加让层数**增加**了：状态键、变化量、变化后层数、`source_side` 施加方。只给规则听、不进回放；叠满后只刷新时长、系统 buff 不发 |
 | 资源 | `resource_changed` | 资源键、增量、原因（见下） |
 | 伤害 | `before_damage` | 结算前。**同步派发**，效果在此改写这一下，见 4.6 |
 | 伤害 | `damage` | 结算后。伤害类型、原始值、护盾／护甲吸收量、实际扣除量、施加方 |
@@ -849,6 +850,7 @@ func implied_costs() -> Array[Cost]: return []
 | `OnStacksAtLeast` | 自己／对手身上有 N 层某增益减益时 |
 | `OnDamage` | 受到／造成某类伤害【之后】，且不低于 N 点时 |
 | `OnBeforeDamage` | 受到／造成某类伤害【之前】。减伤、免疫、反转唯一的接入点，见 4.6 |
+| `OnStatusApplied`（130） | 自己／对手身上刚被施加了某状态（层数增加那一瞬）；默认只认本方施加的。施加了几层进 `source_stacks()` 供 `per_stack` |
 
 **没有 `OnTick`。** 「每帧检查一下冷却好没好」是固定步长模拟才需要的东西，
 事件驱动直接算出下一次出手的精确时刻（见 4.7）。
@@ -863,7 +865,7 @@ func implied_costs() -> Array[Cost]: return []
 ```gdscript
 func implied_costs() -> Array[Cost]:        # OnStacksAtLeast
     if not consume: return []
-    ...返回一条 StatusStackCost(buff_id, stacks)
+    ...返回一条 StatusStackCost(buff_id, stacks, on_self)   # 130：对手身上的也能吃（放血刀）
 
 func effective_costs() -> Array[Cost]:      # AbilityRule
     return costs + trigger.implied_costs()
@@ -1003,7 +1005,9 @@ class_name Cost extends Resource
 ```
 
 初期子类：`ResourceCost`（耐力／法力）、`StatusStackCost`（消耗 N 层某 buff）、
-`ChargeCost`（攒够 N 次）、`UsesCost`（全场限 N 次）、`ChanceCondition`（按概率）。
+`ChargeCost`（攒够 N 次）、`UsesCost`（全场限 N 次）、`ChanceCondition`（按概率）、
+`StatusCondition`（130：目标身上至少 N 层某 buff 才放行，**不扣层**；和概率一样是条件型）。
+`StatusStackCost` 带 `on_self`（默认 true），130 起可以扣对手身上的层。
 
 **「耐力够不够」与「次数攒够没有」在失败行为上完全一致** —— 都是跳过效果但不退还冷却，
 所以归在同一层。把后者放进频率层会出真问题：它挡住执行却不推进冷却，
@@ -1049,8 +1053,9 @@ func scope() -> StringName: return EffectScope.COMBAT
 ```
 
 现有子类：`DealDamage`、`ChangeResource`（增减资源，正负同一条）、
-`ApplyStatus`、`RemoveStatus`、`ModifyDamage` 与 `ReflectDamage`
-（后两者只在受伤前阶段有效，见 4.6）。
+`ApplyStatus`、`RemoveStatus`、`ConvertStatus`（130：把目标身上一种状态的全部层数换成另一种 × 比例，四舍五入至少 1，可保留原状态，系统 buff 不转）、
+`ModifyDamage` 与 `ReflectDamage`（后两者只在受伤前阶段有效，见 4.6）。
+导入器拦两条死路（130）：转化成自己；「某状态被施加时」的规则又施加（或转化成）同一个状态。
 计划中：`FireItem`（让另一件物品出手）、`GrantRule`（战斗中授予新规则，注意上文约束 2）。
 
 `RuleContext` 是效果访问战场的唯一入口：读写双方状态与资源池、取随机数、写事件日志、
@@ -2671,7 +2676,7 @@ class_name EnemyPool extends Resource             # data/authoring/enemy_pools/*
 ```
 
 **流派是标签。** 道具按 `ItemDef.tags` 里带没带流派名归到流派里（`burst` 狙击枪 / 撬棍 / 霰弹枪，
-`rapid` 手枪 / 步枪 / 冲锋枪 / 匕首，`bleed` 匕首 / 剁刀）。新增一种流派 = 给几件道具打标签 + 写一个带这个标签的敌人。
+`rapid` 手枪 / 步枪 / 冲锋枪 / 匕首，`bleed` 匕首 / 剁刀，`poison` 涂毒匕首 / 毒药瓶 / 毒箭等（130，药师））。新增一种流派 = 给几件道具打标签 + 写一个带这个标签的敌人。
 导入器要求每个流派至少有一件道具带它。
 
 **强度 = 档位 = 道具数量。** 档位表每行：背几件、棋盘多大、基线乘多少、稀有度上限（外环小兵不背传说品）。
@@ -3920,6 +3925,7 @@ res://
 | v2.42 | 2026-10-05 | **搜索点保底**（127）：`SearchRules.search_floors` 是「进阶难度等级 → 逐件稀有度下限」的阶梯（行长 = 保底件数，每项 = 那一件的下限，`[2,1,1]` = 一蓝两绿）；常规搜索点用第 level 行，进阶搜索点（高危区里的，`search_tier` 可覆盖）用第 level + 1 行；超出表长取末行、第一项抬一阶。`DifficultyDef.search_floors` 可覆盖，节点内容 `search_floor` 最优先。保底位按原权重在「≥ 下限」的候选里抽，没有就往下放宽，事件的 rarity_cap 夹住地板，有保底时打乱顺序 |
 | v2.43 | 2026-10-05 | **百科机制页首批全文**（125）：六个分类四十六页（流程七、背包七、战斗七、信仰十一、地图九、局外五）写进 `data/authoring/help_pages`；「合成」补 order 4。4.7「冷却按工作量计」改口为快照语义（与 `CooldownCadence` 一致） |
 | v2.44 | 2026-10-05 | **地上取代暂存区**（128）：暂存区改名「地上」，规则不变；不画框，格子外整块屏幕就是地上，放手在哪就落在哪。`ItemStash.spots`（归一化落点，存档带着，旧档自动铺）、`NodeStorageModule.spots`（按点留着落点）；新 `GroundLayer`（导演持有一层，盖在屏栈上，各屏 `reserve` 面板、被盖住的东西推开）；`StashView` 删掉，开局屏与沙盒用不铺满屏的一块地；`DragLayer` 放到棋盘外 = 落在放手点、从地上拿起放回 = 改落点，不再画插入线。见 3.4 |
+| v2.46 | 2026-10-05 | **流派倾向道具**（130）：三个新构件 —— 时机 `on_status_applied`（某状态被施加时，默认只认本方施加）、内容 `convert_status`（转化状态）、消耗 `status_condition`（状态条件，不扣层）；新事件 `status_applied`（层数增加才发，刷新不发，不进回放）；`StatusStackCost.on_self`（放血刀吃对手的层）；导入器拦自转与自环。新 buff【剧毒】（每层每秒 5）；十件道具（流血线：嗜血护腕、猎血者的符号、放血刀、锯齿箭、创口盐；中毒线：蝰蛇毒腺、毒匠手套、腐蚀香炉、苦艮根；桥：溃烂之刃）；`poison` 成为敌人流派（药师）。见 4.4、6.0 |
 | v2.45 | 2026-10-05 | **负重**（129）：`ItemDef.weight` + `ItemWeight`（写死 / 公式）、`CharacterDef.weight_capacity`（28 / 34 / 40）、科技「扛重」（`carry_capacity_bonus`，+6 / +12 / +20）；新内容种类 `encumbrance_rules`（三级：吃力 / 超重 / 寸步难行，只减急速、耐力回复、耐力上限，三级走一步 ×2）；`MapTravel.action_cost_mult` 与 `cost_of`。见 7.6 |
 | v2.38 | 2026-10-03 | **界面样式收进一个 Theme**（报告 121，三项按推荐）。新 `ui/ui_theme.gd`（`UiTheme`）代码生成主题、并进引擎默认主题（不挂窗口：节点离树会丢主题重排字，系统缺中文字体时极慢），设置换底色原地重填；`UiPalette.style_button` 退化成选按钮变体（字号非默认才覆写）；游戏屏 / 背包 / 战斗 / 启动器的 `add_theme_*` 从 167 处降到 68 处（剩布局常量与注明的特例）；编辑器只挂主题；`tests/ui/test_theme.gd`（变体齐全、换底色跟着变、小工具零覆写、棘轮 68） |
 | v2.37 | 2026-10-03 | **读档由科技推算数值**（报告 120，三项按推荐；改 8.2）。`TechEffect.apply / heal` 合成幂等的 `derive`，`TechService.heal` → `derive`、`GameFlow.heal_techs` → `derive_techs`；`MetaState.from_dict` 先读 `tech_levels`、推算仓库尺寸等派生值，再按算出的尺寸装仓库（`GridInventory.from_dict` 的 `size_override`，放不下的找空位、再不行临时加行）；`GridInventory.shrink_rows / resize_rows`（只删空行）；存档去掉 `tech_buffs` / `safe_bonus`，不升版本 |

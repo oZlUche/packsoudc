@@ -1,0 +1,35 @@
+{
+  "id": "bitter_root",
+  "display_name": "苦艮根",
+  "display_names": {
+    "en": "Bitter Root"
+  },
+  "description": "嚼着苦，吃毒的时候就不那么疼了。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "remedy",
+    "nature"
+  ],
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_before_damage",
+          "damage_type": "poison"
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "effects": [
+          {
+            "type": "modify_damage",
+            "percent": -50
+          }
+        ]
+      }
+    ]
+  }
+}

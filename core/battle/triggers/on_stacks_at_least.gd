@@ -33,9 +33,10 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 
 
 func implied_costs() -> Array[Cost]:
-	if not consume or not on_self:
+	if not consume:
 		return [] as Array[Cost]
 	var c := StatusStackCost.new()
 	c.buff_id = buff_id
 	c.stacks = maxi(1, stacks)
+	c.on_self = on_self     # 130：对手身上的也能吃（放血刀）
 	return [c] as Array[Cost]

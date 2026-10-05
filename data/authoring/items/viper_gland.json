@@ -1,0 +1,66 @@
+{
+  "id": "viper_gland",
+  "display_name": "蝰蛇毒腺",
+  "display_names": {
+    "en": "Viper Gland"
+  },
+  "description": "挤一滴进去，寻常的毒就烈了。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "reagent",
+    "material",
+    "nature",
+    "poison"
+  ],
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_status_applied",
+          "buff_id": "poison"
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "effects": [
+          {
+            "type": "convert_status",
+            "from": "poison",
+            "to": {
+              "id": "virulent",
+              "display_name": "剧毒",
+              "display_names": {
+                "en": "Virulent Poison"
+              },
+              "is_debuff": true,
+              "rules": [
+                {
+                  "trigger": {
+                    "type": "on_schedule"
+                  },
+                  "cadence": {
+                    "type": "cooldown",
+                    "seconds": 1.0
+                  },
+                  "effects": [
+                    {
+                      "type": "deal_damage",
+                      "target": "SELF",
+                      "damage_type": "poison",
+                      "amount": 5.0,
+                      "damage_stat": "",
+                      "per_stack": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

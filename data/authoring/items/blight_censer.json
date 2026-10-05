@@ -1,0 +1,46 @@
+{
+  "id": "blight_censer",
+  "display_name": "腐蚀香炉",
+  "display_names": {
+    "en": "Blight Censer"
+  },
+  "description": "毒烟熏过的甲，一碰就裂。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "part",
+    "metal",
+    "poison"
+  ],
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_damage",
+          "direction": "DEALT",
+          "damage_type": "poison"
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "costs": [
+          {
+            "type": "chance",
+            "percent": 20
+          }
+        ],
+        "effects": [
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "armor",
+            "delta": -1
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "id": "envenomed_gauntlet",
+  "display_name": "毒匠手套",
+  "display_names": {
+    "en": "Envenomer's Gauntlet"
+  },
+  "description": "摸过的刀都带毒。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "part",
+    "leather",
+    "poison"
+  ],
+  "adjacency": {
+    "grant_cells": [
+      [
+        0,
+        -1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "grant_filter": [
+      "melee"
+    ],
+    "grant_rules": [
+      {
+        "trigger": {
+          "type": "on_item_fired"
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "buff": {
+              "id": "poison",
+              "display_name": "中毒",
+              "display_names": {
+                "en": "Poison"
+              },
+              "is_debuff": true,
+              "rules": [
+                {
+                  "trigger": {
+                    "type": "on_schedule"
+                  },
+                  "cadence": {
+                    "type": "cooldown",
+                    "seconds": 1.0
+                  },
+                  "effects": [
+                    {
+                      "type": "deal_damage",
+                      "target": "SELF",
+                      "damage_type": "poison",
+                      "amount": 2.0,
+                      "damage_stat": "",
+                      "per_stack": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

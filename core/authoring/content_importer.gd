@@ -228,6 +228,44 @@ static func _validate_buff_only_damage(def: ItemDef, report: ImportReport) -> vo
 						"「%s」直接打出 %s 伤害 —— 毒与流血没有直接伤害形态，只能由 buff 每秒造成（用 apply_status 加【中毒】/【流血】）" % [def.id, dd.damage_type])
 
 
+## 130：状态联动的两条死路，导入器拦下 ——
+## 「转化」不许转成自己（`convert_status.to` 就是 `from`）；「某状态被施加时」的规则不许再施加同一个状态（含转化成它）：
+## 本方施加 X → 触发 → 又施加 X → 又触发……一直连锁到派发上限被截断
+static func _validate_status_loops(def: ItemDef, report: ImportReport) -> void:
+	var groups: Array = []
+	if def.combat != null:
+		groups.append(["combat.rules", def.combat.rules])
+	for k in def.faith_bonuses.size():
+		var fb := def.faith_bonuses[k] as FaithBonus
+		if fb != null:
+			groups.append(["faith_bonuses[%d].rules" % k, fb.rules])
+	if def.adjacency != null:
+		groups.append(["adjacency.grant_rules", def.adjacency.grant_rules])
+	for g in groups:
+		validate_status_loops(g[1], g[0], report)
+
+
+static func validate_status_loops(rules: Array, path: String, report: ImportReport) -> void:
+	for i in rules.size():
+		var rule := rules[i] as AbilityRule
+		if rule == null:
+			continue
+		var listen := rule.trigger as OnStatusApplied
+		for j in rule.effects.size():
+			var at := "%s[%d].effects[%d]" % [path, i, j]
+			var e = rule.effects[j]
+			var gives: StringName = &""
+			if e is ConvertStatus:
+				var cv := e as ConvertStatus
+				if cv.to != null and cv.to.id == cv.from:
+					report.error(at + ".to", "「转化状态」把 %s 转成它自己 —— to 不能是 from" % cv.from)
+				gives = cv.to.id if cv.to != null else &""
+			elif e is ApplyStatus and (e as ApplyStatus).buff != null:
+				gives = (e as ApplyStatus).buff.id
+			if listen != null and gives != &"" and gives == listen.buff_id:
+				report.error(at, "「%s被施加时」又施加 %s —— 自己点燃自己，会一直连锁到派发上限" % [listen.buff_id, gives])
+
+
 ## 108（作者定）：附加规则（增益格挂给邻居的 `grant_rules`）的意义是「宿主出手时附带」，所以
 ## 触发器必须是 `on_item_fired`（受伤 / 开战这类时机写在道具自己身上）；不许有 costs（宿主出手已经付过耐力，附带不二次扣）；
 ## 必须有频率（建议 always，写冷却也行：「每 3 秒最多附带一次」）。直接毒伤 / 流血伤由 [method _validate_buff_only_damage] 一并拦
@@ -328,6 +366,7 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_validate_item_buffs(def, report)
 	_validate_buff_only_damage(def, report)
 	_validate_item_combat(def, report)
+	_validate_status_loops(def, report)
 	ctx.register_item(def)
 	return def
 

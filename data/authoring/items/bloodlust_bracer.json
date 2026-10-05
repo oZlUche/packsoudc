@@ -1,0 +1,51 @@
+{
+  "id": "bloodlust_bracer",
+  "display_name": "嗜血护腕",
+  "display_names": {
+    "en": "Bloodlust Bracer"
+  },
+  "description": "闻到血腥，手就快了。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "part",
+    "leather",
+    "bleed"
+  ],
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_status_applied",
+          "buff_id": "bleed"
+        },
+        "cadence": {
+          "type": "always"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "target": "SELF",
+            "buff": {
+              "id": "bloodlust",
+              "display_name": "嗜血",
+              "display_names": {
+                "en": "Bloodlust"
+              },
+              "max_stacks": 6,
+              "mods": [
+                {
+                  "stat": "haste",
+                  "mult_category": "HASTE",
+                  "mult_percent": 4
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
