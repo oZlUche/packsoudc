@@ -16,7 +16,7 @@ amount = 5.0
 [sub_resource type="Resource" id="Resource_q12cm"]
 script = ExtResource("3_42m0y")
 grant_cells = Array[Vector2i]([Vector2i(0, -1)])
-grant_filter = Array[StringName]([&"gear"])
+grant_filter = Array[StringName]([&"armor"])
 grant_mods = Array[ExtResource("1_ql0l1")]([SubResource("Resource_p8rlq")])
 
 [sub_resource type="Resource" id="Resource_c6pr6"]
