@@ -3567,7 +3567,7 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
     "grant": {
       "cells": [[1, 0]],
       "filter": ["weapon"],
-      "mods": [{"stat": "damage", "category": "SHARP", "percent": 25}]
+      "mods": [{"stat": "damage", "mode": "MULT", "amount": 25}]     // 133：只有「乘算 / 加算 + 一个数」，没有乘区
     }
   }
 }
@@ -3791,7 +3791,7 @@ res://
   tools/            import_content  export_content  normalize_content  check_scripts  check_content  map_stats  build_dummies  bench_hunters
                     demo_fill        # 截图演示（101 第 6 刀；只在 DEMO_SCREEN 非空时被导演 load）
                     gen_sample_items  gen_sample_combat  gen_sample_chapter  bench_battle  capture_scene  cli_tool
-  tests/            run_tests  test_case  support（公共装载）                      # 102：按层分目录，76 个套件
+  tests/            run_tests  test_case  support（公共装载）                      # 102：按层分目录（2026-10-06：108 个套件）
     inventory/      test_*（12）   背包、格子、拖拽
     battle/         test_*（8）    编译、效果、伤害、数值
     map/            test_*（10）   图生成、导航、形态、地图编辑器以外的地图逻辑

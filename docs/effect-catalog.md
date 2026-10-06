@@ -59,6 +59,7 @@ Effect
 | `on_status_applied` | `OnStatusApplied` | 某状态**被施加**、层数增加的那一瞬（130）；叠满后只刷新时长不算 | `buff_id`；`on_self`（默认 false = 对手身上）；`by_self`（默认 true = 只认本方施加的）。施加了几层进 `per_stack` |
 | `on_status_removed` | `OnStatusRemoved` | 某状态**掉光**时（最后一层被移除或到期，132） | `buff_id`；`on_self`（默认 true） |
 | `on_overtime` | `OnOvertime` | 加时开始那一瞬，整场一次（132） | — |
+| `on_axis_at_least` | `OnAxisAtLeast` | 某条**标准轴**（4.3「标准轴」，103）到了 N 层时；和 `on_stacks_at_least` 同构，层数变化那一刻求值 | `axis`（见 `StatAxes`）；`stacks` 至少几层（可为负：−3 = 减速到 3 层及以上，按绝对值比、要求同号）；`on_self`；`layer` 数哪一层（TOTAL 合计 / CONTENT 内容层 / SYSTEM 系统层，自然 5 级「加时开始后」数的是系统层） |
 
 `on_item_fired` 的 `source` 值得单独说一句：填 `LINKED` 时**只听与本物品通过
 增益／受益格连结的道具**。本作没有「主武器」的设定，「跟着某把枪一起触发」
@@ -136,6 +137,7 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 | `modify_damage` | `ModifyDamage` | 改写正在结算的那一包伤害。**只在受伤前阶段有效** | `flat` 固定增减；`percent` 百分比；`invert` 反转成治疗；`cancel` 完全免疫 |
 | `reflect_damage` | `ReflectDamage` | 把这一包伤害按比例弹回施加方。**只在受伤前阶段有效** | `percent` 反弹待结算量的百分比；`flat` 额外固定值；`damage_type` 默认 `reflect` |
 | `convert_damage_type` | `ConvertDamageType` | 把这一包换成另一种伤害类型。**只在受伤前阶段有效**；直接旗不变；不许换成 poison / bleed（132） | `to` |
+| `shift_axis` | `ShiftAxis` | 改一条**标准轴**的层数（103）：「加速 2 层」是 +2、「减速 1 层」是 −1，直接相抵；层数永续、战斗结束清空。单位级的攻速、造成 / 受到伤害、回血、耐力回复都走它，不另开 buff（`blight_censer` 在用） | `target`；`axis`（见 `StatAxes`）；`delta` 带符号的层数；`per_stack` 是否乘来源 buff 的层数 |
 
 ### 伤害怎么结算
 
