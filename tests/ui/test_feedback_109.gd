@@ -161,6 +161,12 @@ static func frame_battle_speed(t: TestCase, root: Window) -> void:
 
 
 #region 双击
+static func w_first(meta: MetaState) -> int:
+	for inst in meta.warehouse.items():
+		return (inst as ItemInstance).uid
+	return -1
+
+
 static func frame_warehouse_double_click(t: TestCase, root: Window) -> void:
 	t.begin("仓库面板 · 双击快速置入（带回来的背包 ⇄ 仓库）与整理按钮")
 
@@ -182,6 +188,22 @@ static func frame_warehouse_double_click(t: TestCase, root: Window) -> void:
 	t.eq(emitted[0], 1, "面板发了 changed")
 	t.check(panel.quick_move(panel._warehouse_view, rock.uid), "双击仓库里的那件")
 	t.check(meta.board.has_item(rock.uid), "回到带回来的背包（还有它就能放）")
+	# 审查 A3：重建带回来的背包视图时，旧视图要从拖拽层撤登记，否则之后拖仓库会碰到已释放的视图、卡在「正在拖」
+	var old_view: InventoryView = panel._board_view
+	var n_views: int = panel._drag._views.size()
+	panel._rebuild_board_view()
+	t.check(not panel._drag._views.has(old_view), "旧视图撤了登记")
+	t.eq(panel._drag._views.size(), n_views, "登记数不涨（新的顶替旧的）")
+	var first := w_first(meta)
+	t.check(first < 0, "（这时仓库是空的）")
+	var probe := ItemInstance.create(_def("probe", ["#"]))
+	meta.warehouse.try_add(probe)
+	panel._warehouse_view.grab_requested.emit(panel._warehouse_view, probe.uid, Vector2(10, 10))
+	t.check(panel._drag.is_dragging(), "拿起仓库里的一件")
+	panel._drag.cancel()
+	t.check(meta.warehouse.has_item(probe.uid), "取消放回仓库")
+	meta.warehouse.remove(probe.uid)
+	t.check(not panel._drag.is_dragging(), "拖仓库里的东西能正常放下 / 取消，不卡死")
 
 	# 仓库塞满：双击原地不动、提示行有字
 	var w := meta.warehouse

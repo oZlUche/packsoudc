@@ -302,6 +302,7 @@ func choose(i: int) -> bool:
 	var type := StringName(String(pending.get("type", String(node.type))))
 	var hunter_uid := int(pending.get("hunter", -1))
 	var search_stage := bool(pending.get("search_stage", false))
+	var saved_encounter: Dictionary = pending.get("encounter", {}) if pending.get("encounter", {}) is Dictionary else {}
 	pending = {}
 	for o in option.outcomes:
 		if o != null:
@@ -358,6 +359,9 @@ func choose(i: int) -> bool:
 		if current_search != null and not current_search.encounter.is_empty():
 			# 084：搜索里遭遇的那一场（「遇敌」事件的「迎战」）：打会话里的遭遇。091：无代价（输了不扣体力），打赢接着搜
 			_battle_at(node, &"search", current_search.encounter, "search", 0)
+		elif not saved_encounter.is_empty():
+			# 审查 B1：读档回来会话没了（不进存档），遭遇记在 pending 里：照样打那一场、照样无代价
+			_battle_at(node, &"search", saved_encounter, "search", 0)
 		else:
 			var fight_type := type if type in [&"battle", &"elite", &"core"] else &"battle"
 			var content := node.content if EnemyKit.has_enemy(node.content) else _enemy_for(node, &"battle", _rng_for(node, "event_enemy"))
@@ -747,7 +751,8 @@ func _close_search(node: MapNode, session: SearchSession, reason: StringName) ->
 		var notice := _search_event(node, session, "encounter")
 		if notice != null:
 			# 084：先过「遇敌」事件，选「迎战」（start_battle）才打；会话留在 current_search，遭遇与收获都在里面
-			pending = {"node": node.id, "event": String(notice.id), "type": "search", "search_encounter": true}
+			# 审查 B1：遭遇的内容也记在 pending 里（会话不进存档）—— 读档回来选「迎战」打的还是这一场
+			pending = {"node": node.id, "event": String(notice.id), "type": "search", "search_encounter": true, "encounter": session.encounter.duplicate(true)}
 			event_pending.emit(node, notice)
 			return
 		if pause_before_battle and _can_fight(session.encounter):

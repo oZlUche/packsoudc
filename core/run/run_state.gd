@@ -1021,7 +1021,9 @@ func to_dict() -> Dictionary:
 		"storage": storage.to_dict(),
 		"rng": rng.to_dict(),
 		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id, "pending": events.pending.duplicate(), "losses_forgiven": events.losses_forgiven,
-			"pending_battle": events.pending_battle.duplicate(true)},
+			"pending_battle": events.pending_battle.duplicate(true),
+			# 审查 B1：开着的搜索会话不进存档（存档那一刻视为离开），离开时收获本来就交到待拾取 —— 存档这里照做，搜到的不丢
+			"search_haul": events.current_search.haul().to_dict() if events.current_search != null and events.current_search.haul() != null and events.current_search.haul().item_count() > 0 else null},
 		"skills": skills.to_dict(),
 		"faith_power": faith_power.to_dict(),
 		"faith_history": faith_power.history_to_array(),     # 104
@@ -1091,12 +1093,19 @@ static func from_dict(
 		s.events.pending = {"node": int(pending.get("node", -1)), "event": String(pending.get("event", "")), "type": String(pending.get("type", ""))}
 		if pending.has("hunter"):
 			s.events.pending["hunter"] = int(pending["hunter"])
+		# 审查 B1：搜索循环里的两种待选事件（遇敌 / 再搜或走）的旗子与遭遇内容跟着存档走
+		for flag in ["search_stage", "search_encounter"]:
+			if bool(pending.get(flag, false)):
+				s.events.pending[flag] = true
+		if pending.get("encounter", null) is Dictionary and not (pending["encounter"] as Dictionary).is_empty():
+			s.events.pending["encounter"] = (pending["encounter"] as Dictionary).duplicate(true)
 	# 084：读档回来还停在战前准备屏（开着的搜索会话不存，遭遇那一场打完只标点用过）
 	var pb = (d.get("events", {}) as Dictionary).get("pending_battle", {})
 	if pb is Dictionary and not (pb as Dictionary).is_empty() and pb.has("node"):
 		var content = pb.get("content", {})
 		s.events.pending_battle = {"node": int(pb["node"]), "type": String(pb.get("type", "battle")),
-			"content": (content as Dictionary).duplicate(true) if content is Dictionary else {}, "kind": String(pb.get("kind", "node"))}
+			"content": (content as Dictionary).duplicate(true) if content is Dictionary else {}, "kind": String(pb.get("kind", "node")),
+			"loss_cost": int(pb.get("loss_cost", NodeEvents.LOSS_DEFAULT))}     # 审查 B1：搜索遇敌无代价（0）读档后不能变回默认
 	for key in d.get("tally", {}):
 		s.tally[String(key)] = int((d["tally"] as Dictionary)[key])
 	var buffs: Dictionary = d.get("buffs", {})
@@ -1105,6 +1114,9 @@ static func from_dict(
 	var loot = d.get("pending_loot", null)
 	if loot is Dictionary:
 		s.pending_loot = GridInventory.from_dict(loot, p_items)
+	var haul = (d.get("events", {}) as Dictionary).get("search_haul", null)
+	if haul is Dictionary:
+		s._offer_loot(GridInventory.from_dict(haul, p_items))     # 审查 B1：存档时开着的搜索的收获 → 待拾取（和离开搜索一样）
 	s.phase = int(d.get("phase", Phase.PICK_SPAWN))
 	s.end_reason = StringName(String(d.get("end_reason", "")))
 	s.boss_cleared = bool(d.get("boss_cleared", false))

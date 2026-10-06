@@ -316,3 +316,46 @@ static func run_ghost_snap(t: TestCase) -> void:
 	t.eq(drag.target_origin(view, outside), Vector2i(0, 0), "略出边界：落点吸进边界")
 	t.check(drag.view_at(free) == null, "离得远：仍是棋盘外")
 	drag.cancel()
+
+
+static func frame_hidden_drag_does_not_grab(t: TestCase, root: Window) -> void:
+	t.begin("审查 A2 · 收起（藏起来、停用）的那一屏的拖拽层不从地上抓东西；拿着东西时被藏起来 / 释放先放回原处")
+	ItemInstance.reset_uid_counter()
+	var stash := ItemStash.new(2, 0)
+	var ground := GroundLayer.new()
+	ground.stash = stash
+	ground.size = Vector2(400, 300)
+	root.add_child(ground)
+	var item := ItemInstance.create(_def("rock", ["#"]))
+	stash.admit(item)
+	# 底下一块（地图上的背包）、上面一块（商店，收起了）
+	var low_host := Control.new()
+	root.add_child(low_host)
+	var low := DragLayer.new()
+	low_host.add_child(low)
+	low.register_view(ground)
+	ground.attach(low)
+	var top_host := Control.new()
+	root.add_child(top_host)
+	var top := DragLayer.new()
+	top_host.add_child(top)
+	top.register_view(ground)
+	ground.attach(top)
+	t.check(ground.top_drag() == top, "上面那块开着：它接抓取")
+	top_host.visible = false
+	top_host.process_mode = Node.PROCESS_MODE_DISABLED
+	t.check(ground.top_drag() == low, "收起（藏起来、停用）之后：底下那块接")
+	ground.grab_requested.emit(ground, item.uid, Vector2(10, 10))
+	t.check(not top.is_dragging(), "藏起来的那块没抓")
+	t.check(low.is_dragging(), "底下那块抓起来了")
+	low.cancel()
+	t.check(stash.has_item(item.uid), "取消放回地上")
+	# 拿着东西时被释放：放回原处，不丢
+	ground.grab_requested.emit(ground, item.uid, Vector2(10, 10))
+	t.check(low.is_dragging() and not stash.has_item(item.uid), "又拿起来了")
+	low_host.remove_child(low)
+	t.check(not low.is_dragging() and stash.has_item(item.uid), "拖拽层离开场景树：手上的放回地上")
+	low.free()
+	top_host.queue_free()
+	low_host.queue_free()
+	ground.queue_free()
