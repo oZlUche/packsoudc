@@ -62,7 +62,7 @@ const LABELS := {
 	# 角色 / 敌人 / 猎手 / 信仰
 	"board_size": "棋盘尺寸", "starting_bags": "初始包", "vitality_max": "体力上限", "carry_max_items": "最多带几件", "carry_rarity_cap": "带入稀有度上限", "skills": "技能",
 	"bags": "包", "board": "棋盘", "signature": "招牌道具", "signature_by_strength": "按档位的招牌", "schools": "流派", "item_tags": "道具标签", "item_count": "道具件数",
-	"strength": "档位", "strength_rule": "档位规则", "loadout": "装备", "behavior": "行动逻辑", "visibility": "可见性", "loss_outcomes": "战败后果", "loss_type": "战败类型",
+	"strength": "档位", "strength_rule": "档位规则", "loadout": "装备", "behavior": "行动逻辑", "visibility": "可见性", "loss_outcomes": "战败后果（旧写法）", "loss_options": "战败结果档", "loss_pick": "选档方式", "HunterLossOption.weight": "权重", "LossPickFixed.index": "第几档（从 0 数）", "loss_type": "战败类型",
 	"god": "神", "camp": "阵营", "thresholds": "阈值", "deeds": "行为", "single_faith": "只认一位神", "grants": "给的解锁", "level": "档",
 	"mechanics": "机制", "requires_unlock_": "需要的解锁", "warn_lead_actions": "预警提前量", "first_at_action": "第一次在第几步", "interval_actions": "间隔步数",
 	"from_depth": "从第几层起", "per_depth": "每层", "hunter_ids": "猎手", "bracket_steps": "段位表", "inputs": "输入", "output": "产物",
@@ -99,7 +99,7 @@ const TYPE_LABELS := {
 	"altar_reshape_node": "神坛：改造此点", "smite": "秒杀（耗体力）", "extra_drop_by_node": "按点类型必掉额外一件", "gift_on_enter": "踩上点给对应道具", "overtime_regen": "加时阶段回春", "on_axis_at_least": "标准轴到 N 层时", "shift_axis": "改标准轴层数", "axis_boost": "开战带几层标准轴", "undying": "血归零后坚持几秒", "altar_bless": "神坛：祈求赐福", "bless_item": "赐福一件",
 	"erosion": "侵蚀", "hunters": "猎手", "safe": "保险箱", "node_storage": "按点暂存", "countdown": "全局倒计时", "crafting": "合成", "altar": "神坛", "buff": "一局的 buff",     # 101：一局的模块（本体功能与难度机制同一张表）
 	"approach": "逼近", "flee": "逃跑", "wander": "游荡", "ambush": "伏击", "patrol": "巡逻",
-	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫",
+	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫", "expel": "驱逐（退回上一步）", "random": "按权重随机", "fixed": "固定一档",
 	"damage_item": "损坏道具", "drain_money": "掉钱",
 	"warehouse_rows": "仓库加行",     # 110：局外科技的效果
 	"tech_run_buff": "每级给一条局外 buff", "tech_safe_size": "保险箱扩格",     # 118
@@ -120,7 +120,7 @@ const ENUM_LABELS := {
 const CLASS_LABELS := {
 	"ItemDef": "道具", "BuffDef": "增益", "EventDef": "事件", "EventOption": "选项", "CombatProfile": "战斗", "AbilityRule": "规则", "AdjacencyProfile": "邻接",
 	"StatModifier": "属性修饰", "ItemShape": "形状", "FaithBonus": "信仰加成", "RingSpec": "环", "RingMapConfig": "环形图参数", "MapSource": "地图来源",
-	"ChapterDef": "章节", "CharacterDef": "角色", "EnemyDef": "敌人", "DifficultyDef": "难度", "HunterDef": "猎手", "FaithDef": "信仰", "RecipeDef": "配方",
+	"ChapterDef": "章节", "CharacterDef": "角色", "EnemyDef": "敌人", "DifficultyDef": "难度", "HunterDef": "猎手", "HunterLossOption": "战败结果档", "FaithDef": "信仰", "RecipeDef": "配方",
 	"AchievementDef": "成就", "TagDef": "标签", "DamageTypeDef": "伤害类型", "LoadoutDef": "开局装备", "NodeRules": "节点规则", "DropRule": "掉落规则", "EconomyRules": "经济规则", "MetaRules": "局外规则",
 	"SearchRules": "搜索规则", "ItemSetDef": "套装", "SetTier": "套装档位", "RunBuffDef": "局外 / 地图增益", "EnemyPool": "敌人池", "StrengthRule": "档位规则",
 	"TechDef": "局外科技", "TechTier": "科技一级", "TechEffect": "科技效果",

@@ -30,6 +30,7 @@ const ABSTRACT_ROOTS := {
 	&"RunMechanic": [&"run_mechanic"],
 	&"HunterBehavior": [&"hunter_behavior"],
 	&"HunterLossOutcome": [&"hunter_loss"],
+	&"HunterLossPick": [&"hunter_loss_pick"],
 	&"ErosionEffect": [&"erosion_effect"],
 	&"RunSkill": [&"run_skill"],
 	&"FaithDeed": [&"faith_deed"],

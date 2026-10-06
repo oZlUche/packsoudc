@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.48 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.49 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2860,7 +2860,7 @@ class_name SearchRules extends Resource
 
 **构件按内容需要加（8-3，报告 077）。** 条件看得见的一局状态进了 `EventContext`：地图、步数、棋盘与地上、段位与侵蚀深度（两个回调，持有方接；没接 = -1，条件永远不满足）。
 后果里**传送**只挑目的地（最近 / 最远 / 随机 / 内容里指定的 id，按类型与步数区间筛）、立旗，挪人在 `choose` 的最后：这个点的事都完了才造一个 `MoveIntent.teleport` 交给持有方的 `relocate`
-（`RunState.relocate`：关会话、清地上、`travel.apply`、猎手回合 —— 和走一步一样的壳），落地那个点头一回踩上就触发它的事；`MapTravel` 对 teleport 不再查边（信任解析方）。
+（`RunState.relocate`：关会话、清地上、`travel.apply`（134：猎手回合在它的进点闸门里）—— 和走一步一样的壳），落地那个点头一回踩上就触发它的事；`MapTravel` 对 teleport 不再查边（信任解析方）。
 **原地耗时**走 `MapTravel.wait`（计数 → 侵蚀推进 → 脚下结算，不挪人），在判战败之前。**改类型**写 `resolved_type`（和随机点揭开同一个记号），同一选项里后面的「照常发生」「开战」按新类型走。
 **照常发生**（`proceed`）让休息 / 商店点也能先过事件屏而数值还在 `NodeRules`；`rest_default` / `shop_default` 挂在 `events_by_type`。导入器拦撞车的组合：传送 + 搜索 / 开店 / 接下一个（会话断了）、传送 + 给道具（离开时地上清空）。
 
@@ -3300,11 +3300,18 @@ func player_spec() -> CombatantSpec …
 
 作者：地图上出现移动的单位，不和节点互动，距离够近就主动靠近并攻击（或远离，多种行动逻辑），强度按探索度实时变、胜率对参考玩家调到 50%。
 落地为难度清单里的一个机制 `HunterMechanic`（几个、第几步出现、出现距离、度量）+ 内容种类 `hunters`（`HunterDef`，一个等级一份：可视性、感知、速度、开打距离、
-领地半径、行动逻辑构件、战败后果构件、掉落倍数、逃跑、敌人池与强度规则）。`HunterSystem` 挂在 `run.hunters`：玩家一步的末尾动一回合 ——
+领地半径、行动逻辑构件、战败结果档、掉落倍数、逃跑、敌人池与强度规则）。`HunterSystem` 挂在 `run.hunters`：玩家每走一步**在进点之前**动一回合（134）——
 出现（离玩家与彼此最远）→ 每个按行动逻辑在自己领地里走几小步（不进别人的领地）→ 进感知范围提示一次 → 够得着就**开打前先过事件屏**
 （合成的 `EventDef`「迎战 / 逃跑」，登记在 `NodeEvents.extra_defs`，`pending` 多一个 `hunter` 字段跟存档）。玩家正忙时不打扰，空下来 `poke_hunters` 再问。
-迎战：**按玩家当时的段位定档**（段位只看步数：难度里猎手机制的 `bracket_steps` 划段，猎手定义的 `strength_by_bracket` 每段几档；表空退回探索度的强度规则，074）从猎手专属池（`enemy_pools/hunters`，占位）现造敌人（`EnemyPlacer`），打赢它死、掉落率乘 `drop_mult`；打输按定义里的后果构件依次执行
-（扣体力 / 没事 / 必杀 / 消失 / 退走并歇 / 赶回上一个点并驻守）。逃跑按成功率掷，没逃掉扣体力照打。距离度量 `MapMetric`：`steps` 或 `absolute`（地图屏注入按环距归一的坐标）。
+**猎手战插在进点的事件队列前面**（134，作者：「猎手战不是节点，而是特殊类型的事件」）：`MapTravel.arrival_gate` 是进点前的闸门 —— 人已经挪到点上、步数花了、惩罚结算了，
+这个点的事发生之前 `RunState._arrival_gate` 先过猎手的回合；有猎手够得着就**挂起这次进点**（`MapTravel.held`，跟存档），点不标走过、事不发生、`moved` 不发。
+那一场了结之后（赢了 / 逃掉了 / 输了但是击退档）玩家空下来 `poke_hunters` → `resume_arrival` 接着进（`finish_arrival`：点的事发生、首访才记）；
+输给驱逐档 `LossExpel` 取消进点（`cancel_arrival`）并退回上一步 —— 这个点视为没进，信力只记步数不记首访，再走过去事照常发生。走回走过的点、事件挪人（`relocate`）走同一套；
+正忙时才被追上（`poke_hunters` 那条路）这个点已经进过了，驱逐只退位置。
+迎战：**按玩家当时的段位定档**（段位只看步数：难度里猎手机制的 `bracket_steps` 划段，猎手定义的 `strength_by_bracket` 每段几档；表空退回探索度的强度规则，074）从猎手专属池（`enemy_pools/hunters`，占位）现造敌人（`EnemyPlacer`），打赢它死、掉落率乘 `drop_mult`；打输执行**这只猎手生成时选定的那一档**的后果构件
+（扣体力 / 没事 / 必杀 / 消失 / 退走并歇 / 驱逐 / 赶回上一个点并驻守）。**战败结果档**（134）：`HunterLossOption`（`id`、名字、`weight`、`outcomes`）；`HunterDef.loss_options` 列可能的档，
+`loss_pick`（构件，`RunRegistry.HUNTER_LOSS_PICKS`：`random` 按权重 / `fixed` 固定第几档，null = 随机）在 `spawn()` 时选一档，档名记在 `Hunter.loss_id` 跟存档；
+只写旧 `loss_outcomes` 的定义当作只有一档，旧存档没档名按第一档。被感知之后，地图上悬停那个点与开打前的事件屏都写「输了会怎样」。逃跑按成功率掷，没逃掉扣体力照打。距离度量 `MapMetric`：`steps` 或 `absolute`（地图屏注入按环距归一的坐标）。
 随机数走 `RunRNG` 的 `hunters` 流。`RunContext` 多三个字段（侦察距离、感知倍率、逃跑加成），角色的被动技能（072）、局外 buff、难度修饰都能往里加数。
 **校准**（073）：正式游戏每走一步记一份玩家配置（`CalibrationRecorder` → `user://calibration/snapshots.jsonl`），`tools/build_dummies.gd` 按难度的段位表分段（或固定段长）、每段挑离平均读数最近的真实配置当木桩，
 `tools/bench_hunters.gd` 让木桩对猎手池里每一档打几百场，打印胜率并排「猎手表里这一段的档 / 最接近 50% 的哪一档」—— 工具只做统计，作者对着表改强度规则。数值等系统完整后多场测试。
@@ -3927,6 +3934,7 @@ res://
 | v2.42 | 2026-10-05 | **搜索点保底**（127）：`SearchRules.search_floors` 是「进阶难度等级 → 逐件稀有度下限」的阶梯（行长 = 保底件数，每项 = 那一件的下限，`[2,1,1]` = 一蓝两绿）；常规搜索点用第 level 行，进阶搜索点（高危区里的，`search_tier` 可覆盖）用第 level + 1 行；超出表长取末行、第一项抬一阶。`DifficultyDef.search_floors` 可覆盖，节点内容 `search_floor` 最优先。保底位按原权重在「≥ 下限」的候选里抽，没有就往下放宽，事件的 rarity_cap 夹住地板，有保底时打乱顺序 |
 | v2.43 | 2026-10-05 | **百科机制页首批全文**（125）：六个分类四十六页（流程七、背包七、战斗七、信仰十一、地图九、局外五）写进 `data/authoring/help_pages`；「合成」补 order 4。4.7「冷却按工作量计」改口为快照语义（与 `CooldownCadence` 一致） |
 | v2.44 | 2026-10-05 | **地上取代暂存区**（128）：暂存区改名「地上」，规则不变；不画框，格子外整块屏幕就是地上，放手在哪就落在哪。`ItemStash.spots`（归一化落点，存档带着，旧档自动铺）、`NodeStorageModule.spots`（按点留着落点）；新 `GroundLayer`（导演持有一层，盖在屏栈上，各屏 `reserve` 面板、被盖住的东西推开）；`StashView` 删掉，开局屏与沙盒用不铺满屏的一块地；`DragLayer` 放到棋盘外 = 落在放手点、从地上拿起放回 = 改落点，不再画插入线。见 3.4 |
+| v2.49 | 2026-10-06 | **猎手战败结果档 + 猎手战插进进点的事件队列**（134，作者定，五项待定按推荐；改 8.5）：新资源 `HunterLossOption`（档名、名字、权重、后果），`HunterDef.loss_options` + `loss_pick`（新构件表 `HUNTER_LOSS_PICKS`：`random` / `fixed`），`Hunter.loss_id` 生成时选定、跟存档；新后果 `expel`（退回上一步、不驻守）。`MapTravel` 加进点闸门 `arrival_gate` / 挂起的进点 `held`（存档）/ `finish_arrival` / `cancel_arrival`；`RunState` 的猎手回合从「这一步的事之后」挪到闸门里（先于点的事），`resume_arrival` 在玩家空下来时接着进；驱逐 = 取消进点（不标走过、事不发生、不记首访，步数照算）。`GameFlow._flush` 接着进点后排进队里的接着看；收起猎手战的战利品也接着进点。悬停与开打前事件屏写「输了会怎样」。`hunter_1` 击退 / 驱逐各一半，`hunter_2` 击退 / 驱逐 / 驱逐并驻守各三分之一（数值占位） |
 | v2.48 | 2026-10-05 | **单一乘区**（133，作者定；改 4.3）：删 `StatMath.Buff` 四个乘区，公式改成 `终值 = 基础 × max(0, 1 + Σ乘算) + Σ加算`；`StatModifier` 改成 `stat / mode{ADD, MULT} / amount`，`StatValue` 的四格 `mult` 换成一个 `percent`；`PropertyForm` 在属性修饰下加一行灰字提示（乘算还是加算、扩大还是缩小、在 buff 里每层一份）；导入器迁移旧键（`mult_category` 提醒忽略、又乘又加报错），`normalize_content` 重写了 18 份内容 JSON；百科删掉「乘区」词条组；编译金样有意重录（`percent` 替换 `mult`，四份终值逐项不变）。跨乘区的组合数值变了（弓 + 箭 + 符号 1.38 → 1.35）；标准轴不动 |
 | v2.47 | 2026-10-05 | **规则构件第二批**（132）：时机 `on_status_removed` / `on_overtime`，`on_item_fired.source_tags`、`on_resource_below.direction / full`、`on_damage.crit_only`；条件 `resource_condition` / `axis_condition` 与 `axis_cost`，三个条件型加 `negate`；效果 `convert_damage_type`，`deal_damage.percent_of / per_target_stack`、`change_resource.percent_of_damage`、`remove_status.all_debuffs / all_buffs`；受益格 `receive_rules`（4.2）；导入器的「配了也没用」警告。放血刀改成按目标流血层数 ×3。见 4.2、4.4 |
 | v2.46 | 2026-10-05 | **流派倾向道具**（130）：三个新构件 —— 时机 `on_status_applied`（某状态被施加时，默认只认本方施加）、内容 `convert_status`（转化状态）、消耗 `status_condition`（状态条件，不扣层）；新事件 `status_applied`（层数增加才发，刷新不发，不进回放）；`StatusStackCost.on_self`（放血刀吃对手的层）；导入器拦自转与自环。新 buff【剧毒】（每层每秒 5）；十件道具（流血线：嗜血护腕、猎血者的符号、放血刀、锯齿箭、创口盐；中毒线：蝰蛇毒腺、毒匠手套、腐蚀香炉、苦艮根；桥：溃烂之刃）；`poison` 成为敌人流派（药师）。见 4.4、6.0 |

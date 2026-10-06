@@ -15,11 +15,13 @@ var cooldown: int = 0
 var guarding: bool = false
 ## 玩家现在在它的感知范围内（进入那一刻提示一次）
 var sensed: bool = false
+## 134：生成时选定的战败结果档（[HunterLossOption.id]）。空 = 旧存档，按第一档
+var loss_id: StringName = &""
 
 
 func to_dict() -> Dictionary:
 	return {"uid": uid, "def": String(def_id), "node": node_id, "home": home_id, "alive": alive,
-		"territory": territory.duplicate(), "cooldown": cooldown, "guarding": guarding, "sensed": sensed}
+		"territory": territory.duplicate(), "cooldown": cooldown, "guarding": guarding, "sensed": sensed, "loss": String(loss_id)}
 
 
 static func from_dict(d: Dictionary) -> Hunter:
@@ -34,4 +36,5 @@ static func from_dict(d: Dictionary) -> Hunter:
 	h.cooldown = int(d.get("cooldown", 0))
 	h.guarding = bool(d.get("guarding", false))
 	h.sensed = bool(d.get("sensed", false))
+	h.loss_id = StringName(String(d.get("loss", "")))
 	return h

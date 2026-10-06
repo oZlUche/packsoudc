@@ -5,12 +5,30 @@
   "behavior": {
     "type": "approach"
   },
-  "loss_outcomes": [
+  "loss_options": [
     {
-      "type": "spend_vitality"
+      "id": "repel",
+      "display_name": "击退",
+      "outcomes": [
+        {
+          "type": "spend_vitality"
+        },
+        {
+          "type": "retreat"
+        }
+      ]
     },
     {
-      "type": "retreat"
+      "id": "expel",
+      "display_name": "驱逐",
+      "outcomes": [
+        {
+          "type": "spend_vitality"
+        },
+        {
+          "type": "expel"
+        }
+      ]
     }
   ],
   "enemy_pool": "hunters",

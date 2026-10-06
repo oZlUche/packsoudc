@@ -997,6 +997,28 @@ static func import_hunter(data: Dictionary, ctx: Context, report: ImportReport) 
 	for i in def.loss_outcomes.size():
 		if def.loss_outcomes[i] == null:
 			report.error("loss_outcomes[%d]" % i, "空的战败后果")
+	# 134：战败结果档。写了档就不看旧的 loss_outcomes（两样都写提醒一声）；档名不空、不重，权重不为负，后果不空
+	if not def.loss_options.is_empty() and not def.loss_outcomes.is_empty():
+		report.warn("loss_outcomes", "写了 loss_options 就不看 loss_outcomes（134）：把它挪进某一档的 outcomes")
+	var seen_opts := {}
+	for i in def.loss_options.size():
+		var o := def.loss_options[i] as HunterLossOption
+		var at := "loss_options[%d]" % i
+		if o == null:
+			report.error(at, "空的战败结果档")
+			continue
+		if o.id == &"":
+			report.error(at + ".id", "结果档要有 id（如 repel / expel）")
+		elif seen_opts.has(o.id):
+			report.error(at + ".id", "结果档 id '%s' 重复" % o.id)
+		seen_opts[o.id] = true
+		if o.weight < 0.0:
+			report.error(at + ".weight", "权重不能为负")
+		for j in o.outcomes.size():
+			if o.outcomes[j] == null:
+				report.error("%s.outcomes[%d]" % [at, j], "空的战败后果")
+	if def.loss_pick is LossPickFixed and ((def.loss_pick as LossPickFixed).index < 0 or (def.loss_pick as LossPickFixed).index >= maxi(1, def.options().size())):
+		report.error("loss_pick.index", "固定选第 %d 档，可这个猎手只有 %d 档" % [(def.loss_pick as LossPickFixed).index, def.options().size()])
 	for i in def.strength_by_bracket.size():
 		if def.strength_by_bracket[i] < 0:
 			report.error("strength_by_bracket[%d]" % i, "档位不能为负")

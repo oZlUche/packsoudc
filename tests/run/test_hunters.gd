@@ -232,11 +232,13 @@ static func run_engage_fight_flee(t: TestCase) -> void:
 		t.check(not h.alive, "赢了它死")
 	else:
 		var spend := s.node_rules.loss_cost_of(HunterSystem.TYPE) if s.node_rules != null else 0     # 088：输给猎手也扣节点规则里的体力
-		for o in def.loss_outcomes:
+		var picked := s.hunters.loss_option_of(h)     # 134：输了执行生成时选定的那一档
+		for o in picked.outcomes:
 			if o is LossSpendVitality:
 				spend += (o as LossSpendVitality).amount
-		t.eq(s.vitality.current, maxi(0, vit_before - spend), "输了扣体力 %d（节点规则的 hunter + 后果里的，从定义读）" % spend)
-		for o in def.loss_outcomes:
+		t.eq(s.vitality.current, maxi(0, vit_before - spend), "输了扣体力 %d（节点规则的 hunter + 选定那一档里的，从定义读）" % spend)
+		t.eq(s.hunters.last_loss_id, picked.id, "记着执行的是哪一档（%s）" % picked.id)
+		for o in picked.outcomes:
 			if o is LossRetreat:
 				t.check(h.cooldown >= (o as LossRetreat).cooldown or not h.alive, "退走后歇 %d 步" % (o as LossRetreat).cooldown)
 	t.check(s.events.pending.is_empty(), "选完没有待选的了")

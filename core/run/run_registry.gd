@@ -149,6 +149,13 @@ const HUNTER_LOSSES := {
 	&"vanish": "res://core/run/hunters/losses/loss_vanish.gd",
 	&"retreat": "res://core/run/hunters/losses/loss_retreat.gd",
 	&"expel_and_guard": "res://core/run/hunters/losses/loss_expel_and_guard.gd",
+	&"expel": "res://core/run/hunters/losses/loss_expel.gd",     # 134：驱逐（退回上一步、不驻守）
+}
+
+## 134：生成猎手时怎么选战败结果档
+const HUNTER_LOSS_PICKS := {
+	&"random": "res://core/run/hunters/picks/loss_pick_random.gd",
+	&"fixed": "res://core/run/hunters/picks/loss_pick_fixed.gd",
 }
 
 ## 侵蚀（5.7 / 075）：被侵蚀的点结算时过门的效果
@@ -175,6 +182,7 @@ const TABLES := {
 	&"run_mechanic": RUN_MODULES,     # 101：旧键名的别名（DifficultyDef.mechanics 还叫机制）
 	&"hunter_behavior": HUNTER_BEHAVIORS,
 	&"hunter_loss": HUNTER_LOSSES,
+	&"hunter_loss_pick": HUNTER_LOSS_PICKS,
 	&"erosion_effect": EROSION_EFFECTS,
 	&"tech_effect": TECH_EFFECTS,
 	&"run_skill": RUN_SKILLS,

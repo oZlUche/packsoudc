@@ -524,6 +524,20 @@ func _erosion_line() -> String:
 	return "　　侵蚀 %d 档（下一档 %d 步）" % [f.eroded_bands + 1, f.actions_left()]
 
 
+## 134：这个点上看得见的猎手各一行「名字：输了会怎样」—— 被它感知之后才写档（[HunterSystem.loss_hint]）
+func _hunter_tip(id: int) -> String:
+	if _run == null or _run.hunters == null:
+		return ""
+	var lines: Array[String] = []
+	for h in _run.hunters.visible_hunters():
+		if h.node_id != id:
+			continue
+		var def: HunterDef = _run.hunters.def_of(h)
+		var hint := _run.hunters.loss_hint(h)
+		lines.append("[color=#d9534f]%s[/color]%s" % [def.display_name if def != null else "?", "　输了会怎样 —— " + hint if hint != "" else ""])
+	return "\n".join(lines)
+
+
 ## 地图上画谁：看得见的猎手（一直可见的、进了 near_range 的、进了侦察距离的）
 func _refresh_hunter_marks() -> void:
 	if _run == null or _view == null:
@@ -603,6 +617,9 @@ func _update_tooltip(id: int) -> void:
 		return
 	var node := _run.map.get_node(id)
 	var stash := NodeTooltip.stash_text(_run, node)     # 反馈：每个点的地上悬停就能看，不受「节点浮窗」开关管
+	var hunt := _hunter_tip(id)     # 134：站在这个点上、看得见的猎手输了会怎样（感知之后才说）
+	if hunt != "":
+		stash = hunt if stash == "" else stash + "\n" + hunt
 	if not flow.tooltips_enabled():
 		if stash == "":
 			_tip.hide_tip()
