@@ -67,6 +67,7 @@ func open(payload: Dictionary) -> void:
 	_drag.drop_outside_to_stash = false     # 店里放到外面 = 放回原处，不算买也不算卖
 	_drag.register_view(_sell_view)
 	_drag.drop_filter = _allow_drop
+	_drag.craft_filter = _allow_craft     # 审查 A1：没付钱的商品不能拿去合成（会被消耗掉、结不了账）
 	_drag.drag_finished.connect(_on_drag_finished)
 	_tip = HoverTip.new(font)
 	add_child(_tip)
@@ -156,6 +157,15 @@ func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 		return false
 	# 自己的东西
 	return not _is_shelf(target)
+
+
+## 审查 A1：只有自己的东西能压上去合成；商品（在栏位上、或正拿在手上的那件）先买下再说
+func _allow_craft(inst: ItemInstance) -> bool:
+	if _session == null or inst == null:
+		return true
+	if _session.slot_of(inst.uid) >= 0:
+		return false
+	return not (inst.uid == _dragged_uid and _dragged_slot >= 0)
 
 
 ## 正在拖的商品是从哪格拿起来的（抓起时它已经离开了栏位，拖拽层告诉我们源容器）；不是商品 -1

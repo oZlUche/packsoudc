@@ -398,3 +398,54 @@ static func _armor_on(board: GridInventory) -> int:
 		if d.combat != null and d.combat.base_stats.has("armor"):
 			total += int(d.combat.base_stats["armor"])
 	return total
+
+
+static func run_search_encounter_save_roundtrip(t: TestCase) -> void:
+	t.begin("审查 B1 · 搜索遇敌存读档：遇敌事件的旗子与遭遇内容跟着走、搜到的收获进待拾取；战前准备屏的战败代价（无代价 0）不变回默认")
+	var c = NodeScreens._content()
+	var kit: LoadoutDef = NodeScreens._kit(c)
+	var found: Dictionary = NodeScreens._seed_with(c, &"search", kit.items)
+	if found.is_empty():
+		t.check(false, "找不到带搜索点的种子")
+		return
+	var f := _flow(c, 100000.0)
+	var run := f.begin(c.chapter, kit, int(found["seed"]))
+	if run == null:
+		t.check(false, "开局")
+		return
+	f.pick_spawn(int(found["entry"]))
+	var rules: NodeRules = run.events.rules.duplicate(true)
+	rules.search.encounter_curve.clear()
+	rules.search.encounter_curve.append(1.0)
+	run.events.rules = rules
+	t.check(f.step_to(int(found["next"])), "走上搜索点")
+	var labels: Array = NodeScreens._labels(f.last_payload.get("def", null))
+	t.check(f.choose_event(maxi(labels.find("搜索"), 0)), "选「搜索」")
+	var session: SearchSession = run.events.current_search
+	if session == null or session.encounter.is_empty() or not bool(run.events.pending.get("search_encounter", false)):
+		t.check(false, "没停在遇敌事件上")
+		_cleanup()
+		return
+	var enc: Dictionary = session.encounter.duplicate(true)
+	var haul_n := session.haul().item_count()
+	var back := RunState.from_dict(JSON.parse_string(JSON.stringify(run.to_dict())), c.chapter, c.items, c.enemies, c.sets)
+	t.not_null(back, "读得回来")
+	if back == null:
+		_cleanup()
+		return
+	t.check(bool(back.events.pending.get("search_encounter", false)), "遇敌事件的旗子还在")
+	t.eq(JSON.stringify(back.events.pending.get("encounter", {})), JSON.stringify(JSON.parse_string(JSON.stringify(enc))), "遭遇内容还在")
+	if haul_n > 0:
+		t.check(back.pending_loot != null and back.pending_loot.item_count() == haul_n, "搜到的 %d 件进了待拾取" % haul_n)
+	else:
+		t.check(true, "（这次没搜到东西）")
+	# 战前准备屏：搜索遇敌是无代价（0），读档不能变回默认
+	back.events.pending_battle = {"node": back.events.pending_node().id if back.events.pending_node() != null else 0, "type": "search",
+		"content": enc, "kind": "search", "loss_cost": 0}
+	var back2 := RunState.from_dict(JSON.parse_string(JSON.stringify(back.to_dict())), c.chapter, c.items, c.enemies, c.sets)
+	t.eq(int(back2.events.pending_battle.get("loss_cost", -99)), 0, "战前准备屏的代价 0 跟着存档")
+	# 再搜 / 走的旗子
+	back2.events.pending["search_stage"] = true
+	var back3 := RunState.from_dict(JSON.parse_string(JSON.stringify(back2.to_dict())), c.chapter, c.items, c.enemies, c.sets)
+	t.check(bool(back3.events.pending.get("search_stage", false)), "「再搜 / 走」的旗子跟着存档")
+	_cleanup()

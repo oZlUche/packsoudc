@@ -58,7 +58,7 @@ func detach(drag: DragLayer) -> void:
 ## 现在接地上抓取的那个拖拽层（没人接 = null：谁都能抓，测试里就是这样）
 func top_drag() -> DragLayer:
 	for i in range(_drags.size() - 1, -1, -1):
-		if is_instance_valid(_drags[i]) and _drags[i].is_inside_tree():
+		if is_instance_valid(_drags[i]) and _drags[i].is_inside_tree() and DragLayer.is_live(_drags[i]):
 			return _drags[i]
 	return null
 

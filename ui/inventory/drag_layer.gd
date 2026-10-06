@@ -51,6 +51,9 @@ var craft: Callable = Callable()
 var craft_drop: Callable = Callable()
 ## 能合成的那张棋盘（一局里的作战棋盘）。别的格子容器（战利品箱）里压上去照常顶替
 var craft_grid: GridInventory = null
+## 审查 A1：手上这件许不许拿去合成 `func(inst: ItemInstance) -> bool`。商店给货架上还没付钱的商品返回 false ——
+## 否则压到能合的那件上放手，商品在合成里被消耗，结账那一步看不到它，等于白拿。不给 = 都许
+var craft_filter: Callable = Callable()
 
 var _views: Array[ContainerView] = []
 
@@ -90,6 +93,13 @@ func unregister_view(view: ContainerView) -> void:
 	_views.erase(view)
 
 
+## 审查 A3：登记过的视图被别人释放了（没撤登记）就从名单里拿掉，不去碰已释放的对象
+func _prune_views() -> void:
+	for i in range(_views.size() - 1, -1, -1):
+		if not is_instance_valid(_views[i]):
+			_views.remove_at(i)
+
+
 func is_dragging() -> bool:
 	return _inst != null
 
@@ -99,10 +109,22 @@ func source() -> ItemContainer:
 	return _source if _inst != null else null
 
 
+## 审查 A2：这个拖拽层现在能不能接抓取 —— 在树里、看得见、没停掉。收起（最小化）的叠层藏起来并停用，
+## 它的拖拽层不能再从地上抓东西（否则东西挂在藏起来的手里，那一屏一释放就没了）。不在树里（测试）算能
+static func is_live(drag: DragLayer) -> bool:
+	if drag == null:
+		return false
+	if not drag.is_inside_tree():
+		return true
+	return drag.is_visible_in_tree() and drag.can_process()
+
+
 func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> void:
 	var from := view.container()
 	if is_dragging() or from == null:
 		return
+	if not is_live(self):
+		return     # 审查 A2：藏起来 / 停掉的那一屏不抓
 	if view is GroundLayer and (view as GroundLayer).top_drag() != null and (view as GroundLayer).top_drag() != self:
 		return     # 128：同一层地接着好几块面板，只有最上面那块抓
 	var inst := from.get_item(uid)
@@ -226,6 +248,7 @@ func rotate_dragged() -> void:
 ## 指定全局坐标下的容器视图，没有则返回 null。
 ## 110：视图包在滚动容器里时，矩形按**当前**全局位置取（滚过之后会变），且被滚动区裁掉的部分不接落点
 func view_at(global_pos: Vector2) -> ContainerView:
+	_prune_views()
 	for view in _views:
 		if view is GroundLayer and (view as GroundLayer).fills_screen:
 			continue     # 128：铺满屏的地上 = 「棋盘外」，不当落点视图
@@ -310,6 +333,7 @@ func ghost_anchor(global_pos: Vector2) -> Vector2:
 ## 鼠标位置作为入参而不是内部取，是为了让拖拽逻辑能在没有真实输入的
 ## 测试里被驱动 —— 否则这整块只能靠手工拖拽验证。
 func update_preview(global_pos: Vector2) -> void:
+	_prune_views()
 	if not is_dragging():
 		return
 	var target := view_at(global_pos)
@@ -627,6 +651,8 @@ func _can_shed(fallen: Array) -> bool:
 func _craft_target(inv: GridInventory, origin: Vector2i) -> ItemInstance:
 	if _inst == null or not _payload.is_empty() or not craft.is_valid() or not craft_drop.is_valid():
 		return null
+	if craft_filter.is_valid() and not bool(craft_filter.call(_inst)):
+		return null
 	if inv == null or inv != craft_grid:
 		return null
 	var under := inv.displaced_by(_inst.def, origin, _rot, _inst.uid)
@@ -752,6 +778,15 @@ static func _admit_all(dest: ItemContainer, items: Array) -> bool:
 
 
 ## 放弃本次拖拽，物品退回源容器。
+## 审查 A2：拿着东西的时候这一层被藏起来（收起最小化）或离开场景树（那一屏被释放）—— 先把手上的放回原处，
+## 不让它挂在没人看得见的手里丢掉
+func _notification(what: int) -> void:
+	if (what == NOTIFICATION_EXIT_TREE or what == NOTIFICATION_VISIBILITY_CHANGED) and is_dragging():
+		if what == NOTIFICATION_VISIBILITY_CHANGED and is_visible_in_tree():
+			return
+		cancel()
+
+
 func cancel() -> void:
 	if not is_dragging():
 		return
@@ -789,6 +824,7 @@ func _restore() -> void:
 
 
 func _end_drag() -> void:
+	_prune_views()
 	for view in _views:
 		view.clear_preview()
 	_inst = null

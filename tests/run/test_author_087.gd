@@ -299,6 +299,14 @@ static func run_shop_logic(t: TestCase) -> void:
 	var mine: ItemInstance = run.board.items()[0]
 	t.check(not screen._allow_drop(mine, session.shelves[0]), "自己的东西不能放到栏位上")
 	t.check(screen._allow_drop(mine, session.sell_box), "自己的东西能进出售区")
+	# 审查 A1：没付钱的商品不能拿去合成（会被合成消耗、结不了账 = 白拿）；自己的东西照常能合
+	t.check(not bool(screen.drag_layer().craft_filter.call(slot0)), "货架上的商品不许合成")
+	screen._dragged_uid = slot0.uid
+	screen._dragged_slot = 0
+	t.check(not bool(screen.drag_layer().craft_filter.call(slot0)), "拿在手上的商品也不许合成")
+	screen._dragged_uid = -1
+	screen._dragged_slot = -1
+	t.check(bool(screen.drag_layer().craft_filter.call(mine)), "自己的东西许合成")
 	# 拖着买：栏位 → 棋盘（模拟拖拽层做的事），放手后结账
 	var price0 := int(session.stock[0]["price"])
 	var before := run.wallet.balance
