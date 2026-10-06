@@ -518,7 +518,7 @@ func smite_pending_battle() -> bool:
 	var me: CombatantSpec = hooks.player_spec()
 	var result := BattleResult.new()
 	result.winner = 0
-	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content}
+	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content, "type": String(type)}
 	battle_finished.emit(node, result, true)
 	var ctx := _loot_ctx()
 	var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core") \
@@ -598,7 +598,7 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 	if trace != null:
 		_write_trace(trace, result, node, content, me, enemy, limit, rng_seed)
 	var won := result.winner == 0
-	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content}
+	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content, "type": String(type)}
 	battle_finished.emit(node, result, won)
 	if won:
 		var ctx := loot_ctx if loot_ctx != null else _loot_ctx()

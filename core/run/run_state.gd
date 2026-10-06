@@ -927,8 +927,12 @@ func _wire_faith_power() -> void:
 		elif delta < 0:
 			faith_power.credit(&"spend_money", {"amount": -delta}))
 	# 093：打完一场把这一场的账汇总喂进去（造成 / 受到的伤害按类型、回血、每件出手几次）
+	# 猎手战不是节点类型，是插进当前点的事件：按 hunter 记，不按脚下那个点的类型
 	events.battle_finished.connect(func(n: MapNode, r: BattleResult, won: bool):
-		faith_power.credit(&"battle", battle_summary(r, won, board, NodeEvents.effective_type(n) if n != null else &"")))
+		var t := StringName(String(events.last_battle.get("type", "")))
+		if t != HunterSystem.TYPE:
+			t = NodeEvents.effective_type(n) if n != null else &""
+		faith_power.credit(&"battle", battle_summary(r, won, board, t)))
 	travel.moved.connect(func(i: MoveIntent, first: bool):
 		var n := map.get_node(i.to_id) if map != null and map.has_node(i.to_id) else null
 		faith_power.credit(&"travel", {"steps": travel.clock.total, "first_visit": first, "node_type": String(n.type) if n != null else ""}))
