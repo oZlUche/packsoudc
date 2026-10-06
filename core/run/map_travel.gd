@@ -1,7 +1,7 @@
 ## 在地图上走：一次移动 = 一次原子结算，[b]顺序不可调换[/b]（架构文档 5.6）。
 ##
 ## [codeblock]
-## 校验合法 → ActionClock.spend → 侵蚀推进 → 结算目的地惩罚 → 触发节点事件
+## 校验合法 → ActionClock.spend → 侵蚀推进 → 结算目的地惩罚 →（134：进点闸门，可挂起）→ 触发节点事件
 ## [/codeblock]
 ##
 ## 侵蚀推进必须早于目的地惩罚：顺序反了，玩家走进一个刚好在这一步被侵蚀的点却毫发无伤，
@@ -22,6 +22,10 @@ signal moved(intent: MoveIntent, first_visit: bool)
 signal refused(intent: MoveIntent, why: String)
 ## 原地耗了几个行动点（8-3）
 signal waited(actions: int)
+## 134：这一次进点被闸门挂起了（猎手在进点之前追上）。人已经在点上、步数已经花了，点的事还没发生
+signal arrival_held(intent: MoveIntent, first_visit: bool)
+## 134：挂起的进点取消了（输给驱逐档的猎手，退回上一步）：这个点视为没进
+signal arrival_cancelled(intent: MoveIntent, first_visit: bool)
 
 var graph: MapGraph = null
 var clock: ActionClock = null
@@ -29,6 +33,11 @@ var clock: ActionClock = null
 var vitality: Vitality = null
 var erosion = null
 var on_node_event: Callable = Callable()
+## 134：进点前的闸门 `Callable(intent: MoveIntent, first_visit: bool) -> bool`。人挪到点上、惩罚结算完、点的事发生**之前**问一声，
+## 返回 true = 先挂起这次进点（[member held]），由持有方之后 [method finish_arrival] 接着进、或 [method cancel_arrival] 取消。没设 = 不挂
+var arrival_gate: Callable = Callable()
+## 134：挂起的进点 `{"intent": MoveIntent, "first": bool}`；空 = 没有。跟着存档
+var held: Dictionary = {}
 
 ## 129：走一步（含传送）花的行动点乘几 —— 负重第三级是 2。原地等待不乘。[RunState] 按负重级数写
 var action_cost_mult: int = 1
@@ -98,13 +107,53 @@ func apply(intent: MoveIntent) -> bool:
 			_settle_penalty(graph.get_node(id))
 		_settle_penalty(dest)
 
-	# 5. 节点事件：只在头一回踩上时
+	# 134：进点之前的闸门（猎手战插在这个点的事前面）。挂起了就停在这儿：点不标走过、事不发生、moved 不发
+	if arrival_gate.is_valid() and bool(arrival_gate.call(intent, first_visit)):
+		held = {"intent": intent, "first": first_visit}
+		arrival_held.emit(intent, first_visit)
+		return true
+
+	_arrive(intent, dest, first_visit)
+	return true
+
+
+## 5. 节点事件：只在头一回踩上时；然后发 moved
+func _arrive(intent: MoveIntent, dest: MapNode, first_visit: bool) -> void:
 	if first_visit:
 		if on_node_event.is_valid():
 			on_node_event.call(dest)
 		else:
 			dest.state = MapNode.State.VISITED     # 占位：没人接事件，就当到了即用过
 	moved.emit(intent, first_visit)
+
+
+## 134：有没有挂起的进点
+func is_holding() -> bool:
+	return not held.is_empty()
+
+
+## 134：接着进挂起的那个点（点的事发生、发 moved）。没有挂起的返回 false
+func finish_arrival() -> bool:
+	if held.is_empty():
+		return false
+	var intent: MoveIntent = held["intent"]
+	var first := bool(held["first"])
+	held = {}
+	var dest := graph.get_node(intent.to_id) if graph != null and graph.has_node(intent.to_id) else null
+	if dest == null:
+		return false
+	_arrive(intent, dest, first and dest.state == MapNode.State.UNVISITED)
+	return true
+
+
+## 134：取消挂起的进点（这个点视为没进：不标走过、事不发生）。人挪不挪由调用方定。没有挂起的返回 false
+func cancel_arrival() -> bool:
+	if held.is_empty():
+		return false
+	var intent: MoveIntent = held["intent"]
+	var first := bool(held["first"])
+	held = {}
+	arrival_cancelled.emit(intent, first)
 	return true
 
 
@@ -166,7 +215,10 @@ func _settle_penalty(node: MapNode) -> void:
 
 #region 存档
 func to_dict() -> Dictionary:
-	return {"current": current_id, "history": history.duplicate(), "clock": clock.to_dict()}
+	var out := {"current": current_id, "history": history.duplicate(), "clock": clock.to_dict()}
+	if not held.is_empty():
+		out["held"] = {"intent": (held["intent"] as MoveIntent).to_dict(), "first": bool(held["first"])}     # 134
+	return out
 
 
 ## 图另存（它自己有 to_dict），这里只还原「人在哪、走过哪、花了多少」。
@@ -174,5 +226,8 @@ static func from_dict(d: Dictionary, p_graph: MapGraph) -> MapTravel:
 	var t := MapTravel.new(p_graph, ActionClock.from_dict(d.get("clock", {})), int(d.get("current", -1)))
 	for v in d.get("history", []):
 		t.history.append(int(v))
+	var h = d.get("held", {})
+	if h is Dictionary and not (h as Dictionary).is_empty():
+		t.held = {"intent": MoveIntent.from_dict(h.get("intent", {})), "first": bool(h.get("first", false))}
 	return t
 #endregion

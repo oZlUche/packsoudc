@@ -911,6 +911,12 @@ func hide_overlay() -> bool:
 		return true
 	if run.events.pending_event() != null or not run.events.pending_battle.is_empty():
 		return false
+	if screen == Screen.LOOT and run.has_pending_arrival():
+		# 134：猎手战的战利品收起来了，这个点的事还挂着：接着进点（剩下的战利品留在这个点上），有事就看，没事回地图
+		run.poke_hunters()
+		if not _queue.is_empty() or run.events.pending_event() != null or not run.events.pending_battle.is_empty():
+			_flush()
+			return true
 	if screen == Screen.LOOT and _boss_extracts():
 		# 087：BOSS 的战利品屏「收起」= 不要剩下的，直接撤离结算
 		run.discard_loot()
@@ -1130,8 +1136,11 @@ func _flush() -> void:
 		_settle_run()
 		_go(Screen.RESULT, {"result": result})
 		return
-	if run != null:
-		run.poke_hunters()     # 玩家空下来了：猎手够得着就排上开打前的事件屏（071）
+	# 玩家空下来了：猎手够得着就排上开打前的事件屏（071）；134：猎手那一场了结了就接着进挂起的那个点 ——
+	# 那个点的事发生时排进队里的（休息结果、回放……）接着看
+	if run != null and run.poke_hunters() and not _queue.is_empty():
+		_flush()
+		return
 	if run != null and run.events.pending_event() != null:
 		# 队列空了还有一个等着选的事件（接着放的、或读档回来的）
 		_go(Screen.EVENT, {"node": run.events.pending_node(), "def": run.events.pending_event()})

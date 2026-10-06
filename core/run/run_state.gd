@@ -244,18 +244,51 @@ func step_to(id: int) -> bool:
 	_forget_handled()
 	leaving.emit(travel.current_id)     # 101：走开了 —— 模块自己接（保险箱关上、地上留在这个点）
 	var was_visited := map.has_node(id) and map.get_node(id).is_visited()
+	# 134：猎手的回合在进点之前（旅程的闸门 _arrival_gate 里）：够得着就先上猎手的事件屏、这个点的事挂起
 	var ok := travel.step_to(id)
 	if ok:
-		if was_visited:
-			arrived.emit(travel.current_id, false)     # 回到走过的点（头一回踩的在 _on_arrive 里已经发过）
-		# 091（作者定）：商店可以回头再逛 —— 回到走过的商店点就把店再开起来；货架 / 刷新次数 / 卖掉的都记在节点内容里，刷新价不重置
-		if was_visited and events != null and NodeEvents.effective_type(map.get_node(id)) == &"shop":
-			events.reopen_shop(map.get_node(id))
-		if hunters != null:
-			hunters.on_player_step()     # 猎手的回合在这一步的事都发生之后（071）
+		if was_visited and not travel.is_holding():
+			_arrived_again(travel.current_id)
 		skills.on_step()     # 冷却与躲避在猎手的回合之后减：躲 3 步就是 3 个猎手回合够不着（082）
 		stepped.emit(travel.current_id, &"step")     # 101：走完一步 —— 模块自己接（赐福、倒计时归零 = 行动失败）
 	return ok
+
+
+## 回到走过的点（头一回踩的在 _on_arrive 里已经发过）
+func _arrived_again(id: int) -> void:
+	arrived.emit(id, false)
+	# 091（作者定）：商店可以回头再逛 —— 回到走过的商店点就把店再开起来；货架 / 刷新次数 / 卖掉的都记在节点内容里，刷新价不重置
+	if events != null and map.has_node(id) and NodeEvents.effective_type(map.get_node(id)) == &"shop":
+		events.reopen_shop(map.get_node(id))
+
+
+## 134：旅程的进点闸门 —— 人已经挪到点上、步数花了、惩罚结算了，这个点的事发生之前：先过猎手的回合（出现、移动、感知、开打）。
+## 有猎手够得着（开打前的事件屏排上了）就挂起这次进点，等那一场了结后 [method resume_arrival] 接着进；输给驱逐档的取消（视为没进）
+func _arrival_gate(_intent: MoveIntent, _first_visit: bool) -> bool:
+	if hunters == null:
+		return false
+	hunters.on_player_step()
+	return events != null and int(events.pending.get("hunter", -1)) >= 0
+
+
+## 134：有挂起的进点吗（猎手在进点之前追上了，这个点的事还没发生）
+func has_pending_arrival() -> bool:
+	return travel != null and travel.is_holding()
+
+
+## 134：猎手那一场了结了（赢了、逃掉了、输了但是击退档）：接着进挂起的那个点 —— 这个点的事现在发生。
+## 还有等着选的事件 / 等着开打的一场时不接（先处理那些）。返回接没接
+func resume_arrival() -> bool:
+	if not has_pending_arrival() or is_over() or phase != Phase.ON_MAP:
+		return false
+	if events != null and (not events.pending.is_empty() or not events.pending_battle.is_empty()):
+		return false
+	var first := bool(travel.held.get("first", false))
+	if not travel.finish_arrival():
+		return false
+	if not first:
+		_arrived_again(travel.current_id)
+	return true
 
 
 ## 事件把人挪走（8-3 的传送后果）：不走边，但离开发生过事的点照样清地上、猎手照样得一个回合 —— 和走一步一样的壳，只是意图不同
@@ -268,20 +301,21 @@ func relocate(intent: MoveIntent) -> bool:
 	_forget_handled()
 	leaving.emit(travel.current_id)     # 101：同上，事件把人挪走也算走开
 	var was_visited := map.has_node(intent.to_id) and map.get_node(intent.to_id).is_visited()
-	var ok := travel.apply(intent)
+	var ok := travel.apply(intent)     # 134：猎手的回合在闸门里，先于落地那个点的事
 	if ok:
-		if was_visited:
-			arrived.emit(travel.current_id, false)
-		if hunters != null:
-			hunters.on_player_step()
+		if was_visited and not travel.is_holding():
+			_arrived_again(travel.current_id)
 		skills.on_step()
 		stepped.emit(travel.current_id, &"relocate")
 	return ok
 
 
-## 玩家空下来了（叠层看完、会话关了）问一声猎手够不够得着；够得着就开打前的事件屏已经排上。返回有没有
+## 玩家空下来了（叠层看完、会话关了）问一声猎手够不够得着；够得着就开打前的事件屏已经排上。
+## 134：没有猎手要打、又有挂起的进点（猎手那一场了结了）就接着进那个点。返回有没有事发生
 func poke_hunters() -> bool:
-	return hunters != null and hunters.check_engagement()
+	if hunters != null and hunters.check_engagement():
+		return true
+	return resume_arrival()
 
 
 ## 按 id 取一个敌人池资产（猎手可以指定自己的池）
@@ -901,6 +935,7 @@ func _wire_events() -> void:
 	events.bind(travel)
 	# 进入的那一次检查插在节点事件前面（bind 把 handle 挂上了，这里再包一层）
 	travel.on_node_event = _on_arrive
+	travel.arrival_gate = _arrival_gate     # 134：猎手战插在进点的事件队列前面
 	# 082：技能与信力
 	_ensure_skills()
 	hooks.register(&"before_battle", _before_battle)
@@ -936,6 +971,10 @@ func _wire_faith_power() -> void:
 	travel.moved.connect(func(i: MoveIntent, first: bool):
 		var n := map.get_node(i.to_id) if map != null and map.has_node(i.to_id) else null
 		faith_power.credit(&"travel", {"steps": travel.clock.total, "first_visit": first, "node_type": String(n.type) if n != null else ""}))
+	# 134：输给驱逐档、视为没进：步数照算，进点不算（不带 first_visit —— 「进入节点」那条不认）
+	travel.arrival_cancelled.connect(func(i: MoveIntent, _first: bool):
+		var n := map.get_node(i.to_id) if map != null and map.has_node(i.to_id) else null
+		faith_power.credit(&"travel", {"steps": travel.clock.total, "node_type": String(n.type) if n != null else ""}))
 	vitality.changed.connect(func(_c: int, _m: int, delta: int, _r: StringName):
 		if delta < 0:
 			faith_power.credit(&"vitality_change", {"delta": delta}))

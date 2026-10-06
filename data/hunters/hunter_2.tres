@@ -1,30 +1,63 @@
 [gd_resource type="Resource" script_class="HunterDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/hunters/behaviors/patrol_behavior.gd" id="1_nng7l"]
-[ext_resource type="Script" path="res://core/run/hunters/hunter_loss_outcome.gd" id="2_by7ad"]
-[ext_resource type="Script" path="res://core/run/hunters/losses/loss_spend_vitality.gd" id="3_lw132"]
-[ext_resource type="Script" path="res://core/run/hunters/losses/loss_expel_and_guard.gd" id="4_ci7kc"]
-[ext_resource type="Script" path="res://core/run/hunters/hunter_def.gd" id="5_bb1f7"]
+[ext_resource type="Script" path="res://core/run/hunters/behaviors/patrol_behavior.gd" id="1_ci7kc"]
+[ext_resource type="Script" path="res://core/run/hunters/hunter_loss_option.gd" id="2_bb1f7"]
+[ext_resource type="Script" path="res://core/run/hunters/hunter_loss_outcome.gd" id="3_j6ak4"]
+[ext_resource type="Script" path="res://core/run/hunters/losses/loss_spend_vitality.gd" id="4_p2kd5"]
+[ext_resource type="Script" path="res://core/run/hunters/losses/loss_retreat.gd" id="5_n00tl"]
+[ext_resource type="Script" path="res://core/run/hunters/losses/loss_expel.gd" id="6_28eav"]
+[ext_resource type="Script" path="res://core/run/hunters/losses/loss_expel_and_guard.gd" id="7_tqfby"]
+[ext_resource type="Script" path="res://core/run/hunters/hunter_def.gd" id="8_v5ssu"]
 
-[sub_resource type="Resource" id="Resource_j6ak4"]
-script = ExtResource("1_nng7l")
+[sub_resource type="Resource" id="Resource_8oxv6"]
+script = ExtResource("1_ci7kc")
 
-[sub_resource type="Resource" id="Resource_p2kd5"]
-script = ExtResource("3_lw132")
+[sub_resource type="Resource" id="Resource_jidfe"]
+script = ExtResource("4_p2kd5")
 
-[sub_resource type="Resource" id="Resource_n00tl"]
-script = ExtResource("4_ci7kc")
+[sub_resource type="Resource" id="Resource_hy4wn"]
+script = ExtResource("5_n00tl")
+
+[sub_resource type="Resource" id="Resource_qyw7g"]
+script = ExtResource("2_bb1f7")
+id = &"repel"
+display_name = "击退"
+outcomes = Array[ExtResource("3_j6ak4")]([SubResource("Resource_jidfe"), SubResource("Resource_hy4wn")])
+
+[sub_resource type="Resource" id="Resource_uvoxk"]
+script = ExtResource("4_p2kd5")
+
+[sub_resource type="Resource" id="Resource_nnmnq"]
+script = ExtResource("6_28eav")
+
+[sub_resource type="Resource" id="Resource_k3xf5"]
+script = ExtResource("2_bb1f7")
+id = &"expel"
+display_name = "驱逐"
+outcomes = Array[ExtResource("3_j6ak4")]([SubResource("Resource_uvoxk"), SubResource("Resource_nnmnq")])
+
+[sub_resource type="Resource" id="Resource_0hrrj"]
+script = ExtResource("4_p2kd5")
+
+[sub_resource type="Resource" id="Resource_bm1a7"]
+script = ExtResource("7_tqfby")
+
+[sub_resource type="Resource" id="Resource_0vxhb"]
+script = ExtResource("2_bb1f7")
+id = &"expel_guard"
+display_name = "驱逐并驻守"
+outcomes = Array[ExtResource("3_j6ak4")]([SubResource("Resource_0hrrj"), SubResource("Resource_bm1a7")])
 
 [resource]
-script = ExtResource("5_bb1f7")
+script = ExtResource("8_v5ssu")
 id = &"hunter_2"
 display_name = "守路人（占位）"
-description = "它在这一带巡逻，见了你就追。输了它会把你赶回去，守在原地。"
+description = "它在这一带巡逻，见了你就追。输了它可能把你打退，也可能把你赶回去，甚至守在原地不让你过。"
 level = 2
 visibility = 1
 sense_range = 4.0
-behavior = SubResource("Resource_j6ak4")
-loss_outcomes = Array[ExtResource("2_by7ad")]([SubResource("Resource_p2kd5"), SubResource("Resource_n00tl")])
+behavior = SubResource("Resource_8oxv6")
+loss_options = Array[ExtResource("2_bb1f7")]([SubResource("Resource_qyw7g"), SubResource("Resource_k3xf5"), SubResource("Resource_0vxhb")])
 flee_chance = 0.3
 enemy_pool = &"hunters"
 strength_by_bracket = Array[int]([1, 2, 3, 3])
