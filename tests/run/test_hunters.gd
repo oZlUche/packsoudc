@@ -214,10 +214,18 @@ static func run_engage_fight_flee(t: TestCase) -> void:
 	t.check(not s.poke_hunters(), "已经在等着选了，不重复排")
 	var fights: Array = []
 	s.events.battle_finished.connect(func(_n: MapNode, _r: BattleResult, won: bool): fights.append(won))
+	# 猎手战不是节点类型：狩猎之神的「猎手战 +30」按 hunter 记，不按脚下那个点
+	s.faith_defs = FaithDef.load_all()
+	var charm := ItemInstance.create(s.items.get_def(&"charm_hunt"))
+	s.storage.admit(charm)
+	t.check(InventoryService.transfer_auto(s.storage, charm.uid, s.board) and s.active_faith_id() == &"hunt", "狩猎之神的护符上棋盘：激活狩猎之神")
+	var faith_before := s.faith_power.points_of(&"hunt")
 	var vit_before := s.vitality.current
 	var node_before := s.travel.current_id
 	t.check(s.events.choose(0), "选迎战")
 	t.eq(fights.size(), 1, "打了一场")
+	t.eq(String(s.events.last_battle.get("type", "")), "hunter", "这一场记作猎手战")
+	t.eq(s.faith_power.points_of(&"hunt") - faith_before, 30, "狩猎之神：猎手战 +30（不论胜负）")
 	t.eq(s.events.last_handled_id, node_before, "这个点算发生过事（离开时地上会清）")
 	t.check(not s.map.get_node(node_before).is_visited() or s.map.get_node(node_before).id == s.map.entry_ids[0] or true, "点没被猎手用掉（不和节点互动）")
 	if fights[0]:
