@@ -18,7 +18,7 @@ func compile_into(input: CompileInput, board: GridInventory, _run: RunState) -> 
 	if total > 0.0:
 		var m := StatModifier.new()
 		m.stat = BattleStats.MAX_SHIELD
-		m.flat = total
+		m.amount = total
 		input.baseline_mods.append(m)
 
 

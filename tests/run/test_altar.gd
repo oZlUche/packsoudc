@@ -64,7 +64,7 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	var spec2 := run.compile_player()
 	var hasted := false
 	for it in spec2.items:
-		if (it as CompiledItem).stats.has(BattleStats.HASTE) and (it as CompiledItem).stats.ensure(BattleStats.HASTE).mult_of(StatMath.Buff.HASTE) > 0:
+		if (it as CompiledItem).stats.has(BattleStats.HASTE) and (it as CompiledItem).stats.ensure(BattleStats.HASTE).percent > 0:
 			hasted = true
 	t.check(hasted, "道具急速 +5%")
 	t.check(not altar.is_open() and altar.used.has(altar.node), "特殊操作用掉了这一次机会：神坛关了")

@@ -69,3 +69,21 @@ static func run(t: TestCase) -> void:
 	t.check(hits.has("shield"), "护盾页")
 	t.check(hits.has("term:护盾"), "护盾词条")
 	t.check(book.search("地上", {"_items": db}).has("staging_zone"), "地上页")
+
+
+static func run_single_bucket_wording(t: TestCase) -> void:
+	t.begin("审查 D1 · 战斗页跟 133 单一乘区一致：不再写「四类乘区」「同区相加、跨区相乘」")
+	var by_id := {}
+	for h in GameFlow.load_help_pages():
+		by_id[String((h as HelpPageDef).id)] = h
+	for id in ["multipliers", "haste", "direct_damage_and_armor"]:
+		var page: HelpPageDef = by_id.get(id, null)
+		t.not_null(page, "%s 在" % id)
+		if page == null:
+			continue
+		var text := String(page.text)
+		for stale in ["四类", "物理增伤", "元素增伤", "跨区", "不同乘区", "自己的乘区"]:
+			t.check(not text.contains(stale), "%s 不再写「%s」" % [id, stale])
+	var m: HelpPageDef = by_id.get("multipliers", null)
+	if m != null:
+		t.check(String(m.text).contains("只有一个乘区") and String(m.text).contains("先相加"), "乘区页写的是一个乘区、乘算先相加")

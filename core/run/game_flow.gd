@@ -56,6 +56,9 @@ var meta_path: String = MetaSave.DEFAULT_PATH
 var meta_backup: String = ""
 ## 098：同上，进行中的那一局
 var run_backup: String = ""
+## 当前位是更新版本的游戏存的（它的存档版本号；0 = 不是）。这时这一位只读：不读、不写、不备份、不能接着玩，
+## 免得旧版本把新档当坏档备份掉、再存一份空的盖上去
+var newer_slot: int = 0
 ## 089（作者定）：存档位。null = 老的单文件模式（测试、沙盒）；持有方给了就按位存：save_path / meta_path 指向当前位（[method use_slot]）
 var slots: SaveSlots = null
 var slot: int = 0
@@ -108,6 +111,7 @@ func use_slot(n: int) -> void:
 	# 101 第 4 刀：建目录、算路径、读局外、读不出来先备份（098）都在 SaveSlots.open 里；这里只管当前位与这一局
 	var opened := slots.open(n, items, meta_rules, tech_defs)
 	slot = int(opened["slot"])
+	newer_slot = int(opened.get("newer", 0))
 	save_path = String(opened["run_path"])
 	meta_path = String(opened["meta_path"])
 	if String(opened["backup"]) != "":
@@ -132,6 +136,8 @@ func profile_exists() -> bool:
 
 ## 主菜单「继续」：读当前位接着玩 —— 有局内存档读档；教程打到中途开下一张；都没有就按这份存档开新的一局（教程从头 / 开局屏）
 func continue_game() -> bool:
+	if newer_slot > 0:
+		return false
 	if has_save() or continue_target() != null:
 		return continue_run()
 	if not profile_exists():
@@ -179,6 +185,7 @@ func delete_slot(n: int) -> void:
 		return
 	slots.remove(n)
 	if n == slot:
+		newer_slot = 0
 		meta = MetaState.new(meta_rules)
 		run = null
 		result = null
@@ -235,6 +242,8 @@ func continue_target() -> ChapterDef:
 
 ## 有存档就读档接着玩；没有就接着打下一张教程（[method continue_target]）。两样都没有返回 false
 func continue_run() -> bool:
+	if newer_slot > 0:
+		return false
 	var state := RunSave.read(items, enemies, sets, save_path)
 	if state == null and RunSave.exists(save_path) and slots != null:
 		run_backup = slots.backup(slot, "run")     # 098：读不出来的一局也先备份，否则「继续」每次都撞同一面墙
@@ -506,6 +515,8 @@ func pending_hint() -> String:
 
 ## 098：读不出来、已经备份下来的那一句（没发生过返回空）。读取存档屏与主菜单各显示一次
 func backup_notice() -> String:
+	if newer_slot > 0:
+		return UiText.t("slots.newer") % [newer_slot, maxi(MetaState.SAVE_VERSION, RunState.SAVE_VERSION)]
 	if meta_backup != "":
 		return UiText.t("slots.backed_up") % meta_backup.get_file()
 	if run_backup != "":
@@ -514,7 +525,12 @@ func backup_notice() -> String:
 
 
 func save_meta() -> bool:
-	return meta != null and MetaSave.write(meta, meta_path) == OK
+	return meta != null and writable() and MetaSave.write(meta, meta_path) == OK
+
+
+## 当前位能不能写（更新版本的存档只读）
+func writable() -> bool:
+	return newer_slot <= 0
 
 
 #region 局外科技（110）
@@ -674,7 +690,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	if lost:
 		meta.discard_board()
 	if not taken.is_empty() or character != null or lost:
-		MetaSave.write(meta, meta_path)
+		save_meta()
 	_adopt(state)
 	_grant_keepsakes(chapter)
 	_go(Screen.MAP)
@@ -687,7 +703,7 @@ func has_save() -> bool:
 
 
 func save() -> bool:
-	return run != null and not run.is_over() and RunSave.write(run, save_path) == OK
+	return run != null and not run.is_over() and writable() and RunSave.write(run, save_path) == OK
 
 
 ## 存档回主菜单（随时可以离开：开着的店 / 搜索视为离开）
@@ -840,8 +856,9 @@ func _settle_run() -> void:
 		if result.is_extracted() and run != null and run.chapter != null and run.chapter.grants_unlock != &"":
 			meta.grant_unlock(run.chapter.grants_unlock)
 		check_achievements()     # 091：这一局的账记完了，看成就
-		MetaSave.write(meta, meta_path)
-		RunSave.remove(save_path)
+		if writable():
+			MetaSave.write(meta, meta_path)
+			RunSave.remove(save_path)
 #endregion
 
 
@@ -911,6 +928,12 @@ func hide_overlay() -> bool:
 		return true
 	if run.events.pending_event() != null or not run.events.pending_battle.is_empty():
 		return false
+	if screen == Screen.LOOT and run.has_pending_arrival():
+		# 134：猎手战的战利品收起来了，这个点的事还挂着：接着进点（剩下的战利品留在这个点上），有事就看，没事回地图
+		run.poke_hunters()
+		if not _queue.is_empty() or run.events.pending_event() != null or not run.events.pending_battle.is_empty():
+			_flush()
+			return true
 	if screen == Screen.LOOT and _boss_extracts():
 		# 087：BOSS 的战利品屏「收起」= 不要剩下的，直接撤离结算
 		run.discard_loot()
@@ -1130,8 +1153,11 @@ func _flush() -> void:
 		_settle_run()
 		_go(Screen.RESULT, {"result": result})
 		return
-	if run != null:
-		run.poke_hunters()     # 玩家空下来了：猎手够得着就排上开打前的事件屏（071）
+	# 玩家空下来了：猎手够得着就排上开打前的事件屏（071）；134：猎手那一场了结了就接着进挂起的那个点 ——
+	# 那个点的事发生时排进队里的（休息结果、回放……）接着看
+	if run != null and run.poke_hunters() and not _queue.is_empty():
+		_flush()
+		return
 	if run != null and run.events.pending_event() != null:
 		# 队列空了还有一个等着选的事件（接着放的、或读档回来的）
 		_go(Screen.EVENT, {"node": run.events.pending_node(), "def": run.events.pending_event()})

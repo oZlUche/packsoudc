@@ -7,6 +7,8 @@ extends RefCounted
 
 var source_uid: int = 0
 var def_id: StringName = &""
+## 132：道具的标签（`on_item_fired.source_tags` 按它筛出手的是哪类件）
+var tags: Array[StringName] = []
 ## 结算后的属性快照。战斗中不再回头读背包。
 var stats: StatSet = null
 var rules: Array[AbilityRule] = []

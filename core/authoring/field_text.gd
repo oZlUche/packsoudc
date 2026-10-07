@@ -15,7 +15,7 @@ const LABELS := {
 	"id": "id", "display_name": "名字", "display_names": "别的语言的名字", "description": "说明", "descriptions": "别的语言的说明",
 	"title": "标题", "titles": "别的语言的标题", "text": "正文", "texts": "别的语言的正文", "label": "选项文字", "labels": "别的语言的选项文字",
 	"image": "配图", "icon": "图标", "tags": "标签", "tag": "标签", "order": "先后", "hidden": "隐藏", "note": "备注", "tip": "弹词条", "internal": "内部标签",
-	"amount": "数量", "value": "数值", "count": "件数", "percent": "百分比", "flat": "固定值", "mult": "倍率", "mult_percent": "倍率百分比",
+	"amount": "数量", "value": "数值", "count": "件数", "percent": "百分比", "flat": "固定值", "mult": "倍率", "StatModifier.mode": "乘算 / 加算",
 	"chance": "概率", "seconds": "秒", "steps": "步数", "min_steps": "最少步数", "max_steps": "最多步数", "min_value": "最少", "flag": "旗标",
 	"absent": "反过来（要求没有）", "add": "累加", "clear": "拔掉", "target": "对象", "where": "在哪", "pick": "挑法", "item": "道具", "items": "道具",
 	"include_bags": "包也算", "include_self": "含自己", "invert": "反转", "enabled": "启用", "absolute": "绝对值", "only_total": "只算总量",
@@ -23,10 +23,13 @@ const LABELS := {
 	"shape": "形状", "rarity": "稀有度", "rarity_cap": "稀有度上限", "is_bag": "是包", "bag_accept_tags": "包只收的标签", "bag_mods": "包体加成",
 	"set_id": "套装", "effects": "效果", "faith_bonuses": "信仰加成", "dormant_keeps_combat": "休眠仍保留战斗效果", "requires_unlock": "需要的解锁",
 	"combat": "战斗", "adjacency": "邻接", "base_stats": "基础属性", "rules": "规则", "trigger": "触发", "cadence": "节奏", "costs": "消耗",
-	"use_haste": "受急速影响", "cooldown": "冷却", "resource_key": "资源", "damage_type": "伤害类型", "damage_stat": "伤害用的属性", "amount_stat": "数量用的属性",
+	"use_haste": "受急速影响", "cooldown": "冷却", "resource_key": "资源", "damage_type": "伤害类型", "damage_stat": "伤害用的属性", "amount_stat": "数量改从属性取（留空 = 用上面的数量）",
 	"stat": "属性", "stat_scale": "属性系数", "direct_override": "直接伤害（−1 按来源定）", "shield_absorbable": "可被护盾吸收", "provokes": "招致反应", "on_self": "对自己", "same_side": "同一边",
 	"buff": "增益", "buff_id": "增益 id", "stacks": "叠层", "max_stacks": "叠层上限（0 = 不限）", "per_stack": "按叠层", "duration_sec": "持续秒数",
 	"by_self": "只认本方施加", "from": "转化前", "to": "转化成", "ratio": "换算比例", "keep_from": "保留原状态",     # 130
+	"source_tags": "只听带这些标签的", "full": "回满", "crit_only": "只在暴击时", "receive_rules": "受益规则", "min_percent": "至少百分之", "max_percent": "至多百分之",
+	"absolute_min": "至少点数", "absolute_max": "至多点数", "negate": "取反", "percent_of": "按生命比例", "percent_of_target": "比例按谁的生命",
+	"per_target_stack": "乘目标身上的层数", "percent_of_damage": "按这一下伤害的百分比", "all_debuffs": "清光全部减益", "all_buffs": "清光全部增益",     # 132
 	"is_debuff": "是减益", "refresh_on_restack": "再叠刷新时长", "on_apply": "施加时", "on_expire": "到期时", "mods": "属性加成", "consume": "消耗掉",
 	"grant_cells": "增益格", "receive_cells": "受益格", "grant_mods": "给邻居的加成", "grant_rules": "给邻居挂的规则", "receive_mods": "邻居给的加成", "grant_filter": "只给", "receive_filter": "只收",
 	"uses": "次数", "max_uses": "最多次数", "hp_fraction": "生命比例", "direction": "方向", "source": "来源", "weapon_tag": "武器标签", "min_amount": "最少量",
@@ -59,7 +62,7 @@ const LABELS := {
 	# 角色 / 敌人 / 猎手 / 信仰
 	"board_size": "棋盘尺寸", "starting_bags": "初始包", "vitality_max": "体力上限", "carry_max_items": "最多带几件", "carry_rarity_cap": "带入稀有度上限", "skills": "技能",
 	"bags": "包", "board": "棋盘", "signature": "招牌道具", "signature_by_strength": "按档位的招牌", "schools": "流派", "item_tags": "道具标签", "item_count": "道具件数",
-	"strength": "档位", "strength_rule": "档位规则", "loadout": "装备", "behavior": "行动逻辑", "visibility": "可见性", "loss_outcomes": "战败后果", "loss_type": "战败类型",
+	"strength": "档位", "strength_rule": "档位规则", "loadout": "装备", "behavior": "行动逻辑", "visibility": "可见性", "loss_outcomes": "战败后果（旧写法）", "loss_options": "战败结果档", "loss_pick": "选档方式", "HunterLossOption.weight": "权重", "LossPickFixed.index": "第几档（从 0 数）", "loss_type": "战败类型",
 	"god": "神", "camp": "阵营", "thresholds": "阈值", "deeds": "行为", "single_faith": "只认一位神", "grants": "给的解锁", "level": "档",
 	"mechanics": "机制", "requires_unlock_": "需要的解锁", "warn_lead_actions": "预警提前量", "first_at_action": "第一次在第几步", "interval_actions": "间隔步数",
 	"from_depth": "从第几层起", "per_depth": "每层", "hunter_ids": "猎手", "bracket_steps": "段位表", "inputs": "输入", "output": "产物",
@@ -71,6 +74,8 @@ const TYPE_LABELS := {
 	"on_schedule": "按节奏出手（自发）", "on_battle_start": "开战时", "on_item_fired": "某件出手时", "on_resource_changed": "资源变化时",
 	"on_stacks_at_least": "叠层达到时", "on_resource_below": "资源低于时", "on_damage": "受伤时", "on_before_damage": "受伤前",
 	"on_status_applied": "某状态被施加时", "status_condition": "状态条件", "convert_status": "转化状态",     # 130
+	"on_status_removed": "某状态掉光时", "on_overtime": "加时开始时", "resource_condition": "资源条件", "axis_condition": "标准轴条件", "axis_cost": "消耗轴层数",
+	"convert_damage_type": "改伤害类型",     # 132
 	"always": "每次都行", "cooldown": "冷却",
 	"resource": "消耗资源", "status_stack": "消耗叠层", "charge": "充能", "uses": "限次", "chance": "概率",
 	"deal_damage": "造成伤害", "change_resource": "改资源", "apply_status": "施加状态", "remove_status": "移除状态", "modify_damage": "改伤害", "reflect_damage": "反弹伤害",
@@ -94,7 +99,7 @@ const TYPE_LABELS := {
 	"altar_reshape_node": "神坛：改造此点", "smite": "秒杀（耗体力）", "extra_drop_by_node": "按点类型必掉额外一件", "gift_on_enter": "踩上点给对应道具", "overtime_regen": "加时阶段回春", "on_axis_at_least": "标准轴到 N 层时", "shift_axis": "改标准轴层数", "axis_boost": "开战带几层标准轴", "undying": "血归零后坚持几秒", "altar_bless": "神坛：祈求赐福", "bless_item": "赐福一件",
 	"erosion": "侵蚀", "hunters": "猎手", "safe": "保险箱", "node_storage": "按点暂存", "countdown": "全局倒计时", "crafting": "合成", "altar": "神坛", "buff": "一局的 buff",     # 101：一局的模块（本体功能与难度机制同一张表）
 	"approach": "逼近", "flee": "逃跑", "wander": "游荡", "ambush": "伏击", "patrol": "巡逻",
-	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫",
+	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫", "expel": "驱逐（退回上一步）", "random": "按权重随机", "fixed": "固定一档",
 	"damage_item": "损坏道具", "drain_money": "掉钱",
 	"warehouse_rows": "仓库加行",     # 110：局外科技的效果
 	"tech_run_buff": "每级给一条局外 buff", "tech_safe_size": "保险箱扩格",     # 118
@@ -106,7 +111,8 @@ const ENUM_LABELS := {
 	"LEAST_VALUABLE": "最不值钱的", "BY_ID": "指定 id", "NEAREST": "最近的", "FARTHEST": "最远的", "FIXED": "指定的", "HIDDEN": "隐藏", "VISIBLE": "可见",
 	"NEAR": "靠近才可见", "ANY": "任意", "INCREASE": "增加", "DECREASE": "减少", "GODS": "诸神", "CHURCH": "新教", "META": "局外", "MAP": "地图",
 	"PRESET": "预设", "GENERATED": "生成", "GENERATOR": "生成", "UNVISITED": "没去过", "VISITED": "去过", "TOTAL": "总数", "DISTINCT": "不重复",
-	"OWN": "自己的", "OTHER": "别人的", "ALLY": "同伴", "DEALT": "打出的", "TAKEN": "受到的",
+	"OWN": "自己的", "OTHER": "别人的", "ALLY": "同伴", "DEALT": "打出的", "TAKEN": "受到的", "BELOW": "降到以下", "ABOVE": "涨到以上",     # 132
+	"ADD": "加算", "MULT": "乘算",     # 133
 	"tier": "按阶", "active": "激活即", "scaled": "按信力",     # 111：信仰加成的生效方式（字符串枚举，值是小写原文）
 }
 
@@ -114,7 +120,7 @@ const ENUM_LABELS := {
 const CLASS_LABELS := {
 	"ItemDef": "道具", "BuffDef": "增益", "EventDef": "事件", "EventOption": "选项", "CombatProfile": "战斗", "AbilityRule": "规则", "AdjacencyProfile": "邻接",
 	"StatModifier": "属性修饰", "ItemShape": "形状", "FaithBonus": "信仰加成", "RingSpec": "环", "RingMapConfig": "环形图参数", "MapSource": "地图来源",
-	"ChapterDef": "章节", "CharacterDef": "角色", "EnemyDef": "敌人", "DifficultyDef": "难度", "HunterDef": "猎手", "FaithDef": "信仰", "RecipeDef": "配方",
+	"ChapterDef": "章节", "CharacterDef": "角色", "EnemyDef": "敌人", "DifficultyDef": "难度", "HunterDef": "猎手", "HunterLossOption": "战败结果档", "FaithDef": "信仰", "RecipeDef": "配方",
 	"AchievementDef": "成就", "TagDef": "标签", "DamageTypeDef": "伤害类型", "LoadoutDef": "开局装备", "NodeRules": "节点规则", "DropRule": "掉落规则", "EconomyRules": "经济规则", "MetaRules": "局外规则",
 	"SearchRules": "搜索规则", "ItemSetDef": "套装", "SetTier": "套装档位", "RunBuffDef": "局外 / 地图增益", "EnemyPool": "敌人池", "StrengthRule": "档位规则",
 	"TechDef": "局外科技", "TechTier": "科技一级", "TechEffect": "科技效果",

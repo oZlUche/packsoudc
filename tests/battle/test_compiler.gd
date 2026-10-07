@@ -2,13 +2,11 @@
 extends RefCounted
 
 
-static func _mod(stat: StringName, category: int, percent: int, flat: float = 0.0) -> StatModifier:
-	var m := StatModifier.new()
-	m.stat = stat
-	m.mult_category = category
-	m.mult_percent = percent
-	m.flat = flat
-	return m
+static func _mod(stat: StringName, percent: int, flat: float = 0.0) -> StatModifier:
+	# 133：一条只乘或只加 —— percent 非 0 就是乘算，否则是加算
+	if percent != 0:
+		return StatModifier.make(stat, StatModifier.Mode.MULT, float(percent))
+	return StatModifier.make(stat, StatModifier.Mode.ADD, flat)
 
 
 static func _item(id: String, rows: Array, tags: Array = []) -> ItemDef:
@@ -68,7 +66,6 @@ static func _active(spec: CombatantSpec) -> int:
 static func run(t: TestCase) -> void:
 	t.begin("编译阶段")
 
-	var B := StatMath.Buff
 	ItemInstance.reset_uid_counter()
 
 	var plain_bag := _bag("bag", ["###", "###"])
@@ -128,10 +125,9 @@ static func run(t: TestCase) -> void:
 static func run_bag_effects(t: TestCase) -> void:
 	t.begin("编译阶段 · 包体效果")
 
-	var B := StatMath.Buff
 	ItemInstance.reset_uid_counter()
 
-	var haste_bag := _bag("fanny", ["###", "###"], [_mod(BattleStats.HASTE, B.HASTE, 10)])
+	var haste_bag := _bag("fanny", ["###", "###"], [_mod(BattleStats.HASTE, 10)])
 	var plain_bag := _bag("plain", ["###", "###"])
 	var sword := _weapon("sword", ["#"], 10.0, 2.0, ["weapon"])
 
@@ -173,7 +169,6 @@ static func run_bag_effects(t: TestCase) -> void:
 static func run_adjacency(t: TestCase) -> void:
 	t.begin("编译阶段 · 邻接标记")
 
-	var B := StatMath.Buff
 	ItemInstance.reset_uid_counter()
 
 	var bag := _bag("bag", ["####", "####", "####"])
@@ -183,14 +178,14 @@ static func run_adjacency(t: TestCase) -> void:
 	var ws := AdjacencyProfile.new()
 	ws.grant_cells = [Vector2i(1, 0)]
 	ws.grant_filter = [&"weapon"] as Array[StringName]
-	ws.grant_mods = [_mod(BattleStats.DAMAGE, B.SHARP, 50)]
+	ws.grant_mods = [_mod(BattleStats.DAMAGE, 50)]
 	whetstone.adjacency = ws
 
 	# 饭盒：【受益】于右侧三格的邻居，点亮几个就得几份
 	var lunchbox := _weapon("lunchbox", ["#"], 10.0, 2.0)
 	var lb := AdjacencyProfile.new()
 	lb.receive_cells = [Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]
-	lb.receive_mods = [_mod(BattleStats.DAMAGE, B.EMPOWER, 20)]
+	lb.receive_mods = [_mod(BattleStats.DAMAGE, 20)]
 	lunchbox.adjacency = lb
 
 	var sword := _weapon("sword", ["#"], 10.0, 2.0, ["weapon"])
@@ -284,15 +279,14 @@ static func run_adjacency(t: TestCase) -> void:
 static func run_determinism(t: TestCase) -> void:
 	t.begin("编译阶段 · 确定性")
 
-	var B := StatMath.Buff
-	var bag := _bag("bag", ["####", "####"], [_mod(BattleStats.DAMAGE, B.EMPOWER, 10)])
+	var bag := _bag("bag", ["####", "####"], [_mod(BattleStats.DAMAGE, 10)])
 	var sword := _weapon("sword", ["#"], 10.0, 2.0, ["weapon"])
 	var axe := _weapon("axe", ["#"], 7.0, 1.5, ["weapon"])
 	var stone := _item("stone", ["#"], ["weapon"])
 	var sp := AdjacencyProfile.new()
 	sp.grant_cells = [Vector2i(1, 0), Vector2i(-1, 0)]
 	sp.grant_filter = [&"weapon"] as Array[StringName]
-	sp.grant_mods = [_mod(BattleStats.DAMAGE, B.SHARP, 25)]
+	sp.grant_mods = [_mod(BattleStats.DAMAGE, 25)]
 	stone.adjacency = sp
 
 	## 摆同一个局面，只改放置调用的先后
@@ -328,10 +322,10 @@ static func run_determinism(t: TestCase) -> void:
 	for row in rows:
 		var expected := StatMath.mul(
 			StatMath.from_float(10.0 if row[0] == "sword" else 7.0),
-			StatMath.ONE + StatMath.from_percent(10)
+			StatMath.ONE + StatMath.from_percent(35)
 		)
-		expected = StatMath.mul(expected, StatMath.ONE + StatMath.from_percent(25))
-		t.eq(row[1], expected, "%s 应吃到包体 +10%% 与邻接 +25%% 两个乘区" % row[0])
+		# 133：只剩一个乘区，+10% 与 +25% 先相加再乘一次（×1.35，不是 ×1.1×1.25）
+		t.eq(row[1], expected, "%s 应吃到包体 +10%% 与邻接 +25%%（同一乘区相加 = +35%%）" % row[0])
 
 	# 同一棋盘反复编译结果一致
 	ItemInstance.reset_uid_counter()
@@ -405,7 +399,6 @@ static func run_baseline(t: TestCase) -> void:
 static func run_links(t: TestCase) -> void:
 	t.begin("编译 · 增益槽的连结关系")
 
-	const B := StatMath.Buff
 	ItemInstance.reset_uid_counter()
 	var bag := _bag("bag", ["####", "####"])
 
@@ -414,7 +407,7 @@ static func run_links(t: TestCase) -> void:
 	var ap := AdjacencyProfile.new()
 	ap.grant_cells = [Vector2i(1, 0)]
 	ap.grant_filter = [&"weapon"] as Array[StringName]
-	ap.grant_mods = [_mod(BattleStats.DAMAGE, B.SHARP, 20)]
+	ap.grant_mods = [_mod(BattleStats.DAMAGE, 20)]
 	mag.adjacency = ap
 
 	var rifle := _weapon("rifle", ["#"], 10.0, 1.0, ["weapon"])
@@ -450,7 +443,6 @@ static func run_links(t: TestCase) -> void:
 static func run_linked_trigger(t: TestCase) -> void:
 	t.begin("扳机 · 只听与自己连结的物品出手")
 
-	const B := StatMath.Buff
 	ItemInstance.reset_uid_counter()
 	var bag := _bag("bag", ["####", "####"])
 
@@ -460,7 +452,7 @@ static func run_linked_trigger(t: TestCase) -> void:
 	var ap := AdjacencyProfile.new()
 	ap.grant_cells = [Vector2i(1, 0)]
 	ap.grant_filter = [&"weapon"] as Array[StringName]
-	ap.grant_mods = [_mod(BattleStats.DAMAGE, B.SHARP, 0)]  # 只为建立连结
+	ap.grant_mods = [_mod(BattleStats.DAMAGE, 0)]  # 只为建立连结
 	pouch.adjacency = ap
 
 	var linked_trigger := OnItemFired.new()

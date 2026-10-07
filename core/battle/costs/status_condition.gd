@@ -9,13 +9,16 @@ extends Cost
 ## 看自己身上（true）还是对手身上（false）
 @export var on_self: bool = false
 @export var stacks: int = 1
+## 132：取反 —— 「对手**没有**流血时」
+@export var negate: bool = false
 
 
 func can_pay(ctx: RuleContext) -> bool:
 	if buff_id == &"":
 		return false
 	var who := ctx.owner if on_self else ctx.opponent()
-	return who != null and who.stacks_of(buff_id) >= maxi(1, stacks)
+	var ok := who != null and who.stacks_of(buff_id) >= maxi(1, stacks)
+	return ok != negate
 
 
 func pay(_ctx: RuleContext) -> void:
@@ -23,4 +26,4 @@ func pay(_ctx: RuleContext) -> void:
 
 
 func describe(_ctx: RuleContext) -> String:
-	return "%s%s ≥ %d" % ["自己" if on_self else "对手", DamageTypes.name_of(buff_id), maxi(1, stacks)]
+	return "%s%s %s %d" % ["自己" if on_self else "对手", DamageTypes.name_of(buff_id), "<" if negate else "≥", maxi(1, stacks)]

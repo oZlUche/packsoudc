@@ -244,18 +244,51 @@ func step_to(id: int) -> bool:
 	_forget_handled()
 	leaving.emit(travel.current_id)     # 101：走开了 —— 模块自己接（保险箱关上、地上留在这个点）
 	var was_visited := map.has_node(id) and map.get_node(id).is_visited()
+	# 134：猎手的回合在进点之前（旅程的闸门 _arrival_gate 里）：够得着就先上猎手的事件屏、这个点的事挂起
 	var ok := travel.step_to(id)
 	if ok:
-		if was_visited:
-			arrived.emit(travel.current_id, false)     # 回到走过的点（头一回踩的在 _on_arrive 里已经发过）
-		# 091（作者定）：商店可以回头再逛 —— 回到走过的商店点就把店再开起来；货架 / 刷新次数 / 卖掉的都记在节点内容里，刷新价不重置
-		if was_visited and events != null and NodeEvents.effective_type(map.get_node(id)) == &"shop":
-			events.reopen_shop(map.get_node(id))
-		if hunters != null:
-			hunters.on_player_step()     # 猎手的回合在这一步的事都发生之后（071）
+		if was_visited and not travel.is_holding():
+			_arrived_again(travel.current_id)
 		skills.on_step()     # 冷却与躲避在猎手的回合之后减：躲 3 步就是 3 个猎手回合够不着（082）
 		stepped.emit(travel.current_id, &"step")     # 101：走完一步 —— 模块自己接（赐福、倒计时归零 = 行动失败）
 	return ok
+
+
+## 回到走过的点（头一回踩的在 _on_arrive 里已经发过）
+func _arrived_again(id: int) -> void:
+	arrived.emit(id, false)
+	# 091（作者定）：商店可以回头再逛 —— 回到走过的商店点就把店再开起来；货架 / 刷新次数 / 卖掉的都记在节点内容里，刷新价不重置
+	if events != null and map.has_node(id) and NodeEvents.effective_type(map.get_node(id)) == &"shop":
+		events.reopen_shop(map.get_node(id))
+
+
+## 134：旅程的进点闸门 —— 人已经挪到点上、步数花了、惩罚结算了，这个点的事发生之前：先过猎手的回合（出现、移动、感知、开打）。
+## 有猎手够得着（开打前的事件屏排上了）就挂起这次进点，等那一场了结后 [method resume_arrival] 接着进；输给驱逐档的取消（视为没进）
+func _arrival_gate(_intent: MoveIntent, _first_visit: bool) -> bool:
+	if hunters == null:
+		return false
+	hunters.on_player_step()
+	return events != null and int(events.pending.get("hunter", -1)) >= 0
+
+
+## 134：有挂起的进点吗（猎手在进点之前追上了，这个点的事还没发生）
+func has_pending_arrival() -> bool:
+	return travel != null and travel.is_holding()
+
+
+## 134：猎手那一场了结了（赢了、逃掉了、输了但是击退档）：接着进挂起的那个点 —— 这个点的事现在发生。
+## 还有等着选的事件 / 等着开打的一场时不接（先处理那些）。返回接没接
+func resume_arrival() -> bool:
+	if not has_pending_arrival() or is_over() or phase != Phase.ON_MAP:
+		return false
+	if events != null and (not events.pending.is_empty() or not events.pending_battle.is_empty()):
+		return false
+	var first := bool(travel.held.get("first", false))
+	if not travel.finish_arrival():
+		return false
+	if not first:
+		_arrived_again(travel.current_id)
+	return true
 
 
 ## 事件把人挪走（8-3 的传送后果）：不走边，但离开发生过事的点照样清地上、猎手照样得一个回合 —— 和走一步一样的壳，只是意图不同
@@ -268,20 +301,21 @@ func relocate(intent: MoveIntent) -> bool:
 	_forget_handled()
 	leaving.emit(travel.current_id)     # 101：同上，事件把人挪走也算走开
 	var was_visited := map.has_node(intent.to_id) and map.get_node(intent.to_id).is_visited()
-	var ok := travel.apply(intent)
+	var ok := travel.apply(intent)     # 134：猎手的回合在闸门里，先于落地那个点的事
 	if ok:
-		if was_visited:
-			arrived.emit(travel.current_id, false)
-		if hunters != null:
-			hunters.on_player_step()
+		if was_visited and not travel.is_holding():
+			_arrived_again(travel.current_id)
 		skills.on_step()
 		stepped.emit(travel.current_id, &"relocate")
 	return ok
 
 
-## 玩家空下来了（叠层看完、会话关了）问一声猎手够不够得着；够得着就开打前的事件屏已经排上。返回有没有
+## 玩家空下来了（叠层看完、会话关了）问一声猎手够不够得着；够得着就开打前的事件屏已经排上。
+## 134：没有猎手要打、又有挂起的进点（猎手那一场了结了）就接着进那个点。返回有没有事发生
 func poke_hunters() -> bool:
-	return hunters != null and hunters.check_engagement()
+	if hunters != null and hunters.check_engagement():
+		return true
+	return resume_arrival()
 
 
 ## 按 id 取一个敌人池资产（猎手可以指定自己的池）
@@ -901,6 +935,7 @@ func _wire_events() -> void:
 	events.bind(travel)
 	# 进入的那一次检查插在节点事件前面（bind 把 handle 挂上了，这里再包一层）
 	travel.on_node_event = _on_arrive
+	travel.arrival_gate = _arrival_gate     # 134：猎手战插在进点的事件队列前面
 	# 082：技能与信力
 	_ensure_skills()
 	hooks.register(&"before_battle", _before_battle)
@@ -927,11 +962,19 @@ func _wire_faith_power() -> void:
 		elif delta < 0:
 			faith_power.credit(&"spend_money", {"amount": -delta}))
 	# 093：打完一场把这一场的账汇总喂进去（造成 / 受到的伤害按类型、回血、每件出手几次）
+	# 猎手战不是节点类型，是插进当前点的事件：按 hunter 记，不按脚下那个点的类型
 	events.battle_finished.connect(func(n: MapNode, r: BattleResult, won: bool):
-		faith_power.credit(&"battle", battle_summary(r, won, board, NodeEvents.effective_type(n) if n != null else &"")))
+		var t := StringName(String(events.last_battle.get("type", "")))
+		if t != HunterSystem.TYPE:
+			t = NodeEvents.effective_type(n) if n != null else &""
+		faith_power.credit(&"battle", battle_summary(r, won, board, t)))
 	travel.moved.connect(func(i: MoveIntent, first: bool):
 		var n := map.get_node(i.to_id) if map != null and map.has_node(i.to_id) else null
 		faith_power.credit(&"travel", {"steps": travel.clock.total, "first_visit": first, "node_type": String(n.type) if n != null else ""}))
+	# 134：输给驱逐档、视为没进：步数照算，进点不算（不带 first_visit —— 「进入节点」那条不认）
+	travel.arrival_cancelled.connect(func(i: MoveIntent, _first: bool):
+		var n := map.get_node(i.to_id) if map != null and map.has_node(i.to_id) else null
+		faith_power.credit(&"travel", {"steps": travel.clock.total, "node_type": String(n.type) if n != null else ""}))
 	vitality.changed.connect(func(_c: int, _m: int, delta: int, _r: StringName):
 		if delta < 0:
 			faith_power.credit(&"vitality_change", {"delta": delta}))
@@ -1021,7 +1064,9 @@ func to_dict() -> Dictionary:
 		"storage": storage.to_dict(),
 		"rng": rng.to_dict(),
 		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id, "pending": events.pending.duplicate(), "losses_forgiven": events.losses_forgiven,
-			"pending_battle": events.pending_battle.duplicate(true)},
+			"pending_battle": events.pending_battle.duplicate(true),
+			# 审查 B1：开着的搜索会话不进存档（存档那一刻视为离开），离开时收获本来就交到待拾取 —— 存档这里照做，搜到的不丢
+			"search_haul": events.current_search.haul().to_dict() if events.current_search != null and events.current_search.haul() != null and events.current_search.haul().item_count() > 0 else null},
 		"skills": skills.to_dict(),
 		"faith_power": faith_power.to_dict(),
 		"faith_history": faith_power.history_to_array(),     # 104
@@ -1091,12 +1136,19 @@ static func from_dict(
 		s.events.pending = {"node": int(pending.get("node", -1)), "event": String(pending.get("event", "")), "type": String(pending.get("type", ""))}
 		if pending.has("hunter"):
 			s.events.pending["hunter"] = int(pending["hunter"])
+		# 审查 B1：搜索循环里的两种待选事件（遇敌 / 再搜或走）的旗子与遭遇内容跟着存档走
+		for flag in ["search_stage", "search_encounter"]:
+			if bool(pending.get(flag, false)):
+				s.events.pending[flag] = true
+		if pending.get("encounter", null) is Dictionary and not (pending["encounter"] as Dictionary).is_empty():
+			s.events.pending["encounter"] = (pending["encounter"] as Dictionary).duplicate(true)
 	# 084：读档回来还停在战前准备屏（开着的搜索会话不存，遭遇那一场打完只标点用过）
 	var pb = (d.get("events", {}) as Dictionary).get("pending_battle", {})
 	if pb is Dictionary and not (pb as Dictionary).is_empty() and pb.has("node"):
 		var content = pb.get("content", {})
 		s.events.pending_battle = {"node": int(pb["node"]), "type": String(pb.get("type", "battle")),
-			"content": (content as Dictionary).duplicate(true) if content is Dictionary else {}, "kind": String(pb.get("kind", "node"))}
+			"content": (content as Dictionary).duplicate(true) if content is Dictionary else {}, "kind": String(pb.get("kind", "node")),
+			"loss_cost": int(pb.get("loss_cost", NodeEvents.LOSS_DEFAULT))}     # 审查 B1：搜索遇敌无代价（0）读档后不能变回默认
 	for key in d.get("tally", {}):
 		s.tally[String(key)] = int((d["tally"] as Dictionary)[key])
 	var buffs: Dictionary = d.get("buffs", {})
@@ -1105,6 +1157,9 @@ static func from_dict(
 	var loot = d.get("pending_loot", null)
 	if loot is Dictionary:
 		s.pending_loot = GridInventory.from_dict(loot, p_items)
+	var haul = (d.get("events", {}) as Dictionary).get("search_haul", null)
+	if haul is Dictionary:
+		s._offer_loot(GridInventory.from_dict(haul, p_items))     # 审查 B1：存档时开着的搜索的收获 → 待拾取（和离开搜索一样）
 	s.phase = int(d.get("phase", Phase.PICK_SPAWN))
 	s.end_reason = StringName(String(d.get("end_reason", "")))
 	s.boss_cleared = bool(d.get("boss_cleared", false))

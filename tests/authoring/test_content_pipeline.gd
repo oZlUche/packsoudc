@@ -41,13 +41,13 @@ static func run(t: TestCase) -> void:
 	var bag: ItemDef = _import_item({
 		"id": "belt", "shape": ["1", "1", "1"], "is_bag": true,
 		"tags": ["gear"], "bag_accept_tags": ["remedy"],
-		"bag_mods": [{"stat": "haste", "mult_category": "HASTE", "mult_percent": 15}],
+		"bag_mods": [{"stat": "haste", "mode": "MULT", "amount": 15}],
 	})[0]
 	t.check(bag.is_bag, "是包")
 	t.eq(bag.tags, [&"gear"] as Array[StringName], "标签转成了 StringName")
 	t.eq(bag.bag_mods.size(), 1, "包体效果")
-	t.eq(bag.bag_mods[0].mult_category, StatMath.Buff.HASTE,
-		"乘区可以写名字 —— 裸 int 属性靠 INT_ENUMS 登记")
+	t.eq(bag.bag_mods[0].mode, StatModifier.Mode.MULT, "133：乘算 / 加算写名字")
+	t.eq(bag.bag_mods[0].amount, 15.0, "一个数")
 	t.eq(bag.bag_mods[0].stat, &"haste", "属性键")
 
 
@@ -215,19 +215,19 @@ static func run_weapon_stamina_rules(t: TestCase) -> void:
 	# 106：armor / max_hp / max_mana 现在都是标准轴，单条 mod 的简单 buff 会另收一条「改用轴」的提示，
 	# 所以这里用没有对应轴的 max_shield 单测「不限层 + 百分比」那一条告警
 	var warn := _report()
-	ContentImporter.import_buff({"id": "t_rage", "mods": [{"stat": "max_shield", "mult_category": "EMPOWER", "mult_percent": 10}]}, _ctx(), warn)
+	ContentImporter.import_buff({"id": "t_rage", "mods": [{"stat": "max_shield", "mode": "MULT", "amount": 10}]}, _ctx(), warn)
 	t.check(warn.ok() and warn.warnings.size() == 1, "不限层 + 百分比：告警不报错（%s）" % warn.to_text())
 	var capped := _report()
-	ContentImporter.import_buff({"id": "t_rage3", "max_stacks": 3, "mods": [{"stat": "max_shield", "mult_category": "EMPOWER", "mult_percent": 10}]}, _ctx(), capped)
+	ContentImporter.import_buff({"id": "t_rage3", "max_stacks": 3, "mods": [{"stat": "max_shield", "mode": "MULT", "amount": 10}]}, _ctx(), capped)
 	t.check(capped.ok() and capped.warnings.is_empty(), "填了层数上限：不告警")
 	var flat := _report()
-	ContentImporter.import_buff({"id": "t_tough", "mods": [{"stat": "max_shield", "flat": 5.0}]}, _ctx(), flat)
+	ContentImporter.import_buff({"id": "t_tough", "mods": [{"stat": "max_shield", "amount": 5.0}]}, _ctx(), flat)
 	t.check(flat.warnings.is_empty(), "不限层 + 固定值：不告警")
 
 	# 106 第五节：防护 / 生命上限 / 法力上限有轴了，这类简单 buff 该被提示改成 shift_axis
 	for stat in ["armor", "max_hp", "max_mana"]:
 		var axis_hint := _report()
-		ContentImporter.import_buff({"id": "t_axis_" + stat, "max_stacks": 3, "mods": [{"stat": stat, "flat": 1.0}]}, _ctx(), axis_hint)
+		ContentImporter.import_buff({"id": "t_axis_" + stat, "max_stacks": 3, "mods": [{"stat": stat, "amount": 1.0}]}, _ctx(), axis_hint)
 		t.check(axis_hint.ok() and axis_hint.to_text().contains("shift_axis"),
 			"%s 的简单 buff 提示改用标准轴（%s）" % [stat, axis_hint.to_text()])
 
@@ -296,7 +296,7 @@ static func run_validation(t: TestCase) -> void:
 		"id": "plate", "shape": ["11"],
 		"adjacency": {
 			"grant_cells": [[0, 0], [2, 0]],
-			"grant_mods": [{"stat": "armor", "flat": 1.0}],
+			"grant_mods": [{"stat": "armor", "amount": 1.0}],
 		},
 	})
 	t.check((overlap[1] as ImportReport).ok(), "压在自己身上只是警告，不阻断")
@@ -353,9 +353,9 @@ static func run_round_trip(t: TestCase) -> void:
 		"adjacency": {
 			"grant_cells": [[1, 0], [-1, 0]],
 			"grant_filter": ["weapon"],
-			"grant_mods": [{"stat": "damage", "mult_category": "SHARP", "mult_percent": 20}],
+			"grant_mods": [{"stat": "damage", "mode": "MULT", "amount": 20}],
 			"receive_cells": [[0, 1]],
-			"receive_mods": [{"stat": "damage", "flat": 2.0}],
+			"receive_mods": [{"stat": "damage", "amount": 2.0}],
 		},
 	}
 
@@ -395,8 +395,10 @@ static func run_round_trip(t: TestCase) -> void:
 
 	t.eq(def2.adjacency.grant_cells, def.adjacency.grant_cells, "往返：增益格")
 	t.eq(def2.adjacency.grant_filter, def.adjacency.grant_filter, "往返：过滤器")
-	t.eq(def2.adjacency.grant_mods[0].mult_percent, 20, "往返：邻接加成")
-	t.eq(def2.adjacency.receive_mods[0].flat, 2.0, "往返：固定加值")
+	t.eq(def2.adjacency.grant_mods[0].amount, 20.0, "往返：邻接加成")
+	t.eq(def2.adjacency.grant_mods[0].mode, StatModifier.Mode.MULT, "往返：乘算")
+	t.eq(def2.adjacency.receive_mods[0].amount, 2.0, "往返：固定加值")
+	t.eq(def2.adjacency.receive_mods[0].mode, StatModifier.Mode.ADD, "往返：加算是默认")
 
 	# 导出的 JSON 只写非默认值 —— 否则每个道具都拖着二十行 false
 	t.check(not dumped.has("icon"), "没设过的字段不写进 JSON")
@@ -488,3 +490,32 @@ static func run_registries_split(t: TestCase) -> void:
 	for base in ContentSchema.ABSTRACT_ROOTS:
 		for kind in ContentSchema.ABSTRACT_ROOTS[base]:
 			t.check(all.has(kind), "校验表里的种类 %s（%s）在注册表里" % [kind, base])
+
+
+## 133（作者定）：乘区取消 —— 属性修饰只剩 mode + amount；旧键照读、迁移，一条两样报错
+static func run_stat_modifier_migration(t: TestCase) -> void:
+	t.begin("133 · 属性修饰旧键迁移：mult_percent → 乘算、flat → 加算、mult_category 提醒忽略、一条两样报错")
+	var r1 := _report()
+	var b1 := ContentImporter.import_buff({"id": "t_old", "max_stacks": 2, "mods": [{"stat": "max_shield", "mult_category": "EMPOWER", "mult_percent": 12}]}, _ctx(), r1)
+	t.check(r1.ok(), "旧格式照读（%s）" % r1.to_text())
+	t.eq((b1.mods[0] as StatModifier).mode, StatModifier.Mode.MULT, "mult_percent → 乘算")
+	t.eq((b1.mods[0] as StatModifier).amount, 12.0, "数照搬")
+	t.check(r1.to_text().contains("乘区已取消"), "写了 mult_category：提醒")
+	var r2 := _report()
+	var b2 := ContentImporter.import_buff({"id": "t_old2", "mods": [{"stat": "max_shield", "flat": 4.0}]}, _ctx(), r2)
+	t.check(r2.ok() and r2.warnings.is_empty(), "flat → 加算，不提醒")
+	t.eq((b2.mods[0] as StatModifier).mode, StatModifier.Mode.ADD, "加算")
+	t.eq((b2.mods[0] as StatModifier).amount, 4.0, "数照搬")
+	var r3 := _report()
+	ContentImporter.import_buff({"id": "t_both", "mods": [{"stat": "max_shield", "mult_percent": 10, "flat": 2.0}]}, _ctx(), r3)
+	t.check(not r3.ok() and r3.to_text().contains("拆成两条"), "一条又乘又加：报错（%s）" % r3.to_text())
+	var b4 := ContentImporter.import_buff({"id": "t_new", "max_stacks": 2, "mods": [{"stat": "max_shield", "mode": "MULT", "amount": 10}]}, _ctx(), _report())
+	var mod: Dictionary = (ContentExporter.export_buff(b4)["mods"] as Array)[0]
+	t.eq(mod, {"stat": "max_shield", "mode": "MULT", "amount": 10.0}, "导出只写新键")
+	var stale: Array[String] = []
+	for dir in ["items", "faiths", "run_buffs", "encumbrance_rules"]:
+		for f in DirAccess.get_files_at("res://data/authoring/" + dir):
+			var txt := FileAccess.get_file_as_string("res://data/authoring/%s/%s" % [dir, f])
+			if txt.contains("mult_category") or txt.contains("mult_percent"):
+				stale.append(f)
+	t.check(stale.is_empty(), "作者数据全部重写成新格式：%s" % ", ".join(stale))

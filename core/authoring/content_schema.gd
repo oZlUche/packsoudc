@@ -30,6 +30,7 @@ const ABSTRACT_ROOTS := {
 	&"RunMechanic": [&"run_mechanic"],
 	&"HunterBehavior": [&"hunter_behavior"],
 	&"HunterLossOutcome": [&"hunter_loss"],
+	&"HunterLossPick": [&"hunter_loss_pick"],
 	&"ErosionEffect": [&"erosion_effect"],
 	&"RunSkill": [&"run_skill"],
 	&"FaithDeed": [&"faith_deed"],
@@ -41,10 +42,7 @@ const ABSTRACT_ROOTS := {
 ##
 ## 带类型的枚举（`@export var target: Target`）Godot 会自带 ENUM 提示，
 ## 不需要登记；这张表只收那些**故意声明成 int** 的 ——
-## 比如乘区要能用 -1 表示「不加乘区」，用枚举类型反而别扭。
-const INT_ENUMS := {
-	"StatModifier.mult_category": "StatMath.Buff",
-}
+const INT_ENUMS := {}
 
 static var _class_paths: Dictionary = {}
 static var _int_enum_values: Dictionary = {}
@@ -179,11 +177,7 @@ static func enum_value(
 static func _int_enum_table(domain: String) -> Dictionary:
 	if _int_enum_values.has(domain):
 		return _int_enum_values[domain]
-	var table := {}
-	match domain:
-		"StatMath.Buff":
-			for i in StatMath.Buff.keys().size():
-				table[normalize_enum(StatMath.Buff.keys()[i])] = StatMath.Buff.values()[i]
+	var table := {}     # 133：唯一的一项（乘区）取消了，表现在是空的；口子留着给下一个故意声明成 int 的枚举
 	_int_enum_values[domain] = table
 	return table
 

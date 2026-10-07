@@ -50,13 +50,16 @@ Effect
 |---|---|---|---|
 | `on_schedule` | `OnSchedule` | **自发型**，不等事件，由频率层排出执行时刻 | — |
 | `on_battle_start` | `OnBattleStart` | 开战瞬间 | — |
-| `on_item_fired` | `OnItemFired` | 有物品出手时。**连带触发就是它** | `same_side` 听己方还是敌方；`source_uids` 限定来源（空=不限）；`include_self` 是否含自己（默认否，防自循环） |
+| `on_item_fired` | `OnItemFired` | 有物品出手时。**连带触发就是它** | `same_side` 听己方还是敌方；`source_uids` 限定来源（空=不限）；`include_self` 是否含自己（默认否，防自循环）；`source_tags` 只听带这些标签之一的件（132，可与 LINKED 叠加） |
 | `on_resource_changed` | `OnResourceChanged` | 资源增减时 | `resource_key`（hp/stamina/mana…）；`direction`（ANY/INCREASE/DECREASE）；`same_side`；`reasons` 限定原因 |
-| `on_resource_below` | `OnResourceBelow` | 资源**降到阈值以下**时 | `resource_key`；`percent` 按上限的百分比（0 则改用绝对值）；`absolute`；`on_self` |
+| `on_resource_below` | `OnResourceBelow` | 资源**降到阈值以下**时 | `resource_key`；`percent` 按上限的百分比（0 则改用绝对值）；`absolute`；`on_self`；`direction`（BELOW / ABOVE，132）；`full` 回满（132） |
 | `on_stacks_at_least` | `OnStacksAtLeast` | 身上有 **N 层**某增益减益时 | `buff_id`；`stacks`；`on_self` 看自己还是对手；`consume` **消耗型开关**，见下 |
-| `on_damage` | `OnDamage` | 受到／造成某类伤害**之后** | `direction`（TAKEN/DEALT）；`damage_type` 空=不限；`min_amount` 按实际扣除量 |
+| `on_damage` | `OnDamage` | 受到／造成某类伤害**之后** | `direction`（TAKEN/DEALT）；`damage_type` 空=不限；`min_amount` 按实际扣除量；`crit_only` 只在暴击时（132） |
 | `on_before_damage` | `OnBeforeDamage` | 受到／造成某类伤害**之前**。减伤、免疫、反转唯一的接入点 | 同上；`min_amount` 按护盾吸收后的待结算量 |
 | `on_status_applied` | `OnStatusApplied` | 某状态**被施加**、层数增加的那一瞬（130）；叠满后只刷新时长不算 | `buff_id`；`on_self`（默认 false = 对手身上）；`by_self`（默认 true = 只认本方施加的）。施加了几层进 `per_stack` |
+| `on_status_removed` | `OnStatusRemoved` | 某状态**掉光**时（最后一层被移除或到期，132） | `buff_id`；`on_self`（默认 true） |
+| `on_overtime` | `OnOvertime` | 加时开始那一瞬，整场一次（132） | — |
+| `on_axis_at_least` | `OnAxisAtLeast` | 某条**标准轴**（4.3「标准轴」，103）到了 N 层时；和 `on_stacks_at_least` 同构，层数变化那一刻求值 | `axis`（见 `StatAxes`）；`stacks` 至少几层（可为负：−3 = 减速到 3 层及以上，按绝对值比、要求同号）；`on_self`；`layer` 数哪一层（TOTAL 合计 / CONTENT 内容层 / SYSTEM 系统层，自然 5 级「加时开始后」数的是系统层） |
 
 `on_item_fired` 的 `source` 值得单独说一句：填 `LINKED` 时**只听与本物品通过
 增益／受益格连结的道具**。本作没有「主武器」的设定，「跟着某把枪一起触发」
@@ -111,7 +114,10 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 | `charge` | `ChargeCost` | 攒够 N 次机会才放一发 | `n` |
 | `uses` | `UsesCost` | 全场限用 N 次 | `max_uses`（默认 1） |
 | `chance` | `ChanceCondition` | 按概率放行，走 battle 随机流 | `percent` 0..100 |
-| `status_condition` | `StatusCondition` | 目标身上至少 N 层某状态才放行，**不扣层**（130） | `buff_id`；`on_self`（默认 false）；`stacks`（默认 1） |
+| `status_condition` | `StatusCondition` | 目标身上至少 N 层某状态才放行，**不扣层**（130） | `buff_id`；`on_self`（默认 false）；`stacks`（默认 1）；`negate` 取反（132） |
+| `resource_condition` | `ResourceCondition` | 资源在某范围才放行，**不扣**（132） | `resource_key`；`on_self`；`min_percent` / `max_percent`（0..100，−1 不限）；`absolute_min` / `absolute_max`；`negate`。至少填一个界 |
+| `axis_condition` | `AxisCondition` | 标准轴至少几层才放行，**不扣**（132） | `axis`；`on_self`；`stacks`（可负：按绝对值比、同号）；`negate` |
+| `axis_cost` | `AxisCost` | 扣自己的轴层数，可透支到负（132） | `axis`；`stacks` |
 
 ---
 
@@ -123,13 +129,15 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 
 | 类型名 | 类 | 含义 | 参数 |
 |---|---|---|---|
-| `deal_damage` | `DealDamage` | 造成伤害，按护甲减免 | `target`；`damage_type` 伤害类型（默认 `physical`）；`amount` 固定值；`damage_stat` 改从属性取（默认 `damage`）；`per_stack` 是否乘来源 buff 层数 |
-| `change_resource` | `ChangeResource` | **增减**资源。治疗／回耐力／抽血／耗蓝共用 | `target`；`resource_key`；`amount` **正为获得、负为失去**；`amount_stat`；`per_stack` |
+| `deal_damage` | `DealDamage` | 造成伤害，按护甲减免 | `target`；`damage_type` 伤害类型（默认 `physical`）；`amount` 固定值；`damage_stat` 改从属性取（默认 `damage`）；`per_stack` 是否乘来源 buff 层数；`percent_of`（max_hp / current_hp / missing_hp）+ `percent` 按生命比例、与固定值相加，`percent_of_target` 按谁的生命（132）；`per_target_stack` 乘目标身上某状态的层数、0 层不打（132） |
+| `change_resource` | `ChangeResource` | **增减**资源。治疗／回耐力／抽血／耗蓝共用 | `target`；`resource_key`；`amount` **正为获得、负为失去**；`amount_stat`；`per_stack`；`percent_of_damage` 受伤后按这一包实际扣除量的百分比（吸血，132） |
 | `apply_status` | `ApplyStatus` | 施加增益／减益 | `target`；`buff`；`stacks`；`per_stack` |
-| `remove_status` | `RemoveStatus` | 减少层数。净化、驱散、削减对手蓄力 | `target`；`buff_id`；`stacks`（**0 = 全部移除**） |
+| `remove_status` | `RemoveStatus` | 减少层数。净化、驱散、削减对手蓄力 | `target`；`buff_id`；`stacks`（**0 = 全部移除**）；`all_debuffs` / `all_buffs` 清光（系统 buff 不清，132） |
 | `convert_status` | `ConvertStatus` | 把目标身上一种状态的全部层数换成另一种（130：中毒 → 剧毒）。系统 buff 不转；导入器拦 `to` 就是 `from` | `target`；`from`；`to`（buff）；`ratio`（默认 1.0，四舍五入、至少 1）；`keep_from`（默认 false） |
 | `modify_damage` | `ModifyDamage` | 改写正在结算的那一包伤害。**只在受伤前阶段有效** | `flat` 固定增减；`percent` 百分比；`invert` 反转成治疗；`cancel` 完全免疫 |
 | `reflect_damage` | `ReflectDamage` | 把这一包伤害按比例弹回施加方。**只在受伤前阶段有效** | `percent` 反弹待结算量的百分比；`flat` 额外固定值；`damage_type` 默认 `reflect` |
+| `convert_damage_type` | `ConvertDamageType` | 把这一包换成另一种伤害类型。**只在受伤前阶段有效**；直接旗不变；不许换成 poison / bleed（132） | `to` |
+| `shift_axis` | `ShiftAxis` | 改一条**标准轴**的层数（103）：「加速 2 层」是 +2、「减速 1 层」是 −1，直接相抵；层数永续、战斗结束清空。单位级的攻速、造成 / 受到伤害、回血、耐力回复都走它，不另开 buff（`blight_censer` 在用） | `target`；`axis`（见 `StatAxes`）；`delta` 带符号的层数；`per_stack` 是否乘来源 buff 的层数 |
 
 ### 伤害怎么结算
 
@@ -176,7 +184,7 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 **逃生口**：扳机里**显式**填下类型名就听得见。「中毒时净化」「流失时回一口气」
 靠的就是这个 —— 写下类型名即表示作者知道自己在监听什么。
 
-**伤害类型不是乘区**：`damage_type` 与第 7 节的乘区分类是两个正交维度，刻意不做映射。
+**伤害类型不是乘区**：`damage_type` 与乘算是两个正交维度，刻意不做映射（133 之前的乘区分类已取消）。
 绑在一起就写不出「强化影响全部伤害」—— 那是一个乘区作用于所有类型；
 反过来「火焰抗性」是按类型减伤，与乘区无关。
 
@@ -230,21 +238,24 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 
 ---
 
-## 7 · 乘区（buff 分类）
+## 7 · 属性修饰（乘算 / 加算）
 
-结算公式：`终值 = 基础值 × (1 + A区之和) × (1 + B区之和) × … + 固定加值之和`
+结算公式（133 起只有一个乘区）：`终值 = 基础值 × max(0, 1 + 乘算之和) + 加算之和`
 
-同区相加、跨区相乘、固定加值在所有乘法之后且不吃百分比放大。
+所有乘算先相加再乘一次；加算在乘法之后、不吃百分比放大。
 
-| 乘区 | 定位 |
+一条 `StatModifier`：
+
+| 字段 | 含义 |
 |---|---|
-| `EMPOWER` | 通用增伤 |
-| `SHARP` | 物理系 |
-| `FIRE` | 元素系 |
-| `HASTE` | 作用于速度 |
+| `stat` | 作用的属性键 |
+| `mode` | `ADD` 加算（默认，固定值）/ `MULT` 乘算（百分数） |
+| `amount` | 乘算：25 = +25%、−10 = −10%；加算：固定值。正数扩大、负数缩小 |
 
-> 这四个是开发期占位，正式内容确定后替换。**只能在末尾追加，可以重命名，不能重排** ——
-> 枚举顺序即乘法顺序，中间插入会让所有已配数值和存档对不上。
+编辑器在每条修饰下画一行灰字说明它怎么生效。暴击率 / 暴击伤害只收加算（104）。
+
+> 133 之前有四个乘区（`EMPOWER / SHARP / ELEMENT / HASTE`），按枚举顺序连乘。已取消：锋利、元素、急速这类是独立的 buff / 属性，不是增益的生效方式。
+> 旧键 `mult_category / mult_percent / flat` 导入时自动迁移（`mult_category` 提醒忽略，又乘又加的报错要求拆成两条）。
 
 ---
 

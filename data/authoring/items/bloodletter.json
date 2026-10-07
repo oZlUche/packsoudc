@@ -77,8 +77,7 @@
           "type": "on_stacks_at_least",
           "buff_id": "bleed",
           "stacks": 6,
-          "on_self": false,
-          "consume": true
+          "on_self": false
         },
         "cadence": {
           "type": "always"
@@ -86,8 +85,15 @@
         "effects": [
           {
             "type": "deal_damage",
-            "amount": 18.0,
-            "damage_stat": ""
+            "amount": 3.0,
+            "damage_stat": "",
+            "per_target_stack": "bleed"
+          },
+          {
+            "type": "remove_status",
+            "target": "OPPONENT",
+            "buff_id": "bleed",
+            "stacks": 0
           }
         ]
       }

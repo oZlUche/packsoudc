@@ -68,17 +68,39 @@ func backup(n: int, which: String) -> String:
 	return to
 
 
+## 存档文件里写的版本号；没这个文件、不是 JSON 对象返回 -1
+static func file_version(path: String) -> int:
+	if not FileAccess.file_exists(path):
+		return -1
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	return int((parsed as Dictionary).get("version", -1)) if parsed is Dictionary else -1
+
+
+## 这一位的存档比这个版本的游戏新（局外或进行中的一局，任一份的版本号大于本版本认得的）：返回那个版本号，否则 0。
+## 新档旧读不了，但它不是坏档：不备份、不覆盖，原样留着等玩家换回新版本
+func newer_version(n: int) -> int:
+	var v := 0
+	var mv := file_version(meta_path(n))
+	if mv > MetaState.SAVE_VERSION:
+		v = maxi(v, mv)
+	var rv := file_version(run_path(n))
+	if rv > RunState.SAVE_VERSION:
+		v = maxi(v, rv)
+	return v
+
+
 ## 101 第 4 刀：切到第 n 位要做的文件层的事一次做完 —— 建目录、算两条路径、把局外读进来；
 ## **读不出来就先备份再从零开始**（098 作者定：版本升不上来的老档照原样留在硬盘上，不会被下一次存盘盖掉）。
-## 返回 `{"slot", "run_path", "meta_path", "meta"（读出来的，或 null）, "backup"（备份文件的路径，没备份就空）}`。
+## 返回 `{"slot", "run_path", "meta_path", "meta"（读出来的，或 null）, "backup"（备份文件的路径，没备份就空）,
+## "newer"（这一位是更新版本的存档时它的版本号，否则 0）}`。
 ## 谁是当前位、要不要存设置、这一局怎么办，都还是 [GameFlow] 的事
 func open(n: int, items: ItemDatabase, rules: MetaRules = null, tech_defs: Array = []) -> Dictionary:
 	n = clampi(n, 1, COUNT)
 	ensure_dir(n)
 	var mp := meta_path(n)
-	var out := {"slot": n, "run_path": run_path(n), "meta_path": mp, "meta": null, "backup": ""}
-	if not FileAccess.file_exists(mp):
-		return out
+	var out := {"slot": n, "run_path": run_path(n), "meta_path": mp, "meta": null, "backup": "", "newer": newer_version(n)}
+	if not FileAccess.file_exists(mp) or int(out["newer"]) > 0:
+		return out     # 新版本的存档：不读、不备份，调用方把这一位锁成只读
 	var loaded := MetaSave.read(items, mp, rules, tech_defs)     # 120：先按科技算容量再装仓库
 	if loaded == null:
 		out["backup"] = backup(n, "meta")
@@ -120,11 +142,12 @@ func migrate_legacy(legacy_run: String = RunSave.DEFAULT_PATH, legacy_meta: Stri
 	return moved
 
 
-## 一位的摘要（读取存档屏写一行）：{"exists", "has_run", "runs", "extractions", "deaths", "modified"（unix 秒，0 = 没有）}
+## 一位的摘要（读取存档屏写一行）：{"exists", "has_run", "runs", "extractions", "deaths", "modified"（unix 秒，0 = 没有）, "newer"}
 func summary(n: int, items: ItemDatabase, rules: MetaRules = null) -> Dictionary:
-	var out := {"exists": exists(n), "has_run": has_run(n), "runs": 0, "extractions": 0, "deaths": 0, "modified": 0}
+	var out := {"exists": exists(n), "has_run": has_run(n), "runs": 0, "extractions": 0, "deaths": 0, "modified": 0, "newer": 0}
 	if not out["exists"]:
 		return out
+	out["newer"] = newer_version(n)
 	var meta := MetaSave.read(items, meta_path(n), rules) if items != null and FileAccess.file_exists(meta_path(n)) else null
 	if meta != null:
 		out["runs"] = meta.runs

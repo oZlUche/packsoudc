@@ -30,6 +30,9 @@ enum Source {
 ## 是否把自己出手也算上。默认否，否则容易写出自循环
 @export var include_self: bool = false
 
+## 132：只听带这些标签之一的件出手（`ranged` / `melee` / `weapon`…）；空 = 不限。和 [member source] = LINKED 可叠加
+@export var source_tags: Array[StringName] = []
+
 
 func subscribed_events() -> Array[StringName]:
 	return [BattleEvent.ITEM_FIRED] as Array[StringName]
@@ -52,5 +55,17 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 		if mine == 0:
 			return false  # 规则来自 buff 或套装，没有邻居可言
 		if not ctx.owner.links_of(mine).has(uid):
+			return false
+	if not source_tags.is_empty():
+		var shooter := ctx.owner if from_own_side else ctx.opponent()
+		if shooter == null:
+			return false
+		var tags := shooter.tags_of(uid)
+		var hit := false
+		for tag in source_tags:
+			if tags.has(tag):
+				hit = true
+				break
+		if not hit:
 			return false
 	return true

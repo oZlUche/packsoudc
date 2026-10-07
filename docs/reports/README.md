@@ -140,9 +140,10 @@
 | 128 | [方案：不画暂存区 —— 格子外的整块屏幕就是「地上」，拖出背包放哪就在哪，每个节点各自一片地](128-ground-instead-of-stash.md) | 架构 · 提议 | 已落地（四项待定按推荐）。暂存区全面改名「地上」（`{zone:地上}`、术语、百科 `staging_zone` 页、事件 / 序章文案、架构 3.4）；`ItemStash.spots` + `NodeStorageModule.spots`；新 `ui/inventory/ground_layer.gd`，导演持有一层盖在屏栈上、各屏面板 `reserve`；`StashView` 删掉。偏差：①地层画在屏栈**之上**而不是之下（各屏都有不透明底，压在下面就看不见；只有道具本身接鼠标、面板登记了地方，东西会让开）；②开局屏（上一局带回来的那一栏）与两个沙盒不在节点上，用一块不铺满屏的 `GroundLayer` 代替原来的列表；③按点存放的落点存在 `modules.node_storage.spots`（与 `nodes` 并列）而不是 `nodes[id] = {items, spots}`，旧档格式不变。测试在 tests/inventory/test_ground.gd |
 | 129 | [方案：负重 —— 每件道具一个重量，角色各有负重上限，科技加上限，超重三级递进](129-encumbrance.md) | 架构 · 提议 | 已落地（五项待定按推荐，减益按作者补充：只减急速、耐力回复、耐力上限，不碰伤害）。`ItemWeight`、角色上限 28 / 34 / 40、科技「扛重」（techs.xlsx → JSON）、`encumbrance_rules/standard`（自由模式开，序章不开）、走一步 ×2 的 `MapTravel.cost_of`；背包读数、悬浮窗「重」、地图顶栏小标、开局屏读数、四个术语、百科「负重」页。偏差：附录 A 的定稿值有 31 件和公式不同（26 件加粗的 + 布 / 皮 / 绳这几件轻材料与赐福盾，没有标签能区分），全部写死在道具文件里；`carry_capacity_bonus` 构件默认 +1，每级的数由表给。测试在 tests/run/test_encumbrance.gd |
 | 130 | [方案：流派倾向的道具 —— 流血 / 中毒两条线的联动件（触发、转化、阈值爆发、条件增伤），参照同类作品整合](130-build-synergy-items.md) | 架构 · 提议 | 已落地（五项待定按推荐）。三个新构件 `on_status_applied` / `convert_status` / `status_condition`（`EffectRegistry`，战斗层的构件在这张表而不是 `RunRegistry`）、`status_applied` 事件（层数增加才发、刷新不发、不进回放）、导入器拦自转与自环；新 buff【剧毒】每层每秒 5；十件道具；药师加 `poison` 流派；术语「施加时」；百科「buff 与叠层」页末补「流血与中毒的后手」一段（没有单独的持续伤害页）。偏差：①放血刀「消耗对手的层」需要 `StatusStackCost` 多一个 `on_self`（原来消耗型只扣自己身上的），`on_stacks_at_least(consume)` 跟着把方向传下去；②嗜血 / 血勇是单条 mod 的可叠层 buff，导入器照旧提示「改用标准轴」—— 按待定 3 的推荐保留 buff（要层数上限），这两条警告是预期的；③A 件靠 `bleed` 标签自然进屠夫 / 蛮兵的流派池，没另改敌人。测试在 tests/battle/test_status_synergy.gd |
-| 131 | [审计：编辑器的规则是不是「任意条件 × 任意效果」（是，只有导入器的十来条校验与三种只在受伤前有用的效果），以及可做未做的时机 / 条件 / 效果候选清单与顺序](131-rule-combinability-audit.md) | 架构 · 审计 | 答问；候选清单等作者点 |
-| 132 | [方案：规则构件第二批（131 里相对简单的十六项：听标签、状态掉光、回满、暴击、加时、受益格挂规则、三种不扣的条件与取反、比例伤害、按目标层数、比例吸血、清全部减益、伤害类型转换、三条导入警告）](132-rule-components-batch-2.md) | 架构 · 提议 | 待执行（五项待定按推荐） |
-| 133 | [方案：去掉四个乘区 —— 公式只剩一个乘区（乘算相加后乘一次 + 加算），`StatModifier` 改成 `stat / mode（乘算｜加算）/ amount` 三个字段，编辑器字段下一行提示「乘算还是加算、扩大还是缩小」，旧键自动迁移、金样重录](133-single-mult-bucket.md) | 架构 · 提议 | 待执行（五项待定按推荐） |
+| 131 | [审计：规则能不能「任意条件 × 任意效果」随意搭配，还有哪些可做未做](131-rule-combinability-audit.md) | 架构 · 审计 | 只答问，不改代码；「相对简单」的那些由 132 落地，其余各自成方案。2026-10-06 从共享目录补进仓库（审计 D6） |
+| 132 | [方案：规则构件第二批（131 里「相对简单」的那些）+ 受益格挂规则](132-rule-components-batch-2.md) | 架构 · 提议 | 已落地（五项待定按推荐）。十六项全做：导入器「配了也没用」的警告；时机 `on_status_removed` / `on_overtime` 与 `source_tags` / `direction`+`full` / `crit_only`；受益格 `receive_rules`（任意时机、不许 costs）；条件 `resource_condition` / `axis_condition` / `axis_cost` 与 `negate`；效果 `percent_of` / `per_target_stack` / `percent_of_damage` / `all_debuffs`·`all_buffs` / `convert_damage_type`；放血刀改为按对手流血层数 ×3。偏差：①战斗层构件登记在 `EffectRegistry`（不是 `RunRegistry`）；②`on_overtime` 不另开事件，听现有的 `overtime_stacked` 的第一次；③放血刀不再用「消耗型」扣层（消耗先于效果，扣完就读不到层数了），改成「层数够时 → 按目标层数打 → 清掉流血」，六层时仍是 18；④涨过阈值和原来的降到以下一样是状态型 —— 越过之后每次变动都会再求值，不是只在穿过的那一刻；⑤`source_tags` 需要知道出手件的标签，`CompiledItem` 多带一份 `tags`；⑥`convert_damage_type` 换的类型影响之后的「招不招致反应」，护盾那一步在它之前、按原类型吸收。测试在 tests/battle/test_components_batch_2.gd |
+| 133 | [方案：单一乘区 —— 去掉 EMPOWER / SHARP / ELEMENT / HASTE，属性修饰改成「乘算 / 加算」一个变量，编辑器加提示行](133-single-mult-bucket.md) | 架构 · 提议 | 已落地（五项待定按推荐）。公式 `基础 × max(0, 1+Σ乘算) + Σ加算`；`StatModifier` = `stat / mode / amount`；`PropertyForm` 灰字提示；导入器迁移旧键、`normalize_content` 重写 18 份 JSON；金样有意重录（四份终值逐项不变）；标准轴不动。偏差：方案举的「弓 + 箭 + 符号 1.38 → 1.35」不在金样棋盘上，改由 `test_stat_math` 的「两条乘算相加」与 `test_compiler` 的 +10% / +25% = +35% 覆盖；`StatValue.add_percent` 收百分数（另加 `add_percent_fixed` 收定点）；百科的「乘区」词条组删掉 |
+| 134 | [方案：猎手的战败结果分两种（击退 / 驱逐）、生成时按规则或随机定；猎手战插进进点的事件队列](134-hunter-loss-variants.md) | 架构 · 提议 | 已落地（五项待定按推荐）。`HunterLossOption` 档 + `loss_pick`（`random` / `fixed`），生成时选定跟存档；新后果 `expel`；`MapTravel` 进点闸门与挂起的进点（存档），猎手的回合挪到点的事之前，驱逐 = 取消进点。偏差：`hunter_2` 按第 3 条推荐做成三档（击退 / 驱逐 / 驱逐并驻守，各三分之一），第二节表里「hunter_2 的驱逐档仍然驻守」由第三档承担；输掉之后接着进点放在玩家空下来时（看完回放与战利品之后），不是选完立刻 |
 
 ## 已归档（被覆盖或作废的方案，只留作历史）
 
@@ -150,14 +151,14 @@
 
 | # | 报告 | 为什么归档 |
 |---|---|---|
-| 006 | [与《背包乱斗》机制的差异复盘](archive/006-backpack-battles-gap-analysis.md) | 分析 · 无代码改动 | 已决策 |
-| 011 | [效果系统设计与计划重排](archive/011-effect-system-and-pipeline.md) | 设计 · 无代码改动 | 完成 |
-| 012 | [事件掩码与资源池](archive/012-event-mask-and-resources.md) | 设计 · 无代码改动 | 完成 |
-| 013 | [消耗层与战斗内增益系统](archive/013-cost-layer-and-buffs.md) | 设计 · 无代码改动 | 完成 |
+| 006 | [与《背包乱斗》机制的差异复盘](archive/006-backpack-battles-gap-analysis.md) | 分析 · 无代码改动，已决策 |
+| 011 | [效果系统设计与计划重排](archive/011-effect-system-and-pipeline.md) | 设计 · 无代码改动，完成 |
+| 012 | [事件掩码与资源池](archive/012-event-mask-and-resources.md) | 设计 · 无代码改动，完成 |
+| 013 | [消耗层与战斗内增益系统](archive/013-cost-layer-and-buffs.md) | 设计 · 无代码改动，完成 |
 | 027 | [M3 地图系统实施规划](archive/027-m3-plan.md) | M3 施工计划，030～044 已全部落地，现状看 status.md |
 | 029 | [地图配置表 v0.1：读表记录](archive/029-map-config-v0.1.md) | 地图配置 v0.1 读表笔记，规则已被 035 / 036 / 040 重定义 |
 | 058 | [作者五条提议：节点层、开局预选与带入限制、暂存区按节点清空、仓库与图鉴、搜索揭示](archive/058-author-five-proposals.md) | 五条提议已全部实施（060～068），决定已回写架构文档 |
 | 059 | [设想：事件层、统一容器屏、局外 buff 与地图 buff](archive/059-event-layer-and-buffs-proposal.md) | 三条设想已全部实施（062、063、067），决定已回写架构文档 |
 | 069 | [设想：进阶难度 = 机制而不只是数值；伪 PVP —— 地图上移动的猎手](archive/069-difficulty-mechanics-and-hunters.md) | 设想已全部实施（070～075），决定已回写架构文档 |
 | 080 | [信仰体系（提议，等作者拍板）与暂存区新规则（已实施）](archive/080-faith-system-proposal.md) | 信仰提议：「流派 = 信仰」一节作者否决，实施见 081，流派后由 093 重做 |
-| 091 | [计划书：带剧情的生涯模式 × 肉鸽的取舍（三种「生涯」的界定、玩家画像证据、A / B / C 方案成本收益风险、风险登记册、里程碑与决策门）](archive/091-career-vs-roguelike-plan.md)；附录 [A 国内证据](archive/091-appendix-a-china-evidence.md)、[B 海外证据](archive/091-appendix-b-west-evidence.md)；十一：成就系统、本图规则卡、全部解锁；十二：地图编辑器挑事件、事件链视图、事件多语言 + 局外旗标；十三：编辑器字段本地化 + 悬浮说明；十四：待定项拍板（遭遇胜负 / 商店回头 / 钱带出）+ 出发屏读数、基地出售页、背景底色、套装编辑器、两个编辑器 bug、属性键下拉、`damage` 重复之问 | 提议 + 实施 | 计划等作者拍板；十一～十四已做 |
+| 091 | [计划书：带剧情的生涯模式 × 肉鸽的取舍（三种「生涯」的界定、玩家画像证据、A / B / C 方案成本收益风险、风险登记册、里程碑与决策门）](archive/091-career-vs-roguelike-plan.md)；附录 [A 国内证据](archive/091-appendix-a-china-evidence.md)、[B 海外证据](archive/091-appendix-b-west-evidence.md)；十一：成就系统、本图规则卡、全部解锁；十二：地图编辑器挑事件、事件链视图、事件多语言 + 局外旗标；十三：编辑器字段本地化 + 悬浮说明；十四：待定项拍板（遭遇胜负 / 商店回头 / 钱带出）+ 出发屏读数、基地出售页、背景底色、套装编辑器、两个编辑器 bug、属性键下拉、`damage` 重复之问 | 提议 + 实施，计划等作者拍板；十一～十四已做 |

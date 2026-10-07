@@ -19,8 +19,8 @@
 [sub_resource type="Resource" id="Resource_t1fft"]
 script = ExtResource("3_368f3")
 stat = &"haste"
-mult_category = 3
-mult_percent = 5
+mode = 1
+amount = 5.0
 
 [sub_resource type="Resource" id="Resource_r2xcc"]
 script = ExtResource("2_vxfes")
@@ -30,8 +30,8 @@ mods = Array[ExtResource("3_368f3")]([SubResource("Resource_t1fft")])
 [sub_resource type="Resource" id="Resource_gdva3"]
 script = ExtResource("3_368f3")
 stat = &"stamina_cost"
-mult_category = 0
-mult_percent = -10
+mode = 1
+amount = -10.0
 
 [sub_resource type="Resource" id="Resource_fmsvn"]
 script = ExtResource("2_vxfes")

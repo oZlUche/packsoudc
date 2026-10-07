@@ -7,13 +7,13 @@
 
 [sub_resource type="Resource" id="Resource_cdrvw"]
 script = ExtResource("2_6koqi")
-mult_category = 0
-mult_percent = -10
+mode = 1
+amount = -10.0
 
 [resource]
 script = ExtResource("4_ohfpi")
 id = &"weakened"
 display_name = "虚弱"
-description = "走 {duration_steps} 步之内伤害 {mult_percent|signed}%（地图 buff 的测试用例）"
+description = "走 {duration_steps} 步之内伤害 {amount|signed}%（地图 buff 的测试用例）"
 duration_steps = 5
 mods = Array[ExtResource("2_6koqi")]([SubResource("Resource_cdrvw")])

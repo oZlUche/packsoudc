@@ -16,7 +16,7 @@
       "by_type": {
         "battle": 5,
         "elite": 20,
-        "hunt": 30,
+        "hunter": 30,
         "core": 50
       }
     },

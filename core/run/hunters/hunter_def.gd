@@ -8,6 +8,9 @@ extends Resource
 
 enum Visibility { HIDDEN, VISIBLE, NEAR }
 
+## 只写了 loss_outcomes 的旧定义合成的那一档叫这个
+const LEGACY_OPTION := &"default"
+
 @export var id: StringName = &""
 @export var display_name: String = ""
 @export var description: String = ""
@@ -24,8 +27,12 @@ enum Visibility { HIDDEN, VISIBLE, NEAR }
 ## 领地半径（离出生点），≤ 0 = 整张图
 @export var territory_radius: float = 4.0
 @export var behavior: HunterBehavior = null
-## 输了之后按顺序发生的事
+## 134 之前的写法：输了之后按顺序发生的事（只有一档）。写了 [member loss_options] 就不看它；没写当作只有这一档
 @export var loss_outcomes: Array[HunterLossOutcome] = []
+## 134：这种猎手可能给的战败结果档（击退 / 驱逐……）。生成时按 [member loss_pick] 选定一档，跟着那只猎手存档
+@export var loss_options: Array[HunterLossOption] = []
+## 134：怎么选档。null = 按权重随机
+@export var loss_pick: HunterLossPick = null
 ## 掉落率倍数（作者：模板和普通敌人一样，掉落率更高）
 @export var drop_mult: float = 1.5
 ## 逃跑：基础成功率（0 = 逃不掉，事件屏不给这个选项）、失败扣几点体力、逃掉之后它歇几步
@@ -43,12 +50,42 @@ enum Visibility { HIDDEN, VISIBLE, NEAR }
 ## 占位：和节点的互动（作者：保留选项）。现在恒为不互动
 @export var node_interaction: StringName = &"none"
 
+var _legacy: HunterLossOption = null
+
 
 ## 这个段位该给哪一档；表空返回 -1（让调用方走规则）
 func strength_for_bracket(bracket: int) -> int:
 	if strength_by_bracket.is_empty():
 		return -1
 	return strength_by_bracket[clampi(bracket, 0, strength_by_bracket.size() - 1)]
+
+
+## 134：可能的结果档。没写 loss_options 的旧定义当作只有一档（就是 loss_outcomes）
+func options() -> Array[HunterLossOption]:
+	if not loss_options.is_empty():
+		return loss_options
+	if _legacy == null:
+		_legacy = HunterLossOption.new()
+		_legacy.id = LEGACY_OPTION
+		_legacy.outcomes = loss_outcomes
+	return [_legacy] as Array[HunterLossOption]
+
+
+## 按档名找；找不到（旧存档没有档名、档被删了）按第一档
+func option_by_id(id: StringName) -> HunterLossOption:
+	var all := options()
+	for o in all:
+		if o != null and (o as HunterLossOption).id == id:
+			return o
+	return all[0] if not all.is_empty() else null
+
+
+## 生成时选一档，返回档名
+func pick_option(sys: HunterSystem) -> StringName:
+	var all := options()
+	var picker: HunterLossPick = loss_pick if loss_pick != null else LossPickRandom.new()
+	var i := picker.pick(all, sys)
+	return (all[i] as HunterLossOption).id if i >= 0 and i < all.size() and all[i] != null else &""
 
 
 func can_flee() -> bool:
@@ -60,8 +97,15 @@ func summary() -> String:
 	parts.append(behavior.describe() if behavior != null and behavior.describe() != "" else "不动")
 	parts.append("感知 %.0f" % sense_range)
 	parts.append("速度 %d" % speed)
-	for o in loss_outcomes:
-		var lo := o as HunterLossOutcome
-		if lo != null and lo.describe() != "":
-			parts.append(lo.describe())
+	var all := options()
+	if all.size() == 1:
+		var only := (all[0] as HunterLossOption).summary() if all[0] != null else ""
+		if only != "":
+			parts.append(only)
+	elif all.size() > 1:
+		var names: Array[String] = []
+		for o in all:
+			if o != null:
+				names.append((o as HunterLossOption).display_name if (o as HunterLossOption).display_name != "" else String((o as HunterLossOption).id))
+		parts.append("输了：%s 之一" % " / ".join(names))
 	return "　".join(parts)

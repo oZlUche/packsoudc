@@ -23,8 +23,8 @@
     ],
     "grant_mods": [
       {
-        "mult_category": "SHARP",
-        "mult_percent": 20
+        "mode": "MULT",
+        "amount": 20.0
       }
     ]
   }

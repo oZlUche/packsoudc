@@ -418,5 +418,42 @@ static func frame_stat_key_picker(t: TestCase, root: Window) -> void:
 		custom2.text_changed.emit("weirder")
 		t.eq(m2.stat, &"weirder", "改输入框写回字段")
 	mf2.queue_free()
+	# 可选的属性键（ResourceCost.amount_stat 默认空）：空值停在「不用」，读回仍为空；选 armor 才写成 armor
+	var rc := ResourceCost.new()
+	t.eq(rc.amount_stat, &"", "amount_stat 默认空")
+	var rcf := PropertyForm.create(rc, UiPalette.cjk_font())
+	root.add_child(rcf)
+	hits.clear()
+	walker.call(rcf, walker)
+	var opt: OptionButton = hits[0] if not hits.is_empty() else null
+	t.check(opt != null, "amount_stat 是下拉")
+	if opt != null:
+		t.eq(opt.get_selected(), 0, "空值选中第一项")
+		t.check(opt.get_item_text(0).begins_with("不用"), "第一项是「不用」（%s）" % opt.get_item_text(0))
+		t.eq(PropertyForm._picked_stat(opt.get_parent()), "", "读回仍为空")
+		t.eq(rc.amount_stat, &"", "没碰就没写成别的")
+		var armor_i := -1
+		for i in opt.item_count:
+			if String(opt.get_item_tooltip(i)) == "armor":
+				armor_i = i
+		t.check(armor_i > 0, "列表里有防护")
+		opt.select(armor_i)
+		opt.item_selected.emit(armor_i)
+		t.eq(rc.amount_stat, &"armor", "选 armor 写成 armor")
+		t.eq(PropertyForm._picked_stat(opt.get_parent()), "armor", "读回 armor")
+		opt.select(0)
+		opt.item_selected.emit(0)
+		t.eq(rc.amount_stat, &"", "再选回「不用」写回空")
+	rcf.queue_free()
+	# 必填的 stat 没有「不用」这一项
+	var m3 := StatModifier.new()
+	var mf3 := PropertyForm.create(m3, UiPalette.cjk_font())
+	root.add_child(mf3)
+	hits.clear()
+	walker.call(mf3, walker)
+	var opt3: OptionButton = hits[0] if not hits.is_empty() else null
+	if opt3 != null:
+		t.check(not opt3.get_item_text(0).begins_with("不用"), "必填的 stat 不给「不用」")
+	mf3.queue_free()
 	t.check(PropertyForm._is_stat_field("stat") and PropertyForm._is_stat_field("damage_stat") and not PropertyForm._is_stat_field("status"), "认 stat / *_stat")
 	UiText.lang = saved

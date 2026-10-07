@@ -16,8 +16,8 @@
 
 [sub_resource type="Resource" id="Resource_khvcy"]
 script = ExtResource("1_pg8ou")
-mult_category = 0
-mult_percent = 15
+mode = 1
+amount = 15.0
 
 [sub_resource type="Resource" id="Resource_juc65"]
 script = ExtResource("3_5rl1g")
@@ -30,8 +30,8 @@ script = ExtResource("6_ay87x")
 
 [sub_resource type="Resource" id="Resource_wxfjr"]
 script = ExtResource("1_pg8ou")
-mult_category = 0
-mult_percent = 10
+mode = 1
+amount = 10.0
 
 [sub_resource type="Resource" id="Resource_qshs2"]
 script = ExtResource("9_wbie5")

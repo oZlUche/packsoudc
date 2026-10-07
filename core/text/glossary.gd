@@ -105,9 +105,6 @@ const STAT_NAMES := {
 	"stamina_cost": {"zh": "耗耐力", "en": "Stamina cost"}, "mana_cost": {"zh": "耗法力", "en": "Mana cost"},
 	"crit_chance": {"zh": "暴击率", "en": "Crit chance"}, "crit_damage": {"zh": "暴击伤害", "en": "Crit damage"},
 }
-## 乘区 → 名字
-const CATEGORY_NAMES := {"EMPOWER": {"zh": "增伤", "en": "Empower"}, "SHARP": {"zh": "物理增伤", "en": "Sharpness"},
-	"ELEMENT": {"zh": "元素增伤", "en": "Elemental power"}, "HASTE": {"zh": "急速", "en": "Haste"}}
 
 
 ## 一张「语言 → 文字」的小表按当前语言取；没有就中文；传进来的不是表就原样
@@ -126,19 +123,14 @@ static func stat_name(key: StringName) -> String:
 static func mod_text(m: StatModifier) -> String:
 	if m == null:
 		return ""
-	var parts: Array[String] = []
-	if m.mult_category >= 0 and m.mult_percent != 0:
-		var cat := _pick(CATEGORY_NAMES.get(StatMath.category_name(m.mult_category), null), StatMath.category_name(m.mult_category))
-		if m.stat == BattleStats.DAMAGE:
-			parts.append("%s %+d%%" % [cat, m.mult_percent])
-		else:
-			parts.append("%s %+d%%（%s）" % [stat_name(m.stat), m.mult_percent, cat])
-	if m.flat != 0.0 and BattleStats.PERCENT_DISPLAY.has(m.stat):
-		parts.append("%s %+d%%" % [stat_name(m.stat), roundi(m.flat * 100.0)])     # 104：暴击按百分数写
-	elif m.flat != 0.0:
-		var f := m.flat
-		parts.append("%s %s" % [stat_name(m.stat), ("%+d" % roundi(f)) if is_equal_approx(f, roundf(f)) else "%+.1f" % f])
-	return "、".join(parts) if not parts.is_empty() else "%s（无效果）" % stat_name(m.stat)
+	if m.amount == 0.0:
+		return "%s（无效果）" % stat_name(m.stat)
+	if m.is_mult():     # 133：乘算「伤害 +25%」
+		return "%s %+d%%" % [stat_name(m.stat), roundi(m.amount)]
+	if BattleStats.PERCENT_DISPLAY.has(m.stat):
+		return "%s %+d%%" % [stat_name(m.stat), roundi(m.amount * 100.0)]     # 104：暴击按百分数写
+	var f := m.amount
+	return "%s %s" % [stat_name(m.stat), ("%+d" % roundi(f)) if is_equal_approx(f, roundf(f)) else "%+.1f" % f]
 
 
 static func mods_text(mods: Array) -> String:
@@ -205,7 +197,7 @@ static func effects_text(effects: Array) -> String:
 
 const TRIGGER_NAMES := {"on_schedule": "自发", "on_battle_start": "开战时", "on_item_fired": "出手时", "on_damage": "受伤时",
 	"on_before_damage": "受伤前", "on_stacks_at_least": "层数够时", "on_resource_below": "资源低于时", "on_resource_changed": "资源变化时",
-	"on_status_applied": "施加时"}
+	"on_status_applied": "施加时", "on_status_removed": "状态掉光时", "on_overtime": "加时开始时"}
 
 
 static func trigger_name(trigger: Trigger) -> String:

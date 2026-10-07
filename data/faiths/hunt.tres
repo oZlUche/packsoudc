@@ -14,7 +14,7 @@ by_type = {
 "battle": 5,
 "core": 50,
 "elite": 20,
-"hunt": 30
+"hunter": 30
 }
 
 [sub_resource type="Resource" id="Resource_0k2lu"]

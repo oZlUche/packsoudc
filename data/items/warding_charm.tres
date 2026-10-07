@@ -21,7 +21,7 @@ seconds = 1.0
 [sub_resource type="Resource" id="Resource_eatr2"]
 script = ExtResource("1_vn4sa")
 stat = &"max_shield"
-flat = 8.0
+amount = 8.0
 
 [sub_resource type="Resource" id="Resource_7bpqt"]
 script = ExtResource("6_curu6")

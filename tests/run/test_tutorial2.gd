@@ -344,6 +344,10 @@ static func run_crafting_drag(t: TestCase) -> void:
 	var at := (Vector2(home) + Vector2(0.5, 0.5)) * InventoryView.CELL
 	drag.update_preview(at)
 	t.check(view._preview_valid and view._preview_victims.is_empty(), "压到匕首上：预览是绿的、不画顶替")
+	# 审查 A1：craft_filter 不许的那件（商店里没付钱的商品）压上去不是合成
+	drag.craft_filter = func(_i: ItemInstance) -> bool: return false
+	t.is_null(drag._craft_target(board, home), "craft_filter 不许：不算合成")
+	drag.craft_filter = Callable()
 	t.check(drag.drop_at(at), "放到匕首上：合成（算放下了）")
 	t.check(not drag.is_dragging(), "手上空了（不是顶替）")
 	var made: ItemInstance = null

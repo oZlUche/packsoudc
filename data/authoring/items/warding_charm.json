@@ -36,7 +36,7 @@
               "mods": [
                 {
                   "stat": "max_shield",
-                  "flat": 8.0
+                  "amount": 8.0
                 }
               ]
             }

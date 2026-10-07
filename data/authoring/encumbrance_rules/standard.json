@@ -10,12 +10,12 @@
       "mods": [
         {
           "stat": "haste",
-          "mult_category": "HASTE",
-          "mult_percent": -10
+          "mode": "MULT",
+          "amount": -10.0
         },
         {
           "stat": "regen_stamina",
-          "flat": -0.1
+          "amount": -0.1
         }
       ]
     },
@@ -28,16 +28,16 @@
       "mods": [
         {
           "stat": "haste",
-          "mult_category": "HASTE",
-          "mult_percent": -25
+          "mode": "MULT",
+          "amount": -25.0
         },
         {
           "stat": "regen_stamina",
-          "flat": -0.25
+          "amount": -0.25
         },
         {
           "stat": "max_stamina",
-          "flat": -0.2
+          "amount": -0.2
         }
       ]
     },
@@ -50,16 +50,16 @@
       "mods": [
         {
           "stat": "haste",
-          "mult_category": "HASTE",
-          "mult_percent": -25
+          "mode": "MULT",
+          "amount": -25.0
         },
         {
           "stat": "regen_stamina",
-          "flat": -0.25
+          "amount": -0.25
         },
         {
           "stat": "max_stamina",
-          "flat": -0.2
+          "amount": -0.2
         }
       ],
       "travel_mult": 2

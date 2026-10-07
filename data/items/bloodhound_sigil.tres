@@ -19,8 +19,8 @@ script = ExtResource("3_6xkvw")
 
 [sub_resource type="Resource" id="Resource_qqmym"]
 script = ExtResource("1_a8sh1")
-mult_category = 0
-mult_percent = 5
+mode = 1
+amount = 5.0
 
 [sub_resource type="Resource" id="Resource_e2esi"]
 script = ExtResource("6_si5cy")

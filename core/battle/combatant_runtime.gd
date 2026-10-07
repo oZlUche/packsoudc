@@ -21,6 +21,8 @@ var item_base: Dictionary = {}
 
 ## uid -> 与它连结的物品 uid 列表（增益／受益格）。[OnItemFired] 的 LINKED 来源查它。
 var item_links: Dictionary = {}
+## 132：uid → 道具标签（`on_item_fired.source_tags`）
+var item_tags: Dictionary = {}
 
 ## 标准轴（4.3，103 4e）：axis → [内容层, 系统层]，带符号；结算在 [method _rebuild] 末尾
 var axes: Dictionary = {}
@@ -49,6 +51,8 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 		rt.item_base[it.source_uid] = it.stats
 		if not it.linked_uids.is_empty():
 			rt.item_links[it.source_uid] = it.linked_uids
+		if not it.tags.is_empty():
+			rt.item_tags[it.source_uid] = it.tags
 		for key in it.stats.keys():
 			# **乘法单位元类属性不能跨物品累加。** haste 每件都是 1.0，
 			# 逐件相加会得出「N 件物品 = N 倍速度」；而且单位级 haste 的含义是
@@ -232,6 +236,11 @@ func settle_regen(now: int) -> void:
 ## 某件物品通过增益／受益格连结到的其他物品 uid
 func links_of(uid: int) -> Array[int]:
 	return item_links.get(uid, [] as Array[int])
+
+
+## 132：某件物品的标签（没有 = 空）
+func tags_of(uid: int) -> Array[StringName]:
+	return item_tags.get(uid, [] as Array[StringName])
 
 
 #region buff

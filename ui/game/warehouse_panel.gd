@@ -83,6 +83,9 @@ func _build() -> void:
 
 ## 带回来的棋盘换了（置入完了、丢了、新的一局带回来）就重画那一块
 func _rebuild_board_view() -> void:
+	# 审查 A3：旧视图先从拖拽层撤登记 —— 只 queue_free 的话拖拽层还拿着它，之后拖仓库里的东西会碰到已释放的视图、卡在「正在拖」
+	if _board_view != null and _drag != null:
+		_drag.unregister_view(_board_view)
 	for child in _board_box.get_children():
 		child.queue_free()
 	_board_view = null

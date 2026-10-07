@@ -23,7 +23,7 @@
       "mods": [
         {
           "stat": "armor",
-          "flat": 4.0
+          "amount": 4.0
         }
       ]
     },
@@ -52,7 +52,7 @@
                 "mods": [
                   {
                     "stat": "armor",
-                    "flat": 4.0
+                    "amount": 4.0
                   }
                 ]
               }
@@ -90,7 +90,7 @@
               "mods": [
                 {
                   "stat": "armor",
-                  "flat": 8.0
+                  "amount": 8.0
                 }
               ]
             }

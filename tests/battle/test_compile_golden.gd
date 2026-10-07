@@ -12,6 +12,10 @@
 ## 改成「开战获得 5 层灵巧（耐力消耗 ×97%^层数）」，所以日神那份的短剑少了 `stamina_cost` 的 −2000 乘区、
 ## 多了 `axes: {stamina_cost: 5}`；同一次给四份都加了 `axes` 字段（其余三份都是空的，数值一个没动）。
 ##
+## **133 有意重录**（2026-10-05）：乘区只剩一个，每项属性的 `mult: [EMPOWER, SHARP, ELEMENT, HASTE]` 换成一个 `percent`（四个乘区之和）。
+## 四份金样里没有一项属性同时吃到两个乘区，所以 total / base / flat 逐项不变 —— 重录前后逐项对过终值（方案里说的「弓 + 箭 + 符号 1.38 → 1.35」
+## 不在这四份金样的棋盘上，那一组的变化由 test_stat_math 的「两条乘算相加」覆盖）。
+##
 ## 录制：`RECORD_GOLDEN=1 bash tools/test.sh 金样` 会把 `tests/fixtures/compile_golden/<信仰>.json`
 ## 重写一遍（并断言失败，提醒别把录制开关留在 CI 里）。平时跑是**比对**。
 extends RefCounted
@@ -132,18 +136,15 @@ static func _shot(run: RunState) -> Dictionary:
 	return out
 
 
-## 一套属性：键 → {total, base, flat, mult: [各乘区]}。
-## 只记终值不够 —— 食物翻倍动的是 `base`，乘区动的是乘区，分开记才看得出搬家有没有换落点
+## 一套属性：键 → {total, base, flat, percent}（133：乘区只剩一个，`mult: [四个乘区]` 换成一个 `percent`）。
+## 只记终值不够 —— 食物翻倍动的是 `base`，乘算动的是 percent，分开记才看得出搬家有没有换落点
 static func _stats(set: StatSet) -> Dictionary:
 	var out := {}
 	if set == null:
 		return out
 	for key in set.keys():
 		var v := set.ensure(StringName(String(key)))
-		var mults: Array = []
-		for cat in StatMath.categories():
-			mults.append(v.mult_of(int(cat)))
-		out[String(key)] = {"total": v.total(), "base": v.base, "flat": v.flat, "mult": mults}
+		out[String(key)] = {"total": v.total(), "base": v.base, "flat": v.flat, "percent": v.percent}
 	return out
 
 
@@ -187,7 +188,7 @@ static func _compare(t: TestCase, faith: String, want: Dictionary, got: Dictiona
 		t.eq(int(g["uid"]), int(w["uid"]), "%s：第 %d 件 uid 一样" % [faith, i])
 		t.eq(String(g["def_id"]), String(w["def_id"]), "%s：第 %d 件是 %s" % [faith, i, String(w["def_id"])])
 		t.check(_same_stats(w.get("stats", {}), g.get("stats", {})),
-			"%s：%s 逐属性一样（base / flat / 各乘区都比）" % [faith, String(w["def_id"])])
+			"%s：%s 逐属性一样（base / flat / 乘算都比）" % [faith, String(w["def_id"])])
 		t.check(JSON.stringify(w.get("rules", [])) == JSON.stringify(g.get("rules", [])),
 			"%s：%s 的规则一样（%s）" % [faith, String(w["def_id"]), JSON.stringify(g.get("rules", []))])
 
@@ -202,16 +203,8 @@ static func _same_stats(want: Dictionary, got: Dictionary) -> bool:
 			return false
 		var w: Dictionary = want[key]
 		var g: Dictionary = got[key]
-		for field in ["total", "base", "flat"]:
-			if int(w[field]) != int(g[field]):
-				push_error("金样：%s.%s 期望 %d 实得 %d" % [key, field, int(w[field]), int(g[field])])
-				return false
-		var wm: Array = w.get("mult", [])
-		var gm: Array = g.get("mult", [])
-		if wm.size() != gm.size():
-			return false
-		for i in wm.size():
-			if int(wm[i]) != int(gm[i]):
-				push_error("金样：%s.mult[%d] 期望 %d 实得 %d" % [key, i, int(wm[i]), int(gm[i])])
+		for field in ["total", "base", "flat", "percent"]:
+			if int(w.get(field, 0)) != int(g.get(field, 0)):
+				push_error("金样：%s.%s 期望 %d 实得 %d" % [key, field, int(w.get(field, 0)), int(g.get(field, 0))])
 				return false
 	return true

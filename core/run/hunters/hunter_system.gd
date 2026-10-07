@@ -1,9 +1,9 @@
 ## 猎手系统（069 伪 PVP，报告 071）：一局里所有猎手的回合、领地、感知、开打、战败后果、存档。
 ##
-## 由 [HunterMechanic]（难度清单里的一个机制）装进一局：`run.hunters`。玩家每走一步（[RunState.step_to] 末尾）它动一回合：
+## 由 [HunterMechanic]（难度清单里的一个机制）装进一局：`run.hunters`。玩家每走一步它动一回合（134：在进点之前，[RunState] 的进点闸门里）：
 ## 该出现的出现（默认在离玩家最远的点）→ 每个活着的猎手按行动逻辑走几小步（只在自己领地里、不进别人的领地）→
 ## 进了感知范围提示一次 → 距离 ≤ 开打距离就**开打前先过事件屏**（迎战 / 逃跑），走的是事件层那条路（`NodeEvents.pending` + 合成的 [EventDef]）。
-## 迎战：按当时的探索度现造敌人（和随机点同一条路），打赢猎手死、掉落率乘 `drop_mult`；打输按定义里的后果构件依次执行。
+## 迎战：按当时的探索度现造敌人（和随机点同一条路），打赢猎手死、掉落率乘 `drop_mult`；打输执行这只猎手生成时选定的那一档（[HunterLossOption]，134）。
 ## 逃跑：按成功率掷，逃掉猎手歇几步，没逃掉扣体力然后照打。
 ##
 ## 随机数走 `RunRNG` 的 `hunters` 流，读档接着走和没存过一样。本类不认识具体的行动逻辑与后果 —— 它们是构件。
@@ -31,6 +31,8 @@ var defs: Dictionary = {}
 var metric: MapMetric = null
 var hunters: Array[Hunter] = []
 var has_spawned: bool = false
+## 134：上一场输掉时执行的档名（赢了 / 还没打是空）
+var last_loss_id: StringName = &""
 var _next_uid: int = 1
 
 
@@ -44,6 +46,8 @@ func setup(p_run: RunState, p_config: HunterMechanic, p_defs: Dictionary) -> voi
 	if run.events != null:
 		for id in defs:
 			_encounter_def(defs[id])
+			for o in (defs[id] as HunterDef).options():
+				_encounter_def(defs[id], o)
 
 
 #region 查询
@@ -77,6 +81,20 @@ func player_node() -> int:
 
 func def_of(h: Hunter) -> HunterDef:
 	return defs.get(h.def_id, null)
+
+
+## 134：给玩家看的「输了会怎样」（悬浮说明）。被它感知过之后才说（作者：能事先看到，感知之后显示）；没感知是空串
+func loss_hint(h: Hunter) -> String:
+	if h == null or not h.sensed:
+		return ""
+	var option := loss_option_of(h)
+	return option.summary() if option != null else ""
+
+
+## 134：这只猎手输了给哪一档（生成时选定；旧存档没记按第一档）
+func loss_option_of(h: Hunter) -> HunterLossOption:
+	var def := def_of(h) if h != null else null
+	return def.option_by_id(h.loss_id) if def != null else null
 
 
 func by_uid(uid: int) -> Hunter:
@@ -212,6 +230,7 @@ func spawn() -> void:
 		h.node_id = home
 		h.home_id = home
 		h.territory = _territory_around(home, def.territory_radius)
+		h.loss_id = def.pick_option(self)     # 134：战败结果档生成时就定，跟着存档
 		hunters.append(h)
 		taken.append(home)
 		spawned.emit(h)
@@ -291,21 +310,24 @@ func check_engagement() -> bool:
 
 func _engage(h: Hunter, def: HunterDef) -> void:
 	var node := run.current_node()
-	var ev := _encounter_def(def)
+	var ev := _encounter_def(def, loss_option_of(h))
 	run.events.pending = {"node": node.id, "event": String(ev.id), "type": String(TYPE), "hunter": h.uid}
 	run.events.event_pending.emit(node, ev)
 	encounter.emit(h)
 
 
-## 开打前的事件屏：迎战 / 逃跑（逃不掉的猎手没有第二项）。合成一次、登记在 NodeEvents.extra_defs 里（跟着 id 存档也找得回来）
-func _encounter_def(def: HunterDef) -> EventDef:
-	var id := StringName(ENCOUNTER_PREFIX + String(def.id))
+## 开打前的事件屏：迎战 / 逃跑（逃不掉的猎手没有第二项）。合成一次、登记在 NodeEvents.extra_defs 里（跟着 id 存档也找得回来）。
+## 134：每一档一份（id 带档名），正文写「输了会怎样」，让「迎战还是逃跑」有依据；不带档的那份留给旧存档
+func _encounter_def(def: HunterDef, option: HunterLossOption = null) -> EventDef:
+	var id := StringName(ENCOUNTER_PREFIX + String(def.id) + ("/" + String(option.id) if option != null else ""))
 	if run.events.extra_defs.has(id):
 		return run.events.extra_defs[id]
 	var ev := EventDef.new()
 	ev.id = id
 	ev.title = def.display_name if def.display_name != "" else String(def.id)
 	ev.text = Names.description_of(def) if def.description != "" else "它盯上了你。"
+	if option != null and option.summary() != "":
+		ev.text += "\n输了会怎样 —— %s" % option.summary()
 	var fight_opt := EventOption.new()
 	fight_opt.label = "迎战"
 	fight_opt.outcomes.append(HunterFight.new())
@@ -321,7 +343,7 @@ func _encounter_def(def: HunterDef) -> EventDef:
 
 
 #region 开打与后果
-## 迎战：按当时的探索度现造敌人、打一场。返回赢没赢
+## 迎战：按当时的探索度现造敌人、打一场。返回赢没赢；输了执行这只猎手选定的那一档（134），档名记在 [member last_loss_id]
 func fight(node: MapNode, uid: int, _ctx: EventContext) -> bool:
 	var h := by_uid(uid)
 	var def := def_of(h) if h != null else null
@@ -333,12 +355,15 @@ func fight(node: MapNode, uid: int, _ctx: EventContext) -> bool:
 	run.events.last_handled_id = node.id
 	var loot_ctx := run._loot_context()
 	loot_ctx.drop_mult *= def.drop_mult
+	last_loss_id = &""
 	var won := run.events.fight_content(node, TYPE, content, loot_ctx, def.loss_cost)
 	if won:
 		h.alive = false
 		hunter_defeated.emit(h)
 	else:
-		for o in def.loss_outcomes:
+		var option := loss_option_of(h)
+		last_loss_id = option.id if option != null else &""
+		for o in (option.outcomes if option != null else [] as Array[HunterLossOutcome]):
 			if run.is_over():
 				break
 			var outcome := o as HunterLossOutcome
@@ -416,8 +441,12 @@ func retreat(h: Hunter, steps: int, cooldown: int) -> void:
 	h.cooldown = maxi(h.cooldown, cooldown)
 
 
-## 把玩家赶回上一个点（不花行动点、不触发那个点的事）
+## 把玩家赶回上一个点（不花行动点、不触发那个点的事）。
+## 134：猎手是在进点之前追上的（旅程挂着这一次进点）就把进点取消 —— 这个点不标走过、事不发生、不记首访；
+## 已经在点上忙完才追上的（[RunState.poke_hunters] 那条路），只退位置
 func expel_player() -> void:
+	if run.travel.is_holding():
+		run.travel.cancel_arrival()
 	var hist := run.travel.history
 	if hist.size() < 2:
 		return

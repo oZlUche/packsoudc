@@ -19,8 +19,8 @@
 
 [sub_resource type="Resource" id="Resource_q5s1f"]
 script = ExtResource("1_e6evk")
-mult_category = 1
-mult_percent = 25
+mode = 1
+amount = 25.0
 
 [sub_resource type="Resource" id="Resource_hmlt8"]
 script = ExtResource("3_4xw6q")
@@ -42,8 +42,7 @@ script = ExtResource("8_y01yl")
 [sub_resource type="Resource" id="Resource_yrm5a"]
 script = ExtResource("1_e6evk")
 stat = &"armor"
-mult_category = 0
-flat = -3.0
+amount = -3.0
 
 [sub_resource type="Resource" id="Resource_624fs"]
 script = ExtResource("9_dki5p")

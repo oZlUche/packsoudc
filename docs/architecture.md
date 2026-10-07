@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.46 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.49 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -544,7 +544,7 @@ static func compile(board: GridInventory, input: CompileInput) -> CombatantSpec:
 随机挑选的种子由调用方算好填进 `CompileInput.seed`（`hash(run_seed, "compile", 步数)`），
 所以 `compile` **仍是纯函数** —— 同样的棋盘 + 同样的入参永远同样的结果，拖动预估挑的和真打挑的是同一批。
 
-> **为什么搬家不改数值。** 乘区与 flat 可交换（`StatValue` 同乘区相加、乘区间按枚举顺序连乘、flat 最后加），
+> **为什么搬家不改数值。** 乘算与加算可交换（`StatValue` 乘算相加后乘一次、加算最后加；133 之前是四个乘区按枚举顺序连乘），
 > 所以第 7 步放在第 5 步之后还是之前，`total()` 一样；`base` 只有第 2 步写、第 7 步缩放，别处不碰；
 > 规则是 append 到同一条尾巴上，次序不变。落地时录了四份金样（`tests/fixtures/compile_golden/`）逐件逐字段对过。
 
@@ -561,6 +561,8 @@ static func compile(board: GridInventory, input: CompileInput) -> CombatantSpec:
 | **受益** `receive` | 站在这些格子上的邻居给我加成 | 「旁边每有一份食物，我就触发更快」 |
 
 UI 上用什么图形表示这两类，是表现层的事，数据层不关心。
+
+**受益格也能挂规则**（132）：`AdjacencyProfile.receive_rules` —— 每点亮一个受益格，**本件**多挂一份规则（同样走 `_attach`，来源记点亮它的邻居）；它跑在本件身上，所以时机不限，只是不许 costs。格子的点亮仍是编译期静态的摆放条件，不是事件条件。
 
 **增益格除了加成还能挂规则**（108，作者定）：`AdjacencyProfile.grant_rules` 给每个点亮的邻居各挂一份规则（毒箭挨着弓：弓每次出手对手 +1 层中毒）。
 挂上去的规则是**附加规则** —— 编译器唯一的入口 `BattleCompiler._attach`：深拷贝、把 `OnItemFired` 绑成只听宿主、在
@@ -661,29 +663,24 @@ const DEFAULT_STATS := {"max_hp": 25.0, "max_stamina": 50.0}
 #### 结算公式
 
 ```
-终值 = 基础值 × (1 + A 类加成之和) × (1 + B 类加成之和) × … + 固定加值之和
+终值 = 基础值 × max(0, 1 + 乘算之和) + 加算之和
 ```
 
-- **同一乘区内的加成相加**，不同乘区之间**相乘**
-- **固定加值在所有乘法之后相加**，不参与任何百分比放大
+- **只有一个乘区**（133，作者定）：所有乘算（百分比）先相加，再乘一次；两条 +20% 和 +15% 是 ×1.35，不是 ×1.2×1.15
+- **加算在乘法之后相加**，不参与任何百分比放大
 - 基础值写在物品定义上
 
-固定加值不吃乘区放大是一个有意的取舍：它让固定来源成为前期战力，并随着乘区堆叠自然
+一条属性修饰 `StatModifier` 只有三个字段：`stat`、`mode`（`ADD` 加算 / `MULT` 乘算，默认加算）、`amount`
+（乘算是百分数，25 = +25%、−10 = −10%；加算是固定值）。正数扩大、负数缩小，同一个变量表达百分比和固定值。
+编辑器在每条修饰下画一行灰字（`StatModifier.editor_hint()`）告诉作者这条是乘算还是加算、是扩大还是缩小、怎么和别的叠。
+
+加算不吃百分比放大是一个有意的取舍：它让固定来源成为前期战力，并随着乘算堆叠自然
 贬值，从而压住「百分比 × 固定值」双向叠乘造成的数值爆炸。内容设计时要清楚这一点 ——
-后期想加强一件物品，加乘区比加固定值有效得多。
+后期想加强一件物品，加乘算比加固定值有效得多。
 
-#### 乘区分类是可扩展枚举
-
-```gdscript
-enum Buff { EMPOWER, SHARP, ELEMENT, HASTE }   # 追加只能加在末尾；改名不改位置（109：FIRE → ELEMENT）
-```
-
-结算时**遍历枚举**逐个乘上 `(1 + 该区总和)`，不写死任何一类。新增一个乘区只需在枚举
-末尾加一条，公式自动多乘一个括号，计算代码一行不改。
-
-**为什么只能追加在末尾**：定点乘法带取整，乘法顺序会影响末位。枚举声明顺序即乘法顺序，
-在末尾追加一个空乘区其因子为 1，结果逐位不变；在中间插入则会重排乘法顺序，让所有历史
-数值和存档对不上。
+> **133 取消了四个乘区**（`EMPOWER / SHARP / ELEMENT / HASTE`）。它们混了两件事：增益怎么生效（乘还是加）和增益是什么（锋利、元素、急速）。
+> 后者本该是独立的 `BuffDef` / 属性（「给护盾加急速乘区」根本不成立）。导入器把旧键 `mult_category / mult_percent / flat` 迁成 `mode + amount`：
+> `mult_category` 提醒并忽略，同一条又乘又加的报错要求拆成两条。
 
 #### 定点数与取整
 
@@ -701,11 +698,11 @@ GDScript 里这个好处根本不存在，代价却是设计师写的每个十�
 - 乘法取整为**四舍五入**：`(a * b + ONE / 2) / ONE`，无偏且确定
 - **只在最终应用伤害或显示给玩家时才转成整数**。中途反复取整会让「两个 +5%」不等于
   「一个 +10%」，玩家能算出来，会当成 bug
-- 单个乘区的减益总和若低于 −100%，该乘区因子**钳到 0**，不允许出现负数因子
+- 乘算之和若低于 −100%，因子**钳到 0**，不允许出现负数因子
 
 #### 上下限
 
-冷却存在下限（快到一定程度不再变快），各乘区可各自设叠加层数上限。这些阈值写在
+冷却存在下限（快到一定程度不再变快）。这些阈值写在
 配置资源里，不硬编码。
 
 #### 标准轴：单位级的带符号层数（作者定，报告 103；待实现）
@@ -730,7 +727,7 @@ GDScript 里这个好处根本不存在，代价却是设计师写的每个十�
 | `max_hp`（106） | `max_hp`（单位，`hp` 的上限跟着变） | 固定值 | 1 | 生长 / 衰颓 |
 | `max_mana`（106） | `max_mana`（单位，`mana` 的上限跟着变） | 固定值 | 1 | 充盈 / 枯竭 |
 
-**暴击**（104，作者定）：`crit_chance` 默认 0.10、`crit_damage` 默认 1.5（`BattleStats.DEFAULT_BASE`，不跨道具累加），**所有加成一律加算**（只收 `flat`，导入器拦乘区）。
+**暴击**（104，作者定）：`crit_chance` 默认 0.10、`crit_damage` 默认 1.5（`BattleStats.DEFAULT_BASE`，不跨道具累加），**所有加成一律加算**（只收加算 `mode: ADD`，导入器拦乘算）。
 `DealDamage` 造包时对「从属性取伤害」的那一包掷一次（战斗 RNG，定点万分比；0 与 1 两头不消耗随机数），命中则 `raw × crit_damage`、`DamagePacket.crit = true`——
 在管线之前，护盾 / 减伤 / 护甲 / 加时看到的都是暴击后的原始值；固定值伤害（灼烧这类）不暴击；双方对称。预估伤害乘期望 `1 + 暴击率 × (暴击伤害 − 1)`。
 
@@ -753,7 +750,7 @@ GDScript 里这个好处根本不存在，代价却是设计师写的每个十�
 
 #### 实现
 
-`core/battle/stat_math.gd`（定点数与乘区枚举）与 `core/battle/stat_value.gd`
+`core/battle/stat_math.gd`（定点数）与 `core/battle/stat_value.gd`
 （一项属性的累积器）。**这套约定是可执行的，不是文字描述** —— 改公式必须先改测试。
 
 ### 4.4 效果系统：时机、频率、消耗、内容四者分离
@@ -844,13 +841,15 @@ func implied_costs() -> Array[Cost]: return []
 |---|---|
 | `OnSchedule` | 自发型，不订阅事件，由频率层排出时刻 |
 | `OnBattleStart` | 开场一次 |
-| `OnItemFired` | 别的物品出手时（连带触发） |
+| `OnItemFired` | 别的物品出手时（连带触发）；132：`source_tags` 只听带某标签的件（编译结果带上 `CompiledItem.tags`） |
 | `OnResourceChanged` | 某种资源发生变化时 |
-| `OnResourceBelow` | 资源降到上限的 N%（或绝对值 N）以下时 |
+| `OnResourceBelow` | 资源降到上限的 N%（或绝对值 N）以下时；132：`direction = ABOVE` 反过来（涨到以上），`full` = 回满 |
 | `OnStacksAtLeast` | 自己／对手身上有 N 层某增益减益时 |
-| `OnDamage` | 受到／造成某类伤害【之后】，且不低于 N 点时 |
+| `OnDamage` | 受到／造成某类伤害【之后】，且不低于 N 点时；132：`crit_only` 只在暴击时 |
 | `OnBeforeDamage` | 受到／造成某类伤害【之前】。减伤、免疫、反转唯一的接入点，见 4.6 |
 | `OnStatusApplied`（130） | 自己／对手身上刚被施加了某状态（层数增加那一瞬）；默认只认本方施加的。施加了几层进 `source_stacks()` 供 `per_stack` |
+| `OnStatusRemoved`（132） | 某状态**掉光**时（最后一层被移除或到期；听剩余为 0 的 `status_unstacked`） |
+| `OnOvertime`（132） | 加时开始那一瞬（`overtime_stacked` 的第一次），整场一次 |
 
 **没有 `OnTick`。** 「每帧检查一下冷却好没好」是固定步长模拟才需要的东西，
 事件驱动直接算出下一次出手的精确时刻（见 4.7）。
@@ -1008,6 +1007,7 @@ class_name Cost extends Resource
 `ChargeCost`（攒够 N 次）、`UsesCost`（全场限 N 次）、`ChanceCondition`（按概率）、
 `StatusCondition`（130：目标身上至少 N 层某 buff 才放行，**不扣层**；和概率一样是条件型）。
 `StatusStackCost` 带 `on_self`（默认 true），130 起可以扣对手身上的层。
+132：`ResourceCondition`（资源在某范围才放行，不扣）、`AxisCondition`（标准轴至少几层，可负、同号比，不扣）、`AxisCost`（扣自己的轴层数，可透支到负）；三个条件型（状态 / 资源 / 轴）都有 `negate` 取反。
 
 **「耐力够不够」与「次数攒够没有」在失败行为上完全一致** —— 都是跳过效果但不退还冷却，
 所以归在同一层。把后者放进频率层会出真问题：它挡住执行却不推进冷却，
@@ -1056,6 +1056,8 @@ func scope() -> StringName: return EffectScope.COMBAT
 `ApplyStatus`、`RemoveStatus`、`ConvertStatus`（130：把目标身上一种状态的全部层数换成另一种 × 比例，四舍五入至少 1，可保留原状态，系统 buff 不转）、
 `ModifyDamage` 与 `ReflectDamage`（后两者只在受伤前阶段有效，见 4.6）。
 导入器拦两条死路（130）：转化成自己；「某状态被施加时」的规则又施加（或转化成）同一个状态。
+132：`ConvertDamageType`（受伤前把这一包换成另一种类型，直接旗不变，不许换成毒 / 血）；`DealDamage` 加 `percent_of`（max_hp / current_hp / missing_hp）+ `percent`（与固定 / 属性相加）与 `per_target_stack`（乘目标身上某状态的层数，0 层不打）；`ChangeResource.percent_of_damage`（受伤后按这一包实际扣除量的百分比，吸血）；`RemoveStatus.all_debuffs / all_buffs`（清光，系统 buff 不清）。
+导入器的「配了也没用」警告（132）：改写伤害包的效果不在受伤前、道具自己的规则写 `per_stack`（「施加时」除外）、自发配 always、按伤害比例回复不在受伤后、「只在暴击时」配受到。
 计划中：`FireItem`（让另一件物品出手）、`GrantRule`（战斗中授予新规则，注意上文约束 2）。
 
 `RuleContext` 是效果访问战场的唯一入口：读写双方状态与资源池、取随机数、写事件日志、
@@ -1187,7 +1189,7 @@ func settle_regen(now: int) -> void:      # CombatantRuntime
 
 `regen_xxx` 就是一条普通属性，和 `max_xxx` 对称。所以
 **「某某 buff 让耐力回得更快」不需要任何新机制** —— 一条作用于 `regen_stamina` 的
-`StatModifier` 就够了，走的是和增伤同一条 4.3 公式（同乘区相加、跨乘区相乘）。
+`StatModifier` 就够了，走的是和增伤同一条 4.3 公式（乘算相加后乘一次，加算最后加）。
 
 ### 4.6 伤害结算管线
 
@@ -2858,7 +2860,7 @@ class_name SearchRules extends Resource
 
 **构件按内容需要加（8-3，报告 077）。** 条件看得见的一局状态进了 `EventContext`：地图、步数、棋盘与地上、段位与侵蚀深度（两个回调，持有方接；没接 = -1，条件永远不满足）。
 后果里**传送**只挑目的地（最近 / 最远 / 随机 / 内容里指定的 id，按类型与步数区间筛）、立旗，挪人在 `choose` 的最后：这个点的事都完了才造一个 `MoveIntent.teleport` 交给持有方的 `relocate`
-（`RunState.relocate`：关会话、清地上、`travel.apply`、猎手回合 —— 和走一步一样的壳），落地那个点头一回踩上就触发它的事；`MapTravel` 对 teleport 不再查边（信任解析方）。
+（`RunState.relocate`：关会话、清地上、`travel.apply`（134：猎手回合在它的进点闸门里）—— 和走一步一样的壳），落地那个点头一回踩上就触发它的事；`MapTravel` 对 teleport 不再查边（信任解析方）。
 **原地耗时**走 `MapTravel.wait`（计数 → 侵蚀推进 → 脚下结算，不挪人），在判战败之前。**改类型**写 `resolved_type`（和随机点揭开同一个记号），同一选项里后面的「照常发生」「开战」按新类型走。
 **照常发生**（`proceed`）让休息 / 商店点也能先过事件屏而数值还在 `NodeRules`；`rest_default` / `shop_default` 挂在 `events_by_type`。导入器拦撞车的组合：传送 + 搜索 / 开店 / 接下一个（会话断了）、传送 + 给道具（离开时地上清空）。
 
@@ -3043,6 +3045,8 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 
 **读不出来先备份，绝不静默覆盖**（098，作者定）：`MetaSave.read` 返回 null 而文件还在 → `GameFlow.use_slot` 调 `SaveSlots.backup(n, "meta")` 把老文件改名成 `meta.json.<unix>.bak` 再从零开始；
 `continue_run` 对 `run.json` 同理（否则「继续」每次都撞同一面墙）。`SaveSlots.exists / remove` 不看 `.bak`；`GameFlow.meta_backup / run_backup / backup_notice()`，读取存档屏与主菜单各写一句（`slots.backed_up`）。回滚靠备份文件，不做自动回滚。
+
+**新版本的存档在旧版本里只读**（2026-10-07，作者反馈「旧版读新版存档会当成读不出来、新建存档」）：`SaveSlots.newer_version(n)` 看两份文件的 `version`，大于本版本认得的就不是坏档 —— `open` 不读、不备份，`GameFlow.newer_slot` 记下版本号；这时 `save_meta` / `save` / 结算都不写、`continue_game` / `continue_run` 返回 false，`backup_notice()` 提示换回新版本（`slots.newer`），读取存档屏那一行带「更新版本的存档」。玩家自己删掉这一位才解锁。只对改了这条之后的版本有效：更早的旧版本照旧会把新档备份成 `.bak`。
 
 **内容 id 改名表**（098）：`IdAliases`（`ITEMS / TAGS / FAITHS`，旧 → 新）是**内容层**的事，不进版本链。只在「按真名查不到」时问一次：
 `ItemDatabase.get_def`、`TagRegistry.get_def`、`FaithPower.restore`（旧信仰的点数并进新池子）。现有两条来自 093 的合并改名（`violence → brute`、`sunfire → sun`，标签同前缀）。
@@ -3298,11 +3302,18 @@ func player_spec() -> CombatantSpec …
 
 作者：地图上出现移动的单位，不和节点互动，距离够近就主动靠近并攻击（或远离，多种行动逻辑），强度按探索度实时变、胜率对参考玩家调到 50%。
 落地为难度清单里的一个机制 `HunterMechanic`（几个、第几步出现、出现距离、度量）+ 内容种类 `hunters`（`HunterDef`，一个等级一份：可视性、感知、速度、开打距离、
-领地半径、行动逻辑构件、战败后果构件、掉落倍数、逃跑、敌人池与强度规则）。`HunterSystem` 挂在 `run.hunters`：玩家一步的末尾动一回合 ——
+领地半径、行动逻辑构件、战败结果档、掉落倍数、逃跑、敌人池与强度规则）。`HunterSystem` 挂在 `run.hunters`：玩家每走一步**在进点之前**动一回合（134）——
 出现（离玩家与彼此最远）→ 每个按行动逻辑在自己领地里走几小步（不进别人的领地）→ 进感知范围提示一次 → 够得着就**开打前先过事件屏**
 （合成的 `EventDef`「迎战 / 逃跑」，登记在 `NodeEvents.extra_defs`，`pending` 多一个 `hunter` 字段跟存档）。玩家正忙时不打扰，空下来 `poke_hunters` 再问。
-迎战：**按玩家当时的段位定档**（段位只看步数：难度里猎手机制的 `bracket_steps` 划段，猎手定义的 `strength_by_bracket` 每段几档；表空退回探索度的强度规则，074）从猎手专属池（`enemy_pools/hunters`，占位）现造敌人（`EnemyPlacer`），打赢它死、掉落率乘 `drop_mult`；打输按定义里的后果构件依次执行
-（扣体力 / 没事 / 必杀 / 消失 / 退走并歇 / 赶回上一个点并驻守）。逃跑按成功率掷，没逃掉扣体力照打。距离度量 `MapMetric`：`steps` 或 `absolute`（地图屏注入按环距归一的坐标）。
+**猎手战插在进点的事件队列前面**（134，作者：「猎手战不是节点，而是特殊类型的事件」）：`MapTravel.arrival_gate` 是进点前的闸门 —— 人已经挪到点上、步数花了、惩罚结算了，
+这个点的事发生之前 `RunState._arrival_gate` 先过猎手的回合；有猎手够得着就**挂起这次进点**（`MapTravel.held`，跟存档），点不标走过、事不发生、`moved` 不发。
+那一场了结之后（赢了 / 逃掉了 / 输了但是击退档）玩家空下来 `poke_hunters` → `resume_arrival` 接着进（`finish_arrival`：点的事发生、首访才记）；
+输给驱逐档 `LossExpel` 取消进点（`cancel_arrival`）并退回上一步 —— 这个点视为没进，信力只记步数不记首访，再走过去事照常发生。走回走过的点、事件挪人（`relocate`）走同一套；
+正忙时才被追上（`poke_hunters` 那条路）这个点已经进过了，驱逐只退位置。
+迎战：**按玩家当时的段位定档**（段位只看步数：难度里猎手机制的 `bracket_steps` 划段，猎手定义的 `strength_by_bracket` 每段几档；表空退回探索度的强度规则，074）从猎手专属池（`enemy_pools/hunters`，占位）现造敌人（`EnemyPlacer`），打赢它死、掉落率乘 `drop_mult`；打输执行**这只猎手生成时选定的那一档**的后果构件
+（扣体力 / 没事 / 必杀 / 消失 / 退走并歇 / 驱逐 / 赶回上一个点并驻守）。**战败结果档**（134）：`HunterLossOption`（`id`、名字、`weight`、`outcomes`）；`HunterDef.loss_options` 列可能的档，
+`loss_pick`（构件，`RunRegistry.HUNTER_LOSS_PICKS`：`random` 按权重 / `fixed` 固定第几档，null = 随机）在 `spawn()` 时选一档，档名记在 `Hunter.loss_id` 跟存档；
+只写旧 `loss_outcomes` 的定义当作只有一档，旧存档没档名按第一档。被感知之后，地图上悬停那个点与开打前的事件屏都写「输了会怎样」。逃跑按成功率掷，没逃掉扣体力照打。距离度量 `MapMetric`：`steps` 或 `absolute`（地图屏注入按环距归一的坐标）。
 随机数走 `RunRNG` 的 `hunters` 流。`RunContext` 多三个字段（侦察距离、感知倍率、逃跑加成），角色的被动技能（072）、局外 buff、难度修饰都能往里加数。
 **校准**（073）：正式游戏每走一步记一份玩家配置（`CalibrationRecorder` → `user://calibration/snapshots.jsonl`），`tools/build_dummies.gd` 按难度的段位表分段（或固定段长）、每段挑离平均读数最近的真实配置当木桩，
 `tools/bench_hunters.gd` 让木桩对猎手池里每一档打几百场，打印胜率并排「猎手表里这一段的档 / 最接近 50% 的哪一档」—— 工具只做统计，作者对着表改强度规则。数值等系统完整后多场测试。
@@ -3398,7 +3409,7 @@ tracker.effects_in_scope(EffectScope.LOOT)   # 道具的 + 已激活套装的
 
 #### 伤害类型不绑定乘区
 
-`DealDamage.damage_type`（`physical` / `fire` / …）与 `StatMath.Buff` 乘区分类
+`DealDamage.damage_type`（`physical` / `fire` / …）与乘区分类（133 已取消）
 （`EMPOWER` / `SHARP` / `ELEMENT` / …）是**两个正交的维度**，刻意不做映射。
 
 绑在一起看似省事，但立刻会写不出「强化影响全部伤害」这种最常见的加成 ——
@@ -3565,7 +3576,7 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
     "grant": {
       "cells": [[1, 0]],
       "filter": ["weapon"],
-      "mods": [{"stat": "damage", "category": "SHARP", "percent": 25}]
+      "mods": [{"stat": "damage", "mode": "MULT", "amount": 25}]     // 133：只有「乘算 / 加算 + 一个数」，没有乘区
     }
   }
 }
@@ -3589,7 +3600,7 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 
 - id 唯一、与文件名一致、非空
 - 形状非空、无重复格
-- 引用的 `set_id`、乘区名、属性键、类型名都存在
+- 引用的 `set_id`、属性键、类型名都存在
 - 邻接标记格不与自身轮廓重叠（重叠说明作者搞错了坐标系）
 - `AbilityRule` 三项齐全；`CooldownCadence` 的秒数为正
 - 数值落在合理区间（区间写在配置里，越界只警告不阻断）
@@ -3625,7 +3636,7 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 |---|---|
 | 形状写成 0/1 数字串 | 硬要作者写 `{"cells": [[0,0],[1,0]]}` 是把人当解析器用 |
 | 增益可按 id 引用 | 也允许内联 —— 只被一件道具用到的 buff 没必要单开文件 |
-| 裸 int 枚举登记表 | 乘区要能用 -1 表示「不加乘区」，声明成枚举类型反而别扭 |
+| 裸 int 枚举登记表 | 当初给乘区用（-1 表示「不加乘区」）；133 取消乘区后登记表为空，机制留着 |
 
 #### 两个坑，都写进注释了
 
@@ -3789,7 +3800,7 @@ res://
   tools/            import_content  export_content  normalize_content  check_scripts  check_content  map_stats  build_dummies  bench_hunters
                     demo_fill        # 截图演示（101 第 6 刀；只在 DEMO_SCREEN 非空时被导演 load）
                     gen_sample_items  gen_sample_combat  gen_sample_chapter  bench_battle  capture_scene  cli_tool
-  tests/            run_tests  test_case  support（公共装载）                      # 102：按层分目录，76 个套件
+  tests/            run_tests  test_case  support（公共装载）                      # 102：按层分目录（2026-10-06：108 个套件）
     inventory/      test_*（12）   背包、格子、拖拽
     battle/         test_*（8）    编译、效果、伤害、数值
     map/            test_*（10）   图生成、导航、形态、地图编辑器以外的地图逻辑
@@ -3925,6 +3936,9 @@ res://
 | v2.42 | 2026-10-05 | **搜索点保底**（127）：`SearchRules.search_floors` 是「进阶难度等级 → 逐件稀有度下限」的阶梯（行长 = 保底件数，每项 = 那一件的下限，`[2,1,1]` = 一蓝两绿）；常规搜索点用第 level 行，进阶搜索点（高危区里的，`search_tier` 可覆盖）用第 level + 1 行；超出表长取末行、第一项抬一阶。`DifficultyDef.search_floors` 可覆盖，节点内容 `search_floor` 最优先。保底位按原权重在「≥ 下限」的候选里抽，没有就往下放宽，事件的 rarity_cap 夹住地板，有保底时打乱顺序 |
 | v2.43 | 2026-10-05 | **百科机制页首批全文**（125）：六个分类四十六页（流程七、背包七、战斗七、信仰十一、地图九、局外五）写进 `data/authoring/help_pages`；「合成」补 order 4。4.7「冷却按工作量计」改口为快照语义（与 `CooldownCadence` 一致） |
 | v2.44 | 2026-10-05 | **地上取代暂存区**（128）：暂存区改名「地上」，规则不变；不画框，格子外整块屏幕就是地上，放手在哪就落在哪。`ItemStash.spots`（归一化落点，存档带着，旧档自动铺）、`NodeStorageModule.spots`（按点留着落点）；新 `GroundLayer`（导演持有一层，盖在屏栈上，各屏 `reserve` 面板、被盖住的东西推开）；`StashView` 删掉，开局屏与沙盒用不铺满屏的一块地；`DragLayer` 放到棋盘外 = 落在放手点、从地上拿起放回 = 改落点，不再画插入线。见 3.4 |
+| v2.49 | 2026-10-06 | **猎手战败结果档 + 猎手战插进进点的事件队列**（134，作者定，五项待定按推荐；改 8.5）：新资源 `HunterLossOption`（档名、名字、权重、后果），`HunterDef.loss_options` + `loss_pick`（新构件表 `HUNTER_LOSS_PICKS`：`random` / `fixed`），`Hunter.loss_id` 生成时选定、跟存档；新后果 `expel`（退回上一步、不驻守）。`MapTravel` 加进点闸门 `arrival_gate` / 挂起的进点 `held`（存档）/ `finish_arrival` / `cancel_arrival`；`RunState` 的猎手回合从「这一步的事之后」挪到闸门里（先于点的事），`resume_arrival` 在玩家空下来时接着进；驱逐 = 取消进点（不标走过、事不发生、不记首访，步数照算）。`GameFlow._flush` 接着进点后排进队里的接着看；收起猎手战的战利品也接着进点。悬停与开打前事件屏写「输了会怎样」。`hunter_1` 击退 / 驱逐各一半，`hunter_2` 击退 / 驱逐 / 驱逐并驻守各三分之一（数值占位） |
+| v2.48 | 2026-10-05 | **单一乘区**（133，作者定；改 4.3）：删 `StatMath.Buff` 四个乘区，公式改成 `终值 = 基础 × max(0, 1 + Σ乘算) + Σ加算`；`StatModifier` 改成 `stat / mode{ADD, MULT} / amount`，`StatValue` 的四格 `mult` 换成一个 `percent`；`PropertyForm` 在属性修饰下加一行灰字提示（乘算还是加算、扩大还是缩小、在 buff 里每层一份）；导入器迁移旧键（`mult_category` 提醒忽略、又乘又加报错），`normalize_content` 重写了 18 份内容 JSON；百科删掉「乘区」词条组；编译金样有意重录（`percent` 替换 `mult`，四份终值逐项不变）。跨乘区的组合数值变了（弓 + 箭 + 符号 1.38 → 1.35）；标准轴不动 |
+| v2.47 | 2026-10-05 | **规则构件第二批**（132）：时机 `on_status_removed` / `on_overtime`，`on_item_fired.source_tags`、`on_resource_below.direction / full`、`on_damage.crit_only`；条件 `resource_condition` / `axis_condition` 与 `axis_cost`，三个条件型加 `negate`；效果 `convert_damage_type`，`deal_damage.percent_of / per_target_stack`、`change_resource.percent_of_damage`、`remove_status.all_debuffs / all_buffs`；受益格 `receive_rules`（4.2）；导入器的「配了也没用」警告。放血刀改成按目标流血层数 ×3。见 4.2、4.4 |
 | v2.46 | 2026-10-05 | **流派倾向道具**（130）：三个新构件 —— 时机 `on_status_applied`（某状态被施加时，默认只认本方施加）、内容 `convert_status`（转化状态）、消耗 `status_condition`（状态条件，不扣层）；新事件 `status_applied`（层数增加才发，刷新不发，不进回放）；`StatusStackCost.on_self`（放血刀吃对手的层）；导入器拦自转与自环。新 buff【剧毒】（每层每秒 5）；十件道具（流血线：嗜血护腕、猎血者的符号、放血刀、锯齿箭、创口盐；中毒线：蝰蛇毒腺、毒匠手套、腐蚀香炉、苦艮根；桥：溃烂之刃）；`poison` 成为敌人流派（药师）。见 4.4、6.0 |
 | v2.45 | 2026-10-05 | **负重**（129）：`ItemDef.weight` + `ItemWeight`（写死 / 公式）、`CharacterDef.weight_capacity`（28 / 34 / 40）、科技「扛重」（`carry_capacity_bonus`，+6 / +12 / +20）；新内容种类 `encumbrance_rules`（三级：吃力 / 超重 / 寸步难行，只减急速、耐力回复、耐力上限，三级走一步 ×2）；`MapTravel.action_cost_mult` 与 `cost_of`。见 7.6 |
 | v2.38 | 2026-10-03 | **界面样式收进一个 Theme**（报告 121，三项按推荐）。新 `ui/ui_theme.gd`（`UiTheme`）代码生成主题、并进引擎默认主题（不挂窗口：节点离树会丢主题重排字，系统缺中文字体时极慢），设置换底色原地重填；`UiPalette.style_button` 退化成选按钮变体（字号非默认才覆写）；游戏屏 / 背包 / 战斗 / 启动器的 `add_theme_*` 从 167 处降到 68 处（剩布局常量与注明的特例）；编辑器只挂主题；`tests/ui/test_theme.gd`（变体齐全、换底色跟着变、小工具零覆写、棘轮 68） |
@@ -3939,7 +3953,7 @@ res://
 | v2.29 | 2026-10-03 | **序章三「祭坛」：教信仰全套**（报告 113，作者定）。新章 `prologue_3`（序章二通关开、撤离后直接进；第一章改为要 `prologue3_done`，排第四），预设图 `tutorial3.json` 一条线 9 个点：蛮神的低语（发护符）→ 劫匪（选项门禁 `faith_active`）→ 搜三件（骨骰子 / 碎骨串 / 胫骨大棒）→ 神坛 A 献祭过 1 阶 → 日神的低语（换神、休眠、两边信力各记各的）→ 蛮兵（门禁 `faith_active{faith: brute}`，逼一次切回）→ 神坛 B 特殊操作二选一 → 撤离。数值用真的战斗走一遍验：献祭后在 1 阶、第二场打完到 2 阶。机制：`FaithActive.faith`（只认一位神）；`EventOption.hint_when_hidden`（条件没过时说为什么，藏起来的选项在事件屏底部灰字）；信仰占位符 `{faith:id}`（新色 `faith`）、`{faith_threshold}` `{faith_deed}` `{faith_offer}` `{faith_perk}` `{faith_points}` `{faith_tier}`，导入时查信仰 id。新道具两件骨头祭品（无战斗属性，稀有度 3 / 2 —— 献祭点数按 2^稀有度 × 倍数） |
 | v2.28 | 2026-10-03 | **序章文案占位符化**（报告 112，作者定）：`TextTemplate` 加带类型的占位符，颜色跟着类型走 —— `{char}`（角色名，hp 色）、`{item:id}`（道具名，按稀有度上色 + 粗体，界面经 `UiPalette.resolve_styles` 换成 `ItemPainter` 的稀有度色）、`{enemy:id}`（danger）、`{ui:…}`（good）、`{zone:…}`（grant）、`{key:…}`（dim）；`{item_stat:…}` 也统一加粗上色；新键 `{loss_cost}`。名字读定义（跟语言、改名不漏），`{ui:}` `{zone:}` 英文查 `TextTemplate.TERMS_EN`。导入时 `{item:}` `{enemy:}` `{item_stat:}` 的 id 必须存在（事件文本在全部导完后统一查，规则卡在章节导入时查）。序章两张图 25 条事件与序章二规则卡改成占位符，写死的数（战锤节奏、长剑伤害、毒药瓶间隔、「输两场」）改读数据；规则卡与事件编辑器预览也过 `render` |
 | v2.27 | 2026-10-03 | **局外科技：仓库扩建与上交界面**（报告 110，作者定；改 8.2）与**编辑器字符串下拉 + 条件显示字段**（报告 111，改 10 节）。`TechDef / TechTier / TechEffect` 走内容管线（`techs`），`MetaState` 多 `tech_levels / tech_deposits`，**存档 v2 → v3**（迁移只补两个空字典，留冻结样本 `meta_v2.json`）；`TechService` 七个方法 + 读档自检；仓库扩建 6 级每级 +3 行，前 3 级只要钱、第 4 级起要三种新建材（`supply`【建材】，商店不卖）；基地第五个页签「科技」（双击 / 拖进上交区上交、上交即消耗、交齐且钱够【升级】才亮）。仓库视图加竖向滚动，拖拽命中只认露在外面的部分；整理改先同类（`GridTidy.KIND_ORDER`）再大小。111：`@export_enum` 的字符串字段在编辑器里是下拉（值仍是原字符串，显示名走 `FieldText.ENUM_LABELS`）；资源可声明 `FIELD_WHEN` 让字段按别的字段的值显隐（`ContentSchema.field_visible`），切走后被藏的字段归默认；`@export_range` 的数字框按范围限；`FaithBonus.mode` 改 `@export_enum("tier", "active", "scaled")`，导入时按阶写到超过信仰阶数报错 |
-| v2.26 | 2026-10-03 | **武器附加效果的统一接口**（报告 108，作者定；改 4.2）与**乘区 FIRE 改名 ELEMENT**（109 ⑤）。编译器把挂规则抽成唯一入口 `_attach`，`CompiledItem.attached` 记来源；邻接新增 `grant_rules`（毒箭：远程武器每次出手附带一层中毒），日神附魔的 `ScopedMod` 多一个 `origin`（`faith:sun`）。新道具【毒箭】（稀有度 1，和箭矢同池）。弓的悬浮窗多一行「附加：[出手时] 施加中毒 ← 毒箭」，中毒进它的侧窗。导入校验：附加规则只许出手时、不许消耗、不许直接毒伤。**顺手修了一个旧 bug**：听自己出手的规则执行时会再发一条宿主的 `ITEM_FIRED`，于是自己触发自己 —— 日神附魔一击连锁到 `max_chain` 被截断（5 秒 3 击打出 768 次附火）；现在这类规则执行不算再出手。乘区第 2 位改叫 `ELEMENT`（元素增伤；位置不变，存档与数值不受影响），内容写旧名 `FIRE` 导入报错指路 |
+| v2.26 | 2026-10-03 | **武器附加效果的统一接口**（报告 108，作者定；改 4.2）与**乘区 FIRE 改名 ELEMENT**（109 ⑤）。编译器把挂规则抽成唯一入口 `_attach`，`CompiledItem.attached` 记来源；邻接新增 `grant_rules`（毒箭：远程武器每次出手附带一层中毒），日神附魔的 `ScopedMod` 多一个 `origin`（`faith:sun`）。新道具【毒箭】（稀有度 1，和箭矢同池）。弓的悬浮窗多一行「附加：[出手时] 施加中毒 ← 毒箭」，中毒进它的侧窗。导入校验：附加规则只许出手时、不许消耗、不许直接毒伤。**顺手修了一个旧 bug**：听自己出手的规则执行时会再发一条宿主的 `ITEM_FIRED`，于是自己触发自己 —— 日神附魔一击连锁到 `max_chain` 被截断（5 秒 3 击打出 768 次附火）；现在这类规则执行不算再出手。乘区第 2 位改叫 `ELEMENT`（元素增伤；位置不变，存档与数值不受影响），内容写旧名 `FIRE` 导入报错指路（**133 取消**：乘区整个删掉，这次改名随之作废） |
 | v2.25 | 2026-10-03 | **打法标签留作内部标签**（107 后续，作者定；改 4.8）：快攻 / 重击 / 重型不删 —— 敌人的流派 `schools` 与身份标签 `item_tags` 靠它们圈武器 —— 但标成 `TagDef.internal = true`：道具悬浮窗的标签行不列、不进词条侧窗，玩家哪儿都看不到；编辑器照常显示。`TagRegistry.is_internal / shown` 是唯一的判断入口；没登记的标签不算内部 |
 | v2.24 | 2026-10-03 | **删【消耗品】、四条小修**（报告 107 §2.6、109，作者定；改 3.4）：`consumable` 标签删掉（那些东西按冷却反复出手、并不会消耗，名字误导），换成 `remedy`【药剂】（抗毒包、绷带、医疗包、药膏、兴奋剂，`tip = false`）；口粮只留 `food`；药水带准入改 `["remedy", "food"]`；8 个敌人的身份标签 consumable → remedy；两个敌人池的通用标签换成 remedy + food，圈出来的道具和原来一样。离开点**不再弹暂存区提示**，提醒档位与设置屏那一块一起删。**战斗倍速记进 `GameSettings.battle_speed`**（跨局、跨存档位；只认 1 / 2 / 4，别的回 1×），回放里切一次就存，下一场照这个速度开场。仓库加「整理」（`GridTidy`：先大后小、再按稀有度 / id / uid，行优先放回；放不下整批回滚，只发一次 changed，不盖置入序号）。局外仓库面板与开局屏接上**双击快速置入**（带回来的背包 ⇄ 仓库、仓库 / 暂存区 → 初始包、棋盘 → 仓库；初始包与预设套不动），和局内同一条 `transfer_auto` |
 | v2.23 | 2026-10-03 | **关键词弹窗按字段开关**（报告 107，作者定；改 4.8）：`TagDef.tip` 与 `TERMS` 的 `tip` 决定一个词要不要弹词条 —— 能直观理解的词（时机词、冷却 / 耐力 / 耗耐力 / 信力 / 自发、近战 / 远程、武器 / 盾 / 防具 / 珍宝这类大类、火焰 / 毒 / 流血这类伤害类型）全关，带规则的（急速、防护、护盾、直接伤害、叠层、信仰 / 信物 / 封印 / 符号、骨制品 / 金属 / 自然）照弹；关掉的词**不进侧窗、主文字里也不标色**，但说明文字一字不动。buff 词条不受这个字段管。赐福长弓的侧窗从 13 个降到 3 个。「休眠」整条词条删掉：**状态就是颜色**，信仰行亮 = 生效、灰 = 休眠或没激活，悬浮窗不再写那一行与「—— 现在…」尾巴。另加一条校验：毒与流血没有直接伤害形态（天生是 buff），道具自己的规则里打毒伤 / 流血伤 → 导入 error。图鉴异体格改成**外框不动、里面的物品错位叠画**。打法标签（快攻 / 重击 / 重型）**暂未删除** —— 7 个敌人的流派与身份标签在用它们挑配装，删了组不出装，先只关掉弹窗，等作者定怎么改流派 |

@@ -24,7 +24,7 @@
     "grant_mods": [
       {
         "stat": "max_shield",
-        "flat": 5.0
+        "amount": 5.0
       }
     ]
   }

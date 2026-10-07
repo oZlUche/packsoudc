@@ -2,13 +2,11 @@
 extends RefCounted
 
 
-static func _mod(stat: StringName, category: int, percent: int, flat: float = 0.0) -> StatModifier:
-	var m := StatModifier.new()
-	m.stat = stat
-	m.mult_category = category
-	m.mult_percent = percent
-	m.flat = flat
-	return m
+static func _mod(stat: StringName, percent: int, flat: float = 0.0) -> StatModifier:
+	# 133：一条只乘或只加 —— percent 非 0 就是乘算，否则是加算
+	if percent != 0:
+		return StatModifier.make(stat, StatModifier.Mode.MULT, float(percent))
+	return StatModifier.make(stat, StatModifier.Mode.ADD, flat)
 
 
 static func _item(id: String, set_id: String = "", damage: float = 10.0) -> ItemDef:
@@ -32,7 +30,7 @@ static func _bag(id: String) -> ItemDef:
 
 
 static func _dmg_mod(percent: int) -> StatModifier:
-	return _mod(BattleStats.DAMAGE, StatMath.Buff.EMPOWER, percent)
+	return _mod(BattleStats.DAMAGE, percent)
 
 
 ## 一个档位。三份内容分开传：编译期属性修饰 / 战斗规则 / 非战斗作用域效果。

@@ -1,19 +1,49 @@
 {
   "id": "hunter_2",
   "display_name": "守路人（占位）",
-  "description": "它在这一带巡逻，见了你就追。输了它会把你赶回去，守在原地。",
+  "description": "它在这一带巡逻，见了你就追。输了它可能把你打退，也可能把你赶回去，甚至守在原地不让你过。",
   "level": 2,
   "visibility": "VISIBLE",
   "sense_range": 4.0,
   "behavior": {
     "type": "patrol"
   },
-  "loss_outcomes": [
+  "loss_options": [
     {
-      "type": "spend_vitality"
+      "id": "repel",
+      "display_name": "击退",
+      "outcomes": [
+        {
+          "type": "spend_vitality"
+        },
+        {
+          "type": "retreat"
+        }
+      ]
     },
     {
-      "type": "expel_and_guard"
+      "id": "expel",
+      "display_name": "驱逐",
+      "outcomes": [
+        {
+          "type": "spend_vitality"
+        },
+        {
+          "type": "expel"
+        }
+      ]
+    },
+    {
+      "id": "expel_guard",
+      "display_name": "驱逐并驻守",
+      "outcomes": [
+        {
+          "type": "spend_vitality"
+        },
+        {
+          "type": "expel_and_guard"
+        }
+      ]
     }
   ],
   "flee_chance": 0.3,

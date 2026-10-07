@@ -74,7 +74,7 @@ static func run_faith_files(t: TestCase) -> void:
 	t.eq(sun.offering_value(sword), 10, "日神：短剑算「金属」→ 2 × 5 = 10（体积是小不是中）")
 	t.eq(sun.offering_value(db.get_def(&"core")), 40, "日神：能量核心稀有度 3、体积正好为中、不是金属 → 只算一条：2^3 × 5 = 40")
 	var earth: FaithDef = defs[&"earth"]
-	t.eq(earth.offering_value(db.get_def(&"plate_cuirass")), 2 * 5 * 9, "大地：板甲 2^1 × 5 × 9 格 = 90")
+	t.eq(earth.offering_value(db.get_def(&"plate_cuirass")), 4 * 5 * 9, "大地：板甲稀有度 2 → 2^2 × 5 × 9 格 = 180")
 	t.eq(earth.offering_value(sword), 0, "大地不收小东西")
 	var nature: FaithDef = defs[&"nature"]
 	t.eq(nature.offering_value(db.get_def(&"ration")), 5 + 5, "自然：口粮既是自然又是食物 → 两条各 1 × 5")

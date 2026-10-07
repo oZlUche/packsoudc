@@ -131,6 +131,7 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 		var item := CompiledItem.new()
 		item.source_uid = uid
 		item.def_id = def.id
+		item.tags = def.tags.duplicate()
 		item.stats = set
 		if def.combat != null:
 			item.rules = def.combat.rules.duplicate()
@@ -273,6 +274,13 @@ static func _apply_adjacency(
 			if not providers.is_empty():
 				for mod in profile.receive_mods:
 					(mod as StatModifier).apply_to(stats[uid], providers.size())
+			for other in providers:     # 132：每个点亮的邻居给本件挂一份受益规则，来源记邻居
+				var giver := board.get_item(other)
+				for r in profile.receive_rules:
+					if r != null and giver != null:
+						if not attach_pending.has(uid):
+							attach_pending[uid] = []
+						attach_pending[uid].append([r, giver.def.id])
 
 
 static func _link(links: Dictionary, a: int, b: int) -> void:
