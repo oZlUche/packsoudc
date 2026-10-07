@@ -26,7 +26,7 @@ display_names = {
 "en": "Plate Cuirass"
 }
 shape = SubResource("Resource_kh8t6")
-rarity = 1
+rarity = 2
 value = 40
 tags = Array[StringName]([&"armor", &"heavy", &"imperial", &"metal"])
 combat = SubResource("Resource_on7mh")
