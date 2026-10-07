@@ -924,7 +924,8 @@ func hide_overlay() -> bool:
 	if run == null or run.is_over() or not is_overlay(screen):
 		return false
 	if screen == Screen.LOOT and run.events.pending_event() != null and bool(run.events.pending.get("search_stage", false)):
-		_flush()     # 搜索遭遇打赢的战利品：没拿完也能关，往下走到「再搜 / 走」（剩下的留在这个点上）
+		run.fold_loot_into_search()     # 反馈：没拿的并进搜索的收获箱、包掉在地上 —— 不再和收获并成一份重新搜
+		_flush()     # 搜索遭遇打赢的战利品：没拿完也能关，往下走到「再搜 / 走」
 		return true
 	if run.events.pending_event() != null or not run.events.pending_battle.is_empty():
 		return false
@@ -1003,6 +1004,8 @@ func use_skill(id: StringName) -> String:
 
 ## 事件屏上选了第 i 项（063）。选不了返回 false 留在原地；选了按后果往下走
 func choose_event(i: int) -> bool:
+	if run != null and bool(run.events.pending.get("search_stage", false)):
+		run.fold_loot_into_search()     # 战利品屏没关就到了「再搜 / 走」（读档回来等）：同上
 	if run == null or not run.events.choose(i):
 		return false
 	save_meta()     # 091：选项可能立了局外旗标（set_flag）
@@ -1013,10 +1016,11 @@ func choose_event(i: int) -> bool:
 func take_loot(uid: int) -> bool:
 	if run == null:
 		return false
+	var held := _loot_uids()
 	var ok := run.take_loot(uid)
 	seen_loot.erase(uid)
 	if run.pending_loot == null:
-		seen_loot.clear()
+		_forget_seen(held)
 		_flush()
 	return ok
 
@@ -1024,8 +1028,9 @@ func take_loot(uid: int) -> bool:
 func take_all_loot() -> int:
 	if run == null:
 		return 0
+	var held := _loot_uids()
 	var n := run.take_all_loot()
-	seen_loot.clear()
+	_forget_seen(held)
 	_flush()
 	return n
 
@@ -1033,9 +1038,25 @@ func take_all_loot() -> int:
 func discard_loot() -> void:
 	if run == null:
 		return
+	var held := _loot_uids()
 	run.discard_loot()
-	seen_loot.clear()
+	_forget_seen(held)
 	_flush()
+
+
+## 待拾取里现在有哪些 uid
+func _loot_uids() -> Array[int]:
+	var out: Array[int] = []
+	if run != null and run.pending_loot != null:
+		for inst in run.pending_loot.items():
+			out.append((inst as ItemInstance).uid)
+	return out
+
+
+## 战利品收完：只忘掉这一份里的「亮过」—— 反馈：以前整张表清空，搜索收获箱里亮过的也跟着忘了，回到搜索屏得重新搜
+func _forget_seen(uids: Array[int]) -> void:
+	for uid in uids:
+		seen_loot.erase(uid)
 #endregion
 
 

@@ -151,7 +151,7 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 	if from == _run.storage:
 		if InventoryService.transfer_auto(_run.storage, uid, _run.board):
 			return true
-		_hint_text("背包里没有空间放「%s」" % Names.of(inst.def))
+		say_no_room(inst)
 		return false
 	if from == _run.board:
 		if quick_target != null and InventoryService.transfer_auto(_run.board, uid, quick_target):
@@ -161,6 +161,12 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 				_hint_text("容器里放不下「%s」，放在了地上" % Names.of(inst.def))
 			return true
 	return false
+
+
+## 地上那件进不了背包：提示一句（134：地图 / 事件屏双击地上、放不下只开背包时也用这句）
+func say_no_room(inst: ItemInstance) -> void:
+	if inst != null and inst.def != null:
+		_hint_text("背包里没有空间放「%s」" % Names.of(inst.def))
 
 
 ## 114：合成了：提示一句产物（装不下落在地上也说）

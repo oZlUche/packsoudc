@@ -19,6 +19,7 @@ var _hints: Array[String] = []
 const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
 var _payload: Dictionary = {}
 var _bag: Control = null
+var _bag_panel: Control = null
 
 
 func open(payload: Dictionary) -> void:
@@ -219,6 +220,7 @@ func is_options_page() -> bool:
 ## 背包整理面板叠在事件上；收起时重画选项（条件可能因为整理过了而满足）
 func toggle_bag() -> void:
 	if _bag != null:
+		_bag.hide()     # 134：先藏起来 —— 这一帧里它的拖拽层就不再算「接地上的面板」
 		_bag.queue_free()
 		_bag = null
 		_rebuild()
@@ -238,10 +240,26 @@ func toggle_bag() -> void:
 	var inv := InventoryPanelScript.new()
 	inv.setup(flow.run, font)
 	win.body().add_child(inv)
+	_bag_panel = inv
 
 
 func bag_open() -> bool:
 	return _bag != null
+
+
+## 134：开着的背包浮窗里那块面板（没开 null）
+func bag_panel() -> Control:
+	return _bag_panel if _bag != null and is_instance_valid(_bag_panel) else null
+
+
+## 134（作者定）：地上双击 —— 背包开着就交给背包面板；没开就进包并打开背包（放不下只开背包、面板里提示）
+func ground_double_clicked(uid: int) -> bool:
+	if _bag != null:
+		return false
+	return _ground_to_bag(uid, func():
+		if _bag == null:
+			toggle_bag()
+		return bag_panel())
 
 
 ## 090：Esc —— 开着背包就关背包；结果页就「继续」；等着选的事件不接（必须选）

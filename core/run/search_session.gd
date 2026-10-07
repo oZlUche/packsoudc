@@ -153,6 +153,24 @@ func _scripted_finds(k: int) -> Array[StringName]:
 	return out
 
 
+## 往收获箱里放一件已有的实例（uid 不变）：放不下就一格一格加高，最多到收获箱规定高度的两倍；再放不下 false
+func stow(inst: ItemInstance) -> bool:
+	if inst == null:
+		return false
+	while not haul_box.try_add(inst, true):
+		if haul_box.size.y >= _haul_size().y * 2:
+			return false
+		var bigger := GridInventory.new(haul_box.size + Vector2i(0, 1), haul_box.id, false)
+		bigger.begin_batch()
+		for it in haul_box.items():
+			var item := it as ItemInstance
+			bigger.place(item, item.origin, item.rotation)
+		bigger.end_batch()
+		haul_box = bigger
+		haul_changed.emit(haul_box)
+	return true
+
+
 ## 收获：会话里搜到、还没拿走的都在这个容器里
 func haul() -> GridInventory:
 	return haul_box

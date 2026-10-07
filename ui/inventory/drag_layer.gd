@@ -252,9 +252,16 @@ func view_at(global_pos: Vector2) -> ContainerView:
 	for view in _views:
 		if view is GroundLayer and (view as GroundLayer).fills_screen:
 			continue     # 128：铺满屏的地上 = 「棋盘外」，不当落点视图
-		if view.visible and visible_rect(view).has_point(global_pos):
+		if shown(view) and visible_rect(view).has_point(global_pos):
 			return view
 	return _view_under_footprint(global_pos)
+
+
+## 视图真的露在外面：自己显示、而且（在场景树里时）祖先也都显示。
+## 反馈（开局屏：包或道具放在棋盘左半边吸附不上）：地上那一栏的外框藏起来了，可地上视图自己的 visible 还是 true，
+## 停在原处的矩形盖着棋盘左半边，落点全被它截走（地上又不收仓库来的）—— 只看自己的 visible 不够
+static func shown(view: Control) -> bool:
+	return view.visible and (not view.is_inside_tree() or view.is_visible_in_tree())
 
 
 ## 光标在格子视图外一点、但被拖的东西（按抓取点反推的整块）有一半以上压在视图里：算落在那个视图上（吸附范围）。
@@ -271,7 +278,7 @@ func _view_under_footprint(global_pos: Vector2) -> ContainerView:
 	var best: ContainerView = null
 	var best_area := 0.0
 	for view in _views:
-		if not (view is InventoryView) or not view.visible or (view as InventoryView).inventory == null:
+		if not (view is InventoryView) or not shown(view) or (view as InventoryView).inventory == null:
 			continue
 		var hit := visible_rect(view).intersection(rect)
 		var area := hit.size.x * hit.size.y if hit.size.x > 0.0 and hit.size.y > 0.0 else 0.0
@@ -536,8 +543,13 @@ func drop_at(global_pos: Vector2) -> bool:
 		elif _source == stash:
 			_restore()
 		else:
+			var loose := _payload_items()
 			dropped = _admit_with_payload(stash, inst, -1, spot)
 			home = stash
+			if dropped:
+				_land_from(stash, loose, global_pos)     # 134：脱落的内容物从放手点落下
+		if dropped:
+			stash.landing_from[inst.uid] = true     # 134：放手点就是落点 —— 就地落下（只缩放 + 弹跳）
 		if _source == stash or dropped:
 			_end_drag()
 			drag_finished.emit(inst.uid, dropped)
@@ -583,6 +595,12 @@ func drop_at(global_pos: Vector2) -> bool:
 			var outcome := _drop_displacing(grid_view.inventory, inst, at)
 			dropped = outcome["ok"]
 			pending = outcome["victims"]
+			if dropped and pending.size() >= 2 and stash != null:
+				# 134：顶到地上的那几件从它们原来那一格落过来
+				for v in pending:
+					var vi := v as ItemInstance
+					if stash.has_item(vi.uid):
+						stash.landing_from[vi.uid] = grid_view.global_position + grid_view.cell_origin_px(vi.origin)
 		if dropped:
 			home = grid_view.inventory
 			# 099（作者定）：在棋盘里把信物重新落下 = 奉它为主信仰。只有信物盖序号，普通道具不盖
@@ -761,6 +779,14 @@ func _admit_with_payload(dest: ItemStash, inst: ItemInstance, at: int, spot: Vec
 	return true
 
 
+## 134：这几件（已经在地上）从放手点附近落下
+static func _land_from(dest: ItemStash, items: Array, global_pos: Vector2) -> void:
+	for it in items:
+		var inst := it as ItemInstance
+		if inst != null and dest.has_item(inst.uid):
+			dest.landing_from[inst.uid] = global_pos - Vector2.ONE * InventoryView.CELL * 0.5
+
+
 ## 整批塞进目标容器：有一件放不下就整批退回。
 static func _admit_all(dest: ItemContainer, items: Array) -> bool:
 	dest.begin_batch()
@@ -803,6 +829,7 @@ func _restore() -> void:
 		return
 	if _source is ItemStash:
 		if (_source as ItemStash).insert(_inst, _src_index, _src_spot):
+			(_source as ItemStash).landing_from[_inst.uid] = false     # 134：放回原处不算落地
 			return
 		push_error("DragLayer: uid %d 放不回地上，物品已丢失" % _inst.uid)
 		return

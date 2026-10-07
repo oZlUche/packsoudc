@@ -45,12 +45,12 @@ rules = Array[ExtResource("2_3i5s6")]([SubResource("Resource_ius02")])
 [sub_resource type="Resource" id="Resource_evrft"]
 script = ExtResource("1_r45pg")
 stat = &"crit_damage"
-amount = 20.0
+amount = 0.2
 
 [sub_resource type="Resource" id="Resource_7oroj"]
 script = ExtResource("1_r45pg")
 stat = &"crit_chance"
-amount = 10.0
+amount = 0.1
 
 [sub_resource type="Resource" id="Resource_hf36g"]
 script = ExtResource("11_038i7")

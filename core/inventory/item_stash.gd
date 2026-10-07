@@ -35,6 +35,10 @@ var spots: Dictionary = {}
 var cell_norm: Vector2 = Vector2(60.0 / 1600.0, 60.0 / 900.0)
 ## 自动铺放要躲开的区域（归一化矩形，各屏的面板）。[GroundLayer] 设，不存档
 var avoid: Array[Rect2] = []
+## 134：刚落地的那件从哪落 —— 只是样子，**不存档、不进 [method to_dict]**。界面层写（拖拽放手、顶出），[GroundLayer] 读完即删：
+## [code]Vector2[/code] = 从这个全局像素（道具包围盒左上角）落过来；[code]true[/code] = 就地落下（只缩放 + 弹跳）；
+## [code]false[/code] = 不播（读档、回到存过东西的点 —— 不是「掉」，是本来就在）。没写 = 从最近的面板边缘落出来
+var landing_from: Dictionary = {}
 
 
 func _init(p_id: int = 0, p_capacity: int = 0) -> void:
@@ -127,6 +131,7 @@ func remove(uid: int) -> ItemInstance:
 	var inst := _list[i]
 	_list.remove_at(i)
 	spots.erase(uid)
+	landing_from.erase(uid)
 	inst.container_id = 0
 	_notify_changed()
 	return inst
@@ -154,6 +159,7 @@ func clear() -> void:
 		inst.container_id = 0
 	_list.clear()
 	spots.clear()
+	landing_from.clear()
 	_notify_changed()
 #endregion
 
