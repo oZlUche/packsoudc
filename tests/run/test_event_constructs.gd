@@ -4,16 +4,6 @@
 extends RefCounted
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var events: Dictionary
-	var rules: NodeRules
-
-
 class FakeErosion:
 	var log: Array = []
 	var depths: Dictionary = {}
@@ -26,18 +16,8 @@ class FakeErosion:
 		return int(depths.get(node.id, -1))
 
 
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.events = GameFlow.load_events()
-	c.rules = load(ContentPaths.asset_file("node_rules", String(c.chapter.node_rules)))
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["events", "node_rules"])
 
 
 static func _event(id: StringName, options: Array) -> EventDef:
@@ -56,7 +36,7 @@ static func _event(id: StringName, options: Array) -> EventDef:
 
 
 ## 出生点旁边有某类型点的一局；把事件 [param eid] 放到那个点上。返回 {"run", "next"}
-static func _run_with(c: Content, defs: Dictionary, eid: StringName, type: StringName = &"event") -> Dictionary:
+static func _run_with(c: TestSupport.Content, defs: Dictionary, eid: StringName, type: StringName = &"event") -> Dictionary:
 	for seed in range(1, 80):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [&"bag_leather", &"rifle", &"knife"] as Array[StringName])
 		if s == null:
@@ -402,8 +382,8 @@ static func run_type_proceed_wait_lose(t: TestCase) -> void:
 		t.eq(String(s.events.pending_event().id), "t_rest", "休息点先停下等选")
 		t.eq(s.vitality.current, vit, "还没回")
 		s.events.choose(0)
-		t.eq(rested, [c.rules.rest_restore], "照常发生：回了规则说的 %d 点" % c.rules.rest_restore)
-		t.eq(s.vitality.current, mini(vit + c.rules.rest_restore, s.vitality.maximum), "体力回了")
+		t.eq(rested, [c.node_rules.rest_restore], "照常发生：回了规则说的 %d 点" % c.node_rules.rest_restore)
+		t.eq(s.vitality.current, mini(vit + c.node_rules.rest_restore, s.vitality.maximum), "体力回了")
 		t.check(s.map.get_node(n).is_visited(), "用过了")
 		# 扎营：耗时
 		var fr2 := _run_with(c, defs, &"t_rest", &"rest")

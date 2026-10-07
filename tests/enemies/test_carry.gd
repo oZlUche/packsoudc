@@ -2,24 +2,8 @@
 extends RefCounted
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var pool: EnemyPool
-	var carry: CarryRule
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.pool = c.enemies.pool(chapter.enemy_pool)
-	c.carry = load(ContentPaths.asset_file("carry_rules", String(chapter.carry_rule)))
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["carry"])
 
 
 static func _carried(content: Dictionary) -> Array[StringName]:
@@ -30,7 +14,7 @@ static func _carried(content: Dictionary) -> Array[StringName]:
 	return out
 
 
-static func _build(c: Content, enemy: StringName, strength: int, seed: int, carry: CarryRule) -> Dictionary:
+static func _build(c: TestSupport.Content, enemy: StringName, strength: int, seed: int, carry: CarryRule) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed
 	return EnemyPlacer.build_content(c.enemies.enemy(enemy), c.pool, c.items, strength, rng, carry)

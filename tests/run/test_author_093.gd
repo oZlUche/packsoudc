@@ -2,23 +2,13 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
-const SAVE := "user://test_093_run.json"
-const META := "user://test_093_meta.json"
-const SETTINGS := "user://test_093_settings.json"
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
+const Support := preload("res://tests/run/flow_support.gd")
 
 
-static func _cleanup() -> void:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
-	GameSettings.remove(SETTINGS)
-
-
+## 这一层的套件要信仰定义表（神坛要知道献祭给谁）
 static func _flow(c) -> GameFlow:
-	var f: GameFlow = NodeScreens._flow(c, 10000.0)
-	f.save_path = SAVE
-	f.meta_path = META
-	f.settings_path = SETTINGS
+	var f := Support.flow(c, "093")
 	f.faith_defs = FaithDef.load_all()
 	return f
 
@@ -295,7 +285,7 @@ static func run_faith_call(t: TestCase) -> void:
 			call_node = run.map.get_node(id)
 	if call_node == null:
 		t.check(true, "（这张图没有事件点，跳过走一遍）")
-		_cleanup()
+		Support.cleanup("093")
 		return
 	run.events.handle(call_node)
 	t.check(run.events.pending_event() != null and run.events.pending_event().id == &"faith_call", "踩上：「触发信仰」")
@@ -317,4 +307,4 @@ static func run_faith_call(t: TestCase) -> void:
 			if fid == "earth":
 				t.check(run.board.acts_as_bag(charm.def), "大地的护符在棋盘上是个包")
 	NodeScreens._settle(f)
-	_cleanup()
+	Support.cleanup("093")
