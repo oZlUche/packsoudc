@@ -2,31 +2,27 @@
 ##
 ## 和道具 / 事件 / buff 编辑器同一条原则：**不是另一条通路，只是同一条通路的另一个入口。** 存的是 `data/authoring/sets/<id>.json`，
 ## 校验走导入器（`import_set`），档位与效果构件由 [PropertyForm] 反射生成（字段中文 + 悬浮说明走 [FieldText]）；保存同时产出 `.tres`。
-## 哪些道具属于这套看右边的「成员」：道具的 `set_id` 写这个 id 就算（在道具编辑器里改）。
-extends Control
+## 哪些道具属于这套看右边的「成员」：道具的 `set_id` 写这个 id 就算（在道具编辑器里改）。列表 / 草稿 / 存盘在 [AuthoringEditor]（141）。
+extends AuthoringEditor
 
 const KIND := "sets"
-const SET_DIR := ContentPaths.AUTHORING_SETS
 const PropertyFormScript := preload("res://ui/editor/property_form.gd")
+const SET_TEXTS := {
+	"ok": "没有问题", "unreadable": "%s.json 读不到", "err_id": "先给一个 id", "err_save": "有错，没存",
+	"err_write": "写不进作者目录", "warn_asset": "JSON 存了，.tres 没写成", "err_json": "JSON 读不通",
+}
 
-var _font: Font
-var _ids: Array[String] = []
-var _current_id: String = ""
-var _def: ItemSetDef = null
-var _drafts: Dictionary = {}
-var _baseline: Dictionary = {}
-var _ctx: ContentImporter.Context = null
 var _items: ItemDatabase = null
-var _syncing: bool = false
 
-var _list: ItemList
 var _id_edit: LineEdit
 var _name_edit: LineEdit
 var _form_host: VBoxContainer
 var _summary: Label
 var _members: Label
-var _status: RichTextLabel
-var _json: TextEdit
+
+
+func _init() -> void:
+	_kind = KIND
 
 
 func _ready() -> void:
@@ -38,11 +34,7 @@ func _ready() -> void:
 	_items = ItemDatabase.new()
 	_items.load_dir()
 	_build_ui()
-	_reload_list()
-	if _ids.is_empty():
-		_new_set()
-	else:
-		_open(_ids[0])
+	_start()
 
 
 #region 界面
@@ -173,7 +165,7 @@ func summary_text() -> String:
 		var tier := t as SetTier
 		if tier != null:
 			parts.append("%d 件：%d 修饰 / %d 规则 / %d 效果" % [tier.pieces, tier.mods.size(), tier.rules.size(), tier.effects.size()])
-	var mode := "同一定义只算一次" if _def.count_mode == ItemSetDef.CountMode.DISTINCT_DEFS else "每件实例算一件"
+	var mode: String = "同一定义只算一次" if _def.count_mode == ItemSetDef.CountMode.DISTINCT_DEFS else "每件实例算一件"
 	return "%s（%s）　%s\n%s" % [_def.display_name, _def.id, mode, "　".join(parts) if not parts.is_empty() else "（还没有档位）"]
 
 
@@ -189,134 +181,32 @@ func add_tier(pieces: int) -> SetTier:
 #endregion
 
 
-#region 列表与草稿
-func _reload_list() -> void:
-	_ids = ContentPaths.ids_in(SET_DIR)
-	for key in _drafts:
-		if not _ids.has(key):
-			_ids.append(key)
-	_ids.sort()
-	_repaint_list()
+#region 列表与草稿（公共的在 AuthoringEditor）
+func _export(d) -> Dictionary:
+	return ContentExporter.export_set(d)
 
 
-func _repaint_list() -> void:
-	_list.clear()
-	for id in _ids:
-		_list.add_item(("● " if _drafts.has(id) else "") + id)
+func _import(data: Dictionary, report: ImportReport) -> Resource:
+	return ContentImporter.import_set(data, _ctx, report)
 
 
-func _select_in_list(id: String) -> void:
-	var i := _ids.find(id)
-	if i >= 0 and i < _list.item_count:
-		_list.select(i)
-
-
-func _on_rescan() -> void:
-	_stash_current()
-	_reload_list()
-	_select_in_list(_draft_key())
-
-
-func _on_discard() -> void:
-	var key := _draft_key()
-	_drafts.erase(key)
-	_def = null
-	_current_id = ""
-	if _ids.has(key) and FileAccess.file_exists(ContentPaths.authoring_file(KIND, key)):
-		_open(key)
-		_select_in_list(key)
-	else:
-		_reload_list()
-		if _ids.is_empty():
-			_new_set()
-		else:
-			_open(_ids[0])
-
-
-func _draft_key() -> String:
-	if _current_id != "":
-		return _current_id
-	return String(_def.id) if _def != null else ""
-
-
-func _dump() -> String:
-	return ContentExporter.to_json(ContentExporter.export_set(_def))
-
-
-func _stash_current() -> void:
-	if _def == null:
-		return
-	var key := _draft_key()
-	if key == "":
-		return
-	var now := _dump()
-	if _baseline.has(key) and _baseline[key] == now:
-		_drafts.erase(key)
-	else:
-		_drafts[key] = _def
-
-
-func _track_draft() -> void:
-	var key := _draft_key()
-	if key == "":
-		return
-	var was := _drafts.has(key)
-	var dirty := false
-	for k in _drafts.keys():
-		if k != key and _drafts[k] == _def:
-			_drafts.erase(k)
-			if not FileAccess.file_exists(ContentPaths.authoring_file(KIND, k)):
-				_ids.erase(k)
-			dirty = true
-	var now := _dump()
-	if _baseline.has(key) and _baseline[key] == now:
-		_drafts.erase(key)
-	else:
-		_drafts[key] = _def
-		if not _ids.has(key):
-			_ids.append(key)
-			_ids.sort()
-			dirty = true
-	if dirty or was != _drafts.has(key):
-		_repaint_list()
-
-
-func _open(id: String) -> void:
-	if id == _draft_key() and _def != null:
-		return
-	_stash_current()
-	if _drafts.has(id):
-		_bind(_drafts[id], id)
-		return
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(ContentPaths.authoring_file(KIND, id)))
-	if not (parsed is Dictionary):
-		_status.text = "[color=#d9534f]%s.json 读不到[/color]" % id
-		return
-	var report := ImportReport.new()
-	report.source = id
-	var def := ContentImporter.import_set(parsed, _ctx, report)
-	_baseline[id] = ContentExporter.to_json(ContentExporter.export_set(def))
-	_bind(def, id)
-
-
-func _new_set() -> void:
-	_stash_current()
+func _new_def() -> Resource:
 	var def := ItemSetDef.new()
 	def.id = &"new_set"
 	def.display_name = "新套装"
 	var tier := SetTier.new()
 	tier.pieces = 2
 	def.tiers.append(tier)
-	_bind(def, "")
+	return def
 
 
-func _bind(def: ItemSetDef, id: String) -> void:
-	_def = def
-	_current_id = id
+func _new_set() -> void:
+	_new_entry()
+
+
+func _on_bound() -> void:
 	_sync_fields()
 	_rebuild_form()
-	_refresh()
-	_repaint_list()
 
 
 func _sync_fields() -> void:
@@ -336,74 +226,17 @@ func _rebuild_form() -> void:
 #endregion
 
 
-#region 保存与校验
-func _validate() -> ImportReport:
-	var report := ImportReport.new()
-	report.source = String(_def.id)
-	ContentImporter.import_set(ContentExporter.export_set(_def), _ctx, report)
-	return report
+#region 刷新与提示语
+func _t(key: String) -> String:
+	return String(SET_TEXTS.get(key, key))
 
 
-func _refresh() -> void:
-	if _def == null:
-		return
-	_track_draft()
-	_json.text = _dump()
-	_status.text = _validate().bbcode("没有问题")
+func _saved_text(id: String) -> String:
+	return "已存：sets/%s.json 与 .tres" % id
+
+
+func _on_refreshed() -> void:
 	_summary.text = summary_text()
 	var who := members()
 	_members.text = "、".join(who) if not who.is_empty() else "（还没有道具的 set_id 写着这个 id）"
-
-
-func _save() -> void:
-	if _def == null:
-		return
-	var id := String(_def.id).strip_edges()
-	if id == "":
-		_status.text = "[color=#d9534f]先给一个 id[/color]"
-		return
-	var data := ContentExporter.export_set(_def)
-	var report := ImportReport.new()
-	report.source = id
-	var built := ContentImporter.import_set(data, _ctx, report)
-	if not report.ok():
-		_status.text = "[color=#d9534f]有错，没存[/color]\n" + report.bbcode("没有问题")
-		return
-	DirAccess.make_dir_recursive_absolute(SET_DIR)
-	if ContentExporter.save(data, ContentPaths.authoring_file(KIND, id)) != OK:
-		_status.text = "[color=#d9534f]写不进作者目录[/color]"
-		return
-	DirAccess.make_dir_recursive_absolute(ContentPaths.SETS)
-	if ResourceSaver.save(built, ContentPaths.asset_file(KIND, id)) != OK:
-		_status.text = "[color=#f0ad4e]JSON 存了，.tres 没写成[/color]"
-		return
-	_drafts.erase(_draft_key())
-	_drafts.erase(id)
-	_baseline[id] = ContentExporter.to_json(data)
-	_current_id = id
-	_reload_list()
-	_select_in_list(id)
-	_refresh()
-	_status.text = "[color=#5cb85c]已存：sets/%s.json 与 .tres[/color]\n" % id + report.bbcode("没有问题")
-
-
-func _save_as() -> void:
-	_current_id = ""
-	_save()
-
-
-func _apply_json() -> void:
-	var parsed = JSON.parse_string(_json.text)
-	if not (parsed is Dictionary):
-		_status.text = "[color=#d9534f]JSON 读不通[/color]"
-		return
-	var report := ImportReport.new()
-	report.source = _current_id
-	_bind(ContentImporter.import_set(parsed, _ctx, report), _current_id)
-
-
-## [DevNav] 会问这一句再决定要不要拦一下返回
-func has_unsaved_changes() -> bool:
-	_stash_current()
-	return not _drafts.is_empty()
 #endregion

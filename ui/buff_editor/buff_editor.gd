@@ -3,22 +3,11 @@
 ## 和道具 / 事件编辑器同一条原则：**不是另一条通路，只是同一条通路的另一个入口。** 存的是 `data/authoring/buffs/<id>.json`，
 ## 校验走导入器（含「可叠层的永续、不许填时长」那条规矩），效果构件由 [PropertyForm] 反射生成、类型下拉来自注册表；保存同时产出 `.tres`。
 ## 道具里按 id 引用（`"buff": "<id>"`），内联的 buff 照旧可以在道具编辑器里写。
-## 界面文字走 [UiText]：主菜单切了语言这里跟着变。
-extends Control
+## 界面文字走 [UiText]：主菜单切了语言这里跟着变。列表 / 草稿 / 存盘在 [AuthoringEditor]（141）。
+extends AuthoringEditor
 
 const KIND := "buffs"
-const BUFF_DIR := ContentPaths.AUTHORING_BUFFS
 
-var _font: Font
-var _ids: Array[String] = []
-var _current_id: String = ""
-var _def: BuffDef = null
-var _drafts: Dictionary = {}
-var _baseline: Dictionary = {}
-var _ctx: ContentImporter.Context = null
-var _syncing: bool = false
-
-var _list: ItemList
 var _id_edit: LineEdit
 var _name_edit: LineEdit
 var _debuff: CheckBox
@@ -28,8 +17,10 @@ var _seconds: SpinBox
 var _rule_note: Label
 var _form_host: VBoxContainer
 var _summary: Label
-var _status: RichTextLabel
-var _json: TextEdit
+
+
+func _init() -> void:
+	_kind = KIND
 
 
 func _ready() -> void:
@@ -39,11 +30,7 @@ func _ready() -> void:
 	UiPalette.apply(settings)
 	_ctx = ContentImporter.Context.new()
 	_build_ui()
-	_reload_list()
-	if _ids.is_empty():
-		_new_buff()
-	else:
-		_open(_ids[0])
+	_start()
 
 
 #region 界面
@@ -228,117 +215,30 @@ func def() -> BuffDef:
 #endregion
 
 
-#region 列表与草稿
-func _reload_list() -> void:
-	_ids = ContentPaths.ids_in(BUFF_DIR)
-	_repaint_list()
+#region 列表与草稿（公共的在 AuthoringEditor）
+func _export(d) -> Dictionary:
+	return ContentExporter.export_buff(d)
 
 
-func _repaint_list() -> void:
-	_list.clear()
-	for id in _ids:
-		_list.add_item(("● " if _drafts.has(id) else "") + id)
+func _import(data: Dictionary, report: ImportReport) -> Resource:
+	return ContentImporter.import_buff(data, _ctx, report)
 
 
-func _select_in_list(id: String) -> void:
-	var i := _ids.find(id)
-	if i >= 0 and i < _list.item_count:
-		_list.select(i)
-
-
-func _on_rescan() -> void:
-	_stash_current()
-	_reload_list()
-	_select_in_list(_draft_key())
-
-
-func _on_discard() -> void:
-	var key := _draft_key()
-	_drafts.erase(key)
-	_def = null
-	_current_id = ""
-	if _ids.has(key):
-		_open(key)
-		_select_in_list(key)
-	else:
-		_new_buff()
-
-
-func _draft_key() -> String:
-	if _current_id != "":
-		return _current_id
-	return String(_def.id) if _def != null else ""
-
-
-func _dump() -> String:
-	return ContentExporter.to_json(ContentExporter.export_buff(_def))
-
-
-func _stash_current() -> void:
-	if _def == null:
-		return
-	var key := _draft_key()
-	if key == "":
-		return
-	var now := _dump()
-	if _baseline.has(key) and _baseline[key] == now:
-		_drafts.erase(key)
-	else:
-		_drafts[key] = _def
-
-
-func _track_draft() -> void:
-	var key := _draft_key()
-	if key == "":
-		return
-	var was := _drafts.has(key)
-	# 新建的 buff 还没存盘时草稿键就是它的 id；作者改了 id，旧键下那份就是同一个对象，不能留成孤儿
-	for k in _drafts.keys():
-		if k != key and _drafts[k] == _def:
-			_drafts.erase(k)
-	var now := _dump()
-	if _baseline.has(key) and _baseline[key] == now:
-		_drafts.erase(key)
-	else:
-		_drafts[key] = _def
-	if was != _drafts.has(key):
-		_repaint_list()
-
-
-func _open(id: String) -> void:
-	if id == _draft_key() and _def != null:
-		return
-	_stash_current()
-	if _drafts.has(id):
-		_bind(_drafts[id], id)
-		return
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(ContentPaths.authoring_file(KIND, id)))
-	if not (parsed is Dictionary):
-		_status.text = "[color=#d9534f]%s.json ?[/color]" % id
-		return
-	var report := ImportReport.new()
-	report.source = id
-	var def := ContentImporter.import_buff(parsed, _ctx, report)
-	_baseline[id] = ContentExporter.to_json(ContentExporter.export_buff(def))
-	_bind(def, id)
-
-
-func _new_buff() -> void:
-	_stash_current()
+func _new_def() -> Resource:
 	var def := BuffDef.new()
 	def.id = &"new_buff"
 	def.display_name = "新 buff" if UiText.lang == "zh" else "New buff"
 	def.stackable = true     # 作者定：通常可叠层（137：可叠就是不限层），且可叠层的永续
-	_bind(def, "")
+	return def
 
 
-func _bind(def: BuffDef, id: String) -> void:
-	_def = def
-	_current_id = id
+func _new_buff() -> void:
+	_new_entry()
+
+
+func _on_bound() -> void:
 	_sync_fields()
 	_rebuild_form()
-	_refresh()
-	_repaint_list()
 
 
 func _sync_fields() -> void:
@@ -346,7 +246,7 @@ func _sync_fields() -> void:
 	_id_edit.text = String(_def.id)
 	_name_edit.text = _def.display_name
 	_debuff.button_pressed = _def.is_debuff
-	var stackable := _def.is_stackable()
+	var stackable: bool = _def.is_stackable()
 	_stackable.button_pressed = stackable
 	_permanent.button_pressed = _def.is_permanent()
 	_permanent.disabled = stackable
@@ -367,84 +267,22 @@ func _rebuild_form() -> void:
 
 
 #region 保存与校验
-func _validate() -> ImportReport:
-	var report := ImportReport.new()
-	report.source = String(_def.id)
-	ContentImporter.import_buff(ContentExporter.export_buff(_def), _ctx, report)
-	return report
+func _t(key: String) -> String:
+	return "%s.json ?" if key == "unreadable" else UiText.t("buff." + key)
 
 
-## 状态栏的文字（[method ImportReport.bbcode]），「没有问题」那句按语言来。测试直接调
-func _status_text(report: ImportReport) -> String:
-	return report.bbcode(UiText.t("buff.ok"))
+func _saved_text(id: String) -> String:
+	return UiText.t("buff.saved") % [id, id]
 
 
 func summary_text() -> String:
 	if _def == null:
 		return ""
-	var stacks := UiText.t("buff.stacks_single") if not _def.is_stackable() else UiText.t("buff.stacks_unlimited")
-	var dur := (UiText.t("buff.permanent") if _def.is_permanent() else "%s %.1f" % [UiText.t("buff.seconds"), _def.duration_sec])
+	var stacks: String = UiText.t("buff.stacks_single") if not _def.is_stackable() else UiText.t("buff.stacks_unlimited")
+	var dur: String = (UiText.t("buff.permanent") if _def.is_permanent() else "%s %.1f" % [UiText.t("buff.seconds"), _def.duration_sec])
 	return "%s\n%s\n%s" % [UiText.t("buff.summary") % [stacks, dur], "%d mods · %d rules · %d on_apply · %d on_expire" % [_def.mods.size(), _def.rules.size(), _def.on_apply.size(), _def.on_expire.size()], UiText.t("buff.usage") % String(_def.id)]
 
 
-func _refresh() -> void:
-	if _def == null:
-		return
-	_track_draft()
-	_json.text = _dump()
-	_status.text = _status_text(_validate())
+func _on_refreshed() -> void:
 	_summary.text = summary_text()
-
-
-func _save() -> void:
-	if _def == null:
-		return
-	var id := String(_def.id).strip_edges()
-	if id == "":
-		_status.text = "[color=#d9534f]%s[/color]" % UiText.t("buff.err_id")
-		return
-	var data := ContentExporter.export_buff(_def)
-	var report := ImportReport.new()
-	report.source = id
-	var built := ContentImporter.import_buff(data, _ctx, report)
-	if not report.ok():
-		_status.text = "[color=#d9534f]%s[/color]\n" % UiText.t("buff.err_save") + _status_text(report)
-		return
-	DirAccess.make_dir_recursive_absolute(BUFF_DIR)
-	if ContentExporter.save(data, ContentPaths.authoring_file(KIND, id)) != OK:
-		_status.text = "[color=#d9534f]%s[/color]" % UiText.t("buff.err_write")
-		return
-	DirAccess.make_dir_recursive_absolute(ContentPaths.BUFFS)
-	if ResourceSaver.save(built, ContentPaths.asset_file(KIND, id)) != OK:
-		_status.text = "[color=#f0ad4e]%s[/color]" % UiText.t("buff.warn_asset")
-		return
-	_drafts.erase(_draft_key())
-	_drafts.erase(id)
-	_baseline[id] = ContentExporter.to_json(data)
-	_current_id = id
-	_reload_list()
-	_select_in_list(id)
-	_refresh()
-	_status.text = "[color=#5cb85c]%s[/color]\n" % (UiText.t("buff.saved") % [id, id]) + _status_text(report)
-
-
-func _save_as() -> void:
-	_current_id = ""
-	_save()
-
-
-func _apply_json() -> void:
-	var parsed = JSON.parse_string(_json.text)
-	if not (parsed is Dictionary):
-		_status.text = "[color=#d9534f]%s[/color]" % UiText.t("buff.err_json")
-		return
-	var report := ImportReport.new()
-	report.source = _current_id
-	_bind(ContentImporter.import_buff(parsed, _ctx, report), _current_id)
-
-
-## [DevNav] 会问这一句再决定要不要拦一下返回
-func has_unsaved_changes() -> bool:
-	_stash_current()
-	return not _drafts.is_empty()
 #endregion
