@@ -7,12 +7,18 @@
 class_name GameScreen
 extends Control
 
+const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
+
 ## 这一屏是 GameFlow.Screen 里的哪个，导演设
 var screen: int = -1
 var flow: GameFlow = null
 var font: Font = null
 ## 091：底屏 / 叠层的整块底色（跟设置里的底色走）；换了底色 [method refresh_backdrop] 刷
 var _bg_rect: ColorRect = null
+## 盖住整屏的那一层拖拽（节点屏由 [method _mount_bag] 造；开局屏自己造一层盖在格子上）
+var _drag: DragLayer = null
+## 停在道具上的悬浮说明（节点屏由 [method _mount_bag] 造；地图屏的背包浮窗自己造）
+var _tip: HoverTip = null
 
 
 func _ready() -> void:
@@ -58,6 +64,38 @@ func _ground_to_bag(uid: int, open_bag: Callable) -> bool:
 	if not moved and panel != null and panel.has_method("say_no_room"):
 		panel.say_no_room(inst)
 	return true
+
+
+## 节点屏（神坛 / 保险箱 / 容器 / 商店）右边的背包一次装好：面板（棋盘 + 地上）、盖住整屏的拖拽层、停在道具上的悬浮窗。
+## [param other] 是左边对面的那块视图（祭品台 / 保险箱 / 容器 / 出售区）：登记到拖拽层、由悬浮窗盯着；
+## [param hint_sink] 接面板的提示（`func(text: String)`）；[param quick_target] 是棋盘上双击的去处（商店没有）。
+## 加进树的顺序就是 z 序：面板进 [param row] → 拖拽层 → 悬浮窗，拖拽层要在面板之后加才盖得住。
+## 各屏自己的规矩（`drop_filter`、`can_show`……）回来之后接到 [member _drag] / [member _tip] 上
+func _mount_bag(row: Control, other: ContainerView, hint_sink: Callable, quick_target: ItemContainer = null) -> InventoryPanelScript:
+	var inv := InventoryPanelScript.new()
+	_drag = DragLayer.new()
+	_drag.label_font = font
+	inv.setup(flow.run, font, _drag)
+	inv.quick_target = quick_target
+	inv.hint_sink = hint_sink
+	row.add_child(inv)
+	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_drag)
+	_drag.register_view(other)
+	_tip = HoverTip.new()
+	add_child(_tip)
+	_tip.watch(other)
+	return inv
+
+
+## 「先试棋盘、放不下再到地上」（神坛退回祭品、保险箱取出、容器里双击共用）：返回落点 "board" / "storage"，都放不下 ""。
+## 提示语各屏按返回值自己写
+func _take_to_player(from: ItemContainer, uid: int) -> String:
+	if InventoryService.transfer_auto(from, uid, flow.run.board):
+		return "board"
+	if InventoryService.transfer_auto(from, uid, flow.run.storage):
+		return "storage"
+	return ""
 
 
 ## 对手叫什么（战前准备、战斗回放共用）：从这一场的敌人内容（点里的，或搜索遭遇现造的）查定义，「名字（N 档）」；查不到就「敌人」

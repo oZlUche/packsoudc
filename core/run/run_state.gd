@@ -772,6 +772,15 @@ func unequip(uid: int) -> bool:
 	return InventoryService.transfer_auto(board, uid, storage)
 
 
+## 棋盘 / 地上哪个装着这一件：棋盘有就是棋盘，否则地上有就是地上，都没有 null（神坛 / 保险箱「从棋盘或地上拿一件」用）
+func holder_of(uid: int) -> ItemContainer:
+	if board.has_item(uid):
+		return board
+	if storage.has_item(uid):
+		return storage
+	return null
+
+
 func _offer_loot(container: GridInventory) -> void:
 	if container == null or container.item_count() == 0:
 		return

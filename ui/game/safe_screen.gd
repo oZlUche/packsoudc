@@ -5,12 +5,9 @@
 ## 作者定：**关上（里面有东西）就送回基地、不能再改动**，走开也算关上；空着关只是收起，还能再开。
 extends GameScreen
 
-const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
-
 var _safe: GridInventory = null
 var _module: SafeModule = null
 var _view: InventoryView
-var _drag: DragLayer
 var _line: Label
 var _inv: Control = null
 
@@ -42,24 +39,11 @@ func open(payload: Dictionary) -> void:
 	buttons.add_child(back)
 	left.add_child(buttons)
 
-	var inv := InventoryPanelScript.new()
-	_drag = DragLayer.new()
-	_drag.label_font = font
-	inv.setup(flow.run, font, _drag)
-	inv.quick_target = _safe     # 棋盘上双击 → 进保险箱
-	inv.hint_sink = func(text: String): _line.text = text
-	_inv = inv
-	row.add_child(inv)
+	_inv = _mount_bag(row, _view, func(text: String): _line.text = text, _safe)     # 棋盘上双击 → 进保险箱
 	_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): take_back(uid))
-	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(_drag)
-	_drag.register_view(_view)
 	# 包不进保险箱（局外不留包，MetaState.keeps）
 	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
 		return _is_open() and (target != _safe or MetaState.keeps(inst.def))
-	var tip := HoverTip.new()
-	add_child(tip)
-	tip.watch(_view)
 	_safe.changed.connect(_refresh)
 	_refresh()
 
@@ -75,12 +59,10 @@ func take_back(uid: int) -> bool:
 	var inst := _safe.get_item(uid)
 	if inst == null or not _is_open():
 		return false
-	if InventoryService.transfer_auto(_safe, uid, flow.run.board):
-		return true
-	if InventoryService.transfer_auto(_safe, uid, flow.run.storage):
+	var where := _take_to_player(_safe, uid)
+	if where == "storage":
 		_line.text = "背包放不下「%s」，放在了地上" % Names.of(inst.def)
-		return true
-	return false
+	return where != ""
 
 
 ## 棋盘 / 地上的一件放进保险箱。测试直接调；包不收
@@ -89,7 +71,7 @@ func put_in(uid: int) -> bool:
 	if not _is_open():
 		_line.text = "保险箱已经锁上了"
 		return false
-	var from: ItemContainer = run.board if run.board.has_item(uid) else (run.storage if run.storage.has_item(uid) else null)
+	var from := run.holder_of(uid)
 	if from == null:
 		return false
 	var inst := from.get_item(uid)

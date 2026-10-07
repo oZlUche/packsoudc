@@ -5,7 +5,6 @@
 ## 所有动作都是公开方法，鼠标只是调它们；测试直接调。
 extends GameScreen
 
-const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
 const SettingsScreenScript := preload("res://ui/game/settings_screen.gd")
 const EncyclopediaScreenScript := preload("res://ui/game/encyclopedia_screen.gd")
 const SIDE_WIDTH := 400     # 090：右栏三个按键放大到 300%，栏也加宽
@@ -25,7 +24,6 @@ var _log: RichTextLabel
 var _extract_btn: Button
 var _reopen_btn: Button
 var _skills_box: VBoxContainer
-var _tip: HoverTip = null
 var _bag: Control = null
 var _bag_panel: Control = null
 var _confirm: Control = null
