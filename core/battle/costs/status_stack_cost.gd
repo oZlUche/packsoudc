@@ -11,12 +11,8 @@ extends Cost
 @export var on_self: bool = true
 
 
-func _who(ctx: RuleContext) -> CombatantRuntime:
-	return ctx.owner if on_self else ctx.opponent()
-
-
 func can_pay(ctx: RuleContext) -> bool:
-	var who := _who(ctx)
+	var who := ctx.side_of(on_self)
 	if who == null:
 		return false
 	var inst := who.find_buff(buff_id)
@@ -26,10 +22,4 @@ func can_pay(ctx: RuleContext) -> bool:
 
 
 func pay(ctx: RuleContext) -> void:
-	var who := _who(ctx)
-	var removed := who.remove_buff_stacks(buff_id, maxi(1, stacks))
-	if removed > 0:
-		ctx.battle.emit(BattleEvent.STATUS_UNSTACKED, who.side, {
-			"buff": String(buff_id), "delta": -removed,
-			"stacks": who.stacks_of(buff_id),
-		})
+	RemoveStatus.take(ctx, ctx.side_of(on_self), buff_id, maxi(1, stacks))

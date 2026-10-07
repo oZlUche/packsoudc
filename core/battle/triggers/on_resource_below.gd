@@ -29,9 +29,9 @@ func subscribed_events() -> Array[StringName]:
 func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 	if event.get_name(&"key") != resource_key:
 		return false
-	if (event.side == ctx.owner.side) != on_self:
+	if not ctx.event_on(event, on_self):
 		return false
-	var who := ctx.owner if on_self else ctx.opponent()
+	var who := ctx.side_of(on_self)
 	var cur := who.resources.current(resource_key)
 	if full:
 		return cur >= who.resources.maximum(resource_key)

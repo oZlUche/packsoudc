@@ -47,9 +47,7 @@ func apply(ctx: RuleContext) -> void:
 		if value < 0 and resource_key == BattleStats.RES_HP:
 			# 106 第八节：以血为代价（超频、献祭）不是武器打出来的，所以**不是直接伤害** ——
 			# 防护不该把自己割的那一刀挡掉。这正是作者说的「另行说明」那一类
-			DamageResolver.resolve(ctx.battle, DamagePacket.create(
-				loss_type, -value, who, ctx.owner.side, ctx.source_uid(), false
-			))
+			DamageResolver.deal(ctx.battle, who, -value, loss_type, ctx.owner.side, ctx.source_uid(), false)
 			continue
 		var actual := who.resources.change(
 			resource_key, value,
@@ -60,8 +58,7 @@ func apply(ctx: RuleContext) -> void:
 				"effect": "change_resource", "uid": ctx.source_uid(),
 				"target_side": who.side, "key": String(resource_key), "amount": actual,
 			})
-		if who.resources.current(BattleStats.RES_HP) <= 0 and who.mark_dead():
-			ctx.battle.emit(BattleEvent.DIED, who.side, {})
+		who.settle_death(ctx.battle)
 
 
 func describe() -> String:

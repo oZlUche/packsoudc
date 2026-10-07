@@ -13,7 +13,7 @@ extends Cost
 
 
 func can_pay(ctx: RuleContext) -> bool:
-	var who := ctx.owner if on_self else ctx.opponent()
+	var who := ctx.side_of(on_self)
 	if who == null or axis == &"" or stacks == 0:
 		return negate
 	var have := who.axis_total(axis)

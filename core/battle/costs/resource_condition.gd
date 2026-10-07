@@ -25,7 +25,7 @@ func has_bounds() -> bool:
 
 
 func can_pay(ctx: RuleContext) -> bool:
-	var who := ctx.owner if on_self else ctx.opponent()
+	var who := ctx.side_of(on_self)
 	if who == null or not who.resources.has(resource_key):
 		return negate
 	var cur := who.resources.current(resource_key)

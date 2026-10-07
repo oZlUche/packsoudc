@@ -39,13 +39,20 @@ static func _remove(ctx: RuleContext, who: CombatantRuntime, id: StringName, n_s
 	var have := who.stacks_of(id)
 	if have <= 0:
 		return
-	var n := have if n_stacks <= 0 else mini(n_stacks, have)
+	take(ctx, who, id, have if n_stacks <= 0 else mini(n_stacks, have), "removed")
+
+
+## 从 [param who] 身上扣 [param n] 层 [param id]，返回实际扣掉的层数；扣掉了才发 status_unstacked（与 [method ApplyStatus.give] 对称）。
+## [ConvertStatus] 与 [StatusStackCost] 也走这里。[param reason] 为空就不写这个键 —— 消耗那条原本就不带，回放载荷逐字节不变
+static func take(ctx: RuleContext, who: CombatantRuntime, id: StringName, n: int, reason: String = "") -> int:
 	var removed := who.remove_buff_stacks(id, n)
-	if removed > 0:
-		ctx.battle.emit(BattleEvent.STATUS_UNSTACKED, who.side, {
-			"buff": String(id), "delta": -removed,
-			"stacks": who.stacks_of(id), "reason": "removed",
-		})
+	if removed <= 0:
+		return 0
+	var payload := {"buff": String(id), "delta": -removed, "stacks": who.stacks_of(id)}
+	if reason != "":
+		payload["reason"] = reason
+	ctx.battle.emit(BattleEvent.STATUS_UNSTACKED, who.side, payload)
+	return removed
 
 
 func describe() -> String:

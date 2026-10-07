@@ -57,7 +57,7 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 		if not ctx.owner.links_of(mine).has(uid):
 			return false
 	if not source_tags.is_empty():
-		var shooter := ctx.owner if from_own_side else ctx.opponent()
+		var shooter := ctx.side_of(from_own_side)
 		if shooter == null:
 			return false
 		var tags := shooter.tags_of(uid)
