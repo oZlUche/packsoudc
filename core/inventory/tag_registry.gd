@@ -18,18 +18,8 @@ static func _ensure() -> void:
 
 ## 从一个目录装定义（同 id 后来的覆盖前面的）。返回装了几份
 static func load_dir(dir_path: String) -> int:
-	var dir := DirAccess.open(dir_path)
-	if dir == null:
-		return 0
-	var names: Array[String] = []
-	for f in dir.get_files():
-		var n := f.trim_suffix(".remap")
-		if n.ends_with(".tres") or n.ends_with(".res"):
-			names.append(n)
-	names.sort()
 	var count := 0
-	for n in names:
-		var res := load(dir_path + "/" + n)
+	for res in ContentPaths.load_resources(dir_path):
 		if res is TagDef and (res as TagDef).id != &"":
 			_defs[(res as TagDef).id] = res
 			count += 1

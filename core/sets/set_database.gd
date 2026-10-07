@@ -9,17 +9,8 @@ var _defs: Dictionary = {}  # StringName -> ItemSetDef
 
 
 func load_dir(dir_path: String = DEFAULT_DIR) -> int:
-	var dir := DirAccess.open(dir_path)
-	if dir == null:
-		return 0
 	var count := 0
-	for file_name in dir.get_files():
-		var name := file_name
-		if name.ends_with(".remap"):
-			name = name.trim_suffix(".remap")
-		if not (name.ends_with(".tres") or name.ends_with(".res")):
-			continue
-		var res := ResourceLoader.load(dir_path.path_join(name))
+	for res in ContentPaths.load_resources(dir_path):
 		if res is ItemSetDef and register(res):
 			count += 1
 	return count

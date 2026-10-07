@@ -478,17 +478,7 @@ func restore(d: Dictionary) -> void:
 ## 全部猎手定义（id → HunterDef）
 static func load_all() -> Dictionary:
 	var out := {}
-	var dir := DirAccess.open(ContentPaths.HUNTERS)
-	if dir == null:
-		return out
-	var names: Array[String] = []
-	for f in dir.get_files():
-		var n := f.trim_suffix(".remap")
-		if n.ends_with(".tres") or n.ends_with(".res"):
-			names.append(n)
-	names.sort()
-	for n in names:
-		var res := load(ContentPaths.HUNTERS + "/" + n)
+	for res in ContentPaths.load_resources(ContentPaths.HUNTERS):
 		if res is HunterDef:
 			out[(res as HunterDef).id] = res
 	return out
