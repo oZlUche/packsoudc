@@ -37,6 +37,8 @@ func _row(n: int) -> Control:
 	if exists:
 		text += UiText.t("slots.summary") % [int(summary.get("runs", 0)) + 1, int(summary.get("extractions", 0)), int(summary.get("deaths", 0)),
 			UiText.t("slots.in_run") if bool(summary.get("has_run", false)) else ""]
+		if int(summary.get("newer", 0)) > 0:
+			text += UiText.t("slots.newer_tag")
 	else:
 		text += UiText.t("slots.empty")
 	if flow.slot == n:

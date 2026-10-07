@@ -3046,6 +3046,8 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 **读不出来先备份，绝不静默覆盖**（098，作者定）：`MetaSave.read` 返回 null 而文件还在 → `GameFlow.use_slot` 调 `SaveSlots.backup(n, "meta")` 把老文件改名成 `meta.json.<unix>.bak` 再从零开始；
 `continue_run` 对 `run.json` 同理（否则「继续」每次都撞同一面墙）。`SaveSlots.exists / remove` 不看 `.bak`；`GameFlow.meta_backup / run_backup / backup_notice()`，读取存档屏与主菜单各写一句（`slots.backed_up`）。回滚靠备份文件，不做自动回滚。
 
+**新版本的存档在旧版本里只读**（2026-10-07，作者反馈「旧版读新版存档会当成读不出来、新建存档」）：`SaveSlots.newer_version(n)` 看两份文件的 `version`，大于本版本认得的就不是坏档 —— `open` 不读、不备份，`GameFlow.newer_slot` 记下版本号；这时 `save_meta` / `save` / 结算都不写、`continue_game` / `continue_run` 返回 false，`backup_notice()` 提示换回新版本（`slots.newer`），读取存档屏那一行带「更新版本的存档」。玩家自己删掉这一位才解锁。只对改了这条之后的版本有效：更早的旧版本照旧会把新档备份成 `.bak`。
+
 **内容 id 改名表**（098）：`IdAliases`（`ITEMS / TAGS / FAITHS`，旧 → 新）是**内容层**的事，不进版本链。只在「按真名查不到」时问一次：
 `ItemDatabase.get_def`、`TagRegistry.get_def`、`FaithPower.restore`（旧信仰的点数并进新池子）。现有两条来自 093 的合并改名（`violence → brute`、`sunfire → sun`，标签同前缀）。
 测试守两条：表里的新 id 必须存在、旧 id 不许再被作者数据引用。
