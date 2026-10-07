@@ -387,6 +387,20 @@ static func frame_spawn_mask_and_presets(t: TestCase, root: Window) -> void:
 			t.eq(view.node_at(pos[other]), other, "别的点又点得中了")
 	else:
 		t.check(not view.spawn_mask, "章节自动站好：没有遮罩")
+	# 反馈：进点后节点浮窗一直挂着 —— 悬停相邻的点出浮窗，走过去之后浮窗收起
+	flow.settings.node_tooltips_preview = true
+	var target := -1
+	for id in view.reachable:
+		if int(id) != run.travel.current_id:
+			target = int(id)
+			break
+	if target >= 0:
+		view._hover_id = target
+		view.node_hovered.emit(target)
+		t.check(map.tooltip_text() != "", "悬停相邻的点：浮窗出来了")
+		map.step(target)
+		t.eq(map.tooltip_text(), "", "走过去之后浮窗收起")
+		t.eq(view._hover_id, -1, "悬停清掉：鼠标回到这个点会重新出浮窗")
 	game.queue_free()
 	_cleanup()
 
