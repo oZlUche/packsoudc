@@ -671,13 +671,13 @@ func _refresh() -> void:
 			var caps: Array[String] = []
 			caps.append("体力 %d" % ch.vitality_max)
 			caps.append("生命 %d" % int(ch.baseline().value_of(&"max_hp")))
+			caps.append("耐力 %d" % int(ch.baseline().value_of(&"max_stamina")))     # 136
 			if ch.carry_max_items >= 0:
 				caps.append("最多带 %d 件" % ch.carry_max_items)
 			if ch.carry_rarity_cap >= 0:
 				caps.append("稀有度不超过 %d" % ch.carry_rarity_cap)
 			lines.append("　".join(caps))
-			if ch.skills_summary() != "":
-				lines.append("技能：" + ch.skills_summary())
+			lines.append_array(ch.skill_lines())     # 136：身份 / 擅长 / 主动各一行
 		var pre := preset()
 		if pre != null:
 			lines.append("预设「%s」：%s" % [Names.of(pre), Names.description_of(pre)])

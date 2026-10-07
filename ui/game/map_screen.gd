@@ -464,6 +464,7 @@ func _adopt() -> void:
 	ev.type_changed.connect(func(n: MapNode, type: StringName):
 		_note("　点 %d 变成了%s点" % [n.id, MapNodeStyle.of(type)["label"]])
 		_view.refresh())
+	ev.battle_skipped.connect(func(n: MapNode): _note("　溜走了：点 %d 那一场没打" % n.id))     # 136：脱身
 	ev.battle_finished.connect(func(n: MapNode, result: BattleResult, won: bool):
 		var who := enemy_preview(n.id).get_slice("　", 0)
 		_note("　打 %s：%s，%.1f 秒" % [who if who != "" else "敌人", "赢了" if won else ("平局，按输算" if result.is_draw() else "输了"), result.duration_sec()]))
@@ -503,9 +504,9 @@ func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
 	var n := _run.map.get_node(intent.to_id)
 	var what: String = MapNodeStyle.of(n.type)["label"]
 	if intent.kind == MoveIntent.TELEPORT:
-		_note("[color=#b38cff]⇢ %d %s，传送（花 %d 点）%s[/color]" % [intent.to_id, what, _run.travel.cost_of(intent), "" if first_visit else "，这里用过了"])
+		_note("[color=#b38cff]⇢ %d %s，传送（花 %d 点）%s[/color]" % [intent.to_id, what, _run.travel.last_cost, "" if first_visit else "，这里用过了"])
 	else:
-		_note(("→ %d %s（花 %d 点）" if first_visit else "→ %d %s，穿行（花 %d 点，这里用过了）") % [intent.to_id, what, _run.travel.cost_of(intent)])
+		_note(("→ %d %s（花 %d 点）" if first_visit else "→ %d %s，穿行（花 %d 点，这里用过了）") % [intent.to_id, what, _run.travel.last_cost])
 	var cd := CountdownModule.of(_run)
 	if cd != null and cd.has_countdown() and cd.left() > 0 and cd.left() <= 5:
 		_note("[color=#d9534f]　倒计时只剩 %d 步！[/color]" % cd.left())
@@ -617,7 +618,7 @@ func _on_node_hovered(id: int) -> void:
 		_preview.text = ""
 		return
 	_preview.text = "→ %s　花 %d 行动点%s%s" % [MapNodeStyle.of(n.type)["label"], _run.travel.cost_of(intent),
-		"（负重：双倍）" if _run.travel.action_cost_mult > 1 else "", "（用过了，只是穿行）" if n.is_visited() else ""]
+		"（熟门熟路：这一步不花）" if _run.travel.next_step_free() else ("（负重：双倍）" if _run.travel.action_cost_mult > 1 else ""), "（用过了，只是穿行）" if n.is_visited() else ""]
 
 
 ## 084：节点浮窗（章节开关 `node_tooltips`）：文字按 NodeTooltip 的模板渲染，没用过的战斗点下面画对手的棋盘
@@ -661,6 +662,8 @@ static func search_end_text(why: StringName) -> String:
 			return "被赶跑，这个点不能再搜"
 		&"exhausted":
 			return "搜完了"
+		&"slipped":
+			return "溜走了，这个点不能再搜"
 	return "离开"
 
 
@@ -782,8 +785,8 @@ func _refresh_skills() -> void:
 		if _run.skills.cooldown_of(d.id) > 0:
 			bits.append("冷却 %d 步" % _run.skills.cooldown_of(d.id))
 		var btn := _button("%s%s" % [d.display_name, ("（" + "，".join(bits) + "）") if not bits.is_empty() else ""], func(): use_skill(d.id), 13, UiPalette.Tier.MINOR)
-		btn.disabled = _run.skills.can_use(d.id) != ""
-		btn.tooltip_text = d.summary() + ("\n" + Names.description_of(d) if d.description != "" else "")
+		btn.disabled = _run.skills.can_use(d.id) != "" or not d.map_usable()
+		btn.tooltip_text = d.summary() + ("\n" + Names.description_of(d) if d.description != "" else "") + ("" if d.map_usable() else "\n在战前准备屏（或猎手面前）用")
 		_skills_box.add_child(btn)
 	if _run.skills.evading():
 		_skills_box.add_child(_label("躲避中（剩 %d 步）" % _run.skills.evade_left, 12, UiPalette.DIM))

@@ -515,6 +515,8 @@ func compile_player() -> CombatantSpec:
 	var rules: Array[AbilityRule] = tracker.combat_rules() if tracker != null else [] as Array[AbilityRule]
 	mods.append_array(RunBuffs.combat_mods(active))
 	rules.append_array(RunBuffs.combat_rules(active))
+	if character != null:
+		rules.append_array(character.combat_rules())     # 136：角色技能的战斗规则（布鲁图斯「坚韧」）
 	var baseline := effective_baseline()
 	var input := CompileInput.of(baseline, mods, rules,
 		faith_power.tiers() if faith_power != null else {},
@@ -651,6 +653,7 @@ func refresh_encumbrance() -> void:
 	var lv := encumbrance_level()
 	if travel != null:
 		travel.action_cost_mult = encumbrance.travel_mult_of(lv) if encumbrance != null else 1
+		travel.free_step_every = buff_context().free_step_every     # 136：熟门熟路（角色定了、读档接上角色都会走这里）
 	if lv != _encumbrance_level:
 		_encumbrance_level = lv
 		encumbrance_changed.emit(lv)
@@ -935,6 +938,8 @@ func _wire_events() -> void:
 	hooks.register(&"request_extract", try_extract)     # 085：撤离点的对话里选「撤离」
 	hooks.register(&"faith_tier", active_faith_tier)     # 093：事件条件 faith_active
 	hooks.register(&"active_faith_id", active_faith_id)
+	hooks.register(&"identity", func() -> StringName: return character.identity if character != null else &"")     # 136
+	hooks.register(&"skill_ready", func(id: StringName) -> String: return skills.can_use(id) if skills != null else "没有技能")
 	events.waited.connect(func(_n: MapNode, _actions: int):
 		if hunters != null:
 			hunters.on_player_step()

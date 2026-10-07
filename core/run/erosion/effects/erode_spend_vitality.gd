@@ -9,6 +9,7 @@ extends ErosionEffect
 
 func apply(ctx: ErosionContext) -> void:
 	var n := amount + per_depth * ctx.depth
+	n -= ctx.run.buff_context().erosion_resist if ctx.run != null else 0     # 136：野地里长大（最少扣零）
 	if n <= 0 or ctx.run.vitality == null:
 		return
 	ctx.vitality_spent += ctx.run.vitality.spend(n, &"erosion")

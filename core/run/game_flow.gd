@@ -757,6 +757,28 @@ func offer(insts: Array, node: MapNode = null) -> Dictionary:
 	return got
 
 
+## 136：角色带的「脱身」技能（没有 = null）
+func slip_skill() -> RunSkill:
+	if run == null or run.skills == null:
+		return null
+	for d in run.skills.defs:
+		if d is SlipSkill:
+			return d
+	return null
+
+
+## 136：战前准备屏上按「溜走」：这一场不打（点用过、没战利品、不扣体力），然后往下走（回地图或下一屏）。返回空串 = 溜了，否则是原因
+func slip_battle() -> String:
+	var d := slip_skill()
+	if d == null:
+		return "没有能溜走的技能"
+	var why := run.use_skill(d.id)
+	if why != "":
+		return why
+	_flush()
+	return ""
+
+
 ## 093（蛮神 3 级）：战前准备屏上秒杀这一场（效果构件自己查条件、扣体力）
 func smite() -> bool:
 	if run == null:

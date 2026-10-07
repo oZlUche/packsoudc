@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.51 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.52 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3070,7 +3070,10 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 
 - `RunSkills`（`run.skills`，没角色也有一份空的）：`can_use` / `use` / `on_step`（在猎手的回合之后减冷却与躲避）/ `prepare_battle`（`NodeEvents.before_battle` 回调，在 `BattleSim.run` 之前）；跟着存档走（`skills` 一节），读档回来先放 `skills_saved`，持有方按 id 找回角色时 `RunState.set_character` 接上。
 - 主动技能只在地图屏用（作者：大地图移动时使用）；右栏一个技能一个按钮，不能用时灰掉并写原因。
-- 三个初始角色（作者定）：安德烈乌斯（奴隶，躲避 + 逃跑加成 + 免罚一败）、布鲁图斯（奴隶，坚韧：生命 / 耐力 / 体力更高）、马库斯（军团士兵，耐力更高，突击）。占位的 `default` / `scout` 删了。
+- 三个初始角色（作者定，136 重做）：每人「身份被动 + 擅长被动 + 一个主动 + 一条短板」，`RunSkill.slot`（identity / talent / active）只管开局屏分组，`CharacterDef.identity`（slave / legion）给事件条件 `identity_is`。
+  安德烈乌斯：熟门熟路（`travel_discount`：`MapTravel.paid_steps` 数到 `free_step_every` 下一步不花行动点，跟存档）/ 溜得掉（逃跑、潜行、免一败）/ 脱身（`slip`：战前准备屏「溜走」→ `NodeEvents.skip_pending_battle`，点用过、无战利品、不扣体力，搜索遭遇收会话原因 `slipped`、不弹「被赶跑」，核心点不行；猎手事件屏多一项「脱身（必定逃掉）」，`SkillReady` 锁、`RunSkills.consume` 记账）。
+  布鲁图斯：基线 60 / 60 / 6，被动不再加数；野地里长大（`rest_bonus`、`erosion_resist`）/ 坚韧（`RunSkill.rules`：低于三成生命一次性护盾，`CharacterDef.combat_rules` 编进玩家单位）/ 咬牙（`second_wind`：地图上回体力，满了不让用）。
+  马库斯：军功（`battle_reward_mult`，`NodeEvents._pay_battle_reward` 乘、四舍五入）/ 操练（耐力回复 +1）/ 突击。`evade` 构件留着，没有角色带。占位的 `default` / `scout` 删了。
 
 ## 8. M6 · 场景流
 
@@ -3942,6 +3945,7 @@ res://
 | v2.44 | 2026-10-05 | **地上取代暂存区**（128）：暂存区改名「地上」，规则不变；不画框，格子外整块屏幕就是地上，放手在哪就落在哪。`ItemStash.spots`（归一化落点，存档带着，旧档自动铺）、`NodeStorageModule.spots`（按点留着落点）；新 `GroundLayer`（导演持有一层，盖在屏栈上，各屏 `reserve` 面板、被盖住的东西推开）；`StashView` 删掉，开局屏与沙盒用不铺满屏的一块地；`DragLayer` 放到棋盘外 = 落在放手点、从地上拿起放回 = 改落点，不再画插入线。见 3.4 |
 | v2.50 | 2026-10-07 | **地上的落地动画与双击进包**（134「ground」，作者定，五项待定按推荐；改 3.4）：`GroundLayer` 按 uid 集合找出刚落地的、`_process` 推进、`_draw` 插值（从起点落到落点、末尾弹 6 像素、1.15 → 1 倍、透明度 0.6 → 1，多件错开 40 毫秒、最多错开 10 件，播放中不接抓取）；`ItemStash.landing_from`（不存档）由 `DragLayer` 写（放手就地、顶出从原格、脱落从放手点、取消放回不播），`NodeStorageModule` 回到点上标不播，没写的从最近面板边缘落、没面板从上方 60 像素。双击：`GameDirector` 在没有面板接地上时转给栈顶屏的 `ground_double_clicked`，地图 / 事件屏先 `transfer_auto` 再开背包，放不下由 `InventoryPanel.say_no_room` 提示；关背包先 `hide` 再释放，`top_drag` 跳过排队释放的拖拽层 |
 | v2.51 | 2026-10-07 | **搜索遭遇的胜负文案**（135，作者定，三项待定按推荐；机制不变）：打输那一屏 `search_destroyed` 改成「被赶跑了 / 离开」、教程与百科不再说搜索遭遇扣体力，百科写进打赢后战利品并进收获箱；战前准备屏类型名「搜索中遭遇（输了不扣体力）」；`NodeRules.loss_cost` 默认表与两份节点规则去掉死配置 `search`（搜索遭遇进战斗固定传 0）；地图日志按结束原因说（`MapScreen.search_end_text`） |
+| v2.52 | 2026-10-07 | **三个角色各一套能力**（136，作者定，五项待定按推荐；改 7.3）：四个一局规则效果（`travel_discount` / `rest_bonus` / `erosion_resist` / `battle_reward_mult`）、两个主动（`slip` / `second_wind`）、`RunSkill.rules` 与 `slot`、`CharacterDef.identity` 与条件 `identity_is` / `skill_ready`、hook `identity` / `skill_ready`；布鲁图斯的数值并回基线；战前准备屏「溜走」按钮、开局屏按身份 / 擅长 / 主动分行、百科「三个角色」、序章开头提一句技能按钮；序章第二个搜索点的遭遇生命 40 → 36（布鲁图斯少了 20 血后仍五个种子全赢） |
 | v2.49 | 2026-10-06 | **猎手战败结果档 + 猎手战插进进点的事件队列**（134，作者定，五项待定按推荐；改 8.5）：新资源 `HunterLossOption`（档名、名字、权重、后果），`HunterDef.loss_options` + `loss_pick`（新构件表 `HUNTER_LOSS_PICKS`：`random` / `fixed`），`Hunter.loss_id` 生成时选定、跟存档；新后果 `expel`（退回上一步、不驻守）。`MapTravel` 加进点闸门 `arrival_gate` / 挂起的进点 `held`（存档）/ `finish_arrival` / `cancel_arrival`；`RunState` 的猎手回合从「这一步的事之后」挪到闸门里（先于点的事），`resume_arrival` 在玩家空下来时接着进；驱逐 = 取消进点（不标走过、事不发生、不记首访，步数照算）。`GameFlow._flush` 接着进点后排进队里的接着看；收起猎手战的战利品也接着进点。悬停与开打前事件屏写「输了会怎样」。`hunter_1` 击退 / 驱逐各一半，`hunter_2` 击退 / 驱逐 / 驱逐并驻守各三分之一（数值占位） |
 | v2.48 | 2026-10-05 | **单一乘区**（133，作者定；改 4.3）：删 `StatMath.Buff` 四个乘区，公式改成 `终值 = 基础 × max(0, 1 + Σ乘算) + Σ加算`；`StatModifier` 改成 `stat / mode{ADD, MULT} / amount`，`StatValue` 的四格 `mult` 换成一个 `percent`；`PropertyForm` 在属性修饰下加一行灰字提示（乘算还是加算、扩大还是缩小、在 buff 里每层一份）；导入器迁移旧键（`mult_category` 提醒忽略、又乘又加报错），`normalize_content` 重写了 18 份内容 JSON；百科删掉「乘区」词条组；编译金样有意重录（`percent` 替换 `mult`，四份终值逐项不变）。跨乘区的组合数值变了（弓 + 箭 + 符号 1.38 → 1.35）；标准轴不动 |
 | v2.47 | 2026-10-05 | **规则构件第二批**（132）：时机 `on_status_removed` / `on_overtime`，`on_item_fired.source_tags`、`on_resource_below.direction / full`、`on_damage.crit_only`；条件 `resource_condition` / `axis_condition` 与 `axis_cost`，三个条件型加 `negate`；效果 `convert_damage_type`，`deal_damage.percent_of / per_target_stack`、`change_resource.percent_of_damage`、`remove_status.all_debuffs / all_buffs`；受益格 `receive_rules`（4.2）；导入器的「配了也没用」警告。放血刀改成按目标流血层数 ×3。见 4.2、4.4 |

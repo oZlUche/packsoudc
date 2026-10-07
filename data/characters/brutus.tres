@@ -1,42 +1,102 @@
 [gd_resource type="Resource" script_class="CharacterDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/character_def.gd" id="1_o4bsg"]
-[ext_resource type="Script" path="res://core/run/skills/run_skill.gd" id="2_rnths"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_40tca"]
-[ext_resource type="Script" path="res://core/run/effects/stat_bonus.gd" id="4_k5w2a"]
-[ext_resource type="Script" path="res://core/run/effects/vitality_max_bonus.gd" id="5_7sic7"]
-[ext_resource type="Script" path="res://core/run/skills/passive_skill.gd" id="6_eu30i"]
+[ext_resource type="Script" path="res://core/run/character_def.gd" id="1_rrx7e"]
+[ext_resource type="Script" path="res://core/run/skills/run_skill.gd" id="2_mx3k3"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_oevla"]
+[ext_resource type="Script" path="res://core/run/effects/rest_bonus.gd" id="4_nd1kg"]
+[ext_resource type="Script" path="res://core/run/effects/erosion_resist.gd" id="5_hbv0f"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="6_063lg"]
+[ext_resource type="Script" path="res://core/run/skills/passive_skill.gd" id="7_kraql"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="8_ipor7"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="9_5kvhg"]
+[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="10_3usi0"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="11_gxjex"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="12_utyi1"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="13_t86aj"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="14_eqvia"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="15_iqvcx"]
+[ext_resource type="Script" path="res://core/run/skills/second_wind_skill.gd" id="16_6h21u"]
 
-[sub_resource type="Resource" id="Resource_2ndvl"]
-script = ExtResource("4_k5w2a")
-amount = 20.0
+[sub_resource type="Resource" id="Resource_ga23w"]
+script = ExtResource("4_nd1kg")
 
-[sub_resource type="Resource" id="Resource_adg58"]
-script = ExtResource("4_k5w2a")
-stat = &"max_stamina"
+[sub_resource type="Resource" id="Resource_mv4vl"]
+script = ExtResource("5_hbv0f")
+
+[sub_resource type="Resource" id="Resource_x8pem"]
+script = ExtResource("7_kraql")
+id = &"wild_born"
+display_name = "野地里长大"
+description = "休息时多回 {rest_bonus_amount} 点体力；侵蚀扣体力时少扣 {erosion_resist_amount} 点。"
+passive = Array[ExtResource("3_oevla")]([SubResource("Resource_ga23w"), SubResource("Resource_mv4vl")])
+slot = &"identity"
+
+[sub_resource type="Resource" id="Resource_056bq"]
+script = ExtResource("8_ipor7")
+
+[sub_resource type="Resource" id="Resource_878ss"]
+script = ExtResource("10_3usi0")
+
+[sub_resource type="Resource" id="Resource_vtu5o"]
+script = ExtResource("12_utyi1")
+stat = &"max_shield"
 amount = 15.0
 
-[sub_resource type="Resource" id="Resource_ryvlx"]
-script = ExtResource("5_7sic7")
+[sub_resource type="Resource" id="Resource_47gdc"]
+script = ExtResource("13_t86aj")
+id = &"hardy_guard"
+display_name = "坚韧"
+display_names = {
+"en": "Hardy"
+}
+mods = Array[ExtResource("12_utyi1")]([SubResource("Resource_vtu5o")])
 
-[sub_resource type="Resource" id="Resource_27se4"]
-script = ExtResource("6_eu30i")
+[sub_resource type="Resource" id="Resource_2m2no"]
+script = ExtResource("14_eqvia")
+target = 1
+buff = SubResource("Resource_47gdc")
+
+[sub_resource type="Resource" id="Resource_66poc"]
+script = ExtResource("15_iqvcx")
+
+[sub_resource type="Resource" id="Resource_obt75"]
+script = ExtResource("6_063lg")
+trigger = SubResource("Resource_66poc")
+cadence = SubResource("Resource_056bq")
+costs = Array[ExtResource("9_5kvhg")]([SubResource("Resource_878ss")])
+effects = Array[ExtResource("11_gxjex")]([SubResource("Resource_2m2no")])
+
+[sub_resource type="Resource" id="Resource_3htg3"]
+script = ExtResource("7_kraql")
 id = &"hardy"
 display_name = "坚韧"
-description = "常驻：生命、体力、耐力更高。"
-passive = Array[ExtResource("3_40tca")]([SubResource("Resource_2ndvl"), SubResource("Resource_adg58"), SubResource("Resource_ryvlx")])
+description = "战斗里生命掉到三成以下时，立刻得到一层护盾（每场一次）。"
+rules = Array[ExtResource("6_063lg")]([SubResource("Resource_obt75")])
+slot = &"talent"
+
+[sub_resource type="Resource" id="Resource_y0m8p"]
+script = ExtResource("16_6h21u")
+id = &"second_wind"
+display_name = "咬牙"
+description = "在地图上咬咬牙，恢复 {amount} 点体力。"
+slot = &"active"
+uses = 2
+cooldown_steps = 6
 
 [resource]
-script = ExtResource("1_o4bsg")
+script = ExtResource("1_rrx7e")
 id = &"brutus"
 display_name = "布鲁图斯"
 display_names = {
 "en": "Brutus"
 }
-description = "擅长生存的奴隶探索者。两个皮革包。血量、体力、耐力都更高。"
+description = "擅长生存的奴隶探索者。生命 {max_hp}、体力 {vitality_max}，扛得住、缓得过来，只是没有逃跑和爆发的手段。"
 base_stats = {
-"max_hp": 60
+"max_hp": 60,
+"max_stamina": 60
 }
+vitality_max = 6
 starting_bags = Array[StringName]([&"bag_leather", &"bag_leather"])
 weight_capacity = 40
-skills = Array[ExtResource("2_rnths")]([SubResource("Resource_27se4")])
+skills = Array[ExtResource("2_mx3k3")]([SubResource("Resource_x8pem"), SubResource("Resource_3htg3"), SubResource("Resource_y0m8p")])
+identity = &"slave"

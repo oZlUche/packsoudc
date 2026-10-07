@@ -337,9 +337,31 @@ func _encounter_def(def: HunterDef, option: HunterLossOption = null) -> EventDef
 		flee_opt.label = "逃跑（%.0f%%）" % (clampf(def.flee_chance + run.buff_context().flee_bonus, 0.0, 1.0) * 100.0)
 		flee_opt.outcomes.append(HunterFlee.new())
 		ev.options.append(flee_opt)
+	# 136：角色有「脱身」：多一项，必定逃掉（次数与冷却和战前准备屏上同一本账；用不了时这一项锁着、写原因）
+	var slip := _slip_skill()
+	if slip != null:
+		var slip_opt := EventOption.new()
+		slip_opt.label = "%s（必定逃掉）" % slip.display_name
+		var ready := SkillReady.new()
+		ready.skill = slip.id
+		slip_opt.requires.append(ready)
+		var out := HunterFlee.new()
+		out.skill = slip.id
+		slip_opt.outcomes.append(out)
+		ev.options.append(slip_opt)
 	run.events.extra_defs[id] = ev
 	return ev
 #endregion
+
+
+## 136：角色带的「脱身」技能（没有 = null）
+func _slip_skill() -> RunSkill:
+	if run == null or run.skills == null:
+		return null
+	for d in run.skills.defs:
+		if d is SlipSkill:
+			return d
+	return null
 
 
 #region 开打与后果
@@ -380,6 +402,8 @@ func flee(_node: MapNode, uid: int, ctx: EventContext) -> bool:
 	if h == null or def == null:
 		return false
 	var chance := clampf(def.flee_chance + run.buff_context().flee_bonus, 0.0, 1.0)
+	if ctx != null and ctx.flee_skill != &"" and run.skills != null and run.skills.consume(ctx.flee_skill) == "":
+		chance = 1.0     # 136：脱身
 	var escaped := rng().randf() < chance
 	if escaped:
 		h.cooldown = maxi(0, def.flee_cooldown)
