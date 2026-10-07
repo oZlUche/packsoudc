@@ -28,14 +28,6 @@ func next_time(_ctx: RuleContext, _now: int) -> int:
 	return NEVER
 
 
-## 时机命中后立刻调用，无论最终是否执行。计数类在这里累加。
-##
-## 需要它是因为 [method can_fire] 必须只读，而「每 N 次执行一次」得把
-## 没执行的那几次也数进去。
-func on_match(_ctx: RuleContext) -> void:
-	pass
-
-
 ## 这次能不能执行。只读，不得改状态。
 @abstract func can_fire(ctx: RuleContext, now: int) -> bool
 

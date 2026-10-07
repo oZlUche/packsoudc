@@ -14,6 +14,8 @@ const KEEP := 50
 const REPLAY_EXT := ".replay.json"
 const TRACE_EXT := ".jsonl"
 const TEXT_EXT := ".txt"
+## 一份存档的三个文件后缀（回放、内部日志、文字稿）
+const EXTS := [REPLAY_EXT, TRACE_EXT, TEXT_EXT]
 const VERSION := 1
 
 ## 总开关。测试入口（tests/run_tests.gd）开跑前关掉，免得几百场测试战斗写满测试的 user://；测 117 的套件自己开
@@ -42,7 +44,7 @@ static func stems(dir: String = DIR) -> Array[String]:
 
 
 static func _stem_of(file: String) -> String:
-	for ext in [REPLAY_EXT, TRACE_EXT, TEXT_EXT]:
+	for ext in EXTS:
 		if file.ends_with(ext):
 			return file.substr(0, file.length() - String(ext).length())
 	return ""
@@ -96,7 +98,7 @@ static func prune(dir: String = DIR, keep: int = KEEP) -> int:
 	var all := stems(dir)
 	var drop := all.size() - keep
 	for i in maxi(0, drop):
-		for ext in [REPLAY_EXT, TRACE_EXT, TEXT_EXT]:
+		for ext in EXTS:
 			var p := dir.path_join(all[i] + String(ext))
 			if FileAccess.file_exists(p):
 				DirAccess.remove_absolute(p)

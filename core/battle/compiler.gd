@@ -169,7 +169,7 @@ static func _apply_scoped(spec: CombatantSpec, board: GridInventory, inp: Compil
 		for it in spec.items:
 			var item := it as CompiledItem
 			var inst := board.get_item(item.source_uid)
-			if inst != null and scope.matches(inst.def, not item.rules.is_empty()):
+			if inst != null and scope.matches(inst.def, item.is_active()):
 				hits.append(item.source_uid)
 		hits.sort()     # 候选按 uid 升序：挑的结果只由 seed 与候选集决定
 		for uid in scope.choose(hits, hash("%d:scoped:%d" % [inp.seed, i])):
@@ -235,7 +235,7 @@ static func _apply_bag_effects(board: GridInventory, fighters: Array[int], stats
 ## 非对称会让内容作者踩坑：把配件贴在武器旁边，却只有一边听得见对方出手。
 static func _apply_adjacency(
 	board: GridInventory, fighters: Array[int], stats: Dictionary, links: Dictionary,
-	attach_pending: Dictionary = {}
+	attach_pending: Dictionary
 ) -> void:
 	for uid in fighters:
 		var holder := board.get_item(uid)

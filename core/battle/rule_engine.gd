@@ -17,7 +17,6 @@ static func fire_scheduled(ctx: BattleContext, owner: CombatantRuntime, rt: Rule
 		return false
 	var rc := RuleContext.create(ctx, owner, rt)
 
-	rule.cadence.on_match(rc)
 	if not rule.cadence.can_fire(rc, ctx.now):
 		# 理论上不该发生（是按就绪时刻弹出的）。保险起见也要重新入堆，
 		# 否则这条规则会永远消失
@@ -84,8 +83,7 @@ static func evaluate(
 	if not rule.trigger.matches(rc, event):
 		return false
 
-	# 2. 频率。on_match 先记账（计数类要把没执行的那几次也数上），再判是否放行
-	rule.cadence.on_match(rc)
+	# 2. 频率（计数类的「攒够 N 次」在消耗层，见 [Cost.on_attempt]）
 	if not rule.cadence.can_fire(rc, ctx.now):
 		if ctx.trace != null:
 			_trace(ctx, rt, rc, BattleTrace.RULE_SKIP, {"reason": "cadence", "event": String(event.name)})

@@ -25,16 +25,9 @@ func opponent() -> CombatantRuntime:
 
 
 ## 取属性值。规则来自物品时按该物品的粒度取（伤害、冷却、消耗都属于单件物品）；
-## 规则来自 buff 或套装时退回单位级。
+## 规则来自 buff 或套装时 uid 是 0、不是任何物品，[method CombatantRuntime.item_stat] 自己退回单位级
 func item_stat(key: StringName, fallback: int = 0) -> int:
-	var uid := runtime.source_uid
-	if uid == 0:
-		return owner.stat(key, fallback)
-	return owner.item_stat(uid, key, fallback)
-
-
-func rng() -> RandomNumberGenerator:
-	return battle.rng
+	return owner.item_stat(runtime.source_uid, key, fallback)
 
 
 ## 117：取随机数并记进内部日志（[method BattleContext.roll]）。战斗里的掷骰都走它
@@ -74,6 +67,3 @@ func source_stacks() -> int:
 func damage() -> DamagePacket:
 	return battle.current_damage()
 
-
-func emit(name: StringName, payload: Dictionary = {}) -> void:
-	battle.emit(name, owner.side, payload)

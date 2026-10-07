@@ -29,8 +29,8 @@ enum Direction {
 @export var min_amount: float = 0.0
 
 
-## 伤害事件的 side 是【承受方】，source_side 是【施加方】
-func matches_damage(ctx: RuleContext, event: BattleEvent) -> bool:
+## 伤害事件的 side 是【承受方】，source_side 是【施加方】。两个子类只差订阅哪条事件（与 [OnDamage] 的暴击筛选）
+func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 	var hit := event.side == ctx.owner.side
 	var dealt := event.get_int(&"source_side") == ctx.owner.side
 	match direction:

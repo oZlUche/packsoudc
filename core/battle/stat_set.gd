@@ -62,10 +62,3 @@ func clone() -> StatSet:
 		copy._values[key] = (_values[key] as StatValue).clone()
 	return copy
 
-
-## 调试用快照：键 → 取整后的终值。
-func snapshot() -> Dictionary:
-	var out := {}
-	for key in keys():
-		out[key] = total_int_of(key)
-	return out
