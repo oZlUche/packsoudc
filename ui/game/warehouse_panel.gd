@@ -3,10 +3,23 @@
 ##
 ## 109（作者定）：「整理」把仓库重排（先大后小，占用的聚左上，见 [GridTidy]）；两块格子都能双击快速置入（和局内一样）。
 ##
+## 139（作者定）：基地屏里（[member fill_width]）格子按面板宽度放大到占满整行（60 ～ 96 一格，再宽就居中）；仓库和带回来的背包同一个格子大小。
+## 结算屏照旧 60。
+##
 ## 带回来的棋盘是一块不要求包的格子：包已经不在（只计图鉴），东西位置照旧 —— 作者说的「包统一替换成最大的默认背景包」。
 extends MarginContainer
 
 signal changed()
+
+## 139：格子最大放到多大（再大道具名字和格子比例失衡）
+const CELL_MAX := 96.0
+## 两块格子之间的空隙（和 _build 里那一行的 separation 一致）
+const ROW_GAP := 20.0
+## 滚动框给竖滚动条留的宽（[ScrollBox]）
+const SCROLL_PAD := 14.0
+
+## 139：按面板宽度放大格子（基地屏开，结算屏关）。setup 之前设
+var fill_width: bool = false
 
 var _meta: MetaState = null
 var _flow: GameFlow = null
@@ -29,6 +42,8 @@ func setup(flow: GameFlow, font: Font) -> void:
 	_build()
 	_meta.changed.connect(_refresh)
 	_meta.warehouse.changed.connect(_refresh)
+	if fill_width:
+		resized.connect(func(): fit_to_width(size.x))
 	_refresh()
 
 
@@ -37,7 +52,9 @@ func _build() -> void:
 	col.add_theme_constant_override("separation", 8)
 	add_child(col)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 20)
+	row.add_theme_constant_override("separation", int(ROW_GAP))
+	if fill_width:
+		row.alignment = BoxContainer.ALIGNMENT_CENTER     # 139：封顶之后多出来的宽度两边分
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(row)
 
@@ -102,6 +119,40 @@ func _rebuild_board_view() -> void:
 	_board_box.add_child(ScrollBox.wrap(_board_view, 6))     # 带回来的棋盘也可能很高：同样竖向滚动
 	_drag.register_view(_board_view)
 	_board_view.item_double_clicked.connect(quick_move)     # 视图每次新建，信号跟着重接
+	_board_view.cell_px = _warehouse_view.cell_px     # 139：和仓库一样大
+	if fill_width and size.x > 0.0:
+		fit_to_width.call_deferred(size.x)     # 多了一块：两块一起重新分
+
+
+#region 格子大小（139）
+## 一格多大：[param cols] 列（加上滚动条和间隙）摆进 [param width]，夹在 60 ～ [constant CELL_MAX]
+static func cell_for(width: float, cols: int, extra: float = SCROLL_PAD) -> float:
+	return clampf(floorf((width - extra) / float(maxi(1, cols))), InventoryView.CELL, CELL_MAX)
+
+
+## 按 [param width] 定格子大小：仓库（和带回来的背包，有的话）一起分这一行
+func fit_to_width(width: float) -> float:
+	if _warehouse_view == null or _meta == null:
+		return InventoryView.CELL
+	var cols := _meta.warehouse.size.x
+	var extra := SCROLL_PAD
+	if _board_view != null and _board_view.inventory != null:
+		cols += _board_view.inventory.size.x
+		extra += SCROLL_PAD + ROW_GAP
+	var c := cell_for(width, cols, extra)
+	_warehouse_view.cell_px = c
+	if _board_view != null:
+		_board_view.cell_px = c
+	return c
+
+
+func cell_px() -> float:
+	return _warehouse_view.cell_px if _warehouse_view != null else InventoryView.CELL
+
+
+func warehouse_view() -> InventoryView:
+	return _warehouse_view
+#endregion
 
 
 #region 公开动作

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.54 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.55 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3262,12 +3262,14 @@ func player_spec() -> CombatantSpec …
 - **包只计图鉴**：什么能存进局外由 `MetaState.keeps(def)` 一处说了算（现在：不是包）。「包」只是当前的承载媒介，将来可能删掉，那时删这一个分支。
 - 钱、累计价值、几局几撤几败、最近几局。**保留规则只在 `absorb()` 一个方法里**（15 节第 4 项）：撤离 = 图鉴每件计一次、非包道具带回棋盘、钱全带出；战败 = 全失。
 - 局外有自己的 uid 空间：每局的 uid 从 1 重编，进来时重新编号。
+- **基地屏布局**（139，作者定）：开发开关、局外解锁、科技等级、最近几局收在右侧的 `DevDrawer`（`ui/game/dev_drawer.gd`）里 —— 头部最右的箭头「◂ / ▸」点一下开、再点一下关，默认收起，开着时盖在页面上、宽 420、自己竖向滚，五个页签都能开，状态不进设置。
+  仓库页只剩格子，**格子大小是每块视图自己的**：`InventoryView.cell_px`（默认 `CELL` = 60），`WarehousePanel.fill_width` 开着时按面板宽度算 `cell_for(宽, 列数)`（60 ～ 96，封顶后居中，带回来的背包与仓库同一个数），出售页同样；`DragLayer` 对着某块视图的落点、残影、整块判定读那块的 `cell_px`，跟手的残影按起拖那块的；`ScrollBox` 跟着 `cell_px_changed` 改尺寸。地图背包、战前、开局、地上、冷却覆盖层仍是 60。图鉴一行几个按宽度算（`codex_columns_for`），不横向滚。
 
 一局结束时（`GameFlow._settle_run`，进结算屏之前）就 `absorb`、存 meta、删这一局的存档；结算屏拿到的已经是记完账的局外。
 `MetaSave` 与 `RunSave` 同一套做法：`user://meta.json`，版本号 2（v1 是开发期的，作废），只写 id；仓库大小以存档里的为准（成长过的不该被规则缩回去）。
 **buff**（059 第 3 条，062）：局外的与一局里的是同一套定义 `RunBuffDef`（内容种类 `run_buffs`：scope、时限步数、标记、`mods` / `rules` / `effects`），
 效果树多了 `RunEffect` 分支（9.2），往 `RunContext` 里加数（体力上限、开局钱、多搜几次、商店价、幸运），各系统在对应的点读。
-局外的由 `MetaState.active_buffs`（基地右栏的开发开关）+ `MetaState.tech_buffs`（科技树给的，118）决定，`GameFlow.meta_buffs()` 合并去重，开局那一刻记进这一局；一局里的由事件后果给（`BuffModule.grant`，101 之后在模块里），
+局外的由 `MetaState.active_buffs`（基地屏「调试台」抽屉里的开发开关，139）+ `MetaState.tech_buffs`（科技树给的，118）决定，`GameFlow.meta_buffs()` 合并去重，开局那一刻记进这一局；一局里的由事件后果给（`BuffModule.grant`，101 之后在模块里），
 有时限的每走一步少一步，只带 `tags` 的就是标记，事件选项的条件查 `has_buff_tag`。
 
 **局外科技**（110，作者定）：一张定义 `TechDef`（内容种类 `techs`：`effect` 是 `TechEffect` 构件，登记在 `RunRegistry.TECH_EFFECTS`；`tiers` 每级 `TechTier{funds, items}`）+ `MetaState` 里通用的 `tech_levels`（id → 级）与 `tech_deposits`（id → {道具 id → 已交件数}）。
@@ -3948,6 +3950,7 @@ res://
 | v2.52 | 2026-10-07 | **三个角色各一套能力**（136，作者定，五项待定按推荐；改 7.3）：四个一局规则效果（`travel_discount` / `rest_bonus` / `erosion_resist` / `battle_reward_mult`）、两个主动（`slip` / `second_wind`）、`RunSkill.rules` 与 `slot`、`CharacterDef.identity` 与条件 `identity_is` / `skill_ready`、hook `identity` / `skill_ready`；布鲁图斯的数值并回基线；战前准备屏「溜走」按钮、开局屏按身份 / 擅长 / 主动分行、百科「三个角色」、序章开头提一句技能按钮；序章第二个搜索点的遭遇生命 40 → 36（布鲁图斯少了 20 血后仍五个种子全赢） |
 | v2.53 | 2026-10-07 | **叠层上限取消、道具重量按材质、初始负重上调**（137，作者定，五项待定按推荐；改 4.5、7.6）：`BuffDef.max_stacks` → `stackable`（可叠层不限层、不可叠层固定一层，导入器迁移旧键）；`FaithBonus.max_stacks` 改名 `max_shares`；Buff 制作器去掉上限框；`ItemWeight` 每格重 重 4 / 金属 3 / 石与晶 2；新标签 `stone`（燧石、粗盐）；角色负重上限 40 / 48 / 56 |
 | v2.54 | 2026-10-07 | **136 修订：去掉身份层**（作者补充：科技不跟角色绑定，角色 = 初始面板 + 技能；改 7.3）：删 `CharacterDef.identity`、事件条件 `identity_is`、hook `identity`、`RunSkill.slot`；开局屏角色卡改成「被动 / 被动 / 主动」三行，面板行加负重；百科「三个角色」改写并补一句「科技对每个角色都生效」。技能本身与数值不变 |
+| v2.55 | 2026-10-07 | **基地屏：调试台抽屉、格子占满整行**（139，作者定，三项待定按推荐；改 8.2）：新 `DevDrawer`（箭头开关、盖在页面上，开发开关 / 局外解锁 / 科技等级 / 最近几局都搬进去）；`InventoryView.cell_px` + `cell_px_changed`，`DragLayer` / `ScrollBox` 对着视图算的地方读它；`WarehousePanel.fill_width` 与 `cell_for`（60 ～ 96）；出售页同样；图鉴列数按宽度 |
 | v2.49 | 2026-10-06 | **猎手战败结果档 + 猎手战插进进点的事件队列**（134，作者定，五项待定按推荐；改 8.5）：新资源 `HunterLossOption`（档名、名字、权重、后果），`HunterDef.loss_options` + `loss_pick`（新构件表 `HUNTER_LOSS_PICKS`：`random` / `fixed`），`Hunter.loss_id` 生成时选定、跟存档；新后果 `expel`（退回上一步、不驻守）。`MapTravel` 加进点闸门 `arrival_gate` / 挂起的进点 `held`（存档）/ `finish_arrival` / `cancel_arrival`；`RunState` 的猎手回合从「这一步的事之后」挪到闸门里（先于点的事），`resume_arrival` 在玩家空下来时接着进；驱逐 = 取消进点（不标走过、事不发生、不记首访，步数照算）。`GameFlow._flush` 接着进点后排进队里的接着看；收起猎手战的战利品也接着进点。悬停与开打前事件屏写「输了会怎样」。`hunter_1` 击退 / 驱逐各一半，`hunter_2` 击退 / 驱逐 / 驱逐并驻守各三分之一（数值占位） |
 | v2.48 | 2026-10-05 | **单一乘区**（133，作者定；改 4.3）：删 `StatMath.Buff` 四个乘区，公式改成 `终值 = 基础 × max(0, 1 + Σ乘算) + Σ加算`；`StatModifier` 改成 `stat / mode{ADD, MULT} / amount`，`StatValue` 的四格 `mult` 换成一个 `percent`；`PropertyForm` 在属性修饰下加一行灰字提示（乘算还是加算、扩大还是缩小、在 buff 里每层一份）；导入器迁移旧键（`mult_category` 提醒忽略、又乘又加报错），`normalize_content` 重写了 18 份内容 JSON；百科删掉「乘区」词条组；编译金样有意重录（`percent` 替换 `mult`，四份终值逐项不变）。跨乘区的组合数值变了（弓 + 箭 + 符号 1.38 → 1.35）；标准轴不动 |
 | v2.47 | 2026-10-05 | **规则构件第二批**（132）：时机 `on_status_removed` / `on_overtime`，`on_item_fired.source_tags`、`on_resource_below.direction / full`、`on_damage.crit_only`；条件 `resource_condition` / `axis_condition` 与 `axis_cost`，三个条件型加 `negate`；效果 `convert_damage_type`，`deal_damage.percent_of / per_target_stack`、`change_resource.percent_of_damage`、`remove_status.all_debuffs / all_buffs`；受益格 `receive_rules`（4.2）；导入器的「配了也没用」警告。放血刀改成按目标流血层数 ×3。见 4.2、4.4 |

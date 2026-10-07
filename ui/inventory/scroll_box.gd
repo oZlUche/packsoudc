@@ -8,14 +8,20 @@ static func wrap(view: InventoryView, max_rows: int = 10) -> ScrollContainer:
 	var sc := ScrollContainer.new()
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	var cols := view.inventory.size.x if view.inventory != null else 8
-	var rows := view.inventory.size.y if view.inventory != null else max_rows
-	sc.custom_minimum_size = Vector2(cols * InventoryView.CELL + 14.0, mini(rows, max_rows) * InventoryView.CELL)
+	_fit(sc, view, max_rows)
 	sc.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	sc.add_child(view)
-	if view.inventory != null:     # 仓库长高了（扩建）：窗口跟着长到上限为止
-		var inv := view.inventory
-		inv.changed.connect(func():
-			if is_instance_valid(sc):
-				sc.custom_minimum_size.y = mini(inv.size.y, max_rows) * InventoryView.CELL)
+	# 仓库长高了（扩建）、格子放大了（139）：窗口跟着变，高到上限为止
+	var refit := func():
+		if is_instance_valid(sc):
+			_fit(sc, view, max_rows)
+	if view.inventory != null:
+		view.inventory.changed.connect(refit)
+	view.cell_px_changed.connect(refit)
 	return sc
+
+
+static func _fit(sc: ScrollContainer, view: InventoryView, max_rows: int) -> void:
+	var cols := view.inventory.size.x if view.inventory != null else 8
+	var rows := view.inventory.size.y if view.inventory != null else max_rows
+	sc.custom_minimum_size = Vector2(cols * view.cell_px + 14.0, mini(rows, max_rows) * view.cell_px)
