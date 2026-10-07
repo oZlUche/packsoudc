@@ -16,18 +16,11 @@ func load_all() -> int:
 
 
 func load_dir(dir_path: String) -> int:
-	var dir := DirAccess.open(dir_path)
-	if dir == null:
+	if not DirAccess.dir_exists_absolute(dir_path):
 		push_warning("EnemyDatabase: 无法打开目录 %s" % dir_path)
 		return 0
 	var count := 0
-	for file_name in dir.get_files():
-		var name := file_name
-		if name.ends_with(".remap"):
-			name = name.trim_suffix(".remap")
-		if not (name.ends_with(".tres") or name.ends_with(".res")):
-			continue
-		var res := ResourceLoader.load(dir_path.path_join(name))
+	for res in ContentPaths.load_resources(dir_path):
 		if res is EnemyDef:
 			if register_enemy(res):
 				count += 1
@@ -35,7 +28,7 @@ func load_dir(dir_path: String) -> int:
 			if register_pool(res):
 				count += 1
 		else:
-			push_warning("EnemyDatabase: %s 不是 EnemyDef / EnemyPool，已跳过" % name)
+			push_warning("EnemyDatabase: %s 不是 EnemyDef / EnemyPool，已跳过" % res.resource_path.get_file())
 	return count
 
 

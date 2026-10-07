@@ -1492,22 +1492,6 @@ static func _polar(ring: int, fraction: float) -> Vector2:
 	return Vector2.from_angle(TAU * fraction) * float(ring)
 
 
-## 一条跨环的路：外面那头与里面那头各在第几环、各在一圈的几分之几处。同环的返回空。
-static func _outer_inner(graph: MapGraph, a: int, b: int) -> Dictionary:
-	var na := graph.get_node(a)
-	var nb := graph.get_node(b)
-	var ra := int(na.layout.get("ring", 0))
-	var rb := int(nb.layout.get("ring", 0))
-	if ra == rb:
-		return {}
-	var outer := na if ra > rb else nb
-	var inner := nb if ra > rb else na
-	return {
-		"r_out": maxi(ra, rb), "r_in": mini(ra, rb),
-		"a_out": _fraction(graph, outer), "a_in": _fraction(graph, inner),
-	}
-
-
 static func _fraction(graph: MapGraph, n: MapNode) -> float:
 	var r := int(n.layout.get("ring", 0))
 	var table: Dictionary = graph.layout_meta.get("ring_slots", {})

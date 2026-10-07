@@ -44,18 +44,8 @@ static func _ensure_builtins() -> void:
 
 ## 096：从目录装定义，同 id 覆盖（内置的让位给数据）。返回装了几份
 static func load_dir(dir_path: String) -> int:
-	var dir := DirAccess.open(dir_path)
-	if dir == null:
-		return 0
-	var names: Array[String] = []
-	for f in dir.get_files():
-		var n := f.trim_suffix(".remap")
-		if n.ends_with(".tres") or n.ends_with(".res"):
-			names.append(n)
-	names.sort()
 	var count := 0
-	for n in names:
-		var res := load(dir_path + "/" + n)
+	for res in ContentPaths.load_resources(dir_path):
 		if res is DamageTypeDef and (res as DamageTypeDef).id != &"":
 			_defs[(res as DamageTypeDef).id] = res
 			count += 1

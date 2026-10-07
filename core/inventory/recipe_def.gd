@@ -28,17 +28,7 @@ func matches(a: StringName, b: StringName) -> bool:
 ## 资产目录里的全部配方，按文件名排
 static func load_all() -> Array[RecipeDef]:
 	var out: Array[RecipeDef] = []
-	var dir := DirAccess.open(ContentPaths.RECIPES)
-	if dir == null:
-		return out
-	var names: Array[String] = []
-	for f in dir.get_files():
-		var n := f.trim_suffix(".remap")
-		if n.ends_with(".tres") or n.ends_with(".res"):
-			names.append(n)
-	names.sort()
-	for n in names:
-		var res := load(ContentPaths.RECIPES + "/" + n)
+	for res in ContentPaths.load_resources(ContentPaths.RECIPES):
 		if res is RecipeDef:
 			out.append(res)
 	return out
