@@ -4,6 +4,7 @@
 - 提出：作者（架构设计线程）
 - 性质：架构 · 提议（本线程只写方案，不实现、不跑测试）
 - 作者原话：「目前的三个角色实际上有何区分？开始按照早期角色文档给每个人设计不同能力」
+- 作者补充（同日）：「科技不要跟角色绑定，角色的能力就是初始面板和可能的技能差异」—— 本篇据此改过：**角色 = 基线 + 技能，科技全局通用、和任何角色都叠加**，不再有「身份」层，也不以「和科技重叠」为改动理由。
 - 早期角色文档指的是：082 第一节作者定的三人表（擅长逃跑的奴隶安德烈乌斯 / 擅长生存的奴隶布鲁图斯 / 擅长战斗的军团士兵马库斯）、
   `docs/worldview/worldview.md` 第二节「身份决定开局、立场与文字；天赋独立」、第三节「种族 = 天赋，身份 = 立场与开局」。
 
@@ -26,10 +27,10 @@
    普通难度下他实际只剩「免一败」—— 和科技「不屈」一模一样。生命最低、负重最低，没有任何正向的东西能感觉到。
 2. **布鲁图斯双重计算**：基线已经是三人最高的 60，被动再 +20 → 80，比安德烈乌斯高六成；耐力 +15 之后 65，**正好追平马库斯**，
    马库斯「耐力更高」这唯一的数值特色被抹掉了。
-3. **布鲁图斯的三条被动就是三个科技**（筋骨 = `stat_bonus`、耐久 = `vitality_max_bonus`、不屈 = `free_losses` 对应安德烈乌斯）。
-   科技买几级之后三个人趋同 —— 「科技买得到的，不该是角色的特色」。
+3. **布鲁图斯的三条被动全是数值**（生命、耐力、体力上限），和基线是同一类东西，拆成「基线 + 被动」两处写只是让双重计算更容易发生；
+   直接写进基线更清楚。（科技筋骨 / 耐久 / 不屈照旧全局生效、和任何角色叠加 —— 作者定：科技不跟角色绑定。）
 4. **马库斯**只有突击一件事，初始格子反而最少（10 格），086 也记过：主动技能从没教过，玩家不知道右栏那个按钮是什么。
-5. 身份这一层（奴隶 / 军团士兵）现在**只是一句介绍**，不影响开局、报酬或文字；worldview 第三节写的「身份 = 立场与开局」没有落下来。
+5. 「奴隶 / 军团士兵」只是介绍里的一句话，不做成系统（作者定：角色的能力就是初始面板和技能差异）；下面的技能名只借它的味道。
 
 ## 二、设计原则
 
@@ -45,8 +46,8 @@
 | 槽 | 名字 | 效果 | 实现 |
 |---|---|---|---|
 | 基线 | | 生命 50、耐力 50、体力 5、两个皮革包、负重 28 | 不动 |
-| 身份被动 | **熟门熟路**（奴隶探索者月月进来） | 地图上每走四步，下一步不花行动点 | 新 `RunEffect` `travel_discount`（`every: int = 4`）→ `RunContext.free_step_every`；`MapTravel` 记步数计数器（进存档），`cost_of` 到第 N 步返回 0 |
-| 擅长被动 | **溜得掉** | 猎手处逃跑 +25%、猎手感知 ×0.75、头一回输给节点敌人不扣体力 | 现有 `flee_bonus` / `stealth` / `free_losses`，只是把 `stealth` 加进来 |
+| 被动一 | **熟门熟路** | 地图上每走四步，下一步不花行动点 | 新 `RunEffect` `travel_discount`（`every: int = 4`）→ `RunContext.free_step_every`；`MapTravel` 记步数计数器（进存档），`cost_of` 到第 N 步返回 0 |
+| 被动二 | **溜得掉** | 猎手处逃跑 +25%、猎手感知 ×0.75、头一回输给节点敌人不扣体力 | 现有 `flee_bonus` / `stealth` / `free_losses`，只是把 `stealth` 加进来 |
 | 主动 | **脱身**（替换「躲避」） | 战前准备屏多一个按钮「溜走」：这一场不打，点算用过、没有战利品、不扣体力；对猎手用 = 必定逃掉。两次，冷却四步 | 新 `RunSkill` 子类 `slip`：`activate` 只在 `NodeEvents.pending_battle` 非空时可用；节点敌人 → 新的 `NodeEvents.skip_pending_battle()`（`_visited`、发 `battle_skipped` 信号、搜索遭遇按打输处理但不弹「被赶跑」）；猎手 → `HunterSystem.flee` 的几率按 1.0 |
 | 短板 | | 生命最低、负重最低；核心点不能溜（`type == core` 时按钮灰） | |
 
@@ -57,8 +58,8 @@
 | 槽 | 名字 | 效果 | 实现 |
 |---|---|---|---|
 | 基线 | | 生命 **60**、耐力 **60**、体力 **6**、两个皮革包、负重 40 | `base_stats` 直接写 60 / 60，`vitality_max: 6`；**去掉** 现在被动里的 +20 / +15 / +1（第一节问题 2、3） |
-| 身份被动 | **野地里长大**（蛮族出身，113） | 休息区多回一点体力；侵蚀扣体力时少扣一点（最少扣零） | 新 `RunEffect` `rest_bonus`（`amount: int = 1`）→ `NodeEvents._proceed` 的 `rest` 分支 `rules.rest_restore + ctx.rest_bonus`；新 `erosion_resist`（`amount: int = 1`）→ `erode_spend_vitality` 扣之前减掉 |
-| 擅长被动 | **坚韧** | 战斗里生命低于三成时【防护】+N（一次性）—— 让「生存」在战斗里也有一手 | 现有战斗规则构件：角色技能的 `passive` 里允许放一条 `AbilityRule`（`resource_below` + `grant_shield`），编译玩家时和道具规则一起挂（`BattleCompiler` 已有挂规则的口子，132 的 `receive_rules` 同路）。若执行线程觉得口子不顺，退一步做成 `stat_bonus` 的【防护】+2 |
+| 被动一 | **野地里长大** | 休息区多回一点体力；侵蚀扣体力时少扣一点（最少扣零） | 新 `RunEffect` `rest_bonus`（`amount: int = 1`）→ `NodeEvents._proceed` 的 `rest` 分支 `rules.rest_restore + ctx.rest_bonus`；新 `erosion_resist`（`amount: int = 1`）→ `erode_spend_vitality` 扣之前减掉 |
+| 被动二 | **坚韧** | 战斗里生命低于三成时【防护】+N（一次性）—— 让「生存」在战斗里也有一手 | 现有战斗规则构件：角色技能的 `passive` 里允许放一条 `AbilityRule`（`resource_below` + `grant_shield`），编译玩家时和道具规则一起挂（`BattleCompiler` 已有挂规则的口子，132 的 `receive_rules` 同路）。若执行线程觉得口子不顺，退一步做成 `stat_bonus` 的【防护】+2 |
 | 主动 | **咬牙** | 地图上用：恢复一点体力。两次，冷却六步 | 新 `RunSkill` 子类 `second_wind`（`amount: int = 1`）：`activate` → `run.vitality.restore`，满的时候返回「体力是满的」 |
 | 短板 | | 没有逃跑手段、没有战斗爆发；行动慢（无熟门熟路） | |
 
@@ -67,8 +68,8 @@
 | 槽 | 名字 | 效果 | 实现 |
 |---|---|---|---|
 | 基线 | | 生命 55、耐力 **65**、体力 5、皮革包 + 小背包（10 格）、负重 34 | 不动；耐力 65 现在是三人唯一最高 |
-| 身份被动 | **军功**（军团士兵，收获换军功） | 打赢节点敌人的钱 ×1.25 | 新 `RunEffect` `battle_reward_mult`（`factor: float = 1.25`）→ `NodeEvents._fight` 里 `economy.battle_reward(...)` 之后乘；猎手、核心也算 |
-| 擅长被动 | **操练** | 耐力回复 +1 / 秒 | 现有 `stat_bonus`，`stat: regen_stamina`（`describe` 已认这个键） |
+| 被动一 | **军功** | 打赢节点敌人的钱 ×1.25 | 新 `RunEffect` `battle_reward_mult`（`factor: float = 1.25`）→ `NodeEvents._fight` 里 `economy.battle_reward(...)` 之后乘；猎手、核心也算 |
+| 被动二 | **操练** | 耐力回复 +1 / 秒 | 现有 `stat_bonus`，`stat: regen_stamina`（`describe` 已认这个键） |
 | 主动 | **突击** | 下次战斗先扣对方三成生命。三次，冷却三步 | 不动 |
 | 短板 | | 格子最少、生命中等；没有任何地图上的便利 | |
 
@@ -80,17 +81,15 @@
 | 地图 | 四步免一步、猎手难发现 | 休息多回、侵蚀少扣、能咬牙回体力 | — |
 | 战斗 | 可以不打（脱身） | 低血护盾 | 突击、耐力回复快 |
 | 经济 | — | — | 打赢多拿钱 |
-| 科技重叠 | 只剩「不屈」一条（保留，叠到两次） | 无 | 无 |
 
-## 四、身份这一层要不要再往下做
+## 四、和科技的关系
 
-worldview 第三节还写了身份影响「进出的口、报酬的形式、事件的文字」。这一步**只做报酬的形式**（军功 = 钱更多），进出口与事件分支留到有第二套地图 / 事件变量再说。
-为将来留一个字段：`CharacterDef.identity: StringName`（`slave` / `legion`），事件条件已有 `has_flag`，开局时把 `identity:<id>` 写进一局的旗标，事件作者就能按身份分支 —— 本方案只加字段与旗标，不写任何用到它的事件。
+科技（`techs/*.json`）不改一字。角色被动和科技都是 `RunEffect`，在 `RunState.buff_context()` 里一起累加，谁也不排斥谁；百科「三个角色」页末写一句「科技对每个角色都生效」。
 
 ## 五、界面与文案
 
-- **开局屏角色卡**（`ui/game/setup_screen.gd` 第 670 行附近）：改成四行 —— 定位一句 / 身份：名字 + 一句 / 擅长：名字 + 一句 / 主动：名字 + 一句（次数、冷却）；短板写进定位那句（「生命最低，但走得远、溜得掉」）。
-  `CharacterDef.skills_summary()` 跟着按「身份 / 擅长 / 主动」分组：给 `RunSkill` 加一个 `slot: StringName`（`identity` / `talent` / `active`），只影响显示。
+- **开局屏角色卡**（`ui/game/setup_screen.gd` 第 670 行附近）：改成四行 —— 定位一句 / 被动：两条各一句 / 主动：名字 + 一句（次数、冷却）/ 面板：生命、耐力、体力、负重；短板写进定位那句（「生命最低，但走得远、溜得掉」）。
+  `CharacterDef.skills_summary()` 跟着按「被动 / 主动」分组（`RunSkill.is_active()` 已能区分），不加新字段。
 - **战前准备屏**：有「脱身」且可用时多一个按钮「溜走（剩 N 次）」；核心点灰掉写「这里溜不掉」。
 - **地图右栏**：咬牙按钮沿用现有「技能一个按钮」的做法；用了记日志「咬了咬牙：体力 +1」。
 - **百科**：新页 `help_pages/characters.json`「三个角色」，三段各写定位与四样东西；序章 1 的开局事件文案加一句提到「右栏的技能按钮」（086 第 53 条，待定 5）。
@@ -101,12 +100,12 @@ worldview 第三节还写了身份影响「进出的口、报酬的形式、事�
 | 文件 | 改什么 |
 |---|---|
 | `core/run/effects/travel_discount.gd`、`rest_bonus.gd`、`erosion_resist.gd`、`battle_reward_mult.gd` | 四个新 `RunEffect`；`RunContext` 加 `free_step_every` / `rest_bonus` / `erosion_resist` / `battle_reward_mult`，进 `snapshot()` |
-| `core/run/skills/slip_skill.gd`、`second_wind_skill.gd` | 两个新 `RunSkill` 子类；`RunRegistry.RUN_SKILLS` / `RUN_EFFECTS` 登记；`RunSkill.slot` |
+| `core/run/skills/slip_skill.gd`、`second_wind_skill.gd` | 两个新 `RunSkill` 子类；`RunRegistry.RUN_SKILLS` / `RUN_EFFECTS` 登记 |
 | `core/run/map_travel.gd` | 步数计数器 + 免费步；进 `to_dict` / `restore` |
 | `core/run/node_events.gd` | `rest` 分支加 `rest_bonus`；`_fight` 的奖励乘 `battle_reward_mult`；`skip_pending_battle()` + `battle_skipped` 信号 |
 | `core/run/erosion/effects/erode_spend_vitality.gd` | 减 `erosion_resist` |
 | `core/run/hunters/hunter_system.gd` | 脱身立旗时逃跑几率 1.0 |
-| `core/run/character_def.gd` | `identity`；`skills_summary` 分组；开局把 `identity:<id>` 写进旗标 |
+| `core/run/character_def.gd` | `skills_summary` 按被动 / 主动分组 |
 | `core/run/run_state.gd` / `BattleCompiler` | 角色 `passive` 里的 `AbilityRule` 挂到玩家单位（坚韧） |
 | `ui/game/setup_screen.gd`、`prebattle_screen.gd`、`map_screen.gd` | 第五节 |
 | `data/authoring/characters/*.json` | 三份按第三节重写 |
@@ -137,6 +136,6 @@ worldview 第三节还写了身份影响「进出的口、报酬的形式、事�
 
 1. 四个 `RunEffect` + 两个 `RunSkill` + 注册表 + `RunContext`；
 2. 各处读取点（旅程、休息、侵蚀、奖励、猎手、战前屏跳过）；
-3. 三份角色 JSON 重写（含 `identity`、`slot`）；
+3. 三份角色 JSON 重写；
 4. 开局屏卡片、战前屏按钮、百科页、序章文案；
 5. 测试；文档回写。
