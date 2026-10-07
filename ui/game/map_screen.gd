@@ -354,14 +354,6 @@ func _rich_line(bbcode: String, font_size: int, width: float) -> RichTextLabel:
 	return r
 
 
-## 规则卡上现在写着的（纯文字，测试看）
-func rules_text() -> String:
-	var out: Array[String] = []
-	if _rules != null:
-		for n in _rules.find_children("*", "RichTextLabel", true, false):
-			out.append((n as RichTextLabel).get_parsed_text())
-	return "\n".join(out)
-
 
 func close_rules() -> void:
 	if _rules == null:
@@ -764,10 +756,6 @@ func _refresh_countdown() -> void:
 	if style != null:
 		style.border_color = col
 
-
-## 测试读：倒计时那一行的文字（没有倒计时是空串）
-func countdown_text() -> String:
-	return _countdown.text if _countdown != null and (_countdown.get_parent() as Control).visible else ""
 
 
 ## 信力一句（082）：「　信力 12 / 30（第 1 阶）」；没激活信仰不显示
