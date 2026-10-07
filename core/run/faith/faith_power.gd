@@ -39,7 +39,7 @@ func tiers() -> Dictionary:
 		var id := StringName(String(key))
 		var tier := tier_of(id)
 		if tier > 0:
-			out[StringName(FaithDef.TAG_PREFIX + String(id))] = tier
+			out[StringName(FaithTags.PREFIX + String(id))] = tier
 	return out
 
 
@@ -68,7 +68,7 @@ func credit(event: StringName, payload: Dictionary = {}) -> int:
 func points_by_tag() -> Dictionary:
 	var out := {}
 	for key in points:
-		out[StringName(FaithDef.TAG_PREFIX + String(key))] = int(points[key])
+		out[StringName(FaithTags.PREFIX + String(key))] = int(points[key])
 	return out
 
 

@@ -471,7 +471,7 @@ static func _validate_item_tags(def: ItemDef, ctx: Context, report: ImportReport
 	if ctx.tags.is_empty():
 		return
 	for t in def.tags:
-		if String(t).begins_with(FaithDef.TAG_PREFIX):
+		if String(t).begins_with(FaithTags.PREFIX):
 			continue
 		if not ctx.tags.has(t):
 			report.warn("tags", "没有登记的标签 '%s'：界面上只能显示原词（在 data/authoring/tags 里加一份就有名字与说明）" % t)
@@ -532,8 +532,8 @@ static func import_faith(data: Dictionary, ctx: Context, report: ImportReport) -
 	var def := FaithDef.new()
 	_fill(def, data, "", ctx, report)
 	_require_id(def.id, "信仰", report)
-	if String(def.id).begins_with(FaithDef.TAG_PREFIX) or String(def.id).contains(":"):
-		report.error("id", "id 里别带前缀或冒号：道具上的标签会自动写成 %s<id>" % FaithDef.TAG_PREFIX)
+	if String(def.id).begins_with(FaithTags.PREFIX) or String(def.id).contains(":"):
+		report.error("id", "id 里别带前缀或冒号：道具上的标签会自动写成 %s<id>" % FaithTags.PREFIX)
 	if def.display_name.strip_edges() == "":
 		report.error("display_name", "信仰得有名字")
 	# 信力（082）：阈值正数、非递减；行为非空、点数正
@@ -575,14 +575,14 @@ static func validate_faith_charms(ctx: Context, report: ImportReport) -> void:
 static func _validate_item_faith(def: ItemDef, ctx: Context, report: ImportReport) -> void:
 	var objects: Array[StringName] = []
 	for t in def.tags:
-		if String(t).begins_with(FaithDef.TAG_PREFIX):
+		if String(t).begins_with(FaithTags.PREFIX):
 			objects.append(t)
 	if def.has_faith() and objects.size() != 1:
-		report.error("tags", "带 faith 的道具得恰好有一个信仰对象标签（%s<id>），现在有 %d 个" % [FaithDef.TAG_PREFIX, objects.size()])
+		report.error("tags", "带 faith 的道具得恰好有一个信仰对象标签（%s<id>），现在有 %d 个" % [FaithTags.PREFIX, objects.size()])
 	elif not def.has_faith() and not objects.is_empty():
 		report.error("tags", "带了信仰对象标签 %s 却没有 faith 标签" % objects[0])
 	if def.has_faith() and objects.size() == 1 and not ctx.faiths.is_empty():
-		var fid := FaithDef.id_of_tag(objects[0])
+		var fid := FaithTags.id_of_tag(objects[0])
 		if not ctx.faiths.has(fid):
 			report.error("tags", "没有登记过的信仰 '%s'（已知：%s）" % [fid, ", ".join(ctx.faiths.keys())])
 	# 信力解锁的功能（082）只对信仰道具有意义；阶从 1 起
@@ -617,7 +617,7 @@ static func _string_choices(owner: Object, key: String) -> Array[String]:
 static func _faith_tiers(def: ItemDef, ctx: Context) -> int:
 	if ctx == null or ctx.faiths.is_empty() or not def.has_faith():
 		return 0
-	var faith := ctx.faiths.get(FaithDef.id_of_tag(def.faith_tag()), null) as FaithDef
+	var faith := ctx.faiths.get(FaithTags.id_of_tag(def.faith_tag()), null) as FaithDef
 	return faith.thresholds.size() if faith != null else 0
 
 

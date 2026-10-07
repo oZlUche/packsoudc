@@ -376,7 +376,7 @@ static func known_tags() -> Array[String]:
 					if parsed is Dictionary and (parsed as Dictionary).get("tags") is Array:
 						for tg in (parsed as Dictionary)["tags"]:
 							var s := String(tg)
-							if s != "" and not s.begins_with(FaithDef.TAG_PREFIX) and not _extra_tags.has(s):
+							if s != "" and not s.begins_with(FaithTags.PREFIX) and not _extra_tags.has(s):
 								_extra_tags.append(s)
 	for k in _extra_tags:
 		seen[String(k)] = true

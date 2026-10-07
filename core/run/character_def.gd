@@ -66,15 +66,6 @@ func combat_rules() -> Array[AbilityRule]:
 	return out
 
 
-## 有主动一击的技能
-func active_skills() -> Array[RunSkill]:
-	var out: Array[RunSkill] = []
-	for s in skills:
-		if s != null and (s as RunSkill).is_active():
-			out.append(s)
-	return out
-
-
 ## 技能的一句话：每个技能「名字（主动、被动各一句）」
 func skills_summary() -> String:
 	var parts: Array[String] = []

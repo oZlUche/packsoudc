@@ -29,7 +29,7 @@ static func bonus_lit(def: ItemDef, b: FaithBonus, status: Dictionary) -> bool:
 	if status.is_empty() or def == null or b == null:
 		return false
 	var active := StringName(String(status.get("active", "")))
-	if active == &"" or def.faith_tag() != FaithDef.TAG_PREFIX + String(active):
+	if active == &"" or def.faith_tag() != FaithTags.PREFIX + String(active):
 		return false
 	return b.times_for(int(status.get("tier", 0)), int(status.get("points", 0))) > 0
 
@@ -40,7 +40,7 @@ static func faith_lit(def: ItemDef, status: Dictionary) -> bool:
 	if status.is_empty() or def == null or not def.has_faith():
 		return false
 	var active := StringName(String(status.get("active", "")))
-	return active != &"" and def.faith_tag() == FaithDef.TAG_PREFIX + String(active)
+	return active != &"" and def.faith_tag() == FaithTags.PREFIX + String(active)
 
 
 ## [param board] 给了且道具在上面就按棋盘编译；否则单独编。只要主文字；词条见 [method describe_full]

@@ -41,7 +41,3 @@ func steps(a: int, b: int) -> int:
 		_cache[a] = MapNavigator.distance_map(_graph, a)
 	var d: Dictionary = _cache[a]
 	return int(d[b]) if d.has(b) else (1 << 20)
-
-
-func invalidate() -> void:
-	_cache.clear()

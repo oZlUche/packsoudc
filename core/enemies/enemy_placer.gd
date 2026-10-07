@@ -310,7 +310,7 @@ static func _unify_faith(
 ) -> StringName:
 	var faith := &""
 	for s in schools:
-		if String(s).begins_with(FaithDef.TAG_PREFIX):
+		if String(s).begins_with(FaithTags.PREFIX):
 			faith = s
 			break
 	for id in picks:

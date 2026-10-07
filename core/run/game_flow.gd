@@ -93,9 +93,7 @@ static func is_overlay(s: int) -> bool:
 
 #region 底屏之间
 func to_main_menu() -> void:
-	run = null
-	result = null
-	_queue.clear()
+	_reset_run()
 	run_changed.emit(null)     # 096：局外悬浮窗不按信仰状态上色（UI 摘掉探针）
 	save_meta()
 	_go(Screen.MAIN_MENU)
@@ -117,9 +115,7 @@ func use_slot(n: int) -> void:
 	var loaded := opened["meta"] as MetaState
 	meta = loaded if loaded != null else MetaState.new(meta_rules)
 	derive_techs()
-	run = null
-	result = null
-	_queue.clear()
+	_reset_run()
 	if settings != null and settings.save_slot != n:
 		settings.save_slot = n
 		save_settings()
@@ -185,13 +181,19 @@ func delete_slot(n: int) -> void:
 	if n == slot:
 		newer_slot = 0
 		meta = MetaState.new(meta_rules)
-		run = null
-		result = null
+		_reset_run()
 
 
 func show_slots() -> void:
 	_go(Screen.SLOTS)
 #endregion
+
+
+## 当前的这一局丢掉（回主菜单、换存档位、删当前位）：局、结算、排着没看的屏都清掉
+func _reset_run() -> void:
+	run = null
+	result = null
+	_queue.clear()
 
 
 func new_run() -> void:
@@ -298,8 +300,7 @@ func show_intro() -> bool:
 	var node := run.current_node()
 	if def == null or node == null:
 		return false
-	run.events.pending = {"node": node.id, "event": String(def.id), "type": String(node.type)}
-	run.events.event_pending.emit(node, def)
+	run.events.set_pending(node, def, node.type)
 	_flush()
 	return true
 
@@ -438,21 +439,20 @@ func grant_first_kit() -> int:
 
 
 func loadout_of(id: StringName) -> LoadoutDef:
-	for l in loadouts:
-		if l.id == id:
-			return l
-	return null
+	return _by_id(loadouts, id) as LoadoutDef
 
 
 func character_of(id: StringName) -> CharacterDef:
-	for c in characters:
-		if c.id == id:
-			return c
-	return null
+	return _by_id(characters, id) as CharacterDef
 
 
 func difficulty_of(id: StringName) -> DifficultyDef:
-	for d in difficulties:
+	return _by_id(difficulties, id) as DifficultyDef
+
+
+## 内容表里按 id 找一份定义（章节、角色、难度、开局装备都是「有 id 的资源」的数组）；没有 null
+static func _by_id(list: Array, id: StringName) -> Resource:
+	for d in list:
 		if d.id == id:
 			return d
 	return null
@@ -496,14 +496,8 @@ func characters_for(chapter: ChapterDef) -> Array[CharacterDef]:
 	return out
 
 
-## 现在能不能开新局；空串 = 能，否则是原因。
-## 090（作者定）：带回来的背包没清空**不再拦**（原 058 第 7 条的门）—— 开局屏把它们收到地上：拖上包 = 带上、拖进仓库 = 置入、
-## 留着的出发就没了、回主菜单原样放回。局外屏只提示（[method pending_hint]）
-func can_begin() -> String:
-	return ""
-
-
-## 090：上一局带回来的还没清时给局外屏的一句话；没有就空串
+## 090（作者定）：带回来的背包没清空**不再拦着开新局**（原 058 第 7 条的门）—— 开局屏把它们收到地上：拖上包 = 带上、拖进仓库 = 置入、
+## 留着的出发就没了、回主菜单原样放回。局外屏只提示这一句；没有就空串
 func pending_hint() -> String:
 	if meta != null and meta.has_pending_board():
 		return "上一局带回来的背包还有 %d 件没置入：可以现在置入或不要了；不管的话，开局屏里它们会放到地上，出发就没了" % meta.board.item_count()
@@ -533,10 +527,7 @@ func writable() -> bool:
 #region 局外科技（110）
 ## 按 id 找科技定义；没有 null
 func tech_of(id: StringName) -> TechDef:
-	for def in tech_defs:
-		if def.id == id:
-			return def
-	return null
+	return TechService.find(tech_defs, id)
 
 
 ## 120：由进度表推算科技派生值（仓库行数、保险箱、局外 buff），见 [method TechService.derive]
@@ -657,8 +648,6 @@ func save_settings() -> bool:
 ## 生成不出图返回 null，停在开局屏
 func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: Array[int] = [] as Array[int],
 		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null, scale: StringName = &"", carry_value: int = 0) -> RunState:
-	if can_begin() != "":
-		return null
 	var kit: Array[StringName] = []
 	if loadout != null:
 		kit = loadout.items.duplicate()
@@ -837,11 +826,8 @@ func next_chapter() -> ChapterDef:
 
 
 func chapter_of(id: StringName) -> ChapterDef:
-	var real := IdAliases.chapter(id)     # 114：老存档里的 chapter_01 = free_mode
-	for c in chapters:
-		if c.id == id or c.id == real:
-			return c
-	return null
+	var c := _by_id(chapters, id)
+	return (c if c != null else _by_id(chapters, IdAliases.chapter(id))) as ChapterDef     # 114：老存档里的 chapter_01 = free_mode
 
 
 ## 085：从结算屏直接进下一张教学图：带回来的先全进仓库（教程不从仓库带东西），再按下一章直接开。开不了回局外
@@ -1037,8 +1023,7 @@ func take_loot(uid: int) -> bool:
 	var ok := run.take_loot(uid)
 	seen_loot.erase(uid)
 	if run.pending_loot == null:
-		_forget_seen(held)
-		_flush()
+		_after_loot(held)
 	return ok
 
 
@@ -1047,8 +1032,7 @@ func take_all_loot() -> int:
 		return 0
 	var held := _loot_uids()
 	var n := run.take_all_loot()
-	_forget_seen(held)
-	_flush()
+	_after_loot(held)
 	return n
 
 
@@ -1057,6 +1041,11 @@ func discard_loot() -> void:
 		return
 	var held := _loot_uids()
 	run.discard_loot()
+	_after_loot(held)
+
+
+## 这一份待拾取处理完了（拿完 / 全拿 / 不要了）：忘掉它里面「亮过」的，往下走
+func _after_loot(held: Array[int]) -> void:
 	_forget_seen(held)
 	_flush()
 
@@ -1188,8 +1177,7 @@ func _flush() -> void:
 		_go(int(next["screen"]), next)
 		return
 	if run != null and run.is_over():
-		_settle_run()
-		_go(Screen.RESULT, {"result": result})
+		_show_result()
 		return
 	# 玩家空下来了：猎手够得着就排上开打前的事件屏（071）；134：猎手那一场了结了就接着进挂起的那个点 ——
 	# 那个点的事发生时排进队里的（休息结果、回放……）接着看
@@ -1210,10 +1198,15 @@ func _flush() -> void:
 		return
 	if run != null and _boss_extracts() and run.extract_after_boss():
 		# 087（作者定）：BOSS 倒下、战利品收完 → 直接撤离结算
-		_settle_run()
-		_go(Screen.RESULT, {"result": result})
+		_show_result()
 		return
 	_go(Screen.MAP)
+
+
+## 一局结束了：记账（只一次）然后进结算屏
+func _show_result() -> void:
+	_settle_run()
+	_go(Screen.RESULT, {"result": result})
 
 
 ## 087：这一局现在是不是「BOSS 已倒下、收完就撤」的状态
@@ -1358,6 +1351,5 @@ static func load_events() -> Dictionary:
 
 ## 局外规则（仓库多大）。没导入资产时 null，MetaState 用默认大小
 static func load_meta_rules(id: StringName = &"standard") -> MetaRules:
-	var path := ContentPaths.asset_file("meta_rules", String(id))
-	return load(path) as MetaRules if ResourceLoader.exists(path) else null
+	return ContentPaths.load_asset("meta_rules", String(id)) as MetaRules
 #endregion

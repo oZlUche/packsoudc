@@ -32,7 +32,7 @@ static func _start(items: ItemDatabase) -> RunState:
 static func _item_of_faith(db: ItemDatabase, fid: StringName) -> ItemDef:
 	for id in db.ids():
 		var d := db.get_def(id)
-		if d.is_anchor() and FaithDef.id_of_tag(d.faith_tag()) == fid:     # 095：只有信物能激活
+		if d.is_anchor() and FaithTags.id_of_tag(d.faith_tag()) == fid:     # 095：只有信物能激活
 			return d
 	return null
 
@@ -109,14 +109,14 @@ static func run_credit(t: TestCase) -> void:
 			continue
 		if a == null:
 			a = d
-		elif b == null and FaithDef.id_of_tag(d.faith_tag()) != FaithDef.id_of_tag(a.faith_tag()):
+		elif b == null and FaithTags.id_of_tag(d.faith_tag()) != FaithTags.id_of_tag(a.faith_tag()):
 			b = d
 	t.not_null(a, "至少一件信仰道具")
 	t.not_null(b, "另一个信仰也有道具")
 	if a == null or b == null:
 		return
-	var fa := FaithDef.id_of_tag(a.faith_tag())
-	var fb := FaithDef.id_of_tag(b.faith_tag())
+	var fa := FaithTags.id_of_tag(a.faith_tag())
+	var fb := FaithTags.id_of_tag(b.faith_tag())
 	var changes: Array = []
 	s.faith_power_changed.connect(func(id: StringName, p: int, tier: int): changes.append([id, p, tier]))
 	# 置入 a：激活 fa；置入本身也是一件事（value 按 ItemValue）
@@ -221,7 +221,7 @@ static func run_compiler_tiers(t: TestCase) -> void:
 	var s := _start(db)
 	if s == null:
 		return
-	var fid := FaithDef.id_of_tag(tag)
+	var fid := FaithTags.id_of_tag(tag)
 	var def: FaithDef = s.faith_defs[fid]
 	var mine := ItemInstance.create(with_bonus, 0)
 	s.storage.admit(mine)

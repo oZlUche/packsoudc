@@ -9,9 +9,6 @@
 class_name RunRegistry
 extends RefCounted
 
-## 地图作用域：占位，M3 再填
-const MAP_EFFECTS := {}
-
 ## 一局的规则（059 的 buff 骨架）：体力上限、开局钱、多搜几次、商店价、幸运。**不依赖扳机，激活即生效。**
 const RUN_EFFECTS := {
 	&"vitality_max_bonus": "res://core/run/effects/vitality_max_bonus.gd",
@@ -182,7 +179,6 @@ const TECH_EFFECTS := {
 
 
 const TABLES := {
-	&"map_effect": MAP_EFFECTS,
 	&"run_effect": RUN_EFFECTS,
 	&"event_condition": EVENT_CONDITIONS,
 	&"event_outcome": EVENT_OUTCOMES,

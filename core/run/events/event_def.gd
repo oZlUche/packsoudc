@@ -20,16 +20,10 @@ extends Resource
 @export var options: Array[EventOption] = []
 
 
-## 当前语言（或指定语言）下的标题；没写回落 title
+## 当前语言（或指定语言）下的标题；没写回落 title（[method Names.pick]）
 func title_for(lang: String = "") -> String:
-	return _pick(titles, title, lang)
+	return Names.pick(titles, title, lang)
 
 
 func text_for(lang: String = "") -> String:
-	return _pick(texts, text, lang)
-
-
-static func _pick(table: Dictionary, base: String, lang: String) -> String:
-	var l := lang if lang != "" else UiText.lang
-	var v := String(table.get(l, ""))
-	return v if v != "" else base
+	return Names.pick(texts, text, lang)

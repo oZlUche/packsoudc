@@ -20,6 +20,15 @@ static func _character(c: TestSupport.Content, id: StringName) -> CharacterDef:
 	return null
 
 
+## 角色文件里有主动一击的技能（期望值；一局里的账在 RunSkills.active_skills）
+static func _active(ch: CharacterDef) -> Array[RunSkill]:
+	var out: Array[RunSkill] = []
+	for s in ch.skills:
+		if s != null and (s as RunSkill).is_active():
+			out.append(s)
+	return out
+
+
 ## 角色的技能单独编出来的上下文（期望值）
 static func _expected(ch: CharacterDef) -> RunContext:
 	var ctx := RunContext.new()
@@ -59,7 +68,7 @@ static func run_pipeline(t: TestCase) -> void:
 	var back := ContentImporter.import_character(JSON.parse_string(text), ContentImporter.Context.new(), ImportReport.new())
 	t.eq(ContentExporter.to_json(ContentExporter.export_character(back)), text, "导出 → 导入 → 再导出逐字节相同")
 	t.eq(back.skills.size(), 3, "三个技能")
-	t.eq(back.active_skills().size(), 2, "两个有主动一击（突击、躲避），眼力是被动")
+	t.eq(_active(back).size(), 2, "两个有主动一击（突击、躲避），眼力是被动")
 	var ctx := _expected(back)
 	t.eq([ctx.scout_range, ctx.sense_mult, ctx.flee_bonus, ctx.free_losses, float(ctx.stat_bonus.get(&"max_hp", 0.0))], [3.0, 0.5, 0.25, 1, 20.0], "被动全编进上下文")
 	t.check(back.skills_summary().contains("眼力") and back.skills_summary().contains("突击") and back.skills_summary().contains("30%"), "summary：%s" % back.skills_summary())
@@ -91,10 +100,10 @@ static func run_authored_characters(t: TestCase) -> void:
 	var marcus := _character(c, &"marcus")
 	if brutus == null or andreus == null or marcus == null:
 		return
-	t.check(andreus.active_skills().size() >= 1 and andreus.active_skills()[0] is SlipSkill, "安德烈乌斯有脱身（136：替换了躲避）")
+	t.check(_active(andreus).size() >= 1 and _active(andreus)[0] is SlipSkill, "安德烈乌斯有脱身（136：替换了躲避）")
 	t.check(_expected(andreus).free_losses >= 1, "安德烈乌斯免罚至少一败")
-	t.check(marcus.active_skills().size() >= 1 and marcus.active_skills()[0] is AssaultSkill, "马库斯有突击")
-	t.check(brutus.active_skills().size() == 1 and brutus.active_skills()[0] is SecondWindSkill, "布鲁图斯有咬牙（136）")
+	t.check(_active(marcus).size() >= 1 and _active(marcus)[0] is AssaultSkill, "马库斯有突击")
+	t.check(_active(brutus).size() == 1 and _active(brutus)[0] is SecondWindSkill, "布鲁图斯有咬牙（136）")
 	var want := _expected(brutus)
 	t.check(want.stat_bonus.is_empty() and want.vitality_max_bonus == 0, "136：布鲁图斯的被动里不再有生命 / 耐力 / 体力加成（都在基线里）")
 	for raw in [andreus, brutus, marcus]:
@@ -114,7 +123,7 @@ static func run_authored_characters(t: TestCase) -> void:
 			t.eq(eff.value_of(k), base.value_of(k) + float(w.stat_bonus.get(k, 0.0)), "%s：基线 %s = 角色 + 加成" % [ch.id, k])
 		var spec := s.compile_player()
 		t.eq(spec.max_hp_int(), int(eff.value_of(&"max_hp")) + _board_hp(spec), "%s：编译出来的生命按加成后的基线" % ch.id)
-		t.check(s.skills != null and s.skills.active_skills().size() == ch.active_skills().size(), "%s：技能账里的主动技能与角色一致" % ch.id)
+		t.check(s.skills != null and s.skills.active_skills().size() == _active(ch).size(), "%s：技能账里的主动技能与角色一致" % ch.id)
 
 
 ## 棋盘上道具自带的生命（开局包里可能有）

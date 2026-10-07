@@ -604,7 +604,6 @@ static func run_warehouse_to_run(t: TestCase) -> void:
 	fourth.end_reason = &"extract"
 	f.resume()
 	f.finish_result()
-	t.eq(f.can_begin(), "", "090：带回来的棋盘没清空也能开新局（开局屏里到地上）")
 	f.store_all()
 	t.eq(f.meta.warehouse.item_count(), stock - 3 + board_n, "撤离：棋盘上的非包道具置入后全回仓库")
 	Support.cleanup("flow")

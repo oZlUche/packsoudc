@@ -92,7 +92,8 @@ func buy(i: int) -> bool:
 		return false
 	if not _session.can_buy(i):
 		if i >= 0 and i < _session.stock.size() and not _session.sold.has(i):
-			_say("金币不足：「%s」要 %d 币，你有 %d" % [Names.of(_def_at(i)) if _def_at(i) != null else "?", int(_session.stock[i]["price"]), flow.run.wallet.balance])
+			var inst := _session.item_at(i)
+			_say("金币不足：「%s」要 %d 币，你有 %d" % [Names.of(inst.def) if inst != null else "?", int(_session.stock[i]["price"]), flow.run.wallet.balance])
 		return false
 	return _session.buy(i) != null
 
@@ -202,10 +203,6 @@ func _on_drag_finished(uid: int, dropped: bool) -> void:
 		_refresh()
 
 
-func _def_at(i: int) -> ItemDef:
-	return flow.items.get_def(StringName(String(_session.stock[i]["id"]))) if _session != null and i >= 0 and i < _session.stock.size() else null
-
-
 func _say(text: String) -> void:
 	if _line != null:
 		_line.text = text
@@ -233,7 +230,8 @@ func _rebuild() -> void:
 		view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		view.item_double_clicked.connect(func(_v: ContainerView, uid: int): quick_buy(uid))
 		col.add_child(view)
-		var def := _def_at(i)
+		var inst := _session.item_at(i)     # 卖掉的格子是空的（价签只写「已售」，用不到尺寸）
+		var def := inst.def if inst != null else null
 		var sold := _session.sold.has(i)
 		var size := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
 		var price := _label("已售" if sold else "%d 币　%d×%d" % [int(_session.stock[i]["price"]), size.x, size.y], 12, UiPalette.DIM if sold else UiPalette.STAMINA)

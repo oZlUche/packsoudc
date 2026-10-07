@@ -103,7 +103,6 @@ func settle(node: MapNode) -> void:
 	var ctx := ErosionContext.new()
 	ctx.run = run
 	ctx.node = node
-	ctx.band = node.erosion_band
 	ctx.depth = depth_of(node)
 	ctx.total = is_total()
 	ctx.rng = run.rng.next(STREAM) if run.rng != null else RandomNumberGenerator.new()

@@ -195,7 +195,7 @@ static func run_id_aliases(t: TestCase) -> void:
 	for old in IdAliases.TAGS:
 		var new_tag: StringName = IdAliases.TAGS[old]
 		t.eq(IdAliases.tag(old), new_tag, "标签改名 %s → %s" % [old, new_tag])
-		var fid := FaithDef.id_of_tag(new_tag)
+		var fid := FaithTags.id_of_tag(new_tag)
 		t.check(fid == &"" or faiths.has(fid), "%s 指向登记过的信仰" % new_tag)
 	for old in IdAliases.ITEMS:
 		var new_item: StringName = IdAliases.ITEMS[old]

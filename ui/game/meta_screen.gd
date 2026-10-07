@@ -573,7 +573,7 @@ func variant_tiles() -> Array[CodexTile]:
 func _variant_kind(def: ItemDef) -> String:
 	if def == null or not def.is_blessed():
 		return "原件"
-	var fid := FaithDef.id_of_tag(def.faith_tag())
+	var fid := FaithTags.id_of_tag(def.faith_tag())
 	var fd: FaithDef = flow.faith_defs.get(fid, null) if flow.faith_defs != null else null
 	return "%s版" % (Names.of(fd) if fd != null else String(fid))
 
@@ -660,9 +660,7 @@ func toggle_unlock(id: StringName) -> bool:
 
 
 func _refresh() -> void:
-	var why := flow.can_begin()
-	_new_run_btn.disabled = why != ""
 	# 090：带回来的没清不再拦，只提示（开局屏里到地上，出发就没了）
-	_hint.text = why if why != "" else flow.pending_hint()
+	_hint.text = flow.pending_hint()
 	for id in _tech_spins:     # 119：科技页点亮 / 升级了，开发区的数字框跟上
 		(_tech_spins[id] as SpinBox).set_value_no_signal(TechService.level(flow.meta, id))

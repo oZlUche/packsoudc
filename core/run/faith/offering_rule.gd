@@ -21,20 +21,7 @@ extends Resource
 
 
 func matches(def: ItemDef) -> bool:
-	if def == null:
-		return false
-	if not tags.is_empty():
-		var hit := false
-		for t in tags:
-			if def.tags.has(t):
-				hit = true
-				break
-		if not hit:
-			return false
-	var cells := ItemVolume.cells_of(def)
-	if min_cells > 0 and cells < min_cells:
-		return false
-	if exact_grade >= 0 and ItemVolume.grade_of_cells(cells) != exact_grade:
+	if not FaithTags.item_matches(def, tags, min_cells, exact_grade):
 		return false
 	if has_stat != &"" and (def.combat == null or not def.combat.base_stats.has(String(has_stat))):
 		return false

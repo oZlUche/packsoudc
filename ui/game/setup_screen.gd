@@ -517,9 +517,6 @@ func set_run_seed(v: int) -> void:
 func can_depart() -> String:
 	if chapter() == null:
 		return "没有章节可开"
-	var why := flow.can_begin()
-	if why != "":
-		return why
 	var ch := character()
 	if ch == null:
 		return "没有角色可选"

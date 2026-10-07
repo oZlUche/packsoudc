@@ -32,14 +32,20 @@ static func _center(view: InventoryView, cell: Vector2i) -> Vector2:
 
 
 static func _seconds(view: LootView, uid: int) -> float:
-	var inst := view.inventory.get_item(uid)
-	return view.reveal_seconds[clampi(inst.def.rarity, 0, view.reveal_seconds.size() - 1)]
+	return view.rules.reveal_time(view.inventory.get_item(uid).def.rarity)
+
+
+## 视图里一张自己的耗时表（原来是 `view.reveal_seconds = …`；现在视图按搜索规则算）
+static func _set_seconds(view: LootView, seconds: Array[float]) -> void:
+	view.rules = SearchRules.new()
+	view.rules.reveal_seconds = seconds
 
 
 static func run_rules(t: TestCase) -> void:
 	t.begin("揭示耗时 · 是节点规则里的数：按稀有度取、超表按最后一档、导入器校验非递减且非负、作者文件是不动点")
 	var rules := SearchRules.new()
-	t.eq(rules.reveal_seconds, LootView.DEFAULT_SECONDS, "规则与视图的默认表一致")
+	var defaults := SearchRules.new().reveal_seconds     # 视图没有自己的表了：默认就是一份默认规则
+	t.eq(defaults.size(), 6, "默认表六档稀有度")
 	rules.reveal_seconds = [0.3, 0.5, 2.0] as Array[float]
 	t.eq(rules.reveal_time(0), 0.3, "稀有度 0")
 	t.eq(rules.reveal_time(2), 2.0, "稀有度 2")
@@ -50,15 +56,15 @@ static func run_rules(t: TestCase) -> void:
 	t.check(raw is Dictionary, "读得到 standard 节点规则")
 	var base := raw as Dictionary
 	# 导出器对数组一律写出（遭遇曲线、权重表也是），作者文件里就是默认表；没写这个键的旧文件导进来也是默认
-	t.eq((base.get("search", {}) as Dictionary).get("reveal_seconds", []), LootView.DEFAULT_SECONDS, "作者文件里是默认表（归一化写出来的）")
+	t.eq((base.get("search", {}) as Dictionary).get("reveal_seconds", []), defaults, "作者文件里是默认表（归一化写出来的）")
 	var old: Dictionary = base.duplicate(true)
 	(old["search"] as Dictionary).erase("reveal_seconds")
 	var legacy := ContentImporter.import_node_rules(old, ContentImporter.Context.new(), ImportReport.new())
-	t.eq(legacy.search.reveal_seconds, LootView.DEFAULT_SECONDS, "没写这个键的旧文件导进来是默认表")
+	t.eq(legacy.search.reveal_seconds, defaults, "没写这个键的旧文件导进来是默认表")
 	var ok := ImportReport.new()
 	var imported := ContentImporter.import_node_rules(base, ContentImporter.Context.new(), ok)
 	t.check(ok.ok(), "standard 导入没有错：%s" % ok.to_text())
-	t.eq(imported.search.reveal_seconds, LootView.DEFAULT_SECONDS, "standard 的表 = 默认表")
+	t.eq(imported.search.reveal_seconds, defaults, "standard 的表 = 默认表")
 
 	for bad_case in [[0.3, 0.2], [-1.0], []]:
 		var d: Dictionary = base.duplicate(true)
@@ -81,7 +87,7 @@ static func frame_run_timeline(t: TestCase, root: Window) -> void:
 	var box := LootPacker.board_of([&"pistol", &"knife", &"armor"] as Array[StringName], Vector2i(6, 4), db)
 	var view := _view(box, Vector2.ZERO)
 	root.add_child(view)
-	view.reveal_seconds = [1.0, 2.0, 3.0, 4.0, 5.0] as Array[float]
+	_set_seconds(view, [1.0, 2.0, 3.0, 4.0, 5.0] as Array[float])
 	var revealed: Array = []
 	view.item_revealed.connect(func(uid: int): revealed.append(uid))
 	var finished: Array = []
@@ -142,7 +148,7 @@ static func frame_run_timeline(t: TestCase, root: Window) -> void:
 			for j in defs.size():
 				if i < j and (defs[i] as ItemDef).shape.cell_count() != (defs[j] as ItemDef).shape.cell_count():
 					var v3 := LootView.new()
-					v3.reveal_seconds = view.reveal_seconds
+					v3.rules = view.rules
 					t.eq(v3._seconds_for(ItemInstance.create(defs[i], 0)), v3._seconds_for(ItemInstance.create(defs[j], 0)),
 						"%s 与 %s 同稀有度、格数不同、秒数相同" % [(defs[i] as ItemDef).id, (defs[j] as ItemDef).id])
 					checked = true
@@ -279,7 +285,7 @@ static func frame_run_container_screen(t: TestCase, root: Window) -> void:
 	root.add_child(screen)
 	screen.open({"container": box})
 	var view: LootView = screen.loot_view()
-	t.eq(view.reveal_seconds, run.node_rules.search.reveal_seconds, "耗时表 = 这一局节点规则里的")
+	t.check(view.rules == run.node_rules.search, "耗时表 = 这一局节点规则里的")
 	t.check(screen._drag.drop_filter.is_valid(), "拖拽层装了第二道门")
 	t.check(view.is_revealing(), "打开就开始搜")
 	t.check(screen._line.text.contains("正在搜"), "读数写着正在搜：%s" % screen._line.text)

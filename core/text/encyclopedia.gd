@@ -78,7 +78,7 @@ func _generate_terms() -> void:
 		_add("term:" + String(name), String(name), "term", Glossary.term_text(String(name)))
 	for t in TagRegistry.ids():
 		var tag := StringName(String(t))
-		if TagRegistry.is_internal(tag) or FaithDef.id_of_tag(tag) != &"":
+		if TagRegistry.is_internal(tag) or FaithTags.id_of_tag(tag) != &"":
 			continue
 		_add("tag:" + String(tag), TagRegistry.name_of(tag), "tag", TagRegistry.describe(tag), [], _items_with_tag(tag))
 	for d in DamageTypes.ids():

@@ -27,19 +27,19 @@ static func run_tags_and_defs(t: TestCase) -> void:
 	t.check(not defs.has(&"war"), "战争之神删了（104）")
 	t.eq((defs[&"church"] as FaithDef).camp, FaithDef.Camp.CHURCH, "新教的阵营是 CHURCH")
 	t.eq((defs[&"brute"] as FaithDef).tag(), &"faith:brute", "标签 = faith:<id>")
-	t.eq(FaithDef.id_of_tag(&"faith:skill"), &"skill", "从标签反推 id")
-	t.eq(FaithDef.id_of_tag(&"weapon"), &"", "不是信仰标签返回空")
+	t.eq(FaithTags.id_of_tag(&"faith:skill"), &"skill", "从标签反推 id")
+	t.eq(FaithTags.id_of_tag(&"weapon"), &"", "不是信仰标签返回空")
 	var db := _db()
 	var faithful := 0
 	for id in db.ids():
 		var d := db.get_def(id)
 		var objects := 0
 		for tag in d.tags:
-			if String(tag).begins_with(FaithDef.TAG_PREFIX):
+			if String(tag).begins_with(FaithTags.PREFIX):
 				objects += 1
 		if d.has_faith():
 			faithful += 1
-			t.check(objects == 1 and defs.has(FaithDef.id_of_tag(d.faith_tag())), "%s：faith + 一个登记过的对象标签（%s）" % [id, d.faith_tag()])
+			t.check(objects == 1 and defs.has(FaithTags.id_of_tag(d.faith_tag())), "%s：faith + 一个登记过的对象标签（%s）" % [id, d.faith_tag()])
 		else:
 			t.eq(objects, 0, "%s 没有 faith 就没有对象标签" % id)
 	t.check(faithful >= 3, "第一批里有 %d 件信仰道具（赐福之物、符号）" % faithful)

@@ -1,7 +1,7 @@
 ## 渐进揭示的战利品容器（架构文档 6.2，M6-2；058 第 5 条重做，报告 068）：看得见轮廓、看不清是什么。
 ##
 ## 就是一个 [InventoryView]，多了一层「揭没揭示」：没揭示的物品画成灰色剪影 + 噪点。
-## 揭示**一件一件来**：当前这件按它的稀有度耗时（[SearchRules.reveal_seconds]，和体积无关），到点亮出来，
+## 揭示**一件一件来**：当前这件按它的稀有度耗时（[method SearchRules.reveal_time]，和体积无关），到点亮出来，
 ## 再按栏位顺序（先上后下、先左后右）挑下一件 —— 只知道「当前搜谁」和「下一个搜谁」。
 ## 没揭示的东西**可以拖**（挪一挪就换了「下一个」是谁），但只能在容器内挪（容器屏用 [DragLayer.drop_filter] 圈住）；
 ## **当前正在搜的那件锁住**，抓不起来。「快速搜索」把没亮的全亮。
@@ -21,10 +21,8 @@ const COLOR_PROGRESS := Color("dfe3ea")
 const COLOR_NEXT := Color("8b93a1")
 const NOISE_PER_CELL := 14
 ## 没给规则时的耗时表（和 SearchRules 的默认一样）
-const DEFAULT_SECONDS: Array[float] = [0.3, 0.5, 0.8, 1.2, 2.0, 3.0]
-
-## 每档稀有度的秒数；容器屏从节点规则里给
-var reveal_seconds: Array[float] = DEFAULT_SECONDS
+## 每档稀有度搜几秒是搜索规则里的数（[method SearchRules.reveal_time]）；容器屏给这一局 / 会话的规则，没给就是一份默认的
+var rules: SearchRules = SearchRules.new()
 
 var _revealed: Dictionary = {}      # uid -> true
 ## 在这个容器里出现过的 uid（084：判「没亮的锁在容器里」只看它们；玩家自己棋盘上的东西这里不认识，随便放）
@@ -206,9 +204,9 @@ func _stop() -> void:
 
 
 func _seconds_for(inst: ItemInstance) -> float:
-	if inst == null or inst.def == null or reveal_seconds.is_empty():
+	if inst == null or inst.def == null or rules == null:
 		return 0.0
-	return maxf(0.0, reveal_seconds[clampi(inst.def.rarity, 0, reveal_seconds.size() - 1)])
+	return rules.reveal_time(inst.def.rarity)
 
 
 ## 栏位顺序：先上后下、先左后右

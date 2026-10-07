@@ -47,8 +47,6 @@ const LEGACY_OPTION := &"default"
 ## 按玩家的段位定档（作者：猎手的实际配置随玩家当前段位变，段位只受步数影响）：下标 = 段位（[HunterMechanic.bracket_steps] 划的），
 ## 值 = 池里的档位；超出表长按最后一档。空 = 退回强度规则
 @export var strength_by_bracket: Array[int] = []
-## 占位：和节点的互动（作者：保留选项）。现在恒为不互动
-@export var node_interaction: StringName = &"none"
 
 var _legacy: HunterLossOption = null
 

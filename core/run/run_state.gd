@@ -215,7 +215,6 @@ static func start(
 	s._wire_events()
 	s.install_modules()     # 模块要接的东西（旅程、节点事件）都造好了才装
 	s._seed_owned()     # 104：带进来的不算「获得」
-	s.phase = Phase.PICK_SPAWN
 	# 084：章节说了「默认已经站在出生点上」（序章只有一个出生点，没什么可挑的）就直接站上去
 	if p_chapter.auto_spawn and not s.map.entry_ids.is_empty():
 		s.pick_spawn(s.map.entry_ids[0])
@@ -675,11 +674,6 @@ func use_skill(id: StringName) -> String:
 	return skills.use(id)
 
 
-## 开打前：立了旗的技能改双方的战斗单位（[RunHooks] 的 `before_battle`）
-func _before_battle(me: CombatantSpec, enemy: CombatantSpec, _type: StringName) -> void:
-	skills.prepare_battle(me, enemy)
-
-
 ## 现在激活的信仰（8-4）：最后置入棋盘的信仰道具所属的那个；一件都没有 = null（不信者）
 func active_faith() -> FaithDef:
 	return faith_defs.get(FaithState.active_id(board), null) if board != null else null
@@ -885,10 +879,7 @@ func _resolve_rules() -> void:
 
 
 static func _rule_asset(kind: String, id: StringName) -> Resource:
-	if id == &"":
-		return null
-	var path := ContentPaths.asset_file(kind, String(id))
-	return load(path) if ResourceLoader.exists(path) else null
+	return ContentPaths.load_asset(kind, String(id)) if id != &"" else null
 
 
 ## 这一章的规模 id（有规模模板的生成器才有）
@@ -967,7 +958,8 @@ func _wire_events() -> void:
 	travel.arrival_gate = _arrival_gate     # 134：猎手战插在进点的事件队列前面
 	# 082：技能与信力
 	_ensure_skills()
-	hooks.register(&"before_battle", _before_battle)
+	hooks.register(&"before_battle", func(me: CombatantSpec, enemy: CombatantSpec, _type: StringName) -> void:
+		skills.prepare_battle(me, enemy))     # 开打前：立了旗的技能改双方的战斗单位
 	faith_power = FaithPower.new()
 	faith_power.setup(self)
 	faith_power.changed.connect(func(id: StringName, p: int, tier: int): faith_power_changed.emit(id, p, tier))
@@ -1155,12 +1147,13 @@ static func from_dict(
 	s.travel.vitality = s.vitality
 	s._bind_tracker()
 	s._wire_events()
-	s.events.searches_closed = int((d.get("events", {}) as Dictionary).get("searches_closed", 0))
-	s.events.last_handled_id = int((d.get("events", {}) as Dictionary).get("last_handled", -1))
-	s.events.losses_forgiven = int((d.get("events", {}) as Dictionary).get("losses_forgiven", 0))
+	var ev: Dictionary = d.get("events", {})
+	s.events.searches_closed = int(ev.get("searches_closed", 0))
+	s.events.last_handled_id = int(ev.get("last_handled", -1))
+	s.events.losses_forgiven = int(ev.get("losses_forgiven", 0))
 	s.skills_saved = d.get("skills", {}) if d.get("skills", {}) is Dictionary else {}
 	s.faith_power.restore(d.get("faith_power", {}) if d.get("faith_power", {}) is Dictionary else {})
-	var pending = (d.get("events", {}) as Dictionary).get("pending", {})
+	var pending = ev.get("pending", {})
 	if pending is Dictionary and not (pending as Dictionary).is_empty():
 		s.events.pending = {"node": int(pending.get("node", -1)), "event": String(pending.get("event", "")), "type": String(pending.get("type", ""))}
 		if pending.has("hunter"):
@@ -1172,7 +1165,7 @@ static func from_dict(
 		if pending.get("encounter", null) is Dictionary and not (pending["encounter"] as Dictionary).is_empty():
 			s.events.pending["encounter"] = (pending["encounter"] as Dictionary).duplicate(true)
 	# 084：读档回来还停在战前准备屏（开着的搜索会话不存，遭遇那一场打完只标点用过）
-	var pb = (d.get("events", {}) as Dictionary).get("pending_battle", {})
+	var pb = ev.get("pending_battle", {})
 	if pb is Dictionary and not (pb as Dictionary).is_empty() and pb.has("node"):
 		var content = pb.get("content", {})
 		s.events.pending_battle = {"node": int(pb["node"]), "type": String(pb.get("type", "battle")),
@@ -1186,7 +1179,7 @@ static func from_dict(
 	var loot = d.get("pending_loot", null)
 	if loot is Dictionary:
 		s.pending_loot = GridInventory.from_dict(loot, p_items)
-	var haul = (d.get("events", {}) as Dictionary).get("search_haul", null)
+	var haul = ev.get("search_haul", null)
 	if haul is Dictionary:
 		s._offer_loot(GridInventory.from_dict(haul, p_items))     # 审查 B1：存档时开着的搜索的收获 → 待拾取（和离开搜索一样）
 	s.phase = int(d.get("phase", Phase.PICK_SPAWN))

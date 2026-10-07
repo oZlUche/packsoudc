@@ -144,8 +144,7 @@ func handle(node: MapNode) -> void:
 	var def := _event_for(node, type)
 	if def != null:
 		last_handled_id = node.id
-		pending = {"node": node.id, "event": String(def.id), "type": String(type)}
-		event_pending.emit(node, def)
+		set_pending(node, def, type)
 		return
 	_proceed(node, type)
 
@@ -161,7 +160,7 @@ func _proceed(node: MapNode, type: StringName) -> void:
 			_open_search(node)
 		&"rest":
 			last_handled_id = node.id
-			var got := vitality.restore(rules.rest_restore + _run_ctx().rest_bonus, &"rest") if vitality != null and rules != null else 0     # 136：野地里长大
+			var got := vitality.restore(rules.rest_restore + hooks.run_context().rest_bonus, &"rest") if vitality != null and rules != null else 0     # 136：野地里长大
 			node.content["used_rest"] = true
 			rested.emit(node, got)
 			settle_rest(node)
@@ -215,7 +214,6 @@ func retype(node: MapNode, type: StringName) -> void:
 		return
 	node.content["resolved_type"] = String(type)
 	node.content.erase("event")
-	node.content.erase("choice")
 	node.content.erase("outcome")
 	for key in ["enemy", "items", "strength", "bags", "bag", "board"]:
 		node.content.erase(key)
@@ -264,6 +262,14 @@ func _event_for(node: MapNode, type: StringName) -> EventDef:
 		id = String(picked)
 		node.content["event"] = id
 	return event_defs.get(StringName(id), null)
+
+
+## 把一个事件挂起等玩家选、发 [signal event_pending]。[member pending] 的形状只在这里定：{"node", "event", "type"} + [param extra]
+## （搜索循环的 `search_stage` / `search_encounter` / `encounter`、猎手的 `hunter`，跟着存档走）。持有方（开场事件、猎手）也走这里
+func set_pending(node: MapNode, def: EventDef, type: StringName, extra: Dictionary = {}) -> void:
+	pending = {"node": node.id, "event": String(def.id), "type": String(type)}
+	pending.merge(extra)
+	event_pending.emit(node, def)
 
 
 func pending_event() -> EventDef:
@@ -321,7 +327,6 @@ func choose(i: int) -> bool:
 		if ctx.hunter_fight:
 			hooks.fight_hunter(node, hunter_uid, ctx)
 		return true
-	node.content["choice"] = i
 	# 8-3：改类型先落账，后面的「照常发生」「开战」都按新类型走（和随机点揭开是同一个记号）
 	if ctx.new_type != &"" and ctx.new_type != type:
 		node.content["resolved_type"] = String(ctx.new_type)
@@ -350,8 +355,7 @@ func choose(i: int) -> bool:
 	if ctx.next_event != &"":
 		var next: EventDef = def_by_id(ctx.next_event)
 		if next != null:
-			pending = {"node": node.id, "event": String(next.id), "type": String(type)}
-			event_pending.emit(node, next)
+			set_pending(node, next, type)
 			return true
 	if ctx.open_search:
 		_open_search(node, true)
@@ -397,7 +401,7 @@ func _event_ctx(node: MapNode) -> EventContext:
 	ctx.wallet = wallet
 	ctx.items = items
 	ctx.rules = rules
-	ctx.depth = float(_depths.get(node.id, 0.0))
+	ctx.depth = _depth_of(node)
 	ctx.graph = graph
 	ctx.steps = travel.clock.total if travel != null and travel.clock != null else 0
 	ctx.board = board
@@ -451,15 +455,14 @@ func _can_fight(content: Dictionary) -> bool:
 ## 打完这一场接着做的事：节点的战斗把点标用过。搜索遭遇（091，作者定）：**打赢了会话接着开、还能再搜** ——
 ## 回到「再搜 / 走」那一屏（搜满了是「搜完了」）；**打输了不扣体力**（这一场写了无代价），但会话收掉、收获交出去、
 ## 这个点用过、「余波」事件说一声不能再搜。整场战斗都包在事件里：遇敌事件 → 迎战 → 回放 → 战利品 → 回到搜索的事件屏
-func _after_battle(node: MapNode, kind: String, won: bool = false) -> void:
+func _after_battle(node: MapNode, kind: String, won: bool) -> void:
 	if kind == "search" and current_search != null:
 		var session := current_search
 		if won and not over:
 			session.resume()
 			var again := _search_event(node, session, "done" if session.is_exhausted() else "again")
 			if again != null:
-				pending = {"node": node.id, "event": String(again.id), "type": "search", "search_stage": true}
-				event_pending.emit(node, again)
+				set_pending(node, again, &"search", {"search_stage": true})
 			else:
 				search_shown.emit(node, session)
 			return
@@ -471,8 +474,7 @@ func _after_battle(node: MapNode, kind: String, won: bool = false) -> void:
 		# 084：搜索点被余波摧毁，不能再搜 —— 配了就说一声
 		var def := _search_event(node, null, "destroyed")
 		if def != null:
-			pending = {"node": node.id, "event": String(def.id), "type": "search"}
-			event_pending.emit(node, def)
+			set_pending(node, def, &"search")
 
 
 ## 等着开打的那个点
@@ -538,8 +540,8 @@ func smite_pending_battle() -> bool:
 func _pay_battle_reward(node: MapNode, content: Dictionary) -> void:
 	if wallet == null or economy == null:
 		return
-	var amount := economy.battle_reward(int(content.get("strength", 0)), float(_depths.get(node.id, 0.0)), difficulty)
-	amount = int(roundf(float(amount) * _run_ctx().battle_reward_mult))
+	var amount := economy.battle_reward(int(content.get("strength", 0)), _depth_of(node), difficulty)
+	amount = int(roundf(float(amount) * hooks.run_context().battle_reward_mult))
 	wallet.earn(amount, &"battle")
 	rewarded.emit(node, amount)
 
@@ -645,7 +647,7 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 		elif cost > 0 and vitality != null:
 			# 082：角色技能的免罚败仗 —— 只对节点敌人，配额在上下文里、已免几次在这里记。
 			# 088（作者定）：输给猎手也扣体力（默认按 loss_cost 里的 hunter，猎手定义可以自己写），猎手定义里的战败后果另算
-			if type != HunterSystem.TYPE and losses_forgiven < _run_ctx().free_losses:
+			if type != HunterSystem.TYPE and losses_forgiven < hooks.run_context().free_losses:
 				losses_forgiven += 1
 			else:
 				vitality.spend(cost, &"battle_lost")
@@ -663,8 +665,8 @@ func _open_search(node: MapNode, auto: bool = false) -> void:
 		return
 	var session := current_search
 	if session == null or session.node != node:
-		session = SearchSession.new(node, rules.search, items, _rng_for(node, "search"), float(_depths.get(node.id, 0.0)))
-		session.extra_searches = _run_ctx().extra_searches
+		session = SearchSession.new(node, rules.search, items, _rng_for(node, "search"), _depth_of(node))
+		session.extra_searches = hooks.run_context().extra_searches
 		session.search_floor = SearchSession.floor_for(node, rules.search, difficulty_def)     # 127
 		var s := session
 		var sr := rules.search
@@ -700,8 +702,7 @@ func pause_search() -> bool:
 	if def == null:
 		session.leave()
 		return true
-	pending = {"node": session.node.id, "event": String(def.id), "type": "search", "search_stage": true}
-	event_pending.emit(session.node, def)
+	set_pending(session.node, def, &"search", {"search_stage": true})
 	return true
 
 
@@ -741,7 +742,7 @@ func _open_shop(node: MapNode) -> void:
 		shop_opened.emit(node, null)
 		_visited(node)
 		return
-	var session := ShopSession.new(node, economy, items, wallet, float(_depths.get(node.id, 0.0)), _run_ctx().shop_price_mult)
+	var session := ShopSession.new(node, economy, items, wallet, _depth_of(node), hooks.run_context().shop_price_mult)
 	session.closed.connect(func():
 		current_shop = null
 		shop_closed.emit(node)
@@ -777,8 +778,7 @@ func _close_search(node: MapNode, session: SearchSession, reason: StringName) ->
 		if notice != null:
 			# 084：先过「遇敌」事件，选「迎战」（start_battle）才打；会话留在 current_search，遭遇与收获都在里面
 			# 审查 B1：遭遇的内容也记在 pending 里（会话不进存档）—— 读档回来选「迎战」打的还是这一场
-			pending = {"node": node.id, "event": String(notice.id), "type": "search", "search_encounter": true, "encounter": session.encounter.duplicate(true)}
-			event_pending.emit(node, notice)
+			set_pending(node, notice, &"search", {"search_encounter": true, "encounter": session.encounter.duplicate(true)})
 			return
 		if pause_before_battle and _can_fight(session.encounter):
 			# 先停在战前准备屏；打完由 _after_battle("search") 决定：赢了接着搜、输了收会话（091：无代价）
@@ -801,7 +801,7 @@ func _event(node: MapNode) -> void:
 		&"restore":
 			detail["restored"] = vitality.restore(rules.event_restore, &"event") if vitality != null else 0
 		&"item":
-			var got := SearchSession.draw_items(rules.search, items, float(_depths.get(node.id, 0.0)), node.danger,
+			var got := SearchSession.draw_items(rules.search, items, _depth_of(node), node.danger,
 				_rng_for(node, "event_item"), rules.event_item_rarity_cap) if rules.search != null else [] as Array[StringName]
 			detail["items"] = got.slice(0, 1)
 	node.content["outcome"] = String(outcome)
@@ -815,17 +815,11 @@ func _enemy_for(node: MapNode, as_type: StringName, rng: RandomNumberGenerator) 
 	var view := MapNode.from_dict(node.to_dict())
 	view.type = as_type
 	# 踩上去才造的敌人跟探索度挂钩：走得越远、搜得越多，遇到的越强
-	var built := EnemyPlacer.place_one(view, pool, enemies, items, float(_depths.get(node.id, 0.0)), difficulty, scale_id, rng, exploration(), carry_rule)
+	var built := EnemyPlacer.place_one(view, pool, enemies, items, _depth_of(node), difficulty, scale_id, rng, exploration(), carry_rule)
 	return built.get("content", {})
 
 
-func _run_ctx() -> RunContext:
-	var from_hook := hooks.run_context()
-	if from_hook != null:
-		return from_hook
-	return RunContext.new()
-
-
+## 掉落上下文：没人接就自己造一个只带难度的（难度只有这里知道，所以不能像 run_context 那样放进 [RunHooks] 当默认值）
 func _loot_ctx() -> LootContext:
 	var from_hook := hooks.loot_context()
 	if from_hook != null:
@@ -845,6 +839,11 @@ func _visited(node: MapNode) -> void:
 		travel.mark_visited(node.id)
 	else:
 		node.state = MapNode.State.VISITED
+
+
+## 这个点的深度 0～1（[method EnemyPlacer.depths_of]）；不在图上算 0
+func _depth_of(node: MapNode) -> float:
+	return float(_depths.get(node.id, 0.0))
 
 
 func _rng_for(node: MapNode, tag: String) -> RandomNumberGenerator:

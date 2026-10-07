@@ -70,7 +70,7 @@ static func term_tip(name: String) -> bool:
 
 ## 标签给人看（096：名字是数据 —— [TagRegistry]，按当前语言；`faith:<id>` 写成「信仰：神名」；没登记的原词）
 static func tag_name(tag: StringName) -> String:
-	var fid := FaithDef.id_of_tag(tag)
+	var fid := FaithTags.id_of_tag(tag)
 	if fid != &"":
 		var defs := FaithDef.load_all()
 		var god: FaithDef = defs.get(fid, null)

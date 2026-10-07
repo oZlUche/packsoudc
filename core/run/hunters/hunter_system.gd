@@ -303,8 +303,7 @@ func check_engagement() -> bool:
 func _engage(h: Hunter, def: HunterDef) -> void:
 	var node := run.current_node()
 	var ev := _encounter_def(def, loss_option_of(h))
-	run.events.pending = {"node": node.id, "event": String(ev.id), "type": String(TYPE), "hunter": h.uid}
-	run.events.event_pending.emit(node, ev)
+	run.events.set_pending(node, ev, TYPE, {"hunter": h.uid})
 
 
 ## 开打前的事件屏：迎战 / 逃跑（逃不掉的猎手没有第二项）。合成一次、登记在 NodeEvents.extra_defs 里（跟着 id 存档也找得回来）。
