@@ -328,8 +328,7 @@ func _refresh() -> void:
 		var item_def := _flow.items.get_def(id) if _flow.items != null else null
 		var name := Names.of(item_def) if item_def != null else String(key)
 		var own := int(owned.get(String(key), 0))
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 12)
+		var row := _spaced(HBoxContainer.new(), 12) as HBoxContainer
 		row.add_child(_label("%s　已交 %d / 需要 %d%s" % [name, have, need, "　✓" if have >= need else ""], 13,
 			UiPalette.HEAL if have >= need else UiPalette.FG))
 		row.add_child(_label("拥有 %d" % own, 13, UiPalette.FG if own > 0 else UiPalette.DIM))
@@ -382,9 +381,12 @@ static func _texts_of(box: Container) -> String:
 
 
 func _vbox(sep: int) -> VBoxContainer:
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", sep)
-	return v
+	return _spaced(VBoxContainer.new(), sep) as VBoxContainer
+
+
+static func _spaced(box: BoxContainer, sep: int) -> BoxContainer:
+	box.add_theme_constant_override("separation", sep)
+	return box
 
 
 func _label(text: String, font_size: int, color: Color) -> Label:
