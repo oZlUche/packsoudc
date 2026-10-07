@@ -40,119 +40,103 @@ class Context:
 	## 096：id -> TagDef。道具的标签对着它提醒（没登记只是警告）
 	var tags: Dictionary = {}
 
-	func register_tag(def: TagDef) -> void:
+	## 按 id 登记；没有 id 的（导入已报错）不进表。下面那排 register_* 只是带类型的入口
+	func _put(table: Dictionary, def) -> void:
 		if def != null and def.id != &"":
-			tags[def.id] = def
+			table[def.id] = def
+
+	func register_tag(def: TagDef) -> void:
+		_put(tags, def)
 
 	func register_buff(def: BuffDef) -> void:
-		if def != null and def.id != &"":
-			buffs[def.id] = def
+		_put(buffs, def)
 
 	func register_item(def: ItemDef) -> void:
-		if def != null and def.id != &"":
-			items[def.id] = def
+		_put(items, def)
 
 	func register_enemy(def: EnemyDef) -> void:
-		if def != null and def.id != &"":
-			enemies[def.id] = def
+		_put(enemies, def)
 
 	func register_pool(pool: EnemyPool) -> void:
-		if pool != null and pool.id != &"":
-			pools[pool.id] = pool
+		_put(pools, pool)
 
 	func register_encumbrance_rules(rules: EncumbranceRules) -> void:
-		if rules.id != &"":
-			encumbrance_rules[rules.id] = rules
+		_put(encumbrance_rules, rules)
 
 	func register_carry_rule(rule: CarryRule) -> void:
-		if rule.id != &"":
-			carry_rules[rule.id] = rule
+		_put(carry_rules, rule)
 
 	func register_drop_rule(rule: DropRule) -> void:
-		if rule != null and rule.id != &"":
-			drop_rules[rule.id] = rule
+		_put(drop_rules, rule)
 
 	func register_node_rules(rules: NodeRules) -> void:
-		if rules != null and rules.id != &"":
-			node_rules[rules.id] = rules
+		_put(node_rules, rules)
 
 	func register_economy_rules(rules: EconomyRules) -> void:
-		if rules != null and rules.id != &"":
-			economy_rules[rules.id] = rules
+		_put(economy_rules, rules)
 
 	func register_loadout(def: LoadoutDef) -> void:
-		if def != null and def.id != &"":
-			loadouts[def.id] = def
+		_put(loadouts, def)
 
 	## id -> CharacterDef
 	var characters: Dictionary = {}
 
 	func register_character(def: CharacterDef) -> void:
-		if def != null and def.id != &"":
-			characters[def.id] = def
+		_put(characters, def)
 
 	## id -> DifficultyDef
 	var difficulties: Dictionary = {}
 
 	func register_difficulty(def: DifficultyDef) -> void:
-		if def != null and def.id != &"":
-			difficulties[def.id] = def
+		_put(difficulties, def)
 
 	## id -> HunterDef
 	var hunters: Dictionary = {}
 
 	func register_hunter(def: HunterDef) -> void:
-		if def != null and def.id != &"":
-			hunters[def.id] = def
+		_put(hunters, def)
 
 	## id -> MetaRules
 	var meta_rules: Dictionary = {}
 
 	func register_meta_rules(rules: MetaRules) -> void:
-		if rules != null and rules.id != &"":
-			meta_rules[rules.id] = rules
+		_put(meta_rules, rules)
 
 	## id -> FaithDef（8-4）。道具的信仰对象标签对着它查
 	var faiths: Dictionary = {}
 
 	func register_faith(def: FaithDef) -> void:
-		if def != null and def.id != &"":
-			faiths[def.id] = def
+		_put(faiths, def)
 
 	## id -> RunBuffDef
 	var run_buffs: Dictionary = {}
 
 	func register_run_buff(def: RunBuffDef) -> void:
-		if def != null and def.id != &"":
-			run_buffs[def.id] = def
+		_put(run_buffs, def)
 
 	## id -> EventDef。节点规则对着它查
 	var events: Dictionary = {}
 
 	func register_event(def: EventDef) -> void:
-		if def != null and def.id != &"":
-			events[def.id] = def
+		_put(events, def)
 
 	## id -> HelpPageDef（114）。「相关」对着它查
 	var help_pages: Dictionary = {}
 
 	func register_help_page(def: HelpPageDef) -> void:
-		if def != null and def.id != &"":
-			help_pages[def.id] = def
+		_put(help_pages, def)
 
 	## id -> TechDef（118）。树（前置、成环、撞位）全部导完才查得全
 	var techs: Dictionary = {}
 
 	func register_tech(def: TechDef) -> void:
-		if def != null and def.id != &"":
-			techs[def.id] = def
+		_put(techs, def)
 
 	## id -> AchievementDef（091）
 	var achievements: Dictionary = {}
 
 	func register_achievement(def: AchievementDef) -> void:
-		if def != null and def.id != &"":
-			achievements[def.id] = def
+		_put(achievements, def)
 
 	## 道具里带某个标签的有几件。批量导入时才有意义 —— 单独导一个敌人时上下文是空的，
 	## 这类「对着别的东西查」的校验就跳过（见 _validate_enemy）
@@ -162,6 +146,14 @@ class Context:
 			if (items[id] as ItemDef).tags.has(tag):
 				n += 1
 		return n
+
+
+## 25 种内容都先查这一条。返回有没有 id，好让调用方把「id 格式」的检查接在后面
+static func _require_id(id: StringName, what: String, report: ImportReport) -> bool:
+	if id == &"":
+		report.error("id", what + "必须有 id")
+		return false
+	return true
 
 
 #region 顶层入口
@@ -227,8 +219,7 @@ static func import_of(kind: String, data: Dictionary, ctx: Context, report: Impo
 static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) -> BuffDef:
 	var def := BuffDef.new()
 	_fill(def, data, "", ctx, report)
-	if def.id == &"":
-		report.error("id", "增益必须有 id")
+	_require_id(def.id, "增益", report)
 	validate_buff_duration(def, "", report)
 	warn_unbounded_percent(def, "", report)
 	warn_axis_candidate(def, "", report)
@@ -264,7 +255,8 @@ static func _validate_item_buffs(def: ItemDef, report: ImportReport) -> void:
 const BUFF_ONLY_DAMAGE: Array[StringName] = [&"poison", &"bleed"]
 
 
-static func _validate_buff_only_damage(def: ItemDef, report: ImportReport) -> void:
+## 道具里所有装规则的地方：[路径, 规则数组]。下面四条校验遍历的是同一组 —— 加一种规则容器只改这里
+static func _rule_groups(def: ItemDef) -> Array:
 	var groups: Array = []
 	if def.combat != null:
 		groups.append(["combat.rules", def.combat.rules])
@@ -275,7 +267,11 @@ static func _validate_buff_only_damage(def: ItemDef, report: ImportReport) -> vo
 	if def.adjacency != null:
 		groups.append(["adjacency.grant_rules", def.adjacency.grant_rules])     # 108：附加规则同样适用
 		groups.append(["adjacency.receive_rules", def.adjacency.receive_rules])     # 132
-	for g in groups:
+	return groups
+
+
+static func _validate_buff_only_damage(def: ItemDef, report: ImportReport) -> void:
+	for g in _rule_groups(def):
 		var rules: Array = g[1]
 		for i in rules.size():
 			var rule := rules[i] as AbilityRule
@@ -292,17 +288,7 @@ static func _validate_buff_only_damage(def: ItemDef, report: ImportReport) -> vo
 ## 「转化」不许转成自己（`convert_status.to` 就是 `from`）；「某状态被施加时」的规则不许再施加同一个状态（含转化成它）：
 ## 本方施加 X → 触发 → 又施加 X → 又触发……一直连锁到派发上限被截断
 static func _validate_status_loops(def: ItemDef, report: ImportReport) -> void:
-	var groups: Array = []
-	if def.combat != null:
-		groups.append(["combat.rules", def.combat.rules])
-	for k in def.faith_bonuses.size():
-		var fb := def.faith_bonuses[k] as FaithBonus
-		if fb != null:
-			groups.append(["faith_bonuses[%d].rules" % k, fb.rules])
-	if def.adjacency != null:
-		groups.append(["adjacency.grant_rules", def.adjacency.grant_rules])
-		groups.append(["adjacency.receive_rules", def.adjacency.receive_rules])     # 132
-	for g in groups:
+	for g in _rule_groups(def):
 		validate_status_loops(g[1], g[0], report)
 
 
@@ -335,17 +321,7 @@ const PACKET_EFFECTS := ["ModifyDamage", "ReflectDamage", "LowHpEmpower", "Conve
 
 
 static func _validate_rule_shapes(def: ItemDef, ctx: Context, report: ImportReport) -> void:
-	var groups: Array = []
-	if def.combat != null:
-		groups.append(["combat.rules", def.combat.rules])
-	for k in def.faith_bonuses.size():
-		var fb := def.faith_bonuses[k] as FaithBonus
-		if fb != null:
-			groups.append(["faith_bonuses[%d].rules" % k, fb.rules])
-	if def.adjacency != null:
-		groups.append(["adjacency.grant_rules", def.adjacency.grant_rules])
-		groups.append(["adjacency.receive_rules", def.adjacency.receive_rules])
-	for g in groups:
+	for g in _rule_groups(def):
 		validate_rule_shapes(g[1], g[0], report, true, ctx)
 
 
@@ -464,17 +440,7 @@ static func _validate_item_combat(def: ItemDef, report: ImportReport) -> void:
 		report.error("tags", "「%s」带武器标签却不造成伤害 —— 武器至少要有一条直接造成伤害的规则" % def.id)
 	if is_weapon:
 		return
-	var groups: Array = []
-	if def.combat != null:
-		groups.append(["combat.rules", def.combat.rules])
-	for k in def.faith_bonuses.size():
-		var fb := def.faith_bonuses[k] as FaithBonus
-		if fb != null:
-			groups.append(["faith_bonuses[%d].rules" % k, fb.rules])
-	if def.adjacency != null:
-		groups.append(["adjacency.grant_rules", def.adjacency.grant_rules])     # 108：附加规则同样适用
-		groups.append(["adjacency.receive_rules", def.adjacency.receive_rules])     # 132
-	for g in groups:
+	for g in _rule_groups(def):
 		var rules: Array = g[1]
 		for i in rules.size():
 			var rule := rules[i] as AbilityRule
@@ -489,8 +455,7 @@ static func _validate_item_combat(def: ItemDef, report: ImportReport) -> void:
 static func import_set(data: Dictionary, ctx: Context, report: ImportReport) -> ItemSetDef:
 	var def := ItemSetDef.new()
 	_fill(def, data, "", ctx, report)
-	if def.id == &"":
-		report.error("id", "套装必须有 id")
+	_require_id(def.id, "套装", report)
 	if def.tiers.is_empty():
 		report.warn("tiers", "套装没有任何档位，永远不会生效")
 	return def
@@ -538,9 +503,7 @@ static func _validate_item_tags(def: ItemDef, ctx: Context, report: ImportReport
 static func import_tag(data: Dictionary, ctx: Context, report: ImportReport) -> TagDef:
 	var def := TagDef.new()
 	_fill(def, data, "", ctx, report)
-	if def.id == &"":
-		report.error("id", "标签必须有 id")
-	elif String(def.id).contains(":") or String(def.id).contains(" "):
+	if _require_id(def.id, "标签", report) and (String(def.id).contains(":") or String(def.id).contains(" ")):
 		report.error("id", "标签 id 里别带冒号或空格（`faith:<id>` 这类动态标签不用登记）")
 	if def.display_name.strip_edges() == "":
 		report.error("display_name", "标签得有名字（没名字就不用登记）")
@@ -555,8 +518,7 @@ static func import_tag(data: Dictionary, ctx: Context, report: ImportReport) -> 
 static func import_damage_type(data: Dictionary, ctx: Context, report: ImportReport) -> DamageTypeDef:
 	var def := DamageTypeDef.new()
 	_fill(def, data, "", ctx, report)
-	if def.id == &"":
-		report.error("id", "伤害类型必须有 id")
+	_require_id(def.id, "伤害类型", report)
 	if def.display_name.strip_edges() == "":
 		report.error("display_name", "伤害类型得有名字")
 	return def
@@ -567,8 +529,7 @@ static func import_damage_type(data: Dictionary, ctx: Context, report: ImportRep
 static func import_recipe(data: Dictionary, ctx: Context, report: ImportReport) -> RecipeDef:
 	var def := RecipeDef.new()
 	_fill(def, data, "", ctx, report)
-	if def.id == &"":
-		report.error("id", "配方必须有 id")
+	_require_id(def.id, "配方", report)
 	if def.inputs.size() != 2:
 		report.error("inputs", "配方是两件合一件：inputs 得恰好两个")
 	if def.output == &"":
@@ -584,8 +545,7 @@ static func import_recipe(data: Dictionary, ctx: Context, report: ImportReport) 
 static func import_faith(data: Dictionary, ctx: Context, report: ImportReport) -> FaithDef:
 	var def := FaithDef.new()
 	_fill(def, data, "", ctx, report)
-	if def.id == &"":
-		report.error("id", "信仰必须有 id")
+	_require_id(def.id, "信仰", report)
 	if String(def.id).begins_with(FaithDef.TAG_PREFIX) or String(def.id).contains(":"):
 		report.error("id", "id 里别带前缀或冒号：道具上的标签会自动写成 %s<id>" % FaithDef.TAG_PREFIX)
 	if def.display_name.strip_edges() == "":
@@ -733,8 +693,7 @@ static func import_enemy_pool(data: Dictionary, ctx: Context, report: ImportRepo
 static func import_carry_rule(data: Dictionary, ctx: Context, report: ImportReport) -> CarryRule:
 	var rule := CarryRule.new()
 	_fill(rule, data, "", ctx, report)
-	if rule.id == &"":
-		report.error("id", "携带规则必须有 id")
+	_require_id(rule.id, "携带规则", report)
 	for i in rule.count_by_strength.size():
 		var c := rule.count_by_strength[i]
 		if c.x < 0 or c.y < c.x:
@@ -751,8 +710,7 @@ static func import_carry_rule(data: Dictionary, ctx: Context, report: ImportRepo
 static func import_encumbrance_rules(data: Dictionary, ctx: Context, report: ImportReport) -> EncumbranceRules:
 	var rules := EncumbranceRules.new()
 	_fill(rules, data, "", ctx, report)
-	if rules.id == &"":
-		report.error("id", "负重规则必须有 id")
+	_require_id(rules.id, "负重规则", report)
 	var last := 0.0
 	for i in rules.levels.size():
 		var lv := rules.levels[i]
@@ -800,8 +758,7 @@ static func import_loadout(data: Dictionary, ctx: Context, report: ImportReport)
 static func import_character(data: Dictionary, ctx: Context, report: ImportReport) -> CharacterDef:
 	var def := CharacterDef.new()
 	_fill(def, data, "", ctx, report)
-	if def.id == &"":
-		report.error("id", "角色必须有 id")
+	_require_id(def.id, "角色", report)
 	if def.vitality_max < 1:
 		report.error("vitality_max", "体力上限至少 1")
 	if def.board_size.x < 1 or def.board_size.y < 1:
@@ -855,8 +812,7 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 static func import_difficulty(data: Dictionary, ctx: Context, report: ImportReport) -> DifficultyDef:
 	var def := DifficultyDef.new()
 	_fill(def, data, "", ctx, report)
-	if def.id == &"":
-		report.error("id", "难度必须有 id")
+	_require_id(def.id, "难度", report)
 	if def.level < 0:
 		report.error("level", "档位不能为负（0 = 普通）")
 	# 127：搜索保底的覆盖只有 normal / advanced 两种，值是逐件稀有度下限
@@ -903,8 +859,7 @@ static func import_difficulty(data: Dictionary, ctx: Context, report: ImportRepo
 static func import_achievement(data: Dictionary, ctx: Context, report: ImportReport) -> AchievementDef:
 	var def := AchievementDef.new()
 	_fill(def, data, "", ctx, report)
-	if def.id == &"":
-		report.error("id", "成就必须有 id")
+	_require_id(def.id, "成就", report)
 	if def.display_name.strip_edges() == "":
 		report.error("display_name", "成就得有名字")
 	if not AchievementDef.KINDS.has(def.kind):
@@ -928,8 +883,7 @@ static func import_achievement(data: Dictionary, ctx: Context, report: ImportRep
 static func import_tech(data: Dictionary, ctx: Context, report: ImportReport) -> TechDef:
 	var def := TechDef.new()
 	_fill(def, data, "", ctx, report)
-	if def.id == &"":
-		report.error("id", "科技必须有 id")
+	_require_id(def.id, "科技", report)
 	if def.display_name.strip_edges() == "":
 		report.error("display_name", "科技得有名字")
 	if def.effect == null:
@@ -1000,9 +954,7 @@ static func validate_techs(ctx: Context, report: ImportReport) -> void:
 static func import_help_page(data: Dictionary, ctx: Context, report: ImportReport) -> HelpPageDef:
 	var def := HelpPageDef.new()
 	_fill(def, data, "", ctx, report)
-	if def.id == &"":
-		report.error("id", "百科页必须有 id")
-	if def.id != &"" and String(def.id).contains(":"):
+	if _require_id(def.id, "百科页", report) and String(def.id).contains(":"):
 		report.error("id", "百科页的 id 不能带冒号（冒号留给自动生成的词条页）")
 	if def.display_name.strip_edges() == "":
 		report.error("display_name", "百科页得有标题")
@@ -1037,8 +989,7 @@ static func validate_help_pages(ctx: Context, report: ImportReport) -> void:
 static func import_hunter(data: Dictionary, ctx: Context, report: ImportReport) -> HunterDef:
 	var def := HunterDef.new()
 	_fill(def, data, "", ctx, report)
-	if def.id == &"":
-		report.error("id", "猎手必须有 id")
+	_require_id(def.id, "猎手", report)
 	if def.level < 0:
 		report.error("level", "等级不能为负")
 	if def.speed < 0:
@@ -1091,8 +1042,7 @@ static func import_hunter(data: Dictionary, ctx: Context, report: ImportReport) 
 static func import_run_buff(data: Dictionary, ctx: Context, report: ImportReport) -> RunBuffDef:
 	var def := RunBuffDef.new()
 	_fill(def, data, "", ctx, report)
-	if def.id == &"":
-		report.error("id", "buff 必须有 id")
+	_require_id(def.id, "buff", report)
 	if def.duration_steps < 0:
 		report.error("duration_steps", "时限不能为负（0 = 整局）")
 	for i in def.effects.size():
@@ -1111,8 +1061,7 @@ static func import_run_buff(data: Dictionary, ctx: Context, report: ImportReport
 static func import_event(data: Dictionary, ctx: Context, report: ImportReport) -> EventDef:
 	var def := EventDef.new()
 	_fill(def, data, "", ctx, report)
-	if def.id == &"":
-		report.error("id", "事件必须有 id")
+	_require_id(def.id, "事件", report)
 	if def.options.is_empty():
 		report.error("options", "事件至少一个选项，不然关不掉")
 	else:
@@ -1206,8 +1155,7 @@ static func import_event(data: Dictionary, ctx: Context, report: ImportReport) -
 static func import_meta_rules(data: Dictionary, ctx: Context, report: ImportReport) -> MetaRules:
 	var rules := MetaRules.new()
 	_fill(rules, data, "", ctx, report)
-	if rules.id == &"":
-		report.error("id", "局外规则必须有 id")
+	_require_id(rules.id, "局外规则", report)
 	if rules.warehouse_size.x < 1 or rules.warehouse_size.y < 1:
 		report.error("warehouse_size", "仓库至少 1×1")
 	if rules.first_kit != &"" and not ctx.loadouts.is_empty() and not ctx.loadouts.has(rules.first_kit):
@@ -1218,8 +1166,7 @@ static func import_meta_rules(data: Dictionary, ctx: Context, report: ImportRepo
 
 ## 清单不能空；每件得存在；至少一个包 —— 棋盘上只有包里的东西参战（3.2），没有包一格都用不了
 static func _validate_loadout_def(def: LoadoutDef, ctx: Context, report: ImportReport) -> void:
-	if def.id == &"":
-		report.error("id", "开局装备必须有 id")
+	_require_id(def.id, "开局装备", report)
 	if def.items.is_empty():
 		report.error("items", "开局装备至少带一件")
 		return
@@ -1240,8 +1187,7 @@ static func _validate_loadout_def(def: LoadoutDef, ctx: Context, report: ImportR
 
 ## 钱的数全得非负；商店至少一格、至少有一档稀有度能上架；刷新不能越刷越便宜
 static func _validate_economy_rules(rules: EconomyRules, report: ImportReport) -> void:
-	if rules.id == &"":
-		report.error("id", "经济规则必须有 id")
+	_require_id(rules.id, "经济规则", report)
 	for pair in [["starting_balance", rules.starting_balance], ["reward_base", rules.reward_base],
 			["reward_per_strength", rules.reward_per_strength], ["shop_refresh_cost", rules.shop_refresh_cost],
 			["shop_refresh_step", rules.shop_refresh_step], ["paid_extracts", rules.paid_extracts], ["extract_fee", rules.extract_fee]]:
@@ -1275,8 +1221,7 @@ static func import_node_rules(data: Dictionary, ctx: Context, report: ImportRepo
 
 ## 随机点只能变成 A/S/R/V/Q（5.4：不会变成精英或 BOSS）；遭遇曲线非递减、在 0～1；件数范围合法；扣的体力非负。
 static func _validate_node_rules(rules: NodeRules, ctx: Context, report: ImportReport) -> void:
-	if rules.id == &"":
-		report.error("id", "节点规则必须有 id")
+	_require_id(rules.id, "节点规则", report)
 	if rules.random_weights.is_empty():
 		report.error("random_weights", "随机点得能变成点什么")
 	for key in rules.random_weights:
@@ -1373,8 +1318,7 @@ static func _floor_rows(rows: Array, at: String, report: ImportReport) -> Array:
 
 ## 作者定的形状写成校验：概率在 0～1，**稀有度越高基础掉落率越低**（非递增），珍宝的稀有度得是真的稀有度、权重为正。
 static func _validate_drop_rule(rule: DropRule, report: ImportReport) -> void:
-	if rule.id == &"":
-		report.error("id", "掉落规则必须有 id")
+	_require_id(rule.id, "掉落规则", report)
 	if rule.base_chance.is_empty():
 		report.error("base_chance", "没有基础掉落率表")
 	for i in rule.base_chance.size():
@@ -1400,8 +1344,7 @@ static func _validate_drop_rule(rule: DropRule, report: ImportReport) -> void:
 
 ## 比引擎严格：流派没有道具就组不出来，招牌道具得存在，档位不能为负。
 static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -> void:
-	if def.id == &"":
-		report.error("id", "敌人必须有 id")
+	_require_id(def.id, "敌人", report)
 	if def.strength < 0:
 		report.error("strength", "档位不能为负")
 	if def.schools.is_empty():
@@ -1462,8 +1405,7 @@ static func _validate_loadout(rule: EnemyLoadout, at: String, report: ImportRepo
 
 ## 池：条目指向存在的敌人、档位表不空不重、每条规则都在。
 static func _validate_enemy_pool(pool: EnemyPool, ctx: Context, report: ImportReport) -> void:
-	if pool.id == &"":
-		report.error("id", "敌人池必须有 id")
+	_require_id(pool.id, "敌人池", report)
 	if pool.entries.is_empty():
 		report.error("entries", "池里一个敌人都没有")
 	if pool.tiers.is_empty():
@@ -1518,8 +1460,7 @@ static func import_chapter(data: Dictionary, ctx: Context, report: ImportReport)
 
 ## 比引擎严格：地图来源得真的能拿出图来。生成器没登记、预设文件不在，都是内容错误。
 static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportReport) -> void:
-	if def.id == &"":
-		report.error("id", "章节必须有 id")
+	_require_id(def.id, "章节", report)
 	if def.difficulty < 0:
 		report.error("difficulty", "难度不能为负")
 	if def.enemy_pool != &"" and not ctx.pools.is_empty() and not ctx.pools.has(def.enemy_pool):
@@ -1573,8 +1514,7 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 
 ## 比引擎严格（10.3）：引擎能接受的半成品，这里一律拒绝。
 static func _validate_item(def: ItemDef, report: ImportReport) -> void:
-	if def.id == &"":
-		report.error("id", "物品必须有 id")
+	_require_id(def.id, "物品", report)
 	if def.shape == null:
 		report.error("shape", "物品必须有形状")
 	elif not def.shape.is_valid():
