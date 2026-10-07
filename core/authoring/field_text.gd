@@ -64,7 +64,7 @@ const LABELS := {
 	"bags": "包", "board": "棋盘", "signature": "招牌道具", "signature_by_strength": "按档位的招牌", "schools": "流派", "item_tags": "道具标签", "item_count": "道具件数",
 	"strength": "档位", "strength_rule": "档位规则", "loadout": "装备", "behavior": "行动逻辑", "visibility": "可见性", "loss_options": "战败结果档", "loss_pick": "选档方式", "HunterLossOption.weight": "权重", "LossPickFixed.index": "第几档（从 0 数）", "loss_type": "战败类型",
 	"god": "神", "camp": "阵营", "thresholds": "阈值", "deeds": "行为", "single_faith": "只认一位神", "grants": "给的解锁", "level": "档",
-	"mechanics": "机制", "requires_unlock_": "需要的解锁", "warn_lead_actions": "预警提前量", "first_at_action": "第一次在第几步", "interval_actions": "间隔步数",
+	"mechanics": "机制", "warn_lead_actions": "预警提前量", "first_at_action": "第一次在第几步", "interval_actions": "间隔步数",
 	"from_depth": "从第几层起", "per_depth": "每层", "hunter_ids": "猎手", "bracket_steps": "段位表", "inputs": "输入", "output": "产物",
 	"funds": "钱", "rows": "行数", "effect": "效果",     # 110：局外科技
 }
@@ -114,7 +114,7 @@ const ENUM_LABELS := {
 	"SELF": "自己", "OPPONENT": "对手", "BOTH": "两边", "BOARD": "棋盘", "STORAGE": "地上", "RANDOM": "随机", "MOST_VALUABLE": "最值钱的",
 	"LEAST_VALUABLE": "最不值钱的", "BY_ID": "指定 id", "NEAREST": "最近的", "FARTHEST": "最远的", "FIXED": "指定的", "HIDDEN": "隐藏", "VISIBLE": "可见",
 	"NEAR": "靠近才可见", "ANY": "任意", "INCREASE": "增加", "DECREASE": "减少", "GODS": "诸神", "CHURCH": "新教", "META": "局外", "MAP": "地图",
-	"PRESET": "预设", "GENERATED": "生成", "GENERATOR": "生成", "UNVISITED": "没去过", "VISITED": "去过", "TOTAL": "总数", "DISTINCT": "不重复",
+	"PRESET": "预设", "UNVISITED": "没去过", "VISITED": "去过", "TOTAL": "总数", "DISTINCT": "不重复",
 	"OWN": "自己的", "OTHER": "别人的", "ALLY": "同伴", "DEALT": "打出的", "TAKEN": "受到的", "BELOW": "降到以下", "ABOVE": "涨到以上",     # 132
 	"ADD": "加算", "MULT": "乘算",     # 133
 	"tier": "按阶", "active": "激活即", "scaled": "按信力",     # 111：信仰加成的生效方式（字符串枚举，值是小写原文）
@@ -231,8 +231,7 @@ static func _parse(source: String) -> Dictionary:
 		else:
 			break
 	out[""] = "\n".join(head).strip_edges()
-	var export_re := RegEx.new()
-	export_re.compile("^\\s*@export\\w*(\\([^)]*\\))?\\s+var\\s+(\\w+)")
+	var export_re := TextTemplate.cached_regex("^\\s*@export\\w*(\\([^)]*\\))?\\s+var\\s+(\\w+)")
 	for i in lines.size():
 		var m := export_re.search(lines[i])
 		if m == null:
@@ -258,10 +257,6 @@ static func _parse(source: String) -> Dictionary:
 static func _clean(s: String) -> String:
 	var t := s.trim_prefix("##").strip_edges()
 	t = t.replace("[b]", "").replace("[/b]", "").replace("[i]", "").replace("[/i]", "")
-	var re := RegEx.new()
-	re.compile("\\[(method|member|constant|signal|enum|param|code)\\s+([^\\]]+)\\]")
-	t = re.sub(t, "$2", true)
-	re.compile("\\[/?code\\]")
-	t = re.sub(t, "", true)
-	return t
+	t = TextTemplate.cached_regex("\\[(method|member|constant|signal|enum|param|code)\\s+([^\\]]+)\\]").sub(t, "$2", true)
+	return TextTemplate.cached_regex("\\[/?code\\]").sub(t, "", true)
 #endregion

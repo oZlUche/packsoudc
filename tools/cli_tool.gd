@@ -43,6 +43,23 @@ func tick(_delta: float) -> bool:
 	return true
 
 
+## 一批作者 JSON（路径 → 字典）按导出器格式写盘：内容没变的跳过，写了的各打一行。返回写了几份；
+## 有一份写不了就打一句、[method finish](1)、返回 -1 —— 调用方见负数直接 return（xlsx → JSON 的两个工具用）
+func write_json_if_changed(out: Dictionary) -> int:
+	var written := 0
+	for path in out:
+		var text := ContentExporter.to_json(out[path])
+		if FileAccess.file_exists(path) and FileAccess.get_file_as_string(path) == text:
+			continue
+		if ContentExporter.save(out[path], path) != OK:
+			print("写不了 " + path)
+			finish(1)
+			return -1
+		written += 1
+		print("写了 " + path)
+	return written
+
+
 ## 兜底。[b]这两件事都是实测出来的，不要想当然：[/b]
 ##
 ## 1. GDScript 的运行时错误**只中断出错的那一层函数**，调用方会继续往下走。

@@ -22,17 +22,9 @@ func run() -> void:
 			print("  ✗ " + p)
 		finish(1)
 		return
-	var written := 0
-	for path in out:
-		var text := ContentExporter.to_json(out[path])
-		if FileAccess.file_exists(path) and FileAccess.get_file_as_string(path) == text:
-			continue
-		if ContentExporter.save(out[path], path) != OK:
-			print("写不了 " + path)
-			finish(1)
-			return
-		written += 1
-		print("写了 " + path)
+	var written := write_json_if_changed(out)
+	if written < 0:
+		return
 	var removed := 0
 	for path in TechsTable.owned_files():
 		if out.has(path):

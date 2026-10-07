@@ -13,6 +13,8 @@ extends RefCounted
 
 ## 词条页的分类（排在机制页的分类之后）
 const TERMS_CATEGORY := "terms"
+## 词条页分类给人看的名字（机制页的分类名在 [constant HelpPageDef.CATEGORY_NAMES]）
+const TERMS_CATEGORY_NAME := {"zh": "词条", "en": "Glossary"}
 ## 词条页的分组：来源 → 名字
 const GROUPS := {
 	"term": {"zh": "词条", "en": "Terms"}, "tag": {"zh": "标签", "en": "Tags"}, "dtype": {"zh": "伤害类型", "en": "Damage types"},
@@ -183,12 +185,12 @@ func toc() -> Array:
 
 static func category_name(cat: String) -> String:
 	if cat == TERMS_CATEGORY:
-		return "词条" if UiText.lang == "zh" else "Glossary"
+		return UiText.pick(TERMS_CATEGORY_NAME, cat)
 	return HelpPageDef.category_name(cat)
 
 
 static func group_name(g: String) -> String:
-	return Glossary._pick(GROUPS.get(g, null), g) if g != "" else ""
+	return UiText.pick(GROUPS.get(g, null), g) if g != "" else ""
 
 
 ## 搜索：标题或正文（去掉记号）里有这段字的页，标题命中的排前面。空查询返回空
@@ -202,7 +204,7 @@ func search(query: String, ctx: Dictionary = {}) -> Array[String]:
 		var p: Dictionary = _pages[id]
 		if String(p["title"]).to_lower().contains(q):
 			by_title.append(id)
-		elif Glossary.strip_bbcode(TextTemplate.plain(String(p["text"]), ctx)).to_lower().contains(q):
+		elif TextTemplate.strip_bbcode(TextTemplate.plain(String(p["text"]), ctx)).to_lower().contains(q):
 			by_text.append(id)
 	by_title.append_array(by_text)
 	return by_title
@@ -244,22 +246,14 @@ func link(id: String) -> String:
 	return "[url=%s]%s[/url]" % [id, String(p.get("title", id))] if not p.is_empty() else id
 
 
-## 正文里认得的词画成链接（不链自己；已经在 BBCode 标签里的不动）。长的词先认，占位挡住免得短词把长词切开
+## 正文里认得的词画成链接（不链自己；已经在 BBCode 标签里的不动）。长的词先认、占位挡住免得短词把长词切开 —— [method Glossary.wrap_terms]
 func link_words(text: String, self_id: String = "") -> String:
 	var words: Array[String] = []
 	for w in _links:
 		if String(w).length() >= 2 and String(_links[w]) != self_id:
 			words.append(String(w))
-	words.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
-	var out := text
-	var holders: Array[String] = []
-	for i in words.size():
-		var holder := "\u0001%d\u0002" % i
-		holders.append(holder)
-		out = out.replace(words[i], holder)
-	for i in words.size():
-		out = out.replace(holders[i], "[url=%s]%s[/url]" % [String(_links[words[i]]), words[i]])
-	return out
+	return Glossary.wrap_terms(text, words, func(w: String) -> String:
+		return "[url=%s]%s[/url]" % [String(_links[w]), w])
 
 
 ## 140：配方一行一条「甲 + 乙 → 产物：说明」。三件里有图鉴没点亮的：名字遮成「？」、不写说明（说明里有道具名）

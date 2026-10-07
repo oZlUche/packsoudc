@@ -74,7 +74,7 @@ static func tag_name(tag: StringName) -> String:
 	if fid != &"":
 		var defs := FaithDef.load_all()
 		var god: FaithDef = defs.get(fid, null)
-		return "%s%s%s" % [_pick(FAITH_WORD), "：" if UiText.lang == "zh" else ": ", Names.of(god) if god != null else String(fid)]
+		return "%s%s%s" % [UiText.pick(FAITH_WORD), "：" if UiText.lang == "zh" else ": ", Names.of(god) if god != null else String(fid)]
 	return TagRegistry.name_of(tag)
 
 
@@ -96,7 +96,7 @@ static func damage_type_name(type: StringName) -> String:
 
 const FAITH_WORD := {"zh": "信仰", "en": "Faith"}
 
-## 属性键 → 名字（096：中 / 英；按 [UiText.lang] 取，没有英文的回落中文）
+## 属性键 → 名字（096：中 / 英；按 [UiText.lang] 取，没有英文的回落中文 —— [method UiText.pick]）
 const STAT_NAMES := {
 	"damage": {"zh": "伤害", "en": "Damage"}, "armor": {"zh": "防护", "en": "Armor"}, "max_hp": {"zh": "生命", "en": "Health"},
 	"max_stamina": {"zh": "耐力上限", "en": "Max stamina"}, "haste": {"zh": "急速", "en": "Haste"}, "cooldown": {"zh": "冷却", "en": "Cooldown"},
@@ -107,16 +107,8 @@ const STAT_NAMES := {
 }
 
 
-## 一张「语言 → 文字」的小表按当前语言取；没有就中文；传进来的不是表就原样
-static func _pick(entry: Variant, fallback: String = "") -> String:
-	if entry is Dictionary:
-		var d := entry as Dictionary
-		return String(d.get(UiText.lang, d.get("zh", fallback)))
-	return String(entry) if entry != null else fallback
-
-
 static func stat_name(key: StringName) -> String:
-	return _pick(STAT_NAMES.get(String(key), null), String(key))
+	return UiText.pick(STAT_NAMES.get(String(key), null), String(key))
 
 
 ## 一条属性修饰给人看：「伤害 +10%」「防护 +4」
@@ -130,7 +122,7 @@ static func mod_text(m: StatModifier) -> String:
 	if BattleStats.PERCENT_DISPLAY.has(m.stat):
 		return "%s %+d%%" % [stat_name(m.stat), roundi(m.amount * 100.0)]     # 104：暴击按百分数写
 	var f := m.amount
-	return "%s %s" % [stat_name(m.stat), ("%+d" % roundi(f)) if is_equal_approx(f, roundf(f)) else "%+.1f" % f]
+	return "%s %s" % [stat_name(m.stat), ("%+d" % roundi(f)) if TextTemplate.is_whole(f) else "%+.1f" % f]
 
 
 static func mods_text(mods: Array) -> String:
@@ -260,11 +252,9 @@ static func _buffs_in_effects(effects: Array, out: Dictionary) -> void:
 
 
 #region 找词、标色
-## 剥掉 BBCode 标签，只留文字
+## 剥掉 BBCode 标签，只留文字（实现在 [method TextTemplate.strip_bbcode]）
 static func strip_bbcode(text: String) -> String:
-	var re := RegEx.new()
-	re.compile("\\[/?[a-zA-Z][^\\]]*\\]")
-	return re.sub(text, "", true)
+	return TextTemplate.strip_bbcode(text)
 
 
 ## 文字里出现了哪些词条：固定词条 + [param extra]（名字 → 解释，buff 词条），按第一次出现的位置排。
@@ -290,19 +280,28 @@ static func terms_in(text: String, extra: Dictionary = {}) -> Array:
 	return out
 
 
-## 把词条在文字里标出来（颜色 + 下划线）。长的词先替，替进去的先用占位符挡住，免得短词把长词切开
+## 把词条在文字里标出来（颜色 + 下划线）
 static func mark(text: String, terms: Array) -> String:
 	var names: Array[String] = []
 	for t in terms:
 		names.append(String((t as Dictionary)["name"]))
-	names.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
+	return wrap_terms(text, names, func(name: String) -> String:
+		return "[color=#%s][u]%s[/u][/color]" % [TERM_COLOR.to_html(false), name])
+
+
+## 把一串词在文字里各包一层（[param wrap]：词 → 包好的 BBCode）。长的词先替，替进去的先用占位符挡住，免得短词把长词切开。
+## 词条标色（[method mark]）与百科画链接（[method Encyclopedia.link_words]）同一套，只差包的是什么
+static func wrap_terms(text: String, names: Array[String], wrap: Callable) -> String:
+	var sorted: Array[String] = []
+	sorted.assign(names)
+	sorted.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
 	var out := text
 	var holders: Array[String] = []
-	for i in names.size():
+	for i in sorted.size():
 		var holder := "\u0001%d\u0002" % i
 		holders.append(holder)
-		out = out.replace(names[i], holder)
-	for i in names.size():
-		out = out.replace(holders[i], "[color=#%s][u]%s[/u][/color]" % [TERM_COLOR.to_html(false), names[i]])
+		out = out.replace(sorted[i], holder)
+	for i in sorted.size():
+		out = out.replace(holders[i], String(wrap.call(sorted[i])))
 	return out
 #endregion

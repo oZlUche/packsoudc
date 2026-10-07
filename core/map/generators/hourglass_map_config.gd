@@ -81,11 +81,6 @@ func _spread(n: int, margin: int) -> Array[int]:
 	return out
 
 
-## 颈部两头那两层：作者要在咽喉前后放中途撤离点时，把它填进 rules.extract_rows
-func neck_end_rows() -> Array[int]:
-	return [half_rows - 1, half_rows + neck_rows] as Array[int]
-
-
 static func sample() -> HourglassMapConfig:
 	var cfg := HourglassMapConfig.new()
 	cfg.rules = LatticeTypeRules.new()

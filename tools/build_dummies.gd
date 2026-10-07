@@ -15,12 +15,7 @@ static func _brackets_of(seg: String) -> Array[int]:
 	if not ResourceLoader.exists(path):
 		return out
 	var diff := load(path) as DifficultyDef
-	if diff == null:
-		return out
-	for m in diff.mechanics:
-		if m is HunterMechanic:
-			return (m as HunterMechanic).bracket_steps.duplicate()
-	return out
+	return diff.hunter_bracket_steps() if diff != null else out
 
 
 func run() -> void:

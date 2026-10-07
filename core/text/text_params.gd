@@ -58,7 +58,7 @@ static func _collect(obj: Object, prefix: String, out: Dictionary, depth: int) -
 static func _put(out: Dictionary, key: String, v: Variant) -> void:
 	if out.has(key):
 		return
-	out[key] = int(v) if v is float and is_equal_approx(v, roundf(v)) else v
+	out[key] = int(v) if v is float and TextTemplate.is_whole(v) else v
 
 
 static func _type_of(e: Object) -> String:

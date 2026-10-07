@@ -348,8 +348,7 @@ static func validate_rule_shapes(rules: Array, path: String, report: ImportRepor
 		for j in rule.effects.size():
 			var e = rule.effects[j]
 			var eat := "%s.effects[%d]" % [at, j]
-			var scr: Script = e.get_script() if e is Object else null
-			var cls := String(scr.get_global_name()) if scr != null else ""
+			var cls := RegistryLookup.class_of(e, false)
 			if PACKET_EFFECTS.has(cls) and not (rule.trigger is OnBeforeDamage):
 				report.warn(eat, "%s 只在受伤前阶段有效，这条规则的时机不是 on_before_damage，触发了也改不到伤害" % cls)
 			if item_level and not (rule.trigger is OnStatusApplied) and _effect_per_stack(e):
@@ -1709,14 +1708,8 @@ static func _coerce(
 			if value is float or value is int:
 				return float(value)
 			report.error(path, "应为数字")
-		TYPE_STRING:
-			return str(value)
-		TYPE_STRING_NAME:
-			return StringName(str(value))
-		TYPE_VECTOR2I:
-			return _to_vec2i(value, path, report)
-		TYPE_VECTOR2:
-			return _to_vec2(value, path, report)
+		TYPE_STRING, TYPE_STRING_NAME, TYPE_VECTOR2I, TYPE_VECTOR2:
+			return _coerce_scalar(type, value, path, report)
 		TYPE_DICTIONARY:
 			if value is Dictionary:
 				# JSON 没有整数：{"shop": [0, 1]} 读回来是 [0.0, 1.0]。还原成整数，
@@ -1732,16 +1725,25 @@ static func _coerce(
 	return null
 
 
-static func _to_vec2i(value: Variant, path: String, report: ImportReport) -> Variant:
-	if value is Array and (value as Array).size() == 2:
-		return Vector2i(int(value[0]), int(value[1]))
-	report.error(path, "应为 [x, y]")
+## 字符串 / StringName / 向量这几种标量：字段值与数组元素同一套转法。
+## int / float **不在这里**：字段值认枚举名、类型不对就报错（[method _coerce]），数组元素直接强转（[method _coerce_array]），两边本来就不同，各留各的
+static func _coerce_scalar(builtin: int, value: Variant, path: String, report: ImportReport) -> Variant:
+	match builtin:
+		TYPE_STRING:
+			return str(value)
+		TYPE_STRING_NAME:
+			return StringName(str(value))
+		TYPE_VECTOR2I:
+			return _to_vec(value, path, report, true)
+		TYPE_VECTOR2:
+			return _to_vec(value, path, report, false)
 	return null
 
 
-static func _to_vec2(value: Variant, path: String, report: ImportReport) -> Variant:
+## `[x, y]` → Vector2i（[param as_int]）/ Vector2；不是两个数的数组报错给 null
+static func _to_vec(value: Variant, path: String, report: ImportReport, as_int: bool) -> Variant:
 	if value is Array and (value as Array).size() == 2:
-		return Vector2(float(value[0]), float(value[1]))
+		return Vector2i(int(value[0]), int(value[1])) if as_int else Vector2(float(value[0]), float(value[1]))
 	report.error(path, "应为 [x, y]")
 	return null
 
@@ -1754,22 +1756,17 @@ static func _coerce_array(
 		return null
 	var out := ContentSchema.empty_like(current)
 	var element_class := ContentSchema.array_element_class(current)
+	var builtin := current.get_typed_builtin()
 	var i := -1
 	for raw in value:
 		i += 1
 		var at := "%s[%d]" % [path, i]
 		var item: Variant = null
-		match current.get_typed_builtin():
+		match builtin:
 			TYPE_OBJECT:
 				item = _make_object(element_class, raw, at, ctx, report)
-			TYPE_STRING_NAME:
-				item = StringName(str(raw))
-			TYPE_STRING:
-				item = str(raw)
-			TYPE_VECTOR2I:
-				item = _to_vec2i(raw, at, report)
-			TYPE_VECTOR2:
-				item = _to_vec2(raw, at, report)
+			TYPE_STRING_NAME, TYPE_STRING, TYPE_VECTOR2I, TYPE_VECTOR2:
+				item = _coerce_scalar(builtin, raw, at, report)
 			TYPE_INT:
 				item = int(raw)
 			TYPE_FLOAT:
