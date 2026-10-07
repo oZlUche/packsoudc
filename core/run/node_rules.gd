@@ -20,8 +20,8 @@ const EVENT_OUTCOMES: Array[StringName] = [&"item", &"restore", &"story"]
 @export var search: SearchRules = null
 
 ## 战斗输了扣多少体力：类型 → 数。core 不在这里 —— BOSS 输了直接战败（7.1），那是规则不是数值。
-## 搜索点里遭遇的按 "search" 算
-@export var loss_cost: Dictionary = {"battle": 1, "elite": 2, "search": 1, "hunter": 1}
+## 搜索点里遭遇的不在这里：固定无代价（091 / 135），进战斗时直接传 0
+@export var loss_cost: Dictionary = {"battle": 1, "elite": 2, "hunter": 1}
 
 ## 休息区回多少体力。不写死 —— 不同章节可以不一样
 @export var rest_restore: int = 2
