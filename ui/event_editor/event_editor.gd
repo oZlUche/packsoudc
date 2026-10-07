@@ -67,14 +67,14 @@ func _ready() -> void:
 		_open(_ids[0])
 
 
-## 道具从资产装（`ItemDatabase`），buff 走 `GameFlow.load_run_buffs`，事件从作者数据读 —— 都是现成的路
+## 道具从资产装（`ItemDatabase`），buff 走 `RunBuffs.load_all`，事件从作者数据读 —— 都是现成的路
 static func _build_context() -> ContentImporter.Context:
 	var ctx := ContentImporter.Context.new()
 	var items := ItemDatabase.new()
 	items.load_dir()
 	for id in items.ids():
 		ctx.register_item(items.get_def(id))
-	var buffs := GameFlow.load_run_buffs()
+	var buffs := RunBuffs.load_all()
 	for id in buffs:
 		ctx.register_run_buff(buffs[id])
 	for id in _ids_on_disk():

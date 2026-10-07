@@ -126,6 +126,12 @@ static func asset_file(kind: String, id: String) -> String:
 	return "%s/%s.tres" % [dirs[1], id] if not dirs.is_empty() else ""
 
 
+## 按种类与 id 装一份资产；文件不在（id 空、没导入过）返回 null。是什么类型由调用方自己认
+static func load_asset(kind: String, id: String) -> Resource:
+	var path := asset_file(kind, id)
+	return load(path) if ResourceLoader.exists(path) else null
+
+
 ## 一个资产目录下的全部资源文件名（`.tres` / `.res`；导出后可能带 `.remap` 后缀，去掉一并认），按文件名升序；
 ## 打不开的目录返回空。以前十来处「扫目录装定义」各写一份这段循环，现在都从这里拿
 static func resource_names(dir_path: String) -> Array[String]:

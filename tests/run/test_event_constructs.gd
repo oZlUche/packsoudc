@@ -453,7 +453,7 @@ static func run_type_proceed_wait_lose(t: TestCase) -> void:
 
 static func run_pipeline(t: TestCase) -> void:
 	t.begin("事件构件 · 休息 / 商店的默认事件、裂隙、祭坛走管线；节点规则把休息 / 商店点挂上事件；描述文字不带两个冒号")
-	var events := GameFlow.load_events()
+	var events := EventPlacer.load_all()
 	for id in [&"rest_default", &"shop_default", &"event_rift", &"event_altar"]:
 		t.check(events.has(id), "装回了 %s" % id)
 	var rest: EventDef = events.get(&"rest_default", null)

@@ -217,7 +217,7 @@ static func run_faith_call(t: TestCase) -> void:
 		t.eq(d.is_bag, fid == "earth", "只有大地的是包")
 	t.check(MetaState.keeps(db.get_def(&"charm_earth")) and not MetaState.keeps(db.get_def(&"bag_small")), "大地的护符虽是包也留在局外；普通包不留")
 	# 事件链
-	var events := GameFlow.load_events()
+	var events := EventPlacer.load_all()
 	var root: EventDef = events.get(&"faith_call", null)
 	t.check(root != null and root.options.size() == 2, "「触发信仰」：靠近 / 离开")
 	if root != null:

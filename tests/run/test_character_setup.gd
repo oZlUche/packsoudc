@@ -385,7 +385,6 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 		origins[inst.uid] = inst.origin
 	flow.meta.board = back
 	t.check(flow.meta.has_pending_board(), "带回来的棋盘等着")
-	t.eq(flow.can_begin(), "", "090：没清空也能开新局")
 	t.ne(flow.pending_hint(), "", "局外屏有一句提示")
 	flow.new_run()
 	var setup = game.base()

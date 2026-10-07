@@ -19,3 +19,24 @@ static func tag_of(id: StringName) -> StringName:
 static func id_of_tag(tag: StringName) -> StringName:
 	var s := String(tag)
 	return StringName(s.substr(PREFIX.length())) if s.begins_with(PREFIX) else &""
+
+
+## 信仰那边挑道具的共用条件（献祭品、赐福模板）：[param tags] 任一命中（空 = 不看标签）、格子数 ≥ [param min_cells]（0 = 不限）、
+## 体积恰好 [param exact_grade] 档（-1 = 不限）。条件之间是「且」；def 为 null 不算
+static func item_matches(def: ItemDef, tags: Array[StringName], min_cells: int, exact_grade: int) -> bool:
+	if def == null:
+		return false
+	if not tags.is_empty():
+		var hit := false
+		for t in tags:
+			if def.tags.has(t):
+				hit = true
+				break
+		if not hit:
+			return false
+	var cells := ItemVolume.cells_of(def)
+	if min_cells > 0 and cells < min_cells:
+		return false
+	if exact_grade >= 0 and ItemVolume.grade_of_cells(cells) != exact_grade:
+		return false
+	return true

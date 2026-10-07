@@ -28,17 +28,16 @@ var passes_through: Array[int] = []
 
 
 static func step(p_from: int, p_to: int, p_cost: int) -> MoveIntent:
-	var m := MoveIntent.new()
-	m.kind = STEP
-	m.from_id = p_from
-	m.to_id = p_to
-	m.action_cost = p_cost
-	return m
+	return _make(STEP, p_from, p_to, p_cost)
 
 
 static func teleport(p_from: int, p_to: int, p_cost: int) -> MoveIntent:
+	return _make(TELEPORT, p_from, p_to, p_cost)
+
+
+static func _make(p_kind: StringName, p_from: int, p_to: int, p_cost: int) -> MoveIntent:
 	var m := MoveIntent.new()
-	m.kind = TELEPORT
+	m.kind = p_kind
 	m.from_id = p_from
 	m.to_id = p_to
 	m.action_cost = p_cost

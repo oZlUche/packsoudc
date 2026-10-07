@@ -437,7 +437,7 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 
 ### 3.8 信仰：最后置入的信仰道具决定激活（8-4，报告 081）
 
-作者定的道具一级分类。**靠标签**：信仰道具带 `faith`，再带恰好一个信仰对象标签 `faith:<id>`（`FaithDef.TAG_PREFIX`；新教也是 `faith` + 专属标签）；
+作者定的道具一级分类。**靠标签**：信仰道具带 `faith`，再带恰好一个信仰对象标签 `faith:<id>`（`FaithTags.PREFIX`；新教也是 `faith` + 专属标签）；
 无信仰之物人人能用，而且**现实里也能存在的东西（皮甲、短刀、弓箭……）一律不归信仰**（作者定），带信仰标签的只有赐福之物、符号、神的遗物。信仰的名字、阵营（诸神 / 新教）、说明是内容种类 `faiths`（`FaithDef`，加一位神 = 加一份 JSON）；
 **机制只看标签，不认具体的神**（`FaithState`，纯静态）。
 
@@ -3240,7 +3240,7 @@ func player_spec() -> CombatantSpec …
 作者说正式游戏由新手教程关发第一套（第 8 阶段），这是那之前的配置占位。
 
 `LoadoutDef`（`core/run/loadout_def.gd`，内容种类 `loadouts`）于是只剩两件事：第一套的清单，和没有角色定义时的老路（`begin(chapter, loadout, seed)`：
-清单里的包先上棋盘，其余按顺序往包里放、放不下到地上，`RunState._give_kit`）。校验：每件得存在，至少一个包。现有三套占位。
+清单里的包先上棋盘，其余按顺序往包里放、放不下到地上，`RunState.give_kit`）。校验：每件得存在，至少一个包。现有三套占位。
 
 ### 8.2 结算与局外
 
@@ -4003,7 +4003,7 @@ res://
 | v1.98 | 2026-09-29 | **编辑器字段本地化 + 悬浮说明**（报告 091 十三）：`FieldText`（字段 / 类型 / 枚举 / 类名的中文标签；说明**从脚本源码的 `##` 注释读**并缓存；英文模式原名），`PropertyForm` 每行标签与控件带 tooltip、类型与枚举下拉显示中文（tooltip 原名）；字段名不改 |
 | v1.97 | 2026-09-29 | **事件独立存在的三块补齐**（报告 091 十二）：地图编辑器节点面板「事件」下拉（`set_node_event / event_ids`）；事件编辑器**事件链**树（出去的 next_event 递归 + 被引用：事件 / 节点规则 / 预设图 / 章节开场，双击跳转）与**语言**下拉；`EventDef.titles / texts`、`EventOption.labels` + `title_for / text_for / label_for`；**局外旗标** `MetaState.flags`、`RunState.meta → NodeEvents.meta → EventContext.meta`、条件 `has_flag`、后果 `set_flag`（注册表）、`choose_event` 存 meta |
 | v1.96 | 2026-09-28 | **成就系统**（报告 091 十一）：内容种类 `achievements`（`AchievementDef`：条件种类 + 数 / 对象、`grants` 解锁 id、途径文字、隐藏）；`ItemDef.requires_unlock` + `ItemDatabase.set_locked / ids(include_locked)` 道具上锁；`MetaState.achievements / chapter_extractions / boss_kills / battles_won / seen_rules`，`RunResult.boss_cleared`；`GameFlow.check_achievements`（结算后、读档后）/ `unlocked` / `locked_item_ids` / `apply_item_locks` / `unlock_names`；基地第三页签「成就」（全部 / 已解锁 / 未解锁）；**本图规则卡** `ChapterDef.rules`（首次进图弹、暂停菜单再看）；**全部解锁** `GameSettings.unlock_all`（成就不计） |
-| v1.95 | 2026-09-27 | **开局屏暂存区**（报告 090）：带回来的没置入的进开局屏时挪进暂存区（`setup_screen` `stash` / `_pending` / `_build_stash` / `_allow_drop` / `store` / `_restore_pending`），拖上包 = 带上、拖进仓库 = 置入、留着的出发就没了、回主菜单原样放回；`GameFlow.can_begin()` 不再因没清空而拦、`pending_hint()` 只提示、`begin()` 清掉带回来的棋盘；基地屏 / 仓库面板提示改；**悬浮窗侧窗不再压主窗**（`HoverTip._place` 主窗 + 词条列当一组摆、按真正的视口算）；**按钮三档**（`UiPalette.Tier` / `style_button`，`GameScreen._button(…, tier)`：300% / 200% / 150%，琥珀 / 蓝灰 / 深底）、地图右栏三键 300% 竖排；**Esc 通用返回**（`GameDirector.escape()` → `GameScreen.escape()`：叠层收起；地图关对话框 / 背包、都没开着呼出**暂停菜单**（继续 / 设置嵌入 / 存档并回主菜单）；基地图鉴页 → 仓库页 → 主菜单逐级；设置 / 读取存档回主菜单）；**点当前节点恢复收起的界面** |
+| v1.95 | 2026-09-27 | **开局屏暂存区**（报告 090）：带回来的没置入的进开局屏时挪进暂存区（`setup_screen` `stash` / `_pending` / `_build_stash` / `_allow_drop` / `store` / `_restore_pending`），拖上包 = 带上、拖进仓库 = 置入、留着的出发就没了、回主菜单原样放回；`GameFlow.can_begin()` 不再因没清空而拦（后来恒为能开，已删）、`pending_hint()` 只提示、`begin()` 清掉带回来的棋盘；基地屏 / 仓库面板提示改；**悬浮窗侧窗不再压主窗**（`HoverTip._place` 主窗 + 词条列当一组摆、按真正的视口算）；**按钮三档**（`UiPalette.Tier` / `style_button`，`GameScreen._button(…, tier)`：300% / 200% / 150%，琥珀 / 蓝灰 / 深底）、地图右栏三键 300% 竖排；**Esc 通用返回**（`GameDirector.escape()` → `GameScreen.escape()`：叠层收起；地图关对话框 / 背包、都没开着呼出**暂停菜单**（继续 / 设置嵌入 / 存档并回主菜单）；基地图鉴页 → 仓库页 → 主菜单逐级；设置 / 读取存档回主菜单）；**点当前节点恢复收起的界面** |
 | v1.94 | 2026-09-27 | **三个存档位**（报告 089）：`SaveSlots`（`user://slots/<n>/`，老存档搬进第 1 位）、`GameSettings.save_slot`、`GameFlow.slots / use_slot / profile_exists / continue_game / start_new_game / new_game_in / load_slot / delete_slot`、`Screen.SLOTS` 读取存档屏；主菜单顺序 继续 → 读取存档 → 新的游戏；**图鉴缩略图网格**（`CodexTile`，每行 8 个可滚，没获得的灰的，悬浮窗） |
 | v1.93 | 2026-09-26 | 报告 088 第 16 条：**战败代价跟战斗绑定**（`NodeEvents.LOSS_DEFAULT / LOSS_DEATH`，`_battle_at` / `fight_content` / `_fight` 带 `loss_cost`，`loss_cost_for` 参数 → 节点内容 → 核心必死 → 规则表；跟 `pending_battle` 存；`HunterDef.loss_cost`；战败原因 `fatal_loss`） |
 | v1.92 | 2026-09-26 | 报告 088 第 11～15 条：输给猎手也扣体力（`loss_cost.hunter`）；power 并进 mana；**内容名字多语言**（所有定义 `display_names`，`Names.of` 按 `UiText.lang` 取，界面全改走它；`ItemDef.description`）；**特殊道具** `keepsake`（不进背包、不能生成、`MetaState.keepsakes` 点亮、能力由标签说明）与望远镜（`ChapterDef.starting_keepsakes`，`GameFlow.has_ability(&"node_tooltips")` 开浮窗、`take_notes` 通知）；**基地两个页签**（仓库 / 图鉴，图鉴 = 只读棋盘 + 角标 + 灰字 + 特殊道具） |
@@ -4039,7 +4039,7 @@ res://
 | v1.62 | 2026-09-23 | **事件编辑器**（报告 064，作者要求；10.5、11）。`ui/event_editor`：写文字、导入配图（复制到 `assets/events/<id>.<ext>`，`EventImage` 拿不到资源就按原始文件读，事件屏共用）、选项与条件 / 后果由 `PropertyForm` 反射生成、预览照事件屏画、挂进 `NodeRules.events_by_type`；校验与产出都走导入器（JSON + `.tres`），草稿缓存照道具编辑器。按性价比做在项目里而不是独立 exe：注册表、校验、id 表一行都不用复制，要独立就用导出预设 |
 | v1.61 | 2026-09-23 | **事件层与容器屏合一**（报告 063，058 / 059 顺序里的第 4 项；6.5 新增「事件层」、8 节流程图、10.1、11）。事件是内容（新种类 `events`：文字、图像占位、选项；选项的条件与后果是构件、走注册表两张新表）；`NodeRules.events_by_type` 按类型配，`EventPlacer` 生成时按 `content_seed` 定进节点、已有的不覆盖、随机点揭开后再配；`NodeEvents.handle` 变两段（`pending` / `event_pending` / `choose`），后果的旗子决定接下一个 / 开搜索 / 开店 / 开战 / 用过；等着选的跟着存档；**没有事件定义 = 老路**，现有套件一条不改；搜索点的「要不要搜」是默认事件 `search_default`；`GameFlow` 排事件屏、结果页插队首、队空了显示等着选的；战利品屏与搜索屏合成 `container_screen`；六个作者文件当内容占位 |
 | v1.60 | 2026-09-23 | **buff 骨架**（报告 062，058 / 059 顺序里的第 3 项；9.2、8.2、6.1、10.1）。效果树第四个分支 `RunEffect`（作用域 RUN）往 `RunContext` 里加数，五个构件（体力上限、开局钱、多搜几次、商店价、幸运）登记在注册表；`RunBuffDef`（内容种类 `run_buffs`）局外 / 一局同一套定义、`mods` / `rules` / `effects` 与套装档位同一种分法、`tags` 当标记、`duration_steps` 时限；`MetaState.active_buffs`（占位开关列表）开局记进 `RunState.meta_buffs`，`map_buffs` 每步递减；掉落上下文改由 `RunState._loot_context` 造：幸运从 buff 来，**道具 / 套装的战利品效果第一次真的接进一局**（9.2 说的那条查询此前没接） |
-| v1.59 | 2026-09-23 | **仓库格子化、结算屏一键置入、图鉴**（报告 061，058 / 059 顺序里的第 2 项；8.2 重写，15 节第 4 项定案）。仓库是不要求包的格子，大小是 `MetaRules.warehouse_size`（新内容种类 `meta_rules`，随局外成长）；撤离不直接进仓库 —— 棋盘原样带回（`MetaState.board`，非包道具按原位置、包换成默认背景），结算屏 / 局外屏共用的仓库面板拖或一键置入，放不下就停在那一件提示，没清空 `can_begin()` 拒绝开新局；图鉴 `codex` 累计件数、点亮一次、包也计；`MetaState.keeps(def)` 一处决定什么能存进局外；一局结束时（进结算屏之前）就 absorb、存 meta；`MetaSave` 版本 2，仓库大小以存档为准 |
+| v1.59 | 2026-09-23 | **仓库格子化、结算屏一键置入、图鉴**（报告 061，058 / 059 顺序里的第 2 项；8.2 重写，15 节第 4 项定案）。仓库是不要求包的格子，大小是 `MetaRules.warehouse_size`（新内容种类 `meta_rules`，随局外成长）；撤离不直接进仓库 —— 棋盘原样带回（`MetaState.board`，非包道具按原位置、包换成默认背景），结算屏 / 局外屏共用的仓库面板拖或一键置入，放不下就停在那一件提示，没清空 `can_begin()` 拒绝开新局（v1.95 起不拦，函数已删）；图鉴 `codex` 累计件数、点亮一次、包也计；`MetaState.keeps(def)` 一处决定什么能存进局外；一局结束时（进结算屏之前）就 absorb、存 meta；`MetaSave` 版本 2，仓库大小以存档为准 |
 | v1.58 | 2026-09-23 | **暂存区按点清空**（报告 060，058 / 059 顺序里的第一项；3.4 定稿，15 节第 7 项收掉）。「发生过事的点」= 踩上去时 `NodeEvents` 真的处理了什么，`last_handled_id` 记着、跟着存档；`RunState.step_to` 走出它时清暂存区、发 `storage_dropped`、清回 -1；出生点、岔路、路过的点、走不成的都不清。提醒档位是 `GameSettings`（`user://settings.json`，有就提 / 稀有度 / 价值 / 从不，表 + 阈值），`StorageWarning.at_risk` 挑要提的，地图屏走之前弹面板（照走 / 先整理背包 / 取消）；新增设置屏 |
 | v1.57 | 2026-09-23 | **059 设想：事件层、统一容器屏、局外 buff 与地图 buff**（未实施）。每个节点踩上去先过事件屏（没配事件的战斗点是转场），选项带条件与后果构件，搜索点「要不要搜」是事件、搜索与战利品是同一个容器屏；buff 是同一套构件、两种生命周期（局外 / 一局），效果树加 `RunEffect`（RUN 作用域）分支，标记型地图 buff 供事件分支查；暂存区改为**离开发生过事的点时清**（058 第五节）。顺序重排；15 节第 11 项更新 |
 | v1.56 | 2026-09-23 | **058 第二轮：作者八条回应**，设计修订：搜索速度不做属性；暂存区每走一步清空；图鉴累计件数、点亮一次；带入的限制就是初始包的空间、包只出不进；仓库大小随局外成长；撤离后保留棋盘、结算屏「一键置入」放不下就停下提示；顺序改为 3 → 4 格子化 → 7 结算置入 → 4 图鉴 → 2 开局预选 → 5 搜索 → 1 外框；15 节第 11 项更新 |

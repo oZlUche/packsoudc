@@ -4,8 +4,6 @@ extends RefCounted
 
 var run: RunState = null
 var node: MapNode = null
-## 这个点的侵蚀带（0 = 最外，最先被侵蚀）
-var band: int = 0
 ## 侵蚀深度：这个点被侵蚀了几层（0 = 刚被侵蚀；越大越久）
 var depth: int = 0
 ## 全图都被侵蚀了（终局）

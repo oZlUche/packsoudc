@@ -1,14 +1,11 @@
 ## 一个信仰体系（第 8 阶段 8-4，报告 081；作者定）：诸神里的一位、或将来的新教。内容种类 `faiths`。
 ##
 ## 信仰是道具的一级分类，**靠标签**（作者定的机制）：信仰道具都带 `faith` 标签，再带一个「信仰对象」标签 `faith:<id>`
-## （新教也是 `faith` + 自己的 `faith:church`）。本类只提供名字、阵营、说明与校验；机制在 [FaithState]，一个字段都不认具体的神。
+## （新教也是 `faith` + 自己的 `faith:church`；标签这套词汇在道具层 [FaithTags]，背包与编译器得读它，它们不该认识信仰体系）。
+## 本类只提供名字、阵营、说明与校验；机制在 [FaithState]，一个字段都不认具体的神。
 ## 「不信者」现在只是「没激活任何信仰」这个状态，将来加专门体系时同样走标签。
 class_name FaithDef
 extends Resource
-
-## 信仰对象标签的前缀：`faith:violence`。
-## 101 第 5 刀：标签这套词汇在道具层（[FaithTags]）—— 背包与编译器得读它，它们不该认识信仰体系
-const TAG_PREFIX := FaithTags.PREFIX
 
 enum Camp { GODS, CHURCH }
 
@@ -106,11 +103,6 @@ func deeds_summary() -> String:
 		if d != null and String(d.describe()) != "":
 			parts.append(String(d.describe()))
 	return "、".join(parts)
-
-
-## 从标签反推 id：`faith:violence` → `violence`；不是信仰对象标签返回空
-static func id_of_tag(t: StringName) -> StringName:
-	return FaithTags.id_of_tag(t)
 
 
 ## 装回全部定义：id → FaithDef，按 id 升序

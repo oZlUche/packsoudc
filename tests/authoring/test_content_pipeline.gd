@@ -466,7 +466,7 @@ static func run_registries_split(t: TestCase) -> void:
 	t.eq(EffectRegistry.TABLES.keys(), [&"trigger", &"cadence", &"cost", &"effect"], "战斗那张只有战斗的四种")
 	t.eq(LootRegistry.TABLES.keys(), [&"loot_effect"], "战利品那张只有掉落效果")
 	for kind in [&"run_effect", &"run_module", &"run_mechanic", &"event_condition", &"event_outcome",
-			&"run_skill", &"faith_deed", &"faith_perk", &"hunter_behavior", &"hunter_loss", &"erosion_effect", &"map_effect"]:
+			&"run_skill", &"faith_deed", &"faith_perk", &"hunter_behavior", &"hunter_loss", &"erosion_effect"]:
 		t.check(RunRegistry.TABLES.has(kind), "一局那张有 %s" % kind)
 		t.check(not EffectRegistry.TABLES.has(kind), "战斗那张没有 %s（它不认识一局的构件）" % kind)
 	var all := ContentRegistries.tables()

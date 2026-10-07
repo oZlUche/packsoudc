@@ -30,7 +30,7 @@ static func run_pages(t: TestCase) -> void:
 	for name in Glossary.TERMS:
 		t.check(book.has_page("term:" + String(name)), "词条「%s」有一页" % name)
 	for tag in TagRegistry.ids():
-		if not TagRegistry.is_internal(tag) and FaithDef.id_of_tag(tag) == &"":
+		if not TagRegistry.is_internal(tag) and FaithTags.id_of_tag(tag) == &"":
 			t.check(book.has_page("tag:" + String(tag)), "标签 %s 有一页" % tag)
 	for d in DamageTypes.ids():
 		t.check(book.has_page("dtype:" + String(d)), "伤害类型 %s 有一页" % d)

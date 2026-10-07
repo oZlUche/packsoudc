@@ -16,11 +16,9 @@ extends Resource
 @export var outcomes: Array[EventOutcome] = []
 
 
-## 当前语言（或指定语言）下的选项文字；没写回落 label
+## 当前语言（或指定语言）下的选项文字；没写回落 label（[method Names.pick]）
 func label_for(lang: String = "") -> String:
-	var l := lang if lang != "" else UiText.lang
-	var v := String(labels.get(l, ""))
-	return v if v != "" else label
+	return Names.pick(labels, label, lang)
 
 
 ## 每一条条件都过了才能选。返回第一条没过的说明；空串 = 能选

@@ -18,7 +18,7 @@ func run() -> void:
 	items.load_dir()
 	var enemies := EnemyDatabase.new()
 	enemies.load_all()
-	var hunters := GameFlow.load_hunters()
+	var hunters := HunterSystem.load_all()
 	var hunter: HunterDef = hunters.get(hunter_id, null)
 	if hunter == null:
 		print("找不到猎手 %s（有：%s）" % [hunter_id, ", ".join(hunters.keys())])

@@ -15,14 +15,17 @@ extends RefCounted
 static func of(obj: Object, lang: String = "") -> String:
 	if obj == null:
 		return ""
-	var l := lang if lang != "" else UiText.lang
 	var table: Variant = obj.get("display_names")
-	if table is Dictionary and (table as Dictionary).has(l):
-		var v := String((table as Dictionary)[l])
-		if v != "":
-			return v
 	var base: Variant = obj.get("display_name")
-	return String(base) if base != null else ""
+	return pick(table as Dictionary if table is Dictionary else {}, String(base) if base != null else "", lang)
+
+
+## 语言回落的那一步（名字、事件的标题 / 正文 / 选项都走它）：[param table] 里有当前语言（或指定语言 [param lang]）且不是空串就用它，
+## 否则回落 [param base]（作者写的原文）
+static func pick(table: Dictionary, base: String, lang: String = "") -> String:
+	var l := lang if lang != "" else UiText.lang
+	var v := String(table.get(l, ""))
+	return v if v != "" else base
 
 
 ## 096：说明文字（`description` / `descriptions`）同一条路：当前语言没写就回落 description。

@@ -70,9 +70,10 @@ func loot_context() -> LootContext:
 	return _at(&"loot_context").call() as LootContext
 
 
+## 一局的规则被 buff 改成什么样。没人接 = 一份默认的（沙盒、测试）
 func run_context() -> RunContext:
 	if not has(&"run_context"):
-		return null
+		return RunContext.new()
 	return _at(&"run_context").call() as RunContext
 
 

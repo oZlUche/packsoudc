@@ -32,7 +32,7 @@ static func _start(items: ItemDatabase) -> RunState:
 static func _anchor_of(db: ItemDatabase, fid: StringName) -> ItemDef:
 	for id in db.ids():
 		var d := db.get_def(id)
-		if d.is_anchor() and FaithDef.id_of_tag(d.faith_tag()) == fid:
+		if d.is_anchor() and FaithTags.id_of_tag(d.faith_tag()) == fid:
 			return d
 	return null
 

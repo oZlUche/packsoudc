@@ -47,7 +47,7 @@ func open(payload: Dictionary) -> void:
 	# 每档稀有度搜几秒是节点规则里的数（058 第 5 条）：会话有自己的规则，尸体容器用这一局的
 	var search_rules: SearchRules = _session.rules if _session != null else (flow.run.node_rules.search if flow.run != null and flow.run.node_rules != null else null)
 	if search_rules != null and not search_rules.reveal_seconds.is_empty():
-		_loot.reveal_seconds = search_rules.reveal_seconds
+		_loot.rules = search_rules
 	_loot.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(ScrollBox.wrap(_loot, 8))     # 反馈：容器太高时竖向滚动，不撑出窗口
 	_line = _label("", 13, UiPalette.FG)

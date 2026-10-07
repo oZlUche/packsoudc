@@ -46,7 +46,7 @@ static func run_content(t: TestCase) -> void:
 		t.not_null(charm, "%s 的护符" % fid)
 		if charm == null:
 			continue
-		t.check(charm.is_anchor() and FaithDef.id_of_tag(charm.faith_tag()) == fid, "%s 的护符是它的信物" % fid)
+		t.check(charm.is_anchor() and FaithTags.id_of_tag(charm.faith_tag()) == fid, "%s 的护符是它的信物" % fid)
 		t.eq(ItemVolume.cells_of(charm), 1, "1 格")
 		t.check(charm.faith_bonuses.is_empty() and charm.combat == null, "暂无效果")
 	t.check(db.get_def(&"tibia_violence").tags.has(&"faith:brute"), "胫骨大棒是蛮神的道具")

@@ -79,13 +79,13 @@ static func load_content(chapter_id: String = "free_mode", wants: PackedStringAr
 			"loadouts":
 				c.loadouts = GameFlow.load_loadouts()
 			"events":
-				c.events = GameFlow.load_events()
+				c.events = EventPlacer.load_all()
 			"buffs":
-				c.buffs = GameFlow.load_run_buffs()
+				c.buffs = RunBuffs.load_all()
 			"faiths":
-				c.faiths = GameFlow.load_faiths()
+				c.faiths = FaithDef.load_all()
 			"recipes":
-				c.recipes = GameFlow.load_recipes()
+				c.recipes = RecipeDef.load_all()
 			"characters":
 				c.characters = GameFlow.load_characters()
 			"brutus":
@@ -93,7 +93,7 @@ static func load_content(chapter_id: String = "free_mode", wants: PackedStringAr
 					if ch.id == &"brutus":
 						c.brutus = ch
 			"hunter_defs":
-				c.hunter_defs = GameFlow.load_hunters()
+				c.hunter_defs = HunterSystem.load_all()
 			"difficulties":
 				c.difficulties = GameFlow.load_difficulties()
 			"meta_rules":

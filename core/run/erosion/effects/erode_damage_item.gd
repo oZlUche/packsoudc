@@ -1,7 +1,8 @@
-## 深层侵蚀：损坏背包里的一件（5.7：你刚抢到的战利品正在你手里烂掉）。现在的「损坏」= 摧毁（道具没有耐久）
+## 深层侵蚀：损坏背包里的一件（5.7：你刚抢到的战利品正在你手里烂掉）。现在的「损坏」= 摧毁（道具没有耐久）。挑法见 [ItemPick]
 class_name ErodeDamageItem
 extends ErosionEffect
 
+## 与 [enum ItemPick.Mode] 对齐
 enum Pick { RANDOM, MOST_VALUABLE, LEAST_VALUABLE }
 enum Target { BOARD, STORAGE, BOTH }
 
@@ -14,26 +15,12 @@ enum Target { BOARD, STORAGE, BOTH }
 func apply(ctx: ErosionContext) -> void:
 	var cands: Array = []
 	if target != Target.STORAGE and ctx.run.board != null:
-		for inst in ctx.run.board.items():
-			if include_bags or not (inst as ItemInstance).def.is_bag:
-				cands.append({"inst": inst, "from": ctx.run.board})
+		cands.append_array(ItemPick.candidates([ctx.run.board], include_bags))
 	if target != Target.BOARD and ctx.run.storage != null:
-		for inst in ctx.run.storage.items():
-			cands.append({"inst": inst, "from": ctx.run.storage})
-	if cands.is_empty():
+		cands.append_array(ItemPick.candidates([ctx.run.storage], true))     # 地上是列表，包是空的，不用避
+	var chosen := ItemPick.choose(cands, pick, ctx.rng)
+	if chosen.is_empty():
 		return
-	var chosen: Dictionary = cands[0]
-	match pick:
-		Pick.RANDOM:
-			chosen = cands[ctx.rng.randi_range(0, cands.size() - 1)]
-		Pick.MOST_VALUABLE:
-			for c in cands:
-				if ItemValue.of((c["inst"] as ItemInstance).def) > ItemValue.of((chosen["inst"] as ItemInstance).def):
-					chosen = c
-		Pick.LEAST_VALUABLE:
-			for c in cands:
-				if ItemValue.of((c["inst"] as ItemInstance).def) < ItemValue.of((chosen["inst"] as ItemInstance).def):
-					chosen = c
 	var inst := chosen["inst"] as ItemInstance
 	if (chosen["from"] as ItemContainer).remove(inst.uid) != null:
 		ctx.items_lost.append(inst.def.display_name)
