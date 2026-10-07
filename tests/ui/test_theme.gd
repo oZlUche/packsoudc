@@ -4,7 +4,7 @@ extends RefCounted
 
 ## 棘轮：游戏屏（ui/game、ui/inventory、ui/battle、ui/launcher*）里 `add_theme_` 出现的次数上限 = 121 改完时的实际数。
 ## 剩下的是布局常量（separation / margin）和注了「121 特例」的那几处。要加覆写先想清楚为什么不是变体；真要加就改这个数，并在那行注一句为什么
-const RATCHET := 68
+const RATCHET := 64
 const SCANNED := ["res://ui/game", "res://ui/inventory", "res://ui/battle"]
 
 

@@ -221,8 +221,7 @@ func choose_chapter(i: int) -> void:
 ## 角色按钮按这一章能选的重排
 ## 085：这一章的随机图有哪些规模（环形生成器的 `scales`）；预设图没有
 func _rebuild_scales() -> void:
-	for c in _scale_box.get_children():
-		c.queue_free()
+	UiTheme.clear_children(_scale_box)
 	_scale_btns.clear()
 	scale_id = &""
 	var ch := chapter()
@@ -259,9 +258,7 @@ func _rebuild_characters() -> void:
 	_character_btns.clear()
 	if _char_box == null:
 		return
-	for c in _char_box.get_children():
-		_char_box.remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(_char_box)
 	for i in _characters.size():
 		var ch := _characters[i]
 		var idx := i
@@ -276,9 +273,7 @@ func _rebuild_presets() -> void:
 	_preset_btns.clear()
 	if _preset_box == null:
 		return
-	for c in _preset_box.get_children():
-		_preset_box.remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(_preset_box)
 	var none := _button("不带预设", func(): choose_preset(-1))
 	none.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	none.tooltip_text = "只带角色的初始包，其余从仓库拖"
@@ -602,9 +597,7 @@ func _restore_pending() -> void:
 
 ## 按角色造棋盘：初始包摆好。包的 uid 走局外的号段，免得和从仓库拖来的撞号
 func _rebuild_board() -> void:
-	for c in _board_host.get_children():
-		_board_host.remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(_board_host)
 	if _board_view != null and _drag != null:
 		_drag.unregister_view(_board_view)
 	_board_view = null
@@ -709,3 +702,11 @@ func _refresh() -> void:
 	if _status != null:
 		var why := can_depart()
 		_status.text = why if why != "" and not carried().is_empty() else ""
+
+
+## 读数里一件道具的一行：名字（按稀有度上色）、几格、值多少
+func _item_line(def: ItemDef) -> String:
+	if def == null:
+		return "?"
+	var cells := def.cell_count()
+	return "[color=#%s]%s[/color]  %d 格  %d 币" % [ItemPainter.rarity_color(def).to_html(false), def.display_name, cells, ItemValue.of(def)]

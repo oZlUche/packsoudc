@@ -215,9 +215,7 @@ func _rebuild() -> void:
 	for v in _shelf_views:
 		_drag.unregister_view(v)
 	_shelf_views.clear()
-	for child in _shelf_row.get_children():
-		_shelf_row.remove_child(child)
-		child.queue_free()
+	UiTheme.clear_children(_shelf_row)
 	if not _drag.drag_started.is_connected(_on_drag_started):
 		_drag.drag_started.connect(_on_drag_started)
 	for i in _session.shelves.size():

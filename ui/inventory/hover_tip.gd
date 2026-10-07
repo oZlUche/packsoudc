@@ -35,14 +35,8 @@ func _init() -> void:
 	col.add_theme_constant_override("separation", 8)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(col)
-	_text = RichTextLabel.new()
-	_text.bbcode_enabled = true
-	_text.fit_content = true
-	_text.scroll_active = false
-	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_text.custom_minimum_size.x = MAX_WIDTH
+	_text = UiTheme.rich_block(MAX_WIDTH, UiTheme.RICH_SMALL_SIZE)     # 121：13 号
 	_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_text.theme_type_variation = UiTheme.RICH_SMALL     # 121：13 号
 	col.add_child(_text)
 	_side = VBoxContainer.new()
 	_side.add_theme_constant_override("separation", 6)
@@ -103,9 +97,7 @@ func show_text(bbcode: String, at: Vector2, extra: Control = null, terms: Array 
 
 
 func _set_terms(terms: Array) -> void:
-	for c in _side.get_children():
-		_side.remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(_side)
 	for t in terms:
 		var d := t as Dictionary
 		var p := PanelContainer.new()
@@ -116,15 +108,8 @@ func _set_terms(terms: Array) -> void:
 		style.set_content_margin_all(8)
 		p.add_theme_stylebox_override("panel", style)     # 121 特例：术语卡的边是术语色（和正文里的术语同色），一张一份
 		p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var l := RichTextLabel.new()
-		l.bbcode_enabled = true
-		l.fit_content = true
-		l.scroll_active = false
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l.custom_minimum_size.x = SIDE_WIDTH
+		var l := UiTheme.rich_block(SIDE_WIDTH, 12, "[color=#%s][b]%s[/b][/color]\n%s" % [Glossary.TERM_COLOR.to_html(false), String(d["name"]), String(d["text"])])
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		UiTheme.rich(l, 12)
-		l.text = "[color=#%s][b]%s[/b][/color]\n%s" % [Glossary.TERM_COLOR.to_html(false), String(d["name"]), String(d["text"])]
 		p.add_child(l)
 		_side.add_child(p)
 	_side.visible = not terms.is_empty()

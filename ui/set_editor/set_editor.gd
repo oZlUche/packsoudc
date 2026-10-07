@@ -34,7 +34,6 @@ func _ready() -> void:
 	var settings := GameSettings.load_from()
 	UiText.apply(settings)
 	UiPalette.apply(settings)
-	UiTheme.install()     # 121：界面主题挂在窗口上
 	_ctx = ContentImporter.Context.new()
 	_items = ItemDatabase.new()
 	_items.load_dir()
@@ -61,11 +60,7 @@ static func _ids_on_disk() -> Array[String]:
 
 #region 界面
 func _build_ui() -> void:
-	var bg := ColorRect.new()
-	bg.color = UiPalette.bg()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	UiTheme.prepare_root(self, false)     # 121：装上界面主题、铺底色（设置在 _ready 里已经读过、apply 过）
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
@@ -79,16 +74,16 @@ func _build_ui() -> void:
 	left.custom_minimum_size.x = 220
 	left.add_theme_constant_override("separation", 6)
 	columns.add_child(left)
-	left.add_child(_label("套装", 16, UiPalette.FG))
+	left.add_child(UiTheme.make_label("套装", 16, UiPalette.FG))
 	_list = ItemList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_list.add_theme_font_override("font", _font)
 	_list.item_selected.connect(func(i: int): _open(_ids[i]))
 	left.add_child(_list)
 	var lb := HBoxContainer.new()
-	lb.add_child(_button("新建", _new_set))
-	lb.add_child(_button("刷新列表", _on_rescan))
-	lb.add_child(_button("放弃改动", _on_discard))
+	lb.add_child(UiTheme.make_button("新建", _new_set, UiTheme.TIER_PLAIN, 13))
+	lb.add_child(UiTheme.make_button("刷新列表", _on_rescan, UiTheme.TIER_PLAIN, 13))
+	lb.add_child(UiTheme.make_button("放弃改动", _on_discard, UiTheme.TIER_PLAIN, 13))
 	left.add_child(lb)
 
 	var right_split := HSplitContainer.new()
@@ -101,7 +96,7 @@ func _build_ui() -> void:
 	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_split.add_child(mid)
 	var id_row := HBoxContainer.new()
-	id_row.add_child(_label("id", 13, UiPalette.DIM))
+	id_row.add_child(UiTheme.make_label("id", 13, UiPalette.DIM))
 	_id_edit = LineEdit.new()
 	_id_edit.custom_minimum_size.x = 180
 	_id_edit.add_theme_font_override("font", _font)
@@ -111,8 +106,8 @@ func _build_ui() -> void:
 		_def.id = StringName(text.strip_edges())
 		_refresh())
 	id_row.add_child(_id_edit)
-	id_row.add_child(_button("保存", _save))
-	id_row.add_child(_button("另存为新 id", _save_as))
+	id_row.add_child(UiTheme.make_button("保存", _save, UiTheme.TIER_PLAIN, 13))
+	id_row.add_child(UiTheme.make_button("另存为新 id", _save_as, UiTheme.TIER_PLAIN, 13))
 	mid.add_child(id_row)
 
 	var scroll := ScrollContainer.new()
@@ -125,7 +120,7 @@ func _build_ui() -> void:
 	scroll.add_child(body)
 
 	var name_row := HBoxContainer.new()
-	name_row.add_child(_label("名字", 13, UiPalette.DIM))
+	name_row.add_child(UiTheme.make_label("名字", 13, UiPalette.DIM))
 	_name_edit = LineEdit.new()
 	_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_name_edit.add_theme_font_override("font", _font)
@@ -136,7 +131,7 @@ func _build_ui() -> void:
 		_refresh())
 	name_row.add_child(_name_edit)
 	body.add_child(name_row)
-	body.add_child(_wrapped("档位按件数升序、**累加**生效：4 件套同享 2 件档与 4 件档；要互斥就把高档写成增量。每档三个列表：属性修饰（编译期并入）、规则（要扳机）、别的作用域的效果（激活即生效）。", 12, UiPalette.DIM, 520))
+	body.add_child(UiTheme.make_wrapped("档位按件数升序、**累加**生效：4 件套同享 2 件档与 4 件档；要互斥就把高档写成增量。每档三个列表：属性修饰（编译期并入）、规则（要扳机）、别的作用域的效果（激活即生效）。", 12, UiPalette.DIM, 520))
 	body.add_child(HSeparator.new())
 	_form_host = VBoxContainer.new()
 	_form_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -147,50 +142,26 @@ func _build_ui() -> void:
 	side.custom_minimum_size.x = 380
 	side.add_theme_constant_override("separation", 8)
 	right_split.add_child(side)
-	_summary = _wrapped("", 13, UiPalette.FG, 360)
+	_summary = UiTheme.make_wrapped("", 13, UiPalette.FG, 360)
 	side.add_child(_summary)
-	side.add_child(_label("成员（道具的 set_id 写这个 id；在道具编辑器里改）", 13, UiPalette.DIM))
-	_members = _wrapped("", 12, UiPalette.FG, 360)
+	side.add_child(UiTheme.make_label("成员（道具的 set_id 写这个 id；在道具编辑器里改）", 13, UiPalette.DIM))
+	_members = UiTheme.make_wrapped("", 12, UiPalette.FG, 360)
 	side.add_child(_members)
-	side.add_child(_label("校验", 14, UiPalette.FG))
+	side.add_child(UiTheme.make_label("校验", 14, UiPalette.FG))
 	_status = RichTextLabel.new()
 	_status.bbcode_enabled = true
 	_status.custom_minimum_size.y = 90
 	_status.add_theme_font_override("normal_font", _font)
 	_status.add_theme_font_size_override("normal_font_size", 12)
 	side.add_child(_status)
-	side.add_child(_label("JSON（可直接改）", 12, UiPalette.DIM))
+	side.add_child(UiTheme.make_label("JSON（可直接改）", 12, UiPalette.DIM))
 	_json = TextEdit.new()
 	_json.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_json.add_theme_font_override("font", _font)
 	_json.add_theme_font_size_override("font_size", 12)
 	side.add_child(_json)
-	side.add_child(_button("套用上面的 JSON", _apply_json))
+	side.add_child(UiTheme.make_button("套用上面的 JSON", _apply_json, UiTheme.TIER_PLAIN, 13))
 
-
-func _label(text: String, font_size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.add_theme_font_override("font", _font)
-	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", color)
-	return l
-
-
-func _wrapped(text: String, font_size: int, color: Color, width: float) -> Label:
-	var l := _label(text, font_size, color)
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size.x = width
-	return l
-
-
-func _button(text: String, handler: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.add_theme_font_override("font", _font)
-	b.add_theme_font_size_override("font_size", 13)
-	b.pressed.connect(handler)
-	return b
 #endregion
 
 
@@ -373,9 +344,7 @@ func _sync_fields() -> void:
 
 
 func _rebuild_form() -> void:
-	for c in _form_host.get_children():
-		_form_host.remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(_form_host)
 	if _def == null:
 		return
 	var form = PropertyFormScript.create(_def, _font, {"ItemSetDef": ["id", "display_name"]})

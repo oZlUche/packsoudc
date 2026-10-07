@@ -73,9 +73,6 @@ func draw_edge(
 	canvas: CanvasItem, graph: MapGraph, edge: MapEdge, a: Vector2, b: Vector2,
 	color: Color, width: float, rect: Rect2 = Rect2()
 ) -> void:
-	if edge.is_portal():
-		MapLayout.draw_portal(canvas, a, b, width)
-		return
 	var levels := levels_of(graph)
 	var la := int(levels.get(edge.from_id, -1))
 	if la != int(levels.get(edge.to_id, -2)) or la <= 0:

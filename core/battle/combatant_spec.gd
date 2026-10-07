@@ -46,6 +46,17 @@ func item_of(uid: int) -> CompiledItem:
 	return _by_uid.get(uid, null)
 
 
+## uid → 显示名（回放把「uid 2 出手」写成「手枪 出手」）；[param spec] 为 null 返回空表。结算内核不读
+static func item_names(spec: CombatantSpec, items: ItemDatabase) -> Dictionary:
+	var out := {}
+	if spec == null:
+		return out
+	for item in spec.items:
+		var def := items.get_def(item.def_id)
+		out[item.source_uid] = Names.of(def) if def != null else String(item.def_id)
+	return out
+
+
 ## 有规则的物品
 func active_items() -> Array[CompiledItem]:
 	var out: Array[CompiledItem] = []

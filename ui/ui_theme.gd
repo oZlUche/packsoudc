@@ -7,6 +7,7 @@
 ##
 ## 屏幕脚本不直接贴样式：选变体（`theme_type_variation = UiTheme.LABEL_DIM`），或用下面几个小工具
 ## （[method label]、[method panel]、[method rich]、[method mark]）—— 它们先选变体，只有变体给不了的（字号、面板内边距）才逐个覆写。
+## 造控件走 [method make_label] / [method make_wrapped] / [method make_button] / [method rich_block]（各屏的 `_label / _button…` 都只是转发到这里）。
 ## 画布上画的颜色（血条、格子、邻接标记、稀有度、飘字）不归这里，继续读 [UiPalette]。
 ## 美术进场时把 [method _fill] 换成加载美术给的 `.tres` + 字体 + 贴图，屏幕脚本一行不动。
 class_name UiTheme
@@ -14,6 +15,8 @@ extends RefCounted
 
 ## 默认字号（原来各处最常写的 14）
 const FONT_SIZE := 14
+## [method make_button] 的「不上样式」档：沙盒 / 编辑器的素按钮（引擎默认的样子，字号不是 14 才给）；真正的三档见 [enum UiPalette.Tier]
+const TIER_PLAIN := -1
 
 const BUTTON_PRIMARY := &"ButtonPrimary"
 const BUTTON_SECONDARY := &"ButtonSecondary"
@@ -148,6 +151,85 @@ static func rich(r: RichTextLabel, font_size: int = FONT_SIZE) -> RichTextLabel:
 ## 一排互斥按钮里「选中的那个」：字是前景色，其余暗色（开局屏的章节 / 角色 / 难度……）
 static func mark(b: Control, on: bool) -> void:
 	b.add_theme_color_override("font_color", UiPalette.FG if on else UiPalette.DIM)
+#endregion
+
+
+#region 造控件与场景前奏（屏、面板、沙盒、编辑器共用）
+## 一个标签：字体在主题里，颜色先选变体（[method label]）
+static func make_label(text: String, font_size: int = FONT_SIZE, color: Color = UiPalette.FG) -> Label:
+	var l := Label.new()
+	l.text = text
+	return label(l, font_size, color)
+
+
+## 会折行的说明文字。必须给最小宽度：中文没有词边界，容器算出的最小宽度是一个字
+static func make_wrapped(text: String, font_size: int, color: Color, width: float) -> Label:
+	var l := make_label(text, font_size, color)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size.x = width
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return l
+
+
+## 一个按钮。090（作者定）：按重要性分三档（[enum UiPalette.Tier]），字号是 [param font_size] 的 300% / 200% / 150%，颜色也各不同，
+## 不写档就是次要（200%）；[constant TIER_PLAIN] = 不上样式（字号不是默认的 14 才覆写）
+static func make_button(text: String, handler: Callable, tier: int = UiPalette.Tier.SECONDARY, font_size: int = FONT_SIZE) -> Button:
+	var b := Button.new()
+	b.text = text
+	if tier == TIER_PLAIN:
+		if font_size != FONT_SIZE:
+			b.add_theme_font_size_override("font_size", font_size)
+	else:
+		UiPalette.style_button(b, tier, UiPalette.button_font_size(font_size, tier))
+	b.pressed.connect(handler)
+	return b
+
+
+static func vbox(separation: int = 8) -> VBoxContainer:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", separation)
+	return v
+
+
+static func hbox(separation: int = 8) -> HBoxContainer:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", separation)
+	return h
+
+
+## 一段 BBCode 正文：高度随内容、自己不滚（放进调用方的滚动区或面板里）、按 [param width] 折行；
+## 字号走 [method rich]（17 / 13 号选变体，别的逐个给）
+static func rich_block(width: float, font_size: int = FONT_SIZE, bbcode: String = "") -> RichTextLabel:
+	var r := RichTextLabel.new()
+	r.bbcode_enabled = true
+	r.fit_content = true
+	r.scroll_active = false
+	r.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	r.custom_minimum_size.x = width
+	rich(r, font_size)
+	r.text = bbcode
+	return r
+
+
+## 清空一个节点的全部子节点：先摘下来再 free —— queue_free 到帧末才真的走，同一帧里数子节点会把旧的也数进去
+static func clear_children(node: Node) -> void:
+	for c in node.get_children():
+		node.remove_child(c)
+		c.queue_free()
+
+
+## 根场景的前奏（启动器、沙盒、编辑器）：读设置让底色跟着走（091）、装主题、铺一块底色（铺满、不挡鼠标）。
+## [param read_settings] 假 = 宿主已经读过设置、apply 过（嵌在别人里的 [BattleView]，或自己还要拿设置做别的事）。返回那块底色
+static func prepare_root(root: Control, read_settings: bool = true) -> ColorRect:
+	if read_settings:
+		UiPalette.apply(GameSettings.load_from())
+	install()
+	var bg := ColorRect.new()
+	bg.color = UiPalette.bg()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(bg)
+	return bg
 #endregion
 
 

@@ -37,7 +37,6 @@ func _ready() -> void:
 	var settings := GameSettings.load_from()
 	UiText.apply(settings)
 	UiPalette.apply(settings)
-	UiTheme.install()     # 121：界面主题挂在窗口上
 	_ctx = ContentImporter.Context.new()
 	_build_ui()
 	_reload_list()
@@ -62,11 +61,7 @@ static func _ids_on_disk() -> Array[String]:
 
 #region 界面
 func _build_ui() -> void:
-	var bg := ColorRect.new()
-	bg.color = UiPalette.bg()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	UiTheme.prepare_root(self, false)     # 121：装上界面主题、铺底色（设置在 _ready 里已经读过、apply 过）
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
@@ -80,16 +75,16 @@ func _build_ui() -> void:
 	left.custom_minimum_size.x = 220
 	left.add_theme_constant_override("separation", 6)
 	columns.add_child(left)
-	left.add_child(_label(UiText.t("buff.title"), 16, UiPalette.FG))
+	left.add_child(UiTheme.make_label(UiText.t("buff.title"), 16, UiPalette.FG))
 	_list = ItemList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_list.add_theme_font_override("font", _font)
 	_list.item_selected.connect(func(i: int): _open(_ids[i]))
 	left.add_child(_list)
 	var lb := HBoxContainer.new()
-	lb.add_child(_button(UiText.t("buff.new"), _new_buff))
-	lb.add_child(_button(UiText.t("buff.rescan"), _on_rescan))
-	lb.add_child(_button(UiText.t("buff.discard"), _on_discard))
+	lb.add_child(UiTheme.make_button(UiText.t("buff.new"), _new_buff, UiTheme.TIER_PLAIN, 13))
+	lb.add_child(UiTheme.make_button(UiText.t("buff.rescan"), _on_rescan, UiTheme.TIER_PLAIN, 13))
+	lb.add_child(UiTheme.make_button(UiText.t("buff.discard"), _on_discard, UiTheme.TIER_PLAIN, 13))
 	left.add_child(lb)
 
 	var right_split := HSplitContainer.new()
@@ -102,7 +97,7 @@ func _build_ui() -> void:
 	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_split.add_child(mid)
 	var id_row := HBoxContainer.new()
-	id_row.add_child(_label(UiText.t("buff.id"), 13, UiPalette.DIM))
+	id_row.add_child(UiTheme.make_label(UiText.t("buff.id"), 13, UiPalette.DIM))
 	_id_edit = LineEdit.new()
 	_id_edit.custom_minimum_size.x = 180
 	_id_edit.add_theme_font_override("font", _font)
@@ -112,8 +107,8 @@ func _build_ui() -> void:
 		_def.id = StringName(text.strip_edges())
 		_refresh())
 	id_row.add_child(_id_edit)
-	id_row.add_child(_button(UiText.t("buff.save"), _save))
-	id_row.add_child(_button(UiText.t("buff.save_as"), _save_as))
+	id_row.add_child(UiTheme.make_button(UiText.t("buff.save"), _save, UiTheme.TIER_PLAIN, 13))
+	id_row.add_child(UiTheme.make_button(UiText.t("buff.save_as"), _save_as, UiTheme.TIER_PLAIN, 13))
 	mid.add_child(id_row)
 
 	var scroll := ScrollContainer.new()
@@ -126,7 +121,7 @@ func _build_ui() -> void:
 	scroll.add_child(body)
 
 	var name_row := HBoxContainer.new()
-	name_row.add_child(_label(UiText.t("buff.name"), 13, UiPalette.DIM))
+	name_row.add_child(UiTheme.make_label(UiText.t("buff.name"), 13, UiPalette.DIM))
 	_name_edit = LineEdit.new()
 	_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_name_edit.add_theme_font_override("font", _font)
@@ -147,7 +142,7 @@ func _build_ui() -> void:
 	name_row.add_child(_debuff)
 	body.add_child(name_row)
 
-	body.add_child(_label(UiText.t("buff.stacking"), 14, UiPalette.FG))
+	body.add_child(UiTheme.make_label(UiText.t("buff.stacking"), 14, UiPalette.FG))
 	var stack_row := HBoxContainer.new()
 	stack_row.add_theme_constant_override("separation", 12)
 	_stackable = CheckBox.new()
@@ -158,10 +153,10 @@ func _build_ui() -> void:
 			return
 		set_stackable(on))
 	stack_row.add_child(_stackable)
-	stack_row.add_child(_label(UiText.t("buff.stacks_unlimited"), 12, UiPalette.DIM))     # 137：可叠层就是不限层，没有上限框
+	stack_row.add_child(UiTheme.make_label(UiText.t("buff.stacks_unlimited"), 12, UiPalette.DIM))     # 137：可叠层就是不限层，没有上限框
 	body.add_child(stack_row)
 
-	body.add_child(_label(UiText.t("buff.duration"), 14, UiPalette.FG))
+	body.add_child(UiTheme.make_label(UiText.t("buff.duration"), 14, UiPalette.FG))
 	var dur_row := HBoxContainer.new()
 	dur_row.add_theme_constant_override("separation", 12)
 	_permanent = CheckBox.new()
@@ -172,7 +167,7 @@ func _build_ui() -> void:
 			return
 		set_permanent(on))
 	dur_row.add_child(_permanent)
-	dur_row.add_child(_label(UiText.t("buff.seconds"), 12, UiPalette.DIM))
+	dur_row.add_child(UiTheme.make_label(UiText.t("buff.seconds"), 12, UiPalette.DIM))
 	_seconds = SpinBox.new()
 	_seconds.min_value = 0
 	_seconds.max_value = 600
@@ -184,11 +179,11 @@ func _build_ui() -> void:
 		set_seconds(v))
 	dur_row.add_child(_seconds)
 	body.add_child(dur_row)
-	_rule_note = _label("", 12, UiPalette.DIM)
+	_rule_note = UiTheme.make_label("", 12, UiPalette.DIM)
 	body.add_child(_rule_note)
 
 	body.add_child(HSeparator.new())
-	body.add_child(_label(UiText.t("buff.effects"), 14, UiPalette.FG))
+	body.add_child(UiTheme.make_label(UiText.t("buff.effects"), 14, UiPalette.FG))
 	_form_host = VBoxContainer.new()
 	_form_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_child(_form_host)
@@ -198,42 +193,25 @@ func _build_ui() -> void:
 	side.custom_minimum_size.x = 380
 	side.add_theme_constant_override("separation", 8)
 	right_split.add_child(side)
-	_summary = _label("", 13, UiPalette.FG)
+	_summary = UiTheme.make_label("", 13, UiPalette.FG)
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_summary.custom_minimum_size.x = 360
 	side.add_child(_summary)
-	side.add_child(_label(UiText.t("buff.validation"), 14, UiPalette.FG))
+	side.add_child(UiTheme.make_label(UiText.t("buff.validation"), 14, UiPalette.FG))
 	_status = RichTextLabel.new()
 	_status.bbcode_enabled = true
 	_status.custom_minimum_size.y = 90
 	_status.add_theme_font_override("normal_font", _font)
 	_status.add_theme_font_size_override("normal_font_size", 12)
 	side.add_child(_status)
-	side.add_child(_label(UiText.t("buff.code"), 12, UiPalette.DIM))
+	side.add_child(UiTheme.make_label(UiText.t("buff.code"), 12, UiPalette.DIM))
 	_json = TextEdit.new()
 	_json.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_json.add_theme_font_override("font", _font)
 	_json.add_theme_font_size_override("font_size", 12)
 	side.add_child(_json)
-	side.add_child(_button(UiText.t("buff.apply_code"), _apply_json))
+	side.add_child(UiTheme.make_button(UiText.t("buff.apply_code"), _apply_json, UiTheme.TIER_PLAIN, 13))
 
-
-func _label(text: String, font_size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.add_theme_font_override("font", _font)
-	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", color)
-	return l
-
-
-func _button(text: String, handler: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.add_theme_font_override("font", _font)
-	b.add_theme_font_size_override("font_size", 13)
-	b.pressed.connect(handler)
-	return b
 #endregion
 
 
@@ -400,9 +378,7 @@ func _sync_fields() -> void:
 
 
 func _rebuild_form() -> void:
-	for c in _form_host.get_children():
-		_form_host.remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(_form_host)
 	if _def == null:
 		return
 	var form := PropertyForm.create(_def, _font, {"BuffDef": ["id", "display_name", "is_debuff", "stackable", "duration_sec", "refresh_on_restack"]})

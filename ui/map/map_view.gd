@@ -315,13 +315,16 @@ func _draw() -> void:
 		var key := MapJunctions.edge_key(e.from_id, e.to_id)
 		if in_junction.has(key):
 			continue
+		var color := UiPalette.DIM.darkened(0.25)
+		var width := 1.5
 		if route_of_edge.has(key):
 			var ri: int = route_of_edge[key]
-			_layout.draw_edge(self, graph, e, pos[e.from_id], pos[e.to_id],
-				Color(MapNodeStyle.route_color(ri), 0.9 if ri == bold_route else 0.7),
-				6.0 if ri == bold_route else 3.0, rect)
+			color = Color(MapNodeStyle.route_color(ri), 0.9 if ri == bold_route else 0.7)
+			width = 6.0 if ri == bold_route else 3.0
+		if e.is_portal():
+			MapLayout.draw_portal(self, pos[e.from_id], pos[e.to_id], width)     # 传送点（8-1）：虚线紫，哪种布局都一样
 		else:
-			_layout.draw_edge(self, graph, e, pos[e.from_id], pos[e.to_id], UiPalette.DIM.darkened(0.25), 1.5, rect)
+			_layout.draw_edge(self, graph, e, pos[e.from_id], pos[e.to_id], color, width, rect)
 
 	for clique in (junctions["quads"] as Array) + (junctions["tris"] as Array):
 		_draw_junction(clique, pos, route_of_edge)

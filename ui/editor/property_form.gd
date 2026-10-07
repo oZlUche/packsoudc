@@ -53,8 +53,7 @@ func _ready() -> void:
 
 
 func rebuild() -> void:
-	for child in get_children():
-		child.queue_free()
+	UiTheme.clear_children(self)
 	_rows.clear()
 	if _target == null:
 		return

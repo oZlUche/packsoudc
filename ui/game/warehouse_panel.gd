@@ -65,7 +65,7 @@ func _build() -> void:
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 6)
 	row.add_child(right)
-	_size_label = _label("", 13, UiPalette.DIM)
+	_size_label = UiTheme.make_label("", 13, UiPalette.DIM)
 	right.add_child(_size_label)
 	_warehouse_view = InventoryView.new()
 	_warehouse_view.label_font = _font
@@ -79,16 +79,16 @@ func _build() -> void:
 	right.add_child(wh_scroll)
 	_warehouse_view.item_double_clicked.connect(quick_move)
 
-	_line = _label("", 13, UiPalette.FG)
+	_line = UiTheme.make_label("", 13, UiPalette.FG)
 	col.add_child(_line)
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 8)
 	col.add_child(buttons)
-	_store_btn = _button("一键置入", store_all)
+	_store_btn = UiTheme.make_button("一键置入", store_all, UiPalette.Tier.SECONDARY, 13)
 	buttons.add_child(_store_btn)
-	_discard_btn = _button("剩下的不要了", discard_board)
+	_discard_btn = UiTheme.make_button("剩下的不要了", discard_board, UiPalette.Tier.SECONDARY, 13)
 	buttons.add_child(_discard_btn)
-	_tidy_btn = _button("整理", tidy)
+	_tidy_btn = UiTheme.make_button("整理", tidy, UiPalette.Tier.SECONDARY, 13)
 	buttons.add_child(_tidy_btn)
 
 	_drag = DragLayer.new()
@@ -103,14 +103,13 @@ func _rebuild_board_view() -> void:
 	# 审查 A3：旧视图先从拖拽层撤登记 —— 只 queue_free 的话拖拽层还拿着它，之后拖仓库里的东西会碰到已释放的视图、卡在「正在拖」
 	if _board_view != null and _drag != null:
 		_drag.unregister_view(_board_view)
-	for child in _board_box.get_children():
-		child.queue_free()
+	UiTheme.clear_children(_board_box)
 	_board_view = null
 	if _meta.board == null:
 		_board_box.visible = false
 		return
 	_board_box.visible = true
-	_board_box.add_child(_label("带回来的背包　位置照旧，包已换成默认背景", 13, UiPalette.DIM))
+	_board_box.add_child(UiTheme.make_label("带回来的背包　位置照旧，包已换成默认背景", 13, UiPalette.DIM))
 	_board_view = InventoryView.new()
 	_board_view.label_font = _font
 	_board_view.inventory = _meta.board
@@ -213,18 +212,3 @@ func _refresh() -> void:
 	_tidy_btn.disabled = _meta.warehouse.item_count() <= 1
 	if _line != null and _line.text == "":
 		_line.text = "带回来的背包里还有 %d 件：置入或不要了；不管的话开局屏里它们到地上，出发就没了" % _meta.board.item_count() if pending else "仓库 %d 件" % _meta.warehouse.item_count()
-
-
-func _label(text: String, font_size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
-	return l
-
-
-func _button(text: String, handler: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	UiPalette.style_button(b, UiPalette.Tier.SECONDARY, UiPalette.button_font_size(13, UiPalette.Tier.SECONDARY))     # 090
-	b.pressed.connect(handler)
-	return b

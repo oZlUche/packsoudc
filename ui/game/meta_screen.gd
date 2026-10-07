@@ -370,9 +370,7 @@ func achievement_rows() -> Array:
 func _fill_achievements() -> void:
 	if _ach_list == null:
 		return
-	for c in _ach_list.get_children():
-		_ach_list.remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(_ach_list)
 	_ach_rows.clear()
 	var m := flow.meta
 	var total := flow.achievement_defs.size()

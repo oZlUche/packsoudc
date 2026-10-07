@@ -58,7 +58,7 @@ func _build() -> void:
 	left.add_theme_constant_override("separation", 6)
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(left)
-	left.add_child(_label("科技树　从下往上点亮；点一个节点看右边", 13, UiPalette.DIM))
+	left.add_child(UiTheme.make_label("科技树　从下往上点亮；点一个节点看右边", 13, UiPalette.DIM))
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(560, 520)
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -69,21 +69,21 @@ func _build() -> void:
 	_tree.setup(_meta, _flow.tech_defs, _font)
 	_tree.selected.connect(_on_tree_selected)
 	if _flow.tech_defs.is_empty():
-		left.add_child(_label("（没有科技的内容：data/authoring/techs/）", 12, UiPalette.DIM))
+		left.add_child(UiTheme.make_label("（没有科技的内容：data/authoring/techs/）", 12, UiPalette.DIM))
 
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 8)
 	right.custom_minimum_size.x = PANEL_WIDTH
 	row.add_child(right)
-	_name = _label("", 20, UiPalette.FG)
+	_name = UiTheme.make_label("", 20, UiPalette.FG)
 	right.add_child(_name)
 	right.add_child(HSeparator.new())
-	right.add_child(_label("效果", 13, UiPalette.DIM))
-	_effect = _vbox(4)
+	right.add_child(UiTheme.make_label("效果", 13, UiPalette.DIM))
+	_effect = UiTheme.vbox(4)
 	right.add_child(_effect)
 	right.add_child(HSeparator.new())
-	right.add_child(_label("费用", 13, UiPalette.DIM))
-	_cost = _vbox(4)
+	right.add_child(UiTheme.make_label("费用", 13, UiPalette.DIM))
+	_cost = UiTheme.vbox(4)
 	right.add_child(_cost)
 	_action = Button.new()
 	UiPalette.style_button(_action, UiPalette.Tier.PRIMARY, UiPalette.button_font_size(14, UiPalette.Tier.PRIMARY))
@@ -92,7 +92,7 @@ func _build() -> void:
 	right.add_child(_action)
 	right.add_child(HSeparator.new())
 
-	right.add_child(_label("上交区　交给选中的节点：拖进来或在仓库里双击（上交即消耗，交了不能退）", 13, UiPalette.DIM))
+	right.add_child(UiTheme.make_label("上交区　交给选中的节点：拖进来或在仓库里双击（上交即消耗，交了不能退）", 13, UiPalette.DIM))
 	_zone = GridInventory.new(ZONE_SIZE, 0, false)
 	_zone.accept_filter = _wanted
 	_zone.changed.connect(_on_zone_changed)
@@ -102,7 +102,7 @@ func _build() -> void:
 	_zone_view.show_adjacency = false
 	_zone_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	right.add_child(_zone_view)
-	_line = _label("", 13, UiPalette.STAMINA)
+	_line = UiTheme.make_label("", 13, UiPalette.STAMINA)
 	right.add_child(_line)
 	_warehouse_toggle = Button.new()
 	_warehouse_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -281,8 +281,8 @@ func _refresh() -> void:
 		return
 	_tree.rebuild()     # 等级变了节点样子跟着变；选中的那圈边 rebuild 时照旧画
 	_sync_toggle()
-	_clear(_effect)
-	_clear(_cost)
+	UiTheme.clear_children(_effect)
+	UiTheme.clear_children(_cost)
 	_submit_buttons.clear()
 	var def := _flow.tech_of(_selected)
 	_zone_view.modulate = Color(1, 1, 1, 1) if def != null and TechService.prereqs_met(_meta, def) and TechService.next_tier(_meta, def) != null \
@@ -297,16 +297,16 @@ func _refresh() -> void:
 
 	# 效果：一句总述 + 现在 / 下一级
 	if def.description.strip_edges() != "":
-		_effect.add_child(_wrapped(TextTemplate.plain(def.description, {}), 14, UiPalette.FG))
+		_effect.add_child(UiTheme.make_wrapped(TextTemplate.plain(def.description, {}), 14, UiPalette.FG, PANEL_WIDTH))
 	if def.effect != null:
 		if lv >= 1:
-			_effect.add_child(_wrapped("现在：" + def.effect.describe_level(lv, _flow.buff_defs), 13, UiPalette.HEAL))
+			_effect.add_child(UiTheme.make_wrapped("现在：" + def.effect.describe_level(lv, _flow.buff_defs), 13, UiPalette.HEAL, PANEL_WIDTH))
 		if tier != null:
-			_effect.add_child(_wrapped("下一级：" + def.effect.describe_level(lv + 1, _flow.buff_defs), 13, UiPalette.FG))
+			_effect.add_child(UiTheme.make_wrapped("下一级：" + def.effect.describe_level(lv + 1, _flow.buff_defs), 13, UiPalette.FG, PANEL_WIDTH))
 
 	# 费用
 	if tier == null:
-		_cost.add_child(_label("已满级", 14, UiPalette.HEAL))
+		_cost.add_child(UiTheme.make_label("已满级", 14, UiPalette.HEAL))
 		_action.visible = false
 		return
 	var missing := TechService.missing_prereqs(_meta, def, _flow.tech_defs)
@@ -314,9 +314,9 @@ func _refresh() -> void:
 		var names: Array[String] = []
 		for m in missing:
 			names.append(Names.of(m))
-		_cost.add_child(_wrapped("需要先点亮：%s" % "、".join(names), 13, UiPalette.DIM))
+		_cost.add_child(UiTheme.make_wrapped("需要先点亮：%s" % "、".join(names), 13, UiPalette.DIM, PANEL_WIDTH))
 	var rich := _meta.funds >= tier.funds
-	_cost.add_child(_label("钱　需要 %d / 持有 %d" % [tier.funds, _meta.funds], 13, UiPalette.HEAL if rich else UiPalette.DIM))
+	_cost.add_child(UiTheme.make_label("钱　需要 %d / 持有 %d" % [tier.funds, _meta.funds], 13, UiPalette.HEAL if rich else UiPalette.DIM))
 	var keys: Array = tier.items.keys()
 	keys.sort()
 	var owned := _owned_counts()
@@ -328,10 +328,10 @@ func _refresh() -> void:
 		var item_def := _flow.items.get_def(id) if _flow.items != null else null
 		var name := Names.of(item_def) if item_def != null else String(key)
 		var own := int(owned.get(String(key), 0))
-		var row := _spaced(HBoxContainer.new(), 12) as HBoxContainer
-		row.add_child(_label("%s　已交 %d / 需要 %d%s" % [name, have, need, "　✓" if have >= need else ""], 13,
+		var row := UiTheme.hbox(12)
+		row.add_child(UiTheme.make_label("%s　已交 %d / 需要 %d%s" % [name, have, need, "　✓" if have >= need else ""], 13,
 			UiPalette.HEAL if have >= need else UiPalette.FG))
-		row.add_child(_label("拥有 %d" % own, 13, UiPalette.FG if own > 0 else UiPalette.DIM))
+		row.add_child(UiTheme.make_label("拥有 %d" % own, 13, UiPalette.FG if own > 0 else UiPalette.DIM))
 		var k := mini(maxi(0, need - have), own)
 		if open and k > 0:
 			var btn := Button.new()
@@ -360,12 +360,6 @@ func _sync_toggle() -> void:
 	_warehouse_toggle.text = ("仓库 ▾　（双击一件交给选中的节点）" if _warehouse_box.visible else "仓库 ▸　展开")
 
 
-static func _clear(box: Container) -> void:
-	for c in box.get_children():
-		box.remove_child(c)
-		c.queue_free()
-
-
 static func _texts_of(box: Container) -> String:
 	var parts: Array[String] = []
 	for c in box.get_children():
@@ -378,26 +372,3 @@ static func _texts_of(box: Container) -> String:
 					row.append((l as Label).text)
 			parts.append("　".join(row))
 	return "\n".join(parts)
-
-
-func _vbox(sep: int) -> VBoxContainer:
-	return _spaced(VBoxContainer.new(), sep) as VBoxContainer
-
-
-static func _spaced(box: BoxContainer, sep: int) -> BoxContainer:
-	box.add_theme_constant_override("separation", sep)
-	return box
-
-
-func _label(text: String, font_size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
-	return l
-
-
-func _wrapped(text: String, font_size: int, color: Color) -> Label:
-	var l := _label(text, font_size, color)
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size.x = PANEL_WIDTH
-	return l

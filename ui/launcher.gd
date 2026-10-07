@@ -7,7 +7,7 @@
 ## [b]它只负责切场景，不碰任何游戏状态。[/b]
 extends Control
 
-## 说明文字的折行宽度。见 _wrapped 里的注释。
+## 说明文字的折行宽度（[method UiTheme.make_wrapped]：中文没有词边界，不给最小宽度整段会被压成一列）
 const CARD_WIDTH := 500
 
 const ENTRIES := [
@@ -76,13 +76,7 @@ func _ready() -> void:
 
 
 func _build() -> void:
-	var bg := ColorRect.new()
-	UiPalette.apply(GameSettings.load_from())     # 091：底色跟设置走
-	UiTheme.install()     # 121：界面主题挂在窗口上
-	bg.color = UiPalette.bg()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	UiTheme.prepare_root(self)     # 091 / 121：底色跟设置走、装上界面主题
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -93,15 +87,15 @@ func _build() -> void:
 	col.custom_minimum_size.x = CARD_WIDTH + 40
 	center.add_child(col)
 
-	col.add_child(_label("背包搜打撤", 28, UiPalette.FG))
-	col.add_child(_label("第一项是正式游戏，其余是开发期的沙盒与编辑器。", 13, UiPalette.DIM))
+	col.add_child(UiTheme.make_label("背包搜打撤", 28, UiPalette.FG))
+	col.add_child(UiTheme.make_label("第一项是正式游戏，其余是开发期的沙盒与编辑器。", 13, UiPalette.DIM))
 	col.add_child(HSeparator.new())
 
 	for entry in ENTRIES:
 		col.add_child(_card(entry))
 
 	col.add_child(HSeparator.new())
-	col.add_child(_label("进去之后按 F1 或点右上角回到这里　　Esc 退出", 12, UiPalette.DIM))
+	col.add_child(UiTheme.make_label("进去之后按 F1 或点右上角回到这里　　Esc 退出", 12, UiPalette.DIM))
 
 
 func _card(entry: Dictionary) -> Control:
@@ -122,8 +116,8 @@ func _card(entry: Dictionary) -> Control:
 	# 说明文字单独一行，不要塞进 HBox：
 	# autowrap 的 Label 在 HBox 里最小宽度会退化成一个字符宽，
 	# 中文没有词边界，于是整段被压成竖排的一列。
-	box.add_child(_wrapped(entry["desc"], 12, UiPalette.DIM))
-	box.add_child(_wrapped(entry["keys"], 11, UiPalette.DIM.darkened(0.25)))
+	box.add_child(UiTheme.make_wrapped(entry["desc"], 12, UiPalette.DIM, CARD_WIDTH))
+	box.add_child(UiTheme.make_wrapped(entry["keys"], 11, UiPalette.DIM.darkened(0.25), CARD_WIDTH))
 	return panel
 
 
@@ -134,23 +128,6 @@ func _open(scene: String) -> void:
 	var err := get_tree().change_scene_to_file(scene)
 	if err != OK:
 		push_error("场景切换失败：" + scene)
-
-
-func _label(text: String, font_size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
-	return l
-
-
-## 会折行的说明文字。**必须给最小宽度** —— 否则容器按「最长不可断片段」
-## 算最小宽度，中文没有词边界，那个值就是一个字。
-func _wrapped(text: String, font_size: int, color: Color) -> Label:
-	var l := _label(text, font_size, color)
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size.x = CARD_WIDTH
-	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return l
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
