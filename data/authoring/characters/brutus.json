@@ -4,10 +4,12 @@
   "display_names": {
     "en": "Brutus"
   },
-  "description": "擅长生存的奴隶探索者。两个皮革包。血量、体力、耐力都更高。",
+  "description": "擅长生存的奴隶探索者。生命 {max_hp}、体力 {vitality_max}，扛得住、缓得过来，只是没有逃跑和爆发的手段。",
   "base_stats": {
-    "max_hp": 60
+    "max_hp": 60,
+    "max_stamina": 60
   },
+  "vitality_max": 6,
   "starting_bags": [
     "bag_leather",
     "bag_leather"
@@ -16,23 +18,69 @@
   "skills": [
     {
       "type": "passive",
-      "id": "hardy",
-      "display_name": "坚韧",
-      "description": "常驻：生命、体力、耐力更高。",
+      "id": "wild_born",
+      "display_name": "野地里长大",
+      "description": "休息时多回 {rest_bonus_amount} 点体力；侵蚀扣体力时少扣 {erosion_resist_amount} 点。",
       "passive": [
         {
-          "type": "stat_bonus",
-          "amount": 20.0
+          "type": "rest_bonus"
         },
         {
-          "type": "stat_bonus",
-          "stat": "max_stamina",
-          "amount": 15.0
-        },
-        {
-          "type": "vitality_max_bonus"
+          "type": "erosion_resist"
         }
-      ]
+      ],
+      "slot": "identity"
+    },
+    {
+      "type": "passive",
+      "id": "hardy",
+      "display_name": "坚韧",
+      "description": "战斗里生命掉到三成以下时，立刻得到一层护盾（每场一次）。",
+      "rules": [
+        {
+          "trigger": {
+            "type": "on_resource_below"
+          },
+          "cadence": {
+            "type": "always"
+          },
+          "costs": [
+            {
+              "type": "uses"
+            }
+          ],
+          "effects": [
+            {
+              "type": "apply_status",
+              "target": "SELF",
+              "buff": {
+                "id": "hardy_guard",
+                "display_name": "坚韧",
+                "display_names": {
+                  "en": "Hardy"
+                },
+                "mods": [
+                  {
+                    "stat": "max_shield",
+                    "amount": 15.0
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "slot": "talent"
+    },
+    {
+      "type": "second_wind",
+      "id": "second_wind",
+      "display_name": "咬牙",
+      "description": "在地图上咬咬牙，恢复 {amount} 点体力。",
+      "slot": "active",
+      "uses": 2,
+      "cooldown_steps": 6
     }
-  ]
+  ],
+  "identity": "slave"
 }

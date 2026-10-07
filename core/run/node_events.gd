@@ -102,6 +102,8 @@ var pause_before_battle: bool = false
 var pending_battle: Dictionary = {}
 ## 084：开打前先停下来了：战前准备屏画它（敌人的棋盘从 content 重建，[method EnemyKit.board_of]）
 signal battle_pending(node: MapNode, type: StringName, content: Dictionary)
+## 136：等着开打的那一场被「脱身」跳过了（点用过、没打）
+signal battle_skipped(node: MapNode)
 
 var current_search: SearchSession = null
 var current_shop: ShopSession = null
@@ -159,7 +161,7 @@ func _proceed(node: MapNode, type: StringName) -> void:
 			_open_search(node)
 		&"rest":
 			last_handled_id = node.id
-			var got := vitality.restore(rules.rest_restore, &"rest") if vitality != null and rules != null else 0
+			var got := vitality.restore(rules.rest_restore + _run_ctx().rest_bonus, &"rest") if vitality != null and rules != null else 0     # 136：野地里长大
 			node.content["used_rest"] = true
 			rested.emit(node, got)
 			settle_rest(node)
@@ -525,13 +527,38 @@ func smite_pending_battle() -> bool:
 		if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
 	_bless_rolled(node, rolled)
 	loot_ready.emit(node, DropResolver.corpse_of(content, rolled, items))
-	if wallet != null and economy != null:
-		var amount := economy.battle_reward(int(content.get("strength", 0)), float(_depths.get(node.id, 0.0)), difficulty)
-		wallet.earn(amount, &"battle")
-		rewarded.emit(node, amount)
+	_pay_battle_reward(node, content)
 	if type == &"core":
 		boss_defeated.emit(node)
 	_after_battle(node, kind, true)
+	return true
+
+
+## 打赢的钱：经济规则算基数，136 的军功（RunContext.battle_reward_mult）乘在上面、四舍五入
+func _pay_battle_reward(node: MapNode, content: Dictionary) -> void:
+	if wallet == null or economy == null:
+		return
+	var amount := economy.battle_reward(int(content.get("strength", 0)), float(_depths.get(node.id, 0.0)), difficulty)
+	amount = int(roundf(float(amount) * _run_ctx().battle_reward_mult))
+	wallet.earn(amount, &"battle")
+	rewarded.emit(node, amount)
+
+
+## 136（脱身）：等着开打的这一场不打 —— 点算用过、没有战利品、不扣体力。搜索遭遇按打输收会话（收获照样交出去），但不弹「被赶跑」。
+## 核心点不该走到这里（[SlipSkill] 先拦）。没有等着的一场返回 false
+func skip_pending_battle() -> bool:
+	var node := pending_battle_node()
+	if node == null:
+		return false
+	var kind := String(pending_battle.get("kind", "node"))
+	pending_battle = {}
+	if kind == "search" and current_search != null:
+		var session := current_search
+		searches_closed += session.searches_done
+		current_search = null
+		search_closed.emit(node, session.haul(), &"slipped")
+	_visited(node)
+	battle_skipped.emit(node)
 	return true
 
 
@@ -608,10 +635,7 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 			if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
 		_bless_rolled(node, rolled)
 		loot_ready.emit(node, DropResolver.corpse_of(content, rolled, items))
-		if wallet != null and economy != null:
-			var amount := economy.battle_reward(int(content.get("strength", 0)), float(_depths.get(node.id, 0.0)), difficulty)
-			wallet.earn(amount, &"battle")
-			rewarded.emit(node, amount)
+		_pay_battle_reward(node, content)
 		if type == &"core":
 			boss_defeated.emit(node)
 	else:

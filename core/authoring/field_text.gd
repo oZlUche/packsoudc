@@ -83,6 +83,10 @@ const TYPE_LABELS := {
 	"vitality_max_bonus": "体力上限加成", "starting_funds_bonus": "开局钱加成", "extra_searches": "额外搜索次数", "shop_price_mult": "商店价格倍率",
 	"luck_bonus": "幸运加成", "scout_range": "侦察范围", "stealth": "潜行", "flee_bonus": "逃跑加成", "free_losses": "免扣体力次数", "stat_bonus": "属性加成", "carry_capacity_bonus": "负重上限加成",
 	"passive": "被动", "assault": "突击", "evade": "躲避",
+	# 136：角色的套装
+	"slip": "脱身", "second_wind": "咬牙", "travel_discount": "熟门熟路（免费步）", "rest_bonus": "休息多回体力", "erosion_resist": "侵蚀少扣体力",
+	"battle_reward_mult": "打赢的钱倍率", "every": "每几步", "factor": "倍数", "identity": "身份", "slot": "分组", "identity_is": "角色身份是",
+	"identities": "身份", "skill_ready": "技能能用", "skill": "技能",
 	"place_item": "置入道具", "battle": "打仗", "travel": "走路", "earn_money": "进账", "spend_money": "花钱", "explore": "搜索", "event_choice": "事件里选特定选项",
 	"has_buff_tag": "有带标记的增益", "has_map_buff": "有某地图增益", "can_afford": "钱够", "vitality_at_least": "体力至少", "steps_within": "步数在区间",
 	"bracket_within": "段位在区间", "erosion_depth_within": "侵蚀深度在区间", "has_item": "身上有道具", "node_type_is": "点的类型是", "has_flag": "有局外旗标",

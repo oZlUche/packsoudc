@@ -24,6 +24,11 @@ var free_losses: int = 0
 var stat_bonus: Dictionary = {}
 ## 129：负重上限加多少（科技「扛重」）
 var carry_capacity_bonus: int = 0
+## 136 角色：每走几步下一步不花行动点（0 = 没有；[MapTravel] 读）；休息区多回几点体力；侵蚀扣体力时少扣几点；打赢节点敌人的钱乘几
+var free_step_every: int = 0
+var rest_bonus: int = 0
+var erosion_resist: int = 0
+var battle_reward_mult: float = 1.0
 
 
 func snapshot() -> Dictionary:
@@ -39,4 +44,8 @@ func snapshot() -> Dictionary:
 		"free_losses": free_losses,
 		"stat_bonus": stat_bonus.duplicate(),
 		"carry_capacity_bonus": carry_capacity_bonus,
+		"free_step_every": free_step_every,
+		"rest_bonus": rest_bonus,
+		"erosion_resist": erosion_resist,
+		"battle_reward_mult": battle_reward_mult,
 	}

@@ -106,7 +106,7 @@ static func run_pipeline(t: TestCase) -> void:
 
 
 static func run_authored_characters(t: TestCase) -> void:
-	t.begin("技能 · 作者定的三个角色：安德烈乌斯（躲避、免罚一败）、布鲁图斯（坚韧：生命 / 耐力 / 体力更高）、马库斯（突击）；被动进上下文、基线加成盖到基线上")
+	t.begin("技能 · 作者定的三个角色（136 改过）：安德烈乌斯（脱身、免罚一败）、布鲁图斯（咬牙；数值在基线里，不再做成被动）、马库斯（突击）；被动进上下文、基线加成盖到基线上")
 	var c := _content()
 	for id in [&"andreus", &"brutus", &"marcus"]:
 		t.not_null(_character(c, id), "有角色 %s" % id)
@@ -115,12 +115,12 @@ static func run_authored_characters(t: TestCase) -> void:
 	var marcus := _character(c, &"marcus")
 	if brutus == null or andreus == null or marcus == null:
 		return
-	t.check(andreus.active_skills().size() >= 1 and andreus.active_skills()[0] is EvadeSkill, "安德烈乌斯有躲避")
+	t.check(andreus.active_skills().size() >= 1 and andreus.active_skills()[0] is SlipSkill, "安德烈乌斯有脱身（136：替换了躲避）")
 	t.check(_expected(andreus).free_losses >= 1, "安德烈乌斯免罚至少一败")
 	t.check(marcus.active_skills().size() >= 1 and marcus.active_skills()[0] is AssaultSkill, "马库斯有突击")
-	t.check(brutus.active_skills().is_empty() and not brutus.skills.is_empty(), "布鲁图斯只有被动")
+	t.check(brutus.active_skills().size() == 1 and brutus.active_skills()[0] is SecondWindSkill, "布鲁图斯有咬牙（136）")
 	var want := _expected(brutus)
-	t.check(float(want.stat_bonus.get(&"max_hp", 0.0)) > 0.0 and want.vitality_max_bonus > 0, "坚韧：生命与体力都有加成")
+	t.check(want.stat_bonus.is_empty() and want.vitality_max_bonus == 0, "136：布鲁图斯的被动里不再有生命 / 耐力 / 体力加成（都在基线里）")
 	for raw in [andreus, brutus, marcus]:
 		var ch := raw as CharacterDef
 		var s := _start(c, ch)
@@ -211,10 +211,24 @@ static func run_assault_and_free_loss(t: TestCase) -> void:
 	t.eq(s2.vitality.current, v0 - cost, "配额用完：照扣 %d" % cost)
 
 
+## 136：躲避不再挂在安德烈乌斯身上 —— 测构件用一个只带躲避的副本
+static func _evader(base: CharacterDef) -> CharacterDef:
+	if base == null:
+		return null
+	var ch := base.duplicate(true) as CharacterDef
+	var ev := EvadeSkill.new()
+	ev.id = &"evade"
+	ev.display_name = "躲避"
+	ev.uses = 2
+	ev.cooldown_steps = 4
+	ch.skills = [ev] as Array[RunSkill]
+	return ch
+
+
 static func run_evade(t: TestCase) -> void:
-	t.begin("技能 · 躲避：用了之后猎手够不着，走够步数才又够得着")
+	t.begin("技能 · 躲避（构件，136 起没有角色带它）：用了之后猎手够不着，走够步数才又够得着")
 	var c := _content()
-	var andreus := _character(c, &"andreus")
+	var andreus := _evader(_character(c, &"andreus"))
 	var hid: Array = c.hunter_defs.keys()
 	hid.sort()
 	if andreus == null or hid.is_empty():

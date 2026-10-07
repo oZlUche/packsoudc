@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Marcus"
   },
-  "description": "擅长战斗的军团士兵。一个皮革包、一个小包，生命 {max_hp}，耐力更高。「突击」：下次进入战斗先扣对方三成血。",
+  "description": "擅长战斗的军团士兵。一个皮革包、一个小包，格子最少，生命 {max_hp}、耐力 {max_stamina}：打得狠、打得久、打赢了得的多。",
   "base_stats": {
     "max_hp": 55,
     "max_stamina": 65
@@ -16,12 +16,40 @@
   "weight_capacity": 34,
   "skills": [
     {
+      "type": "passive",
+      "id": "merit",
+      "display_name": "军功",
+      "description": "收获换军功：打赢的钱多四分之一。",
+      "passive": [
+        {
+          "type": "battle_reward_mult"
+        }
+      ],
+      "slot": "identity"
+    },
+    {
+      "type": "passive",
+      "id": "drill",
+      "display_name": "操练",
+      "description": "耐力每秒多回 {stat_bonus_amount} 点。",
+      "passive": [
+        {
+          "type": "stat_bonus",
+          "stat": "regen_stamina",
+          "amount": 1.0
+        }
+      ],
+      "slot": "talent"
+    },
+    {
       "type": "assault",
       "id": "assault",
       "display_name": "突击",
       "description": "下次进入战斗，先扣掉对方三成生命。",
+      "slot": "active",
       "uses": 3,
       "cooldown_steps": 3
     }
-  ]
+  ],
+  "identity": "legion"
 }

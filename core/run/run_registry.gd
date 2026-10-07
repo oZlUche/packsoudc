@@ -25,6 +25,11 @@ const RUN_EFFECTS := {
 	&"free_losses": "res://core/run/effects/free_losses.gd",
 	&"stat_bonus": "res://core/run/effects/stat_bonus.gd",
 	&"carry_capacity_bonus": "res://core/run/effects/carry_capacity_bonus.gd",     # 129
+	# 136：角色的机制类被动
+	&"travel_discount": "res://core/run/effects/travel_discount.gd",
+	&"rest_bonus": "res://core/run/effects/rest_bonus.gd",
+	&"erosion_resist": "res://core/run/effects/erosion_resist.gd",
+	&"battle_reward_mult": "res://core/run/effects/battle_reward_mult.gd",
 }
 
 ## 一局的机制（069）：难度清单里开的那些
@@ -54,6 +59,8 @@ const EVENT_CONDITIONS := {
 	&"has_flag": "res://core/run/events/conditions/has_flag.gd",
 	&"faith_active": "res://core/run/events/conditions/faith_active.gd",
 	&"rest_part_unused": "res://core/run/events/conditions/rest_part_unused.gd",
+	&"identity_is": "res://core/run/events/conditions/identity_is.gd",     # 136
+	&"skill_ready": "res://core/run/events/conditions/skill_ready.gd",     # 136
 }
 
 const EVENT_OUTCOMES := {
@@ -88,6 +95,8 @@ const RUN_SKILLS := {
 	&"passive": "res://core/run/skills/passive_skill.gd",
 	&"assault": "res://core/run/skills/assault_skill.gd",
 	&"evade": "res://core/run/skills/evade_skill.gd",
+	&"slip": "res://core/run/skills/slip_skill.gd",     # 136
+	&"second_wind": "res://core/run/skills/second_wind_skill.gd",     # 136
 }
 
 ## 信力（082）：信仰指定的行为

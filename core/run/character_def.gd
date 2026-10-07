@@ -30,6 +30,8 @@ extends Resource
 @export var carry_rarity_cap: int = -1
 ## 局内技能（082，作者定）：[RunSkill] 构件 —— 被动常驻（一局规则 / 掉落的效果，开局编进 RunContext）+ 可选的主动一击（地图屏上用，次数与冷却由 [RunSkills] 记账）
 @export var skills: Array[RunSkill] = []
+## 136：身份（worldview 第三节「身份 = 立场与开局」）：slave / legion。事件条件 [IdentityIs] 按它分支；空 = 不分
+@export var identity: StringName = &""
 
 
 ## 这个角色的战斗基线：默认值盖上覆盖项。编译器与战斗不认识角色，只认基线（4.2）
@@ -57,6 +59,15 @@ func loot_effects() -> Array[LootEffect]:
 	return out
 
 
+## 136：全部技能的战斗规则（编译玩家时挂到单位上）
+func combat_rules() -> Array[AbilityRule]:
+	var out: Array[AbilityRule] = []
+	for s in skills:
+		if s != null:
+			out.append_array((s as RunSkill).rules)
+	return out
+
+
 ## 有主动一击的技能
 func active_skills() -> Array[RunSkill]:
 	var out: Array[RunSkill] = []
@@ -73,6 +84,36 @@ func skills_summary() -> String:
 		if s != null:
 			parts.append((s as RunSkill).summary())
 	return "　".join(parts)
+
+
+## 136：开局屏的分组行：按槽（身份 / 擅长 / 主动）各一行「身份：名字　说明」；没写槽的技能排在最后、不带前缀
+const SLOT_NAMES := {&"identity": "身份", &"talent": "擅长", &"active": "主动"}
+
+func skill_lines() -> Array[String]:
+	var out: Array[String] = []
+	var loose: Array[String] = []
+	for slot in SLOT_NAMES:
+		for s in skills:
+			var sk := s as RunSkill
+			if sk != null and sk.slot == slot:
+				out.append("%s：%s" % [SLOT_NAMES[slot], _skill_line(sk)])
+	for s in skills:
+		var sk := s as RunSkill
+		if sk != null and not SLOT_NAMES.has(sk.slot):
+			loose.append(_skill_line(sk))
+	out.append_array(loose)
+	return out
+
+
+static func _skill_line(sk: RunSkill) -> String:
+	var text := Names.description_of(sk) if sk.description != "" else sk.summary()
+	var bits: Array[String] = []
+	if sk.is_active():
+		if sk.uses >= 0:
+			bits.append("%d 次" % sk.uses)
+		if sk.cooldown_steps > 0:
+			bits.append("冷却 %d 步" % sk.cooldown_steps)
+	return "%s　%s%s" % [sk.display_name, text, ("（" + "，".join(bits) + "）") if not bits.is_empty() else ""]
 
 
 ## 带入的东西合不合上限。[param defs] 是要带的（非包）道具定义；返回不合的原因，空串 = 合

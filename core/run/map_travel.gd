@@ -41,6 +41,12 @@ var held: Dictionary = {}
 
 ## 129：走一步（含传送）花的行动点乘几 —— 负重第三级是 2。原地等待不乘。[RunState] 按负重级数写
 var action_cost_mult: int = 1
+## 136（熟门熟路）：每走几步下一步不花行动点（0 = 没有）。[RunState] 按 RunContext.free_step_every 写
+var free_step_every: int = 0
+## 136：上一次免费之后付过行动点的步数（走一步 / 传送都算；原地等待不算）。跟着存档
+var paid_steps: int = 0
+## 136：最近一次移动真正花了几点（日志读；不存档）
+var last_cost: int = 0
 
 var current_id: int = -1
 ## 走过的路：每次移动的目的地，按顺序。存档与回放用
@@ -92,8 +98,11 @@ func apply(intent: MoveIntent) -> bool:
 	var dest := graph.get_node(intent.to_id)
 	var first_visit := dest.state == MapNode.State.UNVISITED
 
-	# 2. 行动点（129：负重的倍数乘在这里，预览读同一个 cost_of）
-	clock.spend(cost_of(intent), intent.kind)
+	# 2. 行动点（129：负重的倍数乘在这里，预览读同一个 cost_of；136：熟门熟路的免费步也在 cost_of 里）
+	var free := next_step_free()
+	last_cost = cost_of(intent)
+	clock.spend(last_cost, intent.kind)
+	paid_steps = 0 if free else paid_steps + 1
 
 	# 3. 侵蚀推进 —— 必须在惩罚结算之前
 	if erosion != null and erosion.has_method("on_action"):
@@ -159,7 +168,14 @@ func cancel_arrival() -> bool:
 
 ## 129：这一步真正花几点（边上写的 × 负重倍数）。地图屏的预览与日志读它
 func cost_of(intent: MoveIntent) -> int:
+	if next_step_free():
+		return 0
 	return (intent.action_cost if intent != null else 0) * maxi(1, action_cost_mult)
+
+
+## 136：下一步是不是免费的（熟门熟路：付过 free_step_every 步之后的那一步）
+func next_step_free() -> bool:
+	return free_step_every > 0 and paid_steps >= free_step_every
 
 
 ## 节点事件结束后由事件系统调：这个点用过了，以后只能穿行。
@@ -216,6 +232,8 @@ func _settle_penalty(node: MapNode) -> void:
 #region 存档
 func to_dict() -> Dictionary:
 	var out := {"current": current_id, "history": history.duplicate(), "clock": clock.to_dict()}
+	if paid_steps > 0:
+		out["paid_steps"] = paid_steps     # 136
 	if not held.is_empty():
 		out["held"] = {"intent": (held["intent"] as MoveIntent).to_dict(), "first": bool(held["first"])}     # 134
 	return out
@@ -226,6 +244,7 @@ static func from_dict(d: Dictionary, p_graph: MapGraph) -> MapTravel:
 	var t := MapTravel.new(p_graph, ActionClock.from_dict(d.get("clock", {})), int(d.get("current", -1)))
 	for v in d.get("history", []):
 		t.history.append(int(v))
+	t.paid_steps = int(d.get("paid_steps", 0))
 	var h = d.get("held", {})
 	if h is Dictionary and not (h as Dictionary).is_empty():
 		t.held = {"intent": MoveIntent.from_dict(h.get("intent", {})), "first": bool(h.get("first", false))}

@@ -14,6 +14,7 @@ var _enemy_view: InventoryView
 var _enemy_line: Label
 var _start_btn: Button
 var _why: Label
+var _slip_btn: Button = null
 var _inv: Control
 
 
@@ -65,6 +66,12 @@ func open(payload: Dictionary) -> void:
 			var pb := _button(text, func(): flow.smite(), 14)
 			pb.tooltip_text = perk.describe()
 			buttons.add_child(pb)
+	# 136：脱身（安德烈乌斯）：这一场不打
+	var slip := flow.slip_skill()
+	if slip != null:
+		_slip_btn = _button("", func(): slip_battle(), 14)
+		_slip_btn.tooltip_text = slip.describe()
+		buttons.add_child(_slip_btn)
 	_why = _label("", 13, UiPalette.STAMINA)
 	buttons.add_child(_why)
 	col.add_child(buttons)
@@ -90,6 +97,23 @@ func can_start() -> String:
 	return ""
 
 
+## 136：按「溜走」。返回空串 = 溜了
+func slip_battle() -> String:
+	var why := slip_reason()
+	if why != "":
+		return why
+	return flow.slip_battle()
+
+
+## 136：现在能不能溜：空串 = 能
+func slip_reason() -> String:
+	var slip := flow.slip_skill()
+	if slip == null:
+		return "没有能溜走的技能"
+	var why := SlipSkill.blocked_reason(flow.run)
+	return why if why != "" else flow.run.skills.can_use(slip.id)
+
+
 func enemy_view() -> InventoryView:
 	return _enemy_view
 #endregion
@@ -106,6 +130,12 @@ func _refresh() -> void:
 	var why := can_start()
 	_start_btn.disabled = why != ""
 	_why.text = why
+	if _slip_btn != null:
+		var slip := flow.slip_skill()
+		var left := flow.run.skills.uses_of(slip.id)
+		var sw := slip_reason()
+		_slip_btn.text = "%s（%s）" % ["溜走" if sw == "" else ("溜走：" + sw), "不限次" if left < 0 else "剩 %d 次" % left]
+		_slip_btn.disabled = sw != ""
 
 
 func _enemy_name() -> String:
