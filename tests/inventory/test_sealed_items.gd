@@ -13,7 +13,8 @@ static func _db() -> ItemDatabase:
 static func run_sealed_listing(t: TestCase) -> void:
 	t.begin("封存 · 数据保留、按 id 取得到；ids() 不含封存的、all_ids() 含；候选清单（搜索 / 商店 / 敌人 / 珍宝）一个封存的都没有")
 	var db := _db()
-	var sealed: Array = db.sealed_ids()
+	var sealed: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_sealed())
+	var blessed: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_blessed())
 	t.check(sealed.size() >= 10, "封存了 %d 件现代道具" % sealed.size())
 	for id in [&"pistol", &"rifle", &"sniper", &"mag", &"battery", &"drone", &"armor", &"core", &"stim", &"medkit", &"crowbar"]:
 		t.check(sealed.has(id), "%s 封存了" % id)
@@ -23,7 +24,7 @@ static func run_sealed_listing(t: TestCase) -> void:
 		t.check(db.all_ids().has(id), "%s 在 all_ids() 里" % id)
 	for id in [&"knife", &"ration", &"cleaver", &"belt_potion", &"bag_leather"]:
 		t.check(db.ids().has(id) and not db.get_def(id).is_sealed(), "%s 留着" % id)
-	t.eq(db.ids().size() + sealed.size() + db.keepsake_ids().size() + db.blessed_ids().size(), db.all_ids().size(), "能用的 + 封存的 + 特殊道具 + 赐福版 = 全部（088 / 095）")
+	t.eq(db.ids().size() + sealed.size() + db.keepsake_ids().size() + blessed.size(), db.all_ids().size(), "能用的 + 封存的 + 特殊道具 + 赐福版 = 全部（088 / 095）")
 	t.eq(db.size(), db.all_ids().size(), "size() 数的是全部")
 
 	var rules: NodeRules = load(ContentPaths.asset_file("node_rules", "standard"))
@@ -63,7 +64,7 @@ static func run_content(t: TestCase) -> void:
 			t.check(not db.get_def(id).is_sealed(), "角色 %s 的初始包 %s 没封存" % [(c as CharacterDef).id, id])
 	var enemies := EnemyDatabase.new()
 	enemies.load_all()
-	for eid in enemies.enemy_ids():
+	for eid in TestSupport.enemy_ids():
 		for id in enemies.enemy(eid).signature:
 			t.check(db.get_def(id) != null and not db.get_def(id).is_sealed(), "敌人 %s 的招牌 %s 没封存" % [eid, id])
 	# 导入器拦

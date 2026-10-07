@@ -231,6 +231,12 @@ static func run_adjacency_receive(t: TestCase) -> void:
 			"%s 的受益格 %s：邻居站上去自己的属性没有任何变化" % [item.id, cell])
 
 
+## 掉落上下文里战利品效果会改到的量（140 删了 LootContext.snapshot，这里自己列）
+static func _loot_state(ctx: LootContext) -> Dictionary:
+	return {"rolls": ctx.rolls, "rarity_bias": ctx.rarity_bias.duplicate(), "category_bias": ctx.category_bias.duplicate(),
+		"drop_owned_chance": ctx.drop_owned_chance}
+
+
 static func run_loot_effects(t: TestCase) -> void:
 	t.begin("道具契约 · 战利品效果真的改到上下文")
 
@@ -244,10 +250,10 @@ static func run_loot_effects(t: TestCase) -> void:
 			continue
 
 		var ctx := LootContext.new()
-		var before := ctx.snapshot()
+		var before := _loot_state(ctx)
 		for e in loot:
 			(e as LootEffect).modify(ctx)
-		t.check(ctx.snapshot() != before,
+		t.check(_loot_state(ctx) != before,
 			"%s 配了 %d 条战利品效果，却一条都没改到掉落上下文" % [item.id, loot.size()])
 
 

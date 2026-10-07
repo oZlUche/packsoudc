@@ -2721,15 +2721,14 @@ class_name DropRule extends Resource
 ```
 
 **每件各掷一次**（`DropResolver.owned_chance`）：`base_chance[稀有度] + difficulty × difficulty_bonus + luck × luck_bonus
-+ drop_owned_chance（道具 / 套装的战利品效果）+ Σ 来源`，夹进 0～1。修正全是加法、同一个单位，调一个数看得清另一个。
++ drop_owned_chance（道具 / 套装的战利品效果）`，夹进 0～1。修正全是加法、同一个单位，调一个数看得清另一个。
 
 **珍宝**：`rolls` 次尝试，每次按 `treasure_chance` 掷；中了按权重（+ `rarity_bias`）抽稀有度，在「带珍宝标签、这个稀有度、
 敌人**没有**」的道具里抽一件（`category_bias` 加权）。哪一档都没有（珍宝还没定义）就记一笔，不掉、不报错。
 
-**修正的来源**是接口不是字段（`DropBonusSource`：`owned_bonus(ctx, def)` / `treasure_bonus(ctx)`），
-`LootContext.sources` 装它们。**062 之后局外 / 地图 buff 不走这条缝**：buff 的 `LootEffect` 直接施加到掉落上下文上、幸运从 buff 的 `RunEffect` 来（`RunState._loot_context`，
-道具与套装的战利品效果也在那里施加）。`MetaDropBonus`（局外）与 `MapDropBonus`（地图）是两个占位实现，只剩沙盒的预览还用，待清理；现在都加 0，
-`DropResolver` 现在就调它们 —— 接上的那天规则与测试一行不改。难度与幸运是 `LootContext` 自带的两个数，谁填是 run 层的事。
+**局外 / 地图 buff 不另开接缝**（062 起）：buff 的 `LootEffect` 直接施加到掉落上下文上、幸运从 buff 的 `RunEffect` 来（`RunState._loot_context`，
+道具与套装的战利品效果也在那里施加）。原来留的 `DropBonusSource` 接口与两个恒加 0 的占位实现已清理（140）。
+难度与幸运是 `LootContext` 自带的两个数，谁填是 run 层的事。
 
 M2 定下的四个量各有归宿：`rolls` = 珍宝尝试次数，`rarity_bias` = 珍宝稀有度权重偏移，`category_bias` = 珍宝候选加权，
 `drop_owned_chance` = 自身道具概率加成。
@@ -3597,7 +3596,7 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 ```
 
 代码侧对应 `ItemShape.from_bits()` 与 `to_bits()`，两边同一种记法，
-导入器不需要做任何转换。旧的 `#` 写法 `from_ascii()` 仍然接受，但新内容一律用 0/1。
+导入器不需要做任何转换。`from_ascii()` 收的是同一种写法按行拆开的数组（140 删了旧的 `#` 写法，测试也一律用 0/1）。
 
 ### 10.3 校验必须比引擎严格
 

@@ -13,7 +13,7 @@ extends Resource
 ## 棋盘尺寸。放不下的道具会被跳过，所以棋盘该比件数宽裕
 @export var board: Vector2i = Vector2i(4, 3)
 
-## 基线倍率：属性键 → 倍数。例：{"max_hp": 1.5}
+## 基线倍率：属性键 → 倍数。例：{"max_hp": 1.5}（[method EnemyKit.baseline_of] 乘上去）
 @export var stat_scale: Dictionary = {}
 
 ## 这一档背的包（道具 id，084 作者：敌人和玩家一样，所有道具都依托背包）。先摆包，道具只能摆进包里；
@@ -23,7 +23,3 @@ extends Resource
 ## 这一档背的道具稀有度上限，-1 不限；与组装规则的上限取小。
 ## 外环的小兵不该背传说品 —— 这是掉落的来源（5.10），也是低档棋盘小、别让 3×3 的重甲把它塞满的原因
 @export var rarity_cap: int = -1
-
-
-func scaled(key: StringName, value: float) -> float:
-	return value * float(stat_scale.get(String(key), 1.0))

@@ -14,12 +14,12 @@ static func run(t: TestCase) -> void:
 
 	ItemInstance.reset_uid_counter()
 
-	var bar := _make_def("bar", ["#", "#", "#"])
-	var wide := _make_def("wide", ["##"])
+	var bar := _make_def("bar", ["1", "1", "1"])
+	var wide := _make_def("wide", ["11"])
 
 	# --- 定义校验 ---
 	t.check(bar.is_valid(), "完整定义应合法")
-	var no_id := _make_def("", ["#"])
+	var no_id := _make_def("", ["1"])
 	t.check(not no_id.is_valid(), "缺 id 的定义非法")
 	var no_shape := ItemDef.new()
 	no_shape.id = &"x"

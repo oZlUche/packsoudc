@@ -692,7 +692,7 @@ func _refresh() -> void:
 		var taken := carried()
 		for inst in taken:
 			value += ItemValue.of(inst.def)
-			cells += inst.def.shape.cell_count() if inst.def.shape != null else 0
+			cells += inst.def.cell_count()
 			_readout.append_text("　" + _item_line(inst.def) + "\n")
 		if taken.is_empty():
 			_readout.append_text("[color=#8b93a1]什么都还没带[/color]\n")

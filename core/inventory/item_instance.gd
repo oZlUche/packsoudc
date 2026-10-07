@@ -52,10 +52,6 @@ static func reserve_uid_above(value: int) -> void:
 	_next_uid = maxi(_next_uid, value + 1)
 
 
-static func peek_next_uid() -> int:
-	return _next_uid
-
-
 ## 当前旋转下的占格集合。返回的数组是 ItemShape 的内部缓存，不得修改。
 func cells() -> Array[Vector2i]:
 	if def == null:

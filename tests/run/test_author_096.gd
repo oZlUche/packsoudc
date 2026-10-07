@@ -14,7 +14,7 @@ static func run_tag_data(t: TestCase) -> void:
 	t.begin("096 · 标签是内容：data/tags 装回 TagRegistry；名字 / 说明按语言；没登记的原词；faith:<id> 写成「信仰：神名」；标签词条")
 	TagRegistry.reset()
 	t.check(TagRegistry.ids().size() >= 39, "装回了 %d 个标签" % TagRegistry.ids().size())
-	t.check(TagRegistry.has(&"weapon") and TagRegistry.has(&"metal") and TagRegistry.has(&"rapid"), "武器 / 金属 / 快攻都登记了")
+	t.check(TagRegistry.get_def(&"weapon") != null and TagRegistry.get_def(&"metal") != null and TagRegistry.get_def(&"rapid") != null, "武器 / 金属 / 快攻都登记了")
 	t.eq(TagRegistry.name_of(&"weapon"), "武器", "中文名")
 	t.eq(TagRegistry.name_of(&"weapon", "en"), "Weapon", "英文名")
 	t.check(TagRegistry.describe(&"weapon") != "" and TagRegistry.describe(&"weapon", "en") != TagRegistry.describe(&"weapon"), "两种语言的说明")

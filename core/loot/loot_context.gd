@@ -1,7 +1,7 @@
 ## 战利品掉落计算的上下文（架构文档 6.1）。[LootEffect] 通过它施加影响，[DropResolver] 读它掷骰。
 ##
 ## 四个来自道具 / 套装效果树的量（rolls、rarity_bias、category_bias、drop_owned_chance）是 M2 就定下的接口；
-## M4-2 加了作者要的修正来源：难度、幸运值，以及局外 buff / 地图 buff 的接缝（[member sources]）。
+## M4-2 加了作者要的修正来源：难度、幸运值（局外 / 地图 buff 不另开接缝：它们的 [LootEffect] 直接施加在这里，140 删了恒加 0 的占位来源）。
 ## 各量在掉落里的用处见 [DropResolver] 的类注释。
 class_name LootContext
 extends RefCounted
@@ -27,8 +27,6 @@ var luck: int = 0
 ## 掉落率的倍数（猎手：作者说掉落率更高）。乘在自身携带与珍宝的概率上
 var drop_mult: float = 1.0
 
-## 其他修正来源：局外 buff、地图 buff —— 都是 [DropBonusSource]，现在是占位实现
-var sources: Array[DropBonusSource] = []
 ## 093（日神 4 级）：必掉额外一件这个稀有度的（-1 = 没有）；从道具库里挑，不必是身上有的
 var extra_drop_rarity: int = -1
 
@@ -48,20 +46,3 @@ func add_category_bias(tag: StringName, amount: int) -> void:
 func add_drop_owned_chance(amount: int) -> void:
 	drop_owned_chance = clampi(drop_owned_chance + amount, 0, StatMath.ONE)
 
-
-func add_source(source: DropBonusSource) -> void:
-	if source != null:
-		sources.append(source)
-
-
-func snapshot() -> Dictionary:
-	return {
-		"rolls": rolls,
-		"rarity_bias": rarity_bias.duplicate(),
-		"category_bias": category_bias.duplicate(),
-		"drop_owned_chance": drop_owned_chance,
-		"difficulty": difficulty,
-		"luck": luck,
-		"drop_mult": drop_mult,
-		"sources": sources.size(),
-	}

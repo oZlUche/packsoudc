@@ -113,6 +113,11 @@ func usable_cell_count() -> int:
 
 func _idx(c: Vector2i) -> int:
 	return c.y * size.x + c.x
+
+
+## 这件定义在本容器里记在哪张占用表：作为包生效的记 [member _bag_owner]，其余记 [member _occ]（包装数组按引用传，改的就是原表）
+func _table_for(def: ItemDef) -> PackedInt32Array:
+	return _bag_owner if acts_as_bag(def) else _occ
 #endregion
 
 
@@ -149,17 +154,32 @@ func _bag_accepts(bag_def: ItemDef, def: ItemDef) -> bool:
 ## 后者可以顶替。两条路径必须共用同一套地形判断，否则会出现
 ## 「直接拖进去不行、顶着别人反而进得去」这种玩家看不懂的事。
 func _terrain_ok(cells: Array[Vector2i], origin: Vector2i) -> bool:
+	if not _cells_in_board(cells, origin):
+		return false
+	if requires_bag:
+		for c in cells:
+			if _bag_owner[_idx(origin + c)] == EMPTY_UID:
+				return false          # 未被任何包覆盖
+	return true
+
+
+## 这些格子都在盘内、都不是禁用格 —— 包与普通物品共用的那一半地形判断。空形状不算
+func _cells_in_board(cells: Array[Vector2i], origin: Vector2i) -> bool:
 	if cells.is_empty():
 		return false
 	for c in cells:
 		var p := origin + c
-		if not in_bounds(p):
+		if not in_bounds(p) or _blocked[_idx(p)] != 0:
 			return false
-		var i := _idx(p)
-		if _blocked[i] != 0:
+	return true
+
+
+## 这些格子上没有别的普通物品（[param ignore_uid] 自己不算）。先过地形再问，格子都在盘内
+func _cells_free(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int) -> bool:
+	for c in cells:
+		var occupant := _occ[_idx(origin + c)]
+		if occupant != EMPTY_UID and occupant != ignore_uid:
 			return false
-		if requires_bag and _bag_owner[i] == EMPTY_UID:
-			return false          # 未被任何包覆盖
 	return true
 
 
@@ -180,44 +200,28 @@ func _touched_bags_accept(cells: Array[Vector2i], origin: Vector2i, def: ItemDef
 	return true
 
 
-## 普通物品的落点判定。棋盘模式下要求每格都被**同一个包**覆盖。
+## 普通物品的落点判定：地形允许（棋盘模式下每格都被包覆盖），且没被别的物品占着。
 func can_place(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int = EMPTY_UID) -> bool:
-	if not _terrain_ok(cells, origin):
-		return false
-	for c in cells:
-		var occupant := _occ[_idx(origin + c)]
-		if occupant != EMPTY_UID and occupant != ignore_uid:
-			return false
-	return true
+	return _terrain_ok(cells, origin) and _cells_free(cells, origin, ignore_uid)
 
 
 ## 包体的落点判定。包之间不能重叠，但包本身不需要被覆盖。
 func can_place_bag(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int = EMPTY_UID) -> bool:
-	if cells.is_empty() or not requires_bag:
+	if not requires_bag or not _cells_in_board(cells, origin):
 		return false
 	for c in cells:
-		var p := origin + c
-		if not in_bounds(p):
-			return false
-		var i := _idx(p)
-		if _blocked[i] != 0:
-			return false
-		var owner := _bag_owner[i]
+		var owner := _bag_owner[_idx(origin + c)]
 		if owner != EMPTY_UID and owner != ignore_uid:
 			return false
 	return true
 
 
 ## 指定定义能否以该朝向落在 origin（含容器级与包体级标签校验）。
+## 普通物品 = [method terrain_allows] 再加「没被别的物品占着」—— 直接放与顶替（3.3.1）共用同一套地形判断
 func can_place_def(def: ItemDef, origin: Vector2i, rot: int, ignore_uid: int = EMPTY_UID) -> bool:
-	if def == null or not accepts(def):
-		return false
-	var cells := def.cells_rotated(rot)
 	if acts_as_bag(def):
-		return can_place_bag(cells, origin, ignore_uid)
-	if not can_place(cells, origin, ignore_uid):
-		return false
-	return _touched_bags_accept(cells, origin, def)
+		return accepts(def) and can_place_bag(def.cells_rotated(rot), origin, ignore_uid)
+	return terrain_allows(def, origin, rot) and _cells_free(def.cells_rotated(rot), origin, ignore_uid)
 
 
 func can_place_item(inst: ItemInstance, origin: Vector2i, rot: int) -> bool:
@@ -348,9 +352,8 @@ func place(inst: ItemInstance, origin: Vector2i, rot: int = 0) -> bool:
 		push_warning("GridInventory.place: uid %d 已在本容器中，应先 remove" % inst.uid)
 		return false
 
-	var cells := inst.def.cells_rotated(rot)
-	var table := _bag_owner if acts_as_bag(inst.def) else _occ
-	for c in cells:
+	var table := _table_for(inst.def)
+	for c in inst.def.cells_rotated(rot):
 		table[_idx(origin + c)] = inst.uid
 
 	# 从别的容器进来的才算「置入」（同容器内挪位置、原样放回都先把 container_id 设回本容器）
@@ -375,12 +378,11 @@ func remove(uid: int) -> ItemInstance:
 	var inst: ItemInstance = _items.get(uid, null)
 	if inst == null:
 		return null
-	var is_bag := acts_as_bag(inst.def)
-	if is_bag and not contents_of(uid).is_empty():
+	if acts_as_bag(inst.def) and not contents_of(uid).is_empty():
 		push_warning("GridInventory.remove: uid %d 是非空的包，请改用 detach_bag" % uid)
 		return null
 
-	var table := _bag_owner if is_bag else _occ
+	var table := _table_for(inst.def)
 	for c in inst.def.cells_rotated(inst.rotation):
 		var i := _idx(inst.origin + c)
 		if table[i] == uid:
@@ -542,7 +544,7 @@ static func to_local(bag: ItemInstance, inst: ItemInstance) -> Dictionary:
 	var local_cells: Array[Vector2i] = []
 	for c in inst.def.cells_rotated(inst.rotation):
 		local_cells.append(bag.def.shape.untransform_point(rel + c, bag.rotation))
-	return {"origin": _min_of(local_cells), "rot": local_rot}
+	return {"origin": ItemShape.min_of(local_cells), "rot": local_rot}
 
 
 ## 本地位置在「包摆在 origin、朝向 rot」时的全局位置。
@@ -552,25 +554,12 @@ static func to_global(bag: ItemInstance, local: Dictionary, inst: ItemInstance,
 	var cells: Array[Vector2i] = []
 	for c in inst.def.cells_rotated(int(local["rot"])):
 		cells.append(bag.def.shape.transform_point((local["origin"] as Vector2i) + c, rot))
-	return {"origin": origin + _min_of(cells), "rot": global_rot}
+	return {"origin": origin + ItemShape.min_of(cells), "rot": global_rot}
 
-
-static func _min_of(cs: Array[Vector2i]) -> Vector2i:
-	var m := cs[0]
-	for c in cs:
-		m.x = mini(m.x, c.x)
-		m.y = mini(m.y, c.y)
-	return m
 #endregion
 
 
 #region 放包
-## 非破坏性地检查载荷能否**一件不少**地落在 origin。
-func can_attach_bag(payload: Dictionary, origin: Vector2i, rot: int) -> bool:
-	var report := bag_fit_report(payload, origin, rot)
-	return report["ok"] and (report["fallen"] as Array).is_empty()
-
-
 ## 载荷落在 origin 时会发生什么：包本身放不放得下，以及**哪些东西会脱落**。不改任何状态。
 ##
 ## [codeblock]
@@ -689,7 +678,8 @@ func attach_bag_shedding(payload: Dictionary, origin: Vector2i, rot: int) -> Dic
 ##
 ## 这是「原样放回」用的严格版；玩家放手走的是 [method attach_bag_shedding]。
 func attach_bag(payload: Dictionary, origin: Vector2i, rot: int) -> bool:
-	if not can_attach_bag(payload, origin, rot):
+	var report := bag_fit_report(payload, origin, rot)
+	if not report["ok"] or not (report["fallen"] as Array).is_empty():
 		return false
 	return attach_bag_shedding(payload, origin, rot)["ok"]
 #endregion

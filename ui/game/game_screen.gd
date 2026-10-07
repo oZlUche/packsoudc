@@ -155,6 +155,6 @@ func _log_box(font_size: int = 12) -> RichTextLabel:
 func _item_line(def: ItemDef) -> String:
 	if def == null:
 		return "?"
-	var cells := def.shape.cell_count() if def.shape != null else 0
+	var cells := def.cell_count()
 	return "[color=#%s]%s[/color]  %d 格  %d 币" % [ItemPainter.rarity_color(def).to_html(false), def.display_name, cells, ItemValue.of(def)]
 #endregion

@@ -1,4 +1,4 @@
-## 掉落（M4-2，架构文档 6.1）：每件各掷、越稀有越难掉、难度 / 幸运 / 效果 / 占位来源各加各的、珍宝、尸体容器、走管线。
+## 掉落（M4-2，架构文档 6.1）：每件各掷、越稀有越难掉、难度 / 幸运 / 效果各加各的、珍宝、尸体容器、走管线。
 ##
 ## 期望全从规则的数据推：改 JSON 里的概率，这里跟着变。
 extends RefCounted
@@ -58,19 +58,8 @@ static func _content(ids: Array) -> Dictionary:
 	return {"enemy": "t", "strength": 0, "board": [6, 2], "items": items}
 
 
-## 一个会加成的来源：用来证明接缝真的被调了
-class TestBonus:
-	extends DropBonusSource
-	var owned := 0.1
-	var treasure := 0.2
-	func owned_bonus(_ctx: LootContext, _def: ItemDef) -> float:
-		return owned
-	func treasure_bonus(_ctx: LootContext) -> float:
-		return treasure
-
-
 static func run_chance(t: TestCase) -> void:
-	t.begin("掉落 · 每件的概率：基础按稀有度递减，难度 / 幸运 / 效果 / 来源各加各的")
+	t.begin("掉落 · 每件的概率：基础按稀有度递减，难度 / 幸运 / 效果各加各的")
 
 	var rule := _rule()
 	var db := _db()
@@ -101,15 +90,6 @@ static func run_chance(t: TestCase) -> void:
 	eff.percent = 15
 	eff.modify(ctx)
 	t.check(absf(DropResolver.owned_chance(rule, ctx, d2) - (rule.base_chance[2] + 0.15)) < 1e-6, "道具效果「敌人掉落自身道具 +15%」加进来")
-	ctx = LootContext.new()
-
-	var src := TestBonus.new()
-	ctx.add_source(src)
-	t.check(absf(DropResolver.owned_chance(rule, ctx, d2) - (rule.base_chance[2] + src.owned)) < 1e-9, "来源的 owned_bonus 加进来")
-	ctx.add_source(MetaDropBonus.new())
-	ctx.add_source(MapDropBonus.new())
-	t.check(absf(DropResolver.owned_chance(rule, ctx, d2) - (rule.base_chance[2] + src.owned)) < 1e-9, "局外 / 地图 buff 占位来源各加 0")
-	t.eq(DropResolver.treasure_chance(rule, ctx), clampf(rule.treasure_chance + src.treasure, 0.0, 1.0), "珍宝概率吃来源的 treasure_bonus，占位加 0")
 
 	ctx = LootContext.new()
 	ctx.luck = 100

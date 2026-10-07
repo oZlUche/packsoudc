@@ -211,7 +211,7 @@ static func run_drop_outside(t: TestCase) -> void:
 	var gun := ItemDef.new()
 	gun.id = &"t_gun"
 	gun.display_name = "gun"
-	gun.shape = ItemShape.from_ascii(["#"])
+	gun.shape = ItemShape.from_ascii(["1"])
 	var board := GridInventory.new(Vector2i(4, 4), 1)
 	var stash := ItemStash.new(2, 0)
 	var view := InventoryView.new()

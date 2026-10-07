@@ -91,7 +91,7 @@ static func run_activation(t: TestCase) -> void:
 	t.eq(FaithState.active_id(b), &"brute", "凡物（短剑）不改变激活")
 	t.check(not FaithState.is_dormant(sword.def, FaithState.active_tag(b)), "凡物不休眠")
 	# 同容器挪位置：不算重新置入
-	t.check(InventoryService.move_within(b, shield.uid, Vector2i(0, 3), 0), "把盾挪个位置")
+	t.check(InventoryService.move(b, shield.uid, b, Vector2i(0, 3), 0), "把盾挪个位置")
 	t.eq(FaithState.active_id(b), &"brute", "同容器挪位置不换信仰")
 	# 挪到地上再挪回：切换
 	var stash := ItemStash.new(2, 0)
@@ -205,7 +205,7 @@ static func run_run_and_save(t: TestCase) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	var checked := 0
-	for eid in enemies.enemy_ids():
+	for eid in TestSupport.enemy_ids():
 		var def := enemies.enemy(eid)
 		for round in 6:
 			var picks := EnemyPlacer.choose_items(def, rule, db, 6, rng, -1)

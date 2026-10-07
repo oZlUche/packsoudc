@@ -134,3 +134,8 @@ func cells_rotated(rot: int) -> Array[Vector2i]:
 	if shape == null:
 		return [] as Array[Vector2i]
 	return shape.cells_rotated(rot)
+
+
+## 占格数；形状为空算 0（那是非法定义，导入器拦着，库里没有）
+func cell_count() -> int:
+	return shape.cell_count() if shape != null else 0

@@ -227,7 +227,6 @@ static func run_id_aliases(t: TestCase) -> void:
 	def.display_name = "信仰：蛮神"
 	TagRegistry.register(def)
 	t.check(TagRegistry.get_def(&"faith:violence") == def, "老存档 / 老内容里的 faith:violence 查得回新标签")
-	t.check(TagRegistry.has(&"faith:violence"), "has() 也认")
 	TagRegistry.reset()
 
 	# 信力：旧池子并进新池子（两边都有就加起来）

@@ -37,9 +37,9 @@ static func run(t: TestCase) -> void:
 	t.begin("DragLayer")
 
 	ItemInstance.reset_uid_counter()
-	var bar := _def("bar", ["#", "#", "#"])
-	var big := _def("big", ["##", "##"])
-	var gun := _def("gun", ["#"], ["weapon"])
+	var bar := _def("bar", ["1", "1", "1"])
+	var big := _def("big", ["11", "11"])
+	var gun := _def("gun", ["1"], ["weapon"])
 
 	var src := GridInventory.new(Vector2i(4, 4), 1)
 	var dst := GridInventory.new(Vector2i(4, 4), 2)
@@ -208,8 +208,8 @@ static func run_bag_drag(t: TestCase) -> void:
 	t.begin("DragLayer · 拖包")
 
 	ItemInstance.reset_uid_counter()
-	var bag_def := _bag_def("bag6", ["##", "##", "##"])   # 2 宽 3 高
-	var dot := _def("dot", ["#"])
+	var bag_def := _bag_def("bag6", ["11", "11", "11"])   # 2 宽 3 高
+	var dot := _def("dot", ["1"])
 
 	var board_a := GridInventory.new(Vector2i(6, 6), 1, true)
 	var board_b := GridInventory.new(Vector2i(6, 6), 2, true)
@@ -289,7 +289,7 @@ static func run_bag_drag(t: TestCase) -> void:
 static func run_ghost_snap(t: TestCase) -> void:
 	t.begin("DragLayer · 残影吸附：在格子视图上方，残影的位置 = 会落下的那一格，不随光标在格内的偏移漂")
 	ItemInstance.reset_uid_counter()
-	var big := _def("big", ["##", "##"])
+	var big := _def("big", ["11", "11"])
 	var inv := GridInventory.new(Vector2i(6, 6), 1)
 	var view := _view(inv, Vector2(100, 50))
 	var drag := DragLayer.new()
@@ -326,7 +326,7 @@ static func frame_hidden_drag_does_not_grab(t: TestCase, root: Window) -> void:
 	ground.stash = stash
 	ground.size = Vector2(400, 300)
 	root.add_child(ground)
-	var item := ItemInstance.create(_def("rock", ["#"]))
+	var item := ItemInstance.create(_def("rock", ["1"]))
 	stash.admit(item)
 	# 底下一块（地图上的背包）、上面一块（商店，收起了）
 	var low_host := Control.new()

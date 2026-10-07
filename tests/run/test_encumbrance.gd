@@ -52,7 +52,7 @@ static func run_weights(t: TestCase) -> void:
 	for id in anchors:
 		t.eq(ItemWeight.of(c.items.get_def(id)), int(anchors[id]), "%s 重 %d" % [id, anchors[id]])
 	var d := ItemDef.new()
-	d.shape = ItemShape.from_ascii(["##", "##"])
+	d.shape = ItemShape.from_ascii(["11", "11"])
 	t.eq(ItemWeight.of(d), 4, "没标签：每格 1")
 	d.tags = [&"metal"] as Array[StringName]
 	t.eq(ItemWeight.of(d), 12, "金属：每格 3")

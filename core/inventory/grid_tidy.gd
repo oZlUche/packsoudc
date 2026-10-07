@@ -73,8 +73,8 @@ static func _before(a: ItemInstance, b: ItemInstance) -> bool:
 	var kb := kind_of(b.def)
 	if ka != kb:
 		return ka < kb
-	var ca := _cells(a)
-	var cb := _cells(b)
+	var ca := a.def.cell_count()
+	var cb := b.def.cell_count()
 	if ca != cb:
 		return ca > cb
 	if a.def.rarity != b.def.rarity:
@@ -82,7 +82,3 @@ static func _before(a: ItemInstance, b: ItemInstance) -> bool:
 	if a.def.id != b.def.id:
 		return String(a.def.id) < String(b.def.id)
 	return a.uid < b.uid
-
-
-static func _cells(inst: ItemInstance) -> int:
-	return inst.def.shape.cell_count() if inst.def.shape != null else 1

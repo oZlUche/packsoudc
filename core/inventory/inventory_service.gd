@@ -77,11 +77,6 @@ static func _move_bag(
 	return moved
 
 
-## 容器内挪位的便捷写法。
-static func move_within(inv: GridInventory, uid: int, origin: Vector2i, rot: int = 0) -> bool:
-	return move(inv, uid, inv, origin, rot)
-
-
 ## 把 uid 从 from 搬进 to 的任意可用位置。用于「全部拾取」。
 ##
 ## 收发两端都是 [ItemContainer] 而不是 [GridInventory]：地上是个列表，
@@ -147,22 +142,14 @@ static func _transfer_bag(from: GridInventory, uid: int, to: ItemContainer) -> b
 	return true
 
 
-## 尽可能多地把 from 的内容搬进 to，返回成功搬运的件数。
+## 尽可能多地把 from 的内容搬进 to，返回成功搬运的件数 —— 就是没有退路容器的 [method transfer_all_prefer]。
 ##
 ## 按占格数从大到小搬 —— 先安置大件，小件更容易见缝插针，总装入量明显优于随机顺序。
 ## 087：作为包生效的排最后（先把包上的东西搬走，包就空了，当普通物品搬）
 static func transfer_all(from: ItemContainer, to: ItemContainer) -> int:
-	if from == null or to == null:
+	if to == null:
 		return 0
-	var moved := 0
-	from.begin_batch()
-	to.begin_batch()
-	for inst in _take_order(from):
-		if transfer_auto(from, (inst as ItemInstance).uid, to):
-			moved += 1
-	to.end_batch()
-	from.end_batch()
-	return moved
+	return int(transfer_all_prefer(from, to, null)["board"])
 
 
 ## 084 / 123：全拿走 —— 每件先试 first（棋盘，自动找位），放不下才进 fallback（地上）。

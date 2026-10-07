@@ -20,7 +20,7 @@ static func _ground(stash: ItemStash) -> GroundLayer:
 static func run_new_items_land(t: TestCase) -> void:
 	t.begin("134 · 新落地的那件播落地动画、播完删掉；换一片地 / 本来就在的不播；起点不进存档；一串落下错开")
 	ItemInstance.reset_uid_counter()
-	var gun := G._def(&"t_gun", ["#"])
+	var gun := G._def(&"t_gun", ["1"])
 	var stash := ItemStash.new(2, 0)
 	var old := ItemInstance.create(gun)
 	stash.insert(old, -1, Vector2(0.5, 0.5))
@@ -85,7 +85,7 @@ static func run_new_items_land(t: TestCase) -> void:
 static func run_drag_writes_origin(t: TestCase) -> void:
 	t.begin("134 · 拖出棋盘放到地上：就地落下（不位移）；取消拖拽放回地上原处：不播")
 	ItemInstance.reset_uid_counter()
-	var gun := G._def(&"t_gun", ["#"])
+	var gun := G._def(&"t_gun", ["1"])
 	var board := GridInventory.new(Vector2i(4, 4), 1)
 	var stash := ItemStash.new(2, 0)
 	var rig := G._rig(stash, board)
@@ -117,7 +117,7 @@ static func run_drag_writes_origin(t: TestCase) -> void:
 static func frame_landing_from_panel_edge(t: TestCase, root: Window) -> void:
 	t.begin("134 · 程序放到地上的（战利品放不下之类）：从离落点最近的面板边缘落出来")
 	ItemInstance.reset_uid_counter()
-	var gun := G._def(&"t_gun", ["#"])
+	var gun := G._def(&"t_gun", ["1"])
 	var stash := ItemStash.new(2, 0)
 	var host := Control.new()
 	host.size = G.SCREEN
@@ -197,7 +197,7 @@ static func frame_double_click_opens_bag(t: TestCase, root: Window) -> void:
 	t.check(map.bag_open(), "背包开着时双击：背包还开着（面板接，地图不抢）")
 	map.toggle_bag()
 	# 放不下：一件比棋盘还大的东西
-	var huge := G._def(&"t_huge", ["##########", "##########", "##########", "##########", "##########", "##########", "##########", "##########", "##########", "##########"])
+	var huge := G._def(&"t_huge", ["1111111111", "1111111111", "1111111111", "1111111111", "1111111111", "1111111111", "1111111111", "1111111111", "1111111111", "1111111111"])
 	var big := ItemInstance.create(huge)
 	run.storage.insert(big, -1, Vector2(0.2, 0.85))
 	ground.item_double_clicked.emit(ground, big.uid)

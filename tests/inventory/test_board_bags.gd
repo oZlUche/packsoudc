@@ -44,13 +44,13 @@ static func run(t: TestCase) -> void:
 	t.begin("棋盘与包体")
 
 	ItemInstance.reset_uid_counter()
-	var big_bag := _bag("bag6", ["##", "##", "##"])     # 2x3，6 格
-	var tiny_bag := _bag("bag1", ["#"])                  # 1x1
-	var belt := _bag("belt", ["#", "#"], ["potion"])     # 1x2，只收药水
-	var dot := _def("dot", ["#"])
-	var bar := _def("bar", ["#", "#", "#"])              # 1x3
-	var wide := _def("wide", ["##"])                     # 2x1
-	var potion := _def("potion", ["#"], ["potion"])
+	var big_bag := _bag("bag6", ["11", "11", "11"])     # 2x3，6 格
+	var tiny_bag := _bag("bag1", ["1"])                  # 1x1
+	var belt := _bag("belt", ["1", "1"], ["potion"])     # 1x2，只收药水
+	var dot := _def("dot", ["1"])
+	var bar := _def("bar", ["1", "1", "1"])              # 1x3
+	var wide := _def("wide", ["11"])                     # 2x1
+	var potion := _def("potion", ["1"], ["potion"])
 
 	# --- 空棋盘：一格都不能用 ---
 	var board := GridInventory.new(Vector2i(7, 9), 1, true)
@@ -139,7 +139,8 @@ static func run(t: TestCase) -> void:
 
 	# --- 换朝向放回：内容物按本地坐标跟着转，一件不少，严格版也放得回 ---
 	var p2 := board.detach_bag(b1.uid)
-	t.check(board.can_attach_bag(p2, Vector2i(0, 3), 1),
+	var turned := board.bag_fit_report(p2, Vector2i(0, 3), 1)
+	t.check(turned["ok"] and (turned["fallen"] as Array).is_empty(),
 		"换个朝向放回也一件不少 —— 竖着的 1x3 跟着包一起变横")
 	t.check(board.attach_bag(p2, Vector2i(0, 3), 0), "原朝向放回成功")
 
@@ -186,8 +187,8 @@ static func run_bag_move(t: TestCase) -> void:
 	t.begin("包的跨容器搬运")
 
 	ItemInstance.reset_uid_counter()
-	var big_bag := _bag("bag6", ["##", "##", "##"])
-	var dot := _def("dot", ["#"])
+	var big_bag := _bag("bag6", ["11", "11", "11"])
+	var dot := _def("dot", ["1"])
 
 	var src := GridInventory.new(Vector2i(6, 6), 1, true)
 	var dst := GridInventory.new(Vector2i(6, 6), 2, true)
@@ -245,8 +246,8 @@ static func run_board_serialization(t: TestCase) -> void:
 	t.begin("棋盘序列化")
 
 	ItemInstance.reset_uid_counter()
-	var big_bag := _bag("bag6", ["##", "##", "##"])
-	var dot := _def("dot", ["#"])
+	var big_bag := _bag("bag6", ["11", "11", "11"])
+	var dot := _def("dot", ["1"])
 	var db := ItemDatabase.new()
 	db.register(big_bag)
 	db.register(dot)
@@ -284,9 +285,9 @@ static func run_rotate_shedding(t: TestCase) -> void:
 	t.begin("棋盘与包 · 包旋转：内容物按本地坐标跟着转，跨包的脱落")
 
 	ItemInstance.reset_uid_counter()
-	var big_bag := _bag("bag6", ["##", "##", "##"])   # 2 宽 3 高
-	var dot := _def("dot", ["#"])
-	var bar := _def("bar", ["#", "#", "#"])            # 竖 1x3
+	var big_bag := _bag("bag6", ["11", "11", "11"])   # 2 宽 3 高
+	var dot := _def("dot", ["1"])
+	var bar := _def("bar", ["1", "1", "1"])            # 竖 1x3
 	var board := GridInventory.new(Vector2i(8, 8), 1, true)
 
 	var bag := ItemInstance.create(big_bag)
@@ -329,7 +330,7 @@ static func run_rotate_shedding(t: TestCase) -> void:
 	var other := ItemInstance.create(big_bag)
 	board.place(other, Vector2i(1, 4), 0)            # 占 (1..2, 4..6)
 	board.remove(column.uid)
-	var bridge := ItemInstance.create(_def("tall", ["#", "#"]))
+	var bridge := ItemInstance.create(_def("tall", ["1", "1"]))
 	t.check(board.place(bridge, Vector2i(2, 3), 0), "竖 1x2 横跨两个包放得下：(2,3) 在上面的包，(2,4) 在下面的包")
 	t.eq(board.bag_of(bridge.uid), GridInventory.EMPTY_UID, "它谁的都不是")
 
@@ -369,11 +370,11 @@ static func run_bag_accept_touching(t: TestCase) -> void:
 	t.begin("棋盘与包 · 跨包时每个碰到的包都得接受")
 
 	ItemInstance.reset_uid_counter()
-	var big_bag := _bag("bag6", ["##", "##", "##"])
-	var belt := _bag("belt", ["##", "##", "##"])
+	var big_bag := _bag("bag6", ["11", "11", "11"])
+	var belt := _bag("belt", ["11", "11", "11"])
 	belt.bag_accept_tags = [&"potion"] as Array[StringName]
-	var rifle := _def("rifle", ["##"], ["weapon"])
-	var potion := _def("potion", ["##"], ["potion"])
+	var rifle := _def("rifle", ["11"], ["weapon"])
+	var potion := _def("potion", ["11"], ["potion"])
 	var board := GridInventory.new(Vector2i(6, 6), 1, true)
 	board.place(ItemInstance.create(big_bag), Vector2i(0, 0), 0)
 	board.place(ItemInstance.create(belt), Vector2i(2, 0), 0)

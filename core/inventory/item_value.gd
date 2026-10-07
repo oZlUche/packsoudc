@@ -20,5 +20,5 @@ static func of(def: ItemDef) -> int:
 	if def.value > 0:
 		return def.value
 	var tier := clampi(def.rarity, 0, BASE_PER_CELL.size() - 1)
-	var cells := def.shape.cell_count() if def.shape != null else 0
+	var cells := def.cell_count()
 	return BASE_PER_CELL[tier] * cells

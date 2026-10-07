@@ -6,6 +6,11 @@ const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const Support := preload("res://tests/run/flow_support.gd")
 
 
+## 一件道具的体积档名（格子数 → 档位 → 名字）
+static func _grade(def: ItemDef) -> String:
+	return ItemVolume.grade_name(ItemVolume.grade_of_cells(ItemVolume.cells_of(def)))
+
+
 ## 这一层的套件要信仰定义表（神坛要知道献祭给谁）
 static func _flow(c) -> GameFlow:
 	var f := Support.flow(c, "093")
@@ -38,12 +43,12 @@ static func run_faith_files(t: TestCase) -> void:
 	var db := ItemDatabase.new()
 	db.load_dir()
 	t.eq(db.get_def(&"strength_sigil").faith_tag(), &"faith:brute", "力量的符号归蛮神")
-	# 体积
-	t.eq(ItemVolume.grade(db.get_def(&"knife")), ItemVolume.Grade.TINY, "匕首 1 格：极小")
-	t.eq(ItemVolume.grade(db.get_def(&"shortsword")), ItemVolume.Grade.SMALL, "短剑 2 格：小")
-	t.eq(ItemVolume.grade(db.get_def(&"core")), ItemVolume.Grade.MEDIUM, "能量核心 5 格：中")
-	t.eq(ItemVolume.grade(db.get_def(&"plate_cuirass")), ItemVolume.Grade.LARGE, "板甲 9 格：大")
-	t.eq(ItemVolume.grade_of_cells(13), ItemVolume.Grade.HUGE, "13 格：极大")
+	# 体积（档位 = 格子数查表，名字跟着序号）
+	t.eq(_grade(db.get_def(&"knife")), "极小", "匕首 1 格：极小")
+	t.eq(_grade(db.get_def(&"shortsword")), "小", "短剑 2 格：小")
+	t.eq(_grade(db.get_def(&"core")), "中", "能量核心 5 格：中")
+	t.eq(_grade(db.get_def(&"plate_cuirass")), "大", "板甲 9 格：大")
+	t.eq(ItemVolume.grade_name(ItemVolume.grade_of_cells(13)), "极大", "13 格：极大")
 	# 献祭规矩：一件满足几条算几次；2^稀有度 × 倍率（104：倍率照神明总表）
 	var sword := db.get_def(&"shortsword")     # 稀有度 1、武器、金属、2 格
 	t.eq(brute.offering_value(sword), 4, "蛮神：短剑只算「武器」一条 → 2 × 2 = 4")
