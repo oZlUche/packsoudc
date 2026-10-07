@@ -43,10 +43,6 @@ func tally() -> Dictionary:
 	return out
 
 
-func merge(other: MapValidation) -> void:
-	failures.append_array(other.failures)
-
-
 ## 人读的多行汇总。条数多时只列前几条 —— 「117 个节点到不了入口」列全了没人看，
 ## 而前几个足够定位。
 func to_text(limit: int = 6) -> String:

@@ -74,7 +74,7 @@ static func tag_name(tag: StringName) -> String:
 	if fid != &"":
 		var defs := FaithDef.load_all()
 		var god: FaithDef = defs.get(fid, null)
-		return "%s%s%s" % [_pick(FAITH_WORD), "：" if UiText.lang == "zh" else ": ", Names.of(god) if god != null else String(fid)]
+		return "%s%s%s" % [UiText.pick(FAITH_WORD), "：" if UiText.lang == "zh" else ": ", Names.of(god) if god != null else String(fid)]
 	return TagRegistry.name_of(tag)
 
 
@@ -96,7 +96,7 @@ static func damage_type_name(type: StringName) -> String:
 
 const FAITH_WORD := {"zh": "信仰", "en": "Faith"}
 
-## 属性键 → 名字（096：中 / 英；按 [UiText.lang] 取，没有英文的回落中文）
+## 属性键 → 名字（096：中 / 英；按 [UiText.lang] 取，没有英文的回落中文 —— [method UiText.pick]）
 const STAT_NAMES := {
 	"damage": {"zh": "伤害", "en": "Damage"}, "armor": {"zh": "防护", "en": "Armor"}, "max_hp": {"zh": "生命", "en": "Health"},
 	"max_stamina": {"zh": "耐力上限", "en": "Max stamina"}, "haste": {"zh": "急速", "en": "Haste"}, "cooldown": {"zh": "冷却", "en": "Cooldown"},
@@ -107,16 +107,8 @@ const STAT_NAMES := {
 }
 
 
-## 一张「语言 → 文字」的小表按当前语言取；没有就中文；传进来的不是表就原样
-static func _pick(entry: Variant, fallback: String = "") -> String:
-	if entry is Dictionary:
-		var d := entry as Dictionary
-		return String(d.get(UiText.lang, d.get("zh", fallback)))
-	return String(entry) if entry != null else fallback
-
-
 static func stat_name(key: StringName) -> String:
-	return _pick(STAT_NAMES.get(String(key), null), String(key))
+	return UiText.pick(STAT_NAMES.get(String(key), null), String(key))
 
 
 ## 一条属性修饰给人看：「伤害 +10%」「防护 +4」
@@ -130,7 +122,7 @@ static func mod_text(m: StatModifier) -> String:
 	if BattleStats.PERCENT_DISPLAY.has(m.stat):
 		return "%s %+d%%" % [stat_name(m.stat), roundi(m.amount * 100.0)]     # 104：暴击按百分数写
 	var f := m.amount
-	return "%s %s" % [stat_name(m.stat), ("%+d" % roundi(f)) if is_equal_approx(f, roundf(f)) else "%+.1f" % f]
+	return "%s %s" % [stat_name(m.stat), ("%+d" % roundi(f)) if TextTemplate.is_whole(f) else "%+.1f" % f]
 
 
 static func mods_text(mods: Array) -> String:

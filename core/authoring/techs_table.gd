@@ -322,7 +322,7 @@ static func _int(v: Variant) -> Variant:
 		v = (v as String).strip_edges().to_float()
 	if v is int:
 		return v
-	if v is float and is_equal_approx(v, roundf(v)):
+	if v is float and TextTemplate.is_whole(v):
 		return int(v)
 	return null
 
@@ -339,7 +339,7 @@ static func _is_id(s: String) -> bool:
 static func _s(v: Variant) -> String:
 	if v == null:
 		return ""
-	if v is float and is_equal_approx(v, roundf(v)):
+	if v is float and TextTemplate.is_whole(v):
 		return str(int(v))
 	return str(v)
 #endregion

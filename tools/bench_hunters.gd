@@ -39,9 +39,7 @@ func run() -> void:
 	var brackets: Array[int] = []
 	var dpath := ContentPaths.asset_file("difficulties", difficulty_id)
 	if ResourceLoader.exists(dpath):
-		for m in (load(dpath) as DifficultyDef).mechanics:
-			if m is HunterMechanic:
-				brackets = (m as HunterMechanic).bracket_steps.duplicate()
+		brackets = (load(dpath) as DifficultyDef).hunter_bracket_steps()
 	if not brackets.is_empty():
 		print("段位表（难度 %s）：%s；猎手按段位的档位表：%s" % [difficulty_id, str(brackets), str(hunter.strength_by_bracket)])
 	var result := HunterBench.run(dummies, hunter, pool, enemies, items, fights, 1, chapter.difficulty if chapter != null else 0, &"", 0.0, brackets)

@@ -187,9 +187,14 @@ static func refs(text: String) -> Array[Dictionary]:
 	return out
 
 
+## 这个 float 是不是整数值（`5.0` 是、`5.01` 不是）。「整数值的 float 显示成整数」的判定都走它，各处怎么写非整数各自定
+static func is_whole(v: float) -> bool:
+	return is_equal_approx(v, roundf(v))
+
+
 ## 数 → 文字：整数值的 float 写成整数（`5.0` → `5`），其余照 str()。describe() 拼句用（Godot 的 % 不认 %g）
 static func num(v: float) -> String:
-	return str(int(v)) if is_equal_approx(v, roundf(v)) else str(snappedf(v, 0.01))
+	return str(int(v)) if is_whole(v) else str(snappedf(v, 0.01))
 
 
 ## 值 → 文字：整数值的 float 写成整数；[param filter] 不认识返回 null（整个记号原样保留）
@@ -207,7 +212,7 @@ static func _format(v: Variant, filter: String) -> Variant:
 			return ("+" + String(t)) if float(v) > 0.0 else String(t)
 		_:
 			return null
-	if v is float and is_equal_approx(v, roundf(v)):
+	if v is float and is_whole(v):
 		return str(int(v))
 	return str(v)
 

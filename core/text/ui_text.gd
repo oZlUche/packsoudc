@@ -80,10 +80,16 @@ const TEXT := {
 
 ## 取一句；没有的键原样返回
 static func t(key: String) -> String:
-	var entry: Dictionary = TEXT.get(key, {})
-	if entry.is_empty():
-		return key
-	return String(entry.get(lang, entry.get("zh", key)))
+	return pick(TEXT.get(key, null), key)
+
+
+## 一张「语言 → 文字」的小表按当前语言取；没有就中文、再没有给 [param fallback]；传进来的不是表就原样
+## （null 给 [param fallback]）。界面文字、分类名、属性名……凡是 `{zh, en}` 小表都走这一条回退规则
+static func pick(entry: Variant, fallback: String = "") -> String:
+	if entry is Dictionary:
+		var d := entry as Dictionary
+		return String(d.get(lang, d.get("zh", fallback)))
+	return String(entry) if entry != null else fallback
 
 
 ## 下一种语言（主菜单点一下切）

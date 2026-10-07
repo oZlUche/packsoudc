@@ -31,6 +31,11 @@ static func _nodes_in_row(g: MapGraph, r: int) -> Array[int]:
 	return out
 
 
+## 沙漏颈部两头那两层（作者要在咽喉前后放中途撤离点时填进 rules.extract_rows 的那两个数）
+static func _neck_end_rows(cfg: HourglassMapConfig) -> Array[int]:
+	return [cfg.half_rows - 1, cfg.half_rows + cfg.neck_rows] as Array[int]
+
+
 static func run_hourglass(t: TestCase) -> void:
 	t.begin("沙漏 · 上下两块对称的长方形、中间几层只有平行线段；线段层不横连、只直上直下；出生在底、终点在顶正中；多种子都过校验")
 	var cfg := HourglassMapConfig.sample()
@@ -276,7 +281,7 @@ static func run_types_and_rules(t: TestCase) -> void:
 	t.begin("格阵 · 类型规则：撤离点只在允许的层、够远、数量在范围里；每层配额；覆盖；不许相邻；规则写进图，手改就红")
 	var cfg := HourglassMapConfig.sample()
 	# 作者要在咽喉前后放中途撤离点时这么填（默认没有中途撤离点）
-	cfg.rules.extract_rows = cfg.neck_end_rows()
+	cfg.rules.extract_rows = _neck_end_rows(cfg)
 	cfg.rules.extract_count = Vector2i(1, 2)
 	var g := _hourglass(11, cfg)
 	if g == null:

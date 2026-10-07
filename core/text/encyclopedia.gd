@@ -13,6 +13,8 @@ extends RefCounted
 
 ## 词条页的分类（排在机制页的分类之后）
 const TERMS_CATEGORY := "terms"
+## 词条页分类给人看的名字（机制页的分类名在 [constant HelpPageDef.CATEGORY_NAMES]）
+const TERMS_CATEGORY_NAME := {"zh": "词条", "en": "Glossary"}
 ## 词条页的分组：来源 → 名字
 const GROUPS := {
 	"term": {"zh": "词条", "en": "Terms"}, "tag": {"zh": "标签", "en": "Tags"}, "dtype": {"zh": "伤害类型", "en": "Damage types"},
@@ -183,12 +185,12 @@ func toc() -> Array:
 
 static func category_name(cat: String) -> String:
 	if cat == TERMS_CATEGORY:
-		return "词条" if UiText.lang == "zh" else "Glossary"
+		return UiText.pick(TERMS_CATEGORY_NAME, cat)
 	return HelpPageDef.category_name(cat)
 
 
 static func group_name(g: String) -> String:
-	return Glossary._pick(GROUPS.get(g, null), g) if g != "" else ""
+	return UiText.pick(GROUPS.get(g, null), g) if g != "" else ""
 
 
 ## 搜索：标题或正文（去掉记号）里有这段字的页，标题命中的排前面。空查询返回空

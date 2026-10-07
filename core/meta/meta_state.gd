@@ -132,19 +132,14 @@ func absorb(result: RunResult) -> Dictionary:
 			chapter_extractions[String(result.chapter_id)] = chapter_extractions_of(result.chapter_id) + 1
 		# 图鉴：每件各计一次（包也算），第一次带出算点亮
 		for inst in result.carried:
-			var key := String(inst.def.id)
-			if int(codex.get(key, 0)) == 0:
-				got["lit"] = int(got["lit"]) + 1
-			codex[key] = int(codex.get(key, 0)) + 1
+			_record_codex(inst, got)
 		# 棋盘原样带回：不要求包的格子，非包道具按原位置；uid 重新编号
 		var size := result.board_size if result.board_size.x > 0 and result.board_size.y > 0 else RunState.BOARD_SIZE
 		var back := GridInventory.new(size, BOARD_ID, false)
 		back.begin_batch()
 		for inst in result.carried:
-			if not keeps(inst.def):
+			if not _adopt(inst):
 				continue
-			inst.uid = _next_uid
-			_next_uid += 1
 			if not back.place(inst, inst.origin, inst.rotation) and not back.try_add(inst, true):
 				push_warning("MetaState.absorb: %s 放不回带回来的棋盘，丢弃" % inst.def.id)
 				continue
@@ -166,14 +161,9 @@ func absorb(result: RunResult) -> Dictionary:
 		var size2 := result.board_size if result.board_size.x > 0 and result.board_size.y > 0 else RunState.BOARD_SIZE
 		var back2 := board if board != null else GridInventory.new(size2, BOARD_ID, false)
 		for inst in result.safe_items:
-			var key2 := String(inst.def.id)
-			if int(codex.get(key2, 0)) == 0:
-				got["lit"] = int(got["lit"]) + 1
-			codex[key2] = int(codex.get(key2, 0)) + 1
-			if not keeps(inst.def):
+			_record_codex(inst, got)
+			if not _adopt(inst):
 				continue
-			inst.uid = _next_uid
-			_next_uid += 1
 			if back2.try_add(inst, true) or warehouse.try_add(inst, true):
 				got["items"] = int(got["items"]) + 1
 				got["safe"] = int(got["safe"]) + 1
@@ -189,25 +179,21 @@ func absorb(result: RunResult) -> Dictionary:
 	return got
 
 
-func _keepsake_ids() -> Array:
-	var out: Array = []
-	for id in keepsakes:
-		out.append(String(id))
-	return out
+## 图鉴登记一件：计数加一，第一次带出算点亮（记进 got["lit"]）
+func _record_codex(inst: ItemInstance, got: Dictionary) -> void:
+	var key := String(inst.def.id)
+	if int(codex.get(key, 0)) == 0:
+		got["lit"] = int(got["lit"]) + 1
+	codex[key] = int(codex.get(key, 0)) + 1
 
 
-func _unlock_ids() -> Array:
-	var out: Array = []
-	for id in unlocks:
-		out.append(String(id))
-	return out
-
-
-func _buff_ids() -> Array:
-	var out: Array = []
-	for id in active_buffs:
-		out.append(String(id))
-	return out
+## 一件东西要不要留进局外（[method keeps]）；留的换成局外号段的 uid。返回要不要留
+func _adopt(inst: ItemInstance) -> bool:
+	if not keeps(inst.def):
+		return false
+	inst.uid = _next_uid
+	_next_uid += 1
+	return true
 
 
 ## 带回来的棋盘还没清空：清空前不能开下一局（作者：提示玩家清空背包再配置）
@@ -259,22 +245,22 @@ func grant_unlock(id: StringName) -> bool:
 
 ## 解锁 / 收回一个局外解锁（占位开关）。返回现在解没解锁
 func toggle_unlock(id: StringName) -> bool:
-	if unlocks.has(id):
-		unlocks.erase(id)
-	else:
-		unlocks.append(id)
-	changed.emit()
-	return unlocks.has(id)
+	return _toggle(unlocks, id)
 
 
 ## 开 / 关一个局外 buff。返回现在开没开
 func toggle_buff(id: StringName) -> bool:
-	if active_buffs.has(id):
-		active_buffs.erase(id)
+	return _toggle(active_buffs, id)
+
+
+## 有就去掉、没有就加上，发 changed；返回现在有没有
+func _toggle(list: Array[StringName], id: StringName) -> bool:
+	if list.has(id):
+		list.erase(id)
 	else:
-		active_buffs.append(id)
+		list.append(id)
 	changed.emit()
-	return active_buffs.has(id)
+	return list.has(id)
 
 
 ## 088：拿到一件特殊道具。已经有了返回 false
@@ -357,10 +343,7 @@ static func sell_price(def: ItemDef, ratio: float = 0.5) -> int:
 ## 一键出售：稀有度 ≤ [param max_rarity] 的全卖（-1 = 全部）。返回 {"count", "funds"}
 func sell_where(max_rarity: int, ratio: float = 0.5) -> Dictionary:
 	var out := {"count": 0, "funds": 0}
-	for inst in warehouse.items():
-		var it := inst as ItemInstance
-		if max_rarity >= 0 and it.def.rarity > max_rarity:
-			continue
+	for it in _sellable(max_rarity):
 		var got := sell_item(it.uid, ratio)
 		if got >= 0:
 			out["count"] = int(out["count"]) + 1
@@ -371,12 +354,20 @@ func sell_where(max_rarity: int, ratio: float = 0.5) -> Dictionary:
 ## 一键出售会卖几件、得多少（不动仓库）
 func sell_preview(max_rarity: int, ratio: float = 0.5) -> Dictionary:
 	var out := {"count": 0, "funds": 0}
+	for it in _sellable(max_rarity):
+		out["count"] = int(out["count"]) + 1
+		out["funds"] = int(out["funds"]) + sell_price(it.def, ratio)
+	return out
+
+
+## 一键出售会碰的那些：仓库里稀有度 ≤ [param max_rarity] 的（-1 = 全部），按仓库的顺序
+func _sellable(max_rarity: int) -> Array[ItemInstance]:
+	var out: Array[ItemInstance] = []
 	for inst in warehouse.items():
 		var it := inst as ItemInstance
 		if max_rarity >= 0 and it.def.rarity > max_rarity:
 			continue
-		out["count"] = int(out["count"]) + 1
-		out["funds"] = int(out["funds"]) + sell_price(it.def, ratio)
+		out.append(it)
 	return out
 
 
@@ -467,9 +458,9 @@ func to_dict() -> Dictionary:
 		"warehouse": warehouse.to_dict(),
 		"board": board.to_dict() if board != null else null,
 		"codex": codex.duplicate(),
-		"active_buffs": _buff_ids(),
-		"unlocks": _unlock_ids(),
-		"keepsakes": _keepsake_ids(),
+		"active_buffs": _names_of(active_buffs),
+		"unlocks": _names_of(unlocks),
+		"keepsakes": _names_of(keepsakes),
 		"next_uid": _next_uid,
 		"funds": funds, "score": score, "runs": runs, "extractions": extractions, "deaths": deaths,
 		"best_value": best_value,

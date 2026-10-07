@@ -223,6 +223,6 @@ static func _push(f: Dictionary, key: String, entry: Dictionary) -> void:
 static func _s(v: Variant) -> String:
 	if v == null:
 		return ""
-	if v is float and is_equal_approx(v, roundf(v)):
+	if v is float and TextTemplate.is_whole(v):
 		return str(int(v))
 	return str(v)
