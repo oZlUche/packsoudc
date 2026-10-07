@@ -16,6 +16,4 @@ func subscribed_events() -> Array[StringName]:
 
 
 func matches(ctx: RuleContext, event: BattleEvent) -> bool:
-	if crit_only and not event.get_bool(&"crit"):
-		return false
-	return matches_damage(ctx, event)
+	return (not crit_only or event.get_bool(&"crit")) and super.matches(ctx, event)

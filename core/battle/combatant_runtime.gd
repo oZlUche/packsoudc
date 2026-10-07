@@ -245,10 +245,8 @@ func tags_of(uid: int) -> Array[StringName]:
 
 #region buff
 func stacks_of(buff_id: StringName) -> int:
-	for b in buffs:
-		if b.def.id == buff_id:
-			return b.stacks
-	return 0
+	var b := find_buff(buff_id)
+	return b.stacks if b != null else 0
 
 
 func find_buff(buff_id: StringName) -> BuffInstance:

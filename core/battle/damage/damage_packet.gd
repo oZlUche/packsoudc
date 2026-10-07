@@ -92,21 +92,6 @@ func cancel() -> void:
 #endregion
 
 
-func snapshot() -> Dictionary:
-	return {
-		"type": String(type),
-		"raw": raw,
-		"absorbed": absorbed,
-		"armor": armor,
-		"final": final,
-		"applied": applied,
-		"source_side": source_side,
-		"uid": source_uid,
-		"crit": crit,
-		"direct": direct,
-	}
-
-
 func _to_string() -> String:
 	return "DamagePacket(%s 原始 %.1f → 护盾 -%.1f → 防护 -%.1f → 最终 %.1f)" % [
 		type, StatMath.to_float(raw), StatMath.to_float(absorbed),

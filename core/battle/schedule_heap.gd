@@ -27,10 +27,6 @@ func size() -> int:
 	return _items.size()
 
 
-func clear() -> void:
-	_items.clear()
-
-
 ## 堆顶时刻；空堆返回 -1
 func peek_time() -> int:
 	return -1 if _items.is_empty() else int(_items[0][T])

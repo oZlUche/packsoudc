@@ -8,7 +8,6 @@
 class_name OvertimeRules
 extends Resource
 
-const OVERTIME_ID := &"overtime"
 const DECAY_ID := &"decay"
 
 ## 加时从第几秒开始

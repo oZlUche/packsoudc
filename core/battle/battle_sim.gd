@@ -208,7 +208,7 @@ static func _hp(ctx: BattleContext, side: int) -> int:
 
 ## 0 / 1 为获胜方，-1 为平局（103 起只剩「打到安全上限」这一种来源）。
 ## 同一刻双双倒下（作者定）：先比这一刻之前的当前血量（多者胜），再比这场造成的总伤害，再判玩家（side 0）胜
-static func _winner(ctx: BattleContext, pre_hp: Array[int] = [0, 0] as Array[int]) -> int:
+static func _winner(ctx: BattleContext, pre_hp: Array[int]) -> int:
 	var a_alive := ctx.sides[0].is_alive()
 	var b_alive := ctx.sides[1].is_alive()
 	if a_alive != b_alive:

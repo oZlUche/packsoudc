@@ -53,6 +53,3 @@ func duration_text() -> String:
 @export var on_apply: Array[CombatEffect] = []
 @export var on_expire: Array[CombatEffect] = []
 
-
-func is_valid() -> bool:
-	return id != &""
