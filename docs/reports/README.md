@@ -148,6 +148,7 @@
 | 135 | [方案：搜索点遭遇战的胜负结果 —— 打输不扣体力、这个点不能再搜（改文案）；打赢先拿战利品再接着搜](135-search-encounter-outcome.md) | 架构 · 提议 | 已落地（三项待定按推荐：输了之前翻到的留着、「被赶跑」屏不给再打、战前屏类型名加「输了不扣体力」）。只改文案与死配置，胜负逻辑不动。偏差：`prologue.json` 节点规则里也有同样的 `search` 表项，一并去掉；编辑器没有固定的 `loss_cost` 键列表，不用改 |
 | 136 | [方案：三个角色到底差在哪 —— 现状盘点（安德烈乌斯整套挂在猎手上、布鲁图斯双重计算且与科技重叠），按早期角色文档给每人「身份被动 + 擅长被动 + 主动 + 短板」](136-character-kits.md) | 架构 · 提议 | 待执行（五项待定按推荐）。四个新 `RunEffect`（`travel_discount` / `rest_bonus` / `erosion_resist` / `battle_reward_mult`）、两个新 `RunSkill`（`slip` 脱身 / `second_wind` 咬牙）、`CharacterDef.identity` |
 | 137 | [方案：去掉 buff 叠层上限（`max_stacks` → `stackable`，可叠 = 不限、不可叠 = 一层）；道具重量按名称与标签重配（重型 4 / 金属 3 / 石与晶 2）；初始负重上限 40 / 48 / 56](137-stack-cap-removal-weight-and-capacity.md) | 架构 · 提议 | 待执行（五项待定按推荐）。三件事可分三个提交，重量与上限要一起上线 |
+| 138 | [方案：科技页材料行加「拥有 n」，拥有大于零时一键【交 k】置入](138-tech-panel-owned-count-and-quick-submit.md) | 架构 · 提议 | 待执行（两项待定按推荐）。只改 `tech_panel.gd` 的材料行，逐件走现有 `submit_tech` |
 
 ## 已归档（被覆盖或作废的方案，只留作历史）
 
