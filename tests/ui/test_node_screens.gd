@@ -431,3 +431,85 @@ static func frame_minimize_and_window(t: TestCase, root: Window) -> void:
 	flow.to_main_menu()
 	game.queue_free()
 	_cleanup()
+
+
+static func run_search_encounter_loot_folds(t: TestCase) -> void:
+	t.begin("反馈 · 搜索里遇敌打赢：战利品屏和搜索屏分开 —— 尸体没拿的并进搜索的收获箱（亮过的不重搜）、包掉在地上，离开时不再并成一份重新搜")
+	var c := _content()
+	var kit := _kit(c)
+	var done := false
+	for attempt in range(1, 80):
+		var f := _flow(c)
+		var run := f.begin(c.chapter, kit, attempt)
+		if run == null:
+			continue
+		var entry := -1
+		var next := -1
+		for e in run.map.entry_ids:
+			for nid in run.map.neighbors(e):
+				if run.map.get_node(nid).type == &"search":
+					entry = e
+					next = nid
+		if next < 0:
+			continue
+		f.pick_spawn(entry)
+		if not f.step_to(next) or f.screen != GameFlow.Screen.EVENT:
+			continue
+		f.choose_event(0)
+		var session: SearchSession = run.events.current_search
+		if session == null:
+			continue
+		var guard := 0
+		while session.active and guard < 10:
+			guard += 1
+			for uid in session.haul_box.items().map(func(i): return (i as ItemInstance).uid):
+				f.seen_loot[uid] = true     # 搜索屏里亮过
+			f.close_search()
+			var d: EventDef = f.last_payload.get("def", null)
+			if d == null or d.id != &"search_again":
+				break
+			f.choose_event(0)
+		if session.active or session.encounter.is_empty():
+			continue
+		var haul_seen: Array = session.haul_box.items().map(func(i): return (i as ItemInstance).uid)
+		f.choose_event(0)
+		f.start_battle()
+		if not session.active:
+			continue     # 输了：换一个种子
+		f.resume()
+		if f.screen != GameFlow.Screen.LOOT or run.pending_loot == null:
+			continue
+		var corpse := run.pending_loot
+		var corpse_items: Array = []
+		var corpse_bags: Array = []
+		for it in corpse.items():
+			var inst := it as ItemInstance
+			(corpse_bags if inst.def.is_bag else corpse_items).append(inst.uid)
+		if corpse_bags.is_empty() or corpse_items.is_empty():
+			continue
+		var ground_before := run.storage.item_count()
+		t.check(f.hide_overlay(), "战利品屏没拿完就关")
+		t.check(run.pending_loot == null, "尸体的待拾取没了（没留着等离开时并）")
+		for uid in corpse_items:
+			t.check(session.haul_box.has_item(uid), "没拿的道具 #%d 进了搜索的收获箱" % uid)
+		for uid in corpse_bags:
+			t.check(run.storage.has_item(uid), "包 #%d 掉在地上" % uid)
+		t.eq(run.storage.item_count(), ground_before + corpse_bags.size(), "地上只多了包")
+		for uid in haul_seen:
+			t.check(f.seen_loot.has(uid), "搜索屏里亮过的 #%d 还记着（不重新搜）" % uid)
+		var d2: EventDef = run.events.pending_event()
+		t.check(f.screen == GameFlow.Screen.EVENT and d2 != null and (d2.id == &"search_again" or d2.id == &"search_done"), "回到「再搜 / 走」")
+		var leave_at := _labels(d2).find("离开") if d2 != null else 0
+		var haul_n := session.haul_box.item_count()
+		f.choose_event(maxi(leave_at, 0))
+		t.check(run.pending_loot != null and run.pending_loot.item_count() == haul_n, "离开：交出的就是收获箱这一份（%d 件），不再和别的并" % haul_n)
+		f.take_all_loot()
+		for uid in haul_seen:
+			if f.seen_loot.has(uid):
+				t.check(false, "拿完之后这一份的「亮过」才忘掉")
+				break
+		done = true
+		_settle(f)
+		break
+	t.check(done, "找到了一局：搜索里遇敌、打赢、尸体有包也有道具")
+	_cleanup()

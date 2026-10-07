@@ -223,8 +223,8 @@ static func run_search_encounter_won_sees_loot(t: TestCase) -> void:
 		t.eq(f.screen, GameFlow.Screen.LOOT, "回放之后先看战利品（不是直接回事件）")
 		t.check(f.hide_overlay(), "没拿完也能直接关掉战利品屏")
 		t.check(f.screen == GameFlow.Screen.EVENT or f.screen == GameFlow.Screen.SEARCH, "关掉后回到「再搜 / 走」（%d）" % f.screen)
-		t.check(run.pending_loot != null, "没拿的还留在这个点上")
-		f.discard_loot()
+		# 作者反馈（2026-10-07）：没拿的不再挂成待拾取，道具并进搜索的收获箱、包掉在地上（tests/ui/test_node_screens.gd 细查）
+		t.check(run.pending_loot == null, "没拿的并进了搜索的收获箱 / 地上，不再单挂一份待拾取")
 	else:
 		t.check(true, "（这一场没掉东西，直接看下一屏）")
 	t.check(f.screen == GameFlow.Screen.EVENT or f.screen == GameFlow.Screen.SEARCH, "然后回到搜索的事件屏 / 搜索屏（%d）" % f.screen)

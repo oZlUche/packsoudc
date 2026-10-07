@@ -142,6 +142,11 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 			return _labeled(owner, key, _number(value, 1.0, func(v: float): owner.set(key, int(v)), prop))
 
 		TYPE_FLOAT:
+			if key == "amount" and _percent_mod(owner):
+				# 作者反馈：暴击率 / 暴击伤害按百分数填（20 = 20%），存成小数
+				var pct := _number(BattleStats.to_percent(value), 1.0, func(v: float): owner.set(key, BattleStats.from_percent(v)), prop)
+				pct.suffix = "%"
+				return _labeled(owner, key, pct)
 			return _labeled(owner, key, _number(value, 0.1, func(v: float): owner.set(key, v), prop))
 
 		TYPE_STRING, TYPE_STRING_NAME:
@@ -153,7 +158,13 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 				# 可以为空的（默认值是空串，如 amount_stat）第一项是「不用」，空值就停在它上，不再被显示成第一个属性
 				var allow_empty := _stat_field_nullable(owner, key)
 				var picker := _stat_picker(String(value), func(k: String):
+					var was_pct := _percent_mod(owner)
 					owner.set(key, StringName(k))
+					if owner is StatModifier and was_pct != _percent_mod(owner):
+						# 换到 / 换出百分比属性：填的数不变（20 还是 20），存的值跟着换算，数字框按新单位重画
+						var m := owner as StatModifier
+						m.amount = BattleStats.from_percent(m.amount) if not was_pct else BattleStats.to_percent(m.amount)
+						rebuild.call_deferred()
 					_emit(), [], allow_empty)
 				if allow_empty:
 					picker.tooltip_text = STAT_EMPTY_TIP
@@ -233,6 +244,11 @@ func _enum_picker(
 		owner.set(prop["name"], values[idx])
 		_emit())
 	return ob
+
+
+## 加算、指向百分比属性的修饰：amount 按百分数显示
+static func _percent_mod(owner: Object) -> bool:
+	return owner is StatModifier and not (owner as StatModifier).is_mult() and BattleStats.is_percent((owner as StatModifier).stat)
 
 
 func _number(value: float, step: float, apply: Callable, prop: Dictionary = {}) -> SpinBox:
@@ -597,7 +613,10 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 		val.step = 0.1
 		val.allow_greater = true
 		val.allow_lesser = true
-		val.value = float(raw)
+		var pct_key := key == "base_stats" and BattleStats.is_percent(StringName(old_key))
+		val.value = BattleStats.to_percent(float(raw)) if pct_key else float(raw)
+		if pct_key:
+			val.suffix = "%"
 		_font(val)
 		if stat_dict:
 			name_edit.tooltip_text = "%s\n（改名直接敲，回车生效）" % stat_label(old_key)
@@ -609,7 +628,7 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 			_emit()
 			rebuild())
 		val.value_changed.connect(func(v: float):
-			dict[old_key] = v
+			dict[old_key] = BattleStats.from_percent(v) if pct_key else v
 			owner.set(key, dict)
 			_emit())
 		row.add_child(name_edit)

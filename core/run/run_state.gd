@@ -740,6 +740,31 @@ func take_all_loot() -> int:
 	return n
 
 
+## 反馈（搜索里遇敌，打赢之后）：尸体的战利品屏关掉、接着搜的时候，没拿的不再和搜索的收获并成一份重新搜 ——
+## 道具并进搜索的收获箱（搜索屏里接着拿，亮过的不重亮），包掉在地上（收获箱是自由容器，收不下摆好的一袋；包里的东西先倒进收获箱）。
+## 收获箱加高到两倍还放不下的也到地上，一件不丢。没有开着的搜索 / 没有待拾取返回 false
+func fold_loot_into_search() -> bool:
+	var session: SearchSession = events.current_search if events != null else null
+	if pending_loot == null or session == null or not session.active:
+		return false
+	var loot := pending_loot
+	var bags: Array[ItemInstance] = []
+	for it in loot.items().duplicate():
+		var inst := it as ItemInstance
+		if inst.def != null and inst.def.is_bag:
+			bags.append(inst)
+			continue
+		loot.remove(inst.uid)
+		if not session.stow(inst):
+			storage.admit(inst)
+	for bag in bags:
+		loot.remove(bag.uid)     # 内容物已经倒出去了，是空包
+		storage.admit(bag)
+	pending_loot = null
+	loot_cleared.emit()
+	return true
+
+
 ## 剩下的不要了
 func discard_loot() -> void:
 	if pending_loot == null:

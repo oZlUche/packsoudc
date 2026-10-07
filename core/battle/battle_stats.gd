@@ -87,6 +87,21 @@ const ADDITIVE_ONLY: Array[StringName] = [CRIT_CHANCE, CRIT_DAMAGE]
 const PERCENT_DISPLAY: Array[StringName] = [CRIT_CHANCE, CRIT_DAMAGE]
 
 
+## 这个属性在作者数据里按百分数写（20 = 20%）：导入时 ÷100 存成小数，导出 ×100 写回去，编辑器里也按百分数显示
+static func is_percent(key: StringName) -> bool:
+	return PERCENT_DISPLAY.has(key)
+
+
+## 作者写的百分数 → 运行时的小数（20 → 0.2）
+static func from_percent(v: float) -> float:
+	return v / 100.0
+
+
+## 运行时的小数 → 作者写的百分数（0.2 → 20）；吸掉浮点尾巴，导出→导入→再导出逐字节不变
+static func to_percent(v: float) -> float:
+	return snappedf(v * 100.0, 0.0001)
+
+
 ## 该属性在未被显式设置时的基础值（定点）
 static func default_base(key: StringName) -> int:
 	return StatMath.from_float(float(DEFAULT_BASE[key])) if DEFAULT_BASE.has(key) else 0
