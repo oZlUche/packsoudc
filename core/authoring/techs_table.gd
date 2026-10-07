@@ -26,46 +26,46 @@ const BUFF_PREFIX := "tech_"
 ## 出错的写进 [param problems]
 static func fields(sheets: Dictionary, problems: Array[String] = []) -> Dictionary:
 	var out := {}
-	for row in _table(sheets, SHEET_NODES, problems):
-		var id := _s(row.get("id", "")).strip_edges()
+	for row in XlsxReader.rows_as_dicts(sheets, SHEET_NODES, PATH, problems):
+		var id := XlsxReader.cell_text(row.get("id", "")).strip_edges()
 		if id == "":
 			continue
 		var where := "%s/%s" % [SHEET_NODES, id]
-		if not _is_id(id):
+		if not XlsxReader.is_id(id):
 			problems.append("%s：id 只能是英文小写、数字、下划线" % where)
 			continue
 		if out.has(id):
 			problems.append("%s：同一个 id 写了两行" % where)
 			continue
 		var f := {
-			"name": _s(row.get("名称", "")).strip_edges(),
-			"en": _s(row.get("英文名", "")).strip_edges(),
+			"name": XlsxReader.cell_text(row.get("名称", "")).strip_edges(),
+			"en": XlsxReader.cell_text(row.get("英文名", "")).strip_edges(),
 			"column": 0, "order": 0, "requires": [],
-			"description": _s(row.get("说明", "")).strip_edges(),
-			"effect": _s(row.get("效果构件", "")).strip_edges(),
-			"params": _json_cell(row.get("构件参数（JSON）", null), "%s 的构件参数" % where, problems),
-			"template": _s(row.get("每级说明模板", "")).strip_edges(),
+			"description": XlsxReader.cell_text(row.get("说明", "")).strip_edges(),
+			"effect": XlsxReader.cell_text(row.get("效果构件", "")).strip_edges(),
+			"params": XlsxReader.json_cell(row.get("构件参数（JSON）", null), "%s 的构件参数" % where, problems),
+			"template": XlsxReader.cell_text(row.get("每级说明模板", "")).strip_edges(),
 			"tiers": [],
 		}
 		if f["name"] == "":
 			problems.append("%s：没写名称" % where)
 		for pair in [["列", "column"], ["排序", "order"]]:
 			var raw: Variant = row.get(pair[0], null)
-			if raw == null or _s(raw).strip_edges() == "":
+			if raw == null or XlsxReader.cell_text(raw).strip_edges() == "":
 				continue
 			var n: Variant = _int(raw)
 			if n == null or (pair[1] == "column" and int(n) < 0):
-				problems.append("%s：%s得是不小于 0 的整数：%s" % [where, pair[0], _s(raw)])
+				problems.append("%s：%s得是不小于 0 的整数：%s" % [where, pair[0], XlsxReader.cell_text(raw)])
 			else:
 				f[pair[1]] = int(n)
-		for part in _s(row.get("前置", "")).replace("，", "、").replace(",", "、").split("、", false):
+		for part in XlsxReader.cell_text(row.get("前置", "")).replace("，", "、").replace(",", "、").split("、", false):
 			if part.strip_edges() != "":
 				(f["requires"] as Array).append(part.strip_edges())
 		var type := String(f["effect"])
 		if not RunRegistry.TECH_EFFECTS.has(StringName(type)):
 			problems.append("%s：效果构件「%s」不在 RunRegistry.TECH_EFFECTS 里（可用 %s）" % [where, type, "、".join(PackedStringArray(RunRegistry.TECH_EFFECTS.keys()))])
 		elif type == "tech_run_buff":
-			var run_effect := _s((f["params"] as Dictionary).get("effect", ""))
+			var run_effect := XlsxReader.cell_text((f["params"] as Dictionary).get("effect", ""))
 			if not RunRegistry.RUN_EFFECTS.has(StringName(run_effect)):
 				problems.append("%s：tech_run_buff 的构件参数得写 {\"effect\": \"<RUN_EFFECTS 里的类型>\"}，「%s」不认得" % [where, run_effect])
 			if f["template"] == "":
@@ -109,7 +109,7 @@ static func generate(f: Dictionary, problems: Array[String] = []) -> Dictionary:
 			for k in (t["tiers"] as Array).size():
 				var bid := "%s%s_%d" % [BUFF_PREFIX, id, k + 1]
 				var e := ((t["tiers"][k] as Dictionary)["params"] as Dictionary).duplicate(true)
-				e["type"] = _s(t["params"].get("effect", ""))
+				e["type"] = XlsxReader.cell_text(t["params"].get("effect", ""))
 				var buff := {"id": bid, "display_name": "%s（科技）" % t["name"], "description": t["template"], "scope": "META", "effects": [e]}
 				var report := ImportReport.new()
 				var def := ContentImporter.import_run_buff(buff, ctx, report)
@@ -226,12 +226,12 @@ static func markdown(f: Dictionary) -> String:
 #region 读表
 static func _read_levels(sheets: Dictionary, out: Dictionary, problems: Array[String]) -> void:
 	var by_id := {}     # id → {级: {funds, items, params}}
-	for row in _table(sheets, SHEET_LEVELS, problems):
-		var id := _s(row.get("科技 id", "")).strip_edges()
+	for row in XlsxReader.rows_as_dicts(sheets, SHEET_LEVELS, PATH, problems):
+		var id := XlsxReader.cell_text(row.get("科技 id", "")).strip_edges()
 		if id == "":
 			continue
 		var lv: Variant = _int(row.get("级", null))
-		var where := "%s/%s 第 %s 级" % [SHEET_LEVELS, id, _s(row.get("级", "?"))]
+		var where := "%s/%s 第 %s 级" % [SHEET_LEVELS, id, XlsxReader.cell_text(row.get("级", "?"))]
 		if not out.has(id):
 			problems.append("%s：节点表里没有 %s" % [where, id])
 			continue
@@ -245,12 +245,12 @@ static func _read_levels(sheets: Dictionary, out: Dictionary, problems: Array[St
 			continue
 		var funds: Variant = _int(row.get("钱", null))
 		if funds == null or int(funds) < 0:
-			problems.append("%s：钱得是不小于 0 的整数：%s" % [where, _s(row.get("钱", ""))])
+			problems.append("%s：钱得是不小于 0 的整数：%s" % [where, XlsxReader.cell_text(row.get("钱", ""))])
 			funds = 0
-		var params := _json_cell(row.get("效果参数（JSON）", null), "%s 的效果参数" % where, problems)
+		var params := XlsxReader.json_cell(row.get("效果参数（JSON）", null), "%s 的效果参数" % where, problems)
 		if not params.is_empty() and out[id]["effect"] != "tech_run_buff":
 			problems.append("%s：效果参数只 tech_run_buff 用，%s 这格留空" % [where, out[id]["effect"]])
-		by_id[id][int(lv)] = {"funds": int(funds), "items": _materials(_s(row.get("材料", "")), where, problems), "params": params}
+		by_id[id][int(lv)] = {"funds": int(funds), "items": _materials(XlsxReader.cell_text(row.get("材料", "")), where, problems), "params": params}
 	for id in out:
 		var levels: Dictionary = by_id.get(id, {})
 		if levels.is_empty():
@@ -278,42 +278,11 @@ static func _materials(text: String, where: String, problems: Array[String]) -> 
 		if kv.size() != 2 or n == null or int(n) < 1:
 			problems.append("%s：材料看不懂（写成「道具 id: 件数」，件数是正整数）：%s" % [where, part.strip_edges()])
 			continue
-		if not _is_id(item) or not FileAccess.file_exists(ContentPaths.authoring_file("items", item)):
+		if not XlsxReader.is_id(item) or not FileAccess.file_exists(ContentPaths.authoring_file("items", item)):
 			problems.append("%s：材料 %s 不是道具库里的道具" % [where, item])
 			continue
 		out[item] = int(n)
 	return out
-
-
-## 表头那一行当键：每行变成 {表头: 值}
-static func _table(sheets: Dictionary, name: String, problems: Array[String]) -> Array[Dictionary]:
-	var out: Array[Dictionary] = []
-	if not sheets.has(name):
-		problems.append("%s 里没有「%s」这张表" % [PATH, name])
-		return out
-	var rows: Array = sheets[name]
-	if rows.is_empty():
-		return out
-	var header: Array = rows[0]
-	for r in range(1, rows.size()):
-		var line: Array = rows[r]
-		var d := {}
-		for c in mini(header.size(), line.size()):
-			if header[c] != null:
-				d[String(header[c])] = line[c]
-		out.append(d)
-	return out
-
-
-## JSON 格 → 字典；空格 = {}，解析不了或不是对象进 problems
-static func _json_cell(raw: Variant, where: String, problems: Array[String]) -> Dictionary:
-	if raw == null or _s(raw).strip_edges() == "":
-		return {}
-	var json := JSON.new()
-	if json.parse(_s(raw)) != OK or not (json.data is Dictionary):
-		problems.append("%s 不是 JSON 对象：%s" % [where, _s(raw)])
-		return {}
-	return json.data as Dictionary
 
 
 ## 整数格：数或数字字符串，带小数的不算
@@ -325,23 +294,6 @@ static func _int(v: Variant) -> Variant:
 	if v is float and TextTemplate.is_whole(v):
 		return int(v)
 	return null
-
-
-static func _is_id(s: String) -> bool:
-	if s == "":
-		return false
-	for ch in s:
-		if not ((ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9") or ch == "_"):
-			return false
-	return true
-
-
-static func _s(v: Variant) -> String:
-	if v == null:
-		return ""
-	if v is float and TextTemplate.is_whole(v):
-		return str(int(v))
-	return str(v)
 #endregion
 
 
@@ -352,7 +304,7 @@ static func _json_text(d: Dictionary) -> String:
 	var parts := PackedStringArray()
 	for k in d:
 		var v: Variant = d[k]
-		parts.append("%s: %s" % [JSON.stringify(k), _s(v) if v is float else JSON.stringify(v)])
+		parts.append("%s: %s" % [JSON.stringify(k), XlsxReader.cell_text(v) if v is float else JSON.stringify(v)])
 	return "{%s}" % ", ".join(parts)
 
 

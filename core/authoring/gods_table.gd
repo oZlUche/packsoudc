@@ -26,16 +26,16 @@ const SHEET_PERKS := "等级效果"
 ## 出错的写进 [param problems]
 static func fields(sheets: Dictionary, problems: Array[String] = []) -> Dictionary:
 	var out := {}
-	var gods := _table(sheets, SHEET_GODS, problems)
+	var gods := XlsxReader.rows_as_dicts(sheets, SHEET_GODS, PATH, problems)
 	for row in gods:
-		var id := _s(row.get("id", "")).strip_edges()
-		if id == "" or not _is_id(id):
+		var id := XlsxReader.cell_text(row.get("id", "")).strip_edges()
+		if id == "" or not XlsxReader.is_id(id):
 			continue
 		var f := {}
-		var name := _s(row.get("名称", "")).strip_edges()
-		var concept := _s(row.get("代表概念 / 权柄", "")).strip_edges()
+		var name := XlsxReader.cell_text(row.get("名称", "")).strip_edges()
+		var concept := XlsxReader.cell_text(row.get("代表概念 / 权柄", "")).strip_edges()
 		f["god"] = name if concept == "" or concept == "暂不引入" else "%s（%s）" % [name, concept]
-		f["description"] = _s(row.get("神话定位", "")).strip_edges()
+		f["description"] = XlsxReader.cell_text(row.get("神话定位", "")).strip_edges()
 		var th: Array = []
 		for i in range(1, 6):
 			var v: Variant = row.get("阈值%d" % i, null)
@@ -47,31 +47,31 @@ static func fields(sheets: Dictionary, problems: Array[String] = []) -> Dictiona
 			if v is float or v is int:
 				f[pair[1]] = float(v)
 		out[id] = f
-	for row in _table(sheets, SHEET_DEEDS, problems):
-		var id := _s(row.get("id", "")).strip_edges()
-		var type := _s(row.get("类型（type）", "")).strip_edges()
+	for row in XlsxReader.rows_as_dicts(sheets, SHEET_DEEDS, PATH, problems):
+		var id := XlsxReader.cell_text(row.get("id", "")).strip_edges()
+		var type := XlsxReader.cell_text(row.get("类型（type）", "")).strip_edges()
 		if not out.has(id) or type == "":
 			continue
-		var entry := _params(row.get("参数（JSON，其余字段）", null), "%s/%s 的信力行为参数" % [SHEET_DEEDS, id], problems)
+		var entry := XlsxReader.json_cell(row.get("参数（JSON，其余字段）", null), "%s/%s 的信力行为参数" % [SHEET_DEEDS, id], problems)
 		entry["type"] = type
 		_push(out[id], "deeds", entry)
-	for row in _table(sheets, SHEET_OFFERINGS, problems):
-		var id := _s(row.get("id", "")).strip_edges()
+	for row in XlsxReader.rows_as_dicts(sheets, SHEET_OFFERINGS, PATH, problems):
+		var id := XlsxReader.cell_text(row.get("id", "")).strip_edges()
 		if not out.has(id):
 			continue
-		var entry := _condition(_s(row.get("条件（tags / min_cells / exact_grade）", "")), "%s/%s" % [SHEET_OFFERINGS, id], problems)
+		var entry := _condition(XlsxReader.cell_text(row.get("条件（tags / min_cells / exact_grade）", "")), "%s/%s" % [SHEET_OFFERINGS, id], problems)
 		var mult: Variant = _first_starting(row, "倍率")
 		entry["multiplier"] = float(mult) if mult is float or mult is int else 1.0
 		var per_cell: Variant = _first_starting(row, "再乘格子数")
 		if per_cell is bool and per_cell:
 			entry["per_cell"] = true
 		_push(out[id], "offerings", entry)
-	for row in _table(sheets, SHEET_PERKS, problems):
-		var id := _s(row.get("id", "")).strip_edges()
-		var type := _s(row.get("构件（type）", "")).strip_edges()
+	for row in XlsxReader.rows_as_dicts(sheets, SHEET_PERKS, PATH, problems):
+		var id := XlsxReader.cell_text(row.get("id", "")).strip_edges()
+		var type := XlsxReader.cell_text(row.get("构件（type）", "")).strip_edges()
 		if not out.has(id) or type == "" or type.begins_with("（"):
 			continue     # 「（道具）」= 功能在道具上，不是信仰级效果
-		var entry := _params(row.get("参数（JSON，其余字段）", null), "%s/%s 的等级效果参数" % [SHEET_PERKS, id], problems)
+		var entry := XlsxReader.json_cell(row.get("参数（JSON，其余字段）", null), "%s/%s 的等级效果参数" % [SHEET_PERKS, id], problems)
 		entry["type"] = type
 		var tier: Variant = row.get("级", null)
 		if (tier is float or tier is int) and int(tier) != 1:
@@ -144,49 +144,12 @@ static func check(path: String = PATH) -> Array[String]:
 	return problems
 
 
-## 表头那一行当键：每行变成 {表头: 值}
-static func _table(sheets: Dictionary, name: String, problems: Array[String]) -> Array[Dictionary]:
-	var out: Array[Dictionary] = []
-	if not sheets.has(name):
-		problems.append("%s 里没有「%s」这张表" % [PATH, name])
-		return out
-	var rows: Array = sheets[name]
-	if rows.is_empty():
-		return out
-	var header: Array = rows[0]
-	for r in range(1, rows.size()):
-		var line: Array = rows[r]
-		var d := {}
-		for c in mini(header.size(), line.size()):
-			if header[c] != null:
-				d[String(header[c])] = line[c]
-		out.append(d)
-	return out
-
-
 ## 表头以某个前缀开头的那一列的值（「倍率（信力 = 2^稀有度 × 倍率……）」这种长表头）
 static func _first_starting(row: Dictionary, prefix: String) -> Variant:
 	for k in row:
 		if String(k).begins_with(prefix):
 			return row[k]
 	return null
-
-
-static func _is_id(s: String) -> bool:
-	for ch in s:
-		if not ((ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9") or ch == "_"):
-			return false
-	return true
-
-
-static func _params(raw: Variant, where: String, problems: Array[String]) -> Dictionary:
-	if raw == null or _s(raw).strip_edges() == "":
-		return {}
-	var parsed: Variant = JSON.parse_string(_s(raw))
-	if not (parsed is Dictionary):
-		problems.append("%s 不是 JSON 对象：%s" % [where, raw])
-		return {}
-	return parsed as Dictionary
 
 
 ## `tags: gear / armor / shield；min_cells: 9` → {"tags": [...], "min_cells": 9}
@@ -218,11 +181,3 @@ static func _push(f: Dictionary, key: String, entry: Dictionary) -> void:
 	if not f.has(key):
 		f[key] = []
 	(f[key] as Array).append(entry)
-
-
-static func _s(v: Variant) -> String:
-	if v == null:
-		return ""
-	if v is float and TextTemplate.is_whole(v):
-		return str(int(v))
-	return str(v)

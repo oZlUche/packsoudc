@@ -18,7 +18,7 @@ static func _put_cell(sheets: Dictionary, sheet: String, id: String, header: Str
 	var lv_col := head.find("级")
 	for r in range(1, rows.size()):
 		var row: Array = rows[r]
-		if row.is_empty() or TechsTable._s(row[0]) != id:
+		if row.is_empty() or XlsxReader.cell_text(row[0]) != id:
 			continue
 		if level > 0 and (lv_col >= row.size() or TechsTable._int(row[lv_col]) != level):
 			continue

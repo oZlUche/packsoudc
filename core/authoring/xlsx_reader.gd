@@ -3,6 +3,8 @@
 ## .xlsx 是一个 zip，里面是 XML：`xl/workbook.xml` 列工作表、`xl/_rels/workbook.xml.rels` 给每张表的文件、
 ## `xl/sharedStrings.xml` 是共享字符串（Excel / WPS 存的都用它；openpyxl 存的是行内字符串，两种都认）。
 ## **只读值**：公式取缓存的结果、样式与合并单元格不管。数字读成 float（整数值也是），布尔读成 bool，空格子是 null。
+## 读出来的表怎么当配置表用（表头当键、格子转文字、JSON 格、id 格）也在这里（[method rows_as_dicts] 起那一组）：
+## 神明总表（[GodsTable]）与科技表（[TechsTable]）同一套
 class_name XlsxReader
 extends RefCounted
 
@@ -165,3 +167,55 @@ static func _row_of(ref: String) -> int:
 		if ch >= "0" and ch <= "9":
 			digits += ch
 	return int(digits) if digits != "" else 0
+
+
+#region 当配置表读
+## 表头那一行当键：每行变成 {表头: 值}。没有这张表记一条问题（[param path] 是写进问题里的文件名）
+static func rows_as_dicts(sheets: Dictionary, name: String, path: String, problems: Array[String]) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if not sheets.has(name):
+		problems.append("%s 里没有「%s」这张表" % [path, name])
+		return out
+	var rows: Array = sheets[name]
+	if rows.is_empty():
+		return out
+	var header: Array = rows[0]
+	for r in range(1, rows.size()):
+		var line: Array = rows[r]
+		var d := {}
+		for c in mini(header.size(), line.size()):
+			if header[c] != null:
+				d[String(header[c])] = line[c]
+		out.append(d)
+	return out
+
+
+## 一格当文字：空格子 ""；整数值的数写成整数（xlsx 读出来全是浮点）；其余 str()
+static func cell_text(v: Variant) -> String:
+	if v == null:
+		return ""
+	if v is float and TextTemplate.is_whole(v):
+		return str(int(v))
+	return str(v)
+
+
+## JSON 格 → 字典；空格 = {}，解析不了或不是对象进 problems
+static func json_cell(raw: Variant, where: String, problems: Array[String]) -> Dictionary:
+	if raw == null or cell_text(raw).strip_edges() == "":
+		return {}
+	var json := JSON.new()
+	if json.parse(cell_text(raw)) != OK or not (json.data is Dictionary):
+		problems.append("%s 不是 JSON 对象：%s" % [where, cell_text(raw)])
+		return {}
+	return json.data as Dictionary
+
+
+## id 格：英文小写、数字、下划线，不能空
+static func is_id(s: String) -> bool:
+	if s == "":
+		return false
+	for ch in s:
+		if not ((ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9") or ch == "_"):
+			return false
+	return true
+#endregion

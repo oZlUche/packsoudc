@@ -252,11 +252,9 @@ static func _buffs_in_effects(effects: Array, out: Dictionary) -> void:
 
 
 #region 找词、标色
-## 剥掉 BBCode 标签，只留文字
+## 剥掉 BBCode 标签，只留文字（实现在 [method TextTemplate.strip_bbcode]）
 static func strip_bbcode(text: String) -> String:
-	var re := RegEx.new()
-	re.compile("\\[/?[a-zA-Z][^\\]]*\\]")
-	return re.sub(text, "", true)
+	return TextTemplate.strip_bbcode(text)
 
 
 ## 文字里出现了哪些词条：固定词条 + [param extra]（名字 → 解释，buff 词条），按第一次出现的位置排。
@@ -282,19 +280,28 @@ static func terms_in(text: String, extra: Dictionary = {}) -> Array:
 	return out
 
 
-## 把词条在文字里标出来（颜色 + 下划线）。长的词先替，替进去的先用占位符挡住，免得短词把长词切开
+## 把词条在文字里标出来（颜色 + 下划线）
 static func mark(text: String, terms: Array) -> String:
 	var names: Array[String] = []
 	for t in terms:
 		names.append(String((t as Dictionary)["name"]))
-	names.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
+	return wrap_terms(text, names, func(name: String) -> String:
+		return "[color=#%s][u]%s[/u][/color]" % [TERM_COLOR.to_html(false), name])
+
+
+## 把一串词在文字里各包一层（[param wrap]：词 → 包好的 BBCode）。长的词先替，替进去的先用占位符挡住，免得短词把长词切开。
+## 词条标色（[method mark]）与百科画链接（[method Encyclopedia.link_words]）同一套，只差包的是什么
+static func wrap_terms(text: String, names: Array[String], wrap: Callable) -> String:
+	var sorted: Array[String] = []
+	sorted.assign(names)
+	sorted.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
 	var out := text
 	var holders: Array[String] = []
-	for i in names.size():
+	for i in sorted.size():
 		var holder := "\u0001%d\u0002" % i
 		holders.append(holder)
-		out = out.replace(names[i], holder)
-	for i in names.size():
-		out = out.replace(holders[i], "[color=#%s][u]%s[/u][/color]" % [TERM_COLOR.to_html(false), names[i]])
+		out = out.replace(sorted[i], holder)
+	for i in sorted.size():
+		out = out.replace(holders[i], String(wrap.call(sorted[i])))
 	return out
 #endregion

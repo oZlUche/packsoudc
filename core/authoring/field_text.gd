@@ -231,8 +231,7 @@ static func _parse(source: String) -> Dictionary:
 		else:
 			break
 	out[""] = "\n".join(head).strip_edges()
-	var export_re := RegEx.new()
-	export_re.compile("^\\s*@export\\w*(\\([^)]*\\))?\\s+var\\s+(\\w+)")
+	var export_re := TextTemplate.cached_regex("^\\s*@export\\w*(\\([^)]*\\))?\\s+var\\s+(\\w+)")
 	for i in lines.size():
 		var m := export_re.search(lines[i])
 		if m == null:
@@ -258,10 +257,6 @@ static func _parse(source: String) -> Dictionary:
 static func _clean(s: String) -> String:
 	var t := s.trim_prefix("##").strip_edges()
 	t = t.replace("[b]", "").replace("[/b]", "").replace("[i]", "").replace("[/i]", "")
-	var re := RegEx.new()
-	re.compile("\\[(method|member|constant|signal|enum|param|code)\\s+([^\\]]+)\\]")
-	t = re.sub(t, "$2", true)
-	re.compile("\\[/?code\\]")
-	t = re.sub(t, "", true)
-	return t
+	t = TextTemplate.cached_regex("\\[(method|member|constant|signal|enum|param|code)\\s+([^\\]]+)\\]").sub(t, "$2", true)
+	return TextTemplate.cached_regex("\\[/?code\\]").sub(t, "", true)
 #endregion

@@ -348,8 +348,7 @@ static func validate_rule_shapes(rules: Array, path: String, report: ImportRepor
 		for j in rule.effects.size():
 			var e = rule.effects[j]
 			var eat := "%s.effects[%d]" % [at, j]
-			var scr: Script = e.get_script() if e is Object else null
-			var cls := String(scr.get_global_name()) if scr != null else ""
+			var cls := RegistryLookup.class_of(e, false)
 			if PACKET_EFFECTS.has(cls) and not (rule.trigger is OnBeforeDamage):
 				report.warn(eat, "%s 只在受伤前阶段有效，这条规则的时机不是 on_before_damage，触发了也改不到伤害" % cls)
 			if item_level and not (rule.trigger is OnStatusApplied) and _effect_per_stack(e):
