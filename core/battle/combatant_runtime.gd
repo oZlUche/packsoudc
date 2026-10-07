@@ -399,9 +399,8 @@ func _on_resource_changed(key: StringName, delta: int, reason: StringName) -> vo
 		"current": resources.current(key), "max": resources.maximum(key),
 	})
 	# 103（衰竭）：生命上限掉到把当前血压成 0 也是倒下。走 mark_dead，所以蛮神的不死照常进坚持期
-	if key == BattleStats.RES_HP and reason == BattleEvent.REASON_MAX_CHANGED \
-			and resources.current(key) <= 0 and mark_dead():
-		ctx.emit(BattleEvent.DIED, side, {})
+	if key == BattleStats.RES_HP and reason == BattleEvent.REASON_MAX_CHANGED:
+		settle_death(ctx)
 
 
 ## 087（作者反馈：敌人倒下两次、倒下时血没归零）：**倒下是终局**。血一到 0 就记死，之后的治疗（伤药的「濒死回血」）不再把它救回来，
@@ -437,6 +436,15 @@ func mark_dead() -> bool:
 			ctx.emit(BattleEvent.EFFECT_RESOLVED, side, {"effect": "undying", "uid": 0, "until": undying_until, "seconds": StatMath.to_float(undying_sec)})
 		return false
 	dead = true
+	return true
+
+
+## 血到 0 就倒下并发 DIED（087：倒下是终局）。伤害管线、以血为代价的资源效果、上限变动三处都走这里，
+## 判定点只有这一个；返回这次是不是真倒下了（不死的坚持期里是 false）
+func settle_death(ctx: BattleContext) -> bool:
+	if resources.current(BattleStats.RES_HP) > 0 or not mark_dead():
+		return false
+	ctx.emit(BattleEvent.DIED, side, {})
 	return true
 
 

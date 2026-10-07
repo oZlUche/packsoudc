@@ -26,8 +26,8 @@ func subscribed_events() -> Array[StringName]:
 func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 	if event.get_name(&"buff") != buff_id:
 		return false
-	var who := ctx.owner if on_self else ctx.opponent()
-	if (event.side == ctx.owner.side) != on_self:
+	var who := ctx.side_of(on_self)
+	if not ctx.event_on(event, on_self):
 		return false
 	return who.stacks_of(buff_id) >= maxi(1, stacks)
 

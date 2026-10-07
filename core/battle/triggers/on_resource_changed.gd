@@ -19,7 +19,7 @@ func subscribed_events() -> Array[StringName]:
 
 
 func matches(ctx: RuleContext, event: BattleEvent) -> bool:
-	if (event.side == ctx.owner.side) != same_side:
+	if not ctx.event_on(event, same_side):
 		return false
 	if resource_key != &"" and event.get_name(&"key") != resource_key:
 		return false

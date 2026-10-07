@@ -16,7 +16,7 @@ extends Cost
 func can_pay(ctx: RuleContext) -> bool:
 	if buff_id == &"":
 		return false
-	var who := ctx.owner if on_self else ctx.opponent()
+	var who := ctx.side_of(on_self)
 	var ok := who != null and who.stacks_of(buff_id) >= maxi(1, stacks)
 	return ok != negate
 
