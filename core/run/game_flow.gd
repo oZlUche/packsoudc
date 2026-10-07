@@ -1238,7 +1238,7 @@ func _go(s: int, payload: Dictionary = {}) -> void:
 ## 资产目录里的全部章节 / 开局装备，按文件名排序
 static func load_chapters() -> Array[ChapterDef]:
 	var out: Array[ChapterDef] = []
-	for res in _load_dir(ContentPaths.CHAPTERS):
+	for res in ContentPaths.load_resources(ContentPaths.CHAPTERS):
 		if res is ChapterDef:
 			out.append(res)
 	return out
@@ -1263,7 +1263,7 @@ func default_loadout() -> LoadoutDef:
 
 static func load_loadouts() -> Array[LoadoutDef]:
 	var out: Array[LoadoutDef] = []
-	for res in _load_dir(ContentPaths.LOADOUTS):
+	for res in ContentPaths.load_resources(ContentPaths.LOADOUTS):
 		if res is LoadoutDef:
 			out.append(res)
 	return out
@@ -1271,7 +1271,7 @@ static func load_loadouts() -> Array[LoadoutDef]:
 
 static func load_characters() -> Array[CharacterDef]:
 	var out: Array[CharacterDef] = []
-	for res in _load_dir(ContentPaths.CHARACTERS):
+	for res in ContentPaths.load_resources(ContentPaths.CHARACTERS):
 		if res is CharacterDef:
 			out.append(res)
 	return out
@@ -1292,7 +1292,7 @@ static func load_recipes() -> Array[RecipeDef]:
 
 static func load_difficulties() -> Array[DifficultyDef]:
 	var out: Array[DifficultyDef] = []
-	for res in _load_dir(ContentPaths.DIFFICULTIES):
+	for res in ContentPaths.load_resources(ContentPaths.DIFFICULTIES):
 		if res is DifficultyDef:
 			out.append(res)
 	out.sort_custom(func(a: DifficultyDef, b: DifficultyDef) -> bool:
@@ -1303,7 +1303,7 @@ static func load_difficulties() -> Array[DifficultyDef]:
 ## 114：百科的机制页
 static func load_help_pages() -> Array[HelpPageDef]:
 	var out: Array[HelpPageDef] = []
-	for res in _load_dir(ContentPaths.HELP_PAGES):
+	for res in ContentPaths.load_resources(ContentPaths.HELP_PAGES):
 		if res is HelpPageDef:
 			out.append(res)
 	return out
@@ -1312,7 +1312,7 @@ static func load_help_pages() -> Array[HelpPageDef]:
 ## 110：局外科技，按 order 再按 id 排
 static func load_techs() -> Array[TechDef]:
 	var out: Array[TechDef] = []
-	for res in _load_dir(ContentPaths.TECHS):
+	for res in ContentPaths.load_resources(ContentPaths.TECHS):
 		if res is TechDef:
 			out.append(res)
 	out.sort_custom(func(a: TechDef, b: TechDef) -> bool:
@@ -1323,7 +1323,7 @@ static func load_techs() -> Array[TechDef]:
 ## 091：成就，按 order 再按 id 排
 static func load_achievements() -> Array[AchievementDef]:
 	var out: Array[AchievementDef] = []
-	for res in _load_dir(ContentPaths.ACHIEVEMENTS):
+	for res in ContentPaths.load_resources(ContentPaths.ACHIEVEMENTS):
 		if res is AchievementDef:
 			out.append(res)
 	out.sort_custom(func(a: AchievementDef, b: AchievementDef) -> bool:
@@ -1343,22 +1343,4 @@ static func load_events() -> Dictionary:
 static func load_meta_rules(id: StringName = &"standard") -> MetaRules:
 	var path := ContentPaths.asset_file("meta_rules", String(id))
 	return load(path) as MetaRules if ResourceLoader.exists(path) else null
-
-
-static func _load_dir(dir_path: String) -> Array[Resource]:
-	var out: Array[Resource] = []
-	var dir := DirAccess.open(dir_path)
-	if dir == null:
-		return out
-	var names: Array[String] = []
-	for file_name in dir.get_files():
-		var name := file_name.trim_suffix(".remap")
-		if name.ends_with(".tres") or name.ends_with(".res"):
-			names.append(name)
-	names.sort()
-	for name in names:
-		var res := ResourceLoader.load(dir_path.path_join(name))
-		if res != null:
-			out.append(res)
-	return out
 #endregion

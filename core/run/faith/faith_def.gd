@@ -116,17 +116,7 @@ static func id_of_tag(t: StringName) -> StringName:
 ## 装回全部定义：id → FaithDef，按 id 升序
 static func load_all() -> Dictionary:
 	var out := {}
-	var dir := DirAccess.open(ContentPaths.FAITHS)
-	if dir == null:
-		return out
-	var names: Array[String] = []
-	for f in dir.get_files():
-		var n := f.trim_suffix(".remap")
-		if n.ends_with(".tres") or n.ends_with(".res"):
-			names.append(n)
-	names.sort()
-	for n in names:
-		var res := load(ContentPaths.FAITHS + "/" + n)
+	for res in ContentPaths.load_resources(ContentPaths.FAITHS):
 		if res is FaithDef and (res as FaithDef).id != &"":
 			out[(res as FaithDef).id] = res
 	return out
