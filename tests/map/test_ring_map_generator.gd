@@ -197,7 +197,7 @@ static func _check_all(g: MapGraph, cfg: RingMapConfig) -> String:
 				return "高危区 %s 里的节点 %d 没标上 zone / danger" % [zone_id, id]
 		if ids.size() < rules.min_size or ids.size() > rules.max_size:
 			return "高危区 %s 有 %d 个点" % [zone_id, ids.size()]
-		if not ZoneRules.is_connected_inside(g, ids):
+		if not MapNavigator.connected_within(g, ids):
 			return "高危区 %s 内部不相连" % zone_id
 		# 路线节点只会在「只长到两个点」时被划进来凑数，所以含路线节点的区一定是最小规模
 		if absorbed > 1 or (absorbed == 1 and ids.size() != rules.min_size):

@@ -168,6 +168,20 @@ static func reachable_from(graph: MapGraph, from_ids: Array[int]) -> Dictionary:
 	return seen
 
 
+## 传送点不是路（8-1）：按生成规则校验时先把 portal 边摘下来、跑 [param body]、再装回去。
+## 不复制图 —— 复制会丢生成期挂在图上的东西（环形生成器拿 `graph == _graph` 认自己造的那张）
+static func run_without_portals(graph: MapGraph, body: Callable) -> void:
+	var portals: Array = []
+	if graph != null:
+		for e in graph.edges.duplicate():
+			if (e as MapEdge).is_portal():
+				graph.remove_edge(e)
+				portals.append(e)
+	body.call()
+	for e in portals:
+		graph.add_edge(e)
+
+
 ## 第 [param attempt] 次尝试用的种子。
 ##
 ## 每次尝试的种子各自独立算得出来，所以「种子 12345 的第 7 次尝试」可以单独复现，

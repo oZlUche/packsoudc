@@ -1,4 +1,5 @@
-## 地图生成共用的随机小工具（140 M-25）：格阵与环形的类型分配器都按权重抽类型，抽法只有这一份。
+## 地图生成共用的随机小工具：按权重抽类型（140 M-25）与 Fisher-Yates 洗牌（140 M-3），
+## 格阵与环形的生成器、类型分配器都从这里拿，各自不再抄一份。
 class_name MapRng
 extends RefCounted
 
@@ -23,3 +24,23 @@ static func pick_weighted(weights: Dictionary, rng: RandomNumberGenerator, order
 		if roll <= 0.0:
 			return StringName(String(k))
 	return StringName(String(keys[-1]))
+
+
+## Fisher-Yates 洗牌，返回打乱过的副本（不动原数组）。要类型化数组的调用方 `assign()` 回去。
+## 循环体与 `randi_range(0, i)` 的调用次序就是以前九份抄本的写法，一字不差 —— 同一种子生成的图不许变
+static func shuffled(items: Array, rng: RandomNumberGenerator) -> Array:
+	var out: Array = items.duplicate()
+	for i in range(out.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp: Variant = out[i]
+		out[i] = out[j]
+		out[j] = tmp
+	return out
+
+
+## 0 ～ n-1 这 n 个下标洗过牌的顺序
+static func shuffled_range(n: int, rng: RandomNumberGenerator) -> Array:
+	var out: Array = []
+	for i in n:
+		out.append(i)
+	return shuffled(out, rng)

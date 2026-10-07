@@ -331,10 +331,9 @@ static func _cells_of(g: MapGraph) -> Dictionary:
 	if not g.layout_meta.has("ring_count"):
 		return {}
 	var count := int(g.layout_meta["ring_count"])
-	var table: Dictionary = g.layout_meta.get("ring_slots", {})
 	var most := 1
 	for r in range(1, count + 1):
-		most = maxi(most, int(table.get(r, table.get(str(r), 1))))
+		most = maxi(most, RingSpec.slots_of(g, r, 1))
 	var zero_cols: Array = []
 	for r in range(count, 0, -1):
 		zero_cols.append(most * 2)
@@ -345,7 +344,7 @@ static func _cells_of(g: MapGraph) -> Dictionary:
 		if r <= 0:
 			place[id] = Vector2i(most, count)
 			continue
-		var slots := maxi(1, int(table.get(r, table.get(str(r), 1))))
+		var slots := maxi(1, RingSpec.slots_of(g, r, 1))
 		# 每个槽位至少隔两列，中间才塞得下一个 -
 		place[id] = Vector2i(roundi(float(int(lay["order"])) * float(most * 2) / float(slots)), count - r)
 	return {"place": place, "rows": count + 1, "zero_cols": zero_cols}

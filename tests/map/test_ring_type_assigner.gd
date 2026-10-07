@@ -52,7 +52,7 @@ static func _check_rules(g: MapGraph, cfg: RingMapConfig) -> String:
 
 	# 覆盖：高危区外的每个点距最近的喘气处不超过 K；死胡同末端也算在内
 	for type in cfg.coverage:
-		var dist := RingTypeAssigner.distances_to_type(g, StringName(type))
+		var dist := MapNavigator.distances_to_type(g, StringName(type))
 		for id in g.node_ids():
 			var n := g.get_node(id)
 			if n.danger > cfg.no_haven_in_danger_above:
@@ -140,7 +140,7 @@ static func _check_rules(g: MapGraph, cfg: RingMapConfig) -> String:
 		if g.get_node(id).type == &"extract":
 			extracts.append(id)
 	for i in extracts.size():
-		var dist := RingTypeAssigner._steps_from(g, extracts[i], gap - 1)
+		var dist := MapNavigator.within_steps(g, extracts[i], gap - 1)
 		for j in range(i + 1, extracts.size()):
 			if dist.has(extracts[j]):
 				return "撤离点 %d 与 %d 只隔 %d 步，至少要 %d" % [extracts[i], extracts[j], dist[extracts[j]], gap]

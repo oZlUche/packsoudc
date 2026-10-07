@@ -648,7 +648,8 @@ func _advance_ring(r: int, steps: int, active: Array[int], paths: Array) -> bool
 			_protected_nodes[side] = true
 			path.append(side)
 		# 先试挑中的那个；它会和别的路交叉又让不开，就换别的候选
-		var tries: Array[int] = _shuffled(pool)
+		var tries: Array[int] = []
+		tries.assign(MapRng.shuffled(pool, _rng))
 		if not exclusive:
 			# 合流之前不许退回到「被别人占了的落点」—— 那就是提前合流；退不了就这次作废
 			for other in options:
@@ -672,23 +673,6 @@ func _advance_ring(r: int, steps: int, active: Array[int], paths: Array) -> bool
 	_walk_extra(r, active, paths, exclusive)
 	_try_adjacent_pivots(r, active, paths)
 	return true
-
-
-func _shuffled_indices(count: int) -> Array[int]:
-	var out: Array[int] = []
-	for i in count:
-		out.append(i)
-	return _shuffled(out)
-
-
-func _shuffled(ids: Array[int]) -> Array[int]:
-	var out: Array[int] = ids.duplicate()
-	for i in range(out.size() - 1, 0, -1):
-		var j := _rng.randi_range(0, i)
-		var tmp := out[i]
-		out[i] = out[j]
-		out[j] = tmp
-	return out
 
 
 ## 从 from_id 怎么走到第 to_ring 环：`{walk, cands}`。
@@ -770,22 +754,11 @@ func _schedule_pivots() -> Array[int]:
 	return out
 
 
-## 相邻的路线对：[[i, j], ...]。两条路线只有一对，三条以上首尾也相邻。
-func _route_pairs(route_count: int) -> Array:
-	var out: Array = []
-	if route_count == 2:
-		out.append([0, 1])
-	elif route_count > 2:
-		for i in route_count:
-			out.append([i, (i + 1) % route_count])
-	return out
-
-
 ## 换乘窗口：两条路线刚落的子如果**恰好相邻**，而此刻正在某次换乘的窗口里
 ## （安排的那一环 ± pivot_window，不必严格踩在那一环上）、这一次又还没换乘过 ——
 ## 直接把这两个点连起来当换乘，不再另外拉一整段换乘弧。
 func _try_adjacent_pivots(r: int, active: Array[int], paths: Array) -> void:
-	for pair in _route_pairs(paths.size()):
+	for pair in RingSpec.route_pairs(paths.size()):
 		var i := int(pair[0])
 		var j := int(pair[1])
 		if not active.has(i) or not active.has(j):
@@ -813,7 +786,7 @@ func _try_adjacent_pivots(r: int, active: Array[int], paths: Array) -> void:
 ## 「搜到好东西转去打」「打不动了转去撤」都做不到，风格就成了开局定终身。
 func _lay_pivots() -> void:
 	var routes := _graph.routes
-	for pair in _route_pairs(routes.size()):
+	for pair in RingSpec.route_pairs(routes.size()):
 		var a: Dictionary = routes[int(pair[0])]
 		var b: Dictionary = routes[int(pair[1])]
 		for k in _pivot_rings.size():
@@ -945,7 +918,7 @@ func _spawn_zone(r: int) -> bool:
 		return false
 	# 岔出来的那条路当场建：会和别的路交叉的不要，换一个
 	var pick: Array = []
-	for i in _shuffled_indices(options.size()):
+	for i in MapRng.shuffled_range(options.size(), _rng):
 		var option: Array = options[i]
 		if not _link(int(option[0]), int(option[1]), true, false).is_empty():
 			pick = option
@@ -1005,7 +978,7 @@ func _grow_zone_once(head: Dictionary) -> bool:
 		return false
 	# 每长一步，那条路当场建出来 —— 区是沿着真的路长的，不是先圈地再补路。
 	# 会和别的路交叉的那一步不走，换一个方向
-	for i in _shuffled_indices(frontier.size()):
+	for i in MapRng.shuffled_range(frontier.size(), _rng):
 		var pick: int = frontier[i]
 		if _link(int(came_from[pick]), pick, true, false).is_empty():
 			continue
@@ -1107,16 +1080,15 @@ static func slot_offset(graph: MapGraph, a: int, b: int) -> float:
 		return 0.0
 	var outer := na if ra >= rb else nb
 	var inner := nb if ra >= rb else na
-	var table: Dictionary = graph.layout_meta.get("ring_slots", {})
 	var r_out := int(outer.layout["ring"])
 	var r_in := int(inner.layout["ring"])
 	if r_out == r_in:
 		# 同环用整数算。走下面的浮点投影的话，6 / 25 * 25 会得到 6.000000001，
 		# 相邻槽位量出来是 1.0000001，恰好超限
 		return float(_ring_dist(int(na.layout["order"]), int(nb.layout["order"]),
-			maxi(1, int(table.get(r_out, table.get(str(r_out), 1))))))
-	var s_out := float(int(table.get(r_out, table.get(str(r_out), 1))))
-	var s_in := float(int(table.get(r_in, table.get(str(r_in), 1))))
+			maxi(1, RingSpec.slots_of(graph, r_out, 1))))
+	var s_out := float(RingSpec.slots_of(graph, r_out, 1))
+	var s_in := float(RingSpec.slots_of(graph, r_in, 1))
 	var projected := float(int(inner.layout["order"])) / maxf(1.0, s_in) * s_out
 	var diff := fposmod(projected - float(int(outer.layout["order"])), s_out)
 	return minf(diff, s_out - diff)
@@ -1210,7 +1182,7 @@ func _isolate_zones() -> void:
 		for e in ZoneRules.crossing_edges(_graph, members):
 			var gate := e.from_id if inside.has(e.from_id) else e.to_id
 			var outside := e.other(gate)
-			if _graph.get_node(outside).zone != 0 and not _protected_edges.has(_edge_key(e.from_id, e.to_id)):
+			if _graph.get_node(outside).zone != 0 and not _protected_edges.has(MapJunctions.edge_key(e.from_id, e.to_id)):
 				# 两片高危区之间不直接开口：那条边两边各算一个出入口，
 				# 后处理的那片会把先处理的那片算好的数目顶破
 				_graph.remove_edge(e)
@@ -1218,7 +1190,7 @@ func _isolate_zones() -> void:
 			if not by_gate.has(gate):
 				by_gate[gate] = [] as Array[MapEdge]
 			(by_gate[gate] as Array[MapEdge]).append(e)
-			if _protected_edges.has(_edge_key(e.from_id, e.to_id)):
+			if _protected_edges.has(MapJunctions.edge_key(e.from_id, e.to_id)):
 				forced[gate] = true
 
 		var keep: Array[int] = _sorted_keys(forced)
@@ -1243,7 +1215,7 @@ func _isolate_zones() -> void:
 				_graph.remove_edge(e)
 		for gate in keep:
 			for e in (by_gate[gate] as Array[MapEdge]):
-				_protected_edges[_edge_key(e.from_id, e.to_id)] = true
+				_protected_edges[MapJunctions.edge_key(e.from_id, e.to_id)] = true
 		info["gate_ids"] = ZoneRules.gate_ids(_graph, members)
 
 
@@ -1313,7 +1285,7 @@ func _rescue_stranded() -> void:
 			members.append(id)
 			members.sort()
 			_link(id, n_id, false)
-			_protected_edges[_edge_key(id, n_id)] = true
+			_protected_edges[MapJunctions.edge_key(id, n_id)] = true
 			break
 
 
@@ -1409,7 +1381,7 @@ func _join(a: int, b: int, protect: bool) -> void:
 		var same_ring: bool = _graph.get_node(a).layout["ring"] == _graph.get_node(b).layout["ring"]
 		_graph.connect_nodes(a, b, &"tangential" if same_ring else &"radial")
 	if protect:
-		_protected_edges[_edge_key(a, b)] = true
+		_protected_edges[MapJunctions.edge_key(a, b)] = true
 
 
 ## 四个点能不能连满：每条边都在长度上限之内、两条同环的边确实是相邻槽位、
@@ -1420,7 +1392,7 @@ func _can_quad(p: int, t: int, q: int, u: int) -> bool:
 	for pair in [[p, q], [u, t], [p, u], [q, t]]:
 		if not _within_limit(int(pair[0]), int(pair[1])):
 			return false
-	var own := {_edge_key(p, t): true, _edge_key(q, u): true}
+	var own := {MapJunctions.edge_key(p, t): true, MapJunctions.edge_key(q, u): true}
 	return _crossers(p, u, own).is_empty() and _crossers(q, t, own).is_empty()
 
 
@@ -1448,7 +1420,7 @@ func _crossers(a: int, b: int, ignore: Dictionary) -> Array[MapEdge]:
 		var r1 := int(_graph.get_node(e.from_id).layout.get("ring", 0))
 		if r1 != hi and r1 != hi - 1:
 			continue
-		if not ignore.has(_edge_key(e.from_id, e.to_id)) 				and edges_cross(_graph, a, b, e.from_id, e.to_id):
+		if not ignore.has(MapJunctions.edge_key(e.from_id, e.to_id)) 				and edges_cross(_graph, a, b, e.from_id, e.to_id):
 			out.append(e)
 	return out
 
@@ -1484,8 +1456,7 @@ static func _polar(ring: int, fraction: float) -> Vector2:
 
 static func _fraction(graph: MapGraph, n: MapNode) -> float:
 	var r := int(n.layout.get("ring", 0))
-	var table: Dictionary = graph.layout_meta.get("ring_slots", {})
-	var slots := maxi(1, int(table.get(r, table.get(str(r), 1))))
+	var slots := maxi(1, RingSpec.slots_of(graph, r, 1))
 	return float(int(n.layout.get("order", 0))) / float(slots)
 
 
@@ -1534,7 +1505,7 @@ func _fix_crossings() -> void:
 		for e in pair:
 			var edge: MapEdge = e
 			if done or not _graph.edges.has(edge) \
-					or _protected_edges.has(_edge_key(edge.from_id, edge.to_id)):
+					or _protected_edges.has(MapJunctions.edge_key(edge.from_id, edge.to_id)):
 				continue
 			_graph.remove_edge(edge)
 			if reachable_from(_graph, [edge.from_id] as Array[int]).has(edge.to_id):
@@ -1552,7 +1523,7 @@ func _fix_crossings() -> void:
 func _break_tangentials() -> void:
 	var doomed: Array[MapEdge] = []
 	for e in _graph.edges:
-		if e.kind != &"tangential" or _protected_edges.has(_edge_key(e.from_id, e.to_id)):
+		if e.kind != &"tangential" or _protected_edges.has(MapJunctions.edge_key(e.from_id, e.to_id)):
 			continue
 		if _rng.randf() < _cfg.tangential_break_chance:
 			doomed.append(e)
@@ -1566,17 +1537,9 @@ func _break_tangentials() -> void:
 #region 校验
 ## 通用校验之上，再看这一章自己的拓扑规矩。类型相关的（配额、覆盖、路线风险收益）
 ## 属于 M3-3c，这里一条都不查 —— 那时候类型还全是 battle。
-## 传送点不是路（8-1）：先把 portal 边摘下来、按生成规则校验、再装回去（不复制图：复制会丢生成期挂在图上的东西）
+## 传送点不是路（8-1）：摘下来再查（[method MapGenerator.run_without_portals]）
 func validate(graph: MapGraph, v: MapValidation) -> void:
-	var portals: Array = []
-	if graph != null:
-		for e in graph.edges.duplicate():
-			if (e as MapEdge).is_portal():
-				graph.remove_edge(e)
-				portals.append(e)
-	_validate_roads(graph, v)
-	for e in portals:
-		graph.add_edge(e)
+	run_without_portals(graph, func() -> void: _validate_roads(graph, v))
 
 
 func _validate_roads(graph: MapGraph, v: MapValidation) -> void:
@@ -1595,10 +1558,9 @@ func _validate_roads(graph: MapGraph, v: MapValidation) -> void:
 
 	# 看的是【槽位数】而不是节点数：外环挖了一段空白之后，它的节点可以比内环还少，
 	# 那是合法的（示意图里就是这样）。「环越靠里越短」说的是环本身的长度
-	var slot_table: Dictionary = graph.layout_meta.get("ring_slots", {})
 	var prev_slots := -1
 	for r in range(int(graph.layout_meta.get("ring_count", 0)), 0, -1):
-		var slots := int(slot_table.get(r, slot_table.get(str(r), -1)))
+		var slots := RingSpec.slots_of(graph, r, -1)
 		if slots < 0:
 			continue
 		if prev_slots >= 0 and slots > prev_slots:
@@ -1614,7 +1576,7 @@ func _validate_roads(graph: MapGraph, v: MapValidation) -> void:
 			var r := int(ring_of.get(id, -1))
 			per_ring[r] = int(per_ring.get(r, 0)) + 1
 		for r in per_ring:
-			var slots := int(slot_table.get(r, slot_table.get(str(r), 0)))
+			var slots := RingSpec.slots_of(graph, int(r), 0)
 			if int(r) > 0 and slots > 0 and int(per_ring[r]) > floori(float(slots) * cap):
 				v.fail(&"ring_fill", "第 %d 环 %d 个槽位放了 %d 个点，超过 %.0f%% —— 内环也不能填满"
 					% [r, slots, per_ring[r], cap * 100.0])
@@ -1656,8 +1618,7 @@ func _validate_entry_gap(graph: MapGraph, v: MapValidation, ring_of: Dictionary)
 	if _cfg == null or graph.entry_ids.size() < 2:
 		return
 	var outer := int(graph.layout_meta.get("ring_count", 0))
-	var slot_table: Dictionary = graph.layout_meta.get("ring_slots", {})
-	var slots := int(slot_table.get(outer, slot_table.get(str(outer), 0)))
+	var slots := RingSpec.slots_of(graph, outer, 0)
 	if slots <= 0:
 		return
 	for i in graph.entry_ids.size():
@@ -1693,10 +1654,6 @@ static func _sorted_keys(d: Dictionary) -> Array[int]:
 	return out
 
 
-static func _edge_key(a: int, b: int) -> String:
-	return "%d:%d" % [mini(a, b), maxi(a, b)]
-
-
 ## 「进骨架并标 protected」：边**当场建出来**，再记一笔不许断。
 ##
 ## 不能只记一笔等后面的候选边去建 —— 骨架挑的落点未必落在「次序最近的那几个」里，
@@ -1707,5 +1664,5 @@ func _protect_edge(a: int, b: int, kind: StringName) -> void:
 		return
 	if _graph.edge_between(a, b) == null:
 		_graph.connect_nodes(a, b, kind)
-	_protected_edges[_edge_key(a, b)] = true
+	_protected_edges[MapJunctions.edge_key(a, b)] = true
 #endregion

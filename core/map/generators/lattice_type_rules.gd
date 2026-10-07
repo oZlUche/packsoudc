@@ -79,7 +79,7 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 	var coverage_rules: Dictionary = rules.get("coverage", {})
 	for t in coverage_rules:
 		var k := int(coverage_rules[t])
-		var dist := RingTypeAssigner.distances_to_type(graph, StringName(String(t)))
+		var dist := MapNavigator.distances_to_type(graph, StringName(String(t)))
 		var over := 0
 		for id in graph.node_ids():
 			if int(dist.get(id, 1 << 20)) > k and graph.get_node(id).danger <= threshold:
@@ -113,11 +113,10 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 	# --- 不许相邻 ---
 	var pairs: Array = rules.get("no_adjacent", [])
 	for e in graph.edges:
-		var ta := String(graph.get_node(e.from_id).type)
-		var tb := String(graph.get_node(e.to_id).type)
-		for pair in pairs:
-			if (pair[0] == ta and pair[1] == tb) or (pair[0] == tb and pair[1] == ta):
-				v.fail(&"adjacent", "%d（%s）与 %d（%s）挨着" % [e.from_id, ta, e.to_id, tb])
+		var ta := graph.get_node(e.from_id).type
+		var tb := graph.get_node(e.to_id).type
+		if MapNodeTypes.pair_forbidden(pairs, ta, tb):
+			v.fail(&"adjacent", "%d（%s）与 %d（%s）挨着" % [e.from_id, ta, e.to_id, tb])
 
 	# --- 中途撤离点只在允许的层、两两够远（终点那一层的撤离点是终点，不算中途）---
 	var allowed: Array = rules.get("extract_rows", [])

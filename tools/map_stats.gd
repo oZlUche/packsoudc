@@ -79,7 +79,7 @@ func _route_table(cfg: RingMapConfig, graphs: Array) -> void:
 				if risk_ok and reward_ok:
 					in_band += 1
 		for t in cfg.coverage:
-			var dist := RingTypeAssigner.distances_to_type(g, t)
+			var dist := MapNavigator.distances_to_type(g, t)
 			var outer := cfg.ring_count()
 			for id in g.node_ids():
 				var n: MapNode = g.get_node(id)

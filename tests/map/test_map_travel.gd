@@ -54,7 +54,8 @@ static func run_navigator_is_read_only(t: TestCase) -> void:
 	t.begin("导航器 · 只有单步与只读查询，没有多步移动的入口")
 
 	# 公开方法就这几个。多一个「走过去」「寻路」之类的就红 —— 自动寻路是有意不做的（5.6）
-	var allowed := ["available_moves", "edge_for_step", "resolve_step", "distance_map", "nearest_of_type"]
+	var allowed := ["available_moves", "edge_for_step", "resolve_step", "distance_map", "nearest_of_type",
+		"distances_to_type", "within_steps", "connected_within"]
 	var found: Array[String] = []
 	for m in MapNavigator.new().get_script().get_script_method_list():
 		var name := String(m["name"])

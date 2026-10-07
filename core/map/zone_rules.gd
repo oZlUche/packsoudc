@@ -66,27 +66,8 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 		if gates < 1 or gates > cap:
 			v.fail(&"zone_gate", "高危区 %s（%d 个点）有 %d 个出入口节点，该在 1～%d 之间"
 				% [zone_id, ids.size(), gates, cap])
-		if not is_connected_inside(graph, ids):
+		if not MapNavigator.connected_within(graph, ids):
 			v.fail(&"zone_connected", "高危区 %s 内部断成了几片" % zone_id)
-
-
-static func is_connected_inside(graph: MapGraph, ids: Array) -> bool:
-	if ids.size() <= 1:
-		return true
-	var inside := {}
-	for id in ids:
-		inside[int(id)] = true
-	var seen := {int(ids[0]): true}
-	var queue: Array[int] = [int(ids[0])]
-	var head := 0
-	while head < queue.size():
-		var id := queue[head]
-		head += 1
-		for n in graph.neighbors(id):
-			if inside.has(n) and not seen.has(n):
-				seen[n] = true
-				queue.append(n)
-	return seen.size() == ids.size()
 
 
 ## 这片区与区外之间的全部路。
