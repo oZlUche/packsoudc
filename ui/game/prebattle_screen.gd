@@ -122,5 +122,5 @@ func _title_of() -> String:
 		&"core":
 			return "核心"
 		&"search":
-			return "搜索中遭遇"
+			return "搜索中遭遇（输了不扣体力）"
 	return "战斗"

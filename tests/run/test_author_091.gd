@@ -457,3 +457,21 @@ static func frame_stat_key_picker(t: TestCase, root: Window) -> void:
 	mf3.queue_free()
 	t.check(PropertyForm._is_stat_field("stat") and PropertyForm._is_stat_field("damage_stat") and not PropertyForm._is_stat_field("status"), "认 stat / *_stat")
 	UiText.lang = saved
+
+
+## 135（作者定）：搜索遭遇打输不扣体力、点不能再搜 —— 文案跟着说清楚；节点规则里不再有 search 的扣体力表项
+static func run_search_loss_text_135(t: TestCase) -> void:
+	t.begin("135 · 搜索遭遇的文案：输了是「被赶跑」、不扣体力；规则表没有 search 一项；地图日志按原因说")
+	var destroyed: EventDef = load("res://data/events/search_destroyed.tres")
+	t.eq(destroyed.title, "被赶跑了", "打输那一屏的标题")
+	t.check(not destroyed.text.contains("对方留下"), "不再像打赢了：%s" % destroyed.text)
+	var tut: EventDef = load("res://data/events/tut_search_2.tres")
+	t.check(not tut.text.contains("会扣体力") and tut.text.contains("不扣体力"), "教程不再说搜索遭遇扣体力")
+	for path in ["res://data/node_rules/standard.tres", "res://data/node_rules/prologue.tres"]:
+		var rules: NodeRules = load(path)
+		t.check(not rules.loss_cost.has("search"), "%s：没有 search 的扣体力表项" % path.get_file())
+		t.eq(rules.loss_cost_of(&"search"), 0, "%s：loss_cost_of(search) = 0，和实际一致" % path.get_file())
+	t.eq(NodeRules.new().loss_cost_of(&"search"), 0, "默认表也没有")
+	t.eq(preload("res://ui/game/map_screen.gd").search_end_text(&"encounter"), "被赶跑，这个点不能再搜", "日志：遭遇打输")
+	t.eq(preload("res://ui/game/map_screen.gd").search_end_text(&"exhausted"), "搜完了", "日志：搜满")
+	t.eq(preload("res://ui/game/map_screen.gd").search_end_text(&"left"), "离开", "日志：自己走")

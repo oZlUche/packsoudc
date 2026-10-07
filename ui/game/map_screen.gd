@@ -475,7 +475,7 @@ func _adopt() -> void:
 	ev.battle_finished.connect(func(n: MapNode, result: BattleResult, won: bool):
 		var who := enemy_preview(n.id).get_slice("　", 0)
 		_note("　打 %s：%s，%.1f 秒" % [who if who != "" else "敌人", "赢了" if won else ("平局，按输算" if result.is_draw() else "输了"), result.duration_sec()]))
-	ev.search_closed.connect(func(_n: MapNode, _haul: GridInventory, why: StringName): _note("　搜索结束（%s）" % why))
+	ev.search_closed.connect(func(_n: MapNode, _haul: GridInventory, why: StringName): _note("　" + search_end_text(why)))
 	ev.rested.connect(func(_n: MapNode, got: int): _note("　休息：体力 +%d" % got))
 	ev.extract_reached.connect(func(_n: MapNode, fee: int):
 		_note("　到了撤离点%s：按「撤离」结束这一局" % ("（付费：%d 币，%s）" % [fee, "付得起" if _run.wallet.can_afford(fee) else "钱不够"] if fee > 0 else "")))
@@ -662,6 +662,16 @@ func tooltip_text() -> String:
 
 
 ## 这个点里的敌人一行摘要（5.10：全图可见）；没有敌人就是空串
+## 135：搜索结束那一句日志按原因说人话（遭遇打输 / 搜满 / 自己走）
+static func search_end_text(why: StringName) -> String:
+	match why:
+		&"encounter":
+			return "被赶跑，这个点不能再搜"
+		&"exhausted":
+			return "搜完了"
+	return "离开"
+
+
 func enemy_preview(id: int) -> String:
 	if _run == null or id < 0 or not _run.map.has_node(id):
 		return ""
