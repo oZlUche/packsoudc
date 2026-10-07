@@ -52,5 +52,17 @@ func to_text() -> String:
 	return "\n".join(lines)
 
 
+## 编辑器状态栏用的 BBCode 版：错误红、警告橙，一条一行；没有问题时绿色写 [param ok_text]（各编辑器的措辞不同，原样传）
+func bbcode(ok_text: String = "✓ 没有问题") -> String:
+	var lines: Array[String] = []
+	for e in errors:
+		lines.append("[color=#d9534f]✗ %s：%s[/color]" % [e["path"], e["message"]])
+	for w in warnings:
+		lines.append("[color=#f0ad4e]! %s：%s[/color]" % [w["path"], w["message"]])
+	if lines.is_empty():
+		lines.append("[color=#5cb85c]%s[/color]" % ok_text)
+	return "\n".join(lines)
+
+
 func summary() -> String:
 	return "%d 条错误，%d 条警告" % [errors.size(), warnings.size()]

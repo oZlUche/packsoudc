@@ -16,7 +16,6 @@ var _option_btns: Array[Button] = []
 var _hints: Array[String] = []
 
 
-const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
 var _payload: Dictionary = {}
 var _bag: Control = null
 var _bag_panel: Control = null

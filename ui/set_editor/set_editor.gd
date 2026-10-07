@@ -45,19 +45,6 @@ func _ready() -> void:
 		_open(_ids[0])
 
 
-static func _ids_on_disk() -> Array[String]:
-	var out: Array[String] = []
-	var d := DirAccess.open(SET_DIR)
-	if d == null:
-		return out
-	var files := d.get_files()
-	files.sort()
-	for f in files:
-		if f.ends_with(".json"):
-			out.append(f.get_basename())
-	return out
-
-
 #region 界面
 func _build_ui() -> void:
 	UiTheme.prepare_root(self, false)     # 121：装上界面主题、铺底色（设置在 _ready 里已经读过、apply 过）
@@ -77,7 +64,6 @@ func _build_ui() -> void:
 	left.add_child(UiTheme.make_label("套装", 16, UiPalette.FG))
 	_list = ItemList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_list.add_theme_font_override("font", _font)
 	_list.item_selected.connect(func(i: int): _open(_ids[i]))
 	left.add_child(_list)
 	var lb := HBoxContainer.new()
@@ -99,7 +85,6 @@ func _build_ui() -> void:
 	id_row.add_child(UiTheme.make_label("id", 13, UiPalette.DIM))
 	_id_edit = LineEdit.new()
 	_id_edit.custom_minimum_size.x = 180
-	_id_edit.add_theme_font_override("font", _font)
 	_id_edit.text_changed.connect(func(text: String):
 		if _syncing or _def == null:
 			return
@@ -123,7 +108,6 @@ func _build_ui() -> void:
 	name_row.add_child(UiTheme.make_label("名字", 13, UiPalette.DIM))
 	_name_edit = LineEdit.new()
 	_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_name_edit.add_theme_font_override("font", _font)
 	_name_edit.text_changed.connect(func(text: String):
 		if _syncing or _def == null:
 			return
@@ -157,7 +141,6 @@ func _build_ui() -> void:
 	side.add_child(UiTheme.make_label("JSON（可直接改）", 12, UiPalette.DIM))
 	_json = TextEdit.new()
 	_json.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_json.add_theme_font_override("font", _font)
 	_json.add_theme_font_size_override("font_size", 12)
 	side.add_child(_json)
 	side.add_child(UiTheme.make_button("套用上面的 JSON", _apply_json, UiTheme.TIER_PLAIN, 13))
@@ -208,7 +191,7 @@ func add_tier(pieces: int) -> SetTier:
 
 #region 列表与草稿
 func _reload_list() -> void:
-	_ids = _ids_on_disk()
+	_ids = ContentPaths.ids_in(SET_DIR)
 	for key in _drafts:
 		if not _ids.has(key):
 			_ids.append(key)
@@ -361,23 +344,12 @@ func _validate() -> ImportReport:
 	return report
 
 
-func _status_text(report: ImportReport) -> String:
-	var lines: Array[String] = []
-	for e in report.errors:
-		lines.append("[color=#d9534f]✗ %s：%s[/color]" % [e["path"], e["message"]])
-	for w in report.warnings:
-		lines.append("[color=#f0ad4e]! %s：%s[/color]" % [w["path"], w["message"]])
-	if lines.is_empty():
-		lines.append("[color=#5cb85c]没有问题[/color]")
-	return "\n".join(lines)
-
-
 func _refresh() -> void:
 	if _def == null:
 		return
 	_track_draft()
 	_json.text = _dump()
-	_status.text = _status_text(_validate())
+	_status.text = _validate().bbcode("没有问题")
 	_summary.text = summary_text()
 	var who := members()
 	_members.text = "、".join(who) if not who.is_empty() else "（还没有道具的 set_id 写着这个 id）"
@@ -395,7 +367,7 @@ func _save() -> void:
 	report.source = id
 	var built := ContentImporter.import_set(data, _ctx, report)
 	if not report.ok():
-		_status.text = "[color=#d9534f]有错，没存[/color]\n" + _status_text(report)
+		_status.text = "[color=#d9534f]有错，没存[/color]\n" + report.bbcode("没有问题")
 		return
 	DirAccess.make_dir_recursive_absolute(SET_DIR)
 	if ContentExporter.save(data, ContentPaths.authoring_file(KIND, id)) != OK:
@@ -412,7 +384,7 @@ func _save() -> void:
 	_reload_list()
 	_select_in_list(id)
 	_refresh()
-	_status.text = "[color=#5cb85c]已存：sets/%s.json 与 .tres[/color]\n" % id + _status_text(report)
+	_status.text = "[color=#5cb85c]已存：sets/%s.json 与 .tres[/color]\n" % id + report.bbcode("没有问题")
 
 
 func _save_as() -> void:

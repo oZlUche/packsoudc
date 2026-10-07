@@ -6,8 +6,6 @@
 ## 刷新、收起（回地图，店还开着）、离开照旧。
 extends GameScreen
 
-const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
-
 var _session: ShopSession = null
 var _shelf_row: HBoxContainer
 var _shelf_views: Array[InventoryView] = []
@@ -15,9 +13,7 @@ var _sell_view: InventoryView
 var _refresh_btn: Button
 var _wallet_line: Label
 var _line: Label
-var _drag: DragLayer
 var _inv: Control
-var _tip: HoverTip
 
 
 func open(payload: Dictionary) -> void:
@@ -55,23 +51,11 @@ func open(payload: Dictionary) -> void:
 	left.add_child(buttons)
 
 	# 右边：自己的背包（棋盘 + 地上），和店共用一层拖拽
-	var inv := InventoryPanelScript.new()
-	_drag = DragLayer.new()
-	_drag.label_font = font
-	inv.setup(flow.run, font, _drag)
-	inv.hint_sink = func(text: String): _say(text)
-	_inv = inv
-	row.add_child(inv)
-	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(_drag)
+	_inv = _mount_bag(row, _sell_view, func(text: String): _say(text))
 	_drag.drop_outside_to_stash = false     # 店里放到外面 = 放回原处，不算买也不算卖
-	_drag.register_view(_sell_view)
 	_drag.drop_filter = _allow_drop
 	_drag.craft_filter = _allow_craft     # 审查 A1：没付钱的商品不能拿去合成（会被消耗掉、结不了账）
 	_drag.drag_finished.connect(_on_drag_finished)
-	_tip = HoverTip.new()
-	add_child(_tip)
-	_tip.watch(_sell_view)
 
 	if _session != null:
 		_session.stock_changed.connect(_rebuild)

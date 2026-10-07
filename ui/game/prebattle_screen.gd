@@ -5,8 +5,6 @@
 ## 只有一个按钮「开战」：棋盘上一件会出手的东西都没有时灰掉（打不起来的仗不让开）。这一屏是**必须过的**：不能收起回地图，也走不了。
 extends GameScreen
 
-const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
-
 var _node: MapNode = null
 var _content: Dictionary = {}
 var _type: StringName = &"battle"

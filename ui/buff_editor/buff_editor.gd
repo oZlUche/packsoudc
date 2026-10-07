@@ -46,19 +46,6 @@ func _ready() -> void:
 		_open(_ids[0])
 
 
-static func _ids_on_disk() -> Array[String]:
-	var out: Array[String] = []
-	var d := DirAccess.open(BUFF_DIR)
-	if d == null:
-		return out
-	var files := d.get_files()
-	files.sort()
-	for f in files:
-		if f.ends_with(".json"):
-			out.append(f.get_basename())
-	return out
-
-
 #region 界面
 func _build_ui() -> void:
 	UiTheme.prepare_root(self, false)     # 121：装上界面主题、铺底色（设置在 _ready 里已经读过、apply 过）
@@ -78,7 +65,6 @@ func _build_ui() -> void:
 	left.add_child(UiTheme.make_label(UiText.t("buff.title"), 16, UiPalette.FG))
 	_list = ItemList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_list.add_theme_font_override("font", _font)
 	_list.item_selected.connect(func(i: int): _open(_ids[i]))
 	left.add_child(_list)
 	var lb := HBoxContainer.new()
@@ -100,7 +86,6 @@ func _build_ui() -> void:
 	id_row.add_child(UiTheme.make_label(UiText.t("buff.id"), 13, UiPalette.DIM))
 	_id_edit = LineEdit.new()
 	_id_edit.custom_minimum_size.x = 180
-	_id_edit.add_theme_font_override("font", _font)
 	_id_edit.text_changed.connect(func(text: String):
 		if _syncing or _def == null:
 			return
@@ -124,7 +109,6 @@ func _build_ui() -> void:
 	name_row.add_child(UiTheme.make_label(UiText.t("buff.name"), 13, UiPalette.DIM))
 	_name_edit = LineEdit.new()
 	_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_name_edit.add_theme_font_override("font", _font)
 	_name_edit.text_changed.connect(func(text: String):
 		if _syncing or _def == null:
 			return
@@ -133,7 +117,6 @@ func _build_ui() -> void:
 	name_row.add_child(_name_edit)
 	_debuff = CheckBox.new()
 	_debuff.text = UiText.t("buff.debuff")
-	_debuff.add_theme_font_override("font", _font)
 	_debuff.toggled.connect(func(on: bool):
 		if _syncing or _def == null:
 			return
@@ -147,7 +130,6 @@ func _build_ui() -> void:
 	stack_row.add_theme_constant_override("separation", 12)
 	_stackable = CheckBox.new()
 	_stackable.text = UiText.t("buff.stackable")
-	_stackable.add_theme_font_override("font", _font)
 	_stackable.toggled.connect(func(on: bool):
 		if _syncing or _def == null:
 			return
@@ -161,7 +143,6 @@ func _build_ui() -> void:
 	dur_row.add_theme_constant_override("separation", 12)
 	_permanent = CheckBox.new()
 	_permanent.text = UiText.t("buff.permanent")
-	_permanent.add_theme_font_override("font", _font)
 	_permanent.toggled.connect(func(on: bool):
 		if _syncing or _def == null:
 			return
@@ -172,7 +153,6 @@ func _build_ui() -> void:
 	_seconds.min_value = 0
 	_seconds.max_value = 600
 	_seconds.step = 0.1
-	_seconds.add_theme_font_override("font", _font)
 	_seconds.value_changed.connect(func(v: float):
 		if _syncing or _def == null:
 			return
@@ -207,7 +187,6 @@ func _build_ui() -> void:
 	side.add_child(UiTheme.make_label(UiText.t("buff.code"), 12, UiPalette.DIM))
 	_json = TextEdit.new()
 	_json.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_json.add_theme_font_override("font", _font)
 	_json.add_theme_font_size_override("font_size", 12)
 	side.add_child(_json)
 	side.add_child(UiTheme.make_button(UiText.t("buff.apply_code"), _apply_json, UiTheme.TIER_PLAIN, 13))
@@ -251,7 +230,7 @@ func def() -> BuffDef:
 
 #region 列表与草稿
 func _reload_list() -> void:
-	_ids = _ids_on_disk()
+	_ids = ContentPaths.ids_in(BUFF_DIR)
 	_repaint_list()
 
 
@@ -395,15 +374,9 @@ func _validate() -> ImportReport:
 	return report
 
 
+## 状态栏的文字（[method ImportReport.bbcode]），「没有问题」那句按语言来。测试直接调
 func _status_text(report: ImportReport) -> String:
-	var lines: Array[String] = []
-	for e in report.errors:
-		lines.append("[color=#d9534f]✗ %s：%s[/color]" % [e["path"], e["message"]])
-	for w in report.warnings:
-		lines.append("[color=#f0ad4e]! %s：%s[/color]" % [w["path"], w["message"]])
-	if lines.is_empty():
-		lines.append("[color=#5cb85c]%s[/color]" % UiText.t("buff.ok"))
-	return "\n".join(lines)
+	return report.bbcode(UiText.t("buff.ok"))
 
 
 func summary_text() -> String:
