@@ -139,7 +139,8 @@ static func run(t: TestCase) -> void:
 
 	# --- 换朝向放回：内容物按本地坐标跟着转，一件不少，严格版也放得回 ---
 	var p2 := board.detach_bag(b1.uid)
-	t.check(board.can_attach_bag(p2, Vector2i(0, 3), 1),
+	var turned := board.bag_fit_report(p2, Vector2i(0, 3), 1)
+	t.check(turned["ok"] and (turned["fallen"] as Array).is_empty(),
 		"换个朝向放回也一件不少 —— 竖着的 1x3 跟着包一起变横")
 	t.check(board.attach_bag(p2, Vector2i(0, 3), 0), "原朝向放回成功")
 

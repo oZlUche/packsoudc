@@ -34,7 +34,7 @@ static func of(def: ItemDef) -> int:
 static func formula(def: ItemDef) -> int:
 	if def == null:
 		return 0
-	var cells := def.shape.cell_count() if def.shape != null else 1
+	var cells := def.cell_count()
 	if def.tags.has(HEAVY):
 		return cells * PER_CELL_HEAVY
 	if def.tags.has(METAL):

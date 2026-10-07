@@ -509,7 +509,7 @@ static func run_kit(t: TestCase) -> void:
 	t.eq(a.max_hp_int(), b.max_hp_int(), "两次编译生命相同")
 	t.eq(a.rough_dps(), b.rough_dps(), "两次编译 DPS 相同")
 	var base := EnemyKit.baseline_of(def, tier)
-	t.eq(base.value_of(&"max_hp"), tier.scaled(&"max_hp", float(def.base_stats["max_hp"])), "基线 = 敌人覆盖 × 档位倍率")
+	t.eq(base.value_of(&"max_hp"), float(def.base_stats["max_hp"]) * float(tier.stat_scale.get("max_hp", 1.0)), "基线 = 敌人覆盖 × 档位倍率")
 	t.eq(base.value_of(&"max_stamina"), CombatantBaseline.DEFAULT_STATS["max_stamina"], "没覆盖的键用默认")
 	t.check(a.max_hp_int() >= int(base.value_of(&"max_hp")), "编译出的生命至少是基线（道具只加不减）")
 

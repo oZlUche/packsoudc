@@ -25,11 +25,7 @@ func is_locked(id: StringName) -> bool:
 
 ## 091：带解锁要求的道具（不管解没解锁）
 func gated_ids() -> Array:
-	var out: Array = []
-	for id in _defs:
-		if (_defs[id] as ItemDef).requires_unlock != &"":
-			out.append(id)
-	return out
+	return ids_where(func(d: ItemDef) -> bool: return d.requires_unlock != &"")
 
 
 ## 095：装完按信仰的赐福模板派生赐福版（[method load_dir] 末尾）
@@ -112,16 +108,21 @@ func variants_of(base_id: StringName) -> Array:
 
 ## 088：特殊道具（不进背包、不能生成，只在图鉴里点亮）
 func keepsake_ids() -> Array:
-	var out: Array = []
-	for id in _defs:
-		if (_defs[id] as ItemDef).is_keepsake():
-			out.append(id)
-	return out
+	return ids_where(func(d: ItemDef) -> bool: return d.is_keepsake())
 
 
 ## 全部，含封存的
 func all_ids() -> Array:
 	return _defs.keys()
+
+
+## 满足 [param pred]（收一个 [ItemDef]）的全部 id，封存的、锁着的都在内 —— 「某一类的 id」都从这里筛
+func ids_where(pred: Callable) -> Array:
+	var out: Array = []
+	for id in _defs:
+		if pred.call(_defs[id]):
+			out.append(id)
+	return out
 
 
 func size() -> int:

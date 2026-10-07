@@ -10,7 +10,7 @@ const FLOORS := [1, 2, 5, 9, 13]
 
 
 static func cells_of(def: ItemDef) -> int:
-	return def.shape.cells.size() if def != null and def.shape != null else 0
+	return def.cell_count() if def != null else 0
 
 
 static func grade_of_cells(n: int) -> int:

@@ -48,7 +48,7 @@ static func baseline_of(def: EnemyDef, tier: StrengthTier, content: Dictionary =
 	if tier != null:
 		for key in tier.stat_scale:
 			var k := String(key)
-			b.base_stats[k] = tier.scaled(StringName(k), b.value_of(StringName(k), 0.0))
+			b.base_stats[k] = b.value_of(StringName(k), 0.0) * float(tier.stat_scale[key])
 	var over = content.get("base_stats", null)
 	if over is Dictionary:
 		for key in over:

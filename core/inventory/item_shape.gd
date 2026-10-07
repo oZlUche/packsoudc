@@ -114,7 +114,7 @@ func _build_cache() -> void:
 	for i in 4:
 		if i > 0:
 			cur = _rotate_cw(cur)
-		var off := _min_of(cur)
+		var off := min_of(cur)
 		var shifted: Array[Vector2i] = []
 		for c in cur:
 			shifted.append(c - off)
@@ -124,7 +124,8 @@ func _build_cache() -> void:
 		cur = shifted
 
 
-static func _min_of(cs: Array[Vector2i]) -> Vector2i:
+## 一组格子的最小角（两轴各取最小）；空数组返回 (0, 0)。[GridInventory] 的本地 ↔ 全局坐标换算也用它
+static func min_of(cs: Array[Vector2i]) -> Vector2i:
 	if cs.is_empty():
 		return Vector2i.ZERO
 	var mn := cs[0]

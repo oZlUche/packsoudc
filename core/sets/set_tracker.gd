@@ -109,12 +109,19 @@ func is_active(set_id: StringName) -> bool:
 	return not active_tiers(set_id).is_empty()
 
 
+## 全部已激活的档位：套装按 id 字典序、同一套装按档位表的顺序 —— 下面三个查询共用，顺序稳定
+func _active_tiers_all() -> Array[SetTier]:
+	var out: Array[SetTier] = []
+	for set_id in tracked_ids():
+		out.append_array(active_tiers(set_id))
+	return out
+
+
 ## 已激活套装中属于该作用域的效果。
 func set_effects_in_scope(scope: StringName) -> Array[Effect]:
 	var out: Array[Effect] = []
-	for set_id in tracked_ids():
-		for tier in active_tiers(set_id):
-			out.append_array((tier as SetTier).effects_in(scope))
+	for tier in _active_tiers_all():
+		out.append_array(tier.effects_in(scope))
 	return out
 
 
@@ -134,18 +141,16 @@ func effects_in_scope(scope: StringName) -> Array[Effect]:
 ## 已激活套装贡献的战斗规则
 func combat_rules() -> Array[AbilityRule]:
 	var out: Array[AbilityRule] = []
-	for set_id in tracked_ids():
-		for tier in active_tiers(set_id):
-			out.append_array((tier as SetTier).rules)
+	for tier in _active_tiers_all():
+		out.append_array(tier.rules)
 	return out
 
 
 ## 已激活套装贡献的编译期属性修饰
 func combat_mods() -> Array[StatModifier]:
 	var out: Array[StatModifier] = []
-	for set_id in tracked_ids():
-		for tier in active_tiers(set_id):
-			out.append_array((tier as SetTier).mods)
+	for tier in _active_tiers_all():
+		out.append_array(tier.mods)
 	return out
 
 
