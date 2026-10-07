@@ -676,7 +676,7 @@ static func run_names_and_hunters_and_mana(t: TestCase) -> void:
 	var normal: DifficultyDef = load(ContentPaths.asset_file("difficulties", "normal"))
 	var has_hunters := false
 	for m in normal.mechanics:
-		if String(ContentExporter._registry_name_of(m)) == "hunters":
+		if String(ContentSchema.registry_name_of(m)) == "hunters":
 			has_hunters = true
 	t.check(not has_hunters, "普通难度没有猎手机制：猎手要在难度里额外配")
 	var diffs := GameFlow.load_difficulties()

@@ -448,11 +448,11 @@ static func run_existing_assets(t: TestCase) -> void:
 
 static func run_assets_match_json(t: TestCase) -> void:
 	t.begin("内容管线 · 仓库里的作者 JSON 与 .tres 一致（100 第 1 步；命令行是 tools/check_content.gd，同一段逻辑）")
-	# 每一种都得有导出器与登记，否则新种类会悄悄躲过这道检查
+	# ORDER 与 KINDS 得是同一组种类，否则新种类会悄悄躲过这道检查（导出器按反射工作，不用另外登记导出器）
 	for kind in ContentPaths.ORDER:
-		t.check(ContentCheck.KINDS.has(String(kind)), "%s 在 ContentCheck.KINDS 里" % kind)
-	for kind in ContentCheck.KINDS:
-		t.check(not ContentPaths.dirs_of(kind).is_empty(), "%s 有目录（KINDS 或 EDITOR_ONLY_KINDS）" % kind)
+		t.check(ContentPaths.KINDS.has(String(kind)), "%s 在 ContentPaths.KINDS 里" % kind)
+	for kind in ContentPaths.KINDS:
+		t.check(ContentPaths.ORDER.has(kind), "%s 在 ContentPaths.ORDER 里" % kind)
 	var problems := ContentCheck.run_all()
 	t.check(problems.is_empty(), "198 份内容对得上" if problems.is_empty() else "\n      ".join(problems))
 	# 这道检查本身抓不抓得住：改一个值、少一份资产，都得报出来
