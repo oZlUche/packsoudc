@@ -140,7 +140,7 @@ static func run_spawn_territory_turn(t: TestCase) -> void:
 		t.check(h.territory.is_empty(), "半径 0 = 整张图")
 	# 回合：走几步，猎手只在领地里
 	var sensed: Array = []
-	s.hunter_sensed.connect(func(_h: Hunter): sensed.append(true))
+	s.hunters.sensed.connect(func(_h: Hunter): sensed.append(true))
 	var moved := 0
 	for i in 6:
 		if s.is_over() or not s.events.pending.is_empty():

@@ -22,6 +22,8 @@ const GROUPS := {
 const GROUP_ORDER := ["term", "tag", "dtype", "buff", "stat", "trigger"]
 ## 还没有说明的词条页正文
 const NO_TEXT := "（这一页的说明还没写。）"
+## 140：「合成」这一页的正文下面列全部配方（两件 → 产物，配上作者写的那句 `note`）
+const RECIPE_PAGE := "crafting"
 
 ## 页 id → 页：`{id, title, category, group, order, text, related: Array[String], items: Array[StringName]}`
 var _pages: Dictionary = {}
@@ -33,12 +35,17 @@ var _links: Dictionary = {}
 var items: ItemDatabase = null
 ## 图鉴点亮了没有：`func(id: StringName) -> bool`；无效 = 全当亮了
 var lit: Callable = Callable()
+## 140：全部配方（「合成」页列出来）
+var recipes: Array[RecipeDef] = []
 
 
 ## 造一本：手写的机制页 + 按当前内容生成的词条页
-static func build(help: Array, item_db: ItemDatabase) -> Encyclopedia:
+static func build(help: Array, item_db: ItemDatabase, p_recipes: Array = []) -> Encyclopedia:
 	var e := Encyclopedia.new()
 	e.items = item_db
+	for r in p_recipes:
+		if r is RecipeDef:
+			e.recipes.append(r as RecipeDef)
 	e._generate_terms()
 	var authored: Array = help.duplicate()
 	authored.sort_custom(func(a: HelpPageDef, b: HelpPageDef) -> bool:
@@ -224,6 +231,8 @@ func render(id: String, ctx: Dictionary = {}) -> String:
 	if not names.is_empty():
 		var label := "来自：" if String(p["group"]) == "buff" else ("相关道具：" if UiText.lang == "zh" else "Items: ")
 		tail.append(label + "、".join(names))
+	if id == RECIPE_PAGE:
+		tail.append_array(recipe_lines())
 	if tail.is_empty():
 		return body
 	return body + "\n\n" + "\n".join(tail)
@@ -250,6 +259,28 @@ func link_words(text: String, self_id: String = "") -> String:
 		out = out.replace(words[i], holder)
 	for i in words.size():
 		out = out.replace(holders[i], "[url=%s]%s[/url]" % [String(_links[words[i]]), words[i]])
+	return out
+
+
+## 140：配方一行一条「甲 + 乙 → 产物：说明」。三件里有图鉴没点亮的：名字遮成「？」、不写说明（说明里有道具名）
+func recipe_lines() -> Array[String]:
+	var out: Array[String] = []
+	if recipes.is_empty():
+		return out
+	out.append("配方：" if UiText.lang == "zh" else "Recipes:")
+	for r in recipes:
+		if r.inputs.size() != 2:
+			continue
+		var ids: Array[StringName] = [r.inputs[0], r.inputs[1], r.output]
+		var names: Array[String] = []
+		var all_lit := true
+		for item_id in ids:
+			names.append(_item_name(item_id))
+			all_lit = all_lit and not (lit.is_valid() and not bool(lit.call(item_id)))
+		var line := "　%s + %s → %s" % names
+		if all_lit and r.note != "":
+			line += "：" + r.note
+		out.append(line)
 	return out
 
 

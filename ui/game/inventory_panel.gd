@@ -99,6 +99,8 @@ func _build() -> void:
 		_drag.craft_grid = _run.board
 		_drag.craft_drop = func(a: ItemInstance, b_uid: int) -> bool:
 			return bool(crafting.craft(a, b_uid)["ok"])
+		_drag.craft_note = func(a: ItemInstance, b: ItemInstance) -> String:     # 140：预览旁边那行小字
+			return crafting.note_of(a.def, b.def)
 		crafting.done.connect(_on_crafted)
 	# 084：停在道具上的悬浮说明（名、稀有度、标签、效果、武器的冷却与 DPS、槽）
 	tip = HoverTip.new(_font)

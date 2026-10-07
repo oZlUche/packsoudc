@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.57 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.58 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2392,10 +2392,10 @@ func spend(n: int) -> void:
 
 这五步落在 **`core/run/map_travel.gd`（`MapTravel`）** 一处：`step_to(to_id)` 造一个 step 意图交给
 `apply(intent)`，`apply` 是唯一会改地图状态的入口 —— 将来传送、定点移动造好自己的意图之后也走它，
-顺序、计数、惩罚、事件一处都不用改。侵蚀与节点事件都是**鸭子类型的钩子**，`MapTravel` 不认识它们的类：
+顺序、计数、惩罚、事件一处都不用改。两个钩子：
 
-- `erosion`：有 `on_action(clock, graph)` 与 `move_penalty(node) -> {hp_damage, item_risk}` 就行；
-  浅层惩罚扣在 `vitality` 上（7.1）。第 7 阶段之前是 null，但**顺序现在就定死**，测试用一个假钩子记调用次序守着。
+- `erosion: ErosionField`（140 起明确类型，不再是鸭子接口）：每步先 `on_action(clock, graph)` 推进，再 `settle(node)` 结算途经点与目的地，
+  惩罚由侵蚀场自己的效果构件做（`MapTravel` 不再持有体力）。null = 没有侵蚀；**顺序定死**，测试用 `ErosionField` 的子类记调用次序守着。
 - `on_node_event: Callable(node)`：设了它，节点什么时候算「用过」由它说（战斗打完才 `mark_visited`）；
   没设，到点即标 `VISITED` —— M4 之前的占位。
 - 出生点开局就算踩过了（`start_at`），它不该再触发一次事件。走不了的一律发 `refused(intent, why)`，
@@ -2459,7 +2459,7 @@ var next_at_action: int
 func on_action(clock: ActionClock, graph: MapGraph) -> void
 func is_eroded(node: MapNode) -> bool:
     return node.erosion_band <= eroded_bands
-func move_penalty(node: MapNode) -> Dictionary    # {hp_damage:int, item_risk:float}
+func settle(node: MapNode) -> void              # 被侵蚀的点：效果构件挨个过门（075）
 ```
 
 #### 三条硬性设计约束
@@ -3331,6 +3331,8 @@ func player_spec() -> CombatantSpec …
 
 ## 9. 套装与跨域效果
 
+> **已实现、暂无内容**（140 登记，见 [status.md](status.md)）：本节的套装、道具跨域效果、包体加成、敌人 `loadout` 代码与测试都在，数据里还没有一份；第一份内容待流派 / 掉落设计需要时再写。
+
 **套装是由道具触发的独立系统，不是编译期的一步。**
 
 道具身上显示的套装信息**纯粹是 UI 提示**（按激活状态做暗／亮切换），不参与任何结算。
@@ -3947,6 +3949,7 @@ res://
 | v2.55 | 2026-10-07 | **基地屏：调试台抽屉、格子占满整行**（139，作者定，三项待定按推荐；改 8.2）：新 `DevDrawer`（箭头开关、盖在页面上，开发开关 / 局外解锁 / 科技等级 / 最近几局都搬进去）；`InventoryView.cell_px` + `cell_px_changed`，`DragLayer` / `ScrollBox` 对着视图算的地方读它；`WarehousePanel.fill_width` 与 `cell_for`（60 ～ 96）；出售页同样；图鉴列数按宽度 |
 | v2.56 | 2026-10-07 | **精简移交第 1 组：删**（140，作者定，待定按推荐；改 3.3、4.4）：`ItemDef.icon`；`GridInventory.rotate_item / rotate_bag / neighbors_of`、`ItemInstance.rotated_step`（原地转 = `detach_bag` + `attach_bag_shedding`）；两个容器的 `accept_tags`（`GridInventory` 只剩 `accept_filter`，存档不再写该键）；`Cost.describe` 全家；`CombatantRuntime.clear_axis`、`CompiledItem.origin_of`；扳机 `OnResourceChanged`；没人接的信号（猎手 `spawned / moved / encounter / hunter_defeated / fled`、`MapTravel.arrival_held`、`GameFlow.run_started / run_ended`、`Vitality.depleted`）；工具 `gen_sample_items / gen_sample_combat / export_content`；开局屏「没有角色」老路改成红字 |
 | v2.57 | 2026-10-07 | **精简移交第 2 组：改行为**（140，作者定，待定按推荐；改 6.1、7.x 猎手、存档版本）：`LootPacker.pack` = 往空容器里 `add`（加高时先放下的原位不动，只往后排没放下的）；`DropResolver.expected_count` 按固定种子 64 次掷骰的均值（掉落 + 保底），带 `boss` 参数，地图预览对核心点传 true；`carried_entries` 取代 `carried_flags`；编译器没有棋盘也照算后续步骤（信仰标签空）；猎手旧路径 R-21 删（`HunterDef.LEGACY_OPTION / loss_outcomes`，导入写 `loss_outcomes` 或 `loss_options` 为空都报错；一局存档 v3 → v4）；`MapRng.pick_weighted` 合并格阵与环形两份按权重抽样（遍历顺序由调用方给，同种子输出不变） |
+| v2.58 | 2026-10-07 | **精简移交第 3 组：收紧**（140，作者定，待定按推荐；改 5.6、5.7、9 节、7.4）：`MapTravel.erosion: ErosionField`（删 `move_penalty` 与 `has_method` 鸭子判断；`MapTravel.vitality` 随之没人用、删；三个测试的假侵蚀改成 `ErosionField` 子类）；`RunState` 的 9 个转发信号删掉，地图屏直接接 `hunters / travel.erosion / skills / faith_power` 的信号；`RecipeDef.note` 显示出来（拖到搭档上时残影下面一行「合成 → 产物：说明」、百科「合成」页列全部配方）；9 节开头与 [status.md](status.md) 标「已实现、暂无内容」，status 新增登记表（套装等扩展点、非矩形容器、`count_by_scale`、`min_danger`、`treasure_modified`） |
 | v2.49 | 2026-10-06 | **猎手战败结果档 + 猎手战插进进点的事件队列**（134，作者定，五项待定按推荐；改 8.5）：新资源 `HunterLossOption`（档名、名字、权重、后果），`HunterDef.loss_options` + `loss_pick`（新构件表 `HUNTER_LOSS_PICKS`：`random` / `fixed`），`Hunter.loss_id` 生成时选定、跟存档；新后果 `expel`（退回上一步、不驻守）。`MapTravel` 加进点闸门 `arrival_gate` / 挂起的进点 `held`（存档）/ `finish_arrival` / `cancel_arrival`；`RunState` 的猎手回合从「这一步的事之后」挪到闸门里（先于点的事），`resume_arrival` 在玩家空下来时接着进；驱逐 = 取消进点（不标走过、事不发生、不记首访，步数照算）。`GameFlow._flush` 接着进点后排进队里的接着看；收起猎手战的战利品也接着进点。悬停与开打前事件屏写「输了会怎样」。`hunter_1` 击退 / 驱逐各一半，`hunter_2` 击退 / 驱逐 / 驱逐并驻守各三分之一（数值占位） |
 | v2.48 | 2026-10-05 | **单一乘区**（133，作者定；改 4.3）：删 `StatMath.Buff` 四个乘区，公式改成 `终值 = 基础 × max(0, 1 + Σ乘算) + Σ加算`；`StatModifier` 改成 `stat / mode{ADD, MULT} / amount`，`StatValue` 的四格 `mult` 换成一个 `percent`；`PropertyForm` 在属性修饰下加一行灰字提示（乘算还是加算、扩大还是缩小、在 buff 里每层一份）；导入器迁移旧键（`mult_category` 提醒忽略、又乘又加报错），`normalize_content` 重写了 18 份内容 JSON；百科删掉「乘区」词条组；编译金样有意重录（`percent` 替换 `mult`，四份终值逐项不变）。跨乘区的组合数值变了（弓 + 箭 + 符号 1.38 → 1.35）；标准轴不动 |
 | v2.47 | 2026-10-05 | **规则构件第二批**（132）：时机 `on_status_removed` / `on_overtime`，`on_item_fired.source_tags`、`on_resource_below.direction / full`、`on_damage.crit_only`；条件 `resource_condition` / `axis_condition` 与 `axis_cost`，三个条件型加 `negate`；效果 `convert_damage_type`，`deal_damage.percent_of / per_target_stack`、`change_resource.percent_of_damage`、`remove_status.all_debuffs / all_buffs`；受益格 `receive_rules`（4.2）；导入器的「配了也没用」警告。放血刀改成按目标流血层数 ×3。见 4.2、4.4 |

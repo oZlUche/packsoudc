@@ -634,7 +634,7 @@ func show_encyclopedia(page: String = "") -> void:
 ## 114：这本百科（第一次用时按手写页 + 当前内容造；「相关道具」按图鉴遮名字）
 func encyclopedia() -> Encyclopedia:
 	if _encyclopedia == null:
-		_encyclopedia = Encyclopedia.build(help_pages, items)
+		_encyclopedia = Encyclopedia.build(help_pages, items, recipes)
 	_encyclopedia.lit = func(id: StringName) -> bool: return meta == null or meta.codex_lit(id)
 	return _encyclopedia
 

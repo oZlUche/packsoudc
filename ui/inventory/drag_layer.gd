@@ -54,6 +54,11 @@ var craft_grid: GridInventory = null
 ## 审查 A1：手上这件许不许拿去合成 `func(inst: ItemInstance) -> bool`。商店给货架上还没付钱的商品返回 false ——
 ## 否则压到能合的那件上放手，商品在合成里被消耗，结账那一步看不到它，等于白拿。不给 = 都许
 var craft_filter: Callable = Callable()
+## 140：配方说明 `func(a: ItemInstance, b: ItemInstance) -> String`（作者写的 `note`）。压到能合的那件上时，残影下面一行小字
+## 「合成 → 产物：说明」；不给 = 只写产物
+var craft_note: Callable = Callable()
+## 140：此刻残影下面那行合成提示（没压在能合的那件上 = 空串）。[method update_preview] 算，[method _draw] 画
+var craft_hint: String = ""
 
 var _views: Array[ContainerView] = []
 
@@ -353,6 +358,7 @@ func update_preview(global_pos: Vector2) -> void:
 	_prune_views()
 	if not is_dragging():
 		return
+	_set_craft_hint("")
 	var target := view_at(global_pos)
 	for view in _views:
 		if view != target:
@@ -392,9 +398,11 @@ func update_preview(global_pos: Vector2) -> void:
 		grid_view.set_preview(cells, origin, true)
 		return
 
-	# 114：压在恰好一件上、两件有配方 → 合成（绿的，不算顶替）
-	if _craft_target(inv, origin) != null:
+	# 114：压在恰好一件上、两件有配方 → 合成（绿的，不算顶替）；140：残影下面写一行产物与说明
+	var partner := _craft_target(inv, origin)
+	if partner != null:
 		grid_view.set_preview(cells, origin, true)
+		_set_craft_hint(_hint_for(partner))
 		return
 
 	if inv.acts_as_bag(_inst.def):
@@ -692,6 +700,22 @@ func _craft_target(inv: GridInventory, origin: Vector2i) -> ItemInstance:
 	return b if craft.call(_inst, b) is ItemDef else null
 
 
+## 140：「合成 → 产物：说明」
+func _hint_for(partner: ItemInstance) -> String:
+	var out: Variant = craft.call(_inst, partner)
+	if not (out is ItemDef):
+		return ""
+	var text := "合成 → " + Names.of(out as ItemDef)
+	var note := String(craft_note.call(_inst, partner)) if craft_note.is_valid() else ""
+	return text + ("：" + note if note != "" else "")
+
+
+func _set_craft_hint(text: String) -> void:
+	if craft_hint != text:
+		craft_hint = text
+		queue_redraw()
+
+
 ## 085 / 114：拖起一件时，所有登记的视图里能和它合成的那几件亮一圈（放下 / 取消时熄）—— 提醒「拖到它上面就合」
 func _highlight_partners() -> void:
 	for view in _views:
@@ -866,6 +890,7 @@ func _end_drag() -> void:
 		view.clear_preview()
 	_inst = null
 	_cell = InventoryView.CELL
+	craft_hint = ""
 	_highlight_partners()     # _inst 空了：全熄
 	_source = null
 	_src_index = -1
@@ -898,6 +923,13 @@ func _draw() -> void:
 		self, cells, anchor, cell,
 		Names.of(_inst.def), font, 11 if is_bag else 13, Color("f2f4f8")
 	)
+	if craft_hint != "":     # 140：压在能合的那件上：残影下面一行小字
+		var rows := 0
+		for c in cells:
+			rows = maxi(rows, (c as Vector2i).y + 1)
+		var at := anchor + Vector2(0.0, rows * cell + 16.0)
+		draw_string_outline(font, at, craft_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 4, Color(0, 0, 0, 0.85))
+		draw_string(font, at, craft_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("8fd98f"))
 
 	# 包里的东西要跟着残影一起画，否则玩家看不出自己正拖着什么。
 	# 按本地坐标算它们在当前朝向下的位置 —— 包转了，它们就跟着转

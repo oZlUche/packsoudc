@@ -91,11 +91,6 @@ func on_action(clock: ActionClock, _graph: MapGraph) -> void:
 			warned.emit(coming, left)
 
 
-## 兼容旧的鸭子接口：浅层惩罚都在效果构件里做了，这里不再报数
-func move_penalty(_node: MapNode) -> Dictionary:
-	return {"hp_damage": 0, "item_risk": 0.0}
-
-
 ## 目的地结算：被侵蚀的点才有事；效果构件挨个过门
 func settle(node: MapNode) -> void:
 	if mechanic == null or run == null or not is_eroded(node):

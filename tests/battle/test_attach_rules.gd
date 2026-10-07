@@ -218,3 +218,15 @@ static func run_enchant_fires_once_per_hit(t: TestCase) -> void:
 	t.check(fired > 0, "长剑出手 %d 次" % fired)
 	t.eq(fire_hits, fired, "每击附火一次")
 	t.eq(overflow, 0, "没有连锁截断")
+
+
+static func run_compile_without_board(t: TestCase) -> void:
+	t.begin("140 B-12 · 没有棋盘也照算后续步骤：基线 + 负的基线修饰 → 生命夹到 0，不是原样返回基线")
+	var base := CombatantBaseline.with_hp(20.0)
+	var inp := CompileInput.of(base)
+	inp.baseline_mods = [StatModifier.make(&"max_hp", StatModifier.Mode.ADD, -50.0)] as Array[StatModifier]
+	var spec := BattleCompiler.compile(null, inp)
+	t.not_null(spec, "空棋盘编得出来")
+	t.eq(spec.max_hp_int() if spec != null else -1, 0, "生命 20 − 50 夹到 0")
+	var plain := BattleCompiler.compile(null, CompileInput.of(base))
+	t.eq(plain.max_hp_int(), 20, "没有修饰：就是基线的 20")

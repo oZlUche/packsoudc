@@ -345,11 +345,10 @@ static func run_events(t: TestCase) -> void:
 	t.eq(paid, [3] as Array[int], "深的那个撤离点收费")
 
 	var travel := MapTravel.new(g, ActionClock.new())
-	travel.vitality = Vitality.new(5)
 	travel.start_at(0)
 	var wallet := Wallet.new(economy.starting_balance)
 	var events := NodeEvents.new(g)
-	events.vitality = travel.vitality
+	events.vitality = Vitality.new(5)
 	events.rules = node_rules
 	events.pool = pool
 	events.enemies = enemies

@@ -4,14 +4,13 @@
 extends RefCounted
 
 
-class FakeErosion:
+class FakeErosion extends ErosionField:
 	var log: Array = []
 	var depths: Dictionary = {}
 	func on_action(clock: ActionClock, _graph: MapGraph) -> void:
 		log.append("erosion@%d" % clock.total)
-	func move_penalty(_node: MapNode) -> Dictionary:
+	func settle(_node: MapNode) -> void:
 		log.append("penalty")
-		return {"hp_damage": 0, "item_risk": 0.0}
 	func depth_of(node: MapNode) -> int:
 		return int(depths.get(node.id, -1))
 
