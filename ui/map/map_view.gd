@@ -204,6 +204,21 @@ func slot_at(p: Vector2) -> Dictionary:
 	return {}
 
 
+## 不再悬停任何点（鼠标离开地图、点了一个点走过去 / 打开界面之后）：发一次 -1，浮窗跟着收起；
+## 鼠标回到同一个点上会重新发悬停
+func clear_hover() -> void:
+	if _hover_id == -1:
+		return
+	_hover_id = -1
+	node_hovered.emit(-1)
+	queue_redraw()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_MOUSE_EXIT:
+		clear_hover()
+
+
 func _gui_input(event: InputEvent) -> void:
 	if graph == null:
 		return

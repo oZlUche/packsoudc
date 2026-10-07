@@ -65,6 +65,7 @@ func pick_spawn(id: int) -> bool:
 
 ## 走一步。087 起地上按点保留（走了东西留在那个点上、回来能拿），109（作者定）：不再弹「地上还有东西」的提示，直接走
 func step(to_id: int) -> bool:
+	_view.clear_hover()     # 反馈：进点后悬浮窗一直挂着 —— 走之前收起，鼠标再动才按新位置重算
 	return flow.step_to(to_id)
 
 
@@ -177,6 +178,7 @@ func bag_open() -> bool:
 func reopen() -> bool:
 	if _bag != null or _confirm != null or _pause != null or _rules != null:
 		return false
+	_view.clear_hover()
 	var ok := flow.reopen_node()
 	if not ok:
 		_say("这个点上没有可以再打开的界面")
