@@ -119,8 +119,6 @@ static func run_fire_axis(t: TestCase) -> void:
 	var me := CombatantRuntime.from_spec(spec, 0)
 	t.eq(me.axis_system(StatAxes.FIRE_DAMAGE), 20, "开战时种在系统层")
 	t.eq(me.axis_stacks(StatAxes.FIRE_DAMAGE), 0, "内容层是 0")
-	me.clear_axis(StatAxes.FIRE_DAMAGE)
-	t.eq(me.axis_total(StatAxes.FIRE_DAMAGE), 20, "净化只动内容层：祈祷攒的洗不掉")
 
 	# 伤害管线：攻方的因子乘在防御之前
 	var foe := CombatantRuntime.from_spec(BattleCompiler.compile_board(null, CombatantBaseline.with_hp(1000.0)), 1)

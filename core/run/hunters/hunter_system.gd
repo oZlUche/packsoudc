@@ -10,13 +10,8 @@
 class_name HunterSystem
 extends RefCounted
 
-signal spawned(h: Hunter)
-signal moved(h: Hunter, from_id: int, to_id: int)
 ## 玩家进了它的感知范围（进入那一刻一次）
 signal sensed(h: Hunter)
-signal encounter(h: Hunter)
-signal hunter_defeated(h: Hunter)
-signal fled(h: Hunter, escaped: bool)
 signal player_expelled(to_id: int)
 signal changed()
 
@@ -233,7 +228,6 @@ func spawn() -> void:
 		h.loss_id = def.pick_option(self)     # 134：战败结果档生成时就定，跟着存档
 		hunters.append(h)
 		taken.append(home)
-		spawned.emit(h)
 
 
 ## 离 [param taken] 里每个点都最远的点（比较的是到它们的最小距离），且离玩家至少 [param min_from_player]；没有满足的就放宽
@@ -276,9 +270,7 @@ func _move(h: Hunter) -> void:
 		var next := def.behavior.next_node(h, self, options) if def.behavior != null else h.node_id
 		if next == h.node_id or not options.has(next):
 			break
-		var from := h.node_id
 		h.node_id = next
-		moved.emit(h, from, next)
 
 
 func _update_sense() -> void:
@@ -313,7 +305,6 @@ func _engage(h: Hunter, def: HunterDef) -> void:
 	var ev := _encounter_def(def, loss_option_of(h))
 	run.events.pending = {"node": node.id, "event": String(ev.id), "type": String(TYPE), "hunter": h.uid}
 	run.events.event_pending.emit(node, ev)
-	encounter.emit(h)
 
 
 ## 开打前的事件屏：迎战 / 逃跑（逃不掉的猎手没有第二项）。合成一次、登记在 NodeEvents.extra_defs 里（跟着 id 存档也找得回来）。
@@ -381,7 +372,6 @@ func fight(node: MapNode, uid: int, _ctx: EventContext) -> bool:
 	var won := run.events.fight_content(node, TYPE, content, loot_ctx, def.loss_cost)
 	if won:
 		h.alive = false
-		hunter_defeated.emit(h)
 	else:
 		var option := loss_option_of(h)
 		last_loss_id = option.id if option != null else &""
@@ -413,7 +403,6 @@ func flee(_node: MapNode, uid: int, ctx: EventContext) -> bool:
 		if def.flee_fail_vitality > 0:
 			spend_vitality(def.flee_fail_vitality)
 			ctx.spent += def.flee_fail_vitality
-	fled.emit(h, escaped)
 	changed.emit()
 	return escaped
 
@@ -459,9 +448,7 @@ func retreat(h: Hunter, steps: int, cooldown: int) -> void:
 		var next := farthest_from_player(options, h.node_id)
 		if next == h.node_id:
 			break
-		var from := h.node_id
 		h.node_id = next
-		moved.emit(h, from, next)
 	h.cooldown = maxi(h.cooldown, cooldown)
 
 

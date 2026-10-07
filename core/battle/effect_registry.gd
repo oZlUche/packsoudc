@@ -13,7 +13,6 @@ const TRIGGERS := {
 	&"on_schedule": "res://core/battle/triggers/on_schedule.gd",
 	&"on_battle_start": "res://core/battle/triggers/on_battle_start.gd",
 	&"on_item_fired": "res://core/battle/triggers/on_item_fired.gd",
-	&"on_resource_changed": "res://core/battle/triggers/on_resource_changed.gd",
 	# 状态条件型：条件在相关事件发生的那一刻求值
 	&"on_stacks_at_least": "res://core/battle/triggers/on_stacks_at_least.gd",
 	&"on_axis_at_least": "res://core/battle/triggers/on_axis_at_least.gd",

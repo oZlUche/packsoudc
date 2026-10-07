@@ -89,18 +89,15 @@ static func run_capacity(t: TestCase) -> void:
 
 
 static func run_tags(t: TestCase) -> void:
-	t.begin("地上 · 准入标签")
+	t.begin("地上 · 准入：什么都收（140 删了容器级准入标签）")
 
 	ItemInstance.reset_uid_counter()
 	var gun := _def("gun", ["#"], ["weapon"])
 	var food := _def("food", ["#"], ["remedy"])
 
 	var s := ItemStash.new(4)
-	s.accept_tags = [&"weapon"] as Array[StringName]
-	t.check(s.can_admit(gun), "标签对得上，收")
-	t.check(not s.can_admit(food), "对不上，不收")
-	t.check(not s.insert(ItemInstance.create(food), -1), "硬塞也不收")
-	t.eq(s.item_count(), 0, "一件都没进去")
+	t.check(s.can_admit(gun) and s.can_admit(food), "140：地上没有准入标签，什么都收")
+	t.check(not s.accepts(null), "空定义不收")
 #endregion
 
 

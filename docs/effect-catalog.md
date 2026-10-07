@@ -51,7 +51,6 @@ Effect
 | `on_schedule` | `OnSchedule` | **自发型**，不等事件，由频率层排出执行时刻 | — |
 | `on_battle_start` | `OnBattleStart` | 开战瞬间 | — |
 | `on_item_fired` | `OnItemFired` | 有物品出手时。**连带触发就是它** | `same_side` 听己方还是敌方；`source_uids` 限定来源（空=不限）；`include_self` 是否含自己（默认否，防自循环）；`source_tags` 只听带这些标签之一的件（132，可与 LINKED 叠加） |
-| `on_resource_changed` | `OnResourceChanged` | 资源增减时 | `resource_key`（hp/stamina/mana…）；`direction`（ANY/INCREASE/DECREASE）；`same_side`；`reasons` 限定原因 |
 | `on_resource_below` | `OnResourceBelow` | 资源**降到阈值以下**时 | `resource_key`；`percent` 按上限的百分比（0 则改用绝对值）；`absolute`；`on_self`；`direction`（BELOW / ABOVE，132）；`full` 回满（132） |
 | `on_stacks_at_least` | `OnStacksAtLeast` | 身上有 **N 层**某增益减益时 | `buff_id`；`stacks`；`on_self` 看自己还是对手；`consume` **消耗型开关**，见下 |
 | `on_damage` | `OnDamage` | 受到／造成某类伤害**之后** | `direction`（TAKEN/DEALT）；`damage_type` 空=不限；`min_amount` 按实际扣除量；`crit_only` 只在暴击时（132） |
@@ -313,7 +312,7 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 ### 反击
 
 ```
-时机 on_resource_changed(hp, DECREASE, 自己)
+时机 on_damage(受到)
 频率 cooldown(2.0)          ← 这里冷却当闸门用，不是调度器
 内容 deal_damage(5)
 ```

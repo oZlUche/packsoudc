@@ -23,7 +23,3 @@ func can_pay(ctx: RuleContext) -> bool:
 
 func pay(_ctx: RuleContext) -> void:
 	pass
-
-
-func describe(_ctx: RuleContext) -> String:
-	return "%s%s %s %d 层" % ["自己" if on_self else "对手", axis, "<" if negate else "≥", stacks]

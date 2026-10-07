@@ -13,7 +13,3 @@ func can_pay(ctx: RuleContext) -> bool:
 
 func pay(ctx: RuleContext) -> void:
 	ctx.state()[KEY] = int(ctx.state().get(KEY, 0)) + 1
-
-
-func describe(_ctx: RuleContext) -> String:
-	return "每场 %d 次" % max_uses

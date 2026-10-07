@@ -33,7 +33,3 @@ func pay(ctx: RuleContext) -> void:
 			"buff": String(buff_id), "delta": -removed,
 			"stacks": who.stacks_of(buff_id),
 		})
-
-
-func describe(_ctx: RuleContext) -> String:
-	return "%s ×%d" % [buff_id, stacks]

@@ -45,16 +45,3 @@ func can_pay(ctx: RuleContext) -> bool:
 
 func pay(_ctx: RuleContext) -> void:
 	pass
-
-
-func describe(_ctx: RuleContext) -> String:
-	var bits: Array[String] = []
-	if min_percent >= 0:
-		bits.append("≥ %d%%" % min_percent)
-	if max_percent >= 0:
-		bits.append("≤ %d%%" % max_percent)
-	if absolute_min >= 0.0:
-		bits.append("≥ %.0f" % absolute_min)
-	if absolute_max >= 0.0:
-		bits.append("≤ %.0f" % absolute_max)
-	return "%s%s%s %s" % ["不满足：" if negate else "", "自己" if on_self else "对手", resource_key, " 且 ".join(bits)]

@@ -84,13 +84,6 @@ func absolute_cells(offsets: Array[Vector2i]) -> Array[Vector2i]:
 	return out
 
 
-## 顺时针旋转一步，返回旋转后的值。不检查是否放得下 —— 那是容器的事。
-func rotated_step(steps: int = 1) -> int:
-	if def == null:
-		return 0
-	return posmod(rotation + steps, 4)
-
-
 func to_dict() -> Dictionary:
 	return {
 		"uid": uid,

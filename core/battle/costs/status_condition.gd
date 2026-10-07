@@ -23,7 +23,3 @@ func can_pay(ctx: RuleContext) -> bool:
 
 func pay(_ctx: RuleContext) -> void:
 	pass
-
-
-func describe(_ctx: RuleContext) -> String:
-	return "%s%s %s %d" % ["自己" if on_self else "对手", DamageTypes.name_of(buff_id), "<" if negate else "≥", maxi(1, stacks)]

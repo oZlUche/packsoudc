@@ -396,7 +396,7 @@ static func run_round_trip(t: TestCase) -> void:
 	t.eq(def2.adjacency.receive_mods[0].mode, StatModifier.Mode.ADD, "往返：加算是默认")
 
 	# 导出的 JSON 只写非默认值 —— 否则每个道具都拖着二十行 false
-	t.check(not dumped.has("icon"), "没设过的字段不写进 JSON")
+	t.check(not dumped.has("is_bag") and not dumped.has("weight"), "没设过的字段不写进 JSON")
 	t.check(not (dumped["combat"]["rules"][1]["effects"][0] as Dictionary).has("flat"),
 		"子对象同样只写非默认值")
 

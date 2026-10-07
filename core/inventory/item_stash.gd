@@ -20,9 +20,6 @@ extends ItemContainer
 ## 0 = 不限
 var capacity: int = 0
 
-## 容器级准入标签。为空表示不限制。
-var accept_tags: Array[StringName] = []
-
 var _list: Array[ItemInstance] = []
 
 ## 128：没有落点（[method insert] 不给）
@@ -83,16 +80,9 @@ func index_of(uid: int) -> int:
 	return -1
 
 
-## 容器是否接受这件定义（只看标签，列表容器没有空间可言）。
+## 容器是否接受这件定义：地上什么都收（140：容器级准入标签删了，生产从来不设）
 func accepts(def: ItemDef) -> bool:
-	if def == null:
-		return false
-	if accept_tags.is_empty():
-		return true
-	for tag in def.tags:
-		if accept_tags.has(tag):
-			return true
-	return false
+	return def != null
 #endregion
 
 
