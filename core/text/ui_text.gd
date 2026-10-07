@@ -33,6 +33,10 @@ const TEXT := {
 		"en": "This slot's meta progress is from an older version and could not be read; backed up as %s, starting fresh"},
 	"slots.run_backed_up": {"zh": "进行中的那一局来自旧版本，读不回来，已备份成 %s；局外进度不受影响",
 		"en": "The run in progress is from an older version and could not be read; backed up as %s. Meta progress is unaffected"},
+	# 新版本的存档拿旧版本打开（%d = 存档的版本号、本版本认得的版本号）：只读，不动它
+	"slots.newer": {"zh": "这个存档位来自更新版本的游戏（存档版本 %d，本版本只认 %d）：本版本不会读它、也不会改它。请换回新版本再玩，或者换一个存档位",
+		"en": "This slot was saved by a newer version of the game (save version %d; this build reads %d). It will not be read or changed here: switch back to the newer build, or use another slot"},
+	"slots.newer_tag": {"zh": "　（更新版本的存档）", "en": " (saved by a newer version)"},
 	"menu.meta": {"zh": "仓库与战绩", "en": "Warehouse & records"},
 	"menu.settings": {"zh": "设置", "en": "Settings"},
 	"menu.encyclopedia": {"zh": "百科", "en": "Encyclopedia"},

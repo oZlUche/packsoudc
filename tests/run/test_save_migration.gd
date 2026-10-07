@@ -2,7 +2,8 @@
 ##
 ## - 每一版留一份**冻结的 JSON 样本**（`tests/fixtures/meta_v<n>.json`），断言升到当前版本后读得回来、关键字段没走形；
 ##   升版时必须加新样本，否则链上有洞这里立刻红；
-## - 升不上去的版本（未来版本、缺这一级）不猜：`from_text` 返回 null，调用方**备份后从零开始**，绝不静默覆盖；
+## - 升不上去的老版本（缺这一级）不猜：`from_text` 返回 null，调用方**备份后从零开始**，绝不静默覆盖；
+## - 比本版本**新**的存档不是坏档：这一位只读，不备份、不写、不能接着玩，留着等换回新版本；
 ## - 改名表（[IdAliases]）：新 id 必须存在、旧 id 不许再被内容引用；老存档里的旧 id 查得回定义，旧信仰的信力并进新池子。
 extends RefCounted
 
@@ -144,6 +145,41 @@ static func run_backup_instead_of_overwrite(t: TestCase) -> void:
 	t.check(not slots.exists(1), "只剩 .bak 的位算空位（exists / remove 都不看 .bak）")
 	t.eq(slots.backup(1, "meta"), "", "没有文件可备份时返回空")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(flow.meta_backup))
+
+
+static func run_newer_save_is_read_only(t: TestCase) -> void:
+	t.begin("旧版本打开新版本的存档：不当坏档、不备份、不覆盖，这一位只读并提示换回新版本")
+	var db := _db()
+	var slots := SaveSlots.new(SLOT_ROOT)
+	for n in range(1, SaveSlots.COUNT + 1):
+		slots.remove(n)
+	slots.ensure_dir(1)
+	var meta_text := JSON.stringify({"version": MetaState.SAVE_VERSION + 1, "funds": 777, "runs": 42})
+	var run_text := JSON.stringify({"version": RunState.SAVE_VERSION + 1})
+	for pair in [[slots.meta_path(1), meta_text], [slots.run_path(1), run_text]]:
+		var f := FileAccess.open(pair[0], FileAccess.WRITE)
+		t.not_null(f, "写得出测试用的新版本存档")
+		if f == null:
+			return
+		f.store_string(pair[1])
+		f.close()
+	t.eq(slots.newer_version(1), MetaState.SAVE_VERSION + 1, "认得出这一位是更新版本存的")
+	t.eq(int(slots.summary(1, db)["newer"]), MetaState.SAVE_VERSION + 1, "读取存档屏的摘要带着这一条")
+
+	var flow := GameFlow.new(db, EnemyDatabase.new(), SetDatabase.new())
+	flow.slots = slots
+	flow.use_slot(1)
+	t.eq(flow.newer_slot, MetaState.SAVE_VERSION + 1, "当前位标成只读")
+	t.eq(flow.meta_backup, "", "没有备份（不是坏档）")
+	t.check(flow.backup_notice().contains(str(MetaState.SAVE_VERSION + 1)), "界面上说清楚：%s" % flow.backup_notice())
+	t.check(not flow.save_meta(), "存局外被拦下")
+	t.check(not flow.continue_game(), "不能接着玩")
+	t.eq(FileAccess.get_file_as_string(slots.meta_path(1)), meta_text, "局外文件原样没动")
+	t.eq(FileAccess.get_file_as_string(slots.run_path(1)), run_text, "进行中的一局原样没动")
+	# 玩家自己删掉这一位：解锁，之后就是一个普通的空位
+	flow.delete_slot(1)
+	t.eq(flow.newer_slot, 0, "删掉之后不再只读")
+	t.check(not slots.exists(1), "这一位空了")
 
 
 static func run_id_aliases(t: TestCase) -> void:
