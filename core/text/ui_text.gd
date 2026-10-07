@@ -7,7 +7,6 @@ class_name UiText
 extends RefCounted
 
 const LANGS: Array[String] = ["zh", "en"]
-const LANG_LABELS := {"zh": "中文", "en": "English"}
 
 static var lang: String = "zh"
 

@@ -23,18 +23,6 @@ static func _flow(c) -> GameFlow:
 	return f
 
 
-## 把一件信仰道具放上棋盘（激活那个信仰）
-static func _activate(run: RunState, item_id: StringName) -> ItemInstance:
-	var def := run.items.get_def(item_id)
-	if def == null:
-		return null
-	var inst := ItemInstance.create(def)
-	if run.board.try_add(inst, true):
-		return inst
-	run.storage.admit(inst)
-	return null
-
-
 static func _event(name: StringName, side: int, payload: Dictionary) -> BattleEvent:
 	var e := BattleEvent.new()
 	e.name = name

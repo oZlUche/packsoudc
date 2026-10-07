@@ -3068,7 +3068,7 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 `uses` 次数、`cooldown_steps` 冷却由 `RunSkills` 记账）。三个构件：`passive`、`assault`（突击：立旗，下一场战斗先把对方的生命上限乘 1 − `hp_fraction`）、`evade`（躲避：`steps` 步内猎手不开打）。
 两个新的一局规则效果：`free_losses`（输给节点敌人前 n 次不扣体力，`NodeEvents.losses_forgiven` 记已免几次，猎手与核心不免）、`stat_bonus`（战斗基线加成，`RunState.effective_baseline` 盖到角色基线上）。
 
-- `RunSkills`（`run.skills`，没角色也有一份空的）：`can_use` / `use` / `on_step`（在猎手的回合之后减冷却与躲避）/ `prepare_battle`（`NodeEvents.before_battle` 回调，在 `BattleSim.run` 之前）/ `status_line`；跟着存档走（`skills` 一节），读档回来先放 `skills_saved`，持有方按 id 找回角色时 `RunState.set_character` 接上。
+- `RunSkills`（`run.skills`，没角色也有一份空的）：`can_use` / `use` / `on_step`（在猎手的回合之后减冷却与躲避）/ `prepare_battle`（`NodeEvents.before_battle` 回调，在 `BattleSim.run` 之前）；跟着存档走（`skills` 一节），读档回来先放 `skills_saved`，持有方按 id 找回角色时 `RunState.set_character` 接上。
 - 主动技能只在地图屏用（作者：大地图移动时使用）；右栏一个技能一个按钮，不能用时灰掉并写原因。
 - 三个初始角色（作者定）：安德烈乌斯（奴隶，躲避 + 逃跑加成 + 免罚一败）、布鲁图斯（奴隶，坚韧：生命 / 耐力 / 体力更高）、马库斯（军团士兵，耐力更高，突击）。占位的 `default` / `scout` 删了。
 

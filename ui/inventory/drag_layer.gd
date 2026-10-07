@@ -214,7 +214,6 @@ func _input(event: InputEvent) -> void:
 		elif mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
 			cancel()
 			get_viewport().set_input_as_handled()     # 099：取消就是取消，别再被容器视图读成「右键奉为主信仰」
-			get_viewport().set_input_as_handled()
 		return
 
 	if event is InputEventKey and event.pressed and not event.echo:

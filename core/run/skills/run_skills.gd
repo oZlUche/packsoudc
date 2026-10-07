@@ -126,23 +126,6 @@ func prepare_battle(me: CombatantSpec, enemy: CombatantSpec) -> void:
 	changed.emit()
 
 
-## 给地图屏的一句：「突击（剩 1 次）、躲避中（剩 2 步）」
-func status_line() -> String:
-	var parts: Array[String] = []
-	for d in active_skills():
-		var bits: Array[String] = []
-		if is_armed(d.id):
-			bits.append("已准备")
-		if uses_of(d.id) >= 0:
-			bits.append("剩 %d 次" % uses_of(d.id))
-		if cooldown_of(d.id) > 0:
-			bits.append("冷却 %d 步" % cooldown_of(d.id))
-		parts.append(d.display_name + ("（" + "，".join(bits) + "）" if not bits.is_empty() else ""))
-	if evade_left > 0:
-		parts.append("躲避中（剩 %d 步）" % evade_left)
-	return "、".join(parts)
-
-
 func to_dict() -> Dictionary:
 	return {"uses": uses_left.duplicate(), "cooldowns": cooldowns.duplicate(), "armed": armed.duplicate(), "evade_left": evade_left}
 
