@@ -1610,6 +1610,31 @@ static func _fill(
 	# 104（作者定）：暴击的加成一律加算 —— 作用于它们的修饰只能是 ADD
 	if obj is StatModifier and BattleStats.additive_only((obj as StatModifier).stat) and (obj as StatModifier).is_mult():
 		report.error(path, "%s 只接受加算（mode = ADD）；不能写乘算" % (obj as StatModifier).stat)
+	_percent_in(obj, path, report)
+
+
+## 作者反馈：暴击率 / 暴击伤害这类百分比属性，作者数据按百分数写（20 = 20%），导入时 ÷100 存成运行时的小数。
+## 管两处：加算的属性修饰的 amount、基础属性表（`base_stats`）里这类键的值。导出时 [ContentExporter] 乘回去
+static func _percent_in(obj: Object, path: String, report: ImportReport) -> void:
+	if obj is StatModifier:
+		var m := obj as StatModifier
+		if not m.is_mult() and BattleStats.is_percent(m.stat):
+			_warn_tiny_percent(m.amount, _join(path, "amount"), m.stat, report)
+			m.amount = BattleStats.from_percent(m.amount)
+		return
+	var stats = obj.get("base_stats") if "base_stats" in obj else null
+	if not (stats is Dictionary):
+		return
+	for key in (stats as Dictionary).keys():
+		var v = stats[key]
+		if (v is float or v is int) and BattleStats.is_percent(StringName(String(key))):
+			_warn_tiny_percent(float(v), _join(path, "base_stats." + String(key)), StringName(String(key)), report)
+			stats[key] = BattleStats.from_percent(float(v))
+
+
+static func _warn_tiny_percent(v: float, at: String, stat: StringName, report: ImportReport) -> void:
+	if v != 0.0 and absf(v) < 1.0:
+		report.warn(at, "%s 按百分数写（20 = 20%%）：%s 只有 %s%%，是不是写成了小数" % [stat, str(v), str(v)])
 
 
 ## 133：旧格式的属性修饰（`mult_category` / `mult_percent` / `flat`）换成 `mode` + `amount`。

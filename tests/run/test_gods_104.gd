@@ -294,8 +294,32 @@ static func run_crit(t: TestCase) -> void:
 	ContentImporter.import_buff({"id": "b", "display_name": "b", "mods": [{"stat": "crit_chance", "mode": "MULT", "amount": 10}]}, ContentImporter.Context.new(), bad)
 	t.check(not bad.ok() and bad.to_text().contains("crit_chance"), "暴击率写乘区：拦（%s）" % bad.to_text().strip_edges().left(50))
 	var good := ImportReport.new()
-	ContentImporter.import_buff({"id": "b", "display_name": "b", "mods": [{"stat": "crit_chance", "amount": 0.05}]}, ContentImporter.Context.new(), good)
+	var goodbuff := ContentImporter.import_buff({"id": "b", "display_name": "b", "mods": [{"stat": "crit_chance", "amount": 5}]}, ContentImporter.Context.new(), good)
 	t.check(good.ok(), "暴击率写 flat：过")
+	t.check(goodbuff != null and is_equal_approx((goodbuff.mods[0] as StatModifier).amount, 0.05), "作者写 5（百分数）→ 存 0.05")
+	# 作者反馈：百分比属性按百分数写 —— 导入 ÷100、导出 ×100，往返不变；写成小数的提醒
+	var pct_data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(ContentPaths.authoring_file("items", "tibia_violence")))     # 胫骨暴力：暴击伤害 20、暴击率 10
+	pct_data["combat"]["base_stats"]["crit_chance"] = 20
+	var pct_rep := ImportReport.new()
+	var pct_item := ContentImporter.import_item(pct_data, ContentImporter.Context.new(), pct_rep)
+	t.check(pct_item != null and pct_rep.ok(), "导入通过：%s" % pct_rep.to_text().strip_edges().left(80))
+	if pct_item != null:
+		var fb_mods: Array = pct_item.faith_bonuses[0].mods
+		t.check(is_equal_approx((fb_mods[0] as StatModifier).amount, 0.2), "暴击伤害写 20 → 存 0.2（+20%%，不是 +2000%%）")
+		t.check(is_equal_approx((fb_mods[1] as StatModifier).amount, 0.1), "暴击率写 10 → 存 0.1")
+		t.eq(Glossary.mod_text(fb_mods[0] as StatModifier), "暴击伤害 +20%", "说明写 +20%")
+		t.check(is_equal_approx(float(pct_item.combat.base_stats["crit_chance"]), 0.2), "基础属性里的暴击率 20 → 0.2")
+		t.check(is_equal_approx(float(pct_item.combat.base_stats["damage"]), 15.0), "别的属性不动")
+		var back := ContentExporter.export_item(pct_item)
+		var back_mods: Array = back["faith_bonuses"][0]["mods"]
+		t.eq(float(back_mods[0]["amount"]), 20.0, "导出写回 20")
+		t.eq(float(back_mods[1]["amount"]), 10.0, "导出写回 10")
+		t.eq(float(back["combat"]["base_stats"]["crit_chance"]), 20.0, "基础属性导出写回 20")
+		var again := ContentImporter.import_item(back, ContentImporter.Context.new(), ImportReport.new())
+		t.eq(ContentExporter.to_json(ContentExporter.export_item(again)), ContentExporter.to_json(back), "导出 → 导入 → 再导出 逐字节不变")
+	var tiny := ImportReport.new()
+	ContentImporter.import_buff({"id": "b", "display_name": "b", "mods": [{"stat": "crit_chance", "amount": 0.05}]}, ContentImporter.Context.new(), tiny)
+	t.check(tiny.to_text().contains("百分数"), "写成小数（0.05）会提醒：%s" % tiny.to_text().strip_edges().left(80))
 	var m := StatModifier.new()
 	m.stat = BattleStats.CRIT_CHANCE
 	m.amount = 0.05

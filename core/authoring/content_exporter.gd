@@ -138,7 +138,25 @@ static func _dump(obj: Object, with_type: bool = false) -> Dictionary:
 		var encoded = _encode(obj, prop, value)
 		if encoded != null:
 			out[key] = encoded
+	_percent_out(obj, out)
 	return out
+
+
+## 百分比属性写回百分数（导入时 ÷100 的反方向，见 [method ContentImporter._percent_in]）
+static func _percent_out(obj: Object, out: Dictionary) -> void:
+	if obj is StatModifier:
+		var m := obj as StatModifier
+		if out.has("amount") and not m.is_mult() and BattleStats.is_percent(m.stat):
+			out["amount"] = BattleStats.to_percent(m.amount)
+		return
+	if not (out.get("base_stats") is Dictionary):
+		return
+	var stats: Dictionary = out["base_stats"]
+	for key in stats.keys():
+		var v = stats[key]
+		if (v is float or v is int) and BattleStats.is_percent(StringName(String(key))):
+			stats[key] = BattleStats.to_percent(float(v))
+	out["base_stats"] = MapGraph.normalize(stats)
 
 
 static func _same(a: Variant, b: Variant) -> bool:
