@@ -191,7 +191,7 @@ static func effects_text(effects: Array) -> String:
 		if e == null:
 			continue
 		var d: String = e.describe() if e.has_method("describe") else ""
-		bits.append(d if d != "" else String(ContentExporter._registry_name_of(e)))
+		bits.append(d if d != "" else String(ContentSchema.registry_name_of(e)))
 	return "，".join(bits) if not bits.is_empty() else "（没有效果）"
 
 
@@ -203,7 +203,7 @@ const TRIGGER_NAMES := {"on_schedule": "自发", "on_battle_start": "开战时",
 static func trigger_name(trigger: Trigger) -> String:
 	if trigger == null:
 		return ""
-	var key := String(ContentExporter._registry_name_of(trigger))
+	var key := String(ContentSchema.registry_name_of(trigger))
 	return String(TRIGGER_NAMES.get(key, key))
 
 

@@ -5,78 +5,13 @@
 ## 仓库就带着两份对不上的内容，而**游戏读的是 `.tres`** —— 作者看着 JSON 调数值，游戏里一点变化都没有。
 ##
 ## 原理：仓库里的 JSON 已经是导出器格式（`tools/normalize_content.gd` 导入 → 导出 → 写回），所以
-## **`ContentExporter.export_xxx(load(tres))` 的 JSON 文本 == 磁盘上的 JSON 文本** 就是「两份一致」。
-## 不重跑导入：重跑会把「导入器变了」和「内容变了」混在一起，而导出器对全部 21 种都现成。
+## **`ContentExporter.dump(load(tres))` 的 JSON 文本 == 磁盘上的 JSON 文本** 就是「两份一致」。
+## 不重跑导入：重跑会把「导入器变了」和「内容变了」混在一起，而导出器按反射工作，任何种类都现成 ——
+## 所以哪些种类过这道检查只看 [constant ContentPaths.KINDS]，不用另外登记。
 ##
 ## 命令行是 `tools/check_content.gd`，测试是 `test_content_pipeline.run_assets_match_json`，两边调的都是这里。
 class_name ContentCheck
 extends RefCounted
-
-## 哪些种类过这道检查。[b]加一种内容就在这儿加一行，并在 [method export_of] 的 match 里接上[/b]
-## （100 第 3 步会把导出器名并进 `ContentPaths.KINDS` 的种类描述，这张表那时就没了）
-const KINDS: Array[String] = [
-	"tags", "damage_types", "run_buffs", "faiths", "recipes", "items",
-	"loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters",
-	"drop_rules", "carry_rules", "encumbrance_rules", "node_rules", "economy_rules", "meta_rules", "chapters", "achievements", "techs", "help_pages",
-]
-
-
-## 这一种内容的资产导出成字典。不认识的种类返回 null（调用方报成「没登记导出器」）
-static func export_of(kind: String, res: Resource):
-	match kind:
-		"tags":
-			return ContentExporter.export_tag(res as TagDef)
-		"damage_types":
-			return ContentExporter.export_damage_type(res as DamageTypeDef)
-		"buffs":     # 现在不在 ContentPaths.KINDS 里（100）；留着，加回来就不用再写一遍
-			return ContentExporter.export_buff(res as BuffDef)
-		"sets":
-			return ContentExporter.export_set(res as ItemSetDef)
-		"run_buffs":
-			return ContentExporter.export_run_buff(res as RunBuffDef)
-		"faiths":
-			return ContentExporter.export_faith(res as FaithDef)
-		"recipes":
-			return ContentExporter.export_recipe(res as RecipeDef)
-		"items":
-			return ContentExporter.export_item(res as ItemDef)
-		"loadouts":
-			return ContentExporter.export_loadout(res as LoadoutDef)
-		"characters":
-			return ContentExporter.export_character(res as CharacterDef)
-		"difficulties":
-			return ContentExporter.export_difficulty(res as DifficultyDef)
-		"events":
-			return ContentExporter.export_event(res as EventDef)
-		"enemies":
-			return ContentExporter.export_enemy(res as EnemyDef)
-		"enemy_pools":
-			return ContentExporter.export_enemy_pool(res as EnemyPool)
-		"hunters":
-			return ContentExporter.export_hunter(res as HunterDef)
-		"drop_rules":
-			return ContentExporter.export_drop_rule(res as DropRule)
-		"carry_rules":
-			return ContentExporter.export_carry_rule(res as CarryRule)
-		"encumbrance_rules":
-			return ContentExporter.export_encumbrance_rules(res as EncumbranceRules)
-		"node_rules":
-			return ContentExporter.export_node_rules(res as NodeRules)
-		"economy_rules":
-			return ContentExporter.export_economy_rules(res as EconomyRules)
-		"meta_rules":
-			return ContentExporter.export_meta_rules(res as MetaRules)
-		"chapters":
-			return ContentExporter.export_chapter(res as ChapterDef)
-		"achievements":
-			return ContentExporter.export_achievement(res as AchievementDef)
-		"techs":
-			return ContentExporter.export_tech(res as TechDef)
-		"help_pages":
-			return ContentExporter.export_help_page(res as HelpPageDef)
-		_:
-			return null
-
 
 ## 全部种类过一遍。返回**问题清单**（空 = 一致）。每条都写清是哪一份文件、哪里不对
 static func run_all() -> Array[String]:
@@ -90,11 +25,8 @@ static func run_all() -> Array[String]:
 ## 两边都有但对不上（打印第一处差异的键路径）
 static func check_kind(kind: String) -> Array[String]:
 	var problems: Array[String] = []
-	if not KINDS.has(kind):
-		problems.append("%s：这道检查还不认识它 —— 新种类要在 ContentCheck.KINDS 与 export_of 各加一行" % kind)
-		return problems
 	if not ContentPaths.KINDS.has(kind):
-		problems.append("%s：ContentPaths.KINDS 里没有这一种（只有编辑器用的那两种不走这道检查）" % kind)
+		problems.append("%s：ContentPaths.KINDS 里没有这一种（只有编辑器用的那两种不走这道检查；新种类登记在那里就自动进来）" % kind)
 		return problems
 	var dirs := ContentPaths.dirs_of(kind)
 	var in_dir: String = dirs[0]
@@ -116,7 +48,7 @@ static func check_kind(kind: String) -> Array[String]:
 		if res == null:
 			problems.append("%s/%s.tres 装不进来" % [kind, id])
 			continue
-		var dumped: Variant = export_of(kind, res)
+		var dumped: Variant = ContentExporter.dump(res)
 		if not (dumped is Dictionary):
 			problems.append("%s/%s：导出器没给出字典" % [kind, id])
 			continue

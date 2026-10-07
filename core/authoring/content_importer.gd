@@ -165,6 +165,65 @@ class Context:
 
 
 #region 顶层入口
+## 按种类分派到各导入函数。`tools/import_content.gd` 与 `tools/normalize_content.gd` 共用这一张表 ——
+## 加一种内容就在这儿接一臂（种类名与 [constant ContentPaths.KINDS] 一致）。不认识的种类报错并返回 null
+static func import_of(kind: String, data: Dictionary, ctx: Context, report: ImportReport) -> Resource:
+	match kind:
+		"tags":
+			return import_tag(data, ctx, report)
+		"damage_types":
+			return import_damage_type(data, ctx, report)
+		"buffs":
+			return import_buff(data, ctx, report)
+		"sets":
+			return import_set(data, ctx, report)
+		"enemies":
+			return import_enemy(data, ctx, report)
+		"enemy_pools":
+			return import_enemy_pool(data, ctx, report)
+		"drop_rules":
+			return import_drop_rule(data, ctx, report)
+		"carry_rules":
+			return import_carry_rule(data, ctx, report)
+		"encumbrance_rules":
+			return import_encumbrance_rules(data, ctx, report)
+		"node_rules":
+			return import_node_rules(data, ctx, report)
+		"economy_rules":
+			return import_economy_rules(data, ctx, report)
+		"loadouts":
+			return import_loadout(data, ctx, report)
+		"characters":
+			return import_character(data, ctx, report)
+		"difficulties":
+			return import_difficulty(data, ctx, report)
+		"hunters":
+			return import_hunter(data, ctx, report)
+		"meta_rules":
+			return import_meta_rules(data, ctx, report)
+		"run_buffs":
+			return import_run_buff(data, ctx, report)
+		"faiths":
+			return import_faith(data, ctx, report)
+		"recipes":
+			return import_recipe(data, ctx, report)
+		"events":
+			return import_event(data, ctx, report)
+		"chapters":
+			return import_chapter(data, ctx, report)
+		"achievements":
+			return import_achievement(data, ctx, report)
+		"techs":
+			return import_tech(data, ctx, report)
+		"help_pages":
+			return import_help_page(data, ctx, report)
+		"items":
+			return import_item(data, ctx, report)
+		_:
+			report.error("", "不认识的内容种类 '%s'（登记在 ContentPaths.KINDS，并在 ContentImporter.import_of 接一臂）" % kind)
+			return null
+
+
 static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) -> BuffDef:
 	var def := BuffDef.new()
 	_fill(def, data, "", ctx, report)
