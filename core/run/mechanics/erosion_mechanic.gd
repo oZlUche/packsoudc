@@ -1,7 +1,7 @@
 ## 侵蚀机制（5.7 的本体，报告 075）：难度清单里开它，一局里地图就逐层向内被侵蚀。时间表与效果清单都在这里，数字不写死。
 ##
 ## 作者：侵蚀的各种效果都要能开关、能调（是否启用、在哪个阶段启用、触发概率）—— 效果是构件（[ErosionEffect]），每个自带四道门。
-## `install` 造一个 [ErosionField] 接到 `run.travel.erosion`（读档时用存档里的状态恢复），把信号接到一局上；幂等。
+## `install` 造一个 [ErosionField] 接到 `run.travel.erosion`（读档时用存档里的状态恢复）；幂等。信号由界面直接接在它身上（140 R-23）。
 class_name ErosionMechanic
 extends RunMechanic
 
@@ -19,18 +19,14 @@ func install(run: RunState) -> void:
 	run.mechanic_tags[&"erosion"] = true
 	if run.travel == null:
 		return
-	if run.travel.erosion is ErosionField:
-		(run.travel.erosion as ErosionField).mechanic = self
+	if run.travel.erosion != null:
+		run.travel.erosion.mechanic = self
 		return
 	var field := ErosionField.new()
 	field.setup(run, self)
 	if not run.erosion_saved.is_empty():
 		field.restore(run.erosion_saved)
 	run.travel.erosion = field
-	field.warned.connect(func(band: int, left: int): run.erosion_warned.emit(band, left))
-	field.advanced.connect(func(bands: int): run.erosion_advanced.emit(bands))
-	field.applied.connect(func(node: MapNode, detail: Dictionary): run.erosion_applied.emit(node, detail))
-	field.total_reached.connect(func(): run.erosion_total.emit())
 
 
 func describe() -> String:

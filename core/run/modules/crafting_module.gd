@@ -50,6 +50,14 @@ func output_of(a: ItemDef, b: ItemDef) -> ItemDef:
 	return _run.items.get_def(r.output) if r != null else null
 
 
+## 140：这两件的配方说明（作者写的 `note`，拖到搭档上时预览旁边那行小字）；没有配方或没写返回空串
+func note_of(a: ItemDef, b: ItemDef) -> String:
+	if a == null or b == null:
+		return ""
+	var r := RecipeDef.find(recipes, a.id, b.id)
+	return r.note if r != null else ""
+
+
 ## 114（作者定）：**拖到上面立刻合** —— 手上的 [param a]（拖拽中，不在任何容器里）压在棋盘上的 [param b_uid] 那件上、
 ## 两件有配方：b 拆下，产物落在 b 的位置（b 的朝向），放不下自动找位，再不行到地上并提醒。a 就此消耗。
 ## 返回 `{"ok": bool, "output": 产物 id, "where": "board" / "storage", "log": [几句话]}`；不成（没配方、b 不在棋盘上、产物没地方去）

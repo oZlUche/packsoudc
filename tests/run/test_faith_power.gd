@@ -118,7 +118,7 @@ static func run_credit(t: TestCase) -> void:
 	var fa := FaithDef.id_of_tag(a.faith_tag())
 	var fb := FaithDef.id_of_tag(b.faith_tag())
 	var changes: Array = []
-	s.faith_power_changed.connect(func(id: StringName, p: int, tier: int): changes.append([id, p, tier]))
+	s.faith_power.changed.connect(func(id: StringName, p: int, tier: int): changes.append([id, p, tier]))
 	# 置入 a：激活 fa；置入本身也是一件事（value 按 ItemValue）
 	var ia := ItemInstance.create(a, 0)
 	s.storage.admit(ia)

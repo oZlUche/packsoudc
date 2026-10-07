@@ -72,8 +72,8 @@ static func run_schedule(t: TestCase) -> void:
 	t.eq(f.max_band, _max_band(s), "最内一档 = 图上最大的 erosion_band（%d）" % f.max_band)
 	var warns: Array = []
 	var advances: Array = []
-	s.erosion_warned.connect(func(band: int, left: int): warns.append([band, left]))
-	s.erosion_advanced.connect(func(bands: int): advances.append(bands))
+	s.travel.erosion.warned.connect(func(band: int, left: int): warns.append([band, left]))
+	s.travel.erosion.advanced.connect(func(bands: int): advances.append(bands))
 	# 逐步走，按行动点检查
 	var guard := 0
 	while not f.is_total() and guard < 60 and _step(s):
@@ -203,7 +203,7 @@ static func run_settle_save_and_pipeline(t: TestCase) -> void:
 		return
 	var f := _field(s)
 	var applied: Array = []
-	s.erosion_applied.connect(func(node: MapNode, detail: Dictionary): applied.append([node.id, detail]))
+	s.travel.erosion.applied.connect(func(node: MapNode, detail: Dictionary): applied.append([node.id, detail]))
 	var v := s.vitality.current
 	# 走进的点要是事件、抽到「恢复」会补回体力 —— 那是事件的事，算账时扣掉
 	var restored := [0]

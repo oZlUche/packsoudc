@@ -312,14 +312,20 @@ static func run_crafting_drag(t: TestCase) -> void:
 	t.check(view.highlights.has(knife.uid), "拿起毒药瓶：棋盘上的匕首亮了")
 	t.check(not sview.highlights.has(other.uid), "伤药没亮")
 	var at := (Vector2(home) + Vector2(0.5, 0.5)) * InventoryView.CELL
+	drag.craft_note = func(a: ItemInstance, b: ItemInstance) -> String: return cm.note_of(a.def, b.def)
 	drag.update_preview(at)
 	t.check(view._preview_valid and view._preview_victims.is_empty(), "压到匕首上：预览是绿的、不画顶替")
+	# 140：绿预览旁边一行小字 = 产物 + 作者写的配方说明
+	var recipe := RecipeDef.find(c.recipes, &"knife", &"poison_vial")
+	t.check(drag.craft_hint.begins_with("合成 → " + Names.of(c.items.get_def(&"poisoned_knife"))), "提示写产物：%s" % drag.craft_hint)
+	t.check(recipe != null and recipe.note != "" and drag.craft_hint.ends_with("：" + recipe.note), "提示带配方的 note")
 	# 审查 A1：craft_filter 不许的那件（商店里没付钱的商品）压上去不是合成
 	drag.craft_filter = func(_i: ItemInstance) -> bool: return false
 	t.is_null(drag._craft_target(board, home), "craft_filter 不许：不算合成")
 	drag.craft_filter = Callable()
 	t.check(drag.drop_at(at), "放到匕首上：合成（算放下了）")
 	t.check(not drag.is_dragging(), "手上空了（不是顶替）")
+	t.eq(drag.craft_hint, "", "放下之后提示没了")
 	var made: ItemInstance = null
 	for inst in board.items():
 		if (inst as ItemInstance).def.id == &"poisoned_knife":

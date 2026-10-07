@@ -25,18 +25,8 @@ signal phase_changed(phase: int, reason: StringName)
 ## 有东西等着拾取（尸体容器 / 搜索收获）。拿走或丢掉之前不会再来第二份
 signal loot_pending(container: GridInventory)
 signal loot_cleared()
-## 猎手（071）：玩家进了某个猎手的感知范围；猎手的状态变了（动了、死了、歇了）；玩家被赶回上一个点
-signal hunter_sensed(h: Hunter)
-signal hunters_changed()
-signal player_expelled(to_id: int)
-## 侵蚀（075）：预警、推进、结算了、终局
-signal erosion_warned(next_band: int, actions_left: int)
-signal erosion_advanced(eroded_bands: int)
-signal erosion_applied(node: MapNode, detail: Dictionary)
-signal erosion_total()
-## 局内技能（082）：次数 / 冷却 / 旗子变了；信力变了
-signal skills_changed()
-signal faith_power_changed(faith_id: StringName, points: int, tier: int)
+## 140 R-23：猎手、侵蚀、技能、信力的信号不再转发 —— 界面直接接模块（`hunters.sensed / changed / player_expelled`、
+## `travel.erosion.warned / advanced / applied / total_reached`、`skills.changed`、`faith_power.changed`）
 ## 129：负重级数变了（0 = 轻装）。HUD 与地图屏听
 signal encumbrance_changed(level: int)
 
@@ -211,7 +201,6 @@ static func start(
 	s._place_layout(p_layout)
 	s._give_kit(full_kit)
 	s.travel = MapTravel.new(s.map, ActionClock.new())
-	s.travel.vitality = s.vitality
 	s._wire_events()
 	s.install_modules()     # 模块要接的东西（旅程、节点事件）都造好了才装
 	s._seed_owned()     # 104：带进来的不算「获得」
@@ -616,7 +605,7 @@ func set_character(ch: CharacterDef) -> void:
 	if not skills_saved.is_empty():
 		skills.restore(skills_saved)
 		skills_saved = {}
-	skills_changed.emit()
+	skills.changed.emit()
 	refresh_encumbrance()     # 129：上限跟着角色
 
 
@@ -665,7 +654,6 @@ func _ensure_skills() -> void:
 		return
 	skills = RunSkills.new()
 	skills.setup(self, [] as Array[RunSkill])
-	skills.changed.connect(func(): skills_changed.emit())
 
 
 ## 地图上用一个局内技能（082）。返回空串 = 用了；否则是不能用的原因
@@ -970,7 +958,6 @@ func _wire_events() -> void:
 	hooks.register(&"before_battle", _before_battle)
 	faith_power = FaithPower.new()
 	faith_power.setup(self)
-	faith_power.changed.connect(func(id: StringName, p: int, tier: int): faith_power_changed.emit(id, p, tier))
 	_wire_faith_power()
 	board.changed.connect(refresh_encumbrance)     # 129
 	_encumbrance_level = encumbrance_level()
@@ -1082,7 +1069,7 @@ func to_dict() -> Dictionary:
 		"map_scale": String(map_scale),
 		"difficulty": String(difficulty_id),
 		"hunters": hunters.to_dict() if hunters != null else {},
-		"erosion": travel.erosion.to_dict() if travel != null and travel.erosion != null and travel.erosion.has_method("to_dict") else {},
+		"erosion": travel.erosion.to_dict() if travel != null and travel.erosion != null else {},
 		"phase": phase,
 		"end_reason": String(end_reason),
 		"map": map.to_dict(),
@@ -1152,7 +1139,6 @@ static func from_dict(
 	var mods_raw: Variant = d.get("modules", {})
 	s.modules_saved = (mods_raw as Dictionary).duplicate(true) if mods_raw is Dictionary else {}
 	s.rng = RunRNG.from_dict(d.get("rng", {}))
-	s.travel.vitality = s.vitality
 	s._bind_tracker()
 	s._wire_events()
 	s.events.searches_closed = int((d.get("events", {}) as Dictionary).get("searches_closed", 0))
