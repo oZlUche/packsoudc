@@ -98,7 +98,7 @@ static func run_pipeline(t: TestCase) -> void:
 			t.eq(ContentExporter.to_json(ContentExporter.export_hunter(res)), raw, "%s 是往返不动点" % f)
 			t.check(ResourceLoader.exists(ContentPaths.asset_file("hunters", f.get_basename())), "%s 的资产在" % f)
 	t.check(files >= 1, "至少一份猎手文件")
-	t.eq(c.hunter_defs.size(), files, "load_hunters 装回全部 %d 份" % files)
+	t.eq(c.hunter_defs.size(), files, "HunterSystem.load_all 装回全部 %d 份" % files)
 
 
 static func run_spawn_territory_turn(t: TestCase) -> void:

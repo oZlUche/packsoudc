@@ -265,9 +265,13 @@ func tutorial_chapters() -> Array[ChapterDef]:
 	for c in chapters:
 		if c.hidden_by_unlock != &"":
 			out.append(c)
-	out.sort_custom(func(a: ChapterDef, b: ChapterDef) -> bool:
-		return a.order < b.order if a.order != b.order else String(a.id) < String(b.id))
+	out.sort_custom(_by_order)
 	return out
+
+
+## 内容按 order 再按 id 排（章节、科技、成就都这么排；难度按档位另算）
+static func _by_order(a: Resource, b: Resource) -> bool:
+	return a.order < b.order if a.order != b.order else String(a.id) < String(b.id)
 
 
 ## 教程是不是全通了（没有教程章也算全通）
@@ -482,8 +486,7 @@ func available_chapters() -> Array[ChapterDef]:
 			out.append(c)
 	if out.is_empty():
 		out = chapters.duplicate()
-	out.sort_custom(func(a: ChapterDef, b: ChapterDef) -> bool:
-		return a.order < b.order if a.order != b.order else String(a.id) < String(b.id))
+	out.sort_custom(_by_order)
 	return out
 
 
@@ -1245,7 +1248,8 @@ func _go(s: int, payload: Dictionary = {}) -> void:
 
 
 #region 内容
-## 资产目录里的全部章节 / 开局装备，按文件名排序
+## 资产目录里的全部章节 / 开局装备 / 角色 / 难度 / 成就 / 科技 / 百科页，按文件名（或 order）排序。
+## 猎手、信仰、配方、局外 buff、事件各自有 `load_all`（HunterSystem / FaithDef / RecipeDef / RunBuffs / EventPlacer），持有方直接调
 static func load_chapters() -> Array[ChapterDef]:
 	var out: Array[ChapterDef] = []
 	for res in ContentPaths.load_resources(ContentPaths.CHAPTERS):
@@ -1288,18 +1292,6 @@ static func load_characters() -> Array[CharacterDef]:
 
 
 ## 按档位排：普通在前
-static func load_hunters() -> Dictionary:
-	return HunterSystem.load_all()
-
-
-static func load_faiths() -> Dictionary:
-	return FaithDef.load_all()
-
-
-static func load_recipes() -> Array[RecipeDef]:
-	return RecipeDef.load_all()
-
-
 static func load_difficulties() -> Array[DifficultyDef]:
 	var out: Array[DifficultyDef] = []
 	for res in ContentPaths.load_resources(ContentPaths.DIFFICULTIES):
@@ -1325,8 +1317,7 @@ static func load_techs() -> Array[TechDef]:
 	for res in ContentPaths.load_resources(ContentPaths.TECHS):
 		if res is TechDef:
 			out.append(res)
-	out.sort_custom(func(a: TechDef, b: TechDef) -> bool:
-		return a.order < b.order if a.order != b.order else String(a.id) < String(b.id))
+	out.sort_custom(_by_order)
 	return out
 
 
@@ -1336,17 +1327,8 @@ static func load_achievements() -> Array[AchievementDef]:
 	for res in ContentPaths.load_resources(ContentPaths.ACHIEVEMENTS):
 		if res is AchievementDef:
 			out.append(res)
-	out.sort_custom(func(a: AchievementDef, b: AchievementDef) -> bool:
-		return a.order < b.order if a.order != b.order else String(a.id) < String(b.id))
+	out.sort_custom(_by_order)
 	return out
-
-
-static func load_run_buffs() -> Dictionary:
-	return RunBuffs.load_all()
-
-
-static func load_events() -> Dictionary:
-	return EventPlacer.load_all()
 
 
 ## 局外规则（仓库多大）。没导入资产时 null，MetaState 用默认大小

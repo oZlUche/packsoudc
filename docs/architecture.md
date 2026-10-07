@@ -3240,7 +3240,7 @@ func player_spec() -> CombatantSpec …
 作者说正式游戏由新手教程关发第一套（第 8 阶段），这是那之前的配置占位。
 
 `LoadoutDef`（`core/run/loadout_def.gd`，内容种类 `loadouts`）于是只剩两件事：第一套的清单，和没有角色定义时的老路（`begin(chapter, loadout, seed)`：
-清单里的包先上棋盘，其余按顺序往包里放、放不下到地上，`RunState._give_kit`）。校验：每件得存在，至少一个包。现有三套占位。
+清单里的包先上棋盘，其余按顺序往包里放、放不下到地上，`RunState.give_kit`）。校验：每件得存在，至少一个包。现有三套占位。
 
 ### 8.2 结算与局外
 

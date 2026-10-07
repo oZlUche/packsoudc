@@ -101,7 +101,7 @@ static func frame_dev_levels(t: TestCase, root: Window) -> void:
 	f.meta_path = META
 	f.settings_path = SETTINGS
 	f.tech_defs = GameFlow.load_techs()
-	f.buff_defs = GameFlow.load_run_buffs()
+	f.buff_defs = RunBuffs.load_all()
 	var screen = load("res://ui/game/meta_screen.gd").new()
 	screen.flow = f
 	screen.font = UiPalette.cjk_font()

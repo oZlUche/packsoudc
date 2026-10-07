@@ -1,8 +1,9 @@
-## 后果：失去身上的道具（8-3）—— 献祭、被偷、交钥匙。挑法与 [ErodeDamageItem] 一样：随机 / 最值钱 / 最不值钱，
+## 后果：失去身上的道具（8-3）—— 献祭、被偷、交钥匙。挑法与 [ErodeDamageItem] 一样（[ItemPick]）：随机 / 最值钱 / 最不值钱，
 ## 再加「指定 id」；从棋盘、地上或两处拿；一次拿几件。没得拿就什么也不发生（条件层该先用 HasItem 挡住）
 class_name LoseItem
 extends EventOutcome
 
+## 前三档与 [enum ItemPick.Mode] 对齐
 enum Pick { RANDOM, MOST_VALUABLE, LEAST_VALUABLE, BY_ID }
 enum Where { BOARD, STORAGE, BOTH }
 
@@ -27,29 +28,14 @@ func apply(ctx: EventContext) -> void:
 
 func _choose(ctx: EventContext) -> Dictionary:
 	var cands: Array = []
-	for c in ctx.containers(where):
-		for inst in (c as ItemContainer).items():
-			var def := (inst as ItemInstance).def
-			if pick == Pick.BY_ID:
-				if def.id == item:
+	if pick == Pick.BY_ID:
+		for c in ctx.containers(where):
+			for inst in (c as ItemContainer).items():
+				if (inst as ItemInstance).def.id == item:
 					cands.append({"inst": inst, "from": c})
-			elif include_bags or not def.is_bag:
-				cands.append({"inst": inst, "from": c})
-	if cands.is_empty():
-		return {}
-	var chosen: Dictionary = cands[0]
-	match pick:
-		Pick.RANDOM:
-			chosen = cands[ctx.rng.randi_range(0, cands.size() - 1)] if ctx.rng != null else cands[0]
-		Pick.MOST_VALUABLE:
-			for c in cands:
-				if ItemValue.of((c["inst"] as ItemInstance).def) > ItemValue.of((chosen["inst"] as ItemInstance).def):
-					chosen = c
-		Pick.LEAST_VALUABLE:
-			for c in cands:
-				if ItemValue.of((c["inst"] as ItemInstance).def) < ItemValue.of((chosen["inst"] as ItemInstance).def):
-					chosen = c
-	return chosen
+	else:
+		cands = ItemPick.candidates(ctx.containers(where), include_bags)
+	return ItemPick.choose(cands, pick, ctx.rng)     # BY_ID 不在挑法里：取第一件
 
 
 func describe() -> String:

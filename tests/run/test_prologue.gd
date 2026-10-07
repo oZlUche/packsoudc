@@ -25,7 +25,7 @@ static func _start(c: TestSupport.Content) -> RunState:
 		return null
 	s.event_defs = c.events
 	s.faith_defs = c.faiths
-	CraftingModule.of(s).recipes = GameFlow.load_recipes()     # 114：序章一教合成
+	CraftingModule.of(s).recipes = RecipeDef.load_all()     # 114：序章一教合成
 	s.pick_spawn(s.map.entry_ids[0])
 	return s
 

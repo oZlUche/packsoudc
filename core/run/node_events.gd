@@ -466,9 +466,7 @@ func _after_battle(node: MapNode, kind: String, won: bool) -> void:
 			else:
 				search_shown.emit(node, session)
 			return
-		searches_closed += session.searches_done
-		current_search = null
-		search_closed.emit(node, session.haul(), &"encounter")
+		_finish_search(node, session, &"encounter")
 	_visited(node)
 	if kind == "search" and not over:
 		# 084：搜索点被余波摧毁，不能再搜 —— 配了就说一声
@@ -524,14 +522,7 @@ func smite_pending_battle() -> bool:
 	result.winner = 0
 	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content, "type": String(type)}
 	battle_finished.emit(node, result, true)
-	var ctx := _loot_ctx()
-	var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core") \
-		if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
-	_bless_rolled(node, rolled)
-	loot_ready.emit(node, DropResolver.corpse_of(content, rolled, items))
-	_pay_battle_reward(node, content)
-	if type == &"core":
-		boss_defeated.emit(node)
+	_settle_won(node, type, content)
 	_after_battle(node, kind, true)
 	return true
 
@@ -555,10 +546,7 @@ func skip_pending_battle() -> bool:
 	var kind := String(pending_battle.get("kind", "node"))
 	pending_battle = {}
 	if kind == "search" and current_search != null:
-		var session := current_search
-		searches_closed += session.searches_done
-		current_search = null
-		search_closed.emit(node, session.haul(), &"slipped")
+		_finish_search(node, current_search, &"slipped")
 	_visited(node)
 	battle_skipped.emit(node)
 	return true
@@ -631,15 +619,7 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content, "type": String(type)}
 	battle_finished.emit(node, result, won)
 	if won:
-		var ctx := loot_ctx if loot_ctx != null else _loot_ctx()
-		# 087：核心点的 BOSS 保底一件金色（DropRule.boss_rarity）
-		var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core") \
-			if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
-		_bless_rolled(node, rolled)
-		loot_ready.emit(node, DropResolver.corpse_of(content, rolled, items))
-		_pay_battle_reward(node, content)
-		if type == &"core":
-			boss_defeated.emit(node)
+		_settle_won(node, type, content, loot_ctx)
 	else:
 		var cost := loss_cost_for(type, content, loss_cost)
 		if cost == LOSS_DEATH:
@@ -655,6 +635,20 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 				_defeat(&"vitality_depleted")
 		# cost == 0：这一场写了无代价
 	return won
+
+
+## 打赢了之后（节点的一场、搜索遭遇、猎手、秒杀都走这里）：掉落 → 赐福替换 → 尸体容器交出去 → 进账 → 核心点的 BOSS 倒下。
+## [param loot_ctx] 没给就问 hook（猎手系统给自己的那份）
+func _settle_won(node: MapNode, type: StringName, content: Dictionary, loot_ctx: LootContext = null) -> void:
+	var ctx := loot_ctx if loot_ctx != null else _loot_ctx()
+	# 087：核心点的 BOSS 保底一件金色（DropRule.boss_rarity）
+	var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core") \
+		if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
+	_bless_rolled(node, rolled)
+	loot_ready.emit(node, DropResolver.corpse_of(content, rolled, items))
+	_pay_battle_reward(node, content)
+	if type == &"core":
+		boss_defeated.emit(node)
 
 
 ## 开搜索。[param auto] = 事件屏上选了「搜索」（084）：第一次开会话，然后**搜一次**；没遭遇就给看搜索屏，遭遇了会话自己结束、走 _close_search。
@@ -780,18 +774,19 @@ func _close_search(node: MapNode, session: SearchSession, reason: StringName) ->
 			# 审查 B1：遭遇的内容也记在 pending 里（会话不进存档）—— 读档回来选「迎战」打的还是这一场
 			set_pending(node, notice, &"search", {"search_encounter": true, "encounter": session.encounter.duplicate(true)})
 			return
-		if pause_before_battle and _can_fight(session.encounter):
-			# 先停在战前准备屏；打完由 _after_battle("search") 决定：赢了接着搜、输了收会话（091：无代价）
-			pending_battle = {"node": node.id, "type": "search", "content": session.encounter.duplicate(true), "kind": "search", "loss_cost": 0}
-			battle_pending.emit(node, &"search", session.encounter)
-			return
-		var won := _fight(node, &"search", session.encounter, null, 0)
-		_after_battle(node, "search", won)
+		# 没配「遇敌」事件就直接打这一场（091：无代价）：开着 pause_before_battle 先停在战前准备屏；
+		# 打完由 _after_battle("search") 决定：赢了接着搜、输了收会话
+		_battle_at(node, &"search", session.encounter, "search", 0)
 		return
+	_finish_search(node, session, reason)
+	_visited(node)
+
+
+## 搜索会话收掉（自己走的、搜满了走的、遭遇打输了、脱身）：搜过的次数记进总账、收获交出去（[signal search_closed]）
+func _finish_search(node: MapNode, session: SearchSession, reason: StringName) -> void:
 	searches_closed += session.searches_done
 	current_search = null
 	search_closed.emit(node, session.haul(), reason)
-	_visited(node)
 
 
 func _event(node: MapNode) -> void:

@@ -90,22 +90,7 @@ static func from_loadouts(loadouts: Array[LoadoutDef], items: ItemDatabase, base
 	var out: Array[Dictionary] = []
 	for l in loadouts:
 		var board := GridInventory.new(board_size, RunState.BOARD_ID, true)
-		var bags: Array[ItemDef] = []
-		var rest: Array[ItemDef] = []
-		for id in l.items:
-			var d := items.get_def(id)
-			if d == null:
-				continue
-			if d.is_bag:
-				bags.append(d)
-			else:
-				rest.append(d)
-		board.begin_batch()
-		for d in bags:
-			board.try_add(ItemInstance.create(d, 0), true)
-		for d in rest:
-			board.try_add(ItemInstance.create(d, 0), true)
-		board.end_batch()
+		RunState.give_kit(board, l.items, items)     # 和一局开局发 kit 同一条路（放不下的这里丢掉）
 		var stats := {}
 		if baseline != null:
 			for key in baseline.base_stats:

@@ -34,7 +34,7 @@ static func snapshot(run: RunState) -> Dictionary:
 		"requires_bag": run.board.requires_bag,
 		"layout": RunState.layout_of(run.board),
 		"baseline": stats,
-		"buffs": run._meta_buff_ids(),
+		"buffs": run.meta_buff_ids(),
 	}
 
 
@@ -78,18 +78,7 @@ static func read_all(p_path: String = DEFAULT_PATH) -> Array[Dictionary]:
 static func board_of(snap: Dictionary, items: ItemDatabase) -> GridInventory:
 	var size_raw: Array = snap.get("board_size", [8, 6])
 	var board := GridInventory.new(Vector2i(int(size_raw[0]), int(size_raw[1])), RunState.BOARD_ID, bool(snap.get("requires_bag", true)))
-	board.begin_batch()
-	for row in snap.get("layout", []):
-		if not (row is Dictionary):
-			continue
-		var def := items.get_def(StringName(String(row.get("id", ""))))
-		if def == null:
-			continue
-		var at: Array = row.get("origin", [0, 0])
-		var inst := ItemInstance.create(def, 0)
-		if not board.place(inst, Vector2i(int(at[0]), int(at[1])), int(row.get("rot", 0))):
-			board.try_add(inst, true)
-	board.end_batch()
+	RunState.place_layout(board, snap.get("layout", []), items)
 	return board
 
 

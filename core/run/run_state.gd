@@ -208,8 +208,8 @@ static func start(
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
 	s.storage = ItemStash.new(STORAGE_ID, 0)
 	s._bind_tracker()
-	s._place_layout(p_layout)
-	s._give_kit(full_kit)
+	place_layout(s.board, p_layout, p_items, s.storage)
+	give_kit(s.board, full_kit, p_items, s.storage)
 	s.travel = MapTravel.new(s.map, ActionClock.new())
 	s.travel.vitality = s.vitality
 	s._wire_events()
@@ -237,20 +237,30 @@ func step_to(id: int) -> bool:
 		return false
 	if not travel.available_moves().has(id):
 		return travel.step_to(id)     # 让旅程自己拒绝、发 refused；走不成就不该清东西
-	reconcile_owned()     # 104：地上留下之前对账，这个点上拿到的都算获得
-	close_sessions()
-	_drop_pending_loot()
-	_forget_handled()
-	leaving.emit(travel.current_id)     # 101：走开了 —— 模块自己接（保险箱关上、地上留在这个点）
-	var was_visited := map.has_node(id) and map.get_node(id).is_visited()
+	var was_visited := _leave_current(id)
 	# 134：猎手的回合在进点之前（旅程的闸门 _arrival_gate 里）：够得着就先上猎手的事件屏、这个点的事挂起
 	var ok := travel.step_to(id)
 	if ok:
-		if was_visited and not travel.is_holding():
-			_arrived_again(travel.current_id)
-		skills.on_step()     # 冷却与躲避在猎手的回合之后减：躲 3 步就是 3 个猎手回合够不着（082）
-		stepped.emit(travel.current_id, &"step")     # 101：走完一步 —— 模块自己接（赐福、倒计时归零 = 行动失败）
+		_after_move(was_visited, &"step")
 	return ok
+
+
+## 要离开现在这个点了（走一步 / 被事件挪走同一条路）：对账、关会话、丢待拾取、忘掉「发生过事的点」、发 [signal leaving]。
+## 顺序不能动：leaving 必须在 _forget_handled 之后、真正动身之前。返回目的地 [param to_id] 走过没有
+func _leave_current(to_id: int) -> bool:
+	reconcile_owned()     # 104：地上留下之前对账，这个点上拿到的都算获得
+	_abandon_sessions()
+	_forget_handled()
+	leaving.emit(travel.current_id)     # 101：走开了 —— 模块自己接（保险箱关上、地上留在这个点）
+	return map.has_node(to_id) and map.get_node(to_id).is_visited()
+
+
+## 动完了（走到了 / 挪到了）：回到走过的点再发一次「到了」，技能走一步，发 [signal stepped]
+func _after_move(was_visited: bool, reason: StringName) -> void:
+	if was_visited and not travel.is_holding():
+		_arrived_again(travel.current_id)
+	skills.on_step()     # 冷却与躲避在猎手的回合之后减：躲 3 步就是 3 个猎手回合够不着（082）
+	stepped.emit(travel.current_id, reason)     # 101：走完一步 —— 模块自己接（赐福、倒计时归零 = 行动失败）
 
 
 ## 回到走过的点（头一回踩的在 _on_arrive 里已经发过）
@@ -294,18 +304,10 @@ func resume_arrival() -> bool:
 func relocate(intent: MoveIntent) -> bool:
 	if phase != Phase.ON_MAP or intent == null:
 		return false
-	reconcile_owned()
-	close_sessions()
-	_drop_pending_loot()
-	_forget_handled()
-	leaving.emit(travel.current_id)     # 101：同上，事件把人挪走也算走开
-	var was_visited := map.has_node(intent.to_id) and map.get_node(intent.to_id).is_visited()
+	var was_visited := _leave_current(intent.to_id)     # 101：事件把人挪走也算走开
 	var ok := travel.apply(intent)     # 134：猎手的回合在闸门里，先于落地那个点的事
 	if ok:
-		if was_visited and not travel.is_holding():
-			_arrived_again(travel.current_id)
-		skills.on_step()
-		stepped.emit(travel.current_id, &"relocate")
+		_after_move(was_visited, &"relocate")
 	return ok
 
 
@@ -349,6 +351,12 @@ func _drop_pending_loot() -> void:
 		discard_loot()
 
 
+## 走开、撤离、失败都先做这两件：开着的会话关掉、没拿的战利品丢掉
+func _abandon_sessions() -> void:
+	close_sessions()
+	_drop_pending_loot()
+
+
 ## 离开正在搜的点 / 正在逛的店
 func close_sessions() -> void:
 	if events == null:
@@ -373,8 +381,7 @@ func try_extract() -> bool:
 		return false     # 092：倒计时过半关掉的撤离点
 	if not events.pay_extract_fee(node):
 		return false
-	close_sessions()
-	_drop_pending_loot()
+	_abandon_sessions()
 	_set_phase(Phase.EXTRACTED, &"extract")
 	return true
 
@@ -383,8 +390,7 @@ func try_extract() -> bool:
 func extract_after_boss() -> bool:
 	if not boss_cleared or is_over():
 		return false
-	close_sessions()
-	_drop_pending_loot()
+	_abandon_sessions()
 	_set_phase(Phase.EXTRACTED, &"boss")
 	return true
 
@@ -395,8 +401,7 @@ func extract_after_boss() -> bool:
 func force_extract() -> bool:
 	if is_over():
 		return false
-	close_sessions()
-	_drop_pending_loot()
+	_abandon_sessions()
 	_set_phase(Phase.EXTRACTED, &"extract")
 	return true
 
@@ -406,8 +411,7 @@ func force_extract() -> bool:
 func fail(reason: StringName) -> bool:
 	if is_over():
 		return false
-	close_sessions()
-	_drop_pending_loot()
+	_abandon_sessions()
 	if events != null:
 		events.pending_battle = {}
 		events.pending = {}
@@ -826,9 +830,10 @@ static func layout_of(board: GridInventory) -> Array:
 	return out
 
 
-## 按 [method layout_of] 的记录摆回棋盘；摆不回去的（棋盘换了、定义没了）到地上
-func _place_layout(layout: Array) -> void:
-	if items == null or layout.is_empty():
+## 按 [method layout_of] 的记录摆上棋盘（开局与校准快照 [CalibrationRecorder] 同一条路）：摆不回去的（棋盘换了、定义没了）先自动找位，
+## 还放不下的到 [param overflow]（开局是地上；null = 丢掉）
+static func place_layout(board: GridInventory, layout: Array, items: ItemDatabase, overflow: ItemContainer = null) -> void:
+	if items == null:
 		return
 	board.begin_batch()
 	for row in layout:
@@ -839,11 +844,14 @@ func _place_layout(layout: Array) -> void:
 			continue
 		var at: Array = row.get("origin", [0, 0])
 		var inst := ItemInstance.create(d, 0)
-		if not board.place(inst, Vector2i(int(at[0]), int(at[1])), int(row.get("rot", 0))) and not board.try_add(inst, true):
-			storage.admit(inst)
+		if not board.place(inst, Vector2i(int(at[0]), int(at[1])), int(row.get("rot", 0))) and not board.try_add(inst, true) and overflow != null:
+			overflow.admit(inst)
 	board.end_batch()
 
-func _give_kit(kit: Array[StringName]) -> void:
+
+## 按清单发一套道具（开局的 kit 与校准的开局装备 [DummyBuilder] 同一条路）：包先上棋盘，其余按顺序自动找位、
+## 放不下的到 [param overflow]（开局是地上；null = 丢掉）
+static func give_kit(board: GridInventory, kit: Array[StringName], items: ItemDatabase, overflow: ItemContainer = null) -> void:
 	if items == null:
 		return
 	var bags: Array[ItemDef] = []
@@ -861,8 +869,8 @@ func _give_kit(kit: Array[StringName]) -> void:
 		board.try_add(ItemInstance.create(d, 0), true)
 	for d in rest:
 		var inst := ItemInstance.create(d, 0)
-		if not board.try_add(inst, true):
-			storage.admit(inst)
+		if not board.try_add(inst, true) and overflow != null:
+			overflow.admit(inst)
 	board.end_batch()
 #endregion
 
@@ -1097,7 +1105,7 @@ func to_dict() -> Dictionary:
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
 		"boss_cleared": boss_cleared,
 		"tally": tally.duplicate(),
-		"buffs": {"meta": _meta_buff_ids()},     # 一局里拿到的在 modules.buff 下（101）
+		"buffs": {"meta": meta_buff_ids()},     # 一局里拿到的在 modules.buff 下（101）
 		"modules": _modules_to_dict(),     # 101：每个模块自己的状态；加模块 = 新键、带默认值，不升版
 	}
 
@@ -1109,7 +1117,8 @@ func _modules_to_dict() -> Dictionary:
 	return out
 
 
-func _meta_buff_ids() -> Array:
+## 局外带进来的 buff id（字符串，存档与校准快照用）
+func meta_buff_ids() -> Array:
 	var out: Array = []
 	for id in meta_buffs:
 		out.append(String(id))
