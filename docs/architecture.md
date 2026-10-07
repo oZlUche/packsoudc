@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.58 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.59 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3710,6 +3710,10 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 列表的行号对应的是**筛过之后**的那一份（`_shown`），不是全集（`_ids`）。
 两者混用的表现是「点第三行打开了第五件」，而且只有加了筛选之后才错。
 
+**列表 / 草稿 / 存盘只有一份**（141）：道具、事件、buff、套装四个编辑器继承 `AuthoringEditor`（`ui/editor/authoring_editor.gd`），
+列表（盘上的 id + 没存过盘的草稿）、草稿与判脏（按打开时的 id 记，和盘上那份规范化 JSON 比）、打开、存盘（导出 → 导入器建资产 → 写 `.json` 与 `.tres`，有错不写）、
+另存、套用 JSON、放弃、重扫都在基类；子类只给种类、导出 / 导入那一对、新建的那一件、表单和提示语。改 id 时旧名字下的草稿撤掉、盘上也没有就从列表里消失，四个一样。
+
 **事件编辑器**（`ui/event_editor/event_editor.tscn`，报告 064）是同一套做法对着事件（6.5）的第二个入口：左边事件列表，中间 id、标题、多行正文、配图、选项表单，
 右边预览、校验、挂进节点规则、JSON。选项、条件、后果的表单由 `PropertyForm` 反射生成，「添加」下拉从注册表来，加一种构件编辑器不改；
 标题、正文、配图在表单之外有专门控件（表单里跳过这三个字段，免得两处能改同一个值）。配图用系统文件对话框挑，复制到 `assets/events/<id>.<ext>`，
@@ -3797,7 +3801,7 @@ res://
                     settings_screen  warehouse_panel  loot_view  event_image
     inventory/      inventory_sandbox  inventory_view  container_view  stash_view  drag_layer  item_painter
     battle/         battle_sandbox  battle_view  combatant_panel
-    editor/         content_editor  property_form  shape_editor
+    editor/         authoring_editor（141 四个编辑器的基类）  content_editor  property_form  shape_editor
     event_editor/   event_editor      # 事件编辑器（10.5，报告 064）
     map/            map_view  map_layout  ring_layout_base  ring_map_layout  grid_map_layout
                     ring_angle_solver  map_node_style
@@ -3950,6 +3954,7 @@ res://
 | v2.56 | 2026-10-07 | **精简移交第 1 组：删**（140，作者定，待定按推荐；改 3.3、4.4）：`ItemDef.icon`；`GridInventory.rotate_item / rotate_bag / neighbors_of`、`ItemInstance.rotated_step`（原地转 = `detach_bag` + `attach_bag_shedding`）；两个容器的 `accept_tags`（`GridInventory` 只剩 `accept_filter`，存档不再写该键）；`Cost.describe` 全家；`CombatantRuntime.clear_axis`、`CompiledItem.origin_of`；扳机 `OnResourceChanged`；没人接的信号（猎手 `spawned / moved / encounter / hunter_defeated / fled`、`MapTravel.arrival_held`、`GameFlow.run_started / run_ended`、`Vitality.depleted`）；工具 `gen_sample_items / gen_sample_combat / export_content`；开局屏「没有角色」老路改成红字 |
 | v2.57 | 2026-10-07 | **精简移交第 2 组：改行为**（140，作者定，待定按推荐；改 6.1、7.x 猎手、存档版本）：`LootPacker.pack` = 往空容器里 `add`（加高时先放下的原位不动，只往后排没放下的）；`DropResolver.expected_count` 按固定种子 64 次掷骰的均值（掉落 + 保底），带 `boss` 参数，地图预览对核心点传 true；`carried_entries` 取代 `carried_flags`；编译器没有棋盘也照算后续步骤（信仰标签空）；猎手旧路径 R-21 删（`HunterDef.LEGACY_OPTION / loss_outcomes`，导入写 `loss_outcomes` 或 `loss_options` 为空都报错；一局存档 v3 → v4）；`MapRng.pick_weighted` 合并格阵与环形两份按权重抽样（遍历顺序由调用方给，同种子输出不变） |
 | v2.58 | 2026-10-07 | **精简移交第 3 组：收紧**（140，作者定，待定按推荐；改 5.6、5.7、9 节、7.4）：`MapTravel.erosion: ErosionField`（删 `move_penalty` 与 `has_method` 鸭子判断；`MapTravel.vitality` 随之没人用、删；三个测试的假侵蚀改成 `ErosionField` 子类）；`RunState` 的 9 个转发信号删掉，地图屏直接接 `hunters / travel.erosion / skills / faith_power` 的信号；`RecipeDef.note` 显示出来（拖到搭档上时残影下面一行「合成 → 产物：说明」、百科「合成」页列全部配方）；9 节开头与 [status.md](status.md) 标「已实现、暂无内容」，status 新增登记表（套装等扩展点、非矩形容器、`count_by_scale`、`min_danger`、`treasure_modified`） |
+| v2.59 | 2026-10-07 | **内容编辑器基类**（141 第 1 步，作者定，待定按推荐：基类、「盘上没有就从列表里删」四个都做；改 10.5）：新增 `AuthoringEditor`（列表 / 草稿 / 判脏 / 打开 / 存盘 / 另存 / 套用 JSON / 放弃 / 重扫 / 状态文本），buff 与套装编辑器改成继承它；测试碰的私有名字（`_def` / `_ids` / `_drafts` / `_open` / `has_unsaved_changes`）原样在基类 |
 | v2.49 | 2026-10-06 | **猎手战败结果档 + 猎手战插进进点的事件队列**（134，作者定，五项待定按推荐；改 8.5）：新资源 `HunterLossOption`（档名、名字、权重、后果），`HunterDef.loss_options` + `loss_pick`（新构件表 `HUNTER_LOSS_PICKS`：`random` / `fixed`），`Hunter.loss_id` 生成时选定、跟存档；新后果 `expel`（退回上一步、不驻守）。`MapTravel` 加进点闸门 `arrival_gate` / 挂起的进点 `held`（存档）/ `finish_arrival` / `cancel_arrival`；`RunState` 的猎手回合从「这一步的事之后」挪到闸门里（先于点的事），`resume_arrival` 在玩家空下来时接着进；驱逐 = 取消进点（不标走过、事不发生、不记首访，步数照算）。`GameFlow._flush` 接着进点后排进队里的接着看；收起猎手战的战利品也接着进点。悬停与开打前事件屏写「输了会怎样」。`hunter_1` 击退 / 驱逐各一半，`hunter_2` 击退 / 驱逐 / 驱逐并驻守各三分之一（数值占位） |
 | v2.48 | 2026-10-05 | **单一乘区**（133，作者定；改 4.3）：删 `StatMath.Buff` 四个乘区，公式改成 `终值 = 基础 × max(0, 1 + Σ乘算) + Σ加算`；`StatModifier` 改成 `stat / mode{ADD, MULT} / amount`，`StatValue` 的四格 `mult` 换成一个 `percent`；`PropertyForm` 在属性修饰下加一行灰字提示（乘算还是加算、扩大还是缩小、在 buff 里每层一份）；导入器迁移旧键（`mult_category` 提醒忽略、又乘又加报错），`normalize_content` 重写了 18 份内容 JSON；百科删掉「乘区」词条组；编译金样有意重录（`percent` 替换 `mult`，四份终值逐项不变）。跨乘区的组合数值变了（弓 + 箭 + 符号 1.38 → 1.35）；标准轴不动 |
 | v2.47 | 2026-10-05 | **规则构件第二批**（132）：时机 `on_status_removed` / `on_overtime`，`on_item_fired.source_tags`、`on_resource_below.direction / full`、`on_damage.crit_only`；条件 `resource_condition` / `axis_condition` 与 `axis_cost`，三个条件型加 `negate`；效果 `convert_damage_type`，`deal_damage.percent_of / per_target_stack`、`change_resource.percent_of_damage`、`remove_status.all_debuffs / all_buffs`；受益格 `receive_rules`（4.2）；导入器的「配了也没用」警告。放血刀改成按目标流血层数 ×3。见 4.2、4.4 |
