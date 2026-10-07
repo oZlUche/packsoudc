@@ -29,7 +29,6 @@ id = &"wild_born"
 display_name = "野地里长大"
 description = "休息时多回 {rest_bonus_amount} 点体力；侵蚀扣体力时少扣 {erosion_resist_amount} 点。"
 passive = Array[ExtResource("3_oevla")]([SubResource("Resource_ga23w"), SubResource("Resource_mv4vl")])
-slot = &"identity"
 
 [sub_resource type="Resource" id="Resource_056bq"]
 script = ExtResource("8_ipor7")
@@ -72,14 +71,12 @@ id = &"hardy"
 display_name = "坚韧"
 description = "战斗里生命掉到三成以下时，立刻得到一层护盾（每场一次）。"
 rules = Array[ExtResource("6_063lg")]([SubResource("Resource_obt75")])
-slot = &"talent"
 
 [sub_resource type="Resource" id="Resource_y0m8p"]
 script = ExtResource("16_6h21u")
 id = &"second_wind"
 display_name = "咬牙"
 description = "在地图上咬咬牙，恢复 {amount} 点体力。"
-slot = &"active"
 uses = 2
 cooldown_steps = 6
 
@@ -99,4 +96,3 @@ vitality_max = 6
 starting_bags = Array[StringName]([&"bag_leather", &"bag_leather"])
 weight_capacity = 56
 skills = Array[ExtResource("2_mx3k3")]([SubResource("Resource_x8pem"), SubResource("Resource_3htg3"), SubResource("Resource_y0m8p")])
-identity = &"slave"

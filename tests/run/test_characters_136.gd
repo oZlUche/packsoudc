@@ -1,4 +1,4 @@
-## 136（作者定，五项待定按推荐）：三个角色各一套 —— 身份被动 + 擅长被动 + 一个主动 + 一条短板。
+## 136（作者定，五项待定按推荐）：三个角色各一套 —— 初始面板 + 两个被动 + 一个主动 + 一条短板（修订：没有身份这一层，科技对谁都生效）。
 ## 安德烈乌斯：熟门熟路（每四步免一步）/ 溜得掉（逃跑、潜行、免一败）/ 脱身（战前溜走，猎手面前必定逃掉）；
 ## 布鲁图斯：野地里长大（休息多回、侵蚀少扣）/ 坚韧（低血一次性护盾）/ 咬牙（回体力）；
 ## 马库斯：军功（打赢的钱 ×1.25）/ 操练（耐力回复 +1）/ 突击（不动）。期望从角色文件推：文件里写多少就断言多少。
@@ -35,7 +35,7 @@ static func run_travel_discount(t: TestCase) -> void:
 	var andreus := CS._character(c, &"andreus")
 	var marcus := CS._character(c, &"marcus")
 	var fx := _effect_of(andreus, TravelDiscount) as TravelDiscount
-	t.not_null(fx, "安德烈乌斯的身份被动里有熟门熟路")
+	t.not_null(fx, "安德烈乌斯的被动里有熟门熟路")
 	if fx == null:
 		return
 	var s := CS._start(c, andreus)
@@ -203,7 +203,7 @@ static func run_brutus(t: TestCase) -> void:
 	var ctx := s.buff_context()
 	var rest := _effect_of(brutus, RestBonus) as RestBonus
 	var resist := _effect_of(brutus, ErosionResist) as ErosionResist
-	t.check(rest != null and resist != null, "身份被动：休息多回 + 侵蚀少扣")
+	t.check(rest != null and resist != null, "被动：休息多回 + 侵蚀少扣")
 	t.eq(ctx.rest_bonus, rest.amount, "上下文：休息多回 %d" % rest.amount)
 	# 休息
 	var rnode: MapNode = null
@@ -270,7 +270,7 @@ static func run_marcus(t: TestCase) -> void:
 		t.check(false, "开不了局")
 		return
 	var merit := _effect_of(marcus, BattleRewardMult) as BattleRewardMult
-	t.not_null(merit, "身份被动：军功")
+	t.not_null(merit, "被动：军功")
 	var node := CS._battle_node(s)
 	var base := s.economy.battle_reward(int(node.content.get("strength", 0)), float(s.events._depths.get(node.id, 0.0)), s.events.difficulty)
 	var m0 := s.wallet.balance
@@ -287,20 +287,21 @@ static func run_marcus(t: TestCase) -> void:
 	t.eq(s2.buff_context().battle_reward_mult, 1.0, "布鲁图斯不乘")
 
 
-static func run_identity_and_card(t: TestCase) -> void:
-	t.begin("136 · 身份字段（奴隶 / 军团士兵）给事件条件用；开局屏按「身份 / 擅长 / 主动」各一行")
+static func run_card_without_identity(t: TestCase) -> void:
+	t.begin("136 修订 · 没有身份这一层（作者定：角色 = 初始面板 + 技能）；开局屏按「被动 / 被动 / 主动」各一行")
 	var c := CS._content()
-	var want := {&"andreus": &"slave", &"brutus": &"slave", &"marcus": &"legion"}
-	for id in want:
+	for id in [&"andreus", &"brutus", &"marcus"]:
 		var ch := CS._character(c, id)
-		t.eq(ch.identity, want[id], "%s 的身份" % id)
-		var s := CS._start(c, ch)
-		t.eq(s.hooks.identity(), want[id], "%s：一局里查得到" % id)
-		var cond := IdentityIs.new()
-		cond.identities = [&"legion"] as Array[StringName]
-		t.eq(cond.check(s.events._event_ctx(s.current_node())), want[id] == &"legion", "%s：条件「身份是军团士兵」" % id)
+		t.check(not ("identity" in ch), "%s：角色上没有身份字段" % id)
 		var lines := ch.skill_lines()
 		t.eq(lines.size(), 3, "%s：三行" % id)
 		if lines.size() == 3:
-			t.check(lines[0].begins_with("身份：") and lines[1].begins_with("擅长：") and lines[2].begins_with("主动："), "%s：%s" % [id, " / ".join(lines)])
+			t.check(lines[0].begins_with("被动：") and lines[1].begins_with("被动：") and lines[2].begins_with("主动："), "%s：%s" % [id, " / ".join(lines)])
 			t.check(not lines[0].contains("{"), "%s：占位符都填上了" % id)
+		for sk in ch.skills:
+			t.check(not ("slot" in sk), "%s：技能没有分组字段" % id)
+	t.check(not RunHooks.NAMES.has(&"identity"), "没有 identity 这个 hook")
+	t.check(not RunRegistry.EVENT_CONDITIONS.has(&"identity_is"), "没有 identity_is 条件")
+	t.check(not ResourceLoader.exists("res://core/run/events/conditions/identity_is.gd"), "身份条件的脚本删了")
+	var page := FileAccess.get_file_as_string("res://data/authoring/help_pages/characters.json")
+	t.check(page.contains("科技对每个角色都生效") and not page.contains("身份"), "百科「三个角色」：科技对谁都生效，不提身份")

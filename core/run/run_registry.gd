@@ -59,7 +59,6 @@ const EVENT_CONDITIONS := {
 	&"has_flag": "res://core/run/events/conditions/has_flag.gd",
 	&"faith_active": "res://core/run/events/conditions/faith_active.gd",
 	&"rest_part_unused": "res://core/run/events/conditions/rest_part_unused.gd",
-	&"identity_is": "res://core/run/events/conditions/identity_is.gd",     # 136
 	&"skill_ready": "res://core/run/events/conditions/skill_ready.gd",     # 136
 }
 
