@@ -10,7 +10,7 @@
 ## 往包里拖 = 带上、往仓库拖 = 置入、留着的**出发就没了**；回主菜单则原样放回带回来的棋盘（视为没发生过移动）。
 ## 仓库的东西进不了地上（会丢）。
 ##
-## 没有角色定义（老内容、测试）时退回老路：按第一套开局装备开。
+## 没有角色定义时和没有章节一样：一条红字，开不了（140：作者数据里有三个角色，「按第一套开局装备开」的老路只留在 core 给测试）。
 ##
 ## **预设装备**（096，作者定）：角色之下一栏「预设装备」—— 不带 / 强攻（伤害高）/ 坚守（防御高）……（`LoadoutDef.preset`，数据里加一份就多一套）。
 ## 挑一套就把它的道具免费放进初始包：不从仓库拿、不算带入预算与件数上限、拖不进仓库 / 地上（只能在棋盘上挪），出发时带着走。
@@ -95,7 +95,7 @@ func open(_payload: Dictionary) -> void:
 	_char_box = _vbox(8)
 	left.add_child(_char_box)
 	if flow.characters.is_empty():
-		left.add_child(_label("没有角色定义：按第一套开局装备开（老路）", 12, UiPalette.DIM))
+		left.add_child(_label("没有角色：先跑 tools/import_content.gd", 13, UiPalette.HP))
 	if not flow.presets().is_empty():
 		left.add_child(_label("预设装备", 15, UiPalette.DIM))
 		_preset_box = _vbox(6)
@@ -521,12 +521,12 @@ func can_depart() -> String:
 	if why != "":
 		return why
 	var ch := character()
-	if ch != null:
-		var defs: Array = []
-		for inst in carried():
-			defs.append(inst.def)
-		return ch.carry_problem(defs)
-	return ""
+	if ch == null:
+		return "没有角色可选"
+	var defs: Array = []
+	for inst in carried():
+		defs.append(inst.def)
+	return ch.carry_problem(defs)
 
 
 ## 反馈（紧急）：左边那一列比窗口还高，原来放在列尾的「出发」按钮被挤出了屏幕，开局没有入口。
@@ -556,11 +556,7 @@ func depart() -> bool:
 		return false
 	var c := chapter()
 	var ch := character()
-	var run: RunState = null
-	if ch != null:
-		run = flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value())
-	else:
-		run = flow.begin(c, flow.default_loadout(), run_seed, [] as Array[int], null, [], difficulty(), scale_id)
+	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value())
 	if run == null:
 		_status.text = "这一章生成不出图：%s" % (c.map_source.last_error if c.map_source != null else "没有地图来源")
 		return false
@@ -619,8 +615,7 @@ func _rebuild_board() -> void:
 	board = null
 	_preset_uids.clear()
 	var ch := character()
-	if ch == null:
-		_board_host.add_child(_label("（老路：按第一套开局装备开，出发后在地图上按「背包」整理）", 12, UiPalette.DIM))
+	if ch == null:     # 140：没有角色就没有棋盘（左栏那条红字说明了）
 		return
 	board = GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
 	board.begin_batch()

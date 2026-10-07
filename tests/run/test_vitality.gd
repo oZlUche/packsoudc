@@ -8,13 +8,10 @@ extends RefCounted
 
 ## 收信号用的小信箱。lambda 按值捕获局部变量，写不出去，所以用字典。
 static func _watch(v: Vitality) -> Dictionary:
-	var log := {"changed": [], "depleted": []}
+	var log := {"changed": []}
 	v.changed.connect(
 		func(cur: int, mx: int, delta: int, reason: StringName) -> void:
 			(log["changed"] as Array).append([cur, mx, delta, String(reason)])
-	)
-	v.depleted.connect(
-		func(reason: StringName) -> void: (log["depleted"] as Array).append(String(reason))
 	)
 	return log
 
@@ -66,10 +63,10 @@ static func run_clamping(t: TestCase) -> void:
 	# --- 扣不破 0 ---
 	t.eq(v.spend(99, &"boss"), 3, "只剩 3，实际只扣 3")
 	t.eq(v.current, 0, "到 0 为止，不会变成负数")
-	t.eq((log["depleted"] as Array), ["boss"], "归零发一次 depleted，带着原因")
+	t.check(v.is_depleted(), "归零了（140：没有 depleted 信号，调用方查 is_depleted）")
 
 	t.eq(v.spend(1, &"again"), 0, "已经 0 了，再扣不动")
-	t.eq((log["depleted"] as Array).size(), 1, "也不会再发一次 depleted")
+	t.check(v.is_depleted(), "还是空的")
 
 	# --- 上限为 0 的退化情形 ---
 	var zero := Vitality.new(0)
@@ -99,7 +96,7 @@ static func run_set_max(t: TestCase) -> void:
 	var log := _watch(v)
 	v.set_max(0, &"cursed")
 	t.check(v.is_depleted(), "上限归零，人也就没了")
-	t.eq((log["depleted"] as Array), ["cursed"], "同样发 depleted，原因是调用方给的")
+	t.eq(((log["changed"] as Array).back() as Array)[3], "cursed", "变动的原因是调用方给的")
 
 	# --- 没变就不动 ---
 	var still := Vitality.new(4)

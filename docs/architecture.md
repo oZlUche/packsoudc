@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.55 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.56 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -225,7 +225,7 @@ signal changed
 var id: int
 var size: Vector2i
 var requires_bag: bool = false      # true = 棋盘模式
-var accept_tags: Array[StringName]  # 容器级准入，空 = 不限
+var accept_filter: Callable          # 容器级准入回调，无效 = 不限（仓库接 MetaState.keeps；140 删了准入标签）
 var _occ: PackedInt32Array
 var _bag_owner: PackedInt32Array
 var _items: Dictionary              # uid -> ItemInstance
@@ -235,8 +235,6 @@ var _blocked: PackedByteArray       # 自由容器的非矩形支持
 func can_place_item(inst, origin, rot) -> bool
 func place(inst, origin, rot) -> bool
 func remove(uid) -> ItemInstance          # 非空的包拒绝直接移除
-func rotate_item(uid, steps) -> bool      # 非空的包请走 rotate_bag
-func rotate_bag(uid, steps)               # 原地转包，返回脱落的实例；失败 null
 func find_first_fit(def, allow_rotate) -> Dictionary
 func try_add(inst, allow_rotate) -> bool
 
@@ -256,9 +254,6 @@ func detach_bag(bag_uid) -> Dictionary    # 连内容物一起摘下，记录相
 func attach_bag(payload, origin, rot) -> bool   # 严格版：一件不能少，给「原样放回」用
 func bag_fit_report(payload, origin, rot) -> Dictionary        # {ok, fallen}，不改状态
 func attach_bag_shedding(payload, origin, rot) -> Dictionary   # 依附不上的脱落并交还
-
-# 战斗编译期使用
-func neighbors_of(uid) -> Array[int]      # 四邻相接的其他物品
 ```
 
 玩家棋盘、敌人尸体、商店货架、仓库全部复用这一个类。不要为它们另写实现 —— 掉落系统几乎零成本，正是因为这里没有分叉。
@@ -302,8 +297,8 @@ func begin_batch() / end_batch()                  # 变更合批
 > 语义正好对上「依附不上才脱落」。
 
 实现上只有一条路径：`bag_fit_report` 回答「包放不放得下、哪几件会脱落」，
-`attach_bag_shedding` 照报告执行；原地转（`rotate_bag`）就是「摘下来、换个朝向放回去」，
-与拖拽中按 R 走的是同一段代码，两处不会给出不同的脱落结果。
+`attach_bag_shedding` 照报告执行；拖拽中按 R 转包走的就是这一段。没有单独的「原地转」API（140 删了 `rotate_item` / `rotate_bag`，
+生产没人调）：将来要原地转 = `detach_bag` 之后 `attach_bag_shedding(payload, origin, 新朝向)` 一行，不会和拖拽给出不同的脱落结果。
 `attach_bag` 保留为**一件不能少**的严格版，只给「原样放回」用。
 
 脱落的东西没地方去（没有地上、或地上满了）时，整件事不成立，包连同内容物退回原处。
@@ -846,7 +841,6 @@ func implied_costs() -> Array[Cost]: return []
 | `OnSchedule` | 自发型，不订阅事件，由频率层排出时刻 |
 | `OnBattleStart` | 开场一次 |
 | `OnItemFired` | 别的物品出手时（连带触发）；132：`source_tags` 只听带某标签的件（编译结果带上 `CompiledItem.tags`） |
-| `OnResourceChanged` | 某种资源发生变化时 |
 | `OnResourceBelow` | 资源降到上限的 N%（或绝对值 N）以下时；132：`direction = ABOVE` 反过来（涨到以上），`full` = 回满 |
 | `OnStacksAtLeast` | 自己／对手身上有 N 层某增益减益时 |
 | `OnDamage` | 受到／造成某类伤害【之后】，且不低于 N 点时；132：`crit_only` 只在暴击时 |
@@ -3122,7 +3116,7 @@ flow 只说「现在该显示哪一屏、给它什么」（`screen_changed(scree
 class_name GameFlow extends RefCounted
 enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR }   # SLOTS 089、SAFE 092、ALTAR 093
 signal screen_changed(screen, payload)
-signal run_started(state) / run_ended(result)
+signal run_changed(state)                    # 140：run_started / run_ended 没人接，删了
 func to_main_menu() / new_run() / show_meta()
 func begin(chapter, loadout, seed, from_warehouse, character, layout) -> RunState   # SETUP → MAP；老路给 loadout，角色路给 character + layout
 func continue_run() -> bool / save() / save_and_quit()
@@ -3764,7 +3758,7 @@ res://
                     adjacency_profile  combat_profile  buff_def  buff_instance  effect_registry
       damage/       damage_type_def  damage_types  damage_packet  damage_resolver
       triggers/     on_schedule  on_battle_start  on_damage  on_before_damage  on_item_fired
-                    on_resource_below  on_resource_changed  on_stacks_at_least  damage_trigger
+                    on_resource_below  on_stacks_at_least  damage_trigger
       cadences/     always  cooldown_cadence
       costs/        resource_cost  charge_cost  status_stack_cost  uses_cost  chance_condition
       effects/      deal_damage  modify_damage  reflect_damage  apply_status  remove_status  change_resource
@@ -3806,9 +3800,9 @@ res://
     map/            map_view  map_layout  ring_layout_base  ring_map_layout  grid_map_layout
                     ring_angle_solver  map_node_style
     map_editor/     map_editor
-  tools/            import_content  export_content  normalize_content  check_scripts  check_content  map_stats  build_dummies  bench_hunters
+  tools/            import_content  normalize_content  check_scripts  check_content  map_stats  build_dummies  bench_hunters
                     demo_fill        # 截图演示（101 第 6 刀；只在 DEMO_SCREEN 非空时被导演 load）
-                    gen_sample_items  gen_sample_combat  gen_sample_chapter  bench_battle  capture_scene  cli_tool
+                    gen_sample_chapter  bench_battle  capture_scene  cli_tool
   tests/            run_tests  test_case  support（公共装载）                      # 102：按层分目录（2026-10-06：108 个套件）
     inventory/      test_*（12）   背包、格子、拖拽
     battle/         test_*（8）    编译、效果、伤害、数值
@@ -3906,7 +3900,7 @@ res://
 | 新的资源种类（法力、护盾值…） | `ResourcePool` 的新键 + `max_*` 属性键 | 不为每种资源单开事件，统一走 `resource_changed(key, delta, reason)` |
 | 新的触发时机／频率／效果 | `Trigger`／`Cadence`／`Effect` 子类 + `effect_registry` 登记一行 | 不在 `BattleSim` 或导入器里出现任何具体效果名；连带触发是 `OnItemFired` 子类，不是特例字段 |
 | 合成配方 | 新增 `RecipeBook` + 回合边界的结算钩子 | 匹配的是**相对偏移模式**而非「挨着」；`state` 预留 `locked` 标志 |
-| 有内容物的包可旋转 | `GridInventory.rotate_item` 的包分支 | 现在直接拒绝；放开时内容物需同步做坐标变换 |
+| 原地旋转（不经拖拽） | `detach_bag` + `attach_bag_shedding(payload, origin, 新朝向)` | 140 删了 `rotate_item` / `rotate_bag`；要做就是这一行，脱落规则和拖拽同一条路 |
 
 **这张表的用法是防御性的**：实现底层时对照检查有没有踩到右列，而不是现在就去实现左列。
 
@@ -3951,6 +3945,7 @@ res://
 | v2.53 | 2026-10-07 | **叠层上限取消、道具重量按材质、初始负重上调**（137，作者定，五项待定按推荐；改 4.5、7.6）：`BuffDef.max_stacks` → `stackable`（可叠层不限层、不可叠层固定一层，导入器迁移旧键）；`FaithBonus.max_stacks` 改名 `max_shares`；Buff 制作器去掉上限框；`ItemWeight` 每格重 重 4 / 金属 3 / 石与晶 2；新标签 `stone`（燧石、粗盐）；角色负重上限 40 / 48 / 56 |
 | v2.54 | 2026-10-07 | **136 修订：去掉身份层**（作者补充：科技不跟角色绑定，角色 = 初始面板 + 技能；改 7.3）：删 `CharacterDef.identity`、事件条件 `identity_is`、hook `identity`、`RunSkill.slot`；开局屏角色卡改成「被动 / 被动 / 主动」三行，面板行加负重；百科「三个角色」改写并补一句「科技对每个角色都生效」。技能本身与数值不变 |
 | v2.55 | 2026-10-07 | **基地屏：调试台抽屉、格子占满整行**（139，作者定，三项待定按推荐；改 8.2）：新 `DevDrawer`（箭头开关、盖在页面上，开发开关 / 局外解锁 / 科技等级 / 最近几局都搬进去）；`InventoryView.cell_px` + `cell_px_changed`，`DragLayer` / `ScrollBox` 对着视图算的地方读它；`WarehousePanel.fill_width` 与 `cell_for`（60 ～ 96）；出售页同样；图鉴列数按宽度 |
+| v2.56 | 2026-10-07 | **精简移交第 1 组：删**（140，作者定，待定按推荐；改 3.3、4.4）：`ItemDef.icon`；`GridInventory.rotate_item / rotate_bag / neighbors_of`、`ItemInstance.rotated_step`（原地转 = `detach_bag` + `attach_bag_shedding`）；两个容器的 `accept_tags`（`GridInventory` 只剩 `accept_filter`，存档不再写该键）；`Cost.describe` 全家；`CombatantRuntime.clear_axis`、`CompiledItem.origin_of`；扳机 `OnResourceChanged`；没人接的信号（猎手 `spawned / moved / encounter / hunter_defeated / fled`、`MapTravel.arrival_held`、`GameFlow.run_started / run_ended`、`Vitality.depleted`）；工具 `gen_sample_items / gen_sample_combat / export_content`；开局屏「没有角色」老路改成红字 |
 | v2.49 | 2026-10-06 | **猎手战败结果档 + 猎手战插进进点的事件队列**（134，作者定，五项待定按推荐；改 8.5）：新资源 `HunterLossOption`（档名、名字、权重、后果），`HunterDef.loss_options` + `loss_pick`（新构件表 `HUNTER_LOSS_PICKS`：`random` / `fixed`），`Hunter.loss_id` 生成时选定、跟存档；新后果 `expel`（退回上一步、不驻守）。`MapTravel` 加进点闸门 `arrival_gate` / 挂起的进点 `held`（存档）/ `finish_arrival` / `cancel_arrival`；`RunState` 的猎手回合从「这一步的事之后」挪到闸门里（先于点的事），`resume_arrival` 在玩家空下来时接着进；驱逐 = 取消进点（不标走过、事不发生、不记首访，步数照算）。`GameFlow._flush` 接着进点后排进队里的接着看；收起猎手战的战利品也接着进点。悬停与开打前事件屏写「输了会怎样」。`hunter_1` 击退 / 驱逐各一半，`hunter_2` 击退 / 驱逐 / 驱逐并驻守各三分之一（数值占位） |
 | v2.48 | 2026-10-05 | **单一乘区**（133，作者定；改 4.3）：删 `StatMath.Buff` 四个乘区，公式改成 `终值 = 基础 × max(0, 1 + Σ乘算) + Σ加算`；`StatModifier` 改成 `stat / mode{ADD, MULT} / amount`，`StatValue` 的四格 `mult` 换成一个 `percent`；`PropertyForm` 在属性修饰下加一行灰字提示（乘算还是加算、扩大还是缩小、在 buff 里每层一份）；导入器迁移旧键（`mult_category` 提醒忽略、又乘又加报错），`normalize_content` 重写了 18 份内容 JSON；百科删掉「乘区」词条组；编译金样有意重录（`percent` 替换 `mult`，四份终值逐项不变）。跨乘区的组合数值变了（弓 + 箭 + 符号 1.38 → 1.35）；标准轴不动 |
 | v2.47 | 2026-10-05 | **规则构件第二批**（132）：时机 `on_status_removed` / `on_overtime`，`on_item_fired.source_tags`、`on_resource_below.direction / full`、`on_damage.crit_only`；条件 `resource_condition` / `axis_condition` 与 `axis_cost`，三个条件型加 `negate`；效果 `convert_damage_type`，`deal_damage.percent_of / per_target_stack`、`change_resource.percent_of_damage`、`remove_status.all_debuffs / all_buffs`；受益格 `receive_rules`（4.2）；导入器的「配了也没用」警告。放血刀改成按目标流血层数 ×3。见 4.2、4.4 |

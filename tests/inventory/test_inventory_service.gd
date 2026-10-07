@@ -61,9 +61,9 @@ static func run(t: TestCase) -> void:
 	)
 	t.check(src.has_item(b.uid), "越界失败后物品仍在源容器")
 
-	# --- 标签不匹配失败同样回滚 ---
+	# --- 准入不过失败同样回滚 ---
 	var slot := GridInventory.new(Vector2i(2, 2), 3)
-	slot.accept_tags = [&"weapon"] as Array[StringName]
+	slot.accept_filter = func(d: ItemDef) -> bool: return d.tags.has(&"weapon")
 	t.check(
 		not InventoryService.move(src, b.uid, slot, Vector2i(0, 0), 0),
 		"标签不匹配应失败"

@@ -235,12 +235,10 @@ static func run_flow_screens(t: TestCase) -> void:
 	t.check(not found.is_empty(), "找得到出生点旁边就是战斗点的种子")
 	if found.is_empty():
 		return
-	var started: Array = []
-	f.run_started.connect(func(st: RunState): started.append(st))
 	var run := f.begin(c.chapter, kit, int(found["seed"]))
 	t.not_null(run, "开局")
 	t.eq(f.screen, GameFlow.Screen.MAP, "→ 地图")
-	t.eq(started.size(), 1, "发了 run_started")
+	t.check(f.run == run, "这一局挂到流程上了")
 	t.eq(run.phase, RunState.Phase.PICK_SPAWN, "先挑出生点")
 	t.check(f.pick_spawn(int(found["entry"])), "挑出生点")
 	t.check(not f.extract(), "不在撤离点上撤不了")
@@ -323,8 +321,6 @@ static func run_flow_defeat(t: TestCase) -> void:
 	f.pick_spawn(int(found["entry"]))
 	f.run.vitality.spend(f.run.vitality.current - 1, &"test")
 	t.check(f.save(), "先存一份")
-	var ended: Array = []
-	f.run_ended.connect(func(r: RunResult): ended.append(r))
 	t.check(f.step_to(int(found["next"])), "走上战斗点")
 	t.eq(f.screen, GameFlow.Screen.PREBATTLE, "先到战前准备屏")
 	t.check(f.start_battle(), "开战")
@@ -333,7 +329,7 @@ static func run_flow_defeat(t: TestCase) -> void:
 	t.check(f.run.is_over(), "一局结束了")
 	f.resume()
 	t.eq(f.screen, GameFlow.Screen.RESULT, "→ 结算")
-	t.eq(ended.size(), 1, "发了 run_ended")
+	t.not_null(f.result, "结算过了")
 	var r: RunResult = f.last_payload.get("result", null)
 	t.check(r != null and not r.is_extracted() and r.battles_lost == 1, "战败的账：输了一场")
 	t.check(not f.pick_spawn(int(found["entry"])) and not f.step_to(int(found["entry"])), "结束了走不了")

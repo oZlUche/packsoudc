@@ -31,7 +31,3 @@ func pay(ctx: RuleContext) -> void:
 func trace_info(ctx: RuleContext) -> Dictionary:
 	return {"cost": "ResourceCost", "resource": String(resource_key), "need": _amount_fp(ctx),
 		"have": ctx.owner.resources.current(resource_key) if ctx.owner.resources.has(resource_key) else 0}
-
-
-func describe(_ctx: RuleContext) -> String:
-	return "%s %.0f" % [resource_key, amount]

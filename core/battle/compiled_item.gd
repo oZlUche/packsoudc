@@ -29,14 +29,6 @@ var linked_uids: Array[int] = []
 var attached: Array[Dictionary] = []
 
 
-## 这条规则是不是别人附加的；是就返回来源，否则空
-func origin_of(rule_index: int) -> StringName:
-	for a in attached:
-		if int(a["rule_index"]) == rule_index:
-			return StringName(String(a["origin"]))
-	return &""
-
-
 func is_active() -> bool:
 	return not rules.is_empty()
 

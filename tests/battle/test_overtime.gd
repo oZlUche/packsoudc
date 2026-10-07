@@ -128,8 +128,7 @@ static func run_system_buffs(t: TestCase) -> void:
 	FX._advance_to(ctx, 62.0)
 	var me := ctx.sides[0]
 	me.shift_axis(StatAxes.DAMAGE_TAKEN, 2)
-	t.eq(me.clear_axis(StatAxes.DAMAGE_TAKEN), -2, "净化轴：只清内容层的 2 层")
-	t.eq(me.axis_system(StatAxes.DAMAGE_TAKEN), 28, "系统层 28 层还在（7 次 × 4）")
+	t.eq(me.axis_system(StatAxes.DAMAGE_TAKEN), 28, "系统层 28 层（7 次 × 4）")
 	t.eq(me.remove_buff_stacks(OvertimeRules.DECAY_ID, 99), 0, "衰竭：remove_buff_stacks 挡住")
 	var purge := RemoveStatus.new()
 	purge.buff_id = OvertimeRules.DECAY_ID

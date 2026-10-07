@@ -45,8 +45,6 @@ static func run_neighbor_attach(t: TestCase) -> void:
 	t.eq(bow.attached.size(), 1, "弓挂了一条")
 	var idx := int(bow.attached[0]["rule_index"])
 	t.eq(bow.attached[0]["origin"], &"poison_arrows", "来源是毒箭")
-	t.eq(bow.origin_of(idx), &"poison_arrows", "origin_of 查得到")
-	t.eq(bow.origin_of(0), &"", "弓自己的规则没有来源")
 	var rule := bow.rules[idx]
 	t.check(rule.trigger is OnItemFired, "触发器是出手时")
 	t.eq((rule.trigger as OnItemFired).source_uids, [bow.source_uid] as Array[int], "绑成只听弓自己")

@@ -36,14 +36,11 @@ static func run(t: TestCase) -> void:
 	# --- 一切道具都能转，创建时给的朝向原样保留 ---
 	var f := ItemInstance.create(wide, 3)
 	t.eq(f.rotation, 3, "创建时指定的朝向不该被改掉")
-	t.eq(f.rotated_step(1), 0, "转一步回到 0")
 	t.eq(f.cells(), wide.shape.cells_rotated(3), "占格按当前朝向算")
 
 	# --- 可旋转物品 ---
 	var r := ItemInstance.create(bar)
-	t.eq(r.rotated_step(1), 1, "旋转一步为 1")
 	r.rotation = 3
-	t.eq(r.rotated_step(1), 0, "从 3 旋转一步回到 0")
 	t.eq(r.size(), Vector2i(3, 1), "竖条 rot3（270°）包围盒为 3x1")
 	r.rotation = 2
 	t.eq(r.size(), Vector2i(1, 3), "竖条 rot2（180°）包围盒回到 1x3")

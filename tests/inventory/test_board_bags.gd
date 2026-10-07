@@ -27,6 +27,19 @@ static func _bag(id: String, rows: Array, accept: Array = []) -> ItemDef:
 	return d
 
 
+
+## 140：原地转包 = 摘下来、换个朝向放回去（和拖拽中按 R 同一条路）；转不动就原样放回。成功返回脱落的实例，失败 null
+static func _turn_bag(board: GridInventory, bag_uid: int, steps: int):
+	var bag := board.get_item(bag_uid)
+	var origin := bag.origin
+	var old_rot := bag.rotation
+	var payload := board.detach_bag(bag_uid)
+	var result := board.attach_bag_shedding(payload, origin, posmod(old_rot + steps, 4))
+	if not result["ok"]:
+		board.attach_bag(payload, origin, old_rot)
+		return null
+	return result["fallen"]
+
 static func run(t: TestCase) -> void:
 	t.begin("棋盘与包体")
 
@@ -96,18 +109,17 @@ static func run(t: TestCase) -> void:
 	t.check(board.place(straddle, Vector2i(2, 0), 0), "整件落在第二个包内也可以")
 	t.eq(board.bag_of(straddle.uid), b2.uid, "这时归属于第二个包")
 
-	# --- 非空的包不能直接移除；rotate_item 也接不住脱落的东西，要走 rotate_bag ---
+	# --- 非空的包不能直接移除 ---
 	t.check(board.is_bag_with_contents(b1.uid), "第一个包有内容物")
 	t.is_null(board.remove(b1.uid), "非空的包 remove 应返回 null")
 	t.check(board.has_item(b1.uid), "被拒后包仍在棋盘上")
-	t.check(not board.rotate_item(b1.uid, 1), "非空的包不能用 rotate_item 转（它回不了脱落的东西）")
-	t.eq(b1.rotation, 0, "被拒后朝向不变")
 
 	# --- 空包可以旋转 ---
 	var empty_board := GridInventory.new(Vector2i(6, 6), 9, true)
 	var eb := ItemInstance.create(big_bag)
 	empty_board.place(eb, Vector2i(0, 0), 0)
-	t.check(empty_board.rotate_item(eb.uid, 1), "空包可以旋转")
+	empty_board.remove(eb.uid)
+	t.check(empty_board.place(eb, Vector2i(0, 0), 1), "空包可以换个朝向放回去")
 	t.eq(eb.rotation, 1, "旋转生效")
 	t.check(empty_board.is_covered(Vector2i(2, 1)), "旋转后覆盖范围跟着变（3x2）")
 	t.check(not empty_board.is_covered(Vector2i(0, 2)), "旋转后原先的覆盖已释放")
@@ -167,9 +179,7 @@ static func run(t: TestCase) -> void:
 	var n2 := ItemInstance.create(dot)
 	adj.place(n1, Vector2i(0, 0), 0)
 	adj.place(n2, Vector2i(1, 0), 0)
-	var nb := adj.neighbors_of(n1.uid)
-	t.eq(nb, [n2.uid] as Array[int], "邻居只含普通物品，不含容纳它的包")
-	t.check(not nb.has(ab.uid), "包不是邻居 —— 容纳关系与邻接关系是两回事")
+	t.eq(adj.cell_uid(Vector2i(0, 0)), n1.uid, "包上放的东西占的是物品层，包在包层（容纳关系与邻接关系是两回事）")
 
 
 static func run_bag_move(t: TestCase) -> void:
@@ -295,7 +305,7 @@ static func run_rotate_shedding(t: TestCase) -> void:
 	t.eq(int(back["rot"]), 0, "朝向也回来")
 
 	# --- 原地转：内容物跟着转，一件不掉 ---
-	var fallen = board.rotate_bag(bag.uid, 1)
+	var fallen = _turn_bag(board, bag.uid, 1)
 	t.not_null(fallen, "非空的包能转")
 	t.eq(bag.rotation, 1, "包转了一步（2x3 → 3x2，占 (1..3, 1..2)）")
 	t.eq((fallen as Array).size(), 0, "**整件在包里的东西不脱落**")
@@ -309,7 +319,7 @@ static func run_rotate_shedding(t: TestCase) -> void:
 		t.eq(board.bag_at(column.origin + c), bag.uid, "长条的每一格都仍被这个包覆盖")
 
 	# --- 转回去：完全复原 ---
-	board.rotate_bag(bag.uid, -1)
+	_turn_bag(board, bag.uid, -1)
 	t.eq(column.origin, Vector2i(2, 1), "转回去长条回到右列")
 	t.eq(column.rotation, 0, "朝向也回来")
 	t.eq(corner.origin, Vector2i(1, 1), "方块回到左上角")
@@ -338,7 +348,7 @@ static func run_rotate_shedding(t: TestCase) -> void:
 	t.check(board.has_item(bridge.uid), "跨包的那件回来了")
 	t.eq(bridge.origin, Vector2i(2, 3), "回到原处")
 
-	var shed = board.rotate_bag(bag.uid, 1)
+	var shed = _turn_bag(board, bag.uid, 1)
 	t.eq((shed as Array).size(), 1, "原地转：跨包的脱落")
 	t.check(not board.has_item(bridge.uid), "离开了棋盘")
 	t.check(board.has_item(corner.uid), "整件在里面的跟着转，没掉")
@@ -349,7 +359,7 @@ static func run_rotate_shedding(t: TestCase) -> void:
 	edge_board.place(edge_bag, Vector2i(1, 0), 0)      # 2x3 占 (1..2, 0..2)
 	var inside := ItemInstance.create(dot)
 	edge_board.place(inside, Vector2i(1, 0), 0)
-	t.is_null(edge_board.rotate_bag(edge_bag.uid, 1), "转成 3x2 会出界，转不动")
+	t.is_null(_turn_bag(edge_board, edge_bag.uid, 1), "转成 3x2 会出界，转不动")
 	t.eq(edge_bag.rotation, 0, "朝向没变")
 	t.check(edge_board.has_item(inside.uid), "**内容物一件不掉**")
 	t.eq(inside.origin, Vector2i(1, 0), "位置也没动")

@@ -22,8 +22,6 @@ signal moved(intent: MoveIntent, first_visit: bool)
 signal refused(intent: MoveIntent, why: String)
 ## 原地耗了几个行动点（8-3）
 signal waited(actions: int)
-## 134：这一次进点被闸门挂起了（猎手在进点之前追上）。人已经在点上、步数已经花了，点的事还没发生
-signal arrival_held(intent: MoveIntent, first_visit: bool)
 ## 134：挂起的进点取消了（输给驱逐档的猎手，退回上一步）：这个点视为没进
 signal arrival_cancelled(intent: MoveIntent, first_visit: bool)
 
@@ -119,7 +117,6 @@ func apply(intent: MoveIntent) -> bool:
 	# 134：进点之前的闸门（猎手战插在这个点的事前面）。挂起了就停在这儿：点不标走过、事不发生、moved 不发
 	if arrival_gate.is_valid() and bool(arrival_gate.call(intent, first_visit)):
 		held = {"intent": intent, "first": first_visit}
-		arrival_held.emit(intent, first_visit)
 		return true
 
 	_arrive(intent, dest, first_visit)

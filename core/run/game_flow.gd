@@ -13,11 +13,9 @@ extends RefCounted
 enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR, ENCYCLOPEDIA }
 
 signal screen_changed(screen: int, payload: Dictionary)
-signal run_started(state: RunState)
 ## 101 第 5 刀：当前的这一局换了（开局 / 读档 / 回主菜单时 `null`）。UI 据此把只属于一局的东西挂上 / 摘掉
 ## （[ItemTooltip] 的信仰探针就是这么接的 —— core 不认识 ui）
 signal run_changed(state: RunState)
-signal run_ended(result: RunResult)
 
 var items: ItemDatabase = null
 var enemies: EnemyDatabase = null
@@ -250,7 +248,6 @@ func continue_run() -> bool:
 	if state != null:
 		_adopt(state)
 		_flush()     # 读档回来：等着选的事件还在这一屏；结束了的直接进结算；否则回地图
-		run_started.emit(state)
 		return true
 	var target := continue_target()
 	if target == null:
@@ -694,7 +691,6 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	_adopt(state)
 	_grant_keepsakes(chapter)
 	_go(Screen.MAP)
-	run_started.emit(state)
 	return state
 
 
@@ -870,7 +866,6 @@ func _settle_run() -> void:
 	if result != null:
 		return
 	result = RunResult.settle(run)
-	run_ended.emit(result)
 	if not _settled:
 		_settled = true
 		last_absorbed = meta.absorb(result)
