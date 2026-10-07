@@ -7,6 +7,7 @@ const PROBE := "zz_141_probe"
 const EDITORS := {
 	"res://ui/buff_editor/buff_editor.tscn": ["buffs", "display_name"],
 	"res://ui/set_editor/set_editor.tscn": ["sets", "display_name"],
+	"res://ui/event_editor/event_editor.tscn": ["events", "title"],
 }
 
 

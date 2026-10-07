@@ -13,8 +13,8 @@
 ##
 ## 为什么不做成 Godot 之外的独立程序：构件的种类、字段、校验、道具与 buff 的 id 全在注册表与导入器里，
 ## 独立程序要么复制一份（迟早对不上），要么不校验；这里一行都不用复制。
-## 真要单独发给作者，用导出预设把项目导出成 exe，启动选择器就是入口。
-extends Control
+## 真要单独发给作者，用导出预设把项目导出成 exe，启动选择器就是入口。列表 / 草稿 / 存盘在 [AuthoringEditor]（141）。
+extends AuthoringEditor
 
 const KIND := "events"
 const EVENT_DIR := ContentPaths.AUTHORING_EVENTS
@@ -22,20 +22,6 @@ const EVENT_DIR := ContentPaths.AUTHORING_EVENTS
 const IMAGE_DIR := "res://assets/events"
 const RULES_KIND := "node_rules"
 
-var _font: Font
-var _ids: Array[String] = []
-var _current_id: String = ""
-var _def: EventDef = null
-## 改过但还没存盘的：列表键 → 正在编辑的对象（只在内存里，见道具编辑器）
-var _drafts: Dictionary = {}
-## 列表键 → 盘上的规范化 JSON 文本，判断脏没脏
-var _baseline: Dictionary = {}
-## 校验用的上下文：道具、buff、盘上的事件。导入器「对着别的东西查」的那些校验只在上下文非空时生效
-var _ctx: ContentImporter.Context = null
-## 绑定时改控件文字会触发 changed，这个标志让处理器忽略那一下
-var _syncing: bool = false
-
-var _list: ItemList
 var _id_edit: LineEdit
 var _title_edit: LineEdit
 var _text_edit: TextEdit
@@ -43,8 +29,6 @@ var _image_edit: LineEdit
 var _thumb: TextureRect
 var _form_host: VBoxContainer
 var _preview_host: VBoxContainer
-var _status: RichTextLabel
-var _json: TextEdit
 var _rules_pick: OptionButton
 var _type_pick: OptionButton
 var _weight: SpinBox
@@ -56,15 +40,15 @@ var _lang_pick: OptionButton
 var _chain: Tree
 
 
+func _init() -> void:
+	_kind = KIND
+
+
 func _ready() -> void:
 	_font = UiPalette.cjk_font()
-	_ctx = _build_context()
+	_ctx = _build_context()     # 校验用的上下文：道具、buff、盘上的事件（导入器「对着别的东西查」的校验只在上下文非空时生效）
 	_build_ui()
-	_reload_list()
-	if _ids.is_empty():
-		_new_event()
-	else:
-		_open(_ids[0])
+	_start()
 
 
 ## 道具从资产装（`ItemDatabase`），buff 走 `RunBuffs.load_all`，事件从作者数据读 —— 都是现成的路
@@ -273,117 +257,22 @@ func _build_ui() -> void:
 #endregion
 
 
-#region 列表与草稿
-func _reload_list() -> void:
-	_ids = ContentPaths.ids_in(EVENT_DIR)
-	_repaint_list()
+#region 列表与草稿（公共的在 AuthoringEditor）
+func _export(d) -> Dictionary:
+	return ContentExporter.export_event(d)
 
 
-## 有未保存改动的条目前面加一个点
-func _repaint_list() -> void:
-	_list.clear()
-	for id in _ids:
-		_list.add_item(("● " if _drafts.has(id) else "") + id)
+func _import(data: Dictionary, report: ImportReport) -> Resource:
+	return ContentImporter.import_event(data, _ctx, report)
 
 
-func _select_in_list(id: String) -> void:
-	var i := _ids.find(id)
-	if i >= 0 and i < _list.item_count:
-		_list.select(i)
-
-
-func _on_rescan() -> void:
-	_stash_current()
-	_reload_list()
-	_select_in_list(_draft_key())
-
-
-## 丢掉当前这件的草稿，从盘上重读。只影响当前这一件
-func _on_discard() -> void:
-	var key := _draft_key()
-	_drafts.erase(key)
-	if _ids.has(key):
-		_def = null
-		_current_id = ""
-		_open(key)
-		_select_in_list(key)
-	else:
-		_def = null
-		_current_id = ""
-		_new_event()
-
-
-## 当前这件在草稿表里的键：打开时的那个 id；新建的用当前 id
-func _draft_key() -> String:
-	if _current_id != "":
-		return _current_id
-	return String(_def.id) if _def != null else ""
-
-
-func _stash_current() -> void:
-	if _def == null:
-		return
-	var key := _draft_key()
-	if key == "":
-		return
-	var now := ContentExporter.to_json(ContentExporter.export_event(_def))
-	if _baseline.has(key) and _baseline[key] == now:
-		_drafts.erase(key)
-	else:
-		_drafts[key] = _def
-
-
-func _track_draft() -> void:
-	var key := _draft_key()
-	if key == "":
-		return
-	var now := ContentExporter.to_json(ContentExporter.export_event(_def))
-	var was := _drafts.has(key)
-	if _baseline.has(key) and _baseline[key] == now:
-		_drafts.erase(key)
-	else:
-		_drafts[key] = _def
-	if was != _drafts.has(key):
-		_repaint_list()
-
-
-func _open(id: String) -> void:
-	if id == _draft_key() and _def != null:
-		return
-	_stash_current()
-	if _drafts.has(id):
-		_bind(_drafts[id], id)
-		return
-	var text := FileAccess.get_file_as_string(ContentPaths.authoring_file(KIND, id))
-	var parsed = JSON.parse_string(text)
-	if not (parsed is Dictionary):
-		_status.text = "[color=#d9534f]读不出 %s.json[/color]" % id
-		return
-	var report := ImportReport.new()
-	report.source = id
-	var def := ContentImporter.import_event(parsed, _ctx, report)
-	# 基准必须在 _bind 之前写好，否则刚打开就被标成脏
-	_baseline[id] = ContentExporter.to_json(ContentExporter.export_event(def))
-	_bind(def, id)
-
-
-func _load_dict(data: Dictionary, id: String) -> void:
-	var report := ImportReport.new()
-	report.source = id
-	_bind(ContentImporter.import_event(data, _ctx, report), id)
-
-
-func _bind(def: EventDef, id: String) -> void:
-	_def = def
-	_current_id = id
+func _on_bound() -> void:
 	_syncing = true
 	_id_edit.text = String(_def.id)
 	_image_edit.text = _def.image
 	_syncing = false
 	_sync_fields()
 	_rebuild_form()
-	_refresh()
-	_repaint_list()
 
 
 ## 091：标题 / 正文两个框按当前语言填
@@ -426,7 +315,10 @@ static func _put_lang(table: Dictionary, lang: String, text: String) -> void:
 
 
 func _new_event() -> void:
-	_stash_current()
+	_new_entry()
+
+
+func _new_def() -> Resource:
 	var def := EventDef.new()
 	def.id = &"new_event"
 	def.title = "新事件"
@@ -434,7 +326,7 @@ func _new_event() -> void:
 	var leave := EventOption.new()
 	leave.label = "离开"
 	def.options.append(leave)
-	_bind(def, "")
+	return def
 #endregion
 
 
@@ -514,54 +406,6 @@ func _clear_image() -> void:
 	_image_edit.text = ""
 	_syncing = false
 	_refresh()
-#endregion
-
-
-#region 保存
-func _save() -> void:
-	if _def == null:
-		return
-	var id := String(_def.id).strip_edges()
-	if id == "":
-		_status.text = "[color=#d9534f]id 不能为空[/color]"
-		return
-	# 校验顺带把资产也建出来了：导出成 JSON 再导入回来，和命令行导入器完全一致
-	var data := ContentExporter.export_event(_def)
-	var report := ImportReport.new()
-	report.source = id
-	var built := ContentImporter.import_event(data, _ctx, report)
-	if not report.ok():
-		_status.text = "[color=#d9534f]有错误，没有保存[/color]\n" + report.bbcode()
-		return
-	DirAccess.make_dir_recursive_absolute(EVENT_DIR)
-	if ContentExporter.save(data, ContentPaths.authoring_file(KIND, id)) != OK:
-		_status.text = "[color=#d9534f]作者数据写入失败[/color]"
-		return
-	DirAccess.make_dir_recursive_absolute(ContentPaths.EVENTS)
-	if ResourceSaver.save(built, ContentPaths.asset_file(KIND, id)) != OK:
-		_status.text = "[color=#f0ad4e]JSON 存了，但资产写入失败 —— 跑一次 import_content[/color]"
-		return
-	_drafts.erase(_draft_key())
-	_drafts.erase(id)
-	_baseline[id] = ContentExporter.to_json(data)
-	_current_id = id
-	_reload_list()
-	_select_in_list(id)
-	_refresh()
-	_status.text = "[color=#5cb85c]已保存 %s.json，并生成 %s.tres[/color]\n" % [id, id] + report.bbcode()
-
-
-func _save_as() -> void:
-	_current_id = ""
-	_save()
-
-
-func _apply_json() -> void:
-	var parsed = JSON.parse_string(_json.text)
-	if not (parsed is Dictionary):
-		_status.text = "[color=#d9534f]JSON 语法错误[/color]"
-		return
-	_load_dict(parsed, _current_id)
 #endregion
 
 
@@ -730,20 +574,13 @@ static func _describe(construct: Object) -> String:
 
 ## 校验走的就是导入器本身
 func _validate() -> ImportReport:
-	var report := ImportReport.new()
-	report.source = String(_def.id)
-	ContentImporter.import_event(ContentExporter.export_event(_def), _ctx, report)
+	var report := super()
 	if _def.image != "" and EventImage.load_texture(_def.image) == null:
 		report.warn("image", "配图 '%s' 读不到，事件屏上会画一块占位" % _def.image)
 	return report
 
 
-func _refresh() -> void:
-	if _def == null:
-		return
-	_track_draft()
-	_json.text = ContentExporter.to_json(ContentExporter.export_event(_def))
-	_status.text = _validate().bbcode()
+func _on_refreshed() -> void:
 	_thumb.texture = EventImage.load_texture(_def.image)
 	_thumb.custom_minimum_size = Vector2(0, 120) if _thumb.texture != null else Vector2(0, 0)
 	_rebuild_preview()
@@ -865,12 +702,6 @@ func _open_from_chain() -> void:
 	_open(id)
 	_select_in_list(id)
 #endregion
-
-
-## [DevNav] 会问这一句再决定要不要拦一下返回
-func has_unsaved_changes() -> bool:
-	_stash_current()
-	return not _drafts.is_empty()
 
 
 ## 截图工具的钩子：打开一个带条件与后果的事件
