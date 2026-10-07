@@ -8,9 +8,6 @@ extends Resource
 
 enum Visibility { HIDDEN, VISIBLE, NEAR }
 
-## 只写了 loss_outcomes 的旧定义合成的那一档叫这个
-const LEGACY_OPTION := &"default"
-
 @export var id: StringName = &""
 @export var display_name: String = ""
 @export var description: String = ""
@@ -27,8 +24,6 @@ const LEGACY_OPTION := &"default"
 ## 领地半径（离出生点），≤ 0 = 整张图
 @export var territory_radius: float = 4.0
 @export var behavior: HunterBehavior = null
-## 134 之前的写法：输了之后按顺序发生的事（只有一档）。写了 [member loss_options] 就不看它；没写当作只有这一档
-@export var loss_outcomes: Array[HunterLossOutcome] = []
 ## 134：这种猎手可能给的战败结果档（击退 / 驱逐……）。生成时按 [member loss_pick] 选定一档，跟着那只猎手存档
 @export var loss_options: Array[HunterLossOption] = []
 ## 134：怎么选档。null = 按权重随机
@@ -48,9 +43,6 @@ const LEGACY_OPTION := &"default"
 ## 值 = 池里的档位；超出表长按最后一档。空 = 退回强度规则
 @export var strength_by_bracket: Array[int] = []
 
-var _legacy: HunterLossOption = null
-
-
 ## 这个段位该给哪一档；表空返回 -1（让调用方走规则）
 func strength_for_bracket(bracket: int) -> int:
 	if strength_by_bracket.is_empty():
@@ -58,15 +50,9 @@ func strength_for_bracket(bracket: int) -> int:
 	return strength_by_bracket[clampi(bracket, 0, strength_by_bracket.size() - 1)]
 
 
-## 134：可能的结果档。没写 loss_options 的旧定义当作只有一档（就是 loss_outcomes）
+## 134：可能的结果档（140：134 之前只有一档的 loss_outcomes 删了，导入器拒收）
 func options() -> Array[HunterLossOption]:
-	if not loss_options.is_empty():
-		return loss_options
-	if _legacy == null:
-		_legacy = HunterLossOption.new()
-		_legacy.id = LEGACY_OPTION
-		_legacy.outcomes = loss_outcomes
-	return [_legacy] as Array[HunterLossOption]
+	return loss_options
 
 
 ## 按档名找；找不到（旧存档没有档名、档被删了）按第一档

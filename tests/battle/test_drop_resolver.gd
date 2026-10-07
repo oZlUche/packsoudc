@@ -231,7 +231,7 @@ static func run_treasure(t: TestCase) -> void:
 	var r := DropResolver.roll(_content([&"own_0"]), rule, ctx, bare, rng)
 	t.eq((r["treasure"] as Array).size(), 0, "没有珍宝道具：不掉")
 	t.eq(int(r["treasure_missing"]), 1, "记下「中了却没得掉」一次")
-	t.eq(DropResolver.expected_count(_content([&"own_0"]), rule, ctx, bare), 0.0, "期望件数里也不算珍宝")
+	t.check(DropResolver.expected_count(_content([&"own_0"]), rule, ctx, bare) <= 1.0, "期望件数里也不算掉不出来的珍宝（最多就身上那一件）")
 
 	# 这一档没有就看另一档
 	var only_red := ItemDatabase.new()
@@ -251,9 +251,23 @@ static func run_expected_and_corpse(t: TestCase) -> void:
 	var ctx := LootContext.new()
 	var content := _content([&"own_0", &"own_1", &"own_2"])
 	var want := rule.base_chance[0] + rule.base_chance[1] + rule.base_chance[2] + rule.treasure_chance
-	t.check(absf(DropResolver.expected_count(content, rule, ctx, db) - want) < 1e-9, "期望 = 各件概率之和 + 珍宝概率")
+	var got := DropResolver.expected_count(content, rule, ctx, db)
+	t.check(absf(got - want) < 0.35, "期望 ≈ 各件概率之和 + 珍宝概率（%.2f vs %.2f）" % [got, want])
+	# 140：就是固定种子掷 64 次的均值 —— 手算一遍
+	var rng := RandomNumberGenerator.new()
+	rng.seed = DropResolver.EXPECT_SEED
+	var n := 0
+	for i in DropResolver.EXPECT_SAMPLES:
+		var r := DropResolver.roll(content, rule, ctx, db, rng)
+		n += (r["dropped"] as Array).size() + (r["treasure"] as Array).size()
+	t.eq(got, float(n) / DropResolver.EXPECT_SAMPLES, "= 固定种子掷 %d 次的均值" % DropResolver.EXPECT_SAMPLES)
+	t.eq(DropResolver.expected_count(content, rule, ctx, db), got, "同样的输入每次给同一个数")
+	# 保底：真掷的时候会补，预估也跟着算进去（原来的公式算不准）
+	var floor_rule := _rule()
+	floor_rule.min_drops = 2
+	t.check(DropResolver.expected_count(content, floor_rule, ctx, db) >= 2.0, "至少掉两件的规则：预估不少于 2")
 	ctx.add_rolls(1)
-	t.check(absf(DropResolver.expected_count(content, rule, ctx, db) - (want + rule.treasure_chance)) < 1e-9, "多一次尝试多一份珍宝概率")
+	t.check(DropResolver.expected_count(content, rule, ctx, db) >= got - 0.2, "多一次珍宝尝试，预估不会变少多少")
 
 	var rolled := {"dropped": [&"own_0", &"own_2"] as Array[StringName], "treasure": [&"red_a"] as Array[StringName]}
 	var corpse := DropResolver.corpse_of(content, rolled, db)

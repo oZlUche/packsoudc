@@ -9,7 +9,7 @@ class_name RunMigrations
 extends RefCounted
 
 ## 有哪几步：from_version → 方法名（文档与自检用；分派走 match，不走反射）
-const STEPS := {1: "_v1_to_v2", 2: "_v2_to_v3"}
+const STEPS := {1: "_v1_to_v2", 2: "_v2_to_v3", 3: "_v3_to_v4"}
 
 
 ## 尽量升到 [constant RunState.SAVE_VERSION]。不改入参（深拷一份）。
@@ -23,6 +23,8 @@ static func upgrade(src: Dictionary) -> Dictionary:
 				d = _v1_to_v2(d)
 			2:
 				d = _v2_to_v3(d)
+			3:
+				d = _v3_to_v4(d)
 			_:
 				push_error("RunMigrations: STEPS 里有 v%d 但 match 没接上" % v)
 				return d
@@ -30,6 +32,22 @@ static func upgrade(src: Dictionary) -> Dictionary:
 		d["version"] = v
 	if int(d.get("version", -1)) != RunState.SAVE_VERSION:
 		push_warning("RunMigrations: 没有 v%s → v%d 的迁移，这一局作废（局外进度不受影响）" % [str(d.get("version", "?")), RunState.SAVE_VERSION])
+	return d
+
+
+## v3 → v4（140）：猎手 134 之前的单档写法（`loss_outcomes` 合成的 `default` 档）删了。
+## 老档里记着那一档的猎手改成不记（读回来按现行 `loss_options` 的第一档）；等着选的、不带档名的猎手遭遇丢掉 ——
+## 猎手还在原处，下一步够得着就按现行的档重新生成那一屏
+static func _v3_to_v4(d: Dictionary) -> Dictionary:
+	var hs: Dictionary = d.get("hunters", {}) if d.get("hunters", {}) is Dictionary else {}
+	for row in hs.get("hunters", []):
+		if row is Dictionary and String((row as Dictionary).get("loss", "")) == "default":
+			(row as Dictionary)["loss"] = ""
+	var ev: Dictionary = d.get("events", {}) if d.get("events", {}) is Dictionary else {}
+	var pending: Dictionary = ev.get("pending", {}) if ev.get("pending", {}) is Dictionary else {}
+	var eid := String(pending.get("event", ""))
+	if eid.begins_with(HunterSystem.ENCOUNTER_PREFIX) and not eid.contains("/"):
+		ev["pending"] = {}
 	return d
 
 

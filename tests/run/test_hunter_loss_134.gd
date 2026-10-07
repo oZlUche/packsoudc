@@ -92,16 +92,11 @@ static func run_pick_on_spawn(t: TestCase) -> void:
 	H._step_once(s2)
 	t.eq(s2.hunters.alive()[0].loss_id, fdef.options()[pick.index].id, "固定选法：生成的就是第 %d 档" % (pick.index + 1))
 
-	# 旧定义：只写了 loss_outcomes —— 当作只有一档
-	var legacy := ContentImporter.import_hunter({"id": "legacy", "loss_outcomes": [{"type": "spend_vitality"}, {"type": "retreat"}]},
-		ContentImporter.Context.new(), ImportReport.new())
-	t.eq(legacy.options().size(), 1, "旧定义：一档")
-	t.eq(legacy.options()[0].outcomes.size(), 2, "那一档就是原来的两条后果")
-	t.eq(legacy.option_by_id(&"whatever"), legacy.options()[0], "找不到的档名按第一档")
+	t.eq(fdef.option_by_id(&"whatever"), fdef.options()[0], "找不到的档名按第一档")
 
 
 static func run_import_checks(t: TestCase) -> void:
-	t.begin("134 · 导入：档名不空不重、权重不为负、固定选法不越界；两样都写提醒；往返不动")
+	t.begin("134 · 导入：档名不空不重、权重不为负、固定选法不越界；140：旧写法 loss_outcomes 报错；往返不动")
 	var sample := {"id": "probe", "loss_options": [
 		{"id": "repel", "display_name": "击退", "weight": 2.0, "outcomes": [{"type": "retreat"}]},
 		{"id": "expel", "display_name": "驱逐", "outcomes": [{"type": "expel"}]}],
@@ -125,8 +120,14 @@ static func run_import_checks(t: TestCase) -> void:
 		ContentImporter.import_hunter(bad, ContentImporter.Context.new(), r)
 		t.check(not r.ok(), "%s 报错" % JSON.stringify(bad))
 	var both := ImportReport.new()
-	ContentImporter.import_hunter({"id": "x", "loss_outcomes": [{"type": "retreat"}], "loss_options": [{"id": "a"}]}, ContentImporter.Context.new(), both)
-	t.check(both.ok() and both.to_text().contains("loss_outcomes"), "两样都写：提醒、不报错")
+	ContentImporter.import_hunter({"id": "x", "loss_outcomes": [{"type": "retreat"}], "loss_options": [{"id": "a", "outcomes": [{"type": "retreat"}]}]}, ContentImporter.Context.new(), both)
+	t.check(not both.ok() and both.to_text().contains("loss_options"), "140：写了旧的 loss_outcomes 就报错，指向 loss_options（%s）" % both.to_text())
+	var legacy := ImportReport.new()
+	ContentImporter.import_hunter({"id": "legacy", "loss_outcomes": [{"type": "retreat"}]}, ContentImporter.Context.new(), legacy)
+	t.check(not legacy.ok(), "只写旧写法：报错")
+	var none := ImportReport.new()
+	ContentImporter.import_hunter({"id": "x"}, ContentImporter.Context.new(), none)
+	t.check(not none.ok() and none.to_text().contains("loss_options"), "一档都没写：报错")
 
 
 static func run_hunter_before_node(t: TestCase) -> void:
