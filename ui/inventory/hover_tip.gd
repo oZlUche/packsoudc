@@ -15,18 +15,14 @@ var _text: RichTextLabel
 var _extra: Control = null
 ## 词条小窗那一列
 var _side: VBoxContainer
-var _terms: Array = []
 var _views: Array[ContainerView] = []
-var _board_of: Callable = Callable()     # view → 拿来编译的棋盘（地上的道具单独编）
 ## 可选：`func(view, uid) -> bool`，假就不显示（容器屏：没亮出来的不说）
 var can_show: Callable = Callable()
-var _font: Font
 var _uid: int = -1
 var _for_view: ContainerView = null
 
 
-func _init(font: Font = null) -> void:
-	_font = font
+func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	z_index = 60     # 128：画在地上（盖在各屏上面的那一层）的东西之上
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -39,14 +35,8 @@ func _init(font: Font = null) -> void:
 	col.add_theme_constant_override("separation", 8)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(col)
-	_text = RichTextLabel.new()
-	_text.bbcode_enabled = true
-	_text.fit_content = true
-	_text.scroll_active = false
-	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_text.custom_minimum_size.x = MAX_WIDTH
+	_text = UiTheme.rich_block(MAX_WIDTH, UiTheme.RICH_SMALL_SIZE)     # 121：13 号
 	_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_text.theme_type_variation = UiTheme.RICH_SMALL     # 121：13 号
 	col.add_child(_text)
 	_side = VBoxContainer.new()
 	_side.add_theme_constant_override("separation", 6)
@@ -72,18 +62,17 @@ static func ensure_for(view: ContainerView) -> HoverTip:
 		node = node.get_parent()
 	if top == null:
 		return null
-	var tip := HoverTip.new(UiPalette.cjk_font())
+	var tip := HoverTip.new()
 	top.add_child(tip)
 	tip.watch(view)
 	return tip
 
 
-## 登记一个容器视图：停在道具上就显示 [ItemTooltip]。[param board_of] 可选：`func(view) -> GridInventory`，给编译用
-func watch(view: ContainerView, board_of: Callable = Callable()) -> void:
+## 登记一个容器视图：停在道具上就显示 [ItemTooltip]
+func watch(view: ContainerView) -> void:
 	if _views.has(view):
 		return
 	_views.append(view)
-	_board_of = board_of if board_of.is_valid() else _board_of
 	view.gui_input.connect(func(event: InputEvent): _on_view_input(view, event))
 	view.mouse_exited.connect(func():
 		if _for_view == view:
@@ -107,16 +96,8 @@ func show_text(bbcode: String, at: Vector2, extra: Control = null, terms: Array 
 	_place(at)
 
 
-## 现在显示的词条（测试看）
-func terms() -> Array:
-	return _terms
-
-
 func _set_terms(terms: Array) -> void:
-	_terms = terms
-	for c in _side.get_children():
-		_side.remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(_side)
 	for t in terms:
 		var d := t as Dictionary
 		var p := PanelContainer.new()
@@ -127,15 +108,8 @@ func _set_terms(terms: Array) -> void:
 		style.set_content_margin_all(8)
 		p.add_theme_stylebox_override("panel", style)     # 121 特例：术语卡的边是术语色（和正文里的术语同色），一张一份
 		p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var l := RichTextLabel.new()
-		l.bbcode_enabled = true
-		l.fit_content = true
-		l.scroll_active = false
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l.custom_minimum_size.x = SIDE_WIDTH
+		var l := UiTheme.rich_block(SIDE_WIDTH, 12, "[color=#%s][b]%s[/b][/color]\n%s" % [Glossary.TERM_COLOR.to_html(false), String(d["name"]), String(d["text"])])
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		UiTheme.rich(l, 12)
-		l.text = "[color=#%s][b]%s[/b][/color]\n%s" % [Glossary.TERM_COLOR.to_html(false), String(d["name"]), String(d["text"])]
 		p.add_child(l)
 		_side.add_child(p)
 	_side.visible = not terms.is_empty()
@@ -182,8 +156,6 @@ func _on_view_input(view: ContainerView, event: InputEvent) -> void:
 		var board: GridInventory = null
 		if view is InventoryView:
 			board = (view as InventoryView).inventory
-		elif _board_of.is_valid():
-			board = _board_of.call(view)
 		var full := ItemTooltip.describe_full(inst, board)
 		_text.text = String(full["text"])
 		if _extra != null:

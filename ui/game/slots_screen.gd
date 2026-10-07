@@ -88,8 +88,5 @@ func escape() -> bool:
 
 
 func _rebuild() -> void:
-	for c in get_children():
-		remove_child(c)
-		c.queue_free()
 	_rows.clear()
-	open({})
+	_reopen()

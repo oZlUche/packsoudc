@@ -105,18 +105,10 @@ func confirm_open() -> bool:
 
 func _open_confirm(node: MapNode) -> void:
 	cancel_extract()
-	var shade := ColorRect.new()
-	shade.color = Color(0.04, 0.05, 0.07, 0.7)
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(shade)
-	_confirm = shade
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.add_child(center)
+	_confirm = _shade(0.7, true)
 	var panel := _panel(20)
 	panel.custom_minimum_size.x = 520
-	center.add_child(panel)
+	_confirm.get_child(0).add_child(panel)
 	var col := _vbox(10)
 	panel.add_child(col)
 	col.add_child(_label("撤离？", 20, UiPalette.FG))
@@ -157,15 +149,10 @@ func toggle_bag() -> void:
 		_bag.queue_free()
 		_bag = null
 		return
-	var shade := ColorRect.new()
-	shade.color = Color(0.04, 0.05, 0.07, 0.7)
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(shade)
-	_bag = shade
+	_bag = _shade(0.7)
 	var win := FloatingWindow.new()
-	win.setup("bag", "背包", font, toggle_bag, "收起（B）")
-	shade.add_child(win)
+	win.setup("bag", "背包", toggle_bag, "收起（B）")
+	_bag.add_child(win)
 	_reserve_ground(win)     # 128：背包浮窗占着的地方，地上的东西让开
 	var inv := InventoryPanelScript.new()
 	inv.setup(_run, font)
@@ -240,17 +227,9 @@ func toggle_pause() -> void:
 		_pause.queue_free()
 		_pause = null
 		return
-	var shade := ColorRect.new()
-	shade.color = Color(0.04, 0.05, 0.07, 0.72)
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(shade)
-	_pause = shade
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.add_child(center)
+	_pause = _shade(0.72, true)
 	var panel := _panel(28)
-	center.add_child(panel)
+	_pause.get_child(0).add_child(panel)
 	var col := _vbox(12)
 	panel.add_child(col)
 	col.add_child(_label("暂停", 26, UiPalette.FG))
@@ -271,14 +250,7 @@ func pause_open() -> bool:
 func pause_settings() -> void:
 	if _pause == null or _pause_settings != null:
 		return
-	var s = SettingsScreenScript.new()
-	s.screen = GameFlow.Screen.SETTINGS
-	s.flow = flow
-	s.font = font
-	s.back = close_pause_settings
-	_pause.add_child(s)
-	s.open({})
-	_pause_settings = s
+	_pause_settings = _embed_in_pause(SettingsScreenScript, GameFlow.Screen.SETTINGS, {}, close_pause_settings)
 
 
 func close_pause_settings() -> void:
@@ -296,14 +268,7 @@ func settings_open() -> bool:
 func pause_encyclopedia(page: String = "") -> void:
 	if _pause == null or _pause_book != null:
 		return
-	var s = EncyclopediaScreenScript.new()
-	s.screen = GameFlow.Screen.ENCYCLOPEDIA
-	s.flow = flow
-	s.font = font
-	s.back = close_pause_encyclopedia
-	_pause.add_child(s)
-	s.open({"page": page} if page != "" else {})
-	_pause_book = s
+	_pause_book = _embed_in_pause(EncyclopediaScreenScript, GameFlow.Screen.ENCYCLOPEDIA, {"page": page} if page != "" else {}, close_pause_encyclopedia)
 
 
 func close_pause_encyclopedia() -> void:
@@ -316,43 +281,34 @@ func encyclopedia_open() -> bool:
 	return _pause_book != null
 
 
+## 090 / 114：把一屏嵌进暂停菜单（设置、百科）：它的「返回」回暂停菜单，不回主菜单 —— 一局还在
+func _embed_in_pause(script: GDScript, screen_id: int, payload: Dictionary, on_close: Callable) -> GameScreen:
+	var s = script.new()
+	s.screen = screen_id
+	s.flow = flow
+	s.font = font
+	s.back = on_close
+	_pause.add_child(s)
+	s.open(payload)
+	return s
+
+
 ## 091：「本图规则」卡：章节写的 ≤ 3 条，一页；[param first] = 第一次进这一章弹的（关掉时记住看过了）
 func show_rules(first: bool = false) -> void:
 	if _rules != null or _run == null or _run.chapter == null or _run.chapter.rules.is_empty():
 		return
 	_rules_first = first
-	var shade := ColorRect.new()
-	shade.color = Color(0.04, 0.05, 0.07, 0.72)
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(shade)
-	_rules = shade
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.add_child(center)
+	_rules = _shade(0.72, true)
 	var panel := _panel(28)
-	center.add_child(panel)
+	_rules.get_child(0).add_child(panel)
 	var col := _vbox(12)
 	panel.add_child(col)
 	col.add_child(_label("本图规则　%s" % Names.of(_run.chapter), 24, UiPalette.FG))
 	var ctx := TextTemplate.context_for(_run)     # 112：规则卡也过占位符（{item:…} 按稀有度上色）
 	for i in _run.chapter.rules.size():
-		col.add_child(_rich_line("%d. %s" % [i + 1, UiPalette.resolve_styles(TextTemplate.render(_run.chapter.rules[i], ctx))], 15, 560))
+		col.add_child(UiTheme.rich_block(560, 15, "%d. %s" % [i + 1, UiPalette.resolve_styles(TextTemplate.render(_run.chapter.rules[i], ctx))]))
 	col.add_child(_wrapped("暂停菜单（Esc）里能再看", 12, UiPalette.DIM, 560))
 	col.add_child(_button("知道了（Esc）", close_rules, 14, UiPalette.Tier.PRIMARY))
-
-
-## 规则卡上的一条（BBCode，自动换行、高度随内容）
-func _rich_line(bbcode: String, font_size: int, width: float) -> RichTextLabel:
-	var r := RichTextLabel.new()
-	r.bbcode_enabled = true
-	r.fit_content = true
-	r.scroll_active = false
-	r.custom_minimum_size.x = width
-	UiTheme.rich(r, font_size)
-	r.text = bbcode
-	return r
-
 
 
 func close_rules() -> void:
@@ -466,7 +422,7 @@ func _adopt() -> void:
 		_note("　点 %d 是个「?」：原来是 %s" % [n.id, MapNodeStyle.of(type)["label"]]))
 	ev.type_changed.connect(func(n: MapNode, type: StringName):
 		_note("　点 %d 变成了%s点" % [n.id, MapNodeStyle.of(type)["label"]])
-		_view.refresh())
+		_view.queue_redraw())
 	ev.battle_skipped.connect(func(n: MapNode): _note("　溜走了：点 %d 那一场没打" % n.id))     # 136：脱身
 	ev.battle_finished.connect(func(n: MapNode, result: BattleResult, won: bool):
 		var who := enemy_preview(n.id).get_slice("　", 0)
@@ -574,7 +530,7 @@ func _after_move() -> void:
 		for id in _run.travel.available_moves():
 			reach[id] = true
 	_view.reachable = reach
-	_view.refresh()
+	_view.queue_redraw()
 	_refresh_hud()
 	_refresh_hunter_marks()
 	var node := _run.current_node()
@@ -772,8 +728,7 @@ func _power_line() -> String:
 func _refresh_skills() -> void:
 	if _skills_box == null or _run == null:
 		return
-	for c in _skills_box.get_children():
-		c.queue_free()
+	UiTheme.clear_children(_skills_box)
 	if _run.skills == null:
 		return
 	for s in _run.skills.active_skills():
@@ -820,10 +775,8 @@ func _buff_line() -> String:
 
 
 func _route_of_entry(id: int) -> Dictionary:
-	for route in _run.map.routes:
-		if int(route.get("entry_id", -1)) == id:
-			return route
-	return {}
+	var i := _route_index_of_entry(id)
+	return _run.map.routes[i] if i >= 0 else {}
 
 
 func _route_index_of_entry(id: int) -> int:
@@ -835,8 +788,7 @@ func _route_index_of_entry(id: int) -> int:
 
 ## 右栏：挑出生点阶段每条路线一张卡 —— 这是这一章第一个真正的决策；开局之后收起
 func _rebuild_routes() -> void:
-	for child in _routes_box.get_children():
-		child.queue_free()
+	UiTheme.clear_children(_routes_box)
 	if _run.phase != RunState.Phase.PICK_SPAWN:
 		return
 	_routes_box.add_child(_label("路线：挑一个出生点", 14, UiPalette.FG))
@@ -923,7 +875,7 @@ func _build() -> void:
 	_enemy_line.custom_minimum_size.y = 22
 	_pin_width(_enemy_line)
 	mid.add_child(_enemy_line)
-	_tip = HoverTip.new(font)
+	_tip = HoverTip.new()
 	add_child(_tip)
 
 	var side := _panel(12)

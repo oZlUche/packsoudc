@@ -98,7 +98,7 @@ func _draw() -> void:
 	_draw_variant_stack(cells, anchor, cell, layers)
 	ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
 	# 名字
-	var name := Names.of(def) if lit else Names.of(def)
+	var name := Names.of(def)
 	var color := UiPalette.FG if lit else Color("4a515e")
 	draw_string(font, Vector2(PAD, size.y - PAD), name, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - PAD * 2), 12, color)
 	# 095：异体角标「1/3」（点亮几个 / 共几个）

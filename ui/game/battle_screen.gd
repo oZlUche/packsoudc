@@ -38,8 +38,8 @@ func open(payload: Dictionary) -> void:
 
 	if result != null:
 		_view.play(result, ["我", enemy_name])
-		_view.set_item_names(0, _names_of(payload.get("player", null)))
-		_view.set_item_names(1, _names_of(payload.get("enemy", null)))
+		_view.set_item_names(0, CombatantSpec.item_names(payload.get("player", null), flow.items))
+		_view.set_item_names(1, CombatantSpec.item_names(payload.get("enemy", null), flow.items))
 		# 087 / 103：双方上过身的 buff（图标 + 悬浮说明）在 result.buffs 里，play 已经接上
 		# 103 第 7 条：双方棋盘 + 冷却遮罩（编译时的那张棋盘，uid 和日志一致）
 		for side in 2:
@@ -62,25 +62,6 @@ func _on_finished() -> void:
 
 func verdict_shown() -> bool:
 	return _title != null and _title.text.contains(_verdict)
-
-
-## 对手叫什么：从这一场的敌人内容（点里的，或搜索遭遇现造的）查定义
-func _enemy_name(content: Dictionary) -> String:
-	var def := flow.enemies.enemy(StringName(String(content.get("enemy", "")))) if not content.is_empty() else null
-	if def == null:
-		return "敌人"
-	return "%s（%d 档）" % [Names.of(def), int(content.get("strength", 0))]
-
-
-## uid → 显示名，回放把「uid 2 出手」写成「手枪 出手」
-func _names_of(spec: CombatantSpec) -> Dictionary:
-	var out := {}
-	if spec == null:
-		return out
-	for item in spec.items:
-		var def := flow.items.get_def(item.def_id)
-		out[item.source_uid] = Names.of(def) if def != null else String(item.def_id)
-	return out
 
 
 ## 109：玩家在回放里切了倍速 → 记进设置并存盘（和「拿走最后一件自动关闭」同一个写法）

@@ -84,13 +84,7 @@ func _ready() -> void:
 
 #region 界面
 func _build_ui() -> void:
-	var bg := ColorRect.new()
-	UiPalette.apply(GameSettings.load_from())     # 091：底色跟设置走
-	UiTheme.install(self)     # 121：界面主题挂在窗口上
-	bg.color = UiPalette.bg()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	UiTheme.prepare_root(self)     # 091 / 121：底色跟设置走、装上界面主题
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -106,7 +100,7 @@ func _build_ui() -> void:
 	left.custom_minimum_size.x = 290
 	left.add_theme_constant_override("separation", 6)
 	columns.add_child(left)
-	left.add_child(_label("道具", 16, UiPalette.FG))
+	left.add_child(UiTheme.make_label("道具", 16, UiPalette.FG))
 
 	var browse := HBoxContainer.new()
 	browse.add_theme_constant_override("separation", 6)
@@ -132,9 +126,9 @@ func _build_ui() -> void:
 	_list.item_selected.connect(func(i: int): _open(_shown[i]))
 	browse.add_child(_list)
 	var list_buttons := HBoxContainer.new()
-	list_buttons.add_child(_button("新建", _new_item))
-	list_buttons.add_child(_button("刷新列表", _on_rescan))
-	list_buttons.add_child(_button("放弃改动", _on_discard))
+	list_buttons.add_child(UiTheme.make_button("新建", _new_item, UiTheme.TIER_PLAIN, 13))
+	list_buttons.add_child(UiTheme.make_button("刷新列表", _on_rescan, UiTheme.TIER_PLAIN, 13))
+	list_buttons.add_child(UiTheme.make_button("放弃改动", _on_discard, UiTheme.TIER_PLAIN, 13))
 	left.add_child(list_buttons)
 
 	var right_split := HSplitContainer.new()
@@ -148,14 +142,14 @@ func _build_ui() -> void:
 	right_split.add_child(mid)
 
 	var id_row := HBoxContainer.new()
-	id_row.add_child(_label("id", 13, UiPalette.DIM))
+	id_row.add_child(UiTheme.make_label("id", 13, UiPalette.DIM))
 	_id_edit = LineEdit.new()
 	_id_edit.custom_minimum_size.x = 150
 	_id_edit.add_theme_font_override("font", _font)
 	_id_edit.text_changed.connect(_on_id_changed)
 	id_row.add_child(_id_edit)
-	id_row.add_child(_button("保存", _save))
-	id_row.add_child(_button("另存为新 id", _save_as))
+	id_row.add_child(UiTheme.make_button("保存", _save, UiTheme.TIER_PLAIN, 13))
+	id_row.add_child(UiTheme.make_button("另存为新 id", _save_as, UiTheme.TIER_PLAIN, 13))
 	mid.add_child(id_row)
 
 	var scroll := ScrollContainer.new()
@@ -172,7 +166,7 @@ func _build_ui() -> void:
 	side_col.add_theme_constant_override("separation", 8)
 	right_split.add_child(side_col)
 
-	side_col.add_child(_label("形状与邻接标记", 14, UiPalette.FG))
+	side_col.add_child(UiTheme.make_label("形状与邻接标记", 14, UiPalette.FG))
 
 	# 画哪一层。标记格和形状必须在同一张网格上 ——
 	# 「加成的是上下相邻那一格」是条相对偏移，脱离形状就看不出来。
@@ -184,7 +178,7 @@ func _build_ui() -> void:
 		[ShapeEditor.Layer.RECEIVE, "受益格", UiPalette.RECEIVE],
 	]:
 		var which: int = spec[0]
-		var b := _button(spec[1], func(): _set_layer(which))
+		var b := UiTheme.make_button(spec[1], func(): _set_layer(which), UiTheme.TIER_PLAIN, 13)
 		b.add_theme_color_override("font_color", spec[2])
 		_layer_buttons.append(b)
 		layer_row.add_child(b)
@@ -196,18 +190,18 @@ func _build_ui() -> void:
 	side_col.add_child(_shape)
 
 	var grid_row := HBoxContainer.new()
-	grid_row.add_child(_label("画板", 12, UiPalette.DIM))
+	grid_row.add_child(UiTheme.make_label("画板", 12, UiPalette.DIM))
 	for wh in [Vector2i(2, 2), Vector2i(3, 3), Vector2i(4, 4), Vector2i(2, 4), Vector2i(4, 2)]:
 		var size := wh as Vector2i
-		grid_row.add_child(_button(
-			"%dx%d" % [size.x, size.y], func(): _shape.grow_to(size.x, size.y)
+		grid_row.add_child(UiTheme.make_button(
+			"%dx%d" % [size.x, size.y], func(): _shape.grow_to(size.x, size.y), UiTheme.TIER_PLAIN, 13
 		))
 	side_col.add_child(grid_row)
 
-	_dps = _label("", 13, UiPalette.DIM)
+	_dps = UiTheme.make_label("", 13, UiPalette.DIM)
 	side_col.add_child(_dps)
 
-	side_col.add_child(_label("校验", 14, UiPalette.FG))
+	side_col.add_child(UiTheme.make_label("校验", 14, UiPalette.FG))
 	_status = RichTextLabel.new()
 	_status.bbcode_enabled = true
 	_status.custom_minimum_size.y = 100
@@ -215,13 +209,13 @@ func _build_ui() -> void:
 	_status.add_theme_font_size_override("normal_font_size", 12)
 	side_col.add_child(_status)
 
-	side_col.add_child(_label("JSON（可直接改）", 12, UiPalette.DIM))
+	side_col.add_child(UiTheme.make_label("JSON（可直接改）", 12, UiPalette.DIM))
 	_preview = TextEdit.new()
 	_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_preview.add_theme_font_override("font", _font)
 	_preview.add_theme_font_size_override("font_size", 12)
 	side_col.add_child(_preview)
-	side_col.add_child(_button("套用上面的 JSON", _apply_json))
+	side_col.add_child(UiTheme.make_button("套用上面的 JSON", _apply_json, UiTheme.TIER_PLAIN, 13))
 
 
 func _set_layer(which: int) -> void:
@@ -229,24 +223,6 @@ func _set_layer(which: int) -> void:
 	for i in _layer_buttons.size():
 		_layer_buttons[i].flat = i != which
 	_shape.queue_redraw()
-
-
-func _label(text: String, font_size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.add_theme_font_override("font", _font)
-	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", color)
-	return l
-
-
-func _button(text: String, handler: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.add_theme_font_override("font", _font)
-	b.add_theme_font_size_override("font_size", 13)
-	b.pressed.connect(handler)
-	return b
 #endregion
 
 
@@ -341,9 +317,7 @@ func _rebuild_tabs() -> void:
 	for child in _tab_host.get_children():
 		current.append((child as Button).get_meta("page"))
 	if current != wanted:
-		for child in _tab_host.get_children():
-			_tab_host.remove_child(child)
-			child.queue_free()
+		UiTheme.clear_children(_tab_host)
 		for page in wanted:
 			_tab_host.add_child(_tab_button(page))
 
@@ -595,8 +569,7 @@ func _apply_json() -> void:
 
 #region 刷新
 func _rebuild_form() -> void:
-	for c in _form_host.get_children():
-		c.queue_free()
+	UiTheme.clear_children(_form_host)
 	if _def == null:
 		return
 	# id 在顶栏、形状有画板 —— 表单里跳过，免得两处能改同一个值

@@ -95,8 +95,7 @@ func use_generator(id: StringName) -> void:
 
 
 func _rebuild_form() -> void:
-	for child in _form_host.get_children():
-		child.queue_free()
+	UiTheme.clear_children(_form_host)
 	if _cfg != null:
 		_form_host.add_child(PropertyForm.create(_cfg, _font))
 
@@ -113,13 +112,12 @@ func choose_scale(id: StringName, ring_count: int) -> void:
 
 ## 「从规模选起」的那几个旋钮。上限来自规模模板（[MapScaleProfile]），不是写在这里的。
 func _rebuild_scale_panel() -> void:
-	for child in _scale_host.get_children():
-		child.queue_free()
+	UiTheme.clear_children(_scale_host)
 	if _cfg == null or not _cfg.has_method("apply_scale"):
 		return
 	var profiles: Array = _cfg.get("scales")
 	var current: MapScaleProfile = _cfg.call("scale")
-	_scale_host.add_child(_label("规模", 14, UiPalette.FG))
+	_scale_host.add_child(UiTheme.make_label("规模", 14, UiPalette.FG))
 	var pick := OptionButton.new()
 	_style(pick)
 	for i in profiles.size():
@@ -134,10 +132,10 @@ func _rebuild_scale_panel() -> void:
 		choose_scale(p.id, p.rings.x))
 	_scale_host.add_child(_pair("地图规模", pick))
 	if current == null:
-		_scale_host.add_child(_label("当前环数不属于任何规模：不设上限，也没有高危区", 12, UiPalette.DIM))
+		_scale_host.add_child(UiTheme.make_label("当前环数不属于任何规模：不设上限，也没有高危区", 12, UiPalette.DIM))
 		return
 	if current.placeholder:
-		_scale_host.add_child(_label("这一档的数值还没定，只是占位", 12, UiPalette.STAMINA))
+		_scale_host.add_child(UiTheme.make_label("这一档的数值还没定，只是占位", 12, UiPalette.STAMINA))
 
 	_scale_host.add_child(_pair("环数 %d～%d" % [current.rings.x, current.rings.y],
 		_spin(int(_cfg.call("ring_count")), current.rings.x, current.rings.y,
@@ -152,7 +150,7 @@ func _rebuild_scale_panel() -> void:
 	_scale_host.add_child(_pair("高危区规模 %d～%d" % [current.zone_size.x, current.zone_size.y],
 		_spin(int(_cfg.get("zone_soft_cap")), -1, current.zone_size.y,
 			func(v: int): _cfg.set("zone_soft_cap", v))))
-	_scale_host.add_child(_label("后两项填 -1 = 在范围里随机 / 用上限", 11, UiPalette.DIM))
+	_scale_host.add_child(UiTheme.make_label("后两项填 -1 = 在范围里随机 / 用上限", 11, UiPalette.DIM))
 
 
 func config() -> Resource:
@@ -366,7 +364,7 @@ func _sync_zones() -> void:
 
 func _touch() -> void:
 	_dirty = true
-	_view.refresh()
+	_view.queue_redraw()
 	_rebuild_props()
 	_revalidate()
 #endregion
@@ -545,13 +543,7 @@ func _refresh_presets() -> void:
 
 #region 界面
 func _build() -> void:
-	var bg := ColorRect.new()
-	UiPalette.apply(GameSettings.load_from())     # 091：底色跟设置走
-	UiTheme.install(self)     # 121：界面主题挂在窗口上
-	bg.color = UiPalette.bg()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	UiTheme.prepare_root(self)     # 091 / 121：底色跟设置走、装上界面主题
 
 	var row := HBoxContainer.new()
 	row.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -574,7 +566,7 @@ func _build() -> void:
 func _build_side() -> Control:
 	var panel := _panel(SIDE_WIDTH)
 	var col: VBoxContainer = panel.get_child(0)
-	col.add_child(_label("地图编辑器", 18, UiPalette.FG))
+	col.add_child(UiTheme.make_label("地图编辑器", 18, UiPalette.FG))
 
 	_gen_pick = OptionButton.new()
 	_style(_gen_pick)
@@ -590,8 +582,8 @@ func _build_side() -> Control:
 	col.add_child(_pair("种子", _seed_box))
 
 	var buttons := HBoxContainer.new()
-	buttons.add_child(_button("生成", func(): generate()))
-	buttons.add_child(_button("换个种子生成", func(): generate_with_new_seed()))
+	buttons.add_child(UiTheme.make_button("生成", func(): generate(), UiTheme.TIER_PLAIN, 13))
+	buttons.add_child(UiTheme.make_button("换个种子生成", func(): generate_with_new_seed(), UiTheme.TIER_PLAIN, 13))
 	col.add_child(buttons)
 	var portal_row := HBoxContainer.new()
 	var portal_toggle := CheckButton.new()
@@ -607,43 +599,46 @@ func _build_side() -> Control:
 	portal_row.add_child(_pair("传送花几点", portal_spin))
 	col.add_child(portal_row)
 
-	_status = _label("", 12, UiPalette.DIM)
+	_status = UiTheme.make_label("", 12, UiPalette.DIM)
 	_status.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
 	_status.custom_minimum_size.x = SIDE_WIDTH - 30
 	col.add_child(_status)
 	col.add_child(HSeparator.new())
 
-	col.add_child(_label("预设", 14, UiPalette.FG))
+	col.add_child(UiTheme.make_label("预设", 14, UiPalette.FG))
 	_name_edit = LineEdit.new()
 	_name_edit.placeholder_text = "预设名（存到 data/maps/）"
 	_style(_name_edit)
 	col.add_child(_name_edit)
 	var save_row := HBoxContainer.new()
-	save_row.add_child(_button("保存", func(): save_preset(_name_edit.text)))
+	save_row.add_child(UiTheme.make_button("保存", func(): save_preset(_name_edit.text), UiTheme.TIER_PLAIN, 13))
 	_preset_pick = OptionButton.new()
 	_preset_pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style(_preset_pick)
 	save_row.add_child(_preset_pick)
-	save_row.add_child(_button("载入", func():
+	var load_picked := func():
 		if _preset_pick.selected >= 0:
-			load_preset(_preset_pick.get_item_text(_preset_pick.selected))))
+			load_preset(_preset_pick.get_item_text(_preset_pick.selected))
+	save_row.add_child(UiTheme.make_button("载入", load_picked, UiTheme.TIER_PLAIN, 13))
 	col.add_child(save_row)
 	_refresh_presets()
 	col.add_child(HSeparator.new())
 
 	# 章节：把当前的生成器 + 配置存成一章的作者数据（走内容管线），或从一章载入
-	col.add_child(_label("章节（走内容管线）", 14, UiPalette.FG))
+	col.add_child(UiTheme.make_label("章节（走内容管线）", 14, UiPalette.FG))
 	var ch_row := HBoxContainer.new()
 	_chapter_pick = OptionButton.new()
 	_chapter_pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style(_chapter_pick)
 	ch_row.add_child(_chapter_pick)
-	ch_row.add_child(_button("载入", func():
+	var load_chapter_picked := func():
 		if _chapter_pick.selected >= 0:
-			load_chapter(_chapter_pick.get_item_text(_chapter_pick.selected))))
-	ch_row.add_child(_button("存回", func():
+			load_chapter(_chapter_pick.get_item_text(_chapter_pick.selected))
+	var save_chapter_picked := func():
 		if _chapter_pick.selected >= 0:
-			save_chapter(_chapter_pick.get_item_text(_chapter_pick.selected))))
+			save_chapter(_chapter_pick.get_item_text(_chapter_pick.selected))
+	ch_row.add_child(UiTheme.make_button("载入", load_chapter_picked, UiTheme.TIER_PLAIN, 13))
+	ch_row.add_child(UiTheme.make_button("存回", save_chapter_picked, UiTheme.TIER_PLAIN, 13))
 	col.add_child(ch_row)
 	_refresh_chapters()
 	col.add_child(HSeparator.new())
@@ -653,7 +648,7 @@ func _build_side() -> Control:
 	col.add_child(_scale_host)
 	col.add_child(HSeparator.new())
 
-	col.add_child(_label("全部生成参数", 14, UiPalette.FG))
+	col.add_child(UiTheme.make_label("全部生成参数", 14, UiPalette.FG))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -671,7 +666,7 @@ func _build_info() -> Control:
 	var spacer := Control.new()
 	spacer.custom_minimum_size.y = 26
 	col.add_child(spacer)
-	var hint := _label(
+	var hint := UiTheme.make_label(
 		"左键点：选中　　空位：加点\n选中后 Shift+左键另一点：连 / 断\n右键路：断开　　Delete：删点\n中键拖动　滚轮缩放　F：缩到刚好放下　1：原比例",
 		12, UiPalette.DIM)
 	col.add_child(hint)
@@ -680,7 +675,7 @@ func _build_info() -> Control:
 	_props.add_theme_constant_override("separation", 6)
 	col.add_child(_props)
 	col.add_child(HSeparator.new())
-	col.add_child(_label("校验", 14, UiPalette.FG))
+	col.add_child(UiTheme.make_label("校验", 14, UiPalette.FG))
 	_report = RichTextLabel.new()
 	_report.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_report.add_theme_font_override("normal_font", _font)
@@ -692,13 +687,12 @@ func _build_info() -> Control:
 func _rebuild_props() -> void:
 	if _props == null:
 		return
-	for child in _props.get_children():
-		child.queue_free()
+	UiTheme.clear_children(_props)
 	if _graph == null:
 		return
 	var n := _node(_selected)
 	if n == null:
-		_props.add_child(_label("%d 个点　%d 条路　%d 个出生点　%d 片高危区"
+		_props.add_child(UiTheme.make_label("%d 个点　%d 条路　%d 个出生点　%d 片高危区"
 			% [_graph.node_count(), _graph.edges.size(), _graph.entry_ids.size(), _graph.zones.size()],
 			12, UiPalette.DIM))
 		var merge := CheckBox.new()
@@ -711,7 +705,7 @@ func _rebuild_props() -> void:
 		return
 
 	var id := n.id
-	_props.add_child(_label("节点 %d　tier %d　%s" % [id, n.tier, str(n.layout)], 12, UiPalette.DIM))
+	_props.add_child(UiTheme.make_label("节点 %d　tier %d　%s" % [id, n.tier, str(n.layout)], 12, UiPalette.DIM))
 	var type_pick := OptionButton.new()
 	_style(type_pick)
 	for i in MapNodeTypes.ALL.size():
@@ -763,7 +757,7 @@ func _rebuild_props() -> void:
 	flags.add_child(entry)
 	flags.add_child(goal)
 	_props.add_child(flags)
-	_props.add_child(_button("删除这个点", func(): delete_node(id)))
+	_props.add_child(UiTheme.make_button("删除这个点", func(): delete_node(id), UiTheme.TIER_PLAIN, 13))
 
 
 ## 彩色粗线是什么：生成器当初铺的路线。**只是标注** —— 它们是生成地图用的规则，
@@ -783,8 +777,8 @@ func _add_route_legend() -> void:
 		var text := "━━  出生点 %d · %s → %s" % [route.get("entry_id", -1), route.get("style", "?"), route.get("ends_at", "?")]
 		if route.has("risk_x100"):
 			text += "　风险 %.1f  收益 %.1f" % [float(route["risk_x100"]) / 100.0, float(route["reward_x100"]) / 100.0]
-		_props.add_child(_label(text, 12, MapNodeStyle.route_color(i)))
-	_props.add_child(_button("清空路线标注（%d 条）" % _graph.routes.size(), clear_routes))
+		_props.add_child(UiTheme.make_label(text, 12, MapNodeStyle.route_color(i)))
+	_props.add_child(UiTheme.make_button("清空路线标注（%d 条）" % _graph.routes.size(), clear_routes, UiTheme.TIER_PLAIN, 13))
 
 
 func _on_node_pressed(id: int, button: int, shift: bool) -> void:
@@ -835,31 +829,14 @@ func _panel(width: int) -> PanelContainer:
 	return panel
 
 
-func _label(text: String, font_size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.add_theme_font_override("font", _font)
-	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", color)
-	return l
-
-
 func _style(c: Control) -> void:
 	c.add_theme_font_override("font", _font)
 	c.add_theme_font_size_override("font_size", 13)
 
 
-func _button(text: String, handler: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	_style(b)
-	b.pressed.connect(handler)
-	return b
-
-
 func _pair(text: String, control: Control) -> Control:
 	var row := HBoxContainer.new()
-	var l := _label(text, 13, UiPalette.DIM)
+	var l := UiTheme.make_label(text, 13, UiPalette.DIM)
 	l.custom_minimum_size.x = 90
 	row.add_child(l)
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL

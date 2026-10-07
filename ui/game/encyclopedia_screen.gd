@@ -63,14 +63,8 @@ func open(payload: Dictionary) -> void:
 	page_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	page_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	right.add_child(page_scroll)
-	_body = RichTextLabel.new()
-	_body.bbcode_enabled = true
-	_body.fit_content = true
-	_body.scroll_active = false
-	_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_body.custom_minimum_size.x = PAGE_WIDTH - 20
+	_body = UiTheme.rich_block(PAGE_WIDTH - 20, UiTheme.RICH_BODY_SIZE)     # 121：17 号、行距 6
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_body.theme_type_variation = UiTheme.RICH_BODY     # 121：17 号、行距 6
 	_body.meta_clicked.connect(func(meta: Variant): open_page(String(meta)))
 	page_scroll.add_child(_body)
 
@@ -137,9 +131,7 @@ func escape() -> bool:
 
 
 func _fill_toc() -> void:
-	for c in _toc.get_children():
-		_toc.remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(_toc)
 	if _query.strip_edges() != "":
 		var hits := book.search(_query, _ctx)
 		_toc.add_child(_label("找到 %d 页" % hits.size(), 13, UiPalette.DIM))

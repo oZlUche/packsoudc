@@ -87,7 +87,7 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
-	tip = HoverTip.new(label_font if label_font != null else UiPalette.cjk_font())
+	tip = HoverTip.new()
 	add_child(tip)
 	tip.watch(self)
 	resized.connect(_on_resized)

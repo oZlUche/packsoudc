@@ -20,7 +20,7 @@ var _placed: bool = false
 
 
 ## [param on_close] 给了就在标题栏右边放一个「收起」按钮
-func setup(p_key: String, title: String, _font: Font, on_close: Callable = Callable(), close_text: String = "收起") -> void:
+func setup(p_key: String, title: String, on_close: Callable = Callable(), close_text: String = "收起") -> void:
 	key = p_key
 	UiTheme.panel(self, 12)     # 121：主题的 PanelDark 变体
 	mouse_filter = Control.MOUSE_FILTER_STOP

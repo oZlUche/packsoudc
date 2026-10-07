@@ -56,13 +56,11 @@ func edge_kind(_graph: MapGraph, _a: int, _b: int) -> StringName:
 
 ## 画一条边。默认直线；同心环的切向边画弧 —— 画直线会把同心环的视觉语言破坏掉，
 ## 玩家看到的就是一张普通的网。[param rect] 是画布（点的坐标就是按它算的），画弧要拿它当圆心。
+## 传送点不到这里：[MapView] 画边之前先判，统一走 [method draw_portal]，布局不必记得
 func draw_edge(
 	canvas: CanvasItem, _graph: MapGraph, _edge: MapEdge, a: Vector2, b: Vector2,
 	color: Color, width: float, _rect: Rect2 = Rect2()
 ) -> void:
-	if _edge.is_portal():
-		draw_portal(canvas, a, b, width)
-		return
 	canvas.draw_line(a, b, color, width, true)
 
 

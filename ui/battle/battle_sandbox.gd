@@ -47,13 +47,7 @@ func _ready() -> void:
 
 #region 界面
 func _build_ui() -> void:
-	var bg := ColorRect.new()
-	UiPalette.apply(GameSettings.load_from())     # 091：底色跟设置走
-	UiTheme.install(self)     # 121：界面主题挂在窗口上
-	bg.color = UiPalette.bg()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	UiTheme.prepare_root(self)     # 091 / 121：底色跟设置走、装上界面主题
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -71,7 +65,7 @@ func _build_ui() -> void:
 	left.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	columns.add_child(left)
 
-	left.add_child(_label("作战棋盘　拖动即重新编译", 18, UiPalette.FG))
+	left.add_child(UiTheme.make_label("作战棋盘　拖动即重新编译", 18, UiPalette.FG))
 
 	var view := InventoryView.new()
 	view.label_font = _font
@@ -79,27 +73,27 @@ func _build_ui() -> void:
 	view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(view)
 
-	_dps_label = _label("", 16, UiPalette.FG)
+	_dps_label = UiTheme.make_label("", 16, UiPalette.FG)
 	left.add_child(_dps_label)
-	_set_label = _label("", 13, UiPalette.DIM)
+	_set_label = UiTheme.make_label("", 13, UiPalette.DIM)
 	left.add_child(_set_label)
 
 	var controls := HBoxContainer.new()
 	controls.add_theme_constant_override("separation", 8)
 	left.add_child(controls)
-	controls.add_child(_button("开打", _on_fight))
-	controls.add_child(_label("种子", 13, UiPalette.DIM))
+	controls.add_child(UiTheme.make_button("开打", _on_fight, UiTheme.TIER_PLAIN))
+	controls.add_child(UiTheme.make_label("种子", 13, UiPalette.DIM))
 	_seed_spin = SpinBox.new()
 	_seed_spin.min_value = 1
 	_seed_spin.max_value = 9999
 	_seed_spin.value = 1
 	controls.add_child(_seed_spin)
-	controls.add_child(_button("换一套装备", _on_reseed))
+	controls.add_child(UiTheme.make_button("换一套装备", _on_reseed, UiTheme.TIER_PLAIN))
 
-	_hint = _label("同一种子 → 逐条相同的回放。改变棋盘才会改变结果。", 12, UiPalette.DIM)
+	_hint = UiTheme.make_label("同一种子 → 逐条相同的回放。改变棋盘才会改变结果。", 12, UiPalette.DIM)
 	left.add_child(_hint)
 
-	left.add_child(_label("地上　放这儿的不参战　放手在哪就落在哪", 13, UiPalette.DIM))
+	left.add_child(UiTheme.make_label("地上　放这儿的不参战　放手在哪就落在哪", 13, UiPalette.DIM))
 	var storage_view := GroundLayer.new()     # 128：地上
 	storage_view.label_font = _font
 	storage_view.stash = _storage
@@ -123,20 +117,6 @@ func _build_ui() -> void:
 	_drag.register_view(storage_view)
 	_drag.stash = _storage
 	_drag.items_displaced.connect(_on_displaced)
-
-
-func _label(text: String, font_size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
-	return l
-
-
-func _button(text: String, handler: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.pressed.connect(handler)
-	return b
 #endregion
 
 
@@ -182,14 +162,7 @@ func _seed_board() -> void:
 ## 顶掉别人之后给一句交代。不说的话，东西就是「不见了」——
 ## 玩家不会去地上找一件自己都不知道被挤走的物品。
 func _on_displaced(instances: Array, grabbed: bool) -> void:
-	var names: Array[String] = []
-	for inst in instances:
-		var item := inst as ItemInstance
-		names.append(item.def.display_name if item.def != null else "?")
-	if grabbed:
-		_hint.text = "顶出了「%s」，已经拿在手上。" % names[0]
-	else:
-		_hint.text = "顶出了 %d 件（%s），都放到地上了。" % [names.size(), "、".join(names)]
+	_hint.text = DragLayer.displaced_text(instances, grabbed)
 
 
 func _on_reseed() -> void:
@@ -226,16 +199,6 @@ func _refresh_readout() -> void:
 			"　已激活" if p["active"] else "",
 		])
 	_set_label.text = "套装：" + ("、".join(lines) if not lines.is_empty() else "无")
-
-
-## uid -> 显示名，供回放把「uid 2 出手」写成「手枪 出手」
-func _board_names() -> Dictionary:
-	var out := {}
-	for inst in _board.items():
-		var item := inst as ItemInstance
-		if item.def != null:
-			out[item.uid] = item.def.display_name
-	return out
 
 
 func _compile() -> CombatantSpec:
@@ -279,16 +242,17 @@ func _on_fight() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(_seed_spin.value)
 	var me := _compile()
+	var names := CombatantSpec.item_names(me, _db)     # uid → 显示名，回放把「uid 2 出手」写成「手枪 出手」
 	var dummy := _dummy()
 	# 117：沙盒也写战斗日志（设置开着时），章节记成 sandbox
 	var trace: BattleTrace = BattleTrace.new() if BattleArchive.enabled and GameSettings.load_from().battle_trace else null
 	var result := BattleSim.run(me, dummy, rng, BattleSim.DEFAULT_TIME_LIMIT, null, trace)     # 103：和真打一样带加时与衰竭
 	if trace != null:
 		BattleTraceWriter.write(trace, result, {"run_seed": int(_seed_spin.value), "chapter": "sandbox", "node": 0, "enemy": "dummy",
-			"rng_seed": int(_seed_spin.value), "time_limit": BattleSim.DEFAULT_TIME_LIMIT, "names": [_board_names(), {1: "重拳"}],
+			"rng_seed": int(_seed_spin.value), "time_limit": BattleSim.DEFAULT_TIME_LIMIT, "names": [names, {1: "重拳"}],
 			"boards": [me.board.to_dict() if me.board != null else {}, {}]})
 	_view.play(result, ["我方", "训练假人"])
-	_view.set_item_names(0, _board_names())
+	_view.set_item_names(0, names)
 	_view.set_item_names(1, {1: "重拳"})
 	_hint.text = "本场 %d 条事件，%.2f 秒。同一种子重放逐条相同。" % [
 		result.log.size(), result.duration_sec()

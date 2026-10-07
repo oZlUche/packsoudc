@@ -118,7 +118,9 @@ func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
 	var panel := _centered_panel(PANEL_SIZE, 0)
 	var row := _hbox(0)
 	panel.add_child(row)
-	row.add_child(_image_area(image_path, title))
+	var image := EventImage.area(image_path, title, Vector2(IMAGE_WIDTH, 0))     # 左栏：图铺满、按比例裁；没有图就一块深底色写着占位
+	image.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_child(image)
 
 	var margin := MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -137,54 +139,14 @@ func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	col.add_child(scroll)
 	if body != "":
-		# RichTextLabel：正文里能变色、加粗（BBCode，TextTemplate 的样式码也翻成它）
-		var text := RichTextLabel.new()
-		text.bbcode_enabled = true
-		text.fit_content = true
-		text.scroll_active = false
-		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		text.custom_minimum_size.x = TEXT_WIDTH
+		# RichTextLabel：正文里能变色、加粗（BBCode，TextTemplate 的样式码也翻成它）；121：17 号、行距 6
+		var text := UiTheme.rich_block(TEXT_WIDTH, UiTheme.RICH_BODY_SIZE, body)
 		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		text.theme_type_variation = UiTheme.RICH_BODY     # 121：17 号、行距 6
-		text.text = body
 		scroll.add_child(text)
 	var options := _vbox(8)
 	options.name = "Options"
 	col.add_child(options)
 	return options
-
-
-## 左栏：图铺满、按比例裁；没有图就一块深底色写着占位
-func _image_area(path: String, title: String) -> Control:
-	var area := Control.new()
-	area.clip_contents = true
-	area.custom_minimum_size = Vector2(IMAGE_WIDTH, 0)
-	area.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var loaded := EventImage.load_texture(path)
-	if loaded != null:
-		var tex := TextureRect.new()
-		tex.texture = loaded
-		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		area.add_child(tex)
-		return area
-	var bg := ColorRect.new()
-	bg.color = Color("0d0f12")
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	area.add_child(bg)
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	area.add_child(center)
-	var col := _vbox(6)
-	center.add_child(col)
-	var big := _label(title, 22, UiPalette.DIM.darkened(0.35))
-	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(big)
-	var hint := _label("（图像占位：%s）" % path if path != "" else "（没有配图）", 12, UiPalette.DIM.darkened(0.45))
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(hint)
-	return area
 
 
 ## 一个选项：整行宽、左对齐、够高
@@ -227,16 +189,11 @@ func toggle_bag() -> void:
 		return
 	if flow.run == null:
 		return
-	var shade := ColorRect.new()
-	shade.color = Color(0.04, 0.05, 0.07, 0.7)
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(shade)
-	_bag = shade
+	_bag = _shade(0.7)
 	# 084：背包是能拖着走的浮窗，不锁在一个地方；关掉再开还在上次放的位置
 	var win := FloatingWindow.new()
-	win.setup("bag", "背包", font, toggle_bag, "收起（B）")
-	shade.add_child(win)
+	win.setup("bag", "背包", toggle_bag, "收起（B）")
+	_bag.add_child(win)
 	var inv := InventoryPanelScript.new()
 	inv.setup(flow.run, font)
 	win.body().add_child(inv)
@@ -274,11 +231,8 @@ func escape() -> bool:
 
 
 func _rebuild() -> void:
-	for c in get_children():
-		remove_child(c)
-		c.queue_free()
 	_option_btns.clear()
-	open(_payload)
+	_reopen(_payload)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:

@@ -33,7 +33,7 @@ func open(payload: Dictionary) -> void:
 	col.add_child(row)
 	var left := _vbox(8)
 	row.add_child(left)
-	left.add_child(_label("对手的棋盘　%s" % _enemy_name(), 14, UiPalette.HP))
+	left.add_child(_label("对手的棋盘　%s" % _enemy_name(_content), 14, UiPalette.HP))
 	_enemy_view = InventoryView.new()
 	_enemy_view.label_font = font
 	_enemy_view.show_adjacency = true
@@ -41,7 +41,7 @@ func open(payload: Dictionary) -> void:
 	_enemy_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_enemy_view.mouse_filter = Control.MOUSE_FILTER_STOP     # 只看（没登记进拖拽层，点了没事），停上去有说明
 	left.add_child(_enemy_view)
-	var tip := HoverTip.new(font)
+	var tip := HoverTip.new()
 	add_child(tip)
 	tip.watch(_enemy_view)
 	_enemy_line = _wrapped("", 13, UiPalette.FG, 420)
@@ -136,13 +136,6 @@ func _refresh() -> void:
 		var sw := slip_reason()
 		_slip_btn.text = "%s（%s）" % ["溜走" if sw == "" else ("溜走：" + sw), "不限次" if left < 0 else "剩 %d 次" % left]
 		_slip_btn.disabled = sw != ""
-
-
-func _enemy_name() -> String:
-	var def := flow.enemies.enemy(StringName(String(_content.get("enemy", "")))) if not _content.is_empty() else null
-	if def == null:
-		return "敌人"
-	return "%s（%d 档）" % [Names.of(def), int(_content.get("strength", 0))]
 
 
 func _title_of() -> String:

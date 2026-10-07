@@ -69,7 +69,7 @@ func open(payload: Dictionary) -> void:
 	_drag.drop_filter = _allow_drop
 	_drag.craft_filter = _allow_craft     # 审查 A1：没付钱的商品不能拿去合成（会被消耗掉、结不了账）
 	_drag.drag_finished.connect(_on_drag_finished)
-	_tip = HoverTip.new(font)
+	_tip = HoverTip.new()
 	add_child(_tip)
 	_tip.watch(_sell_view)
 
@@ -215,9 +215,7 @@ func _rebuild() -> void:
 	for v in _shelf_views:
 		_drag.unregister_view(v)
 	_shelf_views.clear()
-	for child in _shelf_row.get_children():
-		_shelf_row.remove_child(child)
-		child.queue_free()
+	UiTheme.clear_children(_shelf_row)
 	if not _drag.drag_started.is_connected(_on_drag_started):
 		_drag.drag_started.connect(_on_drag_started)
 	for i in _session.shelves.size():

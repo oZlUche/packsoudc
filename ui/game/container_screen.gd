@@ -91,7 +91,7 @@ func open(payload: Dictionary) -> void:
 	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_drag)
 	_drag.register_view(_loot)
-	var tip := HoverTip.new(font)
+	var tip := HoverTip.new()
 	tip.can_show = func(_v: ContainerView, uid: int) -> bool: return not _loot.is_locked(uid)     # 没亮的不说是什么
 	add_child(tip)
 	tip.watch(_loot)

@@ -370,9 +370,7 @@ func achievement_rows() -> Array:
 func _fill_achievements() -> void:
 	if _ach_list == null:
 		return
-	for c in _ach_list.get_children():
-		_ach_list.remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(_ach_list)
 	_ach_rows.clear()
 	var m := flow.meta
 	var total := flow.achievement_defs.size()
@@ -477,11 +475,10 @@ func _build_codex(root: Control) -> Control:
 		for id in keeps:
 			var def := flow.items.get_def(id)
 			var tile := CodexTile.new(def, m.has_keepsake(id), 0, font)
-			tile.hovered.connect(_on_tile_hovered)
-			tile.unhovered.connect(func(_t: CodexTile): _codex_tip.hide_tip())
+			_wire_tile(tile)
 			kgrid.add_child(tile)
 			_codex_tiles.append(tile)
-	_codex_tip = HoverTip.new(font)
+	_codex_tip = HoverTip.new()
 	add_child(_codex_tip)
 	fit_codex_to_width(1100.0)     # 进树之前先给个列数，布局好了按真宽度重算
 	scroll.resized.connect(func(): fit_codex_to_width(scroll.size.x))
@@ -519,10 +516,15 @@ func _codex_tile_for(def: ItemDef) -> CodexTile:
 		tile.variant_counts.append(m.codex_count(v.id))
 	tile.variants = variants
 	tile.lit = any_lit
-	tile.hovered.connect(_on_tile_hovered)
-	tile.unhovered.connect(func(_t: CodexTile): _codex_tip.hide_tip())
+	_wire_tile(tile)
 	tile.pressed.connect(func(t: CodexTile): show_variants(t))
 	return tile
+
+
+## 图鉴格的悬浮接线：停上去显示说明、离开就藏
+func _wire_tile(tile: CodexTile) -> void:
+	tile.hovered.connect(_on_tile_hovered)
+	tile.unhovered.connect(func(_t: CodexTile): _codex_tip.hide_tip())
 
 
 ## 095：点开一格：有异体就弹出列表（原件、蛮神版、日神版……各一小格，点亮的亮着），再点关闭 / 别处关掉
@@ -541,8 +543,7 @@ func show_variants(tile: CodexTile) -> void:
 	for i in tile.variants.size():
 		var v: ItemDef = tile.variants[i]
 		var vt := CodexTile.new(v, tile.variant_lit[i] if i < tile.variant_lit.size() else false, tile.variant_counts[i] if i < tile.variant_counts.size() else 0, font)
-		vt.hovered.connect(_on_tile_hovered)
-		vt.unhovered.connect(func(_t: CodexTile): _codex_tip.hide_tip())
+		_wire_tile(vt)
 		var cell := _vbox(2)
 		cell.add_child(_label(_variant_kind(v), 11, UiPalette.DIM))
 		cell.add_child(vt)
@@ -621,15 +622,6 @@ func escape() -> bool:
 		return true
 	flow.to_main_menu()
 	return true
-
-
-
-func store_all() -> Dictionary:
-	return _wh.store_all()
-
-
-func discard_board() -> void:
-	_wh.discard_board()
 
 
 func toggle_buff(id: StringName) -> bool:

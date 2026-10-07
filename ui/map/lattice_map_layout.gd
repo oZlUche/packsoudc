@@ -75,9 +75,6 @@ func draw_edge(
 	canvas: CanvasItem, _graph: MapGraph, edge: MapEdge, a: Vector2, b: Vector2,
 	color: Color, width: float, _rect: Rect2 = Rect2()
 ) -> void:
-	if edge.is_portal():
-		MapLayout.draw_portal(canvas, a, b, width)
-		return
 	canvas.draw_line(a, b, color, width, true)
 	if edge.directed:
 		# 箭头画在离终点一个节点半径的地方，指向 to（MapView 传的 a / b 就是 from / to 的位置）

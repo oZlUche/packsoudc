@@ -60,30 +60,28 @@ func _ground_to_bag(uid: int, open_bag: Callable) -> bool:
 	return true
 
 
-#region 控件
+## 对手叫什么（战前准备、战斗回放共用）：从这一场的敌人内容（点里的，或搜索遭遇现造的）查定义，「名字（N 档）」；查不到就「敌人」
+func _enemy_name(content: Dictionary) -> String:
+	var def := flow.enemies.enemy(StringName(String(content.get("enemy", "")))) if not content.is_empty() else null
+	if def == null:
+		return "敌人"
+	return "%s（%d 档）" % [Names.of(def), int(content.get("strength", 0))]
+
+
+#region 控件（造控件的活在 [UiTheme] 里，这里只留给子类的短名字）
 func _label(text: String, font_size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	return UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
+	return UiTheme.make_label(text, font_size, color)
 
 
-## 会折行的说明文字。必须给最小宽度：中文没有词边界，容器算出的最小宽度是一个字
+## 会折行的说明文字（[method UiTheme.make_wrapped]：必须给最小宽度）
 func _wrapped(text: String, font_size: int, color: Color, width: float) -> Label:
-	var l := _label(text, font_size, color)
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size.x = width
-	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return l
+	return UiTheme.make_wrapped(text, font_size, color, width)
 
 
 ## 090（作者定）：按钮按重要性分三档（[enum UiPalette.Tier]），字号是 [param font_size] 的 300% / 200% / 150%，颜色也各不同。
 ## 不写档就是次要（200%）；各屏自己说哪个是主动作、哪个是辅助
 func _button(text: String, handler: Callable, font_size: int = 14, tier: int = UiPalette.Tier.SECONDARY) -> Button:
-	var b := Button.new()
-	b.text = text
-	UiPalette.style_button(b, tier, UiPalette.button_font_size(font_size, tier))
-	b.pressed.connect(handler)
-	return b
+	return UiTheme.make_button(text, handler, tier, font_size)
 
 
 ## 整屏的底色（底屏用）。不传颜色 = 设置里挑的底色（[method UiPalette.bg]）
@@ -119,11 +117,20 @@ func _reserve_ground(c: Control) -> void:
 		g.reserve(c)
 
 
+## 半透明遮罩（对话框 / 背包浮窗 / 暂停菜单的底）：压暗底下、挡住鼠标，关掉就 free 它。
+## 透明度各处略有不同（0.7 / 0.72 / 0.82），原样传；[param centered] 为真时遮罩里再放一个铺满的 [CenterContainer]
+## （`shade.get_child(0)`），对话框面板放进去就居中
+func _shade(alpha: float = 0.7, centered: bool = false) -> ColorRect:
+	var shade := _backdrop(Color(0.04, 0.05, 0.07, alpha))
+	if centered:
+		shade.add_child(_full_center())
+	return shade
+
+
 ## 居中的一块面板（叠层用）：半透明压暗底下的地图，面板放中间
 func _centered_panel(min_size: Vector2, margin: int = 16) -> PanelContainer:
-	_backdrop(Color(0.04, 0.05, 0.07, 0.82))
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_shade(0.82)
+	var center := _full_center()
 	add_child(center)
 	var p := _panel(margin)
 	p.custom_minimum_size = min_size
@@ -131,16 +138,19 @@ func _centered_panel(min_size: Vector2, margin: int = 16) -> PanelContainer:
 	return p
 
 
+## 铺满宿主的居中容器
+static func _full_center() -> CenterContainer:
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	return center
+
+
 func _vbox(separation: int = 8) -> VBoxContainer:
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", separation)
-	return v
+	return UiTheme.vbox(separation)
 
 
 func _hbox(separation: int = 8) -> HBoxContainer:
-	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", separation)
-	return h
+	return UiTheme.hbox(separation)
 
 
 func _log_box(font_size: int = 12) -> RichTextLabel:
@@ -151,10 +161,8 @@ func _log_box(font_size: int = 12) -> RichTextLabel:
 	return UiTheme.rich(log, font_size)
 
 
-## 一件道具的一行说明：名字（按稀有度上色）、几格、值多少
-func _item_line(def: ItemDef) -> String:
-	if def == null:
-		return "?"
-	var cells := def.cell_count()
-	return "[color=#%s]%s[/color]  %d 格  %d 币" % [ItemPainter.rarity_color(def).to_html(false), def.display_name, cells, ItemValue.of(def)]
+## 原地重建这一屏：清空全部子节点，再按 [param payload] 重新 [method open]（切了语言、收起背包、删了存档之后重画）
+func _reopen(payload: Dictionary = {}) -> void:
+	UiTheme.clear_children(self)
+	open(payload)
 #endregion

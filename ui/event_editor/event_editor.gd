@@ -99,13 +99,7 @@ static func _ids_on_disk() -> Array[String]:
 
 #region 界面
 func _build_ui() -> void:
-	var bg := ColorRect.new()
-	UiPalette.apply(GameSettings.load_from())     # 091：底色跟设置走
-	UiTheme.install(self)     # 121：界面主题挂在窗口上
-	bg.color = UiPalette.bg()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	UiTheme.prepare_root(self)     # 091 / 121：底色跟设置走、装上界面主题
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -121,16 +115,16 @@ func _build_ui() -> void:
 	left.custom_minimum_size.x = 240
 	left.add_theme_constant_override("separation", 6)
 	columns.add_child(left)
-	left.add_child(_label("事件", 16, UiPalette.FG))
+	left.add_child(UiTheme.make_label("事件", 16, UiPalette.FG))
 	_list = ItemList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_list.add_theme_font_override("font", _font)
 	_list.item_selected.connect(func(i: int): _open(_ids[i]))
 	left.add_child(_list)
 	var list_buttons := HBoxContainer.new()
-	list_buttons.add_child(_button("新建", _new_event))
-	list_buttons.add_child(_button("刷新列表", _on_rescan))
-	list_buttons.add_child(_button("放弃改动", _on_discard))
+	list_buttons.add_child(UiTheme.make_button("新建", _new_event, UiTheme.TIER_PLAIN, 13))
+	list_buttons.add_child(UiTheme.make_button("刷新列表", _on_rescan, UiTheme.TIER_PLAIN, 13))
+	list_buttons.add_child(UiTheme.make_button("放弃改动", _on_discard, UiTheme.TIER_PLAIN, 13))
 	left.add_child(list_buttons)
 
 	var right_split := HSplitContainer.new()
@@ -144,16 +138,16 @@ func _build_ui() -> void:
 	right_split.add_child(mid)
 
 	var id_row := HBoxContainer.new()
-	id_row.add_child(_label("id", 13, UiPalette.DIM))
+	id_row.add_child(UiTheme.make_label("id", 13, UiPalette.DIM))
 	_id_edit = LineEdit.new()
 	_id_edit.custom_minimum_size.x = 180
 	_id_edit.add_theme_font_override("font", _font)
 	_id_edit.text_changed.connect(_on_id_changed)
 	id_row.add_child(_id_edit)
-	id_row.add_child(_button("保存", _save))
-	id_row.add_child(_button("另存为新 id", _save_as))
+	id_row.add_child(UiTheme.make_button("保存", _save, UiTheme.TIER_PLAIN, 13))
+	id_row.add_child(UiTheme.make_button("另存为新 id", _save_as, UiTheme.TIER_PLAIN, 13))
 	# 091：语言切换 —— 标题 / 正文按这个语言编辑；中文是原文，别的语言写进 titles / texts（空 = 用中文）
-	id_row.add_child(_label("语言", 13, UiPalette.DIM))
+	id_row.add_child(UiTheme.make_label("语言", 13, UiPalette.DIM))
 	_lang_pick = OptionButton.new()
 	_lang_pick.add_theme_font_override("font", _font)
 	for i in UiText.LANGS.size():
@@ -172,7 +166,7 @@ func _build_ui() -> void:
 	scroll.add_child(body)
 
 	var title_row := HBoxContainer.new()
-	title_row.add_child(_label("标题", 13, UiPalette.DIM))
+	title_row.add_child(UiTheme.make_label("标题", 13, UiPalette.DIM))
 	_title_edit = LineEdit.new()
 	_title_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_title_edit.add_theme_font_override("font", _font)
@@ -180,7 +174,7 @@ func _build_ui() -> void:
 	title_row.add_child(_title_edit)
 	body.add_child(title_row)
 
-	body.add_child(_label("正文", 13, UiPalette.DIM))
+	body.add_child(UiTheme.make_label("正文", 13, UiPalette.DIM))
 	_text_edit = TextEdit.new()
 	_text_edit.custom_minimum_size.y = 120
 	_text_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
@@ -190,15 +184,15 @@ func _build_ui() -> void:
 	body.add_child(_text_edit)
 
 	var image_row := HBoxContainer.new()
-	image_row.add_child(_label("配图", 13, UiPalette.DIM))
+	image_row.add_child(UiTheme.make_label("配图", 13, UiPalette.DIM))
 	_image_edit = LineEdit.new()
 	_image_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_image_edit.placeholder_text = "res://assets/events/<id>.png（可以直接填，或点导入）"
 	_image_edit.add_theme_font_override("font", _font)
 	_image_edit.text_changed.connect(_on_image_changed)
 	image_row.add_child(_image_edit)
-	image_row.add_child(_button("导入图片…", _pick_image))
-	image_row.add_child(_button("清除", _clear_image))
+	image_row.add_child(UiTheme.make_button("导入图片…", _pick_image, UiTheme.TIER_PLAIN, 13))
+	image_row.add_child(UiTheme.make_button("清除", _clear_image, UiTheme.TIER_PLAIN, 13))
 	body.add_child(image_row)
 	_thumb = TextureRect.new()
 	_thumb.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
@@ -225,7 +219,7 @@ func _build_ui() -> void:
 	side.add_theme_constant_override("separation", 8)
 	right_split.add_child(side)
 
-	side.add_child(_label("预览（事件屏的样子）", 14, UiPalette.FG))
+	side.add_child(UiTheme.make_label("预览（事件屏的样子）", 14, UiPalette.FG))
 	var preview_scroll := ScrollContainer.new()
 	preview_scroll.custom_minimum_size.y = 260
 	preview_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -244,7 +238,7 @@ func _build_ui() -> void:
 	_preview_host.add_theme_constant_override("separation", 8)
 	preview_panel.add_child(_preview_host)
 
-	side.add_child(_label("校验", 14, UiPalette.FG))
+	side.add_child(UiTheme.make_label("校验", 14, UiPalette.FG))
 	_status = RichTextLabel.new()
 	_status.bbcode_enabled = true
 	_status.custom_minimum_size.y = 80
@@ -253,7 +247,7 @@ func _build_ui() -> void:
 	side.add_child(_status)
 
 	# 091：事件链 —— 从这个事件出去的（选项 → next_event，递归）和引用它的（别的事件 / 节点规则 / 预设图 / 章节开场）；双击一行打开那个事件
-	side.add_child(_label("事件链（双击跳过去）", 14, UiPalette.FG))
+	side.add_child(UiTheme.make_label("事件链（双击跳过去）", 14, UiPalette.FG))
 	_chain = Tree.new()
 	_chain.hide_root = true
 	_chain.custom_minimum_size.y = 150
@@ -262,8 +256,8 @@ func _build_ui() -> void:
 	_chain.item_activated.connect(_open_from_chain)
 	side.add_child(_chain)
 
-	side.add_child(_label("挂进节点规则（先保存）", 14, UiPalette.FG))
-	_placement = _label("", 12, UiPalette.DIM)
+	side.add_child(UiTheme.make_label("挂进节点规则（先保存）", 14, UiPalette.FG))
+	_placement = UiTheme.make_label("", 12, UiPalette.DIM)
 	_placement.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_placement.custom_minimum_size.x = 380
 	side.add_child(_placement)
@@ -288,44 +282,18 @@ func _build_ui() -> void:
 	_weight.value = 1
 	_weight.add_theme_font_override("font", _font)
 	attach_row.add_child(_weight)
-	attach_row.add_child(_button("挂上", _on_attach))
-	attach_row.add_child(_button("摘下", _on_detach))
+	attach_row.add_child(UiTheme.make_button("挂上", _on_attach, UiTheme.TIER_PLAIN, 13))
+	attach_row.add_child(UiTheme.make_button("摘下", _on_detach, UiTheme.TIER_PLAIN, 13))
 	side.add_child(attach_row)
 
-	side.add_child(_label("JSON（可直接改）", 12, UiPalette.DIM))
+	side.add_child(UiTheme.make_label("JSON（可直接改）", 12, UiPalette.DIM))
 	_json = TextEdit.new()
 	_json.custom_minimum_size.y = 160
 	_json.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_json.add_theme_font_override("font", _font)
 	_json.add_theme_font_size_override("font_size", 12)
 	side.add_child(_json)
-	side.add_child(_button("套用上面的 JSON", _apply_json))
-
-
-func _label(text: String, font_size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.add_theme_font_override("font", _font)
-	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", color)
-	return l
-
-
-func _wrapped(text: String, font_size: int, color: Color, width: float) -> Label:
-	var l := _label(text, font_size, color)
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size.x = width
-	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return l
-
-
-func _button(text: String, handler: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.add_theme_font_override("font", _font)
-	b.add_theme_font_size_override("font_size", 13)
-	b.pressed.connect(handler)
-	return b
+	side.add_child(UiTheme.make_button("套用上面的 JSON", _apply_json, UiTheme.TIER_PLAIN, 13))
 #endregion
 
 
@@ -726,9 +694,7 @@ func _on_detach() -> void:
 
 #region 刷新
 func _rebuild_form() -> void:
-	for c in _form_host.get_children():
-		_form_host.remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(_form_host)
 	if _def == null:
 		return
 	# 标题、正文、配图在上面有专门的控件，表单里跳过，免得两处能改同一个值
@@ -739,25 +705,22 @@ func _rebuild_form() -> void:
 
 ## 照着事件屏画（两栏：左边图，右边标题、正文、选项）；每个选项底下写条件与后果
 func _rebuild_preview() -> void:
-	# 先摘下来再 free：queue_free 到帧末才真的走，同一帧里数子节点会把旧的也数进去
-	for c in _preview_host.get_children():
-		_preview_host.remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(_preview_host)
 	if _def == null:
 		return
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	_preview_host.add_child(row)
 	var title := TextTemplate.plain(_def.title) if _def.title != "" else String(_def.id)     # 112：{item:} {enemy:} 换成名字
-	row.add_child(_image_control(_def.image, title, Vector2(150, 240)))
+	row.add_child(EventImage.area(_def.image, title, Vector2(150, 240), 13, 10, "（图读不到）", 4))     # 和事件屏一个画法
 	var col := VBoxContainer.new()
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	col.add_theme_constant_override("separation", 8)
 	row.add_child(col)
-	col.add_child(_label(title, 17, UiPalette.FG))
+	col.add_child(UiTheme.make_label(title, 17, UiPalette.FG))
 	col.add_child(HSeparator.new())
 	if _def.text != "":
-		col.add_child(_wrapped(TextTemplate.plain(_def.text), 12, UiPalette.FG, 190))
+		col.add_child(UiTheme.make_wrapped(TextTemplate.plain(_def.text), 12, UiPalette.FG, 190))
 	for i in _def.options.size():
 		var opt := _def.options[i] as EventOption
 		if opt == null:
@@ -782,44 +745,12 @@ func _rebuild_preview() -> void:
 			notes.append("条件不满足时不显示")
 		if notes.is_empty():
 			notes.append("（什么也不做，点了就走）")
-		col.add_child(_wrapped("　".join(notes), 11, UiPalette.DIM, 190))
+		col.add_child(UiTheme.make_wrapped("　".join(notes), 11, UiPalette.DIM, 190))
 
 
 static func _describe(construct: Object) -> String:
 	var s := String(construct.call("describe"))
 	return s if s != "" else String(ContentSchema.registry_name_of(construct))
-
-
-## 左栏的图：铺满、按比例裁，和事件屏一个画法；没有图就深底色写占位
-func _image_control(path: String, title: String, size: Vector2) -> Control:
-	var area := Control.new()
-	area.clip_contents = true
-	area.custom_minimum_size = size
-	var tex2d := EventImage.load_texture(path)
-	if tex2d != null:
-		var rect := TextureRect.new()
-		rect.texture = tex2d
-		rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		area.add_child(rect)
-		return area
-	var bg := ColorRect.new()
-	bg.color = Color("0d0f12")
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	area.add_child(bg)
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	area.add_child(center)
-	var col := VBoxContainer.new()
-	center.add_child(col)
-	var big := _label(title, 13, UiPalette.DIM.darkened(0.35))
-	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(big)
-	var hint := _label("（没有配图）" if path == "" else "（图读不到）", 10, UiPalette.DIM.darkened(0.45))
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(hint)
-	return area
 
 
 ## 校验走的就是导入器本身

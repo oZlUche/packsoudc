@@ -80,7 +80,7 @@ func open(payload: Dictionary) -> void:
 			return true
 		var d := flow.run.active_faith()
 		return d != null and d.accepts_offering(inst.def) and _altar_open()
-	var tip := HoverTip.new(font)
+	var tip := HoverTip.new()
 	add_child(tip)
 	tip.watch(_table_view)
 	_table.changed.connect(_refresh)
@@ -186,8 +186,7 @@ func preview_text() -> String:
 ## 特殊操作那一列：到了等级的才有按钮；等级变了重画
 func _rebuild_actions() -> void:
 	var run := flow.run
-	for ch in _actions_box.get_children():
-		ch.queue_free()
+	UiTheme.clear_children(_actions_box)
 	_action_btns.clear()
 	var actions := (AltarModule.of(run).actions() if AltarModule.of(run) != null else [])
 	if actions.is_empty():

@@ -47,14 +47,14 @@ func _build() -> void:
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", 8)
 	row.add_child(left)
-	left.add_child(_label("作战棋盘　只有包里的东西参战　拖出棋盘 = 放在地上", 13, UiPalette.DIM))
+	left.add_child(UiTheme.make_label("作战棋盘　只有包里的东西参战　拖出棋盘 = 放在地上", 13, UiPalette.DIM))
 	board_view = InventoryView.new()
 	board_view.label_font = _font
 	board_view.inventory = _run.board
 	board_view.show_adjacency = true
 	board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(board_view)
-	_faith_label = _label("", 14, UiPalette.FG)
+	_faith_label = UiTheme.make_label("", 14, UiPalette.FG)
 	_faith_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	_faith_label.mouse_entered.connect(func():
 		if tip != null:
@@ -63,10 +63,10 @@ func _build() -> void:
 		if tip != null:
 			tip.hide_tip())
 	left.add_child(_faith_label)
-	_readout = _label("", 14, UiPalette.FG)
+	_readout = UiTheme.make_label("", 14, UiPalette.FG)
 	left.add_child(_readout)
 	# 084：耐力消耗评估（低 / 中 / 高 / 极高），停上去看每秒消耗与回复
-	_stamina = _label("", 13, UiPalette.STAMINA)
+	_stamina = UiTheme.make_label("", 13, UiPalette.STAMINA)
 	_stamina.mouse_filter = Control.MOUSE_FILTER_STOP
 	_stamina.mouse_entered.connect(func():
 		if tip != null:
@@ -75,12 +75,12 @@ func _build() -> void:
 		if tip != null:
 			tip.hide_tip())
 	left.add_child(_stamina)
-	_weight = _label("", 13, UiPalette.FG)
+	_weight = UiTheme.make_label("", 13, UiPalette.FG)
 	left.add_child(_weight)
-	_hint = _label("左键拖动　双击快速置入　R 旋转　右键 / Esc 取消　右键信物 = 奉为主信仰　拖到能合成的那件上 = 合成　压着别人放手会把人顶出来　放到棋盘外就放在地上（放哪落哪）", 11, UiPalette.DIM)
+	_hint = UiTheme.make_label("左键拖动　双击快速置入　R 旋转　右键 / Esc 取消　右键信物 = 奉为主信仰　拖到能合成的那件上 = 合成　压着别人放手会把人顶出来　放到棋盘外就放在地上（放哪落哪）", 11, UiPalette.DIM)
 	left.add_child(_hint)
 
-	left.add_child(_label("地上（不限件数）　不参战、留在这个点（回来还在原处）、撤离不带出去", 11, UiPalette.DIM))
+	left.add_child(UiTheme.make_label("地上（不限件数）　不参战、留在这个点（回来还在原处）、撤离不带出去", 11, UiPalette.DIM))
 
 	if _drag == null:
 		_drag = DragLayer.new()
@@ -103,7 +103,7 @@ func _build() -> void:
 			return crafting.note_of(a.def, b.def)
 		crafting.done.connect(_on_crafted)
 	# 084：停在道具上的悬浮说明（名、稀有度、标签、效果、武器的冷却与 DPS、槽）
-	tip = HoverTip.new(_font)
+	tip = HoverTip.new()
 	add_child(tip)
 	tip.watch(board_view)
 	board_view.item_double_clicked.connect(quick_move)
@@ -211,15 +211,4 @@ func _refresh_readout() -> void:
 
 
 func _on_displaced(instances: Array, grabbed: bool) -> void:
-	var names: Array[String] = []
-	for inst in instances:
-		var item := inst as ItemInstance
-		names.append(Names.of(item.def) if item.def != null else "?")
-	_hint.text = "顶出了「%s」，已经拿在手上" % names[0] if grabbed else "顶出了 %d 件（%s），都放在地上了" % [names.size(), "、".join(names)]
-
-
-func _label(text: String, font_size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
-	return l
+	_hint.text = DragLayer.displaced_text(instances, grabbed)

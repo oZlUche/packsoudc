@@ -15,10 +15,6 @@ const LOOT_SIZE := Vector2i(6, 5)
 ## 地上是列表，只有宽度
 const STORAGE_WIDTH := 240
 
-const BG := Color("101216")
-const FG := Color("dfe3ea")
-const DIM := Color("8b93a1")
-
 var _db: ItemDatabase
 var _board: GridInventory
 var _storage: ItemStash
@@ -29,8 +25,7 @@ var _font: Font
 
 
 func _ready() -> void:
-	_font = _make_cjk_font()
-	UiTheme.install(self)     # 121：界面主题挂在窗口上
+	_font = UiPalette.cjk_font()
 	_db = ItemDatabase.new()
 	if _db.load_dir() == 0:
 		push_error("没有加载到任何物品定义，先跑 tools/import_content.gd 把作者数据导成资产")
@@ -49,21 +44,8 @@ func _ready() -> void:
 		inv.changed.connect(_update_status)
 
 
-func _make_cjk_font() -> Font:
-	# Godot 内置字体不含 CJK 字形，中文会显示成方块
-	var f := SystemFont.new()
-	f.font_names = PackedStringArray(
-		["Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "SimHei", "sans-serif"]
-	)
-	return f
-
-
 func _build_ui() -> void:
-	var bg := ColorRect.new()
-	bg.color = BG
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	UiTheme.prepare_root(self)     # 091 / 121：底色跟设置走（和别的沙盒一致）、装上界面主题
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -75,7 +57,7 @@ func _build_ui() -> void:
 	root.add_theme_constant_override("separation", 12)
 	margin.add_child(root)
 
-	root.add_child(_heading("背包整理沙盒", 22, FG))
+	root.add_child(UiTheme.make_label("背包整理沙盒", 22, UiPalette.FG))
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 24)
@@ -94,17 +76,17 @@ func _build_ui() -> void:
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 10)
 	root.add_child(buttons)
-	buttons.add_child(_button("全部拾取到地上", _on_take_all))
-	buttons.add_child(_button("刷新战利品", _on_refill))
-	buttons.add_child(_button("清空棋盘", _on_clear_board))
+	buttons.add_child(UiTheme.make_button("全部拾取到地上", _on_take_all, UiTheme.TIER_PLAIN))
+	buttons.add_child(UiTheme.make_button("刷新战利品", _on_refill, UiTheme.TIER_PLAIN))
+	buttons.add_child(UiTheme.make_button("清空棋盘", _on_clear_board, UiTheme.TIER_PLAIN))
 
-	_status = _heading("", 14, DIM)
+	_status = UiTheme.make_label("", 14, UiPalette.DIM)
 	root.add_child(_status)
 	root.add_child(
-		_heading(
+		UiTheme.make_label(
 			"左键拖动　R 旋转　右键 / Esc 取消　　拖包时内容物跟着走；包转了之后"
 			+ "依附不上的东西会脱落到地上　　压着别人放手会把人顶出来：一件直接上手，多件到地上",
-			14, DIM
+			14, UiPalette.DIM
 		)
 	)
 
@@ -124,7 +106,7 @@ func _labeled_grid(caption: String, inv: GridInventory, adjacency: bool = false)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	box.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	box.add_child(_heading(caption, 13, DIM))
+	box.add_child(UiTheme.make_label(caption, 13, UiPalette.DIM))
 
 	var view := InventoryView.new()
 	view.label_font = _font
@@ -140,7 +122,7 @@ func _labeled_stash(caption: String, s: ItemStash) -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	box.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	box.add_child(_heading(caption, 13, DIM))
+	box.add_child(UiTheme.make_label(caption, 13, UiPalette.DIM))
 
 	var view := GroundLayer.new()
 	view.label_font = _font
@@ -162,20 +144,6 @@ func _collect_views(node: Node, out: Array[ContainerView]) -> void:
 		if child is ContainerView:
 			out.append(child)
 		_collect_views(child, out)
-
-
-func _heading(text: String, font_size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
-	return l
-
-
-func _button(text: String, handler: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.pressed.connect(handler)
-	return b
 
 
 #region 操作

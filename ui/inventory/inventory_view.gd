@@ -35,7 +35,6 @@ const COLOR_DISPLACE := Color(0.95, 0.72, 0.25, 0.38)
 ## 即将被顶出来的那几件，描一圈边，让人看清代价
 const COLOR_VICTIM := Color(0.98, 0.62, 0.25)
 
-@export var title: String = ""
 ## 中文标签需要系统字体，Godot 内置字体不含 CJK 字形。
 @export var label_font: Font
 

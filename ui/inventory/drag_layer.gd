@@ -782,6 +782,15 @@ func _settle_displaced(victims: Array, home: ItemContainer, global_pos: Vector2)
 	items_displaced.emit(victims, false)
 
 
+## 顶出来之后界面写的那一句（[signal items_displaced] 的两种情况）：一件已经拿在手上，多件都到了地上
+static func displaced_text(instances: Array, grabbed: bool) -> String:
+	var names: Array[String] = []
+	for inst in instances:
+		var item := inst as ItemInstance
+		names.append(Names.of(item.def) if item.def != null else "?")
+	return "顶出了「%s」，已经拿在手上" % names[0] if grabbed else "顶出了 %d 件（%s），都放在地上了" % [names.size(), "、".join(names)]
+
+
 ## 这个落点能顶掉哪些：地形得允许，且确实压着别人。
 ## 多于一件时还要有地方安置，否则不算可顶 —— 预览就该是红的，不该给出做不到的承诺。
 func _displaceable(inv: GridInventory, origin: Vector2i) -> Array[int]:

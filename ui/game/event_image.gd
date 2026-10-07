@@ -28,3 +28,38 @@ static func load_texture(path: String) -> Texture2D:
 
 static func is_image_file(path: String) -> bool:
 	return EXTENSIONS.has(path.get_extension().to_lower())
+
+
+## 配图那一块（事件屏的左栏、编辑器的预览）：有图就铺满、按比例裁；没有图就一块深底色，居中写两行占位字（标题、提示）。
+## [param size] 是最小尺寸；[param broken_hint] 是路径有、图却读不到时的提示（空 = 写出路径）；[param sep] 是两行占位字的间距
+static func area(path: String, title: String, size: Vector2, big_size: int = 22, small_size: int = 12,
+		broken_hint: String = "", sep: int = 6) -> Control:
+	var area := Control.new()
+	area.clip_contents = true
+	area.custom_minimum_size = size
+	var loaded := load_texture(path)
+	if loaded != null:
+		var tex := TextureRect.new()
+		tex.texture = loaded
+		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		area.add_child(tex)
+		return area
+	var bg := ColorRect.new()
+	bg.color = Color("0d0f12")
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	area.add_child(bg)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	area.add_child(center)
+	var col := UiTheme.vbox(sep)
+	center.add_child(col)
+	var big := UiTheme.make_label(title, big_size, UiPalette.DIM.darkened(0.35))
+	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(big)
+	var missing := "（没有配图）" if path == "" else (broken_hint if broken_hint != "" else "（图像占位：%s）" % path)
+	var hint := UiTheme.make_label(missing, small_size, UiPalette.DIM.darkened(0.45))
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(hint)
+	return area
