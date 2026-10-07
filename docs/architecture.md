@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.52 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.53 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1082,10 +1082,10 @@ func scope() -> StringName: return EffectScope.COMBAT
 **战斗中一切属性变化都由 buff 承载，包括资源上限。**
 「强壮」提供额外生命上限，「病弱」降低生命上限 —— 不为上限另开一套机制。
 
-**如无说明，buff 永续、可叠层**（103，作者定）：`BuffDef` 的默认值就是 `max_stacks = 0`（不限层）、
-`duration_sec = 0`（永续）。不可叠或会过期是**例外**，必须在定义里显式写 `max_stacks: 1`（和可选的 `duration_sec`），
-导入器守着（085：可叠层的不许填时长）；词条里这两种用例外色标出来。设计数值时按「永续 + 叠层」来算 ——
-不限层又按百分比乘的 buff 导入器会告警，提醒确认要不要封顶。
+**如无说明，buff 永续、可叠层**（103，作者定）：`BuffDef` 的默认值就是 `stackable = true`（可叠层，**没有层数上限**，137）、
+`duration_sec = 0`（永续）。不可叠或会过期是**例外**，必须在定义里显式写 `stackable: false`（固定一层，和可选的 `duration_sec`），
+导入器守着（085：可叠层的不许填时长）；词条里这两种用例外色标出来。设计数值时按「永续 + 叠层」来算。
+137（作者定）取消了叠层上限：可叠层就是不限层，旧字段 `max_stacks` 由导入器迁移（1 → 不可叠，其余 → 可叠，带提醒）。
 
 buff 仅在本场战斗内存在，**战斗结束全部清空**。因此**参战属性在进入战斗时只读取一次**，
 这也正是 4.1「编译期快照，战斗中不回头读背包」的直接后果。
@@ -1138,7 +1138,7 @@ class_name BuffDef extends Resource
 @export var id: StringName
 @export var display_name: String
 @export var is_debuff: bool = false        ## 仅影响 UI 配色与「净化」类效果的筛选
-@export var max_stacks: int = 0            ## 0 = 不限
+@export var stackable: bool = true         ## 137：可叠层 = 不限层；false = 固定一层
 @export var duration_ticks: int = 0        ## 0 = 持续到本场战斗结束
 @export var on_restack: RestackMode        ## 叠层时是否刷新时长
 @export var mods: Array[StatModifier]      ## 每层一份，走 4.3 公式
@@ -3222,8 +3222,8 @@ func player_spec() -> CombatantSpec …
 
 作者：「增加负重系统，给道具设计重量（要符合它们的名称和占据空间），给不同角色设计不同的初始负重。增加可以提升负重上限的科技。设计多个递进的负重等级……」；补充：「不要直接降低伤害，可以降低耐力恢复、上限和急速」。
 
-- **重量**：`ItemDef.weight`（0 = 按公式），`ItemWeight.of(def)`：写死的用写死的，否则格数 × 每格重（`heavy` 3、`metal` 2、`remedy / food / ammo / keepsake / sigil / treasure / relic` 半格一重、其余 1）。名字说它沉或轻的写死在道具文件里（报告 129 附录 A）。
-- **负重** = 作战棋盘上每件（含包本身）的重量之和（`RunState.carry_weight`）；地上、保险箱、仓库不算。**上限** = `CharacterDef.weight_capacity`（安德烈乌斯 28 / 马库斯 34 / 布鲁图斯 40，0 = 不算负重）+ `RunContext.carry_capacity_bonus`（科技「扛重」，`carry_capacity_bonus` 构件）。全派生，不进存档。
+- **重量**：`ItemDef.weight`（0 = 按公式），`ItemWeight.of(def)`：写死的用写死的，否则格数 × 每格重（137 起：`heavy` 4、`metal` 3、`gem / stone` 2、`remedy / food / ammo / keepsake / sigil / treasure / relic` 半格一重、其余 1；先匹配的档生效）。名字说它沉或轻的写死在道具文件里（报告 129 附录 A、137 的重配表）。
+- **负重** = 作战棋盘上每件（含包本身）的重量之和（`RunState.carry_weight`）；地上、保险箱、仓库不算。**上限** = `CharacterDef.weight_capacity`（安德烈乌斯 40 / 马库斯 48 / 布鲁图斯 56，137；0 = 不算负重）+ `RunContext.carry_capacity_bonus`（科技「扛重」，`carry_capacity_bonus` 构件）。全派生，不进存档。
 - **分级**：`EncumbranceRules`（内容种类 `encumbrance_rules`，章节 `encumbrance_rules` 引用，自由模式用 `standard`，序章不开）。负重**严格大于**上限 × `over` 才到那一级：×1 吃力（急速 −10%、耐力回复 −10%），×1.25 超重（急速 −25%、耐力回复 −25%、耐力上限 −20%），×1.5 寸步难行（超重的减益照旧 + 走一步行动点 ×2）。**不碰伤害**（导入时拦）。`regen_* / max_*` 的 `flat` 写的是基线比例，`combat_mods(level, baseline)` 折成真值进 `CompileInput.baseline_mods`；急速进 `input.mods`（每件参战道具）。
 - **接线**：`RunState.compile_player` 并入减益；`BattlePassives` 列一条「负重：<级名>」；`RunState.refresh_encumbrance` 在棋盘变了、换了角色、开局 / 读档后重算，写 `MapTravel.action_cost_mult`，级数真变了发 `encumbrance_changed`。`MapTravel.cost_of(intent)` 是唯一的「这一步花几点」（`apply` 扣它、地图屏预览与日志读它），`wait()` 不乘。
 - **界面**：背包读数一行「负重 w / c　级名」（超重警示色）、道具悬浮窗「重 n」、地图顶栏负重小标、开局屏读数也算；术语「负重 / 吃力 / 超重 / 寸步难行」，百科「背包」类一页 `encumbrance`。
@@ -3687,7 +3687,7 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
   新增一种效果，下拉框自动多一项，编辑器一行不用改。
 - **字段的形状跟着声明走**（111）：`@export_enum("a", "b")` 的字符串字段是下拉（值存原字符串，显示名查 `FieldText.ENUM_LABELS`）；
   `@export_range(min, max)` 的数字框按范围限；资源声明 `const FIELD_WHEN := {字段: {别的字段: [允许的值]}}` 就能让字段按条件显隐
-  （`ContentSchema.field_visible`；例：`FaithBonus` 按阶只露「阶」、按信力露「每份信力 / 叠层上限」、激活即都不露），
+  （`ContentSchema.field_visible`；例：`FaithBonus` 按阶只露「阶」、按信力露「每份信力 / 最多几份」（`max_shares`，137 从 `max_stacks` 改名）、激活即都不露），
   作者切走后被藏的字段归默认值，JSON 里不留看不见的旧值。表单不认识任何具体类。
 - **实时校验走的就是导入器本身**，不是另写一份规则 ——
   那样界面和命令行迟早给出不同答案，而作者会相信先看到的那个。
@@ -3946,6 +3946,7 @@ res://
 | v2.50 | 2026-10-07 | **地上的落地动画与双击进包**（134「ground」，作者定，五项待定按推荐；改 3.4）：`GroundLayer` 按 uid 集合找出刚落地的、`_process` 推进、`_draw` 插值（从起点落到落点、末尾弹 6 像素、1.15 → 1 倍、透明度 0.6 → 1，多件错开 40 毫秒、最多错开 10 件，播放中不接抓取）；`ItemStash.landing_from`（不存档）由 `DragLayer` 写（放手就地、顶出从原格、脱落从放手点、取消放回不播），`NodeStorageModule` 回到点上标不播，没写的从最近面板边缘落、没面板从上方 60 像素。双击：`GameDirector` 在没有面板接地上时转给栈顶屏的 `ground_double_clicked`，地图 / 事件屏先 `transfer_auto` 再开背包，放不下由 `InventoryPanel.say_no_room` 提示；关背包先 `hide` 再释放，`top_drag` 跳过排队释放的拖拽层 |
 | v2.51 | 2026-10-07 | **搜索遭遇的胜负文案**（135，作者定，三项待定按推荐；机制不变）：打输那一屏 `search_destroyed` 改成「被赶跑了 / 离开」、教程与百科不再说搜索遭遇扣体力，百科写进打赢后战利品并进收获箱；战前准备屏类型名「搜索中遭遇（输了不扣体力）」；`NodeRules.loss_cost` 默认表与两份节点规则去掉死配置 `search`（搜索遭遇进战斗固定传 0）；地图日志按结束原因说（`MapScreen.search_end_text`） |
 | v2.52 | 2026-10-07 | **三个角色各一套能力**（136，作者定，五项待定按推荐；改 7.3）：四个一局规则效果（`travel_discount` / `rest_bonus` / `erosion_resist` / `battle_reward_mult`）、两个主动（`slip` / `second_wind`）、`RunSkill.rules` 与 `slot`、`CharacterDef.identity` 与条件 `identity_is` / `skill_ready`、hook `identity` / `skill_ready`；布鲁图斯的数值并回基线；战前准备屏「溜走」按钮、开局屏按身份 / 擅长 / 主动分行、百科「三个角色」、序章开头提一句技能按钮；序章第二个搜索点的遭遇生命 40 → 36（布鲁图斯少了 20 血后仍五个种子全赢） |
+| v2.53 | 2026-10-07 | **叠层上限取消、道具重量按材质、初始负重上调**（137，作者定，五项待定按推荐；改 4.5、7.6）：`BuffDef.max_stacks` → `stackable`（可叠层不限层、不可叠层固定一层，导入器迁移旧键）；`FaithBonus.max_stacks` 改名 `max_shares`；Buff 制作器去掉上限框；`ItemWeight` 每格重 重 4 / 金属 3 / 石与晶 2；新标签 `stone`（燧石、粗盐）；角色负重上限 40 / 48 / 56 |
 | v2.49 | 2026-10-06 | **猎手战败结果档 + 猎手战插进进点的事件队列**（134，作者定，五项待定按推荐；改 8.5）：新资源 `HunterLossOption`（档名、名字、权重、后果），`HunterDef.loss_options` + `loss_pick`（新构件表 `HUNTER_LOSS_PICKS`：`random` / `fixed`），`Hunter.loss_id` 生成时选定、跟存档；新后果 `expel`（退回上一步、不驻守）。`MapTravel` 加进点闸门 `arrival_gate` / 挂起的进点 `held`（存档）/ `finish_arrival` / `cancel_arrival`；`RunState` 的猎手回合从「这一步的事之后」挪到闸门里（先于点的事），`resume_arrival` 在玩家空下来时接着进；驱逐 = 取消进点（不标走过、事不发生、不记首访，步数照算）。`GameFlow._flush` 接着进点后排进队里的接着看；收起猎手战的战利品也接着进点。悬停与开打前事件屏写「输了会怎样」。`hunter_1` 击退 / 驱逐各一半，`hunter_2` 击退 / 驱逐 / 驱逐并驻守各三分之一（数值占位） |
 | v2.48 | 2026-10-05 | **单一乘区**（133，作者定；改 4.3）：删 `StatMath.Buff` 四个乘区，公式改成 `终值 = 基础 × max(0, 1 + Σ乘算) + Σ加算`；`StatModifier` 改成 `stat / mode{ADD, MULT} / amount`，`StatValue` 的四格 `mult` 换成一个 `percent`；`PropertyForm` 在属性修饰下加一行灰字提示（乘算还是加算、扩大还是缩小、在 buff 里每层一份）；导入器迁移旧键（`mult_category` 提醒忽略、又乘又加报错），`normalize_content` 重写了 18 份内容 JSON；百科删掉「乘区」词条组；编译金样有意重录（`percent` 替换 `mult`，四份终值逐项不变）。跨乘区的组合数值变了（弓 + 箭 + 符号 1.38 → 1.35）；标准轴不动 |
 | v2.47 | 2026-10-05 | **规则构件第二批**（132）：时机 `on_status_removed` / `on_overtime`，`on_item_fired.source_tags`、`on_resource_below.direction / full`、`on_damage.crit_only`；条件 `resource_condition` / `axis_condition` 与 `axis_cost`，三个条件型加 `negate`；效果 `convert_damage_type`，`deal_damage.percent_of / per_target_stack`、`change_resource.percent_of_damage`、`remove_status.all_debuffs / all_buffs`；受益格 `receive_rules`（4.2）；导入器的「配了也没用」警告。放血刀改成按目标流血层数 ×3。见 4.2、4.4 |

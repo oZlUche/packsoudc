@@ -97,6 +97,6 @@ base_stats = {
 }
 vitality_max = 6
 starting_bags = Array[StringName]([&"bag_leather", &"bag_leather"])
-weight_capacity = 40
+weight_capacity = 56
 skills = Array[ExtResource("2_mx3k3")]([SubResource("Resource_x8pem"), SubResource("Resource_3htg3"), SubResource("Resource_y0m8p")])
 identity = &"slave"

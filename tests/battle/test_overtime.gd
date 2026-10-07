@@ -153,7 +153,7 @@ static func run_buff_bar(t: TestCase) -> void:
 	var single := BuffDef.new()
 	single.id = &"t_once"
 	single.display_name = "专注"
-	single.max_stacks = 1
+	single.stackable = false
 	var apply_poison := ApplyStatus.new()
 	apply_poison.buff = poison
 	var apply_single := ApplyStatus.new()

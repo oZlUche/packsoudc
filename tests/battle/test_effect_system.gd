@@ -154,7 +154,6 @@ static func run_runtime(t: TestCase) -> void:
 	var strong := BuffDef.new()
 	strong.id = &"strong"
 	strong.mods = [_mod(BattleStats.MAX_HP, 0, 20.0)] as Array[StatModifier]
-	strong.max_stacks = 3
 
 	rt.apply_buff(strong, 1)
 	t.eq(rt.stat_int(BattleStats.MAX_HP), 70, "强壮 1 层：生命上限 +20")
@@ -165,8 +164,15 @@ static func run_runtime(t: TestCase) -> void:
 	t.eq(rt.stacks_of(&"strong"), 3, "叠到 3 层")
 	t.eq(rt.stat_int(BattleStats.MAX_HP), 110, "3 层共 +60")
 
-	rt.apply_buff(strong, 5)
-	t.eq(rt.stacks_of(&"strong"), 3, "max_stacks = 3，超出部分被挡住")
+	rt.apply_buff(strong, 47)
+	t.eq(rt.stacks_of(&"strong"), 50, "137：可叠层不封顶，叠到 50 层")
+	rt.remove_buff_stacks(&"strong", 47)
+	var single := BuffDef.new()
+	single.id = &"single"
+	single.stackable = false
+	rt.apply_buff(single, 1)
+	rt.apply_buff(single, 3)
+	t.eq(rt.stacks_of(&"single"), 1, "137：不可叠层的叠几次都是一层")
 
 	# --- 减层 ---
 	t.eq(rt.remove_buff_stacks(&"strong", 2), 2, "移除 2 层")
@@ -181,7 +187,7 @@ static func run_runtime(t: TestCase) -> void:
 	var brief := BuffDef.new()
 	brief.id = &"brief"
 	brief.duration_sec = 0.5
-	brief.max_stacks = 1     # 不可叠层的才会过期（085 作者定：可叠层的永续）
+	brief.stackable = false     # 不可叠层的才会过期（085 作者定：可叠层的永续）
 	rt.apply_buff(brief, 1, _sec(1.0))
 	t.eq(rt.expire_buffs(_sec(1.4)).size(), 0, "1.4 秒时未过期")
 	t.eq(rt.next_expiry(), _sec(1.5), "到期时刻记为绝对时间，可直接排进时间轮")
@@ -796,7 +802,6 @@ static func run_regen_buff(t: TestCase) -> void:
 	# regen_stamina 是普通属性，一条 StatModifier 就够，走的是和增伤同一条公式。
 	var vigor := BuffDef.new()
 	vigor.id = &"vigor"
-	vigor.max_stacks = 5
 	vigor.mods = [_mod(BattleStats.REGEN_STAMINA, 100)] as Array[StatModifier]
 
 	var spec := _spec(100.0, [_compiled(1, "gear", {"max_stamina": 100.0, "regen_stamina": 5.0}, [])])

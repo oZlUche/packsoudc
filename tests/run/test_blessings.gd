@@ -61,7 +61,7 @@ static func run_variants_and_modes(t: TestCase) -> void:
 	fb.mode = "scaled"
 	fb.per_points = 50
 	t.eq(fb.times_for(0, 120), 2, "scaled：120 信力 = 2 份")
-	fb.max_stacks = 1
+	fb.max_shares = 1
 	t.eq(fb.times_for(0, 120), 1, "最多 1 份")
 	t.check(fb.gate_text().contains("每 50 信力"), "说明文字：%s" % fb.gate_text())
 	# 编译：激活即 +10%、每 50 信力 +1（最多 6）

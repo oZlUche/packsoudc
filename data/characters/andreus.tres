@@ -61,6 +61,6 @@ base_stats = {
 "max_hp": 50
 }
 starting_bags = Array[StringName]([&"bag_leather", &"bag_leather"])
-weight_capacity = 28
+weight_capacity = 40
 skills = Array[ExtResource("2_xijn7")]([SubResource("Resource_nsl5r"), SubResource("Resource_c4ici"), SubResource("Resource_ecief")])
 identity = &"slave"
