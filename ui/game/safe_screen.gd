@@ -57,7 +57,7 @@ func open(payload: Dictionary) -> void:
 	# 包不进保险箱（局外不留包，MetaState.keeps）
 	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
 		return _is_open() and (target != _safe or MetaState.keeps(inst.def))
-	var tip := HoverTip.new(font)
+	var tip := HoverTip.new()
 	add_child(tip)
 	tip.watch(_view)
 	_safe.changed.connect(_refresh)

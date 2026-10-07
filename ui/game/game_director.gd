@@ -85,7 +85,7 @@ func _ready() -> void:
 	flow.settings = GameSettings.load_from(settings_path)
 	UiText.apply(flow.settings)
 	UiPalette.apply(flow.settings)     # 091：背景底色
-	UiTheme.install(self)     # 121：界面主题挂在窗口上
+	UiTheme.install()     # 121：界面主题挂在窗口上
 	ground = GroundLayer.new()
 	ground.fills_screen = true
 	ground.label_font = _font
@@ -136,7 +136,6 @@ func _on_screen_changed(screen: int, payload: Dictionary) -> void:
 ## 128：地上画不画（最上面那一屏是一局里某个点上的界面才画），并保持在屏栈之上
 func _sync_ground() -> void:
 	var top := _overlay if _overlay != null else _base
-	ground.stash = flow.run.storage if flow.run != null else null
 	ground.visible = flow.run != null and top != null and GROUND_SCREENS.has(top.screen)
 	move_child(ground, -1)
 	if ground.visible:

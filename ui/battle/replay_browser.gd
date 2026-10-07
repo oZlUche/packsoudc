@@ -43,7 +43,7 @@ static func _known_buffs(db: ItemDatabase) -> Dictionary:
 func _build() -> void:
 	var bg := ColorRect.new()
 	UiPalette.apply(GameSettings.load_from())
-	UiTheme.install(self)     # 121：界面主题挂在窗口上
+	UiTheme.install()     # 121：界面主题挂在窗口上
 	bg.color = UiPalette.bg()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE

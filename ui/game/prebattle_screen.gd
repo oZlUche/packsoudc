@@ -41,7 +41,7 @@ func open(payload: Dictionary) -> void:
 	_enemy_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_enemy_view.mouse_filter = Control.MOUSE_FILTER_STOP     # 只看（没登记进拖拽层，点了没事），停上去有说明
 	left.add_child(_enemy_view)
-	var tip := HoverTip.new(font)
+	var tip := HoverTip.new()
 	add_child(tip)
 	tip.watch(_enemy_view)
 	_enemy_line = _wrapped("", 13, UiPalette.FG, 420)

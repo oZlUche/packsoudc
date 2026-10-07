@@ -103,7 +103,7 @@ func _build() -> void:
 			return crafting.note_of(a.def, b.def)
 		crafting.done.connect(_on_crafted)
 	# 084：停在道具上的悬浮说明（名、稀有度、标签、效果、武器的冷却与 DPS、槽）
-	tip = HoverTip.new(_font)
+	tip = HoverTip.new()
 	add_child(tip)
 	tip.watch(board_view)
 	board_view.item_double_clicked.connect(quick_move)

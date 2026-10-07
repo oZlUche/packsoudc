@@ -69,7 +69,7 @@ func open(payload: Dictionary) -> void:
 	_drag.drop_filter = _allow_drop
 	_drag.craft_filter = _allow_craft     # 审查 A1：没付钱的商品不能拿去合成（会被消耗掉、结不了账）
 	_drag.drag_finished.connect(_on_drag_finished)
-	_tip = HoverTip.new(font)
+	_tip = HoverTip.new()
 	add_child(_tip)
 	_tip.watch(_sell_view)
 

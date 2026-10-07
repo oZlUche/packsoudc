@@ -235,7 +235,7 @@ func toggle_bag() -> void:
 	_bag = shade
 	# 084：背包是能拖着走的浮窗，不锁在一个地方；关掉再开还在上次放的位置
 	var win := FloatingWindow.new()
-	win.setup("bag", "背包", font, toggle_bag, "收起（B）")
+	win.setup("bag", "背包", toggle_bag, "收起（B）")
 	shade.add_child(win)
 	var inv := InventoryPanelScript.new()
 	inv.setup(flow.run, font)

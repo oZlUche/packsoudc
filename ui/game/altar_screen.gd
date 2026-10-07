@@ -80,7 +80,7 @@ func open(payload: Dictionary) -> void:
 			return true
 		var d := flow.run.active_faith()
 		return d != null and d.accepts_offering(inst.def) and _altar_open()
-	var tip := HoverTip.new(font)
+	var tip := HoverTip.new()
 	add_child(tip)
 	tip.watch(_table_view)
 	_table.changed.connect(_refresh)

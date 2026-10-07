@@ -34,7 +34,7 @@ func _ready() -> void:
 	var settings := GameSettings.load_from()
 	UiText.apply(settings)
 	UiPalette.apply(settings)
-	UiTheme.install(self)     # 121：界面主题挂在窗口上
+	UiTheme.install()     # 121：界面主题挂在窗口上
 	_ctx = ContentImporter.Context.new()
 	_items = ItemDatabase.new()
 	_items.load_dir()

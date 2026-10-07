@@ -30,7 +30,7 @@ var _font: Font
 
 func _ready() -> void:
 	_font = _make_cjk_font()
-	UiTheme.install(self)     # 121：界面主题挂在窗口上
+	UiTheme.install()     # 121：界面主题挂在窗口上
 	_db = ItemDatabase.new()
 	if _db.load_dir() == 0:
 		push_error("没有加载到任何物品定义，先跑 tools/import_content.gd 把作者数据导成资产")

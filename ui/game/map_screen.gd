@@ -164,7 +164,7 @@ func toggle_bag() -> void:
 	add_child(shade)
 	_bag = shade
 	var win := FloatingWindow.new()
-	win.setup("bag", "背包", font, toggle_bag, "收起（B）")
+	win.setup("bag", "背包", toggle_bag, "收起（B）")
 	shade.add_child(win)
 	_reserve_ground(win)     # 128：背包浮窗占着的地方，地上的东西让开
 	var inv := InventoryPanelScript.new()
@@ -466,7 +466,7 @@ func _adopt() -> void:
 		_note("　点 %d 是个「?」：原来是 %s" % [n.id, MapNodeStyle.of(type)["label"]]))
 	ev.type_changed.connect(func(n: MapNode, type: StringName):
 		_note("　点 %d 变成了%s点" % [n.id, MapNodeStyle.of(type)["label"]])
-		_view.refresh())
+		_view.queue_redraw())
 	ev.battle_skipped.connect(func(n: MapNode): _note("　溜走了：点 %d 那一场没打" % n.id))     # 136：脱身
 	ev.battle_finished.connect(func(n: MapNode, result: BattleResult, won: bool):
 		var who := enemy_preview(n.id).get_slice("　", 0)
@@ -574,7 +574,7 @@ func _after_move() -> void:
 		for id in _run.travel.available_moves():
 			reach[id] = true
 	_view.reachable = reach
-	_view.refresh()
+	_view.queue_redraw()
 	_refresh_hud()
 	_refresh_hunter_marks()
 	var node := _run.current_node()
@@ -820,10 +820,8 @@ func _buff_line() -> String:
 
 
 func _route_of_entry(id: int) -> Dictionary:
-	for route in _run.map.routes:
-		if int(route.get("entry_id", -1)) == id:
-			return route
-	return {}
+	var i := _route_index_of_entry(id)
+	return _run.map.routes[i] if i >= 0 else {}
 
 
 func _route_index_of_entry(id: int) -> int:
@@ -923,7 +921,7 @@ func _build() -> void:
 	_enemy_line.custom_minimum_size.y = 22
 	_pin_width(_enemy_line)
 	mid.add_child(_enemy_line)
-	_tip = HoverTip.new(font)
+	_tip = HoverTip.new()
 	add_child(_tip)
 
 	var side := _panel(12)

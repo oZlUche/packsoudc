@@ -200,10 +200,6 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 	if ok:
 		changed.emit()
 	return ok
-
-
-func has_pending() -> bool:
-	return _meta.has_pending_board()
 #endregion
 
 

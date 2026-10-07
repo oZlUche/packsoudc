@@ -130,10 +130,6 @@ func cell_count() -> int:
 	return n
 
 
-func size_wh() -> Vector2i:
-	return Vector2i(_w, _h)
-
-
 func grow_to(w: int, h: int) -> void:
 	_resize(w, h)
 	_refit()
@@ -235,8 +231,6 @@ func _gui_input(event: InputEvent) -> void:
 			if not _in_shape_area(o):
 				return  # 形状只能画在包围盒里；要更大就先调画板尺寸
 			_bits[o.y][o.x] = add
-			if not add:
-				pass
 		_:
 			# 标记格在【轮廓之外】—— 画在自己身上没有意义，直接忽略
 			if _is_filled(o):

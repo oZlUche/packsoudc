@@ -151,11 +151,6 @@ func to_screen(canvas: Vector2) -> Vector2:
 	return canvas * zoom + pan
 
 
-## 图被外面改过之后调一下。
-func refresh() -> void:
-	queue_redraw()
-
-
 func positions() -> Dictionary:
 	if graph == null or _layout == null:
 		return {}

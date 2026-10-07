@@ -63,9 +63,9 @@ static func current() -> Theme:
 	return _current
 
 
-## 并进引擎的默认主题，从此每个控件都用它（根场景的 `_ready` 调；[param _node] 只是调用方，挂几次都一样）。
+## 并进引擎的默认主题，从此每个控件都用它（根场景的 `_ready` 调；调几次都一样）。
 ## 不挂在窗口上：窗口上的主题节点离开树时会丢，几千个控件退出时逐个换回引擎字体重排，系统里找不到中文字体时极慢
-static func install(_node: Node = null) -> void:
+static func install() -> void:
 	if _installed:
 		return     # 并一次就够：再并会让树里每个控件都收到主题变更、重排一遍字
 	ThemeDB.get_default_theme().merge_with(current())
@@ -154,10 +154,7 @@ static func mark(b: Control, on: bool) -> void:
 #region 生成
 static func _bg_of(settings: GameSettings) -> Color:
 	var id := settings.bg_theme if settings != null and UiPalette.has_bg_theme(settings.bg_theme) else UiPalette.bg_theme
-	for t in UiPalette.BG_THEMES:
-		if String(t["id"]) == id:
-			return t["color"]
-	return UiPalette.bg()
+	return UiPalette.theme_of(id).get("color", UiPalette.BG_THEMES[0]["color"])
 
 
 static func _fill(t: Theme, bg: Color) -> void:

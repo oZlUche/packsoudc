@@ -432,7 +432,7 @@ func _build() -> void:
 	bar.add_child(_speed_btn)
 	bar.add_child(_button("跳过", skip_to_end))
 	bar.add_child(_label("战斗中只能看与跳过 —— 结果在开打那一瞬就已经算完了；停在 buff 图标上看效果", 12, UiPalette.DIM))
-	_tip = HoverTip.new(label_font)
+	_tip = HoverTip.new()
 	add_child(_tip)
 
 
