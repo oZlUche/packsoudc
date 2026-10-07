@@ -220,4 +220,4 @@ static func _names(tags: Array) -> Array[String]:
 
 
 static func _type_name(obj: Object) -> String:
-	return String(ContentExporter._registry_name_of(obj)) if obj != null else "?"
+	return String(ContentSchema.registry_name_of(obj)) if obj != null else "?"

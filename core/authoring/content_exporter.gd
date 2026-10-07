@@ -15,112 +15,113 @@ extends RefCounted
 
 
 static func export_item(def: ItemDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_buff(def: BuffDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_set(def: ItemSetDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_chapter(def: ChapterDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_enemy(def: EnemyDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_enemy_pool(pool: EnemyPool) -> Dictionary:
-	return _dump(pool)
+	return dump(pool)
 
 
 static func export_drop_rule(rule: DropRule) -> Dictionary:
-	return _dump(rule)
+	return dump(rule)
 
 
 static func export_carry_rule(rule: CarryRule) -> Dictionary:
-	return _dump(rule)
+	return dump(rule)
 
 
 static func export_encumbrance_rules(rules: EncumbranceRules) -> Dictionary:
-	return _dump(rules)
+	return dump(rules)
 
 
 static func export_node_rules(rules: NodeRules) -> Dictionary:
-	return _dump(rules)
+	return dump(rules)
 
 
 static func export_economy_rules(rules: EconomyRules) -> Dictionary:
-	return _dump(rules)
+	return dump(rules)
 
 
 static func export_loadout(def: LoadoutDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_character(def: CharacterDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_difficulty(def: DifficultyDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_hunter(def: HunterDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_meta_rules(rules: MetaRules) -> Dictionary:
-	return _dump(rules)
+	return dump(rules)
 
 
 static func export_faith(def: FaithDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_tag(def: TagDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_damage_type(def: DamageTypeDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_achievement(def: AchievementDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_tech(def: TechDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_help_page(def: HelpPageDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_recipe(def: RecipeDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_run_buff(def: RunBuffDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
 static func export_event(def: EventDef) -> Dictionary:
-	return _dump(def)
+	return dump(def)
 
 
-## 带 type 的导出，用于抽象基类的子对象
-static func _dump(obj: Object, with_type: bool = false) -> Dictionary:
+## 资源 → 字典。按反射工作、不认识具体类型，所以按种类分派的地方（[ContentCheck]、`tools/normalize_content.gd`）
+## 直接用它，上面那排 `export_xxx` 只是带类型的入口。`with_type` 给抽象基类的子对象带上 `type`
+static func dump(obj: Object, with_type: bool = false) -> Dictionary:
 	var out := {}
 	if obj == null:
 		return out
 	if with_type:
-		out["type"] = String(_registry_name_of(obj))
+		out["type"] = String(ContentSchema.registry_name_of(obj))
 
 	var fresh: Object = null
 	var script := obj.get_script() as GDScript
@@ -233,25 +234,7 @@ static func _encode_object(declared: StringName, obj: Object) -> Variant:
 	var with_type := ContentSchema.ABSTRACT_ROOTS.has(declared) \
 		or ContentSchema.script_of(declared) == null \
 		or ContentSchema.class_name_of(obj) != declared
-	return _dump(obj, with_type)
-
-
-## 实例 → 注册表里的类型名。
-##
-## 反查而不是在每个效果类上挂一个 `type` 字段：那样同一个事实会存两份，
-## 而且新增效果时漏填就悄悄导不出来。
-static func _registry_name_of(obj: Object) -> StringName:
-	var wanted := ContentSchema.class_name_of(obj)
-	var tables := ContentRegistries.tables()
-	for table in tables:
-		var t: Dictionary = tables[table]
-		for type_name in t:
-			var path: String = t[type_name]
-			var script := load(path) as GDScript
-			if script != null and script.get_global_name() == wanted:
-				return type_name
-	# 不在效果注册表里的，就用它的 class_name —— 导入器按全局类表造得出来
-	return wanted
+	return dump(obj, with_type)
 
 
 #region 文件
