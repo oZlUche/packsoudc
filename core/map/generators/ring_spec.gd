@@ -21,3 +21,21 @@ extends Resource
 
 ## 类型 → 权重。[b]M3-3c 才用到。[/b]
 @export var type_weights: Dictionary = {}
+
+
+## 第 r 环的槽位数，从图上读（`layout_meta.ring_slots`）。键两种都认：生成期是整数，
+## 过一遍 JSON 之后字典键会变成字符串（[method MapGraph.normalize] 的约定）。没记就是 [param default]
+static func slots_of(graph: MapGraph, r: int, default: int) -> int:
+	var table: Dictionary = graph.layout_meta.get("ring_slots", {})
+	return int(table.get(r, table.get(str(r), default)))
+
+
+## 相邻的路线对：[[i, j], ...]。两条路线只有一对，三条以上首尾也相邻
+static func route_pairs(route_count: int) -> Array:
+	var out: Array = []
+	if route_count == 2:
+		out.append([0, 1])
+	elif route_count > 2:
+		for i in route_count:
+			out.append([i, (i + 1) % route_count])
+	return out

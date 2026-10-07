@@ -2,7 +2,7 @@
 ##
 ## [b]不做自动寻路。[/b] 玩家只能一步一步走到相邻的点 —— 每一步都得是一次独立决策，
 ## 那正是侵蚀施压的着力点。所以这里[b]没有任何多步移动的入口[/b]：
-## [method distance_map] 是只读查询（HUD 的「距最近撤离点 N 步」、生成期校验），
+## [method distance_map] 与下面几个 BFS 都是只读查询（HUD 的「距最近撤离点 N 步」、生成期的覆盖与校验），
 ## 任何情况下都不得用它驱动移动。测试里有一条守着这件事：公开方法就这几个，多一个都红。
 ##
 ## 全部是静态方法：它没有状态，状态在 [MapTravel]。
@@ -72,3 +72,60 @@ static func nearest_of_type(graph: MapGraph, from_id: int, type: StringName) -> 
 		if best["id"] < 0 or steps < int(best["steps"]):
 			best = {"id": id, "steps": steps}
 	return best
+
+
+## 只读：每个节点到最近的某类型节点的步数（多源 BFS，id → 步数）。到不了的不在结果里。
+## 生成期的步数覆盖、校验与统计工具都问它 —— 格阵与环形共用，不各抄一份
+static func distances_to_type(graph: MapGraph, type: StringName) -> Dictionary:
+	var dist := {}
+	var queue: Array[int] = []
+	for id in graph.node_ids():
+		if graph.get_node(id).type == type:
+			dist[id] = 0
+			queue.append(id)
+	var head := 0
+	while head < queue.size():
+		var id := queue[head]
+		head += 1
+		for n in graph.neighbors(id):
+			if not dist.has(n):
+				dist[n] = int(dist[id]) + 1
+				queue.append(n)
+	return dist
+
+
+## 只读：从 [param from_id] 走 [param limit] 步之内到得了的点（id → 步数，含出发点自己）。
+static func within_steps(graph: MapGraph, from_id: int, limit: int) -> Dictionary:
+	var dist := {from_id: 0}
+	var queue: Array[int] = [from_id]
+	var head := 0
+	while head < queue.size():
+		var id := queue[head]
+		head += 1
+		if int(dist[id]) >= limit:
+			continue
+		for n in graph.neighbors(id):
+			if not dist.has(n):
+				dist[n] = int(dist[id]) + 1
+				queue.append(n)
+	return dist
+
+
+## 只读：这几个点只沿着彼此之间的路走，是不是连成一片（高危区内部不许断成几片）。
+static func connected_within(graph: MapGraph, ids: Array) -> bool:
+	if ids.size() <= 1:
+		return true
+	var inside := {}
+	for id in ids:
+		inside[int(id)] = true
+	var seen := {int(ids[0]): true}
+	var queue: Array[int] = [int(ids[0])]
+	var head := 0
+	while head < queue.size():
+		var id := queue[head]
+		head += 1
+		for n in graph.neighbors(id):
+			if inside.has(n) and not seen.has(n):
+				seen[n] = true
+				queue.append(n)
+	return seen.size() == ids.size()

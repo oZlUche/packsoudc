@@ -18,3 +18,14 @@ const STRUCTURAL: Array[StringName] = [&"core", &"spawn", &"extract", &"junction
 
 static func has(type: StringName) -> bool:
 	return ALL.has(type)
+
+
+## `no_adjacent` 规则：这一对类型是不是列在「不许相邻」的表里（顺序不论）。
+## 表里的一对可能是 String 也可能是 StringName（配置里的、过了 JSON 的图上的），都按字符串比
+static func pair_forbidden(pairs: Array, a: StringName, b: StringName) -> bool:
+	var sa := String(a)
+	var sb := String(b)
+	for pair in pairs:
+		if (String(pair[0]) == sa and String(pair[1]) == sb) or (String(pair[0]) == sb and String(pair[1]) == sa):
+			return true
+	return false

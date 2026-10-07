@@ -116,7 +116,7 @@ func _assign_zone_content() -> void:
 		for id in members:
 			if not _fixed.has(int(id)):
 				search_pool.append(int(id))
-		search_pool = _shuffled(search_pool)
+		search_pool.assign(MapRng.shuffled(search_pool, _rng))
 		for k in mini(spec.min_search, search_pool.size()):
 			_put_type(search_pool[k], &"search", true)
 
@@ -236,10 +236,10 @@ func _assign_route_mix() -> void:
 		for k in keys:
 			for _c in int(counts[k]):
 				bag.append(k)
-		bag = _shuffled_strings(bag)
-		var order := _shuffled(exclusive)
+		bag.assign(MapRng.shuffled(bag, _rng))
+		var order: Array = MapRng.shuffled(exclusive, _rng)
 		for j in order.size():
-			_put_type(order[j], StringName(bag[j]), false)
+			_put_type(int(order[j]), StringName(bag[j]), false)
 
 
 ## 其余节点按所在环的权重抽。
@@ -254,14 +254,14 @@ func _assign_by_weights() -> void:
 
 ## 环配额：超了改成权重次高的可替换类型，缺了从本环的非固定节点里改。
 func _enforce_quota() -> void:
-	for r in range(_ring_count(), 0, -1):
+	for r in range(_cfg.ring_count(), 0, -1):
 		var spec := _cfg.spec_for_ring(r)
 		if spec == null or spec.quota.is_empty():
 			continue
 		var ring_ids := _ring_ids(r)
 		for t in _sorted_keys(spec.quota):
 			var lim := _quota(r, t)
-			while _count(ring_ids, t) > lim.y:
+			while _count_in_ring(r, t) > lim.y:
 				var victim := _pick_of_type(ring_ids, t)
 				if victim < 0:
 					break
@@ -271,7 +271,7 @@ func _enforce_quota() -> void:
 				_put_type(victim, alt, false)
 		for t in _sorted_keys(spec.quota):
 			var lim := _quota(r, t)
-			while _count(ring_ids, t) < lim.x:
+			while _count_in_ring(r, t) < lim.x:
 				var pool: Array[int] = []
 				for id in ring_ids:
 					if _can_become(id, StringName(t)):
@@ -287,7 +287,7 @@ func _enforce_coverage() -> void:
 	for t in _haven:
 		var k := int(_cfg.coverage[t])
 		for _guard in _g.node_count():
-			var dist := distances_to_type(_g, StringName(t))
+			var dist := MapNavigator.distances_to_type(_g, StringName(t))
 			var uncovered: Array[int] = []
 			for id in _g.node_ids():
 				if int(dist.get(id, 1 << 20)) > k and _needs_haven(_g.get_node(id)):
@@ -297,7 +297,7 @@ func _enforce_coverage() -> void:
 			# 从每个超标点出发走 K 步，沿途的候选各记一分 —— 超标点少、候选多，反过来算贵得多
 			var gain := {}
 			for u in uncovered:
-				for id in _within_steps(u, k):
+				for id in MapNavigator.within_steps(_g, u, k):
 					gain[id] = int(gain.get(id, 0)) + 1
 			var best := -1
 			var best_gain := 0
@@ -315,7 +315,7 @@ func _enforce_coverage() -> void:
 ## 不许相邻的类型对：违反的换成权重次高的。
 func _enforce_adjacency() -> void:
 	for e in _g.edges:
-		if not _pair_forbidden(_g.get_node(e.from_id).type, _g.get_node(e.to_id).type):
+		if not MapNodeTypes.pair_forbidden(_cfg.no_adjacent, _g.get_node(e.from_id).type, _g.get_node(e.to_id).type):
 			continue
 		for id in [e.to_id, e.from_id]:
 			if _fixed.has(id):
@@ -339,14 +339,8 @@ func _place_extracts() -> void:
 		return
 	var gap := _cfg.effective_extract_gap()
 	# 每对相邻路线：两条路都够得着的撤离环间候选
-	var route_count := _g.routes.size()
-	var pairs: Array = []
-	if route_count == 2:
-		pairs.append([0, 1])
-	elif route_count > 2:
-		for i in route_count:
-			pairs.append([i, (i + 1) % route_count])
-	for pi in _shuffled_indices(pairs.size()):
+	var pairs := RingSpec.route_pairs(_g.routes.size())
+	for pi in MapRng.shuffled_range(pairs.size(), _rng):
 		var pair: Array = pairs[pi]
 		# 搜索路线的尽头已经是这一对共用的撤离点了
 		if _pair_has_extract(int(pair[0]), int(pair[1]), band):
@@ -409,7 +403,10 @@ func _shared_pool(i: int, j: int) -> Array[int]:
 		if rs.size() >= 2 and ((int(rs[0]) == i and int(rs[1]) == j) or (int(rs[0]) == j and int(rs[1]) == i)):
 			for id in (arc.get("node_ids", []) as Array):
 				pool[int(id)] = true
-	return _sorted_ints(pool)
+	var out: Array[int] = []
+	out.assign(pool.keys())
+	out.sort()
+	return out
 
 
 ## 候选里离已有撤离点最远的那几个再随机挑一个 —— 随手挑一个，下一个就可能没地方放了
@@ -426,24 +423,9 @@ func _farthest_from_extracts(pool: Array[int]) -> int:
 	return picks[_rng.randi_range(0, picks.size() - 1)]
 
 
-static func _sorted_ints(d: Dictionary) -> Array[int]:
-	var out: Array[int] = []
-	for k in d:
-		out.append(int(k))
-	out.sort()
-	return out
-
-
-func _shuffled_indices(count: int) -> Array[int]:
-	var out: Array[int] = []
-	for i in count:
-		out.append(i)
-	return _shuffled(out)
-
-
 ## 到最近的已有撤离点几步；一个都没有就是很大的数。
 func _distance_to_extracts(id: int) -> int:
-	var dist := distances_to_type(_g, &"extract")
+	var dist := MapNavigator.distances_to_type(_g, &"extract")
 	return int(dist.get(id, 1 << 20))
 
 
@@ -451,7 +433,7 @@ func _distance_to_extracts(id: int) -> int:
 func _far_from_extracts(id: int, gap: int) -> bool:
 	if gap <= 1:
 		return true
-	for other in _within_steps(id, gap - 1):
+	for other in MapNavigator.within_steps(_g, id, gap - 1):
 		if other != id and _g.get_node(other).type == &"extract":
 			return false
 	return true
@@ -740,7 +722,7 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 	var coverage: Dictionary = rules.get("coverage", {})
 	for t in coverage:
 		var k := int(coverage[t])
-		var dist := distances_to_type(graph, StringName(t))
+		var dist := MapNavigator.distances_to_type(graph, StringName(t))
 		var over := 0
 		var worst := 0
 		for id in graph.node_ids():
@@ -771,11 +753,10 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 	# --- 不许相邻 ---
 	var pairs: Array = rules.get("no_adjacent", [])
 	for e in graph.edges:
-		var ta := String(graph.get_node(e.from_id).type)
-		var tb := String(graph.get_node(e.to_id).type)
-		for pair in pairs:
-			if (pair[0] == ta and pair[1] == tb) or (pair[0] == tb and pair[1] == ta):
-				v.fail(&"adjacent", "%d（%s）与 %d（%s）挨着" % [e.from_id, ta, e.to_id, tb])
+		var ta := graph.get_node(e.from_id).type
+		var tb := graph.get_node(e.to_id).type
+		if MapNodeTypes.pair_forbidden(pairs, ta, tb):
+			v.fail(&"adjacent", "%d（%s）与 %d（%s）挨着" % [e.from_id, ta, e.to_id, tb])
 
 	# --- 高危区里的精英与搜索点 ---
 	var zone_min: Dictionary = rules.get("zone_min", {})
@@ -800,7 +781,7 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 			if graph.get_node(id).type == &"extract":
 				extracts.append(id)
 		for i in extracts.size():
-			var dist := _steps_from(graph, extracts[i], gap - 1)
+			var dist := MapNavigator.within_steps(graph, extracts[i], gap - 1)
 			for j in range(i + 1, extracts.size()):
 				if dist.has(extracts[j]):
 					v.fail(&"extract_spacing", "撤离点 %d 与 %d 只隔 %d 步，至少要 %d"
@@ -832,40 +813,6 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 					maxi(1, int(rules.get("extract_min_count", 1)))])
 
 
-## 从一个点走 limit 步之内到得了的点：id -> 步数。
-static func _steps_from(graph: MapGraph, from_id: int, limit: int) -> Dictionary:
-	var dist := {from_id: 0}
-	var queue: Array[int] = [from_id]
-	var head := 0
-	while head < queue.size():
-		var id := queue[head]
-		head += 1
-		if int(dist[id]) >= limit:
-			continue
-		for n in graph.neighbors(id):
-			if not dist.has(n):
-				dist[n] = int(dist[id]) + 1
-				queue.append(n)
-	return dist
-
-
-## 每个节点到最近的某类型节点的步数（多源 BFS）。到不了的不在结果里。
-static func distances_to_type(graph: MapGraph, type: StringName) -> Dictionary:
-	var dist := {}
-	var queue: Array[int] = []
-	for id in graph.node_ids():
-		if graph.get_node(id).type == type:
-			dist[id] = 0
-			queue.append(id)
-	var head := 0
-	while head < queue.size():
-		var id := queue[head]
-		head += 1
-		for n in graph.neighbors(id):
-			if not dist.has(n):
-				dist[n] = int(dist[id]) + 1
-				queue.append(n)
-	return dist
 #endregion
 
 
@@ -894,10 +841,6 @@ func _ring(id: int) -> int:
 	return int(_g.get_node(id).layout.get("ring", 0))
 
 
-func _ring_count() -> int:
-	return _cfg.ring_count()
-
-
 func _ring_ids(r: int) -> Array[int]:
 	return _by_ring.get(r, [] as Array[int])
 
@@ -909,14 +852,6 @@ func _bump(r: int, type: String, delta: int) -> void:
 
 func _count_in_ring(r: int, type: String) -> int:
 	return int((_counts.get(r, {}) as Dictionary).get(type, 0))
-
-
-func _count(ids: Array[int], type: String) -> int:
-	var n := 0
-	for id in ids:
-		if _g.get_node(id).type == StringName(type):
-			n += 1
-	return n
 
 
 ## 第 r 环某类型的配额 [min, max]；没配就是 [0, 很大]。
@@ -966,7 +901,7 @@ func _can_become(id: int, type: StringName, from_mandatory: bool = false) -> boo
 	if not _share_allows_leaving(id, old):
 		return false
 	for other in _g.neighbors(id):
-		if _pair_forbidden(type, _g.get_node(other).type):
+		if MapNodeTypes.pair_forbidden(_cfg.no_adjacent, type, _g.get_node(other).type):
 			return false
 	return true
 
@@ -991,14 +926,6 @@ func _share_allows_leaving(id: int, old: String) -> bool:
 		if ty == old:
 			have += 1
 	return float(have - 1) >= float(style.min_share[old]) * float(pool) - 1e-6
-
-
-func _pair_forbidden(a: StringName, b: StringName) -> bool:
-	for pair in _cfg.no_adjacent:
-		if (String(pair[0]) == String(a) and String(pair[1]) == String(b)) \
-				or (String(pair[0]) == String(b) and String(pair[1]) == String(a)):
-			return true
-	return false
 
 
 ## 权重次高的、能改成的类型；没有就空。
@@ -1042,42 +969,6 @@ func _weights_for(id: int) -> Dictionary:
 ## 按排好序的键扣减（140 M-25：抽法在 [method MapRng.pick_weighted]）
 func _pick_weighted(weights: Dictionary) -> StringName:
 	return MapRng.pick_weighted(weights, _rng, _sorted_keys(weights))
-
-
-func _within_steps(from_id: int, k: int) -> Dictionary:
-	var dist := {from_id: 0}
-	var queue: Array[int] = [from_id]
-	var head := 0
-	while head < queue.size():
-		var id := queue[head]
-		head += 1
-		if int(dist[id]) >= k:
-			continue
-		for n in _g.neighbors(id):
-			if not dist.has(n):
-				dist[n] = int(dist[id]) + 1
-				queue.append(n)
-	return dist
-
-
-func _shuffled(ids: Array[int]) -> Array[int]:
-	var out: Array[int] = ids.duplicate()
-	for i in range(out.size() - 1, 0, -1):
-		var j := _rng.randi_range(0, i)
-		var tmp := out[i]
-		out[i] = out[j]
-		out[j] = tmp
-	return out
-
-
-func _shuffled_strings(items: Array[String]) -> Array[String]:
-	var out: Array[String] = items.duplicate()
-	for i in range(out.size() - 1, 0, -1):
-		var j := _rng.randi_range(0, i)
-		var tmp := out[i]
-		out[i] = out[j]
-		out[j] = tmp
-	return out
 
 
 static func _sorted_keys(d: Dictionary) -> Array[String]:

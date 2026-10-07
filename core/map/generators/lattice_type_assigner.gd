@@ -117,8 +117,8 @@ func _enforce_quota() -> void:
 					have.append(id)
 				elif free.has(String(n.type)):
 					spare.append(id)
-			have = _shuffled(have)
-			spare = _shuffled(spare)
+			have.assign(MapRng.shuffled(have, _rng))
+			spare.assign(MapRng.shuffled(spare, _rng))
 			while have.size() > int(lim[1]) and not have.is_empty():
 				var id: int = have.pop_back()
 				_g.get_node(id).type = _weighted(_rules.type_weights, _non_free())
@@ -144,7 +144,7 @@ func _enforce_coverage() -> void:
 		var type := StringName(String(t))
 		var k := int(_rules.coverage[t])
 		for _round in 64:
-			var dist := RingTypeAssigner.distances_to_type(_g, type)
+			var dist := MapNavigator.distances_to_type(_g, type)
 			var uncovered: Array[int] = []
 			for id in _g.node_ids():
 				if int(dist.get(id, 1 << 20)) > k and _g.get_node(id).danger <= _rules.no_haven_in_danger_above:
@@ -194,7 +194,7 @@ func _enforce_adjacency() -> void:
 			var pick := e.to_id if not _fixed.has(e.to_id) else e.from_id
 			if _fixed.has(pick):
 				continue
-			for t in _shuffled_strings(free):
+			for t in MapRng.shuffled(free, _rng):
 				_g.get_node(pick).type = StringName(t)
 				var ok := true
 				for n in _g.neighbors(pick):
@@ -208,29 +208,4 @@ func _enforce_adjacency() -> void:
 
 
 func _violates(a: int, b: int) -> bool:
-	var ta := String(_g.get_node(a).type)
-	var tb := String(_g.get_node(b).type)
-	for pair in _rules.no_adjacent:
-		if (pair[0] == ta and pair[1] == tb) or (pair[0] == tb and pair[1] == ta):
-			return true
-	return false
-
-
-func _shuffled(ids: Array[int]) -> Array[int]:
-	var out: Array[int] = ids.duplicate()
-	for i in range(out.size() - 1, 0, -1):
-		var j := _rng.randi_range(0, i)
-		var tmp: int = out[i]
-		out[i] = out[j]
-		out[j] = tmp
-	return out
-
-
-func _shuffled_strings(items: Array[String]) -> Array[String]:
-	var out: Array[String] = items.duplicate()
-	for i in range(out.size() - 1, 0, -1):
-		var j := _rng.randi_range(0, i)
-		var tmp: String = out[i]
-		out[i] = out[j]
-		out[j] = tmp
-	return out
+	return MapNodeTypes.pair_forbidden(_rules.no_adjacent, _g.get_node(a).type, _g.get_node(b).type)

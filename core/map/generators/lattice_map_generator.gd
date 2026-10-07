@@ -88,7 +88,8 @@ func _place_nodes() -> bool:
 			picked = allowed.duplicate()
 		else:
 			var want := clampi(roundi(float(allowed.size()) * float(_shape.rows[r]["fill"])), 1, allowed.size())
-			var pool := _shuffled(allowed)
+			var pool: Array[int] = []
+			pool.assign(MapRng.shuffled(allowed, _rng))
 			for c in pool:
 				if forced.has(c) and not picked.has(c):
 					picked.append(c)
@@ -100,7 +101,7 @@ func _place_nodes() -> bool:
 			# 下面那层每个点都得有向上的去处：没有的，在够得着的格子里补一个
 			if r > 0:
 				for c_below in chosen[r - 1]:
-					if _reachable_col(int(c_below), picked, r):
+					if _within_reach(int(c_below), picked, r):
 						continue
 					var fix := _nearest_allowed(int(c_below), allowed, picked, r)
 					if fix < 0:
@@ -118,7 +119,7 @@ func _place_nodes() -> bool:
 					return false
 			continue
 		for c_below in chosen[r - 1]:
-			if not _reachable_col(int(c_below), chosen[r], r):
+			if not _within_reach(int(c_below), chosen[r], r):
 				build_note = "第 %d 层的 %d 列向上没路可连" % [r - 1, c_below]
 				return false
 	# 建点
@@ -152,27 +153,27 @@ func _place_nodes() -> bool:
 	return true
 
 
+## 第 r 层与它下面那层之间，一条边最多斜几列：直上层两头一律 0，其余按形状的 forward_reach
+func _reach_at(r: int) -> int:
+	return 0 if _shape.is_straight(r) or _shape.is_straight(r - 1) else _shape.forward_reach
+
+
 ## 这一列在下面那层有没有够得着的点
 func _has_backing(c: int, below: Array, r: int) -> bool:
-	if r == 0:
-		return true
-	var reach := 0 if _shape.is_straight(r) or _shape.is_straight(r - 1) else _shape.forward_reach
-	for cb in below:
-		if absi(int(cb) - c) <= reach:
-			return true
-	return false
+	return r == 0 or _within_reach(c, below, r)
 
 
-func _reachable_col(c_below: int, above: Array, r: int) -> bool:
-	var reach := 0 if _shape.is_straight(r) or _shape.is_straight(r - 1) else _shape.forward_reach
-	for ca in above:
-		if absi(int(ca) - c_below) <= reach:
+## 第 r 层的 c 列，在相邻那层的 cols 里有没有够得着（列差不超过斜度）的点。向上向下问法一样
+func _within_reach(c: int, cols: Array, r: int) -> bool:
+	var reach := _reach_at(r)
+	for other in cols:
+		if absi(int(other) - c) <= reach:
 			return true
 	return false
 
 
 func _nearest_allowed(c_below: int, allowed: Array[int], picked: Array[int], r: int) -> int:
-	var reach := 0 if _shape.is_straight(r) or _shape.is_straight(r - 1) else _shape.forward_reach
+	var reach := _reach_at(r)
 	var best := -1
 	for c in allowed:
 		if picked.has(c) or absi(c - c_below) > reach:
@@ -186,7 +187,7 @@ func _nearest_allowed(c_below: int, allowed: Array[int], picked: Array[int], r: 
 #region 连边与断边
 func _link() -> void:
 	for r in range(1, _shape.row_count()):
-		var reach := 0 if _shape.is_straight(r) or _shape.is_straight(r - 1) else _shape.forward_reach
+		var reach := _reach_at(r)
 		var directed := _shape.one_way and (r - 1) >= _shape.one_way_from_row
 		for cb in _cells[r - 1]:
 			for ca in _cells[r]:
@@ -208,7 +209,7 @@ func _link() -> void:
 ## 第 0 层与最后一层的横边不断（出生点之间、终点那层得连成一片）
 func _thin() -> void:
 	var last := _shape.row_count() - 1
-	for raw in _shuffled_edges():
+	for raw in MapRng.shuffled(_graph.edges, _rng):
 		var e := raw as MapEdge
 		var ra := int(_graph.get_node(e.from_id).layout["row"])
 		var rb := int(_graph.get_node(e.to_id).layout["row"])
@@ -236,40 +237,15 @@ func _count_dir(id: int, dir: int) -> int:
 	return n
 
 
-func _shuffled_edges() -> Array:
-	var out: Array = _graph.edges.duplicate()
-	for i in range(out.size() - 1, 0, -1):
-		var j := _rng.randi_range(0, i)
-		var tmp: MapEdge = out[i]
-		out[i] = out[j]
-		out[j] = tmp
-	return out
-
-
-func _shuffled(ids: Array[int]) -> Array[int]:
-	var out: Array[int] = ids.duplicate()
-	for i in range(out.size() - 1, 0, -1):
-		var j := _rng.randi_range(0, i)
-		var tmp: int = out[i]
-		out[i] = out[j]
-		out[j] = tmp
-	return out
 #endregion
 
 
 #region 校验
 ## 格阵自己的规矩（规则从图上读，手改的图也能问）：边只连相邻层或同层邻格、直上层不横连、tier = 层号、
-## 单向的图每个点都到得了终点；类型规则见 [LatticeTypeRules.validate]。传送点先摘下来，它不是路
+## 单向的图每个点都到得了终点；类型规则见 [LatticeTypeRules.validate]。
+## 传送点先摘下来，它不是路（[method MapGenerator.run_without_portals]）
 func validate(graph: MapGraph, v: MapValidation) -> void:
-	var portals: Array = []
-	if graph != null:
-		for e in graph.edges.duplicate():
-			if (e as MapEdge).is_portal():
-				graph.remove_edge(e)
-				portals.append(e)
-	_validate_lattice(graph, v)
-	for e in portals:
-		graph.add_edge(e)
+	run_without_portals(graph, func() -> void: _validate_lattice(graph, v))
 
 
 func _validate_lattice(graph: MapGraph, v: MapValidation) -> void:

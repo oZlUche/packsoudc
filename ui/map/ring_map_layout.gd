@@ -8,10 +8,9 @@ static func ring_count_of(graph: MapGraph) -> int:
 	return int(graph.layout_meta.get("ring_count", 0))
 
 
-## 第 r 环的槽位数。JSON 读回来的字典键是字符串，两种都认。
+## 第 r 环的槽位数（没记就是 0）。两种键都认的事只在 [method RingSpec.slots_of] 里说一次
 static func slots_of(graph: MapGraph, r: int) -> int:
-	var table: Dictionary = graph.layout_meta.get("ring_slots", {})
-	return int(table.get(r, table.get(str(r), 0)))
+	return RingSpec.slots_of(graph, r, 0)
 
 
 func level_count(graph: MapGraph) -> int:
