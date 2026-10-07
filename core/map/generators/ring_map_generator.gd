@@ -888,14 +888,6 @@ func _zone_free(id: int) -> bool:
 	return n != null and n.zone == 0
 
 
-## 「连接点不能是必须存在点」（唯一的休息区、唯一的精英……）。
-##
-## 这一步节点还没有类型，所以恒为 false；约束落在 [RingTypeAssigner]：
-## 被高危区吸收进去的路线节点，类型分配时不许拿去当必须型。
-func _is_mandatory_node(_id: int) -> bool:
-	return false
-
-
 ## 路线铺完之后再长高危区（报告 053 第三条）。岔出的规矩不变，只是从「边铺边岔」挪到「铺完再挑锚点」：
 ## 从过了半程的那一环起逐环向内，每环按概率从这一环上的路线节点岔出还没长的区，最内环兜底；
 ## 每走一环，已经岔出的区各长一个点 —— 先岔出的区长得大些，和以前一样。
@@ -937,8 +929,10 @@ func _spawn_zone(r: int) -> bool:
 			var n := _graph.get_node(anchor)
 			if anchor == CORE_ID or int(n.layout.get("ring", 0)) != r or _graph.entry_ids.has(anchor):
 				continue
-			# 路线的尽头是它的出口：不从它岔出，收尾时也就不会把它吸进去
-			if _is_mandatory_node(anchor) or n.zone != 0 or _route_ends.has(anchor):
+			# 路线的尽头是它的出口：不从它岔出，收尾时也就不会把它吸进去。
+			# 「岔出点不能是必须存在点」（唯一的休息区、唯一的精英……）这里查不了 —— 这一步节点还没有类型；
+			# 约束落在 [RingTypeAssigner]：被高危区吸收进去的路线节点，类型分配时不许拿去当必须型
+			if n.zone != 0 or _route_ends.has(anchor):
 				continue
 			for first in _spatial_neighbors(anchor):
 				if not _zone_free(first):
@@ -1318,7 +1312,7 @@ func _rescue_stranded() -> void:
 			node.danger = 2
 			members.append(id)
 			members.sort()
-			_connect_by_rings(id, n_id)
+			_link(id, n_id, false)
 			_protected_edges[_edge_key(id, n_id)] = true
 			break
 
@@ -1340,10 +1334,6 @@ func _reconnect_islands() -> void:
 					break
 			if progressed:
 				break
-
-
-func _connect_by_rings(a: int, b: int) -> void:
-	_link(a, b, false)
 
 
 func _has_inward_edge(id: int, r: int) -> bool:
@@ -1662,22 +1652,6 @@ func _validate_roads(graph: MapGraph, v: MapValidation) -> void:
 	_validate_entry_gap(graph, v, ring_of)
 
 
-static func _zone_connected(graph: MapGraph, ids: Array, inside: Dictionary) -> bool:
-	if ids.size() <= 1:
-		return true
-	var seen := {int(ids[0]): true}
-	var queue: Array[int] = [int(ids[0])]
-	var head := 0
-	while head < queue.size():
-		var id := queue[head]
-		head += 1
-		for n in graph.neighbors(id):
-			if inside.has(n) and not seen.has(n):
-				seen[n] = true
-				queue.append(n)
-	return seen.size() == ids.size()
-
-
 func _validate_entry_gap(graph: MapGraph, v: MapValidation, ring_of: Dictionary) -> void:
 	if _cfg == null or graph.entry_ids.size() < 2:
 		return
@@ -1698,31 +1672,6 @@ func _validate_entry_gap(graph: MapGraph, v: MapValidation, ring_of: Dictionary)
 				v.fail(&"entry_gap", "出生点 %d 与 %d 只隔 %d 个槽位，要求至少 %d"
 					% [a.id, b.id, dist, _cfg.entry_min_gap])
 
-
-static func _node_on_ring(graph: MapGraph, route: Dictionary, r: int, ring_of: Dictionary) -> int:
-	for id in (route["node_ids"] as Array):
-		if int(ring_of.get(int(id), -1)) == r:
-			return int(id)
-	return -1
-
-
-## 只沿着这一环上的点走，看 a 到不到得了 b。
-static func _connected_within_ring(
-	graph: MapGraph, a: int, b: int, r: int, ring_of: Dictionary
-) -> bool:
-	var seen := {a: true}
-	var queue: Array[int] = [a]
-	var head := 0
-	while head < queue.size():
-		var id := queue[head]
-		head += 1
-		if id == b:
-			return true
-		for n in graph.neighbors(id):
-			if int(ring_of.get(n, -1)) == r and not seen.has(n):
-				seen[n] = true
-				queue.append(n)
-	return false
 #endregion
 
 

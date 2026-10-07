@@ -189,17 +189,15 @@ static func _check_all(g: MapGraph, cfg: RingMapConfig) -> String:
 	for zone_id in g.zones:
 		var info: Dictionary = g.zones[zone_id]
 		var ids: Array = info["node_ids"]
-		var inside := {}
 		var absorbed := 0
 		for id in ids:
-			inside[int(id)] = true
 			if on_route.has(int(id)):
 				absorbed += 1
 			if g.get_node(int(id)).danger != 2 or g.get_node(int(id)).zone != int(zone_id):
 				return "高危区 %s 里的节点 %d 没标上 zone / danger" % [zone_id, id]
 		if ids.size() < rules.min_size or ids.size() > rules.max_size:
 			return "高危区 %s 有 %d 个点" % [zone_id, ids.size()]
-		if not RingMapGenerator._zone_connected(g, ids, inside):
+		if not ZoneRules.is_connected_inside(g, ids):
 			return "高危区 %s 内部不相连" % zone_id
 		# 路线节点只会在「只长到两个点」时被划进来凑数，所以含路线节点的区一定是最小规模
 		if absorbed > 1 or (absorbed == 1 and ids.size() != rules.min_size):
@@ -750,6 +748,31 @@ static func run_gaps(t: TestCase) -> void:
 	t.check(made > 0, "至少跑成了一次")
 
 
+## 路线在第 r 环上的（第一个）点；没经过这一环返回 -1。只有换乘那个用例问
+static func _node_on_ring(graph: MapGraph, route: Dictionary, r: int, ring_of: Dictionary) -> int:
+	for id in (route["node_ids"] as Array):
+		if int(ring_of.get(int(id), -1)) == r:
+			return int(id)
+	return -1
+
+
+## 只沿着这一环上的点走，看 a 到不到得了 b
+static func _connected_within_ring(graph: MapGraph, a: int, b: int, r: int, ring_of: Dictionary) -> bool:
+	var seen := {a: true}
+	var queue: Array[int] = [a]
+	var head := 0
+	while head < queue.size():
+		var id := queue[head]
+		head += 1
+		if id == b:
+			return true
+		for n in graph.neighbors(id):
+			if int(ring_of.get(n, -1)) == r and not seen.has(n):
+				seen[n] = true
+				queue.append(n)
+	return false
+
+
 static func run_pivots(t: TestCase) -> void:
 	t.begin("环形生成器 · 换乘点真的走得通")
 
@@ -772,11 +795,11 @@ static func run_pivots(t: TestCase) -> void:
 			var b: Dictionary = g.routes[(i + 1) % g.routes.size()]
 			var linked := false
 			for r in range(cfg.ring_count(), 0, -1):
-				var ia := RingMapGenerator._node_on_ring(g, a, r, ring_of)
-				var ib := RingMapGenerator._node_on_ring(g, b, r, ring_of)
+				var ia := _node_on_ring(g, a, r, ring_of)
+				var ib := _node_on_ring(g, b, r, ring_of)
 				if ia < 0 or ib < 0:
 					continue
-				if ia == ib or RingMapGenerator._connected_within_ring(g, ia, ib, r, ring_of):
+				if ia == ib or _connected_within_ring(g, ia, ib, r, ring_of):
 					linked = true
 					break
 			t.check(linked, "路线 %s 与 %s 之间换乘得过去（种子 %d）"

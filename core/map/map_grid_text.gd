@@ -16,11 +16,8 @@ const SYMBOL_TYPES := {
 	"S": &"shop", "R": &"rest", "X": &"extract", "B": &"core",
 	"P": &"spawn",      # 出生点。符号是解析器先占的位，等作者在表里定
 	"K": &"safe",       # 092：保险箱
-	"1": &"random",     # v0 遗留的缺省点，按 ? 处理
+	"1": &"random",     # v0 遗留的缺省点，按 ? 处理（作者的图里还在用）
 }
-## 没有 [map] 段头的老格式（v0）里符号另有所指：E 是终点，2 是「高危的缺省点」
-const LEGACY_TYPES := {"1": &"random", "2": &"random", "E": &"core"}
-const LEGACY_DANGER := {"2": 2}
 
 const EMPTY := "."
 const ARC := "-"
@@ -36,11 +33,13 @@ static var last_error: String = ""
 static func parse(text: String) -> MapGraph:
 	last_error = ""
 	var sections := _split_sections(text)
+	if sections.is_empty():
+		last_error = "没有 [map] 段头（没有段头的 v0 老格式已不再支持）"
+		return null
 	var rows: Array = sections["map"]
 	if rows.is_empty():
 		last_error = "没有地图内容"
 		return null
-	var legacy: bool = sections["legacy"]
 	var danger_rows: Array = sections["danger"]
 
 	var g := MapGraph.new()
@@ -63,7 +62,7 @@ static func parse(text: String) -> MapGraph:
 			if ch == END_MARK:
 				zero_cols[ri] = x
 				continue
-			var type := _type_of(ch, legacy)
+			var type := _type_of(ch)
 			var is_junction := ch == ARC and (_cell(rows, y - 1, x) == SPOKE or _cell(rows, y + 1, x) == SPOKE)
 			if type == &"" and not is_junction:
 				continue
@@ -74,10 +73,10 @@ static func parse(text: String) -> MapGraph:
 			n.tier = ri
 			n.erosion_band = ri
 			n.content_seed = hash("grid:%d:%d" % [y, x])
-			n.danger = _danger_at(danger_rows, y, x, ch, legacy)
+			n.danger = _danger_at(danger_rows, y, x)
 			n.layout = {"row": ri, "col": x}
 			if not is_junction and ch != symbol_of(type):
-				n.layout["symbol"] = ch     # 同一种类型的另一种写法（v0 的 1 / 2 / E），导出时照原样写回
+				n.layout["symbol"] = ch     # 同一种类型的另一种写法（v0 遗留的 1），导出时照原样写回
 			g.add_node(n)
 			stop_at["%d:%d" % [y, x]] = n.id
 			if n.type == &"core":
@@ -140,7 +139,7 @@ static func parse(text: String) -> MapGraph:
 	_assign_zones(g)
 	_assign_entries(g)
 	g.layout_meta = {
-		"rows": ring_rows, "legacy": legacy, "zero_cols": zero_cols, "line_widths": widths,
+		"rows": ring_rows, "zero_cols": zero_cols, "line_widths": widths,
 		"zone_rules": ZoneRules.new().to_dict(),
 	}
 	if not danger_rows.is_empty():
@@ -149,32 +148,30 @@ static func parse(text: String) -> MapGraph:
 	return g
 
 
+## 按 `[段名]` 切段。内容必须写在某个段头之下：段头之前就有内容（没有 `[map]` 的 v0 老格式）返回空字典
 static func _split_sections(text: String) -> Dictionary:
-	var out := {"map": [], "danger": [], "links": [], "legacy": true}
-	var current := "map"
+	var out := {"map": [], "danger": [], "links": []}
+	var current := ""
 	for raw in text.split("\n"):
 		var line := raw.trim_suffix("\r")
 		if line.begins_with("[") and line.ends_with("]"):
 			current = line.substr(1, line.length() - 2)
-			out["legacy"] = false
 			if not out.has(current):
 				out[current] = []
 			continue
 		if line.strip_edges() == "":
 			continue
+		if current == "":
+			return {}
 		(out[current] as Array).append(line)
 	return out
 
 
-static func _type_of(ch: String, legacy: bool) -> StringName:
-	if legacy and LEGACY_TYPES.has(ch):
-		return LEGACY_TYPES[ch]
+static func _type_of(ch: String) -> StringName:
 	return SYMBOL_TYPES.get(ch, &"")
 
 
-static func _danger_at(danger_rows: Array, y: int, x: int, ch: String, legacy: bool) -> int:
-	if legacy:
-		return int(LEGACY_DANGER.get(ch, 0))
+static func _danger_at(danger_rows: Array, y: int, x: int) -> int:
 	if y >= danger_rows.size() or x >= (danger_rows[y] as String).length():
 		return 0
 	var d: String = (danger_rows[y] as String)[x]
@@ -271,7 +268,6 @@ static func render(g: MapGraph) -> String:
 	var place: Dictionary = cells["place"]     # id -> Vector2i(col, ring_row)
 	var ring_rows: int = cells["rows"]
 	var zero_cols: Array = cells["zero_cols"]
-	var legacy: bool = cells["legacy"]
 
 	var grid: Array = []        # 每行一个 Array[String]
 	for _y in ring_rows * 2 - 1:
@@ -313,8 +309,6 @@ static func render(g: MapGraph) -> String:
 	for y in grid.size():
 		map_lines.append(_line(grid[y], int(widths[y]) if y < widths.size() else width))
 
-	if legacy:
-		return "\n".join(map_lines) + "\n"
 	var out := "[map]\n" + "\n".join(map_lines) + "\n\n[danger]\n" \
 		+ "\n".join(_danger_lines(g, place, map_lines)) + "\n"
 	if not links.is_empty():
@@ -333,7 +327,6 @@ static func _cells_of(g: MapGraph) -> Dictionary:
 		return {
 			"place": place, "rows": int(g.layout_meta.get("rows", 0)),
 			"zero_cols": g.layout_meta.get("zero_cols", []),
-			"legacy": bool(g.layout_meta.get("legacy", false)),
 		}
 	if not g.layout_meta.has("ring_count"):
 		return {}
@@ -355,7 +348,7 @@ static func _cells_of(g: MapGraph) -> Dictionary:
 		var slots := maxi(1, int(table.get(r, table.get(str(r), 1))))
 		# 每个槽位至少隔两列，中间才塞得下一个 -
 		place[id] = Vector2i(roundi(float(int(lay["order"])) * float(most * 2) / float(slots)), count - r)
-	return {"place": place, "rows": count + 1, "zero_cols": zero_cols, "legacy": false}
+	return {"place": place, "rows": count + 1, "zero_cols": zero_cols}
 
 
 ## 首尾相连的那条弧：解析出来的图上有标记；别的形态的图上，就是「连着这一行最左与最右两个点、

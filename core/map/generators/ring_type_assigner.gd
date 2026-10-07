@@ -254,14 +254,14 @@ func _assign_by_weights() -> void:
 
 ## 环配额：超了改成权重次高的可替换类型，缺了从本环的非固定节点里改。
 func _enforce_quota() -> void:
-	for r in range(_ring_count(), 0, -1):
+	for r in range(_cfg.ring_count(), 0, -1):
 		var spec := _cfg.spec_for_ring(r)
 		if spec == null or spec.quota.is_empty():
 			continue
 		var ring_ids := _ring_ids(r)
 		for t in _sorted_keys(spec.quota):
 			var lim := _quota(r, t)
-			while _count(ring_ids, t) > lim.y:
+			while _count_in_ring(r, t) > lim.y:
 				var victim := _pick_of_type(ring_ids, t)
 				if victim < 0:
 					break
@@ -271,7 +271,7 @@ func _enforce_quota() -> void:
 				_put_type(victim, alt, false)
 		for t in _sorted_keys(spec.quota):
 			var lim := _quota(r, t)
-			while _count(ring_ids, t) < lim.x:
+			while _count_in_ring(r, t) < lim.x:
 				var pool: Array[int] = []
 				for id in ring_ids:
 					if _can_become(id, StringName(t)):
@@ -297,7 +297,7 @@ func _enforce_coverage() -> void:
 			# 从每个超标点出发走 K 步，沿途的候选各记一分 —— 超标点少、候选多，反过来算贵得多
 			var gain := {}
 			for u in uncovered:
-				for id in _within_steps(u, k):
+				for id in _steps_from(_g, u, k):
 					gain[id] = int(gain.get(id, 0)) + 1
 			var best := -1
 			var best_gain := 0
@@ -451,7 +451,7 @@ func _distance_to_extracts(id: int) -> int:
 func _far_from_extracts(id: int, gap: int) -> bool:
 	if gap <= 1:
 		return true
-	for other in _within_steps(id, gap - 1):
+	for other in _steps_from(_g, id, gap - 1):
 		if other != id and _g.get_node(other).type == &"extract":
 			return false
 	return true
@@ -894,10 +894,6 @@ func _ring(id: int) -> int:
 	return int(_g.get_node(id).layout.get("ring", 0))
 
 
-func _ring_count() -> int:
-	return _cfg.ring_count()
-
-
 func _ring_ids(r: int) -> Array[int]:
 	return _by_ring.get(r, [] as Array[int])
 
@@ -909,14 +905,6 @@ func _bump(r: int, type: String, delta: int) -> void:
 
 func _count_in_ring(r: int, type: String) -> int:
 	return int((_counts.get(r, {}) as Dictionary).get(type, 0))
-
-
-func _count(ids: Array[int], type: String) -> int:
-	var n := 0
-	for id in ids:
-		if _g.get_node(id).type == StringName(type):
-			n += 1
-	return n
 
 
 ## 第 r 环某类型的配额 [min, max]；没配就是 [0, 很大]。
@@ -1042,22 +1030,6 @@ func _weights_for(id: int) -> Dictionary:
 ## 按排好序的键扣减（140 M-25：抽法在 [method MapRng.pick_weighted]）
 func _pick_weighted(weights: Dictionary) -> StringName:
 	return MapRng.pick_weighted(weights, _rng, _sorted_keys(weights))
-
-
-func _within_steps(from_id: int, k: int) -> Dictionary:
-	var dist := {from_id: 0}
-	var queue: Array[int] = [from_id]
-	var head := 0
-	while head < queue.size():
-		var id := queue[head]
-		head += 1
-		if int(dist[id]) >= k:
-			continue
-		for n in _g.neighbors(id):
-			if not dist.has(n):
-				dist[n] = int(dist[id]) + 1
-				queue.append(n)
-	return dist
 
 
 func _shuffled(ids: Array[int]) -> Array[int]:
