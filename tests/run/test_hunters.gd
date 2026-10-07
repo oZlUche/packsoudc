@@ -2,36 +2,14 @@
 ## 迎战 / 逃跑、六种战败后果、掉落倍率、存档、流程。期望从数据推：定义里写了几步就断言几步。
 extends RefCounted
 
+## 与 Support.paths("hunters") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_hunters_run.json"
 const META := "user://test_hunters_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var hunter_defs: Dictionary
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.hunter_defs = GameFlow.load_hunters()
-	return c
-
-
-static func _cleanup() -> void:
-	for p in [SAVE, META]:
-		if FileAccess.file_exists(p):
-			DirAccess.remove_absolute(p)
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["hunter_defs"])
 
 
 ## 一份只开猎手机制的难度（代码里造，不依赖作者的进阶文件）
@@ -49,7 +27,7 @@ static func _difficulty(ids: Array[StringName], count: int = 1, min_dist: float 
 
 
 ## 开一局、挑出生点。[param defs] 是这一局的猎手定义表（可以是改过数的副本）
-static func _start(c: Content, defs: Dictionary, diff: DifficultyDef) -> RunState:
+static func _start(c: TestSupport.Content, defs: Dictionary, diff: DifficultyDef) -> RunState:
 	for seed in range(1, 40):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [&"bag_leather", &"rifle"] as Array[StringName],
 			{}, [] as Array[StringName], null, [], diff, defs)
@@ -67,7 +45,7 @@ static func _copy_defs(defs: Dictionary) -> Dictionary:
 	return out
 
 
-static func _first_def(c: Content) -> HunterDef:
+static func _first_def(c: TestSupport.Content) -> HunterDef:
 	var ids: Array = c.hunter_defs.keys()
 	ids.sort()
 	return c.hunter_defs[ids[0]] if not ids.is_empty() else null
@@ -376,7 +354,7 @@ static func run_save_and_flow(t: TestCase) -> void:
 	t.check(s3.events.choose(0), "读档后能迎战")
 
 	# 流程
-	_cleanup()
+	Support.cleanup("hunters")
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = [c.chapter] as Array[ChapterDef]
 	f.difficulties = [diff] as Array[DifficultyDef]
@@ -419,7 +397,7 @@ static func run_save_and_flow(t: TestCase) -> void:
 				f.resume()
 	if run.is_over() or run.hunters.alive().is_empty():
 		t.check(true, "（这一步就结束了，流程部分跳过）")
-		_cleanup()
+		Support.cleanup("hunters")
 		return
 	var hh: Hunter = run.hunters.alive()[0]
 	hh.node_id = run.travel.current_id
@@ -432,7 +410,7 @@ static func run_save_and_flow(t: TestCase) -> void:
 	t.eq(int(run.tally["battles_won"]) + int(run.tally["battles_lost"]), before + 1, "打了一场")
 	t.eq(f.screen, GameFlow.Screen.BATTLE, "→ 回放")
 	t.check(f.save() or run.is_over(), "存得了档")
-	_cleanup()
+	Support.cleanup("hunters")
 
 
 static func run_brackets(t: TestCase) -> void:

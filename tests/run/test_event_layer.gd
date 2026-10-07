@@ -4,39 +4,17 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
+## 与 Support.paths("event") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_event_run.json"
 const META := "user://test_event_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var loadouts: Array[LoadoutDef]
-	var buffs: Dictionary
-	var events: Dictionary
-	var rules: NodeRules
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["loadouts", "buffs", "events", "node_rules"])
 
 
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.loadouts = GameFlow.load_loadouts()
-	c.buffs = GameFlow.load_run_buffs()
-	c.events = GameFlow.load_events()
-	c.rules = load(ContentPaths.asset_file("node_rules", String(c.chapter.node_rules)))
-	return c
-
-
-static func _kit(c: Content) -> LoadoutDef:
+static func _kit(c: TestSupport.Content) -> LoadoutDef:
 	for l in c.loadouts:
 		if l.id == &"standard":
 			return l
@@ -44,7 +22,7 @@ static func _kit(c: Content) -> LoadoutDef:
 
 
 ## 带事件层的一局
-static func _start(c: Content, seed: int) -> RunState:
+static func _start(c: TestSupport.Content, seed: int) -> RunState:
 	var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, _kit(c).items, c.buffs, [] as Array[StringName])
 	if s != null:
 		s.player_baseline = CombatantBaseline.with_hp(10000.0)
@@ -52,22 +30,8 @@ static func _start(c: Content, seed: int) -> RunState:
 	return s
 
 
-static func _flow(c: Content) -> GameFlow:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
-	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
-	f.buff_defs = c.buffs
-	f.event_defs = c.events
-	f.chapters = [c.chapter] as Array[ChapterDef]
-	f.loadouts = c.loadouts
-	f.save_path = SAVE
-	f.meta_path = META
-	f.player_baseline = CombatantBaseline.with_hp(10000.0)
-	return f
-
-
 ## 出生点旁边就有某类型点的种子
-static func _seed_with(c: Content, type: StringName) -> Dictionary:
+static func _seed_with(c: TestSupport.Content, type: StringName) -> Dictionary:
 	for seed in range(1, 80):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, _kit(c).items)
 		if s == null:
@@ -130,7 +94,7 @@ static func _custom_defs() -> Dictionary:
 
 
 ## 开一局、站到出生点、把某个测试事件放到旁边那个点上
-static func _start_with_custom(c: Content, found: Dictionary, eid: StringName) -> RunState:
+static func _start_with_custom(c: TestSupport.Content, found: Dictionary, eid: StringName) -> RunState:
 	var s := _start(c, int(found["seed"]))
 	s.pick_spawn(int(found["entry"]))
 	for id in _custom_defs():
@@ -212,8 +176,8 @@ static func run_pipeline(t: TestCase) -> void:
 	t.check(files >= 5, "至少五个事件（实际 %d）" % files)
 	t.eq(c.events.size(), files, "load_all 装回全部")
 	t.check(c.events.has(&"search_default"), "搜索点的默认事件在")
-	for type in c.rules.events_by_type:
-		for eid in c.rules.events_by_type[type]:
+	for type in c.node_rules.events_by_type:
+		for eid in c.node_rules.events_by_type[type]:
 			t.check(c.events.has(StringName(String(eid))), "节点规则里 '%s' 的事件 '%s' 存在" % [type, eid])
 	var nr_bad := ImportReport.new()
 	var nctx := ContentImporter.Context.new()
@@ -240,10 +204,10 @@ static func run_placer(t: TestCase) -> void:
 				t.eq(eid, "search_default", "搜索点 %d 配了搜索事件" % id)
 			&"event":
 				events += 1
-				t.check((c.rules.events_by_type["event"] as Dictionary).has(eid) or (n.content.has("event_group") and (c.rules.event_groups[String(n.content["event_group"])]["events"] as Dictionary).has(eid)), "事件点 %d 配的 '%s' 在表里（或成组限量的那一个）" % [id, eid])
+				t.check((c.node_rules.events_by_type["event"] as Dictionary).has(eid) or (n.content.has("event_group") and (c.node_rules.event_groups[String(n.content["event_group"])]["events"] as Dictionary).has(eid)), "事件点 %d 配的 '%s' 在表里（或成组限量的那一个）" % [id, eid])
 			_:
 				# 别的类型：规则表里挂了就得是表里的（8-3 给休息 / 商店挂了默认事件），没挂就不配（转场）
-				var table: Dictionary = c.rules.events_by_type.get(n.type, {})
+				var table: Dictionary = c.node_rules.events_by_type.get(n.type, {})
 				if table.is_empty():
 					t.eq(eid, "", "%s 点 %d 没配事件（规则表没挂 → 转场）" % [n.type, id])
 				else:
@@ -258,7 +222,7 @@ static func run_placer(t: TestCase) -> void:
 			some = id
 			break
 	s.map.get_node(some).content["event"] = "event_rest_spot"
-	EventPlacer.fill(s.map, c.rules)
+	EventPlacer.fill(s.map, c.node_rules)
 	t.eq(String(s.map.get_node(some).content["event"]), "event_rest_spot", "替换过的不被铺回去（作者：可覆盖、可替换）")
 
 	# 随机点：揭开成有表的类型才配事件
@@ -267,7 +231,7 @@ static func run_placer(t: TestCase) -> void:
 		if n.type != &"random":
 			continue
 		var type := s.events.reveal(n)
-		var expect := EventPlacer.pick_for(n, type, c.rules)
+		var expect := EventPlacer.pick_for(n, type, c.node_rules)
 		t.eq(String(n.content.get("event", "")), String(expect), "随机点 %d 揭成 %s 之后配的事件按那种类型抽" % [id, type])
 		break
 
@@ -390,7 +354,7 @@ static func run_flow(t: TestCase) -> void:
 	if found.is_empty():
 		t.check(false, "找不到种子")
 		return
-	var f := _flow(c)
+	var f := Support.flow(c, "event")
 	f.begin(c.chapter, _kit(c), int(found["seed"]))
 	f.pick_spawn(int(found["entry"]))
 	var next := int(found["next"])
@@ -402,7 +366,7 @@ static func run_flow(t: TestCase) -> void:
 	t.eq(f.screen, GameFlow.Screen.MAP, "什么都没发生：直接回地图")
 
 	# 「搜索」进容器屏
-	var f2 := _flow(c)
+	var f2 := Support.flow(c, "event")
 	f2.begin(c.chapter, _kit(c), int(found["seed"]))
 	f2.pick_spawn(int(found["entry"]))
 	f2.step_to(next)
@@ -420,7 +384,7 @@ static func run_flow(t: TestCase) -> void:
 	t.eq(f2.screen, GameFlow.Screen.MAP, "离开后回地图")
 
 	# 发生了什么：先看结果页
-	var f3 := _flow(c)
+	var f3 := Support.flow(c, "event")
 	var run3 := f3.begin(c.chapter, _kit(c), int(found["seed"]))
 	f3.pick_spawn(int(found["entry"]))
 	var heal := RestoreVitality.new()
@@ -441,7 +405,7 @@ static func run_flow(t: TestCase) -> void:
 	t.eq(f3.screen, GameFlow.Screen.MAP, "继续 → 地图")
 
 	# 读档回来还在事件屏
-	var f4 := _flow(c)
+	var f4 := Support.flow(c, "event")
 	f4.begin(c.chapter, _kit(c), int(found["seed"]))
 	f4.pick_spawn(int(found["entry"]))
 	f4.step_to(next)

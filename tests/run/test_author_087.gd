@@ -3,55 +3,17 @@
 extends RefCounted
 
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
+## 与 Support.paths("087") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_087_run.json"
 const META := "user://test_087_meta.json"
-const SETTINGS := "user://test_087_settings.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var loadouts: Array[LoadoutDef]
-	var events: Dictionary
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["loadouts", "events"])
 
 
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.loadouts = GameFlow.load_loadouts()
-	c.events = GameFlow.load_events()
-	return c
-
-
-static func _cleanup() -> void:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
-	GameSettings.remove(SETTINGS)
-
-
-static func _flow(c: Content) -> GameFlow:
-	_cleanup()
-	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
-	f.chapters = [c.chapter] as Array[ChapterDef]
-	f.loadouts = c.loadouts
-	f.event_defs = c.events
-	f.save_path = SAVE
-	f.meta_path = META
-	f.settings_path = SETTINGS
-	f.player_baseline = CombatantBaseline.with_hp(10000.0)
-	return f
-
-
-static func _kit(c: Content) -> LoadoutDef:
+static func _kit(c: TestSupport.Content) -> LoadoutDef:
 	for l in c.loadouts:
 		if l.id == &"standard":
 			return l
@@ -221,7 +183,7 @@ static func run_boss(t: TestCase) -> void:
 	t.check(rules.boss_extracts, "标准规则：BOSS 倒下直接撤离")
 
 	# 流程：BOSS 倒下（boss_cleared）→ 战利品屏 → 收起 = 撤离结算
-	var f := _flow(c)
+	var f := Support.flow(c, "087")
 	var kit := _kit(c)
 	var run := f.begin(c.chapter, kit, 3)
 	t.not_null(run, "开局")
@@ -242,7 +204,7 @@ static func run_boss(t: TestCase) -> void:
 	var back := RunState.from_dict(run.to_dict(), c.chapter, c.items, c.enemies, c.sets)
 	t.check(back != null and back.boss_cleared, "boss_cleared 跟存档")
 	# 规则关掉：收起只是最小化
-	var f2 := _flow(c)
+	var f2 := Support.flow(c, "087")
 	var run2 := f2.begin(c.chapter, kit, 3)
 	f2.pick_spawn(run2.map.entry_ids[0])
 	run2.boss_cleared = true
@@ -251,13 +213,13 @@ static func run_boss(t: TestCase) -> void:
 	run2._offer_loot(LootPacker.board_of([&"knife"] as Array[StringName], Vector2i(4, 4), c.items))
 	f2.resume()
 	t.check(f2.hide_overlay() and f2.screen == GameFlow.Screen.MAP and not run2.is_over(), "boss_extracts=false：收起只是回地图")
-	_cleanup()
+	Support.cleanup("087")
 
 
 static func run_shop_logic(t: TestCase) -> void:
 	t.begin("087 · 商店屏的逻辑：栏位是小棋盘、商品只能进自己的容器且钱够、钱不够弹回并提示、双击买、拖进出售区就卖半价")
 	var c := _content()
-	var f := _flow(c)
+	var f := Support.flow(c, "087")
 	var run := f.begin(c.chapter, _kit(c), 3)
 	if run == null:
 		t.check(false, "开局")
@@ -270,7 +232,7 @@ static func run_shop_logic(t: TestCase) -> void:
 			break
 	if shop_node == null:
 		t.check(true, "（这个种子没有商店点）")
-		_cleanup()
+		Support.cleanup("087")
 		return
 	run.wallet.earn(1000, &"test")
 	run.events.handle(shop_node)
@@ -279,7 +241,7 @@ static func run_shop_logic(t: TestCase) -> void:
 	var session := run.events.current_shop
 	t.not_null(session, "开了店")
 	if session == null:
-		_cleanup()
+		Support.cleanup("087")
 		return
 	var screen = load("res://ui/game/shop_screen.gd").new()
 	screen.flow = f
@@ -291,7 +253,7 @@ static func run_shop_logic(t: TestCase) -> void:
 	t.not_null(slot0, "第 0 格有商品")
 	if slot0 == null:
 		screen.free()
-		_cleanup()
+		Support.cleanup("087")
 		return
 	# 落点过滤
 	t.check(screen._allow_drop(slot0, run.board), "钱够：商品能进棋盘")
@@ -349,7 +311,7 @@ static func run_shop_logic(t: TestCase) -> void:
 	t.check(not session.sell_box.has_item(sell_me.uid), "出售区清了")
 	t.check(screen.line_text().contains("卖掉了"), "提示卖掉了")
 	screen.free()
-	_cleanup()
+	Support.cleanup("087")
 
 
 static func frame_buff_chips(t: TestCase, root: Window) -> void:
@@ -700,14 +662,14 @@ static func run_spyglass_and_codex(t: TestCase) -> void:
 	var p2: ChapterDef = load(ContentPaths.asset_file("chapters", "prologue_2"))
 	t.check(p2.starting_keepsakes.has(&"spyglass") and not p2.node_tooltips, "序章二靠望远镜开浮窗，不靠章节开关")
 	# 局外：拿到 → 存读 → 第一章也开着浮窗
-	var f := _flow(c)
+	var f := Support.flow(c, "087")
 	f.chapters = [c.chapter, p2] as Array[ChapterDef]
 	f.characters = GameFlow.load_characters()
 	f.event_defs = c.events
 	var run := f.begin_direct(p2, 2)
 	t.not_null(run, "开序章二")
 	if run == null:
-		_cleanup()
+		Support.cleanup("087")
 		return
 	t.check(f.meta.has_keepsake(&"spyglass"), "开局拿到了望远镜")
 	t.check(f.has_ability(&"node_tooltips") and f.tooltips_enabled(), "浮窗开着（靠能力）")
@@ -727,7 +689,7 @@ static func run_spyglass_and_codex(t: TestCase) -> void:
 	t.check(run2 != null and f.tooltips_enabled(), "之后开第一章：浮窗也开着（能力是局外的）")
 	t.check(f.take_notes().is_empty(), "已经有了不再通知")
 	# 没拿过的一张白纸：第一章关着
-	var f2 := _flow(c)
+	var f2 := Support.flow(c, "087")
 	f2.begin(c.chapter, _kit(c), 3)
 	t.check(not f2.tooltips_enabled(), "没拿过望远镜：第一章浮窗关")
 	# 基地页签
@@ -771,7 +733,7 @@ static func run_spyglass_and_codex(t: TestCase) -> void:
 	screen.show_tab("nope")
 	t.eq(screen.tab(), "warehouse", "不认识的页签回仓库")
 	screen.free()
-	_cleanup()
+	Support.cleanup("087")
 
 
 static func run_loss_cost_bound_to_battle(t: TestCase) -> void:

@@ -3,53 +3,19 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
+## 与 Support.paths("storage") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_storage_run.json"
 const META := "user://test_storage_meta.json"
 const SETTINGS := "user://test_storage_settings.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var loadouts: Array[LoadoutDef]
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.loadouts = GameFlow.load_loadouts()
-	return c
-
-
-static func _flow(c: Content) -> GameFlow:
-	_cleanup()
-	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
-	f.chapters = [c.chapter] as Array[ChapterDef]
-	f.loadouts = c.loadouts
-	f.save_path = SAVE
-	f.meta_path = META
-	f.settings_path = SETTINGS
-	f.player_baseline = CombatantBaseline.with_hp(10000.0)
-	return f
-
-
-static func _cleanup() -> void:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
-	GameSettings.remove(SETTINGS)
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["loadouts"])
 
 
 ## 出生点旁边就有某类型点的种子：{seed, entry, next}
-static func _seed_with(c: Content, type: StringName, kit: Array[StringName]) -> Dictionary:
+static func _seed_with(c: TestSupport.Content, type: StringName, kit: Array[StringName]) -> Dictionary:
 	for seed in range(1, 80):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit)
 		if s == null:
@@ -78,7 +44,7 @@ static func _settle(f: GameFlow) -> void:
 				f.resume()
 
 
-static func _kit(c: Content) -> LoadoutDef:
+static func _kit(c: TestSupport.Content) -> LoadoutDef:
 	for l in c.loadouts:
 		if l.id == &"standard":
 			return l
@@ -94,7 +60,7 @@ static func run_clear_on_leave(t: TestCase) -> void:
 	if found.is_empty():
 		t.check(false, "找不到种子")
 		return
-	var f := _flow(c)
+	var f := Support.flow(c, "storage")
 	var run := f.begin(c.chapter, kit, int(found["seed"]))
 	var entry := int(found["entry"])
 	var next := int(found["next"])
@@ -193,7 +159,7 @@ static func run_clear_on_leave(t: TestCase) -> void:
 		t.not_null(back, "读回来")
 		t.eq(back.events.last_handled_id, run.events.last_handled_id, "「发生过事的点」跟着存档")
 		t.eq(back.will_clear_storage(), before, "读回来的也知道走了要清")
-	_cleanup()
+	Support.cleanup("storage")
 
 
 static func run_left_behind_line(t: TestCase) -> void:
@@ -241,7 +207,7 @@ static func frame_map_prompt(t: TestCase, root: Window) -> void:
 	if found.is_empty():
 		t.check(false, "找不到种子")
 		return
-	_cleanup()
+	Support.cleanup("storage")
 	var game = load(GAME).instantiate()
 	game.save_path = SAVE
 	game.meta_path = META
@@ -301,4 +267,4 @@ static func frame_map_prompt(t: TestCase, root: Window) -> void:
 				ov2.proceed()
 	flow.to_main_menu()
 	game.queue_free()
-	_cleanup()
+	Support.cleanup("storage")

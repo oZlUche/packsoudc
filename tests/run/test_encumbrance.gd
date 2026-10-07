@@ -2,26 +2,8 @@
 extends RefCounted
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var buffs: Dictionary
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.buffs = RunBuffs.load_all()
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["buffs"])
 
 
 static func _character(id: String) -> CharacterDef:
@@ -29,7 +11,7 @@ static func _character(id: String) -> CharacterDef:
 
 
 ## 角色定好、棋盘清空（只留包）的一局；[param cap] ≥ 0 时把上限改成它（复制一份角色，不动库里的）
-static func _run(c: Content, cap: int = -1, meta: Array[StringName] = []) -> RunState:
+static func _run(c: TestSupport.Content, cap: int = -1, meta: Array[StringName] = []) -> RunState:
 	var ch := _character("andreus")
 	if cap >= 0:
 		ch = ch.duplicate()

@@ -5,26 +5,8 @@ extends RefCounted
 const SAVE := "user://test_erosion_run.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var difficulties: Array[DifficultyDef]
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.difficulties = GameFlow.load_difficulties()
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["difficulties"])
 
 
 ## 一份只开侵蚀的难度，参数由用例给
@@ -41,7 +23,7 @@ static func _difficulty(first: int, interval: int, warn: int, effects: Array) ->
 	return d
 
 
-static func _start(c: Content, diff: DifficultyDef, kit: Array[StringName] = [&"bag_leather", &"rifle", &"pistol"] as Array[StringName]) -> RunState:
+static func _start(c: TestSupport.Content, diff: DifficultyDef, kit: Array[StringName] = [&"bag_leather", &"rifle", &"pistol"] as Array[StringName]) -> RunState:
 	for seed in range(1, 40):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit, {}, [] as Array[StringName], null, [], diff)
 		if s != null:

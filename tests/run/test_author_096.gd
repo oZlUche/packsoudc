@@ -2,24 +2,12 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
+## 与 Support.paths("096") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_096_run.json"
 const META := "user://test_096_meta.json"
 const SETTINGS := "user://test_096_settings.json"
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
-
-
-static func _cleanup() -> void:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
-	GameSettings.remove(SETTINGS)
-
-
-static func _flow(c, hp: float) -> GameFlow:
-	var f: GameFlow = NodeScreens._flow(c, hp)
-	f.save_path = SAVE
-	f.meta_path = META
-	f.settings_path = SETTINGS
-	return f
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func run_tag_data(t: TestCase) -> void:
@@ -193,7 +181,7 @@ static func run_search_encounter_won_sees_loot(t: TestCase) -> void:
 	if found.is_empty():
 		t.check(false, "找不到带搜索点的种子")
 		return
-	var f := _flow(c, 100000.0)
+	var f := Support.flow(c, "096", 100000.0)
 	var run := f.begin(c.chapter, kit, int(found["seed"]))
 	if run == null:
 		t.check(false, "开局")
@@ -209,7 +197,7 @@ static func run_search_encounter_won_sees_loot(t: TestCase) -> void:
 	var session: SearchSession = run.events.current_search
 	if session == null or session.encounter.is_empty():
 		t.check(false, "没遭遇")
-		_cleanup()
+		Support.cleanup("096")
 		return
 	t.eq(f.screen, GameFlow.Screen.EVENT, "→「有人来了」")
 	t.check(f.choose_event(0), "迎战")
@@ -229,7 +217,7 @@ static func run_search_encounter_won_sees_loot(t: TestCase) -> void:
 		t.check(true, "（这一场没掉东西，直接看下一屏）")
 	t.check(f.screen == GameFlow.Screen.EVENT or f.screen == GameFlow.Screen.SEARCH, "然后回到搜索的事件屏 / 搜索屏（%d）" % f.screen)
 	t.check(run.events.current_search == session and session.active, "会话还开着，能再搜")
-	_cleanup()
+	Support.cleanup("096")
 
 
 static func frame_property_form_pickers(t: TestCase, root: Window) -> void:
@@ -291,7 +279,7 @@ static func frame_property_form_pickers(t: TestCase, root: Window) -> void:
 
 static func frame_spawn_mask_and_presets(t: TestCase, root: Window) -> void:
 	t.begin("096 · 开局屏预设套（两套：强攻 / 坚守；不算带入、拖不进仓库、出发带着走）；地图屏挑出生点的遮罩（只有出生点点得中，挑完撤掉）")
-	_cleanup()
+	Support.cleanup("096")
 	var game = load(GAME).instantiate()
 	game.save_path = SAVE
 	game.meta_path = META
@@ -402,7 +390,7 @@ static func frame_spawn_mask_and_presets(t: TestCase, root: Window) -> void:
 		t.eq(map.tooltip_text(), "", "走过去之后浮窗收起")
 		t.eq(view._hover_id, -1, "悬停清掉：鼠标回到这个点会重新出浮窗")
 	game.queue_free()
-	_cleanup()
+	Support.cleanup("096")
 
 
 static func _armor_on(board: GridInventory) -> int:
@@ -422,7 +410,7 @@ static func run_search_encounter_save_roundtrip(t: TestCase) -> void:
 	if found.is_empty():
 		t.check(false, "找不到带搜索点的种子")
 		return
-	var f := _flow(c, 100000.0)
+	var f := Support.flow(c, "096", 100000.0)
 	var run := f.begin(c.chapter, kit, int(found["seed"]))
 	if run == null:
 		t.check(false, "开局")
@@ -438,14 +426,14 @@ static func run_search_encounter_save_roundtrip(t: TestCase) -> void:
 	var session: SearchSession = run.events.current_search
 	if session == null or session.encounter.is_empty() or not bool(run.events.pending.get("search_encounter", false)):
 		t.check(false, "没停在遇敌事件上")
-		_cleanup()
+		Support.cleanup("096")
 		return
 	var enc: Dictionary = session.encounter.duplicate(true)
 	var haul_n := session.haul().item_count()
 	var back := RunState.from_dict(JSON.parse_string(JSON.stringify(run.to_dict())), c.chapter, c.items, c.enemies, c.sets)
 	t.not_null(back, "读得回来")
 	if back == null:
-		_cleanup()
+		Support.cleanup("096")
 		return
 	t.check(bool(back.events.pending.get("search_encounter", false)), "遇敌事件的旗子还在")
 	t.eq(JSON.stringify(back.events.pending.get("encounter", {})), JSON.stringify(JSON.parse_string(JSON.stringify(enc))), "遭遇内容还在")
@@ -462,4 +450,4 @@ static func run_search_encounter_save_roundtrip(t: TestCase) -> void:
 	back2.events.pending["search_stage"] = true
 	var back3 := RunState.from_dict(JSON.parse_string(JSON.stringify(back2.to_dict())), c.chapter, c.items, c.enemies, c.sets)
 	t.check(bool(back3.events.pending.get("search_stage", false)), "「再搜 / 走」的旗子跟着存档")
-	_cleanup()
+	Support.cleanup("096")
