@@ -2,7 +2,7 @@
 ##
 ## 两段：
 ## 1. **敌人自己的道具各掷一次。** 概率 = 基础（按稀有度，越稀有越低）+ 难度 × difficulty_bonus + 幸运 × luck_bonus
-##    + 道具 / 套装的战利品效果（`LootContext.drop_owned_chance`）+ 各来源（局外 buff、地图 buff，占位）。夹进 0～1。
+##    + 道具 / 套装的战利品效果（`LootContext.drop_owned_chance`）。夹进 0～1。
 ## 2. **珍宝。** `rolls` 次尝试（基础 1，战利品效果可加），每次按 treasure_chance（可选吃同一套修正）掷；
 ##    中了按 treasure_weights（+ rarity_bias）抽稀有度，再在「带珍宝标签、这个稀有度、敌人**没有**」的道具里抽一件
 ##    （category_bias 加权）。珍宝道具还没定义时会记下 `treasure_missing`，不掉、不报错。
@@ -19,8 +19,6 @@ static func owned_chance(rule: DropRule, ctx: LootContext, def: ItemDef) -> floa
 	var p := rule.base_of(def.rarity) + _common_bonus(rule, ctx)
 	if ctx != null:
 		p += StatMath.to_float(ctx.drop_owned_chance)
-		for s in ctx.sources:
-			p += (s as DropBonusSource).owned_bonus(ctx, def)
 		p *= ctx.drop_mult
 	return clampf(p, 0.0, 1.0)
 
@@ -33,8 +31,6 @@ static func treasure_chance(rule: DropRule, ctx: LootContext) -> float:
 	if rule.treasure_modified:
 		p += _common_bonus(rule, ctx)
 	if ctx != null:
-		for s in ctx.sources:
-			p += (s as DropBonusSource).treasure_bonus(ctx)
 		p *= ctx.drop_mult
 	return clampf(p, 0.0, 1.0)
 

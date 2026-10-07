@@ -25,8 +25,8 @@ static func run(t: TestCase) -> void:
 	t.begin("地上 · 列表语义")
 
 	ItemInstance.reset_uid_counter()
-	var dot := _def("dot", ["#"])
-	var long := _def("long", ["#", "#", "#", "#", "#"])
+	var dot := _def("dot", ["1"])
+	var long := _def("long", ["1", "1", "1", "1", "1"])
 	var s := ItemStash.new(7)
 
 	var a := ItemInstance.create(dot)
@@ -49,8 +49,9 @@ static func run(t: TestCase) -> void:
 	t.check(s.insert(dd, 999), "拖到列表下方的空白处 = 放到最后，不该判失败")
 	t.eq(s.index_of(dd.uid), s.item_count() - 1, "它在最后一行")
 
-	# --- 挪位 ---
-	t.check(s.move(dd.uid, 0), "挪到第一行")
+	# --- 挪位（拖拽层的做法：取下再插回）---
+	var lifted := s.remove(dd.uid)
+	t.check(lifted != null and s.insert(lifted, 0), "挪到第一行")
 	t.eq(s.index_of(dd.uid), 0, "挪到了")
 	t.eq(s.item_count(), 4, "挪位不改变件数")
 
@@ -72,7 +73,7 @@ static func run_capacity(t: TestCase) -> void:
 	t.begin("地上 · 上限")
 
 	ItemInstance.reset_uid_counter()
-	var dot := _def("dot", ["#"])
+	var dot := _def("dot", ["1"])
 
 	var unlimited := ItemStash.new(1)
 	for i in 50:
@@ -92,8 +93,8 @@ static func run_tags(t: TestCase) -> void:
 	t.begin("地上 · 准入：什么都收（140 删了容器级准入标签）")
 
 	ItemInstance.reset_uid_counter()
-	var gun := _def("gun", ["#"], ["weapon"])
-	var food := _def("food", ["#"], ["remedy"])
+	var gun := _def("gun", ["1"], ["weapon"])
+	var food := _def("food", ["1"], ["remedy"])
 
 	var s := ItemStash.new(4)
 	t.check(s.can_admit(gun) and s.can_admit(food), "140：地上没有准入标签，什么都收")
@@ -106,7 +107,7 @@ static func run_transfer(t: TestCase) -> void:
 	t.begin("地上 · 从网格搬进列表")
 
 	ItemInstance.reset_uid_counter()
-	var dot := _def("dot", ["#"])
+	var dot := _def("dot", ["1"])
 	var loot := GridInventory.new(Vector2i(3, 3), 1)
 	var s := ItemStash.new(2)
 
@@ -161,7 +162,7 @@ static func run_drag_to_and_from(t: TestCase) -> void:
 	t.begin("地上 · 与棋盘之间来回拖")
 
 	ItemInstance.reset_uid_counter()
-	var dot := _def("dot", ["#"])
+	var dot := _def("dot", ["1"])
 	var board := GridInventory.new(Vector2i(4, 4), 1)
 	var s := ItemStash.new(2)
 	var bv := _grid_view(board, Vector2.ZERO)
@@ -198,7 +199,7 @@ static func run_drag_reorder(t: TestCase) -> void:
 	t.begin("地上 · 地上挪位置（128）：只改落点，列表顺序不变")
 
 	ItemInstance.reset_uid_counter()
-	var dot := _def("dot", ["#"])
+	var dot := _def("dot", ["1"])
 	var s := ItemStash.new(2)
 	var sv := _stash_view(s, Vector2.ZERO)
 
@@ -229,7 +230,7 @@ static func run_drag_cancel(t: TestCase) -> void:
 	t.begin("地上 · 取消拖拽回到原行")
 
 	ItemInstance.reset_uid_counter()
-	var dot := _def("dot", ["#"])
+	var dot := _def("dot", ["1"])
 	var s := ItemStash.new(2)
 	var sv := _stash_view(s, Vector2.ZERO)
 
@@ -257,9 +258,9 @@ static func run_bag_with_contents_rejected(t: TestCase) -> void:
 	t.begin("地上 · 带东西的包收得进来（087 作者定）：包一行、内容物打散各一行")
 
 	ItemInstance.reset_uid_counter()
-	var bag_def := _def("bag4", ["##", "##"])
+	var bag_def := _def("bag4", ["11", "11"])
 	bag_def.is_bag = true
-	var dot := _def("dot", ["#"])
+	var dot := _def("dot", ["1"])
 
 	var board := GridInventory.new(Vector2i(6, 6), 1, true)
 	var s := ItemStash.new(2)

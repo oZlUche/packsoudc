@@ -52,8 +52,7 @@ func cell_count() -> int:
 
 ## 本形状有几个在视觉上不同的旋转（1、2 或 4）。
 ##
-## 正方形返回 1，长条返回 2。UI 用它决定要不要显示旋转提示 ——
-## 对一个 2x2 方块按 R 键毫无反应会让玩家以为功能坏了。
+## 正方形返回 1，长条返回 2。[method GridInventory.find_first_fit] 用它剪枝：只试彼此不同的朝向。
 func distinct_rotation_count() -> int:
 	if _rot_cache.is_empty():
 		_build_cache()
@@ -142,18 +141,17 @@ static func _rotate_cw(cs: Array[Vector2i]) -> Array[Vector2i]:
 	return out
 
 
-## 从紧凑的文本写法构造形状，便于测试与手写数据：
-## "##." 一行代表一列格子，'#' 为占格，其余字符留空。
+## 从按行拆开的 0/1 写法构造形状，便于测试与手写数据：一个字符串一行，`1` 为占格，其余字符（`0`、`.`、空格）算空。
 ##     ItemShape.from_ascii(["11", "01"])  ->  L 形三格
 ##
-## `1` 与 `#` 都算占格，其余字符（`0`、`.`、空格）算空 —— `#` 是旧写法，仍然接受。
+## [method from_bits] 是正式记法，拆行后走这里；140 删了旧的 `#` 写法，测试也一律用 0/1。
 static func from_ascii(rows: Array) -> ItemShape:
 	var s := ItemShape.new()
 	var cs: Array[Vector2i] = []
 	for y in rows.size():
 		var line: String = rows[y]
 		for x in line.length():
-			if line[x] == "1" or line[x] == "#":
+			if line[x] == "1":
 				cs.append(Vector2i(x, y))
 	s.cells = cs
 	return s

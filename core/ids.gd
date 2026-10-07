@@ -12,13 +12,6 @@ class_name Ids
 extends RefCounted
 
 
-## 按**文本**升序排一份新的（原数组不动）
-static func sorted(names: Array[StringName]) -> Array[StringName]:
-	var out: Array[StringName] = names.duplicate()
-	sort(out)
-	return out
-
-
 ## 原地按文本升序排（有类型的、无类型的 id 数组都收）
 static func sort(names: Array) -> void:
 	names.sort_custom(func(a, b) -> bool: return String(a) < String(b))

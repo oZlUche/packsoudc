@@ -77,11 +77,6 @@ static func _move_bag(
 	return moved
 
 
-## 容器内挪位的便捷写法。
-static func move_within(inv: GridInventory, uid: int, origin: Vector2i, rot: int = 0) -> bool:
-	return move(inv, uid, inv, origin, rot)
-
-
 ## 把 uid 从 from 搬进 to 的任意可用位置。用于「全部拾取」。
 ##
 ## 收发两端都是 [ItemContainer] 而不是 [GridInventory]：地上是个列表，

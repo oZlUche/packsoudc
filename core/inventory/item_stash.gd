@@ -127,21 +127,6 @@ func remove(uid: int) -> ItemInstance:
 	return inst
 
 
-## 把已在表内的一件挪到第 [param to] 行。
-##
-## 单独一个方法而不是「先 remove 再 insert」：那样会发两次 changed，
-## 中间那一帧列表里少一行，看着像闪烁。
-func move(uid: int, to: int) -> bool:
-	var from := index_of(uid)
-	if from < 0:
-		return false
-	var inst := _list[from]
-	_list.remove_at(from)
-	_list.insert(clampi(to, 0, _list.size()), inst)
-	_notify_changed()
-	return true
-
-
 func clear() -> void:
 	if _list.is_empty():
 		return

@@ -400,7 +400,7 @@ static func run_enemy_identity(t: TestCase) -> void:
 	var c := _content()
 	var pool := c.enemies.pool(c.chapter.enemy_pool)
 	var checked := 0
-	for eid in c.enemies.enemy_ids():
+	for eid in TestSupport.enemy_ids():
 		var def := c.enemies.enemy(eid)
 		if def == null or def.item_tags.is_empty():
 			continue

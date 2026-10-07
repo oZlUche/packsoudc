@@ -4,7 +4,7 @@
 ## 作者的设想原话：每件道具都有一定概率掉落，稀有度越高基础掉落率越低，受难度（正面）、幸运值（增益 / 减益）、
 ## 局外 buff（占位）、地图 buff（占位）修正；每个敌人都有概率掉落自身未持有的最高两级（红、金）珍宝。
 ##
-## 全是数据：概率表按稀有度下标，修正是每一级 / 每一点加多少。局外与地图 buff 走 [DropBonusSource] 的接缝。
+## 全是数据：概率表按稀有度下标，修正是每一级 / 每一点加多少。局外与地图 buff 的修正走 [LootEffect]（施加到 [LootContext] 上），这里不另开口子。
 ## 作者数据，走内容管线：`data/authoring/drop_rules/*.json` → `data/drop_rules/*.tres`，章节按 id 引用。
 class_name DropRule
 extends Resource

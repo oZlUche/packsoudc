@@ -107,6 +107,32 @@ static func load_content(chapter_id: String = "free_mode", wants: PackedStringAr
 	return c
 
 
+## 敌人目录里的全部敌人 id（`EnemyDatabase.load_all` 装的就是这些；140 删了库上只有测试用的 enemy_ids）
+static func enemy_ids() -> Array:
+	return _ids_in(EnemyDatabase.ENEMY_DIR, EnemyDef)
+
+
+## 敌人池目录里的全部池 id（同上，对应删掉的 pool_ids）
+static func pool_ids() -> Array:
+	return _ids_in(EnemyDatabase.POOL_DIR, EnemyPool)
+
+
+static func _ids_in(dir_path: String, type: Variant) -> Array:
+	var out: Array = []
+	for res in ContentPaths.load_resources(dir_path):
+		if is_instance_of(res, type) and not out.has(res.id):
+			out.append(res.id)
+	return out
+
+
+## 池里这个敌人的那一行；没有返回 null（140 删了 EnemyPool.entry_of，只有测试在查）
+static func pool_entry(pool: EnemyPool, enemy_id: StringName) -> EnemyPoolEntry:
+	for e in pool.entries:
+		if e != null and e.enemy == enemy_id:
+			return e
+	return null
+
+
 ## 一份内容（道具、敌人、套装、buff、事件、章节、关卡与角色……）。
 ## 返回字典而不是一个类型，是为了和现有套件里的 `_content()` 形状一致，搬过来不用改断言
 static func content() -> Dictionary:

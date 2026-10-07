@@ -58,11 +58,6 @@ static func shown(tags: Array) -> Array:
 	return out
 
 
-static func has(id: StringName) -> bool:
-	_ensure()
-	return _defs.has(id) or _defs.has(IdAliases.tag(id))
-
-
 ## 登记过的标签，按字典序（编辑器下拉框、测试）
 static func ids() -> Array:
 	_ensure()

@@ -311,7 +311,7 @@ static func run_search(t: TestCase) -> void:
 	if why == &"encounter":
 		t.eq(fights.size(), 1, "遭遇了就地打了一场")
 		t.check(EnemyKit.has_enemy(s.encounter), "遭遇的是敌人池出的人")
-		t.check(w.pool.entry_of(StringName(String(s.encounter["enemy"]))).fits(_search_view(node)), "那个敌人允许在搜索点出现")
+		t.check(TestSupport.pool_entry(w.pool, StringName(String(s.encounter["enemy"]))).fits(_search_view(node)), "那个敌人允许在搜索点出现")
 	else:
 		# 091（作者定）：遭遇打赢了会话接着开、能搜到底 —— 所以搜满 / 走了之前可能已经打过，但都得是赢的
 		var all_won := true

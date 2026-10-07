@@ -17,10 +17,10 @@ static func run(t: TestCase) -> void:
 	t.begin("GridInventory")
 
 	ItemInstance.reset_uid_counter()
-	var bar := _def("bar", ["#", "#", "#"])          # 竖 1x3
-	var l_shape := _def("L", ["##", "#."])           # L 形三格
-	var single := _def("dot", ["#"])
-	var weapon := _def("sword", ["#", "#"], ["weapon"])
+	var bar := _def("bar", ["1", "1", "1"])          # 竖 1x3
+	var l_shape := _def("L", ["11", "10"])           # L 形三格
+	var single := _def("dot", ["1"])
+	var weapon := _def("sword", ["1", "1"], ["weapon"])
 
 	# --- 初始状态 ---
 	var inv := GridInventory.new(Vector2i(4, 4), 1)
@@ -158,8 +158,8 @@ static func run_serialization(t: TestCase) -> void:
 	t.begin("GridInventory 序列化")
 
 	ItemInstance.reset_uid_counter()
-	var bar := _def("bar", ["#", "#", "#"])
-	var l_shape := _def("L", ["##", "#."])
+	var bar := _def("bar", ["1", "1", "1"])
+	var l_shape := _def("L", ["11", "10"])
 	var db := ItemDatabase.new()
 	db.register(bar)
 	db.register(l_shape)

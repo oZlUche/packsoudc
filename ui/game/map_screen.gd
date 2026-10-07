@@ -680,8 +680,6 @@ func enemy_preview(id: int) -> String:
 	if _run.drop_rule != null:
 		var ctx := LootContext.new()
 		ctx.difficulty = _run.chapter.difficulty
-		ctx.add_source(MetaDropBonus.new())
-		ctx.add_source(MapDropBonus.new())
 		line += "　预计掉 %.1f 件，珍宝 %.0f%%" % [
 			DropResolver.expected_count(content, _run.drop_rule, ctx, flow.items, _run.map.get_node(id).type == &"core"),
 			DropResolver.treasure_chance(_run.drop_rule, ctx) * 100.0]

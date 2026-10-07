@@ -8,7 +8,7 @@ extends Resource
 @export var tags: Array[StringName] = []
 ## 格子数下限（0 = 不限）：「大及以上」写 9
 @export var min_cells: int = 0
-## 体积恰好这一档（ItemVolume.Grade；-1 = 不限）：「正好为中」写 2
+## 体积恰好这一档（[ItemVolume] 的档位序号：0 极小 … 4 极大；-1 = 不限）：「正好为中」写 2
 @export var exact_grade: int = -1
 ## 104：道具的 `combat.base_stats` 里**显式写了**这条属性才算（默认值不算「带有」：人人都有 10% 暴击率）；空 = 不看
 @export var has_stat: StringName = &""

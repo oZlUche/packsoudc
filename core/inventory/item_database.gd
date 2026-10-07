@@ -32,15 +32,14 @@ func gated_ids() -> Array:
 	return out
 
 
-## 扫描目录加载全部定义，返回成功登记的条数。
-##
-## 导出后 .tres 可能被转成 .res 或带上 .remap 后缀，这里一并处理。
-## 095：加载完按信仰的赐福模板派生赐福版（测试想要干净的库可以关）
-static var derive_blessings: bool = true
+## 095：装完按信仰的赐福模板派生赐福版（[method load_dir] 末尾）
 const BlessingsScript := preload("res://core/run/faith/blessings.gd")
 const FaithDefScript := preload("res://core/run/faith/faith_def.gd")
 
 
+## 扫描目录加载全部定义，返回成功登记的条数（含派生出来的赐福版）。
+##
+## 导出后 .tres 可能被转成 .res 或带上 .remap 后缀，这里一并处理。
 func load_dir(dir_path: String = DEFAULT_DIR) -> int:
 	if not DirAccess.dir_exists_absolute(dir_path):
 		push_warning("ItemDatabase: 无法打开目录 %s" % dir_path)
@@ -52,8 +51,7 @@ func load_dir(dir_path: String = DEFAULT_DIR) -> int:
 				count += 1
 		else:
 			push_warning("ItemDatabase: %s 不是 ItemDef，已跳过" % res.resource_path.get_file())
-	if derive_blessings:
-		count += BlessingsScript.derive_all(self, FaithDefScript.load_all())     # 095：按信仰的赐福模板派生赐福版
+	count += BlessingsScript.derive_all(self, FaithDefScript.load_all())     # 095：按信仰的赐福模板派生赐福版
 	return count
 
 
@@ -97,15 +95,6 @@ func ids(include_locked: bool = false) -> Array:
 	return out
 
 
-## 095：派生出来的赐福版（不进生成池，只从赐福来）
-func blessed_ids() -> Array:
-	var out: Array = []
-	for id in _defs:
-		if (_defs[id] as ItemDef).is_blessed():
-			out.append(id)
-	return out
-
-
 ## 095：这件的全部异体（原件 + 各神的赐福版），按 id 升序；传赐福版进来也认原件
 func variants_of(base_id: StringName) -> Array:
 	var root := base_id
@@ -133,15 +122,6 @@ func keepsake_ids() -> Array:
 ## 全部，含封存的
 func all_ids() -> Array:
 	return _defs.keys()
-
-
-## 封存的那些
-func sealed_ids() -> Array:
-	var out: Array = []
-	for id in _defs:
-		if (_defs[id] as ItemDef).is_sealed():
-			out.append(id)
-	return out
 
 
 func size() -> int:

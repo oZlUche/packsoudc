@@ -179,7 +179,7 @@ static func run_drag_last_item(t: TestCase) -> void:
 	var d := ItemDef.new()
 	d.id = &"t_one"
 	d.display_name = "one"
-	d.shape = ItemShape.from_ascii(["#"])
+	d.shape = ItemShape.from_ascii(["1"])
 	var box := GridInventory.new(Vector2i(3, 3), 1)
 	var a := ItemInstance.create(d)
 	box.place(a, Vector2i(0, 0), 0)
@@ -353,7 +353,7 @@ static func run_settings_and_double_click(t: TestCase) -> void:
 	var d := ItemDef.new()
 	d.id = &"t_dbl"
 	d.display_name = "dbl"
-	d.shape = ItemShape.from_ascii(["#"])
+	d.shape = ItemShape.from_ascii(["1"])
 	var box := GridInventory.new(Vector2i(3, 3), 1)
 	var a := ItemInstance.create(d)
 	box.place(a, Vector2i(0, 0), 0)

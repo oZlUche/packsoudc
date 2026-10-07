@@ -116,7 +116,7 @@ static func run_drag_on_big_cells(t: TestCase) -> void:
 	ItemInstance.reset_uid_counter()
 	var d := ItemDef.new()
 	d.id = &"t139"
-	d.shape = ItemShape.from_ascii(["##"])
+	d.shape = ItemShape.from_ascii(["11"])
 	var src := GridInventory.new(Vector2i(6, 4), 1)
 	var dst := GridInventory.new(Vector2i(6, 4), 2)
 	var a := ItemInstance.create(d, 1)

@@ -3,7 +3,7 @@
 class_name ItemVolume
 extends RefCounted
 
-enum Grade { TINY, SMALL, MEDIUM, LARGE, HUGE }
+## 档位序号 0～4 的名字（[method grade_name]）
 const NAMES := ["极小", "小", "中", "大", "极大"]
 ## 各档的格子数下限（上一档的上限 + 1）
 const FLOORS := [1, 2, 5, 9, 13]
@@ -19,10 +19,6 @@ static func grade_of_cells(n: int) -> int:
 		if n >= int(FLOORS[i]):
 			g = i
 	return g
-
-
-static func grade(def: ItemDef) -> int:
-	return grade_of_cells(cells_of(def))
 
 
 static func grade_name(g: int) -> String:

@@ -30,9 +30,9 @@ static func _full_ctx(items: ItemDatabase, enemies: EnemyDatabase) -> ContentImp
 	var ctx := _ctx()
 	for id in items.ids():
 		ctx.register_item(items.get_def(id))
-	for id in enemies.enemy_ids():
+	for id in TestSupport.enemy_ids():
 		ctx.register_enemy(enemies.enemy(id))
-	for id in enemies.pool_ids():
+	for id in TestSupport.pool_ids():
 		ctx.register_pool(enemies.pool(id))
 	return ctx
 
@@ -200,8 +200,8 @@ static func run_authoring_files(t: TestCase) -> void:
 
 	var items := _items()
 	var enemies := _enemies()
-	t.check(enemies.enemy_ids().size() >= 3, "至少三种敌人（实际 %d）" % enemies.enemy_ids().size())
-	t.check(enemies.pool_ids().size() >= 1, "至少一个池")
+	t.check(TestSupport.enemy_ids().size() >= 3, "至少三种敌人（实际 %d）" % TestSupport.enemy_ids().size())
+	t.check(TestSupport.pool_ids().size() >= 1, "至少一个池")
 	var ctx := _full_ctx(items, enemies)
 
 	for kind in ["enemies", "enemy_pools"]:
@@ -243,7 +243,7 @@ static func run_authoring_files(t: TestCase) -> void:
 
 	# 池里每种流派在每一档的稀有度上限下都得有道具，而且流派道具得能打 —— 不然「按流派挑」挑出来的是个空架子
 	var pool := enemies.pool(chapter.enemy_pool)
-	for id in enemies.enemy_ids():
+	for id in TestSupport.enemy_ids():
 		var def := enemies.enemy(id)
 		for s in def.schools:
 			var pool_items := EnemyPlacer.school_items([s] as Array[StringName], items, -1)
@@ -414,7 +414,7 @@ static func run_placement(t: TestCase) -> void:
 			strengths_seen[s] = true
 			t.eq(s, EnemyPlacer.wanted_strength(pool, n, float(depth[id]), chapter.difficulty, &""),
 				"点 %d 记的档位就是规则算出来的" % id)
-			t.check(pool.entry_of(def.id).fits(n), "点 %d：条目的过滤（环种类 / 节点类型 / 危险）对得上" % id)
+			t.check(TestSupport.pool_entry(pool, def.id).fits(n), "点 %d：条目的过滤（环种类 / 节点类型 / 危险）对得上" % id)
 			var tier := pool.tier_of(s)
 			var cap := EnemyPlacer.rarity_cap_of(rule, tier)
 			var placed: Array = c["items"]

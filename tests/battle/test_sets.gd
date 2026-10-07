@@ -13,7 +13,7 @@ static func _item(id: String, set_id: String = "", damage: float = 10.0) -> Item
 	var d := ItemDef.new()
 	d.id = StringName(id)
 	d.display_name = id
-	d.shape = ItemShape.from_ascii(["#"])
+	d.shape = ItemShape.from_ascii(["1"])
 	d.set_id = StringName(set_id)
 	var c := CombatProfile.new()
 	c.base_stats = {"damage": damage}
@@ -24,7 +24,7 @@ static func _item(id: String, set_id: String = "", damage: float = 10.0) -> Item
 static func _bag(id: String) -> ItemDef:
 	var d := ItemDef.new()
 	d.id = StringName(id)
-	d.shape = ItemShape.from_ascii(["####", "####"])
+	d.shape = ItemShape.from_ascii(["1111", "1111"])
 	d.is_bag = true
 	return d
 

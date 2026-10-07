@@ -53,10 +53,3 @@ func clamp_strength(strength: int) -> int:
 	if s.is_empty():
 		return maxi(0, strength)
 	return clampi(strength, s[0], s[s.size() - 1])
-
-
-func entry_of(enemy_id: StringName) -> EnemyPoolEntry:
-	for e in entries:
-		if e != null and e.enemy == enemy_id:
-			return e
-	return null
