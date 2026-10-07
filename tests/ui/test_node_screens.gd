@@ -8,30 +8,9 @@ const META := "user://test_084_meta.json"
 const SETTINGS := "user://test_084_settings.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var prologue: ChapterDef
-	var loadouts: Array[LoadoutDef]
-	var events: Dictionary
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.prologue = load(ContentPaths.asset_file("chapters", "prologue"))
-	c.loadouts = GameFlow.load_loadouts()
-	c.events = GameFlow.load_events()
-	return c
+## 一局级套件的标准内容：自由模式 + 开局装备 + 事件表（altar / 09x / countdown / safe / keyword_tips 等套件也借这一份）
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["loadouts", "events"])
 
 
 static func _cleanup() -> void:
@@ -40,7 +19,7 @@ static func _cleanup() -> void:
 	GameSettings.remove(SETTINGS)
 
 
-static func _flow(c: Content, hp: float = 10000.0, keep_saves: bool = false) -> GameFlow:
+static func _flow(c: TestSupport.Content, hp: float = 10000.0, keep_saves: bool = false) -> GameFlow:
 	if not keep_saves:
 		_cleanup()
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
@@ -54,7 +33,7 @@ static func _flow(c: Content, hp: float = 10000.0, keep_saves: bool = false) -> 
 	return f
 
 
-static func _kit(c: Content) -> LoadoutDef:
+static func _kit(c: TestSupport.Content) -> LoadoutDef:
 	for l in c.loadouts:
 		if l.id == &"standard":
 			return l
@@ -62,7 +41,7 @@ static func _kit(c: Content) -> LoadoutDef:
 
 
 ## 出生点旁边就有某类型点的种子：{seed, entry, next}
-static func _seed_with(c: Content, type: StringName, kit: Array[StringName]) -> Dictionary:
+static func _seed_with(c: TestSupport.Content, type: StringName, kit: Array[StringName]) -> Dictionary:
 	for seed in range(1, 80):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit)
 		if s == null:

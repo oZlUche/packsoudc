@@ -6,7 +6,7 @@ const H := preload("res://tests/run/test_hunters.gd")
 
 
 ## hunter_1 的副本：不动（速度 0），够得着才打（同一个点）
-static func _still_defs(c: H.Content, id: StringName) -> Dictionary:
+static func _still_defs(c: TestSupport.Content, id: StringName) -> Dictionary:
 	var defs := H._copy_defs(c.hunter_defs)
 	var def: HunterDef = defs[id]
 	def.speed = 0
@@ -15,7 +15,7 @@ static func _still_defs(c: H.Content, id: StringName) -> Dictionary:
 
 
 ## 开局走一步（猎手出现），清掉脚下等着选的事；返回 [run, 猎手]
-static func _ready_run(c: H.Content, defs: Dictionary, id: StringName) -> Array:
+static func _ready_run(c: TestSupport.Content, defs: Dictionary, id: StringName) -> Array:
 	var s := H._start(c, defs, H._difficulty([id] as Array[StringName]))
 	if s == null or not H._step_once(s) or s.hunters.alive().is_empty():
 		return []

@@ -7,26 +7,8 @@ const SAVE := "user://test_difficulty_run.json"
 const META := "user://test_difficulty_meta.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var difficulties: Array[DifficultyDef]
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.difficulties = GameFlow.load_difficulties()
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["difficulties"])
 
 
 static func _cleanup() -> void:
@@ -35,7 +17,7 @@ static func _cleanup() -> void:
 			DirAccess.remove_absolute(p)
 
 
-static func _flow(c: Content) -> GameFlow:
+static func _flow(c: TestSupport.Content) -> GameFlow:
 	_cleanup()
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = [c.chapter] as Array[ChapterDef]
@@ -46,7 +28,7 @@ static func _flow(c: Content) -> GameFlow:
 
 
 ## 第一个要解锁的难度；没有返回 null
-static func _locked(c: Content) -> DifficultyDef:
+static func _locked(c: TestSupport.Content) -> DifficultyDef:
 	for d in c.difficulties:
 		if d.requires_unlock != &"":
 			return d

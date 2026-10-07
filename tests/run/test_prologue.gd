@@ -6,32 +6,8 @@ const SAVE := "user://test_prologue_run.json"
 const META := "user://test_prologue_meta.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var prologue: ChapterDef
-	var chapter1: ChapterDef
-	var characters: Array[CharacterDef]
-	var events: Dictionary
-	var faiths: Dictionary
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.prologue = load(ContentPaths.asset_file("chapters", "prologue"))
-	c.chapter1 = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.characters = GameFlow.load_characters()
-	c.events = GameFlow.load_events()
-	c.faiths = GameFlow.load_faiths()
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("prologue", ["characters", "events", "faiths"])
 
 
 static func _cleanup() -> void:
@@ -40,14 +16,14 @@ static func _cleanup() -> void:
 			DirAccess.remove_absolute(p)
 
 
-static func _brutus(c: Content) -> CharacterDef:
+static func _brutus(c: TestSupport.Content) -> CharacterDef:
 	for ch in c.characters:
 		if ch.id == &"brutus":
 			return ch
 	return null
 
 
-static func _start(c: Content) -> RunState:
+static func _start(c: TestSupport.Content) -> RunState:
 	var s := RunState.start(c.prologue, 7, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], _brutus(c))
 	if s == null:
 		return null
@@ -59,7 +35,7 @@ static func _start(c: Content) -> RunState:
 
 
 ## 084：敌人和玩家一样 —— 有包、道具全在包里、每件都摆得上（重建出的件数 = 写的件数）；必掉的都是身上有的
-static func _check_enemy_bags(t: TestCase, c: Content, content: Dictionary, who: String) -> void:
+static func _check_enemy_bags(t: TestCase, c: TestSupport.Content, content: Dictionary, who: String) -> void:
 	var board := EnemyKit.board_of(content, c.items)
 	var entries: Array = content.get("items", [])
 	t.eq(board.item_count(), entries.size(), "%s：%d 件都摆上了" % [who, entries.size()])
@@ -110,7 +86,7 @@ static func _finds_until(path: Array[MapNode], upto: int) -> Array[StringName]:
 
 
 ## 布鲁图斯背着这些东西的战斗单位（初始包 + 尽量塞）
-static func _player(c: Content, ids: Array[StringName]) -> CombatantSpec:
+static func _player(c: TestSupport.Content, ids: Array[StringName]) -> CombatantSpec:
 	var ch := _brutus(c)
 	var board := GridInventory.new(ch.board_size, 1, true)
 	for bag_id in ch.starting_bags:

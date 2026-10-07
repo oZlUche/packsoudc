@@ -7,29 +7,11 @@ const SAVE := "user://test_flow_run.json"
 const META := "user://test_flow_meta.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var loadouts: Array[LoadoutDef]
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["loadouts"])
 
 
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.loadouts = GameFlow.load_loadouts()
-	return c
-
-
-static func _flow(c: Content, hp: float = 10000.0) -> GameFlow:
+static func _flow(c: TestSupport.Content, hp: float = 10000.0) -> GameFlow:
 	_cleanup()      # 上一次跑挂在半路可能留下存档，别让它影响这一次
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = [c.chapter] as Array[ChapterDef]
@@ -40,7 +22,7 @@ static func _flow(c: Content, hp: float = 10000.0) -> GameFlow:
 	return f
 
 
-static func _loadout(c: Content, id: StringName) -> LoadoutDef:
+static func _loadout(c: TestSupport.Content, id: StringName) -> LoadoutDef:
 	for l in c.loadouts:
 		if l.id == id:
 			return l
@@ -48,7 +30,7 @@ static func _loadout(c: Content, id: StringName) -> LoadoutDef:
 
 
 ## 找一个种子：某个出生点旁边就有某类型的点。返回 {seed, entry, next}，找不到空字典
-static func _seed_with(c: Content, type: StringName, kit: Array[StringName] = [] as Array[StringName]) -> Dictionary:
+static func _seed_with(c: TestSupport.Content, type: StringName, kit: Array[StringName] = [] as Array[StringName]) -> Dictionary:
 	for seed in range(1, 80):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit)
 		if s == null:

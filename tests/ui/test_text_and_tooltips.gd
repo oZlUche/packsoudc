@@ -3,26 +3,8 @@
 extends RefCounted
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var pool: EnemyPool
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.pool = c.enemies.pool(c.chapter.enemy_pool)
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content()
 
 
 static func run_text_template(t: TestCase) -> void:

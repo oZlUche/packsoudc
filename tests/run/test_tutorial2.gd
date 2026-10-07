@@ -6,36 +6,9 @@ const SAVE := "user://test_t2_run.json"
 const META := "user://test_t2_meta.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var prologue: ChapterDef
-	var chapter1: ChapterDef
-	var brutus: CharacterDef
-	var events: Dictionary
-	var recipes: Array[RecipeDef]
-	var graph: MapGraph
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "prologue_2"))
-	c.prologue = load(ContentPaths.asset_file("chapters", "prologue"))
-	c.chapter1 = load(ContentPaths.asset_file("chapters", "free_mode"))
-	for ch in GameFlow.load_characters():
-		if ch.id == &"brutus":
-			c.brutus = ch
-	c.events = GameFlow.load_events()
-	c.recipes = GameFlow.load_recipes()
+static func _content() -> TestSupport.Content:
+	var c := TestSupport.load_content("prologue_2", ["brutus", "events", "recipes"])
+	# 预设图按种子 1 解析一份：要跑地图源，只这个套件要，所以不进共用装载
 	c.graph = c.chapter.map_source.resolve(1) if c.chapter != null and c.chapter.map_source != null else null
 	return c
 
@@ -46,7 +19,7 @@ static func _cleanup() -> void:
 
 
 ## 布鲁图斯背着这些东西的战斗单位
-static func _player(c: Content, ids: Array[StringName]) -> CombatantSpec:
+static func _player(c: TestSupport.Content, ids: Array[StringName]) -> CombatantSpec:
 	var board := GridInventory.new(c.brutus.board_size, 1, true)
 	for bag_id in c.brutus.starting_bags:
 		board.try_add(ItemInstance.create(c.items.get_def(bag_id), 0), true)
@@ -62,7 +35,7 @@ static func _player(c: Content, ids: Array[StringName]) -> CombatantSpec:
 
 
 ## 五个种子：赢几场、平均剩多少血
-static func _fight(c: Content, ids: Array[StringName], content: Dictionary) -> Dictionary:
+static func _fight(c: TestSupport.Content, ids: Array[StringName], content: Dictionary) -> Dictionary:
 	var me := _player(c, ids)
 	var foe := EnemyKit.spec_of(content, c.enemies, null, c.items)
 	var wins := 0

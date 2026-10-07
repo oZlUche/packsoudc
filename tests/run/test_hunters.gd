@@ -6,26 +6,8 @@ const SAVE := "user://test_hunters_run.json"
 const META := "user://test_hunters_meta.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var hunter_defs: Dictionary
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.hunter_defs = GameFlow.load_hunters()
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["hunter_defs"])
 
 
 static func _cleanup() -> void:
@@ -49,7 +31,7 @@ static func _difficulty(ids: Array[StringName], count: int = 1, min_dist: float 
 
 
 ## 开一局、挑出生点。[param defs] 是这一局的猎手定义表（可以是改过数的副本）
-static func _start(c: Content, defs: Dictionary, diff: DifficultyDef) -> RunState:
+static func _start(c: TestSupport.Content, defs: Dictionary, diff: DifficultyDef) -> RunState:
 	for seed in range(1, 40):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [&"bag_leather", &"rifle"] as Array[StringName],
 			{}, [] as Array[StringName], null, [], diff, defs)
@@ -67,7 +49,7 @@ static func _copy_defs(defs: Dictionary) -> Dictionary:
 	return out
 
 
-static func _first_def(c: Content) -> HunterDef:
+static func _first_def(c: TestSupport.Content) -> HunterDef:
 	var ids: Array = c.hunter_defs.keys()
 	ids.sort()
 	return c.hunter_defs[ids[0]] if not ids.is_empty() else null

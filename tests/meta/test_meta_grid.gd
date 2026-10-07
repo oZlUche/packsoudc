@@ -6,42 +6,22 @@ const SAVE := "user://test_meta_grid_run.json"
 const META := "user://test_meta_grid_meta.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var loadouts: Array[LoadoutDef]
-	var rules: MetaRules
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["loadouts", "meta_rules"])
 
 
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.loadouts = GameFlow.load_loadouts()
-	c.rules = GameFlow.load_meta_rules()
-	return c
-
-
-static func _kit(c: Content) -> LoadoutDef:
+static func _kit(c: TestSupport.Content) -> LoadoutDef:
 	for l in c.loadouts:
 		if l.id == &"standard":
 			return l
 	return c.loadouts[0]
 
 
-static func _flow(c: Content, rules: MetaRules = null) -> GameFlow:
+static func _flow(c: TestSupport.Content, rules: MetaRules = null) -> GameFlow:
 	RunSave.remove(SAVE)
 	MetaSave.remove(META)
-	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new(rules if rules != null else c.rules))
-	f.meta_rules = rules if rules != null else c.rules
+	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new(rules if rules != null else c.meta_rules))
+	f.meta_rules = rules if rules != null else c.meta_rules
 	f.chapters = [c.chapter] as Array[ChapterDef]
 	f.loadouts = c.loadouts
 	f.save_path = SAVE
@@ -51,7 +31,7 @@ static func _flow(c: Content, rules: MetaRules = null) -> GameFlow:
 
 
 ## 一局直接算撤离
-static func _extracted(c: Content, seed: int, kit: LoadoutDef) -> RunState:
+static func _extracted(c: TestSupport.Content, seed: int, kit: LoadoutDef) -> RunState:
 	var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items)
 	s.pick_spawn(s.map.entry_ids[0])
 	s.phase = RunState.Phase.EXTRACTED
@@ -210,7 +190,7 @@ static func run_flow_gate(t: TestCase) -> void:
 	t.check(int(stored["moved"]) > 0, "一键置入 %d 件" % stored["moved"])
 	t.check(not f.meta.has_pending_board(), "清空了")
 	t.eq(f.can_begin(), "", "能开新局了")
-	t.eq(MetaSave.read(c.items, META, c.rules).warehouse.item_count(), f.meta.warehouse.item_count(), "置入之后存了")
+	t.eq(MetaSave.read(c.items, META, c.meta_rules).warehouse.item_count(), f.meta.warehouse.item_count(), "置入之后存了")
 	t.not_null(f.begin(c.chapter, kit, 33), "开局")
 	RunSave.remove(SAVE)
 	MetaSave.remove(META)

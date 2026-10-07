@@ -8,29 +8,11 @@ const META := "user://test_storage_meta.json"
 const SETTINGS := "user://test_storage_settings.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var loadouts: Array[LoadoutDef]
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["loadouts"])
 
 
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.loadouts = GameFlow.load_loadouts()
-	return c
-
-
-static func _flow(c: Content) -> GameFlow:
+static func _flow(c: TestSupport.Content) -> GameFlow:
 	_cleanup()
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = [c.chapter] as Array[ChapterDef]
@@ -49,7 +31,7 @@ static func _cleanup() -> void:
 
 
 ## 出生点旁边就有某类型点的种子：{seed, entry, next}
-static func _seed_with(c: Content, type: StringName, kit: Array[StringName]) -> Dictionary:
+static func _seed_with(c: TestSupport.Content, type: StringName, kit: Array[StringName]) -> Dictionary:
 	for seed in range(1, 80):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit)
 		if s == null:
@@ -78,7 +60,7 @@ static func _settle(f: GameFlow) -> void:
 				f.resume()
 
 
-static func _kit(c: Content) -> LoadoutDef:
+static func _kit(c: TestSupport.Content) -> LoadoutDef:
 	for l in c.loadouts:
 		if l.id == &"standard":
 			return l

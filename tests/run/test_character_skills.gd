@@ -7,28 +7,8 @@ const SAVE := "user://test_skills_run.json"
 const META := "user://test_skills_meta.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var characters: Array[CharacterDef]
-	var hunter_defs: Dictionary
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.characters = GameFlow.load_characters()
-	c.hunter_defs = GameFlow.load_hunters()
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["characters", "hunter_defs"])
 
 
 static func _cleanup() -> void:
@@ -37,7 +17,7 @@ static func _cleanup() -> void:
 			DirAccess.remove_absolute(p)
 
 
-static func _character(c: Content, id: StringName) -> CharacterDef:
+static func _character(c: TestSupport.Content, id: StringName) -> CharacterDef:
 	for ch in c.characters:
 		if ch.id == id:
 			return ch
@@ -52,7 +32,7 @@ static func _expected(ch: CharacterDef) -> RunContext:
 	return ctx
 
 
-static func _start(c: Content, ch: CharacterDef, diff: DifficultyDef = null, defs: Dictionary = {}) -> RunState:
+static func _start(c: TestSupport.Content, ch: CharacterDef, diff: DifficultyDef = null, defs: Dictionary = {}) -> RunState:
 	for seed in range(1, 60):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], ch, [], diff, defs)
 		if s != null:

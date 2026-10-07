@@ -8,30 +8,8 @@ const SAVE := "user://test_char_run.json"
 const META := "user://test_char_meta.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var loadouts: Array[LoadoutDef]
-	var characters: Array[CharacterDef]
-	var rules: MetaRules
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.loadouts = GameFlow.load_loadouts()
-	c.characters = GameFlow.load_characters()
-	c.rules = GameFlow.load_meta_rules()
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["loadouts", "characters", "meta_rules"])
 
 
 static func _cleanup() -> void:
@@ -40,7 +18,7 @@ static func _cleanup() -> void:
 			DirAccess.remove_absolute(p)
 
 
-static func _ctx(c: Content) -> ContentImporter.Context:
+static func _ctx(c: TestSupport.Content) -> ContentImporter.Context:
 	var ctx := ContentImporter.Context.new()
 	for id in c.items.ids():
 		ctx.register_item(c.items.get_def(id))
@@ -56,7 +34,7 @@ static func _import(data: Dictionary, ctx: ContentImporter.Context) -> ImportRep
 
 
 ## 一套开局装备里、局外收的（非包）道具
-static func _kept_of(c: Content, kit: LoadoutDef) -> Array[ItemDef]:
+static func _kept_of(c: TestSupport.Content, kit: LoadoutDef) -> Array[ItemDef]:
 	var out: Array[ItemDef] = []
 	if kit == null:
 		return out
@@ -67,7 +45,7 @@ static func _kept_of(c: Content, kit: LoadoutDef) -> Array[ItemDef]:
 	return out
 
 
-static func _flow(c: Content, rules: MetaRules) -> GameFlow:
+static func _flow(c: TestSupport.Content, rules: MetaRules) -> GameFlow:
 	_cleanup()
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new(rules))
 	f.chapters = [c.chapter] as Array[ChapterDef]
@@ -150,7 +128,7 @@ static func run_character_pipeline(t: TestCase) -> void:
 	var lone := ImportReport.new()
 	ContentImporter.import_meta_rules({"id": "x", "first_kit": "no_such_kit"}, ContentImporter.Context.new(), lone)
 	t.check(lone.ok(), "单独导不查")
-	t.check(c.rules != null and c.rules.first_kit != &"", "作者数据里配了第一套（占位）")
+	t.check(c.meta_rules != null and c.meta_rules.first_kit != &"", "作者数据里配了第一套（占位）")
 
 
 static func run_start_with_character(t: TestCase) -> void:
@@ -207,14 +185,14 @@ static func run_start_with_character(t: TestCase) -> void:
 static func run_first_kit_and_flow(t: TestCase) -> void:
 	t.begin("角色 · 第一套发进仓库；从仓库拖上棋盘再出发 = 带入并存 meta；读档找回基线")
 	var c := _content()
-	if c.characters.is_empty() or c.rules == null:
+	if c.characters.is_empty() or c.meta_rules == null:
 		t.check(false, "没有角色或局外规则")
 		return
 	var ch := c.characters[0]
-	var f := _flow(c, c.rules)
-	var kit := f.loadout_of(c.rules.first_kit)
+	var f := _flow(c, c.meta_rules)
+	var kit := f.loadout_of(c.meta_rules.first_kit)
 	var kept := _kept_of(c, kit)
-	t.check(kit != null and not kept.is_empty(), "第一套 '%s' 存在且有非包道具" % c.rules.first_kit)
+	t.check(kit != null and not kept.is_empty(), "第一套 '%s' 存在且有非包道具" % c.meta_rules.first_kit)
 	t.eq(f.meta.warehouse.item_count(), 0, "仓库一开始是空的")
 	f.new_run()
 	t.eq(f.meta.warehouse.item_count(), kept.size(), "开局屏打开时把第一套的非包道具发进了仓库（%d 件）" % kept.size())
@@ -234,7 +212,7 @@ static func run_first_kit_and_flow(t: TestCase) -> void:
 	t.eq(f0.meta.warehouse.item_count(), 0, "first_kit 空 = 不发")
 
 	# 从仓库拖上棋盘再出发
-	f = _flow(c, c.rules)
+	f = _flow(c, c.meta_rules)
 	f.new_run()
 	var first := f.meta.warehouse.items()[0] as ItemInstance
 	var staged := GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
@@ -259,13 +237,13 @@ static func run_first_kit_and_flow(t: TestCase) -> void:
 			found = true
 	t.check(found, "带的那件在一局的棋盘上、位置和开局屏摆的一样")
 	t.eq(run.player_baseline.value_of(&"max_hp"), ch.baseline().value_of(&"max_hp"), "基线按角色")
-	var on_disk := MetaSave.read(c.items, META, c.rules)
+	var on_disk := MetaSave.read(c.items, META, c.meta_rules)
 	t.eq(on_disk.warehouse.item_count(), kept.size() - 1, "出发那一刻存了 meta：仓库里没有它了")
 
 	# 存档、换个持有方读回来：角色 id 在，基线从定义表找回
 	run.phase = RunState.Phase.ON_MAP
 	t.check(f.save(), "存档")
-	var f2 := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new(c.rules))
+	var f2 := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new(c.meta_rules))
 	f2.chapters = [c.chapter] as Array[ChapterDef]
 	f2.characters = c.characters
 	f2.save_path = SAVE

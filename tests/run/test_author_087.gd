@@ -8,28 +8,8 @@ const META := "user://test_087_meta.json"
 const SETTINGS := "user://test_087_settings.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var loadouts: Array[LoadoutDef]
-	var events: Dictionary
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.loadouts = GameFlow.load_loadouts()
-	c.events = GameFlow.load_events()
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["loadouts", "events"])
 
 
 static func _cleanup() -> void:
@@ -38,7 +18,7 @@ static func _cleanup() -> void:
 	GameSettings.remove(SETTINGS)
 
 
-static func _flow(c: Content) -> GameFlow:
+static func _flow(c: TestSupport.Content) -> GameFlow:
 	_cleanup()
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = [c.chapter] as Array[ChapterDef]
@@ -51,7 +31,7 @@ static func _flow(c: Content) -> GameFlow:
 	return f
 
 
-static func _kit(c: Content) -> LoadoutDef:
+static func _kit(c: TestSupport.Content) -> LoadoutDef:
 	for l in c.loadouts:
 		if l.id == &"standard":
 			return l
