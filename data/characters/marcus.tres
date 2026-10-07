@@ -55,6 +55,6 @@ base_stats = {
 "max_stamina": 65
 }
 starting_bags = Array[StringName]([&"bag_leather", &"bag_small"])
-weight_capacity = 34
+weight_capacity = 48
 skills = Array[ExtResource("2_1b8yu")]([SubResource("Resource_2w6jy"), SubResource("Resource_22n10"), SubResource("Resource_xwebo")])
 identity = &"legion"

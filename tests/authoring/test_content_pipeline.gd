@@ -117,7 +117,7 @@ static func run_cross_scope(t: TestCase) -> void:
 	var ctx := _ctx()
 	var r := _report()
 	ContentImporter.import_buff({
-		"id": "burn", "display_name": "灼烧", "max_stacks": 10,     # 可叠层的永续，不填时长（085）
+		"id": "burn", "display_name": "灼烧",     # 可叠层的永续，不填时长（085）
 		"rules": [{
 			"trigger": {"type": "on_schedule"},
 			"cadence": {"type": "cooldown", "seconds": 1.0},
@@ -148,7 +148,7 @@ static func run_cross_scope(t: TestCase) -> void:
 		"combat": {"rules": [{
 			"trigger": {"type": "on_battle_start"},
 			"cadence": {"type": "always"},
-			"effects": [{"type": "apply_status", "buff": {"id": "rush", "max_stacks": 1, "duration_sec": 3.0}}],
+			"effects": [{"type": "apply_status", "buff": {"id": "rush", "stackable": false, "duration_sec": 3.0}}],
 		}]},
 	})[0]
 	t.eq((inline.combat.rules[0].effects[0] as ApplyStatus).buff.id, &"rush",
@@ -159,24 +159,23 @@ static func run_buff_duration_rule(t: TestCase) -> void:
 	t.begin("内容管线 · 作者定：可叠层的 buff 永续不许填时长（独立文件与道具内联都拦）；不可叠层的可以过期；BuffDef.is_permanent 按此判")
 	var ctx := _ctx()
 	var bad := _report()
-	ContentImporter.import_buff({"id": "t_stack_timed", "display_name": "x", "max_stacks": 5, "duration_sec": 6.0}, ctx, bad)
+	ContentImporter.import_buff({"id": "t_stack_timed", "display_name": "x", "duration_sec": 6.0}, ctx, bad)
 	t.check(not bad.ok(), "可叠层 + 时长：拦下（%s）" % bad.to_text())
 	var ok := _report()
-	ContentImporter.import_buff({"id": "t_single_timed", "display_name": "x", "max_stacks": 1, "duration_sec": 6.0}, ctx, ok)
+	ContentImporter.import_buff({"id": "t_single_timed", "display_name": "x", "stackable": false, "duration_sec": 6.0}, ctx, ok)
 	t.check(ok.ok(), "不可叠层 + 时长：可以")
 	var ok2 := _report()
-	ContentImporter.import_buff({"id": "t_stack_forever", "display_name": "x", "max_stacks": 0}, ctx, ok2)
+	ContentImporter.import_buff({"id": "t_stack_forever", "display_name": "x", "stackable": true}, ctx, ok2)
 	t.check(ok2.ok(), "不限层、没时长：可以")
 	var bad_item := _report()
 	ContentImporter.import_item({"id": "t_vial", "shape": ["1"], "combat": {"rules": [{"trigger": {"type": "on_schedule"}, "cadence": {"type": "cooldown", "seconds": 1.0},
-		"effects": [{"type": "apply_status", "buff": {"id": "t_inline", "max_stacks": 3, "duration_sec": 2.0}}]}]}}, ctx, bad_item)
+		"effects": [{"type": "apply_status", "buff": {"id": "t_inline", "duration_sec": 2.0}}]}]}}, ctx, bad_item)
 	t.check(not bad_item.ok(), "道具内联的可叠层 buff 填了时长：也拦")
 	var stack := BuffDef.new()
-	stack.max_stacks = 5
 	stack.duration_sec = 6.0
 	t.check(stack.is_stackable() and stack.is_permanent(), "可叠层的就算写了时长也永续")
 	var single := BuffDef.new()
-	single.max_stacks = 1
+	single.stackable = false
 	single.duration_sec = 6.0
 	t.check(not single.is_stackable() and not single.is_permanent() and single.duration_text().contains("6.0"), "不可叠层 + 时长：会过期")
 	single.duration_sec = 0.0
@@ -186,7 +185,7 @@ static func run_buff_duration_rule(t: TestCase) -> void:
 
 
 static func run_weapon_stamina_rules(t: TestCase) -> void:
-	t.begin("内容管线 · 103 作者定：武器必须造成伤害；只有武器消耗耐力；不限层 + 百分比的 buff 告警")
+	t.begin("内容管线 · 103 作者定：武器必须造成伤害；只有武器消耗耐力；137：不限层 + 百分比的 buff 不再告警（上限取消了）")
 	var hit := {"trigger": {"type": "on_schedule"}, "cadence": {"type": "cooldown", "seconds": 1.0}, "effects": [{"type": "deal_damage"}]}
 	var hit_cost := hit.duplicate(true)
 	hit_cost["costs"] = [{"type": "resource", "amount": 5.0}]
@@ -212,14 +211,10 @@ static func run_weapon_stamina_rules(t: TestCase) -> void:
 	var drone: ImportReport = _import_item({"id": "t_drone", "shape": ["1"], "tags": ["tool"], "combat": {"rules": [mana]}})[1]
 	t.check(drone.ok(), "非武器耗法力：可以")
 
-	# 106：armor / max_hp / max_mana 现在都是标准轴，单条 mod 的简单 buff 会另收一条「改用轴」的提示，
-	# 所以这里用没有对应轴的 max_shield 单测「不限层 + 百分比」那一条告警
+	# 137：叠层上限取消，「不限层 + 百分比」那条告警跟着删（每个乘算 buff 都会响，没有信息量）
 	var warn := _report()
 	ContentImporter.import_buff({"id": "t_rage", "mods": [{"stat": "max_shield", "mode": "MULT", "amount": 10}]}, _ctx(), warn)
-	t.check(warn.ok() and warn.warnings.size() == 1, "不限层 + 百分比：告警不报错（%s）" % warn.to_text())
-	var capped := _report()
-	ContentImporter.import_buff({"id": "t_rage3", "max_stacks": 3, "mods": [{"stat": "max_shield", "mode": "MULT", "amount": 10}]}, _ctx(), capped)
-	t.check(capped.ok() and capped.warnings.is_empty(), "填了层数上限：不告警")
+	t.check(warn.ok() and warn.warnings.is_empty(), "不限层 + 百分比：不告警（%s）" % warn.to_text())
 	var flat := _report()
 	ContentImporter.import_buff({"id": "t_tough", "mods": [{"stat": "max_shield", "amount": 5.0}]}, _ctx(), flat)
 	t.check(flat.warnings.is_empty(), "不限层 + 固定值：不告警")
@@ -227,7 +222,7 @@ static func run_weapon_stamina_rules(t: TestCase) -> void:
 	# 106 第五节：防护 / 生命上限 / 法力上限有轴了，这类简单 buff 该被提示改成 shift_axis
 	for stat in ["armor", "max_hp", "max_mana"]:
 		var axis_hint := _report()
-		ContentImporter.import_buff({"id": "t_axis_" + stat, "max_stacks": 3, "mods": [{"stat": stat, "amount": 1.0}]}, _ctx(), axis_hint)
+		ContentImporter.import_buff({"id": "t_axis_" + stat, "mods": [{"stat": stat, "amount": 1.0}]}, _ctx(), axis_hint)
 		t.check(axis_hint.ok() and axis_hint.to_text().contains("shift_axis"),
 			"%s 的简单 buff 提示改用标准轴（%s）" % [stat, axis_hint.to_text()])
 
@@ -246,7 +241,7 @@ static func run_weapon_stamina_rules(t: TestCase) -> void:
 	var crowbar = JSON.parse_string(FileAccess.get_file_as_string("res://data/authoring/items/crowbar.json"))
 	t.check((crowbar["tags"] as Array).has("weapon"), "撬棍带武器标签（作者定）")
 
-	var desc := Glossary.describe_buff(ContentImporter.import_buff({"id": "t_brief", "max_stacks": 1, "duration_sec": 3.0}, _ctx(), _report()))
+	var desc := Glossary.describe_buff(ContentImporter.import_buff({"id": "t_brief", "stackable": false, "duration_sec": 3.0}, _ctx(), _report()))
 	t.check(desc.contains("[color=") and desc.contains("不可叠层") and desc.contains("持续 3.0 秒"), "词条：不可叠层与会过期用例外色标出（%s）" % desc)
 	var desc2 := Glossary.describe_buff(ContentImporter.import_buff({"id": "t_stack"}, _ctx(), _report()))
 	t.check(not desc2.contains("[color="), "默认（不限层、永续）不上色")
@@ -492,11 +487,37 @@ static func run_registries_split(t: TestCase) -> void:
 			t.check(all.has(kind), "校验表里的种类 %s（%s）在注册表里" % [kind, base])
 
 
+## 137（作者定）：buff 的叠层上限取消 —— 老字段 max_stacks 迁移成 stackable（1 → 不可叠，其余 → 可叠）、提醒；导出只写新键；
+## 信仰加成的 max_stacks 改名 max_shares（旧键照收）；数据里没有剩下的 max_stacks
+static func run_stack_cap_migration(t: TestCase) -> void:
+	t.begin("137 · 叠层上限取消：max_stacks → stackable 迁移、提醒、导出只写新键；信仰加成改名 max_shares；数据里不剩 max_stacks")
+	var r1 := _report()
+	var b1 := ContentImporter.import_buff({"id": "t_cap6", "max_stacks": 6}, _ctx(), r1)
+	t.check(r1.ok() and b1.stackable and r1.to_text().contains("stackable"), "max_stacks 6 → 可叠层，带迁移提醒（%s）" % r1.to_text())
+	t.check(not ContentExporter.export_buff(b1).has("max_stacks") and not ContentExporter.export_buff(b1).has("stackable"), "导出：可叠层是默认，不写；也没有 max_stacks")
+	var r2 := _report()
+	var b2 := ContentImporter.import_buff({"id": "t_one", "max_stacks": 1, "duration_sec": 2.0}, _ctx(), r2)
+	t.check(r2.ok() and not b2.stackable and not b2.is_permanent(), "max_stacks 1 → 不可叠层，可以过期")
+	t.eq(ContentExporter.export_buff(b2).get("stackable", null), false, "导出写 stackable: false")
+	var f2 := FaithBonus.new()
+	var r3 := _report()
+	ContentImporter._fill(f2, {"mode": "scaled", "max_stacks": 4}, "", _ctx(), r3)
+	t.check(r3.ok() and f2.max_shares == 4, "信仰加成：旧键 max_stacks → max_shares（%s）" % r3.to_text())
+	var stale: Array[String] = []
+	for dir in ["items", "faiths", "run_buffs", "buffs", "characters"]:
+		if not DirAccess.dir_exists_absolute("res://data/authoring/" + dir):
+			continue
+		for f in DirAccess.get_files_at("res://data/authoring/" + dir):
+			if FileAccess.get_file_as_string("res://data/authoring/%s/%s" % [dir, f]).contains("max_stacks"):
+				stale.append(f)
+	t.eq(stale, [] as Array[String], "数据里没有剩下的 max_stacks")
+
+
 ## 133（作者定）：乘区取消 —— 属性修饰只剩 mode + amount；旧键照读、迁移，一条两样报错
 static func run_stat_modifier_migration(t: TestCase) -> void:
 	t.begin("133 · 属性修饰旧键迁移：mult_percent → 乘算、flat → 加算、mult_category 提醒忽略、一条两样报错")
 	var r1 := _report()
-	var b1 := ContentImporter.import_buff({"id": "t_old", "max_stacks": 2, "mods": [{"stat": "max_shield", "mult_category": "EMPOWER", "mult_percent": 12}]}, _ctx(), r1)
+	var b1 := ContentImporter.import_buff({"id": "t_old", "mods": [{"stat": "max_shield", "mult_category": "EMPOWER", "mult_percent": 12}]}, _ctx(), r1)
 	t.check(r1.ok(), "旧格式照读（%s）" % r1.to_text())
 	t.eq((b1.mods[0] as StatModifier).mode, StatModifier.Mode.MULT, "mult_percent → 乘算")
 	t.eq((b1.mods[0] as StatModifier).amount, 12.0, "数照搬")
@@ -509,7 +530,7 @@ static func run_stat_modifier_migration(t: TestCase) -> void:
 	var r3 := _report()
 	ContentImporter.import_buff({"id": "t_both", "mods": [{"stat": "max_shield", "mult_percent": 10, "flat": 2.0}]}, _ctx(), r3)
 	t.check(not r3.ok() and r3.to_text().contains("拆成两条"), "一条又乘又加：报错（%s）" % r3.to_text())
-	var b4 := ContentImporter.import_buff({"id": "t_new", "max_stacks": 2, "mods": [{"stat": "max_shield", "mode": "MULT", "amount": 10}]}, _ctx(), _report())
+	var b4 := ContentImporter.import_buff({"id": "t_new", "mods": [{"stat": "max_shield", "mode": "MULT", "amount": 10}]}, _ctx(), _report())
 	var mod: Dictionary = (ContentExporter.export_buff(b4)["mods"] as Array)[0]
 	t.eq(mod, {"stat": "max_shield", "mode": "MULT", "amount": 10.0}, "导出只写新键")
 	var stale: Array[String] = []

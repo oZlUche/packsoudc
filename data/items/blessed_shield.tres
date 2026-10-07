@@ -29,7 +29,7 @@ display_name = "弹开"
 display_names = {
 "en": "Deflect"
 }
-max_stacks = 1
+stackable = false
 duration_sec = 4.0
 mods = Array[ExtResource("1_dkjj4")]([SubResource("Resource_hpahx")])
 
@@ -78,7 +78,7 @@ display_name = "久弹"
 display_names = {
 "en": "Long Deflect"
 }
-max_stacks = 1
+stackable = false
 duration_sec = 8.0
 mods = Array[ExtResource("1_dkjj4")]([SubResource("Resource_74w5y")])
 
@@ -115,7 +115,7 @@ display_names = {
 }
 shape = SubResource("Resource_rh8uo")
 rarity = 3
-weight = 2
+weight = 6
 tags = Array[StringName]([&"faith", &"faith:skill", &"gear", &"shield", &"blessed", &"faith_anchor"])
 faith_bonuses = Array[ExtResource("11_y2exc")]([SubResource("Resource_2jowl"), SubResource("Resource_dgkn5")])
 combat = SubResource("Resource_kci6v")

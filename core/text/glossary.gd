@@ -146,7 +146,7 @@ static func describe_buff(def: BuffDef) -> String:
 		return ""
 	var lines: Array[String] = []
 	var kind := "减益" if def.is_debuff else "增益"
-	var stacks := "不可叠层" if not def.is_stackable() else ("不限层" if def.max_stacks <= 0 else "至多 %d 层" % def.max_stacks)
+	var stacks := "不可叠层" if not def.is_stackable() else "不限层"
 	var duration := def.duration_text()
 	# 103：默认永续、可叠层；不可叠层与会过期是例外，用例外色标出来，作者 / 玩家一眼看出「这个不是默认」
 	if not def.is_stackable():

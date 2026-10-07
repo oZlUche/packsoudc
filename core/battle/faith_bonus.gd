@@ -3,15 +3,15 @@
 class_name FaithBonus
 extends Resource
 
-## 111（作者定）：编辑器里哪个字段在什么方式下才显示 —— 按阶只有「第几阶」一个框，激活即没有框，按信力是「每多少信力一份」与叠层上限。
+## 111（作者定）：编辑器里哪个字段在什么方式下才显示 —— 按阶只有「第几阶」一个框，激活即没有框，按信力是「每多少信力一份」与最多几份。
 ## 没列的字段永远显示；切走时隐藏的字段归默认值（[method ContentSchema.field_visible]）
 const FIELD_WHEN := {
 	"tier": {"mode": ["tier"]},
 	"per_points": {"mode": ["scaled"]},
-	"max_stacks": {"mode": ["scaled"]},
+	"max_shares": {"mode": ["scaled"]},
 }
 
-## 生效方式（095，作者定）：tier = 过了第 tier 阶；active = 激活即生效；scaled = 按信力每 per_points 算一份（最多 max_stacks 份，0 = 不限）。
+## 生效方式（095，作者定）：tier = 过了第 tier 阶；active = 激活即生效；scaled = 按信力每 per_points 算一份（最多 max_shares 份，0 = 不限）。
 ## 111：`@export_enum` —— 编辑器里是下拉，JSON 里照旧是字符串
 @export_enum("tier", "active", "scaled") var mode: String = "tier"
 ## 第几阶起生效（1 = 过了第一道阈值；mode = tier 用）。表单限 1～5，导入器再按这件道具所属信仰的阈值数拦一次
@@ -19,7 +19,7 @@ const FIELD_WHEN := {
 ## 每多少信力算一份（mode = scaled 用），正整数
 @export_range(1, 100000) var per_points: int = 50
 ## 最多几份，0 = 不限（mode = scaled 用）
-@export_range(0, 999) var max_stacks: int = 0
+@export_range(0, 999) var max_shares: int = 0
 ## 施加给这件道具的属性修饰
 @export var mods: Array[StatModifier] = []
 ## 多出来的规则
@@ -36,7 +36,7 @@ func times_for(p_tier: int, points: int) -> int:
 		"scaled":
 			@warning_ignore("integer_division")
 			var n := points / maxi(1, per_points)
-			return mini(n, max_stacks) if max_stacks > 0 else n
+			return mini(n, max_shares) if max_shares > 0 else n
 		_:
 			return 1 if p_tier >= tier else 0
 
@@ -47,7 +47,7 @@ func gate_text() -> String:
 		"active":
 			return "激活即"
 		"scaled":
-			return "每 %d 信力一份%s" % [per_points, ("，最多 %d 份" % max_stacks) if max_stacks > 0 else ""]
+			return "每 %d 信力一份%s" % [per_points, ("，最多 %d 份" % max_shares) if max_shares > 0 else ""]
 		_:
 			return "Lv.%d" % tier
 

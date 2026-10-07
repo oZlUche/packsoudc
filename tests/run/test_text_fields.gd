@@ -46,7 +46,7 @@ static func run_notes(t: TestCase) -> void:
 	var fb := FaithBonus.new()
 	fb.mode = "scaled"
 	fb.per_points = 50
-	fb.max_stacks = 6
+	fb.max_shares = 6
 	var m := StatModifier.new()
 	m.amount = 1.0
 	fb.mods.append(m)
@@ -54,7 +54,7 @@ static func run_notes(t: TestCase) -> void:
 	t.check(a.contains("每 50 信力一份") and a.contains("最多 6 份") and a.contains("+1"), "主句按字段：%s" % a)
 	fb.per_points = 40
 	t.check(fb.describe().contains("每 40 信力一份"), "改 per_points：%s" % fb.describe())
-	fb.note = "满 {max_stacks} 份封顶"
+	fb.note = "满 {max_shares} 份封顶"
 	t.check(fb.describe().ends_with("满 6 份封顶") and fb.describe().contains("每 40 信力"), "note 接在后面、也读字段：%s" % fb.describe())
 	fb.mode = "tier"
 	fb.tier = 2

@@ -50,7 +50,7 @@
                 "en": "Marked"
               },
               "is_debuff": true,
-              "max_stacks": 1,
+              "stackable": false,
               "duration_sec": 8.0,
               "mods": [
                 {

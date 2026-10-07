@@ -18,4 +18,4 @@ display_names = {
 }
 description = "敲一下就出火星。"
 shape = SubResource("Resource_sh6gg")
-tags = Array[StringName]([&"material", &"nature"])
+tags = Array[StringName]([&"material", &"nature", &"stone"])

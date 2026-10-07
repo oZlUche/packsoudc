@@ -221,7 +221,6 @@ static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_fill(def, data, "", ctx, report)
 	_require_id(def.id, "增益", report)
 	validate_buff_duration(def, "", report)
-	warn_unbounded_percent(def, "", report)
 	warn_axis_candidate(def, "", report)
 	ctx.register_buff(def)
 	return def
@@ -230,7 +229,7 @@ static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) ->
 ## 作者定的规矩（085）：可叠层的 buff 永续，不许填时长；不可叠层的才可以过期
 static func validate_buff_duration(def: BuffDef, path: String, report: ImportReport) -> void:
 	if def != null and def.is_stackable() and def.duration_sec > 0.0:
-		report.error(path + "duration_sec", "「%s」可叠层（max_stacks %d），可叠层的 buff 永续，不填时长" % [def.id, def.max_stacks])
+		report.error(path + "duration_sec", "「%s」可叠层，可叠层的 buff 永续，不填时长（要会过期就写 stackable: false）" % def.id)
 
 
 ## 道具里内联的 buff（apply_status.buff）也按同一条规矩查
@@ -245,7 +244,6 @@ static func _validate_item_buffs(def: ItemDef, report: ImportReport) -> void:
 			var e := rule.effects[j] as ApplyStatus
 			if e != null and e.buff != null:
 				validate_buff_duration(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
-				warn_unbounded_percent(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
 				warn_axis_candidate(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
 
 
@@ -398,18 +396,6 @@ static func validate_attached_rules(rules: Array, path: String, report: ImportRe
 			report.error(at + ".cadence", "规则必须有频率（附加规则一般写 always）")
 		if rule.effects.is_empty():
 			report.warn(at + ".effects", "附加规则没有任何效果")
-
-
-## 103 第 3 条：buff 没写明就是永续、不限层 —— 按百分比乘的不限层 buff 越叠越大（加时一拖更甚），
-## 提醒作者确认要不要填 max_stacks。不是错误：有的就是故意不封顶
-static func warn_unbounded_percent(def: BuffDef, path: String, report: ImportReport) -> void:
-	if def == null or def.max_stacks != 0:
-		return
-	for m in def.mods:
-		var mod := m as StatModifier
-		if mod != null and mod.is_mult() and mod.amount != 0.0:
-			report.warn(path + "max_stacks", "「%s」不限层且按百分比乘（%+d%%），永续叠加会越叠越大，确认要不要填层数上限" % [def.id, roundi(mod.amount)])
-			return
 
 
 ## 103 4e：能用标准轴表达的简单增减一律走轴 —— 只有一条落在轴属性上的 mod、没有规则的可叠层 buff，提示改成 shift_axis
@@ -1594,6 +1580,10 @@ static func _fill(
 		props[String(p["name"])] = p
 	if obj is StatModifier:
 		data = _migrate_stat_modifier(data, path, report)
+	elif obj is BuffDef:
+		data = _migrate_buff(data, path, report)
+	elif obj is FaithBonus:
+		data = _migrate_faith_bonus(data, path, report)
 
 	for key in data:
 		var at := _join(path, String(key))
@@ -1658,6 +1648,30 @@ static func _migrate_stat_modifier(data: Dictionary, path: String, report: Impor
 	elif flat != 0.0:
 		out["mode"] = "ADD"
 		out["amount"] = flat
+	return out
+
+
+## 137：buff 的叠层上限取消 —— 老字段 `max_stacks` 换成 `stackable`（1 → 不可叠，其余 → 可叠），提醒一句
+static func _migrate_buff(data: Dictionary, path: String, report: ImportReport) -> Dictionary:
+	if not data.has("max_stacks"):
+		return data
+	var out := data.duplicate()
+	var cap := int(out["max_stacks"])
+	out.erase("max_stacks")
+	if not out.has("stackable"):
+		out["stackable"] = cap != 1
+	report.warn(_join(path, "max_stacks"), "max_stacks 已改成 stackable（137）：可叠层不再有上限%s" % ("（这里原来封顶 %d 层）" % cap if cap > 1 else ""))
+	return out
+
+
+## 137：信仰加成的「最多几份」从 `max_stacks` 改名 `max_shares`（和 buff 的旧字段分开）。旧键照收、不提醒
+static func _migrate_faith_bonus(data: Dictionary, _path: String, _report: ImportReport) -> Dictionary:
+	if not data.has("max_stacks"):
+		return data
+	var out := data.duplicate()
+	if not out.has("max_shares"):
+		out["max_shares"] = out["max_stacks"]
+	out.erase("max_stacks")
 	return out
 
 

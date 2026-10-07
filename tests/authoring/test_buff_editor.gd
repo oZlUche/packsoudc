@@ -58,20 +58,15 @@ static func frame_run_fields(t: TestCase, root: Window) -> void:
 	var ed := _make(root)
 	ed._new_buff()
 	var d: BuffDef = ed.def()
-	t.eq(d.max_stacks, 0, "新建默认不限层")
+	t.check(d.stackable, "新建默认可叠层（不限层）")
 	t.check(d.is_stackable() and d.is_permanent(), "新建：可叠层 → 永续")
 	t.check(ed._stackable.button_pressed, "可叠层勾着")
 	t.check(ed._permanent.disabled, "可叠层时永续锁死不能取消")
 	t.check(not ed._seconds.editable, "可叠层时秒数不可编辑")
 	t.check(ed.summary_text().contains("不限层"), "摘要写着不限层")
 
-	ed.set_cap(3)
-	t.eq(d.max_stacks, 3, "设上限 3")
-	t.check(d.is_stackable() and d.is_permanent(), "有上限仍是可叠层、仍永续")
-	t.check(ed.summary_text().contains("至多 3 层"), "摘要写着至多 3 层")
-
 	ed.set_stackable(false)
-	t.eq(d.max_stacks, 1, "取消可叠层 → 上限 1")
+	t.check(not d.stackable, "取消可叠层 → 固定一层")
 	t.check(d.is_permanent(), "不可叠层、没填时长 → 仍永续")
 	t.check(not ed._permanent.disabled, "不可叠层时永续可以取消")
 	ed.set_permanent(false)
@@ -82,7 +77,7 @@ static func frame_run_fields(t: TestCase, root: Window) -> void:
 	t.check(ed.summary_text().contains("8.0"), "摘要写着秒数")
 
 	ed.set_stackable(true)
-	t.eq(d.max_stacks, 0, "重新勾上可叠层 → 上限回到不限")
+	t.check(d.stackable, "重新勾上可叠层")
 	t.eq(d.duration_sec, 0.0, "重新勾上可叠层 → 时长清掉")
 	# 绕过界面直接塞时长：导入器要拦
 	d.duration_sec = 3.0
@@ -105,9 +100,9 @@ static func frame_run_save_roundtrip(t: TestCase, root: Window) -> void:
 	d.id = StringName(PROBE)
 	d.display_name = "探针"
 	d.is_debuff = true
-	ed.set_cap(4)
+	ed.set_stackable(false)
 	ed._refresh()
-	t.check(ed._json.text.contains("\"max_stacks\": 4"), "JSON 预览里有上限")
+	t.check(ed._json.text.contains("\"stackable\": false"), "JSON 预览里写着不可叠层")
 	ed._save()
 	var json_path := ContentPaths.authoring_file("buffs", PROBE)
 	var tres_path := ContentPaths.asset_file("buffs", PROBE)
@@ -118,17 +113,17 @@ static func frame_run_save_roundtrip(t: TestCase, root: Window) -> void:
 
 	# 重新从盘上读：字段一致
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(json_path))
-	t.check(parsed is Dictionary and int(parsed.get("max_stacks", -1)) == 4, "盘上 JSON 的 max_stacks 是 4")
+	t.check(parsed is Dictionary and parsed.get("stackable", true) == false, "盘上 JSON 的 stackable 是 false")
 	var loaded: BuffDef = load(tres_path)
-	t.check(loaded != null and loaded.max_stacks == 4 and loaded.is_debuff, ".tres 读回来一致")
+	t.check(loaded != null and not loaded.stackable and loaded.is_debuff, ".tres 读回来一致")
 
 	# JSON 编辑器：改文字再套用
-	ed._json.text = ed._json.text.replace("\"max_stacks\": 4", "\"max_stacks\": 0")
+	ed._json.text = ed._json.text.replace("\"stackable\": false", "\"stackable\": true")
 	ed._apply_json()
-	t.eq(ed.def().max_stacks, 0, "套用 JSON 改了上限")
+	t.check(ed.def().stackable, "套用 JSON 改成可叠层")
 	t.check(ed.has_unsaved_changes(), "套用后有草稿")
 	ed._on_discard()
-	t.eq(ed.def().max_stacks, 4, "放弃改动回到盘上的样子")
+	t.check(not ed.def().stackable, "放弃改动回到盘上的样子")
 
 	# 空 id 不许存
 	ed._new_buff()

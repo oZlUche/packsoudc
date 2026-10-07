@@ -24,7 +24,7 @@ static func _buff(id: String, max_stacks: int = 0, system: bool = false) -> Buff
 	var b := BuffDef.new()
 	b.id = StringName(id)
 	b.display_name = id
-	b.max_stacks = max_stacks
+	b.stackable = max_stacks != 1     # 137：没有上限了，只剩可叠 / 不可叠
 	b.system = system
 	return b
 
@@ -216,14 +216,14 @@ static func run_items(t: TestCase) -> void:
 	_start(ctx)
 	t.eq(ctx.sides[1].stacks_of(&"poison"), 1, "流血带出一层中毒")
 
-	# 嗜血护腕：对手被施加流血 → 自己一层嗜血，封顶 6
+	# 嗜血护腕：对手被施加流血 → 自己一层嗜血（137：不再封顶）
 	var bracer := db.get_def(&"bloodlust_bracer").combat.rules[0] as AbilityRule
 	var many: Array = []
 	for i in 8:
 		many.append(_apply(bleed_buff))
 	ctx = _ctx([_opener(many), bracer])
 	_start(ctx)
-	t.eq(ctx.sides[0].stacks_of(&"bloodlust"), 6, "八次施加，嗜血封顶 6 层")
+	t.eq(ctx.sides[0].stacks_of(&"bloodlust"), 8, "八次施加，嗜血八层（137：不封顶）")
 
 
 ## 一块不要求包的格子：长弓竖在第 2 列，[锯齿箭] 在它正下方（增益格朝上）；小刀在 (0,1)，毒匠手套在 (1,1)（四邻：小刀与长弓都挨着），

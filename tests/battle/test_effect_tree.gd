@@ -25,7 +25,7 @@ static func _buff(id: String, max_stacks: int = 0, duration: float = 0.0) -> Buf
 	var b := BuffDef.new()
 	b.id = StringName(id)
 	b.display_name = id
-	b.max_stacks = max_stacks
+	b.stackable = max_stacks != 1     # 137：没有上限了，只剩可叠 / 不可叠
 	b.duration_sec = duration
 	return b
 
