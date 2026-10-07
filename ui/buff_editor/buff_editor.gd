@@ -23,7 +23,6 @@ var _id_edit: LineEdit
 var _name_edit: LineEdit
 var _debuff: CheckBox
 var _stackable: CheckBox
-var _cap: SpinBox
 var _permanent: CheckBox
 var _seconds: SpinBox
 var _rule_note: Label
@@ -159,16 +158,7 @@ func _build_ui() -> void:
 			return
 		set_stackable(on))
 	stack_row.add_child(_stackable)
-	stack_row.add_child(_label(UiText.t("buff.cap"), 12, UiPalette.DIM))
-	_cap = SpinBox.new()
-	_cap.min_value = 0
-	_cap.max_value = 999
-	_cap.add_theme_font_override("font", _font)
-	_cap.value_changed.connect(func(v: float):
-		if _syncing or _def == null:
-			return
-		set_cap(int(v)))
-	stack_row.add_child(_cap)
+	stack_row.add_child(_label(UiText.t("buff.stacks_unlimited"), 12, UiPalette.DIM))     # 137：可叠层就是不限层，没有上限框
 	body.add_child(stack_row)
 
 	body.add_child(_label(UiText.t("buff.duration"), 14, UiPalette.FG))
@@ -248,24 +238,13 @@ func _button(text: String, handler: Callable) -> Button:
 
 
 #region 字段（公开：测试直接调）
-## 可叠层 = 层数上限不是 1。勾上 → 上限归 0（不限，通常如此）、时长清掉；取消 → 上限 1
+## 137：可叠层（不限层）/ 不可叠层（固定一层）。勾上 → 时长清掉（可叠层的永续）
 func set_stackable(on: bool) -> void:
+	_def.stackable = on
 	if on:
-		if _def.max_stacks == 1:
-			_def.max_stacks = 0
 		_def.duration_sec = 0.0
-	else:
-		_def.max_stacks = 1
 	_sync_fields()
 	_rebuild_form()
-	_refresh()
-
-
-func set_cap(v: int) -> void:
-	_def.max_stacks = maxi(0, v)
-	if _def.max_stacks != 1:
-		_def.duration_sec = 0.0
-	_sync_fields()
 	_refresh()
 
 
@@ -392,7 +371,7 @@ func _new_buff() -> void:
 	var def := BuffDef.new()
 	def.id = &"new_buff"
 	def.display_name = "新 buff" if UiText.lang == "zh" else "New buff"
-	def.max_stacks = 0     # 作者定：通常不限层，且可叠层的永续
+	def.stackable = true     # 作者定：通常可叠层（137：可叠就是不限层），且可叠层的永续
 	_bind(def, "")
 
 
@@ -412,8 +391,6 @@ func _sync_fields() -> void:
 	_debuff.button_pressed = _def.is_debuff
 	var stackable := _def.is_stackable()
 	_stackable.button_pressed = stackable
-	_cap.value = _def.max_stacks
-	_cap.editable = stackable
 	_permanent.button_pressed = _def.is_permanent()
 	_permanent.disabled = stackable
 	_seconds.value = _def.duration_sec
@@ -428,7 +405,7 @@ func _rebuild_form() -> void:
 		c.queue_free()
 	if _def == null:
 		return
-	var form := PropertyForm.create(_def, _font, {"BuffDef": ["id", "display_name", "is_debuff", "max_stacks", "duration_sec", "refresh_on_restack"]})
+	var form := PropertyForm.create(_def, _font, {"BuffDef": ["id", "display_name", "is_debuff", "stackable", "duration_sec", "refresh_on_restack"]})
 	form.changed.connect(_refresh)
 	_form_host.add_child(form)
 #endregion
@@ -456,7 +433,7 @@ func _status_text(report: ImportReport) -> String:
 func summary_text() -> String:
 	if _def == null:
 		return ""
-	var stacks := UiText.t("buff.stacks_single") if not _def.is_stackable() else (UiText.t("buff.stacks_unlimited") if _def.max_stacks == 0 else UiText.t("buff.stacks_cap") % _def.max_stacks)
+	var stacks := UiText.t("buff.stacks_single") if not _def.is_stackable() else UiText.t("buff.stacks_unlimited")
 	var dur := (UiText.t("buff.permanent") if _def.is_permanent() else "%s %.1f" % [UiText.t("buff.seconds"), _def.duration_sec])
 	return "%s\n%s\n%s" % [UiText.t("buff.summary") % [stacks, dur], "%d mods · %d rules · %d on_apply · %d on_expire" % [_def.mods.size(), _def.rules.size(), _def.on_apply.size(), _def.on_expire.size()], UiText.t("buff.usage") % String(_def.id)]
 

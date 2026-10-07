@@ -106,7 +106,7 @@ static func _buff(id: String, display: String, duration: float, max_stacks: int)
 	b.id = StringName(id)
 	b.display_name = display
 	b.duration_sec = duration
-	b.max_stacks = max_stacks
+	b.stackable = max_stacks != 1     # 137：没有上限了，只剩可叠 / 不可叠
 	return b
 #endregion
 

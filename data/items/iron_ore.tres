@@ -20,5 +20,4 @@ display_names = {
 description = "沉手的黑石，铁匠的饭。"
 shape = SubResource("Resource_om07j")
 rarity = 1
-weight = 6
 tags = Array[StringName]([&"material", &"nature", &"metal"])

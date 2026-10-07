@@ -99,7 +99,7 @@
         },
         {
           "mode": "scaled",
-          "max_stacks": 5,
+          "max_shares": 5,
           "mods": [
             {
               "stat": "armor",

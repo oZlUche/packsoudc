@@ -56,7 +56,6 @@ const TEXT := {
 	"buff.debuff": {"zh": "是减益", "en": "Is a debuff"},
 	"buff.stacking": {"zh": "叠层", "en": "Stacking"},
 	"buff.stackable": {"zh": "可叠层", "en": "Stackable"},
-	"buff.cap": {"zh": "叠层上限（0 = 不限，通常不限）", "en": "Stack cap (0 = none, usually none)"},
 	"buff.duration": {"zh": "时长", "en": "Duration"},
 	"buff.permanent": {"zh": "永续（到战斗结束）", "en": "Permanent (until battle ends)"},
 	"buff.permanent_forced": {"zh": "可叠层的 buff 一律永续", "en": "Stackable buffs are always permanent"},
@@ -74,7 +73,6 @@ const TEXT := {
 	"buff.ok": {"zh": "✓ 没有问题", "en": "✓ No problems"},
 	"buff.summary": {"zh": "%s　%s", "en": "%s · %s"},
 	"buff.stacks_unlimited": {"zh": "不限层", "en": "unlimited stacks"},
-	"buff.stacks_cap": {"zh": "至多 %d 层", "en": "up to %d stacks"},
 	"buff.stacks_single": {"zh": "不可叠层", "en": "single stack"},
 	"buff.usage": {"zh": "道具里这样引用：\"buff\": \"%s\"", "en": "Reference from an item: \"buff\": \"%s\""},
 }

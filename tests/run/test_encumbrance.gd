@@ -41,12 +41,13 @@ static func _empty_board(run: RunState) -> void:
 
 
 static func run_weights(t: TestCase) -> void:
-	t.begin("129 · 重量：写死的用写死的，其余按格数 × 材质类；附录 A 的锚点")
+	t.begin("129/137 · 重量：写死的用写死的，其余按格数 × 材质类（重 4、金属 3、石与晶 2）；锚点")
 	var c := _content()
 	var anchors := {
-		&"knife": 2, &"shortsword": 4, &"longsword": 6, &"plate_cuirass": 27, &"tower_shield": 18, &"round_shield": 8,
+		&"knife": 3, &"shortsword": 6, &"longsword": 9, &"plate_cuirass": 36, &"tower_shield": 24, &"round_shield": 12,
 		&"bag_leather": 3, &"bag_long": 2, &"bag_small": 2, &"ration": 1, &"iron_ore": 6, &"oak_log": 6, &"silk_bolt": 2,
-		&"warhammer": 9, &"nail_keg": 12, &"high_tier_armor": 18, &"charm_brute": 1, &"bone_dice": 1, &"crowbar": 6,
+		&"warhammer": 12, &"nail_keg": 12, &"high_tier_armor": 18, &"charm_brute": 1, &"bone_dice": 1, &"crowbar": 9,
+		&"mana_crystal": 4,
 	}
 	for id in anchors:
 		t.eq(ItemWeight.of(c.items.get_def(id)), int(anchors[id]), "%s 重 %d" % [id, anchors[id]])
@@ -54,9 +55,13 @@ static func run_weights(t: TestCase) -> void:
 	d.shape = ItemShape.from_ascii(["##", "##"])
 	t.eq(ItemWeight.of(d), 4, "没标签：每格 1")
 	d.tags = [&"metal"] as Array[StringName]
-	t.eq(ItemWeight.of(d), 8, "金属：每格 2")
+	t.eq(ItemWeight.of(d), 12, "金属：每格 3")
 	d.tags = [&"heavy", &"metal"] as Array[StringName]
-	t.eq(ItemWeight.of(d), 12, "重：每格 3（先于金属）")
+	t.eq(ItemWeight.of(d), 16, "重：每格 4（先于金属）")
+	d.tags = [&"gem"] as Array[StringName]
+	t.eq(ItemWeight.of(d), 8, "晶体：每格 2")
+	d.tags = [&"stone"] as Array[StringName]
+	t.eq(ItemWeight.of(d), 8, "石材：每格 2")
 	d.tags = [&"remedy"] as Array[StringName]
 	t.eq(ItemWeight.of(d), 2, "轻：半格一重")
 	d.weight = 9
@@ -69,15 +74,25 @@ static func run_weights(t: TestCase) -> void:
 
 
 static func run_capacities(t: TestCase) -> void:
-	t.begin("129 · 三人的负重上限：安德烈乌斯 28、马库斯 34、布鲁图斯 40")
-	t.eq(_character("andreus").weight_capacity, 28, "安德烈乌斯 28")
-	t.eq(_character("marcus").weight_capacity, 34, "马库斯 34")
-	t.eq(_character("brutus").weight_capacity, 40, "布鲁图斯 40")
+	t.begin("137 · 三人的负重上限：安德烈乌斯 40、马库斯 48、布鲁图斯 56")
+	t.eq(_character("andreus").weight_capacity, 40, "安德烈乌斯 40")
+	t.eq(_character("marcus").weight_capacity, 48, "马库斯 48")
+	t.eq(_character("brutus").weight_capacity, 56, "布鲁图斯 56")
 	var c := _content()
 	var run := _run(c)
 	t.not_null(run.encumbrance, "自由模式开着负重")
-	t.eq(run.carry_capacity(), 28, "一局里的上限 = 角色的")
+	t.eq(run.carry_capacity(), 40, "一局里的上限 = 角色的")
 	t.check(run.carry_weight() > 0, "开局的包与装备有重量（%d）" % run.carry_weight())
+	t.eq(run.encumbrance_level(), 0, "标准开局在安德烈乌斯身上是轻装")
+	var rules: EncumbranceRules = load(ContentPaths.asset_file("encumbrance_rules", "standard"))
+	for cap in [40, 48, 56]:
+		t.eq(rules.level_of(35, cap), 0, "负重 35、上限 %d：轻装" % cap)
+	t.eq(rules.level_of(41, 40), 1, "负重 41、安德烈乌斯（40）：吃力")
+	for l in GameFlow.load_loadouts():
+		var w := 0
+		for id in (l as LoadoutDef).items:
+			w += ItemWeight.of(c.items.get_def(id))
+		t.check(w <= 40, "预设 %s 的开局负重 %d ≤ 最小上限 40" % [(l as LoadoutDef).id, w])
 	var prologue: ChapterDef = load(ContentPaths.asset_file("chapters", "prologue"))
 	t.eq(prologue.encumbrance_rules, &"", "序章不算负重")
 

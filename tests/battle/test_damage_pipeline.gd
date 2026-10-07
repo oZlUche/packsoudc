@@ -216,7 +216,6 @@ static func run_conditional_mitigation(t: TestCase) -> void:
 	# 这正是减伤不能写成一个固定属性的原因。
 	var block := BuffDef.new()
 	block.id = &"block"
-	block.max_stacks = 10
 
 	var seed := ApplyStatus.new()
 	seed.target = CombatEffect.Target.SELF

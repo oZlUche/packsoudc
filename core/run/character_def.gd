@@ -30,8 +30,6 @@ extends Resource
 @export var carry_rarity_cap: int = -1
 ## 局内技能（082，作者定）：[RunSkill] 构件 —— 被动常驻（一局规则 / 掉落的效果，开局编进 RunContext）+ 可选的主动一击（地图屏上用，次数与冷却由 [RunSkills] 记账）
 @export var skills: Array[RunSkill] = []
-## 136：身份（worldview 第三节「身份 = 立场与开局」）：slave / legion。事件条件 [IdentityIs] 按它分支；空 = 不分
-@export var identity: StringName = &""
 
 
 ## 这个角色的战斗基线：默认值盖上覆盖项。编译器与战斗不认识角色，只认基线（4.2）
@@ -86,22 +84,14 @@ func skills_summary() -> String:
 	return "　".join(parts)
 
 
-## 136：开局屏的分组行：按槽（身份 / 擅长 / 主动）各一行「身份：名字　说明」；没写槽的技能排在最后、不带前缀
-const SLOT_NAMES := {&"identity": "身份", &"talent": "擅长", &"active": "主动"}
-
+## 136：开局屏的分组行：被动在前、主动在后，各一行「被动：名字　说明」（作者定：角色 = 初始面板 + 技能，没有身份这一层）
 func skill_lines() -> Array[String]:
 	var out: Array[String] = []
-	var loose: Array[String] = []
-	for slot in SLOT_NAMES:
+	for active in [false, true]:
 		for s in skills:
 			var sk := s as RunSkill
-			if sk != null and sk.slot == slot:
-				out.append("%s：%s" % [SLOT_NAMES[slot], _skill_line(sk)])
-	for s in skills:
-		var sk := s as RunSkill
-		if sk != null and not SLOT_NAMES.has(sk.slot):
-			loose.append(_skill_line(sk))
-	out.append_array(loose)
+			if sk != null and sk.is_active() == active:
+				out.append("%s：%s" % ["主动" if active else "被动", _skill_line(sk)])
 	return out
 
 

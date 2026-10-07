@@ -34,7 +34,6 @@
               "display_names": {
                 "en": "Bloodlust"
               },
-              "max_stacks": 6,
               "mods": [
                 {
                   "stat": "haste",

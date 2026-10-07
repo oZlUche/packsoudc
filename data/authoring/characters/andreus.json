@@ -12,7 +12,7 @@
     "bag_leather",
     "bag_leather"
   ],
-  "weight_capacity": 28,
+  "weight_capacity": 40,
   "skills": [
     {
       "type": "passive",
@@ -23,8 +23,7 @@
         {
           "type": "travel_discount"
         }
-      ],
-      "slot": "identity"
+      ]
     },
     {
       "type": "passive",
@@ -42,18 +41,15 @@
         {
           "type": "free_losses"
         }
-      ],
-      "slot": "talent"
+      ]
     },
     {
       "type": "slip",
       "id": "slip",
       "display_name": "脱身",
       "description": "开战前溜走：这一场不打、不扣体力、也没有战利品，点算用过（核心点溜不掉）；猎手面前用，必定逃掉。",
-      "slot": "active",
       "uses": 2,
       "cooldown_steps": 4
     }
-  ],
-  "identity": "slave"
+  ]
 }

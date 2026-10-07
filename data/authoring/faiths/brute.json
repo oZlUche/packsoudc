@@ -88,7 +88,7 @@
         },
         {
           "mode": "scaled",
-          "max_stacks": 6,
+          "max_shares": 6,
           "mods": [
             {
               "amount": 1.0

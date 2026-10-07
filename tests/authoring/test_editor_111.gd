@@ -19,12 +19,12 @@ static func run_field_visible(t: TestCase) -> void:
 	b.mode = "tier"
 	t.check(ContentSchema.field_visible(b, "tier"), "按阶：显示阶")
 	t.check(not ContentSchema.field_visible(b, "per_points"), "按阶：不显示每份信力")
-	t.check(not ContentSchema.field_visible(b, "max_stacks"), "按阶：不显示叠层上限")
+	t.check(not ContentSchema.field_visible(b, "max_shares"), "按阶：不显示叠层上限")
 	b.mode = "scaled"
 	t.check(not ContentSchema.field_visible(b, "tier"), "按信力：不显示阶")
-	t.check(ContentSchema.field_visible(b, "per_points") and ContentSchema.field_visible(b, "max_stacks"), "按信力：显示每份信力与叠层上限")
+	t.check(ContentSchema.field_visible(b, "per_points") and ContentSchema.field_visible(b, "max_shares"), "按信力：显示每份信力与叠层上限")
 	b.mode = "active"
-	for key in ["tier", "per_points", "max_stacks"]:
+	for key in ["tier", "per_points", "max_shares"]:
 		t.check(not ContentSchema.field_visible(b, key), "激活即：不显示 %s" % key)
 	t.check(ContentSchema.field_visible(b, "mods") and ContentSchema.field_visible(b, "mode"), "没列进表的字段照常显示")
 	t.eq(ContentSchema.default_of(b, "per_points"), 50, "默认值读脚本：每份 50 信力")
@@ -84,16 +84,16 @@ static func frame_form_dropdown_and_hiding(t: TestCase, root: Window) -> void:
 		return
 	t.eq(picker.item_count, 3, "三个选项")
 	t.eq(picker.get_item_text(picker.selected), "按阶", "选中的是「按阶」")
-	t.check(form.row_visible("tier") and not form.row_visible("per_points") and not form.row_visible("max_stacks"), "按阶：只露阶")
+	t.check(form.row_visible("tier") and not form.row_visible("per_points") and not form.row_visible("max_shares"), "按阶：只露阶")
 
 	picker.item_selected.emit(1)     # 激活即
 	t.eq(b.mode, "active", "值写回原字符串 active")
-	t.check(not form.row_visible("tier") and not form.row_visible("per_points") and not form.row_visible("max_stacks"), "激活即：一个数也不露")
+	t.check(not form.row_visible("tier") and not form.row_visible("per_points") and not form.row_visible("max_shares"), "激活即：一个数也不露")
 	t.eq(b.tier, 1, "被藏起来的阶归默认（JSON 里不留看不见的旧值）")
 
 	b.per_points = 80
 	picker.item_selected.emit(2)     # 按信力
 	t.eq(b.mode, "scaled", "按信力")
-	t.check(form.row_visible("per_points") and form.row_visible("max_stacks") and not form.row_visible("tier"), "按信力：露每份信力与叠层上限")
+	t.check(form.row_visible("per_points") and form.row_visible("max_shares") and not form.row_visible("tier"), "按信力：露每份信力与叠层上限")
 	t.eq(b.per_points, 80, "露着的字段不动")
 	form.queue_free()

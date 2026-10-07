@@ -25,7 +25,7 @@ const LABELS := {
 	"combat": "战斗", "adjacency": "邻接", "base_stats": "基础属性", "rules": "规则", "trigger": "触发", "cadence": "节奏", "costs": "消耗",
 	"use_haste": "受急速影响", "cooldown": "冷却", "resource_key": "资源", "damage_type": "伤害类型", "damage_stat": "伤害用的属性", "amount_stat": "数量改从属性取（留空 = 用上面的数量）",
 	"stat": "属性", "stat_scale": "属性系数", "direct_override": "直接伤害（−1 按来源定）", "shield_absorbable": "可被护盾吸收", "provokes": "招致反应", "on_self": "对自己", "same_side": "同一边",
-	"buff": "增益", "buff_id": "增益 id", "stacks": "叠层", "max_stacks": "叠层上限（0 = 不限）", "per_stack": "按叠层", "duration_sec": "持续秒数",
+	"buff": "增益", "buff_id": "增益 id", "stacks": "叠层", "stackable": "可叠层（不限层）", "max_shares": "最多几份（0 = 不限）", "per_stack": "按叠层", "duration_sec": "持续秒数",
 	"by_self": "只认本方施加", "from": "转化前", "to": "转化成", "ratio": "换算比例", "keep_from": "保留原状态",     # 130
 	"source_tags": "只听带这些标签的", "full": "回满", "crit_only": "只在暴击时", "receive_rules": "受益规则", "min_percent": "至少百分之", "max_percent": "至多百分之",
 	"absolute_min": "至少点数", "absolute_max": "至多点数", "negate": "取反", "percent_of": "按生命比例", "percent_of_target": "比例按谁的生命",
@@ -85,8 +85,8 @@ const TYPE_LABELS := {
 	"passive": "被动", "assault": "突击", "evade": "躲避",
 	# 136：角色的套装
 	"slip": "脱身", "second_wind": "咬牙", "travel_discount": "熟门熟路（免费步）", "rest_bonus": "休息多回体力", "erosion_resist": "侵蚀少扣体力",
-	"battle_reward_mult": "打赢的钱倍率", "every": "每几步", "factor": "倍数", "identity": "身份", "slot": "分组", "identity_is": "角色身份是",
-	"identities": "身份", "skill_ready": "技能能用", "skill": "技能",
+	"battle_reward_mult": "打赢的钱倍率", "every": "每几步", "factor": "倍数",
+	"skill_ready": "技能能用", "skill": "技能",
 	"place_item": "置入道具", "battle": "打仗", "travel": "走路", "earn_money": "进账", "spend_money": "花钱", "explore": "搜索", "event_choice": "事件里选特定选项",
 	"has_buff_tag": "有带标记的增益", "has_map_buff": "有某地图增益", "can_afford": "钱够", "vitality_at_least": "体力至少", "steps_within": "步数在区间",
 	"bracket_within": "段位在区间", "erosion_depth_within": "侵蚀深度在区间", "has_item": "身上有道具", "node_type_is": "点的类型是", "has_flag": "有局外旗标",

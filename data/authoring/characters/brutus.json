@@ -14,7 +14,7 @@
     "bag_leather",
     "bag_leather"
   ],
-  "weight_capacity": 40,
+  "weight_capacity": 56,
   "skills": [
     {
       "type": "passive",
@@ -28,8 +28,7 @@
         {
           "type": "erosion_resist"
         }
-      ],
-      "slot": "identity"
+      ]
     },
     {
       "type": "passive",
@@ -69,18 +68,15 @@
             }
           ]
         }
-      ],
-      "slot": "talent"
+      ]
     },
     {
       "type": "second_wind",
       "id": "second_wind",
       "display_name": "咬牙",
       "description": "在地图上咬咬牙，恢复 {amount} 点体力。",
-      "slot": "active",
       "uses": 2,
       "cooldown_steps": 6
     }
-  ],
-  "identity": "slave"
+  ]
 }

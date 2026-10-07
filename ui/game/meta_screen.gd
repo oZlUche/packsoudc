@@ -1,12 +1,15 @@
-## 局外 / 基地（M6，架构文档 8.2；058 第 4 / 7 条）：两个页签（088 作者定）—— **仓库**（格子、带回来还没清空的背包、局外 buff 与解锁、战绩、
-## 最近几局）与**图鉴**（带出过的道具点亮、记累计件数，停上去看属性；特殊道具另列）。
+## 局外 / 基地（M6，架构文档 8.2；058 第 4 / 7 条）：页签（088 作者定）—— **仓库**（格子、带回来还没清空的背包）与**图鉴**（带出过的道具点亮、
+## 记累计件数，停上去看属性；特殊道具另列），后来又加了成就、出售、科技。
+## 139（作者定）：开发开关、局外解锁、科技等级、最近几局收进右侧的「调试台」抽屉（[DevDrawer]，头部最右的箭头开关）；仓库与图鉴的格子占满整行。
 ## 带回来的背包没清空之前「再来一局」是灰的（作者：提示玩家清空背包再配置）。
 extends GameScreen
 
 const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
 const TechPanelScript := preload("res://ui/game/tech_panel.gd")
-## 图鉴一行几个缩略图
-const CODEX_COLS := 8
+## 图鉴缩略图之间的空隙；一行几个按宽度算（139）
+const CODEX_GAP := 8
+## 出售页的仓库格子最大放到多大（139，和仓库页一样）
+const SELL_CELL_MAX := 96.0
 
 var _wh = null
 var _new_run_btn: Button
@@ -31,6 +34,9 @@ var _ach_filter_btns: Dictionary = {}
 var _ach_list: VBoxContainer = null
 var _ach_hint: Label = null
 var _ach_rows: Array = []
+## 139：调试台抽屉
+var _drawer: DevDrawer = null
+var _codex_grids: Array[GridContainer] = []
 
 
 func open(payload: Dictionary) -> void:
@@ -54,6 +60,12 @@ func open(payload: Dictionary) -> void:
 		b.toggle_mode = true
 		_tab_btns[key] = b
 		head.add_child(b)
+	# 139：调试台的箭头放在头部最右边
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(spacer)
+	_drawer = DevDrawer.new()
+	head.add_child(_drawer.arrow)
 	var just: RunResult = payload.get("result", null)
 	if just != null:
 		root.add_child(_wrapped("刚才这一局：%s" % ("撤离，背出来 %d 件、值 %d 币、带出 %d 币" % [just.carried.size(), just.value, just.balance]
@@ -72,24 +84,22 @@ func open(payload: Dictionary) -> void:
 	buttons.add_child(_hint)
 	root.add_child(buttons)
 
-	# 仓库页
-	var row := _hbox(28)
-	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(row)
-	_pages["warehouse"] = row
+	# 仓库页：格子占满整行（139）
 	var left := _vbox(8)
-	row.add_child(left)
+	left.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(left)
+	_pages["warehouse"] = left
 	left.add_child(_label("仓库　拖进格子里就留下；带回来的背包先清空", 15, UiPalette.DIM))
 	_wh = WarehousePanelScript.new()
+	_wh.fill_width = true
 	_wh.setup(flow, font)
 	_wh.changed.connect(_refresh)
 	_wh.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	left.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_wh.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.add_child(_wh)
 
-	var right := _vbox(8)
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(right)
+	# 调试台（139：原来仓库页的右列）
+	var right := _drawer.content
 	# 开发开关：只在非导出包显示。科技给的局外 buff 由「科技」页的等级决定（写进 tech_buffs），不在这里重复开关
 	if not OS.has_feature("template"):
 		right.add_child(_label("开发：局外 buff 开关（科技给的在下面「科技等级」里改）", 15, UiPalette.DIM))
@@ -146,7 +156,7 @@ func open(payload: Dictionary) -> void:
 	if not OS.has_feature("template") and not flow.tech_defs.is_empty():
 		right.add_child(_label("科技等级　开发：直接改存档里点到几级（0 = 没点亮），效果跟着重算", 15, UiPalette.DIM))
 		var grid := GridContainer.new()
-		grid.columns = 4
+		grid.columns = 2     # 139：抽屉窄，一行一个科技
 		grid.add_theme_constant_override("h_separation", 12)
 		right.add_child(grid)
 		for t in flow.tech_defs:
@@ -171,6 +181,7 @@ func open(payload: Dictionary) -> void:
 			"%d 件、值 %d 币、带出 %d 币" % [(h.get("items", []) as Array).size(), int(h.get("value", 0)), int(h.get("balance", 0))] if extracted else ""])
 	if m.history.is_empty():
 		log.append_text("[color=#8b93a1]还没有打过[/color]")
+	log.fit_content = true     # 抽屉自己滚，日志按内容撑高
 	right.add_child(log)
 
 	# 图鉴页、成就页（091）
@@ -178,8 +189,24 @@ func open(payload: Dictionary) -> void:
 	_pages["achievements"] = _build_achievements(root)
 	_pages["sell"] = _build_sell(root)
 	_pages["tech"] = _build_tech(root)     # 110：局外科技（仓库扩建）与上交
+	# 139：抽屉盖在页面上（最后加 = 画在最上面），贴右缘、头部下面
+	_drawer.wrap_contents()
+	add_child(_drawer)
+	_drawer.dock(96.0, 32.0)
+	head.resized.connect(func(): _drawer.dock(32.0 + head.size.y + 10.0, 32.0))
 	show_tab(String(payload.get("tab", "warehouse")))
 	_refresh()
+
+
+#region 调试台（139）
+func dev_drawer() -> DevDrawer:
+	return _drawer
+
+
+## 点箭头：开 / 关。返回开着没
+func toggle_dev_drawer() -> bool:
+	return _drawer.toggle() if _drawer != null else false
+#endregion
 
 
 #region 科技（110）
@@ -236,10 +263,19 @@ func _build_sell(root: Control) -> Control:
 	_sell_view.show_adjacency = false
 	_sell_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_sell_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): sell(uid))
-	page.add_child(ScrollBox.wrap(_sell_view))     # 110：竖向滚动
+	var sell_scroll := ScrollBox.wrap(_sell_view)     # 110：竖向滚动
+	sell_scroll.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	page.add_child(sell_scroll)
+	page.resized.connect(func(): fit_sell_to_width(page.size.x))     # 139：和仓库页一样撑满整行
 	flow.meta.warehouse.changed.connect(_refresh_sell)
 	set_sell_filter(0)
 	return page
+
+
+## 139：出售页的仓库格子按 [param width] 放大（60 ～ 96）
+func fit_sell_to_width(width: float) -> void:
+	if _sell_view != null and _sell_view.inventory != null:
+		_sell_view.cell_px = WarehousePanelScript.cell_for(width, _sell_view.inventory.size.x)
 
 
 ## 选一档（SELL_FILTERS 的下标）
@@ -389,7 +425,7 @@ func _achievement_row(def: AchievementDef, done: bool) -> Control:
 #endregion
 
 
-## 088 / 089：图鉴页 —— 跟棋盘的格子无关：所有能获得的道具按稀有度排成**缩略图网格**（每行 CODEX_COLS 个，能上下滚），
+## 088 / 089：图鉴页 —— 跟棋盘的格子无关：所有能获得的道具按稀有度排成**缩略图网格**（一行几个按宽度算，139；能上下滚），
 ## 带出过的亮着（右上角写累计件数），没获得的灰的；停在一格上开悬浮窗看属性。特殊道具另起一段
 func _build_codex(root: Control) -> Control:
 	var m := flow.meta
@@ -412,15 +448,17 @@ func _build_codex(root: Control) -> Control:
 	page.add_child(_label("图鉴　带出过的点亮（%d / %d，含赐福版），右上角是累计件数；停在一格上看属性，叠着的格子点开看异体" % [lit_n, total_n], 15, UiPalette.DIM))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED     # 139：按宽度定列数，不横向滚
 	scroll.custom_minimum_size.y = 300
 	page.add_child(scroll)
 	var inner := _vbox(10)
 	scroll.add_child(inner)
 	var grid := GridContainer.new()
-	grid.columns = CODEX_COLS
-	grid.add_theme_constant_override("h_separation", 8)
-	grid.add_theme_constant_override("v_separation", 8)
+	grid.add_theme_constant_override("h_separation", CODEX_GAP)
+	grid.add_theme_constant_override("v_separation", CODEX_GAP)
 	inner.add_child(grid)
+	_codex_grids.clear()
+	_codex_grids.append(grid)
 	_codex_tiles.clear()
 	for id in ids:
 		var def := flow.items.get_def(id)
@@ -433,9 +471,9 @@ func _build_codex(root: Control) -> Control:
 		keeps.sort()
 		inner.add_child(_label("特殊道具　不占背包，代表一种能力", 14, UiPalette.DIM))
 		var kgrid := GridContainer.new()
-		kgrid.columns = CODEX_COLS
-		kgrid.add_theme_constant_override("h_separation", 8)
+		kgrid.add_theme_constant_override("h_separation", CODEX_GAP)
 		inner.add_child(kgrid)
+		_codex_grids.append(kgrid)
 		for id in keeps:
 			var def := flow.items.get_def(id)
 			var tile := CodexTile.new(def, m.has_keepsake(id), 0, font)
@@ -445,7 +483,24 @@ func _build_codex(root: Control) -> Control:
 			_codex_tiles.append(tile)
 	_codex_tip = HoverTip.new(font)
 	add_child(_codex_tip)
+	fit_codex_to_width(1100.0)     # 进树之前先给个列数，布局好了按真宽度重算
+	scroll.resized.connect(func(): fit_codex_to_width(scroll.size.x))
 	return page
+
+
+## 139：图鉴一行放几个 —— 让缩略图占满 [param width]（扣掉竖滚动条），至少一个
+static func codex_columns_for(width: float) -> int:
+	return maxi(1, floori((width - 14.0 + CODEX_GAP) / (CodexTile.SIZE.x + CODEX_GAP)))
+
+
+func fit_codex_to_width(width: float) -> void:
+	var cols := codex_columns_for(width)
+	for g in _codex_grids:
+		g.columns = cols
+
+
+func codex_columns() -> int:
+	return _codex_grids[0].columns if not _codex_grids.is_empty() else 0
 
 
 ## 095：一件（含它的异体）的格子：原件在前、各神的赐福版按 id 排；任一点亮格子就亮

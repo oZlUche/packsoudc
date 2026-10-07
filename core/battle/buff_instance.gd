@@ -33,14 +33,12 @@ func refresh(now: int) -> void:
 		expires_at = -1
 
 
-## 返回实际增加的层数（受 max_stacks 限制）
+## 返回实际增加的层数。137：可叠层不封顶；不可叠层固定一层
 func add_stacks(n: int, now: int = 0) -> int:
 	if n <= 0:
 		return 0
 	var before := stacks
-	stacks += n
-	if def.max_stacks > 0:
-		stacks = mini(stacks, def.max_stacks)
+	stacks = stacks + n if def.is_stackable() else 1
 	if def.refresh_on_restack:
 		refresh(now)
 	return stacks - before

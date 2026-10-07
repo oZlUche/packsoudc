@@ -13,7 +13,7 @@
     "bag_leather",
     "bag_small"
   ],
-  "weight_capacity": 34,
+  "weight_capacity": 48,
   "skills": [
     {
       "type": "passive",
@@ -24,8 +24,7 @@
         {
           "type": "battle_reward_mult"
         }
-      ],
-      "slot": "identity"
+      ]
     },
     {
       "type": "passive",
@@ -38,18 +37,15 @@
           "stat": "regen_stamina",
           "amount": 1.0
         }
-      ],
-      "slot": "talent"
+      ]
     },
     {
       "type": "assault",
       "id": "assault",
       "display_name": "突击",
       "description": "下次进入战斗，先扣掉对方三成生命。",
-      "slot": "active",
       "uses": 3,
       "cooldown_steps": 3
     }
-  ],
-  "identity": "legion"
+  ]
 }

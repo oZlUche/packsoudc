@@ -938,7 +938,6 @@ func _wire_events() -> void:
 	hooks.register(&"request_extract", try_extract)     # 085：撤离点的对话里选「撤离」
 	hooks.register(&"faith_tier", active_faith_tier)     # 093：事件条件 faith_active
 	hooks.register(&"active_faith_id", active_faith_id)
-	hooks.register(&"identity", func() -> StringName: return character.identity if character != null else &"")     # 136
 	hooks.register(&"skill_ready", func(id: StringName) -> String: return skills.can_use(id) if skills != null else "没有技能")
 	events.waited.connect(func(_n: MapNode, _actions: int):
 		if hunters != null:

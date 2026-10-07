@@ -35,7 +35,7 @@
                 "display_names": {
                   "en": "Blood Rage"
                 },
-                "max_stacks": 1,
+                "stackable": false,
                 "duration_sec": 10.0,
                 "mods": [
                   {
