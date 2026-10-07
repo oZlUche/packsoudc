@@ -2,18 +2,14 @@
 ## 迎战 / 逃跑、六种战败后果、掉落倍率、存档、流程。期望从数据推：定义里写了几步就断言几步。
 extends RefCounted
 
+## 与 Support.paths("hunters") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_hunters_run.json"
 const META := "user://test_hunters_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func _content() -> TestSupport.Content:
 	return TestSupport.load_content("free_mode", ["hunter_defs"])
-
-
-static func _cleanup() -> void:
-	for p in [SAVE, META]:
-		if FileAccess.file_exists(p):
-			DirAccess.remove_absolute(p)
 
 
 ## 一份只开猎手机制的难度（代码里造，不依赖作者的进阶文件）
@@ -358,7 +354,7 @@ static func run_save_and_flow(t: TestCase) -> void:
 	t.check(s3.events.choose(0), "读档后能迎战")
 
 	# 流程
-	_cleanup()
+	Support.cleanup("hunters")
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = [c.chapter] as Array[ChapterDef]
 	f.difficulties = [diff] as Array[DifficultyDef]
@@ -401,7 +397,7 @@ static func run_save_and_flow(t: TestCase) -> void:
 				f.resume()
 	if run.is_over() or run.hunters.alive().is_empty():
 		t.check(true, "（这一步就结束了，流程部分跳过）")
-		_cleanup()
+		Support.cleanup("hunters")
 		return
 	var hh: Hunter = run.hunters.alive()[0]
 	hh.node_id = run.travel.current_id
@@ -414,7 +410,7 @@ static func run_save_and_flow(t: TestCase) -> void:
 	t.eq(int(run.tally["battles_won"]) + int(run.tally["battles_lost"]), before + 1, "打了一场")
 	t.eq(f.screen, GameFlow.Screen.BATTLE, "→ 回放")
 	t.check(f.save() or run.is_over(), "存得了档")
-	_cleanup()
+	Support.cleanup("hunters")
 
 
 static func run_brackets(t: TestCase) -> void:

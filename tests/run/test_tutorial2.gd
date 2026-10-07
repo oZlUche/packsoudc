@@ -2,8 +2,10 @@
 ## 两场都输也死不了、章节收起与顶上（序章通关 → 直接开序章二 → 通关 → 第一章）。期望从数据推、克制关系用真的战斗模拟验。
 extends RefCounted
 
+## 与 Support.paths("t2") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_t2_run.json"
 const META := "user://test_t2_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func _content() -> TestSupport.Content:
@@ -11,11 +13,6 @@ static func _content() -> TestSupport.Content:
 	# 预设图按种子 1 解析一份：要跑地图源，只这个套件要，所以不进共用装载
 	c.graph = c.chapter.map_source.resolve(1) if c.chapter != null and c.chapter.map_source != null else null
 	return c
-
-
-static func _cleanup() -> void:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
 
 
 ## 布鲁图斯背着这些东西的战斗单位
@@ -391,7 +388,7 @@ static func run_random_mode(t: TestCase) -> void:
 static func run_gating(t: TestCase) -> void:
 	t.begin("序章二 · 章节的门：序章通关 → 序章收起、只剩序章二 → 「新的一局」直接开它、先过 intro → 通关 → 第一章开、序章二收起")
 	var c := _content()
-	_cleanup()
+	Support.cleanup("t2")
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = GameFlow.load_chapters()
 	f.characters = GameFlow.load_characters()
@@ -454,4 +451,4 @@ static func run_gating(t: TestCase) -> void:
 	f.finish_result()
 	avail = f.available_chapters()
 	t.check(avail.size() == 1 and avail[0].id == &"prologue_3", "序章二收起，只剩序章三：%s" % str(avail.map(func(x: ChapterDef) -> String: return String(x.id))))
-	_cleanup()
+	Support.cleanup("t2")

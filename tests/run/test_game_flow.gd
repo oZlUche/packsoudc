@@ -3,23 +3,14 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
+## 与 Support.paths("flow") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_flow_run.json"
 const META := "user://test_flow_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func _content() -> TestSupport.Content:
 	return TestSupport.load_content("free_mode", ["loadouts"])
-
-
-static func _flow(c: TestSupport.Content, hp: float = 10000.0) -> GameFlow:
-	_cleanup()      # 上一次跑挂在半路可能留下存档，别让它影响这一次
-	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
-	f.chapters = [c.chapter] as Array[ChapterDef]
-	f.loadouts = c.loadouts
-	f.save_path = SAVE
-	f.meta_path = META
-	f.player_baseline = CombatantBaseline.with_hp(hp)
-	return f
 
 
 static func _loadout(c: TestSupport.Content, id: StringName) -> LoadoutDef:
@@ -68,11 +59,6 @@ static func _sum_value(container) -> int:
 	for inst in container.items():
 		v += ItemValue.of((inst as ItemInstance).def)
 	return v
-
-
-static func _cleanup() -> void:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
 
 
 #region 开局装备
@@ -235,7 +221,7 @@ static func run_flow_screens(t: TestCase) -> void:
 	t.begin("场景流 · 主菜单 → 开局 → 地图 → 打一场（回放 → 战利品）→ 地图；存档回主菜单再继续")
 
 	var c := _content()
-	var f := _flow(c)
+	var f := Support.flow(c, "flow")
 	var seen: Array = []
 	f.screen_changed.connect(func(s: int, _p: Dictionary): seen.append(s))
 	f.to_main_menu()
@@ -289,7 +275,7 @@ static func run_flow_screens(t: TestCase) -> void:
 	t.eq(f.run.travel.current_id, at, "还站在原地")
 	t.eq(int(f.run.tally["battles_won"]), 1, "计数跟着存档")
 	t.check(seen.has(GameFlow.Screen.SETUP) and seen.has(GameFlow.Screen.BATTLE), "屏的切换都发了信号")
-	_cleanup()
+	Support.cleanup("flow")
 
 
 static func run_flow_search_and_shop(t: TestCase) -> void:
@@ -302,7 +288,7 @@ static func run_flow_search_and_shop(t: TestCase) -> void:
 		t.check(not found.is_empty(), "找得到出生点旁边就是%s的种子" % MapNodeStyle.of(type)["label"])
 		if found.is_empty():
 			continue
-		var f := _flow(c)
+		var f := Support.flow(c, "flow")
 		f.begin(c.chapter, kit, int(found["seed"]))
 		f.pick_spawn(int(found["entry"]))
 		f.step_to(int(found["next"]))
@@ -331,7 +317,7 @@ static func run_flow_defeat(t: TestCase) -> void:
 	if found.is_empty():
 		t.check(false, "找不到种子")
 		return
-	var f := _flow(c, 1.0)
+	var f := Support.flow(c, "flow", 1.0)
 	var empty := LoadoutDef.new()      # 空手：肯定输
 	f.begin(c.chapter, empty, int(found["seed"]))
 	f.pick_spawn(int(found["entry"]))
@@ -360,7 +346,7 @@ static func run_flow_defeat(t: TestCase) -> void:
 	t.eq(f.meta.runs, 1, "再按一次不会记两遍")
 	f.to_main_menu()
 	t.eq(f.screen, GameFlow.Screen.MAIN_MENU, "回主菜单")
-	_cleanup()
+	Support.cleanup("flow")
 
 
 static func run_flow_extract(t: TestCase) -> void:
@@ -368,7 +354,7 @@ static func run_flow_extract(t: TestCase) -> void:
 
 	var c := _content()
 	var kit := _loadout(c, &"scavenger")
-	var f := _flow(c)
+	var f := Support.flow(c, "flow")
 	var run: RunState = null
 	var target := -1
 	for seed in range(1, 40):
@@ -421,7 +407,7 @@ static func run_flow_extract(t: TestCase) -> void:
 	t.eq(f.meta.warehouse.item_count(), kept, "仓库里就是棋盘上的那些")
 	t.eq(f.meta.funds, r.balance, "钱带出来了")
 	t.eq(MetaSave.read(c.items, META).warehouse.item_count(), kept, "局外存了，读回来一样")
-	_cleanup()
+	Support.cleanup("flow")
 #endregion
 
 
@@ -518,7 +504,7 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	t.eq(flow.meta.warehouse.item_count(), int(stored["moved"]), "仓库里就是背出去的")
 	flow.to_main_menu()
 	game.queue_free()
-	_cleanup()
+	Support.cleanup("flow")
 
 
 static func _nearest_free_extract(run: RunState) -> int:
@@ -574,7 +560,7 @@ static func run_warehouse_to_run(t: TestCase) -> void:
 	t.begin("场景流 · 从仓库带东西进一局：从仓库拿走、立刻存 meta；撤离了回来")
 
 	var c := _content()
-	var f := _flow(c)
+	var f := Support.flow(c, "flow")
 	var kit := _loadout(c, &"standard")
 	# 先攒一个仓库：一局撤离
 	var first := f.begin(c.chapter, kit, 11)
@@ -625,7 +611,7 @@ static func run_warehouse_to_run(t: TestCase) -> void:
 	t.eq(f.can_begin(), "", "090：带回来的棋盘没清空也能开新局（开局屏里到地上）")
 	f.store_all()
 	t.eq(f.meta.warehouse.item_count(), stock - 3 + board_n, "撤离：棋盘上的非包道具置入后全回仓库")
-	_cleanup()
+	Support.cleanup("flow")
 #endregion
 
 
@@ -639,7 +625,7 @@ static func run_seen_loot(t: TestCase) -> void:
 	if found.is_empty():
 		t.check(false, "找不到种子")
 		return
-	var f := _flow(c)
+	var f := Support.flow(c, "flow")
 	f.begin(c.chapter, kit, int(found["seed"]))
 	f.pick_spawn(int(found["entry"]))
 	f.step_to(int(found["next"]))

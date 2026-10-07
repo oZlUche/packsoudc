@@ -2,8 +2,10 @@
 ## 图鉴累计件数、点亮一次；带回来的没清空开不了新局；存档 v2 往返。
 extends RefCounted
 
+## 与 Support.paths("meta_grid") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_meta_grid_run.json"
 const META := "user://test_meta_grid_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func _content() -> TestSupport.Content:
@@ -15,19 +17,6 @@ static func _kit(c: TestSupport.Content) -> LoadoutDef:
 		if l.id == &"standard":
 			return l
 	return c.loadouts[0]
-
-
-static func _flow(c: TestSupport.Content, rules: MetaRules = null) -> GameFlow:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
-	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new(rules if rules != null else c.meta_rules))
-	f.meta_rules = rules if rules != null else c.meta_rules
-	f.chapters = [c.chapter] as Array[ChapterDef]
-	f.loadouts = c.loadouts
-	f.save_path = SAVE
-	f.meta_path = META
-	f.player_baseline = CombatantBaseline.with_hp(10000.0)
-	return f
 
 
 ## 一局直接算撤离
@@ -173,7 +162,7 @@ static func run_flow_gate(t: TestCase) -> void:
 
 	var c := _content()
 	var kit := _kit(c)
-	var f := _flow(c)
+	var f := Support.flow(c, "meta_grid")
 	var run := f.begin(c.chapter, kit, 31)
 	run.phase = RunState.Phase.EXTRACTED
 	run.end_reason = &"extract"

@@ -4,18 +4,14 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
+## 与 Support.paths("char") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_char_run.json"
 const META := "user://test_char_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func _content() -> TestSupport.Content:
 	return TestSupport.load_content("free_mode", ["loadouts", "characters", "meta_rules"])
-
-
-static func _cleanup() -> void:
-	for p in [SAVE, META]:
-		if FileAccess.file_exists(p):
-			DirAccess.remove_absolute(p)
 
 
 static func _ctx(c: TestSupport.Content) -> ContentImporter.Context:
@@ -43,18 +39,6 @@ static func _kept_of(c: TestSupport.Content, kit: LoadoutDef) -> Array[ItemDef]:
 		if MetaState.keeps(def):
 			out.append(def)
 	return out
-
-
-static func _flow(c: TestSupport.Content, rules: MetaRules) -> GameFlow:
-	_cleanup()
-	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new(rules))
-	f.chapters = [c.chapter] as Array[ChapterDef]
-	f.loadouts = c.loadouts
-	f.characters = c.characters
-	f.meta_rules = rules
-	f.save_path = SAVE
-	f.meta_path = META
-	return f
 
 
 static func _bags_on(board: GridInventory) -> int:
@@ -189,7 +173,7 @@ static func run_first_kit_and_flow(t: TestCase) -> void:
 		t.check(false, "没有角色或局外规则")
 		return
 	var ch := c.characters[0]
-	var f := _flow(c, c.meta_rules)
+	var f := Support.flow(c, "char", 0.0, c.meta_rules)
 	var kit := f.loadout_of(c.meta_rules.first_kit)
 	var kept := _kept_of(c, kit)
 	t.check(kit != null and not kept.is_empty(), "第一套 '%s' 存在且有非包道具" % c.meta_rules.first_kit)
@@ -207,12 +191,12 @@ static func run_first_kit_and_flow(t: TestCase) -> void:
 	t.eq(f.meta.warehouse.item_count(), kept.size(), "仓库不空就不再发")
 	var quiet := MetaRules.new()
 	quiet.id = &"quiet"
-	var f0 := _flow(c, quiet)
+	var f0 := Support.flow(c, "char", 0.0, quiet)
 	f0.new_run()
 	t.eq(f0.meta.warehouse.item_count(), 0, "first_kit 空 = 不发")
 
 	# 从仓库拖上棋盘再出发
-	f = _flow(c, c.meta_rules)
+	f = Support.flow(c, "char", 0.0, c.meta_rules)
 	f.new_run()
 	var first := f.meta.warehouse.items()[0] as ItemInstance
 	var staged := GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
@@ -251,12 +235,12 @@ static func run_first_kit_and_flow(t: TestCase) -> void:
 	t.check(f2.continue_run(), "读档")
 	t.eq(f2.run.character_id, ch.id, "读回来还是那个角色")
 	t.eq(f2.run.player_baseline.value_of(&"max_hp"), ch.baseline().value_of(&"max_hp"), "基线从定义表找回（存档只写 id）")
-	_cleanup()
+	Support.cleanup("char")
 
 
 static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 	t.begin("开局屏 · 角色、初始包、从仓库带（进 / 出 / 上限 / 包不能进仓库）、出发、取消")
-	_cleanup()
+	Support.cleanup("char")
 	var game = load(GAME).instantiate()
 	game.save_path = SAVE
 	game.meta_path = META
@@ -365,14 +349,14 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 		t.eq(MetaSave.read(flow.items, META, flow.meta_rules).warehouse.item_count(), m, "meta 存的也是放回之后的")
 
 	game.queue_free()
-	_cleanup()
+	Support.cleanup("char")
 
 
 ## 090（作者定）：开局屏的地上 —— 上一局带回来、还没置入的东西进这一屏时挪到地上；拖上包 = 带上、拖进仓库 = 置入、
 ## 换角色回地上；回主菜单原样放回带回来的棋盘（视为没发生过移动）；出发则留在地上的没了。仓库的东西进不了地上
 static func frame_setup_stash(t: TestCase, root: Window) -> void:
 	t.begin("开局屏 · 地上（090）：带回来的到地上、带上 / 置入 / 留着、换角色回地上、回主菜单原样放回、出发就没了")
-	_cleanup()
+	Support.cleanup("char")
 	var game = load(GAME).instantiate()
 	game.save_path = SAVE
 	game.meta_path = META
@@ -475,4 +459,4 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 		t.eq(flow.meta.warehouse.item_count(), n + 1, "仓库没被动")
 		t.check(not MetaSave.read(flow.items, META, flow.meta_rules).has_pending_board(), "存盘里也清了")
 	game.queue_free()
-	_cleanup()
+	Support.cleanup("char")

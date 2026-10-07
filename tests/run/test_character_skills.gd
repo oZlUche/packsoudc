@@ -3,18 +3,14 @@
 ## 三个作者定的角色（安德烈乌斯 / 布鲁图斯 / 马库斯）走管线。期望从数据推：角色文件里写多少就断言多少。
 extends RefCounted
 
+## 与 Support.paths("skills") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_skills_run.json"
 const META := "user://test_skills_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func _content() -> TestSupport.Content:
 	return TestSupport.load_content("free_mode", ["characters", "hunter_defs"])
-
-
-static func _cleanup() -> void:
-	for p in [SAVE, META]:
-		if FileAccess.file_exists(p):
-			DirAccess.remove_absolute(p)
 
 
 static func _character(c: TestSupport.Content, id: StringName) -> CharacterDef:
@@ -259,7 +255,7 @@ static func run_save_load(t: TestCase) -> void:
 	t.begin("技能 · 存档：次数、冷却、立的旗、躲避、免罚次数都跟着走；读档由持有方按 id 接回角色")
 	var c := _content()
 	var marcus := _character(c, &"marcus")
-	_cleanup()
+	Support.cleanup("skills")
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = [c.chapter] as Array[ChapterDef]
 	f.characters = c.characters
@@ -291,4 +287,4 @@ static func run_save_load(t: TestCase) -> void:
 	t.check(f2.run.skills.is_armed(skill.id), "旗子还立着")
 	t.eq(f2.run.events.losses_forgiven, 1, "免罚次数还在")
 	t.eq(f2.run.skills.can_use(skill.id), run.skills.can_use(skill.id), "能不能用的判断一致")
-	_cleanup()
+	Support.cleanup("skills")

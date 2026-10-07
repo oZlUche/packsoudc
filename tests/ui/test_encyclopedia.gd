@@ -3,16 +3,12 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
+## 与 Support.paths("114") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_114_run.json"
 const META := "user://test_114_meta.json"
 const SETTINGS := "user://test_114_settings.json"
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
-
-
-static func _cleanup() -> void:
-	for p in [SAVE, META, SETTINGS]:
-		if FileAccess.file_exists(p):
-			DirAccess.remove_absolute(p)
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func _book() -> Encyclopedia:
@@ -106,7 +102,7 @@ static func frame_entries(t: TestCase, root: Window) -> void:
 	t.begin("114 · 入口：主菜单「百科」独立一屏（返回 / Esc 回主菜单）；暂停菜单「百科」嵌进遮罩，点链接跳页、「上一页」回得去，Esc 先关百科再关暂停")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
-	_cleanup()
+	Support.cleanup("114")
 	var game = (load(GAME) as PackedScene).instantiate()
 	game.save_path = SAVE
 	game.meta_path = META
@@ -151,4 +147,4 @@ static func frame_entries(t: TestCase, root: Window) -> void:
 	t.check(not map.encyclopedia_open(), "关暂停菜单把百科一起关了")
 	flow.to_main_menu()
 	game.queue_free()
-	_cleanup()
+	Support.cleanup("114")

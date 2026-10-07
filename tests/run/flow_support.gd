@@ -3,9 +3,8 @@
 ##
 ## 文件名不以 `test_` 开头 —— `run_tests.gd` 扫的是套件，这里是套件的工具。
 ## 以前这些函数在每个 `test_author_*.gd` 里各写一份，搬用例的时候就得连着抄；收到这里之后搬用例只搬用例。
+## 精简 T-1：造 [GameFlow] 的底座与「把叠层看完」也从 test_node_screens 搬了过来，那边改成调这里。
 extends RefCounted
-
-const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 
 
 ## 一组互不打扰的存档路径（同一个前缀同一组）
@@ -14,13 +13,32 @@ static func paths(prefix: String) -> Dictionary:
 		"settings": "user://test_%s_settings.json" % prefix}
 
 
-## 一个用这组路径的 [GameFlow]
-static func flow(c, prefix: String, hp: float = 10000.0) -> GameFlow:
-	var f: GameFlow = NodeScreens._flow(c, hp)
+## 一个用这组路径的 [GameFlow]。先把这组路径清掉（上一次跑挂在半路可能留下存档；[param keep_saves] 为 true 时留着，
+## 给「存了再读档接着走」的用例）；内容里装了的表都接上 —— 没装的留空，接上等于没接，所以各套件只要装自己原来装的；
+## 玩家基线血量 [param hp]（≤ 0 不设基线、用一局默认的）；局外规则 [param rules]（null 时用内容里的，都没有就是
+## [MetaState] 的默认）
+static func flow(c: TestSupport.Content, prefix: String, hp: float = 10000.0, rules: MetaRules = null,
+		keep_saves: bool = false) -> GameFlow:
+	if not keep_saves:
+		cleanup(prefix)
+	var meta_rules := rules if rules != null else c.meta_rules
+	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new(meta_rules))
+	f.meta_rules = meta_rules
+	f.chapters = [c.chapter] as Array[ChapterDef]
+	f.loadouts = c.loadouts
+	f.event_defs = c.events
+	f.buff_defs = c.buffs
+	f.difficulties = c.difficulties
+	f.characters = c.characters
+	f.hunter_defs = c.hunter_defs
+	f.faith_defs = c.faiths
+	f.recipes = c.recipes
 	var p := paths(prefix)
 	f.save_path = String(p["run"])
 	f.meta_path = String(p["meta"])
 	f.settings_path = String(p["settings"])
+	if hp > 0.0:
+		f.player_baseline = CombatantBaseline.with_hp(hp)
 	return f
 
 
@@ -71,11 +89,19 @@ static func walk_to(f: GameFlow, target: int, stop_at_screen: int = -1) -> bool:
 				g += 1
 				settle_one(f)
 			return true
-		NodeScreens._settle(f)
+		settle(f)
 	return run.travel.current_id == target
 
 
-## 只把当前这一屏看完（不像 NodeScreens._settle 那样一路看到地图 —— 撤离点的事件选第 0 项就是「撤离」）
+## 把叠层一路看完直到地图（最多 30 屏），每一屏按 [method settle_one] 处理 —— 撤离点的事件选第 0 项就是「撤离」
+static func settle(f: GameFlow) -> void:
+	var guard := 0
+	while GameFlow.is_overlay(f.screen) and guard < 30:
+		guard += 1
+		settle_one(f)
+
+
+## 只把当前这一屏看完（不像 [method settle] 那样一路看到地图）
 static func settle_one(f: GameFlow) -> void:
 	match f.screen:
 		GameFlow.Screen.PREBATTLE:

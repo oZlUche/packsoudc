@@ -4,8 +4,10 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
+## 与 Support.paths("event") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_event_run.json"
 const META := "user://test_event_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func _content() -> TestSupport.Content:
@@ -26,20 +28,6 @@ static func _start(c: TestSupport.Content, seed: int) -> RunState:
 		s.player_baseline = CombatantBaseline.with_hp(10000.0)
 		s.event_defs = c.events.duplicate()
 	return s
-
-
-static func _flow(c: TestSupport.Content) -> GameFlow:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
-	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
-	f.buff_defs = c.buffs
-	f.event_defs = c.events
-	f.chapters = [c.chapter] as Array[ChapterDef]
-	f.loadouts = c.loadouts
-	f.save_path = SAVE
-	f.meta_path = META
-	f.player_baseline = CombatantBaseline.with_hp(10000.0)
-	return f
 
 
 ## 出生点旁边就有某类型点的种子
@@ -366,7 +354,7 @@ static func run_flow(t: TestCase) -> void:
 	if found.is_empty():
 		t.check(false, "找不到种子")
 		return
-	var f := _flow(c)
+	var f := Support.flow(c, "event")
 	f.begin(c.chapter, _kit(c), int(found["seed"]))
 	f.pick_spawn(int(found["entry"]))
 	var next := int(found["next"])
@@ -378,7 +366,7 @@ static func run_flow(t: TestCase) -> void:
 	t.eq(f.screen, GameFlow.Screen.MAP, "什么都没发生：直接回地图")
 
 	# 「搜索」进容器屏
-	var f2 := _flow(c)
+	var f2 := Support.flow(c, "event")
 	f2.begin(c.chapter, _kit(c), int(found["seed"]))
 	f2.pick_spawn(int(found["entry"]))
 	f2.step_to(next)
@@ -396,7 +384,7 @@ static func run_flow(t: TestCase) -> void:
 	t.eq(f2.screen, GameFlow.Screen.MAP, "离开后回地图")
 
 	# 发生了什么：先看结果页
-	var f3 := _flow(c)
+	var f3 := Support.flow(c, "event")
 	var run3 := f3.begin(c.chapter, _kit(c), int(found["seed"]))
 	f3.pick_spawn(int(found["entry"]))
 	var heal := RestoreVitality.new()
@@ -417,7 +405,7 @@ static func run_flow(t: TestCase) -> void:
 	t.eq(f3.screen, GameFlow.Screen.MAP, "继续 → 地图")
 
 	# 读档回来还在事件屏
-	var f4 := _flow(c)
+	var f4 := Support.flow(c, "event")
 	f4.begin(c.chapter, _kit(c), int(found["seed"]))
 	f4.pick_spawn(int(found["entry"]))
 	f4.step_to(next)

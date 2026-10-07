@@ -2,18 +2,14 @@
 ## 通关解锁第一章。期望从数据推：地图文件里写的点、事件、搜索的次数与固定的收获，都读文件断言；教程能打赢用真的战斗模拟验。
 extends RefCounted
 
+## 与 Support.paths("prologue") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_prologue_run.json"
 const META := "user://test_prologue_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func _content() -> TestSupport.Content:
 	return TestSupport.load_content("prologue", ["characters", "events", "faiths"])
-
-
-static func _cleanup() -> void:
-	for p in [SAVE, META]:
-		if FileAccess.file_exists(p):
-			DirAccess.remove_absolute(p)
 
 
 static func _brutus(c: TestSupport.Content) -> CharacterDef:
@@ -367,13 +363,13 @@ static func run_crafting_gate(t: TestCase) -> void:
 	t.check(bool(s.events.option_state(1)["ok"]), "也没有匕首：退路「就这么上」能选")
 	s.board.try_add(ItemInstance.create(c.items.get_def(&"knife")), true)
 	t.check(not bool(s.events.option_state(1)["ok"]), "有匕首了：退路藏起来")
-	_cleanup()
+	Support.cleanup("prologue")
 
 
 static func run_gating(t: TestCase) -> void:
 	t.begin("序章 · 开局屏的门：没通关只列序章、序章只能选布鲁图斯；撤离成功给解锁，第一章随之出现并排在序章后面")
 	var c := _content()
-	_cleanup()
+	Support.cleanup("prologue")
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = GameFlow.load_chapters()
 	f.characters = c.characters
@@ -426,4 +422,4 @@ static func run_gating(t: TestCase) -> void:
 	var f2 := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f2.chapters = [c.chapter1] as Array[ChapterDef]
 	t.eq(f2.available_chapters().size(), 1, "只有一个要解锁的章节时照样列出来（不把游戏锁死）")
-	_cleanup()
+	Support.cleanup("prologue")

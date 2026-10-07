@@ -2,16 +2,8 @@
 ## 只有信物能激活信仰；自己神的赐福版献回来双倍
 extends RefCounted
 
-const SAVE := "user://test_095_run.json"
-const META := "user://test_095_meta.json"
-const SETTINGS := "user://test_095_settings.json"
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
-
-
-static func _cleanup() -> void:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
-	GameSettings.remove(SETTINGS)
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func _dmg(spec: CombatantSpec, uid: int) -> float:
@@ -83,10 +75,7 @@ static func run_variants_and_modes(t: TestCase) -> void:
 static func run_blessing_paths(t: TestCase) -> void:
 	t.begin("095 · 赐福从哪来：战利品 / 搜索替代（激活只换那位神的、没激活随机一位）、包内每步转化（位置不动、发信号）、神坛「祈求赐福」花信力、事件后果赐福一件")
 	var c = NodeScreens._content()
-	var f: GameFlow = NodeScreens._flow(c)
-	f.save_path = SAVE
-	f.meta_path = META
-	f.settings_path = SETTINGS
+	var f: GameFlow = Support.flow(c, "095")
 	f.faith_defs = FaithDef.load_all()
 	var run := f.begin(c.chapter, NodeScreens._kit(c), 4)
 	if run == null:
@@ -162,18 +151,15 @@ static func run_blessing_paths(t: TestCase) -> void:
 	var o := BlessItem.new()
 	o.apply(ctx)
 	t.check(another.def.id == &"longsword_brute" and not ctx.log.is_empty(), "事件「赐福一件」：地上那把长剑成了蛮神赐福版（%s）" % (ctx.log[0] if not ctx.log.is_empty() else ""))
-	_cleanup()
+	Support.cleanup("095")
 
 
 ## 图鉴：赐福版并进原件那一格，叠影 + 角标，点开弹异体列表
 static func frame_codex_variants(t: TestCase, root: Window) -> void:
 	t.begin("095 · 图鉴：赐福版并进原件那一格（不单列）、格子记着异体与各自点亮、点开弹出「原件 / 蛮神版 / 日神版…」、关得掉；点亮的计数含赐福版")
 	var c = NodeScreens._content()
-	_cleanup()
-	var f: GameFlow = NodeScreens._flow(c)
-	f.save_path = SAVE
-	f.meta_path = META
-	f.settings_path = SETTINGS
+	Support.cleanup("095")
+	var f: GameFlow = Support.flow(c, "095")
 	f.faith_defs = FaithDef.load_all()
 	f.meta.codex["shortsword_brute"] = 1     # 假装带出过一把蛮神赐福的短剑
 	var screen = load("res://ui/game/meta_screen.gd").new()
@@ -213,4 +199,4 @@ static func frame_codex_variants(t: TestCase, root: Window) -> void:
 			plain = tile
 	t.check(plain != null and plain.variant_count() == 0, "护符本来就是信仰道具、没有异体：普通一格")
 	screen.queue_free()
-	_cleanup()
+	Support.cleanup("095")

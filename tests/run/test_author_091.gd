@@ -3,24 +3,12 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
+## 与 Support.paths("091") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_091_run.json"
 const META := "user://test_091_meta.json"
 const SETTINGS := "user://test_091_settings.json"
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
-
-
-static func _cleanup() -> void:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
-	GameSettings.remove(SETTINGS)
-
-
-static func _flow(c, hp: float) -> GameFlow:
-	var f: GameFlow = NodeScreens._flow(c, hp)
-	f.save_path = SAVE
-	f.meta_path = META
-	f.settings_path = SETTINGS
-	return f
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 ## 遭遇打输：整场包在事件里 —— 会话收掉、点用过、体力一点不掉、一局也不结束
@@ -32,7 +20,7 @@ static func run_encounter_lost(t: TestCase) -> void:
 	if found.is_empty():
 		t.check(false, "找不到带搜索点的种子")
 		return
-	var f := _flow(c, 1.0)
+	var f := Support.flow(c, "091", 1.0)
 	var run := f.begin(c.chapter, LoadoutDef.new(), int(found["seed"]))     # 空手 + 1 血：肯定输
 	if run == null:
 		t.check(false, "开局")
@@ -52,7 +40,7 @@ static func run_encounter_lost(t: TestCase) -> void:
 	var session: SearchSession = run.events.current_search
 	t.not_null(session, "会话开着")
 	if session == null:
-		_cleanup()
+		Support.cleanup("091")
 		return
 	t.check(not session.active and not session.encounter.is_empty(), "第一次就遭遇")
 	t.eq(f.screen, GameFlow.Screen.EVENT, "→「有人来了」")
@@ -69,7 +57,7 @@ static func run_encounter_lost(t: TestCase) -> void:
 	f.resume()
 	NodeScreens._settle(f)
 	t.eq(f.screen, GameFlow.Screen.MAP, "收尾回地图")
-	_cleanup()
+	Support.cleanup("091")
 
 
 ## 商店回头再逛：刷新次数 / 卖掉的记在节点里，回来价钱接着涨
@@ -81,7 +69,7 @@ static func run_shop_revisit(t: TestCase) -> void:
 	if found.is_empty():
 		t.check(true, "（种子里出生点旁没有商店，跳过）")
 		return
-	var f := _flow(c, 10000.0)
+	var f := Support.flow(c, "091", 10000.0)
 	var run := f.begin(c.chapter, kit, int(found["seed"]))
 	if run == null:
 		t.check(false, "开局")
@@ -99,7 +87,7 @@ static func run_shop_revisit(t: TestCase) -> void:
 	var s1: ShopSession = run.events.current_shop
 	t.not_null(s1, "开了店")
 	if s1 == null:
-		_cleanup()
+		Support.cleanup("091")
 		return
 	t.check(s1.refresh() and s1.refresh(), "刷了两次")
 	t.eq(s1.refreshes, 2, "计了两次")
@@ -119,7 +107,7 @@ static func run_shop_revisit(t: TestCase) -> void:
 		t.eq(s2.refresh_cost(), cost_after, "刷新价不重置")
 		s2.leave()
 	NodeScreens._settle(f)
-	_cleanup()
+	Support.cleanup("091")
 
 
 ## 背景底色：设置里挑一个，调色板 / 底板 / 存盘都跟着
@@ -128,7 +116,7 @@ static func frame_bg_theme(t: TestCase, root: Window) -> void:
 	t.check(UiPalette.BG_THEMES.size() >= 4, "至少四种底色（%d）" % UiPalette.BG_THEMES.size())
 	t.check(UiPalette.has_bg_theme(UiPalette.BG_DEFAULT) and not UiPalette.has_bg_theme("nope"), "认得默认、不认瞎写的")
 	var saved_theme := UiPalette.bg_theme
-	_cleanup()
+	Support.cleanup("091")
 	var game = (load(GAME) as PackedScene).instantiate()
 	game.save_path = SAVE
 	game.meta_path = META
@@ -170,7 +158,7 @@ static func frame_bg_theme(t: TestCase, root: Window) -> void:
 	t.eq(UiPalette.bg_theme, UiPalette.BG_DEFAULT, "换回默认")
 	UiPalette.bg_theme = saved_theme
 	game.queue_free()
-	_cleanup()
+	Support.cleanup("091")
 
 
 static func _place_any(inv: GridInventory, def: ItemDef) -> ItemInstance:
@@ -186,8 +174,8 @@ static func _place_any(inv: GridInventory, def: ItemDef) -> ItemInstance:
 static func frame_sell_tab(t: TestCase, root: Window) -> void:
 	t.begin("091 · 基地「出售」页：按定价的比例进钱；筛选档「白色 / 绿色及以下 / … / 全部」；预览 → 一键出售；双击卖一件")
 	var c = NodeScreens._content()
-	_cleanup()
-	var f := _flow(c, 10000.0)
+	Support.cleanup("091")
+	var f := Support.flow(c, "091", 10000.0)
 	var white: ItemDef = null
 	var higher: ItemDef = null
 	for id in c.items.all_ids():
@@ -205,7 +193,7 @@ static func frame_sell_tab(t: TestCase, root: Window) -> void:
 	var b := _place_any(f.meta.warehouse, higher)
 	t.check(a != null and b != null, "仓库里放了两件")
 	if a == null or b == null:
-		_cleanup()
+		Support.cleanup("091")
 		return
 	t.check(f.sell_ratio() > 0.0 and f.sell_ratio() <= 1.0, "出售比例在 (0, 1]（%.2f）" % f.sell_ratio())
 	var pw := MetaState.sell_price(white, f.sell_ratio())
@@ -249,7 +237,7 @@ static func frame_sell_tab(t: TestCase, root: Window) -> void:
 	var back := MetaState.from_dict(f.meta.to_dict(), c.items)
 	t.eq(back.funds, f.meta.funds, "钱跟存档")
 	screen.queue_free()
-	_cleanup()
+	Support.cleanup("091")
 
 
 ## 道具编辑器：新建后边敲 id，列表里始终只有一条
