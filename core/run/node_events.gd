@@ -404,9 +404,9 @@ func _event_ctx(node: MapNode) -> EventContext:
 	ctx.storage = storage
 	ctx.meta = meta
 	ctx.hooks = hooks
-	if travel != null and travel.erosion != null and travel.erosion.has_method("depth_of"):
-		var field: Variant = travel.erosion
-		ctx.erosion_depth = func(n: MapNode) -> int: return int(field.depth_of(n))
+	if travel != null and travel.erosion != null:
+		var field := travel.erosion
+		ctx.erosion_depth = func(n: MapNode) -> int: return field.depth_of(n)
 	return ctx
 #endregion
 

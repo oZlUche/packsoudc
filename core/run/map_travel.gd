@@ -8,9 +8,8 @@
 ## 预警倒计时的最后一步就没有意义。侵蚀现在还没有（第 7 阶段），但**钩子与顺序现在就定死**，
 ## 测试用一个假钩子记调用次序守着它。
 ##
-## 侵蚀与节点事件都是鸭子类型的钩子，本类不认识它们的具体类：
-## - [member erosion]：有 `on_action(clock, graph)` 与 `move_penalty(node) -> Dictionary`
-##   （`{"hp_damage": int, "item_risk": float}`）就行。null = 没有侵蚀
+## 两个钩子：
+## - [member erosion]：一个 [ErosionField]（140 R-22：不再是鸭子接口）。每步先 `on_action(clock, graph)` 推进，再 `settle(node)` 结算途经点与目的地。null = 没有侵蚀
 ## - [member on_node_event]：`Callable(node: MapNode)`。设了它，节点什么时候算「用过」由它说
 ##   （战斗打完才算）；没设，本类到点就标 VISITED —— M4 之前的占位
 class_name MapTravel
@@ -27,9 +26,7 @@ signal arrival_cancelled(intent: MoveIntent, first_visit: bool)
 
 var graph: MapGraph = null
 var clock: ActionClock = null
-## 侵蚀的浅层惩罚扣它；null = 不扣（比如还没接上体力的沙盒）
-var vitality: Vitality = null
-var erosion = null
+var erosion: ErosionField = null
 var on_node_event: Callable = Callable()
 ## 134：进点前的闸门 `Callable(intent: MoveIntent, first_visit: bool) -> bool`。人挪到点上、惩罚结算完、点的事发生**之前**问一声，
 ## 返回 true = 先挂起这次进点（[member held]），由持有方之后 [method finish_arrival] 接着进、或 [method cancel_arrival] 取消。没设 = 不挂
@@ -103,13 +100,13 @@ func apply(intent: MoveIntent) -> bool:
 	paid_steps = 0 if free else paid_steps + 1
 
 	# 3. 侵蚀推进 —— 必须在惩罚结算之前
-	if erosion != null and erosion.has_method("on_action"):
+	if erosion != null:
 		erosion.on_action(clock, graph)
 
 	# 4. 目的地（与途经点）的惩罚
 	current_id = intent.to_id
 	history.append(intent.to_id)
-	if erosion != null and erosion.has_method("move_penalty"):
+	if erosion != null:
 		for id in intent.passes_through:
 			_settle_penalty(graph.get_node(id))
 		_settle_penalty(dest)
@@ -205,25 +202,16 @@ func wait(actions: int, reason: StringName = &"wait") -> void:
 	if actions <= 0 or graph == null:
 		return
 	clock.spend(actions, reason)
-	if erosion != null and erosion.has_method("on_action"):
+	if erosion != null:
 		erosion.on_action(clock, graph)
-	if erosion != null and erosion.has_method("move_penalty") and graph.has_node(current_id):
-		_settle_penalty(graph.get_node(current_id))
+		if graph.has_node(current_id):
+			_settle_penalty(graph.get_node(current_id))
 	waited.emit(actions)
 
 
 func _settle_penalty(node: MapNode) -> void:
-	if node == null:
-		return
-	# 本体（075）：有 settle 的自己结算（效果构件过门）；老的鸭子接口只报浅层扣体力
-	if erosion.has_method("settle"):
-		erosion.settle(node)
-		return
-	var penalty: Dictionary = erosion.move_penalty(node)
-	var hp := int(penalty.get("hp_damage", 0))
-	if hp > 0 and vitality != null:
-		vitality.spend(hp, &"erosion")
-	# item_risk 是第 7 阶段的事：损坏背包里的物品要先有背包在 run 里
+	if node != null:
+		erosion.settle(node)     # 本体（075）自己结算：效果构件过门
 
 
 #region 存档

@@ -56,7 +56,6 @@ static func _world(seed_base: int = 100, vitality_max: int = 5, strong: bool = t
 
 	w.travel = MapTravel.new(w.graph, ActionClock.new())
 	w.vitality = Vitality.new(vitality_max)
-	w.travel.vitality = w.vitality
 	w.travel.start_at(0)
 	w.events = NodeEvents.new(w.graph)
 	w.events.vitality = w.vitality

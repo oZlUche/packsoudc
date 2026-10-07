@@ -52,9 +52,6 @@ func install(run: RunState) -> void:
 	if not run.hunters_saved.is_empty():
 		sys.restore(run.hunters_saved)
 	run.hunters = sys
-	sys.sensed.connect(func(h: Hunter): run.hunter_sensed.emit(h))
-	sys.changed.connect(func(): run.hunters_changed.emit())
-	sys.player_expelled.connect(func(to: int): run.player_expelled.emit(to))
 
 
 func describe() -> String:

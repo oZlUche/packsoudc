@@ -393,7 +393,7 @@ func _adopt() -> void:
 	if buff_mod != null:
 		buff_mod.buffs_changed.connect(_refresh_hud)
 	# 082：技能按钮与信力
-	_run.skills_changed.connect(func():
+	_run.skills.changed.connect(func():
 		_refresh_skills()
 		_refresh_hud())
 	var countdown := CountdownModule.of(_run)     # 101：倒计时是一局的模块，数与信号都在它身上
@@ -401,7 +401,7 @@ func _adopt() -> void:
 		_note("[color=#f0ad4e]　带入超出预算 %d：倒计时 −%d[/color]" % [countdown.over_value(), countdown.penalty_steps()])
 	for note in flow.take_notes():     # 088：开局拿到的特殊道具（望远镜）等通知
 		_note("[color=#f0ad4e]　%s[/color]" % note)
-	_run.faith_power_changed.connect(func(id: StringName, p: int, tier: int):
+	_run.faith_power.changed.connect(func(id: StringName, p: int, tier: int):
 		var def: FaithDef = _run.faith_defs.get(id, null)
 		_note("　信力（%s）%d，第 %d 阶" % [def.display_name if def != null else String(id), p, tier])
 		_refresh_hud())
@@ -418,36 +418,39 @@ func _adopt() -> void:
 		crafting.done.connect(func(detail: Dictionary):
 			for line in detail.get("log", []):
 				_note("　" + String(line)))
-	# 猎手（071）：进了感知范围提示一句；动了就重画标记；被赶回上一个点
-	_run.hunter_sensed.connect(func(h: Hunter):
-		var def: HunterDef = _run.hunters.def_of(h) if _run.hunters != null else null
-		var seen := _run.hunters != null and _run.hunters.visible_hunters().has(h)
-		_note("[color=#d9534f]　附近有动静……%s[/color]" % ("（" + def.display_name + "）" if def != null and seen else "")))
-	_run.hunters_changed.connect(_refresh_hunter_marks)
-	_run.player_expelled.connect(func(to: int):
-		_note("[color=#d9534f]　被赶回了点 %d[/color]" % to)
-		_view.current_id = to
-		_after_move())
-	# 侵蚀（075）：预警、推进、结算了、终局 —— 都写进日志，地图上垫色
-	_run.erosion_warned.connect(func(band: int, left: int):
-		_note("[color=#f0ad4e]　侵蚀预警：第 %d 档还有 %d 步就被侵蚀[/color]" % [band, left])
-		_refresh_erosion_view())
-	_run.erosion_advanced.connect(func(bands: int):
-		_note("[color=#d9534f]　侵蚀推进：最外 %d 档已被侵蚀[/color]" % (bands + 1))
-		_refresh_erosion_view()
-		_refresh_hud())
-	_run.erosion_applied.connect(func(node: MapNode, detail: Dictionary):
-		var bits: Array[String] = []
-		if int(detail.get("vitality", 0)) > 0:
-			bits.append("体力 -%d" % int(detail["vitality"]))
-		if int(detail.get("money", 0)) > 0:
-			bits.append("钱 -%d" % int(detail["money"]))
-		for name in detail.get("items", []):
-			bits.append("「%s」烂掉了" % name)
-		for line in detail.get("log", []):
-			bits.append(String(line))
-		_note("[color=#d9534f]　侵蚀区（点 %d，深 %d 层）：%s[/color]" % [node.id, int(detail.get("depth", 0)), "，".join(bits)]))
-	_run.erosion_total.connect(func(): _note("[color=#d9534f]　全图都被侵蚀了：快撤[/color]"))
+	# 猎手（071）：进了感知范围提示一句；动了就重画标记；被赶回上一个点。140 R-23：直接接猎手系统
+	if _run.hunters != null:
+		_run.hunters.sensed.connect(func(h: Hunter):
+			var def: HunterDef = _run.hunters.def_of(h)
+			var seen := _run.hunters.visible_hunters().has(h)
+			_note("[color=#d9534f]　附近有动静……%s[/color]" % ("（" + def.display_name + "）" if def != null and seen else "")))
+		_run.hunters.changed.connect(_refresh_hunter_marks)
+		_run.hunters.player_expelled.connect(func(to: int):
+			_note("[color=#d9534f]　被赶回了点 %d[/color]" % to)
+			_view.current_id = to
+			_after_move())
+	# 侵蚀（075）：预警、推进、结算了、终局 —— 都写进日志，地图上垫色。直接接侵蚀场
+	var field := _run.travel.erosion
+	if field != null:
+		field.warned.connect(func(band: int, left: int):
+			_note("[color=#f0ad4e]　侵蚀预警：第 %d 档还有 %d 步就被侵蚀[/color]" % [band, left])
+			_refresh_erosion_view())
+		field.advanced.connect(func(bands: int):
+			_note("[color=#d9534f]　侵蚀推进：最外 %d 档已被侵蚀[/color]" % (bands + 1))
+			_refresh_erosion_view()
+			_refresh_hud())
+		field.applied.connect(func(node: MapNode, detail: Dictionary):
+			var bits: Array[String] = []
+			if int(detail.get("vitality", 0)) > 0:
+				bits.append("体力 -%d" % int(detail["vitality"]))
+			if int(detail.get("money", 0)) > 0:
+				bits.append("钱 -%d" % int(detail["money"]))
+			for name in detail.get("items", []):
+				bits.append("「%s」烂掉了" % name)
+			for line in detail.get("log", []):
+				bits.append(String(line))
+			_note("[color=#d9534f]　侵蚀区（点 %d，深 %d 层）：%s[/color]" % [node.id, int(detail.get("depth", 0)), "，".join(bits)]))
+		field.total_reached.connect(func(): _note("[color=#d9534f]　全图都被侵蚀了：快撤[/color]"))
 	_refresh_erosion_view()
 	if _run.hunters != null and _run.hunters.metric != null and _run.hunters.metric.mode == MapMetric.ABSOLUTE:
 		# 绝对距离：把布局坐标按环距归一后交给度量（core 不认识布局）
@@ -517,7 +520,7 @@ func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
 func _refresh_erosion_view() -> void:
 	if _run == null or _view == null:
 		return
-	var f := _run.travel.erosion as ErosionField if _run.travel != null else null
+	var f: ErosionField = _run.travel.erosion if _run.travel != null else null
 	if f == null:
 		_view.erosion = {}
 		return
@@ -527,7 +530,7 @@ func _refresh_erosion_view() -> void:
 
 ## HUD 里的侵蚀一句：没有 / 还没开始 / 侵蚀了几档、下一档几步
 func _erosion_line() -> String:
-	var f := _run.travel.erosion as ErosionField if _run != null and _run.travel != null else null
+	var f: ErosionField = _run.travel.erosion if _run != null and _run.travel != null else null
 	if f == null:
 		return ""
 	if f.is_total():

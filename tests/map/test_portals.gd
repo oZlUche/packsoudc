@@ -3,15 +3,14 @@
 extends RefCounted
 
 
-class FakeErosion:
+class FakeErosion extends ErosionField:
 	var log: Array
 	func _init(p_log: Array) -> void:
 		log = p_log
 	func on_action(_clock: ActionClock, _graph: MapGraph) -> void:
 		log.append("erosion")
-	func move_penalty(_node: MapNode) -> Dictionary:
+	func settle(_node: MapNode) -> void:
 		log.append("penalty")
-		return {"hp_damage": 0, "item_risk": 0.0}
 
 
 static func _map(seed: int, portals: int, min_steps: int = 4, cost: int = 2) -> MapGraph:

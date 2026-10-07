@@ -52,6 +52,26 @@ static func run_pages(t: TestCase) -> void:
 	t.eq(book.page_for("合成"), "crafting", "「合成」先跳机制页（压过同名词条）")
 
 
+static func run_recipe_notes(t: TestCase) -> void:
+	t.begin("140 · 百科「合成」页列出全部配方，带作者写的 note；图鉴没点亮的遮名字、不写 note；别的页不列")
+	var db := ItemDatabase.new()
+	db.load_dir()
+	var recipes := RecipeDef.load_all()
+	t.check(not recipes.is_empty(), "有配方（%d）" % recipes.size())
+	var book := Encyclopedia.build(GameFlow.load_help_pages(), db, recipes)
+	var text := book.render(Encyclopedia.RECIPE_PAGE)
+	t.check(text.contains("配方："), "合成页有「配方」段")
+	for r in recipes:
+		t.check(r.note == "" or text.contains(r.note), "%s 的 note 在合成页上" % r.id)
+		t.check(text.contains(Names.of(db.get_def(r.output))), "%s 的产物名在" % r.id)
+	t.check(not book.render(book.ids()[book.ids().size() - 1]).contains("配方："), "别的页不列配方")
+	book.lit = func(_id: StringName) -> bool: return false
+	var dark := book.render(Encyclopedia.RECIPE_PAGE)
+	t.check(dark.contains("？ + ？ → ？"), "全没点亮：名字遮住")
+	t.check(not dark.contains(recipes[0].note), "没点亮不写 note（note 里有道具名）")
+	t.check(not Encyclopedia.build(GameFlow.load_help_pages(), db).render(Encyclopedia.RECIPE_PAGE).contains("配方："), "没给配方：不列")
+
+
 static func run_links_and_search(t: TestCase) -> void:
 	t.begin("114 · 链接与搜索：正文里认得的词画成 [url=页 id]（不链自己）；「相关」「相关道具」接在后面，没点亮的道具写「？」；搜索标题命中排前面")
 	var book := _book()
