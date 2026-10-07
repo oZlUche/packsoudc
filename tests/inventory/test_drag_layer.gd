@@ -359,3 +359,31 @@ static func frame_hidden_drag_does_not_grab(t: TestCase, root: Window) -> void:
 	top_host.queue_free()
 	low_host.queue_free()
 	ground.queue_free()
+
+
+static func frame_hidden_parent_view_takes_no_drop(t: TestCase, root: Window) -> void:
+	t.begin("反馈 · 开局屏棋盘左半边吸附不上：藏起来的那一栏里的地上视图（自己 visible 还是 true）不截落点")
+	ItemInstance.reset_uid_counter()
+	var hidden_host := Control.new()
+	hidden_host.visible = false
+	root.add_child(hidden_host)
+	var ground := GroundLayer.new()
+	ground.stash = ItemStash.new(2, 0)
+	ground.size = Vector2(240, 320)
+	hidden_host.add_child(ground)
+	var board := GridInventory.new(Vector2i(6, 4), 1)
+	var view := _view(board, Vector2.ZERO)
+	root.add_child(view)
+	var drag := DragLayer.new()
+	root.add_child(drag)
+	drag.register_view(ground)     # 先登记的先比（和开局屏一样）
+	drag.register_view(view)
+	t.check(ground.visible and not ground.is_visible_in_tree(), "地上视图自己 visible，外框藏着")
+	t.check(not DragLayer.shown(ground) and DragLayer.shown(view), "按场景树算：地上不算露着，棋盘露着")
+	t.eq(drag.view_at(_center(view, Vector2i(0, 0))), view, "棋盘左半边：落点是棋盘，不是藏起来的地上")
+	t.eq(drag.view_at(_center(view, Vector2i(5, 3))), view, "右半边照旧")
+	hidden_host.visible = true
+	t.eq(drag.view_at(_center(view, Vector2i(0, 0))), ground, "那一栏显示出来之后它才接落点")
+	drag.queue_free()
+	view.queue_free()
+	hidden_host.queue_free()
