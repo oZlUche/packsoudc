@@ -67,6 +67,8 @@ var _src_index: int = -1
 var _src_spot: Vector2 = ItemStash.NO_SPOT
 ## 抓取点相对物品 origin 的格偏移，拖拽时用它反推落点
 var _grab_cell: Vector2i = Vector2i.ZERO
+## 139：起拖那块视图的格子边长（基地屏的仓库会放大）。跟手的残影、整块判定按它；吸附到某块视图上时按那块的
+var _cell: float = InventoryView.CELL
 var _rot: int = 0
 ## 非空表示正在拖一个带内容物的包，内容为 detach_bag 的载荷
 var _payload: Dictionary = {}
@@ -152,6 +154,7 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 	else:
 		var grid := from as GridInventory
 		_grab_cell = (view as InventoryView).cell_at_local(local_pos) - inst.origin
+		_cell = (view as InventoryView).cell_px
 		if grid.is_bag_with_contents(uid):
 			_payload = grid.detach_bag(uid)
 			if _payload.is_empty():
@@ -273,7 +276,7 @@ func _view_under_footprint(global_pos: Vector2) -> ContainerView:
 	if cells.is_empty():
 		return null
 	var size := _footprint_cells(cells)
-	var rect := Rect2(global_pos - (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * InventoryView.CELL, Vector2(size) * InventoryView.CELL)
+	var rect := Rect2(global_pos - (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * _cell, Vector2(size) * _cell)
 	var best: ContainerView = null
 	var best_area := 0.0
 	for view in _views:
@@ -329,9 +332,17 @@ func ghost_anchor(global_pos: Vector2) -> Vector2:
 	var view := view_at(global_pos)
 	if view is InventoryView and (view as InventoryView).inventory != null:
 		var grid_view := view as InventoryView
-		return grid_view.global_position - global_position + Vector2(target_origin(grid_view, global_pos)) * InventoryView.CELL
+		return grid_view.global_position - global_position + Vector2(target_origin(grid_view, global_pos)) * grid_view.cell_px
 	# 光标逐像素跟手：让被抓住的那一格正好压在光标下
-	return global_pos - global_position - (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * InventoryView.CELL
+	return global_pos - global_position - (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * _cell
+
+
+## 139：残影按多大的格子画 —— 吸附在某块格子视图上就按那块的，否则按起拖那块的
+func ghost_cell(global_pos: Vector2) -> float:
+	var view := view_at(global_pos)
+	if view is InventoryView and (view as InventoryView).inventory != null:
+		return (view as InventoryView).cell_px
+	return _cell
 
 
 ## 按指定鼠标位置刷新落点高亮。
@@ -501,7 +512,7 @@ func _ground_view() -> GroundLayer:
 func _drop_spot(ground: GroundLayer, global_pos: Vector2, inst: ItemInstance) -> Vector2:
 	if ground == null:
 		return ItemStash.NO_SPOT
-	var top_left := global_pos - (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * InventoryView.CELL
+	var top_left := global_pos - (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * _cell
 	return ground.spot_for_drop(top_left, inst, _rot)
 
 
@@ -854,6 +865,7 @@ func _end_drag() -> void:
 	for view in _views:
 		view.clear_preview()
 	_inst = null
+	_cell = InventoryView.CELL
 	_highlight_partners()     # _inst 空了：全熄
 	_source = null
 	_src_index = -1
@@ -867,7 +879,9 @@ func _draw() -> void:
 	if not is_dragging():
 		return
 	var cells := _inst.def.cells_rotated(_rot)
-	var anchor := ghost_anchor(get_global_mouse_position())
+	var mouse := get_global_mouse_position()
+	var anchor := ghost_anchor(mouse)
+	var cell := ghost_cell(mouse)
 
 	var font := label_font if label_font != null else get_theme_default_font()
 	var is_bag := not _payload.is_empty()
@@ -879,9 +893,9 @@ func _draw() -> void:
 	var edge := (
 		InventoryView.COLOR_BAG_EDGE if is_bag else ItemPainter.rarity_color(_inst.def)
 	)
-	ItemPainter.draw_item(self, cells, anchor, InventoryView.CELL, body, edge)
+	ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
 	ItemPainter.draw_label(
-		self, cells, anchor, InventoryView.CELL,
+		self, cells, anchor, cell,
 		Names.of(_inst.def), font, 11 if is_bag else 13, Color("f2f4f8")
 	)
 
@@ -894,15 +908,15 @@ func _draw() -> void:
 		for i in contents.size():
 			var item: ItemInstance = contents[i]
 			var g := GridInventory.to_global(bag, locals[i], item, Vector2i.ZERO, _rot)
-			var at: Vector2 = anchor + Vector2(g["origin"] as Vector2i) * InventoryView.CELL
+			var at: Vector2 = anchor + Vector2(g["origin"] as Vector2i) * cell
 			var item_cells := item.def.cells_rotated(int(g["rot"]))
 			var c_body := ItemPainter.body_color(item.def)
 			c_body.a = 0.9
 			ItemPainter.draw_item(
-				self, item_cells, at, InventoryView.CELL, c_body, ItemPainter.rarity_color(item.def)
+				self, item_cells, at, cell, c_body, ItemPainter.rarity_color(item.def)
 			)
 			ItemPainter.draw_label(
-				self, item_cells, at, InventoryView.CELL,
+				self, item_cells, at, cell,
 				Names.of(item.def), font, 12, Color("f2f4f8")
 			)
 		_draw_straddlers(font)
@@ -922,16 +936,17 @@ func _draw_straddlers(font: Font) -> void:
 	if src_view == null or not (src_view is InventoryView):
 		return
 	var base := (src_view as InventoryView).global_position - global_position
+	var cell := (src_view as InventoryView).cell_px
 	for s in straddlers:
 		var item: ItemInstance = s["inst"]
-		var at := base + Vector2(s["origin"] as Vector2i) * InventoryView.CELL
+		var at := base + Vector2(s["origin"] as Vector2i) * cell
 		var item_cells := item.def.cells_rotated(int(s["rot"]))
 		var c_body := ItemPainter.body_color(item.def)
 		c_body.a = 0.45
 		ItemPainter.draw_item(
-			self, item_cells, at, InventoryView.CELL, c_body, InventoryView.COLOR_VICTIM
+			self, item_cells, at, cell, c_body, InventoryView.COLOR_VICTIM
 		)
 		ItemPainter.draw_label(
-			self, item_cells, at, InventoryView.CELL,
+			self, item_cells, at, cell,
 			Names.of(item.def), font, 12, Color("f2f4f8", 0.6)
 		)
