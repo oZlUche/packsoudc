@@ -93,6 +93,7 @@ func _ready() -> void:
 	ground.visible = false
 	add_child(ground)
 	GroundLayer.set_current(ground)
+	ground.item_double_clicked.connect(_on_ground_double)     # 134
 	# 089：存档位 —— 用默认路径（正式游戏）时按位存：老的单文件存档先搬进第 1 位，再切到设置里记的那一位。
 	# 测试 / 演示改了路径的走单文件模式
 	if save_path == RunSave.DEFAULT_PATH and meta_path == MetaSave.DEFAULT_PATH:
@@ -140,6 +141,16 @@ func _sync_ground() -> void:
 	move_child(ground, -1)
 	if ground.visible:
 		ground.settle.call_deferred()
+
+
+## 134（作者定）：地上的一件被双击了。有面板接地上（容器屏、战前、开着的背包浮窗……）就是它的事；
+## 没有就转给最上面那一屏：地图 / 事件屏「进包 + 打开背包」（放不下只开背包），没有背包按钮的屏不接
+func _on_ground_double(_view: ContainerView, uid: int) -> void:
+	if ground.top_drag() != null:
+		return
+	var top := _overlay if _overlay != null else _base
+	if top != null:
+		top.ground_double_clicked(uid)
 
 
 func _exit_tree() -> void:

@@ -27,6 +27,7 @@ var _reopen_btn: Button
 var _skills_box: VBoxContainer
 var _tip: HoverTip = null
 var _bag: Control = null
+var _bag_panel: Control = null
 var _confirm: Control = null
 ## 090（作者定）：地图上按 Esc 呼出的暂停菜单（继续 / 设置 / 存档并回主菜单）；设置嵌在它里面，返回回暂停菜单、一局还在
 var _pause: Control = null
@@ -151,6 +152,7 @@ func _open_confirm(node: MapNode) -> void:
 ## 背包整理面板叠在地图上，再按一次收起。084：是能拖着走的浮窗，关掉再开还在上次放的位置
 func toggle_bag() -> void:
 	if _bag != null:
+		_bag.hide()     # 134：先藏起来 —— 这一帧里它的拖拽层就不再算「接地上的面板」
 		_bag.queue_free()
 		_bag = null
 		return
@@ -167,10 +169,26 @@ func toggle_bag() -> void:
 	var inv := InventoryPanelScript.new()
 	inv.setup(_run, font)
 	win.body().add_child(inv)
+	_bag_panel = inv
 
 
 func bag_open() -> bool:
 	return _bag != null
+
+
+## 134：开着的背包浮窗里那块面板（没开 null）
+func bag_panel() -> Control:
+	return _bag_panel if _bag != null and is_instance_valid(_bag_panel) else null
+
+
+## 134（作者定）：地上双击 —— 背包开着就交给背包面板；没开就进包并打开背包（放不下只开背包、面板里提示）
+func ground_double_clicked(uid: int) -> bool:
+	if _bag != null or _confirm != null or _pause != null or _rules != null:
+		return false
+	return _ground_to_bag(uid, func():
+		if _bag == null:
+			toggle_bag()
+		return bag_panel())
 
 
 ## 084：还没走，重新打开这个点的最后一个界面（没拿完的战利品 / 还开着的搜索或商店 / 等着的事件或一场）。没有可开的返回 false

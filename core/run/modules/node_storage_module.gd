@@ -131,4 +131,5 @@ func _on_arrived(node_id: int, _first_time: bool) -> void:
 		return
 	for inst in back:
 		_run.storage.insert(inst, -1, node_spots.get((inst as ItemInstance).uid, ItemStash.NO_SPOT))     # 128：回到原处
+		_run.storage.landing_from[(inst as ItemInstance).uid] = false     # 134：本来就在，不播落地
 	restored.emit(node_id, back)

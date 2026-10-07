@@ -12,11 +12,23 @@
 ## [endcodeblock]
 ##
 ## 各屏向它登记自己占住的面板（[method reserve]）：地上的东西被面板盖住就往最近的空处推开，面板关了也不挪回。
+##
+## 134：**落地动画**（只是样子）。这一层记着上一次见过的 uid，多出来的就是刚落地的 —— 谁放的都一样（拖拽、顶出、战利品放不下……）：
+## 从起点落到落点（缓出 + 末尾一个小弹跳）、从 1.15 倍缩回 1 倍、透明度 0.6 → 1。起点看 [member ItemStash.landing_from]，
+## 没写就从离落点最近的面板边缘落出来（没面板从上方落下）。换一片地、读档、回到存过东西的点不播。播放中的那件不接鼠标
 class_name GroundLayer
 extends ContainerView
 
 ## 自动推开时离面板留的空（像素）
 const PUSH_GAP := 6.0
+## 134：落地动画 —— 时长、末尾弹跳高度、没起点时从多高落下、一串落下时每件错开、最多错开几件、起始缩放与透明度
+const LAND_SEC := 0.28
+const LAND_BOUNCE := 6.0
+const LAND_DROP := 60.0
+const LAND_STAGGER := 0.04
+const LAND_STAGGER_MAX := 10
+const LAND_SCALE := 1.15
+const LAND_ALPHA := 0.6
 const COLOR_HIGHLIGHT := Color(0.42, 0.86, 0.52)
 
 ## 导演持有的那一层（没有 = null：测试、沙盒）。各屏开拖拽时拿它登记
@@ -35,6 +47,11 @@ var _reserved: Array[Control] = []
 var tip: HoverTip = null
 ## 接着这层地的拖拽层（后接的在上）。好几块面板同时开着时（地图上的背包浮窗 + 叠层），只有最上面那块接地上的抓取 / 双击
 var _drags: Array[DragLayer] = []
+## 134：上一次见过的 uid（uid → true）—— 多出来的就是刚落地的
+var _known: Dictionary = {}
+## 134：正在落的（uid → {"t": 已播秒数（负 = 还在排队）, "from": 起点（本控件内像素，包围盒左上角）}）
+var _landing: Dictionary = {}
+var _scan_queued: bool = false
 
 
 static func current() -> GroundLayer:
@@ -58,7 +75,7 @@ func detach(drag: DragLayer) -> void:
 ## 现在接地上抓取的那个拖拽层（没人接 = null：谁都能抓，测试里就是这样）
 func top_drag() -> DragLayer:
 	for i in range(_drags.size() - 1, -1, -1):
-		if is_instance_valid(_drags[i]) and _drags[i].is_inside_tree() and DragLayer.is_live(_drags[i]):
+		if is_instance_valid(_drags[i]) and not _drags[i].is_queued_for_deletion() and _drags[i].is_inside_tree() and DragLayer.is_live(_drags[i]):
 			return _drags[i]
 	return null
 
@@ -80,17 +97,141 @@ func _ready() -> void:
 func set_stash(s: ItemStash) -> void:
 	if stash == s:
 		return
-	if stash != null and stash.changed.is_connected(queue_redraw):
-		stash.changed.disconnect(queue_redraw)
+	if stash != null and stash.changed.is_connected(_on_stash_changed):
+		stash.changed.disconnect(_on_stash_changed)
 	stash = s
+	# 134：换一片地 = 基线，不播
+	_landing.clear()
+	_known = _uids()
 	if stash != null:
-		stash.changed.connect(queue_redraw)
+		stash.landing_from.clear()
+		stash.changed.connect(_on_stash_changed)
 		_sync_norms()
+	set_process(false)
 	queue_redraw()
 
 
 func container() -> ItemContainer:
 	return stash
+
+
+func _on_stash_changed() -> void:
+	queue_redraw()
+	# 晚一拍再比对：放手 / 顶出的调用方在 insert 之后才写起点
+	if not _scan_queued:
+		_scan_queued = true
+		_scan.call_deferred()
+
+
+#region 落地动画（134）
+func _uids() -> Dictionary:
+	var out := {}
+	if stash != null:
+		for inst in stash.items():
+			out[(inst as ItemInstance).uid] = true
+	return out
+
+
+## 和上一次见过的比：多出来的各给一段落地动画（按插入顺序错开），不在了的停掉
+func _scan() -> void:
+	_scan_queued = false
+	if not is_instance_valid(self) or stash == null:
+		return
+	var now := _uids()
+	for uid in _landing.keys():
+		if not now.has(uid):
+			_landing.erase(uid)
+	var k := 0
+	for inst in stash.items():
+		var uid := (inst as ItemInstance).uid
+		if _known.has(uid):
+			continue
+		var from: Variant = stash.landing_from.get(uid, null)
+		stash.landing_from.erase(uid)
+		if from is bool and not from:
+			continue     # 本来就在（读档、回到存过东西的点）
+		_landing[uid] = {"t": -LAND_STAGGER * mini(k, LAND_STAGGER_MAX), "from": _landing_start(uid, from)}
+		k += 1
+	_known = now
+	set_process(not _landing.is_empty())
+	queue_redraw()
+
+
+## 起点（本控件内像素，包围盒左上角）：给了全局像素就从那里；就地（true）就是落点；没给从最近的面板边缘，没面板从上方
+func _landing_start(uid: int, from: Variant) -> Vector2:
+	var target := item_rect(uid)
+	if from is Vector2:
+		return (from as Vector2) - global_position
+	if from is bool:
+		return target.position
+	var center := target.get_center()
+	var best := Vector2.INF
+	var best_d := INF
+	for r in reserved_rects():
+		# 面板边上离落点最近的那一点
+		var p := Vector2(clampf(center.x, r.position.x, r.end.x), clampf(center.y, r.position.y, r.end.y))
+		if r.has_point(center):
+			var to_edge := [Vector2(r.position.x, center.y), Vector2(r.end.x, center.y), Vector2(center.x, r.position.y), Vector2(center.x, r.end.y)]
+			p = to_edge[0]
+			for e in to_edge:
+				if (e as Vector2).distance_to(center) < p.distance_to(center):
+					p = e
+		var d := p.distance_to(center)
+		if d < best_d:
+			best_d = d
+			best = p
+	if best_d < INF:
+		return best - target.size * 0.5
+	return target.position - Vector2(0.0, LAND_DROP)
+
+
+func _process(delta: float) -> void:
+	advance_landing(delta)
+
+
+## 推进落地动画 [param delta] 秒（测试直接调）
+func advance_landing(delta: float) -> void:
+	if _landing.is_empty():
+		set_process(false)
+		return
+	for uid in _landing.keys():
+		var a: Dictionary = _landing[uid]
+		a["t"] = float(a["t"]) + delta
+		if float(a["t"]) >= LAND_SEC:
+			_landing.erase(uid)
+	if _landing.is_empty():
+		set_process(false)
+	queue_redraw()
+
+
+## 这件是不是正在落
+func is_landing(uid: int) -> bool:
+	return _landing.has(uid)
+
+
+## 正在落的（测试看）
+func landing_uids() -> Array:
+	return _landing.keys()
+
+
+## 一件此刻画在哪、多大、多透明：{"pos": 包围盒左上角, "scale", "alpha", "hidden": 还在排队}。没在落 = 落点、1、1
+func landing_pose(uid: int) -> Dictionary:
+	var target := item_rect(uid).position
+	if not _landing.has(uid):
+		return {"pos": target, "scale": 1.0, "alpha": 1.0, "hidden": false}
+	var a: Dictionary = _landing[uid]
+	var t := float(a["t"])
+	if t < 0.0:
+		return {"pos": a["from"], "scale": LAND_SCALE, "alpha": 0.0, "hidden": true}
+	var p := clampf(t / LAND_SEC, 0.0, 1.0)
+	# 前 75% 缓出落到落点，后 25% 弹起 LAND_BOUNCE 再落稳
+	var fall := clampf(p / 0.75, 0.0, 1.0)
+	var eased := 1.0 - pow(1.0 - fall, 3.0)
+	var pos := (a["from"] as Vector2).lerp(target, eased)
+	if p > 0.75:
+		pos.y -= LAND_BOUNCE * sin(PI * (p - 0.75) / 0.25)
+	return {"pos": pos, "scale": lerpf(LAND_SCALE, 1.0, eased), "alpha": lerpf(LAND_ALPHA, 1.0, p), "hidden": false}
+#endregion
 
 
 func _on_resized() -> void:
@@ -148,6 +289,8 @@ func uid_at_local(p: Vector2) -> int:
 	var list := stash.items()
 	for i in range(list.size() - 1, -1, -1):
 		var inst := list[i] as ItemInstance
+		if _landing.has(inst.uid):
+			continue     # 134：半空中的不接（0.28 秒，几乎感觉不到）
 		var r := item_rect(inst.uid)
 		if not r.has_point(p):
 			continue
@@ -305,5 +448,23 @@ func _draw() -> void:
 		var r := item_rect(inst.uid)
 		var cells := inst.def.cells_rotated(inst.rotation)
 		var edge := COLOR_HIGHLIGHT if highlights.has(inst.uid) else ItemPainter.rarity_color(inst.def)
-		ItemPainter.draw_item(self, cells, r.position, InventoryView.CELL, ItemPainter.body_color(inst.def), edge)
-		ItemPainter.draw_label(self, cells, r.position, InventoryView.CELL, Names.of(inst.def), font, 13, ItemPainter.label_color(inst.def))
+		var body := ItemPainter.body_color(inst.def)
+		var ink := ItemPainter.label_color(inst.def)
+		var at := r.position
+		var landing := _landing.has(inst.uid)
+		if landing:
+			# 134：正在落 —— 绕包围盒中心缩放，颜色乘透明度
+			var pose := landing_pose(inst.uid)
+			if bool(pose["hidden"]):
+				continue
+			var k := float(pose["scale"])
+			var alpha := float(pose["alpha"])
+			draw_set_transform((pose["pos"] as Vector2) + r.size * 0.5, 0.0, Vector2(k, k))
+			at = -r.size * 0.5
+			body.a *= alpha
+			edge.a *= alpha
+			ink.a *= alpha
+		ItemPainter.draw_item(self, cells, at, InventoryView.CELL, body, edge)
+		ItemPainter.draw_label(self, cells, at, InventoryView.CELL, Names.of(inst.def), font, 13, ink)
+		if landing:
+			draw_set_transform(Vector2.ZERO)
