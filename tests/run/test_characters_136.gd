@@ -175,11 +175,8 @@ static func run_slip_vs_hunter(t: TestCase) -> void:
 	if idx < 0:
 		return
 	var uses0 := s.skills.uses_of(&"slip")
-	var fled: Array = []
-	sys.fled.connect(func(_h: Hunter, ok: bool): fled.append(ok))
 	t.check(s.events.choose(idx), "选了脱身")
-	t.eq(fled, [true], "成功率 0 也逃掉了")
-	t.eq(h.cooldown, maxi(0, hdef.flee_cooldown), "它歇 %d 步" % hdef.flee_cooldown)
+	t.eq(h.cooldown, maxi(0, hdef.flee_cooldown), "成功率 0 也逃掉了：它歇 %d 步" % hdef.flee_cooldown)
 	t.eq(s.skills.uses_of(&"slip"), uses0 - 1, "技能次数减一")
 	# 冷却中：那一项锁着
 	s.events.pending = {}

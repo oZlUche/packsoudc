@@ -23,7 +23,3 @@ func can_pay(ctx: RuleContext) -> bool:
 
 func pay(ctx: RuleContext) -> void:
 	RemoveStatus.take(ctx, ctx.side_of(on_self), buff_id, maxi(1, stacks))
-
-
-func describe(_ctx: RuleContext) -> String:
-	return "%s ×%d" % [buff_id, stacks]

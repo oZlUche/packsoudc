@@ -158,15 +158,6 @@ func shift_axis(axis: StringName, delta: int, system: bool = false) -> int:
 	return delta
 
 
-## 净化：把内容层往 0 推至多 [param count] 层（0 = 清空）；[param sign] 只动正（1）/ 负（-1）/ 都动（0）。系统层不动
-func clear_axis(axis: StringName, count: int = 0, sign: int = 0) -> int:
-	var have := axis_stacks(axis)
-	if have == 0 or (sign > 0 and have < 0) or (sign < 0 and have > 0):
-		return 0
-	var n := absi(have) if count <= 0 else mini(count, absi(have))
-	return shift_axis(axis, -n if have > 0 else n)
-
-
 ## 4.3 公式的最后一步：按轴表把因子 / 固定值落到单位与每件道具的属性终值上
 func _apply_axes() -> void:
 	for axis in axes:

@@ -20,8 +20,6 @@ extends Resource
 ## 占格形状。为 null 时本定义不可用。
 @export var shape: ItemShape
 
-@export var icon: Texture2D
-
 ## 稀有度档位，0 起。影响掉落权重与 UI 配色。
 @export var rarity: int = 0
 

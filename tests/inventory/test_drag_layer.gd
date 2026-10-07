@@ -121,7 +121,7 @@ static func run(t: TestCase) -> void:
 
 	# --- 标签过滤 ---
 	var slot := GridInventory.new(Vector2i(1, 1), 4)
-	slot.accept_tags = [&"weapon"] as Array[StringName]
+	slot.accept_filter = func(d: ItemDef) -> bool: return d.tags.has(&"weapon")
 	var view_d := _view(slot, Vector2(400, 400))
 	drag.register_view(view_d)
 

@@ -268,7 +268,8 @@ static func run_adjacency(t: TestCase) -> void:
 		10,
 		"rot0 时下邻不在增益格上，不受加成"
 	)
-	t.check(board5.rotate_item(ws_inst.uid, 1), "磨刀石旋转一步")
+	board5.remove(ws_inst.uid)
+	t.check(board5.place(ws_inst, Vector2i(0, 0), 1), "磨刀石换个朝向放回去")
 	t.eq(
 		_dmg(BattleCompiler.compile_board(board5), below.uid),
 		15,

@@ -404,7 +404,7 @@ static func run_event_mask(t: TestCase) -> void:
 		"3 秒共掉 9 点")
 
 	# --- 带【事件型】规则的 buff 才涉及掩码，施加后必须重算 ---
-	var thorns_rule := _rule(OnResourceChanged.new(), Always.new(), [_damage(1.0)])
+	var thorns_rule := _rule(OnDamage.new(), Always.new(), [_damage(1.0)])
 	var thorns := BuffDef.new()
 	thorns.id = &"thorns"
 	thorns.rules = [thorns_rule] as Array[AbilityRule]
@@ -418,11 +418,11 @@ static func run_event_mask(t: TestCase) -> void:
 			[_rule(OnBattleStart.new(), Always.new(), [spiker])])]),
 		_spec(100.0, [])
 	)
-	t.check(not quiet2.is_listening(BattleEvent.RESOURCE_CHANGED),
-		"开战前没有任何规则订阅 resource_changed")
+	t.check(not quiet2.is_listening(BattleEvent.DAMAGE),
+		"开战前没有任何规则订阅 damage")
 	quiet2.emit(BattleEvent.BATTLE_START, -1, {})
 	quiet2.drain()
-	t.check(quiet2.is_listening(BattleEvent.RESOURCE_CHANGED),
+	t.check(quiet2.is_listening(BattleEvent.DAMAGE),
 		"buff 带来了订阅该事件的规则，掩码必须已重算 —— 否则这条规则会静默失效")
 
 
@@ -534,8 +534,8 @@ static func run_battle_sim(t: TestCase) -> void:
 static func run_event_index(t: TestCase) -> void:
 	t.begin("事件索引")
 
-	# 一条订阅 resource_changed 的 buff 规则
-	var thorns_rule := _rule(OnResourceChanged.new(), Always.new(), [_damage(1.0)])
+	# 一条订阅 damage 的 buff 规则（140：原来用 OnResourceChanged，那个扳机删了）
+	var thorns_rule := _rule(OnDamage.new(), Always.new(), [_damage(1.0)])
 	var thorns := BuffDef.new()
 	thorns.id = &"thorns"
 	thorns.rules = [thorns_rule] as Array[AbilityRule]
@@ -543,17 +543,17 @@ static func run_event_index(t: TestCase) -> void:
 	var ctx := _battle(_spec(100.0, []), _spec(100.0, []))
 	var me := ctx.sides[0]
 
-	t.check(not ctx.is_listening(BattleEvent.RESOURCE_CHANGED), "开局无人订阅")
-	t.eq(ctx.subscribers_of(BattleEvent.RESOURCE_CHANGED).size(), 0, "索引为空")
+	t.check(not ctx.is_listening(BattleEvent.DAMAGE), "开局无人订阅")
+	t.eq(ctx.subscribers_of(BattleEvent.DAMAGE).size(), 0, "索引为空")
 
 	# --- 施加：索引自动重建 ---
 	me.apply_buff(thorns, 1, ctx.now)
-	t.check(ctx.is_listening(BattleEvent.RESOURCE_CHANGED),
+	t.check(ctx.is_listening(BattleEvent.DAMAGE),
 		"施加带规则的 buff 后索引自动重建，无需调用方记得")
-	t.eq(ctx.subscribers_of(BattleEvent.RESOURCE_CHANGED).size(), 1, "索引里有 1 条订阅")
+	t.eq(ctx.subscribers_of(BattleEvent.DAMAGE).size(), 1, "索引里有 1 条订阅")
 
 	var before := StatMath.to_int(ctx.sides[1].resources.current(BattleStats.RES_HP))
-	ctx.emit(BattleEvent.RESOURCE_CHANGED, 0, {"key": "hp", "delta": -5, "reason": "damage"})
+	ctx.emit(BattleEvent.DAMAGE, 0, {"source_side": 1, "type": DamageTypes.PHYSICAL, "amount": StatMath.from_float(5.0), "provokes": true})
 	ctx.drain()
 	t.eq(StatMath.to_int(ctx.sides[1].resources.current(BattleStats.RES_HP)), before - 1,
 		"buff 的规则确实被派发到了")
@@ -563,11 +563,11 @@ static func run_event_index(t: TestCase) -> void:
 	# 表现为「某个效果明明没了却还在生效」，极难定位
 	me.remove_buff_stacks(&"thorns", 1)
 	t.eq(me.stacks_of(&"thorns"), 0, "buff 已移除")
-	t.check(not ctx.is_listening(BattleEvent.RESOURCE_CHANGED), "索引已清空")
-	t.eq(ctx.subscribers_of(BattleEvent.RESOURCE_CHANGED).size(), 0, "不再有订阅者")
+	t.check(not ctx.is_listening(BattleEvent.DAMAGE), "索引已清空")
+	t.eq(ctx.subscribers_of(BattleEvent.DAMAGE).size(), 0, "不再有订阅者")
 
 	var after_removal := StatMath.to_int(ctx.sides[1].resources.current(BattleStats.RES_HP))
-	ctx.emit(BattleEvent.RESOURCE_CHANGED, 0, {"key": "hp", "delta": -5, "reason": "damage"})
+	ctx.emit(BattleEvent.DAMAGE, 0, {"source_side": 1, "type": DamageTypes.PHYSICAL, "amount": StatMath.from_float(5.0), "provokes": true})
 	ctx.drain()
 	t.eq(StatMath.to_int(ctx.sides[1].resources.current(BattleStats.RES_HP)), after_removal,
 		"已移除的规则绝不能再触发")

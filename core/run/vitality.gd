@@ -22,10 +22,7 @@ extends RefCounted
 ## 「这一下该扣 3 点」和「实际扣掉了 1 点（只剩 1 点了）」是两回事，
 ## 监听者（结算界面、日志）关心的通常是后者。
 signal changed(current: int, maximum: int, delta: int, reason: StringName)
-
-## 体力归零。战败由监听者判定 —— 本类不知道「战败」是什么，
-## 也不该知道 BOSS 输了要直接战败（那是 7.1 的规则，归调用方）。
-signal depleted(reason: StringName)
+## 140：没有「归零」信号 —— 战败由调用方查 [method is_depleted] 判定（本类不知道「战败」是什么，也不该知道 BOSS 输了要直接战败）
 
 ## 角色系统落地前的默认上限。
 ##
@@ -72,8 +69,6 @@ func change(delta: int, reason: StringName = &"") -> int:
 	if actual == 0:
 		return 0
 	changed.emit(current, maximum, actual, reason)
-	if current <= 0:
-		depleted.emit(reason)
 	return actual
 
 
@@ -102,8 +97,6 @@ func set_max(new_max: int, reason: StringName = &"max_changed") -> void:
 	current = clampi(current + maxi(0, grew), 0, maximum)
 	if current != before:
 		changed.emit(current, maximum, current - before, reason)
-		if current <= 0:
-			depleted.emit(reason)
 #endregion
 
 

@@ -14,7 +14,7 @@ extends RefCounted
 const LABELS := {
 	"id": "id", "display_name": "名字", "display_names": "别的语言的名字", "description": "说明", "descriptions": "别的语言的说明",
 	"title": "标题", "titles": "别的语言的标题", "text": "正文", "texts": "别的语言的正文", "label": "选项文字", "labels": "别的语言的选项文字",
-	"image": "配图", "icon": "图标", "tags": "标签", "tag": "标签", "order": "先后", "hidden": "隐藏", "note": "备注", "tip": "弹词条", "internal": "内部标签",
+	"image": "配图", "tags": "标签", "tag": "标签", "order": "先后", "hidden": "隐藏", "note": "备注", "tip": "弹词条", "internal": "内部标签",
 	"amount": "数量", "value": "数值", "count": "件数", "percent": "百分比", "flat": "固定值", "mult": "倍率", "StatModifier.mode": "乘算 / 加算",
 	"chance": "概率", "seconds": "秒", "steps": "步数", "min_steps": "最少步数", "max_steps": "最多步数", "min_value": "最少", "flag": "旗标",
 	"absent": "反过来（要求没有）", "add": "累加", "clear": "拔掉", "target": "对象", "where": "在哪", "pick": "挑法", "item": "道具", "items": "道具",
@@ -71,7 +71,7 @@ const LABELS := {
 
 ## 注册表名 → 中文
 const TYPE_LABELS := {
-	"on_schedule": "按节奏出手（自发）", "on_battle_start": "开战时", "on_item_fired": "某件出手时", "on_resource_changed": "资源变化时",
+	"on_schedule": "按节奏出手（自发）", "on_battle_start": "开战时", "on_item_fired": "某件出手时",
 	"on_stacks_at_least": "叠层达到时", "on_resource_below": "资源低于时", "on_damage": "受伤时", "on_before_damage": "受伤前",
 	"on_status_applied": "某状态被施加时", "status_condition": "状态条件", "convert_status": "转化状态",     # 130
 	"on_status_removed": "某状态掉光时", "on_overtime": "加时开始时", "resource_condition": "资源条件", "axis_condition": "标准轴条件", "axis_cost": "消耗轴层数",

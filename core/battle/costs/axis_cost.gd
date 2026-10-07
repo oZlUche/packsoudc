@@ -16,7 +16,3 @@ func can_pay(_ctx: RuleContext) -> bool:
 func pay(ctx: RuleContext) -> void:
 	if stacks != 0:
 		ShiftAxis.shift(ctx.battle, ctx.owner, axis, -stacks, false)
-
-
-func describe(_ctx: RuleContext) -> String:
-	return "%s −%d 层" % [axis, stacks]
