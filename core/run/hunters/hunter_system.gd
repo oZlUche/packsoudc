@@ -40,7 +40,6 @@ func setup(p_run: RunState, p_config: HunterMechanic, p_defs: Dictionary) -> voi
 	run.hooks.register(&"flee_hunter", flee)
 	if run.events != null:
 		for id in defs:
-			_encounter_def(defs[id])
 			for o in (defs[id] as HunterDef).options():
 				_encounter_def(defs[id], o)
 
@@ -308,7 +307,7 @@ func _engage(h: Hunter, def: HunterDef) -> void:
 
 
 ## 开打前的事件屏：迎战 / 逃跑（逃不掉的猎手没有第二项）。合成一次、登记在 NodeEvents.extra_defs 里（跟着 id 存档也找得回来）。
-## 134：每一档一份（id 带档名），正文写「输了会怎样」，让「迎战还是逃跑」有依据；不带档的那份留给旧存档
+## 134：每一档一份（id 带档名），正文写「输了会怎样」，让「迎战还是逃跑」有依据（140：不带档的那份删了，老存档由 RunMigrations v3 → v4 处理）
 func _encounter_def(def: HunterDef, option: HunterLossOption = null) -> EventDef:
 	var id := StringName(ENCOUNTER_PREFIX + String(def.id) + ("/" + String(option.id) if option != null else ""))
 	if run.events.extra_defs.has(id):

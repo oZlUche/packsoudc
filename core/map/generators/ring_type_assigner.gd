@@ -1039,18 +1039,9 @@ func _weights_for(id: int) -> Dictionary:
 	return out
 
 
+## 按排好序的键扣减（140 M-25：抽法在 [method MapRng.pick_weighted]）
 func _pick_weighted(weights: Dictionary) -> StringName:
-	var total := 0.0
-	for t in weights:
-		total += float(weights[t])
-	if total <= 0.0:
-		return &""
-	var roll := _rng.randf() * total
-	for t in _sorted_keys(weights):
-		roll -= float(weights[t])
-		if roll <= 0.0:
-			return StringName(t)
-	return StringName(_sorted_keys(weights)[-1])
+	return MapRng.pick_weighted(weights, _rng, _sorted_keys(weights))
 
 
 func _within_steps(from_id: int, k: int) -> Dictionary:

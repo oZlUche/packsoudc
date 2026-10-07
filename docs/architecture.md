@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.56 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.57 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3033,7 +3033,7 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 累计搜索次数、待拾取的容器、阶段。**内容库不进存档**，只写 id（章节、道具、敌人），读档时由调用方给；
 开着的店 / 搜索会话不存 —— 存档那一刻视为离开了那个点，货架与搜索进度本来就在图里。
 
-**存档从第一天就写版本号**（一局 `RunState.SAVE_VERSION = 2`，局外 `MetaState.SAVE_VERSION = 3`，110 加了科技等级与上交记录），读到不认识的版本不猜、返回 null。
+**存档从第一天就写版本号**（一局 `RunState.SAVE_VERSION = 4`，局外 `MetaState.SAVE_VERSION = 3`，110 加了科技等级与上交记录），读到不认识的版本不猜、返回 null。
 一局的 v1 → v2（101）是迁移链的第一个真实用例：子系统搬成模块之后，它们的状态从顶层键（`safe` / `safe_locked`）挪进了 `modules[id]`。
 
 **迁移链**（098，报告 098）：`MetaMigrations` / `RunMigrations`（纯静态）**在字典层逐级升**，一步只认 n → n+1，`match` 显式分派（不走反射）、`duplicate(true)` 不改入参；
@@ -3316,7 +3316,7 @@ func player_spec() -> CombatantSpec …
 迎战：**按玩家当时的段位定档**（段位只看步数：难度里猎手机制的 `bracket_steps` 划段，猎手定义的 `strength_by_bracket` 每段几档；表空退回探索度的强度规则，074）从猎手专属池（`enemy_pools/hunters`，占位）现造敌人（`EnemyPlacer`），打赢它死、掉落率乘 `drop_mult`；打输执行**这只猎手生成时选定的那一档**的后果构件
 （扣体力 / 没事 / 必杀 / 消失 / 退走并歇 / 驱逐 / 赶回上一个点并驻守）。**战败结果档**（134）：`HunterLossOption`（`id`、名字、`weight`、`outcomes`）；`HunterDef.loss_options` 列可能的档，
 `loss_pick`（构件，`RunRegistry.HUNTER_LOSS_PICKS`：`random` 按权重 / `fixed` 固定第几档，null = 随机）在 `spawn()` 时选一档，档名记在 `Hunter.loss_id` 跟存档；
-只写旧 `loss_outcomes` 的定义当作只有一档，旧存档没档名按第一档。被感知之后，地图上悬停那个点与开打前的事件屏都写「输了会怎样」。逃跑按成功率掷，没逃掉扣体力照打。距离度量 `MapMetric`：`steps` 或 `absolute`（地图屏注入按环距归一的坐标）。
+至少写一档（140 起旧的 `loss_outcomes` 导入时报错；v3 → v4 迁移把旧存档的 `"default"` 档名清掉、按第一档，挂着的没档名的猎手遭遇丢掉）。被感知之后，地图上悬停那个点与开打前的事件屏都写「输了会怎样」。逃跑按成功率掷，没逃掉扣体力照打。距离度量 `MapMetric`：`steps` 或 `absolute`（地图屏注入按环距归一的坐标）。
 随机数走 `RunRNG` 的 `hunters` 流。`RunContext` 多三个字段（侦察距离、感知倍率、逃跑加成），角色的被动技能（072）、局外 buff、难度修饰都能往里加数。
 **校准**（073）：正式游戏每走一步记一份玩家配置（`CalibrationRecorder` → `user://calibration/snapshots.jsonl`），`tools/build_dummies.gd` 按难度的段位表分段（或固定段长）、每段挑离平均读数最近的真实配置当木桩，
 `tools/bench_hunters.gd` 让木桩对猎手池里每一档打几百场，打印胜率并排「猎手表里这一段的档 / 最接近 50% 的哪一档」—— 工具只做统计，作者对着表改强度规则。数值等系统完整后多场测试。
@@ -3946,6 +3946,7 @@ res://
 | v2.54 | 2026-10-07 | **136 修订：去掉身份层**（作者补充：科技不跟角色绑定，角色 = 初始面板 + 技能；改 7.3）：删 `CharacterDef.identity`、事件条件 `identity_is`、hook `identity`、`RunSkill.slot`；开局屏角色卡改成「被动 / 被动 / 主动」三行，面板行加负重；百科「三个角色」改写并补一句「科技对每个角色都生效」。技能本身与数值不变 |
 | v2.55 | 2026-10-07 | **基地屏：调试台抽屉、格子占满整行**（139，作者定，三项待定按推荐；改 8.2）：新 `DevDrawer`（箭头开关、盖在页面上，开发开关 / 局外解锁 / 科技等级 / 最近几局都搬进去）；`InventoryView.cell_px` + `cell_px_changed`，`DragLayer` / `ScrollBox` 对着视图算的地方读它；`WarehousePanel.fill_width` 与 `cell_for`（60 ～ 96）；出售页同样；图鉴列数按宽度 |
 | v2.56 | 2026-10-07 | **精简移交第 1 组：删**（140，作者定，待定按推荐；改 3.3、4.4）：`ItemDef.icon`；`GridInventory.rotate_item / rotate_bag / neighbors_of`、`ItemInstance.rotated_step`（原地转 = `detach_bag` + `attach_bag_shedding`）；两个容器的 `accept_tags`（`GridInventory` 只剩 `accept_filter`，存档不再写该键）；`Cost.describe` 全家；`CombatantRuntime.clear_axis`、`CompiledItem.origin_of`；扳机 `OnResourceChanged`；没人接的信号（猎手 `spawned / moved / encounter / hunter_defeated / fled`、`MapTravel.arrival_held`、`GameFlow.run_started / run_ended`、`Vitality.depleted`）；工具 `gen_sample_items / gen_sample_combat / export_content`；开局屏「没有角色」老路改成红字 |
+| v2.57 | 2026-10-07 | **精简移交第 2 组：改行为**（140，作者定，待定按推荐；改 6.1、7.x 猎手、存档版本）：`LootPacker.pack` = 往空容器里 `add`（加高时先放下的原位不动，只往后排没放下的）；`DropResolver.expected_count` 按固定种子 64 次掷骰的均值（掉落 + 保底），带 `boss` 参数，地图预览对核心点传 true；`carried_entries` 取代 `carried_flags`；编译器没有棋盘也照算后续步骤（信仰标签空）；猎手旧路径 R-21 删（`HunterDef.LEGACY_OPTION / loss_outcomes`，导入写 `loss_outcomes` 或 `loss_options` 为空都报错；一局存档 v3 → v4）；`MapRng.pick_weighted` 合并格阵与环形两份按权重抽样（遍历顺序由调用方给，同种子输出不变） |
 | v2.49 | 2026-10-06 | **猎手战败结果档 + 猎手战插进进点的事件队列**（134，作者定，五项待定按推荐；改 8.5）：新资源 `HunterLossOption`（档名、名字、权重、后果），`HunterDef.loss_options` + `loss_pick`（新构件表 `HUNTER_LOSS_PICKS`：`random` / `fixed`），`Hunter.loss_id` 生成时选定、跟存档；新后果 `expel`（退回上一步、不驻守）。`MapTravel` 加进点闸门 `arrival_gate` / 挂起的进点 `held`（存档）/ `finish_arrival` / `cancel_arrival`；`RunState` 的猎手回合从「这一步的事之后」挪到闸门里（先于点的事），`resume_arrival` 在玩家空下来时接着进；驱逐 = 取消进点（不标走过、事不发生、不记首访，步数照算）。`GameFlow._flush` 接着进点后排进队里的接着看；收起猎手战的战利品也接着进点。悬停与开打前事件屏写「输了会怎样」。`hunter_1` 击退 / 驱逐各一半，`hunter_2` 击退 / 驱逐 / 驱逐并驻守各三分之一（数值占位） |
 | v2.48 | 2026-10-05 | **单一乘区**（133，作者定；改 4.3）：删 `StatMath.Buff` 四个乘区，公式改成 `终值 = 基础 × max(0, 1 + Σ乘算) + Σ加算`；`StatModifier` 改成 `stat / mode{ADD, MULT} / amount`，`StatValue` 的四格 `mult` 换成一个 `percent`；`PropertyForm` 在属性修饰下加一行灰字提示（乘算还是加算、扩大还是缩小、在 buff 里每层一份）；导入器迁移旧键（`mult_category` 提醒忽略、又乘又加报错），`normalize_content` 重写了 18 份内容 JSON；百科删掉「乘区」词条组；编译金样有意重录（`percent` 替换 `mult`，四份终值逐项不变）。跨乘区的组合数值变了（弓 + 箭 + 符号 1.38 → 1.35）；标准轴不动 |
 | v2.47 | 2026-10-05 | **规则构件第二批**（132）：时机 `on_status_removed` / `on_overtime`，`on_item_fired.source_tags`、`on_resource_below.direction / full`、`on_damage.crit_only`；条件 `resource_condition` / `axis_condition` 与 `axis_cost`，三个条件型加 `negate`；效果 `convert_damage_type`，`deal_damage.percent_of / per_target_stack`、`change_resource.percent_of_damage`、`remove_status.all_debuffs / all_buffs`；受益格 `receive_rules`（4.2）；导入器的「配了也没用」警告。放血刀改成按目标流血层数 ×3。见 4.2、4.4 |

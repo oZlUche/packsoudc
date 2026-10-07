@@ -404,3 +404,22 @@ static func run_layout_and_play(t: TestCase) -> void:
 			t.check(not s.travel.available_moves().has(from), "塔（不回头）：上去了回不了出生点")
 			t.check(not s.step_to(from), "往回走被拒")
 		t.check(s.phase != RunState.Phase.PICK_SPAWN, "%s：在图上" % kind)
+
+
+static func run_map_rng_pick_weighted(t: TestCase) -> void:
+	t.begin("140 M-25 · MapRng.pick_weighted：按给定顺序扣减、跳过 exclude、表空退回 fallback、一次只掷一回")
+	var w := {"battle": 3.0, "search": 1.0, "rest": 0.0}
+	var rng := RandomNumberGenerator.new()
+	t.eq(MapRng.pick_weighted({}, rng, [], [], &"battle"), &"battle", "空表退回 fallback")
+	t.eq(MapRng.pick_weighted(w, rng, [], ["battle", "search"], &"x"), &"x", "全被排除（剩下的权重 0）退回 fallback")
+	t.eq(MapRng.pick_weighted(w, rng, [], ["battle"]), &"search", "排除 battle 只剩 search")
+	for seed in [1, 7, 20261007]:
+		var a := RandomNumberGenerator.new()
+		a.seed = seed
+		var b := RandomNumberGenerator.new()
+		b.seed = seed
+		var got := MapRng.pick_weighted(w, a, ["search", "battle", "rest"])
+		var roll := b.randf() * 4.0
+		var want := &"search" if roll <= 1.0 else &"battle"
+		t.eq(got, want, "种子 %d：按 order 顺序扣减（先 search）" % seed)
+		t.eq(a.randf(), b.randf(), "种子 %d：只掷了一次" % seed)
