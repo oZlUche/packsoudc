@@ -57,14 +57,7 @@ static func has_tag(defs: Array, tag: StringName) -> bool:
 ## 资产目录里的全部 buff：id → 定义
 static func load_all(dir_path: String = ContentPaths.RUN_BUFFS) -> Dictionary:
 	var out := {}
-	var dir := DirAccess.open(dir_path)
-	if dir == null:
-		return out
-	for file_name in dir.get_files():
-		var name := file_name.trim_suffix(".remap")
-		if not (name.ends_with(".tres") or name.ends_with(".res")):
-			continue
-		var res := ResourceLoader.load(dir_path.path_join(name))
+	for res in ContentPaths.load_resources(dir_path):
 		if res is RunBuffDef and (res as RunBuffDef).id != &"":
 			out[(res as RunBuffDef).id] = res
 	return out

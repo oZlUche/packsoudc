@@ -124,3 +124,28 @@ static func authoring_file(kind: String, id: String) -> String:
 static func asset_file(kind: String, id: String) -> String:
 	var dirs := dirs_of(kind)
 	return "%s/%s.tres" % [dirs[1], id] if not dirs.is_empty() else ""
+
+
+## 一个资产目录下的全部资源文件名（`.tres` / `.res`；导出后可能带 `.remap` 后缀，去掉一并认），按文件名升序；
+## 打不开的目录返回空。以前十来处「扫目录装定义」各写一份这段循环，现在都从这里拿
+static func resource_names(dir_path: String) -> Array[String]:
+	var out: Array[String] = []
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return out
+	for f in dir.get_files():
+		var name := f.trim_suffix(".remap")
+		if name.ends_with(".tres") or name.ends_with(".res"):
+			out.append(name)
+	out.sort()
+	return out
+
+
+## 一个资产目录下的全部资源，按文件名顺序装进来（装不出来的跳过）。是什么类型由调用方自己认
+static func load_resources(dir_path: String) -> Array[Resource]:
+	var out: Array[Resource] = []
+	for name in resource_names(dir_path):
+		var res := ResourceLoader.load(dir_path.path_join(name))
+		if res != null:
+			out.append(res)
+	return out

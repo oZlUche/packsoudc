@@ -288,8 +288,3 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	toggle_bag()
 	get_viewport().set_input_as_handled()
 #endregion
-
-
-## 113：现在底部显示着的门禁提示（测试看）
-func hint_lines() -> Array[String]:
-	return _hints.duplicate()

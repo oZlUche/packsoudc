@@ -66,10 +66,6 @@ func is_revealed(uid: int) -> bool:
 	return _revealed.has(uid)
 
 
-## 这件是不是这个容器里出现过的（玩家自己的东西放进来之前是「不认识」的）
-func knows(uid: int) -> bool:
-	return _known.has(uid)
-
 
 ## 这件还锁在容器里（是这个容器的、还没亮出来）。不是这个容器的东西（玩家自己棋盘 / 地上的）从不锁 ——
 ## 容器屏的落点过滤按它判，不按 [method is_revealed]：后者对棋盘上的包也说「没亮」，把玩家自己的东西全卡住了（084）

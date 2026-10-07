@@ -3068,7 +3068,7 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 `uses` 次数、`cooldown_steps` 冷却由 `RunSkills` 记账）。三个构件：`passive`、`assault`（突击：立旗，下一场战斗先把对方的生命上限乘 1 − `hp_fraction`）、`evade`（躲避：`steps` 步内猎手不开打）。
 两个新的一局规则效果：`free_losses`（输给节点敌人前 n 次不扣体力，`NodeEvents.losses_forgiven` 记已免几次，猎手与核心不免）、`stat_bonus`（战斗基线加成，`RunState.effective_baseline` 盖到角色基线上）。
 
-- `RunSkills`（`run.skills`，没角色也有一份空的）：`can_use` / `use` / `on_step`（在猎手的回合之后减冷却与躲避）/ `prepare_battle`（`NodeEvents.before_battle` 回调，在 `BattleSim.run` 之前）/ `status_line`；跟着存档走（`skills` 一节），读档回来先放 `skills_saved`，持有方按 id 找回角色时 `RunState.set_character` 接上。
+- `RunSkills`（`run.skills`，没角色也有一份空的）：`can_use` / `use` / `on_step`（在猎手的回合之后减冷却与躲避）/ `prepare_battle`（`NodeEvents.before_battle` 回调，在 `BattleSim.run` 之前）；跟着存档走（`skills` 一节），读档回来先放 `skills_saved`，持有方按 id 找回角色时 `RunState.set_character` 接上。
 - 主动技能只在地图屏用（作者：大地图移动时使用）；右栏一个技能一个按钮，不能用时灰掉并写原因。
 - 三个初始角色（作者定，136 重做）：每人「身份被动 + 擅长被动 + 一个主动 + 一条短板」，`RunSkill.slot`（identity / talent / active）只管开局屏分组，`CharacterDef.identity`（slave / legion）给事件条件 `identity_is`。
   安德烈乌斯：熟门熟路（`travel_discount`：`MapTravel.paid_steps` 数到 `free_step_every` 下一步不花行动点，跟存档）/ 溜得掉（逃跑、潜行、免一败）/ 脱身（`slip`：战前准备屏「溜走」→ `NodeEvents.skip_pending_battle`，点用过、无战利品、不扣体力，搜索遭遇收会话原因 `slipped`、不弹「被赶跑」，核心点不行；猎手事件屏多一项「脱身（必定逃掉）」，`SkillReady` 锁、`RunSkills.consume` 记账）。

@@ -92,14 +92,7 @@ static func pick_for(node: MapNode, type: StringName, rules: NodeRules) -> Strin
 ## 资产目录里的全部事件：id → 定义
 static func load_all(dir_path: String = ContentPaths.EVENTS) -> Dictionary:
 	var out := {}
-	var dir := DirAccess.open(dir_path)
-	if dir == null:
-		return out
-	for file_name in dir.get_files():
-		var name := file_name.trim_suffix(".remap")
-		if not (name.ends_with(".tres") or name.ends_with(".res")):
-			continue
-		var res := ResourceLoader.load(dir_path.path_join(name))
+	for res in ContentPaths.load_resources(dir_path):
 		if res is EventDef and (res as EventDef).id != &"":
 			out[(res as EventDef).id] = res
 	return out

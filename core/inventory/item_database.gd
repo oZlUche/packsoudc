@@ -42,23 +42,16 @@ const FaithDefScript := preload("res://core/run/faith/faith_def.gd")
 
 
 func load_dir(dir_path: String = DEFAULT_DIR) -> int:
-	var dir := DirAccess.open(dir_path)
-	if dir == null:
+	if not DirAccess.dir_exists_absolute(dir_path):
 		push_warning("ItemDatabase: 无法打开目录 %s" % dir_path)
 		return 0
 	var count := 0
-	for file_name in dir.get_files():
-		var name := file_name
-		if name.ends_with(".remap"):
-			name = name.trim_suffix(".remap")
-		if not (name.ends_with(".tres") or name.ends_with(".res")):
-			continue
-		var res := ResourceLoader.load(dir_path.path_join(name))
+	for res in ContentPaths.load_resources(dir_path):
 		if res is ItemDef:
 			if register(res):
 				count += 1
 		else:
-			push_warning("ItemDatabase: %s 不是 ItemDef，已跳过" % name)
+			push_warning("ItemDatabase: %s 不是 ItemDef，已跳过" % res.resource_path.get_file())
 	if derive_blessings:
 		count += BlessingsScript.derive_all(self, FaithDefScript.load_all())     # 095：按信仰的赐福模板派生赐福版
 	return count

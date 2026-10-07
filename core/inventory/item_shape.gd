@@ -107,13 +107,6 @@ func untransform_point(q: Vector2i, rot: int) -> Vector2i:
 	return p + _step_offset[0]
 
 
-## 一组偏移的批量变换。
-func transform_points(points: Array[Vector2i], rot: int) -> Array[Vector2i]:
-	var out: Array[Vector2i] = []
-	for p in points:
-		out.append(transform_point(p, rot))
-	return out
-
 
 func _build_cache() -> void:
 	_rot_cache = []
@@ -146,21 +139,6 @@ static func _rotate_cw(cs: Array[Vector2i]) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
 	for c in cs:
 		out.append(Vector2i(-c.y, c.x))
-	return out
-
-
-## 平移到 min = (0, 0) 并排序，得到与表示方式无关的规范形式。
-static func _normalize(cs: Array[Vector2i]) -> Array[Vector2i]:
-	var out: Array[Vector2i] = []
-	if cs.is_empty():
-		return out
-	var mn := cs[0]
-	for c in cs:
-		mn.x = mini(mn.x, c.x)
-		mn.y = mini(mn.y, c.y)
-	for c in cs:
-		out.append(c - mn)
-	out.sort()
 	return out
 
 

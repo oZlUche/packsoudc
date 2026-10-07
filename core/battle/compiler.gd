@@ -24,9 +24,6 @@
 class_name BattleCompiler
 extends RefCounted
 
-## run 级基础生命值。保留给只关心生命的调用方；完整基线见 [CombatantBaseline]。
-const BASE_HP := 25.0
-
 
 ## 薄的兼容入口：只关心棋盘与这几样的调用方（大多是测试与敌人 kit）用它，内部造一份 [CompileInput]。
 ## 正式的玩家编译走 [method compile] + 完整的 [CompileInput]（信仰效果、轴、按件修饰都在里面）

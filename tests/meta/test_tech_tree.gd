@@ -267,3 +267,53 @@ static func frame_tree_panel(t: TestCase, root: Window) -> void:
 	panel.queue_free()
 	MetaSave.remove(META)
 	GameSettings.remove(SETTINGS)
+
+
+static func frame_owned_count_quick_submit(t: TestCase, root: Window) -> void:
+	t.begin("138 · 科技页材料行：已交 / 需要 + 拥有 n；拥有且还差时【交 k】（k = 还差与拥有取小），按下逐件上交；锁住 / 没有 / 交齐不给按钮")
+	ItemInstance.reset_uid_counter()
+	var db := _db()
+	var m := _meta()
+	var f := GameFlow.new(db, EnemyDatabase.new(), SetDatabase.new(), m)
+	f.meta_path = META
+	f.settings_path = SETTINGS
+	f.tech_defs = GameFlow.load_techs()
+	f.buff_defs = GameFlow.load_run_buffs()
+	var panel = load(TECH_PANEL).new()
+	root.add_child(panel)
+	panel.setup(f, UiPalette.cjk_font())
+	for i in 5:
+		_add(m, db, &"steel_ingot")
+	_add(m, db, &"hardwood_plank")
+	m.changed.emit()
+
+	# 不屈：前置耐久没点 → 拥有照写，但不给按钮
+	t.check(panel.select(&"undaunted"), "选不屈")
+	t.check(String(panel.panel_texts()["cost"]).contains("拥有 5"), "锁着也写拥有：%s" % panel.panel_texts()["cost"])
+	t.is_null(panel.submit_button(&"steel_ingot"), "前置没点：没有【交】")
+	m.funds = 100000
+	t.check(TechService.upgrade(m, f.tech_of(&"endurance")), "点亮耐久")
+	m.changed.emit()
+
+	# 钢锭：要 2、已交 0、拥有 5 → 【交 2】
+	var steel: Button = panel.submit_button(&"steel_ingot")
+	t.not_null(steel, "钢锭有按钮")
+	t.eq(steel.text if steel != null else "", "交 2", "k = min(还差 2, 拥有 5)")
+	steel.pressed.emit()
+	t.eq(TechService.deposited(m, &"undaunted", &"steel_ingot"), 2, "交齐两块")
+	t.eq(panel._owned_counts().get("steel_ingot", 0), 3, "仓库剩三块")
+	t.is_null(panel.submit_button(&"steel_ingot"), "交齐：按钮没了")
+	t.check(String(panel.panel_texts()["cost"]).contains("已交 2 / 需要 2　✓"), "行打 ✓")
+	t.check(panel.line_text().contains("交了 2 件"), "提示：%s" % panel.line_text())
+	t.eq(MetaSave.read(db, META, m.rules, f.tech_defs).tech_deposits.get("undaunted", {}).get("steel_ingot", 0), 2, "meta 存了")
+
+	# 硬木板：要 2、拥有 1 → 【交 1】，交完拥有 0、还差一块、没按钮
+	var plank: Button = panel.submit_button(&"hardwood_plank")
+	t.eq(plank.text if plank != null else "", "交 1", "只有一块：交 1")
+	plank.pressed.emit()
+	t.eq(TechService.deposited(m, &"undaunted", &"hardwood_plank"), 1, "交了一块")
+	t.check(String(panel.panel_texts()["cost"]).contains("拥有 0"), "拥有 0")
+	t.is_null(panel.submit_button(&"hardwood_plank"), "拥有 0：没按钮")
+	panel.queue_free()
+	MetaSave.remove(META)
+	GameSettings.remove(SETTINGS)

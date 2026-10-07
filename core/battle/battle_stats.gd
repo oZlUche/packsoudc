@@ -55,7 +55,6 @@ const REGEN_HP := &"regen_hp"
 ## 耐力消耗的面板值。走 4.3 公式结算，
 ## 因此「减少耐力消耗 20%」就是一条作用于本键的普通 StatModifier。
 const STAMINA_COST := &"stamina_cost"
-const MANA_COST := &"mana_cost"
 
 ## 104（作者定）：暴击。暴击率是概率（0.10 = 10%），暴击伤害是倍率（1.5 = 150%）。
 ## **所有加成一律加算**：这两条只接受固定值（flat），导入器拦乘区（[method additive_only]）。
@@ -128,7 +127,3 @@ static func resource_of_max(stat_key: StringName) -> StringName:
 static func regen_of_resource(resource_key: StringName) -> StringName:
 	return StringName(REGEN_PREFIX + String(resource_key))
 
-
-## xxx -> max_xxx
-static func max_of_resource(resource_key: StringName) -> StringName:
-	return StringName(MAX_PREFIX + String(resource_key))
