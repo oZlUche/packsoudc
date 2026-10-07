@@ -122,7 +122,6 @@ func _build_ui() -> void:
 	_list = ItemList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_list.add_theme_font_override("font", _font)
 	_list.item_selected.connect(func(i: int): _open(_shown[i]))
 	browse.add_child(_list)
 	var list_buttons := HBoxContainer.new()
@@ -145,7 +144,6 @@ func _build_ui() -> void:
 	id_row.add_child(UiTheme.make_label("id", 13, UiPalette.DIM))
 	_id_edit = LineEdit.new()
 	_id_edit.custom_minimum_size.x = 150
-	_id_edit.add_theme_font_override("font", _font)
 	_id_edit.text_changed.connect(_on_id_changed)
 	id_row.add_child(_id_edit)
 	id_row.add_child(UiTheme.make_button("保存", _save, UiTheme.TIER_PLAIN, 13))
@@ -212,7 +210,6 @@ func _build_ui() -> void:
 	side_col.add_child(UiTheme.make_label("JSON（可直接改）", 12, UiPalette.DIM))
 	_preview = TextEdit.new()
 	_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_preview.add_theme_font_override("font", _font)
 	_preview.add_theme_font_size_override("font_size", 12)
 	side_col.add_child(_preview)
 	side_col.add_child(UiTheme.make_button("套用上面的 JSON", _apply_json, UiTheme.TIER_PLAIN, 13))
@@ -231,16 +228,9 @@ func _reload_list() -> void:
 	_ids.clear()
 	_tags_of.clear()
 	_list.clear()
-	var d := DirAccess.open(ITEM_DIR)
-	if d != null:
-		var files := d.get_files()
-		files.sort()  # 顺序稳定，列表才不会每次打开都换位置
-		for f in files:
-			if not f.ends_with(".json"):
-				continue
-			var id := f.get_basename()
-			_ids.append(id)
-			_tags_of[id] = _tags_in_file(f)
+	for id in ContentPaths.ids_in(ITEM_DIR):     # 按文件名排好：顺序稳定，列表才不会每次打开都换位置
+		_ids.append(id)
+		_tags_of[id] = _tags_in_file(id + ".json")
 	# 草稿里可能有还没存过盘的新道具，它们不在目录里但得看得见
 	for key in _drafts:
 		if not _ids.has(key):
@@ -364,7 +354,6 @@ func _tab_button(page: Array) -> Button:
 	b.toggle_mode = true
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	b.clip_text = true
-	b.add_theme_font_override("font", _font)
 	b.add_theme_font_size_override("font_size", 12)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.pressed.connect(func() -> void:
@@ -513,7 +502,7 @@ func _save() -> void:
 	var built := ContentImporter.import_item(data, ContentImporter.Context.new(), report)
 	if not report.ok():
 		# 有错就不写盘：半套内容比没内容更难查，游戏照样跑得起来，只是悄悄不对
-		_status.text = "[color=#d9534f]有错误，没有保存[/color]\n" + _status_text(report)
+		_status.text = "[color=#d9534f]有错误，没有保存[/color]\n" + report.bbcode()
 		return
 
 	DirAccess.make_dir_recursive_absolute(ITEM_DIR)
@@ -537,7 +526,7 @@ func _save() -> void:
 	_select_in_list(id)
 	_refresh()
 	_status.text = "[color=#5cb85c]已保存 %s.json，并生成 %s.tres[/color]\n" % [id, id] \
-		+ _status_text(report)
+		+ report.bbcode()
 
 
 ## 改了 id 再保存就是另一个文件；旧的留着，删不删由作者决定
@@ -641,17 +630,6 @@ func _validate() -> ImportReport:
 	return report
 
 
-func _status_text(report: ImportReport) -> String:
-	var lines: Array[String] = []
-	for e in report.errors:
-		lines.append("[color=#d9534f]✗ %s：%s[/color]" % [e["path"], e["message"]])
-	for w in report.warnings:
-		lines.append("[color=#f0ad4e]! %s：%s[/color]" % [w["path"], w["message"]])
-	if lines.is_empty():
-		lines.append("[color=#5cb85c]✓ 没有问题[/color]")
-	return "\n".join(lines)
-
-
 func _refresh() -> void:
 	if _def == null:
 		return
@@ -659,7 +637,7 @@ func _refresh() -> void:
 	_sync_adjacency()
 	_track_draft()
 	_preview.text = ContentExporter.to_json(ContentExporter.export_item(_def))
-	_status.text = _status_text(_validate())
+	_status.text = _validate().bbcode()
 
 	# 预估 DPS：编译是纯函数，所以这条读数和真打出来的一致
 	var item := CompiledItem.new()

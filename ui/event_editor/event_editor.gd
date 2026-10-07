@@ -77,24 +77,11 @@ static func _build_context() -> ContentImporter.Context:
 	var buffs := RunBuffs.load_all()
 	for id in buffs:
 		ctx.register_run_buff(buffs[id])
-	for id in _ids_on_disk():
+	for id in ContentPaths.ids_in(EVENT_DIR):
 		var parsed = JSON.parse_string(FileAccess.get_file_as_string(ContentPaths.authoring_file(KIND, id)))
 		if parsed is Dictionary:
 			ContentImporter.import_event(parsed, ctx, ImportReport.new())
 	return ctx
-
-
-static func _ids_on_disk() -> Array[String]:
-	var out: Array[String] = []
-	var d := DirAccess.open(EVENT_DIR)
-	if d == null:
-		return out
-	var files := d.get_files()
-	files.sort()
-	for f in files:
-		if f.ends_with(".json"):
-			out.append(f.get_basename())
-	return out
 
 
 #region 界面
@@ -118,7 +105,6 @@ func _build_ui() -> void:
 	left.add_child(UiTheme.make_label("事件", 16, UiPalette.FG))
 	_list = ItemList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_list.add_theme_font_override("font", _font)
 	_list.item_selected.connect(func(i: int): _open(_ids[i]))
 	left.add_child(_list)
 	var list_buttons := HBoxContainer.new()
@@ -141,7 +127,6 @@ func _build_ui() -> void:
 	id_row.add_child(UiTheme.make_label("id", 13, UiPalette.DIM))
 	_id_edit = LineEdit.new()
 	_id_edit.custom_minimum_size.x = 180
-	_id_edit.add_theme_font_override("font", _font)
 	_id_edit.text_changed.connect(_on_id_changed)
 	id_row.add_child(_id_edit)
 	id_row.add_child(UiTheme.make_button("保存", _save, UiTheme.TIER_PLAIN, 13))
@@ -149,7 +134,6 @@ func _build_ui() -> void:
 	# 091：语言切换 —— 标题 / 正文按这个语言编辑；中文是原文，别的语言写进 titles / texts（空 = 用中文）
 	id_row.add_child(UiTheme.make_label("语言", 13, UiPalette.DIM))
 	_lang_pick = OptionButton.new()
-	_lang_pick.add_theme_font_override("font", _font)
 	for i in UiText.LANGS.size():
 		_lang_pick.add_item(UiText.LANGS[i], i)
 	_lang_pick.item_selected.connect(func(i: int): set_lang(UiText.LANGS[i]))
@@ -169,7 +153,6 @@ func _build_ui() -> void:
 	title_row.add_child(UiTheme.make_label("标题", 13, UiPalette.DIM))
 	_title_edit = LineEdit.new()
 	_title_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_title_edit.add_theme_font_override("font", _font)
 	_title_edit.text_changed.connect(_on_title_changed)
 	title_row.add_child(_title_edit)
 	body.add_child(title_row)
@@ -178,7 +161,6 @@ func _build_ui() -> void:
 	_text_edit = TextEdit.new()
 	_text_edit.custom_minimum_size.y = 120
 	_text_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
-	_text_edit.add_theme_font_override("font", _font)
 	_text_edit.add_theme_font_size_override("font_size", 14)
 	_text_edit.text_changed.connect(_on_text_changed)
 	body.add_child(_text_edit)
@@ -188,7 +170,6 @@ func _build_ui() -> void:
 	_image_edit = LineEdit.new()
 	_image_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_image_edit.placeholder_text = "res://assets/events/<id>.png（可以直接填，或点导入）"
-	_image_edit.add_theme_font_override("font", _font)
 	_image_edit.text_changed.connect(_on_image_changed)
 	image_row.add_child(_image_edit)
 	image_row.add_child(UiTheme.make_button("导入图片…", _pick_image, UiTheme.TIER_PLAIN, 13))
@@ -251,7 +232,6 @@ func _build_ui() -> void:
 	_chain = Tree.new()
 	_chain.hide_root = true
 	_chain.custom_minimum_size.y = 150
-	_chain.add_theme_font_override("font", _font)
 	_chain.add_theme_font_size_override("font_size", 12)
 	_chain.item_activated.connect(_open_from_chain)
 	side.add_child(_chain)
@@ -264,12 +244,10 @@ func _build_ui() -> void:
 	var attach_row := HBoxContainer.new()
 	attach_row.add_theme_constant_override("separation", 6)
 	_rules_pick = OptionButton.new()
-	_rules_pick.add_theme_font_override("font", _font)
 	for rid in _rules_ids():
 		_rules_pick.add_item(rid)
 	attach_row.add_child(_rules_pick)
 	_type_pick = OptionButton.new()
-	_type_pick.add_theme_font_override("font", _font)
 	for i in MapNodeTypes.ALL.size():
 		_type_pick.add_item(String(MapNodeTypes.ALL[i]), i)
 		if MapNodeTypes.ALL[i] == &"event":
@@ -280,7 +258,6 @@ func _build_ui() -> void:
 	_weight.max_value = 999
 	_weight.step = 1
 	_weight.value = 1
-	_weight.add_theme_font_override("font", _font)
 	attach_row.add_child(_weight)
 	attach_row.add_child(UiTheme.make_button("挂上", _on_attach, UiTheme.TIER_PLAIN, 13))
 	attach_row.add_child(UiTheme.make_button("摘下", _on_detach, UiTheme.TIER_PLAIN, 13))
@@ -290,7 +267,6 @@ func _build_ui() -> void:
 	_json = TextEdit.new()
 	_json.custom_minimum_size.y = 160
 	_json.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_json.add_theme_font_override("font", _font)
 	_json.add_theme_font_size_override("font_size", 12)
 	side.add_child(_json)
 	side.add_child(UiTheme.make_button("套用上面的 JSON", _apply_json, UiTheme.TIER_PLAIN, 13))
@@ -299,7 +275,7 @@ func _build_ui() -> void:
 
 #region 列表与草稿
 func _reload_list() -> void:
-	_ids = _ids_on_disk()
+	_ids = ContentPaths.ids_in(EVENT_DIR)
 	_repaint_list()
 
 
@@ -555,7 +531,7 @@ func _save() -> void:
 	report.source = id
 	var built := ContentImporter.import_event(data, _ctx, report)
 	if not report.ok():
-		_status.text = "[color=#d9534f]有错误，没有保存[/color]\n" + _status_text(report)
+		_status.text = "[color=#d9534f]有错误，没有保存[/color]\n" + report.bbcode()
 		return
 	DirAccess.make_dir_recursive_absolute(EVENT_DIR)
 	if ContentExporter.save(data, ContentPaths.authoring_file(KIND, id)) != OK:
@@ -572,7 +548,7 @@ func _save() -> void:
 	_reload_list()
 	_select_in_list(id)
 	_refresh()
-	_status.text = "[color=#5cb85c]已保存 %s.json，并生成 %s.tres[/color]\n" % [id, id] + _status_text(report)
+	_status.text = "[color=#5cb85c]已保存 %s.json，并生成 %s.tres[/color]\n" % [id, id] + report.bbcode()
 
 
 func _save_as() -> void:
@@ -679,7 +655,7 @@ func _on_attach() -> void:
 	if _rules_pick.item_count == 0:
 		return
 	var report := _attach(_rules_pick.get_item_text(_rules_pick.selected), _type_pick.get_item_text(_type_pick.selected), _weight.value)
-	_status.text = ("[color=#5cb85c]已挂上[/color]\n" if report.ok() else "") + _status_text(report)
+	_status.text = ("[color=#5cb85c]已挂上[/color]\n" if report.ok() else "") + report.bbcode()
 	_placement.text = _placement_text()
 
 
@@ -687,7 +663,7 @@ func _on_detach() -> void:
 	if _rules_pick.item_count == 0:
 		return
 	var report := _attach(_rules_pick.get_item_text(_rules_pick.selected), _type_pick.get_item_text(_type_pick.selected), 0.0)
-	_status.text = ("[color=#5cb85c]已摘下[/color]\n" if report.ok() else "") + _status_text(report)
+	_status.text = ("[color=#5cb85c]已摘下[/color]\n" if report.ok() else "") + report.bbcode()
 	_placement.text = _placement_text()
 #endregion
 
@@ -728,7 +704,6 @@ func _rebuild_preview() -> void:
 		var b := Button.new()
 		b.text = opt.label if opt.label != "" else "（没有字）"
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.add_theme_font_override("font", _font)
 		b.add_theme_font_size_override("font_size", 13)
 		b.set_meta("option", i)
 		col.add_child(b)
@@ -763,23 +738,12 @@ func _validate() -> ImportReport:
 	return report
 
 
-func _status_text(report: ImportReport) -> String:
-	var lines: Array[String] = []
-	for e in report.errors:
-		lines.append("[color=#d9534f]✗ %s：%s[/color]" % [e["path"], e["message"]])
-	for w in report.warnings:
-		lines.append("[color=#f0ad4e]! %s：%s[/color]" % [w["path"], w["message"]])
-	if lines.is_empty():
-		lines.append("[color=#5cb85c]✓ 没有问题[/color]")
-	return "\n".join(lines)
-
-
 func _refresh() -> void:
 	if _def == null:
 		return
 	_track_draft()
 	_json.text = ContentExporter.to_json(ContentExporter.export_event(_def))
-	_status.text = _status_text(_validate())
+	_status.text = _validate().bbcode()
 	_thumb.texture = EventImage.load_texture(_def.image)
 	_thumb.custom_minimum_size = Vector2(0, 120) if _thumb.texture != null else Vector2(0, 0)
 	_rebuild_preview()

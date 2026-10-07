@@ -217,12 +217,7 @@ func set_node_event(id: int, event_id: String) -> void:
 ## 作者目录里的事件 id（下拉框用）
 func event_ids() -> Array[String]:
 	if _event_ids.is_empty():
-		var d := DirAccess.open(ContentPaths.AUTHORING_EVENTS)
-		if d != null:
-			for f in d.get_files():
-				if f.ends_with(".json"):
-					_event_ids.append(f.get_basename())
-			_event_ids.sort()
+		_event_ids = ContentPaths.ids_in(ContentPaths.AUTHORING_EVENTS)
 	return _event_ids
 
 
@@ -451,15 +446,7 @@ func load_preset(preset_name: String) -> bool:
 #region 章节
 func _refresh_chapters() -> void:
 	_chapter_pick.clear()
-	var dir := DirAccess.open(ContentPaths.AUTHORING_CHAPTERS)
-	if dir == null:
-		return
-	var names: Array[String] = []
-	for f in dir.get_files():
-		if f.ends_with(".json"):
-			names.append(f.get_basename())
-	names.sort()
-	for n in names:
+	for n in ContentPaths.ids_in(ContentPaths.AUTHORING_CHAPTERS):
 		_chapter_pick.add_item(n)
 
 
@@ -588,7 +575,6 @@ func _build_side() -> Control:
 	var portal_row := HBoxContainer.new()
 	var portal_toggle := CheckButton.new()
 	portal_toggle.text = "Shift+左键连成传送点"
-	portal_toggle.add_theme_font_override("font", _font)
 	portal_toggle.toggled.connect(func(on: bool): portal_mode = on)
 	portal_row.add_child(portal_toggle)
 	var portal_spin := SpinBox.new()
@@ -829,8 +815,8 @@ func _panel(width: int) -> PanelContainer:
 	return panel
 
 
+## 编辑器的输入框 / 下拉 / 按钮用 13 号（字体在主题里）
 func _style(c: Control) -> void:
-	c.add_theme_font_override("font", _font)
 	c.add_theme_font_size_override("font_size", 13)
 
 
