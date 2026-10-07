@@ -103,8 +103,7 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	if ctx.trace != null:
 		_trace(ctx, packet, raw_in, hp_before, taken_factor)
 	_notify(ctx, packet, td)
-	if victim.resources.current(BattleStats.RES_HP) <= 0 and victim.mark_dead():
-		ctx.emit(BattleEvent.DIED, victim.side, {})
+	victim.settle_death(ctx)
 	return -packet.applied
 
 
@@ -147,7 +146,7 @@ static func _notify(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef)
 	})
 
 
-## 便捷入口：造一包伤害并当场结算。
+## 便捷入口：造一包伤害并当场结算。附火、反伤、以血为代价都走这里；要先改包（暴击旗）的 [DealDamage] 自己造包
 static func deal(
 	ctx: BattleContext, victim: CombatantRuntime, raw: int,
 	type: StringName = DamageTypes.PHYSICAL,

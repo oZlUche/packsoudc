@@ -40,9 +40,7 @@ func apply(ctx: RuleContext) -> void:
 		return
 
 	var attacker := ctx.battle.sides[p.source_side]
-	DamageResolver.resolve(ctx.battle, DamagePacket.create(
-		damage_type, amount, attacker, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override)
-	))
+	DamageResolver.deal(ctx.battle, attacker, amount, damage_type, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override))
 
 
 func describe() -> String:

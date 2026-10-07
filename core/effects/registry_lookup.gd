@@ -25,6 +25,15 @@ static func has_type(tables: Dictionary, kind: StringName, type_name: StringName
 	return (tables.get(kind, {}) as Dictionary).has(type_name)
 
 
+## 一个实例的全局类名（没有脚本、或脚本没有 class_name 时是引擎类名）。内部日志写构件类名都走它
+static func class_of(o: Object) -> String:
+	if o == null:
+		return ""
+	var script := o.get_script() as Script
+	var n := String(script.get_global_name()) if script != null else ""
+	return n if n != "" else o.get_class()
+
+
 ## 这一种的全部类型名，升序
 static func type_names(tables: Dictionary, kind: StringName) -> Array:
 	var k := (tables.get(kind, {}) as Dictionary).keys()
