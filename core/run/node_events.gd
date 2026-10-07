@@ -574,6 +574,7 @@ func fight_content(node: MapNode, type: StringName, content: Dictionary, loot_ct
 
 
 ## 这一场输了扣多少：参数写了就用参数；没写看节点内容的 `loss_cost`；再没有：核心点必死，其余按节点规则的表
+## 搜索遭遇固定 0（091 / 135），进战斗时直接传，不看表
 func loss_cost_for(type: StringName, content: Dictionary, loss_cost: int = LOSS_DEFAULT) -> int:
 	if loss_cost != LOSS_DEFAULT:
 		return loss_cost
