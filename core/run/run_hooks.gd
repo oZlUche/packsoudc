@@ -31,7 +31,6 @@ const NAMES := {
 	&"before_battle": "RunState：开打前改双方的战斗单位（局内技能）",
 	&"fight_hunter": "HunterSystem：迎战追上来的猎手",
 	&"flee_hunter": "HunterSystem：从猎手那里逃跑",
-	&"identity": "RunState：角色的身份（136：slave / legion；空 = 没有角色）",
 	&"skill_ready": "RunState：局内技能现在能不能用（136：空串 = 能，否则是原因）",
 }
 
@@ -101,11 +100,6 @@ func active_faith_id() -> StringName:
 	if not has(&"active_faith_id"):
 		return &""
 	return StringName(String(_at(&"active_faith_id").call()))
-
-
-## 136：角色身份；没人接 = 空
-func identity() -> StringName:
-	return StringName(String(_at(&"identity").call())) if has(&"identity") else &""
 
 
 ## 136：局内技能现在能不能用：空串 = 能。没人接 = 不能

@@ -17,8 +17,6 @@ extends Resource
 @export var passive: Array[Effect] = []
 ## 136：战斗里常驻的规则（布鲁图斯「坚韧」：低血一次性护盾）。编译玩家时和套装 / buff 的规则一起挂到单位上
 @export var rules: Array[AbilityRule] = []
-## 136：开局屏按槽分组显示 —— identity（身份）/ talent（擅长）/ active（主动）；空 = 不分组。只影响显示
-@export var slot: StringName = &""
 ## 主动使用的次数，-1 = 不限；被动技能不看它
 @export var uses: int = -1
 ## 用一次之后要走几步才能再用；0 = 没有冷却

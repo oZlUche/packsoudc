@@ -18,7 +18,6 @@ id = &"merit"
 display_name = "军功"
 description = "收获换军功：打赢的钱多四分之一。"
 passive = Array[ExtResource("3_iy1av")]([SubResource("Resource_g2ila")])
-slot = &"identity"
 
 [sub_resource type="Resource" id="Resource_dh4py"]
 script = ExtResource("7_iqgrf")
@@ -31,14 +30,12 @@ id = &"drill"
 display_name = "操练"
 description = "耐力每秒多回 {stat_bonus_amount} 点。"
 passive = Array[ExtResource("3_iy1av")]([SubResource("Resource_dh4py")])
-slot = &"talent"
 
 [sub_resource type="Resource" id="Resource_xwebo"]
 script = ExtResource("8_oxqwc")
 id = &"assault"
 display_name = "突击"
 description = "下次进入战斗，先扣掉对方三成生命。"
-slot = &"active"
 uses = 3
 cooldown_steps = 3
 
@@ -57,4 +54,3 @@ base_stats = {
 starting_bags = Array[StringName]([&"bag_leather", &"bag_small"])
 weight_capacity = 48
 skills = Array[ExtResource("2_1b8yu")]([SubResource("Resource_2w6jy"), SubResource("Resource_22n10"), SubResource("Resource_xwebo")])
-identity = &"legion"
