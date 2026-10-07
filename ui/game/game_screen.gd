@@ -38,6 +38,28 @@ func escape() -> bool:
 	return false
 
 
+## 134（作者定）：没有面板接的时候，地上的一件被双击了 —— 有背包按钮的屏「进包 + 打开背包」（放不下就只开背包）。
+## 导演只在没有面板接地上（[method GroundLayer.top_drag] 为空）时转给最上面那一屏。返回接没接；默认不接（没有背包按钮的屏）
+func ground_double_clicked(_uid: int) -> bool:
+	return false
+
+
+## 134：「进包 + 打开背包」的那一套，有背包浮窗的屏（地图、事件）共用：先试着进棋盘，**无论成败都打开背包**；
+## 放不下就让面板提示一句。[param open_bag] 打开背包并返回那块 [InventoryPanel]
+func _ground_to_bag(uid: int, open_bag: Callable) -> bool:
+	var run := flow.run if flow != null else null
+	if run == null or run.storage == null or run.board == null:
+		return false
+	var inst := run.storage.get_item(uid)
+	if inst == null:
+		return false
+	var moved := InventoryService.transfer_auto(run.storage, uid, run.board)
+	var panel = open_bag.call()
+	if not moved and panel != null and panel.has_method("say_no_room"):
+		panel.say_no_room(inst)
+	return true
+
+
 #region 控件
 func _label(text: String, font_size: int, color: Color) -> Label:
 	var l := Label.new()
