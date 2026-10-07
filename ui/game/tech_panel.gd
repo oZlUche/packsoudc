@@ -3,7 +3,7 @@
 ## 左：科技树（TechTreeView）—— 深度 0 在最下面、往上点亮；点一个节点，右板切到它
 ## 右：说明面板，从上到下 ——  名称　Lv n / m（单级写已点亮 / 未点亮）
 ##                          效果：一句总述；「现在：……」「下一级：……」
-##                          费用：钱 需要 / 持有；材料每种一行 已交 / 需要；锁住的写「需要先点亮：……」；满级写「已满级」
+##                          费用：钱 需要 / 持有；材料每种一行 已交 / 需要　拥有 n　【交 k】；锁住的写「需要先点亮：……」；满级写「已满级」
 ##                          【点亮】/【升级】
 ##     下面：上交区（只给**选中的节点**）+ 折叠的仓库格子（双击一件上交）
 ## [endcodeblock]
@@ -33,6 +33,8 @@ var _cost: VBoxContainer
 var _action: Button
 var _line: Label
 var _selected: StringName = &""
+## 材料行的【交 k】按钮：道具 id（字符串）→ Button（138；只有选中节点、前置满足、拥有且还差的才有）
+var _submit_buttons: Dictionary = {}
 
 
 func setup(flow: GameFlow, font: Font) -> void:
@@ -162,6 +164,33 @@ func submit(uid: int) -> bool:
 	return ok
 
 
+## 138：把仓库里这种材料交 k 件给**选中的节点**（材料行的【交 k】）。逐件走 submit_tech；返回交了几件
+func submit_many(item_id: StringName, k: int) -> int:
+	var def := _flow.tech_of(_selected)
+	if def == null or not TechService.prereqs_met(_meta, def):
+		return 0
+	var uids: Array[int] = []
+	for inst in _meta.warehouse.items():
+		var it := inst as ItemInstance
+		if uids.size() < k and it.def != null and it.def.id == item_id:
+			uids.append(it.uid)
+	var done := 0
+	for uid in uids:
+		if _flow.submit_tech(def.id, uid):
+			done += 1
+	if done > 0:
+		var item_def := _flow.items.get_def(item_id) if _flow.items != null else null
+		_line.text = "交了 %d 件「%s」" % [done, Names.of(item_def) if item_def != null else String(item_id)]
+		changed.emit()
+		_refresh()
+	return done
+
+
+## 材料行的【交 k】按钮（测试看）；没有 null
+func submit_button(item_id: StringName) -> Button:
+	return _submit_buttons.get(String(item_id), null)
+
+
 func upgrade(id: StringName) -> bool:
 	var ok := _flow.upgrade_tech(id)
 	if ok:
@@ -254,6 +283,7 @@ func _refresh() -> void:
 	_sync_toggle()
 	_clear(_effect)
 	_clear(_cost)
+	_submit_buttons.clear()
 	var def := _flow.tech_of(_selected)
 	_zone_view.modulate = Color(1, 1, 1, 1) if def != null and TechService.prereqs_met(_meta, def) and TechService.next_tier(_meta, def) != null \
 		else Color(1, 1, 1, 0.35)     # 没选 / 锁住 / 满级：上交区灰着
@@ -289,16 +319,42 @@ func _refresh() -> void:
 	_cost.add_child(_label("钱　需要 %d / 持有 %d" % [tier.funds, _meta.funds], 13, UiPalette.HEAL if rich else UiPalette.DIM))
 	var keys: Array = tier.items.keys()
 	keys.sort()
+	var owned := _owned_counts()
+	var open := missing.is_empty()
 	for key in keys:
+		var id := StringName(String(key))
 		var need := int(tier.items[key])
-		var have := TechService.deposited(_meta, def.id, StringName(String(key)))
-		var item_def := _flow.items.get_def(StringName(String(key))) if _flow.items != null else null
+		var have := TechService.deposited(_meta, def.id, id)
+		var item_def := _flow.items.get_def(id) if _flow.items != null else null
 		var name := Names.of(item_def) if item_def != null else String(key)
-		_cost.add_child(_label("%s　已交 %d / 需要 %d%s" % [name, have, need, "　✓" if have >= need else ""], 13,
+		var own := int(owned.get(String(key), 0))
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		row.add_child(_label("%s　已交 %d / 需要 %d%s" % [name, have, need, "　✓" if have >= need else ""], 13,
 			UiPalette.HEAL if have >= need else UiPalette.FG))
+		row.add_child(_label("拥有 %d" % own, 13, UiPalette.FG if own > 0 else UiPalette.DIM))
+		var k := mini(maxi(0, need - have), own)
+		if open and k > 0:
+			var btn := Button.new()
+			btn.text = "交 %d" % k
+			UiPalette.style_button(btn, UiPalette.Tier.SECONDARY, UiPalette.button_font_size(13, UiPalette.Tier.SECONDARY))
+			btn.pressed.connect(submit_many.bind(id, k))
+			row.add_child(btn)
+			_submit_buttons[String(key)] = btn
+		_cost.add_child(row)
 	_action.visible = true
 	_action.text = "点亮" if def.max_level() <= 1 else "升级"     # 单级「点亮」、多级「升级」
 	_action.disabled = not TechService.ready(_meta, def)
+
+
+## 仓库里每种道具几件：道具 id（字符串）→ 件数（仓库只有局外物品、一件一个）
+func _owned_counts() -> Dictionary:
+	var out := {}
+	for inst in _meta.warehouse.items():
+		var it := inst as ItemInstance
+		if it.def != null:
+			out[String(it.def.id)] = int(out.get(String(it.def.id), 0)) + 1
+	return out
 
 
 func _sync_toggle() -> void:
@@ -316,6 +372,12 @@ static func _texts_of(box: Container) -> String:
 	for c in box.get_children():
 		if c is Label:
 			parts.append((c as Label).text)
+		elif c is HBoxContainer:     # 材料行：名称 / 已交 / 需要　拥有 n
+			var row: Array[String] = []
+			for l in c.get_children():
+				if l is Label:
+					row.append((l as Label).text)
+			parts.append("　".join(row))
 	return "\n".join(parts)
 
 
