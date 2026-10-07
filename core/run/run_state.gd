@@ -11,7 +11,7 @@ class_name RunState
 extends RefCounted
 
 ## 存档从第一天就写版本号（7.2）
-const SAVE_VERSION := 3
+const SAVE_VERSION := 4
 ## 作战棋盘的尺寸（3.2：棋盘 + 包体）。占位，等角色系统
 const BOARD_SIZE := Vector2i(8, 6)
 const BOARD_ID := 1

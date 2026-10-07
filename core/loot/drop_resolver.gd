@@ -46,19 +46,21 @@ static func _common_bonus(rule: DropRule, ctx: LootContext) -> float:
 	return float(maxi(0, ctx.difficulty)) * rule.difficulty_bonus + float(ctx.luck) * rule.luck_bonus
 
 
-## 敌人自己的道具 id 列表（节点内容里记的）
-static func carried_ids(content: Dictionary) -> Array[StringName]:
-	var out: Array[StringName] = []
+## 敌人自己的道具（节点内容里记的），一件一条 `{"id": StringName, "carried": bool}`（126：是不是携带品）。
+## 140：原来是 id 与「是不是携带品」两个靠下标对齐的数组，合成一次遍历
+static func carried_entries(content: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
 	for raw in content.get("items", []):
-		out.append(StringName(String((raw as Dictionary).get("id", ""))))
+		var d := raw as Dictionary
+		out.append({"id": StringName(String(d.get("id", ""))), "carried": bool(d.get("carried", false))})
 	return out
 
 
-## 126：每一条是不是携带品（和 [method carried_ids] 一一对应）
-static func carried_flags(content: Dictionary) -> Array[bool]:
-	var out: Array[bool] = []
-	for raw in content.get("items", []):
-		out.append(bool((raw as Dictionary).get("carried", false)))
+## 敌人自己的道具 id 列表
+static func carried_ids(content: Dictionary) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for e in carried_entries(content):
+		out.append(e["id"])
 	return out
 
 
@@ -92,14 +94,13 @@ static func roll(
 		var extra := rarity_guarantee(ctx.extra_drop_rarity, rule, items, carried, rng)
 		if extra != &"":
 			(out["treasure"] as Array[StringName]).append(extra)
-	var flags := carried_flags(content)
 	var forced := 0     # 126：必掉的携带品件数，不占保底名额
-	for i in carried.size():
-		var id := carried[i]
+	for e in carried_entries(content):
+		var id: StringName = e["id"]
 		var def := items.get_def(id)
 		if def == null:
 			continue
-		if rule.carried_always_drop and flags[i]:
+		if rule.carried_always_drop and bool(e["carried"]):
 			(out["dropped"] as Array[StringName]).append(id)
 			forced += 1
 			continue
@@ -211,37 +212,23 @@ static func _pick_weighted(cands: Array[StringName], ctx: LootContext, items: It
 	return cands[cands.size() - 1]
 
 
-## 期望掉几件（沙盒预览用）：每件的概率之和 + 珍宝尝试次数 × 珍宝概率（有珍宝可掉才算）
-static func expected_count(content: Dictionary, rule: DropRule, ctx: LootContext, items: ItemDatabase) -> float:
+## 预估要掷几次（[method expected_count]）
+const EXPECT_SAMPLES := 64
+## 预估用的固定种子：同一个点每次预览给同一个数
+const EXPECT_SEED := 20261007
+
+## 期望掉几件（地图屏敌人预览用）。140：就用 [method roll] 掷 [constant EXPECT_SAMPLES] 次取均值（固定种子）——
+## 保底、BOSS 保底、额外掉落、携带品这些规则改了，预估自己跟上，不再另写一份近似公式
+static func expected_count(content: Dictionary, rule: DropRule, ctx: LootContext, items: ItemDatabase, boss: bool = false) -> float:
 	if rule == null or items == null:
 		return 0.0
-	var total := 0.0
-	var carried := carried_ids(content)
-	var p_none := 1.0     # 一件非包都没掉的概率（保底会补）
-	var non_bags := 0
-	var flags := carried_flags(content)
-	for i in carried.size():
-		var d := items.get_def(carried[i])
-		if d == null:
-			continue
-		if (rule.bags_always_drop and d.is_bag) or (rule.carried_always_drop and flags[i]):
-			total += 1.0     # 包与携带品必掉
-			continue
-		var p := owned_chance(rule, ctx, d)
-		total += p
-		p_none *= (1.0 - p)
-		non_bags += 1
-	# 保底至少 min_drops 件非包：近似按「一件都没掉」时补上的那几件算
-	if rule.min_drops > 0 and non_bags > 0:
-		total += p_none * float(mini(rule.min_drops, non_bags))
-	var any_treasure := false
-	for r in rule.treasure_rarities():
-		if not treasure_candidates(rule, items, r, carried).is_empty():
-			any_treasure = true
-			break
-	if any_treasure:
-		total += float(ctx.rolls if ctx != null else 1) * treasure_chance(rule, ctx)
-	return total
+	var rng := RandomNumberGenerator.new()
+	rng.seed = EXPECT_SEED
+	var total := 0
+	for i in EXPECT_SAMPLES:
+		var r := roll(content, rule, ctx, items, rng, boss)
+		total += (r["dropped"] as Array).size() + (r["treasure"] as Array).size()
+	return float(total) / float(EXPECT_SAMPLES)
 
 
 ## 尸体容器：掉下来的东西摆进一块棋盘（大小照敌人的棋盘；珍宝塞不下就加高，见 [LootPacker]）。

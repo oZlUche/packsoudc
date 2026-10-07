@@ -98,6 +98,17 @@ static func run_run_chain(t: TestCase) -> void:
 	t.check(not up_b.has("node_storages"), "顶层 node_storages 删掉了")
 	t.check(((up_b["modules"] as Dictionary)["node_storage"] as Dictionary).has("nodes"), "按点暂存搬进了 modules.node_storage")
 	t.eq(int(v1["version"]), 1, "不改入参")
+	# 140：v3 → v4 —— 猎手旧的单档（default）不记了；等着选的、不带档名的猎手遭遇丢掉
+	var v3 := {"version": 3, "chapter": "chapter_01",
+		"hunters": {"spawned": true, "next_uid": 3, "hunters": [{"uid": 1, "loss": "default"}, {"uid": 2, "loss": "repel"}]},
+		"events": {"pending": {"node": 4, "event": HunterSystem.ENCOUNTER_PREFIX + "stalker", "type": "hunter", "hunter": 1}}}
+	var up4 := RunMigrations.upgrade(v3)
+	t.eq(int(up4["version"]), RunState.SAVE_VERSION, "v3 升到了当前版本")
+	var rows: Array = (up4["hunters"] as Dictionary)["hunters"]
+	t.eq([String(rows[0]["loss"]), String(rows[1]["loss"])], ["", "repel"], "旧的 default 档改成不记（读回来按第一档），别的档不动")
+	t.eq((up4["events"] as Dictionary)["pending"], {}, "不带档名的猎手遭遇丢掉，下一步按现行的档重新生成")
+	var v3b := {"version": 3, "chapter": "chapter_01", "events": {"pending": {"node": 4, "event": HunterSystem.ENCOUNTER_PREFIX + "stalker/repel", "type": "hunter", "hunter": 2}}}
+	t.eq(String(((RunMigrations.upgrade(v3b)["events"] as Dictionary)["pending"] as Dictionary).get("event", "")), HunterSystem.ENCOUNTER_PREFIX + "stalker/repel", "带档名的遭遇照留")
 	# 105：v2 → v3 把祈祷次数补算成「炽烈」的层数（曲线换了是有意的，旧公式不保留）
 	var v2 := {"version": 2, "chapter": "chapter_01",
 		"modules": {"altar": {"rituals": {"pray_fire": 4}, "stat_bonus": {}, "used": []}}}
@@ -163,15 +174,17 @@ static func run_newer_save_is_read_only(t: TestCase) -> void:
 			return
 		f.store_string(pair[1])
 		f.close()
-	t.eq(slots.newer_version(1), MetaState.SAVE_VERSION + 1, "认得出这一位是更新版本存的")
-	t.eq(int(slots.summary(1, db)["newer"]), MetaState.SAVE_VERSION + 1, "读取存档屏的摘要带着这一条")
+	# 两个文件都更新：报的是两者里大的那个（140 起局内存档版本号比局外大）
+	var newer := maxi(MetaState.SAVE_VERSION, RunState.SAVE_VERSION) + 1
+	t.eq(slots.newer_version(1), newer, "认得出这一位是更新版本存的")
+	t.eq(int(slots.summary(1, db)["newer"]), newer, "读取存档屏的摘要带着这一条")
 
 	var flow := GameFlow.new(db, EnemyDatabase.new(), SetDatabase.new())
 	flow.slots = slots
 	flow.use_slot(1)
-	t.eq(flow.newer_slot, MetaState.SAVE_VERSION + 1, "当前位标成只读")
+	t.eq(flow.newer_slot, newer, "当前位标成只读")
 	t.eq(flow.meta_backup, "", "没有备份（不是坏档）")
-	t.check(flow.backup_notice().contains(str(MetaState.SAVE_VERSION + 1)), "界面上说清楚：%s" % flow.backup_notice())
+	t.check(flow.backup_notice().contains(str(newer)), "界面上说清楚：%s" % flow.backup_notice())
 	t.check(not flow.save_meta(), "存局外被拦下")
 	t.check(not flow.continue_game(), "不能接着玩")
 	t.eq(FileAccess.get_file_as_string(slots.meta_path(1)), meta_text, "局外文件原样没动")

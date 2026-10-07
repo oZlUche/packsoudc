@@ -61,7 +61,7 @@ static func run_pipeline(t: TestCase) -> void:
 	var c := _content()
 	var sample := {"id": "probe", "display_name": "探针", "level": 3, "visibility": "VISIBLE", "sense_range": 5.0, "speed": 2,
 		"engage_range": 1.0, "territory_radius": 0, "behavior": {"type": "patrol", "every_steps": 3},
-		"loss_outcomes": [{"type": "spend_vitality", "amount": 2}, {"type": "expel_and_guard"}], "drop_mult": 2.0, "flee_chance": 0.25}
+		"loss_options": [{"id": "default", "outcomes": [{"type": "spend_vitality", "amount": 2}, {"type": "expel_and_guard"}]}], "drop_mult": 2.0, "flee_chance": 0.25}
 	var report := ImportReport.new()
 	var def := ContentImporter.import_hunter(sample, ContentImporter.Context.new(), report)
 	t.check(report.ok(), "合法的猎手导入没有错：%s" % report.to_text())
@@ -69,9 +69,10 @@ static func run_pipeline(t: TestCase) -> void:
 	var back := ContentImporter.import_hunter(JSON.parse_string(text), ContentImporter.Context.new(), ImportReport.new())
 	t.eq(ContentExporter.to_json(ContentExporter.export_hunter(back)), text, "导出 → 导入 → 再导出逐字节相同")
 	t.check(back.behavior is PatrolBehavior and (back.behavior as PatrolBehavior).every_steps == 3, "行动逻辑按注册表造、参数在")
-	t.eq(back.loss_outcomes.size(), 2, "两条战败后果")
-	t.check(back.loss_outcomes[0] is LossSpendVitality and (back.loss_outcomes[0] as LossSpendVitality).amount == 2, "第一条：扣 2 体力")
-	t.check(back.loss_outcomes[1] is LossExpelAndGuard, "第二条：赶走并驻守")
+	var outs := back.loss_options[0].outcomes if not back.loss_options.is_empty() else []
+	t.eq(outs.size(), 2, "两条战败后果")
+	t.check(outs.size() == 2 and outs[0] is LossSpendVitality and (outs[0] as LossSpendVitality).amount == 2, "第一条：扣 2 体力")
+	t.check(outs.size() == 2 and outs[1] is LossExpelAndGuard, "第二条：赶走并驻守")
 	t.eq(back.visibility, HunterDef.Visibility.VISIBLE, "可视性枚举按名字读")
 	t.check(back.summary().contains("巡逻"), "summary 写着行动逻辑：%s" % back.summary())
 

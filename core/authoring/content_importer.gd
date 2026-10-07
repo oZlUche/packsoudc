@@ -974,7 +974,13 @@ static func validate_help_pages(ctx: Context, report: ImportReport) -> void:
 ## 猎手（069 / 071）：数全得合理；行动逻辑可空（= 不动）；战败后果不能是空的；指定的敌人池得存在（批量导入时）
 static func import_hunter(data: Dictionary, ctx: Context, report: ImportReport) -> HunterDef:
 	var def := HunterDef.new()
-	_fill(def, data, "", ctx, report)
+	# 140：134 之前的 loss_outcomes（只有一档）删了 —— 写了就报错，让作者挪进 loss_options 的某一档
+	var body := data
+	if data.has("loss_outcomes"):
+		report.error("loss_outcomes", "loss_outcomes 已删（140）：请改用 loss_options，把这几条后果放进某一档的 outcomes")
+		body = data.duplicate()
+		body.erase("loss_outcomes")
+	_fill(def, body, "", ctx, report)
 	_require_id(def.id, "猎手", report)
 	if def.level < 0:
 		report.error("level", "等级不能为负")
@@ -990,12 +996,9 @@ static func import_hunter(data: Dictionary, ctx: Context, report: ImportReport) 
 		report.error("flee_fail_vitality", "逃跑的代价与冷却不能为负")
 	if def.loss_cost < -2:
 		report.error("loss_cost", "战败代价只能是 -1（按规则）、-2（必死）、0（无代价）或正数")
-	for i in def.loss_outcomes.size():
-		if def.loss_outcomes[i] == null:
-			report.error("loss_outcomes[%d]" % i, "空的战败后果")
-	# 134：战败结果档。写了档就不看旧的 loss_outcomes（两样都写提醒一声）；档名不空、不重，权重不为负，后果不空
-	if not def.loss_options.is_empty() and not def.loss_outcomes.is_empty():
-		report.warn("loss_outcomes", "写了 loss_options 就不看 loss_outcomes（134）：把它挪进某一档的 outcomes")
+	# 134：战败结果档。至少一档；档名不空、不重，权重不为负，后果不空
+	if def.loss_options.is_empty():
+		report.error("loss_options", "至少写一档战败结果（loss_options）")
 	var seen_opts := {}
 	for i in def.loss_options.size():
 		var o := def.loss_options[i] as HunterLossOption

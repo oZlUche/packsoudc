@@ -96,22 +96,9 @@ func _assign_by_weights() -> void:
 			_g.get_node(id).type = _weighted(_rules.type_weights, [])
 
 
-## 按权重抽一个，跳过 [param exclude] 里的。表空了退回 battle
+## 按权重抽一个，跳过 [param exclude] 里的。表空了退回 battle（按字典插入序扣减，140 M-25 合进 [method MapRng.pick_weighted]）
 func _weighted(weights: Dictionary, exclude: Array) -> StringName:
-	var total := 0.0
-	for t in weights:
-		if not exclude.has(String(t)):
-			total += float(weights[t])
-	if total <= 0.0:
-		return &"battle"
-	var roll := _rng.randf() * total
-	for t in weights:
-		if exclude.has(String(t)):
-			continue
-		roll -= float(weights[t])
-		if roll <= 0.0:
-			return StringName(String(t))
-	return &"battle"
+	return MapRng.pick_weighted(weights, _rng, [], exclude, &"battle")
 
 
 ## 每层配额：超了把多的改成自由类型；缺了从本层的自由类型点里改
