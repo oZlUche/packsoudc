@@ -71,9 +71,9 @@ static func run_reseat_rules(t: TestCase) -> void:
 	var db := _db()
 	var board := GridInventory.new(Vector2i(6, 4), 1, false)
 	var shield := ItemInstance.create(db.get_def(&"blessed_shield"), 0)     # skill 的信物
-	var sigil := ItemInstance.create(db.get_def(&"strength_sigil"), 0)      # brute 的信物
+	var sigil := ItemInstance.create(db.get_def(&"charm_brute"), 0)      # brute 的信物
 	t.check(board.place(shield, Vector2i(0, 0), 0), "放赐福的盾")
-	t.check(board.place(sigil, Vector2i(4, 0), 0), "放力量的符号")
+	t.check(board.place(sigil, Vector2i(4, 0), 0), "放蛮神的护符")
 	t.eq(FaithState.active_id(board), &"brute", "后放的符号激活暴力之神")
 	var placed_times := [0]
 	board.placed.connect(func(_i: ItemInstance): placed_times[0] += 1)

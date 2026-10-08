@@ -51,7 +51,7 @@ static func run_content(t: TestCase) -> void:
 	var db := _db()
 	for id in [&"shortsword", &"longsword", &"scimitar", &"longbow", &"arrows", &"round_shield", &"leather_armor", &"gambeson",
 			&"mithril_sword", &"blessed_shield", &"blessed_longbow", &"salve", &"bandage", &"mana_shard", &"mana_crystal",
-			&"warped_obsidian", &"strength_sigil", &"pale_shard", &"barbarian_necklace"]:
+			&"warped_obsidian", &"charm_brute", &"pale_shard", &"barbarian_necklace"]:
 		var def := db.get_def(id)
 		t.check(def != null and not def.is_sealed(), "%s 在库里、没封存" % id)
 	t.check(ItemValue.of(db.get_def(&"warped_obsidian")) > ItemValue.of(db.get_def(&"leather_armor")), "异化黑曜石小而贵（value 覆盖）")

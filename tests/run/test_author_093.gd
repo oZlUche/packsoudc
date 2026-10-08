@@ -27,7 +27,7 @@ static func _event(name: StringName, side: int, payload: Dictionary) -> BattleEv
 
 
 static func run_faith_files(t: TestCase) -> void:
-	t.begin("093 · 信仰文件：蛮神 / 日神 / 自然 / 大地各一份（旧的暴力 / 太阳与火合并改名），阈值、行为、献祭规矩、各级效果都从数据来；体积五档；力量的符号归蛮神")
+	t.begin("093 · 信仰文件：蛮神 / 日神 / 自然 / 大地各一份（旧的暴力 / 太阳与火合并改名），阈值、行为、献祭规矩、各级效果都从数据来；体积五档；蛮神的护符归蛮神")
 	var defs := FaithDef.load_all()
 	for id in [&"brute", &"sun", &"nature", &"earth", &"hunt", &"skill", &"church"]:
 		t.check(defs.has(id), "有 %s" % id)
@@ -42,7 +42,7 @@ static func run_faith_files(t: TestCase) -> void:
 	t.eq(brute.perks.size(), 5, "五条效果（含 4 级「不死 10 秒」与 1 级「祈求赐福」）")
 	var db := ItemDatabase.new()
 	db.load_dir()
-	t.eq(db.get_def(&"strength_sigil").faith_tag(), &"faith:brute", "力量的符号归蛮神")
+	t.eq(db.get_def(&"charm_brute").faith_tag(), &"faith:brute", "蛮神的护符归蛮神")
 	# 体积（档位 = 格子数查表，名字跟着序号）
 	t.eq(_grade(db.get_def(&"knife")), "极小", "匕首 1 格：极小")
 	t.eq(_grade(db.get_def(&"shortsword")), "小", "短剑 2 格：小")
@@ -218,7 +218,10 @@ static func run_faith_call(t: TestCase) -> void:
 		t.check(ItemVolume.cells_of(d) == 1 and d.tags.has(&"treasure") and d.faith_tag() == StringName("faith:" + fid), "%s：1 格、珍宝、归 %s" % [d.display_name, fid])
 		if String(extra[fid]) != "":
 			t.check(d.tags.has(StringName(extra[fid])), "带流派标签 %s" % extra[fid])
-		t.check(d.combat == null and d.faith_bonuses.is_empty(), "没有别的效果")
+		if fid == "brute":     # 142：力量的符号并进来了 —— 开战血怒 + 相邻武器的增益槽
+			t.check(d.combat == null and d.faith_bonuses.size() == 1 and d.adjacency != null, "蛮神的护符带力量的符号那套：信力加成 + 增益槽")
+		else:
+			t.check(d.combat == null and d.faith_bonuses.is_empty(), "没有别的效果")
 		t.eq(d.is_bag, fid == "earth", "只有大地的是包")
 	t.check(MetaState.keeps(db.get_def(&"charm_earth")) and not MetaState.keeps(db.get_def(&"bag_small")), "大地的护符虽是包也留在局外；普通包不留")
 	# 事件链

@@ -37,10 +37,10 @@
 			"def_id": "shortsword",
 			"stats": {
 				"damage": {
-					"total": 50000,
+					"total": 57500,
 					"base": 50000,
 					"flat": 0,
-					"percent": 0
+					"percent": 1500
 				},
 				"haste": {
 					"total": 11000,
@@ -93,7 +93,13 @@
 					"percent": 1000
 				}
 			},
-			"rules": []
+			"rules": [
+				[
+					"OnBattleStart",
+					"Always",
+					"ApplyStatus"
+				]
+			]
 		}
 	]
 }

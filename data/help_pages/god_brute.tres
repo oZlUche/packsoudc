@@ -12,4 +12,4 @@ text = "{faith:brute}是暴力与杀戮本身，石头砸下来也是暴力，�
 
 一阶起血越少伤害越高；二阶可以在神坛上献祭生命上限换耐力上限与急速，能反复做，但生命上限有底；三阶在战前准备屏上花体力直接秒杀精英；四阶血归零后还能坚持一小段时间、期间耐力无限，到期血还是零才倒下，一场只一次。"
 related = Array[String](["special_rites", "faith_power_and_tiers", "altar_offering"])
-see_items = Array[StringName]([&"charm_brute", &"strength_sigil", &"tibia_violence"])
+see_items = Array[StringName]([&"charm_brute", &"tibia_violence"])
