@@ -5,10 +5,10 @@
     "en": "Hunt God's Blessed Longbow"
   },
   "shape": [
-    "1",
-    "1",
-    "1",
-    "1"
+    "11",
+    "10",
+    "10",
+    "11"
   ],
   "rarity": 3,
   "tags": [
@@ -41,7 +41,7 @@
   ],
   "combat": {
     "base_stats": {
-      "damage": 10
+      "damage": 15
     },
     "rules": [
       {

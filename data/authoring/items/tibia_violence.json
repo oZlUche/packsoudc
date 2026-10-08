@@ -2,10 +2,10 @@
   "id": "tibia_violence",
   "display_name": "胫骨大棒",
   "shape": [
-    "1",
-    "1",
-    "1",
-    "1"
+    "11",
+    "11",
+    "10",
+    "10"
   ],
   "rarity": 1,
   "weight": 6,
@@ -33,7 +33,7 @@
   ],
   "combat": {
     "base_stats": {
-      "damage": 15
+      "damage": 23
     },
     "rules": [
       {

@@ -5,10 +5,10 @@
     "en": "Longbow"
   },
   "shape": [
-    "1",
-    "1",
-    "1",
-    "1"
+    "11",
+    "10",
+    "10",
+    "11"
   ],
   "rarity": 2,
   "tags": [
@@ -19,7 +19,7 @@
   ],
   "combat": {
     "base_stats": {
-      "damage": 8
+      "damage": 12
     },
     "rules": [
       {

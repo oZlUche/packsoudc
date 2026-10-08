@@ -185,7 +185,7 @@
 				"enemy": "warden",
 				"strength": 1,
 				"board": [
-					4,
+					6,
 					3
 				],
 				"items": [
@@ -193,6 +193,14 @@
 						"id": "bag_leather",
 						"at": [
 							0,
+							0
+						],
+						"rot": 0
+					},
+					{
+						"id": "bag_leather",
+						"at": [
+							3,
 							0
 						],
 						"rot": 0
@@ -208,10 +216,10 @@
 					{
 						"id": "shortsword",
 						"at": [
-							0,
-							2
+							3,
+							0
 						],
-						"rot": 1
+						"rot": 0
 					}
 				],
 				"base_stats": {

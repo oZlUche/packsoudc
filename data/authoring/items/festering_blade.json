@@ -6,9 +6,9 @@
   },
   "description": "伤口不会愈合，只会烂下去。",
   "shape": [
-    "1",
-    "1",
-    "1"
+    "10",
+    "11",
+    "10"
   ],
   "rarity": 3,
   "tags": [
@@ -20,7 +20,7 @@
   ],
   "combat": {
     "base_stats": {
-      "damage": 9
+      "damage": 12
     },
     "rules": [
       {

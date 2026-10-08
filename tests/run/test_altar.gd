@@ -277,15 +277,16 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 	t.check(screen.head_text().contains("蛮神") and screen.head_text().contains("Lv.0"), "抬头：信仰与等级（%s）" % screen.head_text())
 	t.check(screen._offer_btn.disabled and screen.preview_text().contains("拖上台"), "台上没东西：献祭灰着")
 	var sword: ItemInstance = null
-	var bag: ItemInstance = null
+	var nope: ItemInstance = null
 	for inst in run.board.items():
-		if (inst as ItemInstance).def.is_bag:
-			bag = inst
-		elif (inst as ItemInstance).def.tags.has(&"weapon") and sword == null:
+		if (inst as ItemInstance).def.tags.has(&"weapon") and sword == null:
 			sword = inst
+		elif not run.active_faith().accepts_offering((inst as ItemInstance).def) and nope == null:
+			nope = inst
 	t.check(sword != null, "棋盘上有武器")
-	if bag != null:
-		t.check(not screen.put_on_table(bag.uid), "包不是祭品")
+	# 143：皮背包成了 3×3（9 格），对蛮神算「大块的东西」，能献 —— 这里换成一件蛮神不认的
+	if nope != null:
+		t.check(not screen.put_on_table(nope.uid), "「%s」不是蛮神认的祭品" % Names.of(nope.def))
 	if sword != null:
 		var val := run.active_faith().offering_value(sword.def)
 		t.check(screen.put_on_table(sword.uid), "武器上台")

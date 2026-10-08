@@ -5,9 +5,9 @@
     "en": "Scimitar"
   },
   "shape": [
-    "1",
-    "1",
-    "1"
+    "01",
+    "11",
+    "10"
   ],
   "rarity": 1,
   "tags": [
@@ -19,7 +19,7 @@
   ],
   "combat": {
     "base_stats": {
-      "damage": 7
+      "damage": 9
     },
     "rules": [
       {

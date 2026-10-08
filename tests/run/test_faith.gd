@@ -128,7 +128,7 @@ static func run_compile_and_sets(t: TestCase) -> void:
 	var db := _db()
 	var b := GridInventory.new(Vector2i(8, 6), 1, false)
 	var bow := _put(b, db, &"blessed_longbow", Vector2i(0, 0))      # hunt，会打
-	var sigil := _put(b, db, &"charm_brute", Vector2i(2, 0))     # violence
+	var sigil := _put(b, db, &"charm_brute", Vector2i(4, 0))     # violence；142：不挨着弓（护符的增益槽给相邻武器 +15%）
 	var spec := BattleCompiler.compile_board(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:hunt": 2})
 	var uids: Array = []
 	for item in spec.items:

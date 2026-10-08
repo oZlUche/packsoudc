@@ -5,9 +5,9 @@
     "en": "Shortbow"
   },
   "shape": [
-    "1",
-    "1",
-    "1"
+    "11",
+    "10",
+    "11"
   ],
   "rarity": 1,
   "tags": [
@@ -18,7 +18,7 @@
   ],
   "combat": {
     "base_stats": {
-      "damage": 6
+      "damage": 10
     },
     "rules": [
       {
