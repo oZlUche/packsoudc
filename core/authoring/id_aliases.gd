@@ -12,7 +12,9 @@ class_name IdAliases
 extends RefCounted
 
 ## 道具 id：旧 → 新
-const ITEMS := {}
+const ITEMS := {
+	&"strength_sigil": &"charm_brute",     # 142：力量的符号并进蛮神的护符
+}
 
 ## 标签：旧 → 新。093 把暴力之神 / 太阳与火之神并成蛮神 / 日神，道具上的对象标签跟着改
 const TAGS := {

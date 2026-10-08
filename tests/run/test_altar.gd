@@ -25,8 +25,8 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 		t.check(false, "开局")
 		return
 	f.pick_spawn(run.map.entry_ids[0])
-	var sigil := Support.activate(run, &"strength_sigil")
-	t.check(sigil != null and run.active_faith() != null and run.active_faith().id == &"brute", "放上力量的符号：激活蛮神")
+	var sigil := Support.activate(run, &"charm_brute")
+	t.check(sigil != null and run.active_faith() != null and run.active_faith().id == &"brute", "放上蛮神的护符：激活蛮神")
 	t.eq(run.active_faith_tier(), 0, "0 级")
 	var altar := AltarModule.of(run)     # 101：神坛与信仰级效果是一局的模块
 	t.not_null(altar, "默认清单里有神坛")
@@ -250,8 +250,8 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 	# 激活蛮神再来
 	run = flow.begin(c.chapter, kit, int(found["seed"]))
 	flow.pick_spawn(int(found["entry"]))
-	var sigil := Support.activate(run, &"strength_sigil")
-	t.check(sigil != null and run.active_faith_id() == &"brute", "力量的符号上棋盘：蛮神")
+	var sigil := Support.activate(run, &"charm_brute")
+	t.check(sigil != null and run.active_faith_id() == &"brute", "蛮神的护符上棋盘：蛮神")
 	t.check(flow.step_to(int(found["next"])), "走上休息点")
 	def = flow.last_payload.get("def", null)
 	var at := -1

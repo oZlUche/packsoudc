@@ -122,7 +122,7 @@ static func run_faith_bonus_lit(t: TestCase) -> void:
 	t.begin("096（作者定）· 悬浮窗的信仰加成词条：局里生效的白、没生效的灰（没激活 / 阶不够 / 别的神）；局外原色；信仰道具那行写现在的状态")
 	var c := NodeScreens._content()
 	var bow := c.items.get_def(&"blessed_longbow")
-	var sigil := c.items.get_def(&"strength_sigil")
+	var sigil := c.items.get_def(&"charm_brute")
 	if bow == null or sigil == null or bow.faith_bonuses.is_empty():
 		t.check(false, "缺道具")
 		return
@@ -145,7 +145,7 @@ static func run_faith_bonus_lit(t: TestCase) -> void:
 	t.check(not Glossary.strip_bbcode(dormant).contains("休眠"), "别的神激活：不写「休眠」两个字，灰色就是状态")
 	t.check(not ItemTooltip.faith_lit(bow, ItemTooltip.faith_status()), "狩猎的弓在蛮神激活时不亮")
 	var sig_text := ItemTooltip.describe(ItemInstance.create(sigil))
-	t.check(ItemTooltip.faith_lit(sigil, ItemTooltip.faith_status()), "蛮神的符号在蛮神激活时亮（107：不再写「已激活（Lv.2）」，亮色就是状态）")
+	t.check(ItemTooltip.faith_lit(sigil, ItemTooltip.faith_status()), "蛮神的护符在蛮神激活时亮（107：不再写「已激活（Lv.2）」，亮色就是状态）")
 	t.check(not Glossary.strip_bbcode(sig_text).contains("已激活"), "状态尾巴去掉了")
 	var lit_n := 0
 	for fb in sigil.faith_bonuses:

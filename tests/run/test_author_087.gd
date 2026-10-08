@@ -45,7 +45,7 @@ static func run_rarity(t: TestCase) -> void:
 static func run_glossary(t: TestCase) -> void:
 	t.begin("087 · 词条：主文字只写名词、侧边词条写效果；buff 词条按定义生成；武器写耗耐力；DPS 算上开战 buff")
 	var c := _content()
-	var sigil := ItemInstance.create(c.items.get_def(&"strength_sigil"))
+	var sigil := ItemInstance.create(c.items.get_def(&"charm_brute"))
 	var full := ItemTooltip.describe_full(sigil)
 	var text := String(full["text"])
 	var terms: Array = full["terms"]
@@ -98,10 +98,10 @@ static func run_glossary(t: TestCase) -> void:
 	t.eq(kept.size(), 2, "带规则的词照旧弹（护盾、直接伤害）：%s" % str(kept))
 	var marked := Glossary.mark("血怒 与 血怒", [{"name": "血怒", "text": ""}])
 	t.eq(marked.count("[u]血怒[/u]"), 2, "每处都标")
-	# 开战 buff 进预估 DPS：匕首 + 力量的符号（信力一阶）
+	# 开战 buff 进预估 DPS：匕首 + 蛮神的护符（信力一阶）
 	var board := GridInventory.new(Vector2i(4, 4), 0, false)
 	var k := ItemInstance.create(c.items.get_def(&"knife"))
-	var sg := ItemInstance.create(c.items.get_def(&"strength_sigil"))
+	var sg := ItemInstance.create(c.items.get_def(&"charm_brute"))
 	board.place(k, Vector2i(0, 0), 0)
 	board.place(sg, Vector2i(1, 0), 0)
 	var plain := BattleCompiler.compile_board(board)
@@ -120,7 +120,7 @@ static func run_dormant_faith(t: TestCase) -> void:
 	var bow_def := c.items.get_def(&"blessed_longbow")
 	t.check(shield_def.has_faith() and bow_def.has_faith() and shield_def.faith_tag() != bow_def.faith_tag(), "两件不同信仰的赐福之物")
 	t.check(FaithState.keeps_combat_when_dormant(shield_def), "盾有战斗定义、默认保留")
-	t.check(not FaithState.keeps_combat_when_dormant(c.items.get_def(&"strength_sigil")), "力量的符号没有 combat：休眠就彻底失效")
+	t.check(not FaithState.keeps_combat_when_dormant(c.items.get_def(&"charm_brute")), "蛮神的护符没有 combat：休眠就彻底失效")
 	var board := GridInventory.new(Vector2i(6, 4), 0, false)
 	var shield := ItemInstance.create(shield_def)
 	var bow := ItemInstance.create(bow_def)
