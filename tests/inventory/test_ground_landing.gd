@@ -114,6 +114,39 @@ static func run_drag_writes_origin(t: TestCase) -> void:
 	G._free(rig)
 
 
+static func run_click_then_double_click(t: TestCase) -> void:
+	t.begin("反馈 · 地上一件单击一下（拿起、原地放下）之后紧跟的双击照样接得到：就地落下的不算半空")
+	ItemInstance.reset_uid_counter()
+	var gun := G._def(&"t_gun", ["1"])
+	var board := GridInventory.new(Vector2i(4, 4), 1)
+	var stash := ItemStash.new(2, 0)
+	var rig := G._rig(stash, board)
+	var ground: GroundLayer = rig["ground"]
+	var drag: DragLayer = rig["drag"]
+	var a := ItemInstance.create(gun)
+	stash.insert(a, -1, Vector2(0.4, 0.4))
+	ground._scan()
+	var at := ground.item_rect(a.uid).position + Vector2.ONE * InventoryView.CELL * 0.5
+	# 双击的第一下：按下 = 拿起，松开 = 原地放下
+	ground.grab_requested.emit(ground, a.uid, at)
+	t.check(drag.is_dragging(), "第一下按下：拿起")
+	ground._scan()
+	t.check(drag.drop_at(ground.global_position + at), "第一下松开：放回地上")
+	ground._scan()
+	t.check(ground.is_landing(a.uid), "放回地上：就地落下（只缩放 + 弹跳）")
+	t.eq(ground.uid_at_local(at), a.uid, "就地落下的那件照样接鼠标")
+	var got: Array = []
+	ground.item_double_clicked.connect(func(_v: ContainerView, uid: int): got.append(uid))
+	var mb := InputEventMouseButton.new()
+	mb.button_index = MOUSE_BUTTON_LEFT
+	mb.pressed = true
+	mb.double_click = true
+	mb.position = at
+	ground._gui_input(mb)
+	t.eq(got, [a.uid], "第二下（双击）：发出双击，面板把它放进背包")
+	G._free(rig)
+
+
 static func frame_landing_from_panel_edge(t: TestCase, root: Window) -> void:
 	t.begin("134 · 程序放到地上的（战利品放不下之类）：从离落点最近的面板边缘落出来")
 	ItemInstance.reset_uid_counter()
