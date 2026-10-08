@@ -20,7 +20,15 @@ static func _player(c: TestSupport.Content, ids: Array[StringName]) -> Combatant
 	var board := GridInventory.new(c.brutus.board_size, 1, true)
 	for bag_id in c.brutus.starting_bags:
 		board.try_add(ItemInstance.create(c.items.get_def(bag_id), 0), true)
-	for id in ids:
+	# 143：包先摆，再大件先放（玩家也是这么摆的）—— 异形装备大了，按列表顺序贪心塞会白白剩下放不进的空隙
+	var sorted := ids.duplicate()
+	sorted.sort_custom(func(a: StringName, b: StringName) -> bool:
+		var da := c.items.get_def(a)
+		var db := c.items.get_def(b)
+		if da.is_bag != db.is_bag:
+			return da.is_bag
+		return da.cell_count() > db.cell_count() if da.cell_count() != db.cell_count() else String(a) < String(b))
+	for id in sorted:
 		board.try_add(ItemInstance.create(c.items.get_def(id), 0), true)
 	var ctx := RunContext.new()
 	for e in c.brutus.run_effects():
@@ -143,7 +151,10 @@ static func run_data(t: TestCase) -> void:
 	var bag_cells := 0
 	for b in c.brutus.starting_bags:
 		bag_cells += c.items.get_def(b).shape.cell_count()
-	t.check(cells > bag_cells, "两件护具 %d 格 > 两个包 %d 格：只能带一件" % [cells, bag_cells])
+	# 143：护具成了异形、包成了 3×3 —— 算上开局发的东西（匕首）才是包里真要装的
+	for id in c.chapter.starting_items:
+		cells += c.items.get_def(id).shape.cell_count()
+	t.check(cells > bag_cells, "两件护具 + 开局的东西 %d 格 > 两个包 %d 格：只能带一件" % [cells, bag_cells])
 	# 搜索点 2：毒药瓶、长剑、长条包；配方
 	var finds2: Array[StringName] = []
 	for round in s2.content["search_finds"]:
@@ -154,8 +165,13 @@ static func run_data(t: TestCase) -> void:
 	t.check(recipe != null and recipe.output == &"poisoned_knife", "匕首 + 毒药瓶 → 涂毒匕首")
 	t.check(RecipeDef.find(c.recipes, &"poison_vial", &"knife") == recipe, "顺序无关")
 	t.is_null(RecipeDef.find(c.recipes, &"knife", &"longsword"), "没有的配方是 null")
-	var long_bag := c.items.get_def(&"bag_long").shape.cell_count()
-	t.check(long_bag >= c.items.get_def(&"longsword").shape.cell_count() and long_bag >= 2, "长条包装得下长剑，或匕首 + 毒药")
+	# 143：长剑是十字形，长条包一条装不下整把 —— 但挨着皮背包摆，十字的一臂伸进长条包，两件护具哪件都能和长剑、匕首一起带
+	for armor in [&"tower_shield", &"plate_cuirass"]:
+		var spec := _player(c, [&"knife", armor, &"longsword", &"bag_long"] as Array[StringName])
+		var have: Array[StringName] = []
+		for item in spec.items:
+			have.append((item as CompiledItem).def_id)
+		t.check(have.has(&"longsword") and have.has(armor) and have.has(&"knife"), "加上长条包：长剑 + %s + 匕首都摆得下（%s）" % [armor, str(have)])
 
 
 static func run_matchups(t: TestCase) -> void:

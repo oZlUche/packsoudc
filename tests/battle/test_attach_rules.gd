@@ -9,21 +9,31 @@ static func _items() -> ItemDatabase:
 	return db
 
 
-## 一块不要求包的格子：弓横着放在第一行（4 格），[param arrows] 个毒箭摆在它正下方（增益格朝上，正好压在弓上）
+## 一块不要求包的格子：弓横着放在第一行（143：长弓是两头弯回的弓臂，横过来第一行 4 格是弓身、第二行只有两头），
+## [param arrows] 个毒箭摆在弓身正下方第二行的空处（增益格朝上，正好压在弓上）
 static func _bow_board(db: ItemDatabase, arrows: int) -> Dictionary:
 	ItemInstance.reset_uid_counter()
 	var g := GridInventory.new(Vector2i(6, 4), 1, false)
 	var bow := ItemInstance.create(db.get_def(&"longbow"))
 	var rot := 0
 	for r in 4:
-		if bow.def.cells_rotated(r).size() == 4 and _width(bow.def.cells_rotated(r)) == 4:
+		var cells := bow.def.cells_rotated(r)
+		var top := 0
+		for c in cells:
+			if c.y == 0:
+				top += 1
+		if _width(cells) == 4 and top == 4:
 			rot = r
 			break
 	g.place(bow, Vector2i.ZERO, rot)
+	var under: Array[int] = []
+	for x in 4:
+		if not bow.def.cells_rotated(rot).has(Vector2i(x, 1)):
+			under.append(x)
 	var placed: Array[ItemInstance] = []
 	for i in arrows:
 		var a := ItemInstance.create(db.get_def(&"poison_arrows"))
-		g.place(a, Vector2i(i, 1), 0)
+		g.place(a, Vector2i(under[i], 1), 0)
 		placed.append(a)
 	return {"board": g, "bow": bow, "arrows": placed}
 

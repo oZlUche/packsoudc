@@ -149,7 +149,7 @@
           }
         ],
         "base_stats": {
-          "max_hp": 25,
+          "max_hp": 15,
           "regen_stamina": 10
         },
         "event": "tut2_battle_heavy",
@@ -242,7 +242,8 @@
           }
         ],
         "base_stats": {
-          "max_hp": 40
+          "max_hp": 40,
+          "armor": 12
         },
         "event": "tut2_battle_ward",
         "tooltip": "{battle_data}\n{c:dim}每秒叠一层护盾，没有上限。{/c}"
@@ -288,8 +289,8 @@
           {
             "id": "shortsword",
             "at": [
-              1,
-              0
+              0,
+              1
             ],
             "rot": 0
           }

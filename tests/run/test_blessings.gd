@@ -41,7 +41,7 @@ static func run_variants_and_modes(t: TestCase) -> void:
 	t.eq(FaithState.active_id(b), &"sun", "护符是信物：激活日神")
 	t.check(FaithState.is_dormant(sb, FaithState.active_tag(b)), "蛮神赐福的短剑在日神下休眠（留通用效果）")
 	var sigil := ItemInstance.create(db.get_def(&"charm_brute"))
-	t.check(b.try_add(sigil, true), "再放蛮神的护符")
+	t.check(b.place(sigil, Vector2i(5, 3), 0), "再放蛮神的护符（142：放远一点，别让它的增益槽碰到短剑）")
 	t.eq(FaithState.active_id(b), &"brute", "最后置入的信物说了算：蛮神")
 	# 三种生效方式
 	var fb := FaithBonus.new()

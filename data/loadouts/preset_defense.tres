@@ -9,9 +9,9 @@ display_name = "坚守"
 display_names = {
 "en": "Bulwark"
 }
-description = "防御高：圆盾加皮甲把伤害压下去，制式短剑慢慢磨，纱布和伤药各一"
+description = "防御高：圆盾加皮甲把伤害压下去，剁刀慢慢磨，纱布和伤药各一"
 descriptions = {
-"en": "High defense: round shield and leather armor soak hits, a shortsword grinds, bandage and salve."
+"en": "High defense: round shield and leather armor soak hits, a cleaver grinds, bandage and salve."
 }
 preset = true
-items = Array[StringName]([&"round_shield", &"leather_armor", &"shortsword", &"bandage", &"salve"])
+items = Array[StringName]([&"round_shield", &"leather_armor", &"cleaver", &"bandage", &"salve"])

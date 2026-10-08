@@ -87,7 +87,15 @@ static func _player(c: TestSupport.Content, ids: Array[StringName]) -> Combatant
 	var board := GridInventory.new(ch.board_size, 1, true)
 	for bag_id in ch.starting_bags:
 		board.try_add(ItemInstance.create(c.items.get_def(bag_id), 0), true)
-	for id in ids:
+	# 143：捡到的包先摆（玩家也是先摆包再往里塞），再大件先放 —— 异形装备大了，贪心按捡到的顺序塞会白白剩下放不进的空隙
+	var sorted := ids.duplicate()
+	sorted.sort_custom(func(a: StringName, b: StringName) -> bool:
+		var da := c.items.get_def(a)
+		var db := c.items.get_def(b)
+		if da.is_bag != db.is_bag:
+			return da.is_bag
+		return da.cell_count() > db.cell_count() if da.cell_count() != db.cell_count() else String(a) < String(b))
+	for id in sorted:
 		board.try_add(ItemInstance.create(c.items.get_def(id), 0), true)
 	var ctx := RunContext.new()
 	for e in ch.run_effects():

@@ -5,9 +5,9 @@
     "en": "Mithril Enchanted Sword"
   },
   "shape": [
-    "1",
-    "1",
-    "1"
+    "010",
+    "111",
+    "010"
   ],
   "rarity": 3,
   "tags": [
@@ -20,7 +20,7 @@
   "requires_unlock": "ach_extract_3",
   "combat": {
     "base_stats": {
-      "damage": 16
+      "damage": 27
     },
     "rules": [
       {

@@ -157,16 +157,20 @@ static func build_content(
 	var bag_count := placed.size()
 	count += bag_count     # 包不计入件数：件数说的是包里的东西
 	# 包里地方有限：招牌与流派道具（会打的那几件）先摆，护甲补给后摆 —— 不然一件 2×2 的甲先占了包，1×3 的剑就横竖都塞不进（084）
+	# 143：招牌再排在流派道具前面 —— 异形装备大了，同样大的流派道具（按 id 排）先占了唯一放得下的包，招牌就塞不进了
+	var signature: Array[StringName] = []
 	var first: Array[StringName] = []
 	var later: Array[StringName] = []
 	var sig := def.signature_at(strength)
 	for item_id in picks:
 		var idef := items.get_def(item_id)
-		if idef != null and (sig.has(item_id) or _shares_tag(idef.tags, def.schools)):
+		if idef != null and sig.has(item_id):
+			signature.append(item_id)
+		elif idef != null and _shares_tag(idef.tags, def.schools):
 			first.append(item_id)
 		else:
 			later.append(item_id)
-	for item_id in first + later:
+	for item_id in signature + first + later:
 		_try_place(board, items.get_def(item_id), placed)
 	# 放不下就换一件：从同一批候选里按小到大补（同样大的随机排），小件总有地方塞。流派道具不够先补流派的。
 	# 只有棋盘真的满了才会差件数，回报里看得见 —— 那是档位表的棋盘 / 包配小了

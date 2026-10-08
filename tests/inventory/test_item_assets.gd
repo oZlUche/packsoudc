@@ -56,7 +56,7 @@ static func run(t: TestCase) -> void:
 	var leather := db.get_def(&"bag_leather")
 	t.not_null(leather, "应存在皮革包")
 	t.check(leather.is_bag, "皮革包应标记为包体")
-	t.eq(leather.shape.cell_count(), 6, "皮革包提供 6 格")
+	t.eq(leather.shape.cell_count(), 9, "皮革包提供 9 格（143：3×3）")
 	t.check(leather.bag_accept_tags.is_empty(), "皮革包不限内容")
 
 	var belt := db.get_def(&"belt_potion")
@@ -68,23 +68,23 @@ static func run(t: TestCase) -> void:
 	var board := GridInventory.new(Vector2i(7, 9), 1, true)
 	t.eq(board.usable_cell_count(), 0, "空棋盘没有可用格")
 	t.check(board.try_add(ItemInstance.create(leather)), "皮革包可放上棋盘")
-	t.eq(board.usable_cell_count(), 6, "放包后有 6 格可用")
+	t.eq(board.usable_cell_count(), 9, "放包后有 9 格可用")
 
 	# 显式摆放，不靠遍历顺序 —— 自动装填是贪心的，先遇到 3x2 的防弹衣
-	# 就会旋转后填满整个 2x3 的包，后面什么都塞不进，那样测不出东西
+	# 就会占掉包的一大块，后面塞不进几件，那样测不出东西
 	t.check(board.try_add(ItemInstance.create(db.get_def(&"mag"))), "弹匣 1 格可入包")
 	t.check(board.try_add(ItemInstance.create(db.get_def(&"battery"))), "电池 1 格可入包")
 	t.check(board.try_add(ItemInstance.create(db.get_def(&"pistol"))), "手枪 2 格可入包")
-	t.eq(board.free_cell_count(), 2, "6 格用掉 4 格，剩 2 格")
+	t.eq(board.free_cell_count(), 5, "9 格用掉 4 格，剩 5 格")
 	t.check(
-		not board.try_add(ItemInstance.create(db.get_def(&"armor"))),
-		"3x2 的防弹衣在只剩 2 格时放不进"
+		not board.try_add(ItemInstance.create(db.get_def(&"high_tier_armor"))),
+		"3x3 的高级贴身甲在只剩 5 格时放不进"
 	)
 
 	# --- 包体准入：药水带只收药剂与食物 ---
 	var belt_inst := ItemInstance.create(belt)
 	t.check(board.place(belt_inst, Vector2i(4, 0), 0), "药水带放在棋盘空处")
-	t.eq(board.usable_cell_count(), 9, "两个包共 9 格")
+	t.eq(board.usable_cell_count(), 12, "两个包共 12 格")
 	t.check(
 		not board.place(ItemInstance.create(db.get_def(&"mag")), Vector2i(4, 0), 0),
 		"弹匣不是药剂也不是食物，进不了药水带"

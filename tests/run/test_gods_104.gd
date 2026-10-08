@@ -309,7 +309,7 @@ static func run_crit(t: TestCase) -> void:
 		t.check(is_equal_approx((fb_mods[1] as StatModifier).amount, 0.1), "暴击率写 10 → 存 0.1")
 		t.eq(Glossary.mod_text(fb_mods[0] as StatModifier), "暴击伤害 +20%", "说明写 +20%")
 		t.check(is_equal_approx(float(pct_item.combat.base_stats["crit_chance"]), 0.2), "基础属性里的暴击率 20 → 0.2")
-		t.check(is_equal_approx(float(pct_item.combat.base_stats["damage"]), 15.0), "别的属性不动")
+		t.check(is_equal_approx(float(pct_item.combat.base_stats["damage"]), 23.0), "别的属性不动（143：胫骨大棒伤害 23）")
 		var back := ContentExporter.export_item(pct_item)
 		var back_mods: Array = back["faith_bonuses"][0]["mods"]
 		t.eq(float(back_mods[0]["amount"]), 20.0, "导出写回 20")

@@ -5,8 +5,8 @@
     "en": "Cleaver"
   },
   "shape": [
-    "1",
-    "1"
+    "11",
+    "10"
   ],
   "rarity": 1,
   "tags": [
@@ -17,7 +17,7 @@
   ],
   "combat": {
     "base_stats": {
-      "damage": 5
+      "damage": 8
     },
     "rules": [
       {

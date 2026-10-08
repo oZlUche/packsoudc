@@ -57,7 +57,7 @@ static func run_faith_files(t: TestCase) -> void:
 	t.eq(sun.offering_value(sword), 10, "日神：短剑算「金属」→ 2 × 5 = 10（体积是小不是中）")
 	t.eq(sun.offering_value(db.get_def(&"core")), 40, "日神：能量核心稀有度 3、体积正好为中、不是金属 → 只算一条：2^3 × 5 = 40")
 	var earth: FaithDef = defs[&"earth"]
-	t.eq(earth.offering_value(db.get_def(&"plate_cuirass")), 4 * 5 * 9, "大地：板甲稀有度 2 → 2^2 × 5 × 9 格 = 180")
+	t.eq(earth.offering_value(db.get_def(&"plate_cuirass")), 4 * 5 * 10, "大地：板甲稀有度 2 → 2^2 × 5 × 10 格 = 200（143：板甲 10 格）")
 	t.eq(earth.offering_value(sword), 0, "大地不收小东西")
 	var nature: FaithDef = defs[&"nature"]
 	t.eq(nature.offering_value(db.get_def(&"ration")), 5 + 5, "自然：口粮既是自然又是食物 → 两条各 1 × 5")
@@ -125,7 +125,7 @@ static func run_deeds_and_summary(t: TestCase) -> void:
 	t.eq(float(s["healed"]), 4.0, "我方回血 4（敌方的、扣血的不算）")
 	t.eq(int(s["fired_total"]), 2, "我方出手 2 次（敌方的不算）")
 	var fi: Array = s["fired_items"]
-	t.check(fi.size() == 1 and int(fi[0]["count"]) == 2 and (fi[0]["tags"] as Array).has("nature") and int(fi[0]["cells"]) == 4, "出手的那件：长弓，带 nature，4 格，2 次")
+	t.check(fi.size() == 1 and int(fi[0]["count"]) == 2 and (fi[0]["tags"] as Array).has("nature") and int(fi[0]["cells"]) == 6, "出手的那件：长弓，带 nature，6 格（143），2 次")
 
 
 
