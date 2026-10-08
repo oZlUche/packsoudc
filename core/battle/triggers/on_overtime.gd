@@ -11,3 +11,7 @@ func subscribed_events() -> Array[StringName]:
 
 func matches(_ctx: RuleContext, event: BattleEvent) -> bool:
 	return event.get_int(&"count") == 1
+
+
+func describe() -> String:
+	return "加时开始时"

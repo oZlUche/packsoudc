@@ -20,3 +20,7 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 	if not ctx.event_on(event, on_self):
 		return false
 	return event.get_int(&"stacks", 1) <= 0
+
+
+func describe() -> String:
+	return "%s的%s掉光时" % ["你" if on_self else "对手", Glossary.status_name(buff_id)]

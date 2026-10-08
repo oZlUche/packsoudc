@@ -31,3 +31,8 @@ func on_attempt(_ctx: RuleContext) -> void:
 ## 117：内部日志里这条消耗 / 条件的样子（跳过时写「什么不够、差多少」）。默认只写类名，资源消耗写需要与现有
 func trace_info(_ctx: RuleContext) -> Dictionary:
 	return {"cost": RegistryLookup.class_of(self)}
+
+
+## 142：给人看的一句（「若对手有流血」「消耗你 2 层蓄力」），只由字段拼出来。空 = 不写进规则行
+func describe() -> String:
+	return ""

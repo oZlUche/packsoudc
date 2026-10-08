@@ -23,3 +23,7 @@ func can_pay(ctx: RuleContext) -> bool:
 
 func pay(ctx: RuleContext) -> void:
 	RemoveStatus.take(ctx, ctx.side_of(on_self), buff_id, maxi(1, stacks))
+
+
+func describe() -> String:
+	return "消耗%s %d 层%s" % ["你" if on_self else "对手", maxi(1, stacks), Glossary.status_name(buff_id)]

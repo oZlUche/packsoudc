@@ -82,7 +82,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			var rule := r as AbilityRule
 			if rule == null:
 				continue
-			var line := Glossary.rule_text(rule)
+			var line := Glossary.rule_text(rule, true)     # 142：耐力下面单写「耗耐力 N」
 			if weapon and rule.cadence is CooldownCadence and compiled != null and compiled.stats != null:
 				var hz := rule.cadence.estimated_hz(compiled.stats)
 				if hz > 0.0:

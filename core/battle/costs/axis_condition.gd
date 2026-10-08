@@ -23,3 +23,9 @@ func can_pay(ctx: RuleContext) -> bool:
 
 func pay(_ctx: RuleContext) -> void:
 	pass
+
+
+func describe() -> String:
+	var who := "你" if on_self else "对手"
+	var n := absi(stacks) if stacks != 0 else 1
+	return "若%s的%s%s %d 层" % [who, StatAxes.name_of(axis, stacks), "不到" if negate else "至少", n]

@@ -40,3 +40,9 @@ func implied_costs() -> Array[Cost]:
 	c.stacks = maxi(1, stacks)
 	c.on_self = on_self     # 130：对手身上的也能吃（放血刀）
 	return [c] as Array[Cost]
+
+
+func describe() -> String:
+	var n := maxi(1, stacks)
+	var line := "%s的%s达到 %d 层时" % ["你" if on_self else "对手", Glossary.status_name(buff_id), n]
+	return line + ("（消耗这 %d 层）" % n if consume else "")

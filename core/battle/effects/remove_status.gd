@@ -55,7 +55,11 @@ static func take(ctx: RuleContext, who: CombatantRuntime, id: StringName, n: int
 	return removed
 
 
+## 142：写目标与状态名（不写 id）：「清掉对手全部流血」「移除你 2 层中毒」「清除对手全部增益」
 func describe() -> String:
+	var who := {Target.OPPONENT: "对手", Target.SELF: "你", Target.BOTH: "双方"}[target] as String
 	if all_debuffs or all_buffs:
-		return "清除全部%s" % ("增益与减益" if all_debuffs and all_buffs else ("减益" if all_debuffs else "增益"))
-	return "移除 %s %s 层" % [buff_id, "全部" if stacks <= 0 else str(stacks)]
+		return "清除%s全部%s" % [who, "增益与减益" if all_debuffs and all_buffs else ("减益" if all_debuffs else "增益")]
+	if stacks <= 0:
+		return "清掉%s全部%s" % [who, Glossary.status_name(buff_id)]
+	return "移除%s %d 层%s" % [who, stacks, Glossary.status_name(buff_id)]

@@ -16,3 +16,7 @@ func can_pay(_ctx: RuleContext) -> bool:
 func pay(ctx: RuleContext) -> void:
 	if stacks != 0:
 		ShiftAxis.shift(ctx.battle, ctx.owner, axis, -stacks, false)
+
+
+func describe() -> String:
+	return "消耗你 %d 层%s" % [absi(stacks), StatAxes.name_of(axis, stacks)]

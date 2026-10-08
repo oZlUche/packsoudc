@@ -27,3 +27,11 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 	if by_self and event.get_int(&"source_side", -1) != ctx.owner.side:
 		return false
 	return event.get_int(&"delta") > 0
+
+
+## 142：「你给对手施加流血时」「你被施加中毒时」「对手被施加流血时」（不认施加者）
+func describe() -> String:
+	var s := Glossary.status_name(buff_id)
+	if by_self:
+		return "你给%s施加%s时" % ["自己" if on_self else "对手", s]
+	return "%s被施加%s时" % ["你" if on_self else "对手", s]

@@ -41,3 +41,12 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 			who.resources.maximum(resource_key), StatMath.from_percent(percent)
 		)
 	return cur >= threshold if direction == Direction.ABOVE else cur <= threshold
+
+
+func describe() -> String:
+	var who := "你" if on_self else "对手"
+	var res := Glossary.resource_name(resource_key)
+	if full:
+		return "%s的%s回满时" % [who, res]
+	var at := ("%d%%" % percent) if percent > 0 else TextTemplate.num(absolute)
+	return "%s的%s%s %s 时" % [who, res, "不低于" if direction == Direction.ABOVE else "低于", at]

@@ -22,3 +22,8 @@ func matches(_ctx: RuleContext, _event: BattleEvent) -> bool:
 ## 供 [BattleSim] 识别：本规则要进时间轮
 func is_self_driven() -> bool:
 	return true
+
+
+## 142：自发的不写「自发」，方括号里写频率（[method Glossary.rule_text] 拼「每 N 秒」）
+func describe() -> String:
+	return "自发"

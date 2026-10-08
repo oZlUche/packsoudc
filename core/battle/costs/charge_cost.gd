@@ -24,3 +24,7 @@ func can_pay(ctx: RuleContext) -> bool:
 
 func pay(ctx: RuleContext) -> void:
 	ctx.state()[KEY] = 0
+
+
+func describe() -> String:
+	return "每第 %d 次才生效" % n

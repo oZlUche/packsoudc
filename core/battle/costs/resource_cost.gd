@@ -31,3 +31,11 @@ func pay(ctx: RuleContext) -> void:
 func trace_info(ctx: RuleContext) -> Dictionary:
 	return {"cost": "ResourceCost", "resource": String(resource_key), "need": _amount_fp(ctx),
 		"have": ctx.owner.resources.current(resource_key) if ctx.owner.resources.has(resource_key) else 0}
+
+
+## 142：「消耗 5 耐力」；按属性取的写属性名（数值随加成变，写死反而错）
+func describe() -> String:
+	var res := Glossary.resource_name(resource_key)
+	if amount_stat != &"":
+		return "消耗%s（%s）" % [res, Glossary.stat_name(amount_stat)]
+	return "消耗 %s %s" % [TextTemplate.num(amount), res]

@@ -7,3 +7,7 @@ func subscribed_events() -> Array[StringName]:
 
 func matches(_ctx: RuleContext, _event: BattleEvent) -> bool:
 	return true
+
+
+func describe() -> String:
+	return "开战时"
