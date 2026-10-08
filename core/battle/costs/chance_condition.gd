@@ -18,3 +18,7 @@ func can_pay(ctx: RuleContext) -> bool:
 
 func pay(_ctx: RuleContext) -> void:
 	pass
+
+
+func describe() -> String:
+	return "%d%% 几率" % percent

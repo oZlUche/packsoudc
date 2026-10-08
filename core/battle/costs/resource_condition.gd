@@ -45,3 +45,20 @@ func can_pay(ctx: RuleContext) -> bool:
 
 func pay(_ctx: RuleContext) -> void:
 	pass
+
+
+## 142：「若你的生命不低于 70%」「若对手的耐力不到 50%」；几个界都填了就用「、」连起来
+func describe() -> String:
+	var who := "你" if on_self else "对手"
+	var res := Glossary.resource_name(resource_key)
+	var bits: Array[String] = []
+	if min_percent >= 0:
+		bits.append("不低于 %d%%" % min_percent)
+	if max_percent >= 0:
+		bits.append("不高于 %d%%" % max_percent)
+	if absolute_min >= 0.0:
+		bits.append("不低于 %s 点" % TextTemplate.num(absolute_min))
+	if absolute_max >= 0.0:
+		bits.append("不高于 %s 点" % TextTemplate.num(absolute_max))
+	var line := "若%s的%s%s" % [who, res, "、".join(bits)]
+	return ("并非（%s）" % line) if negate else line

@@ -60,7 +60,7 @@ static func run_damage_type_data(t: TestCase) -> void:
 	t.eq(Glossary.damage_type_name(&"bleed"), "流血", "Glossary 走数据")
 	var dd := DealDamage.new()
 	dd.damage_type = &"fire"
-	t.eq(dd.describe(), "造成 火焰 伤害", "效果说明用名字")
+	t.eq(dd.describe(), "造成火焰伤害", "效果说明用名字（142：不再夹空格）")
 	var saved := UiText.lang
 	UiText.lang = "en"
 	t.eq(Glossary.damage_type_name(&"bleed"), "Bleed", "英文模式")

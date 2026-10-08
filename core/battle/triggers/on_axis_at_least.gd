@@ -31,3 +31,7 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 	if stacks < 0:
 		return have <= stacks
 	return have >= maxi(1, stacks)
+
+
+func describe() -> String:
+	return "%s的%s达到 %d 层时" % ["你" if on_self else "对手", StatAxes.name_of(axis, stacks), absi(maxi(1, stacks) if stacks >= 0 else stacks)]

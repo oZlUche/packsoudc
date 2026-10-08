@@ -23,3 +23,12 @@ func can_pay(ctx: RuleContext) -> bool:
 
 func pay(_ctx: RuleContext) -> void:
 	pass
+
+
+## 142：「若对手有流血」「若你流血至少 3 层」「若对手没有流血」
+func describe() -> String:
+	var who := "你" if on_self else "对手"
+	var s := Glossary.status_name(buff_id)
+	if negate:
+		return "若%s没有%s" % [who, s] if stacks <= 1 else "若%s%s不到 %d 层" % [who, s, stacks]
+	return "若%s有%s" % [who, s] if stacks <= 1 else "若%s%s至少 %d 层" % [who, s, stacks]

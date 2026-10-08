@@ -15,3 +15,6 @@ extends DamageTrigger
 func subscribed_events() -> Array[StringName]:
 	return [BattleEvent.BEFORE_DAMAGE] as Array[StringName]
 
+
+func _when() -> String:
+	return "前"

@@ -167,14 +167,32 @@ static func _exception(text: String) -> String:
 	return "[color=#%s]%s[/color]" % [EXCEPTION_COLOR.to_html(false), text]
 
 
-## 一条规则的一句：「[自发] 每 1.0 秒　造成 poison 伤害」
-static func rule_text(rule: AbilityRule) -> String:
-	var when := trigger_name(rule.trigger)
-	var line := ("[%s] " % when) if when != "" else ""
-	if rule.cadence is CooldownCadence:
-		line += "每 %.1f 秒　" % (rule.cadence as CooldownCadence).seconds
-	line += effects_text(rule.effects)
-	return line
+## 一条规则的一句（142：全部由字段生成）：「[你给对手施加流血时] 获得血勇」「[造成物理伤害前] 若对手有流血，伤害 +20%」。
+##
+## 方括号里是扳机那句（[method Trigger.describe]）；自发且有冷却的写「每 N 秒」（武器那条悬浮窗再换成实算冷却），
+## 别的扳机带冷却的在方括号后写「每 N 秒最多一次」。之后是条件 / 消耗（[method Cost.describe]），最后是效果。
+## [param skip_stamina]：耐力消耗另有地方写（道具悬浮窗的「耗耐力 N」）时不在句子里重复
+static func rule_text(rule: AbilityRule, skip_stamina: bool = false) -> String:
+	var line := ""
+	var cd := rule.cadence as CooldownCadence
+	if rule.trigger is OnSchedule and cd != null:
+		line = "[每 %.1f 秒] " % cd.seconds
+	else:
+		var when := trigger_text(rule.trigger)
+		line = ("[%s] " % when) if when != "" else ""
+		if cd != null:
+			line += "每 %.1f 秒最多一次，" % cd.seconds
+	var bits: Array[String] = []
+	for c in rule.costs:
+		if c == null:
+			continue
+		if skip_stamina and c is ResourceCost and (c as ResourceCost).resource_key == BattleStats.RES_STAMINA:
+			continue
+		var d := (c as Cost).describe()
+		if d != "":
+			bits.append(d)
+	bits.append(effects_text(rule.effects))
+	return line + "，".join(bits)
 
 
 static func effects_text(effects: Array) -> String:
@@ -192,11 +210,36 @@ const TRIGGER_NAMES := {"on_schedule": "自发", "on_battle_start": "开战时",
 	"on_status_applied": "施加时", "on_status_removed": "状态掉光时", "on_overtime": "加时开始时"}
 
 
+## 时机的类别名（百科「时机」那一页的词条用）：自发 / 开战时 / 施加时……
 static func trigger_name(trigger: Trigger) -> String:
 	if trigger == null:
 		return ""
 	var key := String(ContentSchema.registry_name_of(trigger))
 	return String(TRIGGER_NAMES.get(key, key))
+
+
+## 142：规则行方括号里那句 —— 扳机自己按字段说（[method Trigger.describe]）；没写的退回类别名
+static func trigger_text(trigger: Trigger) -> String:
+	if trigger == null:
+		return ""
+	var d := trigger.describe()
+	return d if d != "" else trigger_name(trigger)
+
+
+## 142：状态 id 给人看。按 id 引用的状态（扳机、条件、移除）都是有登记的类型（流血、中毒……），名字从那里取；
+## 查不到原样返回（测试守着：道具的规则行里不出现英文 id）
+static func status_name(id: StringName) -> String:
+	if id == &"":
+		return "?"
+	return DamageTypes.name_of(id)
+
+
+const RESOURCE_NAMES := {"hp": {"zh": "生命", "en": "Health"}, "stamina": {"zh": "耐力", "en": "Stamina"},
+	"mana": {"zh": "法力", "en": "Mana"}, "shield": {"zh": "护盾", "en": "Shield"}}
+
+
+static func resource_name(key: StringName) -> String:
+	return UiText.pick(RESOURCE_NAMES.get(String(key), null), String(key))
 
 
 #region 收集 buff
