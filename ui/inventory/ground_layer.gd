@@ -150,7 +150,8 @@ func _scan() -> void:
 		stash.landing_from.erase(uid)
 		if from is bool and not from:
 			continue     # 本来就在（读档、回到存过东西的点）
-		_landing[uid] = {"t": -LAND_STAGGER * mini(k, LAND_STAGGER_MAX), "from": _landing_start(uid, from)}
+		# 就地落下（拖拽放手、单击一下又放回）画在落点上，照样接鼠标：否则单击后紧跟的那一下双击落空
+		_landing[uid] = {"t": -LAND_STAGGER * mini(k, LAND_STAGGER_MAX), "from": _landing_start(uid, from), "in_place": from is bool}
 		k += 1
 	_known = now
 	set_process(not _landing.is_empty())
@@ -289,8 +290,8 @@ func uid_at_local(p: Vector2) -> int:
 	var list := stash.items()
 	for i in range(list.size() - 1, -1, -1):
 		var inst := list[i] as ItemInstance
-		if _landing.has(inst.uid):
-			continue     # 134：半空中的不接（0.28 秒，几乎感觉不到）
+		if _landing.has(inst.uid) and not bool(_landing[inst.uid].get("in_place", false)):
+			continue     # 134：半空中的不接（0.28 秒，几乎感觉不到）；就地落下的不在半空，照接
 		var r := item_rect(inst.uid)
 		if not r.has_point(p):
 			continue
