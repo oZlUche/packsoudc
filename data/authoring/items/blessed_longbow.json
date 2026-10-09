@@ -42,7 +42,7 @@
   ],
   "combat": {
     "base_stats": {
-      "damage": 15
+      "damage": 18
     },
     "rules": [
       {

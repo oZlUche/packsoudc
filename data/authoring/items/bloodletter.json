@@ -20,7 +20,7 @@
   ],
   "combat": {
     "base_stats": {
-      "damage": 9
+      "damage": 15
     },
     "rules": [
       {

@@ -67,7 +67,7 @@
   ],
   "combat": {
     "base_stats": {
-      "armor": 11
+      "armor": 15
     },
     "rules": [
       {
