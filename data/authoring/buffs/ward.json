@@ -1,0 +1,13 @@
+{
+  "id": "ward",
+  "display_name": "护符结界",
+  "display_names": {
+    "en": "Ward"
+  },
+  "mods": [
+    {
+      "stat": "max_shield",
+      "amount": 8.0
+    }
+  ]
+}

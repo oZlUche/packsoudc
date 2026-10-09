@@ -1,0 +1,8 @@
+{
+  "id": "on_status_applied_bleed",
+  "display_name": "你给对手施加流血时",
+  "trigger": {
+    "type": "on_status_applied",
+    "buff_id": "bleed"
+  }
+}

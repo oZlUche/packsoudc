@@ -29,6 +29,15 @@ static func run_part_refs_import(t: TestCase) -> void:
 	var missing := ImportReport.new()
 	ContentImporter._make_object(&"AbilityRule", {"trigger": "@nope", "cadence": {"type": "always"}, "effects": ["@hit"]}, "r", ctx, missing)
 	t.check(not missing.ok() and missing.to_text().contains("找不到规则构件"), "库里没有：报错")
+	ContentLibrary.reset()
+	var loose := ImportReport.new()
+	var from_disk := ContentImporter._make_object(&"AbilityRule", {"trigger": "@on_schedule", "cadence": {"type": "always"}, "effects": [{"type": "deal_damage"}]}, "r", ContentImporter.Context.new(), loose)
+	t.check(from_disk != null and (from_disk as AbilityRule).trigger is OnSchedule, "登记表里没有：单件导入到盘上的库里找")
+	var strict_ctx := ContentImporter.Context.new()
+	strict_ctx.strict = true
+	var strict_rep := ImportReport.new()
+	ContentImporter._make_object(&"AbilityRule", {"trigger": "@on_schedule", "cadence": {"type": "always"}, "effects": [{"type": "deal_damage"}]}, "r", strict_ctx, strict_rep)
+	t.check(not strict_rep.ok(), "批量导入（strict）只认这一趟登记的：报错")
 
 	var in_buff := ImportReport.new()
 	ContentImporter.import_buff({"id": "b146", "rules": [{"trigger": "@tick", "cadence": {"type": "always"}, "effects": [{"type": "deal_damage"}]}]}, ctx, in_buff)

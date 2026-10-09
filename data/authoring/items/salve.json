@@ -15,17 +15,10 @@
   "combat": {
     "rules": [
       {
-        "trigger": {
-          "type": "on_resource_below",
-          "percent": 40
-        },
-        "cadence": {
-          "type": "always"
-        },
+        "trigger": "@on_resource_below_40",
+        "cadence": "@always",
         "costs": [
-          {
-            "type": "uses"
-          }
+          "@uses_1"
         ],
         "effects": [
           {

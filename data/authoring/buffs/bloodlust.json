@@ -1,0 +1,14 @@
+{
+  "id": "bloodlust",
+  "display_name": "嗜血",
+  "display_names": {
+    "en": "Bloodlust"
+  },
+  "mods": [
+    {
+      "stat": "haste",
+      "mode": "MULT",
+      "amount": 4.0
+    }
+  ]
+}

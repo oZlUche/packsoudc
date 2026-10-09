@@ -1,0 +1,7 @@
+{
+  "id": "cooldown_2s",
+  "display_name": "每 2.0 秒",
+  "cadence": {
+    "type": "cooldown"
+  }
+}

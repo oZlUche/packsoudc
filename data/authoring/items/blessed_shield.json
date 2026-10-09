@@ -33,31 +33,13 @@
       "tier": 2,
       "rules": [
         {
-          "trigger": {
-            "type": "on_battle_start"
-          },
-          "cadence": {
-            "type": "always"
-          },
+          "trigger": "@on_battle_start",
+          "cadence": "@always",
           "effects": [
             {
               "type": "apply_status",
               "target": "SELF",
-              "buff": {
-                "id": "deflect_long",
-                "display_name": "久弹",
-                "display_names": {
-                  "en": "Long Deflect"
-                },
-                "stackable": false,
-                "duration_sec": 8.0,
-                "mods": [
-                  {
-                    "stat": "armor",
-                    "amount": 4.0
-                  }
-                ]
-              }
+              "buff": "deflect_long"
             }
           ]
         }
@@ -71,31 +53,13 @@
     },
     "rules": [
       {
-        "trigger": {
-          "type": "on_battle_start"
-        },
-        "cadence": {
-          "type": "always"
-        },
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
         "effects": [
           {
             "type": "apply_status",
             "target": "SELF",
-            "buff": {
-              "id": "deflect",
-              "display_name": "弹开",
-              "display_names": {
-                "en": "Deflect"
-              },
-              "stackable": false,
-              "duration_sec": 4.0,
-              "mods": [
-                {
-                  "stat": "armor",
-                  "amount": 8.0
-                }
-              ]
-            }
+            "buff": "deflect"
           }
         ]
       }

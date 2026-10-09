@@ -38,13 +38,14 @@ amount = 18.0
 
 [sub_resource type="Resource" id="Resource_jihun"]
 script = ExtResource("8_y01yl")
+metadata/part_ref = &"deal_damage"
 
-[sub_resource type="Resource" id="Resource_yrm5a"]
+[sub_resource type="Resource" id="Resource_ebeqf"]
 script = ExtResource("1_e6evk")
 stat = &"armor"
 amount = -3.0
 
-[sub_resource type="Resource" id="Resource_624fs"]
+[sub_resource type="Resource" id="Resource_mr88r"]
 script = ExtResource("9_dki5p")
 id = &"marked"
 display_name = "标记"
@@ -54,30 +55,31 @@ display_names = {
 is_debuff = true
 stackable = false
 duration_sec = 8.0
-mods = Array[ExtResource("1_e6evk")]([SubResource("Resource_yrm5a")])
+mods = Array[ExtResource("1_e6evk")]([SubResource("Resource_ebeqf")])
+
+[sub_resource type="Resource" id="Resource_yrm5a"]
+script = ExtResource("10_w6xmv")
+buff = SubResource("Resource_mr88r")
+
+[sub_resource type="Resource" id="Resource_624fs"]
+script = ExtResource("11_k3eek")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_wn8nq"]
-script = ExtResource("10_w6xmv")
-buff = SubResource("Resource_624fs")
-
-[sub_resource type="Resource" id="Resource_g2bia"]
-script = ExtResource("11_k3eek")
-
-[sub_resource type="Resource" id="Resource_3wa02"]
 script = ExtResource("2_lbiof")
-trigger = SubResource("Resource_g2bia")
+trigger = SubResource("Resource_624fs")
 cadence = SubResource("Resource_aw08o")
 costs = Array[ExtResource("5_gclyn")]([SubResource("Resource_0xf4h")])
-effects = Array[ExtResource("7_niftu")]([SubResource("Resource_jihun"), SubResource("Resource_wn8nq")])
+effects = Array[ExtResource("7_niftu")]([SubResource("Resource_jihun"), SubResource("Resource_yrm5a")])
 
-[sub_resource type="Resource" id="Resource_xmuyv"]
+[sub_resource type="Resource" id="Resource_g2bia"]
 script = ExtResource("12_bx0g3")
 base_stats = {
 "damage": 30
 }
-rules = Array[ExtResource("2_lbiof")]([SubResource("Resource_3wa02")])
+rules = Array[ExtResource("2_lbiof")]([SubResource("Resource_wn8nq")])
 
-[sub_resource type="Resource" id="Resource_caqn7"]
+[sub_resource type="Resource" id="Resource_3wa02"]
 script = ExtResource("16_dqow0")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2i(0, 3)])
 
@@ -88,8 +90,8 @@ display_name = "狙击枪"
 display_names = {
 "en": "Sniper Rifle"
 }
-shape = SubResource("Resource_caqn7")
+shape = SubResource("Resource_3wa02")
 rarity = 3
 tags = Array[StringName]([&"sealed", &"weapon", &"gun", &"burst", &"metal"])
-combat = SubResource("Resource_xmuyv")
+combat = SubResource("Resource_g2bia")
 adjacency = SubResource("Resource_hmlt8")

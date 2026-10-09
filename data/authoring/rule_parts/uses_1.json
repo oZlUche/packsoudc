@@ -1,0 +1,7 @@
+{
+  "id": "uses_1",
+  "display_name": "每场最多 1 次",
+  "cost": {
+    "type": "uses"
+  }
+}

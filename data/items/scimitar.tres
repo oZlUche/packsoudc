@@ -26,6 +26,7 @@ amount = 6.0
 
 [sub_resource type="Resource" id="Resource_f0fgp"]
 script = ExtResource("7_erixr")
+metadata/part_ref = &"deal_damage"
 
 [sub_resource type="Resource" id="Resource_i5ig0"]
 script = ExtResource("3_h3qj3")
@@ -60,9 +61,11 @@ rules = Array[ExtResource("2_ki6wq")]([SubResource("Resource_776pt")])
 [sub_resource type="Resource" id="Resource_2w5kq"]
 script = ExtResource("10_n2tk1")
 buff = SubResource("Resource_fmrn3")
+metadata/part_ref = &"apply_status_bleed"
 
 [sub_resource type="Resource" id="Resource_pwnbl"]
 script = ExtResource("8_50tdm")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_gpo2j"]
 script = ExtResource("2_ki6wq")

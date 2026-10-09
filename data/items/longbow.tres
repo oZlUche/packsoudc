@@ -21,12 +21,15 @@ seconds = 0.9
 [sub_resource type="Resource" id="Resource_kmd41"]
 script = ExtResource("5_hro4k")
 amount = 5.0
+metadata/part_ref = &"resource_5"
 
 [sub_resource type="Resource" id="Resource_ev4yr"]
 script = ExtResource("7_ub4aq")
+metadata/part_ref = &"deal_damage"
 
 [sub_resource type="Resource" id="Resource_5bn85"]
 script = ExtResource("8_fl4bj")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_ggxlh"]
 script = ExtResource("2_i8qbm")

@@ -16,12 +16,8 @@
   "combat": {
     "rules": [
       {
-        "trigger": {
-          "type": "on_schedule"
-        },
-        "cadence": {
-          "type": "cooldown"
-        },
+        "trigger": "@on_schedule",
+        "cadence": "@cooldown_2s",
         "effects": [
           {
             "type": "remove_status",

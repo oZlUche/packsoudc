@@ -16,30 +16,13 @@
   "combat": {
     "rules": [
       {
-        "trigger": {
-          "type": "on_schedule"
-        },
-        "cadence": {
-          "type": "cooldown",
-          "seconds": 1.0
-        },
+        "trigger": "@on_schedule",
+        "cadence": "@cooldown_1s",
         "effects": [
           {
             "type": "apply_status",
             "target": "SELF",
-            "buff": {
-              "id": "ward",
-              "display_name": "护符结界",
-              "display_names": {
-                "en": "Ward"
-              },
-              "mods": [
-                {
-                  "stat": "max_shield",
-                  "amount": 8.0
-                }
-              ]
-            }
+            "buff": "ward"
           }
         ]
       }

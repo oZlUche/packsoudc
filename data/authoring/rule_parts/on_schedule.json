@@ -1,0 +1,7 @@
+{
+  "id": "on_schedule",
+  "display_name": "自发",
+  "trigger": {
+    "type": "on_schedule"
+  }
+}

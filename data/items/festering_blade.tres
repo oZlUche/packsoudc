@@ -28,6 +28,7 @@ amount = 7.0
 
 [sub_resource type="Resource" id="Resource_55ixu"]
 script = ExtResource("7_xsa10")
+metadata/part_ref = &"deal_damage"
 
 [sub_resource type="Resource" id="Resource_s73gq"]
 script = ExtResource("3_lx2c5")
@@ -62,9 +63,11 @@ rules = Array[ExtResource("2_amd6d")]([SubResource("Resource_enbml")])
 [sub_resource type="Resource" id="Resource_aa170"]
 script = ExtResource("10_a7mhu")
 buff = SubResource("Resource_l0h4m")
+metadata/part_ref = &"apply_status_bleed"
 
 [sub_resource type="Resource" id="Resource_oddk5"]
 script = ExtResource("8_8473r")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_cbx2s"]
 script = ExtResource("2_amd6d")
@@ -75,6 +78,7 @@ effects = Array[ExtResource("6_ee441")]([SubResource("Resource_55ixu"), SubResou
 
 [sub_resource type="Resource" id="Resource_1ye41"]
 script = ExtResource("11_gt3uo")
+metadata/part_ref = &"always"
 
 [sub_resource type="Resource" id="Resource_dixyd"]
 script = ExtResource("3_lx2c5")
@@ -110,10 +114,12 @@ rules = Array[ExtResource("2_amd6d")]([SubResource("Resource_qgpcq")])
 [sub_resource type="Resource" id="Resource_tjfa2"]
 script = ExtResource("10_a7mhu")
 buff = SubResource("Resource_wwh6q")
+metadata/part_ref = &"apply_status_poison"
 
 [sub_resource type="Resource" id="Resource_j501u"]
 script = ExtResource("12_u3075")
 buff_id = &"bleed"
+metadata/part_ref = &"on_status_applied_bleed"
 
 [sub_resource type="Resource" id="Resource_po6bq"]
 script = ExtResource("2_amd6d")

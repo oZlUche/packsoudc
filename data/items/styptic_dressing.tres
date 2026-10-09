@@ -29,6 +29,7 @@ amount = 6.0
 
 [sub_resource type="Resource" id="Resource_kca66"]
 script = ExtResource("8_51y3s")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_m3qyf"]
 script = ExtResource("2_ly8yx")

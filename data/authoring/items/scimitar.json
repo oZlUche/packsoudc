@@ -23,9 +23,7 @@
     },
     "rules": [
       {
-        "trigger": {
-          "type": "on_schedule"
-        },
+        "trigger": "@on_schedule",
         "cadence": {
           "type": "cooldown",
           "seconds": 1.2
@@ -37,40 +35,8 @@
           }
         ],
         "effects": [
-          {
-            "type": "deal_damage"
-          },
-          {
-            "type": "apply_status",
-            "buff": {
-              "id": "bleed",
-              "display_name": "流血",
-              "display_names": {
-                "en": "Bleed"
-              },
-              "rules": [
-                {
-                  "trigger": {
-                    "type": "on_schedule"
-                  },
-                  "cadence": {
-                    "type": "cooldown",
-                    "seconds": 1.0
-                  },
-                  "effects": [
-                    {
-                      "type": "deal_damage",
-                      "target": "SELF",
-                      "damage_type": "bleed",
-                      "amount": 1.0,
-                      "damage_stat": "",
-                      "per_stack": true
-                    }
-                  ]
-                }
-              ]
-            }
-          }
+          "@deal_damage",
+          "@apply_status_bleed"
         ]
       }
     ]

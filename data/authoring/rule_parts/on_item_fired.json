@@ -1,0 +1,7 @@
+{
+  "id": "on_item_fired",
+  "display_name": "你的其他道具出手时",
+  "trigger": {
+    "type": "on_item_fired"
+  }
+}

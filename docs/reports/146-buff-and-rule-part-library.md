@@ -88,3 +88,20 @@
 | 3 | 构件编辑器放哪 | A 新的独立编辑器「构件编辑器」；B 并进 buff 制作器当几个页签 | **A**：buff 制作器有自己的字段（叠层 / 时长），混在一起又杂了；作者也点名要独立 |
 | 4 | buff 自己的规则能不能用库构件 | A 不能（导入顺序 buff → 构件 → 道具，无循环）；B 能，导入器做两遍解析 | **A**：buff 内部的规则（每秒掉血）本来就不共用 |
 | 5 | 迁移抽构件的门槛 | A 完全相同且出现 ≥ 3 次才抽；B 只抽 buff，构件全由作者手建 | **A**：先有几十个现成的，下拉才有东西可选 |
+
+---
+
+## 落地记录（2026-10-09，五项待定全按推荐）
+
+- **buff**：`buffs` 搬回 `ContentPaths.KINDS`，`ORDER` 里排在信仰之后、构件与道具之前。迁移工具抽出 **10 份**：bleed、blood_rage、bloodlust、deflect、deflect_long、hardy_guard（角色 brutus 里的）、marked、poison、virulent（`convert_status.to` 里的）、ward。提议里写的「19 份」是内联的份数，同 id 同内容的合成一份。猎犬符改成「强攻」轴以后不再带血勇，所以 blood_valor 没有抽。
+- **构件**：`RulePartDef` 是**四个带类型的槽**（trigger / cadence / cost / effect，只填一个），没有用单个 `part` 字段。这样编辑器反射出来的就是对应基类的下拉，导入器也能直接按槽查类。按「完全相同、≥ 3 次」抽出 **15 份**：
+  - 扳机：on_schedule（自发）、on_battle_start、on_item_fired、on_resource_below_40、on_status_applied_bleed
+  - 节奏：cooldown_0_8s、cooldown_1s、cooldown_2s
+  - 消耗与检查：always、resource_4、resource_5、uses_1
+  - 效果：deal_damage、apply_status_bleed、apply_status_poison
+
+  名字由预览句生成，作者可在构件编辑器里改。
+- **引用语义**：规则里写 `"@id"`，导入时复制进规则并记 meta `part_ref`。只要还带着 `part_ref`，导出就写回 `"@id"`。编辑器里这类卡片只读，「断开」去掉链接后才能改。buff 不看链接，导出时和库里同 id 的那份完全一样才写回 id。
+- **单件导入**：`ContentImporter.Context` 登记表里没有的 buff 或构件，到盘上的库（`ContentLibrary`）找。批量导入（`import_content` / `normalize_content`）设 `strict`，只认这一趟导入的。
+- **去库里改**：当前编辑器有没存的改动时不跳，状态栏提示先存。
+- **核对**：迁移前后 `data/` 下全部资源逐字段倒出来比对，**完全一致**（构件只是换了写法）；`check_content` 25 种全对得上。

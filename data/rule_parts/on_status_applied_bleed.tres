@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RulePartDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/rule_part_def.gd" id="1_8tl7h"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_status_applied.gd" id="2_dpi1b"]
+
+[sub_resource type="Resource" id="Resource_daq15"]
+script = ExtResource("2_dpi1b")
+buff_id = &"bleed"
+
+[resource]
+script = ExtResource("1_8tl7h")
+id = &"on_status_applied_bleed"
+display_name = "你给对手施加流血时"
+trigger = SubResource("Resource_daq15")

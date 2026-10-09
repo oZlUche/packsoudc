@@ -19,13 +19,16 @@
 [sub_resource type="Resource" id="Resource_27v5w"]
 script = ExtResource("3_37l7g")
 seconds = 1.0
+metadata/part_ref = &"cooldown_1s"
 
 [sub_resource type="Resource" id="Resource_3lyhb"]
 script = ExtResource("5_6t4eo")
 amount = 4.0
+metadata/part_ref = &"resource_4"
 
 [sub_resource type="Resource" id="Resource_4ml0y"]
 script = ExtResource("7_h8vb3")
+metadata/part_ref = &"deal_damage"
 
 [sub_resource type="Resource" id="Resource_kicnm"]
 script = ExtResource("3_37l7g")
@@ -60,9 +63,11 @@ rules = Array[ExtResource("2_18d2x")]([SubResource("Resource_hafnj")])
 [sub_resource type="Resource" id="Resource_1gean"]
 script = ExtResource("10_m233a")
 buff = SubResource("Resource_ngsvg")
+metadata/part_ref = &"apply_status_bleed"
 
 [sub_resource type="Resource" id="Resource_iqp7d"]
 script = ExtResource("8_i1r5i")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_pre0p"]
 script = ExtResource("2_18d2x")
