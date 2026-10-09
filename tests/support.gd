@@ -151,3 +151,163 @@ static func content() -> Dictionary:
 		"hunters": c.hunter_defs,
 		"difficulties": c.difficulties,
 	}
+
+
+#region 摆道具：自己找空位，不写死坐标
+## 道具的形状随时会被作者在编辑器里改（143 之后一件装备可能是任意不规则形状），
+## 测试把道具摆在写死的坐标上、或假设「防弹衣是 2×2」，改一次形状就红一片，而被测的行为一点没变。
+## 这一组帮助函数让套件只说「放进去」「放在不挨着它的地方」「放在它的增益格上」，
+## 位置由棋盘自己找。找不到返回 null / 空字典 —— 套件用 `t.not_null` 接住，红得明明白白。
+##
+## 只有专门测几何的套件（放置、顶替、包、整理）和 143「主数值 ÷ 格数」才该关心坐标与形状。
+
+## [param what] 可以是 [ItemDef] 或还没放进任何容器的 [ItemInstance]；统一成实例
+static func _inst(what) -> ItemInstance:
+	if what is ItemInstance:
+		return what
+	if what is ItemDef:
+		return ItemInstance.create(what, 0)
+	return null
+
+
+## 放进棋盘第一个放得下的位置（可旋转）。放不下返回 null
+static func put(board: GridInventory, what) -> ItemInstance:
+	var inst := _inst(what)
+	if inst == null or not board.try_add(inst, true):
+		return null
+	return inst
+
+
+## 放进第一个满足 [param ok] 的位置：逐个落点 / 朝向试，候选位置先写进实例（origin / rotation），
+## 再问 `ok.call(inst) -> bool`，所以判断里可以直接用 [method cells_of] / [method markers_of]。放不下返回 null
+static func put_where(board: GridInventory, what, ok: Callable) -> ItemInstance:
+	var inst := _inst(what)
+	if inst == null or inst.def == null:
+		return null
+	var rots := inst.def.shape.distinct_rotation_count() if inst.def.shape != null else 1
+	for y in board.size.y:
+		for x in board.size.x:
+			for rot in rots:
+				var at := Vector2i(x, y)
+				if not board.can_place_item(inst, at, rot):
+					continue
+				inst.origin = at
+				inst.rotation = rot
+				if ok.call(inst) and board.place(inst, at, rot):
+					return inst
+	return null
+
+
+## 放在和 [param others] 里每一件都**不连结**的地方：谁的增益 / 受益格都压不到对方
+static func put_apart(board: GridInventory, what, others: Array) -> ItemInstance:
+	return put_where(board, what, func(inst: ItemInstance) -> bool:
+		for o in others:
+			if touches(inst, o as ItemInstance):
+				return false
+		return true)
+
+
+## 放在 [param holder] 的增益格上（会吃到它的邻接加成）
+static func put_on_grant(board: GridInventory, what, holder: ItemInstance) -> ItemInstance:
+	return put_where(board, what, func(inst: ItemInstance) -> bool:
+		return grants_to(holder, inst))
+
+
+## 放在增益格能盖到 [param targets] 每一件的地方（它给它们加成 / 挂规则）
+static func put_granting(board: GridInventory, what, targets: Array) -> ItemInstance:
+	return put_where(board, what, func(inst: ItemInstance) -> bool:
+		for o in targets:
+			if not grants_to(inst, o as ItemInstance):
+				return false
+		return true)
+
+
+## [param holder] 的增益格压没压在 [param target] 身上
+static func grants_to(holder: ItemInstance, target: ItemInstance) -> bool:
+	return _overlap(grant_cells_of(holder), cells_of(target))
+
+
+## 实例当前占的格子（绝对坐标）
+static func cells_of(inst: ItemInstance) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for c in inst.cells():
+		out.append(inst.origin + c)
+	return out
+
+
+## 实例占着的某一格（点击、悬停用）。原点不一定被占 —— 不规则形状的包围盒左上角可能是空的
+static func a_cell_of(inst: ItemInstance) -> Vector2i:
+	var cs := cells_of(inst)
+	return cs[0] if not cs.is_empty() else inst.origin
+
+
+## 实例的增益格（绝对坐标）；没有邻接定义返回空
+static func grant_cells_of(inst: ItemInstance) -> Array[Vector2i]:
+	if inst.def == null or inst.def.adjacency == null:
+		return [] as Array[Vector2i]
+	return inst.absolute_cells(inst.def.adjacency.grant_cells)
+
+
+## 实例的增益格 + 受益格（绝对坐标）
+static func markers_of(inst: ItemInstance) -> Array[Vector2i]:
+	var out := grant_cells_of(inst)
+	if inst.def != null and inst.def.adjacency != null:
+		out.append_array(inst.absolute_cells(inst.def.adjacency.receive_cells))
+	return out
+
+
+## [param holder] 的增益格或受益格压没压在 [param target] 身上（压着就点亮，[BattleCompiler] 的连结就是这么算的）
+static func lights(holder: ItemInstance, target: ItemInstance) -> bool:
+	return _overlap(markers_of(holder), cells_of(target))
+
+
+## 两件之间有没有邻接连结（任一方的标记格压在另一方身上）
+static func touches(a: ItemInstance, b: ItemInstance) -> bool:
+	return lights(a, b) or lights(b, a)
+
+
+static func _overlap(xs: Array[Vector2i], ys: Array[Vector2i]) -> bool:
+	for p in xs:
+		if ys.has(p):
+			return true
+	return false
+
+
+## 同一容器里给这件找个**别的**落点（换位置用）：{"origin", "rotation"}；没有返回空字典
+static func other_spot(board: GridInventory, inst: ItemInstance) -> Dictionary:
+	var rots := inst.def.shape.distinct_rotation_count() if inst.def.shape != null else 1
+	for y in board.size.y:
+		for x in board.size.x:
+			for rot in rots:
+				var at := Vector2i(x, y)
+				if at != inst.origin and board.can_place_item(inst, at, rot):
+					return {"origin": at, "rotation": rot}
+	return {}
+
+
+## 顶替式放进来，且**真的顶掉了**至少一件：返回被顶出来的实例；哪儿都顶不成返回 null
+static func displace_somewhere(board: GridInventory, what):
+	var inst := _inst(what)
+	if inst == null or inst.def == null:
+		return null
+	var rots := inst.def.shape.distinct_rotation_count() if inst.def.shape != null else 1
+	for y in board.size.y:
+		for x in board.size.x:
+			for rot in rots:
+				var at := Vector2i(x, y)
+				if not board.terrain_allows(inst.def, at, rot) or board.displaced_by(inst.def, at, rot).is_empty():
+					continue
+				var victims = board.place_displacing(inst, at, rot)
+				if victims != null:
+					return victims
+	return null
+
+
+## 一件指定形状的假道具（测「放不放得下」这类和真实内容形状无关的行为）
+static func block_def(id: StringName, rows: Array) -> ItemDef:
+	var d := ItemDef.new()
+	d.id = id
+	d.display_name = String(id)
+	d.shape = ItemShape.from_ascii(rows)
+	return d
+#endregion

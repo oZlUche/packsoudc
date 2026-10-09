@@ -298,9 +298,13 @@ static func run_receive_rules(t: TestCase) -> void:
 	var g := GridInventory.new(Vector2i(4, 3), 1, false)
 	var totem := ItemInstance.create(holder_def)
 	t.check(g.place(totem, Vector2i(1, 0), 0), "图腾放下")
-	var k1 := ItemInstance.create(db.get_def(&"knife"))
-	var k2 := ItemInstance.create(db.get_def(&"knife"))
-	t.check(g.place(k1, Vector2i(0, 0), 0) and g.place(k2, Vector2i(2, 0), 0), "两把小刀放在左右")
+	# 小刀的形状不归这里管：只要压在图腾的受益格上
+	var on_totem := func(inst: ItemInstance) -> bool: return TestSupport.lights(totem, inst)
+	var k1 := TestSupport.put_where(g, db.get_def(&"knife"), on_totem)
+	var k2 := TestSupport.put_where(g, db.get_def(&"knife"), on_totem)
+	t.check(k1 != null and k2 != null, "两把小刀都挨着图腾")
+	if k1 == null or k2 == null:
+		return
 	var spec := BattleCompiler.compile_board(g)
 	var item := spec.item_of(totem.uid)
 	t.eq(item.attached.size(), 2, "点亮两格：挂两份")
