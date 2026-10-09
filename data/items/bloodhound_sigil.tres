@@ -5,8 +5,8 @@
 [ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_6xkvw"]
 [ext_resource type="Script" path="res://core/battle/cost.gd" id="4_duofo"]
 [ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_tckdm"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="6_si5cy"]
 [ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="7_5j1tb"]
+[ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="7_a8sh1"]
 [ext_resource type="Script" path="res://core/battle/triggers/on_status_applied.gd" id="8_2g8r7"]
 [ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_55ree"]
 [ext_resource type="Script" path="res://core/effects/effect.gd" id="10_76all"]
@@ -14,43 +14,32 @@
 [ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_3p7r5"]
 [ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_muxlg"]
 
-[sub_resource type="Resource" id="Resource_kyocl"]
+[sub_resource type="Resource" id="Resource_k0tof"]
 script = ExtResource("3_6xkvw")
 
-[sub_resource type="Resource" id="Resource_qqmym"]
-script = ExtResource("1_a8sh1")
-mode = 1
-amount = 5.0
-
-[sub_resource type="Resource" id="Resource_e2esi"]
-script = ExtResource("6_si5cy")
-id = &"blood_valor"
-display_name = "血勇"
-display_names = {
-"en": "Blood Valor"
-}
-mods = Array[ExtResource("1_a8sh1")]([SubResource("Resource_qqmym")])
-
-[sub_resource type="Resource" id="Resource_fga1v"]
+[sub_resource type="Resource" id="Resource_6xkvw"]
 script = ExtResource("7_5j1tb")
 target = 1
-buff = SubResource("Resource_e2esi")
 
-[sub_resource type="Resource" id="Resource_bnkf0"]
+[sub_resource type="Resource" id="Resource_duofo"]
+script = ExtResource("7_a8sh1")
+axis = &"damage_dealt"
+
+[sub_resource type="Resource" id="Resource_tckdm"]
 script = ExtResource("8_2g8r7")
 buff_id = &"bleed"
 
-[sub_resource type="Resource" id="Resource_tctfc"]
+[sub_resource type="Resource" id="Resource_si5cy"]
 script = ExtResource("2_k0tof")
-trigger = SubResource("Resource_bnkf0")
-cadence = SubResource("Resource_kyocl")
-effects = Array[ExtResource("5_tckdm")]([SubResource("Resource_fga1v")])
+trigger = SubResource("Resource_tckdm")
+cadence = SubResource("Resource_k0tof")
+effects = Array[ExtResource("5_tckdm")]([SubResource("Resource_6xkvw"), SubResource("Resource_duofo")])
 
-[sub_resource type="Resource" id="Resource_vscg2"]
+[sub_resource type="Resource" id="Resource_5j1tb"]
 script = ExtResource("9_55ree")
-rules = Array[ExtResource("2_k0tof")]([SubResource("Resource_tctfc")])
+rules = Array[ExtResource("2_k0tof")]([SubResource("Resource_si5cy")])
 
-[sub_resource type="Resource" id="Resource_depuf"]
+[sub_resource type="Resource" id="Resource_2g8r7"]
 script = ExtResource("13_muxlg")
 
 [resource]
@@ -61,7 +50,7 @@ display_names = {
 "en": "Bloodhound Sigil"
 }
 description = "猎人循着血迹，越追越凶。"
-shape = SubResource("Resource_depuf")
+shape = SubResource("Resource_2g8r7")
 rarity = 2
 tags = Array[StringName]([&"part", &"sigil", &"bleed"])
-combat = SubResource("Resource_vscg2")
+combat = SubResource("Resource_5j1tb")

@@ -27,20 +27,11 @@
         "effects": [
           {
             "type": "apply_status",
-            "target": "SELF",
-            "buff": {
-              "id": "blood_valor",
-              "display_name": "血勇",
-              "display_names": {
-                "en": "Blood Valor"
-              },
-              "mods": [
-                {
-                  "mode": "MULT",
-                  "amount": 5.0
-                }
-              ]
-            }
+            "target": "SELF"
+          },
+          {
+            "type": "shift_axis",
+            "axis": "damage_dealt"
           }
         ]
       }

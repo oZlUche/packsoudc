@@ -14,15 +14,15 @@
 [ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_m2fkp"]
 [ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_382f2"]
 
-[sub_resource type="Resource" id="Resource_k5nhu"]
+[sub_resource type="Resource" id="Resource_dkjj4"]
 script = ExtResource("3_dql6g")
 
-[sub_resource type="Resource" id="Resource_hpahx"]
+[sub_resource type="Resource" id="Resource_cf17m"]
 script = ExtResource("1_dkjj4")
 stat = &"armor"
 amount = 8.0
 
-[sub_resource type="Resource" id="Resource_ouk8o"]
+[sub_resource type="Resource" id="Resource_dql6g"]
 script = ExtResource("6_o32o2")
 id = &"deflect"
 display_name = "弹开"
@@ -31,47 +31,47 @@ display_names = {
 }
 stackable = false
 duration_sec = 4.0
-mods = Array[ExtResource("1_dkjj4")]([SubResource("Resource_hpahx")])
+mods = Array[ExtResource("1_dkjj4")]([SubResource("Resource_cf17m")])
 
-[sub_resource type="Resource" id="Resource_vi1ei"]
+[sub_resource type="Resource" id="Resource_4jajr"]
 script = ExtResource("7_seitx")
 target = 1
-buff = SubResource("Resource_ouk8o")
+buff = SubResource("Resource_dql6g")
 
-[sub_resource type="Resource" id="Resource_md8cq"]
+[sub_resource type="Resource" id="Resource_ppj1f"]
 script = ExtResource("8_i8p28")
 
-[sub_resource type="Resource" id="Resource_u8eqt"]
+[sub_resource type="Resource" id="Resource_o32o2"]
 script = ExtResource("2_cf17m")
-trigger = SubResource("Resource_md8cq")
-cadence = SubResource("Resource_k5nhu")
-effects = Array[ExtResource("5_ppj1f")]([SubResource("Resource_vi1ei")])
+trigger = SubResource("Resource_ppj1f")
+cadence = SubResource("Resource_dkjj4")
+effects = Array[ExtResource("5_ppj1f")]([SubResource("Resource_4jajr")])
 
-[sub_resource type="Resource" id="Resource_kci6v"]
+[sub_resource type="Resource" id="Resource_seitx"]
 script = ExtResource("9_ln6vm")
 base_stats = {
 "armor": 11
 }
-rules = Array[ExtResource("2_cf17m")]([SubResource("Resource_u8eqt")])
+rules = Array[ExtResource("2_cf17m")]([SubResource("Resource_o32o2")])
 
-[sub_resource type="Resource" id="Resource_1m5cu"]
+[sub_resource type="Resource" id="Resource_i8p28"]
 script = ExtResource("1_dkjj4")
 stat = &"armor"
 amount = 4.0
 
-[sub_resource type="Resource" id="Resource_2jowl"]
+[sub_resource type="Resource" id="Resource_ln6vm"]
 script = ExtResource("11_y2exc")
-mods = Array[ExtResource("1_dkjj4")]([SubResource("Resource_1m5cu")])
+mods = Array[ExtResource("1_dkjj4")]([SubResource("Resource_i8p28")])
 
-[sub_resource type="Resource" id="Resource_ir1jj"]
+[sub_resource type="Resource" id="Resource_pn5eu"]
 script = ExtResource("3_dql6g")
 
-[sub_resource type="Resource" id="Resource_74w5y"]
+[sub_resource type="Resource" id="Resource_y2exc"]
 script = ExtResource("1_dkjj4")
 stat = &"armor"
 amount = 4.0
 
-[sub_resource type="Resource" id="Resource_qo1rn"]
+[sub_resource type="Resource" id="Resource_m2fkp"]
 script = ExtResource("6_o32o2")
 id = &"deflect_long"
 display_name = "久弹"
@@ -80,31 +80,31 @@ display_names = {
 }
 stackable = false
 duration_sec = 8.0
-mods = Array[ExtResource("1_dkjj4")]([SubResource("Resource_74w5y")])
+mods = Array[ExtResource("1_dkjj4")]([SubResource("Resource_y2exc")])
 
-[sub_resource type="Resource" id="Resource_hpfcm"]
+[sub_resource type="Resource" id="Resource_382f2"]
 script = ExtResource("7_seitx")
 target = 1
-buff = SubResource("Resource_qo1rn")
+buff = SubResource("Resource_m2fkp")
 
-[sub_resource type="Resource" id="Resource_euv75"]
+[sub_resource type="Resource" id="Resource_k5nhu"]
 script = ExtResource("8_i8p28")
 
-[sub_resource type="Resource" id="Resource_tuaju"]
+[sub_resource type="Resource" id="Resource_hpahx"]
 script = ExtResource("2_cf17m")
-trigger = SubResource("Resource_euv75")
-cadence = SubResource("Resource_ir1jj")
-effects = Array[ExtResource("5_ppj1f")]([SubResource("Resource_hpfcm")])
+trigger = SubResource("Resource_k5nhu")
+cadence = SubResource("Resource_pn5eu")
+effects = Array[ExtResource("5_ppj1f")]([SubResource("Resource_382f2")])
 
-[sub_resource type="Resource" id="Resource_dgkn5"]
+[sub_resource type="Resource" id="Resource_ouk8o"]
 script = ExtResource("11_y2exc")
 tier = 2
-rules = Array[ExtResource("2_cf17m")]([SubResource("Resource_tuaju")])
+rules = Array[ExtResource("2_cf17m")]([SubResource("Resource_hpahx")])
 note = "弹开更久"
 
-[sub_resource type="Resource" id="Resource_rh8uo"]
+[sub_resource type="Resource" id="Resource_vi1ei"]
 script = ExtResource("13_382f2")
-cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(1, 2)])
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(0, 2), Vector2i(1, 2), Vector2i(2, 2), Vector2i(1, 3)])
 
 [resource]
 script = ExtResource("12_m2fkp")
@@ -113,9 +113,9 @@ display_name = "技巧之神赐福的盾牌"
 display_names = {
 "en": "Skill God's Blessed Shield"
 }
-shape = SubResource("Resource_rh8uo")
+shape = SubResource("Resource_vi1ei")
 rarity = 3
 weight = 6
 tags = Array[StringName]([&"faith", &"faith:skill", &"gear", &"shield", &"blessed", &"faith_anchor"])
-faith_bonuses = Array[ExtResource("11_y2exc")]([SubResource("Resource_2jowl"), SubResource("Resource_dgkn5")])
-combat = SubResource("Resource_kci6v")
+faith_bonuses = Array[ExtResource("11_y2exc")]([SubResource("Resource_ln6vm"), SubResource("Resource_ouk8o")])
+combat = SubResource("Resource_seitx")
