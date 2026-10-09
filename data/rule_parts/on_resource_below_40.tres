@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RulePartDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/rule_part_def.gd" id="1_ci45t"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="2_gnhs0"]
+
+[sub_resource type="Resource" id="Resource_wgfg3"]
+script = ExtResource("2_gnhs0")
+percent = 40
+
+[resource]
+script = ExtResource("1_ci45t")
+id = &"on_resource_below_40"
+display_name = "你的生命低于 40% 时"
+trigger = SubResource("Resource_wgfg3")

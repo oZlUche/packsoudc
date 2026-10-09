@@ -19,6 +19,7 @@
 
 [sub_resource type="Resource" id="Resource_0llgg"]
 script = ExtResource("3_6kfpr")
+metadata/part_ref = &"always"
 
 [sub_resource type="Resource" id="Resource_7wasi"]
 script = ExtResource("6_vtdj4")
@@ -54,9 +55,11 @@ rules = Array[ExtResource("2_k8xyn")]([SubResource("Resource_0aopi")])
 [sub_resource type="Resource" id="Resource_tyfrv"]
 script = ExtResource("10_kr7gu")
 buff = SubResource("Resource_7ya13")
+metadata/part_ref = &"apply_status_poison"
 
 [sub_resource type="Resource" id="Resource_u8unb"]
 script = ExtResource("11_emyqn")
+metadata/part_ref = &"on_item_fired"
 
 [sub_resource type="Resource" id="Resource_nm2x0"]
 script = ExtResource("2_k8xyn")

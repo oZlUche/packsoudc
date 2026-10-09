@@ -1,0 +1,29 @@
+{
+  "id": "virulent",
+  "display_name": "剧毒",
+  "display_names": {
+    "en": "Virulent Poison"
+  },
+  "is_debuff": true,
+  "rules": [
+    {
+      "trigger": {
+        "type": "on_schedule"
+      },
+      "cadence": {
+        "type": "cooldown",
+        "seconds": 1.0
+      },
+      "effects": [
+        {
+          "type": "deal_damage",
+          "target": "SELF",
+          "damage_type": "poison",
+          "amount": 5.0,
+          "damage_stat": "",
+          "per_stack": true
+        }
+      ]
+    }
+  ]
+}

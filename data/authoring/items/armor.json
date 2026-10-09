@@ -5,8 +5,8 @@
     "en": "Body Armor"
   },
   "shape": [
-    "11",
-    "11"
+    "1111",
+    "0110"
   ],
   "rarity": 2,
   "weight": 8,
@@ -17,7 +17,7 @@
   ],
   "combat": {
     "base_stats": {
-      "max_shield": 25
+      "max_shield": 35
     }
   }
 }

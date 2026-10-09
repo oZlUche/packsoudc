@@ -38,45 +38,10 @@
     ],
     "grant_rules": [
       {
-        "trigger": {
-          "type": "on_item_fired"
-        },
-        "cadence": {
-          "type": "always"
-        },
+        "trigger": "@on_item_fired",
+        "cadence": "@always",
         "effects": [
-          {
-            "type": "apply_status",
-            "buff": {
-              "id": "poison",
-              "display_name": "中毒",
-              "display_names": {
-                "en": "Poison"
-              },
-              "is_debuff": true,
-              "rules": [
-                {
-                  "trigger": {
-                    "type": "on_schedule"
-                  },
-                  "cadence": {
-                    "type": "cooldown",
-                    "seconds": 1.0
-                  },
-                  "effects": [
-                    {
-                      "type": "deal_damage",
-                      "target": "SELF",
-                      "damage_type": "poison",
-                      "amount": 2.0,
-                      "damage_stat": "",
-                      "per_stack": true
-                    }
-                  ]
-                }
-              ]
-            }
-          }
+          "@apply_status_poison"
         ]
       }
     ]

@@ -1,0 +1,7 @@
+{
+  "id": "deal_damage",
+  "display_name": "造成物理伤害",
+  "effect": {
+    "type": "deal_damage"
+  }
+}

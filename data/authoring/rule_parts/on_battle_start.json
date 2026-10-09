@@ -1,0 +1,7 @@
+{
+  "id": "on_battle_start",
+  "display_name": "开战时",
+  "trigger": {
+    "type": "on_battle_start"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "id": "apply_status_bleed",
+  "display_name": "施加流血",
+  "effect": {
+    "type": "apply_status",
+    "buff": "bleed"
+  }
+}

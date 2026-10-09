@@ -43,6 +43,17 @@ var popup_layer: Control = null
 var only: Array = []
 ## 145：本表单里的规则列表（字段名 → Tree），弹窗改了东西按这个找回去刷新那几行
 var _rule_trees: Dictionary = {}
+## 146：「添加」下拉里列不列规则构件库（构件编辑器自己、buff 的规则里不列：构件不套构件，buff 的规则请内联）。子表单继承
+var parts_allowed: bool = true
+## 146：来自库的构件（带 `part_ref`）只读：控件全部禁用，「断开」之后才能改。子表单继承
+var locked: bool = false
+## 146：「去库里改」「去 buff 制作器」切过去时要定位到哪一份（目标编辑器开场读一次）
+static var library_focus: String = ""
+
+const PART_EDITOR := "res://ui/part_editor/part_editor.tscn"
+const BUFF_EDITOR := "res://ui/buff_editor/buff_editor.tscn"
+## 「添加」下拉里库项的 id 从这里起（前面是类型）
+const LIB_ID0 := 1000
 
 ## 用时再 load：弹窗里的页签又是 PropertyForm，两边互相 preload 会成环
 const RULE_WINDOW := "res://ui/editor/rule_window.gd"
@@ -88,6 +99,18 @@ func rebuild() -> void:
 		_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		add_child(_hint)
 		_refresh_hint()
+	if locked:
+		_lock_controls()
+
+
+## 146：来自库的构件只读 —— 输入框不能改、按钮与下拉点不了，整块灰一点
+func _lock_controls() -> void:
+	modulate.a = 0.6
+	for n in find_children("*", "", true, false):
+		if n is LineEdit or n is SpinBox or n is TextEdit:
+			n.editable = false
+		elif n is BaseButton:
+			n.disabled = true
 
 
 ## 133：灰字提示的当前文字（没有 = 空；测试用）
@@ -187,6 +210,11 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 			if type == TYPE_STRING_NAME and _is_damage_type_field(key):
 				# 096：伤害类型是数据（DamageTypes）：下拉列出登记过的，也能自定义
 				return _labeled(owner, key, _key_picker(_damage_type_keys(), Callable(PropertyForm, "damage_type_label"), String(value), func(k: String):
+					owner.set(key, StringName(k))
+					_emit()))
+			if type == TYPE_STRING_NAME and _is_buff_id_field(owner, key):
+				# 146：指向一个 buff 的 id（移除 / 条件 / 扳机里的状态）：下拉列出库里的 buff，也能手填
+				return _labeled(owner, key, _key_picker(known_buff_ids(), Callable(PropertyForm, "buff_id_label"), String(value), func(k: String):
 					owner.set(key, StringName(k))
 					_emit()))
 			if type == TYPE_STRING_NAME and _is_tag_field(key):
@@ -339,6 +367,57 @@ static func _is_tag_field(key: String) -> bool:
 ## 096：伤害类型字段
 static func _is_damage_type_field(key: String) -> bool:
 	return key == "damage_type"
+
+
+## 146：指向 buff id 的字段：`buff_id`（移除 / 条件 / 状态扳机 / 扣层），转化状态的 `from`
+static func _is_buff_id_field(owner: Object, key: String) -> bool:
+	return key == "buff_id" or (owner is ConvertStatus and key == "from")
+
+
+## 库里全部 buff 的 id
+static func known_buff_ids() -> Array[String]:
+	var out: Array[String] = []
+	for id in ContentLibrary.buffs():
+		out.append(String(id))
+	out.sort()
+	return out
+
+
+## buff id 给人看：「流血 (bleed)」
+static func buff_id_label(id: String) -> String:
+	var def: BuffDef = ContentLibrary.buffs().get(StringName(id), null)
+	var n := Names.of(def) if def != null else DamageTypes.name_of(StringName(id))
+	return "%s (%s)" % [n, id] if n != "" and n != id else id
+
+
+## 这个 buff 对象是不是库里的那一份（同一个对象，或同 id 且内容一样）；是就返回 id
+static func library_buff_id(value: Object) -> String:
+	if not (value is BuffDef):
+		return ""
+	var lib: BuffDef = ContentLibrary.buffs().get((value as BuffDef).id, null)
+	if lib == null:
+		return ""
+	if lib == value or ContentExporter.dump(lib) == ContentExporter.dump(value):
+		return String(lib.id)
+	return ""
+
+
+## 带 `part_ref` 的对象来自库里哪一件；不是返回空
+static func part_ref_of(obj: Object) -> String:
+	if obj is Resource and obj.has_meta(RulePartDef.REF_META):
+		return String(obj.get_meta(RulePartDef.REF_META))
+	return ""
+
+
+static func part_label(def: RulePartDef) -> String:
+	var n := Names.of(def)
+	return n if n != "" else String(def.id)
+
+
+## 「来自库：名字」
+static func part_ref_label(ref: String) -> String:
+	var def := ContentLibrary.part(StringName(ref))
+	return ("来自库：" + part_label(def)) if def != null else "来自库：@%s（库里已没有）" % ref
 
 
 ## 标签给人看：中文模式「武器 (weapon)」，英文模式「Weapon (weapon)」；没登记的原词
@@ -811,10 +890,13 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 		var card := _card()
 		var body := _body(card)
 		var head := HBoxContainer.new()
-		var item_head := _muted("[%d] %s" % [idx, FieldText.type_label(ContentSchema.registry_name_of(item))])
+		var ref := part_ref_of(item)
+		var item_head := _muted("[%d] %s" % [idx, part_ref_label(ref) if ref != "" else FieldText.type_label(ContentSchema.registry_name_of(item))])
 		item_head.tooltip_text = FieldText.type_help(item)
 		item_head.mouse_filter = Control.MOUSE_FILTER_STOP
 		head.add_child(item_head)
+		if ref != "":
+			_library_buttons(head, item, ref)
 		head.add_child(_small_button("↑", func():
 			if idx > 0:
 				var tmp = arr[idx - 1]
@@ -844,6 +926,85 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 		_emit()
 		rebuild()))
 	return box
+
+
+#region 146：库
+## 来自库的构件卡片头上的两个按钮：「断开」（去掉 part_ref，字段能改，存盘后内联）、「去库里改」（切到构件编辑器定位到它）
+func _library_buttons(head: HBoxContainer, obj: Object, ref: String) -> void:
+	head.add_child(_small_button("断开", func():
+		obj.remove_meta(RulePartDef.REF_META)
+		_emit()
+		rebuild()))
+	head.add_child(_small_button("去库里改", func(): _goto_library(PART_EDITOR, ref)))
+
+
+## buff 字段：下拉「内联」+ 库里全部 buff。选库里的 = 引用（只读，旁边「去 buff 制作器」）；内联 = 照旧的子表单
+func _buff_section(owner: Object, key: String, value: Object) -> Control:
+	var box := VBoxContainer.new()
+	var head := HBoxContainer.new()
+	var title := _heading(FieldText.label(owner, key))
+	title.tooltip_text = FieldText.tip(owner, key)
+	title.mouse_filter = Control.MOUSE_FILTER_STOP
+	head.add_child(title)
+	var lib := ContentLibrary.buffs()
+	var ids: Array = lib.keys()
+	ids.sort()
+	var linked := library_buff_id(value)
+	var ob := OptionButton.new()
+	_compact(ob)
+	ob.add_item("内联（这一件自己的）", 0)
+	for i in ids.size():
+		ob.add_item(buff_id_label(String(ids[i])), i + 1)
+	ob.select(ids.find(StringName(linked)) + 1 if linked != "" else 0)
+	ob.item_selected.connect(func(idx: int):
+		if idx == 0:
+			# 改成内联：拿库里那份拷一份当起点（之后改了就是这一件自己的版本）
+			if value != null:
+				owner.set(key, (value as Resource).duplicate_deep(Resource.DEEP_DUPLICATE_ALL))
+		else:
+			owner.set(key, lib[ids[idx - 1]])
+		_emit()
+		rebuild())
+	head.add_child(ob)
+	box.set_meta("buff_picker", ob)
+	if linked != "":
+		head.add_child(_small_button("去 buff 制作器", func(): _goto_library(BUFF_EDITOR, linked)))
+		box.add_child(head)
+		var note := _muted("库里的 buff，这里只读；要改去 buff 制作器，或在下拉里选「内联」")
+		box.add_child(note)
+		return box
+	if value == null:
+		head.add_child(_adder(&"BuffDef", func(made: Object):
+			owner.set(key, made)
+			_emit()
+			rebuild()))
+		box.add_child(head)
+		return box
+	head.add_child(_small_button("清除", func():
+		owner.set(key, null)
+		_emit()
+		rebuild()))
+	box.add_child(head)
+	var card := _card()
+	_body(card).add_child(_sub_form(value))
+	box.add_child(card)
+	return box
+
+
+## 切到库的编辑器并定位。当前编辑器有没存的改动就不切（切场景草稿就没了），在状态栏说一声
+func _goto_library(scene: String, id: String) -> void:
+	var host: Node = self
+	while host != null and not host.has_method("has_unsaved_changes"):
+		host = host.get_parent()
+	if host != null and host.has_unsaved_changes():
+		var status = host.get("_status")
+		if status is RichTextLabel:
+			(status as RichTextLabel).text = "[color=#f0ad4e]先存盘再去库里改 —— 切过去没存的改动会丢[/color]"
+		return
+	PropertyForm.library_focus = id
+	if is_inside_tree():
+		get_tree().change_scene_to_file(scene)
+#endregion
 
 
 #region 145：规则列表
@@ -962,7 +1123,7 @@ func _open_rule(owner: Object, key: String, arr: Array, idx: int) -> void:
 	if idx < 0 or idx >= arr.size() or popup_layer == null:
 		return
 	var win = load(RULE_WINDOW).open_in(popup_layer)
-	win.show_rule(arr[idx], "规则 %d · %s" % [idx + 1, FieldText.label(owner, key)], label_font, func():
+	win.show_rule(arr[idx], "规则 %d · %s" % [idx + 1, FieldText.label(owner, key)], label_font, parts_allowed, func():
 		_emit()
 		var tree := _rule_trees.get(key) as Tree
 		if tree != null and is_instance_valid(tree):
@@ -983,6 +1144,10 @@ func _object_section(owner: Object, prop: Dictionary, value: Object) -> Control:
 			and ContentSchema.script_of(declared) == null:
 		return null
 
+	# 146：buff 字段是「库里的 buff / 内联」二选一
+	if declared == &"BuffDef":
+		return _buff_section(owner, key, value)
+
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
 	var head := HBoxContainer.new()
@@ -996,10 +1161,13 @@ func _object_section(owner: Object, prop: Dictionary, value: Object) -> Control:
 			_emit()
 			rebuild()))
 	else:
-		var kind := _muted(FieldText.type_label(ContentSchema.registry_name_of(value)))
+		var ref := part_ref_of(value)
+		var kind := _muted(part_ref_label(ref) if ref != "" else FieldText.type_label(ContentSchema.registry_name_of(value)))
 		kind.tooltip_text = FieldText.type_help(value)
 		kind.mouse_filter = Control.MOUSE_FILTER_STOP
 		head.add_child(kind)
+		if ref != "":
+			_library_buttons(head, value, ref)
 		head.add_child(_small_button("清除", func():
 			owner.set(key, null)
 			_emit()
@@ -1017,6 +1185,29 @@ func _object_section(owner: Object, prop: Dictionary, value: Object) -> Control:
 func _adder(declared: StringName, on_made: Callable) -> Control:
 	var row := HBoxContainer.new()
 	var types := ContentSchema.available_types(declared)
+	# 146：扳机 / 节奏 / 消耗 / 效果的下拉分两组：「新建：」各类型，再是「库：」里现成的构件（选了 = 复制一份、来自库）
+	var lib: Array[RulePartDef] = []
+	if parts_allowed and RulePartDef.SLOTS.values().has(declared):
+		lib = ContentLibrary.parts_for(declared)
+	if not lib.is_empty():
+		var lob := OptionButton.new()
+		_compact(lob)
+		for i in types.size():
+			lob.add_item("新建：" + FieldText.type_label(types[i]), i)
+			lob.set_item_tooltip(i, String(types[i]))
+		lob.add_separator("库")
+		for j in lib.size():
+			lob.add_item("库：" + part_label(lib[j]), LIB_ID0 + j)
+			lob.set_item_tooltip(lob.item_count - 1, "@%s　%s" % [lib[j].id, lib[j].preview()])
+		row.add_child(lob)
+		row.add_child(_small_button("+ 添加", func():
+			var sel := lob.get_selected_id()
+			var made: Object = ContentLibrary.instance_of(lib[sel - LIB_ID0]) if sel >= LIB_ID0 \
+				else ContentSchema.make(declared, types[sel])
+			if made != null:
+				on_made.call(made)))
+		row.set_meta("library", lob)
+		return row
 	if types.size() <= 1:
 		var only := types[0] if types.size() == 1 else declared
 		row.add_child(_small_button("+ 添加", func():
@@ -1042,6 +1233,8 @@ func _sub_form(obj: Object) -> PropertyForm:
 	var sub := PropertyForm.create(obj, label_font, skip)
 	sub.parent_target = _target
 	sub.popup_layer = popup_layer
+	sub.parts_allowed = parts_allowed and not (obj is BuffDef)
+	sub.locked = locked or part_ref_of(obj) != ""
 	sub.changed.connect(_emit)
 	return sub
 #endregion

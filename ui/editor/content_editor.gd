@@ -498,7 +498,7 @@ func _export(d) -> Dictionary:
 
 ## 道具每次都用一份新的上下文（不对着别的内容查）
 func _import(data: Dictionary, report: ImportReport) -> Resource:
-	return ContentImporter.import_item(data, ContentImporter.Context.new(), report)
+	return ContentImporter.import_item(data, ContentLibrary.context(), report)     # 146：道具里按 id 引用的 buff、「@构件」得查得到
 
 
 func _on_bound() -> void:

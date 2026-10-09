@@ -10,6 +10,7 @@ extends CliTool
 
 func run() -> void:
 	var ctx := ContentImporter.Context.new()
+	ctx.strict = true     # 146：只认这一趟导入的 buff 与构件，不回头读盘上的旧资产
 	var report := ImportReport.new()
 	var rewritten := 0
 	var checked := 0

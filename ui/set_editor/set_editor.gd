@@ -29,7 +29,7 @@ func _ready() -> void:
 	var settings := GameSettings.load_from()
 	UiText.apply(settings)
 	UiPalette.apply(settings)
-	_ctx = ContentImporter.Context.new()
+	_ctx = ContentLibrary.context()     # 146：档位的规则可以引用库里的 buff 与构件
 	_items = ItemDatabase.new()
 	_items.load_dir()
 	_build_ui()

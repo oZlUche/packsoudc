@@ -1,0 +1,8 @@
+{
+  "id": "resource_5",
+  "display_name": "消耗 5 耐力",
+  "cost": {
+    "type": "resource",
+    "amount": 5.0
+  }
+}

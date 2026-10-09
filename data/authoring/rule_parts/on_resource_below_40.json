@@ -1,0 +1,8 @@
+{
+  "id": "on_resource_below_40",
+  "display_name": "你的生命低于 40% 时",
+  "trigger": {
+    "type": "on_resource_below",
+    "percent": 40
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "id": "apply_status_poison",
+  "display_name": "施加中毒",
+  "effect": {
+    "type": "apply_status",
+    "buff": "poison"
+  }
+}

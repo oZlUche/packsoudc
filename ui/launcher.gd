@@ -54,6 +54,12 @@ const ENTRIES := [
 		"keys": "保存 = JSON + .tres　可叠层的 buff 一律永续",
 	},
 	{
+		"scene": "res://ui/part_editor/part_editor.tscn",
+		"title": "构件编辑器",
+		"desc": "146：规则构件库 —— 填好数值、起了名字的扳机 / 节奏 / 消耗与检查 / 效果。别的编辑器「添加」的下拉里「库：」那一组就是这里的；改一份，引用它的规则都跟着变",
+		"keys": "保存 = JSON + .tres　右边看谁在用",
+	},
+	{
 		"scene": "res://ui/set_editor/set_editor.tscn",
 		"title": "套装编辑器",
 		"desc": "给作者做套装：id、名字、计数方式、各档位（集齐几件生效什么：属性修饰 / 规则 / 别的作用域的效果），右边看哪些道具属于这套，实时校验，存盘直接产出资产",

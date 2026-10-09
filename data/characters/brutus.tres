@@ -32,47 +32,49 @@ passive = Array[ExtResource("3_oevla")]([SubResource("Resource_ga23w"), SubResou
 
 [sub_resource type="Resource" id="Resource_056bq"]
 script = ExtResource("8_ipor7")
+metadata/part_ref = &"always"
 
 [sub_resource type="Resource" id="Resource_878ss"]
 script = ExtResource("10_3usi0")
+metadata/part_ref = &"uses_1"
 
-[sub_resource type="Resource" id="Resource_vtu5o"]
+[sub_resource type="Resource" id="Resource_rdf0w"]
 script = ExtResource("12_utyi1")
 stat = &"max_shield"
 amount = 15.0
 
-[sub_resource type="Resource" id="Resource_47gdc"]
+[sub_resource type="Resource" id="Resource_vtu5o"]
 script = ExtResource("13_t86aj")
 id = &"hardy_guard"
 display_name = "坚韧"
 display_names = {
 "en": "Hardy"
 }
-mods = Array[ExtResource("12_utyi1")]([SubResource("Resource_vtu5o")])
+mods = Array[ExtResource("12_utyi1")]([SubResource("Resource_rdf0w")])
 
-[sub_resource type="Resource" id="Resource_2m2no"]
+[sub_resource type="Resource" id="Resource_47gdc"]
 script = ExtResource("14_eqvia")
 target = 1
-buff = SubResource("Resource_47gdc")
+buff = SubResource("Resource_vtu5o")
 
-[sub_resource type="Resource" id="Resource_66poc"]
+[sub_resource type="Resource" id="Resource_2m2no"]
 script = ExtResource("15_iqvcx")
 
-[sub_resource type="Resource" id="Resource_obt75"]
+[sub_resource type="Resource" id="Resource_66poc"]
 script = ExtResource("6_063lg")
-trigger = SubResource("Resource_66poc")
+trigger = SubResource("Resource_2m2no")
 cadence = SubResource("Resource_056bq")
 costs = Array[ExtResource("9_5kvhg")]([SubResource("Resource_878ss")])
-effects = Array[ExtResource("11_gxjex")]([SubResource("Resource_2m2no")])
+effects = Array[ExtResource("11_gxjex")]([SubResource("Resource_47gdc")])
 
-[sub_resource type="Resource" id="Resource_3htg3"]
+[sub_resource type="Resource" id="Resource_obt75"]
 script = ExtResource("7_kraql")
 id = &"hardy"
 display_name = "坚韧"
 description = "战斗里生命掉到三成以下时，立刻得到一层护盾（每场一次）。"
-rules = Array[ExtResource("6_063lg")]([SubResource("Resource_obt75")])
+rules = Array[ExtResource("6_063lg")]([SubResource("Resource_66poc")])
 
-[sub_resource type="Resource" id="Resource_y0m8p"]
+[sub_resource type="Resource" id="Resource_3htg3"]
 script = ExtResource("16_6h21u")
 id = &"second_wind"
 display_name = "咬牙"
@@ -95,4 +97,4 @@ base_stats = {
 vitality_max = 6
 starting_bags = Array[StringName]([&"bag_leather", &"bag_leather"])
 weight_capacity = 56
-skills = Array[ExtResource("2_mx3k3")]([SubResource("Resource_x8pem"), SubResource("Resource_3htg3"), SubResource("Resource_y0m8p")])
+skills = Array[ExtResource("2_mx3k3")]([SubResource("Resource_x8pem"), SubResource("Resource_obt75"), SubResource("Resource_3htg3")])

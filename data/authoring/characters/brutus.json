@@ -40,31 +40,15 @@
           "trigger": {
             "type": "on_resource_below"
           },
-          "cadence": {
-            "type": "always"
-          },
+          "cadence": "@always",
           "costs": [
-            {
-              "type": "uses"
-            }
+            "@uses_1"
           ],
           "effects": [
             {
               "type": "apply_status",
               "target": "SELF",
-              "buff": {
-                "id": "hardy_guard",
-                "display_name": "坚韧",
-                "display_names": {
-                  "en": "Hardy"
-                },
-                "mods": [
-                  {
-                    "stat": "max_shield",
-                    "amount": 15.0
-                  }
-                ]
-              }
+              "buff": "hardy_guard"
             }
           ]
         }

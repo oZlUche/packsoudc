@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RulePartDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="1_g5emi"]
+[ext_resource type="Script" path="res://core/battle/rule_part_def.gd" id="2_yyvpj"]
+
+[sub_resource type="Resource" id="Resource_4h67j"]
+script = ExtResource("1_g5emi")
+amount = 5.0
+
+[resource]
+script = ExtResource("2_yyvpj")
+id = &"resource_5"
+display_name = "消耗 5 耐力"
+cost = SubResource("Resource_4h67j")

@@ -24,9 +24,11 @@ amount = 9.0
 
 [sub_resource type="Resource" id="Resource_tk0u6"]
 script = ExtResource("7_mqpfi")
+metadata/part_ref = &"deal_damage"
 
 [sub_resource type="Resource" id="Resource_8s62x"]
 script = ExtResource("8_d0kj2")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_yfusu"]
 script = ExtResource("2_32duj")

@@ -16,9 +16,11 @@
 
 [sub_resource type="Resource" id="Resource_oii2c"]
 script = ExtResource("3_y0k3a")
+metadata/part_ref = &"always"
 
 [sub_resource type="Resource" id="Resource_itw2x"]
 script = ExtResource("5_xqgdt")
+metadata/part_ref = &"uses_1"
 
 [sub_resource type="Resource" id="Resource_fntlc"]
 script = ExtResource("7_5cpy5")
@@ -27,6 +29,7 @@ amount = 35.0
 [sub_resource type="Resource" id="Resource_evcgn"]
 script = ExtResource("8_x5u6c")
 percent = 40
+metadata/part_ref = &"on_resource_below_40"
 
 [sub_resource type="Resource" id="Resource_mtedr"]
 script = ExtResource("2_ohdgn")

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RulePartDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/rule_part_def.gd" id="1_n5j7s"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_item_fired.gd" id="2_81sug"]
+
+[sub_resource type="Resource" id="Resource_th1y3"]
+script = ExtResource("2_81sug")
+
+[resource]
+script = ExtResource("1_n5j7s")
+id = &"on_item_fired"
+display_name = "你的其他道具出手时"
+trigger = SubResource("Resource_th1y3")

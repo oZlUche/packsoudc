@@ -23,9 +23,7 @@
           "direction": "DEALT",
           "damage_type": "poison"
         },
-        "cadence": {
-          "type": "always"
-        },
+        "cadence": "@always",
         "costs": [
           {
             "type": "chance",

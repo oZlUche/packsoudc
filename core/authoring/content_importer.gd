@@ -51,6 +51,32 @@ class Context:
 	func register_buff(def: BuffDef) -> void:
 		_put(buffs, def)
 
+	## 146：id -> RulePartDef。规则里的 `"@id"` 对着它查
+	var rule_parts: Dictionary = {}
+
+	func register_rule_part(def: RulePartDef) -> void:
+		_put(rule_parts, def)
+
+	## 146：批量导入（import_content / normalize_content）设 true —— 只认这一趟登记过的 buff 与构件。
+	## 默认 false：单件导入（编辑器、测试读一份真实道具）登记表里没有的，到盘上的库（[ContentLibrary]）里找
+	var strict: bool = false
+
+	func find_buff(id: StringName) -> BuffDef:
+		var def: BuffDef = buffs.get(id, null)
+		if def == null and not strict:
+			def = ContentLibrary.buffs().get(id, null)
+		return def
+
+	func find_rule_part(id: StringName) -> RulePartDef:
+		var def: RulePartDef = rule_parts.get(id, null)
+		if def == null and not strict:
+			def = ContentLibrary.part(id)
+		return def
+
+	## 146：正在填 buff / 构件的第几层（>0 时规则里不许再引用构件：buff 的规则请内联；构件不套构件）
+	var buff_depth: int = 0
+	var part_depth: int = 0
+
 	func register_item(def: ItemDef) -> void:
 		_put(items, def)
 
@@ -167,6 +193,8 @@ static func import_of(kind: String, data: Dictionary, ctx: Context, report: Impo
 			return import_damage_type(data, ctx, report)
 		"buffs":
 			return import_buff(data, ctx, report)
+		"rule_parts":
+			return import_rule_part(data, ctx, report)
 		"sets":
 			return import_set(data, ctx, report)
 		"enemies":
@@ -224,6 +252,36 @@ static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) ->
 	warn_axis_candidate(def, "", report)
 	ctx.register_buff(def)
 	return def
+
+
+## 146：规则构件库里的一份。四类里正好填一个
+static func import_rule_part(data: Dictionary, ctx: Context, report: ImportReport) -> RulePartDef:
+	var def := RulePartDef.new()
+	_fill(def, data, "", ctx, report)
+	_require_id(def.id, "规则构件", report)
+	if def.filled() != 1:
+		report.error("", "一份构件只填扳机 / 节奏 / 消耗 / 效果中的一个（现在填了 %d 个）" % def.filled())
+	ctx.register_rule_part(def)
+	return def
+
+
+## 146：规则里的 `"@id"` —— 到库里找那份构件，复制一份打上 `part_ref`。类不对（把扳机填进效果）、
+## 在 buff 的规则里、在构件里面都报错
+static func _resolve_part(class_id: StringName, id: String, path: String, ctx: Context, report: ImportReport) -> Object:
+	if ctx.buff_depth > 0:
+		report.error(path, "buff 的规则请内联，不能引用规则构件（@%s）" % id)
+		return null
+	if ctx.part_depth > 0:
+		report.error(path, "构件里不能再引用构件（@%s）" % id)
+		return null
+	var def := ctx.find_rule_part(StringName(id))
+	if def == null:
+		report.error(path, "找不到规则构件 '@%s'（data/authoring/rule_parts）" % id)
+		return null
+	if def.root() != class_id:
+		report.error(path, "规则构件 '@%s' 是 %s，这里要的是 %s" % [id, def.root(), class_id])
+		return null
+	return ContentLibrary.instance_of(def)
 
 
 ## 作者定的规矩（085）：可叠层的 buff 永续，不许填时长；不可叠层的才可以过期
@@ -1580,6 +1638,13 @@ static func _fill(
 	var props := {}
 	for p in ContentSchema.properties_of(obj):
 		props[String(p["name"])] = p
+	# 146：记住正在填 buff / 构件，里面的规则不许引用构件
+	var in_buff := obj is BuffDef and ctx != null
+	var in_part := obj is RulePartDef and ctx != null
+	if in_buff:
+		ctx.buff_depth += 1
+	if in_part:
+		ctx.part_depth += 1
 	if obj is StatModifier:
 		data = _migrate_stat_modifier(data, path, report)
 	elif obj is BuffDef:
@@ -1598,6 +1663,10 @@ static func _fill(
 		var coerced = _coerce(obj, prop, obj.get(prop["name"]), data[key], at, ctx, report)
 		if coerced != null:
 			obj.set(prop["name"], coerced)
+	if in_buff:
+		ctx.buff_depth -= 1
+	if in_part:
+		ctx.part_depth -= 1
 	# 104（作者定）：暴击的加成一律加算 —— 作用于它们的修饰只能是 ADD
 	if obj is StatModifier and BattleStats.additive_only((obj as StatModifier).stat) and (obj as StatModifier).is_mult():
 		report.error(path, "%s 只接受加算（mode = ADD）；不能写乘算" % (obj as StatModifier).stat)
@@ -1795,12 +1864,16 @@ static func _make_object(
 	# --- 例外二：增益可以按 id 引用先前导入的那一份。
 	#     内联也允许 —— 只被一件道具用到的 buff 没必要单开一个文件。
 	if class_id == &"BuffDef" and value is String:
-		var found: BuffDef = ctx.buffs.get(StringName(value), null)
+		var found := ctx.find_buff(StringName(value))
 		if found == null:
 			report.error(path, "找不到增益 '%s'（已知：%s）" % [
 				value, ", ".join(ctx.buffs.keys())
 			])
 		return found
+
+	# --- 例外三（146）：规则构件按 `"@id"` 引用，复制一份
+	if value is String and String(value).begins_with("@") and RulePartDef.SLOTS.values().has(class_id):
+		return _resolve_part(class_id, String(value).substr(1), path, ctx, report)
 
 	if not (value is Dictionary):
 		report.error(path, "应为对象")

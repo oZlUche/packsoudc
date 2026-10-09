@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RulePartDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="1_r0xcv"]
+[ext_resource type="Script" path="res://core/battle/rule_part_def.gd" id="2_wsxah"]
+
+[sub_resource type="Resource" id="Resource_n0o63"]
+script = ExtResource("1_r0xcv")
+
+[resource]
+script = ExtResource("2_wsxah")
+id = &"uses_1"
+display_name = "每场最多 1 次"
+cost = SubResource("Resource_n0o63")

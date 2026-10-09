@@ -16,6 +16,7 @@
 
 [sub_resource type="Resource" id="Resource_wyon3"]
 script = ExtResource("3_wmign")
+metadata/part_ref = &"always"
 
 [sub_resource type="Resource" id="Resource_vaalh"]
 script = ExtResource("5_4j3ht")

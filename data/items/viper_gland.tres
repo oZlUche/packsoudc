@@ -19,12 +19,13 @@
 
 [sub_resource type="Resource" id="Resource_ewqt4"]
 script = ExtResource("3_e3f30")
+metadata/part_ref = &"always"
 
-[sub_resource type="Resource" id="Resource_evp2v"]
+[sub_resource type="Resource" id="Resource_uldxm"]
 script = ExtResource("7_x1xiu")
 seconds = 1.0
 
-[sub_resource type="Resource" id="Resource_q2ohf"]
+[sub_resource type="Resource" id="Resource_o142h"]
 script = ExtResource("8_a6yks")
 target = 1
 damage_type = &"poison"
@@ -32,16 +33,16 @@ amount = 5.0
 damage_stat = &""
 per_stack = true
 
-[sub_resource type="Resource" id="Resource_5286j"]
+[sub_resource type="Resource" id="Resource_j81pe"]
 script = ExtResource("9_idmao")
 
-[sub_resource type="Resource" id="Resource_ne2al"]
+[sub_resource type="Resource" id="Resource_fqggl"]
 script = ExtResource("2_yysk7")
-trigger = SubResource("Resource_5286j")
-cadence = SubResource("Resource_evp2v")
-effects = Array[ExtResource("5_5dv5h")]([SubResource("Resource_q2ohf")])
+trigger = SubResource("Resource_j81pe")
+cadence = SubResource("Resource_uldxm")
+effects = Array[ExtResource("5_5dv5h")]([SubResource("Resource_o142h")])
 
-[sub_resource type="Resource" id="Resource_wnq5v"]
+[sub_resource type="Resource" id="Resource_evp2v"]
 script = ExtResource("10_ptwt6")
 id = &"virulent"
 display_name = "剧毒"
@@ -49,28 +50,28 @@ display_names = {
 "en": "Virulent Poison"
 }
 is_debuff = true
-rules = Array[ExtResource("2_yysk7")]([SubResource("Resource_ne2al")])
+rules = Array[ExtResource("2_yysk7")]([SubResource("Resource_fqggl")])
 
-[sub_resource type="Resource" id="Resource_w4w5g"]
+[sub_resource type="Resource" id="Resource_q2ohf"]
 script = ExtResource("6_54il0")
 from = &"poison"
-to = SubResource("Resource_wnq5v")
+to = SubResource("Resource_evp2v")
 
-[sub_resource type="Resource" id="Resource_wd0mm"]
+[sub_resource type="Resource" id="Resource_5286j"]
 script = ExtResource("11_xgl8e")
 buff_id = &"poison"
 
-[sub_resource type="Resource" id="Resource_bqoq6"]
+[sub_resource type="Resource" id="Resource_ne2al"]
 script = ExtResource("2_yysk7")
-trigger = SubResource("Resource_wd0mm")
+trigger = SubResource("Resource_5286j")
 cadence = SubResource("Resource_ewqt4")
-effects = Array[ExtResource("5_5dv5h")]([SubResource("Resource_w4w5g")])
+effects = Array[ExtResource("5_5dv5h")]([SubResource("Resource_q2ohf")])
 
-[sub_resource type="Resource" id="Resource_3bna4"]
+[sub_resource type="Resource" id="Resource_wnq5v"]
 script = ExtResource("12_648ps")
-rules = Array[ExtResource("2_yysk7")]([SubResource("Resource_bqoq6")])
+rules = Array[ExtResource("2_yysk7")]([SubResource("Resource_ne2al")])
 
-[sub_resource type="Resource" id="Resource_iwtek"]
+[sub_resource type="Resource" id="Resource_w4w5g"]
 script = ExtResource("16_mtyyw")
 
 [resource]
@@ -81,7 +82,7 @@ display_names = {
 "en": "Viper Gland"
 }
 description = "挤一滴进去，寻常的毒就烈了。"
-shape = SubResource("Resource_iwtek")
+shape = SubResource("Resource_w4w5g")
 rarity = 3
 tags = Array[StringName]([&"reagent", &"material", &"nature", &"poison"])
-combat = SubResource("Resource_3bna4")
+combat = SubResource("Resource_wnq5v")

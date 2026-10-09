@@ -1,0 +1,8 @@
+{
+  "id": "cooldown_1s",
+  "display_name": "每 1.0 秒",
+  "cadence": {
+    "type": "cooldown",
+    "seconds": 1.0
+  }
+}
