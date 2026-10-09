@@ -45,6 +45,10 @@ var _list: ItemList
 var _status: RichTextLabel
 ## JSON 预览（能直接改了套用）
 var _json: TextEdit
+## 145：铺满编辑器的弹窗层（规则浮窗挂在这里）。平时不挡鼠标，浮窗开着时接住「点外面」
+var _popup_layer: Control = null
+
+const PropertyFormScript := preload("res://ui/editor/property_form.gd")
 
 
 #region 子类实现
@@ -225,6 +229,37 @@ func _load_dict(data: Dictionary, id: String) -> void:
 	var report := ImportReport.new()
 	report.source = id
 	_bind(_import(data, report), id)
+
+
+## 145：四个编辑器的属性表单都从这里拿：规则表是列表 + 浮窗，改动走 [method _refresh]。
+## 换了对象（表单重建）时开着的规则浮窗一起关掉 —— 它改的是旧对象里的规则
+func _form_for(def, skip_map: Dictionary) -> PropertyForm:
+	_close_popups()
+	var form: PropertyForm = PropertyFormScript.create(def, _font, skip_map)
+	form.popup_layer = _popups()
+	form.changed.connect(_refresh)
+	return form
+
+
+func _popups() -> Control:
+	if _popup_layer == null:
+		_popup_layer = Control.new()
+		_popup_layer.name = "Popups"
+		_popup_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_popup_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_popup_layer)
+	return _popup_layer
+
+
+func _close_popups() -> void:
+	if _popup_layer == null:
+		return
+	for c in _popup_layer.get_children():
+		if c.has_method("close"):
+			c.close()
+		else:
+			c.queue_free()
+	_popup_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 ## 把一个对象接到界面上

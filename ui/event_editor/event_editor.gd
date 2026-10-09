@@ -518,9 +518,7 @@ func _rebuild_form() -> void:
 	if _def == null:
 		return
 	# 标题、正文、配图在上面有专门的控件，表单里跳过，免得两处能改同一个值
-	var form := PropertyForm.create(_def, _font, {"EventDef": ["id", "title", "titles", "text", "texts", "image"]})
-	form.changed.connect(_refresh)
-	_form_host.add_child(form)
+	_form_host.add_child(_form_for(_def, {"EventDef": ["id", "title", "titles", "text", "texts", "image"]}))
 
 
 ## 照着事件屏画（两栏：左边图，右边标题、正文、选项）；每个选项底下写条件与后果

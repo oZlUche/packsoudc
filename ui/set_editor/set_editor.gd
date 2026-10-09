@@ -6,7 +6,6 @@
 extends AuthoringEditor
 
 const KIND := "sets"
-const PropertyFormScript := preload("res://ui/editor/property_form.gd")
 const SET_TEXTS := {
 	"ok": "没有问题", "unreadable": "%s.json 读不到", "err_id": "先给一个 id", "err_save": "有错，没存",
 	"err_write": "写不进作者目录", "warn_asset": "JSON 存了，.tres 没写成", "err_json": "JSON 读不通",
@@ -220,9 +219,7 @@ func _rebuild_form() -> void:
 	UiTheme.clear_children(_form_host)
 	if _def == null:
 		return
-	var form = PropertyFormScript.create(_def, _font, {"ItemSetDef": ["id", "display_name"]})
-	form.changed.connect(_refresh)
-	_form_host.add_child(form)
+	_form_host.add_child(_form_for(_def, {"ItemSetDef": ["id", "display_name"]}))
 #endregion
 
 

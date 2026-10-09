@@ -260,9 +260,7 @@ func _rebuild_form() -> void:
 	UiTheme.clear_children(_form_host)
 	if _def == null:
 		return
-	var form := PropertyForm.create(_def, _font, {"BuffDef": ["id", "display_name", "is_debuff", "stackable", "duration_sec", "refresh_on_restack"]})
-	form.changed.connect(_refresh)
-	_form_host.add_child(form)
+	_form_host.add_child(_form_for(_def, {"BuffDef": ["id", "display_name", "is_debuff", "stackable", "duration_sec", "refresh_on_restack"]}))
 #endregion
 
 

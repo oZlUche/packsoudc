@@ -174,14 +174,48 @@ static func _exception(text: String) -> String:
 ## [param skip_stamina]：耐力消耗另有地方写（道具悬浮窗的「耗耐力 N」）时不在句子里重复
 static func rule_text(rule: AbilityRule, skip_stamina: bool = false) -> String:
 	var line := ""
-	var cd := rule.cadence as CooldownCadence
-	if rule.trigger is OnSchedule and cd != null:
-		line = "[每 %.1f 秒] " % cd.seconds
+	var cad := cadence_text(rule)
+	if _scheduled(rule):
+		line = "[%s] " % cad
 	else:
 		var when := trigger_text(rule.trigger)
 		line = ("[%s] " % when) if when != "" else ""
-		if cd != null:
-			line += "每 %.1f 秒最多一次，" % cd.seconds
+		if cad != "":
+			line += cad + "，"
+	var bits: Array[String] = []
+	var costs := costs_text(rule, skip_stamina)
+	if costs != "":
+		bits.append(costs)
+	bits.append(effects_text(rule.effects))
+	return line + "，".join(bits)
+
+
+## 自发且有冷却：方括号里直接写「每 N 秒」
+static func _scheduled(rule: AbilityRule) -> bool:
+	return rule.trigger is OnSchedule and rule.cadence is CooldownCadence
+
+
+## 145：节奏那半句。自发的「每 N 秒」，别的扳机带冷却「每 N 秒最多一次」，没冷却为空
+static func cadence_text(rule: AbilityRule) -> String:
+	var cd := rule.cadence as CooldownCadence
+	if cd == null:
+		return ""
+	return ("每 %.1f 秒" if _scheduled(rule) else "每 %.1f 秒最多一次") % cd.seconds
+
+
+## 145：规则列表「时机」那一列 = 扳机句 + 节奏（自发的只写「每 N 秒」）
+static func timing_text(rule: AbilityRule) -> String:
+	var cad := cadence_text(rule)
+	if _scheduled(rule):
+		return cad
+	var when := trigger_text(rule.trigger)
+	if when == "":
+		when = "（没有扳机）"
+	return when + ("，" + cad if cad != "" else "")
+
+
+## 145：显式消耗 / 条件，「，」连起来；没有为空
+static func costs_text(rule: AbilityRule, skip_stamina: bool = false) -> String:
 	var bits: Array[String] = []
 	for c in rule.costs:
 		if c == null:
@@ -191,8 +225,7 @@ static func rule_text(rule: AbilityRule, skip_stamina: bool = false) -> String:
 		var d := (c as Cost).describe()
 		if d != "":
 			bits.append(d)
-	bits.append(effects_text(rule.effects))
-	return line + "，".join(bits)
+	return "，".join(bits)
 
 
 static func effects_text(effects: Array) -> String:
