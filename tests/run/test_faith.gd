@@ -13,9 +13,10 @@ static func _db() -> ItemDatabase:
 	return db
 
 
-static func _put(b: GridInventory, db: ItemDatabase, id: StringName, at: Vector2i) -> ItemInstance:
-	var inst := ItemInstance.create(db.get_def(id), 0)
-	assert(b.place(inst, at, 0), "放不下 %s" % id)
+## 找个空位放下（不写死坐标：形状随时会改）。放不下记一条失败、返回 null
+static func _put(t: TestCase, b: GridInventory, db: ItemDatabase, id: StringName) -> ItemInstance:
+	var inst := TestSupport.put(b, db.get_def(id))
+	t.not_null(inst, "放得下 %s" % id)
 	return inst
 
 
@@ -81,17 +82,22 @@ static func run_activation(t: TestCase) -> void:
 	var db := _db()
 	var b := GridInventory.new(Vector2i(8, 6), 1, false)
 	t.eq(FaithState.active_tag(b), &"", "空棋盘：没激活")
-	var shield := _put(b, db, &"blessed_shield", Vector2i(0, 0))     # skill，2×2
+	var shield := _put(t, b, db, &"blessed_shield")     # skill
 	t.eq(FaithState.active_id(b), &"skill", "放了技巧之神的盾：技巧之神")
-	var sigil := _put(b, db, &"charm_brute", Vector2i(3, 0))      # violence，1×1
+	var sigil := _put(t, b, db, &"charm_brute")      # brute
+	if shield == null or sigil == null:
+		return
 	t.eq(FaithState.active_id(b), &"brute", "再放蛮神的护符：最后置入的是它 → 暴力之神")
 	t.check(shield.placed_seq < sigil.placed_seq, "置入序号递增")
 	t.eq(FaithState.dormant_uids(b), [shield.uid] as Array[int], "盾休眠")
-	var sword := _put(b, db, &"shortsword", Vector2i(5, 0))
+	var sword := _put(t, b, db, &"shortsword")
+	if sword == null:
+		return
 	t.eq(FaithState.active_id(b), &"brute", "凡物（短剑）不改变激活")
 	t.check(not FaithState.is_dormant(sword.def, FaithState.active_tag(b)), "凡物不休眠")
 	# 同容器挪位置：不算重新置入
-	t.check(InventoryService.move(b, shield.uid, b, Vector2i(0, 3), 0), "把盾挪个位置")
+	var spot := TestSupport.other_spot(b, shield)
+	t.check(not spot.is_empty() and InventoryService.move(b, shield.uid, b, spot["origin"], spot["rotation"]), "把盾挪个位置")
 	t.eq(FaithState.active_id(b), &"brute", "同容器挪位置不换信仰")
 	# 挪到地上再挪回：切换
 	var stash := ItemStash.new(2, 0)
@@ -101,9 +107,9 @@ static func run_activation(t: TestCase) -> void:
 	t.eq(FaithState.active_id(b), &"skill", "切换成技巧之神：盾成了最后置入的")
 	t.eq(FaithState.dormant_uids(b), [sigil.uid] as Array[int], "符号休眠")
 	# 顶替式放置：顶进来的算最后置入
-	var bow := ItemInstance.create(db.get_def(&"blessed_longbow"), 0)     # hunt，1×4
-	var victims = b.place_displacing(bow, Vector2i(3, 0), 0)
-	t.check(victims != null, "赐福的长弓顶进来（狩猎之神）")
+	var bow := ItemInstance.create(db.get_def(&"blessed_longbow"), 0)     # hunt
+	var victims = TestSupport.displace_somewhere(b, bow)
+	t.check(victims != null and not (victims as Array).is_empty(), "赐福的长弓顶掉别人进来（狩猎之神）")
 	t.eq(FaithState.active_id(b), &"hunt", "顶进来的长弓是最后置入的")
 	# 全拿走：无
 	for inst in b.items().duplicate():
@@ -112,13 +118,24 @@ static func run_activation(t: TestCase) -> void:
 	# 同容器里挪包：包和内容物都不算
 	var bag := ItemInstance.create(db.get_def(&"bag_leather"), 0)     # 2×3
 	var b2 := GridInventory.new(Vector2i(8, 6), 1, true)
-	t.check(b2.place(bag, Vector2i(0, 0), 0), "放包")
-	var s2 := _put(b2, db, &"blessed_shield", Vector2i(0, 0))
-	var c2 := _put(b2, db, &"charm_brute", Vector2i(0, 2))
+	t.not_null(TestSupport.put(b2, bag), "放包")
+	# 棋盘模式：只落在包上。先放一件别的信仰的信物 —— 挑包里放得下的，不指定哪件（形状随时会改）
+	var s2: ItemInstance = null
+	for id in db.ids():
+		var d := db.get_def(id)
+		if d.is_anchor() and FaithTags.id_of_tag(d.faith_tag()) != &"brute":
+			s2 = TestSupport.put(b2, d)
+			if s2 != null:
+				break
+	t.not_null(s2, "包里放得下一件别的信仰的信物")
+	var c2 := _put(t, b2, db, &"charm_brute")
+	if s2 == null or c2 == null:
+		return
+	var bag_spot := TestSupport.other_spot(b2, bag)
 	t.eq(FaithState.active_id(b2), &"brute", "符号后放")
 	var payload := b2.detach_bag(bag.uid)
 	t.check(not payload.is_empty() and int(payload["from"]) == b2.id, "摘下包，载荷记着来自哪个容器")
-	t.check(b2.attach_bag(payload, Vector2i(3, 0), 0), "整包挪到别处")
+	t.check(not bag_spot.is_empty() and b2.attach_bag(payload, bag_spot["origin"], bag_spot["rotation"]), "整包挪到别处")
 	t.eq(FaithState.active_id(b2), &"brute", "同容器里挪包：置入顺序不变")
 	t.check(s2.placed_seq < c2.placed_seq, "序号也没变")
 
@@ -127,8 +144,13 @@ static func run_compile_and_sets(t: TestCase) -> void:
 	t.begin("信仰 · 编译战斗单位：休眠的只留通用效果（087：长弓本身的攻击力照在、信力加成与邻接不给）；套装不计休眠的；切换之后另一边活过来")
 	var db := _db()
 	var b := GridInventory.new(Vector2i(8, 6), 1, false)
-	var bow := _put(b, db, &"blessed_longbow", Vector2i(0, 0))      # hunt，会打
-	var sigil := _put(b, db, &"charm_brute", Vector2i(4, 0))     # violence；142：不挨着弓（护符的增益槽给相邻武器 +15%）
+	var bow := _put(t, b, db, &"blessed_longbow")      # hunt，会打
+	if bow == null:
+		return
+	var sigil := TestSupport.put_apart(b, db.get_def(&"charm_brute"), [bow])     # brute；142：不挨着弓（护符的增益槽给相邻武器 +15%）
+	t.not_null(sigil, "护符放在碰不到弓的地方")
+	if sigil == null:
+		return
 	var spec := BattleCompiler.compile_board(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:hunt": 2})
 	var uids: Array = []
 	for item in spec.items:
@@ -147,7 +169,7 @@ static func run_compile_and_sets(t: TestCase) -> void:
 	t.eq((spec2.items[0] as CompiledItem).source_uid, bow.uid, "是长弓")
 	t.check(spec2.rough_dps() > spec.rough_dps(), "长弓活了：吃到信力加成，输出比休眠时高")
 	# 凡物照常参战
-	var sword := _put(b, db, &"shortsword", Vector2i(4, 0))
+	var sword := _put(t, b, db, &"shortsword")
 	var spec3 := BattleCompiler.compile_board(b)
 	t.eq(spec3.items.size(), 2, "凡物短剑也参战")
 	# 套装：休眠的不计数

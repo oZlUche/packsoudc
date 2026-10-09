@@ -216,9 +216,12 @@ static func run_haul_box(t: TestCase) -> void:
 	for uid in uids_before:
 		t.check(s2.haul_box.has_item(int(uid)), "第二次搜之后，第一次的 uid %d 还在" % uid)
 
-	# LootPacker.add 直接试：加到两倍就停，装不下的报回来
+	# LootPacker.add 直接试：加到两倍就停，装不下的报回来。
+	# 用一件自己造的 2×2 方块，不借真道具 —— 真道具的形状作者随时会改，这里测的是「加高到两倍就停」
+	var blocks := ItemDatabase.new()
+	blocks.register(TestSupport.block_def(&"test_block_2x2", ["11", "11"]))
 	var box := GridInventory.new(Vector2i(2, 1), 0, false)
-	var r := LootPacker.add(box, [&"armor", &"armor", &"armor"] as Array[StringName], items, 1)
+	var r := LootPacker.add(box, [&"test_block_2x2", &"test_block_2x2", &"test_block_2x2"] as Array[StringName], blocks, 1)
 	t.eq((r["board"] as GridInventory).size, Vector2i(2, 2), "2×1 加到 2×2 就停")
-	t.eq((r["board"] as GridInventory).item_count(), 1, "装进一件防弹衣（2×2）")
+	t.eq((r["board"] as GridInventory).item_count(), 1, "装进一件 2×2 的方块")
 	t.eq((r["left"] as Array).size(), 2, "另两件报回来")
