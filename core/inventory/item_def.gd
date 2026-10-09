@@ -71,6 +71,18 @@ func is_anchor() -> bool:
 	return has_faith() and tags.has(ANCHOR)
 
 
+## 144：这件东西在局里「起作用」—— 有战斗属性或规则、增益格、跨域效果、包体加成、信力加成，是包，或是信物 / 特殊道具。
+## 其余（材料、珍宝、战利品……）只有价值和重量。从定义算，不是标签：作者给材料加了 combat，它自己就算有效果
+func has_effect() -> bool:
+	if combat != null and (not combat.base_stats.is_empty() or not combat.rules.is_empty()):
+		return true
+	if adjacency != null or is_bag:
+		return true
+	if not effects.is_empty() or not bag_mods.is_empty() or not faith_bonuses.is_empty():
+		return true
+	return tags.has(ANCHOR) or is_keepsake()
+
+
 ## 信仰对象标签（`faith:violence`）；没有返回空。带 `faith` 却没有对象标签也返回空 —— 导入器不许这种道具进来
 func faith_tag() -> StringName:
 	for t in tags:
