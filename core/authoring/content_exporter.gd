@@ -229,6 +229,16 @@ static func _encode_object(declared: StringName, obj: Object) -> Variant:
 		for line in (obj as ItemShape).to_bits().split("\n"):
 			rows.append(String(line))
 		return rows
+	# 146：库里的东西写引用。buff：库里有同 id 且内容一样的就写 id（不一样 = 这件自己的版本，整份内联）；
+	# 规则构件：带 `part_ref`（编辑器里没「断开」过）且库里还有它就写 `"@id"`，内容以库为准
+	if obj is BuffDef:
+		var lib: BuffDef = ContentLibrary.buffs().get((obj as BuffDef).id, null)
+		if lib != null and (lib == obj or dump(lib) == dump(obj)):
+			return String((obj as BuffDef).id)
+	if obj is Resource and obj.has_meta(RulePartDef.REF_META):
+		var ref := StringName(obj.get_meta(RulePartDef.REF_META))
+		if ContentLibrary.part(ref) != null:
+			return "@" + String(ref)
 	# 带 type 的两种情况：声明的是抽象基类（按注册表名）；声明的是引擎基类如 Resource
 	# 或子类装进了父类字段（按 class_name）—— 不写的话导入器不知道该造哪个类
 	var with_type := ContentSchema.ABSTRACT_ROOTS.has(declared) \

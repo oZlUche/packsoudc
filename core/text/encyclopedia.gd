@@ -125,11 +125,13 @@ func _items_with_tag(tag: StringName) -> Array[StringName]:
 	return out
 
 
-## 道具库里出现的全部 buff：id → {def, from: [施加它的道具 id]}
+## 全部 buff：id → {def, from: [施加它的道具 id]}。146：库里的（`data/buffs`）+ 道具里还内联着的
 func _all_buffs() -> Dictionary:
 	var out := {}
 	if items == null:
 		return out
+	for bid in ContentLibrary.buffs():
+		out[bid] = {"def": ContentLibrary.buffs()[bid], "from": [] as Array[StringName]}
 	var ids: Array[StringName] = []
 	ids.assign(items.ids())
 	Ids.sort(ids)

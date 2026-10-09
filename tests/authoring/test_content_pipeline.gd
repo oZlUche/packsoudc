@@ -454,8 +454,9 @@ static func run_assets_match_json(t: TestCase) -> void:
 	var items: Array[String] = ContentCheck.check_kind("items")
 	t.check(items.is_empty(), "items 一致")
 	t.check(not ContentCheck.check_kind("根本没有这一种").is_empty(), "不认识的种类会报出来")
-	# 100（作者定）：buffs / sets 有目录、不进 KINDS，所以不走这道检查
-	for kind in ["buffs", "sets"]:
+	# 100（作者定）：sets 有目录、不进 KINDS，所以不走这道检查；146：buffs 有了独立文件，搬回 KINDS
+	t.check(ContentPaths.KINDS.has("buffs") and ContentPaths.KINDS.has("rule_parts"), "146：buffs 与 rule_parts 在 KINDS 里")
+	for kind in ["sets"]:
 		t.check(not ContentPaths.KINDS.has(kind), "%s 不在 KINDS 里" % kind)
 		t.check(ContentPaths.authoring_file(kind, "x") != "" and ContentPaths.asset_file(kind, "x") != "",
 			"%s 的路径照样算得出来（编辑器在用）" % kind)

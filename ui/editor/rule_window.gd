@@ -34,7 +34,8 @@ static func open_in(layer: Control) -> RuleWindow:
 	return w
 
 
-func show_rule(p_rule: AbilityRule, title: String, font: Font, on_change: Callable = Callable()) -> void:
+## [param allow_parts]：「添加」下拉列不列构件库（buff 的规则里不列）
+func show_rule(p_rule: AbilityRule, title: String, font: Font, allow_parts: bool = true, on_change: Callable = Callable()) -> void:
 	rule = p_rule
 	_on_change = on_change
 	_title.text = title
@@ -54,6 +55,7 @@ func show_rule(p_rule: AbilityRule, title: String, font: Font, on_change: Callab
 		scroll.add_child(col)
 		var form := PropertyForm.create(rule, font)
 		form.only = spec[1]
+		form.parts_allowed = allow_parts
 		form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		form.changed.connect(_changed)
 		col.add_child(form)

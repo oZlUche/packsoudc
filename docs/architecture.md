@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.66 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.67 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1080,6 +1080,12 @@ func scope() -> StringName: return EffectScope.COMBAT
 `duration_sec = 0`（永续）。不可叠或会过期是**例外**，必须在定义里显式写 `stackable: false`（固定一层，和可选的 `duration_sec`），
 导入器守着（085：可叠层的不许填时长）；词条里这两种用例外色标出来。设计数值时按「永续 + 叠层」来算。
 137（作者定）取消了叠层上限：可叠层就是不限层，旧字段 `max_stacks` 由导入器迁移（1 → 不可叠，其余 → 可叠，带提醒）。
+
+**buff 是内容**（146）：`data/authoring/buffs/<id>.json` 一份一个（`ContentPaths.KINDS` 里，`ORDER` 排在 `items` 前面），
+道具 / 角色 / 套装里写 `"buff": "bleed"` 按 id 引用；只被一处用到的仍可内联。buff 制作器存的就是它们，
+`apply_status.buff`、`convert_status.to` 在编辑器里是「内联 / 库里的 buff」下拉，`buff_id` 一类字段是 id 下拉。
+同理，**规则的四个部件也可存可选**：`rule_parts` 种类（`RulePartDef`，扳机 / 节奏 / 消耗与检查 / 效果四个槽只填一个），
+规则里写 `"@id"`，导入时**复制**进规则并记 meta `part_ref`；导出时带 `part_ref` 的回写成 `"@id"`。buff 自己的规则不许引用构件，构件里也不许再套构件。
 
 buff 仅在本场战斗内存在，**战斗结束全部清空**。因此**参战属性在进入战斗时只读取一次**，
 这也正是 4.1「编译期快照，战斗中不回头读背包」的直接后果。
@@ -3530,10 +3536,12 @@ JSON 有资产没有 = 没跑导入，资产有 JSON 没有 = 孤儿资产（游
 命令行 `tools/check_content.gd`，`tools/test.sh` 每次都跑，测试 `test_content_pipeline.run_assets_match_json` 调同一段逻辑。
 **不重跑导入**：导出器对每种都现成，而重跑会把「导入器变了」和「内容变了」混在一起。
 
-`buffs` / `sets` 两种**暂时不在 `KINDS` 里**（100，作者定）：独立的 buff / 套装文件一份都还没有（buff 都写在道具里），
-所以批量导入与这道检查都不跑它们。它们在 `ContentPaths.EDITOR_ONLY_KINDS` 里 —— 路径还是只在 `ContentPaths` 一处算
-（`dirs_of / authoring_file / asset_file` 两张表都查），buff 制作器与套装编辑器照旧存得下；
+`sets` **暂时不在 `KINDS` 里**（100，作者定）：独立的套装文件一份都还没有，
+所以批量导入与这道检查都不跑它。它在 `ContentPaths.EDITOR_ONLY_KINDS` 里 —— 路径还是只在 `ContentPaths` 一处算
+（`dirs_of / authoring_file / asset_file` 两张表都查），套装编辑器照旧存得下；
 真有了第一份独立内容，把那一行搬回 `KINDS`、`ORDER` 里排在 `items` 之前，它就自动进管线与检查。
+`buffs` 在 146 这么搬回去了，同时新增 `rule_parts`：顺序是 …信仰 → buff → 构件 → 道具…。编辑器单件导入用 `ContentLibrary.context()`
+（盘上的 buff 与构件已登记），引用才解析得到。
 
 ### 10.2 导入器不认识任何具体效果
 
@@ -3640,7 +3648,8 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 | 例外 | 为什么 |
 |---|---|
 | 形状写成 0/1 数字串 | 硬要作者写 `{"cells": [[0,0],[1,0]]}` 是把人当解析器用 |
-| 增益可按 id 引用 | 也允许内联 —— 只被一件道具用到的 buff 没必要单开文件 |
+| 增益可按 id 引用 | 也允许内联 —— 只被一件道具用到的 buff 没必要单开文件；导出时和库里那份一样就写回 id（146） |
+| 规则部件可写 `"@id"` | 146：扳机 / 节奏 / 消耗 / 效果引用 `rule_parts`，导入复制并记 `part_ref`，导出带 `part_ref` 的写回 `"@id"` |
 | 裸 int 枚举登记表 | 当初给乘区用（-1 表示「不加乘区」）；133 取消乘区后登记表为空，机制留着 |
 
 #### 两个坑，都写进注释了
@@ -3685,7 +3694,7 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
   新增一种效果，下拉框自动多一项，编辑器一行不用改。
 - **规则表是列表 + 浮窗**（145）：`Array[AbilityRule]` 在表单里是一张四列 `Tree`（#、时机、消耗、效果；文案走 `Glossary.timing_text / costs_text / effects_text`，
   不合法的序号前加「！」），下面一排新建 / 复制 / 删除 / 上移 / 下移 / 编辑；双击弹 `RuleWindow`（`FloatingWindow`），触发（扳机 + 节奏）/ 消耗 / 效果三个页签，
-  每页是只显示那几个字段的 `PropertyForm`（`only`），即改即生效。浮窗挂在 `AuthoringEditor` 的弹窗层（`popup_layer`，四个编辑器都经 `_form_for` 拿表单）；
+  每页是只显示那几个字段的 `PropertyForm`（`only`），即改即生效。浮窗挂在 `AuthoringEditor` 的弹窗层（`popup_layer`，各编辑器都经 `_form_for` 拿表单）；
   没有弹窗层的表单照旧内联卡片。
 - **字段的形状跟着声明走**（111）：`@export_enum("a", "b")` 的字符串字段是下拉（值存原字符串，显示名查 `FieldText.ENUM_LABELS`）；
   `@export_range(min, max)` 的数字框按范围限；资源声明 `const FIELD_WHEN := {字段: {别的字段: [允许的值]}}` 就能让字段按条件显隐
@@ -3719,9 +3728,14 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 列表的行号对应的是**筛过之后**的那一份（`_shown`），不是全集（`_ids`）。
 两者混用的表现是「点第三行打开了第五件」，而且只有加了筛选之后才错。
 
-**列表 / 草稿 / 存盘只有一份**（141）：道具、事件、buff、套装四个编辑器继承 `AuthoringEditor`（`ui/editor/authoring_editor.gd`），
+**构件库**（146）：`ContentLibrary`（`core/authoring`）读盘上的 buff 与 `rule_parts`，给编辑器下拉与单件导入用，存盘后 `reset()`。
+`PropertyForm` 的「添加」下拉在「新建：」各类之后列「库：」同类构件；选库里的那件进来是只读卡片（「来自库：名字」），
+「断开」去掉链接变成内联可改，「去库里改」跳到构件编辑器 / buff 制作器并打开那一件（有没存的改动时不跳，状态栏提示）。
+**构件编辑器**（`ui/part_editor/`，启动器入口）列表按 全部 / 扳机 / 节奏 / 消耗与检查 / 效果 分组 + 搜索，右边是一句预览和「谁在用」。
+
+**列表 / 草稿 / 存盘只有一份**（141）：道具、事件、buff、套装、构件五个编辑器继承 `AuthoringEditor`（`ui/editor/authoring_editor.gd`），
 列表（盘上的 id + 没存过盘的草稿）、草稿与判脏（按打开时的 id 记，和盘上那份规范化 JSON 比）、打开、存盘（导出 → 导入器建资产 → 写 `.json` 与 `.tres`，有错不写）、
-另存、套用 JSON、放弃、重扫都在基类；子类只给种类、导出 / 导入那一对、新建的那一件、表单和提示语。改 id 时旧名字下的草稿撤掉、盘上也没有就从列表里消失，四个一样。
+另存、套用 JSON、放弃、重扫都在基类；子类只给种类、导出 / 导入那一对、新建的那一件、表单和提示语。改 id 时旧名字下的草稿撤掉、盘上也没有就从列表里消失，五个一样。
 
 **事件编辑器**（`ui/event_editor/event_editor.tscn`，报告 064）是同一套做法对着事件（6.5）的第二个入口：左边事件列表，中间 id、标题、多行正文、配图、选项表单，
 右边预览、校验、挂进节点规则、JSON。选项、条件、后果的表单由 `PropertyForm` 反射生成，「添加」下拉从注册表来，加一种构件编辑器不改；
@@ -3801,8 +3815,8 @@ res://
     meta/           meta_state  meta_save  meta_rules              # 跨局（8.2）：仓库格子、带回来的棋盘、图鉴、局外 buff
     settings/       game_settings                                  # 玩家设置（偏好：自动关战利品屏、底色、战斗倍速……；跨局跨存档位）
   data/
-    authoring/      items/  loadouts/  characters/  difficulties/  enemies/  enemy_pools/  hunters/  hunters/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/  maps/
-    items/  loadouts/  characters/  difficulties/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/     # 导入器产出，也进 git
+    authoring/      buffs/  rule_parts/  items/  loadouts/  characters/  difficulties/  enemies/  enemy_pools/  hunters/  hunters/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/  maps/
+    buffs/  rule_parts/  items/  loadouts/  characters/  difficulties/  enemies/  enemy_pools/  drop_rules/  node_rules/  economy_rules/  meta_rules/  chapters/     # 导入器产出，也进 git
   ui/
     launcher  dev_nav  ui_palette
     game/           game_director  game_screen  main_menu  setup_screen  map_screen  inventory_panel   # 正式游戏（8 节），game.tscn 是主场景
@@ -3810,8 +3824,9 @@ res://
                     settings_screen  warehouse_panel  loot_view  event_image
     inventory/      inventory_sandbox  inventory_view  container_view  stash_view  drag_layer  item_painter
     battle/         battle_sandbox  battle_view  combatant_panel
-    editor/         authoring_editor（141 四个编辑器的基类）  content_editor  property_form  shape_editor
+    editor/         authoring_editor（141 各内容编辑器的基类）  content_editor  property_form  shape_editor
     event_editor/   event_editor      # 事件编辑器（10.5，报告 064）
+    part_editor/    part_editor       # 构件编辑器（146）
     map/            map_view  map_layout  ring_layout_base  ring_map_layout  grid_map_layout
                     ring_angle_solver  map_node_style
     map_editor/     map_editor
@@ -3970,6 +3985,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.67 | 2026-10-09 | **buff 与规则构件成为内容**（146）：`buffs` 搬回 `KINDS`，迁移工具 `tools/extract_buffs.gd` 抽出 11 份 buff；新种类 `rule_parts`（`RulePartDef` 四槽）抽出 15 份构件，规则里写 `"@id"`、导入复制 + `part_ref`、导出回写；`ContentLibrary`；`PropertyForm` 下拉列库项、只读卡片 + 断开 / 去库里改；构件编辑器 `ui/part_editor` |
 | v2.66 | 2026-10-09 | **规则表改列表视图 + 双击浮窗**（145）：`PropertyForm._rule_list`（`Tree` 四列 + 按钮行，`popup_layer` 子表单继承）、`RuleWindow`（三页签、预览句、扳机隐含消耗只读、Esc / 点外面关）；`AuthoringEditor._form_for` 统一建表单并在换对象时关浮窗；`Glossary.rule_text` 拆出 `cadence_text / timing_text / costs_text`（文案不变） |
 | v2.49 | 2026-10-06 | **猎手战败结果档 + 猎手战插进进点的事件队列**（134，作者定，五项待定按推荐；改 8.5）：新资源 `HunterLossOption`（档名、名字、权重、后果），`HunterDef.loss_options` + `loss_pick`（新构件表 `HUNTER_LOSS_PICKS`：`random` / `fixed`），`Hunter.loss_id` 生成时选定、跟存档；新后果 `expel`（退回上一步、不驻守）。`MapTravel` 加进点闸门 `arrival_gate` / 挂起的进点 `held`（存档）/ `finish_arrival` / `cancel_arrival`；`RunState` 的猎手回合从「这一步的事之后」挪到闸门里（先于点的事），`resume_arrival` 在玩家空下来时接着进；驱逐 = 取消进点（不标走过、事不发生、不记首访，步数照算）。`GameFlow._flush` 接着进点后排进队里的接着看；收起猎手战的战利品也接着进点。悬停与开打前事件屏写「输了会怎样」。`hunter_1` 击退 / 驱逐各一半，`hunter_2` 击退 / 驱逐 / 驱逐并驻守各三分之一（数值占位） |
 | v2.48 | 2026-10-05 | **单一乘区**（133，作者定；改 4.3）：删 `StatMath.Buff` 四个乘区，公式改成 `终值 = 基础 × max(0, 1 + Σ乘算) + Σ加算`；`StatModifier` 改成 `stat / mode{ADD, MULT} / amount`，`StatValue` 的四格 `mult` 换成一个 `percent`；`PropertyForm` 在属性修饰下加一行灰字提示（乘算还是加算、扩大还是缩小、在 buff 里每层一份）；导入器迁移旧键（`mult_category` 提醒忽略、又乘又加报错），`normalize_content` 重写了 18 份内容 JSON；百科删掉「乘区」词条组；编译金样有意重录（`percent` 替换 `mult`，四份终值逐项不变）。跨乘区的组合数值变了（弓 + 箭 + 符号 1.38 → 1.35）；标准轴不动 |

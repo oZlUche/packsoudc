@@ -28,7 +28,7 @@ func _ready() -> void:
 	var settings := GameSettings.load_from()
 	UiText.apply(settings)
 	UiPalette.apply(settings)
-	_ctx = ContentImporter.Context.new()
+	_ctx = ContentLibrary.context()     # 146：buff 的效果可以按 id 引用库里别的 buff
 	_build_ui()
 	_start()
 
