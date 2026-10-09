@@ -3,26 +3,8 @@
 extends RefCounted
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var pool: EnemyPool
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.pool = c.enemies.pool(c.chapter.enemy_pool)
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content()
 
 
 static func run_text_template(t: TestCase) -> void:
@@ -197,7 +179,7 @@ static func run_drag_last_item(t: TestCase) -> void:
 	var d := ItemDef.new()
 	d.id = &"t_one"
 	d.display_name = "one"
-	d.shape = ItemShape.from_ascii(["#"])
+	d.shape = ItemShape.from_ascii(["1"])
 	var box := GridInventory.new(Vector2i(3, 3), 1)
 	var a := ItemInstance.create(d)
 	box.place(a, Vector2i(0, 0), 0)
@@ -371,7 +353,7 @@ static func run_settings_and_double_click(t: TestCase) -> void:
 	var d := ItemDef.new()
 	d.id = &"t_dbl"
 	d.display_name = "dbl"
-	d.shape = ItemShape.from_ascii(["#"])
+	d.shape = ItemShape.from_ascii(["1"])
 	var box := GridInventory.new(Vector2i(3, 3), 1)
 	var a := ItemInstance.create(d)
 	box.place(a, Vector2i(0, 0), 0)

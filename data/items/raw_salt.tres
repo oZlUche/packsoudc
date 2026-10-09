@@ -18,5 +18,4 @@ display_names = {
 }
 description = "没化开的盐，内陆值钱。"
 shape = SubResource("Resource_mybct")
-weight = 2
-tags = Array[StringName]([&"material", &"nature"])
+tags = Array[StringName]([&"material", &"nature", &"stone"])

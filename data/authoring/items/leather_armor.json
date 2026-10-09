@@ -5,8 +5,8 @@
     "en": "Leather Armor"
   },
   "shape": [
-    "11",
-    "11"
+    "1111",
+    "0110"
   ],
   "rarity": 1,
   "tags": [
@@ -18,7 +18,7 @@
   ],
   "combat": {
     "base_stats": {
-      "max_shield": 20
+      "max_shield": 30
     }
   }
 }

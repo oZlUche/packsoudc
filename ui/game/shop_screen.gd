@@ -6,8 +6,6 @@
 ## 刷新、收起（回地图，店还开着）、离开照旧。
 extends GameScreen
 
-const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
-
 var _session: ShopSession = null
 var _shelf_row: HBoxContainer
 var _shelf_views: Array[InventoryView] = []
@@ -15,9 +13,7 @@ var _sell_view: InventoryView
 var _refresh_btn: Button
 var _wallet_line: Label
 var _line: Label
-var _drag: DragLayer
 var _inv: Control
-var _tip: HoverTip
 
 
 func open(payload: Dictionary) -> void:
@@ -55,23 +51,11 @@ func open(payload: Dictionary) -> void:
 	left.add_child(buttons)
 
 	# 右边：自己的背包（棋盘 + 地上），和店共用一层拖拽
-	var inv := InventoryPanelScript.new()
-	_drag = DragLayer.new()
-	_drag.label_font = font
-	inv.setup(flow.run, font, _drag)
-	inv.hint_sink = func(text: String): _say(text)
-	_inv = inv
-	row.add_child(inv)
-	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(_drag)
+	_inv = _mount_bag(row, _sell_view, func(text: String): _say(text))
 	_drag.drop_outside_to_stash = false     # 店里放到外面 = 放回原处，不算买也不算卖
-	_drag.register_view(_sell_view)
 	_drag.drop_filter = _allow_drop
 	_drag.craft_filter = _allow_craft     # 审查 A1：没付钱的商品不能拿去合成（会被消耗掉、结不了账）
 	_drag.drag_finished.connect(_on_drag_finished)
-	_tip = HoverTip.new(font)
-	add_child(_tip)
-	_tip.watch(_sell_view)
 
 	if _session != null:
 		_session.stock_changed.connect(_rebuild)
@@ -92,7 +76,8 @@ func buy(i: int) -> bool:
 		return false
 	if not _session.can_buy(i):
 		if i >= 0 and i < _session.stock.size() and not _session.sold.has(i):
-			_say("金币不足：「%s」要 %d 币，你有 %d" % [Names.of(_def_at(i)) if _def_at(i) != null else "?", int(_session.stock[i]["price"]), flow.run.wallet.balance])
+			var inst := _session.item_at(i)
+			_say("金币不足：「%s」要 %d 币，你有 %d" % [Names.of(inst.def) if inst != null else "?", int(_session.stock[i]["price"]), flow.run.wallet.balance])
 		return false
 	return _session.buy(i) != null
 
@@ -202,10 +187,6 @@ func _on_drag_finished(uid: int, dropped: bool) -> void:
 		_refresh()
 
 
-func _def_at(i: int) -> ItemDef:
-	return flow.items.get_def(StringName(String(_session.stock[i]["id"]))) if _session != null and i >= 0 and i < _session.stock.size() else null
-
-
 func _say(text: String) -> void:
 	if _line != null:
 		_line.text = text
@@ -218,9 +199,7 @@ func _rebuild() -> void:
 	for v in _shelf_views:
 		_drag.unregister_view(v)
 	_shelf_views.clear()
-	for child in _shelf_row.get_children():
-		_shelf_row.remove_child(child)
-		child.queue_free()
+	UiTheme.clear_children(_shelf_row)
 	if not _drag.drag_started.is_connected(_on_drag_started):
 		_drag.drag_started.connect(_on_drag_started)
 	for i in _session.shelves.size():
@@ -233,7 +212,8 @@ func _rebuild() -> void:
 		view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		view.item_double_clicked.connect(func(_v: ContainerView, uid: int): quick_buy(uid))
 		col.add_child(view)
-		var def := _def_at(i)
+		var inst := _session.item_at(i)     # 卖掉的格子是空的（价签只写「已售」，用不到尺寸）
+		var def := inst.def if inst != null else null
 		var sold := _session.sold.has(i)
 		var size := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
 		var price := _label("已售" if sold else "%d 币　%d×%d" % [int(_session.stock[i]["price"]), size.x, size.y], 12, UiPalette.DIM if sold else UiPalette.STAMINA)

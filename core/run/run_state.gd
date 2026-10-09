@@ -11,7 +11,7 @@ class_name RunState
 extends RefCounted
 
 ## 存档从第一天就写版本号（7.2）
-const SAVE_VERSION := 3
+const SAVE_VERSION := 4
 ## 作战棋盘的尺寸（3.2：棋盘 + 包体）。占位，等角色系统
 const BOARD_SIZE := Vector2i(8, 6)
 const BOARD_ID := 1
@@ -25,18 +25,8 @@ signal phase_changed(phase: int, reason: StringName)
 ## 有东西等着拾取（尸体容器 / 搜索收获）。拿走或丢掉之前不会再来第二份
 signal loot_pending(container: GridInventory)
 signal loot_cleared()
-## 猎手（071）：玩家进了某个猎手的感知范围；猎手的状态变了（动了、死了、歇了）；玩家被赶回上一个点
-signal hunter_sensed(h: Hunter)
-signal hunters_changed()
-signal player_expelled(to_id: int)
-## 侵蚀（075）：预警、推进、结算了、终局
-signal erosion_warned(next_band: int, actions_left: int)
-signal erosion_advanced(eroded_bands: int)
-signal erosion_applied(node: MapNode, detail: Dictionary)
-signal erosion_total()
-## 局内技能（082）：次数 / 冷却 / 旗子变了；信力变了
-signal skills_changed()
-signal faith_power_changed(faith_id: StringName, points: int, tier: int)
+## 140 R-23：猎手、侵蚀、技能、信力的信号不再转发 —— 界面直接接模块（`hunters.sensed / changed / player_expelled`、
+## `travel.erosion.warned / advanced / applied / total_reached`、`skills.changed`、`faith_power.changed`）
 ## 129：负重级数变了（0 = 轻装）。HUD 与地图屏听
 signal encumbrance_changed(level: int)
 
@@ -208,14 +198,12 @@ static func start(
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
 	s.storage = ItemStash.new(STORAGE_ID, 0)
 	s._bind_tracker()
-	s._place_layout(p_layout)
-	s._give_kit(full_kit)
+	place_layout(s.board, p_layout, p_items, s.storage)
+	give_kit(s.board, full_kit, p_items, s.storage)
 	s.travel = MapTravel.new(s.map, ActionClock.new())
-	s.travel.vitality = s.vitality
 	s._wire_events()
 	s.install_modules()     # 模块要接的东西（旅程、节点事件）都造好了才装
 	s._seed_owned()     # 104：带进来的不算「获得」
-	s.phase = Phase.PICK_SPAWN
 	# 084：章节说了「默认已经站在出生点上」（序章只有一个出生点，没什么可挑的）就直接站上去
 	if p_chapter.auto_spawn and not s.map.entry_ids.is_empty():
 		s.pick_spawn(s.map.entry_ids[0])
@@ -238,20 +226,30 @@ func step_to(id: int) -> bool:
 		return false
 	if not travel.available_moves().has(id):
 		return travel.step_to(id)     # 让旅程自己拒绝、发 refused；走不成就不该清东西
-	reconcile_owned()     # 104：地上留下之前对账，这个点上拿到的都算获得
-	close_sessions()
-	_drop_pending_loot()
-	_forget_handled()
-	leaving.emit(travel.current_id)     # 101：走开了 —— 模块自己接（保险箱关上、地上留在这个点）
-	var was_visited := map.has_node(id) and map.get_node(id).is_visited()
+	var was_visited := _leave_current(id)
 	# 134：猎手的回合在进点之前（旅程的闸门 _arrival_gate 里）：够得着就先上猎手的事件屏、这个点的事挂起
 	var ok := travel.step_to(id)
 	if ok:
-		if was_visited and not travel.is_holding():
-			_arrived_again(travel.current_id)
-		skills.on_step()     # 冷却与躲避在猎手的回合之后减：躲 3 步就是 3 个猎手回合够不着（082）
-		stepped.emit(travel.current_id, &"step")     # 101：走完一步 —— 模块自己接（赐福、倒计时归零 = 行动失败）
+		_after_move(was_visited, &"step")
 	return ok
+
+
+## 要离开现在这个点了（走一步 / 被事件挪走同一条路）：对账、关会话、丢待拾取、忘掉「发生过事的点」、发 [signal leaving]。
+## 顺序不能动：leaving 必须在 _forget_handled 之后、真正动身之前。返回目的地 [param to_id] 走过没有
+func _leave_current(to_id: int) -> bool:
+	reconcile_owned()     # 104：地上留下之前对账，这个点上拿到的都算获得
+	_abandon_sessions()
+	_forget_handled()
+	leaving.emit(travel.current_id)     # 101：走开了 —— 模块自己接（保险箱关上、地上留在这个点）
+	return map.has_node(to_id) and map.get_node(to_id).is_visited()
+
+
+## 动完了（走到了 / 挪到了）：回到走过的点再发一次「到了」，技能走一步，发 [signal stepped]
+func _after_move(was_visited: bool, reason: StringName) -> void:
+	if was_visited and not travel.is_holding():
+		_arrived_again(travel.current_id)
+	skills.on_step()     # 冷却与躲避在猎手的回合之后减：躲 3 步就是 3 个猎手回合够不着（082）
+	stepped.emit(travel.current_id, reason)     # 101：走完一步 —— 模块自己接（赐福、倒计时归零 = 行动失败）
 
 
 ## 回到走过的点（头一回踩的在 _on_arrive 里已经发过）
@@ -295,18 +293,10 @@ func resume_arrival() -> bool:
 func relocate(intent: MoveIntent) -> bool:
 	if phase != Phase.ON_MAP or intent == null:
 		return false
-	reconcile_owned()
-	close_sessions()
-	_drop_pending_loot()
-	_forget_handled()
-	leaving.emit(travel.current_id)     # 101：同上，事件把人挪走也算走开
-	var was_visited := map.has_node(intent.to_id) and map.get_node(intent.to_id).is_visited()
+	var was_visited := _leave_current(intent.to_id)     # 101：事件把人挪走也算走开
 	var ok := travel.apply(intent)     # 134：猎手的回合在闸门里，先于落地那个点的事
 	if ok:
-		if was_visited and not travel.is_holding():
-			_arrived_again(travel.current_id)
-		skills.on_step()
-		stepped.emit(travel.current_id, &"relocate")
+		_after_move(was_visited, &"relocate")
 	return ok
 
 
@@ -350,6 +340,12 @@ func _drop_pending_loot() -> void:
 		discard_loot()
 
 
+## 走开、撤离、失败都先做这两件：开着的会话关掉、没拿的战利品丢掉
+func _abandon_sessions() -> void:
+	close_sessions()
+	_drop_pending_loot()
+
+
 ## 离开正在搜的点 / 正在逛的店
 func close_sessions() -> void:
 	if events == null:
@@ -374,8 +370,7 @@ func try_extract() -> bool:
 		return false     # 092：倒计时过半关掉的撤离点
 	if not events.pay_extract_fee(node):
 		return false
-	close_sessions()
-	_drop_pending_loot()
+	_abandon_sessions()
 	_set_phase(Phase.EXTRACTED, &"extract")
 	return true
 
@@ -384,8 +379,7 @@ func try_extract() -> bool:
 func extract_after_boss() -> bool:
 	if not boss_cleared or is_over():
 		return false
-	close_sessions()
-	_drop_pending_loot()
+	_abandon_sessions()
 	_set_phase(Phase.EXTRACTED, &"boss")
 	return true
 
@@ -396,8 +390,7 @@ func extract_after_boss() -> bool:
 func force_extract() -> bool:
 	if is_over():
 		return false
-	close_sessions()
-	_drop_pending_loot()
+	_abandon_sessions()
 	_set_phase(Phase.EXTRACTED, &"extract")
 	return true
 
@@ -407,8 +400,7 @@ func force_extract() -> bool:
 func fail(reason: StringName) -> bool:
 	if is_over():
 		return false
-	close_sessions()
-	_drop_pending_loot()
+	_abandon_sessions()
 	if events != null:
 		events.pending_battle = {}
 		events.pending = {}
@@ -515,6 +507,8 @@ func compile_player() -> CombatantSpec:
 	var rules: Array[AbilityRule] = tracker.combat_rules() if tracker != null else [] as Array[AbilityRule]
 	mods.append_array(RunBuffs.combat_mods(active))
 	rules.append_array(RunBuffs.combat_rules(active))
+	if character != null:
+		rules.append_array(character.combat_rules())     # 136：角色技能的战斗规则（布鲁图斯「坚韧」）
 	var baseline := effective_baseline()
 	var input := CompileInput.of(baseline, mods, rules,
 		faith_power.tiers() if faith_power != null else {},
@@ -614,7 +608,7 @@ func set_character(ch: CharacterDef) -> void:
 	if not skills_saved.is_empty():
 		skills.restore(skills_saved)
 		skills_saved = {}
-	skills_changed.emit()
+	skills.changed.emit()
 	refresh_encumbrance()     # 129：上限跟着角色
 
 
@@ -651,6 +645,7 @@ func refresh_encumbrance() -> void:
 	var lv := encumbrance_level()
 	if travel != null:
 		travel.action_cost_mult = encumbrance.travel_mult_of(lv) if encumbrance != null else 1
+		travel.free_step_every = buff_context().free_step_every     # 136：熟门熟路（角色定了、读档接上角色都会走这里）
 	if lv != _encumbrance_level:
 		_encumbrance_level = lv
 		encumbrance_changed.emit(lv)
@@ -662,7 +657,6 @@ func _ensure_skills() -> void:
 		return
 	skills = RunSkills.new()
 	skills.setup(self, [] as Array[RunSkill])
-	skills.changed.connect(func(): skills_changed.emit())
 
 
 ## 地图上用一个局内技能（082）。返回空串 = 用了；否则是不能用的原因
@@ -670,11 +664,6 @@ func use_skill(id: StringName) -> String:
 	if phase != Phase.ON_MAP:
 		return "不在图上"
 	return skills.use(id)
-
-
-## 开打前：立了旗的技能改双方的战斗单位（[RunHooks] 的 `before_battle`）
-func _before_battle(me: CombatantSpec, enemy: CombatantSpec, _type: StringName) -> void:
-	skills.prepare_battle(me, enemy)
 
 
 ## 现在激活的信仰（8-4）：最后置入棋盘的信仰道具所属的那个；一件都没有 = null（不信者）
@@ -783,6 +772,15 @@ func unequip(uid: int) -> bool:
 	return InventoryService.transfer_auto(board, uid, storage)
 
 
+## 棋盘 / 地上哪个装着这一件：棋盘有就是棋盘，否则地上有就是地上，都没有 null（神坛 / 保险箱「从棋盘或地上拿一件」用）
+func holder_of(uid: int) -> ItemContainer:
+	if board.has_item(uid):
+		return board
+	if storage.has_item(uid):
+		return storage
+	return null
+
+
 func _offer_loot(container: GridInventory) -> void:
 	if container == null or container.item_count() == 0:
 		return
@@ -829,9 +827,10 @@ static func layout_of(board: GridInventory) -> Array:
 	return out
 
 
-## 按 [method layout_of] 的记录摆回棋盘；摆不回去的（棋盘换了、定义没了）到地上
-func _place_layout(layout: Array) -> void:
-	if items == null or layout.is_empty():
+## 按 [method layout_of] 的记录摆上棋盘（开局与校准快照 [CalibrationRecorder] 同一条路）：摆不回去的（棋盘换了、定义没了）先自动找位，
+## 还放不下的到 [param overflow]（开局是地上；null = 丢掉）
+static func place_layout(board: GridInventory, layout: Array, items: ItemDatabase, overflow: ItemContainer = null) -> void:
+	if items == null:
 		return
 	board.begin_batch()
 	for row in layout:
@@ -842,11 +841,14 @@ func _place_layout(layout: Array) -> void:
 			continue
 		var at: Array = row.get("origin", [0, 0])
 		var inst := ItemInstance.create(d, 0)
-		if not board.place(inst, Vector2i(int(at[0]), int(at[1])), int(row.get("rot", 0))) and not board.try_add(inst, true):
-			storage.admit(inst)
+		if not board.place(inst, Vector2i(int(at[0]), int(at[1])), int(row.get("rot", 0))) and not board.try_add(inst, true) and overflow != null:
+			overflow.admit(inst)
 	board.end_batch()
 
-func _give_kit(kit: Array[StringName]) -> void:
+
+## 按清单发一套道具（开局的 kit 与校准的开局装备 [DummyBuilder] 同一条路）：包先上棋盘，其余按顺序自动找位、
+## 放不下的到 [param overflow]（开局是地上；null = 丢掉）
+static func give_kit(board: GridInventory, kit: Array[StringName], items: ItemDatabase, overflow: ItemContainer = null) -> void:
 	if items == null:
 		return
 	var bags: Array[ItemDef] = []
@@ -864,8 +866,8 @@ func _give_kit(kit: Array[StringName]) -> void:
 		board.try_add(ItemInstance.create(d, 0), true)
 	for d in rest:
 		var inst := ItemInstance.create(d, 0)
-		if not board.try_add(inst, true):
-			storage.admit(inst)
+		if not board.try_add(inst, true) and overflow != null:
+			overflow.admit(inst)
 	board.end_batch()
 #endregion
 
@@ -882,10 +884,7 @@ func _resolve_rules() -> void:
 
 
 static func _rule_asset(kind: String, id: StringName) -> Resource:
-	if id == &"":
-		return null
-	var path := ContentPaths.asset_file(kind, String(id))
-	return load(path) if ResourceLoader.exists(path) else null
+	return ContentPaths.load_asset(kind, String(id)) if id != &"" else null
 
 
 ## 这一章的规模 id（有规模模板的生成器才有）
@@ -935,6 +934,7 @@ func _wire_events() -> void:
 	hooks.register(&"request_extract", try_extract)     # 085：撤离点的对话里选「撤离」
 	hooks.register(&"faith_tier", active_faith_tier)     # 093：事件条件 faith_active
 	hooks.register(&"active_faith_id", active_faith_id)
+	hooks.register(&"skill_ready", func(id: StringName) -> String: return skills.can_use(id) if skills != null else "没有技能")
 	events.waited.connect(func(_n: MapNode, _actions: int):
 		if hunters != null:
 			hunters.on_player_step()
@@ -963,10 +963,10 @@ func _wire_events() -> void:
 	travel.arrival_gate = _arrival_gate     # 134：猎手战插在进点的事件队列前面
 	# 082：技能与信力
 	_ensure_skills()
-	hooks.register(&"before_battle", _before_battle)
+	hooks.register(&"before_battle", func(me: CombatantSpec, enemy: CombatantSpec, _type: StringName) -> void:
+		skills.prepare_battle(me, enemy))     # 开打前：立了旗的技能改双方的战斗单位
 	faith_power = FaithPower.new()
 	faith_power.setup(self)
-	faith_power.changed.connect(func(id: StringName, p: int, tier: int): faith_power_changed.emit(id, p, tier))
 	_wire_faith_power()
 	board.changed.connect(refresh_encumbrance)     # 129
 	_encumbrance_level = encumbrance_level()
@@ -1078,7 +1078,7 @@ func to_dict() -> Dictionary:
 		"map_scale": String(map_scale),
 		"difficulty": String(difficulty_id),
 		"hunters": hunters.to_dict() if hunters != null else {},
-		"erosion": travel.erosion.to_dict() if travel != null and travel.erosion != null and travel.erosion.has_method("to_dict") else {},
+		"erosion": travel.erosion.to_dict() if travel != null and travel.erosion != null else {},
 		"phase": phase,
 		"end_reason": String(end_reason),
 		"map": map.to_dict(),
@@ -1101,7 +1101,7 @@ func to_dict() -> Dictionary:
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
 		"boss_cleared": boss_cleared,
 		"tally": tally.duplicate(),
-		"buffs": {"meta": _meta_buff_ids()},     # 一局里拿到的在 modules.buff 下（101）
+		"buffs": {"meta": meta_buff_ids()},     # 一局里拿到的在 modules.buff 下（101）
 		"modules": _modules_to_dict(),     # 101：每个模块自己的状态；加模块 = 新键、带默认值，不升版
 	}
 
@@ -1113,7 +1113,8 @@ func _modules_to_dict() -> Dictionary:
 	return out
 
 
-func _meta_buff_ids() -> Array:
+## 局外带进来的 buff id（字符串，存档与校准快照用）
+func meta_buff_ids() -> Array:
 	var out: Array = []
 	for id in meta_buffs:
 		out.append(String(id))
@@ -1148,15 +1149,15 @@ static func from_dict(
 	var mods_raw: Variant = d.get("modules", {})
 	s.modules_saved = (mods_raw as Dictionary).duplicate(true) if mods_raw is Dictionary else {}
 	s.rng = RunRNG.from_dict(d.get("rng", {}))
-	s.travel.vitality = s.vitality
 	s._bind_tracker()
 	s._wire_events()
-	s.events.searches_closed = int((d.get("events", {}) as Dictionary).get("searches_closed", 0))
-	s.events.last_handled_id = int((d.get("events", {}) as Dictionary).get("last_handled", -1))
-	s.events.losses_forgiven = int((d.get("events", {}) as Dictionary).get("losses_forgiven", 0))
+	var ev: Dictionary = d.get("events", {})
+	s.events.searches_closed = int(ev.get("searches_closed", 0))
+	s.events.last_handled_id = int(ev.get("last_handled", -1))
+	s.events.losses_forgiven = int(ev.get("losses_forgiven", 0))
 	s.skills_saved = d.get("skills", {}) if d.get("skills", {}) is Dictionary else {}
 	s.faith_power.restore(d.get("faith_power", {}) if d.get("faith_power", {}) is Dictionary else {})
-	var pending = (d.get("events", {}) as Dictionary).get("pending", {})
+	var pending = ev.get("pending", {})
 	if pending is Dictionary and not (pending as Dictionary).is_empty():
 		s.events.pending = {"node": int(pending.get("node", -1)), "event": String(pending.get("event", "")), "type": String(pending.get("type", ""))}
 		if pending.has("hunter"):
@@ -1168,7 +1169,7 @@ static func from_dict(
 		if pending.get("encounter", null) is Dictionary and not (pending["encounter"] as Dictionary).is_empty():
 			s.events.pending["encounter"] = (pending["encounter"] as Dictionary).duplicate(true)
 	# 084：读档回来还停在战前准备屏（开着的搜索会话不存，遭遇那一场打完只标点用过）
-	var pb = (d.get("events", {}) as Dictionary).get("pending_battle", {})
+	var pb = ev.get("pending_battle", {})
 	if pb is Dictionary and not (pb as Dictionary).is_empty() and pb.has("node"):
 		var content = pb.get("content", {})
 		s.events.pending_battle = {"node": int(pb["node"]), "type": String(pb.get("type", "battle")),
@@ -1182,7 +1183,7 @@ static func from_dict(
 	var loot = d.get("pending_loot", null)
 	if loot is Dictionary:
 		s.pending_loot = GridInventory.from_dict(loot, p_items)
-	var haul = (d.get("events", {}) as Dictionary).get("search_haul", null)
+	var haul = ev.get("search_haul", null)
 	if haul is Dictionary:
 		s._offer_loot(GridInventory.from_dict(haul, p_items))     # 审查 B1：存档时开着的搜索的收获 → 待拾取（和离开搜索一样）
 	s.phase = int(d.get("phase", Phase.PICK_SPAWN))

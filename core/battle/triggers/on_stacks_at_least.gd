@@ -26,8 +26,8 @@ func subscribed_events() -> Array[StringName]:
 func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 	if event.get_name(&"buff") != buff_id:
 		return false
-	var who := ctx.owner if on_self else ctx.opponent()
-	if (event.side == ctx.owner.side) != on_self:
+	var who := ctx.side_of(on_self)
+	if not ctx.event_on(event, on_self):
 		return false
 	return who.stacks_of(buff_id) >= maxi(1, stacks)
 
@@ -40,3 +40,9 @@ func implied_costs() -> Array[Cost]:
 	c.stacks = maxi(1, stacks)
 	c.on_self = on_self     # 130：对手身上的也能吃（放血刀）
 	return [c] as Array[Cost]
+
+
+func describe() -> String:
+	var n := maxi(1, stacks)
+	var line := "%s的%s达到 %d 层时" % ["你" if on_self else "对手", Glossary.status_name(buff_id), n]
+	return line + ("（消耗这 %d 层）" % n if consume else "")

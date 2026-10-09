@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.51 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.64 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -225,7 +225,7 @@ signal changed
 var id: int
 var size: Vector2i
 var requires_bag: bool = false      # true = 棋盘模式
-var accept_tags: Array[StringName]  # 容器级准入，空 = 不限
+var accept_filter: Callable          # 容器级准入回调，无效 = 不限（仓库接 MetaState.keeps；140 删了准入标签）
 var _occ: PackedInt32Array
 var _bag_owner: PackedInt32Array
 var _items: Dictionary              # uid -> ItemInstance
@@ -235,8 +235,6 @@ var _blocked: PackedByteArray       # 自由容器的非矩形支持
 func can_place_item(inst, origin, rot) -> bool
 func place(inst, origin, rot) -> bool
 func remove(uid) -> ItemInstance          # 非空的包拒绝直接移除
-func rotate_item(uid, steps) -> bool      # 非空的包请走 rotate_bag
-func rotate_bag(uid, steps)               # 原地转包，返回脱落的实例；失败 null
 func find_first_fit(def, allow_rotate) -> Dictionary
 func try_add(inst, allow_rotate) -> bool
 
@@ -256,9 +254,6 @@ func detach_bag(bag_uid) -> Dictionary    # 连内容物一起摘下，记录相
 func attach_bag(payload, origin, rot) -> bool   # 严格版：一件不能少，给「原样放回」用
 func bag_fit_report(payload, origin, rot) -> Dictionary        # {ok, fallen}，不改状态
 func attach_bag_shedding(payload, origin, rot) -> Dictionary   # 依附不上的脱落并交还
-
-# 战斗编译期使用
-func neighbors_of(uid) -> Array[int]      # 四邻相接的其他物品
 ```
 
 玩家棋盘、敌人尸体、商店货架、仓库全部复用这一个类。不要为它们另写实现 —— 掉落系统几乎零成本，正是因为这里没有分叉。
@@ -302,8 +297,8 @@ func begin_batch() / end_batch()                  # 变更合批
 > 语义正好对上「依附不上才脱落」。
 
 实现上只有一条路径：`bag_fit_report` 回答「包放不放得下、哪几件会脱落」，
-`attach_bag_shedding` 照报告执行；原地转（`rotate_bag`）就是「摘下来、换个朝向放回去」，
-与拖拽中按 R 走的是同一段代码，两处不会给出不同的脱落结果。
+`attach_bag_shedding` 照报告执行；拖拽中按 R 转包走的就是这一段。没有单独的「原地转」API（140 删了 `rotate_item` / `rotate_bag`，
+生产没人调）：将来要原地转 = `detach_bag` 之后 `attach_bag_shedding(payload, origin, 新朝向)` 一行，不会和拖拽给出不同的脱落结果。
 `attach_bag` 保留为**一件不能少**的严格版，只给「原样放回」用。
 
 脱落的东西没地方去（没有地上、或地上满了）时，整件事不成立，包连同内容物退回原处。
@@ -442,7 +437,7 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 
 ### 3.8 信仰：最后置入的信仰道具决定激活（8-4，报告 081）
 
-作者定的道具一级分类。**靠标签**：信仰道具带 `faith`，再带恰好一个信仰对象标签 `faith:<id>`（`FaithDef.TAG_PREFIX`；新教也是 `faith` + 专属标签）；
+作者定的道具一级分类。**靠标签**：信仰道具带 `faith`，再带恰好一个信仰对象标签 `faith:<id>`（`FaithTags.PREFIX`；新教也是 `faith` + 专属标签）；
 无信仰之物人人能用，而且**现实里也能存在的东西（皮甲、短刀、弓箭……）一律不归信仰**（作者定），带信仰标签的只有赐福之物、符号、神的遗物。信仰的名字、阵营（诸神 / 新教）、说明是内容种类 `faiths`（`FaithDef`，加一位神 = 加一份 JSON）；
 **机制只看标签，不认具体的神**（`FaithState`，纯静态）。
 
@@ -846,7 +841,6 @@ func implied_costs() -> Array[Cost]: return []
 | `OnSchedule` | 自发型，不订阅事件，由频率层排出时刻 |
 | `OnBattleStart` | 开场一次 |
 | `OnItemFired` | 别的物品出手时（连带触发）；132：`source_tags` 只听带某标签的件（编译结果带上 `CompiledItem.tags`） |
-| `OnResourceChanged` | 某种资源发生变化时 |
 | `OnResourceBelow` | 资源降到上限的 N%（或绝对值 N）以下时；132：`direction = ABOVE` 反过来（涨到以上），`full` = 回满 |
 | `OnStacksAtLeast` | 自己／对手身上有 N 层某增益减益时 |
 | `OnDamage` | 受到／造成某类伤害【之后】，且不低于 N 点时；132：`crit_only` 只在暴击时 |
@@ -1082,10 +1076,10 @@ func scope() -> StringName: return EffectScope.COMBAT
 **战斗中一切属性变化都由 buff 承载，包括资源上限。**
 「强壮」提供额外生命上限，「病弱」降低生命上限 —— 不为上限另开一套机制。
 
-**如无说明，buff 永续、可叠层**（103，作者定）：`BuffDef` 的默认值就是 `max_stacks = 0`（不限层）、
-`duration_sec = 0`（永续）。不可叠或会过期是**例外**，必须在定义里显式写 `max_stacks: 1`（和可选的 `duration_sec`），
-导入器守着（085：可叠层的不许填时长）；词条里这两种用例外色标出来。设计数值时按「永续 + 叠层」来算 ——
-不限层又按百分比乘的 buff 导入器会告警，提醒确认要不要封顶。
+**如无说明，buff 永续、可叠层**（103，作者定）：`BuffDef` 的默认值就是 `stackable = true`（可叠层，**没有层数上限**，137）、
+`duration_sec = 0`（永续）。不可叠或会过期是**例外**，必须在定义里显式写 `stackable: false`（固定一层，和可选的 `duration_sec`），
+导入器守着（085：可叠层的不许填时长）；词条里这两种用例外色标出来。设计数值时按「永续 + 叠层」来算。
+137（作者定）取消了叠层上限：可叠层就是不限层，旧字段 `max_stacks` 由导入器迁移（1 → 不可叠，其余 → 可叠，带提醒）。
 
 buff 仅在本场战斗内存在，**战斗结束全部清空**。因此**参战属性在进入战斗时只读取一次**，
 这也正是 4.1「编译期快照，战斗中不回头读背包」的直接后果。
@@ -1138,7 +1132,7 @@ class_name BuffDef extends Resource
 @export var id: StringName
 @export var display_name: String
 @export var is_debuff: bool = false        ## 仅影响 UI 配色与「净化」类效果的筛选
-@export var max_stacks: int = 0            ## 0 = 不限
+@export var stackable: bool = true         ## 137：可叠层 = 不限层；false = 固定一层
 @export var duration_ticks: int = 0        ## 0 = 持续到本场战斗结束
 @export var on_restack: RestackMode        ## 叠层时是否刷新时长
 @export var mods: Array[StatModifier]      ## 每层一份，走 4.3 公式
@@ -1979,8 +1973,8 @@ class_name ZoneRules extends Resource
    高危区不占路线节点、换乘弧与出生点 —— 它们这时都已经铺好、受保护了。
    收尾：只长到两个点的，把它岔出来的那个路线节点也划进去凑成三个 —— 那个点原本的路线边
    就成了出入口，哪怕这让一片三个点的小区有两个口也没关系。
-   「岔出点不能是必须存在点（唯一的休息区 / 精英）」这一步节点还没有类型，留了口子
-   （_is_mandatory_node）；约束实际落在 M3-3c：被吸收的路线节点不许分配成必须型
+   「岔出点不能是必须存在点（唯一的休息区 / 精英）」这一步节点还没有类型，查不了；
+   约束实际落在 M3-3c：被吸收的路线节点不许分配成必须型
 
 7. 候选边：同环挨着的两个点 → tangential，中间可以隔至多 tangential_span_max 个空槽（5.4.1 的 `1----1`），
    隔得更远就是空白区、弧断开；向内一环里【边长上限之内】最近的 radial_links 个 → radial。
@@ -2091,7 +2085,8 @@ class_name ZoneRules extends Resource
 
 - 岔路口自己就是一格 `-`，所以它和**紧挨着**的点之间不需要再隔一格 `-`：`A-V` 的 `-` 上落了 `|`，
   就是 A—岔—V 三个点连成一串。作者两张图的第一行第二格就是这样，漏了这条整张图是散的。
-- 没有 `[map]` 段头的是 v0 老格式：`E` 是终点、`2` 是「高危的缺省点」。有段头的按节点类型表来。
+- 文本必须以 `[map]` 段头开头，符号一律按节点类型表来；没有段头的 v0 老格式（`E` 是终点、
+  `2` 是「高危的缺省点」）已不再支持，解析直接报错。
   同一种类型的另一种写法记在 `layout.symbol` 里，导出时原样写回。
 - `|` 出现在环行里（不是连接层）= 这条径向边从这一环**穿过去**。
 - 底色刷在 `-` 上没有意义，但原稿存进 `layout_meta.danger_rows`，导出时节点那一格以节点为准、
@@ -2398,10 +2393,10 @@ func spend(n: int) -> void:
 
 这五步落在 **`core/run/map_travel.gd`（`MapTravel`）** 一处：`step_to(to_id)` 造一个 step 意图交给
 `apply(intent)`，`apply` 是唯一会改地图状态的入口 —— 将来传送、定点移动造好自己的意图之后也走它，
-顺序、计数、惩罚、事件一处都不用改。侵蚀与节点事件都是**鸭子类型的钩子**，`MapTravel` 不认识它们的类：
+顺序、计数、惩罚、事件一处都不用改。两个钩子：
 
-- `erosion`：有 `on_action(clock, graph)` 与 `move_penalty(node) -> {hp_damage, item_risk}` 就行；
-  浅层惩罚扣在 `vitality` 上（7.1）。第 7 阶段之前是 null，但**顺序现在就定死**，测试用一个假钩子记调用次序守着。
+- `erosion: ErosionField`（140 起明确类型，不再是鸭子接口）：每步先 `on_action(clock, graph)` 推进，再 `settle(node)` 结算途经点与目的地，
+  惩罚由侵蚀场自己的效果构件做（`MapTravel` 不再持有体力）。null = 没有侵蚀；**顺序定死**，测试用 `ErosionField` 的子类记调用次序守着。
 - `on_node_event: Callable(node)`：设了它，节点什么时候算「用过」由它说（战斗打完才 `mark_visited`）；
   没设，到点即标 `VISITED` —— M4 之前的占位。
 - 出生点开局就算踩过了（`start_at`），它不该再触发一次事件。走不了的一律发 `refused(intent, why)`，
@@ -2465,7 +2460,7 @@ var next_at_action: int
 func on_action(clock: ActionClock, graph: MapGraph) -> void
 func is_eroded(node: MapNode) -> bool:
     return node.erosion_band <= eroded_bands
-func move_penalty(node: MapNode) -> Dictionary    # {hp_damage:int, item_risk:float}
+func settle(node: MapNode) -> void              # 被侵蚀的点：效果构件挨个过门（075）
 ```
 
 #### 三条硬性设计约束
@@ -2727,15 +2722,14 @@ class_name DropRule extends Resource
 ```
 
 **每件各掷一次**（`DropResolver.owned_chance`）：`base_chance[稀有度] + difficulty × difficulty_bonus + luck × luck_bonus
-+ drop_owned_chance（道具 / 套装的战利品效果）+ Σ 来源`，夹进 0～1。修正全是加法、同一个单位，调一个数看得清另一个。
++ drop_owned_chance（道具 / 套装的战利品效果）`，夹进 0～1。修正全是加法、同一个单位，调一个数看得清另一个。
 
 **珍宝**：`rolls` 次尝试，每次按 `treasure_chance` 掷；中了按权重（+ `rarity_bias`）抽稀有度，在「带珍宝标签、这个稀有度、
 敌人**没有**」的道具里抽一件（`category_bias` 加权）。哪一档都没有（珍宝还没定义）就记一笔，不掉、不报错。
 
-**修正的来源**是接口不是字段（`DropBonusSource`：`owned_bonus(ctx, def)` / `treasure_bonus(ctx)`），
-`LootContext.sources` 装它们。**062 之后局外 / 地图 buff 不走这条缝**：buff 的 `LootEffect` 直接施加到掉落上下文上、幸运从 buff 的 `RunEffect` 来（`RunState._loot_context`，
-道具与套装的战利品效果也在那里施加）。`MetaDropBonus`（局外）与 `MapDropBonus`（地图）是两个占位实现，只剩沙盒的预览还用，待清理；现在都加 0，
-`DropResolver` 现在就调它们 —— 接上的那天规则与测试一行不改。难度与幸运是 `LootContext` 自带的两个数，谁填是 run 层的事。
+**局外 / 地图 buff 不另开接缝**（062 起）：buff 的 `LootEffect` 直接施加到掉落上下文上、幸运从 buff 的 `RunEffect` 来（`RunState._loot_context`，
+道具与套装的战利品效果也在那里施加）。原来留的 `DropBonusSource` 接口与两个恒加 0 的占位实现已清理（140）。
+难度与幸运是 `LootContext` 自带的两个数，谁填是 run 层的事。
 
 M2 定下的四个量各有归宿：`rolls` = 珍宝尝试次数，`rarity_bias` = 珍宝稀有度权重偏移，`category_bias` = 珍宝候选加权，
 `drop_owned_chance` = 自身道具概率加成。
@@ -3039,7 +3033,7 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 累计搜索次数、待拾取的容器、阶段。**内容库不进存档**，只写 id（章节、道具、敌人），读档时由调用方给；
 开着的店 / 搜索会话不存 —— 存档那一刻视为离开了那个点，货架与搜索进度本来就在图里。
 
-**存档从第一天就写版本号**（一局 `RunState.SAVE_VERSION = 2`，局外 `MetaState.SAVE_VERSION = 3`，110 加了科技等级与上交记录），读到不认识的版本不猜、返回 null。
+**存档从第一天就写版本号**（一局 `RunState.SAVE_VERSION = 4`，局外 `MetaState.SAVE_VERSION = 3`，110 加了科技等级与上交记录），读到不认识的版本不猜、返回 null。
 一局的 v1 → v2（101）是迁移链的第一个真实用例：子系统搬成模块之后，它们的状态从顶层键（`safe` / `safe_locked`）挪进了 `modules[id]`。
 
 **迁移链**（098，报告 098）：`MetaMigrations` / `RunMigrations`（纯静态）**在字典层逐级升**，一步只认 n → n+1，`match` 显式分派（不走反射）、`duplicate(true)` 不改入参；
@@ -3070,7 +3064,10 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 
 - `RunSkills`（`run.skills`，没角色也有一份空的）：`can_use` / `use` / `on_step`（在猎手的回合之后减冷却与躲避）/ `prepare_battle`（`NodeEvents.before_battle` 回调，在 `BattleSim.run` 之前）；跟着存档走（`skills` 一节），读档回来先放 `skills_saved`，持有方按 id 找回角色时 `RunState.set_character` 接上。
 - 主动技能只在地图屏用（作者：大地图移动时使用）；右栏一个技能一个按钮，不能用时灰掉并写原因。
-- 三个初始角色（作者定）：安德烈乌斯（奴隶，躲避 + 逃跑加成 + 免罚一败）、布鲁图斯（奴隶，坚韧：生命 / 耐力 / 体力更高）、马库斯（军团士兵，耐力更高，突击）。占位的 `default` / `scout` 删了。
+- 三个初始角色（作者定，136 重做，同日修订）：**角色 = 初始面板 + 技能**（基线、初始包、负重上限 + 两个被动、一个主动），外加一条短板；没有身份这一层（作者：「科技不要跟角色绑定，角色的能力就是初始面板和可能的技能差异」）。科技全局通用，和角色被动在 `buff_context()` 里直接叠加。开局屏按 `RunSkill.is_active()` 分「被动 / 主动」行，面板行写生命、耐力、体力、负重。
+  安德烈乌斯：熟门熟路（`travel_discount`：`MapTravel.paid_steps` 数到 `free_step_every` 下一步不花行动点，跟存档）/ 溜得掉（逃跑、潜行、免一败）/ 脱身（`slip`：战前准备屏「溜走」→ `NodeEvents.skip_pending_battle`，点用过、无战利品、不扣体力，搜索遭遇收会话原因 `slipped`、不弹「被赶跑」，核心点不行；猎手事件屏多一项「脱身（必定逃掉）」，`SkillReady` 锁、`RunSkills.consume` 记账）。
+  布鲁图斯：基线 60 / 60 / 6，被动不再加数；野地里长大（`rest_bonus`、`erosion_resist`）/ 坚韧（`RunSkill.rules`：低于三成生命一次性护盾，`CharacterDef.combat_rules` 编进玩家单位）/ 咬牙（`second_wind`：地图上回体力，满了不让用）。
+  马库斯：军功（`battle_reward_mult`，`NodeEvents._pay_battle_reward` 乘、四舍五入）/ 操练（耐力回复 +1）/ 突击。`evade` 构件留着，没有角色带。占位的 `default` / `scout` 删了。
 
 ## 8. M6 · 场景流
 
@@ -3119,7 +3116,7 @@ flow 只说「现在该显示哪一屏、给它什么」（`screen_changed(scree
 class_name GameFlow extends RefCounted
 enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR }   # SLOTS 089、SAFE 092、ALTAR 093
 signal screen_changed(screen, payload)
-signal run_started(state) / run_ended(result)
+signal run_changed(state)                    # 140：run_started / run_ended 没人接，删了
 func to_main_menu() / new_run() / show_meta()
 func begin(chapter, loadout, seed, from_warehouse, character, layout) -> RunState   # SETUP → MAP；老路给 loadout，角色路给 character + layout
 func continue_run() -> bool / save() / save_and_quit()
@@ -3219,8 +3216,8 @@ func player_spec() -> CombatantSpec …
 
 作者：「增加负重系统，给道具设计重量（要符合它们的名称和占据空间），给不同角色设计不同的初始负重。增加可以提升负重上限的科技。设计多个递进的负重等级……」；补充：「不要直接降低伤害，可以降低耐力恢复、上限和急速」。
 
-- **重量**：`ItemDef.weight`（0 = 按公式），`ItemWeight.of(def)`：写死的用写死的，否则格数 × 每格重（`heavy` 3、`metal` 2、`remedy / food / ammo / keepsake / sigil / treasure / relic` 半格一重、其余 1）。名字说它沉或轻的写死在道具文件里（报告 129 附录 A）。
-- **负重** = 作战棋盘上每件（含包本身）的重量之和（`RunState.carry_weight`）；地上、保险箱、仓库不算。**上限** = `CharacterDef.weight_capacity`（安德烈乌斯 28 / 马库斯 34 / 布鲁图斯 40，0 = 不算负重）+ `RunContext.carry_capacity_bonus`（科技「扛重」，`carry_capacity_bonus` 构件）。全派生，不进存档。
+- **重量**：`ItemDef.weight`（0 = 按公式），`ItemWeight.of(def)`：写死的用写死的，否则格数 × 每格重（137 起：`heavy` 4、`metal` 3、`gem / stone` 2、`remedy / food / ammo / keepsake / sigil / treasure / relic` 半格一重、其余 1；先匹配的档生效）。名字说它沉或轻的写死在道具文件里（报告 129 附录 A、137 的重配表）。
+- **负重** = 作战棋盘上每件（含包本身）的重量之和（`RunState.carry_weight`）；地上、保险箱、仓库不算。**上限** = `CharacterDef.weight_capacity`（安德烈乌斯 40 / 马库斯 48 / 布鲁图斯 56，137；0 = 不算负重）+ `RunContext.carry_capacity_bonus`（科技「扛重」，`carry_capacity_bonus` 构件）。全派生，不进存档。
 - **分级**：`EncumbranceRules`（内容种类 `encumbrance_rules`，章节 `encumbrance_rules` 引用，自由模式用 `standard`，序章不开）。负重**严格大于**上限 × `over` 才到那一级：×1 吃力（急速 −10%、耐力回复 −10%），×1.25 超重（急速 −25%、耐力回复 −25%、耐力上限 −20%），×1.5 寸步难行（超重的减益照旧 + 走一步行动点 ×2）。**不碰伤害**（导入时拦）。`regen_* / max_*` 的 `flat` 写的是基线比例，`combat_mods(level, baseline)` 折成真值进 `CompileInput.baseline_mods`；急速进 `input.mods`（每件参战道具）。
 - **接线**：`RunState.compile_player` 并入减益；`BattlePassives` 列一条「负重：<级名>」；`RunState.refresh_encumbrance` 在棋盘变了、换了角色、开局 / 读档后重算，写 `MapTravel.action_cost_mult`，级数真变了发 `encumbrance_changed`。`MapTravel.cost_of(intent)` 是唯一的「这一步花几点」（`apply` 扣它、地图屏预览与日志读它），`wait()` 不乘。
 - **界面**：背包读数一行「负重 w / c　级名」（超重警示色）、道具悬浮窗「重 n」、地图顶栏负重小标、开局屏读数也算；术语「负重 / 吃力 / 超重 / 寸步难行」，百科「背包」类一页 `encumbrance`。
@@ -3243,7 +3240,7 @@ func player_spec() -> CombatantSpec …
 作者说正式游戏由新手教程关发第一套（第 8 阶段），这是那之前的配置占位。
 
 `LoadoutDef`（`core/run/loadout_def.gd`，内容种类 `loadouts`）于是只剩两件事：第一套的清单，和没有角色定义时的老路（`begin(chapter, loadout, seed)`：
-清单里的包先上棋盘，其余按顺序往包里放、放不下到地上，`RunState._give_kit`）。校验：每件得存在，至少一个包。现有三套占位。
+清单里的包先上棋盘，其余按顺序往包里放、放不下到地上，`RunState.give_kit`）。校验：每件得存在，至少一个包。现有三套占位。
 
 ### 8.2 结算与局外
 
@@ -3259,12 +3256,14 @@ func player_spec() -> CombatantSpec …
 - **包只计图鉴**：什么能存进局外由 `MetaState.keeps(def)` 一处说了算（现在：不是包）。「包」只是当前的承载媒介，将来可能删掉，那时删这一个分支。
 - 钱、累计价值、几局几撤几败、最近几局。**保留规则只在 `absorb()` 一个方法里**（15 节第 4 项）：撤离 = 图鉴每件计一次、非包道具带回棋盘、钱全带出；战败 = 全失。
 - 局外有自己的 uid 空间：每局的 uid 从 1 重编，进来时重新编号。
+- **基地屏布局**（139，作者定）：开发开关、局外解锁、科技等级、最近几局收在右侧的 `DevDrawer`（`ui/game/dev_drawer.gd`）里 —— 头部最右的箭头「◂ / ▸」点一下开、再点一下关，默认收起，开着时盖在页面上、宽 420、自己竖向滚，五个页签都能开，状态不进设置。
+  仓库页只剩格子，**格子大小是每块视图自己的**：`InventoryView.cell_px`（默认 `CELL` = 60），`WarehousePanel.fill_width` 开着时按面板宽度算 `cell_for(宽, 列数)`（60 ～ 96，封顶后居中，带回来的背包与仓库同一个数），出售页同样；`DragLayer` 对着某块视图的落点、残影、整块判定读那块的 `cell_px`，跟手的残影按起拖那块的；`ScrollBox` 跟着 `cell_px_changed` 改尺寸。地图背包、战前、开局、地上、冷却覆盖层仍是 60。图鉴一行几个按宽度算（`codex_columns_for`），不横向滚。
 
 一局结束时（`GameFlow._settle_run`，进结算屏之前）就 `absorb`、存 meta、删这一局的存档；结算屏拿到的已经是记完账的局外。
 `MetaSave` 与 `RunSave` 同一套做法：`user://meta.json`，版本号 2（v1 是开发期的，作废），只写 id；仓库大小以存档里的为准（成长过的不该被规则缩回去）。
 **buff**（059 第 3 条，062）：局外的与一局里的是同一套定义 `RunBuffDef`（内容种类 `run_buffs`：scope、时限步数、标记、`mods` / `rules` / `effects`），
 效果树多了 `RunEffect` 分支（9.2），往 `RunContext` 里加数（体力上限、开局钱、多搜几次、商店价、幸运），各系统在对应的点读。
-局外的由 `MetaState.active_buffs`（基地右栏的开发开关）+ `MetaState.tech_buffs`（科技树给的，118）决定，`GameFlow.meta_buffs()` 合并去重，开局那一刻记进这一局；一局里的由事件后果给（`BuffModule.grant`，101 之后在模块里），
+局外的由 `MetaState.active_buffs`（基地屏「调试台」抽屉里的开发开关，139）+ `MetaState.tech_buffs`（科技树给的，118）决定，`GameFlow.meta_buffs()` 合并去重，开局那一刻记进这一局；一局里的由事件后果给（`BuffModule.grant`，101 之后在模块里），
 有时限的每走一步少一步，只带 `tags` 的就是标记，事件选项的条件查 `has_buff_tag`。
 
 **局外科技**（110，作者定）：一张定义 `TechDef`（内容种类 `techs`：`effect` 是 `TechEffect` 构件，登记在 `RunRegistry.TECH_EFFECTS`；`tiers` 每级 `TechTier{funds, items}`）+ `MetaState` 里通用的 `tech_levels`（id → 级）与 `tech_deposits`（id → {道具 id → 已交件数}）。
@@ -3317,7 +3316,7 @@ func player_spec() -> CombatantSpec …
 迎战：**按玩家当时的段位定档**（段位只看步数：难度里猎手机制的 `bracket_steps` 划段，猎手定义的 `strength_by_bracket` 每段几档；表空退回探索度的强度规则，074）从猎手专属池（`enemy_pools/hunters`，占位）现造敌人（`EnemyPlacer`），打赢它死、掉落率乘 `drop_mult`；打输执行**这只猎手生成时选定的那一档**的后果构件
 （扣体力 / 没事 / 必杀 / 消失 / 退走并歇 / 驱逐 / 赶回上一个点并驻守）。**战败结果档**（134）：`HunterLossOption`（`id`、名字、`weight`、`outcomes`）；`HunterDef.loss_options` 列可能的档，
 `loss_pick`（构件，`RunRegistry.HUNTER_LOSS_PICKS`：`random` 按权重 / `fixed` 固定第几档，null = 随机）在 `spawn()` 时选一档，档名记在 `Hunter.loss_id` 跟存档；
-只写旧 `loss_outcomes` 的定义当作只有一档，旧存档没档名按第一档。被感知之后，地图上悬停那个点与开打前的事件屏都写「输了会怎样」。逃跑按成功率掷，没逃掉扣体力照打。距离度量 `MapMetric`：`steps` 或 `absolute`（地图屏注入按环距归一的坐标）。
+至少写一档（140 起旧的 `loss_outcomes` 导入时报错；v3 → v4 迁移把旧存档的 `"default"` 档名清掉、按第一档，挂着的没档名的猎手遭遇丢掉）。被感知之后，地图上悬停那个点与开打前的事件屏都写「输了会怎样」。逃跑按成功率掷，没逃掉扣体力照打。距离度量 `MapMetric`：`steps` 或 `absolute`（地图屏注入按环距归一的坐标）。
 随机数走 `RunRNG` 的 `hunters` 流。`RunContext` 多三个字段（侦察距离、感知倍率、逃跑加成），角色的被动技能（072）、局外 buff、难度修饰都能往里加数。
 **校准**（073）：正式游戏每走一步记一份玩家配置（`CalibrationRecorder` → `user://calibration/snapshots.jsonl`），`tools/build_dummies.gd` 按难度的段位表分段（或固定段长）、每段挑离平均读数最近的真实配置当木桩，
 `tools/bench_hunters.gd` 让木桩对猎手池里每一档打几百场，打印胜率并排「猎手表里这一段的档 / 最接近 50% 的哪一档」—— 工具只做统计，作者对着表改强度规则。数值等系统完整后多场测试。
@@ -3331,6 +3330,8 @@ func player_spec() -> CombatantSpec …
 节点内容里的搜索覆盖（`SearchSession` 读）：`search_max` / `search_min`（搜够才能走）/ `search_curve` / `search_finds`（第 k 次固定收获）/ `encounter`（写死的遭遇）。`has_item` 条件多了 `tag`。事件屏上能整理背包（选项页「整理背包（B）」，收起重画选项）。
 
 ## 9. 套装与跨域效果
+
+> **已实现、暂无内容**（140 登记，见 [status.md](status.md)）：本节的套装、道具跨域效果、包体加成、敌人 `loadout` 代码与测试都在，数据里还没有一份；第一份内容待流派 / 掉落设计需要时再写。
 
 **套装是由道具触发的独立系统，不是编译期的一步。**
 
@@ -3596,7 +3597,7 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 ```
 
 代码侧对应 `ItemShape.from_bits()` 与 `to_bits()`，两边同一种记法，
-导入器不需要做任何转换。旧的 `#` 写法 `from_ascii()` 仍然接受，但新内容一律用 0/1。
+导入器不需要做任何转换。`from_ascii()` 收的是同一种写法按行拆开的数组（140 删了旧的 `#` 写法，测试也一律用 0/1）。
 
 ### 10.3 校验必须比引擎严格
 
@@ -3684,7 +3685,7 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
   新增一种效果，下拉框自动多一项，编辑器一行不用改。
 - **字段的形状跟着声明走**（111）：`@export_enum("a", "b")` 的字符串字段是下拉（值存原字符串，显示名查 `FieldText.ENUM_LABELS`）；
   `@export_range(min, max)` 的数字框按范围限；资源声明 `const FIELD_WHEN := {字段: {别的字段: [允许的值]}}` 就能让字段按条件显隐
-  （`ContentSchema.field_visible`；例：`FaithBonus` 按阶只露「阶」、按信力露「每份信力 / 叠层上限」、激活即都不露），
+  （`ContentSchema.field_visible`；例：`FaithBonus` 按阶只露「阶」、按信力露「每份信力 / 最多几份」（`max_shares`，137 从 `max_stacks` 改名）、激活即都不露），
   作者切走后被藏的字段归默认值，JSON 里不留看不见的旧值。表单不认识任何具体类。
 - **实时校验走的就是导入器本身**，不是另写一份规则 ——
   那样界面和命令行迟早给出不同答案，而作者会相信先看到的那个。
@@ -3708,6 +3709,10 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 
 列表的行号对应的是**筛过之后**的那一份（`_shown`），不是全集（`_ids`）。
 两者混用的表现是「点第三行打开了第五件」，而且只有加了筛选之后才错。
+
+**列表 / 草稿 / 存盘只有一份**（141）：道具、事件、buff、套装四个编辑器继承 `AuthoringEditor`（`ui/editor/authoring_editor.gd`），
+列表（盘上的 id + 没存过盘的草稿）、草稿与判脏（按打开时的 id 记，和盘上那份规范化 JSON 比）、打开、存盘（导出 → 导入器建资产 → 写 `.json` 与 `.tres`，有错不写）、
+另存、套用 JSON、放弃、重扫都在基类；子类只给种类、导出 / 导入那一对、新建的那一件、表单和提示语。改 id 时旧名字下的草稿撤掉、盘上也没有就从列表里消失，四个一样。
 
 **事件编辑器**（`ui/event_editor/event_editor.tscn`，报告 064）是同一套做法对着事件（6.5）的第二个入口：左边事件列表，中间 id、标题、多行正文、配图、选项表单，
 右边预览、校验、挂进节点规则、JSON。选项、条件、后果的表单由 `PropertyForm` 反射生成，「添加」下拉从注册表来，加一种构件编辑器不改；
@@ -3759,7 +3764,7 @@ res://
                     adjacency_profile  combat_profile  buff_def  buff_instance  effect_registry
       damage/       damage_type_def  damage_types  damage_packet  damage_resolver
       triggers/     on_schedule  on_battle_start  on_damage  on_before_damage  on_item_fired
-                    on_resource_below  on_resource_changed  on_stacks_at_least  damage_trigger
+                    on_resource_below  on_stacks_at_least  damage_trigger
       cadences/     always  cooldown_cadence
       costs/        resource_cost  charge_cost  status_stack_cost  uses_cost  chance_condition
       effects/      deal_damage  modify_damage  reflect_damage  apply_status  remove_status  change_resource
@@ -3796,14 +3801,14 @@ res://
                     settings_screen  warehouse_panel  loot_view  event_image
     inventory/      inventory_sandbox  inventory_view  container_view  stash_view  drag_layer  item_painter
     battle/         battle_sandbox  battle_view  combatant_panel
-    editor/         content_editor  property_form  shape_editor
+    editor/         authoring_editor（141 四个编辑器的基类）  content_editor  property_form  shape_editor
     event_editor/   event_editor      # 事件编辑器（10.5，报告 064）
     map/            map_view  map_layout  ring_layout_base  ring_map_layout  grid_map_layout
                     ring_angle_solver  map_node_style
     map_editor/     map_editor
-  tools/            import_content  export_content  normalize_content  check_scripts  check_content  map_stats  build_dummies  bench_hunters
+  tools/            import_content  normalize_content  check_scripts  check_content  map_stats  build_dummies  bench_hunters
                     demo_fill        # 截图演示（101 第 6 刀；只在 DEMO_SCREEN 非空时被导演 load）
-                    gen_sample_items  gen_sample_combat  gen_sample_chapter  bench_battle  capture_scene  cli_tool
+                    gen_sample_chapter  bench_battle  capture_scene  cli_tool
   tests/            run_tests  test_case  support（公共装载）                      # 102：按层分目录（2026-10-06：108 个套件）
     inventory/      test_*（12）   背包、格子、拖拽
     battle/         test_*（8）    编译、效果、伤害、数值
@@ -3901,7 +3906,7 @@ res://
 | 新的资源种类（法力、护盾值…） | `ResourcePool` 的新键 + `max_*` 属性键 | 不为每种资源单开事件，统一走 `resource_changed(key, delta, reason)` |
 | 新的触发时机／频率／效果 | `Trigger`／`Cadence`／`Effect` 子类 + `effect_registry` 登记一行 | 不在 `BattleSim` 或导入器里出现任何具体效果名；连带触发是 `OnItemFired` 子类，不是特例字段 |
 | 合成配方 | 新增 `RecipeBook` + 回合边界的结算钩子 | 匹配的是**相对偏移模式**而非「挨着」；`state` 预留 `locked` 标志 |
-| 有内容物的包可旋转 | `GridInventory.rotate_item` 的包分支 | 现在直接拒绝；放开时内容物需同步做坐标变换 |
+| 原地旋转（不经拖拽） | `detach_bag` + `attach_bag_shedding(payload, origin, 新朝向)` | 140 删了 `rotate_item` / `rotate_bag`；要做就是这一行，脱落规则和拖拽同一条路 |
 
 **这张表的用法是防御性的**：实现底层时对照检查有没有踩到右列，而不是现在就去实现左列。
 
@@ -3942,6 +3947,19 @@ res://
 | v2.44 | 2026-10-05 | **地上取代暂存区**（128）：暂存区改名「地上」，规则不变；不画框，格子外整块屏幕就是地上，放手在哪就落在哪。`ItemStash.spots`（归一化落点，存档带着，旧档自动铺）、`NodeStorageModule.spots`（按点留着落点）；新 `GroundLayer`（导演持有一层，盖在屏栈上，各屏 `reserve` 面板、被盖住的东西推开）；`StashView` 删掉，开局屏与沙盒用不铺满屏的一块地；`DragLayer` 放到棋盘外 = 落在放手点、从地上拿起放回 = 改落点，不再画插入线。见 3.4 |
 | v2.50 | 2026-10-07 | **地上的落地动画与双击进包**（134「ground」，作者定，五项待定按推荐；改 3.4）：`GroundLayer` 按 uid 集合找出刚落地的、`_process` 推进、`_draw` 插值（从起点落到落点、末尾弹 6 像素、1.15 → 1 倍、透明度 0.6 → 1，多件错开 40 毫秒、最多错开 10 件，播放中不接抓取）；`ItemStash.landing_from`（不存档）由 `DragLayer` 写（放手就地、顶出从原格、脱落从放手点、取消放回不播），`NodeStorageModule` 回到点上标不播，没写的从最近面板边缘落、没面板从上方 60 像素。双击：`GameDirector` 在没有面板接地上时转给栈顶屏的 `ground_double_clicked`，地图 / 事件屏先 `transfer_auto` 再开背包，放不下由 `InventoryPanel.say_no_room` 提示；关背包先 `hide` 再释放，`top_drag` 跳过排队释放的拖拽层 |
 | v2.51 | 2026-10-07 | **搜索遭遇的胜负文案**（135，作者定，三项待定按推荐；机制不变）：打输那一屏 `search_destroyed` 改成「被赶跑了 / 离开」、教程与百科不再说搜索遭遇扣体力，百科写进打赢后战利品并进收获箱；战前准备屏类型名「搜索中遭遇（输了不扣体力）」；`NodeRules.loss_cost` 默认表与两份节点规则去掉死配置 `search`（搜索遭遇进战斗固定传 0）；地图日志按结束原因说（`MapScreen.search_end_text`） |
+| v2.52 | 2026-10-07 | **三个角色各一套能力**（136，作者定，五项待定按推荐；改 7.3）：四个一局规则效果（`travel_discount` / `rest_bonus` / `erosion_resist` / `battle_reward_mult`）、两个主动（`slip` / `second_wind`）、`RunSkill.rules` 与 `slot`、`CharacterDef.identity` 与条件 `identity_is` / `skill_ready`、hook `identity` / `skill_ready`；布鲁图斯的数值并回基线；战前准备屏「溜走」按钮、开局屏按身份 / 擅长 / 主动分行、百科「三个角色」、序章开头提一句技能按钮；序章第二个搜索点的遭遇生命 40 → 36（布鲁图斯少了 20 血后仍五个种子全赢） |
+| v2.53 | 2026-10-07 | **叠层上限取消、道具重量按材质、初始负重上调**（137，作者定，五项待定按推荐；改 4.5、7.6）：`BuffDef.max_stacks` → `stackable`（可叠层不限层、不可叠层固定一层，导入器迁移旧键）；`FaithBonus.max_stacks` 改名 `max_shares`；Buff 制作器去掉上限框；`ItemWeight` 每格重 重 4 / 金属 3 / 石与晶 2；新标签 `stone`（燧石、粗盐）；角色负重上限 40 / 48 / 56 |
+| v2.54 | 2026-10-07 | **136 修订：去掉身份层**（作者补充：科技不跟角色绑定，角色 = 初始面板 + 技能；改 7.3）：删 `CharacterDef.identity`、事件条件 `identity_is`、hook `identity`、`RunSkill.slot`；开局屏角色卡改成「被动 / 被动 / 主动」三行，面板行加负重；百科「三个角色」改写并补一句「科技对每个角色都生效」。技能本身与数值不变 |
+| v2.55 | 2026-10-07 | **基地屏：调试台抽屉、格子占满整行**（139，作者定，三项待定按推荐；改 8.2）：新 `DevDrawer`（箭头开关、盖在页面上，开发开关 / 局外解锁 / 科技等级 / 最近几局都搬进去）；`InventoryView.cell_px` + `cell_px_changed`，`DragLayer` / `ScrollBox` 对着视图算的地方读它；`WarehousePanel.fill_width` 与 `cell_for`（60 ～ 96）；出售页同样；图鉴列数按宽度 |
+| v2.56 | 2026-10-07 | **精简移交第 1 组：删**（140，作者定，待定按推荐；改 3.3、4.4）：`ItemDef.icon`；`GridInventory.rotate_item / rotate_bag / neighbors_of`、`ItemInstance.rotated_step`（原地转 = `detach_bag` + `attach_bag_shedding`）；两个容器的 `accept_tags`（`GridInventory` 只剩 `accept_filter`，存档不再写该键）；`Cost.describe` 全家；`CombatantRuntime.clear_axis`、`CompiledItem.origin_of`；扳机 `OnResourceChanged`；没人接的信号（猎手 `spawned / moved / encounter / hunter_defeated / fled`、`MapTravel.arrival_held`、`GameFlow.run_started / run_ended`、`Vitality.depleted`）；工具 `gen_sample_items / gen_sample_combat / export_content`；开局屏「没有角色」老路改成红字 |
+| v2.57 | 2026-10-07 | **精简移交第 2 组：改行为**（140，作者定，待定按推荐；改 6.1、7.x 猎手、存档版本）：`LootPacker.pack` = 往空容器里 `add`（加高时先放下的原位不动，只往后排没放下的）；`DropResolver.expected_count` 按固定种子 64 次掷骰的均值（掉落 + 保底），带 `boss` 参数，地图预览对核心点传 true；`carried_entries` 取代 `carried_flags`；编译器没有棋盘也照算后续步骤（信仰标签空）；猎手旧路径 R-21 删（`HunterDef.LEGACY_OPTION / loss_outcomes`，导入写 `loss_outcomes` 或 `loss_options` 为空都报错；一局存档 v3 → v4）；`MapRng.pick_weighted` 合并格阵与环形两份按权重抽样（遍历顺序由调用方给，同种子输出不变） |
+| v2.58 | 2026-10-07 | **精简移交第 3 组：收紧**（140，作者定，待定按推荐；改 5.6、5.7、9 节、7.4）：`MapTravel.erosion: ErosionField`（删 `move_penalty` 与 `has_method` 鸭子判断；`MapTravel.vitality` 随之没人用、删；三个测试的假侵蚀改成 `ErosionField` 子类）；`RunState` 的 9 个转发信号删掉，地图屏直接接 `hunters / travel.erosion / skills / faith_power` 的信号；`RecipeDef.note` 显示出来（拖到搭档上时残影下面一行「合成 → 产物：说明」、百科「合成」页列全部配方）；9 节开头与 [status.md](status.md) 标「已实现、暂无内容」，status 新增登记表（套装等扩展点、非矩形容器、`count_by_scale`、`min_danger`、`treasure_modified`） |
+| v2.59 | 2026-10-07 | **内容编辑器基类**（141 第 1 步，作者定，待定按推荐：基类、「盘上没有就从列表里删」四个都做；改 10.5）：新增 `AuthoringEditor`（列表 / 草稿 / 判脏 / 打开 / 存盘 / 另存 / 套用 JSON / 放弃 / 重扫 / 状态文本），buff 与套装编辑器改成继承它；测试碰的私有名字（`_def` / `_ids` / `_drafts` / `_open` / `has_unsaved_changes`）原样在基类 |
+| v2.60 | 2026-10-07 | **内容编辑器基类第 2 步**（141）：事件编辑器继承 `AuthoringEditor`，列表 / 草稿 / 存盘 / 另存 / 套用 JSON 删掉自己那份；配图读不到的警告在 `_validate` 里接在基类校验之后。事件列表现在也列没存过盘的草稿 |
+| v2.61 | 2026-10-07 | **内容编辑器基类第 3 步**（141 收尾）：道具编辑器继承 `AuthoringEditor`；分类页签、形状画板（`_collect` 把画板收回对象）、预估 DPS 留在子类，JSON 预览 `_preview` 就是基类的 `_json`。四个编辑器的列表 / 草稿 / 存盘只剩一份 |
+| v2.62 | 2026-10-08 | **规则文案按字段生成**（142 第 1 步）：`Trigger` / `Cost` 各加 `describe()`，`Glossary.rule_text` 拼「[扳机句] 条件句，效果」，不再查写死的时机名表（`TRIGGER_NAMES` 只留给百科的「时机」页）；`remove_status` 写状态名与目标、`deal_damage` 写固定值 / 按层 / 按比例；状态 id 经 `Glossary.status_name` 取名；悬浮窗另写耗耐力时规则行不重复 |
+| v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
+| v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.49 | 2026-10-06 | **猎手战败结果档 + 猎手战插进进点的事件队列**（134，作者定，五项待定按推荐；改 8.5）：新资源 `HunterLossOption`（档名、名字、权重、后果），`HunterDef.loss_options` + `loss_pick`（新构件表 `HUNTER_LOSS_PICKS`：`random` / `fixed`），`Hunter.loss_id` 生成时选定、跟存档；新后果 `expel`（退回上一步、不驻守）。`MapTravel` 加进点闸门 `arrival_gate` / 挂起的进点 `held`（存档）/ `finish_arrival` / `cancel_arrival`；`RunState` 的猎手回合从「这一步的事之后」挪到闸门里（先于点的事），`resume_arrival` 在玩家空下来时接着进；驱逐 = 取消进点（不标走过、事不发生、不记首访，步数照算）。`GameFlow._flush` 接着进点后排进队里的接着看；收起猎手战的战利品也接着进点。悬停与开打前事件屏写「输了会怎样」。`hunter_1` 击退 / 驱逐各一半，`hunter_2` 击退 / 驱逐 / 驱逐并驻守各三分之一（数值占位） |
 | v2.48 | 2026-10-05 | **单一乘区**（133，作者定；改 4.3）：删 `StatMath.Buff` 四个乘区，公式改成 `终值 = 基础 × max(0, 1 + Σ乘算) + Σ加算`；`StatModifier` 改成 `stat / mode{ADD, MULT} / amount`，`StatValue` 的四格 `mult` 换成一个 `percent`；`PropertyForm` 在属性修饰下加一行灰字提示（乘算还是加算、扩大还是缩小、在 buff 里每层一份）；导入器迁移旧键（`mult_category` 提醒忽略、又乘又加报错），`normalize_content` 重写了 18 份内容 JSON；百科删掉「乘区」词条组；编译金样有意重录（`percent` 替换 `mult`，四份终值逐项不变）。跨乘区的组合数值变了（弓 + 箭 + 符号 1.38 → 1.35）；标准轴不动 |
 | v2.47 | 2026-10-05 | **规则构件第二批**（132）：时机 `on_status_removed` / `on_overtime`，`on_item_fired.source_tags`、`on_resource_below.direction / full`、`on_damage.crit_only`；条件 `resource_condition` / `axis_condition` 与 `axis_cost`，三个条件型加 `negate`；效果 `convert_damage_type`，`deal_damage.percent_of / per_target_stack`、`change_resource.percent_of_damage`、`remove_status.all_debuffs / all_buffs`；受益格 `receive_rules`（4.2）；导入器的「配了也没用」警告。放血刀改成按目标流血层数 ×3。见 4.2、4.4 |
@@ -3995,7 +4013,7 @@ res://
 | v1.98 | 2026-09-29 | **编辑器字段本地化 + 悬浮说明**（报告 091 十三）：`FieldText`（字段 / 类型 / 枚举 / 类名的中文标签；说明**从脚本源码的 `##` 注释读**并缓存；英文模式原名），`PropertyForm` 每行标签与控件带 tooltip、类型与枚举下拉显示中文（tooltip 原名）；字段名不改 |
 | v1.97 | 2026-09-29 | **事件独立存在的三块补齐**（报告 091 十二）：地图编辑器节点面板「事件」下拉（`set_node_event / event_ids`）；事件编辑器**事件链**树（出去的 next_event 递归 + 被引用：事件 / 节点规则 / 预设图 / 章节开场，双击跳转）与**语言**下拉；`EventDef.titles / texts`、`EventOption.labels` + `title_for / text_for / label_for`；**局外旗标** `MetaState.flags`、`RunState.meta → NodeEvents.meta → EventContext.meta`、条件 `has_flag`、后果 `set_flag`（注册表）、`choose_event` 存 meta |
 | v1.96 | 2026-09-28 | **成就系统**（报告 091 十一）：内容种类 `achievements`（`AchievementDef`：条件种类 + 数 / 对象、`grants` 解锁 id、途径文字、隐藏）；`ItemDef.requires_unlock` + `ItemDatabase.set_locked / ids(include_locked)` 道具上锁；`MetaState.achievements / chapter_extractions / boss_kills / battles_won / seen_rules`，`RunResult.boss_cleared`；`GameFlow.check_achievements`（结算后、读档后）/ `unlocked` / `locked_item_ids` / `apply_item_locks` / `unlock_names`；基地第三页签「成就」（全部 / 已解锁 / 未解锁）；**本图规则卡** `ChapterDef.rules`（首次进图弹、暂停菜单再看）；**全部解锁** `GameSettings.unlock_all`（成就不计） |
-| v1.95 | 2026-09-27 | **开局屏暂存区**（报告 090）：带回来的没置入的进开局屏时挪进暂存区（`setup_screen` `stash` / `_pending` / `_build_stash` / `_allow_drop` / `store` / `_restore_pending`），拖上包 = 带上、拖进仓库 = 置入、留着的出发就没了、回主菜单原样放回；`GameFlow.can_begin()` 不再因没清空而拦、`pending_hint()` 只提示、`begin()` 清掉带回来的棋盘；基地屏 / 仓库面板提示改；**悬浮窗侧窗不再压主窗**（`HoverTip._place` 主窗 + 词条列当一组摆、按真正的视口算）；**按钮三档**（`UiPalette.Tier` / `style_button`，`GameScreen._button(…, tier)`：300% / 200% / 150%，琥珀 / 蓝灰 / 深底）、地图右栏三键 300% 竖排；**Esc 通用返回**（`GameDirector.escape()` → `GameScreen.escape()`：叠层收起；地图关对话框 / 背包、都没开着呼出**暂停菜单**（继续 / 设置嵌入 / 存档并回主菜单）；基地图鉴页 → 仓库页 → 主菜单逐级；设置 / 读取存档回主菜单）；**点当前节点恢复收起的界面** |
+| v1.95 | 2026-09-27 | **开局屏暂存区**（报告 090）：带回来的没置入的进开局屏时挪进暂存区（`setup_screen` `stash` / `_pending` / `_build_stash` / `_allow_drop` / `store` / `_restore_pending`），拖上包 = 带上、拖进仓库 = 置入、留着的出发就没了、回主菜单原样放回；`GameFlow.can_begin()` 不再因没清空而拦（后来恒为能开，已删）、`pending_hint()` 只提示、`begin()` 清掉带回来的棋盘；基地屏 / 仓库面板提示改；**悬浮窗侧窗不再压主窗**（`HoverTip._place` 主窗 + 词条列当一组摆、按真正的视口算）；**按钮三档**（`UiPalette.Tier` / `style_button`，`GameScreen._button(…, tier)`：300% / 200% / 150%，琥珀 / 蓝灰 / 深底）、地图右栏三键 300% 竖排；**Esc 通用返回**（`GameDirector.escape()` → `GameScreen.escape()`：叠层收起；地图关对话框 / 背包、都没开着呼出**暂停菜单**（继续 / 设置嵌入 / 存档并回主菜单）；基地图鉴页 → 仓库页 → 主菜单逐级；设置 / 读取存档回主菜单）；**点当前节点恢复收起的界面** |
 | v1.94 | 2026-09-27 | **三个存档位**（报告 089）：`SaveSlots`（`user://slots/<n>/`，老存档搬进第 1 位）、`GameSettings.save_slot`、`GameFlow.slots / use_slot / profile_exists / continue_game / start_new_game / new_game_in / load_slot / delete_slot`、`Screen.SLOTS` 读取存档屏；主菜单顺序 继续 → 读取存档 → 新的游戏；**图鉴缩略图网格**（`CodexTile`，每行 8 个可滚，没获得的灰的，悬浮窗） |
 | v1.93 | 2026-09-26 | 报告 088 第 16 条：**战败代价跟战斗绑定**（`NodeEvents.LOSS_DEFAULT / LOSS_DEATH`，`_battle_at` / `fight_content` / `_fight` 带 `loss_cost`，`loss_cost_for` 参数 → 节点内容 → 核心必死 → 规则表；跟 `pending_battle` 存；`HunterDef.loss_cost`；战败原因 `fatal_loss`） |
 | v1.92 | 2026-09-26 | 报告 088 第 11～15 条：输给猎手也扣体力（`loss_cost.hunter`）；power 并进 mana；**内容名字多语言**（所有定义 `display_names`，`Names.of` 按 `UiText.lang` 取，界面全改走它；`ItemDef.description`）；**特殊道具** `keepsake`（不进背包、不能生成、`MetaState.keepsakes` 点亮、能力由标签说明）与望远镜（`ChapterDef.starting_keepsakes`，`GameFlow.has_ability(&"node_tooltips")` 开浮窗、`take_notes` 通知）；**基地两个页签**（仓库 / 图鉴，图鉴 = 只读棋盘 + 角标 + 灰字 + 特殊道具） |
@@ -4031,7 +4049,7 @@ res://
 | v1.62 | 2026-09-23 | **事件编辑器**（报告 064，作者要求；10.5、11）。`ui/event_editor`：写文字、导入配图（复制到 `assets/events/<id>.<ext>`，`EventImage` 拿不到资源就按原始文件读，事件屏共用）、选项与条件 / 后果由 `PropertyForm` 反射生成、预览照事件屏画、挂进 `NodeRules.events_by_type`；校验与产出都走导入器（JSON + `.tres`），草稿缓存照道具编辑器。按性价比做在项目里而不是独立 exe：注册表、校验、id 表一行都不用复制，要独立就用导出预设 |
 | v1.61 | 2026-09-23 | **事件层与容器屏合一**（报告 063，058 / 059 顺序里的第 4 项；6.5 新增「事件层」、8 节流程图、10.1、11）。事件是内容（新种类 `events`：文字、图像占位、选项；选项的条件与后果是构件、走注册表两张新表）；`NodeRules.events_by_type` 按类型配，`EventPlacer` 生成时按 `content_seed` 定进节点、已有的不覆盖、随机点揭开后再配；`NodeEvents.handle` 变两段（`pending` / `event_pending` / `choose`），后果的旗子决定接下一个 / 开搜索 / 开店 / 开战 / 用过；等着选的跟着存档；**没有事件定义 = 老路**，现有套件一条不改；搜索点的「要不要搜」是默认事件 `search_default`；`GameFlow` 排事件屏、结果页插队首、队空了显示等着选的；战利品屏与搜索屏合成 `container_screen`；六个作者文件当内容占位 |
 | v1.60 | 2026-09-23 | **buff 骨架**（报告 062，058 / 059 顺序里的第 3 项；9.2、8.2、6.1、10.1）。效果树第四个分支 `RunEffect`（作用域 RUN）往 `RunContext` 里加数，五个构件（体力上限、开局钱、多搜几次、商店价、幸运）登记在注册表；`RunBuffDef`（内容种类 `run_buffs`）局外 / 一局同一套定义、`mods` / `rules` / `effects` 与套装档位同一种分法、`tags` 当标记、`duration_steps` 时限；`MetaState.active_buffs`（占位开关列表）开局记进 `RunState.meta_buffs`，`map_buffs` 每步递减；掉落上下文改由 `RunState._loot_context` 造：幸运从 buff 来，**道具 / 套装的战利品效果第一次真的接进一局**（9.2 说的那条查询此前没接） |
-| v1.59 | 2026-09-23 | **仓库格子化、结算屏一键置入、图鉴**（报告 061，058 / 059 顺序里的第 2 项；8.2 重写，15 节第 4 项定案）。仓库是不要求包的格子，大小是 `MetaRules.warehouse_size`（新内容种类 `meta_rules`，随局外成长）；撤离不直接进仓库 —— 棋盘原样带回（`MetaState.board`，非包道具按原位置、包换成默认背景），结算屏 / 局外屏共用的仓库面板拖或一键置入，放不下就停在那一件提示，没清空 `can_begin()` 拒绝开新局；图鉴 `codex` 累计件数、点亮一次、包也计；`MetaState.keeps(def)` 一处决定什么能存进局外；一局结束时（进结算屏之前）就 absorb、存 meta；`MetaSave` 版本 2，仓库大小以存档为准 |
+| v1.59 | 2026-09-23 | **仓库格子化、结算屏一键置入、图鉴**（报告 061，058 / 059 顺序里的第 2 项；8.2 重写，15 节第 4 项定案）。仓库是不要求包的格子，大小是 `MetaRules.warehouse_size`（新内容种类 `meta_rules`，随局外成长）；撤离不直接进仓库 —— 棋盘原样带回（`MetaState.board`，非包道具按原位置、包换成默认背景），结算屏 / 局外屏共用的仓库面板拖或一键置入，放不下就停在那一件提示，没清空 `can_begin()` 拒绝开新局（v1.95 起不拦，函数已删）；图鉴 `codex` 累计件数、点亮一次、包也计；`MetaState.keeps(def)` 一处决定什么能存进局外；一局结束时（进结算屏之前）就 absorb、存 meta；`MetaSave` 版本 2，仓库大小以存档为准 |
 | v1.58 | 2026-09-23 | **暂存区按点清空**（报告 060，058 / 059 顺序里的第一项；3.4 定稿，15 节第 7 项收掉）。「发生过事的点」= 踩上去时 `NodeEvents` 真的处理了什么，`last_handled_id` 记着、跟着存档；`RunState.step_to` 走出它时清暂存区、发 `storage_dropped`、清回 -1；出生点、岔路、路过的点、走不成的都不清。提醒档位是 `GameSettings`（`user://settings.json`，有就提 / 稀有度 / 价值 / 从不，表 + 阈值），`StorageWarning.at_risk` 挑要提的，地图屏走之前弹面板（照走 / 先整理背包 / 取消）；新增设置屏 |
 | v1.57 | 2026-09-23 | **059 设想：事件层、统一容器屏、局外 buff 与地图 buff**（未实施）。每个节点踩上去先过事件屏（没配事件的战斗点是转场），选项带条件与后果构件，搜索点「要不要搜」是事件、搜索与战利品是同一个容器屏；buff 是同一套构件、两种生命周期（局外 / 一局），效果树加 `RunEffect`（RUN 作用域）分支，标记型地图 buff 供事件分支查；暂存区改为**离开发生过事的点时清**（058 第五节）。顺序重排；15 节第 11 项更新 |
 | v1.56 | 2026-09-23 | **058 第二轮：作者八条回应**，设计修订：搜索速度不做属性；暂存区每走一步清空；图鉴累计件数、点亮一次；带入的限制就是初始包的空间、包只出不进；仓库大小随局外成长；撤离后保留棋盘、结算屏「一键置入」放不下就停下提示；顺序改为 3 → 4 格子化 → 7 结算置入 → 4 图鉴 → 2 开局预选 → 5 搜索 → 1 外框；15 节第 11 项更新 |

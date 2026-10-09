@@ -70,11 +70,11 @@ static func term_tip(name: String) -> bool:
 
 ## 标签给人看（096：名字是数据 —— [TagRegistry]，按当前语言；`faith:<id>` 写成「信仰：神名」；没登记的原词）
 static func tag_name(tag: StringName) -> String:
-	var fid := FaithDef.id_of_tag(tag)
+	var fid := FaithTags.id_of_tag(tag)
 	if fid != &"":
 		var defs := FaithDef.load_all()
 		var god: FaithDef = defs.get(fid, null)
-		return "%s%s%s" % [_pick(FAITH_WORD), "：" if UiText.lang == "zh" else ": ", Names.of(god) if god != null else String(fid)]
+		return "%s%s%s" % [UiText.pick(FAITH_WORD), "：" if UiText.lang == "zh" else ": ", Names.of(god) if god != null else String(fid)]
 	return TagRegistry.name_of(tag)
 
 
@@ -96,7 +96,7 @@ static func damage_type_name(type: StringName) -> String:
 
 const FAITH_WORD := {"zh": "信仰", "en": "Faith"}
 
-## 属性键 → 名字（096：中 / 英；按 [UiText.lang] 取，没有英文的回落中文）
+## 属性键 → 名字（096：中 / 英；按 [UiText.lang] 取，没有英文的回落中文 —— [method UiText.pick]）
 const STAT_NAMES := {
 	"damage": {"zh": "伤害", "en": "Damage"}, "armor": {"zh": "防护", "en": "Armor"}, "max_hp": {"zh": "生命", "en": "Health"},
 	"max_stamina": {"zh": "耐力上限", "en": "Max stamina"}, "haste": {"zh": "急速", "en": "Haste"}, "cooldown": {"zh": "冷却", "en": "Cooldown"},
@@ -107,16 +107,8 @@ const STAT_NAMES := {
 }
 
 
-## 一张「语言 → 文字」的小表按当前语言取；没有就中文；传进来的不是表就原样
-static func _pick(entry: Variant, fallback: String = "") -> String:
-	if entry is Dictionary:
-		var d := entry as Dictionary
-		return String(d.get(UiText.lang, d.get("zh", fallback)))
-	return String(entry) if entry != null else fallback
-
-
 static func stat_name(key: StringName) -> String:
-	return _pick(STAT_NAMES.get(String(key), null), String(key))
+	return UiText.pick(STAT_NAMES.get(String(key), null), String(key))
 
 
 ## 一条属性修饰给人看：「伤害 +10%」「防护 +4」
@@ -130,7 +122,7 @@ static func mod_text(m: StatModifier) -> String:
 	if BattleStats.PERCENT_DISPLAY.has(m.stat):
 		return "%s %+d%%" % [stat_name(m.stat), roundi(m.amount * 100.0)]     # 104：暴击按百分数写
 	var f := m.amount
-	return "%s %s" % [stat_name(m.stat), ("%+d" % roundi(f)) if is_equal_approx(f, roundf(f)) else "%+.1f" % f]
+	return "%s %s" % [stat_name(m.stat), ("%+d" % roundi(f)) if TextTemplate.is_whole(f) else "%+.1f" % f]
 
 
 static func mods_text(mods: Array) -> String:
@@ -146,7 +138,7 @@ static func describe_buff(def: BuffDef) -> String:
 		return ""
 	var lines: Array[String] = []
 	var kind := "减益" if def.is_debuff else "增益"
-	var stacks := "不可叠层" if not def.is_stackable() else ("不限层" if def.max_stacks <= 0 else "至多 %d 层" % def.max_stacks)
+	var stacks := "不可叠层" if not def.is_stackable() else "不限层"
 	var duration := def.duration_text()
 	# 103：默认永续、可叠层；不可叠层与会过期是例外，用例外色标出来，作者 / 玩家一眼看出「这个不是默认」
 	if not def.is_stackable():
@@ -175,14 +167,32 @@ static func _exception(text: String) -> String:
 	return "[color=#%s]%s[/color]" % [EXCEPTION_COLOR.to_html(false), text]
 
 
-## 一条规则的一句：「[自发] 每 1.0 秒　造成 poison 伤害」
-static func rule_text(rule: AbilityRule) -> String:
-	var when := trigger_name(rule.trigger)
-	var line := ("[%s] " % when) if when != "" else ""
-	if rule.cadence is CooldownCadence:
-		line += "每 %.1f 秒　" % (rule.cadence as CooldownCadence).seconds
-	line += effects_text(rule.effects)
-	return line
+## 一条规则的一句（142：全部由字段生成）：「[你给对手施加流血时] 获得血勇」「[造成物理伤害前] 若对手有流血，伤害 +20%」。
+##
+## 方括号里是扳机那句（[method Trigger.describe]）；自发且有冷却的写「每 N 秒」（武器那条悬浮窗再换成实算冷却），
+## 别的扳机带冷却的在方括号后写「每 N 秒最多一次」。之后是条件 / 消耗（[method Cost.describe]），最后是效果。
+## [param skip_stamina]：耐力消耗另有地方写（道具悬浮窗的「耗耐力 N」）时不在句子里重复
+static func rule_text(rule: AbilityRule, skip_stamina: bool = false) -> String:
+	var line := ""
+	var cd := rule.cadence as CooldownCadence
+	if rule.trigger is OnSchedule and cd != null:
+		line = "[每 %.1f 秒] " % cd.seconds
+	else:
+		var when := trigger_text(rule.trigger)
+		line = ("[%s] " % when) if when != "" else ""
+		if cd != null:
+			line += "每 %.1f 秒最多一次，" % cd.seconds
+	var bits: Array[String] = []
+	for c in rule.costs:
+		if c == null:
+			continue
+		if skip_stamina and c is ResourceCost and (c as ResourceCost).resource_key == BattleStats.RES_STAMINA:
+			continue
+		var d := (c as Cost).describe()
+		if d != "":
+			bits.append(d)
+	bits.append(effects_text(rule.effects))
+	return line + "，".join(bits)
 
 
 static func effects_text(effects: Array) -> String:
@@ -191,20 +201,45 @@ static func effects_text(effects: Array) -> String:
 		if e == null:
 			continue
 		var d: String = e.describe() if e.has_method("describe") else ""
-		bits.append(d if d != "" else String(ContentExporter._registry_name_of(e)))
+		bits.append(d if d != "" else String(ContentSchema.registry_name_of(e)))
 	return "，".join(bits) if not bits.is_empty() else "（没有效果）"
 
 
 const TRIGGER_NAMES := {"on_schedule": "自发", "on_battle_start": "开战时", "on_item_fired": "出手时", "on_damage": "受伤时",
-	"on_before_damage": "受伤前", "on_stacks_at_least": "层数够时", "on_resource_below": "资源低于时", "on_resource_changed": "资源变化时",
+	"on_before_damage": "受伤前", "on_stacks_at_least": "层数够时", "on_resource_below": "资源低于时",
 	"on_status_applied": "施加时", "on_status_removed": "状态掉光时", "on_overtime": "加时开始时"}
 
 
+## 时机的类别名（百科「时机」那一页的词条用）：自发 / 开战时 / 施加时……
 static func trigger_name(trigger: Trigger) -> String:
 	if trigger == null:
 		return ""
-	var key := String(ContentExporter._registry_name_of(trigger))
+	var key := String(ContentSchema.registry_name_of(trigger))
 	return String(TRIGGER_NAMES.get(key, key))
+
+
+## 142：规则行方括号里那句 —— 扳机自己按字段说（[method Trigger.describe]）；没写的退回类别名
+static func trigger_text(trigger: Trigger) -> String:
+	if trigger == null:
+		return ""
+	var d := trigger.describe()
+	return d if d != "" else trigger_name(trigger)
+
+
+## 142：状态 id 给人看。按 id 引用的状态（扳机、条件、移除）都是有登记的类型（流血、中毒……），名字从那里取；
+## 查不到原样返回（测试守着：道具的规则行里不出现英文 id）
+static func status_name(id: StringName) -> String:
+	if id == &"":
+		return "?"
+	return DamageTypes.name_of(id)
+
+
+const RESOURCE_NAMES := {"hp": {"zh": "生命", "en": "Health"}, "stamina": {"zh": "耐力", "en": "Stamina"},
+	"mana": {"zh": "法力", "en": "Mana"}, "shield": {"zh": "护盾", "en": "Shield"}}
+
+
+static func resource_name(key: StringName) -> String:
+	return UiText.pick(RESOURCE_NAMES.get(String(key), null), String(key))
 
 
 #region 收集 buff
@@ -260,11 +295,9 @@ static func _buffs_in_effects(effects: Array, out: Dictionary) -> void:
 
 
 #region 找词、标色
-## 剥掉 BBCode 标签，只留文字
+## 剥掉 BBCode 标签，只留文字（实现在 [method TextTemplate.strip_bbcode]）
 static func strip_bbcode(text: String) -> String:
-	var re := RegEx.new()
-	re.compile("\\[/?[a-zA-Z][^\\]]*\\]")
-	return re.sub(text, "", true)
+	return TextTemplate.strip_bbcode(text)
 
 
 ## 文字里出现了哪些词条：固定词条 + [param extra]（名字 → 解释，buff 词条），按第一次出现的位置排。
@@ -290,19 +323,28 @@ static func terms_in(text: String, extra: Dictionary = {}) -> Array:
 	return out
 
 
-## 把词条在文字里标出来（颜色 + 下划线）。长的词先替，替进去的先用占位符挡住，免得短词把长词切开
+## 把词条在文字里标出来（颜色 + 下划线）
 static func mark(text: String, terms: Array) -> String:
 	var names: Array[String] = []
 	for t in terms:
 		names.append(String((t as Dictionary)["name"]))
-	names.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
+	return wrap_terms(text, names, func(name: String) -> String:
+		return "[color=#%s][u]%s[/u][/color]" % [TERM_COLOR.to_html(false), name])
+
+
+## 把一串词在文字里各包一层（[param wrap]：词 → 包好的 BBCode）。长的词先替，替进去的先用占位符挡住，免得短词把长词切开。
+## 词条标色（[method mark]）与百科画链接（[method Encyclopedia.link_words]）同一套，只差包的是什么
+static func wrap_terms(text: String, names: Array[String], wrap: Callable) -> String:
+	var sorted: Array[String] = []
+	sorted.assign(names)
+	sorted.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
 	var out := text
 	var holders: Array[String] = []
-	for i in names.size():
+	for i in sorted.size():
 		var holder := "\u0001%d\u0002" % i
 		holders.append(holder)
-		out = out.replace(names[i], holder)
-	for i in names.size():
-		out = out.replace(holders[i], "[color=#%s][u]%s[/u][/color]" % [TERM_COLOR.to_html(false), names[i]])
+		out = out.replace(sorted[i], holder)
+	for i in sorted.size():
+		out = out.replace(holders[i], String(wrap.call(sorted[i])))
 	return out
 #endregion

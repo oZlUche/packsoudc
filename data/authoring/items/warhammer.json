@@ -5,13 +5,13 @@
     "en": "Warhammer"
   },
   "shape": [
-    "1",
-    "1",
-    "1"
+    "111",
+    "010",
+    "010"
   ],
   "rarity": 1,
   "value": 30,
-  "weight": 9,
+  "weight": 12,
   "tags": [
     "weapon",
     "melee",
@@ -21,7 +21,7 @@
   "requires_unlock": "ach_first_extract",
   "combat": {
     "base_stats": {
-      "damage": 30
+      "damage": 50
     },
     "rules": [
       {

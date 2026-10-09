@@ -39,14 +39,12 @@ static func run_roundtrip(t: TestCase) -> void:
 		var symbols := 0
 		var map_part := text.get_slice("[danger]", 0)
 		for ch in map_part:
-			if ch != MapGridText.END_MARK and ch != "[" and \
-					MapGridText._type_of(ch, bool(g.layout_meta["legacy"])) != &"":
+			if ch != MapGridText.END_MARK and ch != "[" and MapGridText._type_of(ch) != &"":
 				symbols += 1
 		# [map] 这个段头里的字母不算
-		if not bool(g.layout_meta["legacy"]):
-			for ch in "[map]":
-				if MapGridText._type_of(ch, false) != &"":
-					symbols -= 1
+		for ch in "[map]":
+			if MapGridText._type_of(ch) != &"":
+				symbols -= 1
 		var typed := 0
 		for id in g.node_ids():
 			if g.get_node(id).type != MapGridText.JUNCTION:
@@ -139,6 +137,8 @@ static func run_bad_input(t: TestCase) -> void:
 	t.begin("网格脚本 · 写错了说得出错在哪")
 
 	t.is_null(MapGridText.parse(""), "空文本")
+	t.is_null(MapGridText.parse("A-V-Q0\n..|...\n..B...\n"), "没有 [map] 段头（v0 老格式）→ 解析失败")
+	t.check(MapGridText.last_error.contains("[map]"), "报错说的是段头：%s" % MapGridText.last_error)
 	t.is_null(MapGridText.parse("[map]\nA-A\n..|\n...\n"), "| 的下面什么都没接")
 	t.check(MapGridText.last_error.contains("|"), "报错指向那个 |：%s" % MapGridText.last_error)
 

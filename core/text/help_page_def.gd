@@ -41,7 +41,4 @@ func text_for(lang: String = "") -> String:
 
 ## 分类在当前语言下的名字
 static func category_name(cat: String) -> String:
-	var entry: Variant = CATEGORY_NAMES.get(cat, null)
-	if entry is Dictionary:
-		return String((entry as Dictionary).get(UiText.lang, (entry as Dictionary).get("zh", cat)))
-	return cat
+	return UiText.pick(CATEGORY_NAMES.get(cat, null), cat)

@@ -10,13 +10,8 @@
 class_name HunterSystem
 extends RefCounted
 
-signal spawned(h: Hunter)
-signal moved(h: Hunter, from_id: int, to_id: int)
 ## 玩家进了它的感知范围（进入那一刻一次）
 signal sensed(h: Hunter)
-signal encounter(h: Hunter)
-signal hunter_defeated(h: Hunter)
-signal fled(h: Hunter, escaped: bool)
 signal player_expelled(to_id: int)
 signal changed()
 
@@ -45,7 +40,6 @@ func setup(p_run: RunState, p_config: HunterMechanic, p_defs: Dictionary) -> voi
 	run.hooks.register(&"flee_hunter", flee)
 	if run.events != null:
 		for id in defs:
-			_encounter_def(defs[id])
 			for o in (defs[id] as HunterDef).options():
 				_encounter_def(defs[id], o)
 
@@ -233,7 +227,6 @@ func spawn() -> void:
 		h.loss_id = def.pick_option(self)     # 134：战败结果档生成时就定，跟着存档
 		hunters.append(h)
 		taken.append(home)
-		spawned.emit(h)
 
 
 ## 离 [param taken] 里每个点都最远的点（比较的是到它们的最小距离），且离玩家至少 [param min_from_player]；没有满足的就放宽
@@ -276,9 +269,7 @@ func _move(h: Hunter) -> void:
 		var next := def.behavior.next_node(h, self, options) if def.behavior != null else h.node_id
 		if next == h.node_id or not options.has(next):
 			break
-		var from := h.node_id
 		h.node_id = next
-		moved.emit(h, from, next)
 
 
 func _update_sense() -> void:
@@ -311,13 +302,11 @@ func check_engagement() -> bool:
 func _engage(h: Hunter, def: HunterDef) -> void:
 	var node := run.current_node()
 	var ev := _encounter_def(def, loss_option_of(h))
-	run.events.pending = {"node": node.id, "event": String(ev.id), "type": String(TYPE), "hunter": h.uid}
-	run.events.event_pending.emit(node, ev)
-	encounter.emit(h)
+	run.events.set_pending(node, ev, TYPE, {"hunter": h.uid})
 
 
 ## 开打前的事件屏：迎战 / 逃跑（逃不掉的猎手没有第二项）。合成一次、登记在 NodeEvents.extra_defs 里（跟着 id 存档也找得回来）。
-## 134：每一档一份（id 带档名），正文写「输了会怎样」，让「迎战还是逃跑」有依据；不带档的那份留给旧存档
+## 134：每一档一份（id 带档名），正文写「输了会怎样」，让「迎战还是逃跑」有依据（140：不带档的那份删了，老存档由 RunMigrations v3 → v4 处理）
 func _encounter_def(def: HunterDef, option: HunterLossOption = null) -> EventDef:
 	var id := StringName(ENCOUNTER_PREFIX + String(def.id) + ("/" + String(option.id) if option != null else ""))
 	if run.events.extra_defs.has(id):
@@ -337,9 +326,31 @@ func _encounter_def(def: HunterDef, option: HunterLossOption = null) -> EventDef
 		flee_opt.label = "逃跑（%.0f%%）" % (clampf(def.flee_chance + run.buff_context().flee_bonus, 0.0, 1.0) * 100.0)
 		flee_opt.outcomes.append(HunterFlee.new())
 		ev.options.append(flee_opt)
+	# 136：角色有「脱身」：多一项，必定逃掉（次数与冷却和战前准备屏上同一本账；用不了时这一项锁着、写原因）
+	var slip := _slip_skill()
+	if slip != null:
+		var slip_opt := EventOption.new()
+		slip_opt.label = "%s（必定逃掉）" % slip.display_name
+		var ready := SkillReady.new()
+		ready.skill = slip.id
+		slip_opt.requires.append(ready)
+		var out := HunterFlee.new()
+		out.skill = slip.id
+		slip_opt.outcomes.append(out)
+		ev.options.append(slip_opt)
 	run.events.extra_defs[id] = ev
 	return ev
 #endregion
+
+
+## 136：角色带的「脱身」技能（没有 = null）
+func _slip_skill() -> RunSkill:
+	if run == null or run.skills == null:
+		return null
+	for d in run.skills.defs:
+		if d is SlipSkill:
+			return d
+	return null
 
 
 #region 开打与后果
@@ -359,7 +370,6 @@ func fight(node: MapNode, uid: int, _ctx: EventContext) -> bool:
 	var won := run.events.fight_content(node, TYPE, content, loot_ctx, def.loss_cost)
 	if won:
 		h.alive = false
-		hunter_defeated.emit(h)
 	else:
 		var option := loss_option_of(h)
 		last_loss_id = option.id if option != null else &""
@@ -380,6 +390,8 @@ func flee(_node: MapNode, uid: int, ctx: EventContext) -> bool:
 	if h == null or def == null:
 		return false
 	var chance := clampf(def.flee_chance + run.buff_context().flee_bonus, 0.0, 1.0)
+	if ctx != null and ctx.flee_skill != &"" and run.skills != null and run.skills.consume(ctx.flee_skill) == "":
+		chance = 1.0     # 136：脱身
 	var escaped := rng().randf() < chance
 	if escaped:
 		h.cooldown = maxi(0, def.flee_cooldown)
@@ -389,7 +401,6 @@ func flee(_node: MapNode, uid: int, ctx: EventContext) -> bool:
 		if def.flee_fail_vitality > 0:
 			spend_vitality(def.flee_fail_vitality)
 			ctx.spent += def.flee_fail_vitality
-	fled.emit(h, escaped)
 	changed.emit()
 	return escaped
 
@@ -435,9 +446,7 @@ func retreat(h: Hunter, steps: int, cooldown: int) -> void:
 		var next := farthest_from_player(options, h.node_id)
 		if next == h.node_id:
 			break
-		var from := h.node_id
 		h.node_id = next
-		moved.emit(h, from, next)
 	h.cooldown = maxi(h.cooldown, cooldown)
 
 

@@ -3,50 +3,18 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
+## 与 Support.paths("difficulty") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_difficulty_run.json"
 const META := "user://test_difficulty_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var difficulties: Array[DifficultyDef]
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.difficulties = GameFlow.load_difficulties()
-	return c
-
-
-static func _cleanup() -> void:
-	for p in [SAVE, META]:
-		if FileAccess.file_exists(p):
-			DirAccess.remove_absolute(p)
-
-
-static func _flow(c: Content) -> GameFlow:
-	_cleanup()
-	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
-	f.chapters = [c.chapter] as Array[ChapterDef]
-	f.difficulties = c.difficulties
-	f.save_path = SAVE
-	f.meta_path = META
-	return f
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["difficulties"])
 
 
 ## 第一个要解锁的难度；没有返回 null
-static func _locked(c: Content) -> DifficultyDef:
+static func _locked(c: TestSupport.Content) -> DifficultyDef:
 	for d in c.difficulties:
 		if d.requires_unlock != &"":
 			return d
@@ -168,7 +136,7 @@ static func run_flow_unlock(t: TestCase) -> void:
 	if hard == null:
 		t.check(false, "没有进阶难度的内容")
 		return
-	var f := _flow(c)
+	var f := Support.flow(c, "difficulty", 0.0)
 	var avail := f.available_difficulties()
 	t.check(not avail.has(hard), "没解锁：进阶不在能选的里")
 	t.check(avail.size() >= 1 and avail[0].requires_unlock == &"", "普通一直能选")
@@ -198,12 +166,12 @@ static func run_flow_unlock(t: TestCase) -> void:
 	t.eq(f2.run.mechanic_tags.has(&"erosion"), _has_mechanic(hard, &"erosion"), "机制重新接上了")
 	t.check(not f.toggle_unlock(hard.requires_unlock), "解锁开关：关")
 	t.check(not f.available_difficulties().has(hard), "关了又不能选")
-	_cleanup()
+	Support.cleanup("difficulty")
 
 
 static func frame_run_screens(t: TestCase, root: Window) -> void:
 	t.begin("难度 · 开局屏只列能选的、挑了就按它开；局外屏有解锁开关")
-	_cleanup()
+	Support.cleanup("difficulty")
 	var game = load(GAME).instantiate()
 	game.save_path = SAVE
 	game.meta_path = META
@@ -259,4 +227,4 @@ static func frame_run_screens(t: TestCase, root: Window) -> void:
 		t.eq(flow.run.vitality.maximum, (flow.characters[0].vitality_max if not flow.characters.is_empty() else Vitality.PLACEHOLDER_MAX) + _vitality_bonus(hard),
 			"体力上限 = 角色的 + 难度的修饰")
 	game.queue_free()
-	_cleanup()
+	Support.cleanup("difficulty")

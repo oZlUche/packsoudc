@@ -20,5 +20,5 @@ func pay(_ctx: RuleContext) -> void:
 	pass
 
 
-func describe(_ctx: RuleContext) -> String:
-	return "%d%% 概率" % percent
+func describe() -> String:
+	return "%d%% 几率" % percent

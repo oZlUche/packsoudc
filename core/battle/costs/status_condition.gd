@@ -16,7 +16,7 @@ extends Cost
 func can_pay(ctx: RuleContext) -> bool:
 	if buff_id == &"":
 		return false
-	var who := ctx.owner if on_self else ctx.opponent()
+	var who := ctx.side_of(on_self)
 	var ok := who != null and who.stacks_of(buff_id) >= maxi(1, stacks)
 	return ok != negate
 
@@ -25,5 +25,10 @@ func pay(_ctx: RuleContext) -> void:
 	pass
 
 
-func describe(_ctx: RuleContext) -> String:
-	return "%s%s %s %d" % ["自己" if on_self else "对手", DamageTypes.name_of(buff_id), "<" if negate else "≥", maxi(1, stacks)]
+## 142：「若对手有流血」「若你流血至少 3 层」「若对手没有流血」
+func describe() -> String:
+	var who := "你" if on_self else "对手"
+	var s := Glossary.status_name(buff_id)
+	if negate:
+		return "若%s没有%s" % [who, s] if stacks <= 1 else "若%s%s不到 %d 层" % [who, s, stacks]
+	return "若%s有%s" % [who, s] if stacks <= 1 else "若%s%s至少 %d 层" % [who, s, stacks]

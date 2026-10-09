@@ -43,7 +43,7 @@ static func run_term_table(t: TestCase) -> void:
 static func run_tag_tips(t: TestCase) -> void:
 	t.begin("107 · 标签的 tip：一看就懂的大类与伤害类型不弹，带规则的照弹；名字照样列在标签行里")
 	for tag in QUIET_TAGS:
-		t.check(TagRegistry.has(tag), "标签 %s 还在" % tag)
+		t.check(TagRegistry.get_def(tag) != null, "标签 %s 还在" % tag)
 		t.check(not TagRegistry.tip_of(tag), "%s 不弹词条" % tag)
 		t.check(TagRegistry.describe(tag) != "", "%s 的说明文字保留" % tag)
 	for tag in LOUD_TAGS:
@@ -167,7 +167,7 @@ static func run_internal_style_tags(t: TestCase) -> void:
 	t.begin("107 后续（作者定）：快攻 / 重击 / 重型留作内部标签 —— 敌人照旧按它挑武器，玩家哪儿都看不到")
 	for id in [&"rapid", &"burst", &"heavy"]:
 		t.check(TagRegistry.is_internal(id), "%s 是内部标签" % id)
-		t.check(TagRegistry.has(id), "%s 还登记着（没删）" % id)
+		t.check(TagRegistry.get_def(id) != null, "%s 还登记着（没删）" % id)
 	for id in [&"weapon", &"melee", &"metal", &"remedy"]:
 		t.check(not TagRegistry.is_internal(id), "%s 照常给玩家看" % id)
 	t.check(not TagRegistry.is_internal(&"no_such_tag"), "没登记的标签不算内部（界面照原词显示）")

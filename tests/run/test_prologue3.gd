@@ -6,39 +6,11 @@ const SAVE := "user://test_p3_run.json"
 const META := "user://test_p3_meta.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var prologue2: ChapterDef
-	var chapter1: ChapterDef
-	var brutus: CharacterDef
-	var events: Dictionary
-	var faiths: Dictionary
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("prologue_3", ["brutus", "events", "faiths"])
 
 
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "prologue_3"))
-	c.prologue2 = load(ContentPaths.asset_file("chapters", "prologue_2"))
-	c.chapter1 = load(ContentPaths.asset_file("chapters", "free_mode"))
-	for ch in GameFlow.load_characters():
-		if ch.id == &"brutus":
-			c.brutus = ch
-	c.events = GameFlow.load_events()
-	c.faiths = GameFlow.load_faiths()
-	return c
-
-
-static func _start(c: Content, seed: int = 7) -> RunState:
+static func _start(c: TestSupport.Content, seed: int = 7) -> RunState:
 	var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
 	if s == null:
 		return null

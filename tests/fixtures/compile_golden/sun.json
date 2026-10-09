@@ -29,12 +29,12 @@
 	"set_rules": [],
 	"items": [
 		{
-			"uid": 74,
+			"uid": 77,
 			"def_id": "shortsword",
 			"stats": {
 				"damage": {
-					"total": 50000,
-					"base": 50000,
+					"total": 100000,
+					"base": 100000,
 					"flat": 0,
 					"percent": 0
 				},
@@ -64,7 +64,7 @@
 			]
 		},
 		{
-			"uid": 75,
+			"uid": 78,
 			"def_id": "ration",
 			"stats": {
 				"regen_stamina": {
@@ -89,7 +89,7 @@
 			"rules": []
 		},
 		{
-			"uid": 76,
+			"uid": 79,
 			"def_id": "charm_sun",
 			"stats": {},
 			"rules": []

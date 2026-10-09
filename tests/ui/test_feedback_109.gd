@@ -42,12 +42,12 @@ static func run_tidy(t: TestCase) -> void:
 	ItemInstance.reset_uid_counter()
 	var g := GridInventory.new(Vector2i(6, 5), 100, false)
 	var placed_at := [
-		[_def("pebble", ["#"]), Vector2i(5, 4)],
-		[_def("gem", ["#"], 3), Vector2i(0, 4)],
-		[_def("stick", ["##"]), Vector2i(2, 3)],
-		[_def("ell", ["#.", "##"], 1), Vector2i(3, 1)],
-		[_def("crate", ["##", "##"]), Vector2i(0, 1)],
-		[_def("coin", ["#"]), Vector2i(5, 0)],
+		[_def("pebble", ["1"]), Vector2i(5, 4)],
+		[_def("gem", ["1"], 3), Vector2i(0, 4)],
+		[_def("stick", ["11"]), Vector2i(2, 3)],
+		[_def("ell", ["10", "11"], 1), Vector2i(3, 1)],
+		[_def("crate", ["11", "11"]), Vector2i(0, 1)],
+		[_def("coin", ["1"]), Vector2i(5, 0)],
 	]
 	var seqs := {}
 	for row in placed_at:
@@ -93,8 +93,8 @@ static func run_tidy_rollback(t: TestCase) -> void:
 	ItemInstance.reset_uid_counter()
 	# 4×2 里两件 L 形咬合拼满。按排序 a_hook 先放、落在 (0,0)，剩下的四格不连成 L —— b_hook 放不进，必须整批回滚
 	var g := GridInventory.new(Vector2i(4, 2), 100, false)
-	var b_hook := ItemInstance.create(_def("b_hook", ["###", "#.."]))
-	var a_hook := ItemInstance.create(_def("a_hook", ["..#", "###"]))
+	var b_hook := ItemInstance.create(_def("b_hook", ["111", "100"]))
+	var a_hook := ItemInstance.create(_def("a_hook", ["001", "111"]))
 	t.check(g.place(b_hook, Vector2i.ZERO, 0) and g.place(a_hook, Vector2i(1, 0), 0), "两件 L 形咬合摆满")
 	var before := _cells_of(g)
 	var fired := [0]
@@ -174,8 +174,8 @@ static func frame_warehouse_double_click(t: TestCase, root: Window) -> void:
 	var meta := MetaState.new()
 	var f := _flow(meta)
 	meta.board = GridInventory.new(Vector2i(4, 2), MetaState.BOARD_ID, false)
-	var rock := ItemInstance.create(_def("rock", ["#"]))
-	var rod := ItemInstance.create(_def("rod", ["##"]))
+	var rock := ItemInstance.create(_def("rock", ["1"]))
+	var rod := ItemInstance.create(_def("rod", ["11"]))
 	t.check(meta.board.place(rock, Vector2i.ZERO, 0) and meta.board.place(rod, Vector2i(1, 0), 0), "带回来两件")
 	var panel = load(WAREHOUSE_PANEL).new()
 	root.add_child(panel)
@@ -196,7 +196,7 @@ static func frame_warehouse_double_click(t: TestCase, root: Window) -> void:
 	t.eq(panel._drag._views.size(), n_views, "登记数不涨（新的顶替旧的）")
 	var first := w_first(meta)
 	t.check(first < 0, "（这时仓库是空的）")
-	var probe := ItemInstance.create(_def("probe", ["#"]))
+	var probe := ItemInstance.create(_def("probe", ["1"]))
 	meta.warehouse.try_add(probe)
 	panel._warehouse_view.grab_requested.emit(panel._warehouse_view, probe.uid, Vector2(10, 10))
 	t.check(panel._drag.is_dragging(), "拿起仓库里的一件")
@@ -208,7 +208,7 @@ static func frame_warehouse_double_click(t: TestCase, root: Window) -> void:
 	# 仓库塞满：双击原地不动、提示行有字
 	var w := meta.warehouse
 	var fillers := 0
-	while w.try_add(ItemInstance.create(_def("filler", ["#"]))):
+	while w.try_add(ItemInstance.create(_def("filler", ["1"]))):
 		fillers += 1
 	t.check(fillers > 0, "仓库塞满了（%d 件）" % fillers)
 	t.check(not panel.quick_move(panel._board_view, rod.uid), "仓库满了：双击不动")
@@ -222,7 +222,7 @@ static func frame_warehouse_double_click(t: TestCase, root: Window) -> void:
 	# 局外平时没有带回来的背包：双击仓库什么都不做
 	var meta2 := MetaState.new()
 	var f2 := _flow(meta2)
-	var lone := ItemInstance.create(_def("lone", ["#"]))
+	var lone := ItemInstance.create(_def("lone", ["1"]))
 	meta2.warehouse.try_add(lone)
 	var panel2 = load(WAREHOUSE_PANEL).new()
 	root.add_child(panel2)

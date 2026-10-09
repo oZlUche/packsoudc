@@ -45,11 +45,3 @@ extends Resource
 ## 作者写下类型名，就表示他知道自己在监听什么。
 @export var provokes: bool = true
 
-
-func describe() -> String:
-	var parts: Array[String] = []
-	if not shield_absorbable:
-		parts.append("无视护盾")
-	if not provokes:
-		parts.append("不招致反应")
-	return "、".join(parts) if not parts.is_empty() else "常规"

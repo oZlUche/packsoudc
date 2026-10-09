@@ -21,9 +21,8 @@ const ABSTRACT_ROOTS := {
 	&"Cost": [&"cost"],
 	&"CombatEffect": [&"effect"],
 	&"LootEffect": [&"loot_effect"],
-	&"MapEffect": [&"map_effect"],
 	&"RunEffect": [&"run_effect"],
-	&"Effect": [&"effect", &"loot_effect", &"map_effect", &"run_effect"],
+	&"Effect": [&"effect", &"loot_effect", &"run_effect"],
 	&"EventCondition": [&"event_condition"],
 	&"EventOutcome": [&"event_outcome"],
 	&"RunModule": [&"run_module"],
@@ -93,12 +92,9 @@ static func instance_is(inst: Object, base: StringName) -> bool:
 	return false
 
 
-## 一个实例的最具体类名，导出时用它写回 `type`
+## 一个实例的最具体类名，导出时用它写回 `type`；没有 class_name 的给空（[method RegistryLookup.class_of] 不回退引擎类名的那一版）
 static func class_name_of(inst: Object) -> StringName:
-	if inst == null:
-		return &""
-	var s := inst.get_script() as Script
-	return s.get_global_name() if s != null else &""
+	return StringName(RegistryLookup.class_of(inst, false))
 #endregion
 
 

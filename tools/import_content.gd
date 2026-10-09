@@ -35,7 +35,7 @@ func run() -> void:
 					report.error(String(hit["path"]), msg)
 				else:
 					report.warn(String(hit["path"]), msg)
-			var res := _build(kind, data, ctx, report)
+			var res := ContentImporter.import_of(kind, data, ctx, report)
 			if res != null:
 				built[ContentPaths.asset_file(kind, id)] = res
 
@@ -64,62 +64,6 @@ func run() -> void:
 
 	print("导入成功：%d 份资产，%d 条警告" % [built.size(), report.warnings.size()])
 	finish(0)
-
-
-func _build(
-	kind: String, data: Dictionary, ctx: ContentImporter.Context, report: ImportReport
-) -> Resource:
-	match kind:
-		"tags":
-			return ContentImporter.import_tag(data, ctx, report)
-		"damage_types":
-			return ContentImporter.import_damage_type(data, ctx, report)
-		"buffs":
-			return ContentImporter.import_buff(data, ctx, report)
-		"sets":
-			return ContentImporter.import_set(data, ctx, report)
-		"enemies":
-			return ContentImporter.import_enemy(data, ctx, report)
-		"enemy_pools":
-			return ContentImporter.import_enemy_pool(data, ctx, report)
-		"drop_rules":
-			return ContentImporter.import_drop_rule(data, ctx, report)
-		"carry_rules":
-			return ContentImporter.import_carry_rule(data, ctx, report)
-		"encumbrance_rules":
-			return ContentImporter.import_encumbrance_rules(data, ctx, report)
-		"node_rules":
-			return ContentImporter.import_node_rules(data, ctx, report)
-		"economy_rules":
-			return ContentImporter.import_economy_rules(data, ctx, report)
-		"loadouts":
-			return ContentImporter.import_loadout(data, ctx, report)
-		"characters":
-			return ContentImporter.import_character(data, ctx, report)
-		"difficulties":
-			return ContentImporter.import_difficulty(data, ctx, report)
-		"hunters":
-			return ContentImporter.import_hunter(data, ctx, report)
-		"meta_rules":
-			return ContentImporter.import_meta_rules(data, ctx, report)
-		"run_buffs":
-			return ContentImporter.import_run_buff(data, ctx, report)
-		"faiths":
-			return ContentImporter.import_faith(data, ctx, report)
-		"recipes":
-			return ContentImporter.import_recipe(data, ctx, report)
-		"events":
-			return ContentImporter.import_event(data, ctx, report)
-		"chapters":
-			return ContentImporter.import_chapter(data, ctx, report)
-		"achievements":
-			return ContentImporter.import_achievement(data, ctx, report)
-		"techs":
-			return ContentImporter.import_tech(data, ctx, report)
-		"help_pages":
-			return ContentImporter.import_help_page(data, ctx, report)
-		_:
-			return ContentImporter.import_item(data, ctx, report)
 
 
 func _json_files(dir_path: String) -> Array[String]:

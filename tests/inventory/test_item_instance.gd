@@ -14,12 +14,12 @@ static func run(t: TestCase) -> void:
 
 	ItemInstance.reset_uid_counter()
 
-	var bar := _make_def("bar", ["#", "#", "#"])
-	var wide := _make_def("wide", ["##"])
+	var bar := _make_def("bar", ["1", "1", "1"])
+	var wide := _make_def("wide", ["11"])
 
 	# --- 定义校验 ---
 	t.check(bar.is_valid(), "完整定义应合法")
-	var no_id := _make_def("", ["#"])
+	var no_id := _make_def("", ["1"])
 	t.check(not no_id.is_valid(), "缺 id 的定义非法")
 	var no_shape := ItemDef.new()
 	no_shape.id = &"x"
@@ -36,14 +36,11 @@ static func run(t: TestCase) -> void:
 	# --- 一切道具都能转，创建时给的朝向原样保留 ---
 	var f := ItemInstance.create(wide, 3)
 	t.eq(f.rotation, 3, "创建时指定的朝向不该被改掉")
-	t.eq(f.rotated_step(1), 0, "转一步回到 0")
 	t.eq(f.cells(), wide.shape.cells_rotated(3), "占格按当前朝向算")
 
 	# --- 可旋转物品 ---
 	var r := ItemInstance.create(bar)
-	t.eq(r.rotated_step(1), 1, "旋转一步为 1")
 	r.rotation = 3
-	t.eq(r.rotated_step(1), 0, "从 3 旋转一步回到 0")
 	t.eq(r.size(), Vector2i(3, 1), "竖条 rot3（270°）包围盒为 3x1")
 	r.rotation = 2
 	t.eq(r.size(), Vector2i(1, 3), "竖条 rot2（180°）包围盒回到 1x3")

@@ -49,20 +49,15 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	spec.axes = inp.axes.duplicate()
 	spec.undying_sec = inp.undying_sec
 
-	if board == null:
-		_apply_baseline_mods(spec, inp)
-		spec.set_rules.append_array(inp.rules)
-		spec.max_hp = spec.baseline.total_of(BattleStats.MAX_HP)
-		return spec
-
 	# --- 1. 收集参战物品：棋盘上的非包物品，按 uid 升序 ---
 	# 信仰（8-4）：只激活最后置入的信仰道具所属的信仰，别的信仰的道具休眠。
 	# 087（作者定）：休眠的仍可能有**通用效果**（盾的固定减伤、武器的攻击力 = 它自己的 combat）：留着的照样参战，
 	# 只丢信力加成与邻接（`dormant` 记着谁是休眠的）；不留的（护符）彻底不参战
-	var active_faith := FaithState.active_tag(board)
+	# 140：没有棋盘（敌人基线、测试）只跳过这一段 —— 后面几步对着空的 fighters 自然什么都不做，九步只有一条路
+	var active_faith := FaithState.active_tag(board) if board != null else &""
 	var fighters: Array[int] = []
 	var dormant: Dictionary = {}     # uid -> true
-	for inst in board.items():
+	for inst in (board.items() if board != null else []):
 		var item := inst as ItemInstance
 		if item.def == null or board.acts_as_bag(item.def):
 			continue
@@ -169,7 +164,7 @@ static func _apply_scoped(spec: CombatantSpec, board: GridInventory, inp: Compil
 		for it in spec.items:
 			var item := it as CompiledItem
 			var inst := board.get_item(item.source_uid)
-			if inst != null and scope.matches(inst.def, not item.rules.is_empty()):
+			if inst != null and scope.matches(inst.def, item.is_active()):
 				hits.append(item.source_uid)
 		hits.sort()     # 候选按 uid 升序：挑的结果只由 seed 与候选集决定
 		for uid in scope.choose(hits, hash("%d:scoped:%d" % [inp.seed, i])):
@@ -235,7 +230,7 @@ static func _apply_bag_effects(board: GridInventory, fighters: Array[int], stats
 ## 非对称会让内容作者踩坑：把配件贴在武器旁边，却只有一边听得见对方出手。
 static func _apply_adjacency(
 	board: GridInventory, fighters: Array[int], stats: Dictionary, links: Dictionary,
-	attach_pending: Dictionary = {}
+	attach_pending: Dictionary
 ) -> void:
 	for uid in fighters:
 		var holder := board.get_item(uid)

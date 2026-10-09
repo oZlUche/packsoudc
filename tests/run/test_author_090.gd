@@ -3,16 +3,12 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
+## 与 Support.paths("090") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_090_run.json"
 const META := "user://test_090_meta.json"
 const SETTINGS := "user://test_090_settings.json"
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
-
-
-static func _cleanup() -> void:
-	for p in [SAVE, META, SETTINGS]:
-		if FileAccess.file_exists(p):
-			DirAccess.remove_absolute(p)
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func _bg(b: Button) -> Color:
@@ -77,7 +73,7 @@ static func run_achievements(t: TestCase) -> void:
 	var defs := GameFlow.load_achievements()
 	t.eq(defs.size(), files, "GameFlow.load_achievements 装回全部")
 	var c = NodeScreens._content()
-	_cleanup()
+	Support.cleanup("090")
 	var flow := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	flow.chapters = [c.chapter] as Array[ChapterDef]
 	flow.difficulties = GameFlow.load_difficulties()
@@ -134,7 +130,7 @@ static func run_achievements(t: TestCase) -> void:
 	t.check(not flow.meta.has_seen_rules(c.chapter.id), "没看过")
 	flow.meta.mark_rules_seen(c.chapter.id)
 	t.check(flow.meta.has_seen_rules(c.chapter.id) and MetaState.from_dict(flow.meta.to_dict(), c.items).has_seen_rules(c.chapter.id), "看过了，跟存档")
-	_cleanup()
+	Support.cleanup("090")
 
 
 static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
@@ -145,7 +141,7 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	if found.is_empty():
 		t.check(false, "找不到带搜索点的种子")
 		return
-	_cleanup()
+	Support.cleanup("090")
 	var game = (load(GAME) as PackedScene).instantiate()
 	game.save_path = SAVE
 	game.meta_path = META
@@ -228,7 +224,7 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 		t.check(true, "（这个种子没开出搜索屏：%s）" % str(flow.screen))
 		flow.to_main_menu()
 		game.queue_free()
-		_cleanup()
+		Support.cleanup("090")
 		return
 	# 叠层上的 Esc = 收起（最小化）
 	t.check(game.escape(), "搜索屏 Esc 接了")
@@ -253,7 +249,7 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 		game.overlay().proceed() if game.overlay().has_method("proceed") else null
 	flow.to_main_menu()
 	game.queue_free()
-	_cleanup()
+	Support.cleanup("090")
 
 
 ## 091（计划书阶段 3）：局外旗标进事件（条件 has_flag / 后果 set_flag）、事件文本多语言、一局接上局外
@@ -320,7 +316,7 @@ static func run_event_flags_and_texts(t: TestCase) -> void:
 	t.eq(opt.label_for("en"), "Go", "英文选项")
 	t.eq(opt.label_for("zh"), "去", "中文选项")
 	# 一局接上局外：flow.begin 之后事件上下文能看到 meta
-	_cleanup()
+	Support.cleanup("090")
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	var flow := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	flow.chapters = [c.chapter] as Array[ChapterDef]
@@ -336,7 +332,7 @@ static func run_event_flags_and_texts(t: TestCase) -> void:
 	if run != null:
 		var ectx: EventContext = run.events._event_ctx(run.current_node() if run.current_node() != null else MapNode.new())
 		t.check(ectx.meta == flow.meta, "事件上下文里的 meta 就是局外")
-	_cleanup()
+	Support.cleanup("090")
 
 
 ## 091（作者定）：编辑器字段 / 类型 / 枚举只在显示时换中文（FieldText），每一行带悬浮说明（读 @export 上面的注释）；字段名不改

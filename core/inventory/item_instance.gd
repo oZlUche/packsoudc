@@ -52,10 +52,6 @@ static func reserve_uid_above(value: int) -> void:
 	_next_uid = maxi(_next_uid, value + 1)
 
 
-static func peek_next_uid() -> int:
-	return _next_uid
-
-
 ## 当前旋转下的占格集合。返回的数组是 ItemShape 的内部缓存，不得修改。
 func cells() -> Array[Vector2i]:
 	if def == null:
@@ -82,13 +78,6 @@ func absolute_cells(offsets: Array[Vector2i]) -> Array[Vector2i]:
 	for o in offsets:
 		out.append(origin + def.shape.transform_point(o, rotation))
 	return out
-
-
-## 顺时针旋转一步，返回旋转后的值。不检查是否放得下 —— 那是容器的事。
-func rotated_step(steps: int = 1) -> int:
-	if def == null:
-		return 0
-	return posmod(rotation + steps, 4)
 
 
 func to_dict() -> Dictionary:

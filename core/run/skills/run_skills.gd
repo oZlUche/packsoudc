@@ -90,13 +90,26 @@ func use(id: StringName) -> String:
 	why = d.activate(run)
 	if why != "":
 		return why
-	if uses_of(id) > 0:
-		uses_left[String(id)] = uses_of(id) - 1
-	cooldowns[String(id)] = maxi(0, d.cooldown_steps)
-	if d.arms_battle():
-		armed.append(String(id))
-	changed.emit()
+	_spend(d)
 	return ""
+
+
+## 136：只记账（次数减一、冷却开始），不调 activate —— 别处已经替技能做了那件事（猎手事件屏上的「脱身」）。返回空串 = 记了
+func consume(id: StringName) -> String:
+	var why := can_use(id)
+	if why != "":
+		return why
+	_spend(skill(id))
+	return ""
+
+
+func _spend(d: RunSkill) -> void:
+	if uses_of(d.id) > 0:
+		uses_left[String(d.id)] = uses_of(d.id) - 1
+	cooldowns[String(d.id)] = maxi(0, d.cooldown_steps)
+	if d.arms_battle():
+		armed.append(String(d.id))
+	changed.emit()
 
 
 ## 走了一步：冷却少一步、躲避少一步

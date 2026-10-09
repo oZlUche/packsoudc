@@ -17,7 +17,6 @@ static func fire_scheduled(ctx: BattleContext, owner: CombatantRuntime, rt: Rule
 		return false
 	var rc := RuleContext.create(ctx, owner, rt)
 
-	rule.cadence.on_match(rc)
 	if not rule.cadence.can_fire(rc, ctx.now):
 		# 理论上不该发生（是按就绪时刻弹出的）。保险起见也要重新入堆，
 		# 否则这条规则会永远消失
@@ -27,26 +26,7 @@ static func fire_scheduled(ctx: BattleContext, owner: CombatantRuntime, rt: Rule
 		return false
 	rule.cadence.commit(rc, ctx.now)
 	_reschedule(ctx, owner, rt, rc)
-
-	var all_costs := rule.effective_costs()
-	for cost in all_costs:
-		(cost as Cost).on_attempt(rc)
-	for cost in all_costs:
-		if not (cost as Cost).can_pay(rc):
-			if ctx.trace != null:
-				_trace(ctx, rt, rc, BattleTrace.RULE_SKIP, {"reason": "cost", "cost": (cost as Cost).trace_info(rc)})
-			_emit_skipped(ctx, owner, rt, rc)
-			return false
-	for cost in all_costs:
-		(cost as Cost).pay(rc)
-	if ctx.trace != null:
-		_trace(ctx, rt, rc, BattleTrace.RULE_FIRE, {"costs": all_costs.map(func(c): return (c as Cost).trace_info(rc))})
-
-	if rt.source_uid != 0:
-		ctx.emit(BattleEvent.ITEM_FIRED, owner.side, _fired_payload(rt, rc))
-	for effect in rule.effects:
-		(effect as Effect).apply(rc)
-	return true
+	return _settle(ctx, owner, rt, rc, null)
 
 
 ## 只遍历**订阅了该事件**的规则，而不是全部规则。
@@ -84,15 +64,21 @@ static func evaluate(
 	if not rule.trigger.matches(rc, event):
 		return false
 
-	# 2. 频率。on_match 先记账（计数类要把没执行的那几次也数上），再判是否放行
-	rule.cadence.on_match(rc)
+	# 2. 频率（计数类的「攒够 N 次」在消耗层，见 [Cost.on_attempt]）
 	if not rule.cadence.can_fire(rc, ctx.now):
 		if ctx.trace != null:
 			_trace(ctx, rt, rc, BattleTrace.RULE_SKIP, {"reason": "cadence", "event": String(event.name)})
 		return false
 	rule.cadence.commit(rc, ctx.now)
 
-	# 3. 消耗。本层内部原子：全过才逐个扣，不允许半付款
+	# 3、4. 消耗与内容
+	return _settle(ctx, owner, rt, rc, event)
+
+
+## 频率放行之后的后半段，自发型与事件型共用：消耗 → 出手事件 → 效果。返回是否真的执行了效果。
+## 消耗这一层内部原子：全过才逐个扣，不允许半付款；但与上面的频率刻意不原子（冷却已经清零），见 [method evaluate]
+static func _settle(ctx: BattleContext, owner: CombatantRuntime, rt: RuleRuntime, rc: RuleContext, event: BattleEvent) -> bool:
+	var rule := rt.rule
 	var all_costs := rule.effective_costs()
 	for cost in all_costs:
 		(cost as Cost).on_attempt(rc)
@@ -109,11 +95,13 @@ static func evaluate(
 
 	# 物品出手。连带触发靠监听这条事件，不需要任何特例。
 	# 108：**听自己出手的规则不算再出手一次** —— 附加规则（毒箭挂给弓的、日神附魔）以宿主身份跑、听的就是宿主的出手；
-	# 它要是再发一条宿主的 ITEM_FIRED，就会再触发自己，一直连锁到 max_chain 被截断（一击挂几十层毒 / 几十次附火）
-	if rt.source_uid != 0 and not (event.name == BattleEvent.ITEM_FIRED and event.get_int(&"uid") == rt.source_uid):
+	# 它要是再发一条宿主的 ITEM_FIRED，就会再触发自己，一直连锁到 max_chain 被截断（一击挂几十层毒 / 几十次附火）。
+	# 自发型（event 为 null）天然不是
+	var self_fired := event != null and event.name == BattleEvent.ITEM_FIRED and event.get_int(&"uid") == rt.source_uid
+	if rt.source_uid != 0 and not self_fired:
 		ctx.emit(BattleEvent.ITEM_FIRED, owner.side, _fired_payload(rt, rc))
 
-	# 4. 内容。同一条规则的多个效果共用上面那一次消耗
+	# 内容。同一条规则的多个效果共用上面那一次消耗
 	for effect in rule.effects:
 		(effect as Effect).apply(rc)
 	return true
@@ -139,8 +127,8 @@ static func _emit_skipped(ctx: BattleContext, owner: CombatantRuntime, rt: RuleR
 
 ## 117：内部日志的一条出手 / 跳过：哪件道具（或哪个 buff）的哪条规则、什么时机、下一次就绪
 static func _trace(ctx: BattleContext, rt: RuleRuntime, rc: RuleContext, kind: String, extra: Dictionary) -> void:
-	var d := {"uid": rt.source_uid, "order": rt.order, "trigger": _class_of(rt.rule.trigger),
-		"cadence": _class_of(rt.rule.cadence)}
+	var d := {"uid": rt.source_uid, "order": rt.order, "trigger": RegistryLookup.class_of(rt.rule.trigger),
+		"cadence": RegistryLookup.class_of(rt.rule.cadence)}
 	if rt.buff != null and rt.buff.def != null:
 		d["buff"] = String(rt.buff.def.id)
 	var ready := ready_at_of(rt, rc)
@@ -148,14 +136,6 @@ static func _trace(ctx: BattleContext, rt: RuleRuntime, rc: RuleContext, kind: S
 		d["ready_at"] = ready
 	d.merge(extra, true)
 	ctx.trace.record(ctx.now, rt.owner_side, kind, d)
-
-
-static func _class_of(o: Object) -> String:
-	if o == null:
-		return ""
-	var script := o.get_script() as Script
-	var n := String(script.get_global_name()) if script != null else ""
-	return n if n != "" else o.get_class()
 
 
 ## 冷却型频率的下一次就绪时刻；不是冷却型 -1

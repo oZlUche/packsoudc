@@ -25,7 +25,7 @@ static func run_typed_placeholders(t: TestCase) -> void:
 	t.eq(TextTemplate.render("{ui:开战}", ctx), "[color=@good][b]开战[/b][/color]", "{ui:}：good 色")
 	t.eq(TextTemplate.render("{zone:地上}", ctx), "[color=@grant][b]地上[/b][/color]", "{zone:}：grant 色")
 	t.eq(TextTemplate.render("{key:R}", ctx), "[color=@dim][b]R[/b][/color]", "{key:}：dim 色")
-	t.eq(TextTemplate.render("{item_stat:longsword:damage}", ctx), "[color=@fg][b]12[/b][/color]", "{item_stat:} 也上色")
+	t.eq(TextTemplate.render("{item_stat:longsword:damage}", ctx), "[color=@fg][b]20[/b][/color]", "{item_stat:} 也上色（143：长剑伤害 20）")
 	t.eq(TextTemplate.plain("{item_stat:poison_vial:seconds}", ctx), "6", "{item_stat:} 能读规则节奏的 seconds")
 	t.eq(TextTemplate.render("{item:no_such}", ctx), "{item:no_such}", "不存在的 id 原样保留（一眼看得见）")
 	t.eq(TextTemplate.render("{char_name}", ctx), "阿岚", "{char_name} 仍是不上色的裸值")

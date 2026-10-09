@@ -5,26 +5,8 @@ extends RefCounted
 const SAVE := "user://test_erosion_run.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var difficulties: Array[DifficultyDef]
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.difficulties = GameFlow.load_difficulties()
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["difficulties"])
 
 
 ## 一份只开侵蚀的难度，参数由用例给
@@ -41,7 +23,7 @@ static func _difficulty(first: int, interval: int, warn: int, effects: Array) ->
 	return d
 
 
-static func _start(c: Content, diff: DifficultyDef, kit: Array[StringName] = [&"bag_leather", &"rifle", &"pistol"] as Array[StringName]) -> RunState:
+static func _start(c: TestSupport.Content, diff: DifficultyDef, kit: Array[StringName] = [&"bag_leather", &"rifle", &"pistol"] as Array[StringName]) -> RunState:
 	for seed in range(1, 40):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit, {}, [] as Array[StringName], null, [], diff)
 		if s != null:
@@ -90,8 +72,8 @@ static func run_schedule(t: TestCase) -> void:
 	t.eq(f.max_band, _max_band(s), "最内一档 = 图上最大的 erosion_band（%d）" % f.max_band)
 	var warns: Array = []
 	var advances: Array = []
-	s.erosion_warned.connect(func(band: int, left: int): warns.append([band, left]))
-	s.erosion_advanced.connect(func(bands: int): advances.append(bands))
+	s.travel.erosion.warned.connect(func(band: int, left: int): warns.append([band, left]))
+	s.travel.erosion.advanced.connect(func(bands: int): advances.append(bands))
 	# 逐步走，按行动点检查
 	var guard := 0
 	while not f.is_total() and guard < 60 and _step(s):
@@ -221,7 +203,7 @@ static func run_settle_save_and_pipeline(t: TestCase) -> void:
 		return
 	var f := _field(s)
 	var applied: Array = []
-	s.erosion_applied.connect(func(node: MapNode, detail: Dictionary): applied.append([node.id, detail]))
+	s.travel.erosion.applied.connect(func(node: MapNode, detail: Dictionary): applied.append([node.id, detail]))
 	var v := s.vitality.current
 	# 走进的点要是事件、抽到「恢复」会补回体力 —— 那是事件的事，算账时扣掉
 	var restored := [0]

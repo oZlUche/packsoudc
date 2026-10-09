@@ -2,10 +2,13 @@
 ## 屏幕脚本选变体而不是逐个贴样式；棘轮挡住 `add_theme_*` 回潮
 extends RefCounted
 
-## 棘轮：游戏屏（ui/game、ui/inventory、ui/battle、ui/launcher*）里 `add_theme_` 出现的次数上限 = 121 改完时的实际数。
-## 剩下的是布局常量（separation / margin）和注了「121 特例」的那几处。要加覆写先想清楚为什么不是变体；真要加就改这个数，并在那行注一句为什么
-const RATCHET := 68
-const SCANNED := ["res://ui/game", "res://ui/inventory", "res://ui/battle"]
+## 棘轮：游戏屏（ui/game、ui/inventory、ui/battle、ui/launcher*）**与五个编辑器**（ui/editor、ui/*_editor）里 `add_theme_` 出现的次数上限
+## = 现在的实际数：游戏屏 64（121 改完时的数，没涨）+ 编辑器 71（精简 12 删掉编辑器里 31 处无效的字体覆写后一并扫进来）。
+## 剩下的是布局常量（separation / margin）、编辑器里字号 13 / 12 与颜色的覆写、注了「121 特例」的那几处。
+## 要加覆写先想清楚为什么不是变体；真要加就改这个数，并在那行注一句为什么
+const RATCHET := 135
+const SCANNED := ["res://ui/game", "res://ui/inventory", "res://ui/battle",
+	"res://ui/editor", "res://ui/event_editor", "res://ui/buff_editor", "res://ui/set_editor", "res://ui/map_editor"]
 
 
 static func run(t: TestCase) -> void:
@@ -53,7 +56,7 @@ static func run(t: TestCase) -> void:
 	for c in [l, d, hp, b]:
 		c.free()
 
-	t.begin("121 · 棘轮：游戏屏里 add_theme_ 不超过 %d 处（要加先想清楚为什么不是变体）" % RATCHET)
+	t.begin("121 · 棘轮：游戏屏与编辑器里 add_theme_ 不超过 %d 处（要加先想清楚为什么不是变体）" % RATCHET)
 	var count := 0
 	var files: Array[String] = []
 	for dir in SCANNED:

@@ -20,7 +20,7 @@ static func _ground(stash: ItemStash) -> GroundLayer:
 static func run_new_items_land(t: TestCase) -> void:
 	t.begin("134 · 新落地的那件播落地动画、播完删掉；换一片地 / 本来就在的不播；起点不进存档；一串落下错开")
 	ItemInstance.reset_uid_counter()
-	var gun := G._def(&"t_gun", ["#"])
+	var gun := G._def(&"t_gun", ["1"])
 	var stash := ItemStash.new(2, 0)
 	var old := ItemInstance.create(gun)
 	stash.insert(old, -1, Vector2(0.5, 0.5))
@@ -85,7 +85,7 @@ static func run_new_items_land(t: TestCase) -> void:
 static func run_drag_writes_origin(t: TestCase) -> void:
 	t.begin("134 · 拖出棋盘放到地上：就地落下（不位移）；取消拖拽放回地上原处：不播")
 	ItemInstance.reset_uid_counter()
-	var gun := G._def(&"t_gun", ["#"])
+	var gun := G._def(&"t_gun", ["1"])
 	var board := GridInventory.new(Vector2i(4, 4), 1)
 	var stash := ItemStash.new(2, 0)
 	var rig := G._rig(stash, board)
@@ -114,10 +114,43 @@ static func run_drag_writes_origin(t: TestCase) -> void:
 	G._free(rig)
 
 
+static func run_click_then_double_click(t: TestCase) -> void:
+	t.begin("反馈 · 地上一件单击一下（拿起、原地放下）之后紧跟的双击照样接得到：就地落下的不算半空")
+	ItemInstance.reset_uid_counter()
+	var gun := G._def(&"t_gun", ["1"])
+	var board := GridInventory.new(Vector2i(4, 4), 1)
+	var stash := ItemStash.new(2, 0)
+	var rig := G._rig(stash, board)
+	var ground: GroundLayer = rig["ground"]
+	var drag: DragLayer = rig["drag"]
+	var a := ItemInstance.create(gun)
+	stash.insert(a, -1, Vector2(0.4, 0.4))
+	ground._scan()
+	var at := ground.item_rect(a.uid).position + Vector2.ONE * InventoryView.CELL * 0.5
+	# 双击的第一下：按下 = 拿起，松开 = 原地放下
+	ground.grab_requested.emit(ground, a.uid, at)
+	t.check(drag.is_dragging(), "第一下按下：拿起")
+	ground._scan()
+	t.check(drag.drop_at(ground.global_position + at), "第一下松开：放回地上")
+	ground._scan()
+	t.check(ground.is_landing(a.uid), "放回地上：就地落下（只缩放 + 弹跳）")
+	t.eq(ground.uid_at_local(at), a.uid, "就地落下的那件照样接鼠标")
+	var got: Array = []
+	ground.item_double_clicked.connect(func(_v: ContainerView, uid: int): got.append(uid))
+	var mb := InputEventMouseButton.new()
+	mb.button_index = MOUSE_BUTTON_LEFT
+	mb.pressed = true
+	mb.double_click = true
+	mb.position = at
+	ground._gui_input(mb)
+	t.eq(got, [a.uid], "第二下（双击）：发出双击，面板把它放进背包")
+	G._free(rig)
+
+
 static func frame_landing_from_panel_edge(t: TestCase, root: Window) -> void:
 	t.begin("134 · 程序放到地上的（战利品放不下之类）：从离落点最近的面板边缘落出来")
 	ItemInstance.reset_uid_counter()
-	var gun := G._def(&"t_gun", ["#"])
+	var gun := G._def(&"t_gun", ["1"])
 	var stash := ItemStash.new(2, 0)
 	var host := Control.new()
 	host.size = G.SCREEN
@@ -197,7 +230,7 @@ static func frame_double_click_opens_bag(t: TestCase, root: Window) -> void:
 	t.check(map.bag_open(), "背包开着时双击：背包还开着（面板接，地图不抢）")
 	map.toggle_bag()
 	# 放不下：一件比棋盘还大的东西
-	var huge := G._def(&"t_huge", ["##########", "##########", "##########", "##########", "##########", "##########", "##########", "##########", "##########", "##########"])
+	var huge := G._def(&"t_huge", ["1111111111", "1111111111", "1111111111", "1111111111", "1111111111", "1111111111", "1111111111", "1111111111", "1111111111", "1111111111"])
 	var big := ItemInstance.create(huge)
 	run.storage.insert(big, -1, Vector2(0.2, 0.85))
 	ground.item_double_clicked.emit(ground, big.uid)

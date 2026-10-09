@@ -27,25 +27,25 @@ static func run_tags_and_defs(t: TestCase) -> void:
 	t.check(not defs.has(&"war"), "战争之神删了（104）")
 	t.eq((defs[&"church"] as FaithDef).camp, FaithDef.Camp.CHURCH, "新教的阵营是 CHURCH")
 	t.eq((defs[&"brute"] as FaithDef).tag(), &"faith:brute", "标签 = faith:<id>")
-	t.eq(FaithDef.id_of_tag(&"faith:skill"), &"skill", "从标签反推 id")
-	t.eq(FaithDef.id_of_tag(&"weapon"), &"", "不是信仰标签返回空")
+	t.eq(FaithTags.id_of_tag(&"faith:skill"), &"skill", "从标签反推 id")
+	t.eq(FaithTags.id_of_tag(&"weapon"), &"", "不是信仰标签返回空")
 	var db := _db()
 	var faithful := 0
 	for id in db.ids():
 		var d := db.get_def(id)
 		var objects := 0
 		for tag in d.tags:
-			if String(tag).begins_with(FaithDef.TAG_PREFIX):
+			if String(tag).begins_with(FaithTags.PREFIX):
 				objects += 1
 		if d.has_faith():
 			faithful += 1
-			t.check(objects == 1 and defs.has(FaithDef.id_of_tag(d.faith_tag())), "%s：faith + 一个登记过的对象标签（%s）" % [id, d.faith_tag()])
+			t.check(objects == 1 and defs.has(FaithTags.id_of_tag(d.faith_tag())), "%s：faith + 一个登记过的对象标签（%s）" % [id, d.faith_tag()])
 		else:
 			t.eq(objects, 0, "%s 没有 faith 就没有对象标签" % id)
 	t.check(faithful >= 3, "第一批里有 %d 件信仰道具（赐福之物、符号）" % faithful)
 	t.check((defs[&"skill"] as FaithDef).matches(db.get_def(&"blessed_shield")), "技巧之神赐福的盾归技巧之神")
 	t.check((defs[&"hunt"] as FaithDef).matches(db.get_def(&"blessed_longbow")), "狩猎之神赐福的长弓归狩猎之神")
-	t.check((defs[&"brute"] as FaithDef).matches(db.get_def(&"strength_sigil")), "力量的符号归暴力之神")
+	t.check((defs[&"brute"] as FaithDef).matches(db.get_def(&"charm_brute")), "蛮神的护符归暴力之神")
 	# 作者定：现实里也能存在的东西不归任何信仰
 	for id in [&"shortsword", &"longsword", &"scimitar", &"longbow", &"shortbow", &"arrows", &"round_shield", &"leather_armor", &"gambeson", &"knife", &"cleaver", &"salve", &"ration"]:
 		t.check(not db.get_def(id).has_faith(), "%s 是凡物，不归信仰" % id)
@@ -83,15 +83,15 @@ static func run_activation(t: TestCase) -> void:
 	t.eq(FaithState.active_tag(b), &"", "空棋盘：没激活")
 	var shield := _put(b, db, &"blessed_shield", Vector2i(0, 0))     # skill，2×2
 	t.eq(FaithState.active_id(b), &"skill", "放了技巧之神的盾：技巧之神")
-	var sigil := _put(b, db, &"strength_sigil", Vector2i(3, 0))      # violence，1×1
-	t.eq(FaithState.active_id(b), &"brute", "再放力量的符号：最后置入的是它 → 暴力之神")
+	var sigil := _put(b, db, &"charm_brute", Vector2i(3, 0))      # violence，1×1
+	t.eq(FaithState.active_id(b), &"brute", "再放蛮神的护符：最后置入的是它 → 暴力之神")
 	t.check(shield.placed_seq < sigil.placed_seq, "置入序号递增")
 	t.eq(FaithState.dormant_uids(b), [shield.uid] as Array[int], "盾休眠")
 	var sword := _put(b, db, &"shortsword", Vector2i(5, 0))
 	t.eq(FaithState.active_id(b), &"brute", "凡物（短剑）不改变激活")
 	t.check(not FaithState.is_dormant(sword.def, FaithState.active_tag(b)), "凡物不休眠")
 	# 同容器挪位置：不算重新置入
-	t.check(InventoryService.move_within(b, shield.uid, Vector2i(0, 3), 0), "把盾挪个位置")
+	t.check(InventoryService.move(b, shield.uid, b, Vector2i(0, 3), 0), "把盾挪个位置")
 	t.eq(FaithState.active_id(b), &"brute", "同容器挪位置不换信仰")
 	# 挪到地上再挪回：切换
 	var stash := ItemStash.new(2, 0)
@@ -114,7 +114,7 @@ static func run_activation(t: TestCase) -> void:
 	var b2 := GridInventory.new(Vector2i(8, 6), 1, true)
 	t.check(b2.place(bag, Vector2i(0, 0), 0), "放包")
 	var s2 := _put(b2, db, &"blessed_shield", Vector2i(0, 0))
-	var c2 := _put(b2, db, &"strength_sigil", Vector2i(0, 2))
+	var c2 := _put(b2, db, &"charm_brute", Vector2i(0, 2))
 	t.eq(FaithState.active_id(b2), &"brute", "符号后放")
 	var payload := b2.detach_bag(bag.uid)
 	t.check(not payload.is_empty() and int(payload["from"]) == b2.id, "摘下包，载荷记着来自哪个容器")
@@ -128,7 +128,7 @@ static func run_compile_and_sets(t: TestCase) -> void:
 	var db := _db()
 	var b := GridInventory.new(Vector2i(8, 6), 1, false)
 	var bow := _put(b, db, &"blessed_longbow", Vector2i(0, 0))      # hunt，会打
-	var sigil := _put(b, db, &"strength_sigil", Vector2i(2, 0))     # violence
+	var sigil := _put(b, db, &"charm_brute", Vector2i(4, 0))     # violence；142：不挨着弓（护符的增益槽给相邻武器 +15%）
 	var spec := BattleCompiler.compile_board(b, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:hunt": 2})
 	var uids: Array = []
 	for item in spec.items:
@@ -176,7 +176,7 @@ static func run_run_and_save(t: TestCase) -> void:
 	sets.load_dir()
 	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
 	var faiths := FaithDef.load_all()
-	var s := RunState.start(chapter, 5, db, enemies, sets, [&"bag_leather", &"bag_leather", &"blessed_shield", &"strength_sigil", &"salve"] as Array[StringName])
+	var s := RunState.start(chapter, 5, db, enemies, sets, [&"bag_leather", &"bag_leather", &"blessed_shield", &"charm_brute", &"salve"] as Array[StringName])
 	t.not_null(s, "开得起来")
 	if s == null:
 		return
@@ -205,7 +205,7 @@ static func run_run_and_save(t: TestCase) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	var checked := 0
-	for eid in enemies.enemy_ids():
+	for eid in TestSupport.enemy_ids():
 		var def := enemies.enemy(eid)
 		for round in 6:
 			var picks := EnemyPlacer.choose_items(def, rule, db, 6, rng, -1)

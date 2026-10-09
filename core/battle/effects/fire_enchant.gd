@@ -20,8 +20,7 @@ func apply(ctx: RuleContext) -> void:
 	if raw <= 0:
 		return
 	for victim in resolve_targets(ctx, target):
-		DamageResolver.resolve(ctx.battle, DamagePacket.create(
-			DamageTypes.FIRE, raw, victim, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override)))
+		DamageResolver.deal(ctx.battle, victim, raw, DamageTypes.FIRE, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override))
 
 
 func estimated_damage(_stats: StatSet) -> float:

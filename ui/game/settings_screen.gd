@@ -22,16 +22,12 @@ func open(_payload: Dictionary) -> void:
 	center.add_child(col)
 	col.add_child(_label("设置", 26, UiPalette.FG))
 	col.add_child(_label("战利品 / 容器屏", 15, UiPalette.DIM))
-	_auto_close_btn = _button("拿走最后一件后自动关闭", toggle_loot_auto_close, 14, UiPalette.Tier.MINOR)
-	_auto_close_btn.toggle_mode = true
-	_auto_close_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_auto_close_btn = _toggle("拿走最后一件后自动关闭", toggle_loot_auto_close)
 	col.add_child(_auto_close_btn)
 	col.add_child(HSeparator.new())
 	col.add_child(_label("地图", 15, UiPalette.DIM))
 	col.add_child(_wrapped("节点浮窗（鼠标停在点上显示敌人数据与背包 / 用过了 / 可能发生什么……）按章节开放，第二章才开。这里能强制打开先看效果。", 12, UiPalette.DIM, 500))
-	_tooltip_btn = _button("节点浮窗预览", toggle_node_tooltips_preview, 14, UiPalette.Tier.MINOR)
-	_tooltip_btn.toggle_mode = true
-	_tooltip_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_tooltip_btn = _toggle("节点浮窗预览", toggle_node_tooltips_preview)
 	col.add_child(_tooltip_btn)
 	col.add_child(HSeparator.new())
 	col.add_child(_label("背景底色", 15, UiPalette.DIM))
@@ -51,24 +47,28 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(HSeparator.new())
 	col.add_child(_label("老手", 15, UiPalette.DIM))
 	col.add_child(_wrapped("全部解锁：章节、难度、道具不看解锁，直接全开；代价是成就不计（091）。", 12, UiPalette.DIM, 500))
-	_unlock_all_btn = _button("全部解锁", toggle_unlock_all, 14, UiPalette.Tier.MINOR)
-	_unlock_all_btn.toggle_mode = true
-	_unlock_all_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_unlock_all_btn = _toggle("全部解锁", toggle_unlock_all)
 	col.add_child(_unlock_all_btn)
 	col.add_child(HSeparator.new())
 	if BattleArchive.default_on():     # 117：开发区只在非导出包里有 —— 日志是给作者看的，玩家看不到
 		col.add_child(_label("开发", 15, UiPalette.DIM))
 		col.add_child(_wrapped("战斗日志：每场战斗的内部日志（逐条、带时间）与回放存档写进 user://battle_logs，只留最近 %d 场。回放在开发工具的「战斗回放」里翻。" % BattleArchive.KEEP, 12, UiPalette.DIM, 500))
 		var row := _hbox(8)
-		_trace_btn = _button("战斗日志", toggle_battle_trace, 14, UiPalette.Tier.MINOR)
-		_trace_btn.toggle_mode = true
-		_trace_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_trace_btn = _toggle("战斗日志", toggle_battle_trace)
 		row.add_child(_trace_btn)
 		row.add_child(_button("打开日志文件夹", open_log_folder, 13, UiPalette.Tier.MINOR))
 		col.add_child(row)
 		col.add_child(HSeparator.new())
 	col.add_child(_button("返回" if back.is_valid() else "回主菜单", go_back, 14))
 	_refresh()
+
+
+## 一个开关按钮：辅助档、按下保持、左对齐（这一屏的几个布尔项）
+func _toggle(text: String, handler: Callable) -> Button:
+	var b := _button(text, handler, 14, UiPalette.Tier.MINOR)
+	b.toggle_mode = true
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	return b
 
 
 ## 090：返回上一级 —— 嵌在暂停菜单里就回暂停菜单，独立的一屏就回主菜单

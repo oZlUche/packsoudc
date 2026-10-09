@@ -154,7 +154,6 @@ static func run_runtime(t: TestCase) -> void:
 	var strong := BuffDef.new()
 	strong.id = &"strong"
 	strong.mods = [_mod(BattleStats.MAX_HP, 0, 20.0)] as Array[StatModifier]
-	strong.max_stacks = 3
 
 	rt.apply_buff(strong, 1)
 	t.eq(rt.stat_int(BattleStats.MAX_HP), 70, "强壮 1 层：生命上限 +20")
@@ -165,8 +164,15 @@ static func run_runtime(t: TestCase) -> void:
 	t.eq(rt.stacks_of(&"strong"), 3, "叠到 3 层")
 	t.eq(rt.stat_int(BattleStats.MAX_HP), 110, "3 层共 +60")
 
-	rt.apply_buff(strong, 5)
-	t.eq(rt.stacks_of(&"strong"), 3, "max_stacks = 3，超出部分被挡住")
+	rt.apply_buff(strong, 47)
+	t.eq(rt.stacks_of(&"strong"), 50, "137：可叠层不封顶，叠到 50 层")
+	rt.remove_buff_stacks(&"strong", 47)
+	var single := BuffDef.new()
+	single.id = &"single"
+	single.stackable = false
+	rt.apply_buff(single, 1)
+	rt.apply_buff(single, 3)
+	t.eq(rt.stacks_of(&"single"), 1, "137：不可叠层的叠几次都是一层")
 
 	# --- 减层 ---
 	t.eq(rt.remove_buff_stacks(&"strong", 2), 2, "移除 2 层")
@@ -181,7 +187,7 @@ static func run_runtime(t: TestCase) -> void:
 	var brief := BuffDef.new()
 	brief.id = &"brief"
 	brief.duration_sec = 0.5
-	brief.max_stacks = 1     # 不可叠层的才会过期（085 作者定：可叠层的永续）
+	brief.stackable = false     # 不可叠层的才会过期（085 作者定：可叠层的永续）
 	rt.apply_buff(brief, 1, _sec(1.0))
 	t.eq(rt.expire_buffs(_sec(1.4)).size(), 0, "1.4 秒时未过期")
 	t.eq(rt.next_expiry(), _sec(1.5), "到期时刻记为绝对时间，可直接排进时间轮")
@@ -398,7 +404,7 @@ static func run_event_mask(t: TestCase) -> void:
 		"3 秒共掉 9 点")
 
 	# --- 带【事件型】规则的 buff 才涉及掩码，施加后必须重算 ---
-	var thorns_rule := _rule(OnResourceChanged.new(), Always.new(), [_damage(1.0)])
+	var thorns_rule := _rule(OnDamage.new(), Always.new(), [_damage(1.0)])
 	var thorns := BuffDef.new()
 	thorns.id = &"thorns"
 	thorns.rules = [thorns_rule] as Array[AbilityRule]
@@ -412,11 +418,11 @@ static func run_event_mask(t: TestCase) -> void:
 			[_rule(OnBattleStart.new(), Always.new(), [spiker])])]),
 		_spec(100.0, [])
 	)
-	t.check(not quiet2.is_listening(BattleEvent.RESOURCE_CHANGED),
-		"开战前没有任何规则订阅 resource_changed")
+	t.check(not quiet2.is_listening(BattleEvent.DAMAGE),
+		"开战前没有任何规则订阅 damage")
 	quiet2.emit(BattleEvent.BATTLE_START, -1, {})
 	quiet2.drain()
-	t.check(quiet2.is_listening(BattleEvent.RESOURCE_CHANGED),
+	t.check(quiet2.is_listening(BattleEvent.DAMAGE),
 		"buff 带来了订阅该事件的规则，掩码必须已重算 —— 否则这条规则会静默失效")
 
 
@@ -528,8 +534,8 @@ static func run_battle_sim(t: TestCase) -> void:
 static func run_event_index(t: TestCase) -> void:
 	t.begin("事件索引")
 
-	# 一条订阅 resource_changed 的 buff 规则
-	var thorns_rule := _rule(OnResourceChanged.new(), Always.new(), [_damage(1.0)])
+	# 一条订阅 damage 的 buff 规则（140：原来用 OnResourceChanged，那个扳机删了）
+	var thorns_rule := _rule(OnDamage.new(), Always.new(), [_damage(1.0)])
 	var thorns := BuffDef.new()
 	thorns.id = &"thorns"
 	thorns.rules = [thorns_rule] as Array[AbilityRule]
@@ -537,17 +543,17 @@ static func run_event_index(t: TestCase) -> void:
 	var ctx := _battle(_spec(100.0, []), _spec(100.0, []))
 	var me := ctx.sides[0]
 
-	t.check(not ctx.is_listening(BattleEvent.RESOURCE_CHANGED), "开局无人订阅")
-	t.eq(ctx.subscribers_of(BattleEvent.RESOURCE_CHANGED).size(), 0, "索引为空")
+	t.check(not ctx.is_listening(BattleEvent.DAMAGE), "开局无人订阅")
+	t.eq(ctx.subscribers_of(BattleEvent.DAMAGE).size(), 0, "索引为空")
 
 	# --- 施加：索引自动重建 ---
 	me.apply_buff(thorns, 1, ctx.now)
-	t.check(ctx.is_listening(BattleEvent.RESOURCE_CHANGED),
+	t.check(ctx.is_listening(BattleEvent.DAMAGE),
 		"施加带规则的 buff 后索引自动重建，无需调用方记得")
-	t.eq(ctx.subscribers_of(BattleEvent.RESOURCE_CHANGED).size(), 1, "索引里有 1 条订阅")
+	t.eq(ctx.subscribers_of(BattleEvent.DAMAGE).size(), 1, "索引里有 1 条订阅")
 
 	var before := StatMath.to_int(ctx.sides[1].resources.current(BattleStats.RES_HP))
-	ctx.emit(BattleEvent.RESOURCE_CHANGED, 0, {"key": "hp", "delta": -5, "reason": "damage"})
+	ctx.emit(BattleEvent.DAMAGE, 0, {"source_side": 1, "type": DamageTypes.PHYSICAL, "amount": StatMath.from_float(5.0), "provokes": true})
 	ctx.drain()
 	t.eq(StatMath.to_int(ctx.sides[1].resources.current(BattleStats.RES_HP)), before - 1,
 		"buff 的规则确实被派发到了")
@@ -557,11 +563,11 @@ static func run_event_index(t: TestCase) -> void:
 	# 表现为「某个效果明明没了却还在生效」，极难定位
 	me.remove_buff_stacks(&"thorns", 1)
 	t.eq(me.stacks_of(&"thorns"), 0, "buff 已移除")
-	t.check(not ctx.is_listening(BattleEvent.RESOURCE_CHANGED), "索引已清空")
-	t.eq(ctx.subscribers_of(BattleEvent.RESOURCE_CHANGED).size(), 0, "不再有订阅者")
+	t.check(not ctx.is_listening(BattleEvent.DAMAGE), "索引已清空")
+	t.eq(ctx.subscribers_of(BattleEvent.DAMAGE).size(), 0, "不再有订阅者")
 
 	var after_removal := StatMath.to_int(ctx.sides[1].resources.current(BattleStats.RES_HP))
-	ctx.emit(BattleEvent.RESOURCE_CHANGED, 0, {"key": "hp", "delta": -5, "reason": "damage"})
+	ctx.emit(BattleEvent.DAMAGE, 0, {"source_side": 1, "type": DamageTypes.PHYSICAL, "amount": StatMath.from_float(5.0), "provokes": true})
 	ctx.drain()
 	t.eq(StatMath.to_int(ctx.sides[1].resources.current(BattleStats.RES_HP)), after_removal,
 		"已移除的规则绝不能再触发")
@@ -796,7 +802,6 @@ static func run_regen_buff(t: TestCase) -> void:
 	# regen_stamina 是普通属性，一条 StatModifier 就够，走的是和增伤同一条公式。
 	var vigor := BuffDef.new()
 	vigor.id = &"vigor"
-	vigor.max_stacks = 5
 	vigor.mods = [_mod(BattleStats.REGEN_STAMINA, 100)] as Array[StatModifier]
 
 	var spec := _spec(100.0, [_compiled(1, "gear", {"max_stamina": 100.0, "regen_stamina": 5.0}, [])])

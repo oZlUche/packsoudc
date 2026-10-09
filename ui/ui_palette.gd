@@ -104,25 +104,20 @@ static func cjk_font() -> Font:
 
 
 #region 背景底色（091）
-static func bg() -> Color:
+## [constant BG_THEMES] 里 id 是 [param id] 的那一档；没有这一档返回空字典
+static func theme_of(id: String) -> Dictionary:
 	for t in BG_THEMES:
-		if String(t["id"]) == bg_theme:
-			return t["color"]
-	return BG_THEMES[0]["color"]
+		if String(t["id"]) == id:
+			return t
+	return {}
+
+
+static func bg() -> Color:
+	return theme_of(bg_theme).get("color", BG_THEMES[0]["color"])
 
 
 static func has_bg_theme(id: String) -> bool:
-	for t in BG_THEMES:
-		if String(t["id"]) == id:
-			return true
-	return false
-
-
-static func bg_name(id: String) -> String:
-	for t in BG_THEMES:
-		if String(t["id"]) == id:
-			return String(t["name"])
-	return id
+	return not theme_of(id).is_empty()
 
 
 ## 从设置里读底色（和 [method UiText.apply] 一样，持有方读了设置就调一次）。

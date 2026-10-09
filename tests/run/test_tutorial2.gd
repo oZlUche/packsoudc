@@ -2,55 +2,33 @@
 ## 两场都输也死不了、章节收起与顶上（序章通关 → 直接开序章二 → 通关 → 第一章）。期望从数据推、克制关系用真的战斗模拟验。
 extends RefCounted
 
+## 与 Support.paths("t2") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_t2_run.json"
 const META := "user://test_t2_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var prologue: ChapterDef
-	var chapter1: ChapterDef
-	var brutus: CharacterDef
-	var events: Dictionary
-	var recipes: Array[RecipeDef]
-	var graph: MapGraph
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "prologue_2"))
-	c.prologue = load(ContentPaths.asset_file("chapters", "prologue"))
-	c.chapter1 = load(ContentPaths.asset_file("chapters", "free_mode"))
-	for ch in GameFlow.load_characters():
-		if ch.id == &"brutus":
-			c.brutus = ch
-	c.events = GameFlow.load_events()
-	c.recipes = GameFlow.load_recipes()
+static func _content() -> TestSupport.Content:
+	var c := TestSupport.load_content("prologue_2", ["brutus", "events", "recipes"])
+	# 预设图按种子 1 解析一份：要跑地图源，只这个套件要，所以不进共用装载
 	c.graph = c.chapter.map_source.resolve(1) if c.chapter != null and c.chapter.map_source != null else null
 	return c
 
 
-static func _cleanup() -> void:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
-
-
 ## 布鲁图斯背着这些东西的战斗单位
-static func _player(c: Content, ids: Array[StringName]) -> CombatantSpec:
+static func _player(c: TestSupport.Content, ids: Array[StringName]) -> CombatantSpec:
 	var board := GridInventory.new(c.brutus.board_size, 1, true)
 	for bag_id in c.brutus.starting_bags:
 		board.try_add(ItemInstance.create(c.items.get_def(bag_id), 0), true)
-	for id in ids:
+	# 143：包先摆，再大件先放（玩家也是这么摆的）—— 异形装备大了，按列表顺序贪心塞会白白剩下放不进的空隙
+	var sorted := ids.duplicate()
+	sorted.sort_custom(func(a: StringName, b: StringName) -> bool:
+		var da := c.items.get_def(a)
+		var db := c.items.get_def(b)
+		if da.is_bag != db.is_bag:
+			return da.is_bag
+		return da.cell_count() > db.cell_count() if da.cell_count() != db.cell_count() else String(a) < String(b))
+	for id in sorted:
 		board.try_add(ItemInstance.create(c.items.get_def(id), 0), true)
 	var ctx := RunContext.new()
 	for e in c.brutus.run_effects():
@@ -62,7 +40,7 @@ static func _player(c: Content, ids: Array[StringName]) -> CombatantSpec:
 
 
 ## 五个种子：赢几场、平均剩多少血
-static func _fight(c: Content, ids: Array[StringName], content: Dictionary) -> Dictionary:
+static func _fight(c: TestSupport.Content, ids: Array[StringName], content: Dictionary) -> Dictionary:
 	var me := _player(c, ids)
 	var foe := EnemyKit.spec_of(content, c.enemies, null, c.items)
 	var wins := 0
@@ -173,7 +151,10 @@ static func run_data(t: TestCase) -> void:
 	var bag_cells := 0
 	for b in c.brutus.starting_bags:
 		bag_cells += c.items.get_def(b).shape.cell_count()
-	t.check(cells > bag_cells, "两件护具 %d 格 > 两个包 %d 格：只能带一件" % [cells, bag_cells])
+	# 143：护具成了异形、包成了 3×3 —— 算上开局发的东西（匕首）才是包里真要装的
+	for id in c.chapter.starting_items:
+		cells += c.items.get_def(id).shape.cell_count()
+	t.check(cells > bag_cells, "两件护具 + 开局的东西 %d 格 > 两个包 %d 格：只能带一件" % [cells, bag_cells])
 	# 搜索点 2：毒药瓶、长剑、长条包；配方
 	var finds2: Array[StringName] = []
 	for round in s2.content["search_finds"]:
@@ -184,8 +165,13 @@ static func run_data(t: TestCase) -> void:
 	t.check(recipe != null and recipe.output == &"poisoned_knife", "匕首 + 毒药瓶 → 涂毒匕首")
 	t.check(RecipeDef.find(c.recipes, &"poison_vial", &"knife") == recipe, "顺序无关")
 	t.is_null(RecipeDef.find(c.recipes, &"knife", &"longsword"), "没有的配方是 null")
-	var long_bag := c.items.get_def(&"bag_long").shape.cell_count()
-	t.check(long_bag >= c.items.get_def(&"longsword").shape.cell_count() and long_bag >= 2, "长条包装得下长剑，或匕首 + 毒药")
+	# 143：长剑是十字形，长条包一条装不下整把 —— 但挨着皮背包摆，十字的一臂伸进长条包，两件护具哪件都能和长剑、匕首一起带
+	for armor in [&"tower_shield", &"plate_cuirass"]:
+		var spec := _player(c, [&"knife", armor, &"longsword", &"bag_long"] as Array[StringName])
+		var have: Array[StringName] = []
+		for item in spec.items:
+			have.append((item as CompiledItem).def_id)
+		t.check(have.has(&"longsword") and have.has(armor) and have.has(&"knife"), "加上长条包：长剑 + %s + 匕首都摆得下（%s）" % [armor, str(have)])
 
 
 static func run_matchups(t: TestCase) -> void:
@@ -342,14 +328,20 @@ static func run_crafting_drag(t: TestCase) -> void:
 	t.check(view.highlights.has(knife.uid), "拿起毒药瓶：棋盘上的匕首亮了")
 	t.check(not sview.highlights.has(other.uid), "伤药没亮")
 	var at := (Vector2(home) + Vector2(0.5, 0.5)) * InventoryView.CELL
+	drag.craft_note = func(a: ItemInstance, b: ItemInstance) -> String: return cm.note_of(a.def, b.def)
 	drag.update_preview(at)
 	t.check(view._preview_valid and view._preview_victims.is_empty(), "压到匕首上：预览是绿的、不画顶替")
+	# 140：绿预览旁边一行小字 = 产物 + 作者写的配方说明
+	var recipe := RecipeDef.find(c.recipes, &"knife", &"poison_vial")
+	t.check(drag.craft_hint.begins_with("合成 → " + Names.of(c.items.get_def(&"poisoned_knife"))), "提示写产物：%s" % drag.craft_hint)
+	t.check(recipe != null and recipe.note != "" and drag.craft_hint.ends_with("：" + recipe.note), "提示带配方的 note")
 	# 审查 A1：craft_filter 不许的那件（商店里没付钱的商品）压上去不是合成
 	drag.craft_filter = func(_i: ItemInstance) -> bool: return false
 	t.is_null(drag._craft_target(board, home), "craft_filter 不许：不算合成")
 	drag.craft_filter = Callable()
 	t.check(drag.drop_at(at), "放到匕首上：合成（算放下了）")
 	t.check(not drag.is_dragging(), "手上空了（不是顶替）")
+	t.eq(drag.craft_hint, "", "放下之后提示没了")
 	var made: ItemInstance = null
 	for inst in board.items():
 		if (inst as ItemInstance).def.id == &"poisoned_knife":
@@ -418,7 +410,7 @@ static func run_random_mode(t: TestCase) -> void:
 static func run_gating(t: TestCase) -> void:
 	t.begin("序章二 · 章节的门：序章通关 → 序章收起、只剩序章二 → 「新的一局」直接开它、先过 intro → 通关 → 第一章开、序章二收起")
 	var c := _content()
-	_cleanup()
+	Support.cleanup("t2")
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = GameFlow.load_chapters()
 	f.characters = GameFlow.load_characters()
@@ -481,4 +473,4 @@ static func run_gating(t: TestCase) -> void:
 	f.finish_result()
 	avail = f.available_chapters()
 	t.check(avail.size() == 1 and avail[0].id == &"prologue_3", "序章二收起，只剩序章三：%s" % str(avail.map(func(x: ChapterDef) -> String: return String(x.id))))
-	_cleanup()
+	Support.cleanup("t2")

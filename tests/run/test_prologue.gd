@@ -2,64 +2,36 @@
 ## 通关解锁第一章。期望从数据推：地图文件里写的点、事件、搜索的次数与固定的收获，都读文件断言；教程能打赢用真的战斗模拟验。
 extends RefCounted
 
+## 与 Support.paths("prologue") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_prologue_run.json"
 const META := "user://test_prologue_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var prologue: ChapterDef
-	var chapter1: ChapterDef
-	var characters: Array[CharacterDef]
-	var events: Dictionary
-	var faiths: Dictionary
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("prologue", ["characters", "events", "faiths"])
 
 
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.prologue = load(ContentPaths.asset_file("chapters", "prologue"))
-	c.chapter1 = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.characters = GameFlow.load_characters()
-	c.events = GameFlow.load_events()
-	c.faiths = GameFlow.load_faiths()
-	return c
-
-
-static func _cleanup() -> void:
-	for p in [SAVE, META]:
-		if FileAccess.file_exists(p):
-			DirAccess.remove_absolute(p)
-
-
-static func _brutus(c: Content) -> CharacterDef:
+static func _brutus(c: TestSupport.Content) -> CharacterDef:
 	for ch in c.characters:
 		if ch.id == &"brutus":
 			return ch
 	return null
 
 
-static func _start(c: Content) -> RunState:
+static func _start(c: TestSupport.Content) -> RunState:
 	var s := RunState.start(c.prologue, 7, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], _brutus(c))
 	if s == null:
 		return null
 	s.event_defs = c.events
 	s.faith_defs = c.faiths
-	CraftingModule.of(s).recipes = GameFlow.load_recipes()     # 114：序章一教合成
+	CraftingModule.of(s).recipes = RecipeDef.load_all()     # 114：序章一教合成
 	s.pick_spawn(s.map.entry_ids[0])
 	return s
 
 
 ## 084：敌人和玩家一样 —— 有包、道具全在包里、每件都摆得上（重建出的件数 = 写的件数）；必掉的都是身上有的
-static func _check_enemy_bags(t: TestCase, c: Content, content: Dictionary, who: String) -> void:
+static func _check_enemy_bags(t: TestCase, c: TestSupport.Content, content: Dictionary, who: String) -> void:
 	var board := EnemyKit.board_of(content, c.items)
 	var entries: Array = content.get("items", [])
 	t.eq(board.item_count(), entries.size(), "%s：%d 件都摆上了" % [who, entries.size()])
@@ -110,12 +82,20 @@ static func _finds_until(path: Array[MapNode], upto: int) -> Array[StringName]:
 
 
 ## 布鲁图斯背着这些东西的战斗单位（初始包 + 尽量塞）
-static func _player(c: Content, ids: Array[StringName]) -> CombatantSpec:
+static func _player(c: TestSupport.Content, ids: Array[StringName]) -> CombatantSpec:
 	var ch := _brutus(c)
 	var board := GridInventory.new(ch.board_size, 1, true)
 	for bag_id in ch.starting_bags:
 		board.try_add(ItemInstance.create(c.items.get_def(bag_id), 0), true)
-	for id in ids:
+	# 143：捡到的包先摆（玩家也是先摆包再往里塞），再大件先放 —— 异形装备大了，贪心按捡到的顺序塞会白白剩下放不进的空隙
+	var sorted := ids.duplicate()
+	sorted.sort_custom(func(a: StringName, b: StringName) -> bool:
+		var da := c.items.get_def(a)
+		var db := c.items.get_def(b)
+		if da.is_bag != db.is_bag:
+			return da.is_bag
+		return da.cell_count() > db.cell_count() if da.cell_count() != db.cell_count() else String(a) < String(b))
+	for id in sorted:
 		board.try_add(ItemInstance.create(c.items.get_def(id), 0), true)
 	var ctx := RunContext.new()
 	for e in ch.run_effects():
@@ -123,7 +103,9 @@ static func _player(c: Content, ids: Array[StringName]) -> CombatantSpec:
 	var base := ch.baseline()
 	for key in ctx.stat_bonus:
 		base.base_stats[String(key)] = float(base.base_stats.get(String(key), 0.0)) + float(ctx.stat_bonus[key])
-	return BattleCompiler.compile_board(board, base)
+	var spec := BattleCompiler.compile_board(board, base)
+	spec.set_rules.append_array(ch.combat_rules())     # 136：角色技能的战斗规则（布鲁图斯「坚韧」），一局里编译玩家时也挂
+	return spec
 
 
 static func run_data(t: TestCase) -> void:
@@ -389,13 +371,13 @@ static func run_crafting_gate(t: TestCase) -> void:
 	t.check(bool(s.events.option_state(1)["ok"]), "也没有匕首：退路「就这么上」能选")
 	s.board.try_add(ItemInstance.create(c.items.get_def(&"knife")), true)
 	t.check(not bool(s.events.option_state(1)["ok"]), "有匕首了：退路藏起来")
-	_cleanup()
+	Support.cleanup("prologue")
 
 
 static func run_gating(t: TestCase) -> void:
 	t.begin("序章 · 开局屏的门：没通关只列序章、序章只能选布鲁图斯；撤离成功给解锁，第一章随之出现并排在序章后面")
 	var c := _content()
-	_cleanup()
+	Support.cleanup("prologue")
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = GameFlow.load_chapters()
 	f.characters = c.characters
@@ -448,4 +430,4 @@ static func run_gating(t: TestCase) -> void:
 	var f2 := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f2.chapters = [c.chapter1] as Array[ChapterDef]
 	t.eq(f2.available_chapters().size(), 1, "只有一个要解锁的章节时照样列出来（不把游戏锁死）")
-	_cleanup()
+	Support.cleanup("prologue")

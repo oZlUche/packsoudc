@@ -38,8 +38,8 @@ static func run(t: TestCase) -> void:
 	t.begin("顶替 · 容器层")
 
 	ItemInstance.reset_uid_counter()
-	var dot := _def("dot", ["#"])
-	var wide := _def("wide", ["##"])
+	var dot := _def("dot", ["1"])
+	var wide := _def("wide", ["11"])
 	var inv := GridInventory.new(Vector2i(4, 4), 1)
 
 	# --- 地形与占用是两件事 ---
@@ -72,7 +72,7 @@ static func run(t: TestCase) -> void:
 	inv.place(b, Vector2i(3, 0), 0)
 	inv.place(c, Vector2i(1, 0), 0)
 
-	var row := _def("row", ["####"])
+	var row := _def("row", ["1111"])
 	t.eq(inv.displaced_by(row, Vector2i(0, 0), 0).size(), 3,
 		"横跨一整行压住三件；两格宽的那件被压了两格，仍只算一件")
 
@@ -98,8 +98,8 @@ static func run_bags_are_not_displaced(t: TestCase) -> void:
 	t.begin("顶替 · 包是地基，不参与顶替")
 
 	ItemInstance.reset_uid_counter()
-	var bag := _bag_def("bag4", ["##", "##"])
-	var dot := _def("dot", ["#"])
+	var bag := _bag_def("bag4", ["11", "11"])
+	var dot := _def("dot", ["1"])
 	var board := GridInventory.new(Vector2i(6, 6), 1, true)
 
 	var b := ItemInstance.create(bag)
@@ -147,7 +147,7 @@ static func run_drag_single(t: TestCase) -> void:
 	t.begin("顶替 · 顶出一件就接着上手")
 
 	ItemInstance.reset_uid_counter()
-	var dot := _def("dot", ["#"])
+	var dot := _def("dot", ["1"])
 	var src := GridInventory.new(Vector2i(4, 4), 1)
 	var dst := GridInventory.new(Vector2i(4, 4), 2)
 	var view_a := _view(src, Vector2.ZERO)
@@ -195,8 +195,8 @@ static func run_drag_many(t: TestCase) -> void:
 	t.begin("顶替 · 顶出多件全到地上")
 
 	ItemInstance.reset_uid_counter()
-	var dot := _def("dot", ["#"])
-	var row := _def("row", ["###"])
+	var dot := _def("dot", ["1"])
+	var row := _def("row", ["111"])
 	var src := GridInventory.new(Vector2i(4, 4), 1)
 	var dst := GridInventory.new(Vector2i(4, 4), 2)
 	var stash := ItemStash.new(3)
@@ -237,8 +237,8 @@ static func run_drag_no_stash(t: TestCase) -> void:
 	t.begin("顶替 · 没地方安置就整件事作废")
 
 	ItemInstance.reset_uid_counter()
-	var dot := _def("dot", ["#"])
-	var row := _def("row", ["###"])
+	var dot := _def("dot", ["1"])
+	var row := _def("row", ["111"])
 	var src := GridInventory.new(Vector2i(4, 4), 1)
 	var dst := GridInventory.new(Vector2i(4, 4), 2)
 	var view_a := _view(src, Vector2.ZERO)
@@ -288,8 +288,8 @@ static func run_drag_full_stash(t: TestCase) -> void:
 	t.begin("顶替 · 地上塞不下就整批退回")
 
 	ItemInstance.reset_uid_counter()
-	var dot := _def("dot", ["#"])
-	var row := _def("row", ["###"])
+	var dot := _def("dot", ["1"])
+	var row := _def("row", ["111"])
 	var src := GridInventory.new(Vector2i(4, 4), 1)
 	var dst := GridInventory.new(Vector2i(4, 4), 2)
 	# 只放得下一件的地上：收得下第一件，收不下第二件
@@ -327,9 +327,9 @@ static func run_drag_bag_rotate_sheds(t: TestCase) -> void:
 	t.begin("顶替 · 拖着包按 R，内容物跟着转，跨包的到地上")
 
 	ItemInstance.reset_uid_counter()
-	var bag_def := _bag_def("bag6", ["##", "##", "##"])
-	var dot := _def("dot", ["#"])
-	var tall := _def("tall", ["#", "#"])
+	var bag_def := _bag_def("bag6", ["11", "11", "11"])
+	var dot := _def("dot", ["1"])
+	var tall := _def("tall", ["1", "1"])
 
 	var board := GridInventory.new(Vector2i(8, 8), 1, true)
 	var stash := ItemStash.new(2)
@@ -375,8 +375,8 @@ static func run_drag_bag_cancel_restores_straddler(t: TestCase) -> void:
 	t.begin("顶替 · 抓起再取消，跨包的那件回到原处")
 
 	ItemInstance.reset_uid_counter()
-	var bag_def := _bag_def("bag6", ["##", "##", "##"])
-	var tall := _def("tall", ["#", "#"])
+	var bag_def := _bag_def("bag6", ["11", "11", "11"])
+	var tall := _def("tall", ["1", "1"])
 	var board := GridInventory.new(Vector2i(8, 8), 1, true)
 	var bv := _view(board, Vector2.ZERO)
 	var drag := DragLayer.new()
@@ -403,8 +403,8 @@ static func run_drag_bag_rotate_no_stash(t: TestCase) -> void:
 	t.begin("顶替 · 脱落没地方去就不让放")
 
 	ItemInstance.reset_uid_counter()
-	var bag_def := _bag_def("bag6", ["##", "##", "##"])
-	var tall := _def("tall", ["#", "#"])
+	var bag_def := _bag_def("bag6", ["11", "11", "11"])
+	var tall := _def("tall", ["1", "1"])
 
 	var board := GridInventory.new(Vector2i(8, 8), 1, true)
 	var bv := _view(board, Vector2.ZERO)

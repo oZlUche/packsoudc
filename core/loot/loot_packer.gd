@@ -6,23 +6,11 @@ class_name LootPacker
 extends RefCounted
 
 
-## 摆。返回 {"board": GridInventory, "left": [没装下的 id]}
+## 摆。返回 {"board": GridInventory, "left": [没装下的 id]}。140：就是往一块空容器里 [method add] —— 先放下的留在原位，
+## 加高之后只把没放下的往后排（以前每次加高都从头重排一遍）
 static func pack(ids: Array[StringName], size: Vector2i, items: ItemDatabase) -> Dictionary:
 	var base := Vector2i(maxi(1, size.x), maxi(1, size.y))
-	var grow := 0
-	while true:
-		var board := GridInventory.new(base + Vector2i(0, grow), 0, false)
-		var left: Array[StringName] = []
-		for id in ids:
-			var def := items.get_def(id) if items != null else null
-			if def == null:
-				continue
-			if not board.try_add(ItemInstance.create(def, 0), true):
-				left.append(id)
-		if left.is_empty() or grow >= base.y:
-			return {"board": board, "left": left}
-		grow += 1
-	return {"board": null, "left": ids}
+	return add(GridInventory.new(base, 0, false), ids, items, base.y)
 
 
 ## 只要棋盘，不关心装没装下

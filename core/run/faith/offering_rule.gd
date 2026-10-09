@@ -8,7 +8,7 @@ extends Resource
 @export var tags: Array[StringName] = []
 ## 格子数下限（0 = 不限）：「大及以上」写 9
 @export var min_cells: int = 0
-## 体积恰好这一档（ItemVolume.Grade；-1 = 不限）：「正好为中」写 2
+## 体积恰好这一档（[ItemVolume] 的档位序号：0 极小 … 4 极大；-1 = 不限）：「正好为中」写 2
 @export var exact_grade: int = -1
 ## 104：道具的 `combat.base_stats` 里**显式写了**这条属性才算（默认值不算「带有」：人人都有 10% 暴击率）；空 = 不看
 @export var has_stat: StringName = &""
@@ -21,20 +21,7 @@ extends Resource
 
 
 func matches(def: ItemDef) -> bool:
-	if def == null:
-		return false
-	if not tags.is_empty():
-		var hit := false
-		for t in tags:
-			if def.tags.has(t):
-				hit = true
-				break
-		if not hit:
-			return false
-	var cells := ItemVolume.cells_of(def)
-	if min_cells > 0 and cells < min_cells:
-		return false
-	if exact_grade >= 0 and ItemVolume.grade_of_cells(cells) != exact_grade:
+	if not FaithTags.item_matches(def, tags, min_cells, exact_grade):
 		return false
 	if has_stat != &"" and (def.combat == null or not def.combat.base_stats.has(String(has_stat))):
 		return false

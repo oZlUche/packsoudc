@@ -20,9 +20,9 @@ func subscribed_events() -> Array[StringName]:
 func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 	if event.get_name(&"axis") != axis:
 		return false
-	if (event.side == ctx.owner.side) != on_self:
+	if not ctx.event_on(event, on_self):
 		return false
-	var who := ctx.owner if on_self else ctx.opponent()
+	var who := ctx.side_of(on_self)
 	var have := who.axis_total(axis)
 	if layer == Layer.CONTENT:
 		have = who.axis_stacks(axis)
@@ -31,3 +31,7 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 	if stacks < 0:
 		return have <= stacks
 	return have >= maxi(1, stacks)
+
+
+func describe() -> String:
+	return "%s的%s达到 %d 层时" % ["你" if on_self else "对手", StatAxes.name_of(axis, stacks), absi(maxi(1, stacks) if stacks >= 0 else stacks)]

@@ -363,12 +363,7 @@ func _side_name(side: int) -> String:
 
 #region 界面
 func _build() -> void:
-	var bg := ColorRect.new()
-	UiPalette.apply(GameSettings.load_from())     # 091：底色跟设置走
-	bg.color = UiPalette.bg()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	UiTheme.prepare_root(self, false)     # 091：底色跟设置走 —— 设置由宿主（导演 / 沙盒 / 回放浏览器）读过、apply 过，这里不再读盘
 
 	var root := VBoxContainer.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -378,9 +373,9 @@ func _build() -> void:
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
 	root.add_child(header)
-	_clock = _label("0.00 秒", 16, UiPalette.DIM)
+	_clock = UiTheme.make_label("0.00 秒", 16, UiPalette.DIM)
 	header.add_child(_clock)
-	_verdict = _label("", 16, UiPalette.FG)
+	_verdict = UiTheme.make_label("", 16, UiPalette.FG)
 	header.add_child(_verdict)
 
 	var arena := HBoxContainer.new()
@@ -426,13 +421,13 @@ func _build() -> void:
 	var bar := HBoxContainer.new()
 	bar.add_theme_constant_override("separation", 8)
 	root.add_child(bar)
-	_play_btn = _button("暂停", toggle_play)
+	_play_btn = UiTheme.make_button("暂停", toggle_play, UiPalette.Tier.MINOR, 13)     # 090：回放控制是辅助键
 	bar.add_child(_play_btn)
-	_speed_btn = _button("1×", cycle_speed)
+	_speed_btn = UiTheme.make_button("1×", cycle_speed, UiPalette.Tier.MINOR, 13)
 	bar.add_child(_speed_btn)
-	bar.add_child(_button("跳过", skip_to_end))
-	bar.add_child(_label("战斗中只能看与跳过 —— 结果在开打那一瞬就已经算完了；停在 buff 图标上看效果", 12, UiPalette.DIM))
-	_tip = HoverTip.new(label_font)
+	bar.add_child(UiTheme.make_button("跳过", skip_to_end, UiPalette.Tier.MINOR, 13))
+	bar.add_child(UiTheme.make_label("战斗中只能看与跳过 —— 结果在开打那一瞬就已经算完了；停在 buff 图标上看效果", 12, UiPalette.DIM))
+	_tip = HoverTip.new()
 	add_child(_tip)
 
 
@@ -442,19 +437,4 @@ func _sync_buttons() -> void:
 	var done := _result != null and _cursor >= _result.log.size()
 	_play_btn.text = "重播" if done else ("暂停" if _playing else "播放")
 	_speed_btn.text = "%d×" % int(SPEEDS[_speed_idx])
-
-
-func _label(text: String, font_size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	UiTheme.label(l, font_size, color)     # 121：字体在主题里，颜色先选变体
-	return l
-
-
-func _button(text: String, handler: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	UiPalette.style_button(b, UiPalette.Tier.MINOR, UiPalette.button_font_size(13, UiPalette.Tier.MINOR))     # 090：回放控制是辅助键
-	b.pressed.connect(handler)
-	return b
 #endregion

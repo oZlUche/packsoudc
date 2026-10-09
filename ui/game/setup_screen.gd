@@ -10,7 +10,7 @@
 ## 往包里拖 = 带上、往仓库拖 = 置入、留着的**出发就没了**；回主菜单则原样放回带回来的棋盘（视为没发生过移动）。
 ## 仓库的东西进不了地上（会丢）。
 ##
-## 没有角色定义（老内容、测试）时退回老路：按第一套开局装备开。
+## 没有角色定义时和没有章节一样：一条红字，开不了（140：作者数据里有三个角色，「按第一套开局装备开」的老路只留在 core 给测试）。
 ##
 ## **预设装备**（096，作者定）：角色之下一栏「预设装备」—— 不带 / 强攻（伤害高）/ 坚守（防御高）……（`LoadoutDef.preset`，数据里加一份就多一套）。
 ## 挑一套就把它的道具免费放进初始包：不从仓库拿、不算带入预算与件数上限、拖不进仓库 / 地上（只能在棋盘上挪），出发时带着走。
@@ -55,7 +55,6 @@ var _difficulty_btns: Array[Button] = []
 var _board_host: VBoxContainer
 var _board_view: InventoryView = null
 var _warehouse_view: InventoryView = null
-var _drag: DragLayer = null
 var _desc: Label
 var _readout: RichTextLabel = null
 var _status: Label
@@ -81,21 +80,17 @@ func open(_payload: Dictionary) -> void:
 	left.add_child(_label("开局", 26, UiPalette.FG))
 	left.add_child(_label("模式", 15, UiPalette.DIM))     # 114：序章之后只有自由模式（将来加章再长）
 	_chapters = flow.available_chapters()
-	for i in _chapters.size():
-		var c := _chapters[i]
-		var idx := i
-		var b := _button("%s（难度 %d）" % [c.display_name if c.display_name != "" else String(c.id), c.difficulty],
-			func(): choose_chapter(idx))
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		_chapter_btns.append(b)
-		left.add_child(b)
+	var chapter_names: Array[String] = []
+	for c in _chapters:
+		chapter_names.append("%s（难度 %d）" % [c.display_name if c.display_name != "" else String(c.id), c.difficulty])
+	_chapter_btns = _choice_column(left, chapter_names, choose_chapter)
 	if _chapters.is_empty():
 		left.add_child(_label("没有章节：先跑 tools/import_content.gd", 13, UiPalette.HP))
 	left.add_child(_label("角色", 15, UiPalette.DIM))
 	_char_box = _vbox(8)
 	left.add_child(_char_box)
 	if flow.characters.is_empty():
-		left.add_child(_label("没有角色定义：按第一套开局装备开（老路）", 12, UiPalette.DIM))
+		left.add_child(_label("没有角色：先跑 tools/import_content.gd", 13, UiPalette.HP))
 	if not flow.presets().is_empty():
 		left.add_child(_label("预设装备", 15, UiPalette.DIM))
 		_preset_box = _vbox(6)
@@ -104,13 +99,10 @@ func open(_payload: Dictionary) -> void:
 	var avail := flow.available_difficulties()
 	if not avail.is_empty():
 		left.add_child(_label("难度", 15, UiPalette.DIM))
-		for i in avail.size():
-			var d := avail[i]
-			var idx := i
-			var b := _button(d.display_name if d.display_name != "" else String(d.id), func(): choose_difficulty(idx))
-			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			_difficulty_btns.append(b)
-			left.add_child(b)
+		var difficulty_names: Array[String] = []
+		for d in avail:
+			difficulty_names.append(d.display_name if d.display_name != "" else String(d.id))
+		_difficulty_btns = _choice_column(left, difficulty_names, choose_difficulty)
 	_scale_box = _vbox(6)
 	left.add_child(_scale_box)
 	_desc = _wrapped("", 12, UiPalette.DIM, 280)
@@ -203,13 +195,31 @@ func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 	return true
 
 
+## 一列单选按钮（章节 / 难度 / 角色 / 预设 / 规模各一列）：每个名字一个左对齐的按钮，按下调 `on_pick(序号)`；
+## 选中的是哪个由 [method _mark_choice] 标。返回这一列的按钮，顺序同 [param names]
+func _choice_column(box: Control, names: Array[String], on_pick: Callable, size: int = 14) -> Array[Button]:
+	var btns: Array[Button] = []
+	for i in names.size():
+		var idx := i
+		var b := _button(names[i], func(): on_pick.call(idx), size)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btns.append(b)
+		box.add_child(b)
+	return btns
+
+
+## 121：一列里第 [param index] 个是选中的（前景色），其余暗色（[method UiTheme.mark]）
+func _mark_choice(btns: Array, index: int) -> void:
+	for k in btns.size():
+		UiTheme.mark(btns[k], k == index)
+
+
 #region 公开动作
 func choose_chapter(i: int) -> void:
 	if _chapters.is_empty():
 		return
 	chapter_index = clampi(i, 0, _chapters.size() - 1)
-	for k in _chapter_btns.size():
-		UiTheme.mark(_chapter_btns[k], k == chapter_index)     # 121：选中的那个前景色、其余暗色
+	_mark_choice(_chapter_btns, chapter_index)
 	# 083：这一章能选的角色、能不能从仓库带东西，都跟着章节变
 	_rebuild_characters()
 	_rebuild_scales()
@@ -221,8 +231,7 @@ func choose_chapter(i: int) -> void:
 ## 角色按钮按这一章能选的重排
 ## 085：这一章的随机图有哪些规模（环形生成器的 `scales`）；预设图没有
 func _rebuild_scales() -> void:
-	for c in _scale_box.get_children():
-		c.queue_free()
+	UiTheme.clear_children(_scale_box)
 	_scale_btns.clear()
 	scale_id = &""
 	var ch := chapter()
@@ -230,24 +239,22 @@ func _rebuild_scales() -> void:
 	if options.is_empty():
 		return
 	_scale_box.add_child(_label("地图规模", 15, UiPalette.DIM))
-	var def_btn := _button("默认（章节配置）", func(): choose_scale(&""), 13)
-	def_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_scale_btns[&""] = def_btn
-	_scale_box.add_child(def_btn)
+	var ids: Array[StringName] = [&""]
+	var names: Array[String] = ["默认（章节配置）"]
 	for o in options:
 		var sid: StringName = o["id"]
 		var limit := int(o.get("step_limit", 0))
-		var b := _button(String(o["display_name"]) + ("　倒计时 %d" % limit if limit > 0 else ""), func(): choose_scale(sid), 13)
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		_scale_btns[sid] = b
-		_scale_box.add_child(b)
+		ids.append(sid)
+		names.append(String(o["display_name"]) + ("　倒计时 %d" % limit if limit > 0 else ""))
+	var btns := _choice_column(_scale_box, names, func(i: int): choose_scale(ids[i]), 13)
+	for i in btns.size():
+		_scale_btns[ids[i]] = btns[i]
 	choose_scale(&"")
 
 
 func choose_scale(id: StringName) -> void:
 	scale_id = id if _scale_btns.has(id) else &""
-	for k in _scale_btns:
-		UiTheme.mark((_scale_btns[k] as Button), k == scale_id)     # 121：选中的那个前景色、其余暗色
+	_mark_choice(_scale_btns.values(), _scale_btns.keys().find(scale_id))
 
 
 func scale_options() -> Array:
@@ -259,16 +266,11 @@ func _rebuild_characters() -> void:
 	_character_btns.clear()
 	if _char_box == null:
 		return
-	for c in _char_box.get_children():
-		_char_box.remove_child(c)
-		c.queue_free()
-	for i in _characters.size():
-		var ch := _characters[i]
-		var idx := i
-		var b := _button(ch.display_name if ch.display_name != "" else String(ch.id), func(): choose_character(idx))
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		_character_btns.append(b)
-		_char_box.add_child(b)
+	UiTheme.clear_children(_char_box)
+	var names: Array[String] = []
+	for ch in _characters:
+		names.append(ch.display_name if ch.display_name != "" else String(ch.id))
+	_character_btns = _choice_column(_char_box, names, choose_character)
 
 
 ## 096：预设套那一栏：「不带」+ 每套一个按钮（悬停看说明）
@@ -276,29 +278,20 @@ func _rebuild_presets() -> void:
 	_preset_btns.clear()
 	if _preset_box == null:
 		return
-	for c in _preset_box.get_children():
-		_preset_box.remove_child(c)
-		c.queue_free()
-	var none := _button("不带预设", func(): choose_preset(-1))
-	none.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	none.tooltip_text = "只带角色的初始包，其余从仓库拖"
-	_preset_btns.append(none)
-	_preset_box.add_child(none)
-	var sets := flow.presets()
-	for i in sets.size():
-		var def := sets[i]
-		var idx := i
-		var b := _button(Names.of(def), func(): choose_preset(idx))
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.tooltip_text = Names.description_of(def)
-		_preset_btns.append(b)
-		_preset_box.add_child(b)
+	UiTheme.clear_children(_preset_box)
+	var names: Array[String] = ["不带预设"]
+	var tips: Array[String] = ["只带角色的初始包，其余从仓库拖"]
+	for def in flow.presets():
+		names.append(Names.of(def))
+		tips.append(Names.description_of(def))
+	_preset_btns = _choice_column(_preset_box, names, func(i: int): choose_preset(i - 1))     # 第 0 个是「不带」
+	for i in _preset_btns.size():
+		_preset_btns[i].tooltip_text = tips[i]
 	_color_presets()
 
 
 func _color_presets() -> void:
-	for k in _preset_btns.size():
-		UiTheme.mark(_preset_btns[k], k == preset_index + 1)     # 121：选中的那个前景色、其余暗色
+	_mark_choice(_preset_btns, preset_index + 1)     # 第 0 个是「不带」
 
 
 ## 096：挑一套预设（-1 = 不带）：棋盘上原来那套拿掉，新的免费放进初始包（放不下的在状态栏说）。从仓库带上的不动
@@ -360,8 +353,7 @@ func choose_character(i: int) -> void:
 	_return_carried()
 	if not _characters.is_empty():
 		character_index = clampi(i, 0, _characters.size() - 1)
-	for k in _character_btns.size():
-		UiTheme.mark(_character_btns[k], k == character_index)     # 121：选中的那个前景色、其余暗色
+	_mark_choice(_character_btns, character_index)
 	_rebuild_board()
 	_refresh()
 
@@ -372,8 +364,7 @@ func choose_difficulty(i: int) -> void:
 	if avail.is_empty():
 		return
 	difficulty_index = clampi(i, 0, avail.size() - 1)
-	for k in _difficulty_btns.size():
-		UiTheme.mark(_difficulty_btns[k], k == difficulty_index)     # 121：选中的那个前景色、其余暗色
+	_mark_choice(_difficulty_btns, difficulty_index)
 	_refresh()
 
 
@@ -517,16 +508,13 @@ func set_run_seed(v: int) -> void:
 func can_depart() -> String:
 	if chapter() == null:
 		return "没有章节可开"
-	var why := flow.can_begin()
-	if why != "":
-		return why
 	var ch := character()
-	if ch != null:
-		var defs: Array = []
-		for inst in carried():
-			defs.append(inst.def)
-		return ch.carry_problem(defs)
-	return ""
+	if ch == null:
+		return "没有角色可选"
+	var defs: Array = []
+	for inst in carried():
+		defs.append(inst.def)
+	return ch.carry_problem(defs)
 
 
 ## 反馈（紧急）：左边那一列比窗口还高，原来放在列尾的「出发」按钮被挤出了屏幕，开局没有入口。
@@ -556,11 +544,7 @@ func depart() -> bool:
 		return false
 	var c := chapter()
 	var ch := character()
-	var run: RunState = null
-	if ch != null:
-		run = flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value())
-	else:
-		run = flow.begin(c, flow.default_loadout(), run_seed, [] as Array[int], null, [], difficulty(), scale_id)
+	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value())
 	if run == null:
 		_status.text = "这一章生成不出图：%s" % (c.map_source.last_error if c.map_source != null else "没有地图来源")
 		return false
@@ -609,9 +593,7 @@ func _restore_pending() -> void:
 
 ## 按角色造棋盘：初始包摆好。包的 uid 走局外的号段，免得和从仓库拖来的撞号
 func _rebuild_board() -> void:
-	for c in _board_host.get_children():
-		_board_host.remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(_board_host)
 	if _board_view != null and _drag != null:
 		_drag.unregister_view(_board_view)
 	_board_view = null
@@ -619,8 +601,7 @@ func _rebuild_board() -> void:
 	board = null
 	_preset_uids.clear()
 	var ch := character()
-	if ch == null:
-		_board_host.add_child(_label("（老路：按第一套开局装备开，出发后在地图上按「背包」整理）", 12, UiPalette.DIM))
+	if ch == null:     # 140：没有角色就没有棋盘（左栏那条红字说明了）
 		return
 	board = GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
 	board.begin_batch()
@@ -671,13 +652,15 @@ func _refresh() -> void:
 			var caps: Array[String] = []
 			caps.append("体力 %d" % ch.vitality_max)
 			caps.append("生命 %d" % int(ch.baseline().value_of(&"max_hp")))
+			caps.append("耐力 %d" % int(ch.baseline().value_of(&"max_stamina")))     # 136
+			if ch.weight_capacity > 0:
+				caps.append("负重 %d" % ch.weight_capacity)
 			if ch.carry_max_items >= 0:
 				caps.append("最多带 %d 件" % ch.carry_max_items)
 			if ch.carry_rarity_cap >= 0:
 				caps.append("稀有度不超过 %d" % ch.carry_rarity_cap)
 			lines.append("　".join(caps))
-			if ch.skills_summary() != "":
-				lines.append("技能：" + ch.skills_summary())
+			lines.append_array(ch.skill_lines())     # 136：被动 / 主动各一行
 		var pre := preset()
 		if pre != null:
 			lines.append("预设「%s」：%s" % [Names.of(pre), Names.description_of(pre)])
@@ -698,12 +681,13 @@ func _refresh() -> void:
 		var taken := carried()
 		for inst in taken:
 			value += ItemValue.of(inst.def)
-			cells += inst.def.shape.cell_count() if inst.def.shape != null else 0
+			cells += inst.def.cell_count()
 			_readout.append_text("　" + _item_line(inst.def) + "\n")
 		if taken.is_empty():
 			_readout.append_text("[color=#8b93a1]什么都还没带[/color]\n")
-		if not preset_items().is_empty():
-			_readout.append_text("[color=#8b93a1]预设套 %d 件（不算预算）[/color]\n" % preset_items().size())
+		var preset_count := preset_items().size()
+		if preset_count > 0:
+			_readout.append_text("[color=#8b93a1]预设套 %d 件（不算预算）[/color]\n" % preset_count)
 		_readout.append_text("\n带 %d 件，占 %d 格，值 %d 币　包里还有 %d 格" % [taken.size(), cells, value, board.free_cell_count()])
 		if c != null and CountdownModule.budget_for(c, scale_id) > 0:
 			_readout.append_text("\n" + carry_text(c, scale_id, value))
@@ -715,3 +699,11 @@ func _refresh() -> void:
 	if _status != null:
 		var why := can_depart()
 		_status.text = why if why != "" and not carried().is_empty() else ""
+
+
+## 读数里一件道具的一行：名字（按稀有度上色）、几格、值多少
+func _item_line(def: ItemDef) -> String:
+	if def == null:
+		return "?"
+	var cells := def.cell_count()
+	return "[color=#%s]%s[/color]  %d 格  %d 币" % [ItemPainter.rarity_color(def).to_html(false), def.display_name, cells, ItemValue.of(def)]

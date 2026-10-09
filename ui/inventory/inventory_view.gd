@@ -11,6 +11,9 @@
 class_name InventoryView
 extends ContainerView
 
+## 139：格子边长变了（基地屏按宽度放大仓库）
+signal cell_px_changed
+
 ## 087（作者定）：格子放大
 const CELL := 60.0
 
@@ -32,12 +35,22 @@ const COLOR_DISPLACE := Color(0.95, 0.72, 0.25, 0.38)
 ## 即将被顶出来的那几件，描一圈边，让人看清代价
 const COLOR_VICTIM := Color(0.98, 0.62, 0.25)
 
-@export var title: String = ""
 ## 中文标签需要系统字体，Godot 内置字体不含 CJK 字形。
 @export var label_font: Font
 
 var inventory: GridInventory:
 	set = set_inventory
+## 139：这块视图自己的格子边长（默认 [constant CELL]）。基地屏的仓库按可用宽度放大；拖拽层对着视图算落点时读它
+var cell_px: float = CELL:
+	set(v):
+		if is_equal_approx(cell_px, v):
+			return
+		cell_px = v
+		if inventory != null:
+			custom_minimum_size = Vector2(inventory.size) * cell_px
+			size = custom_minimum_size
+		cell_px_changed.emit()
+		queue_redraw()
 
 var _preview_cells: Array[Vector2i] = []
 var _preview_origin: Vector2i = Vector2i.ZERO
@@ -69,14 +82,14 @@ func set_inventory(inv: GridInventory) -> void:
 	inventory = inv
 	if inventory != null:
 		inventory.changed.connect(_on_inventory_changed)
-		custom_minimum_size = Vector2(inventory.size) * CELL
+		custom_minimum_size = Vector2(inventory.size) * cell_px
 		size = custom_minimum_size
 	queue_redraw()
 
 
 ## 110：容器变了就重画；格子长了（仓库扩建 `grow_rows`）视图跟着变高
 func _on_inventory_changed() -> void:
-	var want := Vector2(inventory.size) * CELL
+	var want := Vector2(inventory.size) * cell_px
 	if custom_minimum_size != want:
 		custom_minimum_size = want
 		size = want
@@ -86,7 +99,7 @@ func _on_inventory_changed() -> void:
 #region 坐标换算
 ## 本控件内的像素坐标 → 格坐标。可能越界，调用方自行判断。
 func cell_at_local(p: Vector2) -> Vector2i:
-	return Vector2i(floori(p.x / CELL), floori(p.y / CELL))
+	return Vector2i(floori(p.x / cell_px), floori(p.y / cell_px))
 
 
 ## 全局像素坐标 → 格坐标。
@@ -96,7 +109,7 @@ func cell_at_global(p: Vector2) -> Vector2i:
 
 ## 格坐标 → 本控件内的像素坐标（该格左上角）。
 func cell_origin_px(c: Vector2i) -> Vector2:
-	return Vector2(c) * CELL
+	return Vector2(c) * cell_px
 #endregion
 
 
@@ -158,7 +171,7 @@ func _label_visible(_item: ItemInstance) -> bool:
 func _draw() -> void:
 	if inventory == null:
 		return
-	var grid_px := Vector2(inventory.size) * CELL
+	var grid_px := Vector2(inventory.size) * cell_px
 
 	draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BG, true)
 
@@ -171,14 +184,14 @@ func _draw() -> void:
 				col = COLOR_BLOCKED
 			elif not inventory.is_covered(c):
 				col = COLOR_UNUSABLE
-			draw_rect(Rect2(cell_origin_px(c) + Vector2.ONE, Vector2(CELL - 2, CELL - 2)), col, true)
+			draw_rect(Rect2(cell_origin_px(c) + Vector2.ONE, Vector2(cell_px - 2, cell_px - 2)), col, true)
 
 	# 网格线
 	for x in inventory.size.x + 1:
-		var fx := x * CELL
+		var fx := x * cell_px
 		draw_line(Vector2(fx, 0), Vector2(fx, grid_px.y), COLOR_GRID, 1.0)
 	for y in inventory.size.y + 1:
-		var fy := y * CELL
+		var fy := y * cell_px
 		draw_line(Vector2(0, fy), Vector2(grid_px.x, fy), COLOR_GRID, 1.0)
 
 	var font := label_font if label_font != null else get_theme_default_font()
@@ -189,9 +202,9 @@ func _draw() -> void:
 		var b := bag as ItemInstance
 		var bag_cells := b.cells()
 		var bag_anchor := cell_origin_px(b.origin)
-		ItemPainter.draw_item(self, bag_cells, bag_anchor, CELL, COLOR_BAG_FILL, COLOR_BAG_EDGE)
+		ItemPainter.draw_item(self, bag_cells, bag_anchor, cell_px, COLOR_BAG_FILL, COLOR_BAG_EDGE)
 		ItemPainter.draw_label(
-			self, bag_cells, bag_anchor, CELL, Names.of(b.def), font, 11, Color("79839a")
+			self, bag_cells, bag_anchor, cell_px, Names.of(b.def), font, 11, Color("79839a")
 		)
 
 	# 物品。休眠的信仰道具（8-4：不是激活的那个信仰）画灰、标「休眠」
@@ -215,20 +228,20 @@ func _draw() -> void:
 			body = body.lerp(COLOR_BAG_FILL, 0.7)
 			edge = edge.lerp(COLOR_BAG_EDGE, 0.7)
 			text_color = COLOR_TEXT.darkened(0.35)
-		ItemPainter.draw_item(self, cells, anchor, CELL, body, edge)
+		ItemPainter.draw_item(self, cells, anchor, cell_px, body, edge)
 		if _label_visible(item):
 			ItemPainter.draw_label(
-				self, cells, anchor, CELL, Names.of(item.def) + ("
+				self, cells, anchor, cell_px, Names.of(item.def) + ("
 休眠" if dormant else ""), font, 13, text_color
 			)
 		if highlights.has(item.uid):
 			var hb := item.def.shape.size_rotated(item.rotation)
 			var pulse := 0.6 + 0.4 * (0.5 + 0.5 * sin(Time.get_ticks_msec() / 180.0))
-			draw_rect(Rect2(anchor - Vector2(3, 3), Vector2(hb) * CELL + Vector2(6, 6)), Color(COLOR_HIGHLIGHT, pulse), false, 3.0)
+			draw_rect(Rect2(anchor - Vector2(3, 3), Vector2(hb) * cell_px + Vector2(6, 6)), Color(COLOR_HIGHLIGHT, pulse), false, 3.0)
 		if badges.has(item.uid):
 			var badge := String(badges[item.uid])
 			var box := item.def.shape.size_rotated(item.rotation)
-			var at := anchor + Vector2(box.x * CELL - 18.0, 4.0)
+			var at := anchor + Vector2(box.x * cell_px - 18.0, 4.0)
 			draw_rect(Rect2(at, Vector2(16, 16)), UiPalette.HEAL, true)
 			draw_string(font, at + Vector2(2.0, 13.0), badge, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("101216"))
 
@@ -246,7 +259,7 @@ func _draw() -> void:
 			var p := _preview_origin + c
 			if p.x < 0 or p.y < 0 or p.x >= inventory.size.x or p.y >= inventory.size.y:
 				continue
-			draw_rect(Rect2(cell_origin_px(p), Vector2(CELL, CELL)), tint, true)
+			draw_rect(Rect2(cell_origin_px(p), Vector2(cell_px, cell_px)), tint, true)
 
 		# 被顶的那几件描一圈，让人放手前就知道要付什么代价
 		for uid in _preview_victims:
@@ -256,7 +269,7 @@ func _draw() -> void:
 			for c in victim.cells():
 				var p := victim.origin + c
 				draw_rect(
-					Rect2(cell_origin_px(p) + Vector2(2, 2), Vector2(CELL - 4, CELL - 4)),
+					Rect2(cell_origin_px(p) + Vector2(2, 2), Vector2(cell_px - 4, cell_px - 4)),
 					COLOR_VICTIM, false, 2.0
 				)
 
@@ -312,7 +325,7 @@ func _draw_markers(
 			continue
 		var rect := Rect2(
 			cell_origin_px(cell) + Vector2(inset, inset),
-			Vector2(CELL - inset * 2.0, CELL - inset * 2.0)
+			Vector2(cell_px - inset * 2.0, cell_px - inset * 2.0)
 		)
 		var lit := _marker_lit(item, cell, filter)
 		if lit:

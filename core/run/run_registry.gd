@@ -9,9 +9,6 @@
 class_name RunRegistry
 extends RefCounted
 
-## 地图作用域：占位，M3 再填
-const MAP_EFFECTS := {}
-
 ## 一局的规则（059 的 buff 骨架）：体力上限、开局钱、多搜几次、商店价、幸运。**不依赖扳机，激活即生效。**
 const RUN_EFFECTS := {
 	&"vitality_max_bonus": "res://core/run/effects/vitality_max_bonus.gd",
@@ -25,6 +22,11 @@ const RUN_EFFECTS := {
 	&"free_losses": "res://core/run/effects/free_losses.gd",
 	&"stat_bonus": "res://core/run/effects/stat_bonus.gd",
 	&"carry_capacity_bonus": "res://core/run/effects/carry_capacity_bonus.gd",     # 129
+	# 136：角色的机制类被动
+	&"travel_discount": "res://core/run/effects/travel_discount.gd",
+	&"rest_bonus": "res://core/run/effects/rest_bonus.gd",
+	&"erosion_resist": "res://core/run/effects/erosion_resist.gd",
+	&"battle_reward_mult": "res://core/run/effects/battle_reward_mult.gd",
 }
 
 ## 一局的机制（069）：难度清单里开的那些
@@ -54,6 +56,7 @@ const EVENT_CONDITIONS := {
 	&"has_flag": "res://core/run/events/conditions/has_flag.gd",
 	&"faith_active": "res://core/run/events/conditions/faith_active.gd",
 	&"rest_part_unused": "res://core/run/events/conditions/rest_part_unused.gd",
+	&"skill_ready": "res://core/run/events/conditions/skill_ready.gd",     # 136
 }
 
 const EVENT_OUTCOMES := {
@@ -88,6 +91,8 @@ const RUN_SKILLS := {
 	&"passive": "res://core/run/skills/passive_skill.gd",
 	&"assault": "res://core/run/skills/assault_skill.gd",
 	&"evade": "res://core/run/skills/evade_skill.gd",
+	&"slip": "res://core/run/skills/slip_skill.gd",     # 136
+	&"second_wind": "res://core/run/skills/second_wind_skill.gd",     # 136
 }
 
 ## 信力（082）：信仰指定的行为
@@ -174,7 +179,6 @@ const TECH_EFFECTS := {
 
 
 const TABLES := {
-	&"map_effect": MAP_EFFECTS,
 	&"run_effect": RUN_EFFECTS,
 	&"event_condition": EVENT_CONDITIONS,
 	&"event_outcome": EVENT_OUTCOMES,

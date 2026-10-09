@@ -5,12 +5,12 @@ static func run(t: TestCase) -> void:
 	t.begin("ItemShape")
 
 	# --- 构造与基本属性 ---
-	var l_shape := ItemShape.from_ascii(["##", "#."])  # L 形三格
+	var l_shape := ItemShape.from_ascii(["11", "10"])  # L 形三格
 	t.eq(l_shape.cell_count(), 3, "L 形应占 3 格")
 	t.check(l_shape.is_valid(), "L 形应为合法形状")
 	t.eq(l_shape.size_rotated(0), Vector2i(2, 2), "L 形包围盒为 2x2")
 
-	var bar := ItemShape.from_ascii(["#", "#", "#"])  # 竖向 1x3
+	var bar := ItemShape.from_ascii(["1", "1", "1"])  # 竖向 1x3
 	t.eq(bar.size_rotated(0), Vector2i(1, 3), "竖条 rot0 包围盒 1x3")
 	t.eq(bar.size_rotated(1), Vector2i(3, 1), "竖条 rot1 包围盒 3x1")
 	t.eq(bar.size_rotated(2), Vector2i(1, 3), "竖条 rot2 回到 1x3")
@@ -40,16 +40,16 @@ static func run(t: TestCase) -> void:
 	)
 
 	# --- 对称形状的可辨旋转数 ---
-	var square := ItemShape.from_ascii(["##", "##"])
+	var square := ItemShape.from_ascii(["11", "11"])
 	t.eq(square.distinct_rotation_count(), 1, "2x2 方块只有 1 种可辨朝向")
 	t.eq(bar.distinct_rotation_count(), 2, "长条有 2 种可辨朝向")
 	t.eq(l_shape.distinct_rotation_count(), 4, "L 形有 4 种可辨朝向")
 
-	var single := ItemShape.from_ascii(["#"])
+	var single := ItemShape.from_ascii(["1"])
 	t.eq(single.distinct_rotation_count(), 1, "单格只有 1 种可辨朝向")
 
 	# --- 缓存随 cells 改写失效 ---
-	var mutable := ItemShape.from_ascii(["#"])
+	var mutable := ItemShape.from_ascii(["1"])
 	t.eq(mutable.size_rotated(0), Vector2i(1, 1), "改写前为 1x1")
 	mutable.cells = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)] as Array[Vector2i]
 	t.eq(mutable.size_rotated(0), Vector2i(3, 1), "改写 cells 后缓存应失效并重算")
@@ -65,7 +65,7 @@ static func run(t: TestCase) -> void:
 	t.check(not dup.is_valid(), "含重复格的形状非法")
 
 	# --- 不连通形状：允许存在，由内容设计决定用不用 ---
-	var split := ItemShape.from_ascii(["#.#"])
+	var split := ItemShape.from_ascii(["101"])
 	t.check(split.is_valid(), "不连通形状在数据层视为合法")
 	t.eq(split.cell_count(), 2, "不连通形状占 2 格")
 
@@ -82,10 +82,10 @@ static func run_bit_notation(t: TestCase) -> void:
 	t.check(l_shape.cells_rotated(0).has(Vector2i(0, 1)), "左下角占格")
 	t.check(not l_shape.cells_rotated(0).has(Vector2i(1, 1)), "右下角是 0，不占")
 
-	# 与旧的 # 写法等价 —— from_ascii 两种字符都认
+	# from_bits 就是把串按行拆开交给 from_ascii：两条路结果相同
 	t.eq(ItemShape.from_bits("11\n10").cells_rotated(0),
-		ItemShape.from_ascii(["##", "#."]).cells_rotated(0),
-		"0/1 与 #/. 两种写法结果相同")
+		ItemShape.from_ascii(["11", "10"]).cells_rotated(0),
+		"from_bits 与 from_ascii 的行写法结果相同")
 
 	# 空白与多余换行不影响结果，方便在 JSON 里用多行字符串书写
 	t.eq(ItemShape.from_bits("\n  11 \n  10  \n").cells_rotated(0),

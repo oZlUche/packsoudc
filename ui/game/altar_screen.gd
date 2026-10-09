@@ -6,13 +6,11 @@
 ## 神坛和休息是两份独立的机会，互不占用。「返回」= 回地图；没用过就还能再开。
 extends GameScreen
 
-const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
 const TABLE_ID := 4
 
 var _node: MapNode = null
 var _table: GridInventory = null
 var _table_view: InventoryView
-var _drag: DragLayer
 var _head: Label
 var _preview: Label
 var _line: Label
@@ -63,26 +61,13 @@ func open(payload: Dictionary) -> void:
 	_actions_box = _vbox(6)
 	left.add_child(_actions_box)
 
-	var inv := InventoryPanelScript.new()
-	_drag = DragLayer.new()
-	_drag.label_font = font
-	inv.setup(run, font, _drag)
-	inv.quick_target = _table     # 棋盘上双击 → 祭品台
-	inv.hint_sink = func(text: String): _line.text = text
-	_inv = inv
-	row.add_child(inv)
+	_inv = _mount_bag(row, _table_view, func(text: String): _line.text = text, _table)     # 棋盘上双击 → 祭品台
 	_table_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): take_back(uid))
-	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(_drag)
-	_drag.register_view(_table_view)
 	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
 		if target != _table:
 			return true
 		var d := flow.run.active_faith()
 		return d != null and d.accepts_offering(inst.def) and _altar_open()
-	var tip := HoverTip.new(font)
-	add_child(tip)
-	tip.watch(_table_view)
 	_table.changed.connect(_refresh)
 	run.faith_power.changed.connect(func(_id: StringName, _p: int, _t: int): _refresh())
 	_refresh()
@@ -94,16 +79,14 @@ func take_back(uid: int) -> bool:
 	var inst := _table.get_item(uid)
 	if inst == null:
 		return false
-	if InventoryService.transfer_auto(_table, uid, flow.run.board):
-		return true
-	return InventoryService.transfer_auto(_table, uid, flow.run.storage)
+	return _take_to_player(_table, uid) != ""
 
 
 ## 把棋盘 / 地上的一件放上祭品台（不能献的不收）。测试直接调
 func put_on_table(uid: int) -> bool:
 	var run := flow.run
 	var def := run.active_faith()
-	var from: ItemContainer = run.board if run.board.has_item(uid) else (run.storage if run.storage.has_item(uid) else null)
+	var from := run.holder_of(uid)
 	if from == null or def == null or not _altar_open():
 		return false
 	var inst := from.get_item(uid)
@@ -186,8 +169,7 @@ func preview_text() -> String:
 ## 特殊操作那一列：到了等级的才有按钮；等级变了重画
 func _rebuild_actions() -> void:
 	var run := flow.run
-	for ch in _actions_box.get_children():
-		ch.queue_free()
+	UiTheme.clear_children(_actions_box)
 	_action_btns.clear()
 	var actions := (AltarModule.of(run).actions() if AltarModule.of(run) != null else [])
 	if actions.is_empty():

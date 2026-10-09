@@ -3,45 +3,30 @@
 ## 三个作者定的角色（安德烈乌斯 / 布鲁图斯 / 马库斯）走管线。期望从数据推：角色文件里写多少就断言多少。
 extends RefCounted
 
+## 与 Support.paths("skills") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_skills_run.json"
 const META := "user://test_skills_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var characters: Array[CharacterDef]
-	var hunter_defs: Dictionary
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["characters", "hunter_defs"])
 
 
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.characters = GameFlow.load_characters()
-	c.hunter_defs = GameFlow.load_hunters()
-	return c
-
-
-static func _cleanup() -> void:
-	for p in [SAVE, META]:
-		if FileAccess.file_exists(p):
-			DirAccess.remove_absolute(p)
-
-
-static func _character(c: Content, id: StringName) -> CharacterDef:
+static func _character(c: TestSupport.Content, id: StringName) -> CharacterDef:
 	for ch in c.characters:
 		if ch.id == id:
 			return ch
 	return null
+
+
+## 角色文件里有主动一击的技能（期望值；一局里的账在 RunSkills.active_skills）
+static func _active(ch: CharacterDef) -> Array[RunSkill]:
+	var out: Array[RunSkill] = []
+	for s in ch.skills:
+		if s != null and (s as RunSkill).is_active():
+			out.append(s)
+	return out
 
 
 ## 角色的技能单独编出来的上下文（期望值）
@@ -52,7 +37,7 @@ static func _expected(ch: CharacterDef) -> RunContext:
 	return ctx
 
 
-static func _start(c: Content, ch: CharacterDef, diff: DifficultyDef = null, defs: Dictionary = {}) -> RunState:
+static func _start(c: TestSupport.Content, ch: CharacterDef, diff: DifficultyDef = null, defs: Dictionary = {}) -> RunState:
 	for seed in range(1, 60):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], ch, [], diff, defs)
 		if s != null:
@@ -83,7 +68,7 @@ static func run_pipeline(t: TestCase) -> void:
 	var back := ContentImporter.import_character(JSON.parse_string(text), ContentImporter.Context.new(), ImportReport.new())
 	t.eq(ContentExporter.to_json(ContentExporter.export_character(back)), text, "导出 → 导入 → 再导出逐字节相同")
 	t.eq(back.skills.size(), 3, "三个技能")
-	t.eq(back.active_skills().size(), 2, "两个有主动一击（突击、躲避），眼力是被动")
+	t.eq(_active(back).size(), 2, "两个有主动一击（突击、躲避），眼力是被动")
 	var ctx := _expected(back)
 	t.eq([ctx.scout_range, ctx.sense_mult, ctx.flee_bonus, ctx.free_losses, float(ctx.stat_bonus.get(&"max_hp", 0.0))], [3.0, 0.5, 0.25, 1, 20.0], "被动全编进上下文")
 	t.check(back.skills_summary().contains("眼力") and back.skills_summary().contains("突击") and back.skills_summary().contains("30%"), "summary：%s" % back.skills_summary())
@@ -106,7 +91,7 @@ static func run_pipeline(t: TestCase) -> void:
 
 
 static func run_authored_characters(t: TestCase) -> void:
-	t.begin("技能 · 作者定的三个角色：安德烈乌斯（躲避、免罚一败）、布鲁图斯（坚韧：生命 / 耐力 / 体力更高）、马库斯（突击）；被动进上下文、基线加成盖到基线上")
+	t.begin("技能 · 作者定的三个角色（136 改过）：安德烈乌斯（脱身、免罚一败）、布鲁图斯（咬牙；数值在基线里，不再做成被动）、马库斯（突击）；被动进上下文、基线加成盖到基线上")
 	var c := _content()
 	for id in [&"andreus", &"brutus", &"marcus"]:
 		t.not_null(_character(c, id), "有角色 %s" % id)
@@ -115,12 +100,12 @@ static func run_authored_characters(t: TestCase) -> void:
 	var marcus := _character(c, &"marcus")
 	if brutus == null or andreus == null or marcus == null:
 		return
-	t.check(andreus.active_skills().size() >= 1 and andreus.active_skills()[0] is EvadeSkill, "安德烈乌斯有躲避")
+	t.check(_active(andreus).size() >= 1 and _active(andreus)[0] is SlipSkill, "安德烈乌斯有脱身（136：替换了躲避）")
 	t.check(_expected(andreus).free_losses >= 1, "安德烈乌斯免罚至少一败")
-	t.check(marcus.active_skills().size() >= 1 and marcus.active_skills()[0] is AssaultSkill, "马库斯有突击")
-	t.check(brutus.active_skills().is_empty() and not brutus.skills.is_empty(), "布鲁图斯只有被动")
+	t.check(_active(marcus).size() >= 1 and _active(marcus)[0] is AssaultSkill, "马库斯有突击")
+	t.check(_active(brutus).size() == 1 and _active(brutus)[0] is SecondWindSkill, "布鲁图斯有咬牙（136）")
 	var want := _expected(brutus)
-	t.check(float(want.stat_bonus.get(&"max_hp", 0.0)) > 0.0 and want.vitality_max_bonus > 0, "坚韧：生命与体力都有加成")
+	t.check(want.stat_bonus.is_empty() and want.vitality_max_bonus == 0, "136：布鲁图斯的被动里不再有生命 / 耐力 / 体力加成（都在基线里）")
 	for raw in [andreus, brutus, marcus]:
 		var ch := raw as CharacterDef
 		var s := _start(c, ch)
@@ -138,7 +123,7 @@ static func run_authored_characters(t: TestCase) -> void:
 			t.eq(eff.value_of(k), base.value_of(k) + float(w.stat_bonus.get(k, 0.0)), "%s：基线 %s = 角色 + 加成" % [ch.id, k])
 		var spec := s.compile_player()
 		t.eq(spec.max_hp_int(), int(eff.value_of(&"max_hp")) + _board_hp(spec), "%s：编译出来的生命按加成后的基线" % ch.id)
-		t.check(s.skills != null and s.skills.active_skills().size() == ch.active_skills().size(), "%s：技能账里的主动技能与角色一致" % ch.id)
+		t.check(s.skills != null and s.skills.active_skills().size() == _active(ch).size(), "%s：技能账里的主动技能与角色一致" % ch.id)
 
 
 ## 棋盘上道具自带的生命（开局包里可能有）
@@ -211,10 +196,24 @@ static func run_assault_and_free_loss(t: TestCase) -> void:
 	t.eq(s2.vitality.current, v0 - cost, "配额用完：照扣 %d" % cost)
 
 
+## 136：躲避不再挂在安德烈乌斯身上 —— 测构件用一个只带躲避的副本
+static func _evader(base: CharacterDef) -> CharacterDef:
+	if base == null:
+		return null
+	var ch := base.duplicate(true) as CharacterDef
+	var ev := EvadeSkill.new()
+	ev.id = &"evade"
+	ev.display_name = "躲避"
+	ev.uses = 2
+	ev.cooldown_steps = 4
+	ch.skills = [ev] as Array[RunSkill]
+	return ch
+
+
 static func run_evade(t: TestCase) -> void:
-	t.begin("技能 · 躲避：用了之后猎手够不着，走够步数才又够得着")
+	t.begin("技能 · 躲避（构件，136 起没有角色带它）：用了之后猎手够不着，走够步数才又够得着")
 	var c := _content()
-	var andreus := _character(c, &"andreus")
+	var andreus := _evader(_character(c, &"andreus"))
 	var hid: Array = c.hunter_defs.keys()
 	hid.sort()
 	if andreus == null or hid.is_empty():
@@ -265,7 +264,7 @@ static func run_save_load(t: TestCase) -> void:
 	t.begin("技能 · 存档：次数、冷却、立的旗、躲避、免罚次数都跟着走；读档由持有方按 id 接回角色")
 	var c := _content()
 	var marcus := _character(c, &"marcus")
-	_cleanup()
+	Support.cleanup("skills")
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = [c.chapter] as Array[ChapterDef]
 	f.characters = c.characters
@@ -297,4 +296,4 @@ static func run_save_load(t: TestCase) -> void:
 	t.check(f2.run.skills.is_armed(skill.id), "旗子还立着")
 	t.eq(f2.run.events.losses_forgiven, 1, "免罚次数还在")
 	t.eq(f2.run.skills.can_use(skill.id), run.skills.can_use(skill.id), "能不能用的判断一致")
-	_cleanup()
+	Support.cleanup("skills")

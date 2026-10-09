@@ -14,10 +14,6 @@ extends Resource
 @export var rules: Array[AbilityRule] = []
 
 
-func is_active() -> bool:
-	return not rules.is_empty()
-
-
 ## 把基础值写进一份 StatSet
 func seed_stats(into: StatSet) -> void:
 	for key in base_stats:

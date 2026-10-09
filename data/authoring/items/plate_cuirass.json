@@ -5,9 +5,9 @@
     "en": "Plate Cuirass"
   },
   "shape": [
-    "111",
-    "111",
-    "111"
+    "1111",
+    "0110",
+    "1111"
   ],
   "rarity": 2,
   "value": 40,
@@ -19,7 +19,7 @@
   ],
   "combat": {
     "base_stats": {
-      "max_shield": 45
+      "max_shield": 50
     }
   }
 }

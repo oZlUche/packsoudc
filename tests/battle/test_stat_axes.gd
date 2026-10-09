@@ -83,9 +83,6 @@ static func run_compiled_axes(t: TestCase) -> void:
 	t.eq(rt.axis_system(AXIS), 5, "spec.axes 的 5 层种进系统层")
 	t.eq(rt.axis_stacks(AXIS), 0, "内容层是空的")
 
-	rt.clear_axis(AXIS)
-	t.eq(rt.axis_total(AXIS), 5, "对手净化只动内容层，系统层的 5 层灵巧不动")
-
 	# 被人加了 2 层笨拙：层数相抵，显示成「灵巧 ×3」
 	rt.shift_axis(AXIS, -2)
 	t.eq(rt.axis_total(AXIS), 3, "5 − 2 = 3 层")

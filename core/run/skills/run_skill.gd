@@ -15,6 +15,8 @@ extends Resource
 @export_multiline var description: String = ""
 ## 常驻的效果：一局规则（体力上限、逃跑、属性加成……）或掉落
 @export var passive: Array[Effect] = []
+## 136：战斗里常驻的规则（布鲁图斯「坚韧」：低血一次性护盾）。编译玩家时和套装 / buff 的规则一起挂到单位上
+@export var rules: Array[AbilityRule] = []
 ## 主动使用的次数，-1 = 不限；被动技能不看它
 @export var uses: int = -1
 ## 用一次之后要走几步才能再用；0 = 没有冷却
@@ -24,6 +26,11 @@ extends Resource
 ## 有没有主动的一击（有 = 地图屏上有按钮）
 func is_active() -> bool:
 	return false
+
+
+## 136：地图右栏的按钮能不能直接按（脱身只在战前准备屏 / 猎手事件屏上用：地图上按钮灰着）
+func map_usable() -> bool:
+	return true
 
 
 ## 主动使用。返回空串 = 用了；否则是不能用的原因。[RunSkills] 已经查过次数与冷却，这里只做自己的事

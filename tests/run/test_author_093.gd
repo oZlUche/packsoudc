@@ -2,23 +2,18 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
-const SAVE := "user://test_093_run.json"
-const META := "user://test_093_meta.json"
-const SETTINGS := "user://test_093_settings.json"
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
+const Support := preload("res://tests/run/flow_support.gd")
 
 
-static func _cleanup() -> void:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
-	GameSettings.remove(SETTINGS)
+## 一件道具的体积档名（格子数 → 档位 → 名字）
+static func _grade(def: ItemDef) -> String:
+	return ItemVolume.grade_name(ItemVolume.grade_of_cells(ItemVolume.cells_of(def)))
 
 
+## 这一层的套件要信仰定义表（神坛要知道献祭给谁）
 static func _flow(c) -> GameFlow:
-	var f: GameFlow = NodeScreens._flow(c, 10000.0)
-	f.save_path = SAVE
-	f.meta_path = META
-	f.settings_path = SETTINGS
+	var f := Support.flow(c, "093")
 	f.faith_defs = FaithDef.load_all()
 	return f
 
@@ -32,7 +27,7 @@ static func _event(name: StringName, side: int, payload: Dictionary) -> BattleEv
 
 
 static func run_faith_files(t: TestCase) -> void:
-	t.begin("093 · 信仰文件：蛮神 / 日神 / 自然 / 大地各一份（旧的暴力 / 太阳与火合并改名），阈值、行为、献祭规矩、各级效果都从数据来；体积五档；力量的符号归蛮神")
+	t.begin("093 · 信仰文件：蛮神 / 日神 / 自然 / 大地各一份（旧的暴力 / 太阳与火合并改名），阈值、行为、献祭规矩、各级效果都从数据来；体积五档；蛮神的护符归蛮神")
 	var defs := FaithDef.load_all()
 	for id in [&"brute", &"sun", &"nature", &"earth", &"hunt", &"skill", &"church"]:
 		t.check(defs.has(id), "有 %s" % id)
@@ -47,13 +42,13 @@ static func run_faith_files(t: TestCase) -> void:
 	t.eq(brute.perks.size(), 5, "五条效果（含 4 级「不死 10 秒」与 1 级「祈求赐福」）")
 	var db := ItemDatabase.new()
 	db.load_dir()
-	t.eq(db.get_def(&"strength_sigil").faith_tag(), &"faith:brute", "力量的符号归蛮神")
-	# 体积
-	t.eq(ItemVolume.grade(db.get_def(&"knife")), ItemVolume.Grade.TINY, "匕首 1 格：极小")
-	t.eq(ItemVolume.grade(db.get_def(&"shortsword")), ItemVolume.Grade.SMALL, "短剑 2 格：小")
-	t.eq(ItemVolume.grade(db.get_def(&"core")), ItemVolume.Grade.MEDIUM, "能量核心 5 格：中")
-	t.eq(ItemVolume.grade(db.get_def(&"plate_cuirass")), ItemVolume.Grade.LARGE, "板甲 9 格：大")
-	t.eq(ItemVolume.grade_of_cells(13), ItemVolume.Grade.HUGE, "13 格：极大")
+	t.eq(db.get_def(&"charm_brute").faith_tag(), &"faith:brute", "蛮神的护符归蛮神")
+	# 体积（档位 = 格子数查表，名字跟着序号）
+	t.eq(_grade(db.get_def(&"knife")), "极小", "匕首 1 格：极小")
+	t.eq(_grade(db.get_def(&"shortsword")), "小", "短剑 2 格：小")
+	t.eq(_grade(db.get_def(&"core")), "中", "能量核心 5 格：中")
+	t.eq(_grade(db.get_def(&"plate_cuirass")), "大", "板甲 9 格：大")
+	t.eq(ItemVolume.grade_name(ItemVolume.grade_of_cells(13)), "极大", "13 格：极大")
 	# 献祭规矩：一件满足几条算几次；2^稀有度 × 倍率（104：倍率照神明总表）
 	var sword := db.get_def(&"shortsword")     # 稀有度 1、武器、金属、2 格
 	t.eq(brute.offering_value(sword), 4, "蛮神：短剑只算「武器」一条 → 2 × 2 = 4")
@@ -62,7 +57,7 @@ static func run_faith_files(t: TestCase) -> void:
 	t.eq(sun.offering_value(sword), 10, "日神：短剑算「金属」→ 2 × 5 = 10（体积是小不是中）")
 	t.eq(sun.offering_value(db.get_def(&"core")), 40, "日神：能量核心稀有度 3、体积正好为中、不是金属 → 只算一条：2^3 × 5 = 40")
 	var earth: FaithDef = defs[&"earth"]
-	t.eq(earth.offering_value(db.get_def(&"plate_cuirass")), 4 * 5 * 9, "大地：板甲稀有度 2 → 2^2 × 5 × 9 格 = 180")
+	t.eq(earth.offering_value(db.get_def(&"plate_cuirass")), 4 * 5 * 10, "大地：板甲稀有度 2 → 2^2 × 5 × 10 格 = 200（143：板甲 10 格）")
 	t.eq(earth.offering_value(sword), 0, "大地不收小东西")
 	var nature: FaithDef = defs[&"nature"]
 	t.eq(nature.offering_value(db.get_def(&"ration")), 5 + 5, "自然：口粮既是自然又是食物 → 两条各 1 × 5")
@@ -130,7 +125,7 @@ static func run_deeds_and_summary(t: TestCase) -> void:
 	t.eq(float(s["healed"]), 4.0, "我方回血 4（敌方的、扣血的不算）")
 	t.eq(int(s["fired_total"]), 2, "我方出手 2 次（敌方的不算）")
 	var fi: Array = s["fired_items"]
-	t.check(fi.size() == 1 and int(fi[0]["count"]) == 2 and (fi[0]["tags"] as Array).has("nature") and int(fi[0]["cells"]) == 4, "出手的那件：长弓，带 nature，4 格，2 次")
+	t.check(fi.size() == 1 and int(fi[0]["count"]) == 2 and (fi[0]["tags"] as Array).has("nature") and int(fi[0]["cells"]) == 6, "出手的那件：长弓，带 nature，6 格（143），2 次")
 
 
 
@@ -223,11 +218,14 @@ static func run_faith_call(t: TestCase) -> void:
 		t.check(ItemVolume.cells_of(d) == 1 and d.tags.has(&"treasure") and d.faith_tag() == StringName("faith:" + fid), "%s：1 格、珍宝、归 %s" % [d.display_name, fid])
 		if String(extra[fid]) != "":
 			t.check(d.tags.has(StringName(extra[fid])), "带流派标签 %s" % extra[fid])
-		t.check(d.combat == null and d.faith_bonuses.is_empty(), "没有别的效果")
+		if fid == "brute":     # 142：力量的符号并进来了 —— 开战血怒 + 相邻武器的增益槽
+			t.check(d.combat == null and d.faith_bonuses.size() == 1 and d.adjacency != null, "蛮神的护符带力量的符号那套：信力加成 + 增益槽")
+		else:
+			t.check(d.combat == null and d.faith_bonuses.is_empty(), "没有别的效果")
 		t.eq(d.is_bag, fid == "earth", "只有大地的是包")
 	t.check(MetaState.keeps(db.get_def(&"charm_earth")) and not MetaState.keeps(db.get_def(&"bag_small")), "大地的护符虽是包也留在局外；普通包不留")
 	# 事件链
-	var events := GameFlow.load_events()
+	var events := EventPlacer.load_all()
 	var root: EventDef = events.get(&"faith_call", null)
 	t.check(root != null and root.options.size() == 2, "「触发信仰」：靠近 / 离开")
 	if root != null:
@@ -295,7 +293,7 @@ static func run_faith_call(t: TestCase) -> void:
 			call_node = run.map.get_node(id)
 	if call_node == null:
 		t.check(true, "（这张图没有事件点，跳过走一遍）")
-		_cleanup()
+		Support.cleanup("093")
 		return
 	run.events.handle(call_node)
 	t.check(run.events.pending_event() != null and run.events.pending_event().id == &"faith_call", "踩上：「触发信仰」")
@@ -317,4 +315,4 @@ static func run_faith_call(t: TestCase) -> void:
 			if fid == "earth":
 				t.check(run.board.acts_as_bag(charm.def), "大地的护符在棋盘上是个包")
 	NodeScreens._settle(f)
-	_cleanup()
+	Support.cleanup("093")

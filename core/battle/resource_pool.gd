@@ -22,9 +22,9 @@ var _max: Dictionary = {}      # StringName -> int
 var _regen_at: Dictionary = {}  # StringName -> int
 
 
-func define(key: StringName, max_value: int, fill: bool = true) -> void:
+func define(key: StringName, max_value: int) -> void:
 	_max[key] = maxi(0, max_value)
-	_current[key] = _max[key] if fill else 0
+	_current[key] = _max[key]
 
 
 func has(key: StringName) -> bool:
@@ -37,10 +37,6 @@ func current(key: StringName) -> int:
 
 func maximum(key: StringName) -> int:
 	return int(_max.get(key, 0))
-
-
-func is_empty_of(key: StringName) -> bool:
-	return current(key) <= 0
 
 
 func can_afford(key: StringName, amount: int) -> bool:

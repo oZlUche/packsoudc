@@ -124,13 +124,13 @@ effects = Array[ExtResource("6_ee441")]([SubResource("Resource_tjfa2")])
 [sub_resource type="Resource" id="Resource_po6ms"]
 script = ExtResource("13_0es67")
 base_stats = {
-"damage": 9
+"damage": 12
 }
 rules = Array[ExtResource("2_amd6d")]([SubResource("Resource_cbx2s"), SubResource("Resource_po6bq")])
 
 [sub_resource type="Resource" id="Resource_o0hhv"]
 script = ExtResource("17_2qtf3")
-cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(0, 2)])
 
 [resource]
 script = ExtResource("16_qanre")

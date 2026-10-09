@@ -23,11 +23,7 @@ func apply(ctx: RuleContext) -> void:
 		var have := inst.stacks
 		var n := maxi(1, roundi(float(have) * ratio))
 		if not keep_from:
-			var removed := who.remove_buff_stacks(from, have)
-			if removed > 0:
-				ctx.battle.emit(BattleEvent.STATUS_UNSTACKED, who.side, {
-					"buff": String(from), "delta": -removed, "stacks": who.stacks_of(from), "reason": "converted",
-				})
+			RemoveStatus.take(ctx, who, from, have, "converted")
 		ApplyStatus.give(ctx, who, to, n)
 
 

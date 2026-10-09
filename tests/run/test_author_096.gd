@@ -2,31 +2,19 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
+## 与 Support.paths("096") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_096_run.json"
 const META := "user://test_096_meta.json"
 const SETTINGS := "user://test_096_settings.json"
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
-
-
-static func _cleanup() -> void:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
-	GameSettings.remove(SETTINGS)
-
-
-static func _flow(c, hp: float) -> GameFlow:
-	var f: GameFlow = NodeScreens._flow(c, hp)
-	f.save_path = SAVE
-	f.meta_path = META
-	f.settings_path = SETTINGS
-	return f
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func run_tag_data(t: TestCase) -> void:
 	t.begin("096 · 标签是内容：data/tags 装回 TagRegistry；名字 / 说明按语言；没登记的原词；faith:<id> 写成「信仰：神名」；标签词条")
 	TagRegistry.reset()
 	t.check(TagRegistry.ids().size() >= 39, "装回了 %d 个标签" % TagRegistry.ids().size())
-	t.check(TagRegistry.has(&"weapon") and TagRegistry.has(&"metal") and TagRegistry.has(&"rapid"), "武器 / 金属 / 快攻都登记了")
+	t.check(TagRegistry.get_def(&"weapon") != null and TagRegistry.get_def(&"metal") != null and TagRegistry.get_def(&"rapid") != null, "武器 / 金属 / 快攻都登记了")
 	t.eq(TagRegistry.name_of(&"weapon"), "武器", "中文名")
 	t.eq(TagRegistry.name_of(&"weapon", "en"), "Weapon", "英文名")
 	t.check(TagRegistry.describe(&"weapon") != "" and TagRegistry.describe(&"weapon", "en") != TagRegistry.describe(&"weapon"), "两种语言的说明")
@@ -72,7 +60,7 @@ static func run_damage_type_data(t: TestCase) -> void:
 	t.eq(Glossary.damage_type_name(&"bleed"), "流血", "Glossary 走数据")
 	var dd := DealDamage.new()
 	dd.damage_type = &"fire"
-	t.eq(dd.describe(), "造成 火焰 伤害", "效果说明用名字")
+	t.eq(dd.describe(), "造成火焰伤害", "效果说明用名字（142：不再夹空格）")
 	var saved := UiText.lang
 	UiText.lang = "en"
 	t.eq(Glossary.damage_type_name(&"bleed"), "Bleed", "英文模式")
@@ -134,7 +122,7 @@ static func run_faith_bonus_lit(t: TestCase) -> void:
 	t.begin("096（作者定）· 悬浮窗的信仰加成词条：局里生效的白、没生效的灰（没激活 / 阶不够 / 别的神）；局外原色；信仰道具那行写现在的状态")
 	var c := NodeScreens._content()
 	var bow := c.items.get_def(&"blessed_longbow")
-	var sigil := c.items.get_def(&"strength_sigil")
+	var sigil := c.items.get_def(&"charm_brute")
 	if bow == null or sigil == null or bow.faith_bonuses.is_empty():
 		t.check(false, "缺道具")
 		return
@@ -157,7 +145,7 @@ static func run_faith_bonus_lit(t: TestCase) -> void:
 	t.check(not Glossary.strip_bbcode(dormant).contains("休眠"), "别的神激活：不写「休眠」两个字，灰色就是状态")
 	t.check(not ItemTooltip.faith_lit(bow, ItemTooltip.faith_status()), "狩猎的弓在蛮神激活时不亮")
 	var sig_text := ItemTooltip.describe(ItemInstance.create(sigil))
-	t.check(ItemTooltip.faith_lit(sigil, ItemTooltip.faith_status()), "蛮神的符号在蛮神激活时亮（107：不再写「已激活（Lv.2）」，亮色就是状态）")
+	t.check(ItemTooltip.faith_lit(sigil, ItemTooltip.faith_status()), "蛮神的护符在蛮神激活时亮（107：不再写「已激活（Lv.2）」，亮色就是状态）")
 	t.check(not Glossary.strip_bbcode(sig_text).contains("已激活"), "状态尾巴去掉了")
 	var lit_n := 0
 	for fb in sigil.faith_bonuses:
@@ -193,7 +181,7 @@ static func run_search_encounter_won_sees_loot(t: TestCase) -> void:
 	if found.is_empty():
 		t.check(false, "找不到带搜索点的种子")
 		return
-	var f := _flow(c, 100000.0)
+	var f := Support.flow(c, "096", 100000.0)
 	var run := f.begin(c.chapter, kit, int(found["seed"]))
 	if run == null:
 		t.check(false, "开局")
@@ -209,7 +197,7 @@ static func run_search_encounter_won_sees_loot(t: TestCase) -> void:
 	var session: SearchSession = run.events.current_search
 	if session == null or session.encounter.is_empty():
 		t.check(false, "没遭遇")
-		_cleanup()
+		Support.cleanup("096")
 		return
 	t.eq(f.screen, GameFlow.Screen.EVENT, "→「有人来了」")
 	t.check(f.choose_event(0), "迎战")
@@ -229,7 +217,7 @@ static func run_search_encounter_won_sees_loot(t: TestCase) -> void:
 		t.check(true, "（这一场没掉东西，直接看下一屏）")
 	t.check(f.screen == GameFlow.Screen.EVENT or f.screen == GameFlow.Screen.SEARCH, "然后回到搜索的事件屏 / 搜索屏（%d）" % f.screen)
 	t.check(run.events.current_search == session and session.active, "会话还开着，能再搜")
-	_cleanup()
+	Support.cleanup("096")
 
 
 static func frame_property_form_pickers(t: TestCase, root: Window) -> void:
@@ -291,7 +279,7 @@ static func frame_property_form_pickers(t: TestCase, root: Window) -> void:
 
 static func frame_spawn_mask_and_presets(t: TestCase, root: Window) -> void:
 	t.begin("096 · 开局屏预设套（两套：强攻 / 坚守；不算带入、拖不进仓库、出发带着走）；地图屏挑出生点的遮罩（只有出生点点得中，挑完撤掉）")
-	_cleanup()
+	Support.cleanup("096")
 	var game = load(GAME).instantiate()
 	game.save_path = SAVE
 	game.meta_path = META
@@ -402,7 +390,7 @@ static func frame_spawn_mask_and_presets(t: TestCase, root: Window) -> void:
 		t.eq(map.tooltip_text(), "", "走过去之后浮窗收起")
 		t.eq(view._hover_id, -1, "悬停清掉：鼠标回到这个点会重新出浮窗")
 	game.queue_free()
-	_cleanup()
+	Support.cleanup("096")
 
 
 static func _armor_on(board: GridInventory) -> int:
@@ -422,7 +410,7 @@ static func run_search_encounter_save_roundtrip(t: TestCase) -> void:
 	if found.is_empty():
 		t.check(false, "找不到带搜索点的种子")
 		return
-	var f := _flow(c, 100000.0)
+	var f := Support.flow(c, "096", 100000.0)
 	var run := f.begin(c.chapter, kit, int(found["seed"]))
 	if run == null:
 		t.check(false, "开局")
@@ -438,14 +426,14 @@ static func run_search_encounter_save_roundtrip(t: TestCase) -> void:
 	var session: SearchSession = run.events.current_search
 	if session == null or session.encounter.is_empty() or not bool(run.events.pending.get("search_encounter", false)):
 		t.check(false, "没停在遇敌事件上")
-		_cleanup()
+		Support.cleanup("096")
 		return
 	var enc: Dictionary = session.encounter.duplicate(true)
 	var haul_n := session.haul().item_count()
 	var back := RunState.from_dict(JSON.parse_string(JSON.stringify(run.to_dict())), c.chapter, c.items, c.enemies, c.sets)
 	t.not_null(back, "读得回来")
 	if back == null:
-		_cleanup()
+		Support.cleanup("096")
 		return
 	t.check(bool(back.events.pending.get("search_encounter", false)), "遇敌事件的旗子还在")
 	t.eq(JSON.stringify(back.events.pending.get("encounter", {})), JSON.stringify(JSON.parse_string(JSON.stringify(enc))), "遭遇内容还在")
@@ -462,4 +450,4 @@ static func run_search_encounter_save_roundtrip(t: TestCase) -> void:
 	back2.events.pending["search_stage"] = true
 	var back3 := RunState.from_dict(JSON.parse_string(JSON.stringify(back2.to_dict())), c.chapter, c.items, c.enemies, c.sets)
 	t.check(bool(back3.events.pending.get("search_stage", false)), "「再搜 / 走」的旗子跟着存档")
-	_cleanup()
+	Support.cleanup("096")

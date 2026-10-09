@@ -18,19 +18,20 @@ extends Resource
 @export var system: bool = false
 
 @export_group("叠层与时长")
-## 0 = 不限层数
-@export var max_stacks: int = 0
-## 时长，秒。作者定的规矩（085）：**可叠层的 buff 永续**（`max_stacks != 1`：中毒、流血、结界……叠上就一直在，直到被清除或战斗结束），
-## 这个字段对它们不生效、导入器也不许填；**不可叠层的**（`max_stacks == 1`，往往是「满足 X 条件时获得 ABC」那种复杂的）才可以过期，
+## 137（作者定）：可叠层 = 层数不限；不可叠层 = 固定一层（将来的「无敌」）。没有「至多 N 层」
+## （老字段 `max_stacks` 由导入器迁移：1 → 不可叠，其余 → 可叠）
+@export var stackable: bool = true
+## 时长，秒。作者定的规矩（085）：**可叠层的 buff 永续**（中毒、流血、结界……叠上就一直在，直到被清除或战斗结束），
+## 这个字段对它们不生效、导入器也不许填；**不可叠层的**（往往是「满足 X 条件时获得 ABC」那种复杂的）才可以过期，
 ## 0 = 也永续。可以是任意小数（模拟按时刻跳跃，不受「帧」粒度限制）
 @export var duration_sec: float = 0.0
 ## 叠层时是否把时长刷新回满（只对会过期的有意义）
 @export var refresh_on_restack: bool = true
 
 
-## 可叠层：层数上限不是 1（0 = 不限也算可叠）
+## 可叠层（137：可叠就是不限层）
 func is_stackable() -> bool:
-	return max_stacks != 1
+	return stackable
 
 
 ## 永续：不过期，到战斗结束 —— 可叠层的一律永续；不可叠层的没填时长也永续
@@ -52,6 +53,3 @@ func duration_text() -> String:
 @export var on_apply: Array[CombatEffect] = []
 @export var on_expire: Array[CombatEffect] = []
 
-
-func is_valid() -> bool:
-	return id != &""

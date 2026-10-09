@@ -18,3 +18,7 @@
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# 代理的 git 工作树（整个项目的副本）：不进仓库；.gdignore 让 Godot 扫项目时跳过它，免得每个 class_name 各两份
+.claude/worktrees/*
+!.claude/worktrees/.gdignore

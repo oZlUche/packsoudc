@@ -53,8 +53,7 @@ func _ready() -> void:
 
 
 func rebuild() -> void:
-	for child in get_children():
-		child.queue_free()
+	UiTheme.clear_children(self)
 	_rows.clear()
 	if _target == null:
 		return
@@ -129,7 +128,7 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 			cb.text = FieldText.label(owner, key)
 			cb.tooltip_text = FieldText.tip(owner, key)
 			cb.button_pressed = value
-			_font(cb)
+			_compact(cb)
 			cb.toggled.connect(func(on: bool):
 				owner.set(key, on)
 				_emit())
@@ -182,7 +181,7 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 			var le := LineEdit.new()
 			le.text = String(value)
 			le.custom_minimum_size.x = 180
-			_font(le)
+			_compact(le)
 			le.text_changed.connect(func(t: String):
 				owner.set(key, StringName(t) if type == TYPE_STRING_NAME else t)
 				_emit())
@@ -214,7 +213,7 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 
 func _string_picker(owner: Object, prop: Dictionary, options: Array[String], current: String) -> OptionButton:
 	var ob := OptionButton.new()
-	_font(ob)
+	_compact(ob)
 	var string_name := int(prop["type"]) == TYPE_STRING_NAME
 	for i in options.size():
 		ob.add_item(FieldText.enum_label(options[i]), i)
@@ -231,7 +230,7 @@ func _enum_picker(
 	owner: Object, prop: Dictionary, options: Array[String], current: int
 ) -> OptionButton:
 	var ob := OptionButton.new()
-	_font(ob)
+	_compact(ob)
 	var values: Array[int] = []
 	for i in options.size():
 		ob.add_item(FieldText.enum_label(options[i]), i)
@@ -269,7 +268,6 @@ func _number(value: float, step: float, apply: Callable, prop: Dictionary = {}) 
 			if bits.size() >= 3 and bits[2].strip_edges().is_valid_float():
 				sb.step = float(bits[2])
 	sb.value = value
-	_font(sb)
 	sb.value_changed.connect(func(v: float):
 		apply.call(v)
 		_emit())
@@ -376,7 +374,7 @@ static func known_tags() -> Array[String]:
 					if parsed is Dictionary and (parsed as Dictionary).get("tags") is Array:
 						for tg in (parsed as Dictionary)["tags"]:
 							var s := String(tg)
-							if s != "" and not s.begins_with(FaithDef.TAG_PREFIX) and not _extra_tags.has(s):
+							if s != "" and not s.begins_with(FaithTags.PREFIX) and not _extra_tags.has(s):
 								_extra_tags.append(s)
 	for k in _extra_tags:
 		seen[String(k)] = true
@@ -483,7 +481,7 @@ func _key_picker(keys: Array[String], label_of: Callable, current: String, on_pi
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	var ob := OptionButton.new()
-	_font(ob)
+	_compact(ob)
 	var off := 1 if allow_empty else 0
 	if allow_empty:
 		ob.add_item(STAT_NONE_LABEL if FieldText.zh() else "None (use the amount above)", 0)
@@ -496,7 +494,7 @@ func _key_picker(keys: Array[String], label_of: Callable, current: String, on_pi
 	var custom := LineEdit.new()
 	custom.custom_minimum_size.x = 140
 	custom.placeholder_text = placeholder if placeholder != "" else ("键（小写英文）" if FieldText.zh() else "key")
-	_font(custom)
+	_compact(custom)
 	var at := keys.find(current)
 	if at >= 0:
 		at += off
@@ -556,7 +554,7 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 		var name_edit := LineEdit.new()
 		name_edit.text = String(k)
 		name_edit.custom_minimum_size.x = 130
-		_font(name_edit)
+		_compact(name_edit)
 		var old_key := String(k)
 		var raw = dict[k]
 		if raw is String:
@@ -565,7 +563,7 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 			se.text = String(raw)
 			se.custom_minimum_size.x = 200
 			se.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			_font(se)
+			_compact(se)
 			se.text_changed.connect(func(t: String):
 				dict[old_key] = t
 				owner.set(key, dict)
@@ -591,7 +589,7 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 			var te := LineEdit.new()
 			te.text = JSON.stringify(raw)
 			te.custom_minimum_size.x = 160
-			_font(te)
+			_compact(te)
 			te.text_submitted.connect(func(s: String):
 				var parsed = JSON.parse_string(s)
 				if parsed != null:
@@ -617,7 +615,6 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 		val.value = BattleStats.to_percent(float(raw)) if pct_key else float(raw)
 		if pct_key:
 			val.suffix = "%"
-		_font(val)
 		if stat_dict:
 			name_edit.tooltip_text = "%s\n（改名直接敲，回车生效）" % stat_label(old_key)
 		name_edit.text_submitted.connect(func(t: String):
@@ -696,7 +693,7 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 			parts.append(String(v))
 		le.text = ", ".join(parts)
 		le.custom_minimum_size.x = 220
-		_font(le)
+		_compact(le)
 		le.text_changed.connect(func(t: String):
 			var out := ContentSchema.empty_like(arr)
 			for piece in t.split(",", false):
@@ -711,7 +708,7 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 			row.add_theme_constant_override("separation", 4)
 			row.add_child(le)
 			var ob := OptionButton.new()
-			_font(ob)
+			_compact(ob)
 			ob.add_item("加标签…" if FieldText.zh() else "Add tag…", 0)
 			var keys := known_tags()
 			for i in keys.size():
@@ -746,7 +743,7 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 		le2.text = "; ".join(parts2)
 		le2.custom_minimum_size.x = 220
 		le2.placeholder_text = "x,y; x,y"
-		_font(le2)
+		_compact(le2)
 		le2.text_changed.connect(func(t: String):
 			var out := ContentSchema.empty_like(arr)
 			for piece in t.split(";", false):
@@ -766,7 +763,7 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 		le3.text = ", ".join(parts3)
 		le3.custom_minimum_size.x = 220
 		le3.placeholder_text = "1, 2, 3"
-		_font(le3)
+		_compact(le3)
 		le3.text_changed.connect(func(t: String):
 			var out := ContentSchema.empty_like(arr)
 			for piece in t.split(",", false):
@@ -881,7 +878,7 @@ func _adder(declared: StringName, on_made: Callable) -> Control:
 		return row
 
 	var ob := OptionButton.new()
-	_font(ob)
+	_compact(ob)
 	for i in types.size():
 		ob.add_item(FieldText.type_label(types[i]), i)
 		ob.set_item_tooltip(i, String(types[i]))
@@ -902,10 +899,8 @@ func _sub_form(obj: Object) -> PropertyForm:
 
 
 #region 小控件
-func _font(c: Control) -> void:
-	if label_font == null:
-		return
-	c.add_theme_font_override("font", label_font)
+## 表单里的输入框 / 下拉 / 按钮用 13 号（比正文紧一号；字体在主题里）。标签的字号与颜色在 [method _labeled] / [method _heading] / [method _muted] 里各自给
+func _compact(c: Control) -> void:
 	if c is LineEdit or c is OptionButton or c is Button:
 		c.add_theme_font_size_override("font_size", 13)
 
@@ -922,7 +917,6 @@ func _labeled(owner: Object, key: String, control: Control) -> Control:
 	l.tooltip_text = tip
 	if control.tooltip_text == "":
 		control.tooltip_text = tip
-	_font(l)
 	l.add_theme_font_size_override("font_size", 13)
 	l.add_theme_color_override("font_color", UiPalette.DIM)
 	row.add_child(l)
@@ -933,7 +927,6 @@ func _labeled(owner: Object, key: String, control: Control) -> Control:
 func _heading(text: String) -> Label:
 	var l := Label.new()
 	l.text = text
-	_font(l)
 	l.add_theme_font_size_override("font_size", 13)
 	l.add_theme_color_override("font_color", UiPalette.FG)
 	return l
@@ -942,7 +935,6 @@ func _heading(text: String) -> Label:
 func _muted(text: String) -> Label:
 	var l := Label.new()
 	l.text = text
-	_font(l)
 	l.add_theme_font_size_override("font_size", 12)
 	l.add_theme_color_override("font_color", UiPalette.DIM)
 	return l
@@ -951,7 +943,7 @@ func _muted(text: String) -> Label:
 func _small_button(text: String, handler: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
-	_font(b)
+	_compact(b)
 	b.pressed.connect(handler)
 	return b
 

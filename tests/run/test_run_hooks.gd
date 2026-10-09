@@ -32,7 +32,7 @@ static func run_defaults(t: TestCase) -> void:
 	t.eq(hooks.active_faith_id(), &"", "没激活信仰：id 空")
 	t.is_null(hooks.player_spec(), "没人编译玩家：null（节点事件据此不开打）")
 	t.is_null(hooks.loot_context(), "没人给掉落上下文：null（节点事件自己造一个只带难度的）")
-	t.is_null(hooks.run_context(), "没人给一局的规则：null（节点事件用默认的）")
+	t.check(hooks.run_context() != null and hooks.run_context().extra_searches == 0, "没人给一局的规则：一份默认的（节点事件直接用）")
 	t.check(not hooks.request_extract(), "没人接撤离：撤不了")
 	t.check(not hooks.relocate(MoveIntent.teleport(0, 1, 0)), "没人接传送：节点事件自己交给旅程")
 	t.check(not hooks.grant_map_buff(&"hardy") and not hooks.remove_map_buff(&"hardy") and not hooks.has_map_buff(&"hardy"),

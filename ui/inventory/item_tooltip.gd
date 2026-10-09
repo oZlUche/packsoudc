@@ -29,7 +29,7 @@ static func bonus_lit(def: ItemDef, b: FaithBonus, status: Dictionary) -> bool:
 	if status.is_empty() or def == null or b == null:
 		return false
 	var active := StringName(String(status.get("active", "")))
-	if active == &"" or def.faith_tag() != FaithDef.TAG_PREFIX + String(active):
+	if active == &"" or def.faith_tag() != FaithTags.PREFIX + String(active):
 		return false
 	return b.times_for(int(status.get("tier", 0)), int(status.get("points", 0))) > 0
 
@@ -40,7 +40,7 @@ static func faith_lit(def: ItemDef, status: Dictionary) -> bool:
 	if status.is_empty() or def == null or not def.has_faith():
 		return false
 	var active := StringName(String(status.get("active", "")))
-	return active != &"" and def.faith_tag() == FaithDef.TAG_PREFIX + String(active)
+	return active != &"" and def.faith_tag() == FaithTags.PREFIX + String(active)
 
 
 ## [param board] 给了且道具在上面就按棋盘编译；否则单独编。只要主文字；词条见 [method describe_full]
@@ -57,7 +57,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var def := inst.def
 	var lines: Array[String] = []
 	var rc := ItemPainter.rarity_color(def).to_html(false)
-	lines.append("[color=#%s][b]%s[/b][/color]　%s　%d 格　值 %d　重 %d" % [rc, Names.of(def), rarity_name(def.rarity), def.shape.cell_count() if def.shape != null else 0, ItemValue.of(def), ItemWeight.of(def)])     # 129：重
+	lines.append("[color=#%s][b]%s[/b][/color]　%s　%d 格　值 %d　重 %d" % [rc, Names.of(def), rarity_name(def.rarity), def.cell_count(), ItemValue.of(def), ItemWeight.of(def)])     # 129：重
 	var desc := Names.description_of(def)     # 104：说明里的 {字段} 按这件道具自己的字段填
 	if desc != "":
 		lines.append("[color=#8b93a1]%s[/color]" % desc)
@@ -82,7 +82,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			var rule := r as AbilityRule
 			if rule == null:
 				continue
-			var line := Glossary.rule_text(rule)
+			var line := Glossary.rule_text(rule, true)     # 142：耐力下面单写「耗耐力 N」
 			if weapon and rule.cadence is CooldownCadence and compiled != null and compiled.stats != null:
 				var hz := rule.cadence.estimated_hz(compiled.stats)
 				if hz > 0.0:
@@ -220,4 +220,4 @@ static func _names(tags: Array) -> Array[String]:
 
 
 static func _type_name(obj: Object) -> String:
-	return String(ContentExporter._registry_name_of(obj)) if obj != null else "?"
+	return String(ContentSchema.registry_name_of(obj)) if obj != null else "?"

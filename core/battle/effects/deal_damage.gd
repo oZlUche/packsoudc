@@ -118,5 +118,26 @@ func estimated_damage(stats: StatSet) -> float:
 	return dmg
 
 
+## 142：固定值、按层数、按比例都写出来（「对手每层流血造成 3 点物理伤害」「造成 4 点 + 对手 10% 最大生命的物理伤害」）；
+## 只读属性表的（武器的普通攻击）照旧只写「造成物理伤害」—— 数值随加成变，看 DPS 那行
 func describe() -> String:
-	return "造成 %s 伤害" % Glossary.damage_type_name(damage_type)
+	var parts: Array[String] = []
+	var fixed := damage_stat == &"" and amount > 0.0
+	if fixed:
+		parts.append("%s 点" % TextTemplate.num(amount))
+	if percent_of != &"" and percent > 0:
+		var whose := {Target.OPPONENT: "对手", Target.SELF: "自己", Target.BOTH: "目标"}[percent_of_target] as String
+		parts.append("%s %d%% %s" % [whose, percent, PERCENT_OF_NAMES.get(String(percent_of), String(percent_of))])
+	var head := ""
+	if per_target_stack != &"":
+		head = "对手每层%s" % Glossary.status_name(per_target_stack)
+	elif per_stack:
+		head = "每层"
+	var what := " + ".join(parts)
+	if what == "":
+		return "%s造成%s伤害" % [head, Glossary.damage_type_name(damage_type)]
+	var joiner := "的" if percent_of != &"" and percent > 0 else ""
+	return "%s造成 %s%s%s伤害" % [head, what, joiner, Glossary.damage_type_name(damage_type)]
+
+
+const PERCENT_OF_NAMES := {"max_hp": "最大生命", "current_hp": "当前生命", "missing_hp": "已损失生命"}

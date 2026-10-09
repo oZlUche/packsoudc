@@ -17,10 +17,10 @@ static func run(t: TestCase) -> void:
 	t.begin("InventoryService")
 
 	ItemInstance.reset_uid_counter()
-	var bar := _def("bar", ["#", "#", "#"])
-	var single := _def("dot", ["#"])
-	var big := _def("big", ["##", "##"])
-	var weapon := _def("sword", ["#"], ["weapon"])
+	var bar := _def("bar", ["1", "1", "1"])
+	var single := _def("dot", ["1"])
+	var big := _def("big", ["11", "11"])
+	var weapon := _def("sword", ["1"], ["weapon"])
 
 	# --- 跨容器移动 ---
 	var src := GridInventory.new(Vector2i(4, 4), 1)
@@ -61,9 +61,9 @@ static func run(t: TestCase) -> void:
 	)
 	t.check(src.has_item(b.uid), "越界失败后物品仍在源容器")
 
-	# --- 标签不匹配失败同样回滚 ---
+	# --- 准入不过失败同样回滚 ---
 	var slot := GridInventory.new(Vector2i(2, 2), 3)
-	slot.accept_tags = [&"weapon"] as Array[StringName]
+	slot.accept_filter = func(d: ItemDef) -> bool: return d.tags.has(&"weapon")
 	t.check(
 		not InventoryService.move(src, b.uid, slot, Vector2i(0, 0), 0),
 		"标签不匹配应失败"
@@ -82,19 +82,19 @@ static func run(t: TestCase) -> void:
 	var inv := GridInventory.new(Vector2i(4, 4), 4)
 	var c := ItemInstance.create(bar)
 	inv.place(c, Vector2i(0, 0), 0)
-	t.check(InventoryService.move_within(inv, c.uid, Vector2i(3, 1), 0), "容器内挪位应成功")
+	t.check(InventoryService.move(inv, c.uid, inv, Vector2i(3, 1), 0), "容器内挪位应成功")
 	t.eq(c.origin, Vector2i(3, 1), "挪位后 origin 更新")
 	t.eq(inv.item_count(), 1, "挪位不改变件数")
 	t.eq(inv.cell_uid(Vector2i(0, 0)), GridInventory.EMPTY_UID, "旧位置应释放")
 
 	# --- 挪位到自身重叠的位置（必须允许，因为已先移除）---
-	t.check(InventoryService.move_within(inv, c.uid, Vector2i(3, 0), 0), "挪到与自身重叠的位置应成功")
+	t.check(InventoryService.move(inv, c.uid, inv, Vector2i(3, 0), 0), "挪到与自身重叠的位置应成功")
 	t.eq(c.origin, Vector2i(3, 0), "重叠挪位后 origin 更新")
 
 	# --- 挪位失败回滚 ---
 	var d2 := ItemInstance.create(big)
 	inv.place(d2, Vector2i(0, 0), 0)
-	t.check(not InventoryService.move_within(inv, c.uid, Vector2i(0, 0), 0), "挪到被占位置应失败")
+	t.check(not InventoryService.move(inv, c.uid, inv, Vector2i(0, 0), 0), "挪到被占位置应失败")
 	t.eq(c.origin, Vector2i(3, 0), "挪位失败后 origin 不变")
 	t.eq(inv.cell_uid(Vector2i(3, 2)), c.uid, "挪位失败后占用表完好")
 

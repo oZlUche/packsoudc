@@ -53,9 +53,4 @@ func toggle_language() -> void:
 		flow.settings = GameSettings.new()
 	flow.settings.language = UiText.next_lang(flow.settings.language)
 	flow.save_settings()
-	UiText.apply(flow.settings)
-	UiPalette.apply(flow.settings)
-	for c in get_children():
-		c.queue_free()
-		remove_child(c)
-	open({})
+	_reopen()

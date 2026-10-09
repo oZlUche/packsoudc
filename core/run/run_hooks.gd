@@ -31,6 +31,7 @@ const NAMES := {
 	&"before_battle": "RunState：开打前改双方的战斗单位（局内技能）",
 	&"fight_hunter": "HunterSystem：迎战追上来的猎手",
 	&"flee_hunter": "HunterSystem：从猎手那里逃跑",
+	&"skill_ready": "RunState：局内技能现在能不能用（136：空串 = 能，否则是原因）",
 }
 
 var _fns: Dictionary = {}
@@ -69,9 +70,10 @@ func loot_context() -> LootContext:
 	return _at(&"loot_context").call() as LootContext
 
 
+## 一局的规则被 buff 改成什么样。没人接 = 一份默认的（沙盒、测试）
 func run_context() -> RunContext:
 	if not has(&"run_context"):
-		return null
+		return RunContext.new()
 	return _at(&"run_context").call() as RunContext
 
 
@@ -99,6 +101,11 @@ func active_faith_id() -> StringName:
 	if not has(&"active_faith_id"):
 		return &""
 	return StringName(String(_at(&"active_faith_id").call()))
+
+
+## 136：局内技能现在能不能用：空串 = 能。没人接 = 不能
+func skill_ready(id: StringName) -> String:
+	return String(_at(&"skill_ready").call(id)) if has(&"skill_ready") else "没有技能"
 
 
 func before_battle(me: CombatantSpec, enemy: CombatantSpec, type: StringName) -> void:

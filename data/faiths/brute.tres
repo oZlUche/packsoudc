@@ -33,7 +33,7 @@ amount = 1.0
 [sub_resource type="Resource" id="Resource_qgcs4"]
 script = ExtResource("2_fhojw")
 mode = "scaled"
-max_stacks = 6
+max_shares = 6
 mods = Array[ExtResource("3_thvtn")]([SubResource("Resource_umwjh")])
 
 [sub_resource type="Resource" id="Resource_dwbhk"]

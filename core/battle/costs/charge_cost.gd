@@ -26,5 +26,5 @@ func pay(ctx: RuleContext) -> void:
 	ctx.state()[KEY] = 0
 
 
-func describe(_ctx: RuleContext) -> String:
-	return "蓄力 %d 次" % n
+func describe() -> String:
+	return "每第 %d 次才生效" % n

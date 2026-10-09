@@ -62,7 +62,7 @@ static func run(t: TestCase) -> void:
 			t.eq(d.shape.cell_count(), 2 if i == 2 else 1, "%s：%d 格" % [d.id, 2 if i == 2 else 1])
 
 	t.begin("124 · 八条配方：一件低阶 + 一件材料（万灵药是两条阶梯的汇合：解毒药囊 + 止血敷料）")
-	var recipes := GameFlow.load_recipes()
+	var recipes := RecipeDef.load_all()
 	for out in RECIPES:
 		var pair: Array = RECIPES[out]
 		var r := RecipeDef.find(recipes, pair[0], pair[1])

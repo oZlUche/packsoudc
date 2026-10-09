@@ -3,58 +3,19 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
+## 与 Support.paths("084") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_084_run.json"
 const META := "user://test_084_meta.json"
 const SETTINGS := "user://test_084_settings.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var prologue: ChapterDef
-	var loadouts: Array[LoadoutDef]
-	var events: Dictionary
+## 一局级套件的标准内容：自由模式 + 开局装备 + 事件表（altar / 09x / countdown / safe / keyword_tips 等套件也借这一份）
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["loadouts", "events"])
 
 
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.prologue = load(ContentPaths.asset_file("chapters", "prologue"))
-	c.loadouts = GameFlow.load_loadouts()
-	c.events = GameFlow.load_events()
-	return c
-
-
-static func _cleanup() -> void:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
-	GameSettings.remove(SETTINGS)
-
-
-static func _flow(c: Content, hp: float = 10000.0, keep_saves: bool = false) -> GameFlow:
-	if not keep_saves:
-		_cleanup()
-	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
-	f.chapters = [c.chapter] as Array[ChapterDef]
-	f.loadouts = c.loadouts
-	f.event_defs = c.events
-	f.save_path = SAVE
-	f.meta_path = META
-	f.settings_path = SETTINGS
-	f.player_baseline = CombatantBaseline.with_hp(hp)
-	return f
-
-
-static func _kit(c: Content) -> LoadoutDef:
+static func _kit(c: TestSupport.Content) -> LoadoutDef:
 	for l in c.loadouts:
 		if l.id == &"standard":
 			return l
@@ -62,7 +23,7 @@ static func _kit(c: Content) -> LoadoutDef:
 
 
 ## 出生点旁边就有某类型点的种子：{seed, entry, next}
-static func _seed_with(c: Content, type: StringName, kit: Array[StringName]) -> Dictionary:
+static func _seed_with(c: TestSupport.Content, type: StringName, kit: Array[StringName]) -> Dictionary:
 	for seed in range(1, 80):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit)
 		if s == null:
@@ -74,26 +35,9 @@ static func _seed_with(c: Content, type: StringName, kit: Array[StringName]) -> 
 	return {}
 
 
+## 把叠层一路看完直到地图（搬到了 Support.settle；别的套件还按这个名字调）
 static func _settle(f: GameFlow) -> void:
-	var guard := 0
-	while GameFlow.is_overlay(f.screen) and guard < 30:
-		guard += 1
-		match f.screen:
-			GameFlow.Screen.PREBATTLE:
-				f.start_battle()
-			GameFlow.Screen.LOOT:
-				f.take_all_loot()
-			GameFlow.Screen.SEARCH:
-				f.run.events.current_search.leave()
-			GameFlow.Screen.SHOP:
-				f.run.events.current_shop.leave()
-			GameFlow.Screen.EVENT:
-				if f.run.events.pending_event() != null:
-					f.choose_event(0)
-				else:
-					f.resume()
-			_:
-				f.resume()
+	Support.settle(f)
 
 
 static func run_prebattle(t: TestCase) -> void:
@@ -104,7 +48,7 @@ static func run_prebattle(t: TestCase) -> void:
 	if found.is_empty():
 		t.check(false, "找不到种子")
 		return
-	var f := _flow(c)
+	var f := Support.flow(c, "084")
 	var run := f.begin(c.chapter, kit, int(found["seed"]))
 	f.pick_spawn(int(found["entry"]))
 	var next := int(found["next"])
@@ -125,7 +69,7 @@ static func run_prebattle(t: TestCase) -> void:
 	t.check(not f.can_reopen() or f.reopen_node(), "（重开只会回到同一屏）")
 	# 存档：等着的一场跟着走
 	t.check(f.save(), "存得了档")
-	var f2 := _flow(c, 10000.0, true)
+	var f2 := Support.flow(c, "084", 10000.0, null, true)
 	t.check(f2.continue_run(), "读档")
 	t.eq(f2.screen, GameFlow.Screen.PREBATTLE, "读回来还停在战前准备屏")
 	t.check(not f2.run.events.pending_battle.is_empty() and int(f2.run.events.pending_battle["node"]) == next, "等着开打的还是那个点")
@@ -139,7 +83,7 @@ static func run_prebattle(t: TestCase) -> void:
 	t.check(not f2.start_battle(), "没有等着的一场再按没用")
 	_settle(f2)
 	t.eq(f2.screen, GameFlow.Screen.MAP, "看完回地图")
-	_cleanup()
+	Support.cleanup("084")
 
 
 static func run_search_loop(t: TestCase) -> void:
@@ -150,7 +94,7 @@ static func run_search_loop(t: TestCase) -> void:
 	if found.is_empty():
 		t.check(false, "找不到种子")
 		return
-	var f := _flow(c)
+	var f := Support.flow(c, "084")
 	var run := f.begin(c.chapter, kit, int(found["seed"]))
 	f.pick_spawn(int(found["entry"]))
 	var next := int(found["next"])
@@ -233,7 +177,7 @@ static func run_search_loop(t: TestCase) -> void:
 		else:
 			t.eq(f.screen, GameFlow.Screen.MAP, "什么都没掉：回地图")
 	_settle(f)
-	_cleanup()
+	Support.cleanup("084")
 
 
 static func _labels(def: EventDef) -> Array:
@@ -267,7 +211,7 @@ static func run_drop_outside(t: TestCase) -> void:
 	var gun := ItemDef.new()
 	gun.id = &"t_gun"
 	gun.display_name = "gun"
-	gun.shape = ItemShape.from_ascii(["#"])
+	gun.shape = ItemShape.from_ascii(["1"])
 	var board := GridInventory.new(Vector2i(4, 4), 1)
 	var stash := ItemStash.new(2, 0)
 	var view := InventoryView.new()
@@ -358,7 +302,7 @@ static func frame_minimize_and_window(t: TestCase, root: Window) -> void:
 	var host := Control.new()
 	host.size = Vector2(800, 600)
 	root.add_child(host)
-	win.setup("t_win", "试", null)
+	win.setup("t_win", "试")
 	var filler := Control.new()
 	filler.custom_minimum_size = Vector2(200, 100)
 	win.body().add_child(filler)
@@ -368,7 +312,7 @@ static func frame_minimize_and_window(t: TestCase, root: Window) -> void:
 	win.move_to(Vector2(-40, 5000))
 	t.check(win.position.x == 0.0 and win.position.y <= 600.0 - win.size.y + 0.5, "不出父控件的范围（%s）" % str(win.position))
 	var again := FloatingWindow.new()
-	again.setup("t_win", "再开", null)
+	again.setup("t_win", "再开")
 	host.add_child(again)
 	again._place()
 	t.eq(again.position, win.position, "同一个 key 再开：记得上次的位置")
@@ -385,7 +329,7 @@ static func frame_minimize_and_window(t: TestCase, root: Window) -> void:
 	game.save_path = SAVE
 	game.meta_path = META
 	game.settings_path = SETTINGS
-	_cleanup()
+	Support.cleanup("084")
 	root.add_child(game)
 	var flow: GameFlow = game.flow
 	flow.chapters = [c.chapter] as Array[ChapterDef]
@@ -403,7 +347,7 @@ static func frame_minimize_and_window(t: TestCase, root: Window) -> void:
 		t.check(true, "（这个种子没开出搜索屏：%s）" % str(flow.screen))
 		flow.to_main_menu()
 		game.queue_free()
-		_cleanup()
+		Support.cleanup("084")
 		return
 	t.check(map.can_reopen(), "地图上「回到这个点」亮着（会话开着）")
 	t.check(ov.to_map(), "收起")
@@ -430,7 +374,7 @@ static func frame_minimize_and_window(t: TestCase, root: Window) -> void:
 	t.is_null(game.minimized(), "会话结束后藏着的那一屏也没了")
 	flow.to_main_menu()
 	game.queue_free()
-	_cleanup()
+	Support.cleanup("084")
 
 
 static func run_search_encounter_loot_folds(t: TestCase) -> void:
@@ -439,7 +383,7 @@ static func run_search_encounter_loot_folds(t: TestCase) -> void:
 	var kit := _kit(c)
 	var done := false
 	for attempt in range(1, 80):
-		var f := _flow(c)
+		var f := Support.flow(c, "084")
 		var run := f.begin(c.chapter, kit, attempt)
 		if run == null:
 			continue
@@ -512,4 +456,4 @@ static func run_search_encounter_loot_folds(t: TestCase) -> void:
 		_settle(f)
 		break
 	t.check(done, "找到了一局：搜索里遇敌、打赢、尸体有包也有道具")
-	_cleanup()
+	Support.cleanup("084")

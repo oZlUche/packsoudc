@@ -27,17 +27,30 @@ static func _bag(id: String, rows: Array, accept: Array = []) -> ItemDef:
 	return d
 
 
+
+## 140：原地转包 = 摘下来、换个朝向放回去（和拖拽中按 R 同一条路）；转不动就原样放回。成功返回脱落的实例，失败 null
+static func _turn_bag(board: GridInventory, bag_uid: int, steps: int):
+	var bag := board.get_item(bag_uid)
+	var origin := bag.origin
+	var old_rot := bag.rotation
+	var payload := board.detach_bag(bag_uid)
+	var result := board.attach_bag_shedding(payload, origin, posmod(old_rot + steps, 4))
+	if not result["ok"]:
+		board.attach_bag(payload, origin, old_rot)
+		return null
+	return result["fallen"]
+
 static func run(t: TestCase) -> void:
 	t.begin("棋盘与包体")
 
 	ItemInstance.reset_uid_counter()
-	var big_bag := _bag("bag6", ["##", "##", "##"])     # 2x3，6 格
-	var tiny_bag := _bag("bag1", ["#"])                  # 1x1
-	var belt := _bag("belt", ["#", "#"], ["potion"])     # 1x2，只收药水
-	var dot := _def("dot", ["#"])
-	var bar := _def("bar", ["#", "#", "#"])              # 1x3
-	var wide := _def("wide", ["##"])                     # 2x1
-	var potion := _def("potion", ["#"], ["potion"])
+	var big_bag := _bag("bag6", ["11", "11", "11"])     # 2x3，6 格
+	var tiny_bag := _bag("bag1", ["1"])                  # 1x1
+	var belt := _bag("belt", ["1", "1"], ["potion"])     # 1x2，只收药水
+	var dot := _def("dot", ["1"])
+	var bar := _def("bar", ["1", "1", "1"])              # 1x3
+	var wide := _def("wide", ["11"])                     # 2x1
+	var potion := _def("potion", ["1"], ["potion"])
 
 	# --- 空棋盘：一格都不能用 ---
 	var board := GridInventory.new(Vector2i(7, 9), 1, true)
@@ -96,18 +109,17 @@ static func run(t: TestCase) -> void:
 	t.check(board.place(straddle, Vector2i(2, 0), 0), "整件落在第二个包内也可以")
 	t.eq(board.bag_of(straddle.uid), b2.uid, "这时归属于第二个包")
 
-	# --- 非空的包不能直接移除；rotate_item 也接不住脱落的东西，要走 rotate_bag ---
+	# --- 非空的包不能直接移除 ---
 	t.check(board.is_bag_with_contents(b1.uid), "第一个包有内容物")
 	t.is_null(board.remove(b1.uid), "非空的包 remove 应返回 null")
 	t.check(board.has_item(b1.uid), "被拒后包仍在棋盘上")
-	t.check(not board.rotate_item(b1.uid, 1), "非空的包不能用 rotate_item 转（它回不了脱落的东西）")
-	t.eq(b1.rotation, 0, "被拒后朝向不变")
 
 	# --- 空包可以旋转 ---
 	var empty_board := GridInventory.new(Vector2i(6, 6), 9, true)
 	var eb := ItemInstance.create(big_bag)
 	empty_board.place(eb, Vector2i(0, 0), 0)
-	t.check(empty_board.rotate_item(eb.uid, 1), "空包可以旋转")
+	empty_board.remove(eb.uid)
+	t.check(empty_board.place(eb, Vector2i(0, 0), 1), "空包可以换个朝向放回去")
 	t.eq(eb.rotation, 1, "旋转生效")
 	t.check(empty_board.is_covered(Vector2i(2, 1)), "旋转后覆盖范围跟着变（3x2）")
 	t.check(not empty_board.is_covered(Vector2i(0, 2)), "旋转后原先的覆盖已释放")
@@ -127,7 +139,8 @@ static func run(t: TestCase) -> void:
 
 	# --- 换朝向放回：内容物按本地坐标跟着转，一件不少，严格版也放得回 ---
 	var p2 := board.detach_bag(b1.uid)
-	t.check(board.can_attach_bag(p2, Vector2i(0, 3), 1),
+	var turned := board.bag_fit_report(p2, Vector2i(0, 3), 1)
+	t.check(turned["ok"] and (turned["fallen"] as Array).is_empty(),
 		"换个朝向放回也一件不少 —— 竖着的 1x3 跟着包一起变横")
 	t.check(board.attach_bag(p2, Vector2i(0, 3), 0), "原朝向放回成功")
 
@@ -167,17 +180,15 @@ static func run(t: TestCase) -> void:
 	var n2 := ItemInstance.create(dot)
 	adj.place(n1, Vector2i(0, 0), 0)
 	adj.place(n2, Vector2i(1, 0), 0)
-	var nb := adj.neighbors_of(n1.uid)
-	t.eq(nb, [n2.uid] as Array[int], "邻居只含普通物品，不含容纳它的包")
-	t.check(not nb.has(ab.uid), "包不是邻居 —— 容纳关系与邻接关系是两回事")
+	t.eq(adj.cell_uid(Vector2i(0, 0)), n1.uid, "包上放的东西占的是物品层，包在包层（容纳关系与邻接关系是两回事）")
 
 
 static func run_bag_move(t: TestCase) -> void:
 	t.begin("包的跨容器搬运")
 
 	ItemInstance.reset_uid_counter()
-	var big_bag := _bag("bag6", ["##", "##", "##"])
-	var dot := _def("dot", ["#"])
+	var big_bag := _bag("bag6", ["11", "11", "11"])
+	var dot := _def("dot", ["1"])
 
 	var src := GridInventory.new(Vector2i(6, 6), 1, true)
 	var dst := GridInventory.new(Vector2i(6, 6), 2, true)
@@ -235,8 +246,8 @@ static func run_board_serialization(t: TestCase) -> void:
 	t.begin("棋盘序列化")
 
 	ItemInstance.reset_uid_counter()
-	var big_bag := _bag("bag6", ["##", "##", "##"])
-	var dot := _def("dot", ["#"])
+	var big_bag := _bag("bag6", ["11", "11", "11"])
+	var dot := _def("dot", ["1"])
 	var db := ItemDatabase.new()
 	db.register(big_bag)
 	db.register(dot)
@@ -274,9 +285,9 @@ static func run_rotate_shedding(t: TestCase) -> void:
 	t.begin("棋盘与包 · 包旋转：内容物按本地坐标跟着转，跨包的脱落")
 
 	ItemInstance.reset_uid_counter()
-	var big_bag := _bag("bag6", ["##", "##", "##"])   # 2 宽 3 高
-	var dot := _def("dot", ["#"])
-	var bar := _def("bar", ["#", "#", "#"])            # 竖 1x3
+	var big_bag := _bag("bag6", ["11", "11", "11"])   # 2 宽 3 高
+	var dot := _def("dot", ["1"])
+	var bar := _def("bar", ["1", "1", "1"])            # 竖 1x3
 	var board := GridInventory.new(Vector2i(8, 8), 1, true)
 
 	var bag := ItemInstance.create(big_bag)
@@ -295,7 +306,7 @@ static func run_rotate_shedding(t: TestCase) -> void:
 	t.eq(int(back["rot"]), 0, "朝向也回来")
 
 	# --- 原地转：内容物跟着转，一件不掉 ---
-	var fallen = board.rotate_bag(bag.uid, 1)
+	var fallen = _turn_bag(board, bag.uid, 1)
 	t.not_null(fallen, "非空的包能转")
 	t.eq(bag.rotation, 1, "包转了一步（2x3 → 3x2，占 (1..3, 1..2)）")
 	t.eq((fallen as Array).size(), 0, "**整件在包里的东西不脱落**")
@@ -309,7 +320,7 @@ static func run_rotate_shedding(t: TestCase) -> void:
 		t.eq(board.bag_at(column.origin + c), bag.uid, "长条的每一格都仍被这个包覆盖")
 
 	# --- 转回去：完全复原 ---
-	board.rotate_bag(bag.uid, -1)
+	_turn_bag(board, bag.uid, -1)
 	t.eq(column.origin, Vector2i(2, 1), "转回去长条回到右列")
 	t.eq(column.rotation, 0, "朝向也回来")
 	t.eq(corner.origin, Vector2i(1, 1), "方块回到左上角")
@@ -319,7 +330,7 @@ static func run_rotate_shedding(t: TestCase) -> void:
 	var other := ItemInstance.create(big_bag)
 	board.place(other, Vector2i(1, 4), 0)            # 占 (1..2, 4..6)
 	board.remove(column.uid)
-	var bridge := ItemInstance.create(_def("tall", ["#", "#"]))
+	var bridge := ItemInstance.create(_def("tall", ["1", "1"]))
 	t.check(board.place(bridge, Vector2i(2, 3), 0), "竖 1x2 横跨两个包放得下：(2,3) 在上面的包，(2,4) 在下面的包")
 	t.eq(board.bag_of(bridge.uid), GridInventory.EMPTY_UID, "它谁的都不是")
 
@@ -338,7 +349,7 @@ static func run_rotate_shedding(t: TestCase) -> void:
 	t.check(board.has_item(bridge.uid), "跨包的那件回来了")
 	t.eq(bridge.origin, Vector2i(2, 3), "回到原处")
 
-	var shed = board.rotate_bag(bag.uid, 1)
+	var shed = _turn_bag(board, bag.uid, 1)
 	t.eq((shed as Array).size(), 1, "原地转：跨包的脱落")
 	t.check(not board.has_item(bridge.uid), "离开了棋盘")
 	t.check(board.has_item(corner.uid), "整件在里面的跟着转，没掉")
@@ -349,7 +360,7 @@ static func run_rotate_shedding(t: TestCase) -> void:
 	edge_board.place(edge_bag, Vector2i(1, 0), 0)      # 2x3 占 (1..2, 0..2)
 	var inside := ItemInstance.create(dot)
 	edge_board.place(inside, Vector2i(1, 0), 0)
-	t.is_null(edge_board.rotate_bag(edge_bag.uid, 1), "转成 3x2 会出界，转不动")
+	t.is_null(_turn_bag(edge_board, edge_bag.uid, 1), "转成 3x2 会出界，转不动")
 	t.eq(edge_bag.rotation, 0, "朝向没变")
 	t.check(edge_board.has_item(inside.uid), "**内容物一件不掉**")
 	t.eq(inside.origin, Vector2i(1, 0), "位置也没动")
@@ -359,11 +370,11 @@ static func run_bag_accept_touching(t: TestCase) -> void:
 	t.begin("棋盘与包 · 跨包时每个碰到的包都得接受")
 
 	ItemInstance.reset_uid_counter()
-	var big_bag := _bag("bag6", ["##", "##", "##"])
-	var belt := _bag("belt", ["##", "##", "##"])
+	var big_bag := _bag("bag6", ["11", "11", "11"])
+	var belt := _bag("belt", ["11", "11", "11"])
 	belt.bag_accept_tags = [&"potion"] as Array[StringName]
-	var rifle := _def("rifle", ["##"], ["weapon"])
-	var potion := _def("potion", ["##"], ["potion"])
+	var rifle := _def("rifle", ["11"], ["weapon"])
+	var potion := _def("potion", ["11"], ["potion"])
 	var board := GridInventory.new(Vector2i(6, 6), 1, true)
 	board.place(ItemInstance.create(big_bag), Vector2i(0, 0), 0)
 	board.place(ItemInstance.create(belt), Vector2i(2, 0), 0)

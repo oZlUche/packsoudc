@@ -38,13 +38,13 @@ effects = Array[ExtResource("6_eao8e")]([SubResource("Resource_kn3kl")])
 [sub_resource type="Resource" id="Resource_dy07x"]
 script = ExtResource("9_cmakx")
 base_stats = {
-"damage": 30
+"damage": 50
 }
 rules = Array[ExtResource("2_phqxr")]([SubResource("Resource_2a1og")])
 
 [sub_resource type="Resource" id="Resource_ysrwp"]
 script = ExtResource("13_od12a")
-cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(1, 1), Vector2i(1, 2)])
 
 [resource]
 script = ExtResource("12_gwf7o")
@@ -56,7 +56,7 @@ display_names = {
 shape = SubResource("Resource_ysrwp")
 rarity = 1
 value = 30
-weight = 9
+weight = 12
 tags = Array[StringName]([&"weapon", &"melee", &"burst", &"metal"])
 requires_unlock = &"ach_first_extract"
 combat = SubResource("Resource_dy07x")

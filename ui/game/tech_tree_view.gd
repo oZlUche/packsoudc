@@ -40,9 +40,7 @@ func setup(p_meta: MetaState, p_defs: Array[TechDef], p_font: Font) -> void:
 
 ## 重新排位、重画全部节点（等级变了、选中变了都调它）
 func rebuild() -> void:
-	for c in get_children():
-		remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(self)
 	_nodes.clear()
 	_rects.clear()
 	_boxes.clear()

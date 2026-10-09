@@ -13,7 +13,7 @@ extends Cost
 
 
 func can_pay(ctx: RuleContext) -> bool:
-	var who := ctx.owner if on_self else ctx.opponent()
+	var who := ctx.side_of(on_self)
 	if who == null or axis == &"" or stacks == 0:
 		return negate
 	var have := who.axis_total(axis)
@@ -25,5 +25,7 @@ func pay(_ctx: RuleContext) -> void:
 	pass
 
 
-func describe(_ctx: RuleContext) -> String:
-	return "%s%s %s %d 层" % ["自己" if on_self else "对手", axis, "<" if negate else "≥", stacks]
+func describe() -> String:
+	var who := "你" if on_self else "对手"
+	var n := absi(stacks) if stacks != 0 else 1
+	return "若%s的%s%s %d 层" % [who, StatAxes.name_of(axis, stacks), "不到" if negate else "至少", n]

@@ -5,8 +5,9 @@
     "en": "Round Shield"
   },
   "shape": [
-    "11",
-    "11"
+    "010",
+    "111",
+    "010"
   ],
   "rarity": 1,
   "tags": [
@@ -17,7 +18,7 @@
   ],
   "combat": {
     "base_stats": {
-      "armor": 4
+      "armor": 5
     }
   }
 }

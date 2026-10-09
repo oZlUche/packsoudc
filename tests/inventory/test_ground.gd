@@ -47,7 +47,7 @@ static func _free(rig: Dictionary) -> void:
 static func run_drop_at_release_point(t: TestCase) -> void:
 	t.begin("128 · 拖出棋盘放手在 (0.3, 0.7)：落点就在那儿，存档来回不变")
 	ItemInstance.reset_uid_counter()
-	var gun := _def(&"t_gun", ["#"])
+	var gun := _def(&"t_gun", ["1"])
 	var board := GridInventory.new(Vector2i(4, 4), 1)
 	var stash := ItemStash.new(2, 0)
 	var rig := _rig(stash, board)
@@ -77,9 +77,9 @@ static func _db_of(defs: Array) -> ItemDatabase:
 static func run_auto_lay(t: TestCase) -> void:
 	t.begin("128 · 没给落点的（程序塞进来的、旧档）自动铺：从左下角起，互不重叠、都在屏内")
 	ItemInstance.reset_uid_counter()
-	var small := _def(&"t_small", ["#"])
-	var long := _def(&"t_long", ["###"])
-	var block := _def(&"t_block", ["##", "##"])
+	var small := _def(&"t_small", ["1"])
+	var long := _def(&"t_long", ["111"])
+	var block := _def(&"t_block", ["11", "11"])
 	var stash := ItemStash.new(2, 0)
 	stash.cell_norm = Vector2(InventoryView.CELL, InventoryView.CELL) / SCREEN
 	var all: Array = []
@@ -111,7 +111,7 @@ static func run_auto_lay(t: TestCase) -> void:
 static func run_resize_keeps_on_screen(t: TestCase) -> void:
 	t.begin("128 · 窗口尺寸变了：东西还在屏内（落点是归一化的，画的时候整块夹进屏）")
 	ItemInstance.reset_uid_counter()
-	var block := _def(&"t_block", ["###", "###"])
+	var block := _def(&"t_block", ["111", "111"])
 	var stash := ItemStash.new(2, 0)
 	var ground := GroundLayer.new()
 	ground.size = SCREEN
@@ -133,7 +133,7 @@ static func run_resize_keeps_on_screen(t: TestCase) -> void:
 static func run_pick_up_and_drop_again(t: TestCase) -> void:
 	t.begin("128 · 从地上拿起又放回地上 = 改落点（列表里的位置不变、件数不变）；拿起放进棋盘就离开地上")
 	ItemInstance.reset_uid_counter()
-	var gun := _def(&"t_gun", ["#"])
+	var gun := _def(&"t_gun", ["1"])
 	var board := GridInventory.new(Vector2i(4, 4), 1)
 	var stash := ItemStash.new(2, 0)
 	var rig := _rig(stash, board)
@@ -170,7 +170,7 @@ static func run_pick_up_and_drop_again(t: TestCase) -> void:
 static func run_old_save_without_spots(t: TestCase) -> void:
 	t.begin("128 · 旧档（地上 / 按点存放都没有 spots）照样读得回来，东西自动铺开")
 	ItemInstance.reset_uid_counter()
-	var gun := _def(&"t_gun", ["#"])
+	var gun := _def(&"t_gun", ["1"])
 	var db := _db_of([gun])
 	var stash := ItemStash.new(2, 0)
 	for i in 3:
@@ -241,7 +241,7 @@ static func run_spots_follow_nodes(t: TestCase) -> void:
 static func frame_push_out_of_panels(t: TestCase, root: Window) -> void:
 	t.begin("128 · 放到面板上也算地上，但落点推到面板外最近的空处；面板后开的，压着的东西让开")
 	ItemInstance.reset_uid_counter()
-	var gun := _def(&"t_gun", ["#"])
+	var gun := _def(&"t_gun", ["1"])
 	var stash := ItemStash.new(2, 0)
 	var host := Control.new()
 	host.size = SCREEN

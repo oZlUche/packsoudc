@@ -7,9 +7,11 @@ extends RefCounted
 
 
 ## 假的侵蚀：只记谁在什么时候调了它，惩罚按配置给。
-class FakeErosion:
+## 140 R-22：侵蚀是 [ErosionField]，假的就是它的子类 —— 只把推进与结算换成记次序
+class FakeErosion extends ErosionField:
 	var log: Array
 	var damage: int = 0
+	var vitality: Vitality = null
 	var seen_totals: Array[int] = []
 
 	func _init(p_log: Array, p_damage: int = 0) -> void:
@@ -20,9 +22,10 @@ class FakeErosion:
 		log.append("erosion")
 		seen_totals.append(clock.total)
 
-	func move_penalty(_node: MapNode) -> Dictionary:
+	func settle(_node: MapNode) -> void:
 		log.append("penalty")
-		return {"hp_damage": damage, "item_risk": 0.0}
+		if damage > 0 and vitality != null:
+			vitality.spend(damage, &"erosion")
 
 
 static func _map(seed: int = 3) -> MapGraph:
@@ -51,7 +54,8 @@ static func run_navigator_is_read_only(t: TestCase) -> void:
 	t.begin("导航器 · 只有单步与只读查询，没有多步移动的入口")
 
 	# 公开方法就这几个。多一个「走过去」「寻路」之类的就红 —— 自动寻路是有意不做的（5.6）
-	var allowed := ["available_moves", "edge_for_step", "resolve_step", "distance_map", "nearest_of_type"]
+	var allowed := ["available_moves", "edge_for_step", "resolve_step", "distance_map", "nearest_of_type",
+		"distances_to_type", "within_steps", "connected_within"]
 	var found: Array[String] = []
 	for m in MapNavigator.new().get_script().get_script_method_list():
 		var name := String(m["name"])
@@ -98,8 +102,8 @@ static func run_settlement_order(t: TestCase) -> void:
 	clock.advanced.connect(func(_total: int, _delta: int): log.append("spend"))
 	var erosion := FakeErosion.new(log, 1)
 	var travel := MapTravel.new(g, clock)
+	erosion.vitality = Vitality.new(5)
 	travel.erosion = erosion
-	travel.vitality = Vitality.new(5)
 	travel.on_node_event = func(node: MapNode): log.append("event:%d" % node.id)
 
 	var start: int = g.entry_ids[0]
@@ -110,7 +114,7 @@ static func run_settlement_order(t: TestCase) -> void:
 	t.eq(log, ["spend", "erosion", "penalty", "event:%d" % to],
 		"**顺序不可调换**：先计数，再侵蚀推进，再结算目的地惩罚，最后触发事件")
 	t.eq(erosion.seen_totals, [1] as Array[int], "侵蚀看到的是花过这一步之后的累计")
-	t.eq(travel.vitality.current, 4, "惩罚扣在体力上（假侵蚀说扣 1）")
+	t.eq(erosion.vitality.current, 4, "目的地由侵蚀自己结算（假侵蚀扣 1）")
 	t.eq(travel.current_id, to, "人到了")
 	t.eq(travel.history, [start, to] as Array[int], "走过的路记着")
 

@@ -31,6 +31,11 @@ static func _nodes_in_row(g: MapGraph, r: int) -> Array[int]:
 	return out
 
 
+## 沙漏颈部两头那两层（作者要在咽喉前后放中途撤离点时填进 rules.extract_rows 的那两个数）
+static func _neck_end_rows(cfg: HourglassMapConfig) -> Array[int]:
+	return [cfg.half_rows - 1, cfg.half_rows + cfg.neck_rows] as Array[int]
+
+
 static func run_hourglass(t: TestCase) -> void:
 	t.begin("沙漏 · 上下两块对称的长方形、中间几层只有平行线段；线段层不横连、只直上直下；出生在底、终点在顶正中；多种子都过校验")
 	var cfg := HourglassMapConfig.sample()
@@ -276,7 +281,7 @@ static func run_types_and_rules(t: TestCase) -> void:
 	t.begin("格阵 · 类型规则：撤离点只在允许的层、够远、数量在范围里；每层配额；覆盖；不许相邻；规则写进图，手改就红")
 	var cfg := HourglassMapConfig.sample()
 	# 作者要在咽喉前后放中途撤离点时这么填（默认没有中途撤离点）
-	cfg.rules.extract_rows = cfg.neck_end_rows()
+	cfg.rules.extract_rows = _neck_end_rows(cfg)
 	cfg.rules.extract_count = Vector2i(1, 2)
 	var g := _hourglass(11, cfg)
 	if g == null:
@@ -404,3 +409,22 @@ static func run_layout_and_play(t: TestCase) -> void:
 			t.check(not s.travel.available_moves().has(from), "塔（不回头）：上去了回不了出生点")
 			t.check(not s.step_to(from), "往回走被拒")
 		t.check(s.phase != RunState.Phase.PICK_SPAWN, "%s：在图上" % kind)
+
+
+static func run_map_rng_pick_weighted(t: TestCase) -> void:
+	t.begin("140 M-25 · MapRng.pick_weighted：按给定顺序扣减、跳过 exclude、表空退回 fallback、一次只掷一回")
+	var w := {"battle": 3.0, "search": 1.0, "rest": 0.0}
+	var rng := RandomNumberGenerator.new()
+	t.eq(MapRng.pick_weighted({}, rng, [], [], &"battle"), &"battle", "空表退回 fallback")
+	t.eq(MapRng.pick_weighted(w, rng, [], ["battle", "search"], &"x"), &"x", "全被排除（剩下的权重 0）退回 fallback")
+	t.eq(MapRng.pick_weighted(w, rng, [], ["battle"]), &"search", "排除 battle 只剩 search")
+	for seed in [1, 7, 20261007]:
+		var a := RandomNumberGenerator.new()
+		a.seed = seed
+		var b := RandomNumberGenerator.new()
+		b.seed = seed
+		var got := MapRng.pick_weighted(w, a, ["search", "battle", "rest"])
+		var roll := b.randf() * 4.0
+		var want := &"search" if roll <= 1.0 else &"battle"
+		t.eq(got, want, "种子 %d：按 order 顺序扣减（先 search）" % seed)
+		t.eq(a.randf(), b.randf(), "种子 %d：只掷了一次" % seed)

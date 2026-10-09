@@ -121,6 +121,18 @@
 - **`DealDamage.amount` 与 `base_stats.damage`**（091 十四·6）：两者**不相加**，属性有值以属性为准、`amount` 只是不读属性时的备用固定值；武器数据里从没填过 `amount`。这边建议保留 `base_stats.damage`（buff / 套装 / 邻接的加成都落在它上面），编辑器里已把 `amount` 的说明写清；要不要在道具编辑器里把 `amount` 藏起来，等作者一句。
 - **架构文档 15 节**：侵蚀损失的形式、节点事件的额外行动消耗（现在一律只按边的 `action_cost`）、撤离后的保留规则（现在的假设见上）、棋盘尺寸与开局可用格、合成配方、地上清空时机、角色基线、元素性质。
 
+## 已实现、暂无内容 / 内容未用的字段（140 登记）
+
+代码与测试都在，只是现在没有内容让它生效。不是死代码：等需要时写数据就行；真定了不要，再按这里列的范围一次清掉。
+
+| 什么 | 现状 | 代价 / 清掉的范围 |
+|---|---|---|
+| 套装、道具跨域效果、包体加成、敌人 `loadout`（架构 9 节） | 已实现、暂无内容；第一份内容待流派 / 掉落设计需要时再写 | `core/sets`、`set_editor`、`test_sets`、`ItemDef.set_id / effects / bag_mods`、`LootRegistry` 四种效果、`EnemyDef.loadout`、`RunState.tracker` 接线、面板 / 悬浮窗套装行（约 1.2k 行） |
+| 非矩形自由容器 `GridInventory._blocked`（架构 14 节预留） | 生产里每个容器都是矩形，`set_blocked` 只有测试调；139 仓库放大格子之后仍是矩形 | `is_blocked / set_blocked`、三处放置判定、扩容 / 重置、存档键 `"blocked"`、`drag_layer` 与 `inventory_view` 各一处读（约 35 行） |
+| `HunterMechanic.count_by_scale` | `ascension_1.json` 没填：按规模配几个猎手用默认（`default_count`），「用默认」就是生效的规则 | 不往 JSON 里补占位值；要按规模调时直接填 |
+| `EnemyPoolEntry.min_danger` | 两份池子都没写，默认 0，条件永远成立 | 字段 + 一行判定 |
+| `DropRule.treasure_modified` | 没写，默认 true；珍宝概率是 0 时没有可观测效果 | 字段 + 一处分支 |
+
 ## 分支与工作目录
 
 - `main`（远端同步）包含全部工作：M1～M6、探索度、作者七条与设想（052 / 053）。

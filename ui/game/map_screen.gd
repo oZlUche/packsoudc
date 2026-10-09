@@ -5,7 +5,6 @@
 ## 所有动作都是公开方法，鼠标只是调它们；测试直接调。
 extends GameScreen
 
-const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
 const SettingsScreenScript := preload("res://ui/game/settings_screen.gd")
 const EncyclopediaScreenScript := preload("res://ui/game/encyclopedia_screen.gd")
 const SIDE_WIDTH := 400     # 090：右栏三个按键放大到 300%，栏也加宽
@@ -25,7 +24,6 @@ var _log: RichTextLabel
 var _extract_btn: Button
 var _reopen_btn: Button
 var _skills_box: VBoxContainer
-var _tip: HoverTip = null
 var _bag: Control = null
 var _bag_panel: Control = null
 var _confirm: Control = null
@@ -105,18 +103,10 @@ func confirm_open() -> bool:
 
 func _open_confirm(node: MapNode) -> void:
 	cancel_extract()
-	var shade := ColorRect.new()
-	shade.color = Color(0.04, 0.05, 0.07, 0.7)
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(shade)
-	_confirm = shade
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.add_child(center)
+	_confirm = _shade(0.7, true)
 	var panel := _panel(20)
 	panel.custom_minimum_size.x = 520
-	center.add_child(panel)
+	_confirm.get_child(0).add_child(panel)
 	var col := _vbox(10)
 	panel.add_child(col)
 	col.add_child(_label("撤离？", 20, UiPalette.FG))
@@ -157,15 +147,10 @@ func toggle_bag() -> void:
 		_bag.queue_free()
 		_bag = null
 		return
-	var shade := ColorRect.new()
-	shade.color = Color(0.04, 0.05, 0.07, 0.7)
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(shade)
-	_bag = shade
+	_bag = _shade(0.7)
 	var win := FloatingWindow.new()
-	win.setup("bag", "背包", font, toggle_bag, "收起（B）")
-	shade.add_child(win)
+	win.setup("bag", "背包", toggle_bag, "收起（B）")
+	_bag.add_child(win)
 	_reserve_ground(win)     # 128：背包浮窗占着的地方，地上的东西让开
 	var inv := InventoryPanelScript.new()
 	inv.setup(_run, font)
@@ -240,17 +225,9 @@ func toggle_pause() -> void:
 		_pause.queue_free()
 		_pause = null
 		return
-	var shade := ColorRect.new()
-	shade.color = Color(0.04, 0.05, 0.07, 0.72)
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(shade)
-	_pause = shade
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.add_child(center)
+	_pause = _shade(0.72, true)
 	var panel := _panel(28)
-	center.add_child(panel)
+	_pause.get_child(0).add_child(panel)
 	var col := _vbox(12)
 	panel.add_child(col)
 	col.add_child(_label("暂停", 26, UiPalette.FG))
@@ -271,14 +248,7 @@ func pause_open() -> bool:
 func pause_settings() -> void:
 	if _pause == null or _pause_settings != null:
 		return
-	var s = SettingsScreenScript.new()
-	s.screen = GameFlow.Screen.SETTINGS
-	s.flow = flow
-	s.font = font
-	s.back = close_pause_settings
-	_pause.add_child(s)
-	s.open({})
-	_pause_settings = s
+	_pause_settings = _embed_in_pause(SettingsScreenScript, GameFlow.Screen.SETTINGS, {}, close_pause_settings)
 
 
 func close_pause_settings() -> void:
@@ -296,14 +266,7 @@ func settings_open() -> bool:
 func pause_encyclopedia(page: String = "") -> void:
 	if _pause == null or _pause_book != null:
 		return
-	var s = EncyclopediaScreenScript.new()
-	s.screen = GameFlow.Screen.ENCYCLOPEDIA
-	s.flow = flow
-	s.font = font
-	s.back = close_pause_encyclopedia
-	_pause.add_child(s)
-	s.open({"page": page} if page != "" else {})
-	_pause_book = s
+	_pause_book = _embed_in_pause(EncyclopediaScreenScript, GameFlow.Screen.ENCYCLOPEDIA, {"page": page} if page != "" else {}, close_pause_encyclopedia)
 
 
 func close_pause_encyclopedia() -> void:
@@ -316,43 +279,34 @@ func encyclopedia_open() -> bool:
 	return _pause_book != null
 
 
+## 090 / 114：把一屏嵌进暂停菜单（设置、百科）：它的「返回」回暂停菜单，不回主菜单 —— 一局还在
+func _embed_in_pause(script: GDScript, screen_id: int, payload: Dictionary, on_close: Callable) -> GameScreen:
+	var s = script.new()
+	s.screen = screen_id
+	s.flow = flow
+	s.font = font
+	s.back = on_close
+	_pause.add_child(s)
+	s.open(payload)
+	return s
+
+
 ## 091：「本图规则」卡：章节写的 ≤ 3 条，一页；[param first] = 第一次进这一章弹的（关掉时记住看过了）
 func show_rules(first: bool = false) -> void:
 	if _rules != null or _run == null or _run.chapter == null or _run.chapter.rules.is_empty():
 		return
 	_rules_first = first
-	var shade := ColorRect.new()
-	shade.color = Color(0.04, 0.05, 0.07, 0.72)
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(shade)
-	_rules = shade
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.add_child(center)
+	_rules = _shade(0.72, true)
 	var panel := _panel(28)
-	center.add_child(panel)
+	_rules.get_child(0).add_child(panel)
 	var col := _vbox(12)
 	panel.add_child(col)
 	col.add_child(_label("本图规则　%s" % Names.of(_run.chapter), 24, UiPalette.FG))
 	var ctx := TextTemplate.context_for(_run)     # 112：规则卡也过占位符（{item:…} 按稀有度上色）
 	for i in _run.chapter.rules.size():
-		col.add_child(_rich_line("%d. %s" % [i + 1, UiPalette.resolve_styles(TextTemplate.render(_run.chapter.rules[i], ctx))], 15, 560))
+		col.add_child(UiTheme.rich_block(560, 15, "%d. %s" % [i + 1, UiPalette.resolve_styles(TextTemplate.render(_run.chapter.rules[i], ctx))]))
 	col.add_child(_wrapped("暂停菜单（Esc）里能再看", 12, UiPalette.DIM, 560))
 	col.add_child(_button("知道了（Esc）", close_rules, 14, UiPalette.Tier.PRIMARY))
-
-
-## 规则卡上的一条（BBCode，自动换行、高度随内容）
-func _rich_line(bbcode: String, font_size: int, width: float) -> RichTextLabel:
-	var r := RichTextLabel.new()
-	r.bbcode_enabled = true
-	r.fit_content = true
-	r.scroll_active = false
-	r.custom_minimum_size.x = width
-	UiTheme.rich(r, font_size)
-	r.text = bbcode
-	return r
-
 
 
 func close_rules() -> void:
@@ -393,7 +347,7 @@ func _adopt() -> void:
 	if buff_mod != null:
 		buff_mod.buffs_changed.connect(_refresh_hud)
 	# 082：技能按钮与信力
-	_run.skills_changed.connect(func():
+	_run.skills.changed.connect(func():
 		_refresh_skills()
 		_refresh_hud())
 	var countdown := CountdownModule.of(_run)     # 101：倒计时是一局的模块，数与信号都在它身上
@@ -401,7 +355,7 @@ func _adopt() -> void:
 		_note("[color=#f0ad4e]　带入超出预算 %d：倒计时 −%d[/color]" % [countdown.over_value(), countdown.penalty_steps()])
 	for note in flow.take_notes():     # 088：开局拿到的特殊道具（望远镜）等通知
 		_note("[color=#f0ad4e]　%s[/color]" % note)
-	_run.faith_power_changed.connect(func(id: StringName, p: int, tier: int):
+	_run.faith_power.changed.connect(func(id: StringName, p: int, tier: int):
 		var def: FaithDef = _run.faith_defs.get(id, null)
 		_note("　信力（%s）%d，第 %d 阶" % [def.display_name if def != null else String(id), p, tier])
 		_refresh_hud())
@@ -418,36 +372,39 @@ func _adopt() -> void:
 		crafting.done.connect(func(detail: Dictionary):
 			for line in detail.get("log", []):
 				_note("　" + String(line)))
-	# 猎手（071）：进了感知范围提示一句；动了就重画标记；被赶回上一个点
-	_run.hunter_sensed.connect(func(h: Hunter):
-		var def: HunterDef = _run.hunters.def_of(h) if _run.hunters != null else null
-		var seen := _run.hunters != null and _run.hunters.visible_hunters().has(h)
-		_note("[color=#d9534f]　附近有动静……%s[/color]" % ("（" + def.display_name + "）" if def != null and seen else "")))
-	_run.hunters_changed.connect(_refresh_hunter_marks)
-	_run.player_expelled.connect(func(to: int):
-		_note("[color=#d9534f]　被赶回了点 %d[/color]" % to)
-		_view.current_id = to
-		_after_move())
-	# 侵蚀（075）：预警、推进、结算了、终局 —— 都写进日志，地图上垫色
-	_run.erosion_warned.connect(func(band: int, left: int):
-		_note("[color=#f0ad4e]　侵蚀预警：第 %d 档还有 %d 步就被侵蚀[/color]" % [band, left])
-		_refresh_erosion_view())
-	_run.erosion_advanced.connect(func(bands: int):
-		_note("[color=#d9534f]　侵蚀推进：最外 %d 档已被侵蚀[/color]" % (bands + 1))
-		_refresh_erosion_view()
-		_refresh_hud())
-	_run.erosion_applied.connect(func(node: MapNode, detail: Dictionary):
-		var bits: Array[String] = []
-		if int(detail.get("vitality", 0)) > 0:
-			bits.append("体力 -%d" % int(detail["vitality"]))
-		if int(detail.get("money", 0)) > 0:
-			bits.append("钱 -%d" % int(detail["money"]))
-		for name in detail.get("items", []):
-			bits.append("「%s」烂掉了" % name)
-		for line in detail.get("log", []):
-			bits.append(String(line))
-		_note("[color=#d9534f]　侵蚀区（点 %d，深 %d 层）：%s[/color]" % [node.id, int(detail.get("depth", 0)), "，".join(bits)]))
-	_run.erosion_total.connect(func(): _note("[color=#d9534f]　全图都被侵蚀了：快撤[/color]"))
+	# 猎手（071）：进了感知范围提示一句；动了就重画标记；被赶回上一个点。140 R-23：直接接猎手系统
+	if _run.hunters != null:
+		_run.hunters.sensed.connect(func(h: Hunter):
+			var def: HunterDef = _run.hunters.def_of(h)
+			var seen := _run.hunters.visible_hunters().has(h)
+			_note("[color=#d9534f]　附近有动静……%s[/color]" % ("（" + def.display_name + "）" if def != null and seen else "")))
+		_run.hunters.changed.connect(_refresh_hunter_marks)
+		_run.hunters.player_expelled.connect(func(to: int):
+			_note("[color=#d9534f]　被赶回了点 %d[/color]" % to)
+			_view.current_id = to
+			_after_move())
+	# 侵蚀（075）：预警、推进、结算了、终局 —— 都写进日志，地图上垫色。直接接侵蚀场
+	var field := _run.travel.erosion
+	if field != null:
+		field.warned.connect(func(band: int, left: int):
+			_note("[color=#f0ad4e]　侵蚀预警：第 %d 档还有 %d 步就被侵蚀[/color]" % [band, left])
+			_refresh_erosion_view())
+		field.advanced.connect(func(bands: int):
+			_note("[color=#d9534f]　侵蚀推进：最外 %d 档已被侵蚀[/color]" % (bands + 1))
+			_refresh_erosion_view()
+			_refresh_hud())
+		field.applied.connect(func(node: MapNode, detail: Dictionary):
+			var bits: Array[String] = []
+			if int(detail.get("vitality", 0)) > 0:
+				bits.append("体力 -%d" % int(detail["vitality"]))
+			if int(detail.get("money", 0)) > 0:
+				bits.append("钱 -%d" % int(detail["money"]))
+			for name in detail.get("items", []):
+				bits.append("「%s」烂掉了" % name)
+			for line in detail.get("log", []):
+				bits.append(String(line))
+			_note("[color=#d9534f]　侵蚀区（点 %d，深 %d 层）：%s[/color]" % [node.id, int(detail.get("depth", 0)), "，".join(bits)]))
+		field.total_reached.connect(func(): _note("[color=#d9534f]　全图都被侵蚀了：快撤[/color]"))
 	_refresh_erosion_view()
 	if _run.hunters != null and _run.hunters.metric != null and _run.hunters.metric.mode == MapMetric.ABSOLUTE:
 		# 绝对距离：把布局坐标按环距归一后交给度量（core 不认识布局）
@@ -463,7 +420,8 @@ func _adopt() -> void:
 		_note("　点 %d 是个「?」：原来是 %s" % [n.id, MapNodeStyle.of(type)["label"]]))
 	ev.type_changed.connect(func(n: MapNode, type: StringName):
 		_note("　点 %d 变成了%s点" % [n.id, MapNodeStyle.of(type)["label"]])
-		_view.refresh())
+		_view.queue_redraw())
+	ev.battle_skipped.connect(func(n: MapNode): _note("　溜走了：点 %d 那一场没打" % n.id))     # 136：脱身
 	ev.battle_finished.connect(func(n: MapNode, result: BattleResult, won: bool):
 		var who := enemy_preview(n.id).get_slice("　", 0)
 		_note("　打 %s：%s，%.1f 秒" % [who if who != "" else "敌人", "赢了" if won else ("平局，按输算" if result.is_draw() else "输了"), result.duration_sec()]))
@@ -503,9 +461,9 @@ func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
 	var n := _run.map.get_node(intent.to_id)
 	var what: String = MapNodeStyle.of(n.type)["label"]
 	if intent.kind == MoveIntent.TELEPORT:
-		_note("[color=#b38cff]⇢ %d %s，传送（花 %d 点）%s[/color]" % [intent.to_id, what, _run.travel.cost_of(intent), "" if first_visit else "，这里用过了"])
+		_note("[color=#b38cff]⇢ %d %s，传送（花 %d 点）%s[/color]" % [intent.to_id, what, _run.travel.last_cost, "" if first_visit else "，这里用过了"])
 	else:
-		_note(("→ %d %s（花 %d 点）" if first_visit else "→ %d %s，穿行（花 %d 点，这里用过了）") % [intent.to_id, what, _run.travel.cost_of(intent)])
+		_note(("→ %d %s（花 %d 点）" if first_visit else "→ %d %s，穿行（花 %d 点，这里用过了）") % [intent.to_id, what, _run.travel.last_cost])
 	var cd := CountdownModule.of(_run)
 	if cd != null and cd.has_countdown() and cd.left() > 0 and cd.left() <= 5:
 		_note("[color=#d9534f]　倒计时只剩 %d 步！[/color]" % cd.left())
@@ -516,7 +474,7 @@ func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
 func _refresh_erosion_view() -> void:
 	if _run == null or _view == null:
 		return
-	var f := _run.travel.erosion as ErosionField if _run.travel != null else null
+	var f: ErosionField = _run.travel.erosion if _run.travel != null else null
 	if f == null:
 		_view.erosion = {}
 		return
@@ -526,7 +484,7 @@ func _refresh_erosion_view() -> void:
 
 ## HUD 里的侵蚀一句：没有 / 还没开始 / 侵蚀了几档、下一档几步
 func _erosion_line() -> String:
-	var f := _run.travel.erosion as ErosionField if _run != null and _run.travel != null else null
+	var f: ErosionField = _run.travel.erosion if _run != null and _run.travel != null else null
 	if f == null:
 		return ""
 	if f.is_total():
@@ -570,7 +528,7 @@ func _after_move() -> void:
 		for id in _run.travel.available_moves():
 			reach[id] = true
 	_view.reachable = reach
-	_view.refresh()
+	_view.queue_redraw()
 	_refresh_hud()
 	_refresh_hunter_marks()
 	var node := _run.current_node()
@@ -617,7 +575,7 @@ func _on_node_hovered(id: int) -> void:
 		_preview.text = ""
 		return
 	_preview.text = "→ %s　花 %d 行动点%s%s" % [MapNodeStyle.of(n.type)["label"], _run.travel.cost_of(intent),
-		"（负重：双倍）" if _run.travel.action_cost_mult > 1 else "", "（用过了，只是穿行）" if n.is_visited() else ""]
+		"（熟门熟路：这一步不花）" if _run.travel.next_step_free() else ("（负重：双倍）" if _run.travel.action_cost_mult > 1 else ""), "（用过了，只是穿行）" if n.is_visited() else ""]
 
 
 ## 084：节点浮窗（章节开关 `node_tooltips`）：文字按 NodeTooltip 的模板渲染，没用过的战斗点下面画对手的棋盘
@@ -661,6 +619,8 @@ static func search_end_text(why: StringName) -> String:
 			return "被赶跑，这个点不能再搜"
 		&"exhausted":
 			return "搜完了"
+		&"slipped":
+			return "溜走了，这个点不能再搜"
 	return "离开"
 
 
@@ -674,10 +634,8 @@ func enemy_preview(id: int) -> String:
 	if _run.drop_rule != null:
 		var ctx := LootContext.new()
 		ctx.difficulty = _run.chapter.difficulty
-		ctx.add_source(MetaDropBonus.new())
-		ctx.add_source(MapDropBonus.new())
 		line += "　预计掉 %.1f 件，珍宝 %.0f%%" % [
-			DropResolver.expected_count(content, _run.drop_rule, ctx, flow.items),
+			DropResolver.expected_count(content, _run.drop_rule, ctx, flow.items, _run.map.get_node(id).type == &"core"),
 			DropResolver.treasure_chance(_run.drop_rule, ctx) * 100.0]
 	if _run.economy != null:
 		var depth: float = EnemyPlacer.depths_of(_run.map).get(id, 0.0)
@@ -768,8 +726,7 @@ func _power_line() -> String:
 func _refresh_skills() -> void:
 	if _skills_box == null or _run == null:
 		return
-	for c in _skills_box.get_children():
-		c.queue_free()
+	UiTheme.clear_children(_skills_box)
 	if _run.skills == null:
 		return
 	for s in _run.skills.active_skills():
@@ -782,8 +739,8 @@ func _refresh_skills() -> void:
 		if _run.skills.cooldown_of(d.id) > 0:
 			bits.append("冷却 %d 步" % _run.skills.cooldown_of(d.id))
 		var btn := _button("%s%s" % [d.display_name, ("（" + "，".join(bits) + "）") if not bits.is_empty() else ""], func(): use_skill(d.id), 13, UiPalette.Tier.MINOR)
-		btn.disabled = _run.skills.can_use(d.id) != ""
-		btn.tooltip_text = d.summary() + ("\n" + Names.description_of(d) if d.description != "" else "")
+		btn.disabled = _run.skills.can_use(d.id) != "" or not d.map_usable()
+		btn.tooltip_text = d.summary() + ("\n" + Names.description_of(d) if d.description != "" else "") + ("" if d.map_usable() else "\n在战前准备屏（或猎手面前）用")
 		_skills_box.add_child(btn)
 	if _run.skills.evading():
 		_skills_box.add_child(_label("躲避中（剩 %d 步）" % _run.skills.evade_left, 12, UiPalette.DIM))
@@ -816,10 +773,8 @@ func _buff_line() -> String:
 
 
 func _route_of_entry(id: int) -> Dictionary:
-	for route in _run.map.routes:
-		if int(route.get("entry_id", -1)) == id:
-			return route
-	return {}
+	var i := _route_index_of_entry(id)
+	return _run.map.routes[i] if i >= 0 else {}
 
 
 func _route_index_of_entry(id: int) -> int:
@@ -831,8 +786,7 @@ func _route_index_of_entry(id: int) -> int:
 
 ## 右栏：挑出生点阶段每条路线一张卡 —— 这是这一章第一个真正的决策；开局之后收起
 func _rebuild_routes() -> void:
-	for child in _routes_box.get_children():
-		child.queue_free()
+	UiTheme.clear_children(_routes_box)
 	if _run.phase != RunState.Phase.PICK_SPAWN:
 		return
 	_routes_box.add_child(_label("路线：挑一个出生点", 14, UiPalette.FG))
@@ -919,7 +873,7 @@ func _build() -> void:
 	_enemy_line.custom_minimum_size.y = 22
 	_pin_width(_enemy_line)
 	mid.add_child(_enemy_line)
-	_tip = HoverTip.new(font)
+	_tip = HoverTip.new()
 	add_child(_tip)
 
 	var side := _panel(12)

@@ -2,36 +2,14 @@
 ## 迎战 / 逃跑、六种战败后果、掉落倍率、存档、流程。期望从数据推：定义里写了几步就断言几步。
 extends RefCounted
 
+## 与 Support.paths("hunters") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_hunters_run.json"
 const META := "user://test_hunters_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var hunter_defs: Dictionary
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.hunter_defs = GameFlow.load_hunters()
-	return c
-
-
-static func _cleanup() -> void:
-	for p in [SAVE, META]:
-		if FileAccess.file_exists(p):
-			DirAccess.remove_absolute(p)
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["hunter_defs"])
 
 
 ## 一份只开猎手机制的难度（代码里造，不依赖作者的进阶文件）
@@ -49,7 +27,7 @@ static func _difficulty(ids: Array[StringName], count: int = 1, min_dist: float 
 
 
 ## 开一局、挑出生点。[param defs] 是这一局的猎手定义表（可以是改过数的副本）
-static func _start(c: Content, defs: Dictionary, diff: DifficultyDef) -> RunState:
+static func _start(c: TestSupport.Content, defs: Dictionary, diff: DifficultyDef) -> RunState:
 	for seed in range(1, 40):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [&"bag_leather", &"rifle"] as Array[StringName],
 			{}, [] as Array[StringName], null, [], diff, defs)
@@ -67,7 +45,7 @@ static func _copy_defs(defs: Dictionary) -> Dictionary:
 	return out
 
 
-static func _first_def(c: Content) -> HunterDef:
+static func _first_def(c: TestSupport.Content) -> HunterDef:
 	var ids: Array = c.hunter_defs.keys()
 	ids.sort()
 	return c.hunter_defs[ids[0]] if not ids.is_empty() else null
@@ -83,7 +61,7 @@ static func run_pipeline(t: TestCase) -> void:
 	var c := _content()
 	var sample := {"id": "probe", "display_name": "探针", "level": 3, "visibility": "VISIBLE", "sense_range": 5.0, "speed": 2,
 		"engage_range": 1.0, "territory_radius": 0, "behavior": {"type": "patrol", "every_steps": 3},
-		"loss_outcomes": [{"type": "spend_vitality", "amount": 2}, {"type": "expel_and_guard"}], "drop_mult": 2.0, "flee_chance": 0.25}
+		"loss_options": [{"id": "default", "outcomes": [{"type": "spend_vitality", "amount": 2}, {"type": "expel_and_guard"}]}], "drop_mult": 2.0, "flee_chance": 0.25}
 	var report := ImportReport.new()
 	var def := ContentImporter.import_hunter(sample, ContentImporter.Context.new(), report)
 	t.check(report.ok(), "合法的猎手导入没有错：%s" % report.to_text())
@@ -91,9 +69,10 @@ static func run_pipeline(t: TestCase) -> void:
 	var back := ContentImporter.import_hunter(JSON.parse_string(text), ContentImporter.Context.new(), ImportReport.new())
 	t.eq(ContentExporter.to_json(ContentExporter.export_hunter(back)), text, "导出 → 导入 → 再导出逐字节相同")
 	t.check(back.behavior is PatrolBehavior and (back.behavior as PatrolBehavior).every_steps == 3, "行动逻辑按注册表造、参数在")
-	t.eq(back.loss_outcomes.size(), 2, "两条战败后果")
-	t.check(back.loss_outcomes[0] is LossSpendVitality and (back.loss_outcomes[0] as LossSpendVitality).amount == 2, "第一条：扣 2 体力")
-	t.check(back.loss_outcomes[1] is LossExpelAndGuard, "第二条：赶走并驻守")
+	var outs := back.loss_options[0].outcomes if not back.loss_options.is_empty() else []
+	t.eq(outs.size(), 2, "两条战败后果")
+	t.check(outs.size() == 2 and outs[0] is LossSpendVitality and (outs[0] as LossSpendVitality).amount == 2, "第一条：扣 2 体力")
+	t.check(outs.size() == 2 and outs[1] is LossExpelAndGuard, "第二条：赶走并驻守")
 	t.eq(back.visibility, HunterDef.Visibility.VISIBLE, "可视性枚举按名字读")
 	t.check(back.summary().contains("巡逻"), "summary 写着行动逻辑：%s" % back.summary())
 
@@ -120,7 +99,7 @@ static func run_pipeline(t: TestCase) -> void:
 			t.eq(ContentExporter.to_json(ContentExporter.export_hunter(res)), raw, "%s 是往返不动点" % f)
 			t.check(ResourceLoader.exists(ContentPaths.asset_file("hunters", f.get_basename())), "%s 的资产在" % f)
 	t.check(files >= 1, "至少一份猎手文件")
-	t.eq(c.hunter_defs.size(), files, "load_hunters 装回全部 %d 份" % files)
+	t.eq(c.hunter_defs.size(), files, "HunterSystem.load_all 装回全部 %d 份" % files)
 
 
 static func run_spawn_territory_turn(t: TestCase) -> void:
@@ -161,7 +140,7 @@ static func run_spawn_territory_turn(t: TestCase) -> void:
 		t.check(h.territory.is_empty(), "半径 0 = 整张图")
 	# 回合：走几步，猎手只在领地里
 	var sensed: Array = []
-	s.hunter_sensed.connect(func(_h: Hunter): sensed.append(true))
+	s.hunters.sensed.connect(func(_h: Hunter): sensed.append(true))
 	var moved := 0
 	for i in 6:
 		if s.is_over() or not s.events.pending.is_empty():
@@ -376,7 +355,7 @@ static func run_save_and_flow(t: TestCase) -> void:
 	t.check(s3.events.choose(0), "读档后能迎战")
 
 	# 流程
-	_cleanup()
+	Support.cleanup("hunters")
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = [c.chapter] as Array[ChapterDef]
 	f.difficulties = [diff] as Array[DifficultyDef]
@@ -419,7 +398,7 @@ static func run_save_and_flow(t: TestCase) -> void:
 				f.resume()
 	if run.is_over() or run.hunters.alive().is_empty():
 		t.check(true, "（这一步就结束了，流程部分跳过）")
-		_cleanup()
+		Support.cleanup("hunters")
 		return
 	var hh: Hunter = run.hunters.alive()[0]
 	hh.node_id = run.travel.current_id
@@ -432,7 +411,7 @@ static func run_save_and_flow(t: TestCase) -> void:
 	t.eq(int(run.tally["battles_won"]) + int(run.tally["battles_lost"]), before + 1, "打了一场")
 	t.eq(f.screen, GameFlow.Screen.BATTLE, "→ 回放")
 	t.check(f.save() or run.is_over(), "存得了档")
-	_cleanup()
+	Support.cleanup("hunters")
 
 
 static func run_brackets(t: TestCase) -> void:

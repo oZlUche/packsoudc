@@ -16,5 +16,5 @@ func subscribed_events() -> Array[StringName]:
 	return [BattleEvent.BEFORE_DAMAGE] as Array[StringName]
 
 
-func matches(ctx: RuleContext, event: BattleEvent) -> bool:
-	return matches_damage(ctx, event)
+func _when() -> String:
+	return "前"

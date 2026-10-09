@@ -41,7 +41,9 @@ func _all_scripts(root: String) -> Array[String]:
 		if f.ends_with(".gd"):
 			out.append(root.path_join(f))
 	for sub in dir.get_directories():
-		if SKIP_DIRS.has(sub):
+		# 隐藏目录（.godot / .git / .claude 的工作树……）与 Godot 自己也不扫的 .gdignore 目录都跳过：
+		# 工作树里是整个项目的副本，装进来就是每个 class_name 各两份
+		if sub.begins_with(".") or SKIP_DIRS.has(sub) or FileAccess.file_exists(root.path_join(sub).path_join(".gdignore")):
 			continue
 		out.append_array(_all_scripts(root.path_join(sub)))
 	return out

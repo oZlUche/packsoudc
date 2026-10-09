@@ -4,40 +4,19 @@
 extends RefCounted
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var events: Dictionary
-	var rules: NodeRules
-
-
-class FakeErosion:
+class FakeErosion extends ErosionField:
 	var log: Array = []
 	var depths: Dictionary = {}
 	func on_action(clock: ActionClock, _graph: MapGraph) -> void:
 		log.append("erosion@%d" % clock.total)
-	func move_penalty(_node: MapNode) -> Dictionary:
+	func settle(_node: MapNode) -> void:
 		log.append("penalty")
-		return {"hp_damage": 0, "item_risk": 0.0}
 	func depth_of(node: MapNode) -> int:
 		return int(depths.get(node.id, -1))
 
 
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.events = GameFlow.load_events()
-	c.rules = load(ContentPaths.asset_file("node_rules", String(c.chapter.node_rules)))
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["events", "node_rules"])
 
 
 static func _event(id: StringName, options: Array) -> EventDef:
@@ -56,7 +35,7 @@ static func _event(id: StringName, options: Array) -> EventDef:
 
 
 ## 出生点旁边有某类型点的一局；把事件 [param eid] 放到那个点上。返回 {"run", "next"}
-static func _run_with(c: Content, defs: Dictionary, eid: StringName, type: StringName = &"event") -> Dictionary:
+static func _run_with(c: TestSupport.Content, defs: Dictionary, eid: StringName, type: StringName = &"event") -> Dictionary:
 	for seed in range(1, 80):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [&"bag_leather", &"rifle", &"knife"] as Array[StringName])
 		if s == null:
@@ -402,8 +381,8 @@ static func run_type_proceed_wait_lose(t: TestCase) -> void:
 		t.eq(String(s.events.pending_event().id), "t_rest", "休息点先停下等选")
 		t.eq(s.vitality.current, vit, "还没回")
 		s.events.choose(0)
-		t.eq(rested, [c.rules.rest_restore], "照常发生：回了规则说的 %d 点" % c.rules.rest_restore)
-		t.eq(s.vitality.current, mini(vit + c.rules.rest_restore, s.vitality.maximum), "体力回了")
+		t.eq(rested, [c.node_rules.rest_restore], "照常发生：回了规则说的 %d 点" % c.node_rules.rest_restore)
+		t.eq(s.vitality.current, mini(vit + c.node_rules.rest_restore, s.vitality.maximum), "体力回了")
 		t.check(s.map.get_node(n).is_visited(), "用过了")
 		# 扎营：耗时
 		var fr2 := _run_with(c, defs, &"t_rest", &"rest")
@@ -474,7 +453,7 @@ static func run_type_proceed_wait_lose(t: TestCase) -> void:
 
 static func run_pipeline(t: TestCase) -> void:
 	t.begin("事件构件 · 休息 / 商店的默认事件、裂隙、祭坛走管线；节点规则把休息 / 商店点挂上事件；描述文字不带两个冒号")
-	var events := GameFlow.load_events()
+	var events := EventPlacer.load_all()
 	for id in [&"rest_default", &"shop_default", &"event_rift", &"event_altar"]:
 		t.check(events.has(id), "装回了 %s" % id)
 	var rest: EventDef = events.get(&"rest_default", null)

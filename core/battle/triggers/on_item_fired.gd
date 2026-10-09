@@ -57,7 +57,7 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 		if not ctx.owner.links_of(mine).has(uid):
 			return false
 	if not source_tags.is_empty():
-		var shooter := ctx.owner if from_own_side else ctx.opponent()
+		var shooter := ctx.side_of(from_own_side)
 		if shooter == null:
 			return false
 		var tags := shooter.tags_of(uid)
@@ -69,3 +69,19 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 		if not hit:
 			return false
 	return true
+
+
+func describe() -> String:
+	if not same_side:
+		return "对手出手时" if source_tags.is_empty() else "对手的%s出手时" % _tag_names()
+	var what := "道具" if source_tags.is_empty() else _tag_names()
+	if source == Source.LINKED:
+		return "相连的%s出手时" % what
+	return "你的%s%s出手时" % ["" if include_self else "其他", what]
+
+
+func _tag_names() -> String:
+	var names: Array[String] = []
+	for t in source_tags:
+		names.append(Glossary.tag_name(t))
+	return "、".join(names)

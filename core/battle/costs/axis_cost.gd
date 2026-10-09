@@ -18,5 +18,5 @@ func pay(ctx: RuleContext) -> void:
 		ShiftAxis.shift(ctx.battle, ctx.owner, axis, -stacks, false)
 
 
-func describe(_ctx: RuleContext) -> String:
-	return "%s −%d 层" % [axis, stacks]
+func describe() -> String:
+	return "消耗你 %d 层%s" % [absi(stacks), StatAxes.name_of(axis, stacks)]

@@ -6,28 +6,8 @@ const SNAPS := "user://test_calibration_snapshots.jsonl"
 const DUMMIES := "user://test_calibration_dummies.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var loadouts: Array[LoadoutDef]
-	var hunters: Dictionary
-
-
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.loadouts = GameFlow.load_loadouts()
-	c.hunters = GameFlow.load_hunters()
-	return c
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["loadouts", "hunter_defs"])
 
 
 static func _cleanup() -> void:
@@ -36,7 +16,7 @@ static func _cleanup() -> void:
 			DirAccess.remove_absolute(p)
 
 
-static func _start(c: Content, kit: Array[StringName]) -> RunState:
+static func _start(c: TestSupport.Content, kit: Array[StringName]) -> RunState:
 	for seed in range(1, 40):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit)
 		if s != null:
@@ -121,12 +101,12 @@ static func run_record_and_build(t: TestCase) -> void:
 static func run_bench(t: TestCase) -> void:
 	t.begin("校准 · 木桩对猎手各档的胜率：每档都在 0～1，best 是离 50% 最近的档，wanted 是规则给的档，表能打印")
 	var c := _content()
-	var ids: Array = c.hunters.keys()
+	var ids: Array = c.hunter_defs.keys()
 	ids.sort()
 	if ids.is_empty() or c.chapter == null or c.chapter.enemy_pool == &"":
 		t.check(false, "缺猎手或敌人池")
 		return
-	var hunter: HunterDef = c.hunters[ids[0]]
+	var hunter: HunterDef = c.hunter_defs[ids[0]]
 	var pool: EnemyPool = load(ContentPaths.asset_file("enemy_pools", String(c.chapter.enemy_pool)))
 	t.not_null(pool, "有敌人池")
 	var dummies := DummyBuilder.build(DummyBuilder.from_loadouts(c.loadouts, c.items, CombatantBaseline.with_hp(60.0)), c.items, 5)
@@ -168,11 +148,11 @@ static func run_brackets(t: TestCase) -> void:
 	t.eq((dummies["1"] as Dictionary)["steps"], [5, 9], "第 1 段 5～9")
 	t.eq((dummies["2"] as Dictionary)["steps"], [10, -1], "最后一段开区间")
 	t.eq(int((dummies["0"] as Dictionary)["samples"]), 3 * c.loadouts.size(), "第 0 段的样本数（步数 0、1、4）")
-	var ids: Array = c.hunters.keys()
+	var ids: Array = c.hunter_defs.keys()
 	ids.sort()
 	if ids.is_empty():
 		return
-	var hunter: HunterDef = c.hunters[ids[0]]
+	var hunter: HunterDef = c.hunter_defs[ids[0]]
 	var pool: EnemyPool = load(ContentPaths.asset_file("enemy_pools", String(hunter.enemy_pool if hunter.enemy_pool != &"" else c.chapter.enemy_pool)))
 	var result := HunterBench.run(dummies, hunter, pool, c.enemies, c.items, 6, 3, 0, &"", 0.0, thresholds)
 	for k in result:

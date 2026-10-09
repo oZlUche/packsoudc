@@ -17,10 +17,10 @@ static func run(t: TestCase) -> void:
 	t.begin("GridInventory")
 
 	ItemInstance.reset_uid_counter()
-	var bar := _def("bar", ["#", "#", "#"])          # 竖 1x3
-	var l_shape := _def("L", ["##", "#."])           # L 形三格
-	var single := _def("dot", ["#"])
-	var weapon := _def("sword", ["#", "#"], ["weapon"])
+	var bar := _def("bar", ["1", "1", "1"])          # 竖 1x3
+	var l_shape := _def("L", ["11", "10"])           # L 形三格
+	var single := _def("dot", ["1"])
+	var weapon := _def("sword", ["1", "1"], ["weapon"])
 
 	# --- 初始状态 ---
 	var inv := GridInventory.new(Vector2i(4, 4), 1)
@@ -68,24 +68,12 @@ static func run(t: TestCase) -> void:
 	var r := ItemInstance.create(bar)
 	inv2.place(r, Vector2i(0, 0), 0)
 	t.eq(inv2.cell_uid(Vector2i(0, 2)), r.uid, "rot0 竖条占 (0,2)")
-	t.check(inv2.rotate_item(r.uid, 1), "原地旋转应成功")
+	inv2.remove(r.uid)
+	t.check(inv2.place(r, Vector2i(0, 0), 1), "换个朝向放回去")
 	t.eq(r.rotation, 1, "旋转后 rotation 为 1")
 	t.eq(inv2.cell_uid(Vector2i(2, 0)), r.uid, "rot1 横条占 (2,0)")
 	t.eq(inv2.cell_uid(Vector2i(0, 2)), GridInventory.EMPTY_UID, "旋转后旧格应释放")
 	t.eq(inv2.free_cell_count(), 13, "旋转不改变占格总数")
-
-	# --- 旋转被挡住时保持原样 ---
-	# 用干净的容器，避免受上面那轮旋转的残留朝向影响
-	var inv2b := GridInventory.new(Vector2i(4, 4), 12)
-	var v := ItemInstance.create(bar)
-	inv2b.place(v, Vector2i(0, 0), 0)        # 竖条占 (0,0) (0,1) (0,2)
-	var blocker := ItemInstance.create(single)
-	t.check(inv2b.place(blocker, Vector2i(1, 0), 0), "挡路者应能放在 (1,0)")
-	# 转成横向会落到 (0,0) (1,0) (2,0)，其中 (1,0) 已被占
-	t.check(not inv2b.rotate_item(v.uid, 1), "旋转后会撞上挡路者，应被拒绝")
-	t.eq(v.rotation, 0, "旋转被拒后 rotation 不变")
-	t.eq(inv2b.cell_uid(Vector2i(0, 2)), v.uid, "旋转被拒后占用表不变")
-	t.eq(inv2b.cell_uid(Vector2i(2, 0)), GridInventory.EMPTY_UID, "旋转被拒后不应写入新格")
 
 	# --- 封禁格（非矩形容器）---
 	var inv3 := GridInventory.new(Vector2i(3, 3), 3)
@@ -97,9 +85,9 @@ static func run(t: TestCase) -> void:
 	t.check(inv3.place(c, Vector2i(0, 0), 0), "非封禁格仍可放")
 	t.check(not inv3.set_blocked(Vector2i(0, 0), true), "已占据的格子不能封禁")
 
-	# --- 准入标签 ---
+	# --- 准入回调 ---
 	var slot := GridInventory.new(Vector2i(1, 2), 4)
-	slot.accept_tags = [&"weapon"] as Array[StringName]
+	slot.accept_filter = func(d: ItemDef) -> bool: return d.tags.has(&"weapon")
 	var w := ItemInstance.create(weapon)
 	var d := ItemInstance.create(single)
 	t.check(slot.accepts(weapon), "带 weapon 标签的定义应被接受")
@@ -138,31 +126,6 @@ static func run(t: TestCase) -> void:
 	t.eq(tall.free_cell_count(), 0, "3x1 容器被横条填满")
 	t.check(not tall.try_add(ItemInstance.create(single)), "满容器 try_add 应失败")
 
-	# --- 邻接查询 ---
-	var adj := GridInventory.new(Vector2i(4, 4), 8)
-	var n1 := ItemInstance.create(single)
-	var n2 := ItemInstance.create(single)
-	var n3 := ItemInstance.create(single)
-	adj.place(n1, Vector2i(1, 1), 0)
-	adj.place(n2, Vector2i(2, 1), 0)   # n1 右邻
-	adj.place(n3, Vector2i(1, 2), 0)   # n1 下邻
-	var far := ItemInstance.create(single)
-	adj.place(far, Vector2i(3, 3), 0)  # 不相邻
-	var nb := adj.neighbors_of(n1.uid)
-	t.eq(nb.size(), 2, "n1 应有 2 个邻居")
-	t.check(nb.has(n2.uid) and nb.has(n3.uid), "邻居应为 n2 与 n3")
-	t.check(not nb.has(far.uid), "斜对角与远处不算邻居")
-	t.eq(adj.neighbors_of(far.uid).size(), 0, "孤立物品无邻居")
-	t.eq(adj.neighbors_of(9999).size(), 0, "不存在的 uid 返回空")
-
-	# --- 邻居去重：长条与长条多点相接只算一次 ---
-	var dedup := GridInventory.new(Vector2i(4, 4), 9)
-	var barA := ItemInstance.create(bar)
-	var barB := ItemInstance.create(bar)
-	dedup.place(barA, Vector2i(0, 0), 0)
-	dedup.place(barB, Vector2i(1, 0), 0)  # 三格全部相邻
-	t.eq(dedup.neighbors_of(barA.uid).size(), 1, "多点相接的同一物品只计一次")
-
 	# --- clear ---
 	var cl := GridInventory.new(Vector2i(2, 2), 10)
 	var ci := ItemInstance.create(single)
@@ -195,21 +158,17 @@ static func run_serialization(t: TestCase) -> void:
 	t.begin("GridInventory 序列化")
 
 	ItemInstance.reset_uid_counter()
-	var bar := _def("bar", ["#", "#", "#"])
-	var l_shape := _def("L", ["##", "#."])
+	var bar := _def("bar", ["1", "1", "1"])
+	var l_shape := _def("L", ["11", "10"])
 	var db := ItemDatabase.new()
 	db.register(bar)
 	db.register(l_shape)
 
 	var inv := GridInventory.new(Vector2i(5, 5), 42)
-	inv.accept_tags = [&"loot"] as Array[StringName]
 	inv.set_blocked(Vector2i(4, 4), true)
 	var i1 := ItemInstance.create(bar)
 	i1.state = {"durability": 3}
 	var i2 := ItemInstance.create(l_shape)
-	# 容器设了 accept_tags，先给定义补上标签才放得进去
-	bar.tags = [&"loot"] as Array[StringName]
-	l_shape.tags = [&"loot"] as Array[StringName]
 	inv.place(i1, Vector2i(0, 0), 0)
 	inv.place(i2, Vector2i(2, 0), 1)
 
@@ -218,7 +177,7 @@ static func run_serialization(t: TestCase) -> void:
 
 	t.eq(back.id, inv.id, "id 应保留")
 	t.eq(back.size, inv.size, "尺寸应保留")
-	t.eq(back.accept_tags, inv.accept_tags, "准入标签应保留")
+	t.check(not dict.has("accept_tags"), "140：不再写容器级准入标签")
 	t.check(back.is_blocked(Vector2i(4, 4)), "封禁格应保留")
 	t.eq(back.item_count(), 2, "物品数应保留")
 	t.eq(back.free_cell_count(), inv.free_cell_count(), "可用格数应一致")

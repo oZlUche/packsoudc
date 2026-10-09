@@ -5,11 +5,12 @@
     "en": "Skill God's Blessed Shield"
   },
   "shape": [
-    "11",
-    "11"
+    "111",
+    "111",
+    "010"
   ],
   "rarity": 3,
-  "weight": 2,
+  "weight": 6,
   "tags": [
     "faith",
     "faith:skill",
@@ -47,7 +48,7 @@
                 "display_names": {
                   "en": "Long Deflect"
                 },
-                "max_stacks": 1,
+                "stackable": false,
                 "duration_sec": 8.0,
                 "mods": [
                   {
@@ -65,7 +66,7 @@
   ],
   "combat": {
     "base_stats": {
-      "armor": 6
+      "armor": 11
     },
     "rules": [
       {
@@ -85,7 +86,7 @@
               "display_names": {
                 "en": "Deflect"
               },
-              "max_stacks": 1,
+              "stackable": false,
               "duration_sec": 4.0,
               "mods": [
                 {

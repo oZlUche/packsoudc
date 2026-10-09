@@ -56,7 +56,6 @@ const TEXT := {
 	"buff.debuff": {"zh": "是减益", "en": "Is a debuff"},
 	"buff.stacking": {"zh": "叠层", "en": "Stacking"},
 	"buff.stackable": {"zh": "可叠层", "en": "Stackable"},
-	"buff.cap": {"zh": "叠层上限（0 = 不限，通常不限）", "en": "Stack cap (0 = none, usually none)"},
 	"buff.duration": {"zh": "时长", "en": "Duration"},
 	"buff.permanent": {"zh": "永续（到战斗结束）", "en": "Permanent (until battle ends)"},
 	"buff.permanent_forced": {"zh": "可叠层的 buff 一律永续", "en": "Stackable buffs are always permanent"},
@@ -74,7 +73,6 @@ const TEXT := {
 	"buff.ok": {"zh": "✓ 没有问题", "en": "✓ No problems"},
 	"buff.summary": {"zh": "%s　%s", "en": "%s · %s"},
 	"buff.stacks_unlimited": {"zh": "不限层", "en": "unlimited stacks"},
-	"buff.stacks_cap": {"zh": "至多 %d 层", "en": "up to %d stacks"},
 	"buff.stacks_single": {"zh": "不可叠层", "en": "single stack"},
 	"buff.usage": {"zh": "道具里这样引用：\"buff\": \"%s\"", "en": "Reference from an item: \"buff\": \"%s\""},
 }
@@ -82,10 +80,16 @@ const TEXT := {
 
 ## 取一句；没有的键原样返回
 static func t(key: String) -> String:
-	var entry: Dictionary = TEXT.get(key, {})
-	if entry.is_empty():
-		return key
-	return String(entry.get(lang, entry.get("zh", key)))
+	return pick(TEXT.get(key, null), key)
+
+
+## 一张「语言 → 文字」的小表按当前语言取；没有就中文、再没有给 [param fallback]；传进来的不是表就原样
+## （null 给 [param fallback]）。界面文字、分类名、属性名……凡是 `{zh, en}` 小表都走这一条回退规则
+static func pick(entry: Variant, fallback: String = "") -> String:
+	if entry is Dictionary:
+		var d := entry as Dictionary
+		return String(d.get(lang, d.get("zh", fallback)))
+	return String(entry) if entry != null else fallback
 
 
 ## 下一种语言（主菜单点一下切）

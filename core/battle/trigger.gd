@@ -27,3 +27,8 @@ func is_self_driven() -> bool:
 ## 四层的顺序与原子性都不被破坏。
 func implied_costs() -> Array[Cost]:
 	return [] as Array[Cost]
+
+
+## 142：给人看的一句（规则行方括号里那句），只由字段拼出来 —— 作者不写文案。没写的子类给空，[method Glossary.trigger_text] 退回类型名
+func describe() -> String:
+	return ""

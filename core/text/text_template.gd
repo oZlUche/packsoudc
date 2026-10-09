@@ -176,20 +176,42 @@ static func _paint(text: String, style: String, bold: bool = true) -> String:
 	return "[color=%s%s]%s[/color]" % [STYLE_PREFIX, style, inner]
 
 
+## 编译好的正则按模式缓存：模式都是常量，每次调用 RegEx.new().compile 是白做。core/text 与 core/authoring 的文本工具共用
+static var _regex_cache: Dictionary = {}
+
+
+static func cached_regex(pattern: String) -> RegEx:
+	if not _regex_cache.has(pattern):
+		var re := RegEx.new()
+		re.compile(pattern)
+		_regex_cache[pattern] = re
+	return _regex_cache[pattern]
+
+
+## 剥掉全部 BBCode 标签（`[b]` `[color=…]` `[url=…]`……，凡 `[字母…]`），只留文字：搜索、测试比对纯文字用。
+## [method plain] 只剥样式码对应的三种，Label 里 `[url]` 之类要不要留是那边的事
+static func strip_bbcode(text: String) -> String:
+	return cached_regex("\\[/?[a-zA-Z][^\\]]*\\]").sub(text, "", true)
+
+
 ## 112：正文里引用了哪些道具 / 敌人 / 信仰（113 加 `{faith…:}`；`{item:id}` `{enemy:id}` `{item_stat:id:字段}`）→ [{kind, id}]。导入器拿它查 id
 static func refs(text: String) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	var regex := RegEx.new()
-	regex.compile("\\{(item|enemy|item_stat|faith|faith_threshold|faith_deed|faith_offer|faith_perk):([^:}|]+)")
+	var regex := cached_regex("\\{(item|enemy|item_stat|faith|faith_threshold|faith_deed|faith_offer|faith_perk):([^:}|]+)")
 	for m in regex.search_all(text):
 		var k := m.get_string(1)
 		out.append({"kind": "enemy" if k == "enemy" else ("faith" if k.begins_with("faith") else "item"), "id": m.get_string(2)})
 	return out
 
 
+## 这个 float 是不是整数值（`5.0` 是、`5.01` 不是）。「整数值的 float 显示成整数」的判定都走它，各处怎么写非整数各自定
+static func is_whole(v: float) -> bool:
+	return is_equal_approx(v, roundf(v))
+
+
 ## 数 → 文字：整数值的 float 写成整数（`5.0` → `5`），其余照 str()。describe() 拼句用（Godot 的 % 不认 %g）
 static func num(v: float) -> String:
-	return str(int(v)) if is_equal_approx(v, roundf(v)) else str(snappedf(v, 0.01))
+	return str(int(v)) if is_whole(v) else str(snappedf(v, 0.01))
 
 
 ## 值 → 文字：整数值的 float 写成整数；[param filter] 不认识返回 null（整个记号原样保留）
@@ -207,7 +229,7 @@ static func _format(v: Variant, filter: String) -> Variant:
 			return ("+" + String(t)) if float(v) > 0.0 else String(t)
 		_:
 			return null
-	if v is float and is_equal_approx(v, roundf(v)):
+	if v is float and is_whole(v):
 		return str(int(v))
 	return str(v)
 
@@ -299,10 +321,7 @@ static func _find_field(obj: Variant, key: String, depth: int) -> Variant:
 
 ## 把 `{…}` 全剥掉的纯文字（Label、日志用）：占位符照替，样式码去掉
 static func plain(text: String, ctx: Dictionary = {}) -> String:
-	var rendered := render(text, ctx)
-	var regex := RegEx.new()
-	regex.compile("\\[/?(color|b|i)(=[^\\]]*)?\\]")
-	return regex.sub(rendered, "", true)
+	return cached_regex("\\[/?(color|b|i)(=[^\\]]*)?\\]").sub(render(text, ctx), "", true)
 
 
 ## 一局现在的状态 → 占位符表。[param node] 是这段文字说的那个点（事件所在、鼠标停着的），可为 null；

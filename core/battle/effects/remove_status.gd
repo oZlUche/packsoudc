@@ -39,16 +39,27 @@ static func _remove(ctx: RuleContext, who: CombatantRuntime, id: StringName, n_s
 	var have := who.stacks_of(id)
 	if have <= 0:
 		return
-	var n := have if n_stacks <= 0 else mini(n_stacks, have)
+	take(ctx, who, id, have if n_stacks <= 0 else mini(n_stacks, have), "removed")
+
+
+## 从 [param who] 身上扣 [param n] 层 [param id]，返回实际扣掉的层数；扣掉了才发 status_unstacked（与 [method ApplyStatus.give] 对称）。
+## [ConvertStatus] 与 [StatusStackCost] 也走这里。[param reason] 为空就不写这个键 —— 消耗那条原本就不带，回放载荷逐字节不变
+static func take(ctx: RuleContext, who: CombatantRuntime, id: StringName, n: int, reason: String = "") -> int:
 	var removed := who.remove_buff_stacks(id, n)
-	if removed > 0:
-		ctx.battle.emit(BattleEvent.STATUS_UNSTACKED, who.side, {
-			"buff": String(id), "delta": -removed,
-			"stacks": who.stacks_of(id), "reason": "removed",
-		})
+	if removed <= 0:
+		return 0
+	var payload := {"buff": String(id), "delta": -removed, "stacks": who.stacks_of(id)}
+	if reason != "":
+		payload["reason"] = reason
+	ctx.battle.emit(BattleEvent.STATUS_UNSTACKED, who.side, payload)
+	return removed
 
 
+## 142：写目标与状态名（不写 id）：「清掉对手全部流血」「移除你 2 层中毒」「清除对手全部增益」
 func describe() -> String:
+	var who := {Target.OPPONENT: "对手", Target.SELF: "你", Target.BOTH: "双方"}[target] as String
 	if all_debuffs or all_buffs:
-		return "清除全部%s" % ("增益与减益" if all_debuffs and all_buffs else ("减益" if all_debuffs else "增益"))
-	return "移除 %s %s 层" % [buff_id, "全部" if stacks <= 0 else str(stacks)]
+		return "清除%s全部%s" % [who, "增益与减益" if all_debuffs and all_buffs else ("减益" if all_debuffs else "增益")]
+	if stacks <= 0:
+		return "清掉%s全部%s" % [who, Glossary.status_name(buff_id)]
+	return "移除%s %d 层%s" % [who, stacks, Glossary.status_name(buff_id)]

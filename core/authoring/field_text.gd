@@ -14,7 +14,7 @@ extends RefCounted
 const LABELS := {
 	"id": "id", "display_name": "名字", "display_names": "别的语言的名字", "description": "说明", "descriptions": "别的语言的说明",
 	"title": "标题", "titles": "别的语言的标题", "text": "正文", "texts": "别的语言的正文", "label": "选项文字", "labels": "别的语言的选项文字",
-	"image": "配图", "icon": "图标", "tags": "标签", "tag": "标签", "order": "先后", "hidden": "隐藏", "note": "备注", "tip": "弹词条", "internal": "内部标签",
+	"image": "配图", "tags": "标签", "tag": "标签", "order": "先后", "hidden": "隐藏", "note": "备注", "tip": "弹词条", "internal": "内部标签",
 	"amount": "数量", "value": "数值", "count": "件数", "percent": "百分比", "flat": "固定值", "mult": "倍率", "StatModifier.mode": "乘算 / 加算",
 	"chance": "概率", "seconds": "秒", "steps": "步数", "min_steps": "最少步数", "max_steps": "最多步数", "min_value": "最少", "flag": "旗标",
 	"absent": "反过来（要求没有）", "add": "累加", "clear": "拔掉", "target": "对象", "where": "在哪", "pick": "挑法", "item": "道具", "items": "道具",
@@ -25,7 +25,7 @@ const LABELS := {
 	"combat": "战斗", "adjacency": "邻接", "base_stats": "基础属性", "rules": "规则", "trigger": "触发", "cadence": "节奏", "costs": "消耗",
 	"use_haste": "受急速影响", "cooldown": "冷却", "resource_key": "资源", "damage_type": "伤害类型", "damage_stat": "伤害用的属性", "amount_stat": "数量改从属性取（留空 = 用上面的数量）",
 	"stat": "属性", "stat_scale": "属性系数", "direct_override": "直接伤害（−1 按来源定）", "shield_absorbable": "可被护盾吸收", "provokes": "招致反应", "on_self": "对自己", "same_side": "同一边",
-	"buff": "增益", "buff_id": "增益 id", "stacks": "叠层", "max_stacks": "叠层上限（0 = 不限）", "per_stack": "按叠层", "duration_sec": "持续秒数",
+	"buff": "增益", "buff_id": "增益 id", "stacks": "叠层", "stackable": "可叠层（不限层）", "max_shares": "最多几份（0 = 不限）", "per_stack": "按叠层", "duration_sec": "持续秒数",
 	"by_self": "只认本方施加", "from": "转化前", "to": "转化成", "ratio": "换算比例", "keep_from": "保留原状态",     # 130
 	"source_tags": "只听带这些标签的", "full": "回满", "crit_only": "只在暴击时", "receive_rules": "受益规则", "min_percent": "至少百分之", "max_percent": "至多百分之",
 	"absolute_min": "至少点数", "absolute_max": "至多点数", "negate": "取反", "percent_of": "按生命比例", "percent_of_target": "比例按谁的生命",
@@ -62,16 +62,16 @@ const LABELS := {
 	# 角色 / 敌人 / 猎手 / 信仰
 	"board_size": "棋盘尺寸", "starting_bags": "初始包", "vitality_max": "体力上限", "carry_max_items": "最多带几件", "carry_rarity_cap": "带入稀有度上限", "skills": "技能",
 	"bags": "包", "board": "棋盘", "signature": "招牌道具", "signature_by_strength": "按档位的招牌", "schools": "流派", "item_tags": "道具标签", "item_count": "道具件数",
-	"strength": "档位", "strength_rule": "档位规则", "loadout": "装备", "behavior": "行动逻辑", "visibility": "可见性", "loss_outcomes": "战败后果（旧写法）", "loss_options": "战败结果档", "loss_pick": "选档方式", "HunterLossOption.weight": "权重", "LossPickFixed.index": "第几档（从 0 数）", "loss_type": "战败类型",
+	"strength": "档位", "strength_rule": "档位规则", "loadout": "装备", "behavior": "行动逻辑", "visibility": "可见性", "loss_options": "战败结果档", "loss_pick": "选档方式", "HunterLossOption.weight": "权重", "LossPickFixed.index": "第几档（从 0 数）", "loss_type": "战败类型",
 	"god": "神", "camp": "阵营", "thresholds": "阈值", "deeds": "行为", "single_faith": "只认一位神", "grants": "给的解锁", "level": "档",
-	"mechanics": "机制", "requires_unlock_": "需要的解锁", "warn_lead_actions": "预警提前量", "first_at_action": "第一次在第几步", "interval_actions": "间隔步数",
+	"mechanics": "机制", "warn_lead_actions": "预警提前量", "first_at_action": "第一次在第几步", "interval_actions": "间隔步数",
 	"from_depth": "从第几层起", "per_depth": "每层", "hunter_ids": "猎手", "bracket_steps": "段位表", "inputs": "输入", "output": "产物",
 	"funds": "钱", "rows": "行数", "effect": "效果",     # 110：局外科技
 }
 
 ## 注册表名 → 中文
 const TYPE_LABELS := {
-	"on_schedule": "按节奏出手（自发）", "on_battle_start": "开战时", "on_item_fired": "某件出手时", "on_resource_changed": "资源变化时",
+	"on_schedule": "按节奏出手（自发）", "on_battle_start": "开战时", "on_item_fired": "某件出手时",
 	"on_stacks_at_least": "叠层达到时", "on_resource_below": "资源低于时", "on_damage": "受伤时", "on_before_damage": "受伤前",
 	"on_status_applied": "某状态被施加时", "status_condition": "状态条件", "convert_status": "转化状态",     # 130
 	"on_status_removed": "某状态掉光时", "on_overtime": "加时开始时", "resource_condition": "资源条件", "axis_condition": "标准轴条件", "axis_cost": "消耗轴层数",
@@ -83,6 +83,10 @@ const TYPE_LABELS := {
 	"vitality_max_bonus": "体力上限加成", "starting_funds_bonus": "开局钱加成", "extra_searches": "额外搜索次数", "shop_price_mult": "商店价格倍率",
 	"luck_bonus": "幸运加成", "scout_range": "侦察范围", "stealth": "潜行", "flee_bonus": "逃跑加成", "free_losses": "免扣体力次数", "stat_bonus": "属性加成", "carry_capacity_bonus": "负重上限加成",
 	"passive": "被动", "assault": "突击", "evade": "躲避",
+	# 136：角色的套装
+	"slip": "脱身", "second_wind": "咬牙", "travel_discount": "熟门熟路（免费步）", "rest_bonus": "休息多回体力", "erosion_resist": "侵蚀少扣体力",
+	"battle_reward_mult": "打赢的钱倍率", "every": "每几步", "factor": "倍数",
+	"skill_ready": "技能能用", "skill": "技能",
 	"place_item": "置入道具", "battle": "打仗", "travel": "走路", "earn_money": "进账", "spend_money": "花钱", "explore": "搜索", "event_choice": "事件里选特定选项",
 	"has_buff_tag": "有带标记的增益", "has_map_buff": "有某地图增益", "can_afford": "钱够", "vitality_at_least": "体力至少", "steps_within": "步数在区间",
 	"bracket_within": "段位在区间", "erosion_depth_within": "侵蚀深度在区间", "has_item": "身上有道具", "node_type_is": "点的类型是", "has_flag": "有局外旗标",
@@ -110,7 +114,7 @@ const ENUM_LABELS := {
 	"SELF": "自己", "OPPONENT": "对手", "BOTH": "两边", "BOARD": "棋盘", "STORAGE": "地上", "RANDOM": "随机", "MOST_VALUABLE": "最值钱的",
 	"LEAST_VALUABLE": "最不值钱的", "BY_ID": "指定 id", "NEAREST": "最近的", "FARTHEST": "最远的", "FIXED": "指定的", "HIDDEN": "隐藏", "VISIBLE": "可见",
 	"NEAR": "靠近才可见", "ANY": "任意", "INCREASE": "增加", "DECREASE": "减少", "GODS": "诸神", "CHURCH": "新教", "META": "局外", "MAP": "地图",
-	"PRESET": "预设", "GENERATED": "生成", "GENERATOR": "生成", "UNVISITED": "没去过", "VISITED": "去过", "TOTAL": "总数", "DISTINCT": "不重复",
+	"PRESET": "预设", "UNVISITED": "没去过", "VISITED": "去过", "TOTAL": "总数", "DISTINCT": "不重复",
 	"OWN": "自己的", "OTHER": "别人的", "ALLY": "同伴", "DEALT": "打出的", "TAKEN": "受到的", "BELOW": "降到以下", "ABOVE": "涨到以上",     # 132
 	"ADD": "加算", "MULT": "乘算",     # 133
 	"tier": "按阶", "active": "激活即", "scaled": "按信力",     # 111：信仰加成的生效方式（字符串枚举，值是小写原文）
@@ -227,8 +231,7 @@ static func _parse(source: String) -> Dictionary:
 		else:
 			break
 	out[""] = "\n".join(head).strip_edges()
-	var export_re := RegEx.new()
-	export_re.compile("^\\s*@export\\w*(\\([^)]*\\))?\\s+var\\s+(\\w+)")
+	var export_re := TextTemplate.cached_regex("^\\s*@export\\w*(\\([^)]*\\))?\\s+var\\s+(\\w+)")
 	for i in lines.size():
 		var m := export_re.search(lines[i])
 		if m == null:
@@ -254,10 +257,6 @@ static func _parse(source: String) -> Dictionary:
 static func _clean(s: String) -> String:
 	var t := s.trim_prefix("##").strip_edges()
 	t = t.replace("[b]", "").replace("[/b]", "").replace("[i]", "").replace("[/i]", "")
-	var re := RegEx.new()
-	re.compile("\\[(method|member|constant|signal|enum|param|code)\\s+([^\\]]+)\\]")
-	t = re.sub(t, "$2", true)
-	re.compile("\\[/?code\\]")
-	t = re.sub(t, "", true)
-	return t
+	t = TextTemplate.cached_regex("\\[(method|member|constant|signal|enum|param|code)\\s+([^\\]]+)\\]").sub(t, "$2", true)
+	return TextTemplate.cached_regex("\\[/?code\\]").sub(t, "", true)
 #endregion

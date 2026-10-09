@@ -25,7 +25,7 @@ func has_bounds() -> bool:
 
 
 func can_pay(ctx: RuleContext) -> bool:
-	var who := ctx.owner if on_self else ctx.opponent()
+	var who := ctx.side_of(on_self)
 	if who == null or not who.resources.has(resource_key):
 		return negate
 	var cur := who.resources.current(resource_key)
@@ -47,14 +47,18 @@ func pay(_ctx: RuleContext) -> void:
 	pass
 
 
-func describe(_ctx: RuleContext) -> String:
+## 142：「若你的生命不低于 70%」「若对手的耐力不到 50%」；几个界都填了就用「、」连起来
+func describe() -> String:
+	var who := "你" if on_self else "对手"
+	var res := Glossary.resource_name(resource_key)
 	var bits: Array[String] = []
 	if min_percent >= 0:
-		bits.append("≥ %d%%" % min_percent)
+		bits.append("不低于 %d%%" % min_percent)
 	if max_percent >= 0:
-		bits.append("≤ %d%%" % max_percent)
+		bits.append("不高于 %d%%" % max_percent)
 	if absolute_min >= 0.0:
-		bits.append("≥ %.0f" % absolute_min)
+		bits.append("不低于 %s 点" % TextTemplate.num(absolute_min))
 	if absolute_max >= 0.0:
-		bits.append("≤ %.0f" % absolute_max)
-	return "%s%s%s %s" % ["不满足：" if negate else "", "自己" if on_self else "对手", resource_key, " 且 ".join(bits)]
+		bits.append("不高于 %s 点" % TextTemplate.num(absolute_max))
+	var line := "若%s的%s%s" % [who, res, "、".join(bits)]
+	return ("并非（%s）" % line) if negate else line

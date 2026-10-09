@@ -62,14 +62,6 @@ func pool(id: StringName) -> EnemyPool:
 	return _pools.get(id, null)
 
 
-func enemy_ids() -> Array:
-	return _enemies.keys()
-
-
-func pool_ids() -> Array:
-	return _pools.keys()
-
-
 func clear() -> void:
 	_enemies.clear()
 	_pools.clear()

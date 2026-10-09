@@ -41,11 +41,7 @@ static func rating_of(ratio: float) -> String:
 ## 这条规则每次出手花多少耐力（面板数或属性值；扳机隐含的消耗也算）
 static func _stamina_of(rule: AbilityRule, stats: StatSet) -> float:
 	var total := 0.0
-	var costs: Array = []
-	costs.append_array(rule.costs)
-	if rule.trigger != null:
-		costs.append_array(rule.trigger.implied_costs())
-	for c in costs:
+	for c in rule.effective_costs():
 		var rc := c as ResourceCost
 		if rc == null or rc.resource_key != BattleStats.RES_STAMINA:
 			continue

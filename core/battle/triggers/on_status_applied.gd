@@ -22,8 +22,16 @@ func subscribed_events() -> Array[StringName]:
 func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 	if buff_id == &"" or event.get_name(&"buff") != buff_id:
 		return false
-	if (event.side == ctx.owner.side) != on_self:
+	if not ctx.event_on(event, on_self):
 		return false
 	if by_self and event.get_int(&"source_side", -1) != ctx.owner.side:
 		return false
 	return event.get_int(&"delta") > 0
+
+
+## 142：「你给对手施加流血时」「你被施加中毒时」「对手被施加流血时」（不认施加者）
+func describe() -> String:
+	var s := Glossary.status_name(buff_id)
+	if by_self:
+		return "你给%s施加%s时" % ["自己" if on_self else "对手", s]
+	return "%s被施加%s时" % ["你" if on_self else "对手", s]

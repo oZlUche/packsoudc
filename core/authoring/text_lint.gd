@@ -17,9 +17,7 @@ const LOCALIZED := ["descriptions", "labels", "texts"]
 
 ## 剥掉 `{…}` 与 BBCode `[…]` 之后还有没有阿拉伯数字
 static func has_bare_number(text: String) -> bool:
-	var re := RegEx.new()
-	re.compile("\\{[^}]*\\}|\\[[^\\]]*\\]")
-	var stripped := re.sub(text, "", true)
+	var stripped := TextTemplate.cached_regex("\\{[^}]*\\}|\\[[^\\]]*\\]").sub(text, "", true)
 	for ch in stripped:
 		if ch >= "0" and ch <= "9":
 			return true

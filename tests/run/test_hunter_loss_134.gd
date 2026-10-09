@@ -6,7 +6,7 @@ const H := preload("res://tests/run/test_hunters.gd")
 
 
 ## hunter_1 的副本：不动（速度 0），够得着才打（同一个点）
-static func _still_defs(c: H.Content, id: StringName) -> Dictionary:
+static func _still_defs(c: TestSupport.Content, id: StringName) -> Dictionary:
 	var defs := H._copy_defs(c.hunter_defs)
 	var def: HunterDef = defs[id]
 	def.speed = 0
@@ -15,7 +15,7 @@ static func _still_defs(c: H.Content, id: StringName) -> Dictionary:
 
 
 ## 开局走一步（猎手出现），清掉脚下等着选的事；返回 [run, 猎手]
-static func _ready_run(c: H.Content, defs: Dictionary, id: StringName) -> Array:
+static func _ready_run(c: TestSupport.Content, defs: Dictionary, id: StringName) -> Array:
 	var s := H._start(c, defs, H._difficulty([id] as Array[StringName]))
 	if s == null or not H._step_once(s) or s.hunters.alive().is_empty():
 		return []
@@ -92,16 +92,11 @@ static func run_pick_on_spawn(t: TestCase) -> void:
 	H._step_once(s2)
 	t.eq(s2.hunters.alive()[0].loss_id, fdef.options()[pick.index].id, "固定选法：生成的就是第 %d 档" % (pick.index + 1))
 
-	# 旧定义：只写了 loss_outcomes —— 当作只有一档
-	var legacy := ContentImporter.import_hunter({"id": "legacy", "loss_outcomes": [{"type": "spend_vitality"}, {"type": "retreat"}]},
-		ContentImporter.Context.new(), ImportReport.new())
-	t.eq(legacy.options().size(), 1, "旧定义：一档")
-	t.eq(legacy.options()[0].outcomes.size(), 2, "那一档就是原来的两条后果")
-	t.eq(legacy.option_by_id(&"whatever"), legacy.options()[0], "找不到的档名按第一档")
+	t.eq(fdef.option_by_id(&"whatever"), fdef.options()[0], "找不到的档名按第一档")
 
 
 static func run_import_checks(t: TestCase) -> void:
-	t.begin("134 · 导入：档名不空不重、权重不为负、固定选法不越界；两样都写提醒；往返不动")
+	t.begin("134 · 导入：档名不空不重、权重不为负、固定选法不越界；140：旧写法 loss_outcomes 报错；往返不动")
 	var sample := {"id": "probe", "loss_options": [
 		{"id": "repel", "display_name": "击退", "weight": 2.0, "outcomes": [{"type": "retreat"}]},
 		{"id": "expel", "display_name": "驱逐", "outcomes": [{"type": "expel"}]}],
@@ -125,8 +120,14 @@ static func run_import_checks(t: TestCase) -> void:
 		ContentImporter.import_hunter(bad, ContentImporter.Context.new(), r)
 		t.check(not r.ok(), "%s 报错" % JSON.stringify(bad))
 	var both := ImportReport.new()
-	ContentImporter.import_hunter({"id": "x", "loss_outcomes": [{"type": "retreat"}], "loss_options": [{"id": "a"}]}, ContentImporter.Context.new(), both)
-	t.check(both.ok() and both.to_text().contains("loss_outcomes"), "两样都写：提醒、不报错")
+	ContentImporter.import_hunter({"id": "x", "loss_outcomes": [{"type": "retreat"}], "loss_options": [{"id": "a", "outcomes": [{"type": "retreat"}]}]}, ContentImporter.Context.new(), both)
+	t.check(not both.ok() and both.to_text().contains("loss_options"), "140：写了旧的 loss_outcomes 就报错，指向 loss_options（%s）" % both.to_text())
+	var legacy := ImportReport.new()
+	ContentImporter.import_hunter({"id": "legacy", "loss_outcomes": [{"type": "retreat"}]}, ContentImporter.Context.new(), legacy)
+	t.check(not legacy.ok(), "只写旧写法：报错")
+	var none := ImportReport.new()
+	ContentImporter.import_hunter({"id": "x"}, ContentImporter.Context.new(), none)
+	t.check(not none.ok() and none.to_text().contains("loss_options"), "一档都没写：报错")
 
 
 static func run_hunter_before_node(t: TestCase) -> void:

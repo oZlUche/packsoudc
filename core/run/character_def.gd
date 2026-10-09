@@ -57,12 +57,12 @@ func loot_effects() -> Array[LootEffect]:
 	return out
 
 
-## 有主动一击的技能
-func active_skills() -> Array[RunSkill]:
-	var out: Array[RunSkill] = []
+## 136：全部技能的战斗规则（编译玩家时挂到单位上）
+func combat_rules() -> Array[AbilityRule]:
+	var out: Array[AbilityRule] = []
 	for s in skills:
-		if s != null and (s as RunSkill).is_active():
-			out.append(s)
+		if s != null:
+			out.append_array((s as RunSkill).rules)
 	return out
 
 
@@ -73,6 +73,28 @@ func skills_summary() -> String:
 		if s != null:
 			parts.append((s as RunSkill).summary())
 	return "　".join(parts)
+
+
+## 136：开局屏的分组行：被动在前、主动在后，各一行「被动：名字　说明」（作者定：角色 = 初始面板 + 技能，没有身份这一层）
+func skill_lines() -> Array[String]:
+	var out: Array[String] = []
+	for active in [false, true]:
+		for s in skills:
+			var sk := s as RunSkill
+			if sk != null and sk.is_active() == active:
+				out.append("%s：%s" % ["主动" if active else "被动", _skill_line(sk)])
+	return out
+
+
+static func _skill_line(sk: RunSkill) -> String:
+	var text := Names.description_of(sk) if sk.description != "" else sk.summary()
+	var bits: Array[String] = []
+	if sk.is_active():
+		if sk.uses >= 0:
+			bits.append("%d 次" % sk.uses)
+		if sk.cooldown_steps > 0:
+			bits.append("冷却 %d 步" % sk.cooldown_steps)
+	return "%s　%s%s" % [sk.display_name, text, ("（" + "，".join(bits) + "）") if not bits.is_empty() else ""]
 
 
 ## 带入的东西合不合上限。[param defs] 是要带的（非包）道具定义；返回不合的原因，空串 = 合

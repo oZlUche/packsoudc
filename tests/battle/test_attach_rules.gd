@@ -9,21 +9,31 @@ static func _items() -> ItemDatabase:
 	return db
 
 
-## 一块不要求包的格子：弓横着放在第一行（4 格），[param arrows] 个毒箭摆在它正下方（增益格朝上，正好压在弓上）
+## 一块不要求包的格子：弓横着放在第一行（143：长弓是两头弯回的弓臂，横过来第一行 4 格是弓身、第二行只有两头），
+## [param arrows] 个毒箭摆在弓身正下方第二行的空处（增益格朝上，正好压在弓上）
 static func _bow_board(db: ItemDatabase, arrows: int) -> Dictionary:
 	ItemInstance.reset_uid_counter()
 	var g := GridInventory.new(Vector2i(6, 4), 1, false)
 	var bow := ItemInstance.create(db.get_def(&"longbow"))
 	var rot := 0
 	for r in 4:
-		if bow.def.cells_rotated(r).size() == 4 and _width(bow.def.cells_rotated(r)) == 4:
+		var cells := bow.def.cells_rotated(r)
+		var top := 0
+		for c in cells:
+			if c.y == 0:
+				top += 1
+		if _width(cells) == 4 and top == 4:
 			rot = r
 			break
 	g.place(bow, Vector2i.ZERO, rot)
+	var under: Array[int] = []
+	for x in 4:
+		if not bow.def.cells_rotated(rot).has(Vector2i(x, 1)):
+			under.append(x)
 	var placed: Array[ItemInstance] = []
 	for i in arrows:
 		var a := ItemInstance.create(db.get_def(&"poison_arrows"))
-		g.place(a, Vector2i(i, 1), 0)
+		g.place(a, Vector2i(under[i], 1), 0)
 		placed.append(a)
 	return {"board": g, "bow": bow, "arrows": placed}
 
@@ -45,8 +55,6 @@ static func run_neighbor_attach(t: TestCase) -> void:
 	t.eq(bow.attached.size(), 1, "弓挂了一条")
 	var idx := int(bow.attached[0]["rule_index"])
 	t.eq(bow.attached[0]["origin"], &"poison_arrows", "来源是毒箭")
-	t.eq(bow.origin_of(idx), &"poison_arrows", "origin_of 查得到")
-	t.eq(bow.origin_of(0), &"", "弓自己的规则没有来源")
 	var rule := bow.rules[idx]
 	t.check(rule.trigger is OnItemFired, "触发器是出手时")
 	t.eq((rule.trigger as OnItemFired).source_uids, [bow.source_uid] as Array[int], "绑成只听弓自己")
@@ -220,3 +228,15 @@ static func run_enchant_fires_once_per_hit(t: TestCase) -> void:
 	t.check(fired > 0, "长剑出手 %d 次" % fired)
 	t.eq(fire_hits, fired, "每击附火一次")
 	t.eq(overflow, 0, "没有连锁截断")
+
+
+static func run_compile_without_board(t: TestCase) -> void:
+	t.begin("140 B-12 · 没有棋盘也照算后续步骤：基线 + 负的基线修饰 → 生命夹到 0，不是原样返回基线")
+	var base := CombatantBaseline.with_hp(20.0)
+	var inp := CompileInput.of(base)
+	inp.baseline_mods = [StatModifier.make(&"max_hp", StatModifier.Mode.ADD, -50.0)] as Array[StatModifier]
+	var spec := BattleCompiler.compile(null, inp)
+	t.not_null(spec, "空棋盘编得出来")
+	t.eq(spec.max_hp_int() if spec != null else -1, 0, "生命 20 − 50 夹到 0")
+	var plain := BattleCompiler.compile(null, CompileInput.of(base))
+	t.eq(plain.max_hp_int(), 20, "没有修饰：就是基线的 20")

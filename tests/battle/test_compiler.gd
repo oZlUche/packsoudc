@@ -68,9 +68,9 @@ static func run(t: TestCase) -> void:
 
 	ItemInstance.reset_uid_counter()
 
-	var plain_bag := _bag("bag", ["###", "###"])
-	var sword := _weapon("sword", ["#", "#"], 10.0, 2.0, ["weapon"])
-	var rock := _item("rock", ["#"], ["material"])
+	var plain_bag := _bag("bag", ["111", "111"])
+	var sword := _weapon("sword", ["1", "1"], 10.0, 2.0, ["weapon"])
+	var rock := _item("rock", ["1"], ["material"])
 
 	# --- 空棋盘 ---
 	var empty := BattleCompiler.compile_board(_board(), CombatantBaseline.with_hp(25.0))
@@ -98,7 +98,7 @@ static func run(t: TestCase) -> void:
 		t.ne(item.def_id, &"bag", "包本身不进编译结果")
 
 	# --- 非主动物品贡献属性但不出手 ---
-	var charm := _item("charm", ["#"])
+	var charm := _item("charm", ["1"])
 	var charm_combat := CombatProfile.new()
 	charm_combat.base_stats = {"max_hp": 30.0}
 	charm.combat = charm_combat          # 无 rules 即为被动
@@ -127,9 +127,9 @@ static func run_bag_effects(t: TestCase) -> void:
 
 	ItemInstance.reset_uid_counter()
 
-	var haste_bag := _bag("fanny", ["###", "###"], [_mod(BattleStats.HASTE, 10)])
-	var plain_bag := _bag("plain", ["###", "###"])
-	var sword := _weapon("sword", ["#"], 10.0, 2.0, ["weapon"])
+	var haste_bag := _bag("fanny", ["111", "111"], [_mod(BattleStats.HASTE, 10)])
+	var plain_bag := _bag("plain", ["111", "111"])
+	var sword := _weapon("sword", ["1"], 10.0, 2.0, ["weapon"])
 
 	# --- 包内物品吃到包的效果 ---
 	var board := _board(Vector2i(8, 6))
@@ -171,10 +171,10 @@ static func run_adjacency(t: TestCase) -> void:
 
 	ItemInstance.reset_uid_counter()
 
-	var bag := _bag("bag", ["####", "####", "####"])
+	var bag := _bag("bag", ["1111", "1111", "1111"])
 
 	# 磨刀石：【增益】右邻的武器
-	var whetstone := _item("whetstone", ["#"])
+	var whetstone := _item("whetstone", ["1"])
 	var ws := AdjacencyProfile.new()
 	ws.grant_cells = [Vector2i(1, 0)]
 	ws.grant_filter = [&"weapon"] as Array[StringName]
@@ -182,16 +182,16 @@ static func run_adjacency(t: TestCase) -> void:
 	whetstone.adjacency = ws
 
 	# 饭盒：【受益】于右侧三格的邻居，点亮几个就得几份
-	var lunchbox := _weapon("lunchbox", ["#"], 10.0, 2.0)
+	var lunchbox := _weapon("lunchbox", ["1"], 10.0, 2.0)
 	var lb := AdjacencyProfile.new()
 	lb.receive_cells = [Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]
 	lb.receive_mods = [_mod(BattleStats.DAMAGE, 20)]
 	lunchbox.adjacency = lb
 
-	var sword := _weapon("sword", ["#"], 10.0, 2.0, ["weapon"])
-	var shield := _weapon("shield", ["#"], 4.0, 3.0, ["gear"])
-	var longbar := _item("longbar", ["###"], ["food"])
-	var dot := _item("dot", ["#"], ["food"])
+	var sword := _weapon("sword", ["1"], 10.0, 2.0, ["weapon"])
+	var shield := _weapon("shield", ["1"], 4.0, 3.0, ["gear"])
+	var longbar := _item("longbar", ["111"], ["food"])
+	var dot := _item("dot", ["1"], ["food"])
 
 	# --- 增益：磨刀石让右邻的武器增伤 ---
 	var board := _board(Vector2i(8, 6))
@@ -268,7 +268,8 @@ static func run_adjacency(t: TestCase) -> void:
 		10,
 		"rot0 时下邻不在增益格上，不受加成"
 	)
-	t.check(board5.rotate_item(ws_inst.uid, 1), "磨刀石旋转一步")
+	board5.remove(ws_inst.uid)
+	t.check(board5.place(ws_inst, Vector2i(0, 0), 1), "磨刀石换个朝向放回去")
 	t.eq(
 		_dmg(BattleCompiler.compile_board(board5), below.uid),
 		15,
@@ -279,10 +280,10 @@ static func run_adjacency(t: TestCase) -> void:
 static func run_determinism(t: TestCase) -> void:
 	t.begin("编译阶段 · 确定性")
 
-	var bag := _bag("bag", ["####", "####"], [_mod(BattleStats.DAMAGE, 10)])
-	var sword := _weapon("sword", ["#"], 10.0, 2.0, ["weapon"])
-	var axe := _weapon("axe", ["#"], 7.0, 1.5, ["weapon"])
-	var stone := _item("stone", ["#"], ["weapon"])
+	var bag := _bag("bag", ["1111", "1111"], [_mod(BattleStats.DAMAGE, 10)])
+	var sword := _weapon("sword", ["1"], 10.0, 2.0, ["weapon"])
+	var axe := _weapon("axe", ["1"], 7.0, 1.5, ["weapon"])
+	var stone := _item("stone", ["1"], ["weapon"])
 	var sp := AdjacencyProfile.new()
 	sp.grant_cells = [Vector2i(1, 0), Vector2i(-1, 0)]
 	sp.grant_filter = [&"weapon"] as Array[StringName]
@@ -367,10 +368,10 @@ static func run_baseline(t: TestCase) -> void:
 	t.eq(StatMath.to_int(rt.resources.current(BattleStats.RES_STAMINA)), 50, "并且是满的")
 
 	# 道具在基线之上叠加
-	var bag := _bag("bag", ["####", "####"])
+	var bag := _bag("bag", ["1111", "1111"])
 	var board := _board(Vector2i(8, 6))
 	board.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
-	var ration := _item("ration", ["#"])
+	var ration := _item("ration", ["1"])
 	var rc := CombatProfile.new()
 	rc.base_stats = {"max_stamina": 40.0, "max_hp": 10.0}
 	ration.combat = rc
@@ -400,18 +401,18 @@ static func run_links(t: TestCase) -> void:
 	t.begin("编译 · 增益槽的连结关系")
 
 	ItemInstance.reset_uid_counter()
-	var bag := _bag("bag", ["####", "####"])
+	var bag := _bag("bag", ["1111", "1111"])
 
 	# 弹匣：【增益】右邻的武器
-	var mag := _item("mag", ["#"])
+	var mag := _item("mag", ["1"])
 	var ap := AdjacencyProfile.new()
 	ap.grant_cells = [Vector2i(1, 0)]
 	ap.grant_filter = [&"weapon"] as Array[StringName]
 	ap.grant_mods = [_mod(BattleStats.DAMAGE, 20)]
 	mag.adjacency = ap
 
-	var rifle := _weapon("rifle", ["#"], 10.0, 1.0, ["weapon"])
-	var rock := _weapon("rock", ["#"], 10.0, 1.0, ["junk"])
+	var rifle := _weapon("rifle", ["1"], 10.0, 1.0, ["weapon"])
+	var rock := _weapon("rock", ["1"], 10.0, 1.0, ["junk"])
 
 	var board := _board(Vector2i(8, 6))
 	board.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
@@ -444,11 +445,11 @@ static func run_linked_trigger(t: TestCase) -> void:
 	t.begin("扳机 · 只听与自己连结的物品出手")
 
 	ItemInstance.reset_uid_counter()
-	var bag := _bag("bag", ["####", "####"])
+	var bag := _bag("bag", ["1111", "1111"])
 
 	# 破片袋：贴在武器旁边，那把武器每次出手它就补一下。
 	# 本作没有「主武器」设定，所以「跟着某件东西一起触发」只能靠摆放上的连结来表达。
-	var pouch := _item("pouch", ["#"])
+	var pouch := _item("pouch", ["1"])
 	var ap := AdjacencyProfile.new()
 	ap.grant_cells = [Vector2i(1, 0)]
 	ap.grant_filter = [&"weapon"] as Array[StringName]
@@ -469,8 +470,8 @@ static func run_linked_trigger(t: TestCase) -> void:
 	pouch.combat = pc
 
 	# 贴着的那把（1 秒一发）与离得远的那把（也 1 秒一发）
-	var near_gun := _weapon("near_gun", ["#"], 6.0, 1.0, ["weapon"])
-	var far_gun := _weapon("far_gun", ["#"], 6.0, 1.0, ["weapon"])
+	var near_gun := _weapon("near_gun", ["1"], 6.0, 1.0, ["weapon"])
+	var far_gun := _weapon("far_gun", ["1"], 6.0, 1.0, ["weapon"])
 
 	var board := _board(Vector2i(8, 6))
 	board.place(ItemInstance.create(bag), Vector2i(0, 0), 0)

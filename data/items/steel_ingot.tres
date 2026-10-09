@@ -18,5 +18,4 @@ display_names = {
 }
 shape = SubResource("Resource_7dq1r")
 rarity = 2
-weight = 3
 tags = Array[StringName]([&"material", &"crafted", &"metal", &"supply"])

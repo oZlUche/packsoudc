@@ -16,6 +16,11 @@ func subscribed_events() -> Array[StringName]:
 
 
 func matches(ctx: RuleContext, event: BattleEvent) -> bool:
-	if crit_only and not event.get_bool(&"crit"):
-		return false
-	return matches_damage(ctx, event)
+	return (not crit_only or event.get_bool(&"crit")) and super.matches(ctx, event)
+
+
+func describe() -> String:
+	var line := super()
+	if not crit_only:
+		return line
+	return line.replace("受到攻击", "受到暴击").replace("攻击命中", "暴击命中").replace("伤害时", "暴击时")

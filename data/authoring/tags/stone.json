@@ -1,0 +1,12 @@
+{
+  "id": "stone",
+  "display_name": "石材",
+  "display_names": {
+    "en": "Stone"
+  },
+  "description": "石头、晶体、盐块这类矿石以外的硬料。比木头沉，比金属轻。",
+  "descriptions": {
+    "en": "Stone, crystal or salt that isn't ore. Heavier than wood, lighter than metal."
+  },
+  "tip": false
+}

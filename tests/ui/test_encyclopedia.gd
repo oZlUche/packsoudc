@@ -3,16 +3,12 @@
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
+## 与 Support.paths("114") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_114_run.json"
 const META := "user://test_114_meta.json"
 const SETTINGS := "user://test_114_settings.json"
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
-
-
-static func _cleanup() -> void:
-	for p in [SAVE, META, SETTINGS]:
-		if FileAccess.file_exists(p):
-			DirAccess.remove_absolute(p)
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func _book() -> Encyclopedia:
@@ -34,7 +30,7 @@ static func run_pages(t: TestCase) -> void:
 	for name in Glossary.TERMS:
 		t.check(book.has_page("term:" + String(name)), "词条「%s」有一页" % name)
 	for tag in TagRegistry.ids():
-		if not TagRegistry.is_internal(tag) and FaithDef.id_of_tag(tag) == &"":
+		if not TagRegistry.is_internal(tag) and FaithTags.id_of_tag(tag) == &"":
 			t.check(book.has_page("tag:" + String(tag)), "标签 %s 有一页" % tag)
 	for d in DamageTypes.ids():
 		t.check(book.has_page("dtype:" + String(d)), "伤害类型 %s 有一页" % d)
@@ -54,6 +50,26 @@ static func run_pages(t: TestCase) -> void:
 	t.check(not toc.is_empty() and String(toc[-1]["category"]) == Encyclopedia.TERMS_CATEGORY, "目录最后一栏是词条")
 	t.check(not book.has_page("stat:haste") and book.has_page("term:急速"), "属性「急速」和词条同名：不另开页")
 	t.eq(book.page_for("合成"), "crafting", "「合成」先跳机制页（压过同名词条）")
+
+
+static func run_recipe_notes(t: TestCase) -> void:
+	t.begin("140 · 百科「合成」页列出全部配方，带作者写的 note；图鉴没点亮的遮名字、不写 note；别的页不列")
+	var db := ItemDatabase.new()
+	db.load_dir()
+	var recipes := RecipeDef.load_all()
+	t.check(not recipes.is_empty(), "有配方（%d）" % recipes.size())
+	var book := Encyclopedia.build(GameFlow.load_help_pages(), db, recipes)
+	var text := book.render(Encyclopedia.RECIPE_PAGE)
+	t.check(text.contains("配方："), "合成页有「配方」段")
+	for r in recipes:
+		t.check(r.note == "" or text.contains(r.note), "%s 的 note 在合成页上" % r.id)
+		t.check(text.contains(Names.of(db.get_def(r.output))), "%s 的产物名在" % r.id)
+	t.check(not book.render(book.ids()[book.ids().size() - 1]).contains("配方："), "别的页不列配方")
+	book.lit = func(_id: StringName) -> bool: return false
+	var dark := book.render(Encyclopedia.RECIPE_PAGE)
+	t.check(dark.contains("？ + ？ → ？"), "全没点亮：名字遮住")
+	t.check(not dark.contains(recipes[0].note), "没点亮不写 note（note 里有道具名）")
+	t.check(not Encyclopedia.build(GameFlow.load_help_pages(), db).render(Encyclopedia.RECIPE_PAGE).contains("配方："), "没给配方：不列")
 
 
 static func run_links_and_search(t: TestCase) -> void:
@@ -106,7 +122,7 @@ static func frame_entries(t: TestCase, root: Window) -> void:
 	t.begin("114 · 入口：主菜单「百科」独立一屏（返回 / Esc 回主菜单）；暂停菜单「百科」嵌进遮罩，点链接跳页、「上一页」回得去，Esc 先关百科再关暂停")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
-	_cleanup()
+	Support.cleanup("114")
 	var game = (load(GAME) as PackedScene).instantiate()
 	game.save_path = SAVE
 	game.meta_path = META
@@ -151,4 +167,4 @@ static func frame_entries(t: TestCase, root: Window) -> void:
 	t.check(not map.encyclopedia_open(), "关暂停菜单把百科一起关了")
 	flow.to_main_menu()
 	game.queue_free()
-	_cleanup()
+	Support.cleanup("114")

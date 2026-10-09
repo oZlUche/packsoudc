@@ -151,11 +151,6 @@ func to_screen(canvas: Vector2) -> Vector2:
 	return canvas * zoom + pan
 
 
-## 图被外面改过之后调一下。
-func refresh() -> void:
-	queue_redraw()
-
-
 func positions() -> Dictionary:
 	if graph == null or _layout == null:
 		return {}
@@ -305,7 +300,7 @@ func _draw() -> void:
 	for i in graph.routes.size() if show_routes else 0:
 		var ids: Array = graph.routes[i].get("node_ids", [])
 		for k in range(1, ids.size()):
-			var key := _edge_key(int(ids[k - 1]), int(ids[k]))
+			var key := MapJunctions.edge_key(int(ids[k - 1]), int(ids[k]))
 			if not route_of_edge.has(key):
 				route_of_edge[key] = i
 
@@ -317,16 +312,19 @@ func _draw() -> void:
 	for e in graph.edges:
 		if not pos.has(e.from_id) or not pos.has(e.to_id):
 			continue
-		var key := _edge_key(e.from_id, e.to_id)
+		var key := MapJunctions.edge_key(e.from_id, e.to_id)
 		if in_junction.has(key):
 			continue
+		var color := UiPalette.DIM.darkened(0.25)
+		var width := 1.5
 		if route_of_edge.has(key):
 			var ri: int = route_of_edge[key]
-			_layout.draw_edge(self, graph, e, pos[e.from_id], pos[e.to_id],
-				Color(MapNodeStyle.route_color(ri), 0.9 if ri == bold_route else 0.7),
-				6.0 if ri == bold_route else 3.0, rect)
+			color = Color(MapNodeStyle.route_color(ri), 0.9 if ri == bold_route else 0.7)
+			width = 6.0 if ri == bold_route else 3.0
+		if e.is_portal():
+			MapLayout.draw_portal(self, pos[e.from_id], pos[e.to_id], width)     # 传送点（8-1）：虚线紫，哪种布局都一样
 		else:
-			_layout.draw_edge(self, graph, e, pos[e.from_id], pos[e.to_id], UiPalette.DIM.darkened(0.25), 1.5, rect)
+			_layout.draw_edge(self, graph, e, pos[e.from_id], pos[e.to_id], color, width, rect)
 
 	for clique in (junctions["quads"] as Array) + (junctions["tris"] as Array):
 		_draw_junction(clique, pos, route_of_edge)
@@ -398,7 +396,7 @@ func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary) -
 	for id in clique:
 		var route := -1
 		for other in clique:
-			var key := _edge_key(int(id), int(other))
+			var key := MapJunctions.edge_key(int(id), int(other))
 			if other != id and route_of_edge.has(key):
 				route = int(route_of_edge[key])
 		if route >= 0:
@@ -481,8 +479,4 @@ func _draw_player_marker(p: Vector2) -> void:
 		var text := "你"
 		var tw := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
 		draw_string(_font, tip + Vector2(-tw / 2.0, -h - 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, UiPalette.FG)
-
-
-static func _edge_key(a: int, b: int) -> String:
-	return "%d:%d" % [mini(a, b), maxi(a, b)]
 #endregion

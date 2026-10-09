@@ -67,7 +67,7 @@ static func run_depth_and_prereqs(t: TestCase) -> void:
 static func run_run_buff_effect(t: TestCase) -> void:
 	t.begin("118 · tech_run_buff：第 k 级给第 k 条局外 buff、替换上一级那条；读档只留当前级那条；面板那句是 buff 的 summary")
 	var defs := GameFlow.load_techs()
-	var buffs := GameFlow.load_run_buffs()
+	var buffs := RunBuffs.load_all()
 	var pack := TechService.find(defs, &"pack")
 	t.not_null(pack, "行囊在")
 	if pack == null:
@@ -128,7 +128,7 @@ static func run_run_reads_tech(t: TestCase) -> void:
 	m.active_buffs = [&"tech_endurance_1"] as Array[StringName]
 	var f := GameFlow.new(_db(), EnemyDatabase.new(), SetDatabase.new(), m)
 	t.eq(f.meta_buffs(), [&"tech_endurance_1", &"tech_pack_2"] as Array[StringName], "合并去重，开关的在前")
-	var buffs := GameFlow.load_run_buffs()
+	var buffs := RunBuffs.load_all()
 	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
 	var enemies := EnemyDatabase.new()
 	enemies.load_all()
@@ -152,7 +152,7 @@ static func run_run_reads_tech(t: TestCase) -> void:
 static func run_import_checks(t: TestCase) -> void:
 	t.begin("118 · 导入：前置不存在、成环报错；撞位只警告；tech_run_buff 的条数要等于级数、buff 得存在且是局外的")
 	var ctx := ContentImporter.Context.new()
-	var buffs := GameFlow.load_run_buffs()
+	var buffs := RunBuffs.load_all()
 	for id in buffs:
 		ctx.register_run_buff(buffs[id])
 	var r := ImportReport.new()
@@ -184,7 +184,7 @@ static func run_import_checks(t: TestCase) -> void:
 static func run_first_tree(t: TestCase) -> void:
 	t.begin("118 · 首批树：三列十个节点（数值占位）；仓库扩建在第 0 列根上；侦察要幸运和讨价；每个 tech_run_buff 的 buff 都在且是局外的")
 	var defs := GameFlow.load_techs()
-	var buffs := GameFlow.load_run_buffs()
+	var buffs := RunBuffs.load_all()
 	t.eq(defs.size(), 11, "十一个节点（129 加了扛重）")
 	var cols := {}
 	for def in defs:
@@ -212,7 +212,7 @@ static func frame_tree_panel(t: TestCase, root: Window) -> void:
 	f.meta_path = META
 	f.settings_path = SETTINGS
 	f.tech_defs = GameFlow.load_techs()
-	f.buff_defs = GameFlow.load_run_buffs()
+	f.buff_defs = RunBuffs.load_all()
 	var panel = load(TECH_PANEL).new()
 	root.add_child(panel)
 	panel.setup(f, UiPalette.cjk_font())
@@ -278,7 +278,7 @@ static func frame_owned_count_quick_submit(t: TestCase, root: Window) -> void:
 	f.meta_path = META
 	f.settings_path = SETTINGS
 	f.tech_defs = GameFlow.load_techs()
-	f.buff_defs = GameFlow.load_run_buffs()
+	f.buff_defs = RunBuffs.load_all()
 	var panel = load(TECH_PANEL).new()
 	root.add_child(panel)
 	panel.setup(f, UiPalette.cjk_font())

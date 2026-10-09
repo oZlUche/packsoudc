@@ -2,56 +2,25 @@
 ## 图鉴累计件数、点亮一次；带回来的没清空开不了新局；存档 v2 往返。
 extends RefCounted
 
+## 与 Support.paths("meta_grid") 是同一组路径（flow / cleanup 按前缀算）
 const SAVE := "user://test_meta_grid_run.json"
 const META := "user://test_meta_grid_meta.json"
+const Support := preload("res://tests/run/flow_support.gd")
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
-	var loadouts: Array[LoadoutDef]
-	var rules: MetaRules
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content("free_mode", ["loadouts", "meta_rules"])
 
 
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	c.loadouts = GameFlow.load_loadouts()
-	c.rules = GameFlow.load_meta_rules()
-	return c
-
-
-static func _kit(c: Content) -> LoadoutDef:
+static func _kit(c: TestSupport.Content) -> LoadoutDef:
 	for l in c.loadouts:
 		if l.id == &"standard":
 			return l
 	return c.loadouts[0]
 
 
-static func _flow(c: Content, rules: MetaRules = null) -> GameFlow:
-	RunSave.remove(SAVE)
-	MetaSave.remove(META)
-	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new(rules if rules != null else c.rules))
-	f.meta_rules = rules if rules != null else c.rules
-	f.chapters = [c.chapter] as Array[ChapterDef]
-	f.loadouts = c.loadouts
-	f.save_path = SAVE
-	f.meta_path = META
-	f.player_baseline = CombatantBaseline.with_hp(10000.0)
-	return f
-
-
 ## 一局直接算撤离
-static func _extracted(c: Content, seed: int, kit: LoadoutDef) -> RunState:
+static func _extracted(c: TestSupport.Content, seed: int, kit: LoadoutDef) -> RunState:
 	var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items)
 	s.pick_spawn(s.map.entry_ids[0])
 	s.phase = RunState.Phase.EXTRACTED
@@ -193,7 +162,7 @@ static func run_flow_gate(t: TestCase) -> void:
 
 	var c := _content()
 	var kit := _kit(c)
-	var f := _flow(c)
+	var f := Support.flow(c, "meta_grid")
 	var run := f.begin(c.chapter, kit, 31)
 	run.phase = RunState.Phase.EXTRACTED
 	run.end_reason = &"extract"
@@ -202,15 +171,13 @@ static func run_flow_gate(t: TestCase) -> void:
 	t.eq(f.meta.runs, 1, "进结算屏之前账已经记了")
 	t.check(f.meta.has_pending_board(), "带回来的棋盘等着")
 	t.check(MetaSave.exists(META), "meta 已经存了")
-	t.eq(f.can_begin(), "", "090：没清空也能开新局（开局屏把带回来的收到地上，出发就没了）")
 	f.finish_result()
 	t.eq(f.screen, GameFlow.Screen.META, "→ 局外")
 	t.eq(f.meta.runs, 1, "没记两遍")
 	var stored := f.store_all()
 	t.check(int(stored["moved"]) > 0, "一键置入 %d 件" % stored["moved"])
 	t.check(not f.meta.has_pending_board(), "清空了")
-	t.eq(f.can_begin(), "", "能开新局了")
-	t.eq(MetaSave.read(c.items, META, c.rules).warehouse.item_count(), f.meta.warehouse.item_count(), "置入之后存了")
+	t.eq(MetaSave.read(c.items, META, c.meta_rules).warehouse.item_count(), f.meta.warehouse.item_count(), "置入之后存了")
 	t.not_null(f.begin(c.chapter, kit, 33), "开局")
 	RunSave.remove(SAVE)
 	MetaSave.remove(META)

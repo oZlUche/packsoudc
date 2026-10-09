@@ -41,13 +41,7 @@ static func _known_buffs(db: ItemDatabase) -> Dictionary:
 
 
 func _build() -> void:
-	var bg := ColorRect.new()
-	UiPalette.apply(GameSettings.load_from())
-	UiTheme.install(self)     # 121：界面主题挂在窗口上
-	bg.color = UiPalette.bg()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	UiTheme.prepare_root(self)     # 091 / 121：底色跟设置走、装上界面主题
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -64,7 +58,7 @@ func _build() -> void:
 	columns.add_child(left)
 	left.add_child(_label("战斗回放", 22, UiPalette.FG))
 	left.add_child(_label("最近 %d 场（新的在上）" % BattleArchive.KEEP, 12, UiPalette.DIM))
-	left.add_child(_button("刷新", refresh))
+	left.add_child(UiTheme.make_button("刷新", refresh, UiTheme.TIER_PLAIN, 13))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -73,8 +67,8 @@ func _build() -> void:
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_list.add_theme_constant_override("separation", 2)
 	scroll.add_child(_list)
-	left.add_child(_button("打开日志文件夹", open_folder))
-	left.add_child(_button("打开这场的 .txt", open_text))
+	left.add_child(UiTheme.make_button("打开日志文件夹", open_folder, UiTheme.TIER_PLAIN, 13))
+	left.add_child(UiTheme.make_button("打开这场的 .txt", open_text, UiTheme.TIER_PLAIN, 13))
 
 	var right := VBoxContainer.new()
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -98,15 +92,13 @@ func refresh() -> void:
 	_entries = BattleArchive.list(dir)
 	if _list == null:
 		return
-	for c in _list.get_children():
-		_list.remove_child(c)
-		c.queue_free()
+	UiTheme.clear_children(_list)
 	if _entries.is_empty():
 		_list.add_child(_label("还没有记录。设置 → 开发 → 战斗日志开着时，每打一场都会存一份。", 12, UiPalette.DIM))
 	for i in _entries.size():
 		var e := _entries[i]
 		var idx := i
-		var b := _button(_row_text(e), func(): open_entry(idx), 12)
+		var b := UiTheme.make_button(_row_text(e), func(): open_entry(idx), UiTheme.TIER_PLAIN, 12)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_list.add_child(b)
 
@@ -158,17 +150,8 @@ static func _row_text(e: Dictionary) -> String:
 		int(e.get("node", -1)), String(e.get("enemy", "")), verdict, StatMath.to_float(int(e.get("duration", 0)))]
 
 
+## 这一屏的标签都折行（列表里的一行可能很长）
 func _label(text: String, size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	UiTheme.label(l, size, color)     # 121：字体在主题里，颜色先选变体
+	var l := UiTheme.make_label(text, size, color)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return l
-
-
-func _button(text: String, cb: Callable, size: int = 13) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.add_theme_font_size_override("font_size", size)
-	b.pressed.connect(cb)
-	return b

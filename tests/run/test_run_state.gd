@@ -5,27 +5,11 @@ const KIT: Array[StringName] = [&"bag_leather", &"bag_leather", &"rifle", &"pist
 const SAVE_PATH := "user://test_run_state.json"
 
 
-class Content:
-	extends RefCounted
-	var items: ItemDatabase
-	var enemies: EnemyDatabase
-	var sets: SetDatabase
-	var chapter: ChapterDef
+static func _content() -> TestSupport.Content:
+	return TestSupport.load_content()
 
 
-static func _content() -> Content:
-	var c := Content.new()
-	c.items = ItemDatabase.new()
-	c.items.load_dir()
-	c.enemies = EnemyDatabase.new()
-	c.enemies.load_all()
-	c.sets = SetDatabase.new()
-	c.sets.load_dir()
-	c.chapter = load(ContentPaths.asset_file("chapters", "free_mode"))
-	return c
-
-
-static func _start(c: Content, seed: int, kit: Array[StringName] = KIT) -> RunState:
+static func _start(c: TestSupport.Content, seed: int, kit: Array[StringName] = KIT) -> RunState:
 	var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit)
 	if s != null:
 		s.player_baseline = CombatantBaseline.with_hp(10000.0)   # 测试里不想输的时候
@@ -42,7 +26,7 @@ static func _neighbor_of_type(s: RunState, type: StringName) -> int:
 
 
 ## 找一个出生点旁边就有战斗点的种子并开局
-static func _start_with_battle_next(c: Content, kit: Array[StringName] = KIT) -> RunState:
+static func _start_with_battle_next(c: TestSupport.Content, kit: Array[StringName] = KIT) -> RunState:
 	for seed in range(1, 60):
 		var s := _start(c, seed, kit)
 		if s == null:

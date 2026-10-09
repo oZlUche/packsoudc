@@ -13,6 +13,8 @@ extends RefCounted
 
 ## 词条页的分类（排在机制页的分类之后）
 const TERMS_CATEGORY := "terms"
+## 词条页分类给人看的名字（机制页的分类名在 [constant HelpPageDef.CATEGORY_NAMES]）
+const TERMS_CATEGORY_NAME := {"zh": "词条", "en": "Glossary"}
 ## 词条页的分组：来源 → 名字
 const GROUPS := {
 	"term": {"zh": "词条", "en": "Terms"}, "tag": {"zh": "标签", "en": "Tags"}, "dtype": {"zh": "伤害类型", "en": "Damage types"},
@@ -22,6 +24,8 @@ const GROUPS := {
 const GROUP_ORDER := ["term", "tag", "dtype", "buff", "stat", "trigger"]
 ## 还没有说明的词条页正文
 const NO_TEXT := "（这一页的说明还没写。）"
+## 140：「合成」这一页的正文下面列全部配方（两件 → 产物，配上作者写的那句 `note`）
+const RECIPE_PAGE := "crafting"
 
 ## 页 id → 页：`{id, title, category, group, order, text, related: Array[String], items: Array[StringName]}`
 var _pages: Dictionary = {}
@@ -33,12 +37,17 @@ var _links: Dictionary = {}
 var items: ItemDatabase = null
 ## 图鉴点亮了没有：`func(id: StringName) -> bool`；无效 = 全当亮了
 var lit: Callable = Callable()
+## 140：全部配方（「合成」页列出来）
+var recipes: Array[RecipeDef] = []
 
 
 ## 造一本：手写的机制页 + 按当前内容生成的词条页
-static func build(help: Array, item_db: ItemDatabase) -> Encyclopedia:
+static func build(help: Array, item_db: ItemDatabase, p_recipes: Array = []) -> Encyclopedia:
 	var e := Encyclopedia.new()
 	e.items = item_db
+	for r in p_recipes:
+		if r is RecipeDef:
+			e.recipes.append(r as RecipeDef)
 	e._generate_terms()
 	var authored: Array = help.duplicate()
 	authored.sort_custom(func(a: HelpPageDef, b: HelpPageDef) -> bool:
@@ -78,7 +87,7 @@ func _generate_terms() -> void:
 		_add("term:" + String(name), String(name), "term", Glossary.term_text(String(name)))
 	for t in TagRegistry.ids():
 		var tag := StringName(String(t))
-		if TagRegistry.is_internal(tag) or FaithDef.id_of_tag(tag) != &"":
+		if TagRegistry.is_internal(tag) or FaithTags.id_of_tag(tag) != &"":
 			continue
 		_add("tag:" + String(tag), TagRegistry.name_of(tag), "tag", TagRegistry.describe(tag), [], _items_with_tag(tag))
 	for d in DamageTypes.ids():
@@ -176,12 +185,12 @@ func toc() -> Array:
 
 static func category_name(cat: String) -> String:
 	if cat == TERMS_CATEGORY:
-		return "词条" if UiText.lang == "zh" else "Glossary"
+		return UiText.pick(TERMS_CATEGORY_NAME, cat)
 	return HelpPageDef.category_name(cat)
 
 
 static func group_name(g: String) -> String:
-	return Glossary._pick(GROUPS.get(g, null), g) if g != "" else ""
+	return UiText.pick(GROUPS.get(g, null), g) if g != "" else ""
 
 
 ## 搜索：标题或正文（去掉记号）里有这段字的页，标题命中的排前面。空查询返回空
@@ -195,7 +204,7 @@ func search(query: String, ctx: Dictionary = {}) -> Array[String]:
 		var p: Dictionary = _pages[id]
 		if String(p["title"]).to_lower().contains(q):
 			by_title.append(id)
-		elif Glossary.strip_bbcode(TextTemplate.plain(String(p["text"]), ctx)).to_lower().contains(q):
+		elif TextTemplate.strip_bbcode(TextTemplate.plain(String(p["text"]), ctx)).to_lower().contains(q):
 			by_text.append(id)
 	by_title.append_array(by_text)
 	return by_title
@@ -224,6 +233,8 @@ func render(id: String, ctx: Dictionary = {}) -> String:
 	if not names.is_empty():
 		var label := "来自：" if String(p["group"]) == "buff" else ("相关道具：" if UiText.lang == "zh" else "Items: ")
 		tail.append(label + "、".join(names))
+	if id == RECIPE_PAGE:
+		tail.append_array(recipe_lines())
 	if tail.is_empty():
 		return body
 	return body + "\n\n" + "\n".join(tail)
@@ -235,21 +246,35 @@ func link(id: String) -> String:
 	return "[url=%s]%s[/url]" % [id, String(p.get("title", id))] if not p.is_empty() else id
 
 
-## 正文里认得的词画成链接（不链自己；已经在 BBCode 标签里的不动）。长的词先认，占位挡住免得短词把长词切开
+## 正文里认得的词画成链接（不链自己；已经在 BBCode 标签里的不动）。长的词先认、占位挡住免得短词把长词切开 —— [method Glossary.wrap_terms]
 func link_words(text: String, self_id: String = "") -> String:
 	var words: Array[String] = []
 	for w in _links:
 		if String(w).length() >= 2 and String(_links[w]) != self_id:
 			words.append(String(w))
-	words.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
-	var out := text
-	var holders: Array[String] = []
-	for i in words.size():
-		var holder := "\u0001%d\u0002" % i
-		holders.append(holder)
-		out = out.replace(words[i], holder)
-	for i in words.size():
-		out = out.replace(holders[i], "[url=%s]%s[/url]" % [String(_links[words[i]]), words[i]])
+	return Glossary.wrap_terms(text, words, func(w: String) -> String:
+		return "[url=%s]%s[/url]" % [String(_links[w]), w])
+
+
+## 140：配方一行一条「甲 + 乙 → 产物：说明」。三件里有图鉴没点亮的：名字遮成「？」、不写说明（说明里有道具名）
+func recipe_lines() -> Array[String]:
+	var out: Array[String] = []
+	if recipes.is_empty():
+		return out
+	out.append("配方：" if UiText.lang == "zh" else "Recipes:")
+	for r in recipes:
+		if r.inputs.size() != 2:
+			continue
+		var ids: Array[StringName] = [r.inputs[0], r.inputs[1], r.output]
+		var names: Array[String] = []
+		var all_lit := true
+		for item_id in ids:
+			names.append(_item_name(item_id))
+			all_lit = all_lit and not (lit.is_valid() and not bool(lit.call(item_id)))
+		var line := "　%s + %s → %s" % names
+		if all_lit and r.note != "":
+			line += "：" + r.note
+		out.append(line)
 	return out
 
 

@@ -29,8 +29,8 @@ enum Direction {
 @export var min_amount: float = 0.0
 
 
-## 伤害事件的 side 是【承受方】，source_side 是【施加方】
-func matches_damage(ctx: RuleContext, event: BattleEvent) -> bool:
+## 伤害事件的 side 是【承受方】，source_side 是【施加方】。两个子类只差订阅哪条事件（与 [OnDamage] 的暴击筛选）
+func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 	var hit := event.side == ctx.owner.side
 	var dealt := event.get_int(&"source_side") == ctx.owner.side
 	match direction:
@@ -46,3 +46,19 @@ func matches_damage(ctx: RuleContext, event: BattleEvent) -> bool:
 	elif not event.get_bool(&"provokes", true):
 		return false
 	return event.get_int(&"amount") >= StatMath.from_float(min_amount)
+
+
+## 142：「受到攻击前」「造成物理伤害前」「受到流血伤害时」—— 方向、类型、门槛都从字段来；[method _when] 由子类给「前 / 时」
+func describe() -> String:
+	var line := ""
+	if damage_type == &"":
+		line = ("受到攻击" if direction == Direction.TAKEN else "攻击命中") + _when()
+	else:
+		line = "%s%s伤害%s" % ["受到" if direction == Direction.TAKEN else "造成", Glossary.damage_type_name(damage_type), _when()]
+	if min_amount > 0.0:
+		line += "（单次至少 %s 点）" % TextTemplate.num(min_amount)
+	return line
+
+
+func _when() -> String:
+	return "时"

@@ -20,8 +20,6 @@ extends Resource
 ## 占格形状。为 null 时本定义不可用。
 @export var shape: ItemShape
 
-@export var icon: Texture2D
-
 ## 稀有度档位，0 起。影响掉落权重与 UI 配色。
 @export var rarity: int = 0
 
@@ -136,3 +134,8 @@ func cells_rotated(rot: int) -> Array[Vector2i]:
 	if shape == null:
 		return [] as Array[Vector2i]
 	return shape.cells_rotated(rot)
+
+
+## 占格数；形状为空算 0（那是非法定义，导入器拦着，库里没有）
+func cell_count() -> int:
+	return shape.cell_count() if shape != null else 0

@@ -43,6 +43,15 @@ func loot_effects() -> Array[LootEffect]:
 	return out
 
 
+## 这一档猎手机制的段位表（[member HunterMechanic.bracket_steps] 的一份拷贝）；没开猎手给空。校准工具按它分段
+func hunter_bracket_steps() -> Array[int]:
+	var out: Array[int] = []
+	for m in mechanics:
+		if m is HunterMechanic:
+			return (m as HunterMechanic).bracket_steps.duplicate()
+	return out
+
+
 ## 开局屏的一句话：机制与修饰各自的 describe 连起来
 func summary() -> String:
 	var parts: Array[String] = []

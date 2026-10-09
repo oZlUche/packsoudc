@@ -158,15 +158,6 @@ func shift_axis(axis: StringName, delta: int, system: bool = false) -> int:
 	return delta
 
 
-## 净化：把内容层往 0 推至多 [param count] 层（0 = 清空）；[param sign] 只动正（1）/ 负（-1）/ 都动（0）。系统层不动
-func clear_axis(axis: StringName, count: int = 0, sign: int = 0) -> int:
-	var have := axis_stacks(axis)
-	if have == 0 or (sign > 0 and have < 0) or (sign < 0 and have > 0):
-		return 0
-	var n := absi(have) if count <= 0 else mini(count, absi(have))
-	return shift_axis(axis, -n if have > 0 else n)
-
-
 ## 4.3 公式的最后一步：按轴表把因子 / 固定值落到单位与每件道具的属性终值上
 func _apply_axes() -> void:
 	for axis in axes:
@@ -245,10 +236,8 @@ func tags_of(uid: int) -> Array[StringName]:
 
 #region buff
 func stacks_of(buff_id: StringName) -> int:
-	for b in buffs:
-		if b.def.id == buff_id:
-			return b.stacks
-	return 0
+	var b := find_buff(buff_id)
+	return b.stacks if b != null else 0
 
 
 func find_buff(buff_id: StringName) -> BuffInstance:
@@ -401,9 +390,8 @@ func _on_resource_changed(key: StringName, delta: int, reason: StringName) -> vo
 		"current": resources.current(key), "max": resources.maximum(key),
 	})
 	# 103（衰竭）：生命上限掉到把当前血压成 0 也是倒下。走 mark_dead，所以蛮神的不死照常进坚持期
-	if key == BattleStats.RES_HP and reason == BattleEvent.REASON_MAX_CHANGED \
-			and resources.current(key) <= 0 and mark_dead():
-		ctx.emit(BattleEvent.DIED, side, {})
+	if key == BattleStats.RES_HP and reason == BattleEvent.REASON_MAX_CHANGED:
+		settle_death(ctx)
 
 
 ## 087（作者反馈：敌人倒下两次、倒下时血没归零）：**倒下是终局**。血一到 0 就记死，之后的治疗（伤药的「濒死回血」）不再把它救回来，
@@ -439,6 +427,15 @@ func mark_dead() -> bool:
 			ctx.emit(BattleEvent.EFFECT_RESOLVED, side, {"effect": "undying", "uid": 0, "until": undying_until, "seconds": StatMath.to_float(undying_sec)})
 		return false
 	dead = true
+	return true
+
+
+## 血到 0 就倒下并发 DIED（087：倒下是终局）。伤害管线、以血为代价的资源效果、上限变动三处都走这里，
+## 判定点只有这一个；返回这次是不是真倒下了（不死的坚持期里是 false）
+func settle_death(ctx: BattleContext) -> bool:
+	if resources.current(BattleStats.RES_HP) > 0 or not mark_dead():
+		return false
+	ctx.emit(BattleEvent.DIED, side, {})
 	return true
 
 
