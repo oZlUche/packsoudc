@@ -544,12 +544,10 @@ func _rebuild_form() -> void:
 		return
 	# id 在顶栏、形状有画板 —— 表单里跳过，免得两处能改同一个值
 	# 画板上能画的东西，表单里一律不给第二个入口
-	var form := PropertyForm.create(_def, _font, {
+	_form_host.add_child(_form_for(_def, {
 		"ItemDef": ["id", "shape"],
 		"AdjacencyProfile": ["grant_cells", "receive_cells"],
-	})
-	form.changed.connect(_refresh)
-	_form_host.add_child(form)
+	}))
 
 
 ## 把画板上的标记格写回 adjacency。

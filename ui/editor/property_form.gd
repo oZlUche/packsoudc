@@ -37,6 +37,19 @@ var _rows: Dictionary = {}
 var _hint: Label = null
 ## 133：外层表单的对象（子表单才有）。[StatModifier] 挂在 [BuffDef] 下时，提示末尾补「每层一份」
 var parent_target: Object = null
+## 145：规则表（`Array[AbilityRule]`）的弹窗挂在这一层上（编辑器给，子表单继承）。没有就退回内联卡片
+var popup_layer: Control = null
+## 145：只显示这几个字段（规则弹窗的三个页签各显示规则的一部分）；空 = 全部。不传给子表单
+var only: Array = []
+## 145：本表单里的规则列表（字段名 → Tree），弹窗改了东西按这个找回去刷新那几行
+var _rule_trees: Dictionary = {}
+
+## 用时再 load：弹窗里的页签又是 PropertyForm，两边互相 preload 会成环
+const RULE_WINDOW := "res://ui/editor/rule_window.gd"
+const RULE_COLUMNS := ["#", "时机", "消耗", "效果"]
+## 规则列表一行的高度与最多显示几行（多了在列表里滚）
+const RULE_ROW_H := 26
+const RULE_ROWS_MAX := 8
 
 
 static func create(target: Object, font: Font, skip_map: Dictionary = {}) -> PropertyForm:
@@ -55,11 +68,14 @@ func _ready() -> void:
 func rebuild() -> void:
 	UiTheme.clear_children(self)
 	_rows.clear()
+	_rule_trees.clear()
 	if _target == null:
 		return
 	var hidden: Array = skip.get(String(ContentSchema.class_name_of(_target)), [])
 	for prop in ContentSchema.properties_of(_target):
 		if hidden.has(String(prop["name"])):
+			continue
+		if not only.is_empty() and not only.has(String(prop["name"])):
 			continue
 		var row := _row_for(_target, prop)
 		if row != null:
@@ -779,6 +795,9 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 
 	# --- 对象数组：每项一个可折叠的子表单，带类型下拉 ---
 	var element_class := ContentSchema.array_element_class(arr)
+	# 145：规则表一条一行，双击弹窗改（四层嵌套的卡片看不清哪个效果是谁的）
+	if element_class == &"AbilityRule" and popup_layer != null:
+		return _rule_list(owner, key, arr)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	var heading := _heading("%s（%d）" % [FieldText.label(owner, key), arr.size()])
@@ -825,6 +844,135 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 		_emit()
 		rebuild()))
 	return box
+
+
+#region 145：规则列表
+## 规则表 = 一张四列的列表（#、时机、消耗、效果，文案走 [Glossary]）+ 一排按钮。双击 / 回车 / 「编辑」弹 [RuleWindow]
+func _rule_list(owner: Object, key: String, arr: Array) -> Control:
+	var box := VBoxContainer.new()
+	var heading := _heading("%s（%d）" % [FieldText.label(owner, key), arr.size()])
+	heading.tooltip_text = FieldText.tip(owner, key)
+	heading.mouse_filter = Control.MOUSE_FILTER_STOP
+	box.add_child(heading)
+
+	var tree := Tree.new()
+	tree.set_meta("rule_key", key)
+	tree.hide_root = true
+	tree.columns = RULE_COLUMNS.size()
+	tree.column_titles_visible = true
+	tree.select_mode = Tree.SELECT_ROW
+	for c in RULE_COLUMNS.size():
+		tree.set_column_title(c, RULE_COLUMNS[c])
+		tree.set_column_expand(c, c > 0)
+	tree.set_column_custom_minimum_width(0, 44)
+	tree.set_column_expand_ratio(3, 2)
+	tree.custom_minimum_size.y = RULE_ROW_H * (clampi(arr.size(), 1, RULE_ROWS_MAX) + 1) + 8
+	tree.create_item()
+	for i in arr.size():
+		tree.create_item()
+	_fill_rule_rows(tree, arr)
+	_rule_trees[key] = tree
+	box.add_child(tree)
+
+	var row := HBoxContainer.new()
+	var needs_pick: Array[Button] = []
+	row.add_child(_small_button("新建", func():
+		arr.append(ContentSchema.make(&"AbilityRule", &"AbilityRule"))
+		_rules_changed(owner, key, arr, arr.size() - 1)
+		_open_rule(owner, key, arr, arr.size() - 1)))
+	needs_pick.append(_small_button("复制", func():
+		var i := _picked_rule(tree)
+		arr.insert(i + 1, (arr[i] as Resource).duplicate_deep(Resource.DEEP_DUPLICATE_ALL))
+		_rules_changed(owner, key, arr, i + 1)))
+	needs_pick.append(_small_button("删除", func():
+		var i := _picked_rule(tree)
+		arr.remove_at(i)
+		_rules_changed(owner, key, arr, mini(i, arr.size() - 1))))
+	needs_pick.append(_small_button("上移", func():
+		var i := _picked_rule(tree)
+		if i > 0:
+			var tmp = arr[i - 1]
+			arr[i - 1] = arr[i]
+			arr[i] = tmp
+			_rules_changed(owner, key, arr, i - 1)))
+	needs_pick.append(_small_button("下移", func():
+		var i := _picked_rule(tree)
+		if i < arr.size() - 1:
+			var tmp = arr[i + 1]
+			arr[i + 1] = arr[i]
+			arr[i] = tmp
+			_rules_changed(owner, key, arr, i + 1)))
+	needs_pick.append(_small_button("编辑", func():
+		_open_rule(owner, key, arr, _picked_rule(tree))))
+	for b in needs_pick:
+		b.disabled = true
+		row.add_child(b)
+	box.add_child(row)
+
+	var set_picked := func(on: bool) -> void:
+		for b in needs_pick:
+			b.disabled = not on
+	tree.item_selected.connect(func(): set_picked.call(true))
+	tree.nothing_selected.connect(func():
+		tree.deselect_all()
+		set_picked.call(false))
+	tree.item_activated.connect(func(): _open_rule(owner, key, arr, _picked_rule(tree)))
+	return box
+
+
+## 列表里选中的是第几条；没选中为 -1
+static func _picked_rule(tree: Tree) -> int:
+	var it := tree.get_selected()
+	return it.get_index() if it != null else -1
+
+
+## 每行的文字。不合法的（缺扳机 / 节奏 / 效果）序号前加「！」、整行暗色；悬浮看完整的一句
+static func _fill_rule_rows(tree: Tree, arr: Array) -> void:
+	var items := tree.get_root().get_children()
+	for i in mini(items.size(), arr.size()):
+		var item := items[i] as TreeItem
+		var rule := arr[i] as AbilityRule
+		var bad := rule == null or not rule.is_valid()
+		item.set_text(0, ("！" if bad else "") + str(i + 1))
+		var tip := ""
+		if rule != null:
+			item.set_text(1, Glossary.timing_text(rule))
+			item.set_text(2, Glossary.costs_text(rule))
+			item.set_text(3, Glossary.effects_text(rule.effects))
+			tip = Glossary.rule_text(rule)
+		for c in RULE_COLUMNS.size():
+			item.set_tooltip_text(c, tip)
+			if bad:
+				item.set_custom_color(c, UiPalette.DIM)
+			else:
+				item.clear_custom_color(c)
+
+
+## 增删、换顺序之后：写回、通知、重画，选中 [param pick] 那一行
+func _rules_changed(owner: Object, key: String, arr: Array, pick: int) -> void:
+	owner.set(key, arr)
+	_emit()
+	rebuild()
+	var tree := _rule_trees.get(key) as Tree
+	if tree != null and pick >= 0 and pick < arr.size():
+		tree.get_root().get_child(pick).select(0)
+
+
+func _open_rule(owner: Object, key: String, arr: Array, idx: int) -> void:
+	if idx < 0 or idx >= arr.size() or popup_layer == null:
+		return
+	var win = load(RULE_WINDOW).open_in(popup_layer)
+	win.show_rule(arr[idx], "规则 %d · %s" % [idx + 1, FieldText.label(owner, key)], label_font, func():
+		_emit()
+		var tree := _rule_trees.get(key) as Tree
+		if tree != null and is_instance_valid(tree):
+			_fill_rule_rows(tree, arr))
+
+
+## 测试用：本表单里某个规则表字段的列表（没有为 null）
+func rule_list(key: String) -> Tree:
+	return _rule_trees.get(key) as Tree
+#endregion
 
 
 func _object_section(owner: Object, prop: Dictionary, value: Object) -> Control:
@@ -893,6 +1041,7 @@ func _adder(declared: StringName, on_made: Callable) -> Control:
 func _sub_form(obj: Object) -> PropertyForm:
 	var sub := PropertyForm.create(obj, label_font, skip)
 	sub.parent_target = _target
+	sub.popup_layer = popup_layer
 	sub.changed.connect(_emit)
 	return sub
 #endregion
