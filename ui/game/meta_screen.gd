@@ -9,7 +9,7 @@ const TechPanelScript := preload("res://ui/game/tech_panel.gd")
 ## 图鉴缩略图之间的空隙；一行几个按宽度算（139）
 const CODEX_GAP := 8
 ## 出售页的仓库格子最大放到多大（139，和仓库页一样）
-const SELL_CELL_MAX := 96.0
+const SELL_CELL_MAX := 80.0
 
 var _wh = null
 var _new_run_btn: Button
@@ -272,7 +272,7 @@ func _build_sell(root: Control) -> Control:
 	return page
 
 
-## 139：出售页的仓库格子按 [param width] 放大（60 ～ 96）
+## 139：出售页的仓库格子按 [param width] 放大（60 ～ 80）
 func fit_sell_to_width(width: float) -> void:
 	if _sell_view != null and _sell_view.inventory != null:
 		_sell_view.cell_px = WarehousePanelScript.cell_for(width, _sell_view.inventory.size.x)
