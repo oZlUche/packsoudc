@@ -84,7 +84,7 @@ static func run_library_refs_export(t: TestCase) -> void:
 			if text.contains("\"id\": \"%s\"" % bid) and text.contains("\"buff\": {"):
 				inline_left.append("%s/%s" % [id, bid])
 	t.check(inline_left.is_empty(), "道具里不再内联库里有的 buff" if inline_left.is_empty() else ", ".join(inline_left))
-	t.check(ContentLibrary.buffs().size() >= 10, "库里有 %d 个 buff" % ContentLibrary.buffs().size())
+	t.check(ContentLibrary.buffs().size() >= 9, "库里有 %d 个 buff（嗜血改成轴后删了一份）" % ContentLibrary.buffs().size())
 	t.check(ContentLibrary.parts().size() >= 10, "构件库里有 %d 个" % ContentLibrary.parts().size())
 
 
