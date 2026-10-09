@@ -216,14 +216,15 @@ static func run_items(t: TestCase) -> void:
 	_start(ctx)
 	t.eq(ctx.sides[1].stacks_of(&"poison"), 1, "流血带出一层中毒")
 
-	# 嗜血护腕：对手被施加流血 → 自己一层嗜血（137：不再封顶）
+	# 嗜血护腕：对手被施加流血 → 自己加速 1 层（标准轴，不封顶；原来是一层嗜血 buff）
 	var bracer := db.get_def(&"bloodlust_bracer").combat.rules[0] as AbilityRule
 	var many: Array = []
 	for i in 8:
 		many.append(_apply(bleed_buff))
 	ctx = _ctx([_opener(many), bracer])
 	_start(ctx)
-	t.eq(ctx.sides[0].stacks_of(&"bloodlust"), 8, "八次施加，嗜血八层（137：不封顶）")
+	t.eq(ctx.sides[0].axis_stacks(&"attack_speed"), 8, "八次施加，加速八层")
+	t.eq(ctx.sides[0].stacks_of(&"bloodlust"), 0, "不再挂嗜血 buff")
 
 
 ## 一块不要求包的格子：锯齿箭挨着长弓，毒匠手套同时挨着小刀与长弓，另一枚锯齿箭只挨着小刀（压着的是近战）。
