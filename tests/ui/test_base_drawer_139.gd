@@ -1,5 +1,5 @@
 ## 139（作者定，三项待定按推荐）：基地屏右侧的开发栏改成箭头抽屉（默认收起，点一下开、再点一下关，盖在页面上）；
-## 仓库与图鉴的格子占满整行 —— 格子大小是每块视图自己的（`InventoryView.cell_px`，60 ～ 96），图鉴一行几个按宽度算。
+## 仓库与图鉴的格子占满整行 —— 格子大小是每块视图自己的（`InventoryView.cell_px`，60 ～ 80），图鉴一行几个按宽度算。
 extends RefCounted
 
 const META := "user://test_139_meta.json"
@@ -85,8 +85,8 @@ static func _collect_text(n: Node, out: Array[String]) -> void:
 
 
 static func frame_warehouse_fills_row(t: TestCase, root: Window) -> void:
-	t.begin("139 · 仓库格子按宽度放大（60 ～ 96），带回来的背包同一个大小；别的屏格子还是 60")
-	t.eq(WarehousePanelScript.cell_for(1600.0, 10), 96.0, "1600 宽、10 列：封顶 96")
+	t.begin("139 · 仓库格子按宽度放大（60 ～ 80；作者 2026-10-09 从 96 改小），带回来的背包同一个大小；别的屏格子还是 60")
+	t.eq(WarehousePanelScript.cell_for(1600.0, 10), 80.0, "1600 宽、10 列：封顶 80")
 	t.eq(WarehousePanelScript.cell_for(800.0, 10), 78.0, "800 宽、10 列：(800 − 14) / 10 取整 = 78")
 	t.eq(WarehousePanelScript.cell_for(400.0, 10), InventoryView.CELL, "太窄：不小于 60")
 	var f := _flow()
@@ -94,7 +94,7 @@ static func frame_warehouse_fills_row(t: TestCase, root: Window) -> void:
 	var wh = screen._wh
 	t.check(wh.fill_width, "基地屏的仓库面板开着撑满")
 	var c: float = wh.fit_to_width(1600.0)
-	t.check(c >= 90.0, "1600 宽：一格 ≥ 90（%.0f）" % c)
+	t.eq(c, 80.0, "1600 宽：一格封顶 80")
 	var view: InventoryView = wh.warehouse_view()
 	t.eq(view.cell_px, c, "仓库视图用这个格子")
 	t.eq(view.custom_minimum_size.x, f.meta.warehouse.size.x * c, "视图宽 = 列数 × 格子")
@@ -105,7 +105,7 @@ static func frame_warehouse_fills_row(t: TestCase, root: Window) -> void:
 	t.eq(wh.fit_to_width(500.0), InventoryView.CELL, "窄了缩回 60")
 	screen.show_tab("sell")
 	screen.fit_sell_to_width(1600.0)
-	t.check(screen._sell_view.cell_px >= 90.0, "出售页的仓库也撑满（%.0f）" % screen._sell_view.cell_px)
+	t.eq(screen._sell_view.cell_px, 80.0, "出售页的仓库也撑满、同样封顶 80")
 	screen.queue_free()
 	t.eq(InventoryView.new().cell_px, InventoryView.CELL, "新建的格子视图默认 60（地图背包、战前、开局不变）")
 	_cleanup()
