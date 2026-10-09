@@ -32,7 +32,7 @@ static func run_variants_and_modes(t: TestCase) -> void:
 			in_pool = true
 	t.check(not in_pool and db.all_ids().has(&"shortsword_brute"), "赐福版不进生成池（搜索 / 掉落 / 商店 / 敌人），但库里有")
 	# 只有信物能激活
-	var b := GridInventory.new(Vector2i(6, 4), 1, false)
+	var b := GridInventory.new(Vector2i(8, 6), 1, false)
 	var sword := ItemInstance.create(sb)
 	t.check(b.try_add(sword, true), "放上赐福短剑")
 	t.eq(FaithState.active_id(b), &"", "赐福的武器不激活信仰")
@@ -40,8 +40,8 @@ static func run_variants_and_modes(t: TestCase) -> void:
 	t.check(b.try_add(charm, true), "放上日神的护符")
 	t.eq(FaithState.active_id(b), &"sun", "护符是信物：激活日神")
 	t.check(FaithState.is_dormant(sb, FaithState.active_tag(b)), "蛮神赐福的短剑在日神下休眠（留通用效果）")
-	var sigil := ItemInstance.create(db.get_def(&"charm_brute"))
-	t.check(b.place(sigil, Vector2i(5, 3), 0), "再放蛮神的护符（142：放远一点，别让它的增益槽碰到短剑）")
+	var sigil := TestSupport.put_apart(b, db.get_def(&"charm_brute"), [sword])
+	t.not_null(sigil, "再放蛮神的护符（142：放远一点，别让它的增益槽碰到短剑）")
 	t.eq(FaithState.active_id(b), &"brute", "最后置入的信物说了算：蛮神")
 	# 三种生效方式
 	var fb := FaithBonus.new()
