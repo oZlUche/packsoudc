@@ -21,9 +21,8 @@
         "cadence": "@always",
         "effects": [
           {
-            "type": "apply_status",
-            "target": "SELF",
-            "buff": "bloodlust"
+            "type": "shift_axis",
+            "axis": "attack_speed"
           }
         ]
       }
