@@ -30,6 +30,9 @@ const ITEM_DIR := ContentPaths.AUTHORING_ITEMS
 ## 挑哪个词当哨兵都可能撞上，而撞上的表现是某个标签页莫名其妙变成了另一页。
 enum Filter { ALL, TAG, UNTAGGED }
 
+## 144：标签页签上面的一级分组。「有效果」由 [method ItemDef.has_effect] 算，不是标签
+enum Group { ALL, EFFECT, PLAIN }
+
 ## 当前分类筛选之后，列表里实际显示的 id，**按显示顺序**。
 ##
 ## 与 [member _ids] 分开：ItemList 的行号对应的是这一份，不是全集。
@@ -39,12 +42,19 @@ var _shown: Array[String] = []
 ## 分类筛选。[constant Filter.TAG] 时看 [member _filter_tag]。
 var _filter: Filter = Filter.ALL
 var _filter_tag: String = ""
+var _group: Group = Group.ALL
+
+## 列表键 → 名字（显示名 + 各语言名）/ 有没有效果。和 [member _tags_of] 一样在列表重读时从盘上读一次
+var _names_of: Dictionary = {}
+var _effect_of: Dictionary = {}
 
 ## 列表键 → 它的标签。标签是**从数据里读出来的**，不是写死的表 ——
 ## MOD 作者加一个新标签，分类页签就该自己多出来一个。
 var _tags_of: Dictionary = {}
 
 var _tab_host: VBoxContainer
+var _group_host: HBoxContainer
+var _search: LineEdit
 var _form_host: VBoxContainer
 var _shape: ShapeEditor
 var _id_edit: LineEdit
@@ -84,6 +94,12 @@ func _build_ui() -> void:
 	columns.add_child(left)
 	left.add_child(UiTheme.make_label("道具", 16, UiPalette.FG))
 
+	# 144：分组行横跨整个总览，标签页签在当前分组里长出来
+	_group_host = HBoxContainer.new()
+	for g in [Group.ALL, Group.EFFECT, Group.PLAIN]:
+		_group_host.add_child(_group_button(g))
+	left.add_child(_group_host)
+
 	var browse := HBoxContainer.new()
 	browse.add_theme_constant_override("separation", 6)
 	browse.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -101,11 +117,24 @@ func _build_ui() -> void:
 	_tab_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tab_scroll.add_child(_tab_host)
 
+	var list_col := VBoxContainer.new()
+	list_col.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	browse.add_child(list_col)
+	_search = LineEdit.new()
+	_search.placeholder_text = "搜索 id / 名字 / 标签"
+	_search.clear_button_enabled = true
+	_search.text_changed.connect(func(_t: String) -> void: _repaint_list())
+	_search.gui_input.connect(_on_search_input)
+	list_col.add_child(_search)
 	_list = ItemList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_list.item_selected.connect(func(i: int): _open(_shown[i]))
-	browse.add_child(_list)
+	# 空列表那一行灰字不在 _shown 里
+	_list.item_selected.connect(func(i: int) -> void:
+		if i < _shown.size():
+			_open(_shown[i]))
+	list_col.add_child(_list)
 	var list_buttons := HBoxContainer.new()
 	list_buttons.add_child(UiTheme.make_button("新建", _new_item, UiTheme.TIER_PLAIN, 13))
 	list_buttons.add_child(UiTheme.make_button("刷新列表", _on_rescan, UiTheme.TIER_PLAIN, 13))
@@ -207,33 +236,50 @@ func _set_layer(which: int) -> void:
 
 
 #region 文件
-## 列表重读之后读一遍各件的标签（分类页签用）
+## 列表重读之后读一遍各件的标签、名字和有没有效果（页签、分组与搜索用）
 func _on_list_reloaded() -> void:
 	_tags_of.clear()
+	_names_of.clear()
+	_effect_of.clear()
 	for id in _ids:
-		_tags_of[id] = _tags_in_file(id + ".json")
+		_read_meta(id)
 
 
-## 只为了标签读一遍文件。走 JSON 而不是导入器：这里不关心内容对不对，
+## 标签和名字走 JSON 而不是导入器：这里不关心内容对不对，
 ## 一件配错的道具照样得出现在列表里，否则作者就没法进去修它。
-func _tags_in_file(file_name: String) -> Array[String]:
-	var out: Array[String] = []
+## 有没有效果得看定义，才过一遍导入器；导不进来的算没效果（照样列出来）
+func _read_meta(id: String) -> void:
+	var tags: Array[String] = []
+	var names: Array[String] = []
 	var parsed = JSON.parse_string(
-		FileAccess.get_file_as_string(ITEM_DIR + "/" + file_name))
-	if not (parsed is Dictionary):
-		return out
-	for t in ((parsed as Dictionary).get("tags", []) as Array):
-		out.append(String(t))
-	return out
+		FileAccess.get_file_as_string(ITEM_DIR + "/" + id + ".json"))
+	var effect := false
+	if parsed is Dictionary:
+		var data := parsed as Dictionary
+		for t in (data.get("tags", []) as Array):
+			tags.append(String(t))
+		names.append(String(data.get("display_name", "")))
+		var by_lang = data.get("display_names", {})
+		if by_lang is Dictionary:
+			for lang in by_lang:
+				names.append(String(by_lang[lang]))
+		var def = _import(data, ImportReport.new())
+		effect = def != null and (def as ItemDef).has_effect()
+	_tags_of[id] = tags
+	_names_of[id] = names
+	_effect_of[id] = effect
+
+
+## 内存里那一份（当前打开的、草稿）；没有返回 null
+func _live(id: String) -> ItemDef:
+	if id == _draft_key() and _def != null:
+		return _def
+	return _drafts.get(id, null)
 
 
 ## 内存里那一份的标签盖掉盘上的 —— 作者刚加的标签，页签就该跟着变。
 func _tags_for(id: String) -> Array[String]:
-	var live: ItemDef = null
-	if id == _draft_key() and _def != null:
-		live = _def
-	elif _drafts.has(id):
-		live = _drafts[id]
+	var live := _live(id)
 	if live == null:
 		return _tags_of.get(id, [] as Array[String])
 	var out: Array[String] = []
@@ -242,11 +288,55 @@ func _tags_for(id: String) -> Array[String]:
 	return out
 
 
-## 全部出现过的标签，按名字排序。**从内容里长出来，不是写死的枚举** ——
+func _has_effect(id: String) -> bool:
+	var live := _live(id)
+	return live.has_effect() if live != null else bool(_effect_of.get(id, false))
+
+
+func _in_group(id: String, group: Group) -> bool:
+	match group:
+		Group.EFFECT:
+			return _has_effect(id)
+		Group.PLAIN:
+			return not _has_effect(id)
+		_:
+			return true
+
+
+## 144：搜索 = 不分大小写的子串，对 id、各语言名字、标签 id 与标签显示名（说明文字不搜，太散）
+func _matches_search(id: String) -> bool:
+	var q := _search.text.strip_edges().to_lower() if _search != null else ""
+	if q == "":
+		return true
+	var hay: Array[String] = [id]
+	var live := _live(id)
+	if live != null:
+		hay.append(live.display_name)
+		for lang in live.display_names:
+			hay.append(String(live.display_names[lang]))
+	else:
+		hay.append_array(_names_of.get(id, [] as Array[String]))
+	for t in _tags_for(id):
+		hay.append(t)
+		hay.append(TagRegistry.name_of(StringName(t)))
+	for s in hay:
+		if s.to_lower().contains(q):
+			return true
+	return false
+
+
+## 分组 + 搜索之后还在的（页签计数按这一份算）
+func _visible_base(id: String) -> bool:
+	return _in_group(id, _group) and _matches_search(id)
+
+
+## 当前分组里出现过的标签，按名字排序。**从内容里长出来，不是写死的枚举** ——
 ## MOD 作者加一个标签，这里自己就多一页。
 func _all_tags() -> Array[String]:
 	var seen := {}
 	for id in _ids:
+		if not _in_group(id, _group):
+			continue
 		for t in _tags_for(id):
 			seen[t] = true
 	var out: Array[String] = []
@@ -256,7 +346,10 @@ func _all_tags() -> Array[String]:
 	return out
 
 
+## 分组 AND 搜索 AND 标签页签
 func _matches_filter(id: String) -> bool:
+	if not _visible_base(id):
+		return false
 	match _filter:
 		Filter.ALL:
 			return true
@@ -274,7 +367,7 @@ func _rebuild_tabs() -> void:
 	for t in _all_tags():
 		wanted.append([Filter.TAG, t])
 	for id in _ids:
-		if _tags_for(id).is_empty():
+		if _in_group(id, _group) and _tags_for(id).is_empty():
 			wanted.append([Filter.UNTAGGED, ""])
 			break
 
@@ -297,10 +390,23 @@ func _rebuild_tabs() -> void:
 		b.button_pressed = page == [_filter, _filter_tag]
 		b.text = "%s %d" % [_tab_label(page), _count_of(page)]
 
+	for child in _group_host.get_children():
+		var b := child as Button
+		var g: Group = b.get_meta("group")
+		b.button_pressed = g == _group
+		var n := 0
+		for id in _ids:
+			if _in_group(id, g) and _matches_search(id):
+				n += 1
+		b.text = "%s %d" % [GROUP_LABELS[g], n]
 
+
+## 计数按「分组 + 搜索」算：搜着的时候「武器 3」就是搜到的三把
 func _count_of(page: Array) -> int:
 	var n := 0
 	for id in _ids:
+		if not _visible_base(id):
+			continue
 		match page[0]:
 			Filter.ALL:
 				n += 1
@@ -339,6 +445,28 @@ func _tab_button(page: Array) -> Button:
 	return b
 
 
+const GROUP_LABELS := {Group.ALL: "全部", Group.EFFECT: "有效果", Group.PLAIN: "无效果"}
+
+
+func _group_button(g: Group) -> Button:
+	var b := Button.new()
+	b.set_meta("group", g)
+	b.toggle_mode = true
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.pressed.connect(func() -> void:
+		_group = g
+		_repaint_list()
+	)
+	return b
+
+
+func _on_search_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and (event as InputEventKey).keycode == KEY_ESCAPE:
+		_search.clear()
+		_repaint_list()
+		_search.accept_event()
+
+
 ## 有未保存改动的条目前面加一个点。没有这个标记，作者就得靠记忆。
 func _repaint_list() -> void:
 	_rebuild_tabs()
@@ -348,6 +476,10 @@ func _repaint_list() -> void:
 		if _matches_filter(id):
 			_shown.append(id)
 			_list.add_item(("● " if _drafts.has(id) else "") + id)
+	if _shown.is_empty():
+		var row := _list.add_item("没有匹配的道具")
+		_list.set_item_selectable(row, false)
+		_list.set_item_custom_fg_color(row, UiPalette.DIM)
 	# 按 id 选回去，不按行号 —— 换一页之后行号指向的是另一件东西
 	var i := _shown.find(_draft_key())
 	if i >= 0:
@@ -386,11 +518,14 @@ func _new_def() -> Resource:
 
 func _new_item() -> void:
 	_new_entry()
+	_select_in_list(_draft_key())
 
 
 func _select_in_list(id: String) -> void:
-	# 当前分类里没有它，就退回「全部」：选中一件看不见的东西等于没选
+	# 当前筛选里没有它，就把分组、搜索、标签页签全退回去：选中一件看不见的东西等于没选
 	if not _matches_filter(id):
+		_group = Group.ALL
+		_search.text = ""
 		_filter = Filter.ALL
 		_filter_tag = ""
 		_repaint_list()

@@ -235,3 +235,97 @@ static func frame_run_unsaved_hook(t: TestCase, root: Window) -> void:
 	t.check(not ed.has_unsaved_changes(), "放弃改动之后又干净了")
 
 	ed.queue_free()
+
+
+static func _press_group(ed, g: int) -> void:
+	for child in ed._group_host.get_children():
+		if int((child as Button).get_meta("group")) == g:
+			(child as Button).pressed.emit()
+
+
+static func _tab_count(ed, tag: String) -> int:
+	for child in ed._tab_host.get_children():
+		var b := child as Button
+		if String(b.get_meta("page")[1]) == tag:
+			return int(b.text.get_slice(" ", b.text.get_slice_count(" ") - 1))
+	return -1
+
+
+## 144：分组（有效果 / 无效果）+ 搜索栏
+static func frame_run_groups_and_search(t: TestCase, root: Window) -> void:
+	t.begin("编辑器 · 144 分组与搜索")
+
+	var ed = load(SCENE).instantiate()
+	root.add_child(ed)
+	const EFFECT := 1
+	const PLAIN := 2
+
+	# --- 有效果从定义算 ---
+	for id in ["shortsword", "salve", "ration", "bag_leather", "gambeson", "arrows", "charm_sun", "spyglass"]:
+		t.check(ed._has_effect(id), "%s 有效果" % id)
+	for id in ["copper_ore", "steel_ingot", "heart_of_guoguo", "antler", "rope_coil"]:
+		t.check(not ed._has_effect(id), "%s 没效果" % id)
+
+	# --- 切到「无效果」：全是没效果的，左列没有武器页，「全部」页的计数 = 本组件数 ---
+	_press_group(ed, PLAIN)
+	t.check(ed._shown.size() > 0 and ed._shown.size() < ed._ids.size(), "无效果是全集的一部分")
+	var all_plain := true
+	for id in ed._shown:
+		all_plain = all_plain and not ed._has_effect(id)
+	t.check(all_plain, "无效果页里一件有效果的都没有")
+	t.eq(_tab_count(ed, "weapon"), -1, "无效果分组下左列没有「武器」页签")
+	var plain_n: int = ed._shown.size()
+	t.eq(_tab_count(ed, ""), plain_n, "「全部」页的计数是本组的件数")
+	_press_group(ed, EFFECT)
+	t.eq(ed._shown.size() + plain_n, ed._ids.size(), "有效果 + 无效果 = 全部")
+	t.check(_tab_count(ed, "weapon") > 0, "有效果分组下有「武器」页签")
+
+	# --- 搜索：名字、id、标签都能命中；计数跟着搜索变 ---
+	_press_group(ed, 0)
+	ed._search.text = "剑"
+	ed._search.text_changed.emit("剑")
+	for id in ["shortsword", "longsword", "mithril_sword"]:
+		t.check(ed._shown.has(id), "搜「剑」找得到 %s" % id)
+	t.check(not ed._shown.has("copper_ore"), "搜「剑」找不到铜矿石")
+	t.eq(_tab_count(ed, ""), ed._shown.size(), "「全部」页计数随搜索变")
+	ed._search.text = "SHORTSWORD"
+	ed._search.text_changed.emit("SHORTSWORD")
+	t.check(ed._shown.has("shortsword"), "不分大小写地搜 id")
+	ed._search.text = "zzz"
+	ed._search.text_changed.emit("zzz")
+	t.eq(ed._shown.size(), 0, "搜不到时列表为空")
+	t.eq(ed._list.item_count, 1, "空列表有一行提示")
+	t.eq(ed._list.get_item_text(0), "没有匹配的道具", "提示是灰字那一行")
+	t.check(not ed._list.is_item_selectable(0), "提示行点不了")
+	ed._search.text = ""
+	ed._search.text_changed.emit("")
+	t.eq(ed._shown.size(), ed._ids.size(), "清空搜索后恢复全集")
+
+	# --- 三级叠加：有效果 + 武器页 + 搜索 ---
+	_press_group(ed, EFFECT)
+	for child in ed._tab_host.get_children():
+		if String((child as Button).get_meta("page")[1]) == "weapon":
+			(child as Button).pressed.emit()
+	ed._search.text = "刀"
+	ed._search.text_changed.emit("刀")
+	t.check(ed._shown.size() > 0, "有效果 + 武器 + 「刀」有结果")
+	var ok := true
+	for id in ed._shown:
+		ok = ok and ed._has_effect(id) and ed._tags_for(id).has("weapon") and ed._matches_search(id)
+	t.check(ok, "三级筛选是 AND")
+	t.check(ed._shown.has("cleaver"), "剁刀在里面")
+
+	# --- 无效果 + 搜「铜」下新建：分组、搜索、页签全清掉，定位到新的那件 ---
+	_press_group(ed, PLAIN)
+	ed._search.text = "铜"
+	ed._search.text_changed.emit("铜")
+	ed._new_item()
+	t.eq(ed._group, 0, "分组退回全部")
+	t.eq(ed._search.text, "", "搜索清掉了")
+	var key: String = ed._draft_key()
+	var row: int = ed._shown.find(key)
+	t.check(row >= 0, "新建的那件在列表里")
+	t.check(row >= 0 and ed._list.is_selected(row), "并且选中了")
+
+	ed._on_discard()
+	ed.queue_free()
