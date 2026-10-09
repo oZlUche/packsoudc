@@ -1,56 +1,51 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_a8sh1"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_k0tof"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_6xkvw"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_duofo"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_tckdm"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="7_5j1tb"]
-[ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="7_a8sh1"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_status_applied.gd" id="8_2g8r7"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_55ree"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_76all"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_r6t4s"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_3p7r5"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_muxlg"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_ad0nw"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_a8sh1"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_k0tof"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_6xkvw"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_duofo"]
+[ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="6_tckdm"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_status_applied.gd" id="7_si5cy"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="8_5j1tb"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="9_2g8r7"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="10_55ree"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_76all"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_r6t4s"]
 
-[sub_resource type="Resource" id="Resource_k0tof"]
-script = ExtResource("3_6xkvw")
+[sub_resource type="Resource" id="Resource_3p7r5"]
+script = ExtResource("3_k0tof")
 
-[sub_resource type="Resource" id="Resource_6xkvw"]
-script = ExtResource("7_5j1tb")
-target = 1
-
-[sub_resource type="Resource" id="Resource_duofo"]
-script = ExtResource("7_a8sh1")
+[sub_resource type="Resource" id="Resource_muxlg"]
+script = ExtResource("6_tckdm")
 axis = &"damage_dealt"
 
-[sub_resource type="Resource" id="Resource_tckdm"]
-script = ExtResource("8_2g8r7")
+[sub_resource type="Resource" id="Resource_kyocl"]
+script = ExtResource("7_si5cy")
 buff_id = &"bleed"
 
-[sub_resource type="Resource" id="Resource_si5cy"]
-script = ExtResource("2_k0tof")
-trigger = SubResource("Resource_tckdm")
-cadence = SubResource("Resource_k0tof")
-effects = Array[ExtResource("5_tckdm")]([SubResource("Resource_6xkvw"), SubResource("Resource_duofo")])
+[sub_resource type="Resource" id="Resource_qqmym"]
+script = ExtResource("2_a8sh1")
+trigger = SubResource("Resource_kyocl")
+cadence = SubResource("Resource_3p7r5")
+effects = Array[ExtResource("5_duofo")]([SubResource("Resource_muxlg")])
 
-[sub_resource type="Resource" id="Resource_5j1tb"]
-script = ExtResource("9_55ree")
-rules = Array[ExtResource("2_k0tof")]([SubResource("Resource_si5cy")])
+[sub_resource type="Resource" id="Resource_e2esi"]
+script = ExtResource("8_5j1tb")
+rules = Array[ExtResource("2_a8sh1")]([SubResource("Resource_qqmym")])
 
-[sub_resource type="Resource" id="Resource_2g8r7"]
-script = ExtResource("13_muxlg")
+[sub_resource type="Resource" id="Resource_fga1v"]
+script = ExtResource("12_r6t4s")
 
 [resource]
-script = ExtResource("12_3p7r5")
+script = ExtResource("11_76all")
 id = &"bloodhound_sigil"
 display_name = "猎血者的符号"
 display_names = {
 "en": "Bloodhound Sigil"
 }
 description = "猎人循着血迹，越追越凶。"
-shape = SubResource("Resource_2g8r7")
+shape = SubResource("Resource_fga1v")
 rarity = 2
 tags = Array[StringName]([&"part", &"sigil", &"bleed"])
-combat = SubResource("Resource_5j1tb")
+combat = SubResource("Resource_e2esi")

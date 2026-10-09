@@ -26,10 +26,6 @@
         },
         "effects": [
           {
-            "type": "apply_status",
-            "target": "SELF"
-          },
-          {
             "type": "shift_axis",
             "axis": "damage_dealt"
           }
