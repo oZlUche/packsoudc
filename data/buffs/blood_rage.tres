@@ -5,10 +5,16 @@
 [ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_3dtjv"]
 [ext_resource type="Script" path="res://core/battle/buff_def.gd" id="4_7oy5y"]
 
-[sub_resource type="Resource" id="Resource_ynjp5"]
+[sub_resource type="Resource" id="Resource_1iqh7"]
 script = ExtResource("1_1iqh7")
 mode = 1
-amount = 10.0
+amount = 3.0
+
+[sub_resource type="Resource" id="Resource_o4h3v"]
+script = ExtResource("1_1iqh7")
+stat = &"haste"
+mode = 1
+amount = 3.0
 
 [resource]
 script = ExtResource("4_7oy5y")
@@ -19,4 +25,4 @@ display_names = {
 }
 stackable = false
 duration_sec = 10.0
-mods = Array[ExtResource("1_1iqh7")]([SubResource("Resource_ynjp5")])
+mods = Array[ExtResource("1_1iqh7")]([SubResource("Resource_1iqh7"), SubResource("Resource_o4h3v")])
