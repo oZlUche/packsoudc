@@ -104,3 +104,16 @@
 | 3 | 开局钱按角色 | A 加 `starting_funds` 字段（120 / 100 / 80）；B 仍用全局数，行囊按全局数乘 | **A**：否则行囊对三人一样，百分比白改 |
 | 4 | 不屈怎么改 | A 改「败仗少扣一点体力」；B 删掉这条科技 | **A**：科技树那一格留着，内容换掉 |
 | 5 | 马库斯「操练」 | A 开战时耐力满 / 额外一段；B 保留 +1 耐力回复、面板不写 5 | **A**：面板差异要进面板，被动做别人做不到的事 |
+
+---
+
+## 落地记录（2026-10-10，五项待定全按推荐）
+
+- **棋盘与面板**：三份角色 JSON 按 2.1 / 2.2 的表写好，开局钱用新字段 `CharacterDef.starting_funds`（-1 = 经济规则的 `starting_balance`，导入器拦小于 -1 的）。开局屏面板行加了「棋盘 7 × 6」「开局钱 120」两项。角色说明与百科「三个角色」跟着改了（棋盘宽窄、钱多钱少）。
+- **百分比**：`StatBonus.mode`（ADD / MULT，乘算的 `amount` 是百分数）；`VitalityMaxBonus / CarryCapacityBonus / StartingFundsBonus.percent` 与 `amount` 并存（科技那几级写 `"amount": 0`，因为 `amount` 的默认值不是 0）。`RunContext` 新增 `stat_mult`、`vitality_max_mult`、`carry_capacity_mult`、`starting_funds_mult`，三样整数的结算统一走 `RunContext.scaled`：`roundi(基数 ×（100 + Σ%）/ 100) + Σ加算`。按整数算，所以 40 × 1.15 得 46，不会落成 45.999…。开局屏的负重预览走同一个函数。
+- **生命不取整**：生命按浮点乘，安德烈乌斯满级是 58.5，不是方案表里的 59。显示照旧按整数显示。战斗面板「基础属性加成」那一格会写出乘算那一条。
+- **科技表**：`docs/techs.xlsx` 改了四条科技的「效果参数」和「每级说明模板」（写成「开局生命 +10%」这种，数从参数来），也改了不屈的构件。改完跑了 `tools/techs_xlsx_to_json.gd` 和导入。
+- **不屈**：换成新的 `RunEffect` `loss_discount`（`RunContext.loss_discount`）。`NodeEvents` 扣败仗体力时减掉，最少扣一点；输给猎手也减，必死和写了无代价的不管。
+- **铁律检查**：在 `ContentImporter._check_not_in_techs` 里。角色被动的构件只要和任何一个 `tech_*` 局外 buff 的效果是同一个脚本，就报错并写出是哪个科技。单独导入角色时上下文里没有科技，这条检查跳过。
+- **操练**（2.5）：开战时耐力本来就是满的，所以没写「开战时满」。改成战斗规则：耐力掉到两成以下时立刻回 30 点，每场一次（`on_resource_below` + `@uses_1` + `change_resource`）。它不再是一局被动，所以和筋骨（`stat_bonus`）不撞。
+- **测试**：新增 `tests/run/test_characters_149.gd`，覆盖三人零级和满级的对照表、取整边界、乘算相加、神坛加算在最后、不屈、撞车检查和操练。老测试跟着改了：耐久与行囊读百分比；马库斯的耐力回复看面板、三人最高。

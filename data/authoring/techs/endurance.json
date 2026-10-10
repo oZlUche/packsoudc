@@ -5,7 +5,7 @@
     "en": "Endurance"
   },
   "column": 1,
-  "description": "体力上限更高，在图上走得更远。",
+  "description": "体力上限更高，在图上走得更远：按角色自己的体力上限加百分比。",
   "effect": {
     "type": "tech_run_buff",
     "buffs": [

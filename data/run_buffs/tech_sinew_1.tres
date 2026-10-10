@@ -8,12 +8,13 @@
 
 [sub_resource type="Resource" id="Resource_p03jl"]
 script = ExtResource("2_7esvf")
-amount = 5.0
+mode = 1
+amount = 10.0
 
 [resource]
 script = ExtResource("5_1s1mh")
 id = &"tech_sinew_1"
 display_name = "筋骨（科技）"
-description = "开局生命 {stat_bonus_amount|signed}"
+description = "开局生命 {stat_bonus_amount|signed}%"
 scope = 0
 effects = Array[ExtResource("1_l7n8r")]([SubResource("Resource_p03jl")])

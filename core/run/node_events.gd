@@ -627,7 +627,8 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 			if type != HunterSystem.TYPE and losses_forgiven < hooks.run_context().free_losses:
 				losses_forgiven += 1
 			else:
-				vitality.spend(cost, &"battle_lost")
+				# 149：科技「不屈」少扣几点，最少还是扣一点
+				vitality.spend(maxi(1, cost - hooks.run_context().loss_discount), &"battle_lost")
 			if vitality.is_depleted():
 				_defeat(&"vitality_depleted")
 		# cost == 0：这一场写了无代价

@@ -18,8 +18,10 @@ extends Resource
 @export var base_stats: Dictionary = {}
 ## 体力上限（7.1）
 @export var vitality_max: int = 5
-## 作战棋盘的尺寸
+## 作战棋盘的尺寸（149：三个人各不相同，7 / 8 / 9 × 6）
 @export var board_size: Vector2i = Vector2i(8, 6)
+## 149：开局钱的基数（科技「行囊」按它乘百分比）。-1 = 用经济规则的全局 [member EconomyRules.starting_balance]
+@export var starting_funds: int = -1
 ## 初始包：道具 id，可重复。开局摆在棋盘上；带入的东西只能放进它们
 @export var starting_bags: Array[StringName] = []
 ## 129：负重上限（单位「重」）。0 = 不算负重
