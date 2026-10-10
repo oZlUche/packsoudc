@@ -149,6 +149,7 @@ static func run_wear(t: TestCase) -> void:
 
 	var round_trip := ItemInstance.from_dict(JSON.parse_string(JSON.stringify(probe.to_dict())), c.items)
 	t.eq(round_trip.charges(), 1, "存档（JSON）往返：还剩 1 次")
+	t.eq(JSON.stringify(round_trip.to_dict()), JSON.stringify(probe.to_dict()), "再存一次逐字节相同（次数还是整数）")
 	var old := probe.to_dict()
 	(old["state"] as Dictionary).clear()
 	t.eq(ItemInstance.from_dict(old, c.items).charges(), probe.def.wear.max_charges, "老档没记：按满算")

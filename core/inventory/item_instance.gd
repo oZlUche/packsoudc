@@ -130,5 +130,7 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> ItemInstance:
 	inst.origin = Vector2i(int(o[0]), int(o[1]))
 	inst.placed_seq = int(d.get("seq", 0))
 	inst.state = (d.get("state", {}) as Dictionary).duplicate(true)
+	if inst.state.has(WearProfile.CHARGES_KEY):     # 148：JSON 读回来是 3.0，存回去得还是 3（存档逐字节往返）
+		inst.state[WearProfile.CHARGES_KEY] = int(inst.state[WearProfile.CHARGES_KEY])
 	reserve_uid_above(inst.uid)
 	return inst
