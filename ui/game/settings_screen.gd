@@ -6,6 +6,8 @@ var _tooltip_btn: Button = null
 var _unlock_all_btn: Button = null
 ## 117：开发区的「战斗日志」开关（导出包里整块不画）
 var _trace_btn: Button = null
+## 150 补 2：调试模式开关
+var _debug_btn: Button = null
 ## 091：背景底色的按钮（主题 id → 按钮）
 var _bg_btns: Dictionary = {}
 ## 090：从地图的暂停菜单嵌进来时的「返回」（回暂停菜单，一局还在）；空 = 独立的一屏，回主菜单
@@ -49,6 +51,11 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(_wrapped("全部解锁：章节、难度、道具不看解锁，直接全开；代价是成就不计（091）。", 12, UiPalette.DIM, 500))
 	_unlock_all_btn = _toggle("全部解锁", toggle_unlock_all)
 	col.add_child(_unlock_all_btn)
+	col.add_child(HSeparator.new())
+	col.add_child(_label("调试", 15, UiPalette.DIM))
+	col.add_child(_wrapped("调试模式：地图上摆出只给开发看的东西（事件日志）。关掉就藏起来，日志照样在记，再打开能看到之前的（150）。", 12, UiPalette.DIM, 500))
+	_debug_btn = _toggle("调试模式", toggle_debug_mode)
+	col.add_child(_debug_btn)
 	col.add_child(HSeparator.new())
 	if BattleArchive.default_on():     # 117：开发区只在非导出包里有 —— 日志是给作者看的，玩家看不到
 		col.add_child(_label("开发", 15, UiPalette.DIM))
@@ -101,6 +108,13 @@ func toggle_battle_trace() -> void:
 	_refresh()
 
 
+## 150 补 2：调试模式开关（存盘；地图屏从暂停菜单的设置回来时照新值重摆）
+func toggle_debug_mode() -> void:
+	flow.settings.debug_mode = not flow.settings.debug_mode
+	flow.save_settings()
+	_refresh()
+
+
 ## 117：在系统的文件管理器里打开 user://battle_logs
 func open_log_folder() -> void:
 	DirAccess.make_dir_recursive_absolute(BattleArchive.DIR)
@@ -134,6 +148,9 @@ func _refresh() -> void:
 	if _trace_btn != null:
 		_trace_btn.set_pressed_no_signal(flow.settings.battle_trace)
 		_trace_btn.text = "战斗日志：%s" % ("开" if flow.settings.battle_trace else "关")
+	if _debug_btn != null:
+		_debug_btn.set_pressed_no_signal(flow.settings.debug_mode)
+		_debug_btn.text = "调试模式：%s" % ("开" if flow.settings.debug_mode else "关")
 	for tid in _bg_btns:
 		# 101 第 5 刀：设置里存的可能是空串或认不出来的 id，按生效的那一档打勾
 		(_bg_btns[tid] as Button).set_pressed_no_signal(String(tid) == UiPalette.bg_theme)

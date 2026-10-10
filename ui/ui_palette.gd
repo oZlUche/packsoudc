@@ -23,6 +23,8 @@ const DIM := Color("8b93a1")
 const LINE := Color("2a2f38")
 
 const HP := Color("d9534f")
+## 150 补 4：体力心「失去」的那颗（黑心，外面描一圈 DIM）
+const HEART_LOST := Color("0a0a0c")
 const SHIELD := Color("5bc0de")
 ## 106（作者定）：护盾不再是独立的一条，而是生命条外侧的一圈粗白框 —— 这是那圈框的颜色
 const SHIELD_FRAME := Color("f2f6ff")

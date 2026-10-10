@@ -36,6 +36,7 @@ var _ach_hint: Label = null
 var _ach_rows: Array = []
 ## 139：调试台抽屉
 var _drawer: DevDrawer = null
+var _debug_btn: Button = null
 var _codex_grids: Array[GridContainer] = []
 
 
@@ -100,6 +101,10 @@ func open(payload: Dictionary) -> void:
 
 	# 调试台（139：原来仓库页的右列）
 	var right := _drawer.content
+	# 150 补 2：头部写着现在的调试模式，点一下切（和设置页那个勾选是同一个开关）
+	_debug_btn = _button("", toggle_debug_mode, 13, UiPalette.Tier.MINOR)
+	_debug_btn.text = _debug_text()
+	right.add_child(_debug_btn)
 	# 开发开关：只在非导出包显示。科技给的局外 buff 由「科技」页的等级决定（写进 tech_buffs），不在这里重复开关
 	if not OS.has_feature("template"):
 		right.add_child(_label("开发：局外 buff 开关（科技给的在下面「科技等级」里改）", 15, UiPalette.DIM))
@@ -199,6 +204,19 @@ func open(payload: Dictionary) -> void:
 
 
 #region 调试台（139）
+## 150 补 2：调试模式开关（存盘）
+func toggle_debug_mode() -> bool:
+	flow.settings.debug_mode = not flow.settings.debug_mode
+	flow.save_settings()
+	if _debug_btn != null:
+		_debug_btn.text = _debug_text()
+	return flow.settings.debug_mode
+
+
+func _debug_text() -> String:
+	return "调试模式：%s（地图上的事件日志）" % ("开" if flow.settings.debug_mode else "关")
+
+
 func dev_drawer() -> DevDrawer:
 	return _drawer
 
