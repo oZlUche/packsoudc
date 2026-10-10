@@ -46,3 +46,16 @@ func describe() -> String:
 	var n := maxi(1, stacks)
 	var line := "%s的%s达到 %d 层时" % ["你" if on_self else "对手", Glossary.status_name(buff_id), n]
 	return line + ("（消耗这 %d 层）" % n if consume else "")
+
+
+## 151：本件自己在叠这个 buff（一秒施加几层）就按「几秒叠够一次」；否则按门槛占比 × 频率
+func estimated_rate(ctx: PowerContext, cadence_hz: float) -> float:
+	var key := ("self:" if on_self else "opp:") + String(buff_id)
+	var own := float(ctx.applied_rate.get(key, 0.0))
+	if own > 0.0:
+		return own / maxf(1.0, stacks)
+	return ctx.weights.threshold_share * (cadence_hz if cadence_hz > 0.0 else ctx.hz())
+
+
+func estimated_stacks() -> float:
+	return float(stacks)

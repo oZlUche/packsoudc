@@ -85,3 +85,13 @@ func _tag_names() -> String:
 	for t in source_tags:
 		names.append(Glossary.tag_name(t))
 	return "、".join(names)
+
+
+## 151：一秒命中几次 —— 听对手出手按假定受击频率；听连结的邻居按假定邻居频率；听全场再加上自己（勾了「算自己」）
+func estimated_rate(ctx: PowerContext, _cadence_hz: float) -> float:
+	if not same_side:
+		return ctx.hits_taken()
+	var rate := ctx.weights.neighbor_hz
+	if include_self and source == Source.ANY:
+		rate += ctx.hz()
+	return rate

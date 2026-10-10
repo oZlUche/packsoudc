@@ -18,3 +18,8 @@ func apply(ctx: RuleContext) -> void:
 
 func describe() -> String:
 	return "这一下改为%s伤害" % Glossary.damage_type_name(to)
+
+
+## 151：估值 —— 零（元素抗性落地后再按目标抗性表算）；记零但不算「未估」
+func estimated_value(_ctx: PowerContext) -> float:
+	return 0.0

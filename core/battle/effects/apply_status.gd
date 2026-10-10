@@ -42,3 +42,25 @@ func describe() -> String:
 	if buff == null:
 		return "施加 ?"
 	return "%s%s%s" % ["施加" if target != Target.SELF else "获得", Names.of(buff), ("×%d" % stacks) if stacks > 1 else ""]
+
+
+## 151：估值 —— 层数 × 一层在那一边身上总共值多少（[method BuffDef.stack_value]，从那一边的角度）；
+## 给对手的取反（对手身上的增益是我的损失、减益是我的收益）
+func estimated_value(ctx: PowerContext) -> float:
+	if buff == null:
+		return NAN
+	var n := stacks * (ctx.stacks_or_assumed() if per_stack else 1.0)
+	var v := 0.0
+	if target != Target.OPPONENT:
+		v += n * buff.stack_value(ctx.for_carrier(true))
+	if target != Target.SELF:
+		v -= n * buff.stack_value(ctx.for_carrier(false))
+	return v
+
+
+## 151：不可叠层的 buff 还在身上时再上一次是白费：min(1, 1 ÷ (一秒几次 × 平均待多久))
+func estimated_cap(ctx: PowerContext, rate: float) -> float:
+	if buff == null or buff.is_stackable():
+		return 1.0
+	var stay := rate * ctx.weights.expected_duration(buff.duration_sec, buff.is_permanent())
+	return minf(1.0, 1.0 / stay) if stay > 0.0 else 1.0

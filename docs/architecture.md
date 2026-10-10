@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.71 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.72 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2831,6 +2831,22 @@ class_name SearchRules extends Resource
 
 它也是 5.4.2 里 `type_reward` 的单位：一步的收益分 = 期望拿到的价值。
 
+#### 6.4.1 战斗力估算（151）
+
+编辑器里武器的「当前战斗力」和推荐稀有度 / 推荐价值来自 `PowerEstimate.estimate(def)`（`core/authoring/power_estimate.gd`）：
+
+> P = (B + Σ V × T × C × K × L) × W
+
+- **B**：自己按冷却出手（`OnSchedule`）、打对手的 `DealDamage` 的每秒伤害，含暴击期望，不打消耗折扣。
+- **V**：每条其余规则里各效果的估值，站在道具主人这边看，有正负（伤自己、给自己上 debuff 为负）。各效果自己实现 `CombatEffect.estimated_value(ctx: PowerContext)`，没实现的记零并标「未估」。
+- **T / C / K / L**：扳机率（`Trigger.estimated_rate`，被规则的冷却夹住）、消耗折扣（`Cost.estimated_factor`）、条件折扣（`is_condition()` 的那些）、上限（不可叠的 buff 重复上身不加值）。都在 0..1 或是频率，**只缩放、不翻符号**。
+- **W**：负重折扣 `max(下限, 1 − 重量 / 基准)`。
+- buff 的值 = 每秒值 × 期望持续 + 上身 / 离身一次性值，在挂着它的那一边算（`PowerContext.for_carrier`），嵌套超过三层记零。
+
+所有系数在 `data/authoring/balance/power_weights.json`（`PowerWeights`，缺项回代码默认、多写或写错类型给提示）。`PowerWeights` / `PowerContext` 放在 `core/battle`，因为各效果、扳机、消耗的估值方法要用到它们。
+
+推荐只给武器：预算比 r = P ÷ (每格基准 DPS × 格数)，按 `tiers` 阈值定档（神话不推荐）；推荐价值 = `ItemValue.BASE_PER_CELL[档] × 格数 × 档内位置系数`，取整到 5。编辑器的「战斗力」面板（`PowerPanel`）逐行列出 B 和每条规则，「采用」写回稀有度与价值；「新建武器」画完形状即按格数预填伤害、冷却、耐力消耗，出生约等于默认战斗力。导入器对稀有度和推荐差两档以上的武器给提醒（不拦）。`tools/bench_battle.gd -- power` 输出「估算 vs 实测」单件表和流派组合贡献表，用来校系数。
+
 ### 6.5 节点事件（M4-4）
 
 `NodeEvents` 是 5.6 那个 `MapTravel.on_node_event` 钩子的真正接收方（`bind(travel)`）。
@@ -4058,6 +4074,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.72 | 2026-10-10 | **武器战斗力估算**（151，作者定，五项待定按推荐；新 6.4.1）：`PowerEstimate`（P = (B + Σ V×T×C×K×L) × W，乘项只缩不翻号）、`PowerWeights`（`data/authoring/balance/power_weights.json`）、`PowerContext`；效果 / 扳机 / 消耗 / buff 各自的估值方法；推荐稀有度（仅武器）与推荐价值；编辑器「战斗力」面板 + 「采用」+ 「新建武器」预填；导入器「差两档」提醒；`bench_battle.gd -- power` 对照表 |
 | v2.71 | 2026-10-10 | **150 补充：右栏也拆成组件**（作者定，8.7 补充）：`HudPartWidget`，屏幕的按钮、提示行、技能、路线、日志、调试台箭头装进组件按布局摆，右栏去掉，地图往左让出 `right_inset()`；`belt` 腰带组件；`GameSettings.debug_mode`（默认开）+ 布局项 `debug_only`（日志只在调试模式）；体力画成红心 / 黑心 |
 | v2.70 | 2026-10-10 | **地图屏读数拆成组件**（150，作者定，四项待定按推荐；新 8.7）：`HudWidget` 与十种读数、`HudWidgets` 登记表、`HudLayout`（九宫锚点 + 偏移 + 行，`user://` → 仓库 → 默认）、`HudHost`（摆放、让出顶上、登记地上层）；主题变体 `PanelHud` / `LabelHud` / `LabelHudLarge`；地图屏的调试台抽屉与「摆读数」（拖、吸附、右键显隐、滚轮切档、保存 / 重置）；121 棘轮扫进 `ui/hud`，135 → 134 |
 | v2.69 | 2026-10-10 | **角色棋盘与百分比科技**（149，作者定，五项待定按推荐；改 7.3）：三个角色的棋盘 7 / 8 / 9 × 6、面板各占一轴、新字段 `CharacterDef.starting_funds`；`StatBonus.mode`、`VitalityMaxBonus / CarryCapacityBonus / StartingFundsBonus.percent`、`RunContext.stat_mult / *_mult / scaled`；不屈改成新效果 `loss_discount`；导入器拦角色被动与科技撞同一种效果；马库斯「操练」改成战斗规则（耐力见底回一段）；`docs/techs.xlsx` 四条科技改百分比 |

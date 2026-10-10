@@ -68,3 +68,8 @@ func describe() -> String:
 
 func _when() -> String:
 	return "时"
+
+
+## 151：一秒命中几次 —— 受击按假定受击频率，出手按自己的出手频率
+func estimated_rate(ctx: PowerContext, _cadence_hz: float) -> float:
+	return ctx.hits_taken() if direction == Direction.TAKEN else ctx.hz()

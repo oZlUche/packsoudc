@@ -63,3 +63,21 @@ func apply(ctx: RuleContext) -> void:
 
 func describe() -> String:
 	return "%s %s %.0f" % ["获得" if amount >= 0.0 else "失去", resource_key, absf(amount)]
+
+
+## 151：估值 —— 生命 / 护盾：得到的乘治疗权重、失去的按伤害算；耐力 / 法力乘耐力权重；
+## 吸血那部分按这一下的大小（受击扳机是对面那一下，出手扳机是自己那一下）。给自己为正，给对手取反
+func estimated_value(ctx: PowerContext) -> float:
+	var amt := amount
+	if amount_stat != &"" and ctx.stats != null and ctx.stats.total_of(amount_stat, -1) >= 0:
+		amt = StatMath.to_float(ctx.stats.total_of(amount_stat)) * (1.0 if amount >= 0.0 else -1.0)
+	if per_stack:
+		amt *= ctx.stacks_or_assumed()
+	if percent_of_damage > 0:
+		var hit := ctx.incoming_hit() if ctx.incoming else ctx.hit_size()
+		amt += hit * clampi(percent_of_damage, 0, 100) / 100.0 * (-1.0 if amount < 0.0 else 1.0)
+	var w := ctx.weights
+	var per := w.stamina_weight
+	if resource_key == BattleStats.RES_HP or resource_key == BattleStats.RES_SHIELD:
+		per = w.heal_weight if amt > 0.0 else 1.0
+	return amt * per * -side_sign(target)

@@ -29,3 +29,41 @@ func effective_costs() -> Array[Cost]:
 
 func is_valid() -> bool:
 	return trigger != null and cadence != null and not effects.is_empty()
+
+
+#region 151 战斗力估算
+## 一秒触发几次：自发型 = 频率；别的 = 扳机估的次数，有冷却再被冷却封顶
+func estimated_rate(ctx: PowerContext) -> float:
+	if trigger == null or cadence == null:
+		return 0.0
+	var hz := cadence.estimated_hz(ctx.stats if ctx.stats != null else StatSet.new())
+	if trigger.is_self_driven():
+		return hz
+	var t := trigger.estimated_rate(ctx, hz)
+	return minf(t, hz) if hz > 0.0 else t
+
+
+## 消耗（[param conditions] 假）或条件（真）的折扣之积
+func estimated_factor(ctx: PowerContext, rate: float, conditions: bool) -> float:
+	var f := 1.0
+	for c in effective_costs():
+		if (c as Cost).is_condition() == conditions:
+			f *= clampf((c as Cost).estimated_factor(ctx, rate), 0.0, 1.0)
+	return f
+
+
+## 每秒值多少（buff 自己的规则用；道具的规则由估算器逐项拆开算）
+func estimated_value_per_sec(ctx: PowerContext) -> float:
+	var c := ctx
+	if trigger != null and trigger.estimated_stacks() > 0.0:
+		c = ctx.with_stacks(trigger.estimated_stacks())
+	var rate := estimated_rate(c)
+	if rate <= 0.0:
+		return 0.0
+	var v := 0.0
+	for e in effects:
+		var x := (e as CombatEffect).estimated_value(c)
+		if not is_nan(x):
+			v += x * clampf((e as CombatEffect).estimated_cap(c, rate), 0.0, 1.0)
+	return v * rate * estimated_factor(c, rate, false) * estimated_factor(c, rate, true)
+#endregion

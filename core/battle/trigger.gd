@@ -29,6 +29,17 @@ func implied_costs() -> Array[Cost]:
 	return [] as Array[Cost]
 
 
+## 151：战斗力估算 —— 一秒命中几次。[param cadence_hz] 是这条规则频率层的上限（冷却；没有 = 0）。
+## 默认 0（估不出来就不算）；自发型（[OnSchedule]）不问它，直接用频率
+func estimated_rate(_ctx: PowerContext, _cadence_hz: float) -> float:
+	return 0.0
+
+
+## 151：门槛扳机（到了几层）的门槛 —— 规则里「按层数」的效果按它算；没有 = 0
+func estimated_stacks() -> float:
+	return 0.0
+
+
 ## 142：给人看的一句（规则行方括号里那句），只由字段拼出来 —— 作者不写文案。没写的子类给空，[method Glossary.trigger_text] 退回类型名
 func describe() -> String:
 	return ""

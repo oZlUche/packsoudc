@@ -516,8 +516,24 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_validate_item_combat(def, report)
 	_validate_status_loops(def, report)
 	_validate_rule_shapes(def, ctx, report)
+	_validate_power(def, ctx, report)
 	ctx.register_item(def)
 	return def
+
+
+## 151（待定 5 按推荐）：武器的稀有度和战斗力估算推荐的差两档以上才提醒（流派件单看偏弱是故意的，差一档正常）。只提醒、不拦
+static var _power_weights: PowerWeights = null
+
+
+static func _validate_power(def: ItemDef, ctx: Context, report: ImportReport) -> void:
+	if not def.tags.has(&"weapon") or def.combat == null or def.combat.rules.is_empty():
+		return
+	if _power_weights == null:
+		_power_weights = PowerWeights.load_from()
+	var est := PowerEstimate.estimate(def, _power_weights, ctx.buffs)
+	if est.rarity >= 0 and absi(est.rarity - def.rarity) >= 2:
+		report.warn("rarity", "稀有度 %d 和战斗力估算推荐的 %d 差两档以上（战斗力 %.1f，格数预算比 %.2f）：改数值或改 data/authoring/balance/power_weights.json（151）" % [
+			def.rarity, est.rarity, est.power, est.ratio])
 
 
 ## 122：材料的出身标签，三选一（作者补正：魔晶石等魔法类不算自然也不算工艺，归【魔法】）

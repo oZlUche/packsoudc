@@ -18,7 +18,10 @@
 ## 所以界面存出来的东西和命令行存出来的逐字节相同 ——
 ## 「省一步」不能以「两条路产出不同的资产」为代价。
 ##
-## 列表 / 草稿 / 判脏 / 存盘这一段与别的三个内容编辑器共用，在 [AuthoringEditor]（141）。这里多的是分类页签、形状画板与预估 DPS。
+## 列表 / 草稿 / 判脏 / 存盘这一段与别的三个内容编辑器共用，在 [AuthoringEditor]（141）。这里多的是分类页签、形状画板与战斗力面板。
+##
+## 151（作者定）：右栏的「战斗力」面板（[PowerPanel]）—— 表单一改就按 [PowerEstimate] 重算，列逐项贡献，给推荐稀有度与价值，「采用」才写回。
+## 「新建武器」：先画形状，第一次改形状时按格数预填一套能打的攻击力、冷却与耐力（默认战斗力），之后改哪个数战斗力跟着走
 extends AuthoringEditor
 
 ## 作者数据目录。资产目录见 [ContentPaths]。
@@ -60,7 +63,11 @@ var _shape: ShapeEditor
 var _id_edit: LineEdit
 ## JSON 预览（就是基类的 [member _json]，测试按这个名字读）
 var _preview: TextEdit
-var _dps: Label
+## 151：战斗力面板
+var _power: PowerPanel
+var _power_weights: PowerWeights = null
+## 151：新建的武器还没画形状：第一次改形状时预填（记着刚建好时的形状，和它不一样就是改过了）
+var _weapon_shape_at_bind: String = ""
 var _layer_buttons: Array[Button] = []
 
 
@@ -137,6 +144,7 @@ func _build_ui() -> void:
 	list_col.add_child(_list)
 	var list_buttons := HBoxContainer.new()
 	list_buttons.add_child(UiTheme.make_button("新建", _new_item, UiTheme.TIER_PLAIN, 13))
+	list_buttons.add_child(UiTheme.make_button("新建武器", new_weapon, UiTheme.TIER_PLAIN, 13))
 	list_buttons.add_child(UiTheme.make_button("刷新列表", _on_rescan, UiTheme.TIER_PLAIN, 13))
 	list_buttons.add_child(UiTheme.make_button("放弃改动", _on_discard, UiTheme.TIER_PLAIN, 13))
 	left.add_child(list_buttons)
@@ -207,8 +215,9 @@ func _build_ui() -> void:
 		))
 	side_col.add_child(grid_row)
 
-	_dps = UiTheme.make_label("", 13, UiPalette.DIM)
-	side_col.add_child(_dps)
+	_power = PowerPanel.new()
+	_power.adopt_requested.connect(adopt_power)
+	side_col.add_child(_power)
 
 	side_col.add_child(UiTheme.make_label("校验", 14, UiPalette.FG))
 	_status = RichTextLabel.new()
@@ -521,6 +530,62 @@ func _new_item() -> void:
 	_select_in_list(_draft_key())
 
 
+## 151：新建一件武器 —— 带 weapon 标签、先画形状；第一次改形状时预填默认那一套（[method PowerEstimate.default_weapon]）
+func new_weapon() -> void:
+	_new_entry()
+	_def.tags.append(&"weapon")
+	_weapon_shape_at_bind = _def.shape.to_bits() if _def.shape != null else ""
+	_set_layer(ShapeEditor.Layer.SHAPE)
+	_rebuild_form()
+	_refresh()
+	_select_in_list(_draft_key())
+
+
+## 新建的武器、还没有战斗数据、形状和刚建好时不一样了 → 预填
+func _maybe_prefill_weapon() -> void:
+	if _current_id != "" or _def.combat != null or not _def.tags.has(&"weapon") or _def.shape == null:
+		return
+	if _def.shape.to_bits() == _weapon_shape_at_bind:
+		return
+	var d := PowerEstimate.default_weapon(_def.cell_count(), _weights())
+	var prof := CombatProfile.new()
+	prof.base_stats = {"damage": d["damage"]}
+	var rule := AbilityRule.new()
+	rule.trigger = OnSchedule.new()
+	var cd := CooldownCadence.new()
+	cd.seconds = d["cooldown"]
+	rule.cadence = cd
+	var cost := ResourceCost.new()
+	cost.amount = d["stamina"]
+	rule.costs.append(cost)
+	rule.effects.append(DealDamage.new())
+	prof.rules.append(rule)
+	_def.combat = prof
+	_rebuild_form()
+
+
+func _weights() -> PowerWeights:
+	if _power_weights == null:
+		_power_weights = PowerWeights.load_from()
+	return _power_weights
+
+
+## 151：「采用」—— 把推荐的稀有度与价值写进道具
+func adopt_power() -> void:
+	var est := _power.estimate
+	if _def == null or est == null or est.rarity < 0:
+		return
+	_def.rarity = est.rarity
+	_def.value = est.value
+	_rebuild_form()
+	_refresh()
+
+
+## 151：现在这件的战斗力明细（测试读）
+func power_estimate() -> PowerEstimate.Breakdown:
+	return _power.estimate
+
+
 func _select_in_list(id: String) -> void:
 	# 当前筛选里没有它，就把分组、搜索、标签页签全退回去：选中一件看不见的东西等于没选
 	if not _matches_filter(id):
@@ -569,18 +634,12 @@ func _sync_adjacency() -> void:
 func _collect() -> void:
 	_def.shape = _shape.to_shape()
 	_sync_adjacency()
+	_maybe_prefill_weapon()
 
 
 func _on_refreshed() -> void:
-	# 预估 DPS：编译是纯函数，所以这条读数和真打出来的一致
-	var item := CompiledItem.new()
-	item.source_uid = 1
-	item.def_id = _def.id
-	item.stats = StatSet.new()
-	if _def.combat != null:
-		_def.combat.seed_stats(item.stats)
-		item.rules = _def.combat.rules
-	_dps.text = "占 %d 格　预估 DPS %.1f" % [_shape.cell_count(), item.estimated_dps()]
+	# 151：战斗力（估算是纯函数，表单一改就重算）。buff 按 id 查内容库
+	_power.show_estimate(PowerEstimate.estimate(_def, _weights(), ContentLibrary.context().buffs))
 #endregion
 
 
