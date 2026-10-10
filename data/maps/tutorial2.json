@@ -243,7 +243,7 @@
         ],
         "base_stats": {
           "max_hp": 40,
-          "armor": 12
+          "block": 12
         },
         "event": "tut2_battle_ward",
         "tooltip": "{battle_data}\n{c:dim}每秒叠一层护盾，没有上限。{/c}"
@@ -297,7 +297,7 @@
         ],
         "base_stats": {
           "max_hp": 45,
-          "armor": 3
+          "block": 3
         },
         "event": "tut2_battle_cure",
         "tooltip": "{battle_data}\n{c:dim}随身带着解毒的东西。{/c}"

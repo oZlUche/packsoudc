@@ -23,7 +23,7 @@ var source_uid: int = 0
 var crit: bool = false
 ## 106 第八节（作者定）：这一包是不是**直接伤害** —— 看来源，武器（道具的规则）造成的是直接，
 ## buff 造成的（灼烧、中毒、到期爆发）是非直接，套装 / 单位级规则也算非直接。
-## **防护（格挡 / 破绽）只对直接伤害生效**；造包的效果用 [method CombatEffect.direct_of] 填它
+## **格挡（加固 / 破绽）只对直接伤害生效**；造包的效果用 [method CombatEffect.direct_of] 填它
 var direct: bool = false
 #endregion
 
@@ -38,8 +38,8 @@ var percent: int = 0
 var inverted: bool = false
 ## 完全取消这一次
 var cancelled: bool = false
-## 实际被护甲挡掉的量
-var armor: int = 0
+## 实际被格挡挡掉的量（153：原名 armor；破绽为负）
+var block: int = 0
 ## 最终结算量。正为扣血，负为回血
 var final: int = 0
 ## 落到资源上的实际变化量（可能被上限或归零截断）
@@ -93,7 +93,7 @@ func cancel() -> void:
 
 
 func _to_string() -> String:
-	return "DamagePacket(%s 原始 %.1f → 护盾 -%.1f → 防护 -%.1f → 最终 %.1f)" % [
+	return "DamagePacket(%s 原始 %.1f → 护盾 -%.1f → 格挡 -%.1f → 最终 %.1f)" % [
 		type, StatMath.to_float(raw), StatMath.to_float(absorbed),
-		StatMath.to_float(armor), StatMath.to_float(final),
+		StatMath.to_float(block), StatMath.to_float(final),
 	]

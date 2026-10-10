@@ -62,7 +62,7 @@ static func run_shield_and_armor(t: TestCase) -> void:
 	var a := _dummy(100.0)
 	a.baseline = StatSet.new()
 	a.baseline.set_base(BattleStats.MAX_SHIELD, _sec(4.0))
-	a.baseline.set_base(BattleStats.ARMOR, _sec(2.0))
+	a.baseline.set_base(BattleStats.BLOCK, _sec(2.0))
 	var ctx := _ctx(a, _dummy(100.0))
 	FX._advance_to(ctx, 35.0)     # 2 层：×1.4
 	var me := ctx.sides[0]
@@ -76,7 +76,7 @@ static func run_shield_and_armor(t: TestCase) -> void:
 	var b := _dummy(100.0)
 	b.baseline = StatSet.new()
 	b.baseline.set_base(BattleStats.MAX_SHIELD, _sec(4.0))
-	b.baseline.set_base(BattleStats.ARMOR, _sec(2.0))
+	b.baseline.set_base(BattleStats.BLOCK, _sec(2.0))
 	var ctx2 := _ctx(b, _dummy(100.0))
 	FX._advance_to(ctx2, 35.0)
 	var me2 := ctx2.sides[0]

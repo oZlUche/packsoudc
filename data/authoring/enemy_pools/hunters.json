@@ -70,7 +70,7 @@
       ],
       "stat_scale": {
         "max_hp": 2,
-        "armor": 1.5
+        "block": 1.5
       }
     }
   ],

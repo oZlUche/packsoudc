@@ -77,7 +77,7 @@ static func run_trace_contents(t: TestCase) -> void:
 	var dmg := trace.of_kind(BattleTrace.DAMAGE)
 	t.check(not dmg.is_empty(), "有伤害管线")
 	var first: Dictionary = dmg[0]["data"] if not dmg.is_empty() else {}
-	for key in ["raw_in", "raw", "absorbed", "armor", "taken", "final", "hp_before", "hp_after"]:
+	for key in ["raw_in", "raw", "absorbed", "block", "taken", "final", "hp_before", "hp_after"]:
 		t.check(first.has(key), "管线一条带「%s」" % key)
 	t.check(not trace.of_kind(BattleTrace.RNG).is_empty(), "有随机数（暴击掷骰）")
 	t.check(not trace.of_kind(BattleTrace.BUFF).is_empty(), "有 buff 叠层")

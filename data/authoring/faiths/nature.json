@@ -80,9 +80,36 @@
   "blessings": [
     {
       "tags": [
+        "shield"
+      ],
+      "name_prefix": "自然之神赐福的",
+      "name_prefix_en": "Nature-blessed ",
+      "faith_bonuses": [
+        {
+          "mode": "active",
+          "mods": [
+            {
+              "stat": "max_hp",
+              "amount": 3.0
+            }
+          ]
+        },
+        {
+          "mode": "scaled",
+          "max_shares": 5,
+          "mods": [
+            {
+              "stat": "block",
+              "amount": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tags": [
         "gear",
         "armor",
-        "shield",
         "nature"
       ],
       "name_prefix": "自然之神赐福的",
@@ -102,8 +129,8 @@
           "max_shares": 5,
           "mods": [
             {
-              "stat": "armor",
-              "amount": 1.0
+              "stat": "max_shield",
+              "amount": 4.0
             }
           ]
         }

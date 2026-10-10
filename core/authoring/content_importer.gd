@@ -305,7 +305,7 @@ static func _validate_item_buffs(def: ItemDef, report: ImportReport) -> void:
 				warn_axis_candidate(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
 
 
-## 107（作者定）：**毒与流血没有「直接伤害」形态** —— 它们天生就是 buff（每层每秒掉血、无视护盾与防护），
+## 107（作者定）：**毒与流血没有「直接伤害」形态** —— 它们天生就是 buff（每层每秒掉血、无视护盾与格挡），
 ## 武器顶多给对手加【中毒】/【流血】。所以道具自己的出手规则（以及信力规则）里不许出现 `poison` / `bleed` 的 deal_damage；
 ## buff 内部的那条照旧（内容里毒刀、毒瓶、弯刀、剁刀都是这样写的）
 const BUFF_ONLY_DAMAGE: Array[StringName] = [&"poison", &"bleed"]
@@ -466,8 +466,13 @@ static func warn_axis_candidate(def: BuffDef, path: String, report: ImportReport
 			report.error("%saxes[%d].axis" % [path, i], "没有这条标准轴 '%s'（可用：%s）" % [a.axis, ", ".join(StatAxes.ORDER)])
 		elif a != null and a.stacks == 0:
 			report.warn("%saxes[%d].stacks" % [path, i], "「%s」带 0 层 %s，这条不起作用" % [def.id, a.axis])
+	# 153（作者定）：格挡只来自盾牌 —— buff 不许直接改格挡，临时的加减走格挡轴（加固 / 破绽）
+	for i in def.mods.size():
+		var bm := def.mods[i] as StatModifier
+		if bm != null and bm.stat == BattleStats.BLOCK:
+			report.error("%smods[%d].stat" % [path, i], "「%s」：格挡只能来自盾牌；buff 里临时的加减写 axes —— {axis: block, stacks: N}（加固为正、破绽为负，153）" % def.id)
 	if def.is_stackable() and def.mods.size() == 1 and def.axes.is_empty() and def.rules.is_empty() \
-			and def.on_apply.is_empty() and def.on_expire.is_empty():
+			and def.on_apply.is_empty() and def.on_expire.is_empty() and (def.mods[0] as StatModifier).stat != BattleStats.BLOCK:
 		var only := StatAxes.axis_for_stat((def.mods[0] as StatModifier).stat)
 		if only != &"":
 			report.warn(path + "mods", "「%s」只是一条 %s 的增减，改用标准轴：shift_axis(%s)（增益正、减益负，直接相抵）" % [def.id, (def.mods[0] as StatModifier).stat, only])
@@ -476,7 +481,7 @@ static func warn_axis_candidate(def: BuffDef, path: String, report: ImportReport
 	for i in def.mods.size():
 		var m := def.mods[i] as StatModifier
 		var axis := StatAxes.axis_for_stat(m.stat) if m != null else &""
-		if axis != &"" and axis != StatAxes.ARMOR:     # 防护（格挡）另有方案，先不提醒
+		if axis != &"" and axis != StatAxes.BLOCK:     # 格挡上面已经报错了
 			report.warn("%smods[%d]" % [path, i], "「%s」的 %s 增减落在标准轴上：改写成 axes —— 每层带几层【%s】（152）" % [
 				def.id, m.stat, StatAxes.name_of(axis, 1 if m.amount >= 0.0 else -1)])
 
@@ -532,12 +537,43 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_validate_status_loops(def, report)
 	_validate_rule_shapes(def, ctx, report)
 	_validate_power(def, ctx, report)
+	_validate_block(def, report)
 	ctx.register_item(def)
 	return def
 
 
 ## 151（待定 5 按推荐）：武器的稀有度和战斗力估算推荐的差两档以上才提醒（流派件单看偏弱是故意的，差一档正常）。只提醒、不拦
 static var _power_weights: PowerWeights = null
+
+
+## 153（作者定）：格挡只来自盾牌 —— 非盾道具的基础属性、信仰加成不许给格挡（error）；自己的规则给自己加固提醒（buff 里的查不了来源）
+static func _validate_block(def: ItemDef, report: ImportReport) -> void:
+	if def.tags.has(BattleStats.SHIELD_TAG):
+		return
+	if def.combat != null and (def.combat.base_stats.has(String(BattleStats.BLOCK)) or def.combat.base_stats.has(BattleStats.BLOCK)):
+		report.error("combat.base_stats.block", "「%s」不是盾（没有 shield 标签）：格挡只归盾牌（153）" % def.id)
+	if _bonuses_touch_block(def.faith_bonuses):
+		report.error("faith_bonuses", "「%s」不是盾：信仰加成不能给格挡（153）" % def.id)
+	for g in _rule_groups(def):
+		var rules: Array = g[1]
+		for i in rules.size():
+			var rule := rules[i] as AbilityRule
+			if rule == null:
+				continue
+			for j in rule.effects.size():
+				var e := rule.effects[j] as ShiftAxis
+				if e != null and e.axis == StatAxes.BLOCK and e.delta > 0 and e.target != CombatEffect.Target.OPPONENT:
+					report.warn("%s[%d].effects[%d]" % [g[0], i, j], "「%s」不是盾却给自己加固：加固应来自盾牌（153）" % def.id)
+
+
+static func _bonuses_touch_block(bonuses: Array) -> bool:
+	for fb in bonuses:
+		if fb == null:
+			continue
+		for m in (fb as FaithBonus).mods:
+			if m != null and (m as StatModifier).stat == BattleStats.BLOCK:
+				return true
+	return false
 
 
 static func _validate_power(def: ItemDef, ctx: Context, report: ImportReport) -> void:
@@ -637,6 +673,13 @@ static func import_faith(data: Dictionary, ctx: Context, report: ImportReport) -
 			report.error("deeds[%d]" % i, "空的行为")
 		elif d.amount < 1:
 			report.error("deeds[%d].amount" % i, "每次至少给 1 点")
+	# 153（作者定）：格挡只来自盾牌 —— 赐福项给格挡的，只能落在盾上（标签只写 shield）
+	for i in def.blessings.size():
+		var b := def.blessings[i] as Blessing
+		if b == null or not _bonuses_touch_block(b.faith_bonuses):
+			continue
+		if b.tags.size() != 1 or b.tags[0] != BattleStats.SHIELD_TAG or not b.items.is_empty():
+			report.error("blessings[%d]" % i, "这条赐福给格挡：格挡只归盾牌，标签只写 shield（防具 / 装备改给护盾上限，153）")
 	ctx.register_faith(def)
 	return def
 
@@ -1706,6 +1749,28 @@ static func _warn_overlapping_markers(def: ItemDef, report: ImportReport) -> voi
 ##
 ## 未知键**报错而不是忽略** —— 打错一个字段名却静默生效为默认值，
 ## 是内容作者最难自查的一类问题，报出来才有得改。
+## 153：防护改名格挡 —— 旧键 `armor`（基础属性 / 档位表的键、修饰的 stat、轴字段）当 `block` 读并提醒改名
+static func _migrate_armor_key(data: Dictionary, path: String, report: ImportReport) -> Dictionary:
+	var out := data
+	for key in ["base_stats", "stat_scale"]:
+		var d = data.get(key, null)
+		if d is Dictionary and (d as Dictionary).has("armor"):
+			if out == data:
+				out = data.duplicate()
+			var renamed := {}
+			for k in d:
+				renamed["block" if String(k) == "armor" else k] = d[k]
+			out[key] = renamed
+			report.warn(_join(path, key + ".armor"), "armor（防护）已改名 block（格挡，153）")
+	for key in ["stat", "axis"]:
+		if String(data.get(key, "")) == "armor":
+			if out == data:
+				out = data.duplicate()
+			out[key] = "block"
+			report.warn(_join(path, key), "armor（防护）已改名 block（格挡，153）")
+	return out
+
+
 static func _fill(
 	obj: Object, data: Dictionary, path: String, ctx: Context, report: ImportReport
 ) -> void:
@@ -1719,6 +1784,7 @@ static func _fill(
 		ctx.buff_depth += 1
 	if in_part:
 		ctx.part_depth += 1
+	data = _migrate_armor_key(data, path, report)
 	if obj is StatModifier:
 		data = _migrate_stat_modifier(data, path, report)
 	elif obj is BuffDef:

@@ -85,7 +85,7 @@ static func run_item_stat(t: TestCase) -> void:
 	var leather := db.get_def(&"leather_armor")
 	t.eq(TextTemplate.plain("{item_stat:leather_armor:max_shield}", ctx), TextTemplate.num(float(leather.combat.base_stats.get("max_shield", -1))), "base_stats")
 	var shield := db.get_def(&"tower_shield")
-	t.eq(TextTemplate.plain("{item_stat:tower_shield:armor}", ctx), TextTemplate.num(float(shield.combat.base_stats.get("armor", -1))), "塔盾的防护")
+	t.eq(TextTemplate.plain("{item_stat:tower_shield:block}", ctx), TextTemplate.num(float(shield.combat.base_stats.get("block", -1))), "塔盾的格挡")
 	var m := ModifyDamage.new()
 	m.flat = -4.0
 	var tree := CombatProfile.new()

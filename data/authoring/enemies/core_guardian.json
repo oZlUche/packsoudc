@@ -12,7 +12,7 @@
   ],
   "base_stats": {
     "max_hp": 80,
-    "armor": 5
+    "block": 5
   },
   "signature": [
     "mithril_sword"

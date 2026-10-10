@@ -21,7 +21,7 @@ extends CombatEffect
 ## 反弹伤害的类型。默认 reflect —— 改成会招致反应的类型就要自己承担对轰风险
 @export var damage_type: StringName = DamageTypes.REFLECT
 
-## 106 第八节：反弹来自挨打的那件道具的规则，按来源算直接伤害（对方的防护减得动它）。−1 按来源定，0 / 1 强制
+## 106 第八节：反弹来自挨打的那件道具的规则，按来源算直接伤害（对方的格挡减得动它）。−1 按来源定，0 / 1 强制
 @export var direct_override: int = -1
 
 

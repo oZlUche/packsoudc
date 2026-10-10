@@ -134,23 +134,23 @@ static func run_shield(t: TestCase) -> void:
 static func run_armor(t: TestCase) -> void:
 	t.begin("伤害 · 护甲")
 
-	var ctx := H._battle(_attacker(20.0), _defender({"armor": 5.0}))
+	var ctx := H._battle(_attacker(20.0), _defender({"block": 5.0}))
 	_run(ctx)
 	t.eq(_hp(ctx, 1), 85, "护甲 5 点，20 → 15")
 
 	# 106 第八节（作者定）：防护按**来源**生效，不按伤害类型 —— 武器直接打出的毒也算直接伤害，
 	# 所以照样被防护减（真实内容里的中毒 / 流血都挂在 buff 上，见 run_direct_damage）
-	var ctx2 := H._battle(_attacker(20.0, DamageTypes.POISON), _defender({"armor": 5.0}))
+	var ctx2 := H._battle(_attacker(20.0, DamageTypes.POISON), _defender({"block": 5.0}))
 	_run(ctx2)
 	t.eq(_hp(ctx2, 1), 85, "武器直接打出的中毒也吃防护（106：按来源，不按类型）")
 
 	# 护甲高于伤害时归零，不会倒扣成治疗
-	var ctx3 := H._battle(_attacker(3.0), _defender({"armor": 5.0}))
+	var ctx3 := H._battle(_attacker(3.0), _defender({"block": 5.0}))
 	_run(ctx3)
 	t.eq(_hp(ctx3, 1), 100, "护甲高于伤害时归零，不倒扣")
 
 	# 护盾先吃，护甲再挡余下的
-	var ctx4 := H._battle(_attacker(20.0), _defender({"max_shield": 8.0, "armor": 5.0}))
+	var ctx4 := H._battle(_attacker(20.0), _defender({"max_shield": 8.0, "block": 5.0}))
 	_run(ctx4)
 	t.eq(_shield(ctx4, 1), 0, "护盾吃掉 8")
 	t.eq(_hp(ctx4, 1), 93, "余下 12 再被防护挡 5，实扣 7")
@@ -447,7 +447,7 @@ static func run_reflect_details(t: TestCase) -> void:
 	# 反伤本身会被对方的护甲减免 —— 它是一包普通伤害，走完整管线
 	var ctx3 := H._battle(
 		H._spec(200.0, [
-			H._compiled(1, "gun", {"armor": 3.0}, []),
+			H._compiled(1, "gun", {"block": 3.0}, []),
 			H._compiled(4, "sched", {}, [_opener([_hit(20.0)])]),
 		]),
 		H._spec(200.0, [H._compiled(2, "thorns", {}, [_before_rule(thorns)])])
@@ -462,7 +462,7 @@ static func run_direct_damage(t: TestCase) -> void:
 	t.begin("106 第八节 · 直接伤害按来源定：武器出手吃防护、buff 每秒掉血不吃、override 能两边强制")
 
 	# 武器出手：uid 非 0、不来自 buff → 直接伤害，防护减得动
-	var ctx := H._battle(_attacker(10.0), _defender({"armor": 3.0}))
+	var ctx := H._battle(_attacker(10.0), _defender({"block": 3.0}))
 	_run(ctx)
 	t.eq(_hp(ctx, 1), 93, "武器 10 点，防护 3 → 扣 7")
 
@@ -483,7 +483,7 @@ static func run_direct_damage(t: TestCase) -> void:
 	poisoner.target = ApplyStatus.Target.OPPONENT
 	poisoner.buff = burn
 	var attacker := H._spec(100.0, [H._compiled(1, "vial", {}, [_opener([poisoner])])])
-	var ctx2 := H._battle(attacker, _defender({"armor": 3.0}))
+	var ctx2 := H._battle(attacker, _defender({"block": 3.0}))
 	_start(ctx2)
 	H._advance_to(ctx2, 1.5)
 	t.eq(_hp(ctx2, 1), 95, "buff 每秒 5 点毒伤不吃防护（非直接 —— 它来自 buff，不是武器）")
@@ -494,7 +494,7 @@ static func run_direct_damage(t: TestCase) -> void:
 	var cd := CooldownCadence.new()
 	cd.seconds = 1.0
 	var gun := H._spec(100.0, [H._compiled(1, "gun", {}, [H._rule(OnSchedule.new(), cd, [soft])])])
-	var ctx5 := H._battle(gun, _defender({"armor": 3.0}))
+	var ctx5 := H._battle(gun, _defender({"block": 3.0}))
 	_run(ctx5)
 	t.eq(_hp(ctx5, 1), 90, "direct_override = 0：武器打出的也不吃防护（「另行说明」的口子）")
 
@@ -504,17 +504,17 @@ static func run_negative_armor(t: TestCase) -> void:
 	t.begin("106 · 格挡 / 破绽轴：+3 层 10 点打成 7，−3 层打成 13，中毒（来自 buff）不受影响")
 
 	var ctx := H._battle(_attacker(10.0), _defender())
-	ctx.sides[1].shift_axis(StatAxes.ARMOR, 3)
+	ctx.sides[1].shift_axis(StatAxes.BLOCK, 3)
 	_run(ctx)
 	t.eq(_hp(ctx, 1), 93, "格挡 3 层：10 点打出 7")
 
 	var ctx2 := H._battle(_attacker(10.0), _defender())
-	ctx2.sides[1].shift_axis(StatAxes.ARMOR, -3)
+	ctx2.sides[1].shift_axis(StatAxes.BLOCK, -3)
 	_run(ctx2)
 	t.eq(_hp(ctx2, 1), 87, "破绽 3 层：10 点打出 13（作者定：负防护倒贴）")
 
 	# 破绽不会把治疗变成伤害，也不会把伤害放成负数：它只是加在伤害上
 	var ctx3 := H._battle(_attacker(1.0), _defender())
-	ctx3.sides[1].shift_axis(StatAxes.ARMOR, 10)
+	ctx3.sides[1].shift_axis(StatAxes.BLOCK, 10)
 	_run(ctx3)
 	t.eq(_hp(ctx3, 1), 100, "格挡高于伤害时归零，不倒扣成治疗")

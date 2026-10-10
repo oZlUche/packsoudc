@@ -12,7 +12,7 @@ display_names = {
 strength = 3
 schools = Array[StringName]([&"burst", &"bleed", &"rapid"])
 base_stats = {
-"armor": 5,
+"block": 5,
 "max_hp": 80
 }
 signature = Array[StringName]([&"mithril_sword"])

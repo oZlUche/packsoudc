@@ -216,7 +216,7 @@ func _dummy() -> CombatantSpec:
 	var spec := CombatantSpec.new()
 	spec.baseline = StatSet.new()
 	spec.baseline.set_base(BattleStats.MAX_HP, StatMath.from_float(120.0))
-	spec.baseline.set_base(BattleStats.ARMOR, StatMath.from_float(2.0))
+	spec.baseline.set_base(BattleStats.BLOCK, StatMath.from_float(2.0))
 	spec.max_hp = spec.baseline.total_of(BattleStats.MAX_HP)
 
 	var swing := DealDamage.new()

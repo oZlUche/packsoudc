@@ -111,6 +111,8 @@ func buff_tip(id: String, side: int = 0) -> String:
 		var n := int(panel.stacks().get(id, 0))
 		return "[b]鏖战 ×%d[/b]\n系统效果，不可解除：加时开始后每隔一段，双方受到的最终伤害再加一截（记在「受到伤害」轴的系统层）\n%s" % [
 			n, StatAxes.describe(StatAxes.DAMAGE_TAKEN, panel.axis_value(StatAxes.DAMAGE_TAKEN), _system_of(side, StatAxes.DAMAGE_TAKEN))]
+	if id == CombatantPanel.BLOCK_CHIP:
+		return block_tip(panel)
 	if id.begins_with(CombatantPanel.AXIS_PREFIX):
 		var a := CombatantPanel.axis_of(id)
 		var v := int(panel.stacks().get(id, 0))
@@ -124,6 +126,24 @@ func buff_tip(id: String, side: int = 0) -> String:
 	if def != null and def.system:
 		body += "\n系统效果，不可解除"
 	return "[b]%s[/b]\n%s" % [name, body]
+
+
+## 153：「格挡 N」格的悬浮窗 —— 各层（生效的那层标出来、其余备用）与加固 / 破绽的来源
+static func block_tip(panel: CombatantPanel) -> String:
+	var lines: Array[String] = ["[b]格挡 %d[/b]" % panel.block_value(), "只有盾牌给格挡；几面盾只算最高的一面，加固 / 破绽在它之上加减。只减直接伤害"]
+	for i in panel.block_layers.size():
+		var l: Dictionary = panel.block_layers[i]
+		var who := "天生" if String(l["id"]) == "innate" else String(panel.item_names.get(int(l["uid"]), l["id"]))
+		lines.append("%s %d%s" % [who, int(l["value"]), "　← 生效" if i == 0 else "（备用）"])
+	if panel.axis_value(StatAxes.BLOCK) != 0:
+		var a := panel.axis_value(StatAxes.BLOCK)
+		lines.append("%s ×%d" % [StatAxes.name_of(StatAxes.BLOCK, a), absi(a)])
+	for id in panel.stacks():
+		var def: BuffDef = panel.buff_defs.get(StringName(id), null)
+		if def != null and def.axis_stacks_per(StatAxes.BLOCK) != 0:
+			var n := def.axis_stacks_per(StatAxes.BLOCK) * int(panel.stacks()[id])
+			lines.append("%s ×%d（%s）" % [StatAxes.name_of(StatAxes.BLOCK, n), absi(n), Names.of(def)])
+	return "\n".join(lines)
 
 
 ## 回放到当前游标为止，某一方某条轴的系统层（从日志里最近一条 axis_shifted 读）
@@ -321,8 +341,8 @@ func _log_event(e: BattleEvent) -> void:
 			var bits: Array[String] = []
 			if e.get_int(&"absorbed") > 0:
 				bits.append("盾挡 %d" % StatMath.to_int(e.get_int(&"absorbed")))
-			if e.get_int(&"armor") > 0:
-				bits.append("甲挡 %d" % StatMath.to_int(e.get_int(&"armor")))
+			if e.get_int(&"block") > 0:
+				bits.append("格挡 %d" % StatMath.to_int(e.get_int(&"block")))
 			var tail := ("（%s）" % "、".join(bits)) if not bits.is_empty() else ""
 			var color := UiPalette.damage_color(e.get_name(&"type")).to_html(false)
 			_log_line(e.time, "[color=#%s]%s %s %d%s%s[/color]" % [

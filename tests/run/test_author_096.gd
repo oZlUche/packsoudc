@@ -326,7 +326,7 @@ static func frame_spawn_mask_and_presets(t: TestCase, root: Window) -> void:
 	t.check(not setup._allow_drop(setup.preset_items()[0], flow.meta.warehouse), "拖去仓库也不行")
 	t.check(setup._allow_drop(setup.preset_items()[0], setup.board), "在棋盘上挪可以")
 	t.check(setup._readout.get_parsed_text().contains("预设套"), "读数里写着预设套")
-	# 强攻 DPS > 坚守；坚守护甲 > 强攻
+	# 强攻 DPS > 坚守；坚守格挡 > 强攻
 	var ch: CharacterDef = setup.character()
 	var dps_off: float = BattleCompiler.compile_board(setup.board, ch.baseline(), [] as Array[StatModifier], [] as Array[AbilityRule], {}).rough_dps()
 	var armor_off := _armor_on(setup.board)
@@ -336,7 +336,7 @@ static func frame_spawn_mask_and_presets(t: TestCase, root: Window) -> void:
 	var dps_def: float = BattleCompiler.compile_board(setup.board, ch.baseline(), [] as Array[StatModifier], [] as Array[AbilityRule], {}).rough_dps()
 	var armor_def := _armor_on(setup.board)
 	t.check(dps_off > dps_def, "强攻 DPS %.1f > 坚守 %.1f" % [dps_off, dps_def])
-	t.check(armor_def > armor_off, "坚守护甲 %d > 强攻 %d" % [armor_def, armor_off])
+	t.check(armor_def > armor_off, "坚守格挡 %d > 强攻 %d" % [armor_def, armor_off])
 	# 带一件仓库的：预算只算它
 	if n > 0:
 		var first := flow.meta.warehouse.items()[0] as ItemInstance
@@ -397,8 +397,8 @@ static func _armor_on(board: GridInventory) -> int:
 	var total := 0
 	for inst in board.items():
 		var d := (inst as ItemInstance).def
-		if d.combat != null and d.combat.base_stats.has("armor"):
-			total += int(d.combat.base_stats["armor"])
+		if d.combat != null and d.combat.base_stats.has("block"):
+			total += int(d.combat.base_stats["block"])
 	return total
 
 

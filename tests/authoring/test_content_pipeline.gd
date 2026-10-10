@@ -219,8 +219,9 @@ static func run_weapon_stamina_rules(t: TestCase) -> void:
 	ContentImporter.import_buff({"id": "t_tough", "mods": [{"stat": "max_shield", "amount": 5.0}]}, _ctx(), flat)
 	t.check(flat.warnings.is_empty(), "不限层 + 固定值：不告警")
 
-	# 106 第五节：防护 / 生命上限 / 法力上限有轴了，这类简单 buff 该被提示改成 shift_axis
-	for stat in ["armor", "max_hp", "max_mana"]:
+	# 106 第五节：生命上限 / 法力上限有轴了，这类简单 buff 该被提示改成 shift_axis
+	# （153：格挡不再只是提醒 —— buff 直接改格挡是错，见 test_block_153）
+	for stat in ["max_hp", "max_mana"]:
 		var axis_hint := _report()
 		ContentImporter.import_buff({"id": "t_axis_" + stat, "mods": [{"stat": stat, "amount": 1.0}]}, _ctx(), axis_hint)
 		t.check(axis_hint.ok() and axis_hint.to_text().contains("shift_axis"),
@@ -291,7 +292,7 @@ static func run_validation(t: TestCase) -> void:
 		"id": "plate", "shape": ["11"],
 		"adjacency": {
 			"grant_cells": [[0, 0], [2, 0]],
-			"grant_mods": [{"stat": "armor", "amount": 1.0}],
+			"grant_mods": [{"stat": "block", "amount": 1.0}],
 		},
 	})
 	t.check((overlap[1] as ImportReport).ok(), "压在自己身上只是警告，不阻断")

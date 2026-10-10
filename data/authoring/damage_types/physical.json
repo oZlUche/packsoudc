@@ -4,8 +4,8 @@
   "display_names": {
     "en": "Physical"
   },
-  "description": "常规伤害：吃护盾、吃防护、招致反应。",
+  "description": "常规伤害：吃护盾、吃格挡、招致反应。",
   "descriptions": {
-    "en": "Ordinary damage: absorbed by shield, reduced by armor, provokes reactions."
+    "en": "Ordinary damage: absorbed by shield, reduced by block, provokes reactions."
   }
 }
