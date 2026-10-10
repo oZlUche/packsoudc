@@ -19,3 +19,6 @@ const MAP := &"map"
 
 ## 一局的规则：体力上限、开局钱、多搜几次、商店价、幸运…… 由 buff 携带（059），[RunState] 在对应的点查询 [RunContext]
 const RUN := &"run"
+
+## 147：随身道具（腰带槽）主动使用时的效果：点一下就生效，[BeltModule] 查
+const BELT := &"belt"

@@ -231,7 +231,7 @@ func _draw() -> void:
 		ItemPainter.draw_item(self, cells, anchor, cell_px, body, edge)
 		if _label_visible(item):
 			ItemPainter.draw_label(
-				self, cells, anchor, cell_px, Names.of(item.def) + ("
+				self, cells, anchor, cell_px, Names.of_item(item) + ("
 休眠" if dormant else ""), font, 13, text_color
 			)
 		if highlights.has(item.uid):

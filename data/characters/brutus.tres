@@ -89,12 +89,15 @@ display_name = "布鲁图斯"
 display_names = {
 "en": "Brutus"
 }
-description = "擅长生存的奴隶探索者。生命 {max_hp}、体力 {vitality_max}，扛得住、缓得过来，只是没有逃跑和爆发的手段。"
+description = "擅长生存的奴隶探索者。生命 {max_hp}、体力 {vitality_max}、棋盘最宽，扛得住、缓得过来；只是耐力回得慢、带的钱少，也没有逃跑和爆发的手段。"
 base_stats = {
-"max_hp": 60,
-"max_stamina": 60
+"max_hp": 70,
+"max_stamina": 55,
+"regen_stamina": 3
 }
-vitality_max = 6
+vitality_max = 7
+board_size = Vector2i(9, 6)
+starting_funds = 80
 starting_bags = Array[StringName]([&"bag_leather", &"bag_leather"])
 weight_capacity = 56
 skills = Array[ExtResource("2_mx3k3")]([SubResource("Resource_x8pem"), SubResource("Resource_obt75"), SubResource("Resource_3htg3")])

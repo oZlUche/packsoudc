@@ -39,6 +39,8 @@ static func create(p_def: ItemDef, p_rotation: int = 0) -> ItemInstance:
 	_next_uid += 1
 	inst.def = p_def
 	inst.rotation = posmod(p_rotation, 4)
+	if p_def != null and p_def.wear != null:
+		inst.state[WearProfile.CHARGES_KEY] = p_def.wear.max_charges     # 148：新的一件是满的
 	return inst
 
 
@@ -50,6 +52,28 @@ static func reset_uid_counter() -> void:
 ## 读档后调用：保证之后新建的 uid 不会和存档里已有的撞号。
 static func reserve_uid_above(value: int) -> void:
 	_next_uid = maxi(_next_uid, value + 1)
+
+
+## 148：还剩几次（[member ItemDef.wear]）。没有耐久的返回 -1；老档里没记的按满算
+func charges() -> int:
+	if def == null or def.wear == null:
+		return -1
+	return int(state.get(WearProfile.CHARGES_KEY, def.wear.max_charges))
+
+
+## 148：用坏了（有耐久且剩 0 次）
+func is_broken() -> bool:
+	return charges() == 0
+
+
+## 148：扣 [param n] 次，不低于 0。返回扣完剩几次（没有耐久的不动，返回 -1）
+func spend_charge(n: int = 1) -> int:
+	var left := charges()
+	if left < 0:
+		return -1
+	left = maxi(0, left - n)
+	state[WearProfile.CHARGES_KEY] = left
+	return left
 
 
 ## 当前旋转下的占格集合。返回的数组是 ItemShape 的内部缓存，不得修改。
@@ -106,5 +130,7 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> ItemInstance:
 	inst.origin = Vector2i(int(o[0]), int(o[1]))
 	inst.placed_seq = int(d.get("seq", 0))
 	inst.state = (d.get("state", {}) as Dictionary).duplicate(true)
+	if inst.state.has(WearProfile.CHARGES_KEY):     # 148：JSON 读回来是 3.0，存回去得还是 3（存档逐字节往返）
+		inst.state[WearProfile.CHARGES_KEY] = int(inst.state[WearProfile.CHARGES_KEY])
 	reserve_uid_above(inst.uid)
 	return inst

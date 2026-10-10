@@ -145,8 +145,8 @@ static func run_run_reads_tech(t: TestCase) -> void:
 	var ctx := s.buff_context()
 	var pack: RunBuffDef = buffs[&"tech_pack_2"]
 	var funds_eff := pack.effects[0] as Effect
-	t.eq(ctx.starting_funds_bonus, int(funds_eff.get("amount")), "开局钱加成读到了（行囊 2 级）")
-	t.check(ctx.vitality_max_bonus >= 1, "体力上限加成读到了（耐久 1 级）")
+	t.eq(ctx.starting_funds_mult, int(funds_eff.get("percent")), "开局钱的百分比读到了（行囊 2 级，149）")
+	t.check(ctx.vitality_max_mult >= 1, "体力上限的百分比读到了（耐久 1 级，149）")
 
 
 static func run_import_checks(t: TestCase) -> void:

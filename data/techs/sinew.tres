@@ -33,6 +33,6 @@ display_names = {
 order = 1
 requires = Array[StringName]([&"endurance"])
 column = 1
-description = "开局生命上限更高。"
+description = "开局生命上限更高：按角色自己的生命加百分比。"
 effect = SubResource("Resource_qe3gl")
 tiers = Array[ExtResource("3_s3t8l")]([SubResource("Resource_xa3ph"), SubResource("Resource_m7w3s"), SubResource("Resource_7qvsl")])

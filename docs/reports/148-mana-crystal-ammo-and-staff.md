@@ -87,3 +87,17 @@
 | 3 | 老的 `mana_crystal` / `mana_shard` | A 删掉，拾荒者开局包改放一颗火焰魔晶石；B 保留当普通材料（改名、去掉 max_mana） | **A**：作者说晶石不提供魔力、破碎是状态，留着两件只会混 |
 | 4 | 破碎晶石 | A 留在格子里、卖价打折、不可修复；B 直接消失 | **A**：玩家看得见「用完了」，也能卖掉；修复留给以后 |
 | 5 | 元素的实际差别 | A 这次只加类型标签（与物理同性质）；B 顺带加敌人抗性 | **A**：先把弹药机制立住，抗性是另一张表 |
+
+---
+
+## 落地记录（2026-10-10，五项待定全按推荐）
+
+- **供给**：`AdjacencyProfile.feed_mods / feed_rules / feed_filter`。编译器在受益那一步对每个点亮受益格的邻居查它的供给。条件是命中 `feed_filter`、不是破碎的、在参战。满足就给宿主一份加成，规则走 `_attach`、来源记晶石，并把它记进新的 `CombatantSpec.fed_uids`。宿主的受益格可以只有 `receive_filter`、没有加成，导入器不再为这种情况报警告。
+- **偏差 1**：「改成元素」放在出手扳机上不成立，因为 `convert_damage_type` 只在受伤前有效。所以供给规则用 `on_before_damage(DEALT)`，并给伤害扳机加了 `own_only`（只认来源 uid = 规则主人），不然同一边别的武器也会被改。相应地，供给规则按受益规则校验（时机不限、不许 costs），不按附加规则的「只许出手时」。
+- **偏差 2**：「点亮过」按 `fed_uids` 判（真的供给了），不按 `links`。挨着法杖但被过滤掉的不算。
+- **伤害类型**：`ice` / `lightning` 进了内容，也进了 `DamageTypes` 的内置兜底（导入时校验读的是已有资产，第一次导入还没有它们的 `.tres`）。
+- **耐久**：`WearProfile`（`max_charges` 3、前缀表与英文前缀、`broken_value_ratio` 0.25），`ItemInstance.charges / is_broken / spend_charge`。新的一件写满，老档没记按满算。`WearModule` 订阅 `battle_finished`，按 `fed_uids` −1。秒杀的那一场 `last_battle.smite = true`，不扣。
+- **名字**：用 `Names.of_item(inst)`，没有新建 `ItemNames` 类。格子标签、地上、拖拽、悬浮窗标题、回放 / 日志名字表（`CombatantSpec.item_names` 读棋盘上那一件）都换成了它。价值用 `ItemValue.of_instance`（悬浮窗、撤离结算）。开局带入的 `layout_of / place_layout` 带着 `state`，晶石剩几次跟着走。
+- **数值（占位）**：法杖伤害 6、冷却 1.2 秒、耗 5 耐力，竖 1 × 3，杖头两侧受益格。晶石供给伤害 +6，1 × 2，稀有度 1。说明文字读字段：`{amount}`、`{max_charges}`。
+- **删掉**：`mana_crystal`、`mana_shard`。拾荒者开局包那一格换成火焰魔晶石，六个测试换成新 id（`test_author_087` 改测电池给魔力 + 晶石不再给）。
+- **测试**：`tests/run/test_crystal_148.gd`（编译、三种元素打起来、别的武器不受影响、耐久扣减与秒杀、前缀中英、破碎卖价、存档 / 带入往返、悬浮窗）。

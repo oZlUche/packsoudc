@@ -53,10 +53,14 @@ display_name = "安德烈乌斯"
 display_names = {
 "en": "Andreus"
 }
-description = "擅长逃跑的奴隶探索者。生命最低（{max_hp}）、背得最少，但走得远、溜得掉。"
+description = "擅长逃跑的奴隶探索者。生命最低（{max_hp}）、棋盘最窄、背得最少，但带的钱多、走得远、溜得掉。"
 base_stats = {
-"max_hp": 50
+"max_hp": 45,
+"max_stamina": 55,
+"regen_stamina": 4
 }
+board_size = Vector2i(7, 6)
+starting_funds = 120
 starting_bags = Array[StringName]([&"bag_leather", &"bag_leather"])
 weight_capacity = 40
 skills = Array[ExtResource("2_xijn7")]([SubResource("Resource_nsl5r"), SubResource("Resource_c4ici"), SubResource("Resource_ecief")])

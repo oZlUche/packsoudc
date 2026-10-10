@@ -767,6 +767,17 @@ func slip_battle() -> String:
 	return ""
 
 
+## 147：用腰带里的一件（地图屏 / 战前准备屏）。用了、而且等着开打的那一场因此没了（烟雾弹）就往下走。返回空串 = 用了，否则是原因
+func use_belt(uid: int) -> String:
+	if run == null:
+		return "没有在跑的一局"
+	var had_battle := not run.events.pending_battle.is_empty()
+	var why := run.hooks.belt_use(uid)
+	if why == "" and had_battle and run.events.pending_battle.is_empty():
+		_flush()
+	return why
+
+
 ## 093（蛮神 3 级）：战前准备屏上秒杀这一场（效果构件自己查条件、扣体力）
 func smite() -> bool:
 	if run == null:

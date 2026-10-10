@@ -16,6 +16,8 @@ var _readout: Label
 var _faith_label: Label
 var _hint: Label
 var board_view: InventoryView
+## 147：腰带（没装腰带模块 = null）。双击里面的一件 = 用掉它
+var belt_view: InventoryView = null
 ## 128：导演那一层地（没有 = null：测试里单开面板）
 var ground: GroundLayer = null
 var tip: HoverTip
@@ -47,6 +49,14 @@ func _build() -> void:
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", 8)
 	row.add_child(left)
+	var belt := BeltModule.of(_run)     # 147：腰带在棋盘上方，只收随身道具，双击就用
+	if belt != null and belt.belt != null:
+		left.add_child(UiTheme.make_label("腰带　随身道具放这里（不上棋盘）　双击 = 用掉", 13, UiPalette.DIM))
+		belt_view = InventoryView.new()
+		belt_view.label_font = _font
+		belt_view.inventory = belt.belt
+		belt_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		left.add_child(belt_view)
 	left.add_child(UiTheme.make_label("作战棋盘　只有包里的东西参战　拖出棋盘 = 放在地上", 13, UiPalette.DIM))
 	board_view = InventoryView.new()
 	board_view.label_font = _font
@@ -87,6 +97,8 @@ func _build() -> void:
 		_drag.label_font = _font
 		add_child(_drag)     # 容器把它铺到和 row 一样大，盖在上面
 	_drag.register_view(board_view)
+	if belt_view != null:
+		_drag.register_view(belt_view)
 	_drag.stash = _run.storage
 	_drag.drop_outside_to_stash = true     # 084 / 128：棋盘外的空间全都是地上
 	_attach_ground()
@@ -107,6 +119,9 @@ func _build() -> void:
 	add_child(tip)
 	tip.watch(board_view)
 	board_view.item_double_clicked.connect(quick_move)
+	if belt_view != null:
+		tip.watch(belt_view)
+		belt_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): use_belt(uid))
 	board_view.item_context.connect(func(_v: ContainerView, uid: int): reseat_anchor(uid))     # 099：右键信物 = 奉为主信仰
 
 
@@ -151,6 +166,12 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 	if inst == null:
 		return false
 	if from == _run.storage:
+		var belt := BeltModule.of(_run)     # 147：随身道具双击进腰带（棋盘不收它）
+		if belt != null and inst.def != null and inst.def.is_belt():
+			if InventoryService.transfer_auto(_run.storage, uid, belt.belt):
+				return true
+			_hint_text("腰带满了，放不下「%s」" % Names.of_item(inst))
+			return false
 		if InventoryService.transfer_auto(_run.storage, uid, _run.board):
 			return true
 		say_no_room(inst)
@@ -163,6 +184,23 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 				_hint_text("容器里放不下「%s」，放在了地上" % Names.of(inst.def))
 			return true
 	return false
+
+
+## 147：用掉腰带里一件的那条路：`func(uid: int) -> String`。不给就直接走 hook；战前准备屏给 [method GameFlow.use_belt]（烟雾弹用了要接着往下走）
+var belt_user: Callable = Callable()
+
+
+func use_belt(uid: int) -> String:
+	var belt := BeltModule.of(_run)
+	var inst := belt.belt.get_item(uid) if belt != null and belt.belt != null else null
+	var name := Names.of_item(inst) if inst != null else ""
+	var why: String = String(belt_user.call(uid)) if belt_user.is_valid() else _run.hooks.belt_use(uid)
+	if why != "":
+		_hint_text("「%s」现在用不了：%s" % [name, why])
+		return why
+	if is_inside_tree():
+		_hint_text("用了「%s」" % name)
+	return ""
 
 
 ## 地上那件进不了背包：提示一句（134：地图 / 事件屏双击地上、放不下只开背包时也用这句）

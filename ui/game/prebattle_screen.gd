@@ -13,6 +13,8 @@ var _enemy_line: Label
 var _start_btn: Button
 var _why: Label
 var _slip_btn: Button = null
+## 147：腰带里能在这儿用的（烟雾弹）一件一个按钮
+var _belt_row: HBoxContainer = null
 var _inv: Control
 
 
@@ -50,6 +52,7 @@ func open(payload: Dictionary) -> void:
 	right.add_child(_label("我的棋盘与地上", 14, UiPalette.FG))
 	_inv = InventoryPanelScript.new()
 	_inv.setup(flow.run, font)
+	_inv.belt_user = flow.use_belt     # 147：双击腰带里的烟雾弹也走这条路（用了接着往下走）
 	right.add_child(_inv)
 
 	var buttons := _hbox(10)
@@ -70,10 +73,16 @@ func open(payload: Dictionary) -> void:
 		_slip_btn = _button("", func(): slip_battle(), 14)
 		_slip_btn.tooltip_text = slip.describe()
 		buttons.add_child(_slip_btn)
+	_belt_row = _hbox(10)     # 147：腰带里能在战前用的
+	buttons.add_child(_belt_row)
 	_why = _label("", 13, UiPalette.STAMINA)
 	buttons.add_child(_why)
 	col.add_child(buttons)
 	flow.run.board.changed.connect(_refresh)
+	var belt := BeltModule.of(flow.run)
+	if belt != null and belt.belt != null:
+		belt.belt.changed.connect(_refresh_belt)
+	_refresh_belt()
 	_refresh()
 
 
@@ -114,7 +123,41 @@ func slip_reason() -> String:
 
 func enemy_view() -> InventoryView:
 	return _enemy_view
+
+
+## 147：用腰带里的一件（按钮）。返回空串 = 用了
+func use_belt(uid: int) -> String:
+	return flow.use_belt(uid)
+
+
+## 147：腰带里能在战前准备屏上用的那几件（uid 升序）
+func belt_uids() -> Array[int]:
+	var out: Array[int] = []
+	var belt := BeltModule.of(flow.run) if flow != null else null
+	if belt == null or belt.belt == null:
+		return out
+	for inst in belt.belt.items():
+		var it := inst as ItemInstance
+		if it.def != null and it.def.belt_use != null and it.def.belt_use.on_prebattle():
+			out.append(it.uid)
+	out.sort()
+	return out
 #endregion
+
+
+func _refresh_belt() -> void:
+	if _belt_row == null or not is_instance_valid(_belt_row):
+		return
+	for c in _belt_row.get_children():
+		c.queue_free()
+	var belt := BeltModule.of(flow.run)
+	for uid in belt_uids():
+		var inst := belt.belt.get_item(uid)
+		var why := belt.can_use(uid)
+		var b := _button(("用%s" % Names.of_item(inst)) if why == "" else ("%s：%s" % [Names.of_item(inst), why]), func(): use_belt(uid), 14)
+		b.tooltip_text = inst.def.belt_use.describe()
+		b.disabled = why != ""
+		_belt_row.add_child(b)
 
 
 func _refresh() -> void:

@@ -8,12 +8,13 @@
 
 [sub_resource type="Resource" id="Resource_c40ll"]
 script = ExtResource("2_dpw6s")
-amount = 150
+amount = 0
+percent = 100
 
 [resource]
 script = ExtResource("5_y8vw2")
 id = &"tech_pack_3"
 display_name = "行囊（科技）"
-description = "开局钱 {starting_funds_bonus_amount|signed}"
+description = "开局钱 {starting_funds_bonus_percent|signed}%"
 scope = 0
 effects = Array[ExtResource("1_unkpu")]([SubResource("Resource_c40ll")])

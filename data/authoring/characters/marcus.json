@@ -4,11 +4,13 @@
   "display_names": {
     "en": "Marcus"
   },
-  "description": "擅长战斗的军团士兵。一个皮革包、一个小包，格子最少，生命 {max_hp}、耐力 {max_stamina}：打得狠、打得久、打赢了得的多。",
+  "description": "擅长战斗的军团士兵。一个皮革包、一个小包，生命 {max_hp}、耐力 {max_stamina}、耐力回得最快：打得狠、打得久、打赢了得的多。",
   "base_stats": {
     "max_hp": 55,
-    "max_stamina": 65
+    "max_stamina": 65,
+    "regen_stamina": 5
   },
+  "starting_funds": 100,
   "starting_bags": [
     "bag_leather",
     "bag_small"
@@ -30,12 +32,25 @@
       "type": "passive",
       "id": "drill",
       "display_name": "操练",
-      "description": "耐力每秒多回 {stat_bonus_amount} 点。",
-      "passive": [
+      "description": "耐力掉到两成以下时，立刻回 {change_resource_amount} 点耐力（每场一次）。",
+      "rules": [
         {
-          "type": "stat_bonus",
-          "stat": "regen_stamina",
-          "amount": 1.0
+          "trigger": {
+            "type": "on_resource_below",
+            "resource_key": "stamina",
+            "percent": 20
+          },
+          "cadence": "@always",
+          "costs": [
+            "@uses_1"
+          ],
+          "effects": [
+            {
+              "type": "change_resource",
+              "resource_key": "stamina",
+              "amount": 30.0
+            }
+          ]
         }
       ]
     },

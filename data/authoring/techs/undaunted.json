@@ -8,7 +8,7 @@
     "endurance"
   ],
   "column": 1,
-  "description": "输给节点敌人的头一次不扣体力。",
+  "description": "打输了少扣体力，最少还是扣一点。",
   "effect": {
     "type": "tech_run_buff",
     "buffs": [

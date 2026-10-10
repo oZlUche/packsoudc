@@ -193,9 +193,14 @@ static func start(
 			full_kit = p_character.starting_bags + kit
 	full_kit.append_array(p_chapter.starting_items)     # 章节发的（序章二：一把匕首）
 	var ctx := s.buff_context()     # 角色定了再算：技能的被动（体力上限、开局钱）也在里面（082）
-	s.vitality = Vitality.new(vitality_max + ctx.vitality_max_bonus + p_chapter.vitality_bonus)
-	s.wallet = Wallet.new((s.economy.starting_balance if s.economy != null else 0) + ctx.starting_funds_bonus)
+	# 149：体力上限、开局钱按角色的基数乘科技的百分比再加加算；章节的体力加成在最后加
+	s.vitality = Vitality.new(ctx.vitality_max_of(vitality_max) + p_chapter.vitality_bonus)
+	var funds := s.economy.starting_balance if s.economy != null else 0
+	if p_character != null and p_character.starting_funds >= 0:
+		funds = p_character.starting_funds
+	s.wallet = Wallet.new(ctx.starting_funds_of(funds))
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
+	s.board.reject_tags = [ItemDef.BELT] as Array[StringName]     # 147：随身道具不上棋盘（开局落在地上，腰带装上时挪过去）
 	s.storage = ItemStash.new(STORAGE_ID, 0)
 	s._bind_tracker()
 	place_layout(s.board, p_layout, p_items, s.storage)
@@ -579,16 +584,20 @@ func active_faith_tier() -> int:
 #endregion
 
 
-## 角色基线 + 技能 / buff 的基线加成（RunContext.stat_bonus）。没有加成就是原来那份
+## 角色基线 + 技能 / buff 的基线加成。没有加成就是原来那份。
+## 149：133 的公式 —— 角色面板 ×（1 + Σ乘算%）+ Σ加算（科技 / 技能的 stat_bonus，再加神坛的）；乘算之间相加不相乘
 func effective_baseline() -> CombatantBaseline:
 	var ctx := buff_context()
 	var altar := AltarModule.of(self)
 	var faith_stat_bonus: Dictionary = altar.stat_bonus if altar != null else {}
-	if ctx.stat_bonus.is_empty() and faith_stat_bonus.is_empty():
+	if ctx.stat_bonus.is_empty() and ctx.stat_mult.is_empty() and faith_stat_bonus.is_empty():
 		return player_baseline
 	var base := player_baseline if player_baseline != null else CombatantBaseline.default_baseline()
 	var b := CombatantBaseline.new()
 	b.base_stats = base.base_stats.duplicate()
+	for key in ctx.stat_mult:
+		var km := StringName(String(key))
+		b.base_stats[km] = float(b.base_stats.get(km, BattleStats.default_value(km))) * (1.0 + float(ctx.stat_mult[key]) / 100.0)
 	for key in ctx.stat_bonus:
 		var k := StringName(String(key))
 		b.base_stats[k] = float(b.base_stats.get(k, 0.0)) + float(ctx.stat_bonus[key])
@@ -618,11 +627,11 @@ func carry_weight() -> int:
 	return ItemWeight.total(board)
 
 
-## 负重上限 = 角色的 + 科技（[member RunContext.carry_capacity_bonus]）。0 = 不算负重（没角色、角色没配）
+## 负重上限 = 角色的 ×（1 + 科技的百分比）+ 加算（[method RunContext.carry_capacity_of]，149）。0 = 不算负重（没角色、角色没配）
 func carry_capacity() -> int:
 	if character == null or character.weight_capacity <= 0:
 		return 0
-	return character.weight_capacity + buff_context().carry_capacity_bonus
+	return buff_context().carry_capacity_of(character.weight_capacity)
 
 
 ## 现在第几级（0 = 轻装）。这一章没开负重恒为 0
@@ -823,7 +832,10 @@ static func layout_of(board: GridInventory) -> Array:
 		return a.uid < b.uid)
 	for inst in rows:
 		var it := inst as ItemInstance
-		out.append({"id": String(it.def.id), "origin": [it.origin.x, it.origin.y], "rot": it.rotation})
+		var row := {"id": String(it.def.id), "origin": [it.origin.x, it.origin.y], "rot": it.rotation}
+		if not it.state.is_empty():
+			row["state"] = it.state.duplicate(true)     # 148：魔晶石剩几次跟着带进来
+		out.append(row)
 	return out
 
 
@@ -841,6 +853,9 @@ static func place_layout(board: GridInventory, layout: Array, items: ItemDatabas
 			continue
 		var at: Array = row.get("origin", [0, 0])
 		var inst := ItemInstance.create(d, 0)
+		var saved_state: Variant = row.get("state", null)
+		if saved_state is Dictionary:
+			inst.state = (saved_state as Dictionary).duplicate(true)
 		if not board.place(inst, Vector2i(int(at[0]), int(at[1])), int(row.get("rot", 0))) and not board.try_add(inst, true) and overflow != null:
 			overflow.admit(inst)
 	board.end_batch()
@@ -1049,6 +1064,9 @@ func _owned_now() -> Array:
 	var safe := SafeModule.of(self)
 	if safe != null and safe.inventory != null:
 		out.append_array(safe.inventory.items())
+	var belt := BeltModule.of(self)     # 147
+	if belt != null and belt.belt != null:
+		out.append_array(belt.belt.items())
 	return out
 
 
@@ -1145,6 +1163,7 @@ static func from_dict(
 	s.vitality = Vitality.from_dict(d.get("vitality", {}))
 	s.wallet = Wallet.from_dict(d.get("wallet", {}))
 	s.board = GridInventory.from_dict(d.get("board", {}), p_items)
+	s.board.reject_tags = [ItemDef.BELT] as Array[StringName]     # 147：老档里没写
 	s.storage = ItemStash.from_dict(d.get("storage", {}), p_items)
 	var mods_raw: Variant = d.get("modules", {})
 	s.modules_saved = (mods_raw as Dictionary).duplicate(true) if mods_raw is Dictionary else {}

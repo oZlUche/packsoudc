@@ -391,7 +391,7 @@ func encumbrance_text() -> String:
 	for id in flow.meta_buffs():
 		if flow.buff_defs.has(id):
 			defs.append(flow.buff_defs[id])
-	var cap := ch.weight_capacity + RunBuffs.context(defs).carry_capacity_bonus
+	var cap := RunBuffs.context(defs).carry_capacity_of(ch.weight_capacity)     # 149：科技按百分比
 	var w := ItemWeight.total(board)
 	var lv := rules.level_of(w, cap)
 	return "负重 %d / %d　%s%s" % [w, cap, rules.name_of(lv), "　" + rules.effect_text(lv) if lv > 0 else ""]
@@ -655,6 +655,9 @@ func _refresh() -> void:
 			caps.append("耐力 %d" % int(ch.baseline().value_of(&"max_stamina")))     # 136
 			if ch.weight_capacity > 0:
 				caps.append("负重 %d" % ch.weight_capacity)
+			caps.append("棋盘 %d × %d" % [ch.board_size.x, ch.board_size.y])     # 149
+			if ch.starting_funds >= 0:
+				caps.append("开局钱 %d" % ch.starting_funds)
 			if ch.carry_max_items >= 0:
 				caps.append("最多带 %d 件" % ch.carry_max_items)
 			if ch.carry_rarity_cap >= 0:

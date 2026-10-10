@@ -191,7 +191,8 @@ static func run_registry_and_content(t: TestCase) -> void:
 
 static func run_module_roster(t: TestCase) -> void:
 	t.begin("101 第 1 刀 · 六个子系统都搬成了模块：默认清单里各一个、各自登记在注册表里有中文名、各自存一份在 modules[id] 下")
-	var ids: Array[StringName] = [SafeModule.ID, NodeStorageModule.ID, CraftingModule.ID, BuffModule.ID, AltarModule.ID, CountdownModule.ID]
+	var ids: Array[StringName] = [SafeModule.ID, NodeStorageModule.ID, CraftingModule.ID, BuffModule.ID, AltarModule.ID, CountdownModule.ID,
+		BeltModule.ID, WearModule.ID]     # 147 / 148
 	var c := _content()
 	var run: RunState = null
 	for seed in range(1, 40):

@@ -520,7 +520,7 @@ func smite_pending_battle() -> bool:
 	var me: CombatantSpec = hooks.player_spec()
 	var result := BattleResult.new()
 	result.winner = 0
-	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content, "type": String(type)}
+	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content, "type": String(type), "smite": true}     # 148：秒杀不算打了一场（魔晶石不耗）
 	battle_finished.emit(node, result, true)
 	_settle_won(node, type, content)
 	_after_battle(node, kind, true)
@@ -569,10 +569,7 @@ func _uid_names(spec: CombatantSpec) -> Dictionary:
 	var out := {}
 	if spec == null:
 		return out
-	for item in spec.items:
-		var def := items.get_def(item.def_id) if items != null else null
-		out[item.source_uid] = Names.of(def) if def != null else String(item.def_id)
-	return out
+	return CombatantSpec.item_names(spec, items) if items != null else out     # 148：同一张表（棋盘上的那一件带前缀）
 
 
 ## 095：掉落定了之后按掉落规则的概率把普通道具换成赐福版（激活了信仰只换那位神的）
@@ -630,7 +627,8 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 			if type != HunterSystem.TYPE and losses_forgiven < hooks.run_context().free_losses:
 				losses_forgiven += 1
 			else:
-				vitality.spend(cost, &"battle_lost")
+				# 149：科技「不屈」少扣几点，最少还是扣一点
+				vitality.spend(maxi(1, cost - hooks.run_context().loss_discount), &"battle_lost")
 			if vitality.is_depleted():
 				_defeat(&"vitality_depleted")
 		# cost == 0：这一场写了无代价

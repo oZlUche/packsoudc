@@ -69,7 +69,12 @@ static func settle(state: RunState) -> RunResult:
 		for inst in state.board.items():
 			var item := inst as ItemInstance
 			r.carried.append(item)
-			r.value += ItemValue.of(item.def)
+			r.value += ItemValue.of_instance(item)
+		var belt := BeltModule.of(state)     # 147：腰带里的随身带着，撤离一起带出
+		if belt != null and belt.belt != null:
+			for inst in belt.belt.items():
+				r.carried.append(inst as ItemInstance)
+				r.value += ItemValue.of_instance(inst as ItemInstance)
 		for inst in state.storage.items():
 			r.left_behind += 1
 			r.left_value += ItemValue.of((inst as ItemInstance).def)

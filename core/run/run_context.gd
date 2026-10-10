@@ -9,6 +9,11 @@ extends RefCounted
 var vitality_max_bonus: int = 0
 ## 开局钱加多少
 var starting_funds_bonus: int = 0
+## 149：有基数的三样按百分比加（Σ百分数，相加不相乘）：终值 = roundi(基数 ×（1 + Σ%/100）) + Σ加算（133 的先乘后加）。
+## 基数是角色的数（体力上限、负重、开局钱），见 [method scaled]
+var vitality_max_mult: int = 0
+var carry_capacity_mult: int = 0
+var starting_funds_mult: int = 0
 ## 每个搜索点多搜几次
 var extra_searches: int = 0
 ## 商店售价的倍数（1 = 原价；0.9 = 九折）
@@ -22,6 +27,10 @@ var flee_bonus: float = 0.0
 ## 角色技能（082）：输给节点敌人前几次不扣体力（[NodeEvents] 读）；战斗基线加成，属性键 → 加多少（[RunState.compile_player] 读）
 var free_losses: int = 0
 var stat_bonus: Dictionary = {}
+## 149：战斗基线的乘算，属性键 → Σ百分数（[StatBonus] 的 MULT）。[RunState.effective_baseline] 先乘这个再加 stat_bonus
+var stat_mult: Dictionary = {}
+## 149：败仗少扣几点体力（科技「不屈」；最少扣一点，[NodeEvents] 读）
+var loss_discount: int = 0
 ## 129：负重上限加多少（科技「扛重」）
 var carry_capacity_bonus: int = 0
 ## 136 角色：每走几步下一步不花行动点（0 = 没有；[MapTravel] 读）；休息区多回几点体力；侵蚀扣体力时少扣几点；打赢节点敌人的钱乘几
@@ -29,6 +38,8 @@ var free_step_every: int = 0
 var rest_bonus: int = 0
 var erosion_resist: int = 0
 var battle_reward_mult: float = 1.0
+## 147：腰带多几格（默认格数在 [member BeltModule.slots]）
+var belt_slots_bonus: int = 0
 
 
 func snapshot() -> Dictionary:
@@ -43,9 +54,33 @@ func snapshot() -> Dictionary:
 		"flee_bonus": flee_bonus,
 		"free_losses": free_losses,
 		"stat_bonus": stat_bonus.duplicate(),
+		"stat_mult": stat_mult.duplicate(),
+		"vitality_max_mult": vitality_max_mult,
+		"carry_capacity_mult": carry_capacity_mult,
+		"starting_funds_mult": starting_funds_mult,
+		"loss_discount": loss_discount,
 		"carry_capacity_bonus": carry_capacity_bonus,
 		"free_step_every": free_step_every,
 		"rest_bonus": rest_bonus,
 		"erosion_resist": erosion_resist,
 		"battle_reward_mult": battle_reward_mult,
+		"belt_slots_bonus": belt_slots_bonus,
 	}
+
+
+## 149：基数按百分比放大再加固定值：roundi(基数 ×（100 + Σ%）/ 100) + Σ加算。整数算，避免 40 × 1.15 落成 45.999…
+static func scaled(base: int, percent: int, add: int) -> int:
+	return roundi(base * (100 + percent) / 100.0) + add
+
+
+## 149：体力上限（不含章节加成，章节的仍是加算，调用方自己加）
+func vitality_max_of(base: int) -> int:
+	return scaled(base, vitality_max_mult, vitality_max_bonus)
+
+
+func carry_capacity_of(base: int) -> int:
+	return scaled(base, carry_capacity_mult, carry_capacity_bonus)
+
+
+func starting_funds_of(base: int) -> int:
+	return scaled(base, starting_funds_mult, starting_funds_bonus)

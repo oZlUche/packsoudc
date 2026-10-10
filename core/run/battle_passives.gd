@@ -55,11 +55,17 @@ static func of(run: RunState) -> Array[PassiveNote]:
 			1, buff.mods, "\n".join(rules2)))
 	# --- 技能 / 难度 / 神坛改的基础属性 ---
 	var bonus := run.buff_context().stat_bonus.duplicate()
+	var mult: Dictionary = run.buff_context().stat_mult     # 149：科技的百分比
 	var altar_bonus: Dictionary = AltarModule.of(run).stat_bonus if AltarModule.of(run) != null else {}
 	for k in altar_bonus:
 		bonus[k] = float(bonus.get(k, 0.0)) + float(altar_bonus[k])
-	if not bonus.is_empty():
+	if not bonus.is_empty() or not mult.is_empty():
 		var mods2: Array = []
+		var mkeys := mult.keys()
+		mkeys.sort()
+		for k in mkeys:
+			if float(mult[k]) != 0.0:
+				mods2.append(StatModifier.make(StringName(String(k)), StatModifier.Mode.MULT, float(mult[k])))
 		var keys := bonus.keys()
 		keys.sort()
 		for k in keys:

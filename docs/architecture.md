@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.67 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.69 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -569,6 +569,12 @@ UI 上用什么图形表示这两类，是表现层的事，数据层不关心�
 日神附魔（`ScopedMod.rules`，第 7 步）走的是同一个入口。附加规则只许 `on_item_fired`、不许 costs、不许直接打毒 / 流血（导入 error）；
 **它执行时不算宿主再出手一次**（`RuleEngine.evaluate` 听自己出手的规则不再发 `ITEM_FIRED`，否则会自己触发自己）。
 「配件自己的反应」仍用 `OnItemFired.LINKED`（规则以配件身份跑）；「武器出手时附带 X」统一走附加。反向的 `receive_rules` 等内容需要再加。
+
+**第三面：供给**（148，作者定，魔晶石 → 法杖）：`AdjacencyProfile.feed_mods / feed_rules / feed_filter` —— **本件站在别人的受益格上**、对方命中 `feed_filter` 时，
+把这些交给对方（一份，不按格数乘；规则走 `_attach`、以宿主身份跑，时机不限、不许 costs，同受益规则）。供给方不画格子：「谁的受益格我站上了」由宿主说了算。
+宿主的受益格可以只写 `receive_filter`、不写加成（法杖：数值全看放上去的晶石）。编译器把真的供给了的道具记进 `CombatantSpec.fed_uids`（耐久按它扣，7.4）；
+用坏了的（`ItemInstance.is_broken()`）不再供给。于是邻接三件事齐了：我给邻居（grant）、邻居给我（receive）、我站上谁的受益格就给谁（feed）。
+「只改这件自己打出的伤害」靠伤害扳机的 `own_only`（来源 uid = 规则主人），魔晶石的「改成火焰」用它。
 
 > **这不是宝石镶嵌。** 邻接标记是「谁挨着谁」，双方各占各的格子；宝石是放进宿主物品
 > 孔位、不占网格、按宿主类型给不同效果的另一套系统，尚未实现。
@@ -3070,10 +3076,26 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 
 - `RunSkills`（`run.skills`，没角色也有一份空的）：`can_use` / `use` / `on_step`（在猎手的回合之后减冷却与躲避）/ `prepare_battle`（`NodeEvents.before_battle` 回调，在 `BattleSim.run` 之前）；跟着存档走（`skills` 一节），读档回来先放 `skills_saved`，持有方按 id 找回角色时 `RunState.set_character` 接上。
 - 主动技能只在地图屏用（作者：大地图移动时使用）；右栏一个技能一个按钮，不能用时灰掉并写原因。
-- 三个初始角色（作者定，136 重做，同日修订）：**角色 = 初始面板 + 技能**（基线、初始包、负重上限 + 两个被动、一个主动），外加一条短板；没有身份这一层（作者：「科技不要跟角色绑定，角色的能力就是初始面板和可能的技能差异」）。科技全局通用，和角色被动在 `buff_context()` 里直接叠加。开局屏按 `RunSkill.is_active()` 分「被动 / 主动」行，面板行写生命、耐力、体力、负重。
+- 三个初始角色（作者定，136 重做，同日修订）：**角色 = 初始面板 + 技能**（基线、初始包、负重上限 + 两个被动、一个主动），外加一条短板；没有身份这一层（作者：「科技不要跟角色绑定，角色的能力就是初始面板和可能的技能差异」）。科技全局通用，和角色被动在 `buff_context()` 里直接叠加。开局屏按 `RunSkill.is_active()` 分「被动 / 主动」行，面板行写生命、耐力、体力、负重、棋盘、开局钱（149）。
   安德烈乌斯：熟门熟路（`travel_discount`：`MapTravel.paid_steps` 数到 `free_step_every` 下一步不花行动点，跟存档）/ 溜得掉（逃跑、潜行、免一败）/ 脱身（`slip`：战前准备屏「溜走」→ `NodeEvents.skip_pending_battle`，点用过、无战利品、不扣体力，搜索遭遇收会话原因 `slipped`、不弹「被赶跑」，核心点不行；猎手事件屏多一项「脱身（必定逃掉）」，`SkillReady` 锁、`RunSkills.consume` 记账）。
-  布鲁图斯：基线 60 / 60 / 6，被动不再加数；野地里长大（`rest_bonus`、`erosion_resist`）/ 坚韧（`RunSkill.rules`：低于三成生命一次性护盾，`CharacterDef.combat_rules` 编进玩家单位）/ 咬牙（`second_wind`：地图上回体力，满了不让用）。
-  马库斯：军功（`battle_reward_mult`，`NodeEvents._pay_battle_reward` 乘、四舍五入）/ 操练（耐力回复 +1）/ 突击。`evade` 构件留着，没有角色带。占位的 `default` / `scout` 删了。
+  布鲁图斯：被动不往面板上加数；野地里长大（`rest_bonus`、`erosion_resist`）/ 坚韧（`RunSkill.rules`：低于三成生命一次性护盾，`CharacterDef.combat_rules` 编进玩家单位）/ 咬牙（`second_wind`：地图上回体力，满了不让用）。
+  马库斯：军功（`battle_reward_mult`，`NodeEvents._pay_battle_reward` 乘、四舍五入）/ 操练（149 起是战斗规则：耐力掉到两成以下回一段，每场一次）/ 突击。`evade` 构件留着，没有角色带。占位的 `default` / `scout` 删了。
+
+**角色差异落在棋盘与面板（149，作者定）**：三个人各占一轴，数都在 `characters/*.json`（占位，作者改）：
+
+| | 安德烈乌斯 | 马库斯 | 布鲁图斯 |
+|---|---|---|---|
+| 棋盘 `board_size` | 7 × 6 | 8 × 6 | 9 × 6 |
+| 生命 / 耐力 / 耐力回复 | 45 / 55 / 4 | 55 / 65 / 5 | 70 / 55 / 3 |
+| 体力 `vitality_max` | 5 | 5 | 7 |
+| 负重 `weight_capacity` | 40 | 48 | 56 |
+| 开局钱 `starting_funds`（-1 = 经济规则的全局数） | 120 | 100 | 80 |
+
+**科技有基数的按百分比**：筋骨（`stat_bonus` 的 `mode = MULT`）、耐久 / 扛重 / 行囊（`vitality_max_bonus` / `carry_capacity_bonus` / `starting_funds_bonus` 的 `percent`）。
+`RunContext` 记 Σ百分数（`stat_mult`、`*_mult`），终值 = `roundi(角色的基数 ×（100 + Σ%）/ 100) + Σ加算`（`RunContext.scaled`，133 的先乘后加，乘算之间相加不相乘）；
+战斗基线在 `RunState.effective_baseline` 先乘再加技能 / 科技的加算，最后加神坛的；体力的章节加成在最后加。计数类科技（幸运、侦察、细搜、讨价、不屈）不变。
+**铁律**：科技与随身道具只做所有人都能做的事，角色只做别人做不到的事 —— 导入器拦「角色被动用的一局规则构件也出现在某个 `tech_*` 局外 buff 里」（`ContentImporter._check_not_in_techs`）。
+所以科技「不屈」从免罚败仗（安德烈乌斯独占）改成 `loss_discount`：败仗少扣几点体力，最少扣一点。
 
 ## 8. M6 · 场景流
 
@@ -3174,6 +3196,17 @@ func describe() -> String                # 开局屏的规则卡、编辑器
 | `BuffModule`（062） | 一局里拿到的 buff（`entries`、给 / 去 / 查 / 走表）、`buffs_changed` | `stepped`（任何花行动点的方式） |
 | `AltarModule`（093 / 095） | 神坛开在哪、用过哪些点、仪式的账与改过的基线、献祭 / 特殊操作、信仰级效果（`perks`）、赐福、`noted` / `item_blessed` | `NodeEvents.altar_opened`、`leaving`（关）、`stepped`（赐福）、`MapTravel.moved`（踩点回调） |
 | `CountdownModule`（092 / 094） | 倒计时上限 / 剩余、带入价值与超带罚步、关哪个撤离点、`notice` | `stepped`（归零就 `run.fail`） |
+| `BeltModule`（147） | 腰带（1 × N 的 `GridInventory`，`only_tags = [belt]`，默认 3 格 + `RunContext.belt_slots_bonus`）、`use(uid)`、`used` | 无；`belt_use` 挂在 `RunHooks` |
+| `WearModule`（148） | 不存东西（次数记在实例上） | `NodeEvents.battle_finished`（这一场 `fed_uids` 里的 −1，秒杀不扣） |
+
+**腰带**（147，作者定）：随身道具（`ItemDef.BELT` 标签 + `ItemDef.belt_use`）**不上棋盘** —— 作战棋盘 `reject_tags = [belt]`（开局与读档都设），地上与仓库照旧什么都收；
+开局带进来的先落在地上，腰带装上时挪进去；撤离时腰带里的一起带出。`BeltUse` 写「什么时候能用」（地图 / 战前准备屏 / 都行）与效果（`BeltEffect`，第五个作用域 `EffectScope.BELT`，
+`RunRegistry.BELT_EFFECTS`：`smoke_escape` 走脱身那条路 `skip_pending_battle`、`mend_vitality` 回体力）；先问每个效果的 `blocked_reason`，都能用才用、用了就从腰带拿走。
+`GridInventory` 为此多了按标签的准入 `only_tags / reject_tags`（跟着存档走）与 `resize_cols`（腰带扩列；缩只缩空列）。界面：整理面板棋盘上方一行腰带（双击 = 用），战前准备屏按钮列出能在那儿用的。
+
+**耐久**（148，作者定）：`ItemDef.wear: WearProfile`（满几次、前缀表、破碎前缀与卖价折扣），剩几次记在 `ItemInstance.state.charges`（新的一件满；老档没记按满算）。
+**一件道具一个定义**，明亮 / 闪烁 / 黯淡 / 破碎是同一件的状态；名字看实例：`Names.of_item(inst)`（格子标签、悬浮窗、拖拽、回放名字表），只有定义的地方照旧 `Names.of(def)`。
+破碎的卖价 `ItemValue.of_instance` 打折；开局带入（`layout_of / place_layout`）也带着 `state`。
 
 为此 `RunState` 一共多了三个**通用**生命周期信号（都不认识任何具体模块）与一个方法：
 
@@ -3923,7 +3956,7 @@ res://
 | 新的地图形态 | `MapGenerator` + `MapLayoutStrategy` 子类 | `MapGraph` / `MapNavigator` / `MapView` 主体不出现 `ring` / `angle` |
 | 侵蚀方向变体（如由内向外） | 生成器对 `erosion_band` 的标注方式 | 不把 `erosion_band` 与 `tier` 合并成一个字段 |
 | 非矩形 / 可扩容背包 | `GridInventory._blocked` 与 `size` | 不假定容器是满矩形、尺寸不变 |
-| 物品损坏与随机词条 | `ItemInstance.state` 字典 | 不把运行时可变状态写进 `ItemDef` |
+| 物品损坏与随机词条 | `ItemInstance.state` 字典 | 不把运行时可变状态写进 `ItemDef`。**次数制耐久已实现**（148：`WearProfile` + `state.charges`，7.4）；随机词条仍未做 |
 | 宝石镶嵌 | `ItemDef.gem_slots` + `ItemInstance.state.gems`，编译期在包体效果之后插一步 | 宝石不占网格，效果随宿主类型（武器／护甲／散放）而变；`socket` 一词留给它，不要用在邻接标记上 |
 | 效果的新作用域（地图、商店、撤离…） | `Effect` 子树 + 该系统调 `tracker.effects_in_scope()` | 一棵树按作用域分支；各系统只查自己那一档，互不认识。道具与套装共用同一套词汇 |
 | 新的消耗种类（层数、充能、耐久…） | `Cost` 子类 + 注册表登记 | `costs` 是列表且 AND 语义；消耗与冷却**故意不原子**，失败跳过效果但冷却照走 |
@@ -3985,6 +4018,8 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.69 | 2026-10-10 | **角色棋盘与百分比科技**（149，作者定，五项待定按推荐；改 7.3）：三个角色的棋盘 7 / 8 / 9 × 6、面板各占一轴、新字段 `CharacterDef.starting_funds`；`StatBonus.mode`、`VitalityMaxBonus / CarryCapacityBonus / StartingFundsBonus.percent`、`RunContext.stat_mult / *_mult / scaled`；不屈改成新效果 `loss_discount`；导入器拦角色被动与科技撞同一种效果；马库斯「操练」改成战斗规则（耐力见底回一段）；`docs/techs.xlsx` 四条科技改百分比 |
+| v2.68 | 2026-10-10 | **腰带槽与魔晶石弹药**（147 / 148）：`BeltModule`（随身道具不上棋盘、点一下就用；烟雾弹 / 急救包）、`BeltUse` / `BeltEffect`（作用域 `belt`）、`GridInventory.only_tags / reject_tags / resize_cols`；邻接第三面「供给」`feed_mods / feed_rules / feed_filter` + `CombatantSpec.fed_uids`、伤害扳机 `own_only`；`WearProfile` + `ItemInstance.charges`、`WearModule`、`Names.of_item`、`ItemValue.of_instance`；魔法杖与火焰 / 冰霜 / 闪电魔晶石，伤害类型 `ice` / `lightning`；删掉 `mana_crystal` / `mana_shard`（晶石不再给魔力） |
 | v2.67 | 2026-10-09 | **buff 与规则构件成为内容**（146）：`buffs` 搬回 `KINDS`，迁移工具 `tools/extract_buffs.gd` 抽出 10 份 buff；新种类 `rule_parts`（`RulePartDef` 四槽）抽出 15 份构件，规则里写 `"@id"`、导入复制 + `part_ref`、导出回写；`ContentLibrary`（单件导入登记表里没有的到盘上的库找，批量导入 `strict` 只认这一趟的）；`PropertyForm` 下拉列库项、只读卡片 + 断开 / 去库里改；构件编辑器 `ui/part_editor` |
 | v2.66 | 2026-10-09 | **规则表改列表视图 + 双击浮窗**（145）：`PropertyForm._rule_list`（`Tree` 四列 + 按钮行，`popup_layer` 子表单继承）、`RuleWindow`（三页签、预览句、扳机隐含消耗只读、Esc / 点外面关）；`AuthoringEditor._form_for` 统一建表单并在换对象时关浮窗；`Glossary.rule_text` 拆出 `cadence_text / timing_text / costs_text`（文案不变） |
 | v2.49 | 2026-10-06 | **猎手战败结果档 + 猎手战插进进点的事件队列**（134，作者定，五项待定按推荐；改 8.5）：新资源 `HunterLossOption`（档名、名字、权重、后果），`HunterDef.loss_options` + `loss_pick`（新构件表 `HUNTER_LOSS_PICKS`：`random` / `fixed`），`Hunter.loss_id` 生成时选定、跟存档；新后果 `expel`（退回上一步、不驻守）。`MapTravel` 加进点闸门 `arrival_gate` / 挂起的进点 `held`（存档）/ `finish_arrival` / `cancel_arrival`；`RunState` 的猎手回合从「这一步的事之后」挪到闸门里（先于点的事），`resume_arrival` 在玩家空下来时接着进；驱逐 = 取消进点（不标走过、事不发生、不记首访，步数照算）。`GameFlow._flush` 接着进点后排进队里的接着看；收起猎手战的战利品也接着进点。悬停与开打前事件屏写「输了会怎样」。`hunter_1` 击退 / 驱逐各一半，`hunter_2` 击退 / 驱逐 / 驱逐并驻守各三分之一（数值占位） |

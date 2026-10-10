@@ -83,3 +83,15 @@
 | 2 | 烟雾弹对搜索遭遇 | A 与脱身相同：收会话、收获照交、不弹「被赶跑」；B 只对节点战有效 | **A**：复用一条路，少一套分支 |
 | 3 | 用随身道具算不算行动点 | A 不算；B 算一步 | **A**：作者说的是「使用」，不是「休息」 |
 | 4 | 腰带在哪些屏露出 | A 地图屏物品栏 + 战前准备屏；B 只在地图屏 | **A**：烟雾弹的使用时机就在战前准备屏 |
+
+---
+
+## 落地记录（2026-10-10，四项待定全按推荐）
+
+- **模块与容器**：`BeltModule`（`core/run/modules/belt_module.gd`，容器 id 5），默认 3 格，`RunContext.belt_slots_bonus` 往上加（新 `RunEffect` `belt_slots_bonus`）。扩格用新加的 `GridInventory.resize_cols`，缩格只缩右边的空列。`only_tags / reject_tags` 有值时才写进存档。
+- **棋盘**：`RunState.start` 与 `from_dict` 都给作战棋盘设 `reject_tags = [belt]`。开局屏的棋盘不设，随身道具可以摆在那儿带进来；进局时作战棋盘不收，先落在地上，腰带装上时（只在新开局）挪进腰带，满了的留在地上。撤离时腰带里的进 `RunResult.carried`。
+- **效果**：`BeltEffect` 放在 `core/effects`（和 `RunEffect` 同层，`BeltUse` 在 `core/inventory` 引用它不违反分层），登记在 `RunRegistry.BELT_EFFECTS`（种类 `belt_effect`）。回体力的叫 `mend_vitality`（类 `MendVitality`），因为 `restore_vitality` 已经是事件后果。烟雾弹的 `smoke_escape` 判断和脱身一样，核心点提示「核心的战斗躲不开」。
+- **入口**：`RunHooks.belt_use(uid)`，`GameFlow.use_belt(uid)`（烟雾弹用掉、开打的那一场没了就往下走）。
+- **界面**：整理面板棋盘上方一行腰带，双击是「用」，地上双击随身道具先进腰带。战前准备屏在「开战 / 溜走」那排列出能在这里用的随身道具，用不了时按钮灰着、写原因。用不了的原因写在提示行和按钮上，没有写进悬浮窗。悬浮窗多一行「随身：……用：……」。没有新增 `add_theme_`。
+- **道具**：`smoke_bomb`（烟雾弹，`belt` / `tool` / `crafted`）、`aid_pack`（急救包，`belt` / `remedy` / `crafted`）、标签 `belt`【随身】。都按普通道具进搜索 / 掉落 / 商店池，商店没有单独常备。
+- **测试**：`tests/run/test_belt_147.gd`（容器、开局带入、用法、存档往返与老档、撤离、导入校验）。

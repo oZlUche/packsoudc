@@ -26,6 +26,9 @@ var requires_bag: bool = false
 
 ## 容器级准入回调（140：容器级准入标签删了，生产从来不设；包体自身的准入见 [member ItemDef.bag_accept_tags]）：`func(def: ItemDef) -> bool`，无效 = 不限。仓库用它接 [MetaState.keeps]（包进不了局外），规则只写在那一处
 var accept_filter: Callable = Callable()
+## 147：按标签的准入。`only_tags` 非空 = 只收命中其一的（腰带只收【随身】）；`reject_tags` 命中其一就不收（作战棋盘不收【随身】）。跟着存档走
+var only_tags: Array[StringName] = []
+var reject_tags: Array[StringName] = []
 
 var _occ: PackedInt32Array = PackedInt32Array()
 var _bag_owner: PackedInt32Array = PackedInt32Array()
@@ -126,7 +129,18 @@ func _table_for(def: ItemDef) -> PackedInt32Array:
 func accepts(def: ItemDef) -> bool:
 	if def == null:
 		return false
+	if not only_tags.is_empty() and not _has_any_tag(def, only_tags):
+		return false
+	if not reject_tags.is_empty() and _has_any_tag(def, reject_tags):
+		return false
 	return not accept_filter.is_valid() or bool(accept_filter.call(def))
+
+
+static func _has_any_tag(def: ItemDef, tags: Array[StringName]) -> bool:
+	for t in def.tags:
+		if tags.has(t):
+			return true
+	return false
 
 
 ## 该定义在本容器中是否作为「包」生效。
@@ -755,7 +769,7 @@ func to_dict() -> Dictionary:
 		item_dicts.append((inst as ItemInstance).to_dict())
 	# uid 升序，保证同一状态总是序列化成同样的字节，便于比对与测试
 	item_dicts.sort_custom(func(a, b): return a["uid"] < b["uid"])
-	return {
+	var out := {
 		"id": id,
 		"size": [size.x, size.y],
 		"requires_bag": requires_bag,
@@ -763,6 +777,12 @@ func to_dict() -> Dictionary:
 		"items": item_dicts,
 		"place_seq": place_seq,
 	}
+	# 147：有标签准入才写（老存档与别的容器字节不变）
+	if not only_tags.is_empty():
+		out["only_tags"] = Array(only_tags).map(func(t): return String(t))
+	if not reject_tags.is_empty():
+		out["reject_tags"] = Array(reject_tags).map(func(t): return String(t))
+	return out
 
 
 ## 120：[param size_override] 给了（非零）就按它建格子、忽略存档里的 size（仓库尺寸由科技推算）；
@@ -776,6 +796,10 @@ static func from_dict(d: Dictionary, db: ItemDatabase, size_override: Vector2i =
 	)
 
 	# 140：老存档里的 accept_tags（恒为空）不读了
+	for t in d.get("only_tags", []):
+		inv.only_tags.append(StringName(String(t)))
+	for t in d.get("reject_tags", []):
+		inv.reject_tags.append(StringName(String(t)))
 	for i in d.get("blocked", []):
 		var idx := int(i)
 		if idx >= 0 and idx < inv._blocked.size():
@@ -873,6 +897,50 @@ func resize_rows(rows: int) -> int:
 	elif rows < size.y:
 		shrink_rows(size.y - rows)
 	return size.y
+
+
+## 147（腰带扩格）：列数变成 [param cols]：多了在右边加空列；少了只删右边的**空列**（碰到有东西的就停）。东西原地不动。返回变化后的列数
+func resize_cols(cols: int) -> int:
+	var want := maxi(1, cols)
+	var keep := want
+	if want < size.x:
+		keep = size.x
+		while keep > want and _col_empty(keep - 1):
+			keep -= 1
+	if keep == size.x:
+		return size.x
+	var occ := PackedInt32Array()
+	var bags := PackedInt32Array()
+	var blocked := PackedByteArray()
+	occ.resize(keep * size.y)
+	bags.resize(keep * size.y)
+	blocked.resize(keep * size.y)
+	for y in size.y:
+		for x in keep:
+			var j := y * keep + x
+			if x < size.x:
+				var i := y * size.x + x
+				occ[j] = _occ[i]
+				bags[j] = _bag_owner[i]
+				blocked[j] = _blocked[i]
+			else:
+				occ[j] = EMPTY_UID
+				bags[j] = EMPTY_UID
+				blocked[j] = 0
+	_occ = occ
+	_bag_owner = bags
+	_blocked = blocked
+	size = Vector2i(keep, size.y)
+	changed.emit()
+	return size.x
+
+
+func _col_empty(x: int) -> bool:
+	for y in size.y:
+		var i := y * size.x + x
+		if _occ[i] != EMPTY_UID or _bag_owner[i] != EMPTY_UID:
+			return false
+	return true
 
 
 func _row_empty(y: int) -> bool:

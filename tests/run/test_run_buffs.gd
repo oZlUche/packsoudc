@@ -84,13 +84,14 @@ static func run_context_and_start(t: TestCase) -> void:
 	var lucky: RunBuffDef = c.buffs[&"tech_luck_1"]
 	var weakened: RunBuffDef = c.buffs[&"weakened"]
 	var ctx := RunBuffs.context([hardy, lucky])
-	t.eq(ctx.vitality_max_bonus, _run_amount(hardy, "vitality_max_bonus"), "坚韧：体力上限的加成从定义里来")
+	t.eq(ctx.vitality_max_mult, _run_amount(hardy, "vitality_max_mult"), "坚韧：体力上限的百分比从定义里来（149）")
 	t.eq(ctx.luck_bonus, _run_amount(lucky, "luck_bonus"), "幸运：幸运的加成从定义里来")
-	t.check(ctx.vitality_max_bonus > 0 and ctx.luck_bonus > 0, "两个都是正的（作者文件写的）")
+	t.check(ctx.vitality_max_mult > 0 and ctx.luck_bonus > 0, "两个都是正的（作者文件写的）")
 
 	var plain := RunState.start(c.chapter, 41, c.items, c.enemies, c.sets, kit.items)
 	var buffed := RunState.start(c.chapter, 41, c.items, c.enemies, c.sets, kit.items, c.buffs, [&"tech_endurance_1", &"tech_luck_1"] as Array[StringName])
-	t.eq(buffed.vitality.maximum, plain.vitality.maximum + ctx.vitality_max_bonus, "开局体力上限多了 buff 给的")
+	t.eq(buffed.vitality.maximum, ctx.vitality_max_of(Vitality.PLACEHOLDER_MAX) + c.chapter.vitality_bonus, "开局体力上限按 buff 的百分比放大（149）")
+	t.check(buffed.vitality.maximum > plain.vitality.maximum, "比没 buff 的多")
 	t.eq(buffed.wallet.balance, plain.wallet.balance + ctx.starting_funds_bonus, "开局钱按 buff（这两个不给钱就一样）")
 	t.eq(buffed.meta_buffs.size(), 2, "局外 buff 记在这一局里")
 	var no_such := RunState.start(c.chapter, 41, c.items, c.enemies, c.sets, kit.items, c.buffs, [&"nope", &"marked"] as Array[StringName])
@@ -241,8 +242,8 @@ static func run_flow_toggle(t: TestCase) -> void:
 	t.check(f.toggle_meta_buff(&"tech_endurance_1"), "开耐久")
 	t.check(MetaSave.read(c.items, META).active_buffs.has(&"tech_endurance_1"), "存了")
 	var run := f.begin(c.chapter, kit, 51)
-	var bonus := _run_amount(c.buffs[&"tech_endurance_1"], "vitality_max_bonus")
-	t.eq(run.vitality.maximum, Vitality.PLACEHOLDER_MAX + bonus, "这一局体力上限多了 %d" % bonus)
+	var with_tech := RunBuffs.context([c.buffs[&"tech_endurance_1"]]).vitality_max_of(Vitality.PLACEHOLDER_MAX)
+	t.eq(run.vitality.maximum, with_tech + c.chapter.vitality_bonus, "这一局体力上限按耐久放大到 %d" % with_tech)
 	t.check(f.save(), "存这一局")
 	f.to_main_menu()
 	t.check(f.continue_run(), "继续")

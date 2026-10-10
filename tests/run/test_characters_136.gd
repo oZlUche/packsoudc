@@ -1,7 +1,7 @@
 ## 136（作者定，五项待定按推荐）：三个角色各一套 —— 初始面板 + 两个被动 + 一个主动 + 一条短板（修订：没有身份这一层，科技对谁都生效）。
 ## 安德烈乌斯：熟门熟路（每四步免一步）/ 溜得掉（逃跑、潜行、免一败）/ 脱身（战前溜走，猎手面前必定逃掉）；
 ## 布鲁图斯：野地里长大（休息多回、侵蚀少扣）/ 坚韧（低血一次性护盾）/ 咬牙（回体力）；
-## 马库斯：军功（打赢的钱 ×1.25）/ 操练（耐力回复 +1）/ 突击（不动）。期望从角色文件推：文件里写多少就断言多少。
+## 马库斯：军功（打赢的钱 ×1.25）/ 操练（149 起：耐力见底回一段，战斗规则；耐力回复 5 写进面板）/ 突击（不动）。期望从角色文件推：文件里写多少就断言多少。
 extends RefCounted
 
 const CS := preload("res://tests/run/test_character_skills.gd")
@@ -259,7 +259,7 @@ static func run_brutus(t: TestCase) -> void:
 
 
 static func run_marcus(t: TestCase) -> void:
-	t.begin("136 · 马库斯：打赢的钱 ×军功（四舍五入）；操练让耐力回复 +1；耐力 65 是三人唯一最高")
+	t.begin("136 · 马库斯：打赢的钱 ×军功（四舍五入）；耐力回复写在面板上（149）、三人最高；耐力 65 是三人唯一最高")
 	var c := CS._content()
 	var marcus := CS._character(c, &"marcus")
 	var s := CS._start(c, marcus)
@@ -274,7 +274,11 @@ static func run_marcus(t: TestCase) -> void:
 	s.events._pay_battle_reward(node, node.content)
 	t.eq(s.wallet.balance - m0, int(roundf(float(base) * merit.factor)), "进账 = %d × %.2f" % [base, merit.factor])
 	var regen := &"regen_stamina"
-	t.eq(s.effective_baseline().value_of(regen), marcus.baseline().value_of(regen) + 1.0, "耐力回复 +1")
+	t.eq(s.effective_baseline().value_of(regen), marcus.baseline().value_of(regen), "149：耐力回复就是面板上的，没有技能再加")
+	var regens := {}
+	for id in [&"andreus", &"brutus", &"marcus"]:
+		regens[id] = CS._character(c, id).baseline().value_of(regen)
+	t.check(regens[&"marcus"] > regens[&"andreus"] and regens[&"marcus"] > regens[&"brutus"], "耐力回复马库斯最高：%s" % [regens])
 	var stam := {}
 	for id in [&"andreus", &"brutus", &"marcus"]:
 		stam[id] = CS._character(c, id).baseline().value_of(&"max_stamina")

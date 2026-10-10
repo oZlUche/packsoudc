@@ -61,7 +61,7 @@ static func run_faith_files(t: TestCase) -> void:
 	t.eq(earth.offering_value(sword), 0, "大地不收小东西")
 	var nature: FaithDef = defs[&"nature"]
 	t.eq(nature.offering_value(db.get_def(&"ration")), 5 + 5, "自然：口粮既是自然又是食物 → 两条各 1 × 5")
-	t.check(sun.accepts_offering(db.get_def(&"mana_crystal")), "日神收宝石")
+	t.check(sun.accepts_offering(db.get_def(&"fire_crystal")), "日神收宝石")
 
 
 static func run_deeds_and_summary(t: TestCase) -> void:
