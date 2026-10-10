@@ -10,7 +10,9 @@
 ## W  负重折扣 max(下限, 1 − 重量 ÷ 负重基准)
 ## [endcodeblock]
 ##
-## 推荐稀有度看预算比 r = P ÷ (每格基准 × 格数) 落在哪一档（第一步只给武器，待定 2）；推荐价值 = 那一档的每格价 × 格数 × 档内位置。
+## 推荐稀有度看预算比 r = P ÷ (每格基准 × 格数) 落在哪一档；推荐价值 = 那一档的每格价 × 格数 × 档内位置。
+## 推荐给武器和护具（带 armor / shield 标签，作者定：非武器的护盾、减伤也算价值）—— 护具自带的护盾上限、防护按 D 进 P：
+## P = (B + D + Σ …) × W，D = 护盾上限 × 每点折算 + 防护 × 每点折算（[member PowerWeights.shield_per_point]）。别的非武器只看分数
 ## 只是提示与推荐：流派件单看偏弱是故意的，联动价值不进这个数。系数全在 [PowerWeights]（作者改表不改码）。
 ## 纯函数：只看 [ItemDef]，不碰运行时
 class_name PowerEstimate
@@ -21,6 +23,10 @@ class Breakdown:
 	extends RefCounted
 	## 直接伤害 DPS（基础 B）与出手频率
 	var base: float = 0.0
+	## 自带的护盾 / 减伤（D）：基础属性里的护盾上限与防护折成的每秒伤害
+	var defense: float = 0.0
+	## 护具（armor / shield 标签）：和武器一样给推荐
+	var is_gear: bool = false
 	var hz: float = 0.0
 	## 每条规则一行：{index, text, rate (T), cost (C), cond (K), cap (L，效果的加权平均), effects: [{type, text, value (V), cap, unestimated}], value（这一行的贡献）}
 	var rules: Array[Dictionary] = []
@@ -36,7 +42,7 @@ class Breakdown:
 	## 预算比
 	var ratio: float = 0.0
 	var is_weapon: bool = false
-	## 推荐稀有度（非武器 −1：只看分数）与推荐价值（非武器 0）
+	## 推荐稀有度（不是武器也不是护具 −1：只看分数）与推荐价值（同上 0）
 	var rarity: int = -1
 	var value: int = 0
 
@@ -50,6 +56,7 @@ static func estimate(def: ItemDef, weights: PowerWeights = null, buffs: Dictiona
 	out.cells = maxi(1, def.cell_count())
 	out.default_power = w.per_cell_dps * out.cells
 	out.is_weapon = def.tags.has(&"weapon")
+	out.is_gear = not out.is_weapon and (def.tags.has(&"armor") or def.tags.has(&"shield"))
 	var stats := StatSet.new()
 	var rules: Array[AbilityRule] = []
 	if def.combat != null:
@@ -67,6 +74,7 @@ static func estimate(def: ItemDef, weights: PowerWeights = null, buffs: Dictiona
 				hits = true
 		if hits:
 			out.hz += hz
+	out.defense = defense_of(stats, w)
 	var ctx := PowerContext.new()
 	ctx.weights = w
 	ctx.stats = stats
@@ -90,12 +98,19 @@ static func estimate(def: ItemDef, weights: PowerWeights = null, buffs: Dictiona
 			out.sum += float(line["value"])
 	out.weight = ItemWeight.of(def)
 	out.weight_factor = maxf(w.weight_floor, 1.0 - out.weight / maxf(1.0, w.weight_base))
-	out.power = (out.base + out.sum) * out.weight_factor
+	out.power = (out.base + out.defense + out.sum) * out.weight_factor
 	out.ratio = out.power / out.default_power if out.default_power > 0.0 else 0.0
-	if out.is_weapon:
+	if out.is_weapon or out.is_gear:
 		out.rarity = rarity_for(out.ratio, w)
 		out.value = value_for(out.rarity, out.ratio, out.cells, w)
 	return out
+
+
+## 道具自带的护盾 / 减伤（D）：基础属性里的护盾上限、防护 × 每点折算
+static func defense_of(stats: StatSet, w: PowerWeights) -> float:
+	var shield := StatMath.to_float(stats.total_of(BattleStats.MAX_SHIELD)) if stats.has(BattleStats.MAX_SHIELD) else 0.0
+	var armor := StatMath.to_float(stats.total_of(BattleStats.ARMOR)) if stats.has(BattleStats.ARMOR) else 0.0
+	return shield * w.shield_per_point + armor * w.armor_per_point
 
 
 static func _is_base_rule(r: AbilityRule) -> bool:

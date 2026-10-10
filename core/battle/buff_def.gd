@@ -44,7 +44,10 @@ func duration_text() -> String:
 	return "永续" if is_permanent() else "持续 %.1f 秒" % duration_sec
 
 @export_group("效果")
-## **每层一份**，走 4.3 公式
+## 152（作者定）：**每层**带几层标准轴 ——「每层血怒 = 一层【强攻】+ 一层【加速】」。层数跟着 buff 走（[BuffAxis]）。
+## 能用轴表达的增减（伤害、攻速、回血、暴击……）写这里，不写 [member mods]；导入器对 mods 里落在轴上的那几条给提醒
+@export var axes: Array[BuffAxis] = []
+## **每层一份**，走 4.3 公式。轴表达不了的属性（护盾上限这类）写这里
 @export var mods: Array[StatModifier] = []
 ## buff 自己也能带触发规则 —— 这是「复合效果」成立的关键。
 ## 「灼烧：每层每秒掉 2 点血」= 挂在这里的一条 OnTick + Cooldown(1s) + DealDamage，
@@ -54,13 +57,25 @@ func duration_text() -> String:
 @export var on_expire: Array[CombatEffect] = []
 
 
+## 152：每层带几层 [param axis]（同一条轴写了几行就相加）
+func axis_stacks_per(axis: StringName) -> int:
+	var n := 0
+	for a in axes:
+		if a != null and (a as BuffAxis).axis == axis:
+			n += (a as BuffAxis).stacks
+	return n
+
+
 #region 151 战斗力估算
 ## 一层挂在某一边身上，每秒对那一边值多少（[param ctx] 是那一边的角度，[method PowerContext.for_carrier]）：
-## 属性修饰 + 自己的规则（流血：每层每秒伤自己一点 = −1）
+## 带的轴层 + 属性修饰 + 自己的规则（流血：每层每秒伤自己一点 = −1）
 func value_per_sec(ctx: PowerContext) -> float:
 	if ctx.depth > 3:
 		return 0.0
 	var v := 0.0
+	for a in axes:
+		if a != null and StatAxes.has((a as BuffAxis).axis):
+			v += (a as BuffAxis).stacks * ctx.axis_value((a as BuffAxis).axis)
 	for m in mods:
 		v += ctx.stat_value((m as StatModifier).stat, (m as StatModifier).mode, (m as StatModifier).amount)
 	for r in rules:

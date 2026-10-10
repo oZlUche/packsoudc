@@ -38,6 +38,8 @@ func show_estimate(b: PowerEstimate.Breakdown) -> void:
 	_head.text = "战斗力 %.1f　（默认 %.1f，占 %d 格）" % [b.power, b.default_power, b.cells]
 	var lines: Array[String] = []
 	lines.append("基础（直接伤害）%s　%.1f 次/秒" % [_signed(b.base), b.hz])
+	if b.defense != 0.0:
+		lines.append("自带护盾 / 减伤 %s" % _signed(b.defense))
 	for r in b.rules:
 		var tip := "T %.2f/秒 × C %.2f × K %.2f × L %.2f" % [r["rate"], r["cost"], r["cond"], r["cap"]]
 		var what := String(r["text"]) if String(r["text"]) != "" else "规则 %d" % (int(r["index"]) + 1)
@@ -56,7 +58,7 @@ func show_estimate(b: PowerEstimate.Breakdown) -> void:
 		_rec.text = "推荐：%s　价值 %d" % [ItemTooltip.rarity_name(b.rarity), b.value]
 		_adopt.disabled = false
 	else:
-		_rec.text = "非武器：只看分数（推荐稀有度以后有数据再定）"
+		_rec.text = "不是武器或护具：只看分数"
 		_adopt.disabled = true
 
 

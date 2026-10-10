@@ -458,12 +458,27 @@ static func validate_attached_rules(rules: Array, path: String, report: ImportRe
 
 ## 103 4e：能用标准轴表达的简单增减一律走轴 —— 只有一条落在轴属性上的 mod、没有规则的可叠层 buff，提示改成 shift_axis
 static func warn_axis_candidate(def: BuffDef, path: String, report: ImportReport) -> void:
-	if def == null or not def.is_stackable() or def.mods.size() != 1 or not def.rules.is_empty() \
-			or not def.on_apply.is_empty() or not def.on_expire.is_empty():
+	if def == null:
 		return
-	var axis := StatAxes.axis_for_stat((def.mods[0] as StatModifier).stat)
-	if axis != &"":
-		report.warn(path + "mods", "「%s」只是一条 %s 的增减，改用标准轴：shift_axis(%s)（增益正、减益负，直接相抵）" % [def.id, (def.mods[0] as StatModifier).stat, axis])
+	for i in def.axes.size():     # 152：带的轴得是轴表里有的
+		var a := def.axes[i] as BuffAxis
+		if a != null and not StatAxes.has(a.axis):
+			report.error("%saxes[%d].axis" % [path, i], "没有这条标准轴 '%s'（可用：%s）" % [a.axis, ", ".join(StatAxes.ORDER)])
+		elif a != null and a.stacks == 0:
+			report.warn("%saxes[%d].stacks" % [path, i], "「%s」带 0 层 %s，这条不起作用" % [def.id, a.axis])
+	if def.is_stackable() and def.mods.size() == 1 and def.axes.is_empty() and def.rules.is_empty() \
+			and def.on_apply.is_empty() and def.on_expire.is_empty():
+		var only := StatAxes.axis_for_stat((def.mods[0] as StatModifier).stat)
+		if only != &"":
+			report.warn(path + "mods", "「%s」只是一条 %s 的增减，改用标准轴：shift_axis(%s)（增益正、减益负，直接相抵）" % [def.id, (def.mods[0] as StatModifier).stat, only])
+			return
+	# 152（作者定）：buff 里落在标准轴上的增减，改成「每层带几层轴」（axes），不直接写百分比 / 固定值
+	for i in def.mods.size():
+		var m := def.mods[i] as StatModifier
+		var axis := StatAxes.axis_for_stat(m.stat) if m != null else &""
+		if axis != &"" and axis != StatAxes.ARMOR:     # 防护（格挡）另有方案，先不提醒
+			report.warn("%smods[%d]" % [path, i], "「%s」的 %s 增减落在标准轴上：改写成 axes —— 每层带几层【%s】（152）" % [
+				def.id, m.stat, StatAxes.name_of(axis, 1 if m.amount >= 0.0 else -1)])
 
 
 ## 103 第 1、2 条（作者定）：带武器标签的道具必须造成伤害；只有带武器标签的道具才消耗耐力。

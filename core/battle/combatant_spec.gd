@@ -98,14 +98,45 @@ func opening_mods() -> Array:
 	return out
 
 
+## 152：同一批开战 buff 带的标准轴层数（axis → 层数）。预估照运行时那样把它们当公式的最后一步
+func opening_axes() -> Dictionary:
+	var out: Dictionary = {}
+	var pool: Array = []
+	for it in items:
+		pool.append_array(it.rules)
+	pool.append_array(set_rules)
+	for r in pool:
+		var rule := r as AbilityRule
+		if rule == null or not (rule.trigger is OnBattleStart) or not (rule.cadence == null or rule.cadence is Always):
+			continue
+		for e in rule.effects:
+			var ap := e as ApplyStatus
+			if ap == null or ap.buff == null or ap.target != CombatEffect.Target.SELF:
+				continue
+			for a in ap.buff.axes:
+				if a != null:
+					var k := (a as BuffAxis).axis
+					out[k] = int(out.get(k, 0)) + (a as BuffAxis).stacks * maxi(1, ap.stacks)
+	return out
+
+
 ## 一件道具算上开战 buff 之后的属性
 func stats_with_opening(it: CompiledItem) -> StatSet:
 	var mods := opening_mods()
-	if mods.is_empty() or it.stats == null:
+	var axes := opening_axes()
+	if (mods.is_empty() and axes.is_empty()) or it.stats == null:
 		return it.stats
 	var copy := it.stats.clone()
 	for pair in mods:
 		(pair[0] as StatModifier).apply_to(copy, int(pair[1]))
+	for axis in axes:     # 152：和 [method CombatantRuntime._apply_axes] 同一种落法（只落属性轴）
+		var key := StatAxes.stat_of(axis)
+		if key == &"" or int(axes[axis]) == 0:
+			continue
+		if StatAxes.is_factor(axis):
+			CombatantRuntime._scale_final(copy, key, StatAxes.factor(axis, int(axes[axis])))
+		elif StatAxes.on_items(axis):
+			copy.ensure(key).add_flat(StatMath.from_float(int(axes[axis]) * StatAxes.step_of(axis)))
 	return copy
 
 

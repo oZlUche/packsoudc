@@ -123,7 +123,7 @@ static func run_formula(t: TestCase) -> void:
 
 
 static func run_recommend(t: TestCase) -> void:
-	t.begin("151 · 推荐：预算比定档、价值按档内位置取整到 5；默认那一套出生就约等于默认战斗力；非武器只给分数")
+	t.begin("151 · 推荐：预算比定档、价值按档内位置取整到 5；默认那一套出生就约等于默认战斗力；非武器（护具除外）只给分数")
 	var w := PowerWeights.new()
 	t.eq(PowerEstimate.rarity_for(0.5, w), 0, "低于第一档阈值：普通")
 	t.eq(PowerEstimate.rarity_for(w.tiers[1], w), 2, "正好在阈值上算上一档")
@@ -139,9 +139,9 @@ static func run_recommend(t: TestCase) -> void:
 		var e := PowerEstimate.estimate(def, w)
 		t.check(absf(e.power / e.default_power - 1.0) < 0.15, "%d 格：默认那一套的战斗力 %.1f ≈ 默认 %.1f" % [cells, e.power, e.default_power])
 	var armor := _weapon(10.0, 2.0)
-	armor.tags = [&"armor"] as Array[StringName]
+	armor.tags = [&"tool"] as Array[StringName]
 	var a := PowerEstimate.estimate(armor, w)
-	t.check(a.rarity == -1 and a.value == 0 and a.power > 0.0, "非武器：有分数，不推荐稀有度")
+	t.check(a.rarity == -1 and a.value == 0 and a.power > 0.0, "非武器（也不是护具）：有分数，不推荐稀有度")
 
 
 static func run_weights(t: TestCase) -> void:
@@ -243,3 +243,39 @@ static func frame_editor(t: TestCase, root: Window) -> void:
 	t.eq(ed._def.value, ed.power_estimate().value, "采用：价值写进去了")
 	ed._on_discard()
 	ed.queue_free()
+
+
+static func run_gear(t: TestCase) -> void:
+	t.begin("151 补充（作者定）：非武器自带的护盾 / 减伤算进战斗力与价值；护具（armor / shield 标签）也给推荐，别的非武器只看分数")
+	var w := PowerWeights.new()
+	var vest := ItemDef.new()
+	vest.id = &"test_vest"
+	vest.tags = [&"gear", &"armor"] as Array[StringName]
+	vest.shape = ItemShape.from_bits("111111")
+	vest.combat = CombatProfile.new()
+	vest.combat.base_stats = {"max_shield": 30.0}
+	var e := PowerEstimate.estimate(vest, w)
+	t.eq(e.defense, 30.0 * w.shield_per_point, "护盾上限 30 × 每点折算")
+	t.check(e.power > 0.0 and e.is_gear and e.rarity >= 0 and e.value > 0, "护具给推荐：%s 价值 %d" % [e.rarity, e.value])
+	vest.combat.base_stats = {"max_shield": 60.0}
+	t.check(PowerEstimate.estimate(vest, w).power > e.power, "护盾多 → 战斗力高")
+	var shield := ItemDef.new()
+	shield.id = &"test_shield"
+	shield.tags = [&"shield"] as Array[StringName]
+	shield.shape = ItemShape.from_bits("11111")
+	shield.combat = CombatProfile.new()
+	shield.combat.base_stats = {"armor": 5.0}
+	t.eq(PowerEstimate.estimate(shield, w).defense, 5.0 * w.armor_per_point, "防护 5 × 每点折算")
+	var trinket := ItemDef.new()
+	trinket.id = &"test_trinket"
+	trinket.shape = ItemShape.from_bits("1")
+	trinket.combat = CombatProfile.new()
+	trinket.combat.base_stats = {"max_shield": 10.0}
+	var tr := PowerEstimate.estimate(trinket, w)
+	t.check(tr.defense > 0.0 and tr.rarity == -1 and tr.value == 0, "别的非武器：护盾照样算进分数，但不给推荐")
+	# 现有的皮甲、圆盾和实际差不超过一档（系数按它们定的；格挡方案 153 落地后再调）
+	for id in ["leather_armor", "round_shield"]:
+		var def := load("%s/%s.tres" % [ITEMS, id]) as ItemDef
+		if def != null:
+			var g := PowerEstimate.estimate(def, w)
+			t.check(absi(g.rarity - def.rarity) <= 1, "%s：推荐 %d、实际 %d（预算比 %.2f）" % [id, g.rarity, def.rarity, g.ratio])

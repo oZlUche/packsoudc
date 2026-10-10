@@ -138,8 +138,18 @@ func axis_system(axis: StringName) -> int:
 	return int((axes.get(axis, [0, 0]) as Array)[1])
 
 
+## 152：身上的 buff 带的层数（每层带几层 × buff 层数，[member BuffDef.axes]）—— 跟着 buff 走，不记在 [member axes] 里
+func axis_carried(axis: StringName) -> int:
+	var n := 0
+	for b in buffs:
+		if not b.def.axes.is_empty():
+			n += b.def.axis_stacks_per(axis) * b.stacks
+	return n
+
+
+## 合计 = 内容层 + 系统层 + buff 带的
 func axis_total(axis: StringName) -> int:
-	return axis_stacks(axis) + axis_system(axis)
+	return axis_stacks(axis) + axis_system(axis) + axis_carried(axis)
 
 
 ## 百分比轴的当前因子（定点）。受到伤害这条由伤害管线直接读
@@ -160,7 +170,12 @@ func shift_axis(axis: StringName, delta: int, system: bool = false) -> int:
 
 ## 4.3 公式的最后一步：按轴表把因子 / 固定值落到单位与每件道具的属性终值上
 func _apply_axes() -> void:
-	for axis in axes:
+	var touched: Array = axes.keys()
+	for b in buffs:     # 152：buff 带的轴不在 axes 表里，也要结算
+		for a in b.def.axes:
+			if a != null and not touched.has((a as BuffAxis).axis):
+				touched.append((a as BuffAxis).axis)
+	for axis in touched:
 		var total := axis_total(axis)
 		if total == 0:
 			continue
