@@ -154,14 +154,14 @@ static func run_max_resource_axes(t: TestCase) -> void:
 	t.eq(StatAxes.name_of(StatAxes.MAX_HP, -1), "衰颓", "负层叫衰颓")
 	t.eq(StatAxes.name_of(StatAxes.MAX_MANA, 1), "充盈", "正层叫充盈")
 	t.eq(StatAxes.name_of(StatAxes.MAX_MANA, -1), "枯竭", "负层叫枯竭")
-	t.eq(StatAxes.name_of(StatAxes.ARMOR, 1), "格挡", "防护轴正层叫格挡（作者定）")
-	t.eq(StatAxes.name_of(StatAxes.ARMOR, -1), "破绽", "负层叫破绽")
+	t.eq(StatAxes.name_of(StatAxes.BLOCK, 1), "加固", "格挡轴正层叫加固（153 改名，不和格挡本身撞名）")
+	t.eq(StatAxes.name_of(StatAxes.BLOCK, -1), "破绽", "负层叫破绽")
 
 
 ## 106 第五节：三条新轴的表自检 —— 它们是单位级 FLAT 轴，名字不许和别的轴撞
 static func run_new_axes_table(t: TestCase) -> void:
 	t.begin("106 第五节 · 表自检：防护 / 生命上限 / 法力上限都落在属性上、FLAT、不落到每件道具；全表名字不重复")
-	for axis in [StatAxes.ARMOR, StatAxes.MAX_HP, StatAxes.MAX_MANA]:
+	for axis in [StatAxes.BLOCK, StatAxes.MAX_HP, StatAxes.MAX_MANA]:
 		t.check(StatAxes.has(axis), "%s 在表里" % axis)
 		t.eq(StatAxes.mode_of(axis), StatAxes.Mode.FLAT, "%s 是固定值轴" % axis)
 		t.ne(StatAxes.stat_of(axis), &"", "%s 落在一项属性上" % axis)

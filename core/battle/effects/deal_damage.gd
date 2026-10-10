@@ -22,7 +22,7 @@ extends CombatEffect
 @export var damage_stat: StringName = &"damage"
 ## 伤害是否乘以来源 buff 的层数。「灼烧每层 2 点」用它
 @export var per_stack: bool = false
-## 106 第八节（作者定）：这一下算不算**直接伤害**（吃防护）。−1 = 按来源定（道具的规则 = 直接、buff 的规则 = 非直接），
+## 106 第八节（作者定）：这一下算不算**直接伤害**（吃格挡）。−1 = 按来源定（道具的规则 = 直接、buff 的规则 = 非直接），
 ## 0 / 1 = 强制非直接 / 直接 —— 作者说的「除非另行说明」就是这个口子，现有内容都不填
 @export var direct_override: int = -1
 

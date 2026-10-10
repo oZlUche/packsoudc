@@ -52,7 +52,10 @@ static func baseline_of(def: EnemyDef, tier: StrengthTier, content: Dictionary =
 	var over = content.get("base_stats", null)
 	if over is Dictionary:
 		for key in over:
-			b.base_stats[String(key)] = float(over[key])
+			var k := String(key)
+			if k == String(BattleStats.LEGACY_ARMOR):
+				k = String(BattleStats.BLOCK)     # 153：旧图里写的 armor（防护）当 block（格挡）读
+			b.base_stats[k] = float(over[key])
 	return b
 
 

@@ -34,7 +34,7 @@
           {
             "type": "shift_axis",
             "target": "OPPONENT",
-            "axis": "armor",
+            "axis": "block",
             "delta": -1
           }
         ]

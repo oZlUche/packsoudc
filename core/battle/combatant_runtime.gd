@@ -27,6 +27,11 @@ var item_tags: Dictionary = {}
 ## 标准轴（4.3，103 4e）：axis → [内容层, 系统层]，带符号；结算在 [method _rebuild] 末尾
 var axes: Dictionary = {}
 
+## 153（作者定）：格挡层 —— 每面盾一层（值 = 那面盾编译后的格挡），敌人基线的格挡算一层「天生」（uid 0）。
+## **只有最高的一层生效**，其余保留（最高那层没了就轮到次高）；格挡轴（加固 / 破绽）加在生效层之上。
+## `{uid: int, id: StringName（道具 def id，天生是 &"innate"）, value: int（定点）}`，按值从高到低
+var block_layers: Array[Dictionary] = []
+
 var _merged: StatSet = null
 var _merged_items: Dictionary = {}
 var _dirty: bool = true
@@ -53,7 +58,12 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 			rt.item_links[it.source_uid] = it.linked_uids
 		if not it.tags.is_empty():
 			rt.item_tags[it.source_uid] = it.tags
+		var blk := it.stats.total_of(BattleStats.BLOCK)
+		if blk > 0:
+			rt.block_layers.append({"uid": it.source_uid, "id": it.def_id, "value": blk})
 		for key in it.stats.keys():
+			if key == BattleStats.BLOCK:
+				continue     # 153：格挡不跨件相加，每面盾是一层
 			# **乘法单位元类属性不能跨物品累加。** haste 每件都是 1.0，
 			# 逐件相加会得出「N 件物品 = N 倍速度」；而且单位级 haste 的含义是
 			# 「不属于任何物品的规则（套装、buff）用什么速率」，本就该是 1.0 起。
@@ -61,6 +71,13 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 				continue
 			rt.base.ensure(key).base += it.stats.total_of(key)
 	rt.base.ensure(BattleStats.MAX_HP).base = spec.max_hp
+	# 153：基线的格挡（敌人天生的）也是一层，和盾一起取最高；单位表里不再留这一项
+	var innate := rt.base.total_of(BattleStats.BLOCK)
+	if innate > 0:
+		rt.block_layers.append({"uid": 0, "id": &"innate", "value": innate})
+	rt.base.erase(BattleStats.BLOCK)
+	rt.block_layers.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a["value"]) > int(b["value"]) or (int(a["value"]) == int(b["value"]) and int(a["uid"]) < int(b["uid"])))
 	rt.undying_sec = StatMath.from_float(spec.undying_sec)     # 093：蛮神 4 级
 	# 105：编译期带来的轴层数种进**系统层**（103 第 6 条：常驻加成不是 buff、不走净化）
 	for axis in spec.axes:
@@ -124,8 +141,15 @@ func _rebuild() -> void:
 			(mod as StatModifier).apply_to(_merged, buff.stacks)
 			for uid in _merged_items:
 				(mod as StatModifier).apply_to(_merged_items[uid], buff.stacks)
+	if not block_layers.is_empty():     # 153：生效的那层（最高），轴的修正在 _apply_axes 里加上去
+		_merged.ensure(BattleStats.BLOCK).base = block_effective_layer()
 	_apply_axes()
 	_sync_resource_maxes()
+
+
+## 153：生效的那层格挡（最高；没有层 = 0）
+func block_effective_layer() -> int:
+	return maxi(0, int(block_layers[0]["value"])) if not block_layers.is_empty() else 0
 
 
 #region 标准轴
@@ -473,4 +497,10 @@ func snapshot() -> Dictionary:
 	for a in axes:
 		if axis_total(a) != 0 or axis_system(a) != 0:
 			axis_snap[String(a)] = [axis_stacks(a), axis_system(a)]
-	return {"side": side, "resources": resources.snapshot(), "buffs": buff_snap, "axes": axis_snap}
+	var layers: Array = []
+	for l in block_layers:
+		layers.append({"uid": int(l["uid"]), "id": String(l["id"]), "value": int(l["value"])})
+	var out := {"side": side, "resources": resources.snapshot(), "buffs": buff_snap, "axes": axis_snap}
+	if not layers.is_empty():
+		out["block_layers"] = layers     # 153
+	return out

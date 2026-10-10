@@ -24,7 +24,7 @@
     {
       "mods": [
         {
-          "stat": "armor",
+          "stat": "block",
           "amount": 4.0
         }
       ]
@@ -49,7 +49,7 @@
   ],
   "combat": {
     "base_stats": {
-      "armor": 15
+      "block": 15
     },
     "rules": [
       {

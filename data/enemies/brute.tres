@@ -12,7 +12,7 @@ display_names = {
 strength = 2
 schools = Array[StringName]([&"burst", &"bleed"])
 base_stats = {
-"armor": 3,
+"block": 3,
 "max_hp": 50
 }
 item_tags = Array[StringName]([&"barbarian", &"bleed", &"burst", &"gear", &"remedy"])

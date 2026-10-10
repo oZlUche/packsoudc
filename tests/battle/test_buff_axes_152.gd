@@ -71,8 +71,8 @@ static func run_content(t: TestCase) -> void:
 		t.check(text.contains("【强攻】1 层（造成的伤害 +3%）") and text.contains("【加速】1 层（攻速 +3%）"), "词条：%s" % text)
 	var mark := BuffDef.new()
 	mark.id = &"t_mark"
-	mark.axes.append(BuffAxis.make(StatAxes.ARMOR, -3))
-	t.check(Glossary.describe_buff(mark).contains("【破绽】3 层（防护 −3）"), "负层用反名、折成多少写清：%s" % Glossary.describe_buff(mark))
+	mark.axes.append(BuffAxis.make(StatAxes.BLOCK, -3))
+	t.check(Glossary.describe_buff(mark).contains("【破绽】3 层（格挡 −3）"), "负层用反名、折成多少写清：%s" % Glossary.describe_buff(mark))
 
 
 static func run_import(t: TestCase) -> void:
@@ -153,7 +153,7 @@ static func frame_editor(t: TestCase, root: Window) -> void:
 			picked = true
 	t.check(picked, "轴字段是下拉，显示正名 / 反名")
 	t.check(BuffAxis.make(StatAxes.ATTACK_SPEED, 1).editor_hint().contains("攻速"), "灰字：%s" % BuffAxis.make(StatAxes.ATTACK_SPEED, 1).editor_hint())
-	t.eq(PropertyForm.axis_label("armor"), "格挡 / 破绽 (armor)", "下拉的显示名")
+	t.eq(PropertyForm.axis_label("block"), "加固 / 破绽 (block)", "下拉的显示名")
 	ed.queue_free()
 	UiText.lang = before
 

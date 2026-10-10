@@ -101,8 +101,37 @@
           "max_shares": 5,
           "mods": [
             {
-              "stat": "armor",
+              "stat": "block",
               "amount": 1.0
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "shield"
+      ]
+    },
+    {
+      "min_cells": 5,
+      "name_prefix": "大地之神赐福的",
+      "name_prefix_en": "Earth-blessed ",
+      "faith_bonuses": [
+        {
+          "mode": "active",
+          "mods": [
+            {
+              "stat": "max_stamina",
+              "amount": 5.0
+            }
+          ]
+        },
+        {
+          "mode": "scaled",
+          "max_shares": 5,
+          "mods": [
+            {
+              "stat": "max_shield",
+              "amount": 4.0
             }
           ]
         }

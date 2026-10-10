@@ -19,8 +19,13 @@ const HASTE := &"haste"
 ## 最大生命值
 const MAX_HP := &"max_hp"
 
-## 护甲，减伤用
-const ARMOR := &"armor"
+## 153（作者定）：格挡 —— 盾牌专属的固定减伤，每次直接伤害减这么多。原名 armor（防护）。
+## **不跨件相加**：每面盾一层，只取最高（[member CombatantRuntime.block_layers]），再加格挡轴（加固 / 破绽）
+const BLOCK := &"block"
+## 改名前的键：导入器当 [constant BLOCK] 读并提醒改名
+const LEGACY_ARMOR := &"armor"
+## 盾牌的标签：只有它能给格挡
+const SHIELD_TAG := &"shield"
 
 ## 资源的上限属性统一以 max_ 开头。
 ##

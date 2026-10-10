@@ -85,7 +85,7 @@
       ],
       "stat_scale": {
         "max_hp": 1.9,
-        "armor": 1.25
+        "block": 1.25
       },
       "bags": [
         "bag_leather",
@@ -105,7 +105,7 @@
       ],
       "stat_scale": {
         "max_hp": 2.4,
-        "armor": 1.75
+        "block": 1.75
       },
       "bags": [
         "bag_leather",

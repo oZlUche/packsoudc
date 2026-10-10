@@ -32,9 +32,9 @@ script = ExtResource("7_b3xut")
 metadata/part_ref = &"deal_damage"
 
 [sub_resource type="Resource" id="Resource_oti8u"]
-script = ExtResource("1_crked")
-stat = &"armor"
-amount = -3.0
+script = ExtResource("8_nxyqp")
+axis = &"block"
+stacks = -3
 
 [sub_resource type="Resource" id="Resource_77af5"]
 script = ExtResource("9_h1622")
@@ -46,7 +46,7 @@ display_names = {
 is_debuff = true
 stackable = false
 duration_sec = 8.0
-mods = Array[ExtResource("1_crked")]([SubResource("Resource_oti8u")])
+axes = Array[ExtResource("8_nxyqp")]([SubResource("Resource_oti8u")])
 
 [sub_resource type="Resource" id="Resource_hoprw"]
 script = ExtResource("10_73hxw")

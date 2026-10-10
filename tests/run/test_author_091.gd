@@ -312,7 +312,7 @@ static func frame_stat_key_picker(t: TestCase, root: Window) -> void:
 	var saved := UiText.lang
 	UiText.lang = "zh"
 	var known := PropertyForm.known_stat_keys()
-	t.check(known.has("damage") and known.has("armor") and known.has("max_hp") and known.has("haste"), "认得战斗属性常量（%d 个）" % known.size())
+	t.check(known.has("damage") and known.has("block") and known.has("max_hp") and known.has("haste"), "认得战斗属性常量（%d 个）" % known.size())
 	t.check(known.has("max_shield") and known.has("regen_stamina"), "词典里有名字的也在")
 	var sorted := known.duplicate()
 	sorted.sort()
@@ -338,14 +338,14 @@ static func frame_stat_key_picker(t: TestCase, root: Window) -> void:
 	for i in ob.item_count:
 		listed.append(String(ob.get_item_tooltip(i)))
 	t.check(not listed.has("damage"), "已有的 damage 不再列出")
-	t.check(listed.has("armor") and listed.has("max_hp"), "没写的属性都在")
+	t.check(listed.has("block") and listed.has("max_hp"), "没写的属性都在")
 	t.check(ob.get_item_text(ob.item_count - 1) == "自定义…", "最后一项是自定义")
 	t.check(not custom.visible, "默认不露输入框")
-	var armor_at := listed.find("armor")
+	var armor_at := listed.find("block")
 	ob.select(armor_at)
 	ob.item_selected.emit(armor_at)
 	add_btn.pressed.emit()
-	t.check(profile.base_stats.has("armor") and profile.base_stats["armor"] is float and profile.base_stats["armor"] == 0.0, "挑「防护」加一项：armor = 0.0")
+	t.check(profile.base_stats.has("block") and profile.base_stats["block"] is float and profile.base_stats["block"] == 0.0, "挑「格挡」加一项：armor = 0.0")
 	# 重建后再加自定义
 	box.queue_free()
 	box = form._dict_editor(profile, "base_stats", profile.base_stats)
@@ -362,13 +362,13 @@ static func frame_stat_key_picker(t: TestCase, root: Window) -> void:
 	add_btn.pressed.emit()
 	t.check(profile.base_stats.has("my_power"), "自定义键加进去了")
 	t.check(not PropertyForm._is_stat_dict("type_weights", {"battle": 3.0}), "节点类型权重不算属性表")
-	t.check(PropertyForm._is_stat_dict("weights", {"damage": 1.0, "armor": 2.0}), "键全是已知属性就算")
+	t.check(PropertyForm._is_stat_dict("weights", {"damage": 1.0, "block": 2.0}), "键全是已知属性就算")
 	box.queue_free()
 	form.queue_free()
 
 	# 修饰的 stat：下拉，当前值选中
 	var m := StatModifier.new()
-	m.stat = &"armor"
+	m.stat = &"block"
 	var mf := PropertyForm.create(m, UiPalette.cjk_font())
 	root.add_child(mf)
 	var hits: Array = []     # lambda 里改数组（按引用）；对象变量会被按值捕获
@@ -381,7 +381,7 @@ static func frame_stat_key_picker(t: TestCase, root: Window) -> void:
 	var found_ob: OptionButton = hits[0] if not hits.is_empty() else null
 	t.check(found_ob != null, "stat 字段是下拉")
 	if found_ob != null:
-		t.eq(String(found_ob.get_item_tooltip(found_ob.get_selected())), "armor", "当前值选中")
+		t.eq(String(found_ob.get_item_tooltip(found_ob.get_selected())), "block", "当前值选中")
 		var dmg := -1
 		for i in found_ob.item_count:
 			if String(found_ob.get_item_tooltip(i)) == "damage":
@@ -422,13 +422,13 @@ static func frame_stat_key_picker(t: TestCase, root: Window) -> void:
 		t.eq(rc.amount_stat, &"", "没碰就没写成别的")
 		var armor_i := -1
 		for i in opt.item_count:
-			if String(opt.get_item_tooltip(i)) == "armor":
+			if String(opt.get_item_tooltip(i)) == "block":
 				armor_i = i
-		t.check(armor_i > 0, "列表里有防护")
+		t.check(armor_i > 0, "列表里有格挡")
 		opt.select(armor_i)
 		opt.item_selected.emit(armor_i)
-		t.eq(rc.amount_stat, &"armor", "选 armor 写成 armor")
-		t.eq(PropertyForm._picked_stat(opt.get_parent()), "armor", "读回 armor")
+		t.eq(rc.amount_stat, &"block", "选 armor 写成 armor")
+		t.eq(PropertyForm._picked_stat(opt.get_parent()), "block", "读回 armor")
 		opt.select(0)
 		opt.item_selected.emit(0)
 		t.eq(rc.amount_stat, &"", "再选回「不用」写回空")

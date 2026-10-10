@@ -128,3 +128,13 @@ block   = 生效层 + 格挡轴层数（内容层 + 系统层，带符号）
 | 测试见 3.6 | |
 
 约束提醒：测试 121 的 `add_theme_` 配额已满（135 / 135），新常驻格复用轴格的画法，不新增主题覆写。
+
+## 8. 落地记录（2026-10-10）
+
+五项待定都按推荐落地，和方案的差别：
+
+- **没加 `CombatantSpec.block_layers` / `BlockLayer` 类**：层在 `CombatantRuntime.from_spec` 里直接从各件的 `stats.block` 收（`{uid, id, value}`，天生的 uid 0、id `innate`），编译器不用改。快照 `snapshot.block_layers` 带给回放面板。
+- **预设图也有格挡**：`data/maps/prologue.json`、`tutorial2.json` 的教程敌人在节点内容里写死了 `base_stats.armor`（2、3、12、3），不走导入器。键改成 `block`；`EnemyKit.baseline_of` 读到旧键 `armor` 也当 `block`（玩家旧存档里的节点内容）。持符者天生 12 是一层，它没有盾，所以数不变（序章二的克制测试照过）。
+- 校验：非盾 `base_stats.block`、非盾 `faith_bonuses` 碰 `block` → error；buff 的 mods 改 `block` → error（指向 `axes`）；非盾自己的规则给自己正向加固 → warn；赐福给格挡的那一条标签必须只有 `shield`。旧键 `armor`（基础属性、档位表、修饰的 stat、轴字段）当 `block` 读并 warn。
+- 估算器的权重 `armor_per_point` 改名 `block_per_point`（数不变）。
+- 测试：新增 `tests/battle/test_block_153.gd`（层与取最高、伤害管线、导入、内容、回放面板）；老测试里的 `armor` 键与「跨件求和」的断言改成格挡与「取最高」。

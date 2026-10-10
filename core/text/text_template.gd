@@ -236,11 +236,14 @@ static func _format(v: Variant, filter: String) -> Variant:
 
 ## 104：`{item_stat:<道具 id>:<字段>}` —— 教程文本引用**别的道具**的数（「塔盾每下减 4」）。从道具定义里找：
 ## 先 `combat` 再整份定义，深度优先；遇到 `stat` 是这个名字的属性修饰取它的 `amount`，否则取同名的数值字段 / 字典键
-## （`base_stats` 的 `armor`、伤害修正的 `flat`）。道具库用 ctx 的 `_items`（[method context_for] 放进去），没有就自己读一份
+## （`base_stats` 的 `block`、伤害修正的 `flat`）。道具库用 ctx 的 `_items`（[method context_for] 放进去），没有就自己读一份。
+## 153：旧字段名 `armor` 当 `block` 找（防护改名格挡）
 static func _item_stat(token: String, ctx: Dictionary) -> Variant:
 	var parts := token.split(":")
 	if parts.size() != 3:
 		return null
+	if parts[2] == String(BattleStats.LEGACY_ARMOR):
+		parts[2] = String(BattleStats.BLOCK)
 	var def := _items_of(ctx).get_def(StringName(parts[1]))
 	if def == null:
 		return null

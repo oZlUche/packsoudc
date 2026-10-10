@@ -264,8 +264,8 @@ static func run_gear(t: TestCase) -> void:
 	shield.tags = [&"shield"] as Array[StringName]
 	shield.shape = ItemShape.from_bits("11111")
 	shield.combat = CombatProfile.new()
-	shield.combat.base_stats = {"armor": 5.0}
-	t.eq(PowerEstimate.estimate(shield, w).defense, 5.0 * w.armor_per_point, "防护 5 × 每点折算")
+	shield.combat.base_stats = {"block": 5.0}
+	t.eq(PowerEstimate.estimate(shield, w).defense, 5.0 * w.block_per_point, "格挡 5 × 每点折算")
 	var trinket := ItemDef.new()
 	trinket.id = &"test_trinket"
 	trinket.shape = ItemShape.from_bits("1")

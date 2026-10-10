@@ -46,7 +46,7 @@ func apply(ctx: RuleContext) -> void:
 			continue     # 087：倒下的不吃治疗、不扣资源（倒下是终局）
 		if value < 0 and resource_key == BattleStats.RES_HP:
 			# 106 第八节：以血为代价（超频、献祭）不是武器打出来的，所以**不是直接伤害** ——
-			# 防护不该把自己割的那一刀挡掉。这正是作者说的「另行说明」那一类
+			# 格挡不该把自己割的那一刀挡掉。这正是作者说的「另行说明」那一类
 			DamageResolver.deal(ctx.battle, who, -value, loss_type, ctx.owner.side, ctx.source_uid(), false)
 			continue
 		var actual := who.resources.change(

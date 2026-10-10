@@ -29,7 +29,7 @@ mods = Array[ExtResource("3_af1s0")]([SubResource("Resource_p7i6f")])
 
 [sub_resource type="Resource" id="Resource_2gm7o"]
 script = ExtResource("3_af1s0")
-stat = &"armor"
+stat = &"block"
 amount = 1.0
 
 [sub_resource type="Resource" id="Resource_b4lvr"]
@@ -40,61 +40,89 @@ mods = Array[ExtResource("3_af1s0")]([SubResource("Resource_2gm7o")])
 
 [sub_resource type="Resource" id="Resource_pdjtl"]
 script = ExtResource("1_umqo0")
-tags = Array[StringName]([&"gear", &"armor", &"shield", &"nature"])
+tags = Array[StringName]([&"shield"])
 name_prefix = "自然之神赐福的"
 name_prefix_en = "Nature-blessed "
 faith_bonuses = Array[ExtResource("2_f54du")]([SubResource("Resource_evm5s"), SubResource("Resource_b4lvr")])
 
 [sub_resource type="Resource" id="Resource_iyhxd"]
+script = ExtResource("3_af1s0")
+stat = &"max_hp"
+amount = 3.0
+
+[sub_resource type="Resource" id="Resource_rc0lb"]
+script = ExtResource("2_f54du")
+mode = "active"
+mods = Array[ExtResource("3_af1s0")]([SubResource("Resource_iyhxd")])
+
+[sub_resource type="Resource" id="Resource_4tdp6"]
+script = ExtResource("3_af1s0")
+stat = &"max_shield"
+amount = 4.0
+
+[sub_resource type="Resource" id="Resource_j1itm"]
+script = ExtResource("2_f54du")
+mode = "scaled"
+max_shares = 5
+mods = Array[ExtResource("3_af1s0")]([SubResource("Resource_4tdp6")])
+
+[sub_resource type="Resource" id="Resource_crdnu"]
+script = ExtResource("1_umqo0")
+tags = Array[StringName]([&"gear", &"armor", &"nature"])
+name_prefix = "自然之神赐福的"
+name_prefix_en = "Nature-blessed "
+faith_bonuses = Array[ExtResource("2_f54du")]([SubResource("Resource_rc0lb"), SubResource("Resource_j1itm")])
+
+[sub_resource type="Resource" id="Resource_iwddf"]
 script = ExtResource("6_id2kt")
 tag = &"nature"
 cap = 30
 amount = 3
 
-[sub_resource type="Resource" id="Resource_rc0lb"]
+[sub_resource type="Resource" id="Resource_y2185"]
 script = ExtResource("7_ieyfc")
 cap = 30
 
-[sub_resource type="Resource" id="Resource_4tdp6"]
+[sub_resource type="Resource" id="Resource_rvx17"]
 script = ExtResource("8_7tdnj")
 tags = Array[StringName]([&"nature"])
 multiplier = 5.0
 
-[sub_resource type="Resource" id="Resource_j1itm"]
+[sub_resource type="Resource" id="Resource_4n321"]
 script = ExtResource("8_7tdnj")
 tags = Array[StringName]([&"food"])
 multiplier = 5.0
 
-[sub_resource type="Resource" id="Resource_crdnu"]
+[sub_resource type="Resource" id="Resource_xocq3"]
 script = ExtResource("8_7tdnj")
 tags = Array[StringName]([&"gear", &"armor", &"shield"])
 multiplier = 5.0
 
-[sub_resource type="Resource" id="Resource_iwddf"]
+[sub_resource type="Resource" id="Resource_jn2h1"]
 script = ExtResource("10_r7t77")
 
-[sub_resource type="Resource" id="Resource_y2185"]
+[sub_resource type="Resource" id="Resource_0id3l"]
 script = ExtResource("3_af1s0")
 stat = &"regen_hp"
 amount = 1.0
 
-[sub_resource type="Resource" id="Resource_rvx17"]
+[sub_resource type="Resource" id="Resource_v5mmx"]
 script = ExtResource("11_0s07h")
-mods = Array[ExtResource("3_af1s0")]([SubResource("Resource_y2185")])
+mods = Array[ExtResource("3_af1s0")]([SubResource("Resource_0id3l")])
 
-[sub_resource type="Resource" id="Resource_4n321"]
+[sub_resource type="Resource" id="Resource_8h4p0"]
 script = ExtResource("12_kwpnb")
 tier = 2
 
-[sub_resource type="Resource" id="Resource_xocq3"]
+[sub_resource type="Resource" id="Resource_tq4up"]
 script = ExtResource("13_2c21y")
 tier = 3
 
-[sub_resource type="Resource" id="Resource_jn2h1"]
+[sub_resource type="Resource" id="Resource_sdixq"]
 script = ExtResource("14_nrib4")
 tier = 4
 
-[sub_resource type="Resource" id="Resource_0id3l"]
+[sub_resource type="Resource" id="Resource_aabvh"]
 script = ExtResource("15_28ndt")
 tier = 5
 
@@ -108,7 +136,7 @@ display_names = {
 god = "自然之神（回归、容纳、变化）"
 description = "和生命密切相关，帝国诸神之一，信徒分布极为宽广，祭祀繁多，影响力很大"
 thresholds = Array[int]([25, 80, 150, 400, 800])
-deeds = Array[ExtResource("5_y45hm")]([SubResource("Resource_iyhxd"), SubResource("Resource_rc0lb")])
-offerings = Array[ExtResource("8_7tdnj")]([SubResource("Resource_4tdp6"), SubResource("Resource_j1itm"), SubResource("Resource_crdnu")])
-perks = Array[ExtResource("9_gh7p0")]([SubResource("Resource_iwddf"), SubResource("Resource_rvx17"), SubResource("Resource_4n321"), SubResource("Resource_xocq3"), SubResource("Resource_jn2h1"), SubResource("Resource_0id3l")])
-blessings = Array[ExtResource("1_umqo0")]([SubResource("Resource_pdjtl")])
+deeds = Array[ExtResource("5_y45hm")]([SubResource("Resource_iwddf"), SubResource("Resource_y2185")])
+offerings = Array[ExtResource("8_7tdnj")]([SubResource("Resource_rvx17"), SubResource("Resource_4n321"), SubResource("Resource_xocq3")])
+perks = Array[ExtResource("9_gh7p0")]([SubResource("Resource_jn2h1"), SubResource("Resource_v5mmx"), SubResource("Resource_8h4p0"), SubResource("Resource_tq4up"), SubResource("Resource_sdixq"), SubResource("Resource_aabvh")])
+blessings = Array[ExtResource("1_umqo0")]([SubResource("Resource_pdjtl"), SubResource("Resource_crdnu")])

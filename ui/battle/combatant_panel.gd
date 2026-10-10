@@ -37,6 +37,13 @@ const PASSIVE_PREFIX := "passive:"
 ## 103：标准轴的格（4.3）：`axis:<轴>`，值是内容层的带符号层数；加时的「鏖战 ×n」格是 OVERTIME_CHIP
 const AXIS_PREFIX := "axis:"
 const OVERTIME_CHIP := "system:overtime"
+## 153（作者定）：常驻的「格挡 N」格 —— N = 生效的那层（几面盾取最高）+ 加固 / 破绽（轴内容层 + 身上 buff 带的）。
+## 格挡轴不另画一格，并进这一格；悬浮窗列各层与修正
+const BLOCK_CHIP := "system:block"
+## 153：开战快照里的格挡层 `[{uid, id, value（取整后）}]`，从高到低
+var block_layers: Array = []
+## 格挡轴的内容层（[method set_axis] 收进来，不另画格）
+var _block_axis: int = 0
 ## 现在画着的图标：[Rect2, id]
 var _chips: Array = []
 var _hover_id: String = ""
@@ -100,6 +107,8 @@ func chip_at(local: Vector2) -> String:
 func icon_of(id: String) -> String:
 	if id == OVERTIME_CHIP:
 		return "鏖"
+	if id == BLOCK_CHIP:
+		return "格"
 	if id.begins_with(AXIS_PREFIX):
 		return StatAxes.name_of(axis_of(id), int(_stacks.get(id, 0))).substr(0, 1)
 	var note := passive_of(id)
@@ -144,6 +153,8 @@ func ordered_ids() -> Array:
 func _group_of(id: String) -> int:
 	if id == OVERTIME_CHIP:
 		return 0
+	if id == BLOCK_CHIP:
+		return 1 if block_value() < 0 else 2
 	if id.begins_with(AXIS_PREFIX):
 		return 1 if is_bad_axis(id) else 2
 	var def: BuffDef = buff_defs.get(StringName(id), null)
@@ -162,6 +173,8 @@ func is_bad_axis(id: String) -> bool:
 
 ## 图标上的字 + 层数。不可叠层的不画 ×1（103）；常驻格的层数是阶 / 档位，一律画；轴格画 ×|层数|
 func chip_text(id: String) -> String:
+	if id == BLOCK_CHIP:
+		return "%s %d" % [icon_of(id), block_value()]
 	if id.begins_with(AXIS_PREFIX):
 		return "%s ×%d" % [icon_of(id), absi(int(_stacks.get(id, 0)))]
 	if passive_of(id) != null:
@@ -184,6 +197,11 @@ func reset(snapshot: Dictionary) -> void:
 	for key in res:
 		var pair: Array = res[key]
 		_resources[String(key)] = [int(pair[0]), int(pair[1])]
+	block_layers.clear()
+	for l in snapshot.get("block_layers", []):
+		block_layers.append({"uid": int(l["uid"]), "id": String(l["id"]), "value": StatMath.to_int(int(l["value"]))})
+	_block_axis = 0
+	_refresh_block()
 	queue_redraw()
 
 
@@ -193,19 +211,30 @@ func set_resource(key: String, current: int, maximum: int) -> void:
 
 
 func set_stacks(buff: String, stacks: int) -> void:
-	if stacks <= 0:
-		_stacks.erase(buff)
-		_arrival.erase(buff)
-	else:
-		if not _stacks.has(buff):
-			_arrivals += 1
-			_arrival[buff] = _arrivals
-		_stacks[buff] = stacks
+	_set_chip(buff, stacks)
+	if buff != BLOCK_CHIP:
+		_refresh_block()     # buff 可能带格挡轴（弹开、标记）
 	queue_redraw()
+
+
+func _set_chip(id: String, stacks: int) -> void:
+	if stacks <= 0:
+		_stacks.erase(id)
+		_arrival.erase(id)
+	else:
+		if not _stacks.has(id):
+			_arrivals += 1
+			_arrival[id] = _arrivals
+		_stacks[id] = stacks
 
 
 ## 103：标准轴的内容层（带符号）。0 就收起这一格
 func set_axis(axis: String, stacks: int) -> void:
+	if StringName(axis) == StatAxes.BLOCK:     # 153：并进格挡格
+		_block_axis = stacks
+		_refresh_block()
+		queue_redraw()
+		return
 	var id := AXIS_PREFIX + axis
 	if stacks == 0:
 		_stacks.erase(id)
@@ -224,7 +253,42 @@ func set_overtime(count: int) -> void:
 
 
 func axis_value(axis: StringName) -> int:
+	if axis == StatAxes.BLOCK:
+		return _block_axis
 	return int(_stacks.get(AXIS_PREFIX + String(axis), 0))
+
+
+## 153：身上 buff 带的格挡轴层数（弹开 +8、标记 −3 ……）
+func block_carried() -> int:
+	var n := 0
+	for id in _stacks:
+		var def: BuffDef = buff_defs.get(StringName(id), null)
+		if def != null and not def.axes.is_empty():
+			n += def.axis_stacks_per(StatAxes.BLOCK) * int(_stacks[id])
+	return n
+
+
+## 153：生效的那层（最高；没有层 = 0）
+func block_layer() -> int:
+	return maxi(0, int(block_layers[0]["value"])) if not block_layers.is_empty() else 0
+
+
+## 现在的格挡 = 生效层 + 加固 / 破绽（轴的内容层 + buff 带的；系统层内容里没有人给）
+func block_value() -> int:
+	return block_layer() + _block_axis + block_carried()
+
+
+## 有层或有修正就画「格挡 N」格（N 可以是 0 或负数：负是破绽）
+func _refresh_block() -> void:
+	var show := not block_layers.is_empty() or _block_axis != 0 or block_carried() != 0
+	if not show:
+		_stacks.erase(BLOCK_CHIP)
+		_arrival.erase(BLOCK_CHIP)
+		return
+	if not _stacks.has(BLOCK_CHIP):
+		_arrivals += 1
+		_arrival[BLOCK_CHIP] = _arrivals
+	_stacks[BLOCK_CHIP] = block_value()
 
 
 func mark_dead() -> void:

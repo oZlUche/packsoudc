@@ -20,9 +20,9 @@ script = ExtResource("3_4jajr")
 metadata/part_ref = &"always"
 
 [sub_resource type="Resource" id="Resource_db85r"]
-script = ExtResource("1_cf17m")
-stat = &"armor"
-amount = 8.0
+script = ExtResource("6_seitx")
+axis = &"block"
+stacks = 8
 
 [sub_resource type="Resource" id="Resource_vi1ei"]
 script = ExtResource("7_i8p28")
@@ -33,7 +33,7 @@ display_names = {
 }
 stackable = false
 duration_sec = 4.0
-mods = Array[ExtResource("1_cf17m")]([SubResource("Resource_db85r")])
+axes = Array[ExtResource("6_seitx")]([SubResource("Resource_db85r")])
 
 [sub_resource type="Resource" id="Resource_md8cq"]
 script = ExtResource("8_ln6vm")
@@ -53,13 +53,13 @@ effects = Array[ExtResource("5_o32o2")]([SubResource("Resource_md8cq")])
 [sub_resource type="Resource" id="Resource_1m5cu"]
 script = ExtResource("10_y2exc")
 base_stats = {
-"armor": 15
+"block": 15
 }
 rules = Array[ExtResource("2_dql6g")]([SubResource("Resource_kci6v")])
 
 [sub_resource type="Resource" id="Resource_2jowl"]
 script = ExtResource("1_cf17m")
-stat = &"armor"
+stat = &"block"
 amount = 4.0
 
 [sub_resource type="Resource" id="Resource_ir1jj"]
@@ -71,9 +71,9 @@ script = ExtResource("3_4jajr")
 metadata/part_ref = &"always"
 
 [sub_resource type="Resource" id="Resource_m6jrt"]
-script = ExtResource("1_cf17m")
-stat = &"armor"
-amount = 4.0
+script = ExtResource("6_seitx")
+axis = &"block"
+stacks = 4
 
 [sub_resource type="Resource" id="Resource_qo1rn"]
 script = ExtResource("7_i8p28")
@@ -84,7 +84,7 @@ display_names = {
 }
 stackable = false
 duration_sec = 8.0
-mods = Array[ExtResource("1_cf17m")]([SubResource("Resource_m6jrt")])
+axes = Array[ExtResource("6_seitx")]([SubResource("Resource_m6jrt")])
 
 [sub_resource type="Resource" id="Resource_hpfcm"]
 script = ExtResource("8_ln6vm")

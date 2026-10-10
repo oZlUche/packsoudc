@@ -18,7 +18,7 @@ outcomes = Array[ExtResource("2_noc6n")]([SubResource("Resource_yyejs")])
 script = ExtResource("5_cdmbv")
 id = &"tut2_search_1_again"
 title = "{item:tower_shield}"
-text = "翻出一面{item:tower_shield}：每挨一下固定减 {item_stat:tower_shield:armor} 点伤害。对付出手快、每下轻的对手，几乎打不痛你；对付一锤子 {item_stat:warhammer:damage} 点的，减那 {item_stat:tower_shield:armor} 点等于没减。
+text = "翻出一面{item:tower_shield}：每挨一下固定减 {item_stat:tower_shield:block} 点伤害。对付出手快、每下轻的对手，几乎打不痛你；对付一锤子 {item_stat:warhammer:damage} 点的，减那 {item_stat:tower_shield:block} 点等于没减。
 
 再搜一次。"
 options = Array[ExtResource("1_rwj8x")]([SubResource("Resource_lcxmc")])

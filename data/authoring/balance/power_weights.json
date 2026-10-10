@@ -26,5 +26,5 @@
   "tiers": [0.9, 1.35, 1.9, 2.8],
   "value_band": [0.8, 0.4],
   "shield_per_point": 0.5,
-  "armor_per_point": 3.2
+  "block_per_point": 3.2
 }

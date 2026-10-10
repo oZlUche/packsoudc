@@ -17,7 +17,7 @@
   ],
   "combat": {
     "base_stats": {
-      "armor": 5
+      "block": 5
     }
   }
 }

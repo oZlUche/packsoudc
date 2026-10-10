@@ -67,7 +67,7 @@ strength = 3
 item_count = Vector2i(6, 8)
 board = Vector2i(8, 5)
 stat_scale = {
-"armor": 1.5,
+"block": 1.5,
 "max_hp": 2
 }
 
