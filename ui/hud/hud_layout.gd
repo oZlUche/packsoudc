@@ -1,9 +1,11 @@
-## 150：一屏的读数摆法 —— 每件一条 `{id, anchor, offset, line, tier, visible}`。
+## 150：一屏的读数摆法 —— 每件一条 `{id, anchor, offset, line, tier, visible, debug_only}`。
 ##
 ## - `anchor`：九宫锚点（[constant ANCHORS]），`offset` 相对锚点（像素）。
 ## - 锚点与偏移都一样的几件是**一组**：按 `line` 分行（同一行按列表顺序横排，行与行往下排），整组按锚点对齐 ——
 ##   「倒计时在最上一行、读数一排在它下面」就是同一组的第 0 行与第 1 行；没内容的行收起来，下面的往上补。
 ##   拖开的一件拿到自己的偏移，就自成一组。
+## - `debug_only`（150 补 2）：只在调试模式（[member GameSettings.debug_mode]）下造；关着时宿主跳过它（不造、不占地上）。
+##   文件里没写就按默认布局里这件的值（日志是 true）。
 ## - 文件：`data/authoring/ui_layouts/<屏>.json`（开发版「保存布局」写这里，作者提交）；导出版写 `user://ui_layouts/<屏>.json`，先读它。
 ##   都没有 = [method default_for] 里写死的默认（就是 150 之前的样子）。不走内容管线：这份文件是游戏自己写的，存了立刻生效
 class_name HudLayout
@@ -26,7 +28,9 @@ var screen: String = "map"
 var entries: Array[Dictionary] = []
 
 
-## 150 之前地图屏的样子：倒计时顶上居中一行大字，下面一排读数
+## 150 之前地图屏的样子：倒计时顶上居中一行大字，下面一排读数；
+## 150 补 1：原来右栏里的东西（背包 / 回到这个点 / 撤离按钮、技能、回主菜单、路线、腰带）按原来的顺序竖排贴在右上，
+## 日志贴在右下（只在调试模式）
 static func default_for(p_screen: String) -> HudLayout:
 	var l := HudLayout.new()
 	l.screen = p_screen
@@ -34,11 +38,24 @@ static func default_for(p_screen: String) -> HudLayout:
 		l.entries.append(entry(&"countdown", "top", Vector2(0, 0), 0, "large"))
 		for id in [&"action_points", &"distances", &"vitality", &"wallet", &"ground_count", &"encumbrance", &"faith", &"buffs", &"erosion"]:
 			l.entries.append(entry(id, "top", Vector2(0, 0), 1, "small"))
+		var line := 0
+		for id in COLUMN:
+			l.entries.append(entry(id, "top_right", COLUMN_OFFSET, line))
+			line += 1
+		l.entries.append(entry(&"log", "bottom_right", LOG_OFFSET, 0, "small", true, true))
 	return l
 
 
-static func entry(id: StringName, anchor: String, offset: Vector2, line: int = 0, tier: String = "small", visible: bool = true) -> Dictionary:
-	return {"id": id, "anchor": anchor, "offset": offset, "line": line, "tier": tier, "visible": visible}
+## 默认布局里右上那一列（自上而下）与它离右上角的偏移（右上角是 DevNav 的按钮），日志离右下角的偏移
+const COLUMN: Array[StringName] = [&"dev_drawer", &"status", &"bag_button", &"reopen_button", &"extract_button", &"belt",
+	&"skills", &"menu_button", &"routes"]
+const COLUMN_OFFSET := Vector2(-8, 32)
+const LOG_OFFSET := Vector2(-8, -8)
+
+
+static func entry(id: StringName, anchor: String, offset: Vector2, line: int = 0, tier: String = "small", visible: bool = true,
+		debug_only: bool = false) -> Dictionary:
+	return {"id": id, "anchor": anchor, "offset": offset, "line": line, "tier": tier, "visible": visible, "debug_only": debug_only}
 
 
 #region 文件
@@ -98,6 +115,8 @@ func to_dict() -> Dictionary:
 			d["line"] = int(e["line"])
 		if not bool(e.get("visible", true)):
 			d["visible"] = false
+		if bool(e.get("debug_only", false)):
+			d["debug_only"] = true
 		out.append(d)
 	return {"screen": screen, "widgets": out}
 
@@ -112,6 +131,7 @@ static func from_dict(d: Dictionary, problems: Array[String] = []) -> HudLayout:
 		problems.append("widgets 得是一个列表")
 		return null
 	var seen := {}
+	var fallback := default_for(l.screen)
 	for i in (raw as Array).size():
 		var w: Variant = raw[i]
 		var at := "widgets[%d]" % i
@@ -134,7 +154,9 @@ static func from_dict(d: Dictionary, problems: Array[String] = []) -> HudLayout:
 		if not (off is Array and (off as Array).size() == 2 and (off[0] is float or off[0] is int) and (off[1] is float or off[1] is int)):
 			problems.append("%s：offset 得是两个数 [x, y]" % at)
 			off = [0, 0]
-		l.entries.append(entry(id, anchor, Vector2(float(off[0]), float(off[1])), int(w.get("line", 0)), tier, bool(w.get("visible", true))))
+		var debug_default := bool(fallback.entry_of(id).get("debug_only", false))
+		l.entries.append(entry(id, anchor, Vector2(float(off[0]), float(off[1])), int(w.get("line", 0)), tier, bool(w.get("visible", true)),
+			bool(w.get("debug_only", debug_default))))
 	return l if problems.size() == before else null
 
 

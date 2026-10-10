@@ -30,6 +30,10 @@ var bg_theme: String = ""
 var battle_speed: float = 1.0
 ## 117（作者定）：战斗的内部日志与回放存档（user://battle_logs）。非导出包默认开、导出包默认关（[method BattleArchive.default_on]）
 var battle_trace: bool = BattleArchive.default_on()
+## 150 补 2（作者定）：调试模式 —— 开着时地图屏摆出只给开发看的组件（事件日志等，布局里 `debug_only` 的那几件）。
+## 现在默认开；发布版把这里的默认改成关（一处改）
+var debug_mode: bool = DEBUG_MODE_DEFAULT
+const DEBUG_MODE_DEFAULT := true
 
 
 func to_dict() -> Dictionary:
@@ -43,6 +47,7 @@ func to_dict() -> Dictionary:
 		"bg_theme": bg_theme,
 		"battle_speed": battle_speed,
 		"battle_trace": battle_trace,
+		"debug_mode": debug_mode,
 	}
 
 
@@ -59,6 +64,7 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	s.bg_theme = String(d.get("bg_theme", ""))     # 认不认得由界面管（101 第 5 刀）
 	s.battle_speed = normalize_speed(float(d.get("battle_speed", 1.0)))
 	s.battle_trace = bool(d.get("battle_trace", BattleArchive.default_on()))
+	s.debug_mode = bool(d.get("debug_mode", DEBUG_MODE_DEFAULT))
 	return s
 
 

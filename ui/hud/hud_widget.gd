@@ -59,6 +59,11 @@ func title() -> String:
 	return String(id)
 
 
+## 宿主换掉这件之前叫它（150 补 1：装着屏幕那块控件的组件把控件还回去，别跟着组件一起释放）
+func release() -> void:
+	pass
+
+
 ## 子类可改：文字以外的画法（倒计时的颜色随剩余变）
 func _paint() -> void:
 	pass

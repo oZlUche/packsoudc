@@ -1,13 +1,19 @@
 ## 地图屏（M6）：一局的主屏。挑出生点 → 点相邻的点走一步 → 事件由 [GameFlow] 排成叠层一屏一屏来 → 撤离。
 ##
-## 它是当年地图沙盒（M3-6 → M5，066 删了）的正式版：同一个 [MapView]，同一份 HUD，日志在右栏；沙盒的换种子 / 重开 / 读档在这里没有，
+## 它是当年地图沙盒（M3-6 → M5，066 删了）的正式版：同一个 [MapView]，同一份 HUD；沙盒的换种子 / 重开 / 读档在这里没有，
 ## 那些是开局屏与主菜单的事。「背包」把整理面板叠在地图上，随时开；撤离按钮只在撤离点上亮。
 ## 所有动作都是公开方法，鼠标只是调它们；测试直接调。
+## 150 补 1：原来的右栏没了 —— 按钮、技能、路线、日志、调试台箭头都是这一屏的「部件」（[method hud_part]），装进读数层的组件里按布局摆；
+## 默认布局把它们按原来的顺序竖排在右边，地图往左让出那一条的宽（[method HudHost.right_inset]）
 extends GameScreen
 
 const SettingsScreenScript := preload("res://ui/game/settings_screen.gd")
 const EncyclopediaScreenScript := preload("res://ui/game/encyclopedia_screen.gd")
-const SIDE_WIDTH := 400     # 090：右栏三个按键放大到 300%，栏也加宽
+## 原来右栏的宽（090：三个按键放大到 300%，栏也加宽）；150 补 1 之后是右边那一列部件的宽
+const SIDE_WIDTH := 400
+const PART_WIDTH := SIDE_WIDTH - 24
+## 日志那一块的高（原来铺满右栏剩下的；现在是一件组件，默认贴右下）
+const LOG_HEIGHT := 220
 
 var _run: RunState = null
 var _view: MapView
@@ -18,6 +24,7 @@ var _hud_spacer: Control
 ## 150：调试台抽屉（139 那个），里面是「摆读数」
 var _drawer: DevDrawer = null
 var _hud_edit_btn: Button = null
+var _debug_line: Label = null
 var _preview: Label
 var _enemy_line: Label
 var _status: Label
@@ -26,6 +33,11 @@ var _log: RichTextLabel
 var _extract_btn: Button
 var _reopen_btn: Button
 var _skills_box: VBoxContainer
+## 150 补 1：这一屏交给读数层摆的部件（id → 控件）；没被组件领走的（调试模式关着时的日志）挂在藏着的架子上，照样在
+var _parts: Dictionary = {}
+var _shelf: Control = null
+## 地图那一竖排（右边让出 [method HudHost.right_inset]）
+var _mid: Control = null
 var _bag: Control = null
 var _bag_panel: Control = null
 var _confirm: Control = null
@@ -258,6 +270,7 @@ func close_pause_settings() -> void:
 		_pause_settings.queue_free()
 		_pause_settings = null
 	refresh_backdrop()     # 091：设置里可能换了底色
+	apply_debug_mode()     # 150 补 2：设置里可能开关了调试模式
 
 
 func settings_open() -> bool:
@@ -339,6 +352,7 @@ func _adopt() -> void:
 		_after_move())
 	_run.travel.refused.connect(func(_i: MoveIntent, why: String): _say("走不了：" + why))
 	var problems: Array[String] = []
+	_hud_host.debug = debug_mode()     # 150 补 2
 	_hud_host.setup(_run, self, HudLayout.load_for("map", problems))     # 150
 	for p in problems:
 		_note("[color=#f0ad4e]　读数布局：%s[/color]" % p)
@@ -741,24 +755,23 @@ func _rebuild_routes() -> void:
 #region 界面
 func _build() -> void:
 	_backdrop()
-	var row := _hbox(0)
-	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(row)
-
-	# 150：地图那一块 = 竖排（让出的顶、地图、两行预览）+ 盖在上面的读数层
+	# 150：整屏 = 地图那一竖排（让出的顶、地图、两行预览；右边让出部件那一列）+ 盖在上面的读数层
 	var area := Control.new()
-	area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(area)
+	add_child(area)
 	var mid := _vbox(0)
 	mid.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	area.add_child(mid)
+	_mid = mid
 	_hud_spacer = Control.new()
 	_hud_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	mid.add_child(_hud_spacer)
 	_hud_host = HudHost.new()
 	_hud_host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_hud_host.arranged.connect(func(): _hud_spacer.custom_minimum_size.y = _hud_host.top_inset())
+	_hud_host.arranged.connect(func():
+		_hud_spacer.custom_minimum_size.y = _hud_host.top_inset()
+		_mid.offset_right = -_hud_host.right_inset())
 	area.add_child(_hud_host)
 	_view = MapView.new()
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -781,47 +794,72 @@ func _build() -> void:
 	mid.add_child(_enemy_line)
 	_tip = HoverTip.new()
 	add_child(_tip)
-
-	var side := _panel(12)
-	side.custom_minimum_size.x = SIDE_WIDTH
-	row.add_child(side)
-	var col := _vbox(8)
-	side.add_child(col)
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 26      # 右上角是 DevNav 的按钮
-	col.add_child(spacer)
-	# 150：调试台抽屉（139）—— 箭头在右栏顶上，抽屉盖在右栏上；里面是「摆读数」
-	_drawer = DevDrawer.new()
-	var drawer_row := _hbox(6)
-	var fill := Control.new()
-	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	drawer_row.add_child(fill)
-	drawer_row.add_child(_drawer.arrow)
-	col.add_child(drawer_row)
+	_build_parts()
 	_build_drawer()
-	_status = _wrapped("", 12, UiPalette.DIM, SIDE_WIDTH - 30)
-	col.add_child(_status)
-	# 090（作者定）：右栏的三个互动按键放大到 300%，竖着排
-	var buttons := _vbox(6)
-	buttons.add_child(_button("背包（B）", toggle_bag, 13, UiPalette.Tier.PRIMARY))
+
+
+## 150 补 1：原来右栏里的东西，一件一个部件（读数层的组件按 id 领走，见 [method hud_part]）
+func _build_parts() -> void:
+	_shelf = Control.new()
+	_shelf.name = "HudShelf"
+	_shelf.visible = false
+	_shelf.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_shelf)
+	# 150：调试台抽屉（139）—— 箭头是一件部件，抽屉盖在右边；里面是「摆读数」
+	_drawer = DevDrawer.new()
+	_part(&"dev_drawer", _drawer.arrow)
+	_status = _wrapped("", 12, UiPalette.DIM, PART_WIDTH)
+	_part(&"status", _status)
+	# 090（作者定）：三个互动按键放大到 300%
+	_part(&"bag_button", _button("背包（B）", toggle_bag, 13, UiPalette.Tier.PRIMARY), true)
 	_reopen_btn = _button("回到这个点（N）", func(): reopen(), 13, UiPalette.Tier.PRIMARY)
 	_reopen_btn.disabled = true
 	_reopen_btn.tooltip_text = "还没走的时候，重新打开这个点上最后的界面：没拿完的战利品、还开着的搜索或商店。点地图上的当前节点也行"
-	buttons.add_child(_reopen_btn)
+	_part(&"reopen_button", _reopen_btn, true)
 	_extract_btn = _button("撤离", func(): extract(), 13, UiPalette.Tier.PRIMARY)
 	_extract_btn.disabled = true
-	buttons.add_child(_extract_btn)
-	col.add_child(buttons)
+	_part(&"extract_button", _extract_btn, true)
 	_skills_box = _vbox(4)
-	col.add_child(_skills_box)
-	col.add_child(_button("存档并回主菜单", func(): flow.save_and_quit(), 12, UiPalette.Tier.MINOR))
-	col.add_child(HSeparator.new())
+	_part(&"skills", _skills_box, true)
+	_part(&"menu_button", _button("存档并回主菜单", func(): flow.save_and_quit(), 12, UiPalette.Tier.MINOR), true)
 	_routes_box = _vbox(6)
-	col.add_child(_routes_box)
-	col.add_child(HSeparator.new())
-	col.add_child(_label("日志", 14, UiPalette.FG))
+	_part(&"routes", _routes_box, true)
 	_log = _log_box(12)
-	col.add_child(_log)
+	_log.custom_minimum_size = Vector2(PART_WIDTH, LOG_HEIGHT)
+	_part(&"log", _log)
+
+
+func _part(id: StringName, c: Control, full_width: bool = false) -> void:
+	if full_width:
+		c.custom_minimum_size.x = PART_WIDTH
+	_parts[id] = c
+	_shelf.add_child(c)
+
+
+## 读数层的组件来领这一屏的部件（[HudPartWidget]）。没有这个 id 返回 null
+func hud_part(id: StringName) -> Control:
+	return _parts.get(id, null)
+
+
+## 组件换掉之前把部件还回来：挂回藏着的架子上（日志照样在记）
+func hud_shelve(part: Control) -> void:
+	if part != null and is_instance_valid(part) and _shelf != null:
+		part.reparent(_shelf, false)
+
+
+## 150 补 2：调试模式（设置里的开关；没有设置 = 默认）
+func debug_mode() -> bool:
+	return flow.settings.debug_mode if flow != null and flow.settings != null else GameSettings.DEBUG_MODE_DEFAULT
+
+
+## 照设置里的调试模式重摆读数层（变了才重摆）：关掉时日志那件不造，开回来日志里之前写的都还在
+func apply_debug_mode() -> void:
+	if _hud_host == null or _hud_host.layout == null or _hud_host.debug == debug_mode():
+		return
+	_hud_host.debug = debug_mode()
+	_hud_host.setup(_run, self, _hud_host.layout)
+	if _debug_line != null:
+		_debug_line.text = _debug_text()
 
 
 ## 150：调试台里的「摆读数」：开着时读数能拖（吸附网格）、右键切显隐、滚轮切大小；保存写回布局文件，重置回默认
@@ -829,6 +867,8 @@ func _build_drawer() -> void:
 	add_child(_drawer)
 	_drawer.dock(64, 12)
 	var c := _drawer.content
+	_debug_line = _label(_debug_text(), 13, UiPalette.STAMINA)     # 150 补 2：头部写着现在的调试模式
+	c.add_child(_debug_line)
 	c.add_child(_label("摆读数", 16, UiPalette.FG))
 	c.add_child(_wrapped("开着时：拖动读数换位置（松手吸附 %d 像素网格，记成离它最近的锚点 + 偏移）；右键切显示 / 隐藏；滚轮切大小两档。保存写到 %s。" % [
 		HudLayout.GRID, HudLayout.save_path("map")], 12, UiPalette.DIM, DevDrawer.WIDTH - 40))
@@ -839,6 +879,10 @@ func _build_drawer() -> void:
 		reset_hud_layout()
 		_say("读数布局回到默认"), 13, UiPalette.Tier.MINOR))
 	_drawer.wrap_contents()
+
+
+func _debug_text() -> String:
+	return "调试模式：%s（设置里开关）" % ("开" if debug_mode() else "关")
 
 
 func hud() -> HudHost:
@@ -886,6 +930,14 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _say(text: String) -> void:
 	_status.text = text
+	var w := _hud_host.widget(&"status") if _hud_host != null else null
+	if w != null:
+		w.refresh()
+
+
+## 组件（腰带）往提示行写一句
+func say(text: String) -> void:
+	_say(text)
 
 
 func _note(text: String) -> void:
