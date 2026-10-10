@@ -28,7 +28,7 @@ var direct: bool = false
 #endregion
 
 #region 管线中途写入
-## 被护盾吸收掉的量
+## 被护甲吸收掉的量
 var absorbed: int = 0
 ## 受伤前效果的固定增减，负为减伤
 var flat: int = 0
@@ -65,7 +65,7 @@ func victim_side() -> int:
 	return victim.side if victim != null else -1
 
 
-## 护盾吸收之后、受伤前效果之前的待结算量。受伤前效果据此判断「这一下够不够狠」。
+## 护甲吸收之后、受伤前效果之前的待结算量。受伤前效果据此判断「这一下够不够狠」。
 func pending() -> int:
 	return maxi(0, raw - absorbed)
 
@@ -93,7 +93,7 @@ func cancel() -> void:
 
 
 func _to_string() -> String:
-	return "DamagePacket(%s 原始 %.1f → 护盾 -%.1f → 格挡 -%.1f → 最终 %.1f)" % [
+	return "DamagePacket(%s 原始 %.1f → 护甲 -%.1f → 格挡 -%.1f → 最终 %.1f)" % [
 		type, StatMath.to_float(raw), StatMath.to_float(absorbed),
 		StatMath.to_float(block), StatMath.to_float(final),
 	]

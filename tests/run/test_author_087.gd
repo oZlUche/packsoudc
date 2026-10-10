@@ -95,8 +95,8 @@ static func run_glossary(t: TestCase) -> void:
 	var found := Glossary.terms_in("开战时获得血怒，自发出手", {"血怒": "详"})
 	t.eq(found.size(), 1, "只剩血怒一个词条：%s" % str(found))
 	t.eq(String(found[0]["name"]), "血怒", "传进来的（buff 词条）照旧")
-	var kept := Glossary.terms_in("护盾顶住了直接伤害", {})
-	t.eq(kept.size(), 2, "带规则的词照旧弹（护盾、直接伤害）：%s" % str(kept))
+	var kept := Glossary.terms_in("护甲顶住了直接伤害", {})
+	t.eq(kept.size(), 2, "带规则的词照旧弹（护甲、直接伤害）：%s" % str(kept))
 	var marked := Glossary.mark("血怒 与 血怒", [{"name": "血怒", "text": ""}])
 	t.eq(marked.count("[u]血怒[/u]"), 2, "每处都标")
 	# 开战 buff 进预估 DPS：匕首 + 蛮神的护符（信力一阶）

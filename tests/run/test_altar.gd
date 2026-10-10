@@ -17,7 +17,7 @@ static func _flow(c) -> GameFlow:
 
 
 static func run_perks_and_altar_logic(t: TestCase) -> void:
-	t.begin("神坛 · 信仰级效果与那一次机会（093）：蛮神低血增伤 / 献祭生命上限 / 秒杀；日神附魔 + 祈祷非线性；自然回血 / 食物护盾 / 翻倍 / 加时回春；大地耐力 / 锻炼加行 / 踩点赐物 / 改造此点；献祭换信力、共享一次机会")
+	t.begin("神坛 · 信仰级效果与那一次机会（093）：蛮神低血增伤 / 献祭生命上限 / 秒杀；日神附魔 + 祈祷非线性；自然回血 / 食物护甲 / 翻倍 / 加时回春；大地耐力 / 锻炼加行 / 踩点赐物 / 改造此点；献祭换信力、共享一次机会")
 	var c = NodeScreens._content()
 	var f := _flow(c)
 	var run := f.begin(c.chapter, NodeScreens._kit(c), 4)
@@ -129,21 +129,21 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 				if e is FireEnchant:
 					enchanted += 1
 	t.eq(enchanted, mini(3, weapons_before), "随机 3 把（不够就全部）武器各挂一条火焰附魔（%d 把武器）" % weapons_before)
-	# 自然：回血 / 食物护盾 / 翻倍 / 加时回春
+	# 自然：回血 / 食物护甲 / 翻倍 / 加时回春
 	var nature: FaithDef = defs[&"nature"]
 	var ration := ItemInstance.create(run.items.get_def(&"ration"))
 	run.storage.admit(ration)
 	InventoryService.transfer_auto(run.storage, ration.uid, run.board)
 	var plain4 := run.compile_player()
 	var regen0 := plain4.baseline.total_of(BattleStats.REGEN_HP)
-	var shield0 := plain4.baseline.total_of(BattleStats.MAX_SHIELD)
+	var shield0 := plain4.baseline.total_of(BattleStats.MAX_ARMOR)
 	var input4 := CompileInput.of(run.effective_baseline())
 	for p in nature.perks_at(3):
 		(p as FaithPerk).compile_into(input4, run.board, run)
 	var spec4 := BattleCompiler.compile(run.board, input4)
 	t.check(spec4.baseline.total_of(BattleStats.REGEN_HP) > regen0, "1 级：基线每秒回血 +")
 	if run.board.has_item(ration.uid):
-		t.check(spec4.baseline.total_of(BattleStats.MAX_SHIELD) > shield0, "3 级：棋盘上有口粮就有护盾")
+		t.check(spec4.baseline.total_of(BattleStats.MAX_ARMOR) > shield0, "3 级：棋盘上有口粮就有护甲")
 	var regen_perk: OvertimeRegenPerk = null
 	for p in nature.perks_at(5):
 		if p is OvertimeRegenPerk:

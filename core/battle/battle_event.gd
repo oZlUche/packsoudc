@@ -49,7 +49,7 @@ const REASON_REGEN := &"regen"
 ## 上限变动连带引起的当前值变化。与治疗区分开 ——
 ## 否则监听「生命恢复」的效果会把「强壮」生效误当成治疗。
 const REASON_MAX_CHANGED := &"max_changed"
-## 护盾替血量挡下的那部分
+## 护甲替血量挡下的那部分
 const REASON_ABSORBED := &"absorbed"
 #endregion
 

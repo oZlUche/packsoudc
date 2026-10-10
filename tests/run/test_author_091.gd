@@ -313,7 +313,7 @@ static func frame_stat_key_picker(t: TestCase, root: Window) -> void:
 	UiText.lang = "zh"
 	var known := PropertyForm.known_stat_keys()
 	t.check(known.has("damage") and known.has("block") and known.has("max_hp") and known.has("haste"), "认得战斗属性常量（%d 个）" % known.size())
-	t.check(known.has("max_shield") and known.has("regen_stamina"), "词典里有名字的也在")
+	t.check(known.has("max_armor") and known.has("regen_stamina"), "词典里有名字的也在")
 	var sorted := known.duplicate()
 	sorted.sort()
 	t.eq(known, sorted, "升序")

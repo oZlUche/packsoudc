@@ -160,7 +160,7 @@ static func run_max_resource_axes(t: TestCase) -> void:
 
 ## 106 第五节：三条新轴的表自检 —— 它们是单位级 FLAT 轴，名字不许和别的轴撞
 static func run_new_axes_table(t: TestCase) -> void:
-	t.begin("106 第五节 · 表自检：防护 / 生命上限 / 法力上限都落在属性上、FLAT、不落到每件道具；全表名字不重复")
+	t.begin("106 第五节 · 表自检：格挡 / 生命上限 / 法力上限都落在属性上、FLAT、不落到每件道具；全表名字不重复")
 	for axis in [StatAxes.BLOCK, StatAxes.MAX_HP, StatAxes.MAX_MANA]:
 		t.check(StatAxes.has(axis), "%s 在表里" % axis)
 		t.eq(StatAxes.mode_of(axis), StatAxes.Mode.FLAT, "%s 是固定值轴" % axis)
@@ -177,46 +177,46 @@ static func run_new_axes_table(t: TestCase) -> void:
 			seen[n] = axis
 
 
-## 106 第三节（作者定）：护盾不再是独立的一条资源条，而是生命条外侧的一圈粗白框，
-## 长度 = 护盾 / 生命上限，护盾 ≥ 上限时整条框满
+## 106 第三节（作者定）：护甲不再是独立的一条资源条，而是生命条外侧的一圈粗白框，
+## 长度 = 护甲 / 生命上限，护甲 ≥ 上限时整条框满
 static func run_shield_frame(t: TestCase) -> void:
-	t.begin("106 第三节 · 护盾画成生命条的外框：长度 = 护盾 / 生命上限，0 / 半 / 满 / 超过上限也只到满")
-	t.check(not CombatantPanel.ORDER.has("shield"), "护盾不在资源条的顺序表里（它不占一条）")
+	t.begin("106 第三节 · 护甲画成生命条的外框：长度 = 护甲 / 生命上限，0 / 半 / 满 / 超过上限也只到满")
+	t.check(not CombatantPanel.ORDER.has("armor"), "护甲不在资源条的顺序表里（它不占一条）")
 	t.check(CombatantPanel.ORDER.has("hp"), "生命条还在")
 
 	var panel := CombatantPanel.new()
 	panel.label_font = UiPalette.cjk_font()
-	panel.reset({"resources": {"hp": [100, 100], "shield": [0, 50]}})
-	t.eq(panel.shield_frame_ratio(), 0.0, "没护盾不画框")
+	panel.reset({"resources": {"hp": [100, 100], "armor": [0, 50]}})
+	t.eq(panel.armor_frame_ratio(), 0.0, "没护甲不画框")
 
-	panel.set_resource("shield", 50, 50)
-	t.eq(panel.shield_frame_ratio(), 0.5, "护盾 50 / 生命上限 100 → 框盖半条")
+	panel.set_resource("armor", 50, 50)
+	t.eq(panel.armor_frame_ratio(), 0.5, "护甲 50 / 生命上限 100 → 框盖半条")
 
-	panel.set_resource("shield", 100, 100)
-	t.eq(panel.shield_frame_ratio(), 1.0, "护盾等于生命上限 → 整条框满")
+	panel.set_resource("armor", 100, 100)
+	t.eq(panel.armor_frame_ratio(), 1.0, "护甲等于生命上限 → 整条框满")
 
-	panel.set_resource("shield", 250, 250)
-	t.eq(panel.shield_frame_ratio(), 1.0, "护盾超过生命上限也只到满，不溢出")
+	panel.set_resource("armor", 250, 250)
+	t.eq(panel.armor_frame_ratio(), 1.0, "护甲超过生命上限也只到满，不溢出")
 
 	# 生命上限为 0 的假人不画框
-	panel.reset({"resources": {"hp": [0, 0], "shield": [30, 30]}})
-	t.eq(panel.shield_frame_ratio(), 0.0, "生命上限 0 的假人不画框")
+	panel.reset({"resources": {"hp": [0, 0], "armor": [30, 30]}})
+	t.eq(panel.armor_frame_ratio(), 0.0, "生命上限 0 的假人不画框")
 
-	panel.reset({"resources": {"hp": [60, 100], "shield": [40, 40], "stamina": [10, 10]}})
-	t.eq(panel.shield_value(), 40, "护盾的数读得到（写在生命条上）")
+	panel.reset({"resources": {"hp": [60, 100], "armor": [40, 40], "stamina": [10, 10]}})
+	t.eq(panel.armor_value(), 40, "护甲的数读得到（写在生命条上）")
 	panel.free()
 
 
-## 106 第三节：真的画一遍（要进场景树才能画），确认护盾不再占一条、框画得出来
+## 106 第三节：真的画一遍（要进场景树才能画），确认护甲不再占一条、框画得出来
 static func frame_shield_frame(t: TestCase, root: Window) -> void:
-	t.begin("106 第三节 · 带护盾的面板画一遍：生命 / 耐力各一条，护盾只有那圈框")
+	t.begin("106 第三节 · 带护甲的面板画一遍：生命 / 耐力各一条，护甲只有那圈框")
 	var panel := CombatantPanel.new()
 	panel.label_font = UiPalette.cjk_font()
 	panel.display_name = "我"
 	root.add_child(panel)
 	panel.size = Vector2(320, 190)
-	panel.reset({"resources": {"hp": [60, 100], "shield": [40, 40], "stamina": [10, 10]}})
-	t.eq(panel.shield_frame_ratio(), 0.4, "护盾 40 / 生命上限 100 → 框盖四成")
+	panel.reset({"resources": {"hp": [60, 100], "armor": [40, 40], "stamina": [10, 10]}})
+	t.eq(panel.armor_frame_ratio(), 0.4, "护甲 40 / 生命上限 100 → 框盖四成")
 	panel.queue_redraw()
-	t.eq(panel._ordered_keys(), ["hp", "stamina", "shield"], "画的条只有生命与耐力，护盾排在后面但被跳过（只画框）")
+	t.eq(panel._ordered_keys(), ["hp", "stamina", "armor"], "画的条只有生命与耐力，护甲排在后面但被跳过（只画框）")
 	panel.queue_free()

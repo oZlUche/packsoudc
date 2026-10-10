@@ -22,8 +22,6 @@ const MAX_HP := &"max_hp"
 ## 153（作者定）：格挡 —— 盾牌专属的固定减伤，每次直接伤害减这么多。原名 armor（防护）。
 ## **不跨件相加**：每面盾一层，只取最高（[member CombatantRuntime.block_layers]），再加格挡轴（加固 / 破绽）
 const BLOCK := &"block"
-## 改名前的键：导入器当 [constant BLOCK] 读并提醒改名
-const LEGACY_ARMOR := &"armor"
 ## 盾牌的标签：只有它能给格挡
 const SHIELD_TAG := &"shield"
 
@@ -31,18 +29,18 @@ const SHIELD_TAG := &"shield"
 ##
 ## [b]资源由 max_* 属性自动派生[/b]：战斗单位扫描自己的属性表，
 ## 每发现一个 max_xxx 就开一个名为 xxx 的资源池。
-## 新增一种资源（护盾、充能…）只需配一个 max_shield 属性，不改任何代码。
+## 新增一种资源（护甲、充能…）只需配一个 max_armor 属性，不改任何代码。
 const MAX_PREFIX := "max_"
 
 const RES_HP := &"hp"
 const RES_STAMINA := &"stamina"
 const RES_MANA := &"mana"
-## 护盾。扣血之前先扣它，由伤害类型决定能不能吸收（见 [DamageResolver]）。
-const RES_SHIELD := &"shield"
+## 护甲（153 补充一，原名护盾 shield）。防具给的一层资源，扣血之前先扣它，由伤害类型决定能不能吸收（见 [DamageResolver]）。
+const RES_ARMOR := &"armor"
 
 const MAX_STAMINA := &"max_stamina"
 const MAX_MANA := &"max_mana"
-const MAX_SHIELD := &"max_shield"
+const MAX_ARMOR := &"max_armor"
 
 ## 资源的每秒回复速率，统一以 regen_ 开头，与 max_ 对称。
 ##

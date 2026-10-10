@@ -25,9 +25,9 @@ const LINE := Color("2a2f38")
 const HP := Color("d9534f")
 ## 150 补 4：体力心「失去」的那颗（黑心，外面描一圈 DIM）
 const HEART_LOST := Color("0a0a0c")
-const SHIELD := Color("5bc0de")
-## 106（作者定）：护盾不再是独立的一条，而是生命条外侧的一圈粗白框 —— 这是那圈框的颜色
-const SHIELD_FRAME := Color("f2f6ff")
+const ARMOR := Color("5bc0de")
+## 106（作者定）：护甲不再是独立的一条，而是生命条外侧的一圈粗白框 —— 这是那圈框的颜色
+const ARMOR_FRAME := Color("f2f6ff")
 const STAMINA := Color("f0ad4e")
 const MANA := Color("7a8cf0")
 const HEAL := Color("5cb85c")
@@ -43,7 +43,7 @@ const RECEIVE := Color("f0a85c")  ## 受益：站在这儿的邻居给我加成
 ## 资源键 → 条的颜色。未登记的资源用 DIM，不至于看不见。
 const RESOURCE_COLORS := {
 	"hp": HP,
-	"shield": SHIELD,
+	"armor": ARMOR,
 	"stamina": STAMINA,
 	"mana": MANA,
 }
@@ -69,7 +69,7 @@ static func resource_color(key: StringName) -> Color:
 ## 表在这边是因为颜色是界面的事：[TextTemplate] 只产出带名字的 `[color=@hp]`，
 ## 画之前由 [method resolve_styles] 换成十六进制。名字对不上的原样留着（一眼看得见，也不会崩）
 const STYLE_COLORS := {
-	"fg": FG, "dim": DIM, "hp": HP, "shield": SHIELD,
+	"fg": FG, "dim": DIM, "hp": HP, "armor": ARMOR,
 	"stamina": STAMINA, "mana": MANA, "heal": HEAL,
 	"grant": GRANT, "receive": RECEIVE,
 	"warn": STAMINA, "danger": HP, "good": HEAL, "faith": FAITH,

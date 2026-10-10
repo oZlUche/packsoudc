@@ -19,7 +19,7 @@
   ],
   "combat": {
     "base_stats": {
-      "max_shield": 50
+      "max_armor": 50
     }
   }
 }

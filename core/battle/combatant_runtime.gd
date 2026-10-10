@@ -234,7 +234,7 @@ static func _scale_final(set: StatSet, key: StringName, f: int) -> void:
 #endregion
 
 
-## 资源由 max_* 属性自动派生：有 max_shield 就有 shield 资源。
+## 资源由 max_* 属性自动派生：有 max_armor 就有 shield 资源。
 func _sync_resource_maxes() -> void:
 	for key in _merged.keys():
 		var res := BattleStats.resource_of_max(key)

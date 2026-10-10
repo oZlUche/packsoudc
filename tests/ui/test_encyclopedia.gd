@@ -77,7 +77,7 @@ static func run_links_and_search(t: TestCase) -> void:
 	var book := _book()
 	var ctx := {"_items": book.items}
 	var crafting := book.render("crafting", ctx)
-	t.eq(book.link_words("毒无视护盾，合成也行"), "毒无视[url=shield]护盾[/url]，[url=crafting]合成[/url]也行", "认得的词画成链接（同名先跳机制页：125 起护盾也有机制页）")
+	t.eq(book.link_words("毒无视护甲，合成也行"), "毒无视[url=armor]护甲[/url]，[url=crafting]合成[/url]也行", "认得的词画成链接（同名先跳机制页：125 起护甲也有机制页）")
 	t.eq(book.link_words("合成", "crafting"), "合成", "不链自己那一页")
 	t.check(not crafting.contains("[url=crafting]"), "不链自己")
 	t.check(crafting.contains("相关道具："), "相关道具一行")

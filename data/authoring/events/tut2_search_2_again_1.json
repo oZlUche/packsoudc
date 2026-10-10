@@ -1,7 +1,7 @@
 {
   "id": "tut2_search_2_again_1",
   "title": "{item:poison_vial}",
-  "text": "一个{item:poison_vial}。上一张合过一次：拖到{item:knife}上面就是{item:poisoned_knife}，毒不看护盾。\n\n再搜一次。",
+  "text": "一个{item:poison_vial}。上一张合过一次：拖到{item:knife}上面就是{item:poisoned_knife}，毒不看护甲。\n\n再搜一次。",
   "options": [
     {
       "label": "再搜一次",

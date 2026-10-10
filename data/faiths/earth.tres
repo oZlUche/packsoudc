@@ -57,7 +57,7 @@ mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_uajvw")])
 
 [sub_resource type="Resource" id="Resource_iqm5g"]
 script = ExtResource("3_2gic1")
-stat = &"max_shield"
+stat = &"max_armor"
 amount = 4.0
 
 [sub_resource type="Resource" id="Resource_72j3p"]

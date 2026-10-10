@@ -180,3 +180,12 @@ block   = 生效层 + 格挡轴层数（内容层 + 系统层，带符号）
 - 【护甲】`armor` / `max_armor`：防具给的一层资源，先于生命被扣，开战充满。
 - 【格挡】`block`：盾牌给的固定减伤，只取最高；轴【加固 / 破绽】是它之上的修正。
 - 「防护」「护盾」两个词从游戏里消失。
+
+### 补充一落地记录（2026-10-10）
+
+正文已先合并（PR #105），补充一另开一个 PR 落地，所以两步之间 main 上有过一段「armor 当 block 读」的别名；这次把它换成补充一的规则：`base_stats.armor` / `stat_scale.armor` / `stat: armor` 报错并写清两种去处，旧存档里的节点内容（`EnemyKit.baseline_of`）仍把 `armor` 当 `block`、`max_shield` 当 `max_armor`。
+
+- 改名表全部照做；另外 `UiPalette.SHIELD` / `SHIELD_FRAME` → `ARMOR` / `ARMOR_FRAME`，资源颜色表与文本样式码 `{c:shield}` → `{c:armor}`（数据里没人用旧码）。
+- 生命条文字「盾 N」→「甲 N」，战斗日志「盾挡 N」→「甲挡 N」，内部日志「护盾 −N」→「护甲 −N」。
+- 资源键 `shield` 写在 `resource_key` / `resource` 字段里的、`type: food_shield`、`{item_stat:…:max_shield}` 都认作新名（导入器提醒；文本模板静默）。
+- 测试：`test_block_153.gd` 加 `run_armor_rename`（常量、名字、词条、四种旧名、自然的 food_armor、防具给护甲上限）；其余 17 个文件改常量与字符串，断言不变。

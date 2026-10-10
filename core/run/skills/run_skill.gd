@@ -15,7 +15,7 @@ extends Resource
 @export_multiline var description: String = ""
 ## 常驻的效果：一局规则（体力上限、逃跑、属性加成……）或掉落
 @export var passive: Array[Effect] = []
-## 136：战斗里常驻的规则（布鲁图斯「坚韧」：低血一次性护盾）。编译玩家时和套装 / buff 的规则一起挂到单位上
+## 136：战斗里常驻的规则（布鲁图斯「坚韧」：低血一次性护甲）。编译玩家时和套装 / buff 的规则一起挂到单位上
 @export var rules: Array[AbilityRule] = []
 ## 主动使用的次数，-1 = 不限；被动技能不看它
 @export var uses: int = -1

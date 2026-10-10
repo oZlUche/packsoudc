@@ -53,8 +53,12 @@ static func baseline_of(def: EnemyDef, tier: StrengthTier, content: Dictionary =
 	if over is Dictionary:
 		for key in over:
 			var k := String(key)
-			if k == String(BattleStats.LEGACY_ARMOR):
-				k = String(BattleStats.BLOCK)     # 153：旧图里写的 armor（防护）当 block（格挡）读
+			# 旧存档里的节点内容：armor 是 153 之前的固定减伤（新世界里 base_stats 不会有 armor，护甲只认 max_armor），
+			# max_shield 是补充一之前的护盾
+			if k == "armor":
+				k = String(BattleStats.BLOCK)
+			elif k == "max_shield":
+				k = String(BattleStats.MAX_ARMOR)
 			b.base_stats[k] = float(over[key])
 	return b
 

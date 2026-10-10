@@ -340,7 +340,7 @@ func _log_event(e: BattleEvent) -> void:
 				return
 			var bits: Array[String] = []
 			if e.get_int(&"absorbed") > 0:
-				bits.append("盾挡 %d" % StatMath.to_int(e.get_int(&"absorbed")))
+				bits.append("甲挡 %d" % StatMath.to_int(e.get_int(&"absorbed")))
 			if e.get_int(&"block") > 0:
 				bits.append("格挡 %d" % StatMath.to_int(e.get_int(&"block")))
 			var tail := ("（%s）" % "、".join(bits)) if not bits.is_empty() else ""

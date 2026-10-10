@@ -41,7 +41,7 @@ metadata/part_ref = &"uses_1"
 
 [sub_resource type="Resource" id="Resource_7qucc"]
 script = ExtResource("13_eqvia")
-stat = &"max_shield"
+stat = &"max_armor"
 amount = 15.0
 
 [sub_resource type="Resource" id="Resource_2m2no"]
@@ -72,7 +72,7 @@ effects = Array[ExtResource("11_utyi1")]([SubResource("Resource_66poc")])
 script = ExtResource("7_ipor7")
 id = &"hardy"
 display_name = "坚韧"
-description = "战斗里生命掉到三成以下时，立刻得到一层护盾（每场一次）。"
+description = "战斗里生命掉到三成以下时，立刻得到一层护甲（每场一次）。"
 rules = Array[ExtResource("6_kraql")]([SubResource("Resource_3htg3")])
 
 [sub_resource type="Resource" id="Resource_4qbaa"]

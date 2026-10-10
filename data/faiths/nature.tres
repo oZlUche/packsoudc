@@ -12,7 +12,7 @@
 [ext_resource type="Script" path="res://core/run/faith/perks/altar_bless_perk.gd" id="10_r7t77"]
 [ext_resource type="Script" path="res://core/run/faith/perks/stat_mod_perk.gd" id="11_0s07h"]
 [ext_resource type="Script" path="res://core/run/faith/perks/altar_food_vitality_perk.gd" id="12_kwpnb"]
-[ext_resource type="Script" path="res://core/run/faith/perks/food_shield_perk.gd" id="13_2c21y"]
+[ext_resource type="Script" path="res://core/run/faith/perks/food_armor_perk.gd" id="13_2c21y"]
 [ext_resource type="Script" path="res://core/run/faith/perks/food_double_perk.gd" id="14_nrib4"]
 [ext_resource type="Script" path="res://core/run/faith/perks/overtime_regen_perk.gd" id="15_28ndt"]
 [ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="16_gx8md"]
@@ -57,7 +57,7 @@ mods = Array[ExtResource("3_af1s0")]([SubResource("Resource_iyhxd")])
 
 [sub_resource type="Resource" id="Resource_4tdp6"]
 script = ExtResource("3_af1s0")
-stat = &"max_shield"
+stat = &"max_armor"
 amount = 4.0
 
 [sub_resource type="Resource" id="Resource_j1itm"]

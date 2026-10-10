@@ -213,10 +213,10 @@ static func run_weapon_stamina_rules(t: TestCase) -> void:
 
 	# 137：叠层上限取消，「不限层 + 百分比」那条告警跟着删（每个乘算 buff 都会响，没有信息量）
 	var warn := _report()
-	ContentImporter.import_buff({"id": "t_rage", "mods": [{"stat": "max_shield", "mode": "MULT", "amount": 10}]}, _ctx(), warn)
+	ContentImporter.import_buff({"id": "t_rage", "mods": [{"stat": "max_armor", "mode": "MULT", "amount": 10}]}, _ctx(), warn)
 	t.check(warn.ok() and warn.warnings.is_empty(), "不限层 + 百分比：不告警（%s）" % warn.to_text())
 	var flat := _report()
-	ContentImporter.import_buff({"id": "t_tough", "mods": [{"stat": "max_shield", "amount": 5.0}]}, _ctx(), flat)
+	ContentImporter.import_buff({"id": "t_tough", "mods": [{"stat": "max_armor", "amount": 5.0}]}, _ctx(), flat)
 	t.check(flat.warnings.is_empty(), "不限层 + 固定值：不告警")
 
 	# 106 第五节：生命上限 / 法力上限有轴了，这类简单 buff 该被提示改成 shift_axis
@@ -519,22 +519,22 @@ static func run_stack_cap_migration(t: TestCase) -> void:
 static func run_stat_modifier_migration(t: TestCase) -> void:
 	t.begin("133 · 属性修饰旧键迁移：mult_percent → 乘算、flat → 加算、mult_category 提醒忽略、一条两样报错")
 	var r1 := _report()
-	var b1 := ContentImporter.import_buff({"id": "t_old", "mods": [{"stat": "max_shield", "mult_category": "EMPOWER", "mult_percent": 12}]}, _ctx(), r1)
+	var b1 := ContentImporter.import_buff({"id": "t_old", "mods": [{"stat": "max_armor", "mult_category": "EMPOWER", "mult_percent": 12}]}, _ctx(), r1)
 	t.check(r1.ok(), "旧格式照读（%s）" % r1.to_text())
 	t.eq((b1.mods[0] as StatModifier).mode, StatModifier.Mode.MULT, "mult_percent → 乘算")
 	t.eq((b1.mods[0] as StatModifier).amount, 12.0, "数照搬")
 	t.check(r1.to_text().contains("乘区已取消"), "写了 mult_category：提醒")
 	var r2 := _report()
-	var b2 := ContentImporter.import_buff({"id": "t_old2", "mods": [{"stat": "max_shield", "flat": 4.0}]}, _ctx(), r2)
+	var b2 := ContentImporter.import_buff({"id": "t_old2", "mods": [{"stat": "max_armor", "flat": 4.0}]}, _ctx(), r2)
 	t.check(r2.ok() and r2.warnings.is_empty(), "flat → 加算，不提醒")
 	t.eq((b2.mods[0] as StatModifier).mode, StatModifier.Mode.ADD, "加算")
 	t.eq((b2.mods[0] as StatModifier).amount, 4.0, "数照搬")
 	var r3 := _report()
-	ContentImporter.import_buff({"id": "t_both", "mods": [{"stat": "max_shield", "mult_percent": 10, "flat": 2.0}]}, _ctx(), r3)
+	ContentImporter.import_buff({"id": "t_both", "mods": [{"stat": "max_armor", "mult_percent": 10, "flat": 2.0}]}, _ctx(), r3)
 	t.check(not r3.ok() and r3.to_text().contains("拆成两条"), "一条又乘又加：报错（%s）" % r3.to_text())
-	var b4 := ContentImporter.import_buff({"id": "t_new", "mods": [{"stat": "max_shield", "mode": "MULT", "amount": 10}]}, _ctx(), _report())
+	var b4 := ContentImporter.import_buff({"id": "t_new", "mods": [{"stat": "max_armor", "mode": "MULT", "amount": 10}]}, _ctx(), _report())
 	var mod: Dictionary = (ContentExporter.export_buff(b4)["mods"] as Array)[0]
-	t.eq(mod, {"stat": "max_shield", "mode": "MULT", "amount": 10.0}, "导出只写新键")
+	t.eq(mod, {"stat": "max_armor", "mode": "MULT", "amount": 10.0}, "导出只写新键")
 	var stale: Array[String] = []
 	for dir in ["items", "faiths", "run_buffs", "encumbrance_rules"]:
 		for f in DirAccess.get_files_at("res://data/authoring/" + dir):

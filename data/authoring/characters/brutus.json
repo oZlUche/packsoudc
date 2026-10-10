@@ -40,7 +40,7 @@
       "type": "passive",
       "id": "hardy",
       "display_name": "坚韧",
-      "description": "战斗里生命掉到三成以下时，立刻得到一层护盾（每场一次）。",
+      "description": "战斗里生命掉到三成以下时，立刻得到一层护甲（每场一次）。",
       "rules": [
         {
           "trigger": {

@@ -9,9 +9,9 @@ display_name = "流血"
 display_names = {
 "en": "Bleed"
 }
-description = "持续伤害，无视护盾，不招致反应。"
+description = "持续伤害，无视护甲，不招致反应。"
 descriptions = {
 "en": "Damage over time; ignores shields, provokes nothing."
 }
-shield_absorbable = false
+armor_absorbable = false
 provokes = false

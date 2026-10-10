@@ -13,5 +13,5 @@ description = "以血为代价时扣的血：走完整管线但不触发受伤�
 descriptions = {
 "en": "Life paid as a cost: full pipeline, but no on-damage effects."
 }
-shield_absorbable = false
+armor_absorbable = false
 provokes = false
