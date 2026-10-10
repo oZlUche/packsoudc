@@ -8,13 +8,13 @@
 [ext_resource type="Script" path="res://core/inventory/item_def.gd" id="6_11q3f"]
 [ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="7_pson6"]
 
-[sub_resource type="Resource" id="Resource_ywc2w"]
+[sub_resource type="Resource" id="Resource_8eek3"]
 script = ExtResource("3_xjejp")
 base_stats = {
 "max_shield": 35
 }
 
-[sub_resource type="Resource" id="Resource_xey43"]
+[sub_resource type="Resource" id="Resource_s74pr"]
 script = ExtResource("7_pson6")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0), Vector2i(1, 1), Vector2i(2, 1)])
 
@@ -25,8 +25,8 @@ display_name = "贴身甲"
 display_names = {
 "en": "Body Armor"
 }
-shape = SubResource("Resource_xey43")
+shape = SubResource("Resource_s74pr")
 rarity = 2
 weight = 8
 tags = Array[StringName]([&"sealed", &"gear", &"armor"])
-combat = SubResource("Resource_ywc2w")
+combat = SubResource("Resource_8eek3")

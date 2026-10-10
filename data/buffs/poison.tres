@@ -1,41 +1,42 @@
 [gd_resource type="Resource" script_class="BuffDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_kyqde"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="2_lr2xp"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_vj3v3"]
-[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_bda45"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_56y6x"]
-[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="6_i0ppp"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="7_ont1q"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="8_603la"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_lr2xp"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_vj3v3"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_bda45"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_56y6x"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="5_i0ppp"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_ont1q"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_603la"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_3daau"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_5f2se"]
 
-[sub_resource type="Resource" id="Resource_3daau"]
-script = ExtResource("4_bda45")
+[sub_resource type="Resource" id="Resource_aai0p"]
+script = ExtResource("5_i0ppp")
 seconds = 1.0
 
-[sub_resource type="Resource" id="Resource_5f2se"]
-script = ExtResource("6_i0ppp")
+[sub_resource type="Resource" id="Resource_ekrv1"]
+script = ExtResource("7_603la")
 target = 1
 damage_type = &"poison"
 amount = 2.0
 damage_stat = &""
 per_stack = true
 
-[sub_resource type="Resource" id="Resource_aai0p"]
-script = ExtResource("7_ont1q")
+[sub_resource type="Resource" id="Resource_1qngc"]
+script = ExtResource("8_3daau")
 
-[sub_resource type="Resource" id="Resource_ekrv1"]
-script = ExtResource("3_vj3v3")
-trigger = SubResource("Resource_aai0p")
-cadence = SubResource("Resource_3daau")
-effects = Array[ExtResource("2_lr2xp")]([SubResource("Resource_5f2se")])
+[sub_resource type="Resource" id="Resource_cv4xq"]
+script = ExtResource("4_56y6x")
+trigger = SubResource("Resource_1qngc")
+cadence = SubResource("Resource_aai0p")
+effects = Array[ExtResource("3_bda45")]([SubResource("Resource_ekrv1")])
 
 [resource]
-script = ExtResource("8_603la")
+script = ExtResource("9_5f2se")
 id = &"poison"
 display_name = "中毒"
 display_names = {
 "en": "Poison"
 }
 is_debuff = true
-rules = Array[ExtResource("3_vj3v3")]([SubResource("Resource_ekrv1")])
+rules = Array[ExtResource("4_56y6x")]([SubResource("Resource_cv4xq")])

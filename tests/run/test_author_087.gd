@@ -50,7 +50,7 @@ static func run_glossary(t: TestCase) -> void:
 	var text := String(full["text"])
 	var terms: Array = full["terms"]
 	t.check(text.contains("血怒"), "主文字里有「血怒」")
-	t.check(not Glossary.strip_bbcode(text).contains("+10%"), "主文字里不直接写伤害 +10%")
+	t.check(not Glossary.strip_bbcode(text).contains("强攻"), "主文字里不直接写血怒带的轴")
 	var names: Array[String] = []
 	var blood := ""
 	for term in terms:
@@ -58,7 +58,8 @@ static func run_glossary(t: TestCase) -> void:
 		if String(term["name"]) == "血怒":
 			blood = String(term["text"])
 	t.check(names.has("血怒"), "词条里有血怒：%s" % str(names))
-	t.check(blood.contains("+10%") and blood.contains("持续 10.0 秒"), "血怒的词条写着增伤 +10%%、持续 10 秒：%s" % blood)
+	t.check(blood.contains("【强攻】1 层") and blood.contains("【加速】1 层") and blood.contains("持续 10.0 秒"),
+		"血怒的词条写着每层带一层强攻、一层加速（152）、持续 10 秒：%s" % blood)
 	# 107（作者定）：「开战时」「信力」这类直白的词不再弹词条（说明文字仍在表里）
 	t.check(not names.has("开战时") and not names.has("信力"), "直白的固定词条不再进侧窗：%s" % str(names))
 	t.check(Glossary.term_text("开战时") != "" and not Glossary.term_tip("开战时"), "但说明文字一字不动，只是 tip 关了")
@@ -105,8 +106,8 @@ static func run_glossary(t: TestCase) -> void:
 	t.check(k != null and sg != null, "匕首和护符都放下")
 	var plain := BattleCompiler.compile_board(board)
 	var tiered := BattleCompiler.compile_board(board, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:brute": 1})
-	t.check(plain.opening_mods().is_empty(), "没过阈值：没有开战 buff")
-	t.eq(tiered.opening_mods().size(), 1, "过了一阶：一条开战增伤")
+	t.check(plain.opening_mods().is_empty() and plain.opening_axes().is_empty(), "没过阈值：没有开战 buff")
+	t.eq(tiered.opening_axes().size(), 2, "过了一阶：开战血怒带两条轴（152：强攻、加速）")
 	t.check(tiered.rough_dps() > plain.rough_dps() * 1.05, "预估 DPS 算上血怒：%.2f > %.2f" % [tiered.rough_dps(), plain.rough_dps()])
 	t.check(is_equal_approx(tiered.estimated_dps_of(tiered.item_of(k.uid)), tiered.rough_dps()), "只有匕首出手")
 

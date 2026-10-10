@@ -1,17 +1,18 @@
 [gd_resource type="Resource" script_class="BuffDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_6f8lt"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="2_ru1w3"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_hr6pr"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="4_v7nc6"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_ru1w3"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_hr6pr"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_v7nc6"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_mqjl4"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_7kj0g"]
 
-[sub_resource type="Resource" id="Resource_mqjl4"]
-script = ExtResource("1_6f8lt")
+[sub_resource type="Resource" id="Resource_db85r"]
+script = ExtResource("2_hr6pr")
 stat = &"armor"
 amount = 8.0
 
 [resource]
-script = ExtResource("4_v7nc6")
+script = ExtResource("5_7kj0g")
 id = &"deflect"
 display_name = "弹开"
 display_names = {
@@ -19,4 +20,4 @@ display_names = {
 }
 stackable = false
 duration_sec = 4.0
-mods = Array[ExtResource("1_6f8lt")]([SubResource("Resource_mqjl4")])
+mods = Array[ExtResource("2_hr6pr")]([SubResource("Resource_db85r")])

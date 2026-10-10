@@ -1,30 +1,31 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_dkjj4"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_cf17m"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_dql6g"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_4jajr"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_ppj1f"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="6_o32o2"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="7_seitx"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="8_i8p28"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_ln6vm"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_pn5eu"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_y2exc"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_m2fkp"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_382f2"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_cf17m"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_dql6g"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_4jajr"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_ppj1f"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_o32o2"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="6_seitx"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="7_i8p28"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="8_ln6vm"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="9_pn5eu"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="10_y2exc"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="11_m2fkp"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="12_382f2"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="13_k5nhu"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="14_hpahx"]
 
-[sub_resource type="Resource" id="Resource_k5nhu"]
-script = ExtResource("3_dql6g")
+[sub_resource type="Resource" id="Resource_ouk8o"]
+script = ExtResource("3_4jajr")
 metadata/part_ref = &"always"
 
-[sub_resource type="Resource" id="Resource_mqjl4"]
-script = ExtResource("1_dkjj4")
+[sub_resource type="Resource" id="Resource_db85r"]
+script = ExtResource("1_cf17m")
 stat = &"armor"
 amount = 8.0
 
-[sub_resource type="Resource" id="Resource_hpahx"]
-script = ExtResource("6_o32o2")
+[sub_resource type="Resource" id="Resource_vi1ei"]
+script = ExtResource("7_i8p28")
 id = &"deflect"
 display_name = "弹开"
 display_names = {
@@ -32,50 +33,50 @@ display_names = {
 }
 stackable = false
 duration_sec = 4.0
-mods = Array[ExtResource("1_dkjj4")]([SubResource("Resource_mqjl4")])
-
-[sub_resource type="Resource" id="Resource_ouk8o"]
-script = ExtResource("7_seitx")
-target = 1
-buff = SubResource("Resource_hpahx")
-
-[sub_resource type="Resource" id="Resource_vi1ei"]
-script = ExtResource("8_i8p28")
-metadata/part_ref = &"on_battle_start"
+mods = Array[ExtResource("1_cf17m")]([SubResource("Resource_db85r")])
 
 [sub_resource type="Resource" id="Resource_md8cq"]
-script = ExtResource("2_cf17m")
-trigger = SubResource("Resource_vi1ei")
-cadence = SubResource("Resource_k5nhu")
-effects = Array[ExtResource("5_ppj1f")]([SubResource("Resource_ouk8o")])
+script = ExtResource("8_ln6vm")
+target = 1
+buff = SubResource("Resource_vi1ei")
 
 [sub_resource type="Resource" id="Resource_u8eqt"]
-script = ExtResource("9_ln6vm")
+script = ExtResource("9_pn5eu")
+metadata/part_ref = &"on_battle_start"
+
+[sub_resource type="Resource" id="Resource_kci6v"]
+script = ExtResource("2_dql6g")
+trigger = SubResource("Resource_u8eqt")
+cadence = SubResource("Resource_ouk8o")
+effects = Array[ExtResource("5_o32o2")]([SubResource("Resource_md8cq")])
+
+[sub_resource type="Resource" id="Resource_1m5cu"]
+script = ExtResource("10_y2exc")
 base_stats = {
 "armor": 15
 }
-rules = Array[ExtResource("2_cf17m")]([SubResource("Resource_md8cq")])
-
-[sub_resource type="Resource" id="Resource_kci6v"]
-script = ExtResource("1_dkjj4")
-stat = &"armor"
-amount = 4.0
-
-[sub_resource type="Resource" id="Resource_1m5cu"]
-script = ExtResource("11_y2exc")
-mods = Array[ExtResource("1_dkjj4")]([SubResource("Resource_kci6v")])
+rules = Array[ExtResource("2_dql6g")]([SubResource("Resource_kci6v")])
 
 [sub_resource type="Resource" id="Resource_2jowl"]
-script = ExtResource("3_dql6g")
-metadata/part_ref = &"always"
-
-[sub_resource type="Resource" id="Resource_s4ixo"]
-script = ExtResource("1_dkjj4")
+script = ExtResource("1_cf17m")
 stat = &"armor"
 amount = 4.0
 
 [sub_resource type="Resource" id="Resource_ir1jj"]
-script = ExtResource("6_o32o2")
+script = ExtResource("12_382f2")
+mods = Array[ExtResource("1_cf17m")]([SubResource("Resource_2jowl")])
+
+[sub_resource type="Resource" id="Resource_74w5y"]
+script = ExtResource("3_4jajr")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_m6jrt"]
+script = ExtResource("1_cf17m")
+stat = &"armor"
+amount = 4.0
+
+[sub_resource type="Resource" id="Resource_qo1rn"]
+script = ExtResource("7_i8p28")
 id = &"deflect_long"
 display_name = "久弹"
 display_names = {
@@ -83,43 +84,43 @@ display_names = {
 }
 stackable = false
 duration_sec = 8.0
-mods = Array[ExtResource("1_dkjj4")]([SubResource("Resource_s4ixo")])
-
-[sub_resource type="Resource" id="Resource_74w5y"]
-script = ExtResource("7_seitx")
-target = 1
-buff = SubResource("Resource_ir1jj")
-
-[sub_resource type="Resource" id="Resource_qo1rn"]
-script = ExtResource("8_i8p28")
-metadata/part_ref = &"on_battle_start"
+mods = Array[ExtResource("1_cf17m")]([SubResource("Resource_m6jrt")])
 
 [sub_resource type="Resource" id="Resource_hpfcm"]
-script = ExtResource("2_cf17m")
-trigger = SubResource("Resource_qo1rn")
-cadence = SubResource("Resource_2jowl")
-effects = Array[ExtResource("5_ppj1f")]([SubResource("Resource_74w5y")])
+script = ExtResource("8_ln6vm")
+target = 1
+buff = SubResource("Resource_qo1rn")
 
 [sub_resource type="Resource" id="Resource_euv75"]
-script = ExtResource("11_y2exc")
-tier = 2
-rules = Array[ExtResource("2_cf17m")]([SubResource("Resource_hpfcm")])
-note = "弹开更久"
+script = ExtResource("9_pn5eu")
+metadata/part_ref = &"on_battle_start"
 
 [sub_resource type="Resource" id="Resource_tuaju"]
-script = ExtResource("13_382f2")
+script = ExtResource("2_dql6g")
+trigger = SubResource("Resource_euv75")
+cadence = SubResource("Resource_74w5y")
+effects = Array[ExtResource("5_o32o2")]([SubResource("Resource_hpfcm")])
+
+[sub_resource type="Resource" id="Resource_dgkn5"]
+script = ExtResource("12_382f2")
+tier = 2
+rules = Array[ExtResource("2_dql6g")]([SubResource("Resource_tuaju")])
+note = "弹开更久"
+
+[sub_resource type="Resource" id="Resource_rh8uo"]
+script = ExtResource("14_hpahx")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(0, 2), Vector2i(1, 2), Vector2i(2, 2), Vector2i(1, 3)])
 
 [resource]
-script = ExtResource("12_m2fkp")
+script = ExtResource("13_k5nhu")
 id = &"blessed_shield"
 display_name = "技巧之神赐福的盾牌"
 display_names = {
 "en": "Skill God's Blessed Shield"
 }
-shape = SubResource("Resource_tuaju")
+shape = SubResource("Resource_rh8uo")
 rarity = 3
 weight = 6
 tags = Array[StringName]([&"faith", &"faith:skill", &"gear", &"shield", &"blessed", &"faith_anchor"])
-faith_bonuses = Array[ExtResource("11_y2exc")]([SubResource("Resource_1m5cu"), SubResource("Resource_euv75")])
-combat = SubResource("Resource_u8eqt")
+faith_bonuses = Array[ExtResource("12_382f2")]([SubResource("Resource_ir1jj"), SubResource("Resource_dgkn5")])
+combat = SubResource("Resource_1m5cu")

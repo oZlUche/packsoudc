@@ -212,6 +212,11 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 				return _labeled(owner, key, _key_picker(_damage_type_keys(), Callable(PropertyForm, "damage_type_label"), String(value), func(k: String):
 					owner.set(key, StringName(k))
 					_emit()))
+			if type == TYPE_STRING_NAME and _is_axis_field(key):
+				# 152：指向一条标准轴的字段（buff 带的轴、改轴、扣轴、轴条件）：下拉列出轴表，显示正名 / 反名
+				return _labeled(owner, key, _key_picker(_axis_keys(), Callable(PropertyForm, "axis_label"), String(value), func(k: String):
+					owner.set(key, StringName(k))
+					_emit()))
 			if type == TYPE_STRING_NAME and _is_buff_id_field(owner, key):
 				# 146：指向一个 buff 的 id（移除 / 条件 / 扳机里的状态）：下拉列出库里的 buff，也能手填
 				return _labeled(owner, key, _key_picker(known_buff_ids(), Callable(PropertyForm, "buff_id_label"), String(value), func(k: String):
@@ -367,6 +372,24 @@ static func _is_tag_field(key: String) -> bool:
 ## 096：伤害类型字段
 static func _is_damage_type_field(key: String) -> bool:
 	return key == "damage_type"
+
+
+## 152：指向标准轴的字段
+static func _is_axis_field(key: String) -> bool:
+	return key == "axis"
+
+
+static func _axis_keys() -> Array[String]:
+	var out: Array[String] = []
+	for a in StatAxes.ORDER:
+		out.append(String(a))
+	return out
+
+
+## 「强攻 / 虚弱 (damage_dealt)」
+static func axis_label(key: String) -> String:
+	var i := StatAxes.info(StringName(key))
+	return "%s / %s (%s)" % [i["pos"], i["neg"], key] if not i.is_empty() else key
 
 
 ## 146：指向 buff id 的字段：`buff_id`（移除 / 条件 / 状态扳机 / 扣层），转化状态的 `from`

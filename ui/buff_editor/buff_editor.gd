@@ -278,7 +278,20 @@ func summary_text() -> String:
 		return ""
 	var stacks: String = UiText.t("buff.stacks_single") if not _def.is_stackable() else UiText.t("buff.stacks_unlimited")
 	var dur: String = (UiText.t("buff.permanent") if _def.is_permanent() else "%s %.1f" % [UiText.t("buff.seconds"), _def.duration_sec])
-	return "%s\n%s\n%s" % [UiText.t("buff.summary") % [stacks, dur], "%d mods · %d rules · %d on_apply · %d on_expire" % [_def.mods.size(), _def.rules.size(), _def.on_apply.size(), _def.on_expire.size()], UiText.t("buff.usage") % String(_def.id)]
+	var counts := "%d axes · %d mods · %d rules · %d on_apply · %d on_expire" % [_def.axes.size(), _def.mods.size(), _def.rules.size(), _def.on_apply.size(), _def.on_expire.size()]
+	var lines: Array[String] = [UiText.t("buff.summary") % [stacks, dur], counts]
+	var axes := axes_text()
+	if axes != "":
+		lines.append(axes)
+	lines.append(UiText.t("buff.usage") % String(_def.id))
+	return "\n".join(lines)
+
+
+## 152：每层带的标准轴，一句话（「每层带【强攻】1 层、【加速】1 层」）；没有就空串
+func axes_text() -> String:
+	if _def == null or _def.axes.is_empty():
+		return ""
+	return Glossary.describe_buff(_def).split("\n")[1]
 
 
 func _on_refreshed() -> void:

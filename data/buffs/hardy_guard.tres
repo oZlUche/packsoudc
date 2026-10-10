@@ -1,20 +1,21 @@
 [gd_resource type="Resource" script_class="BuffDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_kfybp"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="2_66u2r"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_byeyd"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="4_v41k8"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_66u2r"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_byeyd"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_v41k8"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_rdf0w"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_vwbpl"]
 
-[sub_resource type="Resource" id="Resource_rdf0w"]
-script = ExtResource("1_kfybp")
+[sub_resource type="Resource" id="Resource_7qucc"]
+script = ExtResource("2_byeyd")
 stat = &"max_shield"
 amount = 15.0
 
 [resource]
-script = ExtResource("4_v41k8")
+script = ExtResource("5_vwbpl")
 id = &"hardy_guard"
 display_name = "坚韧"
 display_names = {
 "en": "Hardy"
 }
-mods = Array[ExtResource("1_kfybp")]([SubResource("Resource_rdf0w")])
+mods = Array[ExtResource("2_byeyd")]([SubResource("Resource_7qucc")])

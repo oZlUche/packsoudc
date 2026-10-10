@@ -146,6 +146,13 @@ static func describe_buff(def: BuffDef) -> String:
 	if not def.is_permanent():
 		duration = _exception(duration)
 	lines.append("%s　%s　%s" % [kind, stacks, duration])
+	if not def.axes.is_empty():     # 152：每层带的标准轴
+		var parts: Array[String] = []
+		for a in def.axes:
+			if a != null:
+				var ba := a as BuffAxis
+				parts.append("【%s】%d 层（%s）" % [StatAxes.name_of(ba.axis, ba.stacks), absi(ba.stacks), StatAxes.effect_text(ba.axis, ba.stacks)])
+		lines.append("每层带%s" % "、".join(parts))
 	if not def.mods.is_empty():
 		lines.append("%s%s" % ["每层：" if def.is_stackable() else "", mods_text(def.mods)])
 	for r in def.rules:
