@@ -114,7 +114,13 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 		if not dormant.has(uid):
 			social.append(uid)
 	var attach_pending: Dictionary = {}     # uid -> [[rule, origin], ...]（108：邻居给我挂的规则，第 6 步打包时挂上）
-	_apply_adjacency(board, social, stats, links, attach_pending)
+	var fed: Dictionary = {}     # 148：这一场真的供给了的（魔晶石点亮了法杖）uid -> true，耐久按它扣
+	_apply_adjacency(board, social, stats, links, attach_pending, fed)
+	var fed_list: Array[int] = []
+	for f in fed:
+		fed_list.append(int(f))
+	fed_list.sort()
+	spec.fed_uids = fed_list
 
 	# --- 6. 打包 ---
 	for uid in fighters:
@@ -230,7 +236,7 @@ static func _apply_bag_effects(board: GridInventory, fighters: Array[int], stats
 ## 非对称会让内容作者踩坑：把配件贴在武器旁边，却只有一边听得见对方出手。
 static func _apply_adjacency(
 	board: GridInventory, fighters: Array[int], stats: Dictionary, links: Dictionary,
-	attach_pending: Dictionary
+	attach_pending: Dictionary, fed: Dictionary = {}
 ) -> void:
 	for uid in fighters:
 		var holder := board.get_item(uid)
@@ -256,10 +262,12 @@ static func _apply_adjacency(
 						attach_pending[other].append([r, holder.def.id])
 
 		# 受益：点亮几个格，本物品就得几份
+		if profile.receive_cells.is_empty():
+			continue
+		var providers := _lit_neighbors(
+			board, holder, profile.receive_cells, profile.receive_filter
+		)
 		if profile.has_receive():
-			var providers := _lit_neighbors(
-				board, holder, profile.receive_cells, profile.receive_filter
-			)
 			for other in providers:
 				if stats.has(other):
 					_link(links, uid, other)
@@ -273,6 +281,23 @@ static func _apply_adjacency(
 						if not attach_pending.has(uid):
 							attach_pending[uid] = []
 						attach_pending[uid].append([r, giver.def.id])
+		# 148 供给：站在受益格上的邻居自己带的「给宿主的东西」（魔晶石 → 法杖）。每个邻居一份；用坏了的不给
+		for other in providers:
+			var feeder := board.get_item(other)
+			var fp: AdjacencyProfile = feeder.def.adjacency if feeder != null and feeder.def != null else null
+			if fp == null or not fp.has_feed() or not stats.has(other) or feeder.is_broken():
+				continue
+			if not AdjacencyProfile.accepts(fp.feed_filter, holder.def):
+				continue
+			_link(links, uid, other)
+			fed[other] = true
+			for mod in fp.feed_mods:
+				(mod as StatModifier).apply_to(stats[uid], 1)
+			for r in fp.feed_rules:
+				if r != null:
+					if not attach_pending.has(uid):
+						attach_pending[uid] = []
+					attach_pending[uid].append([r, feeder.def.id])
 
 
 static func _link(links: Dictionary, a: int, b: int) -> void:

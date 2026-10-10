@@ -196,6 +196,7 @@ static func start(
 	s.vitality = Vitality.new(vitality_max + ctx.vitality_max_bonus + p_chapter.vitality_bonus)
 	s.wallet = Wallet.new((s.economy.starting_balance if s.economy != null else 0) + ctx.starting_funds_bonus)
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
+	s.board.reject_tags = [ItemDef.BELT] as Array[StringName]     # 147：随身道具不上棋盘（开局落在地上，腰带装上时挪过去）
 	s.storage = ItemStash.new(STORAGE_ID, 0)
 	s._bind_tracker()
 	place_layout(s.board, p_layout, p_items, s.storage)
@@ -823,7 +824,10 @@ static func layout_of(board: GridInventory) -> Array:
 		return a.uid < b.uid)
 	for inst in rows:
 		var it := inst as ItemInstance
-		out.append({"id": String(it.def.id), "origin": [it.origin.x, it.origin.y], "rot": it.rotation})
+		var row := {"id": String(it.def.id), "origin": [it.origin.x, it.origin.y], "rot": it.rotation}
+		if not it.state.is_empty():
+			row["state"] = it.state.duplicate(true)     # 148：魔晶石剩几次跟着带进来
+		out.append(row)
 	return out
 
 
@@ -841,6 +845,9 @@ static func place_layout(board: GridInventory, layout: Array, items: ItemDatabas
 			continue
 		var at: Array = row.get("origin", [0, 0])
 		var inst := ItemInstance.create(d, 0)
+		var saved_state: Variant = row.get("state", null)
+		if saved_state is Dictionary:
+			inst.state = (saved_state as Dictionary).duplicate(true)
 		if not board.place(inst, Vector2i(int(at[0]), int(at[1])), int(row.get("rot", 0))) and not board.try_add(inst, true) and overflow != null:
 			overflow.admit(inst)
 	board.end_batch()
@@ -1049,6 +1056,9 @@ func _owned_now() -> Array:
 	var safe := SafeModule.of(self)
 	if safe != null and safe.inventory != null:
 		out.append_array(safe.inventory.items())
+	var belt := BeltModule.of(self)     # 147
+	if belt != null and belt.belt != null:
+		out.append_array(belt.belt.items())
 	return out
 
 
@@ -1145,6 +1155,7 @@ static func from_dict(
 	s.vitality = Vitality.from_dict(d.get("vitality", {}))
 	s.wallet = Wallet.from_dict(d.get("wallet", {}))
 	s.board = GridInventory.from_dict(d.get("board", {}), p_items)
+	s.board.reject_tags = [ItemDef.BELT] as Array[StringName]     # 147：老档里没写
 	s.storage = ItemStash.from_dict(d.get("storage", {}), p_items)
 	var mods_raw: Variant = d.get("modules", {})
 	s.modules_saved = (mods_raw as Dictionary).duplicate(true) if mods_raw is Dictionary else {}

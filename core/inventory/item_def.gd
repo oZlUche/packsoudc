@@ -44,6 +44,8 @@ const FAITH := &"faith"
 ## 095：赐福版（从普通道具派生的信仰道具）；信物（护符 / 符号 / 遗物）—— 只有信物能激活信仰
 const BLESSED := &"blessed"
 const ANCHOR := &"faith_anchor"
+## 147：【随身】—— 不上棋盘，进腰带（[BeltModule]），点一下就用（[member belt_use]）
+const BELT := &"belt"
 
 ## 准入标签。容器级与包体级的准入都拿它比对。
 @export var tags: Array[StringName] = []
@@ -55,6 +57,11 @@ func is_sealed() -> bool:
 
 func is_keepsake() -> bool:
 	return tags.has(KEEPSAKE)
+
+
+## 147：随身道具（只进腰带，不上棋盘）
+func is_belt() -> bool:
+	return tags.has(BELT)
 
 
 func has_faith() -> bool:
@@ -78,7 +85,7 @@ func has_effect() -> bool:
 		return true
 	if adjacency != null or is_bag:
 		return true
-	if not effects.is_empty() or not bag_mods.is_empty() or not faith_bonuses.is_empty():
+	if not effects.is_empty() or not bag_mods.is_empty() or not faith_bonuses.is_empty() or belt_use != null:
 		return true
 	return tags.has(ANCHOR) or is_keepsake()
 
@@ -134,6 +141,12 @@ func faith_tag() -> StringName:
 
 ## 邻接标记（增益／受益）。为空表示本物品与邻居无互动。
 @export var adjacency: AdjacencyProfile
+
+@export_group("随身与耐久")
+## 147：随身道具怎么用（为空 = 不是能主动用的东西）。有它的道具必须带 [constant BELT] 标签、没有 combat、只占 1 格
+@export var belt_use: BeltUse
+## 148：耐久（次数制，魔晶石）。为空 = 不会用坏。剩几次记在实例上（[method ItemInstance.charges]）
+@export var wear: WearProfile
 
 
 ## 定义是否完整可用。资产批量校验与单元测试用。

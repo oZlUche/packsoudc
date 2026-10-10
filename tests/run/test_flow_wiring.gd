@@ -14,6 +14,7 @@ const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 ## 发了没人接、但有正当理由的（写清理由；这张表越短越好）
 const NO_LISTENER_OK := {
 	&"shop_closed": "GameFlow 走会话自己的 closed 往下走（_adopt 里 session.closed.connect(_flush)）；这条留给测试与将来的界面",
+	&"worn": "148：棋盘上的耐久变化走 board.changed 刷新（晶石名字前缀、悬浮窗都读实例）；这条留给测试与将来的「碎了」提示",
 }
 
 const SIGNAL_SOURCES := [

@@ -22,3 +22,13 @@ static func of(def: ItemDef) -> int:
 	var tier := clampi(def.rarity, 0, BASE_PER_CELL.size() - 1)
 	var cells := def.cell_count()
 	return BASE_PER_CELL[tier] * cells
+
+
+## 148：这一件值多少 —— 用坏了（[method ItemInstance.is_broken]）按 [member WearProfile.broken_value_ratio] 打折，至少 1；其余同 [method of]
+static func of_instance(inst: ItemInstance) -> int:
+	if inst == null or inst.def == null:
+		return 0
+	var full := of(inst.def)
+	if inst.is_broken():
+		return maxi(1, int(roundf(float(full) * inst.def.wear.broken_value_ratio)))
+	return full

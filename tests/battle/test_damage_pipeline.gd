@@ -99,7 +99,7 @@ static func run(t: TestCase) -> void:
 
 	DamageTypes.reset_to_builtins()
 	t.check(not DamageTypes.has(&"corrode"), "重置后只剩内置四种")
-	t.eq(DamageTypes.ids().size(), 6, "内置六种")
+	t.eq(DamageTypes.ids().size(), 8, "内置八种（148 加了冰霜、闪电）")
 
 
 static func run_shield(t: TestCase) -> void:

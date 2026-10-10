@@ -21,7 +21,9 @@ const LABELS := {
 	"include_bags": "包也算", "include_self": "含自己", "invert": "反转", "enabled": "启用", "absolute": "绝对值", "only_total": "只算总量",
 	# 道具
 	"shape": "形状", "rarity": "稀有度", "rarity_cap": "稀有度上限", "is_bag": "是包", "bag_accept_tags": "包只收的标签", "bag_mods": "包体加成",
-	"set_id": "套装", "effects": "效果", "faith_bonuses": "信仰加成", "dormant_keeps_combat": "休眠仍保留战斗效果", "requires_unlock": "需要的解锁",
+	"set_id": "套装", "effects": "效果", "belt_use": "随身用法", "wear": "耐久", "when": "什么时候能用",
+	"max_charges": "满的时候几次", "prefixes": "前缀（剩 1 / 2 / 3 次）", "prefixes_by_lang": "别的语言的前缀", "broken_prefix": "破碎的前缀", "broken_prefixes": "别的语言的破碎前缀",
+	"broken_value_ratio": "破碎后卖价几成", "own_only": "只认这件自己打出的", "feed_mods": "供给的加成", "feed_rules": "供给的规则", "feed_filter": "只供给", "faith_bonuses": "信仰加成", "dormant_keeps_combat": "休眠仍保留战斗效果", "requires_unlock": "需要的解锁",
 	"combat": "战斗", "adjacency": "邻接", "base_stats": "基础属性", "rules": "规则", "trigger": "触发", "cadence": "节奏", "costs": "消耗",
 	"use_haste": "受急速影响", "cooldown": "冷却", "resource_key": "资源", "damage_type": "伤害类型", "damage_stat": "伤害用的属性", "amount_stat": "数量改从属性取（留空 = 用上面的数量）",
 	"stat": "属性", "stat_scale": "属性系数", "direct_override": "直接伤害（−1 按来源定）", "shield_absorbable": "可被护盾吸收", "provokes": "招致反应", "on_self": "对自己", "same_side": "同一边",
@@ -101,11 +103,12 @@ const TYPE_LABELS := {
 	"stat_mod": "属性修饰（信仰级）", "enchant_weapons": "武器火焰附魔", "food_shield": "按食物给护盾", "food_double": "食物效果翻倍",
 	"altar_sacrifice_hp": "神坛：献祭生命上限", "altar_pray_fire": "神坛：祈祷火焰", "altar_food_vitality": "献祭食物回体力", "altar_train_board": "神坛：锻炼（棋盘 +1 行）",
 	"altar_reshape_node": "神坛：改造此点", "smite": "秒杀（耗体力）", "extra_drop_by_node": "按点类型必掉额外一件", "gift_on_enter": "踩上点给对应道具", "overtime_regen": "加时阶段回春", "on_axis_at_least": "标准轴到 N 层时", "shift_axis": "改标准轴层数", "axis_boost": "开战带几层标准轴", "undying": "血归零后坚持几秒", "altar_bless": "神坛：祈求赐福", "bless_item": "赐福一件",
-	"erosion": "侵蚀", "hunters": "猎手", "safe": "保险箱", "node_storage": "按点暂存", "countdown": "全局倒计时", "crafting": "合成", "altar": "神坛", "buff": "一局的 buff",     # 101：一局的模块（本体功能与难度机制同一张表）
+	"erosion": "侵蚀", "hunters": "猎手", "safe": "保险箱", "node_storage": "按点暂存", "countdown": "全局倒计时", "crafting": "合成", "altar": "神坛", "buff": "一局的 buff", "belt": "腰带", "wear": "道具耐久",     # 101：一局的模块（本体功能与难度机制同一张表）
 	"approach": "逼近", "flee": "逃跑", "wander": "游荡", "ambush": "伏击", "patrol": "巡逻",
 	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫", "expel": "驱逐（退回上一步）", "random": "按权重随机", "fixed": "固定一档",
 	"damage_item": "损坏道具", "drain_money": "掉钱",
 	"warehouse_rows": "仓库加行",     # 110：局外科技的效果
+	"belt_slots_bonus": "腰带扩格", "smoke_escape": "烟雾：这一场不打", "mend_vitality": "回体力（随身）",     # 147
 	"tech_run_buff": "每级给一条局外 buff", "tech_safe_size": "保险箱扩格",     # 118
 }
 
@@ -117,6 +120,7 @@ const ENUM_LABELS := {
 	"PRESET": "预设", "UNVISITED": "没去过", "VISITED": "去过", "TOTAL": "总数", "DISTINCT": "不重复",
 	"OWN": "自己的", "OTHER": "别人的", "ALLY": "同伴", "DEALT": "打出的", "TAKEN": "受到的", "BELOW": "降到以下", "ABOVE": "涨到以上",     # 132
 	"ADD": "加算", "MULT": "乘算",     # 133
+	"PREBATTLE": "战前准备屏",     # 147
 	"tier": "按阶", "active": "激活即", "scaled": "按信力",     # 111：信仰加成的生效方式（字符串枚举，值是小写原文）
 }
 
@@ -128,6 +132,7 @@ const CLASS_LABELS := {
 	"AchievementDef": "成就", "TagDef": "标签", "DamageTypeDef": "伤害类型", "LoadoutDef": "开局装备", "NodeRules": "节点规则", "DropRule": "掉落规则", "EconomyRules": "经济规则", "MetaRules": "局外规则",
 	"SearchRules": "搜索规则", "ItemSetDef": "套装", "SetTier": "套装档位", "RunBuffDef": "局外 / 地图增益", "EnemyPool": "敌人池", "StrengthRule": "档位规则",
 	"TechDef": "局外科技", "TechTier": "科技一级", "TechEffect": "科技效果",
+	"BeltUse": "随身用法", "BeltEffect": "随身效果", "WearProfile": "耐久",     # 147 / 148
 }
 
 ## 脚本路径 → {字段名 → 说明}；"" 键 = 类的说明

@@ -646,8 +646,9 @@ static func run_names_and_hunters_and_mana(t: TestCase) -> void:
 	var diffs := GameFlow.load_difficulties()
 	t.check(not diffs.is_empty() and diffs[0].id == &"normal", "难度列表第一个是普通（开局屏默认选它）")
 	# mana
-	var crystal := c.items.get_def(&"mana_crystal")
-	t.check(crystal.combat.base_stats.has("max_mana") and not crystal.combat.base_stats.has("max_power"), "魔晶石给 max_mana")
+	var battery := c.items.get_def(&"battery")
+	t.check(battery.combat.base_stats.has("max_mana") and not battery.combat.base_stats.has("max_power"), "电池给 max_mana")
+	t.check(c.items.get_def(&"fire_crystal").combat == null, "148：魔晶石不再给魔力")
 	t.check(not UiPalette.RESOURCE_COLORS.has("power"), "没有 power 资源的颜色了")
 
 

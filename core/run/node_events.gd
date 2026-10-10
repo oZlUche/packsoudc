@@ -520,7 +520,7 @@ func smite_pending_battle() -> bool:
 	var me: CombatantSpec = hooks.player_spec()
 	var result := BattleResult.new()
 	result.winner = 0
-	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content, "type": String(type)}
+	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content, "type": String(type), "smite": true}     # 148：秒杀不算打了一场（魔晶石不耗）
 	battle_finished.emit(node, result, true)
 	_settle_won(node, type, content)
 	_after_battle(node, kind, true)
@@ -569,10 +569,7 @@ func _uid_names(spec: CombatantSpec) -> Dictionary:
 	var out := {}
 	if spec == null:
 		return out
-	for item in spec.items:
-		var def := items.get_def(item.def_id) if items != null else null
-		out[item.source_uid] = Names.of(def) if def != null else String(item.def_id)
-	return out
+	return CombatantSpec.item_names(spec, items) if items != null else out     # 148：同一张表（棋盘上的那一件带前缀）
 
 
 ## 095：掉落定了之后按掉落规则的概率把普通道具换成赐福版（激活了信仰只换那位神的）

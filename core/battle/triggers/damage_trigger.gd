@@ -28,6 +28,10 @@ enum Direction {
 ## 被护盾全吸收掉的一下不该点亮反伤。
 @export var min_amount: float = 0.0
 
+## 148：只认**这件道具自己**打出的那一下（伤害包的来源 uid = 规则的主人）。魔晶石挂到法杖上的「伤害改成火焰」靠它：
+## 不勾的话，同一边别的武器打出的伤害也会被改
+@export var own_only: bool = false
+
 
 ## 伤害事件的 side 是【承受方】，source_side 是【施加方】。两个子类只差订阅哪条事件（与 [OnDamage] 的暴击筛选）
 func matches(ctx: RuleContext, event: BattleEvent) -> bool:
@@ -40,6 +44,8 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 		_:
 			if not dealt or hit:
 				return false  # 打到自己不算「造成伤害」
+	if own_only and event.get_int(&"uid") != ctx.source_uid():
+		return false
 	if damage_type != &"":
 		if event.get_name(&"type") != damage_type:
 			return false
@@ -57,7 +63,7 @@ func describe() -> String:
 		line = "%s%s伤害%s" % ["受到" if direction == Direction.TAKEN else "造成", Glossary.damage_type_name(damage_type), _when()]
 	if min_amount > 0.0:
 		line += "（单次至少 %s 点）" % TextTemplate.num(min_amount)
-	return line
+	return ("这件" + line) if own_only else line
 
 
 func _when() -> String:

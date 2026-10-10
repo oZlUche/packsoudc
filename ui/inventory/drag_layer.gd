@@ -930,7 +930,7 @@ func _draw() -> void:
 	ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
 	ItemPainter.draw_label(
 		self, cells, anchor, cell,
-		Names.of(_inst.def), font, 11 if is_bag else 13, Color("f2f4f8")
+		Names.of_item(_inst), font, 11 if is_bag else 13, Color("f2f4f8")
 	)
 	if craft_hint != "":     # 140：压在能合的那件上：残影下面一行小字
 		var rows := 0
@@ -958,7 +958,7 @@ func _draw() -> void:
 			)
 			ItemPainter.draw_label(
 				self, item_cells, at, cell,
-				Names.of(item.def), font, 12, Color("f2f4f8")
+				Names.of_item(item), font, 12, Color("f2f4f8")
 			)
 		_draw_straddlers(font)
 
@@ -989,5 +989,5 @@ func _draw_straddlers(font: Font) -> void:
 		)
 		ItemPainter.draw_label(
 			self, item_cells, at, cell,
-			Names.of(item.def), font, 12, Color("f2f4f8", 0.6)
+			Names.of_item(item), font, 12, Color("f2f4f8", 0.6)
 		)

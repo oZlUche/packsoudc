@@ -49,7 +49,7 @@ static func run_tag_data(t: TestCase) -> void:
 static func run_damage_type_data(t: TestCase) -> void:
 	t.begin("096 · 伤害类型是内容：data/damage_types 覆盖内置；名字按语言；性质以数据为准；deal_damage 的说明用名字")
 	DamageTypes.reset_to_builtins()
-	t.eq(DamageTypes.ids().size(), 6, "六种")
+	t.eq(DamageTypes.ids().size(), 8, "八种（148 加了冰霜、闪电）")
 	t.eq(DamageTypes.name_of(DamageTypes.FIRE), "火焰", "火焰")
 	t.eq(DamageTypes.name_of(DamageTypes.FIRE, "en"), "Fire", "Fire")
 	t.eq(DamageTypes.name_of(&"zz_type"), "zz_type", "没登记的原词")

@@ -57,7 +57,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var def := inst.def
 	var lines: Array[String] = []
 	var rc := ItemPainter.rarity_color(def).to_html(false)
-	lines.append("[color=#%s][b]%s[/b][/color]　%s　%d 格　值 %d　重 %d" % [rc, Names.of(def), rarity_name(def.rarity), def.cell_count(), ItemValue.of(def), ItemWeight.of(def)])     # 129：重
+	lines.append("[color=#%s][b]%s[/b][/color]　%s　%d 格　值 %d　重 %d" % [rc, Names.of_item(inst), rarity_name(def.rarity), def.cell_count(), ItemValue.of_instance(inst), ItemWeight.of(def)])     # 129：重
 	var desc := Names.description_of(def)     # 104：说明里的 {字段} 按这件道具自己的字段填
 	if desc != "":
 		lines.append("[color=#8b93a1]%s[/color]" % desc)
@@ -106,6 +106,10 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	for e in def.effects:
 		var d: String = e.describe() if e != null and e.has_method("describe") else ""
 		lines.append("效果：%s" % (d if d != "" else _type_name(e)))
+	if def.belt_use != null:     # 147：随身道具 —— 放腰带，点一下就用
+		lines.append("[color=#%s]随身：%s[/color]" % [UiPalette.GRANT.to_html(false), def.belt_use.describe()])
+	if def.wear != null:     # 148：耐久 —— 剩几次、用完就碎
+		lines.append(wear_line(inst))
 	if def.adjacency != null:
 		var adj := def.adjacency
 		if not adj.grant_cells.is_empty():
@@ -118,8 +122,18 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			lines.append("[color=#%s]增益槽 ×%d[/color]：给站在那儿的邻居%s %s" % [UiPalette.GRANT.to_html(false), adj.grant_cells.size(),
 				("（%s）" % "、".join(_names(adj.grant_filter))) if not adj.grant_filter.is_empty() else "", "；".join(gives)])
 		if not adj.receive_cells.is_empty():
+			var gets := _mods(adj.receive_mods) if adj.has_receive() else "按放上去的那件给的算"     # 148：法杖的受益格自己不定数，看晶石
 			lines.append("[color=#%s]受益槽 ×%d[/color]：每点亮一格%s，自己 %s" % [UiPalette.RECEIVE.to_html(false), adj.receive_cells.size(),
-				("（%s）" % "、".join(_names(adj.receive_filter))) if not adj.receive_filter.is_empty() else "", _mods(adj.receive_mods)])
+				("（%s）" % "、".join(_names(adj.receive_filter))) if not adj.receive_filter.is_empty() else "", gets])
+		if adj.has_feed():     # 148：供给 —— 站在谁的受益格上就给谁
+			var feeds: Array[String] = []
+			if not adj.feed_mods.is_empty():
+				feeds.append(_mods(adj.feed_mods))
+			for fr in adj.feed_rules:
+				if fr != null:
+					feeds.append("附加：%s" % Glossary.rule_text(fr))
+			var line := "供给：站在%s的受益槽上时给它 %s" % [("、".join(_names(adj.feed_filter))) if not adj.feed_filter.is_empty() else "别人", "；".join(feeds)]
+			lines.append("[color=#%s]%s[/color]" % [DIM_HEX if inst.is_broken() else UiPalette.GRANT.to_html(false), line + ("（破碎：不再供给）" if inst.is_broken() else "")])
 	var status := faith_status() if def.has_faith() else {}
 	for fb in def.faith_bonuses:
 		var b := fb as FaithBonus
@@ -148,6 +162,14 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			extra[Names.of(bd)] = Glossary.describe_buff(bd)
 	var terms := Glossary.terms_in(text, extra)
 	return {"text": Glossary.mark(text, terms), "terms": terms}
+
+
+## 148：耐久那一行（「耐久 2 / 3：每供给一场少一次，用完就碎」；碎了写不再供给）
+static func wear_line(inst: ItemInstance) -> String:
+	var w := inst.def.wear
+	if inst.is_broken():
+		return "[color=#%s]耐久 0 / %d：破碎了，不再供给，卖价打折[/color]" % [DIM_HEX, w.max_charges]
+	return "耐久 %d / %d：每供给一场少一次，用完就碎" % [inst.charges(), w.max_charges]
 
 
 ## 这条规则每次出手花多少耐力（面板数或属性值）

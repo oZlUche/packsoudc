@@ -13,6 +13,9 @@ const PHYSICAL := &"physical"
 
 ## 火焰。目前与物理同性质，留作元素线的起点。
 const FIRE := &"fire"
+## 148：冰霜、闪电（魔晶石打出来的）。和火一样目前与物理同性质，只是类型标签（抗性 / 元素反应以后再说）
+const ICE := &"ice"
+const LIGHTNING := &"lightning"
 
 ## 中毒。**绕过护盾**，直接见血。持续伤害，不招致反应（防护也挡不住它 —— 它来自 buff，不是直接伤害，106 第八节）。
 const POISON := &"poison"
@@ -73,6 +76,8 @@ static func _define_builtins() -> void:
 	#            id        名称     护盾   招致反应
 	_define(PHYSICAL, "物理", true, true)
 	_define(FIRE, "火焰", true, true)
+	_define(ICE, "冰霜", true, true)
+	_define(LIGHTNING, "闪电", true, true)
 	_define(POISON, "中毒", false, false)
 	_define(BLEED, "流血", false, false)
 	_define(REFLECT, "反伤", true, false)

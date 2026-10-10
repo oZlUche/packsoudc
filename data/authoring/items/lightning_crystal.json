@@ -1,0 +1,62 @@
+{
+  "id": "lightning_crystal",
+  "display_name": "闪电魔晶石",
+  "display_names": {
+    "en": "Lightning Crystal"
+  },
+  "description": "放在法杖的受益格上：法杖伤害 +{amount}，打出闪电伤害。能供给 {max_charges} 场，用完就碎。",
+  "shape": [
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "part",
+    "material",
+    "magic",
+    "gem",
+    "crystal"
+  ],
+  "adjacency": {
+    "feed_mods": [
+      {
+        "amount": 6.0
+      }
+    ],
+    "feed_rules": [
+      {
+        "trigger": {
+          "type": "on_before_damage",
+          "direction": "DEALT",
+          "own_only": true
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "convert_damage_type",
+            "to": "lightning"
+          }
+        ]
+      }
+    ],
+    "feed_filter": [
+      "staff"
+    ]
+  },
+  "wear": {
+    "prefixes": [
+      "黯淡的",
+      "闪烁的",
+      "明亮的"
+    ],
+    "prefixes_by_lang": {
+      "en": [
+        "Dim ",
+        "Flickering ",
+        "Bright "
+      ]
+    },
+    "broken_prefixes": {
+      "en": "Shattered "
+    }
+  }
+}

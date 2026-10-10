@@ -1,0 +1,55 @@
+{
+  "id": "magic_staff",
+  "display_name": "魔法杖",
+  "display_names": {
+    "en": "Magic Staff"
+  },
+  "description": "不放晶石就是根木棍；杖头两侧放一颗魔晶石，打出来的就是元素伤害。",
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "weapon",
+    "melee",
+    "staff",
+    "magic"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 6
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.2
+        },
+        "costs": [
+          "@resource_5"
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  },
+  "adjacency": {
+    "receive_cells": [
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "receive_filter": [
+      "crystal"
+    ]
+  }
+}

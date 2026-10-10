@@ -1,0 +1,71 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_f8tca"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_k6cs4"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_kqan7"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_fcgro"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_tmwf4"]
+[ext_resource type="Script" path="res://core/battle/effects/convert_damage_type.gd" id="6_h2x6p"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_before_damage.gd" id="7_mf588"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="8_moof6"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="9_xt4ls"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="10_4s0f7"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_62k63"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_xs2eo"]
+[ext_resource type="Script" path="res://core/inventory/wear_profile.gd" id="13_ujygy"]
+
+[sub_resource type="Resource" id="Resource_jf2rd"]
+script = ExtResource("1_f8tca")
+amount = 6.0
+
+[sub_resource type="Resource" id="Resource_40ief"]
+script = ExtResource("3_kqan7")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_8tnqc"]
+script = ExtResource("6_h2x6p")
+to = &"lightning"
+
+[sub_resource type="Resource" id="Resource_1ia6g"]
+script = ExtResource("7_mf588")
+direction = 1
+own_only = true
+
+[sub_resource type="Resource" id="Resource_4gdtk"]
+script = ExtResource("2_k6cs4")
+trigger = SubResource("Resource_1ia6g")
+cadence = SubResource("Resource_40ief")
+effects = Array[ExtResource("5_tmwf4")]([SubResource("Resource_8tnqc")])
+
+[sub_resource type="Resource" id="Resource_idboc"]
+script = ExtResource("8_moof6")
+feed_mods = Array[ExtResource("1_f8tca")]([SubResource("Resource_jf2rd")])
+feed_rules = Array[ExtResource("2_k6cs4")]([SubResource("Resource_4gdtk")])
+feed_filter = Array[StringName]([&"staff"])
+
+[sub_resource type="Resource" id="Resource_n77k3"]
+script = ExtResource("12_xs2eo")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
+
+[sub_resource type="Resource" id="Resource_wc27w"]
+script = ExtResource("13_ujygy")
+prefixes_by_lang = {
+"en": ["Dim ", "Flickering ", "Bright "]
+}
+broken_prefixes = {
+"en": "Shattered "
+}
+
+[resource]
+script = ExtResource("11_62k63")
+id = &"lightning_crystal"
+display_name = "闪电魔晶石"
+display_names = {
+"en": "Lightning Crystal"
+}
+description = "放在法杖的受益格上：法杖伤害 +{amount}，打出闪电伤害。能供给 {max_charges} 场，用完就碎。"
+shape = SubResource("Resource_n77k3")
+rarity = 1
+tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal"])
+adjacency = SubResource("Resource_idboc")
+wear = SubResource("Resource_wc27w")
