@@ -7,7 +7,7 @@
   "requires": [
     "safe_box"
   ],
-  "description": "出发时多带一笔钱。",
+  "description": "出发时多带一笔钱：按角色自己的开局钱加百分比。",
   "effect": {
     "type": "tech_run_buff",
     "buffs": [

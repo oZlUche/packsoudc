@@ -9,7 +9,7 @@
     "endurance"
   ],
   "column": 1,
-  "description": "开局生命上限更高。",
+  "description": "开局生命上限更高：按角色自己的生命加百分比。",
   "effect": {
     "type": "tech_run_buff",
     "buffs": [

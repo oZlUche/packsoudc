@@ -799,6 +799,22 @@ static func import_loadout(data: Dictionary, ctx: Context, report: ImportReport)
 
 
 ## 角色（058 第 2 条，067）：体力上限、棋盘都得是正数；初始包至少一个、每个得存在且是包（对着道具查的只在批量导入时生效）；上限 -1 = 不限
+## 149 铁律：科技只做所有人都能做的事，角色只做别人做不到的事 —— 角色被动用的一局规则构件，不许也出现在科技的局外 buff（`tech_*`）里。
+## 批量导入时 run_buffs 先导（[constant ContentPaths.ORDER]），单独导一个角色时上下文是空的，跳过
+static func _check_not_in_techs(e: Effect, at: String, ctx: Context, report: ImportReport) -> void:
+	if e.get_script() == null:
+		return
+	var ids := ctx.run_buffs.keys()
+	ids.sort()
+	for bid in ids:
+		if not String(bid).begins_with(TechsTable.BUFF_PREFIX):
+			continue
+		for other in (ctx.run_buffs[bid] as RunBuffDef).effects:
+			if other != null and (other as Object).get_script() == e.get_script():
+				report.error(at, "和科技「%s」用了同一种效果：科技只做谁都能做的事，角色只做别人做不到的事（149）" % bid)
+				return
+
+
 static func import_character(data: Dictionary, ctx: Context, report: ImportReport) -> CharacterDef:
 	var def := CharacterDef.new()
 	_fill(def, data, "", ctx, report)
@@ -809,6 +825,8 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 		report.error("board_size", "棋盘至少 1×1")
 	if def.carry_max_items < -1 or def.carry_rarity_cap < -1:
 		report.error("carry_max_items", "上限只能是 -1（不限）或非负数")
+	if def.starting_funds < -1:
+		report.error("starting_funds", "开局钱只能是 -1（用全局的）或非负数")
 	if def.starting_bags.is_empty():
 		report.error("starting_bags", "至少一个初始包：棋盘上只有包里的东西参战（3.2），没有包一格都用不了")
 	for key in def.base_stats:
@@ -839,6 +857,8 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 				report.error("skills[%d].passive[%d]" % [i, j], "空的效果")
 			elif e.scope() != EffectScope.LOOT and e.scope() != EffectScope.RUN:
 				report.error("skills[%d].passive[%d]" % [i, j], "技能的被动只放掉落或一局规则的效果；战斗效果写进基线或道具")
+			else:
+				_check_not_in_techs(e, "skills[%d].passive[%d]" % [i, j], ctx, report)
 	if not ctx.items.is_empty():
 		for i in def.starting_bags.size():
 			var item: ItemDef = ctx.items.get(def.starting_bags[i], null)

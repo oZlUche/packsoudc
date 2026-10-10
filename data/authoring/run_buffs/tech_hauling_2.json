@@ -1,12 +1,13 @@
 {
   "id": "tech_hauling_2",
   "display_name": "扛重（科技）",
-  "description": "负重上限 {carry_capacity_bonus_amount|signed}",
+  "description": "负重上限 {carry_capacity_bonus_percent|signed}%",
   "scope": "META",
   "effects": [
     {
       "type": "carry_capacity_bonus",
-      "amount": 12
+      "amount": 0,
+      "percent": 30
     }
   ]
 }

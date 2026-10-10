@@ -1,12 +1,13 @@
 {
   "id": "tech_pack_2",
   "display_name": "行囊（科技）",
-  "description": "开局钱 {starting_funds_bonus_amount|signed}",
+  "description": "开局钱 {starting_funds_bonus_percent|signed}%",
   "scope": "META",
   "effects": [
     {
       "type": "starting_funds_bonus",
-      "amount": 100
+      "amount": 0,
+      "percent": 50
     }
   ]
 }

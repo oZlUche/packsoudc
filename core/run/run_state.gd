@@ -193,8 +193,12 @@ static func start(
 			full_kit = p_character.starting_bags + kit
 	full_kit.append_array(p_chapter.starting_items)     # 章节发的（序章二：一把匕首）
 	var ctx := s.buff_context()     # 角色定了再算：技能的被动（体力上限、开局钱）也在里面（082）
-	s.vitality = Vitality.new(vitality_max + ctx.vitality_max_bonus + p_chapter.vitality_bonus)
-	s.wallet = Wallet.new((s.economy.starting_balance if s.economy != null else 0) + ctx.starting_funds_bonus)
+	# 149：体力上限、开局钱按角色的基数乘科技的百分比再加加算；章节的体力加成在最后加
+	s.vitality = Vitality.new(ctx.vitality_max_of(vitality_max) + p_chapter.vitality_bonus)
+	var funds := s.economy.starting_balance if s.economy != null else 0
+	if p_character != null and p_character.starting_funds >= 0:
+		funds = p_character.starting_funds
+	s.wallet = Wallet.new(ctx.starting_funds_of(funds))
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
 	s.board.reject_tags = [ItemDef.BELT] as Array[StringName]     # 147：随身道具不上棋盘（开局落在地上，腰带装上时挪过去）
 	s.storage = ItemStash.new(STORAGE_ID, 0)
@@ -580,16 +584,20 @@ func active_faith_tier() -> int:
 #endregion
 
 
-## 角色基线 + 技能 / buff 的基线加成（RunContext.stat_bonus）。没有加成就是原来那份
+## 角色基线 + 技能 / buff 的基线加成。没有加成就是原来那份。
+## 149：133 的公式 —— 角色面板 ×（1 + Σ乘算%）+ Σ加算（科技 / 技能的 stat_bonus，再加神坛的）；乘算之间相加不相乘
 func effective_baseline() -> CombatantBaseline:
 	var ctx := buff_context()
 	var altar := AltarModule.of(self)
 	var faith_stat_bonus: Dictionary = altar.stat_bonus if altar != null else {}
-	if ctx.stat_bonus.is_empty() and faith_stat_bonus.is_empty():
+	if ctx.stat_bonus.is_empty() and ctx.stat_mult.is_empty() and faith_stat_bonus.is_empty():
 		return player_baseline
 	var base := player_baseline if player_baseline != null else CombatantBaseline.default_baseline()
 	var b := CombatantBaseline.new()
 	b.base_stats = base.base_stats.duplicate()
+	for key in ctx.stat_mult:
+		var km := StringName(String(key))
+		b.base_stats[km] = float(b.base_stats.get(km, BattleStats.default_value(km))) * (1.0 + float(ctx.stat_mult[key]) / 100.0)
 	for key in ctx.stat_bonus:
 		var k := StringName(String(key))
 		b.base_stats[k] = float(b.base_stats.get(k, 0.0)) + float(ctx.stat_bonus[key])
@@ -619,11 +627,11 @@ func carry_weight() -> int:
 	return ItemWeight.total(board)
 
 
-## 负重上限 = 角色的 + 科技（[member RunContext.carry_capacity_bonus]）。0 = 不算负重（没角色、角色没配）
+## 负重上限 = 角色的 ×（1 + 科技的百分比）+ 加算（[method RunContext.carry_capacity_of]，149）。0 = 不算负重（没角色、角色没配）
 func carry_capacity() -> int:
 	if character == null or character.weight_capacity <= 0:
 		return 0
-	return character.weight_capacity + buff_context().carry_capacity_bonus
+	return buff_context().carry_capacity_of(character.weight_capacity)
 
 
 ## 现在第几级（0 = 轻装）。这一章没开负重恒为 0

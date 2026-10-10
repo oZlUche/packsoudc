@@ -8,12 +8,13 @@
 
 [sub_resource type="Resource" id="Resource_iq17e"]
 script = ExtResource("2_0gtlf")
-amount = 15.0
+mode = 1
+amount = 30.0
 
 [resource]
 script = ExtResource("5_vkcua")
 id = &"tech_sinew_3"
 display_name = "筋骨（科技）"
-description = "开局生命 {stat_bonus_amount|signed}"
+description = "开局生命 {stat_bonus_amount|signed}%"
 scope = 0
 effects = Array[ExtResource("1_rqfuk")]([SubResource("Resource_iq17e")])

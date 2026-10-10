@@ -28,6 +28,7 @@ const RUN_EFFECTS := {
 	&"erosion_resist": "res://core/run/effects/erosion_resist.gd",
 	&"battle_reward_mult": "res://core/run/effects/battle_reward_mult.gd",
 	&"belt_slots_bonus": "res://core/run/effects/belt_slots_bonus.gd",     # 147
+	&"loss_discount": "res://core/run/effects/loss_discount.gd",     # 149：科技「不屈」
 }
 
 ## 147：随身道具点一下的效果（[BeltUse.effects]）

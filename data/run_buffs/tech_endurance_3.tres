@@ -8,12 +8,13 @@
 
 [sub_resource type="Resource" id="Resource_6ar1r"]
 script = ExtResource("2_32bxb")
-amount = 3
+amount = 0
+percent = 60
 
 [resource]
 script = ExtResource("5_3ey4a")
 id = &"tech_endurance_3"
 display_name = "耐久（科技）"
-description = "体力上限 {vitality_max_bonus_amount|signed}"
+description = "体力上限 {vitality_max_bonus_percent|signed}%"
 scope = 0
 effects = Array[ExtResource("1_y02qy")]([SubResource("Resource_6ar1r")])

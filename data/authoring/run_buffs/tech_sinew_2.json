@@ -1,12 +1,13 @@
 {
   "id": "tech_sinew_2",
   "display_name": "筋骨（科技）",
-  "description": "开局生命 {stat_bonus_amount|signed}",
+  "description": "开局生命 {stat_bonus_amount|signed}%",
   "scope": "META",
   "effects": [
     {
       "type": "stat_bonus",
-      "amount": 10.0
+      "mode": "MULT",
+      "amount": 20.0
     }
   ]
 }

@@ -8,12 +8,13 @@
 
 [sub_resource type="Resource" id="Resource_qil2u"]
 script = ExtResource("2_ncfcl")
-amount = 6
+amount = 0
+percent = 15
 
 [resource]
 script = ExtResource("5_qxefp")
 id = &"tech_hauling_1"
 display_name = "扛重（科技）"
-description = "负重上限 {carry_capacity_bonus_amount|signed}"
+description = "负重上限 {carry_capacity_bonus_percent|signed}%"
 scope = 0
 effects = Array[ExtResource("1_dqj08")]([SubResource("Resource_qil2u")])
