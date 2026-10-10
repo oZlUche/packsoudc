@@ -49,3 +49,8 @@ func describe() -> String:
 	if flat != 0.0:
 		return "反弹 %.0f 点" % flat
 	return "反弹 %d%% 伤害" % percent
+
+
+## 151：估值 —— 对面那一下的百分之几 + 固定值，打回去
+func estimated_value(ctx: PowerContext) -> float:
+	return ctx.incoming_hit() * percent / 100.0 + flat

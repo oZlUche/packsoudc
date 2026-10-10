@@ -22,3 +22,12 @@ func pay(_ctx: RuleContext) -> void:
 
 func describe() -> String:
 	return "%d%% 几率" % percent
+
+
+## 151：几率本身
+func estimated_factor(_ctx: PowerContext, _rate: float) -> float:
+	return clampf(percent / 100.0, 0.0, 1.0)
+
+
+func is_condition() -> bool:
+	return true

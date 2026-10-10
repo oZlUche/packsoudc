@@ -29,3 +29,13 @@ func describe() -> String:
 	var who := "你" if on_self else "对手"
 	var n := absi(stacks) if stacks != 0 else 1
 	return "若%s的%s%s %d 层" % [who, StatAxes.name_of(axis, stacks), "不到" if negate else "至少", n]
+
+
+## 151：条件满足的概率（取反 = 一减它）
+func estimated_factor(ctx: PowerContext, _rate: float) -> float:
+	var p := ctx.weights.condition_factor
+	return 1.0 - p if negate else p
+
+
+func is_condition() -> bool:
+	return true

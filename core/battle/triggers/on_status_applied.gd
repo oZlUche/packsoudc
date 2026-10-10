@@ -35,3 +35,12 @@ func describe() -> String:
 	if by_self:
 		return "你给%s施加%s时" % ["自己" if on_self else "对手", s]
 	return "%s被施加%s时" % ["你" if on_self else "对手", s]
+
+
+## 151：本件自己施加的那个 buff 按它施加的频率；别的按假定频率
+func estimated_rate(ctx: PowerContext, _cadence_hz: float) -> float:
+	if by_self:
+		var key := ("self:" if on_self else "opp:") + String(buff_id)
+		if ctx.applied_rate.has(key):
+			return float(ctx.applied_rate[key])
+	return ctx.weights.status_applied_rate

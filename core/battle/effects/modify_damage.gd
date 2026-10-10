@@ -52,3 +52,15 @@ func describe() -> String:
 	if flat != 0.0:
 		parts.append("%+.0f" % flat)
 	return "伤害 " + "、".join(parts) if not parts.is_empty() else "不改动伤害"
+
+
+## 151：估值 —— 改的是哪一下看扳机：主人受击时少挨的为正，主人出手时多打的为正。反转按「这一下变成治疗」，取消按「这一下没了」
+func estimated_value(ctx: PowerContext) -> float:
+	var hit := ctx.incoming_hit() if ctx.incoming else ctx.hit_size()
+	var after := hit * (1.0 + percent / 100.0) + flat
+	if cancel:
+		after = 0.0
+	elif invert:
+		after = -hit * ctx.weights.heal_weight
+	var delta := maxf(after, -hit) - hit if not invert else after - hit
+	return -delta if ctx.incoming else delta

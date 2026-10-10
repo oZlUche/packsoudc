@@ -24,3 +24,9 @@ func describe() -> String:
 	if not crit_only:
 		return line
 	return line.replace("受到攻击", "受到暴击").replace("攻击命中", "暴击命中").replace("伤害时", "暴击时")
+
+
+## 151：只认暴击的再乘假定暴击率
+func estimated_rate(ctx: PowerContext, cadence_hz: float) -> float:
+	var rate := super.estimated_rate(ctx, cadence_hz)
+	return rate * ctx.weights.crit_rate if crit_only else rate

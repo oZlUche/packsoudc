@@ -35,3 +35,12 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 
 func describe() -> String:
 	return "%s的%s达到 %d 层时" % ["你" if on_self else "对手", StatAxes.name_of(axis, stacks), absi(maxi(1, stacks) if stacks >= 0 else stacks)]
+
+
+## 151：门槛占比 × 频率
+func estimated_rate(ctx: PowerContext, cadence_hz: float) -> float:
+	return ctx.weights.threshold_share * (cadence_hz if cadence_hz > 0.0 else ctx.hz())
+
+
+func estimated_stacks() -> float:
+	return float(stacks)

@@ -32,3 +32,13 @@ func describe() -> String:
 	if negate:
 		return "若%s没有%s" % [who, s] if stacks <= 1 else "若%s%s不到 %d 层" % [who, s, stacks]
 	return "若%s有%s" % [who, s] if stacks <= 1 else "若%s%s至少 %d 层" % [who, s, stacks]
+
+
+## 151：条件满足的概率（取反 = 一减它）
+func estimated_factor(ctx: PowerContext, _rate: float) -> float:
+	var p := ctx.weights.condition_factor
+	return 1.0 - p if negate else p
+
+
+func is_condition() -> bool:
+	return true

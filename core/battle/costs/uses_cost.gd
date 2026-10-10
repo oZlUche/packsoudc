@@ -17,3 +17,9 @@ func pay(ctx: RuleContext) -> void:
 
 func describe() -> String:
 	return "每场最多 %d 次" % max_uses
+
+
+## 151：一场里用得完几成 = min(1, 次数 ÷ (一秒几次 × H))
+func estimated_factor(ctx: PowerContext, rate: float) -> float:
+	var want := rate * ctx.weights.horizon_sec
+	return minf(1.0, max_uses / want) if want > 0.0 else 1.0

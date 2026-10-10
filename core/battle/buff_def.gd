@@ -53,3 +53,29 @@ func duration_text() -> String:
 @export var on_apply: Array[CombatEffect] = []
 @export var on_expire: Array[CombatEffect] = []
 
+
+#region 151 战斗力估算
+## 一层挂在某一边身上，每秒对那一边值多少（[param ctx] 是那一边的角度，[method PowerContext.for_carrier]）：
+## 属性修饰 + 自己的规则（流血：每层每秒伤自己一点 = −1）
+func value_per_sec(ctx: PowerContext) -> float:
+	if ctx.depth > 3:
+		return 0.0
+	var v := 0.0
+	for m in mods:
+		v += ctx.stat_value((m as StatModifier).stat, (m as StatModifier).mode, (m as StatModifier).amount)
+	for r in rules:
+		v += (r as AbilityRule).estimated_value_per_sec(ctx)
+	return v
+
+
+## 一层总共值多少 = 每秒 × 平均待多久（[method PowerWeights.expected_duration]）+ 上身 / 到期那一下
+func stack_value(ctx: PowerContext) -> float:
+	if ctx.depth > 3:
+		return 0.0
+	var v := value_per_sec(ctx) * ctx.weights.expected_duration(duration_sec, is_permanent())
+	for e in on_apply + on_expire:
+		var x := (e as CombatEffect).estimated_value(ctx)
+		if not is_nan(x):
+			v += x
+	return v
+#endregion

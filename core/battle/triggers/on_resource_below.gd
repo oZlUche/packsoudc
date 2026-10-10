@@ -50,3 +50,11 @@ func describe() -> String:
 		return "%s的%s回满时" % [who, res]
 	var at := ("%d%%" % percent) if percent > 0 else TextTemplate.num(absolute)
 	return "%s的%s%s %s 时" % [who, res, "不低于" if direction == Direction.ABOVE else "低于", at]
+
+
+## 151：满足的时间占比（低于 p% 占 p 成；高于反过来；回满按门槛占比）× 频率（没有冷却 = 资源一变就问，按受击频率）
+func estimated_rate(ctx: PowerContext, cadence_hz: float) -> float:
+	var share := ctx.weights.threshold_share
+	if not full and percent > 0:
+		share = percent / 100.0 if direction == Direction.BELOW else 1.0 - percent / 100.0
+	return share * (cadence_hz if cadence_hz > 0.0 else ctx.hits_taken())

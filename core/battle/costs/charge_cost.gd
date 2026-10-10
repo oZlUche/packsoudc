@@ -28,3 +28,8 @@ func pay(ctx: RuleContext) -> void:
 
 func describe() -> String:
 	return "每第 %d 次才生效" % n
+
+
+## 151：攒 n 次放一次
+func estimated_factor(_ctx: PowerContext, _rate: float) -> float:
+	return 1.0 / maxf(1.0, n)

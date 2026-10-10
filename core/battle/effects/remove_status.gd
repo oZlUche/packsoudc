@@ -63,3 +63,27 @@ func describe() -> String:
 	if stacks <= 0:
 		return "清掉%s全部%s" % [who, Glossary.status_name(buff_id)]
 	return "移除%s %d 层%s" % [who, stacks, Glossary.status_name(buff_id)]
+
+
+## 151：估值 —— 拿掉那几层在那一边身上「还剩的价值」：从自己身上拿掉减益为正、拿掉增益为负；对手身上的反过来。
+## 全部 = 估算上下文假定的层数；清光全部减益 / 增益按假定层数 × 查不到的 buff 每层值多少
+func estimated_value(ctx: PowerContext) -> float:
+	var n := float(stacks) if stacks > 0 else ctx.stacks_or_assumed()
+	var v := 0.0
+	for on_owner in [true, false]:
+		if (on_owner and target == Target.OPPONENT) or (not on_owner and target == Target.SELF):
+			continue
+		var carrier := ctx.for_carrier(on_owner)
+		var each := 0.0
+		if all_debuffs or all_buffs:
+			var unknown := ctx.weights.unknown_buff_value * ctx.weights.expected_duration(0.0, true)
+			each = (-unknown if all_debuffs else 0.0) + (unknown if all_buffs else 0.0)
+			n = ctx.stacks_or_assumed()
+		else:
+			var b := ctx.buff(buff_id)
+			if b == null:
+				return NAN
+			each = b.stack_value(carrier)
+		# each 是那几层对挂着它的那一边值多少：从自己身上拿掉 = 自己少了这些，从对手身上拿掉 = 对手少了这些
+		v += -n * each if on_owner else n * each
+	return v
