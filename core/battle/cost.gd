@@ -33,6 +33,16 @@ func trace_info(_ctx: RuleContext) -> Dictionary:
 	return {"cost": RegistryLookup.class_of(self)}
 
 
+## 151：战斗力估算的折扣（零到一，只缩不翻号）：付得起几成、条件满足几成。[param rate] = 这条规则一秒触发几次
+func estimated_factor(_ctx: PowerContext, _rate: float) -> float:
+	return 1.0
+
+
+## 151：是条件（几率、状态、资源、轴），不是消耗 —— 编辑器分开列 C 与 K
+func is_condition() -> bool:
+	return false
+
+
 ## 142：给人看的一句（「若对手有流血」「消耗你 2 层蓄力」），只由字段拼出来。空 = 不写进规则行
 func describe() -> String:
 	return ""

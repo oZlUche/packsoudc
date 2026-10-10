@@ -20,3 +20,8 @@ func pay(ctx: RuleContext) -> void:
 
 func describe() -> String:
 	return "消耗你 %d 层%s" % [absi(stacks), StatAxes.name_of(axis, stacks)]
+
+
+## 151：吃层打折（吃掉的层本身有价值）
+func estimated_factor(ctx: PowerContext, _rate: float) -> float:
+	return ctx.weights.stack_cost_factor

@@ -27,3 +27,8 @@ func pay(ctx: RuleContext) -> void:
 
 func describe() -> String:
 	return "消耗%s %d 层%s" % ["你" if on_self else "对手", maxi(1, stacks), Glossary.status_name(buff_id)]
+
+
+## 151：吃层打折（吃掉的层本身有价值）
+func estimated_factor(ctx: PowerContext, _rate: float) -> float:
+	return ctx.weights.stack_cost_factor

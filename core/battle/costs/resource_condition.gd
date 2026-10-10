@@ -62,3 +62,13 @@ func describe() -> String:
 		bits.append("不高于 %s 点" % TextTemplate.num(absolute_max))
 	var line := "若%s的%s%s" % [who, res, "、".join(bits)]
 	return ("并非（%s）" % line) if negate else line
+
+
+## 151：条件满足的概率（取反 = 一减它）
+func estimated_factor(ctx: PowerContext, _rate: float) -> float:
+	var p := ctx.weights.condition_factor
+	return 1.0 - p if negate else p
+
+
+func is_condition() -> bool:
+	return true

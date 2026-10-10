@@ -21,3 +21,9 @@ func apply(ctx: RuleContext) -> void:
 
 func describe() -> String:
 	return "所有伤害 +%d%%～+%d%%（血越少越高）" % [min_percent, max_percent]
+
+
+## 151：估值 —— 自己出手那一下 × (满血的百分比 + 血少时多出来的 × 低血时间占比)
+func estimated_value(ctx: PowerContext) -> float:
+	var pct := float(min_percent) + float(max_percent - min_percent) * ctx.weights.low_hp_share
+	return ctx.hit_size() * pct / 100.0

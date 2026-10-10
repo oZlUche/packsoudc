@@ -31,6 +31,27 @@ func estimated_damage(_stats: StatSet) -> float:
 	return 0.0
 
 
+## 151：战斗力估算 —— 触发一次值多少，**从主人的角度带符号**（打对手、给自己增益为正；伤自己、给自己减益、给对手增益为负），
+## 单位是「抵几点伤害」。默认 NAN = 估不出来：估算器记零并在编辑器里标「未估」—— 新效果加一份估值，不是估算器的事
+func estimated_value(_ctx: PowerContext) -> float:
+	return NAN
+
+
+## 151：重复触发打的折扣（零到一）：不可叠层的 buff 还在身上时再上一次是白费。[param rate] = 一秒触发几次
+func estimated_cap(_ctx: PowerContext, _rate: float) -> float:
+	return 1.0
+
+
+## 151：作用对象的符号 —— 对手 +1、自己 −1、两边 0（同样的东西两边各来一份，抵掉）
+static func side_sign(target: Target) -> float:
+	match target:
+		Target.OPPONENT:
+			return 1.0
+		Target.SELF:
+			return -1.0
+	return 0.0
+
+
 ## 这一包伤害算不算「直接伤害」（106 第八节，作者定）。
 ##
 ## 按**来源**定，不按伤害类型：规则属于某件道具（武器出手触发的）→ 直接；

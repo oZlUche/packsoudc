@@ -117,6 +117,18 @@ func estimated_damage(stats: StatSet) -> float:
 			dmg = StatMath.to_float(from_stats) * (1.0 + chance * (mult - 1.0))
 	return dmg
 
+## 151：估值 —— 一下打多少（属性取的含暴击期望；按生命比例的按假定生命：最大生命算满，当前 / 已损失算一半；
+## 按层数的按估算上下文假定的层数），打对手为正、打自己为负、两边都打抵掉
+func estimated_value(ctx: PowerContext) -> float:
+	var dmg := amount
+	if damage_stat != &"" and ctx.stats != null and ctx.stats.total_of(damage_stat, -1) >= 0:
+		dmg = estimated_damage(ctx.stats) if target != Target.SELF else StatMath.to_float(ctx.stats.total_of(damage_stat))
+	if percent_of != &"" and percent > 0:
+		dmg += ctx.weights.assumed_hp * (1.0 if percent_of == &"max_hp" else 0.5) * percent / 100.0
+	if per_stack or per_target_stack != &"":
+		dmg *= ctx.stacks_or_assumed()
+	return dmg * side_sign(target)
+
 
 ## 142：固定值、按层数、按比例都写出来（「对手每层流血造成 3 点物理伤害」「造成 4 点 + 对手 10% 最大生命的物理伤害」）；
 ## 只读属性表的（武器的普通攻击）照旧只写「造成物理伤害」—— 数值随加成变，看 DPS 那行

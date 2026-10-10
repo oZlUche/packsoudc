@@ -31,3 +31,23 @@ func describe() -> String:
 	if to == null:
 		return "转化 ?"
 	return "%s转为%s" % [DamageTypes.name_of(from), Names.of(to)]
+
+
+## 151：估值 —— 拿掉 [member from] 的那几层（勾了「复制」就不拿）+ 换上 [member to] × 比例；层数按估算上下文假定
+func estimated_value(ctx: PowerContext) -> float:
+	if to == null:
+		return NAN
+	var n := ctx.stacks_or_assumed()
+	var from_def := ctx.buff(from)
+	if from_def == null and not keep_from:
+		return NAN
+	var v := 0.0
+	for on_owner in [true, false]:
+		if (on_owner and target == Target.OPPONENT) or (not on_owner and target == Target.SELF):
+			continue
+		var carrier := ctx.for_carrier(on_owner)
+		var change := n * ratio * to.stack_value(carrier)
+		if not keep_from:
+			change -= n * from_def.stack_value(carrier)
+		v += change if on_owner else -change
+	return v

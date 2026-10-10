@@ -37,3 +37,17 @@ func describe() -> String:
 		return "改 %s ?" % axis
 	return "%s%s %d 层" % ["使对手" if target == Target.OPPONENT else ("双方" if target == Target.BOTH else ""),
 		StatAxes.name_of(axis, delta), absi(delta)]
+
+
+## 151：估值 —— 层数 × 一层轴在那一边身上每秒值多少（[method PowerContext.axis_value]）× 平均待多久；给对手取反
+func estimated_value(ctx: PowerContext) -> float:
+	if axis == &"" or not StatAxes.has(axis):
+		return NAN
+	var n := delta * (ctx.stacks_or_assumed() if per_stack else 1.0)
+	var stay := ctx.weights.expected_duration(0.0, true)
+	var v := 0.0
+	if target != Target.OPPONENT:
+		v += n * ctx.for_carrier(true).axis_value(axis) * stay
+	if target != Target.SELF:
+		v -= n * ctx.for_carrier(false).axis_value(axis) * stay
+	return v
