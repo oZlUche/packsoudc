@@ -27,6 +27,13 @@ const RUN_EFFECTS := {
 	&"rest_bonus": "res://core/run/effects/rest_bonus.gd",
 	&"erosion_resist": "res://core/run/effects/erosion_resist.gd",
 	&"battle_reward_mult": "res://core/run/effects/battle_reward_mult.gd",
+	&"belt_slots_bonus": "res://core/run/effects/belt_slots_bonus.gd",     # 147
+}
+
+## 147：随身道具点一下的效果（[BeltUse.effects]）
+const BELT_EFFECTS := {
+	&"smoke_escape": "res://core/run/effects/smoke_escape.gd",
+	&"mend_vitality": "res://core/run/effects/mend_vitality.gd",
 }
 
 ## 一局的机制（069）：难度清单里开的那些
@@ -40,6 +47,8 @@ const RUN_MODULES := {
 	&"crafting": "res://core/run/modules/crafting_module.gd",
 	&"altar": "res://core/run/modules/altar_module.gd",
 	&"buff": "res://core/run/modules/buff_module.gd",
+	&"belt": "res://core/run/modules/belt_module.gd",     # 147
+	&"wear": "res://core/run/modules/wear_module.gd",     # 148
 }
 
 ## 事件层（063）：选项的条件（只读）与后果（做一件事或立一面旗）
@@ -180,6 +189,7 @@ const TECH_EFFECTS := {
 
 const TABLES := {
 	&"run_effect": RUN_EFFECTS,
+	&"belt_effect": BELT_EFFECTS,
 	&"event_condition": EVENT_CONDITIONS,
 	&"event_outcome": EVENT_OUTCOMES,
 	&"run_module": RUN_MODULES,

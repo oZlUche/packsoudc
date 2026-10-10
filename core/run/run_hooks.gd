@@ -25,6 +25,7 @@ const NAMES := {
 	&"request_extract": "RunState：从这个撤离点撤离（付不起返回 false）",
 	&"relocate": "RunState：把人挪到别处（清地上、给猎手一个回合）",
 	&"safe_open": "SafeModule：保险箱还能开吗",
+	&"belt_use": "BeltModule：用腰带里的一件（147：空串 = 用了，否则是原因）",
 	&"faith_tier": "RunState：激活信仰现在第几阶（-1 = 没激活）",
 	&"active_faith_id": "RunState：激活信仰的 id（空 = 没激活）",
 	&"bless_substitute": "AltarModule：战利品 / 搜索里把道具换成赐福过的",
@@ -118,6 +119,11 @@ func before_battle(me: CombatantSpec, enemy: CombatantSpec, type: StringName) ->
 ## 保险箱还能开吗。没装保险箱模块 = 能（老路：踩上去就开）
 func safe_open() -> bool:
 	return bool(_at(&"safe_open").call()) if has(&"safe_open") else true
+
+
+## 147：用腰带里那一件。空串 = 用了
+func belt_use(uid: int) -> String:
+	return String(_at(&"belt_use").call(uid)) if has(&"belt_use") else "没有腰带"
 
 
 func grant_map_buff(id: StringName) -> bool:

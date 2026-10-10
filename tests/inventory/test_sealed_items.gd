@@ -50,7 +50,7 @@ static func run_content(t: TestCase) -> void:
 	t.begin("第一批剑与魔法道具 · 走管线、都没封存；三套开局装备与角色初始包只用没封存的；敌人招牌没封存的；珍宝标签有人带")
 	var db := _db()
 	for id in [&"shortsword", &"longsword", &"scimitar", &"longbow", &"arrows", &"round_shield", &"leather_armor", &"gambeson",
-			&"mithril_sword", &"blessed_shield", &"blessed_longbow", &"salve", &"bandage", &"mana_shard", &"mana_crystal",
+			&"mithril_sword", &"blessed_shield", &"blessed_longbow", &"salve", &"bandage", &"fire_crystal", &"magic_staff",
 			&"warped_obsidian", &"charm_brute", &"pale_shard", &"barbarian_necklace"]:
 		var def := db.get_def(id)
 		t.check(def != null and not def.is_sealed(), "%s 在库里、没封存" % id)

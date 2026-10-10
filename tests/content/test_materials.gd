@@ -49,7 +49,7 @@ static func run(t: TestCase) -> void:
 		t.eq(kinds, 1, "%s：工艺 / 自然 / 魔法三选一" % id)
 	t.check(materials >= 37, "材料 %d 件（原有 9 + 新 28）" % materials)
 	t.check(db.get_def(&"hardwood_plank").tags.has(&"crafted"), "硬木板：工艺（锯出来的）")
-	for id in [&"mana_shard", &"mana_crystal"]:
+	for id in [&"fire_crystal", &"ice_crystal", &"lightning_crystal"]:     # 148：魔晶石换成三种元素晶石
 		var def := db.get_def(id)
 		t.check(def.tags.has(&"magic") and not def.tags.has(&"nature") and not def.tags.has(&"crafted"), "%s：魔法，不算自然也不算工艺" % id)
 	t.not_null(load(ContentPaths.asset_file("tags", "crafted")), "【工艺】标签登记了")

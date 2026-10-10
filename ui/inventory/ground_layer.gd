@@ -466,6 +466,6 @@ func _draw() -> void:
 			edge.a *= alpha
 			ink.a *= alpha
 		ItemPainter.draw_item(self, cells, at, InventoryView.CELL, body, edge)
-		ItemPainter.draw_label(self, cells, at, InventoryView.CELL, Names.of(inst.def), font, 13, ink)
+		ItemPainter.draw_label(self, cells, at, InventoryView.CELL, Names.of_item(inst), font, 13, ink)
 		if landing:
 			draw_set_transform(Vector2.ZERO)

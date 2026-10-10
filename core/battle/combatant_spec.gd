@@ -28,6 +28,8 @@ var passives: Array[PassiveNote] = []
 
 ## 103 第 7 条：编译它的那张棋盘（回放画双方棋盘、盖冷却遮罩用；uid 就是日志里的 uid）。结算内核不读
 var board: GridInventory = null
+## 148：这一场站在别人受益格上、真的供给了的道具（魔晶石）uid，升序。[WearModule] 按它扣耐久
+var fed_uids: Array[int] = []
 
 var _by_uid: Dictionary = {}
 
@@ -52,6 +54,10 @@ static func item_names(spec: CombatantSpec, items: ItemDatabase) -> Dictionary:
 	if spec == null:
 		return out
 	for item in spec.items:
+		var inst := spec.board.get_item(item.source_uid) if spec.board != null else null
+		if inst != null and inst.def != null and inst.def.id == item.def_id:
+			out[item.source_uid] = Names.of_item(inst)     # 148：棋盘上那一件的名字（魔晶石带前缀）
+			continue
 		var def := items.get_def(item.def_id)
 		out[item.source_uid] = Names.of(def) if def != null else String(item.def_id)
 	return out

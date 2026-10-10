@@ -36,7 +36,7 @@ static func run(t: TestCase) -> void:
 	for id in cands:
 		var d := c.items.get_def(id)
 		t.check(d.combat == null and not d.is_bag and d.tags.has(&"material") and not d.tags.has(&"treasure"), "%s：无战斗档的材料" % id)
-	t.check(not cands.has(&"mana_crystal"), "魔晶石有战斗档，不在里面")
+	t.check(not cands.has(&"magic_staff"), "魔法杖是武器，不在里面")
 
 	t.begin("126 · 同一种子两次一样；不带规则时敌人和战斗道具不变（携带用另一条随机数）")
 	var enemy := c.pool.entries[0].enemy

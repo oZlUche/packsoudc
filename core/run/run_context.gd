@@ -29,6 +29,8 @@ var free_step_every: int = 0
 var rest_bonus: int = 0
 var erosion_resist: int = 0
 var battle_reward_mult: float = 1.0
+## 147：腰带多几格（默认格数在 [member BeltModule.slots]）
+var belt_slots_bonus: int = 0
 
 
 func snapshot() -> Dictionary:
@@ -48,4 +50,5 @@ func snapshot() -> Dictionary:
 		"rest_bonus": rest_bonus,
 		"erosion_resist": erosion_resist,
 		"battle_reward_mult": battle_reward_mult,
+		"belt_slots_bonus": belt_slots_bonus,
 	}

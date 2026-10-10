@@ -8,6 +8,7 @@
 ## [codeblock]
 ## 增益 grant   —— 我给站在这些格子上的邻居加成
 ## 受益 receive —— 站在这些格子上的邻居给我加成
+## 供给 feed    —— 我站在谁的受益格上，就给谁（148；不画格子）
 ## [endcodeblock]
 ##
 ## 参照作品用星形与菱形区分两类标记，那只是两个任意符号；本作直接用语义命名，
@@ -46,6 +47,15 @@ extends Resource
 ## 跑在本件身上，所以时机不限；不许有 costs（同附加规则）
 @export var receive_rules: Array[AbilityRule] = []
 
+@export_group("供给：我站在别人的受益格上时给他")
+## 148（作者定，魔晶石 → 法杖）：**本件站在别人的受益格上**、且对方命中 [member feed_filter] 时，把这些交给对方 —— 一份，不按格数乘。
+## 供给方不画格子：「谁的受益格我站上了」由宿主说了算（晶石形状转四个方向，画一圈增益格才对得上杖头）。用坏了（耐久归零）就不再供给
+@export var feed_mods: Array[StatModifier] = []
+## 供给的规则：挂到宿主身上、以宿主身份跑（同 108 的附加规则：只许 `on_item_fired`、不许 costs）
+@export var feed_rules: Array[AbilityRule] = []
+## 宿主要命中的标签；空 = 任何宿主
+@export var feed_filter: Array[StringName] = []
+
 
 func has_grant() -> bool:
 	return not grant_cells.is_empty() and (not grant_mods.is_empty() or not grant_rules.is_empty())
@@ -53,6 +63,11 @@ func has_grant() -> bool:
 
 func has_receive() -> bool:
 	return not receive_cells.is_empty() and (not receive_mods.is_empty() or not receive_rules.is_empty())
+
+
+## 148：有没有供给（站在别人受益格上时给的东西）
+func has_feed() -> bool:
+	return not feed_mods.is_empty() or not feed_rules.is_empty()
 
 
 ## 某个定义是否满足标记的过滤条件。

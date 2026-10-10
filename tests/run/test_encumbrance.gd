@@ -47,7 +47,7 @@ static func run_weights(t: TestCase) -> void:
 		&"knife": 3, &"shortsword": 12, &"longsword": 15, &"plate_cuirass": 40, &"tower_shield": 32, &"round_shield": 15,     # 143：异形之后格数变了
 		&"bag_leather": 3, &"bag_long": 2, &"bag_small": 2, &"ration": 1, &"iron_ore": 6, &"oak_log": 6, &"silk_bolt": 2,
 		&"warhammer": 12, &"nail_keg": 12, &"high_tier_armor": 18, &"charm_brute": 1, &"bone_dice": 1, &"crowbar": 9,
-		&"mana_crystal": 4,
+		&"fire_crystal": 4,
 	}
 	for id in anchors:
 		t.eq(ItemWeight.of(c.items.get_def(id)), int(anchors[id]), "%s 重 %d" % [id, anchors[id]])

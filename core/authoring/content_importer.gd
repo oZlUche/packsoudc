@@ -323,6 +323,7 @@ static func _rule_groups(def: ItemDef) -> Array:
 	if def.adjacency != null:
 		groups.append(["adjacency.grant_rules", def.adjacency.grant_rules])     # 108：附加规则同样适用
 		groups.append(["adjacency.receive_rules", def.adjacency.receive_rules])     # 132
+		groups.append(["adjacency.feed_rules", def.adjacency.feed_rules])     # 148
 	return groups
 
 
@@ -1595,12 +1596,34 @@ static func _validate_item(def: ItemDef, report: ImportReport) -> void:
 		if not ap.grant_rules.is_empty() and ap.grant_cells.is_empty():
 			report.warn("adjacency.grant_rules", "写了附加规则却没有增益格，挂不到任何邻居身上")
 		validate_attached_rules(ap.grant_rules, "adjacency.grant_rules", report)
-		if not ap.receive_cells.is_empty() and ap.receive_mods.is_empty() and ap.receive_rules.is_empty():
+		# 148：受益格只认某类邻居（法杖只收魔晶石）的，数值由那类邻居的供给给，自己不写加成是对的
+		if not ap.receive_cells.is_empty() and ap.receive_mods.is_empty() and ap.receive_rules.is_empty() and ap.receive_filter.is_empty():
 			report.warn("adjacency.receive", "标了受益格却没有加成也没有受益规则")
 		if not ap.receive_rules.is_empty() and ap.receive_cells.is_empty():
 			report.warn("adjacency.receive_rules", "写了受益规则却没有受益格，永远挂不上")
 		validate_attached_rules(ap.receive_rules, "adjacency.receive_rules", report, false)
+		validate_attached_rules(ap.feed_rules, "adjacency.feed_rules", report, false)     # 148：供给的规则挂到宿主身上、跑在宿主身上，同受益规则（时机不限，不许 costs）
+		if not ap.feed_filter.is_empty() and not ap.has_feed():
+			report.warn("adjacency.feed_filter", "写了「只供给」却没有供给的加成或规则")
 		_warn_overlapping_markers(def, report)
+	_validate_belt_and_wear(def, report)
+
+
+## 147 / 148：随身道具只进腰带（带【随身】、不参战、1 格）；耐久要有正的次数
+static func _validate_belt_and_wear(def: ItemDef, report: ImportReport) -> void:
+	if def.belt_use != null:
+		if not def.is_belt():
+			report.error("belt_use", "能随身用的道具要带「%s」标签（腰带只收它）" % ItemDef.BELT)
+		if def.combat != null:
+			report.error("combat", "随身道具不上棋盘，写了战斗也不会生效")
+		if def.cell_count() != 1:
+			report.error("shape", "随身道具只占 1 格（腰带一格一件）")
+		if def.belt_use.effects.is_empty():
+			report.warn("belt_use.effects", "能用却什么都不做")
+	elif def.is_belt():
+		report.warn("tags", "带了「%s」却没写怎么用：只能放在腰带里看着" % ItemDef.BELT)
+	if def.wear != null and def.wear.max_charges <= 0:
+		report.error("wear.max_charges", "耐久至少 1 次")
 
 
 ## 标记格压在自己轮廓上时提醒。

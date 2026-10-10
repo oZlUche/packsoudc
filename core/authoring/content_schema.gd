@@ -22,6 +22,7 @@ const ABSTRACT_ROOTS := {
 	&"CombatEffect": [&"effect"],
 	&"LootEffect": [&"loot_effect"],
 	&"RunEffect": [&"run_effect"],
+	&"BeltEffect": [&"belt_effect"],
 	&"Effect": [&"effect", &"loot_effect", &"run_effect"],
 	&"EventCondition": [&"event_condition"],
 	&"EventOutcome": [&"event_outcome"],

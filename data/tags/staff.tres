@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_ahoih"]
+
+[resource]
+script = ExtResource("1_ahoih")
+id = &"staff"
+display_name = "法杖"
+display_names = {
+"en": "Staff"
+}
+description = "法杖：自己只是根棍子，受益格上放了魔晶石才打出元素伤害。"
+descriptions = {
+"en": "Staff: just a stick on its own; deals elemental damage once a crystal sits in its receiving slot."
+}
