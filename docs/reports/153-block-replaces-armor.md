@@ -138,3 +138,45 @@ block   = 生效层 + 格挡轴层数（内容层 + 系统层，带符号）
 - 校验：非盾 `base_stats.block`、非盾 `faith_bonuses` 碰 `block` → error；buff 的 mods 改 `block` → error（指向 `axes`）；非盾自己的规则给自己正向加固 → warn；赐福给格挡的那一条标签必须只有 `shield`。旧键 `armor`（基础属性、档位表、修饰的 stat、轴字段）当 `block` 读并 warn。
 - 估算器的权重 `armor_per_point` 改名 `block_per_point`（数不变）。
 - 测试：新增 `tests/battle/test_block_153.gd`（层与取最高、伤害管线、导入、内容、回放面板）；老测试里的 `armor` 键与「跨件求和」的断言改成格挡与「取最高」。
+
+## 补充一（2026-10-10）：防具给的那层改叫【护甲】，字段 `shield` → `armor`
+
+> 作者原话（本线程）：「防具给的属性不要称为【护盾】，而是【护甲】，修改一下游戏内的字段名称（改为 armor）和文本」。
+
+和正文一起落：正文把固定减伤从 `armor` 改成 `block`，腾出了 `armor` 这个词；这一条把原来叫护盾的那层资源接过去。两步**同一个 PR** 里做，顺序是先 `armor → block`，再 `shield → armor`，中间不留「armor 两个意思」的状态。
+
+### 改名表
+
+| 现在 | 改成 | 说明 |
+|---|---|---|
+| 资源 `shield`（`BattleStats.RES_SHIELD`） | `armor`（`RES_ARMOR`） | 资源池照旧由 `max_*` 派生，不改派生代码 |
+| 属性 `max_shield`（`MAX_SHIELD`） | `max_armor`（`MAX_ARMOR`） | 防具的 `base_stats`、防弹装甲的 `grant_mods`、buff 坚守 / 结界的 mods、布鲁图斯「坚韧」的一次性护盾、自然三阶 `food_shield` 的基线修饰 |
+| `DamageTypeDef.shield_absorbable` | `armor_absorbable` | 四个伤害类型文件（物理 / 中毒 / 流血 / 流失）；`field_text` 「可被护甲吸收」 |
+| 信仰功能 `food_shield` | `food_armor` | `RunRegistry` 的键与自然之神 json 的 `type`；导入器认旧名并提醒 |
+| `PowerWeights.shield_per_point` | `armor_per_point` | `power_weights.json` 的键一起改 |
+| `CombatantPanel.SHIELD_KEY / shield_value / shield_frame_ratio / _draw_shield_frame` | `ARMOR_KEY / armor_value / armor_frame_ratio / _draw_armor_frame` | 106 的画法不变：仍是生命条外侧的粗白框；生命条上的「盾 N」改「甲 N」 |
+| 帮助页 `shield` | `armor`（标题「护甲」） | 正文里的 `direct_damage_and_armor` 同时改 id `direct_damage_and_block`（标题「直接伤害与格挡」），免得 `armor` 这个 id 指着格挡页 |
+| 标签 `shield`【盾】、标签 `armor`【防具】 | **不改** | 它们是道具类别，不是属性；资源键 `armor` 和标签 `armor` 同名，和今天资源 `shield` 对标签 `shield` 一样是两个命名空间 |
+
+`DamagePacket.absorbed`、事件载荷 `absorbed`、内部日志「护盾 −N」→「护甲 −N」：字段名不改（吸收就是吸收），只改文字。
+
+### 文案（护盾 → 护甲，玩家可见的全部）
+
+- `Glossary` 词条「护盾」改名「护甲」：「先于生命被扣的一层。开战时按护甲上限充满，之后不自己回复。中毒、流血无视护甲。」属性名 `max_armor` → 「护甲上限」/ Max Armor；资源名 `armor` → 「护甲」/ Armor；「中毒」「流血」「格挡」「直接伤害」四条里的「护盾」改「护甲」；`LOUD_TERMS` 同步。
+- 数据：帮助页 `armor`（原 `shield`）、`characters`、`god_nature`、`direct_damage_and_block` 正文；四个伤害类型的 `description`；毒刀配方 note；十条教程事件（`tut_search_1_done`、`tut_search_2_again_1`、`tut2_lesson`、`tut2_search_1_done`、`tut2_search_2_again_1`、`tut2_battle_heavy` / `swarm` / `ward` 等）；标签 `armor` 的说明「穿上给护甲」；buff 坚守 / 结界的名字不动。
+- 代码里的注释与编辑器文字（`field_text`、`power_panel` 「自带护甲 / 格挡」、`food_armor` 的说明句）一并换词；`docs/architecture.md` 4.6 第 2 步「护盾吸收」→「护甲吸收」、106 那段「护盾画成外框」改措辞。
+
+### 导入器
+
+- `base_stats.armor` **报 error**，不做别名：这个键在两步改名前后含义不同（旧 = 固定减伤，应改 `block`；新世界里资源池只认 `max_armor`），提示语写清两种去处。正文 3.2 节「`armor` 当 `block` 读并 warn」**作废**，改成这一条。
+- `max_shield` / `shield_absorbable` / `food_shield` / `stat = shield` 认旧名、warn「已改名」，一个版本后删。
+
+### 测试
+
+17 个文件提到护盾或 `max_shield`（`test_damage_pipeline`、`test_overtime`、`test_author_087` / `093` / `096`、`test_keyword_tips`、`test_text_fields`、`test_power_estimate_151`、面板测试等）：改常量与字符串，断言不变。另加一条：旧键 `max_shield` 导入得到 warn、`base_stats.armor` 导入得到 error。
+
+### 术语定稿（落地后写进记忆）
+
+- 【护甲】`armor` / `max_armor`：防具给的一层资源，先于生命被扣，开战充满。
+- 【格挡】`block`：盾牌给的固定减伤，只取最高；轴【加固 / 破绽】是它之上的修正。
+- 「防护」「护盾」两个词从游戏里消失。
