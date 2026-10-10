@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RulePartDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="1_ctyry"]
+[ext_resource type="Script" path="res://core/battle/rule_part_def.gd" id="2_6va4k"]
+
+[sub_resource type="Resource" id="Resource_li57r"]
+script = ExtResource("1_ctyry")
+seconds = 1.0
+
+[resource]
+script = ExtResource("2_6va4k")
+id = &"cooldown_1s"
+display_name = "每 1.0 秒"
+cadence = SubResource("Resource_li57r")

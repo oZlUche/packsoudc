@@ -53,7 +53,7 @@ func _ready() -> void:
 
 ## 道具从资产装（`ItemDatabase`），buff 走 `RunBuffs.load_all`，事件从作者数据读 —— 都是现成的路
 static func _build_context() -> ContentImporter.Context:
-	var ctx := ContentImporter.Context.new()
+	var ctx := ContentLibrary.context()     # 146：带上库里的 buff 与构件
 	var items := ItemDatabase.new()
 	items.load_dir()
 	for id in items.ids():

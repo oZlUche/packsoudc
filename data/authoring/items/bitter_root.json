@@ -20,9 +20,7 @@
           "type": "on_before_damage",
           "damage_type": "poison"
         },
-        "cadence": {
-          "type": "always"
-        },
+        "cadence": "@always",
         "effects": [
           {
             "type": "modify_damage",

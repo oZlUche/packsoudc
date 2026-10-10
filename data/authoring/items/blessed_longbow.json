@@ -8,6 +8,7 @@
     "11",
     "10",
     "10",
+    "10",
     "11"
   ],
   "rarity": 3,
@@ -41,45 +42,20 @@
   ],
   "combat": {
     "base_stats": {
-      "damage": 15
+      "damage": 18
     },
     "rules": [
       {
-        "trigger": {
-          "type": "on_schedule"
-        },
-        "cadence": {
-          "type": "cooldown",
-          "seconds": 0.8
-        },
+        "trigger": "@on_schedule",
+        "cadence": "@cooldown_0_8s",
         "costs": [
-          {
-            "type": "resource",
-            "amount": 5.0
-          }
+          "@resource_5"
         ],
         "effects": [
-          {
-            "type": "deal_damage"
-          },
+          "@deal_damage",
           {
             "type": "apply_status",
-            "buff": {
-              "id": "marked",
-              "display_name": "标记",
-              "display_names": {
-                "en": "Marked"
-              },
-              "is_debuff": true,
-              "stackable": false,
-              "duration_sec": 8.0,
-              "mods": [
-                {
-                  "stat": "armor",
-                  "amount": -3.0
-                }
-              ]
-            }
+            "buff": "marked"
           }
         ]
       }

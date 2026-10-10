@@ -20,31 +20,13 @@
     {
       "rules": [
         {
-          "trigger": {
-            "type": "on_battle_start"
-          },
-          "cadence": {
-            "type": "always"
-          },
+          "trigger": "@on_battle_start",
+          "cadence": "@always",
           "effects": [
             {
               "type": "apply_status",
               "target": "SELF",
-              "buff": {
-                "id": "blood_rage",
-                "display_name": "血怒",
-                "display_names": {
-                  "en": "Blood Rage"
-                },
-                "stackable": false,
-                "duration_sec": 10.0,
-                "mods": [
-                  {
-                    "mode": "MULT",
-                    "amount": 10.0
-                  }
-                ]
-              }
+              "buff": "blood_rage"
             }
           ]
         }

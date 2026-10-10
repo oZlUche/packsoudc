@@ -15,12 +15,8 @@
   "combat": {
     "rules": [
       {
-        "trigger": {
-          "type": "on_battle_start"
-        },
-        "cadence": {
-          "type": "always"
-        },
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
         "effects": [
           {
             "type": "shift_axis",

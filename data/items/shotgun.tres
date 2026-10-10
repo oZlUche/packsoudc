@@ -23,9 +23,11 @@ script = ExtResource("5_q5wh2")
 
 [sub_resource type="Resource" id="Resource_wflf1"]
 script = ExtResource("7_6eiyi")
+metadata/part_ref = &"deal_damage"
 
 [sub_resource type="Resource" id="Resource_o2rgo"]
 script = ExtResource("8_lsoqj")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_ta8v8"]
 script = ExtResource("2_urr4g")

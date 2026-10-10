@@ -1,0 +1,15 @@
+{
+  "id": "deflect",
+  "display_name": "弹开",
+  "display_names": {
+    "en": "Deflect"
+  },
+  "stackable": false,
+  "duration_sec": 4.0,
+  "mods": [
+    {
+      "stat": "armor",
+      "amount": 8.0
+    }
+  ]
+}

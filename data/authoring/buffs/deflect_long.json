@@ -1,0 +1,15 @@
+{
+  "id": "deflect_long",
+  "display_name": "久弹",
+  "display_names": {
+    "en": "Long Deflect"
+  },
+  "stackable": false,
+  "duration_sec": 8.0,
+  "mods": [
+    {
+      "stat": "armor",
+      "amount": 4.0
+    }
+  ]
+}

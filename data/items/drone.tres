@@ -24,9 +24,11 @@ resource_key = &"mana"
 
 [sub_resource type="Resource" id="Resource_o27ou"]
 script = ExtResource("7_tc7t7")
+metadata/part_ref = &"deal_damage"
 
 [sub_resource type="Resource" id="Resource_ut4bu"]
 script = ExtResource("8_d2k3v")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_ia1gj"]
 script = ExtResource("2_8m3yp")

@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="RulePartDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_os2ds"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="2_asn17"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_35ine"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_xuuak"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_oeaqp"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="6_8k8t0"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="7_c330x"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="8_ernqh"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="9_vkx5y"]
+[ext_resource type="Script" path="res://core/battle/rule_part_def.gd" id="10_nruqw"]
+
+[sub_resource type="Resource" id="Resource_af22p"]
+script = ExtResource("4_xuuak")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_qrirt"]
+script = ExtResource("6_8k8t0")
+target = 1
+damage_type = &"bleed"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_fos0o"]
+script = ExtResource("7_c330x")
+
+[sub_resource type="Resource" id="Resource_m2ceh"]
+script = ExtResource("3_35ine")
+trigger = SubResource("Resource_fos0o")
+cadence = SubResource("Resource_af22p")
+effects = Array[ExtResource("2_asn17")]([SubResource("Resource_qrirt")])
+
+[sub_resource type="Resource" id="Resource_lfvqy"]
+script = ExtResource("8_ernqh")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+rules = Array[ExtResource("3_35ine")]([SubResource("Resource_m2ceh")])
+
+[sub_resource type="Resource" id="Resource_xl17s"]
+script = ExtResource("9_vkx5y")
+buff = SubResource("Resource_lfvqy")
+
+[resource]
+script = ExtResource("10_nruqw")
+id = &"apply_status_bleed"
+display_name = "施加流血"
+effect = SubResource("Resource_xl17s")

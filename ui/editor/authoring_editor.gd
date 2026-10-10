@@ -97,8 +97,13 @@ func _saved_text(id: String) -> String:
 ## 开场：读列表，打开第一件；一件都没有就新建一件
 func _start() -> void:
 	_reload_list()
+	# 146：从别的编辑器「去库里改」过来的，直接打开那一份
+	var focus := PropertyFormScript.library_focus
+	PropertyFormScript.library_focus = ""
 	if _ids.is_empty():
 		_new_entry()
+	elif _ids.has(focus):
+		_open(focus)
 	else:
 		_open(_ids[0])
 
@@ -331,6 +336,8 @@ func _save() -> void:
 	if ResourceSaver.save(built, ContentPaths.asset_file(_kind, id)) != OK:
 		_status.text = "[color=#f0ad4e]%s[/color]" % _t("warn_asset")
 		return
+	# 146：库（buff / 规则构件）变了，下拉和导出器下次重读
+	ContentLibrary.reset()
 	# 存下去了，草稿没意义了；基准换成刚写出去的那份
 	_drafts.erase(_draft_key())
 	_drafts.erase(id)

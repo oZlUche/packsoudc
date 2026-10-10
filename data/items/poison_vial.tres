@@ -53,9 +53,11 @@ rules = Array[ExtResource("2_uh40j")]([SubResource("Resource_l6sps")])
 [sub_resource type="Resource" id="Resource_dshra"]
 script = ExtResource("9_p0co4")
 buff = SubResource("Resource_y5gmk")
+metadata/part_ref = &"apply_status_poison"
 
 [sub_resource type="Resource" id="Resource_n6g7y"]
 script = ExtResource("7_lhd8t")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_vvtbv"]
 script = ExtResource("2_uh40j")

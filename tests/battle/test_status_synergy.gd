@@ -216,43 +216,47 @@ static func run_items(t: TestCase) -> void:
 	_start(ctx)
 	t.eq(ctx.sides[1].stacks_of(&"poison"), 1, "流血带出一层中毒")
 
-	# 嗜血护腕：对手被施加流血 → 自己一层嗜血（137：不再封顶）
+	# 嗜血护腕：对手被施加流血 → 自己加速 1 层（标准轴，不封顶；原来是一层嗜血 buff）
 	var bracer := db.get_def(&"bloodlust_bracer").combat.rules[0] as AbilityRule
 	var many: Array = []
 	for i in 8:
 		many.append(_apply(bleed_buff))
 	ctx = _ctx([_opener(many), bracer])
 	_start(ctx)
-	t.eq(ctx.sides[0].stacks_of(&"bloodlust"), 8, "八次施加，嗜血八层（137：不封顶）")
+	t.eq(ctx.sides[0].axis_stacks(&"attack_speed"), 8, "八次施加，加速八层")
+	t.eq(ctx.sides[0].stacks_of(&"bloodlust"), 0, "不再挂嗜血 buff")
 
 
-## 一块不要求包的格子：长弓竖在第 2 列，[锯齿箭] 在它正下方（增益格朝上）；小刀在 (0,1)，毒匠手套在 (1,1)（四邻：小刀与长弓都挨着），
-## 另一枚锯齿箭在小刀下面（朝上压着的是近战）
+## 一块不要求包的格子：锯齿箭挨着长弓，毒匠手套同时挨着小刀与长弓，另一枚锯齿箭只挨着小刀（压着的是近战）。
+## 具体落点由棋盘自己找，不写死坐标
 static func run_attach(t: TestCase) -> void:
 	t.begin("130 · 锯齿箭只给远程、毒匠手套只给近战（108 的附加路径）")
 	var db := _items()
 	ItemInstance.reset_uid_counter()
-	var g := GridInventory.new(Vector2i(6, 6), 1, false)
-	var bow := ItemInstance.create(db.get_def(&"longbow"))
-	var rot := 0
-	for r in 4:
-		var cells := bow.def.cells_rotated(r)
-		var vertical := true
-		for c in cells:
-			if c.x != 0:
-				vertical = false
-		if vertical:
-			rot = r
-			break
-	t.check(g.place(bow, Vector2i(2, 0), rot), "长弓放下")
-	var arrows := ItemInstance.create(db.get_def(&"serrated_arrows"))
-	t.check(g.place(arrows, Vector2i(2, 4), 0), "锯齿箭放在弓下")
-	var knife := ItemInstance.create(db.get_def(&"knife"))
-	t.check(g.place(knife, Vector2i(0, 1), 0), "小刀放下")
-	var glove := ItemInstance.create(db.get_def(&"envenomed_gauntlet"))
-	t.check(g.place(glove, Vector2i(1, 1), 0), "手套放在小刀与弓之间")
-	var arrows2 := ItemInstance.create(db.get_def(&"serrated_arrows"))
-	t.check(g.place(arrows2, Vector2i(0, 2), 0), "另一枚锯齿箭在小刀下")
+	# 位置自己找（形状随时会改）：只要求谁的增益格盖到谁
+	var g := GridInventory.new(Vector2i(10, 10), 1, false)
+	var bow := TestSupport.put(g, db.get_def(&"longbow"))
+	t.not_null(bow, "长弓放下")
+	if bow == null:
+		return
+	var arrows := TestSupport.put_granting(g, db.get_def(&"serrated_arrows"), [bow])
+	t.not_null(arrows, "锯齿箭挨着弓")
+	if arrows == null:
+		return
+	var glove := TestSupport.put_granting(g, db.get_def(&"envenomed_gauntlet"), [bow])
+	t.not_null(glove, "手套挨着弓")
+	if glove == null:
+		return
+	var knife := TestSupport.put_where(g, db.get_def(&"knife"), func(inst: ItemInstance) -> bool:
+		return TestSupport.grants_to(glove, inst) and not TestSupport.touches(inst, bow) and not TestSupport.touches(inst, arrows))
+	t.not_null(knife, "小刀也挨着手套，但不碰弓和锯齿箭")
+	if knife == null:
+		return
+	var arrows2 := TestSupport.put_where(g, db.get_def(&"serrated_arrows"), func(inst: ItemInstance) -> bool:
+		return TestSupport.grants_to(inst, knife) and not TestSupport.touches(inst, bow))
+	t.not_null(arrows2, "另一枚锯齿箭只挨着小刀")
+	if arrows2 == null:
+		return
 
 	var spec := BattleCompiler.compile_board(g)
 	var bow_c := spec.item_of(bow.uid)

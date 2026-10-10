@@ -17,30 +17,12 @@
   "combat": {
     "rules": [
       {
-        "trigger": {
-          "type": "on_status_applied",
-          "buff_id": "bleed"
-        },
-        "cadence": {
-          "type": "always"
-        },
+        "trigger": "@on_status_applied_bleed",
+        "cadence": "@always",
         "effects": [
           {
-            "type": "apply_status",
-            "target": "SELF",
-            "buff": {
-              "id": "blood_valor",
-              "display_name": "血勇",
-              "display_names": {
-                "en": "Blood Valor"
-              },
-              "mods": [
-                {
-                  "mode": "MULT",
-                  "amount": 5.0
-                }
-              ]
-            }
+            "type": "shift_axis",
+            "axis": "damage_dealt"
           }
         ]
       }

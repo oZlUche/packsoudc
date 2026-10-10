@@ -1,0 +1,7 @@
+{
+  "id": "always",
+  "display_name": "每次都行",
+  "cadence": {
+    "type": "always"
+  }
+}

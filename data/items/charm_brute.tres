@@ -27,13 +27,14 @@ grant_mods = Array[ExtResource("1_ya0h5")]([SubResource("Resource_jujtf")])
 
 [sub_resource type="Resource" id="Resource_d281f"]
 script = ExtResource("6_tebth")
+metadata/part_ref = &"always"
 
-[sub_resource type="Resource" id="Resource_nxw8s"]
+[sub_resource type="Resource" id="Resource_ynjp5"]
 script = ExtResource("1_ya0h5")
 mode = 1
 amount = 10.0
 
-[sub_resource type="Resource" id="Resource_mgmdq"]
+[sub_resource type="Resource" id="Resource_nxw8s"]
 script = ExtResource("9_gdomn")
 id = &"blood_rage"
 display_name = "血怒"
@@ -42,27 +43,28 @@ display_names = {
 }
 stackable = false
 duration_sec = 10.0
-mods = Array[ExtResource("1_ya0h5")]([SubResource("Resource_nxw8s")])
+mods = Array[ExtResource("1_ya0h5")]([SubResource("Resource_ynjp5")])
 
-[sub_resource type="Resource" id="Resource_fxv4y"]
+[sub_resource type="Resource" id="Resource_mgmdq"]
 script = ExtResource("10_gp5h5")
 target = 1
-buff = SubResource("Resource_mgmdq")
+buff = SubResource("Resource_nxw8s")
+
+[sub_resource type="Resource" id="Resource_fxv4y"]
+script = ExtResource("11_8cr3p")
+metadata/part_ref = &"on_battle_start"
 
 [sub_resource type="Resource" id="Resource_qcvhe"]
-script = ExtResource("11_8cr3p")
+script = ExtResource("2_2xw3f")
+trigger = SubResource("Resource_fxv4y")
+cadence = SubResource("Resource_d281f")
+effects = Array[ExtResource("8_0nr16")]([SubResource("Resource_mgmdq")])
 
 [sub_resource type="Resource" id="Resource_ypuoo"]
-script = ExtResource("2_2xw3f")
-trigger = SubResource("Resource_qcvhe")
-cadence = SubResource("Resource_d281f")
-effects = Array[ExtResource("8_0nr16")]([SubResource("Resource_fxv4y")])
+script = ExtResource("5_ire22")
+rules = Array[ExtResource("2_2xw3f")]([SubResource("Resource_qcvhe")])
 
 [sub_resource type="Resource" id="Resource_dy4rd"]
-script = ExtResource("5_ire22")
-rules = Array[ExtResource("2_2xw3f")]([SubResource("Resource_ypuoo")])
-
-[sub_resource type="Resource" id="Resource_say7k"]
 script = ExtResource("13_fjm76")
 
 [resource]
@@ -72,9 +74,9 @@ display_name = "蛮神的护符"
 display_names = {
 "en": "Charm of the Brute"
 }
-shape = SubResource("Resource_say7k")
+shape = SubResource("Resource_dy4rd")
 rarity = 3
 value = 200
 tags = Array[StringName]([&"treasure", &"faith", &"faith:brute", &"bone", &"faith_anchor"])
-faith_bonuses = Array[ExtResource("5_ire22")]([SubResource("Resource_dy4rd")])
+faith_bonuses = Array[ExtResource("5_ire22")]([SubResource("Resource_ypuoo")])
 adjacency = SubResource("Resource_yyxba")

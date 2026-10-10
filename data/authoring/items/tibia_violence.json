@@ -37,9 +37,7 @@
     },
     "rules": [
       {
-        "trigger": {
-          "type": "on_schedule"
-        },
+        "trigger": "@on_schedule",
         "cadence": {
           "type": "cooldown",
           "seconds": 2.60000000000582,
@@ -51,9 +49,7 @@
           }
         ],
         "effects": [
-          {
-            "type": "deal_damage"
-          }
+          "@deal_damage"
         ]
       }
     ]

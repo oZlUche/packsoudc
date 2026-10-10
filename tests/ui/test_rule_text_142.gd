@@ -14,8 +14,8 @@ static func run_six_items(t: TestCase) -> void:
 	t.begin("142 · 六件流血 / 中毒道具：谁施加、施加给谁、几层、方向、条件都写出来")
 	var c := TestSupport.load_content()
 	var want := {
-		&"bloodhound_sigil": "[你给对手施加流血时] 获得血勇",
-		&"bloodlust_bracer": "[你给对手施加流血时] 获得嗜血",
+		&"bloodhound_sigil": "[你给对手施加流血时] 强攻 1 层",
+		&"bloodlust_bracer": "[你给对手施加流血时] 加速 1 层",
 		&"festering_blade": "[每 1.4 秒] 造成物理伤害，施加流血 / [你给对手施加流血时] 施加中毒",
 		&"bloodletter": "[每 1.1 秒] 造成物理伤害，施加流血 / [对手的流血达到 6 层时] 对手每层流血造成 3 点物理伤害，清掉对手全部流血",
 		&"wound_salt": "[造成物理伤害前] 若对手有流血，伤害 +20%",

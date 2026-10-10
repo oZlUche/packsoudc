@@ -15,6 +15,7 @@
 
 [sub_resource type="Resource" id="Resource_45af8"]
 script = ExtResource("3_0hbqd")
+metadata/part_ref = &"cooldown_2s"
 
 [sub_resource type="Resource" id="Resource_wyxn2"]
 script = ExtResource("6_6ygqc")
@@ -22,6 +23,7 @@ buff_id = &"poison"
 
 [sub_resource type="Resource" id="Resource_22sfj"]
 script = ExtResource("7_cs6ox")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_5g8wp"]
 script = ExtResource("2_dott4")

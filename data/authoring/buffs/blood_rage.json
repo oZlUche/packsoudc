@@ -1,0 +1,15 @@
+{
+  "id": "blood_rage",
+  "display_name": "血怒",
+  "display_names": {
+    "en": "Blood Rage"
+  },
+  "stackable": false,
+  "duration_sec": 10.0,
+  "mods": [
+    {
+      "mode": "MULT",
+      "amount": 10.0
+    }
+  ]
+}

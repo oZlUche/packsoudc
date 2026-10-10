@@ -24,9 +24,7 @@
     },
     "rules": [
       {
-        "trigger": {
-          "type": "on_schedule"
-        },
+        "trigger": "@on_schedule",
         "cadence": {
           "type": "cooldown",
           "seconds": 3.0
@@ -38,27 +36,10 @@
           }
         ],
         "effects": [
-          {
-            "type": "deal_damage"
-          },
+          "@deal_damage",
           {
             "type": "apply_status",
-            "buff": {
-              "id": "marked",
-              "display_name": "标记",
-              "display_names": {
-                "en": "Marked"
-              },
-              "is_debuff": true,
-              "stackable": false,
-              "duration_sec": 8.0,
-              "mods": [
-                {
-                  "stat": "armor",
-                  "amount": -3.0
-                }
-              ]
-            }
+            "buff": "marked"
           }
         ]
       }

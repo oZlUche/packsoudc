@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RulePartDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="1_qlr53"]
+[ext_resource type="Script" path="res://core/battle/rule_part_def.gd" id="2_km2yy"]
+
+[sub_resource type="Resource" id="Resource_phbvv"]
+script = ExtResource("1_qlr53")
+
+[resource]
+script = ExtResource("2_km2yy")
+id = &"always"
+display_name = "每次都行"
+cadence = SubResource("Resource_phbvv")

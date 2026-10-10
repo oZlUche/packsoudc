@@ -16,6 +16,7 @@
 
 [sub_resource type="Resource" id="Resource_4kd1h"]
 script = ExtResource("3_b4xsx")
+metadata/part_ref = &"cooldown_2s"
 
 [sub_resource type="Resource" id="Resource_e1rnc"]
 script = ExtResource("6_b3v8y")
@@ -32,6 +33,7 @@ script = ExtResource("7_11ya2")
 
 [sub_resource type="Resource" id="Resource_tcl3w"]
 script = ExtResource("8_0qj0l")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_fte87"]
 script = ExtResource("2_mjt7t")

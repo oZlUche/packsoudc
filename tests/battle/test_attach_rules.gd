@@ -9,40 +9,18 @@ static func _items() -> ItemDatabase:
 	return db
 
 
-## 一块不要求包的格子：弓横着放在第一行（143：长弓是两头弯回的弓臂，横过来第一行 4 格是弓身、第二行只有两头），
-## [param arrows] 个毒箭摆在弓身正下方第二行的空处（增益格朝上，正好压在弓上）
+## 一块不要求包的格子：一把长弓，[param arrows] 个毒箭摆在增益格盖得到弓的地方。
+## 落点由棋盘自己找 —— 弓和箭的形状作者随时会改，这里只关心「挨着」
 static func _bow_board(db: ItemDatabase, arrows: int) -> Dictionary:
 	ItemInstance.reset_uid_counter()
-	var g := GridInventory.new(Vector2i(6, 4), 1, false)
-	var bow := ItemInstance.create(db.get_def(&"longbow"))
-	var rot := 0
-	for r in 4:
-		var cells := bow.def.cells_rotated(r)
-		var top := 0
-		for c in cells:
-			if c.y == 0:
-				top += 1
-		if _width(cells) == 4 and top == 4:
-			rot = r
-			break
-	g.place(bow, Vector2i.ZERO, rot)
-	var under: Array[int] = []
-	for x in 4:
-		if not bow.def.cells_rotated(rot).has(Vector2i(x, 1)):
-			under.append(x)
+	var g := GridInventory.new(Vector2i(8, 6), 1, false)
+	var bow := TestSupport.put(g, db.get_def(&"longbow"))
 	var placed: Array[ItemInstance] = []
 	for i in arrows:
-		var a := ItemInstance.create(db.get_def(&"poison_arrows"))
-		g.place(a, Vector2i(under[i], 1), 0)
-		placed.append(a)
+		var a := TestSupport.put_granting(g, db.get_def(&"poison_arrows"), [bow])
+		if a != null:
+			placed.append(a)
 	return {"board": g, "bow": bow, "arrows": placed}
-
-
-static func _width(cells: Array[Vector2i]) -> int:
-	var w := 0
-	for c in cells:
-		w = maxi(w, c.x + 1)
-	return w
 
 
 static func run_neighbor_attach(t: TestCase) -> void:
@@ -70,16 +48,15 @@ static func run_neighbor_attach(t: TestCase) -> void:
 	t.eq(bow2.attached.size(), 2, "两件毒箭 → 挂两条（每个邻居各一份）")
 
 	var none := _bow_board(db, 0)
-	var lone := ItemInstance.create(db.get_def(&"poison_arrows"))
-	(none["board"] as GridInventory).place(lone, Vector2i(5, 3), 0)
+	var lone := TestSupport.put_apart(none["board"], db.get_def(&"poison_arrows"), [none["bow"]])
+	t.not_null(lone, "毒箭放在碰不到弓的地方")
 	var bow0 := BattleCompiler.compile_board(none["board"]).item_of((none["bow"] as ItemInstance).uid)
 	t.eq(bow0.attached.size(), 0, "不挨着就没有")
 
 	ItemInstance.reset_uid_counter()
 	var g := GridInventory.new(Vector2i(3, 3), 1, false)
-	var knife := ItemInstance.create(db.get_def(&"knife"))
-	g.place(knife, Vector2i.ZERO, 0)
-	g.place(ItemInstance.create(db.get_def(&"poison_arrows")), Vector2i(0, 1), 0)
+	var knife := TestSupport.put(g, db.get_def(&"knife"))
+	t.not_null(TestSupport.put_granting(g, db.get_def(&"poison_arrows"), [knife]), "毒箭挨着小刀")
 	t.eq(BattleCompiler.compile_board(g).item_of(knife.uid).attached.size(), 0, "挨着近战武器不生效（只给远程）")
 
 

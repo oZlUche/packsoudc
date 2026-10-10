@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RulePartDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/rule_part_def.gd" id="1_g78k2"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="2_ca1ta"]
+
+[sub_resource type="Resource" id="Resource_hfapw"]
+script = ExtResource("2_ca1ta")
+
+[resource]
+script = ExtResource("1_g78k2")
+id = &"on_battle_start"
+display_name = "开战时"
+trigger = SubResource("Resource_hfapw")

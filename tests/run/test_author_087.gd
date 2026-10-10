@@ -100,10 +100,9 @@ static func run_glossary(t: TestCase) -> void:
 	t.eq(marked.count("[u]血怒[/u]"), 2, "每处都标")
 	# 开战 buff 进预估 DPS：匕首 + 蛮神的护符（信力一阶）
 	var board := GridInventory.new(Vector2i(4, 4), 0, false)
-	var k := ItemInstance.create(c.items.get_def(&"knife"))
-	var sg := ItemInstance.create(c.items.get_def(&"charm_brute"))
-	board.place(k, Vector2i(0, 0), 0)
-	board.place(sg, Vector2i(1, 0), 0)
+	var k := TestSupport.put(board, c.items.get_def(&"knife"))
+	var sg := TestSupport.put(board, c.items.get_def(&"charm_brute"))
+	t.check(k != null and sg != null, "匕首和护符都放下")
 	var plain := BattleCompiler.compile_board(board)
 	var tiered := BattleCompiler.compile_board(board, null, [] as Array[StatModifier], [] as Array[AbilityRule], {&"faith:brute": 1})
 	t.check(plain.opening_mods().is_empty(), "没过阈值：没有开战 buff")
@@ -121,11 +120,12 @@ static func run_dormant_faith(t: TestCase) -> void:
 	t.check(shield_def.has_faith() and bow_def.has_faith() and shield_def.faith_tag() != bow_def.faith_tag(), "两件不同信仰的赐福之物")
 	t.check(FaithState.keeps_combat_when_dormant(shield_def), "盾有战斗定义、默认保留")
 	t.check(not FaithState.keeps_combat_when_dormant(c.items.get_def(&"charm_brute")), "蛮神的护符没有 combat：休眠就彻底失效")
-	var board := GridInventory.new(Vector2i(6, 4), 0, false)
-	var shield := ItemInstance.create(shield_def)
-	var bow := ItemInstance.create(bow_def)
-	board.try_add(shield, true)
-	board.try_add(bow, true)     # 后置入：狩猎之神激活，盾休眠
+	var board := GridInventory.new(Vector2i(10, 8), 0, false)
+	var shield := TestSupport.put(board, shield_def)
+	var bow := TestSupport.put(board, bow_def)     # 后置入：狩猎之神激活，盾休眠
+	if shield == null or bow == null:
+		t.check(false, "棋盘上放不下盾和弓")
+		return
 	t.eq(FaithState.active_tag(board), bow_def.faith_tag(), "激活的是后置入的弓的信仰")
 	t.check(FaithState.is_dormant(shield_def, FaithState.active_tag(board)), "盾休眠")
 	var spec := BattleCompiler.compile_board(board, null, [] as Array[StatModifier], [] as Array[AbilityRule], {shield_def.faith_tag(): 2, bow_def.faith_tag(): 2})
@@ -139,17 +139,19 @@ static func run_dormant_faith(t: TestCase) -> void:
 	t.check(bow_item != null and StatMath.to_float(bow_item.stats.total_of(BattleStats.DAMAGE)) > float(bow_def.combat.base_stats["damage"]), "激活的弓吃到了信力加成")
 	# 反过来：盾后置入 → 弓休眠，弓照样出手（武器本身的攻击力）
 	board.remove(shield.uid)
-	board.try_add(shield, true)
+	t.not_null(TestSupport.put(board, shield), "盾拿起来再放回")
 	var spec2 := BattleCompiler.compile_board(board)
 	var bow2 := spec2.item_of(bow.uid)
 	t.check(bow2 != null and bow2.is_active() and spec2.estimated_dps_of(bow2) > 0.0, "休眠的弓仍出手、有 DPS")
 	# 数据说不保留 → 彻底不参战
 	var strict := bow_def.duplicate() as ItemDef
 	strict.dormant_keeps_combat = false
-	var b3 := GridInventory.new(Vector2i(6, 4), 0, false)
-	var bow3 := ItemInstance.create(strict)
-	b3.try_add(bow3, true)
-	b3.try_add(ItemInstance.create(shield_def), true)
+	var b3 := GridInventory.new(Vector2i(10, 8), 0, false)
+	var bow3 := TestSupport.put(b3, strict)
+	t.not_null(TestSupport.put(b3, shield_def), "盾后置入")
+	if bow3 == null:
+		t.check(false, "放不下弓")
+		return
 	t.is_null(BattleCompiler.compile_board(b3).item_of(bow3.uid), "dormant_keeps_combat=false：休眠就不参战")
 	# 107（作者定）：悬浮窗不再写「信仰道具：别的信仰激活时休眠（保留通用效果）」那一行 ——
 	# 休眠与否只靠信仰相关行的灰 / 亮区分（那句话留在信仰自己的悬浮窗里）

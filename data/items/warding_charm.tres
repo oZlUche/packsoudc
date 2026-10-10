@@ -17,40 +17,42 @@
 [sub_resource type="Resource" id="Resource_deyrs"]
 script = ExtResource("3_scvck")
 seconds = 1.0
+metadata/part_ref = &"cooldown_1s"
 
-[sub_resource type="Resource" id="Resource_eatr2"]
+[sub_resource type="Resource" id="Resource_3y0s2"]
 script = ExtResource("1_vn4sa")
 stat = &"max_shield"
 amount = 8.0
 
-[sub_resource type="Resource" id="Resource_7bpqt"]
+[sub_resource type="Resource" id="Resource_eatr2"]
 script = ExtResource("6_curu6")
 id = &"ward"
 display_name = "护符结界"
 display_names = {
 "en": "Ward"
 }
-mods = Array[ExtResource("1_vn4sa")]([SubResource("Resource_eatr2")])
+mods = Array[ExtResource("1_vn4sa")]([SubResource("Resource_3y0s2")])
 
-[sub_resource type="Resource" id="Resource_m1gae"]
+[sub_resource type="Resource" id="Resource_7bpqt"]
 script = ExtResource("7_hcix0")
 target = 1
-buff = SubResource("Resource_7bpqt")
+buff = SubResource("Resource_eatr2")
+
+[sub_resource type="Resource" id="Resource_m1gae"]
+script = ExtResource("8_3yovh")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_3k4tc"]
-script = ExtResource("8_3yovh")
+script = ExtResource("2_csx5m")
+trigger = SubResource("Resource_m1gae")
+cadence = SubResource("Resource_deyrs")
+effects = Array[ExtResource("5_brwv4")]([SubResource("Resource_7bpqt")])
 
 [sub_resource type="Resource" id="Resource_yfs13"]
-script = ExtResource("2_csx5m")
-trigger = SubResource("Resource_3k4tc")
-cadence = SubResource("Resource_deyrs")
-effects = Array[ExtResource("5_brwv4")]([SubResource("Resource_m1gae")])
+script = ExtResource("9_3shkr")
+rules = Array[ExtResource("2_csx5m")]([SubResource("Resource_3k4tc")])
 
 [sub_resource type="Resource" id="Resource_s7leo"]
-script = ExtResource("9_3shkr")
-rules = Array[ExtResource("2_csx5m")]([SubResource("Resource_yfs13")])
-
-[sub_resource type="Resource" id="Resource_b3bqc"]
 script = ExtResource("13_1lmby")
 
 [resource]
@@ -60,8 +62,8 @@ display_name = "护身符"
 display_names = {
 "en": "Warding Charm"
 }
-shape = SubResource("Resource_b3bqc")
+shape = SubResource("Resource_s7leo")
 rarity = 2
 value = 40
 tags = Array[StringName]([&"part", &"sigil"])
-combat = SubResource("Resource_s7leo")
+combat = SubResource("Resource_yfs13")

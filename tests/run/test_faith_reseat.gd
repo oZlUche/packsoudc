@@ -52,10 +52,7 @@ static func _center(view: InventoryView, cell: Vector2i) -> Vector2:
 
 ## 把一件放进棋盘（随便哪个放得下的位置）；放不下返回 null
 static func _add(board: GridInventory, def: ItemDef) -> ItemInstance:
-	if def == null:
-		return null
-	var inst := ItemInstance.create(def, 0)
-	return inst if board.try_add(inst, true) else null
+	return TestSupport.put(board, def) if def != null else null
 
 
 ## 行为构件说这一次置入该给几点
@@ -69,11 +66,13 @@ static func _expected_place_gain(def: FaithDef, item: ItemDef) -> int:
 static func run_reseat_rules(t: TestCase) -> void:
 	t.begin("099 · reseat：只盖置入序号、不发 placed（信力的 place_item 不记）")
 	var db := _db()
-	var board := GridInventory.new(Vector2i(6, 4), 1, false)
-	var shield := ItemInstance.create(db.get_def(&"blessed_shield"), 0)     # skill 的信物
-	var sigil := ItemInstance.create(db.get_def(&"charm_brute"), 0)      # brute 的信物
-	t.check(board.place(shield, Vector2i(0, 0), 0), "放赐福的盾")
-	t.check(board.place(sigil, Vector2i(4, 0), 0), "放蛮神的护符")
+	var board := GridInventory.new(Vector2i(8, 6), 1, false)
+	var shield := TestSupport.put(board, db.get_def(&"blessed_shield"))     # skill 的信物
+	var sigil := TestSupport.put(board, db.get_def(&"charm_brute"))      # brute 的信物
+	t.check(shield != null and sigil != null, "放赐福的盾、再放蛮神的护符")
+	if shield == null or sigil == null:
+		return
+	var shield_at := shield.origin
 	t.eq(FaithState.active_id(board), &"brute", "后放的符号激活暴力之神")
 	var placed_times := [0]
 	board.placed.connect(func(_i: ItemInstance): placed_times[0] += 1)
@@ -83,7 +82,7 @@ static func run_reseat_rules(t: TestCase) -> void:
 	t.eq(FaithState.active_id(board), &"skill", "盾成了最后置入的 → 技巧之神")
 	t.eq(placed_times[0], 0, "reseat 不发 placed：切信仰不是置入道具")
 	t.eq(changed_times[0], 1, "但发 changed：界面要重画（谁生效、谁休眠变了）")
-	t.eq(board.get_item(shield.uid).origin, Vector2i(0, 0), "格子一点没动")
+	t.eq(board.get_item(shield.uid).origin, shield_at, "格子一点没动")
 	t.check(board.reseat(sigil.uid), "再 reseat 符号")
 	t.eq(FaithState.active_id(board), &"brute", "切回暴力之神")
 	t.check(not board.reseat(9999), "不在这个容器里的 uid：false")
@@ -183,7 +182,7 @@ static func run_right_click(t: TestCase) -> void:
 	view.item_context.connect(func(_v: ContainerView, uid: int): got.append(uid))
 	var grabbed: Array = []
 	view.grab_requested.connect(func(_v: ContainerView, uid: int, _p: Vector2): grabbed.append(uid))
-	var at := _center(view, skill_anchor.origin)
+	var at := _center(view, TestSupport.a_cell_of(skill_anchor))     # 原点格不一定被占（不规则形状）
 	view._gui_input(_click(at, MOUSE_BUTTON_RIGHT))
 	t.eq(got, [skill_anchor.uid], "右键发 item_context")
 	t.check(grabbed.is_empty(), "右键不抓东西")

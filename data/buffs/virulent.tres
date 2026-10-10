@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="BuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_mm4os"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="2_uxiel"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_1uewl"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_1p3ak"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_5b31m"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="6_7xq7s"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="7_0vkk8"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="8_hyrdq"]
+
+[sub_resource type="Resource" id="Resource_uldxm"]
+script = ExtResource("4_1p3ak")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_o142h"]
+script = ExtResource("6_7xq7s")
+target = 1
+damage_type = &"poison"
+amount = 5.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_j81pe"]
+script = ExtResource("7_0vkk8")
+
+[sub_resource type="Resource" id="Resource_fqggl"]
+script = ExtResource("3_1uewl")
+trigger = SubResource("Resource_j81pe")
+cadence = SubResource("Resource_uldxm")
+effects = Array[ExtResource("2_uxiel")]([SubResource("Resource_o142h")])
+
+[resource]
+script = ExtResource("8_hyrdq")
+id = &"virulent"
+display_name = "剧毒"
+display_names = {
+"en": "Virulent Poison"
+}
+is_debuff = true
+rules = Array[ExtResource("3_1uewl")]([SubResource("Resource_fqggl")])

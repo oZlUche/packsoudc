@@ -1,0 +1,13 @@
+{
+  "id": "hardy_guard",
+  "display_name": "坚韧",
+  "display_names": {
+    "en": "Hardy"
+  },
+  "mods": [
+    {
+      "stat": "max_shield",
+      "amount": 15.0
+    }
+  ]
+}

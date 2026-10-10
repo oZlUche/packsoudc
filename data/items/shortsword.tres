@@ -17,16 +17,20 @@
 [sub_resource type="Resource" id="Resource_2n71y"]
 script = ExtResource("3_er1px")
 seconds = 0.8
+metadata/part_ref = &"cooldown_0_8s"
 
 [sub_resource type="Resource" id="Resource_dk8c6"]
 script = ExtResource("5_vaaw6")
 amount = 4.0
+metadata/part_ref = &"resource_4"
 
 [sub_resource type="Resource" id="Resource_k67bb"]
 script = ExtResource("7_eyy7r")
+metadata/part_ref = &"deal_damage"
 
 [sub_resource type="Resource" id="Resource_f8sqo"]
 script = ExtResource("8_arlqb")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_6atu8"]
 script = ExtResource("2_wt6gf")

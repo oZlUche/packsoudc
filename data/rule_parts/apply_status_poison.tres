@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="RulePartDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_iamhm"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="2_o51d6"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_8ccqq"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_wt86r"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_ex32o"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="6_m4t1i"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="7_tl2wm"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="8_01o0x"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="9_ovua5"]
+[ext_resource type="Script" path="res://core/battle/rule_part_def.gd" id="10_teun6"]
+
+[sub_resource type="Resource" id="Resource_3daau"]
+script = ExtResource("4_wt86r")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_5f2se"]
+script = ExtResource("6_m4t1i")
+target = 1
+damage_type = &"poison"
+amount = 2.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_aai0p"]
+script = ExtResource("7_tl2wm")
+
+[sub_resource type="Resource" id="Resource_ekrv1"]
+script = ExtResource("3_8ccqq")
+trigger = SubResource("Resource_aai0p")
+cadence = SubResource("Resource_3daau")
+effects = Array[ExtResource("2_o51d6")]([SubResource("Resource_5f2se")])
+
+[sub_resource type="Resource" id="Resource_nj4v6"]
+script = ExtResource("8_01o0x")
+id = &"poison"
+display_name = "中毒"
+display_names = {
+"en": "Poison"
+}
+is_debuff = true
+rules = Array[ExtResource("3_8ccqq")]([SubResource("Resource_ekrv1")])
+
+[sub_resource type="Resource" id="Resource_v63d5"]
+script = ExtResource("9_ovua5")
+buff = SubResource("Resource_nj4v6")
+
+[resource]
+script = ExtResource("10_teun6")
+id = &"apply_status_poison"
+display_name = "施加中毒"
+effect = SubResource("Resource_v63d5")
