@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.67 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.68 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -569,6 +569,12 @@ UI 上用什么图形表示这两类，是表现层的事，数据层不关心�
 日神附魔（`ScopedMod.rules`，第 7 步）走的是同一个入口。附加规则只许 `on_item_fired`、不许 costs、不许直接打毒 / 流血（导入 error）；
 **它执行时不算宿主再出手一次**（`RuleEngine.evaluate` 听自己出手的规则不再发 `ITEM_FIRED`，否则会自己触发自己）。
 「配件自己的反应」仍用 `OnItemFired.LINKED`（规则以配件身份跑）；「武器出手时附带 X」统一走附加。反向的 `receive_rules` 等内容需要再加。
+
+**第三面：供给**（148，作者定，魔晶石 → 法杖）：`AdjacencyProfile.feed_mods / feed_rules / feed_filter` —— **本件站在别人的受益格上**、对方命中 `feed_filter` 时，
+把这些交给对方（一份，不按格数乘；规则走 `_attach`、以宿主身份跑，时机不限、不许 costs，同受益规则）。供给方不画格子：「谁的受益格我站上了」由宿主说了算。
+宿主的受益格可以只写 `receive_filter`、不写加成（法杖：数值全看放上去的晶石）。编译器把真的供给了的道具记进 `CombatantSpec.fed_uids`（耐久按它扣，7.4）；
+用坏了的（`ItemInstance.is_broken()`）不再供给。于是邻接三件事齐了：我给邻居（grant）、邻居给我（receive）、我站上谁的受益格就给谁（feed）。
+「只改这件自己打出的伤害」靠伤害扳机的 `own_only`（来源 uid = 规则主人），魔晶石的「改成火焰」用它。
 
 > **这不是宝石镶嵌。** 邻接标记是「谁挨着谁」，双方各占各的格子；宝石是放进宿主物品
 > 孔位、不占网格、按宿主类型给不同效果的另一套系统，尚未实现。
@@ -3174,6 +3180,17 @@ func describe() -> String                # 开局屏的规则卡、编辑器
 | `BuffModule`（062） | 一局里拿到的 buff（`entries`、给 / 去 / 查 / 走表）、`buffs_changed` | `stepped`（任何花行动点的方式） |
 | `AltarModule`（093 / 095） | 神坛开在哪、用过哪些点、仪式的账与改过的基线、献祭 / 特殊操作、信仰级效果（`perks`）、赐福、`noted` / `item_blessed` | `NodeEvents.altar_opened`、`leaving`（关）、`stepped`（赐福）、`MapTravel.moved`（踩点回调） |
 | `CountdownModule`（092 / 094） | 倒计时上限 / 剩余、带入价值与超带罚步、关哪个撤离点、`notice` | `stepped`（归零就 `run.fail`） |
+| `BeltModule`（147） | 腰带（1 × N 的 `GridInventory`，`only_tags = [belt]`，默认 3 格 + `RunContext.belt_slots_bonus`）、`use(uid)`、`used` | 无；`belt_use` 挂在 `RunHooks` |
+| `WearModule`（148） | 不存东西（次数记在实例上） | `NodeEvents.battle_finished`（这一场 `fed_uids` 里的 −1，秒杀不扣） |
+
+**腰带**（147，作者定）：随身道具（`ItemDef.BELT` 标签 + `ItemDef.belt_use`）**不上棋盘** —— 作战棋盘 `reject_tags = [belt]`（开局与读档都设），地上与仓库照旧什么都收；
+开局带进来的先落在地上，腰带装上时挪进去；撤离时腰带里的一起带出。`BeltUse` 写「什么时候能用」（地图 / 战前准备屏 / 都行）与效果（`BeltEffect`，第五个作用域 `EffectScope.BELT`，
+`RunRegistry.BELT_EFFECTS`：`smoke_escape` 走脱身那条路 `skip_pending_battle`、`mend_vitality` 回体力）；先问每个效果的 `blocked_reason`，都能用才用、用了就从腰带拿走。
+`GridInventory` 为此多了按标签的准入 `only_tags / reject_tags`（跟着存档走）与 `resize_cols`（腰带扩列；缩只缩空列）。界面：整理面板棋盘上方一行腰带（双击 = 用），战前准备屏按钮列出能在那儿用的。
+
+**耐久**（148，作者定）：`ItemDef.wear: WearProfile`（满几次、前缀表、破碎前缀与卖价折扣），剩几次记在 `ItemInstance.state.charges`（新的一件满；老档没记按满算）。
+**一件道具一个定义**，明亮 / 闪烁 / 黯淡 / 破碎是同一件的状态；名字看实例：`Names.of_item(inst)`（格子标签、悬浮窗、拖拽、回放名字表），只有定义的地方照旧 `Names.of(def)`。
+破碎的卖价 `ItemValue.of_instance` 打折；开局带入（`layout_of / place_layout`）也带着 `state`。
 
 为此 `RunState` 一共多了三个**通用**生命周期信号（都不认识任何具体模块）与一个方法：
 
@@ -3923,7 +3940,7 @@ res://
 | 新的地图形态 | `MapGenerator` + `MapLayoutStrategy` 子类 | `MapGraph` / `MapNavigator` / `MapView` 主体不出现 `ring` / `angle` |
 | 侵蚀方向变体（如由内向外） | 生成器对 `erosion_band` 的标注方式 | 不把 `erosion_band` 与 `tier` 合并成一个字段 |
 | 非矩形 / 可扩容背包 | `GridInventory._blocked` 与 `size` | 不假定容器是满矩形、尺寸不变 |
-| 物品损坏与随机词条 | `ItemInstance.state` 字典 | 不把运行时可变状态写进 `ItemDef` |
+| 物品损坏与随机词条 | `ItemInstance.state` 字典 | 不把运行时可变状态写进 `ItemDef`。**次数制耐久已实现**（148：`WearProfile` + `state.charges`，7.4）；随机词条仍未做 |
 | 宝石镶嵌 | `ItemDef.gem_slots` + `ItemInstance.state.gems`，编译期在包体效果之后插一步 | 宝石不占网格，效果随宿主类型（武器／护甲／散放）而变；`socket` 一词留给它，不要用在邻接标记上 |
 | 效果的新作用域（地图、商店、撤离…） | `Effect` 子树 + 该系统调 `tracker.effects_in_scope()` | 一棵树按作用域分支；各系统只查自己那一档，互不认识。道具与套装共用同一套词汇 |
 | 新的消耗种类（层数、充能、耐久…） | `Cost` 子类 + 注册表登记 | `costs` 是列表且 AND 语义；消耗与冷却**故意不原子**，失败跳过效果但冷却照走 |
@@ -3985,6 +4002,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.68 | 2026-10-10 | **腰带槽与魔晶石弹药**（147 / 148）：`BeltModule`（随身道具不上棋盘、点一下就用；烟雾弹 / 急救包）、`BeltUse` / `BeltEffect`（作用域 `belt`）、`GridInventory.only_tags / reject_tags / resize_cols`；邻接第三面「供给」`feed_mods / feed_rules / feed_filter` + `CombatantSpec.fed_uids`、伤害扳机 `own_only`；`WearProfile` + `ItemInstance.charges`、`WearModule`、`Names.of_item`、`ItemValue.of_instance`；魔法杖与火焰 / 冰霜 / 闪电魔晶石，伤害类型 `ice` / `lightning`；删掉 `mana_crystal` / `mana_shard`（晶石不再给魔力） |
 | v2.67 | 2026-10-09 | **buff 与规则构件成为内容**（146）：`buffs` 搬回 `KINDS`，迁移工具 `tools/extract_buffs.gd` 抽出 10 份 buff；新种类 `rule_parts`（`RulePartDef` 四槽）抽出 15 份构件，规则里写 `"@id"`、导入复制 + `part_ref`、导出回写；`ContentLibrary`（单件导入登记表里没有的到盘上的库找，批量导入 `strict` 只认这一趟的）；`PropertyForm` 下拉列库项、只读卡片 + 断开 / 去库里改；构件编辑器 `ui/part_editor` |
 | v2.66 | 2026-10-09 | **规则表改列表视图 + 双击浮窗**（145）：`PropertyForm._rule_list`（`Tree` 四列 + 按钮行，`popup_layer` 子表单继承）、`RuleWindow`（三页签、预览句、扳机隐含消耗只读、Esc / 点外面关）；`AuthoringEditor._form_for` 统一建表单并在换对象时关浮窗；`Glossary.rule_text` 拆出 `cadence_text / timing_text / costs_text`（文案不变） |
 | v2.49 | 2026-10-06 | **猎手战败结果档 + 猎手战插进进点的事件队列**（134，作者定，五项待定按推荐；改 8.5）：新资源 `HunterLossOption`（档名、名字、权重、后果），`HunterDef.loss_options` + `loss_pick`（新构件表 `HUNTER_LOSS_PICKS`：`random` / `fixed`），`Hunter.loss_id` 生成时选定、跟存档；新后果 `expel`（退回上一步、不驻守）。`MapTravel` 加进点闸门 `arrival_gate` / 挂起的进点 `held`（存档）/ `finish_arrival` / `cancel_arrival`；`RunState` 的猎手回合从「这一步的事之后」挪到闸门里（先于点的事），`resume_arrival` 在玩家空下来时接着进；驱逐 = 取消进点（不标走过、事不发生、不记首访，步数照算）。`GameFlow._flush` 接着进点后排进队里的接着看；收起猎手战的战利品也接着进点。悬停与开打前事件屏写「输了会怎样」。`hunter_1` 击退 / 驱逐各一半，`hunter_2` 击退 / 驱逐 / 驱逐并驻守各三分之一（数值占位） |
