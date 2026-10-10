@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.69 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.70 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3368,6 +3368,22 @@ func player_spec() -> CombatantSpec …
 **114：序章之后只有自由模式**：三张序章（`prologue` → `prologue_2` → `prologue_3`）通关后开 `free_mode`（原 `chapter_01`，`IdAliases.CHAPTERS` 让老存档还认得），随机环形图、过开局屏；开局屏左栏标题是「模式」。
 节点内容里的搜索覆盖（`SearchSession` 读）：`search_max` / `search_min`（搜够才能走）/ `search_curve` / `search_finds`（第 k 次固定收获）/ `encounter`（写死的遭遇）。`has_item` 条件多了 `tag`。事件屏上能整理背包（选项页「整理背包（B）」，收起重画选项）。
 
+### 8.7 地图屏的读数组件与布局文件（150，作者定）
+
+地图屏顶上的读数不再是拼成一行的标签：每种读数是一个组件 `HudWidget`（`ui/hud/`，`PanelContainer`，主题变体 `PanelHud` / `LabelHud` / `LabelHudLarge`），
+自己给一行字（`text_of`，空串 = 现在不显示）、自己订阅数据源的信号（`watch`），有大小两档（14 / 34 号）。登记表 `HudWidgets.KINDS`：
+`countdown`（颜色与边框随剩余变，121 的两处特例从地图屏搬进这里）、`action_points`、`distances`（撤离 / 休息 / 核心三个距离一件）、`vitality`、`wallet`、
+`ground_count`、`encumbrance`（轻装不显示）、`faith`（停上去开悬浮窗）、`buffs`、`erosion`。新加一种 = 一个子类 + 登记一行。
+
+**摆法**是一份布局（`HudLayout`）：每件 `{id, anchor, offset, line, tier, visible}`，九宫锚点 + 偏移；锚点与偏移相同的几件是一组，组里按 `line` 分行（同行横排），
+整组按锚点对齐，没内容的行收起来。`HudHost` 是铺在地图那一块上、不接鼠标的一层：造组件、摆放、窗口变了重排，每件登记进地上层（128）。
+地图屏把地图往下让出 `top_inset()`（顶上那几组的底），所以默认布局下画面和以前一样：倒计时顶上居中一行大字，读数一排在它下面。
+
+**文件**：`user://ui_layouts/<屏>.json` → `res://data/authoring/ui_layouts/<屏>.json` → 代码里的默认（`HudLayout.default_for`）。
+不走内容管线：这份文件是游戏自己写的，存了立刻生效；读的时候校验 id、锚点、档位、偏移，坏文件整份不用、回默认并在日志里说一句。
+**摆读数**：地图屏右栏顶上的调试台抽屉（139 的 `DevDrawer`）里开关。开着时组件显示虚线框与 id、藏着的半透明露出来；拖完松手归最近的锚点、偏移吸附 8 像素网格、自成一组；
+右键切显隐，滚轮切大小档。「保存布局」开发版写仓库里那份（作者提交），导出版写 user；「重置」删掉存的那份、回默认。暂时只做地图屏，也不给玩家。
+
 ## 9. 套装与跨域效果
 
 > **已实现、暂无内容**（140 登记，见 [status.md](status.md)）：本节的套装、道具跨域效果、包体加成、敌人 `loadout` 代码与测试都在，数据里还没有一份；第一份内容待流派 / 掉落设计需要时再写。
@@ -4018,6 +4034,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.70 | 2026-10-10 | **地图屏读数拆成组件**（150，作者定，四项待定按推荐；新 8.7）：`HudWidget` 与十种读数、`HudWidgets` 登记表、`HudLayout`（九宫锚点 + 偏移 + 行，`user://` → 仓库 → 默认）、`HudHost`（摆放、让出顶上、登记地上层）；主题变体 `PanelHud` / `LabelHud` / `LabelHudLarge`；地图屏的调试台抽屉与「摆读数」（拖、吸附、右键显隐、滚轮切档、保存 / 重置）；121 棘轮扫进 `ui/hud`，135 → 134 |
 | v2.69 | 2026-10-10 | **角色棋盘与百分比科技**（149，作者定，五项待定按推荐；改 7.3）：三个角色的棋盘 7 / 8 / 9 × 6、面板各占一轴、新字段 `CharacterDef.starting_funds`；`StatBonus.mode`、`VitalityMaxBonus / CarryCapacityBonus / StartingFundsBonus.percent`、`RunContext.stat_mult / *_mult / scaled`；不屈改成新效果 `loss_discount`；导入器拦角色被动与科技撞同一种效果；马库斯「操练」改成战斗规则（耐力见底回一段）；`docs/techs.xlsx` 四条科技改百分比 |
 | v2.68 | 2026-10-10 | **腰带槽与魔晶石弹药**（147 / 148）：`BeltModule`（随身道具不上棋盘、点一下就用；烟雾弹 / 急救包）、`BeltUse` / `BeltEffect`（作用域 `belt`）、`GridInventory.only_tags / reject_tags / resize_cols`；邻接第三面「供给」`feed_mods / feed_rules / feed_filter` + `CombatantSpec.fed_uids`、伤害扳机 `own_only`；`WearProfile` + `ItemInstance.charges`、`WearModule`、`Names.of_item`、`ItemValue.of_instance`；魔法杖与火焰 / 冰霜 / 闪电魔晶石，伤害类型 `ice` / `lightning`；删掉 `mana_crystal` / `mana_shard`（晶石不再给魔力） |
 | v2.67 | 2026-10-09 | **buff 与规则构件成为内容**（146）：`buffs` 搬回 `KINDS`，迁移工具 `tools/extract_buffs.gd` 抽出 10 份 buff；新种类 `rule_parts`（`RulePartDef` 四槽）抽出 15 份构件，规则里写 `"@id"`、导入复制 + `part_ref`、导出回写；`ContentLibrary`（单件导入登记表里没有的到盘上的库找，批量导入 `strict` 只认这一趟的）；`PropertyForm` 下拉列库项、只读卡片 + 断开 / 去库里改；构件编辑器 `ui/part_editor` |
