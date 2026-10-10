@@ -1,21 +1,30 @@
 ## 地图屏（M6）：一局的主屏。挑出生点 → 点相邻的点走一步 → 事件由 [GameFlow] 排成叠层一屏一屏来 → 撤离。
 ##
-## 它是当年地图沙盒（M3-6 → M5，066 删了）的正式版：同一个 [MapView]，同一份 HUD，日志在右栏；沙盒的换种子 / 重开 / 读档在这里没有，
+## 它是当年地图沙盒（M3-6 → M5，066 删了）的正式版：同一个 [MapView]，同一份 HUD；沙盒的换种子 / 重开 / 读档在这里没有，
 ## 那些是开局屏与主菜单的事。「背包」把整理面板叠在地图上，随时开；撤离按钮只在撤离点上亮。
 ## 所有动作都是公开方法，鼠标只是调它们；测试直接调。
+## 150 补 1：原来的右栏没了 —— 按钮、技能、路线、日志、调试台箭头都是这一屏的「部件」（[method hud_part]），装进读数层的组件里按布局摆；
+## 默认布局把它们按原来的顺序竖排在右边，地图往左让出那一条的宽（[method HudHost.right_inset]）
 extends GameScreen
 
 const SettingsScreenScript := preload("res://ui/game/settings_screen.gd")
 const EncyclopediaScreenScript := preload("res://ui/game/encyclopedia_screen.gd")
-const SIDE_WIDTH := 400     # 090：右栏三个按键放大到 300%，栏也加宽
+## 原来右栏的宽（090：三个按键放大到 300%，栏也加宽）；150 补 1 之后是右边那一列部件的宽
+const SIDE_WIDTH := 400
+const PART_WIDTH := SIDE_WIDTH - 24
+## 日志那一块的高（原来铺满右栏剩下的；现在是一件组件，默认贴右下）
+const LOG_HEIGHT := 220
 
 var _run: RunState = null
 var _view: MapView
-var _hud: Label
-## 092：非常显眼的全局倒计时（地图顶上一行大字）
-var _countdown: Label = null
-## 087：信仰那一句单独一个标签，停上去开悬浮窗（具体效果、信力怎么涨）
-var _faith_hud: Label
+## 150（作者定）：顶上的读数（倒计时、行动点、体力、货币、信仰……）都是能摆放的组件，按布局文件摆在地图那一块上
+var _hud_host: HudHost
+## 默认布局下读数占着顶上：地图往下让这么高（读数挪走了就不让）
+var _hud_spacer: Control
+## 150：调试台抽屉（139 那个），里面是「摆读数」
+var _drawer: DevDrawer = null
+var _hud_edit_btn: Button = null
+var _debug_line: Label = null
 var _preview: Label
 var _enemy_line: Label
 var _status: Label
@@ -24,6 +33,11 @@ var _log: RichTextLabel
 var _extract_btn: Button
 var _reopen_btn: Button
 var _skills_box: VBoxContainer
+## 150 补 1：这一屏交给读数层摆的部件（id → 控件）；没被组件领走的（调试模式关着时的日志）挂在藏着的架子上，照样在
+var _parts: Dictionary = {}
+var _shelf: Control = null
+## 地图那一竖排（右边让出 [method HudHost.right_inset]）
+var _mid: Control = null
 var _bag: Control = null
 var _bag_panel: Control = null
 var _confirm: Control = null
@@ -256,6 +270,7 @@ func close_pause_settings() -> void:
 		_pause_settings.queue_free()
 		_pause_settings = null
 	refresh_backdrop()     # 091：设置里可能换了底色
+	apply_debug_mode()     # 150 补 2：设置里可能开关了调试模式
 
 
 func settings_open() -> bool:
@@ -336,6 +351,11 @@ func _adopt() -> void:
 		_note("　原地耗了 %d 个行动点" % actions)
 		_after_move())
 	_run.travel.refused.connect(func(_i: MoveIntent, why: String): _say("走不了：" + why))
+	var problems: Array[String] = []
+	_hud_host.debug = debug_mode()     # 150 补 2
+	_hud_host.setup(_run, self, HudLayout.load_for("map", problems))     # 150
+	for p in problems:
+		_note("[color=#f0ad4e]　读数布局：%s[/color]" % p)
 	_run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh_hud())
 	_run.vitality.changed.connect(func(_c: int, _m: int, _d: int, _r: StringName): _refresh_hud())
 	_run.storage.changed.connect(_refresh_hud)
@@ -480,18 +500,6 @@ func _refresh_erosion_view() -> void:
 		return
 	var warn := f.next_band() if f.actions_left() >= 0 and f.actions_left() <= f.mechanic.warn_lead_actions else -1
 	_view.erosion = {"eroded": f.eroded_bands, "warn": warn}
-
-
-## HUD 里的侵蚀一句：没有 / 还没开始 / 侵蚀了几档、下一档几步
-func _erosion_line() -> String:
-	var f: ErosionField = _run.travel.erosion if _run != null and _run.travel != null else null
-	if f == null:
-		return ""
-	if f.is_total():
-		return "　　侵蚀：全图"
-	if not f.started():
-		return "　　侵蚀：%d 步后开始" % f.actions_left()
-	return "　　侵蚀 %d 档（下一档 %d 步）" % [f.eroded_bands + 1, f.actions_left()]
 
 
 ## 134：这个点上看得见的猎手各一行「名字：输了会怎样」—— 被它感知之后才写档（[HunterSystem.loss_hint]）
@@ -643,39 +651,23 @@ func enemy_preview(id: int) -> String:
 	return line
 
 
-## 129：顶栏的负重小标：轻装不画；吃力 / 超重 / 寸步难行，走路翻倍的那一级再注一句
-func _encumbrance_tag() -> String:
-	var lv := _run.encumbrance_level()
-	if lv <= 0 or _run.encumbrance == null:
-		return ""
-	var tag := "负重：" + _run.encumbrance.name_of(lv)
-	var mult := _run.encumbrance.travel_mult_of(lv)
-	if mult > 1:
-		tag += "（走一步花 %d 倍）" % mult
-	return tag
-
-
+## 150：读数都在组件里；这里只叫宿主整体刷一遍（组件也各自订了信号），外加地图上撤离点的关闭标记
 func _refresh_hud() -> void:
-	if _run == null or _hud == null:
+	if _run == null or _hud_host == null:
 		return
 	_refresh_countdown()
-	if _run.phase == RunState.Phase.PICK_SPAWN:
-		_hud.text = "行动点 —　　挑出生点　　体力 %d/%d　　货币 %d　　地上 %d 件" % [
-			_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count()]
+	_hud_host.refresh()
+
+
+## 092：地图上关闭中的撤离点的标记（倒计时那一行大字是读数组件 `countdown`，150）
+func _refresh_countdown() -> void:
+	var cd := CountdownModule.of(_run)
+	var closing := cd.closing_extract_id() if cd != null and cd.has_countdown() else -1
+	if closing < 0:
+		_view.closing = {}
 		return
-	var t := _run.travel
-	var extract_near := MapNavigator.nearest_of_type(_run.map, t.current_id, &"extract")
-	var rest := MapNavigator.nearest_of_type(_run.map, t.current_id, &"rest")
-	var core := MapNavigator.nearest_of_type(_run.map, t.current_id, &"core")
-	_hud.text = "行动点 %d　　距最近撤离点 %s 步　　距最近休息区 %s 步　　距核心 %s 步　　体力 %d/%d　　货币 %d　　地上 %d 件　　" % [
-		t.clock.total,
-		str(extract_near["steps"]) if int(extract_near["id"]) >= 0 else "—",
-		str(rest["steps"]) if int(rest["id"]) >= 0 else "—",
-		str(core["steps"]) if int(core["id"]) >= 0 else "—",
-		_run.vitality.current, _run.vitality.maximum, _run.wallet.balance, _run.storage.item_count()]
-	_hud.text += _encumbrance_tag()
-	if _faith_hud != null:
-		_faith_hud.text = _run.faith_line() + _power_line() + _buff_line() + _erosion_line()
+	var node := _run.map.get_node(closing)
+	_view.closing = {"id": closing, "closed": cd.extract_closed(node), "left": cd.left() - PaidExtracts.closes_at(node)}
 
 
 ## 这个撤离点被倒计时关掉了没（没装倒计时模块 = 不会关）
@@ -683,43 +675,6 @@ func _countdown_closed(node: MapNode) -> bool:
 	var cd := CountdownModule.of(_run)
 	return cd != null and cd.extract_closed(node)
 
-
-## 092：倒计时那一行大字 + 地图上关闭中的撤离点的标记
-func _refresh_countdown() -> void:
-	if _countdown == null:
-		return
-	var box := _countdown.get_parent() as Control
-	var cd := CountdownModule.of(_run)
-	if cd == null or not cd.has_countdown():
-		box.visible = false
-		_view.closing = {}
-		return
-	box.visible = true
-	var left := cd.left()
-	var limit := cd.limit()
-	var text := "倒计时 %d / %d" % [left, limit]
-	var closing := cd.closing_extract_id()
-	if closing >= 0:
-		var node := _run.map.get_node(closing)
-		var closed := cd.extract_closed(node)
-		text += "　　撤离点 %d %s" % [closing, "已关闭" if closed else "剩 %d 步关闭" % (left - PaidExtracts.closes_at(node))]
-		_view.closing = {"id": closing, "closed": closed, "left": left - PaidExtracts.closes_at(node)}
-	else:
-		_view.closing = {}
-	_countdown.text = text
-	var ratio := float(left) / float(maxi(limit, 1))
-	var col := UiPalette.HP if (ratio <= 0.25 or left <= 5) else (UiPalette.STAMINA if ratio <= 0.5 else UiPalette.FG)
-	_countdown.add_theme_color_override("font_color", col)     # 121 特例：颜色随剩余回合实时变（过半琥珀、四分之一红），不是固定样式
-	var style := (box as PanelContainer).get_theme_stylebox("panel") as StyleBoxFlat
-	if style != null:
-		style.border_color = col
-
-
-
-## 信力一句（082）：「　信力 12 / 30（第 1 阶）」；没激活信仰不显示
-func _power_line() -> String:
-	var line := _run.faith_power.line() if _run.faith_power != null else ""
-	return "　" + line if line != "" else ""
 
 
 ## 局内技能（082）：一个技能一个按钮，能用的亮着；被动的不占按钮
@@ -757,19 +712,6 @@ func use_skill(id: StringName) -> bool:
 	_refresh_skills()
 	_refresh_hud()
 	return true
-
-
-## buff 栏的占位：一行字。局外的和一局里的都列，有时限的写还剩几步
-func _buff_line() -> String:
-	var parts: Array[String] = []
-	for id in _run.meta_buffs:
-		var def: RunBuffDef = _run.buff_defs.get(id, null)
-		parts.append(def.display_name if def != null else String(id))
-	for entry in BuffModule.entries_of(_run):
-		var def: RunBuffDef = _run.buff_defs.get(StringName(String(entry["id"])), null)
-		var name := def.display_name if def != null else String(entry["id"])
-		parts.append(name + ("（剩 %d 步）" % int(entry["left"]) if int(entry["left"]) > 0 else ""))
-	return "　　buff：" + "、".join(parts) if not parts.is_empty() else ""
 
 
 func _route_of_entry(id: int) -> Dictionary:
@@ -813,47 +755,24 @@ func _rebuild_routes() -> void:
 #region 界面
 func _build() -> void:
 	_backdrop()
-	var row := _hbox(0)
-	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(row)
-
+	# 150：整屏 = 地图那一竖排（让出的顶、地图、两行预览；右边让出部件那一列）+ 盖在上面的读数层
+	var area := Control.new()
+	area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(area)
 	var mid := _vbox(0)
-	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(mid)
-	# 092（作者定）：全局倒计时 —— 顶上一行大字，颜色随剩余变（过半琥珀、四分之一以下红）
-	_countdown = _label("", 34, UiPalette.FG)
-	_countdown.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var cd_box := PanelContainer.new()
-	var cd_style := StyleBoxFlat.new()
-	cd_style.bg_color = UiPalette.PANEL
-	cd_style.border_color = UiPalette.STAMINA
-	cd_style.set_border_width_all(2)
-	cd_style.set_content_margin_all(6)
-	cd_box.add_theme_stylebox_override("panel", cd_style)     # 121 特例：边框色随倒计时实时改（见 _refresh_countdown），得是这一块自己的底
-	cd_box.add_child(_countdown)
-	cd_box.visible = false
-	mid.add_child(cd_box)
-	_reserve_ground(cd_box)     # 128
-	_hud = _label("", 14, UiPalette.FG)
-	var hud_box := PanelContainer.new()
-	var st := StyleBoxFlat.new()
-	st.bg_color = UiPalette.PANEL
-	st.set_content_margin_all(8)
-	hud_box.add_theme_stylebox_override("panel", st)     # 121 特例：信力 / 行动点那条 HUD 的无边窄底，只此一处
-	var hud_row := _hbox(0)
-	hud_row.add_child(_hud)
-	_faith_hud = _label("", 14, UiPalette.FG)
-	_faith_hud.mouse_filter = Control.MOUSE_FILTER_STOP
-	_faith_hud.mouse_entered.connect(func():
-		if _tip != null and _run != null:
-			_tip.show_text(FaithTooltip.describe(_run.active_faith(), _run.faith_power, flow.items), _faith_hud.global_position + Vector2(0, _faith_hud.size.y)))
-	_faith_hud.mouse_exited.connect(func():
-		if _tip != null:
-			_tip.hide_tip())
-	hud_row.add_child(_faith_hud)
-	hud_box.add_child(hud_row)
-	mid.add_child(hud_box)
-	_reserve_ground(hud_box)     # 128
+	mid.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	area.add_child(mid)
+	_mid = mid
+	_hud_spacer = Control.new()
+	_hud_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mid.add_child(_hud_spacer)
+	_hud_host = HudHost.new()
+	_hud_host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_hud_host.arranged.connect(func():
+		_hud_spacer.custom_minimum_size.y = _hud_host.top_inset()
+		_mid.offset_right = -_hud_host.right_inset())
+	area.add_child(_hud_host)
 	_view = MapView.new()
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_view.node_pressed.connect(_on_node_pressed)
@@ -875,38 +794,118 @@ func _build() -> void:
 	mid.add_child(_enemy_line)
 	_tip = HoverTip.new()
 	add_child(_tip)
+	_build_parts()
+	_build_drawer()
 
-	var side := _panel(12)
-	side.custom_minimum_size.x = SIDE_WIDTH
-	row.add_child(side)
-	var col := _vbox(8)
-	side.add_child(col)
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 26      # 右上角是 DevNav 的按钮
-	col.add_child(spacer)
-	_status = _wrapped("", 12, UiPalette.DIM, SIDE_WIDTH - 30)
-	col.add_child(_status)
-	# 090（作者定）：右栏的三个互动按键放大到 300%，竖着排
-	var buttons := _vbox(6)
-	buttons.add_child(_button("背包（B）", toggle_bag, 13, UiPalette.Tier.PRIMARY))
+
+## 150 补 1：原来右栏里的东西，一件一个部件（读数层的组件按 id 领走，见 [method hud_part]）
+func _build_parts() -> void:
+	_shelf = Control.new()
+	_shelf.name = "HudShelf"
+	_shelf.visible = false
+	_shelf.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_shelf)
+	# 150：调试台抽屉（139）—— 箭头是一件部件，抽屉盖在右边；里面是「摆读数」
+	_drawer = DevDrawer.new()
+	_part(&"dev_drawer", _drawer.arrow)
+	_status = _wrapped("", 12, UiPalette.DIM, PART_WIDTH)
+	_part(&"status", _status)
+	# 090（作者定）：三个互动按键放大到 300%
+	_part(&"bag_button", _button("背包（B）", toggle_bag, 13, UiPalette.Tier.PRIMARY), true)
 	_reopen_btn = _button("回到这个点（N）", func(): reopen(), 13, UiPalette.Tier.PRIMARY)
 	_reopen_btn.disabled = true
 	_reopen_btn.tooltip_text = "还没走的时候，重新打开这个点上最后的界面：没拿完的战利品、还开着的搜索或商店。点地图上的当前节点也行"
-	buttons.add_child(_reopen_btn)
+	_part(&"reopen_button", _reopen_btn, true)
 	_extract_btn = _button("撤离", func(): extract(), 13, UiPalette.Tier.PRIMARY)
 	_extract_btn.disabled = true
-	buttons.add_child(_extract_btn)
-	col.add_child(buttons)
+	_part(&"extract_button", _extract_btn, true)
 	_skills_box = _vbox(4)
-	col.add_child(_skills_box)
-	col.add_child(_button("存档并回主菜单", func(): flow.save_and_quit(), 12, UiPalette.Tier.MINOR))
-	col.add_child(HSeparator.new())
+	_part(&"skills", _skills_box, true)
+	_part(&"menu_button", _button("存档并回主菜单", func(): flow.save_and_quit(), 12, UiPalette.Tier.MINOR), true)
 	_routes_box = _vbox(6)
-	col.add_child(_routes_box)
-	col.add_child(HSeparator.new())
-	col.add_child(_label("日志", 14, UiPalette.FG))
+	_part(&"routes", _routes_box, true)
 	_log = _log_box(12)
-	col.add_child(_log)
+	_log.custom_minimum_size = Vector2(PART_WIDTH, LOG_HEIGHT)
+	_part(&"log", _log)
+
+
+func _part(id: StringName, c: Control, full_width: bool = false) -> void:
+	if full_width:
+		c.custom_minimum_size.x = PART_WIDTH
+	_parts[id] = c
+	_shelf.add_child(c)
+
+
+## 读数层的组件来领这一屏的部件（[HudPartWidget]）。没有这个 id 返回 null
+func hud_part(id: StringName) -> Control:
+	return _parts.get(id, null)
+
+
+## 组件换掉之前把部件还回来：挂回藏着的架子上（日志照样在记）
+func hud_shelve(part: Control) -> void:
+	if part != null and is_instance_valid(part) and _shelf != null:
+		part.reparent(_shelf, false)
+
+
+## 150 补 2：调试模式（设置里的开关；没有设置 = 默认）
+func debug_mode() -> bool:
+	return flow.settings.debug_mode if flow != null and flow.settings != null else GameSettings.DEBUG_MODE_DEFAULT
+
+
+## 照设置里的调试模式重摆读数层（变了才重摆）：关掉时日志那件不造，开回来日志里之前写的都还在
+func apply_debug_mode() -> void:
+	if _hud_host == null or _hud_host.layout == null or _hud_host.debug == debug_mode():
+		return
+	_hud_host.debug = debug_mode()
+	_hud_host.setup(_run, self, _hud_host.layout)
+	if _debug_line != null:
+		_debug_line.text = _debug_text()
+
+
+## 150：调试台里的「摆读数」：开着时读数能拖（吸附网格）、右键切显隐、滚轮切大小；保存写回布局文件，重置回默认
+func _build_drawer() -> void:
+	add_child(_drawer)
+	_drawer.dock(64, 12)
+	var c := _drawer.content
+	_debug_line = _label(_debug_text(), 13, UiPalette.STAMINA)     # 150 补 2：头部写着现在的调试模式
+	c.add_child(_debug_line)
+	c.add_child(_label("摆读数", 16, UiPalette.FG))
+	c.add_child(_wrapped("开着时：拖动读数换位置（松手吸附 %d 像素网格，记成离它最近的锚点 + 偏移）；右键切显示 / 隐藏；滚轮切大小两档。保存写到 %s。" % [
+		HudLayout.GRID, HudLayout.save_path("map")], 12, UiPalette.DIM, DevDrawer.WIDTH - 40))
+	_hud_edit_btn = _button("摆读数：关", func(): set_hud_editing(not _hud_host.editing), 13)
+	c.add_child(_hud_edit_btn)
+	c.add_child(_button("保存布局", func(): _say("读数布局已保存" if save_hud_layout() else "读数布局没存上"), 13))
+	c.add_child(_button("重置", func():
+		reset_hud_layout()
+		_say("读数布局回到默认"), 13, UiPalette.Tier.MINOR))
+	_drawer.wrap_contents()
+
+
+func _debug_text() -> String:
+	return "调试模式：%s（设置里开关）" % ("开" if debug_mode() else "关")
+
+
+func hud() -> HudHost:
+	return _hud_host
+
+
+func dev_drawer() -> DevDrawer:
+	return _drawer
+
+
+func set_hud_editing(on: bool) -> void:
+	_hud_host.set_editing(on)
+	if _hud_edit_btn != null:
+		_hud_edit_btn.text = "摆读数：开" if on else "摆读数：关"
+
+
+func save_hud_layout(path: String = "") -> bool:
+	return _hud_host.save(path)
+
+
+func reset_hud_layout() -> void:
+	_hud_host.reset()
+	_hud_host.set_editing(_hud_host.editing)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -931,6 +930,14 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _say(text: String) -> void:
 	_status.text = text
+	var w := _hud_host.widget(&"status") if _hud_host != null else null
+	if w != null:
+		w.refresh()
+
+
+## 组件（腰带）往提示行写一句
+func say(text: String) -> void:
+	_say(text)
 
 
 func _note(text: String) -> void:

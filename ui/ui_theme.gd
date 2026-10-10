@@ -26,6 +26,10 @@ const LABEL_DIM := &"LabelDim"
 const LABEL_WARN := &"LabelWarn"
 const PANEL_DARK := &"PanelDark"
 const PANEL_LINE := &"PanelLine"
+## 150：地图屏读数组件（[HudWidget]）的底与字：无边窄底、14 号小档、34 号大档（倒计时那种一行大字）
+const PANEL_HUD := &"PanelHud"
+const LABEL_HUD := &"LabelHud"
+const LABEL_HUD_LARGE := &"LabelHudLarge"
 ## 事件正文、百科正文：17 号、行距 6
 const RICH_BODY := &"RichTextBody"
 ## 悬浮窗正文：13 号
@@ -33,13 +37,15 @@ const RICH_SMALL := &"RichTextSmall"
 
 ## 全部变体（测试看齐全）
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
-	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL]
+	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE]
 
 const TITLE_SIZE := 18
 const PANEL_MARGIN := 16
 const PANEL_LINE_MARGIN := 8
 const RICH_BODY_SIZE := 17
 const RICH_SMALL_SIZE := 13
+const HUD_MARGIN := 8
+const HUD_LARGE_SIZE := 34
 const RICH_FONT_SIZES := ["normal_font_size", "bold_font_size", "italics_font_size", "bold_italics_font_size", "mono_font_size"]
 
 ## 并进默认主题的那一份；[method refresh] 原地重填它
@@ -261,6 +267,14 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_stylebox("panel", PANEL_DARK, _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
 	t.set_type_variation(PANEL_LINE, "PanelContainer")
 	t.set_stylebox("panel", PANEL_LINE, _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), PANEL_LINE_MARGIN))
+	# 150：读数组件（原来地图屏那条 HUD 的无边窄底，搬成变体）
+	t.set_type_variation(PANEL_HUD, "PanelContainer")
+	var hud_box := _box(panel_bg, UiPalette.LINE, HUD_MARGIN)
+	hud_box.set_border_width_all(0)
+	t.set_stylebox("panel", PANEL_HUD, hud_box)
+	t.set_type_variation(LABEL_HUD, "Label")
+	t.set_type_variation(LABEL_HUD_LARGE, "Label")
+	t.set_font_size("font_size", LABEL_HUD_LARGE, HUD_LARGE_SIZE)
 	# 富文本
 	for pair in [[RICH_BODY, RICH_BODY_SIZE], [RICH_SMALL, RICH_SMALL_SIZE]]:
 		t.set_type_variation(pair[0], "RichTextLabel")
