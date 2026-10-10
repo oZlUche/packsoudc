@@ -6,10 +6,12 @@
   },
   "stackable": false,
   "duration_sec": 10.0,
-  "mods": [
+  "axes": [
     {
-      "mode": "MULT",
-      "amount": 10.0
+      "axis": "damage_dealt"
+    },
+    {
+      "axis": "attack_speed"
     }
   ]
 }

@@ -130,12 +130,7 @@ static func describe(axis: StringName, stacks: int, system_stacks: int = 0) -> S
 	if bool(info(axis).get("pct", false)):
 		step *= 100.0
 		unit = "%"
-	var what: String = {
-		ATTACK_SPEED: "攻速", DAMAGE_DEALT: "造成的伤害", DAMAGE_TAKEN: "受到的最终伤害",
-		REGEN_HP: "每秒回血", REGEN_HP_PCT: "每秒按生命上限回血", REGEN_STAMINA: "每秒回耐力",
-		CRIT_CHANCE: "暴击率", CRIT_DAMAGE: "暴击伤害", FIRE_DAMAGE: "造成的火焰伤害",
-		ARMOR: "防护（每次直接伤害固定减免）", MAX_HP: "生命上限", MAX_MANA: "法力上限",
-	}.get(axis, String(axis))
+	var what := what_of(axis)
 	var lines: Array[String] = ["%s：每层 %s%s%s（正为%s、负为%s，相抵）" % [
 		what, "±", _num(step), unit, String(info(axis).get("pos", "")), String(info(axis).get("neg", ""))]]
 	var total := stacks + system_stacks
@@ -145,11 +140,35 @@ static func describe(axis: StringName, stacks: int, system_stacks: int = 0) -> S
 	return "\n".join(lines)
 
 
+## 这条轴作用在什么上（悬浮窗用的全称）
+static func what_of(axis: StringName) -> String:
+	return String({
+		ATTACK_SPEED: "攻速", DAMAGE_DEALT: "造成的伤害", DAMAGE_TAKEN: "受到的最终伤害",
+		REGEN_HP: "每秒回血", REGEN_HP_PCT: "每秒按生命上限回血", REGEN_STAMINA: "每秒回耐力",
+		CRIT_CHANCE: "暴击率", CRIT_DAMAGE: "暴击伤害", FIRE_DAMAGE: "造成的火焰伤害",
+		ARMOR: "防护（每次直接伤害固定减免）", MAX_HP: "生命上限", MAX_MANA: "法力上限",
+		STAMINA_COST: "耐力消耗",
+	}.get(axis, String(axis)))
+
+
+## 152：[param stacks] 层折成多少，短的一句（「造成的伤害 +3%」「防护 −3」「耐力消耗 ×97%」）
+static func effect_text(axis: StringName, stacks: int) -> String:
+	var what := what_of(axis).split("（")[0]
+	if is_compound(axis):
+		return "%s ×%.1f%%" % [what, StatMath.to_float(factor(axis, stacks)) * 100.0]
+	var step := step_of(axis)
+	var unit := "%" if is_percent(axis) else ""
+	if bool(info(axis).get("pct", false)):
+		step *= 100.0
+		unit = "%"
+	return "%s %s%s%s" % [what, "+" if stacks >= 0 else "−", _num(absf(stacks * step)), unit]
+
+
 ## 连乘轴的一句：每层乘一个因子，现在共乘了多少
 static func _describe_compound(axis: StringName, stacks: int, system_stacks: int) -> String:
 	var i := info(axis)
 	var per := step_of(axis)
-	var what: String = {STAMINA_COST: "耐力消耗"}.get(axis, String(axis))
+	var what := what_of(axis)
 	var lines: Array[String] = ["%s：每层 ×%s%%（正为%s、负为%s，相抵）" % [
 		what, _num(per), String(i.get("pos", "")), String(i.get("neg", ""))]]
 	var total := stacks + system_stacks

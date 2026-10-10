@@ -1,69 +1,70 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_vn4sa"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_csx5m"]
-[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_scvck"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_cr5os"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_brwv4"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="6_curu6"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="7_hcix0"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_3yovh"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_3shkr"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_d2kbg"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_oem1k"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_3qo2l"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_1lmby"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_csx5m"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_scvck"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_cr5os"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_brwv4"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_curu6"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="6_hcix0"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="7_3yovh"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="8_3shkr"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="9_d2kbg"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="10_oem1k"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="11_3qo2l"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="12_1lmby"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="13_deyrs"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="14_eatr2"]
 
-[sub_resource type="Resource" id="Resource_deyrs"]
-script = ExtResource("3_scvck")
+[sub_resource type="Resource" id="Resource_7bpqt"]
+script = ExtResource("3_cr5os")
 seconds = 1.0
 metadata/part_ref = &"cooldown_1s"
 
-[sub_resource type="Resource" id="Resource_3y0s2"]
-script = ExtResource("1_vn4sa")
+[sub_resource type="Resource" id="Resource_h6waw"]
+script = ExtResource("1_csx5m")
 stat = &"max_shield"
 amount = 8.0
 
-[sub_resource type="Resource" id="Resource_eatr2"]
-script = ExtResource("6_curu6")
+[sub_resource type="Resource" id="Resource_m1gae"]
+script = ExtResource("7_3yovh")
 id = &"ward"
 display_name = "护符结界"
 display_names = {
 "en": "Ward"
 }
-mods = Array[ExtResource("1_vn4sa")]([SubResource("Resource_3y0s2")])
-
-[sub_resource type="Resource" id="Resource_7bpqt"]
-script = ExtResource("7_hcix0")
-target = 1
-buff = SubResource("Resource_eatr2")
-
-[sub_resource type="Resource" id="Resource_m1gae"]
-script = ExtResource("8_3yovh")
-metadata/part_ref = &"on_schedule"
+mods = Array[ExtResource("1_csx5m")]([SubResource("Resource_h6waw")])
 
 [sub_resource type="Resource" id="Resource_3k4tc"]
-script = ExtResource("2_csx5m")
-trigger = SubResource("Resource_m1gae")
-cadence = SubResource("Resource_deyrs")
-effects = Array[ExtResource("5_brwv4")]([SubResource("Resource_7bpqt")])
+script = ExtResource("8_3shkr")
+target = 1
+buff = SubResource("Resource_m1gae")
 
 [sub_resource type="Resource" id="Resource_yfs13"]
-script = ExtResource("9_3shkr")
-rules = Array[ExtResource("2_csx5m")]([SubResource("Resource_3k4tc")])
+script = ExtResource("9_d2kbg")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_s7leo"]
-script = ExtResource("13_1lmby")
+script = ExtResource("2_scvck")
+trigger = SubResource("Resource_yfs13")
+cadence = SubResource("Resource_7bpqt")
+effects = Array[ExtResource("5_curu6")]([SubResource("Resource_3k4tc")])
+
+[sub_resource type="Resource" id="Resource_b3bqc"]
+script = ExtResource("10_oem1k")
+rules = Array[ExtResource("2_scvck")]([SubResource("Resource_s7leo")])
+
+[sub_resource type="Resource" id="Resource_r6utg"]
+script = ExtResource("14_eatr2")
 
 [resource]
-script = ExtResource("12_3qo2l")
+script = ExtResource("13_deyrs")
 id = &"warding_charm"
 display_name = "护身符"
 display_names = {
 "en": "Warding Charm"
 }
-shape = SubResource("Resource_s7leo")
+shape = SubResource("Resource_r6utg")
 rarity = 2
 value = 40
 tags = Array[StringName]([&"part", &"sigil"])
-combat = SubResource("Resource_yfs13")
+combat = SubResource("Resource_b3bqc")
