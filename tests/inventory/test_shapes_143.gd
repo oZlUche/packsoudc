@@ -6,7 +6,7 @@ const BEFORE := {
 	&"shortsword": [2, 5], &"cleaver": [2, 5], &"bloodletter": [2, 6], &"scimitar": [3, 7], &"festering_blade": [3, 9],
 	&"longsword": [3, 12], &"mithril_sword": [3, 16], &"tibia_violence": [4, 15], &"warhammer": [3, 30],
 	&"shortbow": [3, 6], &"longbow": [4, 8], &"blessed_longbow": [4, 10],
-	&"leather_armor": [4, 20], &"plate_cuirass": [9, 45], &"round_shield": [4, 4], &"blessed_shield": [4, 6],
+	&"leather_armor": [4, 20], &"plate_cuirass": [9, 45], &"blessed_shield": [4, 6],
 }
 const MAIN_STATS := [&"damage", &"max_shield", &"armor"]
 
