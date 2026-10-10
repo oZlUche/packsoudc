@@ -245,7 +245,7 @@ static func _pipeline(d: Dictionary, names: Array) -> String:
 	if int(d.get("raw", 0)) != int(d.get("raw_in", 0)):
 		parts.append("火焰加成 → %s" % _num(int(d["raw"])))
 	if int(d.get("absorbed", 0)) != 0:
-		parts.append("护盾 −%s" % _num(int(d["absorbed"])))
+		parts.append("护甲 −%s" % _num(int(d["absorbed"])))
 	if bool(d.get("cancelled", false)):
 		parts.append("受伤前效果取消")
 	if int(d.get("percent", 0)) != 0:

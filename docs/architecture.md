@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.75 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.76 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -684,7 +684,7 @@ const DEFAULT_STATS := {"max_hp": 25.0, "max_stamina": 50.0}
 后期想加强一件物品，加乘算比加固定值有效得多。
 
 > **133 取消了四个乘区**（`EMPOWER / SHARP / ELEMENT / HASTE`）。它们混了两件事：增益怎么生效（乘还是加）和增益是什么（锋利、元素、急速）。
-> 后者本该是独立的 `BuffDef` / 属性（「给护盾加急速乘区」根本不成立）。导入器把旧键 `mult_category / mult_percent / flat` 迁成 `mode + amount`：
+> 后者本该是独立的 `BuffDef` / 属性（「给护甲加急速乘区」根本不成立）。导入器把旧键 `mult_category / mult_percent / flat` 迁成 `mode + amount`：
 > `mult_category` 提醒并忽略，同一条又乘又加的报错要求拆成两条。
 
 #### 定点数与取整
@@ -734,14 +734,14 @@ GDScript 里这个好处根本不存在，代价却是设计师写的每个十�
 
 **暴击**（104，作者定）：`crit_chance` 默认 0.10、`crit_damage` 默认 1.5（`BattleStats.DEFAULT_BASE`，不跨道具累加），**所有加成一律加算**（只收加算 `mode: ADD`，导入器拦乘算）。
 `DealDamage` 造包时对「从属性取伤害」的那一包掷一次（战斗 RNG，定点万分比；0 与 1 两头不消耗随机数），命中则 `raw × crit_damage`、`DamagePacket.crit = true`——
-在管线之前，护盾 / 减伤 / 护甲 / 加时看到的都是暴击后的原始值；固定值伤害（灼烧这类）不暴击；双方对称。预估伤害乘期望 `1 + 暴击率 × (暴击伤害 − 1)`。
+在管线之前，护甲 / 减伤 / 格挡 / 加时看到的都是暴击后的原始值；固定值伤害（灼烧这类）不暴击；双方对称。预估伤害乘期望 `1 + 暴击率 × (暴击伤害 − 1)`。
 
 规则：
 
 - **一条轴就是一个带符号的 int 层数，默认 0。** 增益 +n、减益 −n，二者直接相抵：吃了 3 层加速再中 1 层减速就是 +2。不再为「加速」「减速」各开一个 buff。
 - **结算是公式的最后一步**，在道具级终值之上：百分比轴 `终值 × (1 + 层数 × 步长)`，固定值轴 `终值 + 层数 × 步长`，连乘轴 `终值 × (步长/100)^层数`（105 第十节，作者给耐力消耗定的曲线：每层省掉当前的 3%，层数之间相乘而不是相加；负层反过来除，相抵照旧）。连乘用 |层数| 次定点乘法而不是 `pow`，跨平台逐位一致；连乘轴的步长必须在 (0, 100) 开区间，表自检拦着（`tests/battle/test_stat_axes.gd`）。百分比因子低于 0 钳到 0（和乘区同一条规矩）。攻速轴作用于 `haste` 的终值，所以 `CooldownCadence` 一行不改。
 - **上限轴（生长 / 衰颓、充盈 / 枯竭）不另定规矩**：上限涨多少当前值涨多少（生长 3 层立刻多 3 点血可用），上限降则把当前值夹到新上限（衰颓压下来会直接掉血），归零那条资源就不可用、面板不画 —— 这都是 `ResourcePool.set_max` 既有的行为。
-- **格挡层：盾牌各一层，只取最高**（153，作者定）：`block`（格挡，原名 `armor` 防护）是**盾牌专属**的固定减伤。`CombatantRuntime.from_spec` 不把它跨件相加，而是每件 `stats.block > 0` 的道具出一层（`block_layers: [{uid, id, value}]`，从高到低），基线里的格挡（敌人天生的）算一层「天生」（uid 0）；`_rebuild` 把单位级 `block` 定成最高那层，加固 / 破绽轴再加在它上面。其余层保留，最高那层没了次高顶上。几面盾不相加。buff 不许在 mods 里直接改格挡（导入 error，写 `axes`：弹开 = 每层 8 层加固、标记 = 3 层破绽）；非盾道具的基础属性、信力加成给格挡也是 error；赐福给格挡的那一条只能认 `shield` 标签（自然 / 大地拆成盾 +1 格挡、防具 +4 护盾上限两条）。旧键 `armor` 导入时当 `block` 读并提醒，教程文字 `{item_stat:…:armor}`、预设图节点的 `base_stats.armor` 同样当 `block` 找。回放面板一格「格 N」，悬浮窗列各层（生效 / 备用）与修正。
+- **格挡层：盾牌各一层，只取最高**（153，作者定）：`block`（格挡，原名 `armor` 防护）是**盾牌专属**的固定减伤。`CombatantRuntime.from_spec` 不把它跨件相加，而是每件 `stats.block > 0` 的道具出一层（`block_layers: [{uid, id, value}]`，从高到低），基线里的格挡（敌人天生的）算一层「天生」（uid 0）；`_rebuild` 把单位级 `block` 定成最高那层，加固 / 破绽轴再加在它上面。其余层保留，最高那层没了次高顶上。几面盾不相加。buff 不许在 mods 里直接改格挡（导入 error，写 `axes`：弹开 = 每层 8 层加固、标记 = 3 层破绽）；非盾道具的基础属性、信力加成给格挡也是 error；赐福给格挡的那一条只能认 `shield` 标签（自然 / 大地拆成盾 +1 格挡、防具 +4 护甲上限两条）。旧键 `base_stats.armor` 导入时报错（补充一把 `armor` 给了护甲，改名前后意思不同，不猜）；只有旧存档里的节点内容（`EnemyKit.baseline_of`）仍把 `armor` 当 `block` 读。回放面板一格「格 N」，悬浮窗列各层（生效 / 备用）与修正。
 - **格挡（加固 / 破绽）为负时倒贴**（106，作者定）：`DamageResolver` 第 4 步直接减 `block`，正值减到 0 为止、负值反而加伤（破绽 3 层 = 直接伤害 +3）。它**只减直接伤害** —— 见下面那条定义。
 - **直接伤害看来源，不看类型**（106 第八节，作者定）：**武器（道具的规则）造成的一定是直接伤害**；buff 造成的（灼烧、中毒、流血、到期爆发）是非直接；套装 / 单位级规则也算非直接；以血为代价的自伤不算。除非另行说明（效果上的 `direct_override`），直接伤害一定吃格挡。`DamagePacket.direct` 记它，`DamageTypes` 原来那列「吃不吃护甲」已删 —— 它按类型判，和这条按来源的规矩重复。
 - **层数永续、无上限（除非轴表写了上下限）**，这是 4.5「可叠层即永续」在单位级的同一条规矩；战斗结束清空。
@@ -795,7 +795,7 @@ class_name AbilityRule extends Resource
 ```
 
 物品的 `CombatProfile` 持有 `Array[AbilityRule]`，而不是「冷却 + 伤害」两个字段。
-一件物品可以有多条规则（平时按冷却出手、受击时额外反击、开局给自己加护盾）。
+一件物品可以有多条规则（平时按冷却出手、受击时额外反击、开局给自己加护甲）。
 
 #### 一切皆事件
 
@@ -811,7 +811,7 @@ class_name AbilityRule extends Resource
 | 层数 | `status_applied`（130） | 某方施加让层数**增加**了：状态键、变化量、变化后层数、`source_side` 施加方。只给规则听、不进回放；叠满后只刷新时长、系统 buff 不发 |
 | 资源 | `resource_changed` | 资源键、增量、原因（见下） |
 | 伤害 | `before_damage` | 结算前。**同步派发**，效果在此改写这一下，见 4.6 |
-| 伤害 | `damage` | 结算后。伤害类型、原始值、护盾／护甲吸收量、实际扣除量、施加方 |
+| 伤害 | `damage` | 结算后。伤害类型、原始值、护甲吸收量、格挡挡掉的量、实际扣除量、施加方 |
 | 存亡 | `died` | 阵亡方 |
 
 **生命与耐力不各开一套事件**，统一走 `resource_changed(key, delta, reason)`。
@@ -1206,13 +1206,13 @@ func settle_regen(now: int) -> void:      # CombatantRuntime
 ### 4.6 伤害结算管线
 
 **一切血量的减少都走同一条管线** —— 武器命中、持续伤害、以血为代价的自伤，
-区别只在伤害类型。这样减伤、护盾、免疫、反转只需要实现一次。
+区别只在伤害类型。这样减伤、护甲、免疫、反转只需要实现一次。
 
 五步，顺序不可调换：
 
 ```
-1. 确认类型      这一下能不能被护盾吸收、要不要通知
-2. 护盾吸收      能吸收则先扣护盾；中毒之类绕过
+1. 确认类型      这一下能不能被护甲吸收、要不要通知
+2. 护甲吸收      能吸收则先扣护甲；中毒之类绕过
 3. 受伤前效果    【同步派发】效果在这里改写伤害包：减伤、反转、免疫
 4. 计算受伤量    百分比 → 固定增减 → 反转 → 格挡（106：只减直接伤害，为负则倒贴；153：最高那面盾 + 加固 / 破绽）→ × 受伤倍率 damage_taken（103，只放大伤害不放大治疗），然后落到血量
 5. 受伤后效果    发 damage 事件；流失类不通知默认监听
@@ -1220,7 +1220,7 @@ func settle_regen(now: int) -> void:      # CombatantRuntime
 
 #### 为什么要有第 3 步
 
-护甲那种**无条件**减伤写成一个属性就够了。但这些写不进任何固定字段：
+格挡那种**无条件**减伤写成一个属性就够了。但这些写不进任何固定字段：
 
 - 消耗 2 层格挡，减免 10 点
 - 喝了解毒剂时，中毒伤害反转成治疗
@@ -1245,7 +1245,7 @@ func settle_regen(now: int) -> void:      # CombatantRuntime
 class_name DamagePacket extends RefCounted
 var type: StringName        ## 伤害类型
 var raw: int                ## 原始值
-var absorbed: int           ## 被护盾吸收
+var absorbed: int           ## 被护甲吸收
 var flat: int               ## 受伤前效果的固定增减
 var percent: int            ## 受伤前效果的百分比增减（多条【相加】）
 var inverted: bool          ## 反转：伤害变治疗
@@ -1276,13 +1276,12 @@ var final: int              ## 最终结算量，正为扣血、负为回血
 
 | 字段 | 含义 |
 |---|---|
-| `shield_absorbable` | 能否被护盾吸收 |
-| `armor_applies` | 吃不吃护甲减免 |
+| `armor_absorbable` | 能否被护甲吸收（153 补充一前叫 `armor_absorbable`） |
 | `provokes` | 这一下会不会**招致反应** —— 反伤、吸血、格挡这类由挨打／打人触发的规则 |
 
 内置六种：
 
-| 类型 | 护盾 | 护甲 | 招致反应 | 用途 |
+| 类型 | 护甲吸收 | 格挡（106 起按来源，不看类型） | 招致反应 | 用途 |
 |---|---|---|---|---|
 | `physical` | ✓ | ✓ | ✓ | 常规 |
 | `fire` | ✓ | ✓ | ✓ | 元素线的起点 |
@@ -1331,9 +1330,9 @@ var final: int              ## 最终结算量，正为扣血、负为回血
 
 不发事件的话，「流失时触发」这类联动就永远没有接入点，而那正是要留的口子。
 
-#### 护盾
+#### 护甲
 
-`shield` 是一种普通资源，由 `max_shield` 属性自动派生 —— 和其他资源一样，
+`armor`（护甲，153 补充一前叫护甲 `shield`）是防具给的一种普通资源，由 `max_armor`（护甲上限）属性自动派生 —— 和其他资源一样，
 配一个属性就有了，不需要改代码。它只是在管线第 2 步被优先扣除。
 
 ### 4.7 模拟循环：事件驱动，没有帧
@@ -1401,9 +1400,9 @@ while 双方存活 and now < 安全上限:
 回放起点取自 `BattleResult.initial`（开战瞬间的快照），而不是让表现层自己去编译一遍棋盘 ——
 那等于让它认识编译器，1.1 的分离就破了。
 
-**护盾画在生命条上**（106，作者定）：护盾不占一条资源条，而是生命条外侧的一圈粗白框，
-长度 = `护盾 / 生命上限`（护盾 ≥ 上限时整条框满），只盖一部分时右端一道竖边收口 ——
-一眼看出「护盾顶得住几成血」。护盾的数写在生命条的文字里（`hp 60 / 100　盾 40`）。
+**护甲画在生命条上**（106，作者定）：护甲不占一条资源条，而是生命条外侧的一圈粗白框，
+长度 = `护甲 / 生命上限`（护甲 ≥ 上限时整条框满），只盖一部分时右端一道竖边收口 ——
+一眼看出「护甲顶得住几成血」。护甲的数写在生命条的文字里（`hp 60 / 100　甲 40`）。
 
 #### 关键词弹不弹：一个 `tip` 字段（107，作者定）
 
@@ -1493,7 +1492,7 @@ buff 词条（`Glossary.describe_buff` 按定义生成）。原来「有说明 =
 作者要的两件：给自己查数值的**内部日志**（逐条、全量、带时间，不给玩家看），和把已有回放从「只在当场」变成「随时翻」的**回放存档**。
 
 - `BattleTrace`（`core/battle/battle_trace.gd`）挂在 `BattleContext.trace`，**默认 null**：每个记录点一行 `if trace != null`，关着零开销。记录不碰战斗状态、不取额外随机数 —— 开不开同一场逐条一样，掩码不变式照旧（测试守着）。每条 `{seq, t（定点秒）, side, kind, data}`：
-  `event`（`emit` 的每一条，不看 VIEW_EVENTS、不看有没有人听；同步派发的 `before_damage` 也记）、`rule_fire` / `rule_skip`（`RuleEngine`：道具 uid、buff、时机类、下次就绪；跳过写原因 —— 频率没放行，或哪条消耗 / 条件不过，资源消耗写要多少有多少，`Cost.trace_info`）、`damage_pipeline`（`DamageResolver`：原始值 → 火焰加成 → 护盾 → 受伤前增减 / 反转 / 取消 → 格挡 → 受到伤害轴 → 最终与扣血前后）、`rng`（战斗里的掷骰都走 `BattleContext.roll(用途, lo, hi, need)`：取数和直接 `randi_range` 一模一样，记用途与值）、`buff`（叠层 / 移除 / 到期，带层数与到期时刻）、`schedule`（一刻结算了几条自发规则）、`snapshot`（开战、每 5 秒、结束）。
+  `event`（`emit` 的每一条，不看 VIEW_EVENTS、不看有没有人听；同步派发的 `before_damage` 也记）、`rule_fire` / `rule_skip`（`RuleEngine`：道具 uid、buff、时机类、下次就绪；跳过写原因 —— 频率没放行，或哪条消耗 / 条件不过，资源消耗写要多少有多少，`Cost.trace_info`）、`damage_pipeline`（`DamageResolver`：原始值 → 火焰加成 → 护甲 → 受伤前增减 / 反转 / 取消 → 格挡 → 受到伤害轴 → 最终与扣血前后）、`rng`（战斗里的掷骰都走 `BattleContext.roll(用途, lo, hi, need)`：取数和直接 `randi_range` 一模一样，记用途与值）、`buff`（叠层 / 移除 / 到期，带层数与到期时刻）、`schedule`（一刻结算了几条自发规则）、`snapshot`（开战、每 5 秒、结束）。
   方案写的 `TracedRng`（包一层随机数生成器）改成了 `roll`：GDScript 覆盖不了原生类的非虚方法，包一层拦不住原生调用。
 - `BattleSim.run(…, trace)` 多一个可选参数；`NodeEvents._fight`（猎手也走它）在 `trace_info` 非空时建 trace，跑完由 `BattleTraceWriter` 写进 `user://battle_logs/`：`<时间>_<种子>_n<点>_<章节>_<对手>` 三份 —— `.jsonl`（首行文件头，程序读）、`.txt`（人读）、`.replay.json`（`BattleResult.to_dict` + 名字表 + 双方棋盘，`JSON.from_native` 保住 int 键与定点整数）。文件头写现实时间、种子、章节、点、敌人内容、道具名表、开战快照、时限。只留最近 50 场（`BattleArchive.prune`）。战斗沙盒同样写（章节记 `sandbox`），基准与校准不写。
 - 回放存档**不存双方编译结果**（作者定）；buff 只存 id，读回来按道具能施加的 buff + 系统衰竭查定义。
@@ -2847,7 +2846,7 @@ class_name SearchRules extends Resource
 
 所有系数在 `data/authoring/balance/power_weights.json`（`PowerWeights`，缺项回代码默认、多写或写错类型给提示）。`PowerWeights` / `PowerContext` 放在 `core/battle`，因为各效果、扳机、消耗的估值方法要用到它们。
 
-道具自带的护盾上限与格挡折成 D 加进括号里（作者定：非武器的护盾、减伤也算价值）。推荐给武器和护具（`armor` / `shield` 标签）：预算比 r = P ÷ (每格基准 DPS × 格数)，按 `tiers` 阈值定档（神话不推荐）；推荐价值 = `ItemValue.BASE_PER_CELL[档] × 格数 × 档内位置系数`，取整到 5。编辑器的「战斗力」面板（`PowerPanel`）逐行列出 B 和每条规则，「采用」写回稀有度与价值；「新建武器」画完形状即按格数预填伤害、冷却、耐力消耗，出生约等于默认战斗力。导入器对稀有度和推荐差两档以上的武器给提醒（不拦）。`tools/bench_battle.gd -- power` 输出「估算 vs 实测」单件表和流派组合贡献表，用来校系数。
+道具自带的护甲上限与格挡折成 D 加进括号里（作者定：非武器的护甲、减伤也算价值）。推荐给武器和护具（`armor` / `shield` 标签）：预算比 r = P ÷ (每格基准 DPS × 格数)，按 `tiers` 阈值定档（神话不推荐）；推荐价值 = `ItemValue.BASE_PER_CELL[档] × 格数 × 档内位置系数`，取整到 5。编辑器的「战斗力」面板（`PowerPanel`）逐行列出 B 和每条规则，「采用」写回稀有度与价值；「新建武器」画完形状即按格数预填伤害、冷却、耐力消耗，出生约等于默认战斗力。导入器对稀有度和推荐差两档以上的武器给提醒（不拦）。`tools/bench_battle.gd -- power` 输出「估算 vs 实测」单件表和流派组合贡献表，用来校系数。
 
 ### 6.5 节点事件（M4-4）
 
@@ -3096,7 +3095,7 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 - 主动技能只在地图屏用（作者：大地图移动时使用）；右栏一个技能一个按钮，不能用时灰掉并写原因。
 - 三个初始角色（作者定，136 重做，同日修订）：**角色 = 初始面板 + 技能**（基线、初始包、负重上限 + 两个被动、一个主动），外加一条短板；没有身份这一层（作者：「科技不要跟角色绑定，角色的能力就是初始面板和可能的技能差异」）。科技全局通用，和角色被动在 `buff_context()` 里直接叠加。开局屏按 `RunSkill.is_active()` 分「被动 / 主动」行，面板行写生命、耐力、体力、负重、棋盘、开局钱（149）。
   安德烈乌斯：熟门熟路（`travel_discount`：`MapTravel.paid_steps` 数到 `free_step_every` 下一步不花行动点，跟存档）/ 溜得掉（逃跑、潜行、免一败）/ 脱身（`slip`：战前准备屏「溜走」→ `NodeEvents.skip_pending_battle`，点用过、无战利品、不扣体力，搜索遭遇收会话原因 `slipped`、不弹「被赶跑」，核心点不行；猎手事件屏多一项「脱身（必定逃掉）」，`SkillReady` 锁、`RunSkills.consume` 记账）。
-  布鲁图斯：被动不往面板上加数；野地里长大（`rest_bonus`、`erosion_resist`）/ 坚韧（`RunSkill.rules`：低于三成生命一次性护盾，`CharacterDef.combat_rules` 编进玩家单位）/ 咬牙（`second_wind`：地图上回体力，满了不让用）。
+  布鲁图斯：被动不往面板上加数；野地里长大（`rest_bonus`、`erosion_resist`）/ 坚韧（`RunSkill.rules`：低于三成生命一次性护甲，`CharacterDef.combat_rules` 编进玩家单位）/ 咬牙（`second_wind`：地图上回体力，满了不让用）。
   马库斯：军功（`battle_reward_mult`，`NodeEvents._pay_battle_reward` 乘、四舍五入）/ 操练（149 起是战斗规则：耐力掉到两成以下回一段，每场一次）/ 突击。`evade` 构件留着，没有角色带。占位的 `default` / `scout` 删了。
 
 **角色差异落在棋盘与面板（149，作者定）**：三个人各占一轴，数都在 `characters/*.json`（占位，作者改）：
@@ -4018,7 +4017,7 @@ res://
 | 宝石镶嵌 | `ItemDef.gem_slots` + `ItemInstance.state.gems`，编译期在包体效果之后插一步 | 宝石不占网格，效果随宿主类型（武器／护甲／散放）而变；`socket` 一词留给它，不要用在邻接标记上 |
 | 效果的新作用域（地图、商店、撤离…） | `Effect` 子树 + 该系统调 `tracker.effects_in_scope()` | 一棵树按作用域分支；各系统只查自己那一档，互不认识。道具与套装共用同一套词汇 |
 | 新的消耗种类（层数、充能、耐久…） | `Cost` 子类 + 注册表登记 | `costs` 是列表且 AND 语义；消耗与冷却**故意不原子**，失败跳过效果但冷却照走 |
-| 新的资源种类（法力、护盾值…） | `ResourcePool` 的新键 + `max_*` 属性键 | 不为每种资源单开事件，统一走 `resource_changed(key, delta, reason)` |
+| 新的资源种类（法力、护甲值…） | `ResourcePool` 的新键 + `max_*` 属性键 | 不为每种资源单开事件，统一走 `resource_changed(key, delta, reason)` |
 | 新的触发时机／频率／效果 | `Trigger`／`Cadence`／`Effect` 子类 + `effect_registry` 登记一行 | 不在 `BattleSim` 或导入器里出现任何具体效果名；连带触发是 `OnItemFired` 子类，不是特例字段 |
 | 合成配方 | 新增 `RecipeBook` + 回合边界的结算钩子 | 匹配的是**相对偏移模式**而非「挨着」；`state` 预留 `locked` 标志 |
 | 原地旋转（不经拖拽） | `detach_bag` + `attach_bag_shedding(payload, origin, 新朝向)` | 140 删了 `rotate_item` / `rotate_bag`；要做就是这一行，脱落规则和拖拽同一条路 |
@@ -4076,6 +4075,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.76 | 2026-10-10 | **护盾改名护甲**（报告 153 补充一，作者定；改 4.6 / 4.8）：防具给的那层资源 `shield` → `armor`（护甲），上限属性 `max_shield` → `max_armor`（护甲上限），`DamageTypeDef.shield_absorbable` → `armor_absorbable`，信仰功能 `food_shield` → `food_armor`，权重 `shield_per_point` → `armor_per_point`，帮助页 `shield` → `armor`、`direct_damage_and_armor` → `direct_damage_and_block`；生命条上「盾 N」→「甲 N」。玩家可见的「护盾」「防护」两词退出。导入器：`base_stats.armor` 报错（改名前后意思不同，写清 block / max_armor 两种去处），`max_shield` / `shield_absorbable` / `food_shield` / 资源键 `shield` 认作新名并提醒 |
 | v2.75 | 2026-10-10 | **防护改名格挡，只取最高**（报告 153，作者定，五项待定按推荐；改 4.3 / 4.6）：属性 `armor` → `block`（格挡），盾牌专属；每面盾一层、只有最高那层生效（其余备用），敌人天生的算一层，守卫删掉天生 4；轴正名改「加固」，加在生效层上；弹开 / 久弹 / 标记改成带轴的 buff；自然 / 大地赐福拆成盾加格挡、防具加护盾上限；导入器拦非盾给格挡、buff mods 改格挡，旧键 armor 当 block 读；回放面板一格「格 N」；`armor_per_point` 改名 `block_per_point` |
 | v2.74 | 2026-10-10 | **151 补充 + 道具编辑器分组**（作者定）：战斗力估算加 D（自带护盾上限 × `shield_per_point` + 防护 × `armor_per_point`），护具（armor / shield 标签）也给推荐稀有度与价值；道具编辑器的一级分组加「包」，包不再混在「有效果」里 |
 | v2.73 | 2026-10-10 | **buff 包含标准轴**（152，作者定；改 4.3）：`BuffDef.axes`（`BuffAxis {axis, stacks}`，每层带几层）、`CombatantRuntime.axis_carried`（合计 = 内容 + 系统 + buff 带的，跟着 buff 层数走）、开战 buff 带的轴进预估 DPS、战斗力估算算上；词条写「每层带【强攻】1 层（造成的伤害 +3%）」；导入器认轴、对落在轴上的 mods 提醒；buff 编辑器「每层带的标准轴」一栏，所有 `axis` 字段改成下拉（正名 / 反名）。血怒改成每层一层强攻 + 一层加速 |

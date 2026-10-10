@@ -209,7 +209,7 @@ static func _attach(item: CompiledItem, rule: AbilityRule, origin: StringName) -
 		item.attached.append({"rule_index": item.rules.size() - 1, "origin": origin})
 
 
-## 第 8 步：基线修饰（食物护盾、`stat_mod(baseline)`）
+## 第 8 步：基线修饰（食物护甲、`stat_mod(baseline)`）
 static func _apply_baseline_mods(spec: CombatantSpec, inp: CompileInput) -> void:
 	for mod in inp.baseline_mods:
 		(mod as StatModifier).apply_to(spec.baseline, 1)

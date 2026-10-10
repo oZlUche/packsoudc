@@ -1,0 +1,16 @@
+{
+  "id": "armor",
+  "display_name": "护甲",
+  "category": "combat",
+  "order": 2,
+  "text": "护甲是先于生命被扣的一层资源。开战时按护甲上限充满，之后不自己回复；带护甲上限的护甲越多，开战时这一层越厚，也有道具在战斗中往上叠。能被护甲吸收的伤害先扣护甲，扣完才扣血。\n\n中毒和流血无视护甲，直接伤在里面；反伤与火焰照样被护甲吸收。受伤前效果看到的是护甲吸收之后剩下的那部分。战斗结束护甲清零，下一场重新按上限充。",
+  "related": [
+    "direct_damage_and_block",
+    "buffs_and_stacks",
+    "护甲"
+  ],
+  "see_items": [
+    "plate_cuirass",
+    "warding_charm"
+  ]
+}

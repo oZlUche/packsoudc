@@ -18,11 +18,11 @@ extends Resource
 ## 096：别的语言的说明
 @export var descriptions: Dictionary = {}
 
-## 能否被护盾吸收。中毒之类的绕过护盾直接见血。
+## 能否被护甲吸收。中毒之类的绕过护甲直接见血。
 ##
 ## 106 第八节（作者定）：原来还有一列「吃不吃护甲」，已删 —— 格挡按**来源**生效
 ## （武器造成的直接伤害吃格挡，buff 造成的不吃，见 [member DamagePacket.direct]），不按伤害类型。
-@export var shield_absorbable: bool = true
+@export var armor_absorbable: bool = true
 
 ## 这一下会不会**招致反应** —— 反伤、吸血、格挡这类由挨打／打人触发的规则。
 ##

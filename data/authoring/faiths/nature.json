@@ -65,7 +65,7 @@
       "tier": 2
     },
     {
-      "type": "food_shield",
+      "type": "food_armor",
       "tier": 3
     },
     {
@@ -129,7 +129,7 @@
           "max_shares": 5,
           "mods": [
             {
-              "stat": "max_shield",
+              "stat": "max_armor",
               "amount": 4.0
             }
           ]

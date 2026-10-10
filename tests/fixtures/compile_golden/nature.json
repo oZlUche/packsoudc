@@ -17,7 +17,7 @@
 			"flat": 0,
 			"percent": 0
 		},
-		"max_shield": {
+		"max_armor": {
 			"total": 20000,
 			"base": 0,
 			"flat": 20000,

@@ -66,10 +66,10 @@ static func run_import(t: TestCase) -> void:
 	ContentImporter.import_item({"id": "t_vest", "shape": ["11"], "tags": ["armor"], "combat": {"base_stats": {"block": 5}}}, ContentImporter.Context.new(), bad)
 	t.check(not bad.ok() and bad.to_text().contains("格挡只归盾牌"), "防具给格挡：报错（%s）" % bad.to_text())
 
+	# 补充一：armor 改名前后意思不同，不猜 —— 报错并写清两种去处
 	var old := ImportReport.new()
-	var legacy := ContentImporter.import_item({"id": "t_old", "shape": ["11"], "tags": ["shield"], "combat": {"base_stats": {"armor": 5}}}, ContentImporter.Context.new(), old)
-	t.check(old.ok() and old.to_text().contains("已改名 block"), "旧键 armor：提醒改名（%s）" % old.to_text())
-	t.check(legacy.combat.base_stats.has("block") and not legacy.combat.base_stats.has("armor"), "读成了 block")
+	ContentImporter.import_item({"id": "t_old", "shape": ["11"], "tags": ["shield"], "combat": {"base_stats": {"armor": 5}}}, ContentImporter.Context.new(), old)
+	t.check(not old.ok() and old.to_text().contains("block") and old.to_text().contains("max_armor"), "旧键 armor：报错，指向 block / max_armor（%s）" % old.to_text())
 
 	var buff := ImportReport.new()
 	ContentImporter.import_buff({"id": "t_wall", "stackable": false, "duration_sec": 4.0, "mods": [{"stat": "block", "amount": 8.0}]}, ContentImporter.Context.new(), buff)
@@ -106,9 +106,7 @@ static func run_content(t: TestCase) -> void:
 	t.eq(Glossary.stat_name(BattleStats.BLOCK), "格挡", "属性名格挡")
 	t.check(Glossary.term_text("格挡").contains("最高"), "词条「格挡」写着只算最高的一面")
 	t.eq(Glossary.term_text("防护"), "", "词条「防护」没了")
-	var tip := TextTemplate.render("{item_stat:tower_shield:block}", {})
-	var legacy := TextTemplate.render("{item_stat:tower_shield:armor}", {})
-	t.check(tip != "" and tip == legacy, "教程文字的 {item_stat:…:armor} 当 block 找（%s / %s）" % [tip, legacy])
+	t.check(TextTemplate.render("{item_stat:tower_shield:block}", {}) != "", "教程文字能引用盾的格挡")
 
 
 static func frame_panel(t: TestCase, root: Window) -> void:
@@ -139,3 +137,37 @@ static func frame_panel(t: TestCase, root: Window) -> void:
 	t.check(not empty.stacks().has(CombatantPanel.BLOCK_CHIP), "没盾也没修正：不画")
 	panel.queue_free()
 	empty.queue_free()
+
+
+static func run_armor_rename(t: TestCase) -> void:
+	t.begin("153 补充一 · 防具给的那层「护盾」改名【护甲】：armor / max_armor；旧名 max_shield、shield_absorbable、food_shield 认并提醒")
+	t.eq(BattleStats.RES_ARMOR, &"armor", "资源键 armor")
+	t.eq(BattleStats.MAX_ARMOR, &"max_armor", "上限属性 max_armor")
+	t.eq(BattleStats.resource_of_max(BattleStats.MAX_ARMOR), BattleStats.RES_ARMOR, "max_armor 派生出 armor 资源池")
+	t.eq(Glossary.stat_name(BattleStats.MAX_ARMOR), "护甲上限", "属性名护甲上限")
+	t.eq(Glossary.resource_name(BattleStats.RES_ARMOR), "护甲", "资源名护甲")
+	t.check(Glossary.term_text("护甲").contains("先于生命"), "词条「护甲」")
+	t.eq(Glossary.term_text("护盾"), "", "词条「护盾」没了")
+
+	var r := ImportReport.new()
+	var vest := ContentImporter.import_item({"id": "t_vest", "shape": ["11"], "tags": ["armor"], "combat": {"base_stats": {"max_shield": 6}}}, ContentImporter.Context.new(), r)
+	t.check(r.ok() and r.to_text().contains("max_armor"), "旧键 max_shield：提醒改名（%s）" % r.to_text())
+	t.check(vest != null and vest.combat.base_stats.has("max_armor") and not vest.combat.base_stats.has("max_shield"), "读成了 max_armor")
+	var m := ImportReport.new()
+	var buff := ContentImporter.import_buff({"id": "t_guard", "mods": [{"stat": "max_shield", "amount": 5.0}]}, ContentImporter.Context.new(), m)
+	t.check(m.ok() and buff.mods.size() == 1 and buff.mods[0].stat == &"max_armor", "buff 修饰的 stat: max_shield → max_armor（%s）" % m.to_text())
+	var dt := ImportReport.new()
+	var def := ContentImporter.import_damage_type({"id": "t_dt", "display_name": "测试", "shield_absorbable": false}, ContentImporter.Context.new(), dt)
+	t.check(dt.ok() and def != null and not def.armor_absorbable and dt.to_text().contains("armor_absorbable"), "shield_absorbable → armor_absorbable（%s）" % dt.to_text())
+
+	var nature: FaithDef = load(ContentPaths.asset_file("faiths", "nature"))
+	var has_food := false
+	if nature != null:
+		for p in nature.perks:
+			if p is FoodArmorPerk:
+				has_food = true
+	t.check(has_food, "自然的「按食物给护甲」是 food_armor")
+	for id in ["leather_armor", "plate_cuirass"]:
+		var item: ItemDef = TestSupport.content().items.get_def(StringName(id))
+		t.check(item != null and item.combat != null and item.combat.base_stats.has("max_armor"), "%s 给护甲上限" % id)
+

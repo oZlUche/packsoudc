@@ -8,7 +8,7 @@
 class_name DamageTypes
 extends RefCounted
 
-## 常规物理。吃护盾、触发受伤效果。
+## 常规物理。吃护甲、触发受伤效果。
 const PHYSICAL := &"physical"
 
 ## 火焰。目前与物理同性质，留作元素线的起点。
@@ -17,10 +17,10 @@ const FIRE := &"fire"
 const ICE := &"ice"
 const LIGHTNING := &"lightning"
 
-## 中毒。**绕过护盾**，直接见血。持续伤害，不招致反应（格挡也挡不住它 —— 它来自 buff，不是直接伤害，106 第八节）。
+## 中毒。**绕过护甲**，直接见血。持续伤害，不招致反应（格挡也挡不住它 —— 它来自 buff，不是直接伤害，106 第八节）。
 const POISON := &"poison"
 
-## 流血。持续伤害，绕过护盾（伤在内里），不招致反应。
+## 流血。持续伤害，绕过护甲（伤在内里），不招致反应。
 const BLEED := &"bleed"
 
 ## 反伤。**反弹伤害专用** —— 它不招致反应，所以两件反伤道具不会互相引燃。
@@ -73,7 +73,7 @@ static func describe(id: StringName, lang: String = "") -> String:
 
 
 static func _define_builtins() -> void:
-	#            id        名称     护盾   招致反应
+	#            id        名称     护甲   招致反应
 	_define(PHYSICAL, "物理", true, true)
 	_define(FIRE, "火焰", true, true)
 	_define(ICE, "冰霜", true, true)
@@ -90,7 +90,7 @@ static func _define(
 	var d := DamageTypeDef.new()
 	d.id = id
 	d.display_name = name
-	d.shield_absorbable = absorbable
+	d.armor_absorbable = absorbable
 	d.provokes = provokes
 	_defs[id] = d
 

@@ -16,11 +16,11 @@ const SYSTEM_COLOR := Color("e0b45c")
 
 ## 资源条的显示顺序。没列出的排在后面，按字典序 —— 顺序稳定，界面才不会乱跳。
 ##
-## 106（作者定）：**护盾不在这里** —— 它不画成独立的一条，而是生命条外侧的一圈粗白框
-## （长度 = 护盾 / 生命上限，护盾顶得住几成血一眼看得出），见 [method shield_frame_ratio]
+## 106（作者定）：**护甲不在这里** —— 它不画成独立的一条，而是生命条外侧的一圈粗白框
+## （长度 = 护甲 / 生命上限，护甲顶得住几成血一眼看得出），见 [method armor_frame_ratio]
 const ORDER := ["hp", "stamina", "mana"]
-## 护盾的资源键：不画条，画框
-const SHIELD_KEY := "shield"
+## 护甲的资源键：不画条，画框
+const ARMOR_KEY := "armor"
 ## 那圈框的粗细（px）
 const FRAME_W := 3.0
 
@@ -354,8 +354,8 @@ func _draw() -> void:
 	y += 26
 
 	for key in _ordered_keys():
-		if key == SHIELD_KEY:
-			continue     # 106：护盾画在生命条外面，不占一条
+		if key == ARMOR_KEY:
+			continue     # 106：护甲画在生命条外面，不占一条
 		var pair: Array = _resources[key]
 		var cur: int = pair[0]
 		var cap: int = pair[1]
@@ -363,7 +363,7 @@ func _draw() -> void:
 			continue
 		_draw_bar(key, cur, cap, y)
 		if key == "hp":
-			_draw_shield_frame(y)
+			_draw_armor_frame(y)
 		y += BAR_H + BAR_GAP
 
 	_chips.clear()
@@ -379,7 +379,7 @@ func _draw() -> void:
 				y += CHIP_H + 4
 			var rect := Rect2(x, y, w, CHIP_H)
 			# 103：四种配色 —— 系统（琥珀）、减益（红）、增益（蓝）、常驻（灰）
-			var line := UiPalette.SHIELD
+			var line := UiPalette.ARMOR
 			var group := _group_of(String(id))
 			if passive_of(String(id)) != null:
 				line = UiPalette.DIM
@@ -403,26 +403,26 @@ func _draw() -> void:
 		)
 
 
-## 现在的护盾值（显示值；没有就 0）
-func shield_value() -> int:
-	var pair: Array = _resources.get(SHIELD_KEY, [0, 0])
+## 现在的护甲值（显示值；没有就 0）
+func armor_value() -> int:
+	var pair: Array = _resources.get(ARMOR_KEY, [0, 0])
 	return int(pair[0])
 
 
-## 106：护盾框占生命条的几成 —— `护盾 / 生命上限`，护盾 ≥ 上限时 1（整条框满）。
+## 106：护甲框占生命条的几成 —— `护甲 / 生命上限`，护甲 ≥ 上限时 1（整条框满）。
 ## 生命上限为 0 的假人返回 0，不画框
-func shield_frame_ratio() -> float:
+func armor_frame_ratio() -> float:
 	var hp: Array = _resources.get("hp", [0, 0])
 	var cap := int(hp[1])
-	if cap <= 0 or shield_value() <= 0:
+	if cap <= 0 or armor_value() <= 0:
 		return 0.0
-	return clampf(float(shield_value()) / float(cap), 0.0, 1.0)
+	return clampf(float(armor_value()) / float(cap), 0.0, 1.0)
 
 
-## 106（作者定）：生命条外侧的一圈粗白框，长度 = [method shield_frame_ratio] × 条宽。
+## 106（作者定）：生命条外侧的一圈粗白框，长度 = [method armor_frame_ratio] × 条宽。
 ## 只盖一部分时画成开口的框：上、下、左三边到那个长度为止，右端一道竖边收口
-func _draw_shield_frame(y: float) -> void:
-	var ratio := shield_frame_ratio()
+func _draw_armor_frame(y: float) -> void:
+	var ratio := armor_frame_ratio()
 	if ratio <= 0.0:
 		return
 	var w := size.x - PAD * 2
@@ -431,7 +431,7 @@ func _draw_shield_frame(y: float) -> void:
 	var top := y - half
 	var bottom := y + BAR_H + half
 	var right := left + (w + FRAME_W) * ratio
-	var c := UiPalette.SHIELD_FRAME
+	var c := UiPalette.ARMOR_FRAME
 	draw_line(Vector2(left, top), Vector2(right, top), c, FRAME_W)
 	draw_line(Vector2(left, bottom), Vector2(right, bottom), c, FRAME_W)
 	draw_line(Vector2(left, top), Vector2(left, bottom), c, FRAME_W)
@@ -448,8 +448,8 @@ func _draw_bar(key: String, current: int, maximum: int, y: float) -> void:
 	draw_rect(Rect2(PAD, y, w, BAR_H), UiPalette.LINE, false, 1.0)
 
 	var text := "%s  %d / %d" % [key, current, maximum]
-	if key == "hp" and shield_value() > 0:
-		text += "　盾 %d" % shield_value()     # 106：护盾的数写在生命条上，框只说明它顶得住几成
+	if key == "hp" and armor_value() > 0:
+		text += "　甲 %d" % armor_value()     # 106：护甲的数写在生命条上，框只说明它顶得住几成
 	draw_string(
 		label_font, Vector2(PAD + 6, y + BAR_H - 4), text,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiPalette.FG

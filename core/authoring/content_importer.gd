@@ -305,7 +305,7 @@ static func _validate_item_buffs(def: ItemDef, report: ImportReport) -> void:
 				warn_axis_candidate(e.buff, "combat.rules[%d].effects[%d].buff." % [i, j], report)
 
 
-## 107（作者定）：**毒与流血没有「直接伤害」形态** —— 它们天生就是 buff（每层每秒掉血、无视护盾与格挡），
+## 107（作者定）：**毒与流血没有「直接伤害」形态** —— 它们天生就是 buff（每层每秒掉血、无视护甲与格挡），
 ## 武器顶多给对手加【中毒】/【流血】。所以道具自己的出手规则（以及信力规则）里不许出现 `poison` / `bleed` 的 deal_damage；
 ## buff 内部的那条照旧（内容里毒刀、毒瓶、弯刀、剁刀都是这样写的）
 const BUFF_ONLY_DAMAGE: Array[StringName] = [&"poison", &"bleed"]
@@ -679,7 +679,7 @@ static func import_faith(data: Dictionary, ctx: Context, report: ImportReport) -
 		if b == null or not _bonuses_touch_block(b.faith_bonuses):
 			continue
 		if b.tags.size() != 1 or b.tags[0] != BattleStats.SHIELD_TAG or not b.items.is_empty():
-			report.error("blessings[%d]" % i, "这条赐福给格挡：格挡只归盾牌，标签只写 shield（防具 / 装备改给护盾上限，153）")
+			report.error("blessings[%d]" % i, "这条赐福给格挡：格挡只归盾牌，标签只写 shield（防具 / 装备改给护甲上限，153）")
 	ctx.register_faith(def)
 	return def
 
@@ -1749,25 +1749,59 @@ static func _warn_overlapping_markers(def: ItemDef, report: ImportReport) -> voi
 ##
 ## 未知键**报错而不是忽略** —— 打错一个字段名却静默生效为默认值，
 ## 是内容作者最难自查的一类问题，报出来才有得改。
-## 153：防护改名格挡 —— 旧键 `armor`（基础属性 / 档位表的键、修饰的 stat、轴字段）当 `block` 读并提醒改名
-static func _migrate_armor_key(data: Dictionary, path: String, report: ImportReport) -> Dictionary:
+## 153 补充一：「护盾」改名「护甲」后的旧名 —— 认并提醒改名（一个版本后删）
+const LEGACY_NAMES := {"max_shield": "max_armor", "shield_absorbable": "armor_absorbable"}
+## 资源键：`resource_key` 之类写 `shield` 的，当 `armor`
+const LEGACY_RESOURCE_FIELDS := ["resource_key", "resource", "res"]
+## 旧构件类型名（`type` 字段）
+const LEGACY_TYPES := {"food_shield": "food_armor"}
+
+
+## 153 + 补充一：`armor` 这个键在两步改名前后意思不同（旧 = 固定减伤，新 = 防具给的那层资源），
+## 所以 `base_stats.armor` / `stat_scale.armor` **报错**，不猜是哪个；`max_shield` / `shield_absorbable`
+## 和资源键 `shield` 认作新名并提醒
+static func _migrate_legacy_names(data: Dictionary, path: String, report: ImportReport) -> Dictionary:
 	var out := data
+	for key in data:
+		var k := String(key)
+		if LEGACY_NAMES.has(k):
+			if out == data:
+				out = data.duplicate()
+			out.erase(key)
+			out[LEGACY_NAMES[k]] = data[key]
+			report.warn(_join(path, k), "%s 已改名 %s（护盾改叫护甲，153 补充一）" % [k, LEGACY_NAMES[k]])
 	for key in ["base_stats", "stat_scale"]:
-		var d = data.get(key, null)
-		if d is Dictionary and (d as Dictionary).has("armor"):
+		var d = out.get(key, null)
+		if not d is Dictionary:
+			continue
+		var dict := d as Dictionary
+		if dict.has("armor"):
+			report.error(_join(path, key + ".armor"), "armor 不能写在这里：原来的固定减伤改写 block（格挡，只给盾）；防具给的那层写 max_armor（护甲上限，153 补充一）")
+		if dict.has("armor") or dict.has("max_shield"):
 			if out == data:
 				out = data.duplicate()
 			var renamed := {}
-			for k in d:
-				renamed["block" if String(k) == "armor" else k] = d[k]
+			for k in dict:
+				if String(k) == "armor":
+					continue
+				if String(k) == "max_shield":
+					report.warn(_join(path, key + ".max_shield"), "max_shield 已改名 max_armor（护盾改叫护甲，153 补充一）")
+					renamed["max_armor"] = dict[k]
+				else:
+					renamed[k] = dict[k]
 			out[key] = renamed
-			report.warn(_join(path, key + ".armor"), "armor（防护）已改名 block（格挡，153）")
-	for key in ["stat", "axis"]:
-		if String(data.get(key, "")) == "armor":
+	for key in data:
+		var v = data[key]
+		if not v is String:
+			continue
+		var k := String(key)
+		if v == "max_shield" or (v == "shield" and LEGACY_RESOURCE_FIELDS.has(k)):
 			if out == data:
 				out = data.duplicate()
-			out[key] = "block"
-			report.warn(_join(path, key), "armor（防护）已改名 block（格挡，153）")
+			out[key] = "max_armor" if v == "max_shield" else "armor"
+			report.warn(_join(path, k), "%s 已改名 %s（护盾改叫护甲，153 补充一）" % [v, out[key]])
+		elif v == "armor" and k == "stat":
+			report.error(_join(path, k), "armor 不是属性：固定减伤写 block（格挡，只给盾），护甲上限写 max_armor（153 补充一）")
 	return out
 
 
@@ -1784,7 +1818,7 @@ static func _fill(
 		ctx.buff_depth += 1
 	if in_part:
 		ctx.part_depth += 1
-	data = _migrate_armor_key(data, path, report)
+	data = _migrate_legacy_names(data, path, report)
 	if obj is StatModifier:
 		data = _migrate_stat_modifier(data, path, report)
 	elif obj is BuffDef:
@@ -2057,6 +2091,9 @@ static func _from_registry(
 		report.error(path, "%s 必须写明 type" % class_id)
 		return null
 	var type_name := StringName(str(data["type"]))
+	if LEGACY_TYPES.has(String(type_name)):
+		report.warn(_join(path, "type"), "%s 已改名 %s（护盾改叫护甲，153 补充一）" % [type_name, LEGACY_TYPES[String(type_name)]])
+		type_name = StringName(LEGACY_TYPES[String(type_name)])
 	var tables: Array = ContentSchema.ABSTRACT_ROOTS[class_id]
 
 	for table in tables:

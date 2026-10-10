@@ -35,7 +35,7 @@ const DEFAULTS := {
 	"weight_floor": 0.6,
 	"tiers": [0.9, 1.35, 1.9, 2.8],
 	"value_band": [0.8, 0.4],
-	"shield_per_point": 0.5,
+	"armor_per_point": 0.5,
 	"block_per_point": 3.2,
 }
 
@@ -49,7 +49,7 @@ var per_cell_dps: float = 2.0
 var default_cooldown: float = 2.0
 ## 新建武器预填的每次耐力消耗 = 它 × 格数
 var stamina_per_cell: float = 2.0
-## 一点治疗 / 护盾抵几点伤害
+## 一点治疗 / 护甲抵几点伤害
 var heal_weight: float = 0.5
 ## 一点耐力（回复、省下的消耗）抵几点伤害
 var stamina_weight: float = 0.25
@@ -88,9 +88,9 @@ var weight_floor: float = 0.6
 var tiers: Array[float] = [0.9, 1.35, 1.9, 2.8]
 ## 推荐价值 = 每格价 × 格数 × (band[0] + band[1] × 档内位置)
 var value_band: Array[float] = [0.8, 0.4]
-## 作者定（151 补充）：非武器自带的护盾 / 减伤也算价值 —— 道具自带（基础属性）的一点护盾上限、一点格挡各折几点「每秒伤害」。
-## 和武器同一张预算表比，所以按现有护甲 / 盾牌的稀有度定（皮甲 30 护盾、圆盾 5 格挡都落在优良）
-var shield_per_point: float = 0.5
+## 作者定（151 补充）：非武器自带的护甲 / 减伤也算价值 —— 道具自带（基础属性）的一点护甲上限、一点格挡各折几点「每秒伤害」。
+## 和武器同一张预算表比，所以按现有防具 / 盾牌的稀有度定（皮甲 30 护甲、圆盾 5 格挡都落在优良）
+var armor_per_point: float = 0.5
 var block_per_point: float = 3.2
 
 

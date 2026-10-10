@@ -39,17 +39,17 @@ const TERMS := {
 	"急速": {"text": "出手速度的倍率，越高冷却越短。"},
 	# 153（作者定）：防护改名格挡，只有盾牌给，几面盾只算最高的一面
 	"格挡": {"text": "只有盾牌给格挡。每次受到**直接伤害**（武器造成的）固定减少这个数，减到零为止；带几面盾只算最高的一面，加固 / 破绽在它之上加减，破绽为负时反而多挨。buff 造成的灼烧、中毒、流血不算直接伤害，格挡挡不住。"},
-	"护盾": {"text": "先于生命被扣的一层。开战时按护盾上限充满，之后不自己回复。中毒、流血无视护盾。"},
+	"护甲": {"text": "先于生命被扣的一层。开战时按护甲上限充满，之后不自己回复。中毒、流血无视护甲。"},
 	"直接伤害": {"text": "武器造成的伤害。格挡（加固 / 破绽）只减它；buff 造成的伤害（灼烧、中毒、流血）不是直接伤害。"},
 	"永续": {"text": "不会过期，一直到战斗结束（除非被清除）。"},
 	"叠层": {"text": "同一个状态可以叠多层，效果按层数累加；没写上限就不限层。"},
 	"合成": {"text": "把一件道具拖到另一件上面，两件有配方就立刻合成一件新的；装不下就到地上。"},
 	"增益槽": {"text": "这件道具的一种格位：邻居占着它，邻居就得到写着的加成。"},
 	"受益槽": {"text": "这件道具的一种格位：每被邻居点亮一格，自己就得一份写着的加成。"},
-	# 107（作者定）：这两条写的是**buff**（每层每秒掉血、无视格挡与护盾），不是武器的伤害类型 —— 同名的标签
+	# 107（作者定）：这两条写的是**buff**（每层每秒掉血、无视格挡与护甲），不是武器的伤害类型 —— 同名的标签
 	# 「中毒」「流血」指类型，那边 tip 为 false。两边文字都保留
-	"中毒": {"text": "每层每秒造成毒伤，无视格挡与护盾，永续叠层。"},
-	"流血": {"text": "每层每秒造成流血伤害，无视格挡与护盾，永续叠层。"},
+	"中毒": {"text": "每层每秒造成毒伤，无视格挡与护甲，永续叠层。"},
+	"流血": {"text": "每层每秒造成流血伤害，无视格挡与护甲，永续叠层。"},
 }
 
 
@@ -101,7 +101,7 @@ const FAITH_WORD := {"zh": "信仰", "en": "Faith"}
 const STAT_NAMES := {
 	"damage": {"zh": "伤害", "en": "Damage"}, "block": {"zh": "格挡", "en": "Block"}, "max_hp": {"zh": "生命", "en": "Health"},
 	"max_stamina": {"zh": "耐力上限", "en": "Max stamina"}, "haste": {"zh": "急速", "en": "Haste"}, "cooldown": {"zh": "冷却", "en": "Cooldown"},
-	"regen_stamina": {"zh": "每秒回耐力", "en": "Stamina regen"}, "regen_hp": {"zh": "每秒回血", "en": "Health regen"}, "max_shield": {"zh": "护盾", "en": "Shield"},
+	"regen_stamina": {"zh": "每秒回耐力", "en": "Stamina regen"}, "regen_hp": {"zh": "每秒回血", "en": "Health regen"}, "max_armor": {"zh": "护甲上限", "en": "Max Armor"},
 	"max_mana": {"zh": "法力上限", "en": "Max mana"}, "regen_mana": {"zh": "每秒回法力", "en": "Mana regen"},
 	"stamina_cost": {"zh": "耗耐力", "en": "Stamina cost"}, "mana_cost": {"zh": "耗法力", "en": "Mana cost"},
 	"crit_chance": {"zh": "暴击率", "en": "Crit chance"}, "crit_damage": {"zh": "暴击伤害", "en": "Crit damage"},
@@ -276,7 +276,7 @@ static func status_name(id: StringName) -> String:
 
 
 const RESOURCE_NAMES := {"hp": {"zh": "生命", "en": "Health"}, "stamina": {"zh": "耐力", "en": "Stamina"},
-	"mana": {"zh": "法力", "en": "Mana"}, "shield": {"zh": "护盾", "en": "Shield"}}
+	"mana": {"zh": "法力", "en": "Mana"}, "armor": {"zh": "护甲", "en": "Armor"}}
 
 
 static func resource_name(key: StringName) -> String:

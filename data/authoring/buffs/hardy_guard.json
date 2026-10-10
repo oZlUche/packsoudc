@@ -6,7 +6,7 @@
   },
   "mods": [
     {
-      "stat": "max_shield",
+      "stat": "max_armor",
       "amount": 15.0
     }
   ]

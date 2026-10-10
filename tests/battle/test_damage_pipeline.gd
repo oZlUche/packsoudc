@@ -1,4 +1,4 @@
-## 伤害结算管线：类型性质、护盾吸收、受伤前改写、护甲、流失（架构文档 4.6）。
+## 伤害结算管线：类型性质、护甲吸收、受伤前改写、格挡、流失（架构文档 4.6）。
 extends RefCounted
 
 const H := preload("res://tests/battle/test_effect_system.gd")
@@ -15,7 +15,7 @@ static func _hp(ctx: BattleContext, side: int) -> int:
 
 
 static func _shield(ctx: BattleContext, side: int) -> int:
-	return StatMath.to_int(ctx.sides[side].resources.current(BattleStats.RES_SHIELD))
+	return StatMath.to_int(ctx.sides[side].resources.current(BattleStats.RES_ARMOR))
 
 
 static func _hit(amount: float, type: StringName = DamageTypes.PHYSICAL) -> DealDamage:
@@ -32,7 +32,7 @@ static func _opener(effects: Array) -> AbilityRule:
 
 ## 攻击方：**1 秒时**打一下，不是开场就打。
 ##
-## 派发顺序固定为先 side 0 后 side 1，开场就打会赶在防守方布好护盾、叠好格挡之前，
+## 派发顺序固定为先 side 0 后 side 1，开场就打会赶在防守方布好护甲、叠好格挡之前，
 ## 测到的就不是想测的东西。让攻击迟一拍，防守方的开场规则才有机会先跑完。
 static func _attacker(amount: float, type: StringName = DamageTypes.PHYSICAL) -> CombatantSpec:
 	var cd := CooldownCadence.new()
@@ -47,7 +47,7 @@ static func _run(ctx: BattleContext) -> void:
 	H._advance_to(ctx, 1.5)
 
 
-## 防守方：可带护盾与护甲，可带一条受伤前规则
+## 防守方：可带护甲与格挡，可带一条受伤前规则
 static func _defender(
 	stats: Dictionary = {}, before: AbilityRule = null
 ) -> CombatantSpec:
@@ -72,8 +72,8 @@ static func run(t: TestCase) -> void:
 
 	DamageTypes.reset_to_builtins()
 
-	t.eq(DamageTypes.get_def(DamageTypes.PHYSICAL).shield_absorbable, true, "物理可被护盾吸收")
-	t.eq(DamageTypes.get_def(DamageTypes.POISON).shield_absorbable, false, "中毒绕过护盾")
+	t.eq(DamageTypes.get_def(DamageTypes.PHYSICAL).armor_absorbable, true, "物理可被护甲吸收")
+	t.eq(DamageTypes.get_def(DamageTypes.POISON).armor_absorbable, false, "中毒绕过护甲")
 	t.eq(DamageTypes.get_def(DamageTypes.DRAIN).provokes, false,
 		"流失不招致反应 —— 否则割自己一刀成了正收益")
 	t.eq(DamageTypes.get_def(DamageTypes.POISON).provokes, false, "中毒不招致反应")
@@ -81,21 +81,21 @@ static func run(t: TestCase) -> void:
 	t.eq(DamageTypes.get_def(DamageTypes.REFLECT).provokes, false,
 		"**反伤自己不招致反伤** —— 这是对轰在第一层就终止的真正原因，不是靠深度上限")
 	t.eq(DamageTypes.get_def(DamageTypes.PHYSICAL).provokes, true, "直接攻击才招致反应")
-	t.eq(DamageTypes.get_def(DamageTypes.DRAIN).shield_absorbable, false, "流失不吃护盾")
+	t.eq(DamageTypes.get_def(DamageTypes.DRAIN).armor_absorbable, false, "流失不吃护甲")
 
 	# 内容可以追加类型，结算代码一行不改
 	var corrode := DamageTypeDef.new()
 	corrode.id = &"corrode"
 	corrode.display_name = "腐蚀"
-	corrode.shield_absorbable = true
+	corrode.armor_absorbable = true
 	t.check(DamageTypes.register(corrode), "登记新类型")
 	t.check(not DamageTypes.register(corrode), "重复 id 被拒，不覆盖")
 	t.check(DamageTypes.has(&"corrode"), "登记后查得到")
-	t.eq(DamageTypes.get_def(&"corrode").shield_absorbable, true, "新类型的性质生效")
+	t.eq(DamageTypes.get_def(&"corrode").armor_absorbable, true, "新类型的性质生效")
 
 	# 打错字不该静默变成无敌
 	var unknown := DamageTypes.get_def(&"typo_here")
-	t.eq(unknown.shield_absorbable, true, "未登记类型退回常规默认值")
+	t.eq(unknown.armor_absorbable, true, "未登记类型退回常规默认值")
 
 	DamageTypes.reset_to_builtins()
 	t.check(not DamageTypes.has(&"corrode"), "重置后只剩内置四种")
@@ -103,57 +103,57 @@ static func run(t: TestCase) -> void:
 
 
 static func run_shield(t: TestCase) -> void:
-	t.begin("伤害 · 护盾吸收")
+	t.begin("伤害 · 护甲吸收")
 
-	# max_shield 自动派生出 shield 资源，不需要为它改任何代码
-	var ctx := H._battle(_attacker(20.0), _defender({"max_shield": 30.0}))
+	# max_armor 自动派生出 shield 资源，不需要为它改任何代码
+	var ctx := H._battle(_attacker(20.0), _defender({"max_armor": 30.0}))
 	_run(ctx)
-	t.eq(_shield(ctx, 1), 10, "20 点被护盾吃下，护盾剩 10")
+	t.eq(_shield(ctx, 1), 10, "20 点被护甲吃下，护甲剩 10")
 	t.eq(_hp(ctx, 1), 100, "血量没掉")
 
 	# --- 溢出部分见血 ---
-	var ctx2 := H._battle(_attacker(50.0), _defender({"max_shield": 30.0}))
+	var ctx2 := H._battle(_attacker(50.0), _defender({"max_armor": 30.0}))
 	_run(ctx2)
-	t.eq(_shield(ctx2, 1), 0, "护盾打空")
+	t.eq(_shield(ctx2, 1), 0, "护甲打空")
 	t.eq(_hp(ctx2, 1), 80, "溢出的 20 点扣血")
 
-	# --- 中毒绕过护盾 ---
+	# --- 中毒绕过护甲 ---
 	var ctx3 := H._battle(
-		_attacker(20.0, DamageTypes.POISON), _defender({"max_shield": 30.0})
+		_attacker(20.0, DamageTypes.POISON), _defender({"max_armor": 30.0})
 	)
 	_run(ctx3)
-	t.eq(_shield(ctx3, 1), 30, "护盾纹丝不动")
+	t.eq(_shield(ctx3, 1), 30, "护甲纹丝不动")
 	t.eq(_hp(ctx3, 1), 80, "中毒直接见血")
 
-	# --- 没有护盾资源的单位照常挨打 ---
+	# --- 没有护甲资源的单位照常挨打 ---
 	var ctx4 := H._battle(_attacker(20.0), _defender())
 	_run(ctx4)
-	t.eq(_hp(ctx4, 1), 80, "没配 max_shield 就没有护盾，不报错")
+	t.eq(_hp(ctx4, 1), 80, "没配 max_armor 就没有护甲，不报错")
 
 
 static func run_armor(t: TestCase) -> void:
-	t.begin("伤害 · 护甲")
+	t.begin("伤害 · 格挡")
 
 	var ctx := H._battle(_attacker(20.0), _defender({"block": 5.0}))
 	_run(ctx)
-	t.eq(_hp(ctx, 1), 85, "护甲 5 点，20 → 15")
+	t.eq(_hp(ctx, 1), 85, "格挡 5 点，20 → 15")
 
-	# 106 第八节（作者定）：防护按**来源**生效，不按伤害类型 —— 武器直接打出的毒也算直接伤害，
-	# 所以照样被防护减（真实内容里的中毒 / 流血都挂在 buff 上，见 run_direct_damage）
+	# 106 第八节（作者定）：格挡按**来源**生效，不按伤害类型 —— 武器直接打出的毒也算直接伤害，
+	# 所以照样被格挡减（真实内容里的中毒 / 流血都挂在 buff 上，见 run_direct_damage）
 	var ctx2 := H._battle(_attacker(20.0, DamageTypes.POISON), _defender({"block": 5.0}))
 	_run(ctx2)
-	t.eq(_hp(ctx2, 1), 85, "武器直接打出的中毒也吃防护（106：按来源，不按类型）")
+	t.eq(_hp(ctx2, 1), 85, "武器直接打出的中毒也吃格挡（106：按来源，不按类型）")
 
-	# 护甲高于伤害时归零，不会倒扣成治疗
+	# 格挡高于伤害时归零，不会倒扣成治疗
 	var ctx3 := H._battle(_attacker(3.0), _defender({"block": 5.0}))
 	_run(ctx3)
-	t.eq(_hp(ctx3, 1), 100, "护甲高于伤害时归零，不倒扣")
+	t.eq(_hp(ctx3, 1), 100, "格挡高于伤害时归零，不倒扣")
 
-	# 护盾先吃，护甲再挡余下的
-	var ctx4 := H._battle(_attacker(20.0), _defender({"max_shield": 8.0, "block": 5.0}))
+	# 护甲先吃，格挡再挡余下的
+	var ctx4 := H._battle(_attacker(20.0), _defender({"max_armor": 8.0, "block": 5.0}))
 	_run(ctx4)
-	t.eq(_shield(ctx4, 1), 0, "护盾吃掉 8")
-	t.eq(_hp(ctx4, 1), 93, "余下 12 再被防护挡 5，实扣 7")
+	t.eq(_shield(ctx4, 1), 0, "护甲吃掉 8")
+	t.eq(_hp(ctx4, 1), 93, "余下 12 再被格挡挡 5，实扣 7")
 
 
 static func run_before_damage(t: TestCase) -> void:
@@ -287,18 +287,18 @@ static func run_drain(t: TestCase) -> void:
 	_start(ctx2)
 	t.eq(_hp(ctx2, 0), 85, "显式监听流失，回了 5 点")
 
-	# --- 流失不吃护盾，但吃得到受伤前减伤 ---
+	# --- 流失不吃护甲，但吃得到受伤前减伤 ---
 	var soften := ModifyDamage.new()
 	soften.percent = -50
 	var before := OnBeforeDamage.new()
 	before.direction = DamageTrigger.Direction.TAKEN
 	before.damage_type = DamageTypes.DRAIN
 	var ctx3 := H._battle(H._spec(100.0, [
-		H._compiled(1, "overclock", {"max_shield": 30.0}, [_opener([bleed])]),
+		H._compiled(1, "overclock", {"max_armor": 30.0}, [_opener([bleed])]),
 		H._compiled(2, "damper", {}, [H._rule(before, Always.new(), [soften])]),
 	]), H._spec(100.0, []))
 	_start(ctx3)
-	t.eq(_shield(ctx3, 0), 30, "流失绕过护盾")
+	t.eq(_shield(ctx3, 0), 30, "流失绕过护甲")
 	t.eq(_hp(ctx3, 0), 90, "但减伤对它照样生效 —— 这正是让它走管线的理由")
 
 	# --- 非血量资源不走管线 ---
@@ -434,17 +434,17 @@ static func run_reflect_details(t: TestCase) -> void:
 	t.eq(_hp(ctx, 0), 180, "自伤 20")
 	t.eq(_hp(ctx, 1), 200, "对手毫发无损 —— 自伤不反弹")
 
-	# 反弹量按【护盾吸收之后】的待结算量算：护盾扛住的部分不算在内
+	# 反弹量按【护甲吸收之后】的待结算量算：护甲扛住的部分不算在内
 	var ctx2 := H._battle(
 		_attacker(20.0),
-		H._spec(200.0, [H._compiled(2, "thorns", {"max_shield": 12.0},
+		H._spec(200.0, [H._compiled(2, "thorns", {"max_armor": 12.0},
 			[_before_rule(thorns)])])
 	)
 	_run(ctx2)
-	t.eq(_shield(ctx2, 1), 0, "护盾吃掉 12")
+	t.eq(_shield(ctx2, 1), 0, "护甲吃掉 12")
 	t.eq(_hp(ctx2, 0), 96, "只弹余下 8 的一半 = 4")
 
-	# 反伤本身会被对方的护甲减免 —— 它是一包普通伤害，走完整管线
+	# 反伤本身会被对方的格挡减免 —— 它是一包普通伤害，走完整管线
 	var ctx3 := H._battle(
 		H._spec(200.0, [
 			H._compiled(1, "gun", {"block": 3.0}, []),
@@ -453,20 +453,20 @@ static func run_reflect_details(t: TestCase) -> void:
 		H._spec(200.0, [H._compiled(2, "thorns", {}, [_before_rule(thorns)])])
 	)
 	_start(ctx3)
-	t.eq(_hp(ctx3, 0), 193, "弹回 10，被攻击方自己的 3 点护甲挡掉 3")
+	t.eq(_hp(ctx3, 0), 193, "弹回 10，被攻击方自己的 3 点格挡挡掉 3")
 
 
-## 106 第八节（作者定）：直接 / 非直接看**来源** —— 武器造成的是直接（吃防护），buff 造成的不是（不吃）。
+## 106 第八节（作者定）：直接 / 非直接看**来源** —— 武器造成的是直接（吃格挡），buff 造成的不是（不吃）。
 ## 另有 `direct_override` 的「另行说明」口子
 static func run_direct_damage(t: TestCase) -> void:
-	t.begin("106 第八节 · 直接伤害按来源定：武器出手吃防护、buff 每秒掉血不吃、override 能两边强制")
+	t.begin("106 第八节 · 直接伤害按来源定：武器出手吃格挡、buff 每秒掉血不吃、override 能两边强制")
 
-	# 武器出手：uid 非 0、不来自 buff → 直接伤害，防护减得动
+	# 武器出手：uid 非 0、不来自 buff → 直接伤害，格挡减得动
 	var ctx := H._battle(_attacker(10.0), _defender({"block": 3.0}))
 	_run(ctx)
-	t.eq(_hp(ctx, 1), 93, "武器 10 点，防护 3 → 扣 7")
+	t.eq(_hp(ctx, 1), 93, "武器 10 点，格挡 3 → 扣 7")
 
-	# buff 每秒掉血：规则来自 buff → 非直接，防护不减（真实内容里的中毒 / 流血都是这一类：
+	# buff 每秒掉血：规则来自 buff → 非直接，格挡不减（真实内容里的中毒 / 流血都是这一类：
 	# 武器出手时 apply_status 挂一个 buff，掉血的那条规则属于 buff 而不是武器）
 	var burn := BuffDef.new()
 	burn.id = &"poison_test"
@@ -486,9 +486,9 @@ static func run_direct_damage(t: TestCase) -> void:
 	var ctx2 := H._battle(attacker, _defender({"block": 3.0}))
 	_start(ctx2)
 	H._advance_to(ctx2, 1.5)
-	t.eq(_hp(ctx2, 1), 95, "buff 每秒 5 点毒伤不吃防护（非直接 —— 它来自 buff，不是武器）")
+	t.eq(_hp(ctx2, 1), 95, "buff 每秒 5 点毒伤不吃格挡（非直接 —— 它来自 buff，不是武器）")
 
-	# override：强制非直接 —— 武器打出的也不吃防护
+	# override：强制非直接 —— 武器打出的也不吃格挡
 	var soft := _hit(10.0)
 	soft.direct_override = 0
 	var cd := CooldownCadence.new()
@@ -496,10 +496,10 @@ static func run_direct_damage(t: TestCase) -> void:
 	var gun := H._spec(100.0, [H._compiled(1, "gun", {}, [H._rule(OnSchedule.new(), cd, [soft])])])
 	var ctx5 := H._battle(gun, _defender({"block": 3.0}))
 	_run(ctx5)
-	t.eq(_hp(ctx5, 1), 90, "direct_override = 0：武器打出的也不吃防护（「另行说明」的口子）")
+	t.eq(_hp(ctx5, 1), 90, "direct_override = 0：武器打出的也不吃格挡（「另行说明」的口子）")
 
 
-## 106 第六节（作者定）：防护为负（破绽）倒贴 —— 10 点打成 13
+## 106 第六节（作者定）：格挡为负（破绽）倒贴 —— 10 点打成 13
 static func run_negative_armor(t: TestCase) -> void:
 	t.begin("106 · 格挡 / 破绽轴：+3 层 10 点打成 7，−3 层打成 13，中毒（来自 buff）不受影响")
 
@@ -511,7 +511,7 @@ static func run_negative_armor(t: TestCase) -> void:
 	var ctx2 := H._battle(_attacker(10.0), _defender())
 	ctx2.sides[1].shift_axis(StatAxes.BLOCK, -3)
 	_run(ctx2)
-	t.eq(_hp(ctx2, 1), 87, "破绽 3 层：10 点打出 13（作者定：负防护倒贴）")
+	t.eq(_hp(ctx2, 1), 87, "破绽 3 层：10 点打出 13（作者定：负格挡倒贴）")
 
 	# 破绽不会把治疗变成伤害，也不会把伤害放成负数：它只是加在伤害上
 	var ctx3 := H._battle(_attacker(1.0), _defender())

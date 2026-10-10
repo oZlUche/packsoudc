@@ -39,7 +39,7 @@ func show_estimate(b: PowerEstimate.Breakdown) -> void:
 	var lines: Array[String] = []
 	lines.append("基础（直接伤害）%s　%.1f 次/秒" % [_signed(b.base), b.hz])
 	if b.defense != 0.0:
-		lines.append("自带护盾 / 减伤 %s" % _signed(b.defense))
+		lines.append("自带护甲 / 格挡 %s" % _signed(b.defense))
 	for r in b.rules:
 		var tip := "T %.2f/秒 × C %.2f × K %.2f × L %.2f" % [r["rate"], r["cost"], r["cond"], r["cap"]]
 		var what := String(r["text"]) if String(r["text"]) != "" else "规则 %d" % (int(r["index"]) + 1)

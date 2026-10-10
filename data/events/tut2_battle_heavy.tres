@@ -20,5 +20,5 @@ id = &"tut2_battle_heavy"
 title = "{enemy:bruiser}"
 text = "一把{item:warhammer}，{item_stat:warhammer:seconds} 秒一下，一下 {item_stat:warhammer:damage} 点。血不多。
 
-{item:plate_cuirass}的护盾能接住它头两三锤，趁这段时间把它放倒；{item:tower_shield}减的那 {item_stat:tower_shield:block} 点在它面前不算什么。"
+{item:plate_cuirass}的护甲能接住它头两三锤，趁这段时间把它放倒；{item:tower_shield}减的那 {item_stat:tower_shield:block} 点在它面前不算什么。"
 options = Array[ExtResource("1_2xv6a")]([SubResource("Resource_lf172")])

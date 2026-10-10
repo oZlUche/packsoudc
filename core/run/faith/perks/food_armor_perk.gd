@@ -1,5 +1,5 @@
-## 自然 3 级（093）：开战时按棋盘上食物的数量与稀有度给护盾：每件 base + per_rarity × 稀有度
-class_name FoodShieldPerk
+## 自然 3 级（093）：开战时按棋盘上食物的数量与稀有度给护甲：每件 base + per_rarity × 稀有度
+class_name FoodArmorPerk
 extends FaithPerk
 
 @export var food_tag: StringName = &"food"
@@ -17,13 +17,13 @@ func compile_into(input: CompileInput, board: GridInventory, _run: RunState) -> 
 			total += base + per_rarity * float(it.def.rarity)
 	if total > 0.0:
 		var m := StatModifier.new()
-		m.stat = BattleStats.MAX_SHIELD
+		m.stat = BattleStats.MAX_ARMOR
 		m.amount = total
 		input.baseline_mods.append(m)
 
 
 func _summary() -> String:
-	return "开战时每件食物给 %.0f + %.0f × 稀有度 的护盾" % [base, per_rarity]
+	return "开战时每件食物给 %.0f + %.0f × 稀有度 的护甲" % [base, per_rarity]
 
 
 ## 103：作用于角色本身 → 进 buff 栏

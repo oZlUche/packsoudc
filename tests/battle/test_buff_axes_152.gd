@@ -97,8 +97,8 @@ static func run_import(t: TestCase) -> void:
 		"mods": [{"mode": "MULT", "amount": 3.0}, {"stat": "haste", "mode": "MULT", "amount": 3.0}]}, ContentImporter.Context.new(), old)
 	t.check(old.ok() and old.warnings.size() == 2 and old.to_text().contains("axes"), "伤害 / 攻速写在 mods 里：两条提醒（%s）" % old.to_text())
 	var shield := ImportReport.new()
-	ContentImporter.import_buff({"id": "t_sh", "mods": [{"stat": "max_shield", "amount": 5.0}]}, ContentImporter.Context.new(), shield)
-	t.check(shield.warnings.is_empty(), "护盾上限没有轴：不提醒")
+	ContentImporter.import_buff({"id": "t_sh", "mods": [{"stat": "max_armor", "amount": 5.0}]}, ContentImporter.Context.new(), shield)
+	t.check(shield.warnings.is_empty(), "护甲上限没有轴：不提醒")
 
 
 static func run_estimates(t: TestCase) -> void:
