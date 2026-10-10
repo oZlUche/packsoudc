@@ -35,6 +35,8 @@ const DEFAULTS := {
 	"weight_floor": 0.6,
 	"tiers": [0.9, 1.35, 1.9, 2.8],
 	"value_band": [0.8, 0.4],
+	"shield_per_point": 0.5,
+	"armor_per_point": 3.2,
 }
 
 ## 估算视野 H：一场打多久（秒）。持续类效果按 H 内能跑多久算
@@ -86,6 +88,10 @@ var weight_floor: float = 0.6
 var tiers: Array[float] = [0.9, 1.35, 1.9, 2.8]
 ## 推荐价值 = 每格价 × 格数 × (band[0] + band[1] × 档内位置)
 var value_band: Array[float] = [0.8, 0.4]
+## 作者定（151 补充）：非武器自带的护盾 / 减伤也算价值 —— 道具自带（基础属性）的一点护盾上限、一点防护各折几点「每秒伤害」。
+## 和武器同一张预算表比，所以按现有护甲 / 盾牌的稀有度定（皮甲 30 护盾、圆盾 5 防护都落在优良）
+var shield_per_point: float = 0.5
+var armor_per_point: float = 3.2
 
 
 ## 读系数表；文件没有、读不了、缺项都用默认。[param problems] 收认不出的键与类型不对的项

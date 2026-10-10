@@ -251,7 +251,7 @@ static func _tab_count(ed, tag: String) -> int:
 	return -1
 
 
-## 144：分组（有效果 / 无效果）+ 搜索栏
+## 144：分组（有效果 / 包 / 无效果）+ 搜索栏
 static func frame_run_groups_and_search(t: TestCase, root: Window) -> void:
 	t.begin("编辑器 · 144 分组与搜索")
 
@@ -259,6 +259,7 @@ static func frame_run_groups_and_search(t: TestCase, root: Window) -> void:
 	root.add_child(ed)
 	const EFFECT := 1
 	const PLAIN := 2
+	const BAG := 3
 
 	# --- 有效果从定义算 ---
 	for id in ["shortsword", "salve", "ration", "bag_leather", "gambeson", "arrows", "charm_sun", "spyglass"]:
@@ -276,8 +277,17 @@ static func frame_run_groups_and_search(t: TestCase, root: Window) -> void:
 	t.eq(_tab_count(ed, "weapon"), -1, "无效果分组下左列没有「武器」页签")
 	var plain_n: int = ed._shown.size()
 	t.eq(_tab_count(ed, ""), plain_n, "「全部」页的计数是本组的件数")
+	# 作者定：包单独一组，「有效果」里不再有包
+	_press_group(ed, BAG)
+	var bag_n: int = ed._shown.size()
+	t.check(ed._shown.has("bag_leather") and bag_n > 0, "「包」分组里有皮革包（%d 件）" % bag_n)
+	var all_bags := true
+	for id in ed._shown:
+		all_bags = all_bags and ed._is_bag(id)
+	t.check(all_bags, "「包」分组里全是包")
 	_press_group(ed, EFFECT)
-	t.eq(ed._shown.size() + plain_n, ed._ids.size(), "有效果 + 无效果 = 全部")
+	t.check(not ed._shown.has("bag_leather"), "「有效果」里没有包")
+	t.eq(ed._shown.size() + plain_n + bag_n, ed._ids.size(), "有效果 + 包 + 无效果 = 全部")
 	t.check(_tab_count(ed, "weapon") > 0, "有效果分组下有「武器」页签")
 
 	# --- 搜索：名字、id、标签都能命中；计数跟着搜索变 ---

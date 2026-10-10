@@ -33,8 +33,9 @@ const ITEM_DIR := ContentPaths.AUTHORING_ITEMS
 ## 挑哪个词当哨兵都可能撞上，而撞上的表现是某个标签页莫名其妙变成了另一页。
 enum Filter { ALL, TAG, UNTAGGED }
 
-## 144：标签页签上面的一级分组。「有效果」由 [method ItemDef.has_effect] 算，不是标签
-enum Group { ALL, EFFECT, PLAIN }
+## 144：标签页签上面的一级分组。「有效果」由 [method ItemDef.has_effect] 算，不是标签。
+## 作者定：包（[member ItemDef.is_bag]）单独一组，不和别的有效果的混在一起（「有效果」里不再有包）
+enum Group { ALL, EFFECT, PLAIN, BAG }
 
 ## 当前分类筛选之后，列表里实际显示的 id，**按显示顺序**。
 ##
@@ -50,6 +51,7 @@ var _group: Group = Group.ALL
 ## 列表键 → 名字（显示名 + 各语言名）/ 有没有效果。和 [member _tags_of] 一样在列表重读时从盘上读一次
 var _names_of: Dictionary = {}
 var _effect_of: Dictionary = {}
+var _bag_of: Dictionary = {}
 
 ## 列表键 → 它的标签。标签是**从数据里读出来的**，不是写死的表 ——
 ## MOD 作者加一个新标签，分类页签就该自己多出来一个。
@@ -103,7 +105,7 @@ func _build_ui() -> void:
 
 	# 144：分组行横跨整个总览，标签页签在当前分组里长出来
 	_group_host = HBoxContainer.new()
-	for g in [Group.ALL, Group.EFFECT, Group.PLAIN]:
+	for g in [Group.ALL, Group.EFFECT, Group.BAG, Group.PLAIN]:
 		_group_host.add_child(_group_button(g))
 	left.add_child(_group_host)
 
@@ -250,6 +252,7 @@ func _on_list_reloaded() -> void:
 	_tags_of.clear()
 	_names_of.clear()
 	_effect_of.clear()
+	_bag_of.clear()
 	for id in _ids:
 		_read_meta(id)
 
@@ -263,6 +266,7 @@ func _read_meta(id: String) -> void:
 	var parsed = JSON.parse_string(
 		FileAccess.get_file_as_string(ITEM_DIR + "/" + id + ".json"))
 	var effect := false
+	var bag := false
 	if parsed is Dictionary:
 		var data := parsed as Dictionary
 		for t in (data.get("tags", []) as Array):
@@ -274,9 +278,11 @@ func _read_meta(id: String) -> void:
 				names.append(String(by_lang[lang]))
 		var def = _import(data, ImportReport.new())
 		effect = def != null and (def as ItemDef).has_effect()
+		bag = def != null and (def as ItemDef).is_bag
 	_tags_of[id] = tags
 	_names_of[id] = names
 	_effect_of[id] = effect
+	_bag_of[id] = bag
 
 
 ## 内存里那一份（当前打开的、草稿）；没有返回 null
@@ -302,10 +308,17 @@ func _has_effect(id: String) -> bool:
 	return live.has_effect() if live != null else bool(_effect_of.get(id, false))
 
 
+func _is_bag(id: String) -> bool:
+	var live := _live(id)
+	return live.is_bag if live != null else bool(_bag_of.get(id, false))
+
+
 func _in_group(id: String, group: Group) -> bool:
 	match group:
+		Group.BAG:
+			return _is_bag(id)
 		Group.EFFECT:
-			return _has_effect(id)
+			return _has_effect(id) and not _is_bag(id)
 		Group.PLAIN:
 			return not _has_effect(id)
 		_:
@@ -454,7 +467,7 @@ func _tab_button(page: Array) -> Button:
 	return b
 
 
-const GROUP_LABELS := {Group.ALL: "全部", Group.EFFECT: "有效果", Group.PLAIN: "无效果"}
+const GROUP_LABELS := {Group.ALL: "全部", Group.EFFECT: "有效果", Group.BAG: "包", Group.PLAIN: "无效果"}
 
 
 func _group_button(g: Group) -> Button:
