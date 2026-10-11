@@ -14,7 +14,7 @@ extends CombatEffect
 ## 扣**血量**时按哪种伤害类型走管线。
 ##
 ## [b]减血一律走伤害管线[/b]（[DamageResolver]），哪怕来源是超频自伤这类机制 ——
-## 否则减伤、护盾、免疫、反转就得在每个来源上各实现一遍，
+## 否则减伤、护甲、免疫、反转就得在每个来源上各实现一遍，
 ## 而「以血为代价」的道具正好是玩家最想用减伤去抵消的那类。
 ##
 ## 默认 [constant DamageTypes.DRAIN]（流失）：走完整管线，但不点亮反伤与吸血，
@@ -46,7 +46,7 @@ func apply(ctx: RuleContext) -> void:
 			continue     # 087：倒下的不吃治疗、不扣资源（倒下是终局）
 		if value < 0 and resource_key == BattleStats.RES_HP:
 			# 106 第八节：以血为代价（超频、献祭）不是武器打出来的，所以**不是直接伤害** ——
-			# 防护不该把自己割的那一刀挡掉。这正是作者说的「另行说明」那一类
+			# 格挡不该把自己割的那一刀挡掉。这正是作者说的「另行说明」那一类
 			DamageResolver.deal(ctx.battle, who, -value, loss_type, ctx.owner.side, ctx.source_uid(), false)
 			continue
 		var actual := who.resources.change(
@@ -65,7 +65,7 @@ func describe() -> String:
 	return "%s %s %.0f" % ["获得" if amount >= 0.0 else "失去", resource_key, absf(amount)]
 
 
-## 151：估值 —— 生命 / 护盾：得到的乘治疗权重、失去的按伤害算；耐力 / 法力乘耐力权重；
+## 151：估值 —— 生命 / 护甲：得到的乘治疗权重、失去的按伤害算；耐力 / 法力乘耐力权重；
 ## 吸血那部分按这一下的大小（受击扳机是对面那一下，出手扳机是自己那一下）。给自己为正，给对手取反
 func estimated_value(ctx: PowerContext) -> float:
 	var amt := amount
@@ -78,6 +78,6 @@ func estimated_value(ctx: PowerContext) -> float:
 		amt += hit * clampi(percent_of_damage, 0, 100) / 100.0 * (-1.0 if amount < 0.0 else 1.0)
 	var w := ctx.weights
 	var per := w.stamina_weight
-	if resource_key == BattleStats.RES_HP or resource_key == BattleStats.RES_SHIELD:
+	if resource_key == BattleStats.RES_HP or resource_key == BattleStats.RES_ARMOR:
 		per = w.heal_weight if amt > 0.0 else 1.0
 	return amt * per * -side_sign(target)

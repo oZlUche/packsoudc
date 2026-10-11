@@ -20,7 +20,7 @@ var faith_points: Dictionary = {}
 var mods: Array[StatModifier] = []
 ## 单位级规则（套装、一局 buff、低血增伤、加时回春）：挂在单位上，来源 uid 为 0
 var rules: Array[AbilityRule] = []
-## 施加到基线（食物护盾、`stat_mod(baseline)`）。第 9 步才算 `max_hp`，所以改基线生命不用再手工补账
+## 施加到基线（食物护甲、`stat_mod(baseline)`）。第 9 步才算 `max_hp`，所以改基线生命不用再手工补账
 var baseline_mods: Array[StatModifier] = []
 ## 按件（3.2）：按下标顺序施加
 var scoped: Array[ScopedMod] = []

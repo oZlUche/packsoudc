@@ -8,7 +8,7 @@ const BEFORE := {
 	&"shortbow": [3, 6], &"longbow": [4, 8], &"blessed_longbow": [4, 10],
 	&"leather_armor": [4, 20], &"plate_cuirass": [9, 45], &"blessed_shield": [4, 6],
 }
-const MAIN_STATS := [&"damage", &"max_shield", &"armor"]
+const MAIN_STATS := [&"damage", &"max_armor", &"block"]
 
 
 static func run_scaled_by_cells(t: TestCase) -> void:

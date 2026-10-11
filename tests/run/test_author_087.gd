@@ -95,8 +95,8 @@ static func run_glossary(t: TestCase) -> void:
 	var found := Glossary.terms_in("开战时获得血怒，自发出手", {"血怒": "详"})
 	t.eq(found.size(), 1, "只剩血怒一个词条：%s" % str(found))
 	t.eq(String(found[0]["name"]), "血怒", "传进来的（buff 词条）照旧")
-	var kept := Glossary.terms_in("护盾顶住了直接伤害", {})
-	t.eq(kept.size(), 2, "带规则的词照旧弹（护盾、直接伤害）：%s" % str(kept))
+	var kept := Glossary.terms_in("护甲顶住了直接伤害", {})
+	t.eq(kept.size(), 2, "带规则的词照旧弹（护甲、直接伤害）：%s" % str(kept))
 	var marked := Glossary.mark("血怒 与 血怒", [{"name": "血怒", "text": ""}])
 	t.eq(marked.count("[u]血怒[/u]"), 2, "每处都标")
 	# 开战 buff 进预估 DPS：匕首 + 蛮神的护符（信力一阶）
@@ -133,8 +133,8 @@ static func run_dormant_faith(t: TestCase) -> void:
 	var shield_item := spec.item_of(shield.uid)
 	t.not_null(shield_item, "休眠的盾仍参战（通用效果）")
 	if shield_item != null:
-		var armor := StatMath.to_float(shield_item.stats.total_of(BattleStats.ARMOR))
-		t.check(is_equal_approx(armor, float(shield_def.combat.base_stats["armor"])), "护甲是它自己的基础值 %.0f（信力一阶的 +4 没给）" % armor)
+		var armor := StatMath.to_float(shield_item.stats.total_of(BattleStats.BLOCK))
+		t.check(is_equal_approx(armor, float(shield_def.combat.base_stats["block"])), "格挡是它自己的基础值 %.0f（信力一阶的 +4 没给）" % armor)
 		t.eq(shield_item.rules.size(), shield_def.combat.rules.size(), "只有自己的规则，没有信力加成的规则")
 	var bow_item := spec.item_of(bow.uid)
 	t.check(bow_item != null and StatMath.to_float(bow_item.stats.total_of(BattleStats.DAMAGE)) > float(bow_def.combat.base_stats["damage"]), "激活的弓吃到了信力加成")

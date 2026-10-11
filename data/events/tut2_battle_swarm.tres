@@ -20,5 +20,5 @@ id = &"tut2_battle_swarm"
 title = "{enemy:skirmisher}"
 text = "三把{item:knife}，一下接一下。每下不重，可一直不停。
 
-{item:tower_shield}每下减 {item_stat:tower_shield:armor}，正好把它的刀磨成钝的；{item:plate_cuirass}的护盾会被它磨光，然后你会一直掉血。"
+{item:tower_shield}每下减 {item_stat:tower_shield:block}，正好把它的刀磨成钝的；{item:plate_cuirass}的护甲会被它磨光，然后你会一直掉血。"
 options = Array[ExtResource("1_pbo5t")]([SubResource("Resource_jbnht")])

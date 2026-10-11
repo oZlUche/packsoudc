@@ -721,13 +721,14 @@ static func run_lazy_removal(t: TestCase) -> void:
 static func run_unit_stat_aggregation(t: TestCase) -> void:
 	t.begin("单位级属性聚合")
 
-	# 加法类属性跨物品求和
+	# 加法类属性跨物品求和；153：格挡例外，几面盾只取最高
 	var spec := _spec(0.0, [
-		_compiled(1, "a", {"max_hp": 30.0, "armor": 2.0}),
-		_compiled(2, "b", {"max_hp": 20.0, "armor": 3.0}),
+		_compiled(1, "a", {"max_hp": 30.0, "max_armor": 2.0, "block": 2.0}),
+		_compiled(2, "b", {"max_hp": 20.0, "max_armor": 3.0, "block": 3.0}),
 	])
 	var rt := CombatantRuntime.from_spec(spec, 0)
-	t.eq(rt.stat_int(BattleStats.ARMOR), 5, "护甲这类加法属性跨物品求和")
+	t.eq(rt.stat_int(BattleStats.MAX_ARMOR), 5, "护甲上限这类加法属性跨物品求和")
+	t.eq(rt.stat_int(BattleStats.BLOCK), 3, "格挡不相加，取最高（153）")
 
 	# 乘法单位元类属性【不能】跨物品累加
 	var many := _spec(100.0, [

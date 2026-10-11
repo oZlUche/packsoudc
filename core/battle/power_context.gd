@@ -108,7 +108,7 @@ func stat_value(stat: StringName, mode: StatModifier.Mode, amount: float) -> flo
 			if mult:
 				return -amount / 100.0 * dps()
 			return dps() * (1.0 / maxf(0.01, 1.0 + amount * hz()) - 1.0)
-		BattleStats.ARMOR:
+		BattleStats.BLOCK:
 			return 0.0 if mult else amount * hits_taken()
 		BattleStats.MAX_HP:
 			var hp := amount / 100.0 * w.assumed_hp if mult else amount
@@ -147,7 +147,7 @@ func axis_value(axis: StringName) -> float:
 			return step * w.crit_rate * dps()
 		StatAxes.STAMINA_COST:
 			return (1.0 - step / 100.0) * w.stamina_regen * w.stamina_weight
-		StatAxes.ARMOR:
+		StatAxes.BLOCK:
 			return step * hits_taken()
 		StatAxes.MAX_HP:
 			return step * w.heal_weight / maxf(1.0, w.horizon_sec)

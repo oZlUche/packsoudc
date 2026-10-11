@@ -26,7 +26,7 @@ const LABELS := {
 	"broken_value_ratio": "破碎后卖价几成", "own_only": "只认这件自己打出的", "feed_mods": "供给的加成", "feed_rules": "供给的规则", "feed_filter": "只供给", "faith_bonuses": "信仰加成", "dormant_keeps_combat": "休眠仍保留战斗效果", "requires_unlock": "需要的解锁",
 	"combat": "战斗", "adjacency": "邻接", "base_stats": "基础属性", "rules": "规则", "trigger": "触发", "cadence": "节奏", "costs": "消耗",
 	"use_haste": "受急速影响", "cooldown": "冷却", "resource_key": "资源", "damage_type": "伤害类型", "damage_stat": "伤害用的属性", "amount_stat": "数量改从属性取（留空 = 用上面的数量）",
-	"stat": "属性", "stat_scale": "属性系数", "direct_override": "直接伤害（−1 按来源定）", "shield_absorbable": "可被护盾吸收", "provokes": "招致反应", "on_self": "对自己", "same_side": "同一边",
+	"stat": "属性", "stat_scale": "属性系数", "direct_override": "直接伤害（−1 按来源定）", "armor_absorbable": "可被护甲吸收", "provokes": "招致反应", "on_self": "对自己", "same_side": "同一边",
 	"buff": "增益", "buff_id": "增益 id", "stacks": "叠层", "stackable": "可叠层（不限层）", "max_shares": "最多几份（0 = 不限）", "per_stack": "按叠层", "duration_sec": "持续秒数",
 	"by_self": "只认本方施加", "from": "转化前", "to": "转化成", "ratio": "换算比例", "keep_from": "保留原状态",     # 130
 	"source_tags": "只听带这些标签的", "full": "回满", "crit_only": "只在暴击时", "receive_rules": "受益规则", "min_percent": "至少百分之", "max_percent": "至多百分之",
@@ -101,7 +101,7 @@ const TYPE_LABELS := {
 	"damage": "造成 / 受到伤害", "vitality_lost": "失去体力", "item_cycle": "道具成功循环", "heal": "战斗内回血", "item_triggered": "触发某类道具", "enter_node": "进入空白节点",
 	"item_acquired": "获得道具", "distinct_items_fired": "不同名字的道具出手", "first_place": "每局首次置入一种道具",
 	"faith_active": "激活了信仰", "rest_part_unused": "休息点这一份没用过", "open_altar": "打开神坛", "next_event_random": "随机接一个事件", "low_hp_empower": "低血增伤", "fire_enchant": "火焰附魔",
-	"stat_mod": "属性修饰（信仰级）", "enchant_weapons": "武器火焰附魔", "food_shield": "按食物给护盾", "food_double": "食物效果翻倍",
+	"stat_mod": "属性修饰（信仰级）", "enchant_weapons": "武器火焰附魔", "food_armor": "按食物给护甲", "food_double": "食物效果翻倍",
 	"altar_sacrifice_hp": "神坛：献祭生命上限", "altar_pray_fire": "神坛：祈祷火焰", "altar_food_vitality": "献祭食物回体力", "altar_train_board": "神坛：锻炼（棋盘 +1 行）",
 	"altar_reshape_node": "神坛：改造此点", "smite": "秒杀（耗体力）", "extra_drop_by_node": "按点类型必掉额外一件", "gift_on_enter": "踩上点给对应道具", "overtime_regen": "加时阶段回春", "on_axis_at_least": "标准轴到 N 层时", "shift_axis": "改标准轴层数", "axis_boost": "开战带几层标准轴", "undying": "血归零后坚持几秒", "altar_bless": "神坛：祈求赐福", "bless_item": "赐福一件",
 	"erosion": "侵蚀", "hunters": "猎手", "safe": "保险箱", "node_storage": "按点暂存", "countdown": "全局倒计时", "crafting": "合成", "altar": "神坛", "buff": "一局的 buff", "belt": "腰带", "wear": "道具耐久",     # 101：一局的模块（本体功能与难度机制同一张表）

@@ -158,7 +158,7 @@
 					],
 					"base_stats": {
 						"max_hp": 36,
-						"armor": 2
+						"block": 2
 					}
 				},
 				"search_again_events": [
@@ -224,7 +224,7 @@
 				],
 				"base_stats": {
 					"max_hp": 36,
-					"armor": 3
+					"block": 3
 				}
 			}
 		},

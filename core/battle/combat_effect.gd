@@ -56,7 +56,7 @@ static func side_sign(target: Target) -> float:
 ##
 ## 按**来源**定，不按伤害类型：规则属于某件道具（武器出手触发的）→ 直接；
 ## 规则来自 buff（灼烧、中毒、到期爆发）→ 非直接；套装 / 单位级规则（没有来源道具）→ 非直接。
-## 防护（格挡 / 破绽）只减直接伤害。
+## 格挡（加固 / 破绽）只减直接伤害。
 ## [param override] 是效果上的「另行说明」口子：−1 按来源默认，0 / 1 强制。
 static func direct_of(ctx: RuleContext, override: int = -1) -> bool:
 	if override >= 0:

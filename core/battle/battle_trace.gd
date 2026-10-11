@@ -245,7 +245,7 @@ static func _pipeline(d: Dictionary, names: Array) -> String:
 	if int(d.get("raw", 0)) != int(d.get("raw_in", 0)):
 		parts.append("火焰加成 → %s" % _num(int(d["raw"])))
 	if int(d.get("absorbed", 0)) != 0:
-		parts.append("护盾 −%s" % _num(int(d["absorbed"])))
+		parts.append("护甲 −%s" % _num(int(d["absorbed"])))
 	if bool(d.get("cancelled", false)):
 		parts.append("受伤前效果取消")
 	if int(d.get("percent", 0)) != 0:
@@ -254,8 +254,8 @@ static func _pipeline(d: Dictionary, names: Array) -> String:
 		parts.append("受伤前 %s" % _num(int(d["flat"])))
 	if bool(d.get("inverted", false)):
 		parts.append("反转成治疗")
-	if int(d.get("armor", 0)) != 0:
-		parts.append("防护 %s" % _num(-int(d["armor"])))
+	if int(d.get("block", 0)) != 0:
+		parts.append("格挡 %s" % _num(-int(d["block"])))
 	if int(d.get("taken", StatMath.ONE)) != StatMath.ONE:
 		parts.append("受到伤害 ×%s" % _num(int(d["taken"])))
 	parts.append("最终 %s（血 %s → %s）" % [_num(int(d.get("final", 0))), _num(int(d.get("hp_before", 0))), _num(int(d.get("hp_after", 0)))])

@@ -26,6 +26,11 @@ func set_base(key: StringName, base: int) -> void:
 	ensure(key).base = base
 
 
+## 153：去掉一项（格挡不跨件相加，汇总后由格挡层另算）
+func erase(key: StringName) -> void:
+	_values.erase(key)
+
+
 func has(key: StringName) -> bool:
 	return _values.has(key)
 

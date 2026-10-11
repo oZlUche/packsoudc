@@ -10,8 +10,7 @@
     "burst"
   ],
   "base_stats": {
-    "max_hp": 46,
-    "armor": 4
+    "max_hp": 46
   },
   "signature": [
     "round_shield"

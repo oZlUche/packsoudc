@@ -55,7 +55,7 @@ static func run_damage_type_data(t: TestCase) -> void:
 	t.eq(DamageTypes.name_of(&"zz_type"), "zz_type", "没登记的原词")
 	t.check(DamageTypes.describe(DamageTypes.POISON) != "", "中毒有说明")
 	var poison := DamageTypes.get_def(DamageTypes.POISON)
-	t.check(not poison.shield_absorbable and not poison.provokes, "中毒的两个性质来自数据（106 删了护甲列：防护按来源算）")
+	t.check(not poison.armor_absorbable and not poison.provokes, "中毒的两个性质来自数据（106 删了「吃不吃减伤」列：格挡按来源算）")
 	t.check(poison.display_names.has("en"), "数据里的定义（带英文名），不是内置的")
 	t.eq(Glossary.damage_type_name(&"bleed"), "流血", "Glossary 走数据")
 	var dd := DealDamage.new()
@@ -88,8 +88,8 @@ static func run_import_tags_and_presets(t: TestCase) -> void:
 	t.check(r2.ok(), "没登记的标签不是错误：%s" % r2.to_text())
 	t.eq(r2.warnings.size(), 1, "只对 zz_unknown 警告一次（faith:<id> 不算）：%s" % r2.to_text())
 	var r3 := ImportReport.new()
-	var dt := ContentImporter.import_damage_type({"id": "acid", "display_name": "酸", "shield_absorbable": false, "provokes": false}, ctx, r3)
-	t.check(r3.ok() and dt.id == &"acid" and not dt.shield_absorbable and not dt.provokes, "伤害类型导入")
+	var dt := ContentImporter.import_damage_type({"id": "acid", "display_name": "酸", "armor_absorbable": false, "provokes": false}, ctx, r3)
+	t.check(r3.ok() and dt.id == &"acid" and not dt.armor_absorbable and not dt.provokes, "伤害类型导入")
 	var r4 := ImportReport.new()
 	ContentImporter.import_damage_type({"id": "acid", "display_name": ""}, ctx, r4)
 	t.check(not r4.ok(), "没名字拦住")
@@ -326,7 +326,7 @@ static func frame_spawn_mask_and_presets(t: TestCase, root: Window) -> void:
 	t.check(not setup._allow_drop(setup.preset_items()[0], flow.meta.warehouse), "拖去仓库也不行")
 	t.check(setup._allow_drop(setup.preset_items()[0], setup.board), "在棋盘上挪可以")
 	t.check(setup._readout.get_parsed_text().contains("预设套"), "读数里写着预设套")
-	# 强攻 DPS > 坚守；坚守护甲 > 强攻
+	# 强攻 DPS > 坚守；坚守格挡 > 强攻
 	var ch: CharacterDef = setup.character()
 	var dps_off: float = BattleCompiler.compile_board(setup.board, ch.baseline(), [] as Array[StatModifier], [] as Array[AbilityRule], {}).rough_dps()
 	var armor_off := _armor_on(setup.board)
@@ -336,7 +336,7 @@ static func frame_spawn_mask_and_presets(t: TestCase, root: Window) -> void:
 	var dps_def: float = BattleCompiler.compile_board(setup.board, ch.baseline(), [] as Array[StatModifier], [] as Array[AbilityRule], {}).rough_dps()
 	var armor_def := _armor_on(setup.board)
 	t.check(dps_off > dps_def, "强攻 DPS %.1f > 坚守 %.1f" % [dps_off, dps_def])
-	t.check(armor_def > armor_off, "坚守护甲 %d > 强攻 %d" % [armor_def, armor_off])
+	t.check(armor_def > armor_off, "坚守格挡 %d > 强攻 %d" % [armor_def, armor_off])
 	# 带一件仓库的：预算只算它
 	if n > 0:
 		var first := flow.meta.warehouse.items()[0] as ItemInstance
@@ -397,8 +397,8 @@ static func _armor_on(board: GridInventory) -> int:
 	var total := 0
 	for inst in board.items():
 		var d := (inst as ItemInstance).def
-		if d.combat != null and d.combat.base_stats.has("armor"):
-			total += int(d.combat.base_stats["armor"])
+		if d.combat != null and d.combat.base_stats.has("block"):
+			total += int(d.combat.base_stats["block"])
 	return total
 
 

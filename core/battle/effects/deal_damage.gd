@@ -1,13 +1,13 @@
 ## 造成伤害。
 ##
 ## 本效果只负责**算出原始值并交给管线**，减免与结算全在 [DamageResolver] 里 ——
-## 护盾、护甲、受伤前减伤、反转对所有伤害来源一视同仁，不该由每个效果各实现一遍。
+## 护甲、格挡、受伤前减伤、反转对所有伤害来源一视同仁，不该由每个效果各实现一遍。
 class_name DealDamage
 extends CombatEffect
 
 @export var target: Target = Target.OPPONENT
 
-## 伤害类型。决定能否被护盾吸收、吃不吃护甲、是否通知受伤效果，
+## 伤害类型。决定能否被护甲吸收、是否通知受伤效果，
 ## 具体性质见 [DamageTypeDef]，不写死在结算里。
 ##
 ## [b]刻意不与乘区绑定。[/b] 火焰伤害吃不吃 ELEMENT（元素增伤）乘区由内容自己在属性上声明，
@@ -22,7 +22,7 @@ extends CombatEffect
 @export var damage_stat: StringName = &"damage"
 ## 伤害是否乘以来源 buff 的层数。「灼烧每层 2 点」用它
 @export var per_stack: bool = false
-## 106 第八节（作者定）：这一下算不算**直接伤害**（吃防护）。−1 = 按来源定（道具的规则 = 直接、buff 的规则 = 非直接），
+## 106 第八节（作者定）：这一下算不算**直接伤害**（吃格挡）。−1 = 按来源定（道具的规则 = 直接、buff 的规则 = 非直接），
 ## 0 / 1 = 强制非直接 / 直接 —— 作者说的「除非另行说明」就是这个口子，现有内容都不填
 @export var direct_override: int = -1
 
@@ -53,7 +53,7 @@ func apply(ctx: RuleContext) -> void:
 		return
 
 	# 104（作者定）：暴击 —— 只有从属性取伤害的那一包掷（固定值伤害不暴击），造包时掷、在管线之前，
-	# 所以护盾 / 减伤 / 护甲 / 加时看到的都是暴击后的原始值。双方对称。一次出手掷一次，打到几个目标都一样
+	# 所以护甲 / 减伤 / 格挡 / 加时看到的都是暴击后的原始值。双方对称。一次出手掷一次，打到几个目标都一样
 	var crit := from_stat and roll_crit(ctx)
 	if crit:
 		raw = StatMath.mul(raw, maxi(0, ctx.item_stat(BattleStats.CRIT_DAMAGE, BattleStats.default_base(BattleStats.CRIT_DAMAGE))))

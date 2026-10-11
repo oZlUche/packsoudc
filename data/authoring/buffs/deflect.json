@@ -6,10 +6,10 @@
   },
   "stackable": false,
   "duration_sec": 4.0,
-  "mods": [
+  "axes": [
     {
-      "stat": "armor",
-      "amount": 8.0
+      "axis": "block",
+      "stacks": 8
     }
   ]
 }

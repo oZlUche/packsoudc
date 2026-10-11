@@ -129,6 +129,16 @@ block   = 生效层 + 格挡轴层数（内容层 + 系统层，带符号）
 
 约束提醒：测试 121 的 `add_theme_` 配额已满（135 / 135），新常驻格复用轴格的画法，不新增主题覆写。
 
+## 8. 落地记录（2026-10-10）
+
+五项待定都按推荐落地，和方案的差别：
+
+- **没加 `CombatantSpec.block_layers` / `BlockLayer` 类**：层在 `CombatantRuntime.from_spec` 里直接从各件的 `stats.block` 收（`{uid, id, value}`，天生的 uid 0、id `innate`），编译器不用改。快照 `snapshot.block_layers` 带给回放面板。
+- **预设图也有格挡**：`data/maps/prologue.json`、`tutorial2.json` 的教程敌人在节点内容里写死了 `base_stats.armor`（2、3、12、3），不走导入器。键改成 `block`；`EnemyKit.baseline_of` 读到旧键 `armor` 也当 `block`（玩家旧存档里的节点内容）。持符者天生 12 是一层，它没有盾，所以数不变（序章二的克制测试照过）。
+- 校验：非盾 `base_stats.block`、非盾 `faith_bonuses` 碰 `block` → error；buff 的 mods 改 `block` → error（指向 `axes`）；非盾自己的规则给自己正向加固 → warn；赐福给格挡的那一条标签必须只有 `shield`。旧键 `armor`（基础属性、档位表、修饰的 stat、轴字段）当 `block` 读并 warn。
+- 估算器的权重 `armor_per_point` 改名 `block_per_point`（数不变）。
+- 测试：新增 `tests/battle/test_block_153.gd`（层与取最高、伤害管线、导入、内容、回放面板）；老测试里的 `armor` 键与「跨件求和」的断言改成格挡与「取最高」。
+
 ## 补充一（2026-10-10）：防具给的那层改叫【护甲】，字段 `shield` → `armor`
 
 > 作者原话（本线程）：「防具给的属性不要称为【护盾】，而是【护甲】，修改一下游戏内的字段名称（改为 armor）和文本」。
@@ -170,3 +180,12 @@ block   = 生效层 + 格挡轴层数（内容层 + 系统层，带符号）
 - 【护甲】`armor` / `max_armor`：防具给的一层资源，先于生命被扣，开战充满。
 - 【格挡】`block`：盾牌给的固定减伤，只取最高；轴【加固 / 破绽】是它之上的修正。
 - 「防护」「护盾」两个词从游戏里消失。
+
+### 补充一落地记录（2026-10-10）
+
+正文已先合并（PR #105），补充一另开一个 PR 落地，所以两步之间 main 上有过一段「armor 当 block 读」的别名；这次把它换成补充一的规则：`base_stats.armor` / `stat_scale.armor` / `stat: armor` 报错并写清两种去处，旧存档里的节点内容（`EnemyKit.baseline_of`）仍把 `armor` 当 `block`、`max_shield` 当 `max_armor`。
+
+- 改名表全部照做；另外 `UiPalette.SHIELD` / `SHIELD_FRAME` → `ARMOR` / `ARMOR_FRAME`，资源颜色表与文本样式码 `{c:shield}` → `{c:armor}`（数据里没人用旧码）。
+- 生命条文字「盾 N」→「甲 N」，战斗日志「盾挡 N」→「甲挡 N」，内部日志「护盾 −N」→「护甲 −N」。
+- 资源键 `shield` 写在 `resource_key` / `resource` 字段里的、`type: food_shield`、`{item_stat:…:max_shield}` 都认作新名（导入器提醒；文本模板静默）。
+- 测试：`test_block_153.gd` 加 `run_armor_rename`（常量、名字、词条、四种旧名、自然的 food_armor、防具给护甲上限）；其余 17 个文件改常量与字符串，断言不变。

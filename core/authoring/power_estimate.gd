@@ -11,8 +11,8 @@
 ## [endcodeblock]
 ##
 ## 推荐稀有度看预算比 r = P ÷ (每格基准 × 格数) 落在哪一档；推荐价值 = 那一档的每格价 × 格数 × 档内位置。
-## 推荐给武器和护具（带 armor / shield 标签，作者定：非武器的护盾、减伤也算价值）—— 护具自带的护盾上限、防护按 D 进 P：
-## P = (B + D + Σ …) × W，D = 护盾上限 × 每点折算 + 防护 × 每点折算（[member PowerWeights.shield_per_point]）。别的非武器只看分数
+## 推荐给武器和护具（带 armor / shield 标签，作者定：非武器的护甲、减伤也算价值）—— 护具自带的护甲上限、格挡按 D 进 P：
+## P = (B + D + Σ …) × W，D = 护甲上限 × 每点折算 + 格挡 × 每点折算（[member PowerWeights.armor_per_point]）。别的非武器只看分数
 ## 只是提示与推荐：流派件单看偏弱是故意的，联动价值不进这个数。系数全在 [PowerWeights]（作者改表不改码）。
 ## 纯函数：只看 [ItemDef]，不碰运行时
 class_name PowerEstimate
@@ -23,7 +23,7 @@ class Breakdown:
 	extends RefCounted
 	## 直接伤害 DPS（基础 B）与出手频率
 	var base: float = 0.0
-	## 自带的护盾 / 减伤（D）：基础属性里的护盾上限与防护折成的每秒伤害
+	## 自带的护甲 / 减伤（D）：基础属性里的护甲上限与格挡折成的每秒伤害
 	var defense: float = 0.0
 	## 护具（armor / shield 标签）：和武器一样给推荐
 	var is_gear: bool = false
@@ -106,11 +106,11 @@ static func estimate(def: ItemDef, weights: PowerWeights = null, buffs: Dictiona
 	return out
 
 
-## 道具自带的护盾 / 减伤（D）：基础属性里的护盾上限、防护 × 每点折算
+## 道具自带的护甲 / 减伤（D）：基础属性里的护甲上限、格挡 × 每点折算
 static func defense_of(stats: StatSet, w: PowerWeights) -> float:
-	var shield := StatMath.to_float(stats.total_of(BattleStats.MAX_SHIELD)) if stats.has(BattleStats.MAX_SHIELD) else 0.0
-	var armor := StatMath.to_float(stats.total_of(BattleStats.ARMOR)) if stats.has(BattleStats.ARMOR) else 0.0
-	return shield * w.shield_per_point + armor * w.armor_per_point
+	var shield := StatMath.to_float(stats.total_of(BattleStats.MAX_ARMOR)) if stats.has(BattleStats.MAX_ARMOR) else 0.0
+	var armor := StatMath.to_float(stats.total_of(BattleStats.BLOCK)) if stats.has(BattleStats.BLOCK) else 0.0
+	return shield * w.armor_per_point + armor * w.block_per_point
 
 
 static func _is_base_rule(r: AbilityRule) -> bool:

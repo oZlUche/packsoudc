@@ -28,7 +28,7 @@ mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_rexqm")])
 
 [sub_resource type="Resource" id="Resource_bpi0t"]
 script = ExtResource("3_2gic1")
-stat = &"armor"
+stat = &"block"
 amount = 1.0
 
 [sub_resource type="Resource" id="Resource_2fhbu"]
@@ -39,47 +39,76 @@ mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_bpi0t")])
 
 [sub_resource type="Resource" id="Resource_tr00d"]
 script = ExtResource("1_yrdk8")
+tags = Array[StringName]([&"shield"])
 min_cells = 5
 name_prefix = "大地之神赐福的"
 name_prefix_en = "Earth-blessed "
 faith_bonuses = Array[ExtResource("2_texte")]([SubResource("Resource_q5jy6"), SubResource("Resource_2fhbu")])
 
 [sub_resource type="Resource" id="Resource_uajvw"]
+script = ExtResource("3_2gic1")
+stat = &"max_stamina"
+amount = 5.0
+
+[sub_resource type="Resource" id="Resource_eoqlt"]
+script = ExtResource("2_texte")
+mode = "active"
+mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_uajvw")])
+
+[sub_resource type="Resource" id="Resource_iqm5g"]
+script = ExtResource("3_2gic1")
+stat = &"max_armor"
+amount = 4.0
+
+[sub_resource type="Resource" id="Resource_72j3p"]
+script = ExtResource("2_texte")
+mode = "scaled"
+max_shares = 5
+mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_iqm5g")])
+
+[sub_resource type="Resource" id="Resource_udmsc"]
+script = ExtResource("1_yrdk8")
+min_cells = 5
+name_prefix = "大地之神赐福的"
+name_prefix_en = "Earth-blessed "
+faith_bonuses = Array[ExtResource("2_texte")]([SubResource("Resource_eoqlt"), SubResource("Resource_72j3p")])
+
+[sub_resource type="Resource" id="Resource_mgcyf"]
 script = ExtResource("6_bd1g6")
 min_cells = 5
 cap = 40
 amount = 8
 
-[sub_resource type="Resource" id="Resource_eoqlt"]
+[sub_resource type="Resource" id="Resource_7l3a5"]
 script = ExtResource("7_5xycn")
 
-[sub_resource type="Resource" id="Resource_iqm5g"]
+[sub_resource type="Resource" id="Resource_leima"]
 script = ExtResource("8_rcova")
 min_cells = 9
 multiplier = 5.0
 per_cell = true
 
-[sub_resource type="Resource" id="Resource_72j3p"]
+[sub_resource type="Resource" id="Resource_pnbk5"]
 script = ExtResource("10_t8ftl")
 
-[sub_resource type="Resource" id="Resource_udmsc"]
+[sub_resource type="Resource" id="Resource_ncrry"]
 script = ExtResource("3_2gic1")
 stat = &"max_stamina"
 amount = 20.0
 
-[sub_resource type="Resource" id="Resource_mgcyf"]
+[sub_resource type="Resource" id="Resource_egaqq"]
 script = ExtResource("11_p841y")
-mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_udmsc")])
+mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_ncrry")])
 
-[sub_resource type="Resource" id="Resource_7l3a5"]
+[sub_resource type="Resource" id="Resource_ojtgt"]
 script = ExtResource("12_kac8c")
 tier = 2
 
-[sub_resource type="Resource" id="Resource_leima"]
+[sub_resource type="Resource" id="Resource_4eqxy"]
 script = ExtResource("13_da2uv")
 tier = 3
 
-[sub_resource type="Resource" id="Resource_pnbk5"]
+[sub_resource type="Resource" id="Resource_xc4as"]
 script = ExtResource("14_cb8j2")
 tier = 4
 
@@ -93,7 +122,7 @@ display_names = {
 god = "大地之神（体积、空间）"
 description = "帝国祭祀的主神之一，但信徒很少，对应种族也极为低调"
 thresholds = Array[int]([25, 100, 250, 500])
-deeds = Array[ExtResource("5_81xyc")]([SubResource("Resource_uajvw"), SubResource("Resource_eoqlt")])
-offerings = Array[ExtResource("8_rcova")]([SubResource("Resource_iqm5g")])
-perks = Array[ExtResource("9_xhs8b")]([SubResource("Resource_72j3p"), SubResource("Resource_mgcyf"), SubResource("Resource_7l3a5"), SubResource("Resource_leima"), SubResource("Resource_pnbk5")])
-blessings = Array[ExtResource("1_yrdk8")]([SubResource("Resource_tr00d")])
+deeds = Array[ExtResource("5_81xyc")]([SubResource("Resource_mgcyf"), SubResource("Resource_7l3a5")])
+offerings = Array[ExtResource("8_rcova")]([SubResource("Resource_leima")])
+perks = Array[ExtResource("9_xhs8b")]([SubResource("Resource_pnbk5"), SubResource("Resource_egaqq"), SubResource("Resource_ojtgt"), SubResource("Resource_4eqxy"), SubResource("Resource_xc4as")])
+blessings = Array[ExtResource("1_yrdk8")]([SubResource("Resource_tr00d"), SubResource("Resource_udmsc")])

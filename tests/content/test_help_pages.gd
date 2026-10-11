@@ -4,7 +4,7 @@ extends RefCounted
 const EXPECTED := {
 	"flow": ["map_and_steps", "search_point", "battle_and_prebattle", "staging_zone", "extraction_and_defeat", "vitality", "settlement_and_warehouse", "characters"],
 	"bag": ["drag_and_rotate", "bags", "quick_place", "tidy", "crafting", "grant_receive_slots", "anchor_and_right_click", "encumbrance"],
-	"combat": ["auto_battle", "direct_damage_and_armor", "shield", "buffs_and_stacks", "stamina_and_cooldown", "haste", "multipliers"],
+	"combat": ["auto_battle", "direct_damage_and_block", "armor", "buffs_and_stacks", "stamina_and_cooldown", "haste", "multipliers"],
 	"faith": ["anchor_activation", "faith_power_and_tiers", "altar_offering", "special_rites", "switch_and_dormant",
 		"god_brute", "god_sun", "god_nature", "god_earth", "god_skill", "god_hunt"],
 	"map": ["node_types", "random_node", "shop", "rest_point", "safe_box", "countdown_and_closing", "hunters", "erosion", "teleport"],
@@ -64,10 +64,10 @@ static func run(t: TestCase) -> void:
 		t.eq(TextLint.scan({"text": def.text}).size(), 0, "%s：正文没有裸数字" % def.id)
 		t.check(not def.text.contains("<!--") and not def.text.contains("待核"), "%s：没有待核注释" % def.id)
 
-	t.begin("125 · 搜索：「护盾」命中护盾页与词条页；「地上」命中地上页")
-	var hits := book.search("护盾", {"_items": db})
-	t.check(hits.has("shield"), "护盾页")
-	t.check(hits.has("term:护盾"), "护盾词条")
+	t.begin("125 · 搜索：「护甲」命中护甲页与词条页；「地上」命中地上页")
+	var hits := book.search("护甲", {"_items": db})
+	t.check(hits.has("armor"), "护甲页")
+	t.check(hits.has("term:护甲"), "护甲词条")
 	t.check(book.search("地上", {"_items": db}).has("staging_zone"), "地上页")
 
 
@@ -76,7 +76,7 @@ static func run_single_bucket_wording(t: TestCase) -> void:
 	var by_id := {}
 	for h in GameFlow.load_help_pages():
 		by_id[String((h as HelpPageDef).id)] = h
-	for id in ["multipliers", "haste", "direct_damage_and_armor"]:
+	for id in ["multipliers", "haste", "direct_damage_and_block"]:
 		var page: HelpPageDef = by_id.get(id, null)
 		t.not_null(page, "%s 在" % id)
 		if page == null:

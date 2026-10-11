@@ -12,7 +12,7 @@ extends RefCounted
 ## 认得的颜色**名**（101 第 5 刀）：这一层只产出名字，名字对应哪个颜色是界面的事 ——
 ## 表在 [constant UiPalette.STYLE_COLORS]，渲染前由 [method UiPalette.resolve_styles] 换成十六进制。
 ## 文本层不认识调色板（core 不依赖 ui）
-const STYLE_NAMES := ["fg", "dim", "hp", "shield", "stamina", "mana", "heal", "grant", "receive",
+const STYLE_NAMES := ["fg", "dim", "hp", "armor", "stamina", "mana", "heal", "grant", "receive",
 	"warn", "danger", "good", "faith"]
 ## 颜色名在 BBCode 里的前缀：`[color=@hp]`。界面查表换掉；没换的话 Godot 当成无效颜色，不会崩
 const STYLE_PREFIX := "@"
@@ -236,11 +236,14 @@ static func _format(v: Variant, filter: String) -> Variant:
 
 ## 104：`{item_stat:<道具 id>:<字段>}` —— 教程文本引用**别的道具**的数（「塔盾每下减 4」）。从道具定义里找：
 ## 先 `combat` 再整份定义，深度优先；遇到 `stat` 是这个名字的属性修饰取它的 `amount`，否则取同名的数值字段 / 字典键
-## （`base_stats` 的 `armor`、伤害修正的 `flat`）。道具库用 ctx 的 `_items`（[method context_for] 放进去），没有就自己读一份
+## （`base_stats` 的 `block`、伤害修正的 `flat`）。道具库用 ctx 的 `_items`（[method context_for] 放进去），没有就自己读一份。
+## 153 补充一：旧字段名 `max_shield` 当 `max_armor` 找（护盾改名护甲）
 static func _item_stat(token: String, ctx: Dictionary) -> Variant:
 	var parts := token.split(":")
 	if parts.size() != 3:
 		return null
+	if parts[2] == "max_shield":
+		parts[2] = String(BattleStats.MAX_ARMOR)
 	var def := _items_of(ctx).get_def(StringName(parts[1]))
 	if def == null:
 		return null

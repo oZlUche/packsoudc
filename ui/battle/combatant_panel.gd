@@ -16,11 +16,11 @@ const SYSTEM_COLOR := Color("e0b45c")
 
 ## 资源条的显示顺序。没列出的排在后面，按字典序 —— 顺序稳定，界面才不会乱跳。
 ##
-## 106（作者定）：**护盾不在这里** —— 它不画成独立的一条，而是生命条外侧的一圈粗白框
-## （长度 = 护盾 / 生命上限，护盾顶得住几成血一眼看得出），见 [method shield_frame_ratio]
+## 106（作者定）：**护甲不在这里** —— 它不画成独立的一条，而是生命条外侧的一圈粗白框
+## （长度 = 护甲 / 生命上限，护甲顶得住几成血一眼看得出），见 [method armor_frame_ratio]
 const ORDER := ["hp", "stamina", "mana"]
-## 护盾的资源键：不画条，画框
-const SHIELD_KEY := "shield"
+## 护甲的资源键：不画条，画框
+const ARMOR_KEY := "armor"
 ## 那圈框的粗细（px）
 const FRAME_W := 3.0
 
@@ -37,6 +37,13 @@ const PASSIVE_PREFIX := "passive:"
 ## 103：标准轴的格（4.3）：`axis:<轴>`，值是内容层的带符号层数；加时的「鏖战 ×n」格是 OVERTIME_CHIP
 const AXIS_PREFIX := "axis:"
 const OVERTIME_CHIP := "system:overtime"
+## 153（作者定）：常驻的「格挡 N」格 —— N = 生效的那层（几面盾取最高）+ 加固 / 破绽（轴内容层 + 身上 buff 带的）。
+## 格挡轴不另画一格，并进这一格；悬浮窗列各层与修正
+const BLOCK_CHIP := "system:block"
+## 153：开战快照里的格挡层 `[{uid, id, value（取整后）}]`，从高到低
+var block_layers: Array = []
+## 格挡轴的内容层（[method set_axis] 收进来，不另画格）
+var _block_axis: int = 0
 ## 现在画着的图标：[Rect2, id]
 var _chips: Array = []
 var _hover_id: String = ""
@@ -100,6 +107,8 @@ func chip_at(local: Vector2) -> String:
 func icon_of(id: String) -> String:
 	if id == OVERTIME_CHIP:
 		return "鏖"
+	if id == BLOCK_CHIP:
+		return "格"
 	if id.begins_with(AXIS_PREFIX):
 		return StatAxes.name_of(axis_of(id), int(_stacks.get(id, 0))).substr(0, 1)
 	var note := passive_of(id)
@@ -144,6 +153,8 @@ func ordered_ids() -> Array:
 func _group_of(id: String) -> int:
 	if id == OVERTIME_CHIP:
 		return 0
+	if id == BLOCK_CHIP:
+		return 1 if block_value() < 0 else 2
 	if id.begins_with(AXIS_PREFIX):
 		return 1 if is_bad_axis(id) else 2
 	var def: BuffDef = buff_defs.get(StringName(id), null)
@@ -162,6 +173,8 @@ func is_bad_axis(id: String) -> bool:
 
 ## 图标上的字 + 层数。不可叠层的不画 ×1（103）；常驻格的层数是阶 / 档位，一律画；轴格画 ×|层数|
 func chip_text(id: String) -> String:
+	if id == BLOCK_CHIP:
+		return "%s %d" % [icon_of(id), block_value()]
 	if id.begins_with(AXIS_PREFIX):
 		return "%s ×%d" % [icon_of(id), absi(int(_stacks.get(id, 0)))]
 	if passive_of(id) != null:
@@ -184,6 +197,11 @@ func reset(snapshot: Dictionary) -> void:
 	for key in res:
 		var pair: Array = res[key]
 		_resources[String(key)] = [int(pair[0]), int(pair[1])]
+	block_layers.clear()
+	for l in snapshot.get("block_layers", []):
+		block_layers.append({"uid": int(l["uid"]), "id": String(l["id"]), "value": StatMath.to_int(int(l["value"]))})
+	_block_axis = 0
+	_refresh_block()
 	queue_redraw()
 
 
@@ -193,19 +211,30 @@ func set_resource(key: String, current: int, maximum: int) -> void:
 
 
 func set_stacks(buff: String, stacks: int) -> void:
-	if stacks <= 0:
-		_stacks.erase(buff)
-		_arrival.erase(buff)
-	else:
-		if not _stacks.has(buff):
-			_arrivals += 1
-			_arrival[buff] = _arrivals
-		_stacks[buff] = stacks
+	_set_chip(buff, stacks)
+	if buff != BLOCK_CHIP:
+		_refresh_block()     # buff 可能带格挡轴（弹开、标记）
 	queue_redraw()
+
+
+func _set_chip(id: String, stacks: int) -> void:
+	if stacks <= 0:
+		_stacks.erase(id)
+		_arrival.erase(id)
+	else:
+		if not _stacks.has(id):
+			_arrivals += 1
+			_arrival[id] = _arrivals
+		_stacks[id] = stacks
 
 
 ## 103：标准轴的内容层（带符号）。0 就收起这一格
 func set_axis(axis: String, stacks: int) -> void:
+	if StringName(axis) == StatAxes.BLOCK:     # 153：并进格挡格
+		_block_axis = stacks
+		_refresh_block()
+		queue_redraw()
+		return
 	var id := AXIS_PREFIX + axis
 	if stacks == 0:
 		_stacks.erase(id)
@@ -224,7 +253,42 @@ func set_overtime(count: int) -> void:
 
 
 func axis_value(axis: StringName) -> int:
+	if axis == StatAxes.BLOCK:
+		return _block_axis
 	return int(_stacks.get(AXIS_PREFIX + String(axis), 0))
+
+
+## 153：身上 buff 带的格挡轴层数（弹开 +8、标记 −3 ……）
+func block_carried() -> int:
+	var n := 0
+	for id in _stacks:
+		var def: BuffDef = buff_defs.get(StringName(id), null)
+		if def != null and not def.axes.is_empty():
+			n += def.axis_stacks_per(StatAxes.BLOCK) * int(_stacks[id])
+	return n
+
+
+## 153：生效的那层（最高；没有层 = 0）
+func block_layer() -> int:
+	return maxi(0, int(block_layers[0]["value"])) if not block_layers.is_empty() else 0
+
+
+## 现在的格挡 = 生效层 + 加固 / 破绽（轴的内容层 + buff 带的；系统层内容里没有人给）
+func block_value() -> int:
+	return block_layer() + _block_axis + block_carried()
+
+
+## 有层或有修正就画「格挡 N」格（N 可以是 0 或负数：负是破绽）
+func _refresh_block() -> void:
+	var show := not block_layers.is_empty() or _block_axis != 0 or block_carried() != 0
+	if not show:
+		_stacks.erase(BLOCK_CHIP)
+		_arrival.erase(BLOCK_CHIP)
+		return
+	if not _stacks.has(BLOCK_CHIP):
+		_arrivals += 1
+		_arrival[BLOCK_CHIP] = _arrivals
+	_stacks[BLOCK_CHIP] = block_value()
 
 
 func mark_dead() -> void:
@@ -290,8 +354,8 @@ func _draw() -> void:
 	y += 26
 
 	for key in _ordered_keys():
-		if key == SHIELD_KEY:
-			continue     # 106：护盾画在生命条外面，不占一条
+		if key == ARMOR_KEY:
+			continue     # 106：护甲画在生命条外面，不占一条
 		var pair: Array = _resources[key]
 		var cur: int = pair[0]
 		var cap: int = pair[1]
@@ -299,7 +363,7 @@ func _draw() -> void:
 			continue
 		_draw_bar(key, cur, cap, y)
 		if key == "hp":
-			_draw_shield_frame(y)
+			_draw_armor_frame(y)
 		y += BAR_H + BAR_GAP
 
 	_chips.clear()
@@ -315,7 +379,7 @@ func _draw() -> void:
 				y += CHIP_H + 4
 			var rect := Rect2(x, y, w, CHIP_H)
 			# 103：四种配色 —— 系统（琥珀）、减益（红）、增益（蓝）、常驻（灰）
-			var line := UiPalette.SHIELD
+			var line := UiPalette.ARMOR
 			var group := _group_of(String(id))
 			if passive_of(String(id)) != null:
 				line = UiPalette.DIM
@@ -339,26 +403,26 @@ func _draw() -> void:
 		)
 
 
-## 现在的护盾值（显示值；没有就 0）
-func shield_value() -> int:
-	var pair: Array = _resources.get(SHIELD_KEY, [0, 0])
+## 现在的护甲值（显示值；没有就 0）
+func armor_value() -> int:
+	var pair: Array = _resources.get(ARMOR_KEY, [0, 0])
 	return int(pair[0])
 
 
-## 106：护盾框占生命条的几成 —— `护盾 / 生命上限`，护盾 ≥ 上限时 1（整条框满）。
+## 106：护甲框占生命条的几成 —— `护甲 / 生命上限`，护甲 ≥ 上限时 1（整条框满）。
 ## 生命上限为 0 的假人返回 0，不画框
-func shield_frame_ratio() -> float:
+func armor_frame_ratio() -> float:
 	var hp: Array = _resources.get("hp", [0, 0])
 	var cap := int(hp[1])
-	if cap <= 0 or shield_value() <= 0:
+	if cap <= 0 or armor_value() <= 0:
 		return 0.0
-	return clampf(float(shield_value()) / float(cap), 0.0, 1.0)
+	return clampf(float(armor_value()) / float(cap), 0.0, 1.0)
 
 
-## 106（作者定）：生命条外侧的一圈粗白框，长度 = [method shield_frame_ratio] × 条宽。
+## 106（作者定）：生命条外侧的一圈粗白框，长度 = [method armor_frame_ratio] × 条宽。
 ## 只盖一部分时画成开口的框：上、下、左三边到那个长度为止，右端一道竖边收口
-func _draw_shield_frame(y: float) -> void:
-	var ratio := shield_frame_ratio()
+func _draw_armor_frame(y: float) -> void:
+	var ratio := armor_frame_ratio()
 	if ratio <= 0.0:
 		return
 	var w := size.x - PAD * 2
@@ -367,7 +431,7 @@ func _draw_shield_frame(y: float) -> void:
 	var top := y - half
 	var bottom := y + BAR_H + half
 	var right := left + (w + FRAME_W) * ratio
-	var c := UiPalette.SHIELD_FRAME
+	var c := UiPalette.ARMOR_FRAME
 	draw_line(Vector2(left, top), Vector2(right, top), c, FRAME_W)
 	draw_line(Vector2(left, bottom), Vector2(right, bottom), c, FRAME_W)
 	draw_line(Vector2(left, top), Vector2(left, bottom), c, FRAME_W)
@@ -384,8 +448,8 @@ func _draw_bar(key: String, current: int, maximum: int, y: float) -> void:
 	draw_rect(Rect2(PAD, y, w, BAR_H), UiPalette.LINE, false, 1.0)
 
 	var text := "%s  %d / %d" % [key, current, maximum]
-	if key == "hp" and shield_value() > 0:
-		text += "　盾 %d" % shield_value()     # 106：护盾的数写在生命条上，框只说明它顶得住几成
+	if key == "hp" and armor_value() > 0:
+		text += "　甲 %d" % armor_value()     # 106：护甲的数写在生命条上，框只说明它顶得住几成
 	draw_string(
 		label_font, Vector2(PAD + 6, y + BAR_H - 4), text,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiPalette.FG

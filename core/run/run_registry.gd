@@ -132,7 +132,7 @@ const FAITH_PERKS := {
 	&"stat_mod": "res://core/run/faith/perks/stat_mod_perk.gd",
 	&"low_hp_empower": "res://core/run/faith/perks/low_hp_empower_perk.gd",
 	&"enchant_weapons": "res://core/run/faith/perks/enchant_weapons_perk.gd",
-	&"food_shield": "res://core/run/faith/perks/food_shield_perk.gd",
+	&"food_armor": "res://core/run/faith/perks/food_armor_perk.gd",
 	&"food_double": "res://core/run/faith/perks/food_double_perk.gd",
 	&"altar_sacrifice_hp": "res://core/run/faith/perks/altar_sacrifice_hp_perk.gd",
 	&"altar_pray_fire": "res://core/run/faith/perks/altar_pray_fire_perk.gd",

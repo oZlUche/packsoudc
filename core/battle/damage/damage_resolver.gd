@@ -1,14 +1,14 @@
 ## 伤害结算管线（架构文档 4.6）。
 ##
 ## [b]一切血量的减少都走这里[/b] —— 武器命中、持续伤害、以血为代价的自伤，
-## 区别只在伤害类型。这样减伤、护盾、免疫、反转只需要实现一次。
+## 区别只在伤害类型。这样减伤、护甲、免疫、反转只需要实现一次。
 ##
 ## 五步，顺序不可调换：
 ## [codeblock]
-## 1. 确认类型      这一下能不能被护盾吸收、要不要通知；攻方的伤害类型加成（火焰轴）在这里乘
-## 2. 护盾吸收      能吸收则先扣护盾，中毒之类绕过
+## 1. 确认类型      这一下能不能被护甲吸收、要不要通知；攻方的伤害类型加成（火焰轴）在这里乘
+## 2. 护甲吸收      能吸收则先扣护甲，中毒之类绕过
 ## 3. 受伤前效果    【同步派发】效果在这里改写伤害包：减伤、反转、免疫
-## 4. 计算受伤量    百分比 → 固定增减 → 反转 → 防护（只对直接伤害，106）→ 「受到伤害」轴（103），然后落到血量
+## 4. 计算受伤量    百分比 → 固定增减 → 反转 → 格挡（只对直接伤害，106）→ 「受到伤害」轴（103），然后落到血量
 ## 5. 受伤后效果    发 damage 事件；流失类不通知默认监听
 ## [endcodeblock]
 ##
@@ -41,14 +41,14 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 			if boost != StatMath.ONE:
 				packet.raw = maxi(0, StatMath.mul(packet.raw, boost))
 
-	# --- 2. 护盾吸收 ---
+	# --- 2. 护甲吸收 ---
 	# 放在受伤前效果之前，是因为「这一下还剩多少要扛」本身就是减伤效果的判断依据。
-	if td.shield_absorbable and packet.raw > 0:
+	if td.armor_absorbable and packet.raw > 0:
 		var pool := victim.resources
-		if pool.has(BattleStats.RES_SHIELD):
-			var take := mini(pool.current(BattleStats.RES_SHIELD), packet.raw)
+		if pool.has(BattleStats.RES_ARMOR):
+			var take := mini(pool.current(BattleStats.RES_ARMOR), packet.raw)
 			if take > 0:
-				pool.change(BattleStats.RES_SHIELD, -take, BattleEvent.REASON_ABSORBED)
+				pool.change(BattleStats.RES_ARMOR, -take, BattleEvent.REASON_ABSORBED)
 				packet.absorbed = take
 
 	# --- 3. 受伤前效果。同步派发，不入队 —— 排队就赶不上这次结算了 ---
@@ -72,14 +72,15 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	amount = maxi(0, amount)
 	if packet.inverted:
 		amount = -amount
-	# 防护只动伤害，不动治疗。106 第八节（作者定）：**只减直接伤害**（武器造成的），
-	# buff 造成的灼烧 / 中毒 / 流血不吃防护 —— 按来源判，不再按伤害类型的护甲列。
-	# 防护为负（破绽）时倒贴：10 点打成 13（作者定），所以负值不走 min
+	# 格挡只动伤害，不动治疗。106 第八节（作者定）：**只减直接伤害**（武器造成的），
+	# buff 造成的灼烧 / 中毒 / 流血不吃格挡 —— 按来源判，不再按伤害类型的护甲列。
+	# 格挡为负（破绽）时倒贴：10 点打成 13（作者定），所以负值不走 min。
+	# 153：这里读到的已经是「最高那面盾 + 加固 / 破绽」（[CombatantRuntime]），几面盾不相加
 	if amount > 0 and packet.direct:
-		var armor := victim.stat(BattleStats.ARMOR, 0)
-		packet.armor = mini(armor, amount) if armor > 0 else armor
-		amount = maxi(0, amount - packet.armor)
-	# 103（作者定）：加时放大的是角色受到的「最终伤害」—— 护盾、减伤、护甲都按原值算完，扛下来的那部分再乘；治疗不放大
+		var block := victim.stat(BattleStats.BLOCK, 0)
+		packet.block = mini(block, amount) if block > 0 else block
+		amount = maxi(0, amount - packet.block)
+	# 103（作者定）：加时放大的是角色受到的「最终伤害」—— 护甲、减伤、格挡都按原值算完，扛下来的那部分再乘；治疗不放大
 	if amount > 0:
 		var taken := victim.axis_factor(StatAxes.DAMAGE_TAKEN)     # 标准轴（4.3）：易伤为正、坚韧为负，加时在系统层
 		taken_factor = taken
@@ -114,13 +115,13 @@ static func _side_of(ctx: BattleContext, side: int) -> CombatantRuntime:
 	return ctx.sides[side]
 
 
-## 117：内部日志的一条伤害管线：原始值 → 火焰加成 → 护盾 → 受伤前效果 → 防护 → 受到伤害轴 → 实际扣血
+## 117：内部日志的一条伤害管线：原始值 → 火焰加成 → 护甲 → 受伤前效果 → 格挡 → 受到伤害轴 → 实际扣血
 static func _trace(ctx: BattleContext, packet: DamagePacket, raw_in: int, hp_before: int, taken: int) -> void:
 	ctx.trace.record(ctx.now, packet.victim_side(), BattleTrace.DAMAGE, {
 		"type": String(packet.type), "source_side": packet.source_side, "uid": packet.source_uid, "victim": packet.victim_side(),
 		"raw_in": raw_in, "raw": packet.raw, "crit": packet.crit, "direct": packet.direct,
 		"absorbed": packet.absorbed, "flat": packet.flat, "percent": packet.percent, "inverted": packet.inverted,
-		"cancelled": packet.cancelled, "armor": packet.armor, "taken": taken, "final": packet.final,
+		"cancelled": packet.cancelled, "block": packet.block, "taken": taken, "final": packet.final,
 		"hp_before": hp_before, "hp_after": packet.victim.resources.current(BattleStats.RES_HP),
 		"hp_lost": maxi(0, -packet.applied),
 	})
@@ -136,13 +137,13 @@ static func _notify(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef)
 		"type": String(packet.type),
 		"raw": packet.raw,
 		"absorbed": packet.absorbed,
-		"armor": packet.armor,
+		"block": packet.block,
 		"amount": -packet.applied,
 		"provokes": td.provokes,
 		"source_side": packet.source_side,
 		"uid": packet.source_uid,
 		"crit": packet.crit,     # 104
-		"direct": packet.direct,     # 106：直接 / 非直接（防护只减直接伤害）
+		"direct": packet.direct,     # 106：直接 / 非直接（格挡只减直接伤害）
 	})
 
 

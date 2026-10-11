@@ -1,7 +1,7 @@
 {
   "id": "tut_search_2_again_1",
   "title": "还有",
-  "text": "翻出一把{item:scimitar}和一个{item:poison_vial}。{item:poison_vial}自己也能下毒，只是慢。{c:good}把它拖到{item:knife}上面{/c}，两件立刻合成一把{item:poisoned_knife}：借{item:knife}的快手，一刀一层毒。毒{b}无视防护和护盾{/b} —— 前面那个守卫披着甲，正好用它。\n\n下面还压着东西，再翻一次。",
+  "text": "翻出一把{item:scimitar}和一个{item:poison_vial}。{item:poison_vial}自己也能下毒，只是慢。{c:good}把它拖到{item:knife}上面{/c}，两件立刻合成一把{item:poisoned_knife}：借{item:knife}的快手，一刀一层毒。毒{b}无视格挡和护甲{/b} —— 前面那个守卫披着甲，正好用它。\n\n下面还压着东西，再翻一次。",
   "options": [
     {
       "label": "再搜一次",

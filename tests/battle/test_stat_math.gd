@@ -131,5 +131,5 @@ static func run_formula(t: TestCase) -> void:
 	t.eq(set.ensure(BattleStats.DAMAGE).total_int(), 23, "两份 +50% 乘算 + 3 加算：10 × 2 + 3 = 23")
 	t.check(StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, 25.0).editor_hint().begins_with("乘算 · 扩大"), "提示：乘算 · 扩大")
 	t.check(StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, -10.0).editor_hint().contains("缩小"), "提示：缩小")
-	t.check(StatModifier.make(BattleStats.MAX_SHIELD, StatModifier.Mode.ADD, 8.0).editor_hint().contains("不吃百分比"), "提示：加算不吃百分比")
+	t.check(StatModifier.make(BattleStats.MAX_ARMOR, StatModifier.Mode.ADD, 8.0).editor_hint().contains("不吃百分比"), "提示：加算不吃百分比")
 	t.check(StatModifier.make(BattleStats.CRIT_CHANCE, StatModifier.Mode.MULT, 5.0).editor_hint().contains("只收加算"), "提示：暴击只收加算")
