@@ -82,6 +82,8 @@ extends Resource
 @export var closing_extract: bool = true
 ## 这一章放几个保险箱点（生成之后挑靠近中央的战斗 / 事件点覆盖成保险箱，和高危区一样是生成后的一遍；预设图直接画 K）。放进去的视为已带出，战败也带得出；**关上就送回基地，不能再改**
 @export var safes: int = 0
+## 154：宝箱屏的皮肤 id（`data/chest_skins/`）：背景、宝箱的纹路与材质跟着地图走
+@export var chest_skin: StringName = &"ruins"
 
 @export_group("带入预算（094，作者定）")
 ## 从仓库带进这一局的道具**总价值**（ItemValue）预算；0 = 不限。预设 / 角色的初始包不算。规模档写了 carry_budget 就用规模档的

@@ -27,7 +27,7 @@
 	"set_rules": [],
 	"items": [
 		{
-			"uid": 77,
+			"uid": 84,
 			"def_id": "shortsword",
 			"stats": {
 				"damage": {
@@ -52,7 +52,7 @@
 			]
 		},
 		{
-			"uid": 78,
+			"uid": 85,
 			"def_id": "ration",
 			"stats": {
 				"regen_stamina": {

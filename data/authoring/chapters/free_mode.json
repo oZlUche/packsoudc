@@ -31,7 +31,8 @@
             "search": 3,
             "event": 3,
             "random": 2,
-            "elite": 1
+            "elite": 1,
+            "chest": 1
           }
         },
         {
@@ -57,7 +58,8 @@
             "search": 3,
             "event": 3,
             "random": 2,
-            "elite": 1
+            "elite": 1,
+            "chest": 1
           }
         },
         {
@@ -83,7 +85,8 @@
             "search": 3,
             "event": 3,
             "random": 2,
-            "elite": 1
+            "elite": 1,
+            "chest": 1
           }
         },
         {
@@ -109,7 +112,8 @@
             "search": 3,
             "event": 3,
             "random": 2,
-            "elite": 1
+            "elite": 1,
+            "chest": 1
           }
         },
         {
@@ -135,7 +139,8 @@
             "search": 3,
             "event": 3,
             "random": 2,
-            "elite": 1
+            "elite": 1,
+            "chest": 1
           }
         },
         {
@@ -161,7 +166,8 @@
             "search": 3,
             "event": 3,
             "random": 2,
-            "elite": 1
+            "elite": 1,
+            "chest": 1
           }
         }
       ],
@@ -185,7 +191,8 @@
           "search": 3,
           "event": 3,
           "random": 2,
-          "elite": 1
+          "elite": 1,
+          "chest": 1
         }
       },
       "scales": [

@@ -70,6 +70,10 @@ const LABELS := {
 	"mechanics": "机制", "warn_lead_actions": "预警提前量", "first_at_action": "第一次在第几步", "interval_actions": "间隔步数",
 	"from_depth": "从第几层起", "per_depth": "每层", "hunter_ids": "猎手", "bracket_steps": "段位表", "inputs": "输入", "output": "产物",
 	"funds": "钱", "rows": "行数", "effect": "效果",     # 110：局外科技
+	"chest": "宝箱", "chest_skin": "宝箱皮肤", "rarity_by_tier": "各档位的宝箱稀有度权重", "danger_bonus": "高危区稀有度加几", "hold_seconds": "开锁要按几秒",
+	"release_decay": "松手回退倍速", "items_by_rarity": "各档出几件", "floor_by_rarity": "各档收获下限", "include_treasure": "能开出珍宝", "haul_board": "收获箱大小",
+	"background": "背景图", "ChestSkinDef.closed": "闭箱图（按稀有度）", "ChestSkinDef.open": "开箱图（按稀有度）", "lock_offset": "锁孔位置", "ring_radius": "进度环半径", "ring_width": "进度环粗细",
+	"unlock_frames": "开锁序列帧", "unlock_fps": "开锁帧率", "trying_frames": "尝试开锁序列帧", "trying_fps": "尝试开锁帧率", "open_frames": "开箱序列帧", "open_fps": "开箱帧率",     # 154
 }
 
 ## 注册表名 → 中文
@@ -135,6 +139,7 @@ const CLASS_LABELS := {
 	"TechDef": "局外科技", "TechTier": "科技一级", "TechEffect": "科技效果",
 	"BuffAxis": "带标准轴",     # 152
 	"BeltUse": "随身用法", "BeltEffect": "随身效果", "WearProfile": "耐久",     # 147 / 148
+	"ChestRules": "宝箱规则", "ChestSkinDef": "宝箱皮肤",     # 154
 }
 
 ## 脚本路径 → {字段名 → 说明}；"" 键 = 类的说明

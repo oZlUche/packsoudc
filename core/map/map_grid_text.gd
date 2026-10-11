@@ -16,6 +16,7 @@ const SYMBOL_TYPES := {
 	"S": &"shop", "R": &"rest", "X": &"extract", "B": &"core",
 	"P": &"spawn",      # 出生点。符号是解析器先占的位，等作者在表里定
 	"K": &"safe",       # 092：保险箱
+	"C": &"chest",      # 154：宝箱
 	"1": &"random",     # v0 遗留的缺省点，按 ? 处理（作者的图里还在用）
 }
 
