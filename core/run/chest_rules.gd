@@ -9,8 +9,9 @@ extends Resource
 @export var rarity_by_tier: Array = [[60.0, 30.0, 10.0, 0.0, 0.0, 0.0], [20.0, 40.0, 30.0, 10.0, 0.0, 0.0], [0.0, 20.0, 40.0, 30.0, 10.0, 0.0]]
 ## 高危区（danger ≥ 2）的宝箱稀有度再加这么多，夹到 5
 @export var danger_bonus: int = 1
-## 六档稀有度各要按住几秒才开得了锁（越好的越久）；超出表长按最后一项
-@export var hold_seconds: Array[float] = [1.5, 2.2, 3.0, 4.0, 5.5, 7.0]
+## 六档稀有度各要按住几秒才开得了锁（越好的越久）；超出表长按最后一项。
+## 155（作者定：最长不能超过三秒）：一秒起、每档加 0.4 秒，神话正好三秒
+@export var hold_seconds: Array[float] = [1.0, 1.4, 1.8, 2.2, 2.6, 3.0]
 ## 松手没开开：进度按这个倍速往回退（再按下接着走）；0 = 一松手立刻归零
 @export var release_decay: float = 2.0
 ## 六档各出几件 [min, max]

@@ -2,7 +2,8 @@
 ##
 ## [codeblock]
 ## P = (B + Σ_规则 Σ_效果 V × T × C × K × L) × W
-## B  直接伤害 DPS：自发规则（按冷却出手）里打对手的那一下 × 频率（含暴击期望）
+## B  直接伤害 DPS：自发规则（按冷却出手）里打对手的那一下 × 频率（含暴击期望）× 耐力可持续系数
+##    （155：min(1, 耐力回复 ÷ 自发规则每秒耗的耐力)，快手武器的上限是耐力不是冷却）
 ## V  效果触发一次值多少，带符号（[method CombatEffect.estimated_value]）：打对手、给自己增益为正，伤自己、给对手增益为负
 ## T  一秒触发几次（[method AbilityRule.estimated_rate]）
 ## C  消耗能付几成、K 条件满足几成（[method Cost.estimated_factor]）、L 重复触发的折扣（[method CombatEffect.estimated_cap]）
@@ -10,7 +11,7 @@
 ## W  负重折扣 max(下限, 1 − 重量 ÷ 负重基准)
 ## [endcodeblock]
 ##
-## 推荐稀有度看预算比 r = P ÷ (每格基准 × 格数) 落在哪一档；推荐价值 = 那一档的每格价 × 格数 × 档内位置。
+## 推荐稀有度看预算比 r = P ÷ (每格基准 × (格数 + 把手格)) 落在哪一档（155：加一格把手）；推荐价值 = 那一档的每格价 × 格数 × 档内位置。
 ## 推荐给武器和护具（带 armor / shield 标签，作者定：非武器的护甲、减伤也算价值）—— 护具自带的护甲上限、格挡按 D 进 P：
 ## P = (B + D + Σ …) × W，D = 护甲上限 × 每点折算 + 格挡 × 每点折算（[member PowerWeights.armor_per_point]）。别的非武器只看分数
 ## 只是提示与推荐：流派件单看偏弱是故意的，联动价值不进这个数。系数全在 [PowerWeights]（作者改表不改码）。
@@ -23,6 +24,8 @@ class Breakdown:
 	extends RefCounted
 	## 直接伤害 DPS（基础 B）与出手频率
 	var base: float = 0.0
+	## 155：耐力可持续系数（B 已经乘过）：自发规则每秒耗的耐力超过回复时打折
+	var sustain: float = 1.0
 	## 自带的护甲 / 减伤（D）：基础属性里的护甲上限与格挡折成的每秒伤害
 	var defense: float = 0.0
 	## 护具（armor / shield 标签）：和武器一样给推荐
@@ -37,7 +40,7 @@ class Breakdown:
 	var weight_factor: float = 1.0
 	var power: float = 0.0
 	var cells: int = 0
-	## 默认战斗力 = 每格基准 × 格数
+	## 默认战斗力 = 每格基准 × (格数 + 把手格)；把手格只算武器
 	var default_power: float = 0.0
 	## 预算比
 	var ratio: float = 0.0
@@ -54,19 +57,23 @@ static func estimate(def: ItemDef, weights: PowerWeights = null, buffs: Dictiona
 	if def == null:
 		return out
 	out.cells = maxi(1, def.cell_count())
-	out.default_power = w.per_cell_dps * out.cells
 	out.is_weapon = def.tags.has(&"weapon")
 	out.is_gear = not out.is_weapon and (def.tags.has(&"armor") or def.tags.has(&"shield"))
+	out.default_power = w.default_power(out.cells, out.is_weapon)     # 155：把手格只算武器
 	var stats := StatSet.new()
 	var rules: Array[AbilityRule] = []
 	if def.combat != null:
 		def.combat.seed_stats(stats)
 		rules = def.combat.rules
-	# 基础：自发规则里打对手的直接伤害
+	# 基础：自发规则里打对手的直接伤害，乘耐力可持续系数（155）
+	var stamina_need := 0.0
 	for r in rules:
 		if not _is_base_rule(r):
 			continue
 		var hz := r.cadence.estimated_hz(stats)
+		for k in r.effective_costs():
+			if k is ResourceCost:
+				stamina_need += (k as ResourceCost).stamina_per_use(stats) * hz
 		var hits := false
 		for e in r.effects:
 			if _is_base_effect(e):
@@ -74,6 +81,8 @@ static func estimate(def: ItemDef, weights: PowerWeights = null, buffs: Dictiona
 				hits = true
 		if hits:
 			out.hz += hz
+	out.sustain = minf(1.0, w.stamina_regen / stamina_need) if stamina_need > 0.0 else 1.0
+	out.base *= out.sustain
 	out.defense = defense_of(stats, w)
 	var ctx := PowerContext.new()
 	ctx.weights = w
@@ -178,7 +187,7 @@ static func value_for(tier: int, ratio: float, cells: int, w: PowerWeights) -> i
 ## 新建武器画完形状时预填的那一套（待定 3）：默认冷却、伤害按默认战斗力反算、耐力按格数
 static func default_weapon(cells: int, w: PowerWeights = null) -> Dictionary:
 	var ww := w if w != null else PowerWeights.load_from()
-	var p0 := ww.per_cell_dps * maxi(1, cells)
+	var p0 := ww.default_power(cells)
 	return {
 		"damage": maxi(1, roundi(p0 * ww.default_cooldown)),
 		"cooldown": ww.default_cooldown,

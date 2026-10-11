@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.79 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.80 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2533,6 +2533,11 @@ func settle(node: MapNode) -> void              # 被侵蚀的点：效果构件
 同一档里**由内向外**（tier 高的先）。路口在所有单条的边之后画。
 编辑器里有开关可以关掉，核对数据时每条边一条线。
 
+**节点用图标**（155，作者定）：每种节点一张 `res://assets/nodes/<type>.png`（64 px、透明底、白色单色线稿，美术交付；生成脚本与 128 px 版在
+`/mnt/project-files/art/nodes/`）。`MapView` 画同色压暗的深色圆底 + 节点色描边，图标按节点色着色（`modulate`）画在圆里，边长 = 半径 × 1.6；
+用过的点连图标一起变灰。缺图的类型退回在圆里写 `MapNodeStyle.STYLES[type].glyph` 那个字。节点半径 `NODE_RADIUS` = 16（原 13），
+命中、外圈（侵蚀、猎手、当前点、可走）都跟着它。宝箱的图标是一只闭合的宝箱，和保险箱（带转盘的方箱）不撞形。
+
 
 ```gdscript
 # ui/map/map_layout.gd —— 布局策略的根，按 graph.layout_kind 从 LAYOUTS 表取
@@ -2841,15 +2846,15 @@ class_name SearchRules extends Resource
 
 > P = (B + Σ V × T × C × K × L) × W
 
-- **B**：自己按冷却出手（`OnSchedule`）、打对手的 `DealDamage` 的每秒伤害，含暴击期望，不打消耗折扣。
+- **B**：自己按冷却出手（`OnSchedule`）、打对手的 `DealDamage` 的每秒伤害，含暴击期望，乘**耐力可持续系数**（155：`min(1, 耐力回复 ÷ 自发规则每秒耗的耐力)`）。
 - **V**：每条其余规则里各效果的估值，站在道具主人这边看，有正负（伤自己、给自己上 debuff 为负）。各效果自己实现 `CombatEffect.estimated_value(ctx: PowerContext)`，没实现的记零并标「未估」。
 - **T / C / K / L**：扳机率（`Trigger.estimated_rate`，被规则的冷却夹住）、消耗折扣（`Cost.estimated_factor`）、条件折扣（`is_condition()` 的那些）、上限（不可叠的 buff 重复上身不加值）。都在 0..1 或是频率，**只缩放、不翻符号**。
 - **W**：负重折扣 `max(下限, 1 − 重量 / 基准)`。
-- buff 的值 = 每秒值 × 期望持续 + 上身 / 离身一次性值，在挂着它的那一边算（`PowerContext.for_carrier`），嵌套超过三层记零。
+- buff 的值 = 每秒值 × 期望持续（155：可叠层的永续 buff 一层按 `fight_sec ÷ 2` 算 —— 每击一层、层数线性涨，平均待一场的一半）+ 上身 / 离身一次性值，在挂着它的那一边算（`PowerContext.for_carrier`），嵌套超过三层记零。
 
 所有系数在 `data/authoring/balance/power_weights.json`（`PowerWeights`，缺项回代码默认、多写或写错类型给提示）。`PowerWeights` / `PowerContext` 放在 `core/battle`，因为各效果、扳机、消耗的估值方法要用到它们。
 
-道具自带的护甲上限与格挡折成 D 加进括号里（作者定：非武器的护甲、减伤也算价值）。推荐给武器和护具（`armor` / `shield` 标签）：预算比 r = P ÷ (每格基准 DPS × 格数)，按 `tiers` 阈值定档（神话不推荐）；推荐价值 = `ItemValue.BASE_PER_CELL[档] × 格数 × 档内位置系数`，取整到 5。编辑器的「战斗力」面板（`PowerPanel`）逐行列出 B 和每条规则，「采用」写回稀有度与价值；「新建武器」画完形状即按格数预填伤害、冷却、耐力消耗，出生约等于默认战斗力。导入器对稀有度和推荐差两档以上的武器给提醒（不拦）。`tools/bench_battle.gd -- power` 输出「估算 vs 实测」单件表和流派组合贡献表，用来校系数。
+道具自带的护甲上限与格挡折成 D 加进括号里（作者定：非武器的护甲、减伤也算价值）。推荐给武器和护具（`armor` / `shield` 标签）：预算比 r = P ÷ (每格基准 DPS × (格数 + 把手格))（155：武器加 `handle_cells` = 1 格把手，护具不加），按 `tiers` 阈值定档（神话不推荐）；推荐价值 = `ItemValue.BASE_PER_CELL[档] × 格数 × 档内位置系数`，取整到 5。编辑器的「战斗力」面板（`PowerPanel`）逐行列出 B 和每条规则，「采用」写回稀有度与价值；「新建武器」画完形状即按格数预填伤害、冷却、耐力消耗，出生约等于默认战斗力。导入器对稀有度和推荐差两档以上的武器给提醒（不拦）。`tools/bench_battle.gd -- power` 输出「估算 vs 实测」单件表和流派组合贡献表，用来校系数。
 
 ### 6.5 节点事件（M4-4）
 
@@ -4078,6 +4083,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.80 | 2026-10-11 | **作者四条拍板**（报告 155，四项待定按推荐；改 5.9、战斗力估算一节）：删冲锋枪 `smg`、狙击枪 `sniper`（废弃道具；老存档里的实例读回丢弃）；估算器三处修正 —— 直伤 B 乘耐力可持续系数、武器预算加一格把手（`handle_cells` = 1，护具不加）、可叠层永续 buff 一层按 `fight_sec ÷ 2`（`fight_sec` = 12）；涂毒匕首稀有 → 史诗，三件武器数值不动；`KNOWN_OFF` 从「五件估高」变成「五件估低两档」（步枪、长弓、放血刀、秘银附魔长剑、狩猎之神赐福的长弓：都是耐力供不上的）；宝箱长按 `hold_seconds` 改成 1.0～3.0 秒（每档 +0.4）；地图节点改用图标（十三张交付，缺图写字），节点半径 13 → 16；赐福护甲每份 +4 不变 |
 | v2.79 | 2026-10-11 | **开了的宝箱里面一片漆黑**（报告 154 补记，作者定）：开箱后不显示箱内、不透光，占位改成立起的盖 + 黑箱口；开好后停 `OPEN_PAUSE_SECONDS`（0.45 秒，有开箱序列帧时在播完之后）再弹搜索界面；美术的开箱图同样要求箱内全黑 |
 | v2.78 | 2026-10-11 | **宝箱屏的确认键与改键数据**（报告 154 补充一，作者定，两项待定按推荐；改 5.4 宝箱皮肤一段）：`project.godot` 首次有 `[input]`：`confirm`（回车、小键盘回车、空格）与 `cancel`（Esc，只定义、各处的 Esc 判断还没换）；宝箱屏按住开锁的键从写死的空格换成 `confirm` 动作；删掉 `MOUSE_OUT_RELEASES`（按着移出宝箱不算松手定案）；`GameSettings.key_bindings`（动作 → 键码数组，文件里也认键名，坏数据扔掉）+ `ui/input_keys.gd`（`InputKeys.apply`：先回 `project.godot` 默认，再整组替换改过的动作），导演启动时调；改键界面以后再做、手柄不绑；帮助页「节点类型」补一句确认键 |
 | v2.77 | 2026-10-11 | **宝箱节点与长按开锁画面**（报告 154，作者定，五项待定按推荐；改 5.4 类型表）：新节点类型 `chest`（样式「宝」、地图文字 `C`、随机点能揭出，自由模式各环权重 1）；`ChestRules`（挂 `NodeRules.chest`：按档位的稀有度权重、高危区 +1、六档按住秒数、松手回退倍速、各档件数与下限、能出珍宝、收获箱大小）；`ChestPlacer` 生成后给每个宝箱点定稀有度与皮肤（只用 `content_seed`），揭出时补同一步；纯逻辑状态机 `LockHold`（按住走、松手二倍速回退、走满只发一次、按着不能走）；`NodeEvents.chest_shown / open_chest`（复制一份搜索规则：一次、不遭遇、去掉珍宝排除、件件不低于下限）、关搜索屏即拿完走人；`GameFlow.Screen.CHEST / open_chest / leave_chest`，`_reopen_entry` 站在没开锁的宝箱上能再开；新屏 `ui/game/chest_screen.gd`（占位绘制：方块宝箱随稀有度换色、圆锁孔、拨片与轻抖、锁孔环；`MOUSE_OUT_RELEASES` 开关切到美术稿的「移出 = 松手」）；`UiDraw.ring`（从 `LootView` 抽出，两处共用）、`FrameStrip`（序列帧）；新内容种类 `chest_skins`（`ChestSkinDef`，`data/authoring/chest_skins/ruins.json`），`ChapterDef.chest_skin` 默认 ruins；缺图一律占位，导入器只提醒。自由模式的图因此变了，编译金样只有 uid 挪动、重录 |
