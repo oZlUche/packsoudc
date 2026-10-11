@@ -208,6 +208,36 @@ static func run_open(t: TestCase) -> void:
 	Support.cleanup("chest")
 
 
+static func _key(code: Key, pressed: bool) -> InputEventKey:
+	var k := InputEventKey.new()
+	k.keycode = code
+	k.pressed = pressed
+	return k
+
+
+static func run_key_bindings(t: TestCase) -> void:
+	t.begin("宝箱 · 确认键与改键（154 补充一）：默认回车 / 小键盘回车 / 空格是确认、Esc 是取消；设置里改过的键启动时盖上去，整组替换；存取往返、坏数据扔掉")
+	InputKeys.apply(null)
+	t.check(InputMap.has_action(InputKeys.CONFIRM) and InputMap.has_action(InputKeys.CANCEL), "两个动作都定义了")
+	for code in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
+		t.check(_key(code, true).is_action(InputKeys.CONFIRM), "默认确认键 %s" % OS.get_keycode_string(code))
+	t.check(_key(KEY_ESCAPE, true).is_action(InputKeys.CANCEL), "默认取消键 Esc")
+	var s := GameSettings.new()
+	t.eq(s.key_bindings, {}, "默认没改过")
+	s.key_bindings = {"confirm": [KEY_F, "G"]}
+	InputKeys.apply(s)
+	t.check(_key(KEY_F, true).is_action(InputKeys.CONFIRM) and _key(KEY_G, true).is_action(InputKeys.CONFIRM), "改成 F、G（键名也认）")
+	t.check(not _key(KEY_ENTER, true).is_action(InputKeys.CONFIRM), "整组替换：回车不再是确认")
+	t.check(_key(KEY_ESCAPE, true).is_action(InputKeys.CANCEL), "没改的动作留默认")
+	var back := GameSettings.from_dict(JSON.parse_string(JSON.stringify(s.to_dict())))
+	t.eq(back.key_bindings, {"confirm": [int(KEY_F), int(KEY_G)]}, "存取往返（键名读成键码）")
+	var bad := GameSettings.from_dict({"version": GameSettings.SAVE_VERSION, "key_bindings": {"confirm": ["没有这个键"], "cancel": 3, "": [KEY_A]}})
+	t.eq(bad.key_bindings, {}, "坏数据全扔")
+	t.eq(GameSettings.from_dict({"version": GameSettings.SAVE_VERSION, "key_bindings": "x"}).key_bindings, {}, "不是字典也不报错")
+	InputKeys.apply(null)
+	t.check(_key(KEY_ENTER, true).is_action(InputKeys.CONFIRM) and not _key(KEY_F, true).is_action(InputKeys.CONFIRM), "回到默认")
+
+
 static func frame_chest_screen(t: TestCase, root: Window) -> void:
 	t.begin("宝箱 · 屏（154）：占位画得出来；按下「尝试开锁」、松手回退、Esc 按着先松手；按满开箱后弹出搜索界面")
 	var c = NodeScreens._content()
@@ -238,13 +268,27 @@ static func frame_chest_screen(t: TestCase, root: Window) -> void:
 	screen.step(hold.hold_seconds * 0.5)
 	t.check(absf(hold.progress - 0.5) < 0.01, "走了一半")
 	screen.view.queue_redraw()
+	var away := InputEventMouseMotion.new()
+	away.position = Vector2(-500, -500)
+	away.global_position = Vector2(-500, -500)
+	screen._input(away)
+	screen.step(0.01)
+	t.check(hold.is_holding() and hold.progress > 0.5, "按着移出宝箱不算松手，接着走（154 补充一）")
 	t.check(not screen.leave(), "按着不能走")
 	t.check(screen.escape() and not hold.is_holding(), "Esc 按着先松手")
 	t.eq(flow.screen, GameFlow.Screen.CHEST, "还在宝箱屏")
 	screen.step(hold.hold_seconds * 0.1)
 	t.check(hold.progress < 0.5 and hold.progress > 0.0, "回退中")
-	t.check(screen.press(true) and screen.press(), "空格、鼠标一起按")
-	t.check(not screen.release(true) and hold.is_holding(), "只松空格还按着")
+	screen._input(_key(KEY_ENTER, true))
+	t.check(hold.is_holding(), "按住确认键（回车）= 按下（154 补充一）")
+	screen._input(_key(KEY_ENTER, false))
+	t.check(not hold.is_holding(), "松开确认键 = 松手")
+	screen._input(_key(KEY_A, true))
+	t.check(not hold.is_holding(), "别的键不算")
+	screen._input(_key(KEY_SPACE, true))
+	t.check(screen.press() and hold.is_holding(), "确认键（空格）、鼠标一起按")
+	screen._input(_key(KEY_SPACE, false))
+	t.check(hold.is_holding(), "只松确认键还按着")
 	screen.step(hold.hold_seconds * 2.0)
 	t.check(hold.is_unlocked() and screen.opening, "走满：开箱动画")
 	t.eq(screen.hint.text, "", "字没了")

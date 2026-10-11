@@ -183,3 +183,12 @@ UNLOCKED  ── 动画全停、环消失、播宝箱开启动画（皮肤 `open
 ### 改动范围
 
 `project.godot`（`[input]`）、`ui/game/chest_screen.gd`（删开关、换动作）、`core/settings/game_settings.gd`（`key_bindings` 存取与启动覆盖，默认空）、`ui/game/game_director.gd` 或启动处调用覆盖、帮助页 `node_types`、`tests/run/test_chest_154.gd`（移出仍走、确认键按住等同鼠标、`key_bindings` 覆盖后动作认新键）。
+
+### 补充一落地记录（2026-10-11，两项待定全按推荐）
+
+- `project.godot` 加 `[input]`：`confirm` 绑回车、小键盘回车、空格（按键码，不按物理键）；`cancel` 绑 Esc，只定义。
+- 宝箱屏：按住开锁的键改成 `confirm` 动作（按下 / 松开都认，忽略连发）；`MOUSE_OUT_RELEASES` 和移出那一支删掉，没用了的 `chest_rect_global` 也删了。
+- 改键：`GameSettings.key_bindings`（动作 → 键码数组），读的时候键名（`"Enter"`）换成键码，认不出来的键、空动作、不是数组的都扔掉。套到 InputMap 的是界面层的 `InputKeys.apply`（`ui/input_keys.gd`，`core/` 不认识它）：先 `load_from_project_settings` 回到默认，再把改过的动作整组替换；只认 `confirm / cancel`。导演 `_ready` 在配色之后调。没有设置屏那一行，手柄不绑。
+- 帮助页「节点类型」：宝箱一句后面加「也可以按住确认键，默认空格或回车」。屏上那行字照作者定稿不改。
+- 架构文档 5.4 补一段宝箱皮肤：背景和宝箱是两张图、两个元素。
+- 测试：`test_chest_154.gd` 加确认键与改键一组（默认键、改成 F / G 整组替换、没改的留默认、存取往返、坏数据、回到默认）；开锁屏那组改成真的发按键事件（回车按下 / 松开、别的键不算、空格与鼠标一起按只松一路还按着），并补「按着移出宝箱接着走」。

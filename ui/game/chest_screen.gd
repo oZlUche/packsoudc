@@ -1,14 +1,13 @@
 ## 宝箱屏（154，作者定）：叠在地图上的一层，整屏背景随地图（章节的宝箱皮肤），中央一只放在地上的宝箱。
 ##
-## 「点击宝箱开锁」：在宝箱上按下鼠标左键（或按住空格）—— 锁孔处出现开锁动画、锁孔外一圈环形进度条顺时针走；
+## 「点击宝箱开锁」：在宝箱上按下鼠标左键（或按住确认键，动作 `confirm`，默认空格 / 回车）—— 锁孔处出现开锁动画、锁孔外一圈环形进度条顺时针走；
 ## 按着的时候播「尝试开锁」，松手按二倍速回退（[LockHold]）。走满了环消失、宝箱打开，然后弹出搜索界面（[method GameFlow.open_chest]）。
 ## 越好的宝箱按得越久（[member ChestRules.hold_seconds]）。没开锁就走（Esc / 回地图）点不算用过。
+## 154 补充一（作者定）：鼠标按着移出宝箱不算松手，只有松开才算。
 ##
 ## 美术还在画：皮肤里缺的图一律画占位（深底、方块宝箱随稀有度换色、圆锁孔），交互照样跑。不新增主题覆写，图形全在画布上。
 extends GameScreen
 
-## 鼠标按着移出宝箱：false = 方案 154 的写法，仍算按着（不打断）；true = 美术稿的写法，移出等于松手
-const MOUSE_OUT_RELEASES := false
 ## 没有开箱序列帧时，占位的「开」停多久再弹搜索界面（秒）
 const OPEN_PLACEHOLDER_SECONDS := 0.45
 ## 没有闭箱图时占位宝箱的大小
@@ -30,7 +29,7 @@ var opening: bool = false
 ## 已经交给流程开搜索了（只交一次）
 var _handed: bool = false
 var _open_time: float = 0.0
-## 谁按着：鼠标、空格（两个都松了才算松手）
+## 谁按着：鼠标、确认键（两个都松了才算松手）
 var _by_mouse: bool = false
 var _by_key: bool = false
 var _unlock_strip: FrameStrip = null
@@ -88,7 +87,7 @@ func open(payload: Dictionary) -> void:
 	col.add_child(hint)
 
 	var back := _button("回地图", leave, 13, UiPalette.Tier.MINOR)
-	back.focus_mode = Control.FOCUS_NONE     # 空格是开锁键，别让按钮抢走
+	back.focus_mode = Control.FOCUS_NONE     # 确认键是开锁键，别让按钮抢走
 	back.tooltip_text = "没开锁就走：这个点不算用过，站着或回来还能再开（Esc）"
 	add_child(back)
 	back.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, 24)
@@ -102,7 +101,7 @@ static func _load_skin(id: StringName) -> ChestSkinDef:
 
 
 #region 公开动作（测试直接调）
-## 按下（鼠标在宝箱上按下 / 空格按下）
+## 按下（鼠标在宝箱上按下 / 确认键按下）
 func press(by_key: bool = false) -> bool:
 	if hold == null or opening:
 		return false
@@ -188,7 +187,7 @@ func _input(event: InputEvent) -> void:
 	if hold == null or _handed:
 		return
 	var key := event as InputEventKey
-	if key != null and key.keycode == KEY_SPACE and not key.echo:
+	if key != null and not key.echo and key.is_action(InputKeys.CONFIRM):     # 154 补充一：确认键（可改键）
 		if key.pressed:
 			press(true)
 		else:
@@ -197,11 +196,7 @@ func _input(event: InputEvent) -> void:
 		return
 	var mb := event as InputEventMouseButton
 	if mb != null and mb.button_index == MOUSE_BUTTON_LEFT and not mb.pressed and _by_mouse:
-		release()     # 松在哪儿都算松手
-		return
-	var motion := event as InputEventMouseMotion
-	if MOUSE_OUT_RELEASES and motion != null and _by_mouse and not view.chest_rect_global().has_point(motion.global_position):
-		release()
+		release()     # 松在哪儿都算松手；按着移出宝箱不算（154 补充一）
 
 
 ## 090：Esc —— 按着先松手；没按着就回地图
@@ -228,9 +223,6 @@ class ChestView extends Control:
 	## 宝箱的矩形（本地坐标）：就是这块画布
 	func chest_rect() -> Rect2:
 		return Rect2(Vector2.ZERO, size)
-
-	func chest_rect_global() -> Rect2:
-		return Rect2(global_position, size)
 
 	## 锁孔（本地坐标）：皮肤给了按皮肤；占位时在箱体中下
 	func lock_point() -> Vector2:
