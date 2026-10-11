@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.78 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.79 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1738,7 +1738,7 @@ func resolve(run_seed: int) -> MapGraph      # 失败返回 null，原因在 las
 
 符号来自作者的地图配置表 v0.1。`1` 是 v0 遗留的「缺省事件点」，解析时按 `?` 处理。
 
-**宝箱的皮肤**（154，`chest_skins/<id>.json`，`ChestSkinDef`）：**背景和宝箱是分开的两张图、两个元素**（作者定，154 补充一）—— 背景是 `background` 一张整屏图，宝箱是 `closed[] / open[]` 按稀有度各六张，锁孔坐标、三段序列帧另给；美术不要交背景和箱子合成的一张图。鼠标按着移出宝箱不算松手；键盘按住确认键（动作 `confirm`）等同按住鼠标。
+**宝箱的皮肤**（154，`chest_skins/<id>.json`，`ChestSkinDef`）：**背景和宝箱是分开的两张图、两个元素**（作者定，154 补充一）—— 背景是 `background` 一张整屏图，宝箱是 `closed[] / open[]` 按稀有度各六张，锁孔坐标、三段序列帧另给；美术不要交背景和箱子合成的一张图。开了的箱子里面一片漆黑，不显示里面的东西（作者定）。鼠标按着移出宝箱不算松手；键盘按住确认键（动作 `confirm`）等同按住鼠标。
 
 **必须型**指配置里要求「每 N 环至少一个」的类型。它们不能只靠权重抽取碰运气 ——
 连续五环没有休息区，玩家撑不到核心；但也不能每环都有，那就没有取舍了。
@@ -4078,6 +4078,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.79 | 2026-10-11 | **开了的宝箱里面一片漆黑**（报告 154 补记，作者定）：开箱后不显示箱内、不透光，占位改成立起的盖 + 黑箱口；开好后停 `OPEN_PAUSE_SECONDS`（0.45 秒，有开箱序列帧时在播完之后）再弹搜索界面；美术的开箱图同样要求箱内全黑 |
 | v2.78 | 2026-10-11 | **宝箱屏的确认键与改键数据**（报告 154 补充一，作者定，两项待定按推荐；改 5.4 宝箱皮肤一段）：`project.godot` 首次有 `[input]`：`confirm`（回车、小键盘回车、空格）与 `cancel`（Esc，只定义、各处的 Esc 判断还没换）；宝箱屏按住开锁的键从写死的空格换成 `confirm` 动作；删掉 `MOUSE_OUT_RELEASES`（按着移出宝箱不算松手定案）；`GameSettings.key_bindings`（动作 → 键码数组，文件里也认键名，坏数据扔掉）+ `ui/input_keys.gd`（`InputKeys.apply`：先回 `project.godot` 默认，再整组替换改过的动作），导演启动时调；改键界面以后再做、手柄不绑；帮助页「节点类型」补一句确认键 |
 | v2.77 | 2026-10-11 | **宝箱节点与长按开锁画面**（报告 154，作者定，五项待定按推荐；改 5.4 类型表）：新节点类型 `chest`（样式「宝」、地图文字 `C`、随机点能揭出，自由模式各环权重 1）；`ChestRules`（挂 `NodeRules.chest`：按档位的稀有度权重、高危区 +1、六档按住秒数、松手回退倍速、各档件数与下限、能出珍宝、收获箱大小）；`ChestPlacer` 生成后给每个宝箱点定稀有度与皮肤（只用 `content_seed`），揭出时补同一步；纯逻辑状态机 `LockHold`（按住走、松手二倍速回退、走满只发一次、按着不能走）；`NodeEvents.chest_shown / open_chest`（复制一份搜索规则：一次、不遭遇、去掉珍宝排除、件件不低于下限）、关搜索屏即拿完走人；`GameFlow.Screen.CHEST / open_chest / leave_chest`，`_reopen_entry` 站在没开锁的宝箱上能再开；新屏 `ui/game/chest_screen.gd`（占位绘制：方块宝箱随稀有度换色、圆锁孔、拨片与轻抖、锁孔环；`MOUSE_OUT_RELEASES` 开关切到美术稿的「移出 = 松手」）；`UiDraw.ring`（从 `LootView` 抽出，两处共用）、`FrameStrip`（序列帧）；新内容种类 `chest_skins`（`ChestSkinDef`，`data/authoring/chest_skins/ruins.json`），`ChapterDef.chest_skin` 默认 ruins；缺图一律占位，导入器只提醒。自由模式的图因此变了，编译金样只有 uid 挪动、重录 |
 | v2.76 | 2026-10-10 | **护盾改名护甲**（报告 153 补充一，作者定；改 4.6 / 4.8）：防具给的那层资源 `shield` → `armor`（护甲），上限属性 `max_shield` → `max_armor`（护甲上限），`DamageTypeDef.shield_absorbable` → `armor_absorbable`，信仰功能 `food_shield` → `food_armor`，权重 `shield_per_point` → `armor_per_point`，帮助页 `shield` → `armor`、`direct_damage_and_armor` → `direct_damage_and_block`；生命条上「盾 N」→「甲 N」。玩家可见的「护盾」「防护」两词退出。导入器：`base_stats.armor` 报错（改名前后意思不同，写清 block / max_armor 两种去处），`max_shield` / `shield_absorbable` / `food_shield` / 资源键 `shield` 认作新名并提醒 |

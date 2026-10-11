@@ -8,8 +8,9 @@
 ## 美术还在画：皮肤里缺的图一律画占位（深底、方块宝箱随稀有度换色、圆锁孔），交互照样跑。不新增主题覆写，图形全在画布上。
 extends GameScreen
 
-## 没有开箱序列帧时，占位的「开」停多久再弹搜索界面（秒）
-const OPEN_PLACEHOLDER_SECONDS := 0.45
+## 宝箱打开之后（开箱序列帧播完，或没有序列帧时一开就算）停多久再弹搜索界面（秒）。
+## 作者定（154）：开了的箱子里面一片漆黑，不显示里面的东西，停顿片刻再弹搜索界面
+const OPEN_PAUSE_SECONDS := 0.45
 ## 没有闭箱图时占位宝箱的大小
 const PLACEHOLDER_SIZE := Vector2(280, 220)
 
@@ -138,7 +139,7 @@ func step(delta: float) -> void:
 	if opening:
 		_open_time += delta
 		_open_strip.advance(delta)
-		var done := _open_strip.finished() if not _open_strip.is_empty() else _open_time >= OPEN_PLACEHOLDER_SECONDS
+		var done := _open_time >= _open_strip.duration() + OPEN_PAUSE_SECONDS     # 没有序列帧时 duration 为 0
 		if done:
 			_hand_over()
 		view.queue_redraw()
@@ -307,7 +308,7 @@ class ChestView extends Control:
 		draw_circle(Vector2.ZERO, size.x * 0.46, Color(0, 0, 0, 0.45))
 		draw_set_transform(Vector2.ZERO)
 
-	## 开箱：有开箱序列帧播帧；没有就用开箱图；再没有画占位（掀起的盖子、一团光、「开」）
+	## 开箱：有开箱序列帧播帧；没有就用开箱图；再没有画占位（掀起的盖子、箱口一片漆黑 —— 作者定：不显示里面的东西，也不透光）
 	func _draw_opened() -> void:
 		var strip: FrameStrip = screen._open_strip
 		if not strip.is_empty():
@@ -322,11 +323,11 @@ class ChestView extends Control:
 		var w := size.x
 		var h := size.y
 		_draw_shadow()
+		var lid := Rect2(w * 0.08, h * 0.04, w * 0.84, h * 0.2)     # 掀起来立在后面的盖子
+		var mouth := Rect2(w * 0.1, h * 0.24, w * 0.8, h * 0.18)     # 箱口：一片漆黑
 		var body := Rect2(w * 0.1, h * 0.42, w * 0.8, h * 0.46)
-		draw_circle(Vector2(w * 0.5, h * 0.42), w * 0.3, Color(trim, 0.35))
+		draw_rect(lid, wood.darkened(0.15), true)
+		draw_rect(lid, trim.darkened(0.25), false, 3.0)
+		draw_rect(mouth, Color.BLACK, true)
 		draw_rect(body, wood, true)
 		draw_rect(body, trim.darkened(0.25), false, 3.0)
-		draw_rect(Rect2(w * 0.08, h * 0.02, w * 0.84, h * 0.14), wood.lightened(0.08), true)
-		draw_rect(Rect2(w * 0.08, h * 0.02, w * 0.84, h * 0.14), trim.darkened(0.25), false, 3.0)
-		var f: Font = screen.font if screen.font != null else get_theme_default_font()
-		draw_string(f, Vector2(0, h * 0.72), "开", HORIZONTAL_ALIGNMENT_CENTER, w, 40, trim)

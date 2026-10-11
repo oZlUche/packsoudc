@@ -293,6 +293,8 @@ static func frame_chest_screen(t: TestCase, root: Window) -> void:
 	t.check(hold.is_unlocked() and screen.opening, "走满：开箱动画")
 	t.eq(screen.hint.text, "", "字没了")
 	t.eq(flow.screen, GameFlow.Screen.CHEST, "开箱动画播完才弹搜索")
+	screen.step(screen.OPEN_PAUSE_SECONDS * 0.5)
+	t.eq(flow.screen, GameFlow.Screen.CHEST, "开了先停一会儿（箱内漆黑），再弹搜索")
 	screen.step(1.0)
 	t.eq(flow.screen, GameFlow.Screen.SEARCH, "→ 搜索屏")
 	t.check(ChestPlacer.is_opened(node), "开过了")
