@@ -34,6 +34,9 @@ var battle_trace: bool = BattleArchive.default_on()
 ## 现在默认开；发布版把这里的默认改成关（一处改）
 var debug_mode: bool = DEBUG_MODE_DEFAULT
 const DEBUG_MODE_DEFAULT := true
+## 154 补充一：改过的键 —— 动作名 → 键码数组（文件里也可以写键名，如 "Enter"）。空 = 全用 `project.godot` 的默认。
+## 设置层只存；哪些动作能改、怎么盖到 InputMap 上是界面的事
+var key_bindings: Dictionary = {}
 
 
 func to_dict() -> Dictionary:
@@ -48,6 +51,7 @@ func to_dict() -> Dictionary:
 		"battle_speed": battle_speed,
 		"battle_trace": battle_trace,
 		"debug_mode": debug_mode,
+		"key_bindings": key_bindings.duplicate(true),
 	}
 
 
@@ -65,7 +69,36 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	s.battle_speed = normalize_speed(float(d.get("battle_speed", 1.0)))
 	s.battle_trace = bool(d.get("battle_trace", BattleArchive.default_on()))
 	s.debug_mode = bool(d.get("debug_mode", DEBUG_MODE_DEFAULT))
+	s.key_bindings = read_bindings(d.get("key_bindings", {}))
 	return s
+
+
+## 154 补充一：读改键表 —— 不是字典、动作名空、键表不是数组的都扔掉；键名换成键码，认不出来的键扔掉，一个都不剩的动作扔掉
+static func read_bindings(raw: Variant) -> Dictionary:
+	var out := {}
+	if not (raw is Dictionary):
+		return out
+	for action in raw:
+		var keys = (raw as Dictionary)[action]
+		if String(action) == "" or not (keys is Array):
+			continue
+		var codes: Array[int] = []
+		for k in keys:
+			var code := keycode_of(k)
+			if code > 0 and not codes.has(code):
+				codes.append(code)
+		if not codes.is_empty():
+			out[String(action)] = codes
+	return out
+
+
+## 设置文件里的一个键：键码数字，或键名（`"Enter"`、`"Space"`、`"F"`）。认不出来返回 0
+static func keycode_of(v: Variant) -> int:
+	if v is int or v is float:
+		return int(v)
+	if v is String:
+		return int(OS.find_keycode_from_string(String(v)))
+	return 0
 
 
 ## 109：不在 [constant BATTLE_SPEEDS] 里的倍速（旧文件、手改过的怪数）回 1×，别让回放被拖成 0× 或 3×

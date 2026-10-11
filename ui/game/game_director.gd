@@ -86,6 +86,7 @@ func _ready() -> void:
 	flow.settings = GameSettings.load_from(settings_path)
 	UiText.apply(flow.settings)
 	UiPalette.apply(flow.settings)     # 091：背景底色
+	InputKeys.apply(flow.settings)     # 154 补充一：改过的键盖到默认上
 	UiTheme.install()     # 121：界面主题挂在窗口上
 	ground = GroundLayer.new()
 	ground.fills_screen = true
