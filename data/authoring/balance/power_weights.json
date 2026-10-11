@@ -17,6 +17,7 @@
   "status_applied_rate": 0.3,
   "status_removed_rate": 0.2,
   "stamina_regen": 4.0,
+  "stamina_max": 50.0,
   "stack_cost_factor": 0.5,
   "condition_factor": 0.6,
   "assumed_stacks": 2.0,

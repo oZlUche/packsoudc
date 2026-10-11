@@ -41,10 +41,9 @@ func describe() -> String:
 	return "消耗 %s %s" % [TextTemplate.num(amount), res]
 
 
-## 151：耐力能持续几成 = min(1, 回复 ÷ (每次 × 一秒几次))；别的资源不打折
+## 151：耐力能持续几成（155 补：耐力上限 + 一场的回复，[method PowerWeights.stamina_sustain]）；别的资源不打折
 func estimated_factor(ctx: PowerContext, rate: float) -> float:
-	var need := stamina_per_use(ctx.stats) * rate
-	return minf(1.0, ctx.weights.stamina_regen / need) if need > 0.0 else 1.0
+	return ctx.weights.stamina_sustain(stamina_per_use(ctx.stats) * rate)
 
 
 ## 151 / 155：每次出手耗多少耐力（不是耐力的为 0）。按属性取的看 [param stats]

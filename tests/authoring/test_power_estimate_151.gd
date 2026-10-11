@@ -4,8 +4,9 @@ extends RefCounted
 
 ## 现有武器里推荐稀有度和实际差两档以上的。155 改了估算器（直伤乘耐力可持续系数、武器预算加一格把手、
 ## 可叠层 DoT 按一场的一半算）、删了冲锋枪与狙击枪、涂毒匕首提到史诗之后，原来的五件都回到一档以内；
-## 剩下的都是**估低**两档、耐力供不上的武器（步枪是方案里预料到的，另四件是落地跑出来的）。作者定了去留或改数之后从这里删掉
-const KNOWN_OFF := ["blessed_longbow", "bloodletter", "longbow", "mithril_sword", "rifle"]
+## 155 补（作者定）把耐力折扣改成「耐力上限 + 一场的回复」之后，现有武器没有一件耗得完，剩下两件只是单看偏弱（估低两档）。
+## 作者定了改数还是接受之后从这里删掉
+const KNOWN_OFF := ["longbow", "mithril_sword"]
 const ITEMS := "res://data/items"
 const TMP := "user://test_power_weights_151.json"
 
@@ -104,7 +105,8 @@ static func run_formula(t: TestCase) -> void:
 	cost.amount = 40.0
 	thirsty.combat.rules.append(_rule(OnDamage.new(), 1.0, [_fire(5.0)], [cost]))
 	var th := PowerEstimate.estimate(thirsty, w)
-	t.check(absf(float(th.rules[0]["cost"]) - w.stamina_regen / 40.0) < 0.001, "耐力：回复 ÷ (每次 × 频率)（%.2f）" % th.rules[0]["cost"])
+	t.check(absf(float(th.rules[0]["cost"]) - w.stamina_sustain(40.0)) < 0.001, "耐力：(上限 + 回复 × 一场) ÷ (每次 × 频率 × 一场)（155 补；%.2f）" % th.rules[0]["cost"])
+	t.check(float(th.rules[0]["cost"]) < 1.0, "一秒耗 40 还是撑不住")
 
 	# 流血：一层每秒伤挂着的那一边一点 —— 给对手为正、给自己为负
 	var bleed: BuffDef = ContentLibrary.buffs().get(&"bleed", null)
@@ -293,13 +295,16 @@ static func run_155(t: TestCase) -> void:
 	t.eq(e_free.sustain, 1.0, "不耗耐力：不打折")
 	var hungry := _weapon(10.0, 1.0, 4)
 	var cost := ResourceCost.new()
-	cost.amount = 8.0
+	cost.amount = 16.0
 	hungry.combat.rules[0].costs.append(cost)
 	var e_hungry := PowerEstimate.estimate(hungry, w)
-	t.check(absf(e_hungry.sustain - 0.5) < 0.001, "一秒耗 8、回 4：撑得住一半（%.2f）" % e_hungry.sustain)
-	t.check(absf(e_hungry.base - e_free.base * 0.5) < 0.001, "直伤 B 跟着打对折")
-	cost.amount = 3.0
-	t.eq(PowerEstimate.estimate(hungry, w).sustain, 1.0, "回得过来：不打折")
+	var expect := (w.stamina_max + w.stamina_regen * w.fight_sec) / (16.0 * w.fight_sec)
+	t.check(absf(e_hungry.sustain - expect) < 0.001, "155 补：一秒耗 16，一场能花「上限 50 + 回 4 × 12 秒」= 98，要 192：撑得住 %.2f（%.2f）" % [expect, e_hungry.sustain])
+	t.check(absf(e_hungry.base - e_free.base * expect) < 0.001, "直伤 B 跟着打折")
+	cost.amount = 8.0
+	t.eq(PowerEstimate.estimate(hungry, w).sustain, 1.0, "一秒耗 8：一场 96 < 98，撑得住，不打折（只看回复会打对折）")
+	t.eq(w.stamina_max, 50.0, "基础耐力上限 50（和 CombatantBaseline 一样）")
+	t.eq(w.stamina_max, float(CombatantBaseline.DEFAULT_STATS["max_stamina"]), "和基线对得上")
 	# b：把手
 	t.eq(PowerEstimate.estimate(_weapon(2.0, 1.0, 1), w).default_power, 4.0, "一格武器的预算 = 2 ×（1 + 1）")
 	t.eq(w.default_power(3, false), 6.0, "护具不加把手")

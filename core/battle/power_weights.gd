@@ -27,6 +27,7 @@ const DEFAULTS := {
 	"status_applied_rate": 0.3,
 	"status_removed_rate": 0.2,
 	"stamina_regen": 4.0,
+	"stamina_max": 50.0,
 	"stack_cost_factor": 0.5,
 	"condition_factor": 0.6,
 	"assumed_stacks": 2.0,
@@ -79,8 +80,10 @@ var threshold_share: float = 0.5
 var status_applied_rate: float = 0.3
 ## 「移除了某 buff 时」假定一秒几次
 var status_removed_rate: float = 0.2
-## 耐力回复基线（每秒），耐力消耗按它算能持续几成
+## 耐力回复基线（每秒），耐力消耗按它算能持续几成（[method stamina_sustain]）
 var stamina_regen: float = 4.0
+## 155 补（作者定）：基础耐力上限（[CombatantBaseline] 的 max_stamina）—— 开场这一池满耐力也算进一场能花的耐力里
+var stamina_max: float = 50.0
 ## 吃层的消耗（轴、buff 层）打几折（吃掉的层本身有价值）
 var stack_cost_factor: float = 0.5
 ## 状态 / 资源 / 轴条件满足的概率（取反 = 一减它）
@@ -144,6 +147,13 @@ func expected_duration(seconds: float, permanent: bool, stackable: bool = false)
 	if stackable:
 		return fight_sec * 0.5
 	return horizon_sec * persist_share if permanent else minf(seconds, horizon_sec)
+
+
+## 155 补（作者定）：耐力能撑住几成 = min(1, (耐力上限 + 回复 × 一场时长) ÷ (每秒耗的耐力 × 一场时长))。
+## 一场里能花的耐力 = 开场那一池 + 这一场回的；不耗耐力 = 1
+func stamina_sustain(per_sec: float) -> float:
+	var need := per_sec * fight_sec
+	return minf(1.0, (stamina_max + stamina_regen * fight_sec) / need) if need > 0.0 else 1.0
 
 
 ## 155：默认战斗力（预算）= 每格基准 × (格数 + 把手格)；把手只算武器（[param weapon]），护具照旧按格数
