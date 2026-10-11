@@ -83,11 +83,11 @@ func value_per_sec(ctx: PowerContext) -> float:
 	return v
 
 
-## 一层总共值多少 = 每秒 × 平均待多久（[method PowerWeights.expected_duration]）+ 上身 / 到期那一下
+## 一层总共值多少 = 每秒 × 平均待多久（[method PowerWeights.expected_duration]；155：可叠层的按一场的一半）+ 上身 / 到期那一下
 func stack_value(ctx: PowerContext) -> float:
 	if ctx.depth > 3:
 		return 0.0
-	var v := value_per_sec(ctx) * ctx.weights.expected_duration(duration_sec, is_permanent())
+	var v := value_per_sec(ctx) * ctx.weights.expected_duration(duration_sec, is_permanent(), is_stackable())
 	for e in on_apply + on_expire:
 		var x := (e as CombatEffect).estimated_value(ctx)
 		if not is_nan(x):

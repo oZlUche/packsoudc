@@ -5,7 +5,8 @@
 class_name MapNodeStyle
 extends RefCounted
 
-## type → {glyph 画在圆里的一个字, color}；名字见 [NodeText.LABELS]
+## type → {glyph 画在圆里的一个字, color}；名字见 [NodeText.LABELS]。
+## 155（作者定）：节点用图标 —— `res://assets/nodes/<type>.png`（[method icon]，白色线稿、按 color 着色）；缺图的退回画 glyph
 const STYLES := {
 	&"battle": {"glyph": "战", "color": Color("c9605a")},
 	&"elite": {"glyph": "精", "color": Color("e0457a")},
@@ -24,6 +25,12 @@ const STYLES := {
 
 const UNKNOWN := {"glyph": "?", "color": Color("8b93a1")}
 
+## 155：节点图标的目录（文件名 = 类型）
+const ICON_DIR := "res://assets/nodes"
+
+## 155：类型 → 图标（没有图为 null），读一次就记住
+static var _icons: Dictionary = {}
+
 ## 路线的描边色，按路线下标轮流取
 const ROUTE_COLORS: Array[Color] = [
 	Color("ff8a7a"), Color("e0b04a"), Color("6fb3f0"), Color("8ed36b"), Color("c9a0ff"),
@@ -35,6 +42,13 @@ static func of(type: StringName) -> Dictionary:
 	var style: Dictionary = STYLES.get(type, UNKNOWN).duplicate()
 	style["label"] = NodeText.label_of(type)
 	return style
+
+
+## 155：这种点的图标（白色线稿，画的时候按 [code]color[/code] 着色）；没有图返回 null，调用方画 glyph
+static func icon(type: StringName) -> Texture2D:
+	if not _icons.has(type):
+		_icons[type] = EventImage.load_texture("%s/%s.png" % [ICON_DIR, type])
+	return _icons[type]
 
 
 static func route_color(index: int) -> Color:

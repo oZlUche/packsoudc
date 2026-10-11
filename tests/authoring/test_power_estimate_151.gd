@@ -2,9 +2,10 @@
 ## 现有武器的推荐和实际差不超过一档（差两档的在 [constant KNOWN_OFF] 里列着，等作者决定改数还是改表）、导入提醒、编辑器面板与新建武器
 extends RefCounted
 
-## 现有武器里推荐稀有度和实际差两档以上的（落地时的占位系数下）：小件伤害密（匕首、冲锋枪、毒匕首）、
-## 便宜的上 DoT（剁刀）、狙击枪单看偏弱。作者改数或改 power_weights.json 之后从这里删掉
-const KNOWN_OFF := ["cleaver", "knife", "poisoned_knife", "smg", "sniper"]
+## 现有武器里推荐稀有度和实际差两档以上的。155 改了估算器（直伤乘耐力可持续系数、武器预算加一格把手、
+## 可叠层 DoT 按一场的一半算）、删了冲锋枪与狙击枪、涂毒匕首提到史诗之后，原来的五件都回到一档以内；
+## 剩下的都是**估低**两档、耐力供不上的武器（步枪是方案里预料到的，另四件是落地跑出来的）。作者定了去留或改数之后从这里删掉
+const KNOWN_OFF := ["blessed_longbow", "bloodletter", "longbow", "mithril_sword", "rifle"]
 const ITEMS := "res://data/items"
 const TMP := "user://test_power_weights_151.json"
 
@@ -279,3 +280,50 @@ static func run_gear(t: TestCase) -> void:
 		if def != null:
 			var g := PowerEstimate.estimate(def, w)
 			t.check(absi(g.rarity - def.rarity) <= 1, "%s：推荐 %d、实际 %d（预算比 %.2f）" % [id, g.rarity, def.rarity, g.ratio])
+
+
+static func run_155(t: TestCase) -> void:
+	t.begin("155 · 估算器三处修正：直伤乘耐力可持续系数、武器预算加一格把手（护具不加）、可叠层 DoT 一层按一场的一半；删掉冲锋枪与狙击枪，涂毒匕首是史诗")
+	var w := PowerWeights.new()
+	t.eq(w.handle_cells, 1.0, "把手格默认 1")
+	t.eq(w.fight_sec, 12.0, "一场默认 12 秒")
+	# a：耐力
+	var free := _weapon(10.0, 1.0, 4)
+	var e_free := PowerEstimate.estimate(free, w)
+	t.eq(e_free.sustain, 1.0, "不耗耐力：不打折")
+	var hungry := _weapon(10.0, 1.0, 4)
+	var cost := ResourceCost.new()
+	cost.amount = 8.0
+	hungry.combat.rules[0].costs.append(cost)
+	var e_hungry := PowerEstimate.estimate(hungry, w)
+	t.check(absf(e_hungry.sustain - 0.5) < 0.001, "一秒耗 8、回 4：撑得住一半（%.2f）" % e_hungry.sustain)
+	t.check(absf(e_hungry.base - e_free.base * 0.5) < 0.001, "直伤 B 跟着打对折")
+	cost.amount = 3.0
+	t.eq(PowerEstimate.estimate(hungry, w).sustain, 1.0, "回得过来：不打折")
+	# b：把手
+	t.eq(PowerEstimate.estimate(_weapon(2.0, 1.0, 1), w).default_power, 4.0, "一格武器的预算 = 2 ×（1 + 1）")
+	t.eq(w.default_power(3, false), 6.0, "护具不加把手")
+	var plate := ItemDef.new()
+	plate.tags = [&"armor"] as Array[StringName]
+	plate.shape = ItemShape.from_bits("1111")
+	t.eq(PowerEstimate.estimate(plate, w).default_power, 8.0, "护具的预算照旧按格数")
+	t.eq(int(PowerEstimate.default_weapon(1, w)["damage"]), roundi(w.default_power(1) * w.default_cooldown), "新建武器预填伤害按同一公式")
+	# c：叠层视野
+	t.eq(w.expected_duration(0.0, true, true), 6.0, "可叠层：一层平均待一场的一半")
+	t.eq(w.expected_duration(0.0, true, false), w.horizon_sec * w.persist_share, "不可叠层的永续照旧")
+	t.eq(w.expected_duration(5.0, false, false), 5.0, "限时照旧")
+	# 内容
+	var db := ItemDatabase.new()
+	db.load_dir()
+	t.check(db.get_def(&"smg") == null and db.get_def(&"sniper") == null, "冲锋枪、狙击枪删了（作者定：废弃道具）")
+	t.eq(db.get_def(&"poisoned_knife").rarity, 3, "涂毒匕首提到史诗（155 待定 3）")
+	var inv := GridInventory.new(Vector2i(4, 4))
+	inv.try_add(ItemInstance.create(db.get_def(&"rifle")), true)
+	var saved := inv.to_dict()
+	var ghost := ((saved["items"] as Array)[0] as Dictionary).duplicate(true)
+	ghost["def"] = "sniper"
+	ghost["uid"] = int(ghost["uid"]) + 1000
+	ghost["origin"] = [3, 0]
+	(saved["items"] as Array).append(ghost)
+	var back := GridInventory.from_dict(saved, db)
+	t.eq(back.item_count(), 1, "老存档里的狙击枪读回来丢掉，别的照旧")

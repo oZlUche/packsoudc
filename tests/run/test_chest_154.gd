@@ -44,6 +44,8 @@ static func run_rules(t: TestCase) -> void:
 	for k in 5:
 		t.check(r.hold_time(k + 1) > r.hold_time(k), "稀有度 %d 比 %d 按得久" % [k + 1, k])
 	t.eq(r.hold_time(99), r.hold_time(5), "超出按最后一项")
+	t.eq(r.hold_time(0), 1.0, "普通一秒（155）")
+	t.eq(r.hold_time(5), 3.0, "神话三秒：最长不超过三秒（155，作者定）")
 	t.eq([r.floor_of(0), r.floor_of(1), r.floor_of(2), r.floor_of(5)], [0, 0, 1, 4], "下限 = 稀有度 − 1，前两档 0")
 	t.eq(r.item_range(0), Vector2i(2, 3), "普通箱 2～3 件")
 
