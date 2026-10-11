@@ -272,6 +272,8 @@ static func run_random(t: TestCase) -> void:
 			&"search":
 				t.eq(searches, [node.id], "变成搜索：开了会话")
 				t.check(not node.is_visited(), "搜着的时候还没用过")
+			&"chest":
+				t.check(not node.is_visited() and ChestPlacer.chest_of(node).has("rarity"), "变成宝箱：补定了稀有度，没开锁不算用过（154）")
 			_:
 				t.check(node.is_visited(), "其他类型：处理完用过了")
 		t.eq(w.events.reveal(node), type, "再揭一次还是它（记在内容里）")

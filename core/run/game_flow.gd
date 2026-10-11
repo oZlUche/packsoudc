@@ -10,7 +10,7 @@
 class_name GameFlow
 extends RefCounted
 
-enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR, ENCYCLOPEDIA }
+enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR, ENCYCLOPEDIA, CHEST }
 
 signal screen_changed(screen: int, payload: Dictionary)
 ## 101 第 5 刀：当前的这一局换了（开局 / 读档 / 回主菜单时 `null`）。UI 据此把只属于一局的东西挂上 / 摘掉
@@ -88,7 +88,7 @@ func _init(p_items: ItemDatabase = null, p_enemies: EnemyDatabase = null, p_sets
 
 
 static func is_overlay(s: int) -> bool:
-	return s in [Screen.BATTLE, Screen.LOOT, Screen.SEARCH, Screen.SHOP, Screen.EVENT, Screen.REST, Screen.PREBATTLE, Screen.SAFE, Screen.ALTAR]
+	return s in [Screen.BATTLE, Screen.LOOT, Screen.SEARCH, Screen.SHOP, Screen.EVENT, Screen.REST, Screen.PREBATTLE, Screen.SAFE, Screen.ALTAR, Screen.CHEST]
 
 
 #region 底屏之间
@@ -714,6 +714,22 @@ func close_safe() -> bool:
 	return locked
 
 
+## 154：宝箱的锁开了（开锁画面的进度走满、开箱动画播完）：开搜索会话、搜一次、给看搜索屏。返回开了没有
+func open_chest(node: MapNode = null) -> bool:
+	if run == null or run.is_over():
+		return false
+	var target := node if node != null else run.current_node()
+	if not run.events.open_chest(target):
+		return false
+	_flush()
+	return true
+
+
+## 154：没开锁就离开宝箱屏 —— 回地图，点不算用过（站着能再开，走开再回来也能开）
+func leave_chest() -> bool:
+	return hide_overlay()
+
+
 ## 093：关掉神坛屏（回地图；站着还能再开，除非用过特殊操作）
 func close_altar() -> void:
 	if run == null:
@@ -998,6 +1014,8 @@ func _reopen_entry() -> Dictionary:
 	var safe := SafeModule.of(run)
 	if here != null and NodeEvents.effective_type(here) == &"safe" and safe != null and safe.is_open():
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开
+	if here != null and not here.is_visited() and NodeEvents.effective_type(here) == &"chest" and not ChestPlacer.is_opened(here):
+		return {"screen": Screen.CHEST, "node": here}     # 154：没开锁的宝箱，站着随时能再开
 	var altar := AltarModule.of(run)
 	if here != null and altar != null and altar.is_open():
 		return {"screen": Screen.ALTAR, "node": here}     # 093：神坛还开着（这一次没用过）
@@ -1148,6 +1166,8 @@ func _adopt(state: RunState) -> void:
 		_push({"screen": Screen.SAFE, "node": node}))     # 092：踩上保险箱就开
 	ev.altar_opened.connect(func(node: MapNode):
 		_push({"screen": Screen.ALTAR, "node": node}))     # 093：休息处的神坛
+	ev.chest_shown.connect(func(node: MapNode):
+		_push({"screen": Screen.CHEST, "node": node}))     # 154：踩上没开锁的宝箱
 	ev.event_pending.connect(func(node: MapNode, def: EventDef):
 		var entry := {"screen": Screen.EVENT, "node": node, "def": def}
 		# 084：战利品已经排在队尾时来的事件（「搜索点被余波摧毁」）说的是刚发生的事：先说，再看战利品（东西还在）。
@@ -1245,6 +1265,9 @@ func _skippable(entry: Dictionary) -> bool:
 			return run.events.current_search != session or session == null or not session.active
 		Screen.SHOP:
 			return run.events.current_shop != entry.get("session", null)
+		Screen.CHEST:
+			var chest_node: MapNode = entry.get("node", null)
+			return chest_node == null or chest_node.is_visited() or ChestPlacer.is_opened(chest_node)
 		Screen.PREBATTLE:
 			var node: MapNode = entry.get("node", null)
 			return run.events.pending_battle.is_empty() or node == null or int(run.events.pending_battle["node"]) != node.id

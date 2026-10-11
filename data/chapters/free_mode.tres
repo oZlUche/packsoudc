@@ -19,6 +19,7 @@ quota = {
 }
 type_weights = {
 "battle": 3,
+"chest": 1,
 "elite": 1,
 "event": 3,
 "random": 2,
@@ -37,6 +38,7 @@ quota = {
 }
 type_weights = {
 "battle": 3,
+"chest": 1,
 "elite": 1,
 "event": 3,
 "random": 2,
@@ -55,6 +57,7 @@ quota = {
 }
 type_weights = {
 "battle": 3,
+"chest": 1,
 "elite": 1,
 "event": 3,
 "random": 2,
@@ -73,6 +76,7 @@ quota = {
 }
 type_weights = {
 "battle": 3,
+"chest": 1,
 "elite": 1,
 "event": 3,
 "random": 2,
@@ -91,6 +95,7 @@ quota = {
 }
 type_weights = {
 "battle": 3,
+"chest": 1,
 "elite": 1,
 "event": 3,
 "random": 2,
@@ -109,6 +114,7 @@ quota = {
 }
 type_weights = {
 "battle": 3,
+"chest": 1,
 "elite": 1,
 "event": 3,
 "random": 2,
@@ -127,6 +133,7 @@ quota = {
 }
 type_weights = {
 "battle": 3,
+"chest": 1,
 "elite": 1,
 "event": 3,
 "random": 2,

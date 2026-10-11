@@ -35,6 +35,7 @@ const AUTHORING_CHAPTERS := AUTHORING + "/chapters"
 const AUTHORING_ACHIEVEMENTS := AUTHORING + "/achievements"
 const AUTHORING_TECHS := AUTHORING + "/techs"
 const AUTHORING_HELP_PAGES := AUTHORING + "/help_pages"
+const AUTHORING_CHEST_SKINS := AUTHORING + "/chest_skins"     # 154
 #endregion
 
 #region 引擎资产（导入器产出，游戏读这里）
@@ -64,6 +65,7 @@ const CHAPTERS := "res://data/chapters"
 const ACHIEVEMENTS := "res://data/achievements"
 const TECHS := "res://data/techs"
 const HELP_PAGES := "res://data/help_pages"
+const CHEST_SKINS := "res://data/chest_skins"
 #endregion
 
 ## 种类 → [作者数据目录, 资产目录]。顺序即导入顺序：后者可以按 id 引用前者。
@@ -96,12 +98,14 @@ const KINDS := {
 	"achievements": [AUTHORING_ACHIEVEMENTS, ACHIEVEMENTS],
 	"techs": [AUTHORING_TECHS, TECHS],
 	"help_pages": [AUTHORING_HELP_PAGES, HELP_PAGES],
+	"chest_skins": [AUTHORING_CHEST_SKINS, CHEST_SKINS],
 }
 ## 开局装备、角色（初始包对着道具查）与敌人都在道具之后（清单、招牌道具、流派标签要对着道具查），池在敌人之后，三种规则独立，
 ## 章节按 id 引用池与规则；成就（091）排最后（对象可能是道具 / 章节）
 ## 096：标签与伤害类型最先（道具的标签对着它提醒；没有它们也能导）；110：局外科技在道具之后（要交的材料对着道具查）；114：百科的机制页最后（相关道具对着道具查）
+## 154：宝箱皮肤在章节之前（章节按 id 引用它）
 ## 146：buff → 规则构件 → 道具（构件里的施加状态可以按 id 引用 buff；buff 自己的规则不能引用构件，所以没有环）
-const ORDER := ["tags", "damage_types", "run_buffs", "faiths", "buffs", "rule_parts", "items", "recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "carry_rules", "encumbrance_rules", "node_rules", "economy_rules", "meta_rules", "chapters", "achievements", "techs", "help_pages"]
+const ORDER := ["tags", "damage_types", "run_buffs", "faiths", "buffs", "rule_parts", "items", "recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "carry_rules", "encumbrance_rules", "node_rules", "economy_rules", "meta_rules", "chest_skins", "chapters", "achievements", "techs", "help_pages"]
 
 
 ## 100（作者定）：有目录、但独立内容一份都还没有的种类 —— **不进 [constant KINDS]**（批量导入与一致性检查都不跑它们），

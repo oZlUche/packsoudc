@@ -27,6 +27,7 @@ const SCREEN_SCRIPTS := {
 	GameFlow.Screen.SAFE: "res://ui/game/safe_screen.gd",
 	GameFlow.Screen.ALTAR: "res://ui/game/altar_screen.gd",
 	GameFlow.Screen.ENCYCLOPEDIA: "res://ui/game/encyclopedia_screen.gd",
+	GameFlow.Screen.CHEST: "res://ui/game/chest_screen.gd",     # 154：宝箱（叠层；不画地上 —— 开锁时只看箱子）
 }
 const LAUNCHER := "res://ui/launcher.tscn"
 

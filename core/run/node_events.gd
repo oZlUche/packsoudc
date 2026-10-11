@@ -38,6 +38,8 @@ signal shop_closed(node: MapNode)
 signal safe_opened(node: MapNode)
 ## 093：神坛（休息处的「神坛」选项）：开了
 signal altar_opened(node: MapNode)
+## 154：踩上没开锁的宝箱（开锁画面由持有方画；锁开了调 [method open_chest]）
+signal chest_shown(node: MapNode)
 signal event_resolved(node: MapNode, outcome: StringName, detail: Dictionary)
 ## 到了撤离点。fee > 0 = 付费的（PaidExtracts），撤离动作（M6）先 pay_extract_fee
 signal extract_reached(node: MapNode, fee: int)
@@ -106,6 +108,9 @@ signal battle_pending(node: MapNode, type: StringName, content: Dictionary)
 signal battle_skipped(node: MapNode)
 
 var current_search: SearchSession = null
+## 154：踩上去才揭出来的宝箱用哪套皮肤（章节的 [member ChapterDef.chest_skin]，持有方设）
+var chest_skin: StringName = &"ruins"
+var _default_chest_rules: ChestRules = null
 var current_shop: ShopSession = null
 ## 最近一场的双方战斗单位：{"player": CombatantSpec, "enemy": CombatantSpec, "node": id}。
 ## 回放要把日志里的 uid 写成名字（4.8：名字是表现层的事，不进日志），从这里查
@@ -174,6 +179,8 @@ func _proceed(node: MapNode, type: StringName) -> void:
 		&"extract":
 			extract_reached.emit(node, PaidExtracts.fee_of(node))
 			_visited(node)
+		&"chest":
+			_arrive_chest(node)
 		&"safe":
 			# 092：没锁的保险箱不算用过 —— 空着走开再回来还能开；关上（里面有东西）就锁了、点灰了
 			if not hooks.safe_open():
@@ -240,6 +247,8 @@ func reveal(node: MapNode) -> StringName:
 		var built := _enemy_for(node, &"battle", _rng_for(node, "enemy"))
 		for key in built:
 			node.content[key] = built[key]
+	if type == &"chest":
+		ChestPlacer.roll_one(node, chest_rules(), chest_skin)     # 154：揭出宝箱时补上生成时那一步
 	# 揭成什么就按什么类型配事件（生成时随机点没法配）
 	if rules != null and String(node.content.get("event", "")) == "":
 		var eid := EventPlacer.pick_for(node, type, rules)
@@ -690,6 +699,9 @@ func pause_search() -> bool:
 	var session := current_search
 	if session == null or not session.active:
 		return false
+	if effective_type(session.node) == &"chest":
+		session.leave()     # 154：宝箱只开一次，关屏就是拿完走人（不过「再搜 / 走」）
+		return true
 	var def := _search_event(session.node, session, "done" if session.is_exhausted() else "again")
 	if def == null:
 		session.leave()
@@ -726,6 +738,83 @@ func _search_event(node: MapNode, session: SearchSession, which: String) -> Even
 			if id == "" and sr != null:
 				id = String(sr.destroyed_event)
 	return def_by_id(StringName(id)) if id != "" else null
+
+
+#region 宝箱（154）
+## 这一局的宝箱规则（节点规则里没写就用默认）
+func chest_rules() -> ChestRules:
+	if rules != null and rules.chest != null:
+		return rules.chest
+	if _default_chest_rules == null:
+		_default_chest_rules = ChestRules.new()
+	return _default_chest_rules
+
+
+## 踩上宝箱点：没开锁 → 给看开锁画面（没开就走不算用过，回来还能开）；锁开过了（存档时视为离开，收获已经交出去）→ 用过
+func _arrive_chest(node: MapNode) -> void:
+	ChestPlacer.roll_one(node, chest_rules(), chest_skin)     # 预设图里画的、测试里改的：没定就现在定
+	if ChestPlacer.is_opened(node):
+		if current_search != null and current_search.node == node and current_search.active:
+			search_shown.emit(node, current_search)
+		else:
+			_visited(node)
+		return
+	last_handled_id = node.id
+	chest_shown.emit(node)
+
+
+## 这个宝箱开锁要按几秒
+func chest_hold_seconds(node: MapNode) -> float:
+	return chest_rules().hold_time(ChestPlacer.rarity_of(node))
+
+
+## 锁开了：用一份改过的搜索规则开会话并立刻搜一次 —— 只搜一次、不遭遇、能出珍宝、每件不低于下限（作者定：宝箱稀有度 − 1，前两档 0）。
+## 收获走现有的搜索屏；关屏（[method pause_search]）就是拿完走人，点用过。不是没开锁的宝箱、或别的会话开着返回 false
+func open_chest(node: MapNode) -> bool:
+	if node == null or over or effective_type(node) != &"chest" or ChestPlacer.is_opened(node):
+		return false
+	if current_search != null or rules == null or rules.search == null or items == null:
+		return false
+	ChestPlacer.roll_one(node, chest_rules(), chest_skin)
+	var cr := chest_rules()
+	var rarity := ChestPlacer.rarity_of(node)
+	var rng := _rng_for(node, "chest_open")
+	var span := cr.item_range(rarity)
+	var n := rng.randi_range(span.x, maxi(span.x, span.y))
+	var sr := rules.search.duplicate() as SearchRules
+	sr.max_searches = 1
+	sr.encounter_curve = [0.0] as Array[float]
+	sr.items_per_search = Vector2i(n, n)
+	var excl: Array[StringName] = sr.exclude_tags.duplicate()
+	if cr.include_treasure:
+		excl.erase(&"treasure")
+	sr.exclude_tags = excl
+	sr.haul_board = cr.haul_board
+	sr.search_floors = []
+	var session := SearchSession.new(node, sr, items, rng, _depth_of(node))
+	var f := cr.floor_of(rarity)
+	var floor_row: Array[int] = []
+	if f > 0:
+		for i in n:
+			floor_row.append(f)
+	session.search_floor = floor_row
+	var bless_rng := _rng_for(node, "bless_chest")
+	var base := rules.search
+	session.substitute = func(ids: Array[StringName]) -> Array[StringName]:
+		return hooks.bless_substitute(ids, base.bless_chance, base.bless_chance_active, bless_rng)     # 095：赐福版照换
+	var s := session
+	session.ended.connect(func(reason: StringName): _close_search(node, s, reason))
+	var chest := ChestPlacer.chest_of(node).duplicate()
+	chest["opened"] = true
+	node.content[ChestPlacer.KEY] = chest
+	last_handled_id = node.id
+	current_search = session
+	search_opened.emit(node, session)
+	session.search()
+	if session.active:
+		search_shown.emit(node, session)
+	return true
+#endregion
 
 
 ## 商店：开一个会话，玩家买、刷新、走；走了才算用过

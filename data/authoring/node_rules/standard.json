@@ -6,7 +6,8 @@
     "search": 3,
     "event": 2,
     "shop": 1,
-    "rest": 1
+    "rest": 1,
+    "chest": 1
   },
   "search": {
     "encounter_curve": [

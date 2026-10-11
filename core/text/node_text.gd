@@ -22,6 +22,7 @@ const LABELS := {
 	&"core": "核心",
 	&"spawn": "出生点",
 	&"safe": "保险箱",
+	&"chest": "宝箱",
 }
 
 const UNKNOWN := "未知"

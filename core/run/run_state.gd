@@ -171,6 +171,7 @@ static func start(
 		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id(), s.carry_rule)
 	PaidExtracts.mark(s.map, s.economy)
 	EventPlacer.fill(s.map, s.node_rules)
+	ChestPlacer.roll(s.map, s.node_rules.chest if s.node_rules != null else null, p_chapter.chest_skin)     # 154：宝箱的稀有度与皮肤生成时就定
 	s.rng = RunRNG.new(p_seed)
 	# 局外 buff 在开局那一刻定下来：体力上限、开局钱按它们改（一局里的规则见 buff_context）
 	s.buff_defs = p_buff_defs
@@ -924,6 +925,7 @@ func _wire_events() -> void:
 	events = NodeEvents.new(map)
 	events.vitality = vitality
 	events.rules = node_rules
+	events.chest_skin = chapter.chest_skin if chapter != null else &"ruins"     # 154
 	events.pool = pool
 	events.enemies = enemies
 	events.items = items
