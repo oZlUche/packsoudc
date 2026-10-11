@@ -3,7 +3,7 @@
 ## [codeblock]
 ## P = (B + Σ_规则 Σ_效果 V × T × C × K × L) × W
 ## B  直接伤害 DPS：自发规则（按冷却出手）里打对手的那一下 × 频率（含暴击期望）× 耐力可持续系数
-##    （155：min(1, 耐力回复 ÷ 自发规则每秒耗的耐力)，快手武器的上限是耐力不是冷却）
+##    （155 补，作者定：min(1, (耐力上限 + 回复 × 一场时长) ÷ (自发规则每秒耗的耐力 × 一场时长))，[method PowerWeights.stamina_sustain]）
 ## V  效果触发一次值多少，带符号（[method CombatEffect.estimated_value]）：打对手、给自己增益为正，伤自己、给对手增益为负
 ## T  一秒触发几次（[method AbilityRule.estimated_rate]）
 ## C  消耗能付几成、K 条件满足几成（[method Cost.estimated_factor]）、L 重复触发的折扣（[method CombatEffect.estimated_cap]）
@@ -81,7 +81,7 @@ static func estimate(def: ItemDef, weights: PowerWeights = null, buffs: Dictiona
 				hits = true
 		if hits:
 			out.hz += hz
-	out.sustain = minf(1.0, w.stamina_regen / stamina_need) if stamina_need > 0.0 else 1.0
+	out.sustain = w.stamina_sustain(stamina_need)
 	out.base *= out.sustain
 	out.defense = defense_of(stats, w)
 	var ctx := PowerContext.new()
