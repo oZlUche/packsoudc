@@ -134,3 +134,22 @@ UNLOCKED  ── 动画全停、环消失、播宝箱开启动画（皮肤 `open
 | 新内容种类 `chest_skins`（`ContentPaths`、`ContentCheck`、导入 / 导出、`ContentSchema`）、`data/authoring/chest_skins/ruins.json`、`ChapterDef.chest_skin` | 皮肤 |
 | `docs/architecture.md` 5.4 类型表、`docs/text-placeholders.md`（如加 `{chest_rarity}`） | 文档 |
 | `tests/run/test_chest_154.gd` | 见 3.6 |
+
+## 落地记录（2026-10-11，五项待定全按推荐）
+
+- **节点**：`chest` 进了类型表、样式（「宝」）、地图文字 `C`、名字、浮窗（默认一句「上锁的宝箱：长按开锁，越好的箱子越费时。」）、帮助页「节点类型」。随机点能揭出（`RANDOM_ALLOWED`、`standard.json` 的 `random_weights.chest = 1`）；自由模式各环和环模板的 `type_weights` 加 `chest: 1`，没进 `type_risk / type_reward`（按 0 算）。
+- **稀有度**：`ChestPlacer.roll` 在 `EventPlacer.fill` 之后跑，只用 `content_seed`，已经定了的不动；随机点揭成宝箱时 `NodeEvents.reveal` 补同一步，`_arrive_chest` 再兜一次（预设图、手改的点）。
+- **开锁后**：`NodeEvents.open_chest` 复制一份 `SearchRules`：`max_searches = 1`、`encounter_curve = [0]`、件数按 `items_by_rarity` 掷定后上下限都设成它、`exclude_tags` 去掉 `treasure`、`haul_board` 用宝箱的、`search_floor` 每件都是下限。原规则不动。赐福替换照旧。关搜索屏（`pause_search`）对宝箱直接拿完走人，不出「再搜 / 走」。
+- **与方案的出入**：
+  - 方案里的 `arrival_payload` 实际叫 `_reopen_entry`，站在没开锁的宝箱上能「回到这个点」。
+  - `ChestSkinDef` 的进度环写成两个平的字段 `ring_radius / ring_width`（不是 `ring: {radius, width}`），`lock_offset` 是 `Vector2`；JSON 示例按这个写。
+  - `FrameStrip` 放在 `ui/widgets/frame_strip.gd`，`UiDraw` 放在 `ui/ui_draw.gd`。
+- **画面**：`ui/game/chest_screen.gd`。整屏背景（有图铺满裁切，没图深底），上面一行「{稀有度}宝箱」，中央 `ChestView` 画宝箱，下面一行字（没按「点击宝箱开锁」、按着「尝试开锁」、开了清空），左下「回地图」。
+  - 占位：地上的影子、木箱身和盖、包边颜色随稀有度（越稀有竖向包边越多）、锁片和圆锁孔；按着时锁孔里一根拨片来回转、箱子轻抖；进度环圆心就是锁孔，从正上方顺时针走。开了画掀开的盖、一团光和「开」，0.45 秒后弹出搜索界面。有序列帧就播序列帧。
+  - 输入：鼠标左键在宝箱上按下才算；松手在哪儿都算松手；空格按住同样（回地图按钮不抢焦点）。两路都松了才算松手。Esc：按着先松手，没按着回地图。开锁不走步。
+  - **鼠标按着移出宝箱**：照 154 §3.4 仍算按着。美术草稿写的是「移出 = 松手」，和方案冲突，所以留了开关 `ChestScreen.MOUSE_OUT_RELEASES`（默认 false），作者定了改成 true 即可。
+  - 搜索屏标题对宝箱写「{稀有度}宝箱　点 N」。
+- **皮肤**：新内容种类 `chest_skins`（在 `chapters` 之前导入），`data/authoring/chest_skins/ruins.json` 只有 id 与名字，图全空，全部占位。导入器对写了却找不到的图只提醒。章节 `chest_skin` 默认 `ruins`，不认识的 id 提醒。美术交付后在 ruins.json 里填路径即可，不用改代码。
+- **121 棘轮**：没加 `add_theme_`，图形全在画布上。
+- **测试**：`tests/run/test_chest_154.gd`（类型登记、规则与稀有度、生成、`LockHold` 数学、开锁后的会话与存档中途读回、开锁画面整屏按住到弹出搜索）。
+- **连带**：自由模式加了宝箱权重，同一个种子的图变了，编译金样四份的 uid 整体挪了 7（数值没动），按 143 的先例重录；随机点用例补上「揭成宝箱」一支（没开锁不算用过）。

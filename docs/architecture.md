@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.76 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.77 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1731,6 +1731,7 @@ func resolve(run_seed: int) -> MapGraph      # 失败返回 null，原因在 las
 | `shop` | `S` | 商店 | **必须型** |
 | `rest` | `R` | 休息区 | **必须型** |
 | `extract` | `X`（暂定） | 中途撤离点 | 覆盖型，见下。符号是解析器先占的位，等作者在表里定 |
+| `chest` | `C` | 宝箱（154）：生成时定好稀有度与皮肤（`content.chest`，`ChestPlacer`）；踩上去是开锁画面，长按开锁、开了搜一次（不遭遇、能出珍宝、每件不低于下限）。没开锁走开不算用过 | 普通（随机点也能揭出） |
 | `junction` | — | 岔路口：路上的一个拐点，没有事件 | 手绘地图才有，见 5.4.1 |
 | `core` | `B` | 章节 BOSS，最终撤离点，固定一个 | — |
 | `spawn` | `P`（暂定） | 出生点，图上写「生」。是一种节点，不只是一个标记：不参与 mix、配额与校准，风险收益都是 0 | 结构性 |
@@ -4075,6 +4076,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.77 | 2026-10-11 | **宝箱节点与长按开锁画面**（报告 154，作者定，五项待定按推荐；改 5.4 类型表）：新节点类型 `chest`（样式「宝」、地图文字 `C`、随机点能揭出，自由模式各环权重 1）；`ChestRules`（挂 `NodeRules.chest`：按档位的稀有度权重、高危区 +1、六档按住秒数、松手回退倍速、各档件数与下限、能出珍宝、收获箱大小）；`ChestPlacer` 生成后给每个宝箱点定稀有度与皮肤（只用 `content_seed`），揭出时补同一步；纯逻辑状态机 `LockHold`（按住走、松手二倍速回退、走满只发一次、按着不能走）；`NodeEvents.chest_shown / open_chest`（复制一份搜索规则：一次、不遭遇、去掉珍宝排除、件件不低于下限）、关搜索屏即拿完走人；`GameFlow.Screen.CHEST / open_chest / leave_chest`，`_reopen_entry` 站在没开锁的宝箱上能再开；新屏 `ui/game/chest_screen.gd`（占位绘制：方块宝箱随稀有度换色、圆锁孔、拨片与轻抖、锁孔环；`MOUSE_OUT_RELEASES` 开关切到美术稿的「移出 = 松手」）；`UiDraw.ring`（从 `LootView` 抽出，两处共用）、`FrameStrip`（序列帧）；新内容种类 `chest_skins`（`ChestSkinDef`，`data/authoring/chest_skins/ruins.json`），`ChapterDef.chest_skin` 默认 ruins；缺图一律占位，导入器只提醒。自由模式的图因此变了，编译金样只有 uid 挪动、重录 |
 | v2.76 | 2026-10-10 | **护盾改名护甲**（报告 153 补充一，作者定；改 4.6 / 4.8）：防具给的那层资源 `shield` → `armor`（护甲），上限属性 `max_shield` → `max_armor`（护甲上限），`DamageTypeDef.shield_absorbable` → `armor_absorbable`，信仰功能 `food_shield` → `food_armor`，权重 `shield_per_point` → `armor_per_point`，帮助页 `shield` → `armor`、`direct_damage_and_armor` → `direct_damage_and_block`；生命条上「盾 N」→「甲 N」。玩家可见的「护盾」「防护」两词退出。导入器：`base_stats.armor` 报错（改名前后意思不同，写清 block / max_armor 两种去处），`max_shield` / `shield_absorbable` / `food_shield` / 资源键 `shield` 认作新名并提醒 |
 | v2.75 | 2026-10-10 | **防护改名格挡，只取最高**（报告 153，作者定，五项待定按推荐；改 4.3 / 4.6）：属性 `armor` → `block`（格挡），盾牌专属；每面盾一层、只有最高那层生效（其余备用），敌人天生的算一层，守卫删掉天生 4；轴正名改「加固」，加在生效层上；弹开 / 久弹 / 标记改成带轴的 buff；自然 / 大地赐福拆成盾加格挡、防具加护盾上限；导入器拦非盾给格挡、buff mods 改格挡，旧键 armor 当 block 读；回放面板一格「格 N」；`armor_per_point` 改名 `block_per_point` |
 | v2.74 | 2026-10-10 | **151 补充 + 道具编辑器分组**（作者定）：战斗力估算加 D（自带护盾上限 × `shield_per_point` + 防护 × `armor_per_point`），护具（armor / shield 标签）也给推荐稀有度与价值；道具编辑器的一级分组加「包」，包不再混在「有效果」里 |

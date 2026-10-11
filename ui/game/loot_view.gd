@@ -269,9 +269,7 @@ func _draw_silhouette(item: ItemInstance) -> void:
 func _draw_progress(item: ItemInstance) -> void:
 	var center := cell_origin_px(item.origin) + Vector2(item.def.shape.size_rotated(item.rotation)) * CELL * 0.5
 	var radius := CELL * 0.38
-	draw_arc(center, radius, 0.0, TAU, 32, COLOR_NEXT.darkened(0.4), 2.0)
-	if _progress > 0.0:
-		draw_arc(center, radius, -PI * 0.5, -PI * 0.5 + TAU * clampf(_progress, 0.0, 1.0), 32, COLOR_PROGRESS, 3.0)
+	UiDraw.ring(self, center, radius, _progress, COLOR_NEXT.darkened(0.4), COLOR_PROGRESS, 3.0, 2.0)
 
 
 ## 下一件：左上角一个小标

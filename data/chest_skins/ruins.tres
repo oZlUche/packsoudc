@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="ChestSkinDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/chest_skin_def.gd" id="1_rn6vg"]
+
+[resource]
+script = ExtResource("1_rn6vg")
+id = &"ruins"
+display_name = "废墟"

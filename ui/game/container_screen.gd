@@ -36,8 +36,10 @@ func open(payload: Dictionary) -> void:
 	var left := _vbox(8)
 	row.add_child(left)
 	var boss := _session == null and flow.run != null and flow.run.boss_cleared
-	left.add_child(_label("搜索点 %d　第 %d 次翻找" % [node.id if node != null else -1, _session.searches_done] if _session != null else
-		("BOSS 的战利品　拖到棋盘带走；收起就直接撤离结算" if boss else "战利品　拖到棋盘或地上带走"), 16, UiPalette.FG))
+	var chest := _session != null and NodeEvents.effective_type(_session.node) == &"chest"     # 154：宝箱开锁后的那一次搜索
+	left.add_child(_label(("%s宝箱　点 %d" % [ItemTooltip.rarity_name(ChestPlacer.rarity_of(_session.node)), _session.node.id]) if chest else
+		("搜索点 %d　第 %d 次翻找" % [node.id if node != null else -1, _session.searches_done] if _session != null else
+		("BOSS 的战利品　拖到棋盘带走；收起就直接撤离结算" if boss else "战利品　拖到棋盘或地上带走")), 16, UiPalette.FG))
 	_loot = LootView.new()
 	_loot.label_font = font
 	_loot.inventory = _container

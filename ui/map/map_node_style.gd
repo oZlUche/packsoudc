@@ -19,6 +19,7 @@ const STYLES := {
 	&"core": {"glyph": "核", "color": Color("ff4a3d")},   # 红，始终可见：玩家的方向锚点（5.9）
 	&"spawn": {"glyph": "生", "color": Color("5cb85c")},
 	&"safe": {"glyph": "箱", "color": Color("c8a2ff")},   # 092：放进去的就算带出去了
+	&"chest": {"glyph": "宝", "color": Color("c98a3c")},   # 154：金棕，和搜索的黄分开（终值等美术）
 }
 
 const UNKNOWN := {"glyph": "?", "color": Color("8b93a1")}

@@ -7,7 +7,7 @@ class_name NodeRules
 extends Resource
 
 ## 随机点（?）进入时可以变成的类型：**不会**变成精英或 BOSS（5.4）。导入器只认这几个键
-const RANDOM_ALLOWED: Array[StringName] = [&"battle", &"search", &"shop", &"rest", &"event"]
+const RANDOM_ALLOWED: Array[StringName] = [&"battle", &"search", &"shop", &"rest", &"event", &"chest"]     # 154：随机点能揭出宝箱
 ## 常规事件的三种结果（占位）：给一件道具 / 回一点体力 / 一段剧情
 const EVENT_OUTCOMES: Array[StringName] = [&"item", &"restore", &"story"]
 
@@ -18,6 +18,9 @@ const EVENT_OUTCOMES: Array[StringName] = [&"item", &"restore", &"story"]
 @export var random_weights: Dictionary = {"battle": 3, "search": 3, "event": 2, "shop": 1, "rest": 1}
 
 @export var search: SearchRules = null
+
+## 154：宝箱点的规则（稀有度、开锁时长、收获）。空 = 用 [ChestRules] 的默认
+@export var chest: ChestRules = null
 
 ## 战斗输了扣多少体力：类型 → 数。core 不在这里 —— BOSS 输了直接战败（7.1），那是规则不是数值。
 ## 搜索点里遭遇的不在这里：固定无代价（091 / 135），进战斗时直接传 0

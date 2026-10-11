@@ -148,6 +148,11 @@ class Context:
 
 	## id -> HelpPageDef（114）。「相关」对着它查
 	var help_pages: Dictionary = {}
+	## id -> ChestSkinDef（154）。章节的 chest_skin 对着它查
+	var chest_skins: Dictionary = {}
+
+	func register_chest_skin(def: ChestSkinDef) -> void:
+		_put(chest_skins, def)
 
 	func register_help_page(def: HelpPageDef) -> void:
 		_put(help_pages, def)
@@ -237,6 +242,8 @@ static func import_of(kind: String, data: Dictionary, ctx: Context, report: Impo
 			return import_tech(data, ctx, report)
 		"help_pages":
 			return import_help_page(data, ctx, report)
+		"chest_skins":
+			return import_chest_skin(data, ctx, report)
 		"items":
 			return import_item(data, ctx, report)
 		_:
@@ -1087,6 +1094,23 @@ static func validate_techs(ctx: Context, report: ImportReport) -> void:
 			slots[at] = id
 
 
+## 154：宝箱屏的皮肤。缺的键、缺的图都画占位，所以图找不到只提醒；开锁动画的帧率得为正
+static func import_chest_skin(data: Dictionary, ctx: Context, report: ImportReport) -> ChestSkinDef:
+	var def := ChestSkinDef.new()
+	_fill(def, data, "", ctx, report)
+	_require_id(def.id, "宝箱皮肤", report)
+	for path in def.all_paths():
+		if not ResourceLoader.exists(path) and not FileAccess.file_exists(path):
+			report.warn("", "图不存在：%s（画占位）" % path)
+	for key in ["unlock_fps", "trying_fps", "open_fps"]:
+		if float(def.get(key)) <= 0.0:
+			report.error(key, "帧率应为正")
+	if def.ring_radius <= 0.0 or def.ring_width <= 0.0:
+		report.error("ring_radius", "进度环的半径与粗细应为正")
+	ctx.register_chest_skin(def)
+	return def
+
+
 ## 114：百科的一页机制说明。分类在固定清单里、有标题有正文、相关道具是真道具、文本里的引用存在。
 ## 「相关」指到的页要等全部导完才查得全（[method validate_help_pages]）
 static func import_help_page(data: Dictionary, ctx: Context, report: ImportReport) -> HelpPageDef:
@@ -1360,6 +1384,36 @@ static func import_node_rules(data: Dictionary, ctx: Context, report: ImportRepo
 	return rules
 
 
+## 154：宝箱规则 —— 每行六个非负权重、不全为零；六档时长为正；件数范围合法；下限在 0～5
+static func _validate_chest_rules(c: ChestRules, report: ImportReport) -> void:
+	for i in c.rarity_by_tier.size():
+		var row = c.rarity_by_tier[i]
+		if not (row is Array) or (row as Array).is_empty():
+			report.error("chest.rarity_by_tier[%d]" % i, "每一行是六档稀有度的权重")
+			continue
+		var total := 0.0
+		for w in row:
+			if float(w) < 0.0:
+				report.error("chest.rarity_by_tier[%d]" % i, "权重不能为负")
+			total += maxf(0.0, float(w))
+		if total <= 0.0:
+			report.error("chest.rarity_by_tier[%d]" % i, "这一档的宝箱总得能是点什么（权重全是 0）")
+	for i in c.hold_seconds.size():
+		if c.hold_seconds[i] <= 0.0:
+			report.error("chest.hold_seconds[%d]" % i, "开锁时长应为正")
+	if c.release_decay < 0.0:
+		report.error("chest.release_decay", "回退倍速不能为负（0 = 一松手归零）")
+	for i in c.items_by_rarity.size():
+		var r := c.items_by_rarity[i]
+		if r.x < 1 or r.y < r.x:
+			report.error("chest.items_by_rarity[%d]" % i, "件数 [min, max] 至少一件、min ≤ max")
+	for i in c.floor_by_rarity.size():
+		if c.floor_by_rarity[i] < 0 or c.floor_by_rarity[i] > 5:
+			report.error("chest.floor_by_rarity[%d]" % i, "下限是稀有度 0～5")
+	if c.haul_board.x < 1 or c.haul_board.y < 1:
+		report.error("chest.haul_board", "收获容器至少 1×1")
+
+
 ## 随机点只能变成 A/S/R/V/Q（5.4：不会变成精英或 BOSS）；遭遇曲线非递减、在 0～1；件数范围合法；扣的体力非负。
 static func _validate_node_rules(rules: NodeRules, ctx: Context, report: ImportReport) -> void:
 	_require_id(rules.id, "节点规则", report)
@@ -1398,6 +1452,8 @@ static func _validate_node_rules(rules: NodeRules, ctx: Context, report: ImportR
 			report.error("event_weights", "认不得的事件结果 '%s'（只能是 %s）" % [key, ", ".join(NodeRules.EVENT_OUTCOMES)])
 	if rules.rest_restore < 0 or rules.event_restore < 0:
 		report.error("rest_restore", "回的体力不能为负")
+	if rules.chest != null:
+		_validate_chest_rules(rules.chest, report)
 	if rules.battle_time_limit <= 0.0:
 		report.error("battle_time_limit", "战斗时限应为正")
 	if rules.overtime != null:
@@ -1614,6 +1670,8 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 		report.error("encumbrance_rules", "找不到负重规则 '%s'（已知：%s）" % [def.encumbrance_rules, ", ".join(ctx.encumbrance_rules.keys())])
 	if def.node_rules != &"" and not ctx.node_rules.is_empty() and not ctx.node_rules.has(def.node_rules):
 		report.error("node_rules", "找不到节点规则 '%s'（已知：%s）" % [def.node_rules, ", ".join(ctx.node_rules.keys())])
+	if def.chest_skin != &"" and not ctx.chest_skins.is_empty() and not ctx.chest_skins.has(def.chest_skin):
+		report.warn("chest_skin", "找不到宝箱皮肤 '%s'（画占位；已知：%s）" % [def.chest_skin, ", ".join(ctx.chest_skins.keys())])
 	if def.economy_rules != &"" and not ctx.economy_rules.is_empty() and not ctx.economy_rules.has(def.economy_rules):
 		report.error("economy_rules", "找不到经济规则 '%s'（已知：%s）" % [def.economy_rules, ", ".join(ctx.economy_rules.keys())])
 	for i in def.characters.size():

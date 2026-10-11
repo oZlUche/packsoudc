@@ -15,6 +15,14 @@ search_floors = [[0, 0], [1, 0], [1, 1, 0], [2, 1, 1]]
 script = ExtResource("1_pbgj0")
 id = &"standard"
 display_name = "标准节点规则（占位）"
+random_weights = {
+"battle": 3,
+"chest": 1,
+"event": 2,
+"rest": 1,
+"search": 3,
+"shop": 1
+}
 search = SubResource("Resource_4xugp")
 events_by_type = {
 "event": {
