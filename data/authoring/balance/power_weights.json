@@ -17,6 +17,7 @@
   "status_applied_rate": 0.3,
   "status_removed_rate": 0.2,
   "stamina_regen": 4.0,
+  "stamina_max": 50.0,
   "stack_cost_factor": 0.5,
   "condition_factor": 0.6,
   "assumed_stacks": 2.0,
@@ -26,5 +27,7 @@
   "tiers": [0.9, 1.35, 1.9, 2.8],
   "value_band": [0.8, 0.4],
   "armor_per_point": 0.5,
-  "block_per_point": 3.2
+  "block_per_point": 3.2,
+  "handle_cells": 1.0,
+  "fight_sec": 12.0
 }

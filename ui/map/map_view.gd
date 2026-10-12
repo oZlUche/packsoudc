@@ -17,7 +17,9 @@ signal edge_pressed(edge: MapEdge, button: int)
 signal slot_pressed(slot: Dictionary)
 signal empty_pressed
 
-const NODE_RADIUS := 13.0
+const NODE_RADIUS := 16.0     # 155：13 → 16，图标放大（作者：图案再大一点），外圈与命中都跟着它
+## 155：图标的边长 = 节点半径 × 它（圆里留一圈边）
+const ICON_SCALE := 1.6
 const SLOT_RADIUS := 5.0
 const EDGE_PICK := 6.0
 
@@ -438,9 +440,15 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, UiPalette.FG, 2.0, true)
 	elif n.id == _hover_id:
 		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, Color(UiPalette.FG, 0.35), 1.0, true)
-	var glyph: String = style["glyph"]
-	var w := _font.get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
-	draw_string(_font, p + Vector2(-w / 2.0, 5.0), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, color)
+	# 155：有图标画图标（白线稿按节点色着色，圆底是同色压暗的深色，图标不会融进去）；没图退回写字
+	var tex := MapNodeStyle.icon(n.type)
+	if tex != null:
+		var side := NODE_RADIUS * ICON_SCALE
+		draw_texture_rect(tex, Rect2(p - Vector2(side, side) * 0.5, Vector2(side, side)), false, color)
+	else:
+		var glyph: String = style["glyph"]
+		var w := _font.get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
+		draw_string(_font, p + Vector2(-w / 2.0, 5.5), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, color)
 	# 「这里有可看的内容」的标记位（5.10，内容归 M4）：random 没有 —— 那是地图上唯一看不透的点
 	if n.type != &"random" and not n.is_visited() and not MapNodeTypes.STRUCTURAL.has(n.type):
 		draw_circle(p + Vector2(-NODE_RADIUS + 3.0, -NODE_RADIUS + 3.0), 2.0, Color(UiPalette.FG, 0.6))

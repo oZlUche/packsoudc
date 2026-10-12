@@ -27,6 +27,7 @@ const DEFAULTS := {
 	"status_applied_rate": 0.3,
 	"status_removed_rate": 0.2,
 	"stamina_regen": 4.0,
+	"stamina_max": 50.0,
 	"stack_cost_factor": 0.5,
 	"condition_factor": 0.6,
 	"assumed_stacks": 2.0,
@@ -37,14 +38,22 @@ const DEFAULTS := {
 	"value_band": [0.8, 0.4],
 	"armor_per_point": 0.5,
 	"block_per_point": 3.2,
+	"handle_cells": 1.0,
+	"fight_sec": 12.0,
 }
 
 ## 估算视野 H：一场打多久（秒）。持续类效果按 H 内能跑多久算
 var horizon_sec: float = 30.0
-## 永续的东西（可叠层的 buff、轴）平均还能起作用的时间占 H 的几成（中途上的，后半场才有）
+## 永续的东西（不可叠层的永续 buff、轴）平均还能起作用的时间占 H 的几成（中途上的，后半场才有）。
+## 155：可叠层的 buff 不用它，按 [member fight_sec] 的三角形累积算
 var persist_share: float = 0.3
-## 每格基准 DPS：默认战斗力 = 它 × 格数；推荐稀有度的预算比也除以它
+## 155：一场普通战斗打多久（秒）。可叠层的永续 buff（流血、中毒，每击一层）层数随时间线性涨，
+## 一层平均待 fight_sec ÷ 2（第 k 秒 k 层，平均一半）
+var fight_sec: float = 12.0
+## 每格基准 DPS：默认战斗力 = 它 × (格数 + [member handle_cells])；推荐稀有度的预算比也除以它
 var per_cell_dps: float = 2.0
+## 155：把手格 —— 任何能打的东西都得有个把手，一格的武器不该只给一格的预算。默认战斗力按「格数 + 它」算
+var handle_cells: float = 1.0
 ## 新建武器预填的冷却（秒）；伤害按默认战斗力反算
 var default_cooldown: float = 2.0
 ## 新建武器预填的每次耐力消耗 = 它 × 格数
@@ -71,8 +80,10 @@ var threshold_share: float = 0.5
 var status_applied_rate: float = 0.3
 ## 「移除了某 buff 时」假定一秒几次
 var status_removed_rate: float = 0.2
-## 耐力回复基线（每秒），耐力消耗按它算能持续几成
+## 耐力回复基线（每秒），耐力消耗按它算能持续几成（[method stamina_sustain]）
 var stamina_regen: float = 4.0
+## 155 补（作者定）：基础耐力上限（[CombatantBaseline] 的 max_stamina）—— 开场这一池满耐力也算进一场能花的耐力里
+var stamina_max: float = 50.0
 ## 吃层的消耗（轴、buff 层）打几折（吃掉的层本身有价值）
 var stack_cost_factor: float = 0.5
 ## 状态 / 资源 / 轴条件满足的概率（取反 = 一减它）
@@ -131,9 +142,23 @@ func apply(d: Dictionary, problems: Array[String] = []) -> void:
 			problems.append("'%s' 得是数" % k)
 
 
-## 一个效果平均能起作用多久（秒）：永续 = H × 永续占比，有时长 = min(时长, H)
-func expected_duration(seconds: float, permanent: bool) -> float:
+## 一个效果平均能起作用多久（秒）：可叠层（永续，155）= 一场的一半，不可叠层的永续 = H × 永续占比，有时长 = min(时长, H)
+func expected_duration(seconds: float, permanent: bool, stackable: bool = false) -> float:
+	if stackable:
+		return fight_sec * 0.5
 	return horizon_sec * persist_share if permanent else minf(seconds, horizon_sec)
+
+
+## 155 补（作者定）：耐力能撑住几成 = min(1, (耐力上限 + 回复 × 一场时长) ÷ (每秒耗的耐力 × 一场时长))。
+## 一场里能花的耐力 = 开场那一池 + 这一场回的；不耗耐力 = 1
+func stamina_sustain(per_sec: float) -> float:
+	var need := per_sec * fight_sec
+	return minf(1.0, (stamina_max + stamina_regen * fight_sec) / need) if need > 0.0 else 1.0
+
+
+## 155：默认战斗力（预算）= 每格基准 × (格数 + 把手格)；把手只算武器（[param weapon]），护具照旧按格数
+func default_power(cells: int, weapon: bool = true) -> float:
+	return per_cell_dps * (maxi(1, cells) + (handle_cells if weapon else 0.0))
 
 
 func to_dict() -> Dictionary:

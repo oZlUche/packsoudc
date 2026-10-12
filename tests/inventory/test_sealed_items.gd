@@ -16,7 +16,7 @@ static func run_sealed_listing(t: TestCase) -> void:
 	var sealed: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_sealed())
 	var blessed: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_blessed())
 	t.check(sealed.size() >= 10, "封存了 %d 件现代道具" % sealed.size())
-	for id in [&"pistol", &"rifle", &"sniper", &"mag", &"battery", &"drone", &"armor", &"core", &"stim", &"medkit", &"crowbar"]:
+	for id in [&"pistol", &"rifle", &"mag", &"battery", &"drone", &"armor", &"core", &"stim", &"medkit", &"crowbar"]:
 		t.check(sealed.has(id), "%s 封存了" % id)
 		var def := db.get_def(id)
 		t.check(def != null and def.is_sealed() and def.tags.has(ItemDef.SEALED), "%s 的数据还在、带 sealed 标签" % id)

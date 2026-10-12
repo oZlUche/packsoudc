@@ -35,9 +35,9 @@ func _init() -> void:
 
 func show_estimate(b: PowerEstimate.Breakdown) -> void:
 	estimate = b
-	_head.text = "战斗力 %.1f　（默认 %.1f，占 %d 格）" % [b.power, b.default_power, b.cells]
+	_head.text = "战斗力 %.1f　（默认 %.1f，占 %d 格 + 把手）" % [b.power, b.default_power, b.cells]
 	var lines: Array[String] = []
-	lines.append("基础（直接伤害）%s　%.1f 次/秒" % [_signed(b.base), b.hz])
+	lines.append("基础（直接伤害）%s　%.1f 次/秒%s" % [_signed(b.base), b.hz, "　耐力只撑得住 %d%%" % roundi(b.sustain * 100.0) if b.sustain < 0.999 else ""])
 	if b.defense != 0.0:
 		lines.append("自带护甲 / 格挡 %s" % _signed(b.defense))
 	for r in b.rules:

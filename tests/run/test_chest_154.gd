@@ -44,6 +44,8 @@ static func run_rules(t: TestCase) -> void:
 	for k in 5:
 		t.check(r.hold_time(k + 1) > r.hold_time(k), "稀有度 %d 比 %d 按得久" % [k + 1, k])
 	t.eq(r.hold_time(99), r.hold_time(5), "超出按最后一项")
+	t.eq(r.hold_time(0), 1.0, "普通一秒（155）")
+	t.eq(r.hold_time(5), 3.0, "神话三秒：最长不超过三秒（155，作者定）")
 	t.eq([r.floor_of(0), r.floor_of(1), r.floor_of(2), r.floor_of(5)], [0, 0, 1, 4], "下限 = 稀有度 − 1，前两档 0")
 	t.eq(r.item_range(0), Vector2i(2, 3), "普通箱 2～3 件")
 
@@ -293,6 +295,8 @@ static func frame_chest_screen(t: TestCase, root: Window) -> void:
 	t.check(hold.is_unlocked() and screen.opening, "走满：开箱动画")
 	t.eq(screen.hint.text, "", "字没了")
 	t.eq(flow.screen, GameFlow.Screen.CHEST, "开箱动画播完才弹搜索")
+	screen.step(screen.OPEN_PAUSE_SECONDS * 0.5)
+	t.eq(flow.screen, GameFlow.Screen.CHEST, "开了先停一会儿（箱内漆黑），再弹搜索")
 	screen.step(1.0)
 	t.eq(flow.screen, GameFlow.Screen.SEARCH, "→ 搜索屏")
 	t.check(ChestPlacer.is_opened(node), "开过了")

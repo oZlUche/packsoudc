@@ -41,12 +41,15 @@ func describe() -> String:
 	return "消耗 %s %s" % [TextTemplate.num(amount), res]
 
 
-## 151：耐力能持续几成 = min(1, 回复 ÷ (每次 × 一秒几次))；别的资源不打折
+## 151：耐力能持续几成（155 补：耐力上限 + 一场的回复，[method PowerWeights.stamina_sustain]）；别的资源不打折
 func estimated_factor(ctx: PowerContext, rate: float) -> float:
+	return ctx.weights.stamina_sustain(stamina_per_use(ctx.stats) * rate)
+
+
+## 151 / 155：每次出手耗多少耐力（不是耐力的为 0）。按属性取的看 [param stats]
+func stamina_per_use(stats: StatSet) -> float:
 	if resource_key != BattleStats.RES_STAMINA:
-		return 1.0
-	var amt := amount
-	if amount_stat != &"" and ctx.stats != null and ctx.stats.total_of(amount_stat, -1) >= 0:
-		amt = StatMath.to_float(ctx.stats.total_of(amount_stat))
-	var need := amt * rate
-	return minf(1.0, ctx.weights.stamina_regen / need) if need > 0.0 else 1.0
+		return 0.0
+	if amount_stat != &"" and stats != null and stats.total_of(amount_stat, -1) >= 0:
+		return StatMath.to_float(stats.total_of(amount_stat))
+	return amount

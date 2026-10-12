@@ -94,7 +94,7 @@ display_names = {
 "en": "Poisoned Knife"
 }
 shape = SubResource("Resource_q4wjq")
-rarity = 2
+rarity = 3
 value = 40
 tags = Array[StringName]([&"weapon", &"melee", &"rapid", &"poison", &"metal"])
 combat = SubResource("Resource_mhdfx")
