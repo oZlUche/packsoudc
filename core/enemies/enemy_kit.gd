@@ -35,8 +35,28 @@ static func board_of(content: Dictionary, items: ItemDatabase) -> GridInventory:
 		var entry: Dictionary = pair[1]
 		var at: Array = entry.get("at", [0, 0])
 		var inst := ItemInstance.create(def, int(entry.get("rot", 0)))
-		board.place(inst, Vector2i(int(at[0]), int(at[1])), int(entry.get("rot", 0)))
+		if not board.place(inst, Vector2i(int(at[0]), int(at[1])), int(entry.get("rot", 0))):
+			# 作者 2026-10-12：敌人只该掉自己身上的东西 —— 摆不下的这件战斗里没有、掉落表却按 items 算，说一声（[method unplaced_items] 给测试查）
+			push_warning("敌人的道具摆不下：%s @ %s（棋盘 %s）" % [def.id, at, size])
 	return board
+
+
+## 作者 2026-10-12：这份节点内容里摆不下的道具 id（预设图的测试逐个敌人查）
+static func unplaced_items(content: Dictionary, items: ItemDatabase) -> Array[StringName]:
+	var board := board_of(content, items)
+	var placed := {}
+	for inst in board.items():
+		placed[(inst as ItemInstance).def.id] = int(placed.get((inst as ItemInstance).def.id, 0)) + 1
+	var out: Array[StringName] = []
+	for raw in content.get("items", []):
+		var id := StringName(String((raw as Dictionary).get("id", "")))
+		if items.get_def(id) == null:
+			continue
+		if int(placed.get(id, 0)) > 0:
+			placed[id] = int(placed[id]) - 1
+		else:
+			out.append(id)
+	return out
 
 
 ## 基线：默认值 → 敌人自己的覆盖 → 档位倍率 → 节点内容的覆盖（`content.base_stats`，084：预设图里写死的教程敌人自己定数，不跟全局敌人数值一起涨）
