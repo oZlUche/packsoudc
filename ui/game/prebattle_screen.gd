@@ -1,6 +1,6 @@
 ## 战前准备屏（084，作者定）：踩上战斗点（或事件里选了开打、搜索遭遇了）先到这里，不是直接开打。
 ##
-## 左边是对手：从节点内容重建的棋盘（[method EnemyKit.board_of]）与读数（生命 / DPS / 几件）—— 和真打出来的是同一份编译（4.2）；
+## 左边是对手：从节点内容重建的棋盘（[method EnemyKit.board_of]）与读数（生命 / DPS；157 作者定：不写几件）—— 和真打出来的是同一份编译（4.2）；
 ## 右边是自己的棋盘与地上（[InventoryPanel]），随便拖：拖出棋盘 = 放到地上（不参战，打完还在地上；走了留在这个点、回来能拿）。
 ## 只有一个按钮「开战」：棋盘上一件会出手的东西都没有时灰掉（打不起来的仗不让开）。这一屏是**必须过的**：不能收起回地图，也走不了。
 extends GameScreen
@@ -16,6 +16,10 @@ var _slip_btn: Button = null
 ## 147：腰带里能在这儿用的（烟雾弹）一件一个按钮
 var _belt_row: HBoxContainer = null
 var _inv: Control
+## 157：两边的名牌、中缝天平
+var _enemy_plate_node: Nameplate = null
+var _player_plate_node: Nameplate = null
+var _seam: BalanceSeam = null
 
 
 func open(payload: Dictionary) -> void:
@@ -25,15 +29,18 @@ func open(payload: Dictionary) -> void:
 	var panel := _centered_panel(Vector2(0, 0), 20)
 	var col := _vbox(12)
 	panel.add_child(col)
-	col.add_child(_label("战前准备　%s　—— 整理好背包再开战" % _title_of(), 20, UiPalette.FG))
+	_frame_title("战前准备　%s　—— 整理好背包再开战" % _title_of())     # 157：标题在石板框的标题条上
 	col.add_child(_wrapped("战斗是自动的：只有棋盘上包里的东西参战，武器自己出手、防具替你挨打，挨着放的互相加成。开战那一瞬胜负就定了，之后只是回放。拖出棋盘 = 弃置到地上（不参战，打完还在）。",
 		13, UiPalette.DIM, 1100))
 
-	var row := _hbox(28)
+	# 157：对阵式 —— 左对手、右自己，两列等宽，中间一道缝，缝顶一杆天平
+	var row := _hbox(16)
 	col.add_child(row)
 	var left := _vbox(8)
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(left)
-	left.add_child(_label("对手的棋盘　%s" % _enemy_name(_content), 14, UiPalette.HP))
+	_enemy_plate_node = _enemy_plate(_content)
+	left.add_child(_enemy_plate_node)
 	_enemy_view = InventoryView.new()
 	_enemy_view.label_font = font
 	_enemy_view.show_adjacency = true
@@ -47,15 +54,24 @@ func open(payload: Dictionary) -> void:
 	_enemy_line = _wrapped("", 13, UiPalette.FG, 420)
 	left.add_child(_enemy_line)
 
+	_seam = BalanceSeam.new()
+	row.add_child(_seam)
+
 	var right := _vbox(8)
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(right)
-	right.add_child(_label("我的棋盘与地上", 14, UiPalette.FG))
+	_player_plate_node = _player_plate()
+	right.add_child(_player_plate_node)
 	_inv = InventoryPanelScript.new()
 	_inv.setup(flow.run, font)
 	_inv.belt_user = flow.use_belt     # 147：双击腰带里的烟雾弹也走这条路（用了接着往下走）
 	right.add_child(_inv)
 
+	# 「开战」居中、主档；腰带件在左，信仰 / 技能给的动作在右，原因写在下面一行
 	var buttons := _hbox(10)
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
+	_belt_row = _hbox(10)     # 147：腰带里能在战前用的
+	buttons.add_child(_belt_row)
 	_start_btn = _button("开战", start_battle, 16, UiPalette.Tier.PRIMARY)
 	buttons.add_child(_start_btn)
 	# 093（蛮神 3 级）：信仰级效果给的额外动作（秒杀精英）
@@ -73,11 +89,10 @@ func open(payload: Dictionary) -> void:
 		_slip_btn = _button("", func(): slip_battle(), 14)
 		_slip_btn.tooltip_text = slip.describe()
 		buttons.add_child(_slip_btn)
-	_belt_row = _hbox(10)     # 147：腰带里能在战前用的
-	buttons.add_child(_belt_row)
-	_why = _label("", 13, UiPalette.STAMINA)
-	buttons.add_child(_why)
 	col.add_child(buttons)
+	_why = _label("", 13, UiPalette.STAMINA)
+	_why.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_why)
 	flow.run.board.changed.connect(_refresh)
 	var belt := BeltModule.of(flow.run)
 	if belt != null and belt.belt != null:
@@ -163,11 +178,11 @@ func _refresh_belt() -> void:
 func _refresh() -> void:
 	var spec := flow.run.events.pending_battle_spec() if flow.run != null else null
 	if spec != null:
-		var names: Array[String] = []
-		for raw in _content.get("items", []):
-			var d := flow.items.get_def(StringName(String((raw as Dictionary).get("id", ""))))
-			names.append(Names.of(d) if d != null else String((raw as Dictionary).get("id", "?")))
-		_enemy_line.text = "生命 %d　约 %.1f DPS　%d 件：%s" % [spec.max_hp_int(), spec.rough_dps(), names.size(), "、".join(names)]
+		# 157（作者定）：读数只剩生命与 DPS，出手几件道具不写
+		_enemy_line.text = "生命 %d　约 %.1f DPS" % [spec.max_hp_int(), spec.rough_dps()]
+	if _seam != null and flow.run != null:
+		var mine := flow.run.compile_player()
+		_seam.set_strength(strength_of(spec), strength_of(mine))
 	var why := can_start()
 	_start_btn.disabled = why != ""
 	_why.text = why
@@ -177,6 +192,20 @@ func _refresh() -> void:
 		var sw := slip_reason()
 		_slip_btn.text = "%s（%s）" % ["溜走" if sw == "" else ("溜走：" + sw), "不限次" if left < 0 else "剩 %d 次" % left]
 		_slip_btn.disabled = sw != ""
+
+
+## 157：天平用的强弱 = 生命上限 × 粗算 DPS（没编出来 0）
+static func strength_of(spec: CombatantSpec) -> float:
+	return float(spec.max_hp_int()) * spec.rough_dps() if spec != null else 0.0
+
+
+## 157：天平（测试看）
+func seam() -> BalanceSeam:
+	return _seam
+
+
+func enemy_line() -> String:
+	return _enemy_line.text if _enemy_line != null else ""
 
 
 func _title_of() -> String:

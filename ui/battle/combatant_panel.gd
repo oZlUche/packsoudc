@@ -23,6 +23,11 @@ const ORDER := ["hp", "stamina", "mana"]
 const ARMOR_KEY := "armor"
 ## 那圈框的粗细（px）
 const FRAME_W := 3.0
+## 157：挨打抖动（像素、秒）与 buff 上身弹出（从几倍、秒）
+const SHAKE_PX := 3.0
+const SHAKE_SEC := 0.1
+const POP_FROM := 0.6
+const POP_SEC := 0.12
 
 signal buff_hovered(buff_id: String, at: Vector2)
 signal buff_unhovered
@@ -67,6 +72,14 @@ var _fired_at: float = -99.0
 
 ## uid -> 显示名。日志里只有 uid，名字是表现层的事。
 var item_names: Dictionary = {}
+## 157：回放的两种反馈的计数（测试看：跳转时一次都不该有）
+var shakes: int = 0
+var pops: int = 0
+var _shake_x: float = 0.0
+var _shake_tw: Tween = null
+var _pop_id: String = ""
+var _pop_t: float = 1.0
+var _pop_tw: Tween = null
 
 
 func _ready() -> void:
@@ -302,6 +315,39 @@ func note_fired(uid: int, now: float) -> void:
 	queue_redraw()
 
 
+## 157：挨打 —— 整块面板左右抖 3 像素、0.1 秒（[param time_scale] 是倍速给的缩短系数）。新的一下打断上一下，不叠加
+func shake(time_scale: float = 1.0) -> void:
+	shakes += 1
+	if not is_inside_tree():
+		return
+	if _shake_tw != null and _shake_tw.is_valid():
+		_shake_tw.kill()
+	_shake_tw = create_tween()
+	_shake_tw.tween_method(_set_shake, 0.0, 1.0, SHAKE_SEC * time_scale)
+
+
+func _set_shake(p: float) -> void:
+	_shake_x = 0.0 if p >= 1.0 else SHAKE_PX * sin(p * TAU * 2.0) * (1.0 - p)
+	queue_redraw()
+
+
+## 157：buff 上身（首层）—— 那一格从 0.6 倍弹到原大，0.12 秒
+func pop(id: String, time_scale: float = 1.0) -> void:
+	pops += 1
+	if not is_inside_tree():
+		return
+	if _pop_tw != null and _pop_tw.is_valid():
+		_pop_tw.kill()
+	_pop_id = id
+	_pop_tw = create_tween()
+	_pop_tw.tween_method(_set_pop, 0.0, 1.0, POP_SEC * time_scale)
+
+
+func _set_pop(p: float) -> void:
+	_pop_t = p
+	queue_redraw()
+
+
 ## 飘字。伤害为正、治疗为负，颜色按伤害类型。
 func popup(amount: int, type: StringName, heal: bool = false, crit: bool = false) -> void:
 	var l := Label.new()
@@ -339,6 +385,7 @@ func _ordered_keys() -> Array:
 
 
 func _draw() -> void:
+	draw_set_transform(Vector2(_shake_x, 0.0))     # 157：挨打的抖动
 	draw_rect(Rect2(Vector2.ZERO, size), UiPalette.PANEL)
 	draw_rect(Rect2(Vector2.ZERO, size), UiPalette.LINE, false, 1.0)
 	if label_font == null:
@@ -378,6 +425,12 @@ func _draw() -> void:
 				x = PAD
 				y += CHIP_H + 4
 			var rect := Rect2(x, y, w, CHIP_H)
+			var drawn := rect
+			var font_px := 12
+			if String(id) == _pop_id and _pop_t < 1.0:     # 157：刚上身的那一格从小弹到原大
+				var k := lerpf(POP_FROM, 1.0, _pop_t)
+				drawn = Rect2(rect.get_center() - rect.size * k * 0.5, rect.size * k)
+				font_px = maxi(6, roundi(12 * k))
 			# 103：四种配色 —— 系统（琥珀）、减益（红）、增益（蓝）、常驻（灰）
 			var line := UiPalette.ARMOR
 			var group := _group_of(String(id))
@@ -387,11 +440,11 @@ func _draw() -> void:
 				line = SYSTEM_COLOR
 			elif group == 1:
 				line = UiPalette.HP
-			draw_rect(rect, Color(line, 0.3))
-			draw_rect(rect, line, false, 1.0 if String(id) != _hover_id else 2.0)
+			draw_rect(drawn, Color(line, 0.3))
+			draw_rect(drawn, line, false, 1.0 if String(id) != _hover_id else 2.0)
 			draw_string(
-				label_font, Vector2(x + 7, y + 14), text,
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiPalette.FG
+				label_font, Vector2(drawn.position.x + 7.0 * drawn.size.y / CHIP_H, drawn.position.y + 14.0 * drawn.size.y / CHIP_H), text,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, font_px, UiPalette.FG
 			)
 			_chips.append([rect, String(id)])
 			x += w + 6

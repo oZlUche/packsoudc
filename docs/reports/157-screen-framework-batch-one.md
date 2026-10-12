@@ -131,3 +131,21 @@
 | `assets/ui/`（新目录，先空；美术交付清单：`frame_stone.png` + json、`tooltip_paper.png`、`cursor_{arrow,drag,can_drop,forbidden}.png`、`cost_{vitality,money,item,time,faith}.png`）、`assets/portraits/{enemies,characters}/` | 钩子 |
 | `tests/ui/test_theme.gd`、`tests/ui/test_overlay_frame.gd`（新）、战前 / 回放 / 结算 / 事件的现有测试加断言 | |
 | `docs/architecture.md` 8 节（叠层框、淡入、光标）、README 落地记录 | |
+
+## 落地记录（2026-10-12）
+
+四项待定按推荐（天平做、九宫格边距随 json、时间轴能拖、代价图标没图画字符）。美术同日交付了第 7 节清单里的图（`/mnt/project-files/art/ui/`），一并放进 `assets/ui/`。
+
+| 节 | 落在哪 | 和方案的出入 |
+|---|---|---|
+| 1.1 石板框 | `ui/widgets/overlay_frame.gd`（`OverlayFrame`：标题条 + 右侧槽 + 内容区）；`GameScreen._centered_panel` 造它、返回内容区，`_frame_title(text)` 写标题；`UiTheme.PANEL_OVERLAY` / `LABEL_OVERLAY_TITLE`，`asset_root`、`art()` / `art_meta()` / `frame_title_height()` | 用 `_centered_panel` 的是九屏（方案数的八屏里宝箱屏不用它，另有休息、百科），九屏的标题都搬进了标题条。商店的长说明拆成标题「商店　点 N」+ 原处一行灰字。槽先空着（收起 / 关闭按钮没挪，各屏原样）|
+| 1.2 悬浮窗底 | `HoverTip` 主面板与侧边词条小窗都走 `PANEL_TOOLTIP` | 词条小窗原来是术语色的边（棘轮里一处特例），现在和主面板同一块底，棘轮 −1。**美术给的 `tooltip_paper.png` 没放进 `assets/ui/`**：纸是亮色，而悬浮窗正文和各种着色（稀有度、术语、伤害类型）都是按深底配的浅色字，直接换上看不清。要用纸得先把悬浮窗的字色整套换成墨色，单列一项 |
+| 1.3 光标 | `ui/ui_cursor.gd`（`UiCursor.apply()` 在导演 `_ready` 调；热点 (2, 2)）；`DragLayer` 拿起 = 拖动、对准了按 `drop_ok_at` 切可放 / 不可放、放下还原 | — |
+| 1.4 淡入 | `GameDirector._fade_in`（叠层 0.15 秒、底屏 0.2 秒）；`GameSettings.ui_fades` + 设置屏「换屏淡入」开关；`GameDirector.fades_allowed` 由 `run_tests.gd` 与 `capture_scene.gd` 关掉 | — |
+| 2 战前对阵式 | `ui/widgets/nameplate.gd`（`Nameplate`，肖像 `assets/portraits/{enemies,characters}/<id>.png`，没图不画槽）；`ui/widgets/balance_seam.gd`（`BalanceSeam`，中缝 + 天平，`tilt_of` 限 ±25°）；`prebattle_screen.gd` 改成两列等宽 + 中缝，读数只剩「生命 N　约 X DPS」 | 自己的名牌副行写「我方」（136 去掉了身份层，没有「角色身份」可写）。「开战」居中，腰带件在它左边、信仰 / 技能给的动作在右边，原因一行挪到按钮下面 |
+| 3 回放 | `ui/battle/replay_timeline.gd`（`ReplayTimeline`：伤害与倒下的刻度，我方打出的朝上；点 / 拖 = `seek`，拖着停、松手按原状态接着放）；`CombatantPanel.shake()` / `pop(id)`；`CooldownOverlay.flash(uid, at)`（出手与带 uid 的规则触发）；`BattleView.report_of` 收尾战报；回放面板顶上接同一份名牌 | 跳过（`skip_to_end`）也和跳转一样抑制飘字与三种反馈。拖到头算「看完」，标题的胜负只写一次 |
+| 4 战败结算 | `result_screen.gd`：战败且有保险箱件 → 那一格居中、格子 60、说明 16 号 | 撤离分支不动（现在的格子本来就是 60，方案里写的「36」是笔误，照旧不改）|
+| 5.1 代价图标 | `ui/game/event_cost_icons.gd`（`EventCostIcons.KINDS`：体力 / 花钱 / 交出道具 / 耗行动点 / 要信仰）；拼成一条图挂在选项按钮的 `icon` 上，没图的格子在按钮上画字符，悬浮提示写「代价：……」 | `KINDS` 里放的是类，GDScript 的常量不收类，写成 `static var` |
+| 5.2 收获行 | `RunState` 把事件给的东西收到地上时把 uid 记回 `detail.item_uids`；`ui/inventory/harvest_row.gd`（`HarvestRow`：背后的容器就是地上，按 uid 摆成一排）；事件结果页有收获时自动开背包、和背包共用一层拖拽；双击 = 进包 | 收获行只拿不放（拖回收获行 = 放回地上原处）。认不出是哪几件（老存档的结果页）时照旧写「得到：……」一行 |
+
+测试：新套件 `tests/ui/test_screens_157.gd`（83 项：主题有图 / 没图、光标四张、淡入设置、代价图标、天平、战前与回放整条走一遍、六个叠层各一块框、战败结算、收获行）。`test_theme` 的变体表多了三个，棘轮 134 → 133。

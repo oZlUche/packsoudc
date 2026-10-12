@@ -18,8 +18,7 @@ func open(payload: Dictionary) -> void:
 	_won = bool(payload.get("won", false))
 	var enemy_name := _enemy_name(payload.get("enemy_content", {}))
 	# 084（作者定）：不提前显示胜负，看完回放（或跳过）才写
-	_title = _label("战斗　%s" % enemy_name, 18, UiPalette.FG)
-	col.add_child(_title)
+	_title = _frame_title("战斗　%s" % enemy_name)     # 157：标题在石板框的标题条上
 	_verdict = "赢了" if _won else ("平局，按输算" if result != null and result.is_draw() else "输了")
 
 	_view = BattleView.new()
@@ -38,6 +37,9 @@ func open(payload: Dictionary) -> void:
 
 	if result != null:
 		_view.play(result, ["我", enemy_name])
+		# 157：名牌和战前准备屏同一份控件、同一个位置（面板顶上）
+		_view.set_nameplate(0, _player_plate())
+		_view.set_nameplate(1, _enemy_plate(payload.get("enemy_content", {})))
 		_view.set_item_names(0, CombatantSpec.item_names(payload.get("player", null), flow.items))
 		_view.set_item_names(1, CombatantSpec.item_names(payload.get("enemy", null), flow.items))
 		# 087 / 103：双方上过身的 buff（图标 + 悬浮说明）在 result.buffs 里，play 已经接上
@@ -56,7 +58,7 @@ func proceed() -> void:
 func _on_finished() -> void:
 	if _next != null:
 		_next.text = "继续"
-	if _title != null:
+	if _title != null and not verdict_shown():     # 157：拖时间轴拖到头会再「看完」一次
 		_title.text += "　—— " + _verdict
 
 

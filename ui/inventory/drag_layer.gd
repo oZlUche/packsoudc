@@ -173,6 +173,7 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 
 	set_process_input(true)
 	_highlight_partners()
+	UiCursor.set_drag(true)     # 157
 	queue_redraw()
 	drag_started.emit(uid)
 
@@ -199,6 +200,7 @@ func grab_free(inst: ItemInstance, home: ItemContainer, home_at: Vector2i, home_
 	_inst = inst
 	set_process_input(true)
 	_highlight_partners()
+	UiCursor.set_drag(true)     # 157
 	if is_inside_tree():
 		update_preview(get_global_mouse_position())
 	queue_redraw()
@@ -354,7 +356,26 @@ func ghost_cell(global_pos: Vector2) -> float:
 ##
 ## 鼠标位置作为入参而不是内部取，是为了让拖拽逻辑能在没有真实输入的
 ## 测试里被驱动 —— 否则这整块只能靠手工拖拽验证。
+## 157：画完预览按「这里能不能放」切光标（可放 / 不可放）
 func update_preview(global_pos: Vector2) -> void:
+	_update_preview(global_pos)
+	if is_dragging():
+		UiCursor.set_drag(true, drop_ok_at(global_pos))
+
+
+## 157：在这里松手算不算放下了（不是弹回原处）：棋盘外看会不会到地上，格子看预览是不是绿 / 黄的
+func drop_ok_at(global_pos: Vector2) -> bool:
+	var target := view_at(global_pos)
+	if target == null:
+		return _drops_outside_to_stash()
+	if target.container() == null or not _drop_allowed(target.container()):
+		return false
+	if target is InventoryView:
+		return (target as InventoryView).preview_ok()
+	return target is GroundLayer
+
+
+func _update_preview(global_pos: Vector2) -> void:
 	_prune_views()
 	if not is_dragging():
 		return
@@ -370,6 +391,8 @@ func update_preview(global_pos: Vector2) -> void:
 	if not _drop_allowed(target.container()):
 		target.clear_preview()
 		return
+	if not (target is InventoryView):
+		return     # 157：事件的收获行（背后是地上）只拿不放
 
 	var grid_view := target as InventoryView
 	var inv := grid_view.inventory
@@ -583,7 +606,7 @@ func drop_at(global_pos: Vector2) -> bool:
 				dropped = _admit_with_payload(gl.stash, inst, -1, at_spot)
 		if dropped:
 			home = gl.stash
-	elif target != null and (target as InventoryView).inventory != null:
+	elif target is InventoryView and (target as InventoryView).inventory != null:     # 157：别的列表视图（事件的收获行）不是落点
 		var grid_view := target as InventoryView
 		var at := target_origin(grid_view, global_pos)
 		# 099（作者定）：落回同一个容器不算「从别处置入」—— 置入顺序只由 reseat 改（见下），
@@ -906,6 +929,7 @@ func _end_drag() -> void:
 	_src_spot = ItemStash.NO_SPOT
 	_payload = {}
 	set_process_input(false)
+	UiCursor.set_drag(false)     # 157：光标还原
 	queue_redraw()
 
 

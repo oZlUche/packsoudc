@@ -22,7 +22,7 @@ func open(payload: Dictionary) -> void:
 
 	var left := _vbox(8)
 	row.add_child(left)
-	left.add_child(_label("保险箱　%d × %d 格%s" % [_safe.size.x, _safe.size.y, "　点 %d" % node.id if node != null else ""], 16, UiPalette.FG))
+	_frame_title("保险箱　%d × %d 格%s" % [_safe.size.x, _safe.size.y, "　点 %d" % node.id if node != null else ""])     # 157：标题在石板框的标题条上
 	left.add_child(_wrapped("放进来的东西就算带出去了：结算时不管撤离还是行动失败都进仓库。包放不进来。拖过来，或双击棋盘上的东西。", 12, UiPalette.DIM, 340))
 	left.add_child(_wrapped("关上（或走开）就送回基地，之后不能再改动；空着关上不算。", 12, UiPalette.HP, 340))
 	_view = InventoryView.new()

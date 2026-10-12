@@ -22,6 +22,7 @@ func run() -> void:
 		push_error("场景加载失败: " + scene_path)
 		finish(1)
 		return
+	GameDirector.fades_allowed = false     # 157：截图不截到淡入一半的屏
 	_scene = packed.instantiate()
 	root.add_child(_scene)
 	# 告诉 SceneTree 这就是当前场景。不设的话 current_scene 是 null，

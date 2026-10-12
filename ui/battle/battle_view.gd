@@ -48,6 +48,12 @@ var _verdict: Label
 var _ticker: RichTextLabel
 var _play_btn: Button
 var _speed_btn: Button
+## 157：时间轴（可拖）、收尾战报、双方名牌的位置（面板顶上）
+var _timeline: ReplayTimeline
+var _report: RichTextLabel
+var _plate_slots: Array[Control] = []
+## 157：拖时间轴之前在不在放（松手按原状态接着放）
+var _resume_after_scrub := false
 
 
 func _ready() -> void:
@@ -84,6 +90,9 @@ func play(result: BattleResult, names: Array = []) -> void:
 		_overlays[i].now = 0.0
 	_ticker.clear()
 	_verdict.text = ""
+	_timeline.load_result(result)
+	_report.text = ""
+	_report.visible = false
 	_sync_buttons()
 
 
@@ -189,12 +198,42 @@ func set_item_names(side: int, names: Dictionary) -> void:
 		_panels[side].item_names = names
 
 
+## 157：一方的名牌放在它的面板顶上（战斗屏给；沙盒、回放浏览器不给就没有）
+func set_nameplate(side: int, plate: Control) -> void:
+	if side < 0 or side >= _plate_slots.size() or plate == null:
+		return
+	UiTheme.clear_children(_plate_slots[side])
+	_plate_slots[side].add_child(plate)
+	_plate_slots[side].visible = true
+
+
+func timeline() -> ReplayTimeline:
+	return _timeline
+
+
+## 157：收尾战报那一行（没播完是空的）
+func report() -> String:
+	return _report.text if _report != null else ""
+
+
+## 回放现在的时刻（秒）
+func now() -> float:
+	return _now
+
+
+func panel(side: int) -> CombatantPanel:
+	return _panels[side] if side >= 0 and side < _panels.size() else null
+
+
 ## 跳过：把游标推到末尾。**结果一模一样** —— 这是事件驱动带来的，不是特例。
+## 157：一次补上整场，三种反馈和飘字一起抑制
 func skip_to_end() -> void:
 	if _result == null:
 		return
 	_now = _result.duration_sec() + 0.001
+	_suppress_popups = true
 	_drain_until(_now)
+	_suppress_popups = false
 	_finish()
 
 
@@ -213,7 +252,22 @@ func seek(t: float) -> void:
 	_sync_overlays()
 	_suppress_popups = false
 	_clock.text = "%.2f 秒" % _now
+	_timeline.cursor = _now
 	_sync_buttons()
+	if _cursor >= _result.log.size():
+		_finish()     # 157：拖到了头 = 看完了（战报照出）
+
+
+## 157：时间轴开拖：记下在不在放，拖着时停着
+func _on_scrub_started() -> void:
+	_resume_after_scrub = _playing
+
+
+func _on_scrub_ended() -> void:
+	if _resume_after_scrub and _result != null and _cursor < _result.log.size():
+		_playing = true
+		_sync_buttons()
+	_resume_after_scrub = false
 
 
 func toggle_play() -> void:
@@ -251,6 +305,7 @@ func _process(delta: float) -> void:
 	_drain_until(_now)
 	_sync_overlays()
 	_clock.text = "%.2f 秒" % _now
+	_timeline.cursor = _now
 	if _cursor >= _result.log.size():
 		_finish()
 
@@ -279,8 +334,30 @@ func _finish() -> void:
 	_verdict.text = (
 		"平局" if _result.is_draw() else "%s 获胜" % _names[_result.winner]
 	)
+	_timeline.cursor = _result.duration_sec()
+	_report.text = report_of(_result, _names)     # 157：收尾战报（跳过也出）
+	_report.visible = true
 	_sync_buttons()
 	finished.emit()
+
+
+## 157：收尾战报：几秒、双方各造成多少（日志里伤害的数逐条累加，治疗不算）、谁打倒了谁
+static func report_of(result: BattleResult, names: Array) -> String:
+	var dealt := [0, 0]     # 下标 = 打出的一方
+	for e in result.log:
+		var ev := e as BattleEvent
+		if ev.name == BattleEvent.DAMAGE and ev.side >= 0 and ev.side <= 1 and ev.get_int(&"amount") > 0:
+			dealt[1 - ev.side] += StatMath.to_int(ev.get_int(&"amount"))
+	var end := "平局"
+	if not result.is_draw():
+		end = "%s 打倒了 %s" % [names[result.winner], names[1 - result.winner]]
+	return "%.1f 秒 ｜ %s造成 %d、承受 %d ｜ %s造成 %d ｜ %s" % [result.duration_sec(), names[0], dealt[0], dealt[1], names[1], dealt[1], end]
+
+
+## 157：倍速 ≥ 4 时三种反馈按倍速缩短（不叠加，新的一下打断上一下）
+func _feedback_scale() -> float:
+	var sp := speed()
+	return 1.0 / sp if sp >= 4.0 else 1.0
 
 
 #region 事件 → 画面
@@ -297,9 +374,11 @@ func _apply(e: BattleEvent) -> void:
 			_on_damage(e)
 		BattleEvent.STATUS_STACKED, BattleEvent.STATUS_UNSTACKED:
 			if e.side >= 0 and e.side < _panels.size():
-				_panels[e.side].set_stacks(
-					String(e.get_name(&"buff")), e.get_int(&"stacks")
-				)
+				var buff := String(e.get_name(&"buff"))
+				var first := e.name == BattleEvent.STATUS_STACKED and e.get_int(&"stacks") > 0 and not _panels[e.side].stacks().has(buff)
+				_panels[e.side].set_stacks(buff, e.get_int(&"stacks"))
+				if first and not _suppress_popups:
+					_panels[e.side].pop(buff, _feedback_scale())     # 157：buff 上身（首层）
 		BattleEvent.AXIS_SHIFTED:
 			if e.side >= 0 and e.side < _panels.size():
 				_panels[e.side].set_axis(String(e.get_name(&"axis")), e.get_int(&"stacks"))
@@ -310,8 +389,12 @@ func _apply(e: BattleEvent) -> void:
 			if e.side >= 0 and e.side < _panels.size():
 				if e.name == BattleEvent.ITEM_FIRED:
 					_panels[e.side].note_fired(e.get_int(&"uid"), _now)
+					_flash(e)
 				if e.payload.has("ready_at") and e.side < _overlays.size():
 					_overlays[e.side].note_cycle(e.get_int(&"uid"), StatMath.to_float(e.time), StatMath.to_float(e.get_int(&"ready_at")))
+		BattleEvent.EFFECT_RESOLVED:
+			if e.get_int(&"uid") > 0:
+				_flash(e)     # 157：规则触发也算那一件出手
 		BattleEvent.DIED:
 			if e.side >= 0 and e.side < _panels.size():
 				_panels[e.side].mark_dead()
@@ -320,10 +403,19 @@ func _apply(e: BattleEvent) -> void:
 	_log_event(e)
 
 
+## 157：出手那件的格子亮一下（跳转时不亮）
+func _flash(e: BattleEvent) -> void:
+	if _suppress_popups or e.side < 0 or e.side >= _overlays.size():
+		return
+	_overlays[e.side].flash(e.get_int(&"uid"), StatMath.to_float(e.time))
+
+
 func _on_damage(e: BattleEvent) -> void:
 	var amount := e.get_int(&"amount")
 	if amount == 0 or _suppress_popups or e.side < 0 or e.side >= _panels.size():
 		return
+	if amount > 0:
+		_panels[e.side].shake(_feedback_scale())     # 157：挨打的一方整块抖一下
 	# amount 为负表示这一下最终是治疗（受伤前效果把它反转了）
 	_panels[e.side].popup(
 		StatMath.to_int(absi(amount)), e.get_name(&"type"), amount < 0, e.get_bool(&"crit")
@@ -406,6 +498,10 @@ func _build() -> void:
 		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		col.add_theme_constant_override("separation", 8)
 		arena.add_child(col)
+		var plate_slot := MarginContainer.new()     # 157：名牌（战斗屏给了才有）
+		plate_slot.visible = false
+		col.add_child(plate_slot)
+		_plate_slots.append(plate_slot)
 		var p := CombatantPanel.new()
 		p.label_font = label_font
 		p.display_name = _names[i]
@@ -438,15 +534,25 @@ func _build() -> void:
 	_ticker.theme_type_variation = UiTheme.RICH_SMALL     # 121：13 号
 	root.add_child(_ticker)
 
+	# 157：播放键 · 时间轴（可拖）· 倍速与跳过在杆的右端；下面一行说明，播完了在说明下面出战报
 	var bar := HBoxContainer.new()
 	bar.add_theme_constant_override("separation", 8)
 	root.add_child(bar)
 	_play_btn = UiTheme.make_button("暂停", toggle_play, UiPalette.Tier.MINOR, 13)     # 090：回放控制是辅助键
 	bar.add_child(_play_btn)
+	_timeline = ReplayTimeline.new()
+	_timeline.seek_requested.connect(seek)
+	_timeline.scrub_started.connect(_on_scrub_started)
+	_timeline.scrub_ended.connect(_on_scrub_ended)
+	bar.add_child(_timeline)
 	_speed_btn = UiTheme.make_button("1×", cycle_speed, UiPalette.Tier.MINOR, 13)
 	bar.add_child(_speed_btn)
 	bar.add_child(UiTheme.make_button("跳过", skip_to_end, UiPalette.Tier.MINOR, 13))
-	bar.add_child(UiTheme.make_label("战斗中只能看与跳过 —— 结果在开打那一瞬就已经算完了；停在 buff 图标上看效果", 12, UiPalette.DIM))
+	root.add_child(UiTheme.make_label("战斗中只能看、拖时间轴与跳过 —— 结果在开打那一瞬就已经算完了；停在 buff 图标上看效果", 12, UiPalette.DIM))
+	_report = UiTheme.rich_block(0, UiTheme.RICH_SMALL_SIZE)
+	_report.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_report.visible = false
+	root.add_child(_report)
 	_tip = HoverTip.new()
 	add_child(_tip)
 

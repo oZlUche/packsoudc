@@ -19,6 +19,8 @@ var _bg_rect: ColorRect = null
 var _drag: DragLayer = null
 ## 停在道具上的悬浮说明（节点屏由 [method _mount_bag] 造；地图屏的背包浮窗自己造）
 var _tip: HoverTip = null
+## 157：叠层的石板框（[method _centered_panel] 造）；底屏没有
+var _overlay_frame: OverlayFrame = null
 
 
 func _ready() -> void:
@@ -106,6 +108,23 @@ func _enemy_name(content: Dictionary) -> String:
 	return "%s（%d 档）" % [Names.of(def), int(content.get("strength", 0))]
 
 
+## 157：对手的名牌（战前准备、战斗回放共用）：名字、「N 档」、肖像（有图才画）
+func _enemy_plate(content: Dictionary) -> Nameplate:
+	var id := StringName(String(content.get("enemy", ""))) if not content.is_empty() else &""
+	var def := flow.enemies.enemy(id) if id != &"" else null
+	if def == null:
+		return Nameplate.new().setup("敌人", "")
+	return Nameplate.new().setup(Names.of(def), "%d 档" % int(content.get("strength", 0)), Nameplate.enemy_face(id))
+
+
+## 157：自己的名牌：角色名（没选角色写「我」）、肖像（有图才画）
+func _player_plate() -> Nameplate:
+	var ch := flow.run.character if flow.run != null else null
+	if ch == null:
+		return Nameplate.new().setup("我", "")
+	return Nameplate.new().setup(Names.of(ch), "我方", Nameplate.character_face(ch.id))
+
+
 #region 控件（造控件的活在 [UiTheme] 里，这里只留给子类的短名字）
 func _label(text: String, font_size: int, color: Color) -> Label:
 	return UiTheme.make_label(text, font_size, color)
@@ -165,15 +184,27 @@ func _shade(alpha: float = 0.7, centered: bool = false) -> ColorRect:
 	return shade
 
 
-## 居中的一块面板（叠层用）：半透明压暗底下的地图，面板放中间
-func _centered_panel(min_size: Vector2, margin: int = 16) -> PanelContainer:
+## 居中的一块面板（叠层用）：半透明压暗底下的地图，石板框放中间（157：[OverlayFrame]，标题写进 [method _frame_title]）。
+## 返回框的内容区，各屏往里加东西；128：框占着地上的地方
+func _centered_panel(min_size: Vector2, margin: int = 16) -> Container:
 	_shade(0.82)
 	var center := _full_center()
 	add_child(center)
-	var p := _panel(margin)
-	p.custom_minimum_size = min_size
-	center.add_child(p)
-	return p
+	_overlay_frame = OverlayFrame.new(margin)
+	_overlay_frame.custom_minimum_size = min_size
+	_reserve_ground(_overlay_frame)
+	center.add_child(_overlay_frame)
+	return _overlay_frame.content
+
+
+## 157：叠层的标题写进石板框的标题条（原来各屏自己在内容里摆的那一行）；返回那个标签，之后改字直接改它
+func _frame_title(text: String) -> Label:
+	return _overlay_frame.set_title(text) if _overlay_frame != null else _label(text, UiTheme.OVERLAY_TITLE_SIZE, UiPalette.FG)
+
+
+## 157：石板框（测试看）；底屏 null
+func overlay_frame() -> OverlayFrame:
+	return _overlay_frame
 
 
 ## 铺满宿主的居中容器
