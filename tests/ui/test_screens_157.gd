@@ -142,6 +142,9 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	var view: BattleView = screen._view
 	var result: BattleResult = flow.last_payload.get("result", null)
 	t.eq(view.find_children("*", "Nameplate", true, false).size(), 2, "回放面板顶上也是两块名牌")
+	t.eq(view.ticker(), null, "157 补充一：正式游戏的回放没有文字播报")
+	t.check(view.board_view(0) != null and view.board_view(0).scale == Vector2.ONE, "棋盘不缩（格子和战前一样大）")
+	t.check(not view.find_children("*", "RichTextLabel", true, false).any(func(r): return (r as RichTextLabel).scroll_following), "树里没有滚动的播报框")
 	var damage := 0
 	var deaths := 0
 	for e in result.log:
@@ -444,3 +447,16 @@ static func frame_nameplate_slots(t: TestCase, root: Window) -> void:
 	bare.free()
 	UiTheme.asset_root = saved
 	plate.free()
+
+
+static func frame_replay_ticker_option(t: TestCase, root: Window) -> void:
+	t.begin("157 补充一 · 回放浏览器（开发工具）照旧有逐条播报：show_ticker 真才建")
+	var view := BattleView.new()
+	view.show_ticker = true
+	root.add_child(view)
+	t.check(view.ticker() != null and view.ticker().is_inside_tree(), "开了：播报在树里")
+	view.free()
+	var plain := BattleView.new()
+	root.add_child(plain)
+	t.eq(plain.ticker(), null, "默认：不建")
+	plain.free()

@@ -31,8 +31,8 @@ var _panels: Array[CombatantPanel] = []
 var _boards: Array[InventoryView] = []
 var _overlays: Array[CooldownOverlay] = []
 var _board_slots: Array[Control] = []
-## 棋盘在回放里缩小显示（格子 60 → 30 像素）
-const BOARD_SCALE := 0.5
+## 棋盘在回放里的缩放。157 补充一（作者定：去掉文字播报、放大棋盘）：0.5 → 1.0，格子和战前准备一样 60 像素
+const BOARD_SCALE := 1.0
 var _cursor: int = 0
 var _now: float = 0.0
 var _playing: bool = false
@@ -45,7 +45,10 @@ var _tip: HoverTip = null
 
 var _clock: Label
 var _verdict: Label
-var _ticker: RichTextLabel
+## 逐条的文字播报：157 补充一起正式游戏不显示（[member show_ticker] 假 = 不建），回放浏览器（开发工具）开着
+var _ticker: RichTextLabel = null
+## 进树之前设；真 = 建文字播报（回放浏览器）
+var show_ticker: bool = false
 var _play_btn: Button
 var _speed_btn: Button
 ## 157：时间轴（可拖）、收尾战报、双方名牌的位置（面板顶上）
@@ -88,7 +91,8 @@ func play(result: BattleResult, names: Array = []) -> void:
 			secs[uid] = StatMath.to_float(int(raw[uid]))
 		_overlays[i].reset(secs)
 		_overlays[i].now = 0.0
-	_ticker.clear()
+	if _ticker != null:
+		_ticker.clear()
 	_verdict.text = ""
 	_timeline.load_result(result)
 	_report.text = ""
@@ -181,6 +185,11 @@ func set_board(side: int, board: GridInventory) -> void:
 	view.inventory = board
 	_board_slots[side].custom_minimum_size = view.custom_minimum_size * BOARD_SCALE
 	_board_slots[side].visible = true
+
+
+## 文字播报（没开 null）
+func ticker() -> RichTextLabel:
+	return _ticker
 
 
 func board_view(side: int) -> InventoryView:
@@ -461,6 +470,8 @@ func _log_event(e: BattleEvent) -> void:
 ## 时间戳取【事件自己的时刻】，不是播放光标 ——
 ## 跳转时一次补上几十条，用光标的话它们会全挤成同一个时间。
 func _log_line(at: int, text: String) -> void:
+	if _ticker == null:
+		return     # 157 补充一：正式游戏不播报（_log_event 照旧跑，收尾战报要它累加的数）
 	_ticker.append_text(
 		"[color=#5d6470]%5.2f[/color]  %s\n" % [StatMath.to_float(at), text]
 	)
@@ -526,13 +537,19 @@ func _build() -> void:
 		_boards.append(board)
 		_overlays.append(o)
 
-	_ticker = RichTextLabel.new()
-	_ticker.bbcode_enabled = true
-	_ticker.scroll_following = true
-	_ticker.custom_minimum_size = Vector2(0, 90)
-	_ticker.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_ticker.theme_type_variation = UiTheme.RICH_SMALL     # 121：13 号
-	root.add_child(_ticker)
+	if show_ticker:
+		_ticker = RichTextLabel.new()
+		_ticker.bbcode_enabled = true
+		_ticker.scroll_following = true
+		_ticker.custom_minimum_size = Vector2(0, 90)
+		_ticker.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_ticker.theme_type_variation = UiTheme.RICH_SMALL     # 121：13 号
+		root.add_child(_ticker)
+	else:
+		var spacer := Control.new()     # 157 补充一：播报那块空间让给棋盘，控制条压在底下
+		spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		root.add_child(spacer)
 
 	# 157：播放键 · 时间轴（可拖）· 倍速与跳过在杆的右端；下面一行说明，播完了在说明下面出战报
 	var bar := HBoxContainer.new()
