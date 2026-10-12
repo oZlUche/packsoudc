@@ -141,9 +141,11 @@ static func label_variation(color: Color) -> StringName:
 	return &""
 
 
-## 面板：选变体；内边距不是变体的默认值时，用变体那份底复制一份改内边距（面板大小各屏不一，这一项只能逐个给）
+## 面板：选变体；内边距不是变体的默认值时，用变体那份底复制一份改内边距（面板大小各屏不一，这一项只能逐个给）。
+## 157 补：按这块底的深浅挂字色（[method apply_tone]）
 static func panel(p: PanelContainer, margin: int = -1, variation: StringName = PANEL_DARK) -> PanelContainer:
 	p.theme_type_variation = variation
+	apply_tone(p, variation)
 	var default_margin := PANEL_LINE_MARGIN if variation == PANEL_LINE else (TOOLTIP_MARGIN if variation == PANEL_TOOLTIP else PANEL_MARGIN)
 	if margin >= 0 and margin != default_margin:
 		var box := current().get_stylebox("panel", variation).duplicate() as StyleBox
@@ -258,6 +260,99 @@ static func prepare_root(root: Control, read_settings: bool = true) -> ColorRect
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(bg)
 	return bg
+#endregion
+
+
+#region 深浅与字色（157 补，作者定：浅底黑字、深底白字 —— 每块底都要标深浅，字色按它选）
+const TONE_DARK := &"dark"
+const TONE_LIGHT := &"light"
+## 每块底（面板变体）的深浅：没用美术图时按这张表；用了图按图旁 json 的 `tone`（美术交图时必须写，测试看）。
+## **新加面板变体必须登记在这里**（测试看全）
+const PANEL_TONES := {
+	PANEL_DARK: TONE_DARK, PANEL_LINE: TONE_DARK, PANEL_HUD: TONE_DARK, PANEL_OVERLAY: TONE_DARK, PANEL_TOOLTIP: TONE_DARK,
+}
+## 面板变体用哪张美术图（有图时深浅读它的 json）
+const PANEL_ART := {PANEL_OVERLAY: ART_FRAME, PANEL_TOOLTIP: ART_TOOLTIP}
+## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸
+const INK := Color("2e2219")
+const INK_SOFT := Color("5a4433")
+const INK_WARN := Color("9a5a22")
+const PAPER := Color("f6eedb")
+## 浅底上的字和底至少要这么大的对比（WCAG 正文 4.5）
+const MIN_CONTRAST := 4.5
+
+static var _tone_themes := {}
+static var _color_tag: RegEx = null
+
+
+## 一块底现在是深是浅：用着美术图就看图的 json，否则查 [constant PANEL_TONES]（没登记的按深）
+static func tone_of(variation: StringName) -> StringName:
+	var art_name := String(PANEL_ART.get(variation, ""))
+	if art_name != "" and art(art_name) != null:
+		var t := StringName(String(art_meta(art_name).get("tone", "")))
+		if t == TONE_LIGHT or t == TONE_DARK:
+			return t
+	return PANEL_TONES.get(variation, TONE_DARK)
+
+
+## 深浅对应的字色：深底 null（就是全局主题的浅色字）；浅底是一份只填字色的小主题 —— 挂在那块底上，里面的字都继承
+static func text_theme(tone: StringName) -> Theme:
+	if tone != TONE_LIGHT:
+		return null
+	if _tone_themes.has(tone):
+		return _tone_themes[tone]
+	var t := Theme.new()
+	t.set_color("font_color", "Label", INK)
+	for pair in [[LABEL_TITLE, INK], [LABEL_DIM, INK_SOFT], [LABEL_WARN, INK_WARN], [LABEL_OVERLAY_TITLE, INK], [LABEL_HUD, INK], [LABEL_HUD_LARGE, INK]]:
+		t.set_type_variation(pair[0], "Label")
+		t.set_color("font_color", pair[0], pair[1])
+	t.set_color("default_color", "RichTextLabel", INK)
+	for v in [RICH_BODY, RICH_SMALL]:
+		t.set_type_variation(v, "RichTextLabel")
+		t.set_color("default_color", v, INK)
+	_tone_themes[tone] = t
+	return t
+
+
+## 给一块底挂上它的字色（[method panel]、[OverlayFrame]、[HudWidget] 调）。深底不动别人挂的主题，只摘掉以前挂的字色
+static func apply_tone(c: Control, variation: StringName) -> void:
+	var t := text_theme(tone_of(variation))
+	if t != null or _tone_themes.values().has(c.theme):
+		c.theme = t
+
+
+## 浅底上的 BBCode：里面写死的 `[color=…]`（都是按深底配的亮色）换成够深的墨水版；深底原样
+static func ink_bbcode(text: String, tone: StringName) -> String:
+	if tone != TONE_LIGHT or not text.contains("[color="):
+		return text
+	if _color_tag == null:
+		_color_tag = RegEx.create_from_string("\\[color=#?([0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?)\\]")
+	var out := ""
+	var at := 0
+	for m in _color_tag.search_all(text):
+		out += text.substr(at, m.get_start() - at)
+		out += "[color=#%s]" % ink_color(Color(m.get_string(1))).to_html(false)
+		at = m.get_end()
+	return out + text.substr(at)
+
+
+## 一个按深底配的颜色在亮纸上的版本：灰色系（前景 / 暗色字）换成墨 / 褐墨；有色的按原色相压暗到对比够
+static func ink_color(c: Color) -> Color:
+	if c.s < 0.18:
+		return INK if c.get_luminance() > 0.7 else INK_SOFT
+	var out := Color(c, 1.0)
+	var guard := 0
+	while contrast(out, PAPER) < MIN_CONTRAST and guard < 30:
+		out = out.darkened(0.08)
+		guard += 1
+	return out
+
+
+## 两个颜色的对比度（WCAG：亮的相对亮度 + 0.05 比暗的 + 0.05；相对亮度按线性值算）
+static func contrast(a: Color, b: Color) -> float:
+	var la := a.srgb_to_linear().get_luminance()
+	var lb := b.srgb_to_linear().get_luminance()
+	return (maxf(la, lb) + 0.05) / (minf(la, lb) + 0.05)
 #endregion
 
 

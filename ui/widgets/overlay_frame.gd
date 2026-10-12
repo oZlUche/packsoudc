@@ -20,6 +20,7 @@ var content: MarginContainer
 ## [param margin] 是各屏原来给面板的内边距：平面底照旧当外框内边距；九宫格底时外框边距由图定，多出来的部分垫在内容区里
 func _init(margin: int = -1) -> void:
 	theme_type_variation = UiTheme.PANEL_OVERLAY
+	UiTheme.apply_tone(self, UiTheme.PANEL_OVERLAY)     # 157 补：深底浅字、浅底墨字
 	var box := UiTheme.current().get_stylebox("panel", UiTheme.PANEL_OVERLAY)
 	var textured := box is StyleBoxTexture
 	var want := margin if margin >= 0 else UiTheme.PANEL_MARGIN

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.83 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.84 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3441,6 +3441,12 @@ func player_spec() -> CombatantSpec …
 宝箱屏整屏铺背景，不套框。
 
 换屏：导演加叠层时 0.15 秒、换底屏时 0.2 秒从透明淡入（撤叠层直接撤）；`GameSettings.ui_fades` 关掉，测试与截图工具用 `GameDirector.fades_allowed` 关掉。
+**深浅字色（每块底都要标深浅）**：浅底配墨色字、深底配浅色字。面板变体的深浅登记在 `UiTheme.PANEL_TONES`（新加面板变体必须登记，测试看全）；
+用了美术图的底（`UiTheme.PANEL_ART`：石板框、悬浮窗的纸）以图旁 json 的 `"tone": "dark" | "light"` 为准（美术交图必须写，测试看）。
+`UiTheme.panel()` / `OverlayFrame` / `HudWidget` 按 `tone_of(变体)` 调 `apply_tone`：浅底挂一份只填字色的小主题（标签墨 `#2E2219`、暗色字褐墨 `#5A4433`、
+警示 `#9A5A22`，富文本默认墨），里面的字都继承；深底不挂（用全局的浅色字）。浅底上的 BBCode 过 `UiTheme.ink_bbcode`：写死的 `[color=…]`
+灰色换成墨 / 褐墨，有色的按原色相压暗到在亮纸上对比 ≥ 4.5（`MIN_CONTRAST`）。按钮自带底，不跟着变。现在悬浮窗（主面板与词条小窗）是亮纸、浅底；石板框是深底。
+
 光标：`UiCursor.apply(skin)` 启动时（和设置里换材质时）按 `GameSettings.cursor_skin` 从 `cursors/<材质>/` 取图换上（铠甲手套秘银 / 铁 / 皮革，默认秘银，热点 (2, 2)）；拖拽层拿起是「拖动」、对准了按 `DragLayer.drop_ok_at` 切「可放 / 不可放」、放下还原。
 
 ## 9. 套装与跨域效果
@@ -4093,6 +4099,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.84 | 2026-10-12 | **深浅字色**（报告 157 补充，作者定「浅底黑字，深底白字，以后任何窗口都要填写深浅字段」；改 8.8）：`UiTheme.PANEL_TONES` 给每个面板变体标深浅，美术底图 json 写 `tone`；浅底挂墨色字小主题、正文里写死的颜色过 `ink_bbcode` 压成墨水版；美术的 `tooltip_paper.png` 放进 `assets/ui/`，悬浮窗换成亮纸墨字 |
 | v2.83 | 2026-10-12 | **光标三套材质**（报告 157 补充，作者定）：铠甲手套秘银 / 铁 / 皮革三套放在 `assets/ui/cursors/<材质>/`，`GameSettings.cursor_skin`（默认秘银），`UiCursor.apply(skin)` 按它取图；设置屏一排三个按钮，点了当场换上 |
 | v2.82 | 2026-10-12 | **各屏构成第一批**（报告 157，四项待定按推荐；改 8.8）：叠层共用石板框 `OverlayFrame`（`_centered_panel` 造、标题进标题条，主题变体 `PanelOverlay` / `LabelOverlayTitle`，`assets/ui/frame_stone.png` 有图九宫格）；悬浮窗底 `PanelTooltip`；四种光标 `UiCursor`，拖拽按能不能放切光标；换屏淡入（`GameSettings.ui_fades`）；战前对阵式（`Nameplate` 名牌 + 肖像钩子、`BalanceSeam` 天平、读数不写几件）；回放时间轴 `ReplayTimeline`（可拖 = `seek`）、三种反馈（出手亮格 / 挨打抖 / buff 弹出，跳转与跳过时抑制）、收尾战报；战败结算保险箱放大居中；事件选项代价图标 `EventCostIcons`、结果页收获行 `HarvestRow`（`detail.item_uids`） |
 | v2.81 | 2026-10-11 | **耐力折扣按「上限 + 回复」算**（报告 155 补，作者定）：`PowerWeights.stamina_max`（50，同基线）+ `stamina_sustain(每秒耗)` = min(1, (上限 + 回复 × fight_sec) ÷ (每秒耗 × fight_sec))，直伤 B 与规则的耐力消耗 C 都用它；现有武器一场都耗不完这池，不再打折。`KNOWN_OFF` 从五件剩长弓、秘银附魔长剑两件（单看偏弱，估低两档） |
