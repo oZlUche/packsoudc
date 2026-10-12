@@ -28,8 +28,7 @@ func open(payload: Dictionary) -> void:
 	var panel := _centered_panel(Vector2(0, 0))
 	var col := _vbox(10)
 	panel.add_child(col)
-	_head = _label("", 20, UiPalette.FG)
-	col.add_child(_head)
+	_head = _frame_title("")     # 157：标题在石板框的标题条上
 	col.add_child(_wrapped("神坛：把道具拖到祭品台上献祭换信力（至少满足一条献祭规矩的才收，一件满足几条算几次）。献祭（一次献一批）和特殊操作只能做一个，做了神坛就关了；不占休息。" +
 		(("\n献祭品：" + def.offerings_summary()) if def != null and not def.offerings.is_empty() else ""), 12, UiPalette.DIM, 900))
 	var row := _hbox(24)

@@ -8,7 +8,7 @@ func open(payload: Dictionary) -> void:
 	var panel := _centered_panel(Vector2(480, 0))
 	var col := _vbox(12)
 	panel.add_child(col)
-	col.add_child(_label("休息区", 18, UiPalette.FG))
+	_frame_title("休息区")     # 157：标题在石板框的标题条上
 	col.add_child(_wrapped("歇了一会儿。体力 +%d，现在 %d / %d%s" % [restored, v.current, v.maximum, "（本来就是满的）" if restored == 0 and v.is_full() else ""],
 		14, UiPalette.FG, 440))
 	col.add_child(_button("继续", proceed, 14, UiPalette.Tier.PRIMARY))

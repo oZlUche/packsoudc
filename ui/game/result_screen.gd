@@ -7,6 +7,8 @@ const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
 var _wh = null
 var _safe_view: InventoryView = null
 var _stash_line: Label = null
+## 157：战败时保险箱放大居中 —— 格子按这个画（撤离时照旧是视图的默认格）
+const DEFEAT_SAFE_CELL := 60.0
 
 
 func open(payload: Dictionary) -> void:
@@ -58,15 +60,25 @@ func open(payload: Dictionary) -> void:
 	else:
 		col.add_child(_wrapped("背包、地上、钱，全都留在了里面。" + ("保险箱里的 %d 件带出来了。" % r.safe_items.size() if not r.safe_items.is_empty() else ""), 14, UiPalette.FG, 600))
 	# 092：保险箱单独一格（放进去的视为已带出，战败也在）
+	# 157：战败时这是唯一带出来的东西 —— 居中、放大（格子 60），字也大一号
 	if not r.safe_items.is_empty():
 		var safe_row := _hbox(16)
 		var safe_col := _vbox(4)
-		safe_col.add_child(_label("保险箱带出 %d 件、值 %d 币" % [r.safe_items.size(), r.safe_value], 13, UiPalette.HEAL))
+		if not extracted:
+			safe_row.alignment = BoxContainer.ALIGNMENT_CENTER
+			safe_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			safe_col.alignment = BoxContainer.ALIGNMENT_CENTER
+		var safe_label := _label("保险箱带出 %d 件、值 %d 币" % [r.safe_items.size(), r.safe_value], 13 if extracted else 16, UiPalette.HEAL)
+		if not extracted:
+			safe_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		safe_col.add_child(safe_label)
 		_safe_view = InventoryView.new()
 		_safe_view.label_font = font
 		_safe_view.inventory = _safe_display(r)
 		_safe_view.show_adjacency = false
-		_safe_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		_safe_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if extracted else Control.SIZE_SHRINK_CENTER
+		if not extracted:
+			_safe_view.cell_px = DEFEAT_SAFE_CELL
 		safe_col.add_child(_safe_view)
 		safe_row.add_child(safe_col)
 		col.add_child(safe_row)

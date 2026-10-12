@@ -968,10 +968,16 @@ func _wire_events() -> void:
 				if inst != null and not board.try_add(inst, true):
 					storage.admit(inst)))
 	events.event_resolved.connect(func(_n: MapNode, _outcome: StringName, detail: Dictionary):
+		# 157：收到地上的那几件 uid 记回 detail —— 事件结果页的「收获」行按它把这几件摆出来
+		var uids: Array = []
 		for id in detail.get("items", []):
 			var d := items.get_def(StringName(String(id)))
 			if d != null:
-				storage.admit(ItemInstance.create(d, 0)))
+				var inst := ItemInstance.create(d, 0)
+				if storage.admit(inst):
+					uids.append(inst.uid)
+		if not uids.is_empty():
+			detail["item_uids"] = uids)
 	events.defeated.connect(func(why: StringName): _set_phase(Phase.DEFEATED, why))
 	events.boss_defeated.connect(func(_n: MapNode): boss_cleared = true)
 	events.bind(travel)

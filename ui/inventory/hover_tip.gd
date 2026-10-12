@@ -27,7 +27,7 @@ func _init() -> void:
 	z_index = 60     # 128：画在地上（盖在各屏上面的那一层）的东西之上
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_panel = PanelContainer.new()
-	UiTheme.panel(_panel, 10, UiTheme.PANEL_LINE)     # 121：主题的 PanelLine 变体（半透明底细边）
+	UiTheme.panel(_panel, -1, UiTheme.PANEL_TOOLTIP)     # 157：悬浮窗底（美术给了纸就是九宫格，没给是半透明底细边）
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.visible = false
 	add_child(_panel)
@@ -100,13 +100,7 @@ func _set_terms(terms: Array) -> void:
 	UiTheme.clear_children(_side)
 	for t in terms:
 		var d := t as Dictionary
-		var p := PanelContainer.new()
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color(UiPalette.PANEL, 0.96)
-		style.border_color = Glossary.TERM_COLOR.darkened(0.3)
-		style.set_border_width_all(1)
-		style.set_content_margin_all(8)
-		p.add_theme_stylebox_override("panel", style)     # 121 特例：术语卡的边是术语色（和正文里的术语同色），一张一份
+		var p := UiTheme.panel(PanelContainer.new(), 8, UiTheme.PANEL_TOOLTIP)     # 157：词条小窗和主面板同一块底
 		p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var l := UiTheme.rich_block(SIDE_WIDTH, 12, "[color=#%s][b]%s[/b][/color]\n%s" % [Glossary.TERM_COLOR.to_html(false), String(d["name"]), String(d["text"])])
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -175,8 +169,8 @@ func _uid_under(view: ContainerView, local: Vector2) -> int:
 		var c := iv.cell_at_local(local)
 		var uid := iv.inventory.cell_uid(c)
 		return uid if uid != GridInventory.EMPTY_UID else iv.inventory.bag_at(c)
-	if view is GroundLayer:
-		return (view as GroundLayer).uid_at_local(local)     # 128：地上
+	if view.has_method("uid_at_local"):
+		return view.uid_at_local(local)     # 128：地上；157：事件的收获行
 	return -1
 
 

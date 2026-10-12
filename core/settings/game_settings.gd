@@ -37,6 +37,8 @@ const DEBUG_MODE_DEFAULT := true
 ## 154 补充一：改过的键 —— 动作名 → 键码数组（文件里也可以写键名，如 "Enter"）。空 = 全用 `project.godot` 的默认。
 ## 设置层只存；哪些动作能改、怎么盖到 InputMap 上是界面的事
 var key_bindings: Dictionary = {}
+## 157：换屏淡入（叠层 0.15 秒、底屏 0.2 秒）。设置屏一个开关
+var ui_fades: bool = true
 
 
 func to_dict() -> Dictionary:
@@ -52,6 +54,7 @@ func to_dict() -> Dictionary:
 		"battle_trace": battle_trace,
 		"debug_mode": debug_mode,
 		"key_bindings": key_bindings.duplicate(true),
+		"ui_fades": ui_fades,
 	}
 
 
@@ -70,6 +73,7 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	s.battle_trace = bool(d.get("battle_trace", BattleArchive.default_on()))
 	s.debug_mode = bool(d.get("debug_mode", DEBUG_MODE_DEFAULT))
 	s.key_bindings = read_bindings(d.get("key_bindings", {}))
+	s.ui_fades = bool(d.get("ui_fades", true))
 	return s
 
 
