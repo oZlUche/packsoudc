@@ -35,7 +35,7 @@ func open(payload: Dictionary) -> void:
 	var left := _vbox(8)
 	left.custom_minimum_size.x = TOC_WIDTH
 	row.add_child(left)
-	left.add_child(_label("百科", 26, UiPalette.FG))
+	_frame_title("百科")     # 157：标题在石板框的标题条上
 	_search = LineEdit.new()
 	_search.placeholder_text = "搜索标题或正文"
 	_search.text_changed.connect(set_query)

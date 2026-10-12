@@ -27,6 +27,7 @@ var _dragging: bool = false
 
 func _init() -> void:
 	theme_type_variation = UiTheme.PANEL_HUD
+	UiTheme.apply_tone(self, UiTheme.PANEL_HUD)     # 157 补：每块底按深浅挂字色
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_text = Label.new()
 	_text.mouse_filter = Control.MOUSE_FILTER_IGNORE

@@ -34,10 +34,16 @@ const LABEL_HUD_LARGE := &"LabelHudLarge"
 const RICH_BODY := &"RichTextBody"
 ## 悬浮窗正文：13 号
 const RICH_SMALL := &"RichTextSmall"
+## 157：叠层共用的石板框（[OverlayFrame]）、框顶标题条的字、悬浮窗底（[HoverTip] 主面板与词条小窗）。
+## 美术给了图（[member asset_root] 下的 `frame_stone.png` / `tooltip_paper.png`）就是九宫格，没给就是平面底
+const PANEL_OVERLAY := &"PanelOverlay"
+const LABEL_OVERLAY_TITLE := &"LabelOverlayTitle"
+const PANEL_TOOLTIP := &"PanelTooltip"
 
 ## 全部变体（测试看齐全）
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
-	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE]
+	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE,
+	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP]
 
 const TITLE_SIZE := 18
 const PANEL_MARGIN := 16
@@ -46,6 +52,11 @@ const RICH_BODY_SIZE := 17
 const RICH_SMALL_SIZE := 13
 const HUD_MARGIN := 8
 const HUD_LARGE_SIZE := 34
+const OVERLAY_TITLE_SIZE := 20
+const TOOLTIP_MARGIN := 10
+## 157：石板框 / 悬浮窗底的贴图文件名（不带扩展名；旁边同名 `.json` 写九宫格边距）
+const ART_FRAME := "frame_stone"
+const ART_TOOLTIP := "tooltip_paper"
 const RICH_FONT_SIZES := ["normal_font_size", "bold_font_size", "italics_font_size", "bold_italics_font_size", "mono_font_size"]
 
 ## 并进默认主题的那一份；[method refresh] 原地重填它
@@ -54,6 +65,8 @@ static var _installed := false
 ## [member _current] 是按哪档底色填的
 static var _current_bg := Color(0, 0, 0, 0)
 static var _font: Font = null
+## 157：界面贴图的目录。测试指到 `res://tests/fixtures/ui/`（那里放一张小图），用完改回来
+static var asset_root := "res://assets/ui/"
 
 
 ## 按设置生成一份新主题（不挂）
@@ -128,10 +141,12 @@ static func label_variation(color: Color) -> StringName:
 	return &""
 
 
-## 面板：选变体；内边距不是变体的默认值时，用变体那份底复制一份改内边距（面板大小各屏不一，这一项只能逐个给）
+## 面板：选变体；内边距不是变体的默认值时，用变体那份底复制一份改内边距（面板大小各屏不一，这一项只能逐个给）。
+## 157 补：按这块底的深浅挂字色（[method apply_tone]）
 static func panel(p: PanelContainer, margin: int = -1, variation: StringName = PANEL_DARK) -> PanelContainer:
 	p.theme_type_variation = variation
-	var default_margin := PANEL_LINE_MARGIN if variation == PANEL_LINE else PANEL_MARGIN
+	apply_tone(p, variation)
+	var default_margin := PANEL_LINE_MARGIN if variation == PANEL_LINE else (TOOLTIP_MARGIN if variation == PANEL_TOOLTIP else PANEL_MARGIN)
 	if margin >= 0 and margin != default_margin:
 		var box := current().get_stylebox("panel", variation).duplicate() as StyleBox
 		box.set_content_margin_all(margin)
@@ -203,6 +218,15 @@ static func hbox(separation: int = 8) -> HBoxContainer:
 	return h
 
 
+## 外边距容器的四边（布局常量，和 [method vbox] 的间距一样不算样式）
+static func margins(m: MarginContainer, left: int, top: int, right: int, bottom: int) -> MarginContainer:
+	m.add_theme_constant_override("margin_left", left)
+	m.add_theme_constant_override("margin_top", top)
+	m.add_theme_constant_override("margin_right", right)
+	m.add_theme_constant_override("margin_bottom", bottom)
+	return m
+
+
 ## 一段 BBCode 正文：高度随内容、自己不滚（放进调用方的滚动区或面板里）、按 [param width] 折行；
 ## 字号走 [method rich]（17 / 13 号选变体，别的逐个给）
 static func rich_block(width: float, font_size: int = FONT_SIZE, bbcode: String = "") -> RichTextLabel:
@@ -239,6 +263,146 @@ static func prepare_root(root: Control, read_settings: bool = true) -> ColorRect
 #endregion
 
 
+#region 深浅与字色（157 补，作者定：浅底黑字、深底白字 —— 每块底都要标深浅，字色按它选）
+const TONE_DARK := &"dark"
+const TONE_LIGHT := &"light"
+## 每块底（面板变体）的深浅：没用美术图时按这张表；用了图按图旁 json 的 `tone`（美术交图时必须写，测试看）。
+## **新加面板变体必须登记在这里**（测试看全）
+const PANEL_TONES := {
+	PANEL_DARK: TONE_DARK, PANEL_LINE: TONE_DARK, PANEL_HUD: TONE_DARK, PANEL_OVERLAY: TONE_DARK, PANEL_TOOLTIP: TONE_DARK,
+}
+## 面板变体用哪张美术图（有图时深浅读它的 json）
+const PANEL_ART := {PANEL_OVERLAY: ART_FRAME, PANEL_TOOLTIP: ART_TOOLTIP}
+## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸
+const INK := Color("2e2219")
+const INK_SOFT := Color("5a4433")
+const INK_WARN := Color("9a5a22")
+const PAPER := Color("f6eedb")
+## 浅底上的字和底至少要这么大的对比（WCAG 正文 4.5）
+const MIN_CONTRAST := 4.5
+
+static var _tone_themes := {}
+static var _color_tag: RegEx = null
+
+
+## 一块底现在是深是浅：用着美术图就看图的 json，否则查 [constant PANEL_TONES]（没登记的按深）
+static func tone_of(variation: StringName) -> StringName:
+	var art_name := String(PANEL_ART.get(variation, ""))
+	if art_name != "" and art(art_name) != null:
+		var t := StringName(String(art_meta(art_name).get("tone", "")))
+		if t == TONE_LIGHT or t == TONE_DARK:
+			return t
+	return PANEL_TONES.get(variation, TONE_DARK)
+
+
+## 深浅对应的字色：深底 null（就是全局主题的浅色字）；浅底是一份只填字色的小主题 —— 挂在那块底上，里面的字都继承
+static func text_theme(tone: StringName) -> Theme:
+	if tone != TONE_LIGHT:
+		return null
+	if _tone_themes.has(tone):
+		return _tone_themes[tone]
+	var t := Theme.new()
+	t.set_color("font_color", "Label", INK)
+	for pair in [[LABEL_TITLE, INK], [LABEL_DIM, INK_SOFT], [LABEL_WARN, INK_WARN], [LABEL_OVERLAY_TITLE, INK], [LABEL_HUD, INK], [LABEL_HUD_LARGE, INK]]:
+		t.set_type_variation(pair[0], "Label")
+		t.set_color("font_color", pair[0], pair[1])
+	t.set_color("default_color", "RichTextLabel", INK)
+	for v in [RICH_BODY, RICH_SMALL]:
+		t.set_type_variation(v, "RichTextLabel")
+		t.set_color("default_color", v, INK)
+	_tone_themes[tone] = t
+	return t
+
+
+## 给一块底挂上它的字色（[method panel]、[OverlayFrame]、[HudWidget] 调）。深底不动别人挂的主题，只摘掉以前挂的字色
+static func apply_tone(c: Control, variation: StringName) -> void:
+	var t := text_theme(tone_of(variation))
+	if t != null or _tone_themes.values().has(c.theme):
+		c.theme = t
+
+
+## 浅底上的 BBCode：里面写死的 `[color=…]`（都是按深底配的亮色）换成够深的墨水版；深底原样
+static func ink_bbcode(text: String, tone: StringName) -> String:
+	if tone != TONE_LIGHT or not text.contains("[color="):
+		return text
+	if _color_tag == null:
+		_color_tag = RegEx.create_from_string("\\[color=#?([0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?)\\]")
+	var out := ""
+	var at := 0
+	for m in _color_tag.search_all(text):
+		out += text.substr(at, m.get_start() - at)
+		out += "[color=#%s]" % ink_color(Color(m.get_string(1))).to_html(false)
+		at = m.get_end()
+	return out + text.substr(at)
+
+
+## 一个按深底配的颜色在亮纸上的版本：灰色系（前景 / 暗色字）换成墨 / 褐墨；有色的按原色相压暗到对比够
+static func ink_color(c: Color) -> Color:
+	if c.s < 0.18:
+		return INK if c.get_luminance() > 0.7 else INK_SOFT
+	var out := Color(c, 1.0)
+	var guard := 0
+	while contrast(out, PAPER) < MIN_CONTRAST and guard < 30:
+		out = out.darkened(0.08)
+		guard += 1
+	return out
+
+
+## 两个颜色的对比度（WCAG：亮的相对亮度 + 0.05 比暗的 + 0.05；相对亮度按线性值算）
+static func contrast(a: Color, b: Color) -> float:
+	var la := a.srgb_to_linear().get_luminance()
+	var lb := b.srgb_to_linear().get_luminance()
+	return (maxf(la, lb) + 0.05) / (minf(la, lb) + 0.05)
+#endregion
+
+
+#region 美术贴图（157：有图用图、没图照旧）
+## [member asset_root] 下的 `<name>.png`；没有这张图返回 null
+static func art(name: String) -> Texture2D:
+	var path := asset_root + name + ".png"
+	if not ResourceLoader.exists(path) and not FileAccess.file_exists(path):
+		return null
+	return EventImage.load_texture(path)
+
+
+## 贴图旁边的 `<name>.json`（九宫格边距 `margin: [左, 上, 右, 下]`、石板框的 `title_height`）；没有或读不成字典是空字典
+static func art_meta(name: String) -> Dictionary:
+	var path := asset_root + name + ".json"
+	if not FileAccess.file_exists(path):
+		return {}
+	var d = JSON.parse_string(FileAccess.get_file_as_string(path))
+	return d if d is Dictionary else {}
+
+
+## 石板框顶上标题条的高（`frame_stone.json` 的 `title_height`）；没图 0 = 按字高
+static func frame_title_height() -> int:
+	return int(art_meta(ART_FRAME).get("title_height", 0)) if art(ART_FRAME) != null else 0
+
+
+## 九宫格底：图 + json 的边距（没写边距按图边长的四分之一）。没图 null。
+## [param title_strip] 真 = 石板框：顶边的内边距是 0，标题条（[OverlayFrame]）自己占住图上那一条
+static func _art_box(name: String, title_strip: bool = false) -> StyleBoxTexture:
+	var tex := art(name)
+	if tex == null:
+		return null
+	var quarter := int(mini(tex.get_width(), tex.get_height()) / 4.0)
+	var m: Array = art_meta(name).get("margin", [quarter, quarter, quarter, quarter])
+	if m.size() != 4:
+		m = [quarter, quarter, quarter, quarter]
+	var s := StyleBoxTexture.new()
+	s.texture = tex
+	s.texture_margin_left = float(m[0])
+	s.texture_margin_top = float(m[1])
+	s.texture_margin_right = float(m[2])
+	s.texture_margin_bottom = float(m[3])
+	s.content_margin_left = float(m[0])
+	s.content_margin_top = 0.0 if title_strip else float(m[1])
+	s.content_margin_right = float(m[2])
+	s.content_margin_bottom = float(m[3])
+	return s
+#endregion
+
+
 #region 生成
 static func _bg_of(settings: GameSettings) -> Color:
 	var id := settings.bg_theme if settings != null and UiPalette.has_bg_theme(settings.bg_theme) else UiPalette.bg_theme
@@ -267,6 +431,16 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_stylebox("panel", PANEL_DARK, _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
 	t.set_type_variation(PANEL_LINE, "PanelContainer")
 	t.set_stylebox("panel", PANEL_LINE, _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), PANEL_LINE_MARGIN))
+	# 157：叠层的石板框、悬浮窗底 —— 美术给了图是九宫格，没给和原来一样（框 = PanelDark 的底、悬浮窗 = PanelLine 的底）
+	t.set_type_variation(PANEL_OVERLAY, "PanelContainer")
+	var frame: StyleBox = _art_box(ART_FRAME, true)
+	t.set_stylebox("panel", PANEL_OVERLAY, frame if frame != null else _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
+	t.set_type_variation(LABEL_OVERLAY_TITLE, "Label")
+	t.set_font_size("font_size", LABEL_OVERLAY_TITLE, OVERLAY_TITLE_SIZE)
+	t.set_color("font_color", LABEL_OVERLAY_TITLE, UiPalette.FG)
+	t.set_type_variation(PANEL_TOOLTIP, "PanelContainer")
+	var paper: StyleBox = _art_box(ART_TOOLTIP)
+	t.set_stylebox("panel", PANEL_TOOLTIP, paper if paper != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), TOOLTIP_MARGIN))
 	# 150：读数组件（原来地图屏那条 HUD 的无边窄底，搬成变体）
 	t.set_type_variation(PANEL_HUD, "PanelContainer")
 	var hud_box := _box(panel_bg, UiPalette.LINE, HUD_MARGIN)

@@ -30,6 +30,11 @@ const SCREEN_SCRIPTS := {
 	GameFlow.Screen.CHEST: "res://ui/game/chest_screen.gd",     # 154：宝箱（叠层；不画地上 —— 开锁时只看箱子）
 }
 const LAUNCHER := "res://ui/launcher.tscn"
+## 157：换屏淡入 —— 叠层、底屏各多久（设置里 [member GameSettings.ui_fades] 能关）
+const OVERLAY_FADE := 0.15
+const BASE_FADE := 0.2
+## 157：测试与截图工具关掉淡入（几百个屏幕用例的时序不变、截图不截到半透明）；正式游戏看设置
+static var fades_allowed := true
 
 ## 存档路径。测试在加进树之前改它，别碰玩家真正的存档
 var save_path: String = RunSave.DEFAULT_PATH
@@ -88,6 +93,7 @@ func _ready() -> void:
 	UiPalette.apply(flow.settings)     # 091：背景底色
 	InputKeys.apply(flow.settings)     # 154 补充一：改过的键盖到默认上
 	UiTheme.install()     # 121：界面主题挂在窗口上
+	UiCursor.apply(flow.settings.cursor_skin)     # 157：美术给的光标（设置里选的那套材质；没图用系统的）
 	ground = GroundLayer.new()
 	ground.fills_screen = true
 	ground.label_font = _font
@@ -173,6 +179,7 @@ func _switch_screen(screen: int, payload: Dictionary) -> void:
 		_overlay = _make(screen)
 		add_child(_overlay)
 		_overlay.open(payload)
+		_fade_in(_overlay, OVERLAY_FADE)     # 157：撤叠层直接撤，不等
 		return
 	if bool(payload.get("minimized", false)) and _overlay != null:
 		# 084：收起 = 最小化：藏起来、停掉它的计时（揭示动画不在背后偷跑），流程与会话都还在
@@ -193,8 +200,19 @@ func _switch_screen(screen: int, payload: Dictionary) -> void:
 	_base = _make(screen)
 	add_child(_base)
 	_base.open(payload)
+	_fade_in(_base, BASE_FADE)
 	if _base.has_signal("dev_tools_requested"):
 		_base.connect("dev_tools_requested", _to_launcher)
+
+
+## 157：新上来的一屏从透明淡到不透明（墨水扫过那种 shader 等美术方案）。关着就什么也不造；返回造的那个 Tween（测试看）
+func _fade_in(s: Control, seconds: float) -> Tween:
+	if not fades_allowed or flow.settings == null or not flow.settings.ui_fades:
+		return null
+	s.modulate.a = 0.0
+	var tw := s.create_tween()
+	tw.tween_property(s, "modulate:a", 1.0, seconds)
+	return tw
 
 
 func _drop_overlay() -> void:

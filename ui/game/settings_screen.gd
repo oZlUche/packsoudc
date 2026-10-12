@@ -8,6 +8,10 @@ var _unlock_all_btn: Button = null
 var _trace_btn: Button = null
 ## 150 补 2：调试模式开关
 var _debug_btn: Button = null
+## 157：换屏淡入开关
+var _fades_btn: Button = null
+## 157 补：光标材质的按钮（材质 id → 按钮）
+var _cursor_btns: Dictionary = {}
 ## 091：背景底色的按钮（主题 id → 按钮）
 var _bg_btns: Dictionary = {}
 ## 090：从地图的暂停菜单嵌进来时的「返回」（回暂停菜单，一局还在）；空 = 独立的一屏，回主菜单
@@ -46,6 +50,17 @@ func open(_payload: Dictionary) -> void:
 		_bg_btns[tid] = b
 		bg_row.add_child(b)
 	col.add_child(bg_row)
+	_fades_btn = _toggle("换屏淡入", toggle_ui_fades)     # 157
+	col.add_child(_fades_btn)
+	var cursor_row := _hbox(8)
+	cursor_row.add_child(_label("光标", 14, UiPalette.FG))
+	for skin in UiCursor.SKINS:
+		var sid := String(skin)
+		var cb := _button(String(UiCursor.SKINS[skin]), func(): set_cursor_skin(sid), 13, UiPalette.Tier.MINOR)
+		cb.toggle_mode = true
+		_cursor_btns[sid] = cb
+		cursor_row.add_child(cb)
+	col.add_child(cursor_row)
 	col.add_child(HSeparator.new())
 	col.add_child(_label("老手", 15, UiPalette.DIM))
 	col.add_child(_wrapped("全部解锁：章节、难度、道具不看解锁，直接全开；代价是成就不计（091）。", 12, UiPalette.DIM, 500))
@@ -115,6 +130,23 @@ func toggle_debug_mode() -> void:
 	_refresh()
 
 
+## 157 补：换光标材质（当场换上、存盘）
+func set_cursor_skin(skin: String) -> void:
+	if not UiCursor.SKINS.has(skin):
+		return
+	flow.settings.cursor_skin = skin
+	flow.save_settings()
+	UiCursor.apply(skin)
+	_refresh()
+
+
+## 157：换屏淡入开关（下一次换屏生效）
+func toggle_ui_fades() -> void:
+	flow.settings.ui_fades = not flow.settings.ui_fades
+	flow.save_settings()
+	_refresh()
+
+
 ## 117：在系统的文件管理器里打开 user://battle_logs
 func open_log_folder() -> void:
 	DirAccess.make_dir_recursive_absolute(BattleArchive.DIR)
@@ -151,6 +183,11 @@ func _refresh() -> void:
 	if _debug_btn != null:
 		_debug_btn.set_pressed_no_signal(flow.settings.debug_mode)
 		_debug_btn.text = "调试模式：%s" % ("开" if flow.settings.debug_mode else "关")
+	if _fades_btn != null:
+		_fades_btn.set_pressed_no_signal(flow.settings.ui_fades)
+		_fades_btn.text = "换屏淡入：%s" % ("开" if flow.settings.ui_fades else "关")
+	for sid in _cursor_btns:
+		(_cursor_btns[sid] as Button).set_pressed_no_signal(String(sid) == (flow.settings.cursor_skin if UiCursor.SKINS.has(flow.settings.cursor_skin) else UiCursor.DEFAULT_SKIN))
 	for tid in _bg_btns:
 		# 101 第 5 刀：设置里存的可能是空串或认不出来的 id，按生效的那一档打勾
 		(_bg_btns[tid] as Button).set_pressed_no_signal(String(tid) == UiPalette.bg_theme)

@@ -19,6 +19,10 @@ var _hints: Array[String] = []
 var _payload: Dictionary = {}
 var _bag: Control = null
 var _bag_panel: Control = null
+## 157：结果页的「收获」行（这次给的、还在地上的那几件，能直接拖进棋盘）与它用的那层拖拽
+var _harvest: HarvestRow = null
+## 157：结果页有收获时自动开过一次背包（关了背包重画这一页时不再自动开）
+var _bag_auto_opened := false
 
 
 func open(payload: Dictionary) -> void:
@@ -53,6 +57,7 @@ func _open_options() -> void:
 		# 104：选项文字里的数写成 {change_money_amount|abs} 这类，取这个选项自己的结果 / 条件的字段（TextParams）
 		var b := _option_button(TextTemplate.plain(opt.label_for(), ctx.merged(TextParams.of(opt))), func(): choose(idx))
 		b.disabled = not ok
+		EventCostIcons.attach(b, opt)     # 157：选项前一排代价图标（只画会花掉什么）
 		_option_btns.append(b)
 		col.add_child(b)
 		if not ok:
@@ -69,11 +74,13 @@ func _open_result(payload: Dictionary) -> void:
 	var lines: Array[String] = []
 	for text in detail.get("log", []):
 		lines.append(String(text))
+	# 157：给的东西画成下面的「收获」行（还在地上的那几件，能直接拖进棋盘）；认不出是哪几件（老存档）才写成一行字
+	var harvest := _harvest_uids(detail)
 	var names: Array[String] = []
 	for id in detail.get("items", []):
 		var d := flow.items.get_def(StringName(String(id)))
 		names.append(d.display_name if d != null else String(id))
-	if not names.is_empty():
+	if not names.is_empty() and harvest.is_empty():
 		lines.append("得到：%s（已放到地上）" % "、".join(names))
 	if int(detail.get("restored", 0)) != 0:
 		lines.append("体力 +%d" % int(detail["restored"]))
@@ -107,7 +114,44 @@ func _open_result(payload: Dictionary) -> void:
 		if def != null:
 			image = def.image
 	var col := _frame(image, String(payload.get("outcome", "事件")), "\n".join(lines))
+	_harvest = null
+	if not harvest.is_empty():
+		col.add_child(_label("收获　拖进背包，或双击；不拿的留在地上", 13, UiPalette.DIM))
+		_harvest = HarvestRow.new()
+		_harvest.label_font = font
+		_harvest.setup(flow.run.storage, harvest)
+		_harvest.item_double_clicked.connect(func(_v: ContainerView, uid: int): _ground_to_bag(uid, func():
+			if _bag == null:
+				toggle_bag()
+			return bag_panel()))     # 双击 = 进包（背包开着也进）
+		col.add_child(_harvest)
+		_drag = DragLayer.new()
+		_drag.label_font = font
+		_drag.stash = flow.run.storage
+		_drag.drop_outside_to_stash = true
+		_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		add_child(_drag)
+		_drag.register_view(_harvest)
 	col.add_child(_option_button("继续", proceed))
+	if _harvest != null and not _bag_auto_opened:
+		_bag_auto_opened = true
+		toggle_bag()     # 157：有收获就把背包打开，拖过去就进棋盘
+
+
+## 157：这次给的东西里还在地上的那几件（[RunState] 收到地上时把 uid 记进了 detail）
+func _harvest_uids(detail: Dictionary) -> Array[int]:
+	var out: Array[int] = []
+	if flow.run == null or flow.run.storage == null:
+		return out
+	for uid in detail.get("item_uids", []):
+		if flow.run.storage.get_item(int(uid)) != null:
+			out.append(int(uid))
+	return out
+
+
+## 157：结果页的收获行（测试看；没有 null）
+func harvest_row() -> HarvestRow:
+	return _harvest if _harvest != null and is_instance_valid(_harvest) else null
 
 
 ## 两栏的框（参考杀戮尖塔的事件屏）：左边整块是图，右边标题、正文、选项。占掉大半个屏幕，底下的地图压暗。
@@ -131,8 +175,7 @@ func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
 	col.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	margin.add_child(col)
 
-	col.add_child(_label(title, 28, UiPalette.FG))
-	col.add_child(HSeparator.new())
+	_frame_title(title)     # 157：标题在石板框的标题条上（横跨图与正文）
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -194,9 +237,13 @@ func toggle_bag() -> void:
 	win.setup("bag", "背包", toggle_bag, "收起（B）")
 	_bag.add_child(win)
 	var inv := InventoryPanelScript.new()
-	inv.setup(flow.run, font)
+	# 157：结果页有收获行时和它共用一层拖拽（从收获行拖进棋盘）；拖拽层挪到最上面，残影画在背包浮窗之上
+	var shared := _drag if _harvest != null and is_instance_valid(_drag) else null
+	inv.setup(flow.run, font, shared)
 	win.body().add_child(inv)
 	_bag_panel = inv
+	if shared != null:
+		move_child(shared, -1)
 
 
 func bag_open() -> bool:
