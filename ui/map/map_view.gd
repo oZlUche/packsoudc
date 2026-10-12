@@ -16,6 +16,8 @@ signal node_hovered(id: int)
 signal edge_pressed(edge: MapEdge, button: int)
 signal slot_pressed(slot: Dictionary)
 signal empty_pressed
+## 玩家滚轮缩放了（游戏屏记进设置，下次进图沿用）
+signal zoom_changed(zoom: float)
 
 const NODE_RADIUS := 16.0     # 155：13 → 16，图标放大（作者：图案再大一点），外圈与命中都跟着它
 ## 155：图标的边长 = 节点半径 × 它（圆里留一圈边）
@@ -96,6 +98,14 @@ var zoom: float = 1.0
 var pan: Vector2 = Vector2.ZERO
 const ZOOM_MIN := 0.3
 const ZOOM_MAX := 2.5
+## 反馈（图标放大后进图太挤）：自动定的进图缩放让相邻两点在屏幕上至少隔这么远（节点按固定屏幕大小画，缩小只会让点挤在一起）
+const START_GAP := NODE_RADIUS * 5.0
+## 自动定的进图缩放最多放大到这里
+const START_ZOOM_MAX := 1.5
+## [method open_at] 时视图还没尺寸：等第一次 resized 再定缩放
+var _open_pending := false
+var _open_zoom := 0.0
+var _last_size := Vector2.ZERO
 
 var _layout: MapLayout = null
 var _font: Font
@@ -114,8 +124,19 @@ func _ready() -> void:
 
 
 func _on_resized() -> void:
-	center()
+	if _open_pending:
+		_apply_open()
+	elif _last_size == Vector2.ZERO or _fits():
+		center()
+	else:
+		pan += (size - _last_size) / 2.0     # 看着的那块留在视图正中（放大看局部时改尺寸不跳回整图中央）
+	_last_size = size
 	queue_redraw()
+
+
+func _fits() -> bool:
+	var c := canvas_rect().size * zoom
+	return c.x <= size.x and c.y <= size.y
 
 
 func _process(delta: float) -> void:
@@ -143,6 +164,64 @@ func fit() -> void:
 		return
 	zoom = clampf(minf(size.x / c.x, size.y / c.y), ZOOM_MIN, 1.0)
 	center()
+
+
+## 进图（游戏屏）：[param preferred] > 0 = 玩家上次滚轮定的缩放（设置里全局沿用）；0 = 自动 [method start_zoom]。
+## 然后把人所在的点摆到视图中央。视图还没尺寸就等第一次 resized
+func open_at(preferred: float) -> void:
+	_open_zoom = preferred
+	_open_pending = true
+	if size.x > 0.0 and size.y > 0.0:
+		_apply_open()
+
+
+func _apply_open() -> void:
+	_open_pending = false
+	zoom = clampf(_open_zoom, ZOOM_MIN, ZOOM_MAX) if _open_zoom > 0.0 else start_zoom()
+	focus(current_id)
+
+
+## 自动的进图缩放：能看全就看全，但相邻两点在屏幕上至少隔 [constant START_GAP]（最短的那条边算），最多放大到 [constant START_ZOOM_MAX]
+func start_zoom() -> float:
+	var c := canvas_rect().size
+	if c.x <= 0.0 or c.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
+		return 1.0
+	var whole := clampf(minf(size.x / c.x, size.y / c.y), ZOOM_MIN, 1.0)
+	var gap := shortest_edge()
+	if gap <= 0.0:
+		return whole
+	return clampf(maxf(whole, START_GAP / gap), ZOOM_MIN, START_ZOOM_MAX)
+
+
+## 画布上最短的一条边（两点间直线距离）；没边 0
+func shortest_edge() -> float:
+	if graph == null:
+		return 0.0
+	var pos := positions()
+	var best := INF
+	for e in graph.edges:
+		if pos.has(e.from_id) and pos.has(e.to_id):
+			var d := (pos[e.from_id] as Vector2).distance_to(pos[e.to_id])
+			if d > 0.0:
+				best = minf(best, d)
+	return 0.0 if best == INF else best
+
+
+## 按当前缩放把某个点摆到视图中央（-1 / 没这个点 = 整图居中）；画布比视图小的那一维照旧居中，大的那一维不拖出空边
+func focus(id: int) -> void:
+	var pos := positions()
+	if id < 0 or not pos.has(id):
+		center()
+		return
+	var c := canvas_rect().size * zoom
+	var p := size / 2.0 - (pos[id] as Vector2) * zoom
+	for i in 2:
+		if c[i] <= size[i]:
+			p[i] = (size[i] - c[i]) / 2.0
+		else:
+			p[i] = clampf(p[i], size[i] - c[i], 0.0)
+	pan = p
+	queue_redraw()
 
 
 func to_canvas(screen: Vector2) -> Vector2:
@@ -256,6 +335,7 @@ func zoom_at(screen: Vector2, factor: float) -> void:
 	zoom = clampf(zoom * factor, ZOOM_MIN, ZOOM_MAX)
 	pan = screen - anchor * zoom
 	queue_redraw()
+	zoom_changed.emit(zoom)
 
 
 ## 在画布坐标 [param p] 处按下。拆出来是为了测试能直接调，不必伪造输入事件。

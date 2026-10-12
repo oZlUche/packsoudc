@@ -20,6 +20,9 @@ var _views: Array[ContainerView] = []
 var can_show: Callable = Callable()
 var _uid: int = -1
 var _for_view: ContainerView = null
+## 最后一次摆放用的鼠标位置（全局）：排版完再量一次尺寸后照这个重摆
+var _last_at := Vector2.ZERO
+var _refit_queued := false
 
 
 func _init() -> void:
@@ -43,6 +46,9 @@ func _init() -> void:
 	_side.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_side.visible = false
 	add_child(_side)
+	# 富文本换了字要等排版完才知道真高：最小尺寸一变就下一帧缩回去重摆，不留旧文字的高度
+	_panel.minimum_size_changed.connect(_queue_refit)
+	_text.minimum_size_changed.connect(_queue_refit)
 
 
 ## 087：给一个容器视图找它该用的悬浮窗并登记上去：沿祖先往上找，谁的直接子节点里有 HoverTip 就用它（屏 / 面板自己造的那个）；
@@ -83,9 +89,7 @@ func watch(view: ContainerView) -> void:
 ## [param terms] 是侧边词条 `[{name, text}]`（[Glossary.terms_in] 的结果），空 = 没有侧窗
 func show_text(bbcode: String, at: Vector2, extra: Control = null, terms: Array = []) -> void:
 	_text.text = _inked(bbcode)
-	if _extra != null:
-		_extra.queue_free()
-		_extra = null
+	_drop_extra()
 	if extra != null:
 		_extra = extra
 		_extra.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -94,6 +98,34 @@ func show_text(bbcode: String, at: Vector2, extra: Control = null, terms: Array 
 	_panel.visible = true
 	_panel.reset_size()
 	_place(at)
+	_queue_refit()
+
+
+## 旧的下挂控件先摘下来再 free：queue_free 到帧末才走，留在列里会把这一帧的 reset_size 撑高（悬浮窗下方大段空白）
+func _drop_extra() -> void:
+	if _extra == null:
+		return
+	if _extra.get_parent() != null:
+		_extra.get_parent().remove_child(_extra)
+	_extra.queue_free()
+	_extra = null
+
+
+func _queue_refit() -> void:
+	if _refit_queued or not _panel.visible:
+		return
+	_refit_queued = true
+	_refit.call_deferred()
+
+
+## 排版完再按实际内容缩一次尺寸（主窗、词条列），照最后的鼠标位置重摆
+func _refit() -> void:
+	_refit_queued = false
+	if not _panel.visible:
+		return
+	_panel.reset_size()
+	_side.reset_size()
+	_place(_last_at)
 
 
 ## 157 补：悬浮窗底是浅的（美术的纸）时，正文里写死的亮色换成墨水版；深底原样
@@ -188,6 +220,7 @@ func _uid_under(view: ContainerView, local: Vector2) -> int:
 ## 放不下再试左边（主窗贴鼠标、词条列在更左），两边都放不下就整组夹进屏里、词条列在右；不再各自夹边，所以永远不叠。
 ## 「屏」是真正的视口，不是本控件的尺寸（背包浮窗那种比屏窄的宿主里也要按屏算）
 func _place(global_at: Vector2) -> void:
+	_last_at = global_at
 	var local := global_at - global_position
 	var s := _panel.size
 	var side_w := _side.size.x if _side.visible else 0.0
