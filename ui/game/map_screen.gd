@@ -23,6 +23,8 @@ var _hud_host: HudHost
 var _hud_spacer: Control
 ## 150：调试台抽屉（139 那个），里面是「摆读数」
 var _drawer: DevDrawer = null
+## 抽屉离右缘的空（[method DevDrawer.dock] 的 margin）
+const DRAWER_MARGIN := 12.0
 var _hud_edit_btn: Button = null
 var _debug_line: Label = null
 var _preview: Label
@@ -808,8 +810,8 @@ func _build_parts() -> void:
 	# 150：调试台抽屉（139）—— 箭头是一件部件，抽屉盖在右边；里面是「摆读数」
 	_drawer = DevDrawer.new()
 	_part(&"dev_drawer", _drawer.arrow)
+	# 作者 2026-10-12：提示行（章节、种子、在哪个点、操作说明，「布局已保存」这类回话）挪进调试台，不再是部件
 	_status = _wrapped("", 12, UiPalette.DIM, PART_WIDTH)
-	_part(&"status", _status)
 	# 090（作者定）：三个互动按键放大到 300%
 	_part(&"bag_button", _button("背包（B）", toggle_bag, 13, UiPalette.Tier.PRIMARY), true)
 	_reopen_btn = _button("回到这个点（N）", func(): reopen(), 13, UiPalette.Tier.PRIMARY)
@@ -865,10 +867,13 @@ func apply_debug_mode() -> void:
 ## 150：调试台里的「摆读数」：开着时读数能拖（吸附网格）、右键切显隐、滚轮切大小；保存写回布局文件，重置回默认
 func _build_drawer() -> void:
 	add_child(_drawer)
-	_drawer.dock(64, 12)
+	_drawer.dock(64, DRAWER_MARGIN)
+	# 作者 2026-10-12：抽屉开着时盖在右边，右边那一列按钮整体往左让开（地图跟着让）
+	_drawer.toggled.connect(func(open: bool): _hud_host.set_extra_right(DevDrawer.WIDTH + DRAWER_MARGIN if open else 0.0))
 	var c := _drawer.content
 	_debug_line = _label(_debug_text(), 13, UiPalette.STAMINA)     # 150 补 2：头部写着现在的调试模式
 	c.add_child(_debug_line)
+	c.add_child(_status)     # 作者 2026-10-12：提示行放在调试模式那一行下面
 	c.add_child(_label("摆读数", 16, UiPalette.FG))
 	c.add_child(_wrapped("开着时：拖动读数换位置（松手吸附 %d 像素网格，记成离它最近的锚点 + 偏移）；右键切显示 / 隐藏；滚轮切大小两档。保存写到 %s。" % [
 		HudLayout.GRID, HudLayout.save_path("map")], 12, UiPalette.DIM, DevDrawer.WIDTH - 40))
@@ -929,10 +934,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _say(text: String) -> void:
-	_status.text = text
-	var w := _hud_host.widget(&"status") if _hud_host != null else null
-	if w != null:
-		w.refresh()
+	_status.text = text     # 作者 2026-10-12：提示行在调试台里
 
 
 ## 组件（腰带）往提示行写一句

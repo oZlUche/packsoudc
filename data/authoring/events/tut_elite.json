@@ -40,11 +40,10 @@
       ]
     },
     {
-      "label": "我先整理一下背包",
+      "label": "先回地图",
       "outcomes": [
         {
-          "type": "next_event",
-          "event": "tut_elite"
+          "type": "revisit_later"
         }
       ]
     }

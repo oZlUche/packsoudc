@@ -15,6 +15,11 @@ signal changed()
 const CELL_MAX := 80.0
 ## 两块格子之间的空隙（和 _build 里那一行的 separation 一致）
 const ROW_GAP := 20.0
+## 最少显示几行（结算屏照旧；基地屏按高度往上加，见 [method fit_to_height]）
+const MIN_ROWS := 4
+const BOARD_MIN_ROWS := 6
+## 按钮下面留的空
+const BOTTOM_PAD := 16.0
 ## 滚动框给竖滚动条留的宽（[ScrollBox]）
 const SCROLL_PAD := 14.0
 
@@ -27,6 +32,11 @@ var _font: Font
 var _drag: DragLayer
 var _board_box: VBoxContainer
 var _board_view: InventoryView = null
+## 两块格子的滚动框（作者 2026-10-12：基地屏按可用高度定最多几行）
+var _wh_scroll: ScrollContainer = null
+var _board_scroll: ScrollContainer = null
+## 格子下面那一截（提示行 + 按钮）
+var _bottom: Array[Control] = []
 var _warehouse_view: InventoryView
 var _line: Label
 var _store_btn: Button
@@ -43,7 +53,12 @@ func setup(flow: GameFlow, font: Font) -> void:
 	_meta.changed.connect(_refresh)
 	_meta.warehouse.changed.connect(_refresh)
 	if fill_width:
-		resized.connect(func(): fit_to_width(size.x))
+		resized.connect(func():
+			fit_to_width(size.x)
+			fit_to_height.call_deferred())
+		visibility_changed.connect(func():
+			if is_visible_in_tree():
+				fit_to_height.call_deferred())     # 切到仓库页时窗口可能变过
 	_refresh()
 
 
@@ -73,7 +88,8 @@ func _build() -> void:
 	_warehouse_view.show_adjacency = false
 	_warehouse_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	# 110：扩建后仓库会很高，竖向滚动。反馈：最小高度压到 4 行（约 240），有空间再长，别把结算屏的按钮挤出窗口
-	var wh_scroll := ScrollBox.wrap(_warehouse_view, 4)
+	var wh_scroll := ScrollBox.wrap(_warehouse_view, MIN_ROWS)
+	_wh_scroll = wh_scroll
 	wh_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.add_child(wh_scroll)
@@ -82,6 +98,7 @@ func _build() -> void:
 	_line = UiTheme.make_label("", 13, UiPalette.FG)
 	col.add_child(_line)
 	var buttons := HBoxContainer.new()
+	_bottom = [_line, buttons]
 	buttons.add_theme_constant_override("separation", 8)
 	col.add_child(buttons)
 	_store_btn = UiTheme.make_button("一键置入", store_all, UiPalette.Tier.SECONDARY, 13)
@@ -115,12 +132,14 @@ func _rebuild_board_view() -> void:
 	_board_view.inventory = _meta.board
 	_board_view.show_adjacency = false
 	_board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_board_box.add_child(ScrollBox.wrap(_board_view, 6))     # 带回来的棋盘也可能很高：同样竖向滚动
+	_board_scroll = ScrollBox.wrap(_board_view, BOARD_MIN_ROWS)     # 带回来的棋盘也可能很高：同样竖向滚动
+	_board_box.add_child(_board_scroll)
 	_drag.register_view(_board_view)
 	_board_view.item_double_clicked.connect(quick_move)     # 视图每次新建，信号跟着重接
 	_board_view.cell_px = _warehouse_view.cell_px     # 139：和仓库一样大
 	if fill_width and size.x > 0.0:
 		fit_to_width.call_deferred(size.x)     # 多了一块：两块一起重新分
+		fit_to_height.call_deferred()
 
 
 #region 格子大小（139）
@@ -143,6 +162,25 @@ func fit_to_width(width: float) -> float:
 	if _board_view != null:
 		_board_view.cell_px = c
 	return c
+
+
+## 作者 2026-10-12（仓库屏太空）：最多显示几行按窗口里剩下的高度算 —— 放得下整块显示，超了才滚；至少原来那几行。
+## [param avail] 给格子的高度（不给 = 从滚动框顶到窗口底，减掉下面的提示行与按钮）
+func fit_to_height(avail: float = -1.0) -> int:
+	if _wh_scroll == null or not is_instance_valid(_wh_scroll):
+		return MIN_ROWS
+	if avail < 0.0:
+		if not is_inside_tree():
+			return MIN_ROWS
+		var below := 0.0
+		for c in _bottom:
+			below += c.get_combined_minimum_size().y + 8.0
+		avail = get_viewport_rect().size.y - _wh_scroll.global_position.y - below - BOTTOM_PAD
+	var rows := maxi(MIN_ROWS, floori(avail / maxf(1.0, cell_px())))
+	ScrollBox.set_rows(_wh_scroll, _warehouse_view, rows)
+	if _board_scroll != null and is_instance_valid(_board_scroll):
+		ScrollBox.set_rows(_board_scroll, _board_view, maxi(BOARD_MIN_ROWS, rows - 1))     # 板上还有一行说明
+	return rows
 
 
 func cell_px() -> float:

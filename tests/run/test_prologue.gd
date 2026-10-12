@@ -314,7 +314,7 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(not bool(s.events.option_state(0)["ok"]), "还没合成：「进入战前准备」灰着")
 	t.check(not bool(s.events.option_state(1)["ok"]), "手里有匕首：退路「就这么上」不出现")
 	t.check(ev != null and (ev.options[0] as EventOption).hint_when_hidden.contains("{item:poison_vial}"), "灰着的选项有一句提示")
-	t.check(ev != null and bool(s.events.option_state(ev.options.size() - 1)["ok"]), "「我先整理一下背包」随时能选")
+	t.check(ev != null and bool(s.events.option_state(ev.options.size() - 1)["ok"]), "「先回地图」随时能选")
 	var knife := _find(s, &"knife")
 	var vial := _find(s, &"poison_vial")
 	t.check(knife != null and vial != null, "身上有匕首和毒药瓶（点 2 必掉匕首、点 3 第一次搜到毒药瓶）")

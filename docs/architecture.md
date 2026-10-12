@@ -2881,7 +2881,7 @@ class_name SearchRules extends Resource
 
 **事件是内容。** `EventDef`（内容种类 `events`）：标题、正文、图像路径（占位）、选项；每个选项若干**条件**（`EventCondition`，只读：`has_buff_tag` / `has_map_buff` /
 `can_afford` / `vitality_at_least` / `steps_within` / `bracket_within` / `erosion_depth_within` / `has_item` / `node_type_is`（8-3））与若干**后果**（`EventOutcome`：`give_item` / `give_random_item` / `restore_vitality` / `spend_vitality` / `change_money` /
-`grant_map_buff` / `remove_map_buff` / `start_battle` / `open_search` / `open_shop` / `next_event` / `say` / `hunter_fight` / `hunter_flee`（071）/ `teleport` / `change_node_type` / `proceed` / `pass_time` / `lose_item`（8-3））。两种都是构件、走注册表（`EffectRegistry` 的两张新表），
+`grant_map_buff` / `remove_map_buff` / `start_battle` / `open_search` / `open_shop` / `next_event` / `say` / `hunter_fight` / `hunter_flee`（071）/ `teleport` / `change_node_type` / `proceed` / `pass_time` / `lose_item`（8-3）/ `revisit_later`（先回地图：不标用过、回来再弹，2026-10-12））。两种都是构件、走注册表（`EffectRegistry` 的两张新表），
 加一种不改导入器。条件没过的选项灰掉并写原因（或按 `hide_when_locked` 不显示）。
 
 **节点怎么拿到事件。** `NodeRules.events_by_type`：类型 → {事件 id: 权重}。生成地图时 `EventPlacer.fill` 按节点 `content_seed` 抽一个写进 `node.content["event"]`，
