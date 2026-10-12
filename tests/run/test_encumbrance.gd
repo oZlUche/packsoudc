@@ -45,7 +45,7 @@ static func run_weights(t: TestCase) -> void:
 	var c := _content()
 	var anchors := {
 		&"knife": 3, &"shortsword": 12, &"longsword": 15, &"plate_cuirass": 40, &"tower_shield": 48, &"round_shield": 12,     # 143：异形之后格数变了；塔盾 3×4 = 12 格、圆盾 2×2 = 4 格
-		&"bag_leather": 3, &"bag_long": 2, &"bag_small": 2, &"ration": 1, &"iron_ore": 6, &"oak_log": 6, &"silk_bolt": 2,
+		&"bag_leather": 0, &"bag_long": 0, &"bag_small": 0, &"ration": 1, &"iron_ore": 6, &"oak_log": 6, &"silk_bolt": 2,
 		&"warhammer": 12, &"nail_keg": 12, &"high_tier_armor": 18, &"charm_brute": 1, &"bone_dice": 1, &"crowbar": 9,
 		&"fire_crystal": 4,
 	}
@@ -66,11 +66,14 @@ static func run_weights(t: TestCase) -> void:
 	t.eq(ItemWeight.of(d), 2, "轻：半格一重")
 	d.weight = 9
 	t.eq(ItemWeight.of(d), 9, "写死的覆盖公式")
+	d.is_bag = true
+	t.eq(ItemWeight.of(d), 0, "161：包不算重（写死的也不看）")
 	var zero := 0
 	for id in c.items.ids():
-		if ItemWeight.of(c.items.get_def(StringName(id))) <= 0:
+		var def := c.items.get_def(StringName(id))
+		if not def.is_bag and ItemWeight.of(def) <= 0:
 			zero += 1
-	t.eq(zero, 0, "库里没有零重的道具")
+	t.eq(zero, 0, "库里除了包没有零重的道具")
 
 
 static func run_capacities(t: TestCase) -> void:
@@ -87,7 +90,10 @@ static func run_capacities(t: TestCase) -> void:
 	var rules: EncumbranceRules = load(ContentPaths.asset_file("encumbrance_rules", "standard"))
 	for cap in [40, 48, 56]:
 		t.eq(rules.level_of(35, cap), 0, "负重 35、上限 %d：轻装" % cap)
-	t.eq(rules.level_of(41, 40), 1, "负重 41、安德烈乌斯（40）：吃力")
+	t.eq(rules.level_of(48, 40), 0, "161：负重 48、安德烈乌斯（40）：1.2 倍还算轻装")
+	t.eq(rules.level_of(60, 40), 1, "1.5 倍：吃力")
+	t.eq(rules.level_of(76, 40), 2, "1.9 倍：超重")
+	t.eq(rules.level_of(92, 40), 3, "2.3 倍：寸步难行（两倍之后才到顶）")
 	for l in GameFlow.load_loadouts():
 		var w := 0
 		for id in (l as LoadoutDef).items:
@@ -98,12 +104,12 @@ static func run_capacities(t: TestCase) -> void:
 
 
 static func run_levels(t: TestCase) -> void:
-	t.begin("129 · 级数边界：恰等于上限 = 轻装；上限 × 1.25 / × 1.5 严格大于才升级")
+	t.begin("129 / 161 · 级数边界：上限 × 1.2 / × 1.6 / × 2.2 严格大于才升级")
 	var rules: EncumbranceRules = load(ContentPaths.asset_file("encumbrance_rules", "standard"))
 	t.not_null(rules, "标准负重规则在")
-	var cases := [[28, 0], [29, 1], [35, 1], [36, 2], [42, 2], [43, 3], [80, 3], [0, 0]]
+	var cases := [[40, 0], [48, 0], [49, 1], [64, 1], [65, 2], [88, 2], [89, 3], [200, 3], [0, 0]]
 	for pair in cases:
-		t.eq(rules.level_of(int(pair[0]), 28), int(pair[1]), "上限 28、负重 %d → %d 级" % [pair[0], pair[1]])
+		t.eq(rules.level_of(int(pair[0]), 40), int(pair[1]), "上限 40、负重 %d → %d 级" % [pair[0], pair[1]])
 	t.eq(rules.level_of(500, 0), 0, "上限 0 = 不算负重")
 	t.eq(rules.name_of(1), "吃力", "一级叫吃力")
 	t.eq(rules.name_of(2), "超重", "二级叫超重")
@@ -125,11 +131,12 @@ static func run_tech_bonus(t: TestCase) -> void:
 	t.eq(with1.carry_capacity(), base_cap + 6, "扛重一级：上限 +6")
 	var with3 := _run(c, -1, [&"tech_hauling_3"] as Array[StringName])
 	t.eq(with3.carry_capacity(), base_cap + 20, "扛重三级：上限 +20")
-	# 同样的负重，科技把级数压下来：上限改成「负重 −3」
+	# 同样的负重，科技把级数压下来：上限改成刚好吃力
 	var w := run.carry_weight()
 	t.eq(with1.carry_weight(), w, "两边背的一样（%d）" % w)
-	_set_cap(run, w - 3)
-	_set_cap(with1, w - 3)
+	var cap := ceili(w / 1.2) - 1     # 刚好过一级门槛；+6 之后又在门槛下
+	_set_cap(run, cap)
+	_set_cap(with1, cap)
 	t.eq(run.encumbrance_level(), 1, "没科技：吃力")
 	t.eq(with1.encumbrance_level(), 0, "扛重一级：还是轻装")
 	var tech: TechDef = load(ContentPaths.asset_file("techs", "hauling"))
@@ -147,7 +154,7 @@ static func run_combat_mods(t: TestCase) -> void:
 	var a := light.compile_player()
 	var cap := heavy.carry_weight()     # 上限 = 现在的负重：轻装
 	var ch := heavy.character.duplicate() as CharacterDef
-	ch.weight_capacity = maxi(1, int(floor(cap / 1.3)))     # 负重是上限的 1.3 倍左右：二级
+	ch.weight_capacity = maxi(1, int(floor(cap / 1.9)))     # 负重是上限的 1.9 倍左右：二级
 	heavy.set_character(ch)
 	t.eq(heavy.encumbrance_level(), 2, "二级（负重 %d / 上限 %d）" % [heavy.carry_weight(), heavy.carry_capacity()])
 	var b := heavy.compile_player()
@@ -193,7 +200,7 @@ static func run_travel_doubles(t: TestCase) -> void:
 	run.encumbrance_changed.connect(func(lv: int): levels.append(lv))
 	run.pick_spawn(run.map.entry_ids[0])
 	var ch := run.character.duplicate() as CharacterDef
-	ch.weight_capacity = maxi(1, int(floor(run.carry_weight() / 2.0)))     # 负重是上限的两倍：三级
+	ch.weight_capacity = maxi(1, int(floor(run.carry_weight() / 2.5)))     # 负重是上限的 2.5 倍：三级
 	run.set_character(ch)
 	t.eq(run.encumbrance_level(), 3, "三级")
 	t.eq(levels, [3], "级数变了发一次信号")
@@ -214,7 +221,7 @@ static func run_travel_doubles(t: TestCase) -> void:
 
 
 static func run_ground_and_safe_free(t: TestCase) -> void:
-	t.begin("129 · 地上、保险箱不算重；只算作战棋盘（含包本身）")
+	t.begin("129 · 地上、保险箱不算重；只算作战棋盘（161：包不算）")
 	var c := _content()
 	var run := _run(c)
 	var w := run.carry_weight()
@@ -229,16 +236,16 @@ static func run_ground_and_safe_free(t: TestCase) -> void:
 	for inst in run.board.items():
 		if run.board.acts_as_bag((inst as ItemInstance).def):
 			bags += ItemWeight.of((inst as ItemInstance).def)
-	t.check(bags > 0, "包本身有重量（%d）" % bags)
+	t.eq(bags, 0, "161：包本身不算重")
 	_empty_board(run)
-	t.eq(run.carry_weight(), bags, "棋盘上只剩包：负重 = 包的重量")
+	t.eq(run.carry_weight(), 0, "棋盘上只剩包：负重 0")
 
 
 static func run_save_round_trip(t: TestCase) -> void:
 	t.begin("129 · 存档不加字段：读回来按角色与棋盘重算，级数一致")
 	var c := _content()
 	var run := _run(c)
-	_set_cap(run, run.carry_weight() - 2)
+	_set_cap(run, int(floor(run.carry_weight() / 1.3)))
 	t.eq(run.encumbrance_level(), 1, "存之前：吃力")
 	var back := RunState.from_dict(run.to_dict(), c.chapter, c.items, c.enemies, c.sets)
 	t.not_null(back, "读回来")

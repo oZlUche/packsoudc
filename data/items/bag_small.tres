@@ -18,5 +18,4 @@ display_names = {
 "en": "Small Bag"
 }
 shape = SubResource("Resource_m2jpm")
-weight = 2
 is_bag = true

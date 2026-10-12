@@ -3,6 +3,7 @@
   "display_name": "标准负重",
   "levels": [
     {
+      "over": 1.2,
       "display_name": "吃力",
       "display_names": {
         "en": "Burdened"
@@ -20,7 +21,7 @@
       ]
     },
     {
-      "over": 1.25,
+      "over": 1.6,
       "display_name": "超重",
       "display_names": {
         "en": "Overloaded"
@@ -42,7 +43,7 @@
       ]
     },
     {
-      "over": 1.5,
+      "over": 2.2,
       "display_name": "寸步难行",
       "display_names": {
         "en": "Immobile"

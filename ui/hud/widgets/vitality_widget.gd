@@ -68,20 +68,4 @@ func _draw() -> void:
 	var margin := get_theme_stylebox("panel").get_offset() if has_theme_stylebox("panel") else Vector2.ZERO
 	for i in h.x:
 		var at := margin + Vector2(i % PER_ROW, floori(float(i) / PER_ROW)) * (s + HEART_GAP)
-		_heart(at, s, UiPalette.HP if i < h.y else UiPalette.HEART_LOST)
-
-
-## 一颗心：两个圆 + 一个朝下的三角，外面一圈暗线（黑心在深底上也看得见）
-func _heart(at: Vector2, s: float, col: Color) -> void:
-	var r := s * 0.27
-	var l := at + Vector2(s * 0.29, s * 0.33)
-	var rr := at + Vector2(s * 0.71, s * 0.33)
-	var tri := PackedVector2Array([at + Vector2(s * 0.04, s * 0.42), at + Vector2(s * 0.96, s * 0.42), at + Vector2(s * 0.5, s * 0.95)])
-	draw_circle(l, r, col)
-	draw_circle(rr, r, col)
-	draw_colored_polygon(tri, col)
-	var edge := UiPalette.DIM
-	draw_arc(l, r, PI * 0.8, PI * 2.0, 12, edge, 1.0, true)
-	draw_arc(rr, r, PI, PI * 2.2, 12, edge, 1.0, true)
-	draw_line(tri[0], tri[2], edge, 1.0, true)
-	draw_line(tri[1], tri[2], edge, 1.0, true)
+		UiPalette.draw_heart(self, at, s, UiPalette.HP if i < h.y else UiPalette.HEART_LOST)     # 161：和开局屏角色卡同一颗心
