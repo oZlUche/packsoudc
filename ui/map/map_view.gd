@@ -278,7 +278,11 @@ func press(p: Vector2, button: int = MOUSE_BUTTON_LEFT, shift: bool = false) -> 
 
 #region 绘制
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), UiPalette.bg())
+	var stone := UiTheme.backdrop_art()     # 157 补：有石板图铺石板（平铺，跟设置的底色染）
+	if stone != null:
+		draw_texture_rect(stone, Rect2(Vector2.ZERO, size), true, UiTheme.backdrop_tint())
+	else:
+		draw_rect(Rect2(Vector2.ZERO, size), UiPalette.bg())
 	if graph == null:
 		return
 	if _layout == null:

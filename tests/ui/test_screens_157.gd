@@ -386,3 +386,35 @@ static func _first_rich(n: Node) -> RichTextLabel:
 	for c in n.find_children("*", "RichTextLabel", true, false):
 		return c as RichTextLabel
 	return null
+
+
+static func run_stone(t: TestCase) -> void:
+	t.begin("157 补 · 石板样式：整屏底铺 bg_stone（平铺、底色设置给它染色）；PanelDark / PanelLine / PanelHud 换成石板九宫格，内边距照旧；没图照旧纯色")
+	var th := UiTheme.build()
+	for pair in [[UiTheme.PANEL_DARK, UiTheme.PANEL_MARGIN], [UiTheme.PANEL_LINE, UiTheme.PANEL_LINE_MARGIN], [UiTheme.PANEL_HUD, UiTheme.HUD_MARGIN]]:
+		var box := th.get_stylebox("panel", pair[0]) as StyleBoxTexture
+		t.check(box != null and box.texture != null, "%s 是石板九宫格" % pair[0])
+		if box != null:
+			t.eq(box.content_margin_left, float(pair[1]), "%s 内边距照旧 %d（换皮不改排版）" % [pair[0], pair[1]])
+		t.eq(UiTheme.tone_of(pair[0]), UiTheme.TONE_DARK, "%s 深底" % pair[0])
+	t.eq(String(UiTheme.art_meta(UiTheme.ART_BG).get("tone", "")), "dark", "整屏底的 json 写了深")
+	t.check(bool(UiTheme.art_meta(UiTheme.ART_BG).get("tile", false)), "整屏底平铺")
+	var rect := ColorRect.new()
+	var tile := UiTheme.dress_backdrop(rect)
+	t.check(tile != null and tile.stretch_mode == TextureRect.STRETCH_TILE and tile.mouse_filter == Control.MOUSE_FILTER_IGNORE, "纯色底上铺了一层平铺的石板，不挡鼠标")
+	var saved_bg := UiPalette.bg_theme
+	UiPalette.bg_theme = UiPalette.BG_DEFAULT
+	t.check(UiTheme.backdrop_tint().is_equal_approx(Color.WHITE), "默认底色：石板原色")
+	UiPalette.bg_theme = "moss"
+	UiTheme.tint_backdrop(rect)
+	t.check(not tile.self_modulate.is_equal_approx(Color.WHITE) and tile.self_modulate.g > tile.self_modulate.r, "换成苔绿：石板染绿一点")
+	UiPalette.bg_theme = saved_bg
+	rect.free()
+	var saved := UiTheme.asset_root
+	UiTheme.asset_root = NOWHERE
+	var flat := UiTheme.build()
+	t.check(flat.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxFlat and flat.get_stylebox("panel", UiTheme.PANEL_HUD) is StyleBoxFlat, "没图：平面底")
+	var plain := ColorRect.new()
+	t.eq(UiTheme.dress_backdrop(plain), null, "没图：整屏底照旧纯色")
+	plain.free()
+	UiTheme.asset_root = saved

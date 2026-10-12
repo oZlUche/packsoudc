@@ -57,6 +57,11 @@ const TOOLTIP_MARGIN := 10
 ## 157：石板框 / 悬浮窗底的贴图文件名（不带扩展名；旁边同名 `.json` 写九宫格边距）
 const ART_FRAME := "frame_stone"
 const ART_TOOLTIP := "tooltip_paper"
+## 157 补（作者定：整体纯色底换成石板）：整屏底（平铺）、通用面板、面板里的分区、地图读数组件
+const ART_BG := "bg_stone"
+const ART_PANEL := "panel_stone"
+const ART_INSET := "panel_inset"
+const ART_HUD := "panel_hud"
 const RICH_FONT_SIZES := ["normal_font_size", "bold_font_size", "italics_font_size", "bold_italics_font_size", "mono_font_size"]
 
 ## 并进默认主题的那一份；[method refresh] 原地重填它
@@ -258,6 +263,7 @@ static func prepare_root(root: Control, read_settings: bool = true) -> ColorRect
 	bg.color = UiPalette.bg()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dress_backdrop(bg)     # 157 补：有石板图铺石板
 	root.add_child(bg)
 	return bg
 #endregion
@@ -272,7 +278,7 @@ const PANEL_TONES := {
 	PANEL_DARK: TONE_DARK, PANEL_LINE: TONE_DARK, PANEL_HUD: TONE_DARK, PANEL_OVERLAY: TONE_DARK, PANEL_TOOLTIP: TONE_DARK,
 }
 ## 面板变体用哪张美术图（有图时深浅读它的 json）
-const PANEL_ART := {PANEL_OVERLAY: ART_FRAME, PANEL_TOOLTIP: ART_TOOLTIP}
+const PANEL_ART := {PANEL_DARK: ART_PANEL, PANEL_LINE: ART_INSET, PANEL_HUD: ART_HUD, PANEL_OVERLAY: ART_FRAME, PANEL_TOOLTIP: ART_TOOLTIP}
 ## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸
 const INK := Color("2e2219")
 const INK_SOFT := Color("5a4433")
@@ -380,8 +386,9 @@ static func frame_title_height() -> int:
 
 
 ## 九宫格底：图 + json 的边距（没写边距按图边长的四分之一）。没图 null。
-## [param title_strip] 真 = 石板框：顶边的内边距是 0，标题条（[OverlayFrame]）自己占住图上那一条
-static func _art_box(name: String, title_strip: bool = false) -> StyleBoxTexture:
+## [param title_strip] 真 = 石板框：顶边的内边距是 0，标题条（[OverlayFrame]）自己占住图上那一条；
+## [param content] ≥ 0 = 内边距用它（换皮不改排版），否则跟图边一样
+static func _art_box(name: String, title_strip: bool = false, content: int = -1) -> StyleBoxTexture:
 	var tex := art(name)
 	if tex == null:
 		return null
@@ -399,7 +406,45 @@ static func _art_box(name: String, title_strip: bool = false) -> StyleBoxTexture
 	s.content_margin_top = 0.0 if title_strip else float(m[1])
 	s.content_margin_right = float(m[2])
 	s.content_margin_bottom = float(m[3])
+	if content >= 0:
+		s.set_content_margin_all(float(content))
 	return s
+
+
+## 整屏底的石板（`bg_stone.png`，平铺）；没图 null = 照旧纯色
+static func backdrop_art() -> Texture2D:
+	return art(ART_BG)
+
+
+## 石板底按设置里挑的底色染一点（091 的底色设置照旧有用）：默认那档是原色，别的档按和默认的比例乘上去
+static func backdrop_tint() -> Color:
+	var base: Color = UiPalette.theme_of(UiPalette.BG_DEFAULT).get("color", UiPalette.BG_THEMES[0]["color"])
+	var c := UiPalette.bg()
+	return Color(c.r / maxf(base.r, 0.01), c.g / maxf(base.g, 0.01), c.b / maxf(base.b, 0.01), 1.0)
+
+
+## 给一块纯色整屏底铺上石板（子节点，平铺、不挡鼠标）；没图什么也不加、返回 null。底色设置变了调 [method tint_backdrop]
+static func dress_backdrop(rect: ColorRect) -> TextureRect:
+	var tex := backdrop_art()
+	if tex == null:
+		return null
+	var tile := TextureRect.new()
+	tile.name = "StoneBackdrop"
+	tile.texture = tex
+	tile.stretch_mode = TextureRect.STRETCH_TILE
+	tile.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tile.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	tile.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tile.self_modulate = backdrop_tint()
+	rect.add_child(tile)
+	return tile
+
+
+## 设置里换了底色：铺着的石板跟着染
+static func tint_backdrop(rect: ColorRect) -> void:
+	var tile := rect.get_node_or_null(^"StoneBackdrop") as TextureRect
+	if tile != null:
+		tile.self_modulate = backdrop_tint()
 #endregion
 
 
@@ -427,10 +472,13 @@ static func _fill(t: Theme, bg: Color) -> void:
 		t.set_color("font_color", pair[0], pair[1])
 	t.set_font_size("font_size", LABEL_TITLE, TITLE_SIZE)
 	# 面板
+	# 157 补：美术给了石板图就是九宫格（内边距照旧按变体的默认值，各屏排版不动），没给是原来的平面底
 	t.set_type_variation(PANEL_DARK, "PanelContainer")
-	t.set_stylebox("panel", PANEL_DARK, _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
+	var stone: StyleBox = _art_box(ART_PANEL, false, PANEL_MARGIN)
+	t.set_stylebox("panel", PANEL_DARK, stone if stone != null else _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
 	t.set_type_variation(PANEL_LINE, "PanelContainer")
-	t.set_stylebox("panel", PANEL_LINE, _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), PANEL_LINE_MARGIN))
+	var inset: StyleBox = _art_box(ART_INSET, false, PANEL_LINE_MARGIN)
+	t.set_stylebox("panel", PANEL_LINE, inset if inset != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), PANEL_LINE_MARGIN))
 	# 157：叠层的石板框、悬浮窗底 —— 美术给了图是九宫格，没给和原来一样（框 = PanelDark 的底、悬浮窗 = PanelLine 的底）
 	t.set_type_variation(PANEL_OVERLAY, "PanelContainer")
 	var frame: StyleBox = _art_box(ART_FRAME, true)
@@ -443,9 +491,10 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_stylebox("panel", PANEL_TOOLTIP, paper if paper != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), TOOLTIP_MARGIN))
 	# 150：读数组件（原来地图屏那条 HUD 的无边窄底，搬成变体）
 	t.set_type_variation(PANEL_HUD, "PanelContainer")
+	var hud_art: StyleBox = _art_box(ART_HUD, false, HUD_MARGIN)
 	var hud_box := _box(panel_bg, UiPalette.LINE, HUD_MARGIN)
 	hud_box.set_border_width_all(0)
-	t.set_stylebox("panel", PANEL_HUD, hud_box)
+	t.set_stylebox("panel", PANEL_HUD, hud_art if hud_art != null else hud_box)
 	t.set_type_variation(LABEL_HUD, "Label")
 	t.set_type_variation(LABEL_HUD_LARGE, "Label")
 	t.set_font_size("font_size", LABEL_HUD_LARGE, HUD_LARGE_SIZE)

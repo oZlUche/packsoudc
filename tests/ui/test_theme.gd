@@ -17,6 +17,9 @@ static func run(t: TestCase) -> void:
 	t.begin("121 · UiTheme.build：默认字体与字号、按钮三档 / 标签 / 面板 / 富文本变体齐全；换底色重建，PanelDark 的底跟着变")
 	var s := GameSettings.new()
 	s.bg_theme = "graphite"
+	# 157 补：assets/ui 里有了石板图，面板是九宫格；这两组看的是没图时的平面底跟底色走
+	var saved_root := UiTheme.asset_root
+	UiTheme.asset_root = "res://tests/fixtures/no_such_ui/"
 	var th := UiTheme.build(s)
 	t.not_null(th.default_font, "默认字体是 CJK 字体")
 	t.eq(th.default_font_size, UiTheme.FONT_SIZE, "默认字号 14")
@@ -42,6 +45,10 @@ static func run(t: TestCase) -> void:
 	back.bg_theme = saved
 	UiPalette.apply(back)
 	t.eq(UiTheme.current(), cur, "还是那一份")
+	UiTheme.asset_root = saved_root
+	UiPalette.apply(s)     # 底色没变不重填：换一下再换回来，让当前那一份按石板图重填（后面的套件照游戏的样子）
+	UiPalette.apply(back)
+	t.check(cur.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxTexture, "157 补：放回石板图，原地重填后 PanelDark 是石板九宫格")
 
 	t.begin("121 · 小工具先选变体：前景色 / 14 号的标签零覆写、暗色走 LabelDim、语义色才覆写；按钮只设变体")
 	var l := UiTheme.label(Label.new(), 14, UiPalette.FG)
