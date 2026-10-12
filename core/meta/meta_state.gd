@@ -54,6 +54,8 @@ var tech_deposits: Dictionary = {}
 var tech_buffs: Array[StringName] = []
 ## 118：科技给保险箱加的列 / 行（[TechSafeSize]），开局 `GameFlow.safe_size()` 加上
 var safe_bonus: Vector2i = Vector2i.ZERO
+## 160 补一：科技每局开局往腰带里发的随身技能（id → 几个，[TechBeltGrant]），开局交给 [BeltModule]。由科技等级推算，不入档
+var belt_grants: Dictionary = {}
 ## 撤离带出来的钱累计。局外货币怎么花（15 节第 4 项）还没定，先攒着
 var funds: int = 0
 ## 累计背出去的价值（6.4）

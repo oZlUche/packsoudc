@@ -25,7 +25,8 @@ const NAMES := {
 	&"request_extract": "RunState：从这个撤离点撤离（付不起返回 false）",
 	&"relocate": "RunState：把人挪到别处（清地上、给猎手一个回合）",
 	&"safe_open": "SafeModule：保险箱还能开吗",
-	&"belt_use": "BeltModule：用腰带里的一件（147：空串 = 用了，否则是原因）",
+	&"belt_use": "BeltModule：用腰带里的一个随身技能（147 / 160：空串 = 用了，否则是原因）",
+	&"belt_grant": "BeltModule：往腰带里放几个随身技能（160 补一：事件发的；返回放进了几个）",
 	&"faith_tier": "RunState：激活信仰现在第几阶（-1 = 没激活）",
 	&"active_faith_id": "RunState：激活信仰的 id（空 = 没激活）",
 	&"bless_substitute": "AltarModule：战利品 / 搜索里把道具换成赐福过的",
@@ -121,9 +122,14 @@ func safe_open() -> bool:
 	return bool(_at(&"safe_open").call()) if has(&"safe_open") else true
 
 
-## 147：用腰带里那一件。空串 = 用了
-func belt_use(uid: int) -> String:
-	return String(_at(&"belt_use").call(uid)) if has(&"belt_use") else "没有腰带"
+## 147：用腰带里的一个（160 补一：按随身技能 id）。空串 = 用了
+func belt_use(skill_id: StringName) -> String:
+	return String(_at(&"belt_use").call(skill_id)) if has(&"belt_use") else "没有腰带"
+
+
+## 160 补一：往腰带里放 [param count] 个，返回放进了几个（没腰带 / 满了 = 0）
+func belt_grant(skill_id: StringName, count: int) -> int:
+	return int(_at(&"belt_grant").call(skill_id, count)) if has(&"belt_grant") else 0
 
 
 func grant_map_buff(id: StringName) -> bool:

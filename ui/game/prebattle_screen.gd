@@ -64,13 +64,12 @@ func open(payload: Dictionary) -> void:
 	right.add_child(_player_plate_node)
 	_inv = InventoryPanelScript.new()
 	_inv.setup(flow.run, font)
-	_inv.belt_user = flow.use_belt     # 147：双击腰带里的烟雾弹也走这条路（用了接着往下走）
 	right.add_child(_inv)
 
 	# 「开战」居中、主档；腰带件在左，信仰 / 技能给的动作在右，原因写在下面一行
 	var buttons := _hbox(10)
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
-	_belt_row = _hbox(10)     # 147：腰带里能在战前用的
+	_belt_row = _hbox(10)     # 147：腰带里能在战前用的（160：名字后面带数量）
 	buttons.add_child(_belt_row)
 	_start_btn = _button("开战", start_battle, 16, UiPalette.Tier.PRIMARY)
 	buttons.add_child(_start_btn)
@@ -95,8 +94,8 @@ func open(payload: Dictionary) -> void:
 	col.add_child(_why)
 	flow.run.board.changed.connect(_refresh)
 	var belt := BeltModule.of(flow.run)
-	if belt != null and belt.belt != null:
-		belt.belt.changed.connect(_refresh_belt)
+	if belt != null:
+		belt.changed.connect(_refresh_belt)
 	_refresh_belt()
 	_refresh()
 
@@ -140,22 +139,21 @@ func enemy_view() -> InventoryView:
 	return _enemy_view
 
 
-## 147：用腰带里的一件（按钮）。返回空串 = 用了
-func use_belt(uid: int) -> String:
-	return flow.use_belt(uid)
+## 147：用腰带里的一个（按钮；160 补一：按随身技能 id）。返回空串 = 用了
+func use_belt(skill_id: StringName) -> String:
+	return flow.use_belt(skill_id)
 
 
-## 147：腰带里能在战前准备屏上用的那几件（uid 升序）
-func belt_uids() -> Array[int]:
-	var out: Array[int] = []
+## 147：腰带里能在战前准备屏上用的那几种（按腰带里的顺序）
+func belt_ids() -> Array[StringName]:
+	var out: Array[StringName] = []
 	var belt := BeltModule.of(flow.run) if flow != null else null
-	if belt == null or belt.belt == null:
+	if belt == null:
 		return out
-	for inst in belt.belt.items():
-		var it := inst as ItemInstance
-		if it.def != null and it.def.belt_use != null and it.def.belt_use.on_prebattle():
-			out.append(it.uid)
-	out.sort()
+	for sid in belt.ids():
+		var def := BeltSkillDef.find(sid)
+		if def != null and def.on_prebattle():
+			out.append(sid)
 	return out
 #endregion
 
@@ -166,11 +164,12 @@ func _refresh_belt() -> void:
 	for c in _belt_row.get_children():
 		c.queue_free()
 	var belt := BeltModule.of(flow.run)
-	for uid in belt_uids():
-		var inst := belt.belt.get_item(uid)
-		var why := belt.can_use(uid)
-		var b := _button(("用%s" % Names.of_item(inst)) if why == "" else ("%s：%s" % [Names.of_item(inst), why]), func(): use_belt(uid), 14)
-		b.tooltip_text = inst.def.belt_use.describe()
+	for sid in belt_ids():
+		var def := BeltSkillDef.find(sid)
+		var name := "%s ×%d" % [def.display_name, belt.count_of(sid)]
+		var why := belt.can_use(sid)
+		var b := _button(("用%s" % name) if why == "" else ("%s：%s" % [name, why]), func(): use_belt(sid), 14)
+		b.tooltip_text = def.describe()
 		b.disabled = why != ""
 		_belt_row.add_child(b)
 

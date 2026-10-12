@@ -57,6 +57,8 @@ var wait_actions: int = 0
 
 ## 后果做了什么（给结果页与日志）
 var items_given: Array[StringName] = []
+## 160 补一：放进腰带的随身技能（「烟雾弹 ×1」，给 detail 与日志）
+var belts_given: Array[String] = []
 var items_lost: Array[String] = []
 var restored: int = 0
 var spent: int = 0
@@ -120,6 +122,8 @@ func detail() -> Dictionary:
 		for id in items_given:
 			ids.append(String(id))
 		d["items"] = ids
+	if not belts_given.is_empty():
+		d["belt"] = belts_given.duplicate()
 	if not items_lost.is_empty():
 		d["items_lost"] = items_lost.duplicate()
 	if restored != 0:

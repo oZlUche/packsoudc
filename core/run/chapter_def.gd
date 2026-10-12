@@ -54,6 +54,8 @@ extends Resource
 @export var vitality_bonus: int = 0
 ## 这一章开局发的道具 id（在角色的初始包之上；序章二发一把匕首）。放不进包的到地上
 @export var starting_items: Array[StringName] = []
+## 160 补一：这一章开局发的随身技能 id（写几次发几个；进腰带，不是道具）
+@export var starting_belt: Array[StringName] = []
 ## 088（作者定）：这一章开局发的**特殊道具**（不进背包，只是文本通知 + 图鉴点亮；序章二发望远镜 → 节点浮窗）。记在局外，以后每一局都有
 @export var starting_keepsakes: Array[StringName] = []
 ## 撤离成功之后直接进的下一章（085 作者定：序章撤离后不是再来一局而是下一张教学图）。空 = 照常去局外

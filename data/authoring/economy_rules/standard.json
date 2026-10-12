@@ -13,5 +13,9 @@
   "shop_exclude_tags": [
     "treasure",
     "supply"
-  ]
+  ],
+  "belt_stock": {
+    "aid_pack": 1,
+    "smoke_bomb": 1
+  }
 }

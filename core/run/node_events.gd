@@ -828,6 +828,8 @@ func _open_shop(node: MapNode) -> void:
 		_visited(node)
 		return
 	var session := ShopSession.new(node, economy, items, wallet, _depth_of(node), hooks.run_context().shop_price_mult)
+	if hooks.has(&"belt_grant"):
+		session.belt_grant = hooks.belt_grant     # 160 补一：「随身」那一排买了直接进腰带
 	session.closed.connect(func():
 		current_shop = null
 		shop_closed.emit(node)

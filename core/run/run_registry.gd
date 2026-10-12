@@ -28,10 +28,11 @@ const RUN_EFFECTS := {
 	&"erosion_resist": "res://core/run/effects/erosion_resist.gd",
 	&"battle_reward_mult": "res://core/run/effects/battle_reward_mult.gd",
 	&"belt_slots_bonus": "res://core/run/effects/belt_slots_bonus.gd",     # 147
+	&"starting_belt": "res://core/run/effects/starting_belt.gd",     # 160 补一
 	&"loss_discount": "res://core/run/effects/loss_discount.gd",     # 149：科技「不屈」
 }
 
-## 147：随身道具点一下的效果（[BeltUse.effects]）
+## 147：随身技能点一下的效果（[BeltUse.effects]；160 补一：挂在 [BeltSkillDef] 上）
 const BELT_EFFECTS := {
 	&"smoke_escape": "res://core/run/effects/smoke_escape.gd",
 	&"mend_vitality": "res://core/run/effects/mend_vitality.gd",
@@ -177,6 +178,7 @@ const HUNTER_LOSS_PICKS := {
 ## 侵蚀（5.7 / 075）：被侵蚀的点结算时过门的效果
 const EROSION_EFFECTS := {
 	&"spend_vitality": "res://core/run/erosion/effects/erode_spend_vitality.gd",
+	&"grant_belt": "res://core/run/events/outcomes/grant_belt.gd",     # 160 补一
 	&"damage_item": "res://core/run/erosion/effects/erode_damage_item.gd",
 	&"drain_money": "res://core/run/erosion/effects/erode_drain_money.gd",
 }
@@ -186,6 +188,7 @@ const TECH_EFFECTS := {
 	&"warehouse_rows": "res://core/meta/techs/warehouse_rows.gd",
 	&"tech_run_buff": "res://core/meta/techs/tech_run_buff.gd",     # 118
 	&"tech_safe_size": "res://core/meta/techs/tech_safe_size.gd",     # 118
+	&"tech_belt_grant": "res://core/meta/techs/tech_belt_grant.gd",     # 160 补一
 }
 
 
