@@ -1,10 +1,10 @@
 ## 139（作者定，三项待定按推荐）：基地屏右侧的开发栏改成箭头抽屉（默认收起，点一下开、再点一下关，盖在页面上）；
-## 仓库与图鉴的格子占满整行 —— 格子大小是每块视图自己的（`InventoryView.cell_px`，60 ～ 80），图鉴一行几个按宽度算。
+## 仓库与图鉴的格子占满整行 —— 格子大小是每块视图自己的（`InventoryView.cell_px`），图鉴一行几个按宽度算。
+## 164：仓库搬到基地右半边常驻，格子按宽高取小（40 ～ 80），10 × 8 整块可见。
 extends RefCounted
 
 const META := "user://test_139_meta.json"
 const SETTINGS := "user://test_139_settings.json"
-const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
 
 
 static func _flow() -> GameFlow:
@@ -66,9 +66,9 @@ static func frame_drawer(t: TestCase, root: Window) -> void:
 		t.check(spin != null and drawer.is_ancestor_of(spin), "数字框在抽屉里")
 		t.eq(screen.set_tech_level(tid, 1), 1, "抽屉收着也能改级数")
 		f.dev_set_tech_level(tid, 0)
-	var page: Control = screen._pages["warehouse"]
-	t.check(not drawer.is_ancestor_of(page) and not page.is_ancestor_of(drawer), "仓库页不再有右列")
-	t.check(drawer.get_index() > page.get_parent().get_parent().get_index(), "抽屉后加：盖在页面上")
+	var page: Control = screen._pages["home"]
+	t.check(not drawer.is_ancestor_of(page) and not page.is_ancestor_of(drawer), "家页不再有右列")
+	t.check(drawer.get_index() > screen._cols.get_parent().get_index(), "抽屉后加：盖在三列上")
 	t.eq(drawer.anchor_left, 1.0, "贴右缘")
 	t.eq(drawer.offset_right - drawer.offset_left, DevDrawer.WIDTH, "宽 %d" % DevDrawer.WIDTH)
 	screen.queue_free()
@@ -85,34 +85,34 @@ static func _collect_text(n: Node, out: Array[String]) -> void:
 
 
 static func frame_warehouse_fills_row(t: TestCase, root: Window) -> void:
-	t.begin("139 · 仓库格子按宽度放大（60 ～ 80；作者 2026-10-09 从 96 改小），带回来的背包同一个大小；别的屏格子还是 60")
-	t.eq(WarehousePanelScript.cell_for(1600.0, 10), 80.0, "1600 宽、10 列：封顶 80")
-	t.eq(WarehousePanelScript.cell_for(800.0, 10), 78.0, "800 宽、10 列：(800 − 14) / 10 取整 = 78")
-	t.eq(WarehousePanelScript.cell_for(400.0, 10), InventoryView.CELL, "太窄：不小于 60")
+	t.begin("164 · 右半边的仓库按宽高取小（40 ～ 80），10 × 8 整块可见、不滚；带回来的背包和它一样大；别的屏格子还是 60")
+	var page := Vector2i(10, 8)
+	t.eq(WarehousePages.cell_for(1000.0, 800.0, page), 80.0, "宽高都够：封顶 80")
+	t.eq(WarehousePages.cell_for(1000.0, 480.0, page), 60.0, "高 480：按高算 60")
+	t.eq(WarehousePages.cell_for(500.0, 800.0, page), floorf((500.0 - WarehousePages.TAB_W - WarehousePages.GAP) / 10.0), "窄：按宽算（扣掉页签列）")
+	t.eq(WarehousePages.cell_for(200.0, 200.0, page), WarehousePages.CELL_MIN, "再小也不小于 40")
 	var f := _flow()
+	f.meta.board = GridInventory.new(Vector2i(8, 6), MetaState.BOARD_ID, false)
+	var stone := ItemInstance.create(f.items.get_def(&"steel_ingot"), f.meta.allocate_uid())
+	f.meta.board.try_add(stone)
 	var screen = _screen(f, root)
-	var wh = screen._wh
-	t.check(wh.fill_width, "基地屏的仓库面板开着撑满")
-	var c: float = wh.fit_to_width(1600.0)
-	t.eq(c, 80.0, "1600 宽：一格封顶 80")
-	var view: InventoryView = wh.warehouse_view()
-	t.eq(view.cell_px, c, "仓库视图用这个格子")
-	t.eq(view.custom_minimum_size.x, f.meta.warehouse.size.x * c, "视图宽 = 列数 × 格子")
+	screen.layout()
+	var shelf: WarehousePages = screen.shelf()
+	var view := shelf.view
+	var c := view.cell_px
+	t.check(c >= WarehousePages.CELL_MIN and c <= WarehousePages.CELL_MAX, "格子 %d（40 ～ 80）" % c)
+	t.eq(view.custom_minimum_size, Vector2(f.meta.warehouse.size) * c, "视图 = 一页 × 格子")
+	var screen_size: Vector2 = root.get_visible_rect().size
+	t.check(c * f.meta.warehouse.size.y + screen.SHELF_HEAD <= screen_size.y, "8 行整块放得下（%d × 8 ≤ %d）" % [c, screen_size.y])
+	t.check(c * f.meta.warehouse.size.x + WarehousePages.TAB_W <= screen_size.x * 0.5, "10 列加页签在右半边里")
 	# 按 cell_px 换算：光标在第 (3, 2) 格的中心
 	var mid := (Vector2(3, 2) + Vector2(0.5, 0.5)) * c
 	t.eq(view.cell_at_local(mid), Vector2i(3, 2), "像素 → 格按 cell_px 算")
 	t.eq(view.cell_origin_px(Vector2i(3, 2)), Vector2(3, 2) * c, "格 → 像素按 cell_px 算")
-	t.eq(wh.fit_to_width(500.0), InventoryView.CELL, "窄了缩回 60")
-	# 作者 2026-10-12（仓库屏太空）：最多几行按剩下的高度算 —— 放得下整块显示，不够才滚；至少 4 行
-	var rows_all: int = f.meta.warehouse.size.y
-	var cell: float = wh.cell_px()
-	t.eq(wh.fit_to_height(cell * (rows_all + 3)), rows_all + 3, "高度够：行数按高度算")
-	t.eq(wh.get("_wh_scroll").custom_minimum_size.y, rows_all * cell, "整块仓库都显示（%d 行）" % rows_all)
-	t.eq(wh.fit_to_height(cell * 2.0), WarehousePanelScript.MIN_ROWS, "矮了：至少 4 行")
-	t.eq(wh.get("_wh_scroll").custom_minimum_size.y, mini(rows_all, WarehousePanelScript.MIN_ROWS) * cell, "矮了：显示 4 行、其余滚动")
-	screen.show_tab("sell")
-	screen.fit_sell_to_width(1600.0)
-	t.eq(screen._sell_view.cell_px, 80.0, "出售页的仓库也撑满、同样封顶 80")
+	var board_view: InventoryView = screen._wh.board_view()
+	t.not_null(board_view, "带回来的背包在家页")
+	if board_view != null:
+		t.check(board_view.cell_px <= c and board_view.cell_px >= WarehousePages.CELL_MIN, "带回来的背包的格子 %d：不比仓库大" % board_view.cell_px)
 	screen.queue_free()
 	t.eq(InventoryView.new().cell_px, InventoryView.CELL, "新建的格子视图默认 60（地图背包、战前、开局不变）")
 	_cleanup()

@@ -101,3 +101,13 @@
 | `core/run/shop_session.gd`、`core/run/economy_rules.gd`、事件效果、科技效果、`RunSkill` 被动 | 四条来源 |
 | `ui/hud/widgets/belt_widget.gd`、`ui/game/shop_screen.gd`、`ui/game/prebattle_screen.gd`、`ui/game/inventory_panel.gd` | 补 2 界面 |
 | `docs/architecture.md` 3.6（腰带）、147 的落地记录加一行 | |
+
+## 落地记录（2026-10-12）
+
+补充一按推荐：随身道具搬出道具库，变成可堆叠的一次性技能。
+
+- 新内容种类 `belt_skills`（`BeltSkillDef extends BeltUse`：名字、说明、价格、`effects`、什么时候能用；图标 `assets/belt_skills/<id>.png`，没有画名字头一个字）。烟雾弹（战前用、脱身）、急救包（回体力）两条；道具 `smoke_bomb` / `aid_pack` 与标签【随身】`belt` 删了，`ItemDef.BELT / belt_use` 去掉。
+- `BeltModule` 存 `id → 个数`：一种占一格，同种叠一格不限个数，格数限种类数；用一个少一个，到零空出那格。存档 `{"stacks": …}`，147 的老档（`belt` 键）读出空腰带。撤离不带出、不进仓库、不进图鉴、不算负重、敌人不带。
+- 四个来源：事件后果 `grant_belt`（经 hook `belt_grant`，事件屏写「腰带里多了 …」）、商店「随身」一排（`EconomyRules.belt_stock` / `belt_picks`，`ShopSession.buy_belt`）、科技构件 `tech_belt_grant`（推算进 `MetaState.belt_grants`，开局经模块输入发）、章节与角色能力 / buff 的 `starting_belt`。导入器检查这四处引用的 id。
+- 界面：`BeltSlots`（`ui/widgets/belt_slots.gd`）一排圆槽，圆里图标、右下角数量，双击用一个，用不了在圆上方飘一行；地图屏的腰带组件默认锚在右下角（`HudLayout.VERSION` 3，旧布局回默认）；背包面板里的腰带那一行删了；战前准备屏按钮「用烟雾弹 ×N」。
+- 测试：`tests/run/test_belt_147.gd` 重写（不是道具、堆叠、用、存档、四个来源、商店），`tests/ui/test_belt_slots_160.gd`。

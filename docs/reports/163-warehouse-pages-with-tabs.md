@@ -56,3 +56,14 @@
 | `ui/game/warehouse_pages.gd`（新）、`ui/game/warehouse_panel.gd`、`ui/game/tech_panel.gd`、`ui/game/setup_screen.gd`（161 第二页） | 2.2 |
 | `tests/meta/test_warehouse.gd`（新）、`tests/meta/test_tech_service.gd`、`tests/ui/test_warehouse_panel.gd`、`tests/meta/test_meta_state.gd` | 2.3 |
 | `docs/architecture.md` 8 节（仓库）、110 / 120 那两段 | |
+
+## 落地记录（2026-10-12）
+
+四项待定都按推荐 A。
+
+- `core/meta/warehouse.gd`（`Warehouse extends ItemContainer`）：`pages: Array[GridInventory]`，每页 `MetaRules.warehouse_size`（10 × 8），页 id 从 200 起（不和带回来的棋盘 101 撞）；`try_add / admit` 按页序；`get_item / remove / items / item_count` 跨页；`set_page_count` 只删末尾的空页；`owns(container)` 让界面认出「拖 / 双击的是仓库的某一页」；`place(inst, origin, rot, page)`。
+- 存档 `{"pages": [...]}`；老档（单块）按页切：原位能放回第一页的原位放，其余按页序重摆；页数给定（科技推算）时放不下的按页序找空位，再不行临时加页、不丢。不升存档版本。
+- `TechWarehouseRows` → `TechWarehousePages`（`warehouse_pages`，每级 `pages = 1`，满级七页），`plan_of(defs)` 给界面列锁着的页；`docs/techs.xlsx` 的构件与说明改了，重新生成 `techs/warehouse.json`。
+- 界面 `ui/game/warehouse_pages.gd`（`WarehousePages`）：左边一列竖排页签「一」「二」……（下一行写几件），没解锁的灰着画一把锁、悬停写要扩建到第几级；切页只换视图的 `inventory`；拖着东西停在页签上 0.4 秒切页（`hover_tab`）；`show_item(uid)` 翻到那件所在的页。结算屏（仓库面板）、开局屏第二页、基地右半边三处共用。
+- 「整理」只整理当前页；双击置入、开局屏放回落到哪页就翻到哪页。
+- 测试：`tests/meta/test_warehouse_163.gd`；`test_tech`（每级一页、读档推算页数）、`test_tech_tree`、`test_feedback_109`、`test_author_091` 跟着改。

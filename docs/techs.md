@@ -9,7 +9,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | pack | 行囊 | Travel Pack | 0 | 0 | safe_box | 出发时多带一笔钱：按角色自己的开局钱加百分比。 | tech_run_buff | {"effect": "starting_funds_bonus"} | 开局钱 {starting_funds_bonus_percent\|signed}% |
 | safe_box | 保险箱扩格 | Bigger Safe | 0 | 0 | warehouse | 局内的保险箱多出格子，撤不出来也能多保住几件。 | tech_safe_size | {"rows": 1} |  |
-| warehouse | 仓库扩建 | Warehouse Expansion | 0 | 0 |  | 仓库往下长，放得下更多带回来的东西；仓库里的东西原地不动。 | warehouse_rows |  |  |
+| warehouse | 仓库扩建 | Warehouse Expansion | 0 | 0 |  | 仓库多一页，放得下更多带回来的东西；各页独立，左边的页签切换。 | warehouse_pages |  |  |
 | endurance | 耐久 | Endurance | 1 | 0 |  | 体力上限更高，在图上走得更远：按角色自己的体力上限加百分比。 | tech_run_buff | {"effect": "vitality_max_bonus"} | 体力上限 {vitality_max_bonus_percent\|signed}% |
 | undaunted | 不屈 | Undaunted | 1 | 0 | endurance | 打输了少扣体力，最少还是扣一点。 | tech_run_buff | {"effect": "loss_discount"} | 打输了少扣 {loss_discount_amount} 点体力（最少扣一点） |
 | sinew | 筋骨 | Sinew | 1 | 1 | endurance | 开局生命上限更高：按角色自己的生命加百分比。 | tech_run_buff | {"effect": "stat_bonus"} | 开局生命 {stat_bonus_amount\|signed}% |

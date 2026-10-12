@@ -1,6 +1,6 @@
-## 110（作者定）：仓库扩建 = 第一项局外科技。1～3 级只要钱、每级仓库 +3 行且东西原地不动；
+## 110（作者定）：仓库扩建 = 第一项局外科技。1～3 级只要钱、每级仓库加一页（163：原来是 +3 行）且东西原地不动；
 ## 第 4 级起要建材，分批上交（上交即消耗、跨存档记着），交齐且钱够【升级】才亮，升完清上交记录；
-## 存档 v2 → v3；读档按进度表推算行数（120：先算容量再装仓库）；整理先同类再大小；仓库滚动后拖拽只认露在外面的部分；基地「科技」页。
+## 存档 v2 → v3；读档按进度表推算页数（120：先算容量再装仓库）；整理先同类再大小；仓库滚动后拖拽只认露在外面的部分；基地「科技」页。
 extends RefCounted
 
 const META := "user://test_110_meta.json"
@@ -34,7 +34,7 @@ static func run_content(t: TestCase) -> void:
 	if def == null:
 		return
 	t.eq(def.max_level(), 6, "6 级")
-	t.check(def.effect is TechWarehouseRows and (def.effect as TechWarehouseRows).rows == 3, "每级 +3 行")
+	t.check(def.effect is TechWarehousePages and (def.effect as TechWarehousePages).pages == 1, "163：每级加一页")
 	for i in 3:
 		t.check(def.tiers[i].items.is_empty() and def.tiers[i].funds > 0, "第 %d 级只要钱" % (i + 1))
 	for i in range(3, 6):
@@ -55,12 +55,12 @@ static func run_content(t: TestCase) -> void:
 
 
 static func run_money_levels(t: TestCase) -> void:
-	t.begin("110 · 1～3 级只扣钱；每级仓库 +3 行，东西原地不动；钱不够不亮")
+	t.begin("110 · 1～3 级只扣钱；每级仓库加一页（163），东西原地不动；钱不够不亮")
 	ItemInstance.reset_uid_counter()
 	var db := _db()
 	var def := _tech()
 	var m := _meta()
-	var rows0 := m.warehouse.size.y
+	var pages0 := m.warehouse.page_count()
 	var knife := _add(m, db, &"knife")
 	var at := knife.origin
 	t.check(not TechService.ready(m, def), "没钱：不能升")
@@ -71,7 +71,7 @@ static func run_money_levels(t: TestCase) -> void:
 		t.check(TechService.needed(m, def).is_empty(), "第 %d 级不要材料" % (lv + 1))
 		t.check(TechService.ready(m, def), "钱够就能升到 %d 级" % (lv + 1))
 		t.check(TechService.upgrade(m, def), "升到 %d 级" % (lv + 1))
-		t.eq(m.warehouse.size.y, rows0 + 3 * (lv + 1), "仓库 %d 行" % (rows0 + 3 * (lv + 1)))
+		t.eq(m.warehouse.page_count(), pages0 + lv + 1, "仓库 %d 页" % (pages0 + lv + 1))
 	t.eq(m.funds, 5, "扣了 100 + 200 + 400")
 	t.eq(TechService.level(m, def.id), 3, "3 级")
 	t.check(m.warehouse.has_item(knife.uid) and knife.origin == at, "原来的那件原地不动")
@@ -85,7 +85,7 @@ static func run_deposits(t: TestCase) -> void:
 	var def := _tech()
 	var m := _meta()
 	m.tech_levels["warehouse"] = 3
-	m.warehouse.grow_rows(9)
+	m.warehouse.set_page_count(4)
 	var plank := _add(m, db, &"hardwood_plank")
 	t.check(not TechService.can_submit(m, def, plank.def), "第 4 级不要硬木板")
 	t.check(not TechService.submit(m, def, plank.uid), "交不进")
@@ -113,12 +113,12 @@ static func run_deposits(t: TestCase) -> void:
 	t.check(not TechService.can_submit(m, def, b.def), "交齐了：再来钢锭不收")
 	m.funds = 600
 	t.check(TechService.ready(m, def), "交齐 + 钱够：能升")
-	var rows := m.warehouse.size.y
+	var pages := m.warehouse.page_count()
 	t.check(TechService.upgrade(m, def), "升到 4 级")
 	t.eq(TechService.level(m, def.id), 4, "4 级")
 	t.eq(m.funds, 0, "扣了 600")
 	t.check(not m.tech_deposits.has("warehouse"), "升级后清掉这一项的上交记录")
-	t.eq(m.warehouse.size.y, rows + 3, "仓库 +3 行")
+	t.eq(m.warehouse.page_count(), pages + 1, "仓库多一页")
 	t.check(TechService.can_submit(m, def, plank.def), "第 5 级要硬木板了")
 
 
@@ -136,7 +136,7 @@ static func run_max_level(t: TestCase) -> void:
 
 
 static func run_migration_and_heal(t: TestCase) -> void:
-	t.begin("110 · v2 存档迁到 v3（补两个空字典）；读档时仓库行数不足按等级补齐，只补不缩")
+	t.begin("110 · v2 存档迁到 v3（补两个空字典）；读档时仓库页数按等级推算，多出来的空页收回")
 	var db := _db()
 	var text := FileAccess.get_file_as_string("res://tests/fixtures/meta_v2.json")
 	var raw: Dictionary = JSON.parse_string(text)
@@ -156,50 +156,47 @@ static func run_migration_and_heal(t: TestCase) -> void:
 	var rules := GameFlow.load_meta_rules()
 	var m2 := MetaState.new(rules)
 	m2.tech_levels["warehouse"] = 2
-	var base := m2.warehouse.size.y
 	TechService.derive(m2, [_tech()])
-	t.eq(m2.warehouse.size.y, base + 6, "补到基础 + 2 × 3 行")
+	t.eq(m2.warehouse.page_count(), 3, "补到 1 + 2 页")
 	TechService.derive(m2, [_tech()])
-	t.eq(m2.warehouse.size.y, base + 6, "再推算一次不再长")
-	m2.warehouse.grow_rows(5)
+	t.eq(m2.warehouse.page_count(), 3, "再推算一次不再长")
+	m2.warehouse.set_page_count(8)
 	TechService.derive(m2, [_tech()])
-	t.eq(m2.warehouse.size.y, base + 6, "120：比期望大且多出的行是空的：缩回期望值")
+	t.eq(m2.warehouse.page_count(), 3, "120：比期望多且多出的页是空的：收回到期望值")
 
 
 ## 120（作者定）：读档先读进度表、按科技算出仓库容量，再往里装东西；存档不存科技算出来的数
 static func run_derive_on_load(t: TestCase) -> void:
-	t.begin("120 · 读档先算容量再装仓库：基础尺寸的档 + 仓库扩建 2 级 → 仓库 = 基础 + 6 行，东西还在原位")
+	t.begin("120 / 163 · 读档先算容量再装仓库：一页的档 + 仓库扩建 2 级 → 仓库 3 页，东西还在原位")
 	ItemInstance.reset_uid_counter()
 	var db := _db()
 	var rules := GameFlow.load_meta_rules()
 	var defs := GameFlow.load_techs()
 	var m := MetaState.new(rules)
-	var base := m.warehouse.size
 	var ingot := ItemInstance.create(db.get_def(&"steel_ingot"), m.allocate_uid())
-	t.check(m.warehouse.place(ingot, Vector2i(0, 0), 0), "钢锭放在第 0 行")
+	t.check(m.warehouse.place(ingot, Vector2i(0, 0), 0), "钢锭放在第一页左上")
 	m.tech_levels["warehouse"] = 2
 	var d := m.to_dict()
-	t.eq((d["warehouse"] as Dictionary)["size"], [base.x, base.y], "存档里仓库还是基础尺寸")
+	t.eq(((d["warehouse"] as Dictionary)["pages"] as Array).size(), 1, "存档里仓库还是一页")
 	var back := MetaState.from_dict(d, db, rules, defs)
-	t.eq(back.warehouse.size, base + Vector2i(0, 6), "读回来：基础 + 2 × 3 行")
-	t.check(back.warehouse.has_item(ingot.uid) and back.warehouse.get_item(ingot.uid).origin == Vector2i(0, 0), "钢锭还在原位")
+	t.eq(back.warehouse.page_count(), 3, "读回来：1 + 2 页")
+	t.check(back.warehouse.page_of(ingot.uid) == 0 and back.warehouse.get_item(ingot.uid).origin == Vector2i(0, 0), "钢锭还在原位")
 	var legacy := MetaState.from_dict(d, db, rules)
-	t.eq(legacy.warehouse.size, base, "没给科技定义：按存档里的尺寸（兜底）")
+	t.eq(legacy.warehouse.page_count(), 1, "没给科技定义：按存档里的页数（兜底）")
 
-	t.begin("120 · 存档里仓库比科技算出的大、底下有东西：读档挪进范围内，仓库 = 算出的尺寸，一件不丢")
+	t.begin("120 / 163 · 存档里仓库比科技算出的多页、后面的页有东西：读档挪进前面的页，页数 = 算出的，一件不丢")
 	var big := MetaState.new(rules)
-	big.warehouse.grow_rows(6)     # 存档里 +6 行，但进度表里仓库扩建 0 级
+	big.warehouse.set_page_count(3)     # 存档里 3 页，但进度表里仓库扩建 0 级
 	var low := ItemInstance.create(db.get_def(&"steel_ingot"), big.allocate_uid())
-	t.check(big.warehouse.place(low, Vector2i(0, base.y + 4), 0), "钢锭放在算出的范围外")
+	t.check(big.warehouse.place(low, Vector2i(0, 4), 0, 2), "钢锭放在第三页")
 	var back2 := MetaState.from_dict(big.to_dict(), db, rules, defs)
-	t.eq(back2.warehouse.size, base, "仓库 = 算出的基础尺寸")
-	t.check(back2.warehouse.has_item(low.uid), "那块钢锭还在")
-	t.check(back2.warehouse.get_item(low.uid).origin.y < base.y, "挪进了范围内")
+	t.eq(back2.warehouse.page_count(), 1, "仓库 = 算出的一页")
+	t.check(back2.warehouse.page_of(low.uid) == 0, "那块钢锭挪进了第一页")
 	t.eq(back2.warehouse.item_count(), 1, "一件不丢")
 
-	t.begin("120 · 装不下（算出的仓库塞满了、还有越界的）：临时加行放下，件数不变")
+	t.begin("120 / 163 · 装不下（算出的页塞满了、还有越界的）：临时加页放下，件数不变；再推算有东西的页不删")
 	var full := MetaState.new(rules)
-	full.warehouse.grow_rows(3)
+	full.warehouse.set_page_count(2)
 	var n := 0
 	while true:
 		var inst := ItemInstance.create(db.get_def(&"steel_ingot"), full.allocate_uid())
@@ -209,9 +206,10 @@ static func run_derive_on_load(t: TestCase) -> void:
 	t.check(n > 0, "塞了 %d 件" % n)
 	var back3 := MetaState.from_dict(full.to_dict(), db, rules, defs)
 	t.eq(back3.warehouse.item_count(), n, "件数不变：%d" % n)
-	t.check(back3.warehouse.size.y > base.y and back3.warehouse.size.y <= base.y + 3, "临时加了行（%d 行，算出的是 %d）" % [back3.warehouse.size.y, base.y])
+	t.eq(back3.warehouse.page_count(), 2, "临时加了一页（算出的是 1 页）")
 	TechService.derive(back3, defs)
-	t.eq(back3.warehouse.item_count(), n, "再推算一次：有东西的行不删")
+	t.eq(back3.warehouse.item_count(), n, "再推算一次：件数不变")
+	t.eq(back3.warehouse.page_count(), 2, "有东西的页不删")
 
 	t.begin("120 · 存档不存 tech_buffs / safe_bonus；带这两项的旧档读回来一样（派生值来自进度表）")
 	var tm := MetaState.new(rules)
@@ -299,7 +297,7 @@ static func frame_scroll_drag(t: TestCase, root: Window) -> void:
 
 
 static func frame_tech_panel(t: TestCase, root: Window) -> void:
-	t.begin("110 · 科技页：双击上交、不要的提示、拖进上交区记账、钱够才亮【升级】、升级后仓库多 3 行")
+	t.begin("110 · 科技页：双击上交、不要的提示、拖进上交区记账、钱够才亮【升级】、升级后仓库多一页")
 	ItemInstance.reset_uid_counter()
 	var db := _db()
 	var m := _meta()
@@ -347,10 +345,10 @@ static func frame_tech_panel(t: TestCase, root: Window) -> void:
 	m.changed.emit()
 	btn = panel.upgrade_button(&"warehouse")
 	t.check(not btn.disabled, "交齐 + 钱够：亮")
-	var rows := m.warehouse.size.y
+	var pages_before := m.warehouse.page_count()
 	btn.pressed.emit()
 	t.eq(TechService.level(m, &"warehouse"), 4, "升到 4 级")
-	t.eq(m.warehouse.size.y, rows + 3, "仓库当场多 3 行")
+	t.eq(m.warehouse.page_count(), pages_before + 1, "仓库当场多一页")
 	panel.queue_free()
 	MetaSave.remove(META)
 	GameSettings.remove(SETTINGS)

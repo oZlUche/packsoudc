@@ -1,12 +1,13 @@
-## 基地的「科技」页（110；118 作者定改成「左树右板」）：
+## 基地的「科技」页（110；118 作者定「树 + 说明板」；164 基地三列后中列窄了，改成上下：上树、下说明板）：
 ## [codeblock]
-## 左：科技树（TechTreeView）—— 深度 0 在最下面、往上点亮；点一个节点，右板切到它
-## 右：说明面板，从上到下 ——  名称　Lv n / m（单级写已点亮 / 未点亮）
+## 上：科技树（TechTreeView）—— 深度 0 在最下面、往上点亮；点一个节点，下面的说明板切到它
+## 下：说明板，从上到下 ——  名称　Lv n / m（单级写已点亮 / 未点亮）
 ##                          效果：一句总述；「现在：……」「下一级：……」
 ##                          费用：钱 需要 / 持有；材料每种一行 已交 / 需要　拥有 n　【交 k】；锁住的写「需要先点亮：……」；满级写「已满级」
 ##                          【点亮】/【升级】
-##     下面：上交区（只给**选中的节点**）+ 折叠的仓库格子（双击一件上交）
+##     说明板右边：上交区（只给**选中的节点**）
 ## [endcodeblock]
+## 164（作者定）：仓库不在这一页里画了 —— 基地右半边常驻的仓库（[WarehousePages]）就是上交的来源：拖进上交区，或在仓库里双击一件（基地屏转给 [method submit]）。
 ## **上交即消耗**（交了不能退）；钱在按按钮时一次扣，前置点亮、材料交齐且钱够按钮才亮。逻辑全在 [TechService]。
 extends MarginContainer
 
@@ -14,16 +15,13 @@ signal changed()
 
 ## 上交区几格
 const ZONE_SIZE := Vector2i(4, 2)
-const PANEL_WIDTH := 420.0
+const PANEL_WIDTH := 300.0
 
 var _flow: GameFlow = null
 var _meta: MetaState = null
 var _font: Font
 var _drag: DragLayer
 var _tree: TechTreeView
-var _warehouse_view: InventoryView
-var _warehouse_box: Control
-var _warehouse_toggle: Button
 ## 上交区：一块空的自由格子，只收**选中节点**下一级还差的材料；落进来的那件当场记账、从这里拿走
 var _zone: GridInventory
 var _zone_view: InventoryView
@@ -37,10 +35,12 @@ var _selected: StringName = &""
 var _submit_buttons: Dictionary = {}
 
 
-func setup(flow: GameFlow, font: Font) -> void:
+## [param drag] 给了 = 基地整屏那一层拖拽（右半边的仓库也登记在上面），上交区登记进去；不给自己建一层
+func setup(flow: GameFlow, font: Font, drag: DragLayer = null) -> void:
 	_flow = flow
 	_meta = flow.meta
 	_font = font
+	_drag = drag
 	_build()
 	_meta.changed.connect(_refresh)
 	var first := _default_selection()
@@ -50,17 +50,16 @@ func setup(flow: GameFlow, font: Font) -> void:
 
 
 func _build() -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 24)
-	add_child(row)
+	var col := UiTheme.vbox(12)
+	add_child(col)
 
-	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 6)
+	var left := UiTheme.vbox(6)
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(left)
-	left.add_child(UiTheme.make_label("科技树　从下往上点亮；点一个节点看右边", 13, UiPalette.DIM))
+	left.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col.add_child(left)
+	left.add_child(UiTheme.make_label("科技树　从下往上点亮；点一个节点看下面", 13, UiPalette.DIM))
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(560, 520)
+	scroll.custom_minimum_size = Vector2(300, 300)
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(scroll)
@@ -71,8 +70,9 @@ func _build() -> void:
 	if _flow.tech_defs.is_empty():
 		left.add_child(UiTheme.make_label("（没有科技的内容：data/authoring/techs/）", 12, UiPalette.DIM))
 
-	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation", 8)
+	var row := UiTheme.hbox(24)
+	col.add_child(row)
+	var right := UiTheme.vbox(8)
 	right.custom_minimum_size.x = PANEL_WIDTH
 	row.add_child(right)
 	_name = UiTheme.make_label("", 20, UiPalette.FG)
@@ -90,9 +90,11 @@ func _build() -> void:
 	_action.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_action.pressed.connect(func(): upgrade(_selected))
 	right.add_child(_action)
-	right.add_child(HSeparator.new())
 
-	right.add_child(UiTheme.make_label("上交区　交给选中的节点：拖进来或在仓库里双击（上交即消耗，交了不能退）", 13, UiPalette.DIM))
+	var zone_col := UiTheme.vbox(8)
+	row.add_child(zone_col)
+	right = zone_col
+	right.add_child(UiTheme.make_wrapped("上交区　交给选中的节点：从右边的仓库拖进来或双击（上交即消耗，交了不能退）", 13, UiPalette.DIM, ZONE_SIZE.x * InventoryView.CELL))
 	_zone = GridInventory.new(ZONE_SIZE, 0, false)
 	_zone.accept_filter = _wanted
 	_zone.changed.connect(_on_zone_changed)
@@ -104,24 +106,11 @@ func _build() -> void:
 	right.add_child(_zone_view)
 	_line = UiTheme.make_label("", 13, UiPalette.STAMINA)
 	right.add_child(_line)
-	_warehouse_toggle = Button.new()
-	_warehouse_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_warehouse_toggle.pressed.connect(toggle_warehouse)
-	right.add_child(_warehouse_toggle)
-	_warehouse_view = InventoryView.new()
-	_warehouse_view.label_font = _font
-	_warehouse_view.inventory = _meta.warehouse
-	_warehouse_view.show_adjacency = false
-	_warehouse_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_warehouse_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): submit(uid))
-	_warehouse_box = ScrollBox.wrap(_warehouse_view, 6)
-	_warehouse_box.visible = false     # 默认收起，点开才占地方
-	right.add_child(_warehouse_box)
 
-	_drag = DragLayer.new()
-	_drag.label_font = _font
-	add_child(_drag)     # 铺满，盖在仓库与上交区上
-	_drag.register_view(_warehouse_view)
+	if _drag == null:
+		_drag = DragLayer.new()
+		_drag.label_font = _font
+		add_child(_drag)     # 铺满，盖在上交区上
 	_drag.register_view(_zone_view)
 	_drag.drag_finished.connect(_on_drag_finished)
 
@@ -210,11 +199,6 @@ func panel_texts() -> Dictionary:
 	return {"name": _name.text, "effect": _texts_of(_effect), "cost": _texts_of(_cost)}
 
 
-func toggle_warehouse() -> void:
-	_warehouse_box.visible = not _warehouse_box.visible
-	_sync_toggle()
-
-
 func tree() -> TechTreeView:
 	return _tree
 
@@ -280,7 +264,6 @@ func _refresh() -> void:
 	if _tree == null:
 		return
 	_tree.rebuild()     # 等级变了节点样子跟着变；选中的那圈边 rebuild 时照旧画
-	_sync_toggle()
 	UiTheme.clear_children(_effect)
 	UiTheme.clear_children(_cost)
 	_submit_buttons.clear()
@@ -354,10 +337,6 @@ func _owned_counts() -> Dictionary:
 		if it.def != null:
 			out[String(it.def.id)] = int(out.get(String(it.def.id), 0)) + 1
 	return out
-
-
-func _sync_toggle() -> void:
-	_warehouse_toggle.text = ("仓库 ▾　（双击一件交给选中的节点）" if _warehouse_box.visible else "仓库 ▸　展开")
 
 
 static func _texts_of(box: Container) -> String:

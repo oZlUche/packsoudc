@@ -60,6 +60,8 @@ var _difficulty_btns: Array[Button] = []
 var _board_host: VBoxContainer
 var _board_view: InventoryView = null
 var _warehouse_view: InventoryView = null
+## 163：仓库分页（[member _warehouse_view] 是它当前页的视图）
+var _warehouse_pages: WarehousePages = null
 var _desc: Label
 var _readout: RichTextLabel = null
 var _status: Label
@@ -153,17 +155,16 @@ func _build_kit_page() -> Control:
 	var right := _warehouse_box
 	grids.add_child(right)
 	var w := flow.meta.warehouse
-	right.add_child(_label("仓库　%d × %d 格，%d 件" % [w.size.x, w.size.y, w.item_count()], 15, UiPalette.DIM))
+	right.add_child(_label("仓库　%d 页，%d 件" % [w.page_count(), w.item_count()], 15, UiPalette.DIM))
 	right.add_child(_wrapped("往左边的包里拖，放得进的就是带的；带进去的从仓库拿走，撤离了回来，死了就没了", 12, UiPalette.DIM, 480))
-	_warehouse_view = InventoryView.new()
-	_warehouse_view.label_font = font
-	_warehouse_view.inventory = w
-	_warehouse_view.show_adjacency = false
-	_warehouse_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	right.add_child(ScrollBox.wrap(_warehouse_view))     # 110：竖向滚动
 
 	_drag = DragLayer.new()
 	_drag.label_font = font
+	# 163：仓库分页 —— 左边竖排页签，拖着东西停在页签上切页
+	_warehouse_pages = WarehousePages.new()
+	right.add_child(_warehouse_pages)
+	_warehouse_pages.setup(w, font, _drag, TechWarehousePages.plan_of(flow.tech_defs))
+	_warehouse_view = _warehouse_pages.view
 	play.add_child(_drag)     # 容器把它铺到和 grids 一样大，盖在两块格子上
 	_drag.register_view(_warehouse_view)
 	_warehouse_view.item_double_clicked.connect(quick_move)     # 109：双击 = 快速置入，和局内一样
@@ -541,7 +542,7 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 		return false
 	var why := ""
 	var ok := false
-	if from == flow.meta.warehouse or from == stash:
+	if flow.meta.warehouse.owns(from) or from == stash:
 		if board == null:
 			return false
 		if not _allow_drop(inst, board):
@@ -567,6 +568,8 @@ func store(uid: int) -> bool:
 	if stash == null or stash.get_item(uid) == null:
 		return false
 	var ok := InventoryService.transfer_auto(stash, uid, flow.meta.warehouse)
+	if ok and _warehouse_pages != null:
+		_warehouse_pages.show_item(uid)
 	_refresh()
 	return ok
 
@@ -579,6 +582,8 @@ func carry_out(uid: int) -> bool:
 	if inst == null or not MetaState.keeps(inst.def) or _preset_uids.has(uid):
 		return false     # 096：预设套的不进仓库
 	var ok := InventoryService.transfer_auto(board, uid, flow.meta.warehouse)
+	if ok and _warehouse_pages != null:
+		_warehouse_pages.show_item(uid)     # 163：放回落到哪页就翻到哪页
 	_refresh()
 	return ok
 

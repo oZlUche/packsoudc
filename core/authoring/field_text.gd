@@ -69,7 +69,7 @@ const LABELS := {
 	"god": "神", "camp": "阵营", "thresholds": "阈值", "deeds": "行为", "single_faith": "只认一位神", "grants": "给的解锁", "level": "档",
 	"mechanics": "机制", "warn_lead_actions": "预警提前量", "first_at_action": "第一次在第几步", "interval_actions": "间隔步数",
 	"from_depth": "从第几层起", "per_depth": "每层", "hunter_ids": "猎手", "bracket_steps": "段位表", "inputs": "输入", "output": "产物",
-	"funds": "钱", "rows": "行数", "effect": "效果",     # 110：局外科技
+	"funds": "钱", "rows": "行数", "pages": "页数", "effect": "效果",     # 110：局外科技
 	"chest": "宝箱", "chest_skin": "宝箱皮肤", "map_skin": "地图底图", "rarity_by_tier": "各档位的宝箱稀有度权重", "danger_bonus": "高危区稀有度加几", "hold_seconds": "开锁要按几秒",
 	"release_decay": "松手回退倍速", "items_by_rarity": "各档出几件", "floor_by_rarity": "各档收获下限", "include_treasure": "能开出珍宝", "haul_board": "收获箱大小",
 	"background": "背景图", "ChestSkinDef.closed": "闭箱图（按稀有度）", "ChestSkinDef.open": "开箱图（按稀有度）", "lock_offset": "锁孔位置", "ring_radius": "进度环半径", "ring_width": "进度环粗细",
@@ -112,7 +112,7 @@ const TYPE_LABELS := {
 	"approach": "逼近", "flee": "逃跑", "wander": "游荡", "ambush": "伏击", "patrol": "巡逻",
 	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫", "expel": "驱逐（退回上一步）", "random": "按权重随机", "fixed": "固定一档",
 	"damage_item": "损坏道具", "drain_money": "掉钱",
-	"warehouse_rows": "仓库加行",     # 110：局外科技的效果
+	"warehouse_pages": "仓库加页",     # 110 / 163：局外科技的效果
 	"belt_slots_bonus": "腰带扩格", "smoke_escape": "烟雾：这一场不打", "mend_vitality": "回体力（随身）",     # 147
 	"starting_belt": "开局发随身技能", "tech_belt_grant": "开局发随身技能（科技）", "grant_belt": "给随身技能",     # 160 补一
 	"tech_run_buff": "每级给一条局外 buff", "tech_safe_size": "保险箱扩格",     # 118
