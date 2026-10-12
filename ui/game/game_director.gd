@@ -93,7 +93,7 @@ func _ready() -> void:
 	UiPalette.apply(flow.settings)     # 091：背景底色
 	InputKeys.apply(flow.settings)     # 154 补充一：改过的键盖到默认上
 	UiTheme.install()     # 121：界面主题挂在窗口上
-	UiCursor.apply()     # 157：美术给的光标（没图用系统的）
+	UiCursor.apply(flow.settings.cursor_skin)     # 157：美术给的光标（设置里选的那套材质；没图用系统的）
 	ground = GroundLayer.new()
 	ground.fills_screen = true
 	ground.label_font = _font

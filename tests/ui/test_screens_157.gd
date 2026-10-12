@@ -30,9 +30,16 @@ static func run_theme_art(t: TestCase) -> void:
 	var real := UiTheme.build().get_stylebox("panel", UiTheme.PANEL_OVERLAY) as StyleBoxTexture
 	t.check(real != null and is_equal_approx(real.texture_margin_top, 44.0), "assets/ui 里美术交付的石板框：九宫格、上边距 44")
 	t.eq(UiTheme.frame_title_height(), 36, "标题条 36")
-	for name in ["cursor_arrow", "cursor_drag", "cursor_can_drop", "cursor_forbidden"]:
-		t.not_null(UiTheme.art(name), "光标图 %s 在" % name)
-	t.eq(UiCursor.apply(), 4, "四种光标都换上了美术的图")
+	for skin in UiCursor.SKINS:
+		for name in ["cursor_arrow", "cursor_drag", "cursor_can_drop", "cursor_forbidden"]:
+			t.not_null(UiTheme.art("cursors/%s/%s" % [skin, name]), "光标图 %s/%s 在" % [skin, name])
+		t.eq(UiCursor.apply(String(skin)), 4, "%s：四种光标都换上了美术的图" % skin)
+	t.eq(UiCursor.apply("没有这套"), 4, "认不出的材质按默认（秘银）")
+	t.eq(UiCursor.DEFAULT_SKIN, "mithril", "默认秘银")
+	UiTheme.asset_root = NOWHERE
+	t.eq(UiCursor.apply(), 0, "没图：全还原成系统光标")
+	UiTheme.asset_root = saved
+	UiCursor.apply()
 
 	t.begin("157 · 换屏淡入：设置项默认开、存取往返；测试与截图工具关掉")
 	t.check(GameSettings.new().ui_fades, "默认开")
@@ -41,6 +48,13 @@ static func run_theme_art(t: TestCase) -> void:
 	t.check(not GameSettings.from_dict(gs.to_dict()).ui_fades, "关了存读还是关")
 	t.check(GameSettings.from_dict({"version": GameSettings.SAVE_VERSION}).ui_fades, "旧设置文件没这个键：开")
 	t.check(not GameDirector.fades_allowed, "跑测试时淡入关着（时序和以前一样）")
+
+	t.begin("157 补 · 光标材质：设置项默认秘银、存取往返、空串回默认；设置屏三个按钮，点了存盘、按下的跟着变")
+	t.eq(GameSettings.new().cursor_skin, "mithril", "默认秘银")
+	gs.cursor_skin = "leather"
+	t.eq(GameSettings.from_dict(gs.to_dict()).cursor_skin, "leather", "存读还是皮革")
+	t.eq(GameSettings.from_dict({"version": GameSettings.SAVE_VERSION}).cursor_skin, "mithril", "旧设置文件没这个键：秘银")
+	t.eq(GameSettings.from_dict({"version": GameSettings.SAVE_VERSION, "cursor_skin": ""}).cursor_skin, "mithril", "空串：秘银")
 
 
 static func run_cost_icons(t: TestCase) -> void:
@@ -278,3 +292,26 @@ static func frame_event_harvest(t: TestCase, root: Window) -> void:
 	t.eq(UiCursor.shape, Input.CURSOR_ARROW, "放下：光标还原")
 	screen.queue_free()
 	Support.cleanup("s157d")
+
+
+static func frame_cursor_setting(t: TestCase, root: Window) -> void:
+	t.begin("157 补 · 设置屏的光标材质：秘银 / 铁 / 皮革三个按钮，默认按下秘银；点铁 → 设置存上、按下的换成铁；坏值按默认")
+	var c = NodeScreens._content()
+	var f := Support.flow(c, "s157e")
+	f.settings = GameSettings.new()
+	var screen = load("res://ui/game/settings_screen.gd").new()
+	screen.flow = f
+	screen.font = UiPalette.cjk_font()
+	root.add_child(screen)
+	screen.open({})
+	t.eq(screen._cursor_btns.keys(), ["mithril", "iron", "leather"], "三个按钮")
+	t.check((screen._cursor_btns["mithril"] as Button).button_pressed and not (screen._cursor_btns["iron"] as Button).button_pressed, "默认按下秘银")
+	screen.set_cursor_skin("iron")
+	t.eq(f.settings.cursor_skin, "iron", "设置改成铁")
+	t.eq(GameSettings.load_from(String(Support.paths("s157e")["settings"])).cursor_skin, "iron", "存盘了")
+	t.check((screen._cursor_btns["iron"] as Button).button_pressed and not (screen._cursor_btns["mithril"] as Button).button_pressed, "按下的换成铁")
+	screen.set_cursor_skin("没有这套")
+	t.eq(f.settings.cursor_skin, "iron", "认不出的不改")
+	UiCursor.apply()
+	screen.queue_free()
+	Support.cleanup("s157e")

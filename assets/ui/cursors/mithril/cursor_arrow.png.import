@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://fcusafbn1um3"
-path="res://.godot/imported/cursor_forbidden.png-d524b1b7579955f05b2c2531d7f8bc38.ctex"
+uid="uid://bfkwosdap8knp"
+path="res://.godot/imported/cursor_arrow.png-e093f11d9e2915d074883209b461f560.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/cursor_forbidden.png"
-dest_files=["res://.godot/imported/cursor_forbidden.png-d524b1b7579955f05b2c2531d7f8bc38.ctex"]
+source_file="res://assets/ui/cursors/mithril/cursor_arrow.png"
+dest_files=["res://.godot/imported/cursor_arrow.png-e093f11d9e2915d074883209b461f560.ctex"]
 
 [params]
 
