@@ -120,6 +120,9 @@ var end_reason: StringName = &""
 var boss_cleared: bool = false
 ## 等着拾取的容器（尸体 / 搜索收获）；null = 没有
 var pending_loot: GridInventory = null
+## 159：搜索收获箱里哪件算「亮过」（uid → bool）—— 走开时开着的搜索只落亮过的，没亮的算没搜到（下次回来再搜还能亮）。
+## [GameFlow] 接上它的 `seen_loot`；没接（纯核心）= 都算亮过
+var loot_seen: Callable = Callable()
 ## 这一局的计数（给结算看）：打赢 / 打输几场。跟着存档走
 var tally: Dictionary = {"battles_won": 0, "battles_lost": 0}
 ## buff（059）：定义表由持有方给（id → RunBuffDef，存档只写 id）；局外的在开局那一刻定下来跟着存档；
@@ -345,16 +348,48 @@ func _on_arrive(node: MapNode) -> void:
 	events.handle(node)
 
 
-## 084：没拿完的战利品（尸体 / 搜索收获）留在这个点上 —— 收起战利品屏不算丢，走了才算。和地上同一个时机
-func _drop_pending_loot() -> void:
-	if pending_loot != null:
-		discard_loot()
+## 084：没拿完的战利品（尸体 / 搜索收获）留在这个点上 —— 收起战利品屏不算丢。
+## 159（作者定）：走了也不丢 —— 倒到这个点的地上（和地上原来的东西一样跟着点走，回来再拿）；包先倒空、再放空包。
+## [param skip] 里的 uid 不落（走开时开着的搜索里没亮过的：算没搜到）
+func _drop_pending_loot(skip: Dictionary = {}) -> void:
+	if pending_loot == null:
+		return
+	var loot := pending_loot
+	var bags: Array[ItemInstance] = []
+	for it in loot.items().duplicate():
+		var inst := it as ItemInstance
+		if inst.def != null and inst.def.is_bag:
+			bags.append(inst)
+			continue
+		loot.remove(inst.uid)
+		if not skip.has(inst.uid):
+			storage.admit(inst)
+	for bag in bags:
+		loot.remove(bag.uid)
+		if not skip.has(bag.uid):
+			storage.admit(bag)
+	pending_loot = null
+	loot_cleared.emit()
 
 
-## 走开、撤离、失败都先做这两件：开着的会话关掉、没拿的战利品丢掉
+## 走开、撤离、失败都先做这两件：开着的会话关掉、没拿的战利品落到地上（159：原来是丢掉）
 func _abandon_sessions() -> void:
+	var unseen := _unseen_search_haul()     # 关会话之前记：关的时候收获箱整箱交出去、都记成见过
 	close_sessions()
-	_drop_pending_loot()
+	_drop_pending_loot(unseen)
+
+
+## 159：开着的搜索收获箱里还没亮过的 uid（没接 [member loot_seen] = 都算亮过）
+func _unseen_search_haul() -> Dictionary:
+	var out := {}
+	var session: SearchSession = events.current_search if events != null else null
+	if session == null or not session.active or not loot_seen.is_valid():
+		return out
+	for it in session.haul_box.items():
+		var uid := (it as ItemInstance).uid
+		if not bool(loot_seen.call(uid)):
+			out[uid] = true
+	return out
 
 
 ## 离开正在搜的点 / 正在逛的店

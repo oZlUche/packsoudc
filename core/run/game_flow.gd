@@ -1116,6 +1116,7 @@ func _adopt(state: RunState) -> void:
 	state.buff_defs = buff_defs      # 读档回来的只有 id，定义表在这里
 	apply_battle_trace()     # 117：战斗日志按设置开关
 	state.event_defs = event_defs
+	state.loot_seen = func(uid: int) -> bool: return seen_loot.has(uid)     # 159：走开时开着的搜索只落搜索屏里亮过的
 	state.meta = meta     # 091：事件的条件 / 后果看、立局外旗标
 	# 基线：按角色（读档回来只有 id，在这里找回）；没角色用持有方给的
 	state.hunter_defs = hunter_defs

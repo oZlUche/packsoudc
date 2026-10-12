@@ -103,6 +103,7 @@ func _build_ui() -> void:
 
 	# --- 右：回放 ---
 	_view = BattleView.new()
+	_view.show_ticker = true     # 157 补充一：开发沙盒保留逐条播报
 	_view.label_font = _font
 	_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.84 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.85 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2810,7 +2810,7 @@ class_name SearchRules extends Resource
 - 当前那件画进度环、下一件画小标（占位画法）；「快速搜索」`skip()` 把没亮的全亮；「全部拾取」先全亮再全到地上
 
 **战利品屏与搜索屏共用它。** 战利品屏（尸体容器 / 搜索收获）左边是 `LootView`，右边是自己的棋盘与地上，同一层 `DragLayer` 盖着三个容器 ——
-亮出来的直接拖到棋盘或地上，剩下的离开时不要了；都拖走了屏自己关。搜索屏每搜一次把找到的摆进 `SearchSession.haul_box`
+亮出来的直接拖到棋盘或地上，剩下的离开时落到这个点的地上（159）；都拖走了屏自己关。搜索屏每搜一次把找到的摆进 `SearchSession.haul_box`
 （`LootPacker.add`：放不下就换一个高一格的容器、东西原位搬过去、uid 不变，`haul_changed` 让视图重绑），只对新来的走时间线；
 搜索屏里已经亮过的，到了战利品屏不再重新揭示（`GameFlow.seen_loot` 记着 uid，拾取完清空）。
 
@@ -3142,7 +3142,10 @@ flow 只说「现在该显示哪一屏、给它什么」（`screen_changed(scree
 `add_child` / `queue_free` 手动管，**不用 `change_scene_to_file`** —— 地图和镜头都留着。
 **叠层能最小化**（084，作者定）：搜索屏、战利品屏、商店屏的「收起」是 `GameFlow.hide_overlay()`，什么都不结束（会话还开着、没拿的战利品还在这个点上、地上不动），
 导演只把那块叠层藏起来（`visible = false`、停 `process_mode`）；地图屏「回到这个点」`reopen_node()` 把同一块放回来。换了别的屏（走了一步、结算）藏着的才销毁。
-没拿的战利品与地上的东西同一时机消失：**走出这个点**（`step_to` / `relocate` / `try_extract`）。
+没拿的战利品与地上的东西同一时机处理：**走出这个点**（`step_to` / `relocate` / `try_extract`）。159（作者定，所有地图）：没拿的**不再丢掉**，
+`RunState._drop_pending_loot` 把待拾取倒进这个点的地上（包先倒空、再放空包），和地上原有的一样跟着点走、回来再拿；
+开着的搜索走开时只落搜索屏里亮过的（`RunState.loot_seen` 接 `GameFlow.seen_loot`，关会话之前先记下没亮过的），没亮的算没搜到。
+`discard_loot()` 只剩 BOSS 战利品屏的「收起 = 不要剩下的直接撤离」与「拿空了关屏」两条路。
 **开打前先停**（084）：`NodeEvents.pause_before_battle` 开着时，节点战斗、事件里选开打、搜索遭遇都先记成 `pending_battle` 发 `battle_pending`，
 流程停在战前准备屏（对手的棋盘与读数 + 自己的棋盘与地上，只有「开战」）；`start_battle()` 才真打。等着的一场跟存档、走不了、收不起、猎手不打扰。
 直接驱动 `RunState` 的测试与批量工具不开这个开关，照旧同步打。每一屏是一个 `GameScreen`（`ui/game/game_screen.gd`）：
@@ -3446,6 +3449,17 @@ func player_spec() -> CombatantSpec …
 `UiTheme.panel()` / `OverlayFrame` / `HudWidget` 按 `tone_of(变体)` 调 `apply_tone`：浅底挂一份只填字色的小主题（标签墨 `#2E2219`、暗色字褐墨 `#5A4433`、
 警示 `#9A5A22`，富文本默认墨），里面的字都继承；深底不挂（用全局的浅色字）。浅底上的 BBCode 过 `UiTheme.ink_bbcode`：写死的 `[color=…]`
 灰色换成墨 / 褐墨，有色的按原色相压暗到在亮纸上对比 ≥ 4.5（`MIN_CONTRAST`）。按钮自带底，不跟着变。现在悬浮窗（主面板与词条小窗）是亮纸、浅底；石板框是深底。
+
+**石板样式**（157 补，作者定「整体纯色底换成石板」）：整屏底（`GameScreen._backdrop` / `UiTheme.prepare_root` 的纯色 `ColorRect`）上 `UiTheme.dress_backdrop` 铺一层平铺的
+`bg_stone.png`，设置里的底色给它染色（`backdrop_tint`：默认那档原色，别的档按和默认的比例乘）；地图视图没底图时也平铺它。`PanelDark` / `PanelLine` / `PanelHud`
+换成 `panel_stone` / `panel_inset` / `panel_hud` 九宫格，**内边距照旧按变体默认值**（`_art_box(name, false, content)`），换皮不改排版。都是有图用图、没图照旧。
+
+**名牌**（157 补充二，作者定「没图也先留框」）：`Nameplate` 是 `PanelNameplate` 底（`nameplate_stone.png`），左边 64×64 肖像位、右边 32×32 徽记位都是 `PortraitSlot`
+（`ui/widgets/`）—— 框永远在（`portrait_frame.png` 画在位子外扩 json `inset` 处，不占排版；没图画细线），有肖像填图、没有放 `portrait_empty.png` 剪影（再没有就自己画）。
+**回放**（157 补充一）：正式游戏的 `BattleView` 不建逐条文字播报（`show_ticker` 默认假，回放浏览器与战斗沙盒设真），空出来的高度给棋盘；`BOARD_SCALE` 0.5 → 1.0。
+
+**地图底图**（作者定：每章一张手绘地图，风格各不同）：`ChapterDef.map_skin`（默认 `ruins`）→ `assets/maps/<id>.png` + json（`tone`）。`MapView.skin` 设了就铺满（`MapSkin.cover_region`：
+等比盖满、裁两边）画在路网底下；浅纸上前景 / 暗色字过 `UiTheme.ink_color`。现配：序章一遗迹、序章二北方林地、序章三诅咒之地深处（深）、自由模式帝国营地。
 
 光标：`UiCursor.apply(skin)` 启动时（和设置里换材质时）按 `GameSettings.cursor_skin` 从 `cursors/<材质>/` 取图换上（铠甲手套秘银 / 铁 / 皮革，默认秘银，热点 (2, 2)）；拖拽层拿起是「拖动」、对准了按 `DragLayer.drop_ok_at` 切「可放 / 不可放」、放下还原。
 
@@ -3982,7 +3996,7 @@ res://
 全局类缓存是编辑器扫脚本生成的**生成物**，提交它等于拿版本控制当分发渠道 ——
 每加一个 `class_name` 都要记得提交、两个分支各加一个就冲突、跑完测试工作区就脏。
 三条用得到它的路各自解决：编辑器打开项目时自己重建；`tools/test.sh` 每次先 `--import`；
-不开编辑器也直接跑即可（115）：`DevNav`（autoload，代码里不引用任何项目全局类，缓存全坏也解析得了）发现缺类就盖一屏「正在重建」，`OS.create_process` 后台 `--headless --path <根> --import`，`_process` 里轮询，导完带原用户参数加 `cache-rebuilt` 重开自己并退出；重开过还缺（导入失败）就回落红字、不循环。门是「非导出包、`Engine.is_editor_hint()` 为假」—— 不能用 `OS.has_feature("editor")`，编辑器版 Godot 直接跑游戏时它也是真。`tools/run_game.sh` / `.bat` 可选，省一次重启。
+**158 起**：`DevNav` 缺类时不再起编辑器，`tools/class_cache.gd`（无 `class_name`，preload）扫全项目脚本头（`class_name` / `extends` / `@tool` / `@abstract` / `@icon`，路径式 extends 往上找类名）写出和编辑器**逐字节一样**的缓存（全项目约 0.1 秒），盖一屏「已重写」后带原参数重开；`tools/import_check.gd` 发现没导入的素材（`.import` 的目标不在、或新图旁没 `.import`）才后台 `--import`，不盖板、不重开，右上角小字「新素材导入中……下次启动生效」。`run_game` 不再先 `--import`。`tests/tools/test_class_cache.gd` 拿编辑器刚写的那份逐条对照。以下 115 的导入式自救是原来的做法：不开编辑器也直接跑即可（115）：`DevNav`（autoload，代码里不引用任何项目全局类，缓存全坏也解析得了）发现缺类就盖一屏「正在重建」，`OS.create_process` 后台 `--headless --path <根> --import`，`_process` 里轮询，导完带原用户参数加 `cache-rebuilt` 重开自己并退出；重开过还缺（导入失败）就回落红字、不循环。门是「非导出包、`Engine.is_editor_hint()` 为假」—— 不能用 `OS.has_feature("editor")`，编辑器版 Godot 直接跑游戏时它也是真。`tools/run_game.sh` / `.bat` 可选，省一次重启。
 `DevNav` 的缺类自检因此只在**非编辑器**运行时提示（编辑器里缓存必然是新的，提示只会是误报）。
 
 ---
@@ -4099,6 +4113,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.85 | 2026-10-12 | **石板样式、名牌留框、回放去播报、启动提速、战利品落地、地图底图**（报告 157 补充一 / 二、158、159；作者定，待定按推荐；改 6.2 / 8 / 8.8 / 11）：整屏底平铺 `bg_stone`、三种面板换石板九宫格（内边距不变，底色设置给石板染色）；`Nameplate` 换石碑底、`PortraitSlot` 肖像位与徽记位永远留框；`BattleView.show_ticker`（正式游戏不播报）、`BOARD_SCALE` 1.0；`tools/class_cache.gd` 进程内重写类缓存、`tools/import_check.gd` 缺素材才后台导入；`_drop_pending_loot` 倒进地上（开着的搜索只落亮过的）；`ChapterDef.map_skin` + `MapSkin`，四章各一张手绘地图 |
 | v2.84 | 2026-10-12 | **深浅字色**（报告 157 补充，作者定「浅底黑字，深底白字，以后任何窗口都要填写深浅字段」；改 8.8）：`UiTheme.PANEL_TONES` 给每个面板变体标深浅，美术底图 json 写 `tone`；浅底挂墨色字小主题、正文里写死的颜色过 `ink_bbcode` 压成墨水版；美术的 `tooltip_paper.png` 放进 `assets/ui/`，悬浮窗换成亮纸墨字 |
 | v2.83 | 2026-10-12 | **光标三套材质**（报告 157 补充，作者定）：铠甲手套秘银 / 铁 / 皮革三套放在 `assets/ui/cursors/<材质>/`，`GameSettings.cursor_skin`（默认秘银），`UiCursor.apply(skin)` 按它取图；设置屏一排三个按钮，点了当场换上 |
 | v2.82 | 2026-10-12 | **各屏构成第一批**（报告 157，四项待定按推荐；改 8.8）：叠层共用石板框 `OverlayFrame`（`_centered_panel` 造、标题进标题条，主题变体 `PanelOverlay` / `LabelOverlayTitle`，`assets/ui/frame_stone.png` 有图九宫格）；悬浮窗底 `PanelTooltip`；四种光标 `UiCursor`，拖拽按能不能放切光标；换屏淡入（`GameSettings.ui_fades`）；战前对阵式（`Nameplate` 名牌 + 肖像钩子、`BalanceSeam` 天平、读数不写几件）；回放时间轴 `ReplayTimeline`（可拖 = `seek`）、三种反馈（出手亮格 / 挨打抖 / buff 弹出，跳转与跳过时抑制）、收尾战报；战败结算保险箱放大居中；事件选项代价图标 `EventCostIcons`、结果页收获行 `HarvestRow`（`detail.item_uids`） |

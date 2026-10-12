@@ -71,7 +71,7 @@ func open(payload: Dictionary) -> void:
 		buttons.add_child(back)
 	else:
 		_leave_btn = _button("收起", to_map, 13)
-		_leave_btn.tooltip_text = "撤离结算" if boss else "剩下的留在这里，走了就没（Esc）"
+		_leave_btn.tooltip_text = "撤离结算" if boss else "剩下的留在这里；走了会落到这个点的地上（Esc）"
 		buttons.add_child(_leave_btn)
 	_boss = boss
 	left.add_child(buttons)

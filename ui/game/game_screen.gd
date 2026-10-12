@@ -148,6 +148,7 @@ func _backdrop(color: Color = Color(0, 0, 0, 0)) -> ColorRect:
 	bg.color = UiPalette.bg() if themed else color
 	if themed:
 		_bg_rect = bg
+		UiTheme.dress_backdrop(bg)     # 157 补：有石板图铺石板（底色设置给石板染色）
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_STOP     # 叠层要挡住底下的地图，不然点穿了就走了一步
 	add_child(bg)
@@ -158,6 +159,7 @@ func _backdrop(color: Color = Color(0, 0, 0, 0)) -> ColorRect:
 func refresh_backdrop() -> void:
 	if _bg_rect != null:
 		_bg_rect.color = UiPalette.bg()
+		UiTheme.tint_backdrop(_bg_rect)
 
 
 ## 一块带边框的面板。128：它占着地上的地方 —— 地上的东西被它盖住就推到最近的空处
