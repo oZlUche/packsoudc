@@ -6,6 +6,7 @@
   },
   "shape": [
     "010",
+    "010",
     "111",
     "010"
   ],
@@ -20,7 +21,7 @@
   "requires_unlock": "ach_extract_3",
   "combat": {
     "base_stats": {
-      "damage": 27
+      "damage": 32
     },
     "rules": [
       {

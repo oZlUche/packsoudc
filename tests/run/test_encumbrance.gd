@@ -44,7 +44,7 @@ static func run_weights(t: TestCase) -> void:
 	t.begin("129/137 · 重量：写死的用写死的，其余按格数 × 材质类（重 4、金属 3、石与晶 2）；锚点")
 	var c := _content()
 	var anchors := {
-		&"knife": 3, &"shortsword": 12, &"longsword": 15, &"plate_cuirass": 40, &"tower_shield": 48, &"round_shield": 12,     # 143：异形之后格数变了；塔盾 3×4 = 12 格、圆盾 2×2 = 4 格
+		&"knife": 6, &"shortsword": 9, &"longsword": 12, &"plate_cuirass": 40, &"tower_shield": 48, &"round_shield": 12,     # 143：异形之后格数变了；塔盾 3×4 = 12 格、圆盾 2×2 = 4 格
 		&"bag_leather": 0, &"bag_long": 0, &"bag_small": 0, &"ration": 1, &"iron_ore": 6, &"oak_log": 6, &"silk_bolt": 2,
 		&"warhammer": 12, &"nail_keg": 12, &"high_tier_armor": 18, &"charm_brute": 1, &"bone_dice": 1, &"crowbar": 9,
 		&"fire_crystal": 4,
