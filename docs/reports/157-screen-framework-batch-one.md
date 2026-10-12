@@ -131,3 +131,29 @@
 | `assets/ui/`（新目录，先空；美术交付清单：`frame_stone.png` + json、`tooltip_paper.png`、`cursor_{arrow,drag,can_drop,forbidden}.png`、`cost_{vitality,money,item,time,faith}.png`）、`assets/portraits/{enemies,characters}/` | 钩子 |
 | `tests/ui/test_theme.gd`、`tests/ui/test_overlay_frame.gd`（新）、战前 / 回放 / 结算 / 事件的现有测试加断言 | |
 | `docs/architecture.md` 8 节（叠层框、淡入、光标）、README 落地记录 | |
+
+## 补充一（2026-10-12）：回放屏去掉文字播报，双方棋盘放大
+
+> 作者原话（截图：回放里棋盘缩成一小块、下面一屏「6.00 游兵（0 档）受到 3 / 我 受到 3……」）：「去掉文字播报，剩下的空间用来显示两边的道具，放大棋盘」。
+
+- **去掉播报**：`BattleView._ticker`（`RichTextLabel`，`_log_line` 往里写）不再加进回放屏。`_log_event` 照旧跑 —— 它累加的数给 3.3 节的收尾战报用。`BattleView` 加 `show_ticker: bool = false`：回放浏览器（`ui/battle/replay_browser.gd`，开发工具）设 true 保留日志；正式游戏（`battle_screen`）用默认 false。
+- **棋盘放大**：`BattleView.BOARD_SCALE` 0.5 → **1.0**（格子回到 60 px，和战前准备一样大）。双方各一列：面板（资源条 + buff 格）在上、棋盘在下，两列各占一半。宽度：最宽 9 格 × 60 = 540，两列 + 16 间距 = 1096，`battle_screen` 的 `custom_minimum_size`（1160 × 780）放得下；高：6 格 × 60 = 360 + 面板约 150 + 表头 + 控制条 ≈ 620，也放得下。`BOARD_SCALE` 常量留着（回放浏览器里多场并排时仍可缩）。
+- **播报留下的空间**归棋盘；3.1 节的时间轴放在控制条那一行，不另占高度。
+- 3.3 节的收尾战报（一行汇总）保留 —— 它不是逐条播报；作者若也不要，去掉就是（待定 5）。
+- 测试：`test_battle_view*` 里断言正式路径下树里没有 `_ticker`、`show_ticker = true` 时有；棋盘 `scale == Vector2.ONE`。
+
+| # | 待定 | 推荐 |
+|---|---|---|
+| 5 | 收尾战报一行要不要 | **要**（不是播报，是结果） |
+
+## 补充二（2026-10-12）：没图也先留框 —— 肖像框与名牌的占位样式；石板框转美术
+
+> 作者原话：「我没有看到可以放置肖像的画框和特殊样式的名牌，是还没做吗？没有美术资源也先预留一个框先」；「我希望将当前整体框架（纯色背景）用石板的样式替换，将这个转交给美术」。
+
+157 正文 2 节写的是「没图不画槽」，落地也是这么做的（`Nameplate.setup` 的 `face` 为 null 就不加肖像块）—— 作者要反过来：**框永远在，图来了填进去**。
+
+- **肖像框**：`Nameplate` 永远画一块 64×64 的肖像位。没图时画**占位框**（画布：`UiPalette.LINE` 描边的方框 + 里面一个半身剪影轮廓 `draw_polyline`，暗底）；有图时图填进框里，框线仍画在外面（美术的肖像图不含框）。
+- **名牌样式**：名牌本身一块**石板底**（`UiTheme` 新变体 `PANEL_NAMEPLATE`：`assets/ui/nameplate_stone.png` 九宫格有图用图、无图 `StyleBoxFlat` 深底细边），名字用 `LABEL_TITLE`，副行 `LABEL_DIM`；左肖像位、右留一个 32×32 的徽记位（也画占位框，阵营数据有了再填）。
+- 战前与回放两屏同一份控件（3.4 节），一起变。
+- 测试：`test_nameplate`：没图 → 树里有肖像位且 `portrait == null`、名牌最小尺寸含 64 px 肖像位；有图 → `portrait` 非空。
+- **转美术设计**（经协调）：157 第 7 节的清单加 `nameplate_stone.png`、`portrait_frame.png`（肖像框线，透明中心）；整体「石板框」（`frame_stone.png` + `frame_stone.json` 边距）、悬浮窗底、光标、代价图标照清单。美术方向 A（墨线平涂、石板面板）。
