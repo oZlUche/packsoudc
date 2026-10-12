@@ -1,114 +1,90 @@
-## 仓库面板（058 第 7 条）：左边是撤离带回来的棋盘（有的话），右边是仓库的格子，同一套拖拽；「一键置入」按栏位顺序逐件放，
-## 放不下就停在那一件提示；（按钮已去掉，[method discard_board] 留给代码调用）清掉带回来的棋盘。结算屏与局外屏共用。
+## 仓库面板（058 第 7 条）：左边是撤离带回来的棋盘（有的话），右边是仓库（163：分页，[WarehousePages]），同一套拖拽；「一键置入」按栏位顺序逐件放，
+## 放不下就停在那一件提示；（按钮已去掉，[method discard_board] 留给代码调用）清掉带回来的棋盘。
 ##
-## 109（作者定）：「整理」把仓库重排（先大后小，占用的聚左上，见 [GridTidy]）；两块格子都能双击快速置入（和局内一样）。
+## 109（作者定）：「整理」把仓库**当前页**重排（163；先大后小，占用的聚左上，见 [GridTidy]）；两块格子都能双击快速置入（和局内一样），
+## 置入落到哪页仓库就翻到哪页。
 ##
-## 139（作者定）：基地屏里（[member fill_width]）格子按面板宽度放大到占满整行（60 ～ 80 一格，再宽就居中；2026-10-09 作者嫌大，封顶 96 → 80）；仓库和带回来的背包同一个格子大小。
-## 结算屏照旧 60。
+## 两种用法：
+## - 结算屏：[method setup] 只给 flow 与字体 —— 面板自己建仓库分页、自己的拖拽层，格子 60；
+## - 基地「家」页（164）：[method setup] 再给基地右半边常驻的 [param shelf] 与整屏的拖拽层 —— 面板只剩带回来的背包和下面两颗按钮，
+##   仓库在右半边，跨列拖拽走那一层。
 ##
 ## 带回来的棋盘是一块不要求包的格子：包已经不在（只计图鉴），东西位置照旧 —— 作者说的「包统一替换成最大的默认背景包」。
 extends MarginContainer
 
 signal changed()
 
-## 139：格子最大放到多大（再大道具名字和格子比例失衡）
-const CELL_MAX := 80.0
-## 两块格子之间的空隙（和 _build 里那一行的 separation 一致）
+## 两块格子之间的空隙
 const ROW_GAP := 20.0
-## 最少显示几行（结算屏照旧；基地屏按高度往上加，见 [method fit_to_height]）
-const MIN_ROWS := 4
+## 带回来的棋盘最少显示几行（再高就滚）
 const BOARD_MIN_ROWS := 6
-## 按钮下面留的空
-const BOTTOM_PAD := 16.0
-## 滚动框给竖滚动条留的宽（[ScrollBox]）
-const SCROLL_PAD := 14.0
-
-## 139：按面板宽度放大格子（基地屏开，结算屏关）。setup 之前设
-var fill_width: bool = false
 
 var _meta: MetaState = null
 var _flow: GameFlow = null
 var _font: Font
 var _drag: DragLayer
+## 163：仓库分页（结算屏自己建；基地是右半边那一块）
+var _shelf: WarehousePages = null
+var _own_shelf := true
 var _board_box: VBoxContainer
 var _board_view: InventoryView = null
-## 两块格子的滚动框（作者 2026-10-12：基地屏按可用高度定最多几行）
-var _wh_scroll: ScrollContainer = null
 var _board_scroll: ScrollContainer = null
-## 格子下面那一截（提示行 + 按钮）
-var _bottom: Array[Control] = []
-var _warehouse_view: InventoryView
 var _line: Label
 var _store_btn: Button
 var _tidy_btn: Button
-var _size_label: Label
+var _size_label: Label = null
 
 
-func setup(flow: GameFlow, font: Font) -> void:
+## [param shelf] / [param drag] 给了 = 基地「家」页（仓库在别处、拖拽层是整屏那一层）
+func setup(flow: GameFlow, font: Font, shelf: WarehousePages = null, drag: DragLayer = null) -> void:
 	_flow = flow
 	_meta = flow.meta
 	_font = font
+	_shelf = shelf
+	_own_shelf = shelf == null
+	_drag = drag
 	_build()
 	_meta.changed.connect(_refresh)
 	_meta.warehouse.changed.connect(_refresh)
-	if fill_width:
-		resized.connect(func():
-			fit_to_width(size.x)
-			fit_to_height.call_deferred())
-		visibility_changed.connect(func():
-			if is_visible_in_tree():
-				fit_to_height.call_deferred())     # 切到仓库页时窗口可能变过
 	_refresh()
 
 
 func _build() -> void:
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 8)
+	var col := UiTheme.vbox(8)
 	add_child(col)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", int(ROW_GAP))
-	if fill_width:
-		row.alignment = BoxContainer.ALIGNMENT_CENTER     # 139：封顶之后多出来的宽度两边分
+	var row := UiTheme.hbox(int(ROW_GAP))
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(row)
 
-	_board_box = VBoxContainer.new()
-	_board_box.add_theme_constant_override("separation", 6)
+	_board_box = UiTheme.vbox(6)
 	row.add_child(_board_box)
 
-	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation", 6)
-	row.add_child(right)
-	_size_label = UiTheme.make_label("", 13, UiPalette.DIM)
-	right.add_child(_size_label)
-	_warehouse_view = InventoryView.new()
-	_warehouse_view.label_font = _font
-	_warehouse_view.inventory = _meta.warehouse
-	_warehouse_view.show_adjacency = false
-	_warehouse_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	# 110：扩建后仓库会很高，竖向滚动。反馈：最小高度压到 4 行（约 240），有空间再长，别把结算屏的按钮挤出窗口
-	var wh_scroll := ScrollBox.wrap(_warehouse_view, MIN_ROWS)
-	_wh_scroll = wh_scroll
-	wh_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.add_child(wh_scroll)
-	_warehouse_view.item_double_clicked.connect(quick_move)
+	if _own_shelf:
+		var right := UiTheme.vbox(6)
+		row.add_child(right)
+		_size_label = UiTheme.make_label("", 13, UiPalette.DIM)
+		right.add_child(_size_label)
+		_shelf = WarehousePages.new()
+		right.add_child(_shelf)
 
 	_line = UiTheme.make_label("", 13, UiPalette.FG)
 	col.add_child(_line)
-	var buttons := HBoxContainer.new()
-	_bottom = [_line, buttons]
-	buttons.add_theme_constant_override("separation", 8)
+	var buttons := UiTheme.hbox(8)
 	col.add_child(buttons)
 	_store_btn = UiTheme.make_button("一键置入", store_all, UiPalette.Tier.SECONDARY, 13)
 	buttons.add_child(_store_btn)
 	_tidy_btn = UiTheme.make_button("整理", tidy, UiPalette.Tier.SECONDARY, 13)
 	buttons.add_child(_tidy_btn)
 
-	_drag = DragLayer.new()
-	_drag.label_font = _font
-	add_child(_drag)     # 容器把它铺满，盖在两块格子上
-	_drag.register_view(_warehouse_view)
+	if _drag == null:
+		_drag = DragLayer.new()
+		_drag.label_font = _font
+		add_child(_drag)     # 容器把它铺满，盖在两块格子上
+	if _own_shelf:
+		_shelf.setup(_meta.warehouse, _font, _drag, TechWarehousePages.plan_of(_flow.tech_defs))
+		_drag.register_view(_shelf.view)
+		_shelf.view.item_double_clicked.connect(quick_move)
+	_shelf.page_changed.connect(func(_i: int): _refresh())     # 「整理」只管当前页：翻页了按钮跟着亮灭
 	_rebuild_board_view()
 
 
@@ -119,6 +95,7 @@ func _rebuild_board_view() -> void:
 		_drag.unregister_view(_board_view)
 	UiTheme.clear_children(_board_box)
 	_board_view = null
+	_board_scroll = null
 	if _meta.board == null:
 		_board_box.visible = false
 		return
@@ -129,64 +106,32 @@ func _rebuild_board_view() -> void:
 	_board_view.inventory = _meta.board
 	_board_view.show_adjacency = false
 	_board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_board_scroll = ScrollBox.wrap(_board_view, BOARD_MIN_ROWS)     # 带回来的棋盘也可能很高：同样竖向滚动
+	_board_view.cell_px = _shelf.view.cell_px if _shelf != null and _shelf.view != null else InventoryView.CELL     # 139：和仓库一样大
+	_board_scroll = ScrollBox.wrap(_board_view, BOARD_MIN_ROWS)     # 带回来的棋盘也可能很高：竖向滚动
 	_board_box.add_child(_board_scroll)
 	_drag.register_view(_board_view)
 	_board_view.item_double_clicked.connect(quick_move)     # 视图每次新建，信号跟着重接
-	_board_view.cell_px = _warehouse_view.cell_px     # 139：和仓库一样大
-	if fill_width and size.x > 0.0:
-		fit_to_width.call_deferred(size.x)     # 多了一块：两块一起重新分
-		fit_to_height.call_deferred()
 
 
-#region 格子大小（139）
-## 一格多大：[param cols] 列（加上滚动条和间隙）摆进 [param width]，夹在 60 ～ [constant CELL_MAX]
-static func cell_for(width: float, cols: int, extra: float = SCROLL_PAD) -> float:
-	return clampf(floorf((width - extra) / float(maxi(1, cols))), InventoryView.CELL, CELL_MAX)
-
-
-## 按 [param width] 定格子大小：仓库（和带回来的背包，有的话）一起分这一行
-func fit_to_width(width: float) -> float:
-	if _warehouse_view == null or _meta == null:
-		return InventoryView.CELL
-	var cols := _meta.warehouse.size.x
-	var extra := SCROLL_PAD
-	if _board_view != null and _board_view.inventory != null:
-		cols += _board_view.inventory.size.x
-		extra += SCROLL_PAD + ROW_GAP
-	var c := cell_for(width, cols, extra)
-	_warehouse_view.cell_px = c
+## 164：带回来的背包的格子边长（基地按中列宽和右边仓库一起算）
+func set_board_cell(c: float) -> void:
 	if _board_view != null:
 		_board_view.cell_px = c
-	return c
+		ScrollBox.set_rows(_board_scroll, _board_view, maxi(BOARD_MIN_ROWS, _meta.board.size.y if _meta.board != null else 0))
 
 
-## 作者 2026-10-12（仓库屏太空）：最多显示几行按窗口里剩下的高度算 —— 放得下整块显示，超了才滚；至少原来那几行。
-## [param avail] 给格子的高度（不给 = 从滚动框顶到窗口底，减掉下面的提示行与按钮）
-func fit_to_height(avail: float = -1.0) -> int:
-	if _wh_scroll == null or not is_instance_valid(_wh_scroll):
-		return MIN_ROWS
-	if avail < 0.0:
-		if not is_inside_tree():
-			return MIN_ROWS
-		var below := 0.0
-		for c in _bottom:
-			below += c.get_combined_minimum_size().y + 8.0
-		avail = get_viewport_rect().size.y - _wh_scroll.global_position.y - below - BOTTOM_PAD
-	var rows := maxi(MIN_ROWS, floori(avail / maxf(1.0, cell_px())))
-	ScrollBox.set_rows(_wh_scroll, _warehouse_view, rows)
-	if _board_scroll != null and is_instance_valid(_board_scroll):
-		ScrollBox.set_rows(_board_scroll, _board_view, maxi(BOARD_MIN_ROWS, rows - 1))     # 板上还有一行说明
-	return rows
+func board_view() -> InventoryView:
+	return _board_view
 
 
-func cell_px() -> float:
-	return _warehouse_view.cell_px if _warehouse_view != null else InventoryView.CELL
+## 仓库分页（结算屏自己的，基地是右半边那块）
+func shelf() -> WarehousePages:
+	return _shelf
 
 
+## 仓库当前页的视图
 func warehouse_view() -> InventoryView:
-	return _warehouse_view
-#endregion
+	return _shelf.view if _shelf != null else null
 
 
 #region 公开动作
@@ -205,16 +150,19 @@ func discard_board() -> void:
 	changed.emit()
 
 
-## 109：整理仓库（只动仓库，不动带回来的棋盘 —— 那块是玩家摆的阵）。排不开就原样不动
+## 109：整理仓库**当前页**（163；不动别的页，也不动带回来的棋盘 —— 那块是玩家摆的阵）。排不开就原样不动
 func tidy() -> bool:
-	var ok := GridTidy.tidy(_meta.warehouse)
-	if _meta.warehouse.item_count() > 1:
-		_line.text = "仓库整理好了" if ok else "这堆东西排不开，没动"
+	var page := _shelf.current_page() if _shelf != null else null
+	if page == null:
+		return false
+	var ok := GridTidy.tidy(page)
+	if page.item_count() > 1:
+		_line.text = "这一页整理好了" if ok else "这堆东西排不开，没动"
 	changed.emit()
 	return ok
 
 
-## 109：双击快速置入 —— 带回来的棋盘 → 仓库；仓库 → 带回来的棋盘（有的话；局外平时没有，双击不做事）
+## 109：双击快速置入 —— 带回来的棋盘 → 仓库（按页序落，落到哪页翻到哪页）；仓库 → 带回来的棋盘（有的话；局外平时没有，双击不做事）
 func quick_move(view: ContainerView, uid: int) -> bool:
 	var from := view.container() if view != null else null
 	var inst := from.get_item(uid) if from != null else null
@@ -225,9 +173,12 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 		ok = InventoryService.transfer_auto(_meta.board, uid, _meta.warehouse)
 		if not ok:
 			_line.text = "仓库放不下「%s」" % Names.of(inst.def)
-		elif _meta.board.item_count() == 0:
-			_meta.discard_board()     # 搬空了 = 和「一键置入」搬完一样，带回来的背包就没了
-	elif from == _meta.warehouse and _meta.board != null:
+		else:
+			if _shelf != null:
+				_shelf.show_item(uid)
+			if _meta.board.item_count() == 0:
+				_meta.discard_board()     # 搬空了 = 和「一键置入」搬完一样，带回来的背包就没了
+	elif _meta.warehouse.owns(from) and _meta.board != null:
 		ok = InventoryService.transfer_auto(_meta.warehouse, uid, _meta.board)
 		if not ok:
 			_line.text = "带回来的背包里放不下「%s」" % Names.of(inst.def)
@@ -240,9 +191,11 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 func _refresh() -> void:
 	if _meta.board == null and _board_view != null or _meta.board != null and (_board_view == null or _board_view.inventory != _meta.board):
 		_rebuild_board_view()
-	_size_label.text = "仓库　%d × %d 格，不需要包" % [_meta.warehouse.size.x, _meta.warehouse.size.y]     # 110：扩建后跟着变
+	if _size_label != null:
+		_size_label.text = "仓库　%d 页，每页 %d × %d 格，不需要包" % [_meta.warehouse.page_count(), _meta.warehouse.size.x, _meta.warehouse.size.y]
 	var pending := _meta.has_pending_board()
 	_store_btn.disabled = not pending
-	_tidy_btn.disabled = _meta.warehouse.item_count() <= 1
+	var page := _shelf.current_page() if _shelf != null else null
+	_tidy_btn.disabled = page == null or page.item_count() <= 1
 	if _line != null and _line.text == "":
 		_line.text = "带回来的背包里还有 %d 件：置入仓库；不管的话开局屏里它们到地上，出发就没了" % _meta.board.item_count() if pending else "仓库 %d 件" % _meta.warehouse.item_count()

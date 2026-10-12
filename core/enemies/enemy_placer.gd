@@ -388,12 +388,12 @@ static func common_items(
 		func(d: ItemDef) -> bool: return _shares_tag(d.tags, rule.common_tags) and not _shares_tag(d.tags, schools))
 
 
-## 两个池子共用的筛选：能生成的道具里去掉包与随身道具（147：不上棋盘）、过稀有度上限与身份标签（087），再过 [param pred]；id 按文本升序
+## 两个池子共用的筛选：能生成的道具里去掉包（160：随身技能不是道具，本来就不在库里）、过稀有度上限与身份标签（087），再过 [param pred]；id 按文本升序
 static func _item_pool(items: ItemDatabase, rarity_cap: int, who: EnemyDef, pred: Callable) -> Array[StringName]:
 	var out: Array[StringName] = []
 	for id in items.ids():
 		var d := items.get_def(id)
-		if d == null or d.is_bag or d.is_belt() or (rarity_cap >= 0 and d.rarity > rarity_cap):
+		if d == null or d.is_bag or (rarity_cap >= 0 and d.rarity > rarity_cap):
 			continue
 		if who != null and not who.allows_item(d):
 			continue

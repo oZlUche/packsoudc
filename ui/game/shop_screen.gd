@@ -4,11 +4,15 @@
 ## **买**：把商品拖进自己的棋盘 = 买（放手时收钱，[method ShopSession.pay_for]）；钱不够放手就弹回栏位、提示一句；双击商品也是买
 ## （自动找位，先包后地上），钱不够双击没反应、提示一句。**卖**：把包里 / 地上的东西拖进「出售区」= 卖，回定价的一半。
 ## 刷新、收起（回地图，店还开着）、离开照旧。
+## 160 补一：货架下面一排「随身」—— 随身技能（不是道具，不能拖），按按钮买，直接进右下角的腰带
 extends GameScreen
 
 var _session: ShopSession = null
 var _shelf_row: HBoxContainer
 var _shelf_views: Array[InventoryView] = []
+## 160 补一：「随身」那一排的按钮（第 i 个 = [member ShopSession.belt_offers] 第 i 格）
+var _belt_row: HBoxContainer = null
+var _belt_btns: Array[Button] = []
 var _sell_view: InventoryView
 var _refresh_btn: Button
 var _wallet_line: Label
@@ -31,6 +35,8 @@ func open(payload: Dictionary) -> void:
 	left.add_child(_wallet_line)
 	_shelf_row = _hbox(10)
 	left.add_child(_shelf_row)
+	_belt_row = _hbox(8)
+	left.add_child(_belt_row)
 	var sell_col := _vbox(4)
 	left.add_child(sell_col)
 	sell_col.add_child(_label("出售区　拖进来就卖，回定价的一半", 13, UiPalette.DIM))
@@ -224,7 +230,34 @@ func _rebuild() -> void:
 		_shelf_views.append(view)
 		_drag.register_view(view)
 		_tip.watch(view)
+	_rebuild_belt()
 	_refresh()
+
+
+## 160 补一：「随身」那一排：每种一个按钮（名字、价格），买了直接进腰带
+func _rebuild_belt() -> void:
+	UiTheme.clear_children(_belt_row)
+	_belt_btns.clear()
+	if _session.belt_offers.is_empty():
+		return
+	_belt_row.add_child(_label("随身", 13, UiPalette.DIM))
+	for i in _session.belt_offers.size():
+		var idx := i
+		var def := BeltSkillDef.find(StringName(String(_session.belt_offers[i]["id"])))
+		var b := _button("", func(): buy_belt(idx), 13)
+		b.tooltip_text = "%s\n%s\n买了直接进腰带（右下角）" % [def.description, def.describe()] if def != null else ""
+		_belt_row.add_child(b)
+		_belt_btns.append(b)
+
+
+## 160 补一：买「随身」那一排第 i 格。返回空串 = 买了，否则是原因（写在提示行）
+func buy_belt(i: int) -> String:
+	var why := _session.buy_belt(i) if _session != null else "没有店"
+	var def := BeltSkillDef.find(StringName(String(_session.belt_offers[i]["id"]))) if _session != null and i >= 0 and i < _session.belt_offers.size() else null
+	var name := def.display_name if def != null else "随身技能"
+	_say("买下了「%s」，放进了腰带" % name if why == "" else "「%s」买不了：%s" % [name, why])
+	_refresh()
+	return why
 
 
 func _refresh() -> void:
@@ -238,3 +271,9 @@ func _refresh() -> void:
 		if price != null and _session.sold.has(i):
 			price.text = "已售"
 			price.theme_type_variation = UiTheme.LABEL_DIM     # 121：卖掉了换暗色变体
+	for i in _belt_btns.size():
+		var offer: Dictionary = _session.belt_offers[i]
+		var def := BeltSkillDef.find(StringName(String(offer["id"])))
+		var sold := _session.belt_sold.has(i)
+		_belt_btns[i].text = "%s　已售" % def.display_name if sold else "%s　%d 币" % [def.display_name if def != null else String(offer["id"]), int(offer["price"])]
+		_belt_btns[i].disabled = sold

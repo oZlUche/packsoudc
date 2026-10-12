@@ -186,7 +186,7 @@ static func frame_warehouse_double_click(t: TestCase, root: Window) -> void:
 	t.check(panel.quick_move(panel._board_view, rock.uid), "双击带回来的一件")
 	t.check(meta.warehouse.has_item(rock.uid) and not meta.board.has_item(rock.uid), "进了仓库")
 	t.eq(emitted[0], 1, "面板发了 changed")
-	t.check(panel.quick_move(panel._warehouse_view, rock.uid), "双击仓库里的那件")
+	t.check(panel.quick_move(panel.warehouse_view(), rock.uid), "双击仓库里的那件")
 	t.check(meta.board.has_item(rock.uid), "回到带回来的背包（还有它就能放）")
 	# 审查 A3：重建带回来的背包视图时，旧视图要从拖拽层撤登记，否则之后拖仓库会碰到已释放的视图、卡在「正在拖」
 	var old_view: InventoryView = panel._board_view
@@ -198,7 +198,7 @@ static func frame_warehouse_double_click(t: TestCase, root: Window) -> void:
 	t.check(first < 0, "（这时仓库是空的）")
 	var probe := ItemInstance.create(_def("probe", ["1"]))
 	meta.warehouse.try_add(probe)
-	panel._warehouse_view.grab_requested.emit(panel._warehouse_view, probe.uid, Vector2(10, 10))
+	panel.warehouse_view().grab_requested.emit(panel.warehouse_view(), probe.uid, Vector2(10, 10))
 	t.check(panel._drag.is_dragging(), "拿起仓库里的一件")
 	panel._drag.cancel()
 	t.check(meta.warehouse.has_item(probe.uid), "取消放回仓库")
@@ -227,7 +227,7 @@ static func frame_warehouse_double_click(t: TestCase, root: Window) -> void:
 	var panel2 = load(WAREHOUSE_PANEL).new()
 	root.add_child(panel2)
 	panel2.setup(f2, UiPalette.cjk_font())
-	t.check(not panel2.quick_move(panel2._warehouse_view, lone.uid), "没有带回来的背包：双击不做事")
+	t.check(not panel2.quick_move(panel2.warehouse_view(), lone.uid), "没有带回来的背包：双击不做事")
 	t.check(meta2.warehouse.has_item(lone.uid), "还在仓库")
 	t.check(panel2._tidy_btn.disabled, "只有一件：整理灰掉")
 	panel2.queue_free()

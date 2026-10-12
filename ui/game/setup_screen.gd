@@ -1,6 +1,11 @@
 ## 开局（M6，架构文档 8 节；058 第 2 条，报告 067）：挑一章、挑角色、往初始包里拖仓库的东西、定个种子，出发。
 ##
-## 左边章节与角色，中间是这个角色的棋盘（初始包已经摆好），右边是仓库的格子：从仓库往包里拖，**放得进的就是带的** ——
+## 161（作者定）：拆成三页，一次只看一页、状态都在屏的字段里（换页不丢）：
+## **一 选角色**（角色列表、角色卡 —— 名牌 + 生命 / 耐力方块 + 体力爱心 + 技能、这个角色的棋盘预览只看不拖）→
+## **二 配道具**（预设装备、可拖的棋盘、地上、仓库 —— 仓库只在这一页）→ **三 选地图与难度**（模式、规模、难度、种子、出发摘要）。
+## 每页右下角两颗大按钮：继续 / 出发（Enter）、返回（Esc；第一页的返回 = 回主菜单）。[method page] / [method next_page] / [method prev_page]。
+##
+## 第二页：中间是这个角色的棋盘（初始包已经摆好），右边是仓库的格子：从仓库往包里拖，**放得进的就是带的** ——
 ## 带入的真正限制是初始包的空间；件数 / 稀有度上限是角色的字段（默认不限），出发时查。
 ## 包不能带入：仓库里本来没有包（局外只收非包，`MetaState.keeps`），仓库的格子也不收包（同一条规则接在 `accept_filter` 上）。
 ## 拖上棋盘那一刻东西就离开了仓库；出发时存 meta，回主菜单就放回去。
@@ -28,7 +33,7 @@ var preset_index: int = -1
 ## 096：棋盘上预设套的实例 uid → true（不算带入、不能拖去仓库）
 var _preset_uids: Dictionary = {}
 var _preset_btns: Array[Button] = []
-var _preset_box: VBoxContainer = null
+var _preset_box: BoxContainer = null
 ## 085：地图规模（随机一局可选）；空 = 章节默认
 var scale_id: StringName = &""
 var _scale_btns: Dictionary = {}
@@ -55,11 +60,25 @@ var _difficulty_btns: Array[Button] = []
 var _board_host: VBoxContainer
 var _board_view: InventoryView = null
 var _warehouse_view: InventoryView = null
+## 163：仓库分页（[member _warehouse_view] 是它当前页的视图）
+var _warehouse_pages: WarehousePages = null
 var _desc: Label
 var _readout: RichTextLabel = null
 var _status: Label
+## 161：右下角「继续 / 出发」与「返回」
 var _enter_btn: Button
+var _back_btn: Button
 var _seed_spin: SpinBox
+## 161：三页（0 选角色、1 配道具、2 选地图与难度）与现在是哪页
+const PAGE_NAMES: Array[String] = ["选角色", "配道具", "选地图与难度"]
+var _pages: Array[Control] = []
+var _page: int = 0
+var _title: Label = null
+## 161：第一页的角色卡与棋盘预览、第三页的出发摘要
+var _card: VBoxContainer = null
+var _preview_host: VBoxContainer = null
+var _preview_view: InventoryView = null
+var _summary: RichTextLabel = null
 
 
 func open(_payload: Dictionary) -> void:
@@ -67,65 +86,61 @@ func open(_payload: Dictionary) -> void:
 	run_seed = randi() % 1000000
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right", "top", "bottom"]:
+	for side in ["left", "right", "top"]:
 		margin.add_theme_constant_override("margin_" + side, 36)
+	margin.add_theme_constant_override("margin_bottom", 140)     # 161：底下留给右下角那两颗大按钮
 	add_child(margin)
-	var row := _hbox(28)
-	margin.add_child(row)
-
-	# 左：章节、角色、种子
-	var left := _vbox(8)
-	left.custom_minimum_size.x = 340
-	row.add_child(left)
-	left.add_child(_label("开局", 26, UiPalette.FG))
-	left.add_child(_label("模式", 15, UiPalette.DIM))     # 114：序章之后只有自由模式（将来加章再长）
+	var col := _vbox(14)
+	margin.add_child(col)
+	_title = _label("", 26, UiPalette.FG)
+	col.add_child(_title)
 	_chapters = flow.available_chapters()
-	var chapter_names: Array[String] = []
-	for c in _chapters:
-		chapter_names.append("%s（难度 %d）" % [c.display_name if c.display_name != "" else String(c.id), c.difficulty])
-	_chapter_btns = _choice_column(left, chapter_names, choose_chapter)
-	if _chapters.is_empty():
-		left.add_child(_label("没有章节：先跑 tools/import_content.gd", 13, UiPalette.HP))
+	_pages.clear()
+	for build in [_build_character_page, _build_kit_page, _build_map_page]:
+		var page: Control = build.call()
+		page.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		col.add_child(page)
+		_pages.append(page)
+	_build_nav()
+	choose_chapter(0)
+	choose_difficulty(0)
+	show_page(0)
+
+
+## 161 第一页：角色列表 | 角色卡 | 棋盘预览（只看不拖）
+func _build_character_page() -> Control:
+	var row := _hbox(36)
+	var left := _vbox(8)
+	left.custom_minimum_size.x = 260
+	row.add_child(left)
 	left.add_child(_label("角色", 15, UiPalette.DIM))
 	_char_box = _vbox(8)
 	left.add_child(_char_box)
 	if flow.characters.is_empty():
 		left.add_child(_label("没有角色：先跑 tools/import_content.gd", 13, UiPalette.HP))
+	_card = _vbox(10)
+	_card.custom_minimum_size.x = 420
+	row.add_child(_card)
+	_preview_host = _vbox(6)
+	row.add_child(_preview_host)
+	return row
+
+
+## 161 第二页：预设装备一行 + 棋盘（可拖）/ 地上 / 仓库，拖拽层盖在下面那一块上
+func _build_kit_page() -> Control:
+	var page := _vbox(12)
 	if not flow.presets().is_empty():
-		left.add_child(_label("预设装备", 15, UiPalette.DIM))
-		_preset_box = _vbox(6)
-		left.add_child(_preset_box)
+		var presets := _hbox(8)
+		presets.add_child(_label("预设装备", 15, UiPalette.DIM))
+		_preset_box = presets
+		page.add_child(presets)
 		_rebuild_presets()
-	var avail := flow.available_difficulties()
-	if not avail.is_empty():
-		left.add_child(_label("难度", 15, UiPalette.DIM))
-		var difficulty_names: Array[String] = []
-		for d in avail:
-			difficulty_names.append(d.display_name if d.display_name != "" else String(d.id))
-		_difficulty_btns = _choice_column(left, difficulty_names, choose_difficulty)
-	_scale_box = _vbox(6)
-	left.add_child(_scale_box)
-	_desc = _wrapped("", 12, UiPalette.DIM, 280)
-	left.add_child(_desc)
-	var seed_row := _hbox(8)
-	seed_row.add_child(_label("种子", 13, UiPalette.DIM))
-	_seed_spin = SpinBox.new()
-	_seed_spin.min_value = 0
-	_seed_spin.max_value = 999999
-	_seed_spin.value = run_seed
-	_seed_spin.value_changed.connect(func(v: float): run_seed = int(v))
-	seed_row.add_child(_seed_spin)
-	seed_row.add_child(_button("随机", func(): set_run_seed(randi() % 1000000), 12, UiPalette.Tier.MINOR))
-	left.add_child(seed_row)
-	left.add_child(HSeparator.new())
-	left.add_child(_button("回主菜单", cancel, 12, UiPalette.Tier.MINOR))
 
-	_build_enter_button()
-
-	# 中 + 右：棋盘与仓库在同一块矩形里，拖拽层盖在上面
+	# 棋盘与仓库在同一块矩形里，拖拽层盖在上面
 	var play := MarginContainer.new()
 	play.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(play)
+	play.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	page.add_child(play)
 	var grids := _hbox(28)
 	play.add_child(grids)
 
@@ -140,25 +155,119 @@ func open(_payload: Dictionary) -> void:
 	var right := _warehouse_box
 	grids.add_child(right)
 	var w := flow.meta.warehouse
-	right.add_child(_label("仓库　%d × %d 格，%d 件" % [w.size.x, w.size.y, w.item_count()], 15, UiPalette.DIM))
+	right.add_child(_label("仓库　%d 页，%d 件" % [w.page_count(), w.item_count()], 15, UiPalette.DIM))
 	right.add_child(_wrapped("往左边的包里拖，放得进的就是带的；带进去的从仓库拿走，撤离了回来，死了就没了", 12, UiPalette.DIM, 480))
-	_warehouse_view = InventoryView.new()
-	_warehouse_view.label_font = font
-	_warehouse_view.inventory = w
-	_warehouse_view.show_adjacency = false
-	_warehouse_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	right.add_child(ScrollBox.wrap(_warehouse_view))     # 110：竖向滚动
 
 	_drag = DragLayer.new()
 	_drag.label_font = font
+	# 163：仓库分页 —— 左边竖排页签，拖着东西停在页签上切页
+	_warehouse_pages = WarehousePages.new()
+	right.add_child(_warehouse_pages)
+	_warehouse_pages.setup(w, font, _drag, TechWarehousePages.plan_of(flow.tech_defs))
+	_warehouse_view = _warehouse_pages.view
 	play.add_child(_drag)     # 容器把它铺到和 grids 一样大，盖在两块格子上
 	_drag.register_view(_warehouse_view)
 	_warehouse_view.item_double_clicked.connect(quick_move)     # 109：双击 = 快速置入，和局内一样
 	w.changed.connect(_refresh)
 	_build_stash()
+	return page
 
-	choose_chapter(0)
-	choose_difficulty(0)
+
+## 161 第三页：模式 | 说明、规模、难度、种子 | 出发摘要
+func _build_map_page() -> Control:
+	var row := _hbox(36)
+	var left := _vbox(8)
+	left.custom_minimum_size.x = 300
+	row.add_child(left)
+	left.add_child(_label("模式", 15, UiPalette.DIM))     # 114：序章之后只有自由模式（将来加章再长）
+	var chapter_names: Array[String] = []
+	for c in _chapters:
+		chapter_names.append("%s（难度 %d）" % [c.display_name if c.display_name != "" else String(c.id), c.difficulty])
+	_chapter_btns = _choice_column(left, chapter_names, choose_chapter)
+	if _chapters.is_empty():
+		left.add_child(_label("没有章节：先跑 tools/import_content.gd", 13, UiPalette.HP))
+
+	var mid := _vbox(8)
+	mid.custom_minimum_size.x = 380
+	row.add_child(mid)
+	_desc = _wrapped("", 13, UiPalette.DIM, 380)
+	mid.add_child(_desc)
+	_scale_box = _vbox(6)
+	mid.add_child(_scale_box)
+	var avail := flow.available_difficulties()
+	if not avail.is_empty():
+		mid.add_child(_label("难度", 15, UiPalette.DIM))
+		var difficulty_names: Array[String] = []
+		for d in avail:
+			difficulty_names.append(d.display_name if d.display_name != "" else String(d.id))
+		_difficulty_btns = _choice_column(mid, difficulty_names, choose_difficulty)
+	var seed_row := _hbox(8)
+	seed_row.add_child(_label("种子", 13, UiPalette.DIM))
+	_seed_spin = SpinBox.new()
+	_seed_spin.min_value = 0
+	_seed_spin.max_value = 999999
+	_seed_spin.value = run_seed
+	_seed_spin.value_changed.connect(func(v: float): run_seed = int(v))
+	seed_row.add_child(_seed_spin)
+	seed_row.add_child(_button("随机", func(): set_run_seed(randi() % 1000000), 12, UiPalette.Tier.MINOR))
+	mid.add_child(seed_row)
+
+	var right := _vbox(8)
+	right.custom_minimum_size.x = 340
+	row.add_child(right)
+	right.add_child(_label("出发摘要", 15, UiPalette.DIM))
+	_summary = _log_box(14)
+	_summary.scroll_following = false
+	_summary.custom_minimum_size = Vector2(340, 200)
+	right.add_child(_summary)
+	return row
+
+
+#region 161：翻页
+func page() -> int:
+	return _page
+
+
+## 换到第 [param i] 页（0..2）：只显示那一页，标题与右下角按钮跟着变
+func show_page(i: int) -> void:
+	_page = clampi(i, 0, PAGE_NAMES.size() - 1)
+	for k in _pages.size():
+		_pages[k].visible = k == _page
+	if _title != null:
+		_title.text = "开局 · %s / 三　%s" % [["一", "二", "三"][_page], PAGE_NAMES[_page]]
+	if _enter_btn != null:
+		_enter_btn.text = "出发" if _page == PAGE_NAMES.size() - 1 else "继续"
+	if _back_btn != null:
+		_back_btn.text = "回主菜单" if _page == 0 else "返回"
+	_refresh()
+
+
+## 继续（最后一页 = 出发）。第一页没角色走不了
+func next_page() -> bool:
+	if _page >= PAGE_NAMES.size() - 1:
+		return depart()
+	if _page == 0 and character() == null:
+		return false
+	show_page(_page + 1)
+	return true
+
+
+## 返回（第一页 = 回主菜单）
+func prev_page() -> void:
+	if _page == 0:
+		cancel()
+	else:
+		show_page(_page - 1)
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
+		return
+	if key.keycode == KEY_ENTER or key.keycode == KEY_KP_ENTER:
+		next_page()
+		get_viewport().set_input_as_handled()
+#endregion
 
 
 ## 090：地上那一栏。上一局带回来、还没置入的东西从带回来的棋盘挪进来，记住各自原位（回主菜单原样放回）
@@ -220,12 +329,22 @@ func choose_chapter(i: int) -> void:
 		return
 	chapter_index = clampi(i, 0, _chapters.size() - 1)
 	_mark_choice(_chapter_btns, chapter_index)
-	# 083：这一章能选的角色、能不能从仓库带东西，都跟着章节变
+	# 083：这一章能选的角色、能不能从仓库带东西，都跟着章节变。
+	# 161：章节在第三页才挑 —— 已经挑好的角色这一章也能用就留着（棋盘上带的东西不动），不能用才换回第一个
+	var keep := character()
 	_rebuild_characters()
 	_rebuild_scales()
 	if _warehouse_box != null:
 		_warehouse_box.visible = chapter().allow_carry_in
-	choose_character(0)
+	var at := _characters.find(keep) if keep != null else -1
+	if at < 0 or board == null:
+		choose_character(0)
+		return
+	character_index = at
+	_mark_choice(_character_btns, character_index)
+	if not chapter().allow_carry_in:
+		_return_carried()
+	_refresh()
 
 
 ## 角色按钮按这一章能选的重排
@@ -355,6 +474,7 @@ func choose_character(i: int) -> void:
 		character_index = clampi(i, 0, _characters.size() - 1)
 	_mark_choice(_character_btns, character_index)
 	_rebuild_board()
+	_rebuild_card()
 	_refresh()
 
 
@@ -422,7 +542,7 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 		return false
 	var why := ""
 	var ok := false
-	if from == flow.meta.warehouse or from == stash:
+	if flow.meta.warehouse.owns(from) or from == stash:
 		if board == null:
 			return false
 		if not _allow_drop(inst, board):
@@ -448,6 +568,8 @@ func store(uid: int) -> bool:
 	if stash == null or stash.get_item(uid) == null:
 		return false
 	var ok := InventoryService.transfer_auto(stash, uid, flow.meta.warehouse)
+	if ok and _warehouse_pages != null:
+		_warehouse_pages.show_item(uid)
 	_refresh()
 	return ok
 
@@ -460,6 +582,8 @@ func carry_out(uid: int) -> bool:
 	if inst == null or not MetaState.keeps(inst.def) or _preset_uids.has(uid):
 		return false     # 096：预设套的不进仓库
 	var ok := InventoryService.transfer_auto(board, uid, flow.meta.warehouse)
+	if ok and _warehouse_pages != null:
+		_warehouse_pages.show_item(uid)     # 163：放回落到哪页就翻到哪页
 	_refresh()
 	return ok
 
@@ -518,8 +642,9 @@ func can_depart() -> String:
 
 
 ## 反馈（紧急）：左边那一列比窗口还高，原来放在列尾的「出发」按钮被挤出了屏幕，开局没有入口。
-## 「进入」钉在屏幕右下角（不跟着列走），又大又醒目；开不了的原因（超上限、生成不出图）也写在它上面，窗口再矮都看得见
-func _build_enter_button() -> void:
+## 按钮钉在屏幕右下角（不跟着列走），又大又醒目；开不了的原因（超上限、生成不出图）也写在它上面，窗口再矮都看得见。
+## 161：两颗并排 —— 「返回」（次档）与「继续 / 出发」（主档），一样大
+func _build_nav() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	box.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -527,12 +652,18 @@ func _build_enter_button() -> void:
 	box.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	box.offset_right = -36
 	box.offset_bottom = -36
-	_status = _wrapped("", 13, UiPalette.HP, 320)
+	_status = _wrapped("", 13, UiPalette.HP, 520)
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	box.add_child(_status)
-	_enter_btn = _button("进入", func(): depart(), 24, UiPalette.Tier.PRIMARY)
-	_enter_btn.custom_minimum_size = Vector2(320, 76)
-	box.add_child(_enter_btn)
+	var row := _hbox(16)
+	row.alignment = BoxContainer.ALIGNMENT_END
+	_back_btn = _button("返回", prev_page, 24, UiPalette.Tier.MINOR)
+	_back_btn.custom_minimum_size = Vector2(240, 76)
+	row.add_child(_back_btn)
+	_enter_btn = _button("继续", func(): next_page(), 24, UiPalette.Tier.PRIMARY)
+	_enter_btn.custom_minimum_size = Vector2(280, 76)
+	row.add_child(_enter_btn)
+	box.add_child(row)
 	add_child(box)
 
 
@@ -561,9 +692,9 @@ func cancel() -> void:
 	flow.to_main_menu()
 
 
-## 090：Esc = 回主菜单（同「回主菜单」按钮）
+## 090：Esc = 回主菜单（同「回主菜单」按钮）。161：第二、三页的 Esc = 回上一页
 func escape() -> bool:
-	cancel()
+	prev_page()
 	return true
 #endregion
 
@@ -632,6 +763,105 @@ func _rebuild_board() -> void:
 	_apply_preset()     # 096：挑着的预设套跟着角色换过来
 
 
+## 161：第一页的角色卡（名牌、生命 / 耐力方块、体力爱心、技能）与棋盘预览（只看不拖）
+func _rebuild_card() -> void:
+	if _card == null:
+		return
+	UiTheme.clear_children(_card)
+	UiTheme.clear_children(_preview_host)
+	_preview_view = null
+	var ch := character()
+	if ch == null:
+		return
+	_card.add_child(Nameplate.new().setup(Names.of(ch), "角色", Nameplate.character_face(ch.id)))
+	_card.add_child(_wrapped(Names.description_of(ch), 13, UiPalette.DIM, 420))
+	var base := ch.baseline()
+	_card.add_child(_stat_row("生命", StatBlocks.new().setup(StatBlocks.HP, base.value_of(&"max_hp"))))
+	var stamina := _stat_row("耐力", StatBlocks.new().setup(StatBlocks.STAMINA, base.value_of(&"max_stamina")))
+	stamina.add_child(_label("每秒回 %s" % _num(base.value_of(&"regen_stamina")), 12, UiPalette.DIM))     # 161 待定 1：三人唯一不同的第三个数
+	_card.add_child(stamina)
+	_card.add_child(_stat_row("体力", StatBlocks.new().setup(StatBlocks.VITALITY, ch.vitality_max)))
+	_card.add_child(_label("一块 10 点；角色自己的底子，不含科技加成", 11, UiPalette.DIM))
+	_card.add_child(_wrapped(caps_text(ch), 13, UiPalette.DIM, 420))
+	for line in ch.skill_lines():
+		_card.add_child(_wrapped(line, 13, UiPalette.FG, 420))
+	if board == null:
+		return
+	_preview_host.add_child(_label("棋盘　%d × %d 格" % [ch.board_size.x, ch.board_size.y], 15, UiPalette.DIM))
+	_preview_view = InventoryView.new()
+	_preview_view.label_font = font
+	_preview_view.inventory = board
+	_preview_view.show_adjacency = false
+	_preview_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_preview_host.add_child(_preview_view)
+	_preview_host.add_child(_label("背包：%s" % bags_text(ch), 13, UiPalette.DIM))
+
+
+## 角色卡上方块之外的那几项：负重上限、棋盘、开局钱、带入上限（136 / 149；161 从说明栏挪到角色卡）
+static func caps_text(ch: CharacterDef) -> String:
+	var caps: Array[String] = []
+	if ch.weight_capacity > 0:
+		caps.append("负重上限 %d" % ch.weight_capacity)
+	caps.append("棋盘 %d × %d" % [ch.board_size.x, ch.board_size.y])
+	if ch.starting_funds >= 0:
+		caps.append("开局钱 %d" % ch.starting_funds)
+	if ch.carry_max_items >= 0:
+		caps.append("最多带 %d 件" % ch.carry_max_items)
+	if ch.carry_rarity_cap >= 0:
+		caps.append("稀有度不超过 %d" % ch.carry_rarity_cap)
+	return "　".join(caps)
+
+
+## 161：「皮革包 × 2、小包」
+func bags_text(ch: CharacterDef) -> String:
+	var counts := {}
+	var order: Array[StringName] = []
+	for id in ch.starting_bags:
+		if not counts.has(id):
+			order.append(id)
+		counts[id] = int(counts.get(id, 0)) + 1
+	var parts: Array[String] = []
+	for id in order:
+		var def := flow.items.get_def(id)
+		var name := Names.of(def) if def != null else String(id)
+		parts.append(name if int(counts[id]) == 1 else "%s × %d" % [name, counts[id]])
+	return "、".join(parts) if not parts.is_empty() else "无"
+
+
+func _stat_row(title: String, blocks: StatBlocks) -> HBoxContainer:
+	var row := _hbox(10)
+	var l := _label(title, 15, UiPalette.FG)
+	l.custom_minimum_size.x = 44
+	row.add_child(l)
+	row.add_child(blocks)
+	return row
+
+
+static func _num(v: float) -> String:
+	return str(int(v)) if is_equal_approx(v, roundf(v)) else "%.1f" % v
+
+
+## 161：第三页的出发摘要（角色、带了几件、负重、模式与难度）
+func summary_text() -> String:
+	var lines: Array[String] = []
+	var ch := character()
+	if ch != null:
+		lines.append("角色　%s" % Names.of(ch))
+	var taken := carried().size()
+	var pre := preset_items().size()
+	lines.append("带上　%d 件%s" % [taken, "（另有预设 %d 件）" % pre if pre > 0 else ""])
+	var enc := encumbrance_text()
+	if enc != "":
+		lines.append(enc)
+	var c := chapter()
+	if c != null:
+		lines.append("模式　%s" % (c.display_name if c.display_name != "" else String(c.id)))
+	var d := difficulty()
+	if d != null:
+		lines.append("难度　%s" % d.display_name)
+	return "\n".join(lines)
+
+
 ## 099（作者定）：右键棋盘上的信物 = 奉它为主信仰（出发带走的就是这个顺序）。不是信物什么也不做
 func reseat_anchor(uid: int) -> bool:
 	var inst := board.get_item(uid) if board != null else null
@@ -647,23 +877,6 @@ func _refresh() -> void:
 		var lines: Array[String] = []
 		if c != null:
 			lines.append("%s　难度 %d　敌人池 %s" % [c.display_name, c.difficulty, String(c.enemy_pool) if c.enemy_pool != &"" else "无"])
-		if ch != null:
-			lines.append(Names.description_of(ch))
-			var caps: Array[String] = []
-			caps.append("体力 %d" % ch.vitality_max)
-			caps.append("生命 %d" % int(ch.baseline().value_of(&"max_hp")))
-			caps.append("耐力 %d" % int(ch.baseline().value_of(&"max_stamina")))     # 136
-			if ch.weight_capacity > 0:
-				caps.append("负重 %d" % ch.weight_capacity)
-			caps.append("棋盘 %d × %d" % [ch.board_size.x, ch.board_size.y])     # 149
-			if ch.starting_funds >= 0:
-				caps.append("开局钱 %d" % ch.starting_funds)
-			if ch.carry_max_items >= 0:
-				caps.append("最多带 %d 件" % ch.carry_max_items)
-			if ch.carry_rarity_cap >= 0:
-				caps.append("稀有度不超过 %d" % ch.carry_rarity_cap)
-			lines.append("　".join(caps))
-			lines.append_array(ch.skill_lines())     # 136：被动 / 主动各一行
 		var pre := preset()
 		if pre != null:
 			lines.append("预设「%s」：%s" % [Names.of(pre), Names.description_of(pre)])
@@ -699,6 +912,10 @@ func _refresh() -> void:
 			_readout.append_text("\n" + enc_line)
 	if _stash_title != null and stash != null:
 		_stash_title.text = "地上　%d 件" % stash.item_count()
+	if _summary != null:
+		_summary.text = summary_text()
+	if _enter_btn != null:
+		_enter_btn.disabled = _page == 0 and ch == null
 	if _status != null:
 		var why := can_depart()
 		_status.text = why if why != "" and not carried().is_empty() else ""

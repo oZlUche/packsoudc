@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.85 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.89 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2807,7 +2807,7 @@ class_name SearchRules extends Resource
   时间由 `advance(delta)` 推进（`_process` 每帧调，测试直接调）
 - **没亮的能拖，但只能在容器里挪**：视图照发 `grab_requested`（除了正在搜的那件 —— 它锁住），拖拽层的第二道门 `DragLayer.drop_filter`
   由容器屏给「亮了随便放，没亮的只许放回这个容器」；挪一挪就换了「下一件」是谁。没有按光标距离的规则
-- 当前那件画进度环、下一件画小标（占位画法）；「快速搜索」`skip()` 把没亮的全亮；「全部拾取」先全亮再全到地上
+- 当前那件画进度环、下一件画小标（占位画法）；「快速搜索」`skip()` 把没亮的全亮；「全部拾取」先全亮再搬（162：先搬包、大的先，带东西的包拆开先放空包再放内容物，其余按格数从大到小；放不下的落地动画从它在战利品格子上那一格起飞，手动拖出同理，飞的途中能抓）
 
 **战利品屏与搜索屏共用它。** 战利品屏（尸体容器 / 搜索收获）左边是 `LootView`，右边是自己的棋盘与地上，同一层 `DragLayer` 盖着三个容器 ——
 亮出来的直接拖到棋盘或地上，剩下的离开时落到这个点的地上（159）；都拖走了屏自己关。搜索屏每搜一次把找到的摆进 `SearchSession.haul_box`
@@ -3224,13 +3224,15 @@ func describe() -> String                # 开局屏的规则卡、编辑器
 | `BuffModule`（062） | 一局里拿到的 buff（`entries`、给 / 去 / 查 / 走表）、`buffs_changed` | `stepped`（任何花行动点的方式） |
 | `AltarModule`（093 / 095） | 神坛开在哪、用过哪些点、仪式的账与改过的基线、献祭 / 特殊操作、信仰级效果（`perks`）、赐福、`noted` / `item_blessed` | `NodeEvents.altar_opened`、`leaving`（关）、`stepped`（赐福）、`MapTravel.moved`（踩点回调） |
 | `CountdownModule`（092 / 094） | 倒计时上限 / 剩余、带入价值与超带罚步、关哪个撤离点、`notice` | `stepped`（归零就 `run.fail`） |
-| `BeltModule`（147） | 腰带（1 × N 的 `GridInventory`，`only_tags = [belt]`，默认 3 格 + `RunContext.belt_slots_bonus`）、`use(uid)`、`used` | 无；`belt_use` 挂在 `RunHooks` |
+| `BeltModule`（147；160） | 腰带：随身技能 id → 个数（`stacks`，默认 3 种 + `RunContext.belt_slots_bonus`）、`use(id)`、`add(id, n)`、`used` | 无；`belt_use` / `belt_grant` 挂在 `RunHooks` |
 | `WearModule`（148） | 不存东西（次数记在实例上） | `NodeEvents.battle_finished`（这一场 `fed_uids` 里的 −1，秒杀不扣） |
 
-**腰带**（147，作者定）：随身道具（`ItemDef.BELT` 标签 + `ItemDef.belt_use`）**不上棋盘** —— 作战棋盘 `reject_tags = [belt]`（开局与读档都设），地上与仓库照旧什么都收；
-开局带进来的先落在地上，腰带装上时挪进去；撤离时腰带里的一起带出。`BeltUse` 写「什么时候能用」（地图 / 战前准备屏 / 都行）与效果（`BeltEffect`，第五个作用域 `EffectScope.BELT`，
-`RunRegistry.BELT_EFFECTS`：`smoke_escape` 走脱身那条路 `skip_pending_battle`、`mend_vitality` 回体力）；先问每个效果的 `blocked_reason`，都能用才用、用了就从腰带拿走。
-`GridInventory` 为此多了按标签的准入 `only_tags / reject_tags`（跟着存档走）与 `resize_cols`（腰带扩列；缩只缩空列）。界面：整理面板棋盘上方一行腰带（双击 = 用），战前准备屏按钮列出能在那儿用的。
+**腰带**（147，作者定；160 补充一改成**可堆叠的一次性技能**）：随身的东西不是道具 —— 内容种类 `belt_skills`（`BeltSkillDef extends BeltUse`：名字、说明、价格、`effects`），不进道具库，所以不进仓库、不进图鉴、不算负重、敌人不带、撤离作废。
+腰带存「id → 个数」：一种占一格、同种叠一格不限个数，格数限的是种类数；用一个少一个，到零空出那格。`BeltUse` 写「什么时候能用」（地图 / 战前准备屏 / 都行）与效果（`BeltEffect`，第五个作用域 `EffectScope.BELT`，
+`RunRegistry.BELT_EFFECTS`：`smoke_escape` 走脱身那条路 `skip_pending_battle`、`mend_vitality` 回体力）；先问每个效果的 `blocked_reason`，都能用才用。
+四个来源：事件后果 `grant_belt`（hook `belt_grant`）、商店「随身」一排（`EconomyRules.belt_stock / belt_picks`）、科技 `tech_belt_grant`（推算进 `MetaState.belt_grants`，开局经模块输入）、章节 / 角色能力 / buff 的 `starting_belt`。
+界面：`BeltSlots` 一排圆槽（图标 + 右下角数量，双击用一个，用不了在圆上方飘字），地图屏的 `belt` 组件默认锚右下角；背包面板里没有腰带；战前准备屏按钮列出能在那儿用的。
+`GridInventory.only_tags / reject_tags / resize_cols`（147 加的）留着，腰带不再用。
 
 **耐久**（148，作者定）：`ItemDef.wear: WearProfile`（满几次、前缀表、破碎前缀与卖价折扣），剩几次记在 `ItemInstance.state.charges`（新的一件满；老档没记按满算）。
 **一件道具一个定义**，明亮 / 闪烁 / 黯淡 / 破碎是同一件的状态；名字看实例：`Names.of_item(inst)`（格子标签、悬浮窗、拖拽、回放名字表），只有定义的地方照旧 `Names.of(def)`。
@@ -3284,8 +3286,8 @@ func player_spec() -> CombatantSpec …
 作者：「增加负重系统，给道具设计重量（要符合它们的名称和占据空间），给不同角色设计不同的初始负重。增加可以提升负重上限的科技。设计多个递进的负重等级……」；补充：「不要直接降低伤害，可以降低耐力恢复、上限和急速」。
 
 - **重量**：`ItemDef.weight`（0 = 按公式），`ItemWeight.of(def)`：写死的用写死的，否则格数 × 每格重（137 起：`heavy` 4、`metal` 3、`gem / stone` 2、`remedy / food / ammo / keepsake / sigil / treasure / relic` 半格一重、其余 1；先匹配的档生效）。名字说它沉或轻的写死在道具文件里（报告 129 附录 A、137 的重配表）。
-- **负重** = 作战棋盘上每件（含包本身）的重量之和（`RunState.carry_weight`）；地上、保险箱、仓库不算。**上限** = `CharacterDef.weight_capacity`（安德烈乌斯 40 / 马库斯 48 / 布鲁图斯 56，137；0 = 不算负重）+ `RunContext.carry_capacity_bonus`（科技「扛重」，`carry_capacity_bonus` 构件）。全派生，不进存档。
-- **分级**：`EncumbranceRules`（内容种类 `encumbrance_rules`，章节 `encumbrance_rules` 引用，自由模式用 `standard`，序章不开）。负重**严格大于**上限 × `over` 才到那一级：×1 吃力（急速 −10%、耐力回复 −10%），×1.25 超重（急速 −25%、耐力回复 −25%、耐力上限 −20%），×1.5 寸步难行（超重的减益照旧 + 走一步行动点 ×2）。**不碰伤害**（导入时拦）。`regen_* / max_*` 的 `flat` 写的是基线比例，`combat_mods(level, baseline)` 折成真值进 `CompileInput.baseline_mods`；急速进 `input.mods`（每件参战道具）。
+- **负重** = 作战棋盘上每件的重量之和（161：包不算重，`ItemWeight` 对包返回 0）（`RunState.carry_weight`）；地上、保险箱、仓库不算。**上限** = `CharacterDef.weight_capacity`（安德烈乌斯 40 / 马库斯 48 / 布鲁图斯 56，137；0 = 不算负重）+ `RunContext.carry_capacity_bonus`（科技「扛重」，`carry_capacity_bonus` 构件）。全派生，不进存档。
+- **分级**：`EncumbranceRules`（内容种类 `encumbrance_rules`，章节 `encumbrance_rules` 引用，自由模式用 `standard`，序章不开）。负重**严格大于**上限 × `over` 才到那一级：×1.2 吃力（急速 −10%、耐力回复 −10%），×1.6 超重（急速 −25%、耐力回复 −25%、耐力上限 −20%），×2.2 寸步难行（161 补充一按测算定）（超重的减益照旧 + 走一步行动点 ×2）。**不碰伤害**（导入时拦）。`regen_* / max_*` 的 `flat` 写的是基线比例，`combat_mods(level, baseline)` 折成真值进 `CompileInput.baseline_mods`；急速进 `input.mods`（每件参战道具）。
 - **接线**：`RunState.compile_player` 并入减益；`BattlePassives` 列一条「负重：<级名>」；`RunState.refresh_encumbrance` 在棋盘变了、换了角色、开局 / 读档后重算，写 `MapTravel.action_cost_mult`，级数真变了发 `encumbrance_changed`。`MapTravel.cost_of(intent)` 是唯一的「这一步花几点」（`apply` 扣它、地图屏预览与日志读它），`wait()` 不乘。
 - **界面**：背包读数一行「负重 w / c　级名」（超重警示色）、道具悬浮窗「重 n」、地图顶栏负重小标、开局屏读数也算；术语「负重 / 吃力 / 超重 / 寸步难行」，百科「背包」类一页 `encumbrance`。
 
@@ -3297,7 +3299,7 @@ func player_spec() -> CombatantSpec …
 侦察 / 潜行 / 逃跑三个构件往 `RunContext` 加数，猎手系统读；主动技能以后走事件层，报告 072）。**没有搜索速度**（作者：搜索在战斗外、不是实时的）。
 三个初始角色是作者定的安德烈乌斯 / 布鲁图斯 / 马库斯（7.3，082）；早期的占位 `default` / `scout` 已删。
 
-**开局屏**：左边挑章、挑角色、定种子；中间是这个角色的棋盘，初始包已经摆好；右边是仓库的格子（8.2）；同一层拖拽。
+**开局屏**（161 拆成三页，右下角大号「返回 / 继续」）：一、选角色（角色卡：`StatBlocks` 红方块生命、黄方块耐力、爱心体力，技能，初始包预览）；二、配道具（预设、这个角色的棋盘 —— 初始包已经摆好、地上、右边分页仓库（163），同一层拖拽）；三、选地图、规模、难度、种子，出发摘要。
 **从仓库往包里拖，放得进的就是带的** —— 带入的真正限制是初始包的空间，没有第二套规则去数格子。拖上棋盘那一刻东西就离开了仓库；
 出发时把棋盘记成 layout（一件一行：定义、落点、朝向），`RunState.start(..., character, layout)` 按它原样摆回一局的棋盘并存 meta；「回主菜单」放回仓库。
 **包不能带入**：局外不收包（`MetaState.keeps`），仓库的格子把同一条规则接成准入回调（`GridInventory.accept_filter`），初始包拖不进去。
@@ -3316,15 +3318,16 @@ func player_spec() -> CombatantSpec …
 
 `MetaState`（`core/meta/meta_state.gd`）是跨局的状态（作者定的形态，058 第 4 / 6 / 7 条，报告 061）：
 
-- **仓库是一块格子**（`GridInventory`，不要求包：所有格子默认可用），大小是 `MetaRules.warehouse_size`（内容种类 `meta_rules`，占位 10×8；作者：仓库也是局外成长的一部分，成长系统改这个数）。
+- **仓库分页**（163，作者定）：`Warehouse`（`core/meta/warehouse.gd`，`ItemContainer`）是一串一样大的格子页（每页 `MetaRules.warehouse_size`，10 × 8，不要求包），各页独立不共享空间；自动放按页序，读取 / 移除跨页，`owns(container)` 认自己的页；页数由科技「仓库扩建」推算（每级一页，满级七页），只删末尾的空页。存档逐页，老的单块档按页切。界面是 `WarehousePages`（左边竖排页签「一」「二」……，锁着的灰着带锁，拖着东西停在页签上 0.4 秒切页），结算屏、开局屏第二页、基地右半边共用。
 - **撤离不直接进仓库。** 棋盘原样带回来（`MetaState.board`：一块和棋盘一样大、不要求包的格子，非包道具按原位置 —— 作者说的「包统一替换成最大的默认背景包」），
   玩家在结算屏 / 局外屏拖或**一键置入**（按栏位顺序逐件放，放不下就停在那一件提示）。没清空**不再拦**开新局（090，原 058 第 7 条的门撤了）：进开局屏时带回来的东西挪进屏中间的**地上**（记原位），拖上包 = 带上、拖进仓库 = 置入、留着的**出发就没了**（`GameFlow.begin` 清掉带回来的棋盘，不经开局屏的路一样）、回主菜单原样放回（视为没发生过移动；玩家自己拖进仓库的留在仓库）；仓库的东西进不了地上。局外屏只提示（`GameFlow.pending_hint()`）。
 - **图鉴**（`codex`）：道具 id → 累计带出件数，同一次带出多件各计一次，点亮 = 计数 > 0（本来就幂等）；不代表物品被储存，将来的制作系统读它。
 - **包只计图鉴**：什么能存进局外由 `MetaState.keeps(def)` 一处说了算（现在：不是包）。「包」只是当前的承载媒介，将来可能删掉，那时删这一个分支。
 - 钱、累计价值、几局几撤几败、最近几局。**保留规则只在 `absorb()` 一个方法里**（15 节第 4 项）：撤离 = 图鉴每件计一次、非包道具带回棋盘、钱全带出；战败 = 全失。
 - 局外有自己的 uid 空间：每局的 uid 从 1 重编，进来时重新编号。
-- **基地屏布局**（139，作者定）：开发开关、局外解锁、科技等级、最近几局收在右侧的 `DevDrawer`（`ui/game/dev_drawer.gd`）里 —— 头部最右的箭头「◂ / ▸」点一下开、再点一下关，默认收起，开着时盖在页面上、宽 420、自己竖向滚，五个页签都能开，状态不进设置。
-  仓库页只剩格子，**格子大小是每块视图自己的**：`InventoryView.cell_px`（默认 `CELL` = 60），`WarehousePanel.fill_width` 开着时按面板宽度算 `cell_for(宽, 列数)`（60 ～ 96，封顶后居中，带回来的背包与仓库同一个数），出售页同样；`DragLayer` 对着某块视图的落点、残影、整块判定读那块的 `cell_px`，跟手的残影按起拖那块的；`ScrollBox` 跟着 `cell_px_changed` 改尺寸。地图背包、战前、开局、地上、冷却覆盖层仍是 60。图鉴一行几个按宽度算（`codex_columns_for`），不横向滚。
+- **基地屏布局**（164，作者定）：三列 —— 左列竖排页签（图鉴 / 成就 / 出售 / 科技，再点一次回「家」）与左下角「再来一局 / 回主菜单」；中列当前页（默认「家」：这一局、战绩、带回来的背包与一键置入 / 整理），各页垫粗布；右半边常驻分页仓库（木架框），格子 `WarehousePages.cell_for` 按宽高取小、夹在 40 ～ 80，10 × 8 整块可见。整屏一层拖拽；双击右边仓库一件按当前页：家 → 置入带回来的背包、出售 → 卖、科技 → 上交。「家」套件（`assets/ui/home/`：`bg_home` 背景、`btn_wood*` 木牌按钮 `BUTTON_HOME / BUTTON_HOME_PRIMARY`、`panel_cloth` 粗布 `PANEL_HOME_BOX`、`shelf` 木架 `PANEL_SHELF`、`tab_mark`）。
+  139：开发开关、局外解锁、科技等级、最近几局收在 `DevDrawer`（`ui/game/dev_drawer.gd`）里 —— 右上角的箭头「◂ / ▸」点一下开、再点一下关，默认收起，开着时盖在右半边上、宽 420、自己竖向滚，状态不进设置。
+  **格子大小是每块视图自己的**：`InventoryView.cell_px`（默认 `CELL` = 60），基地右半边与带回来的背包按 164 算；`DragLayer` 对着某块视图的落点、残影、整块判定读那块的 `cell_px`，跟手的残影按起拖那块的；`ScrollBox` 跟着 `cell_px_changed` 改尺寸。地图背包、战前、开局、地上、冷却覆盖层仍是 60。图鉴一行几个按宽度算（`codex_columns_for`），不横向滚。
 
 一局结束时（`GameFlow._settle_run`，进结算屏之前）就 `absorb`、存 meta、删这一局的存档；结算屏拿到的已经是记完账的局外。
 `MetaSave` 与 `RunSave` 同一套做法：`user://meta.json`，版本号 2（v1 是开发期的，作废），只写 id；仓库大小以存档里的为准（成长过的不该被规则缩回去）。
@@ -3334,7 +3337,7 @@ func player_spec() -> CombatantSpec …
 有时限的每走一步少一步，只带 `tags` 的就是标记，事件选项的条件查 `has_buff_tag`。
 
 **局外科技**（110，作者定）：一张定义 `TechDef`（内容种类 `techs`：`effect` 是 `TechEffect` 构件，登记在 `RunRegistry.TECH_EFFECTS`；`tiers` 每级 `TechTier{funds, items}`）+ `MetaState` 里通用的 `tech_levels`（id → 级）与 `tech_deposits`（id → {道具 id → 已交件数}）。
-第一条内容是**仓库扩建**（`warehouse_rows`：每级 `grow_rows(3)`，东西原地不动），6 级：前 3 级只要钱，第 4 级起要建材（钢锭 / 硬木板 / 铆钉盒，稀有度 2、标签 `supply`【建材】、无战斗规则、走掉落、商店 `shop_exclude_tags` 排除）。
+第一条内容是**仓库扩建**（`warehouse_pages`，163：每级加一页，东西原地不动；原来是 `warehouse_rows` 每级 +3 行），6 级：前 3 级只要钱，第 4 级起要建材（钢锭 / 硬木板 / 铆钉盒，稀有度 2、标签 `supply`【建材】、无战斗规则、走掉落、商店 `shop_exclude_tags` 排除）。
 规矩：**上交即消耗**（交一件从仓库移除、记一件，可跨多局分批，没有取回）；**钱在按【升级】时一次扣**；材料交齐且钱够才能升，升完清这一项的上交记录。逻辑全在 `TechService`（纯静态：`level / next_tier / needed / can_submit / submit / deposit / ready / upgrade / heal`），`GameFlow.submit_tech / upgrade_tech` 转发并存盘。
 读档后 `TechService.heal` 让每项效果按等级自检（`TechEffect.heal`：仓库行数 < 基础 + 3 × 级数就补，只补不缩）。基地第五个页签「科技」（`ui/game/tech_panel.gd`）：左仓库格子，右每项一张卡（等级、钱、每种材料已交 / 需要、【升级】），双击或拖进「上交区」上交。
 **科技树**（118，作者定，五项按推荐）：`TechDef` 加 `requires`（前置 id，**每项至少 1 级**才能点）、`column`（手写的列）、`description`（面板「效果」区的一句总述）。深度不写，按前置算（`TechService.depth_of`：根 0，其余 = 最深前置 + 1）；`TechService.prereqs_met / missing_prereqs / layout / cycle_members`，`ready` 多一个前置条件。导入器 `validate_techs`：前置不存在、成环报错；同列同深度撞位**只警告**（按 `order` 左右并排）。
@@ -3418,11 +3421,9 @@ func player_spec() -> CombatantSpec …
   - 它们都是 `HudPartWidget`：控件归屏幕，屏幕的 `hud_part(id)` 给出，组件只是挂着。
   - 组件被换掉前（`release`）把控件还给屏幕藏着的架子（`hud_shelve`），所以日志藏起来时照样在记。
   - 列表空了、提示行没字，组件就藏起来；摆读数时组件上盖一层把手接鼠标，按钮不再吃点击。
-- `belt`：147 的腰带，一条格子组件。
-  - 自带一层拖拽：拖出去落在地上；背包没开时，地上的东西能拖进来。
-  - 双击用掉，走 `GameFlow.use_belt`。
+- `belt`：腰带组件（160 起是一排圆槽 `BeltSlots`，默认锚右下角 `HudLayout.BELT_OFFSET`，布局版本 3）。
+  - 没有拖拽（随身技能不是道具）；双击一个圆用一个，走 `GameFlow.use_belt`。
   - 这一局没有腰带模块就空着。
-  - 背包面板里的腰带那一行保留：战利品 / 事件 / 战前屏要往里放。
 - 默认布局把这些按原来的顺序竖排在右上（`HudLayout.COLUMN`），日志贴右下。
 - 锚在右边的（`top_right` / `right` / `bottom_right`）算「右边那一条」：
   - 先按整块摆，占多宽就是 `right_inset()`，地图往左让这么多。
@@ -4113,6 +4114,10 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.89 | 2026-10-12 | **仓库分页与基地三列**（报告 163 / 164，作者定，待定按推荐；改 8.2）：`Warehouse` 多页容器（每页 10 × 8、按页序自动放、只删末尾空页、存档逐页、老单块档按页切），科技构件 `warehouse_rows` → `warehouse_pages`（每级一页，`docs/techs.xlsx` 重新生成）；`WarehousePages` 竖排页签（锁着的灰显带锁、拖着停 0.4 秒切页），结算屏 / 开局第二页 / 基地共用；基地改左列竖排页签 + 左下大按钮、中列当前页（默认「家」）、右半边常驻仓库（格子按宽高取小 40 ～ 80），整屏一层拖拽、双击按当前页分派，出售 / 科技页不再自己画仓库；「家」美术套件进 `assets/ui/home/`，`UiTheme` 加 `BUTTON_HOME(_PRIMARY)`、`PANEL_HOME_BOX`、`PANEL_SHELF`、`dress_home_backdrop` |
+| v2.88 | 2026-10-12 | **腰带改右下圆槽、随身改成可堆叠的一次性技能**（报告 160 与补充一；改 9.x 模块表与 150 组件）：内容种类 `belt_skills`（`BeltSkillDef`），删道具 `smoke_bomb / aid_pack` 与标签【随身】；`BeltModule` 存 id → 个数；来源 `grant_belt` 事件后果、商店随身排、科技 `tech_belt_grant`、`starting_belt`；`BeltSlots` 圆槽组件默认右下角（`HudLayout.VERSION` 3），背包面板去掉腰带 |
+| v2.87 | 2026-10-12 | **开局三页、角色卡方块、包不算重、负重三档**（报告 161 与补充一；改 7.6 / 8）：开局屏拆成选角色 / 配道具 / 选地图三页，右下角大号返回 / 继续；`StatBlocks`（生命红块、耐力黄块、体力爱心）、`UiPalette.draw_heart`；`ItemWeight` 对包返回 0；`standard` 负重门槛 1.2 / 1.6 / 2.2 |
+| v2.86 | 2026-10-12 | **全部拾取先包后件、落地从原格起飞**（报告 162；改 6.x 搜索）：`transfer_all_prefer` 先搬包（带东西的包拆开）再按格数放其余；`GroundLayer.landing_from` 记起飞点（全部拾取、手动拖出都从棋盘原格），飞行中的道具能抓 |
 | v2.85 | 2026-10-12 | **石板样式、名牌留框、回放去播报、启动提速、战利品落地、地图底图**（报告 157 补充一 / 二、158、159；作者定，待定按推荐；改 6.2 / 8 / 8.8 / 11）：整屏底平铺 `bg_stone`、三种面板换石板九宫格（内边距不变，底色设置给石板染色）；`Nameplate` 换石碑底、`PortraitSlot` 肖像位与徽记位永远留框；`BattleView.show_ticker`（正式游戏不播报）、`BOARD_SCALE` 1.0；`tools/class_cache.gd` 进程内重写类缓存、`tools/import_check.gd` 缺素材才后台导入；`_drop_pending_loot` 倒进地上（开着的搜索只落亮过的）；`ChapterDef.map_skin` + `MapSkin`，四章各一张手绘地图 |
 | v2.84 | 2026-10-12 | **深浅字色**（报告 157 补充，作者定「浅底黑字，深底白字，以后任何窗口都要填写深浅字段」；改 8.8）：`UiTheme.PANEL_TONES` 给每个面板变体标深浅，美术底图 json 写 `tone`；浅底挂墨色字小主题、正文里写死的颜色过 `ink_bbcode` 压成墨水版；美术的 `tooltip_paper.png` 放进 `assets/ui/`，悬浮窗换成亮纸墨字 |
 | v2.83 | 2026-10-12 | **光标三套材质**（报告 157 补充，作者定）：铠甲手套秘银 / 铁 / 皮革三套放在 `assets/ui/cursors/<材质>/`，`GameSettings.cursor_skin`（默认秘银），`UiCursor.apply(skin)` 按它取图；设置屏一排三个按钮，点了当场换上 |

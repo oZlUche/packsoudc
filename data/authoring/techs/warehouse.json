@@ -4,9 +4,9 @@
   "display_names": {
     "en": "Warehouse Expansion"
   },
-  "description": "仓库往下长，放得下更多带回来的东西；仓库里的东西原地不动。",
+  "description": "仓库多一页，放得下更多带回来的东西；各页独立，左边的页签切换。",
   "effect": {
-    "type": "warehouse_rows"
+    "type": "warehouse_pages"
   },
   "tiers": [
     {

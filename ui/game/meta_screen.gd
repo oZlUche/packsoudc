@@ -1,15 +1,26 @@
 ## 局外 / 基地（M6，架构文档 8.2；058 第 4 / 7 条）：页签（088 作者定）—— **仓库**（格子、带回来还没清空的背包）与**图鉴**（带出过的道具点亮、
 ## 记累计件数，停上去看属性；特殊道具另列），后来又加了成就、出售、科技。
-## 139（作者定）：开发开关、局外解锁、科技等级、最近几局收进右侧的「调试台」抽屉（[DevDrawer]，头部最右的箭头开关）；仓库与图鉴的格子占满整行。
+## 139（作者定）：开发开关、局外解锁、科技等级、最近几局收进「调试台」抽屉（[DevDrawer]，箭头在右上角）。
 ## 带回来的背包没清空之前「再来一局」是灰的（作者：提示玩家清空背包再配置）。
+##
+## 164（作者定）：三列 —— 左列（[constant LEFT_W]）：「基地」、四个页签竖排（图鉴、成就、出售、科技；再点一次选中的回「家」），
+## 左下角「再来一局」（主档）与「回主菜单」；中列：当前页，默认「家」（这一局、战绩、带回来的背包与一键置入 / 整理）；
+## 右半边：仓库（163 的 [WarehousePages]）常驻，10 × 8 整块可见（格子按宽高取小，40 ～ 80）。双击仓库一件按当前页：家 → 置入带回来的背包、
+## 出售 → 卖、科技 → 上交、图鉴 / 成就 → 不做事。整屏一层拖拽，中列与右半边之间能拖。背景、按钮、文本框、仓库木架用「家」套件（`assets/ui/home/`）
 extends GameScreen
 
 const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
 const TechPanelScript := preload("res://ui/game/tech_panel.gd")
 ## 图鉴缩略图之间的空隙；一行几个按宽度算（139）
 const CODEX_GAP := 8
-## 出售页的仓库格子最大放到多大（139，和仓库页一样）
-const SELL_CELL_MAX := 80.0
+## 左列宽、整屏外边距、三列之间的空
+const LEFT_W := 220.0
+const MARGIN := 24.0
+const COL_GAP := 24.0
+## 右半边标题行的高（「仓库　N 件」与调试台箭头）
+const SHELF_HEAD := 44.0
+## 左列四个页签（页签名、字）；「家」不在里面 —— 再点一次选中的页签回家
+const TABS := [["codex", "图鉴"], ["achievements", "成就"], ["sell", "出售"], ["tech", "科技"]]
 
 var _wh = null
 var _new_run_btn: Button
@@ -22,6 +33,8 @@ var _tech_spins: Dictionary = {}
 var _pages: Dictionary = {}
 var _tab_btns: Dictionary = {}
 var _tab: String = ""
+## 164：页签选中时左上角挂的小木牌（`home/tab_mark.png`；没图不挂）
+var _tab_mark: TextureRect = null
 ## 图鉴页的缩略图与它的悬浮窗
 var _codex_tiles: Array[CodexTile] = []
 ## 095：异体弹窗
@@ -38,66 +51,117 @@ var _ach_rows: Array = []
 var _drawer: DevDrawer = null
 var _debug_btn: Button = null
 var _codex_grids: Array[GridContainer] = []
+## 164：三列与右半边的仓库（整屏的拖拽层是 [member GameScreen._drag]）
+var _cols: HBoxContainer = null
+var _middle: VBoxContainer = null
+var _right: VBoxContainer = null
+var _shelf: WarehousePages = null
+var _shelf_frame: PanelContainer = null
+var _shelf_title: Label = null
 
 
 func open(payload: Dictionary) -> void:
 	var m := flow.meta
-	_backdrop()
+	UiTheme.dress_home_backdrop(_backdrop())
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 32)
+		margin.add_theme_constant_override("margin_" + side, int(MARGIN))
 	add_child(margin)
-	var root := _vbox(10)
-	margin.add_child(root)
+	_cols = _hbox(int(COL_GAP))
+	margin.add_child(_cols)
+	_drag = DragLayer.new()
+	_drag.label_font = font
 
-	# 头：标题、页签、这一局、战绩、按钮
-	var head := _hbox(16)
-	root.add_child(head)
-	head.add_child(_label("基地", 26, UiPalette.FG))
-	for pair in [["warehouse", "仓库"], ["codex", "图鉴"], ["achievements", "成就"], ["sell", "出售"], ["tech", "科技"]]:
+	# 左列：标题、四个页签竖排；底下「再来一局」「回主菜单」
+	var left := _vbox(12)
+	left.custom_minimum_size.x = LEFT_W
+	_cols.add_child(left)
+	left.add_child(_label("基地", 30, UiPalette.FG))
+	for pair in TABS:
 		var key: String = pair[0]
-		var b := _button(pair[1], func(): show_tab(key), 16)
+		var b := UiTheme.make_home_button(pair[1], func(): toggle_tab(key))
 		b.toggle_mode = true
+		b.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
+		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		_tab_btns[key] = b
-		head.add_child(b)
-	# 139：调试台的箭头放在头部最右边
+		left.add_child(b)
+	var tex := UiTheme.art(UiTheme.ART_TAB_MARK)
+	if tex != null:
+		_tab_mark = TextureRect.new()
+		_tab_mark.texture = tex
+		_tab_mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_tab_mark.position = Vector2(-10, -14)
 	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(spacer)
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left.add_child(spacer)
+	_hint = _wrapped("", 13, UiPalette.STAMINA, LEFT_W)
+	left.add_child(_hint)
+	_new_run_btn = UiTheme.make_home_button("再来一局", flow.new_run, true)
+	_new_run_btn.custom_minimum_size = Vector2(LEFT_W, 76)
+	left.add_child(_new_run_btn)
+	var menu_btn := UiTheme.make_home_button("回主菜单", flow.to_main_menu)
+	menu_btn.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
+	menu_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	left.add_child(menu_btn)
+
+	# 中列：当前页
+	_middle = _vbox(10)
+	_middle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_middle.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_cols.add_child(_middle)
+
+	# 右半边：仓库（先建 —— 家页的带回来背包、科技页的上交区都要和它同一层拖拽）
+	_right = _vbox(8)
+	_cols.add_child(_right)
+	var head := _hbox(8)
+	head.custom_minimum_size.y = SHELF_HEAD
+	_right.add_child(head)
+	_shelf_title = _label("仓库", 20, UiPalette.FG)
+	_shelf_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(_shelf_title)
 	_drawer = DevDrawer.new()
 	head.add_child(_drawer.arrow)
+	_shelf_frame = UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_SHELF)
+	_shelf_frame.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_right.add_child(_shelf_frame)
+	_shelf = WarehousePages.new()
+	_shelf_frame.add_child(_shelf)
+	_shelf.setup(m.warehouse, font, _drag, TechWarehousePages.plan_of(flow.tech_defs))
+	_drag.register_view(_shelf.view)
+	_shelf.view.item_double_clicked.connect(_on_shelf_double_clicked)
+	m.warehouse.changed.connect(_refresh_shelf_title)
+
+	# 家页：这一局、战绩（粗布框里），带回来的背包与一键置入 / 整理
+	var home := _vbox(12)
+	home.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_middle.add_child(home)
+	_pages["home"] = home
+	var box := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_BOX)
+	box.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	home.add_child(box)
+	var info := _vbox(6)
+	box.add_child(info)
+	var tone := UiTheme.tone_of(UiTheme.PANEL_HOME_BOX)
 	var just: RunResult = payload.get("result", null)
 	if just != null:
-		root.add_child(_wrapped("刚才这一局：%s" % ("撤离，背出来 %d 件、值 %d 币、带出 %d 币" % [just.carried.size(), just.value, just.balance]
-			if just.is_extracted() else ("战败，保险箱里的 %d 件带出来了" % just.safe_items.size() if not just.safe_items.is_empty() else "战败，什么都没带出来")), 13, UiPalette.HEAL if just.is_extracted() else UiPalette.HP, 700))
+		var c := UiPalette.HEAL if just.is_extracted() else UiPalette.HP
+		info.add_child(_wrapped("刚才这一局：%s" % ("撤离，背出来 %d 件、值 %d 币、带出 %d 币" % [just.carried.size(), just.value, just.balance]
+			if just.is_extracted() else ("战败，保险箱里的 %d 件带出来了" % just.safe_items.size() if not just.safe_items.is_empty() else "战败，什么都没带出来")), 15,
+			UiTheme.ink_color(c) if tone == UiTheme.TONE_LIGHT else c, 460))
 	# 092：离开结算屏时地上一键出售了 —— 提示一句
 	var sold: Dictionary = payload.get("stash_sold", {})
 	if int(sold.get("count", 0)) > 0:
-		root.add_child(_wrapped("上一局地上没背出来的 %d 件已一键出售，得 %d 币。" % [int(sold["count"]), int(sold["funds"])], 13, UiPalette.STAMINA, 700))
-	root.add_child(_label("%d 局　撤离 %d　战败 %d　累计价值 %d　单局最高 %d　钱 %d　图鉴 %d / %d" % [
-		m.runs, m.extractions, m.deaths, m.score, m.best_value, m.funds, m.codex.size(), flow.items.ids(true).size()], 14, UiPalette.FG))
-	var buttons := _hbox(8)
-	_new_run_btn = _button("再来一局", flow.new_run, 16, UiPalette.Tier.PRIMARY)
-	buttons.add_child(_new_run_btn)
-	buttons.add_child(_button("回主菜单", flow.to_main_menu, 16, UiPalette.Tier.MINOR))
-	_hint = _label("", 12, UiPalette.STAMINA)
-	buttons.add_child(_hint)
-	root.add_child(buttons)
-
-	# 仓库页：格子占满整行（139）
-	var left := _vbox(8)
-	left.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(left)
-	_pages["warehouse"] = left
-	left.add_child(_label("仓库　拖进格子里就留下；带回来的背包先清空", 15, UiPalette.DIM))
+		info.add_child(_wrapped("上一局地上没背出来的 %d 件已一键出售，得 %d 币。" % [int(sold["count"]), int(sold["funds"])], 14, UiPalette.STAMINA, 460))
+	info.add_child(_wrapped("%d 局　撤离 %d　战败 %d　累计价值 %d　单局最高 %d\n钱 %d　图鉴 %d / %d" % [
+		m.runs, m.extractions, m.deaths, m.score, m.best_value, m.funds, m.codex.size(), flow.items.ids(true).size()], 15, UiPalette.FG, 460))
 	_wh = WarehousePanelScript.new()
-	_wh.fill_width = true
-	_wh.setup(flow, font)
+	_wh.setup(flow, font, _shelf, _drag)
 	_wh.changed.connect(_refresh)
-	_wh.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_wh.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.add_child(_wh)
+	var wh_box := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_BOX)
+	wh_box.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	wh_box.add_child(_wh)
+	home.add_child(wh_box)
 
 	# 调试台（139：原来仓库页的右列）
 	var right := _drawer.content
@@ -190,17 +254,84 @@ func open(payload: Dictionary) -> void:
 	right.add_child(log)
 
 	# 图鉴页、成就页（091）
-	_pages["codex"] = _build_codex(root)
-	_pages["achievements"] = _build_achievements(root)
-	_pages["sell"] = _build_sell(root)
-	_pages["tech"] = _build_tech(root)     # 110：局外科技（仓库扩建）与上交
-	# 139：抽屉盖在页面上（最后加 = 画在最上面），贴右缘、头部下面
+	# 164：中列的页都垫一块粗布（浅底墨字）—— 直接写在背景上，炉火那块亮处看不清
+	for pair in [["codex", _build_codex], ["achievements", _build_achievements], ["sell", _build_sell], ["tech", _build_tech]]:
+		var cloth := _cloth()
+		(pair[1] as Callable).call(cloth)     # 110：科技页（仓库扩建）与上交
+		_pages[pair[0]] = cloth
+	# 139：抽屉盖在右半边上（后加 = 画在上面），贴右缘、标题行下面
 	_drawer.wrap_contents()
 	add_child(_drawer)
-	_drawer.dock(96.0, 32.0)
-	head.resized.connect(func(): _drawer.dock(32.0 + head.size.y + 10.0, 32.0))
-	show_tab(String(payload.get("tab", "warehouse")))
+	_drawer.dock(MARGIN + SHELF_HEAD + 8.0, MARGIN)
+	add_child(_drag)     # 164：整屏一层拖拽，盖在三列上（残影画在最上面）
+	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	resized.connect(layout)
+	show_tab(String(payload.get("tab", "home")))
 	_refresh()
+	_refresh_shelf_title()
+	layout()
+
+
+#region 三列与仓库的大小（164）
+## 中列一页的底：一块粗布，占满中列
+func _cloth() -> PanelContainer:
+	var cloth := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_BOX)
+	cloth.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	cloth.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_middle.add_child(cloth)
+	return cloth
+
+
+
+## 按屏幕大小排：右半边占屏宽一半，仓库格子按右半边的宽高取小（40 ～ 80）；带回来的背包与右边同一个格子大小（中列放不下再缩）
+func layout() -> void:
+	if _right == null:
+		return
+	var screen := size if size.x > 0.0 and size.y > 0.0 else (get_viewport_rect().size if is_inside_tree() else Vector2(1920, 1080))
+	# 科技页（树 + 说明板 + 上交区）最窄要多宽先让给它；别的页按中列宽自己排（图鉴按宽算列数，不能拿它的最小宽来挤）
+	var mid_min: float = (_pages["tech"] as Control).get_combined_minimum_size().x if _tab == "tech" and _pages.has("tech") else 0.0
+	var half := maxf(0.0, minf(screen.x * 0.5 - MARGIN, screen.x - 2.0 * MARGIN - LEFT_W - 2.0 * COL_GAP - mid_min))
+	_right.custom_minimum_size.x = half
+	var frame := _frame_margins()
+	var c := _shelf.fit(half - frame.x, screen.y - 2.0 * MARGIN - SHELF_HEAD - 8.0 - frame.y)
+	var mid_w := screen.x - 2.0 * MARGIN - LEFT_W - half - 2.0 * COL_GAP
+	if _wh != null and flow.meta.board != null:
+		_wh.set_board_cell(minf(c, maxf(WarehousePages.CELL_MIN, floorf((mid_w - 50.0) / float(maxi(1, flow.meta.board.size.x))))))
+
+
+## 木架框的左右、上下内边距之和
+func _frame_margins() -> Vector2:
+	var box := _shelf_frame.get_theme_stylebox("panel") if _shelf_frame != null else null
+	if box == null:
+		return Vector2.ZERO
+	return Vector2(box.get_margin(SIDE_LEFT) + box.get_margin(SIDE_RIGHT), box.get_margin(SIDE_TOP) + box.get_margin(SIDE_BOTTOM))
+
+
+## 右半边的仓库（测试看）
+func shelf() -> WarehousePages:
+	return _shelf
+
+
+func drag_layer() -> DragLayer:
+	return _drag
+
+
+func _refresh_shelf_title() -> void:
+	if _shelf_title != null:
+		_shelf_title.text = "仓库　%d 件　%d 页" % [flow.meta.warehouse.item_count(), flow.meta.warehouse.page_count()]
+
+
+## 双击右边仓库的一件：按当前页 —— 家 → 置入带回来的背包；出售 → 卖；科技 → 上交；图鉴 / 成就 → 不做事
+func _on_shelf_double_clicked(view: ContainerView, uid: int) -> void:
+	match _tab:
+		"home":
+			_wh.quick_move(view, uid)
+		"sell":
+			sell(uid)
+		"tech":
+			if _tech != null:
+				_tech.submit(uid)
+#endregion
 
 
 #region 调试台（139）
@@ -234,7 +365,7 @@ var _tech = null
 func _build_tech(root: Control) -> Control:
 	_tech = TechPanelScript.new()
 	_tech.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_tech.setup(flow, font)
+	_tech.setup(flow, font, _drag)
 	_tech.changed.connect(_refresh)
 	root.add_child(_tech)
 	return _tech
@@ -253,15 +384,14 @@ var _sell_filter: int = 0
 var _sell_pick: OptionButton = null
 var _sell_preview: Label = null
 var _sell_line: Label = null
-var _sell_view: InventoryView = null
 
 
-## 基地商店：卖掉仓库里的东西 —— 双击一件卖一件，或按稀有度一键卖。得的钱进局外的钱（作者：暂无出售效果，先攒着）
+## 基地商店：卖掉仓库里的东西 —— 双击右边仓库的一件卖一件（164：这一页不再自己画仓库），或按稀有度一键卖。得的钱进局外的钱（作者：暂无出售效果，先攒着）
 func _build_sell(root: Control) -> Control:
 	var page := _vbox(8)
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(page)
-	page.add_child(_label("出售　双击仓库里的一件卖掉；或选一档稀有度一键卖。回定价的 %d%%，钱进局外（现在还没处花）" % int(round(flow.sell_ratio() * 100)), 15, UiPalette.DIM))
+	page.add_child(_wrapped("出售　双击右边仓库里的一件卖掉；或选一档稀有度一键卖。回定价的 %d%%，钱进局外（现在还没处花）" % int(round(flow.sell_ratio() * 100)), 15, UiPalette.DIM, 460))
 	var row := _hbox(10)
 	page.add_child(row)
 	row.add_child(_label("一键出售", 13, UiPalette.DIM))
@@ -275,25 +405,9 @@ func _build_sell(root: Control) -> Control:
 	row.add_child(_button("一键出售", func(): sell_filtered(), 13, UiPalette.Tier.PRIMARY))
 	_sell_line = _label("", 13, UiPalette.STAMINA)
 	page.add_child(_sell_line)
-	_sell_view = InventoryView.new()
-	_sell_view.label_font = font
-	_sell_view.inventory = flow.meta.warehouse
-	_sell_view.show_adjacency = false
-	_sell_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_sell_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): sell(uid))
-	var sell_scroll := ScrollBox.wrap(_sell_view)     # 110：竖向滚动
-	sell_scroll.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	page.add_child(sell_scroll)
-	page.resized.connect(func(): fit_sell_to_width(page.size.x))     # 139：和仓库页一样撑满整行
 	flow.meta.warehouse.changed.connect(_refresh_sell)
 	set_sell_filter(0)
 	return page
-
-
-## 139：出售页的仓库格子按 [param width] 放大（60 ～ 80）
-func fit_sell_to_width(width: float) -> void:
-	if _sell_view != null and _sell_view.inventory != null:
-		_sell_view.cell_px = WarehousePanelScript.cell_for(width, _sell_view.inventory.size.x)
 
 
 ## 选一档（SELL_FILTERS 的下标）
@@ -618,25 +732,37 @@ func codex_tiles() -> Array[CodexTile]:
 	return _codex_tiles
 
 
-## 切页签："warehouse" / "codex"
+## 切页："home"（家，默认）/ "codex" / "achievements" / "sell" / "tech"。老名字 "warehouse" 算家（164 之前仓库是一页）
 func show_tab(name: String) -> void:
-	if not _pages.has(name):
-		name = "warehouse"
+	if name == "warehouse" or not _pages.has(name):
+		name = "home"
 	_tab = name
 	for key in _pages:
 		(_pages[key] as Control).visible = key == name
-		if _tab_btns.has(key):
-			(_tab_btns[key] as Button).set_pressed_no_signal(key == name)
+	for key in _tab_btns:
+		var b := _tab_btns[key] as Button
+		b.set_pressed_no_signal(key == name)
+	layout.call_deferred()     # 中列换了页，最窄宽度可能变了
+	if _tab_mark != null:
+		if _tab_mark.get_parent() != null:
+			_tab_mark.get_parent().remove_child(_tab_mark)
+		if _tab_btns.has(name):
+			(_tab_btns[name] as Button).add_child(_tab_mark)
+
+
+## 164：点左列一个页签 —— 已经选着它就回家，否则切过去
+func toggle_tab(key: String) -> void:
+	show_tab("home" if _tab == key else key)
 
 
 func tab() -> String:
 	return _tab
 
 
-## 090：Esc = 返回上一级 —— 在图鉴页先回仓库页，仓库页再回主菜单
+## 090：Esc = 返回上一级 —— 在别的页先回家，家里再回主菜单
 func escape() -> bool:
-	if _tab != "warehouse":
-		show_tab("warehouse")
+	if _tab != "home":
+		show_tab("home")
 		return true
 	flow.to_main_menu()
 	return true

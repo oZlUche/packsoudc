@@ -43,11 +43,16 @@ const LABEL_OVERLAY_TITLE := &"LabelOverlayTitle"
 const PANEL_TOOLTIP := &"PanelTooltip"
 ## 157 补充二：名牌底（战前 / 回放两屏的名牌）
 const PANEL_NAMEPLATE := &"PanelNameplate"
+## 164：基地的「家」套件 —— 木牌按钮（左列页签与两颗大按钮；主档是「再来一局」）、粗布文本框（中列读数）、木架（右半边仓库的框）
+const BUTTON_HOME := &"ButtonHome"
+const BUTTON_HOME_PRIMARY := &"ButtonHomePrimary"
+const PANEL_HOME_BOX := &"PanelHomeBox"
+const PANEL_SHELF := &"PanelShelf"
 
 ## 全部变体（测试看齐全）
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
 	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
-	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP, PANEL_NAMEPLATE]
+	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF]
 
 const TITLE_SIZE := 18
 const PANEL_MARGIN := 16
@@ -72,6 +77,16 @@ const ART_NAMEPLATE := "nameplate_stone"
 const ART_PORTRAIT_FRAME := "portrait_frame"
 const ART_PORTRAIT_EMPTY := "portrait_empty"
 const NAMEPLATE_MARGIN := 12
+## 164：家的套件（`assets/ui/home/`）：整屏背景（铺满裁边，json `stretch: cover`）、木牌按钮五态、粗布框、木架框、页签选中的挂牌
+const ART_HOME_BG := "home/bg_home"
+const ART_HOME_BTN := "home/btn_wood"
+const ART_HOME_BTN_PRIMARY := "home/btn_wood_primary"
+const ART_HOME_BOX := "home/panel_cloth"
+const ART_SHELF := "home/shelf"
+const ART_TAB_MARK := "home/tab_mark"
+## 家的按钮字号：页签 / 回主菜单 20，「再来一局」28
+const HOME_BUTTON_SIZE := 20
+const HOME_PRIMARY_SIZE := 28
 const RICH_FONT_SIZES := ["normal_font_size", "bold_font_size", "italics_font_size", "bold_italics_font_size", "mono_font_size"]
 
 ## 并进默认主题的那一份；[method refresh] 原地重填它
@@ -222,6 +237,15 @@ static func make_button(text: String, handler: Callable, tier: int = UiPalette.T
 	return b
 
 
+## 164：家的木牌按钮（[constant BUTTON_HOME]；[param primary] = 「再来一局」那颗）
+static func make_home_button(text: String, handler: Callable, primary: bool = false) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.theme_type_variation = BUTTON_HOME_PRIMARY if primary else BUTTON_HOME
+	b.pressed.connect(handler)
+	return b
+
+
 static func vbox(separation: int = 8) -> VBoxContainer:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", separation)
@@ -287,11 +311,11 @@ const TONE_LIGHT := &"light"
 ## **新加面板变体必须登记在这里**（测试看全）
 const PANEL_TONES := {
 	PANEL_DARK: TONE_DARK, PANEL_LINE: TONE_DARK, PANEL_HUD: TONE_DARK, PANEL_OVERLAY: TONE_DARK, PANEL_TOOLTIP: TONE_DARK,
-	PANEL_NAMEPLATE: TONE_DARK,
+	PANEL_NAMEPLATE: TONE_DARK, PANEL_HOME_BOX: TONE_LIGHT, PANEL_SHELF: TONE_DARK,
 }
 ## 面板变体用哪张美术图（有图时深浅读它的 json）
 const PANEL_ART := {PANEL_DARK: ART_PANEL, PANEL_LINE: ART_INSET, PANEL_HUD: ART_HUD, PANEL_OVERLAY: ART_FRAME, PANEL_TOOLTIP: ART_TOOLTIP,
-	PANEL_NAMEPLATE: ART_NAMEPLATE}
+	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF}
 ## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸
 const INK := Color("2e2219")
 const INK_SOFT := Color("5a4433")
@@ -453,6 +477,25 @@ static func dress_backdrop(rect: ColorRect) -> TextureRect:
 	return tile
 
 
+## 164：基地整屏背景（`home/bg_home.png`，按比例铺满、多的裁掉）；没图什么也不加、返回 null
+static func dress_home_backdrop(rect: ColorRect) -> TextureRect:
+	var tex := art(ART_HOME_BG)
+	if tex == null:
+		return null
+	var pic := TextureRect.new()
+	pic.name = "HomeBackdrop"
+	pic.texture = tex
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var stone := rect.get_node_or_null(^"StoneBackdrop")
+	if stone != null:
+		stone.visible = false     # 家有自己的背景，石板不铺
+	rect.add_child(pic)
+	return pic
+
+
 ## 设置里换了底色：铺着的石板跟着染
 static func tint_backdrop(rect: ColorRect) -> void:
 	var tile := rect.get_node_or_null(^"StoneBackdrop") as TextureRect
@@ -508,6 +551,14 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_type_variation(PANEL_NAMEPLATE, "PanelContainer")
 	var plate: StyleBox = _art_box(ART_NAMEPLATE)
 	t.set_stylebox("panel", PANEL_NAMEPLATE, plate if plate != null else _box(panel_bg.darkened(0.15), UiPalette.LINE.lightened(0.25), NAMEPLATE_MARGIN))
+	# 164：家的粗布框（浅底墨字）、仓库木架（深底）；没图回落到面板的平面底
+	t.set_type_variation(PANEL_HOME_BOX, "PanelContainer")
+	var cloth: StyleBox = _art_box(ART_HOME_BOX)
+	t.set_stylebox("panel", PANEL_HOME_BOX, cloth if cloth != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), PANEL_MARGIN))
+	t.set_type_variation(PANEL_SHELF, "PanelContainer")
+	var shelf: StyleBox = _art_box(ART_SHELF)
+	t.set_stylebox("panel", PANEL_SHELF, shelf if shelf != null else _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
+	_home_buttons(t)
 	# 150：读数组件（原来地图屏那条 HUD 的无边窄底，搬成变体）
 	t.set_type_variation(PANEL_HUD, "PanelContainer")
 	var hud_art: StyleBox = _art_box(ART_HUD, false, HUD_MARGIN)
@@ -571,6 +622,33 @@ static func _button_variation(t: Theme, name: StringName, tier: int) -> void:
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
 		t.set_color(state, name, text)
 	t.set_color("font_disabled_color", name, UiPalette.DIM)
+
+
+## 164：家的木牌按钮。有图：五态九宫格（常态 / 悬停 / 按下 / 禁用 + 主档一张），浅木墨字；没图：回落到次档 / 主档的样子
+static func _home_buttons(t: Theme) -> void:
+	for pair in [[BUTTON_HOME, UiPalette.Tier.SECONDARY, HOME_BUTTON_SIZE], [BUTTON_HOME_PRIMARY, UiPalette.Tier.PRIMARY, HOME_PRIMARY_SIZE]]:
+		var name: StringName = pair[0]
+		_button_variation(t, name, pair[1])
+		t.set_font_size("font_size", name, pair[2])
+		var normal := _art_box(ART_HOME_BTN_PRIMARY if name == BUTTON_HOME_PRIMARY else ART_HOME_BTN)
+		if normal == null:
+			continue
+		var pad := Vector2i(int(round(pair[2] * 0.9)), int(round(pair[2] * 0.4)))
+		var states := {"normal": normal, "hover": _art_box(ART_HOME_BTN + "_hover"), "pressed": _art_box(ART_HOME_BTN + "_pressed"),
+			"hover_pressed": _art_box(ART_HOME_BTN + "_pressed"), "disabled": _art_box(ART_HOME_BTN + "_disabled")}
+		for state in states:
+			var box: StyleBoxTexture = states[state] if states[state] != null else normal
+			if name == BUTTON_HOME_PRIMARY and state == "hover":
+				box = _art_box(ART_HOME_BTN_PRIMARY)
+				box.modulate_color = Color(1.08, 1.08, 1.08)
+			box.content_margin_left = pad.x
+			box.content_margin_right = pad.x
+			box.content_margin_top = pad.y
+			box.content_margin_bottom = pad.y
+			t.set_stylebox(state, name, box)
+		for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
+			t.set_color(state, name, INK)
+		t.set_color("font_disabled_color", name, INK_SOFT)
 
 
 static func _button_box(bg: Color, edge: Color, pad: Vector2i) -> StyleBoxFlat:

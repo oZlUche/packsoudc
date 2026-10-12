@@ -263,7 +263,7 @@ static func frame_event_harvest(t: TestCase, root: Window) -> void:
 	var small: ItemDef = null
 	for id in c.items.ids():
 		var def: ItemDef = c.items.get_def(StringName(String(id)))
-		if def.shape.size_rotated(0) == Vector2i.ONE and not def.is_bag and def.belt_use == null and run.board.can_admit(def):
+		if def.shape.size_rotated(0) == Vector2i.ONE and not def.is_bag and run.board.can_admit(def):
 			small = def
 			break
 	var detail := {"items": [String(small.id), String(small.id)]}

@@ -1,12 +1,10 @@
-## 150 补 1（作者定）：147 的腰带做成地图屏上的一件组件 —— 一条 1 × N 的格子，随布局摆。
-##
-## 双击里面一件 = 用掉（同背包里的腰带，走 [method GameFlow.use_belt]；用不了的原因写在提示行）。
-## 自带一层拖拽：腰带里的拖出去放哪落在地上哪；背包没开时地上的东西也能拖进来（背包开着时地上归背包那层）。
+## 150 补 1（作者定）：147 的腰带做成地图屏上的一件组件，随布局摆。
+## 160（作者定）：腰带离开背包，只留这一处，默认在右下角；画成一排圆槽（[BeltSlots]）—— 一格一种随身技能、右下角写几个。
+## 双击一个圆 = 用一个（走 [method GameFlow.use_belt]；用不了的原因在圆上方飘一行）。没有拖进拖出（随身技能不是道具）。
 ## 这一局没装腰带模块 = 空着（布局里写了也不报错，平时藏着）
 extends HudWidget
 
-var view: InventoryView = null
-var drag: DragLayer = null
+var slots: BeltSlots = null
 
 
 func title() -> String:
@@ -15,40 +13,39 @@ func title() -> String:
 
 func setup(p_run: RunState, p_screen: Control) -> void:
 	var belt := BeltModule.of(p_run)
-	if view == null and belt != null and belt.belt != null:
+	if slots == null and belt != null:
 		_text.visible = false
-		view = InventoryView.new()
-		view.label_font = p_screen.get("font") if p_screen != null else null
-		view.inventory = belt.belt
-		view.show_adjacency = false
-		add_child(view)
-		view.item_double_clicked.connect(func(_v: ContainerView, uid: int): use(uid))
-		drag = DragLayer.new()
-		drag.label_font = view.label_font
-		add_child(drag)
-		drag.register_view(view)
-		drag.stash = p_run.storage
-		drag.drop_outside_to_stash = true
-		var ground := GroundLayer.current()
-		if ground != null and ground.stash == p_run.storage:
-			drag.register_view(ground)
+		slots = BeltSlots.new()
+		slots.font = p_screen.get("font") if p_screen != null else null
+		slots.on_use = use
+		add_child(slots)
+		slots.bind(belt)
 	super.setup(p_run, p_screen)
 
 
+func watch() -> Array[Signal]:
+	var belt := BeltModule.of(run)
+	return [belt.changed] as Array[Signal] if belt != null else [] as Array[Signal]
+
+
+func _idle_mouse_filter() -> Control.MouseFilter:
+	return Control.MOUSE_FILTER_PASS     # 圆槽自己接双击与悬停
+
+
 func has_content() -> bool:
-	return view != null
+	return slots != null
 
 
 func text_of() -> String:
-	return "腰带" if view != null else ""
+	return "腰带" if slots != null else ""
 
 
-## 用掉腰带里的一件。返回用不了的原因（空串 = 用了）
-func use(uid: int) -> String:
-	var inst := view.inventory.get_item(uid) if view != null else null
-	var name := Names.of_item(inst) if inst != null else ""
+## 用一个随身技能。返回用不了的原因（空串 = 用了）
+func use(skill_id: StringName) -> String:
+	var def := BeltSkillDef.find(skill_id)
+	var name := def.display_name if def != null else String(skill_id)
 	var flow: Variant = screen.get("flow") if screen != null else null
-	var why: String = flow.use_belt(uid) if flow != null else run.hooks.belt_use(uid)
-	if screen != null and screen.has_method("say"):
-		screen.call("say", "「%s」现在用不了：%s" % [name, why] if why != "" else "用了「%s」" % name)
+	var why: String = flow.use_belt(skill_id) if flow != null else run.hooks.belt_use(skill_id)
+	if why == "" and screen != null and screen.has_method("say"):
+		screen.call("say", "用了「%s」" % name)
 	return why

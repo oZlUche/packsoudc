@@ -283,22 +283,32 @@ func _fit(r: Rect2) -> Rect2:
 	return Rect2(p, r.size)
 
 
-## 鼠标下最上面那一件（后放的在上）；没有 -1
+## 鼠标下最上面那一件（后放的在上）；没有 -1。162：半空中的也接（按它此刻画在哪、多大），排队还没出现的不接
 func uid_at_local(p: Vector2) -> int:
 	if stash == null:
 		return -1
 	var list := stash.items()
 	for i in range(list.size() - 1, -1, -1):
 		var inst := list[i] as ItemInstance
-		if _landing.has(inst.uid) and not bool(_landing[inst.uid].get("in_place", false)):
-			continue     # 134：半空中的不接（0.28 秒，几乎感觉不到）；就地落下的不在半空，照接
-		var r := item_rect(inst.uid)
-		if not r.has_point(p):
+		if _landing.has(inst.uid) and bool(landing_pose(inst.uid)["hidden"]):
 			continue
-		var cell := Vector2i(((p - r.position) / InventoryView.CELL).floor())
+		var cell := _cell_under(inst.uid, p)
 		if inst.def.cells_rotated(inst.rotation).has(cell):
 			return inst.uid
 	return -1
+
+
+## [param p] 落在这一件的哪一格（不夹边；包围盒外是越界的格）：正在落的按此刻的位置与缩放（绕包围盒中心）反推
+func _cell_under(uid: int, p: Vector2) -> Vector2i:
+	var r := item_rect(uid)
+	var q := p - r.position
+	if _landing.has(uid):
+		var pose := landing_pose(uid)
+		var k := maxf(0.01, float(pose["scale"]))
+		q = (p - ((pose["pos"] as Vector2) + r.size * 0.5)) / k + r.size * 0.5
+	if q.x < 0.0 or q.y < 0.0:
+		return Vector2i(-1, -1)
+	return Vector2i((q / InventoryView.CELL).floor())
 
 
 ## 抓在这一件的哪一格（拖拽层反推落点用）
@@ -306,7 +316,7 @@ func grab_cell_at(uid: int, local: Vector2) -> Vector2i:
 	var r := item_rect(uid)
 	if r.size == Vector2.ZERO:
 		return Vector2i.ZERO
-	var c := Vector2i(((local - r.position) / InventoryView.CELL).floor())
+	var c := _cell_under(uid, local)
 	var span := Vector2i(r.size / InventoryView.CELL)
 	return Vector2i(clampi(c.x, 0, maxi(0, span.x - 1)), clampi(c.y, 0, maxi(0, span.y - 1)))
 
@@ -435,6 +445,8 @@ func _gui_input(event: InputEvent) -> void:
 		item_double_clicked.emit(self, uid)     # 084：双击 = 快速置入棋盘
 	else:
 		grab_requested.emit(self, uid, mb.position)
+	if not stash.has_item(uid):
+		_landing.erase(uid)     # 162：半空中被抓走 —— 动画停在这一刻，拖拽层接手
 	accept_event()
 
 

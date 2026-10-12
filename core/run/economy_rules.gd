@@ -39,6 +39,9 @@ extends Resource
 ## 刷新一次多少钱；每刷一次涨 shop_refresh_step
 @export var shop_refresh_cost: int = 10
 @export var shop_refresh_step: int = 5
+## 160 补一：货架之外一排「随身」—— 候选的随身技能 id → 权重；每次刷新跟着货架一起抽 1 ～ [member belt_picks] 种，买了直接进腰带。空 = 没有这一排
+@export var belt_stock: Dictionary = {}
+@export_range(1, 4) var belt_picks: int = 2
 
 @export_group("付费撤离点")
 ## 几个中途撤离点收费（挑最深的那几个）

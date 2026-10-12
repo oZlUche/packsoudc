@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="TechDef" format=3]
 
-[ext_resource type="Script" path="res://core/meta/techs/warehouse_rows.gd" id="1_ibvh2"]
+[ext_resource type="Script" path="res://core/meta/techs/warehouse_pages.gd" id="1_ibvh2"]
 [ext_resource type="Script" path="res://core/meta/tech_def.gd" id="2_m03nu"]
 [ext_resource type="Script" path="res://core/meta/tech_tier.gd" id="3_kfasi"]
 
@@ -51,6 +51,6 @@ display_name = "仓库扩建"
 display_names = {
 "en": "Warehouse Expansion"
 }
-description = "仓库往下长，放得下更多带回来的东西；仓库里的东西原地不动。"
+description = "仓库多一页，放得下更多带回来的东西；各页独立，左边的页签切换。"
 effect = SubResource("Resource_u1l1s")
 tiers = Array[ExtResource("3_kfasi")]([SubResource("Resource_h55m7"), SubResource("Resource_44tsh"), SubResource("Resource_11jn4"), SubResource("Resource_lq7uq"), SubResource("Resource_byk3s"), SubResource("Resource_mneyu")])

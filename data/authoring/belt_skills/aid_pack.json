@@ -1,0 +1,13 @@
+{
+  "id": "aid_pack",
+  "display_name": "急救包",
+  "display_names": {
+    "en": "Aid Pack"
+  },
+  "description": "路上包扎一下，缓口气。",
+  "effects": [
+    {
+      "type": "mend_vitality"
+    }
+  ]
+}

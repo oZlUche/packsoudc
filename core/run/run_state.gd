@@ -204,7 +204,6 @@ static func start(
 		funds = p_character.starting_funds
 	s.wallet = Wallet.new(ctx.starting_funds_of(funds))
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
-	s.board.reject_tags = [ItemDef.BELT] as Array[StringName]     # 147：随身道具不上棋盘（开局落在地上，腰带装上时挪过去）
 	s.storage = ItemStash.new(STORAGE_ID, 0)
 	s._bind_tracker()
 	place_layout(s.board, p_layout, p_items, s.storage)
@@ -1112,9 +1111,6 @@ func _owned_now() -> Array:
 	var safe := SafeModule.of(self)
 	if safe != null and safe.inventory != null:
 		out.append_array(safe.inventory.items())
-	var belt := BeltModule.of(self)     # 147
-	if belt != null and belt.belt != null:
-		out.append_array(belt.belt.items())
 	return out
 
 
@@ -1211,7 +1207,6 @@ static func from_dict(
 	s.vitality = Vitality.from_dict(d.get("vitality", {}))
 	s.wallet = Wallet.from_dict(d.get("wallet", {}))
 	s.board = GridInventory.from_dict(d.get("board", {}), p_items)
-	s.board.reject_tags = [ItemDef.BELT] as Array[StringName]     # 147：老档里没写
 	s.storage = ItemStash.from_dict(d.get("storage", {}), p_items)
 	var mods_raw: Variant = d.get("modules", {})
 	s.modules_saved = (mods_raw as Dictionary).duplicate(true) if mods_raw is Dictionary else {}

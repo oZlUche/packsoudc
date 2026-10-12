@@ -178,3 +178,20 @@ static func button_variation(tier: int) -> StringName:
 			return UiTheme.BUTTON_DIM
 	return UiTheme.BUTTON_SECONDARY
 #endregion
+
+
+## 161：一颗心（HUD 体力、开局屏角色卡共用）：两个圆 + 一个朝下的三角，外面一圈暗线（黑心在深底上也看得见）。
+## [param at] 是 [param s] × [param s] 方块的左上角
+static func draw_heart(canvas: CanvasItem, at: Vector2, s: float, col: Color) -> void:
+	var r := s * 0.27
+	var l := at + Vector2(s * 0.29, s * 0.33)
+	var rr := at + Vector2(s * 0.71, s * 0.33)
+	var tri := PackedVector2Array([at + Vector2(s * 0.04, s * 0.42), at + Vector2(s * 0.96, s * 0.42), at + Vector2(s * 0.5, s * 0.95)])
+	canvas.draw_circle(l, r, col)
+	canvas.draw_circle(rr, r, col)
+	canvas.draw_colored_polygon(tri, col)
+	var edge := DIM
+	canvas.draw_arc(l, r, PI * 0.8, PI * 2.0, 12, edge, 1.0, true)
+	canvas.draw_arc(rr, r, PI, PI * 2.2, 12, edge, 1.0, true)
+	canvas.draw_line(tri[0], tri[2], edge, 1.0, true)
+	canvas.draw_line(tri[1], tri[2], edge, 1.0, true)
