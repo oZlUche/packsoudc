@@ -103,6 +103,13 @@ static func frame_warehouse_fills_row(t: TestCase, root: Window) -> void:
 	t.eq(view.cell_at_local(mid), Vector2i(3, 2), "像素 → 格按 cell_px 算")
 	t.eq(view.cell_origin_px(Vector2i(3, 2)), Vector2(3, 2) * c, "格 → 像素按 cell_px 算")
 	t.eq(wh.fit_to_width(500.0), InventoryView.CELL, "窄了缩回 60")
+	# 作者 2026-10-12（仓库屏太空）：最多几行按剩下的高度算 —— 放得下整块显示，不够才滚；至少 4 行
+	var rows_all: int = f.meta.warehouse.size.y
+	var cell: float = wh.cell_px()
+	t.eq(wh.fit_to_height(cell * (rows_all + 3)), rows_all + 3, "高度够：行数按高度算")
+	t.eq(wh.get("_wh_scroll").custom_minimum_size.y, rows_all * cell, "整块仓库都显示（%d 行）" % rows_all)
+	t.eq(wh.fit_to_height(cell * 2.0), WarehousePanelScript.MIN_ROWS, "矮了：至少 4 行")
+	t.eq(wh.get("_wh_scroll").custom_minimum_size.y, mini(rows_all, WarehousePanelScript.MIN_ROWS) * cell, "矮了：显示 4 行、其余滚动")
 	screen.show_tab("sell")
 	screen.fit_sell_to_width(1600.0)
 	t.eq(screen._sell_view.cell_px, 80.0, "出售页的仓库也撑满、同样封顶 80")

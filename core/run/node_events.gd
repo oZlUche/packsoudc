@@ -361,6 +361,10 @@ func choose(i: int) -> bool:
 			return true
 		event_resolved.emit(node, &"撤离", {"log": ["付不起这个撤离点的费用（%d 币），先去挣点钱，或者找别的出口。" % PaidExtracts.fee_of(node)]})
 		return true
+	# 作者 2026-10-12：先回地图 —— 不标用过，记一笔，回到这个点时再弹同一个事件（[method RunState._arrived_again]）
+	if ctx.revisit:
+		node.content["revisit_event"] = true
+		return true
 	if ctx.next_event != &"":
 		var next: EventDef = def_by_id(ctx.next_event)
 		if next != null:

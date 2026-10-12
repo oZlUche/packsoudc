@@ -25,7 +25,9 @@ var widgets: Dictionary = {}
 var editing: bool = false
 ## 150 补 2：调试模式（屏幕从 [member GameSettings.debug_mode] 拿来设）。关着时 `debug_only` 的不造、不占地上
 var debug: bool = true
-## 右边那一条此刻占多宽（[method arrange] 算）
+## 作者 2026-10-12：右边另外让出多宽（调试台抽屉开着时盖在右边：右边那一条整体往左挪这么多，地图跟着让）
+var extra_right: float = 0.0
+## 右边那一条此刻占多宽（[method arrange] 算，含 [member extra_right]）
 var _right: float = 0.0
 var _run: RunState = null
 var _screen: Control = null
@@ -99,7 +101,7 @@ func top_inset() -> float:
 	return bottom
 
 
-## 150 补 1：右边那一条占多宽（地图屏把地图往左让这么多）
+## 150 补 1：右边那一条占多宽（地图屏把地图往左让这么多）；调试台开着时连它让出的一起算
 func right_inset() -> float:
 	return _right
 
@@ -111,7 +113,7 @@ static func on_right(anchor: String) -> bool:
 
 ## 这个锚点对齐用的那块的大小：右边那一条按整块，其余按让出右边之后剩下的
 func _frame(anchor: String) -> Vector2:
-	return size if on_right(anchor) else Vector2(maxf(0.0, size.x - _right), size.y)
+	return Vector2(maxf(0.0, size.x - extra_right), size.y) if on_right(anchor) else Vector2(maxf(0.0, size.x - _right), size.y)
 
 
 #region 摆放
@@ -143,7 +145,7 @@ func arrange() -> void:
 			lines[ln] = []
 		(lines[ln] as Array).append(w)
 	# 先摆右边那一条，量出它占多宽；其余的在剩下那块里摆
-	_right = 0.0
+	_right = extra_right
 	for key in order:
 		if on_right(String(groups[key]["anchor"])):
 			_place_group(groups[key])
@@ -240,10 +242,18 @@ func toggle_tier(w: HudWidget) -> void:
 	var e := layout.entry_of(w.id)
 	if e.is_empty():
 		return
-	e["tier"] = "small" if String(e.get("tier", "small")) == "large" else "large"
+	e["tier"] = {"small": "double", "double": "large", "large": "small"}.get(String(e.get("tier", "small")), "small")
 	w.set_tier(HudLayout.TIERS[e["tier"]])
 	arrange()
 	layout_changed.emit()
+
+
+## 作者 2026-10-12：右边另外让出 [param w]（调试台开着时传它的宽，关上传 0）
+func set_extra_right(w: float) -> void:
+	if is_equal_approx(w, extra_right):
+		return
+	extra_right = w
+	arrange()
 
 
 ## 「保存布局」：写到 [method HudLayout.save_path]（或 [param path]）

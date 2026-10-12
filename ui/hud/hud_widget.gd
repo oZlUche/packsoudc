@@ -6,7 +6,8 @@
 class_name HudWidget
 extends PanelContainer
 
-enum Tier { LARGE, SMALL }
+## DOUBLE（作者 2026-10-12）：小档的 200%，地图顶栏那一排用它
+enum Tier { LARGE, SMALL, DOUBLE }
 
 ## 布局文件里引用的名字
 var id: StringName = &""
@@ -94,7 +95,7 @@ func has_content() -> bool:
 
 func set_tier(t: Tier) -> void:
 	tier = t
-	_text.theme_type_variation = UiTheme.LABEL_HUD_LARGE if t == Tier.LARGE else UiTheme.LABEL_HUD
+	_text.theme_type_variation = {Tier.LARGE: UiTheme.LABEL_HUD_LARGE, Tier.DOUBLE: UiTheme.LABEL_HUD_DOUBLE}.get(t, UiTheme.LABEL_HUD)
 	_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if t == Tier.LARGE else HORIZONTAL_ALIGNMENT_LEFT
 	reset_size()
 

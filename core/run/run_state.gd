@@ -261,6 +261,11 @@ func _after_move(was_visited: bool, reason: StringName) -> void:
 ## 回到走过的点（头一回踩的在 _on_arrive 里已经发过）
 func _arrived_again(id: int) -> void:
 	arrived.emit(id, false)
+	# 作者 2026-10-12：上回选了「先回地图」的点：回来同一个事件再弹（门禁不能借走开跳过）
+	if events != null and map.has_node(id) and bool(map.get_node(id).content.get("revisit_event", false)):
+		map.get_node(id).content.erase("revisit_event")
+		events.handle(map.get_node(id))
+		return
 	# 091（作者定）：商店可以回头再逛 —— 回到走过的商店点就把店再开起来；货架 / 刷新次数 / 卖掉的都记在节点内容里，刷新价不重置
 	if events != null and map.has_node(id) and NodeEvents.effective_type(map.get_node(id)) == &"shop":
 		events.reopen_shop(map.get_node(id))

@@ -17,7 +17,9 @@ const ANCHORS := {
 	"left": Vector2(0, 0.5), "center": Vector2(0.5, 0.5), "right": Vector2(1, 0.5),
 	"bottom_left": Vector2(0, 1), "bottom": Vector2(0.5, 1), "bottom_right": Vector2(1, 1),
 }
-const TIERS := {"large": HudWidget.Tier.LARGE, "small": HudWidget.Tier.SMALL}
+const TIERS := {"large": HudWidget.Tier.LARGE, "small": HudWidget.Tier.SMALL, "double": HudWidget.Tier.DOUBLE}
+## 布局文件的版本：默认布局改了就加一，旧版本存的那份不用（回默认）。2 = 作者 2026-10-12：提示行进调试台、去掉行动点与距离、顶栏 200%
+const VERSION := 2
 ## 「摆读数」松手时吸附的网格
 const GRID := 8
 const DEV_DIR := "res://data/authoring/ui_layouts"
@@ -36,8 +38,9 @@ static func default_for(p_screen: String) -> HudLayout:
 	l.screen = p_screen
 	if p_screen == "map":
 		l.entries.append(entry(&"countdown", "top", Vector2(0, 0), 0, "large"))
+		# 作者 2026-10-12：行动点与距离没有意义 —— 默认藏起来（条目与组件留着，摆读数时右键能放出来）；剩下的放大到 200%
 		for id in [&"action_points", &"distances", &"vitality", &"wallet", &"ground_count", &"encumbrance", &"faith", &"buffs", &"erosion"]:
-			l.entries.append(entry(id, "top", Vector2(0, 0), 1, "small"))
+			l.entries.append(entry(id, "top", Vector2(0, 0), 1, "double", not (id in HIDDEN_BY_DEFAULT)))
 		var line := 0
 		for id in COLUMN:
 			l.entries.append(entry(id, "top_right", COLUMN_OFFSET, line))
@@ -47,9 +50,12 @@ static func default_for(p_screen: String) -> HudLayout:
 
 
 ## 默认布局里右上那一列（自上而下）与它离右上角的偏移（右上角是 DevNav 的按钮），日志离右下角的偏移
-const COLUMN: Array[StringName] = [&"dev_drawer", &"status", &"bag_button", &"reopen_button", &"extract_button", &"belt",
+## 作者 2026-10-12：提示行挪进调试台（地图屏自己放，不再是部件）
+const COLUMN: Array[StringName] = [&"dev_drawer", &"bag_button", &"reopen_button", &"extract_button", &"belt",
 	&"skills", &"menu_button", &"routes"]
 const COLUMN_OFFSET := Vector2(-8, 32)
+## 默认布局里藏着的读数
+const HIDDEN_BY_DEFAULT: Array[StringName] = [&"action_points", &"distances"]
 const LOG_OFFSET := Vector2(-8, -8)
 
 
@@ -65,6 +71,8 @@ static func load_for(p_screen: String, problems: Array[String] = []) -> HudLayou
 		if not FileAccess.file_exists(path):
 			continue
 		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+		if parsed is Dictionary and int((parsed as Dictionary).get("version", 1)) != VERSION:
+			continue     # 旧版本存的：默认布局改过了，不用它
 		var l := from_dict(parsed if parsed is Dictionary else {}, problems)
 		if l != null and problems.is_empty():
 			return l
@@ -118,7 +126,7 @@ func to_dict() -> Dictionary:
 		if bool(e.get("debug_only", false)):
 			d["debug_only"] = true
 		out.append(d)
-	return {"screen": screen, "widgets": out}
+	return {"screen": screen, "version": VERSION, "widgets": out}
 
 
 ## 校验并读成布局；有错写进 [param problems] 并返回 null（只校验 id、锚点、档位、偏移的形状）
@@ -149,7 +157,7 @@ static func from_dict(d: Dictionary, problems: Array[String] = []) -> HudLayout:
 			problems.append("%s：没有这个锚点 '%s'（九宫：%s）" % [at, anchor, ", ".join(ANCHORS.keys())])
 		var tier := String(w.get("tier", "small"))
 		if not TIERS.has(tier):
-			problems.append("%s：档位只有 large / small，写的是 '%s'" % [at, tier])
+			problems.append("%s：档位只有 %s，写的是 '%s'" % [at, " / ".join(TIERS.keys()), tier])
 		var off: Variant = w.get("offset", [0, 0])
 		if not (off is Array and (off as Array).size() == 2 and (off[0] is float or off[0] is int) and (off[1] is float or off[1] is int)):
 			problems.append("%s：offset 得是两个数 [x, y]" % at)

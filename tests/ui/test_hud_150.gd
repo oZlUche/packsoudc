@@ -20,6 +20,12 @@ static func run_layout(t: TestCase) -> void:
 	t.eq(int(d.entry_of(&"countdown")["line"]), 0, "倒计时在第 0 行")
 	for id in [&"action_points", &"vitality", &"wallet", &"faith"]:
 		t.eq(int(d.entry_of(id)["line"]), 1, "%s 在倒计时下面那一行" % id)
+		t.eq(String(d.entry_of(id)["tier"]), "double", "%s 是 200%% 档（作者 2026-10-12）" % id)
+	for id in [&"action_points", &"distances"]:
+		t.check(not bool(d.entry_of(id)["visible"]), "%s 默认藏着（作者 2026-10-12：没有意义）" % id)
+	t.check(not HudLayout.COLUMN.has(&"status") and not HudWidgets.has(&"status"), "提示行不再是读数（挪进调试台）")
+	t.eq(int(d.to_dict()["version"]), HudLayout.VERSION, "存的布局带版本")
+	t.not_null(HudLayout.from_dict({"widgets": [{"id": "wallet", "anchor": "top", "tier": "double"}]}), "double 档认得")
 	for id in HudWidgets.KINDS:
 		t.not_null(HudWidgets.create(id), "%s 造得出来" % id)
 	t.check(HudWidgets.create(&"nope") == null, "不认识的 id：null")
@@ -70,11 +76,16 @@ static func run_layout(t: TestCase) -> void:
 	t.eq(String(loaded.entry_of(&"vitality")["anchor"]), "bottom_left", "读回 user 那份")
 	t.eq(loaded.entry_of(&"vitality")["offset"], Vector2(16, -16), "偏移也在")
 	var f := FileAccess.open(HudLayout.user_path(PROBE), FileAccess.WRITE)
-	f.store_string("{\"widgets\": [{\"id\": \"nope\"}]}")
+	f.store_string("{\"version\": %d, \"widgets\": [{\"id\": \"nope\"}]}" % HudLayout.VERSION)
 	f.close()
 	var why: Array[String] = []
 	t.eq(HudLayout.load_for(PROBE, why).to_dict(), HudLayout.default_for(PROBE).to_dict(), "坏文件：回默认")
 	t.check(not why.is_empty(), "并说一句为什么")
+	# 作者 2026-10-12：默认布局改过（VERSION），旧版本存的那份不用，回默认
+	f = FileAccess.open(HudLayout.user_path(PROBE), FileAccess.WRITE)
+	f.store_string("{\"widgets\": [{\"id\": \"wallet\", \"anchor\": \"bottom_left\"}]}")
+	f.close()
+	t.eq(HudLayout.load_for(PROBE).to_dict(), HudLayout.default_for(PROBE).to_dict(), "没写版本（旧的）：回默认")
 	HudLayout.reset(PROBE)
 	t.check(not FileAccess.file_exists(HudLayout.user_path(PROBE)), "重置：删掉了")
 
@@ -112,6 +123,8 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	run.vitality.set_max(11)
 	t.eq(vit.call("hearts").x, 11, "上限变成 11：11 颗")
 	t.eq(vit.call("grid"), Vector2i(10, 2), "十一颗：折成两行")
+	vit.set_tier(HudWidget.Tier.SMALL)
+	vit.refresh()
 	var small: Vector2 = vit.get_combined_minimum_size()
 	vit.set_tier(HudWidget.Tier.LARGE)
 	vit.refresh()
@@ -134,7 +147,7 @@ static func frame_host(t: TestCase, root: Window) -> void:
 
 	# 默认：读数一行同高、整行水平居中、在倒计时下面
 	var row_y := vit.position.y
-	for id in [&"action_points", &"wallet", &"ground_count"]:
+	for id in [&"wallet", &"ground_count"]:
 		t.eq(host.widget(id).position.y, row_y, "%s 和体力同一行" % id)
 	var left := INF
 	var right := -INF
@@ -179,7 +192,7 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	var off: Vector2 = e["offset"]
 	t.check(int(off.x) % HudLayout.GRID == 0 and int(off.y) % HudLayout.GRID == 0, "偏移吸附 %d 像素网格：%s" % [HudLayout.GRID, off])
 	host.toggle_tier(wal)
-	t.eq(String(e["tier"]), "large", "滚轮：切到大档")
+	t.eq(String(e["tier"]), "large", "滚轮：200% 档切到大档（小 → 200% → 大 → 小）")
 	host.toggle_shown(wal)
 	t.check(bool(e["visible"]), "右键：切回显示")
 	var path := HudLayout.user_path(PROBE)
@@ -239,10 +252,20 @@ static func frame_map_screen(t: TestCase, root: Window) -> void:
 ## 补 1 ～ 补 3：右栏的东西都成了组件、地图往左让；背包按钮 = 按 B；调试模式关掉日志就不造，开回来之前写的都在
 static func _map_parts(t: TestCase, map: Control, host: HudHost, flow: GameFlow, run: RunState) -> void:
 	host.arrange()
-	for id in [&"dev_drawer", &"status", &"bag_button", &"reopen_button", &"extract_button", &"menu_button", &"log"]:
+	for id in [&"dev_drawer", &"bag_button", &"reopen_button", &"extract_button", &"menu_button", &"log"]:
 		var w := host.widget(id) as HudPartWidget
 		t.check(w != null and w.part == map.hud_part(id) and w.part.get_parent() == w, "%s：部件装进了组件" % id)
-	t.check(host.widget(&"status").visible and host.widget(&"status").has_content(), "提示行有字、看得见")
+	# 作者 2026-10-12：提示行挪进调试台；抽屉开着时右边那一列整体往左让开它
+	var status: Label = map.get("_status")
+	t.check(status.get_parent() == map.dev_drawer().content and status.text != "", "提示行在调试台里、有字")
+	t.is_null(host.widget(&"status"), "读数层里没有提示行那件了")
+	var inset0 := host.right_inset()
+	map.dev_drawer().set_open(true)
+	t.eq(host.right_inset(), inset0 + DevDrawer.WIDTH + 12.0, "调试台开着：右边多让出 432")
+	var arrow_w := host.widget(&"dev_drawer")
+	t.check(arrow_w.position.x + arrow_w.size.x <= host.size.x - DevDrawer.WIDTH - 12.0 + 0.5, "箭头按钮挪到抽屉左边，不被盖住")
+	map.dev_drawer().set_open(false)
+	t.eq(host.right_inset(), inset0, "关上：让回去")
 	t.check(not host.widget(&"routes").visible, "挑完出生点：路线收起来，那件也藏了")
 	t.check(host.right_inset() >= map.PART_WIDTH, "地图往左让出右边那一列（%s）" % host.right_inset())
 	t.eq(map.get("_mid").offset_right, -host.right_inset(), "地图那一竖排右边让这么多")

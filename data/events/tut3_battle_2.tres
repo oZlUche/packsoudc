@@ -5,7 +5,7 @@
 [ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="3_xu67q"]
 [ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_tpcon"]
 [ext_resource type="Script" path="res://core/run/events/conditions/faith_active.gd" id="5_rqcrn"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/next_event.gd" id="6_tp4t6"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/revisit_later.gd" id="6_tp4t6"]
 [ext_resource type="Script" path="res://core/run/events/event_def.gd" id="7_s0p7i"]
 
 [sub_resource type="Resource" id="Resource_nwb2n"]
@@ -25,11 +25,10 @@ outcomes = Array[ExtResource("2_h0fse")]([SubResource("Resource_nwb2n")])
 
 [sub_resource type="Resource" id="Resource_aced0"]
 script = ExtResource("6_tp4t6")
-event = &"tut3_battle_2"
 
 [sub_resource type="Resource" id="Resource_2thao"]
 script = ExtResource("1_blc65")
-label = "我先整理一下背包"
+label = "先回地图"
 outcomes = Array[ExtResource("2_h0fse")]([SubResource("Resource_aced0")])
 
 [resource]

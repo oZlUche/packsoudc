@@ -93,6 +93,7 @@ const EVENT_OUTCOMES := {
 	&"set_flag": "res://core/run/events/outcomes/set_flag.gd",
 	&"open_altar": "res://core/run/events/outcomes/open_altar.gd",
 	&"next_event_random": "res://core/run/events/outcomes/next_event_random.gd",
+	&"revisit_later": "res://core/run/events/outcomes/revisit_later.gd",     # 作者 2026-10-12：门禁事件的退路
 	&"bless_item": "res://core/run/events/outcomes/bless_item.gd",
 }
 
