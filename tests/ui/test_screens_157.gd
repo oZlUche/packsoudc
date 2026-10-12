@@ -30,6 +30,7 @@ static func run_theme_art(t: TestCase) -> void:
 	var real := UiTheme.build().get_stylebox("panel", UiTheme.PANEL_OVERLAY) as StyleBoxTexture
 	t.check(real != null and is_equal_approx(real.texture_margin_top, 44.0), "assets/ui 里美术交付的石板框：九宫格、上边距 44")
 	t.eq(UiTheme.frame_title_height(), 36, "标题条 36")
+	t.check(UiTheme.build().get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is StyleBoxTexture, "assets/ui 里美术交付的纸：悬浮窗底是九宫格")
 	for skin in UiCursor.SKINS:
 		for name in ["cursor_arrow", "cursor_drag", "cursor_can_drop", "cursor_forbidden"]:
 			t.not_null(UiTheme.art("cursors/%s/%s" % [skin, name]), "光标图 %s/%s 在" % [skin, name])
@@ -315,3 +316,73 @@ static func frame_cursor_setting(t: TestCase, root: Window) -> void:
 	UiCursor.apply()
 	screen.queue_free()
 	Support.cleanup("s157e")
+
+
+static func run_tones(t: TestCase) -> void:
+	t.begin("157 补 · 深浅字色：每块底都标了深浅（变体查表、美术图看 json），浅底挂墨色字主题、深底不挂；写死的亮色在浅底上压成够深的墨水版")
+	for v in UiTheme.VARIATIONS:
+		if UiTheme.current().get_type_variation_base(v) == &"PanelContainer":
+			t.check(UiTheme.PANEL_TONES.has(v), "面板变体 %s 标了深浅" % v)
+	var dir := DirAccess.open("res://assets/ui/")
+	for f in dir.get_files():
+		var art_name := f.get_basename()
+		if f.ends_with(".png") and UiTheme.PANEL_ART.values().has(art_name):
+			var tone := String(UiTheme.art_meta(art_name).get("tone", ""))
+			t.check(tone == "dark" or tone == "light", "底图 %s 的 json 写了 tone（%s）" % [art_name, tone])
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_TOOLTIP), UiTheme.TONE_LIGHT, "悬浮窗底用美术的亮纸：浅")
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_OVERLAY), UiTheme.TONE_DARK, "石板框：深")
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_DARK), UiTheme.TONE_DARK, "平面底：深")
+	t.check(UiTheme.current().get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is StyleBoxTexture, "assets/ui 里有纸：悬浮窗底是九宫格")
+	var saved := UiTheme.asset_root
+	UiTheme.asset_root = NOWHERE
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_TOOLTIP), UiTheme.TONE_DARK, "没纸：悬浮窗底照旧是深底")
+	UiTheme.asset_root = saved
+	t.eq(UiTheme.text_theme(UiTheme.TONE_DARK), null, "深底不挂字色主题（用全局的浅色字）")
+	var light := UiTheme.text_theme(UiTheme.TONE_LIGHT)
+	t.eq(light.get_color("font_color", "Label"), UiTheme.INK, "浅底：标签墨色")
+	t.eq(light.get_color("font_color", UiTheme.LABEL_DIM), UiTheme.INK_SOFT, "浅底：暗色字是褐墨")
+	t.eq(light.get_color("default_color", "RichTextLabel"), UiTheme.INK, "浅底：富文本墨色")
+	t.check(UiTheme.contrast(UiTheme.INK_WARN, UiTheme.PAPER) >= UiTheme.MIN_CONTRAST, "警示色在纸上够清楚")
+	var colors := [UiPalette.FG, UiPalette.DIM, UiPalette.HP, UiPalette.HEAL, UiPalette.STAMINA, UiPalette.GRANT, UiPalette.FAITH,
+		UiPalette.RECEIVE, UiPalette.ARMOR, UiPalette.MANA, UiPalette.CRIT, Glossary.TERM_COLOR]
+	colors.append_array(ItemPainter.RARITY_COLORS)
+	for c in colors:
+		t.check(UiTheme.contrast(UiTheme.ink_color(c), UiTheme.PAPER) >= UiTheme.MIN_CONTRAST, "#%s 压成墨水版后在纸上对比够" % (c as Color).to_html(false))
+	t.eq(UiTheme.ink_color(UiPalette.FG), UiTheme.INK, "前景灰白 → 墨")
+	t.eq(UiTheme.ink_color(UiPalette.DIM), UiTheme.INK_SOFT, "暗灰 → 褐墨")
+	var src := "[color=#%s]生命[/color] 与 [color=%s]词条[/color]" % [UiPalette.HP.to_html(false), Glossary.TERM_COLOR.to_html(false)]
+	var inked := UiTheme.ink_bbcode(src, UiTheme.TONE_LIGHT)
+	t.check(not inked.contains(UiPalette.HP.to_html(false)) and inked.contains("[color=#%s]" % UiTheme.ink_color(UiPalette.HP).to_html(false)), "浅底：生命的红换成压暗的红")
+	t.check(inked.contains("[color=#%s]词条" % UiTheme.ink_color(Glossary.TERM_COLOR).to_html(false)), "不带 # 的颜色也认")
+	t.eq(UiTheme.ink_bbcode(src, UiTheme.TONE_DARK), src, "深底原样")
+
+
+static func frame_tone_tooltip(t: TestCase, root: Window) -> void:
+	t.begin("157 补 · 悬浮窗用纸：浅底墨字 —— 主面板与词条小窗都挂墨色字主题，正文里的颜色换成墨水版；石板框是深底不挂")
+	var tip := HoverTip.new()
+	root.add_child(tip)
+	var src := "[color=#%s]生命 10[/color]\n普通字" % UiPalette.HP.to_html(false)
+	tip.show_text(src, Vector2(40, 40), null, [{"name": "灼烧", "text": "每秒掉血"}])
+	t.eq(tip.tone(), UiTheme.TONE_LIGHT, "悬浮窗是浅底")
+	t.check(tip.text().contains(UiTheme.ink_color(UiPalette.HP).to_html(false)) and not tip.text().contains(UiPalette.HP.to_html(false)), "正文的红换成墨水版")
+	var rich := _first_rich(tip)
+	t.check(rich != null and rich.get_theme_color("default_color", rich.theme_type_variation) == UiTheme.INK, "正文默认字色是墨")
+	var cards := 0
+	for c in tip.find_children("*", "PanelContainer", true, false):
+		if (c as Control).theme_type_variation == UiTheme.PANEL_TOOLTIP:
+			t.eq((c as Control).theme, UiTheme.text_theme(UiTheme.TONE_LIGHT), "纸底挂了墨色字主题")
+			cards += 1
+	t.eq(cards, 2, "主面板 + 一张词条小窗")
+	var frame := OverlayFrame.new()
+	root.add_child(frame)
+	frame.set_title("标题")
+	t.eq(frame.theme, null, "石板框深底：不挂字色主题")
+	t.check(frame.title_label.get_theme_color("font_color", UiTheme.LABEL_OVERLAY_TITLE).get_luminance() > 0.5, "石板框标题浅色字")
+	frame.free()
+	tip.free()
+
+
+static func _first_rich(n: Node) -> RichTextLabel:
+	for c in n.find_children("*", "RichTextLabel", true, false):
+		return c as RichTextLabel
+	return null
