@@ -39,11 +39,13 @@ const RICH_SMALL := &"RichTextSmall"
 const PANEL_OVERLAY := &"PanelOverlay"
 const LABEL_OVERLAY_TITLE := &"LabelOverlayTitle"
 const PANEL_TOOLTIP := &"PanelTooltip"
+## 157 补充二：名牌底（战前 / 回放两屏的名牌）
+const PANEL_NAMEPLATE := &"PanelNameplate"
 
 ## 全部变体（测试看齐全）
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
 	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE,
-	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP]
+	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP, PANEL_NAMEPLATE]
 
 const TITLE_SIZE := 18
 const PANEL_MARGIN := 16
@@ -62,6 +64,11 @@ const ART_BG := "bg_stone"
 const ART_PANEL := "panel_stone"
 const ART_INSET := "panel_inset"
 const ART_HUD := "panel_hud"
+## 157 补充二：名牌底、肖像框（中间透明，画在肖像位外扩 json `inset` 处；徽记位同一张拉大）、没肖像时的占位
+const ART_NAMEPLATE := "nameplate_stone"
+const ART_PORTRAIT_FRAME := "portrait_frame"
+const ART_PORTRAIT_EMPTY := "portrait_empty"
+const NAMEPLATE_MARGIN := 12
 const RICH_FONT_SIZES := ["normal_font_size", "bold_font_size", "italics_font_size", "bold_italics_font_size", "mono_font_size"]
 
 ## 并进默认主题的那一份；[method refresh] 原地重填它
@@ -276,9 +283,11 @@ const TONE_LIGHT := &"light"
 ## **新加面板变体必须登记在这里**（测试看全）
 const PANEL_TONES := {
 	PANEL_DARK: TONE_DARK, PANEL_LINE: TONE_DARK, PANEL_HUD: TONE_DARK, PANEL_OVERLAY: TONE_DARK, PANEL_TOOLTIP: TONE_DARK,
+	PANEL_NAMEPLATE: TONE_DARK,
 }
 ## 面板变体用哪张美术图（有图时深浅读它的 json）
-const PANEL_ART := {PANEL_DARK: ART_PANEL, PANEL_LINE: ART_INSET, PANEL_HUD: ART_HUD, PANEL_OVERLAY: ART_FRAME, PANEL_TOOLTIP: ART_TOOLTIP}
+const PANEL_ART := {PANEL_DARK: ART_PANEL, PANEL_LINE: ART_INSET, PANEL_HUD: ART_HUD, PANEL_OVERLAY: ART_FRAME, PANEL_TOOLTIP: ART_TOOLTIP,
+	PANEL_NAMEPLATE: ART_NAMEPLATE}
 ## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸
 const INK := Color("2e2219")
 const INK_SOFT := Color("5a4433")
@@ -489,6 +498,10 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_type_variation(PANEL_TOOLTIP, "PanelContainer")
 	var paper: StyleBox = _art_box(ART_TOOLTIP)
 	t.set_stylebox("panel", PANEL_TOOLTIP, paper if paper != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), TOOLTIP_MARGIN))
+	# 157 补充二：名牌底 —— 有图是切角石碑九宫格（内边距按图边），没图是深底细边
+	t.set_type_variation(PANEL_NAMEPLATE, "PanelContainer")
+	var plate: StyleBox = _art_box(ART_NAMEPLATE)
+	t.set_stylebox("panel", PANEL_NAMEPLATE, plate if plate != null else _box(panel_bg.darkened(0.15), UiPalette.LINE.lightened(0.25), NAMEPLATE_MARGIN))
 	# 150：读数组件（原来地图屏那条 HUD 的无边窄底，搬成变体）
 	t.set_type_variation(PANEL_HUD, "PanelContainer")
 	var hud_art: StyleBox = _art_box(ART_HUD, false, HUD_MARGIN)

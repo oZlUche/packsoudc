@@ -122,7 +122,8 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	var plates: Array = pre.find_children("*", "Nameplate", true, false)
 	t.eq(plates.size(), 2, "两块名牌")
 	for p in plates:
-		t.check((p as Nameplate).portrait == null, "没肖像图：不画肖像槽（%s）" % (p as Nameplate).name_label.text)
+		t.check((p as Nameplate).portrait == null and (p as Nameplate).portrait_slot != null and (p as Nameplate).portrait_slot.is_inside_tree(),
+			"没肖像图：肖像位照样在、先放占位（%s）" % (p as Nameplate).name_label.text)
 	var before: float = pre.seam().tilt
 	var moved: Array[int] = []
 	for inst in run.board.items():
@@ -418,3 +419,28 @@ static func run_stone(t: TestCase) -> void:
 	t.eq(UiTheme.dress_backdrop(plain), null, "没图：整屏底照旧纯色")
 	plain.free()
 	UiTheme.asset_root = saved
+
+
+static func frame_nameplate_slots(t: TestCase, root: Window) -> void:
+	t.begin("157 补充二 · 名牌：石碑底（PanelNameplate）、肖像位永远在（没图放占位剪影、框照画）、右边徽记位先画框；有图填进框里")
+	var plate := Nameplate.new().setup("游兵", "0 档")
+	root.add_child(plate)
+	t.eq(plate.theme_type_variation, UiTheme.PANEL_NAMEPLATE, "名牌底是 PanelNameplate")
+	t.check(plate.get_theme_stylebox("panel") is StyleBoxTexture, "美术的名牌石碑：九宫格")
+	t.eq(plate.portrait, null, "没肖像图：portrait 空")
+	t.check(plate.portrait_slot != null and plate.portrait_slot.custom_minimum_size == Vector2(64, 64), "肖像位 64×64 在")
+	t.check(plate.portrait_slot.placeholder != null, "放的是美术的占位剪影")
+	t.check(plate.portrait_slot.frame != null and is_equal_approx(plate.portrait_slot.frame.offset_left, -4.0), "框画在肖像位外扩 4 px")
+	t.check(plate.badge_slot != null and plate.badge_slot.custom_minimum_size == Vector2(32, 32) and plate.badge_slot.frame != null, "徽记位 32×32、先画框")
+	t.check(plate.badge_slot.picture == null and plate.badge_slot.placeholder == null, "徽记位里空着")
+	t.check(plate.get_combined_minimum_size().y >= 64.0, "名牌高至少放得下肖像位")
+	var face := ImageTexture.create_from_image(Image.create_empty(8, 8, false, Image.FORMAT_RGBA8))
+	plate.setup("游兵", "0 档", face)
+	t.check(plate.portrait != null and plate.portrait.texture == face and plate.portrait_slot.placeholder == null, "有图：图填进肖像位，不放占位")
+	var saved := UiTheme.asset_root
+	UiTheme.asset_root = NOWHERE
+	var bare := PortraitSlot.new(64)
+	t.check(bare.frame == null and bare.placeholder == null and bare.picture == null, "没框图、没剪影图：框和剪影自己画")
+	bare.free()
+	UiTheme.asset_root = saved
+	plate.free()
