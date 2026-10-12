@@ -30,6 +30,8 @@ const PANEL_LINE := &"PanelLine"
 const PANEL_HUD := &"PanelHud"
 const LABEL_HUD := &"LabelHud"
 const LABEL_HUD_LARGE := &"LabelHudLarge"
+## 作者 2026-10-12：地图顶栏那一排放大到 200%（28 号）
+const LABEL_HUD_DOUBLE := &"LabelHudDouble"
 ## 事件正文、百科正文：20 号、行距 8（作者 2026-10-12 嫌 17 号的粗体糊，加大并换真粗体）
 const RICH_BODY := &"RichTextBody"
 ## 悬浮窗正文：13 号
@@ -42,7 +44,7 @@ const PANEL_TOOLTIP := &"PanelTooltip"
 
 ## 全部变体（测试看齐全）
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
-	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE,
+	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
 	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP]
 
 const TITLE_SIZE := 18
@@ -52,6 +54,7 @@ const RICH_BODY_SIZE := 20
 const RICH_SMALL_SIZE := 13
 const HUD_MARGIN := 8
 const HUD_LARGE_SIZE := 34
+const HUD_DOUBLE_SIZE := 28
 const OVERLAY_TITLE_SIZE := 20
 const TOOLTIP_MARGIN := 10
 ## 157：石板框 / 悬浮窗底的贴图文件名（不带扩展名；旁边同名 `.json` 写九宫格边距）
@@ -304,7 +307,7 @@ static func text_theme(tone: StringName) -> Theme:
 		return _tone_themes[tone]
 	var t := Theme.new()
 	t.set_color("font_color", "Label", INK)
-	for pair in [[LABEL_TITLE, INK], [LABEL_DIM, INK_SOFT], [LABEL_WARN, INK_WARN], [LABEL_OVERLAY_TITLE, INK], [LABEL_HUD, INK], [LABEL_HUD_LARGE, INK]]:
+	for pair in [[LABEL_TITLE, INK], [LABEL_DIM, INK_SOFT], [LABEL_WARN, INK_WARN], [LABEL_OVERLAY_TITLE, INK], [LABEL_HUD, INK], [LABEL_HUD_LARGE, INK], [LABEL_HUD_DOUBLE, INK]]:
 		t.set_type_variation(pair[0], "Label")
 		t.set_color("font_color", pair[0], pair[1])
 	t.set_color("default_color", "RichTextLabel", INK)
@@ -452,6 +455,8 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_type_variation(LABEL_HUD, "Label")
 	t.set_type_variation(LABEL_HUD_LARGE, "Label")
 	t.set_font_size("font_size", LABEL_HUD_LARGE, HUD_LARGE_SIZE)
+	t.set_type_variation(LABEL_HUD_DOUBLE, "Label")
+	t.set_font_size("font_size", LABEL_HUD_DOUBLE, HUD_DOUBLE_SIZE)
 	# 富文本
 	for pair in [[RICH_BODY, RICH_BODY_SIZE], [RICH_SMALL, RICH_SMALL_SIZE]]:
 		t.set_type_variation(pair[0], "RichTextLabel")

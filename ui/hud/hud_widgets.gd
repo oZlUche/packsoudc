@@ -16,7 +16,6 @@ const KINDS := {
 	&"erosion": "res://ui/hud/widgets/erosion_widget.gd",
 	&"belt": "res://ui/hud/widgets/belt_widget.gd",
 	&"dev_drawer": PART,
-	&"status": PART,
 	&"bag_button": PART,
 	&"reopen_button": PART,
 	&"extract_button": PART,
@@ -28,7 +27,7 @@ const KINDS := {
 const PART := "res://ui/hud/hud_part_widget.gd"
 ## 屏幕那几块的中文名（摆读数时没内容的露这个名字）
 const PART_TITLES := {
-	&"dev_drawer": "调试台", &"status": "提示行", &"bag_button": "背包按钮", &"reopen_button": "回到这个点",
+	&"dev_drawer": "调试台", &"bag_button": "背包按钮", &"reopen_button": "回到这个点",
 	&"extract_button": "撤离按钮", &"skills": "技能", &"menu_button": "回主菜单", &"routes": "路线", &"log": "日志",
 }
 

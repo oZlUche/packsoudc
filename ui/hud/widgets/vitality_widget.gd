@@ -38,7 +38,12 @@ func hearts() -> Vector2i:
 
 
 func heart_size() -> float:
-	return HEART_LARGE if tier == Tier.LARGE else HEART_SMALL
+	match tier:
+		Tier.LARGE:
+			return HEART_LARGE
+		Tier.DOUBLE:
+			return HEART_SMALL * 2.0
+	return HEART_SMALL
 
 
 ## 心排成几行几列
