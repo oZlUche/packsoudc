@@ -1,5 +1,5 @@
 ## 仓库面板（058 第 7 条）：左边是撤离带回来的棋盘（有的话），右边是仓库的格子，同一套拖拽；「一键置入」按栏位顺序逐件放，
-## 放不下就停在那一件提示；「剩下的不要了」清掉带回来的棋盘。结算屏与局外屏共用。
+## 放不下就停在那一件提示；（按钮已去掉，[method discard_board] 留给代码调用）清掉带回来的棋盘。结算屏与局外屏共用。
 ##
 ## 109（作者定）：「整理」把仓库重排（先大后小，占用的聚左上，见 [GridTidy]）；两块格子都能双击快速置入（和局内一样）。
 ##
@@ -40,7 +40,6 @@ var _bottom: Array[Control] = []
 var _warehouse_view: InventoryView
 var _line: Label
 var _store_btn: Button
-var _discard_btn: Button
 var _tidy_btn: Button
 var _size_label: Label
 
@@ -103,8 +102,6 @@ func _build() -> void:
 	col.add_child(buttons)
 	_store_btn = UiTheme.make_button("一键置入", store_all, UiPalette.Tier.SECONDARY, 13)
 	buttons.add_child(_store_btn)
-	_discard_btn = UiTheme.make_button("剩下的不要了", discard_board, UiPalette.Tier.SECONDARY, 13)
-	buttons.add_child(_discard_btn)
 	_tidy_btn = UiTheme.make_button("整理", tidy, UiPalette.Tier.SECONDARY, 13)
 	buttons.add_child(_tidy_btn)
 
@@ -246,7 +243,6 @@ func _refresh() -> void:
 	_size_label.text = "仓库　%d × %d 格，不需要包" % [_meta.warehouse.size.x, _meta.warehouse.size.y]     # 110：扩建后跟着变
 	var pending := _meta.has_pending_board()
 	_store_btn.disabled = not pending
-	_discard_btn.disabled = not pending
 	_tidy_btn.disabled = _meta.warehouse.item_count() <= 1
 	if _line != null and _line.text == "":
-		_line.text = "带回来的背包里还有 %d 件：置入或不要了；不管的话开局屏里它们到地上，出发就没了" % _meta.board.item_count() if pending else "仓库 %d 件" % _meta.warehouse.item_count()
+		_line.text = "带回来的背包里还有 %d 件：置入仓库；不管的话开局屏里它们到地上，出发就没了" % _meta.board.item_count() if pending else "仓库 %d 件" % _meta.warehouse.item_count()

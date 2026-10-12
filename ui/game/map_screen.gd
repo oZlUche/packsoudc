@@ -336,6 +336,14 @@ func close_rules() -> void:
 		flow.mark_rules_seen()
 
 
+## 反馈：地图缩放全局沿用 —— 记进设置并存盘（0 = 回到自动）
+func _remember_zoom(z: float) -> void:
+	if flow == null or flow.settings == null:
+		return
+	flow.settings.map_zoom = GameSettings.normalize_zoom(z)
+	flow.save_settings()
+
+
 func rules_open() -> bool:
 	return _rules != null
 #endregion
@@ -345,6 +353,7 @@ func rules_open() -> bool:
 func _adopt() -> void:
 	_view.graph = _run.map
 	_view.current_id = _run.travel.current_id if _run.phase != RunState.Phase.PICK_SPAWN else -1
+	_view.open_at(flow.settings.map_zoom if flow.settings != null else 0.0)     # 反馈：进图用玩家上次的缩放（没有就按点距自动），人在正中
 	_view.reachable = {}
 	_view.bold_route = -1
 	_view.spawn_mask = _run.phase == RunState.Phase.PICK_SPAWN     # 096：挑出生点时全图蒙灰，只露出生点
@@ -779,6 +788,7 @@ func _build() -> void:
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_view.node_pressed.connect(_on_node_pressed)
 	_view.node_hovered.connect(_on_node_hovered)
+	_view.zoom_changed.connect(_remember_zoom)
 	_view.gui_input.connect(func(event: InputEvent):
 		if event is InputEventMouseMotion and _tip != null:
 			_tip.follow(get_global_mouse_position()))     # 084：浮窗跟着鼠标走，和道具悬浮窗一样
@@ -925,9 +935,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			reopen()
 		KEY_F:
 			_view.fit()
+			_remember_zoom(0.0)     # 看全图 = 回到自动
 		KEY_1:
 			_view.zoom = 1.0
-			_view.center()
+			_view.focus(_view.current_id)
+			_remember_zoom(1.0)
 		_:
 			return
 	get_viewport().set_input_as_handled()
