@@ -39,6 +39,8 @@ var hunter_fight: bool = false
 var hunter_flee: bool = false
 ## 136：逃跑用的是哪个局内技能（「脱身」：必定逃掉，记一次技能的账）；空 = 普通逃跑
 var flee_skill: StringName = &""
+## 作者 2026-10-12：先回地图 —— 这个点不算用过，走开再回来同一个事件再弹（[RevisitLater]）
+var revisit: bool = false
 ## 8-3：这个点照它的类型照常发生（休息就回体力、商店就开店……）
 var proceed: bool = false
 ## 093：打开神坛

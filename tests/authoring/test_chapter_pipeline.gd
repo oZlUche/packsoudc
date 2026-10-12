@@ -155,3 +155,23 @@ static func run_authoring_file(t: TestCase) -> void:
 				"资产与作者数据一致 —— 改了 JSON 忘了导入，这条会红")
 			var g := loaded.map_source.resolve(1)
 			t.not_null(g, "第一章生成得出图")
+
+
+static func run_preset_enemies_fit(t: TestCase) -> void:
+	t.begin("作者 2026-10-12 · 预设图（序章一 ～ 三）每个敌人的 items 全部摆得下 —— 掉落按 items 算，摆不下就掉了战斗里没有的东西")
+	var db := ItemDatabase.new()
+	db.load_dir()
+	for f in DirAccess.get_files_at("res://data/maps"):
+		if not f.ends_with(".json"):
+			continue
+		var data = JSON.parse_string(FileAccess.get_file_as_string("res://data/maps/" + f))
+		var nodes: Array = data.get("nodes", []) if data is Dictionary else []
+		var enemies := 0
+		for n in nodes:
+			var content: Dictionary = (n as Dictionary).get("content", {}) if (n as Dictionary).get("content", {}) is Dictionary else {}
+			if not content.has("items"):
+				continue
+			enemies += 1
+			var left := EnemyKit.unplaced_items(content, db)
+			t.check(left.is_empty(), "%s 节点 %s：都摆得下%s" % [f, (n as Dictionary).get("id", "?"), "" if left.is_empty() else "（摆不下：%s）" % ", ".join(left)])
+		t.check(enemies > 0 or f == "", "%s：查了 %d 个敌人" % [f, enemies])

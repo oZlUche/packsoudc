@@ -30,7 +30,9 @@ const PANEL_LINE := &"PanelLine"
 const PANEL_HUD := &"PanelHud"
 const LABEL_HUD := &"LabelHud"
 const LABEL_HUD_LARGE := &"LabelHudLarge"
-## 事件正文、百科正文：17 号、行距 6
+## 作者 2026-10-12：地图顶栏那一排放大到 200%（28 号）
+const LABEL_HUD_DOUBLE := &"LabelHudDouble"
+## 事件正文、百科正文：20 号、行距 8（作者 2026-10-12 嫌 17 号的粗体糊，加大并换真粗体）
 const RICH_BODY := &"RichTextBody"
 ## 悬浮窗正文：13 号
 const RICH_SMALL := &"RichTextSmall"
@@ -44,16 +46,17 @@ const PANEL_NAMEPLATE := &"PanelNameplate"
 
 ## 全部变体（测试看齐全）
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
-	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE,
+	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
 	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP, PANEL_NAMEPLATE]
 
 const TITLE_SIZE := 18
 const PANEL_MARGIN := 16
 const PANEL_LINE_MARGIN := 8
-const RICH_BODY_SIZE := 17
+const RICH_BODY_SIZE := 20
 const RICH_SMALL_SIZE := 13
 const HUD_MARGIN := 8
 const HUD_LARGE_SIZE := 34
+const HUD_DOUBLE_SIZE := 28
 const OVERLAY_TITLE_SIZE := 20
 const TOOLTIP_MARGIN := 10
 ## 157：石板框 / 悬浮窗底的贴图文件名（不带扩展名；旁边同名 `.json` 写九宫格边距）
@@ -77,6 +80,7 @@ static var _installed := false
 ## [member _current] 是按哪档底色填的
 static var _current_bg := Color(0, 0, 0, 0)
 static var _font: Font = null
+static var _font_bold: Font = null
 ## 157：界面贴图的目录。测试指到 `res://tests/fixtures/ui/`（那里放一张小图），用完改回来
 static var asset_root := "res://assets/ui/"
 
@@ -166,7 +170,7 @@ static func panel(p: PanelContainer, margin: int = -1, variation: StringName = P
 	return p
 
 
-## 富文本：17 号正文 / 13 号小字选变体，别的字号逐个给（几种字重一起）
+## 富文本：20 号正文 / 13 号小字选变体，别的字号逐个给（几种字重一起）
 static func rich(r: RichTextLabel, font_size: int = FONT_SIZE) -> RichTextLabel:
 	match font_size:
 		RICH_BODY_SIZE:
@@ -318,7 +322,7 @@ static func text_theme(tone: StringName) -> Theme:
 		return _tone_themes[tone]
 	var t := Theme.new()
 	t.set_color("font_color", "Label", INK)
-	for pair in [[LABEL_TITLE, INK], [LABEL_DIM, INK_SOFT], [LABEL_WARN, INK_WARN], [LABEL_OVERLAY_TITLE, INK], [LABEL_HUD, INK], [LABEL_HUD_LARGE, INK]]:
+	for pair in [[LABEL_TITLE, INK], [LABEL_DIM, INK_SOFT], [LABEL_WARN, INK_WARN], [LABEL_OVERLAY_TITLE, INK], [LABEL_HUD, INK], [LABEL_HUD_LARGE, INK], [LABEL_HUD_DOUBLE, INK]]:
 		t.set_type_variation(pair[0], "Label")
 		t.set_color("font_color", pair[0], pair[1])
 	t.set_color("default_color", "RichTextLabel", INK)
@@ -466,6 +470,8 @@ static func _bg_of(settings: GameSettings) -> Color:
 static func _fill(t: Theme, bg: Color) -> void:
 	if _font == null:
 		_font = UiPalette.cjk_font()
+	if _font_bold == null:
+		_font_bold = UiPalette.cjk_font_bold()
 	t.default_font = _font
 	t.default_font_size = FONT_SIZE
 	var panel_bg := panel_color(bg)
@@ -511,12 +517,17 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_type_variation(LABEL_HUD, "Label")
 	t.set_type_variation(LABEL_HUD_LARGE, "Label")
 	t.set_font_size("font_size", LABEL_HUD_LARGE, HUD_LARGE_SIZE)
+	t.set_type_variation(LABEL_HUD_DOUBLE, "Label")
+	t.set_font_size("font_size", LABEL_HUD_DOUBLE, HUD_DOUBLE_SIZE)
 	# 富文本
 	for pair in [[RICH_BODY, RICH_BODY_SIZE], [RICH_SMALL, RICH_SMALL_SIZE]]:
 		t.set_type_variation(pair[0], "RichTextLabel")
 		for k in RICH_FONT_SIZES:
 			t.set_font_size(k, pair[0], pair[1])
-	t.set_constant("line_separation", RICH_BODY, 6)
+	t.set_constant("line_separation", RICH_BODY, 8)
+	# 富文本的 [b] 用真粗体（字重 700），不让引擎拿常规体描粗
+	for k in ["bold_font", "bold_italics_font"]:
+		t.set_font(k, "RichTextLabel", _font_bold)
 	# 输入框、数字框、树（编辑器里反复贴的那几组）
 	for type in ["LineEdit", "TextEdit"]:
 		t.set_stylebox("normal", type, _box(panel_bg.darkened(0.2), UiPalette.LINE, 6))

@@ -7,6 +7,9 @@ extends PanelContainer
 
 const WIDTH := 420.0
 
+## 开 / 关了（地图屏让右边那一列按钮让开它）
+signal toggled(open: bool)
+
 ## 抽屉里的内容（竖排）
 var content: VBoxContainer
 ## 头部的箭头按钮（由基地屏放进头部那一行）
@@ -64,8 +67,11 @@ func toggle() -> bool:
 
 
 func set_open(on: bool) -> void:
+	var was := visible
 	visible = on
 	_sync_arrow()
+	if was != on:
+		toggled.emit(on)
 
 
 func is_open() -> bool:

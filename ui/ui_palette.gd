@@ -105,6 +105,13 @@ static func cjk_font() -> Font:
 	return f
 
 
+## 同一组字体的真粗体（字重 700）：富文本的 [b] 用它，不靠引擎把常规体描粗（描出来的发糊）
+static func cjk_font_bold() -> Font:
+	var f := cjk_font() as SystemFont
+	f.font_weight = 700
+	return f
+
+
 #region 背景底色（091）
 ## [constant BG_THEMES] 里 id 是 [param id] 的那一档；没有这一档返回空字典
 static func theme_of(id: String) -> Dictionary:
