@@ -28,6 +28,12 @@ static func run(t: TestCase) -> void:
 	t.eq(th.get_color("font_color", UiTheme.LABEL_DIM), UiPalette.DIM, "LabelDim 暗色字")
 	var graphite := (th.get_stylebox("panel", UiTheme.PANEL_DARK) as StyleBoxFlat).bg_color
 	t.check(absf(graphite.r - UiPalette.PANEL.r) + absf(graphite.g - UiPalette.PANEL.g) + absf(graphite.b - UiPalette.PANEL.b) < 0.02, "默认底色下面板 ≈ 原来的 PANEL：%s" % graphite.to_html(false))
+	# 作者 2026-10-12：事件正文的粗体糊 —— [b] 换真粗体（字重 700），正文 20 号、行距 8
+	var bold := th.get_font("bold_font", "RichTextLabel")
+	t.check(bold is SystemFont and (bold as SystemFont).font_weight == 700, "富文本粗体是字重 700 的系统字体")
+	t.check(bold != th.default_font, "粗体不是默认字体")
+	t.eq(th.get_font_size("normal_font_size", UiTheme.RICH_BODY), 20, "正文 20 号")
+	t.eq(th.get_constant("line_separation", UiTheme.RICH_BODY), 8, "正文行距 8")
 	s.bg_theme = "moss"
 	var moss := (UiTheme.build(s).get_stylebox("panel", UiTheme.PANEL_DARK) as StyleBoxFlat).bg_color
 	t.check(moss != graphite, "换成苔绿底：PanelDark 的底色跟着变")

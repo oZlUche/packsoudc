@@ -63,7 +63,7 @@ func open(payload: Dictionary) -> void:
 	page_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	page_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	right.add_child(page_scroll)
-	_body = UiTheme.rich_block(PAGE_WIDTH - 20, UiTheme.RICH_BODY_SIZE)     # 121：17 号、行距 6
+	_body = UiTheme.rich_block(PAGE_WIDTH - 20, UiTheme.RICH_BODY_SIZE)     # 121：正文档（现 20 号、行距 8）
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.meta_clicked.connect(func(meta: Variant): open_page(String(meta)))
 	page_scroll.add_child(_body)
