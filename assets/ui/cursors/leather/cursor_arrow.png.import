@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cqx5da6hq3h3m"
-path="res://.godot/imported/cursor_arrow.png-3dc6901af04976b26c9e0d02d7987f20.ctex"
+uid="uid://d3wqdgpqbs1t5"
+path="res://.godot/imported/cursor_arrow.png-254254784953da51d58dd086c57f892b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/cursor_arrow.png"
-dest_files=["res://.godot/imported/cursor_arrow.png-3dc6901af04976b26c9e0d02d7987f20.ctex"]
+source_file="res://assets/ui/cursors/leather/cursor_arrow.png"
+dest_files=["res://.godot/imported/cursor_arrow.png-254254784953da51d58dd086c57f892b.ctex"]
 
 [params]
 

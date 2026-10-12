@@ -1,5 +1,6 @@
-## 光标（157）：美术给的四张光标图（[member UiTheme.asset_root] 下的 `cursor_<名>.png`，热点都在箭头尖 (2, 2)）
-## 游戏启动时（[method GameDirector._ready]）装上一次；哪张没图就跳过那一种，用系统光标。
+## 光标（157）：美术给的四张光标图（铠甲手套，热点都在指尖 (2, 2)），三套材质放在 [member UiTheme.asset_root] 下的
+## `cursors/<材质>/cursor_<名>.png`，设置里选哪套（[member GameSettings.cursor_skin]，默认秘银）。
+## 游戏启动时（[method GameDirector._ready]）装上，设置里换了材质再装一次；哪张没图就那一种用系统光标。
 ##
 ## 拖着道具时 [DragLayer] 按「这里能不能放」切可放 / 不可放，松手还原 —— 这一条没图也有（系统的那两种光标）。
 ## 浮窗标题栏的「移动」光标（[FloatingWindow]）不归这里。
@@ -7,6 +8,9 @@ class_name UiCursor
 extends RefCounted
 
 const HOTSPOT := Vector2(2, 2)
+## 三套材质：id → 设置屏上的名字。第一个是默认
+const SKINS := {"mithril": "秘银", "iron": "铁", "leather": "皮革"}
+const DEFAULT_SKIN := "mithril"
 ## 图名 → 光标形状
 const SHAPES := {
 	"arrow": Input.CURSOR_ARROW,
@@ -19,15 +23,15 @@ const SHAPES := {
 static var shape: int = Input.CURSOR_ARROW
 
 
-## 有图的那几种换成美术的图；返回换了几种
-static func apply() -> int:
+## 按材质换上那一套（认不出的材质按默认）；没图的那几种还原成系统光标。返回换了几种
+static func apply(skin: String = DEFAULT_SKIN) -> int:
+	var dir := "cursors/%s/" % (skin if SKINS.has(skin) else DEFAULT_SKIN)
 	var n := 0
 	for name in SHAPES:
-		var tex := UiTheme.art("cursor_" + String(name))
-		if tex == null:
-			continue
-		Input.set_custom_mouse_cursor(tex, SHAPES[name], HOTSPOT)
-		n += 1
+		var tex := UiTheme.art(dir + "cursor_" + String(name))
+		Input.set_custom_mouse_cursor(tex, SHAPES[name], HOTSPOT)     # null = 还原成系统的
+		if tex != null:
+			n += 1
 	return n
 
 
