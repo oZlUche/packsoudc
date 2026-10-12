@@ -23,6 +23,15 @@ const ICON_SCALE := 1.6
 const SLOT_RADIUS := 5.0
 const EDGE_PICK := 6.0
 
+## 这一章的手绘底图（[MapSkin]；空 = 照旧石板 / 纯色底）。设了就按它的深浅换字色
+var skin: StringName = &"":
+	set(v):
+		skin = v
+		_skin_tex = MapSkin.texture(v)
+		_skin_light = _skin_tex != null and MapSkin.tone(v) == UiTheme.TONE_LIGHT
+		queue_redraw()
+var _skin_tex: Texture2D = null
+var _skin_light := false
 var graph: MapGraph = null:
 	set(v):
 		graph = v
@@ -279,7 +288,9 @@ func press(p: Vector2, button: int = MOUSE_BUTTON_LEFT, shift: bool = false) -> 
 #region 绘制
 func _draw() -> void:
 	var stone := UiTheme.backdrop_art()     # 157 补：有石板图铺石板（平铺，跟设置的底色染）
-	if stone != null:
+	if _skin_tex != null:     # 这一章的手绘底图：铺满、裁边，画在路网底下
+		draw_texture_rect_region(_skin_tex, Rect2(Vector2.ZERO, size), MapSkin.cover_region(_skin_tex.get_size(), size))
+	elif stone != null:
 		draw_texture_rect(stone, Rect2(Vector2.ZERO, size), true, UiTheme.backdrop_tint())
 	else:
 		draw_rect(Rect2(Vector2.ZERO, size), UiPalette.bg())
@@ -287,7 +298,7 @@ func _draw() -> void:
 		return
 	if _layout == null:
 		draw_string(_font, Vector2(16, 28), "没有登记布局：%s" % graph.layout_kind,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, UiPalette.DIM)
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, _ink(UiPalette.DIM))
 		return
 	# 下面全用画布坐标画，变换交给画布→屏幕这一层
 	draw_set_transform(pan, 0.0, Vector2(zoom, zoom))
@@ -321,7 +332,7 @@ func _draw() -> void:
 		var key := MapJunctions.edge_key(e.from_id, e.to_id)
 		if in_junction.has(key):
 			continue
-		var color := UiPalette.DIM.darkened(0.25)
+		var color := _ink(UiPalette.DIM).darkened(0.25)
 		var width := 1.5
 		if route_of_edge.has(key):
 			var ri: int = route_of_edge[key]
@@ -408,8 +419,8 @@ func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary) -
 		if route >= 0:
 			draw_line(center, pos[int(id)], Color(MapNodeStyle.route_color(route), 0.85), 3.0, true)
 		else:
-			draw_line(center, pos[int(id)], UiPalette.DIM.darkened(0.25), 1.5, true)
-	draw_circle(center, 3.0, UiPalette.DIM)
+			draw_line(center, pos[int(id)], _ink(UiPalette.DIM).darkened(0.25), 1.5, true)
+	draw_circle(center, 3.0, _ink(UiPalette.DIM))
 
 
 ## 猎手：节点外一圈红环 + 名字（占位画法）
@@ -427,7 +438,7 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	# 反馈：站在用过的点上（走回头路）也保持灰 —— 玩家在哪由「你」的三角标和脉动环说明，不靠把点涂回彩色
 	if n.is_visited() and n.type != &"core":
 		var grey := color.get_luminance()
-		color = Color(grey, grey, grey).lerp(UiPalette.DIM, 0.5)
+		color = Color(grey, grey, grey).lerp(_ink(UiPalette.DIM), 0.5)
 	draw_circle(p, NODE_RADIUS, color.darkened(0.55))
 	draw_arc(p, NODE_RADIUS, 0.0, TAU, 32, color, 2.0, true)
 	if graph.entry_ids.has(n.id):
@@ -435,15 +446,15 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	if graph.goal_ids.has(n.id):
 		draw_arc(p, NODE_RADIUS + 4.0, 0.0, TAU, 32, UiPalette.STAMINA, 2.0, true)
 	if reachable.has(n.id):
-		draw_arc(p, NODE_RADIUS + 5.5, 0.0, TAU, 32, Color(UiPalette.FG, 0.55), 1.5, true)
+		draw_arc(p, NODE_RADIUS + 5.5, 0.0, TAU, 32, Color(_ink(UiPalette.FG), 0.55), 1.5, true)
 	if n.id == current_id:
 		var r := NODE_RADIUS + 8.0 + 2.5 * sin(_pulse)
-		draw_arc(p, r, 0.0, TAU, 40, UiPalette.FG, 2.5, true)
+		draw_arc(p, r, 0.0, TAU, 40, _ink(UiPalette.FG), 2.5, true)
 		_draw_player_marker(p)
 	elif n.id == selected_id:
-		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, UiPalette.FG, 2.0, true)
+		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, _ink(UiPalette.FG), 2.0, true)
 	elif n.id == _hover_id:
-		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, Color(UiPalette.FG, 0.35), 1.0, true)
+		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, Color(_ink(UiPalette.FG), 0.35), 1.0, true)
 	# 155：有图标画图标（白线稿按节点色着色，圆底是同色压暗的深色，图标不会融进去）；没图退回写字
 	var tex := MapNodeStyle.icon(n.type)
 	if tex != null:
@@ -455,7 +466,7 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 		draw_string(_font, p + Vector2(-w / 2.0, 5.5), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, color)
 	# 「这里有可看的内容」的标记位（5.10，内容归 M4）：random 没有 —— 那是地图上唯一看不透的点
 	if n.type != &"random" and not n.is_visited() and not MapNodeTypes.STRUCTURAL.has(n.type):
-		draw_circle(p + Vector2(-NODE_RADIUS + 3.0, -NODE_RADIUS + 3.0), 2.0, Color(UiPalette.FG, 0.6))
+		draw_circle(p + Vector2(-NODE_RADIUS + 3.0, -NODE_RADIUS + 3.0), 2.0, Color(_ink(UiPalette.FG), 0.6))
 	# 127：进阶搜索点 —— 左下角一个琥珀色角标
 	if n.type == &"search" and not n.is_visited() and SearchSession.is_advanced(n):
 		var c := p + Vector2(-NODE_RADIUS + 2.0, NODE_RADIUS - 2.0)
@@ -477,6 +488,16 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 		draw_string(_font, p + Vector2(-tw / 2.0, NODE_RADIUS + 19.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, col)
 
 
+## 底图是浅纸时，按深底配的前景 / 暗色字换成墨水版
+func _ink(c: Color) -> Color:
+	return UiTheme.ink_color(c) if _skin_light else c
+
+
+## 现在的底是不是浅的（测试看）
+func skin_is_light() -> bool:
+	return _skin_light
+
+
 ## 玩家在哪（084）：节点上方一个朝下的三角标，上下轻轻浮动 —— 一眼找到自己，不用在一圈圈环里找那个亮的环
 func _draw_player_marker(p: Vector2) -> void:
 	var lift := NODE_RADIUS + 14.0 + 2.0 * sin(_pulse * 1.3)
@@ -486,9 +507,9 @@ func _draw_player_marker(p: Vector2) -> void:
 	var pts := PackedVector2Array([tip, tip + Vector2(-w, -h), tip + Vector2(w, -h)])
 	draw_colored_polygon(pts, UiPalette.HEAL)
 	var outline := PackedVector2Array([tip, tip + Vector2(-w, -h), tip + Vector2(w, -h), tip])
-	draw_polyline(outline, UiPalette.FG, 1.5, true)
+	draw_polyline(outline, _ink(UiPalette.FG), 1.5, true)
 	if _font != null:
 		var text := "你"
 		var tw := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
-		draw_string(_font, tip + Vector2(-tw / 2.0, -h - 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, UiPalette.FG)
+		draw_string(_font, tip + Vector2(-tw / 2.0, -h - 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, _ink(UiPalette.FG))
 #endregion

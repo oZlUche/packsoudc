@@ -84,6 +84,8 @@ extends Resource
 @export var safes: int = 0
 ## 154：宝箱屏的皮肤 id（`data/chest_skins/`）：背景、宝箱的纹路与材质跟着地图走
 @export var chest_skin: StringName = &"ruins"
+## 作者定：地图屏的手绘底图 id（`assets/maps/<id>.png`，[MapSkin]）—— 每章一种风格；没这张图照旧石板底
+@export var map_skin: StringName = &"ruins"
 
 @export_group("带入预算（094，作者定）")
 ## 从仓库带进这一局的道具**总价值**（ItemValue）预算；0 = 不限。预设 / 角色的初始包不算。规模档写了 carry_budget 就用规模档的

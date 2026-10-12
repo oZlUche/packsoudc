@@ -1672,6 +1672,8 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 		report.error("node_rules", "找不到节点规则 '%s'（已知：%s）" % [def.node_rules, ", ".join(ctx.node_rules.keys())])
 	if def.chest_skin != &"" and not ctx.chest_skins.is_empty() and not ctx.chest_skins.has(def.chest_skin):
 		report.warn("chest_skin", "找不到宝箱皮肤 '%s'（画占位；已知：%s）" % [def.chest_skin, ", ".join(ctx.chest_skins.keys())])
+	if def.map_skin != &"" and not FileAccess.file_exists("res://assets/maps/%s.png" % def.map_skin):
+		report.warn("map_skin", "找不到地图底图 assets/maps/%s.png（照旧石板底）" % def.map_skin)
 	if def.economy_rules != &"" and not ctx.economy_rules.is_empty() and not ctx.economy_rules.has(def.economy_rules):
 		report.error("economy_rules", "找不到经济规则 '%s'（已知：%s）" % [def.economy_rules, ", ".join(ctx.economy_rules.keys())])
 	for i in def.characters.size():

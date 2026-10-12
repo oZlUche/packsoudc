@@ -341,6 +341,7 @@ func rules_open() -> bool:
 
 #region 接线：RunState 与 NodeEvents 的信号写进日志
 func _adopt() -> void:
+	_view.skin = _run.chapter.map_skin if _run.chapter != null else &""     # 每章一张手绘底图
 	_view.graph = _run.map
 	_view.current_id = _run.travel.current_id if _run.phase != RunState.Phase.PICK_SPAWN else -1
 	_view.reachable = {}
