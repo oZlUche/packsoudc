@@ -22,10 +22,14 @@ signal item_context(view: ContainerView, uid: int)
 
 func _ready() -> void:
 	if auto_tooltip:
-		# 等祖先都进了树再找；测试里视图可能下一帧前就被 free 了，所以先验还在不在
-		(func():
-			if is_instance_valid(self) and is_inside_tree():
-				HoverTip.ensure_for(self)).call_deferred()
+		# 等祖先都进了树再找。用具名方法而非 lambda：视图若在下一帧前被 free，引擎会直接丢掉这次延迟调用；
+		# lambda 捕获的 self 在对象释放后可能指向别的对象（全量测试里曾收到 CombatProfile）
+		_attach_tooltip.call_deferred()
+
+
+func _attach_tooltip() -> void:
+	if is_inside_tree():
+		HoverTip.ensure_for(self)
 
 
 @abstract func container() -> ItemContainer

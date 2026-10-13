@@ -37,8 +37,8 @@
 					"percent": 0
 				},
 				"damage": {
-					"total": 100000,
-					"base": 100000,
+					"total": 80000,
+					"base": 80000,
 					"flat": 0,
 					"percent": 0
 				}

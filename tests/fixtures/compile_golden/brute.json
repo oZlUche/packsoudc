@@ -43,10 +43,10 @@
 					"percent": 1000
 				},
 				"damage": {
-					"total": 115000,
-					"base": 100000,
+					"total": 80000,
+					"base": 80000,
 					"flat": 0,
-					"percent": 1500
+					"percent": 0
 				}
 			},
 			"rules": [

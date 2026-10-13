@@ -8,6 +8,8 @@ const BEFORE := {
 	&"shortbow": [3, 6], &"longbow": [4, 8], &"blessed_longbow": [4, 10],
 	&"leather_armor": [4, 20], &"plate_cuirass": [9, 45], &"blessed_shield": [4, 6],
 }
+## 作者（2026-10-12）把这两件改成了笔直的长条（1×3、1×4）：仍守「每格强度不变」，但不再要求是异形
+const STRAIGHT := [&"shortsword", &"longsword"]
 const MAIN_STATS := [&"damage", &"max_armor", &"block"]
 
 
@@ -21,7 +23,8 @@ static func run_scaled_by_cells(t: TestCase) -> void:
 			continue
 		var box := def.shape.size_rotated(0)
 		var cells := def.cell_count()
-		t.check(cells < box.x * box.y, "%s 是异形（%d 格，外框 %d×%d）" % [Names.of(def), cells, box.x, box.y])
+		if not STRAIGHT.has(id):
+			t.check(cells < box.x * box.y, "%s 是异形（%d 格，外框 %d×%d）" % [Names.of(def), cells, box.x, box.y])
 		var stat := &""
 		for k in MAIN_STATS:
 			if def.combat.base_stats.has(k):
