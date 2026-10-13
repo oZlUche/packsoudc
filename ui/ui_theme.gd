@@ -52,14 +52,18 @@ const PANEL_SHELF := &"PanelShelf"
 ## 栏里的图标按钮（[IconButton]：背包、放大镜、主动技能；按下态走这个变体）
 const PANEL_HUD_BAR := &"PanelHudBar"
 const BUTTON_ICON := &"ButtonIcon"
+## 168：大标题（马善政，[method UiPalette.display_font]）—— 主菜单游戏名、开局屏与开场事件的章节名、宝箱屏的说明字
+const LABEL_DISPLAY := &"LabelDisplay"
 
 ## 全部变体（测试看齐全）
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
 	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
 	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
-	PANEL_HUD_BAR, BUTTON_ICON]
+	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY]
 
 const TITLE_SIZE := 18
+## 168：大标题字号
+const DISPLAY_SIZE := 40
 const PANEL_MARGIN := 16
 const PANEL_LINE_MARGIN := 8
 const RICH_BODY_SIZE := 20
@@ -102,6 +106,8 @@ static var _installed := false
 static var _current_bg := Color(0, 0, 0, 0)
 static var _font: Font = null
 static var _font_bold: Font = null
+static var _font_title: Font = null
+static var _font_display: Font = null
 ## 157：界面贴图的目录。测试指到 `res://tests/fixtures/ui/`（那里放一张小图），用完改回来
 static var asset_root := "res://assets/ui/"
 
@@ -218,6 +224,16 @@ static func make_label(text: String, font_size: int = FONT_SIZE, color: Color = 
 	var l := Label.new()
 	l.text = text
 	return label(l, font_size, color)
+
+
+## 168：大标题（马善政，[constant LABEL_DISPLAY]）；字号不是 [constant DISPLAY_SIZE] 才覆写
+static func make_display(text: String, font_size: int = DISPLAY_SIZE) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.theme_type_variation = LABEL_DISPLAY
+	if font_size != DISPLAY_SIZE:
+		l.add_theme_font_size_override("font_size", font_size)
+	return l
 
 
 ## 会折行的说明文字。必须给最小宽度：中文没有词边界，容器算出的最小宽度是一个字
@@ -352,7 +368,7 @@ static func text_theme(tone: StringName) -> Theme:
 		return _tone_themes[tone]
 	var t := Theme.new()
 	t.set_color("font_color", "Label", INK)
-	for pair in [[LABEL_TITLE, INK], [LABEL_DIM, INK_SOFT], [LABEL_WARN, INK_WARN], [LABEL_OVERLAY_TITLE, INK], [LABEL_HUD, INK], [LABEL_HUD_LARGE, INK], [LABEL_HUD_DOUBLE, INK]]:
+	for pair in [[LABEL_TITLE, INK], [LABEL_DIM, INK_SOFT], [LABEL_WARN, INK_WARN], [LABEL_OVERLAY_TITLE, INK], [LABEL_DISPLAY, INK], [LABEL_HUD, INK], [LABEL_HUD_LARGE, INK], [LABEL_HUD_DOUBLE, INK]]:
 		t.set_type_variation(pair[0], "Label")
 		t.set_color("font_color", pair[0], pair[1])
 	t.set_color("default_color", "RichTextLabel", INK)
@@ -523,6 +539,10 @@ static func _fill(t: Theme, bg: Color) -> void:
 		_font = UiPalette.cjk_font()
 	if _font_bold == null:
 		_font_bold = UiPalette.cjk_font_bold()
+	if _font_title == null:
+		_font_title = UiPalette.title_font()
+	if _font_display == null:
+		_font_display = UiPalette.display_font()
 	t.default_font = _font
 	t.default_font_size = FONT_SIZE
 	var panel_bg := panel_color(bg)
@@ -537,6 +557,12 @@ static func _fill(t: Theme, bg: Color) -> void:
 		t.set_type_variation(pair[0], "Label")
 		t.set_color("font_color", pair[0], pair[1])
 	t.set_font_size("font_size", LABEL_TITLE, TITLE_SIZE)
+	# 168：标题（名牌也走 LabelTitle）与叠层标题条是朱雀仿宋；大标题是马善政
+	t.set_font("font", LABEL_TITLE, _font_title)
+	t.set_type_variation(LABEL_DISPLAY, "Label")
+	t.set_font("font", LABEL_DISPLAY, _font_display)
+	t.set_font_size("font_size", LABEL_DISPLAY, DISPLAY_SIZE)
+	t.set_color("font_color", LABEL_DISPLAY, UiPalette.FG)
 	# 面板
 	# 157 补充三：板里的分区是刻进板里的凹槽（`inset.png` 九宫格，内边距照旧按变体的默认值，各屏排版不动），没图是原来的平面底
 	t.set_type_variation(PANEL_DARK, "PanelContainer")
@@ -551,6 +577,7 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_stylebox("panel", PANEL_OVERLAY, frame if frame != null else _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
 	t.set_type_variation(LABEL_OVERLAY_TITLE, "Label")
 	t.set_font_size("font_size", LABEL_OVERLAY_TITLE, OVERLAY_TITLE_SIZE)
+	t.set_font("font", LABEL_OVERLAY_TITLE, _font_title)
 	t.set_color("font_color", LABEL_OVERLAY_TITLE, UiPalette.FG)
 	t.set_type_variation(PANEL_TOOLTIP, "PanelContainer")
 	var paper: StyleBox = _art_box(ART_TOOLTIP)
@@ -598,7 +625,7 @@ static func _fill(t: Theme, bg: Color) -> void:
 		for k in RICH_FONT_SIZES:
 			t.set_font_size(k, pair[0], pair[1])
 	t.set_constant("line_separation", RICH_BODY, 8)
-	# 富文本的 [b] 用真粗体（字重 700），不让引擎拿常规体描粗
+	# 富文本的 [b] 用真粗体（168：文楷 Medium），不让引擎拿常规体描粗
 	for k in ["bold_font", "bold_italics_font"]:
 		t.set_font(k, "RichTextLabel", _font_bold)
 	# 输入框、数字框、树（编辑器里反复贴的那几组）

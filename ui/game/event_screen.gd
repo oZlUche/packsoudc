@@ -178,6 +178,9 @@ func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
 	margin.add_child(col)
 
 	_frame_title(title)     # 157：标题在石板框的标题条上（横跨图与正文）
+	var heading := intro_heading()
+	if heading != "":
+		col.add_child(UiTheme.make_display(heading))     # 168：开场事件先写章节名（马善政大标题）
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -191,6 +194,14 @@ func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
 	options.name = "Options"
 	col.add_child(options)
 	return options
+
+
+## 168：这一屏是这一章的开场事件 → 章节名；别的事件空
+func intro_heading() -> String:
+	var ch: ChapterDef = flow.run.chapter if flow.run != null else null
+	if _def == null or ch == null or ch.intro_event == &"" or _def.id != ch.intro_event:
+		return ""
+	return ch.display_name if ch.display_name != "" else String(ch.id)
 
 
 ## 一个选项：整行宽、左对齐、够高
