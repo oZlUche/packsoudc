@@ -51,6 +51,8 @@ var block_layers: Array = []
 var _block_axis: int = 0
 ## 现在画着的图标：[Rect2, id]
 var _chips: Array = []
+## 166 补充二：图标那一排的顶（面板内；上一次画的）
+var _chip_y: float = 0.0
 var _hover_id: String = ""
 
 ## key -> [current, max]。
@@ -106,6 +108,16 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_MOUSE_EXIT and _hover_id != "":
 		_hover_id = ""
 		buff_unhovered.emit()
+
+
+## 166 补充二：buff 图标那一排（面板内坐标，战斗教程指它）—— 有图标 = 它们的包围盒；还没有 = 那一排该在的位置，一格高
+func chips_rect() -> Rect2:
+	if _chips.is_empty():
+		return Rect2(PAD, _chip_y, maxf(0.0, size.x - PAD * 2), CHIP_H)
+	var r: Rect2 = _chips[0][0]
+	for c in _chips:
+		r = r.merge(c[0] as Rect2)
+	return r
 
 
 ## 这个位置（面板内坐标）压着哪个 buff 的图标；没有空串
@@ -414,6 +426,7 @@ func _draw() -> void:
 		y += BAR_H + BAR_GAP
 
 	_chips.clear()
+	_chip_y = y + 4
 	if not _stacks.is_empty() or not passives.is_empty():
 		y += 4
 		var x := float(PAD)

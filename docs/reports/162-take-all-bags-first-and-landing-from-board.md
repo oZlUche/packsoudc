@@ -94,3 +94,10 @@
 | 补 1 | 时长看什么 | A 只看密度（固定时长）；B 密度 + 飞行距离（远的加时，封顶 +0.3 秒） | **A**：可预期、好测；重物远飞快一点正像被扔出去 |
 | 补 2 | 分档阈值 | A 密度 ≥ 2 算沉（石、金属、重物）；B ≥ 3（只金属与重物） | **A**：石头和晶体也该砸下去 |
 | 补 3 | 数值放哪 | A `GroundLayer` 常量；B 进 `standard.json` 规则 | **A**：纯表现，不是规则 |
+
+### 落地记录（补充一）
+
+- `GroundLayer.land_profile(def) -> {sec, sink, bounce, sway, scale}`，常量 `LAND_BASE_SEC / LAND_SEC_PER_DENSITY / LAND_SEC_MIN / LAND_SINK_DENSITY`；沉的起手放大 `LAND_SCALE_SINK = 1.05`、弹 `LAND_BOUNCE_SINK = 3`，飘的摆幅 `LAND_SWAY = 3`、包 `LAND_SWAY_BAG = 5`。`LAND_SEC` 常量删掉，每件在 `_landing[uid]` 里记 `sec` 与 `profile`，`landing_sec(uid)` 给测试看。
+- 摆按整段进度 `sin(2π × p)`，起点终点都是 0；就地落（`in_place`）不摆。
+- 轻物的重量是向上取整的整数（`ItemWeight`），所以一格的药密度是 1、两格的才是 0.5 —— 按实际比值走，和方案「写死的按实际比值」一致。
+- 测试：`tests/inventory/test_ground_landing.gd` 加 `run_density_profile`（各档时长、沉 / 飘中点、摆、各自时长到了才删、就地不摆）；老用例改读每件自己的时长。
