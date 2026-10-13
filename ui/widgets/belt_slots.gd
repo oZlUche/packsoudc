@@ -1,14 +1,14 @@
 ## 160（作者定）：腰带的圆槽 —— 一排圆，一格一种随身技能（[BeltModule]），圆里画图标（没图画名字的头一个字），
 ## 右下角一个小圆标写还有几个；空槽一个淡的小圆点。双击一个圆 = 用一个（[member on_use]，用不了的原因在圆的上方飘一行 1.5 秒）。
 ## 没有拖进拖出：随身技能不是道具，不落地、不进包。悬停看名字、说明与什么时候能用。
-## 圆槽底图 `assets/ui/belt_slot.png`（56 px 一张圆底，有就贴，没有画圆）
+## 圆槽底图 `assets/ui/belt_slot.png`（72 px 一张圆底，有就贴，没有画圆）
 class_name BeltSlots
 extends Control
 
-## 圆的直径与圆之间的空
-const SLOT := 56.0
-const GAP := 10.0
-const BADGE := 20.0
+## 圆的直径与圆之间的空（166：作者要更显眼，56 → 72）
+const SLOT := 72.0
+const GAP := 12.0
+const BADGE := 24.0
 const SLOT_ART := "res://assets/ui/belt_slot.png"
 const FLOAT_SEC := 1.5
 

@@ -13,7 +13,8 @@ static func run_layout(t: TestCase) -> void:
 			found = e
 	t.eq(found.get("anchor", ""), "bottom_right", "腰带在右下角")
 	t.eq(found.get("offset", Vector2.ZERO), HudLayout.BELT_OFFSET, "偏移 %s" % HudLayout.BELT_OFFSET)
-	t.check(not HudLayout.COLUMN.has(&"belt"), "右上那一列里没有腰带")
+	t.check(not HudLayout.BAR_RIGHT.has(&"belt"), "顶端栏右槽里没有腰带（166）")
+	t.eq(BeltSlots.SLOT, 72.0, "166：圆槽直径 72（更显眼）")
 	t.check(HudLayout.VERSION >= 3, "布局版本 %d" % HudLayout.VERSION)
 
 

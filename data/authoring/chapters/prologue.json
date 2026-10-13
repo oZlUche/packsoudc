@@ -25,5 +25,6 @@
     "只有包里的东西参战，{zone:地上}的留在这个点。",
     "{item:poison_vial}拖到{item:knife}上面，立刻合成{item:poisoned_knife}。",
     "打输了扣体力，体力归零这一局就结束。"
-  ]
+  ],
+  "coach": "prologue_map"
 }

@@ -1,0 +1,9 @@
+{
+  "id": "prologue_map",
+  "steps": [
+    {"target": "vitality", "text": "这是体力。走路、受伤都会用掉它；用光了，这一趟就结束了。"},
+    {"target": "wallet", "text": "这是货币。商店买东西、付费撤离点放行，都要它。"},
+    {"target": "bag_button", "text": "背包：整理棋盘上的东西，打架之前先排好。快捷键 B。"},
+    {"target": "reopen_button", "text": "放大镜：再看一眼脚下这个点里还有什么。快捷键 N。"}
+  ]
+}

@@ -1,5 +1,5 @@
 ## 150（作者定，四项待定按推荐）：地图屏的读数拆成组件（[HudWidget]），按布局（[HudLayout]）摆在读数层（[HudHost]）上；
-## 没有布局文件 = 150 之前的样子（倒计时顶上居中、读数一排在下面）；调试台里「摆读数」：拖、右键切显隐、滚轮切档、保存 / 重置
+## 没有布局文件 = 默认布局（166：顶端栏三个槽、左下路线与图例、右下腰带）；调试台里「摆读数」：拖、右键切显隐、滚轮切档、保存 / 重置
 extends RefCounted
 
 const CS := preload("res://tests/run/test_character_skills.gd")
@@ -13,31 +13,40 @@ const HOST_SIZE := Vector2(1200, 700)
 
 
 static func run_layout(t: TestCase) -> void:
-	t.begin("150 · 布局：默认就是 150 之前的样子；字典往返一致；坏 id / 锚点 / 档位 / 偏移 / 重复都报；文件存取与重置")
+	t.begin("150 / 166 · 布局：默认是顶端栏三个槽；字典往返一致；坏 id / 锚点 / 档位 / 偏移 / 重复都报；文件存取与重置")
 	var d := HudLayout.default_for("map")
-	t.eq(d.entries.size(), HudWidgets.KINDS.size(), "默认布局把十种都摆上了")
+	t.eq(d.entries.size(), HudWidgets.KINDS.size(), "默认布局把每一种都摆上了")
+	t.eq(HudLayout.VERSION, 4, "166：布局版本 4（旧的回默认）")
+	t.eq(String(d.entry_of(&"hud_bar")["anchor"]), "top", "顶端栏横在顶上")
+	t.eq(String(d.entry_of(&"countdown")["anchor"]), "bar_center", "倒计时在栏中间")
 	t.eq(String(d.entry_of(&"countdown")["tier"]), "large", "倒计时是大档")
-	t.eq(int(d.entry_of(&"countdown")["line"]), 0, "倒计时在第 0 行")
-	for id in [&"action_points", &"vitality", &"wallet", &"faith"]:
-		t.eq(int(d.entry_of(id)["line"]), 1, "%s 在倒计时下面那一行" % id)
+	for id in [&"vitality", &"wallet", &"faith"]:
+		t.eq(String(d.entry_of(id)["anchor"]), "bar_left", "%s 在栏左槽" % id)
+		t.eq(int(d.entry_of(id)["line"]), 0, "%s 在左槽第一行" % id)
 		t.eq(String(d.entry_of(id)["tier"]), "double", "%s 是 200%% 档（作者 2026-10-12）" % id)
+	for id in [&"encumbrance", &"buffs", &"erosion"]:
+		t.eq(int(d.entry_of(id)["line"]), 1, "%s 在左槽第二行（小字）" % id)
 	for id in [&"action_points", &"distances"]:
 		t.check(not bool(d.entry_of(id)["visible"]), "%s 默认藏着（作者 2026-10-12：没有意义）" % id)
-	t.check(not HudLayout.COLUMN.has(&"status") and not HudWidgets.has(&"status"), "提示行不再是读数（挪进调试台）")
+	var right_ids: Array[StringName] = []
+	for e in d.entries:
+		if String(e["anchor"]) == "bar_right":
+			right_ids.append(StringName(e["id"]))
+	t.eq(right_ids, [&"bag_button", &"reopen_button", &"skills", &"dev_drawer"] as Array[StringName], "栏右槽：背包、放大镜、技能、调试台箭头")
+	t.eq(String(d.entry_of(&"legend")["anchor"]), "bottom_left", "图例在左下角")
+	t.check(int(d.entry_of(&"routes")["line"]) < int(d.entry_of(&"legend")["line"]), "路线在图例上面")
+	for id in [&"extract_button", &"menu_button", &"log", &"ground_count", &"status"]:
+		t.check(not HudWidgets.has(id) and d.entry_of(id).is_empty(), "%s 不再是部件（删了 / 进了调试台）" % id)
 	t.eq(int(d.to_dict()["version"]), HudLayout.VERSION, "存的布局带版本")
 	t.not_null(HudLayout.from_dict({"widgets": [{"id": "wallet", "anchor": "top", "tier": "double"}]}), "double 档认得")
 	for id in HudWidgets.KINDS:
 		t.not_null(HudWidgets.create(id), "%s 造得出来" % id)
 	t.check(HudWidgets.create(&"nope") == null, "不认识的 id：null")
-	# 补 1 / 补 2：原来右栏的东西也在默认布局里，竖排在右上；日志贴右下、只在调试模式
-	for id in HudLayout.COLUMN:
-		t.eq(String(d.entry_of(id)["anchor"]), "top_right", "%s 在右上那一列" % id)
-	t.eq(int(d.entry_of(&"bag_button")["line"]) + 2, int(d.entry_of(&"extract_button")["line"]), "背包、回到这个点、撤离按原来的顺序")
-	t.check(bool(d.entry_of(&"log")["debug_only"]), "日志只在调试模式")
-	t.check(not bool(d.entry_of(&"bag_button")["debug_only"]), "背包按钮不是")
-	var old := HudLayout.from_dict({"widgets": [{"id": "log", "anchor": "left"}, {"id": "wallet", "anchor": "left"}]})
-	t.check(bool(old.entry_of(&"log")["debug_only"]), "文件里没写 debug_only：按默认（日志是）")
-	t.check(not bool(old.entry_of(&"wallet")["debug_only"]), "文件里没写 debug_only：按默认（货币不是）")
+	t.check(not bool(d.entry_of(&"bag_button")["debug_only"]), "背包按钮不是只在调试模式")
+	var old := HudLayout.from_dict({"widgets": [{"id": "wallet", "anchor": "left"}, {"id": "bag_button", "anchor": "bar_right"}]})
+	t.not_null(old, "栏槽锚点认得")
+	if old != null:
+		t.check(not bool(old.entry_of(&"wallet")["debug_only"]), "文件里没写 debug_only：按默认（货币不是）")
 	t.check(GameSettings.new().debug_mode, "调试模式：默认开")
 	var gs := GameSettings.new()
 	gs.debug_mode = false
@@ -100,7 +109,7 @@ static func _host(root: Window, run: RunState, layout: HudLayout) -> HudHost:
 
 
 static func frame_host(t: TestCase, root: Window) -> void:
-	t.begin("150 · 读数层：组件写对的字、自己跟着信号变；默认一排在倒计时下面居中；改锚点 / 偏移跟着挪；藏起来的不显示；窗口变大锚点保持")
+	t.begin("150 / 166 · 读数层：组件写对的字、自己跟着信号变；默认排进顶端栏的三个槽；改锚点 / 偏移跟着挪；藏起来的不显示；窗口变大锚点保持")
 	var c := CS._content()
 	var run := CS._start(c, CS._character(c, &"marcus"))
 	if run == null:
@@ -110,11 +119,16 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	var vit := host.widget(&"vitality")
 	t.eq(vit.text(), "体力 %d/%d" % [run.vitality.current, run.vitality.maximum], "体力：%s" % vit.text())
 	t.eq(vit.tooltip_text, vit.text(), "体力：停上去的提示是「体力 当前/上限」")
-	t.eq(host.widget(&"wallet").text(), "货币 %d" % run.wallet.balance, "货币")
+	var wallet := host.widget(&"wallet")
+	t.eq(wallet.text(), "%d" % run.wallet.balance, "166：货币只写数字")
+	t.eq(wallet.tooltip_text, "货币", "悬浮窗写「货币」")
+	t.not_null(wallet.get("coin"), "左边一枚金币（缺图画描边圆）")
 	t.eq(host.widget(&"action_points").text(), "行动点 %d" % run.travel.clock.total, "行动点")
-	t.eq(host.widget(&"ground_count").text(), "地上 %d 件" % run.storage.item_count(), "地上")
 	t.check(host.widget(&"distances").text().contains("距最近撤离点"), "距离一组")
-	t.check(host.widget(&"faith").text().begins_with("信仰"), "信仰")
+	var faith := host.widget(&"faith")
+	if run.active_faith_id() == &"":
+		t.eq(faith.text(), "", "166：没信仰不写字")
+		t.check(faith.visible and faith.size.x >= 32.0, "没信仰也留一个空槽")
 	run.vitality.spend(1, &"test")
 	t.eq(vit.text(), "体力 %d/%d" % [run.vitality.current, run.vitality.maximum], "体力变了组件自己跟着变（没叫宿主刷）")
 	# 补 4：画成心 —— 上限几点几颗、前「当前」颗红；上限变了颗数跟着变；一行放不下折行；大档大心
@@ -134,7 +148,7 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	vit.refresh()
 	t.eq(vit.call("grid").y, 1, "回到 %d 颗：一行" % max0)
 	# 屏幕的部件：没有屏幕（这里）就空着、藏着，不报错
-	for id in [&"bag_button", &"log", &"routes"]:
+	for id in [&"bag_button", &"routes"]:
 		t.check(host.widget(id) != null and not host.widget(id).visible, "%s：没有屏幕给部件，藏着" % id)
 	var no_belt := HudWidgets.create(&"belt")
 	root.add_child(no_belt)
@@ -145,28 +159,31 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	t.eq(belt_w.has_content(), BeltModule.of(run) != null, "腰带：有腰带模块才有格子")
 	t.check(not host.widget(&"encumbrance").visible or run.encumbrance_level() > 0, "轻装：负重那件藏着")
 
-	# 默认：读数一行同高、整行水平居中、在倒计时下面
+	# 166：顶端栏横贯顶部；左槽贴左、第一行体力 / 货币 / 信仰同高；倒计时在栏正中；栏下面才是别的锚点
+	host.arrange()    # 上面改过档位，排一次（宿主自己是下一帧才排）
+	var bar := host.widget(&"hud_bar")
+	var bar_h := host.bar_height()
+	t.check(bar.visible and bar_h >= HudHost.BAR_HEIGHT, "顶端栏在，高 %s" % bar_h)
+	t.eq(bar.position, Vector2.ZERO, "栏贴着左上")
+	t.eq(bar.size, Vector2(HOST_SIZE.x, bar_h), "栏横贯整屏宽")
+	t.eq(bar.theme_type_variation, UiTheme.PANEL_HUD_BAR, "栏的底是顶端栏变体")
 	var row_y := vit.position.y
-	for id in [&"wallet", &"ground_count"]:
-		t.eq(host.widget(id).position.y, row_y, "%s 和体力同一行" % id)
-	var left := INF
-	var right := -INF
-	for id in [&"action_points", &"distances", &"vitality", &"wallet", &"ground_count", &"faith"]:
-		var w := host.widget(id)
-		if w.visible:
-			left = minf(left, w.position.x)
-			right = maxf(right, w.position.x + w.size.x)
-	var room := HOST_SIZE.x - host.right_inset()
-	t.check(absf((left + right) / 2.0 - room / 2.0) <= 1.0 or left <= 0.0, "整行在让出右边那一条之后的地方水平居中（%s ～ %s，宽 %s）" % [left, right, room])
+	t.eq(wallet.position.y + wallet.size.y * 0.5, row_y + vit.size.y * 0.5, "货币和体力同一行（竖向居中对齐）")
+	t.eq(vit.position.x, HudHost.BAR_SIDE, "体力贴栏左边（留 %s）" % HudHost.BAR_SIDE)
+	t.check(vit.position.y >= 0.0 and vit.position.y + vit.size.y <= bar_h, "体力在栏里")
 	if belt_w.visible:
-		t.eq(host.right_inset(), HOST_SIZE.x - belt_w.position.x, "右边那一条量出来了（只有腰带）")
 		t.eq(belt_w.position + belt_w.size, HOST_SIZE + HudLayout.BELT_OFFSET, "160：腰带贴右下（偏移 %s）" % HudLayout.BELT_OFFSET)
 	var cd := host.widget(&"countdown")
 	if cd.visible:
-		t.check(cd.position.y + cd.size.y <= row_y, "倒计时在读数上面")
+		t.check(absf(cd.position.x + cd.size.x * 0.5 - HOST_SIZE.x * 0.5) <= 1.0, "倒计时在栏正中")
 		t.eq(cd.tier, HudWidget.Tier.LARGE, "倒计时大档")
 		t.eq(cd.get("_text").get_theme_color("font_color"), cd.color(), "倒计时的颜色跟着剩余")
-	t.eq(host.top_inset(), vit.position.y + vit.size.y, "顶上让出到读数那一行的底")
+	t.eq(host.top_inset(), bar_h, "顶上让出栏高")
+	var inset := host.content_inset()
+	t.eq(inset.position.y, bar_h, "地图上边躲开顶端栏")
+	t.check(inset.size.y >= (belt_w.size.y + 8.0 if belt_w.visible else 0.0), "地图下边躲开左下 / 右下（%s）" % inset.size.y)
+	t.eq(host.rect_of(&"vitality"), vit.get_global_rect(), "rect_of：部件在屏幕上的包围盒")
+	t.eq(host.rect_of(&"nope"), Rect2(), "没有的部件：空矩形")
 
 	# 改布局：体力放到右下角、货币藏起来
 	var layout := HudLayout.default_for("map")
@@ -176,19 +193,28 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	host.setup(run, null, layout)
 	vit = host.widget(&"vitality")
 	t.eq(vit.position + vit.size, HOST_SIZE - Vector2(16, 12), "体力贴右下角（偏移 −16, −12）")
+	t.eq(String(layout.entry_of(&"wallet")["anchor"]), "bar_left", "货币原来在栏左槽")
 	t.check(not host.widget(&"wallet").visible, "货币藏起来了")
 	host.size = Vector2(1500, 800)
 	host.arrange()
 	t.eq(vit.position + vit.size, Vector2(1500, 800) - Vector2(16, 12), "窗口变大：还贴着右下角")
 
-	# 摆读数：藏着的也露出来（半透明）；拖到右上那一片松手 → 归右上角、偏移吸附网格；滚轮切大档；右键切显隐
+	# 摆读数：藏着的也露出来（半透明）；拖到栏下面右上那一片松手 → 归右上角、偏移吸附网格；拖回栏里 → 按横向三等分进槽；滚轮切大档；右键切显隐
 	host.set_editing(true)
 	var wal := host.widget(&"wallet")
 	t.check(wal.visible and wal.modulate.a < 1.0, "摆读数：藏着的半透明露出来")
-	wal.position = Vector2(1500 - wal.size.x - 37, 21)
+	var bh := host.bar_height()
+	wal.position = Vector2(1500 - wal.size.x - 37, bh + 21)
 	host.drop(wal)
 	var e := host.layout.entry_of(&"wallet")
 	t.eq(String(e["anchor"]), "top_right", "松手：归最近的右上角")
+	t.check(wal.position.y >= bh, "栏下面的锚点在栏下面摆")
+	wal.position = Vector2(750 - wal.size.x * 0.5, 4)
+	host.drop(wal)
+	t.eq(String(host.layout.entry_of(&"wallet")["anchor"]), "bar_center", "松在栏的中间三分之一：进中槽")
+	wal.position = Vector2(1500 - wal.size.x - 37, bh + 21)
+	host.drop(wal)
+	e = host.layout.entry_of(&"wallet")
 	var off: Vector2 = e["offset"]
 	t.check(int(off.x) % HudLayout.GRID == 0 and int(off.y) % HudLayout.GRID == 0, "偏移吸附 %d 像素网格：%s" % [HudLayout.GRID, off])
 	host.toggle_tier(wal)
@@ -206,7 +232,7 @@ static func frame_host(t: TestCase, root: Window) -> void:
 
 
 static func frame_map_screen(t: TestCase, root: Window) -> void:
-	t.begin("150 · 地图屏：读数层接上了这一局；调试台里能开关摆读数；读数让出顶上的地方")
+	t.begin("150 / 166 · 地图屏：读数层接上了这一局；地图铺满整屏、躲开顶端栏；调试台悬浮在栏下面、盖着地图；日志与地上件数在调试台里")
 	RunSave.remove(SAVE)
 	MetaSave.remove(META)
 	GameSettings.remove(SETTINGS)
@@ -249,32 +275,44 @@ static func frame_map_screen(t: TestCase, root: Window) -> void:
 	GameSettings.remove(SETTINGS)
 
 
-## 补 1 ～ 补 3：右栏的东西都成了组件、地图往左让；背包按钮 = 按 B；调试模式关掉日志就不造，开回来之前写的都在
+## 补 1 ～ 补 3 / 166：按钮与列表是部件（装进栏里的组件）；地图铺满、按读数层占着的边躲开；调试台悬浮；背包图标按钮 = 按 B；
+## 日志、地上件数、提示行在调试台里（调试模式关了也照写）；暂停菜单没有「存档并回主菜单」
 static func _map_parts(t: TestCase, map: Control, host: HudHost, flow: GameFlow, run: RunState) -> void:
 	host.arrange()
-	for id in [&"dev_drawer", &"bag_button", &"reopen_button", &"extract_button", &"menu_button", &"log"]:
+	for id in [&"dev_drawer", &"bag_button", &"reopen_button"]:
 		var w := host.widget(id) as HudPartWidget
 		t.check(w != null and w.part == map.hud_part(id) and w.part.get_parent() == w, "%s：部件装进了组件" % id)
-	# 作者 2026-10-12：提示行挪进调试台；抽屉开着时右边那一列整体往左让开它
+		t.check(w.position.y + w.size.y <= host.bar_height(), "%s 在顶端栏里" % id)
+	t.check(map.hud_part(&"bag_button") is IconButton and map.hud_part(&"reopen_button") is IconButton, "背包 / 放大镜是图标按钮")
+	for id in [&"extract_button", &"menu_button", &"log", &"ground_count"]:
+		t.is_null(host.widget(id), "%s 不在读数层里" % id)
+		t.is_null(map.hud_part(id), "%s 也不是这一屏的部件了" % id)
+	var view: MapView = map.get("_view")
+	t.eq(view.size, map.size, "地图铺满整屏")
+	t.eq(view.content_inset.position.y, host.bar_height(), "地图上边躲开顶端栏")
+	t.check(view.safe_rect().position.y >= host.bar_height(), "安全区从栏下面开始")
+	var drawer: DevDrawer = map.dev_drawer()
 	var status: Label = map.get("_status")
-	t.check(status.get_parent() == map.dev_drawer().content and status.text != "", "提示行在调试台里、有字")
-	t.is_null(host.widget(&"status"), "读数层里没有提示行那件了")
-	var inset0 := host.right_inset()
-	map.dev_drawer().set_open(true)
-	t.eq(host.right_inset(), inset0 + DevDrawer.WIDTH + 12.0, "调试台开着：右边多让出 432")
+	t.check(status.get_parent() == drawer.content and status.text != "", "提示行在调试台里、有字")
+	var log: RichTextLabel = map.get("_log")
+	t.check(log.get_parent() == drawer.content, "日志在调试台里")
+	var ground: Label = map.get("_ground_line")
+	t.eq(ground.text, "地上 %d 件" % run.storage.item_count(), "地上件数在调试台里")
+	t.check(drawer.offset_top >= host.bar_height(), "调试台顶缘在顶端栏下面（%s）" % drawer.offset_top)
+	var size0 := view.size
 	var arrow_w := host.widget(&"dev_drawer")
-	t.check(arrow_w.position.x + arrow_w.size.x <= host.size.x - DevDrawer.WIDTH - 12.0 + 0.5, "箭头按钮挪到抽屉左边，不被盖住")
-	map.dev_drawer().set_open(false)
-	t.eq(host.right_inset(), inset0, "关上：让回去")
+	var arrow_at := arrow_w.position
+	drawer.set_open(true)
+	host.arrange()
+	t.eq(view.size, size0, "调试台开着：地图不让")
+	t.eq(arrow_w.position, arrow_at, "箭头按钮不挪（调试台在它下面，不盖它）")
+	drawer.set_open(false)
 	t.check(not host.widget(&"routes").visible, "挑完出生点：路线收起来，那件也藏了")
-	t.check(host.right_inset() >= map.PART_WIDTH, "地图往左让出右边那一列（%s）" % host.right_inset())
-	t.eq(map.get("_mid").offset_right, -host.right_inset(), "地图那一竖排右边让这么多")
 	var bag := host.widget(&"bag_button") as HudPartWidget
-	var ext := host.widget(&"extract_button") as HudPartWidget
-	t.check(bag.position.y < ext.position.y, "背包按钮在撤离上面（原来的顺序）")
-	t.eq(bag.position.x + bag.size.x, host.size.x + HudLayout.COLUMN_OFFSET.x, "背包按钮贴右边")
 	if map.rules_open():
 		map.close_rules()     # 091：第一次进这一章弹的规则卡开着时 B 不管用
+	if map.coach() != null:
+		map.coach().queue_free()
 	(bag.part as Button).pressed.emit()
 	t.check(map.bag_open(), "点背包按钮：开背包")
 	var key := InputEventKey.new()
@@ -288,21 +326,22 @@ static func _map_parts(t: TestCase, map: Control, host: HudHost, flow: GameFlow,
 	# 腰带：有腰带模块就是格子，双击用（这里只看接上了）
 	var belt_w := host.widget(&"belt")
 	t.eq(belt_w.has_content(), BeltModule.of(run) != null, "腰带组件：跟着腰带模块")
-	# 调试模式：默认开；关掉 → 日志那件不造、日志照写；开回来 → 之前写的都在
+	# 调试模式：关掉照旧，日志照写；开回来之前写的都在
 	t.check(flow.settings.debug_mode, "调试模式默认开")
-	t.not_null(host.widget(&"log"), "开着：日志那件在")
 	map._note("关之前写的一行")
 	flow.settings.debug_mode = false
 	map.apply_debug_mode()
-	t.check(host.widget(&"log") == null, "关掉：日志那件不造")
-	var log: RichTextLabel = map.hud_part(&"log")
-	t.check(is_instance_valid(log) and not log.is_visible_in_tree(), "日志挂回藏着的架子上，看不见")
 	map._note("关着时写的一行")
 	t.check(host.widget(&"bag_button") != null, "别的组件照旧")
 	flow.settings.debug_mode = true
 	map.apply_debug_mode()
-	var lw := host.widget(&"log") as HudPartWidget
-	t.check(lw != null and lw.part == log, "开回来：日志那件又在了，还是那块")
 	var said := log.get_parsed_text()
 	t.check(said.contains("关之前写的一行") and said.contains("关着时写的一行"), "开回来：之前写的都在")
 	t.check(map.dev_drawer().content.get_child(0).text.contains("调试模式：开"), "调试台头部写着调试模式")
+	# 166：暂停菜单只剩继续 / 设置 / 百科 /（规则）/ 回主菜单
+	map.toggle_pause()
+	var texts: Array[String] = []
+	for b in map.get("_pause").find_children("*", "Button", true, false):
+		texts.append((b as Button).text)
+	t.check(not texts.has("存档并回主菜单") and texts.has("回主菜单"), "暂停菜单：「存档并回主菜单」换成「回主菜单」（%s）" % "、".join(texts))
+	map.toggle_pause()

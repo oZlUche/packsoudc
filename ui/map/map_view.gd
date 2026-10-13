@@ -111,6 +111,19 @@ const ZOOM_MAX := 2.5
 const START_GAP := NODE_RADIUS * 5.0
 ## 自动定的进图缩放最多放大到这里
 const START_ZOOM_MAX := 1.5
+## 166（作者定）：地图铺满整屏、读数浮在上面 —— 这几条边被顶端栏、左下图例、右下腰带占着（position = 左、上，size = 右、下），
+## 「刚好放下」「居中」「把人摆到正中」都按扣掉之后的安全区算（[method safe_rect]）；底图照旧铺满整个视图
+var content_inset: Rect2 = Rect2():
+	set(v):
+		if v == content_inset:
+			return
+		var was_fit := _last_size != Vector2.ZERO and _fits()
+		content_inset = v
+		if _open_pending:
+			return
+		if was_fit:
+			center()
+		queue_redraw()
 ## [method open_at] 时视图还没尺寸：等第一次 resized 再定缩放
 var _open_pending := false
 var _open_zoom := 0.0
@@ -145,7 +158,18 @@ func _on_resized() -> void:
 
 func _fits() -> bool:
 	var c := canvas_rect().size * zoom
-	return c.x <= size.x and c.y <= size.y
+	var room := safe_rect().size
+	return c.x <= room.x and c.y <= room.y
+
+
+## 166：扣掉 [member content_inset] 之后的那块（视图内坐标）；扣得太多时至少留一半
+func safe_rect() -> Rect2:
+	var lo := content_inset.position
+	var hi := content_inset.size
+	var room := size - lo - hi
+	if room.x < size.x * 0.5 or room.y < size.y * 0.5:
+		return Rect2(Vector2.ZERO, size)
+	return Rect2(lo, room)
 
 
 func _process(delta: float) -> void:
@@ -162,7 +186,8 @@ func canvas_rect() -> Rect2:
 
 ## 原比例、画布居中。画布比视口大的部分靠拖。
 func center() -> void:
-	pan = (size - canvas_rect().size * zoom) / 2.0
+	var safe := safe_rect()
+	pan = safe.position + (safe.size - canvas_rect().size * zoom) / 2.0
 	queue_redraw()
 
 
@@ -171,7 +196,8 @@ func fit() -> void:
 	var c := canvas_rect().size
 	if c.x <= 0.0 or c.y <= 0.0:
 		return
-	zoom = clampf(minf(size.x / c.x, size.y / c.y), ZOOM_MIN, 1.0)
+	var room := safe_rect().size
+	zoom = clampf(minf(room.x / c.x, room.y / c.y), ZOOM_MIN, 1.0)
 	center()
 
 
@@ -195,7 +221,8 @@ func start_zoom() -> float:
 	var c := canvas_rect().size
 	if c.x <= 0.0 or c.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
 		return 1.0
-	var whole := clampf(minf(size.x / c.x, size.y / c.y), ZOOM_MIN, 1.0)
+	var room := safe_rect().size
+	var whole := clampf(minf(room.x / c.x, room.y / c.y), ZOOM_MIN, 1.0)
 	var gap := shortest_edge()
 	if gap <= 0.0:
 		return whole
@@ -223,12 +250,13 @@ func focus(id: int) -> void:
 		center()
 		return
 	var c := canvas_rect().size * zoom
-	var p := size / 2.0 - (pos[id] as Vector2) * zoom
+	var safe := safe_rect()
+	var p := safe.get_center() - (pos[id] as Vector2) * zoom
 	for i in 2:
-		if c[i] <= size[i]:
-			p[i] = (size[i] - c[i]) / 2.0
+		if c[i] <= safe.size[i]:
+			p[i] = safe.position[i] + (safe.size[i] - c[i]) / 2.0
 		else:
-			p[i] = clampf(p[i], size[i] - c[i], 0.0)
+			p[i] = clampf(p[i], safe.end[i] - c[i], safe.position[i])
 	pan = p
 	queue_redraw()
 

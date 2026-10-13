@@ -61,6 +61,17 @@ func title() -> String:
 	return String(id)
 
 
+## 166：在字的左边加一枚图标（货币的金币、信仰的徽记）：字和图标排成一行
+func _prepend_icon(icon: Control) -> void:
+	var row := UiTheme.hbox(6)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	remove_child(_text)
+	add_child(row)
+	row.add_child(icon)
+	row.add_child(_text)
+	_text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+
 ## 宿主换掉这件之前叫它（150 补 1：装着屏幕那块控件的组件把控件还回去，别跟着组件一起释放）
 func release() -> void:
 	pass

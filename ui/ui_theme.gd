@@ -48,11 +48,16 @@ const BUTTON_HOME := &"ButtonHome"
 const BUTTON_HOME_PRIMARY := &"ButtonHomePrimary"
 const PANEL_HOME_BOX := &"PanelHomeBox"
 const PANEL_SHELF := &"PanelShelf"
+## 166：地图屏的顶端栏（[code]hud_bar[/code] 部件的底：美术给 `hud/bar.png` 九宫格就贴，没给是读数那种半透明深底）、
+## 栏里的图标按钮（[IconButton]：背包、放大镜、主动技能；按下态走这个变体）
+const PANEL_HUD_BAR := &"PanelHudBar"
+const BUTTON_ICON := &"ButtonIcon"
 
 ## 全部变体（测试看齐全）
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
 	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
-	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF]
+	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
+	PANEL_HUD_BAR, BUTTON_ICON]
 
 const TITLE_SIZE := 18
 const PANEL_MARGIN := 16
@@ -84,6 +89,8 @@ const ART_HOME_BTN_PRIMARY := "home/btn_wood_primary"
 const ART_HOME_BOX := "home/panel_cloth"
 const ART_SHELF := "home/shelf"
 const ART_TAB_MARK := "home/tab_mark"
+## 166：顶端栏的底（`assets/ui/hud/bar.png`，作者第十四条要大理石，json 写 tone）
+const ART_HUD_BAR := "hud/bar"
 ## 家的按钮字号：页签 / 回主菜单 20，「再来一局」28
 const HOME_BUTTON_SIZE := 20
 const HOME_PRIMARY_SIZE := 28
@@ -311,11 +318,11 @@ const TONE_LIGHT := &"light"
 ## **新加面板变体必须登记在这里**（测试看全）
 const PANEL_TONES := {
 	PANEL_DARK: TONE_DARK, PANEL_LINE: TONE_DARK, PANEL_HUD: TONE_DARK, PANEL_OVERLAY: TONE_DARK, PANEL_TOOLTIP: TONE_DARK,
-	PANEL_NAMEPLATE: TONE_DARK, PANEL_HOME_BOX: TONE_LIGHT, PANEL_SHELF: TONE_DARK,
+	PANEL_NAMEPLATE: TONE_DARK, PANEL_HOME_BOX: TONE_LIGHT, PANEL_SHELF: TONE_DARK, PANEL_HUD_BAR: TONE_DARK,
 }
 ## 面板变体用哪张美术图（有图时深浅读它的 json）
 const PANEL_ART := {PANEL_DARK: ART_PANEL, PANEL_LINE: ART_INSET, PANEL_HUD: ART_HUD, PANEL_OVERLAY: ART_FRAME, PANEL_TOOLTIP: ART_TOOLTIP,
-	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF}
+	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_HUD_BAR}
 ## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸
 const INK := Color("2e2219")
 const INK_SOFT := Color("5a4433")
@@ -565,6 +572,19 @@ static func _fill(t: Theme, bg: Color) -> void:
 	var hud_box := _box(panel_bg, UiPalette.LINE, HUD_MARGIN)
 	hud_box.set_border_width_all(0)
 	t.set_stylebox("panel", PANEL_HUD, hud_art if hud_art != null else hud_box)
+	# 166：顶端栏（横贯顶部的一条，左右留 16）与栏里的图标按钮（平时透明，悬停 / 按下才露底）
+	t.set_type_variation(PANEL_HUD_BAR, "PanelContainer")
+	var bar_art: StyleBox = _art_box(ART_HUD_BAR)
+	var bar_box := _box(Color(panel_bg, 0.86), UiPalette.LINE, HUD_MARGIN)
+	bar_box.set_border_width_all(0)
+	bar_box.border_width_bottom = 1
+	bar_box.set_corner_radius_all(0)
+	t.set_stylebox("panel", PANEL_HUD_BAR, bar_art if bar_art != null else bar_box)
+	_button_variation(t, BUTTON_ICON, UiPalette.Tier.MINOR)
+	var clear := StyleBoxEmpty.new()
+	clear.set_content_margin_all(4)
+	t.set_stylebox("normal", BUTTON_ICON, clear)
+	t.set_stylebox("disabled", BUTTON_ICON, clear)
 	t.set_type_variation(LABEL_HUD, "Label")
 	t.set_type_variation(LABEL_HUD_LARGE, "Label")
 	t.set_font_size("font_size", LABEL_HUD_LARGE, HUD_LARGE_SIZE)
