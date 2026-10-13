@@ -5,12 +5,19 @@ extends HudWidget
 const ICON := 24.0
 const ROW_GAP := 4.0
 const TEXT_GAP := 8.0
+## 作者 2026-10-13（图例看不清、字压边框）：图例自己一块深色半透明底、白字，内边距让图标和字离边框远一点
+const BG := Color(0.08, 0.07, 0.06, 0.78)
+const PAD_X := 10
+const PAD_Y := 6
+
+static var _dark_theme: Theme = null
 
 var _rows: VBoxContainer
 
 
 func _init() -> void:
 	super()
+	theme = _legend_theme()     # 深底（tone dark）：不挂墨色字，自己的底和白字
 	_text.visible = false
 	_rows = UiTheme.vbox(int(ROW_GAP))
 	_rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -62,6 +69,29 @@ func refresh() -> void:
 		name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.add_child(name)
 		_rows.add_child(row)
+
+
+## 深色底 + 白字的一份小主题（只给图例）
+static func _legend_theme() -> Theme:
+	if _dark_theme != null:
+		return _dark_theme
+	var box := StyleBoxFlat.new()
+	box.bg_color = BG
+	box.border_color = Color(1, 1, 1, 0.18)
+	box.set_border_width_all(1)
+	box.set_corner_radius_all(4)
+	box.content_margin_left = PAD_X
+	box.content_margin_right = PAD_X
+	box.content_margin_top = PAD_Y
+	box.content_margin_bottom = PAD_Y
+	var t := Theme.new()
+	t.set_type_variation(UiTheme.PANEL_HUD, "PanelContainer")
+	t.set_stylebox("panel", UiTheme.PANEL_HUD, box)
+	t.set_type_variation(UiTheme.LABEL_HUD, "Label")
+	t.set_color("font_color", UiTheme.LABEL_HUD, Color.WHITE)
+	t.set_color("font_color", "Label", Color.WHITE)
+	_dark_theme = t
+	return t
 
 
 ## 一枚图标：图（按类型色着色）或者圆里一个字
