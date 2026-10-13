@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bobjtxm0r4ue1"
-path="res://.godot/imported/panel_stone.png-eddfc5e8b8d66a88eda4f7166113b62c.ctex"
+uid="uid://c0twmjicrew4o"
+path="res://.godot/imported/slab_edge.png-115aa7d9307f62d0a26d00b0758b732b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/panel_stone.png"
-dest_files=["res://.godot/imported/panel_stone.png-eddfc5e8b8d66a88eda4f7166113b62c.ctex"]
+source_file="res://assets/ui/slab_edge.png"
+dest_files=["res://.godot/imported/slab_edge.png-115aa7d9307f62d0a26d00b0758b732b.ctex"]
 
 [params]
 

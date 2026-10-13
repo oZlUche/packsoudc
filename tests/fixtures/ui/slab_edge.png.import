@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b8put80x2ro4l"
-path="res://.godot/imported/bg_stone.png-3de289736f47112775d06c4cc8d0c26a.ctex"
+uid="uid://d0vcwjlt30j4s"
+path="res://.godot/imported/slab_edge.png-a255d82178e8b750f0235a5041f66688.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/bg_stone.png"
-dest_files=["res://.godot/imported/bg_stone.png-3de289736f47112775d06c4cc8d0c26a.ctex"]
+source_file="res://tests/fixtures/ui/slab_edge.png"
+dest_files=["res://.godot/imported/slab_edge.png-a255d82178e8b750f0235a5041f66688.ctex"]
 
 [params]
 

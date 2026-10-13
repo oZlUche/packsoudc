@@ -18,7 +18,7 @@ func open(payload: Dictionary) -> void:
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 32)
-	add_child(margin)
+	_slab_screen().add_child(margin)     # 157 补充三：内容在一整块石板上
 	# 反馈：仓库面板按自己的最小高度占满，把底部的继续按钮挤出窗口。内容放进竖向滚动，按钮钉在底下
 	var outer := _vbox(10)
 	margin.add_child(outer)

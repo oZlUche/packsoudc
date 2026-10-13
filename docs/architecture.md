@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.91 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.93 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3453,13 +3453,14 @@ func player_spec() -> CombatantSpec …
 - `IconButton`（`ui/widgets/`）：48 × 48，图 `assets/ui/hud/icon_<id>.png`，缺图写字；悬浮窗「名字（快捷键）+ 一句说明」；右上快捷键小字、右下次数角标。背包 B、放大镜 N、主动技能 `skill_<id>`（角标 = 这一局还能用几次）。
 - 货币只写数字，左边一枚金币（`HudIcon`，`assets/ui/hud/coin.png`，缺图画金色圆）；信仰有就一枚图标（`assets/ui/faith/<id>.png`）+「Lv.n　当前 / 下一级」，缺图退回老的字，没信仰留一个空槽。
 - 图例只列这张图上有的节点类型（揭开了的随机点按揭开的算），顺序按 `MapNodeStyle.STYLES`，名字是 `MapNodeStyle.NAMES` 的短名，图标与地图上那枚一样。
+- 166 补充一：角色的主动技能对玩家藏着（`RunSkills.ACTIVE_HIDDEN`）—— 右槽的 `skills` 默认不显示（摆读数右键还能放出来验技能），战前屏不建「溜走」，开局屏与百科只列被动；记账与代码都留着，日后翻这一处。
 - 自动存档：`GameFlow.step_to` 人到了新点、事件还没给玩家看就存一次；看完叠层回到地图（`_flush` 最后）再存一次。暂停菜单只留「回主菜单」（照旧先存）。
 
 ### 8.8 叠层的石板框、换屏、光标（157）
 
 叠层屏（事件、战前、回放、容器、商店、保险箱、神坛、休息、百科）都走 `GameScreen._centered_panel()`：它造一块 `OverlayFrame`（`ui/widgets/`），
 顶上标题条（左标题、右槽）+ 内容区，返回内容区给各屏；标题写 `_frame_title(text)`。外观是主题变体 `PanelOverlay`：`UiTheme.asset_root`（默认 `res://assets/ui/`）
-下有 `frame_stone.png` 就是九宫格（边距与标题条高读同名 `.json`），没有就是平面底 —— 换皮只换图。悬浮窗（`HoverTip`）同理走 `PanelTooltip`（`tooltip_paper.png`）。
+下有石板两张图（`slab_body` + `slab_edge`，157 补充三）就是一整块石板（边距与标题条高读 `slab_edge.json`），没有就是平面底 —— 换皮只换图。悬浮窗（`HoverTip`）同理走 `PanelTooltip`（`tooltip_paper.png`）。
 宝箱屏整屏铺背景，不套框。
 
 换屏：导演加叠层时 0.15 秒、换底屏时 0.2 秒从透明淡入（撤叠层直接撤）；`GameSettings.ui_fades` 关掉，测试与截图工具用 `GameDirector.fades_allowed` 关掉。
@@ -3469,9 +3470,13 @@ func player_spec() -> CombatantSpec …
 警示 `#9A5A22`，富文本默认墨），里面的字都继承；深底不挂（用全局的浅色字）。浅底上的 BBCode 过 `UiTheme.ink_bbcode`：写死的 `[color=…]`
 灰色换成墨 / 褐墨，有色的按原色相压暗到在亮纸上对比 ≥ 4.5（`MIN_CONTRAST`）。按钮自带底，不跟着变。现在悬浮窗（主面板与词条小窗）是亮纸、浅底；石板框是深底。
 
-**石板样式**（157 补，作者定「整体纯色底换成石板」）：整屏底（`GameScreen._backdrop` / `UiTheme.prepare_root` 的纯色 `ColorRect`）上 `UiTheme.dress_backdrop` 铺一层平铺的
-`bg_stone.png`，设置里的底色给它染色（`backdrop_tint`：默认那档原色，别的档按和默认的比例乘）；地图视图没底图时也平铺它。`PanelDark` / `PanelLine` / `PanelHud`
-换成 `panel_stone` / `panel_inset` / `panel_hud` 九宫格，**内边距照旧按变体默认值**（`_art_box(name, false, content)`），换皮不改排版。都是有图用图、没图照旧。
+**石板**（157 补充三，作者定「每个界面（框）在一块完整的石板上显示」，取代原来平铺满屏的石砖墙）：**一屏一块石板，板即框**。
+- `SlabStyle`（`ui/widgets/`）是一个两层画的 StyleBox：下层板身 `slab_body.png` 平铺（`AXIS_STRETCH_MODE_TILE`，纹不随框大小拉花，往里缩 json `body_inset`，凿口外透出底下），上层板边 `slab_edge.png` 九宫格（中心透明：手凿轮廓、受光棱、投影、顶上一道刻线）。`UiTheme.slab_box()` 两张图都在才造，否则 null、退回平面底；`UiTheme.slab(c)` 把一块面板挂成石板（`PanelOverlay` 变体 + 按石板深浅挂字色）。没用「两个 Panel 子底」的写法：一个 StyleBox 画两层，凡是挂 `PanelOverlay` / `PanelHudBar` 的都自动是石板，容器排版也不受子底影响。
+- 叠层屏：`OverlayFrame` 就是石板；标题字刻在板顶刻线上方（标题条高 json `title_height`，`_art_box` 的顶内边距只留到标题条上沿，`TITLE_LINE_GAP` 6 给刻线）。板外是半透明暗罩（`GameScreen.OVERLAY_SHADE` 0.6），底下的地图压暗透出。
+- 底屏（主菜单、设置、存档位、结算、开局三页）：`GameScreen._slab_screen()` 造一块居中的大石板（宽高各 `SLAB_SHARE` 九成），返回板里的内容区；板外是纯色底（`_backdrop`，091 的底色设置照旧管它）。基地（164）有自己的家底、地图屏（166）是满幅纸底，都不走石板。
+- 板里的分区是刻进去的凹槽：`PanelDark` / `PanelLine` / `PanelHud` 都用 `inset.png` 九宫格，**内边距照旧按变体默认值**（`_art_box(name, false, content)`），换皮不改排版。
+- 顶端栏（166 `hud_bar`）是一条独立的长石板：同一套板身 + 板边，`slab_box(..., flush_top = true)` 把顶棱和刻线画到屏幕外，只露左右与底边。
+- 退掉：`bg_stone`、`panel_stone`、`panel_inset`、`panel_hud`、`frame_stone`、`hud/bar`；`UiTheme.dress_backdrop / backdrop_art / backdrop_tint / tint_backdrop` 删了，地图视图没底图时就是底色。都是有图用图、没图照旧（平面底）。
 
 **名牌**（157 补充二，作者定「没图也先留框」）：`Nameplate` 是 `PanelNameplate` 底（`nameplate_stone.png`），左边 64×64 肖像位、右边 32×32 徽记位都是 `PortraitSlot`
 （`ui/widgets/`）—— 框永远在（`portrait_frame.png` 画在位子外扩 json `inset` 处，不占排版；没图画细线），有肖像填图、没有放 `portrait_empty.png` 剪影（再没有就自己画）。
@@ -4139,6 +4144,8 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.93 | 2026-10-13 | **一屏一块完整石板**（报告 157 补充三，作者定，待定按推荐；改 8.8）：`SlabStyle` 两层画（板身 `slab_body` 平铺 + 板边 `slab_edge` 九宫格，`body_inset` 缩进），`OverlayFrame` 与顶端栏是石板（栏顶棱藏到屏外）；叠层板外改半透明暗罩 0.6（地图透出），底屏内容进 `GameScreen._slab_screen` 那块九成大板、板外纯色；`PanelDark / PanelLine / PanelHud` 改凹槽 `inset`；石砖墙底与小石板六张退了，`dress_backdrop` 等删掉；名牌换凹刻式 |
+| v2.92 | 2026-10-13 | **主动技能对玩家藏起来**（报告 166 补充一，作者定，待定按推荐；改 8.7）：`RunSkills.ACTIVE_HIDDEN` 一处开关；地图屏默认布局的 `skills` 不显示（`HudLayout.hidden_by_default`，布局版本 5），战前准备屏不建「溜走」，`CharacterDef.skill_lines / skills_summary` 只列被动，百科「三个角色」与序章开场删掉主动技能的句子；记账、存档、`use_skill / slip_battle` 与角色 json 都留着。同版接进 166 的美术（顶端栏大理石、背包 / 放大镜、36 px 金币、七枚信仰章、教程箭头、腰带圆槽）与第十四条的大理石石板（六张 tone 全 light），整屏底的深浅也读 json（`UiTheme.backdrop_tone`，浅底屏挂墨色字主题） |
 | v2.91 | 2026-10-13 | **地图屏顶端栏与序章教程**（报告 166，作者定，待定按推荐；改 8.7，新 8.9）：读数层顶上一条 `hud_bar` 顶端栏（`PanelHudBar` 变体，缺图半透明深底），布局加三个栏槽锚点 `bar_left / bar_center / bar_right`（布局版本 4）；背包 / 放大镜 / 主动技能成了 `IconButton`（缺图写字、快捷键小字、次数角标）；撤离按钮与「存档并回主菜单」删掉，`GameFlow.step_to` 进点前、`_flush` 回地图时自动存档；日志与「地上 N 件」进调试台，调试台悬浮在栏下面盖着地图；金币与信仰图标（`HudIcon`，没信仰留空槽）；左下 `legend` 图例；腰带圆槽 72；地图满幅、按 `HudHost.content_inset()` 躲开栏与左下 / 右下；序章一 `coach` 静态教程 `CoachOverlay`（`MetaState.coach_seen` 记放过） |
 | v2.90 | 2026-10-13 | **敌人棋盘只写死相邻组合**（报告 165，作者定，待定按推荐；改 5.10）：`EnemyPlacer.auto_groups` 从道具的增益 / 受益 / 供给配对成组（`EnemyDef.combos` 可钉死），`_arrange` 组整组摆（现搭或刚体、四个朝向）、散件随机落位、重来四次后贴左上与老办法保底；`build_content` 改用它，补件与携带品也随机落位；预设图 `at` 可省、可写 `groups`，`EnemyPlacer.arrange` / `arrange_map` 开局按 `content_seed` 摆一次写回；`EnemyKit.board_of` 对没写位置的件自己找空位；序章二 / 三六个敌人删掉手写位置 |
 | v2.89 | 2026-10-12 | **仓库分页与基地三列**（报告 163 / 164，作者定，待定按推荐；改 8.2）：`Warehouse` 多页容器（每页 10 × 8、按页序自动放、只删末尾空页、存档逐页、老单块档按页切），科技构件 `warehouse_rows` → `warehouse_pages`（每级一页，`docs/techs.xlsx` 重新生成）；`WarehousePages` 竖排页签（锁着的灰显带锁、拖着停 0.4 秒切页），结算屏 / 开局第二页 / 基地共用；基地改左列竖排页签 + 左下大按钮、中列当前页（默认「家」）、右半边常驻仓库（格子按宽高取小 40 ～ 80），整屏一层拖拽、双击按当前页分派，出售 / 科技页不再自己画仓库；「家」美术套件进 `assets/ui/home/`，`UiTheme` 加 `BUTTON_HOME(_PRIMARY)`、`PANEL_HOME_BOX`、`PANEL_SHELF`、`dress_home_backdrop` |

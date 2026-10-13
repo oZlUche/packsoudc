@@ -257,3 +257,15 @@
 | 补 1 | 叠层屏板外是什么 | A 底下的地图压暗透出（暗罩 0.6）；B 不透明纯色暗底 | **A**：石板「浮在地图上」才像一块板；文字都在板上，不受地图干扰 |
 | 补 2 | 底屏的大板占多大 | A 屏幕九成宽高、居中，板外纯色；B 顶天立地（板边贴屏幕边） | **A**：看得见板的边才像一块石头，B 又回到「满屏石头」 |
 | 补 3 | 板身纹理 | A 平铺无缝纹（TILE）；B 一张大图按框拉伸 | **A**：框大小各屏不同，拉伸会花 |
+
+### 落地记录（补充三，2026-10-13）
+
+三项待定全按推荐 A（叠层板外暗罩透出地图、底屏大板九成居中、板身平铺）。美术同日交了 `slab_body / slab_edge / inset` 与凹刻式名牌，已放进 `assets/ui/`。
+
+- `ui/widgets/slab_style.gd`（`SlabStyle`）：一个 StyleBox 画两层 —— 板身平铺（往里缩 `body_inset`）+ 板边九宫格。和 §2 写的「`PanelContainer` 挂两个 `Panel` 子底」效果一样，但挂在主题变体上：`PanelOverlay`（叠层框、底屏大板）与 `PanelHudBar`（顶端栏）自动是石板，容器不用为子底让排版。
+- `UiTheme`：`ART_SLAB_BODY / ART_SLAB_EDGE / ART_INSET`，`has_slab`、`slab_box(title_strip, content, flush_top)`、`slab(c)`、`is_art_box`；`PANEL_ART` 叠层框与顶端栏指板边、三种分区指凹槽；`frame_title_height` 读 `slab_edge.json`，标题条顶内边距只留到标题条上沿（`TITLE_LINE_GAP` 6 给刻线）。`ART_BG / ART_PANEL / ART_FRAME / ART_HUD / ART_HUD_BAR`、`backdrop_art / backdrop_tone / backdrop_tint / dress_backdrop / tint_backdrop` 删了。
+- `GameScreen`：`_backdrop` 只是纯色；`_centered_panel` 的暗罩 0.82 → `OVERLAY_SHADE` 0.6；新 `_slab_screen()`（九成居中大板，返回内容区）与 `screen_slab()`。主菜单、设置、存档位、结算、开局三页的内容都放进大板。
+- 顶端栏：同一套石板，`flush_top` 把顶棱与刻线画到屏幕外。地图视图没底图就是底色，不再铺砖。
+- 资源：退掉 `bg_stone / panel_stone / panel_inset / panel_hud / frame_stone / hud/bar`（美术那边归档在 `art/ui/stone/retired_marble_v2/`）。
+- 测试：`test_screens_157.gd`（石板两层、板身平铺与缩进、标题条高、凹槽内边距、没图平面底、主菜单大板九成居中且按钮在板上、叠层暗罩 0.6 与石板框）、`test_theme.gd`、`test_class_cache.gd`；测试图 `tests/fixtures/ui/slab_body / slab_edge / inset`。
+

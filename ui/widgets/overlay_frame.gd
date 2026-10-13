@@ -1,8 +1,8 @@
 ## 叠层共用的石板框（157）：顶上一条**标题条**（左标题、右一排槽放各屏自己的收起 / 关闭 / 返回）+ 下面的**内容区**。
 ##
 ## [method GameScreen._centered_panel] 造它、把 [member content] 交给各屏 —— 各屏照旧往里加一个子节点，标题写进 [method set_title]。
-## 外观是主题变体 [constant UiTheme.PANEL_OVERLAY]：美术给了 `frame_stone.png` 就是九宫格（标题条正好压在图顶上那一条，
-## 高度读 `frame_stone.json` 的 `title_height`），没给就是原来那块平面底。
+## 外观是主题变体 [constant UiTheme.PANEL_OVERLAY]：157 补充三起是**一整块石板**（[SlabStyle]：板身平铺 + 板边九宫格，
+## 标题字刻在板顶那道刻线上方，高度读 `slab_edge.json` 的 `title_height`），没图就是原来那块平面底。
 class_name OverlayFrame
 extends PanelContainer
 
@@ -19,10 +19,9 @@ var content: MarginContainer
 
 ## [param margin] 是各屏原来给面板的内边距：平面底照旧当外框内边距；九宫格底时外框边距由图定，多出来的部分垫在内容区里
 func _init(margin: int = -1) -> void:
-	theme_type_variation = UiTheme.PANEL_OVERLAY
-	UiTheme.apply_tone(self, UiTheme.PANEL_OVERLAY)     # 157 补：深底浅字、浅底墨字
+	UiTheme.slab(self)     # 157 补充三：一整块石板；深底浅字、浅底墨字
 	var box := UiTheme.current().get_stylebox("panel", UiTheme.PANEL_OVERLAY)
-	var textured := box is StyleBoxTexture
+	var textured := UiTheme.is_art_box(box)
 	var want := margin if margin >= 0 else UiTheme.PANEL_MARGIN
 	var col := UiTheme.vbox(GAP)
 	add_child(col)

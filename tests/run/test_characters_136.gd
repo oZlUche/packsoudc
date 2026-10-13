@@ -295,9 +295,12 @@ static func run_card_without_identity(t: TestCase) -> void:
 		var ch := CS._character(c, id)
 		t.check(not ("identity" in ch), "%s：角色上没有身份字段" % id)
 		var lines := ch.skill_lines()
-		t.eq(lines.size(), 3, "%s：三行" % id)
-		if lines.size() == 3:
-			t.check(lines[0].begins_with("被动：") and lines[1].begins_with("被动：") and lines[2].begins_with("主动："), "%s：%s" % [id, " / ".join(lines)])
+		# 166 补充一：主动技能藏着时开局屏只列两行被动
+		var want := 2 if RunSkills.ACTIVE_HIDDEN else 3
+		t.eq(lines.size(), want, "%s：%d 行" % [id, want])
+		if lines.size() == want:
+			t.check(lines[0].begins_with("被动：") and lines[1].begins_with("被动："), "%s：%s" % [id, " / ".join(lines)])
+			t.check(RunSkills.ACTIVE_HIDDEN or lines[2].begins_with("主动："), "%s：第三行是主动" % id)
 			t.check(not lines[0].contains("{"), "%s：占位符都填上了" % id)
 		for sk in ch.skills:
 			t.check(not ("slot" in sk), "%s：技能没有分组字段" % id)
@@ -306,3 +309,4 @@ static func run_card_without_identity(t: TestCase) -> void:
 	t.check(not ResourceLoader.exists("res://core/run/events/conditions/identity_is.gd"), "身份条件的脚本删了")
 	var page := FileAccess.get_file_as_string("res://data/authoring/help_pages/characters.json")
 	t.check(page.contains("科技对每个角色都生效") and not page.contains("身份"), "百科「三个角色」：科技对谁都生效，不提身份")
+	t.check(not RunSkills.ACTIVE_HIDDEN or not page.contains("主动"), "166 补充一：百科不提主动技能")

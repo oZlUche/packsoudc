@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://f84momlv6rpw"
-path="res://.godot/imported/frame_stone.png-7153fb7fe620ec6e6b52f53dc2a2736b.ctex"
+uid="uid://djb2vps0iawa1"
+path="res://.godot/imported/slab_body.png-4eef64fdaaf2173e8dd54a09364d2cb7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/frame_stone.png"
-dest_files=["res://.godot/imported/frame_stone.png-7153fb7fe620ec6e6b52f53dc2a2736b.ctex"]
+source_file="res://assets/ui/slab_body.png"
+dest_files=["res://.godot/imported/slab_body.png-4eef64fdaaf2173e8dd54a09364d2cb7.ctex"]
 
 [params]
 

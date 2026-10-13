@@ -21,6 +21,13 @@ var _drag: DragLayer = null
 var _tip: HoverTip = null
 ## 157：叠层的石板框（[method _centered_panel] 造）；底屏没有
 var _overlay_frame: OverlayFrame = null
+## 157 补充三：底屏的那一整块大石板（[method _slab_screen] 造）；叠层、基地、地图没有
+var _screen_slab: PanelContainer = null
+
+## 157 补充三：底屏的大石板占屏幕多少（宽高各九成、居中，板外是纯色底）
+const SLAB_SHARE := 0.9
+## 叠层的暗罩（底下的地图压暗透出来，石板像浮在地图上）
+const OVERLAY_SHADE := 0.6
 
 
 func _ready() -> void:
@@ -141,14 +148,14 @@ func _button(text: String, handler: Callable, font_size: int = 14, tier: int = U
 	return UiTheme.make_button(text, handler, tier, font_size)
 
 
-## 整屏的底色（底屏用）。不传颜色 = 设置里挑的底色（[method UiPalette.bg]）
+## 整屏的底色（底屏用）。不传颜色 = 设置里挑的底色（[method UiPalette.bg]）。
+## 157 补充三：只是纯色暗底，不再铺石砖墙；底屏的内容放进 [method _slab_screen] 那块石板
 func _backdrop(color: Color = Color(0, 0, 0, 0)) -> ColorRect:
 	var bg := ColorRect.new()
 	var themed := color.a <= 0.0
 	bg.color = UiPalette.bg() if themed else color
 	if themed:
 		_bg_rect = bg
-		UiTheme.dress_backdrop(bg)     # 157 补：有石板图铺石板（底色设置给石板染色）
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_STOP     # 叠层要挡住底下的地图，不然点穿了就走了一步
 	add_child(bg)
@@ -159,7 +166,42 @@ func _backdrop(color: Color = Color(0, 0, 0, 0)) -> ColorRect:
 func refresh_backdrop() -> void:
 	if _bg_rect != null:
 		_bg_rect.color = UiPalette.bg()
-		UiTheme.tint_backdrop(_bg_rect)
+
+
+## 157 补充三（作者定：每个界面在一块完整的石板上显示）：底屏的一整块大石板 —— 屏幕九成宽高、居中，板外是纯色底（[method _backdrop]）。
+## 返回板里的内容区（一块铺满板内边距的空控件）：各屏照旧往里放铺满的居中 / 边距容器
+func _slab_screen(min_size: Vector2 = Vector2.ZERO) -> Control:
+	var slab := UiTheme.slab(PanelContainer.new())
+	slab.name = "ScreenSlab"
+	var side := (1.0 - SLAB_SHARE) * 0.5
+	slab.anchor_left = side
+	slab.anchor_top = side
+	slab.anchor_right = 1.0 - side
+	slab.anchor_bottom = 1.0 - side
+	slab.custom_minimum_size = min_size
+	add_child(slab)
+	_screen_slab = slab
+	# 内容区和板同锚点、按板的内边距缩进；不放进板（容器）里 —— 那样要等下一帧排版才有大小，钉在角上的按钮第一帧会跑到屏外
+	var area := Control.new()
+	area.name = "SlabContent"
+	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	area.anchor_left = side
+	area.anchor_top = side
+	area.anchor_right = 1.0 - side
+	area.anchor_bottom = 1.0 - side
+	var box := UiTheme.current().get_stylebox("panel", UiTheme.PANEL_OVERLAY)
+	area.offset_left = box.get_margin(SIDE_LEFT)
+	area.offset_top = box.get_margin(SIDE_TOP)
+	area.offset_right = -box.get_margin(SIDE_RIGHT)
+	area.offset_bottom = -box.get_margin(SIDE_BOTTOM)
+	UiTheme.apply_tone(area, UiTheme.PANEL_OVERLAY)     # 板上的字按石板的深浅（浅板墨字）
+	add_child(area)
+	return area
+
+
+## 157 补充三：底屏的大石板（测试看）；没有 null
+func screen_slab() -> PanelContainer:
+	return _screen_slab
 
 
 ## 一块带边框的面板。128：它占着地上的地方 —— 地上的东西被它盖住就推到最近的空处
@@ -189,7 +231,7 @@ func _shade(alpha: float = 0.7, centered: bool = false) -> ColorRect:
 ## 居中的一块面板（叠层用）：半透明压暗底下的地图，石板框放中间（157：[OverlayFrame]，标题写进 [method _frame_title]）。
 ## 返回框的内容区，各屏往里加东西；128：框占着地上的地方
 func _centered_panel(min_size: Vector2, margin: int = 16) -> Container:
-	_shade(0.82)
+	_shade(OVERLAY_SHADE)     # 157 补充三：地图压暗透出来，石板浮在上面
 	var center := _full_center()
 	add_child(center)
 	_overlay_frame = OverlayFrame.new(margin)
