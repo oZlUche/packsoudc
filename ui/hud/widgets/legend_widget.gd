@@ -18,6 +18,7 @@ var _rows: VBoxContainer
 func _init() -> void:
 	super()
 	theme = _legend_theme()     # 深底（tone dark）：不挂墨色字，自己的底和白字
+	set_meta(&"tone", UiTheme.TONE_DARK)     # 169：里面的字按深底取版（HudWidget 默认挂的是凹槽的浅）
 	_text.visible = false
 	_rows = UiTheme.vbox(int(ROW_GAP))
 	_rows.mouse_filter = Control.MOUSE_FILTER_IGNORE

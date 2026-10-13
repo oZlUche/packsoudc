@@ -148,7 +148,7 @@ func open(payload: Dictionary) -> void:
 		var c := UiPalette.HEAL if just.is_extracted() else UiPalette.HP
 		info.add_child(_wrapped("刚才这一局：%s" % ("撤离，背出来 %d 件、值 %d 币、带出 %d 币" % [just.carried.size(), just.value, just.balance]
 			if just.is_extracted() else ("战败，保险箱里的 %d 件带出来了" % just.safe_items.size() if not just.safe_items.is_empty() else "战败，什么都没带出来")), 15,
-			UiTheme.ink_color(c) if tone == UiTheme.TONE_LIGHT else c, 460))
+			UiPalette.for_tone(c, tone), 460))
 	# 092：离开结算屏时地上一键出售了 —— 提示一句
 	var sold: Dictionary = payload.get("stash_sold", {})
 	if int(sold.get("count", 0)) > 0:

@@ -80,7 +80,7 @@ static func run_slab_text_ink(t: TestCase) -> void:
 	var orange := Color("f0a040")
 	var white := Color("e8e8e8")
 	var text := "[color=#%s]先看对手[/color][color=#%s]长剑[/color]" % [orange.to_html(false), white.to_html(false)]
-	var out := UiTheme.slab_bbcode(text)
+	var out := UiPalette.toned(text, UiTheme.tone_of(UiTheme.PANEL_OVERLAY))     # 169：统一入口
 	if UiTheme.tone_of(UiTheme.PANEL_OVERLAY) == UiTheme.TONE_LIGHT:
 		t.check(not out.contains(orange.to_html(false)) and not out.contains(white.to_html(false)), "浅石板：两种亮色都换掉了（%s）" % out)
 		t.check(UiTheme.contrast(UiTheme.ink_color(orange), UiTheme.PAPER) >= UiTheme.MIN_CONTRAST, "橙色换成够深的版本")

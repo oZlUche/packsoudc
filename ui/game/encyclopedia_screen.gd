@@ -84,7 +84,7 @@ func open_page(id: String, remember: bool = true) -> bool:
 		_history.append(_current)
 	_current = id
 	_title.text = String(book.page(id)["title"])
-	_body.text = UiTheme.slab_bbcode(UiPalette.resolve_styles(book.render(id, _ctx)))
+	UiTheme.set_rich(_body, book.render(id, _ctx))     # 169：颜色名按所在的底取版
 	_prev_btn.disabled = _history.is_empty()
 	return true
 

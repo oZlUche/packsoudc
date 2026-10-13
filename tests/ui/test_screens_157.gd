@@ -388,13 +388,17 @@ static func run_tones(t: TestCase) -> void:
 		UiPalette.RECEIVE, UiPalette.ARMOR, UiPalette.MANA, UiPalette.CRIT, Glossary.TERM_COLOR]
 	colors.append_array(ItemPainter.RARITY_COLORS)
 	for c in colors:
-		t.check(UiTheme.contrast(UiTheme.ink_color(c), UiTheme.PAPER) >= UiTheme.MIN_CONTRAST, "#%s 压成墨水版后在纸上对比够" % (c as Color).to_html(false))
+		t.check(UiTheme.contrast(UiTheme.ink_color(c), UiTheme.PAPER) >= UiTheme.MIN_CONTRAST, "#%s 压成墨水版后在纸上对比够（模板不在时的兜底）" % (c as Color).to_html(false))
+	# 169：有模板时浅底用作者挑的浅版 —— 每一条在纸上都够清楚
+	var tc := UiPalette.text_colors()
+	for pair in (tc["styles"] as Dictionary).values() + (tc["rarity"] as Array) + (tc["damage"] as Dictionary).values():
+		t.check(UiTheme.contrast(pair["light"], UiTheme.PAPER) >= UiTheme.MIN_CONTRAST, "模板浅版 #%s 在纸上对比够" % (pair["light"] as Color).to_html(false))
 	t.eq(UiTheme.ink_color(UiPalette.FG), UiTheme.INK, "前景灰白 → 墨")
 	t.eq(UiTheme.ink_color(UiPalette.DIM), UiTheme.INK_SOFT, "暗灰 → 褐墨")
 	var src := "[color=#%s]生命[/color] 与 [color=%s]词条[/color]" % [UiPalette.HP.to_html(false), Glossary.TERM_COLOR.to_html(false)]
 	var inked := UiTheme.ink_bbcode(src, UiTheme.TONE_LIGHT)
-	t.check(not inked.contains(UiPalette.HP.to_html(false)) and inked.contains("[color=#%s]" % UiTheme.ink_color(UiPalette.HP).to_html(false)), "浅底：生命的红换成压暗的红")
-	t.check(inked.contains("[color=#%s]词条" % UiTheme.ink_color(Glossary.TERM_COLOR).to_html(false)), "不带 # 的颜色也认")
+	t.check(not inked.contains(UiPalette.HP.to_html(false)) and inked.contains("[color=#%s]" % UiPalette.style_color("hp", UiTheme.TONE_LIGHT).to_html(false)), "浅底：生命的红换成模板的浅版（169）")
+	t.check(inked.contains("[color=#%s]词条" % UiPalette.style_color("term", UiTheme.TONE_LIGHT).to_html(false)), "不带 # 的颜色也认")
 	t.eq(UiTheme.ink_bbcode(src, UiTheme.TONE_DARK), src, "深底原样")
 
 
@@ -405,7 +409,7 @@ static func frame_tone_tooltip(t: TestCase, root: Window) -> void:
 	var src := "[color=#%s]生命 10[/color]\n普通字" % UiPalette.HP.to_html(false)
 	tip.show_text(src, Vector2(40, 40), null, [{"name": "灼烧", "text": "每秒掉血"}])
 	t.eq(tip.tone(), UiTheme.TONE_LIGHT, "悬浮窗是浅底")
-	t.check(tip.text().contains(UiTheme.ink_color(UiPalette.HP).to_html(false)) and not tip.text().contains(UiPalette.HP.to_html(false)), "正文的红换成墨水版")
+	t.check(tip.text().contains(UiPalette.style_color("hp", UiTheme.TONE_LIGHT).to_html(false)) and not tip.text().contains(UiPalette.HP.to_html(false)), "正文的红换成模板的浅版（169）")
 	var rich := _first_rich(tip)
 	t.check(rich != null and rich.get_theme_color("default_color", rich.theme_type_variation) == UiTheme.INK, "正文默认字色是墨")
 	var cards := 0

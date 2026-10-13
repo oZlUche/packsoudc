@@ -118,6 +118,7 @@ static var asset_root := "res://assets/ui/"
 
 ## 按设置生成一份新主题（不挂）
 static func build(settings: GameSettings = null) -> Theme:
+	UiPalette.text_colors()     # 169：浅底的墨色读字色模板，先读
 	var t := Theme.new()
 	_fill(t, _bg_of(settings))
 	return t
@@ -126,6 +127,7 @@ static func build(settings: GameSettings = null) -> Theme:
 ## 当前那一份（没有就按现在的底色建）
 static func current() -> Theme:
 	if _current == null:
+		UiPalette.text_colors()
 		_current = Theme.new()
 		_current_bg = UiPalette.bg()
 		_fill(_current, _current_bg)
@@ -174,6 +176,10 @@ static func label(l: Label, font_size: int = FONT_SIZE, color: Color = UiPalette
 	l.theme_type_variation = variation
 	if variation == &"" and color != UiPalette.FG:
 		l.add_theme_color_override("font_color", color)
+		# 169：语义色（生命红、治疗绿……）是按深底配的 —— 进树后按所在的底取模板的版本（浅底暗字）
+		l.set_meta(&"dark_color", color)
+		if not l.tree_entered.is_connected(retone_label.bind(l)):
+			l.tree_entered.connect(retone_label.bind(l))
 	if font_size != (TITLE_SIZE if variation == LABEL_TITLE else FONT_SIZE):
 		l.add_theme_font_size_override("font_size", font_size)
 	return l
@@ -293,7 +299,7 @@ static func margins(m: MarginContainer, left: int, top: int, right: int, bottom:
 	return m
 
 
-## 一段 BBCode 正文：高度随内容、自己不滚（放进调用方的滚动区或面板里）、按 [param width] 折行；
+## 一段 BBCode 正文（169：颜色按所在的底取深版 / 浅版；之后换字走 [method set_rich]）：高度随内容、自己不滚（放进调用方的滚动区或面板里）、按 [param width] 折行；
 ## 字号走 [method rich]（17 / 13 号选变体，别的逐个给）
 static func rich_block(width: float, font_size: int = FONT_SIZE, bbcode: String = "") -> RichTextLabel:
 	var r := RichTextLabel.new()
@@ -303,7 +309,8 @@ static func rich_block(width: float, font_size: int = FONT_SIZE, bbcode: String 
 	r.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	r.custom_minimum_size.x = width
 	rich(r, font_size)
-	r.text = bbcode
+	set_rich(r, bbcode)
+	r.tree_entered.connect(retone.bind(r))     # 169：进树才知道压在什么底上
 	return r
 
 
@@ -342,16 +349,19 @@ const PANEL_TONES := {
 ## 157 补充三：叠层框与顶端栏是石板（深浅读板边的 json；顶端栏是自己那张长条板边），板里的分区都是凹槽
 const PANEL_ART := {PANEL_DARK: ART_INSET, PANEL_LINE: ART_INSET, PANEL_HUD: ART_INSET, PANEL_OVERLAY: ART_SLAB_EDGE, PANEL_TOOLTIP: ART_TOOLTIP,
 	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_BAR}
-## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸
-const INK := Color("2e2219")
-const INK_SOFT := Color("5a4433")
-const INK_WARN := Color("9a5a22")
+## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸。
+## 169：读字色模板 `fg / dim / warn` 的浅版（[method text_colors_changed] 换），这几个常量是文件不在时的默认
+const INK_DEFAULT := Color("2e2219")
+const INK_SOFT_DEFAULT := Color("5a4433")
+const INK_WARN_DEFAULT := Color("9a5a22")
+static var INK := INK_DEFAULT
+static var INK_SOFT := INK_SOFT_DEFAULT
+static var INK_WARN := INK_WARN_DEFAULT
 const PAPER := Color("f6eedb")
 ## 浅底上的字和底至少要这么大的对比（WCAG 正文 4.5）
 const MIN_CONTRAST := 4.5
 
 static var _tone_themes := {}
-static var _color_tag: RegEx = null
 
 
 ## 一块底现在是深是浅：用着美术图就看图的 json，否则查 [constant PANEL_TONES]（没登记的按深）
@@ -383,31 +393,73 @@ static func text_theme(tone: StringName) -> Theme:
 	return t
 
 
-## 给一块底挂上它的字色（[method panel]、[OverlayFrame]、[HudWidget] 调）。深底不动别人挂的主题，只摘掉以前挂的字色
+## 给一块底挂上它的字色（[method panel]、[OverlayFrame]、[HudWidget] 调）。深底不动别人挂的主题，只摘掉以前挂的字色。
+## 169：同时把深浅记在这块底的 `tone` 元数据上 —— 里面的富文本往上找它（[method tone_at]），调用点不用自己传
 static func apply_tone(c: Control, variation: StringName) -> void:
-	var t := text_theme(tone_of(variation))
+	var tone := tone_of(variation)
+	c.set_meta(&"tone", tone)
+	var t := text_theme(tone)
 	if t != null or _tone_themes.values().has(c.theme):
 		c.theme = t
 
 
-## 石板（叠层、地图弹窗）上的 BBCode：按石板的深浅换字色（作者 2026-10-13：浅石板上的亮橙、白色道具名看不清）
-static func slab_bbcode(text: String) -> String:
-	return ink_bbcode(text, tone_of(PANEL_OVERLAY))
+## 169：这个控件压在深底还是浅底上 —— 自己或往上第一个带 `tone` 元数据的祖先说了算；一路都没有 = 深
+static func tone_at(n: Node) -> StringName:
+	while n != null:
+		if n.has_meta(&"tone"):
+			return StringName(n.get_meta(&"tone"))
+		n = n.get_parent()
+	return TONE_DARK
 
 
-## 浅底上的 BBCode：里面写死的 `[color=…]`（都是按深底配的亮色）换成够深的墨水版；深底原样
+## 169：给富文本块换字（原始 BBCode 记在 `raw` 元数据上，颜色按 [method tone_at] 取版；进树、换底时 [method retone] 重算）。
+## 样式码颜色名（`[color=@hp]`）和写死的十六进制都行 —— 统一走 [method UiPalette.toned]
+static func set_rich(r: RichTextLabel, bbcode: String) -> void:
+	r.set_meta(&"raw", bbcode)
+	r.text = UiPalette.toned(bbcode, tone_at(r))
+
+
+## 按现在的底重算一块富文本（[method rich_block] 进树时自动调）
+static func retone(r: RichTextLabel) -> void:
+	if r.has_meta(&"raw"):
+		r.text = UiPalette.toned(String(r.get_meta(&"raw")), tone_at(r))
+
+
+## 169：[method label] 覆写过语义色的标签按现在的底换版本
+static func retone_label(l: Label) -> void:
+	if l.has_meta(&"dark_color"):
+		l.add_theme_color_override("font_color", UiPalette.for_tone(l.get_meta(&"dark_color"), tone_at(l)))
+
+
+## 换底之后（地图底图切换、设置换主题、配色页重读模板）：把 [param root] 下面所有富文本块与语义色标签按新的底重算一遍
+static func refresh_tones(root: Node) -> void:
+	if root is RichTextLabel:
+		retone(root)
+	elif root is Label:
+		retone_label(root)
+	for c in root.get_children():
+		refresh_tones(c)
+
+
+## 浅底上的 BBCode（169 起只是 [method UiPalette.toned] 的转发）：颜色名按模板、写死的亮色换浅版或墨水版；深底只换颜色名
 static func ink_bbcode(text: String, tone: StringName) -> String:
-	if tone != TONE_LIGHT or not text.contains("[color="):
-		return text
-	if _color_tag == null:
-		_color_tag = RegEx.create_from_string("\\[color=#?([0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?)\\]")
-	var out := ""
-	var at := 0
-	for m in _color_tag.search_all(text):
-		out += text.substr(at, m.get_start() - at)
-		out += "[color=#%s]" % ink_color(Color(m.get_string(1))).to_html(false)
-		at = m.get_end()
-	return out + text.substr(at)
+	return UiPalette.toned(text, tone)
+
+
+## 169：字色模板读完（或重读）—— 墨色跟着模板的浅版，浅底小主题重建，已建好的主题原地重填
+static func text_colors_changed() -> void:
+	var styles: Dictionary = UiPalette.text_colors()["styles"]
+	INK = styles["fg"]["light"]
+	INK_SOFT = styles["dim"]["light"]
+	INK_WARN = styles["warn"]["light"]
+	_tone_themes.clear()
+
+
+## 回代码默认的墨色（读模板之前：缺文件时浅版按默认墨色压）
+static func reset_ink() -> void:
+	INK = INK_DEFAULT
+	INK_SOFT = INK_SOFT_DEFAULT
+	INK_WARN = INK_WARN_DEFAULT
 
 
 ## 一个按深底配的颜色在亮纸上的版本：灰色系（前景 / 暗色字）换成墨 / 褐墨；有色的按原色相压暗到对比够
