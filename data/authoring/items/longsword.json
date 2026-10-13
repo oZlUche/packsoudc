@@ -5,9 +5,10 @@
     "en": "Longsword"
   },
   "shape": [
-    "010",
-    "111",
-    "010"
+    "1",
+    "1",
+    "1",
+    "1"
   ],
   "rarity": 1,
   "tags": [
@@ -19,7 +20,7 @@
   ],
   "combat": {
     "base_stats": {
-      "damage": 20
+      "damage": 16
     },
     "rules": [
       {
