@@ -359,4 +359,6 @@ static func _map_parts(t: TestCase, map: Control, host: HudHost, flow: GameFlow,
 	for b in map.get("_pause").find_children("*", "Button", true, false):
 		texts.append((b as Button).text)
 	t.check(not texts.has("存档并回主菜单") and texts.has("回主菜单"), "暂停菜单：「存档并回主菜单」换成「回主菜单」（%s）" % "、".join(texts))
+	var frames: Array = map.get("_pause").find_children("*", "OverlayFrame", true, false)
+	t.check(frames.size() == 1 and (frames[0] as OverlayFrame).title() == "暂停", "作者 2026-10-13：暂停窗是一整块石板（有不透明的底），标题在标题条上")
 	map.toggle_pause()

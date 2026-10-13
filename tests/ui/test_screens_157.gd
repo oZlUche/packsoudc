@@ -150,12 +150,12 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	# 作者 2026-10-13：悬浮窗的层高跟着自己那一屏 —— 底屏（地图）的悬浮窗低于叠层、已收起；叠层里的悬浮窗高于叠层；地上在最上面那一屏之上
 	var abs_z := func(n: CanvasItem) -> int:
 		var z := 0
-		var c: Node = n
-		while c is CanvasItem:
-			z += (c as CanvasItem).z_index
-			if not (c as CanvasItem).z_as_relative:
+		var at: Node = n
+		while at is CanvasItem:
+			z += (at as CanvasItem).z_index
+			if not (at as CanvasItem).z_as_relative:
 				break
-			c = c.get_parent()
+			at = at.get_parent()
 		return z
 	for tip in game.base().find_children("*", "HoverTip", true, false):
 		t.check(int(abs_z.call(tip)) < int(abs_z.call(screen)), "底屏的悬浮窗层高 %d 低于叠层 %d" % [abs_z.call(tip), abs_z.call(screen)])
