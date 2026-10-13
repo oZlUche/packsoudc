@@ -81,6 +81,8 @@ const ART_TOOLTIP := "tooltip_paper"
 ## 板里的分区是刻进板里的凹槽（`PanelDark` / `PanelLine` / `PanelHud` 都用它）。原来的整屏砖墙底与三种小石板退了
 const ART_SLAB_BODY := "slab_body"
 const ART_SLAB_EDGE := "slab_edge"
+## 顶端栏专用的长条板边（贴屏幕顶、没有标题刻线、底下一道投影；`margin` 的上下就是栏里的组居中的那一块）
+const ART_SLAB_BAR := "slab_bar"
 const ART_INSET := "inset"
 ## 石板顶边：标题条下沿到板边九宫格上边距之间留给刻线的那一段
 const TITLE_LINE_GAP := 6.0
@@ -116,6 +118,7 @@ static var asset_root := "res://assets/ui/"
 
 ## 按设置生成一份新主题（不挂）
 static func build(settings: GameSettings = null) -> Theme:
+	UiPalette.text_colors()     # 169：浅底的墨色读字色模板，先读
 	var t := Theme.new()
 	_fill(t, _bg_of(settings))
 	return t
@@ -124,6 +127,7 @@ static func build(settings: GameSettings = null) -> Theme:
 ## 当前那一份（没有就按现在的底色建）
 static func current() -> Theme:
 	if _current == null:
+		UiPalette.text_colors()
 		_current = Theme.new()
 		_current_bg = UiPalette.bg()
 		_fill(_current, _current_bg)
@@ -172,6 +176,10 @@ static func label(l: Label, font_size: int = FONT_SIZE, color: Color = UiPalette
 	l.theme_type_variation = variation
 	if variation == &"" and color != UiPalette.FG:
 		l.add_theme_color_override("font_color", color)
+		# 169：语义色（生命红、治疗绿……）是按深底配的 —— 进树后按所在的底取模板的版本（浅底暗字）
+		l.set_meta(&"dark_color", color)
+		if not l.tree_entered.is_connected(retone_label.bind(l)):
+			l.tree_entered.connect(retone_label.bind(l))
 	if font_size != (TITLE_SIZE if variation == LABEL_TITLE else FONT_SIZE):
 		l.add_theme_font_size_override("font_size", font_size)
 	return l
@@ -291,7 +299,7 @@ static func margins(m: MarginContainer, left: int, top: int, right: int, bottom:
 	return m
 
 
-## 一段 BBCode 正文：高度随内容、自己不滚（放进调用方的滚动区或面板里）、按 [param width] 折行；
+## 一段 BBCode 正文（169：颜色按所在的底取深版 / 浅版；之后换字走 [method set_rich]）：高度随内容、自己不滚（放进调用方的滚动区或面板里）、按 [param width] 折行；
 ## 字号走 [method rich]（17 / 13 号选变体，别的逐个给）
 static func rich_block(width: float, font_size: int = FONT_SIZE, bbcode: String = "") -> RichTextLabel:
 	var r := RichTextLabel.new()
@@ -301,7 +309,8 @@ static func rich_block(width: float, font_size: int = FONT_SIZE, bbcode: String 
 	r.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	r.custom_minimum_size.x = width
 	rich(r, font_size)
-	r.text = bbcode
+	set_rich(r, bbcode)
+	r.tree_entered.connect(retone.bind(r))     # 169：进树才知道压在什么底上
 	return r
 
 
@@ -337,19 +346,22 @@ const PANEL_TONES := {
 	PANEL_NAMEPLATE: TONE_DARK, PANEL_HOME_BOX: TONE_LIGHT, PANEL_SHELF: TONE_DARK, PANEL_HUD_BAR: TONE_DARK,
 }
 ## 面板变体用哪张美术图（有图时深浅读它的 json）
-## 157 补充三：叠层框与顶端栏是石板（深浅读板边的 json），板里的分区都是凹槽
+## 157 补充三：叠层框与顶端栏是石板（深浅读板边的 json；顶端栏是自己那张长条板边），板里的分区都是凹槽
 const PANEL_ART := {PANEL_DARK: ART_INSET, PANEL_LINE: ART_INSET, PANEL_HUD: ART_INSET, PANEL_OVERLAY: ART_SLAB_EDGE, PANEL_TOOLTIP: ART_TOOLTIP,
-	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_EDGE}
-## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸
-const INK := Color("2e2219")
-const INK_SOFT := Color("5a4433")
-const INK_WARN := Color("9a5a22")
+	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_BAR}
+## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸。
+## 169：读字色模板 `fg / dim / warn` 的浅版（[method text_colors_changed] 换），这几个常量是文件不在时的默认
+const INK_DEFAULT := Color("2e2219")
+const INK_SOFT_DEFAULT := Color("5a4433")
+const INK_WARN_DEFAULT := Color("9a5a22")
+static var INK := INK_DEFAULT
+static var INK_SOFT := INK_SOFT_DEFAULT
+static var INK_WARN := INK_WARN_DEFAULT
 const PAPER := Color("f6eedb")
 ## 浅底上的字和底至少要这么大的对比（WCAG 正文 4.5）
 const MIN_CONTRAST := 4.5
 
 static var _tone_themes := {}
-static var _color_tag: RegEx = null
 
 
 ## 一块底现在是深是浅：用着美术图就看图的 json，否则查 [constant PANEL_TONES]（没登记的按深）
@@ -381,31 +393,73 @@ static func text_theme(tone: StringName) -> Theme:
 	return t
 
 
-## 给一块底挂上它的字色（[method panel]、[OverlayFrame]、[HudWidget] 调）。深底不动别人挂的主题，只摘掉以前挂的字色
+## 给一块底挂上它的字色（[method panel]、[OverlayFrame]、[HudWidget] 调）。深底不动别人挂的主题，只摘掉以前挂的字色。
+## 169：同时把深浅记在这块底的 `tone` 元数据上 —— 里面的富文本往上找它（[method tone_at]），调用点不用自己传
 static func apply_tone(c: Control, variation: StringName) -> void:
-	var t := text_theme(tone_of(variation))
+	var tone := tone_of(variation)
+	c.set_meta(&"tone", tone)
+	var t := text_theme(tone)
 	if t != null or _tone_themes.values().has(c.theme):
 		c.theme = t
 
 
-## 石板（叠层、地图弹窗）上的 BBCode：按石板的深浅换字色（作者 2026-10-13：浅石板上的亮橙、白色道具名看不清）
-static func slab_bbcode(text: String) -> String:
-	return ink_bbcode(text, tone_of(PANEL_OVERLAY))
+## 169：这个控件压在深底还是浅底上 —— 自己或往上第一个带 `tone` 元数据的祖先说了算；一路都没有 = 深
+static func tone_at(n: Node) -> StringName:
+	while n != null:
+		if n.has_meta(&"tone"):
+			return StringName(n.get_meta(&"tone"))
+		n = n.get_parent()
+	return TONE_DARK
 
 
-## 浅底上的 BBCode：里面写死的 `[color=…]`（都是按深底配的亮色）换成够深的墨水版；深底原样
+## 169：给富文本块换字（原始 BBCode 记在 `raw` 元数据上，颜色按 [method tone_at] 取版；进树、换底时 [method retone] 重算）。
+## 样式码颜色名（`[color=@hp]`）和写死的十六进制都行 —— 统一走 [method UiPalette.toned]
+static func set_rich(r: RichTextLabel, bbcode: String) -> void:
+	r.set_meta(&"raw", bbcode)
+	r.text = UiPalette.toned(bbcode, tone_at(r))
+
+
+## 按现在的底重算一块富文本（[method rich_block] 进树时自动调）
+static func retone(r: RichTextLabel) -> void:
+	if r.has_meta(&"raw"):
+		r.text = UiPalette.toned(String(r.get_meta(&"raw")), tone_at(r))
+
+
+## 169：[method label] 覆写过语义色的标签按现在的底换版本
+static func retone_label(l: Label) -> void:
+	if l.has_meta(&"dark_color"):
+		l.add_theme_color_override("font_color", UiPalette.for_tone(l.get_meta(&"dark_color"), tone_at(l)))
+
+
+## 换底之后（地图底图切换、设置换主题、配色页重读模板）：把 [param root] 下面所有富文本块与语义色标签按新的底重算一遍
+static func refresh_tones(root: Node) -> void:
+	if root is RichTextLabel:
+		retone(root)
+	elif root is Label:
+		retone_label(root)
+	for c in root.get_children():
+		refresh_tones(c)
+
+
+## 浅底上的 BBCode（169 起只是 [method UiPalette.toned] 的转发）：颜色名按模板、写死的亮色换浅版或墨水版；深底只换颜色名
 static func ink_bbcode(text: String, tone: StringName) -> String:
-	if tone != TONE_LIGHT or not text.contains("[color="):
-		return text
-	if _color_tag == null:
-		_color_tag = RegEx.create_from_string("\\[color=#?([0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?)\\]")
-	var out := ""
-	var at := 0
-	for m in _color_tag.search_all(text):
-		out += text.substr(at, m.get_start() - at)
-		out += "[color=#%s]" % ink_color(Color(m.get_string(1))).to_html(false)
-		at = m.get_end()
-	return out + text.substr(at)
+	return UiPalette.toned(text, tone)
+
+
+## 169：字色模板读完（或重读）—— 墨色跟着模板的浅版，浅底小主题重建，已建好的主题原地重填
+static func text_colors_changed() -> void:
+	var styles: Dictionary = UiPalette.text_colors()["styles"]
+	INK = styles["fg"]["light"]
+	INK_SOFT = styles["dim"]["light"]
+	INK_WARN = styles["warn"]["light"]
+	_tone_themes.clear()
+
+
+## 回代码默认的墨色（读模板之前：缺文件时浅版按默认墨色压）
+static func reset_ink() -> void:
+	INK = INK_DEFAULT
+	INK_SOFT = INK_SOFT_DEFAULT
+	INK_WARN = INK_WARN_DEFAULT
 
 
 ## 一个按深底配的颜色在亮纸上的版本：灰色系（前景 / 暗色字）换成墨 / 褐墨；有色的按原色相压暗到对比够
@@ -457,23 +511,20 @@ static func has_slab() -> bool:
 
 
 ## 一整块石板的底（[SlabStyle]：板身平铺 + 板边九宫格）；没图 null。参数同 [method _art_box]（内边距按板边）；
-## [param flush_top] 真 = 贴着屏幕顶的长条（顶端栏）：顶棱和标题刻线藏到屏幕外，只露左右与底边
-static func slab_box(title_strip: bool = false, content: int = -1, flush_top: bool = false) -> SlabStyle:
-	if not has_slab():
+## [param edge_art] 板边用哪张：默认叠层的 `slab_edge`，顶端栏是 `slab_bar`（缺这张退回平面底）
+static func slab_box(title_strip: bool = false, content: int = -1, edge_art: String = ART_SLAB_EDGE) -> SlabStyle:
+	if not has_slab() or art(edge_art) == null:
 		return null
 	var s := SlabStyle.new()
-	s.edge = _art_box(ART_SLAB_EDGE, title_strip, content)
+	s.edge = _art_box(edge_art, title_strip, content)
 	var body := StyleBoxTexture.new()
 	body.texture = art(ART_SLAB_BODY)
 	body.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
 	body.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
 	s.body = body
-	s.body_inset = float(art_meta(ART_SLAB_EDGE).get("body_inset", 0))
+	s.body_inset = SlabStyle.inset_of(art_meta(edge_art).get("body_inset", 0))
 	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
 		s.set_content_margin(side, s.edge.get_content_margin(side))
-	if flush_top:
-		s.top_cut = maxf(0.0, s.edge.texture_margin_top - TITLE_LINE_GAP + 2.0)
-		s.content_margin_top = maxf(0.0, s.edge.texture_margin_top - s.top_cut)
 	return s
 
 
@@ -608,9 +659,10 @@ static func _fill(t: Theme, bg: Color) -> void:
 	hud_box.set_border_width_all(0)
 	t.set_stylebox("panel", PANEL_HUD, hud_art if hud_art != null else hud_box)
 	# 166：顶端栏（横贯顶部的一条，左右留 16）与栏里的图标按钮（平时透明，悬停 / 按下才露底）。
-	# 157 补充三：栏是一条独立的长石板（同一套板身 + 板边），没图是半透明深底 + 下边一条线
+	# 157 补充三：栏是一条独立的长石板（同一套板身 + 自己的长条板边 `slab_bar`），没图是半透明深底 + 下边一条线。
+	# 板边的上下内边距 = 栏里的组居中的那一块（[HudHost] 读），底下那道投影不算进去
 	t.set_type_variation(PANEL_HUD_BAR, "PanelContainer")
-	var bar_art: StyleBox = slab_box(false, -1, true)
+	var bar_art: StyleBox = slab_box(false, -1, ART_SLAB_BAR)
 	var bar_box := _box(Color(panel_bg, 0.86), UiPalette.LINE, HUD_MARGIN)
 	bar_box.set_border_width_all(0)
 	bar_box.border_width_bottom = 1

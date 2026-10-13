@@ -27,9 +27,14 @@ static func run_theme_art(t: TestCase) -> void:
 		t.eq(slab.content_margin_top, 0.0, "顶边内边距 0：标题条自己占住板顶刻线那一条")
 		t.eq(slab.content_margin_left, 1.0, "其余内边距跟板边")
 		t.eq([slab.body.axis_stretch_horizontal, slab.body.axis_stretch_vertical], [StyleBoxTexture.AXIS_STRETCH_MODE_TILE, StyleBoxTexture.AXIS_STRETCH_MODE_TILE], "板身平铺，纹不随框大小拉花")
-		t.eq(slab.body_inset, 1.0, "板身往里缩 json 的 body_inset")
+		t.eq(slab.body_inset, [1.0, 1.0, 1.0, 1.0], "板身往里缩 json 的 body_inset（一个数 = 四边）")
 	t.check(UiTheme.is_art_box(slab), "石板算美术底（框的外边距听图的）")
-	t.check(art.get_stylebox("panel", UiTheme.PANEL_HUD_BAR) is SlabStyle, "顶端栏也是一条石板（166）")
+	var bar_slab := art.get_stylebox("panel", UiTheme.PANEL_HUD_BAR) as SlabStyle
+	t.check(bar_slab != null, "顶端栏也是一条石板（166）")
+	if bar_slab != null:
+		t.eq(bar_slab.edge.texture, UiTheme.art(UiTheme.ART_SLAB_BAR), "顶端栏的板边是自己那张长条（slab_bar）")
+		t.eq(bar_slab.body_inset, [1.0, 0.0, 1.0, 1.0], "body_inset 四个数：各边分开（顶边贴屏幕不缩）")
+		t.eq([bar_slab.content_margin_top, bar_slab.content_margin_bottom], [1.0, 2.0], "栏的上下内边距按 slab_bar.json（组在这之间居中）")
 	t.check(art.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxTexture, "板里的分区是凹槽九宫格")
 	t.eq(UiTheme.frame_title_height(), 30, "标题条高按 json")
 	t.check(art.get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is StyleBoxFlat, "测试目录里没有纸：悬浮窗底照旧")
@@ -383,13 +388,17 @@ static func run_tones(t: TestCase) -> void:
 		UiPalette.RECEIVE, UiPalette.ARMOR, UiPalette.MANA, UiPalette.CRIT, Glossary.TERM_COLOR]
 	colors.append_array(ItemPainter.RARITY_COLORS)
 	for c in colors:
-		t.check(UiTheme.contrast(UiTheme.ink_color(c), UiTheme.PAPER) >= UiTheme.MIN_CONTRAST, "#%s 压成墨水版后在纸上对比够" % (c as Color).to_html(false))
+		t.check(UiTheme.contrast(UiTheme.ink_color(c), UiTheme.PAPER) >= UiTheme.MIN_CONTRAST, "#%s 压成墨水版后在纸上对比够（模板不在时的兜底）" % (c as Color).to_html(false))
+	# 169：有模板时浅底用作者挑的浅版 —— 每一条在纸上都够清楚
+	var tc := UiPalette.text_colors()
+	for pair in (tc["styles"] as Dictionary).values() + (tc["rarity"] as Array) + (tc["damage"] as Dictionary).values():
+		t.check(UiTheme.contrast(pair["light"], UiTheme.PAPER) >= UiTheme.MIN_CONTRAST, "模板浅版 #%s 在纸上对比够" % (pair["light"] as Color).to_html(false))
 	t.eq(UiTheme.ink_color(UiPalette.FG), UiTheme.INK, "前景灰白 → 墨")
 	t.eq(UiTheme.ink_color(UiPalette.DIM), UiTheme.INK_SOFT, "暗灰 → 褐墨")
 	var src := "[color=#%s]生命[/color] 与 [color=%s]词条[/color]" % [UiPalette.HP.to_html(false), Glossary.TERM_COLOR.to_html(false)]
 	var inked := UiTheme.ink_bbcode(src, UiTheme.TONE_LIGHT)
-	t.check(not inked.contains(UiPalette.HP.to_html(false)) and inked.contains("[color=#%s]" % UiTheme.ink_color(UiPalette.HP).to_html(false)), "浅底：生命的红换成压暗的红")
-	t.check(inked.contains("[color=#%s]词条" % UiTheme.ink_color(Glossary.TERM_COLOR).to_html(false)), "不带 # 的颜色也认")
+	t.check(not inked.contains(UiPalette.HP.to_html(false)) and inked.contains("[color=#%s]" % UiPalette.style_color("hp", UiTheme.TONE_LIGHT).to_html(false)), "浅底：生命的红换成模板的浅版（169）")
+	t.check(inked.contains("[color=#%s]词条" % UiPalette.style_color("term", UiTheme.TONE_LIGHT).to_html(false)), "不带 # 的颜色也认")
 	t.eq(UiTheme.ink_bbcode(src, UiTheme.TONE_DARK), src, "深底原样")
 
 
@@ -400,7 +409,7 @@ static func frame_tone_tooltip(t: TestCase, root: Window) -> void:
 	var src := "[color=#%s]生命 10[/color]\n普通字" % UiPalette.HP.to_html(false)
 	tip.show_text(src, Vector2(40, 40), null, [{"name": "灼烧", "text": "每秒掉血"}])
 	t.eq(tip.tone(), UiTheme.TONE_LIGHT, "悬浮窗是浅底")
-	t.check(tip.text().contains(UiTheme.ink_color(UiPalette.HP).to_html(false)) and not tip.text().contains(UiPalette.HP.to_html(false)), "正文的红换成墨水版")
+	t.check(tip.text().contains(UiPalette.style_color("hp", UiTheme.TONE_LIGHT).to_html(false)) and not tip.text().contains(UiPalette.HP.to_html(false)), "正文的红换成模板的浅版（169）")
 	var rich := _first_rich(tip)
 	t.check(rich != null and rich.get_theme_color("default_color", rich.theme_type_variation) == UiTheme.INK, "正文默认字色是墨")
 	var cards := 0

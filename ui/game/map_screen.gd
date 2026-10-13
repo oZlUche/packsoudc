@@ -326,7 +326,7 @@ func show_rules(first: bool = false) -> void:
 	panel.content.add_child(col)
 	var ctx := TextTemplate.context_for(_run)     # 112：规则卡也过占位符（{item:…} 按稀有度上色）
 	for i in _run.chapter.rules.size():
-		col.add_child(UiTheme.rich_block(560, 15, "%d. %s" % [i + 1, UiTheme.slab_bbcode(UiPalette.resolve_styles(TextTemplate.render(_run.chapter.rules[i], ctx)))]))
+		col.add_child(UiTheme.rich_block(560, 15, "%d. %s" % [i + 1, TextTemplate.render(_run.chapter.rules[i], ctx)]))
 	col.add_child(_wrapped("暂停菜单（Esc）里能再看", 12, UiPalette.DIM, 560))
 	col.add_child(_button("知道了（Esc）", close_rules, 14, UiPalette.Tier.PRIMARY))
 
@@ -625,8 +625,8 @@ func _update_tooltip(id: int) -> void:
 		v.label_font = font
 		v.inventory = EnemyKit.board_of(node.content, flow.items)
 		extra = v
-	# 101 第 5 刀：浮窗文字里的样式码（`{c:hp}`）在这里换成真颜色 —— 颜色表是界面的事
-	var text := UiPalette.resolve_styles(NodeTooltip.text_for(_run, _run.chapter, node))
+	# 101 第 5 刀：浮窗文字里的样式码（`{c:hp}`）—— 169 起由悬浮窗按自己的底换成真颜色（浅纸暗字）
+	var text := NodeTooltip.text_for(_run, _run.chapter, node)
 	_tip.show_text(text + ("\n" + stash if stash != "" else ""), get_global_mouse_position(), extra)
 
 

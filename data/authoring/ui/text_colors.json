@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "styles": {
+    "fg": {"dark": "#dfe3ea", "light": "#2e2219"},
+    "dim": {"dark": "#8b93a1", "light": "#5a4433"},
+    "hp": {"dark": "#d9534f", "light": "#8c2b22"},
+    "armor": {"dark": "#5bc0de", "light": "#1f5f7a"},
+    "stamina": {"dark": "#f0ad4e", "light": "#7a4b10"},
+    "mana": {"dark": "#7a8cf0", "light": "#2f3f9a"},
+    "heal": {"dark": "#5cb85c", "light": "#2f6b2f"},
+    "grant": {"dark": "#6fb3f0", "light": "#1f4f8a"},
+    "receive": {"dark": "#f0a85c", "light": "#7a4b10"},
+    "warn": {"dark": "#f0ad4e", "light": "#9a5a22"},
+    "danger": {"dark": "#d9534f", "light": "#8c2b22"},
+    "good": {"dark": "#5cb85c", "light": "#2f6b2f"},
+    "faith": {"dark": "#c79bf2", "light": "#5c3a8a"},
+    "term": {"dark": "#c9a0ff", "light": "#5c3a8a"},
+    "crit": {"dark": "#ffd23f", "light": "#725600"}
+  },
+  "rarity": [
+    {"dark": "#d8dce3", "light": "#2e2219"},
+    {"dark": "#5fa85f", "light": "#2f6b2f"},
+    {"dark": "#4a86c8", "light": "#1f4f8a"},
+    {"dark": "#b06ccf", "light": "#6a2f8a"},
+    {"dark": "#e0b040", "light": "#725600"},
+    {"dark": "#d9453f", "light": "#8c2b22"}
+  ],
+  "damage": {
+    "physical": {"dark": "#ff8a7a", "light": "#8c2b22"},
+    "fire": {"dark": "#ff9d4d", "light": "#8a4a10"},
+    "poison": {"dark": "#8ed36b", "light": "#2f6b2f"},
+    "bleed": {"dark": "#e05c7a", "light": "#8c2b4a"},
+    "reflect": {"dark": "#c9a0ff", "light": "#5c3a8a"},
+    "drain": {"dark": "#9aa3b2", "light": "#4a4433"},
+    "ice": {"dark": "#dfe3ea", "light": "#2e2219"},
+    "lightning": {"dark": "#dfe3ea", "light": "#2e2219"}
+  }
+}

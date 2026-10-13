@@ -88,7 +88,7 @@ func watch(view: ContainerView) -> void:
 ## 直接显示一段文字（地图上的点）；[param extra] 是文字下面再放的一个控件（对手的棋盘），可为 null；
 ## [param terms] 是侧边词条 `[{name, text}]`（[Glossary.terms_in] 的结果），空 = 没有侧窗
 func show_text(bbcode: String, at: Vector2, extra: Control = null, terms: Array = []) -> void:
-	_text.text = _inked(bbcode)
+	UiTheme.set_rich(_text, bbcode)     # 169：颜色按悬浮窗底的深浅取版
 	_drop_extra()
 	if extra != null:
 		_extra = extra
@@ -128,11 +128,6 @@ func _refit() -> void:
 	_place(_last_at)
 
 
-## 157 补：悬浮窗底是浅的（美术的纸）时，正文里写死的亮色换成墨水版；深底原样
-func _inked(bbcode: String) -> String:
-	return UiTheme.ink_bbcode(bbcode, UiTheme.tone_of(UiTheme.PANEL_TOOLTIP))
-
-
 func tone() -> StringName:
 	return UiTheme.tone_of(UiTheme.PANEL_TOOLTIP)
 
@@ -143,7 +138,7 @@ func _set_terms(terms: Array) -> void:
 		var d := t as Dictionary
 		var p := UiTheme.panel(PanelContainer.new(), 8, UiTheme.PANEL_TOOLTIP)     # 157：词条小窗和主面板同一块底
 		p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var l := UiTheme.rich_block(SIDE_WIDTH, 12, _inked("[color=#%s][b]%s[/b][/color]\n%s" % [Glossary.TERM_COLOR.to_html(false), String(d["name"]), String(d["text"])]))
+		var l := UiTheme.rich_block(SIDE_WIDTH, 12, "[color=@term][b]%s[/b][/color]\n%s" % [String(d["name"]), String(d["text"])])
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		p.add_child(l)
 		_side.add_child(p)
@@ -192,7 +187,7 @@ func _on_view_input(view: ContainerView, event: InputEvent) -> void:
 		if view is InventoryView:
 			board = (view as InventoryView).inventory
 		var full := ItemTooltip.describe_full(inst, board)
-		_text.text = _inked(String(full["text"]))
+		UiTheme.set_rich(_text, String(full["text"]))
 		if _extra != null:
 			_extra.queue_free()
 			_extra = null

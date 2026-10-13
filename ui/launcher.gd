@@ -66,6 +66,12 @@ const ENTRIES := [
 		"keys": "保存 = JSON + .tres　道具的 set_id 写这个 id 就是成员",
 	},
 	{
+		"scene": "res://ui/palette_preview/palette_preview.tscn",
+		"title": "配色",
+		"desc": "169：字色模板 data/authoring/ui/text_colors.json —— 每个颜色名在深底、浅底上各一行样字，标对比度（不够标红）",
+		"keys": "改完文件按 F5 重读",
+	},
+	{
 		"scene": "res://ui/map_editor/map_editor.tscn",
 		"title": "地图编辑器",
 		"desc": "按参数随机生成一张地图，再手动改点、改路、改类型，存成预设给对局载入",

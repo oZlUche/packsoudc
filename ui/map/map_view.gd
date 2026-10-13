@@ -593,9 +593,9 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 		draw_string(_font, p + Vector2(-tw / 2.0, NODE_RADIUS + 19.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, col)
 
 
-## 底图是浅纸时，按深底配的前景 / 暗色字换成墨水版
+## 底图是浅纸时，按深底配的前景 / 暗色字换成字色模板的浅版（169）
 func _ink(c: Color) -> Color:
-	return UiTheme.ink_color(c) if _skin_light else c
+	return UiPalette.for_tone(c, UiTheme.TONE_LIGHT if _skin_light else UiTheme.TONE_DARK)
 
 
 ## 现在的底是不是浅的（测试看）

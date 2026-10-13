@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.96 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.97 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3467,15 +3467,24 @@ func player_spec() -> CombatantSpec …
 **深浅字色（每块底都要标深浅）**：浅底配墨色字、深底配浅色字。面板变体的深浅登记在 `UiTheme.PANEL_TONES`（新加面板变体必须登记，测试看全）；
 用了美术图的底（`UiTheme.PANEL_ART`：石板框、悬浮窗的纸）以图旁 json 的 `"tone": "dark" | "light"` 为准（美术交图必须写，测试看）。
 `UiTheme.panel()` / `OverlayFrame` / `HudWidget` 按 `tone_of(变体)` 调 `apply_tone`：浅底挂一份只填字色的小主题（标签墨 `#2E2219`、暗色字褐墨 `#5A4433`、
-警示 `#9A5A22`，富文本默认墨），里面的字都继承；深底不挂（用全局的浅色字）。浅底上的 BBCode 过 `UiTheme.ink_bbcode`：写死的 `[color=…]`
-灰色换成墨 / 褐墨，有色的按原色相压暗到在亮纸上对比 ≥ 4.5（`MIN_CONTRAST`）。按钮自带底，不跟着变。现在悬浮窗（主面板与词条小窗）是亮纸、浅底；石板框是深底。
+警示 `#9A5A22`，富文本默认墨），里面的字都继承；深底不挂（用全局的浅色字）。按钮自带底，不跟着变。
+
+**字色模板**（169，作者定「固定在亮色背景下指用暗色字体，在暗色背景下指用亮色字体」）：`data/authoring/ui/text_colors.json` 给每个颜色名写两版 ——
+`styles`（样式码 `TextTemplate.STYLE_NAMES` + `term` 术语 + `crit` 暴击）、`rarity`（六档）、`damage`（`damage_types/` 里每一种），每条 `{"dark", "light"}`；深版就是原来的代码常量，
+浅版由作者挑（暗褐、赭、深蓝一路，不再出现亮橙）。`UiPalette.load_text_colors()` 读（可重入）；缺一条、读不成、文件不在 = 整份不用，回代码默认（深版常量、浅版 `ink_color` 压），问题记在 `text_color_problems`。
+取色一个入口：`UiPalette.style_color / rarity_color / damage_color / resource_color(…, tone)`，BBCode 走 `UiPalette.toned(bbcode, tone)`（颜色名按模板取版；浅底上写死的十六进制先查「深版 → 浅版」，已是浅版不动，别的 `ink_color` 兜底）。
+**底的深浅由容器说**：`apply_tone` 同时把 `tone` 记在这块底的元数据上，`UiTheme.tone_at(节点)` 往上找第一个带它的祖先（没有 = 深）。`UiTheme.rich_block` 把原始 BBCode 记在 `raw` 元数据、进树时按 `tone_at` 重算，之后换字走 `UiTheme.set_rich`；
+`UiTheme.label` 覆写过语义色（生命红、治疗绿……）的标签进树时也按底换版。换底后 `UiTheme.refresh_tones(root)` 重算。调用点不再自己过 `ink_bbcode`（留着当 `toned` 的转发）。
+`UiTheme.INK / INK_SOFT / INK_WARN` 读模板 `fg / dim / warn` 的浅版（`*_DEFAULT` 常量是缺文件时的默认）。棋盘格上的道具名有自己的深底，照旧用 `ItemPainter.RARITY_COLORS`。
+校验 `TextColorCheck`（`tools/check_content.gd` 调）：两版都在、浅版对纸 `PAPER` ≥ 4.5 算错；深版对 `UiPalette.PANEL` 不够与内容里写死的 `{c:#…}` 只列警告。启动器「配色」页（`ui/palette_preview/`）深浅两列列全部样字与对比度，F5 重读。
+现在悬浮窗（主面板与词条小窗）是亮纸、浅底；石板是浅底。
 
 **石板**（157 补充三，作者定「每个界面（框）在一块完整的石板上显示」，取代原来平铺满屏的石砖墙）：**一屏一块石板，板即框**。
 - `SlabStyle`（`ui/widgets/`）是一个两层画的 StyleBox：下层板身 `slab_body.png` 平铺（`AXIS_STRETCH_MODE_TILE`，纹不随框大小拉花，往里缩 json `body_inset`，凿口外透出底下），上层板边 `slab_edge.png` 九宫格（中心透明：手凿轮廓、受光棱、投影、顶上一道刻线）。`UiTheme.slab_box()` 两张图都在才造，否则 null、退回平面底；`UiTheme.slab(c)` 把一块面板挂成石板（`PanelOverlay` 变体 + 按石板深浅挂字色）。没用「两个 Panel 子底」的写法：一个 StyleBox 画两层，凡是挂 `PanelOverlay` / `PanelHudBar` 的都自动是石板，容器排版也不受子底影响。
 - 叠层屏：`OverlayFrame` 就是石板；标题字刻在板顶刻线上方（标题条高 json `title_height`，`_art_box` 的顶内边距只留到标题条上沿，`TITLE_LINE_GAP` 6 给刻线）。板外是半透明暗罩（`GameScreen.OVERLAY_SHADE` 0.6），底下的地图压暗透出。
 - 底屏（主菜单、设置、存档位、结算、开局三页）：`GameScreen._slab_screen()` 造一块居中的大石板（宽高各 `SLAB_SHARE` 九成），返回板里的内容区；板外是纯色底（`_backdrop`，091 的底色设置照旧管它）。基地（164）有自己的家底、地图屏（166）是满幅纸底，都不走石板。
 - 板里的分区是刻进去的凹槽：`PanelDark` / `PanelLine` / `PanelHud` 都用 `inset.png` 九宫格，**内边距照旧按变体默认值**（`_art_box(name, false, content)`），换皮不改排版。
-- 顶端栏（166 `hud_bar`）是一条独立的长石板：同一套板身 + 板边，`slab_box(..., flush_top = true)` 把顶棱和刻线画到屏幕外，只露左右与底边。
+- 顶端栏（166 `hud_bar`）是一条独立的长石板：同一张板身 + 专用的长条板边 `slab_bar.png`（贴屏幕顶、没有标题刻线、底下一道投影；`slab_box(..., edge_art = ART_SLAB_BAR)`，缺这张退回平面底）。`body_inset` 可写一个数或 `[左, 上, 右, 下]`（栏顶边不缩）。作者 2026-10-13「凹槽没有和石板位置对齐，考虑增加顶端栏纵向面积」：`HudHost.BAR_HEIGHT` 64 → 88，栏里的组在板边的上下内边距（8 / 26）之间居中，底下的投影不算板面；栏高 = max(88, 最高一组 + 上下内边距)。
 - 退掉：`bg_stone`、`panel_stone`、`panel_inset`、`panel_hud`、`frame_stone`、`hud/bar`；`UiTheme.dress_backdrop / backdrop_art / backdrop_tint / tint_backdrop` 删了，地图视图没底图时就是底色。都是有图用图、没图照旧（平面底）。
 
 **名牌**（157 补充二，作者定「没图也先留框」）：`Nameplate` 是 `PanelNameplate` 底（`nameplate_stone.png`），左边 64×64 肖像位、右边 32×32 徽记位都是 `PortraitSlot`
@@ -3483,7 +3492,7 @@ func player_spec() -> CombatantSpec …
 **回放**（157 补充一）：正式游戏的 `BattleView` 不建逐条文字播报（`show_ticker` 默认假，回放浏览器与战斗沙盒设真），空出来的高度给棋盘；`BOARD_SCALE` 0.5 → 1.0。
 
 **地图底图**（作者定：每章一张手绘地图，风格各不同）：`ChapterDef.map_skin`（默认 `ruins`）→ `assets/maps/<id>.png` + json（`tone`）。`MapView.skin` 设了就铺满（`MapSkin.cover_region`：
-等比盖满、裁两边）画在路网底下；浅纸上前景 / 暗色字过 `UiTheme.ink_color`。现配：序章一遗迹、序章二北方林地、序章三诅咒之地深处（深）、自由模式帝国营地。
+等比盖满、裁两边）画在路网底下；浅纸上前景 / 暗色字取字色模板的浅版（`UiPalette.for_tone`，169）。现配：序章一遗迹、序章二北方林地、序章三诅咒之地深处（深）、自由模式帝国营地。
 
 光标：`UiCursor.apply(skin)` 启动时（和设置里换材质时）按 `GameSettings.cursor_skin` 从 `cursors/<材质>/` 取图换上（铠甲手套秘银 / 铁 / 皮革，默认秘银，热点 (2, 2)）；拖拽层拿起是「拖动」、对准了按 `DragLayer.drop_ok_at` 切「可放 / 不可放」、放下还原。
 
@@ -4153,6 +4162,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.97 | 2026-10-13 | **字色模板 + 顶端栏长条石板**（报告 169，作者定，待定按推荐 1A 2B 3A 4A；改 8.8）：`data/authoring/ui/text_colors.json` 每个颜色名写深底 / 浅底两版，`UiPalette.style_color / rarity_color / damage_color / resource_color(…, tone)`、`toned`、`for_tone`；`apply_tone` 打 `tone` 元数据、`UiTheme.tone_at` 往上找，`rich_block` / 语义色标签进树按底换版，`set_rich`、`refresh_tones`；`slab_bbcode` 删了；`INK*` 读模板；`TextColorCheck` 进内容校验；启动器「配色」页。同版：顶端栏换专用长条板边 `slab_bar`，`SlabStyle.body_inset` 四边分开、去掉 `top_cut`，`HudHost.BAR_HEIGHT` 64 → 88、栏里的组在板面上居中（作者「凹槽没有和石板位置对齐」） |
 | v2.96 | 2026-10-13 | **战斗回放控件换图**（报告 167 §2.3，作者定 D 版：符石按键 + 铜章进度条）：`assets/ui/replay/` 七个键各三态（44 × 44，本体 40 在左上）+ 槽 / 亮段九宫格（边距 [16,0,16,0]）+ 游标（pivot [8,14]）+ 两色刻度；`IconButton.make_art / set_art`（整颗按钮是图，新变体 `ButtonArt` 各态无底，缺图写字走 `ButtonIcon`）；`BattleView` 播放 / 暂停 / 重播、倍速 Ⅰ / Ⅱ / Ⅳ、跳过换成它，常驻说明挪进播放键悬浮窗（`PLAY_HINT`）；`ReplayTimeline` 有图走贴图（两端留符石宽、亮段按游标裁、倒下刻度 1.5 倍、没播到的 35%），缺图照画线 |
 | v2.95 | 2026-10-13 | **打包字体**（报告 168，作者定，待定按推荐；加 8.10）：`assets/fonts/` 四个裁字子集（文楷 Regular / Medium、朱雀仿宋、马善政）+ 授权 + `charset.txt`；`UiPalette` 四个字体函数改 `FontVariation` 带后备；主题 `LabelTitle / LabelOverlayTitle` 换仿宋、新变体 `LabelDisplay`（马善政 40 号）用在主菜单游戏名、开局第三页章节名、开场事件章节名、宝箱屏说明；`tools/font_charset.py`、`tools/subset_fonts.sh`、`FontCoverage` 覆盖检查（内容校验与测试同一段）；文楷子集按授权改名 PackSDC Kai。8.9 补上战斗屏教程（166 补充二） |
 | v2.94 | 2026-10-13 | **掉落下坠跟密度走 + 战斗屏静态指引**（报告 162 补充一、166 补充二，作者定，待定按推荐）：`GroundLayer.land_profile(def)` 按密度（`ItemWeight.of ÷ 格数`）给每件自己的落地时长 `clamp(0.95 − 0.15 × 密度, 0.35, 0.95)`，密度 ≥ 2 走「沉」（二次缓入、弹 3、不摆），其余「飘」（三次缓出、弹 6、左右摆 ±3，包 ±5），`LAND_SEC` 常量退了；`ChapterDef.coach_battle`（序章一 `prologue_battle`，六步），战斗屏开场有教程就 `BattleView.hold()`、淡入后放 `CoachOverlay`（目标走 `BattleView.control_rect`，认 `COACH_TARGETS`，「跳过并继续」由战斗屏 `add_coach_target` 登记），收掉 `release()`、记 `coach_seen`；`CoachOverlay.problems(steps, known_ids)`；地图屏调试台加「重放战斗教程」 |
