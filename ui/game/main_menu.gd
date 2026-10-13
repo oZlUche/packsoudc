@@ -14,7 +14,7 @@ func open(_payload: Dictionary) -> void:
 	_backdrop()
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
+	_slab_screen().add_child(center)     # 157 补充三：内容在一整块石板上
 	var col := _vbox(14)
 	col.custom_minimum_size.x = 420
 	center.add_child(col)

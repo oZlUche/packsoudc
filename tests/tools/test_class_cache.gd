@@ -46,8 +46,8 @@ static func run(t: TestCase) -> void:
 
 	t.begin("158 · 有没有没导入的素材：.import 的目标都在 = 导过；目标没了、或新图旁边连 .import 都没有 = 没导")
 	t.eq(ImportCheck.missing(), [] as Array[String], "测试前导过：一个不缺")
-	var src := "res://assets/ui/frame_stone.png.import"
-	t.check(ImportCheck.imported(src), "石板框导过")
+	var src := "res://assets/ui/tooltip_paper.png.import"
+	t.check(ImportCheck.imported(src), "悬浮窗的纸导过")
 	DirAccess.make_dir_recursive_absolute(TMP + "assets")
 	var text := FileAccess.get_file_as_string(src)
 	_put(TMP + "assets/x.png.import", text.replace(".ctex\"", "_gone.ctex\""))
