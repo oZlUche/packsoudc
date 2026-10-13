@@ -181,10 +181,21 @@ func _slab_screen(min_size: Vector2 = Vector2.ZERO) -> Control:
 	slab.custom_minimum_size = min_size
 	add_child(slab)
 	_screen_slab = slab
+	# 内容区和板同锚点、按板的内边距缩进；不放进板（容器）里 —— 那样要等下一帧排版才有大小，钉在角上的按钮第一帧会跑到屏外
 	var area := Control.new()
 	area.name = "SlabContent"
 	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	slab.add_child(area)
+	area.anchor_left = side
+	area.anchor_top = side
+	area.anchor_right = 1.0 - side
+	area.anchor_bottom = 1.0 - side
+	var box := UiTheme.current().get_stylebox("panel", UiTheme.PANEL_OVERLAY)
+	area.offset_left = box.get_margin(SIDE_LEFT)
+	area.offset_top = box.get_margin(SIDE_TOP)
+	area.offset_right = -box.get_margin(SIDE_RIGHT)
+	area.offset_bottom = -box.get_margin(SIDE_BOTTOM)
+	UiTheme.apply_tone(area, UiTheme.PANEL_OVERLAY)     # 板上的字按石板的深浅（浅板墨字）
+	add_child(area)
 	return area
 
 

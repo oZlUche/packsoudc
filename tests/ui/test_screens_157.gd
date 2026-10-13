@@ -444,8 +444,12 @@ static func frame_slab_screens(t: TestCase, root: Window) -> void:
 	if slab != null:
 		t.eq(slab.theme_type_variation, UiTheme.PANEL_OVERLAY, "大石板用石板变体")
 		t.check(is_equal_approx(slab.anchor_left, 0.05) and is_equal_approx(slab.anchor_top, 0.05) and is_equal_approx(slab.anchor_right, 0.95) and is_equal_approx(slab.anchor_bottom, 0.95), "占屏幕九成、居中")
-		t.check(slab.find_children("*", "Button", true, false).size() > 0, "菜单按钮都在板上")
+		var area: Control = menu.get_node_or_null(^"SlabContent")
+		t.check(area != null and area.find_children("*", "Button", true, false).size() > 0, "菜单按钮都在板的内容区里")
+		t.check(area != null and is_equal_approx(area.anchor_left, slab.anchor_left) and is_equal_approx(area.anchor_right, slab.anchor_right), "内容区和板同锚点（按板的内边距缩进）")
 		t.eq(slab.theme, UiTheme.text_theme(UiTheme.tone_of(UiTheme.PANEL_OVERLAY)), "板上的字色按石板的深浅挂")
+		var holder: Control = menu.get_node_or_null(^"SlabContent")
+		t.eq(holder.theme if holder != null else null, UiTheme.text_theme(UiTheme.tone_of(UiTheme.PANEL_OVERLAY)), "内容区也挂同一份字色")
 	var bg: ColorRect = menu.get("_bg_rect")
 	t.check(bg != null and bg.get_child_count() == 0 and bg.color.a >= 1.0, "板外是纯色底，不铺砖墙")
 	t.is_null(menu.overlay_frame(), "底屏没有叠层框")
