@@ -135,7 +135,7 @@ static func run_absorb_board_codex(t: TestCase) -> void:
 	var n := big.board.item_count()
 	var all := big.store_all()
 	t.eq(int(all["moved"]), n, "全放进去")
-	t.check(not big.has_pending_board() and big.board == null, "棋盘清空了")
+	t.check(not big.has_pending_board() and big.board != null and big.board.item_count() == 0, "棋盘搬空了，空棋盘留着显示（作者 2026-10-13：离开结算屏才丢）")
 	var uids := {}
 	for inst in big.warehouse.items():
 		uids[(inst as ItemInstance).uid] = true

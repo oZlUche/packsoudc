@@ -125,12 +125,11 @@ func confirm_open() -> bool:
 func _open_confirm(node: MapNode) -> void:
 	cancel_extract()
 	_confirm = _shade(0.7, true)
-	var panel := _panel(20)
+	var panel := _modal_panel("撤离？", 20)
 	panel.custom_minimum_size.x = 520
 	_confirm.get_child(0).add_child(panel)
 	var col := _vbox(10)
-	panel.add_child(col)
-	col.add_child(_label("撤离？", 20, UiPalette.FG))
+	panel.content.add_child(col)
 	var fee := _run.events.extract_fee(node)
 	var affordable := fee <= 0 or _run.wallet.can_afford(fee)
 	if fee > 0:
@@ -250,11 +249,10 @@ func toggle_pause() -> void:
 		_pause = null
 		return
 	_pause = _shade(0.72, true)
-	var panel := _panel(28)
+	var panel := _modal_panel("暂停", 28)
 	_pause.get_child(0).add_child(panel)
 	var col := _vbox(12)
-	panel.add_child(col)
-	col.add_child(_label("暂停", 26, UiPalette.FG))
+	panel.content.add_child(col)
 	col.add_child(_wrapped("一局还在：搜索 / 商店 / 没拿完的战利品都留在原地", 12, UiPalette.DIM, 360))
 	col.add_child(_button("继续（Esc）", toggle_pause, 14, UiPalette.Tier.PRIMARY))
 	col.add_child(_button("设置", pause_settings, 14))
@@ -322,11 +320,10 @@ func show_rules(first: bool = false) -> void:
 		return
 	_rules_first = first
 	_rules = _shade(0.72, true)
-	var panel := _panel(28)
+	var panel := _modal_panel("本图规则　%s" % Names.of(_run.chapter), 28)
 	_rules.get_child(0).add_child(panel)
 	var col := _vbox(12)
-	panel.add_child(col)
-	col.add_child(_label("本图规则　%s" % Names.of(_run.chapter), 24, UiPalette.FG))
+	panel.content.add_child(col)
 	var ctx := TextTemplate.context_for(_run)     # 112：规则卡也过占位符（{item:…} 按稀有度上色）
 	for i in _run.chapter.rules.size():
 		col.add_child(UiTheme.rich_block(560, 15, "%d. %s" % [i + 1, UiPalette.resolve_styles(TextTemplate.render(_run.chapter.rules[i], ctx))]))

@@ -33,6 +33,11 @@ signal buff_hovered(buff_id: String, at: Vector2)
 signal buff_unhovered
 
 var display_name: String = ""
+## 顶上画不画名字那一行（作者 2026-10-13：战斗屏有名牌了，这行去掉；沙盒、回放浏览器没名牌照画）
+var show_title: bool = true:
+	set(v):
+		show_title = v
+		queue_redraw()
 var label_font: Font
 ## buff id → 定义（画图标用名字的第一个字、悬浮窗写效果）。103：来自 [member BattleResult.buffs] —— 上过身的都在
 var buff_defs: Dictionary = {}
@@ -404,13 +409,14 @@ func _draw() -> void:
 		return
 
 	var y := float(PAD)
-	var title := display_name + ("　【倒下】" if _dead else "")
-	draw_string(
-		label_font, Vector2(PAD, y + 14), title,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 16,
-		UiPalette.DIM if _dead else UiPalette.FG
-	)
-	y += 26
+	if show_title:
+		var title := display_name + ("　【倒下】" if _dead else "")
+		draw_string(
+			label_font, Vector2(PAD, y + 14), title,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 16,
+			UiPalette.DIM if _dead else UiPalette.FG
+		)
+		y += 26
 
 	for key in _ordered_keys():
 		if key == ARMOR_KEY:
