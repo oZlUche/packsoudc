@@ -214,6 +214,8 @@ func set_nameplate(side: int, plate: Control) -> void:
 	UiTheme.clear_children(_plate_slots[side])
 	_plate_slots[side].add_child(plate)
 	_plate_slots[side].visible = true
+	if side < _panels.size():
+		_panels[side].show_title = false     # 作者 2026-10-13：名牌上有名字了，面板顶上那行不再重复
 
 
 func timeline() -> ReplayTimeline:

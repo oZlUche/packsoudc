@@ -151,6 +151,7 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	var view: BattleView = screen._view
 	var result: BattleResult = flow.last_payload.get("result", null)
 	t.eq(view.find_children("*", "Nameplate", true, false).size(), 2, "回放面板顶上也是两块名牌")
+	t.check(not view.panel(0).show_title and not view.panel(1).show_title, "作者 2026-10-13：有名牌就不在面板顶上再写名字那一行")
 	t.eq(view.ticker(), null, "157 补充一：正式游戏的回放没有文字播报")
 	t.check(view.board_view(0) != null and view.board_view(0).scale == Vector2.ONE, "棋盘不缩（格子和战前一样大）")
 	t.check(not view.find_children("*", "RichTextLabel", true, false).any(func(r): return (r as RichTextLabel).scroll_following), "树里没有滚动的播报框")
