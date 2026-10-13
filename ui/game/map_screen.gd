@@ -1,26 +1,28 @@
 ## 地图屏（M6）：一局的主屏。挑出生点 → 点相邻的点走一步 → 事件由 [GameFlow] 排成叠层一屏一屏来 → 撤离。
 ##
 ## 它是当年地图沙盒（M3-6 → M5，066 删了）的正式版：同一个 [MapView]，同一份 HUD；沙盒的换种子 / 重开 / 读档在这里没有，
-## 那些是开局屏与主菜单的事。「背包」把整理面板叠在地图上，随时开；撤离按钮只在撤离点上亮。
+## 那些是开局屏与主菜单的事。「背包」把整理面板叠在地图上，随时开。
 ## 所有动作都是公开方法，鼠标只是调它们；测试直接调。
-## 150 补 1：原来的右栏没了 —— 按钮、技能、路线、日志、调试台箭头都是这一屏的「部件」（[method hud_part]），装进读数层的组件里按布局摆；
-## 默认布局把它们按原来的顺序竖排在右边，地图往左让出那一条的宽（[method HudHost.right_inset]）
+## 150 补 1：原来的右栏没了 —— 按钮、技能、路线、调试台箭头都是这一屏的「部件」（[method hud_part]），装进读数层的组件里按布局摆。
+## 166（作者定）：地图铺满整屏，读数浮在上面（顶端栏、左下图例与路线、右下腰带；地图按 [method HudHost.content_inset] 躲开它们）；
+## 背包 / 放大镜 / 主动技能是顶端栏右槽的图标按钮；撤离按钮删了（撤离点的事件屏里有「撤离」），「存档并回主菜单」删了（进点自动存档，
+## 暂停菜单「回主菜单」前静默存一次）；日志与「地上 N 件」挪进调试台，调试台盖在地图上、顶缘在顶端栏下面；序章开头的静态教程（[CoachOverlay]）
 extends GameScreen
 
 const SettingsScreenScript := preload("res://ui/game/settings_screen.gd")
 const EncyclopediaScreenScript := preload("res://ui/game/encyclopedia_screen.gd")
-## 原来右栏的宽（090：三个按键放大到 300%，栏也加宽）；150 补 1 之后是右边那一列部件的宽
-const SIDE_WIDTH := 400
-const PART_WIDTH := SIDE_WIDTH - 24
-## 日志那一块的高（原来铺满右栏剩下的；现在是一件组件，默认贴右下）
+## 路线卡片的宽（左下角）
+const PART_WIDTH := 300
+## 166：地图底下浮着的预览几行（走过去花多少、敌人一行）
+const PREVIEW_LINES := 2
+const REOPEN_HINT := "再看一眼脚下这个点：没拿完的战利品、还开着的搜索或商店。点地图上的当前节点也行"
+## 调试台里日志那一块的高
 const LOG_HEIGHT := 220
 
 var _run: RunState = null
 var _view: MapView
 ## 150（作者定）：顶上的读数（倒计时、行动点、体力、货币、信仰……）都是能摆放的组件，按布局文件摆在地图那一块上
 var _hud_host: HudHost
-## 默认布局下读数占着顶上：地图往下让这么高（读数挪走了就不让）
-var _hud_spacer: Control
 ## 150：调试台抽屉（139 那个），里面是「摆读数」
 var _drawer: DevDrawer = null
 ## 抽屉离右缘的空（[method DevDrawer.dock] 的 margin）
@@ -32,14 +34,16 @@ var _enemy_line: Label
 var _status: Label
 var _routes_box: VBoxContainer
 var _log: RichTextLabel
-var _extract_btn: Button
-var _reopen_btn: Button
-var _skills_box: VBoxContainer
+## 166：调试台里的「地上 N 件」
+var _ground_line: Label
+var _bag_btn: IconButton
+var _reopen_btn: IconButton
+var _skills_box: HBoxContainer
+## 166：序章开头的静态教程（开着时盖在最上面）
+var _coach: CoachOverlay = null
 ## 150 补 1：这一屏交给读数层摆的部件（id → 控件）；没被组件领走的（调试模式关着时的日志）挂在藏着的架子上，照样在
 var _parts: Dictionary = {}
 var _shelf: Control = null
-## 地图那一竖排（右边让出 [method HudHost.right_inset]）
-var _mid: Control = null
 var _bag: Control = null
 var _bag_panel: Control = null
 var _confirm: Control = null
@@ -59,6 +63,7 @@ func open(_payload: Dictionary) -> void:
 	_adopt()
 	if flow.rules_card_pending():
 		show_rules(true)     # 091：第一次进这一章：本图规则卡
+	_maybe_coach.call_deferred()     # 166：开场没有事件压着就直接放
 
 
 func refresh() -> void:
@@ -211,6 +216,9 @@ func can_reopen() -> bool:
 ## 090（作者定）：Esc —— 开着什么就关什么（暂停菜单里的设置 → 暂停菜单 → 撤离确认 → 背包）；
 ## 什么都没开着就呼出暂停菜单。地图上的 Esc 总有事做
 func escape() -> bool:
+	if _coach != null:
+		_coach.next()     # 166：Esc 也是下一步
+		return true
 	if _rules != null:
 		close_rules()
 		return true
@@ -253,7 +261,7 @@ func toggle_pause() -> void:
 	col.add_child(_button("百科", func(): pause_encyclopedia(), 14))     # 114
 	if _run != null and _run.chapter != null and not _run.chapter.rules.is_empty():
 		col.add_child(_button("本图规则", func(): show_rules(), 14))     # 091：再看一遍规则卡
-	col.add_child(_button("存档并回主菜单", func(): flow.save_and_quit(), 14))
+	col.add_child(_button("回主菜单", func(): flow.save_and_quit(), 14))     # 166：进点自动存档；这里回去之前也静默存一次
 
 
 func pause_open() -> bool:
@@ -334,6 +342,7 @@ func close_rules() -> void:
 	if _rules_first:
 		_rules_first = false
 		flow.mark_rules_seen()
+	_maybe_coach.call_deferred()     # 166：规则卡收起来才轮到教程
 
 
 ## 反馈：地图缩放全局沿用 —— 记进设置并存盘（0 = 回到自动）
@@ -551,11 +560,8 @@ func _after_move() -> void:
 	_view.queue_redraw()
 	_refresh_hud()
 	_refresh_hunter_marks()
-	var node := _run.current_node()
-	_extract_btn.disabled = node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract" or _countdown_closed(node)
 	_reopen_btn.disabled = not flow.can_reopen()
-	_reopen_btn.tooltip_text = ("重新打开这个点上最后的界面：没拿完的战利品、还开着的搜索或商店。点地图上的当前节点也行" if flow.can_reopen()
-		else "这里没有可重开的界面")
+	_reopen_btn.tooltip_text = "放大镜（N）\n" + (REOPEN_HINT if flow.can_reopen() else "这里没有可重开的界面")
 
 
 func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
@@ -669,7 +675,8 @@ func _refresh_hud() -> void:
 		return
 	_refresh_countdown()
 	_hud_host.refresh()
-
+	if _ground_line != null:
+		_ground_line.text = "地上 %d 件" % _run.storage.item_count()     # 166：在调试台里
 
 ## 092：地图上关闭中的撤离点的标记（倒计时那一行大字是读数组件 `countdown`，150）
 func _refresh_countdown() -> void:
@@ -689,7 +696,8 @@ func _countdown_closed(node: MapNode) -> bool:
 
 
 
-## 局内技能（082）：一个技能一个按钮，能用的亮着；被动的不占按钮
+## 局内技能（082）：一个主动技能一颗按钮，能用的亮着；被动的不占按钮。
+## 166（作者定）：顶端栏右槽里的图标按钮（`icon_skill_<id>.png`，缺图写技能名），右下角标剩几次；状态写在悬浮窗里
 func _refresh_skills() -> void:
 	if _skills_box == null or _run == null:
 		return
@@ -705,9 +713,11 @@ func _refresh_skills() -> void:
 			bits.append("剩 %d 次" % _run.skills.uses_of(d.id))
 		if _run.skills.cooldown_of(d.id) > 0:
 			bits.append("冷却 %d 步" % _run.skills.cooldown_of(d.id))
-		var btn := _button("%s%s" % [d.display_name, ("（" + "，".join(bits) + "）") if not bits.is_empty() else ""], func(): use_skill(d.id), 13, UiPalette.Tier.MINOR)
+		var hint := d.summary() + ("\n" + Names.description_of(d) if d.description != "" else "") + ("" if d.map_usable() else "\n在战前准备屏（或猎手面前）用")
+		var btn := IconButton.make("skill_" + String(d.id), d.display_name,
+			d.display_name + ("（" + "，".join(bits) + "）" if not bits.is_empty() else ""), hint, func(): use_skill(d.id))
+		btn.badge = _run.skills.uses_of(d.id)
 		btn.disabled = _run.skills.can_use(d.id) != "" or not d.map_usable()
-		btn.tooltip_text = d.summary() + ("\n" + Names.description_of(d) if d.description != "" else "") + ("" if d.map_usable() else "\n在战前准备屏（或猎手面前）用")
 		_skills_box.add_child(btn)
 	if _run.skills.evading():
 		_skills_box.add_child(_label("躲避中（剩 %d 步）" % _run.skills.evade_left, 12, UiPalette.DIM))
@@ -767,48 +777,59 @@ func _rebuild_routes() -> void:
 #region 界面
 func _build() -> void:
 	_backdrop()
-	# 150：整屏 = 地图那一竖排（让出的顶、地图、两行预览；右边让出部件那一列）+ 盖在上面的读数层
+	# 166：整屏 = 铺满的地图 + 浮在上面的两行预览与读数层（顶端栏、左下、右下）；地图按读数层占着的边算「刚好放下」
 	var area := Control.new()
 	area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(area)
-	var mid := _vbox(0)
-	mid.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	area.add_child(mid)
-	_mid = mid
-	_hud_spacer = Control.new()
-	_hud_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	mid.add_child(_hud_spacer)
+	_view = MapView.new()
+	_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	area.add_child(_view)
+	# 两行预览浮在地图底边正中（左右让开左下图例与右下腰带）
+	var lines := _vbox(0)
+	lines.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lines.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	lines.offset_left = PART_WIDTH + 24
+	lines.offset_right = -(PART_WIDTH + 24)
+	lines.offset_top = -(PREVIEW_LINES * 22.0 + 8.0)
+	lines.offset_bottom = -8
+	area.add_child(lines)
 	_hud_host = HudHost.new()
 	_hud_host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_hud_host.arranged.connect(func():
-		_hud_spacer.custom_minimum_size.y = _hud_host.top_inset()
-		_mid.offset_right = -_hud_host.right_inset())
+		var inset := _hud_host.content_inset()
+		inset.size.y += PREVIEW_LINES * 22.0     # 底下两行预览也别压着路网
+		_view.content_inset = inset
+		if _drawer != null:
+			_drawer.dock(_hud_host.bar_height() + 8.0, DRAWER_MARGIN))
 	area.add_child(_hud_host)
-	_view = MapView.new()
-	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var mid := lines
 	_view.node_pressed.connect(_on_node_pressed)
 	_view.node_hovered.connect(_on_node_hovered)
 	_view.zoom_changed.connect(_remember_zoom)
 	_view.gui_input.connect(func(event: InputEvent):
 		if event is InputEventMouseMotion and _tip != null:
 			_tip.follow(get_global_mouse_position()))     # 084：浮窗跟着鼠标走，和道具悬浮窗一样
-	mid.add_child(_view)
 	# 反馈（bug：悬停节点时地图错位、闪烁）：这两行的文字随悬停的点变长变短，Label 的最小宽度跟着文字走，
 	# 把中间这一列撑宽 → 地图视图被挤窄 → 触发 resized 重新居中 → 地图位移、鼠标脱离节点 → 文字清空又缩回去 → 再悬停，如此往复。
 	# 让它们不参与布局宽度（超长就省略号裁掉），悬停就不会再改变地图的尺寸
 	_preview = _label("", 13, UiPalette.FG)
 	_preview.custom_minimum_size.y = 22
 	_pin_width(_preview)
+	_preview.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mid.add_child(_preview)
 	_enemy_line = _label("", 13, UiPalette.DIM)
 	_enemy_line.custom_minimum_size.y = 22
 	_pin_width(_enemy_line)
+	_enemy_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mid.add_child(_enemy_line)
 	_tip = HoverTip.new()
 	add_child(_tip)
 	_build_parts()
 	_build_drawer()
+	flow.screen_changed.connect(func(s: int, _p: Dictionary):
+		if s == GameFlow.Screen.MAP:
+			_maybe_coach.call_deferred())
 
 
 ## 150 补 1：原来右栏里的东西，一件一个部件（读数层的组件按 id 领走，见 [method hud_part]）
@@ -824,22 +845,20 @@ func _build_parts() -> void:
 	# 作者 2026-10-12：提示行（章节、种子、在哪个点、操作说明，「布局已保存」这类回话）挪进调试台，不再是部件
 	_status = _wrapped("", 12, UiPalette.DIM, PART_WIDTH)
 	# 090（作者定）：三个互动按键放大到 300%
-	_part(&"bag_button", _button("背包（B）", toggle_bag, 13, UiPalette.Tier.PRIMARY), true)
-	_reopen_btn = _button("回到这个点（N）", func(): reopen(), 13, UiPalette.Tier.PRIMARY)
+	# 166（作者定）：背包与「回到这个点」换成顶端栏里的图标按钮（背包 / 放大镜），快捷键照旧
+	_bag_btn = IconButton.make("bag", "背包", "背包", "整理棋盘上的东西，打架前先排好", toggle_bag, "B")
+	_part(&"bag_button", _bag_btn)
+	_reopen_btn = IconButton.make("lens", "放大镜", "放大镜", REOPEN_HINT, func(): reopen(), "N")
 	_reopen_btn.disabled = true
-	_reopen_btn.tooltip_text = "还没走的时候，重新打开这个点上最后的界面：没拿完的战利品、还开着的搜索或商店。点地图上的当前节点也行"
-	_part(&"reopen_button", _reopen_btn, true)
-	_extract_btn = _button("撤离", func(): extract(), 13, UiPalette.Tier.PRIMARY)
-	_extract_btn.disabled = true
-	_part(&"extract_button", _extract_btn, true)
-	_skills_box = _vbox(4)
-	_part(&"skills", _skills_box, true)
-	_part(&"menu_button", _button("存档并回主菜单", func(): flow.save_and_quit(), 12, UiPalette.Tier.MINOR), true)
+	_part(&"reopen_button", _reopen_btn)
+	_skills_box = _hbox(4)
+	_part(&"skills", _skills_box)
 	_routes_box = _vbox(6)
 	_part(&"routes", _routes_box, true)
+	# 166：日志与「地上 N 件」在调试台里（[method _build_drawer]）
 	_log = _log_box(12)
-	_log.custom_minimum_size = Vector2(PART_WIDTH, LOG_HEIGHT)
-	_part(&"log", _log)
+	_log.custom_minimum_size = Vector2(0, LOG_HEIGHT)
+	_ground_line = _label("", 13, UiPalette.FG)
 
 
 func _part(id: StringName, c: Control, full_width: bool = false) -> void:
@@ -878,13 +897,17 @@ func apply_debug_mode() -> void:
 ## 150：调试台里的「摆读数」：开着时读数能拖（吸附网格）、右键切显隐、滚轮切大小；保存写回布局文件，重置回默认
 func _build_drawer() -> void:
 	add_child(_drawer)
-	_drawer.dock(64, DRAWER_MARGIN)
-	# 作者 2026-10-12：抽屉开着时盖在右边，右边那一列按钮整体往左让开（地图跟着让）
-	_drawer.toggled.connect(func(open: bool): _hud_host.set_extra_right(DevDrawer.WIDTH + DRAWER_MARGIN if open else 0.0))
+	# 166（作者定）：侧边悬浮 —— 顶缘在顶端栏下面（不盖右上角的箭头），开着时盖在地图上、不再挤地图（和基地屏一致）
+	_drawer.dock(HudHost.BAR_HEIGHT + 8.0, DRAWER_MARGIN)
 	var c := _drawer.content
 	_debug_line = _label(_debug_text(), 13, UiPalette.STAMINA)     # 150 补 2：头部写着现在的调试模式
 	c.add_child(_debug_line)
 	c.add_child(_status)     # 作者 2026-10-12：提示行放在调试模式那一行下面
+	c.add_child(_ground_line)     # 166：地上几件
+	c.add_child(_label("日志", 16, UiPalette.FG))
+	c.add_child(_log)     # 166：日志从地图上挪进来
+	if _run != null and _run.chapter != null and _run.chapter.coach != &"":
+		c.add_child(_button("重放教程", func(): show_coach(true), 13))     # 166
 	c.add_child(_label("摆读数", 16, UiPalette.FG))
 	c.add_child(_wrapped("开着时：拖动读数换位置（松手吸附 %d 像素网格，记成离它最近的锚点 + 偏移）；右键切显示 / 隐藏；滚轮切大小两档。保存写到 %s。" % [
 		HudLayout.GRID, HudLayout.save_path("map")], 12, UiPalette.DIM, DevDrawer.WIDTH - 40))
@@ -957,4 +980,48 @@ func say(text: String) -> void:
 
 func _note(text: String) -> void:
 	_log.append_text(text + "\n")
+#endregion
+
+
+#region 166：序章静态教程
+## 这一章要放的教程步骤（章节的 `coach`，没有 = 不放）
+func coach_steps() -> Array:
+	if _run == null or _run.chapter == null or _run.chapter.coach == &"":
+		return []
+	return CoachOverlay.load_steps(_run.chapter.coach)
+
+
+## 第一次露出地图（开场事件关掉、规则卡收起、地图在最上面）时放一次；放过了记在局外（[member MetaState.coach_seen]）
+func _maybe_coach() -> void:
+	if _coach != null or _run == null or _run.chapter == null or _run.chapter.coach == &"":
+		return
+	if flow.screen != GameFlow.Screen.MAP or _rules != null or _pause != null or not is_visible_in_tree():
+		return
+	if flow.meta != null and flow.meta.coach_seen.has(String(_run.chapter.coach)):
+		return
+	show_coach()
+
+
+## 放教程（[param replay]：调试台的「重放」，不管看没看过）。没有步骤返回 false
+func show_coach(replay: bool = false) -> bool:
+	var steps := coach_steps()
+	if steps.is_empty() or _coach != null:
+		return false
+	if _drawer != null and replay:
+		_drawer.set_open(false)
+	_coach = CoachOverlay.new()
+	_coach.font = font
+	_coach.target_rect = func(id: StringName) -> Rect2: return _hud_host.rect_of(id)
+	add_child(_coach)
+	_coach.finished.connect(func():
+		_coach = null
+		if flow.meta != null and not flow.meta.coach_seen.has(String(_run.chapter.coach)):
+			flow.meta.coach_seen.append(String(_run.chapter.coach))
+			flow.save_meta())
+	_coach.start(steps)
+	return true
+
+
+func coach() -> CoachOverlay:
+	return _coach
 #endregion

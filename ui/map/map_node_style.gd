@@ -25,6 +25,12 @@ const STYLES := {
 
 const UNKNOWN := {"glyph": "?", "color": Color("8b93a1")}
 
+## 166（作者定）：左下角图例用的短名（地图上一眼看的那种；岔路口不列）。长名（事件文本、日志）照旧在 [NodeText]
+const NAMES := {
+	&"battle": "战斗", &"elite": "精英", &"event": "事件", &"random": "未知", &"search": "搜索", &"shop": "商店",
+	&"rest": "休息", &"extract": "撤离", &"core": "核心", &"spawn": "出生", &"safe": "保险箱", &"chest": "宝箱",
+}
+
 ## 155：节点图标的目录（文件名 = 类型）
 const ICON_DIR := "res://assets/nodes"
 
@@ -53,3 +59,8 @@ static func icon(type: StringName) -> Texture2D:
 
 static func route_color(index: int) -> Color:
 	return ROUTE_COLORS[posmod(index, ROUTE_COLORS.size())]
+
+
+## 166：图例里的短名；表里没有的退回 [NodeText] 的长名
+static func name_of(type: StringName) -> String:
+	return String(NAMES.get(type, NodeText.label_of(type)))

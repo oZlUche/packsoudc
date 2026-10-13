@@ -919,6 +919,7 @@ func step_to(id: int) -> bool:
 		return false
 	if recorder != null:
 		recorder.record(run)
+	save()     # 166（作者定）：进点自动存档 —— 人到了新点、这个点的事还没给玩家看（读档回来从这个点的事接着）
 	_flush()
 	return true
 
@@ -1237,6 +1238,7 @@ func _flush() -> void:
 		# 087（作者定）：BOSS 倒下、战利品收完 → 直接撤离结算
 		_show_result()
 		return
+	save()     # 166：这个点的事看完回到地图再存一次（不然在点上拿的东西，退出再进会回到进点之前）；传送落地的那个点也在这里存上
 	_go(Screen.MAP)
 
 

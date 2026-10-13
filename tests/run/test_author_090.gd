@@ -191,10 +191,10 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	t.check(map.rules_open(), "暂停菜单里再看规则卡")
 	t.check(game.escape() and not map.rules_open() and map.pause_open(), "Esc 先关规则卡、暂停菜单还在")
 	map.toggle_pause()
-	t.eq(map._reopen_btn.get_theme_font_size("font_size"), 39, "右栏「回到这个点」300%（13 → 39）")
-	t.eq(map._extract_btn.get_theme_font_size("font_size"), 39, "右栏「撤离」300%")
-	t.eq(_bg(map._extract_btn), UiPalette.BTN_PRIMARY, "右栏按键是主动作色")
-	t.eq(map._reopen_btn.text, "回到这个点（N）", "按钮上只写动作，说明进悬浮提示")
+	# 166（作者定）：「回到这个点」换成顶端栏的放大镜图标按钮（缺图写字），快捷键与说明进悬浮提示；撤离按钮删了
+	t.check(map._reopen_btn is IconButton and map._reopen_btn.hotkey == "N", "「回到这个点」是放大镜图标按钮，角上标 N")
+	t.check(map._reopen_btn.tooltip_text.begins_with("放大镜（N）"), "悬浮提示写名字与快捷键")
+	t.check(not ("_extract_btn" in map), "撤离按钮删了（撤离点的事件屏里撤）")
 
 	# 地图上的 Esc：开着什么就关什么，什么都没开着就呼出暂停菜单；暂停菜单里的设置返回回暂停菜单、一局还在
 	t.check(game.escape() and map.pause_open(), "地图上什么都没开着：Esc 呼出暂停菜单")
