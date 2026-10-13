@@ -68,19 +68,20 @@ func combat_rules() -> Array[AbilityRule]:
 	return out
 
 
-## 技能的一句话：每个技能「名字（主动、被动各一句）」
+## 技能的一句话：每个技能「名字（主动、被动各一句）」；166 补充一：主动技能藏着时只列被动
 func skills_summary() -> String:
 	var parts: Array[String] = []
 	for s in skills:
-		if s != null:
+		if s != null and not (RunSkills.ACTIVE_HIDDEN and (s as RunSkill).is_active()):
 			parts.append((s as RunSkill).summary())
 	return "　".join(parts)
 
 
-## 136：开局屏的分组行：被动在前、主动在后，各一行「被动：名字　说明」（作者定：角色 = 初始面板 + 技能，没有身份这一层）
+## 136：开局屏的分组行：被动在前、主动在后，各一行「被动：名字　说明」（作者定：角色 = 初始面板 + 技能，没有身份这一层）。
+## 166 补充一：主动技能藏着（[constant RunSkills.ACTIVE_HIDDEN]）时只有被动行
 func skill_lines() -> Array[String]:
 	var out: Array[String] = []
-	for active in [false, true]:
+	for active in ([false] if RunSkills.ACTIVE_HIDDEN else [false, true]):
 		for s in skills:
 			var sk := s as RunSkill
 			if sk != null and sk.is_active() == active:

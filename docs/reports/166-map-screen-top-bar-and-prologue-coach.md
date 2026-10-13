@@ -84,7 +84,6 @@
 |---|---|---|
 | `assets/ui/hud/bar.png` + json | 九宫格 128 × 64，顶端栏底；**大理石**质感（第十四条），`tone` 自定（大理石浅 → `light`） | 2.2 |
 | `assets/ui/hud/icon_bag.png`、`icon_lens.png` | 48 × 48 线稿，背包 / 放大镜 | 2.3 |
-| `assets/ui/hud/icon_skill_second_wind.png`、`icon_skill_slip.png` | 48 × 48，咬牙（紧咬的牙 / 握拳）、脱身（烟 / 侧身） | 2.2 技能按钮 |
 | `assets/ui/hud/coin.png` | 24 × 24 金币（帝国纹样可用 157 定的徽记） | 3 |
 | `assets/ui/faith/{brute,church,earth,hunt,nature,skill,sun}.png` | 32 × 32，七个信仰各一枚，同一套线稿粗细；避免真实宗教符号（美术线程已有的规矩） | 3 |
 | `assets/ui/coach/arrow.png` | 约 160 × 80 手绘箭头，透明底，指向右；代码按方向翻转 | 4 |
@@ -130,4 +129,35 @@
 - 教程：`CoachOverlay` + `data/authoring/coach/prologue_map.json`（体力、货币、背包、放大镜）；`ChapterDef.coach`、`MetaState.coach_seen`；开场事件、规则卡、暂停压着都不放，地图露出来才放；调试台「重放教程」。
 - 美术：所有图都是占位接口（缺图写字 / 画圆 / 折线箭头），按第 5 节清单交图后放进对应路径即可，不用改代码。
 - 测试：`tests/ui/test_hud_150.gd`（顶端栏几何、栏槽、地图满幅、调试台内容）、`tests/ui/test_map_screen_166.gd`（新：图标按钮、图例、自动存档、教程数据与遮罩、序章开场放一次）、`test_belt_slots_160.gd`、`test_author_090.gd`。
+
+
+## 补充一（2026-10-13）：主动技能藏起来
+
+> 作者原话：「隐藏角色的主动技能」。读法：玩家在局内**看不到也用不到**角色的主动技能（咬牙 / 脱身 / 突击）；136 的构件、角色 json、`RunSkills` 记账都留着，日后要放出来翻一个开关，不删代码。被动技能不受影响。
+
+- **地图屏**：`skills` 部件不进顶端栏（2.2 里 `bar_right` 的「主动技能图标按钮」那一项删掉，`bar_right` 只剩背包、放大镜、调试台箭头）。布局条目保留但 `visible: false`，`HudLayout.HIDDEN_BY_DEFAULT` 加 `skills`，和行动点 / 距离一样 —— 调试模式「摆读数」右键还能放出来验技能。`_refresh_skills` 不改（部件藏着就不画）。待定 2 作废。
+- **战前准备屏**：「溜走」按钮（136 的 `slip`）也藏（补 1 推荐 A）。`PrebattleScreen` 不再建 `_slip_btn`；`slip_battle / slip_reason` 留着给测试与开关。
+- **开局屏角色卡与说明**：`CharacterDef.skill_lines()` / `skills_summary()` 只列被动行（主动行跳过）；`help_pages/characters.json` 第一段「主动技能在地图右栏是一个按钮……」那句删掉，三个角色段落里「主动『……』」那一句各删掉；短板句不动。
+- **开关**：`RunSkills.ACTIVE_HIDDEN := true`（一个常量，`skill_lines`、战前屏、地图屏默认布局都看它）。只是为了日后一处翻回，不做设置项。
+- **不改**：`data/authoring/characters/*.json` 的 `skills` 数组、`RunSkill` 三个主动子类、`RunSkills` 的次数 / 冷却、`GameFlow.use_skill / slip_battle`；教程步骤本来就不提技能。
+
+**备忘（不在本补充范围）**：160 补充一把腰带道具定成「可堆叠的一次性技能」，三个主动技能正好是同一种东西 —— 咬牙 ≈ 一次性回体力、脱身 ≈ 烟雾弹、突击 ≈ 开场一击。日后若要让主动技能回来，推荐改成角色开局自带的腰带技能（160 补充一已有 `starting_belt`），不再另开一套按钮。作者点头再写方案。
+
+### 待定（补充一，默认按推荐）
+
+| # | 问题 | 选项 | 推荐 |
+|---|---|---|---|
+| 补 1 | 战前屏「溜走」是否一起藏 | A 藏（主动技能一律不露）；B 留（它是战斗选择，不在地图上） | **A**：作者说的是「主动技能」不是「咬牙」；安德烈乌斯靴子里的两条被动照旧让他好逃 |
+| 补 2 | 藏法 | A 常量开关 + 布局 `visible: false`，代码数据全留；B 从角色 json 里删掉主动技能 | **A**：改回去只翻一处，备忘那条路也用得上 |
+
+### 落地记录（补充一，2026-10-13）
+
+两项待定按推荐 A（溜走一起藏；常量开关 + 布局藏，代码数据全留）。
+
+- `RunSkills.ACTIVE_HIDDEN := true`：一处开关。
+- 地图屏：`skills` 条目仍在顶端栏右槽，默认 `visible: false`（`HudLayout.hidden_by_default`，含行动点 / 距离与藏着时的技能），布局版本 5；摆读数时右键放出来照样能画、能按。
+- 战前准备屏：开关开着就不建「溜走」；`slip_battle / slip_reason`、`GameFlow.slip_battle` 留着。
+- 开局屏：`CharacterDef.skill_lines / skills_summary` 只列被动；百科「三个角色」删掉主动技能那几句（「技能（两个被动）」）。
+- 美术清单删掉两张技能图标；`IconButton` 的角标留作可选能力。
+- 测试：`test_hud_150.gd`（技能默认藏、右键放出来有按钮）、`test_map_screen_166.gd`（安德烈乌斯战前屏没有溜走、脱身还在）、`test_characters_136.gd` / `test_character_skills.gd`（只列被动）。
 

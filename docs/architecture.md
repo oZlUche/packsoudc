@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.91 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.92 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3453,6 +3453,7 @@ func player_spec() -> CombatantSpec …
 - `IconButton`（`ui/widgets/`）：48 × 48，图 `assets/ui/hud/icon_<id>.png`，缺图写字；悬浮窗「名字（快捷键）+ 一句说明」；右上快捷键小字、右下次数角标。背包 B、放大镜 N、主动技能 `skill_<id>`（角标 = 这一局还能用几次）。
 - 货币只写数字，左边一枚金币（`HudIcon`，`assets/ui/hud/coin.png`，缺图画金色圆）；信仰有就一枚图标（`assets/ui/faith/<id>.png`）+「Lv.n　当前 / 下一级」，缺图退回老的字，没信仰留一个空槽。
 - 图例只列这张图上有的节点类型（揭开了的随机点按揭开的算），顺序按 `MapNodeStyle.STYLES`，名字是 `MapNodeStyle.NAMES` 的短名，图标与地图上那枚一样。
+- 166 补充一：角色的主动技能对玩家藏着（`RunSkills.ACTIVE_HIDDEN`）—— 右槽的 `skills` 默认不显示（摆读数右键还能放出来验技能），战前屏不建「溜走」，开局屏与百科只列被动；记账与代码都留着，日后翻这一处。
 - 自动存档：`GameFlow.step_to` 人到了新点、事件还没给玩家看就存一次；看完叠层回到地图（`_flush` 最后）再存一次。暂停菜单只留「回主菜单」（照旧先存）。
 
 ### 8.8 叠层的石板框、换屏、光标（157）
@@ -4139,6 +4140,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.92 | 2026-10-13 | **主动技能对玩家藏起来**（报告 166 补充一，作者定，待定按推荐；改 8.7）：`RunSkills.ACTIVE_HIDDEN` 一处开关；地图屏默认布局的 `skills` 不显示（`HudLayout.hidden_by_default`，布局版本 5），战前准备屏不建「溜走」，`CharacterDef.skill_lines / skills_summary` 只列被动，百科「三个角色」删掉主动技能的句子；记账、存档、`use_skill / slip_battle` 与角色 json 都留着 |
 | v2.91 | 2026-10-13 | **地图屏顶端栏与序章教程**（报告 166，作者定，待定按推荐；改 8.7，新 8.9）：读数层顶上一条 `hud_bar` 顶端栏（`PanelHudBar` 变体，缺图半透明深底），布局加三个栏槽锚点 `bar_left / bar_center / bar_right`（布局版本 4）；背包 / 放大镜 / 主动技能成了 `IconButton`（缺图写字、快捷键小字、次数角标）；撤离按钮与「存档并回主菜单」删掉，`GameFlow.step_to` 进点前、`_flush` 回地图时自动存档；日志与「地上 N 件」进调试台，调试台悬浮在栏下面盖着地图；金币与信仰图标（`HudIcon`，没信仰留空槽）；左下 `legend` 图例；腰带圆槽 72；地图满幅、按 `HudHost.content_inset()` 躲开栏与左下 / 右下；序章一 `coach` 静态教程 `CoachOverlay`（`MetaState.coach_seen` 记放过） |
 | v2.90 | 2026-10-13 | **敌人棋盘只写死相邻组合**（报告 165，作者定，待定按推荐；改 5.10）：`EnemyPlacer.auto_groups` 从道具的增益 / 受益 / 供给配对成组（`EnemyDef.combos` 可钉死），`_arrange` 组整组摆（现搭或刚体、四个朝向）、散件随机落位、重来四次后贴左上与老办法保底；`build_content` 改用它，补件与携带品也随机落位；预设图 `at` 可省、可写 `groups`，`EnemyPlacer.arrange` / `arrange_map` 开局按 `content_seed` 摆一次写回；`EnemyKit.board_of` 对没写位置的件自己找空位；序章二 / 三六个敌人删掉手写位置 |
 | v2.89 | 2026-10-12 | **仓库分页与基地三列**（报告 163 / 164，作者定，待定按推荐；改 8.2）：`Warehouse` 多页容器（每页 10 × 8、按页序自动放、只删末尾空页、存档逐页、老单块档按页切），科技构件 `warehouse_rows` → `warehouse_pages`（每级一页，`docs/techs.xlsx` 重新生成）；`WarehousePages` 竖排页签（锁着的灰显带锁、拖着停 0.4 秒切页），结算屏 / 开局第二页 / 基地共用；基地改左列竖排页签 + 左下大按钮、中列当前页（默认「家」）、右半边常驻仓库（格子按宽高取小 40 ～ 80），整屏一层拖拽、双击按当前页分派，出售 / 科技页不再自己画仓库；「家」美术套件进 `assets/ui/home/`，`UiTheme` 加 `BUTTON_HOME(_PRIMARY)`、`PANEL_HOME_BOX`、`PANEL_SHELF`、`dress_home_backdrop` |

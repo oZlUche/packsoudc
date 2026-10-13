@@ -16,7 +16,7 @@ static func run_layout(t: TestCase) -> void:
 	t.begin("150 / 166 · 布局：默认是顶端栏三个槽；字典往返一致；坏 id / 锚点 / 档位 / 偏移 / 重复都报；文件存取与重置")
 	var d := HudLayout.default_for("map")
 	t.eq(d.entries.size(), HudWidgets.KINDS.size(), "默认布局把每一种都摆上了")
-	t.eq(HudLayout.VERSION, 4, "166：布局版本 4（旧的回默认）")
+	t.eq(HudLayout.VERSION, 5, "166 补充一：布局版本 5（旧的回默认）")
 	t.eq(String(d.entry_of(&"hud_bar")["anchor"]), "top", "顶端栏横在顶上")
 	t.eq(String(d.entry_of(&"countdown")["anchor"]), "bar_center", "倒计时在栏中间")
 	t.eq(String(d.entry_of(&"countdown")["tier"]), "large", "倒计时是大档")
@@ -33,6 +33,10 @@ static func run_layout(t: TestCase) -> void:
 		if String(e["anchor"]) == "bar_right":
 			right_ids.append(StringName(e["id"]))
 	t.eq(right_ids, [&"bag_button", &"reopen_button", &"skills", &"dev_drawer"] as Array[StringName], "栏右槽：背包、放大镜、技能、调试台箭头")
+	# 166 补充一：主动技能对玩家藏着 —— 技能按钮的条目在（摆读数右键放得出来），默认不显示；其余右槽照常
+	t.eq(bool(d.entry_of(&"skills")["visible"]), not RunSkills.ACTIVE_HIDDEN, "技能按钮默认%s（ACTIVE_HIDDEN = %s）" % ["藏着" if RunSkills.ACTIVE_HIDDEN else "显示", RunSkills.ACTIVE_HIDDEN])
+	for id in [&"bag_button", &"reopen_button", &"dev_drawer"]:
+		t.check(bool(d.entry_of(id)["visible"]), "%s 默认显示" % id)
 	t.eq(String(d.entry_of(&"legend")["anchor"]), "bottom_left", "图例在左下角")
 	t.check(int(d.entry_of(&"routes")["line"]) < int(d.entry_of(&"legend")["line"]), "路线在图例上面")
 	for id in [&"extract_button", &"menu_button", &"log", &"ground_count", &"status"]:
@@ -284,6 +288,17 @@ static func _map_parts(t: TestCase, map: Control, host: HudHost, flow: GameFlow,
 		t.check(w != null and w.part == map.hud_part(id) and w.part.get_parent() == w, "%s：部件装进了组件" % id)
 		t.check(w.position.y + w.size.y <= host.bar_height(), "%s 在顶端栏里" % id)
 	t.check(map.hud_part(&"bag_button") is IconButton and map.hud_part(&"reopen_button") is IconButton, "背包 / 放大镜是图标按钮")
+	# 166 补充一：技能按钮默认藏着；摆读数时右键放出来，有主动技能的角色就画出按钮（验技能用）
+	var sk := host.widget(&"skills")
+	if sk != null and RunSkills.ACTIVE_HIDDEN:
+		t.check(not sk.visible, "技能按钮默认不在栏里")
+		host.toggle_shown(sk)
+		map.call("_refresh_skills")
+		var box: HBoxContainer = map.hud_part(&"skills")
+		t.eq(box.get_child_count() > 0, run.skills != null and run.skills.defs.any(func(d: RunSkill) -> bool: return d != null and d.is_active()), "右键放出来：有主动技能就有按钮（%d 个）" % box.get_child_count())
+		t.check(sk.visible == (box.get_child_count() > 0), "有按钮才显示")
+		host.toggle_shown(sk)
+		t.check(not sk.visible, "再右键：藏回去")
 	for id in [&"extract_button", &"menu_button", &"log", &"ground_count"]:
 		t.is_null(host.widget(id), "%s 不在读数层里" % id)
 		t.is_null(map.hud_part(id), "%s 也不是这一屏的部件了" % id)
