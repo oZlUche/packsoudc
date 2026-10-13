@@ -41,6 +41,8 @@ var key_bindings: Dictionary = {}
 var ui_fades: bool = true
 ## 157 补：光标材质 "mithril" / "iron" / "leather"（铠甲手套三套，作者定秘银默认）。设置层只存非空字符串，认不认得由界面管
 var cursor_skin: String = "mithril"
+## 反馈：地图缩放全局沿用 —— 玩家上次滚轮定下的缩放，下次进图（任何一张）照用；0 = 没定过，进图自动按点距定。F 键看全图时清回 0
+var map_zoom: float = 0.0
 
 
 func to_dict() -> Dictionary:
@@ -58,6 +60,7 @@ func to_dict() -> Dictionary:
 		"key_bindings": key_bindings.duplicate(true),
 		"ui_fades": ui_fades,
 		"cursor_skin": cursor_skin,
+		"map_zoom": map_zoom,
 	}
 
 
@@ -79,7 +82,13 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	s.ui_fades = bool(d.get("ui_fades", true))
 	var skin := String(d.get("cursor_skin", "mithril"))
 	s.cursor_skin = skin if skin != "" else "mithril"
+	s.map_zoom = normalize_zoom(float(d.get("map_zoom", 0.0)))
 	return s
+
+
+## 地图缩放：非正数 = 没定过（0）；其余夹到 0.3～2.5（和地图视图的上下限一致）
+static func normalize_zoom(z: float) -> float:
+	return 0.0 if not (z > 0.0) else clampf(z, 0.3, 2.5)
 
 
 ## 154 补充一：读改键表 —— 不是字典、动作名空、键表不是数组的都扔掉；键名换成键码，认不出来的键扔掉，一个都不剩的动作扔掉

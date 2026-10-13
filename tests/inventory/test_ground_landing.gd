@@ -35,7 +35,8 @@ static func run_new_items_land(t: TestCase) -> void:
 	var start := ground.landing_pose(a.uid)
 	t.check((start["pos"] as Vector2).distance_to(target - Vector2(0, GroundLayer.LAND_DROP)) < 0.01, "没起点、没面板：从落点上方 %.0f 像素落下" % GroundLayer.LAND_DROP)
 	t.check(absf(float(start["scale"]) - GroundLayer.LAND_SCALE) < 0.001 and absf(float(start["alpha"]) - GroundLayer.LAND_ALPHA) < 0.001, "起手放大、半透明")
-	t.eq(ground.uid_at_local(target + Vector2.ONE * 10), -1, "半空中的不接鼠标")
+	t.eq(ground.uid_at_local(target + Vector2.ONE * 10), -1, "落点上还没东西（它在上方 %.0f 像素）" % GroundLayer.LAND_DROP)
+	t.eq(ground.uid_at_local((start["pos"] as Vector2) + Vector2.ONE * InventoryView.CELL * 0.5), a.uid, "162：半空中的照样接鼠标（按此刻画在哪）")
 	ground.advance_landing(GroundLayer.LAND_SEC * 0.5)
 	var mid := ground.landing_pose(a.uid)
 	t.check((mid["pos"] as Vector2).y > (start["pos"] as Vector2).y and (mid["pos"] as Vector2).y <= target.y + 0.01, "半程：往下落了、还没过落点")
@@ -83,7 +84,7 @@ static func run_new_items_land(t: TestCase) -> void:
 
 
 static func run_drag_writes_origin(t: TestCase) -> void:
-	t.begin("134 · 拖出棋盘放到地上：就地落下（不位移）；取消拖拽放回地上原处：不播")
+	t.begin("134 / 162 · 拖出棋盘放到地上：从棋盘上原来那一格飞到放手点；取消拖拽放回地上原处：不播")
 	ItemInstance.reset_uid_counter()
 	var gun := G._def(&"t_gun", ["1"])
 	var board := GridInventory.new(Vector2i(4, 4), 1)
@@ -98,10 +99,11 @@ static func run_drag_writes_origin(t: TestCase) -> void:
 	var release := Vector2(0.3, 0.7) * G.SCREEN + Vector2(0.5, 0.5) * InventoryView.CELL
 	drag.update_preview(release)
 	t.check(drag.drop_at(release), "放到地上")
-	t.eq(stash.landing_from.get(a.uid, null), true, "拖拽层记下：就地落下")
+	var cell_px := view.global_position + view.cell_origin_px(Vector2i(0, 0))
+	t.eq(stash.landing_from.get(a.uid, null), cell_px, "拖拽层记下：起点 = 棋盘上原来那一格")
 	ground._scan()
 	t.check(ground.is_landing(a.uid), "播落地")
-	t.eq(ground.landing_pose(a.uid)["pos"], ground.item_rect(a.uid).position, "起点就是落点")
+	t.eq(ground.landing_pose(a.uid)["pos"], cell_px - ground.global_position, "从原格起飞")
 	ground.advance_landing(1.0)
 	# 从地上拿起、取消：放回原处不算落地
 	ground.grab_requested.emit(ground, a.uid, ground.item_rect(a.uid).position + Vector2.ONE * 10)

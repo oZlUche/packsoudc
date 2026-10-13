@@ -263,7 +263,8 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 	t.eq(setup.screen, GameFlow.Screen.SETUP, "→ 开局屏")
 	# 反馈（紧急）：左列比窗口还高，列尾的「出发」被挤出屏幕，开局没有入口 —— 「进入」钉在右下角，窗口再矮也在屏内
 	var enter: Button = setup._enter_btn
-	t.check(enter != null and enter.text == "进入" and enter.visible, "有「进入」按钮")
+	t.eq(setup.page(), 0, "161：先是第一页（选角色）")
+	t.check(enter != null and enter.text == "继续" and enter.visible, "有「继续」按钮")
 	if enter != null:
 		var vp := Rect2(Vector2.ZERO, setup.get_viewport_rect().size)
 		var rect := Rect2(enter.global_position, enter.size)

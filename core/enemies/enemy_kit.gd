@@ -13,7 +13,8 @@ static func has_enemy(content: Dictionary) -> bool:
 
 
 ## 按内容里记的位置与朝向重建棋盘。认不得的道具跳过（内容比道具库老的时候）
-static func board_of(content: Dictionary, items: ItemDatabase) -> GridInventory:
+## [param find_room] 假 = 写的位置摆不下就不放（[method unplaced_items] 查数据用）
+static func board_of(content: Dictionary, items: ItemDatabase, find_room: bool = true) -> GridInventory:
 	var size_raw: Array = content.get("board", [4, 3])
 	var size := Vector2i(int(size_raw[0]), int(size_raw[1]))
 	# 084：身上有包就和玩家一样 —— 道具只能在包里（requires_bag），包先摆；老内容（没有包）照旧直接摆
@@ -36,14 +37,16 @@ static func board_of(content: Dictionary, items: ItemDatabase) -> GridInventory:
 		var at: Array = entry.get("at", [0, 0])
 		var inst := ItemInstance.create(def, int(entry.get("rot", 0)))
 		if not board.place(inst, Vector2i(int(at[0]), int(at[1])), int(entry.get("rot", 0))):
-			# 作者 2026-10-12：敌人只该掉自己身上的东西 —— 摆不下的这件战斗里没有、掉落表却按 items 算，说一声（[method unplaced_items] 给测试查）
-			push_warning("敌人的道具摆不下：%s @ %s（棋盘 %s）" % [def.id, at, size])
+			# 作者 2026-10-12：敌人只该掉自己身上的东西 —— 写的位置摆不下（旧存档记着改形状之前的位置：143 把短剑改成 T 形），
+			# 自己找个空位放；还放不下才说一声（[method unplaced_items] 给测试查）
+			if not find_room or not board.try_add(inst):
+				push_warning("敌人的道具摆不下：%s @ %s（棋盘 %s）" % [def.id, at, size])
 	return board
 
 
-## 作者 2026-10-12：这份节点内容里摆不下的道具 id（预设图的测试逐个敌人查）
+## 作者 2026-10-12：这份节点内容里**照写的位置**摆不下的道具 id（预设图的测试逐个敌人查；游戏里会自己找空位，数据还是该写对）
 static func unplaced_items(content: Dictionary, items: ItemDatabase) -> Array[StringName]:
-	var board := board_of(content, items)
+	var board := board_of(content, items, false)
 	var placed := {}
 	for inst in board.items():
 		placed[(inst as ItemInstance).def.id] = int(placed.get((inst as ItemInstance).def.id, 0)) + 1

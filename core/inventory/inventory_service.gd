@@ -108,7 +108,8 @@ static func transfer_auto(from: ItemContainer, uid: int, to: ItemContainer) -> b
 	return ok
 
 
-## 087：搬一个带东西的包：摘下来（内容物 + 跨包物），内容物先各自进目标，再进包；有一件进不去就整个放回原处
+## 087：搬一个带东西的包：摘下来（内容物 + 跨包物），162：包先进目标、内容物再各自进（有机会落回刚放下的包）；
+## 有一件进不去就整个放回原处
 static func _transfer_bag(from: GridInventory, uid: int, to: ItemContainer) -> bool:
 	var bag := from.get_item(uid)
 	var home := bag.origin
@@ -116,22 +117,19 @@ static func _transfer_bag(from: GridInventory, uid: int, to: ItemContainer) -> b
 	var payload := from.detach_bag(uid)
 	if payload.is_empty():
 		return false
-	var loose: Array = []
-	loose.append_array(payload.get("contents", []))
-	for sd in payload.get("straddlers", []):
-		loose.append((sd as Dictionary)["inst"])
 	to.begin_batch()
 	var done: Array = []
-	var ok := true
-	for inst in loose:
-		if to.admit(inst):
-			done.append(inst)
-		else:
-			ok = false
-			break
+	var ok := to.admit(bag)
 	if ok:
-		ok = to.admit(bag)
+		done.append(bag)
+		for inst in _payload_items(payload):
+			if to.admit(inst):
+				done.append(inst)
+			else:
+				ok = false
+				break
 	if not ok:
+		done.reverse()     # 后进的先退：包最后退，退的时候已经空了
 		for inst in done:
 			to.remove((inst as ItemInstance).uid)
 		to.end_batch()
@@ -142,18 +140,38 @@ static func _transfer_bag(from: GridInventory, uid: int, to: ItemContainer) -> b
 	return true
 
 
-## 尽可能多地把 from 的内容搬进 to，返回成功搬运的件数 —— 就是没有退路容器的 [method transfer_all_prefer]。
+## 摘下来的包上那些东西（内容物 + 跨包物）
+static func _payload_items(payload: Dictionary) -> Array:
+	var out: Array = []
+	out.append_array(payload.get("contents", []))
+	for sd in payload.get("straddlers", []):
+		out.append((sd as Dictionary)["inst"])
+	return out
+
+
+## 尽可能多地把 from 的内容搬进 to，返回成功搬运的件数（没有退路容器；收不下的留在 from）。
 ##
 ## 按占格数从大到小搬 —— 先安置大件，小件更容易见缝插针，总装入量明显优于随机顺序。
 ## 087：作为包生效的排最后（先把包上的东西搬走，包就空了，当普通物品搬）
 static func transfer_all(from: ItemContainer, to: ItemContainer) -> int:
-	if to == null:
+	if to == null or from == null:
 		return 0
-	return int(transfer_all_prefer(from, to, null)["board"])
+	var moved := 0
+	from.begin_batch()
+	to.begin_batch()
+	for inst in _take_order(from):
+		if transfer_auto(from, (inst as ItemInstance).uid, to):
+			moved += 1
+	to.end_batch()
+	from.end_batch()
+	return moved
 
 
-## 084 / 123：全拿走 —— 每件先试 first（棋盘，自动找位），放不下才进 fallback（地上）。
-## 顺序同 transfer_all（非包先、大件先；包最后，不替玩家决定棋盘布局）。返回 {board: n, storage: n}
+## 084 / 123：全拿走 —— 每件先试 first（棋盘，自动找位），放不下才进 fallback（地上）。返回 {board: n, storage: n}（按件数，包和包里的各算一件）
+##
+## 162（作者定）：**先包后件**。包按大小先塞（放不下的抛到 fallback）；带东西的包摘下来，包自己先去，
+## 包上的东西和其余道具一起按占格数从大到小逐件试 —— 棋盘上多了刚塞进去的包，能进的更多。
+## 两边都收不下的留在 from（带东西的包整个放回原处）
 static func transfer_all_prefer(from: ItemContainer, first: ItemContainer, fallback: ItemContainer) -> Dictionary:
 	var out := {"board": 0, "storage": 0}
 	if from == null:
@@ -163,12 +181,33 @@ static func transfer_all_prefer(from: ItemContainer, first: ItemContainer, fallb
 		first.begin_batch()
 	if fallback != null:
 		fallback.begin_batch()
-	for inst in _take_order(from):
-		var uid := (inst as ItemInstance).uid
-		if first != null and transfer_auto(from, uid, first):
+	var grid := from as GridInventory
+	var tried := {}
+	var loose: Array = []     # 从包上摘下来的（已不在 from 里）
+	for inst in _take_order(from, true):
+		var it := inst as ItemInstance
+		if not it.def.is_bag:
+			break     # 包都在前面
+		tried[it.uid] = true
+		if grid != null and grid.is_bag_with_contents(it.uid):
+			_take_bag_apart(grid, it.uid, first, fallback, loose, out)
+		else:
+			_take_one(from, it.uid, first, fallback, out)
+	var rest: Array = loose.duplicate()
+	for inst in from.items():
+		if not tried.has((inst as ItemInstance).uid):
+			rest.append(inst)
+	_sort_by_cells(rest)
+	for inst in rest:
+		var it := inst as ItemInstance
+		if from.has_item(it.uid):
+			_take_one(from, it.uid, first, fallback, out)
+		elif first != null and first.can_admit(it.def) and first.admit(it):
 			out["board"] += 1
-		elif fallback != null and transfer_auto(from, uid, fallback):
+		elif fallback != null and fallback.can_admit(it.def) and fallback.admit(it):
 			out["storage"] += 1
+		elif not from.admit(it):
+			push_error("InventoryService: uid %d 两边都放不下也回不去，物品已丢失" % it.uid)
 	if fallback != null:
 		fallback.end_batch()
 	if first != null:
@@ -177,16 +216,50 @@ static func transfer_all_prefer(from: ItemContainer, first: ItemContainer, fallb
 	return out
 
 
-## 搬运顺序：按占格数从大到小；作为包生效的排最后
-static func _take_order(from: ItemContainer) -> Array:
+static func _take_one(from: ItemContainer, uid: int, first: ItemContainer, fallback: ItemContainer, out: Dictionary) -> void:
+	if first != null and transfer_auto(from, uid, first):
+		out["board"] += 1
+	elif fallback != null and transfer_auto(from, uid, fallback):
+		out["storage"] += 1
+
+
+## 162：带东西的包摘下来，包自己先进 first / fallback，包上的东西进 loose 等着按件试；包两边都进不去就整个放回原处
+static func _take_bag_apart(from: GridInventory, uid: int, first: ItemContainer, fallback: ItemContainer,
+		loose: Array, out: Dictionary) -> void:
+	var bag := from.get_item(uid)
+	var home := bag.origin
+	var rot := bag.rotation
+	var payload := from.detach_bag(uid)
+	if payload.is_empty():
+		return
+	if first != null and first.can_admit(bag.def) and first.admit(bag):
+		out["board"] += 1
+	elif fallback != null and fallback.can_admit(bag.def) and fallback.admit(bag):
+		out["storage"] += 1
+	else:
+		if not from.attach_bag(payload, home, rot):
+			push_error("InventoryService: 包 uid %d 搬不动又放不回，物品已丢失" % uid)
+		return
+	loose.append_array(_payload_items(payload))
+
+
+## 搬运顺序：按占格数从大到小。[param bags_first] 假（[method transfer_all]）：作为包生效的排最后（包上的东西先走，包空了当普通件）；
+## 真（162，全拿走）：是包的排最前（大包先）
+static func _take_order(from: ItemContainer, bags_first: bool = false) -> Array:
 	var sorted: Array = from.items()
 	var grid := from as GridInventory
 	sorted.sort_custom(
 		func(a, b):
-			var ab := grid != null and grid.acts_as_bag((a as ItemInstance).def)
-			var bb := grid != null and grid.acts_as_bag((b as ItemInstance).def)
+			var da := (a as ItemInstance).def
+			var dbf := (b as ItemInstance).def
+			var ab := da.is_bag if bags_first else (grid != null and grid.acts_as_bag(da))
+			var bb := dbf.is_bag if bags_first else (grid != null and grid.acts_as_bag(dbf))
 			if ab != bb:
-				return bb     # 不是包的排前面
-			return (a as ItemInstance).def.shape.cell_count() > (b as ItemInstance).def.shape.cell_count()
+				return ab if bags_first else bb
+			return da.shape.cell_count() > dbf.shape.cell_count()
 	)
 	return sorted
+
+
+static func _sort_by_cells(list: Array) -> void:
+	list.sort_custom(func(a, b): return (a as ItemInstance).def.shape.cell_count() > (b as ItemInstance).def.shape.cell_count())

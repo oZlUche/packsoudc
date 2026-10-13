@@ -122,7 +122,8 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	var plates: Array = pre.find_children("*", "Nameplate", true, false)
 	t.eq(plates.size(), 2, "两块名牌")
 	for p in plates:
-		t.check((p as Nameplate).portrait == null, "没肖像图：不画肖像槽（%s）" % (p as Nameplate).name_label.text)
+		t.check((p as Nameplate).portrait == null and (p as Nameplate).portrait_slot != null and (p as Nameplate).portrait_slot.is_inside_tree(),
+			"没肖像图：肖像位照样在、先放占位（%s）" % (p as Nameplate).name_label.text)
 	var before: float = pre.seam().tilt
 	var moved: Array[int] = []
 	for inst in run.board.items():
@@ -141,6 +142,9 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	var view: BattleView = screen._view
 	var result: BattleResult = flow.last_payload.get("result", null)
 	t.eq(view.find_children("*", "Nameplate", true, false).size(), 2, "回放面板顶上也是两块名牌")
+	t.eq(view.ticker(), null, "157 补充一：正式游戏的回放没有文字播报")
+	t.check(view.board_view(0) != null and view.board_view(0).scale == Vector2.ONE, "棋盘不缩（格子和战前一样大）")
+	t.check(not view.find_children("*", "RichTextLabel", true, false).any(func(r): return (r as RichTextLabel).scroll_following), "树里没有滚动的播报框")
 	var damage := 0
 	var deaths := 0
 	for e in result.log:
@@ -259,7 +263,7 @@ static func frame_event_harvest(t: TestCase, root: Window) -> void:
 	var small: ItemDef = null
 	for id in c.items.ids():
 		var def: ItemDef = c.items.get_def(StringName(String(id)))
-		if def.shape.size_rotated(0) == Vector2i.ONE and not def.is_bag and def.belt_use == null and run.board.can_admit(def):
+		if def.shape.size_rotated(0) == Vector2i.ONE and not def.is_bag and run.board.can_admit(def):
 			small = def
 			break
 	var detail := {"items": [String(small.id), String(small.id)]}
@@ -386,3 +390,73 @@ static func _first_rich(n: Node) -> RichTextLabel:
 	for c in n.find_children("*", "RichTextLabel", true, false):
 		return c as RichTextLabel
 	return null
+
+
+static func run_stone(t: TestCase) -> void:
+	t.begin("157 补 · 石板样式：整屏底铺 bg_stone（平铺、底色设置给它染色）；PanelDark / PanelLine / PanelHud 换成石板九宫格，内边距照旧；没图照旧纯色")
+	var th := UiTheme.build()
+	for pair in [[UiTheme.PANEL_DARK, UiTheme.PANEL_MARGIN], [UiTheme.PANEL_LINE, UiTheme.PANEL_LINE_MARGIN], [UiTheme.PANEL_HUD, UiTheme.HUD_MARGIN]]:
+		var box := th.get_stylebox("panel", pair[0]) as StyleBoxTexture
+		t.check(box != null and box.texture != null, "%s 是石板九宫格" % pair[0])
+		if box != null:
+			t.eq(box.content_margin_left, float(pair[1]), "%s 内边距照旧 %d（换皮不改排版）" % [pair[0], pair[1]])
+		t.eq(UiTheme.tone_of(pair[0]), UiTheme.TONE_DARK, "%s 深底" % pair[0])
+	t.eq(String(UiTheme.art_meta(UiTheme.ART_BG).get("tone", "")), "dark", "整屏底的 json 写了深")
+	t.check(bool(UiTheme.art_meta(UiTheme.ART_BG).get("tile", false)), "整屏底平铺")
+	var rect := ColorRect.new()
+	var tile := UiTheme.dress_backdrop(rect)
+	t.check(tile != null and tile.stretch_mode == TextureRect.STRETCH_TILE and tile.mouse_filter == Control.MOUSE_FILTER_IGNORE, "纯色底上铺了一层平铺的石板，不挡鼠标")
+	var saved_bg := UiPalette.bg_theme
+	UiPalette.bg_theme = UiPalette.BG_DEFAULT
+	t.check(UiTheme.backdrop_tint().is_equal_approx(Color.WHITE), "默认底色：石板原色")
+	UiPalette.bg_theme = "moss"
+	UiTheme.tint_backdrop(rect)
+	t.check(not tile.self_modulate.is_equal_approx(Color.WHITE) and tile.self_modulate.g > tile.self_modulate.r, "换成苔绿：石板染绿一点")
+	UiPalette.bg_theme = saved_bg
+	rect.free()
+	var saved := UiTheme.asset_root
+	UiTheme.asset_root = NOWHERE
+	var flat := UiTheme.build()
+	t.check(flat.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxFlat and flat.get_stylebox("panel", UiTheme.PANEL_HUD) is StyleBoxFlat, "没图：平面底")
+	var plain := ColorRect.new()
+	t.eq(UiTheme.dress_backdrop(plain), null, "没图：整屏底照旧纯色")
+	plain.free()
+	UiTheme.asset_root = saved
+
+
+static func frame_nameplate_slots(t: TestCase, root: Window) -> void:
+	t.begin("157 补充二 · 名牌：石碑底（PanelNameplate）、肖像位永远在（没图放占位剪影、框照画）、右边徽记位先画框；有图填进框里")
+	var plate := Nameplate.new().setup("游兵", "0 档")
+	root.add_child(plate)
+	t.eq(plate.theme_type_variation, UiTheme.PANEL_NAMEPLATE, "名牌底是 PanelNameplate")
+	t.check(plate.get_theme_stylebox("panel") is StyleBoxTexture, "美术的名牌石碑：九宫格")
+	t.eq(plate.portrait, null, "没肖像图：portrait 空")
+	t.check(plate.portrait_slot != null and plate.portrait_slot.custom_minimum_size == Vector2(64, 64), "肖像位 64×64 在")
+	t.check(plate.portrait_slot.placeholder != null, "放的是美术的占位剪影")
+	t.check(plate.portrait_slot.frame != null and is_equal_approx(plate.portrait_slot.frame.offset_left, -4.0), "框画在肖像位外扩 4 px")
+	t.check(plate.badge_slot != null and plate.badge_slot.custom_minimum_size == Vector2(32, 32) and plate.badge_slot.frame != null, "徽记位 32×32、先画框")
+	t.check(plate.badge_slot.picture == null and plate.badge_slot.placeholder == null, "徽记位里空着")
+	t.check(plate.get_combined_minimum_size().y >= 64.0, "名牌高至少放得下肖像位")
+	var face := ImageTexture.create_from_image(Image.create_empty(8, 8, false, Image.FORMAT_RGBA8))
+	plate.setup("游兵", "0 档", face)
+	t.check(plate.portrait != null and plate.portrait.texture == face and plate.portrait_slot.placeholder == null, "有图：图填进肖像位，不放占位")
+	var saved := UiTheme.asset_root
+	UiTheme.asset_root = NOWHERE
+	var bare := PortraitSlot.new(64)
+	t.check(bare.frame == null and bare.placeholder == null and bare.picture == null, "没框图、没剪影图：框和剪影自己画")
+	bare.free()
+	UiTheme.asset_root = saved
+	plate.free()
+
+
+static func frame_replay_ticker_option(t: TestCase, root: Window) -> void:
+	t.begin("157 补充一 · 回放浏览器（开发工具）照旧有逐条播报：show_ticker 真才建")
+	var view := BattleView.new()
+	view.show_ticker = true
+	root.add_child(view)
+	t.check(view.ticker() != null and view.ticker().is_inside_tree(), "开了：播报在树里")
+	view.free()
+	var plain := BattleView.new()
+	root.add_child(plain)
+	t.eq(plain.ticker(), null, "默认：不建")
+	plain.free()

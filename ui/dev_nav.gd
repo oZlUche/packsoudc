@@ -30,8 +30,12 @@ const CLASS_DIRS := ["res://core", "res://ui", "res://tools", "res://tests"]
 const REBUILT_FLAG := "cache-rebuilt"
 ## 「有未保存的改动」的字色（和 UiPalette.STAMINA 同色；115：这个脚本不许引用任何全局类，缓存坏着它也得解析得了）
 const WARN_COLOR := Color("f0ad4e")
-## 115：后台导入进程的 pid（-1 = 没在重建）
-var _import_pid: int = -1
+## 158：类缓存自己写（不起编辑器）、缺素材才后台导入（不挡游戏）。两个脚本都没有 class_name，缓存坏着也拿得到
+const ClassCache := preload("res://tools/class_cache.gd")
+const ImportCheck := preload("res://tools/import_check.gd")
+## 158：后台导新素材的进程（-1 = 没在导）；导完不重开，只撤掉右上角那行小字
+var _asset_import_pid: int = -1
+var _asset_note: Label = null
 ## 115：重建时的全屏遮罩
 var _rebuild_cover: Control = null
 
@@ -55,9 +59,11 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if _import_pid > 0 and not OS.is_process_running(_import_pid):
-		_finish_rebuild()     # 115：后台导入完了
-		return
+	if _asset_import_pid > 0 and not OS.is_process_running(_asset_import_pid):
+		_asset_import_pid = -1     # 158：新素材导完了，下次启动生效
+		if _asset_note != null:
+			_asset_note.queue_free()
+			_asset_note = null
 	var current := get_tree().current_scene
 	if current != _seen:
 		_seen = current
@@ -133,7 +139,7 @@ static func _scan_dir(path: String, regex: RegEx, known: Dictionary, missing: Ar
 				break
 
 
-## 115：后台导入的参数（[code]--headless --path <根> --import[/code]，导完就退）
+## 115 / 158：后台导入的参数（[code]--headless --path <根> --import[/code]，导完就退）；158 起只在有没导入的素材时用
 static func import_args(root: String) -> PackedStringArray:
 	return PackedStringArray(["--headless", "--path", root, "--import"])
 
@@ -161,31 +167,56 @@ func _check_class_cache() -> void:
 		# 用编辑器版的 Godot（作者的 Godot_console.exe）直接跑游戏时它也是 true，那样这条自检就永远不跑了
 	var missing := stale_classes()
 	if missing.is_empty():
+		_check_assets()
 		return
-	# 115（作者定）：缓存过期就自己修 —— 后台导入、导完重开；重开过一次还缺就别循环，回落到红字
-	if already_rebuilt(OS.get_cmdline_user_args()) or not start_rebuild():
+	# 158（原 115）：缓存过期就自己修 —— 进程内重写缓存（不到一秒，不起编辑器）、立刻重开；重开过一次还缺就别循环，回落到红字
+	if already_rebuilt(OS.get_cmdline_user_args()) or not rewrite_cache():
 		_show_stale_banner(missing)
 
 
-## 115：起后台导入进程并盖上「正在重建」。起不来返回 false（调用方回落到红字）
-func start_rebuild() -> bool:
-	var root := ProjectSettings.globalize_path("res://")
-	var pid := OS.create_process(OS.get_executable_path(), import_args(root))     # 不用 OS.execute：会卡住主线程、窗口未响应
-	if pid <= 0:
-		push_error("DevNav: 起不来导入进程")
+## 158：扫脚本头重写全局类缓存，盖上「已重写」，下一帧带原参数重开。写不了返回 false（调用方回落到红字）
+func rewrite_cache() -> bool:
+	if ClassCache.write(ClassCache.scan()) != OK:
+		push_error("DevNav: 写不了全局类缓存")
 		return false
-	_import_pid = pid
-	_show_rebuild_cover()
+	_show_rebuild_cover("脚本缓存过期，已重写，正在重新打开……")
+	_finish_rebuild.call_deferred()
 	return true
 
 
+## 158：有没导入的素材（别人加了图）→ 后台导入，不盖板、不重开；这一次游戏里那几张图走占位，下次启动生效
+func _check_assets() -> void:
+	var todo := ImportCheck.missing()
+	if todo.is_empty():
+		return
+	var root := ProjectSettings.globalize_path("res://")
+	var pid := OS.create_process(OS.get_executable_path(), import_args(root))
+	if pid <= 0:
+		return
+	_asset_import_pid = pid
+	_asset_note = Label.new()
+	_asset_note.text = "新素材导入中……下次启动生效"
+	_asset_note.add_theme_font_override("font", _cjk_font())
+	_asset_note.add_theme_font_size_override("font_size", 12)
+	_asset_note.add_theme_color_override("font_color", Color(0.75, 0.78, 0.82))
+	_asset_note.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_asset_note.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_asset_note.offset_top = 34
+	_asset_note.offset_right = -8
+	_asset_note.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_asset_note)
+
+
+func importing_assets() -> bool:
+	return _asset_import_pid > 0
+
+
 func rebuilding() -> bool:
-	return _import_pid > 0
+	return _rebuild_cover != null
 
 
-## 115：导入进程退出了：带着原参数重开一份，自己退出
+## 115 / 158：缓存修好了：带着原参数重开一份，自己退出
 func _finish_rebuild() -> void:
-	_import_pid = -1
 	var root := ProjectSettings.globalize_path("res://")
 	if OS.create_process(OS.get_executable_path(), relaunch_args(root, OS.get_cmdline_user_args())) <= 0:
 		push_error("DevNav: 重建完了但重开不了，请手动重新启动")
@@ -197,13 +228,13 @@ func _finish_rebuild() -> void:
 	get_tree().quit()
 
 
-func _show_rebuild_cover() -> void:
+func _show_rebuild_cover(text: String) -> void:
 	var cover := ColorRect.new()
 	cover.color = Color(0.06, 0.07, 0.09, 1.0)
 	cover.set_anchors_preset(Control.PRESET_FULL_RECT)
 	cover.mouse_filter = Control.MOUSE_FILTER_STOP
 	var label := Label.new()
-	label.text = "脚本缓存过期，正在重建……\n几秒后游戏会自己重新打开"
+	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -218,7 +249,7 @@ func _show_rebuild_cover() -> void:
 ## 回落：缺的类写成一条红字（重建过还缺、或起不来导入进程）
 func _show_stale_banner(missing: Array[String]) -> void:
 	var names := ", ".join(missing.slice(0, 8)) + ("　等 %d 个" % missing.size() if missing.size() > 8 else "")
-	var text := "全局类缓存过期：缺 %s —— 界面会灰屏 / 空白。自动重建没修好：在编辑器里打开一次项目（编辑器自己会重建），或跑 tools/run_game（会先 --import）" % names
+	var text := "全局类缓存过期：缺 %s —— 界面会灰屏 / 空白。自动重写没修好：在编辑器里打开一次项目（编辑器自己会重建），或跑一次 tools/test.sh（会先 --import）" % names
 	push_error("DevNav: " + text)
 	_cache_banner = Label.new()
 	_cache_banner.text = text

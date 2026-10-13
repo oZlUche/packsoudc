@@ -194,3 +194,14 @@
 - 战前与回放两屏同一份控件（3.4 节），一起变。
 - 测试：`test_nameplate`：没图 → 树里有肖像位且 `portrait == null`、名牌最小尺寸含 64 px 肖像位；有图 → `portrait` 非空。
 - **转美术设计**（经协调）：157 第 7 节的清单加 `nameplate_stone.png`、`portrait_frame.png`（肖像框线，透明中心）；整体「石板框」（`frame_stone.png` + `frame_stone.json` 边距）、悬浮窗底、光标、代价图标照清单。美术方向 A（墨线平涂、石板面板）。
+
+## 补充一 / 二与石板样式的落地记录（2026-10-12）
+
+待定 5 按推荐（收尾战报那一行留着）。美术同日交付了石板底、名牌、肖像框、肖像占位与四张地图底图。
+
+| 项 | 落在哪 | 出入 |
+|---|---|---|
+| 去掉播报、放大棋盘 | `BattleView.show_ticker`（默认假，`replay_browser` 与 `battle_sandbox` 设真；假时 `_ticker` 不建、`_log_line` 直接返回）；播报那块换成一个撑满的空控件，控制条压在底下；`BOARD_SCALE` 1.0 | 战斗沙盒（开发工具）也保留播报 |
+| 名牌与肖像位 | `ui/widgets/portrait_slot.gd`（`PortraitSlot`：框永远画、有图填图、没图放剪影图或自己画）；`Nameplate` 改成 `PanelContainer`，`PanelNameplate` 底，左肖像位、右徽记位 | 美术给了 `portrait_empty.png`，占位剪影直接用图（没图才代码画） |
+| 石板样式 | `bg_stone` 平铺在整屏底上（`UiTheme.dress_backdrop`）；`PanelDark` / `PanelLine` / `PanelHud` 换石板九宫格 | 内边距照旧按变体默认值（不按图边），各屏排版一处没动；设置里的「背景底色」改成给石板染色（默认那档原色） |
+| 地图底图 | `ChapterDef.map_skin`、`ui/map/map_skin.gd`（`MapSkin`）、`MapView.skin`；浅纸上前景 / 暗色字过 `ink_color` | 底图按屏幕铺满，不跟着拖动缩放走 |

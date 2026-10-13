@@ -8,3 +8,7 @@ id = &"standard"
 display_name = "标准经济（占位）"
 starting_balance = 20
 shop_exclude_tags = Array[StringName]([&"treasure", &"supply"])
+belt_stock = {
+"aid_pack": 1,
+"smoke_bomb": 1
+}

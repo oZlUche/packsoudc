@@ -59,3 +59,14 @@
 | `tools/run_game.sh`、`run_game.bat`、README 的启动说明 | 2.2 |
 | `tests/tools/test_class_cache.gd`（新） | 2.3 |
 | `docs/architecture.md` 15 节（开发期工具）、`.gitignore` 注释（102 那段补一句：缓存由游戏自己重写） | |
+
+## 落地记录（2026-10-12）
+
+三项待定按推荐，只有一处出入（第 3 条）。
+
+| 节 | 落在哪 | 和方案的出入 |
+|---|---|---|
+| 2.1 类缓存 | `tools/class_cache.gd`（`scan` / `write` / `read` / `head_of`）；`DevNav._check_class_cache` 缺类 → `rewrite_cache()`（写缓存、盖「已重写，正在重新打开……」、下一帧带原参数重开） | **`addons/` 也要扫**：编辑器写的那份里有 `addons/godot_ai` 的 56 个类，不扫就对不上；跳过的是 `.godot` / `.git` / `.claude`（里面有别的 worktree）、带 `.gdignore` 的、隐藏目录。写出来的和编辑器那份**逐字节一样**（要写成不带类型的数组，否则是 `Array[Dictionary]([…])`）。实测全项目 505 个类约 0.08 秒。端到端试过：删掉缓存里一条 → 跑游戏 → 缓存写回、和原来逐字节一样、重开。原来的「起 `--import` 自救」去掉了（`start_rebuild` 删除），重开过还缺照旧回落红字 |
+| 2.2 素材 | `tools/import_check.gd`（`.import` 的目标不在、或素材旁边连 `.import` 都没有 = 没导）；`DevNav._check_assets`：缓存齐全时检查，没导的 → 后台 `--import`，右上角小字，导完撤掉，不重开 | — |
+| 2.2 run_game | `run_game.sh` / `.bat` 去掉 `--import`，只剩启动一行 | 待定 3 推荐删掉；**留着**（只剩一行），免得作者本地已有的快捷方式指向它时打不开 |
+| 2.3 测试 | `tests/tools/test_class_cache.gd`：和编辑器那份逐条 + 逐字节对照、各种文件头写法、`import_check` | — |

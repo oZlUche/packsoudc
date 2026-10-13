@@ -668,7 +668,8 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	for inst in taken:
 		value += ItemValue.of(inst.def)
 	# 101：模块要的运行时输入（保险箱几格来自局外成长、带入价值来自这一次的选择）
-	var inputs := {SafeModule.ID: {"size": safe_size()}, CountdownModule.ID: {"carry_value": value}}
+	var inputs := {SafeModule.ID: {"size": safe_size()}, CountdownModule.ID: {"carry_value": value},
+		BeltModule.ID: {"grants": meta.belt_grants.duplicate() if meta != null else {}}}     # 160 补一：科技发的随身技能
 	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta_buffs(), character, layout, difficulty, hunter_defs, scale, inputs)
 	if state == null:
 		return null
@@ -783,12 +784,13 @@ func slip_battle() -> String:
 	return ""
 
 
-## 147：用腰带里的一件（地图屏 / 战前准备屏）。用了、而且等着开打的那一场因此没了（烟雾弹）就往下走。返回空串 = 用了，否则是原因
-func use_belt(uid: int) -> String:
+## 147：用腰带里的一个（地图屏 / 战前准备屏；160 补一：按随身技能的 id）。用了、而且等着开打的那一场因此没了（烟雾弹）就往下走。
+## 返回空串 = 用了，否则是原因
+func use_belt(skill_id: StringName) -> String:
 	if run == null:
 		return "没有在跑的一局"
 	var had_battle := not run.events.pending_battle.is_empty()
-	var why := run.hooks.belt_use(uid)
+	var why := run.hooks.belt_use(skill_id)
 	if why == "" and had_battle and run.events.pending_battle.is_empty():
 		_flush()
 	return why
@@ -1116,6 +1118,7 @@ func _adopt(state: RunState) -> void:
 	state.buff_defs = buff_defs      # 读档回来的只有 id，定义表在这里
 	apply_battle_trace()     # 117：战斗日志按设置开关
 	state.event_defs = event_defs
+	state.loot_seen = func(uid: int) -> bool: return seen_loot.has(uid)     # 159：走开时开着的搜索只落搜索屏里亮过的
 	state.meta = meta     # 091：事件的条件 / 后果看、立局外旗标
 	# 基线：按角色（读档回来只有 id，在这里找回）；没角色用持有方给的
 	state.hunter_defs = hunter_defs

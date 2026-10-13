@@ -21,7 +21,7 @@ const LABELS := {
 	"include_bags": "包也算", "include_self": "含自己", "invert": "反转", "enabled": "启用", "absolute": "绝对值", "only_total": "只算总量",
 	# 道具
 	"shape": "形状", "rarity": "稀有度", "rarity_cap": "稀有度上限", "is_bag": "是包", "bag_accept_tags": "包只收的标签", "bag_mods": "包体加成",
-	"set_id": "套装", "effects": "效果", "belt_use": "随身用法", "wear": "耐久", "when": "什么时候能用",
+	"set_id": "套装", "effects": "效果", "price": "价格", "starting_belt": "开局发的随身技能", "belt_stock": "随身那一排", "belt_grants": "发的随身技能", "wear": "耐久", "when": "什么时候能用",
 	"max_charges": "满的时候几次", "prefixes": "前缀（剩 1 / 2 / 3 次）", "prefixes_by_lang": "别的语言的前缀", "broken_prefix": "破碎的前缀", "broken_prefixes": "别的语言的破碎前缀",
 	"broken_value_ratio": "破碎后卖价几成", "own_only": "只认这件自己打出的", "feed_mods": "供给的加成", "feed_rules": "供给的规则", "feed_filter": "只供给", "faith_bonuses": "信仰加成", "dormant_keeps_combat": "休眠仍保留战斗效果", "requires_unlock": "需要的解锁",
 	"combat": "战斗", "adjacency": "邻接", "base_stats": "基础属性", "rules": "规则", "trigger": "触发", "cadence": "节奏", "costs": "消耗",
@@ -69,8 +69,8 @@ const LABELS := {
 	"god": "神", "camp": "阵营", "thresholds": "阈值", "deeds": "行为", "single_faith": "只认一位神", "grants": "给的解锁", "level": "档",
 	"mechanics": "机制", "warn_lead_actions": "预警提前量", "first_at_action": "第一次在第几步", "interval_actions": "间隔步数",
 	"from_depth": "从第几层起", "per_depth": "每层", "hunter_ids": "猎手", "bracket_steps": "段位表", "inputs": "输入", "output": "产物",
-	"funds": "钱", "rows": "行数", "effect": "效果",     # 110：局外科技
-	"chest": "宝箱", "chest_skin": "宝箱皮肤", "rarity_by_tier": "各档位的宝箱稀有度权重", "danger_bonus": "高危区稀有度加几", "hold_seconds": "开锁要按几秒",
+	"funds": "钱", "rows": "行数", "pages": "页数", "effect": "效果",     # 110：局外科技
+	"chest": "宝箱", "chest_skin": "宝箱皮肤", "map_skin": "地图底图", "rarity_by_tier": "各档位的宝箱稀有度权重", "danger_bonus": "高危区稀有度加几", "hold_seconds": "开锁要按几秒",
 	"release_decay": "松手回退倍速", "items_by_rarity": "各档出几件", "floor_by_rarity": "各档收获下限", "include_treasure": "能开出珍宝", "haul_board": "收获箱大小",
 	"background": "背景图", "ChestSkinDef.closed": "闭箱图（按稀有度）", "ChestSkinDef.open": "开箱图（按稀有度）", "lock_offset": "锁孔位置", "ring_radius": "进度环半径", "ring_width": "进度环粗细",
 	"unlock_frames": "开锁序列帧", "unlock_fps": "开锁帧率", "trying_frames": "尝试开锁序列帧", "trying_fps": "尝试开锁帧率", "open_frames": "开箱序列帧", "open_fps": "开箱帧率",     # 154
@@ -112,8 +112,9 @@ const TYPE_LABELS := {
 	"approach": "逼近", "flee": "逃跑", "wander": "游荡", "ambush": "伏击", "patrol": "巡逻",
 	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫", "expel": "驱逐（退回上一步）", "random": "按权重随机", "fixed": "固定一档",
 	"damage_item": "损坏道具", "drain_money": "掉钱",
-	"warehouse_rows": "仓库加行",     # 110：局外科技的效果
+	"warehouse_pages": "仓库加页",     # 110 / 163：局外科技的效果
 	"belt_slots_bonus": "腰带扩格", "smoke_escape": "烟雾：这一场不打", "mend_vitality": "回体力（随身）",     # 147
+	"starting_belt": "开局发随身技能", "tech_belt_grant": "开局发随身技能（科技）", "grant_belt": "给随身技能",     # 160 补一
 	"tech_run_buff": "每级给一条局外 buff", "tech_safe_size": "保险箱扩格",     # 118
 }
 
@@ -140,6 +141,7 @@ const CLASS_LABELS := {
 	"BuffAxis": "带标准轴",     # 152
 	"BeltUse": "随身用法", "BeltEffect": "随身效果", "WearProfile": "耐久",     # 147 / 148
 	"ChestRules": "宝箱规则", "ChestSkinDef": "宝箱皮肤",     # 154
+	"BeltSkillDef": "随身技能", "BeltStock": "随身那一排的一种",     # 160 补一
 }
 
 ## 脚本路径 → {字段名 → 说明}；"" 键 = 类的说明

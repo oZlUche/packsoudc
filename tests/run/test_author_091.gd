@@ -161,7 +161,7 @@ static func frame_bg_theme(t: TestCase, root: Window) -> void:
 	Support.cleanup("091")
 
 
-static func _place_any(inv: GridInventory, def: ItemDef) -> ItemInstance:
+static func _place_any(inv: Variant, def: ItemDef) -> ItemInstance:
 	var inst := ItemInstance.create(def)
 	for y in inv.size.y:
 		for x in inv.size.x:

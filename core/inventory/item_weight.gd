@@ -8,6 +8,7 @@
 ## remedy / food / ammo / keepsake / sigil / treasure / relic   半格一重，向上取整
 ## 其余（木、骨、皮、布、陶、皮包……）                每格 1
 ## [endcodeblock]
+## 161（作者定）：**包不算重** —— 作为包的道具（`is_bag`）一律 0，写死值也不看。
 ## 公式只是默认值，让新加的道具不填也有一个说得过去的数；名字说它和材质不符的才写死在道具文件里（报告 129 附录 A、137 第二节）
 class_name ItemWeight
 extends RefCounted
@@ -23,7 +24,7 @@ const PER_CELL_STONE := 2
 
 
 static func of(def: ItemDef) -> int:
-	if def == null:
+	if def == null or def.is_bag:
 		return 0
 	if def.weight > 0:
 		return def.weight
@@ -32,7 +33,7 @@ static func of(def: ItemDef) -> int:
 
 ## 不看写死值的公式值（编辑器、报告对照用）
 static func formula(def: ItemDef) -> int:
-	if def == null:
+	if def == null or def.is_bag:
 		return 0
 	var cells := def.cell_count()
 	if def.tags.has(HEAVY):
@@ -48,7 +49,7 @@ static func formula(def: ItemDef) -> int:
 	return maxi(1, cells)
 
 
-## 一块容器里所有东西的重量之和（棋盘：含包本身）
+## 一块容器里所有东西的重量之和（161：包是 0，所以棋盘上就是不含包）
 static func total(c: ItemContainer) -> int:
 	var sum := 0
 	if c == null:

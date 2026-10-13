@@ -160,7 +160,7 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	t.check(absf((left + right) / 2.0 - room / 2.0) <= 1.0 or left <= 0.0, "整行在让出右边那一条之后的地方水平居中（%s ～ %s，宽 %s）" % [left, right, room])
 	if belt_w.visible:
 		t.eq(host.right_inset(), HOST_SIZE.x - belt_w.position.x, "右边那一条量出来了（只有腰带）")
-		t.eq(belt_w.position.x + belt_w.size.x, HOST_SIZE.x + HudLayout.COLUMN_OFFSET.x, "腰带贴右上（偏移 %s）" % HudLayout.COLUMN_OFFSET)
+		t.eq(belt_w.position + belt_w.size, HOST_SIZE + HudLayout.BELT_OFFSET, "160：腰带贴右下（偏移 %s）" % HudLayout.BELT_OFFSET)
 	var cd := host.widget(&"countdown")
 	if cd.visible:
 		t.check(cd.position.y + cd.size.y <= row_y, "倒计时在读数上面")

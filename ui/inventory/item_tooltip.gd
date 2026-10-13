@@ -106,8 +106,6 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	for e in def.effects:
 		var d: String = e.describe() if e != null and e.has_method("describe") else ""
 		lines.append("效果：%s" % (d if d != "" else _type_name(e)))
-	if def.belt_use != null:     # 147：随身道具 —— 放腰带，点一下就用
-		lines.append("[color=#%s]随身：%s[/color]" % [UiPalette.GRANT.to_html(false), def.belt_use.describe()])
 	if def.wear != null:     # 148：耐久 —— 剩几次、用完就碎
 		lines.append(wear_line(inst))
 	if def.adjacency != null:

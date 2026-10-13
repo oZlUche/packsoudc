@@ -23,8 +23,8 @@ const HISTORY_MAX := 20
 signal changed()
 
 var rules: MetaRules = null
-## 仓库：一块不要求包的格子
-var warehouse: GridInventory = null
+## 仓库：不要求包的格子，163 起分页（[Warehouse]，每页 [method warehouse_size] 大，页数由科技推算）
+var warehouse: Warehouse = null
 ## 撤离带回来的棋盘（非包道具按原位置）；null = 没有
 var board: GridInventory = null
 ## 图鉴：道具 id（字符串）→ 累计带出件数。点亮 = 计数 > 0
@@ -54,6 +54,8 @@ var tech_deposits: Dictionary = {}
 var tech_buffs: Array[StringName] = []
 ## 118：科技给保险箱加的列 / 行（[TechSafeSize]），开局 `GameFlow.safe_size()` 加上
 var safe_bonus: Vector2i = Vector2i.ZERO
+## 160 补一：科技每局开局往腰带里发的随身技能（id → 几个，[TechBeltGrant]），开局交给 [BeltModule]。由科技等级推算，不入档
+var belt_grants: Dictionary = {}
 ## 撤离带出来的钱累计。局外货币怎么花（15 节第 4 项）还没定，先攒着
 var funds: int = 0
 ## 累计背出去的价值（6.4）
@@ -69,10 +71,11 @@ var _next_uid: int = 1
 
 func _init(p_rules: MetaRules = null) -> void:
 	rules = p_rules
-	warehouse = GridInventory.new(warehouse_size(), WAREHOUSE_ID, false)
+	warehouse = Warehouse.new(warehouse_size(), WAREHOUSE_ID)
 	warehouse.accept_filter = keeps
 
 
+## 一页仓库多大（163：扩建加页，页的大小不变）
 func warehouse_size() -> Vector2i:
 	return rules.warehouse_size if rules != null else MetaRules.DEFAULT_SIZE
 
@@ -472,7 +475,7 @@ func to_dict() -> Dictionary:
 		"flags": flags.duplicate(),
 		"tech_levels": tech_levels.duplicate(),
 		"tech_deposits": tech_deposits.duplicate(true),
-		# 120：tech_buffs、safe_bonus 和仓库尺寸都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
+		# 120：tech_buffs、safe_bonus 和仓库页数（163）都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
 
@@ -485,8 +488,8 @@ static func _names_of(ids: Array[StringName]) -> Array:
 
 ## 读回来。版本不对返回 null（局外存档还只有开发期的，旧的作废）；定义被删的道具由容器的 from_dict 告警后丢弃。
 ## 120（作者定）：**先读进度表、再算容量、最后装东西** —— 给了 [param tech_defs] 时先读 `tech_levels`，
-## 在还空着的仓库上 [method TechService.derive] 出仓库尺寸、保险箱、局外 buff，再按算出的尺寸把仓库物品放回去
-## （原位放不下的找空位，再不行临时加行，不丢）。没给（测试直接读档）时仓库按存档里的尺寸建，派生值留给调用方 derive
+## 在还空着的仓库上 [method TechService.derive] 出仓库页数（163）、保险箱、局外 buff，再按算出的页数把仓库物品放回去
+## （原位放不下的按页序找空位，再不行临时加页，不丢；163 之前的单块老档按页切）。没给（测试直接读档）时按存档里的页数建，派生值留给调用方 derive
 static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = null, tech_defs: Array = []) -> MetaState:
 	if int(d.get("version", -1)) != SAVE_VERSION:
 		return null
@@ -507,8 +510,7 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	# 3. 装东西
 	var w = d.get("warehouse", null)
 	if w is Dictionary:
-		m.warehouse = GridInventory.from_dict(w, items, m.warehouse.size if not tech_defs.is_empty() else Vector2i.ZERO)
-		m.warehouse.id = WAREHOUSE_ID
+		m.warehouse = Warehouse.from_dict(w, items, m.warehouse_size(), m.warehouse.page_count() if not tech_defs.is_empty() else 0)
 		m.warehouse.accept_filter = keeps
 	var b = d.get("board", null)
 	if b is Dictionary:

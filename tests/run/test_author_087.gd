@@ -706,10 +706,10 @@ static func run_spyglass_and_codex(t: TestCase) -> void:
 	screen.font = UiPalette.cjk_font()
 	screen.screen = GameFlow.Screen.META
 	screen.open({})
-	t.eq(screen.tab(), "warehouse", "默认在仓库页")
+	t.eq(screen.tab(), "home", "默认在家页（164）")
 	screen.show_tab("codex")
 	t.eq(screen.tab(), "codex", "切到图鉴页")
-	t.check(screen._pages["codex"].visible and not screen._pages["warehouse"].visible, "只显示图鉴页")
+	t.check(screen._pages["codex"].visible and not screen._pages["home"].visible, "只显示图鉴页")
 	var tiles: Array = screen.codex_tiles()
 	t.eq(tiles.size(), c.items.ids(true).size() + c.items.keepsake_ids().size(), "每件能获得的道具（含 091 锁着的）+ 特殊道具各一格缩略图（089）")
 	var lit_n := 0
@@ -735,7 +735,7 @@ static func run_spyglass_and_codex(t: TestCase) -> void:
 	screen._on_tile_hovered(dark_tile)
 	t.check(screen._codex_tip.text().contains("未获得"), "停在灰的格子上：只写未获得")
 	screen.show_tab("nope")
-	t.eq(screen.tab(), "warehouse", "不认识的页签回仓库")
+	t.eq(screen.tab(), "home", "不认识的页签回家")
 	screen.free()
 	Support.cleanup("087")
 

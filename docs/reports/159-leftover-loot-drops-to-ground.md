@@ -36,3 +36,13 @@
 | `ui/game/container_screen.gd`（提示文案）、`data/authoring/events/tut_search_2_again_2.json` 等三条教程事件文案 | |
 | `tests/run/test_loot_*`：走开后待拾取的件数 = 地上增加的件数；BOSS 收起仍丢；搜索未揭示的不落地 | |
 | `docs/architecture.md` 6.2 / 084 那段 | |
+
+## 落地记录（2026-10-12）
+
+待定 1 按推荐 B（搜索没亮的不落）。
+
+- `RunState._drop_pending_loot(skip)`：待拾取倒进地上（包先倒空再放空包，和 `fold_loot_into_search` 一样）；`skip` 里的 uid 不落。
+- 「没亮过」在核心里没有：揭示是界面的事，记在 `GameFlow.seen_loot`。`RunState.loot_seen: Callable` 由 `GameFlow._adopt` 接上；`_abandon_sessions` 在**关会话之前**先记下开着的搜索收获箱里没亮过的（关的时候收获箱整箱交出去、`GameFlow` 会把它们都记成见过）。没接（纯核心）= 都算亮过。
+- 战利品屏「收起」的提示改成「剩下的留在这里；走了会落到这个点的地上（Esc）」；序章教程只有 `tut_search_2_again_2` 一条说了「走的时候会丢在这里」，改成「走了会留在这个点的地上（回来还能拿，撤离不带走）」；另两条（`tut_search_1_done`、`tut2_search_1_done`）本来就是「留在这个点上」，不用改。
+- `discard_loot()` 照旧留给 BOSS 收起与拿空关屏。
+- 测试：`tests/run/test_loot_drop_159.gd`（走开后原来那个点的地上 = 原有 + 落下的件数；skip 的不落；开着的搜索只记没亮过的、没接 = 都算亮过；`discard_loot` 不落地）。

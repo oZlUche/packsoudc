@@ -71,7 +71,7 @@ func open(payload: Dictionary) -> void:
 		buttons.add_child(back)
 	else:
 		_leave_btn = _button("收起", to_map, 13)
-		_leave_btn.tooltip_text = "撤离结算" if boss else "剩下的留在这里，走了就没（Esc）"
+		_leave_btn.tooltip_text = "撤离结算" if boss else "剩下的留在这里；走了会落到这个点的地上（Esc）"
 		buttons.add_child(_leave_btn)
 	_boss = boss
 	left.add_child(buttons)
@@ -142,10 +142,20 @@ func skip_reveal() -> void:
 	_loot.skip()
 
 
-## 全拿走（先全亮）：123 先进背包棋盘，放不下的到地上。屏不自动关（084 作者定），设置「拿走最后一件后自动关闭」开了才关（_on_container_changed 管）
+## 全拿走（先全亮）：123 先进背包棋盘，放不下的到地上（162：先包后件，落地从原格起飞）。屏不自动关（084 作者定），设置「拿走最后一件后自动关闭」开了才关（_on_container_changed 管）
 func take_all() -> void:
 	_loot.reveal_all()
-	InventoryService.transfer_all_prefer(_container, flow.run.board, flow.run.storage)
+	# 162：放不下落地的那几件从它在这块棋盘上的格子起飞（进了背包的起点搬完清掉，不留给下一次落地）
+	var ground: ItemStash = flow.run.storage
+	var starts := {}
+	for inst in _container.items():
+		var it := inst as ItemInstance
+		starts[it.uid] = _loot.global_position + _loot.cell_origin_px(it.origin)
+	ground.landing_from.merge(starts, true)
+	InventoryService.transfer_all_prefer(_container, flow.run.board, ground)
+	for uid in starts:
+		if not ground.has_item(uid):
+			ground.landing_from.erase(uid)
 	_refresh()
 
 

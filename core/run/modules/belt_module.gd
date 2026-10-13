@@ -1,23 +1,26 @@
-## 腰带（147，作者定）：随身消耗品槽 —— 一条 1 × N 的格子，默认 3 格，`RunContext.belt_slots_bonus` 往上加（科技 / 角色 / buff）。
-## 只收【随身】（`belt`）道具；它们**不上棋盘**（不参战、不占背包），地上与仓库照旧什么都收。点一下就用（[member ItemDef.belt_use]）。
+## 腰带（147，作者定）：随身技能槽 —— 默认 3 格，`RunContext.belt_slots_bonus` 往上加（科技 / 角色 / buff）。
+## 160 补一（作者定）：放的不再是道具，是**可堆叠的一次性技能**（[BeltSkillDef]）：存「id → 几个」，一种占一格、同种叠在一格里（不限个数），
+## 格数限的是**种类数**；用一次少一个，数到零那格空出来。不落地、不进仓库、撤离时剩的作废（[RunResult] 不带它）。
 ##
-## 101 的插件模型：状态（容器）、存档、接线全在这里，[RunState] 不认识腰带。自己接一条 hook：`belt_use`（界面只认它）。
-## 开局带进来的随身道具（作战棋盘不收，开局先落在地上）在装上时挪进腰带。取它用 [method of]
+## 101 的插件模型：状态、存档、接线全在这里，[RunState] 不认识腰带。接两条 hook：`belt_use`（界面用一个）、`belt_grant`（事件发几个）。
+## 开局发的（章节 `starting_belt`、角色能力 / 局外 buff 的 `starting_belt` 效果、科技 `tech_belt_grant` 经模块输入 `grants`）在第一次装上时放进来。
+## 取它用 [method of]
 class_name BeltModule
 extends RunModule
 
 const ID := &"belt"
-const CONTAINER_ID := 5
 
-## 用掉了一件（定义 id）
-signal used(def_id: StringName)
+## 用掉了一个（技能 id）。里面变了（多了 / 少了 / 格数变了）发 Resource 自带的 `changed`，界面重画
+signal used(skill_id: StringName)
 
 ## 默认几格（内容里可改；`RunContext.belt_slots_bonus` 加在上面）
 @export var slots: int = 3
 
-var belt: GridInventory = null
+## 技能 id → 几个（有序：先来的在前面的格子）
+var stacks: Dictionary = {}
 var _run: RunState = null
 var _saved: Dictionary = {}
+var _installed := false
 
 
 ## 这一局的腰带模块（没装返回 null）
@@ -30,56 +33,88 @@ func id() -> StringName:
 
 
 func describe() -> String:
-	return "腰带：%d 格，放随身道具（烟雾弹、急救包……），点一下就用" % slot_count()
+	return "腰带：%d 格，放随身技能（烟雾弹、急救包……），同种叠在一格，点一下用一个" % slot_count()
 
 
 func install(run: RunState) -> void:
 	if run == null:
 		return
 	_run = run
-	if belt == null:
-		var saved_grid: Variant = _saved.get("belt", null)
-		if saved_grid is Dictionary:
-			belt = GridInventory.from_dict(saved_grid as Dictionary, run.items)
-			belt.id = CONTAINER_ID
-		else:
-			belt = GridInventory.new(Vector2i(slot_count(), 1), CONTAINER_ID, false)
-			belt.only_tags = [ItemDef.BELT] as Array[StringName]
-			_take_from_ground()
-		belt.only_tags = [ItemDef.BELT] as Array[StringName]
-	sync_slots()
+	if not _installed:
+		_installed = true
+		var saved: Variant = _saved.get("stacks", null)
+		if saved is Dictionary:
+			for k in (saved as Dictionary):
+				var n := int((saved as Dictionary)[k])
+				if n > 0 and BeltSkillDef.find(StringName(String(k))) != null:
+					stacks[StringName(String(k))] = n
+		elif not _saved.has("belt"):     # 147 的老档（腰带是格子、里面是道具）读出空腰带；新开局才发开局的
+			_grant_start()
 	run.hooks.register(&"belt_use", use)
+	run.hooks.register(&"belt_grant", add)
+	changed.emit()
 
 
-## 现在该有几格：默认 + 一局的规则加的
+## 现在该有几格（几种）：默认 + 一局的规则加的
 func slot_count() -> int:
 	var bonus := _run.hooks.run_context().belt_slots_bonus if _run != null else 0
 	return maxi(1, slots + bonus)
 
 
-## 格数变了就跟上：变大扩列；变小只在空格上缩（东西不丢）
+## 格数变了（科技 / buff）：界面跟上。变小也不丢已经有的
 func sync_slots() -> void:
-	if belt == null:
-		return
-	belt.resize_cols(slot_count())
+	changed.emit()
 
 
-## 能不能用这一件：空串 = 能，否则是原因（界面灰字）
-func can_use(uid: int) -> String:
-	var inst := belt.get_item(uid) if belt != null else null
-	if inst == null or inst.def == null:
-		return "腰带里没有这件"
-	var how := inst.def.belt_use
-	if how == null:
-		return "这件不能直接用"
+## 腰带里的种类，按格子顺序
+func ids() -> Array[StringName]:
+	var out: Array[StringName] = []
+	for k in stacks:
+		out.append(k)
+	return out
+
+
+func count_of(skill_id: StringName) -> int:
+	return int(stacks.get(skill_id, 0))
+
+
+## 一共几个（所有种类加起来）
+func total() -> int:
+	var n := 0
+	for k in stacks:
+		n += int(stacks[k])
+	return n
+
+
+## 还收不收这一种：已经有它（叠上去）或者还有空格
+func can_add(skill_id: StringName) -> bool:
+	if BeltSkillDef.find(skill_id) == null:
+		return false
+	return stacks.has(skill_id) or stacks.size() < slot_count()
+
+
+## 放进 [param count] 个，返回放进了几个（0 = 不认识这种 / 格子满了）
+func add(skill_id: StringName, count: int = 1) -> int:
+	if count <= 0 or not can_add(skill_id):
+		return 0
+	stacks[skill_id] = count_of(skill_id) + count
+	changed.emit()
+	return count
+
+
+## 能不能用这一种：空串 = 能，否则是原因（界面飘字）
+func can_use(skill_id: StringName) -> String:
+	var def := BeltSkillDef.find(skill_id)
+	if def == null or count_of(skill_id) <= 0:
+		return "腰带里没有这个"
 	if _run == null or _run.is_over():
 		return "这一局结束了"
 	var prebattle := _run.events != null and not _run.events.pending_battle.is_empty()
-	if prebattle and not how.on_prebattle():
+	if prebattle and not def.on_prebattle():
 		return "开战前用不了"
-	if not prebattle and not how.on_map():
+	if not prebattle and not def.on_map():
 		return "只能在开战前用"
-	for e in how.effects:
+	for e in def.effects:
 		if e == null:
 			continue
 		var why := e.blocked_reason(_run)
@@ -88,41 +123,49 @@ func can_use(uid: int) -> String:
 	return ""
 
 
-## 用掉这一件：都能用才逐个生效，然后从腰带拿走。返回空串 = 用了，否则是原因
-func use(uid: int) -> String:
-	var why := can_use(uid)
+## 用掉一个：都能用才逐个生效，然后少一个（到零那格空出来）。返回空串 = 用了，否则是原因
+func use(skill_id: StringName) -> String:
+	var why := can_use(skill_id)
 	if why != "":
 		return why
-	var inst := belt.get_item(uid)
-	var def := inst.def
-	belt.remove(uid)
-	for e in def.belt_use.effects:
+	var def := BeltSkillDef.find(skill_id)
+	var left := count_of(skill_id) - 1
+	if left > 0:
+		stacks[skill_id] = left
+	else:
+		stacks.erase(skill_id)
+	for e in def.effects:
 		if e != null:
 			e.apply(_run)
-	used.emit(def.id)
+	used.emit(skill_id)
+	changed.emit()
 	return ""
 
 
-## 里面的件数
-func item_count() -> int:
-	return belt.item_count() if belt != null else 0
-
-
 func to_dict() -> Dictionary:
-	return {"belt": belt.to_dict() if belt != null else null}
+	var d := {}
+	for k in stacks:
+		d[String(k)] = int(stacks[k])
+	return {"stacks": d}
 
 
 func restore(d: Dictionary) -> void:
 	_saved = d.duplicate(true)
 
 
-## 开局：带进来的随身道具落在地上（棋盘不收）—— 挪进腰带，满了的留在地上
-func _take_from_ground() -> void:
-	if _run == null or _run.storage == null:
-		return
-	for inst in _run.storage.items():
-		var it := inst as ItemInstance
-		if it.def != null and it.def.is_belt():
-			var taken := _run.storage.remove(it.uid)
-			if taken != null and not belt.try_add(taken):
-				_run.storage.admit(taken)
+## 开局发的：章节的 `starting_belt`、角色能力 / 局外 buff 的 `starting_belt`（[member RunContext.belt_start]）、科技（模块输入 `grants`）。
+## 放不下的种类不发（格子满了）
+func _grant_start() -> void:
+	var all: Array = []
+	if _run.chapter != null:
+		for sid in _run.chapter.starting_belt:
+			all.append([sid, 1])
+	var ctx := _run.hooks.run_context()
+	if ctx != null:
+		for sid in ctx.belt_start:
+			all.append([sid, int(ctx.belt_start[sid])])
+	var grants: Dictionary = _run.module_input(ID).get("grants", {})
+	for sid in grants:
+		all.append([StringName(String(sid)), int(grants[sid])])
+	for pair in all:
+		add(StringName(String(pair[0])), int(pair[1]))

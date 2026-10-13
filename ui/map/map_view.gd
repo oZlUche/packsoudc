@@ -16,6 +16,8 @@ signal node_hovered(id: int)
 signal edge_pressed(edge: MapEdge, button: int)
 signal slot_pressed(slot: Dictionary)
 signal empty_pressed
+## 玩家滚轮缩放了（游戏屏记进设置，下次进图沿用）
+signal zoom_changed(zoom: float)
 
 const NODE_RADIUS := 16.0     # 155：13 → 16，图标放大（作者：图案再大一点），外圈与命中都跟着它
 ## 155：图标的边长 = 节点半径 × 它（圆里留一圈边）
@@ -23,6 +25,15 @@ const ICON_SCALE := 1.6
 const SLOT_RADIUS := 5.0
 const EDGE_PICK := 6.0
 
+## 这一章的手绘底图（[MapSkin]；空 = 照旧石板 / 纯色底）。设了就按它的深浅换字色
+var skin: StringName = &"":
+	set(v):
+		skin = v
+		_skin_tex = MapSkin.texture(v)
+		_skin_light = _skin_tex != null and MapSkin.tone(v) == UiTheme.TONE_LIGHT
+		queue_redraw()
+var _skin_tex: Texture2D = null
+var _skin_light := false
 var graph: MapGraph = null:
 	set(v):
 		graph = v
@@ -96,6 +107,14 @@ var zoom: float = 1.0
 var pan: Vector2 = Vector2.ZERO
 const ZOOM_MIN := 0.3
 const ZOOM_MAX := 2.5
+## 反馈（图标放大后进图太挤）：自动定的进图缩放让相邻两点在屏幕上至少隔这么远（节点按固定屏幕大小画，缩小只会让点挤在一起）
+const START_GAP := NODE_RADIUS * 5.0
+## 自动定的进图缩放最多放大到这里
+const START_ZOOM_MAX := 1.5
+## [method open_at] 时视图还没尺寸：等第一次 resized 再定缩放
+var _open_pending := false
+var _open_zoom := 0.0
+var _last_size := Vector2.ZERO
 
 var _layout: MapLayout = null
 var _font: Font
@@ -114,8 +133,19 @@ func _ready() -> void:
 
 
 func _on_resized() -> void:
-	center()
+	if _open_pending:
+		_apply_open()
+	elif _last_size == Vector2.ZERO or _fits():
+		center()
+	else:
+		pan += (size - _last_size) / 2.0     # 看着的那块留在视图正中（放大看局部时改尺寸不跳回整图中央）
+	_last_size = size
 	queue_redraw()
+
+
+func _fits() -> bool:
+	var c := canvas_rect().size * zoom
+	return c.x <= size.x and c.y <= size.y
 
 
 func _process(delta: float) -> void:
@@ -143,6 +173,64 @@ func fit() -> void:
 		return
 	zoom = clampf(minf(size.x / c.x, size.y / c.y), ZOOM_MIN, 1.0)
 	center()
+
+
+## 进图（游戏屏）：[param preferred] > 0 = 玩家上次滚轮定的缩放（设置里全局沿用）；0 = 自动 [method start_zoom]。
+## 然后把人所在的点摆到视图中央。视图还没尺寸就等第一次 resized
+func open_at(preferred: float) -> void:
+	_open_zoom = preferred
+	_open_pending = true
+	if size.x > 0.0 and size.y > 0.0:
+		_apply_open()
+
+
+func _apply_open() -> void:
+	_open_pending = false
+	zoom = clampf(_open_zoom, ZOOM_MIN, ZOOM_MAX) if _open_zoom > 0.0 else start_zoom()
+	focus(current_id)
+
+
+## 自动的进图缩放：能看全就看全，但相邻两点在屏幕上至少隔 [constant START_GAP]（最短的那条边算），最多放大到 [constant START_ZOOM_MAX]
+func start_zoom() -> float:
+	var c := canvas_rect().size
+	if c.x <= 0.0 or c.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
+		return 1.0
+	var whole := clampf(minf(size.x / c.x, size.y / c.y), ZOOM_MIN, 1.0)
+	var gap := shortest_edge()
+	if gap <= 0.0:
+		return whole
+	return clampf(maxf(whole, START_GAP / gap), ZOOM_MIN, START_ZOOM_MAX)
+
+
+## 画布上最短的一条边（两点间直线距离）；没边 0
+func shortest_edge() -> float:
+	if graph == null:
+		return 0.0
+	var pos := positions()
+	var best := INF
+	for e in graph.edges:
+		if pos.has(e.from_id) and pos.has(e.to_id):
+			var d := (pos[e.from_id] as Vector2).distance_to(pos[e.to_id])
+			if d > 0.0:
+				best = minf(best, d)
+	return 0.0 if best == INF else best
+
+
+## 按当前缩放把某个点摆到视图中央（-1 / 没这个点 = 整图居中）；画布比视图小的那一维照旧居中，大的那一维不拖出空边
+func focus(id: int) -> void:
+	var pos := positions()
+	if id < 0 or not pos.has(id):
+		center()
+		return
+	var c := canvas_rect().size * zoom
+	var p := size / 2.0 - (pos[id] as Vector2) * zoom
+	for i in 2:
+		if c[i] <= size[i]:
+			p[i] = (size[i] - c[i]) / 2.0
+		else:
+			p[i] = clampf(p[i], size[i] - c[i], 0.0)
+	pan = p
+	queue_redraw()
 
 
 func to_canvas(screen: Vector2) -> Vector2:
@@ -256,6 +344,7 @@ func zoom_at(screen: Vector2, factor: float) -> void:
 	zoom = clampf(zoom * factor, ZOOM_MIN, ZOOM_MAX)
 	pan = screen - anchor * zoom
 	queue_redraw()
+	zoom_changed.emit(zoom)
 
 
 ## 在画布坐标 [param p] 处按下。拆出来是为了测试能直接调，不必伪造输入事件。
@@ -278,12 +367,18 @@ func press(p: Vector2, button: int = MOUSE_BUTTON_LEFT, shift: bool = false) -> 
 
 #region 绘制
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), UiPalette.bg())
+	var stone := UiTheme.backdrop_art()     # 157 补：有石板图铺石板（平铺，跟设置的底色染）
+	if _skin_tex != null:     # 这一章的手绘底图：铺满、裁边，画在路网底下
+		draw_texture_rect_region(_skin_tex, Rect2(Vector2.ZERO, size), MapSkin.cover_region(_skin_tex.get_size(), size))
+	elif stone != null:
+		draw_texture_rect(stone, Rect2(Vector2.ZERO, size), true, UiTheme.backdrop_tint())
+	else:
+		draw_rect(Rect2(Vector2.ZERO, size), UiPalette.bg())
 	if graph == null:
 		return
 	if _layout == null:
 		draw_string(_font, Vector2(16, 28), "没有登记布局：%s" % graph.layout_kind,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, UiPalette.DIM)
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, _ink(UiPalette.DIM))
 		return
 	# 下面全用画布坐标画，变换交给画布→屏幕这一层
 	draw_set_transform(pan, 0.0, Vector2(zoom, zoom))
@@ -317,7 +412,7 @@ func _draw() -> void:
 		var key := MapJunctions.edge_key(e.from_id, e.to_id)
 		if in_junction.has(key):
 			continue
-		var color := UiPalette.DIM.darkened(0.25)
+		var color := _ink(UiPalette.DIM).darkened(0.25)
 		var width := 1.5
 		if route_of_edge.has(key):
 			var ri: int = route_of_edge[key]
@@ -404,8 +499,8 @@ func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary) -
 		if route >= 0:
 			draw_line(center, pos[int(id)], Color(MapNodeStyle.route_color(route), 0.85), 3.0, true)
 		else:
-			draw_line(center, pos[int(id)], UiPalette.DIM.darkened(0.25), 1.5, true)
-	draw_circle(center, 3.0, UiPalette.DIM)
+			draw_line(center, pos[int(id)], _ink(UiPalette.DIM).darkened(0.25), 1.5, true)
+	draw_circle(center, 3.0, _ink(UiPalette.DIM))
 
 
 ## 猎手：节点外一圈红环 + 名字（占位画法）
@@ -423,7 +518,7 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	# 反馈：站在用过的点上（走回头路）也保持灰 —— 玩家在哪由「你」的三角标和脉动环说明，不靠把点涂回彩色
 	if n.is_visited() and n.type != &"core":
 		var grey := color.get_luminance()
-		color = Color(grey, grey, grey).lerp(UiPalette.DIM, 0.5)
+		color = Color(grey, grey, grey).lerp(_ink(UiPalette.DIM), 0.5)
 	draw_circle(p, NODE_RADIUS, color.darkened(0.55))
 	draw_arc(p, NODE_RADIUS, 0.0, TAU, 32, color, 2.0, true)
 	if graph.entry_ids.has(n.id):
@@ -431,15 +526,15 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	if graph.goal_ids.has(n.id):
 		draw_arc(p, NODE_RADIUS + 4.0, 0.0, TAU, 32, UiPalette.STAMINA, 2.0, true)
 	if reachable.has(n.id):
-		draw_arc(p, NODE_RADIUS + 5.5, 0.0, TAU, 32, Color(UiPalette.FG, 0.55), 1.5, true)
+		draw_arc(p, NODE_RADIUS + 5.5, 0.0, TAU, 32, Color(_ink(UiPalette.FG), 0.55), 1.5, true)
 	if n.id == current_id:
 		var r := NODE_RADIUS + 8.0 + 2.5 * sin(_pulse)
-		draw_arc(p, r, 0.0, TAU, 40, UiPalette.FG, 2.5, true)
+		draw_arc(p, r, 0.0, TAU, 40, _ink(UiPalette.FG), 2.5, true)
 		_draw_player_marker(p)
 	elif n.id == selected_id:
-		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, UiPalette.FG, 2.0, true)
+		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, _ink(UiPalette.FG), 2.0, true)
 	elif n.id == _hover_id:
-		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, Color(UiPalette.FG, 0.35), 1.0, true)
+		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, Color(_ink(UiPalette.FG), 0.35), 1.0, true)
 	# 155：有图标画图标（白线稿按节点色着色，圆底是同色压暗的深色，图标不会融进去）；没图退回写字
 	var tex := MapNodeStyle.icon(n.type)
 	if tex != null:
@@ -451,7 +546,7 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 		draw_string(_font, p + Vector2(-w / 2.0, 5.5), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, color)
 	# 「这里有可看的内容」的标记位（5.10，内容归 M4）：random 没有 —— 那是地图上唯一看不透的点
 	if n.type != &"random" and not n.is_visited() and not MapNodeTypes.STRUCTURAL.has(n.type):
-		draw_circle(p + Vector2(-NODE_RADIUS + 3.0, -NODE_RADIUS + 3.0), 2.0, Color(UiPalette.FG, 0.6))
+		draw_circle(p + Vector2(-NODE_RADIUS + 3.0, -NODE_RADIUS + 3.0), 2.0, Color(_ink(UiPalette.FG), 0.6))
 	# 127：进阶搜索点 —— 左下角一个琥珀色角标
 	if n.type == &"search" and not n.is_visited() and SearchSession.is_advanced(n):
 		var c := p + Vector2(-NODE_RADIUS + 2.0, NODE_RADIUS - 2.0)
@@ -473,6 +568,16 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 		draw_string(_font, p + Vector2(-tw / 2.0, NODE_RADIUS + 19.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, col)
 
 
+## 底图是浅纸时，按深底配的前景 / 暗色字换成墨水版
+func _ink(c: Color) -> Color:
+	return UiTheme.ink_color(c) if _skin_light else c
+
+
+## 现在的底是不是浅的（测试看）
+func skin_is_light() -> bool:
+	return _skin_light
+
+
 ## 玩家在哪（084）：节点上方一个朝下的三角标，上下轻轻浮动 —— 一眼找到自己，不用在一圈圈环里找那个亮的环
 func _draw_player_marker(p: Vector2) -> void:
 	var lift := NODE_RADIUS + 14.0 + 2.0 * sin(_pulse * 1.3)
@@ -482,9 +587,9 @@ func _draw_player_marker(p: Vector2) -> void:
 	var pts := PackedVector2Array([tip, tip + Vector2(-w, -h), tip + Vector2(w, -h)])
 	draw_colored_polygon(pts, UiPalette.HEAL)
 	var outline := PackedVector2Array([tip, tip + Vector2(-w, -h), tip + Vector2(w, -h), tip])
-	draw_polyline(outline, UiPalette.FG, 1.5, true)
+	draw_polyline(outline, _ink(UiPalette.FG), 1.5, true)
 	if _font != null:
 		var text := "你"
 		var tw := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
-		draw_string(_font, tip + Vector2(-tw / 2.0, -h - 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, UiPalette.FG)
+		draw_string(_font, tip + Vector2(-tw / 2.0, -h - 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, _ink(UiPalette.FG))
 #endregion

@@ -70,6 +70,8 @@ var _src_rot: int = 0
 var _src_index: int = -1
 ## 128：源容器是地上时的原落点
 var _src_spot: Vector2 = ItemStash.NO_SPOT
+## 162：从棋盘（格子视图）拿起时原来那一格的左上角（全局像素）；拖出去落地从这里飞到放手点。不是从格子拿的为 null
+var _src_px: Variant = null
 ## 抓取点相对物品 origin 的格偏移，拖拽时用它反推落点
 var _grab_cell: Vector2i = Vector2i.ZERO
 ## 139：起拖那块视图的格子边长（基地屏的仓库会放大）。跟手的残影、整块判定按它；吸附到某块视图上时按那块的
@@ -160,6 +162,7 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 		var grid := from as GridInventory
 		_grab_cell = (view as InventoryView).cell_at_local(local_pos) - inst.origin
 		_cell = (view as InventoryView).cell_px
+		_src_px = (view as InventoryView).global_position + (view as InventoryView).cell_origin_px(inst.origin)
 		if grid.is_bag_with_contents(uid):
 			_payload = grid.detach_bag(uid)
 			if _payload.is_empty():
@@ -590,7 +593,8 @@ func drop_at(global_pos: Vector2) -> bool:
 			if dropped:
 				_land_from(stash, loose, global_pos)     # 134：脱落的内容物从放手点落下
 		if dropped:
-			stash.landing_from[inst.uid] = true     # 134：放手点就是落点 —— 就地落下（只缩放 + 弹跳）
+			# 134：放手点就是落点 —— 就地落下（只缩放 + 弹跳）；162：从棋盘拖出来的从它原来那一格飞过去
+			stash.landing_from[inst.uid] = _src_px if _src_px is Vector2 else true
 		if _source == stash or dropped:
 			_end_drag()
 			drag_finished.emit(inst.uid, dropped)
@@ -606,6 +610,8 @@ func drop_at(global_pos: Vector2) -> bool:
 				dropped = _admit_with_payload(gl.stash, inst, -1, at_spot)
 		if dropped:
 			home = gl.stash
+			if _src_px is Vector2:
+				gl.stash.landing_from[inst.uid] = _src_px     # 162：同上，从原格飞到放手点
 	elif target is InventoryView and (target as InventoryView).inventory != null:     # 157：别的列表视图（事件的收获行）不是落点
 		var grid_view := target as InventoryView
 		var at := target_origin(grid_view, global_pos)
@@ -927,6 +933,7 @@ func _end_drag() -> void:
 	_source = null
 	_src_index = -1
 	_src_spot = ItemStash.NO_SPOT
+	_src_px = null
 	_payload = {}
 	set_process_input(false)
 	UiCursor.set_drag(false)     # 157：光标还原

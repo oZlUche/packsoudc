@@ -8,6 +8,9 @@
 ## 玩家看得见尺寸、**拖到自己的包里就是买**（拖拽层挪、这里 [method pay_for] 收钱），双击也是买（[method buy] 自己找位）；
 ## 把包里的东西拖进 [member sell_box] 就是**卖**（[method sell]，回定价的一半，[EconomyRules.shop_sell_ratio]）。
 ## 钱不够 [method can_buy] 假、[method pay_for] 假 —— 屏据此把东西弹回栏位并提示
+##
+## 160 补一：货架之外一排**随身技能**（[member belt_offers]，[EconomyRules.belt_stock] 按权重抽，跟着货架一起刷新）：
+## 不是道具、没有拖拽，[method buy_belt] 付钱后经 [member belt_grant] 直接放进腰带（腰带满了不收钱）
 class_name ShopSession
 extends RefCounted
 
@@ -16,6 +19,8 @@ const SLOT_MIN := Vector2i(3, 4)
 
 ## 货架变了（刷新之后）
 signal stock_changed()
+## 160 补一：买到了一个随身技能
+signal bought_belt(skill_id: StringName, price: int)
 ## 买到了：inst 是那件实例。走 [method buy] 时它还不在任何容器里（持有方装到地上）；走 [method pay_for] 时它已经被拖进玩家的容器，inst 为 null
 signal bought(def: ItemDef, price: int, inst: ItemInstance)
 ## 卖掉了一件
@@ -40,6 +45,11 @@ var shelves: Array[GridInventory] = []
 ## 087：出售区 —— 把东西拖进来就卖
 var sell_box: GridInventory = GridInventory.new(SLOT_MIN, 0, false)
 var active: bool = true
+## 160 补一：「随身」那一排，每格 {"id": 随身技能 id, "price": int}；买走的下标在 [member belt_sold]
+var belt_offers: Array[Dictionary] = []
+var belt_sold: Array[int] = []
+## 160 补一：往腰带里放（`func(id, count) -> int`，[NodeEvents] 接 `belt_grant` hook）；没接 = 这一排买不了
+var belt_grant: Callable = Callable()
 
 
 func _init(
@@ -56,6 +66,8 @@ func _init(
 		refreshes = int(saved.get("refreshes", 0))
 		for i in saved.get("sold", []):
 			sold.append(int(i))
+		for i in saved.get("belt_sold", []):
+			belt_sold.append(int(i))
 	_restock()
 
 
@@ -179,6 +191,7 @@ func refresh() -> bool:
 		return false
 	refreshes += 1
 	sold = []
+	belt_sold = []
 	_restock()
 	_persist()
 	stock_changed.emit()
@@ -225,6 +238,71 @@ func _restock() -> void:
 		cands.remove_at(k)
 		weights.remove_at(k)
 	_build_shelves()
+	_restock_belt()
+
+
+## 160 补一：第 refreshes 次的「随身」那一排：按权重不重复抽 1 ～ belt_picks 种
+func _restock_belt() -> void:
+	belt_offers = []
+	if rules == null or rules.belt_stock.is_empty():
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%d:shop_belt:%d" % [node.content_seed if node != null else 0, refreshes])
+	var ids: Array[StringName] = []
+	for k in rules.belt_stock:
+		if BeltSkillDef.find(StringName(String(k))) != null:
+			ids.append(StringName(String(k)))
+	ids.sort()
+	var n := mini(ids.size(), rng.randi_range(1, maxi(1, rules.belt_picks)))
+	for _i in n:
+		var total := 0.0
+		for sid in ids:
+			total += maxf(0.0, float(rules.belt_stock.get(String(sid), rules.belt_stock.get(sid, 0.0))))
+		var k := ids.size() - 1
+		var x := rng.randf() * total
+		for j in ids.size():
+			x -= maxf(0.0, float(rules.belt_stock.get(String(ids[j]), rules.belt_stock.get(ids[j], 0.0))))
+			if x <= 0.0:
+				k = j
+				break
+		belt_offers.append({"id": String(ids[k]), "price": belt_price_of(ids[k])})
+		ids.remove_at(k)
+
+
+## 160 补一：随身技能的售价 = 它的标价 × 规则与 buff 的倍数
+func belt_price_of(skill_id: StringName) -> int:
+	var def := BeltSkillDef.find(skill_id)
+	if def == null:
+		return 0
+	return maxi(1, roundi(float(def.price) * (rules.shop_price_mult if rules != null else 1.0) * price_mult))
+
+
+## 160 补一：「随身」那一排第 i 格能不能买：没卖掉、付得起、腰带收得下
+func can_buy_belt(i: int) -> String:
+	if not active or i < 0 or i >= belt_offers.size() or belt_sold.has(i):
+		return "没有这一格"
+	if wallet == null or not wallet.can_afford(int(belt_offers[i]["price"])):
+		return "钱不够"
+	if not belt_grant.is_valid():
+		return "没有腰带"
+	return ""
+
+
+## 160 补一：买「随身」那一排第 i 格：先放进腰带（满了不收钱），再扣钱。返回空串 = 买了，否则是原因
+func buy_belt(i: int) -> String:
+	var why := can_buy_belt(i)
+	if why != "":
+		return why
+	var sid := StringName(String(belt_offers[i]["id"]))
+	var price := int(belt_offers[i]["price"])
+	if int(belt_grant.call(sid, 1)) <= 0:
+		return "腰带满了"
+	wallet.spend(price, &"shop")
+	belt_sold.append(i)
+	_persist()
+	bought_belt.emit(sid, price)
+	stock_changed.emit()
+	return ""
 
 
 ## 087：每格一块小棋盘（至少 3×4，商品更大就跟着大），没卖的把商品摆在 (0,0)
@@ -241,7 +319,7 @@ func _build_shelves() -> void:
 
 func _persist() -> void:
 	if node != null:
-		node.content["shop"] = {"refreshes": refreshes, "sold": sold.duplicate()}
+		node.content["shop"] = {"refreshes": refreshes, "sold": sold.duplicate(), "belt_sold": belt_sold.duplicate()}
 
 
 ## 能上架的道具：不是包、不带排除标签。id 升序，抽出来的才可复现

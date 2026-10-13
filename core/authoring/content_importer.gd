@@ -150,6 +150,11 @@ class Context:
 	var help_pages: Dictionary = {}
 	## id -> ChestSkinDef（154）。章节的 chest_skin 对着它查
 	var chest_skins: Dictionary = {}
+	## 160 补一：id -> BeltSkillDef。章节、经济规则、事件、科技对着它查
+	var belt_skills: Dictionary = {}
+
+	func register_belt_skill(def: BeltSkillDef) -> void:
+		_put(belt_skills, def)
 
 	func register_chest_skin(def: ChestSkinDef) -> void:
 		_put(chest_skins, def)
@@ -244,6 +249,8 @@ static func import_of(kind: String, data: Dictionary, ctx: Context, report: Impo
 			return import_help_page(data, ctx, report)
 		"chest_skins":
 			return import_chest_skin(data, ctx, report)
+		"belt_skills":
+			return import_belt_skill(data, ctx, report)
 		"items":
 			return import_item(data, ctx, report)
 		_:
@@ -866,6 +873,10 @@ static func import_economy_rules(data: Dictionary, ctx: Context, report: ImportR
 	var rules := EconomyRules.new()
 	_fill(rules, data, "", ctx, report)
 	_validate_economy_rules(rules, report)
+	for k in rules.belt_stock:
+		check_belt_ref(StringName(String(k)), "belt_stock", ctx, report)
+		if float(rules.belt_stock[k]) < 0.0:
+			report.error("belt_stock", "权重不能为负")
 	ctx.register_economy_rules(rules)
 	return rules
 
@@ -1033,6 +1044,8 @@ static func import_tech(data: Dictionary, ctx: Context, report: ImportReport) ->
 		report.error("display_name", "科技得有名字")
 	if def.effect == null:
 		report.error("effect", "科技得写每升一级做什么（effect）")
+	elif def.effect is TechBeltGrant:
+		check_belt_ref((def.effect as TechBeltGrant).skill, "effect.skill", ctx, report)     # 160 补一
 	if def.tiers.is_empty():
 		report.error("tiers", "科技至少一级")
 	for i in def.tiers.size():
@@ -1092,6 +1105,29 @@ static func validate_techs(ctx: Context, report: ImportReport) -> void:
 			report.warn("techs/%s" % id, "和 %s 撞位（第 %d 列、深度 %d）：按 order 左右排" % [slots[at], at.x, at.y])
 		else:
 			slots[at] = id
+
+
+## 160 补一：随身技能（不是道具）—— 要有名字、至少一个效果、价格不为负
+static func import_belt_skill(data: Dictionary, ctx: Context, report: ImportReport) -> BeltSkillDef:
+	var def := BeltSkillDef.new()
+	_fill(def, data, "", ctx, report)
+	_require_id(def.id, "随身技能", report)
+	if def.display_name == "":
+		report.error("display_name", "随身技能要有名字")
+	if def.effects.is_empty():
+		report.warn("effects", "能用却什么都不做")
+	if def.price < 0:
+		report.error("price", "价格不能为负")
+	ctx.register_belt_skill(def)
+	return def
+
+
+## 引用随身技能的地方（章节 / 角色的开局发放、经济规则的「随身」一排、事件、科技）：批量导入时对着登记表查
+static func check_belt_ref(skill_id: StringName, at: String, ctx: Context, report: ImportReport) -> void:
+	if skill_id == &"":
+		report.error(at, "没写随身技能 id")
+	elif not ctx.belt_skills.is_empty() and not ctx.belt_skills.has(skill_id):
+		report.error(at, "找不到随身技能 '%s'（已知：%s）" % [skill_id, ", ".join(ctx.belt_skills.keys())])
 
 
 ## 154：宝箱屏的皮肤。缺的键、缺的图都画占位，所以图找不到只提醒；开锁动画的帧率得为正
@@ -1250,6 +1286,8 @@ static func import_event(data: Dictionary, ctx: Context, report: ImportReport) -
 			var at := "options[%d].outcomes[%d]" % [i, k]
 			if o == null:
 				report.error(at, "空的后果")
+			elif o is GrantBelt:
+				check_belt_ref((o as GrantBelt).skill, at, ctx, report)
 			elif o is GiveItem and not ctx.items.is_empty() and not ctx.items.has((o as GiveItem).item):
 				report.error(at, "找不到道具 '%s'" % (o as GiveItem).item)
 			elif o is GiveItem and not ctx.items.is_empty() and (ctx.items[(o as GiveItem).item] as ItemDef).is_sealed():
@@ -1672,12 +1710,16 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 		report.error("node_rules", "找不到节点规则 '%s'（已知：%s）" % [def.node_rules, ", ".join(ctx.node_rules.keys())])
 	if def.chest_skin != &"" and not ctx.chest_skins.is_empty() and not ctx.chest_skins.has(def.chest_skin):
 		report.warn("chest_skin", "找不到宝箱皮肤 '%s'（画占位；已知：%s）" % [def.chest_skin, ", ".join(ctx.chest_skins.keys())])
+	if def.map_skin != &"" and not FileAccess.file_exists("res://assets/maps/%s.png" % def.map_skin):
+		report.warn("map_skin", "找不到地图底图 assets/maps/%s.png（照旧石板底）" % def.map_skin)
 	if def.economy_rules != &"" and not ctx.economy_rules.is_empty() and not ctx.economy_rules.has(def.economy_rules):
 		report.error("economy_rules", "找不到经济规则 '%s'（已知：%s）" % [def.economy_rules, ", ".join(ctx.economy_rules.keys())])
 	for i in def.characters.size():
 		if not ctx.characters.is_empty() and not ctx.characters.has(def.characters[i]):
 			report.error("characters[%d]" % i, "找不到角色 '%s'（已知：%s）" % [def.characters[i], ", ".join(ctx.characters.keys())])
 	# 088：开局发的特殊道具得存在、得是特殊道具
+	for i in def.starting_belt.size():
+		check_belt_ref(def.starting_belt[i], "starting_belt[%d]" % i, ctx, report)
 	for i in def.starting_keepsakes.size():
 		var kid := def.starting_keepsakes[i]
 		if not ctx.items.is_empty() and not ctx.items.has(kid):
@@ -1758,22 +1800,11 @@ static func _validate_item(def: ItemDef, report: ImportReport) -> void:
 		if not ap.feed_filter.is_empty() and not ap.has_feed():
 			report.warn("adjacency.feed_filter", "写了「只供给」却没有供给的加成或规则")
 		_warn_overlapping_markers(def, report)
-	_validate_belt_and_wear(def, report)
+	_validate_wear(def, report)
 
 
-## 147 / 148：随身道具只进腰带（带【随身】、不参战、1 格）；耐久要有正的次数
-static func _validate_belt_and_wear(def: ItemDef, report: ImportReport) -> void:
-	if def.belt_use != null:
-		if not def.is_belt():
-			report.error("belt_use", "能随身用的道具要带「%s」标签（腰带只收它）" % ItemDef.BELT)
-		if def.combat != null:
-			report.error("combat", "随身道具不上棋盘，写了战斗也不会生效")
-		if def.cell_count() != 1:
-			report.error("shape", "随身道具只占 1 格（腰带一格一件）")
-		if def.belt_use.effects.is_empty():
-			report.warn("belt_use.effects", "能用却什么都不做")
-	elif def.is_belt():
-		report.warn("tags", "带了「%s」却没写怎么用：只能放在腰带里看着" % ItemDef.BELT)
+## 148：耐久要有正的次数（147 的随身道具 160 补一搬出了道具库，校验跟着搬到 [method import_belt_skill]）
+static func _validate_wear(def: ItemDef, report: ImportReport) -> void:
 	if def.wear != null and def.wear.max_charges <= 0:
 		report.error("wear.max_charges", "耐久至少 1 次")
 

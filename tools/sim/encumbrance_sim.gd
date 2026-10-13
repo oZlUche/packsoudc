@@ -315,8 +315,6 @@ func _pick(run: RunState, src: ItemContainer) -> void:
 		if not src.has_item(it.uid):
 			continue
 		var d := it.def
-		if d.is_belt():
-			continue
 		if policy == "picky" and d.rarity <= 0 and not d.is_bag and not (_is_def(d) and _count(run, _is_def) < 2):
 			continue
 		if d.tags.has(&"weapon") and _count(run, func(x: ItemDef) -> bool: return x.tags.has(&"weapon")) >= 3:

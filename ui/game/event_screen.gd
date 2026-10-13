@@ -94,6 +94,8 @@ func _open_result(payload: Dictionary) -> void:
 	for id in detail.get("buffs_removed", []):
 		var bd2: RunBuffDef = flow.buff_defs.get(StringName(String(id)), null)
 		lines.append("失去「%s」" % (bd2.display_name if bd2 != null else String(id)))
+	for got in detail.get("belt", []):
+		lines.append("腰带里多了 %s" % String(got))     # 160 补一
 	var lost: Array[String] = []
 	for name in detail.get("items_lost", []):
 		lost.append(String(name))

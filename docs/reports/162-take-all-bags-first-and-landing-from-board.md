@@ -53,3 +53,13 @@
 | `ui/inventory/ground_layer.gd`（`uid_at_local`、`item_rect` 按 pose） | 2.3 |
 | `tests/inventory/test_inventory_service.gd`、`tests/ui/test_ground_layer.gd`、`tests/ui/test_node_screens.gd` | 2.4 |
 | `docs/architecture.md` 3.4（地上）、6.1（战利品）那两段 | |
+
+## 落地记录（2026-10-12）
+
+待定按推荐。
+
+- `InventoryService.transfer_all_prefer`：先搬包（大的先），带东西的包拆开（包进背包或暂存区，内容物进待放清单），再按格数从大到小放其余的；`_transfer_bag` 改成先收包、再收内容物，回滚倒序。`transfer_all` 照旧（包排最后）。
+- 「全部拾取」开搬前给每件记 `ground.landing_from[uid]` = 它在战利品格子上那一格的左上角；没落地的再擦掉。
+- 手动拖出：`DragLayer` 抓起时记原格左上角（`_src_px`），放到外面 / 地上时 `landing_from` 用它（不是从格子抓的照旧 `true`）。
+- `GroundLayer.uid_at_local` / `grab_cell_at` 认飞行中的姿态（`_cell_under` 按缩放与位置反算），半空中能点能拖；抓了就停那一件的动画。
+- 测试：`tests/inventory/test_take_all_162.gd`（包先进、半空可抓、落地从原格起飞），`test_ground_landing.gd` 补两条。

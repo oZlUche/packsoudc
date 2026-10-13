@@ -258,6 +258,24 @@ static func frame_hover_tip(t: TestCase, root: Window) -> void:
 	t.check(pr.position.x >= 0 and sr.position.x >= 0, "都没出屏幕左边")
 	narrow.queue_free()
 
+	# 反馈（悬浮窗下方大段空白）：先显示长文 + 对手棋盘，再换成一行短字 —— 旧棋盘当场摘掉、排版后缩回内容高度
+	var host3 := Control.new()
+	host3.size = Vector2(800, 600)
+	root.add_child(host3)
+	var tip3 := HoverTip.new()
+	host3.add_child(tip3)
+	var bv := InventoryView.new()
+	bv.inventory = board
+	tip3.show_text("[b]长[/b]\n第二行\n第三行\n第四行\n第五行", Vector2(50, 50), bv)
+	var tall := tip3._panel.size.y
+	tip3.show_text("一行", Vector2(50, 50))
+	t.check(bv.get_parent() == null, "换内容时旧的下挂棋盘当场从列里摘掉（不等帧末）")
+	tip3._refit()
+	var want := tip3._panel.get_combined_minimum_size().y
+	t.check(tip3._panel.size.y <= want + 0.5, "排版后主窗高度 = 内容高度（%.0f ≤ %.0f），不留空白" % [tip3._panel.size.y, want])
+	t.check(tip3._panel.size.y < tall, "比长文 + 棋盘那次矮（%.0f < %.0f）" % [tip3._panel.size.y, tall])
+	host3.queue_free()
+
 
 static func run_min_drops(t: TestCase) -> void:
 	t.begin("084 · 至少掉 min_drops 件身上有的（数据，标准规则 1）：概率全 0 也掉、只掉身上的；包必掉（bags_always_drop）且不占保底名额；开关关了包照掷")

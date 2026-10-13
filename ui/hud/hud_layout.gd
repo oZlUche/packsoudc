@@ -18,8 +18,9 @@ const ANCHORS := {
 	"bottom_left": Vector2(0, 1), "bottom": Vector2(0.5, 1), "bottom_right": Vector2(1, 1),
 }
 const TIERS := {"large": HudWidget.Tier.LARGE, "small": HudWidget.Tier.SMALL, "double": HudWidget.Tier.DOUBLE}
-## 布局文件的版本：默认布局改了就加一，旧版本存的那份不用（回默认）。2 = 作者 2026-10-12：提示行进调试台、去掉行动点与距离、顶栏 200%
-const VERSION := 2
+## 布局文件的版本：默认布局改了就加一，旧版本存的那份不用（回默认）。2 = 作者 2026-10-12：提示行进调试台、去掉行动点与距离、顶栏 200%；
+## 3 = 160：腰带挪到右下角
+const VERSION := 3
 ## 「摆读数」松手时吸附的网格
 const GRID := 8
 const DEV_DIR := "res://data/authoring/ui_layouts"
@@ -45,18 +46,21 @@ static func default_for(p_screen: String) -> HudLayout:
 		for id in COLUMN:
 			l.entries.append(entry(id, "top_right", COLUMN_OFFSET, line))
 			line += 1
+		l.entries.append(entry(&"belt", "bottom_right", BELT_OFFSET))     # 160：腰带常驻右下角
 		l.entries.append(entry(&"log", "bottom_right", LOG_OFFSET, 0, "small", true, true))
 	return l
 
 
 ## 默认布局里右上那一列（自上而下）与它离右上角的偏移（右上角是 DevNav 的按钮），日志离右下角的偏移
 ## 作者 2026-10-12：提示行挪进调试台（地图屏自己放，不再是部件）
-const COLUMN: Array[StringName] = [&"dev_drawer", &"bag_button", &"reopen_button", &"extract_button", &"belt",
+const COLUMN: Array[StringName] = [&"dev_drawer", &"bag_button", &"reopen_button", &"extract_button",
 	&"skills", &"menu_button", &"routes"]
 const COLUMN_OFFSET := Vector2(-8, 32)
 ## 默认布局里藏着的读数
 const HIDDEN_BY_DEFAULT: Array[StringName] = [&"action_points", &"distances"]
-const LOG_OFFSET := Vector2(-8, -8)
+## 160：腰带在右下角，日志（只在调试模式）在它上面
+const BELT_OFFSET := Vector2(-8, -8)
+const LOG_OFFSET := Vector2(-8, -96)
 
 
 static func entry(id: StringName, anchor: String, offset: Vector2, line: int = 0, tier: String = "small", visible: bool = true,
