@@ -27,7 +27,7 @@ var _refit_queued := false
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	z_index = 60     # 128：画在地上（盖在各屏上面的那一层）的东西之上
+	z_index = 60     # 128：画在地上（盖在各屏上面的那一层）的东西之上；相对自己那一屏（作者 2026-10-13：导演给叠层整屏抬高，地图的悬浮窗不再盖住叠层）
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_panel = PanelContainer.new()
 	UiTheme.panel(_panel, -1, UiTheme.PANEL_TOOLTIP)     # 157：悬浮窗底（美术给了纸就是九宫格，没给是半透明底细边）

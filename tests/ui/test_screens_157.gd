@@ -147,6 +147,22 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	t.eq(flow.screen, GameFlow.Screen.BATTLE, "→ 回放")
 	var screen = game.overlay()
 	t.eq(screen.find_children("*", "OverlayFrame", true, false).size(), 1, "回放也是一块石板框")
+	# 作者 2026-10-13：悬浮窗的层高跟着自己那一屏 —— 底屏（地图）的悬浮窗低于叠层、已收起；叠层里的悬浮窗高于叠层；地上在最上面那一屏之上
+	var abs_z := func(n: CanvasItem) -> int:
+		var z := 0
+		var c: Node = n
+		while c is CanvasItem:
+			z += (c as CanvasItem).z_index
+			if not (c as CanvasItem).z_as_relative:
+				break
+			c = c.get_parent()
+		return z
+	for tip in game.base().find_children("*", "HoverTip", true, false):
+		t.check(int(abs_z.call(tip)) < int(abs_z.call(screen)), "底屏的悬浮窗层高 %d 低于叠层 %d" % [abs_z.call(tip), abs_z.call(screen)])
+		t.check(not (tip as HoverTip).is_showing(), "叠层开着：底屏的悬浮窗收起")
+	for tip in screen.find_children("*", "HoverTip", true, false):
+		t.check(int(abs_z.call(tip)) > int(abs_z.call(screen)), "叠层里的悬浮窗高于叠层本身")
+	t.check(int(abs_z.call(game.ground)) > int(abs_z.call(screen)), "地上画在叠层之上")
 	t.check(screen.overlay_frame().title().begins_with("战斗"), "标题在标题条上")
 	var view: BattleView = screen._view
 	var result: BattleResult = flow.last_payload.get("result", null)
