@@ -388,6 +388,11 @@ static func apply_tone(c: Control, variation: StringName) -> void:
 		c.theme = t
 
 
+## 石板（叠层、地图弹窗）上的 BBCode：按石板的深浅换字色（作者 2026-10-13：浅石板上的亮橙、白色道具名看不清）
+static func slab_bbcode(text: String) -> String:
+	return ink_bbcode(text, tone_of(PANEL_OVERLAY))
+
+
 ## 浅底上的 BBCode：里面写死的 `[color=…]`（都是按深底配的亮色）换成够深的墨水版；深底原样
 static func ink_bbcode(text: String, tone: StringName) -> String:
 	if tone != TONE_LIGHT or not text.contains("[color="):

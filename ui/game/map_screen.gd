@@ -326,7 +326,7 @@ func show_rules(first: bool = false) -> void:
 	panel.content.add_child(col)
 	var ctx := TextTemplate.context_for(_run)     # 112：规则卡也过占位符（{item:…} 按稀有度上色）
 	for i in _run.chapter.rules.size():
-		col.add_child(UiTheme.rich_block(560, 15, "%d. %s" % [i + 1, UiPalette.resolve_styles(TextTemplate.render(_run.chapter.rules[i], ctx))]))
+		col.add_child(UiTheme.rich_block(560, 15, "%d. %s" % [i + 1, UiTheme.slab_bbcode(UiPalette.resolve_styles(TextTemplate.render(_run.chapter.rules[i], ctx)))]))
 	col.add_child(_wrapped("暂停菜单（Esc）里能再看", 12, UiPalette.DIM, 560))
 	col.add_child(_button("知道了（Esc）", close_rules, 14, UiPalette.Tier.PRIMARY))
 

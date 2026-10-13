@@ -67,7 +67,7 @@ static func hidden_by_default(id: StringName) -> bool:
 	return id in HIDDEN_BY_DEFAULT or (id == &"skills" and RunSkills.ACTIVE_HIDDEN)
 ## 160：腰带在右下角；166：路线与图例在左下角
 const BELT_OFFSET := Vector2(-8, -8)
-const CORNER_OFFSET := Vector2(8, -8)
+const CORNER_OFFSET := Vector2(16, -16)     # 作者 2026-10-13：图例往右上挪一点，说明文字不贴边框
 
 
 ## 这个锚点是不是顶端栏的槽
