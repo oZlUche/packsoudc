@@ -89,7 +89,7 @@ static func run_feed_battle(t: TestCase) -> void:
 	for pair in [[&"fire_crystal", "fire"], [&"ice_crystal", "ice"], [&"lightning_crystal", "lightning"], [&"", "physical"]]:
 		var b := _staff_board(db, pair[0], &"")
 		var knife := ItemInstance.create(db.get_def(&"knife"))
-		(b["board"] as GridInventory).place(knife, Vector2i(4, 2), 0)
+		(b["board"] as GridInventory).try_add(knife)
 		var me := BattleCompiler.compile_board(b["board"], CombatantBaseline.with_hp(4000.0))
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 3

@@ -44,8 +44,8 @@ static func run_faith_files(t: TestCase) -> void:
 	db.load_dir()
 	t.eq(db.get_def(&"charm_brute").faith_tag(), &"faith:brute", "蛮神的护符归蛮神")
 	# 体积（档位 = 格子数查表，名字跟着序号）
-	t.eq(_grade(db.get_def(&"knife")), "极小", "匕首 1 格：极小")
-	t.eq(_grade(db.get_def(&"shortsword")), "小", "短剑 2 格：小")
+	t.eq(_grade(db.get_def(&"knife")), "小", "匕首 2 格：小")
+	t.eq(_grade(db.get_def(&"shortsword")), "小", "短剑 3 格：小")
 	t.eq(_grade(db.get_def(&"core")), "中", "能量核心 5 格：中")
 	t.eq(_grade(db.get_def(&"plate_cuirass")), "大", "板甲 9 格：大")
 	t.eq(ItemVolume.grade_name(ItemVolume.grade_of_cells(13)), "极大", "13 格：极大")
