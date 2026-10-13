@@ -45,18 +45,18 @@
 	],
 	"items": [
 		{
-			"uid": 84,
+			"uid": 2,
 			"def_id": "shortsword",
 			"stats": {
-				"damage": {
-					"total": 100000,
-					"base": 100000,
-					"flat": 0,
-					"percent": 0
-				},
 				"haste": {
 					"total": 10000,
 					"base": 10000,
+					"flat": 0,
+					"percent": 0
+				},
+				"damage": {
+					"total": 100000,
+					"base": 100000,
 					"flat": 0,
 					"percent": 0
 				}
@@ -70,7 +70,7 @@
 			]
 		},
 		{
-			"uid": 85,
+			"uid": 3,
 			"def_id": "ration",
 			"stats": {
 				"regen_stamina": {
@@ -95,7 +95,7 @@
 			"rules": []
 		},
 		{
-			"uid": 86,
+			"uid": 4,
 			"def_id": "charm_nature",
 			"stats": {},
 			"rules": []

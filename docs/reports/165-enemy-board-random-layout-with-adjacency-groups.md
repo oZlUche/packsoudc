@@ -74,3 +74,16 @@
 | `data/maps/tutorial2.json`、`tutorial3.json` | 2.4 |
 | `tests/run/test_enemy_placer.gd`、`test_tutorial2.gd`、`test_prologue.gd` | 2.5 |
 | `docs/architecture.md` 5.10（敌人棋盘：内容格式加 `groups`、位置可省） | |
+
+## 落地记录（2026-10-13）
+
+四项待定全按推荐 A（内容诞生时摆一次、组四个朝向都试、箭无弓当散件、旧档原样）。
+
+- `EnemyPlacer.auto_groups(picks, items, rng, who)`：先认 `EnemyDef.combos`（这几件都抽到了就成组、不参与自动配对），再给每件「给得出东西」的道具（增益格收得下对方，或站在对方受益格上有供给，148）在同一批里随机配一件收得下的；连在一起的并成一组，锚 = 组里占格最多的，后面按宽度优先排（每件都挨着前面配过对的那件）。
+- `EnemyPlacer._arrange`：包照旧先贴左上；组按占格从大到小，没写死位置的从锚起**现搭** —— 锚在所有放得下的落点里随机试，后面每件只在「和组里某件真的挨着生效」（同编译器的点亮规则：增益格压在对方身上，或对方受益格压在自己身上；组合里互相没有相邻加成的就挨着边）的落点里随机挑，组里的件四个朝向都试（箭的增益格跟着转）；写死了组内位置的（预设图 `groups`）整组当刚体转四个朝向找落点。再按招牌 → 流派 → 其余的先后摆散件，都在放得下的位置里随机挑。散件有放不下或组拆了就整盘重来（`ARRANGE_TRIES = 4`），还不行同样步骤不随机、每件取第一个放得下的格（「整理」那样贴左上）再摆一遍，还差件再按老办法（逐件第一个放得下、不成组）摆一遍；取摆上最多、拆组最少的那盘 —— 件数不比之前少。摆不开的组拆成散件，回报里记 `ungrouped`。
+- `build_content`：挑件 → 包 → `auto_groups` + `_arrange` → 补件 / 携带品也随机落位（`_place_random`）；整个过程是草稿实例，uid 计数原样还回去。
+- 预设图：`EnemyPlacer.arrange(content, items, rng)` 把没写 `at` 的件与 `groups` 摆一次、写回内容（组展开成普通的件、`groups` 删掉，写了 `at` 的原样钉死、钉不下的当没写）；`arrange_map` 在 `RunState.start` 放完敌人之后对每个要摆的点调一次，随机数用节点的 `content_seed`。没在开局摆过的内容（测试直接读 JSON），`EnemyKit.board_of` 对没写位置的件自己找空位（`entries_of` 把 `groups` 也算进去）。
+- `tutorial2.json / tutorial3.json`：六个敌人的道具删掉 `at / rot`（包的位置留着）；序章一的位置都写着，不摆、原样。
+- `EnemyDef.combos`（数组的数组，`combo_list()` 读）；导入器校验每组至少两件、id 存在、不是包、身份背得了，互相没有相邻加成的提醒一声；字段名「相邻组合」。现有敌人都没写，全靠自动配对。
+- 测试：`tests/enemies/test_enemy_placer_165.gd`（自动配对、组落在包里且箭照得到弓、同种子可复现换种子不同、重来与保底、随机图弓手四十个种子、预设图摆一次与刚体转向与钉死件、序章二 / 三全部摆上且生命 / DPS 不变、combos 校验）。
+

@@ -69,6 +69,25 @@ func allows_item(def: ItemDef) -> bool:
 			return true
 	return false
 
+## 165（作者定）：**身份固定的相邻组合** —— 每组是几件道具 id（`[["longbow", "arrows"]]`）。挑出来的道具里这几件都在时一定摆成一组、
+## 彼此挨着生效（谁给谁加成看道具自己的相邻标记），不参与自动配对、不被拆。没写就全靠 [method EnemyPlacer.auto_groups] 从道具定义里推。
+## JSON 里是数组的数组（元素不带类型：GDScript 导出不了 `Array[Array[StringName]]`），读用 [method combo_list]
+@export var combos: Array = []
+
+
+## 165：[member combos] 按 id 列表读出来（坏掉的项跳过）
+func combo_list() -> Array[Array]:
+	var out: Array[Array] = []
+	for raw in combos:
+		if not (raw is Array):
+			continue
+		var ids: Array[StringName] = []
+		for id in raw:
+			ids.append(StringName(String(id)))
+		if ids.size() >= 2:
+			out.append(ids)
+	return out
+
 ## 覆盖池的默认组装规则。null = 用池的
 @export var loadout: EnemyLoadout = null
 

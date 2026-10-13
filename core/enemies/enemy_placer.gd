@@ -13,6 +13,7 @@
 ##  "items": [{"id": "pistol", "at": [0, 0], "rot": 0}, ...]}
 ## [/codeblock]
 ## 「放不下」的道具直接跳过 —— 棋盘该比件数宽裕，跳过了 fill 的回报里能看见。
+## 165：位置只有相邻组合是「定」的（整组摆、彼此挨着生效），其余散件随机落位；预设图没写位置的件开局由 [method arrange_map] 摆一次。
 class_name EnemyPlacer
 extends RefCounted
 
@@ -130,8 +131,10 @@ static func pick(
 const REFILL_TRIES := 24
 
 
-## 组装：招牌 → 流派 → 通用，摆上棋盘。大件先摆（摆得下的概率高），放不下的换一件再试。
-## 返回 {"content": Dictionary, "dropped": 补完之后还差几件（战斗道具）, "carry_short": 126 携带品放不下跳过了几件}
+## 组装：招牌 → 流派 → 通用，摆上棋盘。包先摆；165：相邻组合（[method auto_groups]）整组先摆、其余散件随机摆（[method _arrange]）；
+## 放不下的换一件再试。
+## 返回 {"content": Dictionary, "dropped": 补完之后还差几件（战斗道具）, "carry_short": 126 携带品放不下跳过了几件,
+## "ungrouped": 165 摆不开、拆成散件的组数}
 static func build_content(
 	def: EnemyDef, pool: EnemyPool, items: ItemDatabase, strength: int, rng: RandomNumberGenerator,
 	carry: CarryRule = null
@@ -145,6 +148,8 @@ static func build_content(
 	var cap := rarity_cap_of(rule, tier)
 	var picks := choose_items(def, rule, items, count, rng, cap, strength)
 	_sort_big_first(picks, items)
+	# 摆的是草稿实例（内容只记 id 与位置），uid 计数原样还回去 —— 摆几次、重来几次都不影响之后的编号
+	var uid_mark := ItemInstance._next_uid
 
 	# 084：敌人也背包 —— 先摆包（档位的，敌人自己的覆盖），道具只能摆进包里（棋盘 requires_bag，和玩家一样）
 	var bag_ids: Array[StringName] = def.bags if not def.bags.is_empty() else (tier.bags if tier != null else [] as Array[StringName])
@@ -164,14 +169,21 @@ static func build_content(
 	var sig := def.signature_at(strength)
 	for item_id in picks:
 		var idef := items.get_def(item_id)
-		if idef != null and sig.has(item_id):
+		if idef == null:
+			continue
+		if sig.has(item_id):
 			signature.append(item_id)
-		elif idef != null and _shares_tag(idef.tags, def.schools):
+		elif _shares_tag(idef.tags, def.schools):
 			first.append(item_id)
 		else:
 			later.append(item_id)
-	for item_id in signature + first + later:
-		_try_place(board, items.get_def(item_id), placed)
+	var order: Array[StringName] = signature + first + later
+	var defs: Array[ItemDef] = []
+	for id in order:
+		defs.append(items.get_def(id))
+	# 165：相邻组合整组摆、散件随机摆（顺序仍是招牌 → 流派 → 其余：散件按这个先后挑位置）
+	var got := _arrange(board, defs, auto_groups(order, items, rng, def), rng)
+	placed.append_array(got["placed"])
 	# 放不下就换一件：从同一批候选里按小到大补（同样大的随机排），小件总有地方塞。流派道具不够先补流派的。
 	# 只有棋盘真的满了才会差件数，回报里看得见 —— 那是档位表的棋盘 / 包配小了
 	if placed.size() < count:
@@ -187,29 +199,28 @@ static func build_content(
 			if placed.size() >= count or tries >= REFILL_TRIES:
 				break
 			tries += 1
-			_try_place(board, items.get_def(id), placed)
+			_place_random(board, items.get_def(id), placed, rng)
 	# 126：战斗道具摆完再摆携带品（非战斗道具，越值钱越少见）—— 同一块棋盘 / 同一些包，小件先摆，放不下的跳过（计入差件）。
 	# 随机数另起一条（由主随机数的当前状态派生、不消耗它）：加不加携带规则，敌人本身与战斗道具都不变
 	var carry_short := 0
 	if carry != null:
-		# 摆的是草稿实例（内容只记 id 与位置），uid 计数原样还回去 —— 同上，带不带携带品不影响之后的编号
-		var uid_mark := ItemInstance._next_uid
 		var crng := RandomNumberGenerator.new()
 		crng.seed = hash([rng.state, String(def.id), strength, "carry"])
 		var carried := carry.roll(items, strength, cap, crng)
 		for id in _small_first(carried, items, crng):
-			if _try_place(board, items.get_def(id), placed):
+			if _place_random(board, items.get_def(id), placed, crng):
 				(placed[placed.size() - 1] as Dictionary)["carried"] = true
 			else:
 				carry_short += 1
-		ItemInstance._next_uid = uid_mark
+	ItemInstance._next_uid = uid_mark
 	var content := {
 		"enemy": String(def.id),
 		"strength": strength,
 		"board": [size.x, size.y],
 		"items": placed,
 	}
-	return {"content": content, "dropped": maxi(0, count - (placed.size() - _carried_count(placed))), "carry_short": carry_short}
+	return {"content": content, "dropped": maxi(0, count - (placed.size() - _carried_count(placed))), "carry_short": carry_short,
+		"ungrouped": int(got["ungrouped"])}
 
 
 ## 126：已摆上的里有几件是携带品
@@ -242,14 +253,35 @@ static func _small_first(ids: Array[StringName], items: ItemDatabase, rng: Rando
 	return out
 
 
+## 第一个放得下的格（包用它：包先贴左上，道具再往包里随机摆）
 static func _try_place(board: GridInventory, idef: ItemDef, placed: Array) -> bool:
 	if idef == null:
 		return false
 	var inst := ItemInstance.create(idef, 0)
 	if not board.try_add(inst, true):
 		return false
-	placed.append({"id": String(idef.id), "at": [inst.origin.x, inst.origin.y], "rot": inst.rotation})
+	placed.append(_entry(inst))
 	return true
+
+
+## 165：在所有放得下的位置里随机挑一个（补件、携带品）
+static func _place_random(board: GridInventory, idef: ItemDef, placed: Array, rng: RandomNumberGenerator) -> bool:
+	if idef == null:
+		return false
+	var fits := _fits(board, idef, false)
+	if fits.is_empty():
+		return false
+	var f: Array = fits[rng.randi_range(0, fits.size() - 1)]
+	var inst := ItemInstance.create(idef, int(f[1]))
+	if not board.place(inst, f[0], int(f[1])):
+		return false
+	placed.append(_entry(inst))
+	return true
+
+
+## 内容里的一件：{id, at, rot}
+static func _entry(inst: ItemInstance) -> Dictionary:
+	return {"id": String(inst.def.id), "at": [inst.origin.x, inst.origin.y], "rot": inst.rotation}
 
 
 ## 占格多的先摆；同样大的按 id 的**文本** —— 顺序稳定，摆出来的才可复现。
@@ -428,3 +460,600 @@ static func _draw(
 		# 允许重复也不马上把它放回去：同一件连抽三次的敌人太像 bug
 		elif bag.size() > 1:
 			bag.remove_at(k)
+
+
+#region 165：相邻组合整组摆、散件随机摆
+## 散件有放不下（或组拆了）就整盘重来，最多几次（每次随机数接着用）；都不行再按「整理」那样贴左上摆一遍，还不行按老办法，取摆得最好的
+const ARRANGE_TRIES := 4
+
+
+## 从挑出的道具里**推**相邻组合（2.3）：先认 [member EnemyDef.combos]（这几件都在就成一组、不再参与自动配对），
+## 再给每件「给得出东西」的道具（增益格的 / 站在别人受益格上有东西给的）在同一批里找一件收得下的，配成一对；
+## 连在一起的对并成一组（长弓上面一袋箭、右边一个护符，三件一组）。找不到对象的照旧是散件。
+## 返回组的列表，每组是 [param picks] 的下标，第一件是锚（组里占格最多的）、后面每件都和前面某件配过对
+static func auto_groups(
+	picks: Array[StringName], items: ItemDatabase, rng: RandomNumberGenerator, who: EnemyDef = null
+) -> Array:
+	var defs: Array[ItemDef] = []
+	for id in picks:
+		defs.append(items.get_def(id))
+	var groups: Array = []
+	var taken := {}
+	if who != null:
+		for combo in who.combo_list():
+			var idxs: Array[int] = []
+			for id in combo:
+				for i in defs.size():
+					if not taken.has(i) and not idxs.has(i) and picks[i] == id:
+						idxs.append(i)
+						break
+			if idxs.size() == (combo as Array).size():
+				for i in idxs:
+					taken[i] = true
+				groups.append(idxs)
+	# 自动配对：每件给得出东西的配一个收得下的（多个候选随机挑）；按下标走，结果只看 picks 与随机数
+	var edges := {}     # i -> [j, ...]（无向）
+	for i in defs.size():
+		if taken.has(i) or not _pairable(defs[i]):
+			continue
+		var cands: Array[int] = []
+		for j in defs.size():
+			if j != i and not taken.has(j) and _pairable(defs[j]) and _gives(defs[i], defs[j]):
+				cands.append(j)
+		if cands.is_empty():
+			continue
+		var j := cands[rng.randi_range(0, cands.size() - 1)]
+		if not edges.has(i):
+			edges[i] = []
+		if not edges.has(j):
+			edges[j] = []
+		(edges[i] as Array).append(j)
+		(edges[j] as Array).append(i)
+	var seen := {}
+	for i in defs.size():
+		if not edges.has(i) or seen.has(i):
+			continue
+		# 一个连通块：先收齐，锚 = 占格最多的（同样大取下标小的），再从锚起按宽度优先排 —— 每件都挨着前面配过对的那件
+		var comp: Array[int] = []
+		var stack: Array[int] = [i]
+		seen[i] = true
+		while not stack.is_empty():
+			var k: int = stack.pop_back()
+			comp.append(k)
+			for nb in edges[k]:
+				if not seen.has(nb):
+					seen[nb] = true
+					stack.append(nb)
+		comp.sort()
+		var anchor := comp[0]
+		for k in comp:
+			if defs[k].shape.cell_count() > defs[anchor].shape.cell_count():
+				anchor = k
+		var ordered: Array[int] = [anchor]
+		var at := 0
+		while at < ordered.size():
+			var nbs: Array = (edges[ordered[at]] as Array).duplicate()
+			nbs.sort()
+			for nb in nbs:
+				if not ordered.has(nb):
+					ordered.append(nb)
+			at += 1
+		groups.append(ordered)
+	return groups
+
+
+## 能不能进相邻组合：有形状、不是包
+static func _pairable(d: ItemDef) -> bool:
+	return d != null and d.shape != null and not d.is_bag
+
+
+## [param g] 挨着 [param r] 时给不给得出东西（不看位置）：g 的增益格收 r；或者 r 的受益格收 g（r 本身有受益加成，或 g 站上去有供给给 r，148）
+static func _gives(g: ItemDef, r: ItemDef) -> bool:
+	var ga := g.adjacency
+	if ga != null and ga.has_grant() and AdjacencyProfile.accepts(ga.grant_filter, r):
+		return true
+	return _receives_from(r, g)
+
+
+## [param r] 的受益格收不收 [param g]
+static func _receives_from(r: ItemDef, g: ItemDef) -> bool:
+	var ra := r.adjacency
+	if ra == null or ra.receive_cells.is_empty() or not AdjacencyProfile.accepts(ra.receive_filter, g):
+		return false
+	if ra.has_receive():
+		return true
+	var ga := g.adjacency
+	return ga != null and ga.has_feed() and AdjacencyProfile.accepts(ga.feed_filter, r)
+
+
+## 在已经摆好包（与钉死件）的棋盘上摆 [param defs]：组（[param groups]，每组是 defs 的下标，第一件为锚）占格大的先，
+## 再摆散件（按 defs 的先后），都在放得下的位置里**随机挑**。[param fixed]：下标 → [相对锚点的格, 朝向]（预设图写死的组内位置）；
+## 组里有没写的就按相邻关系现搭。散件有放不下、或者组摆不开拆了，就整盘重来（最多 [constant ARRANGE_TRIES] 次）；
+## 还不行就同样的步骤不随机、每件取第一个放得下的格（「整理」那样贴左上，地方最省）再摆一遍；
+## 还差件就按老办法（按 defs 的先后逐件第一个放得下的格、不成组）摆一遍。取摆上件数最多、拆的组最少的 —— 件数不会比 165 之前少。
+## 结果留在 [param board] 上。返回 {"placed": [{id, at, rot}]（按 defs 的先后）, "left": [没摆上的下标], "ungrouped": 拆散的组数}
+static func _arrange(
+	board: GridInventory, defs: Array[ItemDef], groups: Array, rng: RandomNumberGenerator, fixed: Dictionary = {}
+) -> Dictionary:
+	var best := {}
+	for attempt in ARRANGE_TRIES:
+		best = _better(best, _attempt(board, defs, groups, rng, fixed))
+		if _perfect(best):
+			break
+	if not _perfect(best):
+		best = _better(best, _attempt(board, defs, groups, null, fixed))
+	if not (best["left"] as Array).is_empty():
+		var plain := _attempt_first_fit(board, defs)
+		if (plain["left"] as Array).size() < (best["left"] as Array).size():
+			best = plain
+	# 选中的那一盘落到棋盘上（每一盘试完都撤干净了）
+	var placed: Array = []
+	var spots: Dictionary = best["spots"]
+	for i in defs.size():
+		if not spots.has(i):
+			continue
+		var inst := ItemInstance.create(defs[i], int(spots[i][1]))
+		if board.place(inst, spots[i][0], int(spots[i][1])):
+			placed.append(_entry(inst))
+	return {"placed": placed, "left": best["left"], "ungrouped": int(best["ungrouped"])}
+
+
+## 一件不差、组都没拆
+static func _perfect(got: Dictionary) -> bool:
+	return (got["left"] as Array).is_empty() and int(got["ungrouped"]) == 0
+
+
+## 摆上的多的好；一样多拆的组少的好；都一样留先来的
+static func _better(best: Dictionary, got: Dictionary) -> Dictionary:
+	if best.is_empty():
+		return got
+	var a := (best["left"] as Array).size()
+	var b := (got["left"] as Array).size()
+	if b != a:
+		return got if b < a else best
+	return got if int(got["ungrouped"]) < int(best["ungrouped"]) else best
+
+
+## 从候选里挑一个：有随机数随机挑，没有（「整理」那一盘）取第一个
+static func _pick(opts: Array, rng: RandomNumberGenerator) -> Array:
+	return opts[rng.randi_range(0, opts.size() - 1)] if rng != null else opts[0]
+
+
+## 摆一盘：组先、散件后（[param rng] 为 null 时每件取第一个放得下的格）。摆完记下每件的落点，再从棋盘上撤掉
+static func _attempt(
+	board: GridInventory, defs: Array[ItemDef], groups: Array, rng: RandomNumberGenerator, fixed: Dictionary
+) -> Dictionary:
+	var insts := {}     # 下标 -> ItemInstance
+	var in_group := {}
+	var loose: Array[int] = []
+	var ungrouped := 0
+	var by_size: Array = groups.duplicate()
+	by_size.sort_custom(func(a: Array, b: Array) -> bool:
+		var ca := _cells_of(defs, a)
+		var cb := _cells_of(defs, b)
+		return ca > cb if ca != cb else int(a[0]) < int(b[0]))
+	for g in by_size:
+		for i in g:
+			in_group[int(i)] = true
+		if not _place_group(board, defs, g, rng, fixed, insts):
+			ungrouped += 1
+			for i in g:
+				loose.append(int(i))
+	for i in defs.size():
+		if not in_group.has(i) and defs[i] != null:
+			loose.append(i)
+	loose.sort()
+	var left: Array[int] = []
+	for i in loose:
+		var fits := _fits(board, defs[i], false)
+		if fits.is_empty():
+			left.append(i)
+			continue
+		_put(board, defs[i], _pick(fits, rng), insts, i)
+	return _take_back(board, insts, left, ungrouped)
+
+
+## 老办法（165 之前）：按 defs 的先后逐件放第一个放得下的格，不成组
+static func _attempt_first_fit(board: GridInventory, defs: Array[ItemDef]) -> Dictionary:
+	var insts := {}
+	var left: Array[int] = []
+	for i in defs.size():
+		if defs[i] == null:
+			continue
+		var inst := ItemInstance.create(defs[i], 0)
+		if board.try_add(inst, true):
+			insts[i] = inst
+		else:
+			left.append(i)
+	return _take_back(board, insts, left, 0)
+
+
+## 记下这一盘每件的落点，从棋盘上撤掉
+static func _take_back(board: GridInventory, insts: Dictionary, left: Array[int], ungrouped: int) -> Dictionary:
+	var spots := {}
+	for i in insts:
+		var inst: ItemInstance = insts[i]
+		spots[i] = [inst.origin, inst.rotation]
+		board.remove(inst.uid)
+	return {"spots": spots, "left": left, "ungrouped": ungrouped}
+
+
+static func _cells_of(defs: Array[ItemDef], g: Array) -> int:
+	var n := 0
+	for i in g:
+		n += defs[int(i)].shape.cell_count()
+	return n
+
+
+static func _put(board: GridInventory, def: ItemDef, f: Array, insts: Dictionary, i: int) -> ItemInstance:
+	var inst := ItemInstance.create(def, int(f[1]))
+	if not board.place(inst, f[0], int(f[1])):
+		return null
+	insts[i] = inst
+	return inst
+
+
+## 这件道具在棋盘上所有放得下的 [origin, rot]（行优先）。[param all_rots]：四个朝向都试 —— 组里的件要它，
+## 形状对称、相邻格不对称（箭的增益格朝上）时朝向也算数；散件只试看得出区别的朝向
+static func _fits(board: GridInventory, def: ItemDef, all_rots: bool) -> Array:
+	var out: Array = []
+	if def == null or def.shape == null or not board.accepts(def):
+		return out
+	var rots := 4 if all_rots and def.adjacency != null else def.shape.distinct_rotation_count()
+	for rot in rots:
+		var sz := def.shape.size_rotated(rot)
+		for y in range(0, board.size.y - sz.y + 1):
+			for x in range(0, board.size.x - sz.x + 1):
+				var o := Vector2i(x, y)
+				if board.can_place_def(def, o, rot):
+					out.append([o, rot])
+	return out
+
+
+## 摆一个组：写死了组内位置的整组当刚体（四个朝向）找落点；没写的从锚起现搭 —— 每件都要和组里已摆的某件真的挨着生效。
+## 摆上了写进 [param insts]；摆不开返回 false，棋盘原样
+static func _place_group(
+	board: GridInventory, defs: Array[ItemDef], g: Array, rng: RandomNumberGenerator, fixed: Dictionary, insts: Dictionary
+) -> bool:
+	var all_fixed := true
+	for i in g:
+		if not fixed.has(int(i)):
+			all_fixed = false
+	if all_fixed:
+		return _place_rigid(board, defs, g, rng, fixed, insts)
+	var anchor := int(g[0])
+	var starts := _fits(board, defs[anchor], true)
+	if rng != null:
+		_shuffle(starts, rng)
+	for s in starts:
+		var mine: Array[ItemInstance] = []
+		var a := _put(board, defs[anchor], s, insts, anchor)
+		if a == null:
+			continue
+		mine.append(a)
+		var ok := true
+		for k in range(1, g.size()):
+			var i := int(g[k])
+			var touch := not _pairs_any(defs[i], mine)
+			var opts: Array = []
+			for f in _fits(board, defs[i], true):
+				if _links(defs[i], f[0], int(f[1]), mine, touch):
+					opts.append(f)
+			if opts.is_empty():
+				ok = false
+				break
+			var m := _put(board, defs[i], _pick(opts, rng), insts, i)
+			if m == null:
+				ok = false
+				break
+			mine.append(m)
+		if ok:
+			return true
+		for k in g:
+			var inst: ItemInstance = insts.get(int(k), null)
+			if inst != null:
+				board.remove(inst.uid)
+				insts.erase(int(k))
+	return false
+
+
+## 写死了组内位置的组：整组转四个朝向、在棋盘上找所有放得下的锚点，随机挑一个
+static func _place_rigid(
+	board: GridInventory, defs: Array[ItemDef], g: Array, rng: RandomNumberGenerator, fixed: Dictionary, insts: Dictionary
+) -> bool:
+	var cands: Array = []     # [[每件的 [origin, rot]], ...]
+	for turn in 4:
+		var layout := _turn_group(defs, g, fixed, turn)
+		if layout.is_empty():
+			return false     # 组内自己压着自己：写错了，当散件
+		var span := Vector2i.ZERO
+		for k in g.size():
+			var d := defs[int(g[k])]
+			span = Vector2i(maxi(span.x, (layout[k][0] as Vector2i).x + d.shape.size_rotated(int(layout[k][1])).x),
+				maxi(span.y, (layout[k][0] as Vector2i).y + d.shape.size_rotated(int(layout[k][1])).y))
+		for y in range(0, board.size.y - span.y + 1):
+			for x in range(0, board.size.x - span.x + 1):
+				var o := Vector2i(x, y)
+				var ok := true
+				for k in g.size():
+					if not board.can_place_def(defs[int(g[k])], o + layout[k][0], int(layout[k][1])):
+						ok = false
+						break
+				if ok:
+					var spots: Array = []
+					for k in g.size():
+						spots.append([o + layout[k][0], int(layout[k][1])])
+					cands.append(spots)
+	if cands.is_empty():
+		return false
+	var pick := _pick(cands, rng)
+	for k in g.size():
+		_put(board, defs[int(g[k])], pick[k], insts, int(g[k]))
+	return true
+
+
+## 组转 [param turn] 个 90°（顺时针）之后每件的 [相对整组左上角的 origin, rot]；组内有重叠返回空。
+## 整组的格子一起转、再整体平移回左上 —— 每件的格子转完的最小角就是它新的 origin，形状正是 cells_rotated(rot + turn)（[ItemShape] 同一套规范化），
+## 相邻格也跟着转（[method ItemShape.transform_point]），所以组内谁挨着谁转完不变
+static func _turn_group(defs: Array[ItemDef], g: Array, fixed: Dictionary, turn: int) -> Array:
+	var per: Array = []
+	var seen := {}
+	var lo := Vector2i(1 << 20, 1 << 20)
+	for i in g:
+		var d := defs[int(i)]
+		var at: Vector2i = fixed[int(i)][0]
+		var rot := int(fixed[int(i)][1])
+		var cells: Array[Vector2i] = []
+		for c in d.cells_rotated(rot):
+			var p := at + c
+			for t in turn:
+				p = Vector2i(-p.y, p.x)
+			if seen.has(p):
+				return []
+			seen[p] = true
+			cells.append(p)
+		var m := ItemShape.min_of(cells)
+		lo = Vector2i(mini(lo.x, m.x), mini(lo.y, m.y))
+		per.append([m, rot + turn])
+	for e in per:
+		e[0] = (e[0] as Vector2i) - lo
+		e[1] = posmod(int(e[1]), 4)
+	return per
+
+
+## [param def] 和组里已摆的哪件有相邻关系可言（不看位置）。都没有 = 这组是作者硬配的（[member EnemyDef.combos]），挨着就行
+static func _pairs_any(def: ItemDef, mine: Array[ItemInstance]) -> bool:
+	for m in mine:
+		if _gives(def, m.def) or _gives(m.def, def):
+			return true
+	return false
+
+
+## [param def] 摆在 (origin, rot) 时，和组里已摆的某件真的挨着生效（谁给谁都算）；[param touch]：挨着边就算
+static func _links(def: ItemDef, origin: Vector2i, rot: int, mine: Array[ItemInstance], touch: bool) -> bool:
+	for m in mine:
+		if _gives_at(def, origin, rot, m.def, m.origin, m.rotation) or _gives_at(m.def, m.origin, m.rotation, def, origin, rot):
+			return true
+		if touch and _touching(def.cells_rotated(rot), origin, m):
+			return true
+	return false
+
+
+## g 摆在 (go, gr)、r 摆在 (ro, rr) 时 g 给不给得到 r：g 的增益格压在 r 身上，或 r 的受益格压在 g 身上（同编译器的点亮规则）
+static func _gives_at(g: ItemDef, go: Vector2i, gr: int, r: ItemDef, ro: Vector2i, rr: int) -> bool:
+	var ga := g.adjacency
+	if ga != null and ga.has_grant() and AdjacencyProfile.accepts(ga.grant_filter, r):
+		var r_cells := _cell_set(r.cells_rotated(rr), ro)
+		for p in ga.grant_cells:
+			if r_cells.has(go + g.shape.transform_point(p, gr)):
+				return true
+	if _receives_from(r, g):
+		var g_cells := _cell_set(g.cells_rotated(gr), go)
+		for p in r.adjacency.receive_cells:
+			if g_cells.has(ro + r.shape.transform_point(p, rr)):
+				return true
+	return false
+
+
+static func _touching(cells: Array[Vector2i], origin: Vector2i, m: ItemInstance) -> bool:
+	var theirs := _cell_set(m.cells(), m.origin)
+	for c in cells:
+		for d in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			if theirs.has(origin + c + d):
+				return true
+	return false
+
+
+static func _cell_set(cells: Array[Vector2i], origin: Vector2i) -> Dictionary:
+	var out := {}
+	for c in cells:
+		out[origin + c] = true
+	return out
+
+
+static func _shuffle(a: Array, rng: RandomNumberGenerator) -> void:
+	for i in range(a.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var t = a[i]
+		a[i] = a[j]
+		a[j] = t
+#endregion
+
+
+#region 165：节点内容摆一次（预设图）
+## 这份内容要不要摆：有敌人，且有没写位置的件或者写了组
+static func needs_arrange(content: Dictionary) -> bool:
+	if not EnemyKit.has_enemy(content):
+		return false
+	if not (content.get("groups", []) as Array).is_empty():
+		return true
+	for raw in content.get("items", []):
+		if raw is Dictionary and not (raw as Dictionary).has("at"):
+			return true
+	return false
+
+
+## 节点内容里没写 `at` 的件随机摆、`groups` 整组摆，位置写回内容（组展开成普通的件，`groups` 删掉）；写了 `at` 的原样钉死。
+## 摆一次、记下来：之后的存档、战前、战斗、尸体、掉落都照这份内容重建，和随机图的敌人一样（[method EnemyKit.board_of]）。
+## 摆不下的件留在内容里、不带位置（重建时再自己找空位，还不行会告警）。返回 {"left": [摆不下的 id], "ungrouped": 拆散的组数}
+static func arrange(content: Dictionary, items: ItemDatabase, rng: RandomNumberGenerator) -> Dictionary:
+	var out := {"left": [] as Array[StringName], "ungrouped": 0}
+	if not needs_arrange(content) or items == null:
+		return out
+	var size_raw: Array = content.get("board", [4, 3])
+	var size := Vector2i(int(size_raw[0]), int(size_raw[1]))
+	var pinned: Array = []     # [def, entry]
+	var free: Array = []       # [def, entry]
+	var has_bag := false
+	for raw in content.get("items", []):
+		var entry := (raw as Dictionary).duplicate()
+		var d := items.get_def(StringName(String(entry.get("id", ""))))
+		if d == null:
+			pinned.append([null, entry])     # 认不得的原样留着（内容比道具库新）
+			continue
+		has_bag = has_bag or d.is_bag
+		(pinned if entry.has("at") else free).append([d, entry])
+	var group_specs: Array = []     # 每组 [[def, entry], ...]
+	for raw in content.get("groups", []):
+		var spec: Array = []
+		for m in raw:
+			var entry := (m as Dictionary).duplicate()
+			var d := items.get_def(StringName(String(entry.get("id", ""))))
+			if d != null and not d.is_bag:
+				spec.append([d, entry])
+		if spec.size() >= 2:
+			group_specs.append(spec)
+		elif spec.size() == 1:
+			free.append([spec[0][0], spec[0][1]])
+	var uid_mark := ItemInstance._next_uid
+	var board := GridInventory.new(size, 0, has_bag)
+	var result: Array = []
+	# 包先：写了位置的钉在原处，没写的贴左上
+	for pass_bags in [true, false]:
+		for pair in pinned:
+			var d: ItemDef = pair[0]
+			if d == null or d.is_bag != pass_bags:
+				continue
+			var entry: Dictionary = pair[1]
+			var at: Array = entry["at"]
+			var inst := ItemInstance.create(d, int(entry.get("rot", 0)))
+			if board.place(inst, Vector2i(int(at[0]), int(at[1])), int(entry.get("rot", 0))):
+				result.append(entry)
+			else:
+				free.append([d, entry])     # 写的位置摆不下：当没写，下面随机摆
+		if pass_bags:
+			for pair in free.duplicate():
+				var d: ItemDef = pair[0]
+				if not d.is_bag:
+					continue
+				free.erase(pair)
+				var placed: Array = []
+				if _try_place(board, d, placed):
+					result.append(_merge(pair[1], placed[0]))
+				else:
+					result.append(_unplaced(pair[1]))
+					(out["left"] as Array[StringName]).append(d.id)
+	# 道具：组 → 散件（散件大件先，同样大按原先后）
+	var free_rank := {}
+	for k in free.size():
+		free_rank[k] = [(free[k][0] as ItemDef).shape.cell_count(), k]
+	var free_order: Array = free_rank.keys()
+	free_order.sort_custom(func(a: int, b: int) -> bool:
+		return free_rank[a][0] > free_rank[b][0] if free_rank[a][0] != free_rank[b][0] else a < b)
+	var free_sorted: Array = []
+	for k in free_order:
+		free_sorted.append(free[k])
+	free = free_sorted
+	var defs: Array[ItemDef] = []
+	var entries: Array = []
+	var groups: Array = []
+	var fixed := {}
+	for spec in group_specs:
+		# 组内写了位置的按相对锚点的格记下（锚没写当 [0, 0]）；全写了就整组当刚体摆，有没写的就按相邻关系现搭
+		var g: Array[int] = []
+		var any_at := false
+		for pair in spec:
+			any_at = any_at or (pair[1] as Dictionary).has("at")
+		var anchor_at := Vector2i.ZERO
+		for k in spec.size():
+			var entry: Dictionary = spec[k][1]
+			var i := defs.size()
+			defs.append(spec[k][0])
+			entries.append(entry)
+			g.append(i)
+			if not any_at:
+				continue
+			var at := Vector2i.ZERO
+			if entry.has("at"):
+				var a: Array = entry["at"]
+				at = Vector2i(int(a[0]), int(a[1]))
+			if k == 0:
+				anchor_at = at
+			if k == 0 or entry.has("at"):
+				fixed[i] = [at - anchor_at, int(entry.get("rot", 0))]
+		groups.append(g)
+	for pair in free:
+		if pair[0] == null:
+			continue
+		defs.append(pair[0])
+		entries.append(pair[1])
+	for pair in pinned:
+		if pair[0] == null:
+			result.append(pair[1])
+	var got := _arrange(board, defs, groups, rng, fixed)
+	ItemInstance._next_uid = uid_mark
+	# 写回：按 defs 的先后，摆上了的带位置，摆不下的不带
+	var by_index := {}
+	var k_placed := 0
+	var left_set := {}
+	for i in got["left"]:
+		left_set[int(i)] = true
+	for i in defs.size():
+		if left_set.has(i):
+			continue
+		by_index[i] = (got["placed"] as Array)[k_placed]
+		k_placed += 1
+	for i in defs.size():
+		if by_index.has(i):
+			result.append(_merge(entries[i], by_index[i]))
+		else:
+			result.append(_unplaced(entries[i]))
+			(out["left"] as Array[StringName]).append(defs[i].id)
+	content["items"] = result
+	content.erase("groups")
+	out["ungrouped"] = int(got["ungrouped"])
+	if not (out["left"] as Array).is_empty():
+		push_warning("敌人 %s 的道具摆不下：%s（棋盘 %s）" % [content.get("enemy", "?"), out["left"], size])
+	return out
+
+
+## 一张图上每个要摆的点摆一次（开局时，[RunState]）；随机数用节点自己的 `content_seed` —— 同一张图同一个点永远一样
+static func arrange_map(graph: MapGraph, items: ItemDatabase) -> int:
+	var n := 0
+	if graph == null or items == null:
+		return n
+	for id in graph.node_ids():
+		var node := graph.get_node(id)
+		if not needs_arrange(node.content):
+			continue
+		var rng := RandomNumberGenerator.new()
+		rng.seed = node.content_seed
+		arrange(node.content, items, rng)
+		n += 1
+	return n
+
+
+## 原条目（可能带别的字段）+ 摆出来的位置
+static func _merge(entry: Dictionary, spot: Dictionary) -> Dictionary:
+	var out := entry.duplicate()
+	out["at"] = spot["at"]
+	out["rot"] = spot["rot"]
+	return out
+
+
+static func _unplaced(entry: Dictionary) -> Dictionary:
+	var out := entry.duplicate()
+	out.erase("at")
+	out.erase("rot")
+	return out
+#endregion

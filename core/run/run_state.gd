@@ -172,6 +172,7 @@ static func start(
 	SafePlacerScript.mark(s.map, p_chapter.safes)     # 092：先换点，再放敌人（换掉的点不该带敌人）
 	if s.pool != null:
 		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id(), s.carry_rule)
+	EnemyPlacer.arrange_map(s.map, p_items)     # 165：预设图里没写位置的敌人道具（与相邻组）在这里摆一次、记进内容
 	PaidExtracts.mark(s.map, s.economy)
 	EventPlacer.fill(s.map, s.node_rules)
 	ChestPlacer.roll(s.map, s.node_rules.chest if s.node_rules != null else null, p_chapter.chest_skin)     # 154：宝箱的稀有度与皮肤生成时就定

@@ -20,7 +20,7 @@ static func board_of(content: Dictionary, items: ItemDatabase, find_room: bool =
 	# 084：身上有包就和玩家一样 —— 道具只能在包里（requires_bag），包先摆；老内容（没有包）照旧直接摆
 	var entries: Array = []
 	var has_bag := false
-	for raw in content.get("items", []):
+	for raw in entries_of(content):
 		var entry := raw as Dictionary
 		var def := items.get_def(StringName(String(entry.get("id", ""))))
 		if def == null:
@@ -28,20 +28,46 @@ static func board_of(content: Dictionary, items: ItemDatabase, find_room: bool =
 		entries.append([def, entry])
 		if def.is_bag:
 			has_bag = true
-	entries.sort_custom(func(a: Array, b: Array) -> bool:
-		return (a[0] as ItemDef).is_bag and not (b[0] as ItemDef).is_bag)
+	# 包先、写了位置的先（165：没写位置的 —— 还没摆过的预设内容 —— 最后自己找空位）
+	var rank := func(pair: Array) -> int:
+		return (0 if (pair[0] as ItemDef).is_bag else 2) + (0 if (pair[1] as Dictionary).has("at") else 1)
+	var order: Array = []
+	for r in 4:
+		for pair in entries:
+			if rank.call(pair) == r:
+				order.append(pair)
 	var board := GridInventory.new(size, 0, has_bag)
-	for pair in entries:
+	for pair in order:
 		var def: ItemDef = pair[0]
 		var entry: Dictionary = pair[1]
-		var at: Array = entry.get("at", [0, 0])
 		var inst := ItemInstance.create(def, int(entry.get("rot", 0)))
+		if not entry.has("at"):
+			if not board.try_add(inst):
+				push_warning("敌人的道具摆不下：%s（棋盘 %s）" % [def.id, size])
+			continue
+		var at: Array = entry["at"]
 		if not board.place(inst, Vector2i(int(at[0]), int(at[1])), int(entry.get("rot", 0))):
 			# 作者 2026-10-12：敌人只该掉自己身上的东西 —— 写的位置摆不下（旧存档记着改形状之前的位置：143 把短剑改成 T 形），
 			# 自己找个空位放；还放不下才说一声（[method unplaced_items] 给测试查）
 			if not find_room or not board.try_add(inst):
 				push_warning("敌人的道具摆不下：%s @ %s（棋盘 %s）" % [def.id, at, size])
 	return board
+
+
+## 内容里的全部件：`items` 加上还没摆过的 `groups`（165：预设图的组，开局时 [method EnemyPlacer.arrange] 会把它们展开进 items）
+static func entries_of(content: Dictionary) -> Array:
+	var out: Array = []
+	for raw in content.get("items", []):
+		if raw is Dictionary:
+			out.append(raw)
+	for g in content.get("groups", []):
+		for raw in g:
+			if raw is Dictionary:
+				var e := (raw as Dictionary).duplicate()
+				e.erase("at")     # 组内的 at 是相对锚点的，不是棋盘上的格
+				e.erase("rot")
+				out.append(e)
+	return out
 
 
 ## 作者 2026-10-12：这份节点内容里**照写的位置**摆不下的道具 id（预设图的测试逐个敌人查；游戏里会自己找空位，数据还是该写对）
@@ -51,7 +77,7 @@ static func unplaced_items(content: Dictionary, items: ItemDatabase) -> Array[St
 	for inst in board.items():
 		placed[(inst as ItemInstance).def.id] = int(placed.get((inst as ItemInstance).def.id, 0)) + 1
 	var out: Array[StringName] = []
-	for raw in content.get("items", []):
+	for raw in entries_of(content):
 		var id := StringName(String((raw as Dictionary).get("id", "")))
 		if items.get_def(id) == null:
 			continue
