@@ -223,10 +223,16 @@ func store_all() -> Dictionary:
 			out["stuck"] = item.def.display_name
 			break
 	out["left"] = board.item_count()
-	if board.item_count() == 0:
-		board = null
+	# 作者 2026-10-13（一键置入后左边的棋盘消失、仓库跳到左边）：搬空了棋盘也留着（空的），离开结算屏才丢（[method drop_empty_board]）
 	changed.emit()
 	return out
+
+
+## 离开结算屏：带回来的棋盘搬空了就丢掉（还有东西的留着，局外屏照旧提示置入）
+func drop_empty_board() -> void:
+	if board != null and board.item_count() == 0:
+		board = null
+		changed.emit()
 
 
 ## 带回来的棋盘上剩下的不要了

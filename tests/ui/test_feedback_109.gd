@@ -194,6 +194,10 @@ static func frame_warehouse_double_click(t: TestCase, root: Window) -> void:
 	panel._rebuild_board_view()
 	t.check(not panel._drag._views.has(old_view), "旧视图撤了登记")
 	t.eq(panel._drag._views.size(), n_views, "登记数不涨（新的顶替旧的）")
+	# 作者 2026-10-13：双击把带回来的全搬空，左边的棋盘也留着（空的）
+	t.check(panel.quick_move(panel._board_view, rock.uid) and panel.quick_move(panel._board_view, rod.uid), "双击搬空带回来的两件")
+	t.check(meta.board != null and meta.board.item_count() == 0 and panel._board_box.visible, "搬空了棋盘还在、还显示")
+	t.check(panel.quick_move(panel.warehouse_view(), rock.uid) and panel.quick_move(panel.warehouse_view(), rod.uid), "再双击回去（还原前面的状态）")
 	var first := w_first(meta)
 	t.check(first < 0, "（这时仓库是空的）")
 	var probe := ItemInstance.create(_def("probe", ["1"]))
