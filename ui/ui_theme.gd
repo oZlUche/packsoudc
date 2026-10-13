@@ -81,6 +81,8 @@ const ART_TOOLTIP := "tooltip_paper"
 ## 板里的分区是刻进板里的凹槽（`PanelDark` / `PanelLine` / `PanelHud` 都用它）。原来的整屏砖墙底与三种小石板退了
 const ART_SLAB_BODY := "slab_body"
 const ART_SLAB_EDGE := "slab_edge"
+## 顶端栏专用的长条板边（贴屏幕顶、没有标题刻线、底下一道投影；`margin` 的上下就是栏里的组居中的那一块）
+const ART_SLAB_BAR := "slab_bar"
 const ART_INSET := "inset"
 ## 石板顶边：标题条下沿到板边九宫格上边距之间留给刻线的那一段
 const TITLE_LINE_GAP := 6.0
@@ -337,9 +339,9 @@ const PANEL_TONES := {
 	PANEL_NAMEPLATE: TONE_DARK, PANEL_HOME_BOX: TONE_LIGHT, PANEL_SHELF: TONE_DARK, PANEL_HUD_BAR: TONE_DARK,
 }
 ## 面板变体用哪张美术图（有图时深浅读它的 json）
-## 157 补充三：叠层框与顶端栏是石板（深浅读板边的 json），板里的分区都是凹槽
+## 157 补充三：叠层框与顶端栏是石板（深浅读板边的 json；顶端栏是自己那张长条板边），板里的分区都是凹槽
 const PANEL_ART := {PANEL_DARK: ART_INSET, PANEL_LINE: ART_INSET, PANEL_HUD: ART_INSET, PANEL_OVERLAY: ART_SLAB_EDGE, PANEL_TOOLTIP: ART_TOOLTIP,
-	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_EDGE}
+	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_BAR}
 ## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸
 const INK := Color("2e2219")
 const INK_SOFT := Color("5a4433")
@@ -457,23 +459,20 @@ static func has_slab() -> bool:
 
 
 ## 一整块石板的底（[SlabStyle]：板身平铺 + 板边九宫格）；没图 null。参数同 [method _art_box]（内边距按板边）；
-## [param flush_top] 真 = 贴着屏幕顶的长条（顶端栏）：顶棱和标题刻线藏到屏幕外，只露左右与底边
-static func slab_box(title_strip: bool = false, content: int = -1, flush_top: bool = false) -> SlabStyle:
-	if not has_slab():
+## [param edge_art] 板边用哪张：默认叠层的 `slab_edge`，顶端栏是 `slab_bar`（缺这张退回平面底）
+static func slab_box(title_strip: bool = false, content: int = -1, edge_art: String = ART_SLAB_EDGE) -> SlabStyle:
+	if not has_slab() or art(edge_art) == null:
 		return null
 	var s := SlabStyle.new()
-	s.edge = _art_box(ART_SLAB_EDGE, title_strip, content)
+	s.edge = _art_box(edge_art, title_strip, content)
 	var body := StyleBoxTexture.new()
 	body.texture = art(ART_SLAB_BODY)
 	body.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
 	body.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
 	s.body = body
-	s.body_inset = float(art_meta(ART_SLAB_EDGE).get("body_inset", 0))
+	s.body_inset = SlabStyle.inset_of(art_meta(edge_art).get("body_inset", 0))
 	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
 		s.set_content_margin(side, s.edge.get_content_margin(side))
-	if flush_top:
-		s.top_cut = maxf(0.0, s.edge.texture_margin_top - TITLE_LINE_GAP + 2.0)
-		s.content_margin_top = maxf(0.0, s.edge.texture_margin_top - s.top_cut)
 	return s
 
 
@@ -608,9 +607,10 @@ static func _fill(t: Theme, bg: Color) -> void:
 	hud_box.set_border_width_all(0)
 	t.set_stylebox("panel", PANEL_HUD, hud_art if hud_art != null else hud_box)
 	# 166：顶端栏（横贯顶部的一条，左右留 16）与栏里的图标按钮（平时透明，悬停 / 按下才露底）。
-	# 157 补充三：栏是一条独立的长石板（同一套板身 + 板边），没图是半透明深底 + 下边一条线
+	# 157 补充三：栏是一条独立的长石板（同一套板身 + 自己的长条板边 `slab_bar`），没图是半透明深底 + 下边一条线。
+	# 板边的上下内边距 = 栏里的组居中的那一块（[HudHost] 读），底下那道投影不算进去
 	t.set_type_variation(PANEL_HUD_BAR, "PanelContainer")
-	var bar_art: StyleBox = slab_box(false, -1, true)
+	var bar_art: StyleBox = slab_box(false, -1, ART_SLAB_BAR)
 	var bar_box := _box(Color(panel_bg, 0.86), UiPalette.LINE, HUD_MARGIN)
 	bar_box.set_border_width_all(0)
 	bar_box.border_width_bottom = 1

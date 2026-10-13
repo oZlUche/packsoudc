@@ -21,8 +21,9 @@ signal arranged()
 ## 同一行里两件之间、行与行之间的空隙
 const GAP := 6
 const LINE_GAP := 4
-## 166：顶端栏至少多高、左右留多宽、里面的组上下至少留多少
-const BAR_HEIGHT := 64.0
+## 166：顶端栏至少多高、左右留多宽、里面的组上下至少留多少。
+## 作者 2026-10-13（「凹槽没有和石板位置对齐，考虑增加顶端栏纵向面积」）：64 → 88，组在板边上下内边距之间居中（底下的投影不算）
+const BAR_HEIGHT := 88.0
 const BAR_SIDE := 16.0
 const BAR_PAD := 4.0
 ## 没有栏时三个槽退回哪个锚点
@@ -159,9 +160,19 @@ func _frame(anchor: String) -> Rect2:
 	return Rect2(0.0, _bar_h, w, maxf(0.0, size.y - _bar_h))
 
 
-## 166：顶端栏里排组的那块（左右各留 [constant BAR_SIDE]）
+## 166：顶端栏里排组的那块（左右各留 [constant BAR_SIDE]；上下去掉栏底的内边距 —— 有石板就是板面那一段，不含底下的投影）
 func _bar_frame() -> Rect2:
-	return Rect2(BAR_SIDE, 0.0, maxf(0.0, size.x - BAR_SIDE * 2.0), _bar_h)
+	var m := _bar_margins()
+	return Rect2(BAR_SIDE, m.x, maxf(0.0, size.x - BAR_SIDE * 2.0), maxf(0.0, _bar_h - m.x - m.y))
+
+
+## 栏底的上、下内边距（没栏 0）
+func _bar_margins() -> Vector2:
+	var bar := _bar()
+	if bar == null:
+		return Vector2.ZERO
+	var box := bar.get_theme_stylebox("panel")
+	return Vector2.ZERO if box == null else Vector2(box.content_margin_top, box.content_margin_bottom)
 
 
 ## 有没有顶端栏（布局里那件看得见）
@@ -210,9 +221,10 @@ func arrange() -> void:
 	_bar_h = 0.0
 	if bar != null:
 		_bar_h = BAR_HEIGHT
+		var m := _bar_margins()
 		for key in order:
 			if HudLayout.in_bar(String(groups[key]["anchor"])):
-				_bar_h = maxf(_bar_h, _measure(groups[key]).y + BAR_PAD * 2.0)
+				_bar_h = maxf(_bar_h, _measure(groups[key]).y + maxf(BAR_PAD, m.x) + maxf(BAR_PAD, m.y))
 		bar.position = Vector2.ZERO
 		bar.size = Vector2(size.x, _bar_h)
 		for key in order:

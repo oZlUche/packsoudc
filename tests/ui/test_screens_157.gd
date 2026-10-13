@@ -27,9 +27,14 @@ static func run_theme_art(t: TestCase) -> void:
 		t.eq(slab.content_margin_top, 0.0, "顶边内边距 0：标题条自己占住板顶刻线那一条")
 		t.eq(slab.content_margin_left, 1.0, "其余内边距跟板边")
 		t.eq([slab.body.axis_stretch_horizontal, slab.body.axis_stretch_vertical], [StyleBoxTexture.AXIS_STRETCH_MODE_TILE, StyleBoxTexture.AXIS_STRETCH_MODE_TILE], "板身平铺，纹不随框大小拉花")
-		t.eq(slab.body_inset, 1.0, "板身往里缩 json 的 body_inset")
+		t.eq(slab.body_inset, [1.0, 1.0, 1.0, 1.0], "板身往里缩 json 的 body_inset（一个数 = 四边）")
 	t.check(UiTheme.is_art_box(slab), "石板算美术底（框的外边距听图的）")
-	t.check(art.get_stylebox("panel", UiTheme.PANEL_HUD_BAR) is SlabStyle, "顶端栏也是一条石板（166）")
+	var bar_slab := art.get_stylebox("panel", UiTheme.PANEL_HUD_BAR) as SlabStyle
+	t.check(bar_slab != null, "顶端栏也是一条石板（166）")
+	if bar_slab != null:
+		t.eq(bar_slab.edge.texture, UiTheme.art(UiTheme.ART_SLAB_BAR), "顶端栏的板边是自己那张长条（slab_bar）")
+		t.eq(bar_slab.body_inset, [1.0, 0.0, 1.0, 1.0], "body_inset 四个数：各边分开（顶边贴屏幕不缩）")
+		t.eq([bar_slab.content_margin_top, bar_slab.content_margin_bottom], [1.0, 2.0], "栏的上下内边距按 slab_bar.json（组在这之间居中）")
 	t.check(art.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxTexture, "板里的分区是凹槽九宫格")
 	t.eq(UiTheme.frame_title_height(), 30, "标题条高按 json")
 	t.check(art.get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is StyleBoxFlat, "测试目录里没有纸：悬浮窗底照旧")
