@@ -96,20 +96,67 @@ static func damage_color(type: StringName) -> Color:
 	return DAMAGE_COLORS.get(String(type), FG)
 
 
-## Godot 内置字体不含 CJK 字形，中文会显示成方块
-static func cjk_font() -> Font:
+#region 字体（168）
+## 168（作者定）：游戏自带字体 —— 正文霞鹜文楷（裁字子集，改名 PackSDC Kai，见 assets/fonts/README.md）、标题朱雀仿宋、大标题马善政。
+## 子集只含文案里出现过的字（`tools/font_charset.py`），缺的字走后备：文楷后备系统字体，标题后备文楷 Medium，大标题后备标题字体。
+## 文件不在（裁错、夹具）就退回系统字体，不崩
+const FONT_DIR := "res://assets/fonts/"
+const FONT_REGULAR := "wenkai_regular.ttf"
+const FONT_MEDIUM := "wenkai_medium.ttf"
+const FONT_TITLE := "zhuque_fangsong.ttf"
+const FONT_DISPLAY := "mashanzheng.ttf"
+static var _font_files: Dictionary = {}
+
+
+## 一个打包的字体文件（缓存一次）；不在返回 null
+static func font_file(file: String) -> FontFile:
+	if not _font_files.has(file):
+		var path := FONT_DIR + file
+		_font_files[file] = load(path) as FontFile if ResourceLoader.exists(path) else null
+	return _font_files[file]
+
+
+## 系统字体（168 之前的默认字体，现在是后备）：Godot 内置字体不含 CJK 字形，中文会显示成方块
+static func system_font(bold: bool = false) -> SystemFont:
 	var f := SystemFont.new()
 	f.font_names = PackedStringArray(
 		["Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "SimHei", "sans-serif"]
 	)
+	if bold:
+		f.font_weight = 700
 	return f
 
 
-## 同一组字体的真粗体（字重 700）：富文本的 [b] 用它，不靠引擎把常规体描粗（描出来的发糊）
+## 包一层：[param file] 打底，缺字走 [param fallback]；文件不在就直接是 [param fallback]
+static func _wrap(file: String, fallback: Font) -> Font:
+	var base := font_file(file)
+	if base == null:
+		return fallback
+	var v := FontVariation.new()
+	v.base_font = base
+	v.fallbacks = [fallback]
+	return v
+
+
+## 正文、读数、按钮：文楷 Regular
+static func cjk_font() -> Font:
+	return _wrap(FONT_REGULAR, system_font())
+
+
+## 真粗体：富文本的 [b] 用它（文楷 Medium，不让引擎把常规体描粗 —— 描出来的发糊）
 static func cjk_font_bold() -> Font:
-	var f := cjk_font() as SystemFont
-	f.font_weight = 700
-	return f
+	return _wrap(FONT_MEDIUM, system_font(true))
+
+
+## 标题、名牌：朱雀仿宋（技术预览版，缺字时混进文楷 Medium）
+static func title_font() -> Font:
+	return _wrap(FONT_TITLE, cjk_font_bold())
+
+
+## 大标题（主菜单游戏名、章节名、宝箱屏说明）：马善政，缺字走标题字体
+static func display_font() -> Font:
+	return _wrap(FONT_DISPLAY, title_font())
+#endregion
 
 
 #region 背景底色（091）

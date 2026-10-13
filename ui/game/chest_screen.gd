@@ -83,7 +83,7 @@ func open(payload: Dictionary) -> void:
 	view.custom_minimum_size = _closed_tex.get_size() if _closed_tex != null else PLACEHOLDER_SIZE
 	view.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	col.add_child(view)
-	hint = _label(TEXT_IDLE, 20, UiPalette.FG)
+	hint = UiTheme.make_display(TEXT_IDLE, 28)     # 168：说明字是马善政
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(hint)
 
