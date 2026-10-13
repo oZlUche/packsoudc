@@ -1586,8 +1586,34 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 		report.warn("schools", "没有流派，只会背通用道具")
 	if def.loadout != null:
 		_validate_loadout(def.loadout, "loadout", report)
+	# 165：相邻组合 —— 每组至少两件道具 id
+	for k in def.combos.size():
+		if not (def.combos[k] is Array) or (def.combos[k] as Array).size() < 2:
+			report.error("combos[%d]" % k, "一组相邻组合得是至少两件道具 id 的列表")
 	if ctx.items.is_empty():
 		return
+	for k in def.combos.size():
+		if not (def.combos[k] is Array):
+			continue
+		var members: Array[ItemDef] = []
+		for raw in def.combos[k]:
+			var cid := StringName(String(raw))
+			var at := "combos[%d]" % k
+			if not ctx.items.has(cid):
+				report.error(at, "找不到道具 '%s'" % cid)
+			elif (ctx.items[cid] as ItemDef).is_bag:
+				report.error(at, "'%s' 是个包 —— 包不进相邻组合" % cid)
+			elif not def.allows_item(ctx.items[cid]):
+				report.error(at, "'%s' 不带这个身份的任何标签（item_tags），挑不出来" % cid)
+			else:
+				members.append(ctx.items[cid])
+		var linked := members.size() < 2
+		for a in members:
+			for b in members:
+				if a != b and (EnemyPlacer._gives(a, b)):
+					linked = true
+		if not linked:
+			report.warn("combos[%d]" % k, "这几件互相没有相邻加成：摆成一组只是挨着放")
 	for s in def.schools:
 		if ctx.items_tagged(s) == 0:
 			report.error("schools", "流派 '%s' 没有任何道具带这个标签，组不出流派道具" % s)

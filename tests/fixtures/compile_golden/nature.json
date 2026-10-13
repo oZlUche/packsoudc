@@ -45,7 +45,7 @@
 	],
 	"items": [
 		{
-			"uid": 83,
+			"uid": 2,
 			"def_id": "shortsword",
 			"stats": {
 				"haste": {
@@ -70,7 +70,7 @@
 			]
 		},
 		{
-			"uid": 84,
+			"uid": 3,
 			"def_id": "ration",
 			"stats": {
 				"regen_stamina": {
@@ -95,7 +95,7 @@
 			"rules": []
 		},
 		{
-			"uid": 85,
+			"uid": 4,
 			"def_id": "charm_nature",
 			"stats": {},
 			"rules": []

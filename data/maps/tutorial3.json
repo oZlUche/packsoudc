@@ -60,12 +60,7 @@
             "rot": 0
           },
           {
-            "id": "knife",
-            "at": [
-              0,
-              0
-            ],
-            "rot": 0
+            "id": "knife"
           }
         ],
         "base_stats": {
@@ -180,12 +175,7 @@
             "rot": 0
           },
           {
-            "id": "shortsword",
-            "at": [
-              0,
-              0
-            ],
-            "rot": 0
+            "id": "shortsword"
           }
         ],
         "base_stats": {
