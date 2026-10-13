@@ -107,6 +107,39 @@ func untransform_point(q: Vector2i, rot: int) -> Vector2i:
 
 
 
+## 162 补充二：这个朝向下的重心（格单位，从包围盒左上角量）—— 占格中心的平均，每格一样重（重心是形状的事，写死的重量不改它）
+func center_of_mass(rot: int) -> Vector2:
+	var cs := cells_rotated(rot)
+	if cs.is_empty():
+		return Vector2.ZERO
+	var sum := Vector2.ZERO
+	for c in cs:
+		sum += Vector2(c) + Vector2(0.5, 0.5)
+	return sum / cs.size()
+
+
+## 162 补充二：落在地上会躺成哪个朝向 —— 四个朝向里重心离底边最近的（距离 ÷ 件高最小）；
+## 并列取横向更宽的，再并列留在 [param current]（方块不转、长条躺平、L 长边朝下、T 横杠朝下）
+func rest_rotation(current: int) -> int:
+	var best := posmod(current, 4)
+	var best_d := _rest_score(best)
+	var best_w := size_rotated(best).x
+	for i in range(1, 4):
+		var rot := posmod(current + i, 4)
+		var d := _rest_score(rot)
+		var w := size_rotated(rot).x
+		if d < best_d - 0.0001 or (absf(d - best_d) <= 0.0001 and w > best_w):
+			best = rot
+			best_d = d
+			best_w = w
+	return best
+
+
+func _rest_score(rot: int) -> float:
+	var h := float(size_rotated(rot).y)
+	return (h - center_of_mass(rot).y) / h if h > 0.0 else 0.0
+
+
 func _build_cache() -> void:
 	_rot_cache = []
 	_step_offset = []
