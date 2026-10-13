@@ -180,6 +180,7 @@
 | 167 | [交美术：UI 替换第一批 —— 战斗回放控件（重播改逆时针箭头、倍速改罗马数字、跳过符号、石板凹槽进度条，各出两三版给作者挑）与字体范例（可商用中文字体候选按正文 / 标题 / 手绘分组）；挑定后用 `IconButton` 接入](167-ui-replace-batch-1-replay-controls-and-font-samples.md) | 美术 · 待出范例 |
 | 168 | [方案：打包字体 —— 正文霞鹜文楷（Medium 当粗体）、标题朱雀仿宋、大标题马善政，全 OFL；按文案裁字入库（`tools/font_charset.py` + pyftsubset，覆盖测试兜底），`FontVariation` 带系统字体后备，原始字体不入库](168-bundled-fonts-wenkai-zhuque-mashanzheng.md) | 架构 · 已落地 | v2.95；待定全按推荐；文楷子集按授权改名 PackSDC Kai |
 | 169 | [方案：字色模板配置 —— `data/authoring/ui/text_colors.json` 每个颜色名（样式码、稀有度、伤害类型）写深底版 / 浅底版，容器打 `tone` 元数据、富文本按所在底自动换色，`ink_color` 退为十六进制兜底；校验对比度 ≥ 4.5；启动器配色预览页](169-text-color-template-by-tone.md) | 待执行 |
+| 170 | [讨论稿：道具悬浮窗排版 —— 名字进悬浮窗后四层（朱雀仿宋名字 / 稀有度与标签副行 / 说明 / 分隔线 + 正文 + 脚注），加粗只落在段首词与决定取舍的数字，词条只上色；真字体样张 A 与两种变体](170-item-tooltip-typography.md) | 讨论稿 · 待作者审 |
 
 ## 已归档（被覆盖或作废的方案，只留作历史）
 
