@@ -73,3 +73,17 @@ static func frame_map_start_zoom(t: TestCase, root: Window) -> void:
 	late.size = Vector2(800, 600)
 	t.eq(late.zoom, 1.2, "进图时还没尺寸：第一次 resized 时才定缩放")
 	late.queue_free()
+
+
+static func run_slab_text_ink(t: TestCase) -> void:
+	t.begin("反馈 2026-10-13 · 浅石板上的富文本：亮橙、白色道具名换成够深的墨水版；深石板原样")
+	var orange := Color("f0a040")
+	var white := Color("e8e8e8")
+	var text := "[color=#%s]先看对手[/color][color=#%s]长剑[/color]" % [orange.to_html(false), white.to_html(false)]
+	var out := UiTheme.slab_bbcode(text)
+	if UiTheme.tone_of(UiTheme.PANEL_OVERLAY) == UiTheme.TONE_LIGHT:
+		t.check(not out.contains(orange.to_html(false)) and not out.contains(white.to_html(false)), "浅石板：两种亮色都换掉了（%s）" % out)
+		t.check(UiTheme.contrast(UiTheme.ink_color(orange), UiTheme.PAPER) >= UiTheme.MIN_CONTRAST, "橙色换成够深的版本")
+		t.eq(UiTheme.ink_color(white), UiTheme.INK, "白色道具名 → 墨色")
+	else:
+		t.eq(out, text, "深石板：原样")
