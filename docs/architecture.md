@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.97 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.98 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -343,7 +343,11 @@ func begin_batch() / end_batch()                  # 变更合批
 每件记一个落点 `ItemStash.spots`（uid → 归一化 0～1 的屏幕坐标，存档带着；旧档没有就自动从左下角铺开），
 **地上的位置只是样子**：不占格、不碰撞、不参与任何规则，下面这条理由原样成立。
 134：东西落到地上有个**落地动画**，同样只是样子 —— `GroundLayer` 记着见过的 uid，多出来的从起点落到落点（缓出 + 小弹跳，0.28 秒）；
-起点 `ItemStash.landing_from` 是界面层写的运行时字典（不存档）：拖拽放手就地落下、顶出从原来那一格、程序放进来的从最近的面板边缘；读档 / 回到存过东西的点不播。
+起点 `ItemStash.landing_from` 是界面层写的运行时字典（不存档）：拖拽放手 = 松手时残影的左上角、顶出 / 全部拾取从原来那一格、地上单击放回原处就地（`true`）、没写的从落点上方竖直落下；读档 / 回到存过东西的点不播。
+162 补充二（作者定「固定朝下方掉落，且有重心系统……模拟重力加速度」）：给了起点像素的**竖直往下掉** —— `GroundLayer.spot_below` 让重心 x 不变，落到 `floor_under`（这一列往下第一个登记面板的上沿，没有就是屏幕底）上，
+朝向转到 `ItemShape.rest_rotation`（重心离底边最近；并列取更宽、再并列不转），落点与朝向**立刻写成终态**（`set_spot`、`inst.rotation`），动画只是样子：
+重力 `g = LAND_G（2）× 屏高 / 秒²`，密度 ≥ 2 的「沉」不封顶、触地按速度弹 2～6 像素，其余「飘」末速度 0.5 屏高 / 秒（包 0.35）、弹 6、左右摆 ±3（包 ±5）；途中画起手朝向的格子、绕重心转（转角 = 总角 × 落了几成²），触地正好转到位。
+托在面板上沿的记在 `_support`，面板 `unreserve` 时从现在的位置再掉一次。地上的件之间不堆叠（允许重叠）。半空中照样能抓（按此刻的位置、缩放、转角反推格子）。
 **双击地上的东西**：有面板接地上就是面板的事（放得下进棋盘、放不下提示）；没有面板时导演转给最上面那一屏的 `GameScreen.ground_double_clicked` ——
 地图 / 事件屏「进包 + 打开背包」，放不下就只开背包、面板里提示；没有背包按钮的屏不接。
 
@@ -4162,6 +4166,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.98 | 2026-10-13 | **掉落改重力 + 重心**（报告 162 补充二，作者定，待定按推荐 1A 2A 3B 4A；改 3.4）：拖出 / 掉出的东西竖直落到正下方第一个支撑（面板上沿或屏底，`GroundLayer.floor_under / spot_below`），起点 = 松手时残影位置（`DragLayer._release_px`；162 主体「手动拖出从原格起飞」作废，地上单击放回原处仍就地）；重力 `LAND_G` × 屏高、密度定末速度与弹（`land_profile` 不再给时长），`ItemShape.center_of_mass / rest_rotation`，途中绕重心转到最稳朝向，落点与朝向立刻是终态；`_support` 记托着的面板，关了再掉；没起点的从落点上方竖直落（不再从面板边斜飞） |
 | v2.97 | 2026-10-13 | **字色模板 + 顶端栏长条石板**（报告 169，作者定，待定按推荐 1A 2B 3A 4A；改 8.8）：`data/authoring/ui/text_colors.json` 每个颜色名写深底 / 浅底两版，`UiPalette.style_color / rarity_color / damage_color / resource_color(…, tone)`、`toned`、`for_tone`；`apply_tone` 打 `tone` 元数据、`UiTheme.tone_at` 往上找，`rich_block` / 语义色标签进树按底换版，`set_rich`、`refresh_tones`；`slab_bbcode` 删了；`INK*` 读模板；`TextColorCheck` 进内容校验；启动器「配色」页。同版：顶端栏换专用长条板边 `slab_bar`，`SlabStyle.body_inset` 四边分开、去掉 `top_cut`，`HudHost.BAR_HEIGHT` 64 → 88、栏里的组在板面上居中（作者「凹槽没有和石板位置对齐」） |
 | v2.96 | 2026-10-13 | **战斗回放控件换图**（报告 167 §2.3，作者定 D 版：符石按键 + 铜章进度条）：`assets/ui/replay/` 七个键各三态（44 × 44，本体 40 在左上）+ 槽 / 亮段九宫格（边距 [16,0,16,0]）+ 游标（pivot [8,14]）+ 两色刻度；`IconButton.make_art / set_art`（整颗按钮是图，新变体 `ButtonArt` 各态无底，缺图写字走 `ButtonIcon`）；`BattleView` 播放 / 暂停 / 重播、倍速 Ⅰ / Ⅱ / Ⅳ、跳过换成它，常驻说明挪进播放键悬浮窗（`PLAY_HINT`）；`ReplayTimeline` 有图走贴图（两端留符石宽、亮段按游标裁、倒下刻度 1.5 倍、没播到的 35%），缺图照画线 |
 | v2.95 | 2026-10-13 | **打包字体**（报告 168，作者定，待定按推荐；加 8.10）：`assets/fonts/` 四个裁字子集（文楷 Regular / Medium、朱雀仿宋、马善政）+ 授权 + `charset.txt`；`UiPalette` 四个字体函数改 `FontVariation` 带后备；主题 `LabelTitle / LabelOverlayTitle` 换仿宋、新变体 `LabelDisplay`（马善政 40 号）用在主菜单游戏名、开局第三页章节名、开场事件章节名、宝箱屏说明；`tools/font_charset.py`、`tools/subset_fonts.sh`、`FontCoverage` 覆盖检查（内容校验与测试同一段）；文楷子集按授权改名 PackSDC Kai。8.9 补上战斗屏教程（166 补充二） |

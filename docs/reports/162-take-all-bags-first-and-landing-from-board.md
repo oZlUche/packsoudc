@@ -164,3 +164,14 @@
 | `ui/inventory/container_view.gd` / `InventoryView` 画单件时支持绕重心的角度（只地上层用） | 2.3 |
 | `tests/ui/test_ground_landing.gd`、`tests/inventory/test_item_shape.gd` | 3 |
 | `docs/architecture.md` 地上那一节（128 / 134 的落点与动画描述） | |
+
+### 落地记录（补充二）
+
+- 待定全按推荐：补 1 A（落在面板上沿，关了再掉）、补 2 A（转到重心最低的朝向）、补 3 B（`LAND_G = 2.0` 屏高 / 秒²）、补 4 A（不堆叠）。
+- 落点与朝向在发现新件那一拍就写成终态（`set_spot`、`inst.rotation = rest`），存档里不会存半空的样子；动画只画「起手朝向的格子绕重心转 + 重心沿重力落下」。方案写的是「触地后写」，效果一样，少一种中间态。
+- 下落不是逐帧积分，是按时间直接算（`_fall_progress`：先 ½gt²，到末速度后匀速），所以同一件不管帧率怎样，触地时刻都一样，测试也好卡点。`landing_sec` = 触地时刻 + 弹一下（0.18 秒）。
+- 补充一的「时长公式」退了：`land_profile` 只给沉 / 飘、末速度、弹、摆、起手放大。贴着地（落差不到 1 像素）或就地放下的按 `LAND_PLACE_SEC` 0.2 秒做缩放与翻转，再弹一下。
+- 地上单击一下（拿起、没挪、没转、又放下）仍算就地落下，不往下掉 —— 否则紧跟的双击会落空（反馈修过的那条）。挪了 4 像素以上才算拖出去。
+- 拖出去时转过（R）的朝向现在会带到地上（以前地上照旧用拿起前的朝向），落下途中再按重心转。
+- 没写起点的（核心层自己找空处的）从落点正上方 60 像素竖直落下；「从最近的面板边缘斜着飞出来」那条删了。
+- 测试：`tests/inventory/test_ground_landing.gd`（`run_gravity_profile`、`frame_fall_onto_panels`、`run_rest_rotation`、`run_fall_turns_to_rest`，拖出那条改成从松手处起落）。
