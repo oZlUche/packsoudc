@@ -149,6 +149,10 @@ func _backdrop(color: Color = Color(0, 0, 0, 0)) -> ColorRect:
 	if themed:
 		_bg_rect = bg
 		UiTheme.dress_backdrop(bg)     # 157 补：有石板图铺石板（底色设置给石板染色）
+		# 浅色大理石底：直接写在底上的字换墨色（作者定：浅底黑字）；面板自己按自己的深浅再挂
+		var t := UiTheme.text_theme(UiTheme.backdrop_tone())
+		if t != null and theme == null:
+			theme = t
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_STOP     # 叠层要挡住底下的地图，不然点穿了就走了一步
 	add_child(bg)

@@ -159,5 +159,12 @@
 - 战前准备屏：开关开着就不建「溜走」；`slip_battle / slip_reason`、`GameFlow.slip_battle` 留着。
 - 开局屏：`CharacterDef.skill_lines / skills_summary` 只列被动；百科「三个角色」删掉主动技能那几句（「技能（两个被动）」）。
 - 美术清单删掉两张技能图标；`IconButton` 的角标留作可选能力。
-- 测试：`test_hud_150.gd`（技能默认藏、右键放出来有按钮）、`test_map_screen_166.gd`（安德烈乌斯战前屏没有溜走、脱身还在）、`test_characters_136.gd` / `test_character_skills.gd`（只列被动）。
+- 测试：`test_hud_150.gd`（技能默认藏、右键放出来有按钮）、`test_map_screen_166.gd`（安德烈乌斯战前屏没有溜走、脱身还在）、`test_characters_136.gd` / `test_character_skills.gd`（只列被动）。- 序章一开场事件（`tut_intro`）里讲技能按钮的那一段也删了。
+
+### 落地记录（美术交图，2026-10-13）
+
+- 接进仓库：`assets/ui/hud/bar.png + json`（大理石顶端栏，tone light）、`icon_bag.png`、`icon_lens.png`、`coin.png`（36 px，金币组件跟着放大到 36）、`assets/ui/faith/*.png`（七枚信仰章）、`assets/ui/coach/arrow.png`、`assets/ui/belt_slot.png`。两张技能图标按补充一不接。
+- 第十四条：石板六张（`bg_stone`、`panel_stone`、`panel_inset`、`panel_hud`、`frame_stone`、`nameplate_stone`）原名覆盖成浅色大理石，json 的 tone 全是 light；面板与叠层框按 json 自动挂墨色字。
+- 整屏底也按 json 定深浅（`UiTheme.backdrop_tone`）：底屏（主菜单、开局、结算、设置、存档位）铺了浅色大理石时，屏上直接写在底上的字挂墨色字主题。
+- 测试：`test_screens_157.gd` 的深浅断言跟着改成浅（石板框挂墨色字、标题墨字）。
 

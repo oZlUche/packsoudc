@@ -334,8 +334,9 @@ static func run_tones(t: TestCase) -> void:
 			var tone := String(UiTheme.art_meta(art_name).get("tone", ""))
 			t.check(tone == "dark" or tone == "light", "底图 %s 的 json 写了 tone（%s）" % [art_name, tone])
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_TOOLTIP), UiTheme.TONE_LIGHT, "悬浮窗底用美术的亮纸：浅")
-	t.eq(UiTheme.tone_of(UiTheme.PANEL_OVERLAY), UiTheme.TONE_DARK, "石板框：深")
-	t.eq(UiTheme.tone_of(UiTheme.PANEL_DARK), UiTheme.TONE_DARK, "平面底：深")
+	# 美术 2026-10-13（作者：「石板更倾向于大理石那种颜色」）：石板一组换成浅色大理石，json 的 tone 全改 light
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_OVERLAY), UiTheme.TONE_LIGHT, "石板框（大理石）：浅")
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_DARK), UiTheme.TONE_LIGHT, "平面底（大理石）：浅")
 	t.check(UiTheme.current().get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is StyleBoxTexture, "assets/ui 里有纸：悬浮窗底是九宫格")
 	var saved := UiTheme.asset_root
 	UiTheme.asset_root = NOWHERE
@@ -380,8 +381,10 @@ static func frame_tone_tooltip(t: TestCase, root: Window) -> void:
 	var frame := OverlayFrame.new()
 	root.add_child(frame)
 	frame.set_title("标题")
-	t.eq(frame.theme, null, "石板框深底：不挂字色主题")
-	t.check(frame.title_label.get_theme_color("font_color", UiTheme.LABEL_OVERLAY_TITLE).get_luminance() > 0.5, "石板框标题浅色字")
+	# 166 补充（美术 2026-10-13）：石板换成浅色大理石，tone 跟着图旁 json 走 —— 深底不挂字色主题、浅字；浅底挂墨色字主题、墨字
+	var light := UiTheme.tone_of(UiTheme.PANEL_OVERLAY) == UiTheme.TONE_LIGHT
+	t.eq(frame.theme, UiTheme.text_theme(UiTheme.TONE_LIGHT) if light else null, "石板框%s" % ["浅底：挂墨色字主题" if light else "深底：不挂字色主题"])
+	t.eq(frame.title_label.get_theme_color("font_color", UiTheme.LABEL_OVERLAY_TITLE).get_luminance() > 0.5, not light, "石板框标题字色跟着深浅")
 	frame.free()
 	tip.free()
 
@@ -400,8 +403,9 @@ static func run_stone(t: TestCase) -> void:
 		t.check(box != null and box.texture != null, "%s 是石板九宫格" % pair[0])
 		if box != null:
 			t.eq(box.content_margin_left, float(pair[1]), "%s 内边距照旧 %d（换皮不改排版）" % [pair[0], pair[1]])
-		t.eq(UiTheme.tone_of(pair[0]), UiTheme.TONE_DARK, "%s 深底" % pair[0])
-	t.eq(String(UiTheme.art_meta(UiTheme.ART_BG).get("tone", "")), "dark", "整屏底的 json 写了深")
+		t.eq(UiTheme.tone_of(pair[0]), UiTheme.TONE_LIGHT, "%s 大理石浅底" % pair[0])
+	t.eq(String(UiTheme.art_meta(UiTheme.ART_BG).get("tone", "")), "light", "整屏底（大理石）的 json 写了浅")
+	t.eq(UiTheme.backdrop_tone(), UiTheme.TONE_LIGHT, "整屏底的深浅读 json：浅（底屏直接写在底上的字挂墨色字主题）")
 	t.check(bool(UiTheme.art_meta(UiTheme.ART_BG).get("tile", false)), "整屏底平铺")
 	var rect := ColorRect.new()
 	var tile := UiTheme.dress_backdrop(rect)
