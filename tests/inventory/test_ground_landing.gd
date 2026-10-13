@@ -37,11 +37,12 @@ static func run_new_items_land(t: TestCase) -> void:
 	t.check(absf(float(start["scale"]) - GroundLayer.LAND_SCALE) < 0.001 and absf(float(start["alpha"]) - GroundLayer.LAND_ALPHA) < 0.001, "起手放大、半透明")
 	t.eq(ground.uid_at_local(target + Vector2.ONE * 10), -1, "落点上还没东西（它在上方 %.0f 像素）" % GroundLayer.LAND_DROP)
 	t.eq(ground.uid_at_local((start["pos"] as Vector2) + Vector2.ONE * InventoryView.CELL * 0.5), a.uid, "162：半空中的照样接鼠标（按此刻画在哪）")
-	ground.advance_landing(GroundLayer.LAND_SEC * 0.5)
+	var sec := ground.landing_sec(a.uid)
+	ground.advance_landing(sec * 0.5)
 	var mid := ground.landing_pose(a.uid)
 	t.check((mid["pos"] as Vector2).y > (start["pos"] as Vector2).y and (mid["pos"] as Vector2).y <= target.y + 0.01, "半程：往下落了、还没过落点")
-	ground.advance_landing(GroundLayer.LAND_SEC)
-	t.check(not ground.is_landing(a.uid), "播完删掉（%.2f 秒）" % GroundLayer.LAND_SEC)
+	ground.advance_landing(sec)
+	t.check(not ground.is_landing(a.uid), "播完删掉（%.2f 秒）" % sec)
 	t.eq(ground.uid_at_local(target + Vector2.ONE * 10), a.uid, "落稳了能抓")
 	var pose := ground.landing_pose(a.uid)
 	t.check((pose["pos"] as Vector2) == target and float(pose["scale"]) == 1.0, "落稳：在落点、原大小")
@@ -63,7 +64,7 @@ static func run_new_items_land(t: TestCase) -> void:
 	t.check(not ground.is_landing(d.uid), "标了本来就在：不播")
 	t.check(stash.landing_from.is_empty(), "起点读完即删")
 	t.check(ground.landing_pose(c.uid)["hidden"], "同一拍落下的第二件排在后面（错开 %.2f 秒）" % GroundLayer.LAND_STAGGER)
-	ground.advance_landing(GroundLayer.LAND_SEC + 1.0)
+	ground.advance_landing(GroundLayer.LAND_BASE_SEC + 1.0)
 	t.check(ground.landing_uids().is_empty(), "全部落稳")
 
 	# 弹跳：最后四分之一高过落点再落回
@@ -71,7 +72,7 @@ static func run_new_items_land(t: TestCase) -> void:
 	stash.insert(e, -1, Vector2(0.4, 0.8))
 	stash.landing_from[e.uid] = true
 	ground._scan()
-	ground.advance_landing(GroundLayer.LAND_SEC * 0.875)
+	ground.advance_landing(ground.landing_sec(e.uid) * 0.875)
 	t.check((ground.landing_pose(e.uid)["pos"] as Vector2).y < ground.item_rect(e.uid).position.y - 1.0, "末尾弹起一下")
 
 	# 换一片地：基线，不播
@@ -80,6 +81,71 @@ static func run_new_items_land(t: TestCase) -> void:
 	ground.stash = other
 	ground._scan()
 	t.check(ground.landing_uids().is_empty(), "换一片地（回到另一个点）：不播")
+	ground.free()
+
+
+static func run_density_profile(t: TestCase) -> void:
+	t.begin("162 补充一 · 下坠时长跟密度（每格几重）走：重物最快、包最慢；石以上「沉」（缓入、不摆），其余「飘」（缓出、左右摆）")
+	var bag := G._def(&"t_bag", ["11"])
+	bag.is_bag = true
+	var cloth := G._def(&"t_cloth", ["11"])
+	var stone := G._def(&"t_stone", ["1"])
+	stone.tags = [&"stone"] as Array[StringName]
+	var metal := G._def(&"t_metal", ["1"])
+	metal.tags = [&"metal"] as Array[StringName]
+	var heavy := G._def(&"t_heavy", ["1"])
+	heavy.tags = [&"heavy"] as Array[StringName]
+	var secs := {}
+	for d in [bag, cloth, stone, metal, heavy]:
+		secs[d.id] = float(GroundLayer.land_profile(d)["sec"])
+	t.check(is_equal_approx(secs[&"t_bag"], 0.95) and is_equal_approx(secs[&"t_cloth"], 0.80) and is_equal_approx(secs[&"t_stone"], 0.65) and is_equal_approx(secs[&"t_metal"], 0.50) and is_equal_approx(secs[&"t_heavy"], 0.35), "包 0.95、普通 0.80、石 0.65、金属 0.50、重物 0.35：%s" % secs)
+	var odd := G._def(&"t_odd", ["1"])
+	odd.weight = 20
+	t.check(is_equal_approx(float(GroundLayer.land_profile(odd)["sec"]), GroundLayer.LAND_SEC_MIN), "写死很重的：封底 %.2f" % GroundLayer.LAND_SEC_MIN)
+	t.check(not GroundLayer.land_profile(cloth)["sink"] and GroundLayer.land_profile(stone)["sink"] and GroundLayer.land_profile(heavy)["sink"], "密度 ≥ %.0f 算沉（石起）" % GroundLayer.LAND_SINK_DENSITY)
+	t.eq(float(GroundLayer.land_profile(bag)["sway"]), GroundLayer.LAND_SWAY_BAG, "包摆得最大")
+	t.eq(float(GroundLayer.land_profile(metal)["sway"]), 0.0, "沉的不摆")
+
+	ItemInstance.reset_uid_counter()
+	var stash := ItemStash.new(2, 0)
+	var ground := _ground(stash)
+	var light := ItemInstance.create(cloth)
+	stash.insert(light, -1, Vector2(0.2, 0.5))
+	var hard := ItemInstance.create(metal)
+	stash.insert(hard, -1, Vector2(0.6, 0.5))
+	for inst in [light, hard]:
+		stash.landing_from[inst.uid] = ground.item_rect(inst.uid).position + ground.global_position - Vector2(0, 300)
+	ground._scan()
+	ground.advance_landing(GroundLayer.LAND_STAGGER)     # 第二件出队，两件都在落
+	t.check(is_equal_approx(ground.landing_sec(light.uid), 0.80), "每件记自己的时长（普通 %.2f）" % ground.landing_sec(light.uid))
+	t.check(is_equal_approx(ground.landing_sec(hard.uid), 0.50), "每件记自己的时长（金属 %.2f）" % ground.landing_sec(hard.uid))
+	# 各自走到自己时长的一半，比谁离起点更近：缓入（沉）落得慢、缓出（飘）落得快
+	var frac := func(inst: ItemInstance) -> float:
+		var a: Dictionary = ground._landing[inst.uid]
+		a["t"] = float(a["sec"]) * 0.375     # 落的那段（前 75%）的一半
+		var from: Vector2 = a["from"]
+		var to := ground.item_rect(inst.uid).position
+		return ((ground.landing_pose(inst.uid)["pos"] as Vector2).y - from.y) / (to.y - from.y)
+	var f_light: float = frac.call(light)
+	var f_hard: float = frac.call(hard)
+	t.check(f_hard < 0.5 and f_light > 0.5 and f_hard < f_light, "落的那段的中点：沉的只落了 %.2f（越落越快），飘的已落 %.2f" % [f_hard, f_light])
+	(ground._landing[light.uid] as Dictionary)["t"] = 0.80 * 0.25
+	(ground._landing[hard.uid] as Dictionary)["t"] = 0.50 * 0.25
+	var dx_light := (ground.landing_pose(light.uid)["pos"] as Vector2).x - ground.item_rect(light.uid).position.x
+	var dx_hard := (ground.landing_pose(hard.uid)["pos"] as Vector2).x - ground.item_rect(hard.uid).position.x
+	t.check(absf(dx_light - GroundLayer.LAND_SWAY) < 0.01, "飘的四分之一处摆到一边（%.1f 像素）" % dx_light)
+	t.check(absf(dx_hard) < 0.01, "沉的不摆")
+	ground.advance_landing(0.50)
+	t.check(not ground.is_landing(hard.uid) and ground.is_landing(light.uid), "到了各自的时长才删：金属落稳、普通件还在落")
+	ground.advance_landing(0.80)
+	t.check(ground.landing_uids().is_empty(), "全部落稳")
+	# 就地落下：不位移、不摆
+	var still := ItemInstance.create(cloth)
+	stash.insert(still, -1, Vector2(0.4, 0.2))
+	stash.landing_from[still.uid] = true
+	ground._scan()
+	(ground._landing[still.uid] as Dictionary)["t"] = 0.80 * 0.25
+	t.check((ground.landing_pose(still.uid)["pos"] as Vector2) == ground.item_rect(still.uid).position, "就地落下：轻物也不摆")
 	ground.free()
 
 
