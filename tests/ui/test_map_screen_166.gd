@@ -182,3 +182,37 @@ static func frame_prologue_coach(t: TestCase, root: Window) -> void:
 	t.not_null(map.coach(), "重放开了")
 	game.queue_free()
 	Support.cleanup(PREFIX)
+
+
+static func frame_prebattle_no_slip(t: TestCase, root: Window) -> void:
+	t.begin("166 补充一 · 主动技能藏着：安德烈乌斯到了战前准备屏也没有「溜走」，脱身的记账照旧")
+	var c := CS._content()
+	var andreus := CS._character(c, &"andreus")
+	var kit := GF._loadout(TestSupport.load_content("free_mode", ["loadouts"]), &"standard")
+	var found := GF._seed_with(TestSupport.load_content("free_mode", ["loadouts"]), &"battle", kit.items)
+	if andreus == null or found.is_empty():
+		t.check(false, "没有安德烈乌斯 / 找不到种子")
+		return
+	var p := Support.paths(PREFIX)
+	Support.cleanup(PREFIX)
+	var game = load(GAME).instantiate()
+	game.save_path = p["run"]
+	game.meta_path = p["meta"]
+	game.settings_path = p["settings"]
+	root.add_child(game)
+	var flow: GameFlow = game.flow
+	flow.chapters = [c.chapter] as Array[ChapterDef]
+	flow.player_baseline = CombatantBaseline.with_hp(10000.0)
+	flow.begin(c.chapter, kit, int(found["seed"]), [] as Array[int], andreus)
+	var map = game.base()
+	map.pick_spawn(int(found["entry"]))
+	map.step(int(found["next"]))
+	var pre = game.overlay()
+	t.check(pre != null and pre.screen == GameFlow.Screen.PREBATTLE, "到了战前准备屏")
+	t.not_null(flow.slip_skill(), "脱身还在角色身上（记账照旧）")
+	if pre != null:
+		t.eq(pre.get("_slip_btn") == null, RunSkills.ACTIVE_HIDDEN, "「溜走」按钮%s" % ["没建" if RunSkills.ACTIVE_HIDDEN else "在"])
+	flow.to_main_menu()
+	game.queue_free()
+	Support.cleanup(PREFIX)
+

@@ -460,6 +460,14 @@ static func backdrop_art() -> Texture2D:
 	return art(ART_BG)
 
 
+## 整屏底的深浅：有石板图看它的 json（美术 2026-10-13 换成浅色大理石 = light），没图是纯色深底
+static func backdrop_tone() -> StringName:
+	if backdrop_art() == null:
+		return TONE_DARK
+	var t := StringName(String(art_meta(ART_BG).get("tone", "")))
+	return t if t == TONE_LIGHT else TONE_DARK
+
+
 ## 石板底按设置里挑的底色染一点（091 的底色设置照旧有用）：默认那档是原色，别的档按和默认的比例乘上去
 static func backdrop_tint() -> Color:
 	var base: Color = UiPalette.theme_of(UiPalette.BG_DEFAULT).get("color", UiPalette.BG_THEMES[0]["color"])

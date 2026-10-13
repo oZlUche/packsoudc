@@ -71,7 +71,9 @@ static func run_pipeline(t: TestCase) -> void:
 	t.eq(_active(back).size(), 2, "两个有主动一击（突击、躲避），眼力是被动")
 	var ctx := _expected(back)
 	t.eq([ctx.scout_range, ctx.sense_mult, ctx.flee_bonus, ctx.free_losses, float(ctx.stat_bonus.get(&"max_hp", 0.0))], [3.0, 0.5, 0.25, 1, 20.0], "被动全编进上下文")
-	t.check(back.skills_summary().contains("眼力") and back.skills_summary().contains("突击") and back.skills_summary().contains("30%"), "summary：%s" % back.skills_summary())
+	t.check(back.skills_summary().contains("眼力"), "summary 有被动：%s" % back.skills_summary())
+	# 166 补充一：主动技能藏着时一句话里不提主动的（突击）
+	t.eq(back.skills_summary().contains("突击") and back.skills_summary().contains("30%"), not RunSkills.ACTIVE_HIDDEN, "summary 里的主动：%s" % back.skills_summary())
 	t.eq((back.skills[1] as RunSkill).uses, 1, "次数是字段")
 
 	var combat_type: StringName = EffectRegistry.COMBAT_EFFECTS.keys()[0]

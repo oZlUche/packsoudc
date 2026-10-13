@@ -1,7 +1,7 @@
-## 150：货币。166（作者定）：左边一枚金币（`assets/ui/hud/coin.png`，24 px；缺图画一个描边金圆）+ 数字，不再写「货币」两个字；悬浮窗写「货币」
+## 150：货币。166（作者定）：左边一枚金币（`assets/ui/hud/coin.png`，36 px，和顶端栏数字同高（美术 2026-10-13 放大）；缺图画一个描边金圆）+ 数字，不再写「货币」两个字；悬浮窗写「货币」
 extends HudWidget
 
-const COIN := 24.0
+const COIN := 36.0
 const COIN_ART := "res://assets/ui/hud/coin.png"
 
 var coin: HudIcon

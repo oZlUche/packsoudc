@@ -5,6 +5,10 @@
 class_name RunSkills
 extends RefCounted
 
+## 166 补充一（作者定）：角色的主动技能对玩家藏起来 —— 地图屏默认布局不放技能按钮、战前屏不建「溜走」、角色卡与说明只列被动。
+## 记账、存档、[method GameFlow.use_skill] 都照旧；日后要放出来翻这一处
+const ACTIVE_HIDDEN := true
+
 signal changed()
 
 var run: RunState = null

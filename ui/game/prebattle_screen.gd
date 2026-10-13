@@ -82,9 +82,9 @@ func open(payload: Dictionary) -> void:
 			var pb := _button(text, func(): flow.smite(), 14)
 			pb.tooltip_text = perk.describe()
 			buttons.add_child(pb)
-	# 136：脱身（安德烈乌斯）：这一场不打
+	# 136：脱身（安德烈乌斯）：这一场不打。166 补充一：主动技能藏着时不建
 	var slip := flow.slip_skill()
-	if slip != null:
+	if slip != null and not RunSkills.ACTIVE_HIDDEN:
 		_slip_btn = _button("", func(): slip_battle(), 14)
 		_slip_btn.tooltip_text = slip.describe()
 		buttons.add_child(_slip_btn)
