@@ -116,3 +116,18 @@
 | `data/authoring/coach/prologue_map.json`（新）、`data/authoring/chapters/prologue.json`（`coach`）、`data/authoring/ui_layouts/map.json` | 4 / 2.2 |
 | `tests/ui/…`、`tests/run/test_game_flow.gd` | 4.1 |
 | `docs/architecture.md` 8.7（读数组件）、8.9（新：教程遮罩） | |
+
+## 落地记录（2026-10-13）
+
+五项待定全按推荐 A（进点前 + 回地图各存一次、技能进栏右槽、图例只列图上有的、每个存档位放一次可重放、圆槽 72）。
+
+- 顶端栏：`hud_bar` 组件（`PanelHudBar` 变体，`PANEL_ART` 指 `hud/bar`，缺图半透明深底）+ 三个栏槽锚点；`HudHost` 先定栏高（至少 64），栏槽在栏里摆，再摆右边与其余；`top_inset / bottom_inset / content_inset / bar_height / rect_of`。布局版本 4。
+- 按钮：`IconButton` —— 背包（B）、放大镜（N，原「回到这个点」）、主动技能（次数角标）；撤离按钮、「存档并回主菜单」删掉，暂停菜单改「回主菜单」（照旧先存）。
+- 自动存档：`GameFlow.step_to` 在 `run.step_to` 与录像之后、`_flush` 之前存；`_flush` 回地图前再存。
+- 调试台：`dock` 在栏下面（栏高变了跟着挪），悬浮盖地图；提示行、「地上 N 件」、日志都在里面；`ground_count_widget.gd` 删掉。
+- 地图：`MapView` 满幅，`content_inset` 只管安全区（居中、适配、聚焦）；预览两行字浮在底部正中。
+- 金币 `HudIcon`、信仰图标（没信仰留空槽，缺图退回老的字）、左下 `legend` 图例（`MapNodeStyle.NAMES`）、腰带圆槽 72。
+- 教程：`CoachOverlay` + `data/authoring/coach/prologue_map.json`（体力、货币、背包、放大镜）；`ChapterDef.coach`、`MetaState.coach_seen`；开场事件、规则卡、暂停压着都不放，地图露出来才放；调试台「重放教程」。
+- 美术：所有图都是占位接口（缺图写字 / 画圆 / 折线箭头），按第 5 节清单交图后放进对应路径即可，不用改代码。
+- 测试：`tests/ui/test_hud_150.gd`（顶端栏几何、栏槽、地图满幅、调试台内容）、`tests/ui/test_map_screen_166.gd`（新：图标按钮、图例、自动存档、教程数据与遮罩、序章开场放一次）、`test_belt_slots_160.gd`、`test_author_090.gd`。
+

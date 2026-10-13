@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.90 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.91 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3430,7 +3430,7 @@ func player_spec() -> CombatantSpec …
 - `belt`：腰带组件（160 起是一排圆槽 `BeltSlots`，默认锚右下角 `HudLayout.BELT_OFFSET`，布局版本 3）。
   - 没有拖拽（随身技能不是道具）；双击一个圆用一个，走 `GameFlow.use_belt`。
   - 这一局没有腰带模块就空着。
-- 默认布局把这些按原来的顺序竖排在右上（`HudLayout.COLUMN`），日志贴右下。
+- 默认布局把这些按原来的顺序竖排在右上（`HudLayout.COLUMN`），日志贴右下（166 起改成顶端栏，见下）。
 - 锚在右边的（`top_right` / `right` / `bottom_right`）算「右边那一条」：
   - 先按整块摆，占多宽就是 `right_inset()`，地图往左让这么多。
   - 其余的在剩下那块里对齐，所以顶上那排读数仍在地图正上方居中。
@@ -3442,6 +3442,18 @@ func player_spec() -> CombatantSpec …
 - `vitality` 画成心：上限几点几颗，前「当前」颗红（`UiPalette.HP`），其余黑（`HEART_LOST`）。
   - 一行最多 10 颗，多了折行；大小两档。
   - 停上去的提示仍是「体力 当前/上限」。
+
+**166（作者定）：顶端栏、图标按钮、图例**：
+- 读数层顶上横一条顶端栏：组件 `hud_bar`（`PanelHudBar` 变体，底图 `assets/ui/hud/bar.png`，缺图半透明深底 + 下边一条线），它本身也是布局里的一件，藏起来就退回老的九宫顶边。
+  - 布局多三个锚点 `bar_left / bar_center / bar_right`（`HudLayout.BAR_ANCHORS`），栏槽里的件不用偏移，一槽一组，组里照样按 `line` 分行；栏高 = 最高的那组 + 上下留白，至少 `HudHost.BAR_HEIGHT`（64）。
+  - 默认：左槽第一行体力 / 货币 / 信仰（200% 档），第二行负重 / 增益 / 侵蚀（小字）；中槽倒计时（大档）；右槽 `HudLayout.BAR_RIGHT` = 背包、放大镜、技能、调试台箭头。左下路线与图例（`legend`），右下腰带。布局版本 4，旧文件回默认。
+  - 摆读数时松在栏里 = 按横向三等分进左 / 中 / 右槽。
+- `extract_button`、`menu_button`、`log`、`ground_count` 不再是组件：撤离只在撤离点的事件里选；日志、「地上 N 件」和提示行都在调试台里（调试台 `dock` 在栏下面，悬浮盖着地图，不再挤地图的右边）。
+- 地图满幅：`MapView` 铺满整屏，`content_inset`（宿主的 `content_inset()`：上 = 栏与顶上几组的底，下 = 左下 / 右下几组的顶）只影响居中、适配与聚焦用的安全区，剩下不到一半就退回整块。
+- `IconButton`（`ui/widgets/`）：48 × 48，图 `assets/ui/hud/icon_<id>.png`，缺图写字；悬浮窗「名字（快捷键）+ 一句说明」；右上快捷键小字、右下次数角标。背包 B、放大镜 N、主动技能 `skill_<id>`（角标 = 这一局还能用几次）。
+- 货币只写数字，左边一枚金币（`HudIcon`，`assets/ui/hud/coin.png`，缺图画金色圆）；信仰有就一枚图标（`assets/ui/faith/<id>.png`）+「Lv.n　当前 / 下一级」，缺图退回老的字，没信仰留一个空槽。
+- 图例只列这张图上有的节点类型（揭开了的随机点按揭开的算），顺序按 `MapNodeStyle.STYLES`，名字是 `MapNodeStyle.NAMES` 的短名，图标与地图上那枚一样。
+- 自动存档：`GameFlow.step_to` 人到了新点、事件还没给玩家看就存一次；看完叠层回到地图（`_flush` 最后）再存一次。暂停菜单只留「回主菜单」（照旧先存）。
 
 ### 8.8 叠层的石板框、换屏、光标（157）
 
@@ -3469,6 +3481,13 @@ func player_spec() -> CombatantSpec …
 等比盖满、裁两边）画在路网底下；浅纸上前景 / 暗色字过 `UiTheme.ink_color`。现配：序章一遗迹、序章二北方林地、序章三诅咒之地深处（深）、自由模式帝国营地。
 
 光标：`UiCursor.apply(skin)` 启动时（和设置里换材质时）按 `GameSettings.cursor_skin` 从 `cursors/<材质>/` 取图换上（铠甲手套秘银 / 铁 / 皮革，默认秘银，热点 (2, 2)）；拖拽层拿起是「拖动」、对准了按 `DragLayer.drop_ok_at` 切「可放 / 不可放」、放下还原。
+
+### 8.9 静态教程遮罩（166）
+
+`CoachOverlay`（`ui/widgets/`）：整屏一层阴影（吞掉所有点击），目标周围挖洞（包围盒外扩 `HOLE_PAD` 8，洞边一圈高光），一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右按方向转；缺图画折线）从洞外指过来，箭尾一块羊皮纸（`PanelTooltip`）写说明。点任意处 / 按任意键下一步，最后一步收掉、发 `finished`。
+
+- 步骤是数据：`data/authoring/coach/<id>.json` = `{"id", "steps": [{"target": 读数部件 id, "text"}]}`，`CoachOverlay.problems` 校验目标是登记过的部件、写了字。目标位置每一步现问（地图屏给 `HudHost.rect_of`），所以玩家挪了读数，教程跟着走。
+- 章节写 `coach`（`ChapterDef`），序章一 = `prologue_map`（体力、货币、背包、放大镜四步）。地图第一次露出来（没有事件 / 规则卡 / 暂停压着、屏在地图上）时放一次，放过记进 `MetaState.coach_seen`（跟着存档位）；调试台有「重放教程」。
 
 ## 9. 套装与跨域效果
 
@@ -4120,6 +4139,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.91 | 2026-10-13 | **地图屏顶端栏与序章教程**（报告 166，作者定，待定按推荐；改 8.7，新 8.9）：读数层顶上一条 `hud_bar` 顶端栏（`PanelHudBar` 变体，缺图半透明深底），布局加三个栏槽锚点 `bar_left / bar_center / bar_right`（布局版本 4）；背包 / 放大镜 / 主动技能成了 `IconButton`（缺图写字、快捷键小字、次数角标）；撤离按钮与「存档并回主菜单」删掉，`GameFlow.step_to` 进点前、`_flush` 回地图时自动存档；日志与「地上 N 件」进调试台，调试台悬浮在栏下面盖着地图；金币与信仰图标（`HudIcon`，没信仰留空槽）；左下 `legend` 图例；腰带圆槽 72；地图满幅、按 `HudHost.content_inset()` 躲开栏与左下 / 右下；序章一 `coach` 静态教程 `CoachOverlay`（`MetaState.coach_seen` 记放过） |
 | v2.90 | 2026-10-13 | **敌人棋盘只写死相邻组合**（报告 165，作者定，待定按推荐；改 5.10）：`EnemyPlacer.auto_groups` 从道具的增益 / 受益 / 供给配对成组（`EnemyDef.combos` 可钉死），`_arrange` 组整组摆（现搭或刚体、四个朝向）、散件随机落位、重来四次后贴左上与老办法保底；`build_content` 改用它，补件与携带品也随机落位；预设图 `at` 可省、可写 `groups`，`EnemyPlacer.arrange` / `arrange_map` 开局按 `content_seed` 摆一次写回；`EnemyKit.board_of` 对没写位置的件自己找空位；序章二 / 三六个敌人删掉手写位置 |
 | v2.89 | 2026-10-12 | **仓库分页与基地三列**（报告 163 / 164，作者定，待定按推荐；改 8.2）：`Warehouse` 多页容器（每页 10 × 8、按页序自动放、只删末尾空页、存档逐页、老单块档按页切），科技构件 `warehouse_rows` → `warehouse_pages`（每级一页，`docs/techs.xlsx` 重新生成）；`WarehousePages` 竖排页签（锁着的灰显带锁、拖着停 0.4 秒切页），结算屏 / 开局第二页 / 基地共用；基地改左列竖排页签 + 左下大按钮、中列当前页（默认「家」）、右半边常驻仓库（格子按宽高取小 40 ～ 80），整屏一层拖拽、双击按当前页分派，出售 / 科技页不再自己画仓库；「家」美术套件进 `assets/ui/home/`，`UiTheme` 加 `BUTTON_HOME(_PRIMARY)`、`PANEL_HOME_BOX`、`PANEL_SHELF`、`dress_home_backdrop` |
 | v2.88 | 2026-10-12 | **腰带改右下圆槽、随身改成可堆叠的一次性技能**（报告 160 与补充一；改 9.x 模块表与 150 组件）：内容种类 `belt_skills`（`BeltSkillDef`），删道具 `smoke_bomb / aid_pack` 与标签【随身】；`BeltModule` 存 id → 个数；来源 `grant_belt` 事件后果、商店随身排、科技 `tech_belt_grant`、`starting_belt`；`BeltSlots` 圆槽组件默认右下角（`HudLayout.VERSION` 3），背包面板去掉腰带 |

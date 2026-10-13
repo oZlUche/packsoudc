@@ -43,6 +43,8 @@ var boss_kills: int = 0
 var battles_won: int = 0
 ## 091：看过「本图规则」卡的章节 id（第一次进图弹，之后不弹）
 var seen_rules: Array[StringName] = []
+## 166：看过的界面教程（[CoachOverlay] 的步骤 id，序章是 `prologue_map`）—— 每个存档位放一次，调试台里能重放
+var coach_seen: Array[String] = []
 ## 091（计划书阶段 3）：剧情 / 事件的**局外旗标**（名字 → 数）。事件的条件 `has_flag` 看它、后果 `set_flag` 立它；跟局外存档。
 ## 「剧情推进到哪」「见过谁」就记在这里，营地对话、章节开场按它挑话
 var flags: Dictionary = {}
@@ -472,6 +474,7 @@ func to_dict() -> Dictionary:
 		"chapter_extractions": chapter_extractions.duplicate(),
 		"boss_kills": boss_kills, "battles_won": battles_won,
 		"seen_rules": _names_of(seen_rules),
+		"coach_seen": coach_seen.duplicate(),
 		"flags": flags.duplicate(),
 		"tech_levels": tech_levels.duplicate(),
 		"tech_deposits": tech_deposits.duplicate(true),
@@ -546,6 +549,8 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	m.battles_won = int(d.get("battles_won", 0))
 	for id in d.get("seen_rules", []):
 		m.seen_rules.append(StringName(String(id)))
+	for id in d.get("coach_seen", []):
+		m.coach_seen.append(String(id))
 	for key in d.get("flags", {}):
 		m.flags[String(key)] = int((d["flags"] as Dictionary)[key])
 	for row in d.get("history", []):

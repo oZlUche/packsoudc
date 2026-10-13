@@ -70,6 +70,9 @@ extends Resource
 @export var intro_event: StringName = &""
 ## 091（作者定 10.2 第 3 条）：这一章的「本图规则」卡（≤ 3 条）—— 第一次进图弹一页（局外记住看过了），暂停菜单里能再看。空 = 不弹
 @export var rules: Array[String] = []
+## 166（作者定）：这一章开头的界面教程（`data/authoring/coach/<id>.json` 的步骤：阴影里挖洞指着顶端栏的读数，点哪都下一步）。
+## 第一次露出地图时放一次（[member MetaState.coach_seen]），调试台能重放。空 = 不放；序章一是 `prologue_map`
+@export var coach: StringName = &""
 
 @export_group("一局的模块（101）")
 ## 101 第 0 刀：这一局装哪些**本体模块**（[RunModule] 构件，各带参数）。空 = 用默认清单（[method RunModules.standard]）。

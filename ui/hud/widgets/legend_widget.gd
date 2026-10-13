@@ -1,0 +1,89 @@
+## 166（作者定）：左下角的节点图例 —— 一列「图标 + 名字」，只列**这张图上有的**节点类型（岔路口不列），顺序按 [constant MapNodeStyle.STYLES]。
+## 图标就是地图上的那一枚（155：`assets/nodes/<type>.png`，按类型色着色；缺图画圆里一个字），名字是 [constant MapNodeStyle.NAMES] 的短名
+extends HudWidget
+
+const ICON := 24.0
+const ROW_GAP := 4.0
+const TEXT_GAP := 8.0
+
+var _rows: VBoxContainer
+
+
+func _init() -> void:
+	super()
+	_text.visible = false
+	_rows = UiTheme.vbox(int(ROW_GAP))
+	_rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_rows)
+
+
+func title() -> String:
+	return "图例"
+
+
+## 图上有的类型（按表的顺序）
+func types() -> Array[StringName]:
+	var out: Array[StringName] = []
+	if run == null or run.map == null:
+		return out
+	var have := {}
+	for id in run.map.node_ids():
+		var n := run.map.get_node(id)
+		have[NodeEvents.effective_type(n)] = true     # 揭开了的随机点按揭开的算
+	for t in MapNodeStyle.STYLES:
+		if have.has(t) and MapNodeStyle.NAMES.has(t):
+			out.append(t)
+	return out
+
+
+func text_of() -> String:
+	var names: Array[String] = []
+	for t in types():
+		names.append(MapNodeStyle.name_of(t))
+	return "、".join(names)
+
+
+func refresh() -> void:
+	super()
+	if _rows == null:
+		return
+	UiTheme.clear_children(_rows)
+	if run == null:
+		return
+	for t in types():
+		var row := UiTheme.hbox(int(TEXT_GAP))
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var mark := _Mark.new()
+		mark.type = t
+		row.add_child(mark)
+		var name := Label.new()
+		name.theme_type_variation = UiTheme.LABEL_HUD
+		name.text = MapNodeStyle.name_of(t)
+		name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(name)
+		_rows.add_child(row)
+
+
+## 一枚图标：图（按类型色着色）或者圆里一个字
+class _Mark:
+	extends Control
+	var type: StringName = &""
+
+	func _init() -> void:
+		custom_minimum_size = Vector2(ICON, ICON)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var style := MapNodeStyle.of(type)
+		var col: Color = style["color"]
+		var tex := MapNodeStyle.icon(type)
+		if tex != null:
+			draw_texture_rect(tex, Rect2(Vector2.ZERO, size), false, col)
+			return
+		draw_circle(size * 0.5, ICON * 0.5, Color(col, 0.25))
+		draw_arc(size * 0.5, ICON * 0.5 - 1.0, 0.0, TAU, 24, col, 1.5)
+		var font := get_theme_default_font()
+		if font != null:
+			var g := String(style["glyph"])
+			var w := font.get_string_size(g, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+			draw_string(font, Vector2((size.x - w) * 0.5, size.y * 0.5 + 5.0), g, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, col)

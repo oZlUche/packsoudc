@@ -1,6 +1,7 @@
 ## 150：一屏的读数摆法 —— 每件一条 `{id, anchor, offset, line, tier, visible, debug_only}`。
 ##
-## - `anchor`：九宫锚点（[constant ANCHORS]），`offset` 相对锚点（像素）。
+## - `anchor`：九宫锚点（[constant ANCHORS]），`offset` 相对锚点（像素）；166：或者顶端栏的三个槽（[constant BAR_ANCHORS]）——
+##   排进 `hud_bar` 那条栏里（左槽贴左、中槽居中、右槽贴右，竖向居中），偏移不用。
 ## - 锚点与偏移都一样的几件是**一组**：按 `line` 分行（同一行按列表顺序横排，行与行往下排），整组按锚点对齐 ——
 ##   「倒计时在最上一行、读数一排在它下面」就是同一组的第 0 行与第 1 行；没内容的行收起来，下面的往上补。
 ##   拖开的一件拿到自己的偏移，就自成一组。
@@ -17,10 +18,12 @@ const ANCHORS := {
 	"left": Vector2(0, 0.5), "center": Vector2(0.5, 0.5), "right": Vector2(1, 0.5),
 	"bottom_left": Vector2(0, 1), "bottom": Vector2(0.5, 1), "bottom_right": Vector2(1, 1),
 }
+## 166：顶端栏的三个槽 → 槽里一组的对齐支点（横向：左 / 中 / 右；竖向在栏里居中）
+const BAR_ANCHORS := {"bar_left": Vector2(0, 0.5), "bar_center": Vector2(0.5, 0.5), "bar_right": Vector2(1, 0.5)}
 const TIERS := {"large": HudWidget.Tier.LARGE, "small": HudWidget.Tier.SMALL, "double": HudWidget.Tier.DOUBLE}
 ## 布局文件的版本：默认布局改了就加一，旧版本存的那份不用（回默认）。2 = 作者 2026-10-12：提示行进调试台、去掉行动点与距离、顶栏 200%；
-## 3 = 160：腰带挪到右下角
-const VERSION := 3
+## 3 = 160：腰带挪到右下角；4 = 166：顶端栏三个槽、右列取消（撤离 / 回主菜单删掉，日志与地上件数进调试台）、左下图例
+const VERSION := 4
 ## 「摆读数」松手时吸附的网格
 const GRID := 8
 const DEV_DIR := "res://data/authoring/ui_layouts"
@@ -31,36 +34,40 @@ var screen: String = "map"
 var entries: Array[Dictionary] = []
 
 
-## 150 之前地图屏的样子：倒计时顶上居中一行大字，下面一排读数；
-## 150 补 1：原来右栏里的东西（背包 / 回到这个点 / 撤离按钮、技能、回主菜单、路线、腰带）按原来的顺序竖排贴在右上，
-## 日志贴在右下（只在调试模式）
+## 166（作者定）：地图屏 = 横贯顶部的顶端栏（`hud_bar`）+ 栏里三个槽：
+## 左槽第一行体力 / 货币 / 信仰（两倍档），第二行负重 / buff / 侵蚀（小档；行动点与距离照旧默认藏）；中槽倒计时（大档）；
+## 右槽背包 / 放大镜 / 主动技能 / 调试台箭头。左下角路线在上、图例在下，右下角腰带。
+## 日志与「地上 N 件」不再是部件（在调试台里），撤离按钮与「存档并回主菜单」删了（撤离点的事件屏里撤、进点自动存档）
 static func default_for(p_screen: String) -> HudLayout:
 	var l := HudLayout.new()
 	l.screen = p_screen
 	if p_screen == "map":
-		l.entries.append(entry(&"countdown", "top", Vector2(0, 0), 0, "large"))
-		# 作者 2026-10-12：行动点与距离没有意义 —— 默认藏起来（条目与组件留着，摆读数时右键能放出来）；剩下的放大到 200%
-		for id in [&"action_points", &"distances", &"vitality", &"wallet", &"ground_count", &"encumbrance", &"faith", &"buffs", &"erosion"]:
-			l.entries.append(entry(id, "top", Vector2(0, 0), 1, "double", not (id in HIDDEN_BY_DEFAULT)))
-		var line := 0
-		for id in COLUMN:
-			l.entries.append(entry(id, "top_right", COLUMN_OFFSET, line))
-			line += 1
+		l.entries.append(entry(&"hud_bar", "top", Vector2.ZERO))
+		for id in [&"vitality", &"wallet", &"faith"]:
+			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 0, "double"))
+		for id in [&"encumbrance", &"buffs", &"erosion", &"action_points", &"distances"]:
+			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 1, "small", not (id in HIDDEN_BY_DEFAULT)))
+		l.entries.append(entry(&"countdown", "bar_center", Vector2.ZERO, 0, "large"))
+		for id in BAR_RIGHT:
+			l.entries.append(entry(id, "bar_right", Vector2.ZERO))
+		l.entries.append(entry(&"routes", "bottom_left", CORNER_OFFSET, 0))
+		l.entries.append(entry(&"legend", "bottom_left", CORNER_OFFSET, 1))
 		l.entries.append(entry(&"belt", "bottom_right", BELT_OFFSET))     # 160：腰带常驻右下角
-		l.entries.append(entry(&"log", "bottom_right", LOG_OFFSET, 0, "small", true, true))
 	return l
 
 
-## 默认布局里右上那一列（自上而下）与它离右上角的偏移（右上角是 DevNav 的按钮），日志离右下角的偏移
-## 作者 2026-10-12：提示行挪进调试台（地图屏自己放，不再是部件）
-const COLUMN: Array[StringName] = [&"dev_drawer", &"bag_button", &"reopen_button", &"extract_button",
-	&"skills", &"menu_button", &"routes"]
-const COLUMN_OFFSET := Vector2(-8, 32)
+## 166：顶端栏右槽（自左向右）
+const BAR_RIGHT: Array[StringName] = [&"bag_button", &"reopen_button", &"skills", &"dev_drawer"]
 ## 默认布局里藏着的读数
 const HIDDEN_BY_DEFAULT: Array[StringName] = [&"action_points", &"distances"]
-## 160：腰带在右下角，日志（只在调试模式）在它上面
+## 160：腰带在右下角；166：路线与图例在左下角
 const BELT_OFFSET := Vector2(-8, -8)
-const LOG_OFFSET := Vector2(-8, -96)
+const CORNER_OFFSET := Vector2(8, -8)
+
+
+## 这个锚点是不是顶端栏的槽
+static func in_bar(anchor: String) -> bool:
+	return BAR_ANCHORS.has(anchor)
 
 
 static func entry(id: StringName, anchor: String, offset: Vector2, line: int = 0, tier: String = "small", visible: bool = true,
@@ -157,8 +164,8 @@ static func from_dict(d: Dictionary, problems: Array[String] = []) -> HudLayout:
 			problems.append("%s：'%s' 写了两次" % [at, id])
 		seen[id] = true
 		var anchor := String(w.get("anchor", "top_left"))
-		if not ANCHORS.has(anchor):
-			problems.append("%s：没有这个锚点 '%s'（九宫：%s）" % [at, anchor, ", ".join(ANCHORS.keys())])
+		if not ANCHORS.has(anchor) and not BAR_ANCHORS.has(anchor):
+			problems.append("%s：没有这个锚点 '%s'（九宫：%s；顶端栏：%s）" % [at, anchor, ", ".join(ANCHORS.keys()), ", ".join(BAR_ANCHORS.keys())])
 		var tier := String(w.get("tier", "small"))
 		if not TIERS.has(tier):
 			problems.append("%s：档位只有 %s，写的是 '%s'" % [at, " / ".join(TIERS.keys()), tier])
