@@ -206,3 +206,12 @@
 | 补 1 | 什么时候放 | A 这一章第一场战斗开屏、淡入完成后；B 战前准备屏就放 | **A**：按钮都在战斗屏上 |
 | 补 2 | 放几步 | A 六步（含 buff 行与「继续」）；B 只四个回放按钮 | **A**：buff 行是悬停才有信息的，不指不会发现 |
 | 补 3 | 重放入口 | A 地图屏调试台加「重放战斗教程」；B 设置里加 | **A**：和地图教程同一处 |
+
+### 落地记录（补充二）
+
+- `ChapterDef.coach_battle`（`data/authoring/chapters/prologue.json` 填 `prologue_battle`），步骤 `data/authoring/coach/prologue_battle.json` 六步。
+- `BattleView`：`COACH_TARGETS`、`control_rect(id)`（`buffs_mine` 走 `CombatantPanel.chips_rect()`：有图标是它们的包围盒，还没上身是那一排该在的位置）、`hold()` / `release()` / `is_held()`；停着时 `play()` 重播也不偷跑。「跳过并继续」在回放层外，战斗屏用 `add_coach_target(&"next_button", _next)` 登记。
+- 战斗屏：`coach_due()` 为真就在 `open` 里立刻 `hold()`（开场一帧都不走），延迟调 `_maybe_coach`，叠层还在淡入就 0.05 秒后再看；收掉时 `release()` 并记 `coach_seen`、存局外。
+- `CoachOverlay.problems(steps, known_ids = [])`：空 = 地图屏读数部件。
+- 地图屏调试台「重放战斗教程」（`replay_battle_coach`）：从 `coach_seen` 删掉那条，下一场战斗再放。
+- 测试：`tests/ui/test_battle_coach.gd`（数据、开屏停住、六个目标都找得到、点完接着放并记在局外、看过 / 没写不放、调试台重放、hold / release 语义）。截图在项目文件 `screens/166-battle-coach/`。

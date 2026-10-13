@@ -495,8 +495,13 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	t.check(flow.meta.has_pending_board(), "结算屏上带回来的棋盘等着置入")
 	var stored: Dictionary = game.base().store_all()
 	t.check(int(stored["moved"]) > 0 and not flow.meta.has_pending_board(), "结算屏一键置入 %d 件" % stored["moved"])
+	var wh = game.base().get("_wh")
+	t.check(wh._board_box.visible and wh._board_view != null and flow.meta.board != null and flow.meta.board.item_count() == 0,
+		"作者 2026-10-13：一键置入后左边的棋盘还在（空的），仓库不跳位")
+	t.check(wh._board_label != null and wh._board_label.text.contains("已清空"), "标签写着已清空")
 	game.base().proceed()
 	t.eq(game.base().screen, GameFlow.Screen.META, "→ 局外")
+	t.eq(flow.meta.board, null, "离开结算屏：空棋盘丢了")
 	t.eq(flow.meta.warehouse.item_count(), int(stored["moved"]), "仓库里就是背出去的")
 	flow.to_main_menu()
 	game.queue_free()

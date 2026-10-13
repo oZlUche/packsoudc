@@ -228,6 +228,15 @@ func _shade(alpha: float = 0.7, centered: bool = false) -> ColorRect:
 	return shade
 
 
+## 作者 2026-10-13（地图上的规则卡、暂停、撤离确认没了底，透出地图）：底屏自己弹的小窗也是一块完整石板（[OverlayFrame]），
+## 不再用凹槽（PanelDark 157 补充三起是板里的分区，自己没有不透明的底）。标题写进标题条；各屏往 [member OverlayFrame.content] 里加
+func _modal_panel(title: String, margin: int = 16) -> OverlayFrame:
+	var frame := OverlayFrame.new(margin)
+	frame.set_title(title)
+	_reserve_ground(frame)
+	return frame
+
+
 ## 居中的一块面板（叠层用）：半透明压暗底下的地图，石板框放中间（157：[OverlayFrame]，标题写进 [method _frame_title]）。
 ## 返回框的内容区，各屏往里加东西；128：框占着地上的地方
 func _centered_panel(min_size: Vector2, margin: int = 16) -> Container:

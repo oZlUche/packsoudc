@@ -223,10 +223,16 @@ func store_all() -> Dictionary:
 			out["stuck"] = item.def.display_name
 			break
 	out["left"] = board.item_count()
-	if board.item_count() == 0:
-		board = null
+	# 作者 2026-10-13（一键置入后左边的棋盘消失、仓库跳到左边）：搬空了棋盘也留着（空的），离开结算屏才丢（[method drop_empty_board]）
 	changed.emit()
 	return out
+
+
+## 离开结算屏：带回来的棋盘搬空了就丢掉（还有东西的留着，局外屏照旧提示置入）
+func drop_empty_board() -> void:
+	if board != null and board.item_count() == 0:
+		board = null
+		changed.emit()
 
 
 ## 带回来的棋盘上剩下的不要了
@@ -461,7 +467,7 @@ func to_dict() -> Dictionary:
 	return {
 		"version": SAVE_VERSION,
 		"warehouse": warehouse.to_dict(),
-		"board": board.to_dict() if board != null else null,
+		"board": board.to_dict() if has_pending_board() else null,     # 搬空了留着显示的空棋盘不存（读回来也是没有）
 		"codex": codex.duplicate(),
 		"active_buffs": _names_of(active_buffs),
 		"unlocks": _names_of(unlocks),

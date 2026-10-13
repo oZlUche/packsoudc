@@ -21,6 +21,8 @@ signal finished
 signal speed_changed(speed: float)
 
 const SPEEDS := GameSettings.BATTLE_SPEEDS
+## 166 补充二：战斗教程能指的控件（[method control_rect] 认这些；`next_button` 由战斗屏 [method add_coach_target] 登记）
+const COACH_TARGETS: Array[StringName] = [&"timeline", &"play_button", &"speed_button", &"skip_button", &"buffs_mine", &"next_button"]
 
 var label_font: Font
 
@@ -57,6 +59,12 @@ var _report: RichTextLabel
 var _plate_slots: Array[Control] = []
 ## 157：拖时间轴之前在不在放（松手按原状态接着放）
 var _resume_after_scrub := false
+var _skip_btn: Button
+## 166 补充二：教程压着时停住（[method hold]），收掉按原状态接着放（[method release]）
+var _held := false
+var _resume_after_hold := false
+## 166 补充二：宿主登记的教程目标（id → 控件）
+var _coach_extra: Dictionary = {}
 
 
 func _ready() -> void:
@@ -74,7 +82,9 @@ func play(result: BattleResult, names: Array = []) -> void:
 		_names = [str(names[0]), str(names[1])]
 	_cursor = 0
 	_now = 0.0
-	_playing = true
+	_playing = not _held
+	if _held:
+		_resume_after_hold = true
 
 	var sides: Array = result.initial.get("sides", [])
 	for i in _panels.size():
@@ -214,6 +224,8 @@ func set_nameplate(side: int, plate: Control) -> void:
 	UiTheme.clear_children(_plate_slots[side])
 	_plate_slots[side].add_child(plate)
 	_plate_slots[side].visible = true
+	if side < _panels.size():
+		_panels[side].show_title = false     # 作者 2026-10-13：名牌上有名字了，面板顶上那行不再重复
 
 
 func timeline() -> ReplayTimeline:
@@ -277,6 +289,60 @@ func _on_scrub_ended() -> void:
 		_playing = true
 		_sync_buttons()
 	_resume_after_scrub = false
+
+
+## 166 补充二：教程开着 —— 停住（和拖时间轴一样：记下在不在放，[method _process] 不推时间）
+func hold() -> void:
+	if _held:
+		return
+	_held = true
+	_resume_after_hold = _playing
+	_playing = false
+	_sync_buttons()
+
+
+## 教程收掉：按停之前的样子接着放（播完了就不动）
+func release() -> void:
+	if not _held:
+		return
+	_held = false
+	if _resume_after_hold and _result != null and _cursor < _result.log.size():
+		_playing = true
+	_resume_after_hold = false
+	_sync_buttons()
+
+
+func is_held() -> bool:
+	return _held
+
+
+func is_playing() -> bool:
+	return _playing
+
+
+## 宿主（战斗屏）登记一个教程目标（「跳过并继续」在回放层外面）
+func add_coach_target(id: StringName, c: Control) -> void:
+	_coach_extra[id] = c
+
+
+## 166 补充二：教程目标的全局包围盒（[constant COACH_TARGETS]）；没有 / 不在屏上 = 空矩形
+func control_rect(id: StringName) -> Rect2:
+	var c: Control = null
+	match id:
+		&"timeline": c = _timeline
+		&"play_button": c = _play_btn
+		&"speed_button": c = _speed_btn
+		&"skip_button": c = _skip_btn
+		&"buffs_mine":
+			var p := panel(0)
+			if p == null or not p.is_visible_in_tree():
+				return Rect2()
+			var r := p.chips_rect()
+			return Rect2(p.get_global_transform() * r.position, r.size * p.get_global_transform().get_scale())
+		_: c = _coach_extra.get(id, null)
+	if c == null or not is_instance_valid(c) or not c.is_visible_in_tree():
+		return Rect2()
+	return c.get_global_rect()
 
 
 func toggle_play() -> void:
@@ -564,7 +630,8 @@ func _build() -> void:
 	bar.add_child(_timeline)
 	_speed_btn = UiTheme.make_button("1×", cycle_speed, UiPalette.Tier.MINOR, 13)
 	bar.add_child(_speed_btn)
-	bar.add_child(UiTheme.make_button("跳过", skip_to_end, UiPalette.Tier.MINOR, 13))
+	_skip_btn = UiTheme.make_button("跳过", skip_to_end, UiPalette.Tier.MINOR, 13)
+	bar.add_child(_skip_btn)
 	root.add_child(UiTheme.make_label("战斗中只能看、拖时间轴与跳过 —— 结果在开打那一瞬就已经算完了；停在 buff 图标上看效果", 12, UiPalette.DIM))
 	_report = UiTheme.rich_block(0, UiTheme.RICH_SMALL_SIZE)
 	_report.size_flags_horizontal = Control.SIZE_EXPAND_FILL

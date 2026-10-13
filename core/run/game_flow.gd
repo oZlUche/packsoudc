@@ -676,9 +676,9 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	for inst in taken:
 		meta.warehouse.remove(inst.uid)
 	# 090：进了游戏，上一局带回来还没清的就没了（开局屏的地上规则；不经开局屏的路一样）
-	var lost := meta.board != null
-	if lost:
-		meta.discard_board()
+	var lost := meta.has_pending_board()
+	if meta.board != null:
+		meta.discard_board()     # 搬空了的空棋盘（一键置入后留着显示的）一并丢
 	if not taken.is_empty() or character != null or lost:
 		save_meta()
 	_adopt(state)
@@ -843,6 +843,7 @@ func _sell_left_behind() -> Dictionary:
 ## 结算看完了：去局外（账在进结算屏之前就记了，见 _settle_run）；地上剩的在这一步一键出售（092）
 func finish_result() -> void:
 	_sell_left_behind()
+	meta.drop_empty_board()     # 作者 2026-10-13：结算屏里搬空的棋盘留着显示，离开时才丢
 	save_meta()
 	_go(Screen.META, {"result": result, "stash_sold": last_absorbed.get("stash_sold", {})})
 
@@ -870,7 +871,7 @@ func start_next_chapter() -> bool:
 		return false
 	_sell_left_behind()     # 092：离开结算屏就卖地上剩的
 	meta.store_all()
-	if meta.has_pending_board():
+	if meta.board != null:
 		meta.discard_board()
 	save_meta()
 	if begin_direct(next) == null:

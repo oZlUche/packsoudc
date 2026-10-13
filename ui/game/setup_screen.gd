@@ -55,6 +55,8 @@ var _characters: Array[CharacterDef] = []
 var _char_box: VBoxContainer = null
 var _warehouse_box: VBoxContainer = null
 var _chapter_btns: Array[Button] = []
+## 168：第三页顶上的章节名（大标题）
+var _chapter_title: Label = null
 var _character_btns: Array[Button] = []
 var _difficulty_btns: Array[Button] = []
 var _board_host: VBoxContainer
@@ -193,6 +195,8 @@ func _build_map_page() -> Control:
 	var mid := _vbox(8)
 	mid.custom_minimum_size.x = 380
 	row.add_child(mid)
+	_chapter_title = UiTheme.make_display("")     # 168：挑中的那一章，大标题（马善政）
+	mid.add_child(_chapter_title)
 	_desc = _wrapped("", 13, UiPalette.DIM, 380)
 	mid.add_child(_desc)
 	_scale_box = _vbox(6)
@@ -332,6 +336,8 @@ func choose_chapter(i: int) -> void:
 		return
 	chapter_index = clampi(i, 0, _chapters.size() - 1)
 	_mark_choice(_chapter_btns, chapter_index)
+	if _chapter_title != null:
+		_chapter_title.text = chapter().display_name if chapter().display_name != "" else String(chapter().id)
 	# 083：这一章能选的角色、能不能从仓库带东西，都跟着章节变。
 	# 161：章节在第三页才挑 —— 已经挑好的角色这一章也能用就留着（棋盘上带的东西不动），不能用才换回第一个
 	var keep := character()

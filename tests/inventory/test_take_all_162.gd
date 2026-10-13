@@ -106,7 +106,7 @@ static func run_grab_mid_air(t: TestCase) -> void:
 	ground._scan()
 	t.check(ground.landing_pose(q.uid)["hidden"], "第二件还在排队")
 	t.eq(ground.uid_at_local(Vector2(900, 200) + Vector2.ONE * 5), -1, "排队的不接")
-	ground.advance_landing(GroundLayer.LAND_SEC * 0.1)
+	ground.advance_landing(ground.landing_sec(a.uid) * 0.1)
 	var pose := ground.landing_pose(a.uid)
 	var r := ground.item_rect(a.uid)
 	t.check(ground.is_landing(a.uid) and (pose["pos"] as Vector2).distance_to(r.position) > 20.0, "还在半空（离落点 %.0f 像素）" % (pose["pos"] as Vector2).distance_to(r.position))

@@ -186,7 +186,9 @@ static func frame_setup_and_result(t: TestCase, root: Window) -> void:
 	t.check(panel.quick_move(panel.board_view(), k.uid), "双击带回来的那件：置入")
 	t.eq(f.meta.warehouse.page_of(k.uid), 1, "第一页满了，落第二页")
 	t.eq(shelf.current(), 1, "翻到第二页")
-	t.check(panel.quick_move(shelf.view, k.uid) == false, "带回来的背包搬空就没了：再双击仓库的不做事")
+	# 作者 2026-10-13：搬空了带回来的背包也留着（结算屏不跳位）—— 再双击仓库的那件就放回去；这里放回再置入，后面照旧
+	t.check(panel.quick_move(shelf.view, k.uid), "带回来的背包搬空了还在：再双击仓库的那件放回去")
+	t.check(panel.quick_move(panel.board_view(), k.uid), "再置入一次")
 	shelf.show_page(0)
 	var before: Array = []
 	for inst in f.meta.warehouse.page(1).items():

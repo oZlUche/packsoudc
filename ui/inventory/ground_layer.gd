@@ -21,14 +21,24 @@ extends ContainerView
 
 ## 自动推开时离面板留的空（像素）
 const PUSH_GAP := 6.0
-## 134：落地动画 —— 时长、末尾弹跳高度、没起点时从多高落下、一串落下时每件错开、最多错开几件、起始缩放与透明度
-const LAND_SEC := 0.28
-const LAND_BOUNCE := 6.0
+## 134：落地动画 —— 没起点时从多高落下、一串落下时每件错开、最多错开几件、起始透明度
 const LAND_DROP := 60.0
 const LAND_STAGGER := 0.04
 const LAND_STAGGER_MAX := 10
-const LAND_SCALE := 1.15
 const LAND_ALPHA := 0.6
+## 162 补充一：时长跟密度（每格几重）走 —— sec = clamp(基数 − 每重 × 密度, 下限, 基数)；密度到这一档算「沉」
+const LAND_BASE_SEC := 0.95
+const LAND_SEC_PER_DENSITY := 0.15
+const LAND_SEC_MIN := 0.35
+const LAND_SINK_DENSITY := 2.0
+## 「飘」：三次缓出、弹 6 像素、起手放大 1.15、途中左右摆（包摆得更大）
+const LAND_BOUNCE := 6.0
+const LAND_SCALE := 1.15
+const LAND_SWAY := 3.0
+const LAND_SWAY_BAG := 5.0
+## 「沉」：二次缓入砸下、弹 3 像素、起手只放大 1.05、不摆
+const LAND_BOUNCE_SINK := 3.0
+const LAND_SCALE_SINK := 1.05
 const COLOR_HIGHLIGHT := Color(0.42, 0.86, 0.52)
 
 ## 导演持有的那一层（没有 = null：测试、沙盒）。各屏开拖拽时拿它登记
@@ -151,7 +161,8 @@ func _scan() -> void:
 		if from is bool and not from:
 			continue     # 本来就在（读档、回到存过东西的点）
 		# 就地落下（拖拽放手、单击一下又放回）画在落点上，照样接鼠标：否则单击后紧跟的那一下双击落空
-		_landing[uid] = {"t": -LAND_STAGGER * mini(k, LAND_STAGGER_MAX), "from": _landing_start(uid, from), "in_place": from is bool}
+		var prof := land_profile(inst.def)
+		_landing[uid] = {"t": -LAND_STAGGER * mini(k, LAND_STAGGER_MAX), "from": _landing_start(uid, from), "in_place": from is bool, "sec": float(prof["sec"]), "profile": prof}
 		k += 1
 	_known = now
 	set_process(not _landing.is_empty())
@@ -190,6 +201,17 @@ func _process(delta: float) -> void:
 	advance_landing(delta)
 
 
+## 162 补充一：一件怎么落 —— {sec: 时长, sink: 沉（缓入砸下）还是飘（缓出、摆）, bounce: 弹几像素, sway: 摆幅, scale: 起手放大}
+static func land_profile(def: ItemDef) -> Dictionary:
+	var cells := def.cell_count() if def != null else 0
+	var density := float(ItemWeight.of(def)) / cells if cells > 0 else 0.0
+	var sec := clampf(LAND_BASE_SEC - LAND_SEC_PER_DENSITY * density, LAND_SEC_MIN, LAND_BASE_SEC)
+	if density >= LAND_SINK_DENSITY:
+		return {"sec": sec, "sink": true, "bounce": LAND_BOUNCE_SINK, "sway": 0.0, "scale": LAND_SCALE_SINK}
+	var bag := def != null and def.is_bag
+	return {"sec": sec, "sink": false, "bounce": LAND_BOUNCE, "sway": LAND_SWAY_BAG if bag else LAND_SWAY, "scale": LAND_SCALE}
+
+
 ## 推进落地动画 [param delta] 秒（测试直接调）
 func advance_landing(delta: float) -> void:
 	if _landing.is_empty():
@@ -198,7 +220,7 @@ func advance_landing(delta: float) -> void:
 	for uid in _landing.keys():
 		var a: Dictionary = _landing[uid]
 		a["t"] = float(a["t"]) + delta
-		if float(a["t"]) >= LAND_SEC:
+		if float(a["t"]) >= float(a["sec"]):
 			_landing.erase(uid)
 	if _landing.is_empty():
 		set_process(false)
@@ -208,6 +230,11 @@ func advance_landing(delta: float) -> void:
 ## 这件是不是正在落
 func is_landing(uid: int) -> bool:
 	return _landing.has(uid)
+
+
+## 这件落多久（不在落 = 0）
+func landing_sec(uid: int) -> float:
+	return float(_landing[uid]["sec"]) if _landing.has(uid) else 0.0
 
 
 ## 正在落的（测试看）
@@ -221,17 +248,20 @@ func landing_pose(uid: int) -> Dictionary:
 	if not _landing.has(uid):
 		return {"pos": target, "scale": 1.0, "alpha": 1.0, "hidden": false}
 	var a: Dictionary = _landing[uid]
+	var prof: Dictionary = a["profile"]
 	var t := float(a["t"])
 	if t < 0.0:
-		return {"pos": a["from"], "scale": LAND_SCALE, "alpha": 0.0, "hidden": true}
-	var p := clampf(t / LAND_SEC, 0.0, 1.0)
-	# 前 75% 缓出落到落点，后 25% 弹起 LAND_BOUNCE 再落稳
+		return {"pos": a["from"], "scale": float(prof["scale"]), "alpha": 0.0, "hidden": true}
+	var p := clampf(t / float(a["sec"]), 0.0, 1.0)
+	# 前 75% 落到落点（沉 = 二次缓入，越落越快；飘 = 三次缓出），后 25% 弹起再落稳
 	var fall := clampf(p / 0.75, 0.0, 1.0)
-	var eased := 1.0 - pow(1.0 - fall, 3.0)
+	var eased := fall * fall if bool(prof["sink"]) else 1.0 - pow(1.0 - fall, 3.0)
 	var pos := (a["from"] as Vector2).lerp(target, eased)
 	if p > 0.75:
-		pos.y -= LAND_BOUNCE * sin(PI * (p - 0.75) / 0.25)
-	return {"pos": pos, "scale": lerpf(LAND_SCALE, 1.0, eased), "alpha": lerpf(LAND_ALPHA, 1.0, p), "hidden": false}
+		pos.y -= float(prof["bounce"]) * sin(PI * (p - 0.75) / 0.25)
+	if not bool(a["in_place"]):
+		pos.x += float(prof["sway"]) * sin(TAU * p)     # 飘的左右荡下来；沉的摆幅 0
+	return {"pos": pos, "scale": lerpf(float(prof["scale"]), 1.0, eased), "alpha": lerpf(LAND_ALPHA, 1.0, p), "hidden": false}
 #endregion
 
 

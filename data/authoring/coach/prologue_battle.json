@@ -1,0 +1,11 @@
+{
+  "id": "prologue_battle",
+  "steps": [
+    {"target": "timeline", "text": "这是时间轴。结果在开打那一瞬就定了，这里只是回放：朝上的刻度是我方打出的，朝下的是挨的，长刻度是有人倒下。拖它可以来回看。"},
+    {"target": "play_button", "text": "播放和暂停。播完了再按一次就是重播。"},
+    {"target": "speed_button", "text": "倍速。一倍、两倍、四倍循环切，切过的下一场也照这个速度。"},
+    {"target": "skip_button", "text": "跳过：直接看到结尾，结果不会变。"},
+    {"target": "buffs_mine", "text": "这一排是上身的增益和减益，鼠标停在图标上看效果。"},
+    {"target": "next_button", "text": "看完按这里继续赶路。"}
+  ]
+}

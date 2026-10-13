@@ -32,6 +32,11 @@ const SCREEN_SCRIPTS := {
 const LAUNCHER := "res://ui/launcher.tscn"
 ## 157：换屏淡入 —— 叠层、底屏各多久（设置里 [member GameSettings.ui_fades] 能关）
 const OVERLAY_FADE := 0.15
+## 作者 2026-10-13（点开节点后地图的悬浮窗浮在打开的界面上面）：层高跟着屏走 —— 叠层整屏比底屏高这么多，
+## 屏里的悬浮窗（[HoverTip] 60）、拖拽残影（50）都是相对自己那一屏的；地上画在最上面那一屏 + [constant GROUND_Z] 。
+## 于是地图的悬浮窗高于地图和地上、低于叠层；叠层里的悬浮窗高于叠层本身
+const OVERLAY_Z := 100
+const GROUND_Z := 40
 const BASE_FADE := 0.2
 ## 157：测试与截图工具关掉淡入（几百个屏幕用例的时序不变、截图不截到半透明）；正式游戏看设置
 static var fades_allowed := true
@@ -146,6 +151,10 @@ func _sync_ground() -> void:
 	var top := _overlay if _overlay != null else _base
 	ground.visible = flow.run != null and top != null and GROUND_SCREENS.has(top.screen)
 	move_child(ground, -1)
+	ground.z_index = (top.z_index if top != null else 0) + GROUND_Z
+	if _overlay != null and _base != null:
+		for tip in _base.find_children("*", "HoverTip", true, false):
+			(tip as HoverTip).hide_tip()     # 底屏被盖住了：它的悬浮窗收起来
 	if ground.visible:
 		ground.settle.call_deferred()
 
@@ -177,6 +186,7 @@ func _switch_screen(screen: int, payload: Dictionary) -> void:
 			return
 		_drop_minimized()
 		_overlay = _make(screen)
+		_overlay.z_index = OVERLAY_Z
 		add_child(_overlay)
 		_overlay.open(payload)
 		_fade_in(_overlay, OVERLAY_FADE)     # 157：撤叠层直接撤，不等

@@ -66,3 +66,14 @@
 | `ui/game/main_menu.gd`、`setup_screen.gd`（第三页章节名）、`event_screen.gd`（开场事件标题）、`chest_screen.gd` | 2.3 `LABEL_DISPLAY` |
 | `tests/ui/test_theme.gd`、`tests/ui/test_fonts_168.gd`（新）、`tools/check_content.gd` | 2.4 |
 | `docs/architecture.md` 8.x（主题）加「字体」一段 | |
+
+## 落地记录
+
+- 子集：文楷 Regular / Medium 各约 0.8 MB，朱雀仿宋约 1 MB，马善政约 1.2 MB；字集 1900 个字（`assets/fonts/charset.txt`）。朱雀仿宋在现有文案用到的汉字上不缺字。
+- **和方案不同的一处：文楷子集改了名。** 文楷的 OFL 保留了「霞鹜 / 霞鶩 / 落霞孤鹜 / 落霞孤鶩 / LXGW」这几个字体名，附加许可只放行网页字体用的子集；游戏里带的子集是修改版，所以 `subset_fonts.sh` 裁完把名字表里的字体名改成 PackSDC Kai（版权与授权那几条留着）。朱雀仿宋、马善政没有保留名，不改。
+- 朱雀仿宋的授权原文从上游仓库取（`TrionesType/zhuque` 的 `LICENSE.txt`），存为 `LICENSES/OFL_ZhuqueFangsong.txt`。
+- 扫的范围是 data（json / tres / txt，帮助页在 `data/help_pages`）、ui / tools（gd / tscn）、core（gd）；方案里的 `docs/help_pages` 不存在。
+- 覆盖检查分两条：用到的字都在字集里（不在 = 重跑裁字）；用到的**汉字**文楷子集都有。⌛ ✦ ▸ 这类符号文楷本身就没有，不算错，走系统字体后备。
+- 开局屏第三页原来没有章节名那一行，新加了一个 `LabelDisplay` 写挑中的章；开场事件在正文顶上加一行章节名（标题条照旧是事件名、仿宋）。
+- 导入参数四个文件一样：灰度抗锯齿、hinting 轻、子像素定位 1、不用 MSDF、oversampling 0。
+- 截图在项目文件 `screens/168-fonts/`。

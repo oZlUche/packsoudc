@@ -27,7 +27,8 @@ var _drag: DragLayer
 var _shelf: WarehousePages = null
 var _own_shelf := true
 var _board_box: VBoxContainer
-var _board_view: InventoryView = null
+var _board_view: InventoryView
+var _board_label: Label = null
 var _board_scroll: ScrollContainer = null
 var _line: Label
 var _store_btn: Button
@@ -95,12 +96,15 @@ func _rebuild_board_view() -> void:
 		_drag.unregister_view(_board_view)
 	UiTheme.clear_children(_board_box)
 	_board_view = null
+	_board_label = null
 	_board_scroll = null
 	if _meta.board == null:
 		_board_box.visible = false
 		return
 	_board_box.visible = true
-	_board_box.add_child(UiTheme.make_label("带回来的背包　位置照旧，包已换成默认背景", 13, UiPalette.DIM))
+	_board_label = UiTheme.make_label("", 13, UiPalette.DIM)
+	_board_box.add_child(_board_label)
+	_sync_board_label()
 	_board_view = InventoryView.new()
 	_board_view.label_font = _font
 	_board_view.inventory = _meta.board
@@ -176,8 +180,6 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 		else:
 			if _shelf != null:
 				_shelf.show_item(uid)
-			if _meta.board.item_count() == 0:
-				_meta.discard_board()     # 搬空了 = 和「一键置入」搬完一样，带回来的背包就没了
 	elif _meta.warehouse.owns(from) and _meta.board != null:
 		ok = InventoryService.transfer_auto(_meta.warehouse, uid, _meta.board)
 		if not ok:
@@ -188,11 +190,19 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 #endregion
 
 
+## 作者 2026-10-13：搬空了棋盘留着，标签说一声已清空
+func _sync_board_label() -> void:
+	if _board_label == null or _meta.board == null:
+		return
+	_board_label.text = "带回来的背包　已清空" if _meta.board.item_count() == 0 else "带回来的背包　位置照旧，包已换成默认背景"
+
+
 func _refresh() -> void:
 	if _meta.board == null and _board_view != null or _meta.board != null and (_board_view == null or _board_view.inventory != _meta.board):
 		_rebuild_board_view()
 	if _size_label != null:
 		_size_label.text = "仓库　%d 页，每页 %d × %d 格，不需要包" % [_meta.warehouse.page_count(), _meta.warehouse.size.x, _meta.warehouse.size.y]
+	_sync_board_label()
 	var pending := _meta.has_pending_board()
 	_store_btn.disabled = not pending
 	var page := _shelf.current_page() if _shelf != null else null

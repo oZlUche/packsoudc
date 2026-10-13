@@ -125,12 +125,11 @@ func confirm_open() -> bool:
 func _open_confirm(node: MapNode) -> void:
 	cancel_extract()
 	_confirm = _shade(0.7, true)
-	var panel := _panel(20)
+	var panel := _modal_panel("撤离？", 20)
 	panel.custom_minimum_size.x = 520
 	_confirm.get_child(0).add_child(panel)
 	var col := _vbox(10)
-	panel.add_child(col)
-	col.add_child(_label("撤离？", 20, UiPalette.FG))
+	panel.content.add_child(col)
 	var fee := _run.events.extract_fee(node)
 	var affordable := fee <= 0 or _run.wallet.can_afford(fee)
 	if fee > 0:
@@ -250,11 +249,10 @@ func toggle_pause() -> void:
 		_pause = null
 		return
 	_pause = _shade(0.72, true)
-	var panel := _panel(28)
+	var panel := _modal_panel("暂停", 28)
 	_pause.get_child(0).add_child(panel)
 	var col := _vbox(12)
-	panel.add_child(col)
-	col.add_child(_label("暂停", 26, UiPalette.FG))
+	panel.content.add_child(col)
 	col.add_child(_wrapped("一局还在：搜索 / 商店 / 没拿完的战利品都留在原地", 12, UiPalette.DIM, 360))
 	col.add_child(_button("继续（Esc）", toggle_pause, 14, UiPalette.Tier.PRIMARY))
 	col.add_child(_button("设置", pause_settings, 14))
@@ -322,11 +320,10 @@ func show_rules(first: bool = false) -> void:
 		return
 	_rules_first = first
 	_rules = _shade(0.72, true)
-	var panel := _panel(28)
+	var panel := _modal_panel("本图规则　%s" % Names.of(_run.chapter), 28)
 	_rules.get_child(0).add_child(panel)
 	var col := _vbox(12)
-	panel.add_child(col)
-	col.add_child(_label("本图规则　%s" % Names.of(_run.chapter), 24, UiPalette.FG))
+	panel.content.add_child(col)
 	var ctx := TextTemplate.context_for(_run)     # 112：规则卡也过占位符（{item:…} 按稀有度上色）
 	for i in _run.chapter.rules.size():
 		col.add_child(UiTheme.rich_block(560, 15, "%d. %s" % [i + 1, UiPalette.resolve_styles(TextTemplate.render(_run.chapter.rules[i], ctx))]))
@@ -908,6 +905,8 @@ func _build_drawer() -> void:
 	c.add_child(_log)     # 166：日志从地图上挪进来
 	if _run != null and _run.chapter != null and _run.chapter.coach != &"":
 		c.add_child(_button("重放教程", func(): show_coach(true), 13))     # 166
+	if _run != null and _run.chapter != null and _run.chapter.coach_battle != &"":
+		c.add_child(_button("重放战斗教程", replay_battle_coach, 13))     # 166 补充二：下一场再放
 	c.add_child(_label("摆读数", 16, UiPalette.FG))
 	c.add_child(_wrapped("开着时：拖动读数换位置（松手吸附 %d 像素网格，记成离它最近的锚点 + 偏移）；右键切显示 / 隐藏；滚轮切大小两档。保存写到 %s。" % [
 		HudLayout.GRID, HudLayout.save_path("map")], 12, UiPalette.DIM, DevDrawer.WIDTH - 40))
@@ -1024,4 +1023,13 @@ func show_coach(replay: bool = false) -> bool:
 
 func coach() -> CoachOverlay:
 	return _coach
+
+
+## 166 补充二：调试台「重放战斗教程」—— 把看过的那条删掉，下一场战斗再放
+func replay_battle_coach() -> void:
+	if flow.meta == null or _run == null or _run.chapter == null:
+		return
+	flow.meta.coach_seen.erase(String(_run.chapter.coach_battle))
+	flow.save_meta()
+	_say("下一场战斗会再放一次战斗教程")
 #endregion

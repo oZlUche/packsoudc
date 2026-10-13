@@ -73,6 +73,9 @@ extends Resource
 ## 166（作者定）：这一章开头的界面教程（`data/authoring/coach/<id>.json` 的步骤：阴影里挖洞指着顶端栏的读数，点哪都下一步）。
 ## 第一次露出地图时放一次（[member MetaState.coach_seen]），调试台能重放。空 = 不放；序章一是 `prologue_map`
 @export var coach: StringName = &""
+## 166 补充二：这一章第一场战斗的界面教程（同一种步骤文件，目标是回放层的控件 —— [constant BattleView.COACH_TARGETS]）。
+## 战斗屏淡入后放一次，期间回放停着；看过记在 [member MetaState.coach_seen]。空 = 不放；序章一是 `prologue_battle`
+@export var coach_battle: StringName = &""
 
 @export_group("一局的模块（101）")
 ## 101 第 0 刀：这一局装哪些**本体模块**（[RunModule] 构件，各带参数）。空 = 用默认清单（[method RunModules.standard]）。

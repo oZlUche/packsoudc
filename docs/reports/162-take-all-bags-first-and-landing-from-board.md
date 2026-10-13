@@ -95,6 +95,13 @@
 | 补 2 | 分档阈值 | A 密度 ≥ 2 算沉（石、金属、重物）；B ≥ 3（只金属与重物） | **A**：石头和晶体也该砸下去 |
 | 补 3 | 数值放哪 | A `GroundLayer` 常量；B 进 `standard.json` 规则 | **A**：纯表现，不是规则 |
 
+### 落地记录（补充一）
+
+- `GroundLayer.land_profile(def) -> {sec, sink, bounce, sway, scale}`，常量 `LAND_BASE_SEC / LAND_SEC_PER_DENSITY / LAND_SEC_MIN / LAND_SINK_DENSITY`；沉的起手放大 `LAND_SCALE_SINK = 1.05`、弹 `LAND_BOUNCE_SINK = 3`，飘的摆幅 `LAND_SWAY = 3`、包 `LAND_SWAY_BAG = 5`。`LAND_SEC` 常量删掉，每件在 `_landing[uid]` 里记 `sec` 与 `profile`，`landing_sec(uid)` 给测试看。
+- 摆按整段进度 `sin(2π × p)`，起点终点都是 0；就地落（`in_place`）不摆。
+- 轻物的重量是向上取整的整数（`ItemWeight`），所以一格的药密度是 1、两格的才是 0.5 —— 按实际比值走，和方案「写死的按实际比值」一致。
+- 测试：`tests/inventory/test_ground_landing.gd` 加 `run_density_profile`（各档时长、沉 / 飘中点、摆、各自时长到了才删、就地不摆）；老用例改读每件自己的时长。
+
 ## 补充二（2026-10-13）：拖出容器的东西竖直往下掉 —— 重力加速度 + 重心翻转，落在正下方的「地」上
 
 > 作者原话：「关于物品拖出容器（棋盘、战利品、搜索容器）后，应该固定朝下方掉落，且有重心系统让掉落更加自然，也就是模拟重力加速度」。性质：架构 · 实施。待定按推荐。关联 128（地上 = 格子外整块屏幕，落点只是样子）、134（落地动画）、162 主体（从棋盘格起飞）、162 补充一（密度定快慢 —— 本补充把它的「时长公式」换成重力模型，沉 / 飘两档与左右小摆保留）。
@@ -109,7 +116,8 @@
 #### 2.1 落点：正下方的「地」
 
 - **地** = 这一列往下第一个支撑：某个登记面板（`reserve`）的上沿，或屏幕底（`1.0 − SPOT_MARGIN`）。`GroundLayer.floor_under(x_range, from_y) -> float`：在件的横向范围内扫 `reserved_rects()`，取 `from_y` 以下最高的面板上沿；没有就屏幕底。
-- **落点** = 起点的 x（手动拖出：放手时残影的 x；自动掉：那件在源容器里格子的 x，162 已经传了 `landing_from`）+ 地 − 件高。横向超出屏幕夹回去。
+- **起点**（作者补，2026-10-13：「掉落动画的初始位置应该是鼠标松开时道具的位置，而不是原本棋盘内的位置」）：手动拖出 = **松手那一刻残影的位置**（`DragLayer` 的 `ghost_anchor`，整个 Vector2，不只是 x）；自动掉（战利品放不下、顶出、全部拾取）= 那件在源容器里格子的位置（162 主体）。162 主体里「手动拖出也从原格起飞」那一条（`drag_layer.gd` 写 `landing_from = _src_px`）**作废**，手动拖出改写松手点。
+- **落点** = 起点的 x + 地 − 件高。横向超出屏幕夹回去。
 - 所有进地上的路径都走同一处：`GroundLayer` 在 `_on_changed` 里发现新 uid 时，若 `landing_from` 给了起点像素，就 `stash.set_spot(uid, spot_below(from_px, inst, rot_rest))` 覆盖核心层给的落点（核心层不认识像素，照旧给 `next_free_spot`，只是会被界面层改掉）。`DragLayer.drop_at` 不再自己算 `spot_for_drop`，只写 `landing_from = 放手点` 后 `insert`。
 - 面板关掉（`unreserve`）时，**支撑在它上沿的件再掉一次**（记 `_support[uid] = panel`；没支撑的不动）。128 的「面板关了也不挪回」改成这一条 —— 只往下掉，不往回挪。
 - 地上件之间照旧不碰撞、允许重叠（128 3.4）：落在别的件上面就是压在上面，不堆叠（待定 4）。
@@ -131,7 +139,7 @@
 ### 3. 测试
 
 `tests/ui/test_ground_landing.gd`（或 162 的测试）：
-- 放手在屏幕中间 → 落点 x = 放手 x、y = 屏底 − 件高；放手在登记面板正上方 → 落在面板上沿；面板 `unreserve` 后那件再掉到屏底。
+- 放手在屏幕中间 → 起点 = 松手时残影位置（不是原格）、落点 x = 放手 x、y = 屏底 − 件高；放手在登记面板正上方 → 落在面板上沿；面板 `unreserve` 后那件再掉到屏底。
 - `landing_from` 给了起点的自动掉（战利品放不下）落在源格正下方，不再在左下角铺。
 - 重力：同一高度金属比包先触地；`vy` 单调增到触地（沉）/ 封顶在 `v_max`（飘）。
 - 重心：`center_of_mass` 对 T 形、L 形、长条的结果；`rot_rest` 长条 → 横、L → 长边在下、方块不变；触地后 `inst.rotation == rot_rest`。
