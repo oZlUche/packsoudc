@@ -905,6 +905,8 @@ func _build_drawer() -> void:
 	c.add_child(_log)     # 166：日志从地图上挪进来
 	if _run != null and _run.chapter != null and _run.chapter.coach != &"":
 		c.add_child(_button("重放教程", func(): show_coach(true), 13))     # 166
+	if _run != null and _run.chapter != null and _run.chapter.coach_battle != &"":
+		c.add_child(_button("重放战斗教程", replay_battle_coach, 13))     # 166 补充二：下一场再放
 	c.add_child(_label("摆读数", 16, UiPalette.FG))
 	c.add_child(_wrapped("开着时：拖动读数换位置（松手吸附 %d 像素网格，记成离它最近的锚点 + 偏移）；右键切显示 / 隐藏；滚轮切大小两档。保存写到 %s。" % [
 		HudLayout.GRID, HudLayout.save_path("map")], 12, UiPalette.DIM, DevDrawer.WIDTH - 40))
@@ -1021,4 +1023,13 @@ func show_coach(replay: bool = false) -> bool:
 
 func coach() -> CoachOverlay:
 	return _coach
+
+
+## 166 补充二：调试台「重放战斗教程」—— 把看过的那条删掉，下一场战斗再放
+func replay_battle_coach() -> void:
+	if flow.meta == null or _run == null or _run.chapter == null:
+		return
+	flow.meta.coach_seen.erase(String(_run.chapter.coach_battle))
+	flow.save_meta()
+	_say("下一场战斗会再放一次战斗教程")
 #endregion

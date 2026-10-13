@@ -19,7 +19,7 @@ func open(_payload: Dictionary) -> void:
 	col.custom_minimum_size.x = 420
 	center.add_child(col)
 
-	col.add_child(_label("背包搜打撤", 34, UiPalette.FG))
+	col.add_child(UiTheme.make_display("背包搜打撤"))     # 168：游戏名是马善政
 	var m := flow.meta
 	col.add_child(_label(UiText.t("menu.stats") % [
 		m.runs + 1, m.extractions, m.deaths, m.warehouse.item_count(), m.score, m.funds], 13, UiPalette.DIM))

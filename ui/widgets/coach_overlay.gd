@@ -2,8 +2,8 @@
 ## 一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右，按方向转；缺图画一笔折线箭头）从洞外指向洞，箭尾一块羊皮纸（[constant UiTheme.PANEL_TOOLTIP]）写说明。
 ## **点任意处下一步**（键盘任意键也算，Esc 也是），最后一步点了收掉、发 [signal finished]。阴影层吞掉所有点击。
 ##
-## 步骤是数据（`data/authoring/coach/<id>.json`：`{"id", "steps": [{"target": 读数部件 id, "text"}]}`）；
-## 目标的位置每一步现问（[member target_rect]：屏幕给 [method HudHost.rect_of]）—— 部件挪了位置，教程跟着走
+## 步骤是数据（`data/authoring/coach/<id>.json`：`{"id", "steps": [{"target": 目标 id, "text"}]}`）；
+## 目标的位置每一步现问（[member target_rect]：地图屏给 [method HudHost.rect_of]，战斗屏给 [method BattleView.control_rect]）—— 部件挪了位置，教程跟着走
 class_name CoachOverlay
 extends Control
 
@@ -39,14 +39,16 @@ static func load_steps(id: StringName) -> Array:
 	return (d["steps"] as Array).filter(func(s): return s is Dictionary)
 
 
-## 步骤里有问题的地方（target 不是登记过的读数部件、没写字）；空 = 没问题
-static func problems(p_steps: Array) -> Array[String]:
+## 步骤里有问题的地方（target 不在 [param known_ids] 里、没写字）；空 = 没问题。
+## [param known_ids] 空 = 地图屏的读数部件（[method HudWidgets.has]）；166 补充二：战斗屏传 [constant BattleView.COACH_TARGETS]
+static func problems(p_steps: Array, known_ids: Array = []) -> Array[String]:
 	var out: Array[String] = []
 	for i in p_steps.size():
 		var s: Dictionary = p_steps[i]
 		var target := StringName(String(s.get("target", "")))
-		if not HudWidgets.has(target):
-			out.append("steps[%d]：没有这种读数部件 '%s'" % [i, target])
+		var known := known_ids.has(target) if not known_ids.is_empty() else HudWidgets.has(target)
+		if not known:
+			out.append("steps[%d]：没有这个目标 '%s'" % [i, target])
 		if String(s.get("text", "")) == "":
 			out.append("steps[%d]：没写说明" % i)
 	return out
