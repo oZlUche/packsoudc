@@ -467,7 +467,7 @@ func to_dict() -> Dictionary:
 	return {
 		"version": SAVE_VERSION,
 		"warehouse": warehouse.to_dict(),
-		"board": board.to_dict() if board != null else null,
+		"board": board.to_dict() if has_pending_board() else null,     # 搬空了留着显示的空棋盘不存（读回来也是没有）
 		"codex": codex.duplicate(),
 		"active_buffs": _names_of(active_buffs),
 		"unlocks": _names_of(unlocks),
