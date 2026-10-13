@@ -2,7 +2,10 @@
 ##
 ## 一张图标（`assets/ui/hud/icon_<id>.png`，[member icon_id]；缺图就写 [member fallback] 那几个字）+ 悬浮窗（名字、快捷键、一句说明）
 ## + 右上角可选的快捷键小字（B / N）+ 右下角可选的数字角标（技能还能用几次；-1 不画）。48 × 48，底与按下态走主题变体
-## [constant UiTheme.BUTTON_ICON]，自己不挂主题覆盖
+## [constant UiTheme.BUTTON_ICON]，自己不挂主题覆盖。
+##
+## 167：另一种是**整颗按钮就是图**（[method make_art]：`<目录><id>.png` / `_hover` / `_pressed` 三态，战斗回放的符石键），
+## 变体 [constant UiTheme.BUTTON_ART]（各态没有底），大小按图；缺图同样写字、走 BUTTON_ICON
 class_name IconButton
 extends Button
 
@@ -25,6 +28,11 @@ var badge: int = -1:
 		queue_redraw()
 
 var _tex: Texture2D = null
+## 167：整图按钮的目录（空 = 普通图标按钮）与三态图（"" / "_hover" / "_pressed"）
+var art_dir: String = ""
+var _states: Dictionary = {}
+var _hover := false
+var _down := false
 
 
 ## [param name] 写进悬浮窗第一行；[param hint] 是那一句说明
@@ -38,6 +46,59 @@ static func make(p_icon_id: String, p_fallback: String, name: String, hint: Stri
 		b.pressed.connect(on_press)
 	b._load()
 	return b
+
+
+## 167：整颗按钮就是图的那种（三态）；[method set_art] 换图（播放 → 暂停 → 重播、倍速档）
+static func make_art(dir: String, p_icon_id: String, p_fallback: String, tooltip: String, on_press: Callable) -> IconButton:
+	var b := IconButton.new()
+	b.art_dir = dir
+	if on_press.is_valid():
+		b.pressed.connect(on_press)
+	b.mouse_entered.connect(b._set_hover.bind(true))
+	b.mouse_exited.connect(b._set_hover.bind(false))
+	b.button_down.connect(b._set_down.bind(true))
+	b.button_up.connect(b._set_down.bind(false))
+	b.set_art(p_icon_id, p_fallback, tooltip)
+	return b
+
+
+## 换一套图（同一个按钮换状态）；缺图写 [param p_fallback]
+func set_art(p_icon_id: String, p_fallback: String, tooltip: String) -> void:
+	icon_id = p_icon_id
+	fallback = p_fallback
+	tooltip_text = tooltip
+	_states.clear()
+	for st in ["", "_hover", "_pressed"]:
+		var path: String = art_dir + p_icon_id + st + ".png"
+		if ResourceLoader.exists(path) or FileAccess.file_exists(path):
+			_states[st] = EventImage.load_texture(path)
+	_tex = _states.get("", null)
+	theme_type_variation = UiTheme.BUTTON_ART if _tex != null else UiTheme.BUTTON_ICON
+	custom_minimum_size = _tex.get_size() if _tex != null else Vector2(SIZE, SIZE)
+	text = "" if _tex != null else fallback
+	_sync_state()
+
+
+## 整图按钮现在该贴哪一态
+func state() -> String:
+	return "_pressed" if _down else ("_hover" if _hover else "")
+
+
+func _set_hover(on: bool) -> void:
+	_hover = on
+	_sync_state()
+
+
+func _set_down(on: bool) -> void:
+	_down = on
+	_sync_state()
+
+
+func _sync_state() -> void:
+	if _tex == null:
+		icon = null
+		return
+	icon = _states.get(state(), _tex)
 
 
 func _init() -> void:

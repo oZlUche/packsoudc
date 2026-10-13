@@ -52,6 +52,8 @@ const PANEL_SHELF := &"PanelShelf"
 ## 栏里的图标按钮（[IconButton]：背包、放大镜、主动技能；按下态走这个变体）
 const PANEL_HUD_BAR := &"PanelHudBar"
 const BUTTON_ICON := &"ButtonIcon"
+## 167：整颗按钮就是一张图（三态图自己画悬停与按下，[method IconButton.make_art]）—— 各态都没有底
+const BUTTON_ART := &"ButtonArt"
 ## 168：大标题（马善政，[method UiPalette.display_font]）—— 主菜单游戏名、开局屏与开场事件的章节名、宝箱屏的说明字
 const LABEL_DISPLAY := &"LabelDisplay"
 
@@ -59,7 +61,7 @@ const LABEL_DISPLAY := &"LabelDisplay"
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
 	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
 	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
-	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY]
+	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART]
 
 const TITLE_SIZE := 18
 ## 168：大标题字号
@@ -386,6 +388,11 @@ static func apply_tone(c: Control, variation: StringName) -> void:
 		c.theme = t
 
 
+## 石板（叠层、地图弹窗）上的 BBCode：按石板的深浅换字色（作者 2026-10-13：浅石板上的亮橙、白色道具名看不清）
+static func slab_bbcode(text: String) -> String:
+	return ink_bbcode(text, tone_of(PANEL_OVERLAY))
+
+
 ## 浅底上的 BBCode：里面写死的 `[color=…]`（都是按深底配的亮色）换成够深的墨水版；深底原样
 static func ink_bbcode(text: String, tone: StringName) -> String:
 	if tone != TONE_LIGHT or not text.contains("[color="):
@@ -614,6 +621,10 @@ static func _fill(t: Theme, bg: Color) -> void:
 	clear.set_content_margin_all(4)
 	t.set_stylebox("normal", BUTTON_ICON, clear)
 	t.set_stylebox("disabled", BUTTON_ICON, clear)
+	t.set_type_variation(BUTTON_ART, "Button")
+	var bare := StyleBoxEmpty.new()
+	for st in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
+		t.set_stylebox(st, BUTTON_ART, bare)
 	t.set_type_variation(LABEL_HUD, "Label")
 	t.set_type_variation(LABEL_HUD_LARGE, "Label")
 	t.set_font_size("font_size", LABEL_HUD_LARGE, HUD_LARGE_SIZE)

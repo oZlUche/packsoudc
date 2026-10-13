@@ -21,6 +21,12 @@ signal finished
 signal speed_changed(speed: float)
 
 const SPEEDS := GameSettings.BATTLE_SPEEDS
+## 167：倍速按钮上的罗马数字（缺图时写它，悬浮窗也写它；不写阿拉伯数字）
+const SPEED_NUMERALS := {1: "Ⅰ", 2: "Ⅱ", 4: "Ⅳ"}
+## 167：原来底下那行常驻说明，挪进播放键的悬浮窗
+const PLAY_HINT := "结果在开打那一瞬就已定，这里只是回放；停在 buff 图标上看效果"
+## 167（作者定 D 版）：回放控件的符石按键图（`<id>.png` / `_hover` / `_pressed`）。测试指到别处走文字退路
+static var art_dir := "res://assets/ui/replay/"
 ## 166 补充二：战斗教程能指的控件（[method control_rect] 认这些；`next_button` 由战斗屏 [method add_coach_target] 登记）
 const COACH_TARGETS: Array[StringName] = [&"timeline", &"play_button", &"speed_button", &"skip_button", &"buffs_mine", &"next_button"]
 
@@ -51,15 +57,15 @@ var _verdict: Label
 var _ticker: RichTextLabel = null
 ## 进树之前设；真 = 建文字播报（回放浏览器）
 var show_ticker: bool = false
-var _play_btn: Button
-var _speed_btn: Button
+var _play_btn: IconButton
+var _speed_btn: IconButton
 ## 157：时间轴（可拖）、收尾战报、双方名牌的位置（面板顶上）
 var _timeline: ReplayTimeline
 var _report: RichTextLabel
 var _plate_slots: Array[Control] = []
 ## 157：拖时间轴之前在不在放（松手按原状态接着放）
 var _resume_after_scrub := false
-var _skip_btn: Button
+var _skip_btn: IconButton
 ## 166 补充二：教程压着时停住（[method hold]），收掉按原状态接着放（[method release]）
 var _held := false
 var _resume_after_hold := false
@@ -617,34 +623,40 @@ func _build() -> void:
 		spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		root.add_child(spacer)
 
-	# 157：播放键 · 时间轴（可拖）· 倍速与跳过在杆的右端；下面一行说明，播完了在说明下面出战报
+	# 157：播放键 · 时间轴（可拖）· 倍速与跳过在杆的右端；播完了在下面出战报。
+	# 167：三个键是符石图（[method IconButton.make_art]），缺图写字；原来那行说明挪进播放键的悬浮窗
 	var bar := HBoxContainer.new()
 	bar.add_theme_constant_override("separation", 8)
 	root.add_child(bar)
-	_play_btn = UiTheme.make_button("暂停", toggle_play, UiPalette.Tier.MINOR, 13)     # 090：回放控制是辅助键
+	_play_btn = IconButton.make_art(art_dir, "", "", "", toggle_play)     # 图与悬浮窗由 _sync_buttons 按状态给
 	bar.add_child(_play_btn)
 	_timeline = ReplayTimeline.new()
 	_timeline.seek_requested.connect(seek)
 	_timeline.scrub_started.connect(_on_scrub_started)
 	_timeline.scrub_ended.connect(_on_scrub_ended)
 	bar.add_child(_timeline)
-	_speed_btn = UiTheme.make_button("1×", cycle_speed, UiPalette.Tier.MINOR, 13)
+	_speed_btn = IconButton.make_art(art_dir, "", "", "", cycle_speed)
 	bar.add_child(_speed_btn)
-	_skip_btn = UiTheme.make_button("跳过", skip_to_end, UiPalette.Tier.MINOR, 13)
+	_skip_btn = IconButton.make_art(art_dir, "skip", "跳过", "跳过\n直接看到结尾，结果不会变", skip_to_end)
 	bar.add_child(_skip_btn)
-	root.add_child(UiTheme.make_label("战斗中只能看、拖时间轴与跳过 —— 结果在开打那一瞬就已经算完了；停在 buff 图标上看效果", 12, UiPalette.DIM))
 	_report = UiTheme.rich_block(0, UiTheme.RICH_SMALL_SIZE)
 	_report.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_report.visible = false
 	root.add_child(_report)
 	_tip = HoverTip.new()
 	add_child(_tip)
+	_sync_buttons()
 
 
 func _sync_buttons() -> void:
 	if _play_btn == null:
 		return
 	var done := _result != null and _cursor >= _result.log.size()
-	_play_btn.text = "重播" if done else ("暂停" if _playing else "播放")
-	_speed_btn.text = "%d×" % int(SPEEDS[_speed_idx])
+	var id := "replay" if done else ("pause" if _playing else "play")
+	var name: String = {"replay": "重播", "pause": "暂停", "play": "播放"}[id]
+	if _play_btn.icon_id != id:
+		_play_btn.set_art(id, name, name + "\n" + PLAY_HINT)
+	var x := int(SPEEDS[_speed_idx])
+	if _speed_btn.icon_id != "speed_%d" % x:
+		_speed_btn.set_art("speed_%d" % x, SPEED_NUMERALS[x], "倍速 %s\n一倍、两倍、四倍循环切，下一场也照这个速度" % SPEED_NUMERALS[x])
 #endregion
