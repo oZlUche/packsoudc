@@ -178,7 +178,7 @@
 | 165 | [方案：敌人棋盘只写死「相邻组合」（内容 `groups`，整组刚体找位、四个朝向），其余散件按整理的办法大件先、随机落位、重试后保底贴左上；随机图从道具的 `grant_cells / grant_filter` 自动配对成组，`EnemyDef.combos` 可钉死；位置在内容诞生时摆一次记进 `at`，下游不改；预设图六个敌人删掉手写 `at`](165-enemy-board-random-layout-with-adjacency-groups.md) | 架构 · 已落地 | v2.90；四项待定按 A，现有敌人没写 combos、全靠自动配对 |
 | 166 | [方案：地图屏十四条 —— 底图满幅、正式的顶端栏（`hud_bar` 部件 + 三个栏槽锚点，仍由布局文件摆）、背包 / 放大镜 / 技能图标按钮、撤离与存档按钮删掉改进点自动存档、日志与地上件数进调试台、调试台悬浮不挤地图、金币与七个信仰图标、左下图例、腰带圆槽 72、序章静态教程 `CoachOverlay`（阴影挖洞 + 手绘箭头 + 点任意处下一步）；美术清单含石板改大理石。补充一：角色主动技能一律藏起来（地图屏 `skills` 默认不可见、战前屏「溜走」不建、角色卡只列被动），代码数据留着一个常量开关。补充二：战斗屏也放静态指引（时间轴 / 播放 / 倍速 / 跳过 / buff 行 / 继续六步，`ChapterDef.coach_battle`），指引期间回放 hold，看完 release](166-map-screen-top-bar-and-prologue-coach.md) | 架构 · 已落地 | v2.91 / v2.92 / v2.94；待定全按推荐 A；图标都是占位接口，美术清单待交图 |
 | 167 | [交美术：UI 替换第一批 —— 战斗回放控件（重播改逆时针箭头、倍速改罗马数字、跳过符号、石板凹槽进度条，各出两三版给作者挑）与字体范例（可商用中文字体候选按正文 / 标题 / 手绘分组）；挑定后用 `IconButton` 接入](167-ui-replace-batch-1-replay-controls-and-font-samples.md) | 美术 · 待出范例 |
-| 168 | [方案：打包字体 —— 正文霞鹜文楷（Medium 当粗体）、标题朱雀仿宋、大标题马善政，全 OFL；按文案裁字入库（`tools/font_charset.py` + pyftsubset，覆盖测试兜底），`FontVariation` 带系统字体后备，原始字体不入库](168-bundled-fonts-wenkai-zhuque-mashanzheng.md) | 待执行 |
+| 168 | [方案：打包字体 —— 正文霞鹜文楷（Medium 当粗体）、标题朱雀仿宋、大标题马善政，全 OFL；按文案裁字入库（`tools/font_charset.py` + pyftsubset，覆盖测试兜底），`FontVariation` 带系统字体后备，原始字体不入库](168-bundled-fonts-wenkai-zhuque-mashanzheng.md) | 架构 · 已落地 | v2.95；待定全按推荐；文楷子集按授权改名 PackSDC Kai |
 
 ## 已归档（被覆盖或作废的方案，只留作历史）
 

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.94 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.95 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3493,6 +3493,15 @@ func player_spec() -> CombatantSpec …
 
 - 步骤是数据：`data/authoring/coach/<id>.json` = `{"id", "steps": [{"target": 读数部件 id, "text"}]}`，`CoachOverlay.problems` 校验目标是登记过的部件、写了字。目标位置每一步现问（地图屏给 `HudHost.rect_of`），所以玩家挪了读数，教程跟着走。
 - 章节写 `coach`（`ChapterDef`），序章一 = `prologue_map`（体力、货币、背包、放大镜四步）。地图第一次露出来（没有事件 / 规则卡 / 暂停压着、屏在地图上）时放一次，放过记进 `MetaState.coach_seen`（跟着存档位）；调试台有「重放教程」。
+- 战斗屏（166 补充二）：章节写 `coach_battle`（序章一 = `prologue_battle`，时间轴 / 播放 / 倍速 / 跳过 / buff 行 / 继续六步），目标是 `BattleView.COACH_TARGETS`，位置走 `BattleView.control_rect`（「继续」由战斗屏 `add_coach_target` 登记）。要放时战斗屏一开就 `BattleView.hold()`，叠层淡入完了放，收掉 `release()` 按原状态接着放；同记 `coach_seen`，地图屏调试台「重放战斗教程」把那条删掉。`CoachOverlay.problems(steps, known_ids)` 按屏分开认目标。
+
+### 8.10 字体（168）
+
+游戏自带三款 OFL 字体，`assets/fonts/` 里是**按文案裁过字的子集**（原始字体不入库）：正文 / 读数 / 按钮是霞鹜文楷 Regular（主题默认字体），富文本 `[b]` 是文楷 Medium，标题（`LabelTitle`，名牌也用它）与叠层标题条（`LabelOverlayTitle`）是朱雀仿宋，大标题（`LabelDisplay` 40 号：主菜单游戏名、开局第三页与开场事件的章节名、宝箱屏说明）是马善政。
+
+- `UiPalette.cjk_font / cjk_font_bold / title_font / display_font` 都是 `FontVariation`：文楷后备系统字体，仿宋后备文楷 Medium，马善政后备仿宋 —— 缺字不出方块；文件不在退回后备。编辑器、沙盒直接拿 `cjk_font()` 的跟着换成文楷。
+- 裁字：`tools/font_charset.py` 扫 data / ui / core / tools 的文案写 `assets/fonts/charset.txt`，`tools/subset_fonts.sh` 按它裁四个子集（要 fonttools）。文楷的授权保留了「霞鹜 / LXGW」等字体名，裁过的子集改名 PackSDC Kai。
+- 兜底：`FontCoverage`（`tools/font_coverage.gd`）查文案用到的字都在字集里、用到的汉字文楷子集都有；`tools/check_content.gd` 与 `tests/ui/test_fonts_168.gd` 都跑它，红了就重裁。
 
 ## 9. 套装与跨域效果
 
@@ -4144,6 +4153,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.95 | 2026-10-13 | **打包字体**（报告 168，作者定，待定按推荐；加 8.10）：`assets/fonts/` 四个裁字子集（文楷 Regular / Medium、朱雀仿宋、马善政）+ 授权 + `charset.txt`；`UiPalette` 四个字体函数改 `FontVariation` 带后备；主题 `LabelTitle / LabelOverlayTitle` 换仿宋、新变体 `LabelDisplay`（马善政 40 号）用在主菜单游戏名、开局第三页章节名、开场事件章节名、宝箱屏说明；`tools/font_charset.py`、`tools/subset_fonts.sh`、`FontCoverage` 覆盖检查（内容校验与测试同一段）；文楷子集按授权改名 PackSDC Kai。8.9 补上战斗屏教程（166 补充二） |
 | v2.94 | 2026-10-13 | **掉落下坠跟密度走 + 战斗屏静态指引**（报告 162 补充一、166 补充二，作者定，待定按推荐）：`GroundLayer.land_profile(def)` 按密度（`ItemWeight.of ÷ 格数`）给每件自己的落地时长 `clamp(0.95 − 0.15 × 密度, 0.35, 0.95)`，密度 ≥ 2 走「沉」（二次缓入、弹 3、不摆），其余「飘」（三次缓出、弹 6、左右摆 ±3，包 ±5），`LAND_SEC` 常量退了；`ChapterDef.coach_battle`（序章一 `prologue_battle`，六步），战斗屏开场有教程就 `BattleView.hold()`、淡入后放 `CoachOverlay`（目标走 `BattleView.control_rect`，认 `COACH_TARGETS`，「跳过并继续」由战斗屏 `add_coach_target` 登记），收掉 `release()`、记 `coach_seen`；`CoachOverlay.problems(steps, known_ids)`；地图屏调试台加「重放战斗教程」 |
 | v2.93 | 2026-10-13 | **一屏一块完整石板**（报告 157 补充三，作者定，待定按推荐；改 8.8）：`SlabStyle` 两层画（板身 `slab_body` 平铺 + 板边 `slab_edge` 九宫格，`body_inset` 缩进），`OverlayFrame` 与顶端栏是石板（栏顶棱藏到屏外）；叠层板外改半透明暗罩 0.6（地图透出），底屏内容进 `GameScreen._slab_screen` 那块九成大板、板外纯色；`PanelDark / PanelLine / PanelHud` 改凹槽 `inset`；石砖墙底与小石板六张退了，`dress_backdrop` 等删掉；名牌换凹刻式 |
 | v2.92 | 2026-10-13 | **主动技能对玩家藏起来**（报告 166 补充一，作者定，待定按推荐；改 8.7）：`RunSkills.ACTIVE_HIDDEN` 一处开关；地图屏默认布局的 `skills` 不显示（`HudLayout.hidden_by_default`，布局版本 5），战前准备屏不建「溜走」，`CharacterDef.skill_lines / skills_summary` 只列被动，百科「三个角色」与序章开场删掉主动技能的句子；记账、存档、`use_skill / slip_battle` 与角色 json 都留着。同版接进 166 的美术（顶端栏大理石、背包 / 放大镜、36 px 金币、七枚信仰章、教程箭头、腰带圆槽）与第十四条的大理石石板（六张 tone 全 light），整屏底的深浅也读 json（`UiTheme.backdrop_tone`，浅底屏挂墨色字主题） |

@@ -48,7 +48,7 @@ static func run_theme(t: TestCase) -> void:
 		t.eq(file_of.call(th.get_font("font", v)), UiPalette.font_file(UiPalette.FONT_TITLE), "%s：朱雀仿宋" % v)
 	t.eq(file_of.call(th.get_font("font", UiTheme.LABEL_DISPLAY)), UiPalette.font_file(UiPalette.FONT_DISPLAY), "LabelDisplay：马善政")
 	t.eq(th.get_font_size("font_size", UiTheme.LABEL_DISPLAY), UiTheme.DISPLAY_SIZE, "大标题 %d 号" % UiTheme.DISPLAY_SIZE)
-	t.check(not th.has_font("font", UiTheme.BUTTON_PRIMARY) and not th.has_font("font", "Button"), "按钮不另设字体（= 默认文楷）")
+	t.check(not th.get_font_list(UiTheme.BUTTON_PRIMARY).has("font") and not th.get_font_list("Button").has("font"), "按钮不另设字体（= 默认文楷）")
 	var big := UiTheme.make_display("背包搜打撤")
 	t.check(big.theme_type_variation == UiTheme.LABEL_DISPLAY and not big.has_theme_font_size_override("font_size"), "make_display：走变体、默认字号零覆写")
 	var mid := UiTheme.make_display("点击宝箱开锁", 28)
