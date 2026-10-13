@@ -77,28 +77,13 @@
             "rot": 0
           },
           {
-            "id": "knife",
-            "at": [
-              0,
-              0
-            ],
-            "rot": 0
+            "id": "knife"
           },
           {
-            "id": "knife",
-            "at": [
-              1,
-              0
-            ],
-            "rot": 0
+            "id": "knife"
           },
           {
-            "id": "knife",
-            "at": [
-              2,
-              0
-            ],
-            "rot": 0
+            "id": "knife"
           }
         ],
         "base_stats": {
@@ -140,12 +125,7 @@
             "rot": 0
           },
           {
-            "id": "warhammer",
-            "at": [
-              0,
-              0
-            ],
-            "rot": 0
+            "id": "warhammer"
           }
         ],
         "base_stats": {
@@ -225,20 +205,10 @@
             "rot": 0
           },
           {
-            "id": "warding_charm",
-            "at": [
-              0,
-              0
-            ],
-            "rot": 0
+            "id": "warding_charm"
           },
           {
-            "id": "knife",
-            "at": [
-              1,
-              0
-            ],
-            "rot": 0
+            "id": "knife"
           }
         ],
         "base_stats": {
@@ -279,20 +249,10 @@
             "rot": 0
           },
           {
-            "id": "antidote_kit",
-            "at": [
-              0,
-              0
-            ],
-            "rot": 0
+            "id": "antidote_kit"
           },
           {
-            "id": "shortsword",
-            "at": [
-              2,
-              0
-            ],
-            "rot": 0
+            "id": "shortsword"
           }
         ],
         "base_stats": {

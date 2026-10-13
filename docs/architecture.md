@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.89 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.90 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2720,6 +2720,12 @@ class_name EnemyPool extends Resource             # data/authoring/enemy_pools/*
 随机数只用节点的 `content_seed`：同图同点永远同一个敌人。
 
 内容字典跟着图存：`{"enemy", "strength", "board": [w, h], "items": [{"id", "at": [x, y], "rot"}]}`。
+
+**位置只写死相邻组合**（报告 165，作者定）：除了靠相邻生效的组合（箭挨着弓、魔晶石挨着法杖），敌人身上的道具位置不写死，按「整理」的办法随机摆。
+组合从挑出的道具里推（`EnemyPlacer.auto_groups`：增益格收得下对方、或站在对方受益格上有供给的，配成一对，连着的并成一组；`EnemyDef.combos` 可钉死身份固定的组合），
+组整组摆、每件都和组里某件真的挨着生效（四个朝向都试），其余散件在放得下的位置里随机挑；摆不开就重来，最后贴左上、再按老办法保底，件数不比之前少。
+预设图的内容里 `at` 可省、可写 `groups`（组内位置相对锚点，整组当刚体转），开局 `EnemyPlacer.arrange_map` 用节点的 `content_seed` 摆一次、写回 `at` ——
+之后存档、战前、战斗、尸体、掉落都照这份内容重建，下游不认「没摆过」这回事。
 `EnemyKit` 把它重建成棋盘、走 `BattleCompiler` 编译（预览 = 编译，5.10）、给一行摘要。
 
 导入顺序：items → enemies（招牌道具、流派标签对着道具查）→ enemy_pools（条目对着敌人查）→ chapters（池按 id 查）。
@@ -4114,6 +4120,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.90 | 2026-10-13 | **敌人棋盘只写死相邻组合**（报告 165，作者定，待定按推荐；改 5.10）：`EnemyPlacer.auto_groups` 从道具的增益 / 受益 / 供给配对成组（`EnemyDef.combos` 可钉死），`_arrange` 组整组摆（现搭或刚体、四个朝向）、散件随机落位、重来四次后贴左上与老办法保底；`build_content` 改用它，补件与携带品也随机落位；预设图 `at` 可省、可写 `groups`，`EnemyPlacer.arrange` / `arrange_map` 开局按 `content_seed` 摆一次写回；`EnemyKit.board_of` 对没写位置的件自己找空位；序章二 / 三六个敌人删掉手写位置 |
 | v2.89 | 2026-10-12 | **仓库分页与基地三列**（报告 163 / 164，作者定，待定按推荐；改 8.2）：`Warehouse` 多页容器（每页 10 × 8、按页序自动放、只删末尾空页、存档逐页、老单块档按页切），科技构件 `warehouse_rows` → `warehouse_pages`（每级一页，`docs/techs.xlsx` 重新生成）；`WarehousePages` 竖排页签（锁着的灰显带锁、拖着停 0.4 秒切页），结算屏 / 开局第二页 / 基地共用；基地改左列竖排页签 + 左下大按钮、中列当前页（默认「家」）、右半边常驻仓库（格子按宽高取小 40 ～ 80），整屏一层拖拽、双击按当前页分派，出售 / 科技页不再自己画仓库；「家」美术套件进 `assets/ui/home/`，`UiTheme` 加 `BUTTON_HOME(_PRIMARY)`、`PANEL_HOME_BOX`、`PANEL_SHELF`、`dress_home_backdrop` |
 | v2.88 | 2026-10-12 | **腰带改右下圆槽、随身改成可堆叠的一次性技能**（报告 160 与补充一；改 9.x 模块表与 150 组件）：内容种类 `belt_skills`（`BeltSkillDef`），删道具 `smoke_bomb / aid_pack` 与标签【随身】；`BeltModule` 存 id → 个数；来源 `grant_belt` 事件后果、商店随身排、科技 `tech_belt_grant`、`starting_belt`；`BeltSlots` 圆槽组件默认右下角（`HudLayout.VERSION` 3），背包面板去掉腰带 |
 | v2.87 | 2026-10-12 | **开局三页、角色卡方块、包不算重、负重三档**（报告 161 与补充一；改 7.6 / 8）：开局屏拆成选角色 / 配道具 / 选地图三页，右下角大号返回 / 继续；`StatBlocks`（生命红块、耐力黄块、体力爱心）、`UiPalette.draw_heart`；`ItemWeight` 对包返回 0；`standard` 负重门槛 1.2 / 1.6 / 2.2 |
