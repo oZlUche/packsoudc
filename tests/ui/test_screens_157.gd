@@ -10,7 +10,7 @@ const NOWHERE := "res://tests/fixtures/no_such_ui/"
 
 
 static func run_theme_art(t: TestCase) -> void:
-	t.begin("157 · 石板框与悬浮窗底：assets/ui 有图是九宫格（边距与标题条高读 json），没图是原来的平面底；美术交付的那张框已经放进来")
+	t.begin("157 / 补充三 · 石板框与悬浮窗底：有板身 + 板边两张图是一整块石板（板身平铺、板边九宫格，边距与标题条高读 json），没图是原来的平面底")
 	var saved := UiTheme.asset_root
 	UiTheme.asset_root = NOWHERE
 	var flat := UiTheme.build()
@@ -19,17 +19,26 @@ static func run_theme_art(t: TestCase) -> void:
 	t.eq(UiTheme.frame_title_height(), 0, "没图：标题条按字高")
 	UiTheme.asset_root = FIXTURES
 	var art := UiTheme.build()
-	var box := art.get_stylebox("panel", UiTheme.PANEL_OVERLAY) as StyleBoxTexture
-	t.check(box != null and box.texture != null, "测试图：石板框是九宫格")
-	if box != null:
-		t.eq([box.texture_margin_left, box.texture_margin_top, box.texture_margin_right, box.texture_margin_bottom], [1.0, 1.0, 1.0, 1.0], "边距按 json")
-		t.eq(box.content_margin_top, 0.0, "顶边内边距 0：标题条自己占住图顶那一条")
+	var slab := art.get_stylebox("panel", UiTheme.PANEL_OVERLAY) as SlabStyle
+	t.check(slab != null and slab.body != null and slab.edge != null, "测试图：石板框是两层（板身 + 板边）")
+	if slab != null:
+		var box := slab.edge
+		t.eq([box.texture_margin_left, box.texture_margin_top, box.texture_margin_right, box.texture_margin_bottom], [1.0, 1.0, 1.0, 1.0], "板边九宫格边距按 json")
+		t.eq(slab.content_margin_top, 0.0, "顶边内边距 0：标题条自己占住板顶刻线那一条")
+		t.eq(slab.content_margin_left, 1.0, "其余内边距跟板边")
+		t.eq([slab.body.axis_stretch_horizontal, slab.body.axis_stretch_vertical], [StyleBoxTexture.AXIS_STRETCH_MODE_TILE, StyleBoxTexture.AXIS_STRETCH_MODE_TILE], "板身平铺，纹不随框大小拉花")
+		t.eq(slab.body_inset, 1.0, "板身往里缩 json 的 body_inset")
+	t.check(UiTheme.is_art_box(slab), "石板算美术底（框的外边距听图的）")
+	t.check(art.get_stylebox("panel", UiTheme.PANEL_HUD_BAR) is SlabStyle, "顶端栏也是一条石板（166）")
+	t.check(art.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxTexture, "板里的分区是凹槽九宫格")
 	t.eq(UiTheme.frame_title_height(), 30, "标题条高按 json")
 	t.check(art.get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is StyleBoxFlat, "测试目录里没有纸：悬浮窗底照旧")
 	UiTheme.asset_root = saved
-	var real := UiTheme.build().get_stylebox("panel", UiTheme.PANEL_OVERLAY) as StyleBoxTexture
-	t.check(real != null and is_equal_approx(real.texture_margin_top, 44.0), "assets/ui 里美术交付的石板框：九宫格、上边距 44")
-	t.eq(UiTheme.frame_title_height(), 36, "标题条 36")
+	# 美术正在重画整块石板：assets/ui 里有两张图就是石板，没有就是平面底 —— 两条路都要能走
+	var real := UiTheme.build().get_stylebox("panel", UiTheme.PANEL_OVERLAY)
+	t.eq(real is SlabStyle, UiTheme.has_slab(), "assets/ui：%s" % ("石板" if UiTheme.has_slab() else "还没有石板图，平面底"))
+	for gone in ["bg_stone", "panel_stone", "panel_inset", "panel_hud", "frame_stone", "hud/bar"]:
+		t.is_null(UiTheme.art(gone), "砖墙底 / 小石板退了：%s" % gone)
 	t.check(UiTheme.build().get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is StyleBoxTexture, "assets/ui 里美术交付的纸：悬浮窗底是九宫格")
 	for skin in UiCursor.SKINS:
 		for name in ["cursor_arrow", "cursor_drag", "cursor_can_drop", "cursor_forbidden"]:
@@ -334,9 +343,14 @@ static func run_tones(t: TestCase) -> void:
 			var tone := String(UiTheme.art_meta(art_name).get("tone", ""))
 			t.check(tone == "dark" or tone == "light", "底图 %s 的 json 写了 tone（%s）" % [art_name, tone])
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_TOOLTIP), UiTheme.TONE_LIGHT, "悬浮窗底用美术的亮纸：浅")
-	# 美术 2026-10-13（作者：「石板更倾向于大理石那种颜色」）：石板一组换成浅色大理石，json 的 tone 全改 light
-	t.eq(UiTheme.tone_of(UiTheme.PANEL_OVERLAY), UiTheme.TONE_LIGHT, "石板框（大理石）：浅")
-	t.eq(UiTheme.tone_of(UiTheme.PANEL_DARK), UiTheme.TONE_LIGHT, "平面底（大理石）：浅")
+	# 157 补充三：石板框的深浅读板边的 json，凹槽读凹槽的；没图查表（深）
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_OVERLAY), StringName(String(UiTheme.art_meta(UiTheme.ART_SLAB_EDGE).get("tone", "dark"))) if UiTheme.art(UiTheme.ART_SLAB_EDGE) != null else UiTheme.TONE_DARK, "石板框的深浅")
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_DARK), StringName(String(UiTheme.art_meta(UiTheme.ART_INSET).get("tone", "dark"))) if UiTheme.art(UiTheme.ART_INSET) != null else UiTheme.TONE_DARK, "凹槽的深浅")
+	var saved_root := UiTheme.asset_root
+	UiTheme.asset_root = FIXTURES
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_OVERLAY), UiTheme.TONE_DARK, "测试图的板边写 dark：石板框深")
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_HUD_BAR), UiTheme.TONE_DARK, "顶端栏跟石板")
+	UiTheme.asset_root = saved_root
 	t.check(UiTheme.current().get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is StyleBoxTexture, "assets/ui 里有纸：悬浮窗底是九宫格")
 	var saved := UiTheme.asset_root
 	UiTheme.asset_root = NOWHERE
@@ -396,36 +410,60 @@ static func _first_rich(n: Node) -> RichTextLabel:
 
 
 static func run_stone(t: TestCase) -> void:
-	t.begin("157 补 · 石板样式：整屏底铺 bg_stone（平铺、底色设置给它染色）；PanelDark / PanelLine / PanelHud 换成石板九宫格，内边距照旧；没图照旧纯色")
+	t.begin("157 补充三 · 板里的分区是凹槽：PanelDark / PanelLine / PanelHud 有 inset 图是凹槽九宫格、内边距照旧；没图照旧纯色；不再有整屏砖墙底")
+	var saved := UiTheme.asset_root
+	UiTheme.asset_root = FIXTURES
 	var th := UiTheme.build()
 	for pair in [[UiTheme.PANEL_DARK, UiTheme.PANEL_MARGIN], [UiTheme.PANEL_LINE, UiTheme.PANEL_LINE_MARGIN], [UiTheme.PANEL_HUD, UiTheme.HUD_MARGIN]]:
 		var box := th.get_stylebox("panel", pair[0]) as StyleBoxTexture
-		t.check(box != null and box.texture != null, "%s 是石板九宫格" % pair[0])
+		t.check(box != null and box.texture != null, "%s 是凹槽九宫格" % pair[0])
 		if box != null:
 			t.eq(box.content_margin_left, float(pair[1]), "%s 内边距照旧 %d（换皮不改排版）" % [pair[0], pair[1]])
-		t.eq(UiTheme.tone_of(pair[0]), UiTheme.TONE_LIGHT, "%s 大理石浅底" % pair[0])
-	t.eq(String(UiTheme.art_meta(UiTheme.ART_BG).get("tone", "")), "light", "整屏底（大理石）的 json 写了浅")
-	t.eq(UiTheme.backdrop_tone(), UiTheme.TONE_LIGHT, "整屏底的深浅读 json：浅（底屏直接写在底上的字挂墨色字主题）")
-	t.check(bool(UiTheme.art_meta(UiTheme.ART_BG).get("tile", false)), "整屏底平铺")
-	var rect := ColorRect.new()
-	var tile := UiTheme.dress_backdrop(rect)
-	t.check(tile != null and tile.stretch_mode == TextureRect.STRETCH_TILE and tile.mouse_filter == Control.MOUSE_FILTER_IGNORE, "纯色底上铺了一层平铺的石板，不挡鼠标")
-	var saved_bg := UiPalette.bg_theme
-	UiPalette.bg_theme = UiPalette.BG_DEFAULT
-	t.check(UiTheme.backdrop_tint().is_equal_approx(Color.WHITE), "默认底色：石板原色")
-	UiPalette.bg_theme = "moss"
-	UiTheme.tint_backdrop(rect)
-	t.check(not tile.self_modulate.is_equal_approx(Color.WHITE) and tile.self_modulate.g > tile.self_modulate.r, "换成苔绿：石板染绿一点")
-	UiPalette.bg_theme = saved_bg
-	rect.free()
-	var saved := UiTheme.asset_root
+	t.eq(UiTheme.PANEL_ART[UiTheme.PANEL_DARK], UiTheme.ART_INSET, "PanelDark 的图是凹槽")
+	t.eq(UiTheme.PANEL_ART[UiTheme.PANEL_LINE], UiTheme.ART_INSET, "PanelLine 的图是凹槽")
 	UiTheme.asset_root = NOWHERE
 	var flat := UiTheme.build()
 	t.check(flat.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxFlat and flat.get_stylebox("panel", UiTheme.PANEL_HUD) is StyleBoxFlat, "没图：平面底")
-	var plain := ColorRect.new()
-	t.eq(UiTheme.dress_backdrop(plain), null, "没图：整屏底照旧纯色")
-	plain.free()
+	t.check(flat.get_stylebox("panel", UiTheme.PANEL_OVERLAY) is StyleBoxFlat and flat.get_stylebox("panel", UiTheme.PANEL_HUD_BAR) is StyleBoxFlat, "没图：框与顶端栏也是平面底")
 	UiTheme.asset_root = saved
+
+
+## 157 补充三：底屏的内容在一块居中的大石板上（九成宽高）、板外纯色；叠层的底是半透明暗罩、不铺石砖
+static func frame_slab_screens(t: TestCase, root: Window) -> void:
+	t.begin("157 补充三 · 一屏一块石板：主菜单 / 设置的内容在一块居中的大石板上（屏幕九成），板外纯色底；叠层是暗罩压着地图 + 一块石板框")
+	var p := Support.paths("s157s")
+	Support.cleanup("s157s")
+	var game = load(GAME).instantiate()
+	game.save_path = p["run"]
+	game.meta_path = p["meta"]
+	game.settings_path = p["settings"]
+	root.add_child(game)
+	var menu = game.base()
+	var slab: PanelContainer = menu.screen_slab()
+	t.not_null(slab, "主菜单有一块大石板")
+	if slab != null:
+		t.eq(slab.theme_type_variation, UiTheme.PANEL_OVERLAY, "大石板用石板变体")
+		t.check(is_equal_approx(slab.anchor_left, 0.05) and is_equal_approx(slab.anchor_top, 0.05) and is_equal_approx(slab.anchor_right, 0.95) and is_equal_approx(slab.anchor_bottom, 0.95), "占屏幕九成、居中")
+		var area: Control = menu.get_node_or_null(^"SlabContent")
+		t.check(area != null and area.find_children("*", "Button", true, false).size() > 0, "菜单按钮都在板的内容区里")
+		t.check(area != null and is_equal_approx(area.anchor_left, slab.anchor_left) and is_equal_approx(area.anchor_right, slab.anchor_right), "内容区和板同锚点（按板的内边距缩进）")
+		t.eq(slab.theme, UiTheme.text_theme(UiTheme.tone_of(UiTheme.PANEL_OVERLAY)), "板上的字色按石板的深浅挂")
+		var holder: Control = menu.get_node_or_null(^"SlabContent")
+		t.eq(holder.theme if holder != null else null, UiTheme.text_theme(UiTheme.tone_of(UiTheme.PANEL_OVERLAY)), "内容区也挂同一份字色")
+	var bg: ColorRect = menu.get("_bg_rect")
+	t.check(bg != null and bg.get_child_count() == 0 and bg.color.a >= 1.0, "板外是纯色底，不铺砖墙")
+	t.is_null(menu.overlay_frame(), "底屏没有叠层框")
+	game.queue_free()
+	Support.cleanup("s157s")
+	# 叠层：暗罩半透明、框是石板
+	var screen := GameScreen.new()
+	root.add_child(screen)
+	var content: Container = screen.call("_centered_panel", Vector2(300, 200))
+	var shade := screen.get_child(0) as ColorRect
+	t.check(shade != null and is_equal_approx(shade.color.a, GameScreen.OVERLAY_SHADE) and shade.get_child_count() == 0, "叠层：半透明暗罩（%.2f），地图压暗透出、不铺石砖" % (shade.color.a if shade != null else -1.0))
+	t.check(content != null and screen.overlay_frame() != null and screen.overlay_frame().theme_type_variation == UiTheme.PANEL_OVERLAY, "框是石板")
+	t.is_null(screen.screen_slab(), "叠层没有底屏的大板")
+	screen.free()
 
 
 static func frame_nameplate_slots(t: TestCase, root: Window) -> void:

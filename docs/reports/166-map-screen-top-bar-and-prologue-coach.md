@@ -159,7 +159,8 @@
 - 战前准备屏：开关开着就不建「溜走」；`slip_battle / slip_reason`、`GameFlow.slip_battle` 留着。
 - 开局屏：`CharacterDef.skill_lines / skills_summary` 只列被动；百科「三个角色」删掉主动技能那几句（「技能（两个被动）」）。
 - 美术清单删掉两张技能图标；`IconButton` 的角标留作可选能力。
-- 测试：`test_hud_150.gd`（技能默认藏、右键放出来有按钮）、`test_map_screen_166.gd`（安德烈乌斯战前屏没有溜走、脱身还在）、`test_characters_136.gd` / `test_character_skills.gd`（只列被动）。- 序章一开场事件（`tut_intro`）里讲技能按钮的那一段也删了。
+- 测试：`test_hud_150.gd`（技能默认藏、右键放出来有按钮）、`test_map_screen_166.gd`（安德烈乌斯战前屏没有溜走、脱身还在）、`test_characters_136.gd` / `test_character_skills.gd`（只列被动）。
+- 序章一开场事件（`tut_intro`）里讲技能按钮的那一段也删了。
 
 ### 落地记录（美术交图，2026-10-13）
 

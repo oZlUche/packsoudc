@@ -79,6 +79,8 @@ var _card: VBoxContainer = null
 var _preview_host: VBoxContainer = null
 var _preview_view: InventoryView = null
 var _summary: RichTextLabel = null
+## 157 补充三：石板里的内容区（[method GameScreen._slab_screen]）
+var _area: Control = null
 
 
 func open(_payload: Dictionary) -> void:
@@ -89,7 +91,8 @@ func open(_payload: Dictionary) -> void:
 	for side in ["left", "right", "top"]:
 		margin.add_theme_constant_override("margin_" + side, 36)
 	margin.add_theme_constant_override("margin_bottom", 140)     # 161：底下留给右下角那两颗大按钮
-	add_child(margin)
+	_area = _slab_screen()     # 157 补充三：三页都在一整块石板上
+	_area.add_child(margin)
 	var col := _vbox(14)
 	margin.add_child(col)
 	_title = _label("", 26, UiPalette.FG)
@@ -664,7 +667,7 @@ func _build_nav() -> void:
 	_enter_btn.custom_minimum_size = Vector2(280, 76)
 	row.add_child(_enter_btn)
 	box.add_child(row)
-	add_child(box)
+	_area.add_child(box)
 
 
 ## 出发。开不了（生成不出图、超上限）返回 false，留在这一屏说明原因

@@ -54,7 +54,7 @@ static func run(t: TestCase) -> void:
 	UiTheme.asset_root = saved_root
 	UiPalette.apply(s)     # 底色没变不重填：换一下再换回来，让当前那一份按石板图重填（后面的套件照游戏的样子）
 	UiPalette.apply(back)
-	t.check(cur.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxTexture, "157 补：放回石板图，原地重填后 PanelDark 是石板九宫格")
+	t.eq(cur.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxTexture, UiTheme.art(UiTheme.ART_INSET) != null, "157 补充三：放回美术目录，原地重填后 PanelDark 有凹槽图就是九宫格")
 
 	t.begin("121 · 小工具先选变体：前景色 / 14 号的标签零覆写、暗色走 LabelDim、语义色才覆写；按钮只设变体")
 	var l := UiTheme.label(Label.new(), 14, UiPalette.FG)

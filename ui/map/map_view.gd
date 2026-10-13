@@ -395,12 +395,9 @@ func press(p: Vector2, button: int = MOUSE_BUTTON_LEFT, shift: bool = false) -> 
 
 #region 绘制
 func _draw() -> void:
-	var stone := UiTheme.backdrop_art()     # 157 补：有石板图铺石板（平铺，跟设置的底色染）
 	if _skin_tex != null:     # 这一章的手绘底图：铺满、裁边，画在路网底下
 		draw_texture_rect_region(_skin_tex, Rect2(Vector2.ZERO, size), MapSkin.cover_region(_skin_tex.get_size(), size))
-	elif stone != null:
-		draw_texture_rect(stone, Rect2(Vector2.ZERO, size), true, UiTheme.backdrop_tint())
-	else:
+	else:     # 157 补充三：地图屏不走石板，没底图就是设置里的底色
 		draw_rect(Rect2(Vector2.ZERO, size), UiPalette.bg())
 	if graph == null:
 		return
