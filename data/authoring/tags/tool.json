@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "A tool."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }

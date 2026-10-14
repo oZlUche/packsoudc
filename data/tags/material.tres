@@ -14,3 +14,4 @@ descriptions = {
 "en": "A crafting material."
 }
 tip = false
+category = "purpose"

@@ -14,3 +14,4 @@ descriptions = {
 "en": "A trophy taken from an enemy."
 }
 tip = false
+category = "purpose"

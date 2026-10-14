@@ -88,21 +88,21 @@ static func run_node_tooltip(t: TestCase) -> void:
 
 
 static func run_item_tooltip(t: TestCase) -> void:
-	t.begin("084 · 道具说明：名（按稀有度上色）、稀有度、标签、效果；武器有冷却与 DPS，非武器没有 DPS；槽的说明；包的说明；在棋盘上按棋盘编译")
+	t.begin("084 · 道具说明：名（按稀有度上色）、稀有度、标签、效果；武器写「每 X 秒造成 Y 点伤害」（170：不写冷却与 DPS）；槽的说明；包的说明；在棋盘上按棋盘编译")
 	var c := _content()
 	var knife := ItemInstance.create(c.items.get_def(&"knife"))
 	var text := ItemTooltip.describe(knife)
-	t.check(text.contains("匕首") and text.contains(ItemPainter.rarity_color(knife.def).to_html(false)), "名字按稀有度上色")
+	t.check(text.contains("[color=@rarity%d]匕首" % knife.def.rarity), "名字按稀有度上色（颜色名，按底取版）")
 	t.check(text.contains(ItemTooltip.rarity_name(knife.def.rarity)), "写了稀有度")
 	t.check(text.contains("武器") and not text.contains("weapon"), "写了标签（096：按数据里的名字，不是原词）")
 	t.check(not text.contains("快攻"), "快攻是内部标签，不写（107 后续）")
-	t.check(text.contains("冷却") and text.contains("DPS"), "武器：冷却与 DPS（%s）" % text.replace("\n", " | "))
+	t.check(Glossary.strip_bbcode(text).contains("秒造成") and not text.contains("冷却") and not text.contains("DPS"), "武器：每 X 秒造成 Y 点伤害，不写冷却与 DPS（%s）" % text.replace("\n", " | "))
 	var compiled := ItemTooltip.compiled_for(knife, null)
 	t.check(compiled != null and compiled.estimated_dps() > 0.0, "单独编译得出 DPS")
 	var gamb := ItemInstance.create(c.items.get_def(&"gambeson"))
 	var gtext := ItemTooltip.describe(gamb)
 	t.check(not gtext.contains("DPS"), "非武器不写 DPS")
-	t.check(gtext.contains("槽"), "有邻接标记的写槽的说明（%s）" % gtext.replace("\n", " | "))
+	t.check(gtext.contains("term:增益槽") or gtext.contains("term:受益槽"), "有邻接标记的写槽的句子（行首格位图标，%s）" % gtext.replace("\n", " | "))
 	var bag := ItemInstance.create(c.items.get_def(&"bag_leather"))
 	t.check(ItemTooltip.describe(bag).contains("包："), "包写包的说明")
 	# 在棋盘上：按棋盘编译（有邻接加成时 DPS 会变）
@@ -221,7 +221,9 @@ static func frame_hover_tip(t: TestCase, root: Window) -> void:
 	var mm2 := InputEventMouseMotion.new()
 	mm2.position = Vector2(150, 120)
 	view.gui_input.emit(mm2)
-	t.check(not tip.is_showing(), "移到空格：藏起来")
+	t.check(tip.is_showing(), "170：刚移到空格还在（宽限 %.2f 秒，好让鼠标移进悬浮窗）" % HoverTip.GRACE_SEC)
+	tip.tick(HoverTip.GRACE_SEC + 0.01, Vector2(790, 590))
+	t.check(not tip.is_showing(), "移到空格、宽限过了没进窗：藏起来")
 	tip.can_show = func(_v: ContainerView, _uid: int) -> bool: return false
 	view.gui_input.emit(mm)
 	t.check(not tip.is_showing(), "can_show 说不行就不显示")
@@ -229,33 +231,33 @@ static func frame_hover_tip(t: TestCase, root: Window) -> void:
 	view.gui_input.emit(mm)
 	t.check(tip.is_showing(), "放开就又显示")
 	view.mouse_exited.emit()
-	t.check(not tip.is_showing(), "出了视图：藏起来")
+	tip.tick(HoverTip.GRACE_SEC + 0.01, Vector2(790, 590))
+	t.check(not tip.is_showing(), "出了视图（宽限过了）：藏起来")
 	tip.show_text("地图上的点", Vector2(100, 100))
 	t.check(tip.is_showing() and tip.text() == "地图上的点", "直接给文字也行")
 	host.queue_free()
 
-	# 090（作者：主窗贴屏幕左边时侧窗压在了主窗上）：主窗 + 词条列当一组摆，永不叠；
-	# 宿主比屏窄（背包浮窗那种）也按视口算，不按宿主
+	# 090 → 170：侧窗取消，词条在钉住后开子窗 —— 子窗贴主窗右边，右边放不下换下面，都夹在屏幕里、不压主窗
 	var narrow := Control.new()
 	narrow.size = Vector2(200, 600)
 	root.add_child(narrow)
 	var tip2 := HoverTip.new()
 	narrow.add_child(tip2)
-	var terms := [{"name": "冷却", "text": "两次出手之间的间隔（秒）"}, {"name": "耗耐力", "text": "这一下出手要花的耐力"}]
-	tip2.show_text("[b]匕首[/b]\n[自发] 冷却 0.8 秒　耗耐力 4", Vector2(20, 20), null, terms)
-	var pr := Rect2(tip2._panel.position, tip2._panel.size)
-	var sr := Rect2(tip2._side.position, tip2._side.size)
-	t.check(tip2._side.visible and sr.size.x > 0 and pr.size.x > 0, "有主窗有侧窗")
-	t.check(not pr.intersects(sr), "主窗在屏幕左边：侧窗不压主窗")
-	t.check(sr.position.x >= pr.end.x - 0.5, "侧窗在主窗右边")
-	t.check(pr.position.x >= 0 and sr.position.x >= 0, "都没出屏幕左边")
+	var terms := {"格挡": {"name": "格挡", "text": "只有盾牌给格挡。"}}
 	var vw := root.get_visible_rect().size.x
-	tip2.show_text("[b]匕首[/b]", Vector2(vw - 20, 20), null, terms)
-	pr = Rect2(tip2._panel.position, tip2._panel.size)
-	sr = Rect2(tip2._side.position, tip2._side.size)
-	t.check(not pr.intersects(sr), "鼠标靠屏幕右边：也不叠")
-	t.check(sr.end.x <= pr.position.x + 0.5 or sr.position.x >= pr.end.x - 0.5, "侧窗在主窗的某一侧")
-	t.check(pr.position.x >= 0 and sr.position.x >= 0, "都没出屏幕左边")
+	for at in [Vector2(20, 20), Vector2(vw - 20, 20)]:
+		tip2.show_text("[b]盾[/b]\n[url=term:格挡][u]格挡[/u][/url] 4", at, null, terms)
+		tip2.pin(tip2._panel)
+		var child = tip2.open_child(tip2._panel, "term:格挡")
+		t.not_null(child, "钉住后开得出子窗")
+		if child == null:
+			continue
+		var pr := Rect2(tip2._panel.position, tip2._panel.size)
+		var cr := Rect2(child.position, child.size)
+		t.check(not pr.intersects(cr.grow(-0.5)), "子窗不压主窗（鼠标在 %s）" % str(at))
+		t.check(pr.position.x >= 0 and cr.position.x >= 0 and cr.end.x <= vw + 0.5, "都在屏幕里")
+		tip2.hide_tip()
+	t.check(not tip2.is_showing() and tip2.windows().is_empty(), "收起来整串都关")
 	narrow.queue_free()
 
 	# 反馈（悬浮窗下方大段空白）：先显示长文 + 对手棋盘，再换成一行短字 —— 旧棋盘当场摘掉、排版后缩回内容高度

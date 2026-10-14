@@ -68,16 +68,16 @@ static func run_damage_type_data(t: TestCase) -> void:
 
 
 static func run_import_tags_and_presets(t: TestCase) -> void:
-	t.begin("096 · 导入器：标签定义要 id 与名字；道具带没登记的标签只警告；伤害类型定义；预设套不用带包、非预设仍要")
+	t.begin("096 · 导入器：标签定义要 id 与名字（171：还要大类）；道具带没登记的标签报错（171，原来只警告）；伤害类型定义；预设套不用带包、非预设仍要")
 	var ctx := ContentImporter.Context.new()
 	var report := ImportReport.new()
-	var tag := ContentImporter.import_tag({"id": "weapon", "display_name": "武器", "display_names": {"en": "Weapon"}, "description": "x"}, ctx, report)
-	ContentImporter.import_tag({"id": "faith", "display_name": "信仰"}, ctx, report)
+	var tag := ContentImporter.import_tag({"id": "weapon", "display_name": "武器", "display_names": {"en": "Weapon"}, "description": "x", "category": "purpose"}, ctx, report)
+	ContentImporter.import_tag({"id": "faith", "display_name": "信仰", "category": "origin"}, ctx, report)
 	t.check(report.ok() and tag.id == &"weapon" and ctx.tags.has(&"weapon"), "标签导入、登记进上下文")
 	var dumped := ContentExporter.export_tag(tag)
 	t.check(dumped.get("display_name") == "武器" and (dumped.get("display_names") as Dictionary).get("en") == "Weapon", "导出往返")
 	var bad := ImportReport.new()
-	ContentImporter.import_tag({"id": "", "display_name": ""}, ctx, bad)
+	ContentImporter.import_tag({"id": "", "display_name": "", "category": "purpose"}, ctx, bad)
 	t.eq(bad.errors.size(), 2, "没 id、没名字各一条错误")
 	var bad2 := ImportReport.new()
 	ContentImporter.import_tag({"id": "faith:x", "display_name": "x"}, ctx, bad2)
@@ -85,8 +85,7 @@ static func run_import_tags_and_presets(t: TestCase) -> void:
 	var r2 := ImportReport.new()
 	ContentImporter.import_item({"id": "probe", "display_name": "探", "shape": ["1"], "tags": ["weapon", "zz_unknown", "faith", "faith:brute"],
 		"combat": {"rules": [{"trigger": {"type": "on_schedule"}, "cadence": {"type": "cooldown", "seconds": 1.0}, "effects": [{"type": "deal_damage"}]}]}}, ctx, r2)
-	t.check(r2.ok(), "没登记的标签不是错误：%s" % r2.to_text())
-	t.eq(r2.warnings.size(), 1, "只对 zz_unknown 警告一次（faith:<id> 不算）：%s" % r2.to_text())
+	t.eq(r2.errors.size(), 1, "171：没登记的标签是错误，只对 zz_unknown 一条（faith:<id> 不算）：%s" % r2.to_text())
 	var r3 := ImportReport.new()
 	var dt := ContentImporter.import_damage_type({"id": "acid", "display_name": "酸", "armor_absorbable": false, "provokes": false}, ctx, r3)
 	t.check(r3.ok() and dt.id == &"acid" and not dt.armor_absorbable and not dt.provokes, "伤害类型导入")
@@ -106,14 +105,14 @@ static func run_import_tags_and_presets(t: TestCase) -> void:
 
 
 static func run_tooltip_tags(t: TestCase) -> void:
-	t.begin("096 · 道具悬浮窗：标签按名字写、标签的说明进词条侧窗；包的准入标签也按名字")
+	t.begin("096 · 道具悬浮窗：标签按名字写、标签的说明是词条；包的准入标签也按名字")
 	var c := NodeScreens._content()
 	var knife := ItemInstance.create(c.items.get_def(&"knife"))
 	var full := ItemTooltip.describe_full(knife)
 	var text := Glossary.strip_bbcode(String(full["text"]))
-	t.check(text.contains("标签：武器、近战、金属"), "标签一行照样列出名字（107：不弹词条不等于不显示；快攻是内部标签不列）：%s" % text.split("\n")[1] if text.split("\n").size() > 1 else text)
+	t.check(text.contains("武器 · 近战 · 金属"), "副行照样列出标签名字（107：不弹词条不等于不显示；快攻是内部标签不列；171：按大类排）：%s" % text.split("\n")[1] if text.split("\n").size() > 1 else text)
 	var names: Array[String] = []
-	for term in full["terms"]:
+	for term in (full["terms"] as Dictionary).values():
 		names.append(String((term as Dictionary)["name"]))
 	t.check(names.has("金属") and not names.has("武器") and not names.has("近战"), "107：只有 tip 开着的标签成词条：%s" % str(names))
 
@@ -221,11 +220,12 @@ static func run_search_encounter_won_sees_loot(t: TestCase) -> void:
 
 
 static func frame_property_form_pickers(t: TestCase, root: Window) -> void:
-	t.begin("096 · 编辑器：标签数组旁的「加标签…」下拉（登记过 / 用过的标签，带中文名）；伤害类型字段下拉；指向标签的字段下拉")
+	t.begin("096 · 编辑器：标签数组的「加标签…」下拉（171：只列登记过的，带中文名）；伤害类型字段下拉；指向标签的字段下拉")
 	var saved := UiText.lang
 	UiText.lang = "zh"
 	var known := PropertyForm.known_tags()
-	t.check(known.has("weapon") and known.has("rapid") and known.has("gear_plug"), "已知标签含登记的与内容里用过的（%d 个）" % known.size())
+	t.check(known.has("weapon") and known.has("rapid") and known.has("gear_plug"), "已知标签 = 登记过的（%d 个）" % known.size())
+	t.eq(known.size(), TagRegistry.ids().size(), "171：不再扫内容里用过的（没登记的导入就报错）")
 	t.check(not known.any(func(k: String) -> bool: return k.begins_with("faith:")), "faith:<id> 不列")
 	t.eq(PropertyForm.tag_label("weapon"), "武器 (weapon)", "标签的显示文字")
 	t.eq(PropertyForm.tag_label("zz_x"), "zz_x", "没登记的原词")
@@ -243,17 +243,16 @@ static func frame_property_form_pickers(t: TestCase, root: Window) -> void:
 				found_pickers.append(ch)
 			f.call(ch, f)
 	walker.call(form, walker)
-	t.check(not found_pickers.is_empty(), "tags 字段旁有「加标签…」")
+	t.check(not found_pickers.is_empty(), "tags 字段有「加标签…」")
 	var picker: Control = found_pickers[0] if not found_pickers.is_empty() else null
 	if picker != null:
 		var ob: OptionButton = picker.get_meta("tag_options")
-		t.eq(ob.item_count, known.size() + 1, "下拉 = 已知标签 + 第一项提示")
-		var at := known.find("metal")
-		ob.item_selected.emit(at + 1)
+		var choices: Array = picker.get_meta("tag_choices")
+		t.eq(ob.item_count, known.size() + PropertyForm.tag_groups().size() + 1, "下拉 = 已知标签 + 每类一个分组标题 + 第一项提示")
+		ob.item_selected.emit(choices.find("metal"))
 		t.check(def.tags.has(&"metal") and def.tags.has(&"weapon"), "选一个就追加：%s" % str(def.tags))
-		ob.item_selected.emit(known.find("weapon") + 1)
+		ob.item_selected.emit(choices.find("weapon"))
 		t.eq(def.tags.size(), 2, "已有的不重复加")
-		t.check((picker.get_meta("tag_edit") as LineEdit).text.contains("metal"), "那一行文字跟着更新")
 	form.queue_free()
 	# 伤害类型字段
 	var dd := DealDamage.new()

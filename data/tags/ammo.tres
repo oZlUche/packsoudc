@@ -14,3 +14,4 @@ descriptions = {
 "en": "Ammunition."
 }
 tip = false
+category = "purpose"

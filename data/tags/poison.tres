@@ -14,3 +14,4 @@ descriptions = {
 "en": "Poisonous."
 }
 tip = false
+category = "element"

@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "A god-blessed variant."
   },
-  "tip": false
+  "tip": false,
+  "category": "element"
 }

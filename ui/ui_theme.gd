@@ -75,8 +75,16 @@ const HUD_LARGE_SIZE := 34
 const HUD_DOUBLE_SIZE := 28
 const OVERLAY_TITLE_SIZE := 20
 const TOOLTIP_MARGIN := 10
-## 157：悬浮窗底的贴图文件名（不带扩展名；旁边同名 `.json` 写九宫格边距）
-const ART_TOOLTIP := "tooltip_paper"
+## 157：悬浮窗底的贴图文件名（不带扩展名；旁边同名 `.json` 写九宫格边距）。
+## 170（作者定）：悬浮窗改深底白字 —— 黑曜石九宫格（`tip/tooltip_dark`，json `tone: dark`）；原来的纸（`tooltip_paper`）退了
+const ART_TOOLTIP := "tip/tooltip_dark"
+## 170：悬浮窗里的行内图标（增益 / 受益 / 装载 / 金币 / 秤砣 / 钉子）与棋盘邻居格上的格位图标（`<id>_on` / `<id>_off`，32 px）
+const TIP_ICON_DIR := "res://assets/ui/tip/"
+## 170：带色的字描边（深底上提亮）：统一黑 75%（待定 4 A）
+const OUTLINE_SIZE := 2
+const OUTLINE_COLOR := Color(0, 0, 0, 0.75)
+## 170：斜体（说明文字）—— 正文字体没有斜体字形，斜切这么多
+const ITALIC_SLANT := 0.2
 ## 157 补充三（作者定：一屏一块完整石板，不要石砖墙）：石板的板身（平铺的纹）与板边（九宫格，中心透明；json 有 `title_height`），
 ## 板里的分区是刻进板里的凹槽（`PanelDark` / `PanelLine` / `PanelHud` 都用它）。原来的整屏砖墙底与三种小石板退了
 const ART_SLAB_BODY := "slab_body"
@@ -110,6 +118,8 @@ static var _installed := false
 static var _current_bg := Color(0, 0, 0, 0)
 static var _font: Font = null
 static var _font_bold: Font = null
+static var _font_italic: Font = null
+static var _font_bold_italic: Font = null
 static var _font_title: Font = null
 static var _font_display: Font = null
 ## 157：界面贴图的目录。测试指到 `res://tests/fixtures/ui/`（那里放一张小图），用完改回来
@@ -312,6 +322,77 @@ static func rich_block(width: float, font_size: int = FONT_SIZE, bbcode: String 
 	set_rich(r, bbcode)
 	r.tree_entered.connect(retone.bind(r))     # 169：进树才知道压在什么底上
 	return r
+
+
+## 170：斜切一份字体当斜体用（[constant ITALIC_SLANT]）
+static func slanted(base: Font) -> FontVariation:
+	var v := FontVariation.new()
+	v.base_font = base
+	v.variation_transform = Transform2D(Vector2(1.0, ITALIC_SLANT), Vector2(0.0, 1.0), Vector2.ZERO)
+	return v
+
+
+## 170：一段字描边（[constant OUTLINE_SIZE] / [constant OUTLINE_COLOR]）—— 深底上带色的字都包这一层
+static func outline(bbcode: String) -> String:
+	return "[outline_size=%d][outline_color=#%s]%s[/outline_color][/outline_size]" % [OUTLINE_SIZE, OUTLINE_COLOR.to_html(true), bbcode]
+
+
+## 170：把 BBCode 里每一段 `[color=…]…[/color]` 都包上描边（白字 `@fg` 不描）。嵌套照样配对；已经描过的不重复包
+static func outline_colored(bbcode: String) -> String:
+	if not bbcode.contains("[color=") or bbcode.contains("[outline_size="):
+		return bbcode
+	var out := ""
+	var stack: Array[bool] = []
+	var at := 0
+	while true:
+		var open := bbcode.find("[color=", at)
+		var close := bbcode.find("[/color]", at)
+		if open < 0 and close < 0:
+			break
+		if open >= 0 and (close < 0 or open < close):
+			var end := bbcode.find("]", open)
+			if end < 0:
+				break
+			var value := bbcode.substr(open + 7, end - open - 7)
+			var wrap := value != TextTemplate.STYLE_PREFIX + "fg"
+			out += bbcode.substr(at, open - at)
+			if wrap:
+				out += "[outline_size=%d][outline_color=#%s]" % [OUTLINE_SIZE, OUTLINE_COLOR.to_html(true)]
+			out += bbcode.substr(open, end - open + 1)
+			stack.append(wrap)
+			at = end + 1
+		else:
+			out += bbcode.substr(at, close - at) + "[/color]"
+			if not stack.is_empty() and stack.pop_back():
+				out += "[/outline_color][/outline_size]"
+			at = close + 8
+	return out + bbcode.substr(at)
+
+
+## 170：行内图标 `[img=16x16]…[/img]`；图不在退回 [param fallback] 文字（「【增益】」「值」……）
+static func tip_icon(id: String, fallback: String, px: int = 16) -> String:
+	var path := TIP_ICON_DIR + id + ".png"
+	if not ResourceLoader.exists(path):
+		return fallback
+	return "[img=%dx%d]%s[/img]" % [px, px, path]
+
+
+## 170：棋盘邻居格上的格位图标（`grant_on` / `receive_off` / `load_on` ……，32 px）；不在返回 null（画回半透明方框）
+static func slot_icon(kind: String, lit: bool) -> Texture2D:
+	var path := TIP_ICON_DIR + "%s_%s.png" % [kind, "on" if lit else "off"]
+	if not _slot_icons.has(path):
+		_slot_icons[path] = load(path) as Texture2D if ResourceLoader.exists(path) else null
+	return _slot_icons[path]
+
+
+static var _slot_icons := {}
+
+
+## 170：在 `_draw` 之外先把格位图标读进来 —— 兼容渲染器下第一次在 `_draw` 里才读的贴图会画成白块（[InventoryView] 建出来时调）
+static func warm_slot_icons() -> void:
+	for kind in ["grant", "receive", "load"]:
+		slot_icon(kind, true)
+		slot_icon(kind, false)
 
 
 ## 清空一个节点的全部子节点：先摘下来再 free —— queue_free 到帧末才真的走，同一帧里数子节点会把旧的也数进去
@@ -689,8 +770,13 @@ static func _fill(t: Theme, bg: Color) -> void:
 			t.set_font_size(k, pair[0], pair[1])
 	t.set_constant("line_separation", RICH_BODY, 8)
 	# 富文本的 [b] 用真粗体（168：文楷 Medium），不让引擎拿常规体描粗
-	for k in ["bold_font", "bold_italics_font"]:
-		t.set_font(k, "RichTextLabel", _font_bold)
+	t.set_font("bold_font", "RichTextLabel", _font_bold)
+	# 170：[i] 是正文 / 粗体斜切 0.2（字体没有斜体字形）
+	if _font_italic == null:
+		_font_italic = slanted(_font)
+		_font_bold_italic = slanted(_font_bold)
+	t.set_font("italics_font", "RichTextLabel", _font_italic)
+	t.set_font("bold_italics_font", "RichTextLabel", _font_bold_italic)
 	# 输入框、数字框、树（编辑器里反复贴的那几组）
 	for type in ["LineEdit", "TextEdit"]:
 		t.set_stylebox("normal", type, _box(panel_bg.darkened(0.2), UiPalette.LINE, 6))

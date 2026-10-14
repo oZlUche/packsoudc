@@ -468,39 +468,82 @@ static func _strings(arr: Array) -> Array[String]:
 	return out
 
 
-## 096：已知的标签：登记过的（TagRegistry）+ 道具 / 敌人内容里用过的。升序去重；`faith:<id>` 不列（信仰对象标签由 faith 字段推）
-static var _extra_tags: Array[String] = []
-static var _scanned_tags: bool = false
-
-
+## 096 / 171：已知的标签 = 登记过的（[TagRegistry]），升序。没登记的道具导入就报错，所以不再扫内容里用过的
 static func known_tags() -> Array[String]:
-	var seen := {}
-	for k in TagRegistry.ids():
-		seen[String(k)] = true
-	if not _scanned_tags:
-		_scanned_tags = true
-		for kind in ["items", "enemies"]:
-			if not ContentPaths.KINDS.has(kind):
-				continue
-			var dir := String(ContentPaths.KINDS[kind][0])
-			var d := DirAccess.open(dir)
-			if d == null:
-				continue
-			for f in d.get_files():
-				if f.ends_with(".json"):
-					var parsed = JSON.parse_string(FileAccess.get_file_as_string(dir + "/" + f))
-					if parsed is Dictionary and (parsed as Dictionary).get("tags") is Array:
-						for tg in (parsed as Dictionary)["tags"]:
-							var s := String(tg)
-							if s != "" and not s.begins_with(FaithTags.PREFIX) and not _extra_tags.has(s):
-								_extra_tags.append(s)
-	for k in _extra_tags:
-		seen[String(k)] = true
 	var out: Array[String] = []
-	for k in seen:
-		out.append(k)
-	out.sort()
+	for k in TagRegistry.ids():
+		out.append(String(k))
 	return out
+
+
+## 171：「加标签…」下拉的选项，按大类分组：`[[大类, [id…]], …]`（大类按 [constant TagRegistry.CATEGORY_ORDER]，没归类的放最后一组）
+static func tag_groups() -> Array:
+	var groups: Array = []
+	var seen := {}
+	for cat in TagRegistry.CATEGORY_ORDER + [""]:
+		var ids: Array = []
+		for k in known_tags():
+			if TagRegistry.category_of(StringName(k)) == cat:
+				ids.append(k)
+				seen[k] = true
+		if not ids.is_empty():
+			groups.append([cat, ids])
+	return groups
+
+
+## 171：标签数组 —— 已选的标签一块一块（名字 + ×），后面一个按大类分组的「加标签…」下拉。
+## 节点上挂 `tag_options`（下拉）、`tag_choices`（下拉每一项对应的 id，分组标题是空串）、`tag_chips`（已选那一排）给测试用
+func _tag_chips(owner: Object, key: String, arr: Array) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	var chips := HFlowContainer.new()
+	chips.add_theme_constant_override("h_separation", 4)
+	chips.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	chips.custom_minimum_size.x = 220
+	row.add_child(chips)
+	var set_tags := func(out: Array) -> void:
+		var typed := ContentSchema.empty_like(arr)
+		for v in out:
+			typed.append(StringName(String(v)))
+		owner.set(key, typed)
+		_emit()
+		rebuild.call_deferred()
+	for t in arr:
+		var tag := String(t)
+		var b := Button.new()
+		b.text = "%s ×" % (Glossary.tag_name(StringName(tag)) if tag.begins_with(FaithTags.PREFIX) else TagRegistry.name_of(StringName(tag)))
+		b.tooltip_text = tag
+		_compact(b)
+		b.pressed.connect(func():
+			var cur: Array = (owner.get(key) as Array).duplicate()
+			cur.erase(StringName(tag))
+			set_tags.call(cur))
+		chips.add_child(b)
+	var ob := OptionButton.new()
+	_compact(ob)
+	var choices: Array[String] = [""]
+	ob.add_item("加标签…" if FieldText.zh() else "Add tag…", 0)
+	for g in tag_groups():
+		ob.add_separator(FieldText.enum_label(String(g[0])) if String(g[0]) != "" else ("未归类" if FieldText.zh() else "Uncategorized"))
+		choices.append("")
+		for k in g[1]:
+			ob.add_item(tag_label(k), choices.size())
+			ob.set_item_tooltip(choices.size(), k)
+			choices.append(k)
+	ob.item_selected.connect(func(idx: int):
+		ob.select(0)
+		if idx <= 0 or idx >= choices.size() or choices[idx] == "":
+			return
+		var cur: Array = (owner.get(key) as Array).duplicate()
+		if cur.has(StringName(choices[idx])):
+			return
+		cur.append(StringName(choices[idx]))
+		set_tags.call(cur))
+	row.add_child(ob)
+	row.set_meta("tag_options", ob)
+	row.set_meta("tag_choices", choices)
+	row.set_meta("tag_chips", chips)
+	return row
 
 
 ## 属性键给人看：中文模式「伤害 (damage)」，英文原名
@@ -803,7 +846,11 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 func _array_section(owner: Object, key: String, arr: Array) -> Control:
 	var builtin := arr.get_typed_builtin()
 
-	# 标签／格子这类简单数组用一行文本，比每项一个控件好用得多
+	if builtin == TYPE_STRING_NAME and _is_tag_field(key):
+		# 171（作者定）：标签只能从登记过的里挑 —— 已选的一个一块、后面一个 ×；「加标签…」下拉按大类分组。不能手打
+		return _labeled(owner, key, _tag_chips(owner, key, arr))
+
+	# 格子这类简单数组用一行文本，比每项一个控件好用得多
 	if builtin == TYPE_STRING_NAME or builtin == TYPE_STRING:
 		var le := LineEdit.new()
 		var parts: Array[String] = []
@@ -820,37 +867,6 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 					out.append(StringName(s) if builtin == TYPE_STRING_NAME else s)
 			owner.set(key, out)
 			_emit())
-		if builtin == TYPE_STRING_NAME and _is_tag_field(key):
-			# 096（作者定）：标签数组旁边一个「加标签…」下拉：列出登记过（TagRegistry，带中文名）与内容里用过的标签，选一个就追加到这一行
-			var row := HBoxContainer.new()
-			row.add_theme_constant_override("separation", 4)
-			row.add_child(le)
-			var ob := OptionButton.new()
-			_compact(ob)
-			ob.add_item("加标签…" if FieldText.zh() else "Add tag…", 0)
-			var keys := known_tags()
-			for i in keys.size():
-				ob.add_item(tag_label(keys[i]), i + 1)
-				ob.set_item_tooltip(i + 1, keys[i])
-			ob.item_selected.connect(func(idx: int):
-				ob.select(0)
-				if idx <= 0:
-					return
-				var picked := keys[idx - 1]
-				var cur: Array = owner.get(key)
-				if cur.has(StringName(picked)):
-					return
-				var out := ContentSchema.empty_like(arr)
-				for v in cur:
-					out.append(v)
-				out.append(StringName(picked))
-				owner.set(key, out)
-				le.text = ", ".join(_strings(out))
-				_emit())
-			row.add_child(ob)
-			row.set_meta("tag_options", ob)
-			row.set_meta("tag_edit", le)
-			return _labeled(owner, key, row)
 		return _labeled(owner, key, le)
 
 	if builtin == TYPE_VECTOR2I:

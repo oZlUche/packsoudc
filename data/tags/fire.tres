@@ -14,3 +14,4 @@ descriptions = {
 "en": "Carries fire."
 }
 tip = false
+category = "element"

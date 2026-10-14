@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Something to eat."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }

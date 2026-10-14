@@ -90,6 +90,11 @@ func _t(key: String) -> String:
 ## 存好之后的那一句
 func _saved_text(id: String) -> String:
 	return "已保存 %s.json，并生成 %s.tres" % [id, id]
+
+
+## 171：存盘成功之后（标签制作器借它把新标签登记进注册表，别的编辑器的下拉马上看得到）
+func _after_save(_built: Resource) -> void:
+	pass
 #endregion
 
 
@@ -338,6 +343,7 @@ func _save() -> void:
 		return
 	# 146：库（buff / 规则构件）变了，下拉和导出器下次重读
 	ContentLibrary.reset()
+	_after_save(built)
 	# 存下去了，草稿没意义了；基准换成刚写出去的那份
 	_drafts.erase(_draft_key())
 	_drafts.erase(id)

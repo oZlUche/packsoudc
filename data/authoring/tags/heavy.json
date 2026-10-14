@@ -9,5 +9,6 @@
     "en": "Bulky, heavy equipment."
   },
   "tip": false,
+  "category": "internal",
   "internal": true
 }

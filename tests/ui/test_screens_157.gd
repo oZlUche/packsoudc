@@ -364,7 +364,8 @@ static func run_tones(t: TestCase) -> void:
 		if f.ends_with(".png") and UiTheme.PANEL_ART.values().has(art_name):
 			var tone := String(UiTheme.art_meta(art_name).get("tone", ""))
 			t.check(tone == "dark" or tone == "light", "底图 %s 的 json 写了 tone（%s）" % [art_name, tone])
-	t.eq(UiTheme.tone_of(UiTheme.PANEL_TOOLTIP), UiTheme.TONE_LIGHT, "悬浮窗底用美术的亮纸：浅")
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_TOOLTIP), UiTheme.TONE_DARK, "170：悬浮窗底换成美术的黑曜石深底：深")
+	t.eq(String(UiTheme.art_meta(UiTheme.ART_TOOLTIP).get("tone", "")), "dark", "深底九宫格的 json 写了 tone: dark")
 	# 157 补充三：石板框的深浅读板边的 json，凹槽读凹槽的；没图查表（深）
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_OVERLAY), StringName(String(UiTheme.art_meta(UiTheme.ART_SLAB_EDGE).get("tone", "dark"))) if UiTheme.art(UiTheme.ART_SLAB_EDGE) != null else UiTheme.TONE_DARK, "石板框的深浅")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_DARK), StringName(String(UiTheme.art_meta(UiTheme.ART_INSET).get("tone", "dark"))) if UiTheme.art(UiTheme.ART_INSET) != null else UiTheme.TONE_DARK, "凹槽的深浅")
@@ -373,10 +374,10 @@ static func run_tones(t: TestCase) -> void:
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_OVERLAY), UiTheme.TONE_DARK, "测试图的板边写 dark：石板框深")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_HUD_BAR), UiTheme.TONE_DARK, "顶端栏跟石板")
 	UiTheme.asset_root = saved_root
-	t.check(UiTheme.current().get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is StyleBoxTexture, "assets/ui 里有纸：悬浮窗底是九宫格")
+	t.check(UiTheme.current().get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is StyleBoxTexture, "assets/ui/tip 里有深底：悬浮窗底是九宫格")
 	var saved := UiTheme.asset_root
 	UiTheme.asset_root = NOWHERE
-	t.eq(UiTheme.tone_of(UiTheme.PANEL_TOOLTIP), UiTheme.TONE_DARK, "没纸：悬浮窗底照旧是深底")
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_TOOLTIP), UiTheme.TONE_DARK, "没图：悬浮窗底照旧是深底")
 	UiTheme.asset_root = saved
 	t.eq(UiTheme.text_theme(UiTheme.TONE_DARK), null, "深底不挂字色主题（用全局的浅色字）")
 	var light := UiTheme.text_theme(UiTheme.TONE_LIGHT)
@@ -403,21 +404,23 @@ static func run_tones(t: TestCase) -> void:
 
 
 static func frame_tone_tooltip(t: TestCase, root: Window) -> void:
-	t.begin("157 补 · 悬浮窗用纸：浅底墨字 —— 主面板与词条小窗都挂墨色字主题，正文里的颜色换成墨水版；石板框是深底不挂")
+	t.begin("157 补 → 170 · 悬浮窗深底白字：主窗与子窗都不挂墨色字主题，正文颜色用深底版；石板框按自己的深浅")
 	var tip := HoverTip.new()
 	root.add_child(tip)
-	var src := "[color=#%s]生命 10[/color]\n普通字" % UiPalette.HP.to_html(false)
+	var src := "[color=#%s]生命 10[/color]\n普通字 [url=term:灼烧][u]灼烧[/u][/url]" % UiPalette.HP.to_html(false)
 	tip.show_text(src, Vector2(40, 40), null, [{"name": "灼烧", "text": "每秒掉血"}])
-	t.eq(tip.tone(), UiTheme.TONE_LIGHT, "悬浮窗是浅底")
-	t.check(tip.text().contains(UiPalette.style_color("hp", UiTheme.TONE_LIGHT).to_html(false)) and not tip.text().contains(UiPalette.HP.to_html(false)), "正文的红换成模板的浅版（169）")
+	t.eq(tip.tone(), UiTheme.TONE_DARK, "悬浮窗是深底")
+	t.check(tip.text().contains(UiPalette.HP.to_html(false)), "正文的红用深底版（原色）")
 	var rich := _first_rich(tip)
-	t.check(rich != null and rich.get_theme_color("default_color", rich.theme_type_variation) == UiTheme.INK, "正文默认字色是墨")
+	t.check(rich != null and rich.get_theme_color("default_color", rich.theme_type_variation) != UiTheme.INK, "正文默认字色不是墨（白字）")
+	tip.pin(tip._panel)
+	tip.open_child(tip._panel, "term:灼烧")
 	var cards := 0
 	for c in tip.find_children("*", "PanelContainer", true, false):
-		if (c as Control).theme_type_variation == UiTheme.PANEL_TOOLTIP:
-			t.eq((c as Control).theme, UiTheme.text_theme(UiTheme.TONE_LIGHT), "纸底挂了墨色字主题")
+		if (c as Control).theme_type_variation == UiTheme.PANEL_TOOLTIP and (c as Control).visible:
+			t.eq((c as Control).theme, null, "深底不挂字色主题")
 			cards += 1
-	t.eq(cards, 2, "主面板 + 一张词条小窗")
+	t.eq(cards, 2, "主窗 + 一扇子窗")
 	var frame := OverlayFrame.new()
 	root.add_child(frame)
 	frame.set_title("标题")

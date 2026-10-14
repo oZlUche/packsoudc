@@ -48,7 +48,7 @@ static func run_glossary(t: TestCase) -> void:
 	var sigil := ItemInstance.create(c.items.get_def(&"charm_brute"))
 	var full := ItemTooltip.describe_full(sigil)
 	var text := String(full["text"])
-	var terms: Array = full["terms"]
+	var terms: Array = (full["terms"] as Dictionary).values()
 	t.check(text.contains("血怒"), "主文字里有「血怒」")
 	t.check(not Glossary.strip_bbcode(text).contains("强攻"), "主文字里不直接写血怒带的轴")
 	var names: Array[String] = []
@@ -69,23 +69,23 @@ static func run_glossary(t: TestCase) -> void:
 	var kf := ItemTooltip.describe_full(knife)
 	var ktext := String(kf["text"])
 	var kplain := Glossary.strip_bbcode(ktext)
-	t.check(kplain.contains("耗耐力 3"), "武器写着每次出手耗耐力：%s" % kplain.replace("\n", " / "))
-	t.check(ktext.contains("冷却") and ktext.contains("DPS"), "冷却与 DPS 照旧")
+	t.check(kplain.contains("消耗 3 耐力"), "武器写着每次出手消耗的耐力：%s" % kplain.replace("\n", " / "))
+	t.check(not ktext.contains("冷却") and not ktext.contains("DPS"), "170：不再写冷却与 DPS（武器句已含频率与伤害）")
 	var knames: Array[String] = []
-	for term in kf["terms"]:
+	for term in (kf["terms"] as Dictionary).values():
 		knames.append(String(term["name"]))
 	# 107：自发、耗耐力、冷却、近战、武器、金属… 全不弹；匕首因此一个词条都不剩
-	t.check(not knames.has("自发") and not knames.has("耗耐力") and not knames.has("冷却"), "匕首的直白词条都不弹了：%s" % str(knames))
-	t.check(not ktext.contains("[u]自发[/u]") and not ktext.contains("[u]耗耐力[/u]"), "不弹的词在主文字里也不标色（标了色玩家会去找解释）")
+	t.check(not knames.has("自发") and not knames.has("耗耐力") and not knames.has("冷却") and not knames.has("耐力"), "匕首的直白词条都不弹了：%s" % str(knames))
+	t.check(not ktext.contains("[u]耐力[/u]"), "不弹的词在主文字里也不标色（标了色玩家会去找解释）")
 	# 涂毒匕首：中毒是 buff 词条，说明按定义生成
 	var pk := ItemInstance.create(c.items.get_def(&"poisoned_knife"))
 	var pf := ItemTooltip.describe_full(pk)
 	var poison := ""
-	for term in pf["terms"]:
+	for term in (pf["terms"] as Dictionary).values():
 		if String(term["name"]) == "中毒":
 			poison = String(term["text"])
 	t.check(poison.contains("减益") and poison.contains("不限层") and poison.contains("永续"), "中毒的词条按定义：减益、不限层、永续：%s" % poison)
-	t.check(Glossary.strip_bbcode(String(pf["text"])).contains("施加中毒"), "apply_status 只写「施加中毒」")
+	t.check(Glossary.strip_bbcode(String(pf["text"])).contains("附带【中毒】"), "170：武器句尾接「附带【中毒】」")
 	# Glossary 本身
 	t.eq(Glossary.mod_text(StatModifier.make(&"damage", StatModifier.Mode.ADD, 10.0)), "伤害 +10", "加算")
 	var pct := StatModifier.make(&"damage", StatModifier.Mode.MULT, 10.0)
@@ -99,6 +99,7 @@ static func run_glossary(t: TestCase) -> void:
 	t.eq(kept.size(), 2, "带规则的词照旧弹（护甲、直接伤害）：%s" % str(kept))
 	var marked := Glossary.mark("血怒 与 血怒", [{"name": "血怒", "text": ""}])
 	t.eq(marked.count("[u]血怒[/u]"), 2, "每处都标")
+	t.eq(marked.count("[url=term:血怒]"), 2, "170：标成关键词链接（钉住后停上去开子窗）")
 	# 开战 buff 进预估 DPS：匕首 + 蛮神的护符（信力一阶）
 	var board := GridInventory.new(Vector2i(4, 4), 0, false)
 	var k := TestSupport.put(board, c.items.get_def(&"knife"))
@@ -629,7 +630,7 @@ static func run_names_and_hunters_and_mana(t: TestCase) -> void:
 	t.eq(Names.of(buffs[&"poison"]), "Poison", "道具里内联的 buff 也有英文名")
 	var full := ItemTooltip.describe_full(ItemInstance.create(poisoned))
 	var plain_en := Glossary.strip_bbcode(String(full["text"]))
-	t.check(plain_en.contains("Poisoned Knife") and plain_en.contains("施加Poison"), "悬浮窗按当前语言写名字：%s" % plain_en.replace("\n", " / "))
+	t.check(plain_en.contains("Poisoned Knife") and plain_en.contains("【Poison】"), "悬浮窗按当前语言写名字：%s" % plain_en.replace("\n", " / "))
 	UiText.lang = before
 	# 往返
 	var back := ContentImporter.import_item(ContentExporter.export_item(knife), ContentImporter.Context.new(), ImportReport.new())

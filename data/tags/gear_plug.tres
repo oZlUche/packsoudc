@@ -14,3 +14,4 @@ descriptions = {
 "en": "A small piece that slots next to gear."
 }
 tip = false
+category = "purpose"

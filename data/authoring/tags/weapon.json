@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "An item that attacks on its own; every weapon in a bag fires independently."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }

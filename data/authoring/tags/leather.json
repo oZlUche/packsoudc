@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Made of tanned hide."
   },
-  "tip": false
+  "tip": false,
+  "category": "material"
 }

@@ -14,7 +14,7 @@ extends RefCounted
 const LABELS := {
 	"id": "id", "display_name": "名字", "display_names": "别的语言的名字", "description": "说明", "descriptions": "别的语言的说明",
 	"title": "标题", "titles": "别的语言的标题", "text": "正文", "texts": "别的语言的正文", "label": "选项文字", "labels": "别的语言的选项文字",
-	"image": "配图", "tags": "标签", "tag": "标签", "order": "先后", "hidden": "隐藏", "note": "备注", "tip": "弹词条", "internal": "内部标签",
+	"image": "配图", "tags": "标签", "tag": "标签", "order": "先后", "hidden": "隐藏", "note": "备注", "tip": "弹词条", "internal": "内部标签", "category": "大类", "has_blurb": "有专属解说", "blurb": "解说", "blurbs": "解说（别的语言）",
 	"amount": "数量", "value": "数值", "count": "件数", "percent": "百分比", "flat": "固定值", "mult": "倍率", "StatModifier.mode": "乘算 / 加算", "StatBonus.mode": "乘算 / 加算",
 	"chance": "概率", "seconds": "秒", "steps": "步数", "min_steps": "最少步数", "max_steps": "最多步数", "min_value": "最少", "flag": "旗标",
 	"absent": "反过来（要求没有）", "add": "累加", "clear": "拔掉", "target": "对象", "where": "在哪", "pick": "挑法", "item": "道具", "items": "道具",
@@ -128,6 +128,7 @@ const ENUM_LABELS := {
 	"ADD": "加算", "MULT": "乘算",     # 133
 	"PREBATTLE": "战前准备屏",     # 147
 	"tier": "按阶", "active": "激活即", "scaled": "按信力",     # 111：信仰加成的生效方式（字符串枚举，值是小写原文）
+	"purpose": "用途", "element": "属性", "material": "材料", "origin": "归属", "source": "来源", "internal": "内部",     # 171：标签大类
 }
 
 ## 类名 → 中文

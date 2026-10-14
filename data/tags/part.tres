@@ -14,3 +14,4 @@ descriptions = {
 "en": "A part or component."
 }
 tip = false
+category = "purpose"

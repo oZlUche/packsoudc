@@ -4,8 +4,9 @@
   "display_names": {
     "en": "Crystal"
   },
-  "description": "魔晶石：放在法杖的受益格上给它供给，用几场就会碎。",
+  "description": "魔晶石：放在法杖的装载槽上给它供给，用几场就会碎。",
   "descriptions": {
-    "en": "Mana crystal: fuels a staff from its receiving slot and shatters after a few battles."
-  }
+    "en": "Mana crystal: fuels a staff from its load slot and shatters after a few battles."
+  },
+  "category": "purpose"
 }

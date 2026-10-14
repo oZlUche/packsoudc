@@ -1,9 +1,9 @@
 ## 词条表（087，作者定）：道具说明里指向特定名词 / 关键词的地方（「护符结界」「自发」「中毒」「血怒」……），
-## 悬浮窗**侧边**给每个关键词开一个小窗写具体效果 —— 主文字只写名词，不写「伤害 +10%」这种细节。
+## 每个关键词有一段具体效果 —— 主文字只写名词，不写「伤害 +10%」这种细节。170：关键词带下划线，悬浮窗钉住后停上去开子窗（原来的侧边小窗取消）。
 ##
 ## 两类词条：**固定词条**（[constant TERMS]：时机、属性、机制的通用解释）与 **buff 词条**（从道具的规则里收集到的 [BuffDef]，
 ## 说明由 [method describe_buff] 按定义生成 —— 数据改了文字跟着改，不用手写）。
-## 这一层只产出**数据**（`[{name, text}]`）与标了色的 BBCode；怎么画是 [HoverTip] 的事。将来换正式渲染，这套「主文字 + 侧边词条」的逻辑保留
+## 这一层只产出**数据**（`[{name, text, id}]`）与标了关键词的 BBCode；怎么画是 [HoverTip] 的事
 class_name Glossary
 extends RefCounted
 
@@ -46,6 +46,7 @@ const TERMS := {
 	"合成": {"text": "把一件道具拖到另一件上面，两件有配方就立刻合成一件新的；装不下就到地上。"},
 	"增益槽": {"text": "这件道具的一种格位：邻居占着它，邻居就得到写着的加成。"},
 	"受益槽": {"text": "这件道具的一种格位：每被邻居点亮一格，自己就得一份写着的加成。"},
+	"装载槽": {"text": "法杖的晶石座（171）：放上去的魔晶石把它带的供给交给法杖。一颗晶石只给一把法杖（压着两把的给后放的那把），占了同一把的几个装载槽也只算一份。"},
 	# 107（作者定）：这两条写的是**buff**（每层每秒掉血、无视格挡与护甲），不是武器的伤害类型 —— 同名的标签
 	# 「中毒」「流血」指类型，那边 tip 为 false。两边文字都保留
 	"中毒": {"text": "每层每秒造成毒伤，无视格挡与护甲，永续叠层。"},
@@ -79,14 +80,14 @@ static func tag_name(tag: StringName) -> String:
 	return TagRegistry.name_of(tag)
 
 
-## 标签的词条（096）：登记了说明的标签 → {名字: 说明}；没说明的不出。
+## 标签的词条（096）：登记了说明的标签 → {名字: {"id": 标签 id, "text": 说明}}；没说明的不出。
 ## 107：`tip` 关掉的标签也不出 —— 名字仍在标签行里列着，只是不弹窗
 static func tag_terms(tags: Array) -> Dictionary:
 	var out := {}
 	for t in tags:
 		var d := TagRegistry.describe(t)
 		if d != "" and TagRegistry.tip_of(t) and not TagRegistry.is_internal(t):
-			out[tag_name(t)] = d
+			out[tag_name(t)] = {"id": String(t), "text": d}
 	return out
 
 
@@ -112,10 +113,33 @@ static func stat_name(key: StringName) -> String:
 	return UiText.pick(STAT_NAMES.get(String(key), null), String(key))
 
 
-## 一条属性修饰给人看：「伤害 +10%」「格挡 +4」
-static func mod_text(m: StatModifier) -> String:
+## 171（作者定）：增益 / 受益句里属性的叫法（「武器**增伤** 10%」）。没写的用 [constant STAT_NAMES] 的名字；
+## 伤害的乘算叫「增伤」，加算还是「伤害 +N」
+const SENTENCE_NAMES := {
+	"damage": {"zh": "增伤", "en": "damage"}, "haste": {"zh": "加速", "en": "haste"}, "max_armor": {"zh": "护甲", "en": "Armor"},
+	"regen_stamina": {"zh": "回耐力", "en": "stamina regen"}, "regen_hp": {"zh": "回血", "en": "health regen"},
+}
+
+
+## 171：句子里属性的叫法（见 [constant SENTENCE_NAMES]）
+static func sentence_name(key: StringName, mult: bool) -> String:
+	if key == &"damage" and not mult:
+		return stat_name(key)
+	return UiText.pick(SENTENCE_NAMES.get(String(key), null), stat_name(key))
+
+
+## 一条属性修饰给人看：「伤害 +10%」「格挡 +4」。
+## 171：[param sentence] = 增益 / 受益句的写法 —— 乘算「增伤 10%」（基础轴的数值简单换算，正数不带加号）、加算「护甲 +5」
+static func mod_text(m: StatModifier, sentence: bool = false) -> String:
 	if m == null:
 		return ""
+	if sentence:
+		var nm := sentence_name(m.stat, m.is_mult())
+		if m.is_mult():
+			return "%s %d%%" % [nm, roundi(m.amount)]
+		if BattleStats.PERCENT_DISPLAY.has(m.stat):
+			return "%s %+d%%" % [nm, roundi(m.amount * 100.0)]
+		return "%s %s" % [nm, ("%+d" % roundi(m.amount)) if TextTemplate.is_whole(m.amount) else "%+.1f" % m.amount]
 	if m.amount == 0.0:
 		return "%s（无效果）" % stat_name(m.stat)
 	if m.is_mult():     # 133：乘算「伤害 +25%」
@@ -341,44 +365,69 @@ static func strip_bbcode(text: String) -> String:
 	return TextTemplate.strip_bbcode(text)
 
 
-## 文字里出现了哪些词条：固定词条 + [param extra]（名字 → 解释，buff 词条），按第一次出现的位置排。
-## 返回 `[{"name": 词, "text": 解释}]`；同一个词只出一次
+## 文字里出现了哪些词条：固定词条 + [param extra]（名字 → 解释，或名字 → `{"id", "text"}`：buff / 标签词条），按第一次出现的位置排。
+## 返回 `[{"name": 词, "text": 解释, "id": 词条 id}]`（固定词条的 id 就是词本身）；同一个词只出一次
 static func terms_in(text: String, extra: Dictionary = {}) -> Array:
 	var plain := strip_bbcode(text)
 	var found: Array = []
 	var names := {}
 	for name in extra:
-		names[String(name)] = String(extra[name])
+		var v = extra[name]
+		names[String(name)] = v if v is Dictionary else {"id": String(name), "text": String(v)}
 	for name in TERMS:
-		if not names.has(name) and term_tip(name):     # 107：tip 关掉的词不进侧窗，也因此不被 mark 标色
-			names[name] = term_text(name)
+		if not names.has(name) and term_tip(name):     # 107：tip 关掉的词不弹，也因此不被 mark 标出
+			names[name] = {"id": name, "text": term_text(name)}
 	for name in names:
 		var at := plain.find(name)
 		if at >= 0:
-			found.append({"name": name, "text": names[name], "at": at})
+			found.append({"name": name, "text": String(names[name]["text"]), "id": String(names[name].get("id", name)), "at": at})
 	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return int(a["at"]) < int(b["at"]) if int(a["at"]) != int(b["at"]) else String(a["name"]).length() > String(b["name"]).length())
 	var out: Array = []
 	for f in found:
-		out.append({"name": f["name"], "text": f["text"]})
+		out.append({"name": f["name"], "text": f["text"], "id": f["id"]})
 	return out
 
 
-## 把词条在文字里标出来（颜色 + 下划线）
+## 把词条在文字里标出来：170 起是**关键词** —— `[url=term:<id>]` 包着词条色 + 下划线；悬浮窗钉住后停上去开子窗（[HoverTip]）
 static func mark(text: String, terms: Array) -> String:
 	var names: Array[String] = []
+	var ids := {}
 	for t in terms:
-		names.append(String((t as Dictionary)["name"]))
+		var d := t as Dictionary
+		names.append(String(d["name"]))
+		ids[String(d["name"])] = String(d.get("id", d["name"]))
 	return wrap_terms(text, names, func(name: String) -> String:
-		return "[color=#%s][u]%s[/u][/color]" % [TERM_COLOR.to_html(false), name])
+		return "[url=term:%s][color=%sterm][u]%s[/u][/color][/url]" % [ids[name], TextTemplate.STYLE_PREFIX, name])
 
 
 ## 把一串词在文字里各包一层（[param wrap]：词 → 包好的 BBCode）。长的词先替，替进去的先用占位符挡住，免得短词把长词切开。
-## 词条标色（[method mark]）与百科画链接（[method Encyclopedia.link_words]）同一套，只差包的是什么
+## 170：BBCode 标签里面（`[url=term:增益槽]` 这种参数）不替。词条标色（[method mark]）与百科画链接（[method Encyclopedia.link_words]）同一套，只差包的是什么
 static func wrap_terms(text: String, names: Array[String], wrap: Callable) -> String:
 	var sorted: Array[String] = []
 	sorted.assign(names)
 	sorted.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
+	if sorted.is_empty():
+		return text
+	var out := ""
+	var at := 0
+	while at < text.length():
+		var open := text.find("[", at)
+		if open < 0:
+			out += _wrap_plain(text.substr(at), sorted, wrap)
+			break
+		var close := text.find("]", open)
+		if close < 0:
+			out += _wrap_plain(text.substr(at), sorted, wrap)
+			break
+		out += _wrap_plain(text.substr(at, open - at), sorted, wrap) + text.substr(open, close - open + 1)
+		at = close + 1
+	return out
+
+
+static func _wrap_plain(text: String, sorted: Array[String], wrap: Callable) -> String:
+	if text == "":
+		return text
 	var out := text
 	var holders: Array[String] = []
 	for i in sorted.size():

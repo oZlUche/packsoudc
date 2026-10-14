@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Ammunition."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }

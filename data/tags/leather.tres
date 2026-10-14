@@ -14,3 +14,4 @@ descriptions = {
 "en": "Made of tanned hide."
 }
 tip = false
+category = "material"

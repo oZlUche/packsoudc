@@ -17,6 +17,15 @@ extends Resource
 ## 由 [OvertimeRules] 在代码里造，不是内容
 @export var system: bool = false
 
+## 171（作者定）：是否有专属解说 —— 悬浮窗的增益 / 受益句提到这个 buff 时，有解说写解说、没有只写名字（基础轴的 buff 直接用名字）
+@export var has_blurb: bool = false
+## 171：解说文本（`has_blurb` 真才显示、才写进 JSON）；`blurbs` 是别的语言，`{"en": "…"}`（和 display_names 同款）
+@export_multiline var blurb: String = ""
+@export var blurbs: Dictionary = {}
+
+## 111：解说两栏只在勾了「有专属解说」时显示
+const FIELD_WHEN := {"blurb": {"has_blurb": [true]}, "blurbs": {"has_blurb": [true]}}
+
 @export_group("叠层与时长")
 ## 137（作者定）：可叠层 = 层数不限；不可叠层 = 固定一层（将来的「无敌」）。没有「至多 N 层」
 ## （老字段 `max_stacks` 由导入器迁移：1 → 不可叠，其余 → 可叠）
@@ -37,6 +46,13 @@ func is_stackable() -> bool:
 ## 永续：不过期，到战斗结束 —— 可叠层的一律永续；不可叠层的没填时长也永续
 func is_permanent() -> bool:
 	return is_stackable() or duration_sec <= 0.0
+
+
+## 171：句子里怎么称呼它 —— 有专属解说写解说（当前语言没有用中文），否则名字
+func sentence_text(lang: String = "") -> String:
+	if has_blurb and blurb.strip_edges() != "":
+		return Names.pick(blurbs, blurb, lang)
+	return Names.of(self, lang)
 
 
 ## 给界面看的时长一句：「永续」/「持续 N 秒」

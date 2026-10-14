@@ -9,7 +9,8 @@ display_name = "法杖"
 display_names = {
 "en": "Staff"
 }
-description = "法杖：自己只是根棍子，受益格上放了魔晶石才打出元素伤害。"
+description = "法杖：自己只是根棍子，装载槽上放了魔晶石才打出元素伤害。"
 descriptions = {
-"en": "Staff: just a stick on its own; deals elemental damage once a crystal sits in its receiving slot."
+"en": "Staff: just a stick on its own; deals elemental damage once a crystal sits in its load slot."
 }
+category = "purpose"

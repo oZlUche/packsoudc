@@ -1,0 +1,185 @@
+## 170（作者定）：道具悬浮窗 —— 深底白字、版式 A（头 / 正文 / 脚注分块）、名字粗体、说明斜体、带色的字描边、行内图标；
+## 武器写「每 X 秒造成 Y 点伤害，消耗 Z 耐力」，不写冷却 / DPS / 格数；十字军之王式的固定悬浮窗（钉住、关键词开子窗）。
+extends RefCounted
+
+
+static func _db() -> ItemDatabase:
+	var db := ItemDatabase.new()
+	db.load_dir()
+	return db
+
+
+static func run_item_layout(t: TestCase) -> void:
+	t.begin("170 · 道具说明分块：名字粗体 18 在最前、副行稀有度 · 标签、说明斜体；正文武器句；脚注金币与秤砣图标；带色的字描边；关键词是 url")
+	var db := _db()
+	var knife := ItemInstance.create(db.get_def(&"knife"))
+	var full := ItemTooltip.describe_full(knife)
+	var head := String(full["head"])
+	var body := String(full["body"])
+	var foot := String(full["foot"])
+	t.check(head.begins_with("[outline_size=") or head.begins_with("[font_size=18][b]"), "头从名字开始")
+	t.check(head.contains("[font_size=18][b]") and head.contains(Names.of_item(knife)), "名字粗体 18")
+	var name_at := head.find(Names.of_item(knife))
+	var rarity_at := head.find(ItemTooltip.rarity_name(knife.def.rarity))
+	t.check(name_at >= 0 and rarity_at > name_at, "名字 → 副行（稀有度）")
+	if Names.description_of(knife.def) != "":
+		t.check(head.contains("[i]"), "说明是斜体")
+	var plain := Glossary.strip_bbcode(body)
+	var re := RegEx.create_from_string("每 [0-9.]+ 秒造成 [0-9.]+ 点伤害，消耗 [0-9.]+ 耐力")
+	t.check(re.search(plain) != null, "武器句：每 X 秒造成 Y 点伤害，消耗 Z 耐力（%s）" % plain)
+	var all := Glossary.strip_bbcode(String(full["text"]))
+	for word in ["冷却", "DPS", "格　", " 格"]:
+		t.check(not all.contains(word), "不写「%s」" % word.strip_edges())
+	t.eq(foot.count("[img="), 2, "脚注两个图标（金币、秤砣）")
+	t.check(foot.contains("coin.png") and foot.contains("weight.png"), "金币与秤砣")
+	t.check(head.contains("[outline_size=%d]" % UiTheme.OUTLINE_SIZE), "带色的名字描边")
+	# 带色的每一段都包了描边
+	var colored := RegEx.create_from_string("\\[color=[^\\]]+\\]")
+	var outlined := 0
+	var total := 0
+	for part in [head, body, foot]:
+		for m in colored.search_all(part):
+			if m.get_string() == "[color=@fg]":
+				continue
+			total += 1
+		outlined += part.count("[outline_size=")
+	t.check(outlined >= total and total > 0, "每段带色的字都描边（%d / %d）" % [outlined, total])
+
+
+static func run_keywords(t: TestCase) -> void:
+	t.begin("170 · 关键词：词条是 [url=term:<id>][u]…；terms 是 {id: {name, text}}；标签名不弹的不带下划线")
+	var db := _db()
+	var bow := ItemInstance.create(db.get_def(&"poison_arrows"))
+	var full := ItemTooltip.describe_full(bow)
+	var terms: Dictionary = full["terms"]
+	t.check(not terms.is_empty(), "有词条（%s）" % str(terms.keys()))
+	for id in terms:
+		var e: Dictionary = terms[id]
+		t.check(e.has("name") and e.has("text"), "「%s」有名字与说明" % id)
+		t.check(String(full["text"]).contains("[url=term:%s]" % id), "「%s」在文字里是关键词链接" % id)
+	t.check(String(full["text"]).contains("[u]"), "关键词有下划线")
+
+
+static func run_italic_theme(t: TestCase) -> void:
+	t.begin("170 · 主题：富文本的斜体是正文字体斜切；悬浮窗底是深底（美术给的黑曜石九宫格，tone: dark）")
+	var th := UiTheme.build()
+	var it := th.get_font("italics_font", "RichTextLabel")
+	t.check(it is FontVariation and absf((it as FontVariation).variation_transform.x.y - UiTheme.ITALIC_SLANT) < 0.001, "斜体 = 斜切 %.1f" % UiTheme.ITALIC_SLANT)
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_TOOLTIP), UiTheme.TONE_DARK, "悬浮窗是深底")
+	t.not_null(UiTheme.art(UiTheme.ART_TOOLTIP), "深底九宫格在")
+
+
+static func run_outline_helper(t: TestCase) -> void:
+	t.begin("170 · 描边：每段 [color] 配对包上描边，嵌套照样配对；白字（@fg）不描；已描过不重复")
+	var src := "前[color=@hp]血[color=@term]词[/color]尾[/color]中[color=@fg]白[/color]后"
+	var out := UiTheme.outline_colored(src)
+	t.eq(out.count("[outline_size="), 2, "两段带色的各一层")
+	t.eq(out.count("[/outline_size]"), 2, "配对关上")
+	t.check(out.contains("[color=@fg]白[/color]") and not out.contains("[outline_color=#000000bf][color=@fg]"), "白字不描")
+	t.eq(UiTheme.outline_colored(out), out, "描过的不再包")
+	t.eq(Glossary.strip_bbcode(out), "前血词尾中白后", "字一个不少")
+
+
+static func run_ring(t: TestCase) -> void:
+	t.begin("170 · 钉住进度线：从左上角起顺时针沿外框走 —— 走到四分之一周长在上边，一半到右下角，走满回到起点")
+	var r := Rect2(Vector2.ZERO, Vector2(100, 50))
+	t.eq(HoverTip.ring_points(r, 0.0).size(), 2, "起点")
+	var q := HoverTip.ring_points(r, 1.0 / 6.0)     # 周长 300，走 50：在上边中点
+	t.check(q[q.size() - 1].distance_to(Vector2(50, 0)) < 0.01, "先沿上边往右")
+	var half := HoverTip.ring_points(r, 0.5)
+	t.check(half[half.size() - 1].distance_to(Vector2(100, 50)) < 0.01, "一半到右下角（顺时针）")
+	var full := HoverTip.ring_points(r, 1.0)
+	t.check(full[full.size() - 1].distance_to(Vector2.ZERO) < 0.01, "走满回到左上角")
+
+
+static func frame_pin(t: TestCase, root: Window) -> void:
+	t.begin("170 · 固定式悬浮窗：离开道具有 0.15 秒宽限；停在窗里 0.6 秒钉住、中途移出归零；钉住后关键词停 0.25 秒开子窗（封顶 3 层）；Esc / 点外面 / 离开 0.4 秒收")
+	var db := _db()
+	var host := Control.new()
+	host.size = Vector2(1600, 900)
+	root.add_child(host)
+	var board := GridInventory.new(Vector2i(4, 3), 1)
+	var arrows := ItemInstance.create(db.get_def(&"poison_arrows"))
+	board.place(arrows, Vector2i(0, 0), 0)
+	var view := InventoryView.new()
+	view.inventory = board
+	view.position = Vector2(20, 20)
+	view.size = Vector2(board.size) * InventoryView.CELL
+	host.add_child(view)
+	var tip := HoverTip.new()
+	host.add_child(tip)
+	tip.watch(view)
+	var mm := InputEventMouseMotion.new()
+	mm.position = Vector2(24, 24)
+	view.gui_input.emit(mm)
+	t.check(tip.is_showing(), "停在道具上：出现")
+	var inside := tip._panel.global_position + tip._panel.size * 0.5
+	var outside := Vector2(5, 880)
+	# 宽限：离开道具（移到空格）后 0.15 秒内进了窗就留下
+	var empty := InputEventMouseMotion.new()
+	empty.position = Vector2(200, 160)
+	view.gui_input.emit(empty)
+	t.check(tip.is_showing(), "刚离开：还在（宽限）")
+	tip.tick(0.1, inside)
+	t.check(tip.is_showing(), "宽限内进了窗：留下")
+	# 钉住：中途移出归零
+	tip.tick(0.3, inside)
+	t.check(not tip.is_pinned(), "停了 0.4 秒：还没钉")
+	tip.tick(0.05, outside)
+	t.eq(tip._panel.dwell, 0.0, "中途移出：进度归零")
+	t.check(tip.is_showing(), "移出时没在离开道具（宽限已经结束）—— 还开着")
+	tip.tick(0.3, inside)
+	tip.tick(0.31, inside)
+	t.check(tip.is_pinned(), "停满 0.6 秒：钉住")
+	# 关键词开子窗
+	var terms: Dictionary = tip._panel.terms
+	t.check(not terms.is_empty(), "主窗有词条")
+	var first := String(terms.keys()[0])
+	tip._panel.hover("term:" + first)
+	tip.tick(0.1, inside)
+	t.eq(tip.windows().size(), 1, "停 0.1 秒：还没开子窗")
+	tip.tick(0.2, inside)
+	t.eq(tip.windows().size(), 2, "停满 0.25 秒：开子窗")
+	var child: HoverTip.TipWindow = tip.windows()[1]
+	t.check(child.text().contains(String(terms[first]["name"])), "子窗写的是这个词条（%s）" % first)
+	t.check(child.position.x >= tip._panel.position.x + tip._panel.size.x - 0.5 or child.position.y >= tip._panel.position.y + tip._panel.size.y - 0.5, "子窗在主窗右边或下面")
+	# 子窗钉住、再开、封顶
+	var child_in := child.global_position + child.size * 0.5
+	tip.tick(0.61, child_in)
+	t.check(child.pinned, "子窗也能钉")
+	child.terms["probe"] = {"name": "探针", "text": "说明"}
+	var grand := tip.open_child(child, "term:probe")
+	t.not_null(grand, "子窗还能开子窗")
+	if grand != null:
+		tip.pin(grand)
+		grand.terms["probe2"] = {"name": "探针二", "text": "说明"}
+		t.check(tip.open_child(grand, "term:probe2") == null, "第 4 层开不出来（封顶 %d）" % HoverTip.MAX_DEPTH)
+	# 离开 0.4 秒收
+	tip.tick(0.2, outside)
+	t.check(tip.is_showing(), "离开 0.2 秒：还在")
+	tip.tick(0.25, outside)
+	t.check(not tip.is_showing(), "离开 0.4 秒：整串收掉")
+	# Esc
+	view.gui_input.emit(mm)
+	inside = tip._panel.global_position + tip._panel.size * 0.5
+	tip.tick(0.7, inside)
+	t.check(tip.is_pinned(), "又钉住")
+	var esc := InputEventKey.new()
+	esc.keycode = KEY_ESCAPE
+	esc.pressed = true
+	tip._input(esc)
+	t.check(not tip.is_showing(), "Esc 收掉")
+	# 点外面（开始拖拽也是先点下去）
+	view.gui_input.emit(mm)
+	inside = tip._panel.global_position + tip._panel.size * 0.5
+	tip.tick(0.7, inside)
+	tip.click_at(inside)
+	t.check(tip.is_showing(), "点在窗里：不收")
+	tip.click_at(outside)
+	t.check(not tip.is_showing(), "点窗外：收掉")
+	# 宽限过了没进窗：收
+	view.gui_input.emit(mm)
+	view.gui_input.emit(empty)
+	tip.tick(0.2, outside)
+	t.check(not tip.is_showing(), "宽限过了还没进窗：收起")
+	host.queue_free()

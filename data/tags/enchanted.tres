@@ -14,3 +14,4 @@ descriptions = {
 "en": "Enchanted."
 }
 tip = false
+category = "element"

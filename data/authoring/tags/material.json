@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "A crafting material."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }

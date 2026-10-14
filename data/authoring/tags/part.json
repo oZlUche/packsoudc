@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "A part or component."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }

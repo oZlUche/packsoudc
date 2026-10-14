@@ -111,7 +111,7 @@ static func run_faith_origin(t: TestCase) -> void:
 
 
 static func run_tooltips(t: TestCase) -> void:
-	t.begin("108 · 悬浮窗：弓写「附加：… ← 毒箭」、中毒进侧窗；毒箭自己写给邻居附加什么")
+	t.begin("108 · 悬浮窗：弓写「附加：… ← 毒箭」、中毒是词条；毒箭自己写给邻居附加什么")
 	var db := _items()
 	var saved := ItemTooltip.faith_probe
 	ItemTooltip.faith_probe = Callable()
@@ -121,15 +121,15 @@ static func run_tooltips(t: TestCase) -> void:
 	t.check(text.contains("附加：") and text.contains("← 毒箭"), "弓：附加行带来源")
 	t.check(text.contains("中毒"), "附加行写了中毒")
 	var names: Array = []
-	for term in full["terms"]:
+	for term in (full["terms"] as Dictionary).values():
 		names.append(String((term as Dictionary)["name"]))
 	t.check(names.has("中毒"), "中毒进了弓的侧窗：%s" % str(names))
 	var alone := String(ItemTooltip.describe_full(ItemInstance.create(db.get_def(&"longbow")))["text"])
 	t.check(not alone.contains("附加："), "不在棋盘上（单独编）没有附加行")
 	var arrows := ItemTooltip.describe_full(ItemInstance.create(db.get_def(&"poison_arrows")))
-	t.check(String(arrows["text"]).contains("增益槽") and String(arrows["text"]).contains("附加："), "毒箭：增益槽写附加")
+	t.check(String(arrows["text"]).contains("term:增益槽") and String(arrows["text"]).contains("附加："), "毒箭：增益行（行首增益图标）写附加")
 	var anames: Array = []
-	for term in arrows["terms"]:
+	for term in (arrows["terms"] as Dictionary).values():
 		anames.append(String((term as Dictionary)["name"]))
 	t.check(anames.has("中毒"), "毒箭的侧窗也解释中毒")
 	ItemTooltip.faith_probe = saved

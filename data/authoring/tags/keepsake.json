@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Does not enter the bag and never drops; stands for an ability."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }

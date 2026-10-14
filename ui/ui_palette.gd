@@ -284,8 +284,9 @@ static func for_tone(c: Color, tone: StringName) -> Color:
 ## 子集只含文案里出现过的字（`tools/font_charset.py`），缺的字走后备：文楷后备系统字体，标题后备文楷 Medium，大标题后备标题字体。
 ## 文件不在（裁错、夹具）就退回系统字体，不崩
 const FONT_DIR := "res://assets/fonts/"
-const FONT_REGULAR := "wenkai_regular.ttf"
-const FONT_MEDIUM := "wenkai_medium.ttf"
+## 170 §5：正文 / 粗体按用途叫（原 FONT_REGULAR / FONT_MEDIUM）—— 作者挑定新正文字体后只换这两个文件名，调用点不动
+const FONT_BODY := "wenkai_regular.ttf"
+const FONT_BOLD := "wenkai_medium.ttf"
 const FONT_TITLE := "zhuque_fangsong.ttf"
 const FONT_DISPLAY := "mashanzheng.ttf"
 static var _font_files: Dictionary = {}
@@ -323,12 +324,12 @@ static func _wrap(file: String, fallback: Font) -> Font:
 
 ## 正文、读数、按钮：文楷 Regular
 static func cjk_font() -> Font:
-	return _wrap(FONT_REGULAR, system_font())
+	return _wrap(FONT_BODY, system_font())
 
 
 ## 真粗体：富文本的 [b] 用它（文楷 Medium，不让引擎把常规体描粗 —— 描出来的发糊）
 static func cjk_font_bold() -> Font:
-	return _wrap(FONT_MEDIUM, system_font(true))
+	return _wrap(FONT_BOLD, system_font(true))
 
 
 ## 标题、名牌：朱雀仿宋（技术预览版，缺字时混进文楷 Medium）

@@ -4,12 +4,12 @@ extends RefCounted
 
 static func run_files(t: TestCase) -> void:
 	t.begin("168 · 四个字体子集都在、读得出；常用字和读数符号都有；授权与字集随包")
-	for f in [UiPalette.FONT_REGULAR, UiPalette.FONT_MEDIUM, UiPalette.FONT_TITLE, UiPalette.FONT_DISPLAY]:
+	for f in [UiPalette.FONT_BODY, UiPalette.FONT_BOLD, UiPalette.FONT_TITLE, UiPalette.FONT_DISPLAY]:
 		var file := UiPalette.font_file(f)
 		t.check(file is FontFile, "%s 读得出" % f)
 		if file != null:
 			t.check(file.has_char("的".unicode_at(0)) and file.has_char("撤".unicode_at(0)), "%s 有「的」「撤」" % f)
-	var body := UiPalette.font_file(UiPalette.FONT_REGULAR)
+	var body := UiPalette.font_file(UiPalette.FONT_BODY)
 	if body != null:
 		for ch in ["Ⅳ", "♥", "×", "…"]:
 			t.check(body.has_char(ch.unicode_at(0)), "正文字体有「%s」" % ch)
@@ -21,15 +21,15 @@ static func run_files(t: TestCase) -> void:
 static func run_palette(t: TestCase) -> void:
 	t.begin("168 · 字体链：正文 = 文楷 Regular（后备系统字体）、粗体 = 文楷 Medium、标题 = 朱雀仿宋（后备文楷 Medium）、大标题 = 马善政（后备标题）")
 	var body := UiPalette.cjk_font()
-	t.check(body is FontVariation and (body as FontVariation).base_font == UiPalette.font_file(UiPalette.FONT_REGULAR), "正文打底是文楷 Regular")
+	t.check(body is FontVariation and (body as FontVariation).base_font == UiPalette.font_file(UiPalette.FONT_BODY), "正文打底是文楷 Regular")
 	t.check(body.fallbacks.size() == 1 and body.fallbacks[0] is SystemFont, "缺字走系统字体（不出方块）")
 	var bold := UiPalette.cjk_font_bold()
-	t.check(bold is FontVariation and (bold as FontVariation).base_font == UiPalette.font_file(UiPalette.FONT_MEDIUM), "粗体是真 Medium 文件")
+	t.check(bold is FontVariation and (bold as FontVariation).base_font == UiPalette.font_file(UiPalette.FONT_BOLD), "粗体是真 Medium 文件")
 	t.check(bold.fallbacks[0] is SystemFont and (bold.fallbacks[0] as SystemFont).font_weight == 700, "粗体的后备是字重 700 的系统字体")
 	var title := UiPalette.title_font()
 	t.check(title is FontVariation and (title as FontVariation).base_font == UiPalette.font_file(UiPalette.FONT_TITLE), "标题是朱雀仿宋")
 	var title_back: Font = title.fallbacks[0]
-	t.check(title_back is FontVariation and (title_back as FontVariation).base_font == UiPalette.font_file(UiPalette.FONT_MEDIUM), "朱雀仿宋缺字混进文楷 Medium")
+	t.check(title_back is FontVariation and (title_back as FontVariation).base_font == UiPalette.font_file(UiPalette.FONT_BOLD), "朱雀仿宋缺字混进文楷 Medium")
 	var display := UiPalette.display_font()
 	t.check(display is FontVariation and (display as FontVariation).base_font == UiPalette.font_file(UiPalette.FONT_DISPLAY), "大标题是马善政")
 	var display_back: Font = display.fallbacks[0]
@@ -42,8 +42,8 @@ static func run_theme(t: TestCase) -> void:
 	var th := UiTheme.build()
 	var file_of := func(f: Font) -> FontFile:
 		return (f as FontVariation).base_font as FontFile if f is FontVariation else null
-	t.eq(file_of.call(th.default_font), UiPalette.font_file(UiPalette.FONT_REGULAR), "默认字体：文楷 Regular")
-	t.eq(file_of.call(th.get_font("bold_font", "RichTextLabel")), UiPalette.font_file(UiPalette.FONT_MEDIUM), "富文本 [b]：文楷 Medium")
+	t.eq(file_of.call(th.default_font), UiPalette.font_file(UiPalette.FONT_BODY), "默认字体：文楷 Regular")
+	t.eq(file_of.call(th.get_font("bold_font", "RichTextLabel")), UiPalette.font_file(UiPalette.FONT_BOLD), "富文本 [b]：文楷 Medium")
 	for v in [UiTheme.LABEL_TITLE, UiTheme.LABEL_OVERLAY_TITLE]:
 		t.eq(file_of.call(th.get_font("font", v)), UiPalette.font_file(UiPalette.FONT_TITLE), "%s：朱雀仿宋" % v)
 	t.eq(file_of.call(th.get_font("font", UiTheme.LABEL_DISPLAY)), UiPalette.font_file(UiPalette.FONT_DISPLAY), "LabelDisplay：马善政")
@@ -63,8 +63,8 @@ static func run_coverage(t: TestCase) -> void:
 	t.check(used.size() > 1000, "扫到 %d 个非 ASCII 字" % used.size())
 	var out := FontCoverage.not_in_charset(used)
 	t.check(out.is_empty(), "都在字集里%s" % ("" if out.is_empty() else "；缺：" + "、".join(out.slice(0, 20))))
-	var body := UiPalette.font_file(UiPalette.FONT_REGULAR)
-	var bold := UiPalette.font_file(UiPalette.FONT_MEDIUM)
+	var body := UiPalette.font_file(UiPalette.FONT_BODY)
+	var bold := UiPalette.font_file(UiPalette.FONT_BOLD)
 	if body != null and bold != null:
 		var miss := FontCoverage.missing_hanzi(body, used)
 		t.check(miss.is_empty(), "文楷 Regular 汉字齐%s" % ("" if miss.is_empty() else "；缺：" + "、".join(miss.slice(0, 20))))

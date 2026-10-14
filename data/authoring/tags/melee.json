@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "A close-quarters weapon."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }

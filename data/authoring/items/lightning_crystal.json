@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Lightning Crystal"
   },
-  "description": "放在法杖的受益格上：法杖伤害 +{amount}，打出闪电伤害。能供给 {max_charges} 场，用完就碎。",
+  "description": "放在法杖的装载槽上：法杖伤害 +{amount}，打出闪电伤害。能供给 {max_charges} 场，用完就碎。",
   "shape": [
     "11"
   ],

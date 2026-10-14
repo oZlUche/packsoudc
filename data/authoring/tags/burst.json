@@ -9,5 +9,6 @@
     "en": "Slow, heavy hits."
   },
   "tip": false,
+  "category": "internal",
   "internal": true
 }
