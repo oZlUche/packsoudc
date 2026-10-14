@@ -43,6 +43,19 @@ var ui_fades: bool = true
 var cursor_skin: String = "mithril"
 ## 反馈：地图缩放全局沿用 —— 玩家上次滚轮定下的缩放，下次进图（任何一张）照用；0 = 没定过，进图自动按点距定。F 键看全图时清回 0
 var map_zoom: float = 0.0
+## 172：窗口模式 "windowed" / "fullscreen"（认不出的回窗口）；首次启动默认窗口（待定 3 A）
+var window_mode: String = "windowed"
+## 172：窗口分辨率，[constant RESOLUTIONS] 里的一档；ZERO = 没定过，启动时按屏幕挑（界面层套到窗口上）
+var resolution: Vector2i = Vector2i.ZERO
+
+## 172：认得的窗口模式；全屏 = 无边框铺满桌面（待定 4 A）
+const WINDOW_MODES: Array[String] = ["windowed", "fullscreen"]
+## 172：分辨率档位 —— 市面主流的 16:9 五档、16:10 三档，组内从小到大；超宽屏不列专档（待定 1 A）。
+## 表放设置层（读档要校验），哪档放得进屏幕、怎么套到窗口归界面层
+const RESOLUTIONS: Array[Vector2i] = [
+	Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(2560, 1440), Vector2i(3840, 2160),
+	Vector2i(1280, 800), Vector2i(1920, 1200), Vector2i(2560, 1600),
+]
 
 
 func to_dict() -> Dictionary:
@@ -61,6 +74,8 @@ func to_dict() -> Dictionary:
 		"ui_fades": ui_fades,
 		"cursor_skin": cursor_skin,
 		"map_zoom": map_zoom,
+		"window_mode": window_mode,
+		"resolution": [resolution.x, resolution.y],
 	}
 
 
@@ -83,7 +98,18 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	var skin := String(d.get("cursor_skin", "mithril"))
 	s.cursor_skin = skin if skin != "" else "mithril"
 	s.map_zoom = normalize_zoom(float(d.get("map_zoom", 0.0)))
+	var mode := String(d.get("window_mode", "windowed"))
+	s.window_mode = mode if WINDOW_MODES.has(mode) else "windowed"
+	s.resolution = normalize_resolution(d.get("resolution", []))
 	return s
+
+
+## 172：文件里的 `[宽, 高]` → 档位；不是两个数、不在 [constant RESOLUTIONS] 里的回 ZERO（启动时重挑）
+static func normalize_resolution(raw: Variant) -> Vector2i:
+	if not (raw is Array) or (raw as Array).size() != 2:
+		return Vector2i.ZERO
+	var r := Vector2i(int(raw[0]), int(raw[1]))
+	return r if RESOLUTIONS.has(r) else Vector2i.ZERO
 
 
 ## 地图缩放：非正数 = 没定过（0）；其余夹到 0.3～2.5（和地图视图的上下限一致）

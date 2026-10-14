@@ -88,3 +88,13 @@ window/stretch/aspect="expand"
 ## 5. 改动范围
 
 `project.godot`（resizable、新动作 `toggle_fullscreen`）、`core/settings/game_settings.gd`（两个字段 + 归一化）、`ui/window_setup.gd`（新）、`ui/input_keys.gd`（ACTIONS 加一项）、`ui/game/game_director.gd`（启动时套用、F11）、`ui/game/settings_screen.gd`（「显示」一节）、测试 `tests/settings/test_window_setup.gd`（新）、`docs/architecture.md` 设置一节补两句。不碰任何布局代码。
+
+## 落地记录
+
+- v3.01 落地 §2，待定全按推荐：1 A（不列超宽屏）、2 A（F11 动作 `toggle_fullscreen`，可改键）、3 A（首启窗口、按屏幕自动挑一档）、4 A（`MODE_FULLSCREEN` 无边框铺满）。
+- 档位表放在设置层 `GameSettings.RESOLUTIONS / WINDOW_MODES`（读档要校验，core 不许认界面类名），`WindowSetup.PRESETS / MODES` 引用它。
+- `pick_default` 比 §2.4 多一步：九成里一档都放不下时（1366×768 这类小屏，九成是 1229×691）先放宽到整屏再挑，整屏也放不下才随屏幕 —— 这样 §3 的「1366×768 → 1280×720」成立。
+- `apply` 返回「是不是刚补了默认档」，导演据此存盘；存的档比当前屏幕大（换了显示器）时这次临时按屏挑，不改设置，换回大屏还是原来那档。
+- F11 由导演处理；设置屏加入组 `GameDirector.DISPLAY_GROUP`，切完 `refresh_display`，所以独立设置屏和嵌在暂停菜单里的那块都会跟上。
+- 测试：`tests/settings/test_window_setup.gd`（三组：设置字段读写与坏值、档位与挑档、设置屏「显示」一节的按下 / 灰掉 / 存盘）。
+- 设置屏整列多了「显示」一节后在 1000 高的视口里放不下（开发区在时更长），石板里包了一层只竖着滚的滚动框，放得下照样居中。截图：`/mnt/project-files/screenshots/172/`。

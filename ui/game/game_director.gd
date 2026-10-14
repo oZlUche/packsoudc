@@ -99,6 +99,8 @@ func _ready() -> void:
 	InputKeys.apply(flow.settings)     # 154 补充一：改过的键盖到默认上
 	UiTheme.install()     # 121：界面主题挂在窗口上
 	UiCursor.apply(flow.settings.cursor_skin)     # 157：美术给的光标（设置里选的那套材质；没图用系统的）
+	if WindowSetup.apply(flow.settings, get_window()):     # 172：窗口模式与分辨率；第一次启动按屏幕挑了档就存下
+		flow.save_settings()
 	ground = GroundLayer.new()
 	ground.fills_screen = true
 	ground.label_font = _font
@@ -246,10 +248,26 @@ func minimized() -> GameScreen:
 ## 没叠层问底屏（地图关对话框 / 背包；开局、基地、设置、读取存档回主菜单）。谁都不接就不管（拖拽层自己先吃掉拖着时的 Esc）
 func _unhandled_key_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
-	if key == null or not key.pressed or key.echo or key.keycode != KEY_ESCAPE:
+	if key == null or not key.pressed or key.echo:
 		return
-	if escape():
+	if key.is_action_pressed(InputKeys.TOGGLE_FULLSCREEN):     # 172：F11（可改键）切窗口 / 全屏，记进设置
+		toggle_fullscreen()
 		get_viewport().set_input_as_handled()
+		return
+	if key.keycode == KEY_ESCAPE and escape():
+		get_viewport().set_input_as_handled()
+
+
+## 172：窗口 ↔ 全屏，当场套用并存盘；开着的设置屏跟着刷新
+func toggle_fullscreen() -> void:
+	WindowSetup.toggle_mode(flow.settings)
+	WindowSetup.apply(flow.settings, get_window())
+	flow.save_settings()
+	get_tree().call_group(DISPLAY_GROUP, "refresh_display")     # 设置屏开着（独立一屏或嵌在暂停菜单里）就跟着刷新
+
+
+## 172：开着的设置屏挂在这一组里（F11 切了模式要刷新它的「显示」一节）
+const DISPLAY_GROUP := &"display_settings"
 
 
 ## 按一次 Esc 该做的事；返回有没有人接（测试直接调）

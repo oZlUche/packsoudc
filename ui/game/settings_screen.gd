@@ -14,19 +14,31 @@ var _fades_btn: Button = null
 var _cursor_btns: Dictionary = {}
 ## 091：背景底色的按钮（主题 id → 按钮）
 var _bg_btns: Dictionary = {}
+## 172：窗口模式的按钮（模式 → 按钮）、分辨率的按钮（档位 → 按钮）、全屏时那行注
+var _mode_btns: Dictionary = {}
+var _res_btns: Dictionary = {}
+var _res_note: Label = null
 ## 090：从地图的暂停菜单嵌进来时的「返回」（回暂停菜单，一局还在）；空 = 独立的一屏，回主菜单
 var back: Callable = Callable()
 
 
 func open(_payload: Dictionary) -> void:
 	_backdrop()
+	# 172：加了「显示」一节后，1000 高的视口放不下整列（开发区在时更长）—— 包一层只竖着滚的滚动框，放得下照样居中
+	var scroll := ScrollContainer.new()
+	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_slab_screen().add_child(scroll)     # 157 补充三：内容在一整块石板上
 	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_slab_screen().add_child(center)     # 157 补充三：内容在一整块石板上
+	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.add_child(center)
 	var col := _vbox(10)
 	col.custom_minimum_size.x = 520
 	center.add_child(col)
 	col.add_child(_label("设置", 26, UiPalette.FG))
+	_build_display(col)
+	col.add_child(HSeparator.new())
 	col.add_child(_label("战利品 / 容器屏", 15, UiPalette.DIM))
 	_auto_close_btn = _toggle("拿走最后一件后自动关闭", toggle_loot_auto_close)
 	col.add_child(_auto_close_btn)
@@ -83,6 +95,76 @@ func open(_payload: Dictionary) -> void:
 		col.add_child(HSeparator.new())
 	col.add_child(_button("返回" if back.is_valid() else "回主菜单", go_back, 14))
 	_refresh()
+
+
+## 172：「显示」一节（放最上面）—— 窗口 / 全屏两个按钮；分辨率按宽高比分行，只列放得进这块屏幕的档；全屏时整块灰掉、注一句。
+## 主菜单的设置和 Esc 暂停菜单里嵌的是同一屏，两个入口都有它
+func _build_display(col: VBoxContainer) -> void:
+	add_to_group(GameDirector.DISPLAY_GROUP)     # F11 切了模式，这一节跟着刷新
+	col.add_child(_label("显示", 15, UiPalette.DIM))
+	var mode_row := _hbox(8)
+	mode_row.add_child(_label("窗口", 14, UiPalette.FG))
+	for m in [[WindowSetup.WINDOWED, "窗口"], [WindowSetup.FULLSCREEN, "全屏"]]:
+		var mode: String = m[0]
+		var b := _button(String(m[1]), func(): set_window_mode(mode), 13, UiPalette.Tier.MINOR)
+		b.toggle_mode = true
+		_mode_btns[mode] = b
+		mode_row.add_child(b)
+	col.add_child(mode_row)
+	var rows := {}     # 宽高比 → 那一行
+	var shown := WindowSetup.available(WindowSetup.screen_size(get_window() if is_inside_tree() else null))
+	for p in shown:
+		var aspect := WindowSetup.aspect_name(p)
+		if not rows.has(aspect):
+			var row := _hbox(8)
+			row.add_child(_label(aspect, 12, UiPalette.DIM))
+			rows[aspect] = row
+			col.add_child(row)
+		var size: Vector2i = p
+		var rb := _button(WindowSetup.label(p), func(): set_resolution(size), 13, UiPalette.Tier.MINOR)
+		rb.toggle_mode = true
+		_res_btns[p] = rb
+		rows[aspect].add_child(rb)
+	if shown.is_empty():     # 屏幕比最小一档还小：窗口就是屏幕那么大
+		col.add_child(_label("分辨率：随屏幕", 13, UiPalette.DIM))
+	_res_note = _label("全屏按桌面分辨率", 12, UiPalette.DIM)
+	col.add_child(_res_note)
+
+
+## 172：窗口 / 全屏（当场套用、存盘）
+func set_window_mode(mode: String) -> void:
+	if not WindowSetup.MODES.has(mode):
+		return
+	flow.settings.window_mode = mode
+	_apply_display()
+
+
+## 172：换一档分辨率（当场套用、存盘）；全屏时不接
+func set_resolution(size: Vector2i) -> void:
+	if not WindowSetup.PRESETS.has(size) or flow.settings.window_mode == WindowSetup.FULLSCREEN:
+		return
+	flow.settings.resolution = size
+	_apply_display()
+
+
+func _apply_display() -> void:
+	if is_inside_tree():
+		WindowSetup.apply(flow.settings, get_window())
+	flow.save_settings()
+	refresh_display()
+
+
+## 172：按设置刷新「显示」一节（F11 切了模式时导演也调）
+func refresh_display() -> void:
+	var full := flow.settings.window_mode == WindowSetup.FULLSCREEN
+	for m in _mode_btns:
+		(_mode_btns[m] as Button).set_pressed_no_signal(String(m) == flow.settings.window_mode)
+	for p in _res_btns:
+		var b := _res_btns[p] as Button
+		b.disabled = full
+		b.set_pressed_no_signal(not full and p == flow.settings.resolution)
+	if _res_note != null:
+		_res_note.visible = full
 
 
 ## 一个开关按钮：辅助档、按下保持、左对齐（这一屏的几个布尔项）
@@ -171,6 +253,7 @@ func toggle_unlock_all() -> void:
 
 
 func _refresh() -> void:
+	refresh_display()
 	if _tooltip_btn != null:
 		_tooltip_btn.set_pressed_no_signal(flow.settings.node_tooltips_preview)
 		_tooltip_btn.text = "节点浮窗预览：%s" % ("开（不管章节）" if flow.settings.node_tooltips_preview else "关（按章节：第二章开）")
