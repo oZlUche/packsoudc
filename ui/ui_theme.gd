@@ -76,8 +76,10 @@ const HUD_DOUBLE_SIZE := 28
 const OVERLAY_TITLE_SIZE := 20
 const TOOLTIP_MARGIN := 10
 ## 157：悬浮窗底的贴图文件名（不带扩展名；旁边同名 `.json` 写九宫格边距）。
-## 170（作者定）：悬浮窗改深底白字 —— 黑曜石九宫格（`tip/tooltip_dark`，json `tone: dark`）；原来的纸（`tooltip_paper`）退了
-const ART_TOOLTIP := "tip/tooltip_dark"
+## 170（作者定）：悬浮窗改深底白字；定稿（作者 2026-10-14「样式就这样吧」）是两层 —— 黄铜边框九宫格（`tip/tooltip_frame`，中心透明，json `tone: dark`）
+## 叠在深皮革板身（`tip/tooltip_body`，平铺、边框底下也铺）上，同石板一样用 [SlabStyle] 画；原来的纸（`tooltip_paper`）、整张黑曜石（`tooltip_dark`）都退了
+const ART_TOOLTIP := "tip/tooltip_frame"
+const ART_TOOLTIP_BODY := "tip/tooltip_body"
 ## 170：悬浮窗里的行内图标（增益 / 受益 / 装载 / 金币 / 秤砣 / 钉子）与棋盘邻居格上的格位图标（`<id>_on` / `<id>_off`，32 px）
 const TIP_ICON_DIR := "res://assets/ui/tip/"
 ## 170：带色的字描边（深底上提亮）：统一黑 75%（待定 4 A）
@@ -332,41 +334,9 @@ static func slanted(base: Font) -> FontVariation:
 	return v
 
 
-## 170：一段字描边（[constant OUTLINE_SIZE] / [constant OUTLINE_COLOR]）—— 深底上带色的字都包这一层
+## 170：一段字描边（[constant OUTLINE_SIZE] / [constant OUTLINE_COLOR]）—— 定稿只给悬浮窗里的名字和稀有度名用；正文里带色的字不描
 static func outline(bbcode: String) -> String:
 	return "[outline_size=%d][outline_color=#%s]%s[/outline_color][/outline_size]" % [OUTLINE_SIZE, OUTLINE_COLOR.to_html(true), bbcode]
-
-
-## 170：把 BBCode 里每一段 `[color=…]…[/color]` 都包上描边（白字 `@fg` 不描）。嵌套照样配对；已经描过的不重复包
-static func outline_colored(bbcode: String) -> String:
-	if not bbcode.contains("[color=") or bbcode.contains("[outline_size="):
-		return bbcode
-	var out := ""
-	var stack: Array[bool] = []
-	var at := 0
-	while true:
-		var open := bbcode.find("[color=", at)
-		var close := bbcode.find("[/color]", at)
-		if open < 0 and close < 0:
-			break
-		if open >= 0 and (close < 0 or open < close):
-			var end := bbcode.find("]", open)
-			if end < 0:
-				break
-			var value := bbcode.substr(open + 7, end - open - 7)
-			var wrap := value != TextTemplate.STYLE_PREFIX + "fg"
-			out += bbcode.substr(at, open - at)
-			if wrap:
-				out += "[outline_size=%d][outline_color=#%s]" % [OUTLINE_SIZE, OUTLINE_COLOR.to_html(true)]
-			out += bbcode.substr(open, end - open + 1)
-			stack.append(wrap)
-			at = end + 1
-		else:
-			out += bbcode.substr(at, close - at) + "[/color]"
-			if not stack.is_empty() and stack.pop_back():
-				out += "[/outline_color][/outline_size]"
-			at = close + 8
-	return out + bbcode.substr(at)
 
 
 ## 170：行内图标 `[img=16x16]…[/img]`；图不在退回 [param fallback] 文字（「【增益】」「值」……）
@@ -594,12 +564,20 @@ static func has_slab() -> bool:
 ## 一整块石板的底（[SlabStyle]：板身平铺 + 板边九宫格）；没图 null。参数同 [method _art_box]（内边距按板边）；
 ## [param edge_art] 板边用哪张：默认叠层的 `slab_edge`，顶端栏是 `slab_bar`（缺这张退回平面底）
 static func slab_box(title_strip: bool = false, content: int = -1, edge_art: String = ART_SLAB_EDGE) -> SlabStyle:
-	if not has_slab() or art(edge_art) == null:
+	if not has_slab():
+		return null
+	return layered_box(edge_art, ART_SLAB_BODY, title_strip, content)
+
+
+## 两层的底（[SlabStyle]）：[param body_art] 平铺做板身，[param edge_art] 九宫格叠在上面（内边距按它）；缺一张 null。
+## 石板（[method slab_box]）和 170 定稿的悬浮窗（皮革 + 黄铜边框）都走这里
+static func layered_box(edge_art: String, body_art: String, title_strip: bool = false, content: int = -1) -> SlabStyle:
+	if art(edge_art) == null or art(body_art) == null:
 		return null
 	var s := SlabStyle.new()
 	s.edge = _art_box(edge_art, title_strip, content)
 	var body := StyleBoxTexture.new()
-	body.texture = art(ART_SLAB_BODY)
+	body.texture = art(body_art)
 	body.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
 	body.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
 	s.body = body
@@ -719,7 +697,7 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_font("font", LABEL_OVERLAY_TITLE, _font_title)
 	t.set_color("font_color", LABEL_OVERLAY_TITLE, UiPalette.FG)
 	t.set_type_variation(PANEL_TOOLTIP, "PanelContainer")
-	var paper: StyleBox = _art_box(ART_TOOLTIP)
+	var paper: StyleBox = layered_box(ART_TOOLTIP, ART_TOOLTIP_BODY)
 	t.set_stylebox("panel", PANEL_TOOLTIP, paper if paper != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), TOOLTIP_MARGIN))
 	# 157 补充二：名牌底 —— 有图是切角石碑九宫格（内边距按图边），没图是深底细边
 	t.set_type_variation(PANEL_NAMEPLATE, "PanelContainer")
@@ -769,7 +747,7 @@ static func _fill(t: Theme, bg: Color) -> void:
 		for k in RICH_FONT_SIZES:
 			t.set_font_size(k, pair[0], pair[1])
 	t.set_constant("line_separation", RICH_BODY, 8)
-	# 富文本的 [b] 用真粗体（168：文楷 Medium），不让引擎拿常规体描粗
+	# 富文本的 [b] 用真粗体（168：思源宋体 Bold），不让引擎拿常规体描粗
 	t.set_font("bold_font", "RichTextLabel", _font_bold)
 	# 170：[i] 是正文 / 粗体斜切 0.2（字体没有斜体字形）
 	if _font_italic == null:

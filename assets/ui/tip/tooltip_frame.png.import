@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bn7l8epro2xel"
-path="res://.godot/imported/tooltip_dark.png-c70bb766866d3d033fa315d074b8a83c.ctex"
+uid="uid://cla1t6lc7gttb"
+path="res://.godot/imported/tooltip_frame.png-d393627c0c9ef9de66f1d4a65a498692.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/tip/tooltip_dark.png"
-dest_files=["res://.godot/imported/tooltip_dark.png-c70bb766866d3d033fa315d074b8a83c.ctex"]
+source_file="res://assets/ui/tip/tooltip_frame.png"
+dest_files=["res://.godot/imported/tooltip_frame.png-d393627c0c9ef9de66f1d4a65a498692.ctex"]
 
 [params]
 

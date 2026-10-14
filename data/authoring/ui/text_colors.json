@@ -15,7 +15,10 @@
     "good": {"dark": "#5cb85c", "light": "#2f6b2f"},
     "faith": {"dark": "#c79bf2", "light": "#5c3a8a"},
     "term": {"dark": "#c9a0ff", "light": "#5c3a8a"},
-    "crit": {"dark": "#ffd23f", "light": "#725600"}
+    "crit": {"dark": "#ffd23f", "light": "#725600"},
+    "tip_fg": {"dark": "#f2eee6", "light": "#2e2219"},
+    "tip_meta": {"dark": "#d8d2c8", "light": "#4a3a2c"},
+    "tip_desc": {"dark": "#c9c2b8", "light": "#5a4433"}
   },
   "rarity": [
     {"dark": "#d8dce3", "light": "#2e2219"},

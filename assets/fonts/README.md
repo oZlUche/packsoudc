@@ -2,20 +2,20 @@
 
 | 文件 | 来源 | 版本 | 用在哪 |
 |---|---|---|---|
-| `wenkai_regular.ttf` | 霞鹜文楷 LXGW WenKai Regular（github.com/lxgw/LxgwWenKai） | 1.530 | 正文、读数、按钮（`UiPalette.cjk_font()`，主题默认字体） |
-| `wenkai_medium.ttf` | 霞鹜文楷 Medium | 1.530 | 粗体：富文本 `[b]`（`cjk_font_bold()`） |
+| `serif_regular.otf` | 思源宋体 Noto Serif CJK SC Regular（github.com/notofonts/noto-cjk） | 2.003 | 正文、读数、按钮（`UiPalette.cjk_font()`，主题默认字体） |
+| `serif_bold.otf` | 思源宋体 Noto Serif CJK SC Bold | 2.003 | 粗体：名字、数字、富文本 `[b]`（`cjk_font_bold()`） |
 | `zhuque_fangsong.ttf` | 朱雀仿宋 Zhuque Fangsong（github.com/TrionesType/zhuque） | 0.212 技术预览 | 标题、名牌、叠层标题条（`title_font()`） |
 | `mashanzheng.ttf` | 马善政 Ma Shan Zheng（github.com/googlefonts/mashanzheng） | 2.003 | 大标题：主菜单游戏名、章节名、宝箱屏说明（`display_font()`，变体 `LabelDisplay`） |
 
-三款都是 SIL Open Font License 1.1，授权原文在 `LICENSES/`，随游戏一起分发。
+四个文件三款字体，都是 SIL Open Font License 1.1，授权原文在 `LICENSES/`，随游戏一起分发。
 
 ## 子集与改名
 
-四个文件都是**按文案裁过字的子集**（`charset.txt` 是字集，一行一个字），原始字体（每份文楷 25 MB）不入库，放在共享目录 `art/fonts/chosen/` 与作者机器上。
+四个文件都是**按文案裁过字的子集**（`charset.txt` 是字集，一行一个字），原始字体（每份思源宋体 25 MB）不入库，放在共享目录 `art/fonts/chosen/` 与作者机器上。
 
-霞鹜文楷的授权保留了字体名「霞鹜 / 霞鶩 / 落霞孤鹜 / 落霞孤鶩 / LXGW」，附加许可只放行网页字体用的子集。游戏里带的子集是修改版，所以裁完把字体名改成 **PackSDC Kai**（`subset_fonts.sh` 里那一步），版权与授权那几条名字记录原样留着。朱雀仿宋、马善政没有保留字体名，不改。
+170 定稿（作者 2026-10-14 挑 A）：正文从霞鹜文楷（168 时裁字后改名 PackSDC Kai）换成思源宋体 Regular / Bold。思源宋体、朱雀仿宋、马善政都没有保留字体名，子集照原名，不改名。
 
-缺字不会出方块：文楷后备系统字体，朱雀仿宋后备文楷 Medium，马善政后备朱雀仿宋。
+缺字不会出方块：正文后备系统字体，朱雀仿宋后备思源宋体 Bold，马善政后备朱雀仿宋。
 
 ## 重裁
 
