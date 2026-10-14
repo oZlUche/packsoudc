@@ -12,7 +12,7 @@
 class_name HoverTip
 extends Control
 
-const MAX_WIDTH := 340.0
+const MAX_WIDTH := 360.0     # 170 定稿：字大一号后 340 放不下武器那一行
 const CHILD_WIDTH := 260.0
 ## 170 §3：离开道具后的宽限、钉住要停多久、关键词开子窗要停多久、离开钉住的窗多久收、子窗最多几层（含主窗）
 const GRACE_SEC := 0.15
@@ -447,7 +447,7 @@ func open_child(parent: TipWindow, meta: String) -> TipWindow:
 		w.terms[k] = parent.terms[k]
 	for f in found:
 		w.terms[String(f["id"])] = {"name": f["name"], "text": f["text"]}
-	w.set_text(UiTheme.outline_colored("[b][color=@term]%s[/color][/b]\n%s" % [String(entry["name"]), Glossary.mark(String(entry["text"]), found)]))
+	w.set_text("%s\n[color=@tip_fg]%s[/color]" % [UiTheme.outline("[b][color=@term]%s[/color][/b]" % String(entry["name"])), Glossary.mark(String(entry["text"]), found)])     # 170 定稿：只有名字描边
 	w.visible = true
 	w.reset_size()
 	_place_child(w, parent)

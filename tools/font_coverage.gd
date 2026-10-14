@@ -1,6 +1,6 @@
 ## 168：打包字体的覆盖检查 —— 文案里用到的字是不是都裁进了子集。扫的范围和 `tools/font_charset.py` 是同一张表。
 ##
-## 两条：用到的字都在 `assets/fonts/charset.txt` 里（不在 = 文案新加了字，重跑裁字）；用到的汉字文楷子集都有
+## 两条：用到的字都在 `assets/fonts/charset.txt` 里（不在 = 文案新加了字，重跑裁字）；用到的汉字思源宋体子集都有
 ## （没有 = 子集过期了）。符号类字体本身就没有的（⌛ ✦ ……）不算错，走系统字体后备
 class_name FontCoverage
 extends RefCounted

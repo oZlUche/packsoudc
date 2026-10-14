@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.99 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.00 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1412,12 +1412,12 @@ while 双方存活 and now < 安全上限:
 
 #### 道具悬浮窗的版式与固定式悬浮窗（170，作者定）
 
-- **深底白字**：`PanelTooltip` 用美术的黑曜石九宫格（`assets/ui/tip/tooltip_dark`，json `tone: dark`），宽 340。带色的字一律描边（`UiTheme.outline_colored`：每段 `[color]` 包 `[outline_size=2][outline_color=#000000bf]`，白字 `@fg` 不描；常量 `OUTLINE_SIZE / OUTLINE_COLOR`）。
-- **版式 A**（`ItemTooltip.describe_full` 分块返回 `head / body / foot / set / text / terms`）：头 = 名字（粗体 18、稀有度色）、副行（稀有度名 · 标签，按 171 的大类排、来源类不列）、说明（`[i]` 斜体：正文字体斜切 0.2，`UiTheme.slanted`，主题的 `italics_font`）；分隔线；正文一行一条，行首图标（`UiTheme.tip_icon`，缺图退回「【增益】」等字，图标链到「增益槽 / 受益槽 / 装载槽」词条）；虚线；脚注金币与秤砣图标 + 右边套装名。不写格数、冷却、DPS。
+- **深底白字**（v3.00 定稿，作者 2026-10-14「样式就这样吧」）：`PanelTooltip` 是两层的 `SlabStyle`（`UiTheme.layered_box`，石板也走它）：深皮革板身 `tip/tooltip_body` 平铺铺满整窗、黄铜边框九宫格 `tip/tooltip_frame`（中心透明，json `tone: dark`）叠在上面；宽 360。字色走字色模板的三档：正文 `@tip_fg`（白）、标签与脚注 `@tip_meta`、说明 `@tip_desc`。**只有名字和稀有度名描边**（`UiTheme.outline`：`[outline_size=2][outline_color=#000000bf]`，常量 `OUTLINE_SIZE / OUTLINE_COLOR`）；正文里带色的属性字不描（作者对比后定）。
+- **版式 A**（`ItemTooltip.describe_full` 分块返回 `head / body / foot / set / text / terms`）：头 = 名字（粗体 19、稀有度色）、副行（稀有度名 · 标签，按 171 的大类排、来源类不列）、说明（`[i]` 斜体：正文字体斜切 0.2，`UiTheme.slanted`，主题的 `italics_font`）；分隔线；正文一行一条，行首图标（`UiTheme.tip_icon`，缺图退回「【增益】」等字，图标链到「增益槽 / 受益槽 / 装载槽」词条）；虚线；脚注金币与秤砣图标 + 右边套装名。不写格数、冷却、DPS。
 - **武器句**（`ItemTooltip.weapon_sentence`）：「每 X 秒造成 Y 点伤害，消耗 Z 耐力」，X / Y 用编译后（含开战 buff）的实值；规则施加 buff 就接「，附带【中毒】」（有专属解说写解说）。
 - **生成句**（171 §3，`AdjacencyText`）：条件 = 标签（`grant_filter` OR「XX、YY」，`grant_filter_all` AND 连写「XXYY」，都空「邻居」）+ 效果名（`Glossary.SENTENCE_NAMES`：伤害乘算「增伤」、加速、护甲……；`mod_text(m, true)`：乘算「10%」、加算「+5」）+ 附加规则（提到的 buff 走 `BuffDef.sentence_text`）。受益句「挨着盾时 护甲 +5」；晶石「装进法杖：…」+「装在：魔法杖 / 闲置」；法杖每颗装上的晶石一行「火焰魔晶石　每 X 秒 Y 火焰伤害　剩 N 次」。
 - **固定式悬浮窗**（`HoverTip`，十字军之王式）：离开道具后 `GRACE_SEC` 0.15 秒宽限（这期间进窗就留下）；窗里停满 `PIN_SEC` 0.6 秒钉住（2 px 黄铜线从左上角沿外框顺时针走一圈，`ring_points`；钉住画钉子 `pin.png`）；钉住后停在 `[url=term:<id>]` 关键词上 `TERM_SEC` 0.25 秒开子窗（`TipWindow`，同样可钉、可再开，`MAX_DEPTH` 3 层），位置右边、放不下下面、夹回屏内；离开整串 `AWAY_SEC` 0.4 秒、Esc、点窗外（含开始拖拽）收掉。计时都在 `tick(delta, 鼠标)`。087 的词条侧窗取消，`terms` 是 `{id: {name, text}}`；`Glossary.mark` 输出关键词链接，`wrap_terms` 不替 BBCode 标签里面的字。
-- 字体常量改名 `UiPalette.FONT_BODY / FONT_BOLD`（原 `FONT_REGULAR / FONT_MEDIUM`），换正文字体等作者挑样张。
+- 字号：名字 19、副行 13、说明 14、正文 15、脚注 13（`ItemTooltip.NAME_SIZE` 等）。字体常量 `UiPalette.FONT_BODY / FONT_BOLD`（原 `FONT_REGULAR / FONT_MEDIUM`）指思源宋体 Regular / Bold（见 8.10）。
 
 #### 关键词弹不弹：一个 `tip` 字段（107，作者定）
 
@@ -3523,11 +3523,11 @@ func player_spec() -> CombatantSpec …
 
 ### 8.10 字体（168）
 
-游戏自带三款 OFL 字体，`assets/fonts/` 里是**按文案裁过字的子集**（原始字体不入库）：正文 / 读数 / 按钮是霞鹜文楷 Regular（主题默认字体），富文本 `[b]` 是文楷 Medium，标题（`LabelTitle`，名牌也用它）与叠层标题条（`LabelOverlayTitle`）是朱雀仿宋，大标题（`LabelDisplay` 40 号：主菜单游戏名、开局第三页与开场事件的章节名、宝箱屏说明）是马善政。
+游戏自带三款 OFL 字体，`assets/fonts/` 里是**按文案裁过字的子集**（原始字体不入库）：正文 / 读数 / 按钮是思源宋体 Regular（Noto Serif CJK SC，主题默认字体；170 定稿换掉了 168 的霞鹜文楷），富文本 `[b]` 是思源宋体 Bold，标题（`LabelTitle`，名牌也用它）与叠层标题条（`LabelOverlayTitle`）是朱雀仿宋，大标题（`LabelDisplay` 40 号：主菜单游戏名、开局第三页与开场事件的章节名、宝箱屏说明）是马善政。
 
-- `UiPalette.cjk_font / cjk_font_bold / title_font / display_font` 都是 `FontVariation`：文楷后备系统字体，仿宋后备文楷 Medium，马善政后备仿宋 —— 缺字不出方块；文件不在退回后备。编辑器、沙盒直接拿 `cjk_font()` 的跟着换成文楷。
-- 裁字：`tools/font_charset.py` 扫 data / ui / core / tools 的文案写 `assets/fonts/charset.txt`，`tools/subset_fonts.sh` 按它裁四个子集（要 fonttools）。文楷的授权保留了「霞鹜 / LXGW」等字体名，裁过的子集改名 PackSDC Kai。
-- 兜底：`FontCoverage`（`tools/font_coverage.gd`）查文案用到的字都在字集里、用到的汉字文楷子集都有；`tools/check_content.gd` 与 `tests/ui/test_fonts_168.gd` 都跑它，红了就重裁。
+- `UiPalette.cjk_font / cjk_font_bold / title_font / display_font` 都是 `FontVariation`：正文后备系统字体，仿宋后备思源宋体 Bold，马善政后备仿宋 —— 缺字不出方块；文件不在退回后备。编辑器、沙盒直接拿 `cjk_font()` 的跟着换。
+- 裁字：`tools/font_charset.py` 扫 data / ui / core / tools 的文案写 `assets/fonts/charset.txt`，`tools/subset_fonts.sh` 按它裁四个子集（要 fonttools）。三款都没有保留字体名，子集照原名（168 时文楷要改名 PackSDC Kai，换掉后这一步删了）。
+- 兜底：`FontCoverage`（`tools/font_coverage.gd`）查文案用到的字都在字集里、用到的汉字正文子集都有；`tools/check_content.gd` 与 `tests/ui/test_fonts_168.gd` 都跑它，红了就重裁。
 
 ## 9. 套装与跨域效果
 
@@ -4179,6 +4179,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.00 | 2026-10-14 | **170 悬浮窗定稿**（作者在美术设计里定「样式就这样吧」；改 8.8、8.10）：悬浮窗底改两层 `SlabStyle`（深皮革 `tip/tooltip_body` 平铺 + 黄铜边框 `tip/tooltip_frame`，`UiTheme.layered_box`，`slab_box` 也走它），`tooltip_dark` 退了；宽 360、字号各大一号（19 / 13 / 14 / 15 / 13）；字色模板加 `tip_fg / tip_meta / tip_desc`；只有名字和稀有度名描边，`UiTheme.outline_colored` 删了；正文字体换思源宋体 Regular / Bold（`serif_regular.otf / serif_bold.otf`，霞鹜文楷子集与授权移出），`subset_fonts.sh` 去掉改名一步 |
 | v2.99 | 2026-10-14 | **道具悬浮窗深底版式 + 固定式悬浮窗**（报告 170 §2 §3 §5，作者定，待定按推荐 1A 2A 3A 4A；改 4.8、8.8）与**标签大类 / buff 解说 / 生成句 / 法杖装载槽**（报告 171 §1–§5，待定 1A 2A 3A 4A；改 4.2）：悬浮窗深底九宫格 `tip/tooltip_dark`、带色字描边 `UiTheme.outline_colored`、斜体 `UiTheme.slanted`、行内图标 `tip_icon`、`ItemTooltip.describe_full` 分块（头 / 正文 / 脚注）、武器句「每 X 秒造成 Y 点伤害，消耗 Z 耐力」（不写冷却 / DPS / 格数）；`HoverTip` 宽限 0.15 秒、停 0.6 秒钉住（外框顺时针进度）、关键词 0.25 秒开子窗（封顶 3 层）、离开 0.4 秒 / Esc / 点外收，侧窗取消、`terms` 改 `{id: {name, text}}`；棋盘格位画美术图标（`grant/receive/load_on|off`）；`FONT_BODY / FONT_BOLD` 改名。`BuffDef.has_blurb / blurb / blurbs`、`sentence_text`；`TagDef.category`（用途 / 属性 / 材料 / 归属 / 来源 / 内部，`TagRegistry.by_category / category_of / sorted_by_category`），补 `bow`、`wood`，道具上没登记的标签导入报错，材料来源按来源类判；**标签制作器**（`ui/tag_editor/`）、属性表单的标签数组改成标签块 + 按大类分组的下拉；`AdjacencyText` 生成增益 / 受益 / 供给句，`AdjacencyProfile.grant_filter_all`（AND）；`load_cells / load_filter`、`BattleCompiler.load_assignments / load_claimants`、`CombatantSpec.loads`，一颗晶石只给后放的法杖、一把一份，魔法杖受益格改装载格（导入迁移） |
 | v2.98 | 2026-10-13 | **掉落改重力 + 重心**（报告 162 补充二，作者定，待定按推荐 1A 2A 3B 4A；改 3.4）：拖出 / 掉出的东西竖直落到正下方第一个支撑（面板上沿或屏底，`GroundLayer.floor_under / spot_below`），起点 = 松手时残影位置（`DragLayer._release_px`；162 主体「手动拖出从原格起飞」作废，地上单击放回原处仍就地）；重力 `LAND_G` × 屏高、密度定末速度与弹（`land_profile` 不再给时长），`ItemShape.center_of_mass / rest_rotation`，途中绕重心转到最稳朝向，落点与朝向立刻是终态；`_support` 记托着的面板，关了再掉；没起点的从落点上方竖直落（不再从面板边斜飞） |
 | v2.97 | 2026-10-13 | **字色模板 + 顶端栏长条石板**（报告 169，作者定，待定按推荐 1A 2B 3A 4A；改 8.8）：`data/authoring/ui/text_colors.json` 每个颜色名写深底 / 浅底两版，`UiPalette.style_color / rarity_color / damage_color / resource_color(…, tone)`、`toned`、`for_tone`；`apply_tone` 打 `tone` 元数据、`UiTheme.tone_at` 往上找，`rich_block` / 语义色标签进树按底换版，`set_rich`、`refresh_tones`；`slab_bbcode` 删了；`INK*` 读模板；`TextColorCheck` 进内容校验；启动器「配色」页。同版：顶端栏换专用长条板边 `slab_bar`，`SlabStyle.body_inset` 四边分开、去掉 `top_cut`，`HudHost.BAR_HEIGHT` 64 → 88、栏里的组在板面上居中（作者「凹槽没有和石板位置对齐」） |

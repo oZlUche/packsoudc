@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://c0oaybvbawi47"
-path="res://.godot/imported/wenkai_regular.ttf-35aea4257768e6cf4ec4cfdc5e126c1b.fontdata"
+uid="uid://bvy7bs5482mhx"
+path="res://.godot/imported/serif_regular.otf-9c9cffa51dd69734557490821d2f4e5c.fontdata"
 
 [deps]
 
-source_file="res://assets/fonts/wenkai_regular.ttf"
-dest_files=["res://.godot/imported/wenkai_regular.ttf-35aea4257768e6cf4ec4cfdc5e126c1b.fontdata"]
+source_file="res://assets/fonts/serif_regular.otf"
+dest_files=["res://.godot/imported/serif_regular.otf-9c9cffa51dd69734557490821d2f4e5c.fontdata"]
 
 [params]
 
