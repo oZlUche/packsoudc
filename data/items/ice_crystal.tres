@@ -63,7 +63,7 @@ display_name = "冰霜魔晶石"
 display_names = {
 "en": "Ice Crystal"
 }
-description = "放在法杖的受益格上：法杖伤害 +{amount}，打出冰霜伤害。能供给 {max_charges} 场，用完就碎。"
+description = "放在法杖的装载槽上：法杖伤害 +{amount}，打出冰霜伤害。能供给 {max_charges} 场，用完就碎。"
 shape = SubResource("Resource_enal7")
 rarity = 1
 tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal"])

@@ -718,7 +718,7 @@ func _on_tile_hovered(tile: CodexTile) -> void:
 	var at := tile.global_position + Vector2(tile.size.x, 0)
 	if tile.lit:
 		var full := ItemTooltip.describe_full(ItemInstance.create(tile.def, 0))
-		_codex_tip.show_text(String(full["text"]), at, null, full["terms"])
+		_codex_tip.show_item(full, at)
 	elif tile.def.requires_unlock != &"" and not flow.unlocked(tile.def.requires_unlock):
 		# 091：锁着的写怎么解锁（哪一枚成就）
 		var ach := flow.achievement_granting(tile.def.requires_unlock)

@@ -7,5 +7,6 @@
   "description": "封存的现代道具：数据保留、不再出现。",
   "descriptions": {
     "en": "Sealed modern item: kept in data, never appears."
-  }
+  },
+  "category": "element"
 }

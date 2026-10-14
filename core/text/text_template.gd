@@ -191,7 +191,8 @@ static func cached_regex(pattern: String) -> RegEx:
 ## 剥掉全部 BBCode 标签（`[b]` `[color=…]` `[url=…]`……，凡 `[字母…]`），只留文字：搜索、测试比对纯文字用。
 ## [method plain] 只剥样式码对应的三种，Label 里 `[url]` 之类要不要留是那边的事
 static func strip_bbcode(text: String) -> String:
-	return cached_regex("\\[/?[a-zA-Z][^\\]]*\\]").sub(text, "", true)
+	var out := cached_regex("\\[img[^\\]]*\\][^\\[]*\\[/img\\]").sub(text, "", true)     # 170：行内图标整个去掉（路径不是字）
+	return cached_regex("\\[/?[a-zA-Z][^\\]]*\\]").sub(out, "", true)
 
 
 ## 112：正文里引用了哪些道具 / 敌人 / 信仰（113 加 `{faith…:}`；`{item:id}` `{enemy:id}` `{item_stat:id:字段}`）→ [{kind, id}]。导入器拿它查 id

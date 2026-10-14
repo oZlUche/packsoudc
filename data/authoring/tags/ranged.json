@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "A bow or other ranged weapon."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }

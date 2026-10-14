@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Carries fire."
   },
-  "tip": false
+  "tip": false,
+  "category": "element"
 }

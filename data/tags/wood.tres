@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_8xkb5"]
+
+[resource]
+script = ExtResource("1_8xkb5")
+id = &"wood"
+display_name = "木制"
+display_names = {
+"en": "Wooden"
+}
+description = "木头做的东西。"
+descriptions = {
+"en": "Made of wood."
+}
+tip = false
+category = "material"

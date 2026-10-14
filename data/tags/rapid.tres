@@ -14,4 +14,5 @@ descriptions = {
 "en": "Fast, light hits."
 }
 tip = false
+category = "internal"
 internal = true

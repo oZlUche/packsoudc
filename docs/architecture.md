@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v2.98 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v2.99 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -574,10 +574,12 @@ UI 上用什么图形表示这两类，是表现层的事，数据层不关心�
 **它执行时不算宿主再出手一次**（`RuleEngine.evaluate` 听自己出手的规则不再发 `ITEM_FIRED`，否则会自己触发自己）。
 「配件自己的反应」仍用 `OnItemFired.LINKED`（规则以配件身份跑）；「武器出手时附带 X」统一走附加。反向的 `receive_rules` 等内容需要再加。
 
-**第三面：供给**（148，作者定，魔晶石 → 法杖）：`AdjacencyProfile.feed_mods / feed_rules / feed_filter` —— **本件站在别人的受益格上**、对方命中 `feed_filter` 时，
-把这些交给对方（一份，不按格数乘；规则走 `_attach`、以宿主身份跑，时机不限、不许 costs，同受益规则）。供给方不画格子：「谁的受益格我站上了」由宿主说了算。
-宿主的受益格可以只写 `receive_filter`、不写加成（法杖：数值全看放上去的晶石）。编译器把真的供给了的道具记进 `CombatantSpec.fed_uids`（耐久按它扣，7.4）；
-用坏了的（`ItemInstance.is_broken()`）不再供给。于是邻接三件事齐了：我给邻居（grant）、邻居给我（receive）、我站上谁的受益格就给谁（feed）。
+**第三面：装载与供给**（148，作者定，魔晶石 → 法杖；171 起晶石座是**装载格**，和受益格分开）：宿主写 `AdjacencyProfile.load_cells`（`load_filter` 空 = 魔晶石 `crystal`），
+晶石写 `feed_mods / feed_rules / feed_filter` —— **晶石站在宿主的装载格上**、宿主命中 `feed_filter` 时，把这些交给宿主（一份，不按格数乘；规则走 `_attach`、以宿主身份跑，时机不限、不许 costs，同受益规则）。
+**一颗晶石只给一把**（171，作者定「后来者优先」）：压着几把法杖的装载格，`BattleCompiler.load_assignments` 只给 `placed_seq` 最大的那把（一样大按 uid），被抢走的那把装载格按空算；
+结果记进 `CombatantSpec.loads`（晶石 uid → 法杖 uid），悬浮窗与棋盘的装载格点亮都查它。编译器把真的供给了的晶石记进 `CombatantSpec.fed_uids`（耐久按它扣，7.4）；
+用坏了的（`ItemInstance.is_broken()`）不再供给。老内容里法杖的受益格（带 `staff` 标签、受益格不给东西）导入时迁成装载格（171 待定 4 A）。
+于是邻接三件事：我给邻居（grant，171 加 `grant_filter_all`：全部带上才算，句子里连写）、邻居给我（receive）、装上来的晶石给我（load / feed）。
 「只改这件自己打出的伤害」靠伤害扳机的 `own_only`（来源 uid = 规则主人），魔晶石的「改成火焰」用它。
 
 > **这不是宝石镶嵌。** 邻接标记是「谁挨着谁」，双方各占各的格子；宝石是放进宿主物品
@@ -1408,9 +1410,18 @@ while 双方存活 and now < 安全上限:
 长度 = `护甲 / 生命上限`（护甲 ≥ 上限时整条框满），只盖一部分时右端一道竖边收口 ——
 一眼看出「护甲顶得住几成血」。护甲的数写在生命条的文字里（`hp 60 / 100　甲 40`）。
 
+#### 道具悬浮窗的版式与固定式悬浮窗（170，作者定）
+
+- **深底白字**：`PanelTooltip` 用美术的黑曜石九宫格（`assets/ui/tip/tooltip_dark`，json `tone: dark`），宽 340。带色的字一律描边（`UiTheme.outline_colored`：每段 `[color]` 包 `[outline_size=2][outline_color=#000000bf]`，白字 `@fg` 不描；常量 `OUTLINE_SIZE / OUTLINE_COLOR`）。
+- **版式 A**（`ItemTooltip.describe_full` 分块返回 `head / body / foot / set / text / terms`）：头 = 名字（粗体 18、稀有度色）、副行（稀有度名 · 标签，按 171 的大类排、来源类不列）、说明（`[i]` 斜体：正文字体斜切 0.2，`UiTheme.slanted`，主题的 `italics_font`）；分隔线；正文一行一条，行首图标（`UiTheme.tip_icon`，缺图退回「【增益】」等字，图标链到「增益槽 / 受益槽 / 装载槽」词条）；虚线；脚注金币与秤砣图标 + 右边套装名。不写格数、冷却、DPS。
+- **武器句**（`ItemTooltip.weapon_sentence`）：「每 X 秒造成 Y 点伤害，消耗 Z 耐力」，X / Y 用编译后（含开战 buff）的实值；规则施加 buff 就接「，附带【中毒】」（有专属解说写解说）。
+- **生成句**（171 §3，`AdjacencyText`）：条件 = 标签（`grant_filter` OR「XX、YY」，`grant_filter_all` AND 连写「XXYY」，都空「邻居」）+ 效果名（`Glossary.SENTENCE_NAMES`：伤害乘算「增伤」、加速、护甲……；`mod_text(m, true)`：乘算「10%」、加算「+5」）+ 附加规则（提到的 buff 走 `BuffDef.sentence_text`）。受益句「挨着盾时 护甲 +5」；晶石「装进法杖：…」+「装在：魔法杖 / 闲置」；法杖每颗装上的晶石一行「火焰魔晶石　每 X 秒 Y 火焰伤害　剩 N 次」。
+- **固定式悬浮窗**（`HoverTip`，十字军之王式）：离开道具后 `GRACE_SEC` 0.15 秒宽限（这期间进窗就留下）；窗里停满 `PIN_SEC` 0.6 秒钉住（2 px 黄铜线从左上角沿外框顺时针走一圈，`ring_points`；钉住画钉子 `pin.png`）；钉住后停在 `[url=term:<id>]` 关键词上 `TERM_SEC` 0.25 秒开子窗（`TipWindow`，同样可钉、可再开，`MAX_DEPTH` 3 层），位置右边、放不下下面、夹回屏内；离开整串 `AWAY_SEC` 0.4 秒、Esc、点窗外（含开始拖拽）收掉。计时都在 `tick(delta, 鼠标)`。087 的词条侧窗取消，`terms` 是 `{id: {name, text}}`；`Glossary.mark` 输出关键词链接，`wrap_terms` 不替 BBCode 标签里面的字。
+- 字体常量改名 `UiPalette.FONT_BODY / FONT_BOLD`（原 `FONT_REGULAR / FONT_MEDIUM`），换正文字体等作者挑样张。
+
 #### 关键词弹不弹：一个 `tip` 字段（107，作者定）
 
-悬浮窗的侧边词条有三个来源：固定词条（`Glossary.TERMS`）、标签词条（`TagDef.description`）、
+悬浮窗的词条（170 起是钉住后的关键词子窗）有三个来源：固定词条（`Glossary.TERMS`）、标签词条（`TagDef.description`）、
 buff 词条（`Glossary.describe_buff` 按定义生成）。原来「有说明 = 一定弹」，于是一把赐福长弓能挂出十三个侧窗，
 其中七个对玩家没有信息增量。
 
@@ -1478,6 +1489,8 @@ buff 词条（`Glossary.describe_buff` 按定义生成）。原来「有说明 =
 
 #### 邻接标记必须画在棋盘上
 
+170 起画美术的格位图标（`assets/ui/tip/grant|receive|load_on|off.png`，32 px，点亮 / 没点亮两态），替换原来的半透明方框；一格上只有一种居中，好几种沿对角线错开；
+装载格「点亮」= 这颗晶石真的给了这把（`load_assignments`）。没图时的老画法：
 增益格／受益格画成**四个角括号**，叠在标记指向的那一格上：增益贴着格边、受益缩在里面，
 两类同时落在一格也分得清。不用整圈描边，那会和物品自己的稀有度描边撞车。
 
@@ -3464,7 +3477,7 @@ func player_spec() -> CombatantSpec …
 
 叠层屏（事件、战前、回放、容器、商店、保险箱、神坛、休息、百科）都走 `GameScreen._centered_panel()`：它造一块 `OverlayFrame`（`ui/widgets/`），
 顶上标题条（左标题、右槽）+ 内容区，返回内容区给各屏；标题写 `_frame_title(text)`。外观是主题变体 `PanelOverlay`：`UiTheme.asset_root`（默认 `res://assets/ui/`）
-下有石板两张图（`slab_body` + `slab_edge`，157 补充三）就是一整块石板（边距与标题条高读 `slab_edge.json`），没有就是平面底 —— 换皮只换图。悬浮窗（`HoverTip`）同理走 `PanelTooltip`（`tooltip_paper.png`）。
+下有石板两张图（`slab_body` + `slab_edge`，157 补充三）就是一整块石板（边距与标题条高读 `slab_edge.json`），没有就是平面底 —— 换皮只换图。悬浮窗（`HoverTip`）同理走 `PanelTooltip`（170 起是深底 `tip/tooltip_dark.png`，原来的纸 `tooltip_paper.png` 退了）。
 宝箱屏整屏铺背景，不套框。
 
 换屏：导演加叠层时 0.15 秒、换底屏时 0.2 秒从透明淡入（撤叠层直接撤）；`GameSettings.ui_fades` 关掉，测试与截图工具用 `GameDirector.fades_allowed` 关掉。
@@ -3481,7 +3494,7 @@ func player_spec() -> CombatantSpec …
 `UiTheme.label` 覆写过语义色（生命红、治疗绿……）的标签进树时也按底换版。换底后 `UiTheme.refresh_tones(root)` 重算。调用点不再自己过 `ink_bbcode`（留着当 `toned` 的转发）。
 `UiTheme.INK / INK_SOFT / INK_WARN` 读模板 `fg / dim / warn` 的浅版（`*_DEFAULT` 常量是缺文件时的默认）。棋盘格上的道具名有自己的深底，照旧用 `ItemPainter.RARITY_COLORS`。
 校验 `TextColorCheck`（`tools/check_content.gd` 调）：两版都在、浅版对纸 `PAPER` ≥ 4.5 算错；深版对 `UiPalette.PANEL` 不够与内容里写死的 `{c:#…}` 只列警告。启动器「配色」页（`ui/palette_preview/`）深浅两列列全部样字与对比度，F5 重读。
-现在悬浮窗（主面板与词条小窗）是亮纸、浅底；石板是浅底。
+现在悬浮窗（主窗与关键词子窗）是深底（170）；石板是浅底。
 
 **石板**（157 补充三，作者定「每个界面（框）在一块完整的石板上显示」，取代原来平铺满屏的石砖墙）：**一屏一块石板，板即框**。
 - `SlabStyle`（`ui/widgets/`）是一个两层画的 StyleBox：下层板身 `slab_body.png` 平铺（`AXIS_STRETCH_MODE_TILE`，纹不随框大小拉花，往里缩 json `body_inset`，凿口外透出底下），上层板边 `slab_edge.png` 九宫格（中心透明：手凿轮廓、受光棱、投影、顶上一道刻线）。`UiTheme.slab_box()` 两张图都在才造，否则 null、退回平面底；`UiTheme.slab(c)` 把一块面板挂成石板（`PanelOverlay` 变体 + 按石板深浅挂字色）。没用「两个 Panel 子底」的写法：一个 StyleBox 画两层，凡是挂 `PanelOverlay` / `PanelHudBar` 的都自动是石板，容器排版也不受子底影响。
@@ -4166,6 +4179,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v2.99 | 2026-10-14 | **道具悬浮窗深底版式 + 固定式悬浮窗**（报告 170 §2 §3 §5，作者定，待定按推荐 1A 2A 3A 4A；改 4.8、8.8）与**标签大类 / buff 解说 / 生成句 / 法杖装载槽**（报告 171 §1–§5，待定 1A 2A 3A 4A；改 4.2）：悬浮窗深底九宫格 `tip/tooltip_dark`、带色字描边 `UiTheme.outline_colored`、斜体 `UiTheme.slanted`、行内图标 `tip_icon`、`ItemTooltip.describe_full` 分块（头 / 正文 / 脚注）、武器句「每 X 秒造成 Y 点伤害，消耗 Z 耐力」（不写冷却 / DPS / 格数）；`HoverTip` 宽限 0.15 秒、停 0.6 秒钉住（外框顺时针进度）、关键词 0.25 秒开子窗（封顶 3 层）、离开 0.4 秒 / Esc / 点外收，侧窗取消、`terms` 改 `{id: {name, text}}`；棋盘格位画美术图标（`grant/receive/load_on|off`）；`FONT_BODY / FONT_BOLD` 改名。`BuffDef.has_blurb / blurb / blurbs`、`sentence_text`；`TagDef.category`（用途 / 属性 / 材料 / 归属 / 来源 / 内部，`TagRegistry.by_category / category_of / sorted_by_category`），补 `bow`、`wood`，道具上没登记的标签导入报错，材料来源按来源类判；**标签制作器**（`ui/tag_editor/`）、属性表单的标签数组改成标签块 + 按大类分组的下拉；`AdjacencyText` 生成增益 / 受益 / 供给句，`AdjacencyProfile.grant_filter_all`（AND）；`load_cells / load_filter`、`BattleCompiler.load_assignments / load_claimants`、`CombatantSpec.loads`，一颗晶石只给后放的法杖、一把一份，魔法杖受益格改装载格（导入迁移） |
 | v2.98 | 2026-10-13 | **掉落改重力 + 重心**（报告 162 补充二，作者定，待定按推荐 1A 2A 3B 4A；改 3.4）：拖出 / 掉出的东西竖直落到正下方第一个支撑（面板上沿或屏底，`GroundLayer.floor_under / spot_below`），起点 = 松手时残影位置（`DragLayer._release_px`；162 主体「手动拖出从原格起飞」作废，地上单击放回原处仍就地）；重力 `LAND_G` × 屏高、密度定末速度与弹（`land_profile` 不再给时长），`ItemShape.center_of_mass / rest_rotation`，途中绕重心转到最稳朝向，落点与朝向立刻是终态；`_support` 记托着的面板，关了再掉；没起点的从落点上方竖直落（不再从面板边斜飞） |
 | v2.97 | 2026-10-13 | **字色模板 + 顶端栏长条石板**（报告 169，作者定，待定按推荐 1A 2B 3A 4A；改 8.8）：`data/authoring/ui/text_colors.json` 每个颜色名写深底 / 浅底两版，`UiPalette.style_color / rarity_color / damage_color / resource_color(…, tone)`、`toned`、`for_tone`；`apply_tone` 打 `tone` 元数据、`UiTheme.tone_at` 往上找，`rich_block` / 语义色标签进树按底换版，`set_rich`、`refresh_tones`；`slab_bbcode` 删了；`INK*` 读模板；`TextColorCheck` 进内容校验；启动器「配色」页。同版：顶端栏换专用长条板边 `slab_bar`，`SlabStyle.body_inset` 四边分开、去掉 `top_cut`，`HudHost.BAR_HEIGHT` 64 → 88、栏里的组在板面上居中（作者「凹槽没有和石板位置对齐」） |
 | v2.96 | 2026-10-13 | **战斗回放控件换图**（报告 167 §2.3，作者定 D 版：符石按键 + 铜章进度条）：`assets/ui/replay/` 七个键各三态（44 × 44，本体 40 在左上）+ 槽 / 亮段九宫格（边距 [16,0,16,0]）+ 游标（pivot [8,14]）+ 两色刻度；`IconButton.make_art / set_art`（整颗按钮是图，新变体 `ButtonArt` 各态无底，缺图写字走 `ButtonIcon`）；`BattleView` 播放 / 暂停 / 重播、倍速 Ⅰ / Ⅱ / Ⅳ、跳过换成它，常驻说明挪进播放键悬浮窗（`PLAY_HINT`）；`ReplayTimeline` 有图走贴图（两端留符石宽、亮段按游标裁、倒下刻度 1.5 倍、没播到的 35%），缺图照画线 |

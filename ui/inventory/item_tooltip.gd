@@ -1,19 +1,32 @@
-## 道具的悬浮说明（084，作者定）：名、稀有度、标签、效果；武器多两行 —— 冷却、耗耐力与 DPS；有增益 / 受益槽的写槽的效果；
-## 087：说明里的名词是**词条**（[Glossary]）：主文字只写词，侧边小窗写具体效果（[method describe_full]）。
-## 包写包的格数与包体加成；信仰道具写按阶解锁的加成。
+## 道具的悬浮说明（084，作者定）：名、稀有度、标签、效果；有增益 / 受益 / 装载槽的写槽的效果；包写包的格数与包体加成；信仰道具写按阶解锁的加成。
+## 087：说明里的名词是**词条**（[Glossary]）：主文字只写词，悬浮窗钉住后停在词上开子窗看具体效果（170 §3，原来的侧边小窗取消）。
 ##
-## 纯文字（BBCode），画是 [HoverTip] 的事。冷却与 DPS 从编译结果取：一件在棋盘上就按它此刻的邻接 / 包体加成算，
+## 170（作者定）：版式 A —— 分三块：头（名字粗体 18、副行稀有度 · 标签、说明斜体）/ 正文（一行一条，行首图标）/ 脚注（金币、秤砣、套装）。
+## 武器写「每 X 秒造成 Y 点伤害，消耗 Z 耐力」，不写出手、冷却、DPS、格数；带色的字一律描边（深底白字）。
+## 171：增益 / 受益 / 装载句由字段生成（[AdjacencyText]）。
+##
+## 纯文字（BBCode），画是 [HoverTip] 的事。周期与伤害从编译结果取：一件在棋盘上就按它此刻的邻接 / 包体加成算，
 ## 不在棋盘上（地上、战利品）就单独编一遍 —— 和真打出来的是同一份编译（4.2）
 class_name ItemTooltip
 extends RefCounted
 
 ## 稀有度的名字，下标即稀有度；颜色见 [ItemPainter.RARITY_COLORS]（白 / 绿 / 蓝 / 紫 / 金 / 红）
 const RARITY_NAMES := ["普通", "优良", "稀有", "史诗", "传说", "神话"]
+## 170：各层字号
+const NAME_SIZE := 18
+const SUB_SIZE := 12
+const DESC_SIZE := 13
+const BODY_SIZE := 14
+const FOOT_SIZE := 12
+## 170：行首图标（缺图退回的文字）；图标本身链到格位的词条，钉住后停上去能看解释
+const ICONS := {"grant": "【增益】", "receive": "【受益】", "load": "【装载】", "coin": "值 ", "weight": "重 "}
+const ICON_TERMS := {"grant": "增益槽", "receive": "受益槽", "load": "装载槽"}
 
 ## 096（作者定）：信仰状态的探针 —— 局里由 [GameFlow] 接上，返回 `{"active": 激活的信仰 id, "tier": 阶, "points": 信力}`；
 ## 没接（基地、沙盒、测试）返回空字典。信仰加成的词条按它上色：**生效的白、没生效的灰**；没有探针一律按原色写
 static var faith_probe: Callable = Callable()
 const DIM_HEX := "8b93a1"
+static var _sets: SetDatabase = null
 
 
 ## 现在的信仰状态；没探针 / 不在局里是空
@@ -43,27 +56,44 @@ static func faith_lit(def: ItemDef, status: Dictionary) -> bool:
 	return active != &"" and def.faith_tag() == FaithTags.PREFIX + String(active)
 
 
-## [param board] 给了且道具在上面就按棋盘编译；否则单独编。只要主文字；词条见 [method describe_full]
+## [param board] 给了且道具在上面就按棋盘编译；否则单独编。只要文字（三块连起来）；分块与词条见 [method describe_full]
 static func describe(inst: ItemInstance, board: GridInventory = null) -> String:
 	return String(describe_full(inst, board)["text"])
 
 
-## 087：主文字 + 侧边词条。返回 `{"text": BBCode（词条已标色）, "terms": [{name, text}]}`：
-## 主文字里指向名词的地方只写名词（「开战时血怒」不写「伤害 +10%」），每个名词在 `terms` 里有一条具体说明，悬浮窗在侧边一个一个开小窗。
-## 词条 = 固定词条（[Glossary.TERMS]）+ 这件道具会施加的 buff（说明按定义生成）
+## 170：行内图标（链到格位词条的包一层 url）
+static func icon(id: String) -> String:
+	var img := UiTheme.tip_icon(id, String(ICONS.get(id, "")))
+	if ICON_TERMS.has(id):
+		return "[url=term:%s]%s[/url]" % [ICON_TERMS[id], img]
+	return img
+
+
+## 087 / 170：分块的文字 + 词条。返回
+## `{"head": 名字 / 副行 / 说明, "body": 正文, "foot": 脚注左边（金币、秤砣）, "set": 套装名, "text": 三块连起来, "terms": {id: {"name", "text"}}}`。
+## 词条在文字里是 `[url=term:<id>]` 包着的下划线词（[method Glossary.mark]），悬浮窗钉住后停上去按 id 查 `terms` 开子窗。
+## 词条 = 固定词条（[Glossary.TERMS]）+ 这件道具会施加的 buff（说明按定义生成）+ 弹词条的标签
 static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Dictionary:
 	if inst == null or inst.def == null:
-		return {"text": "", "terms": []}
+		return {"head": "", "body": "", "foot": "", "set": "", "text": "", "terms": {}}
 	var def := inst.def
-	var lines: Array[String] = []
-	var rc := ItemPainter.rarity_color(def).to_html(false)
-	lines.append("[color=#%s][b]%s[/b][/color]　%s　%d 格　值 %d　重 %d" % [rc, Names.of_item(inst), rarity_name(def.rarity), def.cell_count(), ItemValue.of_instance(inst), ItemWeight.of(def)])     # 129：重
+	var rarity_style := "@%s%d" % [TextTemplate.RARITY_STYLE, clampi(def.rarity, 0, RARITY_NAMES.size() - 1)]
+	# --- 头：名字（粗体 18、稀有度色）/ 副行（稀有度名 · 标签，按大类排，171）/ 说明（斜体）
+	var name_line := "[font_size=%d][b][color=%s]%s[/color][/b][/font_size]" % [NAME_SIZE, rarity_style, Names.of_item(inst)]
+	var shown_tags := TagRegistry.shown(def.tags)     # 107 后续（作者定）：内部标签（快攻 / 重击 / 重型）不给玩家看
+	var listed: Array = []
+	for t in TagRegistry.sorted_by_category(shown_tags):     # 171：用途 → 属性 → 材料 → 归属；来源类不列
+		if TagRegistry.category_of(StringName(String(t))) != "source":
+			listed.append(t)
+	var sub := "[color=%s]%s[/color]" % [rarity_style, rarity_name(def.rarity)]
+	if not listed.is_empty():
+		sub += "[color=@dim] · %s[/color]" % " · ".join(_names(listed))     # 096：标签按当前语言显示名字
+	var head_rest: Array[String] = ["[font_size=%d]%s[/font_size]" % [SUB_SIZE, sub]]
 	var desc := Names.description_of(def)     # 104：说明里的 {字段} 按这件道具自己的字段填
 	if desc != "":
-		lines.append("[color=#8b93a1]%s[/color]" % desc)
-	var shown_tags := TagRegistry.shown(def.tags)     # 107 后续（作者定）：内部标签（快攻 / 重击 / 重型）不给玩家看
-	if not shown_tags.is_empty():
-		lines.append("[color=#8b93a1]标签：%s[/color]" % "、".join(_names(shown_tags)))     # 096：标签按当前语言显示名字
+		head_rest.append("[font_size=%d][i][color=@dim]%s[/color][/i][/font_size]" % [DESC_SIZE, desc])
+	# --- 正文
+	var lines: Array[String] = []
 	if def.is_bag:
 		var size := def.shape.size_rotated(0) if def.shape != null else Vector2i.ZERO
 		lines.append("包：%d×%d，放进去的东西才参战" % [size.x, size.y] + ("；只收 %s" % "、".join(_names(def.bag_accept_tags)) if not def.bag_accept_tags.is_empty() else ""))
@@ -73,36 +103,47 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var compiled: CompiledItem = spec.item_of(inst.uid) if spec != null else null
 	if compiled == null and spec != null and not spec.items.is_empty():
 		compiled = spec.items[0]     # 单独编的那块棋盘上只有它的副本
+	var use_stats: StatSet = spec.stats_with_opening(compiled) if compiled != null else null
 	var weapon := def.tags.has(&"weapon")
 	# 087（作者定）：没有「主武器」—— 包里每一件武器都各自出手，这里每件都按自己的规则写
 	if def.combat != null:
 		for key in def.combat.base_stats:
-			lines.append("%s %s" % [Glossary.stat_name(StringName(String(key))), str(def.combat.base_stats[key])])
+			if weapon and String(key) == "damage":
+				continue     # 170：武器的伤害写在武器句里
+			lines.append("%s [b]%s[/b]" % [Glossary.stat_name(StringName(String(key))), str(def.combat.base_stats[key])])
 		for r in def.combat.rules:
 			var rule := r as AbilityRule
 			if rule == null:
 				continue
-			var line := Glossary.rule_text(rule, true)     # 142：耐力下面单写「耗耐力 N」
-			if weapon and rule.cadence is CooldownCadence and compiled != null and compiled.stats != null:
-				var hz := rule.cadence.estimated_hz(compiled.stats)
-				if hz > 0.0:
-					line = line.replace("每 %.1f 秒" % (rule.cadence as CooldownCadence).seconds, "冷却 %.1f 秒" % (1.0 / hz))
-			var st := _stamina_of(rule, compiled.stats if compiled != null else null)
+			var sentence := weapon_sentence(rule, use_stats) if weapon else ""
+			if sentence != "":
+				lines.append(sentence)
+				continue
+			var line := Glossary.rule_text(rule, true)     # 142：耐力下面单写
+			var st := _stamina_of(rule, use_stats)
 			if st > 0.0:
-				line += "　耗耐力 %.0f" % st     # 087（作者定）：武器要写耐力消耗
+				line += "，消耗 [b]%s[/b] 耐力" % _num(st)
 			lines.append(line)
-	# 108（作者定）：别人挂到我身上的规则（邻居的增益规则、信仰附魔）—— 只在棋盘上才有，来源名放句尾
+	# 108（作者定）：别人挂到我身上的规则（邻居的增益规则、信仰附魔、晶石的供给）—— 只在棋盘上才有，来源名放句尾
 	var attached_buffs := {}
+	var loaded := {}     # 171 §4：装进来的晶石已经有自己的装载行，它挂的供给规则不再另写一行「附加」
+	if spec != null and board != null:
+		for c in spec.loads:
+			var crystal: ItemInstance = board.get_item(int(c)) if int(spec.loads[c]) == inst.uid else null
+			if crystal != null:
+				loaded[crystal.def.id] = true
 	if compiled != null:
 		for a in compiled.attached:
 			var idx := int(a["rule_index"])
 			if idx < 0 or idx >= compiled.rules.size():
 				continue
 			var ar := compiled.rules[idx] as AbilityRule
-			lines.append("[color=#%s]附加：%s ← %s[/color]" % [UiPalette.GRANT.to_html(false), Glossary.rule_text(ar), origin_name(StringName(String(a["origin"])), board)])
 			Glossary.buffs_in_rules([ar], attached_buffs)
-	if weapon and compiled != null and spec != null:
-		lines.append("[color=#f0ad4e]约 %.1f DPS[/color]" % spec.estimated_dps_of(compiled))
+			if loaded.has(StringName(String(a["origin"]))):
+				continue
+			lines.append("[color=@grant]附加：%s ← %s[/color]" % [AdjacencyText.rule_phrase(ar), origin_name(StringName(String(a["origin"])), board)])
+	# 171 §4：装载槽 —— 装了几颗晶石写几行（空槽不写；同一颗占两个槽一行）
+	lines.append_array(load_lines(inst, board, spec, use_stats))
 	for e in def.effects:
 		var d: String = e.describe() if e != null and e.has_method("describe") else ""
 		lines.append("效果：%s" % (d if d != "" else _type_name(e)))
@@ -110,28 +151,19 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		lines.append(wear_line(inst))
 	if def.adjacency != null:
 		var adj := def.adjacency
-		if not adj.grant_cells.is_empty():
-			var gives: Array[String] = []
-			if not adj.grant_mods.is_empty() or adj.grant_rules.is_empty():
-				gives.append(_mods(adj.grant_mods))
-			for gr in adj.grant_rules:     # 108：给邻居挂的规则
-				if gr != null:
-					gives.append("附加：%s" % Glossary.rule_text(gr))
-			lines.append("[color=#%s]增益槽 ×%d[/color]：给站在那儿的邻居%s %s" % [UiPalette.GRANT.to_html(false), adj.grant_cells.size(),
-				("（%s）" % "、".join(_names(adj.grant_filter))) if not adj.grant_filter.is_empty() else "", "；".join(gives)])
-		if not adj.receive_cells.is_empty():
-			var gets := _mods(adj.receive_mods) if adj.has_receive() else "按放上去的那件给的算"     # 148：法杖的受益格自己不定数，看晶石
-			lines.append("[color=#%s]受益槽 ×%d[/color]：每点亮一格%s，自己 %s" % [UiPalette.RECEIVE.to_html(false), adj.receive_cells.size(),
-				("（%s）" % "、".join(_names(adj.receive_filter))) if not adj.receive_filter.is_empty() else "", gets])
-		if adj.has_feed():     # 148：供给 —— 站在谁的受益格上就给谁
-			var feeds: Array[String] = []
-			if not adj.feed_mods.is_empty():
-				feeds.append(_mods(adj.feed_mods))
-			for fr in adj.feed_rules:
-				if fr != null:
-					feeds.append("附加：%s" % Glossary.rule_text(fr))
-			var line := "供给：站在%s的受益槽上时给它 %s" % [("、".join(_names(adj.feed_filter))) if not adj.feed_filter.is_empty() else "别人", "；".join(feeds)]
-			lines.append("[color=#%s]%s[/color]" % [DIM_HEX if inst.is_broken() else UiPalette.GRANT.to_html(false), line + ("（破碎：不再供给）" if inst.is_broken() else "")])
+		var g := AdjacencyText.grant(adj)
+		if g != "":
+			lines.append("%s[color=@grant]%s[/color]" % [icon("grant"), g])
+		var rv := AdjacencyText.receive(adj)
+		if rv != "":
+			lines.append("%s[color=@receive]%s[/color]" % [icon("receive"), rv])
+		if adj.has_feed():     # 148：供给 —— 站在谁的装载槽上就给谁；171：晶石自己写装在哪
+			var line := AdjacencyText.feed(adj)
+			if inst.is_broken():
+				lines.append("%s[color=@dim]%s（破碎：不再供给）[/color]" % [icon("load"), line])
+			else:
+				lines.append("%s[color=@grant]%s[/color]" % [icon("load"), line])
+				lines.append(load_status_line(inst, board, spec))
 	var status := faith_status() if def.has_faith() else {}
 	for fb in def.faith_bonuses:
 		var b := fb as FaithBonus
@@ -141,25 +173,140 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			if not status.is_empty():
 				line = "[color=#%s]%s[/color]" % [UiPalette.FG.to_html(false) if bonus_lit(def, b, status) else DIM_HEX, line]
 			lines.append(line)
-	# 107（作者定）：不再写「信仰道具：别的信仰激活时休眠…」那一行，也不写「—— 现在休眠 / 还没激活」的状态尾巴 ——
-	# **状态就是颜色**：这件道具的信仰激活着就亮色，休眠或还没激活就全灰
+	# 107（作者定）：**状态就是颜色**：这件道具的信仰激活着就亮色，休眠或还没激活就全灰
 	if def.is_anchor():
 		# 099（作者定）：切信仰不进菜单 —— 右键一下，或者在棋盘里把它重新落下
 		var line := "信物：%s" % ("当前信仰" if faith_lit(def, status) else "右键：奉为主信仰")
 		lines.append("[color=#%s]%s[/color]" % [UiPalette.FG.to_html(false) if faith_lit(def, status) else DIM_HEX, line])
-	if def.set_id != &"":
-		lines.append("[color=#8b93a1]套装：%s[/color]" % String(def.set_id))
-	var text := "\n".join(lines)
-	# 词条：这件道具会施加的 buff（名字 → 按定义生成的说明）+ 固定词条
-	var extra := Glossary.tag_terms(shown_tags)     # 096：登记了说明的标签也是词条
+	# --- 脚注：金币、秤砣（170：不写格数），右边套装名
+	var foot := "[font_size=%d][color=@dim]%s%d　%s%d[/color][/font_size]" % [FOOT_SIZE, icon("coin"), ItemValue.of_instance(inst), icon("weight"), ItemWeight.of(def)]     # 129：重
+	var set_name := set_name_of(def.set_id)
+	# --- 词条：这件道具会施加的 buff（id → 按定义生成的说明）+ 固定词条 + 弹词条的标签
+	var extra := Glossary.tag_terms(listed)     # 096：登记了说明的标签也是词条
 	var item_buffs := Glossary.buffs_in_item(def)
-	item_buffs.merge(attached_buffs)     # 108：挂到我身上的规则施加的 buff（弓身上的【中毒】）也进侧窗
+	item_buffs.merge(attached_buffs)     # 108：挂到我身上的规则施加的 buff（弓身上的【中毒】）也是词条
 	for id in item_buffs:
 		var bd: BuffDef = item_buffs[id]
 		if Names.of(bd) != "":
-			extra[Names.of(bd)] = Glossary.describe_buff(bd)
-	var terms := Glossary.terms_in(text, extra)
-	return {"text": Glossary.mark(text, terms), "terms": terms}
+			extra[Names.of(bd)] = {"id": String(id), "text": Glossary.describe_buff(bd)}
+	var rest := "\n".join(head_rest) + "\n" + "\n".join(lines)
+	var found := Glossary.terms_in(rest, extra)
+	var terms := {}
+	for f in found:
+		terms[String(f["id"])] = {"name": f["name"], "text": f["text"]}
+	for k in ICON_TERMS.values():     # 行首图标链到格位的词条
+		if rest.contains("term:" + k):
+			terms[k] = {"name": k, "text": Glossary.term_text(k)}
+	var head := UiTheme.outline_colored(name_line + "\n" + Glossary.mark("\n".join(head_rest), found))
+	var body := UiTheme.outline_colored("[font_size=%d]%s[/font_size]" % [BODY_SIZE, Glossary.mark("\n".join(lines), found)])
+	foot = UiTheme.outline_colored(foot)
+	var text := head + "\n" + body + "\n" + foot + ("　套装：%s" % set_name if set_name != "" else "")
+	return {"head": head, "body": body, "foot": foot, "set": set_name, "text": text, "terms": terms}
+
+
+## 170（作者定）：武器句「每 X 秒造成 Y 点伤害，消耗 Z 耐力」—— X = 编译后的实际周期，Y = 伤害面板，Z = 每次出手的耐力；
+## 规则还施加 buff 就接「，附带【中毒】」。不是按周期自己出手、不造成伤害的规则返回空（照普通规则写）
+static func weapon_sentence(rule: AbilityRule, stats: StatSet) -> String:
+	if rule == null or not (rule.cadence is CooldownCadence) or not (rule.trigger is OnSchedule):
+		return ""
+	var hz := rule.cadence.estimated_hz(stats) if stats != null else 1.0 / maxf(0.01, (rule.cadence as CooldownCadence).seconds)
+	if hz <= 0.0:
+		return ""
+	var dmg := 0.0
+	var type := &""
+	var extras: Array[String] = []
+	for e in rule.effects:
+		if e is DealDamage:
+			dmg += (e as CombatEffect).estimated_damage(stats) if stats != null else (e as DealDamage).amount
+			if (e as DealDamage).damage_type != DamageTypes.PHYSICAL:
+				type = (e as DealDamage).damage_type
+	if dmg <= 0.0:
+		return ""
+	var buffs := {}
+	Glossary.buffs_in_rules([rule], buffs)
+	for id in buffs:
+		extras.append("【%s】" % (buffs[id] as BuffDef).sentence_text())
+	var line := "每 [b]%s[/b] 秒造成 [b]%s[/b] 点%s伤害" % [_num(1.0 / hz, 1), _num(dmg), Glossary.damage_type_name(type) if type != &"" else ""]
+	var st := _stamina_of(rule, stats)
+	if st > 0.0:
+		line += "，消耗 [b]%s[/b] 耐力" % _num(st)
+	if not extras.is_empty():
+		line += "，附带%s" % "".join(extras)
+	return line
+
+
+## 171 §4：法杖的装载行 ——「【装载】火焰魔晶石　每 X 秒 Y 火焰伤害　剩 N 次」，一颗晶石一行（X / Y 按这把杖编译后的实际值）
+static func load_lines(inst: ItemInstance, board: GridInventory, spec: CombatantSpec, stats: StatSet) -> Array[String]:
+	var out: Array[String] = []
+	if spec == null or inst.def.adjacency == null or not inst.def.adjacency.has_load() or board == null:
+		return out
+	var uids: Array = []
+	for c in spec.loads:
+		if int(spec.loads[c]) == inst.uid:
+			uids.append(int(c))
+	uids.sort()
+	var period := 0.0
+	var dmg := 0.0
+	if inst.def.combat != null and stats != null:
+		for r in inst.def.combat.rules:
+			var rule := r as AbilityRule
+			if rule == null or not (rule.cadence is CooldownCadence):
+				continue
+			var hz := rule.cadence.estimated_hz(stats)
+			var d := 0.0
+			for e in rule.effects:
+				if e is DealDamage:
+					d += (e as CombatEffect).estimated_damage(stats)
+			if hz > 0.0 and d > 0.0:
+				period = 1.0 / hz
+				dmg = d
+				break
+	for c in uids:
+		var crystal := board.get_item(c)
+		if crystal == null:
+			continue
+		var type := AdjacencyText.feed_damage_type(crystal.def.adjacency)
+		var parts: Array[String] = [Names.of_item(crystal)]
+		if period > 0.0:
+			parts.append("每 [b]%s[/b] 秒 [b]%s[/b] %s伤害" % [_num(period, 1), _num(dmg), Glossary.damage_type_name(type) if type != &"" else ""])
+		if crystal.def.wear != null:
+			parts.append("剩 [b]%d[/b] 次" % crystal.charges())
+		out.append("%s[color=@grant]%s[/color]" % [icon("load"), "　".join(parts)])
+	return out
+
+
+## 171 §4：晶石自己的那一行 ——「装在：魔法杖」/「装在：魔法杖（另一把法杖的装载槽也压着它：后放的优先）」/「闲置：没放在法杖的装载槽上」
+static func load_status_line(inst: ItemInstance, board: GridInventory, spec: CombatantSpec) -> String:
+	var host := -1
+	if board != null and board.has_item(inst.uid):
+		# 晶石自己没有战斗档（编不出 spec）：直接问装载归属
+		var loads := spec.loads if spec != null else BattleCompiler.load_assignments(board)
+		host = int(loads.get(inst.uid, -1))
+	if host < 0:
+		return "[color=@dim]闲置：没放在法杖的装载槽上[/color]"
+	var staff := board.get_item(host)
+	var line := "装在：%s" % (Names.of_item(staff) if staff != null else "?")
+	if BattleCompiler.load_claimants(board, inst.uid).size() > 1:
+		line += "（另一把法杖的装载槽也压着它：后放的优先）"
+	return line
+
+
+## 170：数字给人看 —— 整数不带小数，别的保留 [param digits] 位
+static func _num(v: float, digits: int = 1) -> String:
+	if TextTemplate.is_whole(v):
+		return str(roundi(v))
+	return String.num(v, digits)
+
+
+## 套装的名字（套装库里查；没有就原 id）
+static func set_name_of(id: StringName) -> String:
+	if id == &"":
+		return ""
+	if _sets == null:
+		_sets = SetDatabase.new()
+		_sets.load_dir()
+	var d := _sets.get_def(id)
+	return Names.of(d) if d != null and Names.of(d) != "" else String(id)
 
 
 ## 148：耐久那一行（「耐久 2 / 3：每供给一场少一次，用完就碎」；碎了写不再供给）

@@ -7,5 +7,6 @@
   "description": "金属制品。日神看重它。",
   "descriptions": {
     "en": "Made of metal. Favoured by the sun god."
-  }
+  },
+  "category": "material"
 }

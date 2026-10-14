@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Brought back to base to build with."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }

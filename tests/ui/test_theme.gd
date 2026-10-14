@@ -33,7 +33,7 @@ static func run(t: TestCase) -> void:
 	t.check(absf(graphite.r - UiPalette.PANEL.r) + absf(graphite.g - UiPalette.PANEL.g) + absf(graphite.b - UiPalette.PANEL.b) < 0.02, "默认底色下面板 ≈ 原来的 PANEL：%s" % graphite.to_html(false))
 	# 作者 2026-10-12：事件正文的粗体糊 —— [b] 换真粗体（字重 700），正文 20 号、行距 8
 	var bold := th.get_font("bold_font", "RichTextLabel")
-	t.check(bold is FontVariation and (bold as FontVariation).base_font == UiPalette.font_file(UiPalette.FONT_MEDIUM), "168：富文本粗体是另一份字体文件（文楷 Medium）")
+	t.check(bold is FontVariation and (bold as FontVariation).base_font == UiPalette.font_file(UiPalette.FONT_BOLD), "168：富文本粗体是另一份字体文件（文楷 Medium）")
 	t.check(bold != th.default_font, "粗体不是默认字体")
 	t.eq(th.get_font_size("normal_font_size", UiTheme.RICH_BODY), 20, "正文 20 号")
 	t.eq(th.get_constant("line_separation", UiTheme.RICH_BODY), 8, "正文行距 8")

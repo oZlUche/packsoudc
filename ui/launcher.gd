@@ -54,6 +54,12 @@ const ENTRIES := [
 		"keys": "保存 = JSON + .tres　可叠层的 buff 一律永续",
 	},
 	{
+		"scene": "res://ui/tag_editor/tag_editor.tscn",
+		"title": "标签制作器",
+		"desc": "171：标签先在这里建 —— 名字、多语言、说明、大类（用途 / 属性 / 材料 / 归属 / 来源 / 内部）、弹不弹词条；道具的标签栏只能从这里登记过的里挑",
+		"keys": "保存 = JSON + .tres　右边看哪些道具带着它",
+	},
+	{
 		"scene": "res://ui/part_editor/part_editor.tscn",
 		"title": "构件编辑器",
 		"desc": "146：规则构件库 —— 填好数值、起了名字的扳机 / 节奏 / 消耗与检查 / 效果。别的编辑器「添加」的下拉里「库：」那一组就是这里的；改一份，引用它的规则都跟着变",
@@ -90,9 +96,15 @@ func _ready() -> void:
 func _build() -> void:
 	UiTheme.prepare_root(self)     # 091 / 121：底色跟设置走、装上界面主题
 
+	# 卡片多了（171 加了标签制作器）1080 高放不下：外面套一层竖向滚动
+	var scroll := ScrollContainer.new()
+	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	add_child(scroll)
 	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
+	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.add_child(center)
 
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 14)

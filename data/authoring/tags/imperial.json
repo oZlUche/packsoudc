@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Imperial issue."
   },
-  "tip": false
+  "tip": false,
+  "category": "origin"
 }

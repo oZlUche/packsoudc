@@ -1,5 +1,5 @@
 ## 166（作者定）：静态教程 —— 整屏压一层阴影，目标周围挖一个洞（包围盒外扩 [constant HOLE_PAD]，洞边一圈高光），
-## 一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右，按方向转；缺图画一笔折线箭头）从洞外指向洞，箭尾一块羊皮纸（[constant UiTheme.PANEL_TOOLTIP]）写说明。
+## 一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右，按方向转；缺图画一笔折线箭头）从洞外指向洞，箭尾一块悬浮窗底（[constant UiTheme.PANEL_TOOLTIP]）写说明。
 ## **点任意处下一步**（键盘任意键也算，Esc 也是），最后一步点了收掉、发 [signal finished]。阴影层吞掉所有点击。
 ##
 ## 步骤是数据（`data/authoring/coach/<id>.json`：`{"id", "steps": [{"target": 目标 id, "text"}]}`）；
@@ -62,7 +62,7 @@ func _init() -> void:
 	_arrow = HudIcon.load_art(ARROW_ART)
 	_paper = PanelContainer.new()
 	_paper.theme_type_variation = UiTheme.PANEL_TOOLTIP
-	UiTheme.apply_tone(_paper, UiTheme.PANEL_TOOLTIP)     # 羊皮纸是浅底：墨字
+	UiTheme.apply_tone(_paper, UiTheme.PANEL_TOOLTIP)     # 170 起悬浮窗是深底：白字
 	_paper.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_paper)
 	_line = Label.new()

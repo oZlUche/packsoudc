@@ -52,7 +52,7 @@ static func run_tag_tips(t: TestCase) -> void:
 
 
 static func run_longbow_sidebar(t: TestCase) -> void:
-	t.begin("107 · 狩猎之神赐福的长弓：侧窗从 13 个降到三个 —— 信仰、信物（标签）与标记（它施加的 buff）")
+	t.begin("107 · 狩猎之神赐福的长弓：词条从 13 个降到三个 —— 信仰、信物（标签）与标记（它施加的 buff）")
 	var c := NS._content()
 	var bow := c.items.get_def(&"blessed_longbow")
 	t.not_null(bow, "有赐福长弓")
@@ -62,7 +62,7 @@ static func run_longbow_sidebar(t: TestCase) -> void:
 	ItemTooltip.faith_probe = Callable()
 	var full := ItemTooltip.describe_full(ItemInstance.create(bow))
 	var names: Array[String] = []
-	for term in full["terms"]:
+	for term in (full["terms"] as Dictionary).values():
 		names.append(String((term as Dictionary)["name"]))
 	names.sort()
 	# 方案举例时说「只剩信仰、信物两个」，漏算了它自己施加的【标记】——
@@ -73,7 +73,7 @@ static func run_longbow_sidebar(t: TestCase) -> void:
 	var text := String(full["text"])
 	for quiet in ["自发", "耗耐力", "冷却", "信力"]:
 		t.check(not text.contains("[u]%s[/u]" % quiet), "「%s」在主文字里不标色" % quiet)
-	t.check(Glossary.strip_bbcode(text).contains("标签："), "标签行照旧")
+	t.check(Glossary.strip_bbcode(text).contains(" · 武器"), "副行的标签照旧（170：稀有度 · 标签）")
 	ItemTooltip.faith_probe = saved
 
 
@@ -182,6 +182,6 @@ static func run_internal_style_tags(t: TestCase) -> void:
 			continue
 		var text := String(ItemTooltip.describe_full(ItemInstance.create(def))["text"])
 		t.check(not text.contains(pair[1]), "%s 的悬浮窗不写「%s」" % [pair[0], pair[1]])
-		t.check(text.contains("标签："), "%s 的标签行还在（列别的标签）" % pair[0])
+		t.check(Glossary.strip_bbcode(text).contains(" · 武器"), "%s 的标签还在副行里（列别的标签）" % pair[0])
 	ItemTooltip.faith_probe = saved
 	t.check(Glossary.tag_terms([&"rapid", &"burst", &"heavy"]).is_empty(), "也不进词条侧窗")

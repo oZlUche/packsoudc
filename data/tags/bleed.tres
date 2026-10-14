@@ -14,3 +14,4 @@ descriptions = {
 "en": "Makes the target bleed."
 }
 tip = false
+category = "element"

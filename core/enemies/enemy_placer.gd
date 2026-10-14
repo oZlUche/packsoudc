@@ -547,21 +547,25 @@ static func _pairable(d: ItemDef) -> bool:
 	return d != null and d.shape != null and not d.is_bag
 
 
-## [param g] 挨着 [param r] 时给不给得出东西（不看位置）：g 的增益格收 r；或者 r 的受益格收 g（r 本身有受益加成，或 g 站上去有供给给 r，148）
+## [param g] 挨着 [param r] 时给不给得出东西（不看位置）：g 的增益格收 r；或者 r 的受益格收 g（r 本身有受益加成）；或者 r 的装载格收 g（g 站上去有供给给 r，148 / 171）
 static func _gives(g: ItemDef, r: ItemDef) -> bool:
 	var ga := g.adjacency
-	if ga != null and ga.has_grant() and AdjacencyProfile.accepts(ga.grant_filter, r):
+	if ga != null and ga.has_grant() and ga.grant_accepts(r):
 		return true
-	return _receives_from(r, g)
+	return _receives_from(r, g) or _loads_from(r, g)
 
 
 ## [param r] 的受益格收不收 [param g]
 static func _receives_from(r: ItemDef, g: ItemDef) -> bool:
 	var ra := r.adjacency
-	if ra == null or ra.receive_cells.is_empty() or not AdjacencyProfile.accepts(ra.receive_filter, g):
+	return ra != null and ra.has_receive() and AdjacencyProfile.accepts(ra.receive_filter, g)
+
+
+## 171：[param r] 的装载格装不装 [param g]（g 有供给、互相接受）
+static func _loads_from(r: ItemDef, g: ItemDef) -> bool:
+	var ra := r.adjacency
+	if ra == null or not ra.has_load() or not AdjacencyProfile.accepts(ra.load_tags(), g):
 		return false
-	if ra.has_receive():
-		return true
 	var ga := g.adjacency
 	return ga != null and ga.has_feed() and AdjacencyProfile.accepts(ga.feed_filter, r)
 
@@ -842,14 +846,16 @@ static func _links(def: ItemDef, origin: Vector2i, rot: int, mine: Array[ItemIns
 ## g 摆在 (go, gr)、r 摆在 (ro, rr) 时 g 给不给得到 r：g 的增益格压在 r 身上，或 r 的受益格压在 g 身上（同编译器的点亮规则）
 static func _gives_at(g: ItemDef, go: Vector2i, gr: int, r: ItemDef, ro: Vector2i, rr: int) -> bool:
 	var ga := g.adjacency
-	if ga != null and ga.has_grant() and AdjacencyProfile.accepts(ga.grant_filter, r):
+	if ga != null and ga.has_grant() and ga.grant_accepts(r):
 		var r_cells := _cell_set(r.cells_rotated(rr), ro)
 		for p in ga.grant_cells:
 			if r_cells.has(go + g.shape.transform_point(p, gr)):
 				return true
-	if _receives_from(r, g):
+	for pair in [[_receives_from(r, g), "receive_cells"], [_loads_from(r, g), "load_cells"]]:
+		if not pair[0]:
+			continue
 		var g_cells := _cell_set(g.cells_rotated(gr), go)
-		for p in r.adjacency.receive_cells:
+		for p in r.adjacency.get(pair[1]):
 			if g_cells.has(ro + r.shape.transform_point(p, rr)):
 				return true
 	return false

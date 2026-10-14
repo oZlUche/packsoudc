@@ -14,3 +14,4 @@ descriptions = {
 "en": "Stone, crystal or salt that isn't ore. Heavier than wood, lighter than metal."
 }
 tip = false
+category = "material"

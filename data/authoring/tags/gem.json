@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "A gem or crystal."
   },
-  "tip": false
+  "tip": false,
+  "category": "material"
 }

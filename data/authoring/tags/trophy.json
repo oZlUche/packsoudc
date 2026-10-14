@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "A trophy taken from an enemy."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }

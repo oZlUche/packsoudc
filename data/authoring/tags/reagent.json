@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "An alchemical reagent."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }

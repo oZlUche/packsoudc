@@ -264,6 +264,8 @@ static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_require_id(def.id, "增益", report)
 	validate_buff_duration(def, "", report)
 	warn_axis_candidate(def, "", report)
+	if def.has_blurb and def.blurb.strip_edges() == "":
+		report.warn("blurb", "「%s」勾了有专属解说但解说是空的（句子里只会写名字）" % def.id)     # 171
 	ctx.register_buff(def)
 	return def
 
@@ -613,15 +615,33 @@ static func _validate_item_tags(def: ItemDef, ctx: Context, report: ImportReport
 		if String(t).begins_with(FaithTags.PREFIX):
 			continue
 		if not ctx.tags.has(t):
-			report.warn("tags", "没有登记的标签 '%s'：界面上只能显示原词（在 data/authoring/tags 里加一份就有名字与说明）" % t)
-	# 122：材料按出身分【工艺】/【自然】/【魔法】—— 必有一个、只能有一个（提醒，不拦；和「标签未登记」同级）
+			# 171：标签先在标签制作器里建，道具只从下拉里挑 —— 没登记的是错，不再漏过
+			report.error("tags", "没有登记的标签 '%s'：先在标签制作器（data/authoring/tags）里建一份" % t)
+	# 122 / 171：材料按出身分【工艺】/【自然】/【魔法】（来源类）—— 必有一个、只能有一个（提醒，不拦）
 	if def.tags.has(&"material"):
-		var kinds := 0
-		for k in MATERIAL_ORIGINS:
-			if def.tags.has(k):
-				kinds += 1
-		if kinds != 1:
-			report.warn("tags", "材料得在 %s 里恰好带一个（人造 / 取自自然 / 魔法），现在带了 %d 个" % [" / ".join(PackedStringArray(MATERIAL_ORIGINS)), kinds])
+		var kinds: Array[String] = []
+		for t in def.tags:
+			if _is_source(ctx, t):
+				kinds.append(String(t))
+		if kinds.size() != 1:
+			report.warn("tags", "材料得在来源类（%s）里恰好带一个，现在带了 %d 个" % [" / ".join(PackedStringArray(_source_tags(ctx))), kinds.size()])
+
+
+## 171：来源类的标签（122 的工艺 / 自然 / 魔法）。上下文里登记的不是 [TagDef]（测试只登记了 id）就按 [constant MATERIAL_ORIGINS] 认
+static func _source_tags(ctx: Context) -> Array[String]:
+	var out: Array[String] = []
+	for id in ctx.tags:
+		if _is_source(ctx, id):
+			out.append(String(id))
+	out.sort()
+	return out
+
+
+static func _is_source(ctx: Context, id: StringName) -> bool:
+	var tag = ctx.tags.get(id, null)
+	if tag is TagDef:
+		return (tag as TagDef).category == "source"
+	return tag != null and MATERIAL_ORIGINS.has(id)
 
 
 ## 096：标签定义 —— 得有 id 与名字
@@ -635,6 +655,10 @@ static func import_tag(data: Dictionary, ctx: Context, report: ImportReport) -> 
 	for k in def.display_names:
 		if not (def.display_names[k] is String):
 			report.error("display_names", "'%s' 的值得是文字" % k)
+	if not _string_choices(def, "category").has(def.category):     # 171：得归一类
+		report.error("category", "标签得归一类：%s" % " / ".join(_string_choices(def, "category")))
+	elif def.category == "internal" and not def.internal:
+		report.warn("internal", "内部类的标签应该勾上「内部标签」（玩家看不到）")
 	ctx.register_tag(def)
 	return def
 
@@ -1811,14 +1835,22 @@ static func _validate_item(def: ItemDef, report: ImportReport) -> void:
 
 	if def.adjacency != null:
 		var ap := def.adjacency
+		# 171 待定 4（A）：老内容 / 老存档里法杖的「受益格」其实是晶石座 —— 带 staff 标签、受益格自己不给东西的，迁成装载格
+		if def.tags.has(&"staff") and not ap.receive_cells.is_empty() and ap.receive_mods.is_empty() and ap.receive_rules.is_empty() and ap.load_cells.is_empty():
+			ap.load_cells = ap.receive_cells.duplicate()
+			if not ap.receive_filter.is_empty() and ap.receive_filter != AdjacencyProfile.DEFAULT_LOAD:
+				ap.load_filter = ap.receive_filter.duplicate()
+			ap.receive_cells = [] as Array[Vector2i]
+			ap.receive_filter = [] as Array[StringName]
+			report.warn("adjacency.receive_cells", "法杖的受益格迁成了装载格（171）：重存一次 JSON 就不再提醒")
 		if not ap.grant_cells.is_empty() and ap.grant_mods.is_empty() and ap.grant_rules.is_empty():
 			report.warn("adjacency.grant", "标了增益格却没有加成也没有附加规则，不会点亮任何东西")
 		if not ap.grant_rules.is_empty() and ap.grant_cells.is_empty():
 			report.warn("adjacency.grant_rules", "写了附加规则却没有增益格，挂不到任何邻居身上")
 		validate_attached_rules(ap.grant_rules, "adjacency.grant_rules", report)
-		# 148：受益格只认某类邻居（法杖只收魔晶石）的，数值由那类邻居的供给给，自己不写加成是对的
-		if not ap.receive_cells.is_empty() and ap.receive_mods.is_empty() and ap.receive_rules.is_empty() and ap.receive_filter.is_empty():
-			report.warn("adjacency.receive", "标了受益格却没有加成也没有受益规则")
+		# 171：晶石座是装载格（load_cells），受益格自己得给东西
+		if not ap.receive_cells.is_empty() and ap.receive_mods.is_empty() and ap.receive_rules.is_empty():
+			report.warn("adjacency.receive", "标了受益格却没有加成也没有受益规则（晶石座用装载格）")
 		if not ap.receive_rules.is_empty() and ap.receive_cells.is_empty():
 			report.warn("adjacency.receive_rules", "写了受益规则却没有受益格，永远挂不上")
 		validate_attached_rules(ap.receive_rules, "adjacency.receive_rules", report, false)
@@ -1848,7 +1880,7 @@ static func _warn_overlapping_markers(def: ItemDef, report: ImportReport) -> voi
 	var own := {}
 	for c in def.shape.cells_rotated(0):
 		own[c] = true
-	for pair in [["grant", def.adjacency.grant_cells], ["receive", def.adjacency.receive_cells]]:
+	for pair in [["grant", def.adjacency.grant_cells], ["receive", def.adjacency.receive_cells], ["load", def.adjacency.load_cells]]:
 		for c in pair[1]:
 			if own.has(c):
 				report.warn(

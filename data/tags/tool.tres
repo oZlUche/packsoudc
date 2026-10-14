@@ -14,3 +14,4 @@ descriptions = {
 "en": "A tool."
 }
 tip = false
+category = "purpose"

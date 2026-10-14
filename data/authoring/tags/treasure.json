@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Valuable, does not fight."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }

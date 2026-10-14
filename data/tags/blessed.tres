@@ -14,3 +14,4 @@ descriptions = {
 "en": "A god-blessed variant."
 }
 tip = false
+category = "element"

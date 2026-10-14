@@ -14,3 +14,4 @@ descriptions = {
 "en": "Worn protection: armor, shields and the like."
 }
 tip = false
+category = "purpose"

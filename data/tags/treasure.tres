@@ -14,3 +14,4 @@ descriptions = {
 "en": "Valuable, does not fight."
 }
 tip = false
+category = "purpose"

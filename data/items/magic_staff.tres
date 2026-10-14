@@ -17,8 +17,7 @@
 
 [sub_resource type="Resource" id="Resource_bnrvp"]
 script = ExtResource("3_yurkf")
-receive_cells = Array[Vector2i]([Vector2i(-1, 0), Vector2i(1, 0)])
-receive_filter = Array[StringName]([&"crystal"])
+load_cells = Array[Vector2i]([Vector2i(-1, 0), Vector2i(1, 0)])
 
 [sub_resource type="Resource" id="Resource_2njuq"]
 script = ExtResource("4_kg38w")
@@ -62,7 +61,7 @@ display_name = "魔法杖"
 display_names = {
 "en": "Magic Staff"
 }
-description = "不放晶石就是根木棍；杖头两侧放一颗魔晶石，打出来的就是元素伤害。"
+description = "不放晶石就是根木棍；杖头两侧的装载槽放一颗魔晶石，打出来的就是元素伤害。"
 shape = SubResource("Resource_pbnxr")
 rarity = 1
 tags = Array[StringName]([&"weapon", &"melee", &"staff", &"magic"])

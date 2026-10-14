@@ -13,3 +13,4 @@ description = "现代枪械（已封存）。"
 descriptions = {
 "en": "Modern firearm (sealed)."
 }
+category = "purpose"

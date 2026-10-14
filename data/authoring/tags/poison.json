@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Poisonous."
   },
-  "tip": false
+  "tip": false,
+  "category": "element"
 }

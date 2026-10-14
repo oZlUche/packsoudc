@@ -115,7 +115,7 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 			social.append(uid)
 	var attach_pending: Dictionary = {}     # uid -> [[rule, origin], ...]（108：邻居给我挂的规则，第 6 步打包时挂上）
 	var fed: Dictionary = {}     # 148：这一场真的供给了的（魔晶石点亮了法杖）uid -> true，耐久按它扣
-	_apply_adjacency(board, social, stats, links, attach_pending, fed)
+	spec.loads = _apply_adjacency(board, social, stats, links, attach_pending, fed)
 	var fed_list: Array[int] = []
 	for f in fed:
 		fed_list.append(int(f))
@@ -237,7 +237,7 @@ static func _apply_bag_effects(board: GridInventory, fighters: Array[int], stats
 static func _apply_adjacency(
 	board: GridInventory, fighters: Array[int], stats: Dictionary, links: Dictionary,
 	attach_pending: Dictionary, fed: Dictionary = {}
-) -> void:
+) -> Dictionary:
 	for uid in fighters:
 		var holder := board.get_item(uid)
 		var profile: AdjacencyProfile = holder.def.adjacency
@@ -247,7 +247,7 @@ static func _apply_adjacency(
 		# 增益：站在这些格子上的邻居，各得一份
 		if profile.has_grant():
 			var receivers := _lit_neighbors(
-				board, holder, profile.grant_cells, profile.grant_filter
+				board, holder, profile.grant_cells, profile.grant_filter, profile.grant_filter_all
 			)
 			for other in receivers:
 				if not stats.has(other):
@@ -262,42 +262,92 @@ static func _apply_adjacency(
 						attach_pending[other].append([r, holder.def.id])
 
 		# 受益：点亮几个格，本物品就得几份
-		if profile.receive_cells.is_empty():
+		if not profile.receive_cells.is_empty():
+			var providers := _lit_neighbors(
+				board, holder, profile.receive_cells, profile.receive_filter
+			)
+			if profile.has_receive():
+				for other in providers:
+					if stats.has(other):
+						_link(links, uid, other)
+				if not providers.is_empty():
+					for mod in profile.receive_mods:
+						(mod as StatModifier).apply_to(stats[uid], providers.size())
+				for other in providers:     # 132：每个点亮的邻居给本件挂一份受益规则，来源记邻居
+					var giver := board.get_item(other)
+					for r in profile.receive_rules:
+						if r != null and giver != null:
+							if not attach_pending.has(uid):
+								attach_pending[uid] = []
+							attach_pending[uid].append([r, giver.def.id])
+	# 148 / 171 供给：装载格上的晶石把自己带的「给宿主的东西」交给宿主。一颗晶石只给一把（[method load_assignments]）；一把一颗一份；用坏了的不给
+	var social := {}
+	for uid in fighters:
+		social[uid] = true
+	var loads := load_assignments(board, social)
+	var crystals := loads.keys()
+	crystals.sort()
+	for other in crystals:
+		var uid: int = loads[other]
+		var feeder := board.get_item(other)
+		var fp: AdjacencyProfile = feeder.def.adjacency
+		_link(links, uid, other)
+		fed[other] = true
+		for mod in fp.feed_mods:
+			(mod as StatModifier).apply_to(stats[uid], 1)
+		for r in fp.feed_rules:
+			if r != null:
+				if not attach_pending.has(uid):
+					attach_pending[uid] = []
+				attach_pending[uid].append([r, feeder.def.id])
+	return loads
+
+
+## 171（作者定）：装载归属 —— 晶石 uid → 法杖 uid。每颗（有供给、没碎、命中法杖的 load_filter，法杖命中它的 feed_filter）
+## 压着几把法杖的装载格，只给 `placed_seq` 最大的那把（**后来者优先**；一样大按 uid 大的）。没压着任何一把的不在表里。
+## 编译、悬浮窗（法杖的装载行、晶石的「装在」）都查它，所以永远说同一句话
+## [param only]：只算这些 uid（编译时 = 参与邻接的；空 = 棋盘上全部）
+static func load_assignments(board: GridInventory, only: Dictionary = {}) -> Dictionary:
+	var out := {}
+	if board == null:
+		return out
+	var best := {}     # 晶石 uid → 目前给的那把法杖
+	for item in board.items():
+		var holder := item as ItemInstance
+		var profile: AdjacencyProfile = holder.def.adjacency if holder.def != null else null
+		if profile == null or not profile.has_load() or (not only.is_empty() and not only.has(holder.uid)):
 			continue
-		var providers := _lit_neighbors(
-			board, holder, profile.receive_cells, profile.receive_filter
-		)
-		if profile.has_receive():
-			for other in providers:
-				if stats.has(other):
-					_link(links, uid, other)
-			if not providers.is_empty():
-				for mod in profile.receive_mods:
-					(mod as StatModifier).apply_to(stats[uid], providers.size())
-			for other in providers:     # 132：每个点亮的邻居给本件挂一份受益规则，来源记邻居
-				var giver := board.get_item(other)
-				for r in profile.receive_rules:
-					if r != null and giver != null:
-						if not attach_pending.has(uid):
-							attach_pending[uid] = []
-						attach_pending[uid].append([r, giver.def.id])
-		# 148 供给：站在受益格上的邻居自己带的「给宿主的东西」（魔晶石 → 法杖）。每个邻居一份；用坏了的不给
-		for other in providers:
+		for other in _lit_neighbors(board, holder, profile.load_cells, profile.load_tags()):
+			if not only.is_empty() and not only.has(other):
+				continue
 			var feeder := board.get_item(other)
 			var fp: AdjacencyProfile = feeder.def.adjacency if feeder != null and feeder.def != null else null
-			if fp == null or not fp.has_feed() or not stats.has(other) or feeder.is_broken():
+			if fp == null or not fp.has_feed() or feeder.is_broken() or not AdjacencyProfile.accepts(fp.feed_filter, holder.def):
 				continue
-			if not AdjacencyProfile.accepts(fp.feed_filter, holder.def):
-				continue
-			_link(links, uid, other)
-			fed[other] = true
-			for mod in fp.feed_mods:
-				(mod as StatModifier).apply_to(stats[uid], 1)
-			for r in fp.feed_rules:
-				if r != null:
-					if not attach_pending.has(uid):
-						attach_pending[uid] = []
-					attach_pending[uid].append([r, feeder.def.id])
+			var cur: ItemInstance = best.get(other, null)
+			if cur == null or holder.placed_seq > cur.placed_seq or (holder.placed_seq == cur.placed_seq and holder.uid > cur.uid):
+				best[other] = holder
+	for other in best:
+		out[other] = (best[other] as ItemInstance).uid
+	return out
+
+
+## 171：压着这颗晶石的所有法杖（装载格上、互相接受），不管最后给了谁。悬浮窗写「另一把的装载槽也压着」用
+static func load_claimants(board: GridInventory, crystal_uid: int) -> Array[int]:
+	var out: Array[int] = []
+	var feeder := board.get_item(crystal_uid) if board != null else null
+	var fp: AdjacencyProfile = feeder.def.adjacency if feeder != null and feeder.def != null else null
+	if fp == null or not fp.has_feed():
+		return out
+	for item in board.items():
+		var holder := item as ItemInstance
+		var profile: AdjacencyProfile = holder.def.adjacency if holder.def != null else null
+		if profile == null or not profile.has_load() or not AdjacencyProfile.accepts(fp.feed_filter, holder.def):
+			continue
+		if _lit_neighbors(board, holder, profile.load_cells, profile.load_tags()).has(crystal_uid):
+			out.append(holder.uid)
+	out.sort()
+	return out
 
 
 static func _link(links: Dictionary, a: int, b: int) -> void:
@@ -320,7 +370,8 @@ static func _lit_neighbors(
 	board: GridInventory,
 	holder: ItemInstance,
 	marker_cells: Array[Vector2i],
-	filter: Array[StringName]
+	filter: Array[StringName],
+	filter_all: Array[StringName] = []
 ) -> Array[int]:
 	var found: Array[int] = []
 	if holder.def.shape == null:
@@ -332,7 +383,7 @@ static func _lit_neighbors(
 		if other == GridInventory.EMPTY_UID or other == holder.uid or seen.has(other):
 			continue
 		var other_inst := board.get_item(other)
-		if other_inst == null or not AdjacencyProfile.accepts(filter, other_inst.def):
+		if other_inst == null or not AdjacencyProfile.accepts(filter, other_inst.def) or not AdjacencyProfile.accepts_all(filter_all, other_inst.def):
 			continue
 		seen[other] = true
 		found.append(other)

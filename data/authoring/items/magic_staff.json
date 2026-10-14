@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Magic Staff"
   },
-  "description": "不放晶石就是根木棍；杖头两侧放一颗魔晶石，打出来的就是元素伤害。",
+  "description": "不放晶石就是根木棍；杖头两侧的装载槽放一颗魔晶石，打出来的就是元素伤害。",
   "shape": [
     "1",
     "1",
@@ -38,7 +38,7 @@
     ]
   },
   "adjacency": {
-    "receive_cells": [
+    "load_cells": [
       [
         -1,
         0
@@ -47,9 +47,6 @@
         1,
         0
       ]
-    ],
-    "receive_filter": [
-      "crystal"
     ]
   }
 }

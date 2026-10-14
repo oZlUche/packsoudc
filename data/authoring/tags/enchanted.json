@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Enchanted."
   },
-  "tip": false
+  "tip": false,
+  "category": "element"
 }

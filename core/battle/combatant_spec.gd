@@ -28,8 +28,10 @@ var passives: Array[PassiveNote] = []
 
 ## 103 第 7 条：编译它的那张棋盘（回放画双方棋盘、盖冷却遮罩用；uid 就是日志里的 uid）。结算内核不读
 var board: GridInventory = null
-## 148：这一场站在别人受益格上、真的供给了的道具（魔晶石）uid，升序。[WearModule] 按它扣耐久
+## 148：这一场站在别人装载格上（171 前是受益格）、真的供给了的道具（魔晶石）uid，升序。[WearModule] 按它扣耐久
 var fed_uids: Array[int] = []
+## 171：装载归属 —— 晶石 uid → 拿到它的法杖 uid（[method BattleCompiler.load_assignments]）。悬浮窗的装载行 / 「装在」读它
+var loads: Dictionary = {}
 
 var _by_uid: Dictionary = {}
 

@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "An ancient relic."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }

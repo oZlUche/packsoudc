@@ -70,6 +70,10 @@ var highlights: Dictionary = {}
 const COLOR_HIGHLIGHT := Color(0.42, 0.86, 0.52)
 
 
+func _init() -> void:
+	UiTheme.warm_slot_icons()     # 170：格位图标先读好，别等到 _draw 里第一次读（兼容渲染器下会画成白块）
+
+
 func container() -> ItemContainer:
 	return inventory
 
@@ -282,6 +286,7 @@ func _draw() -> void:
 
 
 #region 邻接标记
+## 170：有美术图标就画图标（增益 / 受益 / 装载三种，点亮 / 没点亮两态）；没图时的老画法 ——
 ## 增益／受益格画成**四个角括号**，不是一圈方框。
 ##
 ## 方框会和物品自己的稀有度描边撞车 —— 蓝框的稀有物品和蓝色的增益标记挨在一起，
@@ -299,6 +304,8 @@ const MARK_CORNER := 0.3
 
 
 func _draw_adjacency() -> void:
+	var marks := {}     # 170：格 → [[种类, 点亮, 颜色, 缩进]]；同一格好几种时图标错开摆
+	var loads := {}     # 171：晶石 uid → 拿到它的法杖（被别的法杖抢走的那把，装载格按空画）
 	for inst in inventory.items():
 		var item := inst as ItemInstance
 		if item.def == null or item.def.adjacency == null:
@@ -307,40 +314,61 @@ func _draw_adjacency() -> void:
 			continue
 		var profile := item.def.adjacency
 		if profile.has_grant():
-			_draw_markers(
-				item, profile.grant_cells, profile.grant_filter,
-				UiPalette.GRANT, MARK_INSET_GRANT
-			)
+			_collect_markers(marks, item, profile.grant_cells, profile.grant_filter, profile.grant_filter_all, "grant", UiPalette.GRANT, MARK_INSET_GRANT)
 		if profile.has_receive():
-			_draw_markers(
-				item, profile.receive_cells, profile.receive_filter,
-				UiPalette.RECEIVE, MARK_INSET_RECEIVE
-			)
+			_collect_markers(marks, item, profile.receive_cells, profile.receive_filter, [] as Array[StringName], "receive", UiPalette.RECEIVE, MARK_INSET_RECEIVE)
+		if profile.has_load():     # 171：法杖的装载格
+			if loads.is_empty():
+				loads = BattleCompiler.load_assignments(inventory)
+				loads[-1] = -1     # 算过了（空表也只算一次）
+			_collect_markers(marks, item, profile.load_cells, profile.load_tags(), [] as Array[StringName], "load", UiPalette.MANA, MARK_INSET_RECEIVE, loads)
+	for cell in marks:
+		var list: Array = marks[cell]
+		for i in list.size():
+			var m: Array = list[i]
+			_draw_marker(cell, String(m[0]), bool(m[1]), m[2], float(m[3]), i, list.size())
 
 
-func _draw_markers(
-	item: ItemInstance,
-	offsets: Array[Vector2i],
-	filter: Array[StringName],
-	color: Color,
-	inset: float
+func _collect_markers(
+	marks: Dictionary, item: ItemInstance, offsets: Array[Vector2i], filter: Array[StringName], filter_all: Array[StringName],
+	kind: String, color: Color, inset: float, loads: Dictionary = {}
 ) -> void:
 	for cell in item.absolute_cells(offsets):
 		if not inventory.in_bounds(cell):
 			continue
-		var rect := Rect2(
-			cell_origin_px(cell) + Vector2(inset, inset),
-			Vector2(cell_px - inset * 2.0, cell_px - inset * 2.0)
-		)
-		var lit := _marker_lit(item, cell, filter)
-		if lit:
-			var fill := color
-			fill.a = 0.20
-			draw_rect(rect, fill, true)
-		var line := color
-		if not lit:
-			line.a = 0.5
-		_draw_corners(rect, line, 2.0 if lit else 1.0)
+		if not marks.has(cell):
+			marks[cell] = []
+		var lit := _marker_lit(item, cell, filter, filter_all)
+		if kind == "load":
+			lit = lit and int(loads.get(inventory.cell_uid(cell), -2)) == item.uid
+		marks[cell].append([kind, lit, color, inset])
+
+
+## 170（作者定）：格位画美术给的图标（`assets/ui/tip/<种类>_on|off.png`，点亮 / 没点亮两张），替换原来的半透明方框；
+## 一格上只有一种就居中，好几种沿对角线错开。图不在就画回原来的角括号（点亮的填色加粗）
+func _draw_marker(cell: Vector2i, kind: String, lit: bool, color: Color, inset: float, index: int, count: int) -> void:
+	var tex := UiTheme.slot_icon(kind, lit)
+	if tex != null:
+		var side := minf(32.0, cell_px * 0.55)
+		var origin := cell_origin_px(cell)
+		var at := origin + Vector2.ONE * (cell_px - side) * 0.5
+		if count > 1:
+			var t := float(index) / float(count - 1)
+			at = origin + Vector2.ONE * lerpf(2.0, cell_px - side - 2.0, t)
+		draw_texture_rect(tex, Rect2(at, Vector2(side, side)), false)
+		return
+	var rect := Rect2(
+		cell_origin_px(cell) + Vector2(inset, inset),
+		Vector2(cell_px - inset * 2.0, cell_px - inset * 2.0)
+	)
+	if lit:
+		var fill := color
+		fill.a = 0.20
+		draw_rect(rect, fill, true)
+	var line := color
+	if not lit:
+		line.a = 0.5
+	_draw_corners(rect, line, 2.0 if lit else 1.0)
 
 
 ## 四个角括号。比整圈描边省墨，也不会被误读成物品轮廓。
@@ -363,10 +391,10 @@ func _draw_corners(rect: Rect2, color: Color, width: float) -> void:
 
 ## 这一格是否被一个符合过滤条件的邻居占住。判据与 [Compiler] 的点亮规则一致：
 ## 得是别人、得是普通物品、标签得对得上。
-func _marker_lit(item: ItemInstance, cell: Vector2i, filter: Array[StringName]) -> bool:
+func _marker_lit(item: ItemInstance, cell: Vector2i, filter: Array[StringName], filter_all: Array[StringName] = []) -> bool:
 	var other := inventory.cell_uid(cell)
 	if other == GridInventory.EMPTY_UID or other == item.uid:
 		return false
 	var other_inst := inventory.get_item(other)
-	return other_inst != null and AdjacencyProfile.accepts(filter, other_inst.def)
+	return other_inst != null and AdjacencyProfile.accepts(filter, other_inst.def) and AdjacencyProfile.accepts_all(filter_all, other_inst.def)
 #endregion

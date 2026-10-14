@@ -17,9 +17,9 @@ static func problems() -> Array[String]:
 	var out: Array[String] = []
 	for m in not_in_charset(used):
 		out.append("168 字体：「%s」不在字集里 —— 重跑 python3 tools/font_charset.py 与 tools/subset_fonts.sh" % m)
-	var body := UiPalette.font_file(UiPalette.FONT_REGULAR)
+	var body := UiPalette.font_file(UiPalette.FONT_BODY)
 	if body == null:
-		out.append("168 字体：%s%s 不在" % [UiPalette.FONT_DIR, UiPalette.FONT_REGULAR])
+		out.append("168 字体：%s%s 不在" % [UiPalette.FONT_DIR, UiPalette.FONT_BODY])
 	else:
 		for m in missing_hanzi(body, used):
 			out.append("168 字体：正文字体缺「%s」—— 子集过期了，重跑 tools/subset_fonts.sh" % m)

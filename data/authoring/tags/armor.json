@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Body armor."
   },
-  "tip": false
+  "tip": false,
+  "category": "purpose"
 }
