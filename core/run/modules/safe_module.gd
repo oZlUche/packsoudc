@@ -46,9 +46,12 @@ func install(run: RunState) -> void:
 		size = want if want.x > 0 and want.y > 0 else size
 		var saved_grid: Variant = _saved.get("inventory", null)
 		if saved_grid is Dictionary:
-			inventory = GridInventory.from_dict(saved_grid as Dictionary, run.items)
+			var lost: Array = []     # 173：原位放不回的先箱里找空位、再落地
+			inventory = GridInventory.from_dict(saved_grid as Dictionary, run.items, Vector2i.ZERO, lost)
 			inventory.id = CONTAINER_ID
 			size = inventory.size
+			for inst in lost:
+				run.rehome(inst, inventory, "modules.safe")
 		else:
 			inventory = GridInventory.new(size, CONTAINER_ID, false)
 		locked = bool(_saved.get("locked", locked))

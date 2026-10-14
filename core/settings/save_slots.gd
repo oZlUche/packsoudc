@@ -24,6 +24,11 @@ func meta_path(n: int) -> String:
 	return "%s/%d/meta.json" % [root, n]
 
 
+## 173：读档修复报告（看过即删）
+func repair_path(n: int) -> String:
+	return "%s/%d/%s" % [root, n, SaveReport.FILE]
+
+
 func ensure_dir(n: int) -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("%s/%d" % [root, n]))
 
@@ -57,14 +62,23 @@ func first_empty() -> int:
 ## `<名字>.<unix 秒>.bak`，返回备份文件的路径（没这份文件、改名失败返回空）。
 ## [param which] 是 "meta" 或 "run"。备份文件不算存档：[method exists] / [method remove] 都不看 `.bak`
 func backup(n: int, which: String) -> String:
-	var from := meta_path(n) if which == "meta" else run_path(n)
-	if not FileAccess.file_exists(from):
+	return backup_file(meta_path(n) if which == "meta" else run_path(n))
+
+
+## 一份文件改名成 `<名字>.<unix 秒>.bak`（和它的上一份一起）。返回备份文件的路径；没这份文件、改名失败返回空
+static func backup_file(from: String) -> String:
+	var prev := AtomicFile.prev_path(from)
+	var src := from if FileAccess.file_exists(from) else (prev if FileAccess.file_exists(prev) else "")
+	if src == "":
 		return ""
 	var to := "%s.%d.bak" % [from, int(Time.get_unix_time_from_system())]
-	var err := DirAccess.rename_absolute(ProjectSettings.globalize_path(from), ProjectSettings.globalize_path(to))
+	var err := DirAccess.rename_absolute(ProjectSettings.globalize_path(src), ProjectSettings.globalize_path(to))
 	if err != OK:
-		push_warning("SaveSlots: 备份 %s 失败（%d）" % [from, err])
+		push_warning("SaveSlots: 备份 %s 失败（%d）" % [src, err])
 		return ""
+	# 173：上一份（`.prev`）也读不出来才会走到这里 —— 跟着备份，免得下次读档又从它「恢复」出同一面墙
+	if src == from and FileAccess.file_exists(prev):
+		DirAccess.rename_absolute(ProjectSettings.globalize_path(prev), ProjectSettings.globalize_path(to + AtomicFile.PREV))
 	return to
 
 
@@ -99,21 +113,22 @@ func open(n: int, items: ItemDatabase, rules: MetaRules = null, tech_defs: Array
 	ensure_dir(n)
 	var mp := meta_path(n)
 	var out := {"slot": n, "run_path": run_path(n), "meta_path": mp, "meta": null, "backup": "", "newer": newer_version(n)}
-	if not FileAccess.file_exists(mp) or int(out["newer"]) > 0:
+	if not MetaSave.exists(mp) or int(out["newer"]) > 0:
 		return out     # 新版本的存档：不读、不备份，调用方把这一位锁成只读
-	var loaded := MetaSave.read(items, mp, rules, tech_defs)     # 120：先按科技算容量再装仓库
+	var report := SaveReport.new()     # 173：对账、挪位、用了上一份 —— 写进这一位的 last_repair.json，界面说一句
+	var loaded := MetaSave.read(items, mp, rules, tech_defs, report)     # 120：先按科技算容量再装仓库
 	if loaded == null:
 		out["backup"] = backup(n, "meta")
+	elif not report.is_empty():
+		report.append_to(repair_path(n))
 	out["meta"] = loaded
 	return out
 
 
-## 删掉这一位的两份文件
+## 删掉这一位的两份文件（和它们的上一份、修复报告）
 func remove(n: int) -> void:
-	for p in [run_path(n), meta_path(n)]:
-		var absolute := ProjectSettings.globalize_path(p)
-		if FileAccess.file_exists(absolute):
-			DirAccess.remove_absolute(absolute)
+	for p in [run_path(n), meta_path(n), repair_path(n)]:
+		AtomicFile.remove(p)     # 173：连同 .prev / .tmp
 
 
 ## 老的单文件存档搬进第 1 位（第 1 位空着才搬）。返回搬了没有
@@ -148,7 +163,7 @@ func summary(n: int, items: ItemDatabase, rules: MetaRules = null) -> Dictionary
 	if not out["exists"]:
 		return out
 	out["newer"] = newer_version(n)
-	var meta := MetaSave.read(items, meta_path(n), rules) if items != null and FileAccess.file_exists(meta_path(n)) else null
+	var meta := MetaSave.read(items, meta_path(n), rules) if items != null and MetaSave.exists(meta_path(n)) else null
 	if meta != null:
 		out["runs"] = meta.runs
 		out["extractions"] = meta.extractions

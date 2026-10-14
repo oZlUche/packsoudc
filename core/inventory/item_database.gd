@@ -72,6 +72,11 @@ func get_def(id: StringName) -> ItemDef:
 	return _defs.get(alias, null) if alias != id else null
 
 
+## 173：只按真名查（不问改名表）—— 对账层要分清「真名」与「改过名的旧名」
+func has_exact(id: StringName) -> bool:
+	return _defs.has(id)
+
+
 func has_def(id: StringName) -> bool:
 	return _defs.has(id) or _defs.has(IdAliases.item(id))
 

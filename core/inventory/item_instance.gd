@@ -115,9 +115,11 @@ func to_dict() -> Dictionary:
 	}
 
 
-## db 用于把 def id 还原成 ItemDef。返回 null 表示该 def 已不存在（内容被删）。
+## db 用于把 def id 还原成 ItemDef。返回 null 表示该 def 已不存在（内容被删）或被对账层清空（173）。
 static func from_dict(d: Dictionary, db: ItemDatabase) -> ItemInstance:
 	var def_id := StringName(d.get("def", ""))
+	if def_id == &"":
+		return null     # 173：对账层清空的（折了钱 / 按退役表丢了，报告里有记录）—— 不再告警
 	var found := db.get_def(def_id)
 	if found == null:
 		push_warning("ItemInstance.from_dict: 未知的 def id '%s'，该物品被丢弃" % def_id)

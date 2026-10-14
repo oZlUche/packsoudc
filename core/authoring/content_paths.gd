@@ -170,6 +170,21 @@ static func load_resources(dir_path: String) -> Array[Resource]:
 	return out
 
 
+## 173 §3.5：内容版本戳 —— 道具、标签、信仰、章节、敌人、事件的资产文件名排序后的哈希（前 12 位）。写进存档头，
+## 读档时报告「这份档存于内容版本 X，现为 Y」，只作诊断、不参与判断。一次进程算一次
+static var _stamp: String = ""
+const STAMP_KINDS := [ITEMS, TAGS, FAITHS, CHAPTERS, ENEMIES, EVENTS]
+
+
+static func content_stamp() -> String:
+	if _stamp == "":
+		var parts: PackedStringArray = []
+		for dir_path in STAMP_KINDS:
+			parts.append(String(dir_path).get_file() + ":" + ",".join(resource_names(dir_path)))
+		_stamp = "\n".join(parts).md5_text().substr(0, 12)
+	return _stamp
+
+
 ## 一个作者数据目录下的全部 id：`.json` 文件的名字去掉后缀，按文件名升序；打不开的目录返回空。
 ## 四个内容编辑器的列表与地图编辑器的两个下拉框都从这里拿（以前各写一份同样的循环）
 static func ids_in(dir_path: String) -> Array[String]:

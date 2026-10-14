@@ -1,0 +1,9 @@
+{
+  "note": "合成样本：模拟内容删了 3 件（sniper / mana_crystal / 没登记的 ghost_item_removed）、改名 1 件（strength_sigil）、1 件放不回原位（longsword 压在 knife 上、又出界）",
+  "refunded": [
+    "sniper",
+    "mana_crystal",
+    "ghost_item_removed"
+  ],
+  "funds_after": 424
+}
