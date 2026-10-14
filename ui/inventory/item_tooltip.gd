@@ -12,12 +12,12 @@ extends RefCounted
 
 ## 稀有度的名字，下标即稀有度；颜色见 [ItemPainter.RARITY_COLORS]（白 / 绿 / 蓝 / 紫 / 金 / 红）
 const RARITY_NAMES := ["普通", "优良", "稀有", "史诗", "传说", "神话"]
-## 170：各层字号
-const NAME_SIZE := 18
-const SUB_SIZE := 12
-const DESC_SIZE := 13
-const BODY_SIZE := 14
-const FOOT_SIZE := 12
+## 170：各层字号（定稿各大一号：名字 19、副行 13、说明 14、正文 15、脚注 13）
+const NAME_SIZE := 19
+const SUB_SIZE := 13
+const DESC_SIZE := 14
+const BODY_SIZE := 15
+const FOOT_SIZE := 13
 ## 170：行首图标（缺图退回的文字）；图标本身链到格位的词条，钉住后停上去能看解释
 const ICONS := {"grant": "【增益】", "receive": "【受益】", "load": "【装载】", "coin": "值 ", "weight": "重 "}
 const ICON_TERMS := {"grant": "增益槽", "receive": "受益槽", "load": "装载槽"}
@@ -78,20 +78,21 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		return {"head": "", "body": "", "foot": "", "set": "", "text": "", "terms": {}}
 	var def := inst.def
 	var rarity_style := "@%s%d" % [TextTemplate.RARITY_STYLE, clampi(def.rarity, 0, RARITY_NAMES.size() - 1)]
-	# --- 头：名字（粗体 18、稀有度色）/ 副行（稀有度名 · 标签，按大类排，171）/ 说明（斜体）
-	var name_line := "[font_size=%d][b][color=%s]%s[/color][/b][/font_size]" % [NAME_SIZE, rarity_style, Names.of_item(inst)]
+	# --- 头：名字（粗体 19、稀有度色）/ 副行（稀有度名 · 标签，按大类排，171）/ 说明（斜体）
+	# 170 定稿：只有名字和稀有度名描边；标签、说明、正文、脚注里带色的字都不描（作者对比过后定的）
+	var name_line := UiTheme.outline("[font_size=%d][b][color=%s]%s[/color][/b][/font_size]" % [NAME_SIZE, rarity_style, Names.of_item(inst)])
 	var shown_tags := TagRegistry.shown(def.tags)     # 107 后续（作者定）：内部标签（快攻 / 重击 / 重型）不给玩家看
 	var listed: Array = []
 	for t in TagRegistry.sorted_by_category(shown_tags):     # 171：用途 → 属性 → 材料 → 归属；来源类不列
 		if TagRegistry.category_of(StringName(String(t))) != "source":
 			listed.append(t)
-	var sub := "[color=%s]%s[/color]" % [rarity_style, rarity_name(def.rarity)]
+	var sub := UiTheme.outline("[color=%s]%s[/color]" % [rarity_style, rarity_name(def.rarity)])
 	if not listed.is_empty():
-		sub += "[color=@dim] · %s[/color]" % " · ".join(_names(listed))     # 096：标签按当前语言显示名字
+		sub += "[color=@tip_meta] · %s[/color]" % " · ".join(_names(listed))     # 096：标签按当前语言显示名字
 	var head_rest: Array[String] = ["[font_size=%d]%s[/font_size]" % [SUB_SIZE, sub]]
 	var desc := Names.description_of(def)     # 104：说明里的 {字段} 按这件道具自己的字段填
 	if desc != "":
-		head_rest.append("[font_size=%d][i][color=@dim]%s[/color][/i][/font_size]" % [DESC_SIZE, desc])
+		head_rest.append("[font_size=%d][i][color=@tip_desc]%s[/color][/i][/font_size]" % [DESC_SIZE, desc])
 	# --- 正文
 	var lines: Array[String] = []
 	if def.is_bag:
@@ -179,7 +180,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		var line := "信物：%s" % ("当前信仰" if faith_lit(def, status) else "右键：奉为主信仰")
 		lines.append("[color=#%s]%s[/color]" % [UiPalette.FG.to_html(false) if faith_lit(def, status) else DIM_HEX, line])
 	# --- 脚注：金币、秤砣（170：不写格数），右边套装名
-	var foot := "[font_size=%d][color=@dim]%s%d　%s%d[/color][/font_size]" % [FOOT_SIZE, icon("coin"), ItemValue.of_instance(inst), icon("weight"), ItemWeight.of(def)]     # 129：重
+	var foot := "[font_size=%d][color=@tip_meta]%s%d　%s%d[/color][/font_size]" % [FOOT_SIZE, icon("coin"), ItemValue.of_instance(inst), icon("weight"), ItemWeight.of(def)]     # 129：重
 	var set_name := set_name_of(def.set_id)
 	# --- 词条：这件道具会施加的 buff（id → 按定义生成的说明）+ 固定词条 + 弹词条的标签
 	var extra := Glossary.tag_terms(listed)     # 096：登记了说明的标签也是词条
@@ -197,9 +198,8 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	for k in ICON_TERMS.values():     # 行首图标链到格位的词条
 		if rest.contains("term:" + k):
 			terms[k] = {"name": k, "text": Glossary.term_text(k)}
-	var head := UiTheme.outline_colored(name_line + "\n" + Glossary.mark("\n".join(head_rest), found))
-	var body := UiTheme.outline_colored("[font_size=%d]%s[/font_size]" % [BODY_SIZE, Glossary.mark("\n".join(lines), found)])
-	foot = UiTheme.outline_colored(foot)
+	var head := name_line + "\n" + Glossary.mark("\n".join(head_rest), found)
+	var body := "[font_size=%d][color=@tip_fg]%s[/color][/font_size]" % [BODY_SIZE, Glossary.mark("\n".join(lines), found)]
 	var text := head + "\n" + body + "\n" + foot + ("　套装：%s" % set_name if set_name != "" else "")
 	return {"head": head, "body": body, "foot": foot, "set": set_name, "text": text, "terms": terms}
 

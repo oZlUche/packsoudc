@@ -44,7 +44,7 @@ static func run_theme_art(t: TestCase) -> void:
 	t.eq(real is SlabStyle, UiTheme.has_slab(), "assets/ui：%s" % ("石板" if UiTheme.has_slab() else "还没有石板图，平面底"))
 	for gone in ["bg_stone", "panel_stone", "panel_inset", "panel_hud", "frame_stone", "hud/bar"]:
 		t.is_null(UiTheme.art(gone), "砖墙底 / 小石板退了：%s" % gone)
-	t.check(UiTheme.build().get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is StyleBoxTexture, "assets/ui 里美术交付的纸：悬浮窗底是九宫格")
+	t.check(UiTheme.build().get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is SlabStyle, "assets/ui 里美术交付的悬浮窗底：皮革板身 + 黄铜边框两层（170 定稿）")
 	for skin in UiCursor.SKINS:
 		for name in ["cursor_arrow", "cursor_drag", "cursor_can_drop", "cursor_forbidden"]:
 			t.not_null(UiTheme.art("cursors/%s/%s" % [skin, name]), "光标图 %s/%s 在" % [skin, name])
@@ -374,7 +374,7 @@ static func run_tones(t: TestCase) -> void:
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_OVERLAY), UiTheme.TONE_DARK, "测试图的板边写 dark：石板框深")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_HUD_BAR), UiTheme.TONE_DARK, "顶端栏跟石板")
 	UiTheme.asset_root = saved_root
-	t.check(UiTheme.current().get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is StyleBoxTexture, "assets/ui/tip 里有深底：悬浮窗底是九宫格")
+	t.check(UiTheme.current().get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is SlabStyle, "assets/ui/tip 里有深底：悬浮窗底是两层（170 定稿）")
 	var saved := UiTheme.asset_root
 	UiTheme.asset_root = NOWHERE
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_TOOLTIP), UiTheme.TONE_DARK, "没图：悬浮窗底照旧是深底")

@@ -1,4 +1,4 @@
-## 170（作者定）：道具悬浮窗 —— 深底白字、版式 A（头 / 正文 / 脚注分块）、名字粗体、说明斜体、带色的字描边、行内图标；
+## 170（作者定）：道具悬浮窗 —— 深底白字、版式 A（头 / 正文 / 脚注分块）、名字粗体、说明斜体、行内图标；定稿（2026-10-14）：只有名字和稀有度名描边，字号各大一号；
 ## 武器写「每 X 秒造成 Y 点伤害，消耗 Z 耐力」，不写冷却 / DPS / 格数；十字军之王式的固定悬浮窗（钉住、关键词开子窗）。
 extends RefCounted
 
@@ -10,15 +10,17 @@ static func _db() -> ItemDatabase:
 
 
 static func run_item_layout(t: TestCase) -> void:
-	t.begin("170 · 道具说明分块：名字粗体 18 在最前、副行稀有度 · 标签、说明斜体；正文武器句；脚注金币与秤砣图标；带色的字描边；关键词是 url")
+	t.begin("170 · 道具说明分块：名字粗体 19 在最前、副行稀有度 · 标签、说明斜体；正文武器句；脚注金币与秤砣图标；只有名字和稀有度名描边；关键词是 url")
 	var db := _db()
 	var knife := ItemInstance.create(db.get_def(&"knife"))
 	var full := ItemTooltip.describe_full(knife)
 	var head := String(full["head"])
 	var body := String(full["body"])
 	var foot := String(full["foot"])
-	t.check(head.begins_with("[outline_size=") or head.begins_with("[font_size=18][b]"), "头从名字开始")
-	t.check(head.contains("[font_size=18][b]") and head.contains(Names.of_item(knife)), "名字粗体 18")
+	t.check(head.begins_with("[outline_size="), "头从名字开始（名字描边）")
+	t.check(head.contains("[font_size=%d][b]" % ItemTooltip.NAME_SIZE) and head.contains(Names.of_item(knife)), "名字粗体 %d" % ItemTooltip.NAME_SIZE)
+	t.eq([ItemTooltip.NAME_SIZE, ItemTooltip.SUB_SIZE, ItemTooltip.DESC_SIZE, ItemTooltip.BODY_SIZE, ItemTooltip.FOOT_SIZE], [19, 13, 14, 15, 13], "定稿字号：名字 19、副行 13、说明 14、正文 15、脚注 13")
+	t.eq(HoverTip.MAX_WIDTH, 360.0, "定稿宽 360")
 	var name_at := head.find(Names.of_item(knife))
 	var rarity_at := head.find(ItemTooltip.rarity_name(knife.def.rarity))
 	t.check(name_at >= 0 and rarity_at > name_at, "名字 → 副行（稀有度）")
@@ -32,18 +34,12 @@ static func run_item_layout(t: TestCase) -> void:
 		t.check(not all.contains(word), "不写「%s」" % word.strip_edges())
 	t.eq(foot.count("[img="), 2, "脚注两个图标（金币、秤砣）")
 	t.check(foot.contains("coin.png") and foot.contains("weight.png"), "金币与秤砣")
-	t.check(head.contains("[outline_size=%d]" % UiTheme.OUTLINE_SIZE), "带色的名字描边")
-	# 带色的每一段都包了描边
-	var colored := RegEx.create_from_string("\\[color=[^\\]]+\\]")
-	var outlined := 0
-	var total := 0
-	for part in [head, body, foot]:
-		for m in colored.search_all(part):
-			if m.get_string() == "[color=@fg]":
-				continue
-			total += 1
-		outlined += part.count("[outline_size=")
-	t.check(outlined >= total and total > 0, "每段带色的字都描边（%d / %d）" % [outlined, total])
+	t.eq(head.count("[outline_size=%d]" % UiTheme.OUTLINE_SIZE), 2, "头里只有名字和稀有度名两处描边")
+	t.check(not body.contains("[outline_size=") and not foot.contains("[outline_size="), "正文、脚注不描边")
+	t.check(body.begins_with("[font_size=%d][color=@tip_fg]" % ItemTooltip.BODY_SIZE), "正文白（tip_fg）")
+	t.check(foot.contains("[color=@tip_meta]") and head.contains("[color=@tip_meta]"), "标签与脚注 tip_meta")
+	if Names.description_of(knife.def) != "":
+		t.check(head.contains("[i][color=@tip_desc]"), "说明 tip_desc")
 
 
 static func run_keywords(t: TestCase) -> void:
@@ -61,23 +57,19 @@ static func run_keywords(t: TestCase) -> void:
 
 
 static func run_italic_theme(t: TestCase) -> void:
-	t.begin("170 · 主题：富文本的斜体是正文字体斜切；悬浮窗底是深底（美术给的黑曜石九宫格，tone: dark）")
+	t.begin("170 · 主题：富文本的斜体是正文字体斜切；悬浮窗底是深底（定稿：深皮革平铺 + 黄铜边框九宫格两层，tone: dark）")
 	var th := UiTheme.build()
 	var it := th.get_font("italics_font", "RichTextLabel")
 	t.check(it is FontVariation and absf((it as FontVariation).variation_transform.x.y - UiTheme.ITALIC_SLANT) < 0.001, "斜体 = 斜切 %.1f" % UiTheme.ITALIC_SLANT)
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_TOOLTIP), UiTheme.TONE_DARK, "悬浮窗是深底")
-	t.not_null(UiTheme.art(UiTheme.ART_TOOLTIP), "深底九宫格在")
-
-
-static func run_outline_helper(t: TestCase) -> void:
-	t.begin("170 · 描边：每段 [color] 配对包上描边，嵌套照样配对；白字（@fg）不描；已描过不重复")
-	var src := "前[color=@hp]血[color=@term]词[/color]尾[/color]中[color=@fg]白[/color]后"
-	var out := UiTheme.outline_colored(src)
-	t.eq(out.count("[outline_size="), 2, "两段带色的各一层")
-	t.eq(out.count("[/outline_size]"), 2, "配对关上")
-	t.check(out.contains("[color=@fg]白[/color]") and not out.contains("[outline_color=#000000bf][color=@fg]"), "白字不描")
-	t.eq(UiTheme.outline_colored(out), out, "描过的不再包")
-	t.eq(Glossary.strip_bbcode(out), "前血词尾中白后", "字一个不少")
+	t.not_null(UiTheme.art(UiTheme.ART_TOOLTIP), "黄铜边框在")
+	t.not_null(UiTheme.art(UiTheme.ART_TOOLTIP_BODY), "皮革板身在")
+	var box := th.get_stylebox("panel", UiTheme.PANEL_TOOLTIP)
+	t.check(box is SlabStyle and (box as SlabStyle).body != null and (box as SlabStyle).edge != null, "两层画（板身 + 边框）")
+	if box is SlabStyle:
+		t.eq((box as SlabStyle).body.axis_stretch_horizontal, StyleBoxTexture.AXIS_STRETCH_MODE_TILE, "板身平铺不拉伸")
+	for c in ["tip_fg", "tip_meta", "tip_desc"]:
+		t.check((UiPalette.text_colors()["styles"] as Dictionary).has(c), "字色模板有 %s" % c)
 
 
 static func run_ring(t: TestCase) -> void:

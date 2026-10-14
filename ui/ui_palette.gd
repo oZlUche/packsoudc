@@ -128,8 +128,10 @@ static func damage_color(type: StringName, tone: StringName = &"dark") -> Color:
 ## 每条都要 `dark` 与 `light` 两版。文件不在、读不成或缺一条 = **整份不用**，回代码默认（深版是代码常量，浅版按 ink_color 压），问题记进 [member text_color_problems]
 const TEXT_COLORS_PATH := "res://data/authoring/ui/text_colors.json"
 const TEXT_COLORS_VERSION := 1
-## 样式码之外模板里也要有的名字：术语链接、暴击飘字
-const EXTRA_STYLES := ["term", "crit"]
+## 样式码之外模板里也要有的名字：术语链接、暴击飘字；170 定稿的悬浮窗三档字色（正文白、标签与脚注、说明）
+const EXTRA_STYLES := ["term", "crit", "tip_fg", "tip_meta", "tip_desc"]
+## 170 定稿（作者 2026-10-14）：悬浮窗正文白、标签与脚注比 dim 亮、斜体说明再暗一档 —— 只在深底悬浮窗上用
+const TIP_COLORS := {"tip_fg": Color("f2eee6"), "tip_meta": Color("d8d2c8"), "tip_desc": Color("c9c2b8")}
 static var text_colors_path := TEXT_COLORS_PATH
 static var text_color_problems: Array[String] = []
 static var _text_colors: Dictionary = {}
@@ -226,6 +228,7 @@ static func default_text_colors() -> Dictionary:
 	var dark := STYLE_COLORS.duplicate()
 	dark["term"] = Glossary.TERM_COLOR
 	dark["crit"] = CRIT
+	dark.merge(TIP_COLORS)
 	for name in dark:
 		styles[name] = {"dark": dark[name], "light": UiTheme.ink_color(dark[name])}
 	var rarity := []
@@ -280,13 +283,14 @@ static func for_tone(c: Color, tone: StringName) -> Color:
 
 
 #region 字体（168）
-## 168（作者定）：游戏自带字体 —— 正文霞鹜文楷（裁字子集，改名 PackSDC Kai，见 assets/fonts/README.md）、标题朱雀仿宋、大标题马善政。
-## 子集只含文案里出现过的字（`tools/font_charset.py`），缺的字走后备：文楷后备系统字体，标题后备文楷 Medium，大标题后备标题字体。
+## 168（作者定）：游戏自带字体 —— 正文一套、标题朱雀仿宋、大标题马善政；170 定稿（作者 2026-10-14 挑 A）正文从霞鹜文楷换成思源宋体（Noto Serif CJK SC，
+## Regular 正文、Bold 粗体，裁字子集，见 assets/fonts/README.md）。子集只含文案里出现过的字（`tools/font_charset.py`），
+## 缺的字走后备：正文后备系统字体，标题后备思源宋体 Bold，大标题后备标题字体。
 ## 文件不在（裁错、夹具）就退回系统字体，不崩
 const FONT_DIR := "res://assets/fonts/"
-## 170 §5：正文 / 粗体按用途叫（原 FONT_REGULAR / FONT_MEDIUM）—— 作者挑定新正文字体后只换这两个文件名，调用点不动
-const FONT_BODY := "wenkai_regular.ttf"
-const FONT_BOLD := "wenkai_medium.ttf"
+## 170 §5：正文 / 粗体按用途叫（原 FONT_REGULAR / FONT_MEDIUM）—— 换字体只换这两个文件名，调用点不动
+const FONT_BODY := "serif_regular.otf"
+const FONT_BOLD := "serif_bold.otf"
 const FONT_TITLE := "zhuque_fangsong.ttf"
 const FONT_DISPLAY := "mashanzheng.ttf"
 static var _font_files: Dictionary = {}
@@ -322,17 +326,17 @@ static func _wrap(file: String, fallback: Font) -> Font:
 	return v
 
 
-## 正文、读数、按钮：文楷 Regular
+## 正文、读数、按钮：思源宋体 Regular
 static func cjk_font() -> Font:
 	return _wrap(FONT_BODY, system_font())
 
 
-## 真粗体：富文本的 [b] 用它（文楷 Medium，不让引擎把常规体描粗 —— 描出来的发糊）
+## 真粗体：富文本的 [b] 用它（思源宋体 Bold，不让引擎把常规体描粗 —— 描出来的发糊）
 static func cjk_font_bold() -> Font:
 	return _wrap(FONT_BOLD, system_font(true))
 
 
-## 标题、名牌：朱雀仿宋（技术预览版，缺字时混进文楷 Medium）
+## 标题、名牌：朱雀仿宋（技术预览版，缺字时混进思源宋体 Bold）
 static func title_font() -> Font:
 	return _wrap(FONT_TITLE, cjk_font_bold())
 
