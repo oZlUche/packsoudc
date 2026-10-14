@@ -21,6 +21,9 @@ func open(payload: Dictionary) -> void:
 	var hint_text := notice if notice != "" else (UiText.t("slots.full") if bool(payload.get("full", false)) else "")
 	_hint = _label(hint_text, 13, UiPalette.STAMINA)
 	col.add_child(_hint)
+	var repaired := flow.repair_notice()     # 173：读档修复报告（和 098 的备份提示同一处）
+	if repaired != "":
+		col.add_child(_wrapped(repaired, 13, UiPalette.STAMINA, 840))
 	for n in range(1, SaveSlots.COUNT + 1):
 		col.add_child(_row(n))
 	col.add_child(HSeparator.new())

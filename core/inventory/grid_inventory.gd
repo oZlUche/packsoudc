@@ -788,7 +788,9 @@ func to_dict() -> Dictionary:
 ## 120：[param size_override] 给了（非零）就按它建格子、忽略存档里的 size（仓库尺寸由科技推算）；
 ## 这时原位越界或被占的物品先找个空位放（[method try_add]），还放不下就在底下临时加行放下并告警 —— 一件也不丢。
 ## 没给时照旧：放不回原位的告警丢弃
-static func from_dict(d: Dictionary, db: ItemDatabase, size_override: Vector2i = Vector2i.ZERO) -> GridInventory:
+## 173：给了 [param homeless_out]（一个 Array）就把原位放不回的道具交出去，由持有方安置（找空位、落地、进仓库、折钱）并记报告；
+## 没给照旧告警丢弃（回放浏览器这类只看不存的）
+static func from_dict(d: Dictionary, db: ItemDatabase, size_override: Vector2i = Vector2i.ZERO, homeless_out: Variant = null) -> GridInventory:
 	var s: Array = d.get("size", [8, 6])
 	var overridden := size_override.x > 0 and size_override.y > 0
 	var inv := GridInventory.new(
@@ -829,6 +831,9 @@ static func from_dict(d: Dictionary, db: ItemDatabase, size_override: Vector2i =
 		if overridden:
 			homeless.append(inst)
 			continue
+		if homeless_out is Array:
+			(homeless_out as Array).append(inst)     # 173：交给持有方安置
+			continue
 		push_warning(
 			"GridInventory.from_dict: uid %d 无法放回 %s，已丢弃（存档与当前定义不一致？）"
 			% [inst.uid, inst.origin]
@@ -845,6 +850,8 @@ static func from_dict(d: Dictionary, db: ItemDatabase, size_override: Vector2i =
 			grown += 1
 		if inv.has_item(inst.uid):
 			push_warning("GridInventory.from_dict: uid %d 在算出的 %s 里放不下，临时加了 %d 行（东西不丢；之后有空行时科技重算会收回）" % [inst.uid, size_override, grown])
+		elif homeless_out is Array:
+			(homeless_out as Array).append(inst)
 		else:
 			push_warning("GridInventory.from_dict: uid %d 加行也放不下，已丢弃（定义比仓库还宽？）" % inst.uid)
 	inv.end_batch()

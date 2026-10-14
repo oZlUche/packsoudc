@@ -27,6 +27,9 @@ func open(_payload: Dictionary) -> void:
 	var notice := flow.backup_notice()
 	if notice != "":
 		col.add_child(_label(notice, 13, UiPalette.STAMINA))
+	var repaired := flow.repair_notice()     # 173：读档时对账 / 挪位 / 打捞过 —— 说一句，看过即删
+	if repaired != "":
+		col.add_child(_wrapped(repaired, 13, UiPalette.STAMINA, 820))
 	col.add_child(HSeparator.new())
 
 	# 089（作者定）：第一项「继续」（当前位有存档才显示：读档 / 下一张教程 / 按这份存档开局）；第二项「读取存档」（换位，有任何一位有存档才显示）；

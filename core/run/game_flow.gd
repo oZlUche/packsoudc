@@ -54,6 +54,8 @@ var meta_path: String = MetaSave.DEFAULT_PATH
 var meta_backup: String = ""
 ## 098：同上，进行中的那一局
 var run_backup: String = ""
+## 173：这一位的读档修复报告那一句（读过就从文件里删了，这一次进程里还留着给读取存档屏 / 主菜单显示；换位时清掉）
+var _repair_text: String = ""
 ## 当前位是更新版本的游戏存的（它的存档版本号；0 = 不是）。这时这一位只读：不读、不写、不备份、不能接着玩，
 ## 免得旧版本把新档当坏档备份掉、再存一份空的盖上去
 var newer_slot: int = 0
@@ -112,6 +114,7 @@ func use_slot(n: int) -> void:
 	meta_path = String(opened["meta_path"])
 	if String(opened["backup"]) != "":
 		meta_backup = String(opened["backup"])     # 界面上说一句，玩家知道老档还在
+	_repair_text = ""
 	var loaded := opened["meta"] as MetaState
 	meta = loaded if loaded != null else MetaState.new(meta_rules)
 	derive_techs()
@@ -244,9 +247,15 @@ func continue_target() -> ChapterDef:
 func continue_run() -> bool:
 	if newer_slot > 0:
 		return false
-	var state := RunSave.read(items, enemies, sets, save_path)
-	if state == null and RunSave.exists(save_path) and slots != null:
-		run_backup = slots.backup(slot, "run")     # 098：读不出来的一局也先备份，否则「继续」每次都撞同一面墙
+	var report := SaveReport.new()     # 173：对账、挪位、打捞 —— 记进这一位的 last_repair.json
+	var state := RunSave.read(items, enemies, sets, save_path, report)
+	if state == null and RunSave.exists(save_path):
+		var salvaged := _salvage_run(report)
+		if slots != null:
+			run_backup = slots.backup(slot, "run")     # 098：读不出来的一局也先备份，否则「继续」每次都撞同一面墙
+		elif salvaged:
+			run_backup = SaveSlots.backup_file(save_path)     # 单文件模式：捞过了就挪开，下次「继续」不会再捞一遍
+	_note_repair(report)
 	if state != null:
 		_adopt(state)
 		_flush()     # 读档回来：等着选的事件还在这一屏；结束了的直接进结算；否则回地图
@@ -257,6 +266,41 @@ func continue_run() -> bool:
 	grant_first_kit()
 	save_meta()
 	return begin_direct(target) != null
+
+
+## 173（待定 2 A）：读不回来的那一局作废前，棋盘 / 地上 / 保险箱里的道具放回仓库（钱包随这一局作废），存局外。返回捞了没有
+func _salvage_run(report: SaveReport) -> bool:
+	if report == null or meta == null or not writable():
+		return false
+	if report.salvage.is_empty() and report.salvage_funds <= 0:
+		return false
+	meta.salvage(report.salvage, items, report)
+	meta.funds += report.salvage_funds
+	report.salvaged = true
+	report.salvage.clear()
+	save_meta()
+	return true
+
+
+## 173：有要告诉玩家的就写进这一位的修复报告（界面读一次就删）
+func _note_repair(report: SaveReport) -> void:
+	if report == null or report.is_empty() or slots == null:
+		return
+	report.append_to(slots.repair_path(slot))
+	_repair_text = ""     # 下次 repair_notice 重新读
+
+
+## 173：读档修复的那一句（「存档修复：N 件道具已随版本更新折算为 X 钱……」）。从这一位的 last_repair.json 读一次、读完就删；
+## 这次进程里留着，读取存档屏和主菜单都能显示。没有返回空串
+func repair_notice() -> String:
+	if slots == null:
+		return _repair_text
+	var path := slots.repair_path(slot)
+	if FileAccess.file_exists(path):
+		var r := SaveReport.consume(path)
+		if r != null:
+			_repair_text = r.summary()
+	return _repair_text
 
 
 ## 教程章（有 `hidden_by_unlock` 的），按顺序

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.01 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.02 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3098,13 +3098,31 @@ vitality.restore(amount, &"rest")      # 歇一会儿，amount 来自休息区�
 
 **迁移链**（098，报告 098）：`MetaMigrations` / `RunMigrations`（纯静态）**在字典层逐级升**，一步只认 n → n+1，`match` 显式分派（不走反射）、`duplicate(true)` 不改入参；
 只在**读文件**这一层做（`MetaSave.from_text` / `RunSave.from_text`），`from_dict` 继续严格只认当前版本，对象因此永远只有一套形状。
-升版规矩：**改语义或改 id 才升版，只加带默认值的字段不升版**（那一类靠 `d.get(key, default)`）。每升一版加一步 + 一份冻结样本（`tests/fixtures/meta_v<n>.json`），链上有洞 `tests/test_save_migration.gd` 立刻红。
+升版规矩：**改语义或改 id 才升版，只加带默认值的字段不升版**（那一类靠 `d.get(key, default)`）。每升一版加一步 + 一份冻结样本（`tests/fixtures/meta_v<n>.json`、一局 `run_v4.json`），链上有洞 `tests/test_save_migration.gd` 立刻红。
+173 补两条：**改道具 `state` 的键名、改容器尺寸的语义（不是算出来的容量）、改模块的键也要升版**并加迁移步（这三种常被当成「加字段」）；
+存档头写 `content_stamp`（`ContentPaths.content_stamp()`：道具 / 标签 / 信仰 / 章节 / 敌人 / 事件资产文件名排序后的哈希），只作诊断，报告与日志里写「存于内容版本 X，现为 Y」，不参与判断。
 `GameSettings` 不进链（设置丢了重设一次）。
 
 **读不出来先备份，绝不静默覆盖**（098，作者定）：`MetaSave.read` 返回 null 而文件还在 → `GameFlow.use_slot` 调 `SaveSlots.backup(n, "meta")` 把老文件改名成 `meta.json.<unix>.bak` 再从零开始；
 `continue_run` 对 `run.json` 同理（否则「继续」每次都撞同一面墙）。`SaveSlots.exists / remove` 不看 `.bak`；`GameFlow.meta_backup / run_backup / backup_notice()`，读取存档屏与主菜单各写一句（`slots.backed_up`）。回滚靠备份文件，不做自动回滚。
 
 **新版本的存档在旧版本里只读**（2026-10-07，作者反馈「旧版读新版存档会当成读不出来、新建存档」）：`SaveSlots.newer_version(n)` 看两份文件的 `version`，大于本版本认得的就不是坏档 —— `open` 不读、不备份，`GameFlow.newer_slot` 记下版本号；这时 `save_meta` / `save` / 结算都不写、`continue_game` / `continue_run` 返回 false，`backup_notice()` 提示换回新版本（`slots.newer`），读取存档屏那一行带「更新版本的存档」。玩家自己删掉这一位才解锁。只对改了这条之后的版本有效：更早的旧版本照旧会把新档备份成 `.bak`。
+
+**原子写**（173）：`MetaSave.write` / `RunSave.write` / `GameSettings.save_to` 走 `AtomicFile.write`（`core/save/`）：写 `<file>.tmp` → 现有 `<file>` 改名成 `<file>.prev` → `.tmp` 改名成 `<file>`。
+读不出来先试 `.prev`（报告 `prev_used`），再走备份从零。`.prev` 不算存档（`SaveSlots.exists` 不看），`remove` 连 `.prev` / `.tmp` 一起删，`backup` 让 `.prev` 跟着备份。
+
+**内容对账**（173，作者问「存档经常会在版本升级后失效」）：版本链管「格式变了」，`SaveReconcile`（`core/save/save_reconcile.gd`）管「格式没变、内容变了」——
+在版本链之后、`from_dict` 之前、字典层：只走归玩家的位置（局外 `warehouse / board`，一局 `board / storage / modules.node_storage / modules.safe / pending_loot / events.search_haul`；敌人棋盘和节点内容不算）。
+每件道具按 **真名 → `IdAliases.ITEMS`（改名，写成新名）→ `IdAliases.RETIRED_ITEMS`（`refund` 折钱 / `replace` 换件 / `drop` 丢掉）** 查，哪都查不到的默认折钱（价值按 0）；
+折钱、丢掉的把 `def` 清空、原地留壳（地上的 `spots` 与道具一一对应，不能错位），`ItemInstance.from_dict` 读到空 `def` 不告警地跳过。折的钱局外进 `funds`、一局进钱包。`IdAliases.STATE_KEYS` 统一改 `state` 键名。
+**原位放不回的不再静默丢**：`GridInventory.from_dict(..., homeless_out)` / `Warehouse.from_dict(..., report, homeless_out)` 把它们交给持有方 ——
+仓库按页序找空位、再临时加页（`Warehouse.rescue`）；带回的背包先在背包里找空位、再进仓库；一局的棋盘 / 保险箱 / 待拾取先本容器找空位、再落到地上（`RunState.rehome`，暂存区就是当前点的地）；都不行按价值折钱。
+**一局作废前打捞**（待定 2 A）：版本升不上来、章节查不到时，`RunSave` 把棋盘 / 地上 / 保险箱的道具字典留在报告里，`GameFlow.continue_run` 交给 `MetaState.salvage` 放回仓库（包不带回，和撤离一样；钱包随这一局作废），再备份那一局。
+每一件都记进 `SaveReport`（`refunded / rehomed / replaced / dropped / salvaged / prev_used`），写到 `user://slots/<n>/last_repair.json`；`GameFlow.repair_notice()` 读一次就删（这次进程里留着），读取存档屏和主菜单各说一句（`repair.*`）。**没有一次丢东西是静默的。**
+**内容快照**：`tests/fixtures/content_snapshot.json`（`ContentSnapshot.capture`：每件道具的格数、尺寸、形状、是否包，标签 / 信仰 / 章节 / 敌人的 id 表）。
+`tests/content/test_content_snapshot.gd` 拿它对现在的内容：删掉的道具要在改名表或退役表、改了形状的要登记 `IdAliases.RESHAPED`（同时看一眼敌人预设棋盘的 `at`）、消失的标签 / 信仰 / 章节 / 敌人要有改名或 `IdAliases.RETIRED` 记录，否则红；
+补完表 `bash tools/snapshot_content.sh` 重生成（有没交代的改动它不写）。**改内容的 PR 要么同时更新快照并补表，要么过不去。**
+**存档回归**：`tests/fixtures/saves/<日期>/{meta,run,expected}.json`（作者的真实存档，待定 3 A），每份读得回来、`dropped` 为空、折钱的和 `expected.json` 一致；`bash tools/check_saves.sh` 只读地查本机存档会被怎么对账。
 
 **内容 id 改名表**（098）：`IdAliases`（`ITEMS / TAGS / FAITHS`，旧 → 新）是**内容层**的事，不进版本链。只在「按真名查不到」时问一次：
 `ItemDatabase.get_def`、`TagRegistry.get_def`、`FaithPower.restore`（旧信仰的点数并进新池子）。现有两条来自 093 的合并改名（`violence → brute`、`sunfire → sun`，标签同前缀）。
@@ -4181,6 +4199,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.02 | 2026-10-14 | **存档原子写与内容对账**（报告 173，作者问「存档经常会在版本升级后失效」，待定 1A 2A 3A 4A；改 7.2）：`AtomicFile`（`.tmp` → 改名、`.prev` 回退）用于局外 / 一局 / 设置；`SaveReconcile` 在版本链之后对账道具（`IdAliases.RETIRED_ITEMS` 折钱 / 换件 / 丢掉，查不到默认折钱；`STATE_KEYS`），六件已删道具补进退役表、短剑登记 `RESHAPED`；容器 `from_dict` 交出放不回原位的（`homeless_out`），仓库换位 / 加页、背包先本盘后仓库、一局先本容器后地上（`RunState.rehome`），都不行折钱；一局作废前打捞进仓库（`MetaState.salvage`）；`SaveReport` 写 `last_repair.json`，`GameFlow.repair_notice` 读一次就删、读取存档屏与主菜单各一句；内容快照 `ContentSnapshot` + `tools/snapshot_content.sh` + 快照测试；一局冻结样本 `run_v4.json`；存档回归目录 `tests/fixtures/saves/` 与只读的 `tools/check_saves.sh`；存档头 `content_stamp` |
 | v3.01 | 2026-10-14 | **固定分辨率档位与窗口模式**（报告 172，作者定，待定 1A 2A 3A 4A；改 8.8）：`GameSettings.window_mode / resolution` 与档位表 `RESOLUTIONS`（16:9 五档、16:10 三档）；`ui/window_setup.gd`（`WindowSetup.apply / pick_default / available / toggle_mode`）导演启动时套用、窗口不可拖改、首启按屏幕九成挑一档；设置屏最上面「显示」一节（窗口 / 全屏、按比例分行的分辨率按钮，全屏时灰掉）；F11 动作 `toggle_fullscreen` |
 | v3.00 | 2026-10-14 | **170 悬浮窗定稿**（作者在美术设计里定「样式就这样吧」；改 8.8、8.10）：悬浮窗底改两层 `SlabStyle`（深皮革 `tip/tooltip_body` 平铺 + 黄铜边框 `tip/tooltip_frame`，`UiTheme.layered_box`，`slab_box` 也走它），`tooltip_dark` 退了；宽 360、字号各大一号（19 / 13 / 14 / 15 / 13）；字色模板加 `tip_fg / tip_meta / tip_desc`；只有名字和稀有度名描边，`UiTheme.outline_colored` 删了；正文字体换思源宋体 Regular / Bold（`serif_regular.otf / serif_bold.otf`，霞鹜文楷子集与授权移出），`subset_fonts.sh` 去掉改名一步 |
 | v2.99 | 2026-10-14 | **道具悬浮窗深底版式 + 固定式悬浮窗**（报告 170 §2 §3 §5，作者定，待定按推荐 1A 2A 3A 4A；改 4.8、8.8）与**标签大类 / buff 解说 / 生成句 / 法杖装载槽**（报告 171 §1–§5，待定 1A 2A 3A 4A；改 4.2）：悬浮窗深底九宫格 `tip/tooltip_dark`、带色字描边 `UiTheme.outline_colored`、斜体 `UiTheme.slanted`、行内图标 `tip_icon`、`ItemTooltip.describe_full` 分块（头 / 正文 / 脚注）、武器句「每 X 秒造成 Y 点伤害，消耗 Z 耐力」（不写冷却 / DPS / 格数）；`HoverTip` 宽限 0.15 秒、停 0.6 秒钉住（外框顺时针进度）、关键词 0.25 秒开子窗（封顶 3 层）、离开 0.4 秒 / Esc / 点外收，侧窗取消、`terms` 改 `{id: {name, text}}`；棋盘格位画美术图标（`grant/receive/load_on|off`）；`FONT_BODY / FONT_BOLD` 改名。`BuffDef.has_blurb / blurb / blurbs`、`sentence_text`；`TagDef.category`（用途 / 属性 / 材料 / 归属 / 来源 / 内部，`TagRegistry.by_category / category_of / sorted_by_category`），补 `bow`、`wood`，道具上没登记的标签导入报错，材料来源按来源类判；**标签制作器**（`ui/tag_editor/`）、属性表单的标签数组改成标签块 + 按大类分组的下拉；`AdjacencyText` 生成增益 / 受益 / 供给句，`AdjacencyProfile.grant_filter_all`（AND）；`load_cells / load_filter`、`BattleCompiler.load_assignments / load_claimants`、`CombatantSpec.loads`，一颗晶石只给后放的法杖、一把一份，魔法杖受益格改装载格（导入迁移） |

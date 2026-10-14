@@ -106,6 +106,18 @@ func try_add(inst: ItemInstance, allow_rotate: bool = true) -> bool:
 	return false
 
 
+## 原位放不下的一件：按页序找空位，再不行临时加页（最多 [constant RESCUE_PAGES] 页）。返回加了几页；放不下返回 -1（实例保持游离态）。
+## 读档（120 / 163）与 173 的「带回的背包放不回原位」都走这里
+func rescue(inst: ItemInstance) -> int:
+	var added := 0
+	while not try_add(inst):
+		if added >= RESCUE_PAGES:
+			return -1
+		set_page_count(page_count() + 1)
+		added += 1
+	return added
+
+
 ## 放到第 [param at_page] 页的 [param origin]
 func place(inst: ItemInstance, origin: Vector2i, rot: int = 0, at_page: int = 0) -> bool:
 	var p := page(at_page)
@@ -158,7 +170,9 @@ func to_dict() -> Dictionary:
 ## 读回来。[param p_pages] > 0 = 页数已经算好（科技推算，120 的顺序），否则按存档里的页数。
 ## 新档逐页原位放；老档（163 之前，一块 `{"size", "items"}`）按页切：落在第一页范围里的原位放，更下面的按页序重摆。
 ## 原位放不下（页被改小、页数变少）的按页序找空位，再不行临时加页 —— 一件也不丢
-static func from_dict(d: Dictionary, db: ItemDatabase, p_page_size: Vector2i, p_pages: int = 0) -> Warehouse:
+## 173：挪了位置的记进 [param report]；加页也放不下的交给 [param homeless_out]（持有方折钱），没给照旧告警丢弃
+static func from_dict(d: Dictionary, db: ItemDatabase, p_page_size: Vector2i, p_pages: int = 0,
+		report: SaveReport = null, homeless_out: Variant = null) -> Warehouse:
 	var page_dicts: Array = d.get("pages", []) if d.has("pages") else [d]
 	var legacy := not d.has("pages")
 	var count := p_pages
@@ -186,13 +200,16 @@ static func from_dict(d: Dictionary, db: ItemDatabase, p_page_size: Vector2i, p_
 				continue
 			homeless.append(inst)
 	for inst in homeless:
-		var rescued := 0
-		while not w.try_add(inst) and rescued < RESCUE_PAGES:
-			w.set_page_count(w.page_count() + 1)
-			rescued += 1
-		if not w.has_item(inst.uid):
-			push_warning("Warehouse.from_dict: uid %d 加页也放不下，已丢弃（定义比一页还大？）" % inst.uid)
-		elif rescued > 0:
+		var rescued := w.rescue(inst)
+		if rescued < 0:
+			if homeless_out is Array:
+				(homeless_out as Array).append(inst)
+			else:
+				push_warning("Warehouse.from_dict: uid %d 加页也放不下，已丢弃（定义比一页还大？）" % inst.uid)
+			continue
+		if report != null:
+			report.rehome(inst.def.id, "warehouse", "warehouse.page%d" % (w.page_of(inst.uid) + 1))
+		if rescued > 0:
 			push_warning("Warehouse.from_dict: uid %d 放不下，临时加了 %d 页（东西不丢；之后空出来时科技重算会收回）" % [inst.uid, rescued])
 	w.end_batch()
 	for i in w.page_count():

@@ -91,3 +91,16 @@
 ## 6. 改动范围
 
 新：`core/save/save_reconcile.gd`、`core/save/save_report.gd`、`tests/content/test_content_snapshot.gd`、`tests/fixtures/content_snapshot.json`、`tests/fixtures/run_v4.json`、`tests/fixtures/saves/`、`tools/snapshot_content.sh`、`tools/check_saves.sh`。改：`MetaSave` / `RunSave` / `GameSettings`（原子写、`.prev`、调对账）、`IdAliases`（`RETIRED_ITEMS` / `RESHAPED` / `STATE_KEYS`）、`GridInventory` / `Warehouse` / `ItemStash.from_dict`（返回 `homeless` 不丢）、`MetaState.from_dict` / `RunState.from_dict`（安置 + 打捞）、`SaveSlots`（`.prev`、`last_repair.json`）、`slots_screen` / `main_menu`（报告一句）、`docs/architecture.md` 7.2 补规矩。先把 7 个已删道具和 143 的短剑补进退役表 / `RESHAPED`，作者手上的档就能回来一部分。
+
+## 落地记录
+
+- v3.02 落地 §3，待定全按推荐：1 A（查不到定义的折钱进 funds / 钱包并报告）、2 A（一局作废前打捞棋盘 / 地上 / 保险箱进仓库，钱包不动）、3 A（存档回归目录 `tests/fixtures/saves/`）、4 A（读取存档屏一次 + 主菜单一行，看过即删）。
+- 原子写在 `core/save/atomic_file.gd`（`AtomicFile`）；`SaveSlots.backup` 让 `.prev` 跟着备份，免得下次读档又从读不出来的上一份「恢复」出同一面墙；只剩 `.prev`（两次改名之间断电）也读得回来。
+- 对账只走归玩家的位置（局外仓库 / 带回的背包，一局棋盘 / 地上 / 各点留着的地 / 保险箱 / 待拾取 / 搜索收获）；敌人棋盘、节点内容不算，那是内容。折钱、丢掉的原地留空壳（`def` 为空），不打乱地上的落点数组。
+- 退役表 `IdAliases.RETIRED_ITEMS` 补了 6 件已删道具（`aid_pack` / `smoke_bomb` 12、`smg` 24、`sniper` 300、`mana_crystal` 24、`mana_shard` 8，按删除前的「稀有度 × 格数」或填的价值），全部折钱；`strength_sigil` 原本就在改名表。`IdAliases.RESHAPED` 登记了 143 的短剑。`STATE_KEYS` 目前为空（153 的护甲改名没有动道具 state）。
+- 放不回原位的：仓库按页序找空位、再临时加页（`Warehouse.rescue`）；带回的背包先在背包里找空位、再进仓库；一局的棋盘 / 保险箱 / 待拾取先本容器、再落到地上（`RunState.rehome`），都不行才折钱。
+- 一局作废的打捞：放回仓库只收 `MetaState.keeps` 认的（包不带回，和撤离一样）；单文件模式（测试 / 沙盒）捞过之后也把那一局挪成 `.bak`，「继续」不会再捞一遍。
+- 内容快照：`ContentSnapshot`（`core/authoring/content_snapshot.gd`），快照一件道具一行，diff 好看；`tools/snapshot_content.sh` 有没交代的改动就不写。快照从今天起算，之前删的六件不在快照里，直接进了退役表。
+- 存档回归：作者的真实存档还没有（这一侧拿不到作者机器上的存档目录），先放了一份**合成样本** `2026-10-14-synthetic/`（删三件、改名一件、一件放不回原位）守着对账层；`tools/check_saves.sh` 只读地查本机每个存档位。
+- 一局冻结样本 `tests/fixtures/run_v4.json`（自由模式开局 + 棋盘三件 + 地上一件）。
+- 测试：`tests/run/test_save_reliability_173.gd`（原子写、`.prev` 回退、对账三种处置、局外 / 一局安置、打捞与修复报告、存档位、冻结样本、回归目录）、`tests/content/test_content_snapshot.gd`（现内容对快照、规矩本身）。

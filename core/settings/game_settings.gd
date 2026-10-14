@@ -154,22 +154,20 @@ static func normalize_speed(v: float) -> float:
 
 
 ## 读设置；没有文件、文件坏了、版本不对都返回默认值
+## 173：读不出来先试上一份（`.prev`），再不行用默认
 static func load_from(path: String = DEFAULT_PATH) -> GameSettings:
-	if not FileAccess.file_exists(path):
-		return GameSettings.new()
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
-	return from_dict(parsed) if parsed is Dictionary else GameSettings.new()
+	for p in [path, AtomicFile.prev_path(path)]:
+		if FileAccess.file_exists(p):
+			var parsed = JSON.parse_string(FileAccess.get_file_as_string(p))
+			if parsed is Dictionary:
+				return from_dict(parsed)
+	return GameSettings.new()
 
 
+## 173：原子写（[AtomicFile]）
 func save_to(path: String = DEFAULT_PATH) -> Error:
-	var f := FileAccess.open(path, FileAccess.WRITE)
-	if f == null:
-		return FileAccess.get_open_error()
-	f.store_string(JSON.stringify(to_dict(), "  ", false) + "\n")
-	f.close()
-	return OK
+	return AtomicFile.write(path, JSON.stringify(to_dict(), "  ", false) + "\n")
 
 
 static func remove(path: String = DEFAULT_PATH) -> void:
-	if FileAccess.file_exists(path):
-		DirAccess.remove_absolute(path)
+	AtomicFile.remove(path)

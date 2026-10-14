@@ -120,6 +120,8 @@ var end_reason: StringName = &""
 var boss_cleared: bool = false
 ## 等着拾取的容器（尸体 / 搜索收获）；null = 没有
 var pending_loot: GridInventory = null
+## 173：读档时的修复报告（[RunSave.from_text] 给的；模块安置放不回原位的道具也记在这里）。null = 不记
+var repair: SaveReport = null
 ## 159：搜索收获箱里哪件算「亮过」（uid → bool）—— 走开时开着的搜索只落亮过的，没亮的算没搜到（下次回来再搜还能亮）。
 ## [GameFlow] 接上它的 `seen_loot`；没接（纯核心）= 都算亮过
 var loot_seen: Callable = Callable()
@@ -1169,6 +1171,26 @@ func to_dict() -> Dictionary:
 	}
 
 
+## 173 §3.2.2：读档时原位放不回的一件（形状 / 尺寸改了）—— 先在原容器 [param home] 里找个空位，再落到地上（暂存区 = 当前点的地，159），
+## 都不行才按价值折进钱包。每一步都记进 [member repair]
+func rehome(inst: ItemInstance, home: GridInventory, from: String) -> void:
+	if inst == null or inst.def == null:
+		return
+	if home != null and home.try_add(inst):
+		if repair != null:
+			repair.rehome(inst.def.id, from, from)
+		return
+	if storage != null and storage.insert(inst):
+		if repair != null:
+			repair.rehome(inst.def.id, from, "storage")
+		return
+	var value := ItemValue.of_instance(inst)
+	if wallet != null:
+		wallet.earn(value, &"save_repair")
+	if repair != null:
+		repair.refund(inst.def.id, value, from)
+
+
 func _modules_to_dict() -> Dictionary:
 	var out := {}
 	for mid in modules:
@@ -1186,8 +1208,10 @@ func meta_buff_ids() -> Array:
 
 ## 读回来。章节、内容库由调用方给（[RunSave] 按 id 取章节）。开着的商店 / 搜索会话不存：
 ## 存档那一刻视为离开了那个点（随时可以离开，5.4）
+## 173：[param report] 给了就记下放不回原位、挪到地上（或折钱）的道具；模块读档时也用它（[member repair]）
 static func from_dict(
-	d: Dictionary, p_chapter: ChapterDef, p_items: ItemDatabase, p_enemies: EnemyDatabase, p_sets: SetDatabase = null
+	d: Dictionary, p_chapter: ChapterDef, p_items: ItemDatabase, p_enemies: EnemyDatabase, p_sets: SetDatabase = null,
+	report: SaveReport = null
 ) -> RunState:
 	if int(d.get("version", -1)) != SAVE_VERSION or p_chapter == null:
 		return null
@@ -1207,8 +1231,12 @@ static func from_dict(
 	s.travel = MapTravel.from_dict(d.get("travel", {}), s.map)
 	s.vitality = Vitality.from_dict(d.get("vitality", {}))
 	s.wallet = Wallet.from_dict(d.get("wallet", {}))
-	s.board = GridInventory.from_dict(d.get("board", {}), p_items)
+	s.repair = report
+	var lost: Array = []     # 173：原位放不回的，等地上读回来再安置
+	s.board = GridInventory.from_dict(d.get("board", {}), p_items, Vector2i.ZERO, lost)
 	s.storage = ItemStash.from_dict(d.get("storage", {}), p_items)
+	for inst in lost:
+		s.rehome(inst, s.board, "board")
 	var mods_raw: Variant = d.get("modules", {})
 	s.modules_saved = (mods_raw as Dictionary).duplicate(true) if mods_raw is Dictionary else {}
 	s.rng = RunRNG.from_dict(d.get("rng", {}))
@@ -1245,10 +1273,17 @@ static func from_dict(
 		s.meta_buffs.append(StringName(String(id)))
 	var loot = d.get("pending_loot", null)
 	if loot is Dictionary:
-		s.pending_loot = GridInventory.from_dict(loot, p_items)
+		var lost_loot: Array = []
+		s.pending_loot = GridInventory.from_dict(loot, p_items, Vector2i.ZERO, lost_loot)
+		for inst in lost_loot:
+			s.rehome(inst, s.pending_loot, "pending_loot")
 	var haul = ev.get("search_haul", null)
 	if haul is Dictionary:
-		s._offer_loot(GridInventory.from_dict(haul, p_items))     # 审查 B1：存档时开着的搜索的收获 → 待拾取（和离开搜索一样）
+		var lost_haul: Array = []
+		var haul_grid := GridInventory.from_dict(haul, p_items, Vector2i.ZERO, lost_haul)
+		for inst in lost_haul:
+			s.rehome(inst, haul_grid, "search_haul")
+		s._offer_loot(haul_grid)     # 审查 B1：存档时开着的搜索的收获 → 待拾取（和离开搜索一样）
 	s.phase = int(d.get("phase", Phase.PICK_SPAWN))
 	s.end_reason = StringName(String(d.get("end_reason", "")))
 	s.boss_cleared = bool(d.get("boss_cleared", false))

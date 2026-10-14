@@ -1,0 +1,2986 @@
+{
+  "version": 4,
+  "seed": 7,
+  "chapter": "free_mode",
+  "character": "",
+  "map_scale": "",
+  "difficulty": "",
+  "hunters": {},
+  "erosion": {},
+  "phase": 0,
+  "end_reason": "",
+  "map": {
+    "version": 1,
+    "layout_kind": "ring",
+    "layout_meta": {
+      "ring_count": 6,
+      "ring_slots": {
+        "6": 19,
+        "5": 16,
+        "4": 16,
+        "3": 12,
+        "2": 6,
+        "1": 6
+      },
+      "edge_max_ring_offset": 1,
+      "edge_max_slot_offset": 1,
+      "edge_max_arc_span": 3,
+      "fill_cap": 0.9,
+      "zone_rules": {
+        "min_size": 3,
+        "max_size": 9,
+        "max_gates_by_size": {
+          "4": 2,
+          "6": 3,
+          "9": 4
+        }
+      },
+      "pivot_links": [
+        [
+          39,
+          40,
+          2,
+          0
+        ]
+      ],
+      "pivot_arcs": [
+        {
+          "routes": [
+            1,
+            2
+          ],
+          "node_ids": [
+            35,
+            36,
+            37
+          ]
+        },
+        {
+          "routes": [
+            0,
+            1
+          ],
+          "node_ids": [
+            33,
+            34
+          ]
+        }
+      ],
+      "zones_skipped": 1,
+      "type_rules": {
+        "quota": {
+          "6": {
+            "elite": [
+              0,
+              2
+            ],
+            "rest": [
+              1,
+              2
+            ],
+            "shop": [
+              0,
+              1
+            ]
+          },
+          "5": {
+            "elite": [
+              0,
+              2
+            ],
+            "rest": [
+              1,
+              2
+            ],
+            "shop": [
+              0,
+              1
+            ]
+          },
+          "4": {
+            "elite": [
+              0,
+              2
+            ],
+            "rest": [
+              1,
+              2
+            ],
+            "shop": [
+              0,
+              1
+            ]
+          },
+          "3": {
+            "elite": [
+              0,
+              2
+            ],
+            "rest": [
+              1,
+              2
+            ],
+            "shop": [
+              0,
+              1
+            ]
+          },
+          "2": {
+            "elite": [
+              0,
+              2
+            ],
+            "rest": [
+              1,
+              2
+            ],
+            "shop": [
+              0,
+              1
+            ]
+          },
+          "1": {
+            "elite": [
+              0,
+              2
+            ],
+            "rest": [
+              1,
+              2
+            ],
+            "shop": [
+              0,
+              1
+            ]
+          }
+        },
+        "coverage": {
+          "rest": 3,
+          "shop": 6
+        },
+        "no_haven_in_danger_above": 1,
+        "no_adjacent": [
+          [
+            "elite",
+            "elite"
+          ],
+          [
+            "shop",
+            "shop"
+          ]
+        ],
+        "mandatory_types": [
+          "elite",
+          "shop",
+          "rest"
+        ],
+        "extract_band": [
+          3,
+          4
+        ],
+        "extract_min_count": 2,
+        "extract_min_distance": 4,
+        "spawn_typed_entries": true,
+        "node_range": [
+          45,
+          50
+        ],
+        "zone_min": {
+          "elite": 1,
+          "search": 2
+        }
+      }
+    },
+    "nodes": [
+      {
+        "id": 0,
+        "type": "core",
+        "danger": 0,
+        "zone": 0,
+        "tier": 6,
+        "erosion_band": 6,
+        "content_seed": 585571931,
+        "content": {
+          "enemy": "warden",
+          "strength": 3,
+          "board": [
+            8,
+            6
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_leather",
+              "at": [
+                3,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                3
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_small",
+              "at": [
+                6,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_small",
+              "at": [
+                6,
+                2
+              ],
+              "rot": 0
+            },
+            {
+              "id": "round_shield",
+              "at": [
+                0,
+                3
+              ],
+              "rot": 0
+            },
+            {
+              "id": "longsword",
+              "at": [
+                2,
+                1
+              ],
+              "rot": 1
+            },
+            {
+              "id": "longsword",
+              "at": [
+                3,
+                2
+              ],
+              "rot": 1
+            },
+            {
+              "id": "longsword",
+              "at": [
+                4,
+                0
+              ],
+              "rot": 1
+            },
+            {
+              "id": "shortsword",
+              "at": [
+                0,
+                2
+              ],
+              "rot": 1
+            },
+            {
+              "id": "bandage",
+              "at": [
+                7,
+                2
+              ],
+              "rot": 0
+            },
+            {
+              "id": "salve",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "rope_coil",
+              "at": [
+                0,
+                5
+              ],
+              "rot": 0,
+              "carried": true
+            },
+            {
+              "id": "rope_coil",
+              "at": [
+                7,
+                3
+              ],
+              "rot": 0,
+              "carried": true
+            },
+            {
+              "id": "dried_herbs",
+              "at": [
+                0,
+                1
+              ],
+              "rot": 0,
+              "carried": true
+            }
+          ]
+        },
+        "state": 0,
+        "layout": {
+          "ring": 0,
+          "order": 0,
+          "kind": "core"
+        }
+      },
+      {
+        "id": 1,
+        "type": "random",
+        "danger": 0,
+        "zone": 0,
+        "tier": 0,
+        "erosion_band": 0,
+        "content_seed": 3625820469,
+        "content": {},
+        "state": 0,
+        "layout": {
+          "ring": 6,
+          "order": 1,
+          "kind": "outskirts"
+        }
+      },
+      {
+        "id": 2,
+        "type": "rest",
+        "danger": 0,
+        "zone": 0,
+        "tier": 0,
+        "erosion_band": 0,
+        "content_seed": 2745712829,
+        "content": {
+          "event": "rest_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 6,
+          "order": 3,
+          "kind": "outskirts"
+        }
+      },
+      {
+        "id": 3,
+        "type": "spawn",
+        "danger": 0,
+        "zone": 0,
+        "tier": 0,
+        "erosion_band": 0,
+        "content_seed": 1928181514,
+        "content": {},
+        "state": 0,
+        "layout": {
+          "ring": 6,
+          "order": 4,
+          "kind": "outskirts"
+        }
+      },
+      {
+        "id": 4,
+        "type": "elite",
+        "danger": 0,
+        "zone": 0,
+        "tier": 0,
+        "erosion_band": 0,
+        "content_seed": 262964704,
+        "content": {
+          "enemy": "marksman",
+          "strength": 1,
+          "board": [
+            7,
+            5
+          ],
+          "items": [
+            {
+              "id": "bag_long",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_long",
+              "at": [
+                4,
+                0
+              ],
+              "rot": 1
+            },
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                1
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_small",
+              "at": [
+                5,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "longbow",
+              "at": [
+                1,
+                0
+              ],
+              "rot": 1
+            },
+            {
+              "id": "shortbow",
+              "at": [
+                0,
+                2
+              ],
+              "rot": 1
+            },
+            {
+              "id": "antidote_kit",
+              "at": [
+                0,
+                1
+              ],
+              "rot": 0
+            },
+            {
+              "id": "copper_ore",
+              "at": [
+                5,
+                1
+              ],
+              "rot": 0,
+              "carried": true
+            }
+          ]
+        },
+        "state": 0,
+        "layout": {
+          "ring": 6,
+          "order": 6,
+          "kind": "outskirts"
+        }
+      },
+      {
+        "id": 5,
+        "type": "search",
+        "danger": 0,
+        "zone": 0,
+        "tier": 0,
+        "erosion_band": 0,
+        "content_seed": 2799228010,
+        "content": {
+          "event": "search_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 6,
+          "order": 8,
+          "kind": "outskirts"
+        }
+      },
+      {
+        "id": 6,
+        "type": "spawn",
+        "danger": 0,
+        "zone": 0,
+        "tier": 0,
+        "erosion_band": 0,
+        "content_seed": 1404578408,
+        "content": {},
+        "state": 0,
+        "layout": {
+          "ring": 6,
+          "order": 10,
+          "kind": "outskirts"
+        }
+      },
+      {
+        "id": 7,
+        "type": "event",
+        "danger": 0,
+        "zone": 0,
+        "tier": 0,
+        "erosion_band": 0,
+        "content_seed": 3470759251,
+        "content": {
+          "event": "event_rift"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 6,
+          "order": 11,
+          "kind": "outskirts"
+        }
+      },
+      {
+        "id": 8,
+        "type": "chest",
+        "danger": 0,
+        "zone": 0,
+        "tier": 0,
+        "erosion_band": 0,
+        "content_seed": 588137995,
+        "content": {
+          "chest": {
+            "rarity": 0,
+            "skin": "ruins"
+          }
+        },
+        "state": 0,
+        "layout": {
+          "ring": 6,
+          "order": 13,
+          "kind": "outskirts"
+        }
+      },
+      {
+        "id": 9,
+        "type": "battle",
+        "danger": 0,
+        "zone": 0,
+        "tier": 0,
+        "erosion_band": 0,
+        "content_seed": 2243207626,
+        "content": {
+          "enemy": "raider",
+          "strength": 0,
+          "board": [
+            5,
+            3
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_small",
+              "at": [
+                3,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "shortbow",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 1
+            },
+            {
+              "id": "salve",
+              "at": [
+                1,
+                2
+              ],
+              "rot": 0
+            },
+            {
+              "id": "fire_crystal",
+              "at": [
+                3,
+                0
+              ],
+              "rot": 0,
+              "carried": true
+            }
+          ]
+        },
+        "state": 0,
+        "layout": {
+          "ring": 6,
+          "order": 15,
+          "kind": "outskirts"
+        }
+      },
+      {
+        "id": 10,
+        "type": "spawn",
+        "danger": 0,
+        "zone": 0,
+        "tier": 0,
+        "erosion_band": 0,
+        "content_seed": 1645125980,
+        "content": {},
+        "state": 0,
+        "layout": {
+          "ring": 6,
+          "order": 16,
+          "kind": "outskirts"
+        }
+      },
+      {
+        "id": 11,
+        "type": "event",
+        "danger": 0,
+        "zone": 0,
+        "tier": 0,
+        "erosion_band": 0,
+        "content_seed": 780777611,
+        "content": {
+          "event": "event_rift"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 6,
+          "order": 18,
+          "kind": "outskirts"
+        }
+      },
+      {
+        "id": 12,
+        "type": "random",
+        "danger": 0,
+        "zone": 0,
+        "tier": 1,
+        "erosion_band": 1,
+        "content_seed": 446454685,
+        "content": {},
+        "state": 0,
+        "layout": {
+          "ring": 5,
+          "order": 0,
+          "kind": "ruins"
+        }
+      },
+      {
+        "id": 13,
+        "type": "elite",
+        "danger": 0,
+        "zone": 0,
+        "tier": 1,
+        "erosion_band": 1,
+        "content_seed": 2059743360,
+        "content": {
+          "enemy": "butcher",
+          "strength": 1,
+          "board": [
+            6,
+            4
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_leather",
+              "at": [
+                3,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "knife",
+              "at": [
+                3,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "scimitar",
+              "at": [
+                0,
+                1
+              ],
+              "rot": 1
+            },
+            {
+              "id": "serrated_arrows",
+              "at": [
+                3,
+                2
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bitter_root",
+              "at": [
+                1,
+                0
+              ],
+              "rot": 0
+            }
+          ]
+        },
+        "state": 0,
+        "layout": {
+          "ring": 5,
+          "order": 1,
+          "kind": "ruins"
+        }
+      },
+      {
+        "id": 14,
+        "type": "battle",
+        "danger": 0,
+        "zone": 0,
+        "tier": 1,
+        "erosion_band": 1,
+        "content_seed": 2211514435,
+        "content": {
+          "enemy": "marksman",
+          "strength": 0,
+          "board": [
+            7,
+            5
+          ],
+          "items": [
+            {
+              "id": "bag_long",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_long",
+              "at": [
+                4,
+                0
+              ],
+              "rot": 1
+            },
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                1
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_small",
+              "at": [
+                5,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "shortbow",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 3
+            },
+            {
+              "id": "shortbow",
+              "at": [
+                4,
+                0
+              ],
+              "rot": 1
+            },
+            {
+              "id": "copper_ore",
+              "at": [
+                4,
+                3
+              ],
+              "rot": 0,
+              "carried": true
+            }
+          ]
+        },
+        "state": 0,
+        "layout": {
+          "ring": 5,
+          "order": 3,
+          "kind": "ruins"
+        }
+      },
+      {
+        "id": 15,
+        "type": "rest",
+        "danger": 0,
+        "zone": 0,
+        "tier": 1,
+        "erosion_band": 1,
+        "content_seed": 442919713,
+        "content": {
+          "event": "rest_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 5,
+          "order": 4,
+          "kind": "ruins"
+        }
+      },
+      {
+        "id": 16,
+        "type": "battle",
+        "danger": 0,
+        "zone": 0,
+        "tier": 1,
+        "erosion_band": 1,
+        "content_seed": 603706568,
+        "content": {
+          "enemy": "butcher",
+          "strength": 0,
+          "board": [
+            5,
+            3
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_small",
+              "at": [
+                3,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "knife",
+              "at": [
+                1,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "serrated_arrows",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            }
+          ]
+        },
+        "state": 0,
+        "layout": {
+          "ring": 5,
+          "order": 6,
+          "kind": "ruins"
+        }
+      },
+      {
+        "id": 17,
+        "type": "battle",
+        "danger": 0,
+        "zone": 0,
+        "tier": 1,
+        "erosion_band": 1,
+        "content_seed": 3341081659,
+        "content": {
+          "enemy": "raider",
+          "strength": 0,
+          "board": [
+            5,
+            3
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_small",
+              "at": [
+                3,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "shortsword",
+              "at": [
+                0,
+                1
+              ],
+              "rot": 1
+            },
+            {
+              "id": "knife",
+              "at": [
+                1,
+                2
+              ],
+              "rot": 1
+            },
+            {
+              "id": "antidote_kit",
+              "at": [
+                1,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "beeswax",
+              "at": [
+                4,
+                0
+              ],
+              "rot": 0,
+              "carried": true
+            }
+          ]
+        },
+        "state": 0,
+        "layout": {
+          "ring": 5,
+          "order": 8,
+          "kind": "ruins"
+        }
+      },
+      {
+        "id": 18,
+        "type": "event",
+        "danger": 0,
+        "zone": 0,
+        "tier": 1,
+        "erosion_band": 1,
+        "content_seed": 3495438664,
+        "content": {
+          "event": "event_rest_spot"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 5,
+          "order": 9,
+          "kind": "ruins"
+        }
+      },
+      {
+        "id": 19,
+        "type": "search",
+        "danger": 0,
+        "zone": 0,
+        "tier": 1,
+        "erosion_band": 1,
+        "content_seed": 1310035708,
+        "content": {
+          "event": "search_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 5,
+          "order": 11,
+          "kind": "ruins"
+        }
+      },
+      {
+        "id": 20,
+        "type": "search",
+        "danger": 0,
+        "zone": 0,
+        "tier": 1,
+        "erosion_band": 1,
+        "content_seed": 2769992909,
+        "content": {
+          "event": "search_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 5,
+          "order": 12,
+          "kind": "ruins"
+        }
+      },
+      {
+        "id": 21,
+        "type": "event",
+        "danger": 0,
+        "zone": 0,
+        "tier": 1,
+        "erosion_band": 1,
+        "content_seed": 1454593880,
+        "content": {
+          "event": "faith_call",
+          "event_group": "faith_call"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 5,
+          "order": 14,
+          "kind": "ruins"
+        }
+      },
+      {
+        "id": 22,
+        "type": "random",
+        "danger": 0,
+        "zone": 0,
+        "tier": 2,
+        "erosion_band": 2,
+        "content_seed": 738493088,
+        "content": {},
+        "state": 0,
+        "layout": {
+          "ring": 4,
+          "order": 1,
+          "kind": "depths"
+        }
+      },
+      {
+        "id": 23,
+        "type": "extract",
+        "danger": 0,
+        "zone": 0,
+        "tier": 2,
+        "erosion_band": 2,
+        "content_seed": 1785155030,
+        "content": {
+          "event": "extract_default",
+          "closes_at": 30
+        },
+        "state": 0,
+        "layout": {
+          "ring": 4,
+          "order": 2,
+          "kind": "depths"
+        }
+      },
+      {
+        "id": 24,
+        "type": "rest",
+        "danger": 0,
+        "zone": 0,
+        "tier": 2,
+        "erosion_band": 2,
+        "content_seed": 1022406091,
+        "content": {
+          "event": "rest_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 4,
+          "order": 4,
+          "kind": "depths"
+        }
+      },
+      {
+        "id": 25,
+        "type": "event",
+        "danger": 0,
+        "zone": 0,
+        "tier": 2,
+        "erosion_band": 2,
+        "content_seed": 401281123,
+        "content": {
+          "event": "event_cache"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 4,
+          "order": 6,
+          "kind": "depths"
+        }
+      },
+      {
+        "id": 26,
+        "type": "search",
+        "danger": 0,
+        "zone": 0,
+        "tier": 2,
+        "erosion_band": 2,
+        "content_seed": 1424558809,
+        "content": {
+          "event": "search_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 4,
+          "order": 7,
+          "kind": "depths"
+        }
+      },
+      {
+        "id": 27,
+        "type": "search",
+        "danger": 0,
+        "zone": 0,
+        "tier": 2,
+        "erosion_band": 2,
+        "content_seed": 3607333257,
+        "content": {
+          "event": "search_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 4,
+          "order": 9,
+          "kind": "depths"
+        }
+      },
+      {
+        "id": 28,
+        "type": "rest",
+        "danger": 0,
+        "zone": 0,
+        "tier": 2,
+        "erosion_band": 2,
+        "content_seed": 2200496876,
+        "content": {
+          "event": "rest_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 4,
+          "order": 10,
+          "kind": "depths"
+        }
+      },
+      {
+        "id": 29,
+        "type": "battle",
+        "danger": 0,
+        "zone": 0,
+        "tier": 2,
+        "erosion_band": 2,
+        "content_seed": 702098704,
+        "content": {
+          "enemy": "butcher",
+          "strength": 1,
+          "board": [
+            6,
+            4
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_leather",
+              "at": [
+                3,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "knife",
+              "at": [
+                2,
+                1
+              ],
+              "rot": 1
+            },
+            {
+              "id": "cleaver",
+              "at": [
+                1,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "wound_salt",
+              "at": [
+                2,
+                2
+              ],
+              "rot": 0
+            },
+            {
+              "id": "raw_amber",
+              "at": [
+                0,
+                1
+              ],
+              "rot": 0,
+              "carried": true
+            }
+          ]
+        },
+        "state": 0,
+        "layout": {
+          "ring": 4,
+          "order": 12,
+          "kind": "depths"
+        }
+      },
+      {
+        "id": 30,
+        "type": "shop",
+        "danger": 0,
+        "zone": 0,
+        "tier": 2,
+        "erosion_band": 2,
+        "content_seed": 3357449961,
+        "content": {
+          "event": "shop_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 4,
+          "order": 14,
+          "kind": "depths"
+        }
+      },
+      {
+        "id": 31,
+        "type": "search",
+        "danger": 0,
+        "zone": 0,
+        "tier": 2,
+        "erosion_band": 2,
+        "content_seed": 282823378,
+        "content": {
+          "event": "search_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 4,
+          "order": 15,
+          "kind": "depths"
+        }
+      },
+      {
+        "id": 32,
+        "type": "battle",
+        "danger": 0,
+        "zone": 0,
+        "tier": 3,
+        "erosion_band": 3,
+        "content_seed": 1550059764,
+        "content": {
+          "enemy": "warden",
+          "strength": 1,
+          "board": [
+            6,
+            4
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_leather",
+              "at": [
+                3,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "round_shield",
+              "at": [
+                1,
+                1
+              ],
+              "rot": 0
+            },
+            {
+              "id": "longsword",
+              "at": [
+                1,
+                0
+              ],
+              "rot": 1
+            },
+            {
+              "id": "shortsword",
+              "at": [
+                5,
+                0
+              ],
+              "rot": 0
+            }
+          ]
+        },
+        "state": 0,
+        "layout": {
+          "ring": 3,
+          "order": 1,
+          "kind": "core_ring"
+        }
+      },
+      {
+        "id": 33,
+        "type": "battle",
+        "danger": 0,
+        "zone": 0,
+        "tier": 3,
+        "erosion_band": 3,
+        "content_seed": 1659007912,
+        "content": {
+          "enemy": "marksman",
+          "strength": 1,
+          "board": [
+            7,
+            5
+          ],
+          "items": [
+            {
+              "id": "bag_long",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_long",
+              "at": [
+                4,
+                0
+              ],
+              "rot": 1
+            },
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                1
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_small",
+              "at": [
+                5,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "longbow",
+              "at": [
+                1,
+                0
+              ],
+              "rot": 2
+            },
+            {
+              "id": "shortbow",
+              "at": [
+                4,
+                0
+              ],
+              "rot": 3
+            },
+            {
+              "id": "styptic_dressing",
+              "at": [
+                4,
+                2
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bandage",
+              "at": [
+                1,
+                2
+              ],
+              "rot": 0
+            },
+            {
+              "id": "flint",
+              "at": [
+                5,
+                0
+              ],
+              "rot": 0,
+              "carried": true
+            }
+          ]
+        },
+        "state": 0,
+        "layout": {
+          "ring": 3,
+          "order": 3,
+          "kind": "core_ring"
+        }
+      },
+      {
+        "id": 34,
+        "type": "search",
+        "danger": 0,
+        "zone": 0,
+        "tier": 3,
+        "erosion_band": 3,
+        "content_seed": 1939641137,
+        "content": {
+          "event": "search_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 3,
+          "order": 5,
+          "kind": "core_ring"
+        }
+      },
+      {
+        "id": 35,
+        "type": "extract",
+        "danger": 0,
+        "zone": 0,
+        "tier": 3,
+        "erosion_band": 3,
+        "content_seed": 483267252,
+        "content": {
+          "fee": 50,
+          "event": "extract_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 3,
+          "order": 7,
+          "kind": "core_ring"
+        }
+      },
+      {
+        "id": 36,
+        "type": "shop",
+        "danger": 0,
+        "zone": 0,
+        "tier": 3,
+        "erosion_band": 3,
+        "content_seed": 1527757821,
+        "content": {
+          "event": "shop_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 3,
+          "order": 8,
+          "kind": "core_ring"
+        }
+      },
+      {
+        "id": 37,
+        "type": "rest",
+        "danger": 0,
+        "zone": 0,
+        "tier": 3,
+        "erosion_band": 3,
+        "content_seed": 2387968003,
+        "content": {
+          "event": "rest_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 3,
+          "order": 10,
+          "kind": "core_ring"
+        }
+      },
+      {
+        "id": 38,
+        "type": "search",
+        "danger": 0,
+        "zone": 0,
+        "tier": 3,
+        "erosion_band": 3,
+        "content_seed": 1481510428,
+        "content": {
+          "event": "search_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 3,
+          "order": 11,
+          "kind": "core_ring"
+        }
+      },
+      {
+        "id": 39,
+        "type": "rest",
+        "danger": 0,
+        "zone": 0,
+        "tier": 4,
+        "erosion_band": 4,
+        "content_seed": 2298724752,
+        "content": {
+          "event": "rest_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 2,
+          "order": 0,
+          "kind": "inner"
+        }
+      },
+      {
+        "id": 40,
+        "type": "shop",
+        "danger": 0,
+        "zone": 0,
+        "tier": 4,
+        "erosion_band": 4,
+        "content_seed": 3055989647,
+        "content": {
+          "event": "shop_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 2,
+          "order": 1,
+          "kind": "inner"
+        }
+      },
+      {
+        "id": 41,
+        "type": "elite",
+        "danger": 2,
+        "zone": 1,
+        "tier": 4,
+        "erosion_band": 4,
+        "content_seed": 1628956895,
+        "content": {
+          "enemy": "warden",
+          "strength": 3,
+          "board": [
+            8,
+            6
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_leather",
+              "at": [
+                3,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                3
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_small",
+              "at": [
+                6,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_small",
+              "at": [
+                6,
+                2
+              ],
+              "rot": 0
+            },
+            {
+              "id": "round_shield",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "longsword",
+              "at": [
+                6,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "longsword",
+              "at": [
+                2,
+                0
+              ],
+              "rot": 1
+            },
+            {
+              "id": "longsword",
+              "at": [
+                7,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "shortsword",
+              "at": [
+                0,
+                3
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bitter_root",
+              "at": [
+                0,
+                2
+              ],
+              "rot": 0
+            },
+            {
+              "id": "antidote_satchel",
+              "at": [
+                1,
+                3
+              ],
+              "rot": 0
+            },
+            {
+              "id": "silver_ingot",
+              "at": [
+                2,
+                5
+              ],
+              "rot": 0,
+              "carried": true
+            }
+          ]
+        },
+        "state": 0,
+        "layout": {
+          "ring": 2,
+          "order": 2,
+          "kind": "inner"
+        }
+      },
+      {
+        "id": 42,
+        "type": "search",
+        "danger": 2,
+        "zone": 1,
+        "tier": 4,
+        "erosion_band": 4,
+        "content_seed": 4024221419,
+        "content": {
+          "event": "search_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 2,
+          "order": 4,
+          "kind": "inner"
+        }
+      },
+      {
+        "id": 43,
+        "type": "search",
+        "danger": 2,
+        "zone": 2,
+        "tier": 4,
+        "erosion_band": 4,
+        "content_seed": 2785982796,
+        "content": {
+          "event": "search_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 2,
+          "order": 5,
+          "kind": "inner"
+        }
+      },
+      {
+        "id": 44,
+        "type": "rest",
+        "danger": 0,
+        "zone": 0,
+        "tier": 5,
+        "erosion_band": 5,
+        "content_seed": 3360029819,
+        "content": {
+          "event": "rest_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 1,
+          "order": 0,
+          "kind": "inner"
+        }
+      },
+      {
+        "id": 45,
+        "type": "safe",
+        "danger": 0,
+        "zone": 0,
+        "tier": 5,
+        "erosion_band": 5,
+        "content_seed": 1092964418,
+        "content": {},
+        "state": 0,
+        "layout": {
+          "ring": 1,
+          "order": 1,
+          "kind": "inner"
+        }
+      },
+      {
+        "id": 46,
+        "type": "search",
+        "danger": 2,
+        "zone": 1,
+        "tier": 5,
+        "erosion_band": 5,
+        "content_seed": 820978870,
+        "content": {
+          "event": "search_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 1,
+          "order": 2,
+          "kind": "inner"
+        }
+      },
+      {
+        "id": 47,
+        "type": "elite",
+        "danger": 2,
+        "zone": 2,
+        "tier": 5,
+        "erosion_band": 5,
+        "content_seed": 172700805,
+        "content": {
+          "enemy": "brute",
+          "strength": 3,
+          "board": [
+            8,
+            6
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_leather",
+              "at": [
+                3,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                3
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_small",
+              "at": [
+                6,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_small",
+              "at": [
+                6,
+                2
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bloodletter",
+              "at": [
+                2,
+                0
+              ],
+              "rot": 1
+            },
+            {
+              "id": "festering_blade",
+              "at": [
+                0,
+                4
+              ],
+              "rot": 1
+            },
+            {
+              "id": "cleaver",
+              "at": [
+                0,
+                2
+              ],
+              "rot": 3
+            },
+            {
+              "id": "leather_armor",
+              "at": [
+                6,
+                0
+              ],
+              "rot": 1
+            },
+            {
+              "id": "antidote_satchel",
+              "at": [
+                1,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "strong_salve",
+              "at": [
+                1,
+                1
+              ],
+              "rot": 0
+            },
+            {
+              "id": "copper_ore",
+              "at": [
+                5,
+                0
+              ],
+              "rot": 0,
+              "carried": true
+            },
+            {
+              "id": "rope_coil",
+              "at": [
+                1,
+                2
+              ],
+              "rot": 0,
+              "carried": true
+            },
+            {
+              "id": "oak_log",
+              "at": [
+                3,
+                2
+              ],
+              "rot": 1,
+              "carried": true
+            }
+          ]
+        },
+        "state": 0,
+        "layout": {
+          "ring": 1,
+          "order": 3,
+          "kind": "inner"
+        }
+      },
+      {
+        "id": 48,
+        "type": "search",
+        "danger": 2,
+        "zone": 2,
+        "tier": 5,
+        "erosion_band": 5,
+        "content_seed": 4126329309,
+        "content": {
+          "event": "search_default"
+        },
+        "state": 0,
+        "layout": {
+          "ring": 1,
+          "order": 5,
+          "kind": "inner"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": 3,
+        "to": 4,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 10,
+        "to": 21,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 4,
+        "to": 15,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 6,
+        "to": 18,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 18,
+        "to": 19,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 15,
+        "to": 24,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 19,
+        "to": 28,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 21,
+        "to": 31,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 28,
+        "to": 27,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 27,
+        "to": 26,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 31,
+        "to": 30,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 30,
+        "to": 29,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 24,
+        "to": 33,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 26,
+        "to": 34,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 29,
+        "to": 37,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 33,
+        "to": 32,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 34,
+        "to": 35,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 35,
+        "to": 36,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 36,
+        "to": 37,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 37,
+        "to": 43,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 32,
+        "to": 40,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 43,
+        "to": 39,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 39,
+        "to": 40,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 40,
+        "to": 44,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 39,
+        "to": 44,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 44,
+        "to": 45,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 45,
+        "to": 0,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 44,
+        "to": 0,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 33,
+        "to": 34,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 33,
+        "to": 41,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 41,
+        "to": 42,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 41,
+        "to": 46,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 43,
+        "to": 48,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 48,
+        "to": 47,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 47,
+        "to": 0,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 40,
+        "to": 41,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 40,
+        "to": 45,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 41,
+        "to": 45,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 37,
+        "to": 38,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 32,
+        "to": 39,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 33,
+        "to": 40,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 34,
+        "to": 41,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 38,
+        "to": 39,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 22,
+        "to": 23,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 23,
+        "to": 24,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 25,
+        "to": 26,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 28,
+        "to": 29,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 31,
+        "to": 22,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 22,
+        "to": 32,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 23,
+        "to": 32,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 25,
+        "to": 34,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 27,
+        "to": 35,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 28,
+        "to": 35,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 29,
+        "to": 36,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 30,
+        "to": 37,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 31,
+        "to": 38,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 13,
+        "to": 14,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 14,
+        "to": 15,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 15,
+        "to": 16,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 16,
+        "to": 17,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 17,
+        "to": 18,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 19,
+        "to": 20,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 20,
+        "to": 21,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 12,
+        "to": 22,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 12,
+        "to": 31,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 13,
+        "to": 22,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 13,
+        "to": 23,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 14,
+        "to": 23,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 14,
+        "to": 24,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 16,
+        "to": 25,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 17,
+        "to": 26,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 17,
+        "to": 27,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 18,
+        "to": 27,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 19,
+        "to": 29,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 20,
+        "to": 29,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 21,
+        "to": 30,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 1,
+        "to": 2,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 2,
+        "to": 3,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 5,
+        "to": 6,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 7,
+        "to": 8,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 8,
+        "to": 9,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 11,
+        "to": 1,
+        "directed": false,
+        "kind": "tangential",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 1,
+        "to": 13,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 1,
+        "to": 12,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 2,
+        "to": 14,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 3,
+        "to": 14,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 3,
+        "to": 15,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 4,
+        "to": 16,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 5,
+        "to": 16,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 5,
+        "to": 17,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 6,
+        "to": 17,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 7,
+        "to": 18,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 8,
+        "to": 19,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 9,
+        "to": 20,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 11,
+        "to": 12,
+        "directed": false,
+        "kind": "radial",
+        "action_cost": 1,
+        "layout": {}
+      }
+    ],
+    "entry_ids": [
+      3,
+      6,
+      10
+    ],
+    "goal_ids": [
+      0
+    ],
+    "zones": [
+      {
+        "node_ids": [
+          41,
+          42,
+          46
+        ],
+        "gate_ids": [
+          41
+        ],
+        "id": 1
+      },
+      {
+        "node_ids": [
+          43,
+          47,
+          48
+        ],
+        "gate_ids": [
+          43,
+          47
+        ],
+        "id": 2
+      }
+    ],
+    "routes": [
+      {
+        "entry_id": 3,
+        "style": "combat",
+        "ends_at": "core",
+        "node_ids": [
+          3,
+          4,
+          15,
+          24,
+          33,
+          32,
+          40,
+          44,
+          45,
+          0
+        ],
+        "zone_ids": [
+          1
+        ],
+        "risk_x100": 820,
+        "reward_x100": 1240
+      },
+      {
+        "entry_id": 6,
+        "style": "search",
+        "ends_at": "extract",
+        "node_ids": [
+          6,
+          18,
+          19,
+          28,
+          27,
+          26,
+          34,
+          35
+        ],
+        "zone_ids": [],
+        "exit_ids": [
+          36
+        ],
+        "risk_x100": 190,
+        "reward_x100": 330
+      },
+      {
+        "entry_id": 10,
+        "style": "mixed",
+        "ends_at": "core",
+        "node_ids": [
+          10,
+          21,
+          31,
+          30,
+          29,
+          37,
+          43,
+          39,
+          44,
+          0
+        ],
+        "zone_ids": [
+          2
+        ],
+        "risk_x100": 538,
+        "reward_x100": 980
+      }
+    ]
+  },
+  "travel": {
+    "current": -1,
+    "history": [],
+    "clock": {
+      "total": 0
+    }
+  },
+  "vitality": {
+    "current": 5,
+    "max": 5
+  },
+  "wallet": {
+    "balance": 20
+  },
+  "board": {
+    "id": 1,
+    "size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "blocked": [],
+    "items": [
+      {
+        "uid": 9001,
+        "def": "bag_leather",
+        "rot": 0,
+        "origin": [
+          0,
+          0
+        ],
+        "seq": 1,
+        "state": {}
+      },
+      {
+        "uid": 9002,
+        "def": "knife",
+        "rot": 0,
+        "origin": [
+          0,
+          0
+        ],
+        "seq": 2,
+        "state": {}
+      },
+      {
+        "uid": 9003,
+        "def": "round_shield",
+        "rot": 0,
+        "origin": [
+          1,
+          0
+        ],
+        "seq": 3,
+        "state": {}
+      }
+    ],
+    "place_seq": 3
+  },
+  "storage": {
+    "id": 2,
+    "capacity": 0,
+    "items": [
+      {
+        "uid": 9004,
+        "def": "bandage",
+        "rot": 0,
+        "origin": [
+          0,
+          0
+        ],
+        "seq": 0,
+        "state": {}
+      }
+    ],
+    "spots": [
+      [
+        0.0199999995529652,
+        0.913333356380463
+      ]
+    ]
+  },
+  "rng": {
+    "seed": 7,
+    "counters": {}
+  },
+  "events": {
+    "searches_closed": 0,
+    "last_handled": -1,
+    "pending": {},
+    "losses_forgiven": 0,
+    "pending_battle": {},
+    "search_haul": null
+  },
+  "skills": {
+    "uses": {},
+    "cooldowns": {},
+    "armed": [],
+    "evade_left": 0
+  },
+  "faith_power": {},
+  "faith_history": [],
+  "owned_uids": [],
+  "acquired_ids": [],
+  "placed_ids": [
+    "bag_leather",
+    "knife",
+    "round_shield"
+  ],
+  "pending_loot": null,
+  "boss_cleared": false,
+  "tally": {
+    "battles_won": 0,
+    "battles_lost": 0
+  },
+  "buffs": {
+    "meta": []
+  },
+  "modules": {
+    "safe": {
+      "inventory": {
+        "id": 3,
+        "size": [
+          3,
+          3
+        ],
+        "requires_bag": false,
+        "blocked": [],
+        "items": [],
+        "place_seq": 0
+      },
+      "locked": false
+    },
+    "node_storage": {
+      "nodes": {},
+      "spots": {}
+    },
+    "crafting": {},
+    "buff": {
+      "map": []
+    },
+    "altar": {
+      "rituals": {},
+      "stat_bonus": {},
+      "axis_bonus": {},
+      "used": []
+    },
+    "countdown": {
+      "carry_value": 0
+    },
+    "belt": {
+      "stacks": {}
+    },
+    "wear": {}
+  },
+  "content_stamp": "52b2669902ea"
+}

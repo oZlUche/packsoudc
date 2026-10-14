@@ -35,6 +35,15 @@ const TEXT := {
 	# 新版本的存档拿旧版本打开（%d = 存档的版本号、本版本认得的版本号）：只读，不动它
 	"slots.newer": {"zh": "这个存档位来自更新版本的游戏（存档版本 %d，本版本只认 %d）：本版本不会读它、也不会改它。请换回新版本再玩，或者换一个存档位",
 		"en": "This slot was saved by a newer version of the game (save version %d; this build reads %d). It will not be read or changed here: switch back to the newer build, or use another slot"},
+	# 173：读档修复报告（一句，各段用分号连）
+	"repair.head": {"zh": "存档修复：", "en": "Save repaired: "},
+	"repair.sep": {"zh": "；", "en": "; "},
+	"repair.prev": {"zh": "存档文件损坏，已从上一份恢复", "en": "the save file was damaged and the previous copy was restored"},
+	"repair.salvaged": {"zh": "进行中的那一局因版本更新作废，带着的东西已放回仓库", "en": "the run in progress could not continue after the update; what you carried is back in the warehouse"},
+	"repair.refunded": {"zh": "%d 件道具已随版本更新折算为 %d 钱", "en": "%d items removed by the update were refunded for %d coins"},
+	"repair.replaced": {"zh": "%d 件换成了新版本里的对应道具", "en": "%d items were replaced with their new versions"},
+	"repair.rehomed": {"zh": "%d 件放不回原位，换了位置", "en": "%d items did not fit their old spot and were moved"},
+	"repair.dropped": {"zh": "%d 件按版本说明移除", "en": "%d items were removed as the update notes say"},
 	"slots.newer_tag": {"zh": "　（更新版本的存档）", "en": " (saved by a newer version)"},
 	"menu.meta": {"zh": "仓库与战绩", "en": "Warehouse & records"},
 	"menu.settings": {"zh": "设置", "en": "Settings"},

@@ -108,6 +108,29 @@ func grant(defs: Array) -> int:
 	return n
 
 
+## 173（待定 2 A）：因版本更新作废的那一局，捞出来的道具字典（[member SaveReport.salvage]）放回仓库 —— 只收 [method keeps] 认的
+## （和撤离一样，包不带回），换局外的 uid，按页序找空位、再不行临时加页；还放不下的按价值折进 funds 并记报告。返回进了几件
+func salvage(raws: Array, items: ItemDatabase, report: SaveReport = null) -> int:
+	var n := 0
+	warehouse.begin_batch()
+	for raw in raws:
+		var inst := ItemInstance.from_dict(raw as Dictionary, items) if raw is Dictionary and items != null else null
+		if inst == null or not keeps(inst.def):
+			continue
+		inst.uid = allocate_uid()
+		if warehouse.rescue(inst) >= 0:
+			n += 1
+			continue
+		var value := ItemValue.of_instance(inst)
+		funds += value
+		if report != null:
+			report.refund(inst.def.id, value, "salvage")
+	warehouse.end_batch()
+	if n > 0:
+		changed.emit()
+	return n
+
+
 ## 局外号段里的下一个 uid（开局屏给初始包编号，免得和仓库里的撞号）
 func allocate_uid() -> int:
 	_next_uid += 1
@@ -499,7 +522,10 @@ static func _names_of(ids: Array[StringName]) -> Array:
 ## 120（作者定）：**先读进度表、再算容量、最后装东西** —— 给了 [param tech_defs] 时先读 `tech_levels`，
 ## 在还空着的仓库上 [method TechService.derive] 出仓库页数（163）、保险箱、局外 buff，再按算出的页数把仓库物品放回去
 ## （原位放不下的按页序找空位，再不行临时加页，不丢；163 之前的单块老档按页切）。没给（测试直接读档）时按存档里的页数建，派生值留给调用方 derive
-static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = null, tech_defs: Array = []) -> MetaState:
+## 173：原位放不回的（形状 / 尺寸改了）—— 仓库里按页序找空位、再临时加页；带回的背包先在背包里找空位、再进仓库；
+## 都不行按价值折进 funds。挪过的、折了的都记进 [param report]
+static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = null, tech_defs: Array = [],
+		report: SaveReport = null) -> MetaState:
 	if int(d.get("version", -1)) != SAVE_VERSION:
 		return null
 	var m := MetaState.new(p_rules)
@@ -517,14 +543,26 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	if not tech_defs.is_empty():
 		TechService.derive(m, tech_defs)
 	# 3. 装东西
+	var lost: Array = []     # 173：哪儿都放不下的，最后折钱
 	var w = d.get("warehouse", null)
 	if w is Dictionary:
-		m.warehouse = Warehouse.from_dict(w, items, m.warehouse_size(), m.warehouse.page_count() if not tech_defs.is_empty() else 0)
+		m.warehouse = Warehouse.from_dict(w, items, m.warehouse_size(), m.warehouse.page_count() if not tech_defs.is_empty() else 0,
+			report, lost)
 		m.warehouse.accept_filter = keeps
 	var b = d.get("board", null)
 	if b is Dictionary:
-		m.board = GridInventory.from_dict(b, items)
+		var lost_board: Array = []
+		m.board = GridInventory.from_dict(b, items, Vector2i.ZERO, lost_board)
 		m.board.id = BOARD_ID
+		for inst in lost_board:
+			if m.board.try_add(inst):
+				if report != null:
+					report.rehome(inst.def.id, "board", "board")
+			elif keeps(inst.def) and m.warehouse.rescue(inst) >= 0:
+				if report != null:
+					report.rehome(inst.def.id, "board", "warehouse")
+			else:
+				lost.append(inst)
 		if m.board.item_count() == 0:
 			m.board = null
 	for key in d.get("codex", {}):
@@ -542,6 +580,11 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		for inst in m.board.items():
 			m._next_uid = maxi(m._next_uid, (inst as ItemInstance).uid + 1)
 	m.funds = int(d.get("funds", 0))
+	for inst in lost:
+		var value := ItemValue.of_instance(inst as ItemInstance)
+		m.funds += value
+		if report != null:
+			report.refund((inst as ItemInstance).def.id, value, "warehouse")
 	m.score = int(d.get("score", 0))
 	m.runs = int(d.get("runs", 0))
 	m.extractions = int(d.get("extractions", 0))
