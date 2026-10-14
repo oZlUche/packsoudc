@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.00 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.01 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3513,6 +3513,8 @@ func player_spec() -> CombatantSpec …
 
 光标：`UiCursor.apply(skin)` 启动时（和设置里换材质时）按 `GameSettings.cursor_skin` 从 `cursors/<材质>/` 取图换上（铠甲手套秘银 / 铁 / 皮革，默认秘银，热点 (2, 2)）；拖拽层拿起是「拖动」、对准了按 `DragLayer.drop_ok_at` 切「可放 / 不可放」、放下还原。
 
+**窗口与分辨率**（172，作者定「市面主流的几种」，待定全按推荐）：设计视口仍是 1600×1000、`canvas_items + expand`，换档只换**窗口**大小，界面按高度等比缩放；窗口不可拖改（`window/size/resizable=false`）。`GameSettings.window_mode`（`windowed` / `fullscreen`，全屏 = 无边框铺满桌面）与 `resolution`（`[宽, 高]`，只认 `GameSettings.RESOLUTIONS`：16:9 的 1280×720 / 1600×900 / 1920×1080 / 2560×1440 / 3840×2160，16:10 的 1280×800 / 1920×1200 / 2560×1600；超宽屏不列；ZERO = 没定过）。`WindowSetup.apply`（`ui/window_setup.gd`）导演启动时套到窗口上并居中，headless 不碰窗口；首次启动窗口模式，按屏幕挑「宽高都 ≤ 屏幕九成」里最大的一档（小屏放宽到整屏，再小随屏幕）并存盘；存的那档比现在的屏大（换了显示器）这次临时按屏挑、不改设置。设置屏最上面一节「显示」（主菜单与 Esc 暂停菜单是同一屏）：窗口 / 全屏两个按钮，分辨率按比例分行、只列放得进屏幕的档，全屏时整块灰掉并注「全屏按桌面分辨率」；改了当场套用并存盘。F11 = 动作 `toggle_fullscreen`（`InputKeys.ACTIONS`，可改键），导演切模式后 `call_group(GameDirector.DISPLAY_GROUP, "refresh_display")` 让打开着的设置屏跟上。
+
 ### 8.9 静态教程遮罩（166）
 
 `CoachOverlay`（`ui/widgets/`）：整屏一层阴影（吞掉所有点击），目标周围挖洞（包围盒外扩 `HOLE_PAD` 8，洞边一圈高光），一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右按方向转；缺图画折线）从洞外指过来，箭尾一块羊皮纸（`PanelTooltip`）写说明。点任意处 / 按任意键下一步，最后一步收掉、发 `finished`。
@@ -4179,6 +4181,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.01 | 2026-10-14 | **固定分辨率档位与窗口模式**（报告 172，作者定，待定 1A 2A 3A 4A；改 8.8）：`GameSettings.window_mode / resolution` 与档位表 `RESOLUTIONS`（16:9 五档、16:10 三档）；`ui/window_setup.gd`（`WindowSetup.apply / pick_default / available / toggle_mode`）导演启动时套用、窗口不可拖改、首启按屏幕九成挑一档；设置屏最上面「显示」一节（窗口 / 全屏、按比例分行的分辨率按钮，全屏时灰掉）；F11 动作 `toggle_fullscreen` |
 | v3.00 | 2026-10-14 | **170 悬浮窗定稿**（作者在美术设计里定「样式就这样吧」；改 8.8、8.10）：悬浮窗底改两层 `SlabStyle`（深皮革 `tip/tooltip_body` 平铺 + 黄铜边框 `tip/tooltip_frame`，`UiTheme.layered_box`，`slab_box` 也走它），`tooltip_dark` 退了；宽 360、字号各大一号（19 / 13 / 14 / 15 / 13）；字色模板加 `tip_fg / tip_meta / tip_desc`；只有名字和稀有度名描边，`UiTheme.outline_colored` 删了；正文字体换思源宋体 Regular / Bold（`serif_regular.otf / serif_bold.otf`，霞鹜文楷子集与授权移出），`subset_fonts.sh` 去掉改名一步 |
 | v2.99 | 2026-10-14 | **道具悬浮窗深底版式 + 固定式悬浮窗**（报告 170 §2 §3 §5，作者定，待定按推荐 1A 2A 3A 4A；改 4.8、8.8）与**标签大类 / buff 解说 / 生成句 / 法杖装载槽**（报告 171 §1–§5，待定 1A 2A 3A 4A；改 4.2）：悬浮窗深底九宫格 `tip/tooltip_dark`、带色字描边 `UiTheme.outline_colored`、斜体 `UiTheme.slanted`、行内图标 `tip_icon`、`ItemTooltip.describe_full` 分块（头 / 正文 / 脚注）、武器句「每 X 秒造成 Y 点伤害，消耗 Z 耐力」（不写冷却 / DPS / 格数）；`HoverTip` 宽限 0.15 秒、停 0.6 秒钉住（外框顺时针进度）、关键词 0.25 秒开子窗（封顶 3 层）、离开 0.4 秒 / Esc / 点外收，侧窗取消、`terms` 改 `{id: {name, text}}`；棋盘格位画美术图标（`grant/receive/load_on|off`）；`FONT_BODY / FONT_BOLD` 改名。`BuffDef.has_blurb / blurb / blurbs`、`sentence_text`；`TagDef.category`（用途 / 属性 / 材料 / 归属 / 来源 / 内部，`TagRegistry.by_category / category_of / sorted_by_category`），补 `bow`、`wood`，道具上没登记的标签导入报错，材料来源按来源类判；**标签制作器**（`ui/tag_editor/`）、属性表单的标签数组改成标签块 + 按大类分组的下拉；`AdjacencyText` 生成增益 / 受益 / 供给句，`AdjacencyProfile.grant_filter_all`（AND）；`load_cells / load_filter`、`BattleCompiler.load_assignments / load_claimants`、`CombatantSpec.loads`，一颗晶石只给后放的法杖、一把一份，魔法杖受益格改装载格（导入迁移） |
 | v2.98 | 2026-10-13 | **掉落改重力 + 重心**（报告 162 补充二，作者定，待定按推荐 1A 2A 3B 4A；改 3.4）：拖出 / 掉出的东西竖直落到正下方第一个支撑（面板上沿或屏底，`GroundLayer.floor_under / spot_below`），起点 = 松手时残影位置（`DragLayer._release_px`；162 主体「手动拖出从原格起飞」作废，地上单击放回原处仍就地）；重力 `LAND_G` × 屏高、密度定末速度与弹（`land_profile` 不再给时长），`ItemShape.center_of_mass / rest_rotation`，途中绕重心转到最稳朝向，落点与朝向立刻是终态；`_support` 记托着的面板，关了再掉；没起点的从落点上方竖直落（不再从面板边斜飞） |
