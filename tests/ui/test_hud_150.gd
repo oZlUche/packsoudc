@@ -175,6 +175,10 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	t.eq(wallet.position.y + wallet.size.y * 0.5, row_y + vit.size.y * 0.5, "货币和体力同一行（竖向居中对齐）")
 	t.eq(vit.position.x, HudHost.BAR_SIDE, "体力贴栏左边（留 %s）" % HudHost.BAR_SIDE)
 	t.check(vit.position.y >= 0.0 and vit.position.y + vit.size.y <= bar_h, "体力在栏里")
+	# 作者 2026-10-13：凹槽对齐石板 —— 栏里的东西在板边上下内边距之间（底下的投影不算板面）
+	var bar_box := bar.get_theme_stylebox("panel")
+	var face := Rect2(0.0, bar_box.content_margin_top, HOST_SIZE.x, bar_h - bar_box.content_margin_top - bar_box.content_margin_bottom)
+	t.check(vit.position.y >= face.position.y - 0.01 and vit.position.y + vit.size.y <= face.end.y + 0.01, "体力落在板面上（%s，板面 %s）" % [vit.get_rect(), face])
 	if belt_w.visible:
 		t.eq(belt_w.position + belt_w.size, HOST_SIZE + HudLayout.BELT_OFFSET, "160：腰带贴右下（偏移 %s）" % HudLayout.BELT_OFFSET)
 	var cd := host.widget(&"countdown")

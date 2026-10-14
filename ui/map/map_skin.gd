@@ -1,7 +1,7 @@
 ## 地图底图（作者定：每章一张手绘地图当底，风格各不同）：`assets/maps/<id>.png` + 同名 `.json`（`tone` 深 / 浅、`display_name`）。
 ##
 ## 章节写 [member ChapterDef.map_skin]（默认遗迹，和宝箱皮肤同一套章节主题）；地图屏把它铺满（cover，裁边不拉伸）画在路网底下，
-## 中间那一大块椭圆是美术留给路网的淡底。字色跟 `tone` 走：浅纸上的字换墨水版（[method UiTheme.ink_color]）。没这张图 = 照旧石板 / 纯色底
+## 中间那一大块椭圆是美术留给路网的淡底。字色跟 `tone` 走：浅纸上的字换字色模板的浅版（[method UiPalette.for_tone]，169）。没这张图 = 照旧石板 / 纯色底
 class_name MapSkin
 extends RefCounted
 

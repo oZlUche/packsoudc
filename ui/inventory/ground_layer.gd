@@ -11,11 +11,13 @@
 ## fills_screen = false  一块普通的落点区域（开局屏、沙盒）：拖进这块就落在放手点
 ## [endcodeblock]
 ##
-## 各屏向它登记自己占住的面板（[method reserve]）：地上的东西被面板盖住就往最近的空处推开，面板关了也不挪回。
+## 各屏向它登记自己占住的面板（[method reserve]）：地上的东西被面板盖住就往最近的空处推开；面板关了，落在它上沿的那几件再往下掉（162 补充二）。
 ##
-## 134：**落地动画**（只是样子）。这一层记着上一次见过的 uid，多出来的就是刚落地的 —— 谁放的都一样（拖拽、顶出、战利品放不下……）：
-## 从起点落到落点（缓出 + 末尾一个小弹跳）、从 1.15 倍缩回 1 倍、透明度 0.6 → 1。起点看 [member ItemStash.landing_from]，
-## 没写就从离落点最近的面板边缘落出来（没面板从上方落下）。换一片地、读档、回到存过东西的点不播。播放中的那件不接鼠标
+## 134：**落地动画**（只是样子）。这一层记着上一次见过的 uid，多出来的就是刚落地的 —— 谁放的都一样（拖拽、顶出、战利品放不下……）。
+## 162 补充二（作者定）：**竖直往下掉** —— 起点看 [member ItemStash.landing_from]（手动拖出 = 松手时残影的位置，自动掉 = 源格），
+## 落到起点正下方第一个支撑（登记面板的上沿或屏幕底）上，按重力加速（沉的不封顶、飘的到末速度、左右小摆），途中绕重心转到重心最低的朝向，
+## 触地弹一下；面板关了，托在它上面的再掉一次。没写起点的从落点上方竖直落下；就地（true）只缩放 + 弹。换一片地、读档、回到存过东西的点不播。
+## 半空中的照样接鼠标（按此刻画在哪）
 class_name GroundLayer
 extends ContainerView
 
@@ -26,19 +28,25 @@ const LAND_DROP := 60.0
 const LAND_STAGGER := 0.04
 const LAND_STAGGER_MAX := 10
 const LAND_ALPHA := 0.6
-## 162 补充一：时长跟密度（每格几重）走 —— sec = clamp(基数 − 每重 × 密度, 下限, 基数)；密度到这一档算「沉」
-const LAND_BASE_SEC := 0.95
-const LAND_SEC_PER_DENSITY := 0.15
-const LAND_SEC_MIN := 0.35
+## 162 补充二：重力 —— g = LAND_G × 屏高 / 秒²（各分辨率一个节奏）；密度（162 补充一，每格几重）到 LAND_SINK_DENSITY 算「沉」
+const LAND_G := 2.0
 const LAND_SINK_DENSITY := 2.0
-## 「飘」：三次缓出、弹 6 像素、起手放大 1.15、途中左右摆（包摆得更大）
+## 「飘」：末速度封顶（屏高 / 秒，包更慢）、触地弹 6 像素、起手放大 1.15、途中左右摆（包摆得更大）
+const LAND_VMAX := 0.5
+const LAND_VMAX_BAG := 0.35
 const LAND_BOUNCE := 6.0
 const LAND_SCALE := 1.15
 const LAND_SWAY := 3.0
 const LAND_SWAY_BAG := 5.0
-## 「沉」：二次缓入砸下、弹 3 像素、起手只放大 1.05、不摆
+## 「沉」：不封顶，触地弹 = 触地速度 × LAND_IMPACT_K（夹在 2 ～ 6 像素）、一下即止；起手只放大 1.05、不摆；就地放下弹 3
+const LAND_IMPACT_K := 0.004
+const LAND_IMPACT_MIN := 2.0
+const LAND_IMPACT_MAX := 6.0
 const LAND_BOUNCE_SINK := 3.0
 const LAND_SCALE_SINK := 1.05
+## 触地后弹一下多久；起点已经贴着地（就地放下、放手点就在地上）时缩放 / 翻转用多久
+const LAND_BOUNCE_SEC := 0.18
+const LAND_PLACE_SEC := 0.2
 const COLOR_HIGHLIGHT := Color(0.42, 0.86, 0.52)
 
 ## 导演持有的那一层（没有 = null：测试、沙盒）。各屏开拖拽时拿它登记
@@ -59,8 +67,10 @@ var tip: HoverTip = null
 var _drags: Array[DragLayer] = []
 ## 134：上一次见过的 uid（uid → true）—— 多出来的就是刚落地的
 var _known: Dictionary = {}
-## 134：正在落的（uid → {"t": 已播秒数（负 = 还在排队）, "from": 起点（本控件内像素，包围盒左上角）}）
+## 134：正在落的（uid → 一段下落：已播秒数 `t`（负 = 还在排队）、重心起止、翻转、触地时刻……见 [method _begin_fall]）
 var _landing: Dictionary = {}
+## 162 补充二：落在哪块面板的上沿上（uid → 面板）；面板关了这几件再掉一次
+var _support: Dictionary = {}
 var _scan_queued: bool = false
 
 
@@ -142,7 +152,8 @@ func _uids() -> Dictionary:
 	return out
 
 
-## 和上一次见过的比：多出来的各给一段落地动画（按插入顺序错开），不在了的停掉
+## 和上一次见过的比：多出来的各给一段落地动画（按插入顺序错开），不在了的停掉。
+## 162 补充二：给了起点像素的（放手点、源格）落到起点**正下方**的地上（[method spot_below]），朝向转到重心最低的那个 —— 核心层给的落点被这里改掉
 func _scan() -> void:
 	_scan_queued = false
 	if not is_instance_valid(self) or stash == null:
@@ -151,6 +162,9 @@ func _scan() -> void:
 	for uid in _landing.keys():
 		if not now.has(uid):
 			_landing.erase(uid)
+	for uid in _support.keys():
+		if not now.has(uid):
+			_support.erase(uid)
 	var k := 0
 	for inst in stash.items():
 		var uid := (inst as ItemInstance).uid
@@ -160,56 +174,165 @@ func _scan() -> void:
 		stash.landing_from.erase(uid)
 		if from is bool and not from:
 			continue     # 本来就在（读档、回到存过东西的点）
-		# 就地落下（拖拽放手、单击一下又放回）画在落点上，照样接鼠标：否则单击后紧跟的那一下双击落空
-		var prof := land_profile(inst.def)
-		_landing[uid] = {"t": -LAND_STAGGER * mini(k, LAND_STAGGER_MAX), "from": _landing_start(uid, from), "in_place": from is bool, "sec": float(prof["sec"]), "profile": prof}
+		var stagger := -LAND_STAGGER * mini(k, LAND_STAGGER_MAX)
+		if from is Vector2:
+			_begin_fall(inst, (from as Vector2) - global_position, stagger)
+		else:
+			# 就地落下（拖拽放手、单击一下又放回）画在落点上，照样接鼠标：否则单击后紧跟的那一下双击落空；
+			# 没给起点的（核心层自己找的空处）从落点上方竖直落下
+			var target := item_rect(uid).position
+			var start := target if from is bool else target - Vector2(0.0, LAND_DROP)
+			_landing[uid] = _fall(inst, start, inst.rotation, target, inst.rotation, stagger, from is bool)
 		k += 1
 	_known = now
 	set_process(not _landing.is_empty())
 	queue_redraw()
 
 
-## 起点（本控件内像素，包围盒左上角）：给了全局像素就从那里；就地（true）就是落点；没给从最近的面板边缘，没面板从上方
-func _landing_start(uid: int, from: Variant) -> Vector2:
-	var target := item_rect(uid)
-	if from is Vector2:
-		return (from as Vector2) - global_position
-	if from is bool:
-		return target.position
-	var center := target.get_center()
-	var best := Vector2.INF
-	var best_d := INF
-	for r in reserved_rects():
-		# 面板边上离落点最近的那一点
-		var p := Vector2(clampf(center.x, r.position.x, r.end.x), clampf(center.y, r.position.y, r.end.y))
-		if r.has_point(center):
-			var to_edge := [Vector2(r.position.x, center.y), Vector2(r.end.x, center.y), Vector2(center.x, r.position.y), Vector2(center.x, r.end.y)]
-			p = to_edge[0]
-			for e in to_edge:
-				if (e as Vector2).distance_to(center) < p.distance_to(center):
-					p = e
-		var d := p.distance_to(center)
-		if d < best_d:
-			best_d = d
-			best = p
-	if best_d < INF:
-		return best - target.size * 0.5
-	return target.position - Vector2(0.0, LAND_DROP)
+## 一件从 [param from_local]（本控件内像素，现在朝向的包围盒左上角）往下掉：算地、算落稳朝向，改落点与朝向（核心层的状态立刻是终态），记一段动画
+func _begin_fall(inst: ItemInstance, from_local: Vector2, stagger: float) -> void:
+	if inst.def == null or inst.def.shape == null:
+		return
+	var rot_from := inst.rotation
+	var rot_to := inst.def.shape.rest_rotation(rot_from)
+	var land := spot_below(from_local, inst, rot_from, rot_to)
+	inst.rotation = rot_to
+	var target: Vector2 = land["pos"]
+	if land["panel"] != null:
+		_support[inst.uid] = land["panel"]
+	else:
+		_support.erase(inst.uid)
+	_landing[inst.uid] = _fall(inst, from_local, rot_from, target, rot_to, stagger, false)
+	stash.set_spot(inst.uid, to_spot(target))
+
+
+## 162 补充二：起点 [param from_local]（朝向 [param rot_from] 的包围盒左上角）正下方的落点：重心 x 不变（夹在屏内），
+## 落到这一列往下第一个支撑（[method floor_under]）上。返回 {pos: 落稳后（朝向 [param rot_to]）包围盒左上角, panel: 托着它的面板或 null}
+func spot_below(from_local: Vector2, inst: ItemInstance, rot_from: int, rot_to: int) -> Dictionary:
+	var span_to := span_px(inst, rot_to)
+	var com_x := from_local.x + inst.def.shape.center_of_mass(rot_from).x * InventoryView.CELL
+	var x := clampf(com_x - inst.def.shape.center_of_mass(rot_to).x * InventoryView.CELL, 0.0, maxf(0.0, size.x - span_to.x))
+	var bottom := from_local.y + span_px(inst, rot_from).y
+	var under := floor_under(x, x + span_to.x, bottom)
+	return {"pos": Vector2(x, maxf(0.0, float(under["y"]) - span_to.y)), "panel": under["panel"]}
+
+
+## 162 补充二：横向 [param x0]～[param x1] 这一条、从 [param from_y] 往下第一个支撑：登记面板的上沿（{y, panel}），没有就是屏幕底（panel = null）
+func floor_under(x0: float, x1: float, from_y: float) -> Dictionary:
+	var best := size.y * (1.0 - ItemStash.SPOT_MARGIN)
+	var by: Control = null
+	for panel in _reserved:
+		if not is_instance_valid(panel) or not panel.is_inside_tree() or not panel.is_visible_in_tree():
+			continue
+		var g := panel.get_global_rect()
+		var r := Rect2(g.position - global_position, g.size)
+		if r.size.x <= 0.0 or r.size.y <= 0.0 or r.position.x >= x1 or r.end.x <= x0:
+			continue
+		if r.position.y >= from_y - 0.5 and r.position.y < best:
+			best = r.position.y
+			by = panel
+	return {"y": best, "panel": by}
+
+
+## 一段下落：重心从起点到终点，竖直按重力（沉的不封顶、飘的到末速度封顶），横向线性（只有夹边时才有），翻转 / 缩放 / 透明跟落了几成走；触地后弹一下
+func _fall(inst: ItemInstance, from_local: Vector2, rot_from: int, to_local: Vector2, rot_to: int, stagger: float, in_place: bool) -> Dictionary:
+	var prof := land_profile(inst.def)
+	var shape := inst.def.shape
+	var com_from := shape.center_of_mass(rot_from) * InventoryView.CELL
+	var com_to := shape.center_of_mass(rot_to) * InventoryView.CELL
+	var p0 := from_local + com_from
+	var p1 := to_local + com_to
+	var drop := p1.y - p0.y
+	var h := _screen_h()
+	var g := LAND_G * h
+	var vmax := float(prof["vmax"]) * h if prof["vmax"] != INF else INF
+	var t_hit := LAND_PLACE_SEC
+	var v_hit := 0.0
+	var falls := drop >= 1.0 and not in_place
+	if falls:
+		var d_cap := vmax * vmax / (2.0 * g) if vmax != INF else INF
+		if drop <= d_cap:
+			t_hit = sqrt(2.0 * drop / g)
+			v_hit = g * t_hit
+		else:
+			t_hit = vmax / g + (drop - d_cap) / vmax
+			v_hit = vmax
+	var amp := float(prof["bounce"])
+	if falls and bool(prof["sink"]):
+		amp = clampf(v_hit * LAND_IMPACT_K, LAND_IMPACT_MIN, LAND_IMPACT_MAX)
+	var steps := posmod(rot_to - rot_from, 4)
+	var turn: float = [0.0, PI * 0.5, PI, -PI * 0.5][steps]     # 走最短的一边（顺时针为正）
+	return {"t": stagger, "p0": p0, "p1": p1, "falls": falls, "g": g, "vmax": vmax, "t_hit": t_hit, "v_hit": v_hit,
+		"sec": t_hit + LAND_BOUNCE_SEC, "amp": amp, "rot_from": rot_from, "turn": turn, "com_from": com_from,
+		"in_place": in_place, "profile": prof}
+
+
+## 屏高（重力按它）：在树里按视口，不在（测试）按自己
+func _screen_h() -> float:
+	if is_inside_tree():
+		return maxf(1.0, get_viewport_rect().size.y)
+	return maxf(1.0, size.y)
+
+
+## 这一段落了几成（0 ～ 1）：真落的按重力算出的竖直位移，就地 / 贴地的按时间
+static func _fall_progress(a: Dictionary, t: float) -> float:
+	if t >= float(a["t_hit"]):
+		return 1.0
+	if not bool(a["falls"]):
+		return clampf(t / float(a["t_hit"]), 0.0, 1.0)
+	var g := float(a["g"])
+	var vmax := float(a["vmax"])
+	var t_cap := vmax / g if vmax != INF else INF
+	var fallen := 0.5 * g * t * t if t <= t_cap else vmax * vmax / (2.0 * g) + vmax * (t - t_cap)
+	var drop := (a["p1"] as Vector2).y - (a["p0"] as Vector2).y
+	return clampf(fallen / drop, 0.0, 1.0)
+
+
+## 此刻往下落的速度（像素 / 秒；测试看重力与末速度）
+func landing_speed(uid: int) -> float:
+	if not _landing.has(uid):
+		return 0.0
+	var a: Dictionary = _landing[uid]
+	var t := float(a["t"])
+	if t < 0.0 or not bool(a["falls"]) or t >= float(a["t_hit"]):
+		return 0.0
+	return minf(float(a["g"]) * t, float(a["vmax"]))
+
+
+## 面板关了：托在它上沿的那几件从现在的位置再掉一次（只往下，不往回挪）
+func _drop_supported(panel: Control) -> void:
+	if stash == null:
+		return
+	for uid in _support.keys():
+		if _support[uid] != panel:
+			continue
+		_support.erase(uid)
+		var inst := stash.get_item(uid)
+		if inst == null:
+			continue
+		_landing.erase(uid)
+		_begin_fall(inst, item_rect(uid).position, 0.0)
+	set_process(not _landing.is_empty())
+	queue_redraw()
+
+
+## 托着这件的面板（测试看；没有 null）
+func support_of(uid: int) -> Control:
+	return _support.get(uid, null)
 
 
 func _process(delta: float) -> void:
 	advance_landing(delta)
 
 
-## 162 补充一：一件怎么落 —— {sec: 时长, sink: 沉（缓入砸下）还是飘（缓出、摆）, bounce: 弹几像素, sway: 摆幅, scale: 起手放大}
+## 162 补充一 / 二：一件怎么落 —— {sink: 沉还是飘, vmax: 末速度（屏高 / 秒，沉 = INF）, bounce: 就地 / 飘的弹几像素, sway: 摆幅, scale: 起手放大}
 static func land_profile(def: ItemDef) -> Dictionary:
 	var cells := def.cell_count() if def != null else 0
 	var density := float(ItemWeight.of(def)) / cells if cells > 0 else 0.0
-	var sec := clampf(LAND_BASE_SEC - LAND_SEC_PER_DENSITY * density, LAND_SEC_MIN, LAND_BASE_SEC)
 	if density >= LAND_SINK_DENSITY:
-		return {"sec": sec, "sink": true, "bounce": LAND_BOUNCE_SINK, "sway": 0.0, "scale": LAND_SCALE_SINK}
+		return {"sink": true, "vmax": INF, "bounce": LAND_BOUNCE_SINK, "sway": 0.0, "scale": LAND_SCALE_SINK}
 	var bag := def != null and def.is_bag
-	return {"sec": sec, "sink": false, "bounce": LAND_BOUNCE, "sway": LAND_SWAY_BAG if bag else LAND_SWAY, "scale": LAND_SCALE}
+	return {"sink": false, "vmax": LAND_VMAX_BAG if bag else LAND_VMAX, "bounce": LAND_BOUNCE, "sway": LAND_SWAY_BAG if bag else LAND_SWAY, "scale": LAND_SCALE}
 
 
 ## 推进落地动画 [param delta] 秒（测试直接调）
@@ -232,7 +355,7 @@ func is_landing(uid: int) -> bool:
 	return _landing.has(uid)
 
 
-## 这件落多久（不在落 = 0）
+## 这一段从出队到落稳一共多久（触地 + 弹一下；不在落 = 0）
 func landing_sec(uid: int) -> float:
 	return float(_landing[uid]["sec"]) if _landing.has(uid) else 0.0
 
@@ -242,26 +365,30 @@ func landing_uids() -> Array:
 	return _landing.keys()
 
 
-## 一件此刻画在哪、多大、多透明：{"pos": 包围盒左上角, "scale", "alpha", "hidden": 还在排队}。没在落 = 落点、1、1
+## 一件此刻画成什么样：{"pos": 不转不缩时包围盒左上角（起手朝向 `rot`）, "pivot": 重心（转与缩放绕它）, "angle": 转了多少（弧度）,
+## "rot": 画的是哪个朝向的格子, "scale", "alpha", "hidden": 还在排队}。没在落 = 落点、现在的朝向、1、1
 func landing_pose(uid: int) -> Dictionary:
-	var target := item_rect(uid).position
+	var r := item_rect(uid)
+	var inst := stash.get_item(uid) if stash != null else null
+	var rot := inst.rotation if inst != null else 0
 	if not _landing.has(uid):
-		return {"pos": target, "scale": 1.0, "alpha": 1.0, "hidden": false}
+		var com := inst.def.shape.center_of_mass(rot) * InventoryView.CELL if inst != null and inst.def != null and inst.def.shape != null else r.size * 0.5
+		return {"pos": r.position, "pivot": r.position + com, "angle": 0.0, "rot": rot, "scale": 1.0, "alpha": 1.0, "hidden": false}
 	var a: Dictionary = _landing[uid]
 	var prof: Dictionary = a["profile"]
 	var t := float(a["t"])
+	var com_from: Vector2 = a["com_from"]
+	var p0: Vector2 = a["p0"]
 	if t < 0.0:
-		return {"pos": a["from"], "scale": float(prof["scale"]), "alpha": 0.0, "hidden": true}
-	var p := clampf(t / float(a["sec"]), 0.0, 1.0)
-	# 前 75% 落到落点（沉 = 二次缓入，越落越快；飘 = 三次缓出），后 25% 弹起再落稳
-	var fall := clampf(p / 0.75, 0.0, 1.0)
-	var eased := fall * fall if bool(prof["sink"]) else 1.0 - pow(1.0 - fall, 3.0)
-	var pos := (a["from"] as Vector2).lerp(target, eased)
-	if p > 0.75:
-		pos.y -= float(prof["bounce"]) * sin(PI * (p - 0.75) / 0.25)
-	if not bool(a["in_place"]):
-		pos.x += float(prof["sway"]) * sin(TAU * p)     # 飘的左右荡下来；沉的摆幅 0
-	return {"pos": pos, "scale": lerpf(float(prof["scale"]), 1.0, eased), "alpha": lerpf(LAND_ALPHA, 1.0, p), "hidden": false}
+		return {"pos": p0 - com_from, "pivot": p0, "angle": 0.0, "rot": a["rot_from"], "scale": float(prof["scale"]), "alpha": 0.0, "hidden": true}
+	var s := _fall_progress(a, t)
+	var pivot := p0.lerp(a["p1"], s)
+	if bool(a["falls"]):
+		pivot.x += float(prof["sway"]) * sin(TAU * s)     # 飘的左右荡下来；沉的摆幅 0
+	if t > float(a["t_hit"]):
+		pivot.y -= float(a["amp"]) * sin(PI * clampf((t - float(a["t_hit"])) / LAND_BOUNCE_SEC, 0.0, 1.0))
+	var angle := float(a["turn"]) * s * s     # 缓入：越落转得越快，触地正好转到位
+	return {"pos": pivot - com_from, "pivot": pivot, "angle": angle, "rot": a["rot_from"], "scale": lerpf(float(prof["scale"]), 1.0, s), "alpha": lerpf(LAND_ALPHA, 1.0, s), "hidden": false}
 #endregion
 
 
@@ -328,17 +455,27 @@ func uid_at_local(p: Vector2) -> int:
 	return -1
 
 
-## [param p] 落在这一件的哪一格（不夹边；包围盒外是越界的格）：正在落的按此刻的位置与缩放（绕包围盒中心）反推
+## [param p] 落在这一件的哪一格（现在朝向的坐标；不夹边，包围盒外是越界的格）：正在落的按此刻的位置、缩放、转角（绕重心）反推，
+## 再从画着的起手朝向换到现在的朝向
 func _cell_under(uid: int, p: Vector2) -> Vector2i:
 	var r := item_rect(uid)
 	var q := p - r.position
+	var drawn_rot := -1
 	if _landing.has(uid):
 		var pose := landing_pose(uid)
 		var k := maxf(0.01, float(pose["scale"]))
-		q = (p - ((pose["pos"] as Vector2) + r.size * 0.5)) / k + r.size * 0.5
+		q = ((p - (pose["pivot"] as Vector2)) / k).rotated(-float(pose["angle"])) + ((pose["pivot"] as Vector2) - (pose["pos"] as Vector2))
+		drawn_rot = int(pose["rot"])
 	if q.x < 0.0 or q.y < 0.0:
 		return Vector2i(-1, -1)
-	return Vector2i((q / InventoryView.CELL).floor())
+	var cell := Vector2i((q / InventoryView.CELL).floor())
+	var inst := stash.get_item(uid)
+	if drawn_rot >= 0 and inst != null and drawn_rot != inst.rotation:
+		var shape := inst.def.shape
+		if not shape.cells_rotated(drawn_rot).has(cell):
+			return Vector2i(-1, -1)
+		cell = shape.transform_point(shape.untransform_point(cell, drawn_rot), inst.rotation)
+	return cell
 
 
 ## 抓在这一件的哪一格（拖拽层反推落点用）
@@ -382,6 +519,7 @@ func unreserve(panel: Control) -> void:
 	if not _reserved.has(panel):
 		return
 	_reserved.erase(panel)
+	_drop_supported(panel)     # 162 补充二：托在它上沿的再掉一次
 	if is_instance_valid(panel):
 		if panel.resized.is_connected(_settle_deferred):
 			panel.resized.disconnect(_settle_deferred)
@@ -496,14 +634,16 @@ func _draw() -> void:
 		var at := r.position
 		var landing := _landing.has(inst.uid)
 		if landing:
-			# 134：正在落 —— 绕包围盒中心缩放，颜色乘透明度
+			# 134 / 162 补充二：正在落 —— 画起手朝向的格子，绕重心转、缩放，颜色乘透明度
 			var pose := landing_pose(inst.uid)
 			if bool(pose["hidden"]):
 				continue
 			var k := float(pose["scale"])
 			var alpha := float(pose["alpha"])
-			draw_set_transform((pose["pos"] as Vector2) + r.size * 0.5, 0.0, Vector2(k, k))
-			at = -r.size * 0.5
+			var pivot: Vector2 = pose["pivot"]
+			draw_set_transform(pivot, float(pose["angle"]), Vector2(k, k))
+			cells = inst.def.cells_rotated(int(pose["rot"]))
+			at = (pose["pos"] as Vector2) - pivot
 			body.a *= alpha
 			edge.a *= alpha
 			ink.a *= alpha

@@ -41,8 +41,8 @@ func _open_options() -> void:
 	var ctx := TextTemplate.context_for(flow.run, _node, _payload.get("extra", {}))
 	_hints.clear()
 	var title := TextTemplate.plain(_def.title_for() if _def.title_for() != "" else String(_def.id), ctx)
-	# 101 第 5 刀：文本层只产出带颜色名的样式码，画之前在这里查表换成真颜色
-	var body := UiTheme.slab_bbcode(UiPalette.resolve_styles(TextTemplate.render(_def.text_for(), ctx)))
+	# 101 第 5 刀：文本层只产出带颜色名的样式码；169：颜色名由富文本块按所在的底换（浅石板暗字）
+	var body := TextTemplate.render(_def.text_for(), ctx)
 	var col := _frame(_def.image, title, body)
 	for i in _def.options.size():
 		var opt := _def.options[i] as EventOption

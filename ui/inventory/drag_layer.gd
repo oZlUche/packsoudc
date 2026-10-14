@@ -77,6 +77,8 @@ var _grab_cell: Vector2i = Vector2i.ZERO
 ## 139：起拖那块视图的格子边长（基地屏的仓库会放大）。跟手的残影、整块判定按它；吸附到某块视图上时按那块的
 var _cell: float = InventoryView.CELL
 var _rot: int = 0
+## 162 补充二：从地上拿起，放回离原处这么近（像素）以内算「放回原处」（就地，不掉）
+const PUT_BACK_PX := 4.0
 ## 非空表示正在拖一个带内容物的包，内容为 detach_bag 的载荷
 var _payload: Dictionary = {}
 
@@ -542,6 +544,20 @@ func _ground_view() -> GroundLayer:
 	return null
 
 
+## 162 补充二：松手那一刻残影的左上角（全局像素）—— 掉落的起点
+func _release_px(global_pos: Vector2) -> Vector2:
+	return global_pos - (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * _cell
+
+
+## 从地上拿起又放回差不多原处、没转（单击一下）：就地落下，不往下掉 —— 否则紧跟的双击落空
+func _put_back(spot: Vector2) -> bool:
+	if not (_source is ItemStash) or _rot != _src_rot or not ItemStash.has_spot_value(_src_spot) or not ItemStash.has_spot_value(spot):
+		return false
+	var g := _ground_view()
+	var scale := g.size if g != null else Vector2.ONE * 1000.0
+	return ((spot - _src_spot) * scale).length() < PUT_BACK_PX
+
+
 ## 128：放手在 [param global_pos]，这件在地 [param ground] 上落在哪（没有地 = [constant ItemStash.NO_SPOT]）
 func _drop_spot(ground: GroundLayer, global_pos: Vector2, inst: ItemInstance) -> Vector2:
 	if ground == null:
@@ -593,8 +609,9 @@ func drop_at(global_pos: Vector2) -> bool:
 			if dropped:
 				_land_from(stash, loose, global_pos)     # 134：脱落的内容物从放手点落下
 		if dropped:
-			# 134：放手点就是落点 —— 就地落下（只缩放 + 弹跳）；162：从棋盘拖出来的从它原来那一格飞过去
-			stash.landing_from[inst.uid] = _src_px if _src_px is Vector2 else true
+			# 162 补充二（作者定）：从松手那一刻残影的位置竖直往下掉（地层改落点与朝向）；地上拿起又原样放回（单击）= 就地，不掉
+			inst.rotation = _rot
+			stash.landing_from[inst.uid] = true if _put_back(spot) else _release_px(global_pos)
 		if _source == stash or dropped:
 			_end_drag()
 			drag_finished.emit(inst.uid, dropped)
@@ -602,16 +619,16 @@ func drop_at(global_pos: Vector2) -> bool:
 	if target is GroundLayer:
 		# 一块地（开局屏、沙盒）：落在放手点
 		var gl := target as GroundLayer
+		var at_spot := _drop_spot(gl, global_pos, inst)
 		if _stash_accepts(gl.stash, inst):
-			var at_spot := _drop_spot(gl, global_pos, inst)
 			if _source == gl.stash:
 				dropped = gl.stash.insert(inst, _src_index, at_spot)
 			else:
 				dropped = _admit_with_payload(gl.stash, inst, -1, at_spot)
 		if dropped:
 			home = gl.stash
-			if _src_px is Vector2:
-				gl.stash.landing_from[inst.uid] = _src_px     # 162：同上，从原格飞到放手点
+			inst.rotation = _rot
+			gl.stash.landing_from[inst.uid] = true if _source == gl.stash and _put_back(at_spot) else _release_px(global_pos)     # 162 补充二：同上
 	elif target is InventoryView and (target as InventoryView).inventory != null:     # 157：别的列表视图（事件的收获行）不是落点
 		var grid_view := target as InventoryView
 		var at := target_origin(grid_view, global_pos)
