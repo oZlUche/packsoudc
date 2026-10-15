@@ -387,6 +387,13 @@ N = 这次反应吃掉的层数（补充三：`min(已有层, 新来层)`）。�
 
 ### 补 4.4 牵连
 
+**对照已落地的 v3.06 / v3.07**（补充一至三的落地记录在上面）：
+- 删 `BuffDef.stack_cap`（补 2 的 10 层上限——作者这次定「均无叠层上限」）及其词条「至多 10 层」。
+- 删凝毒专用状态 `congeal`（v3.06 的毒印 + `uncleansable`）：改成中毒实例的 `guard`；`BuffDef.uncleansable` 若没别的用处一并删。
+- `ReactionDef.scaling` / `effects_for(N)` 与三种写法**保留**，加 `"n/2"`；`{"seconds": "n"}` 写在 `duration_sec` 上那条（只给不可叠会过期的状态）不再被燃血 / 菌血用到——它们改成层数 = 秒数，可留着备用。
+- `ReactionResolver.before_status` 的余量叠法不动；`mark_stacks` 对五种印一律按层。
+- v3.06 落地记录里「燃血 / 超导 / 冻疮的层数 = N 没落」那条，这次全部落：燃血可叠（层 = 秒），超导 = 轴层，冻疮 = guard。
+
 - `tests/battle/test_reactions_175.gd`、`tests/ui/test_reactions_ui_175.gd` 的期望大改；金样重录（中毒 / 流血 / 灼伤的数都变了）。
 - 删七个 buff json（`overload / superconduct / surge / congeal / frostbite` 删；`scorched_blood / fungal_blood` 改）；buff 只存在于战斗内，**不碰存档**，`MetaState.reactions_seen` 的反应 id 不变，173 的对账不需要条目。
 - 百科 / 悬浮窗的反应一句话按补 4.2 重写；五种印的名字改为灼伤 / 寒冷 / 麻痹（对阵屏小图标的单字仍可用 火 / 冰 / 雷 / 毒 / 血，`ELEMENT_NAMES` 不动）。
