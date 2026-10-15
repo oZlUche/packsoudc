@@ -19,9 +19,9 @@ const TERMS_CATEGORY_NAME := {"zh": "词条", "en": "Glossary"}
 const GROUPS := {
 	"term": {"zh": "词条", "en": "Terms"}, "tag": {"zh": "标签", "en": "Tags"}, "dtype": {"zh": "伤害类型", "en": "Damage types"},
 	"buff": {"zh": "状态", "en": "Statuses"}, "stat": {"zh": "属性", "en": "Stats"},
-	"trigger": {"zh": "时机", "en": "Timings"},
+	"trigger": {"zh": "时机", "en": "Timings"}, "reaction": {"zh": "反应", "en": "Reactions"},
 }
-const GROUP_ORDER := ["term", "tag", "dtype", "buff", "stat", "trigger"]
+const GROUP_ORDER := ["term", "tag", "dtype", "reaction", "buff", "stat", "trigger"]
 ## 还没有说明的词条页正文
 const NO_TEXT := "（这一页的说明还没写。）"
 ## 140：「合成」这一页的正文下面列全部配方（两件 → 产物，配上作者写的那句 `note`）
@@ -39,6 +39,8 @@ var items: ItemDatabase = null
 var lit: Callable = Callable()
 ## 140：全部配方（「合成」页列出来）
 var recipes: Array[RecipeDef] = []
+## 175：反应引发过没有：`func(id: StringName) -> bool`；无效 = 全当引发过。没引发过的反应页只写两种元素，不写效果
+var reaction_lit: Callable = Callable()
 
 
 ## 造一本：手写的机制页 + 按当前内容生成的词条页
@@ -92,6 +94,8 @@ func _generate_terms() -> void:
 		_add("tag:" + String(tag), TagRegistry.name_of(tag), "tag", TagRegistry.describe(tag), [], _items_with_tag(tag))
 	for d in DamageTypes.ids():
 		_add("dtype:" + String(d), DamageTypes.name_of(d), "dtype", DamageTypes.describe(d))
+	for def in ReactionResolver.all():     # 175：一种反应一页
+		_add("reaction:" + String(def.id), Names.of(def), "reaction", reaction_text(def))
 	var buffs := _all_buffs()
 	var buff_ids: Array = buffs.keys()
 	buff_ids.sort_custom(func(a, b) -> bool: return String(a) < String(b))
@@ -110,6 +114,23 @@ func _add_named(id: String, title: String, group: String) -> void:
 	if Glossary.TERMS.has(title) or _links.has(title):
 		return
 	_add(id, title, group, Glossary.term_text(title))
+
+
+## 175：反应页的正文：哪两种元素、一句说明、按字段生成的效果
+static func reaction_text(def: ReactionDef) -> String:
+	var lines: Array[String] = [pair_line(def)]
+	var desc := Names.description_of(def)
+	if desc != "":
+		lines.append(desc)
+	lines.append("效果：" + Glossary.effects_text(def.effects))
+	return "\n".join(lines)
+
+
+## 175：「火 + 毒：目标身上带着其中一种印，再挨上另一种」
+static func pair_line(def: ReactionDef) -> String:
+	var a := ReactionResolver.element_name(def.elements[0]) if def.elements.size() > 0 else "?"
+	var b := ReactionResolver.element_name(def.elements[1]) if def.elements.size() > 1 else "?"
+	return "%s + %s：目标身上带着其中一种元素的印，再挨上另一种" % [a, b]
 
 
 ## 带这个标签的道具 id（按 id 排）
@@ -220,7 +241,11 @@ func render(id: String, ctx: Dictionary = {}) -> String:
 	var p: Dictionary = _pages.get(id, {})
 	if p.is_empty():
 		return ""
-	var body := link_words(TextTemplate.render(String(p["text"]), ctx), id)
+	var text := String(p["text"])
+	if String(p["group"]) == "reaction" and reaction_lit.is_valid() and not bool(reaction_lit.call(StringName(id.trim_prefix("reaction:")))):
+		var def := ReactionResolver.by_id(StringName(id.trim_prefix("reaction:")))     # 175：没引发过 —— 只写两种元素
+		text = (pair_line(def) if def != null else "") + "\n" + ("还没有引发过。" if UiText.lang == "zh" else "Not triggered yet.")
+	var body := link_words(TextTemplate.render(text, ctx), id)
 	var tail: Array[String] = []
 	var rel: Array[String] = []
 	for r in p.get("related", []):

@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="BuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_1r053"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_sigts"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_uedjt"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_mfhvp"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="5_sjpcy"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_lfkaa"]
+[ext_resource type="Script" path="res://core/battle/effects/remove_status.gd" id="7_lyih4"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_item_fired.gd" id="8_gqxl5"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_ayjfo"]
+
+[sub_resource type="Resource" id="Resource_1xmc1"]
+script = ExtResource("1_1r053")
+axis = &"crit_chance"
+stacks = 100
+
+[sub_resource type="Resource" id="Resource_vcage"]
+script = ExtResource("5_sjpcy")
+
+[sub_resource type="Resource" id="Resource_jrijs"]
+script = ExtResource("7_lyih4")
+buff_id = &"surge"
+stacks = 0
+
+[sub_resource type="Resource" id="Resource_re2so"]
+script = ExtResource("8_gqxl5")
+source_tags = Array[StringName]([&"weapon"])
+
+[sub_resource type="Resource" id="Resource_w2oye"]
+script = ExtResource("4_mfhvp")
+trigger = SubResource("Resource_re2so")
+cadence = SubResource("Resource_vcage")
+effects = Array[ExtResource("3_uedjt")]([SubResource("Resource_jrijs")])
+
+[resource]
+script = ExtResource("9_ayjfo")
+id = &"surge"
+display_name = "激荡"
+display_names = {
+"en": "Surge"
+}
+stackable = false
+duration_sec = 8.0
+axes = Array[ExtResource("1_1r053")]([SubResource("Resource_1xmc1")])
+rules = Array[ExtResource("4_mfhvp")]([SubResource("Resource_w2oye")])

@@ -1,0 +1,31 @@
+{
+  "id": "overload",
+  "display_name": "过载",
+  "display_names": {
+    "en": "Overload"
+  },
+  "stackable": false,
+  "duration_sec": 8.0,
+  "rules": [
+    {
+      "trigger": {
+        "type": "on_before_damage",
+        "direction": "DEALT"
+      },
+      "cadence": {
+        "type": "always"
+      },
+      "effects": [
+        {
+          "type": "modify_damage",
+          "percent": 100
+        },
+        {
+          "type": "remove_status",
+          "buff_id": "overload",
+          "stacks": 0
+        }
+      ]
+    }
+  ]
+}

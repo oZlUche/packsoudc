@@ -43,7 +43,7 @@ trigger = SubResource("Resource_433tm")
 cadence = SubResource("Resource_j81pe")
 effects = Array[ExtResource("5_54il0")]([SubResource("Resource_fqggl")])
 
-[sub_resource type="Resource" id="Resource_5286j"]
+[sub_resource type="Resource" id="Resource_uodj3"]
 script = ExtResource("11_648ps")
 id = &"virulent"
 display_name = "剧毒"
@@ -52,27 +52,28 @@ display_names = {
 }
 is_debuff = true
 rules = Array[ExtResource("2_e3f30")]([SubResource("Resource_0v26r")])
+element = &"poison"
 
-[sub_resource type="Resource" id="Resource_ne2al"]
+[sub_resource type="Resource" id="Resource_5286j"]
 script = ExtResource("6_x1xiu")
 from = &"poison"
-to = SubResource("Resource_5286j")
+to = SubResource("Resource_uodj3")
 
-[sub_resource type="Resource" id="Resource_wnq5v"]
+[sub_resource type="Resource" id="Resource_ne2al"]
 script = ExtResource("12_xv8d2")
 buff_id = &"poison"
 
-[sub_resource type="Resource" id="Resource_w4w5g"]
+[sub_resource type="Resource" id="Resource_wnq5v"]
 script = ExtResource("2_e3f30")
-trigger = SubResource("Resource_wnq5v")
+trigger = SubResource("Resource_ne2al")
 cadence = SubResource("Resource_q2ohf")
-effects = Array[ExtResource("5_54il0")]([SubResource("Resource_ne2al")])
+effects = Array[ExtResource("5_54il0")]([SubResource("Resource_5286j")])
+
+[sub_resource type="Resource" id="Resource_w4w5g"]
+script = ExtResource("13_tymay")
+rules = Array[ExtResource("2_e3f30")]([SubResource("Resource_wnq5v")])
 
 [sub_resource type="Resource" id="Resource_wd0mm"]
-script = ExtResource("13_tymay")
-rules = Array[ExtResource("2_e3f30")]([SubResource("Resource_w4w5g")])
-
-[sub_resource type="Resource" id="Resource_bqoq6"]
 script = ExtResource("17_evp2v")
 
 [resource]
@@ -83,7 +84,7 @@ display_names = {
 "en": "Viper Gland"
 }
 description = "挤一滴进去，寻常的毒就烈了。"
-shape = SubResource("Resource_bqoq6")
+shape = SubResource("Resource_wd0mm")
 rarity = 3
 tags = Array[StringName]([&"reagent", &"material", &"nature", &"poison"])
-combat = SubResource("Resource_wd0mm")
+combat = SubResource("Resource_w4w5g")

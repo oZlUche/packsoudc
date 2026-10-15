@@ -51,6 +51,7 @@ display_names = {
 "en": "Bleed"
 }
 rules = Array[ExtResource("2_m3a7x")]([SubResource("Resource_rx44e")])
+element = &"bleed"
 
 [sub_resource type="Resource" id="Resource_mkwnj"]
 script = ExtResource("11_0pbir")

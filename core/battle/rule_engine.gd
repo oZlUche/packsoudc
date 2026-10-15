@@ -41,6 +41,8 @@ static func dispatch(ctx: BattleContext, event: BattleEvent) -> void:
 	# 边遍历边改会漏掉或重复。规则集的变化从下一条事件开始生效。
 	for rule_rt in subs.duplicate():
 		var rt := rule_rt as RuleRuntime
+		if rt.born > event.seq:
+			continue     # 175：这条规则是在这条事件发出之后才出生的（被这一下施加的 buff），不听它
 		evaluate(ctx, ctx.sides[rt.owner_side], rt, event)
 
 

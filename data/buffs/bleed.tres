@@ -39,3 +39,4 @@ display_names = {
 "en": "Bleed"
 }
 rules = Array[ExtResource("4_dohsk")]([SubResource("Resource_e0tjf")])
+element = &"bleed"

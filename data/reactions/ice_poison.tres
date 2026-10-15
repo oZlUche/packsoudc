@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="ReactionDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_1xjmr"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="2_qi2yd"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_0cuuj"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_etjcq"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_erika"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="6_orrta"]
+[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="7_7d1qs"]
+
+[sub_resource type="Resource" id="Resource_jocjw"]
+script = ExtResource("5_erika")
+id = &"congeal"
+display_name = "凝毒"
+display_names = {
+"en": "Congealed Toxin"
+}
+is_debuff = true
+stackable = false
+locks = Array[StringName]([&"poison", &"virulent"])
+locks_while = &"chill"
+
+[sub_resource type="Resource" id="Resource_r7pgy"]
+script = ExtResource("6_orrta")
+buff = SubResource("Resource_jocjw")
+
+[resource]
+script = ExtResource("7_7d1qs")
+id = &"ice_poison"
+display_name = "凝毒"
+display_names = {
+"en": "Congeal"
+}
+description = "寒印消失之前，对手身上的中毒无法被清除。"
+elements = Array[StringName]([&"ice", &"poison"])
+consume = &"none"
+effects = Array[ExtResource("1_1xjmr")]([SubResource("Resource_r7pgy")])

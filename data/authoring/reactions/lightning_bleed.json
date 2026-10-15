@@ -1,0 +1,19 @@
+{
+  "id": "lightning_bleed",
+  "display_name": "激荡",
+  "display_names": {
+    "en": "Surge"
+  },
+  "description": "你的下一次攻击必定暴击。",
+  "elements": [
+    "lightning",
+    "bleed"
+  ],
+  "effects": [
+    {
+      "type": "apply_status",
+      "target": "SELF",
+      "buff": "surge"
+    }
+  ]
+}

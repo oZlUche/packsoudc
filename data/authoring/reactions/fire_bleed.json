@@ -1,0 +1,24 @@
+{
+  "id": "fire_bleed",
+  "display_name": "燃血",
+  "display_names": {
+    "en": "Seared Blood"
+  },
+  "description": "对手一段时间内治疗无效，并受到一下火焰伤害。",
+  "elements": [
+    "fire",
+    "bleed"
+  ],
+  "effects": [
+    {
+      "type": "apply_status",
+      "buff": "scorched_blood"
+    },
+    {
+      "type": "deal_damage",
+      "damage_type": "fire",
+      "amount": 6.0,
+      "damage_stat": ""
+    }
+  ]
+}

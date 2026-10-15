@@ -1,0 +1,12 @@
+{
+  "id": "fungal_blood",
+  "display_name": "菌血",
+  "display_names": {
+    "en": "Fungal Blood"
+  },
+  "is_debuff": true,
+  "stackable": false,
+  "duration_sec": 6.0,
+  "heal_cut": 50,
+  "heal_cut_to": "poison"
+}

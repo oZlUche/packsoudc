@@ -25,6 +25,10 @@ var state: Dictionary = {}
 ## 没有它的话，同刻并列的先后会取决于堆的内部排布，同一局面可能产出不同结果。
 var order: int = 0
 
+## 175：出生时的派发序号（[member BattleContext.event_seq]）。开局就有的规则是 0；战斗里施加的 buff 带来的规则记当时的序号，
+## 派发时只听序号不小于它的事件（[method RuleEngine.dispatch]）
+var born: int = 0
+
 
 static func create(
 	p_rule: AbilityRule, p_uid: int = 0, p_buff: BuffInstance = null, p_side: int = 0

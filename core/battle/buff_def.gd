@@ -72,6 +72,26 @@ func duration_text() -> String:
 @export var on_apply: Array[CombatEffect] = []
 @export var on_expire: Array[CombatEffect] = []
 
+@export_group("元素与治疗")
+## 175：这个状态是哪种元素的【印】（`fire` / `ice` / `lightning` / `poison` / `bleed`，和伤害类型同名）；空 = 不是印。
+## 灼 / 寒 / 麻是专门的轻状态，中毒 / 剧毒 / 流血本身就是印。目标身上带着一种印、又挨上另一种 → 反应（[ReactionResolver]）
+@export var element: StringName = &""
+## 175：挂着它时，目标**每次恢复生命**先被截走这么多（百分比，0..100）。燃血 100 = 治疗无效；菌血 50 = 减半
+@export var heal_cut: int = 0
+## 175：截走的那部分变成哪种伤害打回目标自己（菌血 = `poison`）；空 = 直接没了
+@export var heal_cut_to: StringName = &""
+## 175：挂着它时，这些状态**不能被移除**（解毒剂、净化、消耗层数对它们都无效）。凝毒锁中毒
+@export var locks: Array[StringName] = []
+## 175：只在目标还带着这个状态时才锁（凝毒：直到寒印消失）；空 = 一直锁
+@export var locks_while: StringName = &""
+
+
+## 175：挂着它时 [param id] 是否被锁住（[member locks]，且 [member locks_while] 指的状态还在）
+func locks_now(id: StringName, carrier_has: Callable) -> bool:
+	if not locks.has(id):
+		return false
+	return locks_while == &"" or bool(carrier_has.call(locks_while))
+
 
 ## 152：每层带几层 [param axis]（同一条轴写了几行就相加）
 func axis_stacks_per(axis: StringName) -> int:

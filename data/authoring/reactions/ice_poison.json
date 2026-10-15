@@ -1,0 +1,19 @@
+{
+  "id": "ice_poison",
+  "display_name": "凝毒",
+  "display_names": {
+    "en": "Congeal"
+  },
+  "description": "寒印消失之前，对手身上的中毒无法被清除。",
+  "elements": [
+    "ice",
+    "poison"
+  ],
+  "consume": "none",
+  "effects": [
+    {
+      "type": "apply_status",
+      "buff": "congeal"
+    }
+  ]
+}

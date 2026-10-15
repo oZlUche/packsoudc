@@ -1,0 +1,16 @@
+{
+  "id": "superconduct",
+  "display_name": "超导",
+  "display_names": {
+    "en": "Superconduct"
+  },
+  "is_debuff": true,
+  "stackable": false,
+  "duration_sec": 5.0,
+  "axes": [
+    {
+      "axis": "damage_taken",
+      "stacks": 4
+    }
+  ]
+}

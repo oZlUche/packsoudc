@@ -1,0 +1,18 @@
+{
+  "id": "ice_bleed",
+  "display_name": "冻疮",
+  "display_names": {
+    "en": "Frostbite"
+  },
+  "description": "对手一段时间内出手变慢。",
+  "elements": [
+    "ice",
+    "bleed"
+  ],
+  "effects": [
+    {
+      "type": "apply_status",
+      "buff": "frostbite"
+    }
+  ]
+}

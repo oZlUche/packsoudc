@@ -205,6 +205,8 @@ static func import_of(kind: String, data: Dictionary, ctx: Context, report: Impo
 			return import_buff(data, ctx, report)
 		"rule_parts":
 			return import_rule_part(data, ctx, report)
+		"reactions":
+			return import_reaction(data, ctx, report)
 		"sets":
 			return import_set(data, ctx, report)
 		"enemies":
@@ -267,6 +269,32 @@ static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) ->
 	if def.has_blurb and def.blurb.strip_edges() == "":
 		report.warn("blurb", "「%s」勾了有专属解说但解说是空的（句子里只会写名字）" % def.id)     # 171
 	ctx.register_buff(def)
+	return def
+
+
+## 175：一种元素反应。两种不同的、认得的元素，id 就是这两种按元素顺序拼起来（`fire_poison`）；吃印写 both / none / 两种之一；
+## 效果是普通的规则内容（施加的 buff 按 id 查），不许空
+static func import_reaction(data: Dictionary, ctx: Context, report: ImportReport) -> ReactionDef:
+	var def := ReactionDef.new()
+	_fill(def, data, "", ctx, report)
+	_require_id(def.id, "反应", report)
+	if def.display_name.strip_edges() == "":
+		report.error("display_name", "反应得有名字")
+	if def.elements.size() != 2:
+		report.error("elements", "反应得恰好两种元素")
+	else:
+		for i in 2:
+			if not ReactionResolver.is_element(def.elements[i]):
+				report.error("elements[%d]" % i, "不认识的元素 '%s'（%s）" % [def.elements[i], ", ".join(ReactionResolver.ELEMENTS)])
+		var key := ReactionResolver.pair_key(def.elements[0], def.elements[1])
+		if key == "":
+			report.error("elements", "两种元素得不同")
+		elif def.id != &"" and String(def.id) != key:
+			report.error("id", "反应的 id 应为 '%s'（两种元素按 %s 的顺序拼）" % [key, "、".join(ReactionResolver.ELEMENTS)])
+	if def.consume != ReactionDef.CONSUME_BOTH and def.consume != ReactionDef.CONSUME_NONE and not def.elements.has(def.consume):
+		report.error("consume", "吃印只能写 both / none / 这两种元素之一（现在是 '%s'）" % def.consume)
+	if def.effects.is_empty():
+		report.error("effects", "反应得有效果")
 	return def
 
 

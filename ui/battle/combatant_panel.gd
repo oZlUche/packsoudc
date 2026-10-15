@@ -384,6 +384,26 @@ func popup(amount: int, type: StringName, heal: bool = false, crit: bool = false
 	tw.tween_property(l, "position:y", l.position.y - 42.0, 0.9)
 	tw.tween_property(l, "modulate:a", 0.0, 0.9).set_delay(0.25)
 	tw.chain().tween_callback(l.queue_free)
+
+
+## 175：反应弹字 —— 反应名、描边（170 的描边），颜色按两种元素里的第一种；比伤害飘字大一号、停得久一点，从面板中线往上飘
+func popup_text(text: String, color: Color, time_scale: float = 1.0) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", 26)
+	l.add_theme_color_override("font_color", color)
+	l.add_theme_color_override("font_outline_color", UiTheme.OUTLINE_COLOR)
+	l.add_theme_constant_override("outline_size", UiTheme.OUTLINE_SIZE * 3)
+	l.position = Vector2(size.x * 0.5 - 30.0, size.y * 0.3)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(l)
+	var span := 1.2 * time_scale
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(l, "position:y", l.position.y - 36.0, span)
+	tw.tween_property(l, "modulate:a", 0.0, span * 0.6).set_delay(span * 0.4)
+	tw.chain().tween_callback(l.queue_free)
+	return l
 #endregion
 
 

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.02 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.03 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1340,6 +1340,29 @@ var final: int              ## 最终结算量，正为扣血、负为回血
 
 `armor`（护甲，153 补充一前叫护甲 `shield`）是防具给的一种普通资源，由 `max_armor`（护甲上限）属性自动派生 —— 和其他资源一样，
 配一个属性就有了，不需要改代码。它只是在管线第 2 步被优先扣除。
+
+#### 元素印与反应（175 第一批，作者定）
+
+五种元素：火、冰、雷、毒、血，和伤害类型同名。**印就是状态**：`BuffDef.element` 指明一个状态是哪种元素的印 ——
+火 / 冰 / 雷各有一个轻状态【灼】【寒】【麻】（不可叠、4 秒，本身不伤不减），毒与血的印就是中毒 / 剧毒 / 流血本身。印从两条路来，规则层一行不加：
+
+```
+命中    第 5 步之后：伤害类型有 DamageTypeDef.mark 就盖那个印（fire → scorch、ice → chill、lightning → numb；物理 / 反伤 / 流失 / 中毒与流血的伤害不盖）
+施加    ApplyStatus.give 加上了层数、而那个状态本身是印（施加中毒 = 盖毒印）
+```
+
+目标身上已有甲元素的印、这一下带来乙元素 → `ReactionResolver` 查反应表（`ReactionDef`，`data/authoring/reactions/<甲>_<乙>.json`，
+id 按元素顺序拼）结算一次：记下两边可叠层印的层数（效果的 `per_stack` 读它，`RuleContext.reaction_stacks`）→ 按 `consume`（`both` / `none` / 一种元素）
+吃掉印（整个吃掉，被锁住的吃不掉）→ 发 `effect_resolved {effect: reaction}`（回放弹字、百科点亮）→ 以挨打那一方的对手为主人跑效果（普通的规则内容）。
+命中带来的印被吃掉就不盖，不吃（凝毒的寒、电解里的毒）就在效果之后补盖。**同元素再碰只是加深**（灼 / 寒 / 麻刷新时长，中毒 / 流血加层）。
+身上同时带着几种印时按「火、冰、雷、毒、血」取第一个能反应的。**反应不连锁**：结算中 `BattleContext.reacting > 0`，这期间的伤害不盖印、
+施加的状态照常上身但不再引发反应。
+
+为反应加的三个通用口子（都是数据字段，不是效果类型）：
+
+- **治疗入口** `CombatantRuntime.heal`：治疗效果、反转成治疗的伤害都走它。身上 buff 的 `heal_cut`（百分比）截走一部分，`heal_cut_to` 给了就把截走的变成那种伤害打回自己（燃血 100 = 治疗无效；菌血 50 + `poison`）。每秒回血按 `heal_kept()` 打折（不转伤害）。
+- **锁** `BuffDef.locks` / `locks_while`：挂着它时那几个状态不可移除（`remove_buff_stacks` 返回 0，`convert_status` 扣不掉就不转）；`locks_while` 指的状态没了，这个 buff 跟着摘掉（凝毒跟着寒印走）。
+- **规则只听出生之后的事件**：`BattleContext.event_seq` 每发一条事件（含同步派发的受伤前）加一，事件带 `seq`；战斗中施加的 buff 带来的规则记 `RuleRuntime.born`，`RuleEngine.dispatch` 跳过更早的事件。于是「下一次攻击」类 buff（过载、激荡）不会被引发它的那一下自己排在队里的出手 / 伤害事件当场用掉。
 
 ### 4.7 模拟循环：事件驱动，没有帧
 
@@ -4199,6 +4222,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.03 | 2026-10-15 | **元素印与反应表**（报告 175 第一批，作者定，待定 1A；改 4.6）：火 / 冰 / 雷命中盖【灼】【寒】【麻】（`DamageTypeDef.mark`，不可叠、4 秒），中毒 / 剧毒 / 流血本身是印（`BuffDef.element`）；`ReactionResolver` 在伤害管线第 5 步之后与施加状态之后查反应表（`ReactionDef`，`data/authoring/reactions/`，新内容种类 `reactions`）：十对反应爆燃 / 淬裂 / 过载 / 燃血 / 超导 / 凝毒 / 冻疮 / 电解 / 激荡 / 菌血，吃印按 `consume`，反应不连锁；治疗入口 `CombatantRuntime.heal`（`heal_cut` / `heal_cut_to`），锁 `BuffDef.locks` / `locks_while`；规则只听出生之后的事件（`BattleEvent.seq` / `RuleRuntime.born`）；溃烂之刃的桥收进菌血；回放反应弹字、悬浮窗「可引发」、百科「反应」组（`MetaState.reactions_seen` 点亮）、对阵屏元素小图标 |
 | v3.02 | 2026-10-14 | **存档原子写与内容对账**（报告 173，作者问「存档经常会在版本升级后失效」，待定 1A 2A 3A 4A；改 7.2）：`AtomicFile`（`.tmp` → 改名、`.prev` 回退）用于局外 / 一局 / 设置；`SaveReconcile` 在版本链之后对账道具（`IdAliases.RETIRED_ITEMS` 折钱 / 换件 / 丢掉，查不到默认折钱；`STATE_KEYS`），六件已删道具补进退役表、短剑登记 `RESHAPED`；容器 `from_dict` 交出放不回原位的（`homeless_out`），仓库换位 / 加页、背包先本盘后仓库、一局先本容器后地上（`RunState.rehome`），都不行折钱；一局作废前打捞进仓库（`MetaState.salvage`）；`SaveReport` 写 `last_repair.json`，`GameFlow.repair_notice` 读一次就删、读取存档屏与主菜单各一句；内容快照 `ContentSnapshot` + `tools/snapshot_content.sh` + 快照测试；一局冻结样本 `run_v4.json`；存档回归目录 `tests/fixtures/saves/` 与只读的 `tools/check_saves.sh`；存档头 `content_stamp` |
 | v3.01 | 2026-10-14 | **固定分辨率档位与窗口模式**（报告 172，作者定，待定 1A 2A 3A 4A；改 8.8）：`GameSettings.window_mode / resolution` 与档位表 `RESOLUTIONS`（16:9 五档、16:10 三档）；`ui/window_setup.gd`（`WindowSetup.apply / pick_default / available / toggle_mode`）导演启动时套用、窗口不可拖改、首启按屏幕九成挑一档；设置屏最上面「显示」一节（窗口 / 全屏、按比例分行的分辨率按钮，全屏时灰掉）；F11 动作 `toggle_fullscreen` |
 | v3.00 | 2026-10-14 | **170 悬浮窗定稿**（作者在美术设计里定「样式就这样吧」；改 8.8、8.10）：悬浮窗底改两层 `SlabStyle`（深皮革 `tip/tooltip_body` 平铺 + 黄铜边框 `tip/tooltip_frame`，`UiTheme.layered_box`，`slab_box` 也走它），`tooltip_dark` 退了；宽 360、字号各大一号（19 / 13 / 14 / 15 / 13）；字色模板加 `tip_fg / tip_meta / tip_desc`；只有名字和稀有度名描边，`UiTheme.outline_colored` 删了；正文字体换思源宋体 Regular / Bold（`serif_regular.otf / serif_bold.otf`，霞鹜文楷子集与授权移出），`subset_fonts.sh` 去掉改名一步 |

@@ -269,6 +269,9 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 | `mods` | 属性加成，**每层一份** |
 | `rules` | **buff 自己也能带规则** —— 复合效果靠它 |
 | `on_apply` / `on_expire` | 施加与到期时的效果 |
+| `element` | 175：这个状态是哪种元素的印（`fire` / `ice` / `lightning` / `poison` / `bleed`）；带着一种印再挨上另一种 → 反应（`data/authoring/reactions/`） |
+| `heal_cut` / `heal_cut_to` | 175：挂着时每次恢复生命截走几成（100 = 治疗无效），截走的变成哪种伤害打回自己（空 = 没了） |
+| `locks` / `locks_while` | 175：挂着时这些状态不能被移除；`locks_while` 指的状态没了它跟着摘掉 |
 
 战斗内一切属性变化都由 buff 承载，**包括资源上限**。buff 仅限本场战斗，结束清空。
 

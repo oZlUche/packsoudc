@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_g6qam"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_5m81h"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_v6xeq"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_jqb0h"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_e1r3n"]
+
+[resource]
+script = ExtResource("5_e1r3n")
+id = &"fungal_blood"
+display_name = "菌血"
+display_names = {
+"en": "Fungal Blood"
+}
+is_debuff = true
+stackable = false
+duration_sec = 6.0
+heal_cut = 50
+heal_cut_to = &"poison"

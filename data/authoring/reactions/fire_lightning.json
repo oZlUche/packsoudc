@@ -1,0 +1,19 @@
+{
+  "id": "fire_lightning",
+  "display_name": "过载",
+  "display_names": {
+    "en": "Overload"
+  },
+  "description": "你的下一次攻击伤害翻倍。",
+  "elements": [
+    "fire",
+    "lightning"
+  ],
+  "effects": [
+    {
+      "type": "apply_status",
+      "target": "SELF",
+      "buff": "overload"
+    }
+  ]
+}

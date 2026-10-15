@@ -1,0 +1,11 @@
+{
+  "id": "scorch",
+  "display_name": "灼",
+  "display_names": {
+    "en": "Scorch"
+  },
+  "is_debuff": true,
+  "stackable": false,
+  "duration_sec": 4.0,
+  "element": "fire"
+}

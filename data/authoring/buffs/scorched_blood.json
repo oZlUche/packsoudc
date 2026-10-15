@@ -1,0 +1,11 @@
+{
+  "id": "scorched_blood",
+  "display_name": "燃血",
+  "display_names": {
+    "en": "Seared Blood"
+  },
+  "is_debuff": true,
+  "stackable": false,
+  "duration_sec": 5.0,
+  "heal_cut": 100
+}

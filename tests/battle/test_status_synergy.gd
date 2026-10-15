@@ -210,11 +210,8 @@ static func run_items(t: TestCase) -> void:
 	_start(ctx)
 	t.eq(_hp(ctx, 1), 85, "毒伤 10 减半为 5，物理 10 不变")
 
-	# 溃烂之刃第二条：流血被施加时附一层中毒（流血喂中毒）
-	var bridge := db.get_def(&"festering_blade").combat.rules[1] as AbilityRule
-	ctx = _ctx([_opener([_apply(bleed_buff)]), bridge])
-	_start(ctx)
-	t.eq(ctx.sides[1].stacks_of(&"poison"), 1, "流血带出一层中毒")
+	# 175：溃烂之刃的桥（流血被施加时附一层中毒）收进反应【菌血】—— 刀只剩出手时盖血印那一条
+	t.eq(db.get_def(&"festering_blade").combat.rules.size(), 1, "溃烂之刃只剩一条规则（桥收进菌血）")
 
 	# 嗜血护腕：对手被施加流血 → 自己加速 1 层（标准轴，不封顶；原来是一层嗜血 buff）
 	var bracer := db.get_def(&"bloodlust_bracer").combat.rules[0] as AbilityRule

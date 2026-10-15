@@ -29,6 +29,8 @@ var warehouse: Warehouse = null
 var board: GridInventory = null
 ## 图鉴：道具 id（字符串）→ 累计带出件数。点亮 = 计数 > 0
 var codex: Dictionary = {}
+## 175：引发过的元素反应（id）—— 百科的反应页点亮。打完一场由 [method note_reactions] 记
+var reactions_seen: Array[StringName] = []
 ## 激活的局外 buff（id）。谁来改它不写死：现在是局外屏的开关列表占位，将来是任务系统、局外科技
 var active_buffs: Array[StringName] = []
 ## 局外解锁（069）：难度、以后的角色 / 内容按 id 查。谁来解锁不写死：现在是局外屏的占位开关，将来是成长系统
@@ -310,6 +312,21 @@ func has_keepsake(id: StringName) -> bool:
 	return keepsakes.has(id)
 
 
+## 175：记下这一场引发过的反应，返回新记下几种
+func note_reactions(ids: Array) -> int:
+	var n := 0
+	for id in ids:
+		var key := StringName(String(id))
+		if key != &"" and not reactions_seen.has(key):
+			reactions_seen.append(key)
+			n += 1
+	return n
+
+
+func reaction_seen(id: StringName) -> bool:
+	return reactions_seen.has(id)
+
+
 func codex_lit(id: StringName) -> bool:
 	return int(codex.get(String(id), 0)) > 0
 
@@ -503,6 +520,7 @@ func to_dict() -> Dictionary:
 		"chapter_extractions": chapter_extractions.duplicate(),
 		"boss_kills": boss_kills, "battles_won": battles_won,
 		"seen_rules": _names_of(seen_rules),
+		"reactions_seen": _names_of(reactions_seen),     # 175
 		"coach_seen": coach_seen.duplicate(),
 		"flags": flags.duplicate(),
 		"tech_levels": tech_levels.duplicate(),
@@ -600,6 +618,8 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		m.seen_rules.append(StringName(String(id)))
 	for id in d.get("coach_seen", []):
 		m.coach_seen.append(String(id))
+	for id in d.get("reactions_seen", []):
+		m.reactions_seen.append(StringName(String(id)))
 	for key in d.get("flags", {}):
 		m.flags[String(key)] = int((d["flags"] as Dictionary)[key])
 	for row in d.get("history", []):

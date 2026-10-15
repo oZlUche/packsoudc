@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="ReactionDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_clb0a"]
+[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="2_83vb1"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="3_q6r8x"]
+[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="4_aia7x"]
+
+[sub_resource type="Resource" id="Resource_d2mub"]
+script = ExtResource("2_83vb1")
+target = 0
+resource_key = &"armor"
+amount = -999.0
+
+[sub_resource type="Resource" id="Resource_q5wrh"]
+script = ExtResource("3_q6r8x")
+amount = 8.0
+damage_stat = &""
+
+[resource]
+script = ExtResource("4_aia7x")
+id = &"fire_ice"
+display_name = "淬裂"
+display_names = {
+"en": "Shatter"
+}
+description = "对手的护甲清零，并受到一下伤害。"
+elements = Array[StringName]([&"fire", &"ice"])
+effects = Array[ExtResource("1_clb0a")]([SubResource("Resource_d2mub"), SubResource("Resource_q5wrh")])

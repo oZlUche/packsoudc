@@ -145,6 +145,9 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			lines.append("[color=@grant]附加：%s ← %s[/color]" % [AdjacencyText.rule_phrase(ar), origin_name(StringName(String(a["origin"])), board)])
 	# 171 §4：装载槽 —— 装了几颗晶石写几行（空槽不写；同一颗占两个槽一行）
 	lines.append_array(load_lines(inst, board, spec, use_stats))
+	var reacts := reactions_line(spec, compiled)     # 175：可引发的反应（按棋盘上别的道具带的元素）
+	if reacts != "":
+		lines.append(reacts)
 	for e in def.effects:
 		var d: String = e.describe() if e != null and e.has_method("describe") else ""
 		lines.append("效果：%s" % (d if d != "" else _type_name(e)))
@@ -233,6 +236,28 @@ static func weapon_sentence(rule: AbilityRule, stats: StatSet) -> String:
 	if not extras.is_empty():
 		line += "，附带%s" % "".join(extras)
 	return line
+
+
+## 175：「可引发：爆燃、燃血」—— 这件带的元素 × 同一块棋盘上（别的道具和它自己）带的元素，反应表里有的；不带元素、或凑不成反应的不写
+static func reactions_line(spec: CombatantSpec, compiled: CompiledItem) -> String:
+	if spec == null or compiled == null:
+		return ""
+	var mine := ReactionResolver.elements_of_item(compiled)
+	if mine.is_empty():
+		return ""
+	var pool: Array = mine.duplicate()
+	for it in spec.items:
+		if (it as CompiledItem).source_uid == compiled.source_uid:
+			continue
+		for el in ReactionResolver.elements_of_item(it):
+			if not pool.has(el):
+				pool.append(el)
+	var names: Array[String] = []
+	for def in ReactionResolver.reactions_between(mine, pool):
+		names.append("【%s】" % Names.of(def))
+	if names.is_empty():
+		return ""
+	return "[color=@grant]可引发：%s[/color]" % "".join(names)
 
 
 ## 171 §4：法杖的装载行 ——「【装载】火焰魔晶石　每 X 秒 Y 火焰伤害　剩 N 次」，一颗晶石一行（X / Y 按这把杖编译后的实际值）

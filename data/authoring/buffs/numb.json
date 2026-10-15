@@ -1,0 +1,11 @@
+{
+  "id": "numb",
+  "display_name": "麻",
+  "display_names": {
+    "en": "Numb"
+  },
+  "is_debuff": true,
+  "stackable": false,
+  "duration_sec": 4.0,
+  "element": "lightning"
+}

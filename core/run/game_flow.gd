@@ -680,6 +680,7 @@ func encyclopedia() -> Encyclopedia:
 	if _encyclopedia == null:
 		_encyclopedia = Encyclopedia.build(help_pages, items, recipes)
 	_encyclopedia.lit = func(id: StringName) -> bool: return meta == null or meta.codex_lit(id)
+	_encyclopedia.reaction_lit = func(id: StringName) -> bool: return meta == null or meta.reaction_seen(id)     # 175
 	return _encyclopedia
 
 
@@ -1188,6 +1189,8 @@ func _adopt(state: RunState) -> void:
 	ev.battle_pending.connect(func(node: MapNode, type: StringName, content: Dictionary):
 		_push({"screen": Screen.PREBATTLE, "node": node, "type": type, "content": content}))
 	ev.battle_finished.connect(func(node: MapNode, r: BattleResult, won: bool):
+		if meta != null and r != null:
+			meta.note_reactions(ReactionResolver.reactions_in(r.log))     # 175：百科的反应页点亮
 		_push({"screen": Screen.BATTLE, "node": node, "result": r, "won": won,
 			"player": ev.last_battle.get("player", null), "enemy": ev.last_battle.get("enemy", null),
 			"enemy_content": ev.last_battle.get("content", {})}))
