@@ -9,7 +9,7 @@
 ## 2. 护甲吸收      能吸收则先扣护甲，中毒之类绕过
 ## 3. 受伤前效果    【同步派发】效果在这里改写伤害包：减伤、反转、免疫
 ## 4. 计算受伤量    百分比 → 固定增减 → 反转 → 格挡（只对直接伤害，106）→ 「受到伤害」轴（103），然后落到血量
-## 5. 受伤后效果    发 damage 事件；流失类不通知默认监听；175：按类型盖元素印、引发反应
+## 5. 受伤后效果    发 damage 事件；流失类不通知默认监听（175 补充五：伤害不盖元素印 —— 印只从施加状态来）
 ## [endcodeblock]
 ## 175 补充四：真实伤害（[member DamageTypeDef.pure]，流血）跳过 1b–4，原值直接落血；第 4 步末尾再乘守方按类型的易伤（剧毒）
 ##
@@ -38,8 +38,8 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	var pure := td.pure
 	if packet.raw > 0 and packet.type == DamageTypes.FIRE and not pure:
 		var attacker := _side_of(ctx, packet.source_side)
-		if packet.from_status and attacker == victim:
-			attacker = ctx.opponent_of(victim)     # 175 补充四：身上的灼伤 / 燃血跳的火伤，按对手（施加方）的火焰加成
+		if not packet.direct and attacker == victim:
+			attacker = ctx.opponent_of(victim)     # 175 补充四：身上的灼伤 / 燃血跳的火伤（非直接、主人是挨打的自己），按对手（施加方）的火焰加成
 		if attacker != null:
 			var boost := attacker.axis_factor(StatAxes.FIRE_DAMAGE)
 			if boost != StatMath.ONE:
@@ -112,9 +112,6 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 		_trace(ctx, packet, raw_in, hp_before, taken_factor)
 	_notify(ctx, packet, td)
 	victim.settle_death(ctx)
-	# 175：命中后按类型盖印 / 引发反应（反应结算中不盖，[ReactionResolver]；补充四：状态自己跳的伤害不盖）
-	if td.mark != &"" and amount >= 0 and (packet.final > 0 or packet.absorbed > 0) and not packet.from_status:
-		ReactionResolver.after_hit(ctx, packet, td)
 	return -packet.applied
 
 
@@ -143,7 +140,7 @@ static func _trace(ctx: BattleContext, packet: DamagePacket, raw_in: int, hp_bef
 ## provokes 为真的类型），而不是这里不发 —— 不发的话「中毒时净化」「流失时回气」
 ## 这类联动就永远没有接入点，而那正是我们想留的口子。
 static func _notify(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef) -> void:
-	ctx.emit(BattleEvent.DAMAGE, packet.victim_side(), {
+	var payload := {
 		"type": String(packet.type),
 		"raw": packet.raw,
 		"absorbed": packet.absorbed,
@@ -154,7 +151,10 @@ static func _notify(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef)
 		"uid": packet.source_uid,
 		"crit": packet.crit,     # 104
 		"direct": packet.direct,     # 106：直接 / 非直接（格挡只减直接伤害）
-	})
+	}
+	if packet.cancelled:
+		payload["cancelled"] = true     # 175 补充五：被取消的一下（「造成伤害后施加」不认它，[member DamageTrigger.landed_only]）
+	ctx.emit(BattleEvent.DAMAGE, packet.victim_side(), payload)
 
 
 ## 便捷入口：造一包伤害并当场结算。附火、反伤、以血为代价都走这里；要先改包（暴击旗）的 [DealDamage] 自己造包

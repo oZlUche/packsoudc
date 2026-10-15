@@ -1,34 +1,35 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_acv6y"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_kb0x4"]
-[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_tco6d"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_u4fbs"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="5_q5mjt"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="6_ddt8e"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="7_fdhot"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_kb0x4"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_tco6d"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_u4fbs"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="4_q5mjt"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_ddt8e"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_fdhot"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="7_f7e41"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="8_k5xol"]
 
-[sub_resource type="Resource" id="Resource_f7e41"]
-script = ExtResource("1_acv6y")
+[sub_resource type="Resource" id="Resource_ikctp"]
+script = ExtResource("1_kb0x4")
 mode = 1
 amount = 20.0
 
-[sub_resource type="Resource" id="Resource_k5xol"]
-script = ExtResource("3_tco6d")
+[sub_resource type="Resource" id="Resource_ni4ln"]
+script = ExtResource("3_u4fbs")
 grant_cells = Array[Vector2i]([Vector2i(0, -1)])
 grant_filter = Array[StringName]([&"gun"])
-grant_mods = Array[ExtResource("1_acv6y")]([SubResource("Resource_f7e41")])
+grant_mods = Array[ExtResource("1_kb0x4")]([SubResource("Resource_ikctp")])
 
-[sub_resource type="Resource" id="Resource_ikctp"]
-script = ExtResource("7_fdhot")
+[sub_resource type="Resource" id="Resource_5vb5l"]
+script = ExtResource("8_k5xol")
 
 [resource]
-script = ExtResource("6_ddt8e")
+script = ExtResource("7_f7e41")
 id = &"mag"
 display_name = "弹匣"
 display_names = {
 "en": "Magazine"
 }
-shape = SubResource("Resource_ikctp")
+shape = SubResource("Resource_5vb5l")
 tags = Array[StringName]([&"sealed", &"ammo", &"metal"])
-adjacency = SubResource("Resource_k5xol")
+adjacency = SubResource("Resource_ni4ln")

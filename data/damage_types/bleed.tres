@@ -9,10 +9,11 @@ display_name = "流血"
 display_names = {
 "en": "Bleed"
 }
-description = "持续伤害，真实伤害：无视护甲、格挡与一切增减，不招致反应。"
+description = "持续伤害：无视护甲、格挡与一切增减，不招致反应。"
 descriptions = {
-"en": "Damage over time; true damage, ignores armor, block and every modifier, provokes nothing."
+"en": "Damage over time: ignores armor, block and every modifier, provokes nothing."
 }
 armor_absorbable = false
 provokes = false
 pure = true
+family = &"physical"

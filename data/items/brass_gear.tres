@@ -1,22 +1,23 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_4d17q"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_fvh75"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_ijf13"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_bdfai"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_e5eeo"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_fvh75"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_ijf13"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_bdfai"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_e5eeo"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_6u8ve"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_keqdt"]
 
-[sub_resource type="Resource" id="Resource_6u8ve"]
-script = ExtResource("5_e5eeo")
+[sub_resource type="Resource" id="Resource_e3svu"]
+script = ExtResource("6_keqdt")
 
 [resource]
-script = ExtResource("4_bdfai")
+script = ExtResource("5_6u8ve")
 id = &"brass_gear"
 display_name = "黄铜齿轮"
 display_names = {
 "en": "Brass Gear"
 }
 description = "齿口精细的小齿轮。"
-shape = SubResource("Resource_6u8ve")
+shape = SubResource("Resource_e3svu")
 rarity = 2
 tags = Array[StringName]([&"material", &"crafted", &"metal"])

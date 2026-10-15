@@ -1,23 +1,24 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_v1fus"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_b4l1m"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_li05g"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_tscm8"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_du4i4"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_b4l1m"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_li05g"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_tscm8"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_du4i4"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_xj6dy"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_on7lk"]
 
-[sub_resource type="Resource" id="Resource_xj6dy"]
-script = ExtResource("5_du4i4")
+[sub_resource type="Resource" id="Resource_lxcs1"]
+script = ExtResource("6_on7lk")
 
 [resource]
-script = ExtResource("4_tscm8")
+script = ExtResource("5_xj6dy")
 id = &"forge_token"
 display_name = "铸牌"
 display_names = {
 "en": "Forge Token"
 }
 description = "三件道具在铸炉里熔铸成的附魔牌。拖到一件武器上放手：武器获得这条附魔（永久，覆盖原有的）。"
-shape = SubResource("Resource_xj6dy")
+shape = SubResource("Resource_lxcs1")
 rarity = 1
 weight = 1
 tags = Array[StringName]([&"token"])

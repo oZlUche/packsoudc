@@ -32,6 +32,10 @@ enum Direction {
 ## 不勾的话，同一边别的武器打出的伤害也会被改
 @export var own_only: bool = false
 
+## 175 补充五：只认**打中了**的那一下 —— 被受伤前效果整个取消的包（damage 事件带 `cancelled`）不算。
+## 道具的「造成伤害后施加」（[member ItemDef.applies]）、晶石的施加元素靠它：没打中不施加
+@export var landed_only: bool = false
+
 
 ## 伤害事件的 side 是【承受方】，source_side 是【施加方】。两个子类只差订阅哪条事件（与 [OnDamage] 的暴击筛选）
 func matches(ctx: RuleContext, event: BattleEvent) -> bool:
@@ -45,6 +49,8 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 			if not dealt or hit:
 				return false  # 打到自己不算「造成伤害」
 	if own_only and event.get_int(&"uid") != ctx.source_uid():
+		return false
+	if landed_only and event.get_bool(&"cancelled", false):
 		return false
 	if damage_type != &"":
 		if event.get_name(&"type") != damage_type:

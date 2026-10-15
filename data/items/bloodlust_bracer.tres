@@ -1,53 +1,54 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_wkne1"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_h50at"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_pr7ns"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_6kxed"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_j21q2"]
-[ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="6_b3fob"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_status_applied.gd" id="7_exjvb"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="8_vsooe"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="9_k1etu"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="10_apmft"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_6gl2w"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_7mf8g"]
-
-[sub_resource type="Resource" id="Resource_4s7ik"]
-script = ExtResource("3_pr7ns")
-metadata/part_ref = &"always"
-
-[sub_resource type="Resource" id="Resource_kf6pq"]
-script = ExtResource("6_b3fob")
-axis = &"attack_speed"
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_h50at"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_pr7ns"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_6kxed"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="4_j21q2"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_b3fob"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_exjvb"]
+[ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="7_vsooe"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_status_applied.gd" id="8_k1etu"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_apmft"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_6gl2w"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_7mf8g"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_4s7ik"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_kf6pq"]
 
 [sub_resource type="Resource" id="Resource_0iw71"]
-script = ExtResource("7_exjvb")
+script = ExtResource("4_j21q2")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_t4ck6"]
+script = ExtResource("7_vsooe")
+axis = &"attack_speed"
+
+[sub_resource type="Resource" id="Resource_5adsf"]
+script = ExtResource("8_k1etu")
 buff_id = &"bleed"
 metadata/part_ref = &"on_status_applied_bleed"
 
-[sub_resource type="Resource" id="Resource_t4ck6"]
-script = ExtResource("2_h50at")
-trigger = SubResource("Resource_0iw71")
-cadence = SubResource("Resource_4s7ik")
-effects = Array[ExtResource("5_j21q2")]([SubResource("Resource_kf6pq")])
-
-[sub_resource type="Resource" id="Resource_5adsf"]
-script = ExtResource("8_vsooe")
-rules = Array[ExtResource("2_h50at")]([SubResource("Resource_t4ck6")])
-
 [sub_resource type="Resource" id="Resource_0473i"]
-script = ExtResource("12_7mf8g")
+script = ExtResource("3_6kxed")
+trigger = SubResource("Resource_5adsf")
+cadence = SubResource("Resource_0iw71")
+effects = Array[ExtResource("6_exjvb")]([SubResource("Resource_t4ck6")])
+
+[sub_resource type="Resource" id="Resource_k8n4o"]
+script = ExtResource("9_apmft")
+rules = Array[ExtResource("3_6kxed")]([SubResource("Resource_0473i")])
+
+[sub_resource type="Resource" id="Resource_05ut1"]
+script = ExtResource("13_kf6pq")
 
 [resource]
-script = ExtResource("11_6gl2w")
+script = ExtResource("12_4s7ik")
 id = &"bloodlust_bracer"
 display_name = "嗜血护腕"
 display_names = {
 "en": "Bloodlust Bracer"
 }
 description = "闻到血腥，手就快了。"
-shape = SubResource("Resource_0473i")
+shape = SubResource("Resource_05ut1")
 rarity = 2
 tags = Array[StringName]([&"part", &"leather", &"bleed"])
-combat = SubResource("Resource_5adsf")
+combat = SubResource("Resource_k8n4o")

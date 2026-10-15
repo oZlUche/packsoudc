@@ -1,11 +1,9 @@
 ## 元素印与反应（175 第一批，架构文档 4.6）。
 ##
-## 五种元素：火、冰、雷、毒、血（和伤害类型同名）。**印就是状态**（175 补充四）：灼伤 / 寒冷 / 麻痹 / 中毒 / 流血，
-## [member BuffDef.element] 指明是哪种元素；都可叠、不封顶、永续，只按自己的规矩衰减（流血跳后减半、寒冷出手后减半、麻痹付耐力后减半）。印从两条路来：
-## [codeblock]
-## 命中    伤害管线第 5 步之后（[DamageResolver]）：这种伤害类型有 [member DamageTypeDef.mark] 就盖那个印
-## 施加    [method ApplyStatus.give] 加上了层数、而那个状态本身是印（施加中毒 = 盖毒印）
-## [endcodeblock]
+## 五种元素：火、冰、雷、毒、血。**印就是状态**（175 补充四）：灼伤 / 寒冷 / 麻痹 / 中毒 / 流血，
+## [member BuffDef.element] 指明是哪种元素；都可叠、不封顶、永续，只按自己的规矩衰减（流血跳后减半、寒冷出手后减半、麻痹付耐力后减半）。
+## 175 补充五（作者定）：【造成伤害】和【施加元素】是两件事 —— **印只有一条路来**：[method ApplyStatus.give] 加层之前问 [method before_status]。
+## 火焰伤害就是火焰伤害，不顺手盖灼伤；要「打一下叠一层灼伤」就写施加（道具的 [member ItemDef.applies]、晶石的第二条供给规则、附魔的元素行）。
 ## 175 补充一 / 三（作者伪代码，见报告 175 附录二与补充三）：给目标加 n 层乙元素的印时，在目标身上找**元素不同、层数 > 0** 的印里
 ## **层数最多的那种**（一种元素的层数 = 这种元素的印加起来；并列按 [constant ELEMENTS] 的顺序）：
 ## [codeblock]
@@ -18,8 +16,8 @@
 ## 发一条 `effect_resolved {effect: reaction}`（回放弹字、百科点亮），以**攻击方**（挨打那一方的对手）为主人跑效果。
 ## 带保底的印（凝毒 / 冻疮，[member BuffInstance.guard]）算 N 时照常算全部层数，扣的时候扣不到保底以下（「纳入计算但不真正减少」）。
 ##
-## **反应不连锁**：结算期间 [member BattleContext.reacting] > 0 —— 这期间的伤害不盖印、施加的状态照常上身但不再引发反应。
-## 规则层一行不加：印是伤害类型与状态的副产品，元素从哪儿来（法杖的晶石、附加的火箭、附魔、投掷弹）都一样
+## **反应不连锁**：结算期间 [member BattleContext.reacting] > 0 —— 这期间施加的状态照常上身但不再引发反应。
+## 一件道具「带哪种元素」只看它**施加**什么（[method elements_of_item]），不看它打什么类型的伤害
 class_name ReactionResolver
 extends RefCounted
 
@@ -127,21 +125,13 @@ static func element_name(e: StringName, lang: String = "") -> String:
 	return String(n.get(l, n["zh"]))
 
 
-## 一个印的定义（伤害类型的 mark 指的那个 buff）
+## 按 id 找一个 buff 定义（测试登记的先查，再查内容库）
 static func mark_buff(id: StringName) -> BuffDef:
 	if id == &"":
 		return null
 	if _buffs.has(id):
 		return _buffs[id]
 	return ContentLibrary.buffs().get(id, null)
-
-
-## 一种伤害类型带的元素（它盖的印是哪种元素的）；不盖印的空
-static func element_of_type(type: StringName) -> StringName:
-	if type == &"" or not DamageTypes.has(type):
-		return &""
-	var mark := mark_buff(DamageTypes.get_def(type).mark)
-	return mark.element if mark != null else &""
 
 
 ## [param who] 身上有没有 [param e] 元素的印
@@ -175,7 +165,8 @@ static func strongest_other(who: CombatantRuntime, incoming: StringName) -> Stri
 	return best
 
 
-## 一组规则会带来哪些元素（悬浮窗的「可引发」、对阵屏的元素图标）：造成的伤害类型、改成的伤害类型、施加 / 转成的状态、附火。按元素顺序
+## 一组规则会**施加**哪些元素（悬浮窗的「可引发」、对阵屏的元素图标）：施加 / 转成的状态带的元素。按元素顺序。
+## 补充五：打什么类型的伤害不算 —— 只打火伤、不施加灼伤的道具不带火
 static func elements_of_rules(rules: Array) -> Array[StringName]:
 	var found := {}
 	for r in rules:
@@ -195,13 +186,7 @@ static func elements_of_rules(rules: Array) -> Array[StringName]:
 static func _elements_of_effect(e) -> Array[StringName]:
 	var out: Array[StringName] = []
 	var el := &""
-	if e is DealDamage:
-		el = element_of_type((e as DealDamage).damage_type)
-	elif e is ConvertDamageType:
-		el = element_of_type((e as ConvertDamageType).to)
-	elif e is FireEnchant:
-		el = element_of_type(DamageTypes.FIRE)
-	elif e is ApplyStatus and (e as ApplyStatus).buff != null:
+	if e is ApplyStatus and (e as ApplyStatus).buff != null:
 		el = (e as ApplyStatus).buff.element
 	elif e is ConvertStatus and (e as ConvertStatus).to != null:
 		el = (e as ConvertStatus).to.element
@@ -217,13 +202,14 @@ static func elements_of_item(item: CompiledItem) -> Array[StringName]:
 	var out := elements_of_rules(item.rules)
 	if item.loaded.is_empty():
 		return out
-	var found := {}     # 175 第二批：轮读的法杖，元素来自轮读表里的晶石
+	var found := {}     # 175 第二批：轮读的法杖，元素来自轮读表里每颗晶石施加的（补充五）
 	for el in out:
 		found[el] = true
 	for e in item.loaded:
-		var el := element_of_type(StringName(e.get("type", &"")))
-		if el != &"":
-			found[el] = true
+		var app: Dictionary = e.get("applies", {})
+		var b := mark_buff(StringName(String(app.get("buff", ""))))
+		if b != null and b.element != &"":
+			found[b.element] = true
 	var merged: Array[StringName] = []
 	for el in ELEMENTS:
 		if found.has(el):
@@ -244,19 +230,6 @@ static func reactions_between(mine: Array, others: Array) -> Array[ReactionDef]:
 
 
 #region 结算
-## 伤害管线第 5 步之后：这一下带的印（[member DamageTypeDef.mark_stacks] 层）—— 先看反应，余下的盖上
-static func after_hit(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef) -> void:
-	var victim := packet.victim
-	if ctx == null or victim == null or victim.dead or ctx.reacting > 0:
-		return
-	var mark := mark_buff(td.mark)
-	if mark == null:
-		return
-	var left := _react(ctx, victim, mark, maxi(1, td.mark_stacks), packet.source_uid)
-	if left > 0 and not victim.dead:
-		_stamp(ctx, victim, mark, left)
-
-
 ## [method ApplyStatus.give] 加层**之前**问一句：这个状态本身是印（中毒、流血……）、要给 [param victim] 加 [param n] 层 ——
 ## 返回反应过后还要叠几层（没反应 = [param n]；补充三：新印扣 N 层后的余量照常叠，不再引发第二次反应）
 static func before_status(ctx: BattleContext, victim: CombatantRuntime, def: BuffDef, n: int) -> int:
@@ -316,17 +289,10 @@ static func _consume(rc: RuleContext, who: CombatantRuntime, e: StringName, n: i
 			rc.battle.emit(BattleEvent.STATUS_UNSTACKED, who.side, {"buff": String(id), "delta": -removed, "stacks": who.stacks_of(id), "reason": REASON})
 
 
-## 以 [param victim] 的对手为主人的一份上下文（盖印、反应效果、菌血叠毒的施加方都是它）
+## 以 [param victim] 的对手为主人的一份上下文（反应效果、菌血叠毒的施加方都是它）
 static func foe_context(ctx: BattleContext, victim: CombatantRuntime) -> RuleContext:
 	var owner := ctx.opponent_of(victim)
 	return RuleContext.create(ctx, owner, RuleRuntime.create(null, 0, null, owner.side))
-
-
-## 盖 [param n] 层印（施加方 = 挨打那一方的对手）。走 [method ApplyStatus.give]：发 status_stacked / status_applied，同元素就是加层
-static func _stamp(ctx: BattleContext, victim: CombatantRuntime, mark: BuffDef, n: int) -> void:
-	ctx.reacting += 1     # 已经判过反应了：这一盖不再引发
-	ApplyStatus.give(foe_context(ctx, victim), victim, mark, n)
-	ctx.reacting -= 1
 #endregion
 
 

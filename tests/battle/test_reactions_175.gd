@@ -1,4 +1,4 @@
-## 175 第一批：元素印与反应表 —— 命中盖印、施加中毒 / 流血即盖印、物理不盖；反应不连锁；导入器的校验。
+## 175 第一批：元素印与反应表 —— 施加印即盖印（补充五：伤害不再顺手盖印）；反应不连锁；导入器的校验。
 ## 175 补充一 / 三（作者伪代码，更正为 min）：取层数最多的异色印、N = min(已有, 新来)、两边各扣 N、新印余量照常叠且不再反应。
 ## 补充二：反应效果里的数字可写成随 N 变（per_stack / stacks: n / seconds: n + max）。
 ## 补充四（作者定稿）：五种印都可叠、不封顶、永续，按自己的规矩结算 / 衰减（灼伤与中毒每秒层数点、流血真实伤害跳后减半、
@@ -73,13 +73,8 @@ static func _axis(ctx: BattleContext, side: int, axis: StringName) -> int:
 
 
 static func run_marks(t: TestCase) -> void:
-	t.begin("175 补充四 · 五种印：都可叠、不封顶、永续；灼伤 / 中毒每秒层数点、流血真实伤害跳后减半；印自己跳的伤害不再盖印")
-	t.eq(DamageTypes.get_def(DamageTypes.FIRE).mark, &"scorch", "火焰盖灼伤")
-	t.eq(DamageTypes.get_def(DamageTypes.ICE).mark, &"chill", "冰霜盖寒冷")
-	t.eq(DamageTypes.get_def(DamageTypes.LIGHTNING).mark, &"numb", "闪电盖麻痹")
-	t.eq(DamageTypes.get_def(DamageTypes.PHYSICAL).mark, &"", "物理不盖")
-	t.eq(DamageTypes.get_def(DamageTypes.POISON).mark, &"", "中毒伤害不盖（毒印是状态本身，否则每跳一次多一层）")
-	t.eq(DamageTypes.get_def(DamageTypes.FIRE).mark_stacks, 1, "一下盖一层（补 3 A）")
+	t.begin("175 补充四 / 五 · 五种印：都可叠、不封顶、永续；灼伤 / 中毒每秒层数点、流血真实伤害跳后减半；印只从施加来，伤害不盖印")
+	t.check(not ("mark" in DamageTypes.get_def(DamageTypes.FIRE)), "补充五：伤害类型没有「盖印」这一项了")
 	var names := {"scorch": "灼伤", "chill": "寒冷", "numb": "麻痹", "poison": "中毒", "bleed": "流血"}
 	var elements := {"scorch": &"fire", "chill": &"ice", "numb": &"lightning", "poison": &"poison", "bleed": &"bleed"}
 	for id in names:
@@ -90,17 +85,24 @@ static func run_marks(t: TestCase) -> void:
 			t.eq(b.display_name, String(names[id]), "%s 的名字" % id)
 	t.eq(_b("virulent").element, &"", "剧毒不再是印（补 4.2 第 8 条）")
 	t.check(DamageTypes.get_def(DamageTypes.BLEED).pure, "流血是真实伤害")
+	t.eq(DamageTypes.family_of(DamageTypes.BLEED), DamageTypes.PHYSICAL, "补充五：流血是真实 · 物理（family = physical）")
+	t.eq(DamageTypes.nature(DamageTypes.BLEED, "zh"), "真实 · 物理", "词条的「真实 · 物理」从数据来")
+	t.check(DamageTypes.describe(DamageTypes.BLEED, "zh").begins_with("真实 · 物理。"), "流血的说明以「真实 · 物理」开头")
+	for id in [DamageTypes.PHYSICAL, DamageTypes.FIRE, DamageTypes.ICE, DamageTypes.LIGHTNING, DamageTypes.POISON, DamageTypes.REFLECT, DamageTypes.DRAIN]:
+		t.check(not DamageTypes.get_def(id).pure and DamageTypes.family_of(id) == id, "%s：不是真实伤害，大类是自己" % id)
 
-	var ctx := _run([_hit(DamageTypes.FIRE, 1.0)])
-	t.eq(ctx.sides[1].stacks_of(&"scorch"), 1, "火伤之后身上一层灼伤")
+	var ctx := _run([_hit(DamageTypes.FIRE, 1.0), _hit(DamageTypes.ICE, 1.0), _hit(DamageTypes.LIGHTNING, 1.0)])
+	t.check(ctx.sides[1].buffs.is_empty(), "补充五：火、冰、雷伤害只是伤害，身上没有印")
+	t.check(_reactions(ctx).is_empty(), "不施加就不反应")
+	t.eq(S._hp(ctx, 1), 97, "伤害照打")
+	ctx = _run([_apply("scorch")])
+	t.eq([ctx.sides[1].stacks_of(&"scorch"), S._hp(ctx, 1)], [1, 100], "补充五：只施加灼伤不打伤害 —— 一层灼伤、不掉血")
 	t.check(_reactions(ctx).is_empty(), "一种元素不反应")
-	ctx = _run([_hit(DamageTypes.PHYSICAL, 1.0)])
-	t.check(ctx.sides[1].buffs.is_empty(), "物理不盖印")
 	var many: Array = []
 	for i in 12:
-		many.append(_hit(DamageTypes.FIRE, 1.0))
+		many.append(_apply("scorch"))
 	ctx = _run(many)
-	t.eq(ctx.sides[1].stacks_of(&"scorch"), 12, "十二下火：十二层灼伤，不封顶（均无叠层上限）")
+	t.eq(ctx.sides[1].stacks_of(&"scorch"), 12, "十二次施加：十二层灼伤，不封顶（均无叠层上限）")
 	t.check(_reactions(ctx).is_empty(), "同元素不反应")
 	ctx = _run([_apply("poison", 2), _apply("poison", 3)])
 	t.eq(ctx.sides[1].stacks_of(&"poison"), 5, "中毒再碰就是加层")
@@ -225,8 +227,10 @@ static func run_fire(t: TestCase) -> void:
 	ctx = _react("poison", 3, "scorch", 3)
 	t.eq(S._hp(ctx, 1), 100 - roundi(3 * m_burst), "N = 3：3M 火伤")
 	t.eq([ctx.sides[1].stacks_of(&"scorch"), ctx.sides[1].stacks_of(&"poison")], [1, 0], "N = 3：重叠 3 / 2 = 1 层灼伤，中毒吃光")
+	ctx = _run([_apply("poison", 3), _hit(DamageTypes.FIRE, 1.0), _apply("scorch")])
+	t.eq([ctx.sides[1].stacks_of(&"poison"), S._hp(ctx, 1)], [2, 100 - 1 - roundi(m_burst)], "一下火伤 + 一层灼伤打三层中毒：N = min(3, 1) = 1，中毒剩两层")
 	ctx = _run([_apply("poison", 3), _hit(DamageTypes.FIRE, 1.0)])
-	t.eq([ctx.sides[1].stacks_of(&"poison"), S._hp(ctx, 1)], [2, 100 - 1 - roundi(m_burst)], "一下火打三层中毒：N = min(3, 1) = 1，中毒剩两层")
+	t.check(_reactions(ctx).is_empty() and ctx.sides[1].stacks_of(&"poison") == 3, "补充五：只打火伤不施加灼伤，不引发爆燃")
 
 	# 淬裂
 	ctx = _react("chill", 1, "scorch", 1, {"max_armor": 30})
@@ -396,7 +400,7 @@ static func run_rules(t: TestCase) -> void:
 	foe.apply_buff(_b("chill"), 5, ctx.now)
 	foe.apply_buff(_b("bleed"), 3, ctx.now)
 	var rc := RuleContext.create(ctx, ctx.sides[0], RuleRuntime.create(null, 1, null, 0))
-	_hit(DamageTypes.LIGHTNING, 1.0).apply(rc)
+	_apply("numb").apply(rc)
 	t.eq(_reactions(ctx), [&"ice_lightning"] as Array[StringName], "取层数最多的寒 → 超导")
 	t.eq([foe.stacks_of(&"chill"), foe.stacks_of(&"scorch"), foe.stacks_of(&"bleed"), foe.stacks_of(&"numb")], [4, 2, 3, 0], "寒扣 N = 1 剩四、灼和流血不动、麻扣光")
 	# 并列：灼 3、流血 3，来毒 → 按顺序取火 → 爆燃 N = 3
@@ -415,11 +419,11 @@ static func run_rules(t: TestCase) -> void:
 	foe.apply_buff(_b("scorch"), 3, ctx.now)
 	foe.apply_buff(_b("poison"), 1, ctx.now)
 	rc = RuleContext.create(ctx, ctx.sides[0], RuleRuntime.create(null, 1, null, 0))
-	_hit(DamageTypes.FIRE, 1.0).apply(rc)
+	_apply("scorch").apply(rc)
 	t.eq(_reactions(ctx), [&"fire_poison"] as Array[StringName], "同色的灼不算，和中毒反应")
 	t.eq(foe.stacks_of(&"scorch"), 3, "灼伤 3 留着（N = 1 的爆燃不重叠灼伤）")
 	# 电解（补 4 A）：先麻后毒 → N = min(1, 2) = 1 层剧毒，中毒余一层叠上
-	ctx = _run([_hit(DamageTypes.LIGHTNING, 1.0), _apply("poison", 2)])
+	ctx = _run([_apply("numb"), _apply("poison", 2)])
 	t.eq([ctx.sides[1].stacks_of(&"virulent"), ctx.sides[1].stacks_of(&"poison"), ctx.sides[1].stacks_of(&"numb")], [1, 1, 0], "先麻后毒：一层剧毒、中毒余一层、麻扣光")
 	# 补 3.3：寒 1、麻 3，来五层灼 → 和麻反应（过载）N = 3，灼余两层叠上，寒原地不动，不再和灼炸
 	ctx = _run([])
@@ -433,9 +437,9 @@ static func run_rules(t: TestCase) -> void:
 	# 反应不连锁：爆燃里的火伤与灼都在反应结算内
 	ctx = _run([_apply("poison", 2), _apply("bleed")])
 	t.eq(_reactions(ctx), [&"poison_bleed"] as Array[StringName], "毒 + 血 = 菌血")
-	ctx = _run([_apply("poison", 1), _hit(DamageTypes.FIRE, 1.0), _hit(DamageTypes.FIRE, 1.0)])
-	t.eq(_reactions(ctx).size(), 1, "爆燃之后对手只剩灼，再一下火只是加深")
-	t.eq(ctx.sides[1].stacks_of(&"scorch"), 1, "N = 1 的爆燃不叠灼伤，再一下火盖一层")
+	ctx = _run([_apply("poison", 1), _apply("scorch"), _apply("scorch")])
+	t.eq(_reactions(ctx).size(), 1, "爆燃之后对手只剩灼，再施加一次灼伤只是加深")
+	t.eq(ctx.sides[1].stacks_of(&"scorch"), 1, "N = 1 的爆燃不叠灼伤，再施加一层")
 	# 出生晚于事件：施加 buff 的那一刻已经排在队里的出手事件，它的规则听不见
 	var rt := RuleRuntime.new()
 	rt.born = 5

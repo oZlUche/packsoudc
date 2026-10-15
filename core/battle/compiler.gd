@@ -137,6 +137,9 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 			item.rules.append_array(bonus_rules[uid])
 		for pair in attach_pending.get(uid, []):
 			_attach(item, pair[0], pair[1])
+		# 175 补充五：道具自己的「造成伤害后施加」简写，也走附加入口（来源是道具自己 → 直接来源，130 的「施加时」听得到）
+		if not def.applies.is_empty():
+			_attach(item, ElementApply.rule_of(def.applies), ElementApply.ORIGIN)
 		# 175 第三批：附魔（铸牌附上的覆盖预置的）走同一个附加入口，一把只挂一条；表里查不到了就不挂
 		var ench := Forge.enchant_of(board.get_item(uid))
 		if not ench.is_empty():
@@ -307,8 +310,8 @@ static func _apply_adjacency(
 			(mod as StatModifier).apply_to(stats[uid], 1)
 		for r in fp.feed_rules:
 			if r != null:
-				if cycler and convert_to(r) != &"":
-					continue     # 175：换型也一样，轮到它那一下才换
+				if cycler and (convert_to(r) != &"" or not applies_of(r).is_empty()):
+					continue     # 175：换型也一样，轮到它那一下才换；补充五：施加元素也是，轮到它那一下才施加
 				if not attach_pending.has(uid):
 					attach_pending[uid] = []
 				attach_pending[uid].append([r, feeder.def.id])
@@ -336,9 +339,20 @@ static func convert_to(rule: AbilityRule) -> StringName:
 	return &""
 
 
+## 175 补充五：一条供给规则若是「这件造成伤害后施加某个状态」（on_damage DEALT + [ApplyStatus]），返回 `{buff: id, stacks}`；不是 = 空。
+## 轮读的法杖把它记进轮读表（[member CompiledItem.loaded] 每颗的 `applies`），轮到那颗才施加
+static func applies_of(rule: AbilityRule) -> Dictionary:
+	if rule == null or not (rule.trigger is OnDamage) or (rule.trigger as OnDamage).direction != DamageTrigger.Direction.DEALT:
+		return {}
+	for e in rule.effects:
+		if e is ApplyStatus and (e as ApplyStatus).buff != null:
+			return {"buff": (e as ApplyStatus).buff.id, "stacks": maxi(1, (e as ApplyStatus).stacks)}
+	return {}
+
+
 ## 175（作者定，待定 6 推荐 A）：法杖 [param holder_uid] 的轮读表 —— 归属给它的晶石按**顺时针**排：
 ## 以法杖占格的中心为原点，晶石压在装载格上那几格的中心为方位，从 12 点起顺时针；同角按 `placed_seq`、再按 uid。
-## 每颗 `{uid, id, type, damage}`（见 [member CompiledItem.loaded]）。宿主不轮读 / 没有晶石 = 空
+## 每颗 `{uid, id, type, damage, applies}`（见 [member CompiledItem.loaded]；applies 空 = 这颗只打伤害、不施加）。宿主不轮读 / 没有晶石 = 空
 static func cycle_order(board: GridInventory, holder_uid: int, loads: Dictionary) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var holder := board.get_item(holder_uid) if board != null else null
@@ -373,11 +387,16 @@ static func _loaded_entry(feeder: ItemInstance) -> Dictionary:
 		if (mod as StatModifier).stat == BattleStats.DAMAGE:
 			(mod as StatModifier).apply_to(dmg, 1)
 	var type := &""
+	var applies := {}
 	for r in fp.feed_rules:
 		var to := convert_to(r as AbilityRule)
 		if to != &"":
 			type = to
-	return {"uid": feeder.uid, "id": feeder.def.id, "type": type if type != &"" else DamageTypes.PHYSICAL, "damage": dmg.total_of(BattleStats.DAMAGE)}
+		var app := applies_of(r as AbilityRule)
+		if not app.is_empty():
+			applies = app
+	return {"uid": feeder.uid, "id": feeder.def.id, "type": type if type != &"" else DamageTypes.PHYSICAL, "damage": dmg.total_of(BattleStats.DAMAGE),
+		"applies": applies}
 
 
 static func _abs_cells(inst: ItemInstance) -> Array[Vector2i]:

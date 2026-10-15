@@ -19,6 +19,8 @@ const TOKEN_ID := &"forge_token"
 const TOKEN_TAG := &"token"
 ## 「每次都触发」落到不许的时机上时换成的冷却（秒）
 const MIN_COOLDOWN := 1.0
+## 175 补充五（待定 补 5.2 A）：元素行一次最多施加几层
+const MAX_ELEMENT_STACKS := 5
 ## 附魔规则挂到武器上时记的来源（[member CompiledItem.attached] 的 origin）
 const ORIGIN := &"enchant"
 ## 槽的中文名
@@ -86,7 +88,7 @@ static func forge(timing: ItemDef, effect: ItemDef, value: ItemDef) -> Dictionar
 	}
 
 
-## 晶石这类按元素盖印：这件道具自己带的元素（供给规则、战斗规则里的伤害类型），表里有的第一个；没有就表里第一个
+## 晶石这类按元素换：这件道具自己施加的元素（供给规则、战斗规则里施加的状态；补充五：不看伤害类型），表里有的第一个；没有就表里第一个
 static func _element_for(em: ForgeEntry, def: ItemDef) -> StringName:
 	if em.by_element.is_empty():
 		return &""
@@ -190,10 +192,34 @@ static func rule_of(ench: Dictionary) -> AbilityRule:
 		if not em.self_only and ep != null and ep.target >= 0 and "target" in extra:
 			extra.set("target", ep.target)
 		rule.effects.append(extra)
+	var app := _element_apply(em, ep, ench, tier)
+	if app != null:
+		rule.effects.append(app)
 	return rule
 
 
-## 数值、给谁、按元素换的印
+## 175 补充五：元素行的施加 —— 伤害只是伤害，元素要另写一句施加（`by_element.<元素>.applies: {"buff": "scorch"}`）。
+## 待定 补 5.2 A：一阶 1 层，每高一阶多 1 层，最多 [constant MAX_ELEMENT_STACKS] 层。给谁跟主效果一样（用途定）
+static func _element_apply(em: ForgeEntry, ep: ForgeEntry, ench: Dictionary, tier: int) -> ApplyStatus:
+	var el := String(ench.get("element", ""))
+	if el == "" or not em.by_element.has(el):
+		return null
+	var row: Dictionary = em.by_element[el]
+	var spec: Variant = row.get("applies", null)
+	if not (spec is Dictionary):
+		return null
+	var b: BuffDef = ContentLibrary.buffs().get(StringName(String((spec as Dictionary).get("buff", ""))), null)
+	if b == null:
+		return null
+	var eff := ApplyStatus.new()
+	eff.buff = b
+	eff.stacks = mini(MAX_ELEMENT_STACKS, 1 + maxi(0, tier))
+	if not em.self_only and ep != null and ep.target >= 0:
+		eff.target = ep.target as CombatEffect.Target
+	return eff
+
+
+## 数值、给谁、按元素换的伤害类型（元素的施加另成一个效果，[method _element_apply]）
 static func _shape_effect(eff: CombatEffect, em: ForgeEntry, ep: ForgeEntry, ench: Dictionary) -> void:
 	var mag := maxi(1, int(ench.get("magnitude", 1)))
 	if em.amount_field in eff:
@@ -207,7 +233,7 @@ static func _shape_effect(eff: CombatEffect, em: ForgeEntry, ep: ForgeEntry, enc
 	var row: Dictionary = em.by_element[el]
 	for k in row:
 		var key := String(k)
-		if key == "prefix" or key == "prefixes" or not (key in eff):
+		if key == "prefix" or key == "prefixes" or key == "applies" or not (key in eff):
 			continue
 		if key == "buff":
 			var b: BuffDef = ContentLibrary.buffs().get(StringName(String(row[k])), null)

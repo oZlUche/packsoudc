@@ -1,21 +1,22 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_186ps"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_8vkkn"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_t1qor"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_pyikr"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_wmb4a"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_8vkkn"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_t1qor"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_pyikr"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_wmb4a"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_mybct"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_bn8vt"]
 
-[sub_resource type="Resource" id="Resource_mybct"]
-script = ExtResource("5_wmb4a")
+[sub_resource type="Resource" id="Resource_o3dqt"]
+script = ExtResource("6_bn8vt")
 
 [resource]
-script = ExtResource("4_pyikr")
+script = ExtResource("5_mybct")
 id = &"raw_salt"
 display_name = "粗盐块"
 display_names = {
 "en": "Rock Salt"
 }
 description = "没化开的盐，内陆值钱。"
-shape = SubResource("Resource_mybct")
+shape = SubResource("Resource_o3dqt")
 tags = Array[StringName]([&"material", &"nature", &"stone"])

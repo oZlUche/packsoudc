@@ -65,11 +65,27 @@ static func name_of(id: StringName, lang: String = "") -> String:
 	return n if n != "" else String(id)
 
 
-## 096：类型的一句说明（当前语言）；没写返回空
+## 096：类型的一句说明（当前语言）；没写返回空。175 补充五：真实伤害前面加性质（「真实 · 物理。」，从 pure / family 来）
 static func describe(id: StringName, lang: String = "") -> String:
 	_ensure_builtins()
 	var d: DamageTypeDef = _defs.get(id, null)
-	return Names.description_of(d, lang) if d != null else ""
+	if d == null:
+		return ""
+	var text := Names.description_of(d, lang)
+	var head := nature(id, lang)
+	if head == "":
+		return text
+	return "%s。%s" % [head, text] if text != "" else head
+
+
+## 175 补充五：真实伤害的性质 ——「真实 · 物理」（大类按 [member DamageTypeDef.family] 的名字）；不是真实伤害返回空
+static func nature(id: StringName, lang: String = "") -> String:
+	_ensure_builtins()
+	var d: DamageTypeDef = _defs.get(id, null)
+	if d == null or not d.pure:
+		return ""
+	var l := lang if lang != "" else UiText.lang
+	return "%s · %s" % ["True" if l == "en" else "真实", name_of(d.family_of(), lang)]
 
 
 static func _define_builtins() -> void:
@@ -81,6 +97,7 @@ static func _define_builtins() -> void:
 	_define(POISON, "中毒", false, false)
 	_define(BLEED, "流血", false, false)
 	(_defs[BLEED] as DamageTypeDef).pure = true     # 175 补充四：流血是真实伤害
+	(_defs[BLEED] as DamageTypeDef).family = PHYSICAL     # 补充五：真实 · 物理
 	_define(REFLECT, "反伤", true, false)
 	_define(DRAIN, "流失", false, false)
 
@@ -117,6 +134,13 @@ static func register(def: DamageTypeDef) -> bool:
 		return false
 	_defs[def.id] = def
 	return true
+
+
+## 175 补充五：这种伤害归哪一大类（流血 → 物理；没登记的原样）
+static func family_of(id: StringName) -> StringName:
+	_ensure_builtins()
+	var d: DamageTypeDef = _defs.get(id, null)
+	return d.family_of() if d != null else id
 
 
 static func has(id: StringName) -> bool:

@@ -1,22 +1,23 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_3n2eo"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_24cmb"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_ira1k"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_558x2"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_0jshj"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_24cmb"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_ira1k"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_558x2"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_0jshj"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_2qjqc"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_6c3j4"]
 
-[sub_resource type="Resource" id="Resource_2qjqc"]
-script = ExtResource("5_0jshj")
+[sub_resource type="Resource" id="Resource_a5uob"]
+script = ExtResource("6_6c3j4")
 
 [resource]
-script = ExtResource("4_558x2")
+script = ExtResource("5_2qjqc")
 id = &"silver_ingot"
 display_name = "银锭"
 display_names = {
 "en": "Silver Ingot"
 }
 description = "打了印记的银。"
-shape = SubResource("Resource_2qjqc")
+shape = SubResource("Resource_a5uob")
 rarity = 2
 tags = Array[StringName]([&"material", &"crafted", &"metal", &"supply"])

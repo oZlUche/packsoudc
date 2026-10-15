@@ -818,6 +818,11 @@ static func import_damage_type(data: Dictionary, ctx: Context, report: ImportRep
 	_require_id(def.id, "伤害类型", report)
 	if def.display_name.strip_edges() == "":
 		report.error("display_name", "伤害类型得有名字")
+	# 175 补充五（作者定）：只有流血是真实伤害，别的类型不许打开它
+	if def.pure and def.id != DamageTypes.BLEED:
+		report.error("pure", "只有流血是真实伤害（175 补充五）：%s 不能写 pure" % def.id)
+	if def.family != &"" and def.family != def.id and not DamageTypes.has(def.family):
+		report.error("family", "认不得的伤害大类 '%s'" % def.family)
 	return def
 
 
