@@ -1,5 +1,6 @@
 ## 一方战斗单位的面板：资源条 + 增益层数 + 飘字。
-## 087（作者定）：增益 / 减益画成一排**图标**（现在暂时用名字的第一个字），鼠标停上去发 [signal buff_hovered]，回放层开悬浮窗写具体效果。
+## 087（作者定）：增益 / 减益画成一排**图标**，鼠标停上去发 [signal buff_hovered]，回放层开悬浮窗写具体效果。
+## 175 补 5.5：图标走 [EffectIcons]（28×28，不画方格底和外框，层数在右下角）；缺图和被动条目照旧画名字的第一个字。
 ##
 ## [b]它只认日志喂进来的数值，不认识 [CombatantRuntime]。[/b]
 ## 回放是「照着一串事件重演」，不是「盯着一个活的模拟对象」——
@@ -9,7 +10,8 @@ extends Control
 
 const BAR_H := 18
 const BAR_GAP := 6
-const CHIP_H := 20
+## 175 补 5.5：一排格子的高 = 图标的边长（缺图的首字格也这么高，一排才齐）
+const CHIP_H := 28
 const PAD := 12
 ## 103：系统效果（鏖战、衰竭）的配色
 const SYSTEM_COLOR := Color("e0b45c")
@@ -135,7 +137,7 @@ func chip_at(local: Vector2) -> String:
 	return ""
 
 
-## 图标上写的字：名字的第一个字（暂时；正式美术换成图）
+## 缺图时格子上写的字：名字的第一个字
 func icon_of(id: String) -> String:
 	if id == OVERTIME_CHIP:
 		return "鏖"
@@ -203,18 +205,31 @@ func is_bad_axis(id: String) -> bool:
 	return v > 0 if axis_of(id) == StatAxes.DAMAGE_TAKEN else v < 0
 
 
-## 图标上的字 + 层数。不可叠层的不画 ×1（103）；常驻格的层数是阶 / 档位，一律画；轴格画 ×|层数|
+## 首字格上的字 + 层数（缺图时画它）。不可叠层的不画 ×1（103）；常驻格的层数是阶 / 档位，一律画；轴格画 ×|层数|
 func chip_text(id: String) -> String:
+	var n := chip_count(id)
+	if n == "":
+		return icon_of(id)
+	return "%s %s" % [icon_of(id), n] if id == BLOCK_CHIP else "%s ×%s" % [icon_of(id), n]
+
+
+## 格子的层数（图标格画在右下角）；不可叠层的空
+func chip_count(id: String) -> String:
 	if id == BLOCK_CHIP:
-		return "%s %d" % [icon_of(id), block_value()]
+		return str(block_value())
 	if id.begins_with(AXIS_PREFIX):
-		return "%s ×%d" % [icon_of(id), absi(int(_stacks.get(id, 0)))]
+		return str(absi(int(_stacks.get(id, 0))))
 	if passive_of(id) != null:
-		return "%s ×%d" % [icon_of(id), passive_of(id).stacks]
+		return str(passive_of(id).stacks)
 	var def: BuffDef = buff_defs.get(StringName(id), null)
 	if def != null and not def.is_stackable():
-		return icon_of(id)
-	return "%s ×%d" % [icon_of(id), int(_stacks.get(id, 0))]
+		return ""
+	return str(int(_stacks.get(id, 0)))
+
+
+## 175 补 5.5：这一格的图标（保底的中毒 / 流血换彩色成品）；没有 null
+func icon_texture(id: String) -> Texture2D:
+	return EffectIcons.of(id, int(_stacks.get(id, 0)), int(guards.get(id, 0)))
 
 
 #region 由回放驱动
@@ -462,33 +477,23 @@ func _draw() -> void:
 		var x := float(PAD)
 		for id in ordered_ids():
 			var def: BuffDef = buff_defs.get(StringName(String(id)), null)
+			var tex := icon_texture(String(id))
 			var text := chip_text(String(id))
-			var w := label_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 14
+			var w := EffectIcons.SIZE if tex != null else label_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 14
 			if x + w > size.x - PAD:
 				x = PAD
 				y += CHIP_H + 4
 			var rect := Rect2(x, y, w, CHIP_H)
 			var drawn := rect
-			var font_px := 12
+			var k := 1.0
 			if String(id) == _pop_id and _pop_t < 1.0:     # 157：刚上身的那一格从小弹到原大
-				var k := lerpf(POP_FROM, 1.0, _pop_t)
+				k = lerpf(POP_FROM, 1.0, _pop_t)
 				drawn = Rect2(rect.get_center() - rect.size * k * 0.5, rect.size * k)
-				font_px = maxi(6, roundi(12 * k))
-			# 103：四种配色 —— 系统（琥珀）、减益（红）、增益（蓝）、常驻（灰）
-			var line := UiPalette.ARMOR
 			var group := _group_of(String(id))
-			if passive_of(String(id)) != null:
-				line = UiPalette.DIM
-			elif group == 0:
-				line = SYSTEM_COLOR
-			elif group == 1:
-				line = UiPalette.HP
-			draw_rect(drawn, Color(line, 0.3))
-			draw_rect(drawn, line, false, 1.0 if String(id) != _hover_id else 2.0)
-			draw_string(
-				label_font, Vector2(drawn.position.x + 7.0 * drawn.size.y / CHIP_H, drawn.position.y + 14.0 * drawn.size.y / CHIP_H), text,
-				HORIZONTAL_ALIGNMENT_LEFT, -1, font_px, UiPalette.FG
-			)
+			if tex != null:
+				_draw_icon_chip(String(id), def, group, tex, drawn, k)
+			else:
+				_draw_text_chip(String(id), group, text, drawn, k)
 			_chips.append([rect, String(id)])
 			x += w + 6
 
@@ -497,6 +502,40 @@ func _draw() -> void:
 			label_font, Vector2(PAD, size.y - PAD), "▸ " + _last_fired,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiPalette.DIM
 		)
+
+
+## 175 补 5.5：图标格 —— 单色图按 [method EffectIcons.tint_of] 着色（保底的彩色成品用白），层数描边画在右下角；悬停时垫一层淡底
+func _draw_icon_chip(id: String, def: BuffDef, group: int, tex: Texture2D, drawn: Rect2, k: float) -> void:
+	var stacks := int(_stacks.get(id, 0))
+	var tint := EffectIcons.tint_of(id, def, group)
+	if id == _hover_id:
+		draw_rect(drawn, Color(tint, 0.22))
+	var guard_art := EffectIcons.is_guard_art(id, stacks, int(guards.get(id, 0)))
+	draw_texture_rect(tex, drawn, false, Color.WHITE if guard_art else tint)
+	var n := chip_count(id)
+	if n == "":
+		return
+	var px := maxi(6, roundi(12 * k))
+	var at := Vector2(drawn.position.x, drawn.end.y - 1.0)
+	draw_string_outline(label_font, at, n, HORIZONTAL_ALIGNMENT_RIGHT, drawn.size.x, px, 3, UiPalette.BG)
+	draw_string(label_font, at, n, HORIZONTAL_ALIGNMENT_RIGHT, drawn.size.x, px, UiPalette.FG)
+
+
+## 缺图的首字格（103 的四种配色：系统琥珀、减益红、增益蓝、常驻灰）
+func _draw_text_chip(id: String, group: int, text: String, drawn: Rect2, k: float) -> void:
+	var line := UiPalette.ARMOR
+	if passive_of(id) != null:
+		line = UiPalette.DIM
+	elif group == 0:
+		line = SYSTEM_COLOR
+	elif group == 1:
+		line = UiPalette.HP
+	draw_rect(drawn, Color(line, 0.3))
+	draw_rect(drawn, line, false, 1.0 if id != _hover_id else 2.0)
+	draw_string(
+		label_font, Vector2(drawn.position.x + 7.0 * k, drawn.position.y + (CHIP_H * 0.5 + 4.0) * k), text,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, maxi(6, roundi(12 * k)), UiPalette.FG
+	)
 
 
 ## 现在的护甲值（显示值；没有就 0）
