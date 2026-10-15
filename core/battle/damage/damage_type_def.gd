@@ -49,3 +49,5 @@ extends Resource
 ## 175：这种伤害命中后在目标身上盖哪个【印】（buff id：火 → `scorch`、冰 → `chill`、雷 → `numb`）；空 = 不盖（物理、反伤、流失；
 ## 中毒 / 流血的伤害也不盖 —— 它们的印就是状态本身，由施加状态来盖，否则每跳一次都会多一层）。见 [ReactionResolver]
 @export var mark: StringName = &""
+## 175 补充一（作者定）：一下这种伤害盖几层印（默认 1 层；要多层的伤害类型改这里）
+@export var mark_stacks: int = 1

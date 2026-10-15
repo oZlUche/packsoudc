@@ -18,7 +18,7 @@ seconds = 1.0
 script = ExtResource("7_hyrdq")
 target = 1
 damage_type = &"poison"
-amount = 5.0
+amount = 2.5
 damage_stat = &""
 per_stack = true
 

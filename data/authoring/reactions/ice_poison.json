@@ -4,16 +4,16 @@
   "display_names": {
     "en": "Congeal"
   },
-  "description": "寒印消失之前，对手身上的中毒无法被清除。",
+  "description": "把对手的中毒凝成同样层数的【凝毒】：一样每秒掉血，但无法被清除。",
   "elements": [
     "ice",
     "poison"
   ],
-  "consume": "none",
   "effects": [
     {
       "type": "apply_status",
-      "buff": "congeal"
+      "buff": "congeal",
+      "per_stack": true
     }
   ]
 }

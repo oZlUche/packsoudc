@@ -6,12 +6,15 @@
 ## 命中    伤害管线第 5 步之后（[DamageResolver]）：这种伤害类型有 [member DamageTypeDef.mark] 就盖那个印
 ## 施加    [method ApplyStatus.give] 加上了层数、而那个状态本身是印（施加中毒 = 盖毒印）
 ## [endcodeblock]
-## 目标身上已经带着甲元素的印、这一下带来乙元素 → 查反应表（[ReactionDef]）结算一次。**同元素再碰只是加深**（印照常再盖：
-## 灼 / 寒 / 麻刷新时长，中毒 / 流血加层），不反应。身上同时带着几种印时按 [constant ELEMENTS] 的顺序取第一个能和来者反应的。
-##
-## 结算：记下两边可叠层的印共几层（效果的 per_stack 读它）→ 按 [member ReactionDef.consume] 吃掉印 → 发一条
-## `effect_resolved {effect: reaction}`（回放弹字、百科点亮）→ 以**攻击方**（挨打那一方的对手）为主人跑效果。
-## 命中带来的那个印：被吃掉就不盖；不吃（凝毒、电解里的毒）就在效果之后补盖上。
+## 175 补充一（作者伪代码，见报告 175 附录二）：给目标加 n 层乙元素的印时，在目标身上找**元素不同、层数 > 0** 的印里
+## **层数最多的那种**（一种元素的层数 = 这种元素的印加起来；并列按 [constant ELEMENTS] 的顺序）：
+## [codeblock]
+## 没有           新印照常叠上去（同元素再碰就是加层），不反应
+## 有（甲元素）   N = max(甲的层数, n)；甲的印扣 N 层（N ≥ 甲的层数，所以扣光）；新印**不叠**；查反应表（[ReactionDef]），效果以 N 为量
+## [endcodeblock]
+## 效果里 `per_stack` 的都读 N（[member RuleContext.reaction_stacks]）：爆燃 N × 每层火伤，凝毒 / 电解产出 N 层凝毒 / 剧毒。
+## 发一条 `effect_resolved {effect: reaction}`（回放弹字、百科点亮），以**攻击方**（挨打那一方的对手）为主人跑效果。
+## 不可清除的印（凝毒）也会被反应吃掉 —— 反应是唯一吃得掉它的。
 ##
 ## **反应不连锁**：结算期间 [member BattleContext.reacting] > 0 —— 这期间的伤害不盖印、施加的状态照常上身但不再引发反应。
 ## 规则层一行不加：印是伤害类型与状态的副产品，元素从哪儿来（法杖的晶石、附加的火箭、附魔、投掷弹）都一样
@@ -147,13 +150,27 @@ static func has_mark(who: CombatantRuntime, e: StringName) -> bool:
 	return false
 
 
-## [param who] 身上 [param e] 元素的**可叠层**印共几层（中毒 + 剧毒；灼 / 寒 / 麻是不可叠的标记，不算层）
+## [param who] 身上 [param e] 元素的印共几层（这种元素的全部状态加起来：毒 = 中毒 + 剧毒 + 凝毒）
 static func mark_stacks(who: CombatantRuntime, e: StringName) -> int:
 	var n := 0
 	for b in who.buffs:
-		if b.def.element == e and b.def.is_stackable():
+		if b.def.element == e:
 			n += b.stacks
 	return n
+
+
+## 伪代码第一段：[param who] 身上和 [param incoming] 不同、层数 > 0 的元素里层数最多的那种（并列按 [constant ELEMENTS] 的顺序）；没有返回空
+static func strongest_other(who: CombatantRuntime, incoming: StringName) -> StringName:
+	var best := &""
+	var most := 0
+	for e in ELEMENTS:
+		if e == incoming:
+			continue
+		var n := mark_stacks(who, e)
+		if n > most:
+			best = e
+			most = n
+	return best
 
 
 ## 一组规则会带来哪些元素（悬浮窗的「可引发」、对阵屏的元素图标）：造成的伤害类型、改成的伤害类型、施加 / 转成的状态、附火。按元素顺序
@@ -225,7 +242,7 @@ static func reactions_between(mine: Array, others: Array) -> Array[ReactionDef]:
 
 
 #region 结算
-## 伤害管线第 5 步之后：这一下带的印 —— 能反应就反应（印不盖），否则盖上（同元素就是加深）
+## 伤害管线第 5 步之后：这一下带的印（[member DamageTypeDef.mark_stacks] 层）—— 能反应就反应（印不盖），否则盖上
 static func after_hit(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef) -> void:
 	var victim := packet.victim
 	if ctx == null or victim == null or victim.dead or ctx.reacting > 0:
@@ -233,75 +250,80 @@ static func after_hit(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDe
 	var mark := mark_buff(td.mark)
 	if mark == null:
 		return
-	if mark.element != &"" and _react(ctx, victim, mark.element, packet.source_uid, mark, false):
+	var n := maxi(1, td.mark_stacks)
+	if _react(ctx, victim, mark, n, packet.source_uid):
 		return
-	_stamp(ctx, victim, mark)
+	_stamp(ctx, victim, mark, n)
 
 
-## [method ApplyStatus.give] 加上了层数、那个状态本身是印：来者已经在身上了，看要不要反应
-static func after_status(ctx: BattleContext, victim: CombatantRuntime, def: BuffDef) -> void:
-	if ctx == null or victim == null or victim.dead or ctx.reacting > 0 or def.element == &"":
-		return
-	_react(ctx, victim, def.element, 0, def, true)
+## [method ApplyStatus.give] 加层**之前**问一句：这个状态本身是印（中毒、流血……）、要给 [param victim] 加 [param n] 层 ——
+## 反应了返回真（新印不叠，[method ApplyStatus.give] 什么都不加）；没反应返回假，照常叠
+static func before_status(ctx: BattleContext, victim: CombatantRuntime, def: BuffDef, n: int) -> bool:
+	if ctx == null or victim == null or victim.dead or ctx.reacting > 0 or def == null or def.element == &"":
+		return false
+	return _react(ctx, victim, def, n, 0)
 
 
-## 找一个能和来者反应的印并结算。返回反应了没有
-static func _react(ctx: BattleContext, victim: CombatantRuntime, incoming: StringName, uid: int, incoming_def: BuffDef, applied: bool) -> bool:
-	for present in ELEMENTS:
-		if present == incoming or not has_mark(victim, present):
-			continue
-		var def := find(present, incoming)
-		if def == null:
-			continue
-		_resolve(ctx, victim, def, present, incoming, uid, incoming_def, applied)
-		return true
-	return false
+## 伪代码：找层数最多的异色印，有就结算。返回反应了没有（反应表里没有这一对 = 不反应，照常叠）
+static func _react(ctx: BattleContext, victim: CombatantRuntime, incoming: BuffDef, n: int, uid: int) -> bool:
+	var present := strongest_other(victim, incoming.element)
+	if present == &"":
+		return false
+	var def := find(present, incoming.element)
+	if def == null:
+		return false
+	_resolve(ctx, victim, def, present, incoming.element, n, uid)
+	return true
 
 
 static func _resolve(ctx: BattleContext, victim: CombatantRuntime, def: ReactionDef, present: StringName, incoming: StringName,
-		uid: int, incoming_def: BuffDef, applied: bool) -> void:
+		n: int, uid: int) -> void:
 	ctx.reacting += 1
-	var owner := ctx.opponent_of(victim)
-	var rc := RuleContext.create(ctx, owner, RuleRuntime.create(null, 0, null, owner.side))
-	var stacks := mark_stacks(victim, present) + mark_stacks(victim, incoming)
-	if not applied and incoming_def != null and incoming_def.is_stackable():
-		stacks += 1     # 命中带来的可叠层印（没盖上去）也算一层
+	var rc := foe_context(ctx, victim)
+	var have := mark_stacks(victim, present)
+	var stacks := maxi(have, n)     # 伪代码的 maxStackReacted
 	rc.reaction_stacks = stacks
-	for el in [present, incoming]:
-		if def.consumes(el):
-			_consume(rc, victim, el)
+	_consume(rc, victim, present, stacks)
 	if ctx.trace != null:
 		ctx.trace.record(ctx.now, victim.side, BattleTrace.EVENT, {"name": "reaction", "payload": {
 			"reaction": String(def.id), "present": String(present), "incoming": String(incoming), "stacks": stacks}})
 	ctx.emit(BattleEvent.EFFECT_RESOLVED, victim.side, {
-		"effect": EFFECT, "reaction": String(def.id), "uid": 0, "from_uid": uid, "source_side": owner.side,
+		"effect": EFFECT, "reaction": String(def.id), "uid": 0, "from_uid": uid, "source_side": rc.owner.side,
 		"elements": [String(present), String(incoming)], "stacks": stacks,
 	})
 	for e in def.effects:
 		if e != null:
 			(e as Effect).apply(rc)
-	# 命中带来的印没被吃掉（凝毒的寒、电解里的毒）：效果之后补盖上
-	if not applied and incoming_def != null and not def.consumes(incoming) and not victim.dead:
-		_stamp(ctx, victim, incoming_def)
 	ctx.reacting -= 1
 
 
-## 吃掉 [param who] 身上 [param e] 元素的全部印（被锁住的吃不掉，凝毒）
-static func _consume(rc: RuleContext, who: CombatantRuntime, e: StringName) -> void:
-	var ids: Array[StringName] = []
+## 从 [param who] 身上 [param e] 元素的印里扣 [param n] 层（按身上的顺序扣，扣到 0 为止）。不可清除的也扣得掉（反应是唯一的路）
+static func _consume(rc: RuleContext, who: CombatantRuntime, e: StringName, n: int) -> void:
+	var left := n
+	var marks: Array[BuffInstance] = []
 	for b in who.buffs:
 		if b.def.element == e:
-			ids.append(b.def.id)
-	for id in ids:
-		RemoveStatus.take(rc, who, id, who.stacks_of(id), REASON)
+			marks.append(b)
+	for b in marks:
+		if left <= 0:
+			break
+		var id := b.def.id
+		var removed := who.remove_buff_stacks(id, mini(left, b.stacks), true)
+		left -= removed
+		if removed > 0:
+			rc.battle.emit(BattleEvent.STATUS_UNSTACKED, who.side, {"buff": String(id), "delta": -removed, "stacks": who.stacks_of(id), "reason": REASON})
 
 
-## 盖一个印（施加方 = 挨打那一方的对手）。走 [method ApplyStatus.give]：发 status_stacked / status_applied，同元素就是刷新 / 加层
-static func _stamp(ctx: BattleContext, victim: CombatantRuntime, mark: BuffDef) -> void:
+## 以 [param victim] 的对手为主人的一份上下文（盖印、反应效果、菌血叠毒的施加方都是它）
+static func foe_context(ctx: BattleContext, victim: CombatantRuntime) -> RuleContext:
 	var owner := ctx.opponent_of(victim)
-	var rc := RuleContext.create(ctx, owner, RuleRuntime.create(null, 0, null, owner.side))
+	return RuleContext.create(ctx, owner, RuleRuntime.create(null, 0, null, owner.side))
+
+
+## 盖 [param n] 层印（施加方 = 挨打那一方的对手）。走 [method ApplyStatus.give]：发 status_stacked / status_applied，同元素就是加层
+static func _stamp(ctx: BattleContext, victim: CombatantRuntime, mark: BuffDef, n: int) -> void:
 	ctx.reacting += 1     # 已经判过反应了：这一盖不再引发
-	ApplyStatus.give(rc, victim, mark, 1)
+	ApplyStatus.give(foe_context(ctx, victim), victim, mark, n)
 	ctx.reacting -= 1
 #endregion
 

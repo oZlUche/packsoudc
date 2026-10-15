@@ -19,7 +19,7 @@
           "type": "deal_damage",
           "target": "SELF",
           "damage_type": "poison",
-          "amount": 2.0,
+          "amount": 1.0,
           "damage_stat": "",
           "per_stack": true
         }
