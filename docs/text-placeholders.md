@@ -91,7 +91,7 @@
 
 | 写法 | 效果 |
 |---|---|
-| `{c:名}…{/c}` | 变色。名：`fg` `dim` `hp` `shield` `stamina` `mana` `heal` `grant` `receive` `warn` `danger` `good`（见 `TextTemplate.COLORS`，取自 `UiPalette`） |
+| `{c:名}…{/c}` | 变色。名：`fg` `dim` `hp` `armor` `stamina` `mana` `heal` `grant` `receive` `warn` `danger` `good` `faith`；175 补 5.4 的伤害类型字 `fire` `frost` `thunder` `toxin` `true`（火焰 / 冰霜 / 闪电 / 毒素 / 流血伤害）与元素状态 `scorch` `chill` `shock` `poison` `bleed`（灼伤 / 寒冷 / 麻痹 / 中毒 / 流血）（见 `TextTemplate.STYLE_NAMES`，颜色在 `data/authoring/ui/text_colors.json`） |
 | `{c:#ff8800}…{/c}` | 十六进制颜色 |
 | `{b}…{/b}` | 粗体 |
 | `{i}…{/i}` | 斜体 |

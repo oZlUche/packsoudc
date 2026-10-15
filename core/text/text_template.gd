@@ -13,7 +13,10 @@ extends RefCounted
 ## 表在 [constant UiPalette.STYLE_COLORS]，渲染前由 [method UiPalette.resolve_styles] 换成十六进制。
 ## 文本层不认识调色板（core 不依赖 ui）
 const STYLE_NAMES := ["fg", "dim", "hp", "armor", "stamina", "mana", "heal", "grant", "receive",
-	"warn", "danger", "good", "faith"]
+	"warn", "danger", "good", "faith",
+	# 175 补 5.4（作者定）：伤害类型字（更沉、不是关键词）与元素状态关键词（亮）各五个，色值美术设计定（[Glossary.DAMAGE_STYLES] / [Glossary.ELEMENT_STYLES]）
+	"fire", "frost", "thunder", "toxin", "true",
+	"scorch", "chill", "shock", "poison", "bleed"]
 ## 颜色名在 BBCode 里的前缀：`[color=@hp]`。界面查表换掉；没换的话 Godot 当成无效颜色，不会崩
 const STYLE_PREFIX := "@"
 ## 112：道具名按稀有度上色用的颜色名前缀（`@rarity0`～`@rarity5`），界面按 [ItemPainter] 的稀有度色换

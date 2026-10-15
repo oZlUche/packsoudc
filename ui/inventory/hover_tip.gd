@@ -440,14 +440,14 @@ func open_child(parent: TipWindow, meta: String) -> TipWindow:
 	var extra := {}
 	for k in parent.terms:
 		if k != id:
-			extra[String(parent.terms[k]["name"])] = {"id": k, "text": parent.terms[k]["text"]}
+			extra[String(parent.terms[k]["name"])] = {"id": k, "text": parent.terms[k]["text"], "style": String((parent.terms[k] as Dictionary).get("style", "term"))}
 	var found := Glossary.terms_in(String(entry["text"]), extra).filter(func(f): return String(f["id"]) != id and String(f["name"]) != String(entry["name"]))
 	w.terms = {}
 	for k in parent.terms:
 		w.terms[k] = parent.terms[k]
 	for f in found:
-		w.terms[String(f["id"])] = {"name": f["name"], "text": f["text"]}
-	w.set_text("%s\n[color=@tip_fg]%s[/color]" % [UiTheme.outline("[b][color=@term]%s[/color][/b]" % String(entry["name"])), Glossary.mark(String(entry["text"]), found)])     # 170 定稿：只有名字描边
+		w.terms[String(f["id"])] = {"name": f["name"], "text": f["text"], "style": String(f.get("style", "term"))}
+	w.set_text("%s\n[color=@tip_fg]%s[/color]" % [UiTheme.outline("[b][color=@%s]%s[/color][/b]" % [String((entry as Dictionary).get("style", "term")), String(entry["name"])]), Glossary.mark_rich(String(entry["text"]), found)])     # 170 定稿：只有名字描边；175 补 5.4：伤害字带色
 	w.visible = true
 	w.reset_size()
 	_place_child(w, parent)

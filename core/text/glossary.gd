@@ -96,6 +96,49 @@ static func damage_type_name(type: StringName) -> String:
 	return DamageTypes.name_of(type)
 
 
+#region 175 补 5.4：伤害类型字与元素状态关键词的颜色
+## 伤害类型 → 样式名（[constant TextTemplate.STYLE_NAMES]）。「火焰伤害」整段染这个色、**不是关键词**；没列的（物理、反伤、流失）不染
+const DAMAGE_STYLES := {&"fire": "fire", &"ice": "frost", &"lightning": "thunder", &"poison": "toxin", &"bleed": "true"}
+## 元素 → 元素状态关键词的样式名（同系、更亮）。状态是关键词：下划线 + 这个色，弹词条
+const ELEMENT_STYLES := {&"fire": "scorch", &"ice": "chill", &"lightning": "shock", &"poison": "poison", &"bleed": "bleed"}
+
+
+## 一个状态当关键词时用哪个色：元素状态用它元素的那个，别的用词条色 `term`
+static func status_style(def: BuffDef) -> String:
+	if def != null and ELEMENT_STYLES.has(def.element):
+		return String(ELEMENT_STYLES[def.element])
+	return "term"
+
+
+## 「火焰伤害」这几个字（整段带色；物理之类没有色的原样）
+static func damage_words(type: StringName) -> String:
+	var words := "%s伤害" % damage_type_name(type)
+	if not DAMAGE_STYLES.has(type):
+		return words
+	return "[color=%s%s]%s[/color]" % [TextTemplate.STYLE_PREFIX, DAMAGE_STYLES[type], words]
+
+
+## 标关键词，同时把文字里的「X伤害」染成伤害类型色。先挡住伤害字再标关键词 ——
+## 不然「流血伤害」里的「流血」会被当成流血状态的关键词（伤害类型和状态同名）
+static func mark_rich(text: String, terms: Array) -> String:
+	var holders: Array = []
+	var out := text
+	var types: Array = DAMAGE_STYLES.keys()
+	types.sort_custom(func(a, b) -> bool: return damage_type_name(a).length() > damage_type_name(b).length())
+	for type in types:
+		var words := "%s伤害" % damage_type_name(type)
+		if not out.contains(words):
+			continue
+		var token := "\u0003%d\u0003" % holders.size()
+		holders.append([token, damage_words(type)])
+		out = out.replace(words, token)
+	out = mark(out, terms)
+	for h in holders:
+		out = out.replace(String(h[0]), String(h[1]))
+	return out
+#endregion
+
+
 const FAITH_WORD := {"zh": "信仰", "en": "Faith"}
 
 ## 属性键 → 名字（096：中 / 英；按 [UiText.lang] 取，没有英文的回落中文 —— [method UiText.pick]）
@@ -283,13 +326,20 @@ static func costs_text(rule: AbilityRule, skip_stamina: bool = false) -> String:
 
 
 static func effects_text(effects: Array) -> String:
-	var bits: Array[String] = []
+	var out := ""
+	var prev: Variant = null
 	for e in effects:
 		if e == null:
 			continue
 		var d: String = e.describe() if e.has_method("describe") else ""
-		bits.append(d if d != "" else String(ContentSchema.registry_name_of(e)))
-	return "，".join(bits) if not bits.is_empty() else "（没有效果）"
+		if d == "":
+			d = String(ContentSchema.registry_name_of(e))
+		if out != "":
+			# 175 补 5.4（作者定）：造成伤害之后紧跟施加，写成一句两段「造成 X 点火焰伤害，并施加 N 层灼伤」
+			out += "，并" if (prev is DealDamage or prev is FireEnchant) and e is ApplyStatus else "，"
+		out += d
+		prev = e
+	return out if out != "" else "（没有效果）"
 
 
 const TRIGGER_NAMES := {"on_schedule": "自发", "on_battle_start": "开战时", "on_item_fired": "出手时", "on_damage": "受伤时",
@@ -313,11 +363,14 @@ static func trigger_text(trigger: Trigger) -> String:
 	return d if d != "" else trigger_name(trigger)
 
 
-## 142：状态 id 给人看。按 id 引用的状态（扳机、条件、移除）都是有登记的类型（流血、中毒……），名字从那里取；
-## 查不到原样返回（测试守着：道具的规则行里不出现英文 id）
+## 142：状态 id 给人看。175 补 5.4：先按状态自己的名字（中毒），没登记的状态再借同名伤害类型的名字（伤害类型「毒素」和状态「中毒」不同名了）；
+## 都查不到原样返回（测试守着：道具的规则行里不出现英文 id）
 static func status_name(id: StringName) -> String:
 	if id == &"":
 		return "?"
+	var b := ReactionResolver.mark_buff(id)
+	if b != null and Names.of(b) != "":
+		return Names.of(b)
 	return DamageTypes.name_of(id)
 
 
@@ -404,12 +457,16 @@ static func terms_in(text: String, extra: Dictionary = {}) -> Array:
 	for name in names:
 		var at := plain.find(name)
 		if at >= 0:
-			found.append({"name": name, "text": String(names[name]["text"]), "id": String(names[name].get("id", name)), "at": at})
+			found.append({"name": name, "text": String(names[name]["text"]), "id": String(names[name].get("id", name)), "at": at,
+				"style": String(names[name].get("style", "term"))})
 	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return int(a["at"]) < int(b["at"]) if int(a["at"]) != int(b["at"]) else String(a["name"]).length() > String(b["name"]).length())
 	var out: Array = []
 	for f in found:
-		out.append({"name": f["name"], "text": f["text"], "id": f["id"]})
+		var entry := {"name": f["name"], "text": f["text"], "id": f["id"]}
+		if String(f["style"]) != "term":
+			entry["style"] = f["style"]
+		out.append(entry)
 	return out
 
 
@@ -417,12 +474,14 @@ static func terms_in(text: String, extra: Dictionary = {}) -> Array:
 static func mark(text: String, terms: Array) -> String:
 	var names: Array[String] = []
 	var ids := {}
+	var styles := {}
 	for t in terms:
 		var d := t as Dictionary
 		names.append(String(d["name"]))
 		ids[String(d["name"])] = String(d.get("id", d["name"]))
+		styles[String(d["name"])] = String(d.get("style", "term"))     # 175 补 5.4：元素状态用它自己的关键词色
 	return wrap_terms(text, names, func(name: String) -> String:
-		return "[url=term:%s][color=%sterm][u]%s[/u][/color][/url]" % [ids[name], TextTemplate.STYLE_PREFIX, name])
+		return "[url=term:%s][color=%s%s][u]%s[/u][/color][/url]" % [ids[name], TextTemplate.STYLE_PREFIX, styles[name], name])
 
 
 ## 把一串词在文字里各包一层（[param wrap]：词 → 包好的 BBCode）。长的词先替，替进去的先用占位符挡住，免得短词把长词切开。

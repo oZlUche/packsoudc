@@ -95,7 +95,7 @@ static func run_tooltip_lines(t: TestCase) -> void:
 	var b_text := Glossary.strip_bbcode(ItemTooltip.describe(s["b"], g))
 	var a_text := Glossary.strip_bbcode(ItemTooltip.describe(s["a"], g))
 	var name := Names.of_item(s["crystal"])
-	t.check(b_text.contains(name) and b_text.contains("装载一颗：火") and b_text.contains("剩 %d 次" % (s["crystal"] as ItemInstance).charges()), "右杖：一行装载（%s）" % b_text)
+	t.check(b_text.contains(name) and b_text.contains("装载一颗：") and b_text.contains("点火焰伤害") and b_text.contains("剩 %d 次" % (s["crystal"] as ItemInstance).charges()), "右杖：一行装载（%s）" % b_text)
 	t.check(not a_text.contains(name), "左杖：被抢走的那颗不写（空槽不显示）")
 	var lone := ItemInstance.create(db.get_def(&"magic_staff"))
 	var lone_full := ItemTooltip.describe_full(lone)

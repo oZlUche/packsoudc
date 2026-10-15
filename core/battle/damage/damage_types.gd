@@ -94,7 +94,7 @@ static func _define_builtins() -> void:
 	_define(FIRE, "火焰", true, true)
 	_define(ICE, "冰霜", true, true)
 	_define(LIGHTNING, "闪电", true, true)
-	_define(POISON, "中毒", false, false)
+	_define(POISON, "毒素", false, false)
 	_define(BLEED, "流血", false, false)
 	(_defs[BLEED] as DamageTypeDef).pure = true     # 175 补充四：流血是真实伤害
 	(_defs[BLEED] as DamageTypeDef).family = PHYSICAL     # 补充五：真实 · 物理
