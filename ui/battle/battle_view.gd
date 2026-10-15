@@ -154,6 +154,9 @@ func buff_tip(id: String, side: int = 0) -> String:
 	var body := Glossary.describe_buff(def) if def != null else "（没有这个 buff 的定义）"
 	if def != null and def.system:
 		body += "\n系统效果，不可解除"
+	var guard := int(panel.guards.get(id, 0))
+	if guard > 0:
+		body += "\n其中 %d 层不可解除" % guard     # 175 补充四
 	return "[b]%s[/b]\n%s" % [name, body]
 
 
@@ -458,6 +461,8 @@ func _apply(e: BattleEvent) -> void:
 				var buff := String(e.get_name(&"buff"))
 				var first := e.name == BattleEvent.STATUS_STACKED and e.get_int(&"stacks") > 0 and not _panels[e.side].stacks().has(buff)
 				_panels[e.side].set_stacks(buff, e.get_int(&"stacks"))
+				if e.payload.has("guard"):
+					_panels[e.side].guards[buff] = e.get_int(&"guard")     # 175 补充四：凝毒 / 冻疮的保底
 				if first and not _suppress_popups:
 					_panels[e.side].pop(buff, _feedback_scale())     # 157：buff 上身（首层）
 		BattleEvent.AXIS_SHIFTED:

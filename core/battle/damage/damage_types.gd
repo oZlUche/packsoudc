@@ -80,6 +80,7 @@ static func _define_builtins() -> void:
 	_define(LIGHTNING, "闪电", true, true)
 	_define(POISON, "中毒", false, false)
 	_define(BLEED, "流血", false, false)
+	(_defs[BLEED] as DamageTypeDef).pure = true     # 175 补充四：流血是真实伤害
 	_define(REFLECT, "反伤", true, false)
 	_define(DRAIN, "流失", false, false)
 

@@ -4,6 +4,7 @@
   "display_names": {
     "en": "Bleed"
   },
+  "decay_halve_on": "tick",
   "rules": [
     {
       "trigger": {

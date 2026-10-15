@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.07 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.08 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1347,31 +1347,53 @@ var final: int              ## 最终结算量，正为扣血、负为回血
 `armor`（护甲，153 补充一前叫护甲 `shield`）是防具给的一种普通资源，由 `max_armor`（护甲上限）属性自动派生 —— 和其他资源一样，
 配一个属性就有了，不需要改代码。它只是在管线第 2 步被优先扣除。
 
-#### 元素印与反应（175 第一批，作者定）
+#### 元素印与反应（175 第一批，作者定；补充四定稿）
 
-五种元素：火、冰、雷、毒、血，和伤害类型同名。**印就是状态**：`BuffDef.element` 指明一个状态是哪种元素的印 ——
-火 / 冰 / 雷各有一个轻状态【灼】【寒】【麻】（可叠层、永续、至多 10 层 `BuffDef.stack_cap`，本身不伤不减），毒与血的印就是中毒 / 剧毒 / 凝毒 / 流血本身。印从两条路来，规则层一行不加：
+五种元素：火、冰、雷、毒、血，和伤害类型同名。**印就是状态**：`BuffDef.element` 指明一个状态是哪种元素的印。
+补充四（作者定稿）：五种基础状态【灼伤】`scorch`、【寒冷】`chill`、【麻痹】`numb`、【中毒】`poison`、【流血】`bleed` 各是一种元素的印，
+**都可叠、不封顶、永续，只按自己的规矩结算 / 衰减**：
 
 ```
-命中    第 5 步之后：伤害类型有 DamageTypeDef.mark 就盖那个印，一下 mark_stacks 层（默认 1）（fire → scorch、ice → chill、lightning → numb；物理 / 反伤 / 流失 / 中毒与流血的伤害不盖）
+灼伤   每秒层数点火焰伤害（吃护甲、吃施加方的火焰加成轴，不吃格挡），不衰减
+流血   每秒层数点真实伤害（DamageTypeDef.pure），每跳之后减半（decay_halve_on: tick）
+中毒   每秒层数点毒素伤害，不衰减
+寒冷   挂着它的单位的武器出手时，这一次排定的冷却 × (1 + 层数 × per_stack_percent%)（CooldownCadence.chilled），之后减半（weapon_fired）
+麻痹   付耐力时消耗 × (1 + 层数 × per_stack_percent%)（ResourceCost，和灵巧 / 笨拙轴并列），之后减半（stamina_paid）
+```
+
+减半向下取整（1 → 0 移除），不低于保底（下面的 `guard`）。印从两条路来，规则层一行不加：
+
+```
+命中    第 5 步之后：伤害类型有 DamageTypeDef.mark 就盖那个印，一下 mark_stacks 层（默认 1）（fire → scorch、ice → chill、lightning → numb；物理 / 反伤 / 流失 / 中毒与流血的伤害不盖；
+        状态自己的规则跳出来的伤害也不盖 —— DamagePacket.from_status，否则灼伤每跳一次多一层）
 施加    ApplyStatus.give 加层之前、那个状态本身是印（施加中毒 = 盖毒印）
 ```
 
 给目标加 n 层乙元素的印时（175 补充一 / 三，作者伪代码，N 更正为 min）：`ReactionResolver` 在目标身上找**元素不同、层数 > 0** 的印里**层数最多的那种**
-（一种元素的层数 = 这种元素的印加起来，并列按「火、冰、雷、毒、血」）。没有 → 新印照常叠上去（同元素再碰就是加层）。
+（一种元素的层数 = 这种元素的印加起来，含保底的层，并列按「火、冰、雷、毒、血」）。没有 → 新印照常叠上去（同元素再碰就是加层）。
 有（甲元素）→ 查反应表（`ReactionDef`，`data/authoring/reactions/<甲>_<乙>.json`，id 按元素顺序拼）：量 **N = min(甲的层数, n)**，
-甲的印扣 N 层（不可清除的凝毒也扣得掉，反应是唯一的路），新印扣 N 层、**余量照常叠上**（这一次加印只结算一次，余量不再反应），发 `effect_resolved {effect: reaction}`（回放弹字、百科点亮），
-以挨打那一方的对手为主人跑效果（普通的规则内容），效果里 `per_stack` 的读 N（`RuleContext.reaction_stacks`）：爆燃 N × 每层火伤，
-凝毒 / 电解是**产物**（N 层【凝毒】/ N 层剧毒），没有例外。效果里的数字还可以写成随 N 变（补充二，`ReactionDef.scaling`）：
-json 在数字的位置写 `{"per_stack": X}`（N × X）、`{"stacks": "n"}`（= N）、`{"seconds": "n", "max": 10}`（写在 `apply_status` 的 `duration_sec` 上 = 这次施加的状态持续 N 秒），
-都可加 `max` 封顶；导入器抽成 `scaling` 行、导出器写回内联，结算时 `ReactionDef.effects_for(N)` 复制一份改数。**反应不连锁**：结算中 `BattleContext.reacting > 0`，这期间的伤害不盖印、
-施加的状态照常上身但不再引发反应。
+甲的印扣 N 层（扣不到保底以下），新印扣 N 层、**余量照常叠上**（这一次加印只结算一次，余量不再反应），发 `effect_resolved {effect: reaction}`（回放弹字、百科点亮），
+以挨打那一方的对手为主人跑效果（普通的规则内容）。效果里的数字写成随 N 变（`ReactionDef.scaling`，系数 M 在 json 里，作者会调）：
+json 在数字的位置写 `{"per_stack": X}`（N × X）、`{"stacks": "n"}`（= N）、`{"stacks": "n/2"}`（N / 2 向下取整，0 = 这条效果不跑）、
+`{"seconds": "n", "max": 10}`（写在 `apply_status` 的 `duration_sec` 上 = 这次施加的不可叠状态持续 N 秒），都可加 `max` 封顶；
+导入器抽成 `scaling` 行、导出器写回内联，结算时 `ReactionDef.effects_for(N)` 复制一份改数。**反应不连锁**：结算中 `BattleContext.reacting > 0`，这期间的伤害不盖印、
+施加的状态照常上身但不再引发反应。十对反应（补充四）：
 
-为反应加的三个通用口子（都是数据字段，不是效果类型）：
+```
+爆燃 火毒   N × M 火伤，再叠 N / 2 层灼伤                     凝毒 冰毒   对手的中毒保底 + N（guard_status）
+淬裂 火冰   对手护甲 − N × M，没有伤害                        冻疮 冰血   对手的流血保底 + N
+过载 火雷   自己 + N 层加速（轴，永续）                        电解 雷毒   对手 N 层剧毒（受到的毒素伤害每层 +M%，不是印）
+燃血 火血   对手 N 层燃血：治疗无效、每秒层数点火伤、每层 1 秒  激荡 雷血   自己 + N 层锐目，武器里最高暴击率到 100% 后溢出到致命（shift_axis.overflow_to）
+超导 冰雷   对手 + N 层易伤（轴，永续）                        菌血 毒血   对手 N 层菌血：恢复减半、按到手的量叠中毒、每层 1 秒
+```
 
-- **治疗入口** `CombatantRuntime.heal`：治疗效果、反转成治疗的伤害都走它。身上 buff 的 `heal_cut`（百分比）截走一部分（燃血 100 = 治疗无效）；补完按 `heal_echo` / `heal_echo_per_point` 叠状态，施加方是对手（菌血：实际回了几点就叠几层中毒，恢复照常）。每秒回血按 `heal_kept()` 打折，不算「一次恢复」、不叠层。
-- **不可清除** `BuffDef.uncleansable`：移除效果、清除全部减益、转化、消耗层数对它都无效（`remove_buff_stacks` 返回 0，只有反应带 `force` 吃得掉）。凝毒：和中毒一样每层每秒 1 点、毒印、不可清除。
-- **规则只听出生之后的事件**：`BattleContext.event_seq` 每发一条事件（含同步派发的受伤前）加一，事件带 `seq`；战斗中施加的 buff 带来的规则记 `RuleRuntime.born`，`RuleEngine.dispatch` 跳过更早的事件。于是「下一次攻击」类 buff（过载、激荡）不会被引发它的那一下自己排在队里的出手 / 伤害事件当场用掉。
+为反应加的通用口子（数据字段与一个效果类型，不是特判）：
+
+- **治疗入口** `CombatantRuntime.heal`：治疗效果、反转成治疗的伤害都走它。身上 buff 的 `heal_cut`（百分比）截走一部分（燃血 100 = 治疗无效、菌血 50）；补完按 `heal_echo` / `heal_echo_per_point` 叠状态，施加方是对手（菌血：实际回了几点就叠几层中毒）。每秒回血按 `heal_kept()` 打折，不算「一次恢复」、不叠层。
+- **保底** `BuffInstance.guard`（效果 `guard_status`）：移除效果、清除全部减益、转化、反应消耗、减半都压不到它以下；算 N 时照常数全部层数。身上没有或层数低于保底就补到保底。回放靠 `status_stacked` 的 `guard` 键在悬浮窗写「其中 N 层不可解除」。
+- **按层计时** `BuffDef.seconds_per_stack`：可叠层的例外 —— 每叠一层剩余时间加这么多秒（`BuffInstance.seconds_left`），每秒倒数一次（代码造的一条自发规则 `BuffDef.decay_rule`，排在 buff 自己的规则后面，到点那一跳照样跳），到 0 整个移除。燃血 / 菌血：N 层 = 持续 N 秒，再反应加层也加时间。
+- **减半时机** `BuffDef.decay_halve_on`（`tick` / `weapon_fired` / `stamina_paid`）+ `per_stack_percent`；**按类型易伤** `BuffDef.damage_taken_by_type`（第 4 步「受到伤害」轴之后乘一次）；**真实伤害** `DamageTypeDef.pure`（跳过 1b–4）。
+- **规则只听出生之后的事件**：`BattleContext.event_seq` 每发一条事件（含同步派发的受伤前）加一，事件带 `seq`；战斗中施加的 buff 带来的规则记 `RuleRuntime.born`，`RuleEngine.dispatch` 跳过更早的事件。于是 buff 带来的「下一次……」类规则不会被施加它的那一下自己排在队里的出手 / 伤害事件当场用掉。
 
 ### 4.7 模拟循环：事件驱动，没有帧
 
@@ -4241,6 +4263,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.08 | 2026-10-15 | **五种基础状态与十对反应定稿**（报告 175 补充四，作者定，待定补 4.1–4.7 全按推荐；改 4.6）：灼伤 / 寒冷 / 麻痹 / 中毒 / 流血都可叠、不封顶、永续（删 `BuffDef.stack_cap`、`uncleansable`）；灼伤每秒火伤、流血改真实伤害（`DamageTypeDef.pure`）跳后减半、寒冷拉长武器冷却后减半、麻痹加耐力消耗后减半（`decay_halve_on` + `per_stack_percent`）；状态自己跳的伤害不盖印（`DamagePacket.from_status`）；十对反应的数字全写成随 N 变（新写法 `stacks: n/2`），删 buff `overload / superconduct / surge / congeal / frostbite`；保底 `BuffInstance.guard` + 效果 `guard_status`（凝毒 / 冻疮）；按层计时 `seconds_per_stack`（燃血 / 菌血）；剧毒改按类型易伤 `damage_taken_by_type`、不再是印；`shift_axis.overflow_to`（激荡）；蝰蛇毒腺改为施加中毒时加一层剧毒 |
 | v3.07 | 2026-10-15 | **铸炉并进休息点、反应量取较小值、反应数字随 N 变**（报告 175 补充二 / 三，作者定；改 4.6、5.4）：反应 N = min(已有, 新来)，两边各扣 N，新印余量照常叠上、不再反应；`ReactionDef.scaling` + `effects_for(N)`（json 内联 `per_stack` / `stacks: n` / `seconds: n` + `max`，导入器抽、导出器写回）；撤掉节点类型 `forge`，铸炉成为休息屏一栏（`GameFlow.open_forge`，`NodeEvents.use_forge` 不再灰点），老存档铸炉点 → 休息点（`IdAliases.NODE_TYPES`、`SaveReport.retyped`）；铸牌价值固定 3（`Forge.TOKEN_VALUE`）；赐福与附魔两套平行（不动） |
 | v3.06 | 2026-10-15 | **反应按层数结算**（报告 175 补充一，作者伪代码，待定补 1A / 2B / 3A / 4A；改 4.6）：取层数最多的异色印，N = max(已有, 新来)，已有印扣光、新印不叠，效果以 N 为量（`RuleContext.reaction_stacks`）；灼 / 寒 / 麻改可叠层永续、`BuffDef.stack_cap` 10，命中盖 `DamageTypeDef.mark_stacks` 层；凝毒 / 电解改产物（N 层【凝毒】`uncleansable` / N 层剧毒），删 `ReactionDef.consume`、`BuffDef.locks` / `locks_while` / `heal_cut_to`；菌血改 `heal_echo`（按恢复量叠中毒）；中毒每层 1 点、剧毒 2.5 |
 | v3.05 | 2026-10-15 | **铸炉、铸牌与附魔字段**（报告 175 第三批，作者定，待定 2A / 3A / 4A / 5A / 7A；改 4.2 附加规则、5.4 节点类型）：新节点 `forge`（铸炉屏三槽 + 出牌槽，用一次就熄）；铸炉映射表 `ForgeTable`（新内容种类 `forge`，构件之后、道具之前；编辑器「铸炉映射表」页带试铸）；铸牌 `forge_token`（`token` 标签：不进 ids / 图鉴，价值一半）；附魔字段 `ItemDef.enchant` / `state.enchant`，`Forge.rule_of` 经 `_attach` 挂一条；前缀命名进 `Names.of_item`；拖拽 `enchant_drop`；存档对账摘掉坏附魔（`SaveReport.unenchanted`） |

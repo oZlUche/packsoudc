@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Seared Blood"
   },
-  "description": "对手一段时间内治疗无效，并受到一下火焰伤害。",
+  "description": "对手叠上反应层数那么多层【燃血】：治疗无效，每秒受到层数等量的火焰伤害，每层持续一秒，再反应就延长。",
   "elements": [
     "fire",
     "bleed"
@@ -12,13 +12,10 @@
   "effects": [
     {
       "type": "apply_status",
-      "buff": "scorched_blood"
-    },
-    {
-      "type": "deal_damage",
-      "damage_type": "fire",
-      "amount": 6.0,
-      "damage_stat": ""
+      "buff": "scorched_blood",
+      "stacks": {
+        "stacks": "n"
+      }
     }
   ]
 }

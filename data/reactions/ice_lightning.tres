@@ -1,41 +1,26 @@
 [gd_resource type="Resource" script_class="ReactionDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_4ca7r"]
-[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="2_266va"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_gm5t3"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_uxssj"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_6ufwl"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="6_eihhm"]
-[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="7_xpcs4"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_sywel"]
+[ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="2_fsw3c"]
+[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="3_43x17"]
 
-[sub_resource type="Resource" id="Resource_ntwca"]
-script = ExtResource("2_266va")
+[sub_resource type="Resource" id="Resource_ejmwi"]
+script = ExtResource("2_fsw3c")
+target = 0
 axis = &"damage_taken"
-stacks = 4
-
-[sub_resource type="Resource" id="Resource_u3mi0"]
-script = ExtResource("5_6ufwl")
-id = &"superconduct"
-display_name = "超导"
-display_names = {
-"en": "Superconduct"
-}
-is_debuff = true
-stackable = false
-duration_sec = 5.0
-axes = Array[ExtResource("2_266va")]([SubResource("Resource_ntwca")])
-
-[sub_resource type="Resource" id="Resource_g20vw"]
-script = ExtResource("6_eihhm")
-buff = SubResource("Resource_u3mi0")
 
 [resource]
-script = ExtResource("7_xpcs4")
+script = ExtResource("3_43x17")
 id = &"ice_lightning"
 display_name = "超导"
 display_names = {
 "en": "Superconduct"
 }
-description = "对手一段时间内受到的最终伤害提高。"
+description = "对手获得反应层数那么多层【易伤】。"
 elements = Array[StringName]([&"ice", &"lightning"])
-effects = Array[ExtResource("1_4ca7r")]([SubResource("Resource_g20vw")])
+effects = Array[ExtResource("1_sywel")]([SubResource("Resource_ejmwi")])
+scaling = [{
+"effect": 0,
+"field": "delta",
+"kind": "n"
+}]

@@ -9,10 +9,11 @@
 [resource]
 script = ExtResource("5_5q725")
 id = &"chill"
-display_name = "寒"
+display_name = "寒冷"
 display_names = {
 "en": "Chill"
 }
 is_debuff = true
-stack_cap = 10
+decay_halve_on = &"weapon_fired"
 element = &"ice"
+per_stack_percent = 10.0

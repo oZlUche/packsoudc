@@ -4,16 +4,18 @@
   "display_names": {
     "en": "Congeal"
   },
-  "description": "把对手的中毒凝成同样层数的【凝毒】：一样每秒掉血，但无法被清除。",
+  "description": "对手身上反应层数那么多层【中毒】变为不可解除，也不会被反应消耗。",
   "elements": [
     "ice",
     "poison"
   ],
   "effects": [
     {
-      "type": "apply_status",
-      "buff": "congeal",
-      "per_stack": true
+      "type": "guard_status",
+      "buff": "poison",
+      "stacks": {
+        "stacks": "n"
+      }
     }
   ]
 }

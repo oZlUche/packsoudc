@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Electrolysis"
   },
-  "description": "把对手的中毒变成同样层数的剧毒。",
+  "description": "对手获得反应层数那么多层【剧毒】：受到的毒素伤害提高。",
   "elements": [
     "lightning",
     "poison"
@@ -13,7 +13,9 @@
     {
       "type": "apply_status",
       "buff": "virulent",
-      "per_stack": true
+      "stacks": {
+        "stacks": "n"
+      }
     }
   ]
 }

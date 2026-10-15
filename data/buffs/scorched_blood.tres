@@ -1,19 +1,44 @@
 [gd_resource type="Resource" script_class="BuffDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_4dx55"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_vve1w"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_7pdcd"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_535n5"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_0d28e"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_0d28e"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_1tqh6"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_2gfi1"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_guw7f"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="5_dgiig"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_2u444"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_ljabf"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_2ds32"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_do4c6"]
+
+[sub_resource type="Resource" id="Resource_o7qgq"]
+script = ExtResource("5_dgiig")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_01y6v"]
+script = ExtResource("7_ljabf")
+target = 1
+damage_type = &"fire"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_mbwiu"]
+script = ExtResource("8_2ds32")
+
+[sub_resource type="Resource" id="Resource_4wbuu"]
+script = ExtResource("4_guw7f")
+trigger = SubResource("Resource_mbwiu")
+cadence = SubResource("Resource_o7qgq")
+effects = Array[ExtResource("3_2gfi1")]([SubResource("Resource_01y6v")])
 
 [resource]
-script = ExtResource("5_0d28e")
+script = ExtResource("9_do4c6")
 id = &"scorched_blood"
 display_name = "燃血"
 display_names = {
 "en": "Seared Blood"
 }
 is_debuff = true
-stackable = false
-duration_sec = 5.0
+seconds_per_stack = 1
+rules = Array[ExtResource("4_guw7f")]([SubResource("Resource_4wbuu")])
 heal_cut = 100

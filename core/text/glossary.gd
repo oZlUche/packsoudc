@@ -164,12 +164,12 @@ static func describe_buff(def: BuffDef) -> String:
 		return ""
 	var lines: Array[String] = []
 	var kind := "减益" if def.is_debuff else "增益"
-	var stacks := "不可叠层" if not def.is_stackable() else ("至多 %d 层" % def.stack_cap if def.stack_cap > 0 else "不限层")
+	var stacks := "不可叠层" if not def.is_stackable() else "不限层"
 	var duration := def.duration_text()
-	# 103：默认永续、可叠层；不可叠层、有层数上限（175 补充一）与会过期是例外，用例外色标出来，作者 / 玩家一眼看出「这个不是默认」
-	if not def.is_stackable() or def.stack_cap > 0:
+	# 103：默认永续、可叠层；不可叠层与会过期是例外，用例外色标出来，作者 / 玩家一眼看出「这个不是默认」
+	if not def.is_stackable():
 		stacks = _exception(stacks)
-	if not def.is_permanent():
+	if not def.is_permanent() or def.seconds_per_stack > 0:
 		duration = _exception(duration)
 	lines.append("%s　%s　%s" % [kind, stacks, duration])
 	if not def.axes.is_empty():     # 152：每层带的标准轴
@@ -189,7 +189,19 @@ static func describe_buff(def: BuffDef) -> String:
 		lines.append("上身时：" + effects_text(def.on_apply))
 	if not def.on_expire.is_empty():
 		lines.append("到期时：" + effects_text(def.on_expire))
-	# 175：元素印、截治疗、恢复叠层、不可清除
+	# 175：元素印、衰减、截治疗、恢复叠层、按类型易伤
+	if def.seconds_per_stack > 0:
+		lines.append(_exception("每层持续 %d 秒" % def.seconds_per_stack) + "：再叠上来就延长，时间到整个消失")
+	var pct := TextTemplate.num(def.per_stack_percent)
+	match def.decay_halve_on:
+		BuffDef.HALVE_TICK:
+			lines.append(_exception("每次结算后层数减半"))
+		BuffDef.HALVE_WEAPON_FIRED:
+			lines.append("武器出手时，这一次的冷却每层 +%s%%；之后%s" % [pct, _exception("层数减半")])
+		BuffDef.HALVE_STAMINA_PAID:
+			lines.append("付耐力时，这一次的消耗每层 +%s%%；之后%s" % [pct, _exception("层数减半")])
+	for k in def.damage_taken_by_type.keys():
+		lines.append("受到的%s伤害每层 +%s%%" % [damage_type_name(StringName(String(k))), TextTemplate.num(float(def.damage_taken_by_type[k]))])
 	if def.element != &"":
 		lines.append("%s元素的印：带着它再挨上别的元素，引发反应" % ReactionResolver.element_name(def.element))
 	if def.heal_cut > 0:
@@ -197,9 +209,7 @@ static func describe_buff(def: BuffDef) -> String:
 	if def.heal_echo != &"":
 		var per := def.heal_echo_per_point
 		var each := "" if is_equal_approx(per, 1.0) else "×%s" % TextTemplate.num(per)
-		lines.append("每次恢复生命，回了几点就叠几层%s%s（恢复照常）" % [status_name(def.heal_echo), each])
-	if def.uncleansable:
-		lines.append(_exception("不可清除") + "：只有反应能吃掉它")
+		lines.append("每次恢复生命，实际回了几点就叠几层%s%s" % [status_name(def.heal_echo), each])
 	return "\n".join(lines)
 
 
@@ -362,6 +372,8 @@ static func _buffs_in_effects(effects: Array, out: Dictionary) -> void:
 			buff = (e as ApplyStatus).buff
 		elif e is ConvertStatus:
 			buff = (e as ConvertStatus).to     # 130：转化出来的剧毒也要能解释
+		elif e is GuardStatus:
+			buff = (e as GuardStatus).buff     # 175 补充四：凝毒 / 冻疮锁的是中毒 / 流血
 		if buff == null or out.has(buff.id):
 			continue
 		out[buff.id] = buff

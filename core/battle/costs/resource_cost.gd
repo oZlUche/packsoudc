@@ -13,11 +13,21 @@ extends Cost
 
 
 func _amount_fp(ctx: RuleContext) -> int:
+	var v := StatMath.from_float(amount)
 	if amount_stat != &"":
 		var from_stats := ctx.item_stat(amount_stat, -1)
 		if from_stats >= 0:
-			return from_stats
-	return StatMath.from_float(amount)
+			v = from_stats
+	return _numbed(ctx, v)
+
+
+## 175 补充四：麻痹 —— 付耐力时 × (1 + 层数 × 每层%)（[member BuffDef.decay_halve_on] = `stamina_paid` 的状态）；
+## 和 105 的灵巧 / 笨拙轴并列连乘（轴已经乘在属性里），不混进轴
+func _numbed(ctx: RuleContext, v: int) -> int:
+	if resource_key != BattleStats.RES_STAMINA or v <= 0:
+		return v
+	var pct := ctx.owner.percent_on(BuffDef.HALVE_STAMINA_PAID)
+	return StatMath.mul(v, StatMath.ONE + StatMath.from_float(pct / 100.0)) if pct > 0.0 else v
 
 
 func can_pay(ctx: RuleContext) -> bool:
@@ -26,6 +36,8 @@ func can_pay(ctx: RuleContext) -> bool:
 
 func pay(ctx: RuleContext) -> void:
 	ctx.owner.resources.change(resource_key, -_amount_fp(ctx), BattleEvent.REASON_COST)
+	if resource_key == BattleStats.RES_STAMINA:
+		ctx.owner.halve_on(ctx.battle, BuffDef.HALVE_STAMINA_PAID)     # 用完减半
 
 
 func trace_info(ctx: RuleContext) -> Dictionary:

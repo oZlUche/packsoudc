@@ -4,16 +4,19 @@
   "display_names": {
     "en": "Surge"
   },
-  "description": "你的下一次攻击必定暴击。",
+  "description": "你获得反应层数那么多层【锐目】；暴击率满了，多出的层数改为【致命】。",
   "elements": [
     "lightning",
     "bleed"
   ],
   "effects": [
     {
-      "type": "apply_status",
-      "target": "SELF",
-      "buff": "surge"
+      "type": "shift_axis",
+      "axis": "crit_chance",
+      "overflow_to": "crit_damage",
+      "delta": {
+        "stacks": "n"
+      }
     }
   ]
 }

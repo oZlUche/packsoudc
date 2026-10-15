@@ -1,63 +1,25 @@
 [gd_resource type="Resource" script_class="ReactionDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_nqxkx"]
-[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="2_n2sr4"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_os2oo"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_3ak5w"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="5_g82se"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_2h86i"]
-[ext_resource type="Script" path="res://core/battle/effects/modify_damage.gd" id="7_hl8e2"]
-[ext_resource type="Script" path="res://core/battle/effects/remove_status.gd" id="8_vlcby"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_before_damage.gd" id="9_45i5d"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="10_y81dg"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="11_wcayd"]
-[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="12_2ar44"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_f3puj"]
+[ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="2_t5jli"]
+[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="3_ky38v"]
 
-[sub_resource type="Resource" id="Resource_b05u3"]
-script = ExtResource("5_g82se")
-
-[sub_resource type="Resource" id="Resource_vvnif"]
-script = ExtResource("7_hl8e2")
-percent = 100
-
-[sub_resource type="Resource" id="Resource_afvjb"]
-script = ExtResource("8_vlcby")
-buff_id = &"overload"
-stacks = 0
-
-[sub_resource type="Resource" id="Resource_fi8u6"]
-script = ExtResource("9_45i5d")
-direction = 1
-
-[sub_resource type="Resource" id="Resource_tsbtx"]
-script = ExtResource("4_3ak5w")
-trigger = SubResource("Resource_fi8u6")
-cadence = SubResource("Resource_b05u3")
-effects = Array[ExtResource("1_nqxkx")]([SubResource("Resource_vvnif"), SubResource("Resource_afvjb")])
-
-[sub_resource type="Resource" id="Resource_qnf5y"]
-script = ExtResource("10_y81dg")
-id = &"overload"
-display_name = "过载"
-display_names = {
-"en": "Overload"
-}
-stackable = false
-duration_sec = 8.0
-rules = Array[ExtResource("4_3ak5w")]([SubResource("Resource_tsbtx")])
-
-[sub_resource type="Resource" id="Resource_1v3bd"]
-script = ExtResource("11_wcayd")
-target = 1
-buff = SubResource("Resource_qnf5y")
+[sub_resource type="Resource" id="Resource_hefih"]
+script = ExtResource("2_t5jli")
+axis = &"attack_speed"
 
 [resource]
-script = ExtResource("12_2ar44")
+script = ExtResource("3_ky38v")
 id = &"fire_lightning"
 display_name = "过载"
 display_names = {
 "en": "Overload"
 }
-description = "你的下一次攻击伤害翻倍。"
+description = "你获得反应层数那么多层【加速】。"
 elements = Array[StringName]([&"fire", &"lightning"])
-effects = Array[ExtResource("1_nqxkx")]([SubResource("Resource_1v3bd")])
+effects = Array[ExtResource("1_f3puj")]([SubResource("Resource_hefih")])
+scaling = [{
+"effect": 0,
+"field": "delta",
+"kind": "n"
+}]

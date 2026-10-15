@@ -1,61 +1,41 @@
 [gd_resource type="Resource" script_class="ReactionDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_4kc1c"]
-[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="2_jfrhk"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_8kmfb"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_85rp2"]
-[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="5_opfnf"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_t4ls6"]
-[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_udlqn"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_my2r8"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_uhgvf"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_hq7b5"]
-[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="11_erwn3"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_f808r"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="2_ln1dv"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_eag23"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_t4spb"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_4kc1c"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="6_jfrhk"]
+[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="7_8kmfb"]
 
-[sub_resource type="Resource" id="Resource_j81pe"]
-script = ExtResource("5_opfnf")
-seconds = 1.0
-
-[sub_resource type="Resource" id="Resource_fqggl"]
-script = ExtResource("7_udlqn")
-target = 1
-damage_type = &"poison"
-amount = 2.5
-damage_stat = &""
-per_stack = true
-
-[sub_resource type="Resource" id="Resource_433tm"]
-script = ExtResource("8_my2r8")
-
-[sub_resource type="Resource" id="Resource_0v26r"]
-script = ExtResource("4_85rp2")
-trigger = SubResource("Resource_433tm")
-cadence = SubResource("Resource_j81pe")
-effects = Array[ExtResource("1_4kc1c")]([SubResource("Resource_fqggl")])
-
-[sub_resource type="Resource" id="Resource_uodj3"]
-script = ExtResource("9_uhgvf")
+[sub_resource type="Resource" id="Resource_85rp2"]
+script = ExtResource("5_4kc1c")
 id = &"virulent"
 display_name = "剧毒"
 display_names = {
 "en": "Virulent Poison"
 }
 is_debuff = true
-rules = Array[ExtResource("4_85rp2")]([SubResource("Resource_0v26r")])
-element = &"poison"
+damage_taken_by_type = {
+"poison": 25
+}
 
-[sub_resource type="Resource" id="Resource_abowt"]
-script = ExtResource("10_hq7b5")
-buff = SubResource("Resource_uodj3")
-per_stack = true
+[sub_resource type="Resource" id="Resource_opfnf"]
+script = ExtResource("6_jfrhk")
+buff = SubResource("Resource_85rp2")
 
 [resource]
-script = ExtResource("11_erwn3")
+script = ExtResource("7_8kmfb")
 id = &"lightning_poison"
 display_name = "电解"
 display_names = {
 "en": "Electrolysis"
 }
-description = "把对手的中毒变成同样层数的剧毒。"
+description = "对手获得反应层数那么多层【剧毒】：受到的毒素伤害提高。"
 elements = Array[StringName]([&"lightning", &"poison"])
-effects = Array[ExtResource("1_4kc1c")]([SubResource("Resource_abowt")])
+effects = Array[ExtResource("1_f808r")]([SubResource("Resource_opfnf")])
+scaling = [{
+"effect": 0,
+"field": "stacks",
+"kind": "n"
+}]

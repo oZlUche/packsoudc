@@ -46,7 +46,20 @@ func can_fire(ctx: RuleContext, now: int) -> bool:
 func commit(ctx: RuleContext, now: int) -> void:
 	# 从此刻起算新的一轮。不是「上次就绪时刻 + 周期」——
 	# 那样在被消耗挡住多次后会积欠一串补偿性触发
-	ctx.state()[READY_AT] = now + _duration(ctx)
+	ctx.state()[READY_AT] = now + chilled(ctx, _duration(ctx))
+
+
+## 175 补充四：寒冷 —— 武器出手时，这一次排定的冷却 × (1 + 层数 × 每层%)（[member BuffDef.decay_halve_on] = `weapon_fired` 的状态），
+## 用完层数减半。只对带 `weapon` 标签的道具的规则；别的规则原样返回
+static func chilled(ctx: RuleContext, period: int) -> int:
+	var uid := ctx.source_uid()
+	if uid == 0 or ctx.runtime.buff != null or not ctx.owner.tags_of(uid).has(&"weapon"):
+		return period
+	var pct := ctx.owner.percent_on(BuffDef.HALVE_WEAPON_FIRED)
+	if pct <= 0.0:
+		return period
+	ctx.owner.halve_on(ctx.battle, BuffDef.HALVE_WEAPON_FIRED)
+	return maxi(MIN_PERIOD, StatMath.mul(period, StatMath.ONE + StatMath.from_float(pct / 100.0)))
 
 
 func estimated_hz(stats: StatSet) -> float:

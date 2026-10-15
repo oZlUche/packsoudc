@@ -1,43 +1,19 @@
 [gd_resource type="Resource" script_class="BuffDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_uxiel"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_1uewl"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_1p3ak"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_5b31m"]
-[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="5_7xq7s"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_0vkk8"]
-[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_hyrdq"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_uldxm"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_o142h"]
-
-[sub_resource type="Resource" id="Resource_j81pe"]
-script = ExtResource("5_7xq7s")
-seconds = 1.0
-
-[sub_resource type="Resource" id="Resource_fqggl"]
-script = ExtResource("7_hyrdq")
-target = 1
-damage_type = &"poison"
-amount = 2.5
-damage_stat = &""
-per_stack = true
-
-[sub_resource type="Resource" id="Resource_433tm"]
-script = ExtResource("8_uldxm")
-
-[sub_resource type="Resource" id="Resource_0v26r"]
-script = ExtResource("4_5b31m")
-trigger = SubResource("Resource_433tm")
-cadence = SubResource("Resource_j81pe")
-effects = Array[ExtResource("3_1p3ak")]([SubResource("Resource_fqggl")])
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_nxm8x"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_ot772"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_jnaso"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_mm4os"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_uxiel"]
 
 [resource]
-script = ExtResource("9_o142h")
+script = ExtResource("5_uxiel")
 id = &"virulent"
 display_name = "剧毒"
 display_names = {
 "en": "Virulent Poison"
 }
 is_debuff = true
-rules = Array[ExtResource("4_5b31m")]([SubResource("Resource_0v26r")])
-element = &"poison"
+damage_taken_by_type = {
+"poison": 25
+}

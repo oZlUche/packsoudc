@@ -316,7 +316,10 @@ func apply_buff(def: BuffDef, stacks: int = 1, now: int = 0) -> int:
 		buffs.append(inst)
 		added = inst.stacks
 		var added_rules: Array[RuleRuntime] = []
-		for rule in def.rules:
+		var all_rules: Array = def.rules.duplicate()
+		if def.decay_rule() != null:
+			all_rules.append(def.decay_rule())     # 175 补充四：按层计时的倒数，排在自己的规则后面
+		for rule in all_rules:
 			var new_rt := RuleRuntime.create(rule, 0, inst, side)
 			new_rt.born = ctx.event_seq if ctx != null else 0     # 175：只听之后发出的事件
 			_register(new_rt)
@@ -336,14 +339,14 @@ func _trace_buff(ctx: BattleContext, id: StringName, delta: int, stacks: int, re
 
 
 ## 移除层数，返回实际移除的层数。层数归零时整条 buff 连同其规则一并移除。
-## 175 补充一：[param force] 只给反应吃印用 —— 不可清除的（凝毒）只有反应吃得掉
-func remove_buff_stacks(buff_id: StringName, count: int, force: bool = false) -> int:
+## 175 补充四：不低于保底层数（[member BuffInstance.guard]，凝毒 / 冻疮）—— 移除效果、解毒剂、转化、反应消耗都一样
+func remove_buff_stacks(buff_id: StringName, count: int) -> int:
 	var inst := find_buff(buff_id)
 	if inst == null or count <= 0 or inst.def.system:
 		return 0     # 103：系统效果（鏖战、衰竭）不可解除
-	if inst.def.uncleansable and not force:
-		return 0     # 175：不可清除的（凝毒）
-	var removed := mini(count, inst.stacks)
+	var removed := mini(count, inst.removable())
+	if removed <= 0:
+		return 0
 	inst.stacks -= removed
 	if inst.stacks <= 0:
 		_drop_buff(inst)
@@ -352,6 +355,77 @@ func remove_buff_stacks(buff_id: StringName, count: int, force: bool = false) ->
 	if ctx != null and ctx.trace != null:
 		_trace_buff(ctx, buff_id, -removed, maxi(0, inst.stacks), "remove", inst.expires_at)
 	return removed
+
+
+## 175 补充四：衰减 —— 把 [param inst] 压到 [param to] 层（不低于保底；0 = 移除），发 status_unstacked（reason 默认 `decay`）。返回扣掉几层
+func decay_buff(ctx: BattleContext, inst: BuffInstance, to: int, reason: String = "decay") -> int:
+	if inst == null or not buffs.has(inst):
+		return 0
+	var target := maxi(inst.guard, maxi(0, to))
+	var removed := inst.stacks - target
+	if removed <= 0:
+		return 0
+	inst.stacks = target
+	if inst.stacks <= 0:
+		_drop_buff(inst)
+	mark_dirty()
+	if ctx != null:
+		if ctx.trace != null:
+			_trace_buff(ctx, inst.def.id, -removed, inst.stacks, reason, inst.expires_at)
+		ctx.emit(BattleEvent.STATUS_UNSTACKED, side, {"buff": String(inst.def.id), "delta": -removed, "stacks": inst.stacks, "reason": reason})
+	return removed
+
+
+## 175 补充四：身上 [member BuffDef.decay_halve_on] 是 [param when] 的状态合计加几成（每层 [member BuffDef.per_stack_percent]，百分数）——
+## 寒冷 `weapon_fired`：武器这一次的冷却；麻痹 `stamina_paid`：这一次的耐力消耗。读完再调 [method halve_on]
+func percent_on(when: StringName) -> float:
+	var pct := 0.0
+	for b in buffs:
+		if b.def.decay_halve_on == when:
+			pct += b.stacks * b.def.per_stack_percent
+	return pct
+
+
+## 175 补充四：[param when] 这个时机到了：身上按它减半的状态层数减半（向下取整，不低于保底）
+func halve_on(ctx: BattleContext, when: StringName) -> void:
+	var hit: Array[BuffInstance] = []
+	for b in buffs:
+		if b.def.decay_halve_on == when:
+			hit.append(b)
+	for b in hit:
+		decay_buff(ctx, b, b.stacks / 2)
+
+
+## 175 补充四：保底 —— [param def] 的保底层数加 [param n]（凝毒 / 冻疮）。身上没有就新挂一份；层数低于保底就补到保底（待定 补 4.5 A）。
+## 直接挂，不经 [method ApplyStatus.give]（这是反应的结果，不再引发反应）。返回补上的层数
+func guard_buff(ctx: BattleContext, def: BuffDef, n: int) -> int:
+	if def == null or n <= 0 or not def.is_stackable():
+		return 0
+	var inst := find_buff(def.id)
+	var added := 0
+	if inst == null:
+		added = apply_buff(def, n, ctx.now if ctx != null else 0)
+		inst = find_buff(def.id)
+		if inst == null:
+			return 0
+		inst.guard = n
+	else:
+		inst.guard += n
+		if inst.stacks < inst.guard:
+			added = inst.add_stacks(inst.guard - inst.stacks)
+			mark_dirty()
+	if ctx != null:     # 层数没变也发一条：回放靠 guard 键写「其中 N 层不可解除」
+		ctx.emit(BattleEvent.STATUS_STACKED, side, {"buff": String(def.id), "delta": added, "stacks": inst.stacks, "guard": inst.guard})
+	return added
+
+
+## 175 补充四：受到 [param type] 伤害时合计加几成（百分数，[member BuffDef.damage_taken_by_type] × 层数；剧毒）
+func taken_by_type_percent(type: StringName) -> float:
+	var pct := 0.0
+	for b in buffs:
+		if not b.def.damage_taken_by_type.is_empty():
+			pct += b.stacks * float(b.def.damage_taken_by_type.get(String(type), b.def.damage_taken_by_type.get(type, 0.0)))
+	return pct
 
 
 ## 175：恢复生命**唯一的入口** —— 治疗效果、反转成治疗的伤害都走这里。先按身上的 [member BuffDef.heal_cut] 截走
