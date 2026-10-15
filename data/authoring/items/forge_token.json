@@ -1,0 +1,16 @@
+{
+  "id": "forge_token",
+  "display_name": "铸牌",
+  "display_names": {
+    "en": "Forge Token"
+  },
+  "description": "三件道具在铸炉里熔铸成的附魔牌。拖到一件武器上放手：武器获得这条附魔（永久，覆盖原有的）。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "weight": 1,
+  "tags": [
+    "token"
+  ]
+}

@@ -26,9 +26,13 @@ static func of_item(inst: ItemInstance, lang: String = "") -> String:
 	if inst == null or inst.def == null:
 		return ""
 	var base := of(inst.def, lang)
-	if inst.def.wear == null:
-		return base
-	return inst.def.wear.prefix_for(inst.charges(), lang) + base
+	# 175 第三批：附魔前缀（铸牌附上的覆盖预置的）。铸牌自己写成「铸牌 · 嗜血的」
+	var ench := Forge.enchant_of(inst)
+	var enchant := Forge.prefix(ench, lang) if not ench.is_empty() else ""
+	if inst.def.is_token():
+		return base + (" · " + enchant if enchant != "" else "")
+	var wear := inst.def.wear.prefix_for(inst.charges(), lang) if inst.def.wear != null else ""
+	return wear + enchant + base
 
 
 ## 语言回落的那一步（名字、事件的标题 / 正文 / 选项都走它）：[param table] 里有当前语言（或指定语言 [param lang]）且不是空串就用它，

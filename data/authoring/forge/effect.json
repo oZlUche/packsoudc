@@ -1,0 +1,214 @@
+{
+  "id": "effect",
+  "display_name": "效果",
+  "display_names": {
+    "en": "Effect"
+  },
+  "description": "效果槽：放进去的道具按材质定「做什么」（也给附魔前缀）、按用途定给谁、按稀有度定几阶（低的是基础，中间升阶，最高再附带一个）。占位表，作者过内容。",
+  "material": [
+    {
+      "key": "bone",
+      "effect": {
+        "type": "apply_status",
+        "buff": "bleed"
+      },
+      "bonus": {
+        "type": "deal_damage",
+        "amount": 2.0,
+        "damage_stat": ""
+      },
+      "amount_field": "stacks",
+      "prefix": "嗜血的",
+      "prefixes": {
+        "en": "Bloodthirsty "
+      }
+    },
+    {
+      "key": "flesh",
+      "effect": {
+        "type": "apply_status",
+        "buff": "poison"
+      },
+      "upgraded": {
+        "type": "apply_status",
+        "buff": "virulent"
+      },
+      "bonus": {
+        "type": "apply_status",
+        "buff": "bleed"
+      },
+      "amount_field": "stacks",
+      "prefix": "淬毒的",
+      "prefixes": {
+        "en": "Venomous "
+      }
+    },
+    {
+      "key": "gem",
+      "effect": {
+        "type": "deal_damage",
+        "damage_type": "fire",
+        "amount": 2.0,
+        "damage_stat": ""
+      },
+      "bonus": {
+        "type": "deal_damage",
+        "amount": 2.0,
+        "damage_stat": ""
+      },
+      "base": 2.0,
+      "prefix": "燃烧的",
+      "prefixes": {
+        "en": "Burning "
+      },
+      "by_element": {
+        "fire": {
+          "damage_type": "fire",
+          "prefix": "燃烧的",
+          "prefixes": {
+            "en": "Burning "
+          }
+        },
+        "ice": {
+          "damage_type": "ice",
+          "prefix": "霜冻的",
+          "prefixes": {
+            "en": "Frozen "
+          }
+        },
+        "lightning": {
+          "damage_type": "lightning",
+          "prefix": "雷鸣的",
+          "prefixes": {
+            "en": "Thundering "
+          }
+        }
+      }
+    },
+    {
+      "key": "leather",
+      "effect": {
+        "type": "change_resource",
+        "resource_key": "armor",
+        "amount": 3.0
+      },
+      "bonus": {
+        "type": "change_resource",
+        "amount": 2.0
+      },
+      "base": 3.0,
+      "self_only": true,
+      "prefix": "坚壁的",
+      "prefixes": {
+        "en": "Bulwark "
+      }
+    },
+    {
+      "key": "wood",
+      "effect": {
+        "type": "change_resource",
+        "amount": 2.0
+      },
+      "bonus": {
+        "type": "change_resource",
+        "resource_key": "armor",
+        "amount": 2.0
+      },
+      "base": 2.0,
+      "self_only": true,
+      "prefix": "回春的",
+      "prefixes": {
+        "en": "Verdant "
+      }
+    },
+    {
+      "key": "stone",
+      "effect": {
+        "type": "apply_status",
+        "target": "SELF",
+        "buff": "deflect"
+      },
+      "bonus": {
+        "type": "change_resource",
+        "resource_key": "armor",
+        "amount": 2.0
+      },
+      "amount_field": "stacks",
+      "self_only": true,
+      "prefix": "坚固的",
+      "prefixes": {
+        "en": "Sturdy "
+      }
+    },
+    {
+      "key": "metal",
+      "effect": {
+        "type": "deal_damage",
+        "amount": 3.0,
+        "damage_stat": ""
+      },
+      "bonus": {
+        "type": "apply_status",
+        "buff": "bleed"
+      },
+      "base": 3.0,
+      "prefix": "锋利的",
+      "prefixes": {
+        "en": "Keen "
+      }
+    },
+    {
+      "key": "default",
+      "effect": {
+        "type": "deal_damage",
+        "amount": 2.0,
+        "damage_stat": ""
+      },
+      "base": 2.0,
+      "prefix": "附魔的",
+      "prefixes": {
+        "en": "Enchanted "
+      }
+    }
+  ],
+  "purpose": [
+    {
+      "key": "weapon",
+      "target": 0
+    },
+    {
+      "key": "shield",
+      "target": 1
+    },
+    {
+      "key": "armor",
+      "target": 1
+    },
+    {
+      "key": "default"
+    }
+  ],
+  "rarity": [
+    {
+      "key": "0"
+    },
+    {
+      "key": "1"
+    },
+    {
+      "key": "2",
+      "tier": 1
+    },
+    {
+      "key": "3",
+      "tier": 1
+    },
+    {
+      "key": "4",
+      "tier": 2
+    },
+    {
+      "key": "default"
+    }
+  ]
+}

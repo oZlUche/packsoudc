@@ -30,6 +30,9 @@ enum Source {
 ## 是否把自己出手也算上。默认否，否则容易写出自循环
 @export var include_self: bool = false
 
+## 175：只听规则的主人自己出手（附魔「出手时」）。勾了它别的来源条件都不看
+@export var self_only: bool = false
+
 ## 132：只听带这些标签之一的件出手（`ranged` / `melee` / `weapon`…）；空 = 不限。和 [member source] = LINKED 可叠加
 @export var source_tags: Array[StringName] = []
 
@@ -43,6 +46,8 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 	if from_own_side != same_side:
 		return false
 	var uid := event.get_int(&"uid")
+	if self_only:
+		return uid == ctx.source_uid() and uid != 0
 	if not include_self and uid == ctx.source_uid():
 		return false
 	if not source_uids.is_empty() and not source_uids.has(uid):
@@ -72,6 +77,8 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 
 
 func describe() -> String:
+	if self_only:
+		return "出手时"
 	if not same_side:
 		return "对手出手时" if source_tags.is_empty() else "对手的%s出手时" % _tag_names()
 	var what := "道具" if source_tags.is_empty() else _tag_names()
@@ -89,6 +96,8 @@ func _tag_names() -> String:
 
 ## 151：一秒命中几次 —— 听对手出手按假定受击频率；听连结的邻居按假定邻居频率；听全场再加上自己（勾了「算自己」）
 func estimated_rate(ctx: PowerContext, _cadence_hz: float) -> float:
+	if self_only:
+		return ctx.hz()
 	if not same_side:
 		return ctx.hits_taken()
 	var rate := ctx.weights.neighbor_hz

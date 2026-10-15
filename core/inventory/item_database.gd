@@ -88,7 +88,7 @@ func ids(include_locked: bool = false) -> Array:
 	var out: Array = []
 	for id in _defs:
 		var d := _defs[id] as ItemDef
-		if d.is_sealed() or d.is_keepsake() or d.is_blessed():     # 088：特殊道具也不能生成；095：赐福版只从赐福来
+		if d.is_sealed() or d.is_keepsake() or d.is_blessed() or d.is_token():     # 088：特殊道具也不能生成；095：赐福版只从赐福来；175：铸牌只从铸炉来
 			continue
 		if not include_locked and _locked.has(id):
 			continue

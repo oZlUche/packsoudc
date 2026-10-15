@@ -21,6 +21,7 @@ const STYLES := {
 	&"spawn": {"glyph": "生", "color": Color("5cb85c")},
 	&"safe": {"glyph": "箱", "color": Color("c8a2ff")},   # 092：放进去的就算带出去了
 	&"chest": {"glyph": "宝", "color": Color("c98a3c")},   # 154：金棕，和搜索的黄分开（终值等美术）
+	&"forge": {"glyph": "铸", "color": Color("e0703a")},   # 175：炉火橙（终值等美术）
 }
 
 const UNKNOWN := {"glyph": "?", "color": Color("8b93a1")}
@@ -28,7 +29,7 @@ const UNKNOWN := {"glyph": "?", "color": Color("8b93a1")}
 ## 166（作者定）：左下角图例用的短名（地图上一眼看的那种；岔路口不列）。长名（事件文本、日志）照旧在 [NodeText]
 const NAMES := {
 	&"battle": "战斗", &"elite": "精英", &"event": "事件", &"random": "未知", &"search": "搜索", &"shop": "商店",
-	&"rest": "休息", &"extract": "撤离", &"core": "核心", &"spawn": "出生", &"safe": "保险箱", &"chest": "宝箱",
+	&"rest": "休息", &"extract": "撤离", &"core": "核心", &"spawn": "出生", &"safe": "保险箱", &"chest": "宝箱", &"forge": "铸炉",
 }
 
 ## 155：节点图标的目录（文件名 = 类型）

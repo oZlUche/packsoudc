@@ -103,6 +103,9 @@ func _build() -> void:
 		_drag.craft_note = func(a: ItemInstance, b: ItemInstance) -> String:     # 140：预览旁边那行小字
 			return crafting.note_of(a.def, b.def)
 		crafting.done.connect(_on_crafted)
+	# 175 第三批：铸牌压到武器上放手 = 附魔（任何格子容器里都行；铸牌已经拿在手上）
+	_drag.enchant_drop = func(token: ItemInstance, grid: GridInventory, weapon_uid: int) -> bool:
+		return InventoryService.enchant(token, null, grid, weapon_uid)
 	# 084：停在道具上的悬浮说明（名、稀有度、标签、效果、武器的冷却与 DPS、槽）
 	tip = HoverTip.new()
 	add_child(tip)

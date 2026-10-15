@@ -263,3 +263,23 @@ static func _take_order(from: ItemContainer, bags_first: bool = false) -> Array:
 
 static func _sort_by_cells(list: Array) -> void:
 	list.sort_custom(func(a, b): return (a as ItemInstance).def.shape.cell_count() > (b as ItemInstance).def.shape.cell_count())
+
+
+## 175 第三批：铸牌 [param token] 附魔给 [param to] 里的武器 [param weapon_uid] —— 原子：武器的 `state.enchant` 写成铸牌的那份
+## （后来者覆盖前者）、铸牌从 [param token_from] 摘掉（拖拽中已经拿在手上的传 null）、武器所在容器发一次 changed。
+## 不是铸牌、底下不是武器、铸牌的附魔是空的：什么都不动，返回 false
+static func enchant(token: ItemInstance, token_from: ItemContainer, to: ItemContainer, weapon_uid: int) -> bool:
+	if token == null or to == null or not Forge.is_token(token):
+		return false
+	var weapon := to.get_item(weapon_uid)
+	if weapon == null or weapon.uid == token.uid or not Forge.accepts(weapon):
+		return false
+	var ench: Variant = token.state.get(Forge.KEY, null)
+	if not (ench is Dictionary) or (ench as Dictionary).is_empty():
+		return false
+	if token_from != null and token_from.has_item(token.uid):
+		token_from.remove(token.uid)
+	weapon.state[Forge.KEY] = (ench as Dictionary).duplicate(true)
+	to.touch()
+	return true
+

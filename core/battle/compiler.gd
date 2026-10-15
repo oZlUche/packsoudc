@@ -137,6 +137,10 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 			item.rules.append_array(bonus_rules[uid])
 		for pair in attach_pending.get(uid, []):
 			_attach(item, pair[0], pair[1])
+		# 175 第三批：附魔（铸牌附上的覆盖预置的）走同一个附加入口，一把只挂一条；表里查不到了就不挂
+		var ench := Forge.enchant_of(board.get_item(uid))
+		if not ench.is_empty():
+			_attach(item, Forge.rule_of(ench), Forge.ORIGIN)
 		var linked: Array[int] = []
 		for other in (links.get(uid, {}) as Dictionary).keys():
 			linked.append(other)

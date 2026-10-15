@@ -44,6 +44,8 @@ const FAITH := &"faith"
 ## 095：赐福版（从普通道具派生的信仰道具）；信物（护符 / 符号 / 遗物）—— 只有信物能激活信仰
 const BLESSED := &"blessed"
 const ANCHOR := &"faith_anchor"
+## 175 第三批：铸牌这类**内部道具** —— 不进图鉴、掉落、商店（[method ItemDatabase.ids] 拦），能带出、能存仓库
+const TOKEN := &"token"
 
 ## 准入标签。容器级与包体级的准入都拿它比对。
 @export var tags: Array[StringName] = []
@@ -55,6 +57,11 @@ func is_sealed() -> bool:
 
 func is_keepsake() -> bool:
 	return tags.has(KEEPSAKE)
+
+
+## 175：铸牌（[constant TOKEN]）
+func is_token() -> bool:
+	return tags.has(TOKEN)
 
 
 func has_faith() -> bool:
@@ -134,6 +141,10 @@ func faith_tag() -> StringName:
 
 ## 邻接标记（增益／受益）。为空表示本物品与邻居无互动。
 @export var adjacency: AdjacencyProfile
+
+@export_group("附魔")
+## 175 第三批（作者定：所有附魔都视为铸牌附魔）：预置附魔 —— 实例的 `state.enchant`（铸牌附上的）覆盖它，见 [Forge]
+@export var enchant: EnchantDef
 
 @export_group("耐久")
 ## 148：耐久（次数制，魔晶石）。为空 = 不会用坏。剩几次记在实例上（[method ItemInstance.charges]）
