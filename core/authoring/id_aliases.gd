@@ -63,6 +63,11 @@ const CHAPTERS := {
 	&"chapter_01": &"free_mode",
 }
 
+## 地图节点类型：旧 → 新（175 补充二：独立的铸炉点撤掉，铸炉并进休息点；老存档里的铸炉点按休息点读，[SaveReconcile]）
+const NODE_TYPES := {
+	&"forge": &"rest",
+}
+
 
 ## 一张表里查一次（没有就原样返回）。只查一跳：改名表里不许串成链（a → b、b → c 就把 a 直接写成 c）
 static func resolve(table: Dictionary, id: StringName) -> StringName:

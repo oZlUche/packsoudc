@@ -1,6 +1,7 @@
 ## 175 第一批：元素印与反应表 —— 命中盖印、施加中毒 / 流血即盖印、物理不盖；十对反应各一例；同元素加深不反应；燃血治疗为零；
-## 反应不连锁；导入器的校验。175 补充一（作者伪代码）：印可叠层（灼 / 寒 / 麻上限十层）；取层数最多的异色印、N = max、已有印扣光、
-## 新印不叠；凝毒 / 电解是产物（N 层凝毒不可清除、N 层剧毒）；菌血按恢复量叠中毒；中毒每层 1 点
+## 反应不连锁；导入器的校验。175 补充一 / 三（作者伪代码，更正为 min）：印可叠层（灼 / 寒 / 麻上限十层）；取层数最多的异色印、
+## N = min(已有, 新来)、两边各扣 N、新印余量照常叠且不再反应；凝毒 / 电解是产物（N 层凝毒不可清除、N 层剧毒）；菌血按恢复量叠中毒；
+## 中毒每层 1 点。补充二：反应效果里的数字可写成随 N 变（per_stack / stacks: n / seconds: n + max）
 extends RefCounted
 
 const H := preload("res://tests/battle/test_effect_system.gd")
@@ -112,17 +113,19 @@ static func run_fire(t: TestCase) -> void:
 	# 爆燃：三层中毒 + 一下火 1 → 3 × 3 = 9 火伤，中毒清空，再盖灼
 	var ctx := _run([_apply("poison", 3), _hit(DamageTypes.FIRE, 1.0)])
 	t.eq(_reactions(ctx), [&"fire_poison"] as Array[StringName], "引发爆燃")
-	t.eq(ctx.sides[1].stacks_of(&"poison"), 0, "中毒被吃掉")
-	t.eq(ctx.sides[1].stacks_of(&"scorch"), 1, "再盖上灼")
-	t.eq(S._hp(ctx, 1), 90, "已有多：N = max(3, 1) = 3，火 1 + 3 × 3 = 9")
-	# 反过来：先有一层灼、再施加两层中毒 —— N = max(1, 2) = 2，中毒不叠上去
+	t.eq(ctx.sides[1].stacks_of(&"poison"), 2, "已有多：N = min(3, 1) = 1，中毒扣一层剩两层")
+	t.eq(ctx.sides[1].stacks_of(&"scorch"), 1, "火这一下扣光不盖，爆燃再盖一层灼")
+	t.eq(S._hp(ctx, 1), 96, "火 1 + 1 × 3 = 3")
+	# 反过来：先有一层灼、再施加两层中毒 —— N = min(1, 2) = 1，中毒余一层照常叠上
 	ctx = _run([_hit(DamageTypes.FIRE, 1.0), _apply("poison", 2)])
 	t.eq(_reactions(ctx), [&"fire_poison"] as Array[StringName], "先灼后毒也是爆燃")
-	t.eq(S._hp(ctx, 1), 93, "新来多：N = max(1, 2) = 2，火 1 + 2 × 3 = 6")
-	t.eq(ctx.sides[1].stacks_of(&"poison"), 0, "新来的中毒整份进了反应，不叠")
-	# 相等：两层灼 + 两层中毒 → N = 2
+	t.eq(S._hp(ctx, 1), 96, "新来多：N = 1，火 1 + 1 × 3 = 3")
+	t.eq(ctx.sides[1].stacks_of(&"poison"), 1, "新来的中毒扣一层，余一层叠上")
+	t.eq(_reactions(ctx).size(), 1, "余量不再引发第二次反应（身上有爆燃盖的灼）")
+	# 相等：两层灼 + 两层中毒 → N = 2，两边清空
 	ctx = _run([_hit(DamageTypes.FIRE, 1.0), _hit(DamageTypes.FIRE, 1.0), _apply("poison", 2)])
 	t.eq(S._hp(ctx, 1), 92, "相等：N = 2，火 1 + 1 + 2 × 3 = 6")
+	t.eq(ctx.sides[1].stacks_of(&"poison"), 0, "相等：中毒不留")
 
 	# 淬裂：先寒、再火 → 护甲清零 + 8 点
 	ctx = _run([_hit(DamageTypes.ICE, 1.0), _hit(DamageTypes.FIRE, 5.0)], {"max_armor": 30})
@@ -140,7 +143,7 @@ static func run_fire(t: TestCase) -> void:
 	# 燃血：流血 → 火 → 治疗无效 + 6 点火伤；反应里的这下火伤不盖灼（反应不连锁）
 	ctx = _run([_apply("bleed", 2), _hit(DamageTypes.FIRE, 1.0), _heal_opp(20.0)])
 	t.eq(_reactions(ctx), [&"fire_bleed"] as Array[StringName], "引发燃血")
-	t.eq(ctx.sides[1].stacks_of(&"bleed"), 0, "流血被吃掉")
+	t.eq(ctx.sides[1].stacks_of(&"bleed"), 1, "流血扣 N = 1 层，剩一层")
 	t.eq(ctx.sides[1].stacks_of(&"scorched_blood"), 1, "对手燃血")
 	t.eq(S._hp(ctx, 1), 93, "火 1 + 燃血 6；之后的治疗 20 为零")
 	t.eq(ctx.sides[1].stacks_of(&"scorch"), 0, "反应里的火伤不盖灼（本次结算内不盖新印）")
@@ -155,20 +158,23 @@ static func run_ice(t: TestCase) -> void:
 	t.eq(_reactions(ctx), [&"ice_lightning"] as Array[StringName], "引发超导")
 	t.eq(S._hp(ctx, 1), 100 - 1 - 1 - 12, "超导后 10 打成 12")
 
-	# 凝毒（补 4 A，产物式）：两层中毒 → 冰 → 两层凝毒；中毒、寒都没留；凝毒清不掉、每层每秒 1 点、只有反应吃得掉
-	ctx = _run([_apply("poison", 2), _hit(DamageTypes.ICE, 1.0), _cleanse("congeal"), _cleanse_all()])
+	# 凝毒（补 4 A，产物式）：三层中毒 → 冰 → N = 1：一层凝毒、中毒剩两层照常跳；凝毒清不掉、每层每秒 1 点、只有反应吃得掉
+	ctx = _run([_apply("poison", 3), _hit(DamageTypes.ICE, 1.0), _cleanse("congeal")])
 	t.eq(_reactions(ctx), [&"ice_poison"] as Array[StringName], "引发凝毒")
-	t.eq(ctx.sides[1].stacks_of(&"poison"), 0, "中毒被吃掉")
-	t.eq(ctx.sides[1].stacks_of(&"chill"), 0, "寒印不叠（整份进了反应）")
-	t.eq(ctx.sides[1].stacks_of(&"congeal"), 2, "产出 N = 2 层凝毒，解毒与清除全部减益都清不掉")
+	t.eq(ctx.sides[1].stacks_of(&"poison"), 2, "中毒扣一层剩两层")
+	t.eq(ctx.sides[1].stacks_of(&"chill"), 0, "寒扣光不叠")
+	t.eq(ctx.sides[1].stacks_of(&"congeal"), 1, "产出 N = 1 层凝毒，解毒清不掉")
 	t.check(_b("congeal").uncleansable and _b("congeal").element == &"poison", "凝毒：不可清除、毒印")
 	var hp0 := S._hp(ctx, 1)
-	H._advance_to(ctx, 3.05)
-	t.eq(S._hp(ctx, 1), hp0 - 6, "三秒：每层每秒 1 点 × 2 层 × 3")
-	t.eq(ctx.sides[1].stacks_of(&"congeal"), 2, "不衰减")
+	H._advance_to(ctx, 1.05)
+	t.eq(S._hp(ctx, 1), hp0 - 3, "一秒：剩下两层中毒照常跳 2 + 凝毒 1")
 	var rc := RuleContext.create(ctx, ctx.sides[0], RuleRuntime.create(null, 1, null, 0))
+	_cleanse_all().apply(rc)
+	t.eq([ctx.sides[1].stacks_of(&"poison"), ctx.sides[1].stacks_of(&"congeal")], [0, 1], "清除全部减益：中毒清掉，凝毒还在")
+	H._advance_to(ctx, 3.05)
+	t.eq(ctx.sides[1].stacks_of(&"congeal"), 1, "不衰减")
 	_hit(DamageTypes.FIRE, 1.0).apply(rc)
-	t.eq(ReactionResolver.reactions_in(ctx.log).has(&"fire_poison"), true, "凝毒是毒印：再挨火就爆燃")
+	t.check(ReactionResolver.reactions_in(ctx.log).has(&"fire_poison"), "凝毒是毒印：再挨火就爆燃")
 	t.eq(ctx.sides[1].stacks_of(&"congeal"), 0, "反应吃得掉凝毒")
 
 	# 冻疮：流血 → 冰 → 出手间隔拉长（减速十层）
@@ -179,12 +185,12 @@ static func run_ice(t: TestCase) -> void:
 
 static func run_lightning(t: TestCase) -> void:
 	t.begin("175 · 雷系与毒血：电解产出 N 层剧毒、激荡下一次攻击必暴击、菌血按恢复量叠中毒")
-	# 电解：三层中毒 → 雷 → 三层剧毒，麻不留
+	# 电解：三层中毒 → 雷 → N = 1：一层剧毒，中毒剩两层，麻不留
 	var ctx := _run([_apply("poison", 3), _hit(DamageTypes.LIGHTNING, 1.0)])
 	t.eq(_reactions(ctx), [&"lightning_poison"] as Array[StringName], "引发电解")
-	t.eq(ctx.sides[1].stacks_of(&"poison"), 0, "中毒没了")
-	t.eq(ctx.sides[1].stacks_of(&"virulent"), 3, "换成三层剧毒")
-	t.eq(ctx.sides[1].stacks_of(&"numb"), 0, "麻被吃掉")
+	t.eq(ctx.sides[1].stacks_of(&"poison"), 2, "中毒扣一层")
+	t.eq(ctx.sides[1].stacks_of(&"virulent"), 1, "产出 N = 1 层剧毒")
+	t.eq(ctx.sides[1].stacks_of(&"numb"), 0, "麻扣光不叠")
 
 	# 激荡：流血 → 雷 → 下一次武器出手必暴击（这一下自己排在队里的出手事件不算「下一次」）
 	var weapon := H._rule(OnSchedule.new(), H._cooldown(1.0), [DealDamage.new()])
@@ -220,7 +226,7 @@ static func run_lightning(t: TestCase) -> void:
 
 
 static func run_rules(t: TestCase) -> void:
-	t.begin("175 补充一 · 伪代码：取层数最多的异色印（并列按火冰雷毒血）、同色的不算；N = max；已有印扣光、新印不叠；反应不连锁")
+	t.begin("175 补充一 / 三 · 伪代码：取层数最多的异色印（并列按火冰雷毒血）、同色的不算；N = min；两边各扣 N、新印余量叠上不再反应；反应不连锁")
 	# 三色同在（直接挂上去，不经反应）：来雷 → 取层数最多的寒（5）→ 超导，灼与流血不动
 	var ctx := _run([])
 	var foe := ctx.sides[1]
@@ -230,7 +236,7 @@ static func run_rules(t: TestCase) -> void:
 	var rc := RuleContext.create(ctx, ctx.sides[0], RuleRuntime.create(null, 1, null, 0))
 	_hit(DamageTypes.LIGHTNING, 1.0).apply(rc)
 	t.eq(_reactions(ctx), [&"ice_lightning"] as Array[StringName], "取层数最多的寒 → 超导")
-	t.eq([foe.stacks_of(&"chill"), foe.stacks_of(&"scorch"), foe.stacks_of(&"bleed"), foe.stacks_of(&"numb")], [0, 2, 3, 0], "寒扣光、灼和流血不动、麻不叠")
+	t.eq([foe.stacks_of(&"chill"), foe.stacks_of(&"scorch"), foe.stacks_of(&"bleed"), foe.stacks_of(&"numb")], [4, 2, 3, 0], "寒扣 N = 1 剩四、灼和流血不动、麻扣光")
 	# 并列：灼 3、流血 3，来毒 → 按顺序取火 → 爆燃 N = 3
 	ctx = _run([])
 	foe = ctx.sides[1]
@@ -239,7 +245,7 @@ static func run_rules(t: TestCase) -> void:
 	rc = RuleContext.create(ctx, ctx.sides[0], RuleRuntime.create(null, 1, null, 0))
 	_apply("poison").apply(rc)
 	t.eq(_reactions(ctx), [&"fire_poison"] as Array[StringName], "并列取火（火冰雷毒血的顺序）")
-	t.eq(S._hp(ctx, 1), 91, "N = max(3, 1) = 3：3 × 3 = 9")
+	t.eq(S._hp(ctx, 1), 97, "N = min(3, 1) = 1：1 × 3 = 3")
 	t.eq(foe.stacks_of(&"bleed"), 3, "流血不动")
 	# 同色不算：灼 3 + 中毒 1，来火 → 异色只有中毒 → 爆燃 N = 1；原来的灼留着、再加反应盖的一层
 	ctx = _run([])
@@ -250,9 +256,18 @@ static func run_rules(t: TestCase) -> void:
 	_hit(DamageTypes.FIRE, 1.0).apply(rc)
 	t.eq(_reactions(ctx), [&"fire_poison"] as Array[StringName], "同色的灼不算，和中毒反应")
 	t.eq(foe.stacks_of(&"scorch"), 4, "灼 3 留着 + 爆燃盖的 1")
-	# 电解（补 4 A）：先麻后毒 → N = max(1, 2) = 2 层剧毒
+	# 电解（补 4 A）：先麻后毒 → N = min(1, 2) = 1 层剧毒，中毒余一层叠上
 	ctx = _run([_hit(DamageTypes.LIGHTNING, 1.0), _apply("poison", 2)])
-	t.eq([ctx.sides[1].stacks_of(&"virulent"), ctx.sides[1].stacks_of(&"poison"), ctx.sides[1].stacks_of(&"numb")], [2, 0, 0], "先麻后毒：两层剧毒，中毒不叠、麻扣光")
+	t.eq([ctx.sides[1].stacks_of(&"virulent"), ctx.sides[1].stacks_of(&"poison"), ctx.sides[1].stacks_of(&"numb")], [1, 1, 0], "先麻后毒：一层剧毒、中毒余一层、麻扣光")
+	# 补 3.3：寒 1、麻 3，来五层灼 → 和麻反应（过载）N = 3，灼余两层叠上，寒原地不动，不再和灼炸
+	ctx = _run([])
+	foe = ctx.sides[1]
+	foe.apply_buff(_b("chill"), 1, ctx.now)
+	foe.apply_buff(_b("numb"), 3, ctx.now)
+	rc = RuleContext.create(ctx, ctx.sides[0], RuleRuntime.create(null, 1, null, 0))
+	_apply("scorch", 5).apply(rc)
+	t.eq(_reactions(ctx), [&"fire_lightning"] as Array[StringName], "只结算一次：过载")
+	t.eq([foe.stacks_of(&"numb"), foe.stacks_of(&"scorch"), foe.stacks_of(&"chill")], [0, 2, 1], "麻扣光、灼余两层、寒不动")
 	# 反应不连锁：爆燃里的火伤与灼都在反应结算内
 	ctx = _run([_apply("poison", 2), _apply("bleed")])
 	t.eq(_reactions(ctx), [&"poison_bleed"] as Array[StringName], "毒 + 血 = 菌血")
@@ -266,6 +281,58 @@ static func run_rules(t: TestCase) -> void:
 	e.seq = 4
 	t.check(rt.born > e.seq, "规则出生（5）晚于事件（4）：派发跳过")
 	t.eq(BattleEvent.make(BattleEvent.ITEM_FIRED, 0, 0, {}).seq, BattleEvent.NO_SEQ, "手搓的事件谁都听得见")
+
+
+## 补充二：一份试验用的火冰反应 —— 物理伤 N × 2、流血 N 层（封顶 5）、燃血持续 N 秒（封顶 10）
+static func _scaled_def(report: ImportReport) -> ReactionDef:
+	return ContentImporter.import_reaction({"id": "fire_ice", "display_name": "试", "elements": ["fire", "ice"], "effects": [
+		{"type": "deal_damage", "damage_type": "physical", "amount": {"per_stack": 2.0}, "damage_stat": ""},
+		{"type": "apply_status", "buff": "bleed", "stacks": {"stacks": "n", "max": 5.0}},
+		{"type": "apply_status", "buff": "scorched_blood", "duration_sec": {"seconds": "n", "max": 10.0}},
+	]}, ContentLibrary.context(), report)
+
+
+static func run_scaling(t: TestCase) -> void:
+	t.begin("175 补充二 · 反应里的数字随 N 变：per_stack（N × X）、stacks: n（= N，可封顶）、seconds: n + max（这次施加的状态持续 N 秒）；导入器拦错写法；导出写回内联")
+	var r := ImportReport.new()
+	var def := _scaled_def(r)
+	t.check(r.ok(), "三种写法导得进（%s）" % r.to_text())
+	t.eq(def.scaling.size(), 3, "记了三行")
+	var dumped := ContentExporter.dump(def)
+	t.eq(dumped["effects"][0]["amount"], {"per_stack": 2.0}, "导出写回内联：per_stack")
+	t.eq(dumped["effects"][1]["stacks"], {"stacks": "n", "max": 5.0}, "导出写回内联：stacks n")
+	t.eq(dumped["effects"][2]["duration_sec"], {"seconds": "n", "max": 10.0}, "导出写回内联：seconds n")
+	t.check(not dumped.has("scaling"), "json 里不出现 scaling")
+	var again := ImportReport.new()
+	var def2 := ContentImporter.import_reaction(JSON.parse_string(ContentExporter.to_json(dumped)), ContentLibrary.context(), again)
+	t.check(again.ok() and def2.scaling == def.scaling, "往返一致")
+	t.eq((def.effects[0] as DealDamage).amount, 1.0, "原效果里留的是占位数，不被结算改动")
+	for n in [1, 5, 10]:
+		ReactionResolver.reset()
+		ReactionResolver.all()     # 先读进数据，再用试验的那份盖掉火冰
+		ReactionResolver.register(def)
+		var ctx := _run([])
+		var foe := ctx.sides[1]
+		foe.apply_buff(_b("chill"), n, ctx.now)
+		var rc := RuleContext.create(ctx, ctx.sides[0], RuleRuntime.create(null, 1, null, 0))
+		_apply("scorch", n).apply(rc)
+		t.eq(_reactions(ctx), [&"fire_ice"] as Array[StringName], "N = %d：引发" % n)
+		t.eq(S._hp(ctx, 1), 100 - 2 * n, "N = %d：物理 N × 2" % n)
+		t.eq(foe.stacks_of(&"bleed"), mini(n, 5), "N = %d：流血 N 层，封顶 5" % n)
+		var sb := foe.find_buff(&"scorched_blood")
+		t.check(sb != null and sb.expires_at == ctx.now + StatMath.from_float(float(mini(n, 10))), "N = %d：燃血持续 %d 秒" % [n, mini(n, 10)])
+	ReactionResolver.reset()
+	t.eq(_b("scorched_blood").duration_sec, 5.0, "内容库里的燃血时长没被改")
+	var cases := [
+		[{"type": "apply_status", "buff": "scorched_blood", "duration_sec": {"seconds": "n"}}, "max"],
+		[{"type": "apply_status", "buff": "bleed", "duration_sec": {"seconds": "n", "max": 3.0}}, "永续"],
+		[{"type": "deal_damage", "damage_stat": "", "nope": {"per_stack": 1.0}}, "nope"],
+		[{"type": "deal_damage", "damage_stat": "", "amount": {"per_stack": "x"}}, "per_stack"],
+	]
+	for c in cases:
+		var rr := ImportReport.new()
+		ContentImporter.import_reaction({"id": "fire_ice", "display_name": "x", "elements": ["fire", "ice"], "effects": [c[0]]}, ContentLibrary.context(), rr)
+		t.check(not rr.ok() and rr.to_text().contains(String(c[1])), "拦下：%s（%s）" % [c[1], rr.to_text()])
 
 
 static func run_import(t: TestCase) -> void:

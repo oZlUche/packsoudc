@@ -15,6 +15,8 @@ var replaced: Array = []
 var dropped: Array = []
 ## 175：附魔查不到了（铸炉映射表的行删了）被摘掉的：`{id, why, from}`
 var unenchanted: Array = []
+## 175 补充二：撤掉的节点类型改成接班的（铸炉点 → 休息点）`{node, from, to}`。不用告诉玩家（不进 [method is_empty] / [method summary]），留着查账
+var retyped: Array = []
 ## 一局档因版本更新作废，带的东西放回了仓库
 var salvaged: bool = false
 ## 一局档作废前捞出来的道具字典（对账过的），等调用方放进仓库；不写进文件
@@ -46,6 +48,10 @@ func drop(id: StringName, from: String) -> void:
 	dropped.append({"id": String(id), "from": from})
 
 
+func retype(node_id: int, from: StringName, to: StringName) -> void:
+	retyped.append({"node": node_id, "from": String(from), "to": String(to)})
+
+
 func unenchant(id: StringName, why: String, from: String) -> void:
 	unenchanted.append({"id": String(id), "why": why, "from": from})
 
@@ -69,6 +75,7 @@ func clear_items() -> void:
 	replaced.clear()
 	dropped.clear()
 	unenchanted.clear()
+	retyped.clear()
 	salvage.clear()
 	salvage_funds = 0
 
@@ -82,6 +89,7 @@ func merge(other: SaveReport) -> void:
 	replaced.append_array(other.replaced)
 	dropped.append_array(other.dropped)
 	unenchanted.append_array(other.unenchanted)
+	retyped.append_array(other.retyped)
 	salvaged = salvaged or other.salvaged
 	prev_used = prev_used or other.prev_used
 	if other.backup != "":
@@ -94,13 +102,13 @@ func merge(other: SaveReport) -> void:
 
 func to_dict() -> Dictionary:
 	return {"refunded": refunded.duplicate(true), "rehomed": rehomed.duplicate(true), "replaced": replaced.duplicate(true),
-		"dropped": dropped.duplicate(true), "unenchanted": unenchanted.duplicate(true), "salvaged": salvaged, "prev_used": prev_used, "backup": backup,
+		"dropped": dropped.duplicate(true), "unenchanted": unenchanted.duplicate(true), "retyped": retyped.duplicate(true), "salvaged": salvaged, "prev_used": prev_used, "backup": backup,
 		"content_stamp": {"saved": stamp_saved, "now": stamp_now}}
 
 
 static func from_dict(d: Dictionary) -> SaveReport:
 	var r := SaveReport.new()
-	for key in ["refunded", "rehomed", "replaced", "dropped", "unenchanted"]:
+	for key in ["refunded", "rehomed", "replaced", "dropped", "unenchanted", "retyped"]:
 		var raw: Variant = d.get(key, [])
 		if raw is Array:
 			for row in raw:

@@ -140,7 +140,34 @@ static func dump(obj: Object, with_type: bool = false) -> Dictionary:
 		if encoded != null:
 			out[key] = encoded
 	_percent_out(obj, out)
+	if obj is ReactionDef:
+		_reaction_out(obj as ReactionDef, out)
 	return out
+
+
+## 175 补充二：随 N 变的数字写回效果里的内联写法（导入的反方向，见 [method ContentImporter._pull_reaction_scaling]）
+static func _reaction_out(def: ReactionDef, out: Dictionary) -> void:
+	out.erase("scaling")
+	var effects: Variant = out.get("effects", [])
+	if not (effects is Array):
+		return
+	for raw in def.scaling:
+		var row := raw as Dictionary
+		var i := int(row.get("effect", -1))
+		if i < 0 or i >= (effects as Array).size() or not (effects[i] is Dictionary):
+			continue
+		var spec := {}
+		match String(row.get("kind", "")):
+			ReactionDef.KIND_PER_STACK:
+				spec["per_stack"] = float(row.get("x", 0.0))
+			ReactionDef.KIND_N:
+				spec["stacks"] = "n"
+			ReactionDef.KIND_SECONDS:
+				spec["seconds"] = "n"
+		if row.has("max"):
+			spec["max"] = float(row["max"])
+		var field := String(row.get("field", ""))
+		effects[i]["duration_sec" if field == ReactionDef.BUFF_DURATION else field] = spec
 
 
 ## 百分比属性写回百分数（导入时 ÷100 的反方向，见 [method ContentImporter._percent_in]）
