@@ -39,12 +39,38 @@ static func meta(d: Dictionary, db: ItemDatabase, report: SaveReport = null) -> 
 
 ## 一局档：对账并把折的钱加进钱包
 static func run(d: Dictionary, db: ItemDatabase, report: SaveReport = null) -> int:
+	node_types(d, report)
 	var refund := items(d, db, report, RUN_ROOTS)
 	if refund > 0:
 		var w: Dictionary = d.get("wallet", {}) if d.get("wallet", {}) is Dictionary else {}
 		w["balance"] = int(w.get("balance", 0)) + refund
 		d["wallet"] = w
 	return refund
+
+
+## 175 补充二：地图上撤掉的节点类型按 [constant IdAliases.NODE_TYPES] 改成接班的（铸炉点 → 休息点）：
+## 节点的 `type` 与随机点揭开后的 `content.resolved_type` 都改。节点内容原样留着（铸过的 `used_forge` 照样算数）。返回改了几个
+static func node_types(d: Dictionary, report: SaveReport = null) -> int:
+	var map: Variant = d.get("map", {})
+	if not (map is Dictionary) or not ((map as Dictionary).get("nodes", []) is Array):
+		return 0
+	var n := 0
+	for raw in map["nodes"]:
+		if not (raw is Dictionary):
+			continue
+		var node := raw as Dictionary
+		var content: Variant = node.get("content", {})
+		for pair in [[node, "type"], [content, "resolved_type"]]:
+			var holder: Variant = pair[0]
+			if not (holder is Dictionary) or not (holder as Dictionary).has(pair[1]):
+				continue
+			var old := StringName(String(holder[pair[1]]))
+			if IdAliases.NODE_TYPES.has(old):
+				holder[pair[1]] = String(IdAliases.NODE_TYPES[old])
+				n += 1
+				if report != null:
+					report.retype(int(node.get("id", -1)), old, IdAliases.NODE_TYPES[old])
+	return n
 
 
 ## 待定 2 A：作废的一局里能捞回仓库的道具字典 —— 棋盘、地上（暂存区）、保险箱。对账过的、`def` 非空的才算；

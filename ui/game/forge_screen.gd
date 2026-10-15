@@ -1,6 +1,6 @@
-## 铸炉屏（175 第三批，作者定）：踩上没用过的铸炉打开。上面三个凹槽【时机】【效果】【数值】，任意道具都能进任意槽（一槽一件），
+## 铸炉屏（175 第三批，作者定；补充二：铸炉在休息点里，从休息屏的「铸炉」一栏或站在休息点上「重新打开」进来）。上面三个凹槽【时机】【效果】【数值】，任意道具都能进任意槽（一槽一件），
 ## 三槽都填了「铸」才亮；预览写将要铸出的那一枚（名字与那一句附魔）。铸完三件消失、出牌槽出现一枚铸牌，铸炉熄掉。
-## 「返回」= 回地图：槽里的东西先回背包，出牌槽里没拿走的铸牌也放回背包（放不下到地上）。没铸过还能再来
+## 「返回」= 接着看排着的、没有就回地图：槽里的东西先回背包，出牌槽里没拿走的铸牌也放回背包（放不下到地上）。没铸过还能再来
 extends GameScreen
 
 const SLOT_SIZE := Vector2i(4, 4)
@@ -62,7 +62,7 @@ func open(payload: Dictionary) -> void:
 	_forge_btn.disabled = true
 	buttons.add_child(_forge_btn)
 	var back := _button("返回", to_map, 13)
-	back.tooltip_text = "回到地图；没铸过还能再来（Esc）"
+	back.tooltip_text = "离开铸炉；没铸过站在这个休息点上还能再开（Esc）"
 	buttons.add_child(back)
 	left.add_child(buttons)
 	_line = _label("", 13, UiPalette.HEAL)

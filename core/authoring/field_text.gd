@@ -34,7 +34,7 @@ const LABELS := {
 	"per_target_stack": "乘目标身上的层数", "percent_of_damage": "按这一下伤害的百分比", "all_debuffs": "清光全部减益", "all_buffs": "清光全部增益",     # 132
 	"axis": "标准轴", "axes": "每层带的标准轴", "BuffAxis.stacks": "每层带几层",     # 152
 	"element": "元素印", "heal_cut": "截走治疗（%）", "heal_echo": "恢复时叠的状态", "heal_echo_per_point": "每点叠几层", "uncleansable": "不可清除", "stack_cap": "层数上限", "mark": "命中盖印", "mark_stacks": "盖几层",     # 175
-	"elements": "两种元素",     # 175
+	"elements": "两种元素", "scaling": "随反应量变的数",     # 175
 	"is_debuff": "是减益", "refresh_on_restack": "再叠刷新时长", "on_apply": "施加时", "on_expire": "到期时", "mods": "属性加成", "consume": "消耗掉",
 	"grant_cells": "增益格", "receive_cells": "受益格", "grant_mods": "给邻居的加成", "grant_rules": "给邻居挂的规则", "receive_mods": "邻居给的加成", "grant_filter": "只给", "receive_filter": "只收",
 	"uses": "次数", "max_uses": "最多次数", "hp_fraction": "生命比例", "direction": "方向", "source": "来源", "weapon_tag": "武器标签", "min_amount": "最少量",

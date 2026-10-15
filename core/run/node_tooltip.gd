@@ -13,13 +13,12 @@ const DEFAULTS := {
 	"search": "这里有值得搜索的东西，但翻得越久越可能惊动附近的人。",
 	"event": "这里可能会发生什么。",
 	"shop": "有人在这里做买卖。",
-	"rest": "能歇脚的地方，回一点体力。",
+	"rest": "能歇脚的地方，回一点体力；里面有一座铸炉，能把三件道具熔铸成一枚铸牌（用一次就熄）。",
 	"extract": "撤离点：站上去按「撤离」结束这一局。",
 	"random": "{c:dim}看不透的地方，踩上去才知道是什么。{/c}",
 	"spawn": "出发的地方。",
 	"safe": "保险箱：把背包里的东西放进去就算带出去了 —— 就算行动失败也带得出。关上（或走开）就送回基地，不能再改。",
 	"chest": "上锁的宝箱：长按开锁，越好的箱子越费时。",
-	"forge": "铸炉：把三件道具放进【时机】【效果】【数值】三个槽，熔铸成一枚铸牌，拖到武器上就是附魔。用一次就熄。",
 	"other": "{node_type}",
 }
 
@@ -34,7 +33,7 @@ static func category_of(node: MapNode) -> String:
 	match type:
 		&"battle", &"elite", &"core":
 			return "battle"
-		&"search", &"event", &"shop", &"rest", &"extract", &"random", &"spawn", &"safe", &"chest", &"forge":
+		&"search", &"event", &"shop", &"rest", &"extract", &"random", &"spawn", &"safe", &"chest":
 			return String(type)
 	return "other"
 

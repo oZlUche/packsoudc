@@ -63,7 +63,7 @@ func source_buff() -> BuffInstance:
 	return runtime.buff
 
 
-## 规则来自 buff 时是该 buff 的层数；130：被「某状态被施加时」触发的是这次施加了几层；175 补充一：反应里是反应的量 N（max(已有印, 新来的)）；其余为 1
+## 规则来自 buff 时是该 buff 的层数；130：被「某状态被施加时」触发的是这次施加了几层；175 补充三：反应里是反应的量 N（min(已有印, 新来的)）；其余为 1
 func source_stacks() -> int:
 	if reaction_stacks > 0:
 		return reaction_stacks

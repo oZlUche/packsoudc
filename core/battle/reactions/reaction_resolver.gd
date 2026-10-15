@@ -6,11 +6,12 @@
 ## 命中    伤害管线第 5 步之后（[DamageResolver]）：这种伤害类型有 [member DamageTypeDef.mark] 就盖那个印
 ## 施加    [method ApplyStatus.give] 加上了层数、而那个状态本身是印（施加中毒 = 盖毒印）
 ## [endcodeblock]
-## 175 补充一（作者伪代码，见报告 175 附录二）：给目标加 n 层乙元素的印时，在目标身上找**元素不同、层数 > 0** 的印里
+## 175 补充一 / 三（作者伪代码，见报告 175 附录二与补充三）：给目标加 n 层乙元素的印时，在目标身上找**元素不同、层数 > 0** 的印里
 ## **层数最多的那种**（一种元素的层数 = 这种元素的印加起来；并列按 [constant ELEMENTS] 的顺序）：
 ## [codeblock]
 ## 没有           新印照常叠上去（同元素再碰就是加层），不反应
-## 有（甲元素）   N = max(甲的层数, n)；甲的印扣 N 层（N ≥ 甲的层数，所以扣光）；新印**不叠**；查反应表（[ReactionDef]），效果以 N 为量
+## 有（甲元素）   N = min(甲的层数, n)（补充三，作者更正）；甲的印扣 N 层；新印扣 N 层，余量照常叠上（不再引发第二次反应）；
+##                 查反应表（[ReactionDef]），效果以 N 为量（补充二：效果里的数字可以随 N 变，[method ReactionDef.effects_for]）
 ## [endcodeblock]
 ## 效果里 `per_stack` 的都读 N（[member RuleContext.reaction_stacks]）：爆燃 N × 每层火伤，凝毒 / 电解产出 N 层凝毒 / 剧毒。
 ## 发一条 `effect_resolved {effect: reaction}`（回放弹字、百科点亮），以**攻击方**（挨打那一方的对手）为主人跑效果。
@@ -242,7 +243,7 @@ static func reactions_between(mine: Array, others: Array) -> Array[ReactionDef]:
 
 
 #region 结算
-## 伤害管线第 5 步之后：这一下带的印（[member DamageTypeDef.mark_stacks] 层）—— 能反应就反应（印不盖），否则盖上
+## 伤害管线第 5 步之后：这一下带的印（[member DamageTypeDef.mark_stacks] 层）—— 先看反应，余下的盖上
 static func after_hit(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef) -> void:
 	var victim := packet.victim
 	if ctx == null or victim == null or victim.dead or ctx.reacting > 0:
@@ -250,38 +251,36 @@ static func after_hit(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDe
 	var mark := mark_buff(td.mark)
 	if mark == null:
 		return
-	var n := maxi(1, td.mark_stacks)
-	if _react(ctx, victim, mark, n, packet.source_uid):
-		return
-	_stamp(ctx, victim, mark, n)
+	var left := _react(ctx, victim, mark, maxi(1, td.mark_stacks), packet.source_uid)
+	if left > 0 and not victim.dead:
+		_stamp(ctx, victim, mark, left)
 
 
 ## [method ApplyStatus.give] 加层**之前**问一句：这个状态本身是印（中毒、流血……）、要给 [param victim] 加 [param n] 层 ——
-## 反应了返回真（新印不叠，[method ApplyStatus.give] 什么都不加）；没反应返回假，照常叠
-static func before_status(ctx: BattleContext, victim: CombatantRuntime, def: BuffDef, n: int) -> bool:
+## 返回反应过后还要叠几层（没反应 = [param n]；补充三：新印扣 N 层后的余量照常叠，不再引发第二次反应）
+static func before_status(ctx: BattleContext, victim: CombatantRuntime, def: BuffDef, n: int) -> int:
 	if ctx == null or victim == null or victim.dead or ctx.reacting > 0 or def == null or def.element == &"":
-		return false
+		return n
 	return _react(ctx, victim, def, n, 0)
 
 
-## 伪代码：找层数最多的异色印，有就结算。返回反应了没有（反应表里没有这一对 = 不反应，照常叠）
-static func _react(ctx: BattleContext, victim: CombatantRuntime, incoming: BuffDef, n: int, uid: int) -> bool:
+## 伪代码：找层数最多的异色印，有就结算。返回新印还剩几层要叠（反应表里没有这一对 = 不反应，整份照常叠）
+static func _react(ctx: BattleContext, victim: CombatantRuntime, incoming: BuffDef, n: int, uid: int) -> int:
 	var present := strongest_other(victim, incoming.element)
 	if present == &"":
-		return false
+		return n
 	var def := find(present, incoming.element)
 	if def == null:
-		return false
-	_resolve(ctx, victim, def, present, incoming.element, n, uid)
-	return true
+		return n
+	return n - _resolve(ctx, victim, def, present, incoming.element, n, uid)
 
 
+## 结算一次，返回 N。补充三（作者更正）：N = min(已有, 新来)，两边各扣 N
 static func _resolve(ctx: BattleContext, victim: CombatantRuntime, def: ReactionDef, present: StringName, incoming: StringName,
-		n: int, uid: int) -> void:
+		n: int, uid: int) -> int:
 	ctx.reacting += 1
 	var rc := foe_context(ctx, victim)
-	var have := mark_stacks(victim, present)
-	var stacks := maxi(have, n)     # 伪代码的 maxStackReacted
+	var stacks := mini(mark_stacks(victim, present), n)     # 伪代码的 maxStackReacted（作者更正为 min）
 	rc.reaction_stacks = stacks
 	_consume(rc, victim, present, stacks)
 	if ctx.trace != null:
@@ -291,10 +290,11 @@ static func _resolve(ctx: BattleContext, victim: CombatantRuntime, def: Reaction
 		"effect": EFFECT, "reaction": String(def.id), "uid": 0, "from_uid": uid, "source_side": rc.owner.side,
 		"elements": [String(present), String(incoming)], "stacks": stacks,
 	})
-	for e in def.effects:
+	for e in def.effects_for(stacks):
 		if e != null:
 			(e as Effect).apply(rc)
 	ctx.reacting -= 1
+	return stacks
 
 
 ## 从 [param who] 身上 [param e] 元素的印里扣 [param n] 层（按身上的顺序扣，扣到 0 为止）。不可清除的也扣得掉（反应是唯一的路）

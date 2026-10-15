@@ -29,7 +29,7 @@ static func of_instance(inst: ItemInstance) -> int:
 	if inst == null or inst.def == null:
 		return 0
 	if inst.state.has("value"):
-		return maxi(0, int(inst.state["value"]))     # 175：铸牌的价值记在实例上（三件投入之和的一半）
+		return maxi(0, int(inst.state["value"]))     # 175：铸牌的价值记在实例上（补充二：固定价）
 	var full := of(inst.def)
 	if inst.is_broken():
 		return maxi(1, int(roundf(float(full) * inst.def.wear.broken_value_ratio)))

@@ -10,7 +10,6 @@ const ALL: Array[StringName] = [
 	&"shop", &"rest", &"extract", &"junction", &"core", &"spawn",
 	&"safe",     # 092（作者定）：保险箱 —— 放进去的道具视为已带出
 	&"chest",     # 154（作者定）：宝箱 —— 长按开锁，开了就是一次搜索
-	&"forge",     # 175（作者定）：铸炉 —— 三件道具熔铸成一枚铸牌，用一次就关
 ]
 
 
