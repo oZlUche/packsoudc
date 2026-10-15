@@ -16,8 +16,8 @@ display_names = {
 "en": "Fungal Blood"
 }
 is_debuff = true
-stackable = false
-duration_sec = 6.0
+seconds_per_stack = 1
+heal_cut = 50
 heal_echo = &"poison"
 
 [sub_resource type="Resource" id="Resource_2yimr"]
@@ -31,6 +31,11 @@ display_name = "菌血"
 display_names = {
 "en": "Fungal Blood"
 }
-description = "对手一段时间内每次恢复生命，恢复多少就叠多少层中毒，恢复照常。"
+description = "对手叠上反应层数那么多层【菌血】：每次恢复生命减半，实际回了几点就叠几层【中毒】，每层持续一秒，再反应就延长。"
 elements = Array[StringName]([&"poison", &"bleed"])
 effects = Array[ExtResource("1_4wj52")]([SubResource("Resource_2yimr")])
+scaling = [{
+"effect": 0,
+"field": "stacks",
+"kind": "n"
+}]

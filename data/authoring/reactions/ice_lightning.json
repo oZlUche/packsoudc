@@ -4,15 +4,19 @@
   "display_names": {
     "en": "Superconduct"
   },
-  "description": "对手一段时间内受到的最终伤害提高。",
+  "description": "对手获得反应层数那么多层【易伤】。",
   "elements": [
     "ice",
     "lightning"
   ],
   "effects": [
     {
-      "type": "apply_status",
-      "buff": "superconduct"
+      "type": "shift_axis",
+      "target": "OPPONENT",
+      "axis": "damage_taken",
+      "delta": {
+        "stacks": "n"
+      }
     }
   ]
 }

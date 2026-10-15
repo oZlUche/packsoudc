@@ -136,7 +136,9 @@ static func run_three_order(t: TestCase) -> void:
 		types.append(String(x[1]))
 	t.eq(types, ["lightning", "fire", "ice", "lightning"] as Array[String], "雷 → 火 → 冰 → 雷")
 	var cad := spec.item_of(staff.uid).rules[0].cadence as CycleCadence
-	t.eq(_gaps(s, 3), [cad.step_seconds, cad.step_seconds, cad.seconds] as Array[float], "颗间、颗间、一轮后")
+	# 175 补充四：雷 → 火引发过载，自己多一层加速 —— 一轮后的总冷却按那一刻的攻速算（快照语义）
+	var haste := 1.0 + StatAxes.step_of(StatAxes.ATTACK_SPEED) / 100.0
+	t.eq(_gaps(s, 3), [cad.step_seconds, cad.step_seconds, snappedf(cad.seconds / haste, 0.01)] as Array[float], "颗间、颗间、一轮后（过载加速一层）")
 
 
 static func run_estimate_and_text(t: TestCase) -> void:

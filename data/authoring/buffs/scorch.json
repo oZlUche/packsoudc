@@ -1,10 +1,30 @@
 {
   "id": "scorch",
-  "display_name": "灼",
+  "display_name": "灼伤",
   "display_names": {
-    "en": "Scorch"
+    "en": "Burn"
   },
   "is_debuff": true,
-  "stack_cap": 10,
+  "rules": [
+    {
+      "trigger": {
+        "type": "on_schedule"
+      },
+      "cadence": {
+        "type": "cooldown",
+        "seconds": 1.0
+      },
+      "effects": [
+        {
+          "type": "deal_damage",
+          "target": "SELF",
+          "damage_type": "fire",
+          "amount": 1.0,
+          "damage_stat": "",
+          "per_stack": true
+        }
+      ]
+    }
+  ],
   "element": "fire"
 }

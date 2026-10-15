@@ -33,7 +33,7 @@ trigger = SubResource("Resource_1qngc")
 cadence = SubResource("Resource_aai0p")
 effects = Array[ExtResource("3_wt86r")]([SubResource("Resource_ekrv1")])
 
-[sub_resource type="Resource" id="Resource_lq06f"]
+[sub_resource type="Resource" id="Resource_isath"]
 script = ExtResource("9_teun6")
 id = &"poison"
 display_name = "中毒"
@@ -44,12 +44,12 @@ is_debuff = true
 rules = Array[ExtResource("4_ex32o")]([SubResource("Resource_cv4xq")])
 element = &"poison"
 
-[sub_resource type="Resource" id="Resource_ekyjv"]
+[sub_resource type="Resource" id="Resource_lq06f"]
 script = ExtResource("10_nj4v6")
-buff = SubResource("Resource_lq06f")
+buff = SubResource("Resource_isath")
 
 [resource]
 script = ExtResource("11_v63d5")
 id = &"apply_status_poison"
 display_name = "施加中毒"
-effect = SubResource("Resource_ekyjv")
+effect = SubResource("Resource_lq06f")

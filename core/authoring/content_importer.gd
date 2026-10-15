@@ -267,6 +267,7 @@ static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_fill(def, data, "", ctx, report)
 	_require_id(def.id, "增益", report)
 	validate_buff_duration(def, "", report)
+	_validate_buff_decay(def, report)
 	warn_axis_candidate(def, "", report)
 	if def.has_blurb and def.blurb.strip_edges() == "":
 		report.warn("blurb", "「%s」勾了有专属解说但解说是空的（句子里只会写名字）" % def.id)     # 171
@@ -275,7 +276,7 @@ static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) ->
 
 
 ## 175：一种元素反应。两种不同的、认得的元素，id 就是这两种按元素顺序拼起来（`fire_poison`）；吃印写 both / none / 两种之一；
-## 175 补充二：反应效果里随 N 变的数字（内联写法 `{"per_stack": X}` / `{"stacks": "n"}` / `{"seconds": "n", "max": 10}`）
+## 175 补充二：反应效果里随 N 变的数字（内联写法 `{"per_stack": X}` / `{"stacks": "n"}` / `{"seconds": "n", "max": 10}`；补充四加 `{"stacks": "n/2"}`）
 ## 抽进 [param out]（[member ReactionDef.scaling] 的行），效果里换成占位数；返回改过的一份（不动传进来的）
 static func _pull_reaction_scaling(data: Dictionary, out: Array, report: ImportReport) -> Dictionary:
 	var effects: Variant = data.get("effects", [])
@@ -301,6 +302,8 @@ static func _pull_reaction_scaling(data: Dictionary, out: Array, report: ImportR
 				row["x"] = float(spec["per_stack"])
 			elif String(spec.get("stacks", "")) == "n":
 				row["kind"] = ReactionDef.KIND_N
+			elif String(spec.get("stacks", "")) == "n/2":
+				row["kind"] = ReactionDef.KIND_HALF     # 175 补充四：爆燃重叠 N / 2 层灼伤（向下取整，0 不叠）
 			elif String(spec.get("seconds", "")) == "n":
 				row["kind"] = ReactionDef.KIND_SECONDS
 				if not spec.has("max"):
@@ -313,7 +316,7 @@ static func _pull_reaction_scaling(data: Dictionary, out: Array, report: ImportR
 			if key == "duration_sec":
 				(e as Dictionary).erase(key)
 			else:
-				e[key] = 1.0 if row["kind"] != ReactionDef.KIND_N else 1
+				e[key] = 1 if row["kind"] in [ReactionDef.KIND_N, ReactionDef.KIND_HALF] else 1.0
 	return copy
 
 
@@ -436,6 +439,19 @@ static func _resolve_part(class_id: StringName, id: String, path: String, ctx: C
 static func validate_buff_duration(def: BuffDef, path: String, report: ImportReport) -> void:
 	if def != null and def.is_stackable() and def.duration_sec > 0.0:
 		report.error(path + "duration_sec", "「%s」可叠层，可叠层的 buff 永续，不填时长（要会过期就写 stackable: false）" % def.id)
+
+
+## 175 补充四：按层计时与减半只给可叠层的；减半时机只认那几种；按类型的易伤键得是认得的伤害类型
+static func _validate_buff_decay(def: BuffDef, report: ImportReport) -> void:
+	if not def.is_stackable() and (def.seconds_per_stack > 0 or def.decay_halve_on != &""):
+		report.error("seconds_per_stack", "「%s」不可叠层，没有层数可计时 / 减半" % def.id)
+	if def.seconds_per_stack < 0:
+		report.error("seconds_per_stack", "每层几秒不能是负数")
+	if not BuffDef.HALVE_ON.has(def.decay_halve_on):
+		report.error("decay_halve_on", "减半的时机只认 tick / weapon_fired / stamina_paid（现在是 %s）" % def.decay_halve_on)
+	for k in def.damage_taken_by_type.keys():
+		if not DamageTypes.has(StringName(String(k))):
+			report.error("damage_taken_by_type", "不认识的伤害类型 '%s'" % k)
 
 
 ## 道具里内联的 buff（apply_status.buff）也按同一条规矩查

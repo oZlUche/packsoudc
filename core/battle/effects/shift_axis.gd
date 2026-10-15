@@ -12,6 +12,9 @@ extends CombatEffect
 @export var delta: int = 1
 ## 层数是否乘以来源 buff 的层数
 @export var per_stack: bool = false
+## 175 补充四（激荡）：这条轴「满」了之后，多出来的层数改加到这条轴上（`crit_chance` → `crit_damage`）；空 = 不溢出。
+## 「满」= 这个单位所有武器里最终暴击率最高的那把到 100%（待定 补 4.3 A；没有武器看单位自己的）
+@export var overflow_to: StringName = &""
 
 
 func apply(ctx: RuleContext) -> void:
@@ -19,7 +22,31 @@ func apply(ctx: RuleContext) -> void:
 		return
 	var n := delta * (ctx.source_stacks() if per_stack else 1)
 	for who in resolve_targets(ctx, target):
-		shift(ctx.battle, who, axis, n, false)
+		var spill := 0
+		if overflow_to != &"" and StatAxes.has(overflow_to) and n > 0:
+			spill = maxi(0, n - room(who, axis))
+		if n - spill != 0:
+			shift(ctx.battle, who, axis, n - spill, false)
+		if spill > 0:
+			shift(ctx.battle, who, overflow_to, spill, false)
+
+
+## 175 补充四：[param who] 的 [param p_axis] 还能加几层才满（属性到 100%）—— 按道具的轴看武器里最高的那把，否则看单位自己的
+static func room(who: CombatantRuntime, p_axis: StringName) -> int:
+	var stat := StatAxes.stat_of(p_axis)
+	var step := StatMath.from_float(StatAxes.step_of(p_axis))
+	if stat == &"" or step <= 0:
+		return 1 << 30
+	var fallback := BattleStats.default_base(stat)
+	var best := -1
+	if StatAxes.on_items(p_axis):
+		for uid in who.item_base:
+			if who.tags_of(uid).has(&"weapon"):
+				best = maxi(best, who.item_stat(uid, stat, fallback))
+	if best < 0:
+		best = who.stat(stat, fallback)
+	var left := StatMath.ONE - best
+	return 0 if left <= 0 else ceili(float(left) / float(step))
 
 
 ## 改轴并记一条 axis_shifted。系统规则（加时）也走这里，`system = true` 记在系统层
@@ -35,8 +62,11 @@ static func shift(battle: BattleContext, who: CombatantRuntime, p_axis: StringNa
 func describe() -> String:
 	if not StatAxes.has(axis):
 		return "改 %s ?" % axis
-	return "%s%s %d 层" % ["使对手" if target == Target.OPPONENT else ("双方" if target == Target.BOTH else ""),
+	var head := "%s%s %d 层" % ["使对手" if target == Target.OPPONENT else ("双方" if target == Target.BOTH else ""),
 		StatAxes.name_of(axis, delta), absi(delta)]
+	if overflow_to != &"" and StatAxes.has(overflow_to):
+		head += "（%s满了多出的层数改为%s）" % [StatAxes.what_of(axis), StatAxes.name_of(overflow_to, 1)]
+	return head
 
 
 ## 151：估值 —— 层数 × 一层轴在那一边身上每秒值多少（[method PowerContext.axis_value]）× 平均待多久；给对手取反

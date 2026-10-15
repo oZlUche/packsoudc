@@ -162,6 +162,8 @@ static func _reaction_out(def: ReactionDef, out: Dictionary) -> void:
 				spec["per_stack"] = float(row.get("x", 0.0))
 			ReactionDef.KIND_N:
 				spec["stacks"] = "n"
+			ReactionDef.KIND_HALF:
+				spec["stacks"] = "n/2"
 			ReactionDef.KIND_SECONDS:
 				spec["seconds"] = "n"
 		if row.has("max"):

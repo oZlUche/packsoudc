@@ -1,7 +1,7 @@
 ## 元素印与反应（175 第一批，架构文档 4.6）。
 ##
-## 五种元素：火、冰、雷、毒、血（和伤害类型同名）。**印就是状态**：火 / 冰 / 雷各有一个轻状态（灼 / 寒 / 麻，
-## [member BuffDef.element] 指明是哪种元素），毒与血的印就是中毒 / 剧毒 / 流血本身。印从两条路来：
+## 五种元素：火、冰、雷、毒、血（和伤害类型同名）。**印就是状态**（175 补充四）：灼伤 / 寒冷 / 麻痹 / 中毒 / 流血，
+## [member BuffDef.element] 指明是哪种元素；都可叠、不封顶、永续，只按自己的规矩衰减（流血跳后减半、寒冷出手后减半、麻痹付耐力后减半）。印从两条路来：
 ## [codeblock]
 ## 命中    伤害管线第 5 步之后（[DamageResolver]）：这种伤害类型有 [member DamageTypeDef.mark] 就盖那个印
 ## 施加    [method ApplyStatus.give] 加上了层数、而那个状态本身是印（施加中毒 = 盖毒印）
@@ -13,9 +13,10 @@
 ## 有（甲元素）   N = min(甲的层数, n)（补充三，作者更正）；甲的印扣 N 层；新印扣 N 层，余量照常叠上（不再引发第二次反应）；
 ##                 查反应表（[ReactionDef]），效果以 N 为量（补充二：效果里的数字可以随 N 变，[method ReactionDef.effects_for]）
 ## [endcodeblock]
-## 效果里 `per_stack` 的都读 N（[member RuleContext.reaction_stacks]）：爆燃 N × 每层火伤，凝毒 / 电解产出 N 层凝毒 / 剧毒。
+## 补充四：各反应的数字都写成随 N 变（[member ReactionDef.scaling]），系数 M 在 json 里：爆燃 N × M 火伤再叠 N / 2 层灼伤、淬裂扣 N × M 护甲、
+## 过载 / 超导 / 激荡 N 层轴、燃血 / 菌血 N 层（层 = 剩余秒数）、凝毒 / 冻疮给中毒 / 流血 N 层保底、电解 N 层剧毒。
 ## 发一条 `effect_resolved {effect: reaction}`（回放弹字、百科点亮），以**攻击方**（挨打那一方的对手）为主人跑效果。
-## 不可清除的印（凝毒）也会被反应吃掉 —— 反应是唯一吃得掉它的。
+## 带保底的印（凝毒 / 冻疮，[member BuffInstance.guard]）算 N 时照常算全部层数，扣的时候扣不到保底以下（「纳入计算但不真正减少」）。
 ##
 ## **反应不连锁**：结算期间 [member BattleContext.reacting] > 0 —— 这期间的伤害不盖印、施加的状态照常上身但不再引发反应。
 ## 规则层一行不加：印是伤害类型与状态的副产品，元素从哪儿来（法杖的晶石、附加的火箭、附魔、投掷弹）都一样
@@ -151,7 +152,7 @@ static func has_mark(who: CombatantRuntime, e: StringName) -> bool:
 	return false
 
 
-## [param who] 身上 [param e] 元素的印共几层（这种元素的全部状态加起来：毒 = 中毒 + 剧毒 + 凝毒）
+## [param who] 身上 [param e] 元素的印共几层（这种元素的全部状态加起来，含保底的层数）
 static func mark_stacks(who: CombatantRuntime, e: StringName) -> int:
 	var n := 0
 	for b in who.buffs:
@@ -297,7 +298,7 @@ static func _resolve(ctx: BattleContext, victim: CombatantRuntime, def: Reaction
 	return stacks
 
 
-## 从 [param who] 身上 [param e] 元素的印里扣 [param n] 层（按身上的顺序扣，扣到 0 为止）。不可清除的也扣得掉（反应是唯一的路）
+## 从 [param who] 身上 [param e] 元素的印里扣 [param n] 层（按身上的顺序扣，扣到 0 为止）。补充四：扣不到保底以下（凝毒 / 冻疮）
 static func _consume(rc: RuleContext, who: CombatantRuntime, e: StringName, n: int) -> void:
 	var left := n
 	var marks: Array[BuffInstance] = []
@@ -308,8 +309,9 @@ static func _consume(rc: RuleContext, who: CombatantRuntime, e: StringName, n: i
 		if left <= 0:
 			break
 		var id := b.def.id
-		var removed := who.remove_buff_stacks(id, mini(left, b.stacks), true)
-		left -= removed
+		var counted := mini(left, b.stacks)     # 算 N 时算了这么多层（含保底）
+		var removed := who.remove_buff_stacks(id, counted)
+		left -= counted
 		if removed > 0:
 			rc.battle.emit(BattleEvent.STATUS_UNSTACKED, who.side, {"buff": String(id), "delta": -removed, "stacks": who.stacks_of(id), "reason": REASON})
 

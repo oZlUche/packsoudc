@@ -198,7 +198,7 @@ static func run_enchant_fires_once_per_hit(t: TestCase) -> void:
 		var e := ev as BattleEvent
 		if e.name == BattleEvent.ITEM_FIRED and e.side == 0:
 			fired += 1
-		elif e.name == BattleEvent.DAMAGE and e.side == 1 and String(e.payload.get("type", "")) == "fire":
+		elif e.name == BattleEvent.DAMAGE and e.side == 1 and String(e.payload.get("type", "")) == "fire" and e.get_int(&"uid") != 0:     # 175 补充四：灼伤每秒的火伤（uid 0）不算
 			fire_hits += 1
 		elif e.name == BattleEvent.DISPATCH_OVERFLOW:
 			overflow += 1

@@ -25,6 +25,8 @@ var crit: bool = false
 ## buff 造成的（灼烧、中毒、到期爆发）是非直接，套装 / 单位级规则也算非直接。
 ## **格挡（加固 / 破绽）只对直接伤害生效**；造包的效果用 [method CombatEffect.direct_of] 填它
 var direct: bool = false
+## 175 补充四：这一包是状态自己的规则跳出来的（灼伤每秒的火伤、燃血）—— 不盖印、不引发反应，否则灼伤每跳一次多一层灼伤
+var from_status: bool = false
 #endregion
 
 #region 管线中途写入

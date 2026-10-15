@@ -73,6 +73,7 @@ func deal(ctx: RuleContext, type: StringName, extra_raw: int) -> void:
 			continue
 		var packet := DamagePacket.create(type, dmg, victim, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override))
 		packet.crit = crit
+		packet.from_status = ctx.source_buff() != null
 		DamageResolver.resolve(ctx.battle, packet)
 
 

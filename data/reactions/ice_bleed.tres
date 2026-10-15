@@ -1,41 +1,65 @@
 [gd_resource type="Resource" script_class="ReactionDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_43apd"]
-[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="2_2osrx"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_ci300"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_ebtfd"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_awp5y"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="6_16sri"]
-[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="7_2i7i3"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_awp5y"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="2_16sri"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_2i7i3"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_2tbkx"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="5_aoksd"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_bksc7"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_21b8u"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_026o4"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_ixh4q"]
+[ext_resource type="Script" path="res://core/battle/effects/guard_status.gd" id="10_6wl7p"]
+[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="11_7fir7"]
 
-[sub_resource type="Resource" id="Resource_hlj6v"]
-script = ExtResource("2_2osrx")
-axis = &"attack_speed"
-stacks = -10
+[sub_resource type="Resource" id="Resource_fos0o"]
+script = ExtResource("5_aoksd")
+seconds = 1.0
 
-[sub_resource type="Resource" id="Resource_2tbkx"]
-script = ExtResource("5_awp5y")
-id = &"frostbite"
-display_name = "冻疮"
+[sub_resource type="Resource" id="Resource_m2ceh"]
+script = ExtResource("7_21b8u")
+target = 1
+damage_type = &"bleed"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_r2hia"]
+script = ExtResource("8_026o4")
+
+[sub_resource type="Resource" id="Resource_e0tjf"]
+script = ExtResource("4_2tbkx")
+trigger = SubResource("Resource_r2hia")
+cadence = SubResource("Resource_fos0o")
+effects = Array[ExtResource("1_awp5y")]([SubResource("Resource_m2ceh")])
+
+[sub_resource type="Resource" id="Resource_505co"]
+script = ExtResource("9_ixh4q")
+id = &"bleed"
+display_name = "流血"
 display_names = {
-"en": "Frostbite"
+"en": "Bleed"
 }
-is_debuff = true
-stackable = false
-duration_sec = 5.0
-axes = Array[ExtResource("2_2osrx")]([SubResource("Resource_hlj6v")])
+decay_halve_on = &"tick"
+rules = Array[ExtResource("4_2tbkx")]([SubResource("Resource_e0tjf")])
+element = &"bleed"
 
-[sub_resource type="Resource" id="Resource_aoksd"]
-script = ExtResource("6_16sri")
-buff = SubResource("Resource_2tbkx")
+[sub_resource type="Resource" id="Resource_5rkv0"]
+script = ExtResource("10_6wl7p")
+buff = SubResource("Resource_505co")
 
 [resource]
-script = ExtResource("7_2i7i3")
+script = ExtResource("11_7fir7")
 id = &"ice_bleed"
 display_name = "冻疮"
 display_names = {
 "en": "Frostbite"
 }
-description = "对手一段时间内出手变慢。"
+description = "对手身上反应层数那么多层【流血】变为不可解除，减半也不会少于这些层。"
 elements = Array[StringName]([&"ice", &"bleed"])
-effects = Array[ExtResource("1_43apd")]([SubResource("Resource_aoksd")])
+effects = Array[ExtResource("1_awp5y")]([SubResource("Resource_5rkv0")])
+scaling = [{
+"effect": 0,
+"field": "stacks",
+"kind": "n"
+}]

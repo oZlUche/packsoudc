@@ -11,6 +11,7 @@
 ## 4. 计算受伤量    百分比 → 固定增减 → 反转 → 格挡（只对直接伤害，106）→ 「受到伤害」轴（103），然后落到血量
 ## 5. 受伤后效果    发 damage 事件；流失类不通知默认监听；175：按类型盖元素印、引发反应
 ## [endcodeblock]
+## 175 补充四：真实伤害（[member DamageTypeDef.pure]，流血）跳过 1b–4，原值直接落血；第 4 步末尾再乘守方按类型的易伤（剧毒）
 ##
 ## 第 3 步是整条管线存在的理由。护甲那种无条件减伤写成一个属性就够了，
 ## 但「消耗 2 层格挡减免 10 点」「喝了解毒剂时中毒反转成治疗」有前置条件，
@@ -34,8 +35,11 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 
 	# --- 1b. 攻方的伤害类型加成（105）：火焰加成是一条标准轴，放在**防御之前**乘原值 ——
 	# 和「受到伤害」轴在第 4 步乘守方的最终伤害对称。于是附魔、灼烧、任何火焰来源都吃它
-	if packet.raw > 0 and packet.type == DamageTypes.FIRE:
+	var pure := td.pure
+	if packet.raw > 0 and packet.type == DamageTypes.FIRE and not pure:
 		var attacker := _side_of(ctx, packet.source_side)
+		if packet.from_status and attacker == victim:
+			attacker = ctx.opponent_of(victim)     # 175 补充四：身上的灼伤 / 燃血跳的火伤，按对手（施加方）的火焰加成
 		if attacker != null:
 			var boost := attacker.axis_factor(StatAxes.FIRE_DAMAGE)
 			if boost != StatMath.ONE:
@@ -43,7 +47,7 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 
 	# --- 2. 护甲吸收 ---
 	# 放在受伤前效果之前，是因为「这一下还剩多少要扛」本身就是减伤效果的判断依据。
-	if td.armor_absorbable and packet.raw > 0:
+	if td.armor_absorbable and packet.raw > 0 and not pure:
 		var pool := victim.resources
 		if pool.has(BattleStats.RES_ARMOR):
 			var take := mini(pool.current(BattleStats.RES_ARMOR), packet.raw)
@@ -52,7 +56,8 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 				packet.absorbed = take
 
 	# --- 3. 受伤前效果。同步派发，不入队 —— 排队就赶不上这次结算了 ---
-	ctx.dispatch_before_damage(packet)
+	if not pure:
+		ctx.dispatch_before_damage(packet)
 	td = packet.def()     # 132：受伤前可能改了类型（convert_damage_type）；之后按新类型通知
 
 	if packet.cancelled:
@@ -76,16 +81,20 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	# buff 造成的灼烧 / 中毒 / 流血不吃格挡 —— 按来源判，不再按伤害类型的护甲列。
 	# 格挡为负（破绽）时倒贴：10 点打成 13（作者定），所以负值不走 min。
 	# 153：这里读到的已经是「最高那面盾 + 加固 / 破绽」（[CombatantRuntime]），几面盾不相加
-	if amount > 0 and packet.direct:
+	if amount > 0 and packet.direct and not pure:
 		var block := victim.stat(BattleStats.BLOCK, 0)
 		packet.block = mini(block, amount) if block > 0 else block
 		amount = maxi(0, amount - packet.block)
 	# 103（作者定）：加时放大的是角色受到的「最终伤害」—— 护甲、减伤、格挡都按原值算完，扛下来的那部分再乘；治疗不放大
-	if amount > 0:
+	if amount > 0 and not pure:
 		var taken := victim.axis_factor(StatAxes.DAMAGE_TAKEN)     # 标准轴（4.3）：易伤为正、坚韧为负，加时在系统层
 		taken_factor = taken
 		if taken != StatMath.ONE:
 			amount = maxi(0, StatMath.mul(amount, taken))
+		# 175 补充四：按类型的易伤（剧毒：受到的毒素伤害每层 +X%）—— 只读一次，不加轴
+		var by_type := victim.taken_by_type_percent(packet.type)
+		if by_type != 0.0:
+			amount = maxi(0, StatMath.mul(amount, StatMath.ONE + StatMath.from_float(by_type / 100.0)))
 	packet.final = amount
 
 	if amount > 0:
@@ -103,8 +112,8 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 		_trace(ctx, packet, raw_in, hp_before, taken_factor)
 	_notify(ctx, packet, td)
 	victim.settle_death(ctx)
-	# 175：命中后按类型盖印 / 引发反应（反应结算中不盖，[ReactionResolver]）
-	if td.mark != &"" and amount >= 0 and (packet.final > 0 or packet.absorbed > 0):
+	# 175：命中后按类型盖印 / 引发反应（反应结算中不盖，[ReactionResolver]；补充四：状态自己跳的伤害不盖）
+	if td.mark != &"" and amount >= 0 and (packet.final > 0 or packet.absorbed > 0) and not packet.from_status:
 		ReactionResolver.after_hit(ctx, packet, td)
 	return -packet.applied
 

@@ -4,16 +4,18 @@
   "display_names": {
     "en": "Overload"
   },
-  "description": "你的下一次攻击伤害翻倍。",
+  "description": "你获得反应层数那么多层【加速】。",
   "elements": [
     "fire",
     "lightning"
   ],
   "effects": [
     {
-      "type": "apply_status",
-      "target": "SELF",
-      "buff": "overload"
+      "type": "shift_axis",
+      "axis": "attack_speed",
+      "delta": {
+        "stacks": "n"
+      }
     }
   ]
 }

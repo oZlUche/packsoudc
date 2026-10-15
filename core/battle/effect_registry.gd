@@ -68,6 +68,8 @@ const COMBAT_EFFECTS := {
 	&"convert_damage_type": "res://core/battle/effects/convert_damage_type.gd",
 	# 175：法杖按轮读取这一下的晶石，打出它的元素
 	&"fire_loaded": "res://core/battle/effects/fire_loaded.gd",
+	# 175 补充四：给目标身上的状态加保底层数（凝毒 / 冻疮）
+	&"guard_status": "res://core/battle/effects/guard_status.gd",
 }
 
 const TABLES := {
