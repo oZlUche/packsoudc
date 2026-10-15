@@ -18,8 +18,7 @@ display_names = {
 is_debuff = true
 stackable = false
 duration_sec = 6.0
-heal_cut = 50
-heal_cut_to = &"poison"
+heal_echo = &"poison"
 
 [sub_resource type="Resource" id="Resource_2yimr"]
 script = ExtResource("6_26eyy")
@@ -32,6 +31,6 @@ display_name = "菌血"
 display_names = {
 "en": "Fungal Blood"
 }
-description = "对手一段时间内每次恢复生命，恢复量减半，减掉的一半变成中毒伤害。"
+description = "对手一段时间内每次恢复生命，恢复多少就叠多少层中毒，恢复照常。"
 elements = Array[StringName]([&"poison", &"bleed"])
 effects = Array[ExtResource("1_4wj52")]([SubResource("Resource_2yimr")])

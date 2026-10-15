@@ -293,8 +293,6 @@ static func import_reaction(data: Dictionary, ctx: Context, report: ImportReport
 			report.error("elements", "两种元素得不同")
 		elif def.id != &"" and String(def.id) != key:
 			report.error("id", "反应的 id 应为 '%s'（两种元素按 %s 的顺序拼）" % [key, "、".join(ReactionResolver.ELEMENTS)])
-	if def.consume != ReactionDef.CONSUME_BOTH and def.consume != ReactionDef.CONSUME_NONE and not def.elements.has(def.consume):
-		report.error("consume", "吃印只能写 both / none / 这两种元素之一（现在是 '%s'）" % def.consume)
 	if def.effects.is_empty():
 		report.error("effects", "反应得有效果")
 	return def

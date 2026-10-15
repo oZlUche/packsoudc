@@ -24,8 +24,7 @@ display_names = {
 "en": "Scorch"
 }
 is_debuff = true
-stackable = false
-duration_sec = 4.0
+stack_cap = 10
 element = &"fire"
 
 [sub_resource type="Resource" id="Resource_m14b8"]
@@ -39,6 +38,6 @@ display_name = "爆燃"
 display_names = {
 "en": "Combustion"
 }
-description = "吃掉对手的中毒，按层数造成火焰伤害，再盖上【灼】。"
+description = "按反应的层数造成火焰伤害，再盖上【灼】。"
 elements = Array[StringName]([&"fire", &"poison"])
 effects = Array[ExtResource("1_y1ifw")]([SubResource("Resource_0f8dv"), SubResource("Resource_m14b8")])

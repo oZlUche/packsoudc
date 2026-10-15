@@ -1,37 +1,62 @@
 [gd_resource type="Resource" script_class="ReactionDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_1xjmr"]
-[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="2_qi2yd"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_0cuuj"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_etjcq"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_erika"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="6_orrta"]
-[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="7_7d1qs"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_erika"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="2_orrta"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_7d1qs"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_jocjw"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="5_r7pgy"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_8ee14"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_eloyt"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_5m1f4"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_x57f7"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_p4ixd"]
+[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="11_mf2ul"]
 
-[sub_resource type="Resource" id="Resource_jocjw"]
-script = ExtResource("5_erika")
+[sub_resource type="Resource" id="Resource_sybcs"]
+script = ExtResource("5_r7pgy")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_ic7ve"]
+script = ExtResource("7_eloyt")
+target = 1
+damage_type = &"poison"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_cj71i"]
+script = ExtResource("8_5m1f4")
+
+[sub_resource type="Resource" id="Resource_cc5rs"]
+script = ExtResource("4_jocjw")
+trigger = SubResource("Resource_cj71i")
+cadence = SubResource("Resource_sybcs")
+effects = Array[ExtResource("1_erika")]([SubResource("Resource_ic7ve")])
+
+[sub_resource type="Resource" id="Resource_isath"]
+script = ExtResource("9_x57f7")
 id = &"congeal"
 display_name = "凝毒"
 display_names = {
 "en": "Congealed Toxin"
 }
 is_debuff = true
-stackable = false
-locks = Array[StringName]([&"poison", &"virulent"])
-locks_while = &"chill"
+rules = Array[ExtResource("4_jocjw")]([SubResource("Resource_cc5rs")])
+element = &"poison"
+uncleansable = true
 
-[sub_resource type="Resource" id="Resource_r7pgy"]
-script = ExtResource("6_orrta")
-buff = SubResource("Resource_jocjw")
+[sub_resource type="Resource" id="Resource_1bde1"]
+script = ExtResource("10_p4ixd")
+buff = SubResource("Resource_isath")
+per_stack = true
 
 [resource]
-script = ExtResource("7_7d1qs")
+script = ExtResource("11_mf2ul")
 id = &"ice_poison"
 display_name = "凝毒"
 display_names = {
 "en": "Congeal"
 }
-description = "寒印消失之前，对手身上的中毒无法被清除。"
+description = "把对手的中毒凝成同样层数的【凝毒】：一样每秒掉血，但无法被清除。"
 elements = Array[StringName]([&"ice", &"poison"])
-consume = &"none"
-effects = Array[ExtResource("1_1xjmr")]([SubResource("Resource_r7pgy")])
+effects = Array[ExtResource("1_erika")]([SubResource("Resource_1bde1")])

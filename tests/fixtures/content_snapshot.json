@@ -74,6 +74,7 @@
     "fire_crystal": {"bag":false,"cells":2,"shape":[[0,0],[1,0]],"size":[2,1]},
     "flint": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "flint_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
+    "forge_token": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "gambeson": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "gilded_goblet": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "gilded_goblet_sun": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
@@ -197,5 +198,5 @@
     "wool_cloth": {"bag":false,"cells":2,"shape":[[0,0],[1,0]],"size":[2,1]},
     "wound_salt": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]}
   },
-  "tags": ["ammo","armor","barbarian","bleed","blessed","bone","bow","burst","crafted","crystal","enchanted","faith","faith_anchor","fire","flesh","food","gear","gear_plug","gem","gun","heavy","imperial","keepsake","leather","magic","material","melee","metal","nature","node_tooltips","part","poison","ranged","rapid","reagent","relic","remedy","sealed","shield","sigil","staff","stone","supply","tool","treasure","trophy","weapon","wood"]
+  "tags": ["ammo","armor","barbarian","bleed","blessed","bone","bow","burst","crafted","crystal","enchanted","faith","faith_anchor","fire","flesh","food","gear","gear_plug","gem","gun","heavy","imperial","keepsake","leather","magic","material","melee","metal","nature","node_tooltips","part","poison","ranged","rapid","reagent","relic","remedy","sealed","shield","sigil","staff","stone","supply","token","tool","treasure","trophy","weapon","wood"]
 }

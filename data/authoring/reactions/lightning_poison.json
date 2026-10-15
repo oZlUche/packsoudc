@@ -4,17 +4,16 @@
   "display_names": {
     "en": "Electrolysis"
   },
-  "description": "对手的中毒升阶为剧毒。",
+  "description": "把对手的中毒变成同样层数的剧毒。",
   "elements": [
     "lightning",
     "poison"
   ],
-  "consume": "lightning",
   "effects": [
     {
-      "type": "convert_status",
-      "from": "poison",
-      "to": "virulent"
+      "type": "apply_status",
+      "buff": "virulent",
+      "per_stack": true
     }
   ]
 }

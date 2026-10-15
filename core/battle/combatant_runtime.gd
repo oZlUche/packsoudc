@@ -336,12 +336,13 @@ func _trace_buff(ctx: BattleContext, id: StringName, delta: int, stacks: int, re
 
 
 ## 移除层数，返回实际移除的层数。层数归零时整条 buff 连同其规则一并移除。
-func remove_buff_stacks(buff_id: StringName, count: int) -> int:
+## 175 补充一：[param force] 只给反应吃印用 —— 不可清除的（凝毒）只有反应吃得掉
+func remove_buff_stacks(buff_id: StringName, count: int, force: bool = false) -> int:
 	var inst := find_buff(buff_id)
 	if inst == null or count <= 0 or inst.def.system:
 		return 0     # 103：系统效果（鏖战、衰竭）不可解除
-	if is_locked(buff_id):
-		return 0     # 175：被锁住的（凝毒期间的中毒）也不可解除
+	if inst.def.uncleansable and not force:
+		return 0     # 175：不可清除的（凝毒）
 	var removed := mini(count, inst.stacks)
 	inst.stacks -= removed
 	if inst.stacks <= 0:
@@ -350,52 +351,30 @@ func remove_buff_stacks(buff_id: StringName, count: int) -> int:
 	var ctx: BattleContext = _ctx_ref.get_ref() if _ctx_ref != null else null
 	if ctx != null and ctx.trace != null:
 		_trace_buff(ctx, buff_id, -removed, maxi(0, inst.stacks), "remove", inst.expires_at)
-	if inst.stacks <= 0:
-		for orphan in _drop_orphans():     # 175：凝毒跟着寒印走 —— 寒印被吃掉 / 清掉，凝毒一起掉
-			if ctx != null:
-				ctx.emit(BattleEvent.STATUS_UNSTACKED, side, {"buff": String(orphan.def.id), "delta": -orphan.stacks, "stacks": 0, "reason": "expired"})
 	return removed
 
 
-## 175：「只在带着某状态时才锁」的 buff（[member BuffDef.locks_while]），那个状态没了它就没意义了：一起摘掉，返回摘掉的
-func _drop_orphans() -> Array[BuffInstance]:
-	var out: Array[BuffInstance] = []
-	for b in buffs:
-		if b.def.locks_while != &"" and find_buff(b.def.locks_while) == null:
-			out.append(b)
-	for b in out:
-		_drop_buff(b)
-	if not out.is_empty():
-		mark_dirty()
-	return out
-
-
-## 175：[param id] 现在是不是被身上别的 buff 锁住了（[member BuffDef.locks]）
-func is_locked(id: StringName) -> bool:
-	for b in buffs:
-		if not b.def.locks.is_empty() and b.def.locks_now(id, func(other: StringName) -> bool: return find_buff(other) != null):
-			return true
-	return false
-
-
 ## 175：恢复生命**唯一的入口** —— 治疗效果、反转成治疗的伤害都走这里。先按身上的 [member BuffDef.heal_cut] 截走
-## （逐个 buff、按登记顺序，每个截剩下的那部分），截走的若有 [member BuffDef.heal_cut_to] 就变成那种伤害打回自己
-## （非直接、来源是对手），然后补血。返回实际回了多少（定点）。[param reason] 照旧写进 resource_changed
+## （逐个 buff、按登记顺序，每个截剩下的那部分），然后补血；补完按身上的 [member BuffDef.heal_echo] 叠状态
+## （175 补充一，菌血：实际回了几点就叠几层中毒，施加方是对手）。返回实际回了多少（定点）。[param reason] 照旧写进 resource_changed
 func heal(ctx: BattleContext, amount: int, reason: StringName = BattleEvent.REASON_HEAL) -> int:
 	if amount <= 0 or dead:
 		return 0
-	var diverted: Array = []     # [[伤害类型, 量], …]
 	for b in buffs:
 		if b.def.heal_cut <= 0 or amount <= 0:
 			continue
-		var cut := mini(amount, StatMath.mul(amount, StatMath.from_percent(clampi(b.def.heal_cut, 0, 100))))
-		amount -= cut
-		if cut > 0 and b.def.heal_cut_to != &"":
-			diverted.append([b.def.heal_cut_to, cut])
+		amount -= mini(amount, StatMath.mul(amount, StatMath.from_percent(clampi(b.def.heal_cut, 0, 100))))
 	var actual := resources.change(BattleStats.RES_HP, amount, reason) if amount > 0 else 0
-	if ctx != null:
-		for d in diverted:
-			DamageResolver.deal(ctx, self, int(d[1]), StringName(d[0]), 1 - side, 0, false)
+	if ctx != null and actual > 0:
+		var echoes: Array = []     # [[状态, 层数], …] —— 先记下再施加：施加可能引发反应、改动 buffs
+		for b in buffs:
+			if b.def.heal_echo != &"":
+				var n := floori(StatMath.to_float(actual) * b.def.heal_echo_per_point)
+				var def := ReactionResolver.mark_buff(b.def.heal_echo)
+				if n > 0 and def != null:
+					echoes.append([def, n])
+		for e in echoes:
+			ApplyStatus.give(ReactionResolver.foe_context(ctx, self), self, e[0], int(e[1]))
 	return actual
 
 
@@ -456,7 +435,6 @@ func expire_buffs(now: int) -> Array[BuffInstance]:
 	for b in expired:
 		_drop_buff(b)
 	if not expired.is_empty():
-		expired.append_array(_drop_orphans())     # 175：寒印到期，凝毒一起掉（模拟器照常发 status_unstacked）
 		mark_dirty()
 		var ctx: BattleContext = _ctx_ref.get_ref() if _ctx_ref != null else null
 		if ctx != null and ctx.trace != null:

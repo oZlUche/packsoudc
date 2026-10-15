@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Combustion"
   },
-  "description": "吃掉对手的中毒，按层数造成火焰伤害，再盖上【灼】。",
+  "description": "按反应的层数造成火焰伤害，再盖上【灼】。",
   "elements": [
     "fire",
     "poison"

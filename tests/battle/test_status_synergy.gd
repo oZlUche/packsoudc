@@ -180,14 +180,14 @@ static func run_items(t: TestCase) -> void:
 	t.eq(ctx.sides[1].stacks_of(&"bleed"), 0, "六层全扣")
 	t.eq(_hp(ctx, 1), 82, "放血一刀 6 × 3 = 18 点")
 
-	# 蝰蛇毒腺：自己施加的中毒立刻变剧毒；剧毒每层每秒 5 点
+	# 蝰蛇毒腺：自己施加的中毒立刻变剧毒；剧毒每层每秒 2.5 点（175 补充一：中毒每层 1 点，剧毒同比例）
 	var gland := db.get_def(&"viper_gland").combat.rules[0] as AbilityRule
 	ctx = _ctx([_opener([_apply(poison_buff, 2)]), gland])
 	_start(ctx)
 	t.eq(ctx.sides[1].stacks_of(&"poison"), 0, "中毒没了")
 	t.eq(ctx.sides[1].stacks_of(&"virulent"), 2, "换成两层剧毒")
 	H._advance_to(ctx, 1.05)
-	t.eq(_hp(ctx, 1), 90, "一秒后掉 2 × 5 = 10")
+	t.eq(_hp(ctx, 1), 95, "一秒后掉 2 × 2.5 = 5")
 	ctx = _ctx([gland], [_opener([_apply(poison_buff, 2, CombatEffect.Target.SELF)])])
 	_start(ctx)
 	t.eq(ctx.sides[1].stacks_of(&"poison"), 2, "对手自己带的中毒不转")

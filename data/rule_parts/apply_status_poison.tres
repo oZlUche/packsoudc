@@ -20,7 +20,7 @@ seconds = 1.0
 script = ExtResource("7_01o0x")
 target = 1
 damage_type = &"poison"
-amount = 2.0
+amount = 1.0
 damage_stat = &""
 per_stack = true
 

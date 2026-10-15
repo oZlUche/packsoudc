@@ -7,6 +7,5 @@
   "is_debuff": true,
   "stackable": false,
   "duration_sec": 6.0,
-  "heal_cut": 50,
-  "heal_cut_to": "poison"
+  "heal_echo": "poison"
 }

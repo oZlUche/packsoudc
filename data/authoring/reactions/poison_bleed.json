@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Fungal Blood"
   },
-  "description": "对手一段时间内每次恢复生命，恢复量减半，减掉的一半变成中毒伤害。",
+  "description": "对手一段时间内每次恢复生命，恢复多少就叠多少层中毒，恢复照常。",
   "elements": [
     "poison",
     "bleed"
