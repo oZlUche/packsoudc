@@ -211,6 +211,8 @@ func absorb(result: RunResult) -> Dictionary:
 
 ## 图鉴登记一件：计数加一，第一次带出算点亮（记进 got["lit"]）
 func _record_codex(inst: ItemInstance, got: Dictionary) -> void:
+	if inst.def.is_token():
+		return     # 175：铸牌不是常规道具，不进图鉴
 	var key := String(inst.def.id)
 	if int(codex.get(key, 0)) == 0:
 		got["lit"] = int(got["lit"]) + 1

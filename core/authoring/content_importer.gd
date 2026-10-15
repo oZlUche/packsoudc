@@ -207,6 +207,8 @@ static func import_of(kind: String, data: Dictionary, ctx: Context, report: Impo
 			return import_rule_part(data, ctx, report)
 		"reactions":
 			return import_reaction(data, ctx, report)
+		"forge":
+			return import_forge_table(data, ctx, report)
 		"sets":
 			return import_set(data, ctx, report)
 		"enemies":
@@ -299,6 +301,44 @@ static func import_reaction(data: Dictionary, ctx: Context, report: ImportReport
 
 
 ## 146：规则构件库里的一份。四类里正好填一个
+## 175 第三批：铸炉的一张映射表（时机 / 效果 / 数值）。每列都要有 default 行；时机行要有扳机、稀有度行要有节奏；
+## 效果行要有效果、数值写到的那一项效果上得有；拼出来的附魔规则不许有消耗（规则上本来就没有这一格）
+static func import_forge_table(data: Dictionary, ctx: Context, report: ImportReport) -> ForgeTable:
+	var def := ForgeTable.new()
+	_fill(def, data, "", ctx, report)
+	_require_id(def.id, "铸炉映射表", report)
+	if def.id != &"" and not ForgeTable.SLOTS.has(def.id):
+		report.error("id", "铸炉映射表只有 timing / effect / value 三张（现在是 %s）" % def.id)
+		return def
+	for col in ["material", "purpose", "rarity"]:
+		var rows: Array[ForgeEntry] = def.get(col)
+		if ForgeTable.find(rows, ForgeTable.DEFAULT) == null:
+			report.error(col, "要有一行 default（查不到时落到它）")
+		for i in rows.size():
+			var e := rows[i]
+			var at := "%s[%d]" % [col, i]
+			if e == null or e.key == &"":
+				report.error(at, "每一行要写 key")
+				continue
+			if col == "rarity" and e.key != ForgeTable.DEFAULT and not (String(e.key).is_valid_int() and int(String(e.key)) >= 0 and int(String(e.key)) <= 4):
+				report.error(at + ".key", "稀有度行的 key 写 0–4 或 default")
+			match def.id:
+				&"timing":
+					if col == "material" and e.trigger == null:
+						report.error(at + ".trigger", "时机的材质行要写扳机")
+					if col == "rarity" and e.cadence == null:
+						report.error(at + ".cadence", "时机的稀有度行要写节奏")
+				&"effect":
+					if col == "material":
+						if e.effect == null:
+							report.error(at + ".effect", "效果的材质行要写效果")
+						elif not (String(e.amount_field) in e.effect):
+							report.error(at + ".amount_field", "效果上没有「%s」这一项" % e.amount_field)
+					if col == "purpose" and (e.target < -1 or e.target > 2):
+						report.error(at + ".target", "给谁写 0（对手）/ 1（自己）/ 2（双方）/ -1（不改）")
+	return def
+
+
 static func import_rule_part(data: Dictionary, ctx: Context, report: ImportReport) -> RulePartDef:
 	var def := RulePartDef.new()
 	_fill(def, data, "", ctx, report)

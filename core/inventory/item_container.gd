@@ -41,6 +41,11 @@ func end_batch() -> void:
 		changed.emit()
 
 
+## 175：容器里某件的 `state` 改了（附魔）：发一次 [signal changed]，界面与编译跟着刷新
+func touch() -> void:
+	_notify_changed()
+
+
 func _notify_changed() -> void:
 	if _batch_depth > 0:
 		_dirty = true

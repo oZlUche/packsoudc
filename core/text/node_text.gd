@@ -23,6 +23,7 @@ const LABELS := {
 	&"spawn": "出生点",
 	&"safe": "保险箱",
 	&"chest": "宝箱",
+	&"forge": "铸炉",
 }
 
 const UNKNOWN := "未知"

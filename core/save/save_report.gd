@@ -13,6 +13,8 @@ var rehomed: Array = []
 var replaced: Array = []
 ## 退役表写明「丢掉」的：`{id, from}`
 var dropped: Array = []
+## 175：附魔查不到了（铸炉映射表的行删了）被摘掉的：`{id, why, from}`
+var unenchanted: Array = []
 ## 一局档因版本更新作废，带的东西放回了仓库
 var salvaged: bool = false
 ## 一局档作废前捞出来的道具字典（对账过的），等调用方放进仓库；不写进文件
@@ -44,6 +46,10 @@ func drop(id: StringName, from: String) -> void:
 	dropped.append({"id": String(id), "from": from})
 
 
+func unenchant(id: StringName, why: String, from: String) -> void:
+	unenchanted.append({"id": String(id), "why": why, "from": from})
+
+
 func refund_total() -> int:
 	var n := 0
 	for r in refunded:
@@ -53,7 +59,7 @@ func refund_total() -> int:
 
 ## 有没有要告诉玩家的
 func is_empty() -> bool:
-	return refunded.is_empty() and rehomed.is_empty() and replaced.is_empty() and dropped.is_empty() and not salvaged and not prev_used
+	return refunded.is_empty() and rehomed.is_empty() and replaced.is_empty() and dropped.is_empty() and unenchanted.is_empty() and not salvaged and not prev_used
 
 
 ## 清掉逐件的记录（换用上一份存档时，主文件那一遍记下的作废）
@@ -62,6 +68,7 @@ func clear_items() -> void:
 	rehomed.clear()
 	replaced.clear()
 	dropped.clear()
+	unenchanted.clear()
 	salvage.clear()
 	salvage_funds = 0
 
@@ -74,6 +81,7 @@ func merge(other: SaveReport) -> void:
 	rehomed.append_array(other.rehomed)
 	replaced.append_array(other.replaced)
 	dropped.append_array(other.dropped)
+	unenchanted.append_array(other.unenchanted)
 	salvaged = salvaged or other.salvaged
 	prev_used = prev_used or other.prev_used
 	if other.backup != "":
@@ -86,13 +94,13 @@ func merge(other: SaveReport) -> void:
 
 func to_dict() -> Dictionary:
 	return {"refunded": refunded.duplicate(true), "rehomed": rehomed.duplicate(true), "replaced": replaced.duplicate(true),
-		"dropped": dropped.duplicate(true), "salvaged": salvaged, "prev_used": prev_used, "backup": backup,
+		"dropped": dropped.duplicate(true), "unenchanted": unenchanted.duplicate(true), "salvaged": salvaged, "prev_used": prev_used, "backup": backup,
 		"content_stamp": {"saved": stamp_saved, "now": stamp_now}}
 
 
 static func from_dict(d: Dictionary) -> SaveReport:
 	var r := SaveReport.new()
-	for key in ["refunded", "rehomed", "replaced", "dropped"]:
+	for key in ["refunded", "rehomed", "replaced", "dropped", "unenchanted"]:
 		var raw: Variant = d.get(key, [])
 		if raw is Array:
 			for row in raw:
@@ -125,6 +133,8 @@ func summary() -> String:
 		parts.append(UiText.t("repair.rehomed") % rehomed.size())
 	if not dropped.is_empty():
 		parts.append(UiText.t("repair.dropped") % dropped.size())
+	if not unenchanted.is_empty():
+		parts.append(UiText.t("repair.unenchanted") % unenchanted.size())
 	return UiText.t("repair.head") + UiText.t("repair.sep").join(parts)
 
 

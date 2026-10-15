@@ -66,6 +66,12 @@ const ENTRIES := [
 		"keys": "保存 = JSON + .tres　右边看谁在用",
 	},
 	{
+		"scene": "res://ui/forge_editor/forge_editor.tscn",
+		"title": "铸炉映射表",
+		"desc": "175：铸炉的三张表 —— 时机 / 效果 / 数值槽各按材质、用途、稀有度查什么；右边挑三件道具试铸，看铸出来的前缀与那一句",
+		"keys": "保存 = JSON + .tres　每列都要有 default 行",
+	},
+	{
 		"scene": "res://ui/set_editor/set_editor.tscn",
 		"title": "套装编辑器",
 		"desc": "给作者做套装：id、名字、计数方式、各档位（集齐几件生效什么：属性修饰 / 规则 / 别的作用域的效果），右边看哪些道具属于这套，实时校验，存盘直接产出资产",

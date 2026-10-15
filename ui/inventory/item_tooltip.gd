@@ -19,7 +19,7 @@ const DESC_SIZE := 14
 const BODY_SIZE := 15
 const FOOT_SIZE := 13
 ## 170：行首图标（缺图退回的文字）；图标本身链到格位的词条，钉住后停上去能看解释
-const ICONS := {"grant": "【增益】", "receive": "【受益】", "load": "【装载】", "coin": "值 ", "weight": "重 "}
+const ICONS := {"grant": "【增益】", "receive": "【受益】", "load": "【装载】", "enchant": "【附魔】", "coin": "值 ", "weight": "重 "}
 const ICON_TERMS := {"grant": "增益槽", "receive": "受益槽", "load": "装载槽"}
 
 ## 096（作者定）：信仰状态的探针 —— 局里由 [GameFlow] 接上，返回 `{"active": 激活的信仰 id, "tier": 阶, "points": 信力}`；
@@ -144,6 +144,9 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 				continue
 			var ar := compiled.rules[idx] as AbilityRule
 			Glossary.buffs_in_rules([ar], attached_buffs)
+			if StringName(String(a["origin"])) == Forge.ORIGIN:     # 175 第三批：附魔单写一行
+				lines.append("%s[color=@grant]%s[/color]" % [icon("enchant"), AdjacencyText.rule_phrase(ar)])
+				continue
 			if loaded.has(StringName(String(a["origin"]))):
 				continue
 			lines.append("[color=@grant]附加：%s ← %s[/color]" % [AdjacencyText.rule_phrase(ar), origin_name(StringName(String(a["origin"])), board)])
@@ -152,6 +155,11 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var reacts := reactions_line(spec, compiled)     # 175：可引发的反应（按棋盘上别的道具带的元素）
 	if reacts != "":
 		lines.append(reacts)
+	if def.is_token():     # 175 第三批：铸牌 —— 那一句附魔、怎么用
+		var tok := Forge.enchant_of(inst)
+		var said := Forge.sentence(tok)
+		lines.append("%s[color=@grant]%s[/color]" % [icon("enchant"), said if said != "" else "（这枚铸牌的附魔已失效）"])
+		lines.append("[color=@dim]拖到一件武器上放手：附魔（永久；武器原有的附魔被覆盖）[/color]")
 	for e in def.effects:
 		var d: String = e.describe() if e != null and e.has_method("describe") else ""
 		lines.append("效果：%s" % (d if d != "" else _type_name(e)))

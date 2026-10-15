@@ -59,6 +59,9 @@ var craft_filter: Callable = Callable()
 var craft_note: Callable = Callable()
 ## 140：此刻残影下面那行合成提示（没压在能合的那件上 = 空串）。[method update_preview] 算，[method _draw] 画
 var craft_hint: String = ""
+## 175 第三批：铸牌附魔 `func(token: ItemInstance, grid: GridInventory, weapon_uid: int) -> bool` —— 手上是铸牌、压在恰好一件武器上，
+## 预览画绿的、残影下面写「附魔：嗜血的长剑」，放手就调它（成了算放下，铸牌被消耗）。不给 = 压上去照常顶替
+var enchant_drop: Callable = Callable()
 
 var _views: Array[ContainerView] = []
 
@@ -426,6 +429,13 @@ func _update_preview(global_pos: Vector2) -> void:
 		grid_view.set_preview(cells, origin, true)
 		return
 
+	# 175：手上是铸牌、压在恰好一件武器上 → 附魔（绿的，不算顶替）
+	var weapon := _enchant_target(inv, origin)
+	if weapon != null:
+		grid_view.set_preview(cells, origin, true)
+		_set_craft_hint(enchant_hint(_inst, weapon))
+		return
+
 	# 114：压在恰好一件上、两件有配方 → 合成（绿的，不算顶替）；140：残影下面写一行产物与说明
 	var partner := _craft_target(inv, origin)
 	if partner != null:
@@ -645,6 +655,10 @@ func drop_at(global_pos: Vector2) -> bool:
 				pending = swap["victims"]
 		elif grid_view.inventory.place(inst, at, _rot):
 			dropped = true
+		elif _enchant_target(grid_view.inventory, at) != null:
+			# 175：铸牌压到武器上 = 附魔（铸牌被消耗，不再落到任何容器里）
+			dropped = bool(enchant_drop.call(inst, grid_view.inventory, _enchant_target(grid_view.inventory, at).uid))
+			back_home = false
 		elif _craft_target(grid_view.inventory, at) != null:
 			# 114：压到能合的那件上 = 立刻合成（a 被消耗，不再落到任何容器里）
 			dropped = bool(craft_drop.call(inst, _craft_target(grid_view.inventory, at).uid))
@@ -744,6 +758,26 @@ func _craft_target(inv: GridInventory, origin: Vector2i) -> ItemInstance:
 	if b == null or b.def == null:
 		return null
 	return b if craft.call(_inst, b) is ItemDef else null
+
+
+## 175：拖着的铸牌压到这个位置上会正好压着一件武器吗。返回那件武器；没有 null
+func _enchant_target(inv: GridInventory, origin: Vector2i) -> ItemInstance:
+	if _inst == null or not _payload.is_empty() or not enchant_drop.is_valid() or not Forge.is_token(_inst) or inv == null:
+		return null
+	var under := inv.displaced_by(_inst.def, origin, _rot, _inst.uid)
+	if under.size() != 1:
+		return null
+	var b := inv.get_item(int(under[0]))
+	return b if Forge.accepts(b) else null
+
+
+## 175：「附魔：嗜血的长剑」（武器原有的附魔被覆盖时再写一句）
+static func enchant_hint(token: ItemInstance, weapon: ItemInstance) -> String:
+	var ench := Forge.enchant_of(token)
+	var text := "附魔：%s%s" % [Forge.prefix(ench), Names.of(weapon.def)]
+	if not Forge.enchant_of(weapon).is_empty():
+		text += "（覆盖原有的%s附魔）" % Forge.prefix(Forge.enchant_of(weapon)).trim_suffix("的")
+	return text
 
 
 ## 140：「合成 → 产物：说明」

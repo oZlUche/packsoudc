@@ -51,6 +51,10 @@
             "elite": [
               0,
               2
+            ],
+            "forge": [
+              1,
+              1
             ]
           },
           "type_weights": {
@@ -78,6 +82,10 @@
             "elite": [
               0,
               2
+            ],
+            "forge": [
+              0,
+              1
             ]
           },
           "type_weights": {

@@ -15,6 +15,7 @@ static func run_sealed_listing(t: TestCase) -> void:
 	var db := _db()
 	var sealed: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_sealed())
 	var blessed: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_blessed())
+	var tokens: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_token())
 	t.check(sealed.size() >= 10, "封存了 %d 件现代道具" % sealed.size())
 	for id in [&"pistol", &"rifle", &"mag", &"battery", &"drone", &"armor", &"core", &"stim", &"medkit", &"crowbar"]:
 		t.check(sealed.has(id), "%s 封存了" % id)
@@ -24,7 +25,7 @@ static func run_sealed_listing(t: TestCase) -> void:
 		t.check(db.all_ids().has(id), "%s 在 all_ids() 里" % id)
 	for id in [&"knife", &"ration", &"cleaver", &"belt_potion", &"bag_leather"]:
 		t.check(db.ids().has(id) and not db.get_def(id).is_sealed(), "%s 留着" % id)
-	t.eq(db.ids().size() + sealed.size() + db.keepsake_ids().size() + blessed.size(), db.all_ids().size(), "能用的 + 封存的 + 特殊道具 + 赐福版 = 全部（088 / 095）")
+	t.eq(db.ids().size() + sealed.size() + db.keepsake_ids().size() + blessed.size() + tokens.size(), db.all_ids().size(), "能用的 + 封存的 + 特殊道具 + 赐福版 + 铸牌 = 全部（088 / 095 / 175）")
 	t.eq(db.size(), db.all_ids().size(), "size() 数的是全部")
 
 	var rules: NodeRules = load(ContentPaths.asset_file("node_rules", "standard"))

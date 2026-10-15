@@ -52,6 +52,7 @@ slots = 16
 node_count = 10
 quota = {
 "elite": [0, 2],
+"forge": [1, 1],
 "rest": [1, 2],
 "shop": [0, 1]
 }
@@ -71,6 +72,7 @@ slots = 16
 node_count = 10
 quota = {
 "elite": [0, 2],
+"forge": [0, 1],
 "rest": [1, 2],
 "shop": [0, 1]
 }

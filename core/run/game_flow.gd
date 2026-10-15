@@ -10,7 +10,7 @@
 class_name GameFlow
 extends RefCounted
 
-enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR, ENCYCLOPEDIA, CHEST }
+enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR, ENCYCLOPEDIA, CHEST, FORGE }
 
 signal screen_changed(screen: int, payload: Dictionary)
 ## 101 第 5 刀：当前的这一局换了（开局 / 读档 / 回主菜单时 `null`）。UI 据此把只属于一局的东西挂上 / 摘掉
@@ -90,7 +90,7 @@ func _init(p_items: ItemDatabase = null, p_enemies: EnemyDatabase = null, p_sets
 
 
 static func is_overlay(s: int) -> bool:
-	return s in [Screen.BATTLE, Screen.LOOT, Screen.SEARCH, Screen.SHOP, Screen.EVENT, Screen.REST, Screen.PREBATTLE, Screen.SAFE, Screen.ALTAR, Screen.CHEST]
+	return s in [Screen.BATTLE, Screen.LOOT, Screen.SEARCH, Screen.SHOP, Screen.EVENT, Screen.REST, Screen.PREBATTLE, Screen.SAFE, Screen.ALTAR, Screen.CHEST, Screen.FORGE]
 
 
 #region 底屏之间
@@ -776,6 +776,29 @@ func leave_chest() -> bool:
 	return hide_overlay()
 
 
+## 175：离开铸炉屏（回地图；没铸过的还能再开）
+func leave_forge() -> bool:
+	return hide_overlay()
+
+
+## 175：在铸炉 [param node] 上把三件（时机、效果、数值槽，各在 [param from] 里）熔铸成一枚铸牌。三件被消耗、铸炉熄掉，返回铸牌（没铸成 null）。
+## 铸牌放在哪由调用方定（铸炉屏放进出牌槽）
+func forge_token(node: MapNode, timing: ItemInstance, effect: ItemInstance, value: ItemInstance, from: Array) -> ItemInstance:
+	if run == null or run.is_over() or node == null or NodeEvents.forge_used(node) or NodeEvents.effective_type(node) != &"forge":
+		return null
+	var token := Forge.make_token(items, timing, effect, value)
+	if token == null:
+		return null
+	for i in 3:
+		var c := from[i] as ItemContainer
+		var inst := [timing, effect, value][i] as ItemInstance
+		if c != null and c.has_item(inst.uid):
+			c.remove(inst.uid)
+	run.events.use_forge(node)
+	save()
+	return token
+
+
 ## 093：关掉神坛屏（回地图；站着还能再开，除非用过特殊操作）
 func close_altar() -> void:
 	if run == null:
@@ -1065,6 +1088,8 @@ func _reopen_entry() -> Dictionary:
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开
 	if here != null and not here.is_visited() and NodeEvents.effective_type(here) == &"chest" and not ChestPlacer.is_opened(here):
 		return {"screen": Screen.CHEST, "node": here}     # 154：没开锁的宝箱，站着随时能再开
+	if here != null and not here.is_visited() and NodeEvents.effective_type(here) == &"forge" and not NodeEvents.forge_used(here):
+		return {"screen": Screen.FORGE, "node": here}     # 175：没铸过的铸炉，站着随时能再开
 	var altar := AltarModule.of(run)
 	if here != null and altar != null and altar.is_open():
 		return {"screen": Screen.ALTAR, "node": here}     # 093：神坛还开着（这一次没用过）
@@ -1220,6 +1245,8 @@ func _adopt(state: RunState) -> void:
 		_push({"screen": Screen.ALTAR, "node": node}))     # 093：休息处的神坛
 	ev.chest_shown.connect(func(node: MapNode):
 		_push({"screen": Screen.CHEST, "node": node}))     # 154：踩上没开锁的宝箱
+	ev.forge_opened.connect(func(node: MapNode):
+		_push({"screen": Screen.FORGE, "node": node}))     # 175：踩上没用过的铸炉
 	ev.event_pending.connect(func(node: MapNode, def: EventDef):
 		var entry := {"screen": Screen.EVENT, "node": node, "def": def}
 		# 084：战利品已经排在队尾时来的事件（「搜索点被余波摧毁」）说的是刚发生的事：先说，再看战利品（东西还在）。
@@ -1321,6 +1348,9 @@ func _skippable(entry: Dictionary) -> bool:
 		Screen.CHEST:
 			var chest_node: MapNode = entry.get("node", null)
 			return chest_node == null or chest_node.is_visited() or ChestPlacer.is_opened(chest_node)
+		Screen.FORGE:
+			var forge_node: MapNode = entry.get("node", null)
+			return forge_node == null or NodeEvents.forge_used(forge_node)
 		Screen.PREBATTLE:
 			var node: MapNode = entry.get("node", null)
 			return run.events.pending_battle.is_empty() or node == null or int(run.events.pending_battle["node"]) != node.id

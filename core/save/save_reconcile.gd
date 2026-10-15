@@ -71,10 +71,12 @@ static func item(raw: Dictionary, db: ItemDatabase, report: SaveReport = null, f
 	_rename_state_keys(raw, state_keys)
 	var id := StringName(String(raw.get("def", "")))
 	if id == &"" or db.has_exact(id):
+		_check_enchant(raw, id, report, from)
 		return 0
 	var alias := IdAliases.item(id)
 	if alias != id and db.has_exact(alias):
 		raw["def"] = String(alias)     # 改过名：写成新名，之后读、存都是新名
+		_check_enchant(raw, alias, report, from)
 		return 0
 	var retired: Dictionary = retired_items.get(id, {})
 	var to := StringName(String(retired.get("replace", "")))
@@ -92,6 +94,20 @@ static func item(raw: Dictionary, db: ItemDatabase, report: SaveReport = null, f
 	if report != null:
 		report.refund(id, value, from)
 	return value
+
+
+## 175 第三批：附魔里引用的表行查不到了（铸炉映射表删了行）→ 摘掉附魔、报告一行。铸牌也一样（变成一枚没有附魔的牌，悬浮窗写「已失效」）
+static func _check_enchant(raw: Dictionary, id: StringName, report: SaveReport, from: String) -> void:
+	var state: Variant = raw.get("state", null)
+	if not (state is Dictionary) or not (state as Dictionary).has(Forge.KEY):
+		return
+	var ench: Variant = (state as Dictionary)[Forge.KEY]
+	var why := Forge.problem(ench) if ench is Dictionary else "附魔不是字典"
+	if why == "":
+		return
+	(state as Dictionary).erase(Forge.KEY)
+	if report != null:
+		report.unenchant(id, why, from)
 
 
 static func _walk(node: Variant, db: ItemDatabase, report: SaveReport, from: String) -> int:

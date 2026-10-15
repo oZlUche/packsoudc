@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_h5lwl"]
+
+[resource]
+script = ExtResource("1_h5lwl")
+id = &"token"
+display_name = "铸牌"
+display_names = {
+"en": "Forge token"
+}
+description = "铸炉熔铸的附魔牌：不进图鉴、不会掉落，能带出、能存仓库。"
+descriptions = {
+"en": "An enchantment token from the forge: not in the codex, never dropped; can be extracted and stored."
+}
+tip = false
+category = "internal"
+internal = true

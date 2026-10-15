@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.04 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.05 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -573,6 +573,11 @@ UI 上用什么图形表示这两类，是表现层的事，数据层不关心�
 日神附魔（`ScopedMod.rules`，第 7 步）走的是同一个入口。附加规则只许 `on_item_fired`、不许 costs、不许直接打毒 / 流血（导入 error）；
 **它执行时不算宿主再出手一次**（`RuleEngine.evaluate` 听自己出手的规则不再发 `ITEM_FIRED`，否则会自己触发自己）。
 「配件自己的反应」仍用 `OnItemFired.LINKED`（规则以配件身份跑）；「武器出手时附带 X」统一走附加。反向的 `receive_rules` 等内容需要再加。
+
+**附魔**（175 第三批，作者定：**所有附魔都视为铸牌附魔**）：道具的附魔是一份「三张铸炉映射表里各落到哪一行」的字典（`EnchantDef` 同构：`trigger / direction / rate / effect / target / tier / magnitude / element`），
+实例的 `state.enchant`（铸牌附上的）覆盖定义预置的 `ItemDef.enchant`（`Forge.enchant_of`）。编译第 6 步由 `Forge.rule_of` 现拼成一条规则，经 `_attach` 挂到宿主上（来源 `enchant`，一把只挂一条）；
+时机不限（表里有的那几种），不许 costs；「每次都触发」只许给「宿主出手时」「开战时」，别的时机落到每次都触发时换成 1 秒冷却（否则会自己点燃自己）。表里查不到了 → 拼不出、不挂，存档对账摘掉并报告（7.x 173）。
+**命名**：`Names.of_item` = 耐久前缀 + 附魔前缀 + 定义名（悬浮窗、棋盘名牌、日志、结算同一个函数）；以后不再为「火焰长剑」造新定义，用前缀。日神附魔是整局赐福（`ScopedMod`），不是道具附魔，不并进来。
 
 **第三面：装载与供给**（148，作者定，魔晶石 → 法杖；171 起晶石座是**装载格**，和受益格分开）：宿主写 `AdjacencyProfile.load_cells`（`load_filter` 空 = 魔晶石 `crystal`），
 晶石写 `feed_mods / feed_rules / feed_filter` —— **晶石站在宿主的装载格上**、宿主命中 `feed_filter` 时，把这些交给宿主（一份，不按格数乘；规则走 `_attach`、以宿主身份跑，时机不限、不许 costs，同受益规则）。
@@ -1782,6 +1787,7 @@ func resolve(run_seed: int) -> MapGraph      # 失败返回 null，原因在 las
 | `shop` | `S` | 商店 | **必须型** |
 | `rest` | `R` | 休息区 | **必须型** |
 | `extract` | `X`（暂定） | 中途撤离点 | 覆盖型，见下。符号是解析器先占的位，等作者在表里定 |
+| `forge` | `F` | 铸炉（175）：三件道具放进【时机】【效果】【数值】三槽（一槽一件，任意道具都能进），各按材质 / 用途 / 稀有度查 `data/authoring/forge/<槽>.json`（`ForgeTable`），熔铸成一枚 1×1 的铸牌（`forge_token`：标签 `token`，不进 `ItemDatabase.ids()`、不进图鉴，能带出、存仓库；价值 = 三件之和的一半）。铸牌压到武器上放手 = 附魔（`DragLayer.enchant_drop` → `InventoryService.enchant`，后来者覆盖）。没铸走开不算用过，铸了就熄（`content.used_forge`）。自由模式：废墟环 1 座、深处环 0–1 座 | 普通 |
 | `chest` | `C` | 宝箱（154）：生成时定好稀有度与皮肤（`content.chest`，`ChestPlacer`）；踩上去是开锁画面，长按开锁、开了搜一次（不遭遇、能出珍宝、每件不低于下限）。没开锁走开不算用过 | 普通（随机点也能揭出） |
 | `junction` | — | 岔路口：路上的一个拐点，没有事件 | 手绘地图才有，见 5.4.1 |
 | `core` | `B` | 章节 BOSS，最终撤离点，固定一个 | — |
@@ -4233,6 +4239,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.05 | 2026-10-15 | **铸炉、铸牌与附魔字段**（报告 175 第三批，作者定，待定 2A / 3A / 4A / 5A / 7A；改 4.2 附加规则、5.4 节点类型）：新节点 `forge`（铸炉屏三槽 + 出牌槽，用一次就熄）；铸炉映射表 `ForgeTable`（新内容种类 `forge`，构件之后、道具之前；编辑器「铸炉映射表」页带试铸）；铸牌 `forge_token`（`token` 标签：不进 ids / 图鉴，价值一半）；附魔字段 `ItemDef.enchant` / `state.enchant`，`Forge.rule_of` 经 `_attach` 挂一条；前缀命名进 `Names.of_item`；拖拽 `enchant_drop`；存档对账摘掉坏附魔（`SaveReport.unenchanted`） |
 | v3.04 | 2026-10-15 | **法杖轮读**（报告 175 第二批，作者定，待定 6A；改 4.4 频率层、4.6）：新节奏 `CycleCadence`（单次冷却 + 总冷却，都吃急速；只装一颗只有总冷却）与新效果 `FireLoaded`；编译器按顺时针把晶石排进 `CompiledItem.loaded`、法杖属性 `load_steps` 记一轮几下，轮读的宿主不再常驻挂晶石的伤害与换型；出手事件带 `step / steps / next`，回放标罗马数字；悬浮窗装载句改写；`magic_staff.json` 节奏换成 `cycle` |
 | v3.03 | 2026-10-15 | **元素印与反应表**（报告 175 第一批，作者定，待定 1A；改 4.6）：火 / 冰 / 雷命中盖【灼】【寒】【麻】（`DamageTypeDef.mark`，不可叠、4 秒），中毒 / 剧毒 / 流血本身是印（`BuffDef.element`）；`ReactionResolver` 在伤害管线第 5 步之后与施加状态之后查反应表（`ReactionDef`，`data/authoring/reactions/`，新内容种类 `reactions`）：十对反应爆燃 / 淬裂 / 过载 / 燃血 / 超导 / 凝毒 / 冻疮 / 电解 / 激荡 / 菌血，吃印按 `consume`，反应不连锁；治疗入口 `CombatantRuntime.heal`（`heal_cut` / `heal_cut_to`），锁 `BuffDef.locks` / `locks_while`；规则只听出生之后的事件（`BattleEvent.seq` / `RuleRuntime.born`）；溃烂之刃的桥收进菌血；回放反应弹字、悬浮窗「可引发」、百科「反应」组（`MetaState.reactions_seen` 点亮）、对阵屏元素小图标 |
 | v3.02 | 2026-10-14 | **存档原子写与内容对账**（报告 173，作者问「存档经常会在版本升级后失效」，待定 1A 2A 3A 4A；改 7.2）：`AtomicFile`（`.tmp` → 改名、`.prev` 回退）用于局外 / 一局 / 设置；`SaveReconcile` 在版本链之后对账道具（`IdAliases.RETIRED_ITEMS` 折钱 / 换件 / 丢掉，查不到默认折钱；`STATE_KEYS`），六件已删道具补进退役表、短剑登记 `RESHAPED`；容器 `from_dict` 交出放不回原位的（`homeless_out`），仓库换位 / 加页、背包先本盘后仓库、一局先本容器后地上（`RunState.rehome`），都不行折钱；一局作废前打捞进仓库（`MetaState.salvage`）；`SaveReport` 写 `last_repair.json`，`GameFlow.repair_notice` 读一次就删、读取存档屏与主菜单各一句；内容快照 `ContentSnapshot` + `tools/snapshot_content.sh` + 快照测试；一局冻结样本 `run_v4.json`；存档回归目录 `tests/fixtures/saves/` 与只读的 `tools/check_saves.sh`；存档头 `content_stamp` |

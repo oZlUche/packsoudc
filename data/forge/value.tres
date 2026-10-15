@@ -1,0 +1,79 @@
+[gd_resource type="Resource" script_class="ForgeTable" format=3]
+
+[ext_resource type="Script" path="res://core/forge/forge_entry.gd" id="1_yutys"]
+[ext_resource type="Script" path="res://core/forge/forge_table.gd" id="2_36sau"]
+
+[sub_resource type="Resource" id="Resource_iq77w"]
+script = ExtResource("1_yutys")
+key = &"metal"
+mult = 1.25
+
+[sub_resource type="Resource" id="Resource_ueodt"]
+script = ExtResource("1_yutys")
+key = &"gem"
+mult = 1.25
+
+[sub_resource type="Resource" id="Resource_gar4k"]
+script = ExtResource("1_yutys")
+key = &"bone"
+
+[sub_resource type="Resource" id="Resource_3c51i"]
+script = ExtResource("1_yutys")
+key = &"default"
+
+[sub_resource type="Resource" id="Resource_4ndsu"]
+script = ExtResource("1_yutys")
+key = &"weapon"
+mult = 1.2
+
+[sub_resource type="Resource" id="Resource_42i21"]
+script = ExtResource("1_yutys")
+key = &"shield"
+
+[sub_resource type="Resource" id="Resource_yuhqp"]
+script = ExtResource("1_yutys")
+key = &"armor"
+
+[sub_resource type="Resource" id="Resource_8a0b6"]
+script = ExtResource("1_yutys")
+key = &"default"
+
+[sub_resource type="Resource" id="Resource_03yps"]
+script = ExtResource("1_yutys")
+key = &"0"
+
+[sub_resource type="Resource" id="Resource_a0skf"]
+script = ExtResource("1_yutys")
+key = &"1"
+size = 1.5
+
+[sub_resource type="Resource" id="Resource_hnehu"]
+script = ExtResource("1_yutys")
+key = &"2"
+size = 2.0
+
+[sub_resource type="Resource" id="Resource_h2vyp"]
+script = ExtResource("1_yutys")
+key = &"3"
+size = 3.0
+
+[sub_resource type="Resource" id="Resource_wnu0d"]
+script = ExtResource("1_yutys")
+key = &"4"
+size = 4.0
+
+[sub_resource type="Resource" id="Resource_qven1"]
+script = ExtResource("1_yutys")
+key = &"default"
+
+[resource]
+script = ExtResource("2_36sau")
+id = &"value"
+display_name = "数值"
+display_names = {
+"en": "Value"
+}
+description = "数值槽：放进去的道具按稀有度定几档，材质与用途再各乘一个系数。占位表，作者过内容。"
+material = Array[ExtResource("1_yutys")]([SubResource("Resource_iq77w"), SubResource("Resource_ueodt"), SubResource("Resource_gar4k"), SubResource("Resource_3c51i")])
+purpose = Array[ExtResource("1_yutys")]([SubResource("Resource_4ndsu"), SubResource("Resource_42i21"), SubResource("Resource_yuhqp"), SubResource("Resource_8a0b6")])
+rarity = Array[ExtResource("1_yutys")]([SubResource("Resource_03yps"), SubResource("Resource_a0skf"), SubResource("Resource_hnehu"), SubResource("Resource_h2vyp"), SubResource("Resource_wnu0d"), SubResource("Resource_qven1")])

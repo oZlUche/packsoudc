@@ -18,7 +18,7 @@ const LABELS := {
 	"amount": "数量", "value": "数值", "count": "件数", "percent": "百分比", "flat": "固定值", "mult": "倍率", "StatModifier.mode": "乘算 / 加算", "StatBonus.mode": "乘算 / 加算",
 	"chance": "概率", "seconds": "秒", "step_seconds": "单次冷却（秒）", "steps": "步数", "min_steps": "最少步数", "max_steps": "最多步数", "min_value": "最少", "flag": "旗标",
 	"absent": "反过来（要求没有）", "add": "累加", "clear": "拔掉", "target": "对象", "where": "在哪", "pick": "挑法", "item": "道具", "items": "道具",
-	"include_bags": "包也算", "include_self": "含自己", "invert": "反转", "enabled": "启用", "absolute": "绝对值", "only_total": "只算总量",
+	"include_bags": "包也算", "include_self": "含自己", "self_only": "只算自己", "invert": "反转", "enabled": "启用", "absolute": "绝对值", "only_total": "只算总量",
 	# 道具
 	"shape": "形状", "rarity": "稀有度", "rarity_cap": "稀有度上限", "is_bag": "是包", "bag_accept_tags": "包只收的标签", "bag_mods": "包体加成",
 	"set_id": "套装", "effects": "效果", "price": "价格", "starting_belt": "开局发的随身技能", "belt_stock": "随身那一排", "belt_grants": "发的随身技能", "wear": "耐久", "when": "什么时候能用",

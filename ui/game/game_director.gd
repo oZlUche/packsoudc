@@ -28,6 +28,7 @@ const SCREEN_SCRIPTS := {
 	GameFlow.Screen.ALTAR: "res://ui/game/altar_screen.gd",
 	GameFlow.Screen.ENCYCLOPEDIA: "res://ui/game/encyclopedia_screen.gd",
 	GameFlow.Screen.CHEST: "res://ui/game/chest_screen.gd",     # 154：宝箱（叠层；不画地上 —— 开锁时只看箱子）
+	GameFlow.Screen.FORGE: "res://ui/game/forge_screen.gd",     # 175：铸炉（叠层）
 }
 const LAUNCHER := "res://ui/launcher.tscn"
 ## 157：换屏淡入 —— 叠层、底屏各多久（设置里 [member GameSettings.ui_fades] 能关）
@@ -57,7 +58,7 @@ var ground: GroundLayer = null
 ## 地上在这些屏里画（一局里、在某个点上的界面）；战斗回放、结算、局外都不画
 const GROUND_SCREENS := [
 	GameFlow.Screen.MAP, GameFlow.Screen.LOOT, GameFlow.Screen.SEARCH, GameFlow.Screen.SHOP, GameFlow.Screen.EVENT,
-	GameFlow.Screen.REST, GameFlow.Screen.PREBATTLE, GameFlow.Screen.SAFE, GameFlow.Screen.ALTAR,
+	GameFlow.Screen.REST, GameFlow.Screen.PREBATTLE, GameFlow.Screen.SAFE, GameFlow.Screen.ALTAR, GameFlow.Screen.FORGE,
 ]
 
 

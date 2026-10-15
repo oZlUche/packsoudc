@@ -44,6 +44,7 @@ const TEXT := {
 	"repair.replaced": {"zh": "%d 件换成了新版本里的对应道具", "en": "%d items were replaced with their new versions"},
 	"repair.rehomed": {"zh": "%d 件放不回原位，换了位置", "en": "%d items did not fit their old spot and were moved"},
 	"repair.dropped": {"zh": "%d 件按版本说明移除", "en": "%d items were removed as the update notes say"},
+	"repair.unenchanted": {"zh": "%d 件的附魔已失效、被摘掉", "en": "%d enchantments no longer exist and were removed"},     # 175
 	"slots.newer_tag": {"zh": "　（更新版本的存档）", "en": " (saved by a newer version)"},
 	"menu.meta": {"zh": "仓库与战绩", "en": "Warehouse & records"},
 	"menu.settings": {"zh": "设置", "en": "Settings"},

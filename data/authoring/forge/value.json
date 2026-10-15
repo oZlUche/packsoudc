@@ -1,0 +1,63 @@
+{
+  "id": "value",
+  "display_name": "数值",
+  "display_names": {
+    "en": "Value"
+  },
+  "description": "数值槽：放进去的道具按稀有度定几档，材质与用途再各乘一个系数。占位表，作者过内容。",
+  "material": [
+    {
+      "key": "metal",
+      "mult": 1.25
+    },
+    {
+      "key": "gem",
+      "mult": 1.25
+    },
+    {
+      "key": "bone"
+    },
+    {
+      "key": "default"
+    }
+  ],
+  "purpose": [
+    {
+      "key": "weapon",
+      "mult": 1.2
+    },
+    {
+      "key": "shield"
+    },
+    {
+      "key": "armor"
+    },
+    {
+      "key": "default"
+    }
+  ],
+  "rarity": [
+    {
+      "key": "0"
+    },
+    {
+      "key": "1",
+      "size": 1.5
+    },
+    {
+      "key": "2",
+      "size": 2.0
+    },
+    {
+      "key": "3",
+      "size": 3.0
+    },
+    {
+      "key": "4",
+      "size": 4.0
+    },
+    {
+      "key": "default"
+    }
+  ]
+}
