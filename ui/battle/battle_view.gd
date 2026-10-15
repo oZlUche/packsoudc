@@ -473,6 +473,8 @@ func _apply(e: BattleEvent) -> void:
 					_flash(e)
 				if e.payload.has("ready_at") and e.side < _overlays.size():
 					_overlays[e.side].note_cycle(e.get_int(&"uid"), StatMath.to_float(e.time), StatMath.to_float(e.get_int(&"ready_at")))
+				if e.payload.has("steps") and e.side < _overlays.size():
+					_overlays[e.side].note_step(e.get_int(&"uid"), e.get_int(&"next"), e.get_int(&"steps"))     # 175：法杖轮读到第几颗
 		BattleEvent.EFFECT_RESOLVED:
 			if e.get_int(&"uid") > 0:
 				_flash(e)     # 157：规则触发也算那一件出手

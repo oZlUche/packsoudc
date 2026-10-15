@@ -23,6 +23,8 @@ var item_base: Dictionary = {}
 var item_links: Dictionary = {}
 ## 132：uid → 道具标签（`on_item_fired.source_tags`）
 var item_tags: Dictionary = {}
+## 175：uid → 这把法杖顺时针装着的晶石（[member CompiledItem.loaded]），[FireLoaded] 按轮次取
+var item_loaded: Dictionary = {}
 
 ## 标准轴（4.3，103 4e）：axis → [内容层, 系统层]，带符号；结算在 [method _rebuild] 末尾
 var axes: Dictionary = {}
@@ -58,6 +60,8 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 			rt.item_links[it.source_uid] = it.linked_uids
 		if not it.tags.is_empty():
 			rt.item_tags[it.source_uid] = it.tags
+		if not it.loaded.is_empty():
+			rt.item_loaded[it.source_uid] = it.loaded
 		var blk := it.stats.total_of(BattleStats.BLOCK)
 		if blk > 0:
 			rt.block_layers.append({"uid": it.source_uid, "id": it.def_id, "value": blk})
@@ -67,8 +71,8 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 			# **乘法单位元类属性不能跨物品累加。** haste 每件都是 1.0，
 			# 逐件相加会得出「N 件物品 = N 倍速度」；而且单位级 haste 的含义是
 			# 「不属于任何物品的规则（套装、buff）用什么速率」，本就该是 1.0 起。
-			if BattleStats.default_base(key) != 0:
-				continue
+			if BattleStats.default_base(key) != 0 or BattleStats.ITEM_ONLY.has(key):
+				continue     # 175：轮读的两项只属于那把法杖
 			rt.base.ensure(key).base += it.stats.total_of(key)
 	rt.base.ensure(BattleStats.MAX_HP).base = spec.max_hp
 	# 153：基线的格挡（敌人天生的）也是一层，和盾一起取最高；单位表里不再留这一项
@@ -275,6 +279,11 @@ func links_of(uid: int) -> Array[int]:
 ## 132：某件物品的标签（没有 = 空）
 func tags_of(uid: int) -> Array[StringName]:
 	return item_tags.get(uid, [] as Array[StringName])
+
+
+## 175：某把法杖装着的晶石（顺时针；没有 = 空 → 木棍）
+func loaded_of(uid: int) -> Array[Dictionary]:
+	return item_loaded.get(uid, [] as Array[Dictionary])
 
 
 #region buff

@@ -28,6 +28,11 @@ var linked_uids: Array[int] = []
 ## 或 `faith:<id>`（信仰给的）。规则本身仍平铺在 [member rules] 里，战斗层不用认识它；只给悬浮窗写「← 毒箭」用
 var attached: Array[Dictionary] = []
 
+## 175（作者定）：法杖**轮读**的晶石，按顺时针排好（[method BattleCompiler.cycle_order]）。
+## `{uid: int, id: StringName（晶石 def id）, type: StringName（它把这一下换成的伤害类型）, damage: int（它给这一下加的伤害，定点）}`。
+## 只有规则里有 [FireLoaded] 的宿主才这样装：晶石的伤害与换型不再常驻挂在法杖上，轮到它那一下才用；别的供给照旧常驻
+var loaded: Array[Dictionary] = []
+
 
 func is_active() -> bool:
 	return not rules.is_empty()
@@ -47,8 +52,21 @@ func estimated_dps(with_stats: StatSet = null) -> float:
 		if hz <= 0.0:
 			continue
 		for effect in r.effects:
-			total += hz * (effect as CombatEffect).estimated_damage(use)
+			var per_hit := (effect as CombatEffect).estimated_damage(use)
+			if effect is FireLoaded and per_hit > 0.0:
+				per_hit += loaded_damage()
+			total += hz * per_hit
 	return total
+
+
+## 175：轮读的晶石平均每下加多少伤害（没装 = 0）
+func loaded_damage() -> float:
+	if loaded.is_empty():
+		return 0.0
+	var sum := 0
+	for e in loaded:
+		sum += int(e.get("damage", 0))
+	return StatMath.to_float(sum) / loaded.size()
 
 
 func _to_string() -> String:

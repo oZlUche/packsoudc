@@ -18,6 +18,8 @@ var cycles: Dictionary = {}
 var _flash: Dictionary = {}
 ## 157：亮过几次（测试看：跳转时一次都不该有）
 var flashes: int = 0
+## 175：轮读的法杖 uid → 下一下读第几颗（1 起），格子左上角标罗马数字（第一下出手之前不标）
+var steps: Dictionary = {}
 var now: float = 0.0:
 	set(v):
 		now = v
@@ -33,6 +35,7 @@ func _ready() -> void:
 func reset(initial: Dictionary) -> void:
 	cycles.clear()
 	_flash.clear()
+	steps.clear()
 	for uid in initial:
 		var ready := float(initial[uid])
 		cycles[int(uid)] = [0.0, ready, ready]
@@ -47,6 +50,15 @@ func note_cycle(uid: int, at: float, ready_at: float) -> void:
 	if not cur.is_empty() and period + 0.0001 < float(cur[2]) and at + 0.0001 < float(cur[1]):
 		return
 	cycles[uid] = [at, ready_at, period]
+	queue_redraw()
+
+
+## 175：轮读的法杖下一下读第几颗（[param next] 0 起，一轮 [param count] 颗）；一轮只有一颗不标
+func note_step(uid: int, next: int, count: int) -> void:
+	if count <= 1:
+		steps.erase(uid)
+	else:
+		steps[uid] = next + 1
 	queue_redraw()
 
 
@@ -94,3 +106,19 @@ func _draw() -> void:
 			var square := PackedVector2Array([at, at + Vector2(cell, 0), at + Vector2(cell, cell), at + Vector2(0, cell)])
 			for piece in Geometry2D.intersect_polygons(fan, square):
 				draw_colored_polygon(piece, MASK)
+	_draw_steps(cell)
+
+
+## 175：法杖第一格左上角的罗马数字（Ⅰ Ⅱ …，和倍速同一套字形）
+func _draw_steps(cell: int) -> void:
+	if steps.is_empty():
+		return
+	var font := view.label_font if view.label_font != null else get_theme_default_font()
+	for uid in steps:
+		var item := view.inventory.get_item(int(uid))
+		if item == null or item.cells().is_empty():
+			continue
+		var at := Vector2(item.origin + item.cells()[0]) * cell + Vector2(4, 16)
+		var text := TextTemplate.roman(int(steps[uid]))
+		draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, 4, Color(0, 0, 0, 0.85))
+		draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(1.0, 0.95, 0.75))

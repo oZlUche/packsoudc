@@ -115,7 +115,20 @@ static func _fired_payload(rt: RuleRuntime, rc: RuleContext) -> Dictionary:
 	var ready := ready_at_of(rt, rc)
 	if ready >= 0:
 		out["ready_at"] = ready
+	_cycle_payload(rt, rc, out)
 	return out
+
+
+## 175：轮读的法杖再带上这一下读的第几颗（`step`，0 起）、一轮几颗（`steps`）、下一下读第几颗（`next`）—— 回放在法杖上标罗马数字
+static func _cycle_payload(rt: RuleRuntime, rc: RuleContext, out: Dictionary) -> void:
+	if not (rt.rule.cadence is CycleCadence) or rt.source_uid == 0:
+		return
+	var steps := rc.owner.loaded_of(rt.source_uid).size()
+	if steps <= 0:
+		return
+	out["step"] = int(rc.state().get(CycleCadence.FIRED, 0))
+	out["steps"] = steps
+	out["next"] = int(rc.state().get(CycleCadence.INDEX, 0))
 
 
 ## 冷却已经走了、耐力不够没出手：也告诉回放「新一轮开始了」，否则遮罩会在这一刻断掉
@@ -124,7 +137,9 @@ static func _emit_skipped(ctx: BattleContext, owner: CombatantRuntime, rt: RuleR
 		return
 	var ready := ready_at_of(rt, rc)
 	if ready >= 0:
-		ctx.emit(BattleEvent.ITEM_SKIPPED, owner.side, {"uid": rt.source_uid, "ready_at": ready})
+		var d := {"uid": rt.source_uid, "ready_at": ready}
+		_cycle_payload(rt, rc, d)
+		ctx.emit(BattleEvent.ITEM_SKIPPED, owner.side, d)
 
 
 ## 117：内部日志的一条出手 / 跳过：哪件道具（或哪个 buff）的哪条规则、什么时机、下一次就绪

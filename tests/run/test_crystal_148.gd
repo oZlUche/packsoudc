@@ -34,7 +34,7 @@ static func _staff_board(db: ItemDatabase, left: StringName, right: StringName) 
 
 
 static func run_feed_compile(t: TestCase) -> void:
-	t.begin("148 · 编译：法杖独自是木棍；挨着一颗晶石伤害 +N、挂上「改成元素」、记进 fed；两颗两份；破碎的不给；不是法杖的宿主不给")
+	t.begin("148 · 编译：法杖独自是木棍；挨着晶石记进轮读表（175：伤害与换型轮到它才用）、记进 fed；破碎的不给；不是法杖的宿主不给")
 	var db := _db()
 	var staff_def := db.get_def(&"magic_staff")
 	var base := float(staff_def.combat.base_stats["damage"])
@@ -46,25 +46,29 @@ static func run_feed_compile(t: TestCase) -> void:
 	t.eq(_damage(s0, alone["staff"].uid), base, "独自：伤害 %s" % base)
 	t.eq(s0.item_of(alone["staff"].uid).attached.size(), 0, "独自：没有附加规则")
 
+	# 175 第二批：轮读的法杖，晶石的伤害与换型不再常驻 —— 记进 loaded，轮到它那一下才用
 	var one := _staff_board(db, &"fire_crystal", &"")
 	var s1 := BattleCompiler.compile_board(one["board"])
 	var staff1 := s1.item_of(one["staff"].uid)
-	t.eq(_damage(s1, one["staff"].uid), base + plus, "一颗：伤害 %s + %s" % [base, plus])
-	t.eq(staff1.attached.size(), 1, "挂上一条供给规则")
-	t.eq(String(staff1.attached[0]["origin"]), "fire_crystal", "来源记晶石")
+	t.eq(_damage(s1, one["staff"].uid), base, "一颗：属性上的伤害不变（%s）" % base)
+	t.eq(staff1.attached.size(), 0, "换型不再常驻挂着")
+	t.eq(staff1.loaded.size(), 1, "轮读表一颗")
+	t.eq(String(staff1.loaded[0]["type"]), "fire", "这颗打火焰")
+	t.eq(StatMath.to_float(int(staff1.loaded[0]["damage"])), plus, "这颗加 %s" % plus)
 	t.eq(s1.fed_uids, [one["left"].uid] as Array[int], "fed 记下这颗晶石")
 	t.check(staff1.linked_uids.has(one["left"].uid), "法杖和晶石连着")
 
 	var two := _staff_board(db, &"fire_crystal", &"ice_crystal")
 	var s2 := BattleCompiler.compile_board(two["board"])
-	t.eq(_damage(s2, two["staff"].uid), base + plus * 2, "两颗：两份")
-	t.eq(s2.item_of(two["staff"].uid).attached.size(), 2, "两条供给规则")
+	t.eq(_damage(s2, two["staff"].uid), base, "两颗：属性上的伤害仍不变")
+	t.eq(s2.item_of(two["staff"].uid).loaded.size(), 2, "轮读表两颗")
 
 	var broken := _staff_board(db, &"fire_crystal", &"")
 	(broken["left"] as ItemInstance).spend_charge(3)
 	t.check((broken["left"] as ItemInstance).is_broken(), "扣三次：碎了")
 	var sb := BattleCompiler.compile_board(broken["board"])
 	t.eq(_damage(sb, broken["staff"].uid), base, "破碎的不再供给")
+	t.eq(sb.item_of(broken["staff"].uid).loaded.size(), 0, "轮读表里没有它")
 	t.eq(sb.fed_uids.size(), 0, "fed 里没有它")
 
 	# 不是法杖的宿主：受益格收晶石也不给（feed_filter = staff）

@@ -397,3 +397,13 @@ static func _enemy_into(ctx: Dictionary, content: Dictionary, run: RunState) -> 
 			Names.of(def), int(content.get("strength", 0)), spec.max_hp_int(), spec.rough_dps(), names.size(), "、".join(names)]
 	else:
 		ctx["battle_data"] = "%s（%d 档）" % [Names.of(def), int(content.get("strength", 0))]
+
+
+## 175：罗马数字（Ⅰ 到 Ⅻ，和 167 的倍速同一套字形）—— 法杖轮读到第几颗；超出的写阿拉伯数字
+const ROMAN := ["Ⅰ", "Ⅱ", "Ⅲ", "Ⅳ", "Ⅴ", "Ⅵ", "Ⅶ", "Ⅷ", "Ⅸ", "Ⅹ", "Ⅺ", "Ⅻ"]
+
+
+static func roman(n: int) -> String:
+	if n >= 1 and n <= ROMAN.size():
+		return ROMAN[n - 1]
+	return str(n)

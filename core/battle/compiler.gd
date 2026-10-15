@@ -142,6 +142,9 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 			linked.append(other)
 		linked.sort()  # 顺序稳定，编译结果才可复现
 		item.linked_uids = linked
+		item.loaded = cycle_order(board, uid, spec.loads)
+		if not item.loaded.is_empty():
+			set.ensure(BattleStats.LOAD_STEPS).base = item.loaded.size() * StatMath.ONE     # 175：一轮几下，[CycleCadence] 读它
 		spec.add(item)
 
 	# --- 7. 按件（105 3.2）---
@@ -293,14 +296,100 @@ static func _apply_adjacency(
 		var fp: AdjacencyProfile = feeder.def.adjacency
 		_link(links, uid, other)
 		fed[other] = true
+		var cycler := is_cycler(board.get_item(uid).def)
 		for mod in fp.feed_mods:
+			if cycler and (mod as StatModifier).stat == BattleStats.DAMAGE:
+				continue     # 175：轮读的法杖，晶石的伤害只在轮到它那一下加（[member CompiledItem.loaded]）
 			(mod as StatModifier).apply_to(stats[uid], 1)
 		for r in fp.feed_rules:
 			if r != null:
+				if cycler and convert_to(r) != &"":
+					continue     # 175：换型也一样，轮到它那一下才换
 				if not attach_pending.has(uid):
 					attach_pending[uid] = []
 				attach_pending[uid].append([r, feeder.def.id])
 	return loads
+
+
+## 175：规则里有 [FireLoaded] 的宿主 —— 晶石的伤害与换型按轮次用，不常驻
+static func is_cycler(def: ItemDef) -> bool:
+	if def == null or def.combat == null:
+		return false
+	for r in def.combat.rules:
+		for e in (r as AbilityRule).effects:
+			if e is FireLoaded:
+				return true
+	return false
+
+
+## 175：一条供给规则若是「受伤前把我的伤害换成某型」，返回那个类型；不是 = 空
+static func convert_to(rule: AbilityRule) -> StringName:
+	if rule == null:
+		return &""
+	for e in rule.effects:
+		if e is ConvertDamageType:
+			return (e as ConvertDamageType).to
+	return &""
+
+
+## 175（作者定，待定 6 推荐 A）：法杖 [param holder_uid] 的轮读表 —— 归属给它的晶石按**顺时针**排：
+## 以法杖占格的中心为原点，晶石压在装载格上那几格的中心为方位，从 12 点起顺时针；同角按 `placed_seq`、再按 uid。
+## 每颗 `{uid, id, type, damage}`（见 [member CompiledItem.loaded]）。宿主不轮读 / 没有晶石 = 空
+static func cycle_order(board: GridInventory, holder_uid: int, loads: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var holder := board.get_item(holder_uid) if board != null else null
+	if holder == null or not is_cycler(holder.def) or holder.def.adjacency == null:
+		return out
+	var center := _centroid(_abs_cells(holder))
+	var slots := {}
+	for c in holder.absolute_cells(holder.def.adjacency.load_cells):
+		slots[c] = true
+	var keyed: Array = []
+	for other in loads:
+		if int(loads[other]) != holder_uid:
+			continue
+		var feeder := board.get_item(other)
+		var on: Array[Vector2i] = []
+		for c in _abs_cells(feeder):
+			if slots.has(c):
+				on.append(c)
+		var d := _centroid(on) - center
+		var ang := fposmod(atan2(d.x, -d.y), TAU)
+		keyed.append([roundi(ang * 1000000.0), feeder.placed_seq, int(other)])
+	keyed.sort()
+	for k in keyed:
+		out.append(_loaded_entry(board.get_item(int(k[2]))))
+	return out
+
+
+static func _loaded_entry(feeder: ItemInstance) -> Dictionary:
+	var fp: AdjacencyProfile = feeder.def.adjacency
+	var dmg := StatSet.new()
+	for mod in fp.feed_mods:
+		if (mod as StatModifier).stat == BattleStats.DAMAGE:
+			(mod as StatModifier).apply_to(dmg, 1)
+	var type := &""
+	for r in fp.feed_rules:
+		var to := convert_to(r as AbilityRule)
+		if to != &"":
+			type = to
+	return {"uid": feeder.uid, "id": feeder.def.id, "type": type if type != &"" else DamageTypes.PHYSICAL, "damage": dmg.total_of(BattleStats.DAMAGE)}
+
+
+static func _abs_cells(inst: ItemInstance) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for c in inst.cells():
+		out.append(inst.origin + c)
+	return out
+
+
+static func _centroid(cells: Array[Vector2i]) -> Vector2:
+	if cells.is_empty():
+		return Vector2.ZERO
+	var sum := Vector2.ZERO
+	for c in cells:
+		sum += Vector2(c) + Vector2(0.5, 0.5)
+	return sum / cells.size()
 
 
 ## 171（作者定）：装载归属 —— 晶石 uid → 法杖 uid。每颗（有供给、没碎、命中法杖的 load_filter，法杖命中它的 feed_filter）
