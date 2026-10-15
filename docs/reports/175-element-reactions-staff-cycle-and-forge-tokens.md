@@ -163,3 +163,74 @@
 - **命名**：`Names.of_item` = 耐久前缀 + 附魔前缀 + 定义名（悬浮窗、名牌、日志、结算都走它）。`mithril_sword` 身上没有附魔规则（只有 `enchanted` 标签），没东西可迁，金样不动；日神附魔不迁（待定 4 A）；掉落不随机附魔（待定 5 A）。
 - **存档**：173 对账加一条 —— 附魔引用的表行查不到了 → 摘掉附魔、修复报告写「N 件的附魔已失效、被摘掉」。
 - 测试：`tests/run/test_forge_175.gd`（三张表与 default 行、铸出的字典与拼出的规则、元素按晶石、铸牌不进 ids / 图鉴、价值、附魔与覆盖、只认武器、编译只挂一条、战斗里真的施加流血、预置附魔与命名、对账摘除、节点只用一次、铸炉屏放槽 / 预览 / 铸 / 返回）；封存道具的计数加上铸牌；地图编辑器要求的节点图标补了占位。截图：`/mnt/project-files/screenshots/175/batch3-forge.png`。
+
+## 补充一（2026-10-15 09:46，作者）· 菌血改叠层；反应按层数结算
+
+> 作者原话：「『恢复量减半，减掉的一半变成中毒伤害』这不正好等于没有回血吗，好像没什么意义？改成叠加等量的中毒层数（中毒默认 1 层 1 点伤害，N 秒跳一次，不衰减）。元素反应的详细机制，参考以下我写的伪代码」—— 伪代码见文末附录二。第一批已落地（v3.03），这一节是对落地结果的修正，派执行。
+
+### 补 1.1 菌血
+
+- 待定 1 的 A 作废。菌血期间，**对方每次恢复生命时，按恢复量叠加等量的中毒层**（回了 7 点就加 7 层），恢复本身照常发生。燃血仍是「治疗无效」，两者分得开。
+- 实现：`BuffDef.heal_cut / heal_cut_to` 里菌血那一路改成新字段 `heal_echo: {buff: "poison", per_point: 1}` —— `CombatantRuntime.heal` 结算完后按实际恢复量 × per_point 施加该状态。燃血继续用 `heal_cut`。
+- **中毒的默认数值随之改**（作者定）：1 层 1 点，每 N 秒跳一次，不衰减（可叠层永续，085 的规矩本来就是不衰减）。现在是每层 2 点、每秒跳；改成每层 1 点，跳的间隔 N 见待定 补 1。剧毒按同比例看一遍（现在每层 5）。流血（每层 1、每秒）不动。
+
+### 补 1.2 反应的结算算法（作者伪代码的落法）
+
+伪代码的意思，逐条对到实现：
+
+1. **印都有层数**。中毒 / 流血 / 剧毒的层就是层；灼 / 寒 / 麻从「不可叠、4 秒刷新」改成**可叠层**（`stackable`，按 085 永续不衰减，待定 补 2 给个上限）。来源给几层：施加状态给几层就是几层；带元素的一下伤害默认盖 1 层（`DamageTypeDef.mark_stacks`，道具可改）。
+2. **给目标加新印时**：在目标身上找**元素不同、层数 > 0** 的印里**层数最多的那个**（并列按火、冰、雷、毒、血的顺序）；一个都没有 → 新印照常叠上去，没有反应。
+3. **有的话反应**：`N = max(已有印的层数, 新来的层数)`；已有印扣 N 层（扣到 0 为止 —— 伪代码里 `-=` 会扣成负，落地夹到 0）；**新来的印不叠上去**（整份进了反应）；反应效果以 N 为量。
+4. 反应效果里的量：`ReactionContext.stacks = N`，`deal_damage.per_stack` 乘它（爆燃 = N × 每层火伤），`apply_status` 的层数默认 = N（见下）。
+5. 反应不连锁（落地规矩不变）：反应效果施加的状态不再触发第 2 步。
+
+**和落地结果的差别**：落地是「两印全吃、几种印同在按固定顺序取第一个、量按各反应自定」，再给凝毒（`consume: none`）和电解（留中毒）开了例外。按伪代码，`N = max` 且已有印扣 N，意味着**已有印总是被扣光**（N ≥ 它的层数），和「全吃」一致；真正的改动是 ① 取层数最多的而不是固定顺序第一个，② 量 = N，③ 没有例外 —— 凝毒和电解不能再「留着中毒」。所以这两对改成**产物式**：吃掉 N 层中毒，产出 N 层新状态：
+
+| 反应 | 产物 |
+|---|---|
+| 凝毒（冰 + 毒） | N 层【凝毒】：和中毒一样每跳伤害、**不可清除**、不衰减；寒印没了也不解锁（它自己就是锁住的毒），只能等它跳完或被别的反应吃掉 |
+| 电解（雷 + 毒） | N 层【剧毒】（现有） |
+| 菌血（毒 + 血） | N 层【菌血】状态（时长见落地数值），期间 `heal_echo` |
+| 爆燃（火 + 毒） | N × 每层火伤 + 灼烧 |
+| 其余六对 | 固定效果，N 只决定持续时间档或层数（燃血 / 超导 / 冻疮的层数 = N，有上限） |
+
+这样 `consume` 字段删掉，反应定义里只剩 `effects`，`BuffDef.locks / locks_while` 不再需要（凝毒自带不可清除：`BuffDef.uncleansable`）。
+
+### 补 1.3 测试
+
+中毒改数后金样重录；印可叠；取层数最多的异色印（三色同在、并列顺序）；N = max 的三种情形（已有多 / 新来多 / 相等），已有印扣到 0、新来的不叠；菌血：回 7 点加 7 层中毒、回血照常；凝毒产物不可清除、解毒剂与 `remove_status` 无效、寒印到期不影响；电解产物 = N 层剧毒；反应不连锁。
+
+### 待定 补（默认按推荐）
+
+| # | 问题 | 选项 | 推荐 |
+|---|---|---|---|
+| 补 1 | 中毒跳一次的间隔 N | A 保持每秒；B 两秒 | **A**：改间隔会连带流血 / 剧毒的手感，先只把每层伤害从 2 改 1 |
+| 补 2 | 灼 / 寒 / 麻的层数上限 | A 无上限（永续叠）；B 上限 10 | **B**：没上限的话一把快刀能攒出几十层印，一次反应炸穿 |
+| 补 3 | 带元素的一下伤害盖几层 | A 一律 1 层；B 按伤害分档 | **A**：可读；要多层让道具自己写 `mark_stacks` |
+| 补 4 | 凝毒、电解改产物式（没有 consume 例外） | A 改；B 保留落地的两条例外 | **A**：和伪代码一致，一套算法没有特判 |
+
+## 附录二：作者伪代码（2026-10-15 09:46，原样）
+
+```
+void addNewStackForElement(Element newElement, int stackNum){
+	StackedElement recordElement = null;
+	for(e in self.elements){
+		if(e.elementType!=newElement && e.stacks > 0){
+			if(!recordElement){
+				recordElement = e;
+			}else{
+				recordElement = (e.stacks > recordElement.stacks) ? e : recordElement;
+			}
+		}
+	}
+	if(!recordElement) return;
+	StackedElement newElementInStack = new StackedElement(newElment, stackNum);
+	reaction(recordElement, newElemtnInStack);
+}
+
+void reaction(StackedElement recordElement, StackedElement newElementInStack){
+	int maxStackReacted = max(recordElement.stackNum, newElementInStack.stackNum);
+	recordElement.stackNum-=maxStackReacted;
+	reactMap[recordElement.elementType][newElementInStack.elementType](maxStackReacted);
+}
+```
