@@ -45,3 +45,7 @@ extends Resource
 ## 作者写下类型名，就表示他知道自己在监听什么。
 @export var provokes: bool = true
 
+
+## 175：这种伤害命中后在目标身上盖哪个【印】（buff id：火 → `scorch`、冰 → `chill`、雷 → `numb`）；空 = 不盖（物理、反伤、流失；
+## 中毒 / 流血的伤害也不盖 —— 它们的印就是状态本身，由施加状态来盖，否则每跳一次都会多一层）。见 [ReactionResolver]
+@export var mark: StringName = &""

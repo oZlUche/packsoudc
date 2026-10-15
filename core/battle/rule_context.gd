@@ -10,6 +10,8 @@ var owner: CombatantRuntime
 var runtime: RuleRuntime
 ## 130：这次求值是被哪条事件触发的（自发型为 null）。[method source_stacks] 读施加了几层
 var event: BattleEvent = null
+## 175：反应结算时被吃掉的印的层数（爆燃「按中毒层数一次火伤」读它）；0 = 不是反应
+var reaction_stacks: int = 0
 
 
 static func create(p_battle: BattleContext, p_owner: CombatantRuntime, p_rt: RuleRuntime) -> RuleContext:
@@ -61,8 +63,10 @@ func source_buff() -> BuffInstance:
 	return runtime.buff
 
 
-## 规则来自 buff 时是该 buff 的层数；130：被「某状态被施加时」触发的是这次施加了几层；其余为 1
+## 规则来自 buff 时是该 buff 的层数；130：被「某状态被施加时」触发的是这次施加了几层；175：反应里是吃掉的印的层数；其余为 1
 func source_stacks() -> int:
+	if reaction_stacks > 0:
+		return reaction_stacks
 	if runtime.buff != null:
 		return runtime.buff.stacks
 	if event != null and event.name == BattleEvent.STATUS_APPLIED:

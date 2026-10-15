@@ -9,7 +9,7 @@
 ## 2. 护甲吸收      能吸收则先扣护甲，中毒之类绕过
 ## 3. 受伤前效果    【同步派发】效果在这里改写伤害包：减伤、反转、免疫
 ## 4. 计算受伤量    百分比 → 固定增减 → 反转 → 格挡（只对直接伤害，106）→ 「受到伤害」轴（103），然后落到血量
-## 5. 受伤后效果    发 damage 事件；流失类不通知默认监听
+## 5. 受伤后效果    发 damage 事件；流失类不通知默认监听；175：按类型盖元素印、引发反应
 ## [endcodeblock]
 ##
 ## 第 3 步是整条管线存在的理由。护甲那种无条件减伤写成一个属性就够了，
@@ -96,15 +96,16 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 		if victim.undying_active() and -packet.applied < amount:
 			packet.applied = -amount
 	elif amount < 0:
-		packet.applied = victim.resources.change(
-			BattleStats.RES_HP, -amount, BattleEvent.REASON_HEAL
-		)
+		packet.applied = victim.heal(ctx, -amount)     # 175：反转成的治疗也走治疗入口
 
 	# --- 5. 受伤后 ---
 	if ctx.trace != null:
 		_trace(ctx, packet, raw_in, hp_before, taken_factor)
 	_notify(ctx, packet, td)
 	victim.settle_death(ctx)
+	# 175：命中后按类型盖印 / 引发反应（反应结算中不盖，[ReactionResolver]）
+	if td.mark != &"" and amount >= 0 and (packet.final > 0 or packet.absorbed > 0):
+		ReactionResolver.after_hit(ctx, packet, td)
 	return -packet.applied
 
 

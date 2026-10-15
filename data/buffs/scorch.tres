@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_sjytc"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_rqac2"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_q7cty"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_4n88n"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_gmvuk"]
+
+[resource]
+script = ExtResource("5_gmvuk")
+id = &"scorch"
+display_name = "灼"
+display_names = {
+"en": "Scorch"
+}
+is_debuff = true
+stackable = false
+duration_sec = 4.0
+element = &"fire"

@@ -50,6 +50,7 @@ display_names = {
 }
 is_debuff = true
 rules = Array[ExtResource("2_bu2h2")]([SubResource("Resource_dshra")])
+element = &"poison"
 
 [sub_resource type="Resource" id="Resource_vvtbv"]
 script = ExtResource("10_eifmv")

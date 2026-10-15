@@ -33,6 +33,13 @@ var decay_index: int = 0
 ## 所以结果必须完全一致。
 var mask_enabled: bool = true
 
+## 175：派发序号 —— 每发一条事件（含同步派发的受伤前）加一，不看有没有人听，所以掩码开关两条路径一样。
+## 战斗中出生的规则记下出生时的值（[member RuleRuntime.born]），只听之后的事件
+var event_seq: int = 0
+
+## 175：正在结算的反应层数（[ReactionResolver]）。> 0 时伤害不盖印、施加状态不再引发反应 —— 反应不连锁
+var reacting: int = 0
+
 ## 事件名 → 订阅它的规则列表。
 ##
 ## 既是派发索引，也顺带回答「有没有人听」—— 原先的 `_listened` 掩码是它的退化版本，
@@ -133,6 +140,8 @@ func schedule_rule(owner: CombatantRuntime, rt: RuleRuntime) -> void:
 #region 事件
 ## 广播一条事件。没人听且回放也用不上时，连对象都不构造。
 func emit(name: StringName, side: int, payload: Dictionary = {}) -> void:
+	var seq := event_seq
+	event_seq += 1
 	if trace != null:     # 117：每一条都记，不看回放要不要、有没有人听
 		trace.record(now, side, BattleTrace.EVENT, {"name": String(name), "payload": payload.duplicate(true)})
 	var for_view := BattleEvent.is_view_event(name)
@@ -140,6 +149,7 @@ func emit(name: StringName, side: int, payload: Dictionary = {}) -> void:
 	if not for_view and not for_rules:
 		return
 	var e := BattleEvent.make(name, now, side, payload)
+	e.seq = seq
 	if for_view:
 		log.append(e)
 	if for_rules:
@@ -183,6 +193,8 @@ func current_damage() -> DamagePacket:
 func dispatch_before_damage(packet: DamagePacket) -> void:
 	if packet == null:
 		return
+	var seq := event_seq
+	event_seq += 1
 	if trace != null:     # 117：同步派发的这一条不进回放日志，内部日志照记（有没有人听都记）
 		trace.record(now, packet.victim_side(), BattleTrace.EVENT, {"name": String(BattleEvent.BEFORE_DAMAGE), "payload": {
 			"type": String(packet.type), "amount": packet.pending(), "source_side": packet.source_side, "uid": packet.source_uid,
@@ -198,7 +210,7 @@ func dispatch_before_damage(packet: DamagePacket) -> void:
 			% MAX_DAMAGE_DEPTH)
 		return
 	_damage_stack.append(packet)
-	RuleEngine.dispatch(self, BattleEvent.make(
+	var e := BattleEvent.make(
 		BattleEvent.BEFORE_DAMAGE, now, packet.victim_side(), {
 			"type": String(packet.type),
 			"amount": packet.pending(),
@@ -206,7 +218,9 @@ func dispatch_before_damage(packet: DamagePacket) -> void:
 			"source_side": packet.source_side,
 			"uid": packet.source_uid,
 		}
-	))
+	)
+	e.seq = seq
+	RuleEngine.dispatch(self, e)
 	_damage_stack.pop_back()
 #endregion
 

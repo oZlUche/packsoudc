@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="BuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_bw4vb"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_fipyg"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_48sgf"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_t6d4v"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="5_12uaj"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_8dwg5"]
+[ext_resource type="Script" path="res://core/battle/effects/modify_damage.gd" id="7_8wyvl"]
+[ext_resource type="Script" path="res://core/battle/effects/remove_status.gd" id="8_4mogs"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_before_damage.gd" id="9_bu8f7"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="10_vuwq7"]
+
+[sub_resource type="Resource" id="Resource_b05u3"]
+script = ExtResource("5_12uaj")
+
+[sub_resource type="Resource" id="Resource_vvnif"]
+script = ExtResource("7_8wyvl")
+percent = 100
+
+[sub_resource type="Resource" id="Resource_afvjb"]
+script = ExtResource("8_4mogs")
+buff_id = &"overload"
+stacks = 0
+
+[sub_resource type="Resource" id="Resource_fi8u6"]
+script = ExtResource("9_bu8f7")
+direction = 1
+
+[sub_resource type="Resource" id="Resource_tsbtx"]
+script = ExtResource("4_t6d4v")
+trigger = SubResource("Resource_fi8u6")
+cadence = SubResource("Resource_b05u3")
+effects = Array[ExtResource("3_48sgf")]([SubResource("Resource_vvnif"), SubResource("Resource_afvjb")])
+
+[resource]
+script = ExtResource("10_vuwq7")
+id = &"overload"
+display_name = "过载"
+display_names = {
+"en": "Overload"
+}
+stackable = false
+duration_sec = 8.0
+rules = Array[ExtResource("4_t6d4v")]([SubResource("Resource_tsbtx")])

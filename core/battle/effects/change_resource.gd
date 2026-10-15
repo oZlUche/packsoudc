@@ -49,10 +49,14 @@ func apply(ctx: RuleContext) -> void:
 			# 格挡不该把自己割的那一刀挡掉。这正是作者说的「另行说明」那一类
 			DamageResolver.deal(ctx.battle, who, -value, loss_type, ctx.owner.side, ctx.source_uid(), false)
 			continue
-		var actual := who.resources.change(
-			resource_key, value,
-			BattleEvent.REASON_HEAL if value > 0 else BattleEvent.REASON_COST
-		)
+		var actual := 0
+		if value > 0 and resource_key == BattleStats.RES_HP:
+			actual = who.heal(ctx.battle, value)     # 175：治疗走统一入口（燃血 / 菌血在那里截）
+		else:
+			actual = who.resources.change(
+				resource_key, value,
+				BattleEvent.REASON_HEAL if value > 0 else BattleEvent.REASON_COST
+			)
 		if actual != 0:
 			ctx.battle.emit(BattleEvent.EFFECT_RESOLVED, ctx.owner.side, {
 				"effect": "change_resource", "uid": ctx.source_uid(),

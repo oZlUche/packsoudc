@@ -188,6 +188,22 @@ static func describe_buff(def: BuffDef) -> String:
 		lines.append("上身时：" + effects_text(def.on_apply))
 	if not def.on_expire.is_empty():
 		lines.append("到期时：" + effects_text(def.on_expire))
+	# 175：元素印、截治疗、锁
+	if def.element != &"":
+		lines.append("%s元素的印：带着它再挨上别的元素，引发反应" % ReactionResolver.element_name(def.element))
+	if def.heal_cut > 0:
+		var cut := "治疗无效" if def.heal_cut >= 100 else "每次恢复生命少 %d%%" % def.heal_cut
+		if def.heal_cut_to != &"":
+			cut += "，少掉的变成%s伤害" % damage_type_name(def.heal_cut_to)
+		lines.append(cut)
+	if not def.locks.is_empty():
+		var names: Array[String] = []
+		for id in def.locks:
+			names.append(status_name(id))
+		var line := "%s不能被清除" % "、".join(names)
+		if def.locks_while != &"":
+			line += "（直到%s消失）" % status_name(def.locks_while)
+		lines.append(line)
 	return "\n".join(lines)
 
 

@@ -34,6 +34,8 @@ static func give(ctx: RuleContext, who: CombatantRuntime, def: BuffDef, n: int) 
 	})
 	for e in def.on_apply:
 		(e as CombatEffect).apply(ctx)
+	if def.element != &"":
+		ReactionResolver.after_status(ctx.battle, who, def)     # 175：中毒 / 流血本身就是印，施加上去就可能引发反应
 	return added
 
 

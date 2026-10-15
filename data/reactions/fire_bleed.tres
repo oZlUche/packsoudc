@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="ReactionDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_x555d"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="2_up1se"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_hbw6f"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_krjo3"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_r4eq7"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="6_04s1m"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_2nxkh"]
+[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="8_4pyde"]
+
+[sub_resource type="Resource" id="Resource_bwa5h"]
+script = ExtResource("5_r4eq7")
+id = &"scorched_blood"
+display_name = "燃血"
+display_names = {
+"en": "Seared Blood"
+}
+is_debuff = true
+stackable = false
+duration_sec = 5.0
+heal_cut = 100
+
+[sub_resource type="Resource" id="Resource_vi37a"]
+script = ExtResource("6_04s1m")
+buff = SubResource("Resource_bwa5h")
+
+[sub_resource type="Resource" id="Resource_b8obt"]
+script = ExtResource("7_2nxkh")
+damage_type = &"fire"
+amount = 6.0
+damage_stat = &""
+
+[resource]
+script = ExtResource("8_4pyde")
+id = &"fire_bleed"
+display_name = "燃血"
+display_names = {
+"en": "Seared Blood"
+}
+description = "对手一段时间内治疗无效，并受到一下火焰伤害。"
+elements = Array[StringName]([&"fire", &"bleed"])
+effects = Array[ExtResource("1_x555d")]([SubResource("Resource_vi37a"), SubResource("Resource_b8obt")])

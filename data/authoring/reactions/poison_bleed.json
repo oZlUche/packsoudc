@@ -1,0 +1,18 @@
+{
+  "id": "poison_bleed",
+  "display_name": "菌血",
+  "display_names": {
+    "en": "Fungal Blood"
+  },
+  "description": "对手一段时间内每次恢复生命，恢复量减半，减掉的一半变成中毒伤害。",
+  "elements": [
+    "poison",
+    "bleed"
+  ],
+  "effects": [
+    {
+      "type": "apply_status",
+      "buff": "fungal_blood"
+    }
+  ]
+}

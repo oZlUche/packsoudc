@@ -1,0 +1,20 @@
+{
+  "id": "lightning_poison",
+  "display_name": "电解",
+  "display_names": {
+    "en": "Electrolysis"
+  },
+  "description": "对手的中毒升阶为剧毒。",
+  "elements": [
+    "lightning",
+    "poison"
+  ],
+  "consume": "lightning",
+  "effects": [
+    {
+      "type": "convert_status",
+      "from": "poison",
+      "to": "virulent"
+    }
+  ]
+}

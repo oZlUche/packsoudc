@@ -4,8 +4,9 @@
   "display_names": {
     "en": "Lightning"
   },
-  "description": "闪电伤害。目前与物理同性质，元素线。",
+  "description": "闪电伤害。命中时在对手身上盖【麻】印。",
   "descriptions": {
     "en": "Lightning damage. Behaves like physical for now; part of the elemental line."
-  }
+  },
+  "mark": "numb"
 }

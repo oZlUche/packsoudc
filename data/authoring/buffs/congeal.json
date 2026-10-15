@@ -1,0 +1,14 @@
+{
+  "id": "congeal",
+  "display_name": "凝毒",
+  "display_names": {
+    "en": "Congealed Toxin"
+  },
+  "is_debuff": true,
+  "stackable": false,
+  "locks": [
+    "poison",
+    "virulent"
+  ],
+  "locks_while": "chill"
+}

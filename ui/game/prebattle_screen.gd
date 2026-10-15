@@ -45,6 +45,7 @@ func open(payload: Dictionary) -> void:
 	_enemy_view.label_font = font
 	_enemy_view.show_adjacency = true
 	_enemy_view.inventory = flow.run.events.pending_battle_board() if not flow.run.events.pending_battle.is_empty() else EnemyKit.board_of(_content, flow.items)
+	_enemy_view.elements = InventoryView.elements_of_board(_enemy_view.inventory)     # 175：敌人武器上标元素
 	_enemy_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_enemy_view.mouse_filter = Control.MOUSE_FILTER_STOP     # 只看（没登记进拖拽层，点了没事），停上去有说明
 	left.add_child(_enemy_view)

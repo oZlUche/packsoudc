@@ -73,6 +73,11 @@ var time: int = 0
 ## 事件归属的一方（0 / 1），-1 表示全局
 var side: int = -1
 var payload: Dictionary = {}
+## 175：派发序号（[member BattleContext.event_seq] 发出时的值）。规则只听**它出生之后**发出的事件
+## （[member RuleRuntime.born]）：「下一次出手暴击」这种 buff 是被这一下打出来的，不该把这一下自己排在队里的出手事件当成「下一次」。
+## 不进存档；手搓的事件（测试）默认最大 —— 谁都听得见
+var seq: int = NO_SEQ
+const NO_SEQ := 9223372036854775807
 
 
 static func make(p_name: StringName, p_time: int, p_side: int, p_payload: Dictionary = {}) -> BattleEvent:

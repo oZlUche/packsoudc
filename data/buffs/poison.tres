@@ -40,3 +40,4 @@ display_names = {
 }
 is_debuff = true
 rules = Array[ExtResource("4_56y6x")]([SubResource("Resource_cv4xq")])
+element = &"poison"

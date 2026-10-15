@@ -476,6 +476,8 @@ func _apply(e: BattleEvent) -> void:
 		BattleEvent.EFFECT_RESOLVED:
 			if e.get_int(&"uid") > 0:
 				_flash(e)     # 157：规则触发也算那一件出手
+			if String(e.payload.get("effect", "")) == ReactionResolver.EFFECT:
+				_on_reaction(e)
 		BattleEvent.DIED:
 			if e.side >= 0 and e.side < _panels.size():
 				_panels[e.side].mark_dead()
@@ -503,6 +505,25 @@ func _on_damage(e: BattleEvent) -> void:
 	)
 
 
+## 175：反应弹字（挨打的那一方面板上），跳转时不弹
+func _on_reaction(e: BattleEvent) -> void:
+	if _suppress_popups or e.side < 0 or e.side >= _panels.size():
+		return
+	_panels[e.side].popup_text(reaction_label(e), reaction_color(e), _feedback_scale())
+
+
+## 175：反应名（当前语言；反应表里查不到就写 id）
+static func reaction_label(e: BattleEvent) -> String:
+	var def := ReactionResolver.by_id(e.get_name(&"reaction"))
+	return Names.of(def) if def != null else String(e.get_name(&"reaction"))
+
+
+## 175：弹字颜色 = 第一种元素的伤害色
+static func reaction_color(e: BattleEvent) -> Color:
+	var els: Array = e.payload.get("elements", [])
+	return UiPalette.damage_color(StringName(String(els[0]))) if not els.is_empty() else UiPalette.CRIT
+
+
 ## 事件条。回放时最有用的其实不是血条，而是「刚才到底发生了什么」——
 ## 内容配错时这一栏比血条先告诉你。
 func _log_event(e: BattleEvent) -> void:
@@ -528,6 +549,9 @@ func _log_event(e: BattleEvent) -> void:
 				_side_name(e.side), e.get_name(&"buff"), e.get_int(&"stacks")])
 		BattleEvent.DIED:
 			_log_line(e.time, "[color=#d9534f]%s 倒下[/color]" % _side_name(e.side))
+		BattleEvent.EFFECT_RESOLVED:
+			if String(e.payload.get("effect", "")) == ReactionResolver.EFFECT:
+				_log_line(e.time, "[color=#%s]%s 身上引发【%s】[/color]" % [reaction_color(e).to_html(false), _side_name(e.side), reaction_label(e)])
 		BattleEvent.OVERTIME_STACKED:
 			if e.get_int(&"count") == 1:
 				_log_line(e.time, "[color=#e0b45c]鏖战开始：双方受到的最终伤害 +%d%%，隔一段再叠一次[/color]" % e.get_int(&"percent"))

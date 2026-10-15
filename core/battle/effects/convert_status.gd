@@ -22,8 +22,8 @@ func apply(ctx: RuleContext) -> void:
 			continue
 		var have := inst.stacks
 		var n := maxi(1, roundi(float(have) * ratio))
-		if not keep_from:
-			RemoveStatus.take(ctx, who, from, have, "converted")
+		if not keep_from and RemoveStatus.take(ctx, who, from, have, "converted") <= 0:
+			continue     # 175：扣不掉（被锁住，凝毒）就不转 —— 否则凭空多出一份
 		ApplyStatus.give(ctx, who, to, n)
 
 

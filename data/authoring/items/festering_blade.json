@@ -39,13 +39,6 @@
           "@deal_damage",
           "@apply_status_bleed"
         ]
-      },
-      {
-        "trigger": "@on_status_applied_bleed",
-        "cadence": "@always",
-        "effects": [
-          "@apply_status_poison"
-        ]
       }
     ]
   }

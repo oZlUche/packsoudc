@@ -1,0 +1,11 @@
+{
+  "id": "chill",
+  "display_name": "寒",
+  "display_names": {
+    "en": "Chill"
+  },
+  "is_debuff": true,
+  "stackable": false,
+  "duration_sec": 4.0,
+  "element": "ice"
+}
