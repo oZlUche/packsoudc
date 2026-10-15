@@ -77,6 +77,9 @@ const STYLE_COLORS := {
 	"stamina": STAMINA, "mana": MANA, "heal": HEAL,
 	"grant": GRANT, "receive": RECEIVE,
 	"warn": STAMINA, "danger": HP, "good": HEAL, "faith": FAITH,
+	# 175 补 5.4：美术设计在 D2 深皮革底上定的色值 —— 伤害类型字（更沉）/ 元素状态关键词（亮）
+	"fire": Color("f25a46"), "frost": Color("5aa6e8"), "thunder": Color("d9b43a"), "toxin": Color("66b44a"), "true": Color("d8606f"),
+	"scorch": Color("ff8a4c"), "chill": Color("8fdcff"), "shock": Color("ffe45c"), "poison": Color("8fe060"), "bleed": Color("ff4f72"),
 }
 
 

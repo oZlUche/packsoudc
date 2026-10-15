@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.09 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.10 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1375,6 +1375,11 @@ var final: int              ## 最终结算量，正为扣血、负为回血
 - **铸炉效果表**的元素行（`by_element.<元素>.applies`）：另加一个施加效果，一阶 1 层、每高一阶多 1 层（最多 5，`Forge.MAX_ELEMENT_STACKS`）。
 - **日神附火**（`EnchantWeaponsPerk`）：附火规则里火伤之后再施加一层灼伤（`applies_buff` / `applies_stacks`）。
 
+**悬浮窗的写法与颜色**（补 5.4，作者定）：一句两段「造成 X 点火焰伤害，并施加 N 层灼伤」（`Glossary.effects_text` 在伤害后紧跟施加时用「，并」）；
+「火焰伤害」整段染伤害类型色、不是关键词，「灼伤」染元素状态色、是关键词（下划线、弹词条）。十个样式名在 `TextTemplate.STYLE_NAMES`
+（`fire frost thunder toxin true` / `scorch chill shock poison bleed`），对应关系在 `Glossary.DAMAGE_STYLES` / `ELEMENT_STYLES`，色值在字色模板；
+`Glossary.mark_rich` 先挡住「X伤害」再标关键词（流血伤害与流血状态同名）。伤害类型「中毒」改名「毒素」，和状态「中毒」分开。
+
 **真实伤害只有流血**（补充五）：`DamageTypeDef.pure` 只许流血打开（导入器报错别的类型写它）；`DamageTypeDef.family`（空 = 自己的 id）给出大类，流血 `family: physical` ——
 「真实 · 物理」（`DamageTypes.nature`），将来按大类读的加成 / 减免把流血算进物理。
 
@@ -1437,7 +1442,7 @@ while 双方存活 and now < 安全上限:
 - `FireLoaded`（继承 `DealDamage`）：按 `CycleCadence` 记下的第几颗取那颗，这一包的类型 = 它换成的类型、原值 = 法杖属性的伤害 + 它的伤害（再掷暴击），火焰吃火焰加成轴；打中了（`DealDamage.deal` 返回没被取消）再给对手施加那颗的 `applies`（补充五）。没装晶石照 `DealDamage` 原样打，只打伤害、不施加。
 - 晶石供给次数仍按场扣（148），战斗中不会碎，所以一场内轮读序列不变。
 - 回放：出手 / 跳过事件对轮读法杖多带 `step / steps / next`，`CooldownOverlay` 在法杖第一格左上角标下一颗的罗马数字（Ⅰ Ⅱ …，和倍速同一套字形）；冷却扇形走当前这一段（单次或总）。
-- 悬浮窗：「没放晶石：物理 Y，每 Z 秒」/「装载一颗：火焰 Y，每 Z 秒」/「装载 N 颗，顺时针：冰霜 Y → 火焰 Y；颗间 X 秒，一轮后歇 Z 秒」，施加另成一句「。打中后：施加 1 层【寒冷】 → 施加 1 层【灼伤】」（补充五：伤害与施加分两句，不合写成「火焰攻击」；武器句同理「每下施加 N 层【X】」、道具简写「打中后：施加 N 层【X】」），下面每颗一行「Ⅰ 晶石名　剩 N 次」。估算：一秒 n / ((n−1) × 单次 + 总) 下，每下加轮读表的平均伤害。
+- 悬浮窗：「没放晶石：每 Z 秒造成 Y 点物理伤害」/「装载一颗：每 Z 秒造成 Y 点火焰伤害，并施加 1 层灼伤」/「装载 N 颗，顺时针：Y 点冰霜伤害并施加 1 层寒冷 → Y 点火焰伤害并施加 1 层灼伤；颗间 X 秒，一轮后歇 Z 秒」（补 5.4：伤害与施加一句两段，不合写成「火焰攻击」；武器句同理「每 X 秒造成 Y 点火焰伤害，并施加 N 层灼伤」），下面每颗一行「Ⅰ 晶石名　剩 N 次」。估算：一秒 n / ((n−1) × 单次 + 总) 下，每下加轮读表的平均伤害。
 
 #### 冷却按「快照」排定（125 改口，与 `CooldownCadence` 一致）
 
@@ -4272,6 +4277,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.10 | 2026-10-15 | **悬浮窗：伤害与施加一句两段、各自配色**（报告 175 补 5.4，作者定；改 4.6）：「造成 X 点火焰伤害，并施加 N 层灼伤」（`ApplyStatus.describe` 写层数、`effects_text` 用「，并」）；`TextTemplate.STYLE_NAMES` 加伤害类型字五色与元素状态关键词五色（美术设计定值，`text_colors.json`）、`Glossary.DAMAGE_STYLES / ELEMENT_STYLES / mark_rich`、词条带 `style`；伤害类型「中毒」改名「毒素」，`Glossary.status_name` 先取状态名 |
 | v3.09 | 2026-10-15 | **【造成伤害】与【施加元素】分开；流血 = 真实 · 物理**（报告 175 补充五，作者定，待定补 5.1–5.3 全按推荐；改 4.6）：删 `DamageTypeDef.mark` / `mark_stacks`、`ReactionResolver.after_hit`、`DamagePacket.from_status`，印只从 `apply_status` 来；`elements_of_item` 只读施加的元素状态；道具简写 `ItemDef.applies`（`ElementApply`，编译走 `_attach`，来源 `applies`）+ `DamageTrigger.landed_only`（damage 事件带 `cancelled`）；晶石加第二条供给规则（打中后施加对应元素），轮读装载表每颗带 `applies`；铸炉元素行加施加（按阶 1–3 层，最多 5）；日神附火每下施加一层灼伤；`DamageTypeDef.family`（流血 physical）、`pure` 只许流血；悬浮窗伤害与施加分两句 |
 | v3.08 | 2026-10-15 | **五种基础状态与十对反应定稿**（报告 175 补充四，作者定，待定补 4.1–4.7 全按推荐；改 4.6）：灼伤 / 寒冷 / 麻痹 / 中毒 / 流血都可叠、不封顶、永续（删 `BuffDef.stack_cap`、`uncleansable`）；灼伤每秒火伤、流血改真实伤害（`DamageTypeDef.pure`）跳后减半、寒冷拉长武器冷却后减半、麻痹加耐力消耗后减半（`decay_halve_on` + `per_stack_percent`）；状态自己跳的伤害不盖印（`DamagePacket.from_status`）；十对反应的数字全写成随 N 变（新写法 `stacks: n/2`），删 buff `overload / superconduct / surge / congeal / frostbite`；保底 `BuffInstance.guard` + 效果 `guard_status`（凝毒 / 冻疮）；按层计时 `seconds_per_stack`（燃血 / 菌血）；剧毒改按类型易伤 `damage_taken_by_type`、不再是印；`shift_axis.overflow_to`（激荡）；蝰蛇毒腺改为施加中毒时加一层剧毒 |
 | v3.07 | 2026-10-15 | **铸炉并进休息点、反应量取较小值、反应数字随 N 变**（报告 175 补充二 / 三，作者定；改 4.6、5.4）：反应 N = min(已有, 新来)，两边各扣 N，新印余量照常叠上、不再反应；`ReactionDef.scaling` + `effects_for(N)`（json 内联 `per_stack` / `stacks: n` / `seconds: n` + `max`，导入器抽、导出器写回）；撤掉节点类型 `forge`，铸炉成为休息屏一栏（`GameFlow.open_forge`，`NodeEvents.use_forge` 不再灰点），老存档铸炉点 → 休息点（`IdAliases.NODE_TYPES`、`SaveReport.retyped`）；铸牌价值固定 3（`Forge.TOKEN_VALUE`）；赐福与附魔两套平行（不动） |

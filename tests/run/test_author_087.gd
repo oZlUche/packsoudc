@@ -86,7 +86,7 @@ static func run_glossary(t: TestCase) -> void:
 			poison = String(term["text"])
 	t.check(poison.contains("减益") and poison.contains("不限层") and poison.contains("永续"), "中毒的词条按定义：减益、不限层、永续：%s" % poison)
 	var pf_text := Glossary.strip_bbcode(String(pf["text"]))
-	t.check(pf_text.contains("点伤害") and pf_text.contains("。每下施加 1 层【中毒】") and not pf_text.contains("附带【中毒】"), "175 补充五：伤害一句、施加另一句「每下施加 1 层【中毒】」（%s）" % pf_text)
+	t.check(pf_text.contains("点伤害，并施加 1 层中毒") and not pf_text.contains("附带【中毒】"), "175 补 5.4：一句两段「造成 X 点伤害，并施加 1 层中毒」（%s）" % pf_text)
 	# Glossary 本身
 	t.eq(Glossary.mod_text(StatModifier.make(&"damage", StatModifier.Mode.ADD, 10.0)), "伤害 +10", "加算")
 	var pct := StatModifier.make(&"damage", StatModifier.Mode.MULT, 10.0)
@@ -631,7 +631,7 @@ static func run_names_and_hunters_and_mana(t: TestCase) -> void:
 	t.eq(Names.of(buffs[&"poison"]), "Poison", "道具里内联的 buff 也有英文名")
 	var full := ItemTooltip.describe_full(ItemInstance.create(poisoned))
 	var plain_en := Glossary.strip_bbcode(String(full["text"]))
-	t.check(plain_en.contains("Poisoned Knife") and plain_en.contains("【Poison】"), "悬浮窗按当前语言写名字：%s" % plain_en.replace("\n", " / "))
+	t.check(plain_en.contains("Poisoned Knife") and plain_en.contains("层Poison"), "悬浮窗按当前语言写名字：%s" % plain_en.replace("\n", " / "))
 	UiText.lang = before
 	# 往返
 	var back := ContentImporter.import_item(ContentExporter.export_item(knife), ContentImporter.Context.new(), ImportReport.new())

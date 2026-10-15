@@ -46,7 +46,8 @@ static func give(ctx: RuleContext, who: CombatantRuntime, def: BuffDef, n: int) 
 func describe() -> String:
 	if buff == null:
 		return "施加 ?"
-	return "%s%s%s" % ["施加" if target != Target.SELF else "获得", Names.of(buff), ("×%d" % stacks) if stacks > 1 else ""]
+	# 175 补 5.4（作者定）：「施加 N 层灼伤」—— 层数总写出来
+	return "%s %d 层%s" % ["施加" if target != Target.SELF else "获得", maxi(1, stacks), Names.of(buff)]
 
 
 ## 151：估值 —— 层数 × 一层在那一边身上总共值多少（[method BuffDef.stack_value]，从那一边的角度）；

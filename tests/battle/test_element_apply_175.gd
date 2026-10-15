@@ -67,8 +67,17 @@ static func run_rule_shape(t: TestCase) -> void:
 		t.check(item.rules[int(item.attached[0]["rule_index"])].trigger is OnDamage, "挂上的是 on_damage 那条")
 	t.eq(ReactionResolver.elements_of_item(item), [&"fire"] as Array[StringName], "它带火（因为施加灼伤）")
 	var text := Glossary.strip_bbcode(ItemTooltip.describe(inst, g))
-	t.check(text.contains("造成") and text.contains("火焰伤害") and text.contains("打中后：施加 1 层【灼伤】"), "悬浮窗：伤害一句、施加另一句（%s）" % text)
+	t.check(text.contains("点火焰伤害，并施加 1 层灼伤") and not text.contains("打中后"), "补 5.4：一句两段「造成 X 点火焰伤害，并施加 1 层灼伤」（%s）" % text)
 	t.check(not text.contains("附加：") and not text.contains("火焰攻击"), "不写成「附加 ← …」，也不合成「火焰攻击」")
+	var body := String(ItemTooltip.describe_full(inst, g)["body"])
+	t.check(body.contains("[color=@fire]火焰伤害[/color]"), "「火焰伤害」整段用伤害类型色、不是关键词（%s）" % body)
+	t.check(body.contains("[url=term:scorch][color=@scorch][u]灼伤[/u][/color][/url]"), "「灼伤」是关键词、用状态色（%s）" % body)
+	var lone := ItemDef.new()
+	lone.id = &"probe_applies_only"
+	lone.applies = [_ea("chill", 2)] as Array[ElementApply]
+	var item2 := H._compiled(9, "y", {}, [])
+	BattleCompiler._attach(item2, ElementApply.rule_of(lone.applies), ElementApply.ORIGIN)
+	t.eq(ItemTooltip.applies_line(item2.rules[0]), "打中后施加 [b]2[/b] 层寒冷", "没有武器句：单写「打中后施加 2 层寒冷」")
 
 
 static func run_elements_of_item(t: TestCase) -> void:
@@ -175,7 +184,7 @@ static func run_staff_cycle(t: TestCase) -> void:
 	t.eq(ReactionResolver.elements_of_item(a_spec.item_of(alone["staff"].uid)), [] as Array[StringName], "木棍不带元素")
 
 	var text := Glossary.strip_bbcode(ItemTooltip.describe(b["staff"], b["board"]))
-	t.check(text.contains("冰霜") and text.contains("火焰") and text.contains("打中后：施加 1 层【寒冷】 → 施加 1 层【灼伤】"), "悬浮窗：伤害一句、每颗施加另一句（%s）" % text)
+	t.check(text.contains("点冰霜伤害并施加 1 层寒冷 → ") and text.contains("点火焰伤害并施加 1 层灼伤；"), "补 5.4：每颗一句两段（%s）" % text)
 
 
 static func run_forge_and_enchant(t: TestCase) -> void:

@@ -41,7 +41,7 @@ static func run_encyclopedia(t: TestCase) -> void:
 	seen[&"fire_poison"] = true
 	var lit := book.render("reaction:fire_poison")
 	lit = TextTemplate.strip_bbcode(lit)
-	t.check(lit.contains("效果：") and lit.contains("造成 3 点火焰伤害（× 反应层数）") and lit.contains("施加灼伤（× 反应层数的一半）"), "引发过：说明与效果，随 N 变的标出来（%s）" % lit)
+	t.check(lit.contains("效果：") and lit.contains("造成 3 点火焰伤害（× 反应层数）") and lit.contains("施加 1 层灼伤（× 反应层数的一半）"), "引发过：说明与效果，随 N 变的标出来（%s）" % lit)
 	t.check(not Names.description_of(ReactionResolver.by_id(&"fire_poison")).contains("3"), "说明里不写 M 的数（170）")
 	var toc_has := false
 	for cat in book.toc():
@@ -83,7 +83,7 @@ static func run_replay(t: TestCase) -> void:
 	t.check(Glossary.describe_buff(lib[&"chill"]).contains("武器出手时") and not Glossary.describe_buff(lib[&"chill"]).contains("至多"), "寒冷：出手时生效、不封顶")
 	t.check(Glossary.describe_buff(lib[&"numb"]).contains("付耐力时"), "麻痹：付耐力时生效")
 	t.check(Glossary.describe_buff(lib[&"bleed"]).contains("每次结算后层数减半"), "流血：结算后减半")
-	t.check(Glossary.describe_buff(lib[&"virulent"]).contains("受到的中毒伤害每层 +25%"), "剧毒：只放大毒素伤害（%s）" % Glossary.describe_buff(lib[&"virulent"]))
+	t.check(Glossary.describe_buff(lib[&"virulent"]).contains("受到的毒素伤害每层 +25%"), "剧毒：只放大毒素伤害（%s）" % Glossary.describe_buff(lib[&"virulent"]))
 	# 凝毒的保底：回放悬浮窗写「其中 N 层不可解除」
 	var view := BattleView.new()
 	var p0 := CombatantPanel.new()
