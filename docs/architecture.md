@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.10 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.11 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4277,6 +4277,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.11 | 2026-10-15 | **战斗效果栏换图标**（报告 175 补 5.5，美术定稿 44 张、作者 10-15 改三处）：`EffectIcons`（`ui/battle/effect_icons.gd`）按格子 id 的约定取 `assets/ui/effects/` 的图（`<buff id>`、`axis_<轴>_pos/neg`、`system_overtime / block`），不加 `BuffDef.icon`；`CombatantPanel` 有图画 28×28 的单色图（不画方格底和外框，元素状态与反应产物用补 5.4 的关键词色、其余按组着色），层数画在右下角；保底的中毒 / 流血整张换 `<id>_guard.png`（彩色成品，不着色）；缺图与被动条目照旧画首字 |
 | v3.10 | 2026-10-15 | **悬浮窗：伤害与施加一句两段、各自配色**（报告 175 补 5.4，作者定；改 4.6）：「造成 X 点火焰伤害，并施加 N 层灼伤」（`ApplyStatus.describe` 写层数、`effects_text` 用「，并」）；`TextTemplate.STYLE_NAMES` 加伤害类型字五色与元素状态关键词五色（美术设计定值，`text_colors.json`）、`Glossary.DAMAGE_STYLES / ELEMENT_STYLES / mark_rich`、词条带 `style`；伤害类型「中毒」改名「毒素」，`Glossary.status_name` 先取状态名 |
 | v3.09 | 2026-10-15 | **【造成伤害】与【施加元素】分开；流血 = 真实 · 物理**（报告 175 补充五，作者定，待定补 5.1–5.3 全按推荐；改 4.6）：删 `DamageTypeDef.mark` / `mark_stacks`、`ReactionResolver.after_hit`、`DamagePacket.from_status`，印只从 `apply_status` 来；`elements_of_item` 只读施加的元素状态；道具简写 `ItemDef.applies`（`ElementApply`，编译走 `_attach`，来源 `applies`）+ `DamageTrigger.landed_only`（damage 事件带 `cancelled`）；晶石加第二条供给规则（打中后施加对应元素），轮读装载表每颗带 `applies`；铸炉元素行加施加（按阶 1–3 层，最多 5）；日神附火每下施加一层灼伤；`DamageTypeDef.family`（流血 physical）、`pure` 只许流血；悬浮窗伤害与施加分两句 |
 | v3.08 | 2026-10-15 | **五种基础状态与十对反应定稿**（报告 175 补充四，作者定，待定补 4.1–4.7 全按推荐；改 4.6）：灼伤 / 寒冷 / 麻痹 / 中毒 / 流血都可叠、不封顶、永续（删 `BuffDef.stack_cap`、`uncleansable`）；灼伤每秒火伤、流血改真实伤害（`DamageTypeDef.pure`）跳后减半、寒冷拉长武器冷却后减半、麻痹加耐力消耗后减半（`decay_halve_on` + `per_stack_percent`）；状态自己跳的伤害不盖印（`DamagePacket.from_status`）；十对反应的数字全写成随 N 变（新写法 `stacks: n/2`），删 buff `overload / superconduct / surge / congeal / frostbite`；保底 `BuffInstance.guard` + 效果 `guard_status`（凝毒 / 冻疮）；按层计时 `seconds_per_stack`（燃血 / 菌血）；剧毒改按类型易伤 `damage_taken_by_type`、不再是印；`shift_axis.overflow_to`（激荡）；蝰蛇毒腺改为施加中毒时加一层剧毒 |
