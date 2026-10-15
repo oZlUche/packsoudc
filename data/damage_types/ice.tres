@@ -9,7 +9,7 @@ display_name = "冰霜"
 display_names = {
 "en": "Ice"
 }
-description = "冰霜伤害。命中时在对手身上盖【寒】印。"
+description = "冰霜伤害。命中时在对手身上盖【寒冷】印。"
 descriptions = {
 "en": "Ice damage. Behaves like physical for now; part of the elemental line."
 }

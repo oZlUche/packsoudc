@@ -26,7 +26,11 @@ static func fire_scheduled(ctx: BattleContext, owner: CombatantRuntime, rt: Rule
 		return false
 	rule.cadence.commit(rc, ctx.now)
 	_reschedule(ctx, owner, rt, rc)
-	return _settle(ctx, owner, rt, rc, null)
+	var fired := _settle(ctx, owner, rt, rc, null)
+	# 175 补充四：流血这类「每次结算后减半」的状态 —— 自己的周期规则跳完一次就减半（扣层那条不算）
+	if fired and rt.buff != null and rt.buff.def.decay_halve_on == BuffDef.HALVE_TICK and rt.rule != rt.buff.def.decay_rule():
+		owner.decay_buff(ctx, rt.buff, rt.buff.stacks / 2)
+	return fired
 
 
 ## 只遍历**订阅了该事件**的规则，而不是全部规则。

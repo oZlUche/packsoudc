@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Shatter"
   },
-  "description": "对手的护甲清零，并受到一下伤害。",
+  "description": "按反应的层数额外削减对手的护甲，没有伤害。",
   "elements": [
     "fire",
     "ice"
@@ -14,12 +14,9 @@
       "type": "change_resource",
       "target": "OPPONENT",
       "resource_key": "armor",
-      "amount": -999.0
-    },
-    {
-      "type": "deal_damage",
-      "amount": 8.0,
-      "damage_stat": ""
+      "amount": {
+        "per_stack": -5.0
+      }
     }
   ]
 }

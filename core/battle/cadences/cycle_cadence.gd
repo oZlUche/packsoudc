@@ -47,10 +47,10 @@ func commit(ctx: RuleContext, now: int) -> void:
 	var i := int(st.get(INDEX, 0)) % steps
 	st[FIRED] = i
 	if i < steps - 1:
-		st[READY_AT] = now + _step_duration(ctx)
+		st[READY_AT] = now + chilled(ctx, _step_duration(ctx))     # 175 补充四：寒冷也拉长单次冷却
 		st[INDEX] = i + 1
 	else:
-		st[READY_AT] = now + _duration(ctx)     # 一轮读完（只有一颗 / 没有时每一下都是）：总冷却
+		st[READY_AT] = now + chilled(ctx, _duration(ctx))     # 一轮读完（只有一颗 / 没有时每一下都是）：总冷却
 		st[INDEX] = 0
 
 

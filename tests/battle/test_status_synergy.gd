@@ -161,7 +161,7 @@ static func run_condition(t: TestCase) -> void:
 
 
 static func run_items(t: TestCase) -> void:
-	t.begin("130 · 十件道具：放血刀吃六层打一刀、蝰蛇毒腺转剧毒、创口盐对流血目标加伤、苦艮根只减毒伤")
+	t.begin("130 · 十件道具：放血刀吃六层打一刀、蝰蛇毒腺加剧毒、创口盐对流血目标加伤、苦艮根只减毒伤")
 	var db := _items()
 	for id in ["bloodlust_bracer", "bloodhound_sigil", "bloodletter", "serrated_arrows", "wound_salt",
 			"viper_gland", "envenomed_gauntlet", "blight_censer", "bitter_root", "festering_blade"]:
@@ -180,17 +180,17 @@ static func run_items(t: TestCase) -> void:
 	t.eq(ctx.sides[1].stacks_of(&"bleed"), 0, "六层全扣")
 	t.eq(_hp(ctx, 1), 82, "放血一刀 6 × 3 = 18 点")
 
-	# 蝰蛇毒腺：自己施加的中毒立刻变剧毒；剧毒每层每秒 2.5 点（175 补充一：中毒每层 1 点，剧毒同比例）
+	# 蝰蛇毒腺（175 补充四：剧毒改成「受到的毒素伤害每层 +25%」）：自己施加中毒时，对手再挂一层剧毒，中毒照留
 	var gland := db.get_def(&"viper_gland").combat.rules[0] as AbilityRule
-	ctx = _ctx([_opener([_apply(poison_buff, 2)]), gland])
+	ctx = _ctx([_opener([_apply(poison_buff, 4)]), gland])
 	_start(ctx)
-	t.eq(ctx.sides[1].stacks_of(&"poison"), 0, "中毒没了")
-	t.eq(ctx.sides[1].stacks_of(&"virulent"), 2, "换成两层剧毒")
+	t.eq(ctx.sides[1].stacks_of(&"poison"), 4, "中毒照留")
+	t.eq(ctx.sides[1].stacks_of(&"virulent"), 1, "加一层剧毒")
 	H._advance_to(ctx, 1.05)
-	t.eq(_hp(ctx, 1), 95, "一秒后掉 2 × 2.5 = 5")
+	t.eq(_hp(ctx, 1), 95, "一秒后掉 4 × 1 × 1.25 = 5")
 	ctx = _ctx([gland], [_opener([_apply(poison_buff, 2, CombatEffect.Target.SELF)])])
 	_start(ctx)
-	t.eq(ctx.sides[1].stacks_of(&"poison"), 2, "对手自己带的中毒不转")
+	t.eq(ctx.sides[1].stacks_of(&"virulent"), 0, "对手自己带的中毒不算")
 
 	# 创口盐：对手流血时物理 +20%
 	var salt := db.get_def(&"wound_salt").combat.rules[0] as AbilityRule

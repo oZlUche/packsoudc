@@ -122,7 +122,7 @@ static func reaction_text(def: ReactionDef) -> String:
 	var desc := Names.description_of(def)
 	if desc != "":
 		lines.append(desc)
-	lines.append("效果：" + Glossary.effects_text(def.effects))
+	lines.append("效果：" + def.describe_effects())     # 175 补充四：随 N 变的标「× 反应层数」
 	return "\n".join(lines)
 
 

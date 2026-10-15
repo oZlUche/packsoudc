@@ -14,6 +14,6 @@ display_names = {
 "en": "Fungal Blood"
 }
 is_debuff = true
-stackable = false
-duration_sec = 6.0
+seconds_per_stack = 1
+heal_cut = 50
 heal_echo = &"poison"

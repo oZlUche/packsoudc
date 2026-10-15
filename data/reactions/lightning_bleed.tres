@@ -1,64 +1,26 @@
 [gd_resource type="Resource" script_class="ReactionDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_m1m4e"]
-[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="2_qacx8"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_swv6x"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_svvd0"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="5_opqnx"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_7jr1u"]
-[ext_resource type="Script" path="res://core/battle/effects/remove_status.gd" id="7_b6mlb"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_item_fired.gd" id="8_qqivp"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_ji0jo"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_7ad16"]
-[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="11_pnhc3"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_lxcbq"]
+[ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="2_3v5n5"]
+[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="3_m8jau"]
 
-[sub_resource type="Resource" id="Resource_1xmc1"]
-script = ExtResource("2_qacx8")
+[sub_resource type="Resource" id="Resource_qeyeb"]
+script = ExtResource("2_3v5n5")
 axis = &"crit_chance"
-stacks = 100
-
-[sub_resource type="Resource" id="Resource_vcage"]
-script = ExtResource("5_opqnx")
-
-[sub_resource type="Resource" id="Resource_jrijs"]
-script = ExtResource("7_b6mlb")
-buff_id = &"surge"
-stacks = 0
-
-[sub_resource type="Resource" id="Resource_re2so"]
-script = ExtResource("8_qqivp")
-source_tags = Array[StringName]([&"weapon"])
-
-[sub_resource type="Resource" id="Resource_w2oye"]
-script = ExtResource("4_svvd0")
-trigger = SubResource("Resource_re2so")
-cadence = SubResource("Resource_vcage")
-effects = Array[ExtResource("1_m1m4e")]([SubResource("Resource_jrijs")])
-
-[sub_resource type="Resource" id="Resource_wv1ou"]
-script = ExtResource("9_ji0jo")
-id = &"surge"
-display_name = "激荡"
-display_names = {
-"en": "Surge"
-}
-stackable = false
-duration_sec = 8.0
-axes = Array[ExtResource("2_qacx8")]([SubResource("Resource_1xmc1")])
-rules = Array[ExtResource("4_svvd0")]([SubResource("Resource_w2oye")])
-
-[sub_resource type="Resource" id="Resource_v2i7s"]
-script = ExtResource("10_7ad16")
-target = 1
-buff = SubResource("Resource_wv1ou")
+overflow_to = &"crit_damage"
 
 [resource]
-script = ExtResource("11_pnhc3")
+script = ExtResource("3_m8jau")
 id = &"lightning_bleed"
 display_name = "激荡"
 display_names = {
 "en": "Surge"
 }
-description = "你的下一次攻击必定暴击。"
+description = "你获得反应层数那么多层【锐目】；暴击率满了，多出的层数改为【致命】。"
 elements = Array[StringName]([&"lightning", &"bleed"])
-effects = Array[ExtResource("1_m1m4e")]([SubResource("Resource_v2i7s")])
+effects = Array[ExtResource("1_lxcbq")]([SubResource("Resource_qeyeb")])
+scaling = [{
+"effect": 0,
+"field": "delta",
+"kind": "n"
+}]

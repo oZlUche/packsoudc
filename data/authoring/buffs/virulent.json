@@ -5,26 +5,7 @@
     "en": "Virulent Poison"
   },
   "is_debuff": true,
-  "rules": [
-    {
-      "trigger": {
-        "type": "on_schedule"
-      },
-      "cadence": {
-        "type": "cooldown",
-        "seconds": 1.0
-      },
-      "effects": [
-        {
-          "type": "deal_damage",
-          "target": "SELF",
-          "damage_type": "poison",
-          "amount": 2.5,
-          "damage_stat": "",
-          "per_stack": true
-        }
-      ]
-    }
-  ],
-  "element": "poison"
+  "damage_taken_by_type": {
+    "poison": 25
+  }
 }

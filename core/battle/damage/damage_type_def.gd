@@ -46,8 +46,12 @@ extends Resource
 @export var provokes: bool = true
 
 
-## 175：这种伤害命中后在目标身上盖哪个【印】（buff id：火 → `scorch`、冰 → `chill`、雷 → `numb`）；空 = 不盖（物理、反伤、流失；
-## 中毒 / 流血的伤害也不盖 —— 它们的印就是状态本身，由施加状态来盖，否则每跳一次都会多一层）。见 [ReactionResolver]
+## 175：这种伤害命中后在目标身上盖哪个【印】（buff id：火 → `scorch` 灼伤、冰 → `chill` 寒冷、雷 → `numb` 麻痹）；空 = 不盖（物理、反伤、流失；
+## 中毒 / 流血的伤害也不盖 —— 它们的印就是状态本身，由施加状态来盖，否则每跳一次都会多一层）。
+## 补充四：状态自己跳的伤害（灼伤、燃血的火伤）也不盖，理由相同（[member DamagePacket.from_status]）。见 [ReactionResolver]
 @export var mark: StringName = &""
 ## 175 补充一（作者定）：一下这种伤害盖几层印（默认 1 层；要多层的伤害类型改这里）
 @export var mark_stacks: int = 1
+## 175 补充四：**真实伤害** —— 跳过管线的 1b 加成、2 护甲、3 受伤前改写、4 格挡与「受到伤害」轴（含按类型的易伤），原值直接落血；
+## damage 事件照发。流血是它唯一的来源（流血伤害类型打开它）
+@export var pure: bool = false

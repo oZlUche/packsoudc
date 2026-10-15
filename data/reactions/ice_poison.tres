@@ -9,14 +9,14 @@
 [ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_eloyt"]
 [ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_5m1f4"]
 [ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_x57f7"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_p4ixd"]
+[ext_resource type="Script" path="res://core/battle/effects/guard_status.gd" id="10_p4ixd"]
 [ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="11_mf2ul"]
 
-[sub_resource type="Resource" id="Resource_sybcs"]
+[sub_resource type="Resource" id="Resource_aai0p"]
 script = ExtResource("5_r7pgy")
 seconds = 1.0
 
-[sub_resource type="Resource" id="Resource_ic7ve"]
+[sub_resource type="Resource" id="Resource_ekrv1"]
 script = ExtResource("7_eloyt")
 target = 1
 damage_type = &"poison"
@@ -24,31 +24,29 @@ amount = 1.0
 damage_stat = &""
 per_stack = true
 
-[sub_resource type="Resource" id="Resource_cj71i"]
+[sub_resource type="Resource" id="Resource_1qngc"]
 script = ExtResource("8_5m1f4")
 
-[sub_resource type="Resource" id="Resource_cc5rs"]
+[sub_resource type="Resource" id="Resource_cv4xq"]
 script = ExtResource("4_jocjw")
-trigger = SubResource("Resource_cj71i")
-cadence = SubResource("Resource_sybcs")
-effects = Array[ExtResource("1_erika")]([SubResource("Resource_ic7ve")])
+trigger = SubResource("Resource_1qngc")
+cadence = SubResource("Resource_aai0p")
+effects = Array[ExtResource("1_erika")]([SubResource("Resource_ekrv1")])
 
 [sub_resource type="Resource" id="Resource_isath"]
 script = ExtResource("9_x57f7")
-id = &"congeal"
-display_name = "凝毒"
+id = &"poison"
+display_name = "中毒"
 display_names = {
-"en": "Congealed Toxin"
+"en": "Poison"
 }
 is_debuff = true
-rules = Array[ExtResource("4_jocjw")]([SubResource("Resource_cc5rs")])
+rules = Array[ExtResource("4_jocjw")]([SubResource("Resource_cv4xq")])
 element = &"poison"
-uncleansable = true
 
 [sub_resource type="Resource" id="Resource_1bde1"]
 script = ExtResource("10_p4ixd")
 buff = SubResource("Resource_isath")
-per_stack = true
 
 [resource]
 script = ExtResource("11_mf2ul")
@@ -57,6 +55,11 @@ display_name = "凝毒"
 display_names = {
 "en": "Congeal"
 }
-description = "把对手的中毒凝成同样层数的【凝毒】：一样每秒掉血，但无法被清除。"
+description = "对手身上反应层数那么多层【中毒】变为不可解除，也不会被反应消耗。"
 elements = Array[StringName]([&"ice", &"poison"])
 effects = Array[ExtResource("1_erika")]([SubResource("Resource_1bde1")])
+scaling = [{
+"effect": 0,
+"field": "stacks",
+"kind": "n"
+}]

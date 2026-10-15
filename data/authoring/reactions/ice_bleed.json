@@ -4,15 +4,18 @@
   "display_names": {
     "en": "Frostbite"
   },
-  "description": "对手一段时间内出手变慢。",
+  "description": "对手身上反应层数那么多层【流血】变为不可解除，减半也不会少于这些层。",
   "elements": [
     "ice",
     "bleed"
   ],
   "effects": [
     {
-      "type": "apply_status",
-      "buff": "frostbite"
+      "type": "guard_status",
+      "buff": "bleed",
+      "stacks": {
+        "stacks": "n"
+      }
     }
   ]
 }

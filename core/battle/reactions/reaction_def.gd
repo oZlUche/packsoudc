@@ -9,8 +9,10 @@
 ## [codeblock]
 ## {"per_stack": X}             = N × X（可加 "max" 封顶）
 ## {"stacks": "n"}              = N（可加 "max" 封顶）
+## {"stacks": "n/2"}            = N / 2，向下取整（补充四：爆燃重叠的灼伤；为 0 这个效果就不跑）
 ## {"seconds": "n", "max": 10}  = N 秒，封顶 max（写在 apply_status 的 "duration_sec" 上 = 这次施加的状态持续 N 秒）
 ## [endcodeblock]
+## 补充四：各反应的系数 M 都写在 json 里（作者会调），代码里不写死。算出来是 0 的效果整条不跑（施加 0 层不会变成 1 层）
 class_name ReactionDef
 extends Resource
 
@@ -31,6 +33,8 @@ extends Resource
 const KIND_PER_STACK := "per_stack"
 const KIND_N := "n"
 const KIND_SECONDS := "seconds"
+## 175 补充四：N / 2（向下取整）
+const KIND_HALF := "n/2"
 ## 写在 apply_status 上的「这次施加的状态持续几秒」
 const BUFF_DURATION := "buff.duration_sec"
 
@@ -54,6 +58,9 @@ func effects_for(n: int) -> Array[CombatEffect]:
 			out[i] = out[i].duplicate(true) as CombatEffect
 			copied[i] = true
 		var v := value_of(row, n)
+		if is_zero_approx(v):
+			out[i] = null     # 补充四：算出来是 0（N = 1 的 N / 2）—— 这条效果不跑
+			continue
 		var field := String(row.get("field", ""))
 		if field == BUFF_DURATION:
 			var a := out[i] as ApplyStatus
@@ -65,6 +72,26 @@ func effects_for(n: int) -> Array[CombatEffect]:
 	return out
 
 
+## 175 补充四：百科 / 悬浮窗的效果一句 —— 随 N 变的效果写一层的数（per_stack 写 X，其余写 1）再标「× 反应层数」，
+## 这样 M 改了这里跟着变，说明文字里不用写数
+func describe_effects() -> String:
+	var marks := {}
+	for raw in scaling:
+		var row := raw as Dictionary
+		marks[int(row.get("effect", -1))] = "（× 反应层数的一半）" if String(row.get("kind", "")) == KIND_HALF else "（× 反应层数）"
+	var shown := effects_for(1) if not scaling.is_empty() else effects
+	var bits: Array[String] = []
+	for i in effects.size():
+		var e = shown[i] if i < shown.size() and shown[i] != null else effects[i]
+		if e == null:
+			continue
+		var d: String = e.describe() if e.has_method("describe") else ""
+		if d == "":
+			continue
+		bits.append(d + String(marks.get(i, "")))
+	return "，".join(bits) if not bits.is_empty() else "（没有效果）"
+
+
 ## 一行随 N 变的数字在量 [param n] 时是多少
 static func value_of(row: Dictionary, n: int) -> float:
 	var v := float(n)
@@ -73,5 +100,7 @@ static func value_of(row: Dictionary, n: int) -> float:
 			v = n * float(row.get("x", 0.0))
 		KIND_N, KIND_SECONDS:
 			v = float(n)
+		KIND_HALF:
+			v = float(n / 2)
 	var cap := float(row.get("max", 0.0))
 	return minf(v, cap) if cap > 0.0 else v

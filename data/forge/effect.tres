@@ -40,19 +40,20 @@ trigger = SubResource("Resource_r2hia")
 cadence = SubResource("Resource_fos0o")
 effects = Array[ExtResource("5_rnfoh")]([SubResource("Resource_m2ceh")])
 
-[sub_resource type="Resource" id="Resource_blteg"]
+[sub_resource type="Resource" id="Resource_505co"]
 script = ExtResource("10_yvehp")
 id = &"bleed"
 display_name = "流血"
 display_names = {
 "en": "Bleed"
 }
+decay_halve_on = &"tick"
 rules = Array[ExtResource("6_shedm")]([SubResource("Resource_e0tjf")])
 element = &"bleed"
 
 [sub_resource type="Resource" id="Resource_abkp4"]
 script = ExtResource("11_4q2pq")
-buff = SubResource("Resource_blteg")
+buff = SubResource("Resource_505co")
 
 [sub_resource type="Resource" id="Resource_tay32"]
 script = ExtResource("1_o0uq2")
@@ -67,7 +68,7 @@ prefixes = {
 
 [sub_resource type="Resource" id="Resource_pel7x"]
 script = ExtResource("11_4q2pq")
-buff = SubResource("Resource_blteg")
+buff = SubResource("Resource_505co")
 
 [sub_resource type="Resource" id="Resource_aai0p"]
 script = ExtResource("7_24osx")
@@ -90,7 +91,7 @@ trigger = SubResource("Resource_1qngc")
 cadence = SubResource("Resource_aai0p")
 effects = Array[ExtResource("5_rnfoh")]([SubResource("Resource_ekrv1")])
 
-[sub_resource type="Resource" id="Resource_lq06f"]
+[sub_resource type="Resource" id="Resource_isath"]
 script = ExtResource("10_yvehp")
 id = &"poison"
 display_name = "中毒"
@@ -103,30 +104,9 @@ element = &"poison"
 
 [sub_resource type="Resource" id="Resource_ayglt"]
 script = ExtResource("11_4q2pq")
-buff = SubResource("Resource_lq06f")
+buff = SubResource("Resource_isath")
 
-[sub_resource type="Resource" id="Resource_j81pe"]
-script = ExtResource("7_24osx")
-seconds = 1.0
-
-[sub_resource type="Resource" id="Resource_fqggl"]
-script = ExtResource("2_jqr3y")
-target = 1
-damage_type = &"poison"
-amount = 2.5
-damage_stat = &""
-per_stack = true
-
-[sub_resource type="Resource" id="Resource_433tm"]
-script = ExtResource("9_xy6yg")
-
-[sub_resource type="Resource" id="Resource_0v26r"]
-script = ExtResource("6_shedm")
-trigger = SubResource("Resource_433tm")
-cadence = SubResource("Resource_j81pe")
-effects = Array[ExtResource("5_rnfoh")]([SubResource("Resource_fqggl")])
-
-[sub_resource type="Resource" id="Resource_uodj3"]
+[sub_resource type="Resource" id="Resource_85rp2"]
 script = ExtResource("10_yvehp")
 id = &"virulent"
 display_name = "剧毒"
@@ -134,12 +114,13 @@ display_names = {
 "en": "Virulent Poison"
 }
 is_debuff = true
-rules = Array[ExtResource("6_shedm")]([SubResource("Resource_0v26r")])
-element = &"poison"
+damage_taken_by_type = {
+"poison": 25
+}
 
 [sub_resource type="Resource" id="Resource_er3gl"]
 script = ExtResource("11_4q2pq")
-buff = SubResource("Resource_uodj3")
+buff = SubResource("Resource_85rp2")
 
 [sub_resource type="Resource" id="Resource_wv3yw"]
 script = ExtResource("1_o0uq2")
@@ -280,7 +261,7 @@ prefixes = {
 
 [sub_resource type="Resource" id="Resource_djagm"]
 script = ExtResource("11_4q2pq")
-buff = SubResource("Resource_blteg")
+buff = SubResource("Resource_505co")
 
 [sub_resource type="Resource" id="Resource_qjhcv"]
 script = ExtResource("2_jqr3y")

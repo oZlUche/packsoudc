@@ -23,8 +23,9 @@ extends Resource
 @export_multiline var blurb: String = ""
 @export var blurbs: Dictionary = {}
 
-## 111：解说两栏只在勾了「有专属解说」时显示；175 补充一：层数上限只给可叠层的
-const FIELD_WHEN := {"blurb": {"has_blurb": [true]}, "blurbs": {"has_blurb": [true]}, "stack_cap": {"stackable": [true]}}
+## 111：解说两栏只在勾了「有专属解说」时显示；175 补充四：按层计时与减半只给可叠层的
+const FIELD_WHEN := {"blurb": {"has_blurb": [true]}, "blurbs": {"has_blurb": [true]},
+	"seconds_per_stack": {"stackable": [true]}, "decay_halve_on": {"stackable": [true]}}
 
 @export_group("叠层与时长")
 ## 137（作者定）：可叠层 = 层数不限；不可叠层 = 固定一层（将来的「无敌」）。没有「至多 N 层」
@@ -36,8 +37,19 @@ const FIELD_WHEN := {"blurb": {"has_blurb": [true]}, "blurbs": {"has_blurb": [tr
 @export var duration_sec: float = 0.0
 ## 叠层时是否把时长刷新回满（只对会过期的有意义）
 @export var refresh_on_restack: bool = true
-## 175 补充一（作者定）：可叠层的上限，0 = 不限（137 的默认）。灼 / 寒 / 麻 10 层 —— 不封顶的话一把快刀能攒出几十层印，一次反应炸穿
-@export var stack_cap: int = 0
+## 175 补充四：**按层计时**（0 = 不计时，永续）—— 每叠上一层，剩余时间加这么多秒；每秒倒数一次（和 on_schedule 同一个时间轮，
+## 排在自己的规则后面：到点的那一跳照样跳），倒数到 0 整个移除。燃血 / 菌血：N 层 = 每秒 N 点 / 持续 N 秒，再反应加层也加时间。
+## 是 085「可叠层永续」的例外（作者 175 补充四原话：持续 N 秒、重新反应会延长时间）
+@export var seconds_per_stack: int = 0
+## 175 补充四：在这个时机把层数减半（向下取整，1 → 0 移除）：空 = 不减半；`tick` = 自己的周期规则每结算一次之后（流血）；
+## `weapon_fired` = 挂着它的单位的武器每出手一次（寒冷）；`stamina_paid` = 挂着它的单位每付一次耐力（麻痹）。
+## 两种衰减都不低于实例的保底层数（[member BuffInstance.guard]）
+@export var decay_halve_on: StringName = &""
+
+const HALVE_TICK := &"tick"
+const HALVE_WEAPON_FIRED := &"weapon_fired"
+const HALVE_STAMINA_PAID := &"stamina_paid"
+const HALVE_ON: Array[StringName] = [&"", HALVE_TICK, HALVE_WEAPON_FIRED, HALVE_STAMINA_PAID]
 
 
 ## 可叠层（137：可叠就是不限层）
@@ -45,11 +57,28 @@ func is_stackable() -> bool:
 	return stackable
 
 
-## 175 补充一：叠到 [param n] 层之后实际是几层（不可叠 1 层；有上限的封顶）
+## 叠到 [param n] 层之后实际是几层（不可叠固定 1 层；175 补充四：可叠层的不封顶）
 func capped(n: int) -> int:
-	if not is_stackable():
-		return 1
-	return mini(n, stack_cap) if stack_cap > 0 else n
+	return n if is_stackable() else 1
+
+
+## 175 补充四：[member seconds_per_stack] 的那条规则（自发、每秒一次、倒数剩余时间），[method CombatantRuntime.apply_buff] 和 [member rules] 一起登记，
+## 排在 rules 后面（同一刻先跳伤再倒数：燃血 3 层在第 1、2、3 秒各打 3 点，第 3 秒那一跳之后消失）。不写进内容
+func decay_rule() -> AbilityRule:
+	if seconds_per_stack <= 0 or not is_stackable():
+		return null
+	if _decay_rule == null:
+		var cd := CooldownCadence.new()
+		cd.seconds = 1.0
+		cd.use_haste = false
+		var e := StatusDecay.new()
+		_decay_rule = AbilityRule.new()
+		_decay_rule.trigger = OnSchedule.new()
+		_decay_rule.cadence = cd
+		_decay_rule.effects = [e] as Array[CombatEffect]
+	return _decay_rule
+
+var _decay_rule: AbilityRule = null
 
 
 ## 永续：不过期，到战斗结束 —— 可叠层的一律永续；不可叠层的没填时长也永续
@@ -66,6 +95,8 @@ func sentence_text(lang: String = "") -> String:
 
 ## 给界面看的时长一句：「永续」/「持续 N 秒」
 func duration_text() -> String:
+	if seconds_per_stack > 0 and is_stackable():
+		return "按层计时"     # 175 补充四：燃血 / 菌血（具体那句在词条正文里）
 	return "永续" if is_permanent() else "持续 %.1f 秒" % duration_sec
 
 @export_group("效果")
@@ -83,7 +114,7 @@ func duration_text() -> String:
 
 @export_group("元素与治疗")
 ## 175：这个状态是哪种元素的【印】（`fire` / `ice` / `lightning` / `poison` / `bleed`，和伤害类型同名）；空 = 不是印。
-## 灼 / 寒 / 麻是专门的轻状态，中毒 / 剧毒 / 流血本身就是印。目标身上带着一种印、又挨上另一种 → 反应（[ReactionResolver]）
+## 补充四：五种基础状态灼伤 / 寒冷 / 麻痹 / 中毒 / 流血各是一种元素的印。目标身上带着一种印、又挨上另一种 → 反应（[ReactionResolver]）
 @export var element: StringName = &""
 ## 175：挂着它时，目标**每次恢复生命**先被截走这么多（百分比，0..100）。燃血 100 = 治疗无效
 @export var heal_cut: int = 0
@@ -91,8 +122,10 @@ func duration_text() -> String:
 @export var heal_echo: StringName = &""
 ## 175 补充一：恢复一点叠几层 [member heal_echo]
 @export var heal_echo_per_point: float = 1.0
-## 175 补充一：不可清除 —— 移除效果、解毒剂、转化、消耗层数对它都无效；只有反应能吃掉它（凝毒）
-@export var uncleansable: bool = false
+## 175 补充四：每层的百分比（寒冷：武器这一次的冷却每层 +X%；麻痹：这一次的耐力消耗每层 +X%）。作者会调，写在 json 里
+@export var per_stack_percent: float = 0.0
+## 175 补充四：挂着它时，**受到**这些类型的伤害每层 +X%（`{"poison": 25}`，剧毒）。伤害管线第 4 步、「受到伤害」轴之后乘一次，不加轴
+@export var damage_taken_by_type: Dictionary = {}
 
 
 ## 152：每层带几层 [param axis]（同一条轴写了几行就相加）

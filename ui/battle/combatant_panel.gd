@@ -69,6 +69,8 @@ var _hover_id: String = ""
 var _resources: Dictionary = {}
 ## buff id -> 层数
 var _stacks: Dictionary = {}
+## 175 补充四：buff id -> 保底层数（凝毒 / 冻疮；status_stacked 的 guard 键）
+var guards: Dictionary = {}
 ## buff id -> 第几个上身的（103：各组内按上身先后排）
 var _arrival: Dictionary = {}
 var _arrivals: int = 0
@@ -219,6 +221,7 @@ func chip_text(id: String) -> String:
 func reset(snapshot: Dictionary) -> void:
 	_resources.clear()
 	_stacks.clear()
+	guards.clear()
 	_arrival.clear()
 	_arrivals = 0
 	_dead = false
@@ -251,6 +254,7 @@ func _set_chip(id: String, stacks: int) -> void:
 	if stacks <= 0:
 		_stacks.erase(id)
 		_arrival.erase(id)
+		guards.erase(id)
 	else:
 		if not _stacks.has(id):
 			_arrivals += 1

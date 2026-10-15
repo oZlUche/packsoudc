@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Fungal Blood"
   },
-  "description": "对手一段时间内每次恢复生命，恢复多少就叠多少层中毒，恢复照常。",
+  "description": "对手叠上反应层数那么多层【菌血】：每次恢复生命减半，实际回了几点就叠几层【中毒】，每层持续一秒，再反应就延长。",
   "elements": [
     "poison",
     "bleed"
@@ -12,7 +12,10 @@
   "effects": [
     {
       "type": "apply_status",
-      "buff": "fungal_blood"
+      "buff": "fungal_blood",
+      "stacks": {
+        "stacks": "n"
+      }
     }
   ]
 }

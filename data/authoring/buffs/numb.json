@@ -1,10 +1,11 @@
 {
   "id": "numb",
-  "display_name": "麻",
+  "display_name": "麻痹",
   "display_names": {
-    "en": "Numb"
+    "en": "Paralysis"
   },
   "is_debuff": true,
-  "stack_cap": 10,
-  "element": "lightning"
+  "decay_halve_on": "stamina_paid",
+  "element": "lightning",
+  "per_stack_percent": 10.0
 }

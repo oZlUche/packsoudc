@@ -33,22 +33,23 @@ trigger = SubResource("Resource_r2hia")
 cadence = SubResource("Resource_fos0o")
 effects = Array[ExtResource("3_xuuak")]([SubResource("Resource_m2ceh")])
 
-[sub_resource type="Resource" id="Resource_blteg"]
+[sub_resource type="Resource" id="Resource_505co"]
 script = ExtResource("9_nruqw")
 id = &"bleed"
 display_name = "流血"
 display_names = {
 "en": "Bleed"
 }
+decay_halve_on = &"tick"
 rules = Array[ExtResource("4_oeaqp")]([SubResource("Resource_e0tjf")])
 element = &"bleed"
 
-[sub_resource type="Resource" id="Resource_1ugtk"]
+[sub_resource type="Resource" id="Resource_blteg"]
 script = ExtResource("10_lfvqy")
-buff = SubResource("Resource_blteg")
+buff = SubResource("Resource_505co")
 
 [resource]
 script = ExtResource("11_xl17s")
 id = &"apply_status_bleed"
 display_name = "施加流血"
-effect = SubResource("Resource_1ugtk")
+effect = SubResource("Resource_blteg")

@@ -1,43 +1,66 @@
 [gd_resource type="Resource" script_class="ReactionDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_x555d"]
-[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="2_up1se"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_hbw6f"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_krjo3"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_r4eq7"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="6_04s1m"]
-[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_2nxkh"]
-[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="8_4pyde"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="1_krjo3"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="2_r4eq7"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_04s1m"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_2nxkh"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="5_4pyde"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_bwa5h"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_vi37a"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_b8obt"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_61tbl"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_lav4a"]
+[ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="11_nvo7f"]
 
-[sub_resource type="Resource" id="Resource_bwa5h"]
-script = ExtResource("5_r4eq7")
+[sub_resource type="Resource" id="Resource_o7qgq"]
+script = ExtResource("5_4pyde")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_01y6v"]
+script = ExtResource("7_vi37a")
+target = 1
+damage_type = &"fire"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_mbwiu"]
+script = ExtResource("8_b8obt")
+
+[sub_resource type="Resource" id="Resource_4wbuu"]
+script = ExtResource("4_2nxkh")
+trigger = SubResource("Resource_mbwiu")
+cadence = SubResource("Resource_o7qgq")
+effects = Array[ExtResource("1_krjo3")]([SubResource("Resource_01y6v")])
+
+[sub_resource type="Resource" id="Resource_8aasi"]
+script = ExtResource("9_61tbl")
 id = &"scorched_blood"
 display_name = "燃血"
 display_names = {
 "en": "Seared Blood"
 }
 is_debuff = true
-stackable = false
-duration_sec = 5.0
+seconds_per_stack = 1
+rules = Array[ExtResource("4_2nxkh")]([SubResource("Resource_4wbuu")])
 heal_cut = 100
 
-[sub_resource type="Resource" id="Resource_vi37a"]
-script = ExtResource("6_04s1m")
-buff = SubResource("Resource_bwa5h")
-
-[sub_resource type="Resource" id="Resource_b8obt"]
-script = ExtResource("7_2nxkh")
-damage_type = &"fire"
-amount = 6.0
-damage_stat = &""
+[sub_resource type="Resource" id="Resource_vkbic"]
+script = ExtResource("10_lav4a")
+buff = SubResource("Resource_8aasi")
 
 [resource]
-script = ExtResource("8_4pyde")
+script = ExtResource("11_nvo7f")
 id = &"fire_bleed"
 display_name = "燃血"
 display_names = {
 "en": "Seared Blood"
 }
-description = "对手一段时间内治疗无效，并受到一下火焰伤害。"
+description = "对手叠上反应层数那么多层【燃血】：治疗无效，每秒受到层数等量的火焰伤害，每层持续一秒，再反应就延长。"
 elements = Array[StringName]([&"fire", &"bleed"])
-effects = Array[ExtResource("1_x555d")]([SubResource("Resource_vi37a"), SubResource("Resource_b8obt")])
+effects = Array[ExtResource("1_krjo3")]([SubResource("Resource_vkbic")])
+scaling = [{
+"effect": 0,
+"field": "stacks",
+"kind": "n"
+}]

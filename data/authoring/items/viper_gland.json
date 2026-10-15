@@ -25,9 +25,8 @@
         "cadence": "@always",
         "effects": [
           {
-            "type": "convert_status",
-            "from": "poison",
-            "to": "virulent"
+            "type": "apply_status",
+            "buff": "virulent"
           }
         ]
       }
