@@ -5,10 +5,27 @@
     "en": "Congealed Toxin"
   },
   "is_debuff": true,
-  "stackable": false,
-  "locks": [
-    "poison",
-    "virulent"
+  "rules": [
+    {
+      "trigger": {
+        "type": "on_schedule"
+      },
+      "cadence": {
+        "type": "cooldown",
+        "seconds": 1.0
+      },
+      "effects": [
+        {
+          "type": "deal_damage",
+          "target": "SELF",
+          "damage_type": "poison",
+          "amount": 1.0,
+          "damage_stat": "",
+          "per_stack": true
+        }
+      ]
+    }
   ],
-  "locks_while": "chill"
+  "element": "poison",
+  "uncleansable": true
 }

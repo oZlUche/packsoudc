@@ -38,8 +38,6 @@ signal shop_closed(node: MapNode)
 signal safe_opened(node: MapNode)
 ## 093：神坛（休息处的「神坛」选项）：开了
 signal altar_opened(node: MapNode)
-## 175 第三批：踩上没用过的铸炉（铸炉屏由持有方画；铸了调 [method use_forge]）
-signal forge_opened(node: MapNode)
 ## 154：踩上没开锁的宝箱（开锁画面由持有方画；锁开了调 [method open_chest]）
 signal chest_shown(node: MapNode)
 signal event_resolved(node: MapNode, outcome: StringName, detail: Dictionary)
@@ -183,10 +181,6 @@ func _proceed(node: MapNode, type: StringName) -> void:
 			_visited(node)
 		&"chest":
 			_arrive_chest(node)
-		&"forge":
-			# 175：没铸过的铸炉不算用过 —— 空着走开再回来还能用；铸了一次就熄（点灰了）
-			last_handled_id = node.id
-			forge_opened.emit(node)
 		&"safe":
 			# 092：没锁的保险箱不算用过 —— 空着走开再回来还能开；关上（里面有东西）就锁了、点灰了
 			if not hooks.safe_open():
@@ -198,17 +192,15 @@ func _proceed(node: MapNode, type: StringName) -> void:
 			_visited(node)
 
 
-## 175：这座铸炉铸过了（用一次就熄）
+## 175：这座休息点的铸炉铸过了（补充二：铸炉在休息点里，用一次就熄）
 static func forge_used(node: MapNode) -> bool:
 	return node != null and bool(node.content.get("used_forge", false))
 
 
-## 175：铸炉用掉了：记在节点内容里（跟存档）、点变灰
-func use_forge(node: MapNode) -> void:
-	if node == null:
-		return
-	node.content["used_forge"] = true
-	_visited(node)
+## 175：铸炉用掉了：记在节点内容里（跟存档）。补充二：不影响休息点灰不灰（那是休息与神坛两份的事，[method settle_rest]）
+static func use_forge(node: MapNode) -> void:
+	if node != null:
+		node.content["used_forge"] = true
 
 
 ## 反馈（休息点）：休息与神坛是两份独立的机会 —— [param part] 是 rest / altar，用过记在节点内容里（跟存档）

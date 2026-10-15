@@ -13,7 +13,7 @@ var expires_at: int = -1
 static func create(p_def: BuffDef, p_stacks: int = 1, now: int = 0) -> BuffInstance:
 	var b := BuffInstance.new()
 	b.def = p_def
-	b.stacks = maxi(1, p_stacks)
+	b.stacks = p_def.capped(maxi(1, p_stacks))
 	b.refresh(now)
 	return b
 
@@ -38,7 +38,7 @@ func add_stacks(n: int, now: int = 0) -> int:
 	if n <= 0:
 		return 0
 	var before := stacks
-	stacks = stacks + n if def.is_stackable() else 1
+	stacks = def.capped(stacks + n)     # 175 补充一：有上限的封顶
 	if def.refresh_on_restack:
 		refresh(now)
 	return stacks - before

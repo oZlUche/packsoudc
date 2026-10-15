@@ -5,7 +5,6 @@
     "en": "Scorch"
   },
   "is_debuff": true,
-  "stackable": false,
-  "duration_sec": 4.0,
+  "stack_cap": 10,
   "element": "fire"
 }

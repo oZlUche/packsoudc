@@ -82,7 +82,7 @@ static func run_forge_and_rule(t: TestCase) -> void:
 
 
 static func run_token(t: TestCase) -> void:
-	t.begin("175 · 铸牌：1×1、重量 1、价值 = 三件之和的一半；不进 ids()、不进图鉴；能留进局外；名字「铸牌 · 前缀」、悬浮窗写那一句")
+	t.begin("175 · 铸牌：1×1、重量 1、价值固定 3（补充二）；不进 ids()、不进图鉴；能留进局外；名字「铸牌 · 前缀」、悬浮窗写那一句")
 	var db := _db()
 	var a := _inst(db, &"knife")
 	var b := _inst(db, &"antler")
@@ -93,7 +93,8 @@ static func run_token(t: TestCase) -> void:
 		return
 	t.eq(tok.def.cell_count(), 1, "1×1")
 	t.eq(ItemWeight.of(tok.def), 1, "重量 1")
-	t.eq(ItemValue.of_instance(tok), maxi(1, roundi((ItemValue.of_instance(a) + ItemValue.of_instance(b) + ItemValue.of_instance(c)) / 2.0)), "价值 = 一半")
+	t.eq(ItemValue.of_instance(tok), Forge.TOKEN_VALUE, "价值固定 3")
+	t.check(Forge.TOKEN_VALUE < ItemValue.of_instance(a) + ItemValue.of_instance(b) + ItemValue.of_instance(c), "比三件之和低：铸了就亏")
 	t.check(not db.ids(true).has(&"forge_token"), "不进 ids（搜索、掉落、商店、图鉴都从这里拿）")
 	t.check(MetaState.keeps(tok.def), "能留进局外（带出、存仓库）")
 	var m := MetaState.new()
@@ -190,33 +191,30 @@ static func run_reconcile(t: TestCase) -> void:
 
 
 static func run_node(t: TestCase) -> void:
-	t.begin("175 · 铸炉节点：类型登记（名字、样式、地图文字 F、浮窗）；自由模式的图上有一到两座；踩上去是铸炉屏、没铸走开不算用过、铸了就熄")
-	t.check(MapNodeTypes.has(&"forge"), "类型表里有 forge")
-	t.eq(MapNodeStyle.of(&"forge")["label"], "铸炉", "样式的名字")
-	t.eq(MapGridText.SYMBOL_TYPES.get("F", &""), &"forge", "地图文字里 F = 铸炉")
-	t.eq(NodeText.label_of(&"forge"), "铸炉", "节点名字")
-	t.check(NodeTooltip.DEFAULTS.has("forge"), "浮窗有默认文字")
+	t.begin("175 补充二 · 铸炉在休息点里：没有独立的铸炉点；休息点开得了铸炉、没铸走开不算用过、铸了就熄（休息点灰不灰不受它管）；老存档的铸炉点按休息点读")
+	t.check(not MapNodeTypes.has(&"forge"), "类型表里没有 forge 了")
+	t.check(not MapGridText.SYMBOL_TYPES.has("F"), "地图文字里没有 F")
+	t.check(not NodeTooltip.DEFAULTS.has("forge"), "浮窗没有铸炉点")
+	t.check(String(NodeTooltip.DEFAULTS.get("rest", "")).contains("铸炉"), "休息点的浮窗提到铸炉")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
-	var counts: Array[int] = []
+	var forges := 0
 	for seed in range(1, 9):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items)
 		if s == null:
 			continue
-		var n := 0
 		for id in s.map.node_ids():
 			if s.map.get_node(id).type == &"forge":
-				n += 1
-		counts.append(n)
-	t.check(not counts.is_empty() and counts.min() >= 1 and counts.max() <= 2, "每张图一到两座（%s）" % str(counts))
+				forges += 1
+	t.eq(forges, 0, "八张图都不再撒铸炉点")
 
 	var f := Support.flow(c, "forge175")
-	var node := _forge_next_to_spawn(f, c, kit)
-	t.check(node != null and f.step_to(node.id), "走上铸炉")
+	var node := _rest_next_to_spawn(f, c, kit)
+	t.check(node != null and f.step_to(node.id), "走上休息点")
+	t.check(f.open_forge(node), "休息点开得了铸炉")
 	t.eq(f.screen, GameFlow.Screen.FORGE, "→ 铸炉屏")
 	t.check(f.leave_forge(), "不铸就走")
-	t.check(not node.is_visited() and not NodeEvents.forge_used(node), "没铸：不算用过")
-	t.check(f.can_reopen() and int(f._reopen_entry().get("screen", -1)) == GameFlow.Screen.FORGE, "站着还能再开")
+	t.check(not NodeEvents.forge_used(node), "没铸：不算用过")
 	var picks: Array = []
 	for id in [&"knife", &"antler", &"cleaver"]:
 		var inst := _inst(c.items, id)
@@ -226,13 +224,37 @@ static func run_node(t: TestCase) -> void:
 	t.not_null(tok, "铸成一枚")
 	for p in picks:
 		t.check(not f.run.storage.has_item((p as ItemInstance).uid), "%s 被消耗" % (p as ItemInstance).def.id)
-	t.check(NodeEvents.forge_used(node) and node.is_visited(), "铸炉熄了、点灰了")
+	t.check(NodeEvents.forge_used(node), "铸炉熄了")
+	t.check(not node.is_visited(), "铸了不等于歇过：休息、神坛两份没用，点不灰")
 	t.eq(f.forge_token(node, picks[0], picks[1], picks[2], [null, null, null]), null, "熄了不能再铸")
+	t.check(not f.open_forge(node), "熄了开不了")
+	var other := _first_of(f.run.map, &"battle")
+	t.check(other == null or not f.open_forge(other), "不是休息点开不了")
 	Support.cleanup("forge175")
 
+	# 老存档：一局档里的铸炉点（含随机点揭开成铸炉的）按休息点读，节点内容原样
+	var d := {"map": {"nodes": [{"id": 3, "type": "forge", "content": {"used_forge": true}}, {"id": 4, "type": "random", "content": {"resolved_type": "forge"}},
+		{"id": 5, "type": "battle", "content": {}}]}}
+	var report := SaveReport.new()
+	SaveReconcile.run(d, _db(), report)
+	var nodes: Array = d["map"]["nodes"]
+	t.eq([String(nodes[0]["type"]), String(nodes[1]["content"]["resolved_type"]), String(nodes[2]["type"])], ["rest", "rest", "battle"], "铸炉点 → 休息点，别的不动")
+	t.check(bool(nodes[0]["content"]["used_forge"]), "铸过的照样算铸过")
+	t.eq(report.retyped.size(), 2, "对账记了两笔")
+	t.check(report.is_empty(), "不用告诉玩家")
+	t.eq(SaveReport.from_dict(report.to_dict()).retyped.size(), 2, "报告往返")
 
-static func _forge_next_to_spawn(f: GameFlow, c, kit: LoadoutDef) -> MapNode:
-	var found: Dictionary = NodeScreens._seed_with(c, &"forge", kit.items)
+
+static func _first_of(map: MapGraph, type: StringName) -> MapNode:
+	for id in map.node_ids():
+		if map.get_node(id).type == type:
+			return map.get_node(id)
+	return null
+
+
+## 出生点旁边一个休息点（种子里找得到就用，找不到把旁边一个点改成休息点）
+static func _rest_next_to_spawn(f: GameFlow, c, kit: LoadoutDef) -> MapNode:
+	var found: Dictionary = NodeScreens._seed_with(c, &"rest", kit.items)
 	var seed := int(found.get("seed", 1))
 	var run := f.begin(c.chapter, kit, seed)
 	if run == null:
@@ -244,7 +266,7 @@ static func _forge_next_to_spawn(f: GameFlow, c, kit: LoadoutDef) -> MapNode:
 	for nid in run.map.neighbors(entry):
 		var node := run.map.get_node(nid)
 		if node.type in [&"battle", &"event", &"search"]:
-			node.type = &"forge"
+			node.type = &"rest"
 			for key in node.content.keys():
 				node.content.erase(key)
 			return node
@@ -264,8 +286,8 @@ static func frame_forge_screen(t: TestCase, root: Window) -> void:
 	var flow: GameFlow = game.flow
 	flow.chapters = [c.chapter] as Array[ChapterDef]
 	flow.player_baseline = CombatantBaseline.with_hp(10000.0)
-	var node := _forge_next_to_spawn(flow, c, kit)
-	t.check(node != null and flow.step_to(node.id), "走上铸炉")
+	var node := _rest_next_to_spawn(flow, c, kit)
+	t.check(node != null and flow.step_to(node.id) and flow.open_forge(node), "走上休息点、开铸炉")
 	var screen = game.overlay()
 	t.check(screen != null and screen.has_method("put_in"), "叠层是铸炉屏")
 	if screen == null or not screen.has_method("put_in"):
@@ -290,6 +312,7 @@ static func frame_forge_screen(t: TestCase, root: Window) -> void:
 		t.eq(screen.slot(i).item_count(), 0, "槽 %d 空了" % i)
 	t.check(NodeEvents.forge_used(node), "铸炉熄了")
 	t.check(screen.to_map(), "返回")
+	t.check(flow.screen != GameFlow.Screen.FORGE, "离开了铸炉屏")
 	t.check(tok != null and flow.run.holder_of(tok.uid) != null, "铸牌回了背包（棋盘或地上）")
 	game.queue_free()
 	Support.cleanup("forge_ui")

@@ -330,6 +330,6 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 		var line: String = screen.special(hp_perk)
 		t.check(line.contains("献祭了"), "做了特殊操作：%s" % line)
 		t.check(flow.screen == GameFlow.Screen.MAP and not AltarModule.of(run).is_open(), "神坛关了、回地图")
-		t.check(not flow.can_reopen(), "这个休息处不能再开神坛")
+		t.check(int(flow._reopen_entry().get("screen", -1)) != GameFlow.Screen.ALTAR, "这个休息处不能再开神坛（还能重新打开的只有没铸过的铸炉，175 补充二）")
 	game.queue_free()
 	Support.cleanup("altar")

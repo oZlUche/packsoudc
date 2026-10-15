@@ -275,10 +275,76 @@ static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) ->
 
 
 ## 175：一种元素反应。两种不同的、认得的元素，id 就是这两种按元素顺序拼起来（`fire_poison`）；吃印写 both / none / 两种之一；
+## 175 补充二：反应效果里随 N 变的数字（内联写法 `{"per_stack": X}` / `{"stacks": "n"}` / `{"seconds": "n", "max": 10}`）
+## 抽进 [param out]（[member ReactionDef.scaling] 的行），效果里换成占位数；返回改过的一份（不动传进来的）
+static func _pull_reaction_scaling(data: Dictionary, out: Array, report: ImportReport) -> Dictionary:
+	var effects: Variant = data.get("effects", [])
+	if not (effects is Array):
+		return data
+	var copy := data.duplicate(true)
+	for i in (copy["effects"] as Array).size():
+		var e: Variant = copy["effects"][i]
+		if not (e is Dictionary):
+			continue
+		for key in (e as Dictionary).keys():
+			var v: Variant = e[key]
+			if not (v is Dictionary) or key == "buff":
+				continue
+			var spec := v as Dictionary
+			var row := {"effect": i, "field": ReactionDef.BUFF_DURATION if key == "duration_sec" else String(key)}
+			var path := "effects[%d].%s" % [i, key]
+			if spec.has("per_stack"):
+				if not (spec["per_stack"] is float or spec["per_stack"] is int):
+					report.error(path, "per_stack 得是数（N × 它）")
+					continue
+				row["kind"] = ReactionDef.KIND_PER_STACK
+				row["x"] = float(spec["per_stack"])
+			elif String(spec.get("stacks", "")) == "n":
+				row["kind"] = ReactionDef.KIND_N
+			elif String(spec.get("seconds", "")) == "n":
+				row["kind"] = ReactionDef.KIND_SECONDS
+				if not spec.has("max"):
+					report.error(path, "按 N 秒的得写 max（封顶几秒）")
+			else:
+				continue     # 不是随 N 变的写法，交给 _fill 照常处理（报它自己的错）
+			if spec.has("max"):
+				row["max"] = float(spec["max"])
+			out.append(row)
+			if key == "duration_sec":
+				(e as Dictionary).erase(key)
+			else:
+				e[key] = 1.0 if row["kind"] != ReactionDef.KIND_N else 1
+	return copy
+
+
+## 随 N 变的数字只能落在效果真有的数字字段上；按 N 秒的时长只能给不可叠、会过期的状态（可叠层的永续，085）
+static func _check_reaction_scaling(def: ReactionDef, report: ImportReport) -> void:
+	for raw in def.scaling:
+		var row := raw as Dictionary
+		var i := int(row["effect"])
+		var field := String(row["field"])
+		var e: CombatEffect = def.effects[i] if i < def.effects.size() else null
+		var path := "effects[%d].%s" % [i, "duration_sec" if field == ReactionDef.BUFF_DURATION else field]
+		if e == null:
+			report.error(path, "没有这个效果")
+		elif field == ReactionDef.BUFF_DURATION:
+			var a := e as ApplyStatus
+			if a == null or a.buff == null:
+				report.error(path, "时长只能写在 apply_status 上")
+			elif a.buff.is_stackable():
+				report.error(path, "「%s」可叠层、永续，没有时长可调（085）" % a.buff.id)
+		elif not (field in e) or not (e.get(field) is float or e.get(field) is int):
+			report.error(path, "这个效果没有叫 %s 的数字" % field)
+
+
 ## 效果是普通的规则内容（施加的 buff 按 id 查），不许空
 static func import_reaction(data: Dictionary, ctx: Context, report: ImportReport) -> ReactionDef:
 	var def := ReactionDef.new()
+	var scaling: Array = []
+	data = _pull_reaction_scaling(data, scaling, report)
 	_fill(def, data, "", ctx, report)
+	def.scaling = scaling
+	_check_reaction_scaling(def, report)
 	_require_id(def.id, "反应", report)
 	if def.display_name.strip_edges() == "":
 		report.error("display_name", "反应得有名字")
@@ -293,8 +359,6 @@ static func import_reaction(data: Dictionary, ctx: Context, report: ImportReport
 			report.error("elements", "两种元素得不同")
 		elif def.id != &"" and String(def.id) != key:
 			report.error("id", "反应的 id 应为 '%s'（两种元素按 %s 的顺序拼）" % [key, "、".join(ReactionResolver.ELEMENTS)])
-	if def.consume != ReactionDef.CONSUME_BOTH and def.consume != ReactionDef.CONSUME_NONE and not def.elements.has(def.consume):
-		report.error("consume", "吃印只能写 both / none / 这两种元素之一（现在是 '%s'）" % def.consume)
 	if def.effects.is_empty():
 		report.error("effects", "反应得有效果")
 	return def

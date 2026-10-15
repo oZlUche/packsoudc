@@ -10,8 +10,10 @@ extends RefCounted
 
 ## 道具实例 `state` 里附魔的键（铸牌、被附魔的武器都用它）
 const KEY := "enchant"
-## 铸牌的价值记在实例上（三件投入价值之和的一半，待定 3 A）
+## 铸牌的价值记在实例上
 const VALUE_KEY := "value"
+## 175 补充二（作者定）：铸牌固定价，几乎总是亏 —— 低于任何三件材料之和
+const TOKEN_VALUE := 3
 ## 铸牌的定义 id 与标签（不进图鉴、掉落、商店，[method ItemDatabase.ids] 按标签拦）
 const TOKEN_ID := &"forge_token"
 const TOKEN_TAG := &"token"
@@ -101,7 +103,7 @@ static func _element_for(em: ForgeEntry, def: ItemDef) -> StringName:
 	return StringName(String(keys[0]))
 
 
-## 一枚铸牌：1×1、带附魔、价值 = 三件之和的一半（至少 1）。铸牌的定义没导进来返回 null
+## 一枚铸牌：1×1、带附魔、价值固定 [constant TOKEN_VALUE]（补充二）。铸牌的定义没导进来返回 null
 static func make_token(db: ItemDatabase, timing: ItemInstance, effect: ItemInstance, value: ItemInstance) -> ItemInstance:
 	if db == null or not db.has_def(TOKEN_ID) or timing == null or effect == null or value == null:
 		return null
@@ -110,7 +112,7 @@ static func make_token(db: ItemDatabase, timing: ItemInstance, effect: ItemInsta
 		return null
 	var inst := ItemInstance.create(db.get_def(TOKEN_ID))
 	inst.state[KEY] = ench
-	inst.state[VALUE_KEY] = maxi(1, int(roundf((ItemValue.of_instance(timing) + ItemValue.of_instance(effect) + ItemValue.of_instance(value)) / 2.0)))
+	inst.state[VALUE_KEY] = TOKEN_VALUE
 	return inst
 
 

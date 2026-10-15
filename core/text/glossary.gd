@@ -164,10 +164,10 @@ static func describe_buff(def: BuffDef) -> String:
 		return ""
 	var lines: Array[String] = []
 	var kind := "减益" if def.is_debuff else "增益"
-	var stacks := "不可叠层" if not def.is_stackable() else "不限层"
+	var stacks := "不可叠层" if not def.is_stackable() else ("至多 %d 层" % def.stack_cap if def.stack_cap > 0 else "不限层")
 	var duration := def.duration_text()
-	# 103：默认永续、可叠层；不可叠层与会过期是例外，用例外色标出来，作者 / 玩家一眼看出「这个不是默认」
-	if not def.is_stackable():
+	# 103：默认永续、可叠层；不可叠层、有层数上限（175 补充一）与会过期是例外，用例外色标出来，作者 / 玩家一眼看出「这个不是默认」
+	if not def.is_stackable() or def.stack_cap > 0:
 		stacks = _exception(stacks)
 	if not def.is_permanent():
 		duration = _exception(duration)
@@ -189,22 +189,17 @@ static func describe_buff(def: BuffDef) -> String:
 		lines.append("上身时：" + effects_text(def.on_apply))
 	if not def.on_expire.is_empty():
 		lines.append("到期时：" + effects_text(def.on_expire))
-	# 175：元素印、截治疗、锁
+	# 175：元素印、截治疗、恢复叠层、不可清除
 	if def.element != &"":
 		lines.append("%s元素的印：带着它再挨上别的元素，引发反应" % ReactionResolver.element_name(def.element))
 	if def.heal_cut > 0:
-		var cut := "治疗无效" if def.heal_cut >= 100 else "每次恢复生命少 %d%%" % def.heal_cut
-		if def.heal_cut_to != &"":
-			cut += "，少掉的变成%s伤害" % damage_type_name(def.heal_cut_to)
-		lines.append(cut)
-	if not def.locks.is_empty():
-		var names: Array[String] = []
-		for id in def.locks:
-			names.append(status_name(id))
-		var line := "%s不能被清除" % "、".join(names)
-		if def.locks_while != &"":
-			line += "（直到%s消失）" % status_name(def.locks_while)
-		lines.append(line)
+		lines.append("治疗无效" if def.heal_cut >= 100 else "每次恢复生命少 %d%%" % def.heal_cut)
+	if def.heal_echo != &"":
+		var per := def.heal_echo_per_point
+		var each := "" if is_equal_approx(per, 1.0) else "×%s" % TextTemplate.num(per)
+		lines.append("每次恢复生命，回了几点就叠几层%s%s（恢复照常）" % [status_name(def.heal_echo), each])
+	if def.uncleansable:
+		lines.append(_exception("不可清除") + "：只有反应能吃掉它")
 	return "\n".join(lines)
 
 

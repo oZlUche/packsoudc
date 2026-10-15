@@ -776,15 +776,26 @@ func leave_chest() -> bool:
 	return hide_overlay()
 
 
-## 175：离开铸炉屏（回地图；没铸过的还能再开）
+## 175 补充二：在休息点 [param node] 上打开铸炉（休息屏的「铸炉」一栏）。不是休息点、铸过了返回 false
+func open_forge(node: MapNode) -> bool:
+	if run == null or run.is_over() or node == null or NodeEvents.effective_type(node) != &"rest" or NodeEvents.forge_used(node):
+		return false
+	_go(Screen.FORGE, {"node": node})
+	return true
+
+
+## 175：离开铸炉屏（接着看排着的，没有就回地图；没铸过的还能再开）
 func leave_forge() -> bool:
-	return hide_overlay()
+	if run == null or screen != Screen.FORGE:
+		return false
+	_flush()
+	return true
 
 
 ## 175：在铸炉 [param node] 上把三件（时机、效果、数值槽，各在 [param from] 里）熔铸成一枚铸牌。三件被消耗、铸炉熄掉，返回铸牌（没铸成 null）。
 ## 铸牌放在哪由调用方定（铸炉屏放进出牌槽）
 func forge_token(node: MapNode, timing: ItemInstance, effect: ItemInstance, value: ItemInstance, from: Array) -> ItemInstance:
-	if run == null or run.is_over() or node == null or NodeEvents.forge_used(node) or NodeEvents.effective_type(node) != &"forge":
+	if run == null or run.is_over() or node == null or NodeEvents.forge_used(node) or NodeEvents.effective_type(node) != &"rest":
 		return null
 	var token := Forge.make_token(items, timing, effect, value)
 	if token == null:
@@ -794,7 +805,7 @@ func forge_token(node: MapNode, timing: ItemInstance, effect: ItemInstance, valu
 		var inst := [timing, effect, value][i] as ItemInstance
 		if c != null and c.has_item(inst.uid):
 			c.remove(inst.uid)
-	run.events.use_forge(node)
+	NodeEvents.use_forge(node)
 	save()
 	return token
 
@@ -1088,13 +1099,13 @@ func _reopen_entry() -> Dictionary:
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开
 	if here != null and not here.is_visited() and NodeEvents.effective_type(here) == &"chest" and not ChestPlacer.is_opened(here):
 		return {"screen": Screen.CHEST, "node": here}     # 154：没开锁的宝箱，站着随时能再开
-	if here != null and not here.is_visited() and NodeEvents.effective_type(here) == &"forge" and not NodeEvents.forge_used(here):
-		return {"screen": Screen.FORGE, "node": here}     # 175：没铸过的铸炉，站着随时能再开
 	var altar := AltarModule.of(run)
 	if here != null and altar != null and altar.is_open():
 		return {"screen": Screen.ALTAR, "node": here}     # 093：神坛还开着（这一次没用过）
 	if here != null and not here.is_visited() and NodeEvents.effective_type(here) == &"rest":
 		return {"screen": Screen.EVENT, "node": here, "rest": true}     # 反馈：休息点还有没用的那一份
+	if here != null and NodeEvents.effective_type(here) == &"rest" and not NodeEvents.forge_used(here):
+		return {"screen": Screen.FORGE, "node": here}     # 175 补充二：休息点的铸炉没用过，站着随时能开
 	return {}
 
 
@@ -1245,8 +1256,6 @@ func _adopt(state: RunState) -> void:
 		_push({"screen": Screen.ALTAR, "node": node}))     # 093：休息处的神坛
 	ev.chest_shown.connect(func(node: MapNode):
 		_push({"screen": Screen.CHEST, "node": node}))     # 154：踩上没开锁的宝箱
-	ev.forge_opened.connect(func(node: MapNode):
-		_push({"screen": Screen.FORGE, "node": node}))     # 175：踩上没用过的铸炉
 	ev.event_pending.connect(func(node: MapNode, def: EventDef):
 		var entry := {"screen": Screen.EVENT, "node": node, "def": def}
 		# 084：战利品已经排在队尾时来的事件（「搜索点被余波摧毁」）说的是刚发生的事：先说，再看战利品（东西还在）。

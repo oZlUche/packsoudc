@@ -21,7 +21,12 @@ func apply(ctx: RuleContext) -> void:
 
 ## 给 [param who] 叠 [param n] 层 [param def]，返回实际加上的层数。加上了才发 status_stacked 与 130 的 status_applied
 ## （施加方 = 本规则的主人）、跑 on_apply；叠满了只刷新时长的那一下什么都不发。[ConvertStatus] 也走这里
+## 175 补充一 / 三：状态本身是印（中毒、流血、灼……）就先问 [method ReactionResolver.before_status] —— 引发了反应，只叠扣掉 N 层后的余量
 static func give(ctx: RuleContext, who: CombatantRuntime, def: BuffDef, n: int) -> int:
+	if def.element != &"":
+		n = ReactionResolver.before_status(ctx.battle, who, def, n)
+		if n <= 0 or who.dead:
+			return 0
 	var added := who.apply_buff(def, n, ctx.battle.now)
 	if added <= 0:
 		return 0
@@ -34,8 +39,6 @@ static func give(ctx: RuleContext, who: CombatantRuntime, def: BuffDef, n: int) 
 	})
 	for e in def.on_apply:
 		(e as CombatEffect).apply(ctx)
-	if def.element != &"":
-		ReactionResolver.after_status(ctx.battle, who, def)     # 175：中毒 / 流血本身就是印，施加上去就可能引发反应
 	return added
 
 

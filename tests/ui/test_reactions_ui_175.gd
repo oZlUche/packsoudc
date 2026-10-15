@@ -1,5 +1,5 @@
 ## 175 第一批的可见性：悬浮窗「可引发」、对阵屏的元素小图标、百科的反应页（没引发过只写两种元素）、
-## 局外记账（引发过的反应跟存档）、回放的反应弹字与日志行、buff 词条写印 / 截治疗 / 锁
+## 局外记账（引发过的反应跟存档）、回放的反应弹字与日志行、buff 词条写印 / 截治疗 / 恢复叠层 / 不可清除 / 层数上限
 extends RefCounted
 
 const Staff := preload("res://tests/run/test_crystal_148.gd")
@@ -61,7 +61,7 @@ static func run_meta(t: TestCase) -> void:
 
 
 static func run_replay(t: TestCase) -> void:
-	t.begin("175 · 回放：反应弹字是反应名、颜色按第一种元素；buff 词条写印 / 截治疗 / 锁")
+	t.begin("175 · 回放：反应弹字是反应名、颜色按第一种元素；buff 词条写印 / 截治疗 / 恢复叠层 / 不可清除 / 层数上限")
 	var e := BattleEvent.make(BattleEvent.EFFECT_RESOLVED, 0, 1, {"effect": ReactionResolver.EFFECT, "reaction": "fire_poison", "elements": ["fire", "poison"]})
 	t.eq(BattleView.reaction_label(e), "爆燃", "弹字写反应名")
 	t.eq(BattleView.reaction_color(e), UiPalette.damage_color(&"fire"), "颜色按火")
@@ -74,5 +74,6 @@ static func run_replay(t: TestCase) -> void:
 	var lib := ContentLibrary.buffs()
 	t.check(Glossary.describe_buff(lib[&"scorch"]).contains("火元素的印"), "灼：火元素的印")
 	t.check(Glossary.describe_buff(lib[&"scorched_blood"]).contains("治疗无效"), "燃血：治疗无效")
-	t.check(Glossary.describe_buff(lib[&"fungal_blood"]).contains("少掉的变成中毒伤害"), "菌血：减半转毒伤")
-	t.check(Glossary.describe_buff(lib[&"congeal"]).contains("不能被清除"), "凝毒：中毒不能被清除")
+	t.check(Glossary.describe_buff(lib[&"fungal_blood"]).contains("回了几点就叠几层中毒"), "菌血：按恢复量叠中毒（%s）" % Glossary.describe_buff(lib[&"fungal_blood"]))
+	t.check(Glossary.describe_buff(lib[&"congeal"]).contains("不可清除"), "凝毒：不可清除")
+	t.check(Glossary.describe_buff(lib[&"chill"]).contains("至多 10 层"), "寒：至多十层")
