@@ -1,21 +1,22 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_2moyj"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_c7xor"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_j8el4"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_jh5m4"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_077cm"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_c7xor"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_j8el4"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_jh5m4"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_077cm"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_6onem"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_y7y0i"]
 
-[sub_resource type="Resource" id="Resource_6onem"]
-script = ExtResource("5_077cm")
+[sub_resource type="Resource" id="Resource_6oun0"]
+script = ExtResource("6_y7y0i")
 
 [resource]
-script = ExtResource("4_jh5m4")
+script = ExtResource("5_6onem")
 id = &"copper_ore"
 display_name = "铜矿石"
 display_names = {
 "en": "Copper Ore"
 }
 description = "带绿锈的矿石，熔了就是铜。"
-shape = SubResource("Resource_6onem")
+shape = SubResource("Resource_6oun0")
 tags = Array[StringName]([&"material", &"nature", &"metal"])

@@ -1,32 +1,33 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_dy8fi"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_hogoh"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_tagjk"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_loxnu"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="5_5ws4c"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="6_bftd6"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="7_csclv"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_hogoh"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_tagjk"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_loxnu"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="4_5ws4c"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_bftd6"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_csclv"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="7_on7mh"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="8_kh8t6"]
 
-[sub_resource type="Resource" id="Resource_on7mh"]
-script = ExtResource("3_tagjk")
+[sub_resource type="Resource" id="Resource_val86"]
+script = ExtResource("4_5ws4c")
 base_stats = {
 "max_armor": 50
 }
 
-[sub_resource type="Resource" id="Resource_kh8t6"]
-script = ExtResource("7_csclv")
+[sub_resource type="Resource" id="Resource_8dyru"]
+script = ExtResource("8_kh8t6")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0), Vector2i(1, 1), Vector2i(2, 1), Vector2i(0, 2), Vector2i(1, 2), Vector2i(2, 2), Vector2i(3, 2)])
 
 [resource]
-script = ExtResource("6_bftd6")
+script = ExtResource("7_on7mh")
 id = &"plate_cuirass"
 display_name = "板甲"
 display_names = {
 "en": "Plate Cuirass"
 }
-shape = SubResource("Resource_kh8t6")
+shape = SubResource("Resource_8dyru")
 rarity = 2
 value = 40
 tags = Array[StringName]([&"armor", &"heavy", &"imperial", &"metal"])
-combat = SubResource("Resource_on7mh")
+combat = SubResource("Resource_val86")

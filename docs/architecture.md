@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.08 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.09 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1361,13 +1361,22 @@ var final: int              ## 最终结算量，正为扣血、负为回血
 麻痹   付耐力时消耗 × (1 + 层数 × per_stack_percent%)（ResourceCost，和灵巧 / 笨拙轴并列），之后减半（stamina_paid）
 ```
 
-减半向下取整（1 → 0 移除），不低于保底（下面的 `guard`）。印从两条路来，规则层一行不加：
+减半向下取整（1 → 0 移除），不低于保底（下面的 `guard`）。
 
-```
-命中    第 5 步之后：伤害类型有 DamageTypeDef.mark 就盖那个印，一下 mark_stacks 层（默认 1）（fire → scorch、ice → chill、lightning → numb；物理 / 反伤 / 流失 / 中毒与流血的伤害不盖；
-        状态自己的规则跳出来的伤害也不盖 —— DamagePacket.from_status，否则灼伤每跳一次多一层）
-施加    ApplyStatus.give 加层之前、那个状态本身是印（施加中毒 = 盖毒印）
-```
+**【造成伤害】和【施加元素】是两件事**（175 补充五，作者定）：两者通常结伴（火焰法杖一下既打火伤又叠一层灼伤），但各自独立成立 ——
+可以只打火伤不叠灼伤（燃血的每秒火伤、爆燃那一下），也可以只叠灼伤不打伤害。伤害类型（`DamageTypeDef`）只管结算性质（护甲、招致反应、真实），**不盖印**；
+**印只有一条路来**：`ApplyStatus.give` 加层之前、那个状态本身是印（`BuffDef.element`），问 `ReactionResolver.before_status`。
+一件道具「带哪种元素」（悬浮窗「可引发」、对阵屏图标）只看它**施加**什么（`ReactionResolver.elements_of_item` 只读 `apply_status` / `convert_status` 的元素状态），不看它打什么类型的伤害。
+
+「结伴」仍是一行数据：
+
+- **道具简写** `ItemDef.applies`：`[{"buff": "scorch", "stacks": 1}]`（`ElementApply`），编译成一条 `on_damage {DEALT, own_only, landed_only} → apply_status OPPONENT buff × stacks`，经 108 的 `_attach` 挂上（来源 `applies`，直接来源，130 的「施加时」听得到）。只在这件道具**打中之后**施加：被受伤前效果整个取消的包，damage 事件带 `cancelled`，`DamageTrigger.landed_only` 不认它。要别的时机写普通规则。
+- **晶石**：`feed_rules` 两条 —— 原来的 `convert_damage_type` + `on_damage DEALT own_only landed_only → apply_status scorch / chill / numb`。轮读的法杖把第二条记进装载表那颗的 `applies`（不常驻），轮到它那一下打中了才施加。
+- **铸炉效果表**的元素行（`by_element.<元素>.applies`）：另加一个施加效果，一阶 1 层、每高一阶多 1 层（最多 5，`Forge.MAX_ELEMENT_STACKS`）。
+- **日神附火**（`EnchantWeaponsPerk`）：附火规则里火伤之后再施加一层灼伤（`applies_buff` / `applies_stacks`）。
+
+**真实伤害只有流血**（补充五）：`DamageTypeDef.pure` 只许流血打开（导入器报错别的类型写它）；`DamageTypeDef.family`（空 = 自己的 id）给出大类，流血 `family: physical` ——
+「真实 · 物理」（`DamageTypes.nature`），将来按大类读的加成 / 减免把流血算进物理。
 
 给目标加 n 层乙元素的印时（175 补充一 / 三，作者伪代码，N 更正为 min）：`ReactionResolver` 在目标身上找**元素不同、层数 > 0** 的印里**层数最多的那种**
 （一种元素的层数 = 这种元素的印加起来，含保底的层，并列按「火、冰、雷、毒、血」）。没有 → 新印照常叠上去（同元素再碰就是加层）。
@@ -1376,8 +1385,8 @@ var final: int              ## 最终结算量，正为扣血、负为回血
 以挨打那一方的对手为主人跑效果（普通的规则内容）。效果里的数字写成随 N 变（`ReactionDef.scaling`，系数 M 在 json 里，作者会调）：
 json 在数字的位置写 `{"per_stack": X}`（N × X）、`{"stacks": "n"}`（= N）、`{"stacks": "n/2"}`（N / 2 向下取整，0 = 这条效果不跑）、
 `{"seconds": "n", "max": 10}`（写在 `apply_status` 的 `duration_sec` 上 = 这次施加的不可叠状态持续 N 秒），都可加 `max` 封顶；
-导入器抽成 `scaling` 行、导出器写回内联，结算时 `ReactionDef.effects_for(N)` 复制一份改数。**反应不连锁**：结算中 `BattleContext.reacting > 0`，这期间的伤害不盖印、
-施加的状态照常上身但不再引发反应。十对反应（补充四）：
+导入器抽成 `scaling` 行、导出器写回内联，结算时 `ReactionDef.effects_for(N)` 复制一份改数。**反应不连锁**：结算中 `BattleContext.reacting > 0`，
+这期间施加的状态照常上身但不再引发反应（反应里的伤害本来就不盖印）。十对反应（补充四）：
 
 ```
 爆燃 火毒   N × M 火伤，再叠 N / 2 层灼伤                     凝毒 冰毒   对手的中毒保底 + N（guard_status）
@@ -1423,12 +1432,12 @@ while 双方存活 and now < 安全上限:
 #### 法杖轮读（175 第二批，作者定）
 
 - **没有晶石 = 木棍**：法杖按自己的属性与类型出手（物理），只有总冷却。
-- **有晶石**：编译器（`BattleCompiler.cycle_order`）把归属给这把杖的晶石（171 的归属表，一颗只给后放的那把）按**顺时针**排进 `CompiledItem.loaded`：以法杖占格中心为原点、晶石压在装载格上那几格的中心为方位，从 12 点起顺时针，同角按 `placed_seq`、再按 uid。每颗 `{uid, id, type, damage}`：`type` 取自晶石 `feed_rules` 里的 `convert_damage_type.to`，`damage` 是它 `feed_mods` 里伤害那几条的和。
-- 只有规则里有 `FireLoaded` 的宿主（`BattleCompiler.is_cycler`）这样装：晶石的伤害修饰与换型规则**不再常驻**挂在法杖上，轮到它那一下才用；别的供给（非伤害的修饰、别的规则）照旧常驻。
-- `FireLoaded`（继承 `DealDamage`）：按 `CycleCadence` 记下的第几颗取那颗，这一包的类型 = 它的元素、原值 = 法杖属性的伤害 + 它的伤害（再掷暴击）；所以它命中盖印、火焰吃火焰加成轴。没装晶石照 `DealDamage` 原样打。
+- **有晶石**：编译器（`BattleCompiler.cycle_order`）把归属给这把杖的晶石（171 的归属表，一颗只给后放的那把）按**顺时针**排进 `CompiledItem.loaded`：以法杖占格中心为原点、晶石压在装载格上那几格的中心为方位，从 12 点起顺时针，同角按 `placed_seq`、再按 uid。每颗 `{uid, id, type, damage, applies}`：`type` 取自晶石 `feed_rules` 里的 `convert_damage_type.to`，`damage` 是它 `feed_mods` 里伤害那几条的和，`applies`（补充五）是它「造成伤害后施加」那条供给规则的 `{buff, stacks}`（`BattleCompiler.applies_of`）。
+- 只有规则里有 `FireLoaded` 的宿主（`BattleCompiler.is_cycler`）这样装：晶石的伤害修饰、换型规则与施加规则**不再常驻**挂在法杖上，轮到它那一下才用；别的供给（非伤害的修饰、别的规则）照旧常驻。
+- `FireLoaded`（继承 `DealDamage`）：按 `CycleCadence` 记下的第几颗取那颗，这一包的类型 = 它换成的类型、原值 = 法杖属性的伤害 + 它的伤害（再掷暴击），火焰吃火焰加成轴；打中了（`DealDamage.deal` 返回没被取消）再给对手施加那颗的 `applies`（补充五）。没装晶石照 `DealDamage` 原样打，只打伤害、不施加。
 - 晶石供给次数仍按场扣（148），战斗中不会碎，所以一场内轮读序列不变。
 - 回放：出手 / 跳过事件对轮读法杖多带 `step / steps / next`，`CooldownOverlay` 在法杖第一格左上角标下一颗的罗马数字（Ⅰ Ⅱ …，和倍速同一套字形）；冷却扇形走当前这一段（单次或总）。
-- 悬浮窗：「没放晶石：物理 Y，每 Z 秒」/「装载一颗：火 Y，每 Z 秒」/「装载 N 颗，顺时针：冰 Y → 火 Y；颗间 X 秒，一轮后歇 Z 秒」，下面每颗一行「Ⅰ 晶石名　剩 N 次」。估算：一秒 n / ((n−1) × 单次 + 总) 下，每下加轮读表的平均伤害。
+- 悬浮窗：「没放晶石：物理 Y，每 Z 秒」/「装载一颗：火焰 Y，每 Z 秒」/「装载 N 颗，顺时针：冰霜 Y → 火焰 Y；颗间 X 秒，一轮后歇 Z 秒」，施加另成一句「。打中后：施加 1 层【寒冷】 → 施加 1 层【灼伤】」（补充五：伤害与施加分两句，不合写成「火焰攻击」；武器句同理「每下施加 N 层【X】」、道具简写「打中后：施加 N 层【X】」），下面每颗一行「Ⅰ 晶石名　剩 N 次」。估算：一秒 n / ((n−1) × 单次 + 总) 下，每下加轮读表的平均伤害。
 
 #### 冷却按「快照」排定（125 改口，与 `CooldownCadence` 一致）
 
@@ -4263,6 +4272,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.09 | 2026-10-15 | **【造成伤害】与【施加元素】分开；流血 = 真实 · 物理**（报告 175 补充五，作者定，待定补 5.1–5.3 全按推荐；改 4.6）：删 `DamageTypeDef.mark` / `mark_stacks`、`ReactionResolver.after_hit`、`DamagePacket.from_status`，印只从 `apply_status` 来；`elements_of_item` 只读施加的元素状态；道具简写 `ItemDef.applies`（`ElementApply`，编译走 `_attach`，来源 `applies`）+ `DamageTrigger.landed_only`（damage 事件带 `cancelled`）；晶石加第二条供给规则（打中后施加对应元素），轮读装载表每颗带 `applies`；铸炉元素行加施加（按阶 1–3 层，最多 5）；日神附火每下施加一层灼伤；`DamageTypeDef.family`（流血 physical）、`pure` 只许流血；悬浮窗伤害与施加分两句 |
 | v3.08 | 2026-10-15 | **五种基础状态与十对反应定稿**（报告 175 补充四，作者定，待定补 4.1–4.7 全按推荐；改 4.6）：灼伤 / 寒冷 / 麻痹 / 中毒 / 流血都可叠、不封顶、永续（删 `BuffDef.stack_cap`、`uncleansable`）；灼伤每秒火伤、流血改真实伤害（`DamageTypeDef.pure`）跳后减半、寒冷拉长武器冷却后减半、麻痹加耐力消耗后减半（`decay_halve_on` + `per_stack_percent`）；状态自己跳的伤害不盖印（`DamagePacket.from_status`）；十对反应的数字全写成随 N 变（新写法 `stacks: n/2`），删 buff `overload / superconduct / surge / congeal / frostbite`；保底 `BuffInstance.guard` + 效果 `guard_status`（凝毒 / 冻疮）；按层计时 `seconds_per_stack`（燃血 / 菌血）；剧毒改按类型易伤 `damage_taken_by_type`、不再是印；`shift_axis.overflow_to`（激荡）；蝰蛇毒腺改为施加中毒时加一层剧毒 |
 | v3.07 | 2026-10-15 | **铸炉并进休息点、反应量取较小值、反应数字随 N 变**（报告 175 补充二 / 三，作者定；改 4.6、5.4）：反应 N = min(已有, 新来)，两边各扣 N，新印余量照常叠上、不再反应；`ReactionDef.scaling` + `effects_for(N)`（json 内联 `per_stack` / `stacks: n` / `seconds: n` + `max`，导入器抽、导出器写回）；撤掉节点类型 `forge`，铸炉成为休息屏一栏（`GameFlow.open_forge`，`NodeEvents.use_forge` 不再灰点），老存档铸炉点 → 休息点（`IdAliases.NODE_TYPES`、`SaveReport.retyped`）；铸牌价值固定 3（`Forge.TOKEN_VALUE`）；赐福与附魔两套平行（不动） |
 | v3.06 | 2026-10-15 | **反应按层数结算**（报告 175 补充一，作者伪代码，待定补 1A / 2B / 3A / 4A；改 4.6）：取层数最多的异色印，N = max(已有, 新来)，已有印扣光、新印不叠，效果以 N 为量（`RuleContext.reaction_stacks`）；灼 / 寒 / 麻改可叠层永续、`BuffDef.stack_cap` 10，命中盖 `DamageTypeDef.mark_stacks` 层；凝毒 / 电解改产物（N 层【凝毒】`uncleansable` / N 层剧毒），删 `ReactionDef.consume`、`BuffDef.locks` / `locks_while` / `heal_cut_to`；菌血改 `heal_echo`（按恢复量叠中毒）；中毒每层 1 点、剧毒 2.5 |

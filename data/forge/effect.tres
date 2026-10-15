@@ -157,6 +157,9 @@ prefixes = {
 }
 by_element = {
 "fire": {
+"applies": {
+"buff": "scorch"
+},
 "damage_type": "fire",
 "prefix": "燃烧的",
 "prefixes": {
@@ -164,6 +167,9 @@ by_element = {
 }
 },
 "ice": {
+"applies": {
+"buff": "chill"
+},
 "damage_type": "ice",
 "prefix": "霜冻的",
 "prefixes": {
@@ -171,6 +177,9 @@ by_element = {
 }
 },
 "lightning": {
+"applies": {
+"buff": "numb"
+},
 "damage_type": "lightning",
 "prefix": "雷鸣的",
 "prefixes": {

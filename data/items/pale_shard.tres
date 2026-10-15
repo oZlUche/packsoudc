@@ -1,22 +1,23 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_eqqjw"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_p5psv"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_qvyai"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_p3br6"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_rtxkc"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_p5psv"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_qvyai"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_p3br6"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_rtxkc"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_ekf2i"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_wb65i"]
 
-[sub_resource type="Resource" id="Resource_ekf2i"]
-script = ExtResource("5_rtxkc")
+[sub_resource type="Resource" id="Resource_jo6fm"]
+script = ExtResource("6_wb65i")
 
 [resource]
-script = ExtResource("4_p3br6")
+script = ExtResource("5_ekf2i")
 id = &"pale_shard"
 display_name = "灰白色的金属碎片"
 display_names = {
 "en": "Pale Metal Shard"
 }
-shape = SubResource("Resource_ekf2i")
+shape = SubResource("Resource_jo6fm")
 rarity = 4
 value = 800
 tags = Array[StringName]([&"treasure", &"relic", &"gem"])

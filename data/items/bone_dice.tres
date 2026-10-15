@@ -1,21 +1,22 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_w42ps"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_1hdg7"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_rwirj"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_layyo"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_xl52j"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_1hdg7"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_rwirj"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_layyo"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_xl52j"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_ro328"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_2ckwg"]
 
-[sub_resource type="Resource" id="Resource_ro328"]
-script = ExtResource("5_xl52j")
+[sub_resource type="Resource" id="Resource_bwrvv"]
+script = ExtResource("6_2ckwg")
 
 [resource]
-script = ExtResource("4_layyo")
+script = ExtResource("5_ro328")
 id = &"bone_dice"
 display_name = "骨骰子"
 display_names = {
 "en": "Bone Dice"
 }
-shape = SubResource("Resource_ro328")
+shape = SubResource("Resource_bwrvv")
 rarity = 3
 tags = Array[StringName]([&"bone", &"material", &"crafted"])

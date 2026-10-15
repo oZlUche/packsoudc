@@ -1,22 +1,23 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_dsop7"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_pmswh"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_ir1rx"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_rvy0f"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_dfxi1"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_pmswh"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_ir1rx"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_rvy0f"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_dfxi1"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_okovu"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_dja6p"]
 
-[sub_resource type="Resource" id="Resource_okovu"]
-script = ExtResource("5_dfxi1")
+[sub_resource type="Resource" id="Resource_mn40w"]
+script = ExtResource("6_dja6p")
 
 [resource]
-script = ExtResource("4_rvy0f")
+script = ExtResource("5_okovu")
 id = &"charm_skill"
 display_name = "技巧之神的护符"
 display_names = {
 "en": "Charm of Skill"
 }
-shape = SubResource("Resource_okovu")
+shape = SubResource("Resource_mn40w")
 rarity = 3
 value = 200
 tags = Array[StringName]([&"treasure", &"faith", &"faith:skill", &"faith_anchor"])

@@ -142,6 +142,11 @@ func faith_tag() -> StringName:
 ## 邻接标记（增益／受益）。为空表示本物品与邻居无互动。
 @export var adjacency: AdjacencyProfile
 
+## 175 补充五：「造成伤害后施加」的简写 —— `[{"buff": "scorch", "stacks": 1}]`：这件道具每打中一下，给对手叠这几层。
+## 编译时拼成一条 on_damage 规则挂上（[method ElementApply.rule_of]，来源 `applies`）。【造成伤害】和【施加元素】是两件事，
+## 道具带哪种元素只看它施加什么（[method ReactionResolver.elements_of_item]）
+@export var applies: Array[ElementApply] = []
+
 @export_group("附魔")
 ## 175 第三批（作者定：所有附魔都视为铸牌附魔）：预置附魔 —— 实例的 `state.enchant`（铸牌附上的）覆盖它，见 [Forge]
 @export var enchant: EnchantDef

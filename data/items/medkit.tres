@@ -1,60 +1,61 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_2dtpe"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_ohdgn"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_y0k3a"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_krf6n"]
-[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="5_xqgdt"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_vhaw8"]
-[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="7_5cpy5"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="8_x5u6c"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_27haa"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_y2leo"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_aou6r"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_a0l82"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_qnitp"]
-
-[sub_resource type="Resource" id="Resource_oii2c"]
-script = ExtResource("3_y0k3a")
-metadata/part_ref = &"always"
-
-[sub_resource type="Resource" id="Resource_itw2x"]
-script = ExtResource("5_xqgdt")
-metadata/part_ref = &"uses_1"
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_ohdgn"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_y0k3a"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_krf6n"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="4_xqgdt"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_vhaw8"]
+[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="6_5cpy5"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_x5u6c"]
+[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="8_27haa"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="9_y2leo"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="10_aou6r"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="11_a0l82"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="12_qnitp"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="13_oii2c"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="14_itw2x"]
 
 [sub_resource type="Resource" id="Resource_fntlc"]
-script = ExtResource("7_5cpy5")
-amount = 35.0
+script = ExtResource("4_xqgdt")
+metadata/part_ref = &"always"
 
 [sub_resource type="Resource" id="Resource_evcgn"]
-script = ExtResource("8_x5u6c")
+script = ExtResource("6_5cpy5")
+metadata/part_ref = &"uses_1"
+
+[sub_resource type="Resource" id="Resource_mtedr"]
+script = ExtResource("8_27haa")
+amount = 35.0
+
+[sub_resource type="Resource" id="Resource_wraa8"]
+script = ExtResource("9_y2leo")
 percent = 40
 metadata/part_ref = &"on_resource_below_40"
 
-[sub_resource type="Resource" id="Resource_mtedr"]
-script = ExtResource("2_ohdgn")
-trigger = SubResource("Resource_evcgn")
-cadence = SubResource("Resource_oii2c")
-costs = Array[ExtResource("4_krf6n")]([SubResource("Resource_itw2x")])
-effects = Array[ExtResource("6_vhaw8")]([SubResource("Resource_fntlc")])
-
-[sub_resource type="Resource" id="Resource_wraa8"]
-script = ExtResource("9_27haa")
-rules = Array[ExtResource("2_ohdgn")]([SubResource("Resource_mtedr")])
-
 [sub_resource type="Resource" id="Resource_og5vm"]
-script = ExtResource("13_qnitp")
+script = ExtResource("3_krf6n")
+trigger = SubResource("Resource_wraa8")
+cadence = SubResource("Resource_fntlc")
+costs = Array[ExtResource("5_vhaw8")]([SubResource("Resource_evcgn")])
+effects = Array[ExtResource("7_x5u6c")]([SubResource("Resource_mtedr")])
+
+[sub_resource type="Resource" id="Resource_2qcbw"]
+script = ExtResource("10_aou6r")
+rules = Array[ExtResource("3_krf6n")]([SubResource("Resource_og5vm")])
+
+[sub_resource type="Resource" id="Resource_577gs"]
+script = ExtResource("14_itw2x")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
 
 [resource]
-script = ExtResource("12_a0l82")
+script = ExtResource("13_oii2c")
 id = &"medkit"
 display_name = "医疗包"
 display_names = {
 "en": "Medkit"
 }
-shape = SubResource("Resource_og5vm")
+shape = SubResource("Resource_577gs")
 rarity = 1
 weight = 3
 tags = Array[StringName]([&"sealed", &"remedy"])
-combat = SubResource("Resource_wraa8")
+combat = SubResource("Resource_2qcbw")

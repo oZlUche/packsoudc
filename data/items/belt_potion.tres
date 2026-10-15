@@ -1,23 +1,24 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_612m2"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_sbg1u"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_rru0s"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_tt1ft"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_oayvg"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_sbg1u"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_rru0s"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_tt1ft"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_oayvg"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_8sg0y"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_qe3cj"]
 
-[sub_resource type="Resource" id="Resource_8sg0y"]
-script = ExtResource("5_oayvg")
+[sub_resource type="Resource" id="Resource_e0scv"]
+script = ExtResource("6_qe3cj")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
 
 [resource]
-script = ExtResource("4_tt1ft")
+script = ExtResource("5_8sg0y")
 id = &"belt_potion"
 display_name = "药水带"
 display_names = {
 "en": "Potion Belt"
 }
-shape = SubResource("Resource_8sg0y")
+shape = SubResource("Resource_e0scv")
 rarity = 2
 is_bag = true
 bag_accept_tags = Array[StringName]([&"remedy", &"food"])

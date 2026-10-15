@@ -1,32 +1,33 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_u7fuw"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_t4si2"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_ke6uw"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_xcelq"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="5_k3l6a"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="6_dlrj8"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="7_gygn4"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_t4si2"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_ke6uw"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_xcelq"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="4_k3l6a"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_dlrj8"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_gygn4"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="7_4fruf"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="8_6d8bk"]
 
-[sub_resource type="Resource" id="Resource_4fruf"]
-script = ExtResource("3_ke6uw")
+[sub_resource type="Resource" id="Resource_l2plj"]
+script = ExtResource("4_k3l6a")
 base_stats = {
 "max_mana": 60
 }
 
-[sub_resource type="Resource" id="Resource_6d8bk"]
-script = ExtResource("7_gygn4")
+[sub_resource type="Resource" id="Resource_o7ssx"]
+script = ExtResource("8_6d8bk")
 cells = Array[Vector2i]([Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(1, 2)])
 
 [resource]
-script = ExtResource("6_dlrj8")
+script = ExtResource("7_4fruf")
 id = &"core"
 display_name = "能量核心"
 display_names = {
 "en": "Power Core"
 }
-shape = SubResource("Resource_6d8bk")
+shape = SubResource("Resource_o7ssx")
 rarity = 3
 weight = 8
 tags = Array[StringName]([&"sealed", &"part"])
-combat = SubResource("Resource_4fruf")
+combat = SubResource("Resource_l2plj")

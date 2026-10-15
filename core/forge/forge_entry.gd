@@ -39,8 +39,9 @@ extends Resource
 ## 附魔前缀（「嗜血的」）；各语言另写 [member prefixes]
 @export var prefix: String = ""
 @export var prefixes: Dictionary = {}
-## 晶石这类：按这件道具自己的元素换 —— 元素 → `{"damage_type": "fire", "prefix": "燃烧的", "prefixes": {...}}`，
-## 除前缀外的键写到效果的同名项上（`buff` 按 id 查 buff）；空 = 不按元素换
+## 晶石这类：按这件道具自己的元素换 —— 元素 → `{"damage_type": "fire", "prefix": "燃烧的", "prefixes": {...}, "applies": {"buff": "scorch"}}`，
+## 除前缀、applies 外的键写到效果的同名项上（`buff` 按 id 查 buff）；空 = 不按元素换。
+## 175 补充五：`applies` 是另加的一个施加效果（伤害不再顺手盖印），层数按阶（[method Forge._element_apply]）
 @export var by_element: Dictionary = {}
 ## 给谁（用途）：0 = 对手、1 = 自己（[enum CombatEffect.Target]）；-1 = 不改
 @export var target: int = -1

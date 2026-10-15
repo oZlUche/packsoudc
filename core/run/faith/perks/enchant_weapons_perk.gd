@@ -15,6 +15,9 @@ extends FaithPerk
 @export var fixed: float = 3.0
 @export var percent: int = 30
 @export var weapon_tag: StringName = &"weapon"
+## 175 补充五（待定 补 5.1 A）：每下附火给对手施加几层哪个状态 —— 附火只是火焰伤害，灼伤要另写施加（空 / 0 = 不施加）
+@export var applies_buff: StringName = &"scorch"
+@export var applies_stacks: int = 1
 
 
 func compile_into(input: CompileInput, _board: GridInventory, run: RunState) -> void:
@@ -37,8 +40,17 @@ func rule() -> AbilityRule:
 	eff.fixed = fixed
 	eff.percent = percent
 	r.effects.append(eff)
+	var b: BuffDef = ContentLibrary.buffs().get(applies_buff, null) if applies_buff != &"" and applies_stacks > 0 else null
+	if b != null:
+		var app := ApplyStatus.new()
+		app.buff = b
+		app.stacks = applies_stacks
+		r.effects.append(app)
 	return r
 
 
 func _summary() -> String:
-	return "开战时%s火焰附魔（每击 max(%.0f, %d%% 武器伤害) 火焰）" % ["全部武器" if count <= 0 else "随机 %d 把武器" % count, fixed, percent]
+	var line := "开战时%s火焰附魔（每击 max(%.0f, %d%% 武器伤害) 火焰）" % ["全部武器" if count <= 0 else "随机 %d 把武器" % count, fixed, percent]
+	if applies_buff != &"" and applies_stacks > 0:
+		line += "，并施加 %d 层%s" % [applies_stacks, Glossary.status_name(applies_buff)]
+	return line

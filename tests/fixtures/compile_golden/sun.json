@@ -54,12 +54,14 @@
 				[
 					"OnItemFired",
 					"Always",
-					"FireEnchant"
+					"FireEnchant",
+					"ApplyStatus"
 				],
 				[
 					"OnItemFired",
 					"Always",
-					"FireEnchant"
+					"FireEnchant",
+					"ApplyStatus"
 				]
 			]
 		},

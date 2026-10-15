@@ -9,8 +9,7 @@ display_name = "闪电"
 display_names = {
 "en": "Lightning"
 }
-description = "闪电伤害。命中时在对手身上盖【麻痹】印。"
+description = "闪电伤害。只是伤害，不附带元素（【麻痹】要另外施加）。"
 descriptions = {
-"en": "Lightning damage. Behaves like physical for now; part of the elemental line."
+"en": "Lightning damage. Damage only: it applies no element (Numb is applied separately)."
 }
-mark = &"numb"

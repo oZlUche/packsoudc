@@ -67,6 +67,9 @@
           "prefix": "燃烧的",
           "prefixes": {
             "en": "Burning "
+          },
+          "applies": {
+            "buff": "scorch"
           }
         },
         "ice": {
@@ -74,6 +77,9 @@
           "prefix": "霜冻的",
           "prefixes": {
             "en": "Frozen "
+          },
+          "applies": {
+            "buff": "chill"
           }
         },
         "lightning": {
@@ -81,6 +87,9 @@
           "prefix": "雷鸣的",
           "prefixes": {
             "en": "Thundering "
+          },
+          "applies": {
+            "buff": "numb"
           }
         }
       }

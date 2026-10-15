@@ -85,7 +85,8 @@ static func run_glossary(t: TestCase) -> void:
 		if String(term["name"]) == "中毒":
 			poison = String(term["text"])
 	t.check(poison.contains("减益") and poison.contains("不限层") and poison.contains("永续"), "中毒的词条按定义：减益、不限层、永续：%s" % poison)
-	t.check(Glossary.strip_bbcode(String(pf["text"])).contains("附带【中毒】"), "170：武器句尾接「附带【中毒】」")
+	var pf_text := Glossary.strip_bbcode(String(pf["text"]))
+	t.check(pf_text.contains("点伤害") and pf_text.contains("。每下施加 1 层【中毒】") and not pf_text.contains("附带【中毒】"), "175 补充五：伤害一句、施加另一句「每下施加 1 层【中毒】」（%s）" % pf_text)
 	# Glossary 本身
 	t.eq(Glossary.mod_text(StatModifier.make(&"damage", StatModifier.Mode.ADD, 10.0)), "伤害 +10", "加算")
 	var pct := StatModifier.make(&"damage", StatModifier.Mode.MULT, 10.0)

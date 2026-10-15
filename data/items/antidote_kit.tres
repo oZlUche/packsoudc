@@ -1,52 +1,53 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_o58kc"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_dott4"]
-[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="3_0hbqd"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_vgnv5"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_7jv6f"]
-[ext_resource type="Script" path="res://core/battle/effects/remove_status.gd" id="6_6ygqc"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="7_cs6ox"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="8_2q1ck"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="9_ow1oj"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="10_hbc4t"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_pbbc5"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_050yk"]
-
-[sub_resource type="Resource" id="Resource_45af8"]
-script = ExtResource("3_0hbqd")
-metadata/part_ref = &"cooldown_2s"
-
-[sub_resource type="Resource" id="Resource_wyxn2"]
-script = ExtResource("6_6ygqc")
-buff_id = &"poison"
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_dott4"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_0hbqd"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_vgnv5"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_7jv6f"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_6ygqc"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_cs6ox"]
+[ext_resource type="Script" path="res://core/battle/effects/remove_status.gd" id="7_2q1ck"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_ow1oj"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_hbc4t"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_pbbc5"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_050yk"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_45af8"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_wyxn2"]
 
 [sub_resource type="Resource" id="Resource_22sfj"]
-script = ExtResource("7_cs6ox")
-metadata/part_ref = &"on_schedule"
+script = ExtResource("4_7jv6f")
+metadata/part_ref = &"cooldown_2s"
 
 [sub_resource type="Resource" id="Resource_5g8wp"]
-script = ExtResource("2_dott4")
-trigger = SubResource("Resource_22sfj")
-cadence = SubResource("Resource_45af8")
-effects = Array[ExtResource("5_7jv6f")]([SubResource("Resource_wyxn2")])
+script = ExtResource("7_2q1ck")
+buff_id = &"poison"
 
 [sub_resource type="Resource" id="Resource_c2gvo"]
-script = ExtResource("8_2q1ck")
-rules = Array[ExtResource("2_dott4")]([SubResource("Resource_5g8wp")])
+script = ExtResource("8_ow1oj")
+metadata/part_ref = &"on_schedule"
 
 [sub_resource type="Resource" id="Resource_2rgq2"]
-script = ExtResource("12_050yk")
+script = ExtResource("3_vgnv5")
+trigger = SubResource("Resource_c2gvo")
+cadence = SubResource("Resource_22sfj")
+effects = Array[ExtResource("6_cs6ox")]([SubResource("Resource_5g8wp")])
+
+[sub_resource type="Resource" id="Resource_s8m46"]
+script = ExtResource("9_hbc4t")
+rules = Array[ExtResource("3_vgnv5")]([SubResource("Resource_2rgq2")])
+
+[sub_resource type="Resource" id="Resource_hjk3w"]
+script = ExtResource("13_wyxn2")
 
 [resource]
-script = ExtResource("11_pbbc5")
+script = ExtResource("12_45af8")
 id = &"antidote_kit"
 display_name = "解毒包"
 display_names = {
 "en": "Antidote Kit"
 }
-shape = SubResource("Resource_2rgq2")
+shape = SubResource("Resource_hjk3w")
 rarity = 1
 value = 20
 tags = Array[StringName]([&"remedy", &"tool"])
-combat = SubResource("Resource_c2gvo")
+combat = SubResource("Resource_s8m46")

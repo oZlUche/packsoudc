@@ -1,24 +1,25 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_lxhjb"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_3fjbm"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_tac0y"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_gjn5f"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_nks5e"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_3fjbm"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_tac0y"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_gjn5f"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_nks5e"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_4sedo"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_tpvue"]
 
-[sub_resource type="Resource" id="Resource_4sedo"]
-script = ExtResource("5_nks5e")
+[sub_resource type="Resource" id="Resource_fkvq8"]
+script = ExtResource("6_tpvue")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)])
 
 [resource]
-script = ExtResource("4_gjn5f")
+script = ExtResource("5_4sedo")
 id = &"antler"
 display_name = "鹿角"
 display_names = {
 "en": "Antler"
 }
 description = "一对分叉的角，猎人的凭证。"
-shape = SubResource("Resource_4sedo")
+shape = SubResource("Resource_fkvq8")
 rarity = 1
 weight = 2
 tags = Array[StringName]([&"material", &"nature", &"bone", &"trophy"])
