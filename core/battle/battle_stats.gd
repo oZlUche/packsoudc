@@ -65,6 +65,13 @@ const STAMINA_COST := &"stamina_cost"
 const CRIT_CHANCE := &"crit_chance"
 const CRIT_DAMAGE := &"crit_damage"
 
+## 175 第二批：法杖轮读 —— 颗与颗之间的单次冷却（秒），与一轮读几颗（编译期按装载归属写，内容不填；
+## 只属于那一件，不跨物品累加，见 [CombatantRuntime]）
+const STEP_COOLDOWN := &"step_cooldown"
+const LOAD_STEPS := &"load_steps"
+## 只属于单件、不并进单位级属性表的键（默认值为 0 的那些本来会被跨件相加）
+const ITEM_ONLY: Array[StringName] = [STEP_COOLDOWN, LOAD_STEPS]
+
 
 ## 属性的默认基础值。
 ##

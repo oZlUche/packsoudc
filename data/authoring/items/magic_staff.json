@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Magic Staff"
   },
-  "description": "不放晶石就是根木棍；杖头两侧的装载槽放一颗魔晶石，打出来的就是元素伤害。",
+  "description": "不放晶石就是根木棍；杖头两侧的装载槽放魔晶石，按顺时针一颗一颗读，打出各自的元素伤害。颗与颗之间走单次冷却，一轮读完歇一个总冷却。",
   "shape": [
     "1",
     "1",
@@ -25,14 +25,16 @@
       {
         "trigger": "@on_schedule",
         "cadence": {
-          "type": "cooldown",
+          "type": "cycle",
           "seconds": 1.2
         },
         "costs": [
           "@resource_5"
         ],
         "effects": [
-          "@deal_damage"
+          {
+            "type": "fire_loaded"
+          }
         ]
       }
     ]

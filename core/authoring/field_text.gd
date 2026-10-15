@@ -16,7 +16,7 @@ const LABELS := {
 	"title": "标题", "titles": "别的语言的标题", "text": "正文", "texts": "别的语言的正文", "label": "选项文字", "labels": "别的语言的选项文字",
 	"image": "配图", "tags": "标签", "tag": "标签", "order": "先后", "hidden": "隐藏", "note": "备注", "tip": "弹词条", "internal": "内部标签", "category": "大类", "has_blurb": "有专属解说", "blurb": "解说", "blurbs": "解说（别的语言）",
 	"amount": "数量", "value": "数值", "count": "件数", "percent": "百分比", "flat": "固定值", "mult": "倍率", "StatModifier.mode": "乘算 / 加算", "StatBonus.mode": "乘算 / 加算",
-	"chance": "概率", "seconds": "秒", "steps": "步数", "min_steps": "最少步数", "max_steps": "最多步数", "min_value": "最少", "flag": "旗标",
+	"chance": "概率", "seconds": "秒", "step_seconds": "单次冷却（秒）", "steps": "步数", "min_steps": "最少步数", "max_steps": "最多步数", "min_value": "最少", "flag": "旗标",
 	"absent": "反过来（要求没有）", "add": "累加", "clear": "拔掉", "target": "对象", "where": "在哪", "pick": "挑法", "item": "道具", "items": "道具",
 	"include_bags": "包也算", "include_self": "含自己", "invert": "反转", "enabled": "启用", "absolute": "绝对值", "only_total": "只算总量",
 	# 道具
@@ -86,6 +86,7 @@ const TYPE_LABELS := {
 	"on_status_removed": "某状态掉光时", "on_overtime": "加时开始时", "resource_condition": "资源条件", "axis_condition": "标准轴条件", "axis_cost": "消耗轴层数",
 	"convert_damage_type": "改伤害类型",     # 132
 	"always": "每次都行", "cooldown": "冷却",
+	"cycle": "轮读（单次冷却 + 总冷却）", "fire_loaded": "按轮读晶石造成伤害",     # 175
 	"resource": "消耗资源", "status_stack": "消耗叠层", "charge": "充能", "uses": "限次", "chance": "概率",
 	"deal_damage": "造成伤害", "change_resource": "改资源", "apply_status": "施加状态", "remove_status": "移除状态", "modify_damage": "改伤害", "reflect_damage": "反弹伤害",
 	"extra_rolls": "额外掉落次数", "rarity_bias": "稀有度偏移", "category_bias": "类别偏移", "drop_owned_chance": "掉身上有的概率",

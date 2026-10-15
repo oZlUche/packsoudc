@@ -9,8 +9,13 @@ static func _db() -> ItemDatabase:
 	return db
 
 
+## 175 第二批：轮读的法杖，晶石的伤害记在轮读表里 —— 这里按「属性 + 轮读表里各颗之和」算这把杖拿到的
 static func _damage(spec: CombatantSpec, uid: int) -> float:
-	return StatMath.to_float(spec.item_of(uid).stats.total_of(&"damage"))
+	var item := spec.item_of(uid)
+	var sum := item.stats.total_of(&"damage")
+	for e in item.loaded:
+		sum += int(e["damage"])
+	return StatMath.to_float(sum)
 
 
 ## 两把法杖竖着放在第 0 列与第 3 列（装载槽：头顶那格的左右），火焰晶石横放在 (1, 0)：压着左杖的 (1, 0) 与右杖的 (2, 0)
@@ -79,7 +84,7 @@ static func run_two_slots_one_share(t: TestCase) -> void:
 	var base := float(staff_def.combat.base_stats["damage"])
 	var plus := (crystal.def.adjacency.feed_mods[0] as StatModifier).amount
 	t.eq(_damage(spec, staff.uid), base + plus, "一份（不按格数乘）")
-	t.eq(spec.item_of(staff.uid).attached.size(), 1, "一条供给规则")
+	t.eq(spec.item_of(staff.uid).loaded.size(), 1, "轮读表一颗（175）")
 
 
 static func run_tooltip_lines(t: TestCase) -> void:
@@ -90,7 +95,7 @@ static func run_tooltip_lines(t: TestCase) -> void:
 	var b_text := Glossary.strip_bbcode(ItemTooltip.describe(s["b"], g))
 	var a_text := Glossary.strip_bbcode(ItemTooltip.describe(s["a"], g))
 	var name := Names.of_item(s["crystal"])
-	t.check(b_text.contains(name) and b_text.contains("火焰伤害") and b_text.contains("剩 %d 次" % (s["crystal"] as ItemInstance).charges()), "右杖：一行装载（%s）" % b_text)
+	t.check(b_text.contains(name) and b_text.contains("装载一颗：火") and b_text.contains("剩 %d 次" % (s["crystal"] as ItemInstance).charges()), "右杖：一行装载（%s）" % b_text)
 	t.check(not a_text.contains(name), "左杖：被抢走的那颗不写（空槽不显示）")
 	var lone := ItemInstance.create(db.get_def(&"magic_staff"))
 	var lone_full := ItemTooltip.describe_full(lone)

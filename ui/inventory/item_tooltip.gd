@@ -116,7 +116,11 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			var rule := r as AbilityRule
 			if rule == null:
 				continue
-			var sentence := weapon_sentence(rule, use_stats) if weapon else ""
+			var sentence := ""
+			if weapon and rule.cadence is CycleCadence:
+				sentence = cycle_sentence(rule, use_stats, compiled.loaded if compiled != null else [] as Array[Dictionary])     # 175：法杖轮读
+			elif weapon:
+				sentence = weapon_sentence(rule, use_stats)
 			if sentence != "":
 				lines.append(sentence)
 				continue
@@ -260,44 +264,70 @@ static func reactions_line(spec: CombatantSpec, compiled: CompiledItem) -> Strin
 	return "[color=@grant]可引发：%s[/color]" % "".join(names)
 
 
-## 171 §4：法杖的装载行 ——「【装载】火焰魔晶石　每 X 秒 Y 火焰伤害　剩 N 次」，一颗晶石一行（X / Y 按这把杖编译后的实际值）
-static func load_lines(inst: ItemInstance, board: GridInventory, spec: CombatantSpec, stats: StatSet) -> Array[String]:
+## 171 §4：法杖的装载行 ——「【装载】Ⅰ 明亮的火焰魔晶石　剩 N 次」，一颗晶石一行（175：按轮读的顺时针顺序，罗马数字是第几颗；
+## 伤害与冷却写在上面的轮读句里）。不轮读的宿主按 uid 排、不标序号
+static func load_lines(inst: ItemInstance, board: GridInventory, spec: CombatantSpec, _stats: StatSet) -> Array[String]:
 	var out: Array[String] = []
 	if spec == null or inst.def.adjacency == null or not inst.def.adjacency.has_load() or board == null:
 		return out
 	var uids: Array = []
-	for c in spec.loads:
-		if int(spec.loads[c]) == inst.uid:
-			uids.append(int(c))
-	uids.sort()
-	var period := 0.0
-	var dmg := 0.0
-	if inst.def.combat != null and stats != null:
-		for r in inst.def.combat.rules:
-			var rule := r as AbilityRule
-			if rule == null or not (rule.cadence is CooldownCadence):
-				continue
-			var hz := rule.cadence.estimated_hz(stats)
-			var d := 0.0
-			for e in rule.effects:
-				if e is DealDamage:
-					d += (e as CombatEffect).estimated_damage(stats)
-			if hz > 0.0 and d > 0.0:
-				period = 1.0 / hz
-				dmg = d
-				break
-	for c in uids:
-		var crystal := board.get_item(c)
+	var compiled := spec.item_of(inst.uid)
+	if compiled != null and not compiled.loaded.is_empty():
+		for e in compiled.loaded:
+			uids.append(int(e["uid"]))
+	else:
+		for c in spec.loads:
+			if int(spec.loads[c]) == inst.uid:
+				uids.append(int(c))
+		uids.sort()
+	var numbered := compiled != null and not compiled.loaded.is_empty()
+	for i in uids.size():
+		var crystal := board.get_item(uids[i])
 		if crystal == null:
 			continue
-		var type := AdjacencyText.feed_damage_type(crystal.def.adjacency)
-		var parts: Array[String] = [Names.of_item(crystal)]
-		if period > 0.0:
-			parts.append("每 [b]%s[/b] 秒 [b]%s[/b] %s伤害" % [_num(period, 1), _num(dmg), Glossary.damage_type_name(type) if type != &"" else ""])
+		var head := "%s " % TextTemplate.roman(i + 1) if numbered else ""
+		var parts: Array[String] = [head + Names.of_item(crystal)]
 		if crystal.def.wear != null:
 			parts.append("剩 [b]%d[/b] 次" % crystal.charges())
 		out.append("%s[color=@grant]%s[/color]" % [icon("load"), "　".join(parts)])
 	return out
+
+
+## 175（作者定）：法杖的轮读句 —— 没放晶石「没放晶石：物理 Y，每 Z 秒」；一颗「装载一颗：火 Y，每 Z 秒」；
+## 几颗「装载 N 颗，顺时针：火 Y → 冰 Y；颗间 X 秒，一轮后歇 Z 秒」。Y 含暴击期望、晶石加的伤害；X / Z 已除急速
+static func cycle_sentence(rule: AbilityRule, stats: StatSet, loaded: Array[Dictionary]) -> String:
+	var cad := rule.cadence as CycleCadence
+	var p := cad.periods(stats)
+	var base := 0.0
+	var base_type := DamageTypes.PHYSICAL
+	for e in rule.effects:
+		if e is DealDamage:
+			base += (e as CombatEffect).estimated_damage(stats) if stats != null else (e as DealDamage).amount
+			base_type = (e as DealDamage).damage_type
+	var raw := StatMath.to_float(stats.total_of(BattleStats.DAMAGE)) if stats != null else 0.0
+	var crit := base / raw if raw > 0.0 else 1.0     # 暴击期望的倍数，晶石加的那部分一样吃
+	var line := ""
+	if loaded.is_empty():
+		line = "没放晶石：%s [b]%s[/b]，每 [b]%s[/b] 秒" % [_short_type(base_type), _num(base), _num(p.y, 1)]
+	else:
+		var shots: Array[String] = []
+		for e in loaded:
+			var dmg := base + StatMath.to_float(int(e.get("damage", 0))) * crit
+			shots.append("%s [b]%s[/b]" % [_short_type(StringName(e.get("type", base_type))), _num(dmg)])
+		if loaded.size() == 1:
+			line = "装载一颗：%s，每 [b]%s[/b] 秒" % [shots[0], _num(p.y, 1)]
+		else:
+			line = "装载 %d 颗，顺时针：%s；颗间 [b]%s[/b] 秒，一轮后歇 [b]%s[/b] 秒" % [loaded.size(), " → ".join(shots), _num(p.x, 1), _num(p.y, 1)]
+	var st := _stamina_of(rule, stats)
+	if st > 0.0:
+		line += "，每下消耗 [b]%s[/b] 耐力" % _num(st)
+	return line
+
+
+## 元素伤害写一个字（火 / 冰 / 雷），别的写伤害类型名
+static func _short_type(type: StringName) -> String:
+	var el := ReactionResolver.element_of_type(type)
+	return ReactionResolver.element_name(el) if el != &"" else Glossary.damage_type_name(type)
 
 
 ## 171 §4：晶石自己的那一行 ——「装在：魔法杖」/「装在：魔法杖（另一把法杖的装载槽也压着它：后放的优先）」/「闲置：没放在法杖的装载槽上」

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.03 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.04 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -944,6 +944,7 @@ class_name Cadence extends Resource
 | 子类 | 语义 |
 |---|---|
 | `CooldownCadence` | 距上次出手满一个周期（出手时按当时的急速算死，快照语义）后可执行；配 `OnSchedule` 即自发出手，配事件触发器则是内置冷却 |
+| `CycleCadence` | 175：法杖轮读 —— 继承 `CooldownCadence`。一轮 n 下（n = 编译器按装载归属写进法杖的 `load_steps`，没装 = 1），颗与颗之间走单次冷却（`step_seconds` / 属性 `step_cooldown`），一轮读完走总冷却（`seconds` / 属性 `cooldown`）；只有一颗时每下都是总冷却。两种都吃急速、快照语义。`commit` 记下这一下读第几颗（`cycle_fired`），`FireLoaded` 按它取晶石 |
 | `Always` | 每次命中都执行 |
 
 频率层**只管调度，不设卡**。「攒够 3 次才放」「每场限一次」「按概率」全在消耗层，
@@ -1388,6 +1389,16 @@ while 双方存活 and now < 安全上限:
   冷却 0.37 秒就是精确的 0.37 秒。
 - **快。** 60 秒的战斗只处理几百个时刻，而不是 1200 帧 × 全部规则。批量刷平衡才跑得动。
 - **分辨率不受步长限制。** 出手间隔可以是任意小数，不再被 20Hz 网格吸附。
+
+#### 法杖轮读（175 第二批，作者定）
+
+- **没有晶石 = 木棍**：法杖按自己的属性与类型出手（物理），只有总冷却。
+- **有晶石**：编译器（`BattleCompiler.cycle_order`）把归属给这把杖的晶石（171 的归属表，一颗只给后放的那把）按**顺时针**排进 `CompiledItem.loaded`：以法杖占格中心为原点、晶石压在装载格上那几格的中心为方位，从 12 点起顺时针，同角按 `placed_seq`、再按 uid。每颗 `{uid, id, type, damage}`：`type` 取自晶石 `feed_rules` 里的 `convert_damage_type.to`，`damage` 是它 `feed_mods` 里伤害那几条的和。
+- 只有规则里有 `FireLoaded` 的宿主（`BattleCompiler.is_cycler`）这样装：晶石的伤害修饰与换型规则**不再常驻**挂在法杖上，轮到它那一下才用；别的供给（非伤害的修饰、别的规则）照旧常驻。
+- `FireLoaded`（继承 `DealDamage`）：按 `CycleCadence` 记下的第几颗取那颗，这一包的类型 = 它的元素、原值 = 法杖属性的伤害 + 它的伤害（再掷暴击）；所以它命中盖印、火焰吃火焰加成轴。没装晶石照 `DealDamage` 原样打。
+- 晶石供给次数仍按场扣（148），战斗中不会碎，所以一场内轮读序列不变。
+- 回放：出手 / 跳过事件对轮读法杖多带 `step / steps / next`，`CooldownOverlay` 在法杖第一格左上角标下一颗的罗马数字（Ⅰ Ⅱ …，和倍速同一套字形）；冷却扇形走当前这一段（单次或总）。
+- 悬浮窗：「没放晶石：物理 Y，每 Z 秒」/「装载一颗：火 Y，每 Z 秒」/「装载 N 颗，顺时针：冰 Y → 火 Y；颗间 X 秒，一轮后歇 Z 秒」，下面每颗一行「Ⅰ 晶石名　剩 N 次」。估算：一秒 n / ((n−1) × 单次 + 总) 下，每下加轮读表的平均伤害。
 
 #### 冷却按「快照」排定（125 改口，与 `CooldownCadence` 一致）
 
@@ -4222,6 +4233,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.04 | 2026-10-15 | **法杖轮读**（报告 175 第二批，作者定，待定 6A；改 4.4 频率层、4.6）：新节奏 `CycleCadence`（单次冷却 + 总冷却，都吃急速；只装一颗只有总冷却）与新效果 `FireLoaded`；编译器按顺时针把晶石排进 `CompiledItem.loaded`、法杖属性 `load_steps` 记一轮几下，轮读的宿主不再常驻挂晶石的伤害与换型；出手事件带 `step / steps / next`，回放标罗马数字；悬浮窗装载句改写；`magic_staff.json` 节奏换成 `cycle` |
 | v3.03 | 2026-10-15 | **元素印与反应表**（报告 175 第一批，作者定，待定 1A；改 4.6）：火 / 冰 / 雷命中盖【灼】【寒】【麻】（`DamageTypeDef.mark`，不可叠、4 秒），中毒 / 剧毒 / 流血本身是印（`BuffDef.element`）；`ReactionResolver` 在伤害管线第 5 步之后与施加状态之后查反应表（`ReactionDef`，`data/authoring/reactions/`，新内容种类 `reactions`）：十对反应爆燃 / 淬裂 / 过载 / 燃血 / 超导 / 凝毒 / 冻疮 / 电解 / 激荡 / 菌血，吃印按 `consume`，反应不连锁；治疗入口 `CombatantRuntime.heal`（`heal_cut` / `heal_cut_to`），锁 `BuffDef.locks` / `locks_while`；规则只听出生之后的事件（`BattleEvent.seq` / `RuleRuntime.born`）；溃烂之刃的桥收进菌血；回放反应弹字、悬浮窗「可引发」、百科「反应」组（`MetaState.reactions_seen` 点亮）、对阵屏元素小图标 |
 | v3.02 | 2026-10-14 | **存档原子写与内容对账**（报告 173，作者问「存档经常会在版本升级后失效」，待定 1A 2A 3A 4A；改 7.2）：`AtomicFile`（`.tmp` → 改名、`.prev` 回退）用于局外 / 一局 / 设置；`SaveReconcile` 在版本链之后对账道具（`IdAliases.RETIRED_ITEMS` 折钱 / 换件 / 丢掉，查不到默认折钱；`STATE_KEYS`），六件已删道具补进退役表、短剑登记 `RESHAPED`；容器 `from_dict` 交出放不回原位的（`homeless_out`），仓库换位 / 加页、背包先本盘后仓库、一局先本容器后地上（`RunState.rehome`），都不行折钱；一局作废前打捞进仓库（`MetaState.salvage`）；`SaveReport` 写 `last_repair.json`，`GameFlow.repair_notice` 读一次就删、读取存档屏与主菜单各一句；内容快照 `ContentSnapshot` + `tools/snapshot_content.sh` + 快照测试；一局冻结样本 `run_v4.json`；存档回归目录 `tests/fixtures/saves/` 与只读的 `tools/check_saves.sh`；存档头 `content_stamp` |
 | v3.01 | 2026-10-14 | **固定分辨率档位与窗口模式**（报告 172，作者定，待定 1A 2A 3A 4A；改 8.8）：`GameSettings.window_mode / resolution` 与档位表 `RESOLUTIONS`（16:9 五档、16:10 三档）；`ui/window_setup.gd`（`WindowSetup.apply / pick_default / available / toggle_mode`）导演启动时套用、窗口不可拖改、首启按屏幕九成挑一档；设置屏最上面「显示」一节（窗口 / 全屏、按比例分行的分辨率按钮，全屏时灰掉）；F11 动作 `toggle_fullscreen` |

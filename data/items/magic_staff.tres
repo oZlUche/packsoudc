@@ -3,11 +3,11 @@
 [ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_td8ky"]
 [ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_evyl8"]
 [ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_yurkf"]
-[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_kg38w"]
+[ext_resource type="Script" path="res://core/battle/cadences/cycle_cadence.gd" id="4_kg38w"]
 [ext_resource type="Script" path="res://core/battle/cost.gd" id="5_why60"]
 [ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="6_betf8"]
 [ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_j4yg3"]
-[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="8_aytd8"]
+[ext_resource type="Script" path="res://core/battle/effects/fire_loaded.gd" id="8_aytd8"]
 [ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="9_xjyx8"]
 [ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="10_krn6l"]
 [ext_resource type="Script" path="res://core/effects/effect.gd" id="11_phv3f"]
@@ -30,7 +30,6 @@ metadata/part_ref = &"resource_5"
 
 [sub_resource type="Resource" id="Resource_oyegb"]
 script = ExtResource("8_aytd8")
-metadata/part_ref = &"deal_damage"
 
 [sub_resource type="Resource" id="Resource_u2wb6"]
 script = ExtResource("9_xjyx8")
@@ -61,7 +60,7 @@ display_name = "魔法杖"
 display_names = {
 "en": "Magic Staff"
 }
-description = "不放晶石就是根木棍；杖头两侧的装载槽放一颗魔晶石，打出来的就是元素伤害。"
+description = "不放晶石就是根木棍；杖头两侧的装载槽放魔晶石，按顺时针一颗一颗读，打出各自的元素伤害。颗与颗之间走单次冷却，一轮读完歇一个总冷却。"
 shape = SubResource("Resource_pbnxr")
 rarity = 1
 tags = Array[StringName]([&"weapon", &"melee", &"staff", &"magic"])

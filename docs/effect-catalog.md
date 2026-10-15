@@ -93,6 +93,7 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 |---|---|---|---|
 | `always` | `Always` | 每次命中都执行。事件型规则的默认搭配 | — |
 | `cooldown` | `CooldownCadence` | 攒满一个周期的工作量后可执行 | `seconds` 基础冷却（**任意小数**）；`use_haste` 是否吃速度加成 |
+| `cycle` | `CycleCadence` | 175 法杖轮读：一轮 n 下（n = 装载的晶石数，没装 = 1），颗间单次冷却、一轮后总冷却；只装一颗每下都是总冷却。配 `fire_loaded` | `seconds` 总冷却；`step_seconds` 单次冷却（默认 0.6）；`use_haste` 两种都吃 |
 
 冷却以**工作量**计而非时间：每秒推进 `haste` 点，攒满 `seconds` 点即就绪。
 所以速度变化不会丢失已有进度，也没有任何累积误差。
@@ -129,6 +130,7 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 | 类型名 | 类 | 含义 | 参数 |
 |---|---|---|---|
 | `deal_damage` | `DealDamage` | 造成伤害，按护甲减免 | `target`；`damage_type` 伤害类型（默认 `physical`）；`amount` 固定值；`damage_stat` 改从属性取（默认 `damage`）；`per_stack` 是否乘来源 buff 层数；`percent_of`（max_hp / current_hp / missing_hp）+ `percent` 按生命比例、与固定值相加，`percent_of_target` 按谁的生命（132）；`per_target_stack` 乘目标身上某状态的层数、0 层不打（132） |
+| `fire_loaded` | `FireLoaded` | 175 法杖专用：按 `cycle` 记下的第几颗取轮读表里的晶石，这一下打它的元素、原值加它的伤害；没装晶石照 `deal_damage` 打 | 同 `deal_damage` |
 | `change_resource` | `ChangeResource` | **增减**资源。治疗／回耐力／抽血／耗蓝共用 | `target`；`resource_key`；`amount` **正为获得、负为失去**；`amount_stat`；`per_stack`；`percent_of_damage` 受伤后按这一包实际扣除量的百分比（吸血，132） |
 | `apply_status` | `ApplyStatus` | 施加增益／减益 | `target`；`buff`；`stacks`；`per_stack` |
 | `remove_status` | `RemoveStatus` | 减少层数。净化、驱散、削减对手蓄力 | `target`；`buff_id`；`stacks`（**0 = 全部移除**）；`all_debuffs` / `all_buffs` 清光（系统 buff 不清，132） |
@@ -214,6 +216,8 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 |---|---|---|
 | `damage` | 单次伤害 | 单件物品 |
 | `cooldown` | 冷却秒数，覆盖 `CooldownCadence.seconds` | 单件物品 |
+| `step_cooldown` | 175 单次冷却秒数，覆盖 `CycleCadence.step_seconds` | 单件物品（不并进单位级） |
+| `load_steps` | 175 一轮几颗，编译器按装载归属写，内容不填 | 单件物品（不并进单位级） |
 | `haste` | 速度倍率，基础 1.0，越大越快 | 单件物品 |
 | `stamina_cost` / `mana_cost` | 消耗面板值 | 单件物品 |
 | `max_hp` / `max_stamina` / `max_mana` / `max_shield` | 资源上限 | 整个单位 |

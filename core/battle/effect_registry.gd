@@ -29,6 +29,8 @@ const TRIGGERS := {
 const CADENCES := {
 	&"always": "res://core/battle/cadences/always.gd",
 	&"cooldown": "res://core/battle/cadences/cooldown_cadence.gd",
+	# 175：法杖轮读（单次冷却 + 总冷却）
+	&"cycle": "res://core/battle/cadences/cycle_cadence.gd",
 }
 
 ## 消耗与条件同层：两者失败行为一致，都是跳过效果但不退还冷却。
@@ -64,6 +66,8 @@ const COMBAT_EFFECTS := {
 	&"reflect_damage": "res://core/battle/effects/reflect_damage.gd",
 	# 132：只在受伤前阶段有效，把这一包换成另一种类型
 	&"convert_damage_type": "res://core/battle/effects/convert_damage_type.gd",
+	# 175：法杖按轮读取这一下的晶石，打出它的元素
+	&"fire_loaded": "res://core/battle/effects/fire_loaded.gd",
 }
 
 const TABLES := {

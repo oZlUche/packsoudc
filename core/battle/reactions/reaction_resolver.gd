@@ -193,7 +193,23 @@ static func _elements_of_effect(e) -> Array[StringName]:
 
 ## 一件道具（编译后，含别人挂上来的规则）带的元素
 static func elements_of_item(item: CompiledItem) -> Array[StringName]:
-	return elements_of_rules(item.rules) if item != null else [] as Array[StringName]
+	if item == null:
+		return [] as Array[StringName]
+	var out := elements_of_rules(item.rules)
+	if item.loaded.is_empty():
+		return out
+	var found := {}     # 175 第二批：轮读的法杖，元素来自轮读表里的晶石
+	for el in out:
+		found[el] = true
+	for e in item.loaded:
+		var el := element_of_type(StringName(e.get("type", &"")))
+		if el != &"":
+			found[el] = true
+	var merged: Array[StringName] = []
+	for el in ELEMENTS:
+		if found.has(el):
+			merged.append(el)
+	return merged
 
 
 ## 甲方元素 × 乙方元素能引发的反应（不同元素、表里有的），按反应表的顺序，不重复

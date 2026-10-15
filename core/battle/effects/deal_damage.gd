@@ -39,12 +39,17 @@ const PERCENT_OF := [&"max_hp", &"current_hp", &"missing_hp"]
 
 
 func apply(ctx: RuleContext) -> void:
+	deal(ctx, damage_type, 0)
+
+
+## 175：真正打出去的那一下 —— [param type] 是这一包的类型，[param extra_raw] 并进从属性取的原值（法杖轮到的那颗晶石的伤害，[FireLoaded]）
+func deal(ctx: RuleContext, type: StringName, extra_raw: int) -> void:
 	var raw := StatMath.from_float(amount)
 	var from_stat := false
 	if damage_stat != &"":
 		var from_stats := ctx.item_stat(damage_stat, -1)
 		if from_stats >= 0:
-			raw = from_stats
+			raw = from_stats + extra_raw
 			from_stat = true
 	if per_stack:
 		raw *= ctx.source_stacks()
@@ -66,7 +71,7 @@ func apply(ctx: RuleContext) -> void:
 			dmg *= victim.stacks_of(per_target_stack)
 		if dmg <= 0:
 			continue
-		var packet := DamagePacket.create(damage_type, dmg, victim, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override))
+		var packet := DamagePacket.create(type, dmg, victim, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override))
 		packet.crit = crit
 		DamageResolver.resolve(ctx.battle, packet)
 
