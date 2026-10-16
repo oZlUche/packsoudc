@@ -382,6 +382,9 @@ func tech_panel():
 const SELL_FILTERS := [["白色", 0], ["绿色及以下", 1], ["蓝色及以下", 2], ["紫色及以下", 3], ["金色及以下", 4], ["全部", -1]]
 var _sell_filter: int = 0
 var _sell_pick: OptionButton = null
+## 177 补 1.2：标签下拉（单选，待定补 1 选 A；&"" = 不限标签）
+var _sell_tag: StringName = &""
+var _sell_tag_pick: OptionButton = null
 var _sell_preview: Label = null
 var _sell_line: Label = null
 
@@ -391,7 +394,7 @@ func _build_sell(root: Control) -> Control:
 	var page := _vbox(8)
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(page)
-	page.add_child(_wrapped("出售　双击右边仓库里的一件卖掉；或选一档稀有度一键卖。回定价的 %d%%，钱进局外（现在还没处花）" % int(round(flow.sell_ratio() * 100)), 15, UiPalette.DIM, 460))
+	page.add_child(_wrapped("出售　双击右边仓库里的一件卖掉；或选一档稀有度（再挑一个标签）一键卖。回定价的 %d%%，钱进局外（现在还没处花）" % int(round(flow.sell_ratio() * 100)), 15, UiPalette.DIM, 460))
 	var row := _hbox(10)
 	page.add_child(row)
 	row.add_child(_label("一键出售", 13, UiPalette.DIM))
@@ -400,12 +403,16 @@ func _build_sell(root: Control) -> Control:
 		_sell_pick.add_item(String(SELL_FILTERS[i][0]), i)
 	_sell_pick.item_selected.connect(set_sell_filter)
 	row.add_child(_sell_pick)
+	_sell_tag_pick = OptionButton.new()
+	_sell_tag_pick.item_selected.connect(func(i: int): set_sell_tag(StringName(String(_sell_tag_pick.get_item_metadata(i)))))
+	row.add_child(_sell_tag_pick)
 	_sell_preview = _label("", 13, UiPalette.FG)
 	row.add_child(_sell_preview)
 	row.add_child(_button("一键出售", func(): sell_filtered(), 13, UiPalette.Tier.PRIMARY))
 	_sell_line = _label("", 13, UiPalette.STAMINA)
 	page.add_child(_sell_line)
-	flow.meta.warehouse.changed.connect(_refresh_sell)
+	flow.meta.warehouse.changed.connect(_on_sell_stock_changed)
+	_rebuild_sell_tags()
 	set_sell_filter(0)
 	return page
 
@@ -422,6 +429,67 @@ func sell_filter_max() -> int:
 	return int(SELL_FILTERS[_sell_filter][1])
 
 
+## 177 补 1.2：选一个标签（&"" = 不限）；仓库里已经没有这个标签的道具就回「不限」
+func set_sell_tag(tag: StringName) -> void:
+	_sell_tag = tag if flow.meta.sell_tags().has(tag) else &""
+	_sync_sell_tag_pick()
+	_refresh_sell()
+
+
+func sell_filter_tag() -> StringName:
+	return _sell_tag
+
+
+## 标签下拉现在列的标签（不含「不限标签」，测试读）
+func sell_tag_options() -> Array:
+	var out: Array = []
+	if _sell_tag_pick == null:
+		return out
+	for i in _sell_tag_pick.item_count:
+		var tag := String(_sell_tag_pick.get_item_metadata(i)) if not _sell_tag_pick.is_item_separator(i) else ""
+		if tag != "":
+			out.append(StringName(tag))
+	return out
+
+
+## 仓库变了：标签下拉重建，预览重算
+func _on_sell_stock_changed() -> void:
+	_rebuild_sell_tags()
+	_refresh_sell()
+
+
+## 按仓库里现有的标签重建下拉（按大类分组，组间一条分隔）；选中的没了回「不限」
+func _rebuild_sell_tags() -> void:
+	if _sell_tag_pick == null:
+		return
+	var tags := flow.meta.sell_tags()
+	if not tags.has(_sell_tag):
+		_sell_tag = &""
+	_sell_tag_pick.clear()
+	_sell_tag_pick.add_item("不限标签")
+	_sell_tag_pick.set_item_metadata(0, "")
+	var last_rank := -1
+	for t in tags:
+		var rank := TagRegistry.category_rank(t)
+		if last_rank >= 0 and rank != last_rank:
+			_sell_tag_pick.add_separator()
+		last_rank = rank
+		_sell_tag_pick.add_item(Glossary.tag_name(t))
+		_sell_tag_pick.set_item_metadata(_sell_tag_pick.item_count - 1, String(t))
+	_sync_sell_tag_pick()
+
+
+## 下拉上显示的跟着 [member _sell_tag]
+func _sync_sell_tag_pick() -> void:
+	if _sell_tag_pick == null:
+		return
+	for i in _sell_tag_pick.item_count:
+		if not _sell_tag_pick.is_item_separator(i) and String(_sell_tag_pick.get_item_metadata(i)) == String(_sell_tag):
+			if _sell_tag_pick.selected != i:
+				_sell_tag_pick.select(i)
+			return
+
+
 ## 卖掉仓库里的一件；返回得了多少（没这件 -1）
 func sell(uid: int) -> int:
 	var inst := flow.meta.warehouse.get_item(uid)
@@ -434,7 +502,7 @@ func sell(uid: int) -> int:
 
 ## 按当前那一档一键卖；返回 {"count", "funds"}
 func sell_filtered() -> Dictionary:
-	var got := flow.sell_where(sell_filter_max())
+	var got := flow.sell_where(sell_filter_max(), _sell_tag)
 	if _sell_line != null:
 		_sell_line.text = "卖掉 %d 件，得 %d 币；现在有 %d 币" % [int(got["count"]), int(got["funds"]), flow.meta.funds] if int(got["count"]) > 0 else "这一档没有可卖的"
 	return got
@@ -447,7 +515,7 @@ func sell_preview_text() -> String:
 func _refresh_sell() -> void:
 	if _sell_preview == null:
 		return
-	var p := flow.meta.sell_preview(sell_filter_max(), flow.sell_ratio())
+	var p := flow.meta.sell_preview(sell_filter_max(), flow.sell_ratio(), _sell_tag)
 	_sell_preview.text = "会卖 %d 件，得 %d 币" % [int(p["count"]), int(p["funds"])]
 #endregion
 

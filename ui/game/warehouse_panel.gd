@@ -18,6 +18,8 @@ signal changed()
 const ROW_GAP := 20.0
 ## 带回来的棋盘最少显示几行（再高就滚）
 const BOARD_MIN_ROWS := 6
+## 177 补 1.1：一键置入的提示行最多列几个放不下的名字
+const STUCK_SHOWN := 3
 
 var _meta: MetaState = null
 var _flow: GameFlow = null
@@ -138,12 +140,25 @@ func warehouse_view() -> InventoryView:
 	return _shelf.view if _shelf != null else null
 
 
+## 一键置入的提示行。177 补 1.1：放不下的跳过了，列出卡住的名字（最多三个，多的写「等」）
+static func store_text(got: Dictionary) -> String:
+	var line := "放进 %d 件" % int(got["moved"])
+	var names: Array = got.get("stuck_names", [])
+	if names.is_empty() and String(got.get("stuck", "")) != "":
+		names = [String(got["stuck"])]
+	if names.is_empty():
+		return line
+	var shown := "、".join(PackedStringArray(names.slice(0, STUCK_SHOWN)))
+	if names.size() > STUCK_SHOWN:
+		shown += "等"
+	return line + "；仓库放不下 %d 件（%s）—— 挪一挪仓库，或者不要了" % [int(got["left"]), shown]
+
+
 #region 公开动作
 func store_all() -> Dictionary:
 	var got := _flow.store_all()
 	if int(got["moved"]) > 0 or int(got["left"]) > 0:
-		_line.text = "放进 %d 件%s" % [int(got["moved"]),
-			"；仓库放不下，卡在「%s」，还剩 %d 件 —— 挪一挪仓库，或者不要了" % [got["stuck"], int(got["left"])] if String(got["stuck"]) != "" else ""]
+		_line.text = store_text(got)
 	changed.emit()
 	return got
 

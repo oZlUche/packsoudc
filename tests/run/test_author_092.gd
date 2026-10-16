@@ -61,6 +61,8 @@ static func frame_stash_sale_and_result(t: TestCase, root: Window) -> void:
 	root.add_child(screen)
 	screen.open({"result": r})
 	t.check(screen._stash_line != null and screen._stash_line.text.contains("一键出售") and screen._stash_line.text.contains("得 %d 币" % price), "结算屏说了离开时一键出售、得多少（%s）" % (screen._stash_line.text if screen._stash_line != null else "无"))
+	t.eq(screen.safe_view(), null, "177：第 1 步只看账，保险箱格在第 2 步")
+	screen.to_step(2)
 	t.check(screen.safe_view() != null and screen.safe_view().inventory.item_count() == safe_n and screen.safe_view().inventory.size == Vector2i(3, 3), "保险箱那格画出来了：%d 件、3×3" % safe_n)
 	t.check(f.meta.board != null and f.meta.board.item_count() >= safe_n, "带回来的棋盘里有保险箱那件")
 	# 反馈：结算屏的继续按钮不能被仓库挤出窗口 —— 按钮在滚动区外，仓库区最小高度压在 4 行

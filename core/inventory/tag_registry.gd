@@ -83,6 +83,19 @@ static func sorted_by_category(tags: Array) -> Array:
 	return indexed.map(func(e): return e[2])
 
 
+## 177：大类的名次（[constant CATEGORY_ORDER] 里的下标；没归类的排最后）
+static func category_rank(id: StringName) -> int:
+	var i := CATEGORY_ORDER.find(category_of(id))
+	return i if i >= 0 else CATEGORY_ORDER.size()
+
+
+## 177：登记顺序里的位置（装定义时的先后；没登记的排最后）
+static func order_of(id: StringName) -> int:
+	_ensure()
+	var i := _defs.keys().find(id)
+	return i if i >= 0 else _defs.size()
+
+
 ## 107 后续：去掉内部标签，剩下给玩家看的
 static func shown(tags: Array) -> Array:
 	var out: Array = []
