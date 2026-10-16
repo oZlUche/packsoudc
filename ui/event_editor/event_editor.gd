@@ -16,6 +16,9 @@
 ## 真要单独发给作者，用导出预设把项目导出成 exe，启动选择器就是入口。列表 / 草稿 / 存盘在 [AuthoringEditor]（141）。
 extends AuthoringEditor
 
+## 176：带整个库的导入上下文（不写 class_name，按路径取）
+const AuthoringContext := preload("res://core/authoring/authoring_context.gd")
+
 const KIND := "events"
 const EVENT_DIR := ContentPaths.AUTHORING_EVENTS
 ## 配图落在这里；路径写进事件的 `image`
@@ -53,7 +56,7 @@ func _ready() -> void:
 
 ## 道具从资产装（`ItemDatabase`），buff 走 `RunBuffs.load_all`，事件从作者数据读 —— 都是现成的路
 static func _build_context() -> ContentImporter.Context:
-	var ctx := ContentLibrary.context()     # 146：带上库里的 buff 与构件
+	var ctx := AuthoringContext.context()     # 146：带上库里的 buff 与构件
 	var items := ItemDatabase.new()
 	items.load_dir()
 	for id in items.ids():

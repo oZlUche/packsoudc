@@ -6,6 +6,9 @@
 ## 列表 / 草稿 / 存盘在 [AuthoringEditor]（141）。右边看哪些道具带着它。
 extends AuthoringEditor
 
+## 176：带整个库的导入上下文（不写 class_name，按路径取）
+const AuthoringContext := preload("res://core/authoring/authoring_context.gd")
+
 const KIND := "tags"
 const TAG_TEXTS := {
 	"ok": "没有问题", "unreadable": "%s.json 读不到", "err_id": "先给一个 id", "err_save": "有错，没存",
@@ -30,7 +33,7 @@ func _ready() -> void:
 	var settings := GameSettings.load_from()
 	UiText.apply(settings)
 	UiPalette.apply(settings)
-	_ctx = ContentLibrary.context()
+	_ctx = AuthoringContext.context()
 	_items = ItemDatabase.new()
 	_items.load_dir()
 	_build_ui()

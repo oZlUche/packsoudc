@@ -4,6 +4,9 @@
 ## 道具带哪种元素只看施加；流血 family = physical、pure 只在流血上；悬浮窗伤害与施加分两句
 extends RefCounted
 
+## 176：带整个库的导入上下文（不写 class_name，按路径取）
+const AuthoringContext := preload("res://core/authoring/authoring_context.gd")
+
 const H := preload("res://tests/battle/test_effect_system.gd")
 const S := preload("res://tests/battle/test_status_synergy.gd")
 const Staff := preload("res://tests/run/test_crystal_148.gd")
@@ -48,7 +51,7 @@ static func run_rule_shape(t: TestCase) -> void:
 			"effects": [{"type": "deal_damage", "damage_type": "fire"}]}]},
 		"applies": [{"buff": "scorch", "stacks": 1}]}
 	var rep := ImportReport.new()
-	var def := ContentImporter.import_item(data, ContentLibrary.context(), rep)
+	var def := ContentImporter.import_item(data, AuthoringContext.context(), rep)
 	t.check(rep.ok(), "applies 能导（%s）" % rep.to_text())
 	if def == null:
 		return
@@ -227,11 +230,11 @@ static func run_family_and_pure(t: TestCase) -> void:
 	var bleed := DamageTypes.get_def(DamageTypes.BLEED)
 	t.check(bleed.pure and bleed.family == DamageTypes.PHYSICAL, "流血：真实、大类物理")
 	var ok := ImportReport.new()
-	ContentImporter.import_damage_type({"id": "bleed", "display_name": "流血", "pure": true, "family": "physical"}, ContentLibrary.context(), ok)
+	ContentImporter.import_damage_type({"id": "bleed", "display_name": "流血", "pure": true, "family": "physical"}, AuthoringContext.context(), ok)
 	t.check(ok.ok(), "流血写 pure：合法（%s）" % ok.to_text())
 	var bad := ImportReport.new()
-	ContentImporter.import_damage_type({"id": "fire", "display_name": "火焰", "pure": true}, ContentLibrary.context(), bad)
+	ContentImporter.import_damage_type({"id": "fire", "display_name": "火焰", "pure": true}, AuthoringContext.context(), bad)
 	t.check(not bad.ok() and bad.to_text().contains("只有流血是真实伤害"), "火焰写 pure：报错（%s）" % bad.to_text())
 	var fam := ImportReport.new()
-	ContentImporter.import_damage_type({"id": "x", "display_name": "x", "family": "nope"}, ContentLibrary.context(), fam)
+	ContentImporter.import_damage_type({"id": "x", "display_name": "x", "family": "nope"}, AuthoringContext.context(), fam)
 	t.check(not fam.ok(), "认不得的大类：报错")

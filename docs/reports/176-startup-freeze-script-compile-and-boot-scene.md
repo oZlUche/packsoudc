@@ -61,3 +61,13 @@ boot 场景不引用全局类（扫描断言）；`load_threaded_request` 在 he
 ## 7. 改动范围
 
 `ui/boot.tscn` / `ui/boot.gd`（新）、`project.godot`（main_scene、可选渲染器）、`core/authoring/content_library.gd`（摘掉 context）+ `authoring_context.gd`（新）、编辑器几处改 `load()`、`ui/dev_nav.gd`（自卸载 + 去静态引用）、`export_presets.cfg`、`tests/tools/test_startup_graph.gd`（新）、`docs/architecture.md` 启动一节。
+
+## 8. 落地记录（v3.12，3.1–3.3；待定 2A、3A，待定 1 未动）
+
+- **启动屏**：`ui/boot.tscn` + `ui/boot.gd`，`run/main_scene` 换成它。画游戏名（朱雀仿宋）、一条进度和「载入中……」，载失败改写「载入失败，请重启游戏」。`start()` 发 `load_threaded_request`，`_process` 每帧 `poll()`，载好下一帧 `change_scene_to_packed`；`auto_switch` 关掉只载不切（测试用）。本机虚拟屏实测：第 3 帧（0.3 秒）启动屏已出来，之后主线程一直在刷新，软件渲染下约 4.7 秒切到主菜单。截图 `/mnt/project-files/screenshots/176/boot-screen.png`。
+- **启动图**：`ContentLibrary.context()` 挪到 `core/authoring/authoring_context.gd`（无 `class_name`，七个编辑器与三个测试 `preload` 它）。按测试的扫法，游戏启动时静态碰得到的脚本从 300 个（约 4.1 万行）降到 263 个（约 3.6 万行）：导入器、导出器、`techs_table` / `xlsx_reader` / `text_lint` / `content_check` / `power_estimate` / `import_report` 都出去了。剩在图里的 `core/authoring` 文件（`content_paths`、`content_schema`、`content_registries`、`field_text`、`id_aliases`、`content_library`）是游戏运行真用的。编辑器与启动器本来就不在图里（DevNav 按路径换场景）。
+- **按量更正第 1 节**：「477 个全局类几乎都在启动图里」偏高 —— 按静态引用扫，启动图是 300 个脚本（全项目 706），2 秒的编译量在这 300 个里。
+- **DevNav**：`keep_in(editor, debug)`；release 导出时 `_ready` 先停处理再 `queue_free()`。编辑器版 Godot 直接跑、debug 导出照旧在（F1、类缓存自救都不变）。
+- **导出预设**：仓库原来没有 `export_presets.cfg`，新建一份 Windows Desktop 预设，`script_export_mode=2`（二进制令牌，压缩），导出到 `build/`（已在 .gitignore），`include_filter` 带上运行时读的 `*.json, *.txt`。作者本机若有自己的预设，以这份为准合并 `script_export_mode` 即可。
+- **测试** `tests/tools/test_startup_graph.gd`：启动屏的图只有它自己；游戏图碰不到编辑器、启动器、导入器、导出器与表格工具（附引用链），编辑器那头碰得到导入器（证明扫法没漏）；启动屏后台载好 `game.tscn`、进度到 1；导出预设脚本模式；`DevNav.keep_in`。
+

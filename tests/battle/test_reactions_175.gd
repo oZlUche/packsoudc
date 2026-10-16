@@ -5,6 +5,9 @@
 ## 寒冷拉长武器冷却后减半、麻痹加耐力消耗后减半）；十对反应各一例 N = 1 与 N = 3；保底（凝毒 / 冻疮）；剧毒；激荡溢出；M 都从 json 读
 extends RefCounted
 
+## 176：带整个库的导入上下文（不写 class_name，按路径取）
+const AuthoringContext := preload("res://core/authoring/authoring_context.gd")
+
 const H := preload("res://tests/battle/test_effect_system.gd")
 const S := preload("res://tests/battle/test_status_synergy.gd")
 
@@ -456,7 +459,7 @@ static func _scaled_def(report: ImportReport) -> ReactionDef:
 		{"type": "apply_status", "buff": "bleed", "stacks": {"stacks": "n", "max": 5.0}},
 		{"type": "apply_status", "buff": "deflect", "duration_sec": {"seconds": "n", "max": 10.0}},
 		{"type": "apply_status", "buff": "poison", "stacks": {"stacks": "n/2"}},
-	]}, ContentLibrary.context(), report)
+	]}, AuthoringContext.context(), report)
 
 
 static func run_scaling(t: TestCase) -> void:
@@ -472,7 +475,7 @@ static func run_scaling(t: TestCase) -> void:
 	t.eq(dumped["effects"][3]["stacks"], {"stacks": "n/2"}, "导出写回内联：stacks n/2")
 	t.check(not dumped.has("scaling"), "json 里不出现 scaling")
 	var again := ImportReport.new()
-	var def2 := ContentImporter.import_reaction(JSON.parse_string(ContentExporter.to_json(dumped)), ContentLibrary.context(), again)
+	var def2 := ContentImporter.import_reaction(JSON.parse_string(ContentExporter.to_json(dumped)), AuthoringContext.context(), again)
 	t.check(again.ok() and def2.scaling == def.scaling, "往返一致")
 	t.eq((def.effects[0] as DealDamage).amount, 1.0, "原效果里留的是占位数，不被结算改动")
 	for n in [1, 5, 10]:
@@ -500,7 +503,7 @@ static func run_scaling(t: TestCase) -> void:
 	]
 	for c in cases:
 		var rr := ImportReport.new()
-		ContentImporter.import_reaction({"id": "fire_ice", "display_name": "x", "elements": ["fire", "ice"], "effects": [c[0]]}, ContentLibrary.context(), rr)
+		ContentImporter.import_reaction({"id": "fire_ice", "display_name": "x", "elements": ["fire", "ice"], "effects": [c[0]]}, AuthoringContext.context(), rr)
 		t.check(not rr.ok() and rr.to_text().contains(String(c[1])), "拦下：%s（%s）" % [c[1], rr.to_text()])
 
 
@@ -509,7 +512,7 @@ static func run_import(t: TestCase) -> void:
 	var ok := {"id": "fire_poison", "display_name": "爆燃", "elements": ["fire", "poison"],
 		"effects": [{"type": "apply_status", "buff": "scorch"}]}
 	var r := ImportReport.new()
-	ContentImporter.import_reaction(ok, ContentLibrary.context(), r)
+	ContentImporter.import_reaction(ok, AuthoringContext.context(), r)
 	t.check(r.ok(), "正常的能导（%s）" % r.to_text())
 	var cases := [
 		[{"id": "fire_fire", "display_name": "x", "elements": ["fire", "fire"], "effects": ok["effects"]}, "得不同"],
@@ -519,7 +522,7 @@ static func run_import(t: TestCase) -> void:
 	]
 	for c in cases:
 		var rr := ImportReport.new()
-		ContentImporter.import_reaction(c[0], ContentLibrary.context(), rr)
+		ContentImporter.import_reaction(c[0], AuthoringContext.context(), rr)
 		t.check(not rr.ok() and rr.to_text().contains(String(c[1])), "拦下：%s（%s）" % [c[1], rr.to_text()])
 
 

@@ -1,6 +1,6 @@
 ## 146：库 —— 已导入的独立 buff（`data/buffs`）与规则构件（`data/rule_parts`），按 id 查。
 ##
-## 三处要它：编辑器单独导入一件道具时的上下文（[method context]，道具里写的 `"buff": "bleed"`、`"@id"` 得查得到）、
+## 三处要它：编辑器单独导入一件道具时的上下文（176 起在 `authoring_context.gd`，这里不写导入器的名字，免得游戏启动时把它编译进来；道具里写的 `"buff": "bleed"`、`"@id"` 得查得到）、
 ## 导出器回写引用（[ContentExporter]：和库里那份一样的 buff 写 id，带 `part_ref` 的写 `"@id"`）、编辑器的下拉。
 ## 读的是 `.tres`（游戏读的也是它）；编辑器存盘之后 [method reset] 一下就重读。
 class_name ContentLibrary
@@ -44,16 +44,6 @@ static func parts_for(root: StringName) -> Array[RulePartDef]:
 		if p.root() == root:
 			out.append(p)
 	return out
-
-
-## 一份带着整个库的导入上下文（编辑器单独导入一件东西时用）
-static func context() -> ContentImporter.Context:
-	var ctx := ContentImporter.Context.new()
-	for b in buffs().values():
-		ctx.register_buff(b)
-	for p in parts().values():
-		ctx.register_rule_part(p)
-	return ctx
 
 
 ## 从库里复制一份构件的内容，打上 `part_ref`（导入器解析 `"@id"`、编辑器下拉选库项都走这里）

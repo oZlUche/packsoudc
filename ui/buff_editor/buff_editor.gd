@@ -6,6 +6,9 @@
 ## 界面文字走 [UiText]：主菜单切了语言这里跟着变。列表 / 草稿 / 存盘在 [AuthoringEditor]（141）。
 extends AuthoringEditor
 
+## 176：带整个库的导入上下文（不写 class_name，按路径取）
+const AuthoringContext := preload("res://core/authoring/authoring_context.gd")
+
 const KIND := "buffs"
 
 var _id_edit: LineEdit
@@ -28,7 +31,7 @@ func _ready() -> void:
 	var settings := GameSettings.load_from()
 	UiText.apply(settings)
 	UiPalette.apply(settings)
-	_ctx = ContentLibrary.context()     # 146：buff 的效果可以按 id 引用库里别的 buff
+	_ctx = AuthoringContext.context()     # 146：buff 的效果可以按 id 引用库里别的 buff
 	_build_ui()
 	_start()
 

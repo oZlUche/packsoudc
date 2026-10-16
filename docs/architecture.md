@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.11 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.12 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4161,6 +4161,8 @@ res://
 每加一个 `class_name` 都要记得提交、两个分支各加一个就冲突、跑完测试工作区就脏。
 三条用得到它的路各自解决：编辑器打开项目时自己重建；`tools/test.sh` 每次先 `--import`；
 **158 起**：`DevNav` 缺类时不再起编辑器，`tools/class_cache.gd`（无 `class_name`，preload）扫全项目脚本头（`class_name` / `extends` / `@tool` / `@abstract` / `@icon`，路径式 extends 往上找类名）写出和编辑器**逐字节一样**的缓存（全项目约 0.1 秒），盖一屏「已重写」后带原参数重开；`tools/import_check.gd` 发现没导入的素材（`.import` 的目标不在、或新图旁没 `.import`）才后台 `--import`，不盖板、不重开，右上角小字「新素材导入中……下次启动生效」。`run_game` 不再先 `--import`。`tests/tools/test_class_cache.gd` 拿编辑器刚写的那份逐条对照。以下 115 的导入式自救是原来的做法：不开编辑器也直接跑即可（115）：`DevNav`（autoload，代码里不引用任何项目全局类，缓存全坏也解析得了）发现缺类就盖一屏「正在重建」，`OS.create_process` 后台 `--headless --path <根> --import`，`_process` 里轮询，导完带原用户参数加 `cache-rebuilt` 重开自己并退出；重开过还缺（导入失败）就回落红字、不循环。门是「非导出包、`Engine.is_editor_hint()` 为假」—— 不能用 `OS.has_feature("editor")`，编辑器版 Godot 直接跑游戏时它也是真。`tools/run_game.sh` / `.bat` 可选，省一次重启。
+
+**176 起**（启动卡住两三秒）：GDScript 没有预编译，主场景静态引用到的每个全局类都要在第一帧之前从源码编译。所以主场景是 `ui/boot.tscn`（`ui/boot.gd`，**不引用任何全局类**，颜色写死、字体按路径 `load()`）：第一帧只画游戏名和一条进度，`ResourceLoader.load_threaded_request` 在后台线程载 `game.tscn`，每帧 `poll()`，载好 `change_scene_to_packed`；载失败写「载入失败，请重启游戏」。导演 `_ready` 的内容加载（约 0.5 秒）仍在主线程。游戏侧不得静态引用导入器、导出器、表格工具、编辑器、启动器：`ContentLibrary` 只管读库，导入上下文在 `core/authoring/authoring_context.gd`（无 `class_name`，编辑器与测试 `preload`）；`DevNav` 只按路径字符串换场景，release 导出（非编辑器版、非 debug）里 `_ready` 第一件事自卸（`DevNav.keep_in`）。`tests/tools/test_startup_graph.gd` 从 `boot.tscn` 与 `game.tscn` + `dev_nav.gd` 出发扫静态引用（去掉字符串与注释后的全局类名、`preload` / `extends` 路径、场景与资源里的脚本路径；运行时 `load()` 不算），断言启动屏只碰到自己、游戏碰不到上面那些；同一套件读 `export_presets.cfg` 断言脚本导出为二进制令牌（压缩，`script_export_mode=2`）。渲染器（176 待定 1）仍是 Forward+ / D3D12，等作者对照后定。
 `DevNav` 的缺类自检因此只在**非编辑器**运行时提示（编辑器里缓存必然是新的，提示只会是误报）。
 
 ---
@@ -4277,6 +4279,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.12 | 2026-10-16 | **启动屏与启动图瘦身**（报告 176，作者问启动卡住；待定 2A 3A，待定 1 渲染器未动；改 11.1 启动一段）：主场景换成 `ui/boot.tscn`（不引用任何全局类，`load_threaded_request` 后台载 `game.tscn`、画游戏名与进度，载好切过去）；`ContentLibrary.context()` 挪到 `core/authoring/authoring_context.gd`（无 class_name，编辑器与测试 preload），游戏启动图不再拖进导入器 / 导出器 / 表格工具（300 → 263 个脚本，约 4.1 → 3.6 万行）；`DevNav.keep_in`：release 导出自卸；`export_presets.cfg`（Windows Desktop）脚本导出 = 二进制令牌（压缩）；`tests/tools/test_startup_graph.gd` 扫启动图 |
 | v3.11 | 2026-10-15 | **战斗效果栏换图标**（报告 175 补 5.5，美术定稿 44 张、作者 10-15 改三处）：`EffectIcons`（`ui/battle/effect_icons.gd`）按格子 id 的约定取 `assets/ui/effects/` 的图（`<buff id>`、`axis_<轴>_pos/neg`、`system_overtime / block`），不加 `BuffDef.icon`；`CombatantPanel` 有图画 28×28 的单色图（不画方格底和外框，元素状态与反应产物用补 5.4 的关键词色、其余按组着色），层数画在右下角；保底的中毒 / 流血整张换 `<id>_guard.png`（彩色成品，不着色）；缺图与被动条目照旧画首字 |
 | v3.10 | 2026-10-15 | **悬浮窗：伤害与施加一句两段、各自配色**（报告 175 补 5.4，作者定；改 4.6）：「造成 X 点火焰伤害，并施加 N 层灼伤」（`ApplyStatus.describe` 写层数、`effects_text` 用「，并」）；`TextTemplate.STYLE_NAMES` 加伤害类型字五色与元素状态关键词五色（美术设计定值，`text_colors.json`）、`Glossary.DAMAGE_STYLES / ELEMENT_STYLES / mark_rich`、词条带 `style`；伤害类型「中毒」改名「毒素」，`Glossary.status_name` 先取状态名 |
 | v3.09 | 2026-10-15 | **【造成伤害】与【施加元素】分开；流血 = 真实 · 物理**（报告 175 补充五，作者定，待定补 5.1–5.3 全按推荐；改 4.6）：删 `DamageTypeDef.mark` / `mark_stacks`、`ReactionResolver.after_hit`、`DamagePacket.from_status`，印只从 `apply_status` 来；`elements_of_item` 只读施加的元素状态；道具简写 `ItemDef.applies`（`ElementApply`，编译走 `_attach`，来源 `applies`）+ `DamageTrigger.landed_only`（damage 事件带 `cancelled`）；晶石加第二条供给规则（打中后施加对应元素），轮读装载表每颗带 `applies`；铸炉元素行加施加（按阶 1–3 层，最多 5）；日神附火每下施加一层灼伤；`DamageTypeDef.family`（流血 physical）、`pure` 只许流血；悬浮窗伤害与施加分两句 |
