@@ -24,6 +24,9 @@
 ## 「新建武器」：先画形状，第一次改形状时按格数预填一套能打的攻击力、冷却与耐力（默认战斗力），之后改哪个数战斗力跟着走
 extends AuthoringEditor
 
+## 176：带整个库的导入上下文（不写 class_name，按路径取）
+const AuthoringContext := preload("res://core/authoring/authoring_context.gd")
+
 ## 作者数据目录。资产目录见 [ContentPaths]。
 const ITEM_DIR := ContentPaths.AUTHORING_ITEMS
 
@@ -520,7 +523,7 @@ func _export(d) -> Dictionary:
 
 ## 道具每次都用一份新的上下文（不对着别的内容查）
 func _import(data: Dictionary, report: ImportReport) -> Resource:
-	return ContentImporter.import_item(data, ContentLibrary.context(), report)     # 146：道具里按 id 引用的 buff、「@构件」得查得到
+	return ContentImporter.import_item(data, AuthoringContext.context(), report)     # 146：道具里按 id 引用的 buff、「@构件」得查得到
 
 
 func _on_bound() -> void:
@@ -652,7 +655,7 @@ func _collect() -> void:
 
 func _on_refreshed() -> void:
 	# 151：战斗力（估算是纯函数，表单一改就重算）。buff 按 id 查内容库
-	_power.show_estimate(PowerEstimate.estimate(_def, _weights(), ContentLibrary.context().buffs))
+	_power.show_estimate(PowerEstimate.estimate(_def, _weights(), AuthoringContext.context().buffs))
 #endregion
 
 

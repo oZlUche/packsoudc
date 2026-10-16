@@ -4,6 +4,9 @@
 ## 右边「试铸」：挑三件道具，看铸出来的那一枚（前缀与那一句）
 extends AuthoringEditor
 
+## 176：带整个库的导入上下文（不写 class_name，按路径取）
+const AuthoringContext := preload("res://core/authoring/authoring_context.gd")
+
 const KIND := "forge"
 const FORGE_TEXTS := {
 	"ok": "没有问题", "unreadable": "%s.json 读不到", "err_id": "id 只能是 timing / effect / value", "err_save": "有错，没存",
@@ -29,7 +32,7 @@ func _ready() -> void:
 	var settings := GameSettings.load_from()
 	UiText.apply(settings)
 	UiPalette.apply(settings)
-	_ctx = ContentLibrary.context()
+	_ctx = AuthoringContext.context()
 	_items = ItemDatabase.new()
 	_items.load_dir()
 	_item_ids = _items.ids(true)

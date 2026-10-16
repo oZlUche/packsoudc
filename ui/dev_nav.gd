@@ -5,7 +5,8 @@
 ## 漏装的场景表现为「进去就出不来，只能关掉重开」。
 ##
 ## 它是开发期的东西。真正的场景流（进关、战斗、结算）是 M6 的事，
-## 那时这一层要么退化成调试入口，要么直接删掉。
+## 那时这一层要么退化成调试入口，要么直接删掉。176：release 导出里它一进来就自己撤掉；
+## 启动器、编辑器只按路径字符串换场景，不在这里写它们的类名（写了就进了游戏启动时的编译图）。
 extends CanvasLayer
 
 const LAUNCHER := "res://ui/launcher.tscn"
@@ -41,6 +42,11 @@ var _rebuild_cover: Control = null
 
 
 func _ready() -> void:
+	if not keep_in(OS.has_feature("editor"), OS.is_debug_build()):
+		set_process(false)     # 176 待定 3 选 A：正式导出（release 模板）不带开发期导航，玩家按不出启动器
+		set_process_unhandled_key_input(false)
+		queue_free()
+		return
 	layer = 128  # 盖在一切之上
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_check_class_cache()
@@ -98,6 +104,11 @@ func _request_back() -> void:
 	_armed = false
 	if get_tree().change_scene_to_file(LAUNCHER) != OK:
 		push_error("DevNav: 回不去启动选择器")
+
+
+## 176：这一份进程留不留 DevNav —— 编辑器版 Godot 直接跑、debug 导出留；release 导出不留
+static func keep_in(editor: bool, debug: bool) -> bool:
+	return editor or debug
 
 
 ## 094：全局类缓存里缺的类（脚本里写了 class_name、缓存里没有）。缺了就是「拉了新脚本没重新导入」——

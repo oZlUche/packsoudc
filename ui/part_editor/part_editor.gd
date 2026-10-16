@@ -5,6 +5,9 @@
 ## 左边按类分页（144 的分组行做法）+ 搜索；列表 / 草稿 / 存盘在 [AuthoringEditor]（141）。
 extends AuthoringEditor
 
+## 176：带整个库的导入上下文（不写 class_name，按路径取）
+const AuthoringContext := preload("res://core/authoring/authoring_context.gd")
+
 const KIND := "rule_parts"
 ## 分组：标题、构件的字段（空 = 全部）
 const GROUPS := [["全部", ""], ["扳机", "trigger"], ["节奏", "cadence"], ["消耗与检查", "cost"], ["效果", "effect"]]
@@ -39,7 +42,7 @@ func _ready() -> void:
 	var settings := GameSettings.load_from()
 	UiText.apply(settings)
 	UiPalette.apply(settings)
-	_ctx = ContentLibrary.context()     # 构件里的施加状态按 id 引用库里的 buff
+	_ctx = AuthoringContext.context()     # 构件里的施加状态按 id 引用库里的 buff
 	_build_ui()
 	_start()
 

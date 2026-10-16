@@ -3,6 +3,9 @@
 ## 前缀命名（耐久前缀 + 附魔前缀 + 定义名）；存档里查不到的附魔被对账摘掉并报告
 extends RefCounted
 
+## 176：带整个库的导入上下文（不写 class_name，按路径取）
+const AuthoringContext := preload("res://core/authoring/authoring_context.gd")
+
 const GAME := "res://ui/game/game.tscn"
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const Support := preload("res://tests/run/flow_support.gd")
@@ -35,7 +38,7 @@ static func run_tables(t: TestCase) -> void:
 	t.eq(timing.by_rarity(9).key, ForgeTable.DEFAULT, "稀有度超出：default")
 	t.check(ContentPaths.ORDER.find("forge") > ContentPaths.ORDER.find("rule_parts") and ContentPaths.ORDER.find("forge") < ContentPaths.ORDER.find("items"), "导入顺序：构件 → 铸炉 → 道具")
 	var report := ImportReport.new()
-	ContentImporter.import_forge_table({"id": "timing", "material": [{"key": "metal", "trigger": "@on_item_fired"}], "purpose": [], "rarity": []}, ContentLibrary.context(), report)
+	ContentImporter.import_forge_table({"id": "timing", "material": [{"key": "metal", "trigger": "@on_item_fired"}], "purpose": [], "rarity": []}, AuthoringContext.context(), report)
 	t.check(report.to_text().contains("default"), "缺 default 行：导入器报错")
 
 
