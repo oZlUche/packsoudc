@@ -1019,7 +1019,10 @@ func resume() -> void:
 
 ## 084：玩家关闭了搜索屏：回到事件屏（再搜 / 走）。没有开着的搜索返回 false
 func close_search() -> bool:
-	if run == null or not run.events.pause_search():
+	if run == null or run.events.current_search == null or not run.events.current_search.active:
+		return false
+	run.drop_seen_haul(run.events.current_search.haul_box)     # 作者 2026-10-16：左边亮过的直接掉到地上
+	if not run.events.pause_search():
 		return false
 	_flush()
 	return true

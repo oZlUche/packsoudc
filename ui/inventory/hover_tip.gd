@@ -1,7 +1,7 @@
 ## 悬浮窗（084）：跟着鼠标的一小块面板，写 BBCode。两处用：容器视图里停在一件道具上（[ItemTooltip]），地图上停在一个点上（[NodeTooltip]）。
 ##
 ## 170（作者定）：**十字军之王式的固定悬浮窗** —— 深底白字（[constant UiTheme.ART_TOOLTIP]），道具说明分块（头 / 分隔线 / 正文 / 虚线 / 脚注）。
-## - 跟随：停在道具上出现、跟着鼠标；鼠标离开道具后给 [constant GRACE_SEC] 秒宽限，这期间进了悬浮窗就留下（不换、不收）。
+## - 跟随：停在道具上出现、跟着鼠标；鼠标离开道具后给 [constant GRACE_SEC] 秒宽限，这期间进了悬浮窗就留下（不换、不收）；往窗外走就不等（[constant AWAY_PX]）。
 ## - 钉住：鼠标在悬浮窗里停满 [constant PIN_SEC] 秒 —— 一道黄铜线从左上角沿外框**顺时针**走一圈，走完即钉；中途移出归零。钉住后右上角一颗钉子，窗不再动。
 ## - 关键词：钉住的窗里带下划线的词（`[url=term:<id>]`，[method Glossary.mark]）停 [constant TERM_SEC] 秒开**子窗**（同样可钉、可再开），深度封顶 [constant MAX_DEPTH]。
 ## - 收起：离开钉住的窗与它所有子窗 [constant AWAY_SEC] 秒、按 Esc、点窗外（开始拖拽也是先点下去）→ 整串收掉。
@@ -19,6 +19,8 @@ const GRACE_SEC := 0.15
 const PIN_SEC := 0.6
 const TERM_SEC := 0.25
 const AWAY_SEC := 0.4
+## 作者 2026-10-16（移开道具后悬浮窗消失有延迟）：宽限只留给往悬浮窗去的鼠标 —— 宽限期里离窗比刚离开时远出这么多像素就立刻收 / 换
+const AWAY_PX := 2.0
 const MAX_DEPTH := 3
 ## 钉住进度线：2 px 黄铜色
 const RING_WIDTH := 2.0
@@ -169,6 +171,8 @@ var _pending_view: ContainerView = null
 var _pending_local := Vector2.ZERO
 ## 离开钉住的那一串窗多久了
 var _away := 0.0
+## 宽限开始时鼠标离主窗多远（-1 = 还没记）
+var _leave_d := -1.0
 ## 最后一次摆放用的鼠标位置（全局）：排版完再量一次尺寸后照这个重摆
 var _last_at := Vector2.ZERO
 var _refit_queued := false
@@ -361,8 +365,11 @@ func tick(delta: float, mouse: Vector2) -> void:
 		else:
 			_panel.dwell = 0.0
 			if _panel.leave_t >= 0.0:
+				var d := rect_distance(_panel.global_rect(), mouse)
+				if _leave_d < 0.0:
+					_leave_d = d
 				_panel.leave_t += delta
-				if _panel.leave_t >= GRACE_SEC:
+				if _panel.leave_t >= GRACE_SEC or d > _leave_d + AWAY_PX:
 					_panel.leave_t = -1.0
 					_resolve_pending()
 		_panel.queue_redraw()
@@ -526,6 +533,7 @@ func _begin_leave(view: ContainerView, local: Vector2) -> void:
 	_pending_local = local
 	if _panel.leave_t < 0.0:
 		_panel.leave_t = 0.0
+		_leave_d = -1.0     # 下一拍 tick 记下离窗多远
 
 
 ## 宽限期满、鼠标没进悬浮窗：照最后那个位置办 —— 底下有能显示的就换成它，没有就收
@@ -541,6 +549,11 @@ func _resolve_pending() -> void:
 		hide_tip()
 	elif view != _for_view or uid != _uid:
 		_show_for(view, uid, inst, _pending_local)
+
+
+## 点到矩形的距离（在里面是 0）
+static func rect_distance(r: Rect2, p: Vector2) -> float:
+	return p.distance_to(p.clamp(r.position, r.end))
 
 
 func _uid_under(view: ContainerView, local: Vector2) -> int:

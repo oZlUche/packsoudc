@@ -125,20 +125,21 @@ static func run_search_loop(t: TestCase) -> void:
 			t.check(run.events.current_search == session and session.active and session.haul_box.item_count() == had, "会话与收获都在")
 			t.check(f.can_reopen() and f.reopen_node(), "回到这个点")
 			t.check(f.screen == GameFlow.Screen.SEARCH and f.last_payload.get("session", null) == session, "恢复的是同一个会话")
+		var shown: Array = session.haul_box.items().map(func(i): return (i as ItemInstance).uid)
+		for uid in shown:
+			f.seen_loot[uid] = true     # 搜索屏里亮过
 		t.check(f.close_search(), "关闭搜索屏")
 		t.eq(f.screen, GameFlow.Screen.EVENT, "第 %d 次之后：回到事件屏" % rounds)
+		t.eq(session.haul_box.item_count(), 0, "作者 2026-10-16：关屏时左边亮过的掉出去")
+		t.check(shown.all(func(uid) -> bool: return run.storage.has_item(uid)), "掉到了地上（%d 件）" % shown.size())
 		var again: EventDef = f.last_payload.get("def", null)
 		var l2: Array = _labels(again)
 		if session.is_exhausted():
 			t.check(again != null and again.id == &"search_done" and l2 == ["离开"], "搜满了：「翻遍了」只能离开（%s）" % str(l2))
-			var had_all := session.haul_box.item_count()
 			t.check(f.choose_event(0), "离开")
 			t.check(not session.active and run.events.current_search == null, "会话结束")
 			t.check(run.map.get_node(next).is_visited(), "点用过了")
-			if had_all > 0:
-				t.check(f.screen == GameFlow.Screen.LOOT and run.pending_loot != null and run.pending_loot.item_count() == had_all, "收获交到待拾取 → 战利品屏")
-			else:
-				t.eq(f.screen, GameFlow.Screen.MAP, "空手：回地图")
+			t.check(f.screen == GameFlow.Screen.MAP and run.pending_loot == null, "作者 2026-10-16：离开不再弹战利品屏，直接回地图")
 			break
 		t.check(again != null and again.id == &"search_again" and l2 == ["再搜一次", "离开"], "「翻过一遍」：再搜一次 / 离开（%s）" % str(l2))
 		t.check(f.choose_event(0), "再搜一次")
@@ -444,14 +445,12 @@ static func run_search_encounter_loot_folds(t: TestCase) -> void:
 		var d2: EventDef = run.events.pending_event()
 		t.check(f.screen == GameFlow.Screen.EVENT and d2 != null and (d2.id == &"search_again" or d2.id == &"search_done"), "回到「再搜 / 走」")
 		var leave_at := _labels(d2).find("离开") if d2 != null else 0
-		var haul_n := session.haul_box.item_count()
+		for uid in corpse_items:
+			f.seen_loot[uid] = true     # 战利品屏里亮过
 		f.choose_event(maxi(leave_at, 0))
-		t.check(run.pending_loot != null and run.pending_loot.item_count() == haul_n, "离开：交出的就是收获箱这一份（%d 件），不再和别的并" % haul_n)
-		f.take_all_loot()
-		for uid in haul_seen:
-			if f.seen_loot.has(uid):
-				t.check(false, "拿完之后这一份的「亮过」才忘掉")
-				break
+		t.check(run.pending_loot == null and f.screen != GameFlow.Screen.LOOT, "作者 2026-10-16：离开不弹战利品屏")
+		for uid in haul_seen + corpse_items:
+			t.check(run.storage.has_item(uid), "亮过的 #%d 在地上（关屏时 / 离开时掉的）" % uid)
 		done = true
 		_settle(f)
 		break

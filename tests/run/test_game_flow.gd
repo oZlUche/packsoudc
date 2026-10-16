@@ -640,15 +640,7 @@ static func run_seen_loot(t: TestCase) -> void:
 	if f.screen == GameFlow.Screen.SEARCH:
 		session.leave()
 	_settle_overlays_until_loot(f)
-	if f.screen == GameFlow.Screen.LOOT:
-		t.check(had > 0, "有收获才有战利品屏")
-		for uid in f.seen_loot:
-			t.check(f.run.pending_loot.has_item(int(uid)), "记下的 uid %d 都在待拾取里" % uid)
-		t.eq(f.seen_loot.size(), had, "搜索屏里的 %d 件都记成见过了" % had)
-		f.take_all_loot()
-		t.check(f.seen_loot.is_empty(), "拾取完清空")
-	else:
-		t.eq(had, 0, "没有收获就没有战利品屏（%s）" % str(f.screen))
+	t.check(f.screen != GameFlow.Screen.LOOT and f.run.pending_loot == null, "作者 2026-10-16：离开搜索不弹战利品屏（收获 %d 件）" % had)
 
 
 ## 把回放 / 事件 / 休息看完，停在战利品屏或地图

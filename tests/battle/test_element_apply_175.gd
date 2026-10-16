@@ -187,7 +187,8 @@ static func run_staff_cycle(t: TestCase) -> void:
 	t.eq(ReactionResolver.elements_of_item(a_spec.item_of(alone["staff"].uid)), [] as Array[StringName], "木棍不带元素")
 
 	var text := Glossary.strip_bbcode(ItemTooltip.describe(b["staff"], b["board"]))
-	t.check(text.contains("点冰霜伤害并施加 1 层寒冷 → ") and text.contains("点火焰伤害并施加 1 层灼伤；"), "补 5.4：每颗一句两段（%s）" % text)
+	var ice_at := text.find("点冰霜伤害，并施加 1 层寒冷")
+	t.check(ice_at >= 0 and text.find("点火焰伤害，并施加 1 层灼伤") > ice_at, "补 5.4：每颗一句两段（作者 2026-10-16：每颗一行，顺时针）（%s）" % text)
 
 
 static func run_forge_and_enchant(t: TestCase) -> void:

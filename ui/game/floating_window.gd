@@ -22,7 +22,7 @@ var _placed: bool = false
 ## [param on_close] 给了就在标题栏右边放一个「收起」按钮
 func setup(p_key: String, title: String, on_close: Callable = Callable(), close_text: String = "收起") -> void:
 	key = p_key
-	UiTheme.panel(self, 12)     # 121：主题的 PanelDark 变体
+	UiTheme.panel(self, -1, UiTheme.PANEL_WINDOW)     # 作者 2026-10-16：一整块石板（原来是凹槽，没有不透明的底）
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
 	var col := VBoxContainer.new()

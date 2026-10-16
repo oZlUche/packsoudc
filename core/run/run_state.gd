@@ -381,6 +381,31 @@ func _abandon_sessions() -> void:
 	_drop_pending_loot(unseen)
 
 
+## 作者 2026-10-16（关搜索屏时左边的道具直接掉到地上；离开点不该再弹提醒）：搜索收获箱 [param haul] 里亮过的倒到这个点的地上
+## （包最后放，同 [method _drop_pending_loot]）；没亮过的留在箱里 —— 还开着的会话下次再搜接着揭示，会话收了就算没搜到。
+## 没接 [member loot_seen] = 都算亮过。返回倒了几件
+func drop_seen_haul(haul: GridInventory) -> int:
+	if haul == null or storage == null:
+		return 0
+	var bags: Array[ItemInstance] = []
+	var n := 0
+	for it in haul.items().duplicate():
+		var inst := it as ItemInstance
+		if loot_seen.is_valid() and not bool(loot_seen.call(inst.uid)):
+			continue
+		if inst.def != null and inst.def.is_bag:
+			bags.append(inst)
+			continue
+		haul.remove(inst.uid)
+		storage.admit(inst)
+		n += 1
+	for bag in bags:
+		haul.remove(bag.uid)
+		storage.admit(bag)
+		n += 1
+	return n
+
+
 ## 159：开着的搜索收获箱里还没亮过的 uid（没接 [member loot_seen] = 都算亮过）
 func _unseen_search_haul() -> Dictionary:
 	var out := {}
@@ -1002,7 +1027,7 @@ func _wire_events() -> void:
 		var key := "battles_won" if won else "battles_lost"
 		tally[key] = int(tally.get(key, 0)) + 1)
 	events.loot_ready.connect(func(_n: MapNode, corpse: GridInventory): _offer_loot(corpse))
-	events.search_closed.connect(func(_n: MapNode, haul: GridInventory, _why: StringName): _offer_loot(haul))
+	events.search_closed.connect(func(_n: MapNode, haul: GridInventory, _why: StringName): drop_seen_haul(haul))     # 作者 2026-10-16：不再弹战利品屏
 	events.shop_opened.connect(func(_n: MapNode, session: ShopSession):
 		if session != null:
 			# 087：双击 / 按钮买的（inst 由会话交出来）先试着进包、放不下到地上；拖着买的已经在玩家手里了（inst 为 null）

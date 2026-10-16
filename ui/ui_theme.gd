@@ -43,6 +43,8 @@ const LABEL_OVERLAY_TITLE := &"LabelOverlayTitle"
 const PANEL_TOOLTIP := &"PanelTooltip"
 ## 157 补充二：名牌底（战前 / 回放两屏的名牌）
 const PANEL_NAMEPLATE := &"PanelNameplate"
+## 作者 2026-10-16（背包窗口没有底）：可拖的浮窗（[FloatingWindow]：地图 / 事件屏的背包）也是一整块石板，只是没有标题刻线
+const PANEL_WINDOW := &"PanelWindow"
 ## 164：基地的「家」套件 —— 木牌按钮（左列页签与两颗大按钮；主档是「再来一局」）、粗布文本框（中列读数）、木架（右半边仓库的框）
 const BUTTON_HOME := &"ButtonHome"
 const BUTTON_HOME_PRIMARY := &"ButtonHomePrimary"
@@ -61,7 +63,7 @@ const LABEL_DISPLAY := &"LabelDisplay"
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
 	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
 	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
-	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART]
+	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW]
 
 const TITLE_SIZE := 18
 ## 168：大标题字号
@@ -342,7 +344,10 @@ static func outline(bbcode: String) -> String:
 ## 170：行内图标 `[img=16x16]…[/img]`；图不在退回 [param fallback] 文字（「【增益】」「值」……）
 static func tip_icon(id: String, fallback: String, px: int = 16) -> String:
 	var path := TIP_ICON_DIR + id + ".png"
-	if not ResourceLoader.exists(path):
+	# 作者 2026-10-16（脚注只剩数字、没有金币 / 秤砣）：只看 .import 在不在不够 —— 没导入成的图 [img] 画成空白；真读得出来才用图，读不出写字
+	if not _tip_icons.has(path):
+		_tip_icons[path] = ResourceLoader.exists(path) and load(path) is Texture2D
+	if not bool(_tip_icons[path]):
 		return fallback
 	return "[img=%dx%d]%s[/img]" % [px, px, path]
 
@@ -356,6 +361,8 @@ static func slot_icon(kind: String, lit: bool) -> Texture2D:
 
 
 static var _slot_icons := {}
+## tip_icon 的图读不读得出来（路径 → bool）
+static var _tip_icons := {}
 
 
 ## 170：在 `_draw` 之外先把格位图标读进来 —— 兼容渲染器下第一次在 `_draw` 里才读的贴图会画成白块（[InventoryView] 建出来时调）
@@ -395,11 +402,13 @@ const TONE_LIGHT := &"light"
 const PANEL_TONES := {
 	PANEL_DARK: TONE_DARK, PANEL_LINE: TONE_DARK, PANEL_HUD: TONE_DARK, PANEL_OVERLAY: TONE_DARK, PANEL_TOOLTIP: TONE_DARK,
 	PANEL_NAMEPLATE: TONE_DARK, PANEL_HOME_BOX: TONE_LIGHT, PANEL_SHELF: TONE_DARK, PANEL_HUD_BAR: TONE_DARK,
+	PANEL_WINDOW: TONE_DARK,
 }
 ## 面板变体用哪张美术图（有图时深浅读它的 json）
 ## 157 补充三：叠层框与顶端栏是石板（深浅读板边的 json；顶端栏是自己那张长条板边），板里的分区都是凹槽
 const PANEL_ART := {PANEL_DARK: ART_INSET, PANEL_LINE: ART_INSET, PANEL_HUD: ART_INSET, PANEL_OVERLAY: ART_SLAB_EDGE, PANEL_TOOLTIP: ART_TOOLTIP,
-	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_BAR}
+	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_BAR,
+	PANEL_WINDOW: ART_SLAB_EDGE}
 ## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸。
 ## 169：读字色模板 `fg / dim / warn` 的浅版（[method text_colors_changed] 换），这几个常量是文件不在时的默认
 const INK_DEFAULT := Color("2e2219")
@@ -692,6 +701,9 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_type_variation(PANEL_OVERLAY, "PanelContainer")
 	var frame: StyleBox = slab_box(true)
 	t.set_stylebox("panel", PANEL_OVERLAY, frame if frame != null else _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
+	t.set_type_variation(PANEL_WINDOW, "PanelContainer")
+	var window: StyleBox = slab_box(false, PANEL_MARGIN)
+	t.set_stylebox("panel", PANEL_WINDOW, window if window != null else _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
 	t.set_type_variation(LABEL_OVERLAY_TITLE, "Label")
 	t.set_font_size("font_size", LABEL_OVERLAY_TITLE, OVERLAY_TITLE_SIZE)
 	t.set_font("font", LABEL_OVERLAY_TITLE, _font_title)
@@ -701,7 +713,10 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_stylebox("panel", PANEL_TOOLTIP, paper if paper != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), TOOLTIP_MARGIN))
 	# 157 补充二：名牌底 —— 有图是切角石碑九宫格（内边距按图边），没图是深底细边
 	t.set_type_variation(PANEL_NAMEPLATE, "PanelContainer")
-	var plate: StyleBox = _art_box(ART_NAMEPLATE)
+	# 作者 2026-10-16（战斗屏的名牌是透明的）：名牌图是凹刻的边、中间几乎透明（本来刻在石板上）—— 底下垫一层板身，放在哪都不透
+	var plate: StyleBox = layered_box(ART_NAMEPLATE, ART_SLAB_BODY)
+	if plate == null:
+		plate = _art_box(ART_NAMEPLATE)
 	t.set_stylebox("panel", PANEL_NAMEPLATE, plate if plate != null else _box(panel_bg.darkened(0.15), UiPalette.LINE.lightened(0.25), NAMEPLATE_MARGIN))
 	# 164：家的粗布框（浅底墨字）、仓库木架（深底）；没图回落到面板的平面底
 	t.set_type_variation(PANEL_HOME_BOX, "PanelContainer")
