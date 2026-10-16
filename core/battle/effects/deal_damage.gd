@@ -42,8 +42,9 @@ func apply(ctx: RuleContext) -> void:
 	deal(ctx, damage_type, 0)
 
 
-## 175：真正打出去的那一下 —— [param type] 是这一包的类型，[param extra_raw] 并进从属性取的原值（法杖轮到的那颗晶石的伤害，[FireLoaded]）
-func deal(ctx: RuleContext, type: StringName, extra_raw: int) -> void:
+## 175：真正打出去的那一下 —— [param type] 是这一包的类型，[param extra_raw] 并进从属性取的原值（法杖轮到的那颗晶石的伤害，[FireLoaded]）。
+## 补充五：返回有没有一包打中（没被取消）—— 轮读法杖「打中了才施加这颗晶石的元素」读它
+func deal(ctx: RuleContext, type: StringName, extra_raw: int) -> bool:
 	var raw := StatMath.from_float(amount)
 	var from_stat := false
 	if damage_stat != &"":
@@ -55,7 +56,7 @@ func deal(ctx: RuleContext, type: StringName, extra_raw: int) -> void:
 		raw *= ctx.source_stacks()
 	var by_hp := percent_of != &"" and percent > 0
 	if raw <= 0 and not by_hp:
-		return
+		return false
 
 	# 104（作者定）：暴击 —— 只有从属性取伤害的那一包掷（固定值伤害不暴击），造包时掷、在管线之前，
 	# 所以护甲 / 减伤 / 格挡 / 加时看到的都是暴击后的原始值。双方对称。一次出手掷一次，打到几个目标都一样
@@ -63,6 +64,7 @@ func deal(ctx: RuleContext, type: StringName, extra_raw: int) -> void:
 	if crit:
 		raw = StatMath.mul(raw, maxi(0, ctx.item_stat(BattleStats.CRIT_DAMAGE, BattleStats.default_base(BattleStats.CRIT_DAMAGE))))
 
+	var landed := false
 	for victim in resolve_targets(ctx, target):
 		var dmg := raw
 		if by_hp:
@@ -73,8 +75,10 @@ func deal(ctx: RuleContext, type: StringName, extra_raw: int) -> void:
 			continue
 		var packet := DamagePacket.create(type, dmg, victim, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override))
 		packet.crit = crit
-		packet.from_status = ctx.source_buff() != null
 		DamageResolver.resolve(ctx.battle, packet)
+		if not packet.cancelled:
+			landed = true
+	return landed
 
 
 ## 132：按生命比例的那部分（定点）

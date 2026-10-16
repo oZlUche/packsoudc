@@ -1,54 +1,91 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_gxbe4"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_2soed"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_uv5nu"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_8gkxm"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_ssooc"]
-[ext_resource type="Script" path="res://core/battle/effects/convert_damage_type.gd" id="6_hph3v"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_before_damage.gd" id="7_1q6ev"]
-[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="8_lnt1r"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="9_287ch"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="10_cmpis"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="11_r48x2"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="12_bt2a4"]
-[ext_resource type="Script" path="res://core/inventory/wear_profile.gd" id="13_6lfth"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_hph3v"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_1q6ev"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_lnt1r"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_287ch"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_cmpis"]
+[ext_resource type="Script" path="res://core/battle/effects/convert_damage_type.gd" id="6_r48x2"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_before_damage.gd" id="7_bt2a4"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="8_6lfth"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_vrq35"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_5k6e4"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_damage.gd" id="11_qx2nn"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="12_q8f2x"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="13_qhn0y"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="14_byikl"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="15_enal7"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="16_s32v7"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="17_imkgn"]
+[ext_resource type="Script" path="res://core/inventory/wear_profile.gd" id="18_7tnc7"]
 
-[sub_resource type="Resource" id="Resource_vrq35"]
-script = ExtResource("1_gxbe4")
+[sub_resource type="Resource" id="Resource_pf0rb"]
+script = ExtResource("1_hph3v")
 amount = 6.0
 
-[sub_resource type="Resource" id="Resource_5k6e4"]
-script = ExtResource("3_uv5nu")
+[sub_resource type="Resource" id="Resource_cldei"]
+script = ExtResource("3_lnt1r")
 metadata/part_ref = &"always"
 
-[sub_resource type="Resource" id="Resource_qx2nn"]
-script = ExtResource("6_hph3v")
+[sub_resource type="Resource" id="Resource_sls28"]
+script = ExtResource("6_r48x2")
 to = &"ice"
 
-[sub_resource type="Resource" id="Resource_q8f2x"]
-script = ExtResource("7_1q6ev")
+[sub_resource type="Resource" id="Resource_1phf6"]
+script = ExtResource("7_bt2a4")
 direction = 1
 own_only = true
 
-[sub_resource type="Resource" id="Resource_qhn0y"]
-script = ExtResource("2_2soed")
-trigger = SubResource("Resource_q8f2x")
-cadence = SubResource("Resource_5k6e4")
-effects = Array[ExtResource("5_ssooc")]([SubResource("Resource_qx2nn")])
+[sub_resource type="Resource" id="Resource_dkbph"]
+script = ExtResource("2_1q6ev")
+trigger = SubResource("Resource_1phf6")
+cadence = SubResource("Resource_cldei")
+effects = Array[ExtResource("5_cmpis")]([SubResource("Resource_sls28")])
 
-[sub_resource type="Resource" id="Resource_byikl"]
-script = ExtResource("8_lnt1r")
-feed_mods = Array[ExtResource("1_gxbe4")]([SubResource("Resource_vrq35")])
-feed_rules = Array[ExtResource("2_2soed")]([SubResource("Resource_qhn0y")])
+[sub_resource type="Resource" id="Resource_cttf2"]
+script = ExtResource("3_lnt1r")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_2l8vh"]
+script = ExtResource("9_vrq35")
+id = &"chill"
+display_name = "寒冷"
+display_names = {
+"en": "Chill"
+}
+is_debuff = true
+decay_halve_on = &"weapon_fired"
+element = &"ice"
+per_stack_percent = 10.0
+
+[sub_resource type="Resource" id="Resource_dmy7q"]
+script = ExtResource("10_5k6e4")
+buff = SubResource("Resource_2l8vh")
+
+[sub_resource type="Resource" id="Resource_uj8go"]
+script = ExtResource("11_qx2nn")
+direction = 1
+own_only = true
+landed_only = true
+
+[sub_resource type="Resource" id="Resource_b1q3e"]
+script = ExtResource("2_1q6ev")
+trigger = SubResource("Resource_uj8go")
+cadence = SubResource("Resource_cttf2")
+effects = Array[ExtResource("5_cmpis")]([SubResource("Resource_dmy7q")])
+
+[sub_resource type="Resource" id="Resource_b7d3c"]
+script = ExtResource("12_q8f2x")
+feed_mods = Array[ExtResource("1_hph3v")]([SubResource("Resource_pf0rb")])
+feed_rules = Array[ExtResource("2_1q6ev")]([SubResource("Resource_dkbph"), SubResource("Resource_b1q3e")])
 feed_filter = Array[StringName]([&"staff"])
 
-[sub_resource type="Resource" id="Resource_enal7"]
-script = ExtResource("12_bt2a4")
+[sub_resource type="Resource" id="Resource_4p8pg"]
+script = ExtResource("17_imkgn")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
 
-[sub_resource type="Resource" id="Resource_s32v7"]
-script = ExtResource("13_6lfth")
+[sub_resource type="Resource" id="Resource_e014a"]
+script = ExtResource("18_7tnc7")
 prefixes_by_lang = {
 "en": ["Dim ", "Flickering ", "Bright "]
 }
@@ -57,15 +94,15 @@ broken_prefixes = {
 }
 
 [resource]
-script = ExtResource("11_r48x2")
+script = ExtResource("16_s32v7")
 id = &"ice_crystal"
 display_name = "冰霜魔晶石"
 display_names = {
 "en": "Ice Crystal"
 }
-description = "放在法杖的装载槽上：法杖伤害 +{amount}，打出冰霜伤害。能供给 {max_charges} 场，用完就碎。"
-shape = SubResource("Resource_enal7")
+description = "放在法杖的装载槽上：法杖伤害 +{amount}，打出冰霜伤害，打中后给对手施加一层【寒冷】。能供给 {max_charges} 场，用完就碎。"
+shape = SubResource("Resource_4p8pg")
 rarity = 1
 tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal"])
-adjacency = SubResource("Resource_byikl")
-wear = SubResource("Resource_s32v7")
+adjacency = SubResource("Resource_b7d3c")
+wear = SubResource("Resource_e014a")

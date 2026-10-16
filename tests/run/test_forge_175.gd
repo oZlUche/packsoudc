@@ -66,7 +66,7 @@ static func run_forge_and_rule(t: TestCase) -> void:
 	t.eq(String(fire.get("element", "")), "ice", "冰晶石进效果槽：按它的元素")
 	t.eq(Forge.prefix(fire), "霜冻的", "前缀按元素：霜冻的")
 	var r2 := Forge.rule_of(fire)
-	t.check(r2 != null and r2.effects[0] is DealDamage and (r2.effects[0] as DealDamage).damage_type == &"ice", "打冰伤（命中盖寒印）")
+	t.check(r2 != null and r2.effects[0] is DealDamage and (r2.effects[0] as DealDamage).damage_type == &"ice", "打冰伤（补充五：寒冷另由施加来）")
 
 	var beat := {"trigger": "stone", "direction": "default", "rate": 4, "effect": "metal", "target": "default", "tier": 0, "magnitude": 2}
 	var r3 := Forge.rule_of(beat)

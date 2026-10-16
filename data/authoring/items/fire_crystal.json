@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Fire Crystal"
   },
-  "description": "放在法杖的装载槽上：法杖伤害 +{amount}，打出火焰伤害。能供给 {max_charges} 场，用完就碎。",
+  "description": "放在法杖的装载槽上：法杖伤害 +{amount}，打出火焰伤害，打中后给对手施加一层【灼伤】。能供给 {max_charges} 场，用完就碎。",
   "shape": [
     "11"
   ],
@@ -34,6 +34,21 @@
           {
             "type": "convert_damage_type",
             "to": "fire"
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_damage",
+          "direction": "DEALT",
+          "own_only": true,
+          "landed_only": true
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "apply_status",
+            "buff": "scorch"
           }
         ]
       }

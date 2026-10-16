@@ -1,23 +1,24 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_cgu7d"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_bsgku"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_sdwks"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_n8f3o"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_21y5a"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_bsgku"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_sdwks"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_n8f3o"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_21y5a"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_whhp5"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_grsw6"]
 
-[sub_resource type="Resource" id="Resource_whhp5"]
-script = ExtResource("5_21y5a")
+[sub_resource type="Resource" id="Resource_mqm3k"]
+script = ExtResource("6_grsw6")
 
 [resource]
-script = ExtResource("4_n8f3o")
+script = ExtResource("5_whhp5")
 id = &"spyglass"
 display_name = "望远镜"
 display_names = {
 "en": "Spyglass"
 }
 description = "一支旧军团的黄铜望远镜。不占背包：拿到之后，把鼠标停在地图的点上就能看到那个点的情报。"
-shape = SubResource("Resource_whhp5")
+shape = SubResource("Resource_mqm3k")
 rarity = 2
 weight = 2
 tags = Array[StringName]([&"keepsake", &"node_tooltips"])

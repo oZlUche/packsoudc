@@ -538,3 +538,41 @@ N = 这次反应吃掉的层数（补充三：`min(已有层, 新来层)`）。�
 4. 保底层数（凝毒 / 冻疮，补充四）：有保底的格子在图标外加一道细边（颜色同关键词色），不另出图。
 5. 深浅两套（157 / 170 的 tone 规矩）：对阵面板是深色底，图标按深色底设计一套即可；若将来效果栏出现在浅色面板再补。
 6. 测试：`EffectIcons.of` 对每个 buff id、每条轴正负、两个系统格都取得到图（图齐之后的断言）；缺图回首字；回放截图金样随之重录（`/mnt/project-files/screenshots/`）。
+
+### 补充五（v3.09）· 落地记录
+
+待定 补 5.1–5.3 全按推荐（附火每下一层灼伤、铸牌按阶加层、简写在打中后施加）。落法与补 5.2 不一样的地方，以及顺手要改的：
+
+- **「没打中」= 被受伤前效果整个取消的包**：damage 事件在取消时多带 `cancelled: true`，扳机加开关 `DamageTrigger.landed_only`（默认关，原有规则行为不变）。简写拼出的规则与晶石的第二条供给规则都打开它。被护甲整个吃掉、被格挡挡成 0 的一下仍算打中。
+- **简写的类叫 `ElementApply`**（`buff` + `stacks`），`ElementApply.rule_of` 把一件道具的几项拼成一条规则（每项一个 `apply_status`），编译第 6 步经 `_attach` 挂上，来源 `applies`（`ElementApply.ORIGIN`）。现有道具没有用它的（火 / 冰 / 雷伤害只出在晶石、铸牌、附火上，都按各自的路补了施加）；它是给以后「打一下叠一层 / 多层印」的武器用的。
+- **轮读法杖**：编译器认「on_damage DEALT + apply_status」的供给规则（`BattleCompiler.applies_of`），法杖是轮读的就不常驻挂它，而是记进装载表那颗的 `applies: {buff, stacks}`；`FireLoaded` 打完那一下，`DealDamage.deal` 返回有没有一包没被取消，打中了才给对手施加。木棍只打伤害。
+- **1b 火焰加成**原来靠 `from_status` 认「身上的灼伤 / 燃血跳的火伤」去读对手的加成轴；删掉旗子后改认「非直接伤害、主人就是挨打的自己」，结果不变。
+- **铸炉**：元素行写 `"applies": {"buff": "scorch"}`（冰 chill、雷 numb），`Forge.rule_of` 在主效果（与四阶的附带）之后加一个施加，层数 = 1 + 阶（0 / 1 / 2 阶 → 1 / 2 / 3 层），封顶 `Forge.MAX_ELEMENT_STACKS` = 5；给谁跟主效果（用途定）。`_element_for` 现在读这件道具施加的元素（晶石的第二条供给规则），不读伤害类型。
+- **日神附火**：`EnchantWeaponsPerk` 加 `applies_buff`（默认 scorch）/ `applies_stacks`（默认 1，写 0 = 只打火伤），附火规则里火伤之后接一个施加。附火是「出手时」规则，所以这层灼伤跟着出手走（和附火那一下同生）。
+- **`elements_of_item`** 只读 `apply_status` / `convert_status` 的元素状态与装载表的 `applies`；`element_of_type`（伤害类型 → 元素）删了。
+- **真实 · 物理**：`DamageTypeDef.family`（空 = 自己）+ `DamageTypes.family_of`；流血 `family: physical`。`DamageTypes.nature` 给「真实 · 物理」，`DamageTypes.describe` 在真实伤害的说明前面加它（百科伤害类型页）；流血 json 的说明去掉了重复的「真实伤害」字样。导入器：除流血外写 `pure` 报错，`family` 写了不认得的类型报错。
+- **悬浮窗**：武器句「每 X 秒造成 Y 点火焰伤害，消耗 Z 耐力。每下施加 N 层【X】」（施加另成一句；施加以外带到的状态仍「附带」）；简写「打中后：施加 N 层【X】」；轮读句的伤害写类型名（火焰 / 冰霜，原来写元素单字），每颗的施加另成一句「打中后：施加 1 层【寒冷】 → 施加 1 层【灼伤】」。伤害类型的说明改为「只是伤害，不附带元素（【灼伤】要另外施加）」。
+- **晶石的说明**加「打中后给对手施加一层【灼伤 / 寒冷 / 麻痹】」。
+- `ItemDef` 多一个数组字段，导入后每件道具的 `.tres` 都多一个脚本引用（生成文件，不改数据）。只在战斗里的东西，不碰存档，不用别名。
+
+### 补 5.4（v3.10）· 落地记录
+
+按作者定稿（经 12:38 的转述：一句两段；「火焰伤害」整段染伤害类型色、不是关键词；「灼伤」用状态关键词色、是关键词；色值美术设计给）：
+
+- **样式名**：`TextTemplate.STYLE_NAMES` 加十个 —— 伤害类型字 `fire` `frost` `thunder` `toxin` `true`（火焰 / 冰霜 / 闪电 / 毒素 / 流血伤害），元素状态 `scorch` `chill` `shock` `poison` `bleed`（灼伤 / 寒冷 / 麻痹 / 中毒 / 流血）。深版用美术设计在 D2 深皮革底上定的色值（#f25a46 #5aa6e8 #d9b43a #66b44a #d8606f / #ff8a4c #8fdcff #ffe45c #8fe060 #ff4f72），写进 `UiPalette.STYLE_COLORS` 与字色模板 `data/authoring/ui/text_colors.json`；浅版是按 169 的规矩配的暗色（悬浮窗是深底，浅版只在浅面板上用到），美术要换直接改 json。
+- **对应关系**在 `Glossary.DAMAGE_STYLES`（伤害类型 id → 样式名）与 `Glossary.ELEMENT_STYLES`（元素 → 状态样式名，`Glossary.status_style`）。物理、反伤、流失不染。
+- **伤害字**：`Glossary.mark_rich` 先把文字里的「X伤害」挡住、标完关键词再换成整段带色的 `[color=@fire]火焰伤害[/color]` —— 不挡的话「流血伤害」里的「流血」会被当成流血状态的关键词。道具悬浮窗与词条子窗都走它。
+- **关键词色**：`Glossary.mark` 认词条上的 `style`（没写 = 原来的词条色 `term`）；道具悬浮窗收集的状态词条，元素状态带上自己的样式；子窗标题也用它。元素状态在句子里不再加书名号（颜色 + 下划线已经说明它是关键词），别的状态照旧【】。
+- **一句两段**：`ApplyStatus.describe` 改「施加 N 层X」（层数总写）；`Glossary.effects_text` 在伤害（`deal_damage` / 附火）后面紧跟施加时用「，并」连 ——「造成 2 点火焰伤害，并施加 1 层灼伤」。武器句「每 X 秒造成 Y 点火焰伤害，并施加 N 层灼伤，消耗 Z 耐力」，道具 `applies` 并进武器句（没有武器句才单写「打中后施加 N 层X」）。轮读句：「没放晶石：每 Z 秒造成 Y 点物理伤害」/「装载一颗：每 Z 秒造成 Y 点火焰伤害，并施加 1 层灼伤」/「装载 2 颗，顺时针：Y 点冰霜伤害并施加 1 层寒冷 → Y 点火焰伤害并施加 1 层灼伤；颗间 X 秒，一轮后歇 Z 秒」。不做特效字样。
+- **伤害类型「中毒」改名「毒素」**（英文 Toxin）：作者原话里的伤害就叫「毒素伤害」，美术的色表也是「毒素」；不改的话「造成 X 点中毒伤害」和「施加 N 层中毒」同名，颜色分开了字还是一样。`Glossary.status_name` 先按状态自己的名字取（原来借伤害类型的名字），所以扳机、条件里的「中毒」不变。
+- **元素小图标**只按施加亮：补充五起 `elements_of_item` 只读施加，没改。
+
+### 补 5.5（v3.11）· 落地记录
+
+图标由美术设计出图、作者 10-15 定稿（44 张，源图 56×56），经 UI替换美术转交。和上面的替换方案不同的三处按作者 10-15 的改动：
+
+- **不要方格底和外框**，图标按 **28×28** 显示（方案原写 20×20 / 源图 40），层数描边画在图标右下角。一排格子的高 `CombatantPanel.CHIP_H` 跟着从 20 改成 28，缺图的首字格也这么高，一排才齐。
+- **白色单色图用 modulate 着色**：元素状态用补 5.4 的关键词色（灼伤 scorch、寒冷 chill、麻痹 shock、中毒 poison、流血 bleed，按 `Glossary.status_style`），反应产物按美术的色系（燃血跟灼伤，菌血、剧毒跟中毒，`EffectIcons.PRODUCT_STYLES`）；其余按组：系统 `CombatantPanel.SYSTEM_COLOR`、减益 `UiPalette.HP`、增益 `UiPalette.ARMOR`（就是原来方格外框的颜色）。悬停时垫一层同色淡底（原来是外框加粗）。
+- **保底**（`guards` > 0）不画细边：中毒 / 流血整张换成 `poison_guard.png` / `bleed_guard.png`，这两张是彩色成品，modulate 用白；别的状态没有保底成品，照旧着色。
+
+其余照方案：资源在 `assets/ui/effects/`，`EffectIcons.of(chip_id, stacks, guard)` 按四类拆 id 取图（轴格按带符号层数分 pos / neg），取不到返回 null，面板照旧画首字（被动条目永远首字）；不加 `BuffDef.icon`。`chip_text` 仍是首字格的字，层数另由 `chip_count` 给。悬浮窗与教程指格子的包围盒不变。测试 `tests/ui/test_effect_icons_175.gd`：内容库每个 buff、十三条轴正负、两个系统格都取得到图；着色；保底换图；缺图回首字；格子 28×28。

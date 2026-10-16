@@ -106,6 +106,9 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		compiled = spec.items[0]     # 单独编的那块棋盘上只有它的副本
 	var use_stats: StatSet = spec.stats_with_opening(compiled) if compiled != null else null
 	var weapon := def.tags.has(&"weapon")
+	# 175 补 5.4：道具自己的「造成伤害后施加」（[member ItemDef.applies]）并进武器句写成一句两段；没有武器句才单写一行
+	var own_gives := applies_phrases(def.applies)
+	var gives_used := false
 	# 087（作者定）：没有「主武器」—— 包里每一件武器都各自出手，这里每件都按自己的规则写
 	if def.combat != null:
 		for key in def.combat.base_stats:
@@ -120,7 +123,9 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			if weapon and rule.cadence is CycleCadence:
 				sentence = cycle_sentence(rule, use_stats, compiled.loaded if compiled != null else [] as Array[Dictionary])     # 175：法杖轮读
 			elif weapon:
-				sentence = weapon_sentence(rule, use_stats)
+				sentence = weapon_sentence(rule, use_stats, [] as Array[String] if gives_used else own_gives)
+				if sentence != "" and not own_gives.is_empty():
+					gives_used = true
 			if sentence != "":
 				lines.append(sentence)
 				continue
@@ -146,6 +151,10 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			Glossary.buffs_in_rules([ar], attached_buffs)
 			if StringName(String(a["origin"])) == Forge.ORIGIN:     # 175 第三批：附魔单写一行
 				lines.append("%s[color=@grant]%s[/color]" % [icon("enchant"), AdjacencyText.rule_phrase(ar)])
+				continue
+			if StringName(String(a["origin"])) == ElementApply.ORIGIN:     # 175 补充五：自己的「造成伤害后施加」；补 5.4：已并进武器句就不再写
+				if not gives_used:
+					lines.append(applies_line(ar))
 				continue
 			if loaded.has(StringName(String(a["origin"]))):
 				continue
@@ -201,27 +210,35 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var extra := Glossary.tag_terms(listed)     # 096：登记了说明的标签也是词条
 	var item_buffs := Glossary.buffs_in_item(def)
 	item_buffs.merge(attached_buffs)     # 108：挂到我身上的规则施加的 buff（弓身上的【中毒】）也是词条
+	if compiled != null:
+		for e in compiled.loaded:     # 175 补 5.4：轮读法杖每颗晶石施加的元素状态也是词条
+			var lb := ReactionResolver.mark_buff(StringName(String((e.get("applies", {}) as Dictionary).get("buff", ""))))
+			if lb != null:
+				item_buffs[lb.id] = lb
+	for a in def.applies:
+		if a != null and (a as ElementApply).buff != null:
+			item_buffs[(a as ElementApply).buff.id] = (a as ElementApply).buff
 	for id in item_buffs:
 		var bd: BuffDef = item_buffs[id]
 		if Names.of(bd) != "":
-			extra[Names.of(bd)] = {"id": String(id), "text": Glossary.describe_buff(bd)}
+			extra[Names.of(bd)] = {"id": String(id), "text": Glossary.describe_buff(bd), "style": Glossary.status_style(bd)}
 	var rest := "\n".join(head_rest) + "\n" + "\n".join(lines)
 	var found := Glossary.terms_in(rest, extra)
 	var terms := {}
 	for f in found:
-		terms[String(f["id"])] = {"name": f["name"], "text": f["text"]}
+		terms[String(f["id"])] = {"name": f["name"], "text": f["text"], "style": String(f.get("style", "term"))}
 	for k in ICON_TERMS.values():     # 行首图标链到格位的词条
 		if rest.contains("term:" + k):
 			terms[k] = {"name": k, "text": Glossary.term_text(k)}
-	var head := name_line + "\n" + Glossary.mark("\n".join(head_rest), found)
-	var body := "[font_size=%d][color=@tip_fg]%s[/color][/font_size]" % [BODY_SIZE, Glossary.mark("\n".join(lines), found)]
+	var head := name_line + "\n" + Glossary.mark_rich("\n".join(head_rest), found)
+	var body := "[font_size=%d][color=@tip_fg]%s[/color][/font_size]" % [BODY_SIZE, Glossary.mark_rich("\n".join(lines), found)]
 	var text := head + "\n" + body + "\n" + foot + ("　套装：%s" % set_name if set_name != "" else "")
 	return {"head": head, "body": body, "foot": foot, "set": set_name, "text": text, "terms": terms}
 
 
 ## 170（作者定）：武器句「每 X 秒造成 Y 点伤害，消耗 Z 耐力」—— X = 编译后的实际周期，Y = 伤害面板，Z = 每次出手的耐力；
 ## 规则还施加 buff 就接「，附带【中毒】」。不是按周期自己出手、不造成伤害的规则返回空（照普通规则写）
-static func weapon_sentence(rule: AbilityRule, stats: StatSet) -> String:
+static func weapon_sentence(rule: AbilityRule, stats: StatSet, more_gives: Array[String] = []) -> String:
 	if rule == null or not (rule.cadence is CooldownCadence) or not (rule.trigger is OnSchedule):
 		return ""
 	var hz := rule.cadence.estimated_hz(stats) if stats != null else 1.0 / maxf(0.01, (rule.cadence as CooldownCadence).seconds)
@@ -237,17 +254,61 @@ static func weapon_sentence(rule: AbilityRule, stats: StatSet) -> String:
 				type = (e as DealDamage).damage_type
 	if dmg <= 0.0:
 		return ""
+	var applied := {}
+	var gives: Array[String] = []
+	for e in rule.effects:
+		if e is ApplyStatus and (e as ApplyStatus).buff != null:
+			gives.append(apply_phrase(e as ApplyStatus))
+			applied[(e as ApplyStatus).buff.id] = true
 	var buffs := {}
 	Glossary.buffs_in_rules([rule], buffs)
 	for id in buffs:
-		extras.append("【%s】" % (buffs[id] as BuffDef).sentence_text())
+		if not applied.has(id):
+			extras.append("【%s】" % (buffs[id] as BuffDef).sentence_text())
+	gives.append_array(more_gives)
 	var line := "每 [b]%s[/b] 秒造成 [b]%s[/b] 点%s伤害" % [_num(1.0 / hz, 1), _num(dmg), Glossary.damage_type_name(type) if type != &"" else ""]
+	# 175 补充五 / 补 5.4（作者定）：【造成伤害】和【施加元素】是两段，写成一句「造成 X 点火焰伤害，并施加 N 层灼伤」，不合成「火焰攻击」
+	if not gives.is_empty():
+		line += "，并%s" % "，".join(gives)
 	var st := _stamina_of(rule, stats)
 	if st > 0.0:
 		line += "，消耗 [b]%s[/b] 耐力" % _num(st)
 	if not extras.is_empty():
 		line += "，附带%s" % "".join(extras)
 	return line
+
+
+## 175 补充五：「施加 2 层灼伤」/「获得 1 层【血怒】」
+static func apply_phrase(e: ApplyStatus) -> String:
+	return status_phrase("获得" if e.target == CombatEffect.Target.SELF else "施加", e.buff, e.stacks)
+
+
+## 补 5.4（作者定）：元素状态是关键词（带色、下划线，[method Glossary.mark_rich] 按 [method Glossary.status_style] 标），不加书名号；
+## 别的状态照旧【】
+static func status_phrase(verb: String, buff: BuffDef, stacks: int) -> String:
+	var name := buff.sentence_text()
+	if Glossary.ELEMENT_STYLES.has(buff.element):
+		return "%s [b]%d[/b] 层%s" % [verb, maxi(1, stacks), name]
+	return "%s [b]%d[/b] 层【%s】" % [verb, maxi(1, stacks), name]
+
+
+## 道具简写（[member ItemDef.applies]）的几段「施加 N 层灼伤」
+static func applies_phrases(list: Array) -> Array[String]:
+	var out: Array[String] = []
+	for a in list:
+		var ea := a as ElementApply
+		if ea != null and ea.buff != null:
+			out.append(status_phrase("施加", ea.buff, ea.stacks))
+	return out
+
+
+## 175 补充五：道具自己的「造成伤害后施加」简写没有武器句可并时，单写一行 ——「打中后施加 1 层灼伤」
+static func applies_line(rule: AbilityRule) -> String:
+	var gives: Array[String] = []
+	for e in rule.effects:
+		if e is ApplyStatus and (e as ApplyStatus).buff != null:
+			gives.append(apply_phrase(e as ApplyStatus))
+	return "打中后%s" % "，".join(gives) if not gives.is_empty() else ""
 
 
 ## 175：「可引发：爆燃、燃血」—— 这件带的元素 × 同一块棋盘上（别的道具和它自己）带的元素，反应表里有的；不带元素、或凑不成反应的不写
@@ -316,14 +377,19 @@ static func cycle_sentence(rule: AbilityRule, stats: StatSet, loaded: Array[Dict
 	var crit := base / raw if raw > 0.0 else 1.0     # 暴击期望的倍数，晶石加的那部分一样吃
 	var line := ""
 	if loaded.is_empty():
-		line = "没放晶石：%s [b]%s[/b]，每 [b]%s[/b] 秒" % [_short_type(base_type), _num(base), _num(p.y, 1)]
+		line = "没放晶石：每 [b]%s[/b] 秒造成 [b]%s[/b] 点%s" % [_num(p.y, 1), _num(base), _damage_words(base_type)]
 	else:
+		# 175 补 5.4（作者定）：每颗写成一句两段「Y 点火焰伤害，并施加 1 层灼伤」；不施加的（没有施加规则的晶石）只写伤害
 		var shots: Array[String] = []
 		for e in loaded:
 			var dmg := base + StatMath.to_float(int(e.get("damage", 0))) * crit
-			shots.append("%s [b]%s[/b]" % [_short_type(StringName(e.get("type", base_type))), _num(dmg)])
+			var shot := "[b]%s[/b] 点%s" % [_num(dmg), _damage_words(StringName(e.get("type", base_type)))]
+			var give := _loaded_apply(e)
+			if give != "":
+				shot += ("，并" if loaded.size() == 1 else "并") + give
+			shots.append(shot)
 		if loaded.size() == 1:
-			line = "装载一颗：%s，每 [b]%s[/b] 秒" % [shots[0], _num(p.y, 1)]
+			line = "装载一颗：每 [b]%s[/b] 秒造成 %s" % [_num(p.y, 1), shots[0]]
 		else:
 			line = "装载 %d 颗，顺时针：%s；颗间 [b]%s[/b] 秒，一轮后歇 [b]%s[/b] 秒" % [loaded.size(), " → ".join(shots), _num(p.x, 1), _num(p.y, 1)]
 	var st := _stamina_of(rule, stats)
@@ -332,10 +398,18 @@ static func cycle_sentence(rule: AbilityRule, stats: StatSet, loaded: Array[Dict
 	return line
 
 
-## 元素伤害写一个字（火 / 冰 / 雷），别的写伤害类型名
-static func _short_type(type: StringName) -> String:
-	var el := ReactionResolver.element_of_type(type)
-	return ReactionResolver.element_name(el) if el != &"" else Glossary.damage_type_name(type)
+## 「火焰伤害」（物理也写出来：轮读句里要分清这一下是什么）
+static func _damage_words(type: StringName) -> String:
+	return "%s伤害" % Glossary.damage_type_name(type)
+
+
+## 轮读表一颗晶石打中后施加的那一句（「施加 1 层【灼伤】」）；不施加 = 空
+static func _loaded_apply(entry: Dictionary) -> String:
+	var app: Dictionary = entry.get("applies", {})
+	var b := ReactionResolver.mark_buff(StringName(String(app.get("buff", ""))))
+	if b == null:
+		return ""
+	return status_phrase("施加", b, int(app.get("stacks", 1)))
 
 
 ## 171 §4：晶石自己的那一行 ——「装在：魔法杖」/「装在：魔法杖（另一把法杖的装载槽也压着它：后放的优先）」/「闲置：没放在法杖的装载槽上」

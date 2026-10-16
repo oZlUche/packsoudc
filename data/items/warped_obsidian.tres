@@ -1,22 +1,23 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_0yuiu"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_aduh3"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_r6jbh"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_gjm8d"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_8lmd1"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_aduh3"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_r6jbh"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_gjm8d"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_8lmd1"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_un53n"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_0gp3n"]
 
-[sub_resource type="Resource" id="Resource_un53n"]
-script = ExtResource("5_8lmd1")
+[sub_resource type="Resource" id="Resource_haq35"]
+script = ExtResource("6_0gp3n")
 
 [resource]
-script = ExtResource("4_gjm8d")
+script = ExtResource("5_un53n")
 id = &"warped_obsidian"
 display_name = "异化黑曜石"
 display_names = {
 "en": "Warped Obsidian"
 }
-shape = SubResource("Resource_un53n")
+shape = SubResource("Resource_haq35")
 rarity = 3
 value = 300
 tags = Array[StringName]([&"treasure", &"material", &"nature", &"gem"])

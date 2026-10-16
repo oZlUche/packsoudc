@@ -25,11 +25,12 @@ var linked_uids: Array[int] = []
 
 ## 108（作者定）：**附加规则**的来源 —— 别人挂到我身上的规则（邻居的增益规则、信仰附魔），与 [member rules] 的下标对齐；
 ## 自己写的规则没有条目。`{"rule_index": int, "origin": StringName}`，origin = 道具 def id（邻居给的）
-## 或 `faith:<id>`（信仰给的）。规则本身仍平铺在 [member rules] 里，战斗层不用认识它；只给悬浮窗写「← 毒箭」用
+## 或 `faith:<id>`（信仰给的）、`forge`（附魔）、`applies`（175 补充五：道具自己的「造成伤害后施加」简写）。规则本身仍平铺在 [member rules] 里，战斗层不用认识它；只给悬浮窗写「← 毒箭」用
 var attached: Array[Dictionary] = []
 
 ## 175（作者定）：法杖**轮读**的晶石，按顺时针排好（[method BattleCompiler.cycle_order]）。
-## `{uid: int, id: StringName（晶石 def id）, type: StringName（它把这一下换成的伤害类型）, damage: int（它给这一下加的伤害，定点）}`。
+## `{uid: int, id: StringName（晶石 def id）, type: StringName（它把这一下换成的伤害类型）, damage: int（它给这一下加的伤害，定点）,
+## applies: {buff: StringName, stacks: int}（175 补充五：这一下打中后给对手施加的元素；空 = 不施加）}`。
 ## 只有规则里有 [FireLoaded] 的宿主才这样装：晶石的伤害与换型不再常驻挂在法杖上，轮到它那一下才用；别的供给照旧常驻
 var loaded: Array[Dictionary] = []
 

@@ -1,62 +1,63 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_2hg6o"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_egkxc"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_wmign"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_ici57"]
-[ext_resource type="Script" path="res://core/battle/costs/chance_condition.gd" id="5_4j3ht"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_ucinu"]
-[ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="7_gt0ts"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_damage.gd" id="8_j3j5w"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_5w11g"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_s5isw"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_vxq1o"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_e7pd6"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_285e8"]
-
-[sub_resource type="Resource" id="Resource_wyon3"]
-script = ExtResource("3_wmign")
-metadata/part_ref = &"always"
-
-[sub_resource type="Resource" id="Resource_vaalh"]
-script = ExtResource("5_4j3ht")
-percent = 20
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_egkxc"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_wmign"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_ici57"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="4_4j3ht"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_ucinu"]
+[ext_resource type="Script" path="res://core/battle/costs/chance_condition.gd" id="6_gt0ts"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_j3j5w"]
+[ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="8_5w11g"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_damage.gd" id="9_s5isw"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="10_vxq1o"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="11_e7pd6"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="12_285e8"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="13_wyon3"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="14_vaalh"]
 
 [sub_resource type="Resource" id="Resource_qbjg0"]
-script = ExtResource("7_gt0ts")
+script = ExtResource("4_4j3ht")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_oi2q7"]
+script = ExtResource("6_gt0ts")
+percent = 20
+
+[sub_resource type="Resource" id="Resource_lptre"]
+script = ExtResource("8_5w11g")
 target = 0
 axis = &"block"
 delta = -1
 
-[sub_resource type="Resource" id="Resource_oi2q7"]
-script = ExtResource("8_j3j5w")
+[sub_resource type="Resource" id="Resource_c0chg"]
+script = ExtResource("9_s5isw")
 direction = 1
 damage_type = &"poison"
 
-[sub_resource type="Resource" id="Resource_lptre"]
-script = ExtResource("2_egkxc")
-trigger = SubResource("Resource_oi2q7")
-cadence = SubResource("Resource_wyon3")
-costs = Array[ExtResource("4_ici57")]([SubResource("Resource_vaalh")])
-effects = Array[ExtResource("6_ucinu")]([SubResource("Resource_qbjg0")])
-
-[sub_resource type="Resource" id="Resource_c0chg"]
-script = ExtResource("9_5w11g")
-rules = Array[ExtResource("2_egkxc")]([SubResource("Resource_lptre")])
-
 [sub_resource type="Resource" id="Resource_8ufyl"]
-script = ExtResource("13_285e8")
+script = ExtResource("3_ici57")
+trigger = SubResource("Resource_c0chg")
+cadence = SubResource("Resource_qbjg0")
+costs = Array[ExtResource("5_ucinu")]([SubResource("Resource_oi2q7")])
+effects = Array[ExtResource("7_j3j5w")]([SubResource("Resource_lptre")])
+
+[sub_resource type="Resource" id="Resource_j7vcr"]
+script = ExtResource("10_vxq1o")
+rules = Array[ExtResource("3_ici57")]([SubResource("Resource_8ufyl")])
+
+[sub_resource type="Resource" id="Resource_7mjct"]
+script = ExtResource("14_vaalh")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
 
 [resource]
-script = ExtResource("12_e7pd6")
+script = ExtResource("13_wyon3")
 id = &"blight_censer"
 display_name = "腐蚀香炉"
 display_names = {
 "en": "Blight Censer"
 }
 description = "毒烟熏过的甲，一碰就裂。"
-shape = SubResource("Resource_8ufyl")
+shape = SubResource("Resource_7mjct")
 rarity = 2
 tags = Array[StringName]([&"part", &"metal", &"poison"])
-combat = SubResource("Resource_c0chg")
+combat = SubResource("Resource_j7vcr")

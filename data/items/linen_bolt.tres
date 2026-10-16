@@ -1,23 +1,24 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_1ti76"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_jr8ca"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="3_t6wpx"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="4_sk20g"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="5_vqouf"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_jr8ca"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_t6wpx"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_sk20g"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_vqouf"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_rcr3p"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_qlt6q"]
 
-[sub_resource type="Resource" id="Resource_rcr3p"]
-script = ExtResource("5_vqouf")
+[sub_resource type="Resource" id="Resource_7ojrt"]
+script = ExtResource("6_qlt6q")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)])
 
 [resource]
-script = ExtResource("4_sk20g")
+script = ExtResource("5_rcr3p")
 id = &"linen_bolt"
 display_name = "亚麻布卷"
 display_names = {
 "en": "Linen Bolt"
 }
 description = "一卷素色亚麻。"
-shape = SubResource("Resource_rcr3p")
+shape = SubResource("Resource_7ojrt")
 weight = 2
 tags = Array[StringName]([&"material", &"crafted", &"supply"])

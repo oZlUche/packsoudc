@@ -9,8 +9,7 @@ display_name = "火焰"
 display_names = {
 "en": "Fire"
 }
-description = "火焰伤害。命中时在对手身上盖【灼伤】印。"
+description = "火焰伤害：吃攻方的火焰加成。只是伤害，不附带元素（【灼伤】要另外施加）。"
 descriptions = {
-"en": "Fire damage. Behaves like physical for now; the start of the elemental line."
+"en": "Fire damage; scales with the attacker's fire bonus. Damage only: it applies no element (Scorch is applied separately)."
 }
-mark = &"scorch"

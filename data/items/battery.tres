@@ -1,29 +1,30 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_qb8yr"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_4phem"]
-[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="3_ceue3"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_bvc6o"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="5_sn8fo"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="6_5x3f4"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="7_ttehx"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_4phem"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_ceue3"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_bvc6o"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="4_sn8fo"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_5x3f4"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_ttehx"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="7_ta4hc"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="8_3caxe"]
 
-[sub_resource type="Resource" id="Resource_ta4hc"]
-script = ExtResource("3_ceue3")
+[sub_resource type="Resource" id="Resource_tghs1"]
+script = ExtResource("4_sn8fo")
 base_stats = {
 "max_mana": 20
 }
 
-[sub_resource type="Resource" id="Resource_3caxe"]
-script = ExtResource("7_ttehx")
+[sub_resource type="Resource" id="Resource_0e5r8"]
+script = ExtResource("8_3caxe")
 
 [resource]
-script = ExtResource("6_5x3f4")
+script = ExtResource("7_ta4hc")
 id = &"battery"
 display_name = "电池"
 display_names = {
 "en": "Battery"
 }
-shape = SubResource("Resource_3caxe")
+shape = SubResource("Resource_0e5r8")
 tags = Array[StringName]([&"sealed", &"part"])
-combat = SubResource("Resource_ta4hc")
+combat = SubResource("Resource_tghs1")

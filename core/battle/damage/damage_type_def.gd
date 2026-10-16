@@ -6,6 +6,9 @@
 ## [b]刻意不与加成绑定。[/b] 属性修饰（[StatModifier]，133 起只有乘算 / 加算）管的是「加成怎么叠」，
 ## 伤害类型管的是「这一下怎么结算」，两者正交 ——
 ## 绑在一起就写不出「强化影响全部伤害」这种最常见的加成。
+##
+## 175 补充五（作者定）：伤害类型也**不管盖印** ——【造成伤害】和【施加元素】是两件事，
+## 元素只从施加状态来（[ApplyStatus]，[ReactionResolver]）
 class_name DamageTypeDef
 extends Resource
 
@@ -46,12 +49,13 @@ extends Resource
 @export var provokes: bool = true
 
 
-## 175：这种伤害命中后在目标身上盖哪个【印】（buff id：火 → `scorch` 灼伤、冰 → `chill` 寒冷、雷 → `numb` 麻痹）；空 = 不盖（物理、反伤、流失；
-## 中毒 / 流血的伤害也不盖 —— 它们的印就是状态本身，由施加状态来盖，否则每跳一次都会多一层）。
-## 补充四：状态自己跳的伤害（灼伤、燃血的火伤）也不盖，理由相同（[member DamagePacket.from_status]）。见 [ReactionResolver]
-@export var mark: StringName = &""
-## 175 补充一（作者定）：一下这种伤害盖几层印（默认 1 层；要多层的伤害类型改这里）
-@export var mark_stacks: int = 1
 ## 175 补充四：**真实伤害** —— 跳过管线的 1b 加成、2 护甲、3 受伤前改写、4 格挡与「受到伤害」轴（含按类型的易伤），原值直接落血；
-## damage 事件照发。流血是它唯一的来源（流血伤害类型打开它）
+## damage 事件照发。补充五（作者定）：**只有流血是真实伤害** —— 导入器不许别的类型打开它
 @export var pure: bool = false
+## 175 补充五：这种伤害归哪一大类（空 = 自己的 id）。流血是「真实 · 物理」：family = `physical`，
+## 将来按大类读的加成 / 减免（「物理伤害 +X%」）把它算进物理。读的时候用 [method family_of]
+@export var family: StringName = &""
+
+## 归哪一大类（没写 = 自己）
+func family_of() -> StringName:
+	return family if family != &"" else id
