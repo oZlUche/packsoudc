@@ -1,5 +1,5 @@
 ## 179：选角色屏的图标牌 —— 图标 40 + 数字（28 粗体）+ 说明（13 灰），三块等宽横排（负重上限 / 棋盘 / 开局金币）。
-## 图标先找 `assets/ui/setup/icons/<id>.png`（美术出的 40 px 版），没有退回 [member FALLBACK] 里那张（170 的提示框图标），
+## 图标先找 `assets/ui/setup/icons/<id>.png`（美术定稿，源图 80 按 40 显示，彩色成品不调色），没有退回 [member FALLBACK] 里那张（170 的提示框图标），
 ## 再没有就自己画一个占位（秤砣 / 格子 / 金币的轮廓）
 class_name CapTile
 extends PanelContainer
