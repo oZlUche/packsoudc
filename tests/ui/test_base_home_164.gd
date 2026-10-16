@@ -1,5 +1,5 @@
-## 164（作者定）：基地三列 —— 左列四个页签竖排（再点一次回「家」）、左下角「再来一局」「回主菜单」；中列当前页（默认家）；
-## 右半边常驻分页仓库，双击按当前页分派（家 → 置入带回来的背包、出售 → 卖、科技 → 上交、图鉴 / 成就 → 不做事）；
+## 164（作者定）：基地三列 —— 左列页签竖排（178 起五个）（再点一次回「家」）、左下角「再来一局」「回主菜单」；中列当前页（默认家）；
+## 右半边分页仓库（178：图鉴 / 成就页收起），双击按当前页分派（178：仓库 → 置入带回来的背包、出售 → 卖、科技 → 上交、家 / 图鉴 / 成就 → 不做事）；
 ## 出售 / 科技页不再自己画仓库；「家」套件（背景、木牌按钮、粗布框、木架）接进主题，每张图标了深浅
 extends RefCounted
 
@@ -38,12 +38,12 @@ static func _put(f: GameFlow, id: StringName) -> ItemInstance:
 
 
 static func frame_layout(t: TestCase, root: Window) -> void:
-	t.begin("164 · 三列：左列四个页签竖排（木牌按钮）、底下再来一局 / 回主菜单；默认在家；再点一次选中的页签回家；右半边是分页仓库")
+	t.begin("164 · 三列：左列页签竖排（木牌按钮）、底下再来一局 / 回主菜单；默认在家；再点一次选中的页签回家；右半边是分页仓库")
 	var f := _flow()
 	var screen = _screen(f, root)
 	t.eq(screen.tab(), "home", "默认在家页")
 	var keys: Array = screen._tab_btns.keys()
-	t.eq(keys, ["codex", "achievements", "sell", "tech"], "四个页签：图鉴、成就、出售、科技")
+	t.eq(keys, ["warehouse", "sell", "tech", "codex", "achievements"], "178：五个页签：仓库、出售、科技、图鉴、成就")
 	var first: Button = screen._tab_btns["codex"]
 	var col: Node = first.get_parent()
 	t.check(col is VBoxContainer, "页签竖排")
@@ -60,13 +60,18 @@ static func frame_layout(t: TestCase, root: Window) -> void:
 	t.eq(screen.tab(), "home", "再点一次：回家")
 	t.check(not first.button_pressed, "页签抬起")
 	screen.show_tab("warehouse")
-	t.eq(screen.tab(), "home", "老名字「仓库」算家")
+	t.eq(screen.tab(), "warehouse", "178：「仓库」是自己的一页，不再算家")
 	var shelf: WarehousePages = screen.shelf()
 	t.not_null(shelf, "右半边有分页仓库")
 	t.check(screen._right.is_ancestor_of(shelf), "仓库在右列")
-	for k in ["codex", "achievements", "sell", "tech"]:
+	for k in ["home", "warehouse", "sell", "tech"]:
 		screen.show_tab(k)
 		t.check(shelf.is_visible_in_tree(), "%s 页时仓库照常显示" % k)
+	for k in ["codex", "achievements"]:
+		screen.show_tab(k)
+		t.check(not shelf.is_visible_in_tree(), "178：%s 页收起仓库" % k)
+	screen.show_tab("sell")
+	screen.layout()
 	t.check(screen._right.custom_minimum_size.x >= root.get_visible_rect().size.x * 0.5 - screen.MARGIN - 1.0, "右列占半个屏宽")
 	t.eq(screen._shelf_frame.theme_type_variation, UiTheme.PANEL_SHELF, "仓库套木架框")
 	screen.queue_free()
@@ -74,7 +79,7 @@ static func frame_layout(t: TestCase, root: Window) -> void:
 
 
 static func frame_double_click(t: TestCase, root: Window) -> void:
-	t.begin("164 · 双击右边仓库一件按当前页：家 → 置入带回来的背包；出售 → 卖；科技 → 上交；图鉴 → 不做事；出售 / 科技页没有自己的仓库")
+	t.begin("164 · 双击右边仓库一件按当前页：仓库（178，原来是家）→ 置入带回来的背包；出售 → 卖；科技 → 上交；家 / 图鉴 → 不做事；出售 / 科技页没有自己的仓库")
 	ItemInstance.reset_uid_counter()
 	var f := _flow()
 	f.meta.tech_levels["warehouse"] = 3
@@ -90,7 +95,10 @@ static func frame_double_click(t: TestCase, root: Window) -> void:
 	t.check(f.meta.warehouse.has_item(a.uid), "图鉴页：不做事")
 	screen.show_tab("home")
 	screen._on_shelf_double_clicked(view, a.uid)
-	t.check(f.meta.board.has_item(a.uid), "家页：进了带回来的背包")
+	t.check(f.meta.warehouse.has_item(a.uid), "178：家页不做事")
+	screen.show_tab("warehouse")
+	screen._on_shelf_double_clicked(view, a.uid)
+	t.check(f.meta.board.has_item(a.uid), "178：仓库页：进了带回来的背包")
 	var b := _put(f, &"knife")
 	screen.show_tab("sell")
 	var funds := f.meta.funds
