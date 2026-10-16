@@ -9,7 +9,8 @@ const HP := &"hp"
 const STAMINA := &"stamina"
 const VITALITY := &"vitality"
 
-## 方块边长、块间距、圆角
+## 方块边长、块间距（心之间）、圆角。作者 2026-10-16：方块条要紧凑，格子之间不留空 —— 方块连成一根条，
+## 只有整条两头是圆角，格与格之间一道细分隔线
 const BLOCK := 22.0
 const GAP := 4.0
 const RADIUS := 5
@@ -65,41 +66,56 @@ func color() -> Color:
 	return UiPalette.HP
 
 
+## 横向的格距：方块条 0（连成一根），心照旧隔开
+func gap_x() -> float:
+	return GAP if kind == VITALITY else 0.0
+
+
 func _extent() -> Vector2:
 	var n := fills().size()
 	if n == 0:
 		return Vector2(BLOCK, BLOCK)
 	var cols := mini(n, PER_ROW)
 	var rows := ceili(float(n) / PER_ROW)
-	return Vector2(cols * BLOCK + (cols - 1) * GAP, rows * BLOCK + (rows - 1) * GAP)
+	return Vector2(cols * BLOCK + (cols - 1) * gap_x(), rows * BLOCK + (rows - 1) * GAP)
 
 
 func _draw() -> void:
 	var list := fills()
 	var col := color()
-	for i in list.size():
-		var at := Vector2(i % PER_ROW, floori(float(i) / PER_ROW)) * (BLOCK + GAP)
-		if kind == VITALITY:
-			UiPalette.draw_heart(self, at, BLOCK, UiPalette.HP)
-			continue
-		_block(Rect2(at, Vector2(BLOCK, BLOCK)), col, list[i])
+	if kind == VITALITY:
+		for i in list.size():
+			UiPalette.draw_heart(self, Vector2(i % PER_ROW, floori(float(i) / PER_ROW)) * (BLOCK + GAP), BLOCK, UiPalette.HP)
+		return
+	var rows := ceili(float(list.size()) / PER_ROW)
+	for row in rows:
+		var first := row * PER_ROW
+		var count := mini(PER_ROW, list.size() - first)
+		var y := row * (BLOCK + GAP)
+		var bar := Rect2(0, y, count * BLOCK, BLOCK)
+		# 一整根：暗槽 → 各格按比例填亮 → 格间分隔线 → 整根一圈深边（只有两头圆角）
+		draw_style_box(_box(col.darkened(0.72), Color(0, 0, 0, 0), 0, true, true), bar)
+		for k in count:
+			var fill: float = list[first + k]
+			if fill <= 0.0:
+				continue
+			var f := Rect2(k * BLOCK, y, BLOCK * fill, BLOCK)
+			draw_style_box(_box(col, Color(0, 0, 0, 0), 0, k == 0, k == count - 1 and fill >= 1.0), f)
+			draw_rect(Rect2(f.position + Vector2(2 if k > 0 else 3, 3), Vector2(maxf(0.0, f.size.x - (4 if k > 0 else 5)), 4)), col.lightened(0.35))
+		for k in range(1, count):
+			draw_line(Vector2(k * BLOCK, y + 2), Vector2(k * BLOCK, y + BLOCK - 2), col.darkened(0.55), 1.0)
+		draw_style_box(_box(Color(0, 0, 0, 0), col.darkened(0.55), 2, true, true), bar)
 
 
-## 一块卡通方块：暗槽 + 按比例填的亮块 + 上沿一道高光 + 一圈深边
-func _block(r: Rect2, col: Color, fill: float) -> void:
-	draw_style_box(_box(col.darkened(0.72), Color(0, 0, 0, 0), 0), r)
-	if fill > 0.0:
-		var f := Rect2(r.position, Vector2(maxf(RADIUS * 2.0, r.size.x * fill), r.size.y))
-		draw_style_box(_box(col, Color(0, 0, 0, 0), 0), f)
-		draw_style_box(_box(col.lightened(0.35), Color(0, 0, 0, 0), 0), Rect2(f.position + Vector2(3, 3), Vector2(f.size.x - 6, 4)))
-	draw_style_box(_box(Color(0, 0, 0, 0), col.darkened(0.55), 2), r)
-
-
-static func _box(bg: Color, edge: Color, width: int) -> StyleBoxFlat:
+## [param left] / [param right]：那一头圆角（整根的两头），格与格相接处是直角
+static func _box(bg: Color, edge: Color, width: int, left: bool, right: bool) -> StyleBoxFlat:
 	var b := StyleBoxFlat.new()
 	b.bg_color = bg
 	b.draw_center = bg.a > 0.0
 	b.border_color = edge
 	b.set_border_width_all(width)
-	b.set_corner_radius_all(RADIUS)
+	b.corner_radius_top_left = RADIUS if left else 0
+	b.corner_radius_bottom_left = RADIUS if left else 0
+	b.corner_radius_top_right = RADIUS if right else 0
+	b.corner_radius_bottom_right = RADIUS if right else 0
 	return b
