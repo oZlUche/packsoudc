@@ -23,6 +23,8 @@ static func run_stat_blocks(t: TestCase) -> void:
 	t.check(fine.custom_minimum_size.y > StatBlocks.BLOCK * 1.5, "超过一排 %d 块折行" % StatBlocks.PER_ROW)
 	var narrow := StatBlocks.new().setup(StatBlocks.HP, 45)
 	t.check(narrow.custom_minimum_size.x < hp.custom_minimum_size.x, "45 比 70 短")
+	t.eq(hp.custom_minimum_size.x, 7 * StatBlocks.BLOCK, "作者 2026-10-16：方块条连成一根，格子之间不留空（7 块 = 7 个边长）")
+	t.eq(heart.custom_minimum_size.x, 7 * StatBlocks.BLOCK + 6 * StatBlocks.GAP, "心照旧隔开")
 	for b in [hp, st, heart, fine, narrow]:
 		b.free()
 

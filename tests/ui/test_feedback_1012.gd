@@ -87,3 +87,37 @@ static func run_slab_text_ink(t: TestCase) -> void:
 		t.eq(UiTheme.ink_color(white), UiTheme.INK, "白色道具名 → 墨色")
 	else:
 		t.eq(out, text, "深石板：原样")
+
+
+static func frame_spawn_view(t: TestCase, root: Window) -> void:
+	t.begin("作者 2026-10-16 · 开局视角：缩到所有出生点都装得下；出生点在图的哪一侧，屏上也偏哪一侧（另一侧多露地图）")
+	var g := RingMapGenerator.new().generate(RingMapConfig.sample(4), 2)
+	var view := MapView.new()
+	view.size = Vector2(800, 600)
+	root.add_child(view)
+	view.graph = g
+	var pos := view.positions()
+	var ids: Array = pos.keys()
+	var c := view.canvas_rect().size
+	# 取画布右下那几个点当出生点
+	ids.sort_custom(func(a, b) -> bool: return (pos[a] as Vector2).x + (pos[a] as Vector2).y > (pos[b] as Vector2).x + (pos[b] as Vector2).y)
+	var spawns: Array = ids.slice(0, 2)
+	view.current_id = -1
+	view.open_at(2.5, spawns)
+	t.check(view.zoom < 2.5, "从 2.5 缩下来才装得下（%.2f）" % view.zoom)
+	view.open_at(1.0, spawns)     # 原比例：出生点那团比屏小，有地方偏
+	var screen := Rect2(Vector2.ZERO, view.size)
+	var mid := Vector2.ZERO
+	for id in spawns:
+		var s := view.to_screen(pos[id])
+		t.check(screen.has_point(s), "出生点 %d 在屏里（%s）" % [id, s])
+		mid += s / spawns.size()
+	t.eq(view.zoom, 1.0, "装得下就不改缩放")
+	var canvas_mid := Vector2.ZERO
+	for id in spawns:
+		canvas_mid += (pos[id] as Vector2) / spawns.size()
+	if c.x * view.zoom > view.size.x and canvas_mid.x > c.x * 0.6:
+		t.check(mid.x > view.size.x * 0.5, "出生点在图右边：屏上也偏右（%.0f）" % mid.x)
+	if c.y * view.zoom > view.size.y and canvas_mid.y > c.y * 0.6:
+		t.check(mid.y > view.size.y * 0.5, "出生点在图下边：屏上也偏下（%.0f）" % mid.y)
+	view.queue_free()

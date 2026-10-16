@@ -111,6 +111,8 @@ const ZOOM_MAX := 2.5
 const START_GAP := NODE_RADIUS * 5.0
 ## 自动定的进图缩放最多放大到这里
 const START_ZOOM_MAX := 1.5
+## 开局装下出生点时四周留的边（画布像素）
+const SPAWN_MARGIN := NODE_RADIUS * 3.0
 ## 166（作者定）：地图铺满整屏、读数浮在上面 —— 这几条边被顶端栏、左下图例、右下腰带占着（position = 左、上，size = 右、下），
 ## 「刚好放下」「居中」「把人摆到正中」都按扣掉之后的安全区算（[method safe_rect]）；底图照旧铺满整个视图
 var content_inset: Rect2 = Rect2():
@@ -127,6 +129,7 @@ var content_inset: Rect2 = Rect2():
 ## [method open_at] 时视图还没尺寸：等第一次 resized 再定缩放
 var _open_pending := false
 var _open_zoom := 0.0
+var _open_spawns: Array = []
 var _last_size := Vector2.ZERO
 
 var _layout: MapLayout = null
@@ -203,8 +206,10 @@ func fit() -> void:
 
 ## 进图（游戏屏）：[param preferred] > 0 = 玩家上次滚轮定的缩放（设置里全局沿用）；0 = 自动 [method start_zoom]。
 ## 然后把人所在的点摆到视图中央。视图还没尺寸就等第一次 resized
-func open_at(preferred: float) -> void:
+## [param spawns]（作者 2026-10-16，每局开始挑出生点时给）：先缩到所有出生点都装得下，再按 [method frame_spawns] 摆视角
+func open_at(preferred: float, spawns: Array = []) -> void:
 	_open_zoom = preferred
+	_open_spawns = spawns.duplicate()
 	_open_pending = true
 	if size.x > 0.0 and size.y > 0.0:
 		_apply_open()
@@ -213,7 +218,45 @@ func open_at(preferred: float) -> void:
 func _apply_open() -> void:
 	_open_pending = false
 	zoom = clampf(_open_zoom, ZOOM_MIN, ZOOM_MAX) if _open_zoom > 0.0 else start_zoom()
+	if not _open_spawns.is_empty():
+		frame_spawns(_open_spawns)
+		return
 	focus(current_id)
+
+
+## 作者 2026-10-16：开局视角 —— 缩放不超过现在的，且所有出生点（外加一圈边）都装得下；
+## 再把出生点那一团摆在屏上「它在图上的相对位置」处：出生点在图的右下，屏上也偏右下，于是另一侧露出尽量多的地图
+func frame_spawns(ids: Array) -> void:
+	var pos := positions()
+	var box := Rect2()
+	var any := false
+	for id in ids:
+		if not pos.has(id):
+			continue
+		var p: Vector2 = pos[id]
+		box = Rect2(p, Vector2.ZERO) if not any else box.expand(p)
+		any = true
+	if not any or size.x <= 0.0 or size.y <= 0.0:
+		focus(current_id)
+		return
+	box = box.grow(SPAWN_MARGIN)
+	var fit := minf(size.x / maxf(box.size.x, 1.0), size.y / maxf(box.size.y, 1.0))
+	zoom = clampf(minf(zoom, fit), ZOOM_MIN, ZOOM_MAX)
+	var c := canvas_rect().size
+	var mid := box.get_center()
+	var p := Vector2.ZERO
+	for i in 2:
+		var t := clampf(mid[i] / c[i], 0.0, 1.0) if c[i] > 0.0 else 0.5
+		# 出生点团在屏上的位置 = 它在图上的相对位置；再夹住，别让团的边出屏
+		var want := lerpf(box.size[i] * zoom * 0.5, size[i] - box.size[i] * zoom * 0.5, t)
+		p[i] = want - mid[i] * zoom
+		var cz := c[i] * zoom
+		if cz <= size[i]:
+			p[i] = (size[i] - cz) / 2.0
+		else:
+			p[i] = clampf(p[i], size[i] - cz, 0.0)
+	pan = p
+	queue_redraw()
 
 
 ## 自动的进图缩放：能看全就看全，但相邻两点在屏幕上至少隔 [constant START_GAP]（最短的那条边算），最多放大到 [constant START_ZOOM_MAX]
