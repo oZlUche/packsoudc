@@ -22,8 +22,9 @@ const ANCHORS := {
 const BAR_ANCHORS := {"bar_left": Vector2(0, 0.5), "bar_center": Vector2(0.5, 0.5), "bar_right": Vector2(1, 0.5)}
 const TIERS := {"large": HudWidget.Tier.LARGE, "small": HudWidget.Tier.SMALL, "double": HudWidget.Tier.DOUBLE}
 ## 布局文件的版本：默认布局改了就加一，旧版本存的那份不用（回默认）。2 = 作者 2026-10-12：提示行进调试台、去掉行动点与距离、顶栏 200%；
-## 3 = 160：腰带挪到右下角；4 = 166：顶端栏三个槽、右列取消（撤离 / 回主菜单删掉，日志与地上件数进调试台）、左下图例
-const VERSION := 5
+## 3 = 160：腰带挪到右下角；4 = 166：顶端栏三个槽、右列取消（撤离 / 回主菜单删掉，日志与地上件数进调试台）、左下图例；
+## 6 = 179：「行动点」读数删掉（玩家面前只说步，倒计时就是它）
+const VERSION := 6
 ## 「摆读数」松手时吸附的网格
 const GRID := 8
 const DEV_DIR := "res://data/authoring/ui_layouts"
@@ -45,7 +46,7 @@ static func default_for(p_screen: String) -> HudLayout:
 		l.entries.append(entry(&"hud_bar", "top", Vector2.ZERO))
 		for id in [&"vitality", &"wallet", &"faith"]:
 			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 0, "double"))
-		for id in [&"encumbrance", &"buffs", &"erosion", &"action_points", &"distances"]:
+		for id in [&"encumbrance", &"buffs", &"erosion", &"distances"]:
 			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 1, "small", not hidden_by_default(id)))
 		l.entries.append(entry(&"countdown", "bar_center", Vector2.ZERO, 0, "large"))
 		for id in BAR_RIGHT:
@@ -59,7 +60,7 @@ static func default_for(p_screen: String) -> HudLayout:
 ## 166：顶端栏右槽（自左向右）
 const BAR_RIGHT: Array[StringName] = [&"bag_button", &"reopen_button", &"skills", &"dev_drawer"]
 ## 默认布局里藏着的读数（摆读数时右键还能放出来）
-const HIDDEN_BY_DEFAULT: Array[StringName] = [&"action_points", &"distances"]
+const HIDDEN_BY_DEFAULT: Array[StringName] = [&"distances"]
 
 
 ## 默认藏不藏：上面那几件，加上主动技能藏着（166 补充一，[constant RunSkills.ACTIVE_HIDDEN]）时的技能按钮

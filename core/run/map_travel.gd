@@ -192,7 +192,7 @@ func _check(intent: MoveIntent) -> String:
 	if intent.kind == MoveIntent.STEP and MapNavigator.edge_for_step(graph, intent.from_id, intent.to_id) == null:
 		return "从 %d 走不到 %d" % [intent.from_id, intent.to_id]
 	if intent.action_cost < 0:
-		return "行动点不能是负的"
+		return "步数不能是负的"
 	return ""
 
 

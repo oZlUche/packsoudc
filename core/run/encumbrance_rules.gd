@@ -74,5 +74,5 @@ func effect_text(level: int) -> String:
 		var pct := roundi(m.amount) if m.is_mult() else roundi(m.amount * 100.0)     # 加算的上限 / 回复按基线比例写，所以也显示成百分数
 		parts.append("%s %s%d%%" % [what, "+" if pct > 0 else "−", absi(pct)])
 	if r.travel_mult > 1:
-		parts.append("走一步花 %d 倍行动点" % r.travel_mult)
+		parts.append("走一步计 %d 步" % r.travel_mult)
 	return "、".join(parts)

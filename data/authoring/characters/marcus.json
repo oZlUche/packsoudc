@@ -21,7 +21,7 @@
       "type": "passive",
       "id": "merit",
       "display_name": "军功",
-      "description": "收获换军功：打赢的钱多四分之一。",
+      "description": "战斗胜利所得金币增加四分之一。",
       "passive": [
         {
           "type": "battle_reward_mult"
@@ -32,7 +32,7 @@
       "type": "passive",
       "id": "drill",
       "display_name": "操练",
-      "description": "耐力掉到两成以下时，立刻回 {change_resource_amount} 点耐力（每场一次）。",
+      "description": "耐力低于两成时，立即恢复 {change_resource_amount} 点耐力（每场一次）。",
       "rules": [
         {
           "trigger": {
@@ -58,7 +58,7 @@
       "type": "assault",
       "id": "assault",
       "display_name": "突击",
-      "description": "下次进入战斗，先扣掉对方三成生命。",
+      "description": "下次战斗开始时，先扣除敌方三成生命。",
       "uses": 3,
       "cooldown_steps": 3
     }

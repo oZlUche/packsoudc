@@ -81,8 +81,15 @@ var _card: VBoxContainer = null
 var _preview_host: VBoxContainer = null
 var _preview_view: InventoryView = null
 var _summary: RichTextLabel = null
-## 157 补充三：石板里的内容区（[method GameScreen._slab_screen]）
+## 179：整屏的内容区（[method GameScreen._painted_screen]：场地背景上，不再是石板）
 var _area: Control = null
+## 179：第一页三栏的凹槽板（左、中、右）
+var _grooves: Array[PanelContainer] = []
+## 179：中栏的三块图标牌、技能名的标签（测试看）
+var _cap_tiles: Array[CapTile] = []
+var _skill_names: Array[Label] = []
+## 179：右栏的凹槽板内边距（右栏宽 = 这个角色的棋盘宽 + 两边内边距，贴右边；中栏吃掉剩下的）
+const RIGHT_PAD := 10
 
 
 func open(_payload: Dictionary) -> void:
@@ -93,17 +100,17 @@ func open(_payload: Dictionary) -> void:
 	for side in ["left", "right", "top"]:
 		margin.add_theme_constant_override("margin_" + side, 36)
 	margin.add_theme_constant_override("margin_bottom", 140)     # 161：底下留给右下角那两颗大按钮
-	_area = _slab_screen()     # 157 补充三：三页都在一整块石板上
+	_area = _painted_screen(UiTheme.ART_SETUP_BG)     # 179：三页都在场地背景上（157 补充三的整块石板不要了），各块内容坐凹槽板
 	_area.add_child(margin)
 	var col := _vbox(14)
 	margin.add_child(col)
-	_title = _label("", 26, UiPalette.FG)
+	_title = UiTheme.make_variant_label("", UiTheme.LABEL_SCREEN_TITLE)     # 179：背景画上白字带阴影
 	col.add_child(_title)
 	_chapters = flow.available_chapters()
 	_pages.clear()
 	for build in [_build_character_page, _build_kit_page, _build_map_page]:
 		var page: Control = build.call()
-		page.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		page.size_flags_vertical = Control.SIZE_SHRINK_BEGIN if page is PanelContainer else Control.SIZE_EXPAND_FILL     # 179：凹槽板按内容高，不压到右下角的按钮
 		col.add_child(page)
 		_pages.append(page)
 	_build_nav()
@@ -112,28 +119,50 @@ func open(_payload: Dictionary) -> void:
 	show_page(0)
 
 
-## 161 第一页：角色列表 | 角色卡 | 棋盘预览（只看不拖）
+## 179：一块凹槽板（深底白字），内边距 左 / 上 / 右 / 下
+func _groove(l: int, t: int, r: int, b: int) -> PanelContainer:
+	return UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_GROOVE, l, t, r, b)
+
+
+## 161 第一页：角色列表 | 角色卡 | 棋盘预览（只看不拖）。
+## 179：三栏各坐一块凹槽板、间距 36；中栏撑满左右两栏之间，右栏（棋盘）贴右边
 func _build_character_page() -> Control:
 	var row := _hbox(36)
+	_grooves.clear()
+	var left_board := _groove(14, 10, 14, 10)
+	left_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(left_board)
 	var left := _vbox(8)
-	left.custom_minimum_size.x = 260
-	row.add_child(left)
+	left.custom_minimum_size.x = 260 - 28
+	left_board.add_child(left)
 	left.add_child(_label("角色", 15, UiPalette.DIM))
 	_char_box = _vbox(8)
 	left.add_child(_char_box)
 	if flow.characters.is_empty():
 		left.add_child(_label("没有角色：先跑 tools/import_content.gd", 13, UiPalette.HP))
-	_card = _vbox(10)
-	_card.custom_minimum_size.x = 420
-	row.add_child(_card)
+	var mid_board := _groove(30, 24, 30, 28)
+	mid_board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mid_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(mid_board)
+	_card = _vbox(14)
+	_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mid_board.add_child(_card)
+	var right_board := _groove(RIGHT_PAD, RIGHT_PAD, RIGHT_PAD, RIGHT_PAD)
+	right_board.size_flags_horizontal = Control.SIZE_SHRINK_END
+	right_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(right_board)
 	_preview_host = _vbox(6)
-	row.add_child(_preview_host)
+	right_board.add_child(_preview_host)
+	_grooves.append_array([left_board, mid_board, right_board])
 	return row
+
 
 
 ## 161 第二页：预设装备一行 + 棋盘（可拖）/ 地上 / 仓库，拖拽层盖在下面那一块上
 func _build_kit_page() -> Control:
+	var board_panel := _groove(16, 14, 16, 14)     # 179：场地背景上整页坐一块凹槽板
 	var page := _vbox(12)
+	board_panel.add_child(page)
 	if not flow.presets().is_empty():
 		var presets := _hbox(8)
 		presets.add_child(_label("预设装备", 15, UiPalette.DIM))
@@ -175,12 +204,15 @@ func _build_kit_page() -> Control:
 	_warehouse_view.item_double_clicked.connect(quick_move)     # 109：双击 = 快速置入，和局内一样
 	w.changed.connect(_refresh)
 	_build_stash()
-	return page
+	return board_panel
 
 
 ## 161 第三页：模式 | 说明、规模、难度、种子 | 出发摘要
 func _build_map_page() -> Control:
+	var board_panel := _groove(16, 14, 16, 14)     # 179：同第二页
+	board_panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	var row := _hbox(36)
+	board_panel.add_child(row)
 	var left := _vbox(8)
 	left.custom_minimum_size.x = 300
 	row.add_child(left)
@@ -227,7 +259,7 @@ func _build_map_page() -> Control:
 	_summary.scroll_following = false
 	_summary.custom_minimum_size = Vector2(340, 200)
 	right.add_child(_summary)
-	return row
+	return board_panel
 
 
 #region 161：翻页
@@ -782,38 +814,72 @@ func _rebuild_card() -> void:
 	var ch := character()
 	if ch == null:
 		return
+	# 179：角色说明不放在这一屏（字段留着给图鉴 / 帮助）
 	_card.add_child(Nameplate.new().setup(Names.of(ch), "角色", Nameplate.character_face(ch.id)))
-	_card.add_child(_wrapped(Names.description_of(ch), 13, UiPalette.DIM, 420))
 	var base := ch.baseline()
 	_card.add_child(_stat_row("生命", StatBlocks.new().setup(StatBlocks.HP, base.value_of(&"max_hp"))))
 	var stamina := _stat_row("耐力", StatBlocks.new().setup(StatBlocks.STAMINA, base.value_of(&"max_stamina")))
-	stamina.add_child(_label("每秒回 %s" % _num(base.value_of(&"regen_stamina")), 12, UiPalette.DIM))     # 161 待定 1：三人唯一不同的第三个数
+	stamina.add_child(_label("每秒回 %s" % _num(base.value_of(&"regen_stamina")), 14, UiPalette.DIM))     # 161 待定 1：三人唯一不同的第三个数
 	_card.add_child(stamina)
 	_card.add_child(_stat_row("体力", StatBlocks.new().setup(StatBlocks.VITALITY, ch.vitality_max)))
-	_card.add_child(_label("一块 10 点；角色自己的底子，不含科技加成", 11, UiPalette.DIM))
-	_card.add_child(_wrapped(caps_text(ch), 13, UiPalette.DIM, 420))
-	for line in ch.skill_lines():
-		_card.add_child(_wrapped(line, 13, UiPalette.FG, 420))
+	_card.add_child(_label("一块 10 点；角色自己的底子，不含科技加成", 12, UiPalette.DIM))
+	# 179：负重上限 / 棋盘 / 开局金币换成三块图标牌；带入上限（有才有）仍是牌下一行字
+	_cap_tiles.clear()
+	var tiles := _hbox(14)
+	tiles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_card.add_child(tiles)
+	for cap in cap_tiles(ch):
+		var tile := CapTile.new().setup(cap[0], cap[1], cap[2])
+		tiles.add_child(tile)
+		_cap_tiles.append(tile)
+	var extra := carry_caps_text(ch)
+	if extra != "":
+		_card.add_child(_label(extra, 13, UiPalette.DIM))
+	# 179：技能两行 ——「被动」小字 + 名字（22 粗体、亮黄铜、黑描边）；说明 17 正文色
+	_skill_names.clear()
+	var skills := _vbox(12)
+	_card.add_child(skills)
+	for e in ch.skill_entries():
+		var one := _vbox(4)
+		skills.add_child(one)
+		var head := _hbox(10)
+		one.add_child(head)
+		var tag := _label(String(e["kind"]), 13, UiPalette.DIM)
+		tag.size_flags_vertical = Control.SIZE_SHRINK_END
+		head.add_child(tag)
+		var name := UiTheme.make_variant_label(String(e["name"]), UiTheme.LABEL_SKILL_NAME)
+		head.add_child(name)
+		_skill_names.append(name)
+		var text := _wrapped(String(e["text"]), UiTheme.SKILL_TEXT_SIZE, UiPalette.FG, 300)
+		text.theme_type_variation = UiTheme.LABEL_SKILL_TEXT
+		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		one.add_child(text)
 	if board == null:
 		return
+	_grooves[2].custom_minimum_size.x = ch.board_size.x * InventoryView.CELL + 2 * RIGHT_PAD
 	_preview_host.add_child(_label("棋盘　%d × %d 格" % [ch.board_size.x, ch.board_size.y], 15, UiPalette.DIM))
 	_preview_view = InventoryView.new()
 	_preview_view.label_font = font
 	_preview_view.inventory = board
 	_preview_view.show_adjacency = false
 	_preview_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_preview_host.add_child(_preview_view)
-	_preview_host.add_child(_label("背包：%s" % bags_text(ch), 13, UiPalette.DIM))
+	_preview_host.add_child(_preview_view)     # 179：底下不再列有哪些背包
 
 
-## 角色卡上方块之外的那几项：负重上限、棋盘、开局钱、带入上限（136 / 149；161 从说明栏挪到角色卡）
-static func caps_text(ch: CharacterDef) -> String:
-	var caps: Array[String] = []
+## 179：三块图标牌 [id, 数字, 说明]：负重上限（有才有）、棋盘、开局金币（有才有）
+static func cap_tiles(ch: CharacterDef) -> Array:
+	var out: Array = []
 	if ch.weight_capacity > 0:
-		caps.append("负重上限 %d" % ch.weight_capacity)
-	caps.append("棋盘 %d × %d" % [ch.board_size.x, ch.board_size.y])
+		out.append([&"weight", str(ch.weight_capacity), "负重上限"])
+	out.append([&"board", "%d × %d" % [ch.board_size.x, ch.board_size.y], "棋盘"])
 	if ch.starting_funds >= 0:
-		caps.append("开局钱 %d" % ch.starting_funds)
+		out.append([&"coin", str(ch.starting_funds), "开局金币"])
+	return out
+
+
+## 179：图标牌之外的带入上限（最多带 N 件、稀有度不超过 N），有才写
+static func carry_caps_text(ch: CharacterDef) -> String:
+	var caps: Array[String] = []
 	if ch.carry_max_items >= 0:
 		caps.append("最多带 %d 件" % ch.carry_max_items)
 	if ch.carry_rarity_cap >= 0:
@@ -821,26 +887,10 @@ static func caps_text(ch: CharacterDef) -> String:
 	return "　".join(caps)
 
 
-## 161：「皮革包 × 2、小包」
-func bags_text(ch: CharacterDef) -> String:
-	var counts := {}
-	var order: Array[StringName] = []
-	for id in ch.starting_bags:
-		if not counts.has(id):
-			order.append(id)
-		counts[id] = int(counts.get(id, 0)) + 1
-	var parts: Array[String] = []
-	for id in order:
-		var def := flow.items.get_def(id)
-		var name := Names.of(def) if def != null else String(id)
-		parts.append(name if int(counts[id]) == 1 else "%s × %d" % [name, counts[id]])
-	return "、".join(parts) if not parts.is_empty() else "无"
-
-
 func _stat_row(title: String, blocks: StatBlocks) -> HBoxContainer:
 	var row := _hbox(10)
-	var l := _label(title, 15, UiPalette.FG)
-	l.custom_minimum_size.x = 44
+	var l := _label(title, 17, UiPalette.FG)
+	l.custom_minimum_size.x = 48
 	row.add_child(l)
 	row.add_child(blocks)
 	return row

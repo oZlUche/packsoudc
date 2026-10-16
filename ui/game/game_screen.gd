@@ -199,6 +199,19 @@ func _slab_screen(min_size: Vector2 = Vector2.ZERO) -> Control:
 	return area
 
 
+## 179：开局屏不用石板 —— 整屏一幅画（[param art_name]，没图就是纯色底），内容区铺满全屏、深底白字；先调 [method _backdrop]
+func _painted_screen(art_name: String) -> Control:
+	if _bg_rect != null:
+		UiTheme.dress_backdrop(_bg_rect, art_name, "PaintedBackdrop")
+	var area := Control.new()
+	area.name = "PaintedContent"
+	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	area.set_meta(&"tone", UiTheme.TONE_DARK)
+	add_child(area)
+	return area
+
+
 ## 157 补充三：底屏的大石板（测试看）；没有 null
 func screen_slab() -> PanelContainer:
 	return _screen_slab

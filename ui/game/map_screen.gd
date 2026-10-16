@@ -368,7 +368,7 @@ func _adopt() -> void:
 	_view.spawn_mask = _run.phase == RunState.Phase.PICK_SPAWN     # 096：挑出生点时全图蒙灰，只露出生点
 	_run.travel.moved.connect(_on_moved)
 	_run.travel.waited.connect(func(actions: int):
-		_note("　原地耗了 %d 个行动点" % actions)
+		_note("　原地耗了 %d 步" % actions)
 		_after_move())
 	_run.travel.refused.connect(func(_i: MoveIntent, why: String): _say("走不了：" + why))
 	var problems: Array[String] = []
@@ -492,7 +492,7 @@ func _adopt() -> void:
 		_say("%s　种子 %d：%d 个点。挑一个出生点（绿圈的「生」）开始" % [
 			_run.chapter.display_name, _run.run_seed, _run.map.node_count()])
 	else:
-		_say("%s　种子 %d：在点 %d 上（三角标是你），行动点 %d。点相邻的点走一步；B 开背包" % [
+		_say("%s　种子 %d：在点 %d 上（三角标是你），已走 %d 步。点相邻的点走一步；B 开背包" % [
 			_run.chapter.display_name, _run.run_seed, _run.travel.current_id, _run.travel.clock.total])
 
 
@@ -599,8 +599,10 @@ func _on_node_hovered(id: int) -> void:
 	if intent == null:
 		_preview.text = ""
 		return
-	_preview.text = "→ %s　花 %d 行动点%s%s" % [MapNodeStyle.of(n.type)["label"], _run.travel.cost_of(intent),
-		"（熟门熟路：这一步不花）" if _run.travel.next_step_free() else ("（负重：双倍）" if _run.travel.action_cost_mult > 1 else ""), "（用过了，只是穿行）" if n.is_visited() else ""]
+	# 179：只说步 —— 代价 1 不写，别的写「计 N 步」
+	var cost := _run.travel.cost_of(intent)
+	_preview.text = "→ %s%s%s%s" % [MapNodeStyle.of(n.type)["label"], "" if cost == 1 or _run.travel.next_step_free() else "　计 %d 步" % cost,
+		"（熟门熟路：这一步不计）" if _run.travel.next_step_free() else ("（负重：双倍）" if _run.travel.action_cost_mult > 1 else ""), "（用过了，只是穿行）" if n.is_visited() else ""]
 
 
 ## 084：节点浮窗（章节开关 `node_tooltips`）：文字按 NodeTooltip 的模板渲染，没用过的战斗点下面画对手的棋盘

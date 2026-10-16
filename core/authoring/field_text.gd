@@ -44,11 +44,11 @@ const LABELS := {
 	"speed": "速度", "cells": "格", "pieces": "件", "tiers": "档位", "count_mode": "计数方式", "common_tags": "通用标签",
 	# 事件
 	"options": "选项", "requires": "条件", "outcomes": "后果", "hide_when_locked": "条件不满足时隐藏", "event": "事件", "node_type": "点的类型", "node_types": "点的类型",
-	"min_bracket": "最低段位", "max_bracket": "最高段位", "min_depth": "最浅", "max_depth": "最深", "action_cost": "行动点", "actions": "行动点",
+	"min_bracket": "最低段位", "max_bracket": "最高段位", "min_depth": "最浅", "max_depth": "最深", "action_cost": "步数", "actions": "步数",
 	# 章节 / 地图
 	"map_source": "地图来源", "mode": "方式", "preset_path": "预设文件", "generator_id": "生成器", "generator_config": "生成参数",
 	"enemy_pool": "敌人池", "difficulty": "难度", "drop_rule": "掉落规则", "carry_rule": "携带规则", "encumbrance_rules": "负重规则", "weight": "重量", "weight_capacity": "负重上限", "node_rules": "节点规则", "economy_rules": "经济规则",
-	"step_limit": "全局倒计时（行动点）", "blessings": "赐福模板", "blessed_of": "从哪件派生", "per_points": "每多少信力一份",
+	"step_limit": "全局倒计时（步）", "blessings": "赐福模板", "blessed_of": "从哪件派生", "per_points": "每多少信力一份",
 	"name_prefix": "名字前缀", "name_prefix_en": "英文前缀", "add_tags": "多出的标签", "rarity_up": "稀有度加几", "value_mult": "价值倍率", "convert_chance": "包内转化概率", "convert_per_tier": "每级加的转化概率",
 	"bless_chance": "赐福替代概率（没激活）", "bless_chance_active": "赐福替代概率（激活了）", "cost": "花费", "carry_budget": "带入预算（价值）", "carry_over_cost": "每超多少价值倒计时 −1", "event_groups": "成组限量的事件", "events": "事件与权重", "offerings": "献祭品", "perks": "信仰效果", "multiplier": "倍率", "cap": "每场上限",
 	"count_dealt": "算造成的", "count_taken": "算受到的", "min_cells": "最少格子数", "exact_grade": "体积恰好", "per_cell": "乘格子数", "first_amount": "首次给", "again_amount": "再次给", "has_stat": "显式带有的属性", "rarity_pow": "按 2^稀有度给", "plus": "再加", "first_kind_only": "同种一局只算一次", "by_type": "按节点类型", "closing_extract": "过半关一个撤离点", "safes": "保险箱个数", "safe_size": "保险箱大小",

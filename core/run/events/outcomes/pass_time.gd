@@ -10,4 +10,4 @@ func apply(ctx: EventContext) -> void:
 
 
 func describe() -> String:
-	return "耗 %d 个行动点" % maxi(0, actions)
+	return "耗 %d 步" % maxi(0, actions)

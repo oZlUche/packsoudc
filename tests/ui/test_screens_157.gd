@@ -73,7 +73,7 @@ static func run_theme_art(t: TestCase) -> void:
 
 
 static func run_cost_icons(t: TestCase) -> void:
-	t.begin("157 · 事件选项的代价图标：只画会花掉什么（体力、花钱、交出道具、耗行动点、要信仰），得钱不算；有图用图、没图画字符")
+	t.begin("157 · 事件选项的代价图标：只画会花掉什么（体力、花钱、交出道具、耗步、要信仰），得钱不算；有图用图、没图画字符")
 	var opt := EventOption.new()
 	var gain := ChangeMoney.new()
 	gain.amount = 20
@@ -85,7 +85,7 @@ static func run_cost_icons(t: TestCase) -> void:
 	opt.requires = [FaithActive.new()] as Array[EventCondition]
 	var kinds := EventCostIcons.kinds_of(opt)
 	t.eq(kinds, ["vitality", "money", "item", "time", "faith"] as Array[String], "五种，按表的顺序、不重复")
-	t.eq(EventCostIcons.describe(kinds), "代价：耗体力、花钱、交出道具、耗行动点、要信仰", "悬浮提示")
+	t.eq(EventCostIcons.describe(kinds), "代价：耗体力、花钱、交出道具、耗步、要信仰", "悬浮提示")
 	var strip := EventCostIcons.strip(kinds)
 	t.check(strip != null and strip.get_width() == 5 * EventCostIcons.SIZE + 4 * EventCostIcons.GAP and strip.get_height() == EventCostIcons.SIZE, "拼成一条 16 像素高的图")
 	t.eq(EventCostIcons.glyph_slots(kinds), [] as Array[int], "美术交付的五张图都在：不用画字符")

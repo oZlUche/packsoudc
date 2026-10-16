@@ -16,7 +16,7 @@ static func run_layout(t: TestCase) -> void:
 	t.begin("150 / 166 · 布局：默认是顶端栏三个槽；字典往返一致；坏 id / 锚点 / 档位 / 偏移 / 重复都报；文件存取与重置")
 	var d := HudLayout.default_for("map")
 	t.eq(d.entries.size(), HudWidgets.KINDS.size(), "默认布局把每一种都摆上了")
-	t.eq(HudLayout.VERSION, 5, "166 补充一：布局版本 5（旧的回默认）")
+	t.eq(HudLayout.VERSION, 6, "179：布局版本 6（旧的回默认）")
 	t.eq(String(d.entry_of(&"hud_bar")["anchor"]), "top", "顶端栏横在顶上")
 	t.eq(String(d.entry_of(&"countdown")["anchor"]), "bar_center", "倒计时在栏中间")
 	t.eq(String(d.entry_of(&"countdown")["tier"]), "large", "倒计时是大档")
@@ -26,8 +26,8 @@ static func run_layout(t: TestCase) -> void:
 		t.eq(String(d.entry_of(id)["tier"]), "double", "%s 是 200%% 档（作者 2026-10-12）" % id)
 	for id in [&"encumbrance", &"buffs", &"erosion"]:
 		t.eq(int(d.entry_of(id)["line"]), 1, "%s 在左槽第二行（小字）" % id)
-	for id in [&"action_points", &"distances"]:
-		t.check(not bool(d.entry_of(id)["visible"]), "%s 默认藏着（作者 2026-10-12：没有意义）" % id)
+	t.check(not bool(d.entry_of(&"distances")["visible"]), "距离默认藏着（作者 2026-10-12：没有意义）")
+	t.check(d.entry_of(&"action_points").is_empty() and not HudWidgets.KINDS.has(&"action_points"), "179：「行动点」读数删了（登记表与默认布局都没有）")
 	var right_ids: Array[StringName] = []
 	for e in d.entries:
 		if String(e["anchor"]) == "bar_right":
@@ -99,6 +99,10 @@ static func run_layout(t: TestCase) -> void:
 	f.store_string("{\"widgets\": [{\"id\": \"wallet\", \"anchor\": \"bottom_left\"}]}")
 	f.close()
 	t.eq(HudLayout.load_for(PROBE).to_dict(), HudLayout.default_for(PROBE).to_dict(), "没写版本（旧的）：回默认")
+	f = FileAccess.open(HudLayout.user_path(PROBE), FileAccess.WRITE)
+	f.store_string("{\"version\": 5, \"widgets\": [{\"id\": \"action_points\", \"anchor\": \"bar_left\"}]}")
+	f.close()
+	t.eq(HudLayout.load_for(PROBE).to_dict(), HudLayout.default_for(PROBE).to_dict(), "179：版本 5 那份（还摆着行动点）：回默认")
 	HudLayout.reset(PROBE)
 	t.check(not FileAccess.file_exists(HudLayout.user_path(PROBE)), "重置：删掉了")
 
@@ -127,7 +131,6 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	t.eq(wallet.text(), "%d" % run.wallet.balance, "166：货币只写数字")
 	t.eq(wallet.tooltip_text, "货币", "悬浮窗写「货币」")
 	t.not_null(wallet.get("coin"), "左边一枚金币（缺图画描边圆）")
-	t.eq(host.widget(&"action_points").text(), "行动点 %d" % run.travel.clock.total, "行动点")
 	t.check(host.widget(&"distances").text().contains("距最近撤离点"), "距离一组")
 	var faith := host.widget(&"faith")
 	if run.active_faith_id() == &"":
@@ -266,7 +269,7 @@ static func frame_map_screen(t: TestCase, root: Window) -> void:
 	var host: HudHost = map.hud()
 	t.not_null(host, "地图屏有读数层")
 	if host != null:
-		t.eq(host.widget(&"action_points").text(), "行动点 %d" % run.travel.clock.total, "行动点接上了这一局")
+		t.check(host.widget(&"countdown") != null, "倒计时接上了这一局")
 		t.eq(host.widget(&"vitality").text(), "体力 %d/%d" % [run.vitality.current, run.vitality.maximum], "体力接上了")
 		var drawer: DevDrawer = map.dev_drawer()
 		t.check(drawer != null and not drawer.is_open(), "调试台默认收着")
