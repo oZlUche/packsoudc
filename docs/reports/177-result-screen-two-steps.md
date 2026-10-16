@@ -81,3 +81,13 @@
 |---|---|---|---|
 | 补 1 | 标签筛选单选还是多选 | A 单选下拉（一个标签）；B 多选 chips（并集） | **A**：一次卖一类是常见动作，多选留到有人要 |
 | 补 2 | 标签列表 | A 只列仓库里现有的；B 列全部可显示标签 | **A**：四十多个标签一次全列太长，而且大半选了也是 0 件 |
+
+## 落地记录（v3.13，待定 1–3、补 1–2 全按推荐）
+
+- **两步**：`ResultScreen.open` 记下 `_r`、建第 1 步；`to_step(2)` 清掉子节点重建（`step()` 读现在第几步）。第 1 步内容竖排居中，「继续」就在账下面（不钉底）；第 2 步顶上一行「置入仓库」+ 右侧灰字「总价值 N · 带出 N 币」，下面保险箱小格与 `WarehousePanel`，底部钉住「继续」/「进入下一张：X」（`proceed`）。战败只有一步：大数只画「保险箱带出」（有件才画），图鉴有点亮再画一块，保险箱照旧居中放大；`to_step(2)` 对战败无效。
+- **字号与方案不同**：大数用马善政，方案写 48 / 32；这套字的数字字面只占字号七成左右，实画偏小，改成 **64 / 44**（`BIG_NUMBER_PX` / `NUMBER_PX`）。三块的名字按底边对齐（数字大小不一）。图鉴 0 条时数字灰色。
+- **一键置入**：`MetaState.store_all` 放不下的记名字、`continue`；返回多 `stuck_names`（按棋盘顺序、不重复），`stuck` 仍是第一件。名字用 `Names.of_item`（带附魔 / 耐久前缀，和玩家看到的一致；原来是定义名）。提示行 `WarehousePanel.store_text`：「放进 N 件；仓库放不下 M 件（甲、乙、丙等）—— 挪一挪仓库，或者不要了」。
+- **一键出售按标签**：`sell_where / sell_preview / _sellable` 多一个 `tag`（空 = 不限）；`MetaState.sell_tags()` 列仓库里有的、`TagRegistry.shown` 的标签，按 `CATEGORY_ORDER` 分组、组内按登记顺序（新 `TagRegistry.category_rank / order_of`）。出售页稀有度下拉旁加标签下拉：第一项「不限标签」，组间分隔，名字走 `Glossary.tag_name`；仓库变了重建，选中的没了回「不限」。`GameFlow.sell_where(max_rarity, tag)`。
+- **测试** `tests/ui/test_result_steps_177.gd`：三件中间那件放不下 → 放进 2、剩 1、`stuck_names` 是它，全放不下名字全列，提示最多三个；标签和稀有度取交集（逐档对照）、下拉只列仓库里有的且不含内部标签、卖光回「不限」；结算第 1 步三块大数（993 = 953 + 40）、没有仓库与保险箱格、遗落提示在这一步、按「继续」不离开屏 → 第 2 步有仓库与保险箱格、回看一行账、一个离开按钮；战败一步。`test_author_092`、`test_game_flow` 先 `to_step(2)` 再看保险箱格 / 一键置入。
+- **截图**：`/mnt/project-files/screenshots/177/step1-summary.png`、`step2-warehouse.png`、`defeat.png`。
+

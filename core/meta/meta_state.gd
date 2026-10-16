@@ -233,10 +233,10 @@ func has_pending_board() -> bool:
 	return board != null and board.item_count() > 0
 
 
-## 一键置入：按栏位顺序逐件往仓库里放，放不下就停在那一件（作者：中途停止并提示）。
-## 返回 {"moved": 放进几件, "left": 还剩几件, "stuck": 卡住的那件的名字（空 = 没卡）}
+## 一键置入：按栏位顺序逐件往仓库里放。177 补 1.1（作者 2026-10-16「当某个道具卡住时跳到下一个」）：放不下的跳过，后面的照放。
+## 返回 {"moved": 放进几件, "left": 还剩几件, "stuck": 第一件放不下的名字（空 = 没卡）, "stuck_names": 全部放不下的名字（按栏位顺序、不重复）}
 func store_all() -> Dictionary:
-	var out := {"moved": 0, "left": 0, "stuck": ""}
+	var out := {"moved": 0, "left": 0, "stuck": "", "stuck_names": [] as Array[String]}
 	if board == null:
 		return out
 	var order: Array = board.items()
@@ -247,8 +247,11 @@ func store_all() -> Dictionary:
 		if InventoryService.transfer_auto(board, item.uid, warehouse):
 			out["moved"] = int(out["moved"]) + 1
 		else:
-			out["stuck"] = item.def.display_name
-			break
+			var name := Names.of_item(item)
+			if String(out["stuck"]) == "":
+				out["stuck"] = name
+			if not (out["stuck_names"] as Array).has(name):
+				(out["stuck_names"] as Array).append(name)
 	out["left"] = board.item_count()
 	# 作者 2026-10-13（一键置入后左边的棋盘消失、仓库跳到左边）：搬空了棋盘也留着（空的），离开结算屏才丢（[method drop_empty_board]）
 	changed.emit()
@@ -394,9 +397,9 @@ static func sell_price(def: ItemDef, ratio: float = 0.5) -> int:
 
 
 ## 一键出售：稀有度 ≤ [param max_rarity] 的全卖（-1 = 全部）。返回 {"count", "funds"}
-func sell_where(max_rarity: int, ratio: float = 0.5) -> Dictionary:
+func sell_where(max_rarity: int, ratio: float = 0.5, tag: StringName = &"") -> Dictionary:
 	var out := {"count": 0, "funds": 0}
-	for it in _sellable(max_rarity):
+	for it in _sellable(max_rarity, tag):
 		var got := sell_item(it.uid, ratio)
 		if got >= 0:
 			out["count"] = int(out["count"]) + 1
@@ -405,23 +408,41 @@ func sell_where(max_rarity: int, ratio: float = 0.5) -> Dictionary:
 
 
 ## 一键出售会卖几件、得多少（不动仓库）
-func sell_preview(max_rarity: int, ratio: float = 0.5) -> Dictionary:
+func sell_preview(max_rarity: int, ratio: float = 0.5, tag: StringName = &"") -> Dictionary:
 	var out := {"count": 0, "funds": 0}
-	for it in _sellable(max_rarity):
+	for it in _sellable(max_rarity, tag):
 		out["count"] = int(out["count"]) + 1
 		out["funds"] = int(out["funds"]) + sell_price(it.def, ratio)
 	return out
 
 
-## 一键出售会碰的那些：仓库里稀有度 ≤ [param max_rarity] 的（-1 = 全部），按仓库的顺序
-func _sellable(max_rarity: int) -> Array[ItemInstance]:
+## 一键出售会碰的那些：仓库里稀有度 ≤ [param max_rarity] 的（-1 = 全部），按仓库的顺序。
+## 177 补 1.2：[param tag] 非空时还得带这个标签（和稀有度取交集）
+func _sellable(max_rarity: int, tag: StringName = &"") -> Array[ItemInstance]:
 	var out: Array[ItemInstance] = []
 	for inst in warehouse.items():
 		var it := inst as ItemInstance
 		if max_rarity >= 0 and it.def.rarity > max_rarity:
 			continue
+		if tag != &"" and not it.def.tags.has(tag):
+			continue
 		out.append(it)
 	return out
+
+
+## 177 补 1.2（待定补 2 选 A）：一键出售的标签下拉列哪些 —— 仓库里现有道具带的、给玩家看的标签（内部标签不列），
+## 按大类排（[constant TagRegistry.CATEGORY_ORDER]），类内按登记顺序
+func sell_tags() -> Array:
+	var seen := {}
+	for inst in warehouse.items():
+		for t in (inst as ItemInstance).def.tags:
+			seen[t] = true
+	var tags: Array = TagRegistry.shown(seen.keys())
+	tags.sort_custom(func(a, b) -> bool:
+		var ra := TagRegistry.category_rank(a)
+		var rb := TagRegistry.category_rank(b)
+		return ra < rb if ra != rb else TagRegistry.order_of(a) < TagRegistry.order_of(b))
+	return tags
 
 
 ## 092（作者定；101 第 4 刀从 [GameFlow] 搬来）：离开结算屏时地上没背出来的一键出售。这里只算不卖

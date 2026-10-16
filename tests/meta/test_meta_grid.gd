@@ -1,4 +1,4 @@
-## 局外格子化（058 第 4 / 6 / 7 条，报告 061）：仓库是格子、大小是规则里的数；撤离棋盘原样带回、一键置入放不下就停；
+## 局外格子化（058 第 4 / 6 / 7 条，报告 061）：仓库是格子、大小是规则里的数；撤离棋盘原样带回、一键置入放不下的跳过（177 补 1.1）；
 ## 图鉴累计件数、点亮一次；带回来的没清空开不了新局；存档 v2 往返。
 extends RefCounted
 
@@ -74,7 +74,7 @@ static func run_rules_pipeline(t: TestCase) -> void:
 
 
 static func run_absorb_board_codex(t: TestCase) -> void:
-	t.begin("局外 · 撤离棋盘原样带回（包只计图鉴）；一键置入放不下就停；图鉴累计、点亮一次；存档 v2 往返")
+	t.begin("局外 · 撤离棋盘原样带回（包只计图鉴）；一键置入放不下的跳过（177 补 1.1）；图鉴累计、点亮一次；存档 v2 往返")
 
 	var c := _content()
 	var kit := _kit(c)
@@ -114,9 +114,9 @@ static func run_absorb_board_codex(t: TestCase) -> void:
 	t.eq(int(got["lit"]), per_id.size(), "新点亮 %d 条" % per_id.size())
 	t.check(m.codex_lit(&"bag_leather"), "包也点亮图鉴")
 
-	# 一键置入：2×2 的仓库放不下，停在那一件
+	# 一键置入：2×2 的仓库放不下的跳过（177 补 1.1），剩下的留在棋盘上
 	var stored := m.store_all()
-	t.check(int(stored["moved"]) >= 0 and int(stored["left"]) > 0 and String(stored["stuck"]) != "", "放不下就停：放进 %d、卡在「%s」、剩 %d" % [stored["moved"], stored["stuck"], stored["left"]])
+	t.check(int(stored["moved"]) >= 0 and int(stored["left"]) > 0 and String(stored["stuck"]) != "", "放不下的跳过：放进 %d、第一件卡住的「%s」、剩 %d" % [stored["moved"], stored["stuck"], stored["left"]])
 	t.eq(m.warehouse.item_count(), int(stored["moved"]), "仓库里就是放进去的那几件")
 	t.check(m.has_pending_board(), "带回来的棋盘还没清空")
 

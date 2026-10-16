@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.12 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.13 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4279,6 +4279,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.13 | 2026-10-16 | **结算屏两步、一键置入跳过、一键出售按标签**（报告 177 与补充一，作者定，待定全按推荐；改 8.2）：`ResultScreen` 撤离分两步（`to_step` 屏内重建）—— 第 1 步三块大数（总价值 = 背出来 + 保险箱、图鉴新点亮、带出金币；马善政 64 / 44）、件数与遗落提示、「继续」；第 2 步回看一行账 + 保险箱格 + `WarehousePanel`，它的「继续」才 `proceed`；战败一步（大数只画保险箱与图鉴）。`MetaState.store_all` 放不下的跳过、接着放，多返回 `stuck_names`，`WarehousePanel.store_text` 最多列三个名字；`MetaState.sell_where / sell_preview` 加 `tag`（和稀有度取交集）、`sell_tags`（仓库里有的、给玩家看的标签，按大类、类内按登记顺序，`TagRegistry.category_rank / order_of`），基地出售页加标签下拉（组间分隔，仓库变了重建、选中的没了回「不限」） |
 | v3.12 | 2026-10-16 | **启动屏与启动图瘦身**（报告 176，作者问启动卡住；待定 2A 3A，待定 1 渲染器未动；改 11.1 启动一段）：主场景换成 `ui/boot.tscn`（不引用任何全局类，`load_threaded_request` 后台载 `game.tscn`、画游戏名与进度，载好切过去）；`ContentLibrary.context()` 挪到 `core/authoring/authoring_context.gd`（无 class_name，编辑器与测试 preload），游戏启动图不再拖进导入器 / 导出器 / 表格工具（300 → 263 个脚本，约 4.1 → 3.6 万行）；`DevNav.keep_in`：release 导出自卸；`export_presets.cfg`（Windows Desktop）脚本导出 = 二进制令牌（压缩）；`tests/tools/test_startup_graph.gd` 扫启动图 |
 | v3.11 | 2026-10-15 | **战斗效果栏换图标**（报告 175 补 5.5，美术定稿 44 张、作者 10-15 改三处）：`EffectIcons`（`ui/battle/effect_icons.gd`）按格子 id 的约定取 `assets/ui/effects/` 的图（`<buff id>`、`axis_<轴>_pos/neg`、`system_overtime / block`），不加 `BuffDef.icon`；`CombatantPanel` 有图画 28×28 的单色图（不画方格底和外框，元素状态与反应产物用补 5.4 的关键词色、其余按组着色），层数画在右下角；保底的中毒 / 流血整张换 `<id>_guard.png`（彩色成品，不着色）；缺图与被动条目照旧画首字 |
 | v3.10 | 2026-10-15 | **悬浮窗：伤害与施加一句两段、各自配色**（报告 175 补 5.4，作者定；改 4.6）：「造成 X 点火焰伤害，并施加 N 层灼伤」（`ApplyStatus.describe` 写层数、`effects_text` 用「，并」）；`TextTemplate.STYLE_NAMES` 加伤害类型字五色与元素状态关键词五色（美术设计定值，`text_colors.json`）、`Glossary.DAMAGE_STYLES / ELEMENT_STYLES / mark_rich`、词条带 `style`；伤害类型「中毒」改名「毒素」，`Glossary.status_name` 先取状态名 |

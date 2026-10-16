@@ -493,6 +493,7 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	var result: RunResult = flow.result
 	t.check(result != null and result.is_extracted() and result.left_behind == left, "账上遗落 %d 件 = 地上的" % left)
 	t.check(flow.meta.has_pending_board(), "结算屏上带回来的棋盘等着置入")
+	game.base().to_step(2)     # 177：第 1 步看账，第 2 步才置入仓库
 	var stored: Dictionary = game.base().store_all()
 	t.check(int(stored["moved"]) > 0 and not flow.meta.has_pending_board(), "结算屏一键置入 %d 件" % stored["moved"])
 	var wh = game.base().get("_wh")
