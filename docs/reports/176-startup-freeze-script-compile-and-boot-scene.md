@@ -71,3 +71,4 @@ boot 场景不引用全局类（扫描断言）；`load_threaded_request` 在 he
 - **导出预设**：仓库原来没有 `export_presets.cfg`，新建一份 Windows Desktop 预设，`script_export_mode=2`（二进制令牌，压缩），导出到 `build/`（已在 .gitignore），`include_filter` 带上运行时读的 `*.json, *.txt`。作者本机若有自己的预设，以这份为准合并 `script_export_mode` 即可。
 - **测试** `tests/tools/test_startup_graph.gd`：启动屏的图只有它自己；游戏图碰不到编辑器、启动器、导入器、导出器与表格工具（附引用链），编辑器那头碰得到导入器（证明扫法没漏）；启动屏后台载好 `game.tscn`、进度到 1；导出预设脚本模式；`DevNav.keep_in`。
 
+> 作者 2026-10-16 14:09 对照后：「感觉区别不大」—— 渲染器换成 Compatibility 没有明显缩短卡顿。待定 1 定为 **B**（渲染器不动），卡顿按第 2 节归因于脚本编译与内容加载，3.1–3.3 照做。
