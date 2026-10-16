@@ -121,3 +121,52 @@ static func frame_spawn_view(t: TestCase, root: Window) -> void:
 	if c.y * view.zoom > view.size.y and canvas_mid.y > c.y * 0.6:
 		t.check(mid.y > view.size.y * 0.5, "出生点在图下边：屏上也偏下（%.0f）" % mid.y)
 	view.queue_free()
+
+
+static func frame_tip_leave_fast(t: TestCase, root: Window) -> void:
+	t.begin("作者 2026-10-16 · 鼠标移开道具：往悬浮窗外走立刻收（宽限只留给往窗里去的）；停着不动等宽限过完")
+	var c := TestSupport.load_content()
+	var host := Control.new()
+	host.size = Vector2(800, 600)
+	root.add_child(host)
+	var board := GridInventory.new(Vector2i(4, 3), 1)
+	board.place(ItemInstance.create(c.items.get_def(&"knife")), Vector2i(0, 0), 0)
+	var view := InventoryView.new()
+	view.inventory = board
+	view.position = Vector2(300, 300)
+	view.size = Vector2(board.size) * InventoryView.CELL
+	host.add_child(view)
+	var tip := HoverTip.new()
+	host.add_child(tip)
+	tip.watch(view)
+	var on := InputEventMouseMotion.new()
+	on.position = Vector2(4, 4)
+	view.gui_input.emit(on)
+	t.check(tip.is_showing(), "停在刀上：显示")
+	view.mouse_exited.emit()
+	var away := view.global_position + Vector2(-30, -30)     # 往左上走：悬浮窗在右下
+	tip.tick(0.016, away)
+	t.check(tip.is_showing(), "第一拍记下离窗多远")
+	tip.tick(0.016, away + Vector2(-20, -20))
+	t.check(not tip.is_showing(), "再往外走：不等宽限，立刻收")
+	view.gui_input.emit(on)
+	view.mouse_exited.emit()
+	tip.tick(0.016, away)
+	tip.tick(0.016, away)
+	t.check(tip.is_showing(), "停着不动：还在宽限里")
+	tip.tick(HoverTip.GRACE_SEC, away)
+	t.check(not tip.is_showing(), "宽限过完收")
+	t.eq(HoverTip.rect_distance(Rect2(0, 0, 10, 10), Vector2(13, 14)), 5.0, "点到矩形的距离")
+	host.queue_free()
+
+
+static func run_window_and_nameplate_art(t: TestCase) -> void:
+	t.begin("作者 2026-10-16 · 背包浮窗是一整块深石板（不透明的板身）；名牌底下垫板身，放在哪都不透明；图读不出时脚注写字")
+	t.check(UiTheme.VARIATIONS.has(UiTheme.PANEL_WINDOW), "浮窗变体登记了")
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_WINDOW), UiTheme.tone_of(UiTheme.PANEL_OVERLAY), "和叠层石板同一种深浅")
+	var theme := UiTheme.build()
+	if UiTheme.has_slab():
+		t.check(theme.get_stylebox("panel", UiTheme.PANEL_WINDOW) is SlabStyle, "浮窗：石板（板边 + 板身）")
+		t.check(theme.get_stylebox("panel", UiTheme.PANEL_NAMEPLATE) is SlabStyle, "名牌：刻边下面垫了板身")
+	t.eq(UiTheme.tip_icon("no_such_icon", "值 "), "值 ", "没有图：写字")
+	t.check(UiTheme.tip_icon("coin", "值 ").begins_with("[img"), "金币图读得出来：用图")

@@ -127,8 +127,7 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(s.events.choose(0), "搜第三次")
 	t.check(s.events.pause_search() and s.events.pending_event().id == &"tut3_search_done", "→ 胫骨大棒")
 	t.check(s.events.choose(0), "继续")
-	t.not_null(s.pending_loot, "收获等着拿")
-	t.eq(s.take_all_loot(), 3, "三件到手")
+	t.check(s.pending_loot == null, "作者 2026-10-16：不弹战利品屏，收获掉在地上")
 	# 123：全部拾取先进背包，放不下的才到地上
 	var dice := _find_any(s, &"bone_dice")
 	var bits := _find_any(s, &"bone_charm_bits")

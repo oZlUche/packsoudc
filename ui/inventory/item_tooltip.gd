@@ -334,8 +334,8 @@ static func reactions_line(spec: CombatantSpec, compiled: CompiledItem) -> Strin
 
 
 ## 171 §4：法杖的装载行 ——「【装载】Ⅰ 明亮的火焰魔晶石　剩 N 次」，一颗晶石一行（175：按轮读的顺时针顺序，罗马数字是第几颗；
-## 伤害与冷却写在上面的轮读句里）。不轮读的宿主按 uid 排、不标序号
-static func load_lines(inst: ItemInstance, board: GridInventory, spec: CombatantSpec, _stats: StatSet) -> Array[String]:
+## 冷却写在上面的轮读句里；作者 2026-10-16：几颗时每行接着写这颗那一下的效果「：Y 点火焰伤害，并施加 1 层灼伤」）。不轮读的宿主按 uid 排、不标序号
+static func load_lines(inst: ItemInstance, board: GridInventory, spec: CombatantSpec, stats: StatSet) -> Array[String]:
 	var out: Array[String] = []
 	if spec == null or inst.def.adjacency == null or not inst.def.adjacency.has_load() or board == null:
 		return out
@@ -350,12 +350,19 @@ static func load_lines(inst: ItemInstance, board: GridInventory, spec: Combatant
 				uids.append(int(c))
 		uids.sort()
 	var numbered := compiled != null and not compiled.loaded.is_empty()
+	# 作者 2026-10-16：几颗时每颗一行写它那一下的效果（顺时针；一颗时上面的轮读句已经写了）
+	var shots: Array[String] = []
+	if numbered and compiled.loaded.size() > 1 and inst.def.combat != null:
+		for r in inst.def.combat.rules:
+			if r is AbilityRule and (r as AbilityRule).cadence is CycleCadence:
+				shots = cycle_shots(r, stats, compiled.loaded)
+				break
 	for i in uids.size():
 		var crystal := board.get_item(uids[i])
 		if crystal == null:
 			continue
 		var head := "%s " % TextTemplate.roman(i + 1) if numbered else ""
-		var parts: Array[String] = [head + Names.of_item(crystal)]
+		var parts: Array[String] = [head + Names.of_item(crystal) + ("：" + shots[i] if i < shots.size() else "")]
 		if crystal.def.wear != null:
 			parts.append("剩 [b]%d[/b] 次" % crystal.charges())
 		out.append("%s[color=@grant]%s[/color]" % [icon("load"), "　".join(parts)])
@@ -363,39 +370,54 @@ static func load_lines(inst: ItemInstance, board: GridInventory, spec: Combatant
 
 
 ## 175（作者定）：法杖的轮读句 —— 没放晶石「没放晶石：物理 Y，每 Z 秒」；一颗「装载一颗：火 Y，每 Z 秒」；
-## 几颗「装载 N 颗，顺时针：火 Y → 冰 Y；颗间 X 秒，一轮后歇 Z 秒」。Y 含暴击期望、晶石加的伤害；X / Z 已除急速
+## 几颗「装载 N 颗，顺时针轮流：颗间 X 秒，一轮后歇 Z 秒」（作者 2026-10-16：每颗的「火 Y」各写一行装载行，[method cycle_shots]）。Y 含暴击期望、晶石加的伤害；X / Z 已除急速
 static func cycle_sentence(rule: AbilityRule, stats: StatSet, loaded: Array[Dictionary]) -> String:
 	var cad := rule.cadence as CycleCadence
 	var p := cad.periods(stats)
+	var b := _cycle_base(rule, stats)
+	var base := float(b[0])
+	var base_type: StringName = b[1]
+	var line := ""
+	if loaded.is_empty():
+		line = "没放晶石：每 [b]%s[/b] 秒造成 [b]%s[/b] 点%s" % [_num(p.y, 1), _num(base), _damage_words(base_type)]
+	elif loaded.size() == 1:
+		line = "装载一颗：每 [b]%s[/b] 秒造成 %s" % [_num(p.y, 1), cycle_shots(rule, stats, loaded)[0]]
+	else:
+		# 作者 2026-10-16：几颗时每颗的效果各写一行（下面的装载行，顺时针），这句只写轮法与两种冷却
+		line = "装载 %d 颗，顺时针轮流：颗间 [b]%s[/b] 秒，一轮后歇 [b]%s[/b] 秒" % [loaded.size(), _num(p.x, 1), _num(p.y, 1)]
+	var st := _stamina_of(rule, stats)
+	if st > 0.0:
+		line += "，每下消耗 [b]%s[/b] 耐力" % _num(st)
+	return line
+
+
+## 轮读规则的底子：[一下的伤害（含暴击期望）, 伤害类型]
+static func _cycle_base(rule: AbilityRule, stats: StatSet) -> Array:
 	var base := 0.0
 	var base_type := DamageTypes.PHYSICAL
 	for e in rule.effects:
 		if e is DealDamage:
 			base += (e as CombatEffect).estimated_damage(stats) if stats != null else (e as DealDamage).amount
 			base_type = (e as DealDamage).damage_type
+	return [base, base_type]
+
+
+## 175 补 5.4（作者定）：轮读表里每颗晶石那一下 ——「Y 点火焰伤害，并施加 1 层灼伤」；不施加的（没有施加规则的晶石）只写伤害。
+## Y 含暴击期望（晶石加的那部分一样吃）
+static func cycle_shots(rule: AbilityRule, stats: StatSet, loaded: Array[Dictionary]) -> Array[String]:
+	var b := _cycle_base(rule, stats)
+	var base := float(b[0])
 	var raw := StatMath.to_float(stats.total_of(BattleStats.DAMAGE)) if stats != null else 0.0
-	var crit := base / raw if raw > 0.0 else 1.0     # 暴击期望的倍数，晶石加的那部分一样吃
-	var line := ""
-	if loaded.is_empty():
-		line = "没放晶石：每 [b]%s[/b] 秒造成 [b]%s[/b] 点%s" % [_num(p.y, 1), _num(base), _damage_words(base_type)]
-	else:
-		# 175 补 5.4（作者定）：每颗写成一句两段「Y 点火焰伤害，并施加 1 层灼伤」；不施加的（没有施加规则的晶石）只写伤害
-		var shots: Array[String] = []
-		for e in loaded:
-			var dmg := base + StatMath.to_float(int(e.get("damage", 0))) * crit
-			var shot := "[b]%s[/b] 点%s" % [_num(dmg), _damage_words(StringName(e.get("type", base_type)))]
-			var give := _loaded_apply(e)
-			if give != "":
-				shot += ("，并" if loaded.size() == 1 else "并") + give
-			shots.append(shot)
-		if loaded.size() == 1:
-			line = "装载一颗：每 [b]%s[/b] 秒造成 %s" % [_num(p.y, 1), shots[0]]
-		else:
-			line = "装载 %d 颗，顺时针：%s；颗间 [b]%s[/b] 秒，一轮后歇 [b]%s[/b] 秒" % [loaded.size(), " → ".join(shots), _num(p.x, 1), _num(p.y, 1)]
-	var st := _stamina_of(rule, stats)
-	if st > 0.0:
-		line += "，每下消耗 [b]%s[/b] 耐力" % _num(st)
-	return line
+	var crit := base / raw if raw > 0.0 else 1.0
+	var out: Array[String] = []
+	for e in loaded:
+		var dmg := base + StatMath.to_float(int(e.get("damage", 0))) * crit
+		var shot := "[b]%s[/b] 点%s" % [_num(dmg), _damage_words(StringName(e.get("type", b[1])))]
+		var give := _loaded_apply(e)
+		if give != "":
+			shot += "，并" + give
+		out.append(shot)
+	return out
 
 
 ## 「火焰伤害」（物理也写出来：轮读句里要分清这一下是什么）

@@ -236,8 +236,8 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(s.events.choose(0), "继续")
 	t.check(not session.active and s.events.current_search == null, "会话结束了")
 	t.check(path[1].is_visited(), "点用过了")
-	t.not_null(s.pending_loot, "收获等着拿")
-	t.eq(s.take_all_loot(), 3, "拿走三件")
+	t.check(s.pending_loot == null, "作者 2026-10-16：不弹战利品屏")
+	t.check(s.storage.item_count() >= 3, "收获掉在地上（%d 件）" % s.storage.item_count())
 	# 整理：地上一挪步就清（080），先把搜到的都放进包里（有没有武器的门在战前准备屏上，084）
 	# 123：全部拾取先进背包，放不下的才到地上 —— 两边都看
 	var weapon: ItemInstance = null
