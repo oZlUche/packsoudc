@@ -50,3 +50,16 @@
 ## 5. 改动范围
 
 `ui/game/meta_screen.gd`（页签表、仓库页、家页去棋盘、右半边显隐、初始页）、`tests/meta/test_base_home_164.gd`、截图金样 `/mnt/project-files/screenshots/178/`（仓库页有 / 无棋盘、图鉴页全宽）。不碰 `WarehousePanel`、`WarehousePages`、`GameFlow`。
+
+## 落地记录（v3.14，待定 1–3 全按推荐）
+
+- **页签**：`TABS` 五个，顺序 仓库 / 出售 / 科技 / 图鉴 / 成就；`show_tab` 只把不认识的名字回家，`"warehouse"` 是自己的一页；Esc 在仓库页回家（原有逻辑）。
+- **「仓库」页**：中列一块粗布，上面一行「没有带回来的东西」（有棋盘时藏起），下面 `WarehousePanel`（棋盘、提示行、一键置入 / 整理）。家页去掉了原来那块框。
+- **和方案不同的两处**：
+  - `WarehousePanel` 动了一行：没棋盘时「一键置入」藏起（原来是灰着摆在那），所以「仓库」页无棋盘时就是一行字 + 「仓库 N 件」+ 整理，和 2.2 写的一致。结算屏第 2 步总有棋盘，不受影响。
+  - 调试台箭头原来在右半边标题行的末端，右半边收起会跟着没，改成钉在屏幕右上（同一位置）；右半边收起时中列右边只让出箭头那一条（`right_gutter`，约 40 像素），不然图鉴最右一列压在箭头下面。
+- **右半边显隐**：`NO_SHELF_TABS = ["codex", "achievements"]`，`show_tab` 设 `_right.visible`；`layout()` 照旧按半屏算仓库格子（切回来格子不变），收起时 `half = 0`；`middle_width(screen)` 给出中列宽，图鉴靠原有的 `resized → fit_codex_to_width` 重排列数（列数变多）。
+- **进基地落哪页**：`initial_tab(payload)` —— payload 有 `result` 且 `has_pending_board()` → 仓库页，否则家；payload 指定 `tab` 时照旧优先。
+- **左列提示**：改用 `pending_text()`「带回来的背包还有 N 件没清空，去「仓库」页置入；……」，点一下切到仓库页。`GameFlow.pending_hint` 没删（别处还在用）。
+- **测试**：`tests/ui/test_base_home_164.gd` 改页签表、仓库页不再算家、图鉴 / 成就收起、双击置入改在仓库页（家页不动）；新 `tests/ui/test_base_warehouse_178.gd`：五个页签、有 / 无棋盘的仓库页、一键置入按有无棋盘显隐、Esc 回家；图鉴 / 成就页右半边不可见、中列宽 = 全宽减左列减箭头条、调试台箭头还在、图鉴列数变多、切回出售页右半边回来且翻到的页不变；结算后带棋盘落仓库页、不是从结算来 / 清空后落家、指定页签优先。
+- **截图**：`/mnt/project-files/screenshots/178/` —— `1_from_result_warehouse`（结算后落仓库页）、`2_home`（家页只剩战绩，左列提示）、`3_warehouse_empty`（没棋盘）、`4_codex_full_width`、`5_achievements_full_width`、`6_sell`。

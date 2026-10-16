@@ -220,6 +220,7 @@ func _refresh() -> void:
 	_sync_board_label()
 	var pending := _meta.has_pending_board()
 	_store_btn.disabled = not pending
+	_store_btn.visible = _meta.board != null     # 178：没有带回来的背包就不摆「一键置入」（基地「仓库」页只剩整理）
 	var page := _shelf.current_page() if _shelf != null else null
 	_tidy_btn.disabled = page == null or page.item_count() <= 1
 	if _line != null and _line.text == "":

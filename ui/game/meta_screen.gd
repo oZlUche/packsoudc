@@ -19,8 +19,11 @@ const MARGIN := 24.0
 const COL_GAP := 24.0
 ## 右半边标题行的高（「仓库　N 件」与调试台箭头）
 const SHELF_HEAD := 44.0
-## 左列四个页签（页签名、字）；「家」不在里面 —— 再点一次选中的页签回家
-const TABS := [["codex", "图鉴"], ["achievements", "成就"], ["sell", "出售"], ["tech", "科技"]]
+## 左列五个页签（页签名、字）；「家」不在里面 —— 再点一次选中的页签回家。
+## 178（作者 2026-10-16，待定 1 选 A）：加「仓库」，顺序 仓库 / 出售 / 科技 / 图鉴 / 成就 —— 右半边有仓库的三页挨着
+const TABS := [["warehouse", "仓库"], ["sell", "出售"], ["tech", "科技"], ["codex", "图鉴"], ["achievements", "成就"]]
+## 178：这几页不显示右半边的仓库，中列吃满
+const NO_SHELF_TABS := ["codex", "achievements"]
 
 var _wh = null
 var _new_run_btn: Button
@@ -53,27 +56,30 @@ var _debug_btn: Button = null
 var _codex_grids: Array[GridContainer] = []
 ## 164：三列与右半边的仓库（整屏的拖拽层是 [member GameScreen._drag]）
 var _cols: HBoxContainer = null
+var _margin: MarginContainer = null
 var _middle: VBoxContainer = null
 var _right: VBoxContainer = null
 var _shelf: WarehousePages = null
 var _shelf_frame: PanelContainer = null
 var _shelf_title: Label = null
+## 178：「仓库」页没有带回来的棋盘时那一行
+var _no_board: Label = null
 
 
 func open(payload: Dictionary) -> void:
 	var m := flow.meta
 	UiTheme.dress_home_backdrop(_backdrop())
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_margin = MarginContainer.new()
+	_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, int(MARGIN))
-	add_child(margin)
+		_margin.add_theme_constant_override("margin_" + side, int(MARGIN))
+	add_child(_margin)
 	_cols = _hbox(int(COL_GAP))
-	margin.add_child(_cols)
+	_margin.add_child(_cols)
 	_drag = DragLayer.new()
 	_drag.label_font = font
 
-	# 左列：标题、四个页签竖排；底下「再来一局」「回主菜单」
+	# 左列：标题、五个页签竖排；底下「再来一局」「回主菜单」
 	var left := _vbox(12)
 	left.custom_minimum_size.x = LEFT_W
 	_cols.add_child(left)
@@ -96,6 +102,12 @@ func open(payload: Dictionary) -> void:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(spacer)
 	_hint = _wrapped("", 13, UiPalette.STAMINA, LEFT_W)
+	# 178：提示指向「仓库」页 —— 点一下直接过去
+	_hint.mouse_filter = Control.MOUSE_FILTER_STOP
+	_hint.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_hint.gui_input.connect(func(e: InputEvent):
+		if e is InputEventMouseButton and (e as InputEventMouseButton).pressed and (e as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT and flow.meta.has_pending_board():
+			show_tab("warehouse"))
 	left.add_child(_hint)
 	_new_run_btn = UiTheme.make_home_button("再来一局", flow.new_run, true)
 	_new_run_btn.custom_minimum_size = Vector2(LEFT_W, 76)
@@ -121,7 +133,13 @@ func open(payload: Dictionary) -> void:
 	_shelf_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(_shelf_title)
 	_drawer = DevDrawer.new()
-	head.add_child(_drawer.arrow)
+	# 178：箭头钉在屏幕右上（原来在仓库标题行的右端，同一个位置）—— 图鉴 / 成就页收起右半边时它还在
+	var arrow_w := _drawer.arrow.get_combined_minimum_size().x
+	_drawer.arrow.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_drawer.arrow.offset_left = -MARGIN - arrow_w
+	_drawer.arrow.offset_right = -MARGIN
+	_drawer.arrow.offset_top = MARGIN
+	_drawer.arrow.offset_bottom = MARGIN + SHELF_HEAD
 	_shelf_frame = UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_SHELF)
 	_shelf_frame.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_right.add_child(_shelf_frame)
@@ -132,7 +150,7 @@ func open(payload: Dictionary) -> void:
 	_shelf.view.item_double_clicked.connect(_on_shelf_double_clicked)
 	m.warehouse.changed.connect(_refresh_shelf_title)
 
-	# 家页：这一局、战绩（粗布框里），带回来的背包与一键置入 / 整理
+	# 家页：这一局、战绩（粗布框里）。178：带回来的背包搬到「仓库」页
 	var home := _vbox(12)
 	home.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_middle.add_child(home)
@@ -155,13 +173,17 @@ func open(payload: Dictionary) -> void:
 		info.add_child(_wrapped("上一局地上没背出来的 %d 件已一键出售，得 %d 币。" % [int(sold["count"]), int(sold["funds"])], 14, UiPalette.STAMINA, 460))
 	info.add_child(_wrapped("%d 局　撤离 %d　战败 %d　累计价值 %d　单局最高 %d\n钱 %d　图鉴 %d / %d" % [
 		m.runs, m.extractions, m.deaths, m.score, m.best_value, m.funds, m.codex.size(), flow.items.ids(true).size()], 15, UiPalette.FG, 460))
+	# 178：「仓库」页 —— 带回来的背包（一键置入 / 整理 / 提示行）；没有带回来的就一行字（整理照旧管右边当前页）
+	var wh_page := _cloth()
+	_pages["warehouse"] = wh_page
+	var wh_col := _vbox(10)
+	wh_page.add_child(wh_col)
+	_no_board = _label("没有带回来的东西", 15, UiPalette.DIM)
+	wh_col.add_child(_no_board)
 	_wh = WarehousePanelScript.new()
 	_wh.setup(flow, font, _shelf, _drag)
 	_wh.changed.connect(_refresh)
-	var wh_box := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_BOX)
-	wh_box.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	wh_box.add_child(_wh)
-	home.add_child(wh_box)
+	wh_col.add_child(_wh)
 
 	# 调试台（139：原来仓库页的右列）
 	var right := _drawer.content
@@ -263,10 +285,11 @@ func open(payload: Dictionary) -> void:
 	_drawer.wrap_contents()
 	add_child(_drawer)
 	_drawer.dock(MARGIN + SHELF_HEAD + 8.0, MARGIN)
+	add_child(_drawer.arrow)
 	add_child(_drag)     # 164：整屏一层拖拽，盖在三列上（残影画在最上面）
 	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	resized.connect(layout)
-	show_tab(String(payload.get("tab", "home")))
+	show_tab(String(payload.get("tab", initial_tab(payload))))
 	_refresh()
 	_refresh_shelf_title()
 	layout()
@@ -291,12 +314,34 @@ func layout() -> void:
 	# 科技页（树 + 说明板 + 上交区）最窄要多宽先让给它；别的页按中列宽自己排（图鉴按宽算列数，不能拿它的最小宽来挤）
 	var mid_min: float = (_pages["tech"] as Control).get_combined_minimum_size().x if _tab == "tech" and _pages.has("tech") else 0.0
 	var half := maxf(0.0, minf(screen.x * 0.5 - MARGIN, screen.x - 2.0 * MARGIN - LEFT_W - 2.0 * COL_GAP - mid_min))
-	_right.custom_minimum_size.x = half
 	var frame := _frame_margins()
-	var c := _shelf.fit(half - frame.x, screen.y - 2.0 * MARGIN - SHELF_HEAD - 8.0 - frame.y)
-	var mid_w := screen.x - 2.0 * MARGIN - LEFT_W - half - 2.0 * COL_GAP
+	var c := _shelf.fit(half - frame.x, screen.y - 2.0 * MARGIN - SHELF_HEAD - 8.0 - frame.y)     # 收起时也按半屏算，切回来格子不变
+	if not _right.visible:
+		half = 0.0     # 178：图鉴 / 成就页收起右半边，中列吃满
+	_right.custom_minimum_size.x = half
+	_margin.add_theme_constant_override("margin_right", int(MARGIN + right_gutter()))
+	var mid_w := middle_width(screen)
 	if _wh != null and flow.meta.board != null:
 		_wh.set_board_cell(minf(c, maxf(WarehousePages.CELL_MIN, floorf((mid_w - 50.0) / float(maxi(1, flow.meta.board.size.x))))))
+
+
+## 178：右半边收起时，右边空出调试台箭头那一条（箭头钉在屏幕右上，别压在中列上）
+func right_gutter() -> float:
+	if _right.visible or _drawer == null:
+		return 0.0
+	return _drawer.arrow.get_combined_minimum_size().x + 8.0
+
+
+## 178：中列的宽（右半边收起时 = 全宽减左列、减箭头那一条）
+func middle_width(screen: Vector2) -> float:
+	if not _right.visible:
+		return screen.x - 2.0 * MARGIN - LEFT_W - COL_GAP - right_gutter()
+	return screen.x - 2.0 * MARGIN - LEFT_W - _right.custom_minimum_size.x - 2.0 * COL_GAP
+
+
+## 178（待定 2 选 A）：进基地落哪一页 —— 从结算屏回来、带回来的背包还没清空 → 「仓库」页；否则家
+func initial_tab(payload: Dictionary) -> String:
+	return "warehouse" if payload.has("result") and flow.meta.has_pending_board() else "home"
 
 
 ## 木架框的左右、上下内边距之和
@@ -321,10 +366,10 @@ func _refresh_shelf_title() -> void:
 		_shelf_title.text = "仓库　%d 件　%d 页" % [flow.meta.warehouse.item_count(), flow.meta.warehouse.page_count()]
 
 
-## 双击右边仓库的一件：按当前页 —— 家 → 置入带回来的背包；出售 → 卖；科技 → 上交；图鉴 / 成就 → 不做事
+## 双击右边仓库的一件：按当前页 —— 仓库 → 置入带回来的背包（178：原来在家页）；出售 → 卖；科技 → 上交；家 / 图鉴 / 成就 → 不做事
 func _on_shelf_double_clicked(view: ContainerView, uid: int) -> void:
 	match _tab:
-		"home":
+		"warehouse":
 			_wh.quick_move(view, uid)
 		"sell":
 			sell(uid)
@@ -800,13 +845,16 @@ func codex_tiles() -> Array[CodexTile]:
 	return _codex_tiles
 
 
-## 切页："home"（家，默认）/ "codex" / "achievements" / "sell" / "tech"。老名字 "warehouse" 算家（164 之前仓库是一页）
+## 切页："home"（家，默认）/ "warehouse" / "sell" / "tech" / "codex" / "achievements"。
+## 178：图鉴 / 成就页收起右半边的仓库（翻到的那页不变）
 func show_tab(name: String) -> void:
-	if name == "warehouse" or not _pages.has(name):
+	if not _pages.has(name):
 		name = "home"
 	_tab = name
 	for key in _pages:
 		(_pages[key] as Control).visible = key == name
+	if _right != null:
+		_right.visible = not NO_SHELF_TABS.has(name)
 	for key in _tab_btns:
 		var b := _tab_btns[key] as Button
 		b.set_pressed_no_signal(key == name)
@@ -834,6 +882,13 @@ func escape() -> bool:
 		return true
 	flow.to_main_menu()
 	return true
+
+
+## 178：「再来一局」上面那句 —— 带回来的背包还没清空就指向「仓库」页（点一下过去）
+func pending_text() -> String:
+	if not flow.meta.has_pending_board():
+		return ""
+	return "带回来的背包还有 %d 件没清空，去「仓库」页置入；不管的话，开局屏里它们会放到地上，出发就没了" % flow.meta.board.item_count()
 
 
 func toggle_buff(id: StringName) -> bool:
@@ -865,6 +920,8 @@ func toggle_unlock(id: StringName) -> bool:
 
 func _refresh() -> void:
 	# 090：带回来的没清不再拦，只提示（开局屏里到地上，出发就没了）
-	_hint.text = flow.pending_hint()
+	_hint.text = pending_text()
+	if _no_board != null:
+		_no_board.visible = flow.meta.board == null
 	for id in _tech_spins:     # 119：科技页点亮 / 升级了，开发区的数字框跟上
 		(_tech_spins[id] as SpinBox).set_value_no_signal(TechService.level(flow.meta, id))
