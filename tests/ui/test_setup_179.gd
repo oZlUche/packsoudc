@@ -53,6 +53,8 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 		t.eq(tiles.map(func(c: CapTile) -> String: return c.value_label.text),
 			[str(ch.weight_capacity), "%d × %d" % [ch.board_size.x, ch.board_size.y], str(ch.starting_funds)], "%s：负重 / 棋盘 / 开局金币的数" % ch.id)
 		t.eq(tiles.map(func(c: CapTile) -> String: return c.caption_label.text), ["负重上限", "棋盘", "开局金币"], "说明")
+		t.check(tiles.all(func(c: CapTile) -> bool: return c.has_art() and ((c.icon as TextureRect).texture.resource_path.begins_with(CapTile.ICON_DIR))), "%s：三块牌都用美术定稿的图标" % ch.id)
+		t.eq((tiles[0] as CapTile).icon.modulate, Color.WHITE, "彩色成品，不调色")
 		t.eq((tiles[0] as CapTile).value_label.get_theme_font_size("font_size"), 28, "数字 28")
 		var names: Array = setup._skill_names
 		t.eq(names.size(), ch.skill_entries().size(), "%s：每条技能一个名字" % ch.id)
