@@ -102,7 +102,7 @@ func _open_result(payload: Dictionary) -> void:
 	if not lost.is_empty():
 		lines.append("失去：%s" % "、".join(lost))
 	if int(detail.get("waited", 0)) > 0:
-		lines.append("耗了 %d 个行动点" % int(detail["waited"]))
+		lines.append("耗了 %d 步" % int(detail["waited"]))
 	if String(detail.get("type_changed", "")) != "":
 		lines.append("这里变成了%s点" % MapNodeStyle.of(StringName(String(detail["type_changed"])))["label"])
 	if int(detail.get("teleported", -1)) >= 0:

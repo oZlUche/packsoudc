@@ -26,7 +26,7 @@
       "type": "passive",
       "id": "wild_born",
       "display_name": "野地里长大",
-      "description": "休息时多回 {rest_bonus_amount} 点体力；侵蚀扣体力时少扣 {erosion_resist_amount} 点。",
+      "description": "休息时额外恢复 {rest_bonus_amount} 点体力；侵蚀扣除体力时减少 {erosion_resist_amount} 点。",
       "passive": [
         {
           "type": "rest_bonus"
@@ -40,7 +40,7 @@
       "type": "passive",
       "id": "hardy",
       "display_name": "坚韧",
-      "description": "战斗里生命掉到三成以下时，立刻得到一层护甲（每场一次）。",
+      "description": "战斗中生命低于三成时，立即获得一层护甲（每场一次）。",
       "rules": [
         {
           "trigger": {
@@ -64,7 +64,7 @@
       "type": "second_wind",
       "id": "second_wind",
       "display_name": "咬牙",
-      "description": "在地图上咬咬牙，恢复 {amount} 点体力。",
+      "description": "在地图上恢复 {amount} 点体力。",
       "uses": 2,
       "cooldown_steps": 6
     }

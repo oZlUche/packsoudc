@@ -39,7 +39,7 @@ script = ExtResource("5_dp8ju")
 
 [sub_resource type="Resource" id="Resource_oxytg"]
 script = ExtResource("1_44v1f")
-label = "扎营（多耗 {pass_time_actions} 个行动点，多回 {restore_vitality_amount} 点体力）"
+label = "扎营（多耗 {pass_time_actions} 步，多回 {restore_vitality_amount} 点体力）"
 hide_when_locked = true
 requires = Array[ExtResource("4_eejmq")]([SubResource("Resource_anxhh")])
 outcomes = Array[ExtResource("2_k4swn")]([SubResource("Resource_xkvak"), SubResource("Resource_ye14d"), SubResource("Resource_upvsa")])

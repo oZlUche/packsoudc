@@ -25,7 +25,7 @@
       "type": "passive",
       "id": "familiar_paths",
       "display_name": "熟门熟路",
-      "description": "奴隶探索者月月进来，路都认得：每走 {travel_discount_every} 步，下一步不花行动点。",
+      "description": "每走 {travel_discount_every} 步，下一步不计入倒计时。",
       "passive": [
         {
           "type": "travel_discount"
@@ -36,7 +36,7 @@
       "type": "passive",
       "id": "slippery",
       "display_name": "溜得掉",
-      "description": "猎手更难发现你，从猎手面前逃跑更容易；头一回输给节点敌人不扣体力。",
+      "description": "猎手更难发现你，从猎手面前逃跑更容易；首次战败于敌人时不扣体力。",
       "passive": [
         {
           "type": "flee_bonus",
@@ -54,7 +54,7 @@
       "type": "slip",
       "id": "slip",
       "display_name": "脱身",
-      "description": "开战前溜走：这一场不打、不扣体力、也没有战利品，点算用过（核心点溜不掉）；猎手面前用，必定逃掉。",
+      "description": "开战前脱离：不战斗、不扣体力、无战利品，该点视为已用（核心点不可用）；对猎手使用必定逃脱。",
       "uses": 2,
       "cooldown_steps": 4
     }

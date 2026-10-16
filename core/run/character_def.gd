@@ -89,7 +89,23 @@ func skill_lines() -> Array[String]:
 	return out
 
 
+## 179：选角色屏一条技能拆成两行由界面排 ——「被动 / 主动」、名字、说明（主动的次数 / 冷却附在说明末尾）；顺序和 [method skill_lines] 一样
+func skill_entries() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for active in ([false] if RunSkills.ACTIVE_HIDDEN else [false, true]):
+		for s in skills:
+			var sk := s as RunSkill
+			if sk != null and sk.is_active() == active:
+				out.append({"kind": "主动" if active else "被动", "name": sk.display_name, "text": _skill_text(sk)})
+	return out
+
+
 static func _skill_line(sk: RunSkill) -> String:
+	return "%s　%s" % [sk.display_name, _skill_text(sk)]
+
+
+## 技能的说明（主动的次数 / 冷却附在末尾）
+static func _skill_text(sk: RunSkill) -> String:
 	var text := Names.description_of(sk) if sk.description != "" else sk.summary()
 	var bits: Array[String] = []
 	if sk.is_active():
@@ -97,7 +113,7 @@ static func _skill_line(sk: RunSkill) -> String:
 			bits.append("%d 次" % sk.uses)
 		if sk.cooldown_steps > 0:
 			bits.append("冷却 %d 步" % sk.cooldown_steps)
-	return "%s　%s%s" % [sk.display_name, text, ("（" + "，".join(bits) + "）") if not bits.is_empty() else ""]
+	return text + (("（" + "，".join(bits) + "）") if not bits.is_empty() else "")
 
 
 ## 带入的东西合不合上限。[param defs] 是要带的（非包）道具定义；返回不合的原因，空串 = 合

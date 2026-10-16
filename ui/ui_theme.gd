@@ -50,6 +50,18 @@ const BUTTON_HOME := &"ButtonHome"
 const BUTTON_HOME_PRIMARY := &"ButtonHomePrimary"
 const PANEL_HOME_BOX := &"PanelHomeBox"
 const PANEL_SHELF := &"PanelShelf"
+## 179：开局屏坐在场地背景上的凹槽板（比背景更暗的板身、细黄铜边、内阴影；深底白字）；美术给了 `setup/groove` 就用图
+const PANEL_GROOVE := &"PanelGroove"
+## 179：选角色屏 —— 图标牌的底、牌上的数字（28 粗体）、技能名（22 粗体亮黄铜黑描边）、技能说明（17，行距半字）、开局屏标题（白字带阴影）
+const PANEL_CAP_TILE := &"PanelCapTile"
+const LABEL_CAP_VALUE := &"LabelCapValue"
+const LABEL_SKILL_NAME := &"LabelSkillName"
+const LABEL_SKILL_TEXT := &"LabelSkillText"
+const LABEL_SCREEN_TITLE := &"LabelScreenTitle"
+const CAP_VALUE_SIZE := 28
+const SKILL_NAME_SIZE := 22
+const SKILL_TEXT_SIZE := 17
+const SCREEN_TITLE_SIZE := 26
 ## 166：地图屏的顶端栏（[code]hud_bar[/code] 部件的底：美术给 `hud/bar.png` 九宫格就贴，没给是读数那种半透明深底）、
 ## 栏里的图标按钮（[IconButton]：背包、放大镜、主动技能；按下态走这个变体）
 const PANEL_HUD_BAR := &"PanelHudBar"
@@ -63,7 +75,8 @@ const LABEL_DISPLAY := &"LabelDisplay"
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
 	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
 	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
-	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW]
+	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_GROOVE, PANEL_CAP_TILE, LABEL_CAP_VALUE,
+	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE]
 
 const TITLE_SIZE := 18
 ## 168：大标题字号
@@ -110,6 +123,12 @@ const ART_HOME_BTN_PRIMARY := "home/btn_wood_primary"
 const ART_HOME_BOX := "home/panel_cloth"
 const ART_SHELF := "home/shelf"
 const ART_TAB_MARK := "home/tab_mark"
+## 179：开局三页的整屏背景「选人场地」（铺满裁边）与三栏的凹槽板；没图：纯色底、平面板
+const ART_SETUP_BG := "setup/bg_hall"
+const ART_GROOVE := "setup/groove"
+## 179：凹槽板没图时的平面底（样稿第二版的色）
+const GROOVE_BG := Color("14161c")
+const GROOVE_EDGE := Color("5a4522")
 ## 家的按钮字号：页签 / 回主菜单 20，「再来一局」28
 const HOME_BUTTON_SIZE := 20
 const HOME_PRIMARY_SIZE := 28
@@ -218,6 +237,18 @@ static func panel(p: PanelContainer, margin: int = -1, variation: StringName = P
 		var box := current().get_stylebox("panel", variation).duplicate() as StyleBox
 		box.set_content_margin_all(margin)
 		p.add_theme_stylebox_override("panel", box)
+	return p
+
+
+## 179：同 [method panel]，四边内边距各给（左 / 上 / 右 / 下）
+static func panel_margins(p: PanelContainer, variation: StringName, l: int, t: int, r: int, b: int) -> PanelContainer:
+	panel(p, -1, variation)
+	var box := current().get_stylebox("panel", variation).duplicate() as StyleBox
+	box.content_margin_left = l
+	box.content_margin_top = t
+	box.content_margin_right = r
+	box.content_margin_bottom = b
+	p.add_theme_stylebox_override("panel", box)
 	return p
 
 
@@ -402,13 +433,13 @@ const TONE_LIGHT := &"light"
 const PANEL_TONES := {
 	PANEL_DARK: TONE_DARK, PANEL_LINE: TONE_DARK, PANEL_HUD: TONE_DARK, PANEL_OVERLAY: TONE_DARK, PANEL_TOOLTIP: TONE_DARK,
 	PANEL_NAMEPLATE: TONE_DARK, PANEL_HOME_BOX: TONE_LIGHT, PANEL_SHELF: TONE_DARK, PANEL_HUD_BAR: TONE_DARK,
-	PANEL_WINDOW: TONE_DARK,
+	PANEL_WINDOW: TONE_DARK, PANEL_GROOVE: TONE_DARK, PANEL_CAP_TILE: TONE_DARK,
 }
 ## 面板变体用哪张美术图（有图时深浅读它的 json）
 ## 157 补充三：叠层框与顶端栏是石板（深浅读板边的 json；顶端栏是自己那张长条板边），板里的分区都是凹槽
 const PANEL_ART := {PANEL_DARK: ART_INSET, PANEL_LINE: ART_INSET, PANEL_HUD: ART_INSET, PANEL_OVERLAY: ART_SLAB_EDGE, PANEL_TOOLTIP: ART_TOOLTIP,
 	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_BAR,
-	PANEL_WINDOW: ART_SLAB_EDGE}
+	PANEL_WINDOW: ART_SLAB_EDGE, PANEL_GROOVE: ART_GROOVE}
 ## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸。
 ## 169：读字色模板 `fg / dim / warn` 的浅版（[method text_colors_changed] 换），这几个常量是文件不在时的默认
 const INK_DEFAULT := Color("2e2219")
@@ -637,11 +668,16 @@ static func _art_box(name: String, title_strip: bool = false, content: int = -1)
 
 ## 164：基地整屏背景（`home/bg_home.png`，按比例铺满、多的裁掉）；没图什么也不加、返回 null
 static func dress_home_backdrop(rect: ColorRect) -> TextureRect:
-	var tex := art(ART_HOME_BG)
+	return dress_backdrop(rect, ART_HOME_BG, "HomeBackdrop")
+
+
+## 整屏背景图铺进 [param rect]（按比例铺满、多的裁掉）；没图什么也不加、返回 null（179：开局屏的场地也走这里）
+static func dress_backdrop(rect: ColorRect, art_name: String, node_name: String) -> TextureRect:
+	var tex := art(art_name)
 	if tex == null:
 		return null
 	var pic := TextureRect.new()
-	pic.name = "HomeBackdrop"
+	pic.name = node_name
 	pic.texture = tex
 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -725,6 +761,11 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_type_variation(PANEL_SHELF, "PanelContainer")
 	var shelf: StyleBox = _art_box(ART_SHELF)
 	t.set_stylebox("panel", PANEL_SHELF, shelf if shelf != null else _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
+	# 179：开局屏的凹槽板
+	t.set_type_variation(PANEL_GROOVE, "PanelContainer")
+	var groove_box: StyleBox = _art_box(ART_GROOVE)
+	t.set_stylebox("panel", PANEL_GROOVE, groove_box if groove_box != null else _groove_box())
+	_setup_card(t)
 	_home_buttons(t)
 	# 150：读数组件（原来地图屏那条 HUD 的无边窄底，搬成变体）
 	t.set_type_variation(PANEL_HUD, "PanelContainer")
@@ -852,6 +893,53 @@ static func _button_box(bg: Color, edge: Color, pad: Vector2i) -> StyleBoxFlat:
 	s.content_margin_right = pad.x
 	s.content_margin_top = pad.y
 	s.content_margin_bottom = pad.y
+	return s
+
+
+## 179：选角色屏的几种字与图标牌的底
+static func _setup_card(t: Theme) -> void:
+	t.set_type_variation(PANEL_CAP_TILE, "PanelContainer")
+	var tile := _box(Color("1c1f27"), Color("2c3140"), 10)
+	tile.content_margin_left = 14
+	tile.content_margin_right = 14
+	t.set_stylebox("panel", PANEL_CAP_TILE, tile)
+	t.set_type_variation(LABEL_CAP_VALUE, "Label")
+	t.set_font("font", LABEL_CAP_VALUE, _font_bold)
+	t.set_font_size("font_size", LABEL_CAP_VALUE, CAP_VALUE_SIZE)
+	t.set_color("font_color", LABEL_CAP_VALUE, UiPalette.FG)
+	t.set_type_variation(LABEL_SKILL_NAME, "Label")
+	t.set_font("font", LABEL_SKILL_NAME, _font_bold)
+	t.set_font_size("font_size", LABEL_SKILL_NAME, SKILL_NAME_SIZE)
+	t.set_color("font_color", LABEL_SKILL_NAME, UiPalette.BTN_PRIMARY_HOVER)
+	t.set_color("font_outline_color", LABEL_SKILL_NAME, Color.BLACK)
+	t.set_constant("outline_size", LABEL_SKILL_NAME, OUTLINE_SIZE * 2)     # 22 号字上 2 太细
+	t.set_type_variation(LABEL_SKILL_TEXT, "Label")
+	t.set_font_size("font_size", LABEL_SKILL_TEXT, SKILL_TEXT_SIZE)
+	t.set_color("font_color", LABEL_SKILL_TEXT, UiPalette.FG)
+	t.set_constant("line_spacing", LABEL_SKILL_TEXT, SKILL_TEXT_SIZE / 2)
+	t.set_type_variation(LABEL_SCREEN_TITLE, "Label")
+	t.set_font_size("font_size", LABEL_SCREEN_TITLE, SCREEN_TITLE_SIZE)
+	t.set_color("font_color", LABEL_SCREEN_TITLE, UiPalette.FG)
+	t.set_color("font_shadow_color", LABEL_SCREEN_TITLE, Color(0, 0, 0, 0.85))
+	t.set_constant("shadow_offset_x", LABEL_SCREEN_TITLE, 0)
+	t.set_constant("shadow_offset_y", LABEL_SCREEN_TITLE, 2)
+	t.set_constant("shadow_outline_size", LABEL_SCREEN_TITLE, 6)
+
+
+## 只挂变体的标签（字号、颜色、字体都在变体里）
+static func make_variant_label(text: String, variation: StringName) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.theme_type_variation = variation
+	return l
+
+
+## 179：凹槽板的平面底 —— 暗板身、细黄铜边、往下一点投影
+static func _groove_box() -> StyleBoxFlat:
+	var s := _box(Color(GROOVE_BG, 0.94), GROOVE_EDGE, PANEL_MARGIN)
+	s.shadow_color = Color(0, 0, 0, 0.55)
+	s.shadow_size = 14
+	s.shadow_offset = Vector2(0, 6)
 	return s
 
 

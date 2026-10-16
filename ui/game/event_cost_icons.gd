@@ -12,7 +12,7 @@ static var KINDS: Array = [
 	[SpendVitality, "vitality", "♥", "耗体力"],
 	[ChangeMoney, "money", "¤", "花钱"],
 	[LoseItem, "item", "▣", "交出道具"],
-	[PassTime, "time", "⌛", "耗行动点"],
+	[PassTime, "time", "⌛", "耗步"],
 	[FaithActive, "faith", "✦", "要信仰"],
 ]
 

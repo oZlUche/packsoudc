@@ -266,7 +266,7 @@ func open(payload: Dictionary) -> void:
 	var log := _log_box(13)
 	for h in m.history:
 		var extracted := String(h.get("outcome", "")) == "extracted"
-		log.append_text("[color=#%s]%s[/color]　种子 %d　行动点 %d　打赢 %d　%s\n" % [
+		log.append_text("[color=#%s]%s[/color]　种子 %d　走了 %d 步　打赢 %d　%s\n" % [
 			(UiPalette.HEAL if extracted else UiPalette.HP).to_html(false), "撤离" if extracted else "战败",
 			int(h.get("seed", 0)), int(h.get("steps", 0)), int(h.get("battles_won", 0)),
 			"%d 件、值 %d 币、带出 %d 币" % [(h.get("items", []) as Array).size(), int(h.get("value", 0)), int(h.get("balance", 0))] if extracted else ""])

@@ -5,7 +5,6 @@ extends RefCounted
 
 const KINDS := {
 	&"countdown": "res://ui/hud/widgets/countdown_widget.gd",
-	&"action_points": "res://ui/hud/widgets/action_points_widget.gd",
 	&"distances": "res://ui/hud/widgets/distances_widget.gd",
 	&"vitality": "res://ui/hud/widgets/vitality_widget.gd",
 	&"wallet": "res://ui/hud/widgets/wallet_widget.gd",

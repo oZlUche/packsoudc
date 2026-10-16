@@ -83,7 +83,7 @@ func _build_summary(col: VBoxContainer, outer: VBoxContainer) -> void:
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.add_child(_centered(_label("撤离成功" if extracted else "战败", 28, UiPalette.HEAL if extracted else UiPalette.HP)))
 	col.add_child(_centered(_label("%s　种子 %d　%s" % [r.chapter_name, r.run_seed, _reason_text(r.reason)], 13, UiPalette.DIM)))
-	col.add_child(_centered(_label("行动点 %d　踩过 %d 个点　打赢 %d 场　打输 %d 场" % [r.steps, r.visited, r.battles_won, r.battles_lost], 14, UiPalette.FG)))
+	col.add_child(_centered(_label("走了 %d 步　踩过 %d 个点　打赢 %d 场　打输 %d 场" % [r.steps, r.visited, r.battles_won, r.battles_lost], 14, UiPalette.FG)))
 	# 104：信力节奏的量尺（数值都是占位，作者打几局对着这一行调表）；开发版可以导 CSV
 	if r.faith_pace != "":
 		var pace_row := _hbox(12)

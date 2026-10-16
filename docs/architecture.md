@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.14 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.15 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -2445,6 +2445,7 @@ class_name MapScaleProfile extends Resource
 | 节点内容一次性消耗 | 首次进入触发事件（战斗 / 商店 / 休息 …），结束后 `state = VISITED`。**战斗输了也一样** —— 节点变空白，没有战利品，扣体力（7.1） |
 | 已访问节点仅可穿行 | 可以再次经过、可以停留，但**不再产生任何事件或掉落** |
 | 移动消耗行动点 | 每通过一条边消耗 `edge.action_cost`（默认 1） |
+| 玩家面前只说「步」（179） | 「行动点」是内部词：倒计时 = `step_limit − clock.total`，界面、帮助、技能说明一律说「走了 N 步」「计 N 步」「耗 N 步」「不计入倒计时」；`ActionClock / action_cost / portal_cost / action_cost_mult` 等标识符不改名；HUD 的「行动点」读数删了 |
 | 节点事件可额外消耗 | 由节点类型决定：搜刮 +1、休息 +2、商店 +0 等 |
 
 `MapNavigator` 相应简化，只负责单步合法性判定与只读图查询：
@@ -3418,7 +3419,7 @@ func player_spec() -> CombatantSpec …
 侦察 / 潜行 / 逃跑三个构件往 `RunContext` 加数，猎手系统读；主动技能以后走事件层，报告 072）。**没有搜索速度**（作者：搜索在战斗外、不是实时的）。
 三个初始角色是作者定的安德烈乌斯 / 布鲁图斯 / 马库斯（7.3，082）；早期的占位 `default` / `scout` 已删。
 
-**开局屏**（161 拆成三页，右下角大号「返回 / 继续」）：一、选角色（角色卡：`StatBlocks` 红方块生命、黄方块耐力、爱心体力，技能，初始包预览）；二、配道具（预设、这个角色的棋盘 —— 初始包已经摆好、地上、右边分页仓库（163），同一层拖拽）；三、选地图、规模、难度、种子，出发摘要。
+**开局屏**（161 拆成三页，右下角大号「返回 / 继续」）：一、选角色（角色卡：`StatBlocks` 红方块生命、黄方块耐力、爱心体力，技能，初始包预览；179：三栏各坐一块凹槽板 `PANEL_GROOVE`、间距 36，中栏撑满、棋盘栏按这个角色的棋盘宽贴右，负重上限 / 棋盘 / 开局金币是三块 `CapTile` 图标牌，技能「被动」小字 + 名字 22 粗体亮黄铜描边、说明 17（`CharacterDef.skill_entries`），不放角色说明与背包行；三页不再坐石板，整屏是 `setup/bg_hall` 背景画，没图纯色，`GameScreen._painted_screen`）；二、配道具（预设、这个角色的棋盘 —— 初始包已经摆好、地上、右边分页仓库（163），同一层拖拽）；三、选地图、规模、难度、种子，出发摘要。
 **从仓库往包里拖，放得进的就是带的** —— 带入的真正限制是初始包的空间，没有第二套规则去数格子。拖上棋盘那一刻东西就离开了仓库；
 出发时把棋盘记成 layout（一件一行：定义、落点、朝向），`RunState.start(..., character, layout)` 按它原样摆回一局的棋盘并存 meta；「回主菜单」放回仓库。
 **包不能带入**：局外不收包（`MetaState.keeps`），仓库的格子把同一条规则接成准入回调（`GridInventory.accept_filter`），初始包拖不进去。
@@ -3433,7 +3434,7 @@ func player_spec() -> CombatantSpec …
 ### 8.2 结算与局外
 
 `RunResult.settle(state)` 从结束了的一局里算一份账（只读）：撤离 = 棋盘上的全部（含包）按价值（6.4）计、剩多少钱；
-地上的记成「遗落」只提一句（3.4：地上的道具 = 不存在）；战败 = 什么都没有。行动点、踩过几个点、打赢 / 打输几场（`RunState.tally`，跟着存档）。
+地上的记成「遗落」只提一句（3.4：地上的道具 = 不存在）；战败 = 什么都没有。走了几步（179 前叫「行动点」）、踩过几个点、打赢 / 打输几场（`RunState.tally`，跟着存档）。
 
 `MetaState`（`core/meta/meta_state.gd`）是跨局的状态（作者定的形态，058 第 4 / 6 / 7 条，报告 061）：
 
@@ -3595,7 +3596,7 @@ func player_spec() -> CombatantSpec …
 **石板**（157 补充三，作者定「每个界面（框）在一块完整的石板上显示」，取代原来平铺满屏的石砖墙）：**一屏一块石板，板即框**。
 - `SlabStyle`（`ui/widgets/`）是一个两层画的 StyleBox：下层板身 `slab_body.png` 平铺（`AXIS_STRETCH_MODE_TILE`，纹不随框大小拉花，往里缩 json `body_inset`，凿口外透出底下），上层板边 `slab_edge.png` 九宫格（中心透明：手凿轮廓、受光棱、投影、顶上一道刻线）。`UiTheme.slab_box()` 两张图都在才造，否则 null、退回平面底；`UiTheme.slab(c)` 把一块面板挂成石板（`PanelOverlay` 变体 + 按石板深浅挂字色）。没用「两个 Panel 子底」的写法：一个 StyleBox 画两层，凡是挂 `PanelOverlay` / `PanelHudBar` 的都自动是石板，容器排版也不受子底影响。
 - 叠层屏：`OverlayFrame` 就是石板；标题字刻在板顶刻线上方（标题条高 json `title_height`，`_art_box` 的顶内边距只留到标题条上沿，`TITLE_LINE_GAP` 6 给刻线）。板外是半透明暗罩（`GameScreen.OVERLAY_SHADE` 0.6），底下的地图压暗透出。
-- 底屏（主菜单、设置、存档位、结算、开局三页）：`GameScreen._slab_screen()` 造一块居中的大石板（宽高各 `SLAB_SHARE` 九成），返回板里的内容区；板外是纯色底（`_backdrop`，091 的底色设置照旧管它）。基地（164）有自己的家底、地图屏（166）是满幅纸底，都不走石板。
+- 底屏（主菜单、设置、存档位、结算；开局三页 179 起改成背景画 + 凹槽板，不走石板）：`GameScreen._slab_screen()` 造一块居中的大石板（宽高各 `SLAB_SHARE` 九成），返回板里的内容区；板外是纯色底（`_backdrop`，091 的底色设置照旧管它）。基地（164）有自己的家底、地图屏（166）是满幅纸底，都不走石板。
 - 板里的分区是刻进去的凹槽：`PanelDark` / `PanelLine` / `PanelHud` 都用 `inset.png` 九宫格，**内边距照旧按变体默认值**（`_art_box(name, false, content)`），换皮不改排版。
 - 顶端栏（166 `hud_bar`）是一条独立的长石板：同一张板身 + 专用的长条板边 `slab_bar.png`（贴屏幕顶、没有标题刻线、底下一道投影；`slab_box(..., edge_art = ART_SLAB_BAR)`，缺这张退回平面底）。`body_inset` 可写一个数或 `[左, 上, 右, 下]`（栏顶边不缩）。作者 2026-10-13「凹槽没有和石板位置对齐，考虑增加顶端栏纵向面积」：`HudHost.BAR_HEIGHT` 64 → 88，栏里的组在板边的上下内边距（8 / 26）之间居中，底下的投影不算板面；栏高 = max(88, 最高一组 + 上下内边距)。
 - 退掉：`bg_stone`、`panel_stone`、`panel_inset`、`panel_hud`、`frame_stone`、`hud/bar`；`UiTheme.dress_backdrop / backdrop_art / backdrop_tint / tint_backdrop` 删了，地图视图没底图时就是底色。都是有图用图、没图照旧（平面底）。
@@ -4279,6 +4280,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.15 | 2026-10-16 | **选角色屏重排、技能说明书面化、「行动点」一词退役**（报告 179，作者定，待定 1–4 全按推荐；改 8 开局屏、地图规则术语）：开局三页去掉整块石板，整屏 `setup/bg_hall` 背景画（没图纯色，`GameScreen._painted_screen`、`UiTheme.dress_backdrop`），内容坐凹槽板（新变体 `PANEL_GROOVE`，深底，`setup/groove` 有图用图）；第一页三栏间距 36、中栏撑满、棋盘栏按角色棋盘宽贴右；负重上限 / 棋盘 / 开局金币换成 `CapTile` 图标牌（`assets/ui/setup/icons/<id>.png`，没图借 170 的秤砣 / 金币、棋盘画占位格），带入上限仍是一行字；技能两行（`CharacterDef.skill_entries`：「被动」13 灰 + 名字 22 粗体亮黄铜黑描边，说明 17）；角色说明与「背包：」行不放（`caps_text / bags_text` 删）；九条技能说明改书面功能句。「行动点」只退词、机制不动：结算 / 基地「走了 N 步」、地图预览代价 1 不写、其余「计 N 步」、事件「耗 N 步」、代价图标「耗步」、寸步难行「计两步」、熟门熟路「不计入倒计时」、侵蚀描述按步、帮助八页改写、作者表头按「步数」；HUD「行动点」读数删除，`HudLayout.VERSION` 6 |
 | v3.14 | 2026-10-16 | **基地「仓库」页签**（报告 178，作者定，待定 1–3 全按推荐；改 8.2）：左列五个页签 仓库 / 出售 / 科技 / 图鉴 / 成就（`show_tab("warehouse")` 不再算家）；带回来的背包与一键置入 / 整理从家页搬到「仓库」页，没带回来的一行「没有带回来的东西」（`WarehousePanel` 没棋盘时不摆「一键置入」）；图鉴 / 成就页收起右半边仓库（`NO_SHELF_TABS`，翻到的页不变），中列吃满、只给调试台箭头留一条（箭头改钉屏幕右上，`right_gutter`），图鉴按新宽重排列数；从结算屏回来、带回来的还没清空落「仓库」页（`initial_tab`），左列提示指向它、点一下过去；双击右边仓库的置入跟着搬到「仓库」页，家页双击不做事 |
 | v3.13 | 2026-10-16 | **结算屏两步、一键置入跳过、一键出售按标签**（报告 177 与补充一，作者定，待定全按推荐；改 8.2）：`ResultScreen` 撤离分两步（`to_step` 屏内重建）—— 第 1 步三块大数（总价值 = 背出来 + 保险箱、图鉴新点亮、带出金币；马善政 64 / 44）、件数与遗落提示、「继续」；第 2 步回看一行账 + 保险箱格 + `WarehousePanel`，它的「继续」才 `proceed`；战败一步（大数只画保险箱与图鉴）。`MetaState.store_all` 放不下的跳过、接着放，多返回 `stuck_names`，`WarehousePanel.store_text` 最多列三个名字；`MetaState.sell_where / sell_preview` 加 `tag`（和稀有度取交集）、`sell_tags`（仓库里有的、给玩家看的标签，按大类、类内按登记顺序，`TagRegistry.category_rank / order_of`），基地出售页加标签下拉（组间分隔，仓库变了重建、选中的没了回「不限」） |
 | v3.12 | 2026-10-16 | **启动屏与启动图瘦身**（报告 176，作者问启动卡住；待定 2A 3A，待定 1 渲染器未动；改 11.1 启动一段）：主场景换成 `ui/boot.tscn`（不引用任何全局类，`load_threaded_request` 后台载 `game.tscn`、画游戏名与进度，载好切过去）；`ContentLibrary.context()` 挪到 `core/authoring/authoring_context.gd`（无 class_name，编辑器与测试 preload），游戏启动图不再拖进导入器 / 导出器 / 表格工具（300 → 263 个脚本，约 4.1 → 3.6 万行）；`DevNav.keep_in`：release 导出自卸；`export_presets.cfg`（Windows Desktop）脚本导出 = 二进制令牌（压缩）；`tests/tools/test_startup_graph.gd` 扫启动图 |

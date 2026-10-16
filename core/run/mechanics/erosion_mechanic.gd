@@ -31,7 +31,7 @@ func install(run: RunState) -> void:
 
 func describe() -> String:
 	var parts: Array[String] = []
-	parts.append("侵蚀：第 %d 行动点起、每 %d 推进一层、提前 %d 预警" % [first_at_action, interval_actions, warn_lead_actions])
+	parts.append("侵蚀：第 %d 步起、每 %d 步推进一层、提前 %d 步预警" % [first_at_action, interval_actions, warn_lead_actions])
 	for e in effects:
 		var effect := e as ErosionEffect
 		if effect != null and effect.describe() != "":

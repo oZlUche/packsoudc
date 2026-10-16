@@ -104,3 +104,14 @@
 ## 7. 改动范围
 
 `ui/game/setup_screen.gd`（第一页布局、底板、图标牌、技能两行）、`ui/game/game_screen.gd`（开局屏背景走画不走石板，或新 `_painted_screen`）、`core/run/character_def.gd`（`_skill_line` 拆名 / 说明）、三个角色 json、`core/run/effects/travel_discount.gd`、`core/run/events/outcomes/pass_time.gd`、`core/run/encumbrance_rules.gd`、`core/text/glossary.gd`、`ui/game/{result_screen,meta_screen,map_screen,event_screen,event_cost_icons}.gd`、`ui/hud/{hud_widgets,hud_layout}.gd` + 删 `widgets/action_points_widget.gd`、`data/authoring/help_pages/*.json` 八页、字体子集、`docs/architecture.md` 术语注。
+
+## 落地记录（v3.15，待定 1–4 全按推荐）
+
+- **背景与底板**：开局三页不再调 `_slab_screen`，改 `GameScreen._painted_screen(UiTheme.ART_SETUP_BG)`：`_backdrop` 的纯色底上按 `UiTheme.dress_backdrop` 铺 `assets/ui/setup/bg_hall.png`（没图什么也不加，`dress_home_backdrop` 也改走它）；内容区铺满全屏、深底白字。新面板变体 `PANEL_GROOVE`（登记在 `PANEL_TONES` 深、`PANEL_ART` → `setup/groove`；没图是平面底 `#14161c`、细黄铜边 `#5a4522`、往下投影）。标题白字加阴影。
+- **第一页**：左 260、中 `SIZE_EXPAND_FILL`、右 `SIZE_SHRINK_END`，三栏间距 36，内边距按 §2.1。**和方案不同**：右栏宽按**这个角色**的棋盘宽（列数 × 60 + 两边 10）算，所以换角色时中栏跟着变宽 / 变窄（安德烈乌斯 7 列时中栏约 750，布鲁图斯 9 列时约 630）；三栏间距始终 36。
+- **图标牌**：新 `CapTile`（`ui/game/cap_tile.gd`）：图标 40、数字 28 粗体、说明 13 灰，等宽横排。图标先找 `assets/ui/setup/icons/<weight|board|coin>.png`；没有时秤砣、金币借 170 的 `tip/weight.png / coin.png`，棋盘画一个占位格子。带入上限（最多带 N 件、稀有度不超过 N）有才在牌下写一行（`carry_caps_text`）。`caps_text`、`bags_text` 没人用了，删掉。
+- **技能**：`CharacterDef.skill_entries()` 给「被动 / 主动」、名字、说明（主动的次数 / 冷却附在说明末尾）；`skill_lines()` 留着（同一套说明）。名字 22 号思源宋体 Bold、`BTN_PRIMARY_HOVER`、黑描边（描边宽 `OUTLINE_SIZE × 2`，22 号字上 2 太细）；说明 17、行距半个字高。生命 / 耐力 / 体力标签 17、「每秒回」14、提示 12。这些字样与牌底都是主题变体（`LABEL_SKILL_NAME / LABEL_SKILL_TEXT / LABEL_CAP_VALUE / LABEL_SCREEN_TITLE`、`PANEL_CAP_TILE`，`UiTheme.make_variant_label`、`panel_margins`），屏幕脚本里不加 `add_theme_*`（121 棘轮）。
+- **第二 / 三页**：内容整页坐一块凹槽板（板按内容高，不压到右下角按钮）；页里排法不动。
+- **退词**（§3.1 全表）：结算屏与基地战绩「走了 N 步」；地图预览代价 1 不写、别的「计 N 步」，熟门熟路那一步写「（熟门熟路：这一步不计）」；地图开场白「已走 N 步」（方案写「第 N 步」，开局是 0，读成「第 0 步」别扭）；事件屏「耗了 N 步」、地图「原地耗了 N 步」、`PassTime.describe`「耗 N 步」、代价图标「耗步」；寸步难行词条「计两步」、`EncumbranceRules.describe`「走一步计 N 步」；`TravelDiscount`「不计入倒计时」；`CountdownModule`、`ErosionMechanic` 的描述、`MapTravel` 的校验句按步；作者编辑器的表头（`field_text`）「步数」「全局倒计时（步）」；帮助八页与休息点「扎营」选项改写。HUD：`action_points` 从登记表、默认布局与 `HIDDEN_BY_DEFAULT` 去掉，部件脚本删除，`HudLayout.VERSION` 5 → 6。
+- **测试**：新 `tests/ui/test_setup_179.gd`（三块板与变体、中栏撑满、棋盘栏贴右且按棋盘宽、三块牌的数与说明、技能名 22 / 描边 / 颜色、不放角色说明与「背包：」、不在石板上；`skill_entries` 的书面句；扫 `core / ui` 脚本的字符串字面量与 `data` 下 json / tres，没有「行动点」）；`test_hud_150` 去掉行动点断言、版本 6、版本 5 的布局文件回默认；`test_screens_157` 代价提示改「耗步」。角色 / 帮助 / 事件的 json 改完重新导入（只留这几份 `.tres`，导入顺带改动的别的资源还原）。字体子集不用重切：新字只有注释里的「厅」，换了说法。
+- **截图**：`/mnt/project-files/screenshots/179/`：`p1_andreus / p1_brutus / p1_marcus`、`p2`、`p3`，对照 `before_*`。背景画与三个图标等美术设计交付，到了直接放进 `assets/ui/setup/`（`bg_hall.png` + json、`icons/weight|board|coin.png`）就生效，不用改代码。
