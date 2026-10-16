@@ -360,7 +360,9 @@ func _adopt() -> void:
 	_view.skin = _run.chapter.map_skin if _run.chapter != null else &""     # 每章一张手绘底图
 	_view.graph = _run.map
 	_view.current_id = _run.travel.current_id if _run.phase != RunState.Phase.PICK_SPAWN else -1
-	_view.open_at(flow.settings.map_zoom if flow.settings != null else 0.0)     # 反馈：进图用玩家上次的缩放（没有就按点距自动），人在正中
+	# 反馈：进图用玩家上次的缩放（没有就按点距自动），人在正中；作者 2026-10-16：挑出生点时先装下所有出生点、按相对位置偏移视角
+	var spawns: Array = _run.map.entry_ids.duplicate() if _run.phase == RunState.Phase.PICK_SPAWN else []
+	_view.open_at(flow.settings.map_zoom if flow.settings != null else 0.0, spawns)
 	_view.reachable = {}
 	_view.bold_route = -1
 	_view.spawn_mask = _run.phase == RunState.Phase.PICK_SPAWN     # 096：挑出生点时全图蒙灰，只露出生点
