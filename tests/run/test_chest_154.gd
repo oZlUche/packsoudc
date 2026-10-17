@@ -67,7 +67,7 @@ static func run_placement(t: TestCase) -> void:
 			chests += 1
 			var chest := ChestPlacer.chest_of(node)
 			t.check(chest.has("rarity") and int(chest["rarity"]) >= 0 and int(chest["rarity"]) <= 5, "种子 %d 点 %d：稀有度 %s" % [seed, id, str(chest.get("rarity"))])
-			t.eq(ChestPlacer.skin_of(node), &"ruins", "皮肤跟章节")
+			t.eq(ChestPlacer.skin_of(node), c.chapter.chest_skin, "皮肤跟章节")
 			t.check(not ChestPlacer.is_opened(node), "还没开")
 			if again != null:
 				t.eq(ChestPlacer.rarity_of(again.map.get_node(id)), ChestPlacer.rarity_of(node), "同一张图每次一样")
@@ -302,3 +302,56 @@ static func frame_chest_screen(t: TestCase, root: Window) -> void:
 	t.check(ChestPlacer.is_opened(node), "开过了")
 	game.queue_free()
 	Support.cleanup("chest_ui")
+
+
+## 作者 2026-10-17（「都可以」）：宝箱屏四张背景，一章一张，和地图底同一套；浅图墨字、深图白字
+static func run_backgrounds(t: TestCase) -> void:
+	t.begin("宝箱 · 背景：四套皮肤各有一张背景（带深浅与落地线），各章节按地图底分配")
+	var want := {&"ruins": UiTheme.TONE_LIGHT, &"imperial_camp": UiTheme.TONE_LIGHT, &"cursed_depths": UiTheme.TONE_DARK, &"north_woods": UiTheme.TONE_LIGHT}
+	for id in want:
+		var skin := ContentPaths.load_asset("chest_skins", String(id)) as ChestSkinDef
+		t.not_null(skin, "皮肤 %s" % id)
+		if skin == null:
+			continue
+		t.check(skin.background != "" and EventImage.load_texture(skin.background) != null, "%s 有背景图" % id)
+		var meta := skin.background_meta()
+		t.eq(StringName(String(meta.get("tone", ""))), want[id], "%s 的深浅" % id)
+		t.check(float(meta.get("chest_foot_y", 0.0)) > 0.0, "%s 写了落地线" % id)
+	var by_chapter := {"prologue": &"ruins", "prologue_2": &"north_woods", "prologue_3": &"cursed_depths", "free_mode": &"imperial_camp"}
+	for ch in by_chapter:
+		var def := ContentPaths.load_asset("chapters", ch) as ChapterDef
+		t.check(def != null and def.chest_skin == by_chapter[ch], "%s 的宝箱用 %s" % [ch, by_chapter[ch]])
+
+
+static func frame_chest_on_ground(t: TestCase, root: Window) -> void:
+	t.begin("宝箱 · 背景：箱底落在背景图的落地线上（cover 铺，换窗口大小跟着挪）；浅图上的字是墨色")
+	var c = NodeScreens._content()
+	var kit: LoadoutDef = NodeScreens._kit(c)
+	Support.cleanup("chest_bg")
+	var game = (load(GAME) as PackedScene).instantiate()
+	game.save_path = String(Support.paths("chest_bg")["run"])
+	game.meta_path = String(Support.paths("chest_bg")["meta"])
+	game.settings_path = String(Support.paths("chest_bg")["settings"])
+	root.add_child(game)
+	var flow: GameFlow = game.flow
+	flow.chapters = [c.chapter] as Array[ChapterDef]
+	flow.player_baseline = CombatantBaseline.with_hp(10000.0)
+	var node := _chest_next_to_spawn(flow, c, kit)
+	t.check(node != null and flow.step_to(node.id), "走上宝箱点")
+	var screen = game.overlay()
+	if screen == null or not screen.has_method("place_chest"):
+		t.check(false, "叠层是宝箱屏")
+		game.queue_free()
+		Support.cleanup("chest_bg")
+		return
+	var meta: Dictionary = screen.skin.background_meta()
+	var foot := float(meta.get("chest_foot_y", 0.0))
+	t.check(foot > 0.0, "这套皮肤写了落地线")
+	for wh in [Vector2(1600, 1000), Vector2(1280, 720), Vector2(1024, 1000)]:
+		screen.size = wh
+		var s := maxf(wh.x / 1920.0, wh.y / 1200.0)
+		var line: float = (wh.y - 1200.0 * s) * 0.5 + foot * s
+		t.check(absf(screen.chest_foot_y() - line) < 0.5, "%s：箱底 %.1f 对着落地线 %.1f" % [wh, screen.chest_foot_y(), line])
+	t.eq(UiTheme.tone_at(screen.hint), UiTheme.TONE_LIGHT, "浅图：字按浅底取色")
+	game.queue_free()
+	Support.cleanup("chest_bg")
