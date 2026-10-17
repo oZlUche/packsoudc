@@ -1,4 +1,4 @@
-## 名牌（157）：一块名牌底（[constant UiTheme.PANEL_NAMEPLATE]，美术的切角石碑）—— 左边肖像位（64×64）、中间名字（大）与副行、右边徽记位（32×32）。
+## 名牌（157）：一块名牌底（[constant UiTheme.PANEL_NAMEPLATE]，美术的铜名牌，2026-10-17 前是切角石碑）—— 左边肖像位（64×64）、中间名字（大）与副行、右边徽记位（32×32）。
 ## 战前准备与战斗回放共用，两屏的位置一致。
 ##
 ## 157 补充二（作者定：没图也先留框）：肖像位**永远在**，框永远画，图来了填进去 —— `assets/portraits/enemies/<敌人 id>.png`、
@@ -25,6 +25,8 @@ var _row: HBoxContainer
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UiTheme.panel(self, -1, UiTheme.PANEL_NAMEPLATE)
+	if UiTheme.tone_of(UiTheme.PANEL_NAMEPLATE) == UiTheme.TONE_DARK:
+		theme = UiTheme.bright_text_theme()     # 铜名牌是深底，常放在浅色石板框里：不继承外面的墨字
 	_row = UiTheme.hbox(12)
 	add_child(_row)
 

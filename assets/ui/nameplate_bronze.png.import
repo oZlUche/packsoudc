@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cn520g205u1s1"
-path="res://.godot/imported/nameplate_stone.png-b32a2b9628fc1718217ca9b2ac20e845.ctex"
+uid="uid://d16ldhncoqhm7"
+path="res://.godot/imported/nameplate_bronze.png-d63f8b77883f999148f8c9e1e04f66d1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/nameplate_stone.png"
-dest_files=["res://.godot/imported/nameplate_stone.png-b32a2b9628fc1718217ca9b2ac20e845.ctex"]
+source_file="res://assets/ui/nameplate_bronze.png"
+dest_files=["res://.godot/imported/nameplate_bronze.png-d63f8b77883f999148f8c9e1e04f66d1.ctex"]
 
 [params]
 

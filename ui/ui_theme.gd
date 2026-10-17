@@ -112,7 +112,7 @@ const ART_INSET := "inset"
 ## 石板顶边：标题条下沿到板边九宫格上边距之间留给刻线的那一段
 const TITLE_LINE_GAP := 6.0
 ## 157 补充二：名牌底、肖像框（中间透明，画在肖像位外扩 json `inset` 处；徽记位同一张拉大）、没肖像时的占位
-const ART_NAMEPLATE := "nameplate_stone"
+const ART_NAMEPLATE := "nameplate_bronze"
 const ART_PORTRAIT_FRAME := "portrait_frame"
 const ART_PORTRAIT_EMPTY := "portrait_empty"
 const NAMEPLATE_MARGIN := 12
@@ -125,6 +125,9 @@ const ART_SHELF := "home/shelf"
 const ART_TAB_MARK := "home/tab_mark"
 ## 179：开局三页的整屏背景「选人场地」（铺满裁边）与三栏的凹槽板；没图：纯色底、平面板
 const ART_SETUP_BG := "setup/bg_hall"
+## 作者 2026-10-17：选人场地只给第一页；第二页（带装备）木板拼接 / 仓库，第三页（选地图）桌上铺着的军用地图。没图：纯色底
+const ART_SETUP_KIT_BG := "setup/bg_kit"
+const ART_SETUP_MAP_BG := "setup/bg_map"
 const ART_GROOVE := "setup/groove"
 ## 战斗界面的整屏背景（白天的沙地场子，铺满裁边；深浅读图旁 json 的 `tone`）；没图：照旧纯色底
 const ART_BATTLE_BG := "battle/battle_bg"
@@ -489,6 +492,23 @@ static func text_theme(tone: StringName) -> Theme:
 	return t
 
 
+## 深底嵌在浅底里（浅色石板框里的铜名牌）：外面挂的墨字小主题会一路继承进来 —— 这份小主题把同样那几种字色改回全局的浅色字
+static func bright_text_theme() -> Theme:
+	if _tone_themes.has(&"bright"):
+		return _tone_themes[&"bright"]
+	var ink := text_theme(TONE_LIGHT)
+	var base := current()
+	var t := Theme.new()
+	for type in ink.get_color_type_list():
+		var parent := ink.get_type_variation_base(type)
+		if parent != &"":
+			t.set_type_variation(type, parent)
+		for key in ink.get_color_list(type):
+			t.set_color(key, type, base.get_color(key, type))
+	_tone_themes[&"bright"] = t
+	return t
+
+
 ## 给一块底挂上它的字色（[method panel]、[OverlayFrame]、[HudWidget] 调）。深底不动别人挂的主题，只摘掉以前挂的字色。
 ## 169：同时把深浅记在这块底的 `tone` 元数据上 —— 里面的富文本往上找它（[method tone_at]），调用点不用自己传
 static func apply_tone(c: Control, variation: StringName) -> void:
@@ -764,12 +784,10 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_type_variation(PANEL_TOOLTIP, "PanelContainer")
 	var paper: StyleBox = layered_box(ART_TOOLTIP, ART_TOOLTIP_BODY)
 	t.set_stylebox("panel", PANEL_TOOLTIP, paper if paper != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), TOOLTIP_MARGIN))
-	# 157 补充二：名牌底 —— 有图是切角石碑九宫格（内边距按图边），没图是深底细边
+	# 157 补充二：名牌底 —— 有图是九宫格（内边距按图边），没图是深底细边。
+	# 作者 2026-10-17：改铜质名牌（士兵牌样式，深铜底亮字；铜板本身不透明，不再垫板身；左上的穿链孔在边距里，内容不压它）
 	t.set_type_variation(PANEL_NAMEPLATE, "PanelContainer")
-	# 作者 2026-10-16（战斗屏的名牌是透明的）：名牌图是凹刻的边、中间几乎透明（本来刻在石板上）—— 底下垫一层板身，放在哪都不透
-	var plate: StyleBox = layered_box(ART_NAMEPLATE, ART_SLAB_BODY)
-	if plate == null:
-		plate = _art_box(ART_NAMEPLATE)
+	var plate: StyleBox = _art_box(ART_NAMEPLATE)
 	t.set_stylebox("panel", PANEL_NAMEPLATE, plate if plate != null else _box(panel_bg.darkened(0.15), UiPalette.LINE.lightened(0.25), NAMEPLATE_MARGIN))
 	# 164：家的粗布框（浅底墨字）、仓库木架（深底）；没图回落到面板的平面底
 	t.set_type_variation(PANEL_HOME_BOX, "PanelContainer")
