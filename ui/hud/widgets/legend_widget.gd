@@ -1,5 +1,6 @@
 ## 166（作者定）：左下角的节点图例 —— 一列「图标 + 名字」，只列**这张图上有的**节点类型（岔路口不列），顺序按 [constant MapNodeStyle.STYLES]。
-## 图标就是地图上的那一枚（155：`assets/nodes/<type>.png`，按类型色着色；缺图画圆里一个字），名字是 [constant MapNodeStyle.NAMES] 的短名
+## 图标就是地图上的那一枚（155：`assets/nodes/<type>.png`，按类型色着色；缺图画圆里一个字），名字是 [constant MapNodeStyle.NAMES] 的短名。
+## 184：最上面一行「你」是玩家的小兵棋子，「出生」那一行是 182 的小旗（有图就用图，原色不着色）
 extends HudWidget
 
 const ICON := 24.0
@@ -58,18 +59,35 @@ func refresh() -> void:
 	UiTheme.clear_children(_rows)
 	if run == null:
 		return
+	if run.map != null and UiTheme.art_cached(UiTheme.ART_LEGEND_PAWN) != null:
+		_add_row(&"", "你", UiTheme.ART_LEGEND_PAWN)
 	for t in types():
-		var row := UiTheme.hbox(int(TEXT_GAP))
-		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var mark := _Mark.new()
-		mark.type = t
-		row.add_child(mark)
-		var name := Label.new()
-		name.theme_type_variation = UiTheme.LABEL_HUD
-		name.text = MapNodeStyle.name_of(t)
-		name.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(name)
-		_rows.add_child(row)
+		_add_row(t, MapNodeStyle.name_of(t), UiTheme.ART_LEGEND_FLAG if t == &"spawn" and UiTheme.art_cached(UiTheme.ART_LEGEND_FLAG) != null else "")
+
+
+func _add_row(type: StringName, text: String, art_name: String) -> void:
+	var row := UiTheme.hbox(int(TEXT_GAP))
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var mark := _Mark.new()
+	mark.type = type
+	mark.art_name = art_name
+	row.add_child(mark)
+	var name := Label.new()
+	name.theme_type_variation = UiTheme.LABEL_HUD
+	name.text = text
+	name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(name)
+	_rows.add_child(row)
+
+
+## 一行的名字（测试看）
+func row_names() -> Array[String]:
+	var out: Array[String] = []
+	if _rows == null:
+		return out
+	for row in _rows.get_children():
+		out.append((row.get_child(1) as Label).text)
+	return out
 
 
 ## 深色底 + 白字的一份小主题（只给图例）
@@ -99,12 +117,19 @@ static func _legend_theme() -> Theme:
 class _Mark:
 	extends Control
 	var type: StringName = &""
+	## 184：整张小图（棋子、小旗），不按类型色着色
+	var art_name: String = ""
 
 	func _init() -> void:
 		custom_minimum_size = Vector2(ICON, ICON)
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	func _draw() -> void:
+		if art_name != "":
+			var pic := UiTheme.art_cached(art_name)
+			if pic != null:
+				draw_texture_rect(pic, Rect2(Vector2.ZERO, size), false)
+				return
 		var style := MapNodeStyle.of(type)
 		var col: Color = style["color"]
 		var tex := MapNodeStyle.icon(type)

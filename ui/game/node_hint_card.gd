@@ -76,6 +76,15 @@ func show_for(id: int, p_type: StringName, hint: String, extra: String = "", foo
 	_fade(1.0, animate)
 
 
+## 182 定稿：纸签上沿正中单独摆一枚红蜡封（不进九宫格，免得被拉伸）；中心在上沿往下 2 像素
+func _draw() -> void:
+	var seal := UiTheme.art_cached(UiTheme.ART_NODE_SEAL)
+	if seal == null:
+		return
+	var s := seal.get_size()
+	draw_texture(seal, Vector2(size.x * 0.5 - s.x * 0.5, 2.0 - s.y * 0.5))
+
+
 ## 中心对准锚点（屏幕正中）：内容长短不一，量好自己多大再摆
 func _recenter() -> void:
 	var half := (size * 0.5).round()

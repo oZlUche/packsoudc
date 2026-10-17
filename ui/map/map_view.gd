@@ -83,6 +83,7 @@ var merge_junctions: bool = true:
 var current_id: int = -1:
 	set(v):
 		current_id = v
+		_hop = {}     # 184：换了人在的点：没跳完的那一下作废（走一步的跳由 hop_from 另起）
 		set_process(v >= 0)
 		queue_redraw()
 ## 加粗描出哪条路线（下标），-1 = 都不加粗。挑出生点时悬停哪个就加粗哪条
@@ -116,6 +117,51 @@ var spawn_mask: bool = false:
 		spawn_mask = v
 		queue_redraw()
 var _pulse: float = 0.0
+## 184（作者 2026-10-17 15:36 / 15:37）：大图上一眼看清「我在哪」「哪步能走」——
+## 玩家是一枚立在当前节点正中的小兵棋子（屏幕定长），走一步从旧节点弧线跳过去；可走的边画成行进的粗虚线墨路、
+## 终点套一圈定长墨环、多于一步的写「计二步」；走一步人出了屏幕中央三分之一，镜头平移把人带回中央；被拖出屏外时屏边有指向他的小棋子。
+## 这些都画在屏幕坐标里（像素定长，不随缩放变）
+## 可走目标的花费（id → 步数；0 = 这一步不计）与哪些是传送（id → true）
+var reach_cost: Dictionary = {}:
+	set(v):
+		reach_cost = v
+		queue_redraw()
+var reach_teleport: Dictionary = {}:
+	set(v):
+		reach_teleport = v
+		queue_redraw()
+## 走一步要不要播（跳、镜头平移）；关着一步到位（地图屏按「换屏淡入」开关给）
+var animate_moves: bool = true
+const PAWN_H := 60.0
+const PAWN_SHADOW := Vector2(26.0, 8.0)
+const HOP_SEC := 0.25
+const HOP_LIFT := 24.0
+const LAND_SEC := 0.12
+const LAND_SQUASH := 0.92
+const TELEPORT_FADE := 0.15
+const PATH_W := 4.0
+const PATH_W_HOVER := 6.0
+const PATH_DASH := 12.0
+const PATH_GAP := 8.0
+## 虚线往前走的速度（像素 / 秒）
+const MARCH_SPEED := 6.0
+const END_RING_R := 28.0
+const END_RING_W := 2.0
+const TAG_H := 20.0
+const TAG_FONT := 12
+## 两枚签叠在一起时错开多少
+const TAG_NUDGE := 10.0
+const FOLLOW_SEC := 0.3
+## 人在安全区中央这么大的一块里就不跟
+const FOLLOW_BAND := 1.0 / 3.0
+const OFFSCREEN_INSET := 24.0
+const OFFSCREEN_SIZE := 36.0
+var _march: float = 0.0
+## 正在跳：{from, to（画布坐标）, t（已过秒数）, teleport}；空 = 没在跳
+var _hop: Dictionary = {}
+## 落地后过了几秒（-1 = 没在落地）
+var _land_t: float = -1.0
+var _follow_tween: Tween = null
 
 ## 画布 → 屏幕：screen = canvas * zoom + pan
 var zoom: float = 1.0
@@ -192,6 +238,15 @@ func safe_rect() -> Rect2:
 
 func _process(delta: float) -> void:
 	_pulse = fmod(_pulse + delta * 2.0, TAU)
+	_march = fmod(_march + delta * MARCH_SPEED, PATH_DASH + PATH_GAP)
+	if not _hop.is_empty():
+		_hop["t"] = float(_hop["t"]) + delta
+		if float(_hop["t"]) >= _hop_total():
+			finish_hop()
+	elif _land_t >= 0.0:
+		_land_t += delta
+		if _land_t >= LAND_SEC:
+			_land_t = -1.0
 	queue_redraw()
 
 
@@ -204,6 +259,7 @@ func canvas_rect() -> Rect2:
 
 ## 原比例、画布居中。画布比视口大的部分靠拖。
 func center() -> void:
+	stop_follow()
 	var safe := safe_rect()
 	pan = safe.position + (safe.size - canvas_rect().size * zoom) / 2.0
 	queue_redraw()
@@ -303,10 +359,20 @@ func shortest_edge() -> float:
 
 ## 按当前缩放把某个点摆到视图中央（-1 / 没这个点 = 整图居中）；画布比视图小的那一维照旧居中，大的那一维不拖出空边
 func focus(id: int) -> void:
+	stop_follow()
 	var pos := positions()
 	if id < 0 or not pos.has(id):
 		center()
 		return
+	pan = focus_pan(id)
+	queue_redraw()
+
+
+## 按当前缩放把 [param id] 摆到安全区中央时的 pan（[method focus] 与跟镜头共用）
+func focus_pan(id: int) -> Vector2:
+	var pos := positions()
+	if not pos.has(id):
+		return pan
 	var c := canvas_rect().size * zoom
 	var safe := safe_rect()
 	var p := safe.get_center() - (pos[id] as Vector2) * zoom
@@ -315,8 +381,7 @@ func focus(id: int) -> void:
 			p[i] = safe.position[i] + (safe.size[i] - c[i]) / 2.0
 		else:
 			p[i] = clampf(p[i], safe.end[i] - c[i], safe.position[i])
-	pan = p
-	queue_redraw()
+	return p
 
 
 func to_canvas(screen: Vector2) -> Vector2:
@@ -396,6 +461,7 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		var mm := event as InputEventMouseMotion
 		if _dragging:
+			stop_follow()
 			pan += mm.relative
 			queue_redraw()
 			accept_event()
@@ -416,6 +482,10 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	if not mb.pressed:
 		return
+	if mb.button_index == MOUSE_BUTTON_LEFT and offscreen_rect().has_point(mb.position):
+		recenter_on_player()     # 184：点屏边那枚指向自己的小棋子 = 平移回去
+		accept_event()
+		return
 	if mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 		zoom_at(mb.position, 1.15 if mb.button_index == MOUSE_BUTTON_WHEEL_UP else 1.0 / 1.15)
 		accept_event()
@@ -426,6 +496,7 @@ func _gui_input(event: InputEvent) -> void:
 
 ## 围着屏幕上的某一点缩放：那一点底下的东西缩放前后不动。
 func zoom_at(screen: Vector2, factor: float) -> void:
+	stop_follow()
 	var anchor := to_canvas(screen)
 	zoom = clampf(zoom * factor, ZOOM_MIN, ZOOM_MAX)
 	pan = screen - anchor * zoom
@@ -551,6 +622,7 @@ func _draw() -> void:
 		var hid := int((mark as Dictionary).get("node", -1))
 		if pos.has(hid) and float(grow.get(hid, 1.0)) >= 1.0:
 			_draw_hunter(to_screen(pos[hid]), String((mark as Dictionary).get("label", "")))
+	_draw_player_layer(pos, grow, rect)
 	if spawn_mask:
 		_draw_spawn_mask(pos, grow)
 
@@ -655,7 +727,7 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	var color: Color = style["color"]
 	# 用过的点去饱和变灰 —— 但连线照旧、照样能点：走回头路是这一章的核心规则，
 	# 「用过」和「走不了」必须一眼分得开（5.9）。核心永远不灰，它是方向锚点。
-	# 反馈：站在用过的点上（走回头路）也保持灰 —— 玩家在哪由「你」的三角标和脉动环说明，不靠把点涂回彩色
+	# 反馈：站在用过的点上（走回头路）也保持灰 —— 玩家在哪由棋子说明（184），不靠把点涂回彩色
 	if n.is_visited() and n.type != &"core":
 		var grey := color.get_luminance()
 		color = Color(grey, grey, grey).lerp(_ink(UiPalette.DIM), 0.5)
@@ -665,13 +737,8 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 		draw_arc(p, NODE_RADIUS + 4.0, 0.0, TAU, 32, UiPalette.HEAL, 2.0, true)
 	if graph.goal_ids.has(n.id):
 		draw_arc(p, NODE_RADIUS + 4.0, 0.0, TAU, 32, UiPalette.STAMINA, 2.0, true)
-	if reachable.has(n.id):
-		draw_arc(p, NODE_RADIUS + 5.5, 0.0, TAU, 32, Color(_ink(UiPalette.FG), 0.55), 1.5, true)
-	if n.id == current_id:
-		var r := NODE_RADIUS + 8.0 + 2.5 * sin(_pulse)
-		draw_arc(p, r, 0.0, TAU, 40, _ink(UiPalette.FG), 2.5, true)
-		_draw_player_marker(p)
-	elif n.id == selected_id:
+	# 184：可走的点由墨路与墨环说明、玩家由棋子说明（原来的细环、脉动环、三角标都撤了）；选中 / 悬停环是操作反馈，留着
+	if n.id == selected_id:
 		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, _ink(UiPalette.FG), 2.0, true)
 	elif n.id == _hover_id:
 		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, Color(_ink(UiPalette.FG), 0.35), 1.0, true)
@@ -684,6 +751,11 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 		var glyph: String = style["glyph"]
 		var w := _font.get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
 		draw_string(_font, p + Vector2(-w / 2.0, 5.5), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, color)
+	# 184：出生点在右上插一面小旗（182 的那面）
+	if graph.entry_ids.has(n.id):
+		var flag := UiTheme.art_cached(UiTheme.ART_LEGEND_FLAG)
+		if flag != null:
+			draw_texture_rect(flag, Rect2(p + Vector2(NODE_RADIUS * 0.35, -NODE_RADIUS * 1.75), Vector2(24.0, 24.0)), false)
 	# 「这里有可看的内容」的标记位（5.10，内容归 M4）：random 没有 —— 那是地图上唯一看不透的点
 	if n.type != &"random" and not n.is_visited() and not MapNodeTypes.STRUCTURAL.has(n.type):
 		draw_circle(p + Vector2(-NODE_RADIUS + 3.0, -NODE_RADIUS + 3.0), 2.0, Color(_ink(UiPalette.FG), 0.6))
@@ -716,20 +788,307 @@ func _ink(c: Color) -> Color:
 ## 现在的底是不是浅的（测试看）
 func skin_is_light() -> bool:
 	return _skin_light
+#endregion
 
 
-## 玩家在哪（084）：节点上方一个朝下的三角标，上下轻轻浮动 —— 一眼找到自己，不用在一圈圈环里找那个亮的环
-func _draw_player_marker(p: Vector2) -> void:
-	var lift := NODE_RADIUS + 14.0 + 2.0 * sin(_pulse * 1.3)
-	var tip := p + Vector2(0.0, -lift)
-	var w := 9.0
-	var h := 14.0
-	var pts := PackedVector2Array([tip, tip + Vector2(-w, -h), tip + Vector2(w, -h)])
-	draw_colored_polygon(pts, UiPalette.HEAL)
-	var outline := PackedVector2Array([tip, tip + Vector2(-w, -h), tip + Vector2(w, -h), tip])
-	draw_polyline(outline, _ink(UiPalette.FG), 1.5, true)
-	if _font != null:
-		var text := "你"
-		var tw := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
-		draw_string(_font, tip + Vector2(-tw / 2.0, -h - 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, _ink(UiPalette.FG))
+#region 184：棋子、可走的墨路、跟镜头、离屏指示
+## 走了一步（[member current_id] 已经是新点）：棋子从 [param from_id] 跳过去（传送是旧处淡出、新处淡入）。
+## 不播动画 / 不知道旧点在哪 = 直接站上去
+func hop_from(from_id: int, teleport: bool = false) -> void:
+	_hop = {}
+	_land_t = -1.0
+	var pos := positions()
+	if not animate_moves or from_id < 0 or from_id == current_id or not pos.has(from_id) or not pos.has(current_id) or not is_inside_tree():
+		return
+	_hop = {"from": pos[from_id], "to": pos[current_id], "t": 0.0, "teleport": teleport}
+
+
+func hopping() -> bool:
+	return not _hop.is_empty()
+
+
+## 跳直接到头（落地那一下也省了）
+func finish_hop() -> void:
+	var was := not _hop.is_empty() and not bool(_hop.get("teleport", false))
+	_hop = {}
+	_land_t = 0.0 if was and animate_moves else -1.0
+	queue_redraw()
+
+
+func _hop_total() -> float:
+	return TELEPORT_FADE * 2.0 if bool(_hop.get("teleport", false)) else HOP_SEC
+
+
+## 棋子现在立在哪（屏幕坐标，脚底中心）与透明度；没人 = 空
+func pawn_at() -> Dictionary:
+	var pos := positions()
+	if current_id < 0 or not pos.has(current_id):
+		return {}
+	if _hop.is_empty():
+		return {"at": to_screen(pos[current_id]), "alpha": 1.0}
+	var t := float(_hop["t"])
+	var a := to_screen(_hop["from"])
+	var b := to_screen(_hop["to"])
+	if bool(_hop["teleport"]):
+		if t < TELEPORT_FADE:
+			return {"at": a, "alpha": 1.0 - t / TELEPORT_FADE}
+		return {"at": b, "alpha": clampf((t - TELEPORT_FADE) / TELEPORT_FADE, 0.0, 1.0)}
+	var k := clampf(t / HOP_SEC, 0.0, 1.0)
+	return {"at": a.lerp(b, k) + Vector2(0.0, -HOP_LIFT * 4.0 * k * (1.0 - k)), "alpha": 1.0}
+
+
+## 走一步之后：人出了安全区中央那三分之一，镜头平移（缩放不动）把他带回中央；在里面不动。返回动没动
+func follow_current(animate: bool = true) -> bool:
+	if graph == null or current_id < 0 or size.x <= 0.0 or size.y <= 0.0 or _open_pending or node_front != INF:
+		return false
+	var pos := positions()
+	if not pos.has(current_id):
+		return false
+	var safe := safe_rect()
+	var band := Rect2(safe.position + safe.size * (1.0 - FOLLOW_BAND) * 0.5, safe.size * FOLLOW_BAND)
+	if band.has_point(to_screen(pos[current_id])):
+		return false
+	var target := focus_pan(current_id)
+	if target.distance_to(pan) < 1.0:
+		return false     # 人在图边上：画布不往外拖出空边，已经是能摆到最中间的地方了
+	_pan_to(target, animate)
+	return true
+
+
+## 平移回自己（离屏指示点了）：缩放不动
+func recenter_on_player() -> void:
+	if current_id >= 0:
+		_pan_to(focus_pan(current_id), animate_moves)
+
+
+func _pan_to(target: Vector2, animate: bool) -> void:
+	stop_follow()
+	if not animate or not animate_moves or not is_inside_tree():
+		pan = target
+		queue_redraw()
+		return
+	_follow_tween = create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	_follow_tween.tween_property(self, ^"pan", target, FOLLOW_SEC)
+
+
+## 镜头正在跟人
+func following() -> bool:
+	return _follow_tween != null and _follow_tween.is_valid() and _follow_tween.is_running()
+
+
+## 玩家自己动了镜头（拖、滚轮、看全图……）：正在跟的那一下作罢
+func stop_follow() -> void:
+	if _follow_tween != null:
+		_follow_tween.kill()
+		_follow_tween = null
+
+
+## 离屏指示在哪（屏幕坐标的矩形）；人在屏上 / 正在跟 = 空矩形
+func offscreen_rect() -> Rect2:
+	var at := _offscreen_point()
+	if at == Vector2.INF:
+		return Rect2()
+	return Rect2(at - Vector2(OFFSCREEN_SIZE, OFFSCREEN_SIZE) * 0.5, Vector2(OFFSCREEN_SIZE, OFFSCREEN_SIZE))
+
+
+func _offscreen_point() -> Vector2:
+	var pos := positions()
+	if current_id < 0 or not pos.has(current_id) or following() or not _hop.is_empty() or node_front != INF:
+		return Vector2.INF
+	var safe := safe_rect()
+	var p := to_screen(pos[current_id])
+	if safe.has_point(p):
+		return Vector2.INF
+	var inner := safe.grow(-OFFSCREEN_INSET)
+	var c := inner.get_center()
+	var d := p - c
+	var k := INF
+	for i in 2:
+		if absf(d[i]) > 0.001:
+			k = minf(k, (inner.size[i] * 0.5) / absf(d[i]))
+	return c + d * minf(k, 1.0)
+
+
+## 屏幕坐标的那一层：可走的路 → 终点墨环 → 步数签 → 棋子 → 离屏指示（棋子永远压在最上）
+func _draw_player_layer(pos: Dictionary, grow: Dictionary, rect: Rect2) -> void:
+	if current_id < 0 or not pos.has(current_id):
+		return
+	var ink := _ink(UiPalette.FG)
+	if grow.is_empty() and _hop.is_empty():     # 跳的时候路先不画，落地那一帧和人一起出现
+		var tags: Array[Rect2] = []
+		var from_sp := to_screen(pos[current_id])
+		for id in reachable:
+			if not pos.has(id):
+				continue
+			var hot := int(id) == _hover_id
+			var to_sp := to_screen(pos[id])
+			var cost := int(reach_cost.get(id, 1))
+			var mid := to_sp
+			if bool(reach_teleport.get(id, false)):
+				mid = to_sp + Vector2(END_RING_R + 30.0, 0.0)
+				_draw_tag("传送", mid, tags)
+			else:
+				var e := MapNavigator.edge_for_step(graph, current_id, int(id))
+				var pts := PackedVector2Array([pos[current_id], pos[id]])
+				if e != null:
+					pts = _layout.edge_points(graph, e, pos[current_id], pos[id], rect)
+				var sp := PackedVector2Array()
+				for q in pts:
+					sp.append(to_screen(q))
+				sp = _trim(sp, NODE_RADIUS + 4.0, NODE_RADIUS + 4.0)
+				if sp.size() >= 2:
+					_march_line(sp, PATH_W_HOVER if hot else PATH_W, Color(ink, 1.0 if hot else 0.85), _march)
+					mid = _point_at(sp, _length(sp) * 0.5)
+				if cost > 1:
+					_draw_tag("计%s步" % _han(cost), mid, tags)
+			var r := END_RING_R + 2.0 * sin(_pulse)
+			draw_arc(to_sp, r, 0.0, TAU, 48, Color(ink, 1.0 if hot else 0.6), END_RING_W, true)
+	var pawn := pawn_at()
+	if not pawn.is_empty():
+		var alpha := float(pawn["alpha"]) * (float(grow.get(current_id, 1.0)) if not grow.is_empty() else 1.0)
+		var squash := 1.0
+		if _land_t >= 0.0:
+			squash = lerpf(LAND_SQUASH, 1.0, clampf(_land_t / LAND_SEC, 0.0, 1.0))
+		_draw_pawn(pawn["at"], PAWN_H, alpha, squash, UiTheme.ART_MAP_PAWN)
+	var off := _offscreen_point()
+	if off != Vector2.INF:
+		var target := to_screen(pos[current_id])
+		var dir := (target - off).normalized()
+		var tip := off + dir * (OFFSCREEN_SIZE * 0.5 + 10.0)
+		var side := dir.orthogonal() * 6.0
+		draw_colored_polygon(PackedVector2Array([tip, tip - dir * 10.0 + side, tip - dir * 10.0 - side]), Color(ink, 0.85))
+		draw_circle(off, OFFSCREEN_SIZE * 0.5, Color(UiTheme.PAPER, 0.85))
+		draw_arc(off, OFFSCREEN_SIZE * 0.5, 0.0, TAU, 32, Color(ink, 0.85), 1.5, true)
+		_draw_pawn(off + Vector2(0.0, OFFSCREEN_SIZE * 0.3), OFFSCREEN_SIZE * 0.8, 0.85, 1.0, UiTheme.ART_MAP_PAWN_SMALL)
+
+
+## 一枚棋子：脚底中心（图的 json `anchor`）对准 [param foot]，高 [param h]；脚下一枚淡影。没图画一个墨线的小兵
+func _draw_pawn(foot: Vector2, h: float, alpha: float, squash: float, art_name: String) -> void:
+	if alpha <= 0.0:
+		return
+	var shadow := PackedVector2Array()
+	for k in 20:
+		var a := TAU * float(k) / 20.0
+		shadow.append(foot + Vector2(cos(a) * PAWN_SHADOW.x * 0.5 * h / PAWN_H, sin(a) * PAWN_SHADOW.y * 0.5 * h / PAWN_H))
+	draw_colored_polygon(shadow, Color(0, 0, 0, 0.2 * alpha))
+	var tex := UiTheme.art_cached(art_name)
+	if tex != null:
+		draw_texture_rect(tex, pawn_rect(foot, h, squash, art_name), false, Color(1, 1, 1, alpha))
+		return
+	var ink := Color(_ink(UiPalette.FG), alpha)
+	var paper := Color(UiTheme.PAPER, alpha)
+	var u := h / 10.0 * Vector2(1.0, squash)
+	var body := PackedVector2Array([foot + Vector2(-2.5, 0) * u, foot + Vector2(2.5, 0) * u, foot + Vector2(1.2, -5) * u, foot + Vector2(-1.2, -5) * u])
+	draw_colored_polygon(body, paper)
+	body.append(body[0])
+	draw_polyline(body, ink, 1.5, true)
+	var head := foot + Vector2(0, -6.6) * u
+	draw_circle(head, 1.8 * u.x, paper)
+	draw_arc(head, 1.8 * u.x, 0.0, TAU, 24, ink, 1.5, true)
+
+
+## 棋子图画在哪（屏幕坐标）：高 [param h]，图的 `anchor`（脚底中心，json 里按 `size` 的逻辑尺寸给）对准 [param foot]。只看像素，和缩放无关
+func pawn_rect(foot: Vector2, h: float = PAWN_H, squash: float = 1.0, art_name: String = UiTheme.ART_MAP_PAWN) -> Rect2:
+	var tex := UiTheme.art_cached(art_name)
+	var meta := UiTheme.art_meta(art_name)
+	var sz: Array = meta.get("size", [tex.get_width(), tex.get_height()] if tex != null else [h, h])
+	var anchor: Array = meta.get("anchor", [float(sz[0]) * 0.5, float(sz[1])])
+	var k := h / float(sz[1])
+	return Rect2(foot - Vector2(float(anchor[0]) * k, float(anchor[1]) * k * squash), Vector2(float(sz[0]) * k, float(sz[1]) * k * squash))
+
+
+## 步数 / 传送的小纸签，中心在 [param at]；和已经摆了的签叠上就往下错开
+func _draw_tag(text: String, at: Vector2, placed: Array[Rect2]) -> void:
+	if _font == null:
+		return
+	var tw := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_FONT).x
+	var box := Rect2(at - Vector2(tw * 0.5 + 8.0, TAG_H * 0.5), Vector2(tw + 16.0, TAG_H))
+	var guard := 0
+	while placed.any(func(r: Rect2) -> bool: return r.intersects(box)) and guard < 6:
+		box.position.y += TAG_NUDGE
+		guard += 1
+	placed.append(box)
+	var tex := UiTheme.art_cached(UiTheme.ART_MAP_TAG)
+	if tex != null:
+		var m: Array = UiTheme.art_meta(UiTheme.ART_MAP_TAG).get("margin", [6, 4, 6, 4])
+		var sb := StyleBoxTexture.new()
+		sb.texture = tex
+		sb.texture_margin_left = float(m[0])
+		sb.texture_margin_top = float(m[1])
+		sb.texture_margin_right = float(m[2])
+		sb.texture_margin_bottom = float(m[3])
+		draw_style_box(sb, box)
+	else:
+		draw_rect(box, Color(UiTheme.PAPER, 0.9))
+		draw_rect(box, Color(UiTheme.INK, 0.6), false, 1.0)
+	draw_string(_font, Vector2(box.position.x + 8.0, box.position.y + TAG_H * 0.5 + TAG_FONT * 0.36), text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_FONT, UiTheme.INK)
+
+
+## 摆过的签（测试看）：这一帧画了哪些字
+func tags_text() -> Array[String]:
+	var out: Array[String] = []
+	if current_id < 0 or not _hop.is_empty():
+		return out
+	for id in reachable:
+		if bool(reach_teleport.get(id, false)):
+			out.append("传送")
+		elif int(reach_cost.get(id, 1)) > 1:
+			out.append("计%s步" % _han(int(reach_cost.get(id, 1))))
+	return out
+
+
+static func _han(n: int) -> String:
+	const DIGITS := ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"]
+	return DIGITS[n] if n >= 0 and n <= 10 else str(n)
+
+
+## 行进的虚线：段 [constant PATH_DASH]、隙 [constant PATH_GAP]，整串往离开玩家的方向挪 [param phase] 像素
+func _march_line(pts: PackedVector2Array, width: float, color: Color, phase: float) -> void:
+	var total := _length(pts)
+	var period := PATH_DASH + PATH_GAP
+	var d := fposmod(phase, period) - period
+	while d < total:
+		var a := maxf(d, 0.0)
+		var b := minf(d + PATH_DASH, total)
+		if b > a:
+			draw_polyline(_sub_line(pts, a, b), color, width, true)
+		d += period
+
+
+static func _length(pts: PackedVector2Array) -> float:
+	var l := 0.0
+	for i in range(1, pts.size()):
+		l += pts[i - 1].distance_to(pts[i])
+	return l
+
+
+## 折线上离起点 [param d] 处的点
+static func _point_at(pts: PackedVector2Array, d: float) -> Vector2:
+	var left := d
+	for i in range(1, pts.size()):
+		var seg := pts[i - 1].distance_to(pts[i])
+		if left <= seg and seg > 0.0:
+			return pts[i - 1].lerp(pts[i], left / seg)
+		left -= seg
+	return pts[pts.size() - 1]
+
+
+## 折线上 [param a]～[param b] 那一截
+static func _sub_line(pts: PackedVector2Array, a: float, b: float) -> PackedVector2Array:
+	var out := PackedVector2Array([_point_at(pts, a)])
+	var walked := 0.0
+	for i in range(1, pts.size()):
+		walked += pts[i - 1].distance_to(pts[i])
+		if walked > a and walked < b:
+			out.append(pts[i])
+	out.append(_point_at(pts, b))
+	return out
+
+
+## 两头各剪掉一截（从节点边缘起、到节点边缘止）；剪没了返回空
+static func _trim(pts: PackedVector2Array, head: float, tail: float) -> PackedVector2Array:
+	var total := _length(pts)
+	if total <= head + tail:
+		return PackedVector2Array()
+	return _sub_line(pts, head, total - tail)
 #endregion

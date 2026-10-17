@@ -82,6 +82,16 @@ func draw_edge(
 	canvas.draw_polyline(arc_points(a, b, center, RING_STEP * float(la)), color, width, true)
 
 
+## 184：同层的边是那段圆弧上的点，跨层的直线（和 [method draw_edge] 一样）
+func edge_points(graph: MapGraph, edge: MapEdge, a: Vector2, b: Vector2, rect: Rect2 = Rect2()) -> PackedVector2Array:
+	var levels := levels_of(graph)
+	var la := int(levels.get(edge.from_id, -1))
+	if la != int(levels.get(edge.to_id, -2)) or la <= 0:
+		return PackedVector2Array([a, b])
+	var center := rect.get_center() if rect.has_area() else canvas_size(graph) / 2.0
+	return arc_points(a, b, center, RING_STEP * float(la))
+
+
 func draw_backdrop(canvas: CanvasItem, graph: MapGraph, rect: Rect2) -> void:
 	for lv in range(1, level_count(graph) + 1):
 		canvas.draw_arc(rect.get_center(), RING_STEP * float(lv), 0.0, TAU, 96, UiPalette.LINE, 1.0, true)

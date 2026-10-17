@@ -281,9 +281,9 @@ func marks_alpha() -> float:
 
 ## 一个入口印记的透明度：再乘上「在不在墨化那片里」—— 微放大后被推出那片的入口淡掉（纸上那片以外没有图）
 func mark_alpha(id: int) -> float:
-	var edge := radius_frac * half_extent() + MARK_SIZE * 0.5
+	var edge := radius_frac * half_extent()     # 最外一圈就在这里：没放大时入口正好压在上面
 	var d := entry_point(id).distance_to(center())
-	return marks_alpha() * (1.0 - smoothstep(edge, edge + MARK_SIZE, d))
+	return marks_alpha() * (1.0 - smoothstep(edge + 4.0, edge + 16.0, d))
 
 
 ## 以入口 [param id] 及周围为偏移中心微放大（视中心往它挪 [constant ZOOM_SHIFT]、放大到 [constant ZOOM_IN]）；已经放大在它上面就不动
@@ -354,7 +354,7 @@ func _redraw_marks() -> void:
 		_marks.queue_redraw()
 
 
-## 印记：有美术图（`setup/spawn_mark` 常态、`_hover`、`_on` 选中）就贴图；没有是一枚纸底墨圈、中间「生」的图标，选中外面加一圈红
+## 印记：有美术图（小旗 `setup/spawn_flag_normal` / `_hover` / `_sel`，选中的红圈画在图里）就贴图；没有是一枚纸底墨圈、中间「生」的图标，选中外面加一圈红
 func _draw_marks() -> void:
 	if marks_alpha() <= 0.0 or entries.is_empty():
 		return
@@ -364,15 +364,11 @@ func _draw_marks() -> void:
 		var a := mark_alpha(id)
 		if a <= 0.0:
 			continue
-		var state := "_on" if id == selected else ("_hover" if id == hovered else "")
-		var tex := UiTheme.art(UiTheme.ART_SPAWN_MARK + state)
-		if tex == null and state != "":
-			tex = UiTheme.art(UiTheme.ART_SPAWN_MARK)
+		var state := "_sel" if id == selected else ("_hover" if id == hovered else "_normal")
+		var tex := UiTheme.art_cached(UiTheme.ART_SPAWN_MARK + state)
 		if tex != null:
 			var half := Vector2(MARK_SIZE, MARK_SIZE) * 0.5
 			_marks.draw_texture_rect(tex, Rect2(p - half, half * 2.0), false, Color(1, 1, 1, a))
-			if tex == UiTheme.art(UiTheme.ART_SPAWN_MARK) and id == selected:
-				_marks.draw_arc(p, MARK_SIZE * 0.5 + 4.0, 0.0, TAU, 48, Color(UiTheme.PARCHMENT_RED, a), 3.0, true)
 			continue
 		var r := MARK_SIZE * 0.5 - 2.0
 		var ink := Color(UiTheme.INK, a)
