@@ -201,13 +201,12 @@ func _slab_screen(min_size: Vector2 = Vector2.ZERO) -> Control:
 
 ## 179：开局屏不用石板 —— 整屏一幅画（[param art_name]，没图就是纯色底），内容区铺满全屏、深底白字；先调 [method _backdrop]
 func _painted_screen(art_name: String) -> Control:
-	if _bg_rect != null:
-		UiTheme.dress_backdrop(_bg_rect, art_name, "PaintedBackdrop")
+	var dressed := _bg_rect != null and UiTheme.dress_backdrop(_bg_rect, art_name, "PaintedBackdrop") != null
 	var area := Control.new()
 	area.name = "PaintedContent"
 	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	area.set_meta(&"tone", UiTheme.TONE_DARK)
+	area.set_meta(&"tone", UiTheme.art_tone(art_name) if dressed else UiTheme.TONE_DARK)     # 背景图的深浅（图旁 json）；没图纯色底 = 深
 	add_child(area)
 	return area
 

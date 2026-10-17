@@ -38,6 +38,19 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	t.eq(setup._grooves[1].size_flags_horizontal, Control.SIZE_EXPAND_FILL, "中栏撑满")
 	t.eq(setup._grooves[2].size_flags_horizontal, Control.SIZE_SHRINK_END, "棋盘栏贴右")
 	t.eq((setup._grooves[0].get_parent() as HBoxContainer).get_theme_constant("separation"), 36, "三栏间距一律 36")
+	# 作者 2026-10-17：选人大厅白天版定稿 —— 浅底；直接写在背景上的标题墨字，凹槽板里照旧浅色字
+	t.eq(setup.find_children("PaintedBackdrop", "TextureRect", true, false).size(), 1, "大厅背景画铺上了")
+	t.eq(UiTheme.art_tone(UiTheme.ART_SETUP_BG), UiTheme.TONE_LIGHT, "大厅背景标浅底")
+	t.eq(UiTheme.tone_at(setup._area), UiTheme.TONE_LIGHT, "内容区记着浅底")
+	t.eq(setup._title.get_theme_color("font_color"), UiTheme.INK, "标题墨字")
+	t.eq(setup._title.get_theme_color("font_shadow_color").a, 0.0, "浅底上标题不带黑影")
+	for g in setup._grooves:
+		t.eq(UiTheme.tone_at(g), UiTheme.TONE_DARK, "凹槽板里是深底")
+		t.check(not g.theme_type_variation.is_empty() and (g as Control).theme == null, "凹槽板没挂墨字主题")
+	var groove_label := UiTheme.make_label("x", 15, UiPalette.DIM)
+	setup._grooves[0].add_child(groove_label)
+	t.eq(groove_label.get_theme_color("font_color"), UiPalette.DIM, "凹槽板里的字照旧浅色")
+	groove_label.free()
 
 	for i in flow.characters.size():
 		setup.choose_character(i)
@@ -64,12 +77,13 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 			t.check(l.get_theme_constant("outline_size") > 0, "%s 带描边" % l.text)
 			t.eq(l.get_theme_color("font_color"), UiPalette.BTN_PRIMARY_HOVER, "%s 亮黄铜色" % l.text)
 		t.check(not texts.any(func(s: String) -> bool: return s.contains("行动点")), "%s：这一屏没有「行动点」" % ch.id)
+		t.check(not texts.any(func(s: String) -> bool: return s.contains("被动")), "%s：技能行不写「被动」（作者 2026-10-17）" % ch.id)
 	game.queue_free()
 	Support.cleanup("setup179")
 
 
 static func run_skill_entries(t: TestCase) -> void:
-	t.begin("179 · 技能说明是书面功能句，界面按「被动 + 名字 / 说明」两行排；熟门熟路不再说行动点")
+	t.begin("179 · 技能说明是书面功能句，界面按「名字 / 说明」两行排（「被动」不上屏）；熟门熟路不再说行动点")
 	var chars := {}
 	for f in DirAccess.get_files_at("res://data/characters/"):
 		if f.ends_with(".tres"):
