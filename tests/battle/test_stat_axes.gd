@@ -96,10 +96,10 @@ static func run_describe(t: TestCase) -> void:
 	t.begin("105 10.4 · 悬浮窗的一句从表与层数算，不写死")
 	var line := StatAxes.describe(AXIS, 5)
 	t.check(line.contains("耐力消耗") and line.contains("×97%"), "第一行说清每层乘多少：%s" % line)
-	t.check(line.contains("灵巧") and line.contains("笨拙"), "正名负名都在：%s" % line)
+	t.check(not line.contains("相抵"), "不写正负名相抵的内部说明：%s" % line)
 	t.check(line.contains("85.9%"), "第二行是当前的合计因子 ×85.9%%：%s" % line)
 	var sys := StatAxes.describe(AXIS, 0, 5)
-	t.check(sys.contains("不可解除"), "系统层要标明不可解除：%s" % sys)
+	t.check(sys.contains("无法清除"), "系统层要标明无法清除：%s" % sys)
 	t.check(sys.contains("85.9%"), "系统层也算进合计：%s" % sys)
 
 

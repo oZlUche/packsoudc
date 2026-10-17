@@ -38,7 +38,7 @@ outcomes = Array[ExtResource("3_8ialv")]([SubResource("Resource_7mrk6"), SubReso
 [resource]
 script = ExtResource("7_reduf")
 id = &"hunter_1"
-display_name = "追猎者（占位）"
+display_name = "追猎者"
 description = "有人在跟着你。它的脚步声停在了不远处。"
 behavior = SubResource("Resource_ly3jt")
 loss_options = Array[ExtResource("2_kykxh")]([SubResource("Resource_52ljd"), SubResource("Resource_x74br")])

@@ -9,7 +9,7 @@ const BG := Color("101216")
 ## 091（作者定）：背景底色可选，默认比原来浅一点。设置屏挑，存在 [GameSettings.bg_theme]
 const BG_THEMES := [
 	{"id": "graphite", "name": "石墨（默认）", "color": Color("262b33")},
-	{"id": "dark", "name": "深夜（原来的）", "color": Color("101216")},
+	{"id": "dark", "name": "深夜", "color": Color("101216")},
 	{"id": "slate", "name": "石板", "color": Color("1b2028")},
 	{"id": "dusk", "name": "暮色", "color": Color("2a2733")},
 	{"id": "moss", "name": "苔绿", "color": Color("1f2a24")},

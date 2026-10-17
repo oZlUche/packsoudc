@@ -188,7 +188,7 @@ static func run_buff_bar(t: TestCase) -> void:
 	view._ready()
 	r.passives = [[PassiveNote.make(&"set:x", "猎人套装 3 件", 1, [FX._mod(BattleStats.DAMAGE, 10)])], []]
 	view.play(r, ["我", "敌"])
-	t.check(view.buff_tip(CombatantPanel.OVERTIME_CHIP).contains("不可解除"), "鏖战的悬浮窗写着不可解除")
+	t.check(view.buff_tip(CombatantPanel.OVERTIME_CHIP).contains("无法驱散"), "鏖战的悬浮窗写着无法驱散")
 	t.check(view.buff_tip("passive:0", 0).contains("常驻") and view.buff_tip("passive:0", 0).contains("10%"), "常驻格的悬浮窗列出它的加成：%s" % view.buff_tip("passive:0", 0))
 	view.free()
 

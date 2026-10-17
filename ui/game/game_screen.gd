@@ -109,21 +109,21 @@ func _take_to_player(from: ItemContainer, uid: int) -> String:
 	return ""
 
 
-## 对手叫什么（战前准备、战斗回放共用）：从这一场的敌人内容（点里的，或搜索遭遇现造的）查定义，「名字（N 档）」；查不到就「敌人」
+## 对手叫什么（战前准备、战斗回放共用）：从这一场的敌人内容（点里的，或搜索遭遇现造的）查定义；查不到就「敌人」。档位是内部数，不写
 func _enemy_name(content: Dictionary) -> String:
 	var def := flow.enemies.enemy(StringName(String(content.get("enemy", "")))) if not content.is_empty() else null
 	if def == null:
 		return "敌人"
-	return "%s（%d 档）" % [Names.of(def), int(content.get("strength", 0))]
+	return Names.of(def)
 
 
-## 157：对手的名牌（战前准备、战斗回放共用）：名字、「N 档」、肖像（有图才画）
+## 157：对手的名牌（战前准备、战斗回放共用）：名字、肖像（有图才画）
 func _enemy_plate(content: Dictionary) -> Nameplate:
 	var id := StringName(String(content.get("enemy", ""))) if not content.is_empty() else &""
 	var def := flow.enemies.enemy(id) if id != &"" else null
 	if def == null:
 		return Nameplate.new().setup("敌人", "")
-	return Nameplate.new().setup(Names.of(def), "%d 档" % int(content.get("strength", 0)), Nameplate.enemy_face(id))
+	return Nameplate.new().setup(Names.of(def), "", Nameplate.enemy_face(id))
 
 
 ## 157：自己的名牌：角色名（没选角色写「我」）、肖像（有图才画）

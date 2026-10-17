@@ -224,8 +224,8 @@ func open(payload: Dictionary) -> void:
 	for c in flow.chapters:
 		if c.grants_unlock != &"" and not unlock_ids.has(c.grants_unlock):
 			unlock_ids.append(c.grants_unlock)
-	if not unlock_ids.is_empty():
-		right.add_child(_label("局外解锁　占位：开关列表，将来由成长系统决定", 15, UiPalette.DIM))
+	if not unlock_ids.is_empty() and GameSettings.dev_build():     # 作者 2026-10-17：直接改存档的开关只在开发环境
+		right.add_child(_label("开发：局外解锁开关", 15, UiPalette.DIM))
 		for uid in unlock_ids:
 			var names: Array[String] = []
 			for d in flow.difficulties:
@@ -266,9 +266,9 @@ func open(payload: Dictionary) -> void:
 	var log := _log_box(13)
 	for h in m.history:
 		var extracted := String(h.get("outcome", "")) == "extracted"
-		log.append_text("[color=#%s]%s[/color]　种子 %d　走了 %d 步　打赢 %d　%s\n" % [
+		log.append_text("[color=#%s]%s[/color]　走了 %d 步　打赢 %d　%s\n" % [
 			(UiPalette.HEAL if extracted else UiPalette.HP).to_html(false), "撤离" if extracted else "战败",
-			int(h.get("seed", 0)), int(h.get("steps", 0)), int(h.get("battles_won", 0)),
+			int(h.get("steps", 0)), int(h.get("battles_won", 0)),
 			"%d 件、值 %d 币、带出 %d 币" % [(h.get("items", []) as Array).size(), int(h.get("value", 0)), int(h.get("balance", 0))] if extracted else ""])
 	if m.history.is_empty():
 		log.append_text("[color=#8b93a1]还没有打过[/color]")
@@ -286,6 +286,8 @@ func open(payload: Dictionary) -> void:
 	add_child(_drawer)
 	_drawer.dock(MARGIN + SHELF_HEAD + 8.0, MARGIN)
 	add_child(_drawer.arrow)
+	# 作者 2026-10-17：调试台（调试模式、开发开关、最近几局）只在开发环境；正式包里箭头和抽屉都不显示
+	_drawer.arrow.visible = GameSettings.dev_build()
 	add_child(_drag)     # 164：整屏一层拖拽，盖在三列上（残影画在最上面）
 	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	resized.connect(layout)
@@ -439,7 +441,7 @@ func _build_sell(root: Control) -> Control:
 	var page := _vbox(8)
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(page)
-	page.add_child(_wrapped("出售　双击右边仓库里的一件卖掉；或选一档稀有度（再挑一个标签）一键卖。回定价的 %d%%，钱进局外（现在还没处花）" % int(round(flow.sell_ratio() * 100)), 15, UiPalette.DIM, 460))
+	page.add_child(_wrapped("出售　双击右边仓库里的一件卖掉；或选一档稀有度（再挑一个标签）一键卖。回定价的 %d%%，钱进局外，可用于科技" % int(round(flow.sell_ratio() * 100)), 15, UiPalette.DIM, 460))
 	var row := _hbox(10)
 	page.add_child(row)
 	row.add_child(_label("一键出售", 13, UiPalette.DIM))

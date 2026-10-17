@@ -46,7 +46,8 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(_button(UiText.t("menu.settings"), flow.show_settings, 14, UiPalette.Tier.MINOR))
 	col.add_child(_button(UiText.t("menu.language"), toggle_language, 14, UiPalette.Tier.MINOR))
 	col.add_child(HSeparator.new())
-	col.add_child(_button(UiText.t("menu.dev_tools"), func(): dev_tools_requested.emit(), 13, UiPalette.Tier.MINOR))
+	if GameSettings.dev_build():     # 作者 2026-10-17：开发工具只在开发环境
+		col.add_child(_button(UiText.t("menu.dev_tools"), func(): dev_tools_requested.emit(), 13, UiPalette.Tier.MINOR))
 	col.add_child(_button(UiText.t("menu.quit"), func(): get_tree().quit(), 13, UiPalette.Tier.MINOR))
 
 

@@ -31,7 +31,7 @@ static func make(p_id: StringName, p_name: String, p_stacks: int = 1, p_mods: Ar
 
 ## 悬浮窗正文
 func describe() -> String:
-	var lines: Array[String] = ["常驻　编译时并进属性，全场不变"]
+	var lines: Array[String] = ["常驻：整场生效"]
 	if not mods.is_empty():
 		lines.append(Glossary.mods_text(mods))
 	if note != "":

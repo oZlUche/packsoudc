@@ -205,7 +205,9 @@ func _refresh_readout() -> void:
 	if _run.tracker != null:
 		for set_id in _run.tracker.tracked_ids():
 			var p := _run.tracker.progress_of(set_id)
-			lines.append("%s %d/%s%s" % [set_id, p["count"], "—" if p["next"] < 0 else str(p["next"]), "　已激活" if p["active"] else ""])
+			var sdef = _run.tracker.db.get_def(set_id) if _run.tracker.db != null else null
+			var sname := Names.of(sdef) if sdef != null and Names.of(sdef) != "" else "数据缺失"
+			lines.append("%s %d/%s%s" % [sname, p["count"], "—" if p["next"] < 0 else str(p["next"]), "　已激活" if p["active"] else ""])
 	var dormant := FaithState.dormant_uids(_run.board).size()
 	var power := _run.faith_power.line() if _run.faith_power != null else ""
 	if _faith_label != null:

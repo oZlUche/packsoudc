@@ -72,9 +72,9 @@ static func run_notes(t: TestCase) -> void:
 	var rule := OfferingRule.new()
 	rule.multiplier = 5.0
 	rule.note = "（×{multiplier}）"
-	t.check(rule.describe().contains("2^稀有度 × 5") and rule.describe().ends_with("（×5）"), "献祭：主句 + note：%s" % rule.describe())
+	t.check(rule.describe().contains("越稀有给得越多") and rule.describe().ends_with("（×5）"), "献祭：主句 + note：%s" % rule.describe())
 	rule.multiplier = 2.5
-	t.check(rule.describe().contains("× 2.5"), "非整数倍率：%s" % rule.describe())
+	t.check(rule.describe().contains("×2.5"), "非整数倍率：%s" % rule.describe())
 
 
 static func run_item_stat(t: TestCase) -> void:

@@ -14,3 +14,4 @@ descriptions = {
 "en": "Sealed modern item: kept in data, never appears."
 }
 category = "element"
+internal = true

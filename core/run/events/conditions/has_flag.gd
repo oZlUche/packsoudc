@@ -15,6 +15,5 @@ func check(ctx: EventContext) -> bool:
 
 
 func describe() -> String:
-	if absent:
-		return "需要没有旗标「%s」" % flag if min_value <= 1 else "需要旗标「%s」< %d" % [flag, min_value]
-	return "需要旗标「%s」" % flag if min_value <= 1 else "需要旗标「%s」≥ %d" % [flag, min_value]
+	# 旗标是内部记账，玩家只看一句
+	return "条件还没满足"

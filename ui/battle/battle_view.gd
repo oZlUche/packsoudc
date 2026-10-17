@@ -140,7 +140,7 @@ func buff_tip(id: String, side: int = 0) -> String:
 	var panel := _panels[clampi(side, 0, _panels.size() - 1)]
 	if id == CombatantPanel.OVERTIME_CHIP:
 		var n := int(panel.stacks().get(id, 0))
-		return "[b]鏖战 ×%d[/b]\n系统效果，不可解除：加时开始后每隔一段，双方受到的最终伤害再加一截（记在「受到伤害」轴的系统层）\n%s" % [
+		return "[b]鏖战 ×%d[/b]\n加时后每隔一段，双方受到的伤害再提高，无法驱散\n%s" % [
 			n, StatAxes.describe(StatAxes.DAMAGE_TAKEN, panel.axis_value(StatAxes.DAMAGE_TAKEN), _system_of(side, StatAxes.DAMAGE_TAKEN))]
 	if id == CombatantPanel.BLOCK_CHIP:
 		return block_tip(panel)
@@ -153,9 +153,9 @@ func buff_tip(id: String, side: int = 0) -> String:
 		return "[b]%s[/b]\n%s" % [note.name, note.describe()]
 	var def: BuffDef = panel.buff_defs.get(StringName(id), null)
 	var name := Names.of(def) if def != null and Names.of(def) != "" else id
-	var body := Glossary.describe_buff(def) if def != null else "（没有这个 buff 的定义）"
+	var body := Glossary.describe_buff(def) if def != null else "（数据缺失）"
 	if def != null and def.system:
-		body += "\n系统效果，不可解除"
+		body += "\n无法驱散"
 	var guard := int(panel.guards.get(id, 0))
 	if guard > 0:
 		body += "\n其中 %d 层不可解除" % guard     # 175 补充四
@@ -164,7 +164,7 @@ func buff_tip(id: String, side: int = 0) -> String:
 
 ## 153：「格挡 N」格的悬浮窗 —— 各层（生效的那层标出来、其余备用）与加固 / 破绽的来源
 static func block_tip(panel: CombatantPanel) -> String:
-	var lines: Array[String] = ["[b]格挡 %d[/b]" % panel.block_value(), "只有盾牌给格挡；几面盾只算最高的一面，加固 / 破绽在它之上加减。只减直接伤害"]
+	var lines: Array[String] = ["[b]格挡 %d[/b]" % panel.block_value(), "多面盾牌只取最高值；只减少武器直接伤害"]
 	for i in panel.block_layers.size():
 		var l: Dictionary = panel.block_layers[i]
 		var who := "天生" if String(l["id"]) == "innate" else String(panel.item_names.get(int(l["uid"]), l["id"]))

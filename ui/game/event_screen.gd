@@ -106,7 +106,7 @@ func _open_result(payload: Dictionary) -> void:
 	if String(detail.get("type_changed", "")) != "":
 		lines.append("这里变成了%s点" % MapNodeStyle.of(StringName(String(detail["type_changed"])))["label"])
 	if int(detail.get("teleported", -1)) >= 0:
-		lines.append("被传送到了点 %d" % int(detail["teleported"]))
+		lines.append("被传送到了别处")
 	if lines.is_empty():
 		lines.append("什么也没发生。")
 	# 结果页配图沿用这个点的事件（结果只是同一件事的下一页）；老路的事件点没有定义，画占位

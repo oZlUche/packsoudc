@@ -10,4 +10,4 @@ func check(ctx: EventContext) -> bool:
 
 
 func describe() -> String:
-	return "技能「%s」现在用不了" % skill
+	return "这个技能现在用不了"
