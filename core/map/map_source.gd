@@ -39,14 +39,15 @@ func resolve(run_seed: int, scale_id: StringName = &"") -> MapGraph:
 			return _resolve_random(run_seed, scale_id)
 
 
-## 配置里有哪些规模可选（给开局屏）：[{id, display_name}]；不是环形生成器 / 没配就空
+## 配置里有哪些规模可选（给开局屏）：[{id, display_name, step_limit, rings}]；不是环形生成器 / 没配就空
 func scale_options() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if mode == Mode.PRESET or generator_config == null or not ("scales" in generator_config):
 		return out
 	for p in generator_config.get("scales"):
 		if p != null:
-			out.append({"id": p.id, "display_name": p.display_name if p.display_name != "" else String(p.id), "step_limit": int(p.get("step_limit")) if "step_limit" in p else 0})
+			out.append({"id": p.id, "display_name": p.display_name if p.display_name != "" else String(p.id), "step_limit": int(p.get("step_limit")) if "step_limit" in p else 0,
+				"rings": p.get("rings") if "rings" in p else Vector2i.ZERO})     # 180：开局屏规模那行右边写环数
 	return out
 
 

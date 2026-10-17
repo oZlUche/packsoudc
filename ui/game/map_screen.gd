@@ -25,6 +25,8 @@ var _view: MapView
 var _hud_host: HudHost
 ## 150：调试台抽屉（139 那个），里面是「摆读数」
 var _drawer: DevDrawer = null
+## 180：调试台里的「下局种子」
+var _next_seed: SpinBox = null
 ## 抽屉离右缘的空（[method DevDrawer.dock] 的 margin）
 const DRAWER_MARGIN := 12.0
 var _hud_edit_btn: Button = null
@@ -907,6 +909,16 @@ func _build_drawer() -> void:
 	c.add_child(_ground_line)     # 166：地上几件
 	c.add_child(_label("日志", 16, UiPalette.FG))
 	c.add_child(_log)     # 166：日志从地图上挪进来
+	# 180：玩家看不见种子；调试时在这里指定下一局的（-1 = 开局屏随机取）
+	var seed_row := _hbox(8)
+	seed_row.add_child(_label("下局种子", 13, UiPalette.DIM))
+	_next_seed = SpinBox.new()
+	_next_seed.min_value = -1
+	_next_seed.max_value = 999999
+	_next_seed.value = flow.next_run_seed
+	_next_seed.value_changed.connect(func(v: float): flow.next_run_seed = int(v))
+	seed_row.add_child(_next_seed)
+	c.add_child(seed_row)
 	if _run != null and _run.chapter != null and _run.chapter.coach != &"":
 		c.add_child(_button("重放教程", func(): show_coach(true), 13))     # 166
 	if _run != null and _run.chapter != null and _run.chapter.coach_battle != &"":

@@ -14,6 +14,9 @@ extends Resource
 ## 088：别的语言的名字，`{"en": "Knife"}`；界面用 [method Names.of] 取（当前语言没有就用 display_name）
 @export var display_names: Dictionary = {}
 @export var description: String = ""
+## 180：开局屏「当前难度」下面的红字 —— 这一级**新加**的挑战，一句话、玩家的说法（数据不累积，开局屏把 1..这一级的逐行列出）。
+## [member description] 留给图鉴 / 调试
+@export var challenge: String = ""
 ## 第几档，0 = 普通。开局屏按它排序
 @export var level: int = 0
 ## 局外解锁 id，空 = 一直可选

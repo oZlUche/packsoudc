@@ -41,11 +41,12 @@ hunter_ids = Array[StringName]([&"hunter_1"])
 [resource]
 script = ExtResource("10_ievqj")
 id = &"ascension_1"
-display_name = "进阶 1（占位）"
+display_name = "进阶一"
 display_names = {
 "en": "Ascension I"
 }
 description = "侵蚀开启（本体第七阶段），体力上限 {vitality_max_bonus_amount|signed}。局外解锁后可选。"
+challenge = "体力上限少一点；越往深处走，侵蚀越重，包里的东西会受损；猎手会循着你的脚步追来。"
 level = 1
 requires_unlock = &"ascension_1"
 mechanics = Array[ExtResource("3_vu18x")]([SubResource("Resource_beha2"), SubResource("Resource_16ied")])
