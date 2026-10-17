@@ -30,8 +30,9 @@ static func run_overlap_bounces_apart(t: TestCase) -> void:
 	heavy.weight = 4
 	var stash := ItemStash.new(2, 0)
 	var ground := _ground(stash)
-	var a := _put(stash, light, Vector2(0.5, 0.5))
-	var b := _put(stash, heavy, Vector2(0.5, 0.5) + Vector2(90.0, 0.0) / G.SCREEN)
+	var on_floor := (G.SCREEN.y * (1.0 - ItemStash.SPOT_MARGIN) - InventoryView.CELL) / G.SCREEN.y     # 作者 2026-10-17：悬空的弹完会掉下去，这里摆在地上
+	var a := _put(stash, light, Vector2(0.5, on_floor))
+	var b := _put(stash, heavy, Vector2(0.5, on_floor) + Vector2(90.0, 0.0) / G.SCREEN)
 	ground._scan()
 	t.check(ground.is_bumping(), "压着就开始弹开")
 	var a0 := ground.item_rect(a.uid).position
@@ -91,7 +92,7 @@ static func run_wall_absorbs(t: TestCase) -> void:
 
 
 static func run_landing_on_top_bounces(t: TestCase) -> void:
-	t.begin("180 · 掉下来落在别人身上：落稳之后弹开；正在落的不算相交、不被撞")
+	t.begin("180 → 作者 2026-10-17 · 掉下来落在别人身上：停在它顶上（不穿过去再弹开）；正在落的不算相交；底下那件拿走了，上面的接着掉到地上")
 	ItemInstance.reset_uid_counter()
 	var d := G._def(&"t_slab", ["111"])
 	var stash := ItemStash.new(2, 0)
@@ -108,10 +109,13 @@ static func run_landing_on_top_bounces(t: TestCase) -> void:
 	t.check(ground.overlapping_pairs().is_empty() and not ground.is_bumping(), "落的途中不算相交")
 	ground.advance_landing(ground.landing_sec(b.uid) + 0.01)
 	t.check(not ground.is_landing(b.uid), "落稳了")
-	t.check(ground.is_bumping(), "落在第一件上：开始弹开")
-	ground.settle_bumps()
-	t.check(ground.overlapping_pairs().is_empty(), "弹开了")
-	t.check(ground.item_rect(a.uid).end.y <= G.SCREEN.y * (1.0 - ItemStash.SPOT_MARGIN) + 0.01 and ground.item_rect(b.uid).end.y <= G.SCREEN.y * (1.0 - ItemStash.SPOT_MARGIN) + 0.01, "没被压进地面")
+	t.check(not ground.is_bumping() and ground.overlapping_pairs().is_empty(), "落在第一件顶上：不相交、不用弹")
+	t.check(absf(ground.item_rect(b.uid).end.y - ground.item_rect(a.uid).position.y) < 0.5, "第二件的底贴着第一件的顶")
+	stash.remove(a.uid)
+	ground._scan()
+	t.check(ground.is_landing(b.uid), "第一件拿走了：第二件接着掉")
+	ground.advance_landing(ground.landing_sec(b.uid) + 0.01)
+	t.check(absf(ground.item_rect(b.uid).end.y - G.SCREEN.y * (1.0 - ItemStash.SPOT_MARGIN)) < 0.5, "落到地上")
 	ground.free()
 
 

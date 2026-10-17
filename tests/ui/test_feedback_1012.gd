@@ -249,3 +249,10 @@ static func run_routes_hidden(t: TestCase) -> void:
 	t.begin("作者 2026-10-17 · 挑出生点时的路线卡（风险 / 收益）对玩家隐藏：卡片不建，左下角那件跟着藏")
 	var consts: Dictionary = (load("res://ui/game/map_screen.gd") as Script).get_script_constant_map()
 	t.eq(consts.get("SHOW_ROUTES", true), false, "路线卡关着")
+
+
+static func run_map_no_backdrop_rings(t: TestCase) -> void:
+	t.begin("作者 2026-10-17 · 局内地图不画不是路的同心圆（布局底纹默认关，地图编辑器才开）")
+	var view := MapView.new()
+	t.check(not view.show_backdrop, "默认不画底纹")
+	view.free()

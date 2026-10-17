@@ -60,7 +60,8 @@ static func default_for(p_screen: String) -> HudLayout:
 ## 166：顶端栏右槽（自左向右）
 const BAR_RIGHT: Array[StringName] = [&"bag_button", &"reopen_button", &"skills", &"dev_drawer"]
 ## 默认布局里藏着的读数（摆读数时右键还能放出来）
-const HIDDEN_BY_DEFAULT: Array[StringName] = [&"distances"]
+## 作者 2026-10-17：负重不在顶端栏显示，看背包界面里的「负重 X / Y」那一行（[InventoryPanel]）
+const HIDDEN_BY_DEFAULT: Array[StringName] = [&"distances", &"encumbrance"]
 
 
 ## 默认藏不藏：上面那几件，加上主动技能藏着（166 补充一，[constant RunSkills.ACTIVE_HIDDEN]）时的技能按钮

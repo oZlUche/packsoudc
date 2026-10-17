@@ -26,6 +26,8 @@ const SLOT_RADIUS := 5.0
 const EDGE_PICK := 6.0
 
 ## 这一章的手绘底图（[MapSkin]；空 = 照旧石板 / 纯色底）。设了就按它的深浅换字色
+## 布局的底纹（同心环布局的整圈辅助圆、格子布局的网格）画不画。作者 2026-10-17：局内只画路，不画不是路的圆弧；地图编辑器打开
+var show_backdrop: bool = false
 var skin: StringName = &"":
 	set(v):
 		skin = v
@@ -466,7 +468,8 @@ func _draw() -> void:
 	# 下面全用画布坐标画，变换交给画布→屏幕这一层
 	draw_set_transform(pan, 0.0, Vector2(zoom, zoom))
 	var rect := canvas_rect()
-	_layout.draw_backdrop(self, graph, rect)
+	if show_backdrop:
+		_layout.draw_backdrop(self, graph, rect)
 	var pos := _layout.positions(graph, rect)
 	var grow := _grow_map()
 

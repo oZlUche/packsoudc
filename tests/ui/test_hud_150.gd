@@ -27,6 +27,7 @@ static func run_layout(t: TestCase) -> void:
 	for id in [&"encumbrance", &"buffs", &"erosion"]:
 		t.eq(int(d.entry_of(id)["line"]), 1, "%s 在左槽第二行（小字）" % id)
 	t.check(not bool(d.entry_of(&"distances")["visible"]), "距离默认藏着（作者 2026-10-12：没有意义）")
+	t.check(not bool(d.entry_of(&"encumbrance")["visible"]), "负重默认不在顶端栏（作者 2026-10-17：看背包界面）")
 	t.check(d.entry_of(&"action_points").is_empty() and not HudWidgets.KINDS.has(&"action_points"), "179：「行动点」读数删了（登记表与默认布局都没有）")
 	var right_ids: Array[StringName] = []
 	for e in d.entries:
@@ -176,7 +177,8 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	t.eq(bar.theme_type_variation, UiTheme.PANEL_HUD_BAR, "栏的底是顶端栏变体")
 	var row_y := vit.position.y
 	t.eq(wallet.position.y + wallet.size.y * 0.5, row_y + vit.size.y * 0.5, "货币和体力同一行（竖向居中对齐）")
-	t.eq(vit.position.x, HudHost.BAR_SIDE, "体力贴栏左边（留 %s）" % HudHost.BAR_SIDE)
+	t.eq(vit.position.x, host.bar_side(), "作者 2026-10-17：体力往中间收（左边留 %s）" % host.bar_side())
+	t.check(host.bar_side() > HudHost.BAR_SIDE, "比原来的 %s 更靠里" % HudHost.BAR_SIDE)
 	t.check(vit.position.y >= 0.0 and vit.position.y + vit.size.y <= bar_h, "体力在栏里")
 	# 作者 2026-10-13：凹槽对齐石板 —— 栏里的东西在板边上下内边距之间（底下的投影不算板面）
 	var bar_box := bar.get_theme_stylebox("panel")
