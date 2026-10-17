@@ -63,6 +63,18 @@ const PANEL_FLIP_COUNTER := &"PanelFlipCounter"
 const LABEL_FLIP_NUM := &"LabelFlipNum"
 const FLIP_NUM_SIZE := 72
 const FLIP_BRASS := Color("6e5226")
+const FLIP_FACE := Color("0b0b0d")
+## 180 补三：难度块下面的挑战说明 —— 羊皮纸（浅底，竖向平铺九宫格 `setup/parchment_strip`）与上下两根卷轴；没图平色。纸上的挑战句是墨红
+const PANEL_PARCHMENT := &"PanelParchment"
+## 180 补四：难度的「−」「＋」（到头时真的灰：底压到板色、字暗一半、没有悬停）与「开启挑战」铜牌按钮（〇级时整块只剩它、背后两根卷好的卷轴就是羊皮纸的顶、底卷轴；美术图 `setup/difficulty_plate`）
+const BUTTON_STEP := &"ButtonStep"
+const BUTTON_DIFF_PLATE := &"ButtonDiffPlate"
+## 180 补五：展开后顶上那枚「当前难度」铜牌（和「开启挑战」按钮面同一块铜，只是不能点）与它上面的字
+const PANEL_DIFF_TITLE := &"PanelDiffTitle"
+const LABEL_DIFF_TITLE := &"LabelDiffTitle"
+const PARCHMENT := Color("e6dcc4")
+const SCROLL_ROD := Color("5a4632")
+const PARCHMENT_RED := Color("8e2a22")
 const CAP_VALUE_SIZE := 28
 const SKILL_NAME_SIZE := 22
 const SKILL_TEXT_SIZE := 17
@@ -81,7 +93,8 @@ const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, 
 	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
 	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
 	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_GROOVE, PANEL_CAP_TILE, LABEL_CAP_VALUE,
-	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM]
+	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
+	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE]
 
 const TITLE_SIZE := 18
 ## 168：大标题字号
@@ -136,6 +149,11 @@ const ART_SETUP_MAP_BG := "setup/bg_map"
 const ART_GROOVE := "setup/groove"
 ## 180 补二：难度翻页计数器的牌面（黑底、深黄铜框）
 const ART_FLIP_COUNTER := "setup/flip_counter"
+## 180 补三：挑战说明的羊皮纸条与上下卷轴、「当前难度」铜牌（美术在出）
+const ART_PARCHMENT_STRIP := "setup/parchment_strip"
+const ART_SCROLL_ROD_TOP := "setup/scroll_rod_top"
+const ART_SCROLL_ROD_BOTTOM := "setup/scroll_rod_bottom"
+const ART_DIFFICULTY_PLATE := "setup/difficulty_plate"
 ## 战斗界面的整屏背景（白天的沙地场子，铺满裁边；深浅读图旁 json 的 `tone`）；没图：照旧纯色底
 const ART_BATTLE_BG := "battle/battle_bg"
 ## 179：凹槽板没图时的平面底（样稿第二版的色）
@@ -446,12 +464,14 @@ const PANEL_TONES := {
 	PANEL_DARK: TONE_DARK, PANEL_LINE: TONE_DARK, PANEL_HUD: TONE_DARK, PANEL_OVERLAY: TONE_DARK, PANEL_TOOLTIP: TONE_DARK,
 	PANEL_NAMEPLATE: TONE_DARK, PANEL_HOME_BOX: TONE_LIGHT, PANEL_SHELF: TONE_DARK, PANEL_HUD_BAR: TONE_DARK,
 	PANEL_WINDOW: TONE_DARK, PANEL_GROOVE: TONE_DARK, PANEL_CAP_TILE: TONE_DARK, PANEL_FLIP_COUNTER: TONE_DARK,
+	PANEL_PARCHMENT: TONE_LIGHT, PANEL_DIFF_TITLE: TONE_DARK,
 }
 ## 面板变体用哪张美术图（有图时深浅读它的 json）
 ## 157 补充三：叠层框与顶端栏是石板（深浅读板边的 json；顶端栏是自己那张长条板边），板里的分区都是凹槽
 const PANEL_ART := {PANEL_DARK: ART_INSET, PANEL_LINE: ART_INSET, PANEL_HUD: ART_INSET, PANEL_OVERLAY: ART_SLAB_EDGE, PANEL_TOOLTIP: ART_TOOLTIP,
 	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_BAR,
-	PANEL_WINDOW: ART_SLAB_EDGE, PANEL_GROOVE: ART_GROOVE, PANEL_FLIP_COUNTER: ART_FLIP_COUNTER}
+	PANEL_WINDOW: ART_SLAB_EDGE, PANEL_GROOVE: ART_GROOVE, PANEL_FLIP_COUNTER: ART_FLIP_COUNTER,
+	PANEL_PARCHMENT: ART_PARCHMENT_STRIP, PANEL_DIFF_TITLE: ART_DIFFICULTY_PLATE}
 ## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸。
 ## 169：读字色模板 `fg / dim / warn` 的浅版（[method text_colors_changed] 换），这几个常量是文件不在时的默认
 const INK_DEFAULT := Color("2e2219")
@@ -811,7 +831,7 @@ static func _fill(t: Theme, bg: Color) -> void:
 	# 180 补二：难度翻页计数器（没图是平色黑牌 + 压深的黄铜边）
 	t.set_type_variation(PANEL_FLIP_COUNTER, "PanelContainer")
 	var flip_art: StyleBox = _art_box(ART_FLIP_COUNTER)
-	var flip := _box(Color("0b0b0d"), FLIP_BRASS, 6)
+	var flip := _box(FLIP_FACE, FLIP_BRASS, 6)
 	flip.set_border_width_all(3)
 	flip.set_corner_radius_all(6)
 	flip.content_margin_left = 28
@@ -820,6 +840,15 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_type_variation(LABEL_FLIP_NUM, "Label")
 	t.set_font_size("font_size", LABEL_FLIP_NUM, FLIP_NUM_SIZE)
 	t.set_color("font_color", LABEL_FLIP_NUM, Color.WHITE)
+	# 180 补三：羊皮纸（没图是平色纸、不描边）
+	t.set_type_variation(PANEL_PARCHMENT, "PanelContainer")
+	var parchment_art: StyleBoxTexture = _art_box(ART_PARCHMENT_STRIP, false, 0)
+	if parchment_art != null:
+		parchment_art.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT     # 竖着平铺，纸多长都不拉花
+	var parchment := _box(PARCHMENT, PARCHMENT, 0)
+	parchment.set_border_width_all(0)
+	t.set_stylebox("panel", PANEL_PARCHMENT, parchment_art if parchment_art != null else parchment)
+	_difficulty_buttons(t)
 	_home_buttons(t)
 	# 150：读数组件（原来地图屏那条 HUD 的无边窄底，搬成变体）
 	t.set_type_variation(PANEL_HUD, "PanelContainer")
@@ -948,6 +977,45 @@ static func _button_box(bg: Color, edge: Color, pad: Vector2i) -> StyleBoxFlat:
 	s.content_margin_top = pad.y
 	s.content_margin_bottom = pad.y
 	return s
+
+
+## 180 补四：难度的加减键（次档的样子，到头的灰态单独做：底压到板色、字暗一半、悬停不亮）与〇级的「开启挑战」铜牌按钮
+static func _difficulty_buttons(t: Theme) -> void:
+	t.set_type_variation(BUTTON_STEP, BUTTON_DIM)
+	var size := UiPalette.button_font_size(FONT_SIZE, UiPalette.Tier.MINOR)
+	var pad := Vector2i(int(round(size * 0.6)), int(round(size * 0.3)))
+	var off := _button_box(GROOVE_BG, GROOVE_BG.lightened(0.06), pad)
+	t.set_stylebox("disabled", BUTTON_STEP, off)
+	t.set_color("font_disabled_color", BUTTON_STEP, Color(UiPalette.DIM, 0.5))
+	t.set_type_variation(BUTTON_DIFF_PLATE, "Button")
+	var plate_art: StyleBox = _art_box(ART_DIFFICULTY_PLATE)
+	var plate := plate_art if plate_art != null else _button_box(FLIP_BRASS.darkened(0.25), FLIP_BRASS.lightened(0.25), Vector2i(22, 6))
+	var lit := plate_art if plate_art != null else _button_box(FLIP_BRASS, FLIP_BRASS.lightened(0.4), Vector2i(22, 6))
+	t.set_stylebox("normal", BUTTON_DIFF_PLATE, plate)
+	t.set_stylebox("hover", BUTTON_DIFF_PLATE, lit)
+	t.set_stylebox("pressed", BUTTON_DIFF_PLATE, lit)
+	t.set_stylebox("hover_pressed", BUTTON_DIFF_PLATE, lit)
+	t.set_stylebox("disabled", BUTTON_DIFF_PLATE, _button_box(GROOVE_BG.lightened(0.04), GROOVE_BG.lightened(0.1), Vector2i(22, 6)))
+	t.set_stylebox("focus", BUTTON_DIFF_PLATE, StyleBoxEmpty.new())
+	t.set_font_size("font_size", BUTTON_DIFF_PLATE, 26)
+	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
+		t.set_color(state, BUTTON_DIFF_PLATE, Color("f3e3c0"))
+	t.set_color("font_disabled_color", BUTTON_DIFF_PLATE, Color(UiPalette.DIM, 0.5))
+	t.set_type_variation(PANEL_DIFF_TITLE, "PanelContainer")
+	t.set_stylebox("panel", PANEL_DIFF_TITLE, plate)
+	t.set_type_variation(LABEL_DIFF_TITLE, "Label")
+	t.set_font_size("font_size", LABEL_DIFF_TITLE, 26)
+	t.set_color("font_color", LABEL_DIFF_TITLE, Color("f3e3c0"))
+
+
+## 180 补四：「开启挑战」铜牌按钮（字居中）
+static func make_difficulty_plate(text: String, handler: Callable) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.theme_type_variation = BUTTON_DIFF_PLATE
+	b.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	b.pressed.connect(handler)
+	return b
 
 
 ## 179：选角色屏的几种字与图标牌的底

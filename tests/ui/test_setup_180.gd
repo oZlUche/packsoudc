@@ -112,18 +112,27 @@ static func frame_difficulty_and_memory(t: TestCase, root: Window) -> void:
 	t.eq(setup._difficulty_num.get_theme_color("font_color"), Color.WHITE, "白字")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_FLIP_COUNTER), UiTheme.TONE_DARK, "黑底")
 	t.check(setup._minus_btn.disabled and not setup._plus_btn.disabled, "0 档：减灰、加亮")
-	t.eq(setup._challenge.text, "", "0 档红字留白")
+	t.eq(setup._challenge.text(), "", "0 档纸上全空（补四）")
+	t.check(not setup.difficulty_open() and setup._diff_plate.visible and setup._counter.modulate.a == 0.0, "补四：〇级整块收起，只剩「开启挑战」")
+	t.check(not setup._diff_plate.disabled and setup._diff_plate.text == "开启挑战", "按钮能点，写「开启挑战」（补四定乙）")
+	t.check(setup._diff_plate.size.y >= DifficultyBlock.FACE_SIZE.y and setup._diff_plate.alignment == HORIZONTAL_ALIGNMENT_CENTER, "收起时按钮更高、字居中")
+	var block: DifficultyBlock = setup._diff_block
+	t.check(block.scroll.top_rod.visible and block.scroll.bottom_rod.visible and block.scroll.paper_alpha == 0.0, "按钮背后两根卷好的卷轴（就是羊皮纸那对），中间不露纸")
+	var face := block.face_rect()
+	t.check(block.rods_y < face.position.y and block.rods_y + block.scroll.get_combined_minimum_size().y > face.end.y, "卷轴上下各露出一截")
 	setup.step_difficulty(-1)
 	t.eq(setup.difficulty_index, 0, "减不下去")
 	for i in ladder.size() + 2:
 		setup.step_difficulty(1)
+	block.finish()     # 展开过渡直接到头
 	t.eq(setup.difficulty(), ladder[ladder.size() - 1], "加到最高的已解锁档就停")
 	t.eq(setup._difficulty_num.text, TextTemplate.roman(ladder[ladder.size() - 1].level), "罗马数字（%s）" % setup._difficulty_num.text)
 	t.check(setup._plus_btn.disabled, "到顶：加灰")
-	t.eq(setup._challenge.get_theme_color("font_color"), UiPalette.HP, "红字")
+	t.check(setup.difficulty_open() and setup._counter.modulate.a == 1.0, "≥ Ⅰ：展开")
+	t.check(not setup._diff_plate.visible, "展开后「开启挑战」收走")
 	for i in range(1, ladder.size()):
 		if ladder[i].challenge != "":
-			t.check(setup._challenge.text.contains(ladder[i].challenge), "列出第 %d 级的挑战" % ladder[i].level)
+			t.check(setup._challenge.text().contains(ladder[i].challenge), "列出第 %d 级的挑战" % ladder[i].level)
 	t.eq(ladder[1].display_name, "进阶一", "进阶去掉「（占位）」")
 	setup.choose_scale(&"medium")
 	flow.next_run_seed = 4242
@@ -281,3 +290,101 @@ static func frame_supplement_two(t: TestCase, root: Window) -> void:
 	t.eq(setup.difficulty_numeral(3), "Ⅲ", "3 级「Ⅲ」")
 	game.queue_free()
 	Support.cleanup("setup180f")
+
+
+static func frame_supplement_three_four(t: TestCase, root: Window) -> void:
+	t.begin("180 补三 / 补四 / 补五（作者 11:22 / 11:32 / 11:38 / 11:49）：翻页有方向；〇级收成「开启挑战」，点开：卷轴并拢下移、按钮换成铜牌 / 计数器 / 加减，再拉开放出 Ⅰ 级一行；收起反过来；过渡中点一下到终态；到头的加减真灰")
+	var game = _game(root, "setup180g")
+	var flow: GameFlow = game.flow
+	flow.settings.ui_fades = true
+	var setup = game.base()
+	setup.show_page(2)
+	var block: DifficultyBlock = setup._diff_block
+	var counter: FlipCounter = setup._flipper
+	counter.size = Vector2(120, 100)
+	var closed_y := block.rods_y
+	# 点「开启挑战」：拨到 Ⅰ、展开
+	setup._diff_plate.pressed.emit()
+	t.eq(setup.difficulty_index, 1, "点按钮 → Ⅰ")
+	t.check(setup.difficulty_open() and block.transitioning(), "开始展开过渡")
+	block._tween.custom_step(DifficultyBlock.MOVE_SEC * 0.5)
+	t.check(block.rods_y > closed_y and block.rods_y < block.open_rods_y(), "第一段：两根卷轴一起往下移（%.1f）" % block.rods_y)
+	t.check(setup._diff_plate.modulate.a < 1.0 and setup._counter.modulate.a > 0.0 and block.title.modulate.a > 0.0, "按钮面淡出，铜牌 / 计数器淡入")
+	t.eq(counter.last_dir, 0, "还没翻页")
+	block._tween.custom_step(DifficultyBlock.MOVE_SEC * 0.5 + 0.01)
+	t.check(absf(block.rods_y - block.open_rods_y()) < 0.5, "卷轴到了纸的位置")
+	t.eq(counter.last_dir, 1, "第二段：〇 → Ⅰ 从下往上翻")
+	t.check(counter.flipping(), "正在翻")
+	t.eq(setup._challenge.rows().size(), 1, "纸上一行（〇级没有行）")
+	t.check(setup._challenge.shown_h < setup._challenge.paper_height(), "两根卷轴正在拉开")
+	block._tween.custom_step(DifficultyBlock.SPREAD_SEC)
+	t.check(not block.transitioning(), "过渡完了")
+	t.check(absf(setup._challenge.shown_h - setup._challenge.paper_height()) < 0.5, "拉开到一行的高")
+	t.check(not setup._diff_plate.visible and block.title.modulate.a == 1.0 and setup._counter.modulate.a == 1.0, "展开态：铜牌、计数器、加减")
+	t.eq(setup._minus_btn.theme_type_variation, UiTheme.BUTTON_STEP, "加减用专门的灰态")
+	t.check(not setup._minus_btn.disabled, "Ⅰ 级：减可按（回〇级收起）")
+	# 收起：先翻回〇、卷轴合拢，再上移回按钮背后
+	setup.step_difficulty(-1)
+	t.eq(counter.last_dir, -1, "按减：从上往下翻")
+	t.check(not setup.difficulty_open() and block.transitioning(), "开始收起过渡")
+	block._tween.custom_step(DifficultyBlock.SPREAD_SEC * 0.5)
+	t.check(setup._challenge.shown_h < setup._challenge.paper_height() and absf(block.rods_y - block.open_rods_y()) < 0.5, "先合拢，卷轴还在纸的位置")
+	# 过渡中点一下：直接到终态
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	block._on_shield_input(click)
+	t.check(not block.transitioning() and setup._diff_plate.visible and setup._counter.modulate.a == 0.0, "过渡中点一下：直接收好")
+	t.check(absf(block.rods_y - closed_y) < 0.5 and setup._challenge.rows().is_empty(), "卷轴回到按钮背后，纸空")
+	t.eq(setup._difficulty_num.text, "〇", "计数器〇")
+	# 到头的灰态和平常不一样
+	var off: StyleBoxFlat = setup._plus_btn.get_theme_stylebox("disabled") as StyleBoxFlat
+	var on: StyleBoxFlat = setup._plus_btn.get_theme_stylebox("normal") as StyleBoxFlat
+	t.check(off != null and on != null and off.bg_color != on.bg_color, "灰态的底不同于平常（压到板色）")
+	t.check(setup._plus_btn.get_theme_color("font_disabled_color").a <= 0.51, "灰态字暗一半")
+	game.queue_free()
+	Support.cleanup("setup180g")
+
+	# 只解锁了普通：铜牌压灰、悬停提示
+	var g2 = _game(root, "setup180h", false)
+	var s2 = g2.base()
+	s2.show_page(2)
+	t.check(s2._diff_plate.disabled and s2._diff_plate.tooltip_text == "通关一次后开放", "一个难度都没解锁：铜牌压灰，提示通关一次后开放")
+	g2.queue_free()
+	Support.cleanup("setup180h")
+
+
+static func frame_challenge_scroll(t: TestCase, root: Window) -> void:
+	t.begin("180 补三 / 补五 · 羊皮纸：每级一行从下到上、新行在最上、数字列固定宽（点对齐）；底卷轴常在，纸长超上限时收束、默认看最新、滚轮滚、加一级回到顶")
+	var sc := ChallengeScroll.new(308)
+	root.add_child(sc)
+	var lines: Array = [[1, "体力上限少一点"], [2, "侵蚀更重，包里的东西会受损，越往深处越严重"], [3, "猎手循着脚步追来"]]
+	sc.set_lines(lines.slice(0, 1), false)
+	sc.set_lines(lines.slice(0, 2), false)
+	t.eq(int(sc.rows()[0]["level"]), 2, "新的一级在最上")
+	t.eq(int(sc.rows()[-1]["level"]), 1, "最低级在最下")
+	var nums: Array = sc.rows().map(func(r: Dictionary) -> Label: return (r["box"] as Control).find_child("Num", true, false))
+	t.check(nums.all(func(l: Label) -> bool: return l.custom_minimum_size.x == ChallengeScroll.NUM_W and l.horizontal_alignment == HORIZONTAL_ALIGNMENT_RIGHT), "数字一列固定宽、右对齐 → 点在一条竖线上")
+	t.eq((nums[0] as Label).text, "Ⅱ", "罗马数字")
+	t.check(sc.bottom_rod.visible and not sc.capped(), "补五：没超长也有底卷轴（纸由两根卷轴夹着）")
+	var one := sc.content_height()
+	sc.max_paper = one - 1.0
+	sc.set_lines(lines, false)
+	t.check(sc.capped() and sc.bottom_rod.visible, "超长：底卷轴收束")
+	t.eq(sc.shown_h, sc.max_paper, "纸停在上限")
+	t.eq(sc.bottom_rod.position.y, sc.top_rod.custom_minimum_size.y + sc.max_paper, "底卷轴贴着纸下沿")
+	t.eq(sc.scroll_y, 0.0, "默认看最新的几级")
+	var ev := InputEventMouseButton.new()
+	ev.button_index = MOUSE_BUTTON_WHEEL_DOWN
+	ev.pressed = true
+	sc._on_paper_input(ev)
+	t.check(sc.scroll_y > 0.0, "滚轮往下：看更早的级")
+	for i in 10:
+		sc._on_paper_input(ev)
+	t.eq(sc.scroll_y, sc.max_scroll(), "到底不再动")
+	sc.set_lines(lines.slice(0, 2), false)
+	sc.set_lines(lines, false)
+	t.eq(sc.scroll_y, 0.0, "加一级：回到顶")
+	sc.set_lines(lines.slice(0, 2), true)
+	t.eq(sc.rows().size(), 2, "减一级：最上那行收回")
+	sc.free()
