@@ -20,4 +20,4 @@ func text_of() -> String:
 		var def: RunBuffDef = run.buff_defs.get(StringName(String(entry["id"])), null)
 		var name := def.display_name if def != null else String(entry["id"])
 		parts.append(name + ("（剩 %d 步）" % int(entry["left"]) if int(entry["left"]) > 0 else ""))
-	return "buff：" + "、".join(parts) if not parts.is_empty() else ""
+	return "状态：" + "、".join(parts) if not parts.is_empty() else ""

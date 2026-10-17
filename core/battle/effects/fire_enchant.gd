@@ -28,7 +28,7 @@ func estimated_damage(_stats: StatSet) -> float:
 
 
 func describe() -> String:
-	return "出手时附带火焰伤害 max(%.0f, %d%% 武器伤害)" % [fixed, percent]
+	return "出手时附带火焰伤害：武器伤害的 %d%%，至少 %.0f 点" % [percent, fixed]
 
 
 ## 151：估值 —— max(固定, 一下武器伤害的百分之几)

@@ -207,4 +207,4 @@ static func run_axis_passive_note(t: TestCase) -> void:
 	var back := AltarModule.new()
 	back.restore(m.to_dict())
 	t.eq(int(back.axes().get(StatAxes.FIRE_DAMAGE, 0)), 7, "跟存档（modules.altar.axis_bonus）")
-	t.check(StatAxes.describe(StatAxes.FIRE_DAMAGE, 0, 7).contains("不可解除"), "悬浮窗里写明系统层不可解除")
+	t.check(StatAxes.describe(StatAxes.FIRE_DAMAGE, 0, 7).contains("无法清除"), "悬浮窗里写明系统层无法清除")

@@ -262,7 +262,7 @@ static func run_event_flags_and_texts(t: TestCase) -> void:
 	var hf := HasFlag.new()
 	hf.flag = &"met_stranger"
 	t.check(not hf.check(ctx), "没立过旗：不满足")
-	t.eq(hf.describe(), "需要旗标「met_stranger」", "说明")
+	t.eq(hf.describe(), "条件还没满足", "说明不露旗标 id")
 	var sf := SetFlag.new()
 	sf.flag = &"met_stranger"
 	sf.apply(ctx)

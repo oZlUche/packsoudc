@@ -258,4 +258,4 @@ static func run_faith_placeholders(t: TestCase) -> void:
 	t.eq(TextTemplate.refs("{faith:brute}{faith_perk:sun:x:y}").size(), 2, "refs 认信仰引用")
 	var cond := FaithActive.new()
 	cond.faith = &"brute"
-	t.check(cond.describe().contains("brute"), "条件说明点名要哪位神")
+	t.check(cond.describe().contains("蛮神"), "条件说明点名要哪位神")

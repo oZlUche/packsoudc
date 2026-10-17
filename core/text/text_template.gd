@@ -396,10 +396,9 @@ static func _enemy_into(ctx: Dictionary, content: Dictionary, run: RunState) -> 
 	if spec != null:
 		ctx["enemy_hp"] = spec.max_hp_int()
 		ctx["enemy_dps"] = "%.1f" % spec.rough_dps()
-		ctx["battle_data"] = "%s（%d 档）　生命 %d　约 %.1f DPS　%d 件：%s" % [
-			Names.of(def), int(content.get("strength", 0)), spec.max_hp_int(), spec.rough_dps(), names.size(), "、".join(names)]
+		ctx["battle_data"] = "%s　生命 %d　%d 件：%s" % [Names.of(def), spec.max_hp_int(), names.size(), "、".join(names)]
 	else:
-		ctx["battle_data"] = "%s（%d 档）" % [Names.of(def), int(content.get("strength", 0))]
+		ctx["battle_data"] = Names.of(def)
 
 
 ## 175：罗马数字（Ⅰ 到 Ⅻ，和 167 的倍速同一套字形）—— 法杖轮读到第几颗；超出的写阿拉伯数字

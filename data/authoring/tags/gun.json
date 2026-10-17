@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Modern firearm (sealed)."
   },
-  "category": "purpose"
+  "category": "purpose",
+  "internal": true
 }

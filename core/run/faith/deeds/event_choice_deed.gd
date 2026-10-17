@@ -17,4 +17,4 @@ func gain(event: StringName, payload: Dictionary) -> int:
 
 
 func describe() -> String:
-	return ("事件里选带「%s」的选项 +%d" % [tag, amount]) if tag != &"" else ("事件里做选择 +%d" % amount)
+	return ("事件里选带「%s」的选项 +%d" % [Glossary.tag_name(tag), amount]) if tag != &"" else ("事件里做选择 +%d" % amount)

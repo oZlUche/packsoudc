@@ -51,5 +51,6 @@ func describe() -> String:
 		parts.append("体积正好为%s" % ItemVolume.grade_name(exact_grade))
 	if has_stat != &"":
 		parts.append("带有%s属性" % Glossary.stat_name(has_stat))
-	var main := "%s（2^稀有度 × %s%s）" % ["；".join(parts) if not parts.is_empty() else "任何道具", TextTemplate.num(multiplier), " × 格子数" if per_cell else ""]
+	# 作者 2026-10-17：不写公式，写成玩家话
+	var main := "%s（越稀有给得越多%s）" % ["；".join(parts) if not parts.is_empty() else "任何道具", "，越大给得越多" if per_cell else ""]
 	return main if note == "" else "%s　%s" % [main, TextTemplate.render(note, TextParams.of(self))]

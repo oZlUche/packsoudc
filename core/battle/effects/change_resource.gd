@@ -66,7 +66,9 @@ func apply(ctx: RuleContext) -> void:
 
 
 func describe() -> String:
-	return "%s %s %.0f" % ["获得" if amount >= 0.0 else "失去", resource_key, absf(amount)]
+	# 作者 2026-10-17：资源写中文名（原来直接印英文键「获得 hp 25」）
+	var verb := ("回复" if resource_key == &"hp" else "获得") if amount >= 0.0 else "失去"
+	return "%s %.0f 点%s" % [verb, absf(amount), Glossary.resource_name(resource_key)]
 
 
 ## 151：估值 —— 生命 / 护甲：得到的乘治疗权重、失去的按伤害算；耐力 / 法力乘耐力权重；
