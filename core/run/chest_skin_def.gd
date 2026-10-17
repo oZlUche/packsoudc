@@ -39,6 +39,17 @@ func open_for(rarity: int) -> String:
 	return _pick(open, rarity)
 
 
+## 背景图旁边的 json（作者 2026-10-17 交的四张）：`tone` 深 / 浅、`size` 原图大小、`chest_foot_y` 宝箱落地那条线（原图像素）。没图没 json = {}
+func background_meta() -> Dictionary:
+	if background == "":
+		return {}
+	var path := background.get_basename() + ".json"
+	if not FileAccess.file_exists(path):
+		return {}
+	var d = JSON.parse_string(FileAccess.get_file_as_string(path))
+	return d if d is Dictionary else {}
+
+
 ## 写了的全部图（导入器查在不在）
 func all_paths() -> Array[String]:
 	var out: Array[String] = []
