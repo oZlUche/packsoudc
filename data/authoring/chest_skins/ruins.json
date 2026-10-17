@@ -1,4 +1,5 @@
 {
   "id": "ruins",
-  "display_name": "废墟"
+  "display_name": "废墟",
+  "background": "res://assets/chest/bg/ruins.png"
 }

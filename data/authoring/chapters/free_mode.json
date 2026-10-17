@@ -446,5 +446,6 @@
   ],
   "step_limit": 36,
   "safes": 1,
-  "carry_budget": 600
+  "carry_budget": 600,
+  "chest_skin": "imperial_camp"
 }

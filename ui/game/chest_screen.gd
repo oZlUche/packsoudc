@@ -13,6 +13,10 @@ extends GameScreen
 const OPEN_PAUSE_SECONDS := 0.45
 ## 没有闭箱图时占位宝箱的大小
 const PLACEHOLDER_SIZE := Vector2(280, 220)
+## 宝箱图里「落地」那条线在图高的几成（占位宝箱地上影子的中心）：对着背景图的 `chest_foot_y` 摆
+const FOOT_SHARE := 0.9
+## 宝箱上下两行字的间距
+const COL_GAP := 14
 
 const TEXT_IDLE := "点击宝箱开锁"
 const TEXT_TRYING := "尝试开锁"
@@ -38,6 +42,13 @@ var _trying_strip: FrameStrip = null
 var _open_strip: FrameStrip = null
 var _closed_tex: Texture2D = null
 var _open_tex: Texture2D = null
+## 背景图（作者 2026-10-17）：原图大小、宝箱落地线（原图像素，0 = 没写，居中排）、深浅
+var _bg_size := Vector2.ZERO
+var _foot_y := 0.0
+var bg_tone: StringName = UiTheme.TONE_DARK
+## 居中放宝箱那一列的容器（上下挪它让箱底落在背景的地上）
+var _center: CenterContainer = null
+var _title: Label = null
 
 
 func open(payload: Dictionary) -> void:
@@ -68,16 +79,24 @@ func open(payload: Dictionary) -> void:
 		bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(bg)
+		var meta := skin.background_meta()
+		var wh: Array = meta.get("size", [])
+		_bg_size = Vector2(float(wh[0]), float(wh[1])) if wh.size() == 2 else bg_tex.get_size()
+		_foot_y = float(meta.get("chest_foot_y", 0.0))
+		bg_tone = UiTheme.TONE_LIGHT if String(meta.get("tone", "")) == "light" else UiTheme.TONE_DARK
+	set_meta(&"tone", bg_tone)     # 字直接写在背景图上：浅图墨字、深图白字
 
 	var center := _full_center()
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
-	var col := _vbox(14)
+	_center = center
+	var col := _vbox(COL_GAP)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_child(col)
 	var title := _label("%s宝箱" % ItemTooltip.rarity_name(rarity), 16, ItemPainter.RARITY_COLORS[rarity])
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(title)
+	_title = title
 	view = ChestView.new()
 	view.screen = self
 	view.custom_minimum_size = _closed_tex.get_size() if _closed_tex != null else PLACEHOLDER_SIZE
@@ -92,6 +111,34 @@ func open(payload: Dictionary) -> void:
 	back.tooltip_text = "没开锁就走：这个点不算用过，站着或回来还能再开（Esc）"
 	add_child(back)
 	back.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, 24)
+	UiTheme.set_tone(center, bg_tone)
+	UiTheme.refresh_tones(center)
+	resized.connect(place_chest)
+	place_chest()
+
+
+## 背景图写了落地线：把宝箱那一列上下挪，让箱底（[constant FOOT_SHARE]）落在图上那块光斑上（背景按 cover 铺，跟着窗口算）。
+## 没写落地线就照旧整列居中。按最小尺寸算，不等容器排版
+func place_chest() -> void:
+	if _center == null or view == null or _title == null:
+		return
+	var shift := 0.0
+	if _foot_y > 0.0 and _bg_size.y > 0.0 and size.y > 0.0:
+		var s := maxf(size.x / _bg_size.x, size.y / _bg_size.y)
+		var want := (size.y - _bg_size.y * s) * 0.5 + _foot_y * s
+		var col_h := (_center.get_child(0) as Control).get_combined_minimum_size().y
+		var foot := (size.y - col_h) * 0.5 + _title.get_combined_minimum_size().y + COL_GAP + view.custom_minimum_size.y * FOOT_SHARE
+		shift = want - foot
+	_center.offset_top = shift
+	_center.offset_bottom = shift
+
+
+## 箱底现在落在屏上哪一行（测试看；按最小尺寸算，和 [method place_chest] 同一套）
+func chest_foot_y() -> float:
+	if _center == null or view == null or _title == null:
+		return 0.0
+	var col_h := (_center.get_child(0) as Control).get_combined_minimum_size().y
+	return _center.offset_top + (size.y - col_h) * 0.5 + _title.get_combined_minimum_size().y + COL_GAP + view.custom_minimum_size.y * FOOT_SHARE
 
 
 static func _load_skin(id: StringName) -> ChestSkinDef:
