@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Sealed modern item: kept in data, never appears."
   },
-  "category": "element"
+  "category": "element",
+  "internal": true
 }

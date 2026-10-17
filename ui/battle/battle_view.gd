@@ -170,7 +170,7 @@ func buff_tip_parts(id: String, side: int = 0) -> Dictionary:
 		return _parts(Glossary.tip_head(note.name, "@term", "", "常驻"), [note.describe()])
 	var def: BuffDef = panel.buff_defs.get(StringName(id), null)
 	if def == null:
-		return _parts(Glossary.tip_head(id, "@term"), ["（没有这个状态的定义）"])
+		return _parts(Glossary.tip_head(id, "@term"), ["（数据缺失）"])
 	return Glossary.buff_tip_parts(def, int(panel.stacks().get(id, 0)), panel.time_left(id))
 
 

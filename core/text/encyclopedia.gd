@@ -22,8 +22,6 @@ const GROUPS := {
 	"trigger": {"zh": "时机", "en": "Timings"}, "reaction": {"zh": "反应", "en": "Reactions"},
 }
 const GROUP_ORDER := ["term", "tag", "dtype", "reaction", "buff", "stat", "trigger"]
-## 还没有说明的词条页正文
-const NO_TEXT := "（这一页的说明还没写。）"
 ## 140：「合成」这一页的正文下面列全部配方（两件 → 产物，配上作者写的那句 `note`）
 const RECIPE_PAGE := "crafting"
 
@@ -77,8 +75,10 @@ static func build(help: Array, item_db: ItemDatabase, p_recipes: Array = []) -> 
 func _add(id: String, title: String, group: String, text: String, related: Array[String] = [], with_items: Array[StringName] = []) -> void:
 	if _pages.has(id) or title == "":
 		return
+	if text == "" and with_items.is_empty():     # 2026-10-17：没写说明的页不生成，不给玩家看空页
+		return
 	_pages[id] = {"id": id, "title": title, "category": TERMS_CATEGORY, "group": group, "order": _order.size(),
-		"text": text if text != "" else NO_TEXT, "related": related, "items": with_items}
+		"text": text, "related": related, "items": with_items}
 	_order.append(id)
 	if not _links.has(title):
 		_links[title] = id
@@ -126,11 +126,11 @@ static func reaction_text(def: ReactionDef) -> String:
 	return "\n".join(lines)
 
 
-## 175：「火 + 毒：目标身上带着其中一种印，再挨上另一种」
+## 175：「火 + 毒」
 static func pair_line(def: ReactionDef) -> String:
 	var a := ReactionResolver.element_name(def.elements[0]) if def.elements.size() > 0 else "?"
 	var b := ReactionResolver.element_name(def.elements[1]) if def.elements.size() > 1 else "?"
-	return "%s + %s：目标身上带着其中一种元素的印，再挨上另一种" % [a, b]
+	return "%s + %s" % [a, b]
 
 
 ## 带这个标签的道具 id（按 id 排）

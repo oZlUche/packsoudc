@@ -17,7 +17,7 @@ static func describe(def: FaithDef, power: FaithPower = null, items: ItemDatabas
 		lines.append("[color=#8b93a1]%s[/color]" % desc)
 	# 信力怎么涨
 	var deeds := def.deeds_summary()
-	lines.append("[color=#f0ad4e]信力怎么涨：[/color]%s" % (deeds if deeds != "" else "（没有配行为）"))
+	lines.append("[color=#f0ad4e]信力怎么涨：[/color]%s" % (deeds if deeds != "" else "（无）"))
 	# 阈值与现在
 	var ths: Array[String] = []
 	for th in def.thresholds:
@@ -60,5 +60,5 @@ static func describe(def: FaithDef, power: FaithPower = null, items: ItemDatabas
 					continue
 				bits.append(b.describe())
 			lines.append("　%s%s" % [Names.of(d), ("：" + "；".join(bits)) if not bits.is_empty() else "（没有按阶解锁的功能）"])
-	lines.append("[color=#8b93a1]别的信仰的道具休眠：只留通用效果（盾的减伤、武器的攻击力），护符彻底失效。切换 = 把道具挪到地上再挪回[/color]")
+	lines.append("[color=#8b93a1]其他信仰的道具会休眠，只保留基础效果。右键信物可切换主信仰。[/color]")
 	return "\n".join(lines)

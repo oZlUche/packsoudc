@@ -56,5 +56,5 @@ static func _stamina_of(rule: AbilityRule, stats: StatSet) -> float:
 static func describe(spec: CombatantSpec) -> String:
 	var e := of(spec)
 	var cap := StatMath.to_float(CombatantRuntime.from_spec(spec, 0).stat(BattleStats.MAX_STAMINA)) if spec != null else 0.0
-	return "耐力消耗：%s\n每秒平均消耗 %.1f　每秒回复 %.1f%s　耐力上限 %.0f\n回复与上限都算上了道具（口粮这类）" % [
+	return "耐力消耗：%s\n每秒平均消耗 %.1f　每秒回复 %.1f%s　耐力上限 %.0f" % [
 		e["rating"], e["cost"], e["regen"], "" if e["regen"] > 0.0 else "（不回复）", cap]

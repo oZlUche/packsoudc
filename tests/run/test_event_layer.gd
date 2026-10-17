@@ -295,7 +295,7 @@ static func run_two_phase(t: TestCase) -> void:
 	t.check(m.has_buff_tag(&"marked"), "有标记了")
 	var l := _start_with_custom(c, found, &"t_locked")
 	l.step_to(next)
-	t.check(not bool(l.events.option_state(0)["ok"]) and String(l.events.option_state(0)["why"]).contains("marked"), "没标记：「认出」锁住并说原因")
+	t.check(not bool(l.events.option_state(0)["ok"]) and String(l.events.option_state(0)["why"]).contains("被盯上了"), "没标记：「认出」锁住并说原因")
 	t.check(not bool(l.events.option_state(1)["ok"]) and String(l.events.option_state(1)["why"]).contains("999999"), "太贵：锁住并说原因")
 	t.check(not l.events.choose(0), "锁住的选不了")
 	var can_pay := l.wallet.balance >= 10

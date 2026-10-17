@@ -115,7 +115,7 @@ static func run_conditions(t: TestCase) -> void:
 	t.check(hi.check(ctx), "两处合计 2 件")
 	hi.count = 3
 	t.check(not hi.check(ctx), "合计 2 < 3")
-	t.eq(hi.describe(), "需要medkit ×3", "说明")
+	t.eq(hi.describe(), "需要医疗包 ×3", "说明写道具名")
 	var any := HasItem.new()
 	t.check(any.check(ctx), "item 空 = 任何道具")
 	t.eq(ctx.count_item(&"", 2), 2, "数得出两处一共 2 件")

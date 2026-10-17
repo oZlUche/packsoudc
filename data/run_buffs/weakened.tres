@@ -14,6 +14,6 @@ amount = -10.0
 script = ExtResource("4_ohfpi")
 id = &"weakened"
 display_name = "虚弱"
-description = "走 {duration_steps} 步之内伤害 {amount|signed}%（地图 buff 的测试用例）"
+description = "走 {duration_steps} 步之内伤害 {amount|signed}%"
 duration_steps = 5
 mods = Array[ExtResource("2_6koqi")]([SubResource("Resource_cdrvw")])

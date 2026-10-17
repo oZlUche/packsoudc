@@ -82,20 +82,19 @@ func _build_summary(col: VBoxContainer, outer: VBoxContainer) -> void:
 	var extracted := r.is_extracted()
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.add_child(_centered(_label("撤离成功" if extracted else "战败", 28, UiPalette.HEAL if extracted else UiPalette.HP)))
-	col.add_child(_centered(_label("%s　种子 %d　%s" % [r.chapter_name, r.run_seed, _reason_text(r.reason)], 13, UiPalette.DIM)))
+	col.add_child(_centered(_label("%s　%s" % [r.chapter_name, _reason_text(r.reason)], 13, UiPalette.DIM)))     # 作者 2026-10-17：种子不给玩家看
 	col.add_child(_centered(_label("走了 %d 步　踩过 %d 个点　打赢 %d 场　打输 %d 场" % [r.steps, r.visited, r.battles_won, r.battles_lost], 14, UiPalette.FG)))
 	# 104：信力节奏的量尺（数值都是占位，作者打几局对着这一行调表）；开发版可以导 CSV
-	if r.faith_pace != "":
+	if r.faith_pace != "" and GameSettings.dev_build():     # 作者 2026-10-17：调表用的量尺只在开发环境
 		var pace_row := _hbox(12)
 		pace_row.alignment = BoxContainer.ALIGNMENT_CENTER
 		pace_row.add_child(_label(r.faith_pace, 13, UiPalette.DIM))
-		if OS.is_debug_build():
-			var pace_note := _label("", 12, UiPalette.DIM)
-			var export_csv := func():
-				var path := r.export_faith_csv()
-				pace_note.text = ("已写到 " + ProjectSettings.globalize_path(path)) if path != "" else "没写成"
-			pace_row.add_child(_button("导出信力 CSV", export_csv, 12, UiPalette.Tier.MINOR))
-			pace_row.add_child(pace_note)
+		var pace_note := _label("", 12, UiPalette.DIM)
+		var export_csv := func():
+			var path := r.export_faith_csv()
+			pace_note.text = ("已写到 " + ProjectSettings.globalize_path(path)) if path != "" else "没写成"
+		pace_row.add_child(_button("导出信力 CSV", export_csv, 12, UiPalette.Tier.MINOR))
+		pace_row.add_child(pace_note)
 		col.add_child(pace_row)
 	var lit := int(flow.last_absorbed.get("lit", 0))
 	var row := _hbox(48)

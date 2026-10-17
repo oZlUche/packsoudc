@@ -103,8 +103,7 @@ func pick_spawn(id: int) -> bool:
 	_view.bold_route = _route_index_of_entry(id)
 	_after_move()
 	_rebuild_routes()
-	var route := _route_of_entry(id)
-	_say("从出生点 %d 出发（%s）。点相邻的点走一步；B 开背包" % [id, String(route.get("style", "?"))])
+	_say("出发了。点相邻的点走一步；B 开背包")
 	return true
 
 
@@ -178,7 +177,7 @@ func _open_confirm(node: MapNode) -> void:
 			left_value += ItemValue.of(def)
 			if def.rarity >= 2:
 				rare += 1
-		col.add_child(_wrapped("地上还有 %d 件（值 %d 币%s）不会带出去 —— 地上不参战也不出关（3.4）。想带走先放进棋盘（B）" % [
+		col.add_child(_wrapped("地上还有 %d 件（值 %d 币%s）不会带出去 —— 地上不参战也不出关。想带走先放进棋盘（B）" % [
 			left, left_value, "，其中 %d 件稀有以上" % rare if rare > 0 else ""], 14, UiPalette.STAMINA, 480))
 	var buttons := _hbox(8)
 	var go := _button("确定撤离", func(): confirm_extract(), 14)
@@ -396,9 +395,7 @@ func _adopt() -> void:
 	_run.travel.waited.connect(func(actions: int):
 		_note("　原地耗了 %d 步" % actions)
 		_after_move())
-	_run.travel.refused.connect(func(_i: MoveIntent, why: String, code: StringName):
-		_say("走不了：" + why)     # 开发看的原因（带点号）
-		_hud_host.notice(UiText.t("notice.not_adjacent" if code == MapTravel.NOT_ADJACENT else "notice.cannot_move")))     # 186：玩家用语
+	_run.travel.refused.connect(_on_refused)
 	var problems: Array[String] = []
 	_hud_host.debug = debug_mode()     # 150 补 2
 	_hud_host.setup(_run, self, HudLayout.load_for("map", problems))     # 150
@@ -722,7 +719,7 @@ func enemy_preview(id: int) -> String:
 	if not EnemyKit.has_enemy(content):
 		return ""
 	var line := EnemyKit.summary(content, flow.enemies, _run.pool, flow.items)
-	if _run.drop_rule != null:
+	if _run.drop_rule != null and GameSettings.dev_build():     # 期望掉落是调数值的读数，只在开发版显示
 		var ctx := LootContext.new()
 		ctx.difficulty = _run.chapter.difficulty
 		line += "　预计掉 %.1f 件，珍宝 %.0f%%" % [
@@ -1282,3 +1279,9 @@ func replay_battle_coach() -> void:
 	flow.save_meta()
 	_say("下一场战斗会再放一次战斗教程")
 #endregion
+
+
+## 2026-10-17：拒绝的原因是内部说明（点号、规则），玩家只看一句（186：提示行，按 [param code] 选话）；原文只进开发提示行
+func _on_refused(_intent: MoveIntent, why: String, code: StringName) -> void:
+	_say("走不了：" + why)
+	_hud_host.notice(UiText.t("notice.not_adjacent" if code == MapTravel.NOT_ADJACENT else "notice.cannot_move"))

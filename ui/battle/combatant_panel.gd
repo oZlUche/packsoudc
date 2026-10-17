@@ -393,7 +393,7 @@ func mark_dead() -> void:
 
 
 func note_fired(uid: int, now: float) -> void:
-	_last_fired = String(item_names.get(uid, "uid %d" % uid))
+	_last_fired = String(item_names.get(uid, "数据缺失"))
 	_fired_at = now
 	queue_redraw()
 

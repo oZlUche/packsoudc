@@ -176,3 +176,9 @@ func save_to(path: String = DEFAULT_PATH) -> Error:
 
 static func remove(path: String = DEFAULT_PATH) -> void:
 	AtomicFile.remove(path)
+
+
+## 作者 2026-10-17（内部文字不给玩家看）：是不是开发环境 —— 正式导出包（release / debug 模板）都不是。
+## 开发入口、调参读数只在这里显示；不用 `OS.is_debug_build()`（debug 导出包里它也是真）
+static func dev_build() -> bool:
+	return DevGate.on()     # 186：同一个开关

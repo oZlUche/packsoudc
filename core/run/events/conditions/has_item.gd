@@ -17,7 +17,7 @@ func check(ctx: EventContext) -> bool:
 
 
 func describe() -> String:
-	var what := String(item) if item != &"" else ("带「%s」的道具" % tag if tag != &"" else "任何道具")
+	var what := content_name("items", item) if item != &"" else ("带「%s」的道具" % Glossary.tag_name(tag) if tag != &"" else "任何道具")
 	if missing:
 		return "身上没有%s%s" % [what, ["（棋盘上）", "（地上）", ""][where]]
 	return "需要%s ×%d%s" % [what, maxi(1, count), ["（棋盘上）", "（地上）", ""][where]]
