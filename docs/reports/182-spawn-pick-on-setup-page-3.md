@@ -70,3 +70,4 @@
 - **转场**：`reveal_payload()` 多带 `mask_center`（墨化那片的圆心，纸上的洞开在这里）、`view_zoom`、`view_center`、`spawn_id`、`spawn_at`。`center` 与 `ring_gap` 已含微放大，所以第一帧出生点正好在纸上它的印记处。终点是平时进图的视角，人已站在出生点上，`focus` 对准它。
 - **旧档**：地图屏的挑出生点路径（灰罩、路线卡）原样留着，只给停在挑出生点阶段的旧存档与不经开局屏的直开用。
 - **测试**：`tests/ui/test_spawn_pick_182.gd`；`test_setup_180`、`test_setup_pages_161` 的出发前先挑一个出生点，并加了转场起止落在出生点的检查。
+- **定稿美术（v3.26，随 184）**：入口是小旗三态（`setup/spawn_flag_normal` / `_hover` / `_sel`，选中的红圈画在图里）；提示窗是纸签九宫格 `setup/node_tip_paper`，上沿正中单独画红蜡封 `setup/node_tip_seal`。微放大后被推出墨化那片的入口淡掉、点不着。

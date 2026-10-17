@@ -64,6 +64,11 @@ func draw_edge(
 	canvas.draw_line(a, b, color, width, true)
 
 
+## 184：一条边画出来走的那串点（画布坐标，从 [param a] 到 [param b]）—— 可走的墨路沿着它画，和底下那条边重合。默认是直线
+func edge_points(_graph: MapGraph, _edge: MapEdge, a: Vector2, b: Vector2, _rect: Rect2 = Rect2()) -> PackedVector2Array:
+	return PackedVector2Array([a, b])
+
+
 ## 传送点（8-1）：虚线、紫色，两端各一个小圈 —— 和普通的路一眼能分开
 static func draw_portal(canvas: CanvasItem, a: Vector2, b: Vector2, width: float) -> void:
 	var color := Color(0.70, 0.55, 1.0, 0.85)
