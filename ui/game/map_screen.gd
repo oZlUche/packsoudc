@@ -95,6 +95,7 @@ func refresh() -> void:
 
 
 #region 公开动作
+## 182：新的一局在开局第三页就挑好了出生点、直接站在上面；这条路只留给停在挑出生点阶段的旧存档（与不经开局屏的直开）一版
 func pick_spawn(id: int) -> bool:
 	if not flow.pick_spawn(id):
 		return false
@@ -1084,20 +1085,24 @@ func reveal_allowed(reveal: Dictionary) -> bool:
 
 
 ## 起点对齐第三页：缩放 = 预览的圈距 ÷ 环距（[constant RingLayoutBase.RING_STEP]），画布中心落在预览圆心 —— 第一帧的圈和预览上的圈重合；
-## 终点是平时进图的视角（[method MapView.open_at] 算好的）。纸从预览的半径化开到盖过全屏。视图还没尺寸就等它一下
+## 终点是平时进图的视角（[method MapView.open_at] 算好的；182：第三页挑好了出生点，人已经站在上面，于是终点就是以出生点为中心）。
+## 纸从预览的半径化开到盖过全屏。视图还没尺寸就等它一下
 func begin_reveal(reveal: Dictionary) -> void:
 	if _view.size.x <= 0.0 or _view.size.y <= 0.0:
 		await _view.resized
 		if not is_instance_valid(_view):
 			return
-	var center := _view.get_global_transform().affine_inverse() * (reveal.get("center", _view.size * 0.5) as Vector2)
+	var to_local := _view.get_global_transform().affine_inverse()
+	var center := to_local * (reveal.get("center", _view.size * 0.5) as Vector2)
+	# 182：第三页微放大过时圈的圆心跟着挪了，墨化的那片没动 —— 纸上的洞开在那片上（没给就是圈的圆心）
+	var hole := to_local * (reveal.get("mask_center", reveal.get("center", _view.size * 0.5)) as Vector2)
 	var zoom0 := float(reveal["ring_gap"]) / RingLayoutBase.RING_STEP
 	var far := 0.0
 	for corner in [Vector2.ZERO, Vector2(_view.size.x, 0.0), Vector2(0.0, _view.size.y), _view.size]:
-		far = maxf(far, center.distance_to(corner))
+		far = maxf(far, hole.distance_to(corner))
 	_reveal = {"zoom0": zoom0, "pan0": center - _view.canvas_rect().get_center() * zoom0,
-		"r0": maxf(0.0, float(reveal.get("radius", 0.0))), "r1": far * 1.3 + MapPreview.SOFTNESS * 2.0, "center": center}
-	_paper = _make_paper(center)
+		"r0": maxf(0.0, float(reveal.get("radius", 0.0))), "r1": far * 1.3 + MapPreview.SOFTNESS * 2.0, "center": center, "hole": hole}
+	_paper = _make_paper(hole)
 	var area := _view.get_parent()
 	area.add_child(_paper)
 	area.move_child(_paper, _view.get_index() + 1)

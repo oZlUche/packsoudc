@@ -17,6 +17,24 @@ const ALL: Array[StringName] = [
 const STRUCTURAL: Array[StringName] = [&"core", &"spawn", &"extract", &"junction"]
 
 
+## 182：每一类节点一句说明（对玩家说的话）—— 开局第三页点出生点时居中弹的提示窗用；章节的浮窗文字（`ChapterDef.tooltip_texts`）有就先用那份
+const HINTS := {
+	&"battle": "有人守着，过去就得打一场。",
+	&"elite": "守着这里的是狠角色，打赢了收获也大。",
+	&"event": "这里可能会发生什么，踩上去才知道。",
+	&"random": "看不透的地方，踩上去才知道是什么。",
+	&"search": "有值得翻一翻的东西，翻得越久越可能惊动附近的人。",
+	&"shop": "有人在这里做买卖。",
+	&"rest": "能歇脚的地方，回一点体力。",
+	&"extract": "撤离点：站上去就能结束这一局、带着东西离开。",
+	&"junction": "几条路在这里交汇。",
+	&"core": "这张图的核心，最强的守卫在这里。",
+	&"spawn": "从这里进图。挑一个入口，这一局就从它开始走。",
+	&"safe": "保险箱：放进去的东西就算带出去了。",
+	&"chest": "上锁的宝箱，长按开锁。",
+}
+
+
 static func has(type: StringName) -> bool:
 	return ALL.has(type)
 

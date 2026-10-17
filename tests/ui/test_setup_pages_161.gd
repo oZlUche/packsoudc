@@ -121,8 +121,11 @@ static func frame_three_pages(t: TestCase, root: Window) -> void:
 
 	# 出发：最后一页的「出发」= depart
 	setup.show_page(2)
+	t.check(not setup.next_page() and setup._enter_btn.disabled, "182：没挑出生点，「出发」灰着、走不了")
+	setup.pick_spawn(setup.preview().entry_ids()[0])
 	t.check(setup.next_page(), "出发")
 	t.eq(game.base().screen, GameFlow.Screen.MAP, "进了地图")
+	t.eq(flow.run.phase, RunState.Phase.ON_MAP, "182：直接站在挑的出生点上")
 	flow.to_main_menu()
 	game.queue_free()
 	Support.cleanup("setup161")
