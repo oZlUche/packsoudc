@@ -7,22 +7,30 @@
 ##   之后 [constant SPREAD_SEC] 两根卷轴上下拉开放出 Ⅰ 级那一行，计数器从〇往上翻到 Ⅰ。
 ## - 收起（Ⅰ 级按「−」）：反过来 —— 计数器翻回〇、卷轴合上收掉那一行，合上的卷轴上移回按钮背后，按钮面淡入。
 ## - 动画关着一帧到位；动画中块上盖一层挡板，点一下直接到终态
+## 180 定稿美术（作者 12:04）：收起时两根卷轴上下边缘相接（不重叠）、压在 304 × 104 的铜牌后面，只露两端轴头；
+## 展开是梯形标题牌（下沿压计数器 4 像素）| 计数器外框 250 × 160（窗里翻页卡 + 数字 + 中缝）| −、＋ 各 124 × 56 并排留 2 | 卷轴。
+## 时长照演示页：卷轴下移 0.42 秒、拉开 0.3 秒；收起时卷轴上移到位后铜牌再淡入 0.26 秒。没图时尺寸退回平面版
 class_name DifficultyBlock
 extends Control
 
 signal step_pressed(delta: int)
 signal open_pressed
 
-## 块多宽、收起时多高（对美术样稿 diff_open 304 × 104）、按钮面 / 铜牌多大
-const WIDTH := 308.0
+## 块多宽、收起时多高（定稿铜牌 304 × 104）、按钮面 / 铜牌多大（有图整张，没图小一圈）
+const WIDTH := 304.0
 const CLOSED_H := 104.0
-const FACE_SIZE := Vector2(248, 76)
-## 卷轴下移 / 上移多久、拉开 / 合上多久
-const MOVE_SEC := 0.2
-const SPREAD_SEC := 0.25
-## 竖着的间距、加减键多大
-const GAP := 10.0
-const STEP_BTN := Vector2(56, 44)
+const FACE_SIZE := Vector2(304, 104)
+const FACE_SIZE_FLAT := Vector2(248, 76)
+## 卷轴下移 / 上移多久、拉开 / 合上多久、收起后铜牌淡入多久
+const MOVE_SEC := 0.42
+const SPREAD_SEC := 0.3
+const PLATE_IN_SEC := 0.26
+## 竖着的间距、加减键多大（没图 / 有图）、计数器外框多大、标题牌压计数器多少
+const GAP := 6.0
+const STEP_BTN_FLAT := Vector2(56, 44)
+const STEP_BTN := Vector2(124, 56)
+const COUNTER_SIZE := Vector2(250, 160)
+const TITLE_OVERLAP := 4.0
 
 ## 收起时的「开启挑战」按钮面（字在按钮上）
 var open_btn: Button = null
@@ -42,6 +50,8 @@ var rods_y: float = 0.0:
 			scroll.position = Vector2(0.0, v)
 		update_minimum_size()
 var _open := false
+## 有没有定稿图（铜牌那套）：决定各件尺寸
+var _art := false
 var _tween: Tween = null
 ## 动画中盖在块上的挡板：点一下直接到终态
 var _shield: Control = null
@@ -55,7 +65,8 @@ func _init() -> void:
 	# 铜牌、计数器、加减从不 visible = false（藏着的容器最小尺寸不更新，算位置会错），只改透明度
 	clip_contents = true
 	custom_minimum_size.x = WIDTH
-	# 叠放次序（下 → 上）：铜牌、计数器、加减 | 卷轴（往下走时压过它们）|「开启挑战」按钮面（收起时压在卷轴前）| 动画挡板
+	_art = UiTheme.has_setup_art(UiTheme.ART_DIFFICULTY_PLATE)
+	# 叠放次序（下 → 上）：计数器、标题牌（压在计数器上沿）、加减 | 卷轴（往下走时压过它们）|「开启挑战」按钮面（收起时压在卷轴前）| 动画挡板
 	scroll = ChallengeScroll.new(WIDTH)
 	scroll.minimum_size_changed.connect(update_minimum_size)
 	open_btn = UiTheme.make_difficulty_plate("开启挑战", func(): open_pressed.emit())
@@ -67,15 +78,19 @@ func _init() -> void:
 	words.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	words.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.add_child(words)
-	add_child(title)
 	# 180 补二：翻页计数器 —— 黑底白字牌面、深黄铜框，罗马数字（0 级写「〇」）
 	counter = PanelContainer.new()
 	counter.theme_type_variation = UiTheme.PANEL_FLIP_COUNTER
+	UiTheme.set_tone(counter, UiTheme.tone_of(UiTheme.PANEL_FLIP_COUNTER))     # 深黄铜框里白字（纸是浅底）
 	add_child(counter)
+	add_child(title)
 	flipper = FlipCounter.new()
 	flipper.set_value("〇")
 	counter.add_child(flipper)
-	steps = UiTheme.hbox(16)
+	if _art:
+		var frame := UiTheme.current().get_stylebox("panel", UiTheme.PANEL_FLIP_COUNTER)
+		flipper.min_size = COUNTER_SIZE - frame.get_minimum_size()     # 窗口 = 外框减边
+	steps = UiTheme.hbox(2 if _art else 16)
 	steps.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(steps)
 	minus_btn = _step_button("−", -1)
@@ -95,7 +110,12 @@ func _init() -> void:
 func _step_button(text: String, delta: int) -> Button:
 	var b := UiTheme.make_button(text, func(): step_pressed.emit(delta), UiPalette.Tier.MINOR, 24)
 	b.theme_type_variation = UiTheme.BUTTON_STEP     # 补四：到头真变灰
-	b.custom_minimum_size = STEP_BTN
+	b.custom_minimum_size = STEP_BTN_FLAT
+	if _art:     # 定稿：−、＋ 画在图上，四态各一张
+		b.theme_type_variation = UiTheme.BUTTON_DIFF_MINUS if delta < 0 else UiTheme.BUTTON_DIFF_PLUS
+		b.text = ""
+		b.tooltip_text = "降一级" if delta < 0 else "升一级"
+		b.custom_minimum_size = STEP_BTN
 	steps.add_child(b)
 	return b
 
@@ -111,23 +131,32 @@ func _get_minimum_size() -> Vector2:
 	return Vector2(WIDTH, maxf(CLOSED_H, rods_y + scroll.get_combined_minimum_size().y))
 
 
-## 按钮面 / 铜牌的位置（同一处）
+## 「开启挑战」按钮面的位置
 func face_rect() -> Rect2:
-	return Rect2(Vector2((WIDTH - FACE_SIZE.x) * 0.5, (CLOSED_H - FACE_SIZE.y) * 0.5), FACE_SIZE)
+	var sz := FACE_SIZE if _art else FACE_SIZE_FLAT
+	return Rect2(Vector2((WIDTH - sz.x) * 0.5, (CLOSED_H - sz.y) * 0.5), sz)
 
 
-## 收起时两根卷轴顶在哪、中间夹多高（卷轴中线压在按钮面的上下沿）
+## 展开后「当前难度」标题牌的位置：有图是顶上一块梯形牌（按自己的大小），没图在按钮面原位
+func title_rect() -> Rect2:
+	if not _art:
+		return face_rect()
+	var sz := title.get_combined_minimum_size()
+	return Rect2(Vector2((WIDTH - sz.x) * 0.5, 0.0), sz)
+
+
+## 收起时两根卷轴顶在哪（上下边缘相接、在按钮面后面居中）、中间夹多高（0）
 func closed_rods_y() -> float:
-	return face_rect().position.y - scroll.top_rod.custom_minimum_size.y * 0.5
+	return (CLOSED_H - scroll.rods_h()) * 0.5
 
 
 func closed_hold() -> float:
-	return FACE_SIZE.y - scroll.top_rod.custom_minimum_size.y * 0.5 - scroll.bottom_rod.custom_minimum_size.y * 0.5
+	return 0.0
 
 
-## 展开时计数器、加减、卷轴顶在哪
+## 展开时计数器、加减、卷轴顶在哪（有图：标题牌下沿压计数器上沿 4 像素）
 func counter_y() -> float:
-	return face_rect().end.y + GAP
+	return title_rect().end.y - TITLE_OVERLAP if _art else title_rect().end.y + GAP
 
 
 func steps_y() -> float:
@@ -149,9 +178,12 @@ func _layout() -> void:
 	var face := face_rect()
 	open_btn.position = face.position
 	open_btn.size = face.size
-	title.position = face.position
-	title.size = face.size
+	var tr := title_rect()
+	title.position = tr.position
+	title.size = tr.size
 	var cm := counter.get_combined_minimum_size()
+	if _art:
+		cm = cm.max(COUNTER_SIZE)
 	counter.position = Vector2((WIDTH - cm.x) * 0.5, counter_y())
 	counter.size = cm
 	var sm := steps.get_combined_minimum_size()
@@ -234,9 +266,9 @@ func _play_close(numeral: String, lines: Array, dir: int) -> void:
 	_tween.set_parallel()
 	_tween.chain().tween_property(self, ^"rods_y", closed_rods_y(), MOVE_SEC).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
 	_tween.tween_property(scroll, ^"hold_h", closed_hold(), MOVE_SEC).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
-	_tween.tween_property(open_btn, ^"modulate:a", 1.0, MOVE_SEC)
 	for c: Control in [title, counter, steps]:
 		_tween.tween_property(c, ^"modulate:a", 0.0, MOVE_SEC)
+	_tween.chain().tween_property(open_btn, ^"modulate:a", 1.0, PLATE_IN_SEC)     # 卷轴到位后铜牌再淡入
 	_tween.chain().tween_callback(_end_transition)
 
 

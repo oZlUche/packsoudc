@@ -23,6 +23,10 @@ var view: InventoryView = null
 ## 拖拽层（拖着东西悬停页签切页用；不给就不切）
 var drag: DragLayer = null
 var tab_box: VBoxContainer = null
+## 180 定稿：页签换皮（开局屏第二页的挂牌，选中是按下态的图、没解锁是灰态的图，字色在变体里）；空 = 原来的平面按钮
+var tab_variation: StringName = &""
+## 页签多高（挂牌 60，绳子在上面）
+var tab_height := TAB_H
 
 var _tabs: Array[Button] = []
 var _current := 0
@@ -173,7 +177,9 @@ func _rebuild_tabs(n: int) -> void:
 		UiPalette.style_button(b, UiPalette.Tier.MINOR, 14)     # 窄页签：两行小字（页名、件数）
 		b.pressed.connect(func(): show_page(idx))
 		b.toggle_mode = true
-		b.custom_minimum_size = Vector2(TAB_W, TAB_H)
+		b.custom_minimum_size = Vector2(TAB_W, tab_height)
+		if tab_variation != &"":
+			b.theme_type_variation = tab_variation
 		b.draw.connect(_draw_lock.bind(b, idx))
 		tab_box.add_child(b)
 		_tabs.append(b)
@@ -182,7 +188,8 @@ func _rebuild_tabs(n: int) -> void:
 func _mark() -> void:
 	for i in _tabs.size():
 		_tabs[i].set_pressed_no_signal(i == _current)
-		UiTheme.mark(_tabs[i], i == _current)
+		if tab_variation == &"":
+			UiTheme.mark(_tabs[i], i == _current)
 
 
 ## 没解锁的页签右下角画一把小锁

@@ -119,7 +119,9 @@ static func frame_difficulty_and_memory(t: TestCase, root: Window) -> void:
 	var block: DifficultyBlock = setup._diff_block
 	t.check(block.scroll.top_rod.visible and block.scroll.bottom_rod.visible and block.scroll.paper_alpha == 0.0, "按钮背后两根卷好的卷轴（就是羊皮纸那对），中间不露纸")
 	var face := block.face_rect()
-	t.check(block.rods_y < face.position.y and block.rods_y + block.scroll.get_combined_minimum_size().y > face.end.y, "卷轴上下各露出一截")
+	var rods := Rect2(0.0, block.rods_y, DifficultyBlock.WIDTH, block.scroll.get_combined_minimum_size().y)
+	t.eq(block.scroll.shown_h, 0.0, "定稿：两根卷轴上下边缘相接、不重叠")
+	t.check(absf(rods.get_center().y - face.get_center().y) < 0.5, "压在铜牌后面居中（只露两端轴头）")
 	setup.step_difficulty(-1)
 	t.eq(setup.difficulty_index, 0, "减不下去")
 	for i in ladder.size() + 2:
@@ -274,7 +276,7 @@ static func frame_supplement_two(t: TestCase, root: Window) -> void:
 	t.eq(scroll.custom_minimum_size.x, want.x + setup.SCROLL_GUTTER, "宽 = 页签 + 格子 + 滚动条位")
 	t.eq(scroll.horizontal_scroll_mode, ScrollContainer.SCROLL_MODE_DISABLED, "只竖着滚")
 	t.check(scroll.custom_minimum_size.y <= want.y, "高不超过格子")
-	t.check(setup._warehouse_box is PanelContainer and (setup._warehouse_box as PanelContainer).theme_type_variation == UiTheme.PANEL_GROOVE, "仓库自己一块板")
+	t.check(setup._warehouse_box is PanelContainer and (setup._warehouse_box as PanelContainer).theme_type_variation in [UiTheme.PANEL_GROOVE, UiTheme.PANEL_STASH_FRAME], "仓库自己一块板（定稿：木框）")
 	t.check(setup._warehouse_box.get_parent() != setup._board_host.get_parent(), "和棋盘不在同一块板里")
 	t.eq(setup._warehouse_box.size_flags_vertical, Control.SIZE_SHRINK_BEGIN, "按内容高、顶边对齐")
 	# 一屏放不下：这一页只剩 300 高 → 滚动区夹在剩下的高里
@@ -321,7 +323,7 @@ static func frame_supplement_three_four(t: TestCase, root: Window) -> void:
 	t.check(not block.transitioning(), "过渡完了")
 	t.check(absf(setup._challenge.shown_h - setup._challenge.paper_height()) < 0.5, "拉开到一行的高")
 	t.check(not setup._diff_plate.visible and block.title.modulate.a == 1.0 and setup._counter.modulate.a == 1.0, "展开态：铜牌、计数器、加减")
-	t.eq(setup._minus_btn.theme_type_variation, UiTheme.BUTTON_STEP, "加减用专门的灰态")
+	t.check(setup._minus_btn.theme_type_variation in [UiTheme.BUTTON_STEP, UiTheme.BUTTON_DIFF_MINUS], "加减用专门的灰态（定稿：四态图）")
 	t.check(not setup._minus_btn.disabled, "Ⅰ 级：减可按（回〇级收起）")
 	# 收起：先翻回〇、卷轴合拢，再上移回按钮背后
 	setup.step_difficulty(-1)
@@ -338,9 +340,11 @@ static func frame_supplement_three_four(t: TestCase, root: Window) -> void:
 	t.check(absf(block.rods_y - closed_y) < 0.5 and setup._challenge.rows().is_empty(), "卷轴回到按钮背后，纸空")
 	t.eq(setup._difficulty_num.text, "〇", "计数器〇")
 	# 到头的灰态和平常不一样
-	var off: StyleBoxFlat = setup._plus_btn.get_theme_stylebox("disabled") as StyleBoxFlat
-	var on: StyleBoxFlat = setup._plus_btn.get_theme_stylebox("normal") as StyleBoxFlat
-	t.check(off != null and on != null and off.bg_color != on.bg_color, "灰态的底不同于平常（压到板色）")
+	var off: StyleBox = setup._plus_btn.get_theme_stylebox("disabled")
+	var on: StyleBox = setup._plus_btn.get_theme_stylebox("normal")
+	var differs: bool = (off is StyleBoxTexture and on is StyleBoxTexture and (off as StyleBoxTexture).texture != (on as StyleBoxTexture).texture) \
+		or (off is StyleBoxFlat and on is StyleBoxFlat and (off as StyleBoxFlat).bg_color != (on as StyleBoxFlat).bg_color)
+	t.check(differs, "灰态的底不同于平常（灰图 / 压到板色）")
 	t.check(setup._plus_btn.get_theme_color("font_disabled_color").a <= 0.51, "灰态字暗一半")
 	game.queue_free()
 	Support.cleanup("setup180g")

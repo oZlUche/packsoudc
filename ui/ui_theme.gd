@@ -74,7 +74,24 @@ const PANEL_DIFF_TITLE := &"PanelDiffTitle"
 const LABEL_DIFF_TITLE := &"LabelDiffTitle"
 const PARCHMENT := Color("e6dcc4")
 const SCROLL_ROD := Color("5a4632")
-const PARCHMENT_RED := Color("8e2a22")
+## 180 定稿：挑战句血红、不描边
+const PARCHMENT_RED := Color("c81018")
+## 180 定稿美术（作者 2026-10-17 12:04「定稿」，`art/ui/setup/p180/`）：开局第二、三页的整套图。各变体没图时退回原来的平面样子
+## - 第二页：背包皮框、仓库框（都是深底九宫格）、仓库挂牌页签（普通 / 选中 / 没解锁三张：按钮的常态 / 按下 / 灰态）
+## - 第三页：地图条目、规模子条目（选中是 on 图）、摘要便条（浅底）、右下「返回」深色铜 /「出发」亮黄铜（按钮 A 套）
+## - 难度组：「−」「＋」各四态（字画在图上）
+const PANEL_PACK_LEATHER := &"PanelPackLeather"
+const PANEL_STASH_FRAME := &"PanelStashFrame"
+const PANEL_SUMMARY_NOTE := &"PanelSummaryNote"
+## 第三页的东西直接摆在地图纸上（没有板）：一块透明的底，只管内边距；纸是浅底
+const PANEL_BARE := &"PanelBare"
+const BUTTON_SETUP_TAB := &"ButtonSetupTab"
+const BUTTON_MAP_ENTRY := &"ButtonMapEntry"
+const BUTTON_MAP_SUB := &"ButtonMapSub"
+const BUTTON_SETUP_BACK := &"ButtonSetupBack"
+const BUTTON_SETUP_GO := &"ButtonSetupGo"
+const BUTTON_DIFF_MINUS := &"ButtonDiffMinus"
+const BUTTON_DIFF_PLUS := &"ButtonDiffPlus"
 const CAP_VALUE_SIZE := 28
 const SKILL_NAME_SIZE := 22
 const SKILL_TEXT_SIZE := 17
@@ -94,7 +111,8 @@ const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, 
 	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
 	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_GROOVE, PANEL_CAP_TILE, LABEL_CAP_VALUE,
 	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
-	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE]
+	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB,
+	BUTTON_MAP_ENTRY, BUTTON_MAP_SUB, BUTTON_SETUP_BACK, BUTTON_SETUP_GO, BUTTON_DIFF_MINUS, BUTTON_DIFF_PLUS, PANEL_BARE]
 
 const TITLE_SIZE := 18
 ## 168：大标题字号
@@ -147,13 +165,28 @@ const ART_SETUP_BG := "setup/bg_hall"
 const ART_SETUP_KIT_BG := "setup/bg_kit"
 const ART_SETUP_MAP_BG := "setup/bg_map"
 const ART_GROOVE := "setup/groove"
-## 180 补二：难度翻页计数器的牌面（黑底、深黄铜框）
-const ART_FLIP_COUNTER := "setup/flip_counter"
-## 180 补三：挑战说明的羊皮纸条与上下卷轴、「当前难度」铜牌（美术在出）
-const ART_PARCHMENT_STRIP := "setup/parchment_strip"
-const ART_SCROLL_ROD_TOP := "setup/scroll_rod_top"
-const ART_SCROLL_ROD_BOTTOM := "setup/scroll_rod_bottom"
-const ART_DIFFICULTY_PLATE := "setup/difficulty_plate"
+## 180 补二：难度翻页计数器的外框（深黄铜）；定稿：窗里一张翻页卡（下）+ 数字 + 中缝（上）
+const ART_FLIP_COUNTER := "setup/diff_counter_frame"
+const ART_FLIP_CARD := "setup/diff_flip_card"
+const ART_FLIP_SPLIT := "setup/diff_flip_split"
+## 180 补三：挑战说明的羊皮纸条（纵向平铺）与上下卷轴（同一张图）；补五：「开启挑战」铜牌（四态 `_normal/_hover/_pressed/_disabled`）
+const ART_PARCHMENT_STRIP := "setup/diff_parch"
+const ART_SCROLL_ROD_TOP := "setup/diff_roller"
+const ART_SCROLL_ROD_BOTTOM := "setup/diff_roller"
+const ART_DIFFICULTY_PLATE := "setup/diff_open_plate"
+## 180 定稿：「当前难度」梯形标题牌、加减、第二页两块框与页签、第三页地图条目 / 规模 / 便条 / 按钮 A 套、预览圈的虚线参数
+const ART_DIFF_TITLE := "setup/diff_title_tab"
+const ART_DIFF_MINUS := "setup/diff_minus"
+const ART_DIFF_PLUS := "setup/diff_plus"
+const ART_PACK_LEATHER := "setup/pack_leather"
+const ART_STASH_FRAME := "setup/stash_frame"
+const ART_SETUP_TAB := "setup/tab"
+const ART_MAP_ENTRY := "setup/map_entry"
+const ART_MAP_SUB := "setup/map_sub"
+const ART_SUMMARY_NOTE := "setup/summary_note"
+const ART_SETUP_BACK := "setup/btn_back"
+const ART_SETUP_GO := "setup/btn_go"
+const ART_RINGS := "setup/rings"
 ## 战斗界面的整屏背景（白天的沙地场子，铺满裁边；深浅读图旁 json 的 `tone`）；没图：照旧纯色底
 const ART_BATTLE_BG := "battle/battle_bg"
 ## 179：凹槽板没图时的平面底（样稿第二版的色）
@@ -464,14 +497,16 @@ const PANEL_TONES := {
 	PANEL_DARK: TONE_DARK, PANEL_LINE: TONE_DARK, PANEL_HUD: TONE_DARK, PANEL_OVERLAY: TONE_DARK, PANEL_TOOLTIP: TONE_DARK,
 	PANEL_NAMEPLATE: TONE_DARK, PANEL_HOME_BOX: TONE_LIGHT, PANEL_SHELF: TONE_DARK, PANEL_HUD_BAR: TONE_DARK,
 	PANEL_WINDOW: TONE_DARK, PANEL_GROOVE: TONE_DARK, PANEL_CAP_TILE: TONE_DARK, PANEL_FLIP_COUNTER: TONE_DARK,
-	PANEL_PARCHMENT: TONE_LIGHT, PANEL_DIFF_TITLE: TONE_DARK,
+	PANEL_PARCHMENT: TONE_LIGHT, PANEL_DIFF_TITLE: TONE_LIGHT, PANEL_PACK_LEATHER: TONE_DARK, PANEL_STASH_FRAME: TONE_DARK,
+	PANEL_SUMMARY_NOTE: TONE_LIGHT, PANEL_BARE: TONE_LIGHT,
 }
 ## 面板变体用哪张美术图（有图时深浅读它的 json）
 ## 157 补充三：叠层框与顶端栏是石板（深浅读板边的 json；顶端栏是自己那张长条板边），板里的分区都是凹槽
 const PANEL_ART := {PANEL_DARK: ART_INSET, PANEL_LINE: ART_INSET, PANEL_HUD: ART_INSET, PANEL_OVERLAY: ART_SLAB_EDGE, PANEL_TOOLTIP: ART_TOOLTIP,
 	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_BAR,
 	PANEL_WINDOW: ART_SLAB_EDGE, PANEL_GROOVE: ART_GROOVE, PANEL_FLIP_COUNTER: ART_FLIP_COUNTER,
-	PANEL_PARCHMENT: ART_PARCHMENT_STRIP, PANEL_DIFF_TITLE: ART_DIFFICULTY_PLATE}
+	PANEL_PARCHMENT: ART_PARCHMENT_STRIP, PANEL_DIFF_TITLE: ART_DIFF_TITLE, PANEL_PACK_LEATHER: ART_PACK_LEATHER,
+	PANEL_STASH_FRAME: ART_STASH_FRAME, PANEL_SUMMARY_NOTE: ART_SUMMARY_NOTE}
 ## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸。
 ## 169：读字色模板 `fg / dim / warn` 的浅版（[method text_colors_changed] 换），这几个常量是文件不在时的默认
 const INK_DEFAULT := Color("2e2219")
@@ -515,6 +550,9 @@ static func text_theme(tone: StringName) -> Theme:
 	for v in [RICH_BODY, RICH_SMALL]:
 		t.set_type_variation(v, "RichTextLabel")
 		t.set_color("default_color", v, INK)
+	# 180 定稿：难度计数器的数字永远写在黑翻页卡上 —— 摆在浅色地图纸上也还是白字
+	t.set_type_variation(LABEL_FLIP_NUM, "Label")
+	t.set_color("font_color", LABEL_FLIP_NUM, Color.WHITE)
 	_tone_themes[tone] = t
 	return t
 
@@ -840,11 +878,11 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_type_variation(LABEL_FLIP_NUM, "Label")
 	t.set_font_size("font_size", LABEL_FLIP_NUM, FLIP_NUM_SIZE)
 	t.set_color("font_color", LABEL_FLIP_NUM, Color.WHITE)
-	# 180 补三：羊皮纸（没图是平色纸、不描边）
+	# 180 补三：羊皮纸（没图是平色纸、不描边）；定稿图 264 宽、纵向平铺，左右是毛边不切九宫格
 	t.set_type_variation(PANEL_PARCHMENT, "PanelContainer")
-	var parchment_art: StyleBoxTexture = _art_box(ART_PARCHMENT_STRIP, false, 0)
+	var parchment_art := _tex_box(ART_PARCHMENT_STRIP, [0, 0, 0, 0])
 	if parchment_art != null:
-		parchment_art.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT     # 竖着平铺，纸多长都不拉花
+		parchment_art.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE     # 竖着平铺，纸多长都不拉花
 	var parchment := _box(PARCHMENT, PARCHMENT, 0)
 	parchment.set_border_width_all(0)
 	t.set_stylebox("panel", PANEL_PARCHMENT, parchment_art if parchment_art != null else parchment)
@@ -979,7 +1017,8 @@ static func _button_box(bg: Color, edge: Color, pad: Vector2i) -> StyleBoxFlat:
 	return s
 
 
-## 180 补四：难度的加减键（次档的样子，到头的灰态单独做：底压到板色、字暗一半、悬停不亮）与〇级的「开启挑战」铜牌按钮
+## 180 补四：难度的加减键（次档的样子，到头的灰态单独做：底压到板色、字暗一半、悬停不亮）与〇级的「开启挑战」铜牌按钮；
+## 定稿：加减、铜牌、「当前难度」标题牌都换成图（字在加减图上、铜牌墨字），没图照旧平色
 static func _difficulty_buttons(t: Theme) -> void:
 	t.set_type_variation(BUTTON_STEP, BUTTON_DIM)
 	var size := UiPalette.button_font_size(FONT_SIZE, UiPalette.Tier.MINOR)
@@ -987,25 +1026,108 @@ static func _difficulty_buttons(t: Theme) -> void:
 	var off := _button_box(GROOVE_BG, GROOVE_BG.lightened(0.06), pad)
 	t.set_stylebox("disabled", BUTTON_STEP, off)
 	t.set_color("font_disabled_color", BUTTON_STEP, Color(UiPalette.DIM, 0.5))
+	for pair in [[BUTTON_DIFF_MINUS, ART_DIFF_MINUS], [BUTTON_DIFF_PLUS, ART_DIFF_PLUS]]:
+		t.set_type_variation(pair[0], BUTTON_STEP)
+		_art_button(t, pair[0], pair[1], [14, 14, 14, 14])
 	t.set_type_variation(BUTTON_DIFF_PLATE, "Button")
-	var plate_art: StyleBox = _art_box(ART_DIFFICULTY_PLATE)
-	var plate := plate_art if plate_art != null else _button_box(FLIP_BRASS.darkened(0.25), FLIP_BRASS.lightened(0.25), Vector2i(22, 6))
-	var lit := plate_art if plate_art != null else _button_box(FLIP_BRASS, FLIP_BRASS.lightened(0.4), Vector2i(22, 6))
-	t.set_stylebox("normal", BUTTON_DIFF_PLATE, plate)
-	t.set_stylebox("hover", BUTTON_DIFF_PLATE, lit)
-	t.set_stylebox("pressed", BUTTON_DIFF_PLATE, lit)
-	t.set_stylebox("hover_pressed", BUTTON_DIFF_PLATE, lit)
-	t.set_stylebox("disabled", BUTTON_DIFF_PLATE, _button_box(GROOVE_BG.lightened(0.04), GROOVE_BG.lightened(0.1), Vector2i(22, 6)))
-	t.set_stylebox("focus", BUTTON_DIFF_PLATE, StyleBoxEmpty.new())
-	t.set_font_size("font_size", BUTTON_DIFF_PLATE, 26)
-	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
-		t.set_color(state, BUTTON_DIFF_PLATE, Color("f3e3c0"))
+	if _art_button(t, BUTTON_DIFF_PLATE, ART_DIFFICULTY_PLATE, [0, 0, 0, 0]):
+		t.set_font("font", BUTTON_DIFF_PLATE, _font_bold)
+		t.set_font_size("font_size", BUTTON_DIFF_PLATE, 28)
+		_button_ink(t, BUTTON_DIFF_PLATE, INK)
+	else:
+		var plate := _button_box(FLIP_BRASS.darkened(0.25), FLIP_BRASS.lightened(0.25), Vector2i(22, 6))
+		var lit := _button_box(FLIP_BRASS, FLIP_BRASS.lightened(0.4), Vector2i(22, 6))
+		t.set_stylebox("normal", BUTTON_DIFF_PLATE, plate)
+		t.set_stylebox("hover", BUTTON_DIFF_PLATE, lit)
+		t.set_stylebox("pressed", BUTTON_DIFF_PLATE, lit)
+		t.set_stylebox("hover_pressed", BUTTON_DIFF_PLATE, lit)
+		t.set_stylebox("disabled", BUTTON_DIFF_PLATE, _button_box(GROOVE_BG.lightened(0.04), GROOVE_BG.lightened(0.1), Vector2i(22, 6)))
+		t.set_stylebox("focus", BUTTON_DIFF_PLATE, StyleBoxEmpty.new())
+		t.set_font_size("font_size", BUTTON_DIFF_PLATE, 26)
+		_button_ink(t, BUTTON_DIFF_PLATE, Color("f3e3c0"))
 	t.set_color("font_disabled_color", BUTTON_DIFF_PLATE, Color(UiPalette.DIM, 0.5))
 	t.set_type_variation(PANEL_DIFF_TITLE, "PanelContainer")
-	t.set_stylebox("panel", PANEL_DIFF_TITLE, plate)
+	var title_art: StyleBox = _art_box(ART_DIFF_TITLE)
+	t.set_stylebox("panel", PANEL_DIFF_TITLE, title_art if title_art != null else _button_box(FLIP_BRASS.darkened(0.25), FLIP_BRASS.lightened(0.25), Vector2i(22, 6)))
 	t.set_type_variation(LABEL_DIFF_TITLE, "Label")
-	t.set_font_size("font_size", LABEL_DIFF_TITLE, 26)
-	t.set_color("font_color", LABEL_DIFF_TITLE, Color("f3e3c0"))
+	t.set_font_size("font_size", LABEL_DIFF_TITLE, 20 if title_art != null else 26)
+	t.set_color("font_color", LABEL_DIFF_TITLE, INK if title_art != null else Color("f3e3c0"))
+	if title_art != null:
+		t.set_font("font", LABEL_DIFF_TITLE, _font_bold)
+	_setup_art(t)
+
+
+## 180 定稿：开局第二、三页的框、页签、地图条目、便条、按钮 A 套（没图的变体照旧：框是凹槽板、按钮是平面档）
+static func _setup_art(t: Theme) -> void:
+	t.set_type_variation(PANEL_BARE, "PanelContainer")
+	t.set_stylebox("panel", PANEL_BARE, StyleBoxEmpty.new())
+	for spec in [[PANEL_PACK_LEATHER, ART_PACK_LEATHER], [PANEL_STASH_FRAME, ART_STASH_FRAME], [PANEL_SUMMARY_NOTE, ART_SUMMARY_NOTE]]:
+		t.set_type_variation(spec[0], "PanelContainer")
+		var box: StyleBox = _art_box(spec[1])
+		t.set_stylebox("panel", spec[0], box if box != null else (_groove_box() if spec[0] != PANEL_SUMMARY_NOTE else StyleBoxEmpty.new()))
+	# 页签：52 × 60 的挂牌，字写在牌面（json 的 text_area），整张拉伸不切九宫格
+	var tab: Dictionary = art_meta(ART_SETUP_TAB)
+	var area: Array = tab.get("text_area", [6, 18, 40, 38])
+	var sz: Array = tab.get("size", [52, 60])
+	var content := [area[0], area[1], int(sz[0]) - int(area[0]) - int(area[2]), int(sz[1]) - int(area[1]) - int(area[3])]
+	t.set_type_variation(BUTTON_SETUP_TAB, BUTTON_DIM)
+	if _art_button(t, BUTTON_SETUP_TAB, ART_SETUP_TAB, [0, 0, 0, 0], {"normal": "normal", "hover": "normal", "pressed": "on", "hover_pressed": "on", "disabled": "locked"}, content):
+		_button_ink(t, BUTTON_SETUP_TAB, INK)
+	# 地图条目 / 规模：选中是 on 图（按钮按下态），墨字
+	for spec in [[BUTTON_MAP_ENTRY, ART_MAP_ENTRY], [BUTTON_MAP_SUB, ART_MAP_SUB]]:
+		t.set_type_variation(spec[0], BUTTON_DIM)
+		var m: Array = art_meta(spec[1]).get("margin", [16, 8, 16, 8])
+		if _art_button(t, spec[0], spec[1], m, {"normal": "normal", "hover": "hover", "pressed": "on", "hover_pressed": "on", "disabled": "normal"}):
+			_button_ink(t, spec[0], INK)
+	# 按钮 A 套：「返回」深色铜铸牌（浅字），「出发 / 继续」亮黄铜（墨字）
+	var btn: Dictionary = art_meta("setup/btn")
+	for spec in [[BUTTON_SETUP_BACK, ART_SETUP_BACK, "back", BUTTON_SECONDARY, Color("f3e3c0")], [BUTTON_SETUP_GO, ART_SETUP_GO, "go", BUTTON_PRIMARY, INK]]:
+		t.set_type_variation(spec[0], spec[3])
+		var m: Array = (btn.get(spec[2], {}) as Dictionary).get("margin", [26, 22, 26, 26])
+		if _art_button(t, spec[0], spec[1], m):
+			_button_ink(t, spec[0], spec[4])
+
+
+## 一套按钮状态图挂到变体上：[param states] 是 状态 → 文件后缀（`<base>_<后缀>.png`，缺的那张退回 normal）；
+## [param margin] 九宫格边距 [左, 上, 右, 下]，[param content] 字区内边距（不给 = 同 margin）。没有 normal 图什么也不挂、返回 false
+static func _art_button(t: Theme, variation: StringName, base: String, margin: Array, states: Dictionary = {}, content: Array = []) -> bool:
+	if states.is_empty():
+		states = {"normal": "normal", "hover": "hover", "pressed": "pressed", "hover_pressed": "pressed", "disabled": "disabled"}
+	var normal := _tex_box(base + "_" + String(states["normal"]), margin, content)
+	if normal == null:
+		return false
+	for state in states:
+		var box := _tex_box(base + "_" + String(states[state]), margin, content)
+		t.set_stylebox(state, variation, box if box != null else normal)
+	t.set_stylebox("focus", variation, StyleBoxEmpty.new())
+	return true
+
+
+## 一张图的九宫格底（边距照给的，不读 json）；没图 null
+static func _tex_box(name: String, margin: Array, content: Array = []) -> StyleBoxTexture:
+	var tex := art(name)
+	if tex == null:
+		return null
+	var c := content if content.size() == 4 else margin
+	var s := StyleBoxTexture.new()
+	s.texture = tex
+	s.texture_margin_left = float(margin[0])
+	s.texture_margin_top = float(margin[1])
+	s.texture_margin_right = float(margin[2])
+	s.texture_margin_bottom = float(margin[3])
+	s.content_margin_left = float(c[0])
+	s.content_margin_top = float(c[1])
+	s.content_margin_right = float(c[2])
+	s.content_margin_bottom = float(c[3])
+	return s
+
+
+## 按钮各态的字色一样（灰态另给）
+static func _button_ink(t: Theme, variation: StringName, color: Color) -> void:
+	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
+		t.set_color(state, variation, color)
+	t.set_color("font_disabled_color", variation, Color(color, 0.5))
+	t.set_constant("outline_size", variation, 0)
 
 
 ## 180 补四：「开启挑战」铜牌按钮（字居中）
@@ -1016,6 +1138,11 @@ static func make_difficulty_plate(text: String, handler: Callable) -> Button:
 	b.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	b.pressed.connect(handler)
 	return b
+
+
+## 180 定稿：这几样有没有图（开局屏按它决定用图的尺寸、去不去掉凹槽板）
+static func has_setup_art(art_name: String) -> bool:
+	return art(art_name) != null or art(art_name + "_normal") != null
 
 
 ## 179：选角色屏的几种字与图标牌的底

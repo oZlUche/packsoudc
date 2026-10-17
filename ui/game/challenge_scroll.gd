@@ -6,7 +6,8 @@
 ## 补五（作者 11:49）：底卷轴一直在，纸再短也由两根卷轴夹着；纸长超上限（[member max_paper]，第三页按「出发」按钮的上沿算）时
 ## 纸停在上限，底卷轴兼做收束：最早（最低级）的行藏在它后面，滚轮一格滚一行；加一级时回到顶。
 ## 卷轴、纸都按坐标摆（不进容器）：难度块收起时把这一对卷轴当「开启挑战」按钮背后的两根卷好的卷轴用，
-## 用 [member hold_h] 把两根卷轴之间的距离钉住、[member paper_alpha] 把纸藏掉。美术图到之前卷轴、纸都是平色
+## 用 [member hold_h] 把两根卷轴之间的距离钉住、[member paper_alpha] 把纸藏掉。没图时卷轴、纸都是平色。
+## 180 定稿：卷轴 `diff_roller` 304 × 30（上下同图，下面那根竖翻），纸 `diff_parch` 264 宽居中、纵向平铺；字血红不描边，行高 32
 class_name ChallengeScroll
 extends Control
 
@@ -16,9 +17,11 @@ const GROW_SEC := 0.2
 const NUM_W := 48.0
 const DOT_W := 14.0
 const PAD_X := 14.0
-const PAD_Y := 10.0
-const ROW_GAP := 6.0
-const FONT_SIZE := 14
+const PAD_Y := 8.0
+const ROW_GAP := 0.0
+const FONT_SIZE := 16
+## 一行最矮多高（定稿：行高 32）
+const ROW_MIN_H := 32.0
 ## 卷轴多粗（没图时）
 const ROD_H := 18.0
 
@@ -58,6 +61,8 @@ var _list: VBoxContainer = null
 var _rows: Array[Dictionary] = []
 var _tween: Tween = null
 var _width := 0.0
+## 纸多宽（有图按图，居中在两根卷轴之间；没图 = 卷轴宽）
+var _paper_w := 0.0
 ## 正在收回、收完就删的那一行
 var _dying: Control = null
 
@@ -65,6 +70,7 @@ var _dying: Control = null
 ## [param width]：纸多宽（= 难度块宽）
 func _init(width: float = 308.0) -> void:
 	_width = width
+	_paper_w = minf(width, float(UiTheme.art_meta(UiTheme.ART_PARCHMENT_STRIP).get("width", width))) if UiTheme.art(UiTheme.ART_PARCHMENT_STRIP) != null else width
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	paper = Panel.new()
 	paper.theme_type_variation = UiTheme.PANEL_PARCHMENT
@@ -78,6 +84,8 @@ func _init(width: float = 308.0) -> void:
 	top_rod = make_rod(UiTheme.ART_SCROLL_ROD_TOP)
 	add_child(top_rod)
 	bottom_rod = make_rod(UiTheme.ART_SCROLL_ROD_BOTTOM)
+	if bottom_rod is TextureRect:
+		(bottom_rod as TextureRect).flip_v = true     # 上下同图，下面那根竖翻
 	add_child(bottom_rod)
 	paper.gui_input.connect(_on_paper_input)
 	_relayout()
@@ -125,8 +133,8 @@ func _place() -> void:
 	var top := top_rod.custom_minimum_size.y
 	top_rod.position = Vector2.ZERO
 	top_rod.size = Vector2(_width, top)
-	paper.position = Vector2(0.0, top)
-	paper.size = Vector2(_width, shown_h)
+	paper.position = Vector2((_width - _paper_w) * 0.5, top)
+	paper.size = Vector2(_paper_w, shown_h)
 	bottom_rod.position = Vector2(0.0, top + shown_h)
 	bottom_rod.size = Vector2(_width, bottom_rod.custom_minimum_size.y)
 	update_minimum_size()
@@ -189,7 +197,7 @@ func _add_row(level: int, text: String, at: int) -> Dictionary:
 		_rows.insert(at, row)
 	else:
 		_rows.append(row)
-	box.custom_minimum_size = Vector2(_width - PAD_X * 2.0, float(row["h"]))
+	box.custom_minimum_size = Vector2(_paper_w - PAD_X * 2.0, float(row["h"]))
 	return row
 
 
@@ -197,12 +205,12 @@ func _add_row(level: int, text: String, at: int) -> Dictionary:
 func _measure(row: Dictionary) -> void:
 	var h := _row_height(row["body"])
 	row["h"] = h
-	(row["line"] as Control).size = Vector2(_width - PAD_X * 2.0, h)
+	(row["line"] as Control).size = Vector2(_paper_w - PAD_X * 2.0, h)
 
 
 ## 正文一列多宽
 func text_width() -> float:
-	return maxf(40.0, _width - PAD_X * 2.0 - NUM_W - DOT_W)
+	return maxf(40.0, _paper_w - PAD_X * 2.0 - NUM_W - DOT_W)
 
 
 ## 行高：按正文换行后的实际高（长句占几行就几行高）
@@ -214,7 +222,7 @@ func _row_height(body: Label) -> float:
 	var one := font.get_height(fs)
 	var multi := font.get_multiline_string_size(body.text, HORIZONTAL_ALIGNMENT_LEFT, text_width(), fs).y
 	var n := maxi(1, roundi(multi / one))     # 折成几行；Label 行间还有 line_spacing
-	return one * n + float(body.get_theme_constant("line_spacing")) * (n - 1) + 2.0
+	return maxf(ROW_MIN_H, one * n + float(body.get_theme_constant("line_spacing")) * (n - 1) + 2.0)
 
 
 func _grow(row: Dictionary, animate: bool) -> void:
@@ -261,7 +269,7 @@ func _finish() -> void:
 ## 所有行加起来多高
 func content_height() -> float:
 	if _rows.is_empty():
-		return float(FONT_SIZE) * 1.5 + PAD_Y * 2.0     # 一行都没有：留一行高的空纸
+		return ROW_MIN_H + PAD_Y * 2.0     # 一行都没有：留一行高的空纸
 	var h := 0.0
 	for r in _rows:
 		h += float(r["h"])
@@ -299,7 +307,7 @@ func _relayout() -> void:
 func _sync_scroll() -> void:
 	if _list != null:
 		_list.position = Vector2(PAD_X, PAD_Y - scroll_y)
-		_list.size.x = _width - PAD_X * 2.0
+		_list.size.x = _paper_w - PAD_X * 2.0
 
 
 ## 滚 [param rows] 行（正 = 往下看更早的级）

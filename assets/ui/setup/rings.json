@@ -1,0 +1,16 @@
+{
+ "small": {
+  "width": 3.2,
+  "dash": 22,
+  "gap": 14,
+  "color": "#3a2c1e",
+  "alpha": 0.85
+ },
+ "large": {
+  "width": 1.6,
+  "dash": 9,
+  "gap": 7,
+  "color": "#3a2c1e",
+  "alpha": 0.75
+ }
+}
