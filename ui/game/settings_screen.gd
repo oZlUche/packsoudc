@@ -10,6 +10,7 @@ var _trace_btn: Button = null
 var _debug_btn: Button = null
 ## 157：换屏淡入开关
 var _fades_btn: Button = null
+var _grid_btn: Button = null     # 187
 ## 157 补：光标材质的按钮（材质 id → 按钮）
 var _cursor_btns: Dictionary = {}
 ## 091：背景底色的按钮（主题 id → 按钮）
@@ -125,6 +126,8 @@ func _build_display(col: VBoxContainer) -> void:
 		col.add_child(_label("分辨率：随屏幕", 13, UiPalette.DIM))
 	_res_note = _label("全屏按桌面分辨率", 12, UiPalette.DIM)
 	col.add_child(_res_note)
+	_grid_btn = _toggle("棋盘格线", toggle_show_grid)     # 187
+	col.add_child(_grid_btn)
 
 
 ## 172：窗口 / 全屏（当场套用、存盘）
@@ -219,6 +222,18 @@ func set_cursor_skin(skin: String) -> void:
 
 
 ## 157：换屏淡入开关（下一次换屏生效）
+## 187：棋盘格线开 / 关（玩家定了就不再跟默认走）；开着的棋盘当场重画
+func toggle_show_grid() -> void:
+	flow.settings.show_grid = 0 if grid_on() else 1
+	InventoryView.apply_grid_setting(flow.settings, get_tree() if is_inside_tree() else null)
+	flow.save_settings()
+	_refresh()
+
+
+func grid_on() -> bool:
+	return flow.settings.grid_on(ItemPainter.art_available())
+
+
 func toggle_ui_fades() -> void:
 	flow.settings.ui_fades = not flow.settings.ui_fades
 	flow.save_settings()
@@ -262,6 +277,9 @@ func _refresh() -> void:
 	if _debug_btn != null:
 		_debug_btn.set_pressed_no_signal(flow.settings.debug_mode)
 		_debug_btn.text = "调试模式：%s" % ("开" if flow.settings.debug_mode else "关")
+	if _grid_btn != null:
+		_grid_btn.set_pressed_no_signal(grid_on())
+		_grid_btn.text = "棋盘格线：%s" % ("开" if grid_on() else "关")
 	if _fades_btn != null:
 		_fades_btn.set_pressed_no_signal(flow.settings.ui_fades)
 		_fades_btn.text = "换屏淡入：%s" % ("开" if flow.settings.ui_fades else "关")
