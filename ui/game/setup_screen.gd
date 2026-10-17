@@ -812,9 +812,10 @@ func _on_plate_pressed() -> void:
 		step_difficulty(1)
 
 
-## 180 补二：难度写成罗马数字（和回放倍速、仓库页签一套字形）；0 级写「〇」
+## 180 补二：难度写成罗马数字（和回放倍速、仓库页签一套字形）。
+## 0 级是空白卡（补四「全空更好」：收起时计数器翻成空白，点开从空白往上翻到 Ⅰ）
 static func difficulty_numeral(level: int) -> String:
-	return "〇" if level <= 0 else TextTemplate.roman(level)
+	return "" if level <= 0 else TextTemplate.roman(level)
 
 
 ## 翻页、纸伸缩这些小动画开不开（跟设置里的「换屏淡入」走）

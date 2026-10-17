@@ -79,7 +79,7 @@ func set_value(text: String, dir: int = 0, animate: bool = true) -> void:
 	var old := label.text
 	label.text = text
 	_clear_leaves()
-	if dir == 0 or old == "" or not animate or not is_inside_tree() or size.y <= 0.0:
+	if dir == 0 or not animate or not is_inside_tree() or size.y <= 0.0:
 		return
 	last_dir = signi(dir)
 	# 「＋」：上半旧页先盖着，下半旧页往上折到中线，再由上半新页从中线往上翻下来盖住旧的上半；「−」上下对调
