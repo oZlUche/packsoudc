@@ -14,6 +14,12 @@ const RARITY_COLORS: Array[Color] = [
 ]
 
 
+## 187：道具图包到了没有。现在没有道具图，恒为 false；道具图落地那一批把这里接到图包的存在判断上
+## （例如 `assets/items/manifest.json` 在不在），棋盘格线的默认（[method GameSettings.grid_on]）跟着翻成不画
+static func art_available() -> bool:
+	return false
+
+
 ## 物品主色（087 作者定）：**整格的底色就是稀有度的颜色**，不靠边框。往面板色压一点，字才看得清；描边同色稍亮
 static func body_color(def: ItemDef) -> Color:
 	if def == null:
