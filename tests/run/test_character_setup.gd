@@ -281,8 +281,10 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 	t.check(setup.carry_in(first.uid), "带上一件")
 	t.eq(flow.meta.warehouse.item_count(), n - 1, "仓库少了一件")
 	t.eq(setup.carried().size(), 1, "带了一件")
-	t.check(setup._readout.get_parsed_text().contains(name), "读数里写着它")
-	t.check(setup._readout.get_parsed_text().contains("预估 DPS") and setup._readout.get_parsed_text().contains("耐力消耗"), "091：开局屏读数带预估 DPS 与耐力消耗（和背包面板一样）")
+	# 180（作者定）：棋盘下的读数只留负重与带入预算两行 —— 不列带了什么、不写「已带」「带上」
+	var readout: String = setup._readout.get_parsed_text()
+	t.check(not readout.contains(name) and not readout.contains("已带") and not readout.contains("带上"), "读数不列道具、不写已带 / 带上（%s）" % readout)
+	t.check(readout.contains("带入预算") and readout.get_slice_count("\n") <= 2, "读数至多两行：负重、带入预算（%s）" % readout)
 	t.check(setup.carry_out(first.uid), "放回去")
 	t.eq(flow.meta.warehouse.item_count(), n, "仓库又是 %d 件" % n)
 	t.check(setup.carry_in(first.uid), "再带上")
@@ -317,6 +319,7 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 	# 出发：带的那件按原位进一局，仓库存了
 	var went := false
 	for seed in range(1, 30):
+		setup.choose_scale(&"")     # 180：种子是按章节默认配置找的（开局屏默认第一档规模）
 		setup.set_run_seed(seed)
 		if setup.depart():
 			went = true
@@ -442,6 +445,7 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 	t.check(setup.carry_in(uids[0]), "带上一件")
 	var went := false
 	for seed in range(1, 30):
+		setup.choose_scale(&"")     # 180：种子是按章节默认配置找的（开局屏默认第一档规模）
 		setup.set_run_seed(seed)
 		if setup.depart():
 			went = true

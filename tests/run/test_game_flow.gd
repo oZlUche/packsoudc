@@ -438,6 +438,7 @@ static func frame_director(t: TestCase, root: Window) -> void:
 		t.check(false, "找不到种子")
 		game.queue_free()
 		return
+	setup.choose_scale(&"")     # 180：种子是按章节默认配置找的（开局屏默认第一档规模）
 	setup.set_run_seed(int(found["seed"]))
 	# 067：开局屏按角色开（初始包 + 从仓库拖），不再挑装备；新的局外把第一套发进了仓库，全带上。地图只看种子，不看带了什么
 	for inst in flow.meta.warehouse.items().duplicate():

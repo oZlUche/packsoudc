@@ -1,8 +1,8 @@
 {
   "id": "free_mode",
-  "display_name": "自由模式",
+  "display_name": "魔法废墟",
   "display_names": {
-    "en": "Free Mode"
+    "en": "Magic Ruins"
   },
   "map_source": {
     "generator_config": {
@@ -198,7 +198,7 @@
       "scales": [
         {
           "id": "small",
-          "display_name": "小型（4~5 环）",
+          "display_name": "小型",
           "nodes_by_rings": {
             "4": [
               25,
@@ -219,7 +219,7 @@
         },
         {
           "id": "medium",
-          "display_name": "中型（6~8 环）",
+          "display_name": "中型",
           "rings": [
             6,
             8
@@ -263,7 +263,7 @@
         },
         {
           "id": "large",
-          "display_name": "大型（占位）",
+          "display_name": "大型",
           "rings": [
             9,
             12
@@ -446,6 +446,5 @@
   ],
   "step_limit": 36,
   "safes": 1,
-  "map_skin": "imperial_camp",
   "carry_budget": 600
 }

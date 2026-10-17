@@ -32,6 +32,8 @@ var loadouts: Array[LoadoutDef] = []
 var characters: Array[CharacterDef] = []
 ## 全部进阶难度（069），按档位排；空 = 只有普通
 var difficulties: Array[DifficultyDef] = []
+## 180：调试台指定的下一局种子（-1 = 开局屏第三页随机取）；出发一次就还原，不进存档
+var next_run_seed: int = -1
 ## 091：成就的定义（按 order 排）。什么时候算见 [method check_achievements]
 var achievement_defs: Array[AchievementDef] = []
 ## 110：局外科技的定义（按 order 排）。等级与上交记录在 [MetaState]，逻辑在 [TechService]
