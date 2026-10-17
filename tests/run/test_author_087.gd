@@ -161,8 +161,7 @@ static func run_dormant_faith(t: TestCase) -> void:
 	# 107（作者定）：悬浮窗不再写「信仰道具：别的信仰激活时休眠（保留通用效果）」那一行 ——
 	# 休眠与否只靠信仰相关行的灰 / 亮区分（那句话留在信仰自己的悬浮窗里）
 	t.check(not ItemTooltip.describe(ItemInstance.create(shield_def)).contains("保留通用效果"), "道具悬浮窗不再写休眠说明行")
-	var gods := FaithDef.load_all()
-	t.check(FaithTooltip.describe(gods.get(&"hunt", null)).contains("休眠"), "休眠的机制说明留在信仰自己的悬浮窗里")
+	# 188：信仰窗也不写机制说明了，只在名字行写「N 件休眠」（tests/ui/test_faith_tip_188.gd）
 
 
 static func run_boss(t: TestCase) -> void:
@@ -545,18 +544,16 @@ static func run_loot_on_bags(t: TestCase) -> void:
 
 
 static func run_faith_tooltip(t: TestCase) -> void:
-	t.begin("087 · 信仰的悬浮说明：神、说明、信力怎么涨、阈值与现在几阶、这个信仰的道具各阶解锁什么")
-	var c := _content()
+	t.begin("087 · 信仰的悬浮说明（188 重排）：名字、信力来源、献祭；不列阈值串与道具清单；没信仰不开窗")
 	var defs := FaithDef.load_all()
 	var skill: FaithDef = defs.get(&"skill", null)
 	t.not_null(skill, "技巧之神")
 	if skill == null:
 		return
-	var text := FaithTooltip.describe(skill, null, c.items)
-	t.check(text.contains("技巧之神") and text.contains("信力怎么涨") and text.contains(skill.deeds_summary()), "写了名字与信力怎么涨")
-	t.check(text.contains("阈值：25、80"), "写了阈值")
-	t.check(text.contains("技巧之神赐福的盾牌") and text.contains("Lv.1"), "列了这个信仰的道具与各阶")
-	t.check(FaithTooltip.describe(null).contains("没有信仰"), "没激活时也有话说")
+	var text := Glossary.strip_bbcode(FaithTooltip.describe(skill))
+	t.check(text.contains("技巧之神") and text.contains("信力来源"), "写了名字与信力来源（%s）" % text)
+	t.check(not text.contains("阈值") and not text.contains("这个信仰的道具"), "不写阈值串、不列道具")
+	t.check(FaithTooltip.describe_full(null).is_empty(), "没激活：不开窗")
 
 
 static func run_rarity_fill_and_tooltips(t: TestCase) -> void:

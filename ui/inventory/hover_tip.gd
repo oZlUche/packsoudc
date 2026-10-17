@@ -78,11 +78,7 @@ class TipWindow extends PanelContainer:
 		col.add_child(sep)
 		body = _rich(width)
 		col.add_child(body)
-		foot_sep = Control.new()
-		foot_sep.custom_minimum_size = Vector2(width, 3)
-		foot_sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		foot_sep.draw.connect(func():
-			foot_sep.draw_dashed_line(Vector2(0, 1), Vector2(foot_sep.size.x, 1), UiPalette.LINE.lightened(0.3), 1.0, 4.0))
+		foot_sep = dashed(width)
 		col.add_child(foot_sep)
 		foot_row = HBoxContainer.new()
 		foot_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -95,6 +91,15 @@ class TipWindow extends PanelContainer:
 		set_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		set_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		foot_row.add_child(set_label)
+
+	## 一条虚线（脚注上面那条；188 信仰窗的分段也用）
+	func dashed(width: float) -> Control:
+		var c := Control.new()
+		c.custom_minimum_size = Vector2(width, 3)
+		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		c.draw.connect(func():
+			c.draw_dashed_line(Vector2(0, 1), Vector2(c.size.x, 1), UiPalette.LINE.lightened(0.3), 1.0, 4.0))
+		return c
 
 	func _rich(width: float) -> RichTextLabel:
 		var r := UiTheme.rich_block(width, UiTheme.RICH_SMALL_SIZE)
@@ -195,6 +200,8 @@ var _windows: Array[TipWindow] = []
 var _panel: TipWindow
 var _text: RichTextLabel
 var _extra: Control = null
+## 188：信仰窗插进主窗里的件（名字行下的进度条、各段之间的虚线与段落）—— 换窗时一起摘
+var _faith_parts: Array[Control] = []
 var _views: Array[ContainerView] = []
 ## 可选：`func(view, uid) -> bool`，假就不显示（容器屏：没亮出来的不说）
 var can_show: Callable = Callable()
@@ -307,6 +314,59 @@ func update_status(parts: Dictionary) -> void:
 	UiTheme.set_rich(_panel.body, String(parts.get("body", "")))
 
 
+## 188：信仰窗（[method FaithTooltip.describe_full]）：名字行 + 信力行 / 进度条（满阶不挂）/ 分隔线 / 第一段 / 虚线 / 下一段……
+## 宽固定 [constant MAX_WIDTH]（和道具窗一样，不按内容收窄）；钉住的窗不换；空字典（没有信仰）不开
+func show_faith(full: Dictionary, at: Vector2) -> void:
+	if full.is_empty() or (_panel.visible and _panel.pinned):
+		return
+	_close_from(1)
+	_panel.reset_state()
+	_drop_extra()
+	var sections: Array = full.get("sections", [])
+	_panel.set_status(String(full.get("head", "")), String(sections[0]) if not sections.is_empty() else "")
+	_panel.body.visible = not sections.is_empty()
+	_panel.terms = {}
+	var progress := float(full.get("progress", -1.0))
+	if progress >= 0.0:
+		var bar := FaithBar.new()
+		bar.ratio = progress
+		bar.custom_minimum_size = Vector2(_panel.full_width, FaithBar.HEIGHT)
+		_insert_part(bar, _panel.head.get_index() + 1)
+	for i in range(1, sections.size()):
+		_insert_part(_panel.dashed(_panel.full_width), _panel.foot_sep.get_index())
+		var r := _panel._rich(_panel.full_width)
+		_insert_part(r, _panel.foot_sep.get_index())
+		UiTheme.set_rich(r, String(sections[i]))
+	_open_main(at)
+
+
+func _insert_part(c: Control, at: int) -> void:
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE if not (c is RichTextLabel) else c.mouse_filter
+	_panel.col.add_child(c)
+	_panel.col.move_child(c, at)
+	_faith_parts.append(c)
+
+
+## 188：信仰窗名字行下那条细进度条（到下一阶的比例）：槽深色、填充信仰色
+class FaithBar extends Control:
+	const HEIGHT := 6.0
+	const SLOT := Color("1a1512")
+	var ratio := 0.0
+
+	func _draw() -> void:
+		draw_rect(Rect2(Vector2.ZERO, size), SLOT, true)
+		if ratio > 0.0:
+			draw_rect(Rect2(Vector2.ZERO, Vector2(size.x * clampf(ratio, 0.0, 1.0), size.y)), UiPalette.FAITH, true)
+
+
+## 188：主窗里现在挂着的进度条（测试看；没有 null）
+func faith_bar() -> Control:
+	for c in _faith_parts:
+		if c is FaithBar:
+			return c
+	return null
+
+
 ## 170：显示一件道具的分块说明（[method ItemTooltip.describe_full] 的结果）
 func show_item(full: Dictionary, at: Vector2) -> void:
 	_close_from(1)
@@ -338,6 +398,12 @@ static func _terms_dict(terms) -> Dictionary:
 
 ## 旧的下挂控件先摘下来再 free：queue_free 到帧末才走，留在列里会把这一帧的 reset_size 撑高（悬浮窗下方大段空白）
 func _drop_extra() -> void:
+	for c in _faith_parts:
+		if c.get_parent() != null:
+			c.get_parent().remove_child(c)
+		c.queue_free()
+	_faith_parts.clear()
+	_panel.body.visible = true
 	if _extra == null:
 		return
 	if _extra.get_parent() != null:
@@ -369,7 +435,7 @@ func _refit() -> void:
 
 ## 185：只写文字的主窗按内容收窄（[constant MIN_WIDTH]～[constant MAX_WIDTH]）；道具窗、下面挂了控件的不收
 func _shrink_to_text() -> void:
-	if _panel.item_mode or _extra != null:
+	if _panel.item_mode or _extra != null or not _faith_parts.is_empty():
 		return
 	var w := clampf(ceilf(_panel.content_width()) + 1.0, MIN_WIDTH, _panel.full_width)
 	if absf(_panel.body.custom_minimum_size.x - w) > 0.5:

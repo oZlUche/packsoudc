@@ -386,7 +386,8 @@ static func frame_double_click_opens_bag(t: TestCase, root: Window) -> void:
 	t.check(map.bag_open(), "放不下：背包照样打开")
 	t.check(run.storage.has_item(big.uid) and not run.board.has_item(big.uid), "东西还在地上")
 	var p2 := _find_panel(map)
-	t.check(p2 != null and String(p2._hint.text).contains("背包里没有空间"), "面板里提示放不下：%s" % (p2._hint.text if p2 != null else ""))
+	t.check(p2 != null and String(p2.last_hint).contains("背包里没有空间"), "提示放不下：%s" % (p2.last_hint if p2 != null else ""))
+	t.check(map.notice_widget() == null or map.notice_widget().current().contains("背包里没有空间"), "188：地图屏走提示行")
 	map.toggle_bag()
 	# 没有背包按钮的屏不接（默认钩子）
 	var plain := GameScreen.new()

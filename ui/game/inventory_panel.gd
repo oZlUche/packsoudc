@@ -1,7 +1,9 @@
 ## 背包整理面板（M6）：一局里的作战棋盘，同一套拖拽（M1 的 [DragLayer]）。
 ## 128：不再画地上框 —— 棋盘外的整块屏幕就是「地上」（导演持有的那一层 [GroundLayer]），拖出棋盘放哪就落在哪。
 ##
-## 拖一下就重新编译一次读数（生命、预估 DPS、套装进度）—— 编译是纯函数（4.2），这条读数永远和真打出来的一致。
+## 拖一下就重新编译一次读数（耐力消耗、负重）—— 编译是纯函数（4.2），这条读数永远和真打出来的一致。
+## 188（作者 2026-10-17）：操作提示、地上说明、参战 / 可用格读数、信仰行都删了；信仰的悬浮窗在顶端栏的徽记上。
+## 面板自己的回话（顶出来了、放不下、合成了）交给宿主（[member hint_sink]），地图屏走提示行
 ## 地图屏把它叠在地图上；出发前、走到哪都能开。战斗中不会开：战斗在开打那一瞬就算完了，回放是叠层，挡着它。
 ##
 ## 是个 MarginContainer：容器按内容定大小，拖拽层作为它的第二个子节点自然铺满同一块矩形 —— 一个普通 Control
@@ -11,10 +13,8 @@ extends MarginContainer
 var _run: RunState = null
 var _font: Font
 var _drag: DragLayer
-var _readout: Label
-## 087：信仰那一句单独一个标签，停上去开悬浮窗（具体效果、信力怎么涨）
-var _faith_label: Label
-var _hint: Label
+## 188：最近一句回话（测试看；面板上不再写字）
+var last_hint := ""
 var board_view: InventoryView
 ## 128：导演那一层地（没有 = null：测试里单开面板）
 var ground: GroundLayer = null
@@ -47,25 +47,13 @@ func _build() -> void:
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", 8)
 	row.add_child(left)
-	# 160（作者定）：腰带不在背包里了 —— 只在屏幕右下角（[BeltSlots]）
-	left.add_child(UiTheme.make_label("作战棋盘　只有包里的东西参战　拖出棋盘 = 放在地上", 13, UiPalette.DIM))
+	# 160：腰带不在背包里了（屏幕右下角 [BeltSlots]）。188：棋盘上面那行玩法说明也删了
 	board_view = InventoryView.new()
 	board_view.label_font = _font
 	board_view.inventory = _run.board
 	board_view.show_adjacency = true
 	board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(board_view)
-	_faith_label = UiTheme.make_label("", 14, UiPalette.FG)
-	_faith_label.mouse_filter = Control.MOUSE_FILTER_STOP
-	_faith_label.mouse_entered.connect(func():
-		if tip != null:
-			tip.show_text(FaithTooltip.describe(_run.active_faith(), _run.faith_power, _run.items), _faith_label.global_position + Vector2(0, _faith_label.size.y)))
-	_faith_label.mouse_exited.connect(func():
-		if tip != null:
-			tip.release())
-	left.add_child(_faith_label)
-	_readout = UiTheme.make_label("", 14, UiPalette.FG)
-	left.add_child(_readout)
 	# 084：耐力消耗评估（低 / 中 / 高 / 极高），停上去看每秒消耗与回复
 	_stamina = UiTheme.make_label("", 13, UiPalette.STAMINA)
 	_stamina.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -78,10 +66,6 @@ func _build() -> void:
 	left.add_child(_stamina)
 	_weight = UiTheme.make_label("", 13, UiPalette.FG)
 	left.add_child(_weight)
-	_hint = UiTheme.make_label("左键拖动　双击快速置入　R 旋转　右键 / Esc 取消　右键信物 = 奉为主信仰　拖到能合成的那件上 = 合成　压着别人放手会把人顶出来　放到棋盘外就放在地上（放哪落哪）", 11, UiPalette.DIM)
-	left.add_child(_hint)
-
-	left.add_child(UiTheme.make_label("地上（不限件数）　不参战、留在这个点（回来还在原处）、撤离不带出去", 11, UiPalette.DIM))
 
 	if _drag == null:
 		_drag = DragLayer.new()
@@ -185,7 +169,7 @@ func _on_crafted(detail: Dictionary) -> void:
 
 
 func _hint_text(text: String) -> void:
-	_hint.text = text
+	last_hint = text
 	if hint_sink.is_valid():
 		hint_sink.call(text)
 
@@ -201,22 +185,7 @@ func _refresh_readout() -> void:
 		_weight.visible = line != ""
 		_weight.text = line + ("　" + _run.encumbrance.effect_text(lv) if lv > 0 else "")
 		_weight.add_theme_color_override("font_color", UiPalette.HP if lv >= 2 else (UiPalette.STAMINA if lv == 1 else UiPalette.FG))     # 129：超重整行警示色
-	var lines: Array[String] = []
-	if _run.tracker != null:
-		for set_id in _run.tracker.tracked_ids():
-			var p := _run.tracker.progress_of(set_id)
-			var sdef = _run.tracker.db.get_def(set_id) if _run.tracker.db != null else null
-			var sname := Names.of(sdef) if sdef != null and Names.of(sdef) != "" else "数据缺失"
-			lines.append("%s %d/%s%s" % [sname, p["count"], "—" if p["next"] < 0 else str(p["next"]), "　已激活" if p["active"] else ""])
-	var dormant := FaithState.dormant_uids(_run.board).size()
-	var power := _run.faith_power.line() if _run.faith_power != null else ""
-	if _faith_label != null:
-		_faith_label.text = "%s%s%s　停上去看效果与信力怎么涨" % [_run.faith_line(), "（%d 件休眠）" % dormant if dormant > 0 else "", "　" + power if power != "" else ""]
-	_readout.text = "生命 %d　预估 DPS %.1f　参战 %d 件（%d 件会出手）　可用格 %d（空 %d）%s" % [
-		spec.max_hp_int(), spec.rough_dps(), spec.items.size(), spec.active_items().size(),
-		_run.board.usable_cell_count(), _run.board.free_cell_count(),
-		"　套装：" + "、".join(lines) if not lines.is_empty() else ""]
 
 
 func _on_displaced(instances: Array, grabbed: bool) -> void:
-	_hint.text = DragLayer.displaced_text(instances, grabbed)
+	_hint_text(DragLayer.displaced_text(instances, grabbed))     # 188：原来写在面板的提示行上，现在交给宿主
