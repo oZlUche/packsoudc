@@ -631,8 +631,11 @@ func _on_node_hovered(id: int) -> void:
 func _update_tooltip(id: int) -> void:
 	if _tip == null:
 		return
-	if id < 0 or _bag != null or _confirm != null or _pause != null or not _run.map.has_node(id):
+	if _bag != null or _confirm != null or _pause != null:
 		_tip.hide_tip()
+		return
+	if id < 0 or not _run.map.has_node(id):
+		_tip.release()     # 作者 2026-10-17：离开点，钉住的浮窗留着
 		return
 	var node := _run.map.get_node(id)
 	var stash := NodeTooltip.stash_text(_run, node)     # 反馈：每个点的地上悬停就能看，不受「节点浮窗」开关管
@@ -641,7 +644,7 @@ func _update_tooltip(id: int) -> void:
 		stash = hunt if stash == "" else stash + "\n" + hunt
 	if not flow.tooltips_enabled():
 		if stash == "":
-			_tip.hide_tip()
+			_tip.release()
 		else:
 			_tip.show_text(stash, get_global_mouse_position(), null)
 		return
@@ -771,10 +774,12 @@ func _route_index_of_entry(id: int) -> int:
 	return -1
 
 
+## 作者 2026-10-17：路线卡（风险 / 收益）对玩家隐藏 —— 挑出生点就在地图上点；数还在 [member MapGraph.routes] 里，地图编辑器照看
+const SHOW_ROUTES := false
 ## 右栏：挑出生点阶段每条路线一张卡 —— 这是这一章第一个真正的决策；开局之后收起
 func _rebuild_routes() -> void:
 	UiTheme.clear_children(_routes_box)
-	if _run.phase != RunState.Phase.PICK_SPAWN:
+	if not SHOW_ROUTES or _run.phase != RunState.Phase.PICK_SPAWN:
 		return
 	_routes_box.add_child(_label("路线：挑一个出生点", 14, UiPalette.FG))
 	var g := _run.map

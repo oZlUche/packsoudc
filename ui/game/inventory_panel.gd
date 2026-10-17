@@ -62,7 +62,7 @@ func _build() -> void:
 			tip.show_text(FaithTooltip.describe(_run.active_faith(), _run.faith_power, _run.items), _faith_label.global_position + Vector2(0, _faith_label.size.y)))
 	_faith_label.mouse_exited.connect(func():
 		if tip != null:
-			tip.hide_tip())
+			tip.release())
 	left.add_child(_faith_label)
 	_readout = UiTheme.make_label("", 14, UiPalette.FG)
 	left.add_child(_readout)
@@ -74,7 +74,7 @@ func _build() -> void:
 			tip.show_text(StaminaEstimate.describe(_run.compile_player()), _stamina.global_position + Vector2(0, _stamina.size.y)))
 	_stamina.mouse_exited.connect(func():
 		if tip != null:
-			tip.hide_tip())
+			tip.release())
 	left.add_child(_stamina)
 	_weight = UiTheme.make_label("", 13, UiPalette.FG)
 	left.add_child(_weight)
