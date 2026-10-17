@@ -102,11 +102,11 @@ static func frame_three_pages(t: TestCase, root: Window) -> void:
 	var first := flow.meta.warehouse.items()[0] as ItemInstance
 	t.check(setup.carry_in(first.uid), "带上一件")
 
-	# 第三页：摘要写着带了几件；换模式不动角色与带上的东西
+	# 第三页：摘要写着角色与地图；换图不动角色与带上的东西
 	t.check(setup.next_page(), "继续")
 	t.eq(setup.page(), 2, "第三页")
 	t.eq(setup._enter_btn.text, "出发", "最后一页是「出发」")
-	t.check(setup._summary.get_parsed_text().contains("带上　1 件"), "摘要：%s" % setup._summary.get_parsed_text())
+	t.check(setup._summary.get_parsed_text().contains("地图　") and not setup._summary.get_parsed_text().contains("带上"), "摘要（180：角色 / 负重 / 地图 / 难度，不写带了几件）：%s" % setup._summary.get_parsed_text())
 	t.check(setup._summary.get_parsed_text().contains(Names.of(ch2)), "摘要写着角色")
 	setup.choose_chapter(setup.chapter_index)
 	t.eq(setup.character(), ch2, "重挑模式：角色不变")

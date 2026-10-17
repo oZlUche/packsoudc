@@ -324,7 +324,7 @@ static func frame_spawn_mask_and_presets(t: TestCase, root: Window) -> void:
 	t.check(not setup.carry_out(pre_uid), "预设的放不回仓库")
 	t.check(not setup._allow_drop(setup.preset_items()[0], flow.meta.warehouse), "拖去仓库也不行")
 	t.check(setup._allow_drop(setup.preset_items()[0], setup.board), "在棋盘上挪可以")
-	t.check(setup._readout.get_parsed_text().contains("预设套"), "读数里写着预设套")
+	t.check(setup.carried().is_empty(), "预设套不算带入（180：读数只留负重与预算两行，不再列预设套）")
 	# 强攻 DPS > 坚守；坚守格挡 > 强攻
 	var ch: CharacterDef = setup.character()
 	var dps_off: float = BattleCompiler.compile_board(setup.board, ch.baseline(), [] as Array[StatModifier], [] as Array[AbilityRule], {}).rough_dps()
@@ -348,6 +348,7 @@ static func frame_spawn_mask_and_presets(t: TestCase, root: Window) -> void:
 	setup.choose_preset(sets.find(defense))
 	setup.choose_character(setup.character_index)     # 换角色也跟着
 	t.eq(setup.preset_items().size(), defense.items.size(), "重摆棋盘后预设套还在")
+	setup.choose_scale(&"")     # 180：种子是按章节默认配置找的（开局屏默认第一档规模）
 	setup.set_run_seed(7)
 	t.check(setup.depart(), "出发")
 	var run: RunState = flow.run

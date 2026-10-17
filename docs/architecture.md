@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.18 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.19 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4280,6 +4280,7 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.19 | 2026-10-17 | **开局第二、三页重排（180 批一）**：第二页仓库标题只写页数、说明句删掉、棋盘下读数只留负重与带入预算两行（`carry_text` 改「带入预算　420 / 600」）；第三页左列 = 非教程章（`SetupScreen.map_chapters`）+ 选中图下展开规模（`scale_note`，`MapSource.scale_options` 多给 `rings`），中间 `MapPreview`（`ui/map/map_preview.gd` + `ink_reveal.gdshader`：底图按窗口铺、虚线圈数 = 按种子真生成的环数、半径按规模 0.55 / 0.75 / 0.95），右边摘要 + 当前难度（数字、加减、红字 `DifficultyDef.challenge` 逐级累列）；种子不给玩家（进第三页现取，`GameFlow.next_run_seed` 由地图屏调试台指定）；上次的图 / 规模 / 难度存局外旗标 `last_map / last_scale / last_difficulty`（整数）。`free_mode` 显示名「魔法废墟」、底图 `ruins`，`ascension_1` 名「进阶一」 |
 | v3.18 | 2026-10-17 | **名牌换铜质狗牌；开局三页各一幅背景**（作者 2026-10-17 07:55 定铜牌 A、08:02 定三页分画）：`ART_NAMEPLATE` → `nameplate_bronze`（160×96 九宫格，边距 22 / 18，深底），铜板不透明、改单层 `_art_box`，不再垫石板板身（`nameplate_stone` 删）；名牌深底常放在浅色石板框里，`Nameplate` 挂 `UiTheme.bright_text_theme()`（墨字小主题同样那几种字色改回全局浅色），名字与副行是亮字。开局屏 `SetupScreen.PAGE_ART`（`setup/bg_hall / bg_kit / bg_map`），翻页 `GameScreen._repaint` 换画、内容区深浅与标题字色跟着图的 json；第二、三页的图未到前纯色底 |
 | v3.17 | 2026-10-17 | **开局屏白天大厅背景、技能行去掉「被动」**（179 补，作者 2026-10-17 07:50 / 07:51）：`assets/ui/setup/bg_hall.png` + json（`tone: light`）入库；`GameScreen._painted_screen` 内容区的 `tone` 元数据改按背景图 json（`UiTheme.art_tone`，没图深）；开局屏标题 `UiTheme.set_tone` 挂墨字（浅底小主题新增 `LABEL_SCREEN_TITLE`：墨色、无阴影），凹槽板照旧深底浅字；技能行只写名字，`skill_entries` 的 `kind` 不上屏 |
 | v3.16 | 2026-10-17 | **战斗界面背景**（美术线程交图，作者 2026-10-17 定 A：沙地竞技场 · 白天中等亮度；改战斗回放界面）：`assets/ui/battle/battle_bg.png` + json（`stretch: cover`、`tone: light`），`BattleView._build` 用 `UiTheme.dress_backdrop(…, ART_BATTLE_BG, "BattleBackdrop")` 垫在最底层、铺满裁边，没图照旧纯色底。浅底上直接写字的三处（顶上计时 / 胜负一行、收尾战报、开发用播报）按图的深浅挂字色（新 `UiTheme.art_tone(name)` 读 json、`UiTheme.set_tone(c, tone)` = 不经面板变体的 `apply_tone`），浅底即墨字；播报里写死的颜色过 `ink_bbcode`。对阵面板、名牌、棋盘自带深底，不挂墨字主题 |

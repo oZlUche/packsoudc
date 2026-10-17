@@ -226,6 +226,7 @@ static func frame_map_prompt(t: TestCase, root: Window) -> void:
 	# 067：开局屏按角色开；把第一套（发进仓库的）全带上
 	for inst in flow.meta.warehouse.items().duplicate():
 		setup.carry_in((inst as ItemInstance).uid)
+	setup.choose_scale(&"")     # 180：种子是按章节默认配置找的（开局屏默认第一档规模）
 	setup.set_run_seed(int(found["seed"]))
 	t.check(setup.depart(), "出发")
 	var map = game.base()

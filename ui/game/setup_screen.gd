@@ -3,6 +3,9 @@
 ## 161（作者定）：拆成三页，一次只看一页、状态都在屏的字段里（换页不丢）：
 ## **一 选角色**（角色列表、角色卡 —— 名牌 + 生命 / 耐力方块 + 体力爱心 + 技能、这个角色的棋盘预览只看不拖）→
 ## **二 配道具**（预设装备、可拖的棋盘、地上、仓库 —— 仓库只在这一页）→ **三 选地图与难度**（模式、规模、难度、种子、出发摘要）。
+## 180（作者 2026-10-17）：第三页改成 左 地图（一级）与规模（二级，选中的图下面展开）| 中 化开的地图预览（[MapPreview]）|
+## 右 出发摘要 + 当前难度（大字数字、加减两颗键、每升一级红字列出这一级的挑战）。序章不进列表（只出现一次），种子玩家看不见
+## （进第三页随机取；调试台能指定下一局的，[member GameFlow.next_run_seed]）；上次挑的图、规模、难度记在局外旗标里，下次默认它们
 ## 每页右下角两颗大按钮：继续 / 出发（Enter）、返回（Esc；第一页的返回 = 回主菜单）。[method page] / [method next_page] / [method prev_page]。
 ##
 ## 第二页：中间是这个角色的棋盘（初始包已经摆好），右边是仓库的格子：从仓库往包里拖，**放得进的就是带的** ——
@@ -37,7 +40,6 @@ var _preset_box: BoxContainer = null
 ## 085：地图规模（随机一局可选）；空 = 章节默认
 var scale_id: StringName = &""
 var _scale_btns: Dictionary = {}
-var _scale_box: VBoxContainer
 var run_seed: int = 1
 ## 这个角色的棋盘，初始包摆好；从仓库拖进来的东西就在上面。出发时整块记成 layout 交给 RunState
 var board: GridInventory = null
@@ -54,25 +56,37 @@ var _chapters: Array[ChapterDef] = []
 var _characters: Array[CharacterDef] = []
 var _char_box: VBoxContainer = null
 var _warehouse_box: VBoxContainer = null
-var _chapter_btns: Array[Button] = []
-## 168：第三页顶上的章节名（大标题）
-var _chapter_title: Label = null
 var _character_btns: Array[Button] = []
-var _difficulty_btns: Array[Button] = []
+## 180：第三页 —— 左列的地图 / 规模、中间的预览、右边的难度块
+var _map_list: VBoxContainer = null
+var _preview: MapPreview = null
+var _difficulty_num: Label = null
+var _minus_btn: Button = null
+var _plus_btn: Button = null
+var _challenge: Label = null
+## 180：预览的环数按「章 | 规模 | 种子」记，同一档不重复生成
+var _ring_cache: Dictionary = {}
+## 180：上次挑的图 / 规模 / 难度记在局外旗标里（旗标只存整数：图记 order + 1、规模记下标 + 1、难度记档位）
+const FLAG_LAST_MAP := &"last_map"
+const FLAG_LAST_SCALE := &"last_scale"
+const FLAG_LAST_DIFFICULTY := &"last_difficulty"
 var _board_host: VBoxContainer
 var _board_view: InventoryView = null
 var _warehouse_view: InventoryView = null
 ## 163：仓库分页（[member _warehouse_view] 是它当前页的视图）
 var _warehouse_pages: WarehousePages = null
-var _desc: Label
 var _readout: RichTextLabel = null
 var _status: Label
 ## 161：右下角「继续 / 出发」与「返回」
 var _enter_btn: Button
 var _back_btn: Button
-var _seed_spin: SpinBox
 ## 161：三页（0 选角色、1 配道具、2 选地图与难度）与现在是哪页
 const PAGE_NAMES: Array[String] = ["选角色", "配道具", "选地图与难度"]
+const PAGE_MAP := 2
+## 180：难度数字的字号、加减键的大小、规模那一列缩进多少
+const DIFFICULTY_NUM_SIZE := 72
+const DIFFICULTY_BTN := Vector2(56, 44)
+const SCALE_INDENT := 20
 var _pages: Array[Control] = []
 var _page: int = 0
 var _title: Label = null
@@ -96,7 +110,7 @@ const PAGE_ART: Array[String] = [UiTheme.ART_SETUP_BG, UiTheme.ART_SETUP_KIT_BG,
 
 func open(_payload: Dictionary) -> void:
 	_backdrop()
-	run_seed = randi() % 1000000
+	_reroll_seed()
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top"]:
@@ -108,7 +122,7 @@ func open(_payload: Dictionary) -> void:
 	margin.add_child(col)
 	_title = UiTheme.make_variant_label("", UiTheme.LABEL_SCREEN_TITLE)     # 179：直接写在背景画上 —— 深底白字带阴影，浅底（白天的场地）墨字
 	col.add_child(_title)
-	_chapters = flow.available_chapters()
+	_chapters = map_chapters()
 	_pages.clear()
 	for build in [_build_character_page, _build_kit_page, _build_map_page]:
 		var page: Control = build.call()
@@ -116,8 +130,7 @@ func open(_payload: Dictionary) -> void:
 		col.add_child(page)
 		_pages.append(page)
 	_build_nav()
-	choose_chapter(0)
-	choose_difficulty(0)
+	_restore_last()
 	show_page(0)
 
 
@@ -191,8 +204,7 @@ func _build_kit_page() -> Control:
 	var right := _warehouse_box
 	grids.add_child(right)
 	var w := flow.meta.warehouse
-	right.add_child(_label("仓库　%d 页，%d 件" % [w.page_count(), w.item_count()], 15, UiPalette.DIM))
-	right.add_child(_wrapped("往左边的包里拖，放得进的就是带的；带进去的从仓库拿走，撤离了回来，死了就没了", 12, UiPalette.DIM, 480))
+	right.add_child(_label("仓库　%d 页" % w.page_count(), 15, UiPalette.DIM))     # 180：件数与那句「往左边的包里拖……」都不要
 
 	_drag = DragLayer.new()
 	_drag.label_font = font
@@ -209,59 +221,55 @@ func _build_kit_page() -> Control:
 	return board_panel
 
 
-## 161 第三页：模式 | 说明、规模、难度、种子 | 出发摘要
+## 180 第三页：左 地图（一级）与规模（选中的图下面展开）| 中 化开的地图预览 | 右 出发摘要 + 当前难度
 func _build_map_page() -> Control:
-	var board_panel := _groove(16, 14, 16, 14)     # 179：同第二页
-	board_panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	var row := _hbox(36)
-	board_panel.add_child(row)
+	var left_board := _groove(16, 14, 16, 14)
+	left_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(left_board)
 	var left := _vbox(8)
-	left.custom_minimum_size.x = 300
-	row.add_child(left)
-	left.add_child(_label("模式", 15, UiPalette.DIM))     # 114：序章之后只有自由模式（将来加章再长）
-	var chapter_names: Array[String] = []
-	for c in _chapters:
-		chapter_names.append("%s（难度 %d）" % [c.display_name if c.display_name != "" else String(c.id), c.difficulty])
-	_chapter_btns = _choice_column(left, chapter_names, choose_chapter)
+	left.custom_minimum_size.x = 300 - 32
+	left_board.add_child(left)
+	left.add_child(_label("地图", 15, UiPalette.DIM))
+	_map_list = _vbox(6)
+	left.add_child(_map_list)
 	if _chapters.is_empty():
 		left.add_child(_label("没有章节：先跑 tools/import_content.gd", 13, UiPalette.HP))
 
-	var mid := _vbox(8)
-	mid.custom_minimum_size.x = 380
-	row.add_child(mid)
-	_chapter_title = UiTheme.make_display("")     # 168：挑中的那一章，大标题（马善政）
-	mid.add_child(_chapter_title)
-	_desc = _wrapped("", 13, UiPalette.DIM, 380)
-	mid.add_child(_desc)
-	_scale_box = _vbox(6)
-	mid.add_child(_scale_box)
-	var avail := flow.available_difficulties()
-	if not avail.is_empty():
-		mid.add_child(_label("难度", 15, UiPalette.DIM))
-		var difficulty_names: Array[String] = []
-		for d in avail:
-			difficulty_names.append(d.display_name if d.display_name != "" else String(d.id))
-		_difficulty_btns = _choice_column(mid, difficulty_names, choose_difficulty)
-	var seed_row := _hbox(8)
-	seed_row.add_child(_label("种子", 13, UiPalette.DIM))
-	_seed_spin = SpinBox.new()
-	_seed_spin.min_value = 0
-	_seed_spin.max_value = 999999
-	_seed_spin.value = run_seed
-	_seed_spin.value_changed.connect(func(v: float): run_seed = int(v))
-	seed_row.add_child(_seed_spin)
-	seed_row.add_child(_button("随机", func(): set_run_seed(randi() % 1000000), 12, UiPalette.Tier.MINOR))
-	mid.add_child(seed_row)
+	_preview = MapPreview.new()
+	_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_child(_preview)
 
-	var right := _vbox(8)
-	right.custom_minimum_size.x = 340
-	row.add_child(right)
+	var right_board := _groove(16, 14, 16, 14)
+	right_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(right_board)
+	var right := _vbox(10)
+	right.custom_minimum_size.x = 340 - 32
+	right_board.add_child(right)
 	right.add_child(_label("出发摘要", 15, UiPalette.DIM))
 	_summary = _log_box(14)
 	_summary.scroll_following = false
-	_summary.custom_minimum_size = Vector2(340, 200)
+	_summary.custom_minimum_size = Vector2(340 - 32, 120)
 	right.add_child(_summary)
-	return board_panel
+	var title := _label("当前难度", 15, UiPalette.DIM)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	right.add_child(title)
+	_difficulty_num = _label("0", DIFFICULTY_NUM_SIZE, UiPalette.FG)     # 正文字体：标题字体的数字是笔刷体，「1」认不出
+	_difficulty_num.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	right.add_child(_difficulty_num)
+	var steps := _hbox(16)
+	steps.alignment = BoxContainer.ALIGNMENT_CENTER
+	right.add_child(steps)
+	_minus_btn = _button("−", func(): step_difficulty(-1), 24, UiPalette.Tier.MINOR)
+	_minus_btn.custom_minimum_size = DIFFICULTY_BTN
+	steps.add_child(_minus_btn)
+	_plus_btn = _button("＋", func(): step_difficulty(1), 24, UiPalette.Tier.MINOR)
+	_plus_btn.custom_minimum_size = DIFFICULTY_BTN
+	steps.add_child(_plus_btn)
+	_challenge = _wrapped("", 14, UiPalette.HP, 340 - 32)     # 每升一级多一行红字：这一级新加的挑战
+	right.add_child(_challenge)
+	return row
 
 
 #region 161：翻页
@@ -271,7 +279,10 @@ func page() -> int:
 
 ## 换到第 [param i] 页（0..2）：只显示那一页，标题与右下角按钮跟着变
 func show_page(i: int) -> void:
+	var was := _page
 	_page = clampi(i, 0, PAGE_NAMES.size() - 1)
+	if _page == PAGE_MAP and was != PAGE_MAP:
+		_reroll_seed()     # 180：种子玩家看不见，每次进这一页随机取（调试台指定了就用那个）
 	for k in _pages.size():
 		_pages[k].visible = k == _page
 	var tone := _repaint(PAGE_ART[_page])
@@ -282,6 +293,7 @@ func show_page(i: int) -> void:
 		_enter_btn.text = "出发" if _page == PAGE_NAMES.size() - 1 else "继续"
 	if _back_btn != null:
 		_back_btn.text = "回主菜单" if _page == 0 else "返回"
+	_sync_preview()
 	_refresh()
 
 
@@ -319,7 +331,6 @@ func _build_stash() -> void:
 	_pending = flow.meta.take_board_to_stash(stash)     # 101 第 4 刀：挪与记原位的账在 MetaState 里
 	_stash_title = _label("", 15, UiPalette.DIM)
 	_stash_box.add_child(_stash_title)
-	_stash_box.add_child(_wrapped("上一局带回来、还没置入的东西先放在这儿。往包里拖 = 带上；往仓库拖 = 收进仓库；留在这儿的出发就没了；回主菜单则原样放回带回来的背包", 12, UiPalette.DIM, 240))
 	_stash_view = GroundLayer.new()     # 128：一块地，放手在哪就落在哪
 	_stash_view.label_font = font
 	_stash_view.custom_minimum_size = Vector2(240, 320)
@@ -371,9 +382,6 @@ func choose_chapter(i: int) -> void:
 	if _chapters.is_empty():
 		return
 	chapter_index = clampi(i, 0, _chapters.size() - 1)
-	_mark_choice(_chapter_btns, chapter_index)
-	if _chapter_title != null:
-		_chapter_title.text = chapter().display_name if chapter().display_name != "" else String(chapter().id)
 	# 083：这一章能选的角色、能不能从仓库带东西，都跟着章节变。
 	# 161：章节在第三页才挑 —— 已经挑好的角色这一章也能用就留着（棋盘上带的东西不动），不能用才换回第一个
 	var keep := character()
@@ -392,37 +400,148 @@ func choose_chapter(i: int) -> void:
 	_refresh()
 
 
-## 角色按钮按这一章能选的重排
-## 085：这一章的随机图有哪些规模（环形生成器的 `scales`）；预设图没有
+## 180：这一章能选的规模（环形生成器的 `scales`）；预设图没有 = 空。默认挑上次那档（同一张图时），否则第一档
 func _rebuild_scales() -> void:
-	UiTheme.clear_children(_scale_box)
 	_scale_btns.clear()
 	scale_id = &""
 	var ch := chapter()
-	var options := ch.map_source.scale_options() if ch != null and ch.map_source != null else [] as Array[Dictionary]
-	if options.is_empty():
+	var options := scale_options_of(ch)
+	if not options.is_empty():
+		var last := flow.meta.flag(FLAG_LAST_SCALE) - 1
+		var same_map := flow.meta.flag(FLAG_LAST_MAP) == ch.order + 1
+		scale_id = options[last]["id"] if same_map and last >= 0 and last < options.size() else options[0]["id"]
+	_rebuild_map_list()
+	_sync_preview()
+
+
+## 一章的规模选项（[method MapSource.scale_options]，没有 map_source = 空）
+static func scale_options_of(c: ChapterDef) -> Array[Dictionary]:
+	return c.map_source.scale_options() if c != null and c.map_source != null else [] as Array[Dictionary]
+
+
+## 180：规模那一行右边的小字：「4~5 环　36 步」
+static func scale_note(o: Dictionary) -> String:
+	var parts: Array[String] = []
+	var r: Vector2i = o.get("rings", Vector2i.ZERO)
+	if r.x > 0:
+		parts.append(("%d 环" % r.x) if r.y <= r.x else ("%d~%d 环" % [r.x, r.y]))
+	var limit := int(o.get("step_limit", 0))
+	if limit > 0:
+		parts.append("%d 步" % limit)
+	return "　".join(parts)
+
+
+## 180：左列重排 —— 每张图一个按钮；选中的那张下面缩进一列规模（名字在左、环数与步数小字在右）
+func _rebuild_map_list() -> void:
+	if _map_list == null:
 		return
-	_scale_box.add_child(_label("地图规模", 15, UiPalette.DIM))
-	var ids: Array[StringName] = [&""]
-	var names: Array[String] = ["默认（章节配置）"]
-	for o in options:
-		var sid: StringName = o["id"]
-		var limit := int(o.get("step_limit", 0))
-		ids.append(sid)
-		names.append(String(o["display_name"]) + ("　倒计时 %d" % limit if limit > 0 else ""))
-	var btns := _choice_column(_scale_box, names, func(i: int): choose_scale(ids[i]), 13)
-	for i in btns.size():
-		_scale_btns[ids[i]] = btns[i]
-	choose_scale(&"")
+	UiTheme.clear_children(_map_list)
+	for i in _chapters.size():
+		var c := _chapters[i]
+		var idx := i
+		var b := _button(c.display_name if c.display_name != "" else String(c.id), func(): choose_chapter(idx), 16)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		UiTheme.mark(b, i == chapter_index)
+		_map_list.add_child(b)
+		if i != chapter_index:
+			continue
+		for o in scale_options_of(c):
+			var sid: StringName = o["id"]
+			var line := _hbox(0)
+			var indent := Control.new()
+			indent.custom_minimum_size.x = SCALE_INDENT
+			line.add_child(indent)
+			var sb := _button(String(o["display_name"]), func(): choose_scale(sid), 14)
+			sb.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			sb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			UiTheme.mark(sb, sid == scale_id)
+			var note := _label(scale_note(o), 12, UiPalette.DIM)
+			note.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			note.offset_right = -12
+			note.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			note.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			sb.add_child(note)
+			line.add_child(sb)
+			_map_list.add_child(line)
+			_scale_btns[sid] = sb
 
 
+## 挑一档规模。空 = 章节自己的默认配置（界面上不列；测试按章节默认配置找的种子用它）
 func choose_scale(id: StringName) -> void:
-	scale_id = id if _scale_btns.has(id) else &""
-	_mark_choice(_scale_btns.values(), _scale_btns.keys().find(scale_id))
+	if id != &"" and not _scale_btns.has(id):
+		return
+	scale_id = id
+	for k in _scale_btns:
+		UiTheme.mark(_scale_btns[k], k == scale_id)
+	_sync_preview()
+	_refresh()
 
 
 func scale_options() -> Array:
 	return _scale_btns.keys()
+
+
+## 180：第三页的图：开局屏能列的章里去掉教程章（序章只出现一次，不进列表）
+func map_chapters() -> Array[ChapterDef]:
+	var out: Array[ChapterDef] = []
+	for c in flow.available_chapters():
+		if c.hidden_by_unlock == &"":
+			out.append(c)
+	return out
+
+
+## 180：这一章这一档按现在的种子真生成一次、数环（入局时 flow.begin 用同一个种子再生成，确定性生成两次一样）
+func ring_levels(c: ChapterDef, sid: StringName) -> int:
+	if c == null or c.map_source == null:
+		return 0
+	var key := "%s|%s|%d" % [c.id, sid, run_seed]
+	if _ring_cache.has(key):
+		return _ring_cache[key]
+	var g := c.map_source.resolve(run_seed, sid)
+	var lay := MapLayout.for_graph(g) if g != null else null
+	var n := (lay as RingLayoutBase).level_count(g) if lay is RingLayoutBase else 0
+	_ring_cache[key] = n
+	return n
+
+
+## 180：预览跟着现在挑的图与规模（只在第三页算：别的页不生成）
+func _sync_preview() -> void:
+	if _preview == null or _page != PAGE_MAP:
+		return
+	var c := chapter()
+	if c == null:
+		_preview.clear()
+		return
+	var animate := flow.settings == null or flow.settings.ui_fades
+	_preview.show_map(c.map_skin, ring_levels(c, scale_id), scale_id, animate)
+
+
+func preview() -> MapPreview:
+	return _preview
+
+
+## 180：种子进第三页随机取；调试台指定了下一局的种子就用它
+func _reroll_seed() -> void:
+	run_seed = flow.next_run_seed if flow != null and flow.next_run_seed >= 0 else randi() % 1000000
+	_sync_preview()
+
+
+## 180：进开局屏时默认上次的图、规模、难度（找不到回第一个 / 0 档）
+func _restore_last() -> void:
+	var at := 0
+	var want := flow.meta.flag(FLAG_LAST_MAP) - 1
+	for i in _chapters.size():
+		if _chapters[i].order == want:
+			at = i
+	choose_chapter(at)
+	var level := flow.meta.flag(FLAG_LAST_DIFFICULTY)
+	var idx := 0
+	var ladder := flow.available_difficulties()
+	for i in ladder.size():
+		if ladder[i].level <= level:
+			idx = i
+	choose_difficulty(idx)
 
 
 func _rebuild_characters() -> void:
@@ -529,8 +648,38 @@ func choose_difficulty(i: int) -> void:
 	if avail.is_empty():
 		return
 	difficulty_index = clampi(i, 0, avail.size() - 1)
-	_mark_choice(_difficulty_btns, difficulty_index)
+	_sync_difficulty()
 	_refresh()
+
+
+## 180：难度加减一级（只在能选的档里走：没解锁的上不去）
+func step_difficulty(delta: int) -> void:
+	choose_difficulty(difficulty_index + delta)
+
+
+## 180：难度块 —— 数字、两颗键的灰亮、红字（1..这一级各自新加的挑战，一级一行；0 级留白）
+func _sync_difficulty() -> void:
+	var avail := flow.available_difficulties()
+	var d := difficulty()
+	if _difficulty_num != null:
+		_difficulty_num.text = str(d.level if d != null else 0)
+	if _minus_btn != null:
+		_minus_btn.disabled = difficulty_index <= 0
+	if _plus_btn != null:
+		_plus_btn.disabled = difficulty_index >= avail.size() - 1
+	if _challenge != null:
+		_challenge.text = challenge_text()
+
+
+## 180：红字说明：到现在这一级为止，每一级新加的挑战（DifficultyDef.challenge）
+func challenge_text() -> String:
+	var lines: Array[String] = []
+	var avail := flow.available_difficulties()
+	for i in range(1, mini(difficulty_index + 1, avail.size())):
+		var c := avail[i].challenge.strip_edges()
+		if c != "":
+			lines.append(c)
+	return "\n".join(lines)
 
 
 func difficulty() -> DifficultyDef:
@@ -641,19 +790,19 @@ func carry_value() -> int:
 	return v
 
 
-## 094：预算那一行：「带入预算 600：已带 420」/「超出 150 → 倒计时 −3（36 → 33）」
+## 094：预算那一行。180：「带入预算 420 / 600」/「带入预算 750 / 600　超出 150 → 倒计时 −3（36 → 33）」（不写「已带」）
 static func carry_text(c: ChapterDef, sid: StringName, value: int) -> String:
 	var budget := CountdownModule.budget_for(c, sid)
 	if budget <= 0:
 		return ""
 	var over := CountdownModule.over_for(c, sid, value)
 	if over <= 0:
-		return "[color=#5cb85c]带入预算 %d：已带 %d[/color]" % [budget, value]
+		return "[color=#5cb85c]带入预算　%d / %d[/color]" % [value, budget]
 	var penalty := CountdownModule.penalty_for(c, sid, value)
 	var base := CountdownModule.base_limit_for(c, sid)
 	if base > 0 and penalty > 0:
-		return "[color=#f0ad4e]带入预算 %d：已带 %d，超出 %d → 倒计时 −%d（%d → %d）[/color]" % [budget, value, over, penalty, base, CountdownModule.limit_for(c, sid, value)]
-	return "[color=#f0ad4e]带入预算 %d：已带 %d，超出 %d（这一章没有倒计时，只提示）[/color]" % [budget, value, over]
+		return "[color=#f0ad4e]带入预算　%d / %d　超出 %d → 倒计时 −%d（%d → %d）[/color]" % [value, budget, over, penalty, base, CountdownModule.limit_for(c, sid, value)]
+	return "[color=#f0ad4e]带入预算　%d / %d　超出 %d（这一章没有倒计时，只提示）[/color]" % [value, budget, over]
 
 
 ## 现在带上的（非包；096：预设套的不算 —— 它不占预算、不受件数上限）
@@ -669,8 +818,7 @@ func carried() -> Array[ItemInstance]:
 
 func set_run_seed(v: int) -> void:
 	run_seed = v
-	if _seed_spin != null:
-		_seed_spin.set_value_no_signal(v)
+	_sync_preview()
 
 
 ## 能不能出发；空串 = 能，否则是原因
@@ -724,11 +872,26 @@ func depart() -> bool:
 	if run == null:
 		_status.text = "这一章生成不出图：%s" % (c.map_source.last_error if c.map_source != null else "没有地图来源")
 		return false
+	flow.next_run_seed = -1     # 180：调试台指定的种子只管一局
+	_remember_last(c)
 	# 090：进了游戏，留在地上的就没了（带回来的棋盘 begin 里已经清掉）
 	if stash != null:
 		stash.clear()
 	_pending.clear()
 	return true
+
+
+## 180：记下这一局挑的图、规模、难度（下次进开局屏默认它们）
+func _remember_last(c: ChapterDef) -> void:
+	flow.meta.set_flag(FLAG_LAST_MAP, c.order + 1)
+	var opts := scale_options_of(c)
+	var at := -1
+	for i in opts.size():
+		if opts[i]["id"] == scale_id:
+			at = i
+	flow.meta.set_flag(FLAG_LAST_SCALE, at + 1)
+	var d := difficulty()
+	flow.meta.set_flag(FLAG_LAST_DIFFICULTY, d.level if d != null else 0)
 
 
 ## 不开了：带上的放回仓库，回主菜单。090：上一局带回来的原样放回带回来的棋盘（视为没发生过移动）
@@ -789,7 +952,7 @@ func _rebuild_board() -> void:
 		inst.uid = flow.meta.allocate_uid()
 		board.try_add(inst, true)
 	board.end_batch()
-	_board_host.add_child(_label("棋盘　%d × %d 格，初始包 %d 个" % [ch.board_size.x, ch.board_size.y, ch.starting_bags.size()], 15, UiPalette.DIM))
+	_board_host.add_child(_label("行囊　%s　　%d × %d 格" % [Names.of(ch), ch.board_size.x, ch.board_size.y], 15, UiPalette.DIM))     # 180
 	_board_view = InventoryView.new()
 	_board_view.label_font = font
 	_board_view.inventory = board
@@ -797,10 +960,9 @@ func _rebuild_board() -> void:
 	_board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_board_host.add_child(_board_view)
 	_readout = _log_box(13)
-	_readout.custom_minimum_size = Vector2(ch.board_size.x * InventoryView.CELL, 140)
+	_readout.custom_minimum_size = Vector2(ch.board_size.x * InventoryView.CELL, 48)     # 180：只两行
 	_readout.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_board_host.add_child(_readout)
-	_board_host.add_child(_label("左键拖动　R 旋转　右键 / Esc 取消　右键信物 = 奉为主信仰", 11, UiPalette.DIM))
 	_drag.register_view(_board_view)
 	_board_view.item_context.connect(func(_v: ContainerView, uid: int): reseat_anchor(uid))     # 099：开局屏的棋盘同一套
 	_board_view.item_double_clicked.connect(quick_move)     # 109：每次重建棋盘视图都要重新接
@@ -899,24 +1061,25 @@ static func _num(v: float) -> String:
 	return str(int(v)) if is_equal_approx(v, roundf(v)) else "%.1f" % v
 
 
-## 161：第三页的出发摘要（角色、带了几件、负重、模式与难度）
+## 161：第三页的出发摘要。180：角色 / 负重 / 地图 · 规模 / 难度（不写带了几件）
 func summary_text() -> String:
 	var lines: Array[String] = []
 	var ch := character()
 	if ch != null:
 		lines.append("角色　%s" % Names.of(ch))
-	var taken := carried().size()
-	var pre := preset_items().size()
-	lines.append("带上　%d 件%s" % [taken, "（另有预设 %d 件）" % pre if pre > 0 else ""])
 	var enc := encumbrance_text()
 	if enc != "":
 		lines.append(enc)
 	var c := chapter()
 	if c != null:
-		lines.append("模式　%s" % (c.display_name if c.display_name != "" else String(c.id)))
+		var map_name := c.display_name if c.display_name != "" else String(c.id)
+		for o in scale_options_of(c):
+			if o["id"] == scale_id:
+				map_name += " · " + String(o["display_name"])
+		lines.append("地图　%s" % map_name)
 	var d := difficulty()
 	if d != null:
-		lines.append("难度　%s" % d.display_name)
+		lines.append("难度　%d" % d.level)
 	return "\n".join(lines)
 
 
@@ -931,43 +1094,16 @@ func reseat_anchor(uid: int) -> bool:
 func _refresh() -> void:
 	var c := chapter()
 	var ch := character()
-	if _desc != null:
-		var lines: Array[String] = []
-		if c != null:
-			lines.append("%s　难度 %d　敌人池 %s" % [c.display_name, c.difficulty, String(c.enemy_pool) if c.enemy_pool != &"" else "无"])
-		var pre := preset()
-		if pre != null:
-			lines.append("预设「%s」：%s" % [Names.of(pre), Names.description_of(pre)])
-		var d := difficulty()
-		if d != null:
-			lines.append("难度「%s」：%s" % [d.display_name, d.summary()])
-		_desc.text = "\n".join(lines)
 	if _readout != null and board != null:
+		# 180（作者定）：棋盘下只留两行 —— 负重、带入预算
 		_readout.clear()
-		# 091（作者定）：和背包面板一样的读数 —— 按这个角色的基线把棋盘编译一遍，预估 DPS 与耐力消耗实时变
-		if ch != null:
-			var spec := BattleCompiler.compile_board(board, ch.baseline(), [] as Array[StatModifier], [] as Array[AbilityRule], {})
-			var est := StaminaEstimate.of(spec)
-			_readout.append_text("生命 %d　预估 DPS %.1f　耐力消耗：%s（每秒 %.1f，回 %.1f）　%d 件会出手\n" % [
-				spec.max_hp_int(), spec.rough_dps(), est["rating"], est["cost"], est["regen"], spec.active_items().size()])
-		var value := 0
-		var cells := 0
-		var taken := carried()
-		for inst in taken:
-			value += ItemValue.of(inst.def)
-			cells += inst.def.cell_count()
-			_readout.append_text("　" + _item_line(inst.def) + "\n")
-		if taken.is_empty():
-			_readout.append_text("[color=#8b93a1]什么都还没带[/color]\n")
-		var preset_count := preset_items().size()
-		if preset_count > 0:
-			_readout.append_text("[color=#8b93a1]预设套 %d 件（不算预算）[/color]\n" % preset_count)
-		_readout.append_text("\n带 %d 件，占 %d 格，值 %d 币　包里还有 %d 格" % [taken.size(), cells, value, board.free_cell_count()])
-		if c != null and CountdownModule.budget_for(c, scale_id) > 0:
-			_readout.append_text("\n" + carry_text(c, scale_id, value))
+		var lines: Array[String] = []
 		var enc_line := encumbrance_text()
 		if enc_line != "":
-			_readout.append_text("\n" + enc_line)
+			lines.append(enc_line)
+		if c != null and CountdownModule.budget_for(c, scale_id) > 0:
+			lines.append(carry_text(c, scale_id, carry_value()))
+		_readout.append_text("\n".join(lines))
 	if _stash_title != null and stash != null:
 		_stash_title.text = "地上　%d 件" % stash.item_count()
 	if _summary != null:
@@ -977,11 +1113,3 @@ func _refresh() -> void:
 	if _status != null:
 		var why := can_depart()
 		_status.text = why if why != "" and not carried().is_empty() else ""
-
-
-## 读数里一件道具的一行：名字（按稀有度上色）、几格、值多少
-func _item_line(def: ItemDef) -> String:
-	if def == null:
-		return "?"
-	var cells := def.cell_count()
-	return "[color=#%s]%s[/color]  %d 格  %d 币" % [ItemPainter.rarity_color(def).to_html(false), def.display_name, cells, ItemValue.of(def)]

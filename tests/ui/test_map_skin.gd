@@ -4,7 +4,7 @@ extends RefCounted
 
 static func run(t: TestCase) -> void:
 	t.begin("地图底图 · 四章各配一张、图与 json 都在、深浅按 json；铺满裁边的取图区域")
-	var want := {"prologue": "ruins", "prologue_2": "north_woods", "prologue_3": "cursed_depths", "free_mode": "imperial_camp"}
+	var want := {"prologue": "ruins", "prologue_2": "north_woods", "prologue_3": "cursed_depths", "free_mode": "ruins"}
 	for cid in want:
 		var ch := ContentPaths.load_asset("chapters", cid) as ChapterDef
 		t.check(ch != null and String(ch.map_skin) == want[cid], "%s 配 %s（%s）" % [cid, want[cid], ch.map_skin if ch != null else "?"])

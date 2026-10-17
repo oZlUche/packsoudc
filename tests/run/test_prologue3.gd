@@ -233,7 +233,7 @@ static func run_gating(t: TestCase) -> void:
 	t.check(avail.size() == 1 and avail[0].id == &"free_mode", "序章三通关后只剩自由模式")
 	t.check(f.tutorials_done(), "教程全通")
 	t.is_null(f.new_run_target(), "新的一局不直接开：进开局屏挑角色、规模")
-	t.eq(Names.of(avail[0]), "自由模式", "显示名")
+	t.eq(Names.of(avail[0]), "魔法废墟", "显示名（180：自由模式改叫魔法废墟，id 不变）")
 	t.eq(f.chapter_of(&"chapter_01"), avail[0], "老存档里的 chapter_01 认得出是自由模式（IdAliases）")
 	var old := RunSave.load_chapter(&"chapter_01")
 	t.check(old != null and old.id == &"free_mode", "读档按老 id 也载得到")
