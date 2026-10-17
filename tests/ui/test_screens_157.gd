@@ -496,12 +496,12 @@ static func frame_slab_screens(t: TestCase, root: Window) -> void:
 
 
 static func frame_nameplate_slots(t: TestCase, root: Window) -> void:
-	t.begin("157 补充二 · 名牌：石碑底（PanelNameplate）、肖像位永远在（没图放占位剪影、框照画）、右边徽记位先画框；有图填进框里")
+	t.begin("157 补充二 · 名牌：铜牌底（PanelNameplate）、肖像位永远在（没图放占位剪影、框照画）、右边徽记位先画框；有图填进框里")
 	var plate := Nameplate.new().setup("游兵", "0 档")
 	root.add_child(plate)
 	t.eq(plate.theme_type_variation, UiTheme.PANEL_NAMEPLATE, "名牌底是 PanelNameplate")
 	var plate_box := plate.get_theme_stylebox("panel")
-	t.check(plate_box is SlabStyle and (plate_box as SlabStyle).edge is StyleBoxTexture, "美术的名牌石碑：九宫格刻边，底下垫板身（作者 2026-10-16：不透明）")
+	t.check(plate_box is StyleBoxTexture and (plate_box as StyleBoxTexture).texture.get_size() == Vector2(160, 96), "美术的名牌：铜牌九宫格（作者 2026-10-17：铜板本身不透明，不垫板身）")
 	t.eq(plate.portrait, null, "没肖像图：portrait 空")
 	t.check(plate.portrait_slot != null and plate.portrait_slot.custom_minimum_size == Vector2(64, 64), "肖像位 64×64 在")
 	t.check(plate.portrait_slot.placeholder != null, "放的是美术的占位剪影")
@@ -519,6 +519,15 @@ static func frame_nameplate_slots(t: TestCase, root: Window) -> void:
 	bare.free()
 	UiTheme.asset_root = saved
 	plate.free()
+	# 作者 2026-10-17：铜名牌深底 —— 放进浅色石板框（外面挂着墨字小主题）也是亮字
+	var host := PanelContainer.new()
+	UiTheme.set_tone(host, UiTheme.TONE_LIGHT)
+	root.add_child(host)
+	var lit := Nameplate.new().setup("游兵", "0 档")
+	host.add_child(lit)
+	t.eq(lit.name_label.get_theme_color("font_color"), UiPalette.FG, "浅框里的铜名牌：名字亮色字")
+	t.eq(lit.sub_label.get_theme_color("font_color"), UiPalette.DIM, "副行亮灰")
+	host.free()
 
 
 static func frame_replay_ticker_option(t: TestCase, root: Window) -> void:

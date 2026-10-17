@@ -122,3 +122,9 @@
 - **背景画到了**：作者 07:50 定白天版选人大厅，`assets/ui/setup/bg_hall.png` + json（`stretch: cover`、`tone: light`）。原先「内容区深底白字」的假设不成立了：`GameScreen._painted_screen` 的内容区按背景图 json 记深浅（`UiTheme.art_tone`，没图仍是深）；直接写在背景上的标题挂墨字（`UiTheme.set_tone(_title, …)`，浅底小主题里给 `LABEL_SCREEN_TITLE` 墨色、去掉黑影）；右下角那行提示是语义色标签，进树按浅底取暗版。三栏凹槽板自带深底，墨字主题只挂在标题上、不挂内容区，所以板里的字照旧浅色。
 - **「被动」不上屏**（作者 07:51）：技能行第一行只剩名字；`skill_entries()` 的 `kind` 留着（以后主动技能放出来再说）。
 - 测试：`test_setup_179` 加背景画在、浅底、标题墨字无黑影、凹槽板仍深底浅字、这一屏没有「被动」。截图 `/mnt/project-files/screenshots/setup_hall/page1|2|3.png`。
+
+### 补二（2026-10-17，v3.18）：三页各一幅背景画
+
+- 作者 08:02：「大厅背景只在第一页，第二页要设置一个类似仓库的背景，或者简单点用木制拼接板，第三页用一个铺在桌子上的地图为背景，突出军事感」。
+- `SetupScreen.PAGE_ART`：第一页 `setup/bg_hall`、第二页 `setup/bg_kit`、第三页 `setup/bg_map`；翻页时 `GameScreen._repaint(art)` 换掉 `PaintedBackdrop`、按新图的 json 记内容区深浅、重算按底取色的字，标题按它挂字色（浅底墨字、深底白字）。
+- 第二、三页的图已请美术设计出（规格同大厅：1920×1200、铺满裁边、json 写 `tone`）；到之前这两页是纯色底、标题白字。图放进 `assets/ui/setup/` 就生效，不用改代码。
