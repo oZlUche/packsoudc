@@ -24,6 +24,11 @@ static func create(p_def: BuffDef, p_stacks: int = 1, now: int = 0) -> BuffInsta
 	return b
 
 
+## 185 补充一：回放要的计时（status_stacked 载荷）—— 到期时刻（定点，-1 = 永续）与按层计时的剩余秒数
+func timer_payload() -> Dictionary:
+	return {"expires_at": expires_at, "seconds_left": seconds_left}
+
+
 func is_permanent() -> bool:
 	return expires_at < 0
 

@@ -31,13 +31,15 @@ grant_mods = Array[ExtResource("1_6eplp")]([SubResource("Resource_mgmdq")])
 script = ExtResource("7_gdomn")
 metadata/part_ref = &"always"
 
-[sub_resource type="Resource" id="Resource_4vt47"]
+[sub_resource type="Resource" id="Resource_o4h3v"]
 script = ExtResource("10_lqt1n")
 axis = &"damage_dealt"
+stacks = 5
 
-[sub_resource type="Resource" id="Resource_i5ws3"]
+[sub_resource type="Resource" id="Resource_3dtjv"]
 script = ExtResource("10_lqt1n")
 axis = &"attack_speed"
+stacks = 5
 
 [sub_resource type="Resource" id="Resource_ypuoo"]
 script = ExtResource("11_fjm76")
@@ -48,7 +50,7 @@ display_names = {
 }
 stackable = false
 duration_sec = 10.0
-axes = Array[ExtResource("10_lqt1n")]([SubResource("Resource_4vt47"), SubResource("Resource_i5ws3")])
+axes = Array[ExtResource("10_lqt1n")]([SubResource("Resource_o4h3v"), SubResource("Resource_3dtjv")])
 
 [sub_resource type="Resource" id="Resource_dy4rd"]
 script = ExtResource("12_jujtf")

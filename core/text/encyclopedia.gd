@@ -102,7 +102,7 @@ func _generate_terms() -> void:
 	for bid in buff_ids:
 		var def: BuffDef = buffs[bid]["def"]
 		var name := Names.of(def) if Names.of(def) != "" else String(bid)
-		_add("buff:" + String(bid), name, "buff", Glossary.describe_buff(def), [], buffs[bid]["from"])
+		_add("buff:" + String(bid), name, "buff", Glossary.buff_body(def), [], buffs[bid]["from"])     # 185：效果与时长（名字是页标题）
 	# 属性 / 时机（133：乘区取消，不再有乘区页）：名字和固定词条同名的（急速、冷却、自发……）不另开页，那一页就是它
 	for key in Glossary.STAT_NAMES:
 		_add_named("stat:" + String(key), Glossary.stat_name(StringName(key)), "stat")

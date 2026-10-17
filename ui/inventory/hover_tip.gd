@@ -14,6 +14,8 @@ class_name HoverTip
 extends Control
 
 const MAX_WIDTH := 360.0     # 170 定稿：字大一号后 340 放不下武器那一行
+## 185：只写文字的主窗按内容收窄，下限这么宽（道具窗固定 [constant MAX_WIDTH]）
+const MIN_WIDTH := 220.0
 const CHILD_WIDTH := 260.0
 ## 170 §3：离开道具后的宽限、钉住要停多久、关键词开子窗要停多久、离开钉住的窗多久收、子窗最多几层（含主窗）
 const GRACE_SEC := 0.15
@@ -56,6 +58,9 @@ class TipWindow extends PanelContainer:
 
 	func _init(width: float) -> void:
 		UiTheme.panel(self, -1, UiTheme.PANEL_TOOLTIP)
+		# 185：皮革窗是深底，挂亮字 —— 嵌在浅石板（战斗屏）里也不继承墨字（名牌同款）
+		theme = UiTheme.bright_text_theme()
+		full_width = width
 		var pin_path := UiTheme.TIP_ICON_DIR + "pin.png"
 		_pin_tex = load(pin_path) as Texture2D if ResourceLoader.exists(pin_path) else null
 		mouse_filter = Control.MOUSE_FILTER_STOP
@@ -105,9 +110,36 @@ class TipWindow extends PanelContainer:
 			hover_term = meta if meta.begins_with("term:") else ""
 			hover_t = 0.0
 
+	## 185：排版宽（只写文字的主窗按内容收窄时改它）
+	var full_width := 0.0
+
+	func set_width(w: float) -> void:
+		head.custom_minimum_size.x = w
+		body.custom_minimum_size.x = w
+		sep.custom_minimum_size.x = w
+		foot_sep.custom_minimum_size.x = w
+
+	func content_width() -> float:
+		var w := float(body.get_content_width())
+		if head.visible:
+			w = maxf(w, float(head.get_content_width()))
+		return w
+
+	## 185：状态说明 —— 名字行 / 分隔线 / 效果（[method Glossary.buff_tip_parts]）
+	func set_status(head_bb: String, body_bb: String) -> void:
+		item_mode = false
+		set_width(full_width)
+		head.visible = true
+		sep.visible = true
+		foot_sep.visible = false
+		foot_row.visible = false
+		UiTheme.set_rich(head, head_bb)
+		UiTheme.set_rich(body, body_bb)
+
 	## 只写一段文字（地图上的点、子窗）
 	func set_text(bbcode: String) -> void:
 		item_mode = false
+		set_width(full_width)
 		head.visible = false
 		sep.visible = false
 		foot_sep.visible = false
@@ -117,6 +149,7 @@ class TipWindow extends PanelContainer:
 	## 170：道具说明分块
 	func set_item(full: Dictionary) -> void:
 		item_mode = true
+		set_width(full_width)
 		head.visible = true
 		sep.visible = true
 		foot_sep.visible = true
@@ -128,7 +161,7 @@ class TipWindow extends PanelContainer:
 
 	func text() -> String:
 		if not item_mode:
-			return body.text
+			return (head.text + "\n" + body.text) if head.visible else body.text
 		return "\n".join([head.text, body.text, foot.text + ("　" + set_label.text if set_label.text != "" else "")])
 
 	func reset_state() -> void:
@@ -254,6 +287,26 @@ func show_text(bbcode: String, at: Vector2, extra: Control = null, terms = {}) -
 	_open_main(at)
 
 
+## 185：显示一个状态的说明（名字行 / 分隔线 / 效果，[method Glossary.buff_tip_parts]）；钉住的窗不换
+func show_status(parts: Dictionary, at: Vector2) -> void:
+	if _panel.visible and _panel.pinned:
+		return
+	_close_from(1)
+	_panel.reset_state()
+	_drop_extra()
+	_panel.set_status(String(parts.get("head", "")), String(parts.get("body", "")))
+	_panel.terms = _terms_dict(parts.get("terms", {}))
+	_open_main(at)
+
+
+## 185 补充一：开着的状态窗只换字（还剩几秒在走）—— 不重摆、不动钉住
+func update_status(parts: Dictionary) -> void:
+	if not _panel.visible or _panel.item_mode:
+		return
+	UiTheme.set_rich(_panel.head, String(parts.get("head", "")))
+	UiTheme.set_rich(_panel.body, String(parts.get("body", "")))
+
+
 ## 170：显示一件道具的分块说明（[method ItemTooltip.describe_full] 的结果）
 func show_item(full: Dictionary, at: Vector2) -> void:
 	_close_from(1)
@@ -306,11 +359,26 @@ func _refit() -> void:
 	if not _panel.visible:
 		return
 	var at := _panel.position
+	_shrink_to_text()
 	_panel.reset_size()
 	if _panel.pinned:
 		_panel.position = at
 	else:
 		_place(_last_at)
+
+
+## 185：只写文字的主窗按内容收窄（[constant MIN_WIDTH]～[constant MAX_WIDTH]）；道具窗、下面挂了控件的不收
+func _shrink_to_text() -> void:
+	if _panel.item_mode or _extra != null:
+		return
+	var w := clampf(ceilf(_panel.content_width()) + 1.0, MIN_WIDTH, _panel.full_width)
+	if absf(_panel.body.custom_minimum_size.x - w) > 0.5:
+		_panel.set_width(w)
+
+
+## 主窗的宽（测试看）
+func window_width() -> float:
+	return _panel.size.x
 
 
 func tone() -> StringName:

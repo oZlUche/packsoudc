@@ -58,8 +58,9 @@ static func run_glossary(t: TestCase) -> void:
 		if String(term["name"]) == "血怒":
 			blood = String(term["text"])
 	t.check(names.has("血怒"), "词条里有血怒：%s" % str(names))
-	t.check(blood.contains("【强攻】1 层") and blood.contains("【加速】1 层") and blood.contains("持续 10.0 秒"),
-		"血怒的词条写着每层带一层强攻、一层加速（152）、持续 10 秒：%s" % blood)
+	blood = Glossary.strip_bbcode(blood)
+	t.check(blood.contains("造成的伤害 +15%") and blood.contains("攻速 +15%") and blood.contains("持续 10 秒"),
+		"血怒的词条写着合计（185：+15% / +15%）、持续 10 秒：%s" % blood)
 	# 107（作者定）：「开战时」「信力」这类直白的词不再弹词条（说明文字仍在表里）
 	t.check(not names.has("开战时") and not names.has("信力"), "直白的固定词条不再进侧窗：%s" % str(names))
 	t.check(Glossary.term_text("开战时") != "" and not Glossary.term_tip("开战时"), "但说明文字一字不动，只是 tip 关了")
@@ -84,7 +85,8 @@ static func run_glossary(t: TestCase) -> void:
 	for term in (pf["terms"] as Dictionary).values():
 		if String(term["name"]) == "中毒":
 			poison = String(term["text"])
-	t.check(poison.contains("减益") and poison.contains("不限层") and poison.contains("永续"), "中毒的词条按定义：减益、不限层、永续：%s" % poison)
+	poison = Glossary.strip_bbcode(poison)
+	t.check(poison.contains("减益") and poison.contains("每秒受到 1 点毒素伤害") and not poison.contains("永续"), "中毒的词条按定义：减益、合计（185：不写不限层 / 永续）：%s" % poison)
 	var pf_text := Glossary.strip_bbcode(String(pf["text"]))
 	t.check(pf_text.contains("点伤害，并施加 1 层中毒") and not pf_text.contains("附带【中毒】"), "175 补 5.4：一句两段「造成 X 点伤害，并施加 1 层中毒」（%s）" % pf_text)
 	# Glossary 本身
@@ -355,7 +357,7 @@ static func frame_buff_chips(t: TestCase, root: Window) -> void:
 	root.add_child(view)
 	view.set_buff_defs(defs)
 	view._on_buff_hovered("poison", Vector2(10, 10))
-	t.check(view._tip.is_showing() and view._tip.text().contains("中毒") and view._tip.text().contains("永续"), "悬浮窗写着中毒的效果")
+	t.check(view._tip.is_showing() and view._tip.text().contains("中毒") and view._tip.text().contains("每秒受到"), "悬浮窗写着中毒的效果")
 	view._on_buff_unhovered()
 	t.check(not view._tip.is_showing(), "移开就收")
 	var spec_defs := Glossary.buffs_in_spec(BattleCompiler.compile_board(LootPacker.board_of([&"poisoned_knife"] as Array[StringName], Vector2i(4, 4), c.items)))

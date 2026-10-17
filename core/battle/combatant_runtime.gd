@@ -415,7 +415,9 @@ func guard_buff(ctx: BattleContext, def: BuffDef, n: int) -> int:
 			added = inst.add_stacks(inst.guard - inst.stacks)
 			mark_dirty()
 	if ctx != null:     # 层数没变也发一条：回放靠 guard 键写「其中 N 层不可解除」
-		ctx.emit(BattleEvent.STATUS_STACKED, side, {"buff": String(def.id), "delta": added, "stacks": inst.stacks, "guard": inst.guard})
+		var payload := {"buff": String(def.id), "delta": added, "stacks": inst.stacks, "guard": inst.guard}
+		payload.merge(inst.timer_payload())     # 185 补充一
+		ctx.emit(BattleEvent.STATUS_STACKED, side, payload)
 	return added
 
 

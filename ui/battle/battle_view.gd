@@ -128,43 +128,65 @@ func set_buff_defs(defs: Dictionary) -> void:
 		p.queue_redraw()
 
 
+## 185 补充一：悬浮窗开着的是哪一格（还剩几秒跟着回放走）、上次写的秒数
+var _tip_id := ""
+var _tip_side := 0
+var _tip_secs := -1
+
+
 ## 停在图标上时开悬浮窗
 func _on_buff_hovered(id: String, at: Vector2, side: int = 0) -> void:
 	if _tip == null:
 		return
-	_tip.show_text(buff_tip(id, side), at)
+	_tip.show_status(buff_tip_parts(id, side), at)
+	_tip_id = id
+	_tip_side = side
+	_tip_secs = -1
 
 
-## 悬浮窗正文：常驻格写它的加成；buff 写定义生成的说明，系统效果补一句不可解除
+## 悬浮窗正文（整段字，测试与老调用方看）
 func buff_tip(id: String, side: int = 0) -> String:
+	var parts := buff_tip_parts(id, side)
+	return String(parts["head"]) + "\n" + String(parts["body"])
+
+
+## 185（作者 2026-10-17 定稿）：名字行 + 现在的合计（[method Glossary.buff_tip_parts]）；限时的写还剩几秒（作者 16:24）。
+## 常驻格、标准轴格、鏖战、格挡套同一版式；机制说明（不可解除、系统层、叠层规则）不给玩家看
+func buff_tip_parts(id: String, side: int = 0) -> Dictionary:
 	var panel := _panels[clampi(side, 0, _panels.size() - 1)]
 	if id == CombatantPanel.OVERTIME_CHIP:
 		var n := int(panel.stacks().get(id, 0))
-		return "[b]鏖战 ×%d[/b]\n加时后每隔一段，双方受到的伤害再提高，无法驱散\n%s" % [
-			n, StatAxes.describe(StatAxes.DAMAGE_TAKEN, panel.axis_value(StatAxes.DAMAGE_TAKEN), _system_of(side, StatAxes.DAMAGE_TAKEN))]
+		var sys := _system_of(side, StatAxes.DAMAGE_TAKEN)
+		return _parts(Glossary.tip_head("鏖战", Glossary.SYSTEM_NAME_COLOR, "×%d" % n, "系统"), [StatAxes.effect_text(StatAxes.DAMAGE_TAKEN, sys)])
 	if id == CombatantPanel.BLOCK_CHIP:
-		return block_tip(panel)
+		return block_tip_parts(panel)
 	if id.begins_with(CombatantPanel.AXIS_PREFIX):
 		var a := CombatantPanel.axis_of(id)
 		var v := int(panel.stacks().get(id, 0))
-		return "[b]%s ×%d[/b]\n%s" % [StatAxes.name_of(a, v), absi(v), StatAxes.describe(a, v, _system_of(side, a))]
+		var kind := "减益" if panel.is_bad_axis(id) else "增益"
+		return _parts(Glossary.tip_head(StatAxes.name_of(a, v), "@term", "×%d" % absi(v), kind), [StatAxes.effect_text(a, v + _system_of(side, a))])
 	var note := panel.passive_of(id)
 	if note != null:
-		return "[b]%s[/b]\n%s" % [note.name, note.describe()]
+		return _parts(Glossary.tip_head(note.name, "@term", "", "常驻"), [note.describe()])
 	var def: BuffDef = panel.buff_defs.get(StringName(id), null)
-	var name := Names.of(def) if def != null and Names.of(def) != "" else id
-	var body := Glossary.describe_buff(def) if def != null else "（数据缺失）"
-	if def != null and def.system:
-		body += "\n无法驱散"
-	var guard := int(panel.guards.get(id, 0))
-	if guard > 0:
-		body += "\n其中 %d 层不可解除" % guard     # 175 补充四
-	return "[b]%s[/b]\n%s" % [name, body]
+	if def == null:
+		return _parts(Glossary.tip_head(id, "@term"), ["（数据缺失）"])
+	return Glossary.buff_tip_parts(def, int(panel.stacks().get(id, 0)), panel.time_left(id))
 
 
-## 153：「格挡 N」格的悬浮窗 —— 各层（生效的那层标出来、其余备用）与加固 / 破绽的来源
+static func _parts(head: String, lines: Array) -> Dictionary:
+	var body := Glossary.mark_rich(Glossary.val_numbers("\n".join(lines)), [])
+	return {"head": head, "body": "[font_size=%d][color=@tip_fg]%s[/color][/font_size]" % [Glossary.BODY_SIZE, body], "terms": {}}
+
+
+## 153：「格挡 N」格的悬浮窗 —— 名字行写合计，下面是各层（生效的那层标出来、其余备用）与加固 / 破绽的来源
 static func block_tip(panel: CombatantPanel) -> String:
-	var lines: Array[String] = ["[b]格挡 %d[/b]" % panel.block_value(), "多面盾牌只取最高值；只减少武器直接伤害"]
+	var parts := block_tip_parts(panel)
+	return String(parts["head"]) + "\n" + String(parts["body"])
+
+
+static func block_tip_parts(panel: CombatantPanel) -> Dictionary:
+	var lines: Array[String] = []
 	for i in panel.block_layers.size():
 		var l: Dictionary = panel.block_layers[i]
 		var who := "天生" if String(l["id"]) == "innate" else String(panel.item_names.get(int(l["uid"]), l["id"]))
@@ -177,7 +199,7 @@ static func block_tip(panel: CombatantPanel) -> String:
 		if def != null and def.axis_stacks_per(StatAxes.BLOCK) != 0:
 			var n := def.axis_stacks_per(StatAxes.BLOCK) * int(panel.stacks()[id])
 			lines.append("%s ×%d（%s）" % [StatAxes.name_of(StatAxes.BLOCK, n), absi(n), Names.of(def)])
-	return "\n".join(lines)
+	return _parts(Glossary.tip_head("格挡", "@term", str(panel.block_value())), lines)
 
 
 ## 回放到当前游标为止，某一方某条轴的系统层（从日志里最近一条 axis_shifted 读）
@@ -410,6 +432,21 @@ func _drain_until(t: float) -> void:
 func _sync_overlays() -> void:
 	for o in _overlays:
 		o.now = _now
+	for p in _panels:
+		p.set_now(_now)     # 185：图标上的计时环
+	_refresh_tip_time()
+
+
+## 185 补充一：开着的状态窗里「还剩 N 秒」跟着回放时刻走（秒数变了才换字；暂停时不走）
+func _refresh_tip_time() -> void:
+	if _tip == null or _tip_id == "" or not _tip.is_showing():
+		return
+	var panel := _panels[clampi(_tip_side, 0, _panels.size() - 1)]
+	var left := panel.time_left(_tip_id)
+	if left < 0.0 or ceili(left) == _tip_secs:
+		return
+	_tip_secs = ceili(left)
+	_tip.update_status(buff_tip_parts(_tip_id, _tip_side))
 
 
 func _finish() -> void:
@@ -463,6 +500,8 @@ func _apply(e: BattleEvent) -> void:
 				var buff := String(e.get_name(&"buff"))
 				var first := e.name == BattleEvent.STATUS_STACKED and e.get_int(&"stacks") > 0 and not _panels[e.side].stacks().has(buff)
 				_panels[e.side].set_stacks(buff, e.get_int(&"stacks"))
+				if e.name == BattleEvent.STATUS_STACKED:
+					_panels[e.side].note_stacked(buff, e.payload, StatMath.to_float(e.time))     # 185 补充一：限时状态的计时
 				if e.payload.has("guard"):
 					_panels[e.side].guards[buff] = e.get_int(&"guard")     # 175 补充四：凝毒 / 冻疮的保底
 				if first and not _suppress_popups:
