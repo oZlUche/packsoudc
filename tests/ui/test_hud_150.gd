@@ -16,7 +16,7 @@ static func run_layout(t: TestCase) -> void:
 	t.begin("150 / 166 · 布局：默认是顶端栏三个槽；字典往返一致；坏 id / 锚点 / 档位 / 偏移 / 重复都报；文件存取与重置")
 	var d := HudLayout.default_for("map")
 	t.eq(d.entries.size(), HudWidgets.KINDS.size(), "默认布局把每一种都摆上了")
-	t.eq(HudLayout.VERSION, 6, "179：布局版本 6（旧的回默认）")
+	t.eq(HudLayout.VERSION, 7, "186：布局版本 7（旧的回默认）")
 	t.eq(String(d.entry_of(&"hud_bar")["anchor"]), "top", "顶端栏横在顶上")
 	t.eq(String(d.entry_of(&"countdown")["anchor"]), "bar_center", "倒计时在栏中间")
 	t.eq(String(d.entry_of(&"countdown")["tier"]), "large", "倒计时是大档")

@@ -58,6 +58,11 @@ const RESOLUTIONS: Array[Vector2i] = [
 ]
 
 
+## 186：调试模式此刻生效没有 —— 玩家包里永远关着（[DevGate]），存档里记的值不动
+func debug_on() -> bool:
+	return DevGate.on() and debug_mode
+
+
 func to_dict() -> Dictionary:
 	return {
 		"version": SAVE_VERSION,
@@ -176,4 +181,4 @@ static func remove(path: String = DEFAULT_PATH) -> void:
 ## 作者 2026-10-17（内部文字不给玩家看）：是不是开发环境 —— 正式导出包（release / debug 模板）都不是。
 ## 开发入口、调参读数只在这里显示；不用 `OS.is_debug_build()`（debug 导出包里它也是真）
 static func dev_build() -> bool:
-	return not OS.has_feature("template")
+	return DevGate.on()     # 186：同一个开关

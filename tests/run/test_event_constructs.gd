@@ -155,7 +155,7 @@ static func run_travel_teleport(t: TestCase) -> void:
 	var events: Array = []
 	travel.on_node_event = func(node: MapNode): events.append(node.id)
 	var refused: Array = []
-	travel.refused.connect(func(_i: MoveIntent, why: String): refused.append(why))
+	travel.refused.connect(func(_i: MoveIntent, why: String, _code: StringName): refused.append(why))
 	travel.start_at(a)
 	t.check(not travel.apply(MoveIntent.step(a, far, 1)), "走一步到没有边的点：拒绝")
 	t.check(not travel.apply(MoveIntent.teleport(a, 99999, 1)), "传送到不存在的点：拒绝")

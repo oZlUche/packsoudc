@@ -56,6 +56,11 @@ func text_of() -> String:
 	return ""
 
 
+## 子类可改：占不占地图的边（186：提示行一会儿出一会儿没，不让地图跟着挪）
+func takes_space() -> bool:
+	return true
+
+
 ## 子类给：中文名（摆读数时没内容的组件显示它）
 func title() -> String:
 	return String(id)

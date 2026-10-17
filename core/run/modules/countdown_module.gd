@@ -162,6 +162,6 @@ func _on_stepped(_node_id: int, _reason: StringName) -> void:
 	var rest := left()
 	var closing := closing_extract_id()
 	if closing >= 0 and rest == PaidExtracts.closes_at(_run.map.get_node(closing)):
-		notice.emit("有一个撤离点关闭了")
+		notice.emit("有一个撤离点关闭了")     # 186：玩家用语（不写点号）
 	if rest <= 0:
 		_run.fail(&"time_out")

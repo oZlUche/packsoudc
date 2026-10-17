@@ -18,7 +18,8 @@ extends RefCounted
 ## 一次移动结算完毕。[param first_visit] = 目的地这一次是不是头一回踩上
 signal moved(intent: MoveIntent, first_visit: bool)
 ## 想走但走不了：不相邻、那条路不能从这头走、意图过期……
-signal refused(intent: MoveIntent, why: String)
+## 186：[param why] 是给开发看的原因（带点号）；[param code] 机器可读（[constant NOT_ADJACENT] 等），玩家看的话由屏幕按它选
+signal refused(intent: MoveIntent, why: String, code: StringName)
 ## 原地耗了几个行动点（8-3）
 signal waited(actions: int)
 ## 134：挂起的进点取消了（输给驱逐档的猎手，退回上一步）：这个点视为没进
@@ -77,7 +78,7 @@ func step_to(to_id: int) -> bool:
 	var intent := MapNavigator.resolve_step(graph, current_id, to_id)
 	if intent == null:
 		var stale := MoveIntent.step(current_id, to_id, 0)
-		refused.emit(stale, "从 %d 走不到 %d：不相邻，或那条路不能从这头走" % [current_id, to_id])
+		refused.emit(stale, "从 %d 走不到 %d：不相邻，或那条路不能从这头走" % [current_id, to_id], NOT_ADJACENT)
 		return false
 	return apply(intent)
 
@@ -88,7 +89,7 @@ func apply(intent: MoveIntent) -> bool:
 	# 1. 校验合法
 	var why := _check(intent)
 	if why != "":
-		refused.emit(intent, why)
+		refused.emit(intent, why, _code_of(intent))
 		return false
 	var dest := graph.get_node(intent.to_id)
 	var first_visit := dest.state == MapNode.State.UNVISITED
@@ -177,6 +178,25 @@ func mark_visited(id: int) -> void:
 	var n := graph.get_node(id) if graph != null else null
 	if n != null:
 		n.state = MapNode.State.VISITED
+
+
+## 186：走不了的几种（[signal refused] 的 code）
+const NOT_ADJACENT := &"not_adjacent"
+const STALE := &"stale"
+const NO_NODE := &"no_node"
+
+
+## [method _check] 拒绝的是哪一种（和它同一套判断，顺序一样）
+func _code_of(intent: MoveIntent) -> StringName:
+	if graph == null or intent == null:
+		return NO_NODE
+	if intent.kind != MoveIntent.STEP and intent.kind != MoveIntent.TELEPORT or intent.from_id != current_id:
+		return STALE
+	if not graph.has_node(intent.to_id) or intent.to_id == intent.from_id:
+		return NO_NODE
+	if intent.kind == MoveIntent.STEP and MapNavigator.edge_for_step(graph, intent.from_id, intent.to_id) == null:
+		return NOT_ADJACENT
+	return STALE
 
 
 func _check(intent: MoveIntent) -> String:

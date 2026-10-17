@@ -76,6 +76,8 @@ func setup(run: RunState, screen: Control, p_layout: HudLayout) -> void:
 	for e in layout.entries:
 		if bool(e.get("debug_only", false)) and not debug:
 			continue
+		if StringName(e["id"]) in HudWidgets.DEV_ONLY and not DevGate.on():
+			continue     # 186：调试台箭头只在开发包里有
 		var w := HudWidgets.create(StringName(e["id"]))
 		if w == null:
 			continue
@@ -100,6 +102,13 @@ func widget(id: StringName) -> HudWidget:
 	return widgets.get(id, null)
 
 
+## 186：往提示行写一句（[param urgent] = 要紧：红、停得久）。没有提示行（布局删了）就不写
+func notice(text: String, urgent: bool = false) -> void:
+	var w := widget(&"notice")
+	if w != null:
+		w.push(text, urgent)
+
+
 ## 全部刷一遍（地图屏每次动完调它；组件自己也订了各自的信号）
 func refresh() -> void:
 	for w in widgets.values():
@@ -113,7 +122,7 @@ func top_inset() -> float:
 	for e in (layout.entries if layout != null else []):
 		var w: HudWidget = widgets.get(StringName(e["id"]), null)
 		var a := String(e["anchor"])
-		if w != null and w.visible and (a.begins_with("top") or HudLayout.in_bar(a)) and not on_right(a):
+		if w != null and w.visible and w.takes_space() and (a.begins_with("top") or HudLayout.in_bar(a)) and not on_right(a):
 			bottom = maxf(bottom, w.position.y + w.size.y)
 	return bottom
 
@@ -251,7 +260,10 @@ func arrange() -> void:
 	for key in order:
 		var a := String(groups[key]["anchor"])
 		if not on_right(a) and not HudLayout.in_bar(a):
-			_place_group(groups[key], _frame(a), HudLayout.ANCHORS.get(a, Vector2.ZERO))
+			var frame := _frame(a)
+			if _floats(groups[key]):
+				frame.size.x = maxf(0.0, size.x - extra_right)     # 186：浮在地图上的（提示行）按整块宽对齐，跟顶端栏同一条中线
+			_place_group(groups[key], frame, HudLayout.ANCHORS.get(a, Vector2.ZERO))
 	var ground := GroundLayer.current()
 	if ground != null and ground.is_inside_tree():
 		ground.settle.call_deferred()
@@ -277,6 +289,15 @@ func _rows(g: Dictionary) -> Array:
 		group_size.y += row_size.y
 	group_size.y += LINE_GAP * maxi(0, rows.size() - 1)
 	return [rows, group_size]
+
+
+## 186：整组都不占地图的边（[method HudWidget.takes_space] 为 false）—— 浮在上面，不用让右边那一条
+func _floats(g: Dictionary) -> bool:
+	for ln in g["lines"]:
+		for w in g["lines"][ln]:
+			if (w as HudWidget).takes_space():
+				return false
+	return true
 
 
 func _measure(g: Dictionary) -> Vector2:

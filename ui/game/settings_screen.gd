@@ -74,7 +74,7 @@ func open(_payload: Dictionary) -> void:
 	_unlock_all_btn = _toggle("全部解锁", toggle_unlock_all)
 	col.add_child(_unlock_all_btn)
 	col.add_child(HSeparator.new())
-	if GameSettings.dev_build():     # 117：开发区只在非导出包里有 —— 日志是给作者看的，玩家看不到；作者 2026-10-17：调试模式、节点浮窗预览也挪进来
+	if DevGate.on():     # 117：开发区只在非导出包里有 —— 日志是给作者看的，玩家看不到。186：调试模式、节点浮窗预览也挪进来
 		col.add_child(_label("开发", 15, UiPalette.DIM))
 		col.add_child(_wrapped("调试模式：地图上摆出只给开发看的东西（事件日志）。关掉就藏起来，日志照样在记。", 12, UiPalette.DIM, 500))
 		_debug_btn = _toggle("调试模式", toggle_debug_mode)
