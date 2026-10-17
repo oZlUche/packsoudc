@@ -90,6 +90,8 @@ var _cap_tiles: Array[CapTile] = []
 var _skill_names: Array[Label] = []
 ## 179：右栏的凹槽板内边距（右栏宽 = 这个角色的棋盘宽 + 两边内边距，贴右边；中栏吃掉剩下的）
 const RIGHT_PAD := 10
+## 三页各自的整屏画（作者 2026-10-17）：选角色 = 选人场地，带装备 = 木板拼接 / 仓库，选地图 = 桌上的军用地图
+const PAGE_ART: Array[String] = [UiTheme.ART_SETUP_BG, UiTheme.ART_SETUP_KIT_BG, UiTheme.ART_SETUP_MAP_BG]
 
 
 func open(_payload: Dictionary) -> void:
@@ -100,11 +102,11 @@ func open(_payload: Dictionary) -> void:
 	for side in ["left", "right", "top"]:
 		margin.add_theme_constant_override("margin_" + side, 36)
 	margin.add_theme_constant_override("margin_bottom", 140)     # 161：底下留给右下角那两颗大按钮
-	_area = _painted_screen(UiTheme.ART_SETUP_BG)     # 179：三页都在场地背景上（157 补充三的整块石板不要了），各块内容坐凹槽板
+	_area = _painted_screen(PAGE_ART[0])     # 179：整屏一幅画（157 补充三的整块石板不要了），各块内容坐凹槽板；翻页换画（[constant PAGE_ART]）
 	_area.add_child(margin)
 	var col := _vbox(14)
 	margin.add_child(col)
-	_title = UiTheme.make_variant_label("", UiTheme.LABEL_SCREEN_TITLE)     # 179：背景画上白字带阴影
+	_title = UiTheme.make_variant_label("", UiTheme.LABEL_SCREEN_TITLE)     # 179：直接写在背景画上 —— 深底白字带阴影，浅底（白天的场地）墨字
 	col.add_child(_title)
 	_chapters = flow.available_chapters()
 	_pages.clear()
@@ -272,8 +274,10 @@ func show_page(i: int) -> void:
 	_page = clampi(i, 0, PAGE_NAMES.size() - 1)
 	for k in _pages.size():
 		_pages[k].visible = k == _page
+	var tone := _repaint(PAGE_ART[_page])
 	if _title != null:
 		_title.text = "开局 · %s / 三　%s" % [["一", "二", "三"][_page], PAGE_NAMES[_page]]
+		UiTheme.set_tone(_title, tone)
 	if _enter_btn != null:
 		_enter_btn.text = "出发" if _page == PAGE_NAMES.size() - 1 else "继续"
 	if _back_btn != null:
@@ -835,20 +839,15 @@ func _rebuild_card() -> void:
 	var extra := carry_caps_text(ch)
 	if extra != "":
 		_card.add_child(_label(extra, 13, UiPalette.DIM))
-	# 179：技能两行 ——「被动」小字 + 名字（22 粗体、亮黄铜、黑描边）；说明 17 正文色
+	# 179：技能两行 —— 名字（22 粗体、亮黄铜、黑描边；不写「被动」）；说明 17 正文色
 	_skill_names.clear()
 	var skills := _vbox(12)
 	_card.add_child(skills)
 	for e in ch.skill_entries():
 		var one := _vbox(4)
 		skills.add_child(one)
-		var head := _hbox(10)
-		one.add_child(head)
-		var tag := _label(String(e["kind"]), 13, UiPalette.DIM)
-		tag.size_flags_vertical = Control.SIZE_SHRINK_END
-		head.add_child(tag)
 		var name := UiTheme.make_variant_label(String(e["name"]), UiTheme.LABEL_SKILL_NAME)
-		head.add_child(name)
+		one.add_child(name)
 		_skill_names.append(name)
 		var text := _wrapped(String(e["text"]), UiTheme.SKILL_TEXT_SIZE, UiPalette.FG, 300)
 		text.theme_type_variation = UiTheme.LABEL_SKILL_TEXT

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cn520g205u1s1"
-path="res://.godot/imported/nameplate_stone.png-b32a2b9628fc1718217ca9b2ac20e845.ctex"
+uid="uid://dj0xc1aiw5wyq"
+path="res://.godot/imported/bg_hall.png-fc2b195c29000ada9af0f2746e366a1d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/nameplate_stone.png"
-dest_files=["res://.godot/imported/nameplate_stone.png-b32a2b9628fc1718217ca9b2ac20e845.ctex"]
+source_file="res://assets/ui/setup/bg_hall.png"
+dest_files=["res://.godot/imported/bg_hall.png-fc2b195c29000ada9af0f2746e366a1d.ctex"]
 
 [params]
 

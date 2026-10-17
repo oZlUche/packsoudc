@@ -23,6 +23,8 @@ var _tip: HoverTip = null
 var _overlay_frame: OverlayFrame = null
 ## 157 补充三：底屏的那一整块大石板（[method _slab_screen] 造）；叠层、基地、地图没有
 var _screen_slab: PanelContainer = null
+## 179：整屏一幅画时的内容区（[method _painted_screen] 造）；别的屏没有
+var _painted: Control = null
 
 ## 157 补充三：底屏的大石板占屏幕多少（宽高各九成、居中，板外是纯色底）
 const SLAB_SHARE := 0.9
@@ -199,17 +201,32 @@ func _slab_screen(min_size: Vector2 = Vector2.ZERO) -> Control:
 	return area
 
 
-## 179：开局屏不用石板 —— 整屏一幅画（[param art_name]，没图就是纯色底），内容区铺满全屏、深底白字；先调 [method _backdrop]
+## 179：开局屏不用石板 —— 整屏一幅画（[param art_name]，没图就是纯色底），内容区铺满全屏；先调 [method _backdrop]
 func _painted_screen(art_name: String) -> Control:
+	_painted = Control.new()
+	_painted.name = "PaintedContent"
+	_painted.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_painted.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_painted)
+	_repaint(art_name)
+	return _painted
+
+
+## 换整屏那幅画（作者 2026-10-17：开局三页各一张）。图的深浅（图旁 json）记在内容区上、里面按底取色的字重算；
+## 没图 = 纯色底、深。返回现在的深浅（直接写在画上的标题按它挂字色）
+func _repaint(art_name: String) -> StringName:
+	if _painted == null:
+		return UiTheme.TONE_DARK
+	var dressed := false
 	if _bg_rect != null:
-		UiTheme.dress_backdrop(_bg_rect, art_name, "PaintedBackdrop")
-	var area := Control.new()
-	area.name = "PaintedContent"
-	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	area.set_meta(&"tone", UiTheme.TONE_DARK)
-	add_child(area)
-	return area
+		var old := _bg_rect.get_node_or_null(^"PaintedBackdrop")
+		if old != null:
+			old.free()
+		dressed = UiTheme.dress_backdrop(_bg_rect, art_name, "PaintedBackdrop") != null
+	var tone := UiTheme.art_tone(art_name) if dressed else UiTheme.TONE_DARK
+	_painted.set_meta(&"tone", tone)
+	UiTheme.refresh_tones(_painted)
+	return tone
 
 
 ## 157 补充三：底屏的大石板（测试看）；没有 null

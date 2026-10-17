@@ -38,6 +38,32 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	t.eq(setup._grooves[1].size_flags_horizontal, Control.SIZE_EXPAND_FILL, "中栏撑满")
 	t.eq(setup._grooves[2].size_flags_horizontal, Control.SIZE_SHRINK_END, "棋盘栏贴右")
 	t.eq((setup._grooves[0].get_parent() as HBoxContainer).get_theme_constant("separation"), 36, "三栏间距一律 36")
+	# 作者 2026-10-17：选人大厅白天版定稿 —— 浅底；直接写在背景上的标题墨字，凹槽板里照旧浅色字
+	t.eq(setup.find_children("PaintedBackdrop", "TextureRect", true, false).size(), 1, "大厅背景画铺上了")
+	t.eq(UiTheme.art_tone(UiTheme.ART_SETUP_BG), UiTheme.TONE_LIGHT, "大厅背景标浅底")
+	t.eq(UiTheme.tone_at(setup._area), UiTheme.TONE_LIGHT, "内容区记着浅底")
+	t.eq(setup._title.get_theme_color("font_color"), UiTheme.INK, "标题墨字")
+	t.eq(setup._title.get_theme_color("font_shadow_color").a, 0.0, "浅底上标题不带黑影")
+	for g in setup._grooves:
+		t.eq(UiTheme.tone_at(g), UiTheme.TONE_DARK, "凹槽板里是深底")
+		t.check(not g.theme_type_variation.is_empty() and (g as Control).theme == null, "凹槽板没挂墨字主题")
+	# 作者 2026-10-17 08:02：大厅只给第一页，第二页木板拼接 / 仓库，第三页桌上的军用地图 —— 翻页换画；没图纯色底、标题白字
+	t.eq(setup.PAGE_ART, [UiTheme.ART_SETUP_BG, UiTheme.ART_SETUP_KIT_BG, UiTheme.ART_SETUP_MAP_BG], "三页三幅画")
+	for page in [1, 2, 0]:
+		setup.show_page(page)
+		var art_name: String = setup.PAGE_ART[page]
+		var pics: Array = setup.find_children("PaintedBackdrop", "TextureRect", true, false)
+		var has_art := UiTheme.art(art_name) != null
+		t.eq(pics.size(), 1 if has_art else 0, "第 %d 页：%s" % [page + 1, "铺着 " + art_name if has_art else "没图，纯色底"])
+		if has_art:
+			t.eq((pics[0] as TextureRect).texture, UiTheme.art(art_name), "第 %d 页是自己那幅" % (page + 1))
+		var tone := UiTheme.art_tone(art_name) if has_art else UiTheme.TONE_DARK
+		t.eq(UiTheme.tone_at(setup._area), tone, "第 %d 页内容区按画的深浅" % (page + 1))
+		t.eq(setup._title.get_theme_color("font_color"), UiTheme.INK if tone == UiTheme.TONE_LIGHT else UiPalette.FG, "第 %d 页标题字色跟着画" % (page + 1))
+	var groove_label := UiTheme.make_label("x", 15, UiPalette.DIM)
+	setup._grooves[0].add_child(groove_label)
+	t.eq(groove_label.get_theme_color("font_color"), UiPalette.DIM, "凹槽板里的字照旧浅色")
+	groove_label.free()
 
 	for i in flow.characters.size():
 		setup.choose_character(i)
@@ -64,12 +90,13 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 			t.check(l.get_theme_constant("outline_size") > 0, "%s 带描边" % l.text)
 			t.eq(l.get_theme_color("font_color"), UiPalette.BTN_PRIMARY_HOVER, "%s 亮黄铜色" % l.text)
 		t.check(not texts.any(func(s: String) -> bool: return s.contains("行动点")), "%s：这一屏没有「行动点」" % ch.id)
+		t.check(not texts.any(func(s: String) -> bool: return s.contains("被动")), "%s：技能行不写「被动」（作者 2026-10-17）" % ch.id)
 	game.queue_free()
 	Support.cleanup("setup179")
 
 
 static func run_skill_entries(t: TestCase) -> void:
-	t.begin("179 · 技能说明是书面功能句，界面按「被动 + 名字 / 说明」两行排；熟门熟路不再说行动点")
+	t.begin("179 · 技能说明是书面功能句，界面按「名字 / 说明」两行排（「被动」不上屏）；熟门熟路不再说行动点")
 	var chars := {}
 	for f in DirAccess.get_files_at("res://data/characters/"):
 		if f.ends_with(".tres"):

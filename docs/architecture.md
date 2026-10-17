@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.16 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.18 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3601,7 +3601,7 @@ func player_spec() -> CombatantSpec …
 - 顶端栏（166 `hud_bar`）是一条独立的长石板：同一张板身 + 专用的长条板边 `slab_bar.png`（贴屏幕顶、没有标题刻线、底下一道投影；`slab_box(..., edge_art = ART_SLAB_BAR)`，缺这张退回平面底）。`body_inset` 可写一个数或 `[左, 上, 右, 下]`（栏顶边不缩）。作者 2026-10-13「凹槽没有和石板位置对齐，考虑增加顶端栏纵向面积」：`HudHost.BAR_HEIGHT` 64 → 88，栏里的组在板边的上下内边距（8 / 26）之间居中，底下的投影不算板面；栏高 = max(88, 最高一组 + 上下内边距)。
 - 退掉：`bg_stone`、`panel_stone`、`panel_inset`、`panel_hud`、`frame_stone`、`hud/bar`；`UiTheme.dress_backdrop / backdrop_art / backdrop_tint / tint_backdrop` 删了，地图视图没底图时就是底色。都是有图用图、没图照旧（平面底）。
 
-**名牌**（157 补充二，作者定「没图也先留框」）：`Nameplate` 是 `PanelNameplate` 底（`nameplate_stone.png`），左边 64×64 肖像位、右边 32×32 徽记位都是 `PortraitSlot`
+**名牌**（157 补充二，作者定「没图也先留框」）：`Nameplate` 是 `PanelNameplate` 底（`nameplate_bronze.png`，2026-10-17 起铜质狗牌，单层九宫格、深底亮字），左边 64×64 肖像位、右边 32×32 徽记位都是 `PortraitSlot`
 （`ui/widgets/`）—— 框永远在（`portrait_frame.png` 画在位子外扩 json `inset` 处，不占排版；没图画细线），有肖像填图、没有放 `portrait_empty.png` 剪影（再没有就自己画）。
 **回放**（157 补充一）：正式游戏的 `BattleView` 不建逐条文字播报（`show_ticker` 默认假，回放浏览器与战斗沙盒设真），空出来的高度给棋盘；`BOARD_SCALE` 0.5 → 1.0。
 
@@ -4280,6 +4280,8 @@ res://
 | v2.63 | 2026-10-08 | **力量的符号并进蛮神的护符**（142 第 2 步）：`charm_brute` 带上开战血怒的信力加成与四格增益槽（相邻武器伤害 +15%），`strength_sigil` 删除，`IdAliases.ITEMS` 加 `strength_sigil → charm_brute`（老存档读成护符）；蛮神编译金样重录 |
 | v2.64 | 2026-10-08 | **装备异形格子**（143）：16 件武器 / 防具 / 盾牌改成异形，主数值按格数等比；皮背包 3×3；塔盾 2×4。`EnemyPlacer.build_content` 组装时招牌排在流派道具前面；三档敌人棋盘 8×6、神射手 7×5 |
 | v2.65 | 2026-10-09 | **道具编辑器总览的分组与搜索**（144）：标签页签上面加「全部 / 有效果 / 无效果」一排（`ItemDef.has_effect()` 从定义算），列表上方加搜索栏；三级筛选 AND，页签计数随分组与搜索；搜不到时列表一行灰字 |
+| v3.18 | 2026-10-17 | **名牌换铜质狗牌；开局三页各一幅背景**（作者 2026-10-17 07:55 定铜牌 A、08:02 定三页分画）：`ART_NAMEPLATE` → `nameplate_bronze`（160×96 九宫格，边距 22 / 18，深底），铜板不透明、改单层 `_art_box`，不再垫石板板身（`nameplate_stone` 删）；名牌深底常放在浅色石板框里，`Nameplate` 挂 `UiTheme.bright_text_theme()`（墨字小主题同样那几种字色改回全局浅色），名字与副行是亮字。开局屏 `SetupScreen.PAGE_ART`（`setup/bg_hall / bg_kit / bg_map`），翻页 `GameScreen._repaint` 换画、内容区深浅与标题字色跟着图的 json；第二、三页的图未到前纯色底 |
+| v3.17 | 2026-10-17 | **开局屏白天大厅背景、技能行去掉「被动」**（179 补，作者 2026-10-17 07:50 / 07:51）：`assets/ui/setup/bg_hall.png` + json（`tone: light`）入库；`GameScreen._painted_screen` 内容区的 `tone` 元数据改按背景图 json（`UiTheme.art_tone`，没图深）；开局屏标题 `UiTheme.set_tone` 挂墨字（浅底小主题新增 `LABEL_SCREEN_TITLE`：墨色、无阴影），凹槽板照旧深底浅字；技能行只写名字，`skill_entries` 的 `kind` 不上屏 |
 | v3.16 | 2026-10-17 | **战斗界面背景**（美术线程交图，作者 2026-10-17 定 A：沙地竞技场 · 白天中等亮度；改战斗回放界面）：`assets/ui/battle/battle_bg.png` + json（`stretch: cover`、`tone: light`），`BattleView._build` 用 `UiTheme.dress_backdrop(…, ART_BATTLE_BG, "BattleBackdrop")` 垫在最底层、铺满裁边，没图照旧纯色底。浅底上直接写字的三处（顶上计时 / 胜负一行、收尾战报、开发用播报）按图的深浅挂字色（新 `UiTheme.art_tone(name)` 读 json、`UiTheme.set_tone(c, tone)` = 不经面板变体的 `apply_tone`），浅底即墨字；播报里写死的颜色过 `ink_bbcode`。对阵面板、名牌、棋盘自带深底，不挂墨字主题 |
 | v3.15 | 2026-10-16 | **选角色屏重排、技能说明书面化、「行动点」一词退役**（报告 179，作者定，待定 1–4 全按推荐；改 8 开局屏、地图规则术语）：开局三页去掉整块石板，整屏 `setup/bg_hall` 背景画（没图纯色，`GameScreen._painted_screen`、`UiTheme.dress_backdrop`），内容坐凹槽板（新变体 `PANEL_GROOVE`，深底，`setup/groove` 有图用图）；第一页三栏间距 36、中栏撑满、棋盘栏按角色棋盘宽贴右；负重上限 / 棋盘 / 开局金币换成 `CapTile` 图标牌（`assets/ui/setup/icons/<id>.png`，没图借 170 的秤砣 / 金币、棋盘画占位格），带入上限仍是一行字；技能两行（`CharacterDef.skill_entries`：「被动」13 灰 + 名字 22 粗体亮黄铜黑描边，说明 17）；角色说明与「背包：」行不放（`caps_text / bags_text` 删）；九条技能说明改书面功能句。「行动点」只退词、机制不动：结算 / 基地「走了 N 步」、地图预览代价 1 不写、其余「计 N 步」、事件「耗 N 步」、代价图标「耗步」、寸步难行「计两步」、熟门熟路「不计入倒计时」、侵蚀描述按步、帮助八页改写、作者表头按「步数」；HUD「行动点」读数删除，`HudLayout.VERSION` 6 |
 | v3.14 | 2026-10-16 | **基地「仓库」页签**（报告 178，作者定，待定 1–3 全按推荐；改 8.2）：左列五个页签 仓库 / 出售 / 科技 / 图鉴 / 成就（`show_tab("warehouse")` 不再算家）；带回来的背包与一键置入 / 整理从家页搬到「仓库」页，没带回来的一行「没有带回来的东西」（`WarehousePanel` 没棋盘时不摆「一键置入」）；图鉴 / 成就页收起右半边仓库（`NO_SHELF_TABS`，翻到的页不变），中列吃满、只给调试台箭头留一条（箭头改钉屏幕右上，`right_gutter`），图鉴按新宽重排列数；从结算屏回来、带回来的还没清空落「仓库」页（`initial_tab`），左列提示指向它、点一下过去；双击右边仓库的置入跟着搬到「仓库」页，家页双击不做事 |

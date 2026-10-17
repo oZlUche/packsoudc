@@ -161,12 +161,19 @@ static func frame_tip_leave_fast(t: TestCase, root: Window) -> void:
 
 
 static func run_window_and_nameplate_art(t: TestCase) -> void:
-	t.begin("作者 2026-10-16 · 背包浮窗是一整块深石板（不透明的板身）；名牌底下垫板身，放在哪都不透明；图读不出时脚注写字")
+	t.begin("作者 2026-10-16 · 背包浮窗是一整块深石板（不透明的板身）；名牌是铜牌、本身不透明；图读不出时脚注写字")
 	t.check(UiTheme.VARIATIONS.has(UiTheme.PANEL_WINDOW), "浮窗变体登记了")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_WINDOW), UiTheme.tone_of(UiTheme.PANEL_OVERLAY), "和叠层石板同一种深浅")
 	var theme := UiTheme.build()
 	if UiTheme.has_slab():
 		t.check(theme.get_stylebox("panel", UiTheme.PANEL_WINDOW) is SlabStyle, "浮窗：石板（板边 + 板身）")
-		t.check(theme.get_stylebox("panel", UiTheme.PANEL_NAMEPLATE) is SlabStyle, "名牌：刻边下面垫了板身")
+	# 作者 2026-10-17：名牌改铜质狗牌 —— 铜板本身不透明，单层九宫格、不垫板身；深底亮字；内容从边距里开始（不压左上的穿链孔）
+	var plate := theme.get_stylebox("panel", UiTheme.PANEL_NAMEPLATE) as StyleBoxTexture
+	t.not_null(plate, "名牌：铜牌单层九宫格")
+	if plate != null:
+		var img := plate.texture.get_image()
+		t.eq(img.get_pixel(img.get_width() / 2, img.get_height() / 2).a, 1.0, "铜牌中间不透明")
+		t.eq([plate.content_margin_left, plate.content_margin_top], [22.0, 18.0], "内容从左上角穿链孔外面开始")
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_NAMEPLATE), UiTheme.TONE_DARK, "深铜底：名字用亮色字")
 	t.eq(UiTheme.tip_icon("no_such_icon", "值 "), "值 ", "没有图：写字")
 	t.check(UiTheme.tip_icon("coin", "值 ").begins_with("[img"), "金币图读得出来：用图")

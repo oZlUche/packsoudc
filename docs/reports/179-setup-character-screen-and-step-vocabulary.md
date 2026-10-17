@@ -116,3 +116,15 @@
 - **退词**（§3.1 全表）：结算屏与基地战绩「走了 N 步」；地图预览代价 1 不写、别的「计 N 步」，熟门熟路那一步写「（熟门熟路：这一步不计）」；地图开场白「已走 N 步」（方案写「第 N 步」，开局是 0，读成「第 0 步」别扭）；事件屏「耗了 N 步」、地图「原地耗了 N 步」、`PassTime.describe`「耗 N 步」、代价图标「耗步」；寸步难行词条「计两步」、`EncumbranceRules.describe`「走一步计 N 步」；`TravelDiscount`「不计入倒计时」；`CountdownModule`、`ErosionMechanic` 的描述、`MapTravel` 的校验句按步；作者编辑器的表头（`field_text`）「步数」「全局倒计时（步）」；帮助八页与休息点「扎营」选项改写。HUD：`action_points` 从登记表、默认布局与 `HIDDEN_BY_DEFAULT` 去掉，部件脚本删除，`HudLayout.VERSION` 5 → 6。
 - **测试**：新 `tests/ui/test_setup_179.gd`（三块板与变体、中栏撑满、棋盘栏贴右且按棋盘宽、三块牌的数与说明、技能名 22 / 描边 / 颜色、不放角色说明与「背包：」、不在石板上；`skill_entries` 的书面句；扫 `core / ui` 脚本的字符串字面量与 `data` 下 json / tres，没有「行动点」）；`test_hud_150` 去掉行动点断言、版本 6、版本 5 的布局文件回默认；`test_screens_157` 代价提示改「耗步」。角色 / 帮助 / 事件的 json 改完重新导入（只留这几份 `.tres`，导入顺带改动的别的资源还原）。字体子集不用重切：新字只有注释里的「厅」，换了说法。
 - **截图**：`/mnt/project-files/screenshots/179/`：`p1_andreus / p1_brutus / p1_marcus`、`p2`、`p3`，对照 `before_*`。背景画与三个图标等美术设计交付，到了直接放进 `assets/ui/setup/`（`bg_hall.png` + json、`icons/weight|board|coin.png`）就生效，不用改代码。
+
+### 补（2026-10-17，v3.17）：白天大厅背景、技能行去掉「被动」
+
+- **背景画到了**：作者 07:50 定白天版选人大厅，`assets/ui/setup/bg_hall.png` + json（`stretch: cover`、`tone: light`）。原先「内容区深底白字」的假设不成立了：`GameScreen._painted_screen` 的内容区按背景图 json 记深浅（`UiTheme.art_tone`，没图仍是深）；直接写在背景上的标题挂墨字（`UiTheme.set_tone(_title, …)`，浅底小主题里给 `LABEL_SCREEN_TITLE` 墨色、去掉黑影）；右下角那行提示是语义色标签，进树按浅底取暗版。三栏凹槽板自带深底，墨字主题只挂在标题上、不挂内容区，所以板里的字照旧浅色。
+- **「被动」不上屏**（作者 07:51）：技能行第一行只剩名字；`skill_entries()` 的 `kind` 留着（以后主动技能放出来再说）。
+- 测试：`test_setup_179` 加背景画在、浅底、标题墨字无黑影、凹槽板仍深底浅字、这一屏没有「被动」。截图 `/mnt/project-files/screenshots/setup_hall/page1|2|3.png`。
+
+### 补二（2026-10-17，v3.18）：三页各一幅背景画
+
+- 作者 08:02：「大厅背景只在第一页，第二页要设置一个类似仓库的背景，或者简单点用木制拼接板，第三页用一个铺在桌子上的地图为背景，突出军事感」。
+- `SetupScreen.PAGE_ART`：第一页 `setup/bg_hall`、第二页 `setup/bg_kit`、第三页 `setup/bg_map`；翻页时 `GameScreen._repaint(art)` 换掉 `PaintedBackdrop`、按新图的 json 记内容区深浅、重算按底取色的字，标题按它挂字色（浅底墨字、深底白字）。
+- 第二、三页的图已请美术设计出（规格同大厅：1920×1200、铺满裁边、json 写 `tone`）；到之前这两页是纯色底、标题白字。图放进 `assets/ui/setup/` 就生效，不用改代码。
