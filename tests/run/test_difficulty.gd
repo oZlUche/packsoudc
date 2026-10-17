@@ -216,7 +216,7 @@ static func frame_run_screens(t: TestCase, root: Window) -> void:
 	setup.choose_difficulty(idx)
 	t.eq(setup.difficulty(), hard, "挑了进阶")
 	t.eq(setup._difficulty_num.text, setup.difficulty_numeral(hard.level), "罗马数字跟着变")
-	t.check(hard.challenge != "" and setup._challenge.text.contains(hard.challenge), "红字列出这一级的挑战：%s" % setup._challenge.text)
+	t.check(hard.challenge != "" and setup._challenge.text().contains(hard.challenge), "羊皮纸列出这一级的挑战：%s" % setup._challenge.text())
 	t.check(setup._plus_btn.disabled and not setup._minus_btn.disabled, "到顶：加灰、减亮")
 	var went := false
 	for seed in range(1, 30):
