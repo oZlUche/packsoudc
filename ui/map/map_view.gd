@@ -67,8 +67,8 @@ var show_free_slots: bool = false:
 		queue_redraw()
 
 ## 把生成器留下的路线标注描出来。路线只是「这张图当初是照着什么规则长出来的」，
-## 不是图的一部分 —— 关掉它，图一点不变
-var show_routes: bool = true:
+## 不是图的一部分 —— 关掉它，图一点不变。作者 10-17：路线颜色不给玩家看，默认关，编辑器里打开
+var show_routes: bool = false:
 	set(v):
 		show_routes = v
 		queue_redraw()
