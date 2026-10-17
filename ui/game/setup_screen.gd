@@ -104,7 +104,8 @@ func open(_payload: Dictionary) -> void:
 	_area.add_child(margin)
 	var col := _vbox(14)
 	margin.add_child(col)
-	_title = UiTheme.make_variant_label("", UiTheme.LABEL_SCREEN_TITLE)     # 179：背景画上白字带阴影
+	_title = UiTheme.make_variant_label("", UiTheme.LABEL_SCREEN_TITLE)     # 179：直接写在背景画上 —— 深底白字带阴影，浅底（白天的场地）墨字
+	UiTheme.set_tone(_title, UiTheme.tone_at(_area))
 	col.add_child(_title)
 	_chapters = flow.available_chapters()
 	_pages.clear()
@@ -835,20 +836,15 @@ func _rebuild_card() -> void:
 	var extra := carry_caps_text(ch)
 	if extra != "":
 		_card.add_child(_label(extra, 13, UiPalette.DIM))
-	# 179：技能两行 ——「被动」小字 + 名字（22 粗体、亮黄铜、黑描边）；说明 17 正文色
+	# 179：技能两行 —— 名字（22 粗体、亮黄铜、黑描边；不写「被动」）；说明 17 正文色
 	_skill_names.clear()
 	var skills := _vbox(12)
 	_card.add_child(skills)
 	for e in ch.skill_entries():
 		var one := _vbox(4)
 		skills.add_child(one)
-		var head := _hbox(10)
-		one.add_child(head)
-		var tag := _label(String(e["kind"]), 13, UiPalette.DIM)
-		tag.size_flags_vertical = Control.SIZE_SHRINK_END
-		head.add_child(tag)
 		var name := UiTheme.make_variant_label(String(e["name"]), UiTheme.LABEL_SKILL_NAME)
-		head.add_child(name)
+		one.add_child(name)
 		_skill_names.append(name)
 		var text := _wrapped(String(e["text"]), UiTheme.SKILL_TEXT_SIZE, UiPalette.FG, 300)
 		text.theme_type_variation = UiTheme.LABEL_SKILL_TEXT

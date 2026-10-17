@@ -478,6 +478,9 @@ static func text_theme(tone: StringName) -> Theme:
 	for pair in [[LABEL_TITLE, INK], [LABEL_DIM, INK_SOFT], [LABEL_WARN, INK_WARN], [LABEL_OVERLAY_TITLE, INK], [LABEL_DISPLAY, INK], [LABEL_HUD, INK], [LABEL_HUD_LARGE, INK], [LABEL_HUD_DOUBLE, INK]]:
 		t.set_type_variation(pair[0], "Label")
 		t.set_color("font_color", pair[0], pair[1])
+	t.set_type_variation(LABEL_SCREEN_TITLE, "Label")     # 写在浅色背景画上的大标题：墨字，不要阴影（深底那圈黑影在浅底上发糊）
+	t.set_color("font_color", LABEL_SCREEN_TITLE, INK)
+	t.set_color("font_shadow_color", LABEL_SCREEN_TITLE, Color(PAPER, 0.0))
 	t.set_color("default_color", "RichTextLabel", INK)
 	for v in [RICH_BODY, RICH_SMALL]:
 		t.set_type_variation(v, "RichTextLabel")
