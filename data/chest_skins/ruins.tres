@@ -6,3 +6,4 @@
 script = ExtResource("1_rn6vg")
 id = &"ruins"
 display_name = "废墟"
+background = "res://assets/chest/bg/ruins.png"

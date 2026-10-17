@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ChestSkinDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/chest_skin_def.gd" id="1_b3klf"]
+
+[resource]
+script = ExtResource("1_b3klf")
+id = &"north_woods"
+display_name = "北方雪原"
+background = "res://assets/chest/bg/north_woods.png"
