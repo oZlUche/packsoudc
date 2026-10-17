@@ -105,6 +105,23 @@ func remove_node(id: int) -> bool:
 	return true
 
 
+## 182：出生点挑定了 —— 只留 [param keep_id] 这一个入口；别的入口就地变普通搜索点（`layout` 里的环与位置、边都不动），
+## 路线只留这个入口的那一条（放到下标 0）。危险区与路线无关，不动。[param keep_id] 不是入口返回 false、什么都不改
+func demote_entries(keep_id: int) -> bool:
+	if not entry_ids.has(keep_id):
+		return false
+	for id in entry_ids:
+		if id != keep_id and nodes.has(id):
+			(nodes[id] as MapNode).type = &"search"
+	entry_ids = [keep_id] as Array[int]
+	var kept: Array[Dictionary] = []
+	for route in routes:
+		if int(route.get("entry_id", -1)) == keep_id:
+			kept.append(route)
+	routes = kept
+	return true
+
+
 ## 还没被用过的最小正整数 id。编辑器加点时用。
 func next_free_id() -> int:
 	var id := 1

@@ -699,7 +699,8 @@ func save_settings() -> bool:
 ## 两条路都在开局那一刻存 meta：带进去的从仓库拿走（一局里是新实例，3.1 存档只写 id），撤离了回来，死了就是真没了。
 ## 生成不出图返回 null，停在开局屏
 func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: Array[int] = [] as Array[int],
-		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null, scale: StringName = &"", carry_value: int = 0) -> RunState:
+		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null, scale: StringName = &"", carry_value: int = 0,
+		spawn_id: int = -1) -> RunState:
 	var kit: Array[StringName] = []
 	if loadout != null:
 		kit = loadout.items.duplicate()
@@ -722,6 +723,9 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta_buffs(), character, layout, difficulty, hunter_defs, scale, inputs)
 	if state == null:
 		return null
+	# 182：开局第三页挑好了出生点 —— 直接站上去（和章节的 auto_spawn 同一条路），新的一局不再进挑出生点阶段
+	if spawn_id >= 0 and state.phase == RunState.Phase.PICK_SPAWN:
+		state.pick_spawn(spawn_id)
 	for inst in taken:
 		meta.warehouse.remove(inst.uid)
 	# 090：进了游戏，上一局带回来还没清的就没了（开局屏的地上规则；不经开局屏的路一样）

@@ -141,6 +141,7 @@ static func frame_difficulty_and_memory(t: TestCase, root: Window) -> void:
 	setup.show_page(1)
 	setup.show_page(2)
 	t.eq(setup.run_seed, 4242, "调试台指定了下一局种子：进第三页用它")
+	setup.pick_spawn(setup.preview().entry_ids()[0])
 	var went: bool = setup.depart()
 	t.check(went, "出发")
 	if went:
@@ -178,6 +179,12 @@ static func frame_reveal_into_run(t: TestCase, root: Window) -> void:
 		game.queue_free()
 		return
 	t.check(is_equal_approx(float(want["ring_gap"]), pv.ring_gap()) and int(want["levels"]) == pv.levels, "圈距、环数取预览的")
+	setup.pick_spawn(pv.entry_ids()[0])
+	pv.finish()     # 微放大直接到头
+	setup.close_hint()
+	want = setup.reveal_payload()
+	t.check(is_equal_approx(float(want["ring_gap"]), pv.ring_gap() * MapPreview.ZOOM_IN), "182：挑了出生点、微放大过：圈距跟着放大")
+	var spawn: int = setup.spawn_id
 	t.check(setup.depart(), "出发")
 	t.eq(flow.map_reveal, {}, "交出去就清")
 	var map = game.base()
@@ -188,7 +195,9 @@ static func frame_reveal_into_run(t: TestCase, root: Window) -> void:
 	t.check(is_equal_approx(view.zoom, float(want["ring_gap"]) / RingLayoutBase.RING_STEP), "缩放 = 圈距 ÷ 环距（%.3f）" % view.zoom)
 	var c_local: Vector2 = view.get_global_transform().affine_inverse() * (want["center"] as Vector2)
 	t.check(view.to_screen(view.canvas_rect().get_center()).distance_to(c_local) < 0.5, "画布中心落在预览圆心")
-	t.check(absf(RingLayoutBase.RING_STEP * view.zoom - pv.ring_gap()) < 0.01, "第一环和预览第一圈一样大")
+	t.check(absf(RingLayoutBase.RING_STEP * view.zoom - pv.ring_gap() * pv.view_zoom) < 0.01, "第一环和预览第一圈一样大（含微放大）")
+	var spawn_local: Vector2 = view.get_global_transform().affine_inverse() * (want["spawn_at"] as Vector2)
+	t.check(view.to_screen(view.positions()[spawn]).distance_to(spawn_local) < 1.0, "182：第一帧里出生点正好在纸上它的印记那里")
 	t.not_null(map.reveal_paper(), "盖着一张纸")
 	var mat := map.reveal_paper().material as ShaderMaterial
 	t.check(mat.get_shader_parameter(&"invert") == true and is_equal_approx(float(mat.get_shader_parameter(&"radius")), float(want["radius"])), "纸从预览的半径化开")
@@ -221,6 +230,12 @@ static func frame_reveal_into_run(t: TestCase, root: Window) -> void:
 	t.check(not map.revealing(), "点一下：直接到头")
 	t.is_null(map.reveal_paper(), "纸撤了")
 	t.check(is_equal_approx(view.zoom, float(to["zoom"])) and view.pan.distance_to(to["pan"]) < 0.5, "视角落到平时进图的那样")
+	t.eq(view.current_id, spawn, "182：人站在挑的出生点上")
+	var z := view.zoom
+	var p := view.pan
+	view.focus(spawn)
+	t.check(view.pan.distance_to(p) < 0.5 and is_equal_approx(view.zoom, z), "182：转场终点 = 对准出生点（focus）")
+	t.check(view.safe_rect().has_point(view.to_screen(view.positions()[spawn])), "出生点在屏上")
 	t.eq(view.node_front, INF, "节点画全")
 	t.eq(view.deco_alpha, 1.0, "装饰画全")
 	t.check(map._floating.all(func(c: Control) -> bool: return c.modulate.a == 1.0), "读数出来了")
@@ -234,6 +249,7 @@ static func frame_reveal_into_run(t: TestCase, root: Window) -> void:
 	var s2 = g2.base()
 	s2.show_page(2)
 	s2.preview().finish()
+	s2.pick_spawn(s2.preview().entry_ids()[0])
 	s2.depart()
 	t.check(not g2.base().revealing(), "淡入关着：不转场")
 	t.eq(g2.base()._view.node_front, INF, "一步到位")

@@ -225,6 +225,7 @@ static func start(
 func pick_spawn(id: int) -> bool:
 	if phase != Phase.PICK_SPAWN or map == null or not map.entry_ids.has(id):
 		return false
+	map.demote_entries(id)     # 182：没挑的入口变普通搜索点、路线只留这一条
 	travel.start_at(id)
 	_set_phase(Phase.ON_MAP, &"spawn")
 	return true

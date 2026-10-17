@@ -55,3 +55,18 @@
 3. 微放大倍数与偏移：**推荐 ×1.35、偏移 40 %**；作者试玩后可调。
 4. 换难度是否换种子：**推荐不换**（难度不改图，换了反而要重挑）。
 5. `begin` 是否复用第三页缓存的图（`pregen`）：**推荐先不加**，与 180 批三一致；大图生成超过 50 ms 再加。
+
+## 8 落地（v3.25，架构方案执行 2026-10-17）
+
+待定 1–5 都按推荐。
+
+- **第三页**：`setup_screen.preview_graph()` 按「章 | 规模 | 种子」缓存整张图（环数也从它数）；`MapPreview.set_entries()` 用 `RingLayoutBase.positions()` 算入口，存「离圆心几个环距」的向量，和预览尺寸无关，正好落在最外一圈。印记画在预览的子层上（不挂墨化着色器，免得最外环的印记被墨边糊掉），屏幕定长 40 px，常态 / 悬停 / 选中（外加一圈红）；美术给 `setup/spawn_mark`（`_hover`、`_on`）就贴图。
+- **必须点一个**：`spawn_id = -1` 时 `can_depart()` 返回「先在地图上挑一个出生点」，「出发」`disabled`。换图、换规模、换种子清零；换难度、回到这一页（同一张图）不清。自己会站上出生点的章（`auto_spawn`）不画入口。
+- **点入口**：`setup_screen.pick_spawn(id)` 挑中，`MapPreview.zoom_to(id)` ×1.35、视中心往它挪四成（0.25 s）。底图与圈按放大后的矩形直接算，不用 `draw_set_transform`，因为墨化着色器读的是没变换的顶点。被推出墨化那片的入口淡掉、点不着；点预览空白回到不放大，选择保留。
+- **提示窗** `NodeHintCard`（`ui/game/node_hint_card.gd`，变体 `PANEL_NODE_HINT` 浅底）：锚在屏幕正中，内容是字记 + 类型名、一句说明（章节 `tooltip_texts` 有就用，没有用 `MapNodeTypes.HINTS`）、底下一行「点别处可以换一个」。再点同一入口、点窗外任意处都会关窗。
+  - 第三行路线（风险 / 收益）**没显示**：作者 10-17 把地图屏的路线卡对玩家藏了（`SHOW_ROUTES = false`），提示窗跟着那个开关走。
+  - 纸签没有自己的图时借摘要便条那张。
+- **入局**：`flow.begin(..., spawn_id)` 在 `RunState.start` 之后直接 `pick_spawn`。`RunState.pick_spawn()` 先调 `MapGraph.demote_entries(id)`：别的入口就地变 `search`，环、位置、边都不动，路线只留一条，危险区不动。降过的图跟着存档走。
+- **转场**：`reveal_payload()` 多带 `mask_center`（墨化那片的圆心，纸上的洞开在这里）、`view_zoom`、`view_center`、`spawn_id`、`spawn_at`。`center` 与 `ring_gap` 已含微放大，所以第一帧出生点正好在纸上它的印记处。终点是平时进图的视角，人已站在出生点上，`focus` 对准它。
+- **旧档**：地图屏的挑出生点路径（灰罩、路线卡）原样留着，只给停在挑出生点阶段的旧存档与不经开局屏的直开用。
+- **测试**：`tests/ui/test_spawn_pick_182.gd`；`test_setup_180`、`test_setup_pages_161` 的出发前先挑一个出生点，并加了转场起止落在出生点的检查。

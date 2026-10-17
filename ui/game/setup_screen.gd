@@ -76,8 +76,14 @@ var _minus_btn: Button = null
 var _plus_btn: Button = null
 ## 180 补三：挑战说明 —— 卷轴羊皮纸（[ChallengeScroll]）
 var _challenge: ChallengeScroll = null
-## 180：预览的环数按「章 | 规模 | 种子」记，同一档不重复生成
-var _ring_cache: Dictionary = {}
+## 180：预览的图按「章 | 规模 | 种子」记，同一档不重复生成（182：整张图都留着，入口位置也从它算）
+var _graph_cache: Dictionary = {}
+## 182（作者 2026-10-17 15:26）：第三页纸上挑的出生点（-1 = 还没挑，「出发」灰着）；预览现在铺的是哪一张（换了就清选择）
+var spawn_id: int = -1
+var _preview_key: String = ""
+## 182：点入口时屏幕正中弹的提示窗
+var _hint: NodeHintCard = null
+const MAP_SCREEN := preload("res://ui/game/map_screen.gd")
 ## 180：上次挑的图 / 规模 / 难度记在局外旗标里（旗标只存整数：图记 order + 1、规模记下标 + 1、难度记档位）
 const FLAG_LAST_MAP := &"last_map"
 const FLAG_LAST_SCALE := &"last_scale"
@@ -340,6 +346,10 @@ func _build_map_page() -> Control:
 	_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_child(_preview)
+	_preview.entry_pressed.connect(pick_spawn)
+	_preview.blank_pressed.connect(_on_preview_blank)
+	_hint = NodeHintCard.new()
+	add_child(_hint)
 
 	var right_board := _on_paper(0, PAPER_INSET)
 	right_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -387,6 +397,8 @@ func show_page(i: int) -> void:
 	_page = clampi(i, 0, PAGE_NAMES.size() - 1)
 	if _page == PAGE_MAP and was != PAGE_MAP:
 		_reroll_seed()     # 180：种子玩家看不见，每次进这一页随机取（调试台指定了就用那个）
+	if _page != PAGE_MAP:
+		close_hint()
 	for k in _pages.size():
 		_pages[k].visible = k == _page
 	var tone := _repaint(PAGE_ART[_page])
@@ -620,16 +632,23 @@ func map_chapters() -> Array[ChapterDef]:
 
 ## 180：这一章这一档按现在的种子真生成一次、数环（入局时 flow.begin 用同一个种子再生成，确定性生成两次一样）
 func ring_levels(c: ChapterDef, sid: StringName) -> int:
-	if c == null or c.map_source == null:
-		return 0
-	var key := "%s|%s|%d" % [c.id, sid, run_seed]
-	if _ring_cache.has(key):
-		return _ring_cache[key]
-	var g := c.map_source.resolve(run_seed, sid)
+	var g := preview_graph(c, sid)
 	var lay := MapLayout.for_graph(g) if g != null else null
-	var n := (lay as RingLayoutBase).level_count(g) if lay is RingLayoutBase else 0
-	_ring_cache[key] = n
-	return n
+	return (lay as RingLayoutBase).level_count(g) if lay is RingLayoutBase else 0
+
+
+## 182：这一章这一档按现在的种子生成的那张图（缓存；生成不出 null）。入口印记、环数都从它来
+func preview_graph(c: ChapterDef, sid: StringName) -> MapGraph:
+	if c == null or c.map_source == null:
+		return null
+	var key := _graph_key(c, sid)
+	if not _graph_cache.has(key):
+		_graph_cache[key] = c.map_source.resolve(run_seed, sid)
+	return _graph_cache[key]
+
+
+func _graph_key(c: ChapterDef, sid: StringName) -> String:
+	return "%s|%s|%d" % [c.id, sid, run_seed]
 
 
 ## 180：预览跟着现在挑的图与规模（只在第三页算：别的页不生成）
@@ -639,9 +658,17 @@ func _sync_preview() -> void:
 	var c := chapter()
 	if c == null:
 		_preview.clear()
+		_forget_spawn()
 		return
-	var animate := flow.settings == null or flow.settings.ui_fades
+	var animate := _animations_on()
+	var key := _graph_key(c, scale_id)
+	if key == _preview_key and _preview.levels > 0:
+		return     # 同一张图（换难度、回到这一页）：不重新化开，挑好的出生点留着
+	_preview_key = key
 	_preview.show_map(c.map_skin, ring_levels(c, scale_id), scale_id, animate)
+	# 182：换了图（换图、换规模、重取种子）—— 入口换成新图的、挑的清掉（「出发」重新灰）；自己会站上出生点的章不画入口
+	_forget_spawn()
+	_preview.set_entries(preview_graph(c, scale_id) if not c.auto_spawn else null)
 
 
 func preview() -> MapPreview:
@@ -992,6 +1019,8 @@ func set_run_seed(v: int) -> void:
 func can_depart() -> String:
 	if chapter() == null:
 		return "没有章节可开"
+	if needs_spawn():
+		return "先在地图上挑一个出生点"
 	var ch := character()
 	if ch == null:
 		return "没有角色可选"
@@ -1060,7 +1089,7 @@ func depart() -> bool:
 	var c := chapter()
 	var ch := character()
 	flow.map_reveal = reveal_payload()
-	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value())
+	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value(), spawn_id)
 	flow.map_reveal = {}
 	if run == null:
 		_status.text = "这一章生成不出图：%s" % (c.map_source.last_error if c.map_source != null else "没有地图来源")
@@ -1074,12 +1103,98 @@ func depart() -> bool:
 	return true
 
 
-## 180 §4：交给地图屏的入局转场 —— 预览此刻的圆心（全局像素）、化开半径、圈距、环数；第三页没开着 / 没圈 = 空（不转场）
+## 180 §4：交给地图屏的入局转场 —— 预览此刻的圆心（全局像素）、化开半径、圈距、环数；第三页没开着 / 没圈 = 空（不转场）。
+## 182：起点是第三页此刻的样子 —— 微放大了，圈的圆心（`center`）与圈距跟着放大；墨化那片没动（`mask_center`）；另带挑的出生点与它的印记在屏上哪
 func reveal_payload() -> Dictionary:
 	if _preview == null or not _preview.is_visible_in_tree() or _preview.levels <= 0 or _preview.ring_gap() <= 0.0:
 		return {}
-	return {"center": _preview.get_global_transform() * _preview.center(), "radius": _preview.radius_frac * _preview.half_extent(),
-		"ring_gap": _preview.ring_gap(), "levels": _preview.levels}
+	var to_global := _preview.get_global_transform()
+	var out := {"center": to_global * _preview.to_view(_preview.center()), "mask_center": to_global * _preview.center(),
+		"radius": _preview.radius_frac * _preview.half_extent(), "ring_gap": _preview.ring_gap() * _preview.view_zoom, "levels": _preview.levels,
+		"view_zoom": _preview.view_zoom, "view_center": to_global * (_preview.center() + _preview.view_shift), "spawn_id": spawn_id}
+	if spawn_id >= 0:
+		out["spawn_at"] = to_global * _preview.entry_point(spawn_id)
+	return out
+
+
+#region 182：在纸上挑出生点
+## 还得先挑出生点才能出发：预览上画着入口（第三页铺开过这张图）而还没挑
+func needs_spawn() -> bool:
+	return _preview != null and not _preview.entries.is_empty() and spawn_id < 0
+
+
+## 挑入口 [param id]（点印记 = 调它）：挑中、以它为中心微放大、屏幕正中弹提示窗；提示窗正说着它时再点 = 关窗（挑的留着）。
+## 不是纸上的入口返回 false
+func pick_spawn(id: int) -> bool:
+	if _preview == null or not _preview.entry_ids().has(id):
+		return false
+	if _hint != null and _hint.is_open() and _hint.node_id == id:
+		_hint.close(_animations_on())
+		return true
+	spawn_id = id
+	_preview.selected = id
+	_preview.zoom_to(id, _animations_on())
+	_show_hint(id)
+	_refresh()
+	return true
+
+
+## 点了预览上的空白：回到不放大、关窗（挑的留着）
+func _on_preview_blank() -> void:
+	_preview.zoom_reset(_animations_on())
+	close_hint()
+
+
+func close_hint() -> void:
+	if _hint != null:
+		_hint.close(_animations_on())
+
+
+func hint_card() -> NodeHintCard:
+	return _hint
+
+
+func _show_hint(id: int) -> void:
+	if _hint == null:
+		return
+	var g := preview_graph(chapter(), scale_id)
+	var type: StringName = g.get_node(id).type if g != null and g.has_node(id) else &"spawn"
+	_hint.show_for(id, type, NodeHintCard.hint_for(chapter(), type), _route_line(g, id), "点别处可以换一个", _animations_on())
+
+
+## 提示窗第三行：这个入口的路线。作者 2026-10-17 已把路线卡（风险 / 收益）对玩家藏起来（地图屏的 `SHOW_ROUTES`），跟着它藏
+func _route_line(g: MapGraph, id: int) -> String:
+	if g == null or not MAP_SCREEN.SHOW_ROUTES:
+		return ""
+	for route in g.routes:
+		if int(route.get("entry_id", -1)) == id:
+			return "%s → %s　风险 %.1f　收益 %.1f" % [route.get("style", "?"),
+				"核心（打 BOSS）" if String(route.get("ends_at", "core")) == "core" else "撤离点（可以不打）",
+				float(route.get("risk_x100", 0)) / 100.0, float(route.get("reward_x100", 0)) / 100.0]
+	return ""
+
+
+func _forget_spawn() -> void:
+	spawn_id = -1
+	if _preview != null:
+		_preview.selected = -1
+	if _hint != null:
+		_hint.close(false)
+
+
+## 提示窗开着时点窗外任意处（预览上的点由预览自己管）= 关窗
+func _input(event: InputEvent) -> void:
+	if _hint == null or not _hint.is_open() or _page != PAGE_MAP:
+		return
+	var mb := event as InputEventMouseButton
+	if mb == null or not mb.pressed:
+		return
+	if _hint.get_global_rect().has_point(mb.global_position):
+		return
+	if _preview != null and _preview.get_global_rect().has_point(mb.global_position):
+		return
+	close_hint()
+#endregion
 
 
 ## 180：记下这一局挑的图、规模、难度（下次进开局屏默认它们）
@@ -1294,7 +1409,7 @@ func _refresh() -> void:
 	if _summary != null:
 		_summary.text = summary_text()
 	if _enter_btn != null:
-		_enter_btn.disabled = _page == 0 and ch == null
+		_enter_btn.disabled = (_page == 0 and ch == null) or (_page == PAGE_MAP and needs_spawn())     # 182：没挑出生点「出发」灰着
 	if _status != null:
 		var why := can_depart()
 		_status.text = why if why != "" and not carried().is_empty() else ""

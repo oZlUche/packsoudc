@@ -85,6 +85,8 @@ const PANEL_STASH_FRAME := &"PanelStashFrame"
 const PANEL_SUMMARY_NOTE := &"PanelSummaryNote"
 ## 第三页的东西直接摆在地图纸上（没有板）：一块透明的底，只管内边距；纸是浅底
 const PANEL_BARE := &"PanelBare"
+## 182：点节点时屏幕正中弹的提示窗（[NodeHintCard]）—— 浅底纸签
+const PANEL_NODE_HINT := &"PanelNodeHint"
 const BUTTON_SETUP_TAB := &"ButtonSetupTab"
 const BUTTON_MAP_ENTRY := &"ButtonMapEntry"
 const BUTTON_MAP_SUB := &"ButtonMapSub"
@@ -112,7 +114,7 @@ const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, 
 	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_GROOVE, PANEL_CAP_TILE, LABEL_CAP_VALUE,
 	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
 	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB,
-	BUTTON_MAP_ENTRY, BUTTON_MAP_SUB, BUTTON_SETUP_BACK, BUTTON_SETUP_GO, BUTTON_DIFF_MINUS, BUTTON_DIFF_PLUS, PANEL_BARE]
+	BUTTON_MAP_ENTRY, BUTTON_MAP_SUB, BUTTON_SETUP_BACK, BUTTON_SETUP_GO, BUTTON_DIFF_MINUS, BUTTON_DIFF_PLUS, PANEL_BARE, PANEL_NODE_HINT]
 
 const TITLE_SIZE := 18
 ## 168：大标题字号
@@ -187,6 +189,9 @@ const ART_SUMMARY_NOTE := "setup/summary_note"
 const ART_SETUP_BACK := "setup/btn_back"
 const ART_SETUP_GO := "setup/btn_go"
 const ART_RINGS := "setup/rings"
+## 182：第三页纸上的入口印记（常态；`_hover` 悬停、`_on` 选中，缺的态用常态）与居中提示窗的纸签底；没图：印记现画、纸签退回摘要便条
+const ART_SPAWN_MARK := "setup/spawn_mark"
+const ART_NODE_HINT := "setup/node_hint"
 ## 战斗界面的整屏背景（白天的沙地场子，铺满裁边；深浅读图旁 json 的 `tone`）；没图：照旧纯色底
 const ART_BATTLE_BG := "battle/battle_bg"
 ## 179：凹槽板没图时的平面底（样稿第二版的色）
@@ -498,7 +503,7 @@ const PANEL_TONES := {
 	PANEL_NAMEPLATE: TONE_DARK, PANEL_HOME_BOX: TONE_LIGHT, PANEL_SHELF: TONE_DARK, PANEL_HUD_BAR: TONE_DARK,
 	PANEL_WINDOW: TONE_DARK, PANEL_GROOVE: TONE_DARK, PANEL_CAP_TILE: TONE_DARK, PANEL_FLIP_COUNTER: TONE_DARK,
 	PANEL_PARCHMENT: TONE_LIGHT, PANEL_DIFF_TITLE: TONE_LIGHT, PANEL_PACK_LEATHER: TONE_DARK, PANEL_STASH_FRAME: TONE_DARK,
-	PANEL_SUMMARY_NOTE: TONE_LIGHT, PANEL_BARE: TONE_LIGHT,
+	PANEL_SUMMARY_NOTE: TONE_LIGHT, PANEL_BARE: TONE_LIGHT, PANEL_NODE_HINT: TONE_LIGHT,
 }
 ## 面板变体用哪张美术图（有图时深浅读它的 json）
 ## 157 补充三：叠层框与顶端栏是石板（深浅读板边的 json；顶端栏是自己那张长条板边），板里的分区都是凹槽
@@ -506,7 +511,7 @@ const PANEL_ART := {PANEL_DARK: ART_INSET, PANEL_LINE: ART_INSET, PANEL_HUD: ART
 	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_BAR,
 	PANEL_WINDOW: ART_SLAB_EDGE, PANEL_GROOVE: ART_GROOVE, PANEL_FLIP_COUNTER: ART_FLIP_COUNTER,
 	PANEL_PARCHMENT: ART_PARCHMENT_STRIP, PANEL_DIFF_TITLE: ART_DIFF_TITLE, PANEL_PACK_LEATHER: ART_PACK_LEATHER,
-	PANEL_STASH_FRAME: ART_STASH_FRAME, PANEL_SUMMARY_NOTE: ART_SUMMARY_NOTE}
+	PANEL_STASH_FRAME: ART_STASH_FRAME, PANEL_SUMMARY_NOTE: ART_SUMMARY_NOTE, PANEL_NODE_HINT: ART_NODE_HINT}
 ## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸。
 ## 169：读字色模板 `fg / dim / warn` 的浅版（[method text_colors_changed] 换），这几个常量是文件不在时的默认
 const INK_DEFAULT := Color("2e2219")
@@ -1065,6 +1070,14 @@ static func _setup_art(t: Theme) -> void:
 		t.set_type_variation(spec[0], "PanelContainer")
 		var box: StyleBox = _art_box(spec[1])
 		t.set_stylebox("panel", spec[0], box if box != null else (_groove_box() if spec[0] != PANEL_SUMMARY_NOTE else StyleBoxEmpty.new()))
+	# 182：提示窗的纸签 —— 自己的图 → 摘要便条那张 → 平色纸
+	t.set_type_variation(PANEL_NODE_HINT, "PanelContainer")
+	var hint: StyleBox = _art_box(ART_NODE_HINT)
+	if hint == null:
+		hint = _art_box(ART_SUMMARY_NOTE)
+	if hint == null:
+		hint = _box(PARCHMENT, INK_DEFAULT, 20)
+	t.set_stylebox("panel", PANEL_NODE_HINT, hint)
 	# 页签：52 × 60 的挂牌，字写在牌面（json 的 text_area），整张拉伸不切九宫格
 	var tab: Dictionary = art_meta(ART_SETUP_TAB)
 	var area: Array = tab.get("text_area", [6, 18, 40, 38])
