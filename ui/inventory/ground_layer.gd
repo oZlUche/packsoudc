@@ -91,6 +91,8 @@ var _known: Dictionary = {}
 var _landing: Dictionary = {}
 ## 162 补充二：落在哪块面板的上沿上（uid → 面板）；面板关了这几件再掉一次
 var _support: Dictionary = {}
+## 作者 2026-10-17（碰撞有延迟、没弹性）：落在哪件东西的顶上（uid → 底下那件的 uid）；底下那件被拿走 / 又掉了，这几件跟着再掉
+var _rest_on: Dictionary = {}
 var _scan_queued: bool = false
 ## 180 §2.2：正在弹开的（uid → {pos: 包围盒左上角像素, vel, m: 质量, size, floor: 地面 y, last: 上次反弹时刻, skip: 起手就压着的面板}）；
 ## 空 = 都静着。解算中 [method item_rect] 按这里画，结束一次写回落点
@@ -194,6 +196,12 @@ func _scan() -> void:
 	for uid in _support.keys():
 		if not now.has(uid):
 			_support.erase(uid)
+	for uid in _rest_on.keys():
+		if not now.has(uid):
+			_rest_on.erase(uid)
+	for uid in _known.keys():
+		if not now.has(uid):
+			_drop_resting_on(uid)     # 底下那件被拿走了
 	for uid in _bodies.keys():
 		if not now.has(uid):
 			_bodies.erase(uid)
@@ -235,8 +243,13 @@ func _begin_fall(inst: ItemInstance, from_local: Vector2, stagger: float) -> voi
 		_support[inst.uid] = land["panel"]
 	else:
 		_support.erase(inst.uid)
+	if int(land.get("item", -1)) >= 0:
+		_rest_on[inst.uid] = int(land["item"])
+	else:
+		_rest_on.erase(inst.uid)
 	_landing[inst.uid] = _fall(inst, from_local, rot_from, target, rot_to, stagger, false)
 	stash.set_spot(inst.uid, to_spot(target))
+	_drop_resting_on(inst.uid)     # 托在它上面的跟着再掉
 
 
 ## 162 补充二：起点 [param from_local]（朝向 [param rot_from] 的包围盒左上角）正下方的落点：重心 x 不变（夹在屏内），
@@ -246,14 +259,27 @@ func spot_below(from_local: Vector2, inst: ItemInstance, rot_from: int, rot_to: 
 	var com_x := from_local.x + inst.def.shape.center_of_mass(rot_from).x * InventoryView.CELL
 	var x := clampf(com_x - inst.def.shape.center_of_mass(rot_to).x * InventoryView.CELL, 0.0, maxf(0.0, size.x - span_to.x))
 	var bottom := from_local.y + span_px(inst, rot_from).y
-	var under := floor_under(x, x + span_to.x, bottom)
-	return {"pos": Vector2(x, maxf(0.0, float(under["y"]) - span_to.y)), "panel": under["panel"]}
+	var under := floor_under(x, x + span_to.x, bottom, inst.uid)
+	return {"pos": Vector2(x, maxf(0.0, float(under["y"]) - span_to.y)), "panel": under["panel"], "item": under["item"]}
 
 
-## 162 补充二：横向 [param x0]～[param x1] 这一条、从 [param from_y] 往下第一个支撑：登记面板的上沿（{y, panel}），没有就是屏幕底（panel = null）
-func floor_under(x0: float, x1: float, from_y: float) -> Dictionary:
+## 162 补充二：横向 [param x0]～[param x1] 这一条、从 [param from_y] 往下第一个支撑：登记面板的上沿（{y, panel}），没有就是屏幕底（panel = null）。
+## 作者 2026-10-17：地上别的东西的顶也是支撑（{item: 它的 uid}，不然穿过去落到底、落稳了才被弹开 —— 看着既慢又软）；[param self_uid] 是正在掉的那件自己
+func floor_under(x0: float, x1: float, from_y: float, self_uid: int = -1) -> Dictionary:
 	var best := size.y * (1.0 - ItemStash.SPOT_MARGIN)
 	var by: Control = null
+	var on_item := -1
+	if stash != null:
+		for it in stash.items():
+			var uid := (it as ItemInstance).uid
+			if uid == self_uid:
+				continue
+			var r := item_rect(uid)
+			if r.size.x <= 0.0 or r.position.x >= x1 - BUMP_EPS or r.end.x <= x0 + BUMP_EPS:
+				continue
+			if r.position.y >= from_y - 0.5 and r.position.y < best:
+				best = r.position.y
+				on_item = uid
 	for panel in _reserved:
 		if not is_instance_valid(panel) or not panel.is_inside_tree() or not panel.is_visible_in_tree():
 			continue
@@ -264,7 +290,25 @@ func floor_under(x0: float, x1: float, from_y: float) -> Dictionary:
 		if r.position.y >= from_y - 0.5 and r.position.y < best:
 			best = r.position.y
 			by = panel
-	return {"y": best, "panel": by}
+			on_item = -1
+	return {"y": best, "panel": by, "item": on_item}
+
+
+## 底下那件 [param uid] 没了 / 挪了：托在它顶上的从现在的位置再掉一次（再往上托着的跟着掉）
+func _drop_resting_on(uid: int) -> void:
+	if stash == null:
+		return
+	for top in _rest_on.keys():
+		if int(_rest_on[top]) != uid:
+			continue
+		_rest_on.erase(top)
+		var inst := stash.get_item(top)
+		if inst == null:
+			continue
+		var at := item_rect(top).position
+		_landing.erase(top)
+		_bodies.erase(top)
+		_begin_fall(inst, at, 0.0)
 
 
 ## 一段下落：重心从起点到终点，竖直按重力（沉的不封顶、飘的到末速度封顶），横向线性（只有夹边时才有），翻转 / 缩放 / 透明跟落了几成走；触地后弹一下
@@ -850,17 +894,36 @@ func _finish_bumps() -> void:
 	_bodies = {}
 	if stash == null:
 		return
+	var moved: Array[int] = []
 	for uid in bodies.keys():
 		if stash.has_item(uid):
 			var p := to_spot(bodies[uid]["pos"])
 			if not stash.spot_of(uid).is_equal_approx(p):
 				stash.set_spot(uid, p)
+				moved.append(uid)
 	for pair in overlapping_pairs():
 		var inst := stash.get_item(pair[1])
 		if inst != null:
 			stash.set_spot(inst.uid, stash.next_free_spot(inst))
 	# 地上真挤满了（扫也扫不出空处）：这一批不再反复弹，等地上的东西变了再说
 	_bump_hold = _uids() if not overlapping_pairs().is_empty() else {}
+	# 作者 2026-10-17：弹开后悬空的（被推离了托着它的那件）掉下去；托在挪走那件上的也掉
+	moved.sort_custom(func(a: int, b: int) -> bool: return item_rect(a).end.y > item_rect(b).end.y)     # 低的先落，上面的落在它的新位置上
+	for uid in moved:
+		_refall_if_hanging(uid)
+		_drop_resting_on(uid)
+
+
+## 这件底下离支撑还有空（悬着）就从现在的位置掉下去
+func _refall_if_hanging(uid: int) -> void:
+	var inst := stash.get_item(uid) if stash != null else null
+	if inst == null or inst.def == null or inst.def.shape == null or _landing.has(uid):
+		return
+	var at := item_rect(uid).position
+	var land := spot_below(at, inst, inst.rotation, inst.def.shape.rest_rotation(inst.rotation))
+	if (land["pos"] as Vector2).y > at.y + 1.0:
+		_rest_on.erase(uid)
+		_begin_fall(inst, at, 0.0)
 #endregion
 
 

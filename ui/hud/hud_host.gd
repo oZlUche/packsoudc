@@ -25,6 +25,8 @@ const LINE_GAP := 4
 ## 作者 2026-10-13（「凹槽没有和石板位置对齐，考虑增加顶端栏纵向面积」）：64 → 88，组在板边上下内边距之间居中（底下的投影不算）
 const BAR_HEIGHT := 88.0
 const BAR_SIDE := 16.0
+## 作者 2026-10-17（体力条和金币栏更靠近中央，右边同理）：左右两组各往里收屏宽的这么多成（至少 [constant BAR_SIDE]）
+const BAR_SIDE_FRAC := 0.1
 const BAR_PAD := 4.0
 ## 没有栏时三个槽退回哪个锚点
 const BAR_FALLBACK := {"bar_left": "top_left", "bar_center": "top", "bar_right": "top_right"}
@@ -163,7 +165,13 @@ func _frame(anchor: String) -> Rect2:
 ## 166：顶端栏里排组的那块（左右各留 [constant BAR_SIDE]；上下去掉栏底的内边距 —— 有石板就是板面那一段，不含底下的投影）
 func _bar_frame() -> Rect2:
 	var m := _bar_margins()
-	return Rect2(BAR_SIDE, m.x, maxf(0.0, size.x - BAR_SIDE * 2.0), maxf(0.0, _bar_h - m.x - m.y))
+	var side := bar_side()
+	return Rect2(side, m.x, maxf(0.0, size.x - side * 2.0), maxf(0.0, _bar_h - m.x - m.y))
+
+
+## 顶端栏左右各留多宽（栏本身还是铺满）
+func bar_side() -> float:
+	return maxf(BAR_SIDE, size.x * BAR_SIDE_FRAC)
 
 
 ## 栏底的上、下内边距（没栏 0）
