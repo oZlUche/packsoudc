@@ -3,9 +3,9 @@
 ## 收起（〇级）：一颗居中写「开启挑战」的铜牌按钮，背后横着两根卷好的卷轴（上下各露一截）。
 ## 展开（≥ Ⅰ）：「当前难度」铜牌（按钮面原位）| 翻页计数器 |「−」「＋」| 卷轴羊皮纸（[ChallengeScroll]）。
 ## 两根卷轴就是羊皮纸的顶、底卷轴，收起与展开共用同一对节点：
-## - 展开（约 0.45 秒）：0–[constant MOVE_SEC] 两根卷轴合在一起一起往下移到纸的位置，按钮面淡出、铜牌 / 计数器（〇）/ 加减淡入；
-##   之后 [constant SPREAD_SEC] 两根卷轴上下拉开放出 Ⅰ 级那一行，计数器从〇往上翻到 Ⅰ。
-## - 收起（Ⅰ 级按「−」）：反过来 —— 计数器翻回〇、卷轴合上收掉那一行，合上的卷轴上移回按钮背后，按钮面淡入。
+## - 展开（约 0.45 秒）：0–[constant MOVE_SEC] 两根卷轴合在一起一起往下移到纸的位置，按钮面淡出、铜牌 / 计数器（空白卡）/ 加减淡入；
+##   之后 [constant SPREAD_SEC] 两根卷轴上下拉开放出 Ⅰ 级那一行，计数器从空白往上翻到 Ⅰ。
+## - 收起（Ⅰ 级按「−」）：反过来 —— 计数器翻成空白、卷轴合上收掉那一行，合上的卷轴上移回按钮背后，按钮面淡入。
 ## - 动画关着一帧到位；动画中块上盖一层挡板，点一下直接到终态
 ## 180 定稿美术（作者 12:04）：收起时两根卷轴上下边缘相接（不重叠）、压在 304 × 104 的铜牌后面，只露两端轴头；
 ## 展开是梯形标题牌（下沿压计数器 4 像素）| 计数器外框 250 × 160（窗里翻页卡 + 数字 + 中缝）| −、＋ 各 124 × 56 并排留 2 | 卷轴。
@@ -78,14 +78,13 @@ func _init() -> void:
 	words.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	words.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.add_child(words)
-	# 180 补二：翻页计数器 —— 黑底白字牌面、深黄铜框，罗马数字（0 级写「〇」）
+	# 180 补二：翻页计数器 —— 黑底白字牌面、深黄铜框，罗马数字（0 级是空白卡）
 	counter = PanelContainer.new()
 	counter.theme_type_variation = UiTheme.PANEL_FLIP_COUNTER
 	UiTheme.set_tone(counter, UiTheme.tone_of(UiTheme.PANEL_FLIP_COUNTER))     # 深黄铜框里白字（纸是浅底）
 	add_child(counter)
 	add_child(title)
 	flipper = FlipCounter.new()
-	flipper.set_value("〇")
 	counter.add_child(flipper)
 	if _art:
 		var frame := UiTheme.current().get_stylebox("panel", UiTheme.PANEL_FLIP_COUNTER)

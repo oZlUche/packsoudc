@@ -194,7 +194,7 @@ static func frame_run_screens(t: TestCase, root: Window) -> void:
 	for gi in setup._chapters.size():
 		if setup._chapters[gi].id == &"free_mode":
 			setup.choose_chapter(gi)
-	t.eq(setup._difficulty_num.text, "〇", "当前难度 0 级写「〇」（180 补二：罗马数字 + 加减键）")
+	t.eq(setup._difficulty_num.text, "", "当前难度 0 级是空白卡（180 补四：全空）")
 	t.check(setup._plus_btn.disabled and setup._minus_btn.disabled, "只有普通一档：加减都灰")
 	t.check(not flow.available_difficulties().has(hard), "新的局外：进阶没解锁，不列")
 	t.check(setup.difficulty() != null and setup.difficulty().requires_unlock == &"", "默认选的是普通")
