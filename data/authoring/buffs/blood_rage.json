@@ -8,10 +8,12 @@
   "duration_sec": 10.0,
   "axes": [
     {
-      "axis": "damage_dealt"
+      "axis": "damage_dealt",
+      "stacks": 5
     },
     {
-      "axis": "attack_speed"
+      "axis": "attack_speed",
+      "stacks": 5
     }
   ]
 }

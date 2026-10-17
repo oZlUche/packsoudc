@@ -243,9 +243,10 @@ static func run_weapon_stamina_rules(t: TestCase) -> void:
 	t.check((crowbar["tags"] as Array).has("weapon"), "撬棍带武器标签（作者定）")
 
 	var desc := Glossary.describe_buff(ContentImporter.import_buff({"id": "t_brief", "stackable": false, "duration_sec": 3.0}, _ctx(), _report()))
-	t.check(desc.contains("[color=") and desc.contains("不可叠层") and desc.contains("持续 3.0 秒"), "词条：不可叠层与会过期用例外色标出（%s）" % desc)
-	var desc2 := Glossary.describe_buff(ContentImporter.import_buff({"id": "t_stack"}, _ctx(), _report()))
-	t.check(not desc2.contains("[color="), "默认（不限层、永续）不上色")
+	var plain := Glossary.strip_bbcode(desc)
+	t.check(plain.contains("持续 3 秒") and not plain.contains("不可叠层"), "词条：限时的写时长（作者 16:24），不写不可叠层（185：内部说明）（%s）" % plain)
+	var desc2 := Glossary.strip_bbcode(Glossary.describe_buff(ContentImporter.import_buff({"id": "t_stack"}, _ctx(), _report())))
+	t.check(not desc2.contains("永续") and not desc2.contains("不限层"), "默认（不限层、永续）不写（%s）" % desc2)
 
 
 static func run_validation(t: TestCase) -> void:
