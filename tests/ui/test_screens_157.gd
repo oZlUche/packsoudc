@@ -419,7 +419,7 @@ static func frame_tone_tooltip(t: TestCase, root: Window) -> void:
 	var cards := 0
 	for c in tip.find_children("*", "PanelContainer", true, false):
 		if (c as Control).theme_type_variation == UiTheme.PANEL_TOOLTIP and (c as Control).visible:
-			t.eq((c as Control).theme, null, "深底不挂字色主题")
+			t.eq((c as Control).theme, UiTheme.bright_text_theme(), "深底挂亮字主题（185：嵌在浅石板里也不继承墨字）")
 			cards += 1
 	t.eq(cards, 2, "主窗 + 一扇子窗")
 	var frame := OverlayFrame.new()

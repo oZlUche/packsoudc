@@ -286,15 +286,21 @@ func summary_text() -> String:
 	var axes := axes_text()
 	if axes != "":
 		lines.append(axes)
+	lines.append_array(Glossary.buff_rule_lines(_def).slice(1))     # 185：机制说明只在作者工具里看（玩家的窗不写）
 	lines.append(UiText.t("buff.usage") % String(_def.id))
 	return "\n".join(lines)
 
 
-## 152：每层带的标准轴，一句话（「每层带【强攻】1 层、【加速】1 层」）；没有就空串
+## 152：每层带的标准轴，一句话（185 起只写折成多少：「每层：造成的伤害 +15%、攻速 +15%」）；没有就空串
 func axes_text() -> String:
 	if _def == null or _def.axes.is_empty():
 		return ""
-	return Glossary.describe_buff(_def).split("\n")[1]
+	var parts: Array[String] = []
+	for a in _def.axes:
+		var ba := a as BuffAxis
+		if ba != null:
+			parts.append(StatAxes.effect_text(ba.axis, ba.stacks))
+	return "每层：" + "、".join(parts)
 
 
 func _on_refreshed() -> void:
