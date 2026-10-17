@@ -132,14 +132,15 @@ func open(payload: Dictionary) -> void:
 	_shelf_title = _label("仓库", 20, UiPalette.FG)
 	_shelf_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(_shelf_title)
-	_drawer = DevDrawer.new()
-	# 178：箭头钉在屏幕右上（原来在仓库标题行的右端，同一个位置）—— 图鉴 / 成就页收起右半边时它还在
-	var arrow_w := _drawer.arrow.get_combined_minimum_size().x
-	_drawer.arrow.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_drawer.arrow.offset_left = -MARGIN - arrow_w
-	_drawer.arrow.offset_right = -MARGIN
-	_drawer.arrow.offset_top = MARGIN
-	_drawer.arrow.offset_bottom = MARGIN + SHELF_HEAD
+	if DevGate.on():     # 186：调试台只在开发包里有
+		_drawer = DevDrawer.new()
+		# 178：箭头钉在屏幕右上（原来在仓库标题行的右端，同一个位置）—— 图鉴 / 成就页收起右半边时它还在
+		var arrow_w := _drawer.arrow.get_combined_minimum_size().x
+		_drawer.arrow.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		_drawer.arrow.offset_left = -MARGIN - arrow_w
+		_drawer.arrow.offset_right = -MARGIN
+		_drawer.arrow.offset_top = MARGIN
+		_drawer.arrow.offset_bottom = MARGIN + SHELF_HEAD
 	_shelf_frame = UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_SHELF)
 	_shelf_frame.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_right.add_child(_shelf_frame)
@@ -185,95 +186,8 @@ func open(payload: Dictionary) -> void:
 	_wh.changed.connect(_refresh)
 	wh_col.add_child(_wh)
 
-	# 调试台（139：原来仓库页的右列）
-	var right := _drawer.content
-	# 150 补 2：头部写着现在的调试模式，点一下切（和设置页那个勾选是同一个开关）
-	_debug_btn = _button("", toggle_debug_mode, 13, UiPalette.Tier.MINOR)
-	_debug_btn.text = _debug_text()
-	right.add_child(_debug_btn)
-	# 开发开关：只在非导出包显示。科技给的局外 buff 由「科技」页的等级决定（写进 tech_buffs），不在这里重复开关
-	if not OS.has_feature("template"):
-		right.add_child(_label("开发：局外 buff 开关（科技给的在下面「科技等级」里改）", 15, UiPalette.DIM))
-		var ids_b: Array = flow.buff_defs.keys()
-		ids_b.sort()
-		var from_tech := {}
-		for t in flow.tech_defs:
-			if t.effect is TechRunBuff:
-				for tid in (t.effect as TechRunBuff).buffs:
-					from_tech[tid] = true
-		var any_meta := false
-		for id in ids_b:
-			var def: RunBuffDef = flow.buff_defs[id]
-			if not def.is_meta() or from_tech.has(id):
-				continue
-			any_meta = true
-			var bid: StringName = id
-			var b := _button("%s　%s" % [def.display_name, def.summary()], func(): toggle_buff(bid), 13, UiPalette.Tier.MINOR)
-			b.toggle_mode = true
-			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			b.set_pressed_no_signal(m.active_buffs.has(bid))
-			_buff_btns[bid] = b
-			right.add_child(b)
-		if not any_meta:
-			right.add_child(_label("（没有局外 buff 的内容）", 12, UiPalette.DIM))
-	# 局外解锁（069，占位开关）：难度定义里要求的解锁 id 各一个开关；085：章节通关给的解锁也列（关掉 = 教程重新顶上）
-	var unlock_ids: Array[StringName] = []
-	for d in flow.difficulties:
-		if d.requires_unlock != &"" and not unlock_ids.has(d.requires_unlock):
-			unlock_ids.append(d.requires_unlock)
-	for c in flow.chapters:
-		if c.grants_unlock != &"" and not unlock_ids.has(c.grants_unlock):
-			unlock_ids.append(c.grants_unlock)
-	if not unlock_ids.is_empty():
-		right.add_child(_label("局外解锁　占位：开关列表，将来由成长系统决定", 15, UiPalette.DIM))
-		for uid in unlock_ids:
-			var names: Array[String] = []
-			for d in flow.difficulties:
-				if d.requires_unlock == uid:
-					names.append("难度：" + d.display_name)
-			for c in flow.chapters:
-				if c.grants_unlock == uid:
-					names.append("通关：" + c.display_name)
-				elif c.requires_unlock == uid:
-					names.append("开放：" + c.display_name)
-			var key: StringName = uid
-			var ub := _button("%s　%s" % [uid, "、".join(names)], func(): toggle_unlock(key), 13, UiPalette.Tier.MINOR)
-			ub.toggle_mode = true
-			ub.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			ub.set_pressed_no_signal(m.has_unlock(key))
-			_unlock_btns[key] = ub
-			right.add_child(ub)
-	# 119：开发区手改进度表（存档的 tech_levels）—— 每个科技一个数字框，导出包里没有
-	if not OS.has_feature("template") and not flow.tech_defs.is_empty():
-		right.add_child(_label("科技等级　开发：直接改存档里点到几级（0 = 没点亮），效果跟着重算", 15, UiPalette.DIM))
-		var grid := GridContainer.new()
-		grid.columns = 2     # 139：抽屉窄，一行一个科技
-		grid.add_theme_constant_override("h_separation", 12)
-		right.add_child(grid)
-		for t in flow.tech_defs:
-			var tid: StringName = t.id
-			grid.add_child(_label(Names.of(t), 13, UiPalette.FG))
-			var spin := SpinBox.new()
-			spin.min_value = 0
-			spin.max_value = t.max_level()
-			spin.step = 1
-			spin.rounded = true
-			spin.set_value_no_signal(TechService.level(m, tid))
-			spin.value_changed.connect(func(v: float): set_tech_level(tid, int(v)))
-			_tech_spins[tid] = spin
-			grid.add_child(spin)
-	right.add_child(_label("最近几局", 15, UiPalette.DIM))
-	var log := _log_box(13)
-	for h in m.history:
-		var extracted := String(h.get("outcome", "")) == "extracted"
-		log.append_text("[color=#%s]%s[/color]　种子 %d　走了 %d 步　打赢 %d　%s\n" % [
-			(UiPalette.HEAL if extracted else UiPalette.HP).to_html(false), "撤离" if extracted else "战败",
-			int(h.get("seed", 0)), int(h.get("steps", 0)), int(h.get("battles_won", 0)),
-			"%d 件、值 %d 币、带出 %d 币" % [(h.get("items", []) as Array).size(), int(h.get("value", 0)), int(h.get("balance", 0))] if extracted else ""])
-	if m.history.is_empty():
-		log.append_text("[color=#8b93a1]还没有打过[/color]")
-	log.fit_content = true     # 抽屉自己滚，日志按内容撑高
-	right.add_child(log)
+	if _drawer != null:
+		_build_dev_drawer(m)
 
 	# 图鉴页、成就页（091）
 	# 164：中列的页都垫一块粗布（浅底墨字）—— 直接写在背景上，炉火那块亮处看不清
@@ -282,10 +196,11 @@ func open(payload: Dictionary) -> void:
 		(pair[1] as Callable).call(cloth)     # 110：科技页（仓库扩建）与上交
 		_pages[pair[0]] = cloth
 	# 139：抽屉盖在右半边上（后加 = 画在上面），贴右缘、标题行下面
-	_drawer.wrap_contents()
-	add_child(_drawer)
-	_drawer.dock(MARGIN + SHELF_HEAD + 8.0, MARGIN)
-	add_child(_drawer.arrow)
+	if _drawer != null:
+		_drawer.wrap_contents()
+		add_child(_drawer)
+		_drawer.dock(MARGIN + SHELF_HEAD + 8.0, MARGIN)
+		add_child(_drawer.arrow)
 	add_child(_drag)     # 164：整屏一层拖拽，盖在三列上（残影画在最上面）
 	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	resized.connect(layout)
@@ -380,6 +295,98 @@ func _on_shelf_double_clicked(view: ContainerView, uid: int) -> void:
 
 
 #region 调试台（139）
+## 139：调试台（原来仓库页的右列）。186：整个是开发物 —— 只在开发包里造（[DevGate]）
+func _build_dev_drawer(m: MetaState) -> void:
+	var right := _drawer.content
+	# 150 补 2：头部写着现在的调试模式，点一下切（和设置页那个勾选是同一个开关）
+	_debug_btn = _button("", toggle_debug_mode, 13, UiPalette.Tier.MINOR)
+	_debug_btn.text = _debug_text()
+	right.add_child(_debug_btn)
+	# 开发开关：只在非导出包显示。科技给的局外 buff 由「科技」页的等级决定（写进 tech_buffs），不在这里重复开关
+	if not OS.has_feature("template"):
+		right.add_child(_label("开发：局外 buff 开关（科技给的在下面「科技等级」里改）", 15, UiPalette.DIM))
+		var ids_b: Array = flow.buff_defs.keys()
+		ids_b.sort()
+		var from_tech := {}
+		for t in flow.tech_defs:
+			if t.effect is TechRunBuff:
+				for tid in (t.effect as TechRunBuff).buffs:
+					from_tech[tid] = true
+		var any_meta := false
+		for id in ids_b:
+			var def: RunBuffDef = flow.buff_defs[id]
+			if not def.is_meta() or from_tech.has(id):
+				continue
+			any_meta = true
+			var bid: StringName = id
+			var b := _button("%s　%s" % [def.display_name, def.summary()], func(): toggle_buff(bid), 13, UiPalette.Tier.MINOR)
+			b.toggle_mode = true
+			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			b.set_pressed_no_signal(m.active_buffs.has(bid))
+			_buff_btns[bid] = b
+			right.add_child(b)
+		if not any_meta:
+			right.add_child(_label("（没有局外 buff 的内容）", 12, UiPalette.DIM))
+	# 局外解锁（069，占位开关）：难度定义里要求的解锁 id 各一个开关；085：章节通关给的解锁也列（关掉 = 教程重新顶上）
+	var unlock_ids: Array[StringName] = []
+	for d in flow.difficulties:
+		if d.requires_unlock != &"" and not unlock_ids.has(d.requires_unlock):
+			unlock_ids.append(d.requires_unlock)
+	for c in flow.chapters:
+		if c.grants_unlock != &"" and not unlock_ids.has(c.grants_unlock):
+			unlock_ids.append(c.grants_unlock)
+	if not unlock_ids.is_empty():
+		right.add_child(_label("局外解锁　占位：开关列表，将来由成长系统决定", 15, UiPalette.DIM))
+		for uid in unlock_ids:
+			var names: Array[String] = []
+			for d in flow.difficulties:
+				if d.requires_unlock == uid:
+					names.append("难度：" + d.display_name)
+			for c in flow.chapters:
+				if c.grants_unlock == uid:
+					names.append("通关：" + c.display_name)
+				elif c.requires_unlock == uid:
+					names.append("开放：" + c.display_name)
+			var key: StringName = uid
+			var ub := _button("%s　%s" % [uid, "、".join(names)], func(): toggle_unlock(key), 13, UiPalette.Tier.MINOR)
+			ub.toggle_mode = true
+			ub.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			ub.set_pressed_no_signal(m.has_unlock(key))
+			_unlock_btns[key] = ub
+			right.add_child(ub)
+	# 119：开发区手改进度表（存档的 tech_levels）—— 每个科技一个数字框，导出包里没有
+	if not OS.has_feature("template") and not flow.tech_defs.is_empty():
+		right.add_child(_label("科技等级　开发：直接改存档里点到几级（0 = 没点亮），效果跟着重算", 15, UiPalette.DIM))
+		var grid := GridContainer.new()
+		grid.columns = 2     # 139：抽屉窄，一行一个科技
+		grid.add_theme_constant_override("h_separation", 12)
+		right.add_child(grid)
+		for t in flow.tech_defs:
+			var tid: StringName = t.id
+			grid.add_child(_label(Names.of(t), 13, UiPalette.FG))
+			var spin := SpinBox.new()
+			spin.min_value = 0
+			spin.max_value = t.max_level()
+			spin.step = 1
+			spin.rounded = true
+			spin.set_value_no_signal(TechService.level(m, tid))
+			spin.value_changed.connect(func(v: float): set_tech_level(tid, int(v)))
+			_tech_spins[tid] = spin
+			grid.add_child(spin)
+	right.add_child(_label("最近几局", 15, UiPalette.DIM))
+	var log := _log_box(13)
+	for h in m.history:
+		var extracted := String(h.get("outcome", "")) == "extracted"
+		log.append_text("[color=#%s]%s[/color]　种子 %d　走了 %d 步　打赢 %d　%s\n" % [
+			(UiPalette.HEAL if extracted else UiPalette.HP).to_html(false), "撤离" if extracted else "战败",
+			int(h.get("seed", 0)), int(h.get("steps", 0)), int(h.get("battles_won", 0)),
+			"%d 件、值 %d 币、带出 %d 币" % [(h.get("items", []) as Array).size(), int(h.get("value", 0)), int(h.get("balance", 0))] if extracted else ""])
+	if m.history.is_empty():
+		log.append_text("[color=#8b93a1]还没有打过[/color]")
+	log.fit_content = true     # 抽屉自己滚，日志按内容撑高
+	right.add_child(log)
+
+
 ## 150 补 2：调试模式开关（存盘）
 func toggle_debug_mode() -> bool:
 	flow.settings.debug_mode = not flow.settings.debug_mode

@@ -58,6 +58,11 @@ const RESOLUTIONS: Array[Vector2i] = [
 ]
 
 
+## 186：调试模式此刻生效没有 —— 玩家包里永远关着（[DevGate]），存档里记的值不动
+func debug_on() -> bool:
+	return DevGate.on() and debug_mode
+
+
 func to_dict() -> Dictionary:
 	return {
 		"version": SAVE_VERSION,
