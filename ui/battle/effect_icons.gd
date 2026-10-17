@@ -14,7 +14,7 @@ const PRODUCT_STYLES := {&"scorched_blood": "scorch", &"fungal_blood": "poison",
 static var _cache: Dictionary = {}
 
 
-## 这一格的图（[param stacks] 是轴格的带符号层数，分正负两张；[param guard] > 0 时先找 `<id>_guard.png`）；没有返回 null。
+## 这一格的图（[param stacks] 是轴格的带符号层数，按增益 / 减益分两张；[param guard] > 0 时先找 `<id>_guard.png`）；没有返回 null。
 ## 被动条目永远没有图
 static func of(chip_id: String, stacks: int = 0, guard: int = 0) -> Texture2D:
 	var name := file_of(chip_id, stacks)
@@ -38,7 +38,11 @@ static func file_of(chip_id: String, stacks: int = 0) -> String:
 	if chip_id.begins_with(CombatantPanel.PASSIVE_PREFIX) or chip_id == "":
 		return ""
 	if chip_id.begins_with(CombatantPanel.AXIS_PREFIX):
-		return "axis_%s_%s" % [CombatantPanel.axis_of(chip_id), "neg" if stacks < 0 else "pos"]
+		# 作者 10-17：颜色和箭头只表示是不是增益 —— pos 图是增益的上箭头、neg 图是减益的下箭头。
+		# 受到伤害这条轴正层是易伤（减益），所以反过来取；轴的内部正负不动
+		var axis := CombatantPanel.axis_of(chip_id)
+		var good := stacks <= 0 if axis == StatAxes.DAMAGE_TAKEN else stacks >= 0
+		return "axis_%s_%s" % [axis, "pos" if good else "neg"]
 	if chip_id.begins_with("system:"):
 		return "system_" + chip_id.substr("system:".length())
 	return chip_id

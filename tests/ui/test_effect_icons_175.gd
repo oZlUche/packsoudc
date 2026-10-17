@@ -21,6 +21,8 @@ static func run_coverage(t: TestCase) -> void:
 	t.eq(EffectIcons.of("passive:0", 3), null, "被动条目永远首字")
 	t.eq(EffectIcons.file_of("axis:attack_speed", 2), "axis_attack_speed_pos", "正层取 pos")
 	t.eq(EffectIcons.file_of("axis:attack_speed", -2), "axis_attack_speed_neg", "负层取 neg")
+	t.eq(EffectIcons.file_of("axis:damage_taken", 2), "axis_damage_taken_neg", "易伤是减益：取 neg")
+	t.eq(EffectIcons.file_of("axis:damage_taken", -2), "axis_damage_taken_pos", "坚韧是增益：取 pos")
 	t.eq(EffectIcons.file_of("system:block", 5), "system_block", "系统格")
 	var tex := EffectIcons.of("scorch", 1)
 	t.eq(tex.get_size() if tex != null else Vector2.ZERO, Vector2(56, 56), "源图 56（按 28 显示）")
