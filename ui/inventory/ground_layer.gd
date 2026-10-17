@@ -1,8 +1,10 @@
 ## 地上（128，作者定）：不画地上框 —— 格子外的整块屏幕就是「地上」，拖出背包放哪就在哪。
 ##
 ## 画的是一个 [ItemStash]：每件按它的形状画在自己的落点上（[member ItemStash.spots]，归一化坐标，乘回本控件尺寸），
-## 和棋盘同一套画法、同一个格子尺寸，所以「放下去是什么样就是什么样」。允许重叠，后放的在上；没有框、没有标题、没有滚动条。
-## 落点**只是样子**：不占格、不碰撞、不参与任何规则（3.4）。
+## 和棋盘同一套画法、同一个格子尺寸，所以「放下去是什么样就是什么样」。没有框、没有标题、没有滚动条。
+## 落点**只是样子**：不占格、不参与任何规则（3.4）。
+## 180 §2.2（作者定）：**不重叠，相遇弹开** —— 两件相交就按半弹性碰撞分开（物件之间 e = 0.5；墙、地面、面板吸收大部分弹力 e = 0.15），
+## 很快贴住；分开后的终点写回落点。只在画面层（这一类）里解算，核心层照旧不碰撞
 ##
 ## 两种用法：
 ## [codeblock]
@@ -48,6 +50,24 @@ const LAND_SCALE_SINK := 1.05
 const LAND_BOUNCE_SEC := 0.18
 const LAND_PLACE_SEC := 0.2
 const COLOR_HIGHLIGHT := Color(0.42, 0.86, 0.52)
+## 180 §2.2：碰撞 —— 恢复系数（物件之间 / 墙、地面、面板），撞墙的反弹速度封顶（× LAND_VMAX × 屏高），
+## 每次反弹后速度再乘（物件之间 / 墙），两次反弹隔得比这短就贴住，速度低于这个（像素 / 秒）算静止
+const BUMP_E := 0.5
+const BUMP_E_WALL := 0.15
+const BUMP_WALL_VCAP := 0.5
+const BUMP_AFTER := 0.5
+const BUMP_AFTER_WALL := 0.3
+const BUMP_STICK_SEC := 0.05
+const BUMP_REST := 20.0
+## 每 1/60 秒速度乘的衰减；相交时以「重叠 ÷ BUMP_SEP_SEC」的相对速度分开（封顶 BUMP_SEP_VMAX），每小步再直接推开重叠的 BUMP_FIX 成
+const BUMP_DAMP := 0.85
+const BUMP_SEP_SEC := 0.1
+const BUMP_SEP_VMAX := 900.0
+const BUMP_FIX := 0.05
+## 一小步多久、最多解算多久（到时还相交的退回 [method ItemStash.next_free_spot]）、重叠不到这么多像素不算
+const BUMP_STEP := 1.0 / 120.0
+const BUMP_MAX_SEC := 1.0
+const BUMP_EPS := 0.5
 
 ## 导演持有的那一层（没有 = null：测试、沙盒）。各屏开拖拽时拿它登记
 static var _current: GroundLayer = null
@@ -72,6 +92,13 @@ var _landing: Dictionary = {}
 ## 162 补充二：落在哪块面板的上沿上（uid → 面板）；面板关了这几件再掉一次
 var _support: Dictionary = {}
 var _scan_queued: bool = false
+## 180 §2.2：正在弹开的（uid → {pos: 包围盒左上角像素, vel, m: 质量, size, floor: 地面 y, last: 上次反弹时刻, skip: 起手就压着的面板}）；
+## 空 = 都静着。解算中 [method item_rect] 按这里画，结束一次写回落点
+var _bodies: Dictionary = {}
+var _bump_t: float = 0.0
+var _bump_acc: float = 0.0
+## 挤满了放弃弹开时地上有哪些（uid → true）；还是这几件就不再弹
+var _bump_hold: Dictionary = {}
 
 
 static func current() -> GroundLayer:
@@ -122,12 +149,14 @@ func set_stash(s: ItemStash) -> void:
 	stash = s
 	# 134：换一片地 = 基线，不播
 	_landing.clear()
+	_bodies.clear()
 	_known = _uids()
 	if stash != null:
 		stash.landing_from.clear()
 		stash.changed.connect(_on_stash_changed)
 		_sync_norms()
 	set_process(false)
+	wake_bumps()
 	queue_redraw()
 
 
@@ -165,6 +194,9 @@ func _scan() -> void:
 	for uid in _support.keys():
 		if not now.has(uid):
 			_support.erase(uid)
+	for uid in _bodies.keys():
+		if not now.has(uid):
+			_bodies.erase(uid)
 	var k := 0
 	for inst in stash.items():
 		var uid := (inst as ItemInstance).uid
@@ -185,7 +217,8 @@ func _scan() -> void:
 			_landing[uid] = _fall(inst, start, inst.rotation, target, inst.rotation, stagger, from is bool)
 		k += 1
 	_known = now
-	set_process(not _landing.is_empty())
+	wake_bumps()     # 180：读档 / 程序摆的有重叠也弹开
+	_sync_process()
 	queue_redraw()
 
 
@@ -311,8 +344,9 @@ func _drop_supported(panel: Control) -> void:
 		if inst == null:
 			continue
 		_landing.erase(uid)
+		_bodies.erase(uid)
 		_begin_fall(inst, item_rect(uid).position, 0.0)
-	set_process(not _landing.is_empty())
+	_sync_process()
 	queue_redraw()
 
 
@@ -323,6 +357,11 @@ func support_of(uid: int) -> Control:
 
 func _process(delta: float) -> void:
 	advance_landing(delta)
+	advance_bumps(delta)
+
+
+func _sync_process() -> void:
+	set_process(not _landing.is_empty() or not _bodies.is_empty())
 
 
 ## 162 补充一 / 二：一件怎么落 —— {sink: 沉还是飘, vmax: 末速度（屏高 / 秒，沉 = INF）, bounce: 就地 / 飘的弹几像素, sway: 摆幅, scale: 起手放大}
@@ -338,15 +377,18 @@ static func land_profile(def: ItemDef) -> Dictionary:
 ## 推进落地动画 [param delta] 秒（测试直接调）
 func advance_landing(delta: float) -> void:
 	if _landing.is_empty():
-		set_process(false)
+		_sync_process()
 		return
+	var landed := false
 	for uid in _landing.keys():
 		var a: Dictionary = _landing[uid]
 		a["t"] = float(a["t"]) + delta
 		if float(a["t"]) >= float(a["sec"]):
 			_landing.erase(uid)
-	if _landing.is_empty():
-		set_process(false)
+			landed = true
+	if landed:
+		wake_bumps()     # 180：落稳了压着别人就弹开
+	_sync_process()
 	queue_redraw()
 
 
@@ -394,6 +436,9 @@ func landing_pose(uid: int) -> Dictionary:
 
 func _on_resized() -> void:
 	_sync_norms()
+	if not _bodies.is_empty():
+		_finish_bumps()     # 像素坐标跟着尺寸变了：先写回，再按新尺寸重新看
+	wake_bumps()
 	queue_redraw()
 
 
@@ -430,6 +475,8 @@ func item_rect(uid: int) -> Rect2:
 	var inst := stash.get_item(uid) if stash != null else null
 	if inst == null:
 		return Rect2()
+	if _bodies.has(uid):
+		return Rect2(_bodies[uid]["pos"], span_px(inst, inst.rotation))
 	return _fit(Rect2(stash.spot_of(uid) * size, span_px(inst, inst.rotation)))
 
 
@@ -596,7 +643,224 @@ func settle() -> void:
 		var r := item_rect((inst as ItemInstance).uid)
 		var moved := push_out(r)
 		if moved.position != r.position:
+			_bodies.erase((inst as ItemInstance).uid)
 			stash.set_spot((inst as ItemInstance).uid, to_spot(moved.position))
+	wake_bumps()
+#endregion
+
+
+#region 相遇弹开（180 §2.2）
+## 地上（不在落的）两两相交的（uid 对；测试看「任何时候都不重叠」）
+func overlapping_pairs() -> Array:
+	var out: Array = []
+	if stash == null:
+		return out
+	var rects := {}
+	for inst in stash.items():
+		var uid := (inst as ItemInstance).uid
+		if not _landing.has(uid):
+			rects[uid] = item_rect(uid)
+	var keys := rects.keys()
+	for i in keys.size():
+		for j in range(i + 1, keys.size()):
+			var o := _overlap(rects[keys[i]], rects[keys[j]])
+			if o.x > BUMP_EPS and o.y > BUMP_EPS:
+				out.append([keys[i], keys[j]])
+	return out
+
+
+## 两块各轴重叠多少（不相交 ≤ 0）
+static func _overlap(a: Rect2, b: Rect2) -> Vector2:
+	return Vector2(minf(a.end.x, b.end.x) - maxf(a.position.x, b.position.x), minf(a.end.y, b.end.y) - maxf(a.position.y, b.position.y))
+
+
+## 有相交的就开始弹开：地上不在落的每件都成一个物体（被撞到的邻居也会动）。地藏着、没尺寸时不动
+func wake_bumps() -> void:
+	if not _bodies.is_empty() or stash == null or size.x <= 0.0 or size.y <= 0.0:
+		return
+	if is_inside_tree() and not is_visible_in_tree():
+		return
+	if not _bump_hold.is_empty() and _bump_hold == _uids():
+		return
+	if overlapping_pairs().is_empty():
+		return
+	var ground_y := size.y * (1.0 - ItemStash.SPOT_MARGIN)
+	var walls := reserved_rects()
+	for inst in stash.items():
+		var it := inst as ItemInstance
+		if _landing.has(it.uid) or it.def == null:
+			continue
+		var r := item_rect(it.uid)
+		var skip: Array[int] = []
+		for i in walls.size():
+			if walls[i].intersects(r):
+				skip.append(i)     # 起手就压着的面板不当墙（那是 settle 的事），免得一推推出屏
+		_bodies[it.uid] = {"pos": r.position, "vel": Vector2.ZERO, "m": maxf(0.5, float(ItemWeight.of(it.def))),
+			"size": r.size, "floor": maxf(ground_y, r.end.y), "last": -INF, "skip": skip}
+	_bump_t = 0.0
+	_bump_acc = 0.0
+	_sync_process()
+
+
+## 是不是正在弹开
+func is_bumping() -> bool:
+	return not _bodies.is_empty()
+
+
+## 推进弹开 [param delta] 秒（按 [constant BUMP_STEP] 小步走；测试直接调）
+func advance_bumps(delta: float) -> void:
+	if _bodies.is_empty():
+		return
+	for uid in _bodies.keys():
+		if stash == null or not stash.has_item(uid) or _landing.has(uid):
+			_bodies.erase(uid)     # 被抓走、又在落
+	_bump_acc += delta
+	while _bump_acc >= BUMP_STEP and not _bodies.is_empty():
+		_bump_acc -= BUMP_STEP
+		_bump_t += BUMP_STEP
+		if _bump_step(BUMP_STEP) or _bump_t >= BUMP_MAX_SEC:
+			_finish_bumps()
+	_sync_process()
+	queue_redraw()
+
+
+## 一口气解算到底（测试、不在树里时）
+func settle_bumps() -> void:
+	while not _bodies.is_empty():
+		advance_bumps(BUMP_STEP)
+
+
+## 一小步：走、物件两两分开、撞墙。返回「都静了且不再相交」
+func _bump_step(h: float) -> bool:
+	var damp := pow(BUMP_DAMP, h * 60.0)
+	for b in _bodies.values():
+		b["pos"] = (b["pos"] as Vector2) + (b["vel"] as Vector2) * h
+	var keys := _bodies.keys()
+	var touching := false
+	for i in keys.size():
+		for j in range(i + 1, keys.size()):
+			if _bump_pair(_bodies[keys[i]], _bodies[keys[j]], int(keys[i]) < int(keys[j])):
+				touching = true
+	var walls := reserved_rects()
+	var cap := BUMP_WALL_VCAP * LAND_VMAX * _screen_h()
+	var still := not touching
+	for b in _bodies.values():
+		_bump_walls(b, walls, cap)
+		var v: Vector2 = (b["vel"] as Vector2) * damp
+		if v.length() < BUMP_REST:
+			v = Vector2.ZERO
+		b["vel"] = v
+		if v != Vector2.ZERO:
+			still = false
+	return still
+
+
+## 一对：相交就沿重叠较小的轴分开 —— 迎面来的先按 e = 0.5 反弹（按质量反比分），再把分开的相对速度补到「重叠 ÷ BUMP_SEP_SEC」，
+## 外加直接推开一点。返回是否相交
+func _bump_pair(a: Dictionary, b: Dictionary, a_first: bool) -> bool:
+	var ra := Rect2(a["pos"], a["size"])
+	var rb := Rect2(b["pos"], b["size"])
+	var o := _overlap(ra, rb)
+	if o.x <= BUMP_EPS or o.y <= BUMP_EPS:
+		return false
+	var d := rb.get_center() - ra.get_center()
+	var n := Vector2.ZERO
+	var depth := 0.0
+	if o.x <= o.y:
+		n = Vector2(signf(d.x) if absf(d.x) > 0.01 else (1.0 if a_first else -1.0), 0.0)
+		depth = o.x
+	else:
+		n = Vector2(0.0, signf(d.y) if absf(d.y) > 0.01 else (1.0 if a_first else -1.0))
+		depth = o.y
+	var ia := 1.0 / float(a["m"])
+	var ib := 1.0 / float(b["m"])
+	var va: Vector2 = a["vel"]
+	var vb: Vector2 = b["vel"]
+	var vn := (vb - va).dot(n)
+	if vn < 0.0:
+		var j := -(1.0 + BUMP_E) * vn / (ia + ib)
+		va = (va - n * j * ia) * BUMP_AFTER
+		vb = (vb + n * j * ib) * BUMP_AFTER
+		if _bump_t - float(a["last"]) < BUMP_STICK_SEC:
+			va = Vector2.ZERO
+		if _bump_t - float(b["last"]) < BUMP_STICK_SEC:
+			vb = Vector2.ZERO
+		a["last"] = _bump_t
+		b["last"] = _bump_t
+		vn = (vb - va).dot(n)
+	var want := minf(depth / BUMP_SEP_SEC, BUMP_SEP_VMAX)
+	if vn < want:
+		var k := (want - vn) / (ia + ib)
+		va -= n * k * ia
+		vb += n * k * ib
+	a["vel"] = va
+	b["vel"] = vb
+	var fix := depth * BUMP_FIX / (ia + ib)
+	a["pos"] = (a["pos"] as Vector2) - n * fix * ia
+	b["pos"] = (b["pos"] as Vector2) + n * fix * ib
+	return true
+
+
+## 撞墙：屏边、地面、登记的面板都是推不动的，但吸收大部分弹力（e = 0.15，反弹速度封顶 [param cap]），撞完速度再乘 0.3；
+## 两次撞墙隔得太近就贴住
+func _bump_walls(b: Dictionary, walls: Array[Rect2], cap: float) -> void:
+	var pos: Vector2 = b["pos"]
+	var sz: Vector2 = b["size"]
+	var v: Vector2 = b["vel"]
+	var hit := false
+	var hi := Vector2(maxf(0.0, size.x - sz.x), maxf(0.0, float(b["floor"]) - sz.y))
+	for axis in 2:
+		if pos[axis] < 0.0:
+			pos[axis] = 0.0
+			if v[axis] < 0.0:
+				v[axis] = minf(-v[axis] * BUMP_E_WALL, cap)
+				hit = true
+		elif pos[axis] > hi[axis]:
+			pos[axis] = hi[axis]
+			if v[axis] > 0.0:
+				v[axis] = -minf(v[axis] * BUMP_E_WALL, cap)
+				hit = true
+	var skip: Array[int] = b["skip"]
+	for i in walls.size():
+		if skip.has(i):
+			continue
+		var r := Rect2(pos, sz)
+		var o := _overlap(r, walls[i])
+		if o.x <= 0.0 or o.y <= 0.0:
+			continue
+		var d := r.get_center() - walls[i].get_center()
+		var axis := 0 if o.x <= o.y else 1
+		var s := signf(d[axis]) if absf(d[axis]) > 0.01 else -1.0
+		pos[axis] += s * o[axis]
+		if v[axis] * s < 0.0:
+			v[axis] = s * minf(absf(v[axis]) * BUMP_E_WALL, cap)
+			hit = true
+	if hit:
+		v *= BUMP_AFTER_WALL
+		if _bump_t - float(b["last"]) < BUMP_STICK_SEC:
+			v = Vector2.ZERO
+		b["last"] = _bump_t
+	b["pos"] = pos
+	b["vel"] = v
+
+
+## 收尾：动过的写回落点；到时还相交的（地上挤满了）退回网格扫出来的空处
+func _finish_bumps() -> void:
+	var bodies := _bodies
+	_bodies = {}
+	if stash == null:
+		return
+	for uid in bodies.keys():
+		if stash.has_item(uid):
+			var p := to_spot(bodies[uid]["pos"])
+			if not stash.spot_of(uid).is_equal_approx(p):
+				stash.set_spot(uid, p)
+	for pair in overlapping_pairs():
+		var inst := stash.get_item(pair[1])
+		if inst != null:
+			stash.set_spot(inst.uid, stash.next_free_spot(inst))
+	# 地上真挤满了（扫也扫不出空处）：这一批不再反复弹，等地上的东西变了再说
+	_bump_hold = _uids() if not overlapping_pairs().is_empty() else {}
 #endregion
 
 
