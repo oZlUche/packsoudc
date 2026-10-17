@@ -575,9 +575,9 @@ func _log_event(e: BattleEvent) -> void:
 func _log_line(at: int, text: String) -> void:
 	if _ticker == null:
 		return     # 157 补充一：正式游戏不播报（_log_event 照旧跑，收尾战报要它累加的数）
-	_ticker.append_text(
-		"[color=#5d6470]%5.2f[/color]  %s\n" % [StatMath.to_float(at), text]
-	)
+	_ticker.append_text(UiTheme.ink_bbcode(
+		"[color=#5d6470]%5.2f[/color]  %s\n" % [StatMath.to_float(at), text], UiTheme.tone_at(_ticker)
+	))
 	if _ticker.get_line_count() > 200:
 		_ticker.clear()
 
@@ -589,7 +589,11 @@ func _side_name(side: int) -> String:
 
 #region 界面
 func _build() -> void:
-	UiTheme.prepare_root(self, false)     # 091：底色跟设置走 —— 设置由宿主（导演 / 沙盒 / 回放浏览器）读过、apply 过，这里不再读盘
+	var bg := UiTheme.prepare_root(self, false)     # 091：底色跟设置走 —— 设置由宿主（导演 / 沙盒 / 回放浏览器）读过、apply 过，这里不再读盘
+	# 战斗背景（白天的沙地场子，铺满裁边）垫在最底层；直接写在它上面的字（顶上一行、战报、播报）按它的深浅取字色，
+	# 对阵面板、名牌自带深底，不跟着变
+	UiTheme.dress_backdrop(bg, UiTheme.ART_BATTLE_BG, "BattleBackdrop")
+	var on_bg := UiTheme.art_tone(UiTheme.ART_BATTLE_BG)
 
 	var root := VBoxContainer.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -598,6 +602,7 @@ func _build() -> void:
 
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
+	UiTheme.set_tone(header, on_bg)
 	root.add_child(header)
 	_clock = UiTheme.make_label("0.00 秒", 16, UiPalette.DIM)
 	header.add_child(_clock)
@@ -647,6 +652,7 @@ func _build() -> void:
 		_ticker.custom_minimum_size = Vector2(0, 90)
 		_ticker.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		_ticker.theme_type_variation = UiTheme.RICH_SMALL     # 121：13 号
+		UiTheme.set_tone(_ticker, on_bg)
 		root.add_child(_ticker)
 	else:
 		var spacer := Control.new()     # 157 补充一：播报那块空间让给棋盘，控制条压在底下
@@ -673,6 +679,7 @@ func _build() -> void:
 	_report = UiTheme.rich_block(0, UiTheme.RICH_SMALL_SIZE)
 	_report.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_report.visible = false
+	UiTheme.set_tone(_report, on_bg)
 	root.add_child(_report)
 	_tip = HoverTip.new()
 	add_child(_tip)

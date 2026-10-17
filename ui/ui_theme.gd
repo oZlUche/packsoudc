@@ -126,6 +126,8 @@ const ART_TAB_MARK := "home/tab_mark"
 ## 179：开局三页的整屏背景「选人场地」（铺满裁边）与三栏的凹槽板；没图：纯色底、平面板
 const ART_SETUP_BG := "setup/bg_hall"
 const ART_GROOVE := "setup/groove"
+## 战斗界面的整屏背景（白天的沙地场子，铺满裁边；深浅读图旁 json 的 `tone`）；没图：照旧纯色底
+const ART_BATTLE_BG := "battle/battle_bg"
 ## 179：凹槽板没图时的平面底（样稿第二版的色）
 const GROOVE_BG := Color("14161c")
 const GROOVE_EDGE := Color("5a4522")
@@ -487,11 +489,23 @@ static func text_theme(tone: StringName) -> Theme:
 ## 给一块底挂上它的字色（[method panel]、[OverlayFrame]、[HudWidget] 调）。深底不动别人挂的主题，只摘掉以前挂的字色。
 ## 169：同时把深浅记在这块底的 `tone` 元数据上 —— 里面的富文本往上找它（[method tone_at]），调用点不用自己传
 static func apply_tone(c: Control, variation: StringName) -> void:
-	var tone := tone_of(variation)
+	set_tone(c, tone_of(variation))
+
+
+## 按给定的深浅挂字色（不经面板变体：比如直接写在整屏背景图上的那几行字，深浅读 [method art_tone]）
+static func set_tone(c: Control, tone: StringName) -> void:
 	c.set_meta(&"tone", tone)
 	var t := text_theme(tone)
 	if t != null or _tone_themes.values().has(c.theme):
 		c.theme = t
+
+
+## 一张整屏背景图的深浅：有图读 json 的 `tone`（没写按深）；没图 = 纯色底，深
+static func art_tone(art_name: String) -> StringName:
+	if art(art_name) == null:
+		return TONE_DARK
+	var t := StringName(String(art_meta(art_name).get("tone", "")))
+	return t if t == TONE_LIGHT else TONE_DARK
 
 
 ## 169：这个控件压在深底还是浅底上 —— 自己或往上第一个带 `tone` 元数据的祖先说了算；一路都没有 = 深
