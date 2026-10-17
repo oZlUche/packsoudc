@@ -868,7 +868,9 @@ func depart() -> bool:
 		return false
 	var c := chapter()
 	var ch := character()
+	flow.map_reveal = reveal_payload()
 	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value())
+	flow.map_reveal = {}
 	if run == null:
 		_status.text = "这一章生成不出图：%s" % (c.map_source.last_error if c.map_source != null else "没有地图来源")
 		return false
@@ -879,6 +881,14 @@ func depart() -> bool:
 		stash.clear()
 	_pending.clear()
 	return true
+
+
+## 180 §4：交给地图屏的入局转场 —— 预览此刻的圆心（全局像素）、化开半径、圈距、环数；第三页没开着 / 没圈 = 空（不转场）
+func reveal_payload() -> Dictionary:
+	if _preview == null or not _preview.is_visible_in_tree() or _preview.levels <= 0 or _preview.ring_gap() <= 0.0:
+		return {}
+	return {"center": _preview.get_global_transform() * _preview.center(), "radius": _preview.radius_frac * _preview.half_extent(),
+		"ring_gap": _preview.ring_gap(), "levels": _preview.levels}
 
 
 ## 180：记下这一局挑的图、规模、难度（下次进开局屏默认它们）

@@ -142,3 +142,109 @@ static func frame_difficulty_and_memory(t: TestCase, root: Window) -> void:
 	again.show_page(2)
 	game.queue_free()
 	Support.cleanup("setup180c")
+
+
+static func frame_reveal_into_run(t: TestCase, root: Window) -> void:
+	t.begin("180 §4 · 入局转场：第一帧的圈和预览上的圈重合（缩放 = 圈距 ÷ 环距、画布中心在预览圆心）；纸化开、节点一环一环长出来、读数最后出来；点一下直接到头；换屏淡入关着就不转场")
+	var was := GameDirector.fades_allowed
+	GameDirector.fades_allowed = true
+	var game = _game(root, "setup180d")
+	var flow: GameFlow = game.flow
+	flow.settings.ui_fades = true
+	var setup = game.base()
+	setup.show_page(2)
+	var pv: MapPreview = setup.preview()
+	pv.size = Vector2(640, 600)     # 第一帧里容器还没排版
+	pv.finish()
+	var want: Dictionary = setup.reveal_payload()
+	t.check(not want.is_empty(), "第三页开着：有转场的几何")
+	if want.is_empty():
+		GameDirector.fades_allowed = was
+		game.queue_free()
+		return
+	t.check(is_equal_approx(float(want["ring_gap"]), pv.ring_gap()) and int(want["levels"]) == pv.levels, "圈距、环数取预览的")
+	t.check(setup.depart(), "出发")
+	t.eq(flow.map_reveal, {}, "交出去就清")
+	var map = game.base()
+	t.eq(map.screen, GameFlow.Screen.MAP, "→ 地图屏")
+	t.eq(map.modulate.a, 1.0, "不叠换屏淡入")
+	t.check(map.revealing(), "在转场")
+	var view: MapView = map._view
+	t.check(is_equal_approx(view.zoom, float(want["ring_gap"]) / RingLayoutBase.RING_STEP), "缩放 = 圈距 ÷ 环距（%.3f）" % view.zoom)
+	var c_local: Vector2 = view.get_global_transform().affine_inverse() * (want["center"] as Vector2)
+	t.check(view.to_screen(view.canvas_rect().get_center()).distance_to(c_local) < 0.5, "画布中心落在预览圆心")
+	t.check(absf(RingLayoutBase.RING_STEP * view.zoom - pv.ring_gap()) < 0.01, "第一环和预览第一圈一样大")
+	t.not_null(map.reveal_paper(), "盖着一张纸")
+	var mat := map.reveal_paper().material as ShaderMaterial
+	t.check(mat.get_shader_parameter(&"invert") == true and is_equal_approx(float(mat.get_shader_parameter(&"radius")), float(want["radius"])), "纸从预览的半径化开")
+	t.eq(view.node_front, 0.0, "节点还没长出来")
+	t.eq(view.deco_alpha, 0.0, "装饰还没浮现")
+	t.check(map._floating.all(func(c: Control) -> bool: return c.modulate.a == 0.0), "读数还藏着")
+	t.is_null(map._rules, "规则卡等转场完")
+	var to: Dictionary = map.reveal_target()
+	map.apply_reveal(0.6)
+	t.check(view.zoom > minf(float(want["ring_gap"]) / RingLayoutBase.RING_STEP, float(to["zoom"])) - 0.001 and view.zoom < maxf(float(want["ring_gap"]) / RingLayoutBase.RING_STEP, float(to["zoom"])) + 0.001, "半程：缩放在起止之间")
+	t.check(view.node_front > 0.0 and view.node_front < float(view.level_count() + 1), "节点一环一环长（%.2f）" % view.node_front)
+	var grow: Dictionary = view._grow_map()
+	var origin := view.reveal_origin_ring()
+	var rings: Dictionary = (view._layout as RingLayoutBase).levels_of(view.graph)
+	var near := -1.0
+	var far_ := 2.0
+	for id in grow:
+		var k := absi(int(rings[id]) - origin)
+		if k == 0:
+			near = maxf(near, float(grow[id]))
+		if k == view.level_count() - 1:
+			far_ = minf(far_, float(grow[id]))
+	t.check(near > far_, "离出生环近的先长（%.2f > %.2f）" % [near, far_])
+	map.apply_reveal(1.0)
+	t.check(float(mat.get_shader_parameter(&"radius")) > Vector2(root.size).length(), "纸已经化出屏外")
+	var ev := InputEventMouseButton.new()
+	ev.button_index = MOUSE_BUTTON_LEFT
+	ev.pressed = true
+	map._input(ev)
+	t.check(not map.revealing(), "点一下：直接到头")
+	t.is_null(map.reveal_paper(), "纸撤了")
+	t.check(is_equal_approx(view.zoom, float(to["zoom"])) and view.pan.distance_to(to["pan"]) < 0.5, "视角落到平时进图的那样")
+	t.eq(view.node_front, INF, "节点画全")
+	t.eq(view.deco_alpha, 1.0, "装饰画全")
+	t.check(map._floating.all(func(c: Control) -> bool: return c.modulate.a == 1.0), "读数出来了")
+	t.eq(map.rules_open(), flow.rules_card_pending() or map._rules != null, "转场完才轮到规则卡")
+	game.queue_free()
+	Support.cleanup("setup180d")
+
+	# 换屏淡入关着：直接进图
+	var g2 = _game(root, "setup180e")
+	g2.flow.settings.ui_fades = false
+	var s2 = g2.base()
+	s2.show_page(2)
+	s2.preview().finish()
+	s2.depart()
+	t.check(not g2.base().revealing(), "淡入关着：不转场")
+	t.eq(g2.base()._view.node_front, INF, "一步到位")
+	g2.queue_free()
+	Support.cleanup("setup180e")
+	GameDirector.fades_allowed = was
+
+
+static func run_map_deco(t: TestCase) -> void:
+	t.begin("180 §4 · 地图装饰层 `<底图>_deco.png`：美术没交 = null；交了地图屏铺在底图上")
+	t.is_null(MapSkin.deco(&"ruins") if not FileAccess.file_exists(MapSkin.root + "ruins_deco.png") else null, "遗迹的装饰层还没交")
+	t.is_null(MapSkin.deco(&""), "没底图就没装饰")
+	var keep := MapSkin.root
+	var dir := "user://test_map_deco_180/"
+	DirAccess.make_dir_recursive_absolute(dir)
+	var img := Image.create(8, 8, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0.5, 0.4, 0.3))
+	img.save_png(dir + "t180.png")
+	img.fill(Color(0, 0, 0, 0))
+	img.save_png(dir + "t180_deco.png")
+	MapSkin.root = dir
+	t.not_null(MapSkin.deco(&"t180"), "交了就读得到")
+	var v := MapView.new()
+	v.skin = &"t180"
+	t.not_null(v._deco_tex, "地图屏铺上")
+	v.free()
+	MapSkin.root = keep
+	for f in ["t180.png", "t180_deco.png"]:
+		DirAccess.remove_absolute(dir + f)

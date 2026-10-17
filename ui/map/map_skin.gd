@@ -19,6 +19,14 @@ static func texture(id: StringName) -> Texture2D:
 	return EventImage.load_texture(path)
 
 
+## 180 §4：这张底图的装饰层（石头、水、树木……）`<id>_deco.png` —— 透明底、和底图同尺寸、同一种铺法，叠在底图上、圈下面。
+## 美术还没交 = null（入局转场照常，只是没有浮现装饰那一段）
+static func deco(id: StringName) -> Texture2D:
+	if String(id) == "":
+		return null
+	return texture(StringName(String(id) + "_deco"))
+
+
 static func meta(id: StringName) -> Dictionary:
 	var path := root + String(id) + ".json"
 	if String(id) == "" or not FileAccess.file_exists(path):
