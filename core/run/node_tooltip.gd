@@ -8,7 +8,7 @@ class_name NodeTooltip
 extends RefCounted
 
 const DEFAULTS := {
-	"battle": "{c:danger}{enemy_name}{/c}（{enemy_strength} 档）\n生命 {enemy_hp}　约 {enemy_dps} DPS\n带着 {enemy_count} 件：{enemy_items}",
+	"battle": "{c:danger}{enemy_name}{/c}\n生命 {enemy_hp}\n带着 {enemy_count} 件：{enemy_items}",
 	"visited": "{c:dim}这里已经没东西了。{/c}",
 	"search": "这里有值得搜索的东西，但翻得越久越可能惊动附近的人。",
 	"event": "这里可能会发生什么。",

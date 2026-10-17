@@ -73,6 +73,13 @@ var _resources: Dictionary = {}
 var _stacks: Dictionary = {}
 ## 175 补充四：buff id -> 保底层数（凝毒 / 冻疮；status_stacked 的 guard 键）
 var guards: Dictionary = {}
+## 185（作者 2026-10-17 16:24）：限时状态的计时 —— id → {"end": 到期时刻（回放秒）, "total": 这一轮的总长}；图标上画计时环、悬浮窗写还剩几秒
+var timers: Dictionary = {}
+## 回放时刻（[method set_now]）
+var now: float = 0.0
+## 计时环：粗细；底下垫一圈半透明黑（浅沙地上也看得见）
+const TIMER_RING_W := 2.0
+const TIMER_RING_UNDER := Color(0, 0, 0, 0.45)
 ## buff id -> 第几个上身的（103：各组内按上身先后排）
 var _arrival: Dictionary = {}
 var _arrivals: int = 0
@@ -237,6 +244,8 @@ func reset(snapshot: Dictionary) -> void:
 	_resources.clear()
 	_stacks.clear()
 	guards.clear()
+	timers.clear()
+	now = 0.0
 	_arrival.clear()
 	_arrivals = 0
 	_dead = false
@@ -270,11 +279,49 @@ func _set_chip(id: String, stacks: int) -> void:
 		_stacks.erase(id)
 		_arrival.erase(id)
 		guards.erase(id)
+		timers.erase(id)
 	else:
 		if not _stacks.has(id):
 			_arrivals += 1
 			_arrival[id] = _arrivals
 		_stacks[id] = stacks
+
+
+## 185 补充一：一条 status_stacked（回放时刻 [param at]）带来的计时 —— 载荷的 `expires_at`（定点，-1 永续）与 `seconds_left`（按层计时）。
+## 老回放存档没有这两个键：当永续（不画环、不写时间）
+func note_stacked(id: String, payload: Dictionary, at: float) -> void:
+	var def: BuffDef = buff_defs.get(StringName(id), null)
+	if def == null:
+		return
+	var left := int(payload.get("seconds_left", 0))
+	var expires := int(payload.get("expires_at", -1))
+	if def.seconds_per_stack > 0 and def.is_stackable() and left > 0:
+		timers[id] = {"end": at + float(left), "total": -1.0}     # 按层计时：写还剩几秒，不画环（层数在掉就是它的计时）
+	elif expires >= 0 and def.duration_sec > 0.0:
+		timers[id] = {"end": StatMath.to_float(expires), "total": def.duration_sec}
+	elif payload.has("expires_at"):
+		timers.erase(id)
+
+
+## 还剩几秒；不限时的 -1
+func time_left(id: String) -> float:
+	if not timers.has(id):
+		return -1.0
+	return maxf(0.0, float(timers[id]["end"]) - now)
+
+
+## 计时环剩几成（满 = 刚上身；不限时与按层计时的 -1）
+func time_ratio(id: String) -> float:
+	if not timers.has(id):
+		return -1.0
+	var total := float(timers[id]["total"])
+	return clampf(time_left(id) / total, 0.0, 1.0) if total > 0.0 else -1.0
+
+
+func set_now(t: float) -> void:
+	now = t
+	if not timers.is_empty():
+		queue_redraw()
 
 
 ## 103：标准轴的内容层（带符号）。0 就收起这一格
@@ -346,7 +393,7 @@ func mark_dead() -> void:
 
 
 func note_fired(uid: int, now: float) -> void:
-	_last_fired = String(item_names.get(uid, "uid %d" % uid))
+	_last_fired = String(item_names.get(uid, "数据缺失"))
 	_fired_at = now
 	queue_redraw()
 
@@ -494,6 +541,7 @@ func _draw() -> void:
 				_draw_icon_chip(String(id), def, group, tex, drawn, k)
 			else:
 				_draw_text_chip(String(id), group, text, drawn, k)
+			_draw_timer_ring(String(id), drawn, EffectIcons.tint_of(String(id), def, group))
 			_chips.append([rect, String(id)])
 			x += w + 6
 
@@ -519,6 +567,18 @@ func _draw_icon_chip(id: String, def: BuffDef, group: int, tex: Texture2D, drawn
 	var at := Vector2(drawn.position.x, drawn.end.y - 1.0)
 	draw_string_outline(label_font, at, n, HORIZONTAL_ALIGNMENT_RIGHT, drawn.size.x, px, 3, UiPalette.BG)
 	draw_string(label_font, at, n, HORIZONTAL_ALIGNMENT_RIGHT, drawn.size.x, px, UiPalette.FG)
+
+
+## 185 补充一：限时状态图标外缘的计时环 —— 从十二点起顺时针，画剩下的那一段，颜色跟图标
+func _draw_timer_ring(id: String, drawn: Rect2, color: Color) -> void:
+	var r := time_ratio(id)
+	if r <= 0.0:
+		return
+	var radius := maxf(drawn.size.x, drawn.size.y) * 0.5 + 1.0
+	var c := drawn.get_center()
+	var steps := maxi(8, roundi(48 * r))
+	draw_arc(c, radius, -PI * 0.5, -PI * 0.5 + TAU * r, steps, TIMER_RING_UNDER, TIMER_RING_W + 2.0, true)
+	draw_arc(c, radius, -PI * 0.5, -PI * 0.5 + TAU * r, steps, color, TIMER_RING_W, true)
 
 
 ## 缺图的首字格（103 的四种配色：系统琥珀、减益红、增益蓝、常驻灰）

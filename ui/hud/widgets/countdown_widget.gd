@@ -32,7 +32,7 @@ func text_of() -> String:
 	var closing := cd.closing_extract_id()
 	if closing >= 0:
 		var node := run.map.get_node(closing)
-		text += "　　撤离点 %d %s" % [closing, "已关闭" if cd.extract_closed(node) else "剩 %d 步关闭" % (left - PaidExtracts.closes_at(node))]
+		text += "　　限时撤离点%s" % ["已关闭" if cd.extract_closed(node) else "剩 %d 步关闭" % (left - PaidExtracts.closes_at(node))]     # 186：不写点号
 	return text
 
 

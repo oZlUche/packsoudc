@@ -121,7 +121,7 @@ static func spec_of(content: Dictionary, enemies: EnemyDatabase, pool: EnemyPool
 	return BattleCompiler.compile_board(board_of(content, items), baseline_of(def, tier, content))
 
 
-## 一行给人看的摘要：名字、档位、生命、DPS、几件、都是什么
+## 一行给人看的摘要：名字、生命、几件、都是什么（2026-10-17：档位、流派键、DPS 是内部读数，不给玩家看）
 static func summary(content: Dictionary, enemies: EnemyDatabase, pool: EnemyPool, items: ItemDatabase) -> String:
 	var def := enemies.enemy(StringName(String(content.get("enemy", "")))) if enemies != null else null
 	if def == null:
@@ -134,9 +134,7 @@ static func summary(content: Dictionary, enemies: EnemyDatabase, pool: EnemyPool
 			carried += 1
 		var idef := items.get_def(StringName(String((raw as Dictionary).get("id", ""))))
 		names.append(idef.display_name if idef != null else String((raw as Dictionary).get("id", "?")))
-	var line := "%s（档位 %d，%s）　生命 %d　约 %.1f DPS　%d 件：%s" % [
-		def.display_name, int(content.get("strength", 0)), "／".join(def.schools),
-		spec.max_hp_int(), spec.rough_dps(), names.size(), "、".join(names)]
+	var line := "%s　生命 %d　%d 件：%s" % [def.display_name, spec.max_hp_int(), names.size(), "、".join(names)]
 	# 126：身上带的非战斗道具（必掉）
 	if carried > 0:
 		line += "　携带 %d 件" % carried

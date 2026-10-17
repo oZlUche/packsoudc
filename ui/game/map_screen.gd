@@ -103,25 +103,27 @@ func pick_spawn(id: int) -> bool:
 	_view.bold_route = _route_index_of_entry(id)
 	_after_move()
 	_rebuild_routes()
-	var route := _route_of_entry(id)
-	_say("从出生点 %d 出发（%s）。点相邻的点走一步；B 开背包" % [id, String(route.get("style", "?"))])
+	_say("出发了。点相邻的点走一步；B 开背包")
 	return true
 
 
 ## 走一步。087 起地上按点保留（走了东西留在那个点上、回来能拿），109（作者定）：不再弹「地上还有东西」的提示，直接走
 func step(to_id: int) -> bool:
 	_view.clear_hover()     # 反馈：进点后悬浮窗一直挂着 —— 走之前收起，鼠标再动才按新位置重算
-	return flow.step_to(to_id)
+	var ok := flow.step_to(to_id)
+	if not ok and _run != null and (_run.phase != RunState.Phase.ON_MAP or not _run.events.pending_battle.is_empty()):
+		say(UiText.t("notice.busy"))     # 186：等着开打 / 不在图上（旅程不发 refused）
+	return ok
 
 
 ## 在撤离点上按「撤离」：先确认 —— 付多少钱、地上有什么带不出去（3.4）。返回 false = 不在撤离点上
 func extract() -> bool:
 	var node := _run.current_node()
 	if node == null or _run.phase != RunState.Phase.ON_MAP or NodeEvents.effective_type(node) != &"extract":
-		_say("撤不了：不在撤离点上")
+		say(UiText.t("notice.not_extract"))
 		return false
 	if _countdown_closed(node):
-		_say("撤不了：这个撤离点已经关闭（倒计时过半）")
+		say(UiText.t("notice.extract_closed"))
 		return false
 	_open_confirm(node)
 	return true
@@ -132,7 +134,7 @@ func confirm_extract() -> bool:
 	cancel_extract()
 	var node := _run.current_node()
 	if not flow.extract():
-		_say("撤不了：付不起（%d 币）" % (_run.events.extract_fee(node) if node != null else 0))
+		say(UiText.t("notice.extract_fee") % (_run.events.extract_fee(node) if node != null else 0))
 		return false
 	return true
 
@@ -175,7 +177,7 @@ func _open_confirm(node: MapNode) -> void:
 			left_value += ItemValue.of(def)
 			if def.rarity >= 2:
 				rare += 1
-		col.add_child(_wrapped("地上还有 %d 件（值 %d 币%s）不会带出去 —— 地上不参战也不出关（3.4）。想带走先放进棋盘（B）" % [
+		col.add_child(_wrapped("地上还有 %d 件（值 %d 币%s）不会带出去 —— 地上不参战也不出关。想带走先放进棋盘（B）" % [
 			left, left_value, "，其中 %d 件稀有以上" % rare if rare > 0 else ""], 14, UiPalette.STAMINA, 480))
 	var buttons := _hbox(8)
 	var go := _button("确定撤离", func(): confirm_extract(), 14)
@@ -229,7 +231,7 @@ func reopen() -> bool:
 	_view.clear_hover()
 	var ok := flow.reopen_node()
 	if not ok:
-		_say("这个点上没有可以再打开的界面")
+		say(UiText.t("notice.nothing_to_reopen"))
 	return ok
 
 
@@ -393,7 +395,7 @@ func _adopt() -> void:
 	_run.travel.waited.connect(func(actions: int):
 		_note("　原地耗了 %d 步" % actions)
 		_after_move())
-	_run.travel.refused.connect(func(_i: MoveIntent, why: String): _say("走不了：" + why))
+	_run.travel.refused.connect(_on_refused)
 	var problems: Array[String] = []
 	_hud_host.debug = debug_mode()     # 150 补 2
 	_hud_host.setup(_run, self, HudLayout.load_for("map", problems))     # 150
@@ -405,7 +407,8 @@ func _adopt() -> void:
 	_run.encumbrance_changed.connect(func(lv: int):     # 129
 		_refresh_hud()
 		if _run.encumbrance != null:
-			_note("负重变成「%s」%s" % [_run.encumbrance.name_of(lv), "：" + _run.encumbrance.effect_text(lv) if lv > 0 else ""]))
+			_note("负重变成「%s」%s" % [_run.encumbrance.name_of(lv), "：" + _run.encumbrance.effect_text(lv) if lv > 0 else ""])
+			_hud_host.notice(UiText.t("notice.encumbrance") % _run.encumbrance.name_of(lv)))
 	var buff_mod := BuffModule.of(_run)     # 101：一局里拿到的 buff 在模块里
 	if buff_mod != null:
 		buff_mod.buffs_changed.connect(_refresh_hud)
@@ -440,10 +443,12 @@ func _adopt() -> void:
 		_run.hunters.sensed.connect(func(h: Hunter):
 			var def: HunterDef = _run.hunters.def_of(h)
 			var seen := _run.hunters.visible_hunters().has(h)
-			_note("[color=#d9534f]　附近有动静……%s[/color]" % ("（" + def.display_name + "）" if def != null and seen else "")))
+			_note("[color=#d9534f]　附近有动静……%s[/color]" % ("（" + def.display_name + "）" if def != null and seen else ""))
+			_hud_host.notice(UiText.t("notice.hunter_sensed"), true))
 		_run.hunters.changed.connect(_refresh_hunter_marks)
 		_run.hunters.player_expelled.connect(func(to: int):
 			_note("[color=#d9534f]　被赶回了点 %d[/color]" % to)
+			_hud_host.notice(UiText.t("notice.expelled"), true)
 			_view.current_id = to
 			_after_move())
 	# 侵蚀（075）：预警、推进、结算了、终局 —— 都写进日志，地图上垫色。直接接侵蚀场
@@ -451,9 +456,11 @@ func _adopt() -> void:
 	if field != null:
 		field.warned.connect(func(band: int, left: int):
 			_note("[color=#f0ad4e]　侵蚀预警：第 %d 档还有 %d 步就被侵蚀[/color]" % [band, left])
+			_hud_host.notice(UiText.t("notice.erosion_warned") % left, true)
 			_refresh_erosion_view())
 		field.advanced.connect(func(bands: int):
 			_note("[color=#d9534f]　侵蚀推进：最外 %d 档已被侵蚀[/color]" % (bands + 1))
+			_hud_host.notice(UiText.t("notice.erosion_advanced"), true)
 			_refresh_erosion_view()
 			_refresh_hud())
 		field.applied.connect(func(node: MapNode, detail: Dictionary):
@@ -467,7 +474,9 @@ func _adopt() -> void:
 			for line in detail.get("log", []):
 				bits.append(String(line))
 			_note("[color=#d9534f]　侵蚀区（点 %d，深 %d 层）：%s[/color]" % [node.id, int(detail.get("depth", 0)), "，".join(bits)]))
-		field.total_reached.connect(func(): _note("[color=#d9534f]　全图都被侵蚀了：快撤[/color]"))
+		field.total_reached.connect(func():
+			_note("[color=#d9534f]　全图都被侵蚀了：快撤[/color]")
+			_hud_host.notice(UiText.t("notice.erosion_total"), true))
 	_refresh_erosion_view()
 	if _run.hunters != null and _run.hunters.metric != null and _run.hunters.metric.mode == MapMetric.ABSOLUTE:
 		# 绝对距离：把布局坐标按环距归一后交给度量（core 不认识布局）
@@ -491,7 +500,8 @@ func _adopt() -> void:
 	ev.search_closed.connect(func(_n: MapNode, _haul: GridInventory, why: StringName): _note("　" + search_end_text(why)))
 	ev.rested.connect(func(_n: MapNode, got: int): _note("　休息：体力 +%d" % got))
 	ev.extract_reached.connect(func(_n: MapNode, fee: int):
-		_note("　到了撤离点%s：按「撤离」结束这一局" % ("（付费：%d 币，%s）" % [fee, "付得起" if _run.wallet.can_afford(fee) else "钱不够"] if fee > 0 else "")))
+		_note("　到了撤离点%s：按「撤离」结束这一局" % ("（付费：%d 币，%s）" % [fee, "付得起" if _run.wallet.can_afford(fee) else "钱不够"] if fee > 0 else ""))
+		_hud_host.notice(UiText.t("notice.at_extract_paid") % fee if fee > 0 else UiText.t("notice.at_extract")))
 	_run.phase_changed.connect(func(_p: int, why: StringName):
 		if why == &"time_out":
 			_note("[color=#d9534f]　倒计时归零：行动失败。保险箱里的照样带出[/color]")
@@ -499,14 +509,19 @@ func _adopt() -> void:
 		_refresh_hud()
 		_refresh_skills())     # 挑完出生点技能才能用：按钮跟着阶段亮
 	if countdown != null:
-		countdown.notice.connect(func(text: String): _note("[color=#d9534f]　" + text + "[/color]"))     # 092
+		countdown.notice.connect(func(text: String):
+			_note("[color=#d9534f]　" + text + "[/color]")     # 092
+			_hud_host.notice(text, true))     # 186：撤离点关了
 	var safe := SafeModule.of(_run)     # 101：保险箱是一局的模块，信号在它身上
 	if safe != null:
-		safe.closed.connect(func(n: int): _note("[color=#c8a2ff]　保险箱关上了：%d 件送回基地，不能再改[/color]" % n))
+		safe.closed.connect(func(n: int):
+			_note("[color=#c8a2ff]　保险箱关上了：%d 件送回基地，不能再改[/color]" % n)
+			_hud_host.notice(UiText.t("notice.safe_closed") % n))
 	var altar := AltarModule.of(_run)     # 101：神坛是一局的模块，信号在它身上
 	if altar != null:
 		altar.noted.connect(func(text: String):
 			_note("[color=#f0ad4e]　" + text + "[/color]")
+			_hud_host.notice(text)     # 186：神坛的话原样（信仰系统生成）
 			_refresh_hud())     # 093
 		altar.item_blessed.connect(func(_i: ItemInstance, _f: StringName): _refresh_hud())     # 095
 	_rebuild_routes()
@@ -537,6 +552,7 @@ func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
 	var cd := CountdownModule.of(_run)
 	if cd != null and cd.has_countdown() and cd.left() > 0 and cd.left() <= 5:
 		_note("[color=#d9534f]　倒计时只剩 %d 步！[/color]" % cd.left())
+		warn(UiText.t("notice.countdown") % cd.left())
 	_after_move()
 
 
@@ -610,7 +626,7 @@ func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
 		return
 	if _run.phase == RunState.Phase.PICK_SPAWN:
 		if not pick_spawn(id):
-			_say("先挑一个出生点（绿圈的「生」）")
+			say(UiText.t("notice.pick_spawn"))
 	elif id == _view.current_id:
 		# 090（作者定）：点当前节点 = 打开被收起的界面（同「回到这个点」）
 		reopen()
@@ -703,7 +719,7 @@ func enemy_preview(id: int) -> String:
 	if not EnemyKit.has_enemy(content):
 		return ""
 	var line := EnemyKit.summary(content, flow.enemies, _run.pool, flow.items)
-	if _run.drop_rule != null:
+	if _run.drop_rule != null and GameSettings.dev_build():     # 期望掉落是调数值的读数，只在开发版显示
 		var ctx := LootContext.new()
 		ctx.difficulty = _run.chapter.difficulty
 		line += "　预计掉 %.1f 件，珍宝 %.0f%%" % [
@@ -773,7 +789,7 @@ func _refresh_skills() -> void:
 func use_skill(id: StringName) -> bool:
 	var why := flow.use_skill(id)
 	if why != "":
-		_say(why)
+		say(why)
 		return false
 	var d := _run.skills.skill(id)
 	_note("　用了「%s」：%s" % [d.display_name if d != null else String(id), d.describe() if d != null else ""])
@@ -888,9 +904,10 @@ func _build_parts() -> void:
 	_shelf.visible = false
 	_shelf.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_shelf)
-	# 150：调试台抽屉（139）—— 箭头是一件部件，抽屉盖在右边；里面是「摆读数」
-	_drawer = DevDrawer.new()
-	_part(&"dev_drawer", _drawer.arrow)
+	# 150：调试台抽屉（139）—— 箭头是一件部件，抽屉盖在右边；里面是「摆读数」。186：只在开发包里造（[DevGate]）
+	if DevGate.on():
+		_drawer = DevDrawer.new()
+		_part(&"dev_drawer", _drawer.arrow)
 	# 作者 2026-10-12：提示行（章节、种子、在哪个点、操作说明，「布局已保存」这类回话）挪进调试台，不再是部件
 	_status = _wrapped("", 12, UiPalette.DIM, PART_WIDTH)
 	# 090（作者定）：三个互动按键放大到 300%
@@ -928,9 +945,11 @@ func hud_shelve(part: Control) -> void:
 		part.reparent(_shelf, false)
 
 
-## 150 补 2：调试模式（设置里的开关；没有设置 = 默认）
+## 150 补 2：调试模式（设置里的开关；没有设置 = 默认）。186：玩家包里永远关着
 func debug_mode() -> bool:
-	return flow.settings.debug_mode if flow != null and flow.settings != null else GameSettings.DEBUG_MODE_DEFAULT
+	if flow != null and flow.settings != null:
+		return flow.settings.debug_on()
+	return DevGate.on() and GameSettings.DEBUG_MODE_DEFAULT
 
 
 ## 照设置里的调试模式重摆读数层（变了才重摆）：关掉时日志那件不造，开回来日志里之前写的都还在
@@ -945,6 +964,8 @@ func apply_debug_mode() -> void:
 
 ## 150：调试台里的「摆读数」：开着时读数能拖（吸附网格）、右键切显隐、滚轮切大小；保存写回布局文件，重置回默认
 func _build_drawer() -> void:
+	if _drawer == null:
+		return     # 186：玩家包没有调试台（提示行、日志照样记，只是不进树）
 	add_child(_drawer)
 	# 166（作者定）：侧边悬浮 —— 顶缘在顶端栏下面（不盖右上角的箭头），开着时盖在地图上、不再挤地图（和基地屏一致）
 	_drawer.dock(HudHost.BAR_HEIGHT + 8.0, DRAWER_MARGIN)
@@ -1031,12 +1052,26 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _say(text: String) -> void:
-	_status.text = text     # 作者 2026-10-12：提示行在调试台里
+	_status.text = text     # 作者 2026-10-12：开发提示行在调试台里
 
 
-## 组件（腰带）往提示行写一句
+## 186：给玩家的一句 —— 顶端栏下面的提示行（[method HudHost.notice]），调试台的提示行也记一份。组件（腰带）也走它
 func say(text: String) -> void:
 	_say(text)
+	if _hud_host != null:
+		_hud_host.notice(text)
+
+
+## 186：要紧的一句（红、停得久）：倒计时、撤离点关闭、侵蚀、动静
+func warn(text: String) -> void:
+	_say(text)
+	if _hud_host != null:
+		_hud_host.notice(text, true)
+
+
+## 186：提示行（测试看）；布局里删了返回 null
+func notice_widget() -> HudWidget:
+	return _hud_host.widget(&"notice") if _hud_host != null else null
 
 
 func _note(text: String) -> void:
@@ -1244,3 +1279,9 @@ func replay_battle_coach() -> void:
 	flow.save_meta()
 	_say("下一场战斗会再放一次战斗教程")
 #endregion
+
+
+## 2026-10-17：拒绝的原因是内部说明（点号、规则），玩家只看一句（186：提示行，按 [param code] 选话）；原文只进开发提示行
+func _on_refused(_intent: MoveIntent, why: String, code: StringName) -> void:
+	_say("走不了：" + why)
+	_hud_host.notice(UiText.t("notice.not_adjacent" if code == MapTravel.NOT_ADJACENT else "notice.cannot_move"))

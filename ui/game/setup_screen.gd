@@ -216,7 +216,7 @@ func _build_character_page() -> Control:
 	_char_box = _vbox(8)
 	left.add_child(_char_box)
 	if flow.characters.is_empty():
-		left.add_child(_label("没有角色：先跑 tools/import_content.gd", 13, UiPalette.HP))
+		left.add_child(_label("没有角色（数据缺失）", 13, UiPalette.HP))
 	var mid_board := _groove(30, 24, 30, 28)
 	mid_board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -340,7 +340,7 @@ func _build_map_page() -> Control:
 	_map_list = _vbox(6)
 	left.add_child(_map_list)
 	if _chapters.is_empty():
-		left.add_child(_label("没有章节：先跑 tools/import_content.gd", 13, UiPalette.HP))
+		left.add_child(_label("没有章节（数据缺失）", 13, UiPalette.HP))
 
 	_preview = MapPreview.new()
 	_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL

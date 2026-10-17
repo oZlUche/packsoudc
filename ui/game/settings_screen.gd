@@ -10,6 +10,7 @@ var _trace_btn: Button = null
 var _debug_btn: Button = null
 ## 157：换屏淡入开关
 var _fades_btn: Button = null
+var _grid_btn: Button = null     # 187
 ## 157 补：光标材质的按钮（材质 id → 按钮）
 var _cursor_btns: Dictionary = {}
 ## 091：背景底色的按钮（主题 id → 按钮）
@@ -43,11 +44,6 @@ func open(_payload: Dictionary) -> void:
 	_auto_close_btn = _toggle("拿走最后一件后自动关闭", toggle_loot_auto_close)
 	col.add_child(_auto_close_btn)
 	col.add_child(HSeparator.new())
-	col.add_child(_label("地图", 15, UiPalette.DIM))
-	col.add_child(_wrapped("节点浮窗（鼠标停在点上显示敌人数据与背包 / 用过了 / 可能发生什么……）按章节开放，第二章才开。这里能强制打开先看效果。", 12, UiPalette.DIM, 500))
-	_tooltip_btn = _toggle("节点浮窗预览", toggle_node_tooltips_preview)
-	col.add_child(_tooltip_btn)
-	col.add_child(HSeparator.new())
 	col.add_child(_label("背景底色", 15, UiPalette.DIM))
 	var bg_row := _hbox(8)
 	for t in UiPalette.BG_THEMES:
@@ -75,17 +71,18 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(cursor_row)
 	col.add_child(HSeparator.new())
 	col.add_child(_label("老手", 15, UiPalette.DIM))
-	col.add_child(_wrapped("全部解锁：章节、难度、道具不看解锁，直接全开；代价是成就不计（091）。", 12, UiPalette.DIM, 500))
+	col.add_child(_wrapped("全部解锁：章节、难度、道具不看解锁，直接全开；代价是成就不计。", 12, UiPalette.DIM, 500))
 	_unlock_all_btn = _toggle("全部解锁", toggle_unlock_all)
 	col.add_child(_unlock_all_btn)
 	col.add_child(HSeparator.new())
-	col.add_child(_label("调试", 15, UiPalette.DIM))
-	col.add_child(_wrapped("调试模式：地图上摆出只给开发看的东西（事件日志）。关掉就藏起来，日志照样在记，再打开能看到之前的（150）。", 12, UiPalette.DIM, 500))
-	_debug_btn = _toggle("调试模式", toggle_debug_mode)
-	col.add_child(_debug_btn)
-	col.add_child(HSeparator.new())
-	if BattleArchive.default_on():     # 117：开发区只在非导出包里有 —— 日志是给作者看的，玩家看不到
+	if DevGate.on():     # 117：开发区只在非导出包里有 —— 日志是给作者看的，玩家看不到。186：调试模式、节点浮窗预览也挪进来
 		col.add_child(_label("开发", 15, UiPalette.DIM))
+		col.add_child(_wrapped("调试模式：地图上摆出只给开发看的东西（事件日志）。关掉就藏起来，日志照样在记。", 12, UiPalette.DIM, 500))
+		_debug_btn = _toggle("调试模式", toggle_debug_mode)
+		col.add_child(_debug_btn)
+		col.add_child(_wrapped("节点浮窗按章节开放（第二章才开），这里能强制打开先看效果。", 12, UiPalette.DIM, 500))
+		_tooltip_btn = _toggle("节点浮窗预览", toggle_node_tooltips_preview)
+		col.add_child(_tooltip_btn)
 		col.add_child(_wrapped("战斗日志：每场战斗的内部日志（逐条、带时间）与回放存档写进 user://battle_logs，只留最近 %d 场。回放在开发工具的「战斗回放」里翻。" % BattleArchive.KEEP, 12, UiPalette.DIM, 500))
 		var row := _hbox(8)
 		_trace_btn = _toggle("战斗日志", toggle_battle_trace)
@@ -129,6 +126,8 @@ func _build_display(col: VBoxContainer) -> void:
 		col.add_child(_label("分辨率：随屏幕", 13, UiPalette.DIM))
 	_res_note = _label("全屏按桌面分辨率", 12, UiPalette.DIM)
 	col.add_child(_res_note)
+	_grid_btn = _toggle("棋盘格线", toggle_show_grid)     # 187
+	col.add_child(_grid_btn)
 
 
 ## 172：窗口 / 全屏（当场套用、存盘）
@@ -223,6 +222,18 @@ func set_cursor_skin(skin: String) -> void:
 
 
 ## 157：换屏淡入开关（下一次换屏生效）
+## 187：棋盘格线开 / 关（玩家定了就不再跟默认走）；开着的棋盘当场重画
+func toggle_show_grid() -> void:
+	flow.settings.show_grid = 0 if grid_on() else 1
+	InventoryView.apply_grid_setting(flow.settings, get_tree() if is_inside_tree() else null)
+	flow.save_settings()
+	_refresh()
+
+
+func grid_on() -> bool:
+	return flow.settings.grid_on(ItemPainter.art_available())
+
+
 func toggle_ui_fades() -> void:
 	flow.settings.ui_fades = not flow.settings.ui_fades
 	flow.save_settings()
@@ -266,6 +277,9 @@ func _refresh() -> void:
 	if _debug_btn != null:
 		_debug_btn.set_pressed_no_signal(flow.settings.debug_mode)
 		_debug_btn.text = "调试模式：%s" % ("开" if flow.settings.debug_mode else "关")
+	if _grid_btn != null:
+		_grid_btn.set_pressed_no_signal(grid_on())
+		_grid_btn.text = "棋盘格线：%s" % ("开" if grid_on() else "关")
 	if _fades_btn != null:
 		_fades_btn.set_pressed_no_signal(flow.settings.ui_fades)
 		_fades_btn.text = "换屏淡入：%s" % ("开" if flow.settings.ui_fades else "关")

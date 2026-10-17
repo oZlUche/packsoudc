@@ -58,7 +58,8 @@ static func area(path: String, title: String, size: Vector2, big_size: int = 22,
 	var big := UiTheme.make_label(title, big_size, UiPalette.DIM.darkened(0.35))
 	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(big)
-	var missing := "（没有配图）" if path == "" else (broken_hint if broken_hint != "" else "（图像占位：%s）" % path)
+	# 2026-10-17：没配图就只画标题；路径坏了的提示只在开发版露出
+	var missing := "" if path == "" else (broken_hint if broken_hint != "" else ("（图像占位：%s）" % path if GameSettings.dev_build() else ""))
 	var hint := UiTheme.make_label(missing, small_size, UiPalette.DIM.darkened(0.45))
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(hint)

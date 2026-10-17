@@ -115,7 +115,7 @@ static func run_conditions(t: TestCase) -> void:
 	t.check(hi.check(ctx), "两处合计 2 件")
 	hi.count = 3
 	t.check(not hi.check(ctx), "合计 2 < 3")
-	t.eq(hi.describe(), "需要medkit ×3", "说明")
+	t.eq(hi.describe(), "需要医疗包 ×3", "说明写道具名")
 	var any := HasItem.new()
 	t.check(any.check(ctx), "item 空 = 任何道具")
 	t.eq(ctx.count_item(&"", 2), 2, "数得出两处一共 2 件")
@@ -155,7 +155,7 @@ static func run_travel_teleport(t: TestCase) -> void:
 	var events: Array = []
 	travel.on_node_event = func(node: MapNode): events.append(node.id)
 	var refused: Array = []
-	travel.refused.connect(func(_i: MoveIntent, why: String): refused.append(why))
+	travel.refused.connect(func(_i: MoveIntent, why: String, _code: StringName): refused.append(why))
 	travel.start_at(a)
 	t.check(not travel.apply(MoveIntent.step(a, far, 1)), "走一步到没有边的点：拒绝")
 	t.check(not travel.apply(MoveIntent.teleport(a, 99999, 1)), "传送到不存在的点：拒绝")

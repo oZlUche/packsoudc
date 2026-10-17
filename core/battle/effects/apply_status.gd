@@ -20,7 +20,7 @@ func apply(ctx: RuleContext) -> void:
 
 
 ## 给 [param who] 叠 [param n] 层 [param def]，返回实际加上的层数。加上了才发 status_stacked 与 130 的 status_applied
-## （施加方 = 本规则的主人）、跑 on_apply；叠满了只刷新时长的那一下什么都不发。[ConvertStatus] 也走这里
+## （施加方 = 本规则的主人）、跑 on_apply；叠满了只刷新时长的那一下只发一条 delta 0 的 status_stacked（185 补充一：回放的计时环）。[ConvertStatus] 也走这里
 ## 175 补充一 / 三：状态本身是印（中毒、流血、灼……）就先问 [method ReactionResolver.before_status] —— 引发了反应，只叠扣掉 N 层后的余量
 static func give(ctx: RuleContext, who: CombatantRuntime, def: BuffDef, n: int) -> int:
 	if def.element != &"":
@@ -28,12 +28,19 @@ static func give(ctx: RuleContext, who: CombatantRuntime, def: BuffDef, n: int) 
 		if n <= 0 or who.dead:
 			return 0
 	var added := who.apply_buff(def, n, ctx.battle.now)
+	var inst := who.find_buff(def.id)
 	if added <= 0:
+		# 185 补充一：叠满了只刷新时长 —— 回放的计时环要知道重新起算了：发一条 delta 0 的 status_stacked（不发 status_applied、不跑 on_apply）
+		if inst != null and not inst.is_permanent():
+			var refreshed := {"buff": String(def.id), "delta": 0, "stacks": inst.stacks, "reason": "refresh"}
+			refreshed.merge(inst.timer_payload())
+			ctx.battle.emit(BattleEvent.STATUS_STACKED, who.side, refreshed)
 		return 0
 	var stacks := who.stacks_of(def.id)
-	ctx.battle.emit(BattleEvent.STATUS_STACKED, who.side, {
-		"buff": String(def.id), "delta": added, "stacks": stacks,
-	})
+	var payload := {"buff": String(def.id), "delta": added, "stacks": stacks}
+	if inst != null:
+		payload.merge(inst.timer_payload())     # 185 补充一：回放的计时
+	ctx.battle.emit(BattleEvent.STATUS_STACKED, who.side, payload)
 	ctx.battle.emit(BattleEvent.STATUS_APPLIED, who.side, {
 		"buff": String(def.id), "delta": added, "stacks": stacks, "source_side": ctx.owner.side,
 	})

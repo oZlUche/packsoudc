@@ -24,7 +24,7 @@ static var enabled: bool = true
 
 ## 设置里「战斗日志」的默认值：非导出包（编辑器、本地跑）默认开，导出包默认关
 static func default_on() -> bool:
-	return not OS.has_feature("template")
+	return DevGate.on()     # 186：和调试台同一个开关
 
 
 ## 目录里全部场次的文件名主干（不带扩展名），按名字 = 时间升序

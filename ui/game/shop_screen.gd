@@ -29,7 +29,7 @@ func open(payload: Dictionary) -> void:
 
 	var left := _vbox(8)
 	row.add_child(left)
-	_frame_title("商店　点 %d" % (node.id if node != null else -1))     # 157：标题在石板框的标题条上，说明留在原处
+	_frame_title("商店")     # 157：标题在石板框的标题条上，说明留在原处
 	left.add_child(_label("把商品拖进背包 = 买　双击 = 买　把自己的东西拖进出售区 = 卖（半价）", 13, UiPalette.DIM))
 	_wallet_line = _label("", 13, UiPalette.DIM)
 	left.add_child(_wallet_line)

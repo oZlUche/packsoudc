@@ -61,18 +61,18 @@ static func run_runtime(t: TestCase) -> void:
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("152 · 内容：血怒每层带一层强攻、一层加速；词条写着")
+	t.begin("152 · 内容：血怒带五层强攻、五层加速（185：+15% / +15%）；词条写着")
 	var rage: BuffDef = ContentLibrary.buffs().get(&"blood_rage", null)
 	t.check(rage != null and rage.mods.is_empty(), "血怒不再写 mods")
 	if rage != null:
-		t.eq(rage.axis_stacks_per(StatAxes.DAMAGE_DEALT), 1, "每层一层强攻")
-		t.eq(rage.axis_stacks_per(StatAxes.ATTACK_SPEED), 1, "每层一层加速")
-		var text := Glossary.describe_buff(rage)
-		t.check(text.contains("【强攻】1 层（造成的伤害 +3%）") and text.contains("【加速】1 层（攻速 +3%）"), "词条：%s" % text)
+		t.eq(rage.axis_stacks_per(StatAxes.DAMAGE_DEALT), 5, "五层强攻")
+		t.eq(rage.axis_stacks_per(StatAxes.ATTACK_SPEED), 5, "五层加速")
+		var text := Glossary.strip_bbcode(Glossary.describe_buff(rage))
+		t.check(text.contains("造成的伤害 +15%") and text.contains("攻速 +15%") and text.contains("持续 10 秒"), "词条：%s" % text)
 	var mark := BuffDef.new()
 	mark.id = &"t_mark"
 	mark.axes.append(BuffAxis.make(StatAxes.BLOCK, -3))
-	t.check(Glossary.describe_buff(mark).contains("【破绽】3 层（格挡 −3）"), "负层用反名、折成多少写清：%s" % Glossary.describe_buff(mark))
+	t.check(Glossary.strip_bbcode(Glossary.describe_buff(mark)).contains("格挡 −3"), "负层折成多少写清：%s" % Glossary.describe_buff(mark))
 
 
 static func run_import(t: TestCase) -> void:
@@ -142,7 +142,7 @@ static func frame_editor(t: TestCase, root: Window) -> void:
 	d.axes.append(BuffAxis.make(StatAxes.ATTACK_SPEED, 1))
 	ed._rebuild_form()
 	ed._refresh()
-	t.check(ed.summary_text().contains("【强攻】1 层") and ed.summary_text().contains("【加速】1 层"), "摘要：%s" % ed.summary_text())
+	t.check(ed.summary_text().contains("造成的伤害 +3%") and ed.summary_text().contains("攻速 +3%"), "摘要：%s" % ed.summary_text())
 	t.check(ed._json.text.contains("\"axes\"") and ed._json.text.contains("attack_speed"), "JSON 预览写着 axes")
 	t.check(ed._validate().ok(), "导入器放行")
 	var labels := _texts(ed._form_host)

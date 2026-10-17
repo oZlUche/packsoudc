@@ -15,6 +15,7 @@ const KINDS := {
 	&"belt": "res://ui/hud/widgets/belt_widget.gd",
 	&"hud_bar": "res://ui/hud/widgets/hud_bar.gd",
 	&"legend": "res://ui/hud/widgets/legend_widget.gd",
+	&"notice": "res://ui/hud/widgets/notice_widget.gd",     # 186：顶端栏下面的提示行
 	&"dev_drawer": PART,
 	&"bag_button": PART,
 	&"reopen_button": PART,
@@ -22,6 +23,8 @@ const KINDS := {
 	&"routes": PART,
 }
 const PART := "res://ui/hud/hud_part_widget.gd"
+## 186：只在开发包里造的（[DevGate]）—— 玩家包里宿主跳过，不是藏起来
+const DEV_ONLY: Array[StringName] = [&"dev_drawer"]
 ## 屏幕那几块的中文名（摆读数时没内容的露这个名字）
 const PART_TITLES := {
 	&"dev_drawer": "调试台", &"bag_button": "背包", &"reopen_button": "放大镜", &"skills": "技能", &"routes": "路线",

@@ -128,7 +128,7 @@ static func frame_panel(t: TestCase, root: Window) -> void:
 		panel.buff_defs = {&"marked": marked}
 		panel.set_stacks("marked", 1)
 		t.eq(panel.block_value(), 10, "再中标记（破绽 3）：10")
-	var text := BattleView.block_tip(panel)
+	var text := Glossary.strip_bbcode(BattleView.block_tip(panel))
 	t.check(text.contains("塔盾 5") and text.contains("生效") and text.contains("圆盾 4") and text.contains("备用"), "悬浮窗列各层：%s" % text)
 	t.check(text.contains("加固 ×8"), "悬浮窗列修正：%s" % text)
 	var empty := CombatantPanel.new()

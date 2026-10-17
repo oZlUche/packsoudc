@@ -9,7 +9,7 @@ const BG := Color("101216")
 ## 091（作者定）：背景底色可选，默认比原来浅一点。设置屏挑，存在 [GameSettings.bg_theme]
 const BG_THEMES := [
 	{"id": "graphite", "name": "石墨（默认）", "color": Color("262b33")},
-	{"id": "dark", "name": "深夜（原来的）", "color": Color("101216")},
+	{"id": "dark", "name": "深夜", "color": Color("101216")},
 	{"id": "slate", "name": "石板", "color": Color("1b2028")},
 	{"id": "dusk", "name": "暮色", "color": Color("2a2733")},
 	{"id": "moss", "name": "苔绿", "color": Color("1f2a24")},
@@ -132,9 +132,11 @@ static func damage_color(type: StringName, tone: StringName = &"dark") -> Color:
 const TEXT_COLORS_PATH := "res://data/authoring/ui/text_colors.json"
 const TEXT_COLORS_VERSION := 1
 ## 样式码之外模板里也要有的名字：术语链接、暴击飘字；170 定稿的悬浮窗三档字色（正文白、标签与脚注、说明）
-const EXTRA_STYLES := ["term", "crit", "tip_fg", "tip_meta", "tip_desc"]
+const EXTRA_STYLES := ["term", "crit", "tip_fg", "tip_meta", "tip_desc", "val"]
 ## 170 定稿（作者 2026-10-14）：悬浮窗正文白、标签与脚注比 dim 亮、斜体说明再暗一档 —— 只在深底悬浮窗上用
 const TIP_COLORS := {"tip_fg": Color("f2eee6"), "tip_meta": Color("d8d2c8"), "tip_desc": Color("c9c2b8")}
+## 185：悬浮窗里的数值（+15%、5 点、×5 的 5）—— 金色，和铜框同族
+const VAL := Color("f3c969")
 static var text_colors_path := TEXT_COLORS_PATH
 static var text_color_problems: Array[String] = []
 static var _text_colors: Dictionary = {}
@@ -231,6 +233,7 @@ static func default_text_colors() -> Dictionary:
 	var dark := STYLE_COLORS.duplicate()
 	dark["term"] = Glossary.TERM_COLOR
 	dark["crit"] = CRIT
+	dark["val"] = VAL
 	dark.merge(TIP_COLORS)
 	for name in dark:
 		styles[name] = {"dark": dark[name], "light": UiTheme.ink_color(dark[name])}

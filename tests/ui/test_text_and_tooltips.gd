@@ -62,7 +62,7 @@ static func run_node_tooltip(t: TestCase) -> void:
 		t.eq(NodeTooltip.category_of(b), "battle", "战斗点归 battle")
 		t.check(NodeTooltip.shows_board(b), "战斗点画对手的棋盘")
 		var text := NodeTooltip.text_for(s, c.chapter, b)
-		t.check(not text.contains("{") and text.contains("DPS"), "默认模板渲染出了敌人数据（%s）" % text)
+		t.check(not text.contains("{") and text.contains("生命") and not text.contains("DPS"), "默认模板渲染出了敌人数据（%s）" % text)
 	if by_type.has(&"search"):
 		t.check(NodeTooltip.text_for(s, c.chapter, by_type[&"search"]).begins_with("这里有值得搜索的东西"), "搜索点：值得搜索，但……")
 	if by_type.has(&"event"):

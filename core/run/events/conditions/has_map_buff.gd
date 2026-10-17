@@ -10,4 +10,4 @@ func check(ctx: EventContext) -> bool:
 
 
 func describe() -> String:
-	return "需要「%s」" % buff
+	return "需要「%s」" % content_name("run_buffs", buff)

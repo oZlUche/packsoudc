@@ -101,3 +101,14 @@
 2. **开发包里调试台还要不要** —— 推荐 **甲**：开发包原样保留（作者调试、摆读数都在用）。乙：也删，统一走设置里的开发块（改动大，收益小）。
 3. **日志要不要给玩家一个「行记」面板** —— 推荐 **甲**：不给，要紧的话走提示行就够（作者 16:07 的取向是少字）。乙：放大镜旁加「行记」按钮开一个只读滚动面板，写玩家用语的历次事件（另提一篇）。
 4. **`debug_mode` 默认值** —— 推荐 **甲**：不动（开发默认开），玩家包里由 `debug_on()` 压成 false。乙：默认改 false（`test_hud_150.gd:55` 要改）。
+
+## 落地（2026-10-17，架构方案执行）
+
+待定 1–4 都按推荐（甲）。和方案不同的两处：
+
+- **提示行的锚点**：方案写 `bar_center` 第 1 行，落地放在栏外 —— 锚 `top`、偏移 `HudLayout.NOTICE_OFFSET`（0, 8）。放进栏里会把顶端栏撑高、地图跟着往下让；提示行没字时也会留一条空。新加 `HudWidget.takes_space()`（提示行返回 false）：`top_inset()` 不算它，`HudHost.arrange()` 里整组都不占边的按整块宽对齐，所以它和倒计时同一条中线，不受右边那一条影响。
+- **字色、描边**：每行一个 `LabelSettings`（不贴主题覆写，121 棘轮不涨），底板用 `PanelBare` 变体；要紧的字色是 `UiPalette.HP` 按纸的深浅取（与 `danger` 同色系）。
+
+其余照方案：`DevGate`（`core/dev_gate.gd`）、`GameSettings.debug_on()`、`BattleArchive.default_on()` 改调它；`HudWidgets.DEV_ONLY`；地图 / 基地的调试台只在开发包里造；设置的「调试」节、「节点浮窗预览」挪进开发块；`MapTravel.refused(intent, why, code)`；地图屏的拒绝与要紧提示改走 `UiText` 的 `notice.*` 键（中 / 英）；撤离点关闭、倒计时读数改口；`HudLayout.VERSION` 7。
+
+测试：`tests/ui/test_dev_gate_186.gd`（开关、玩家包三屏、提示行的话 / 颜色 / 时长 / 挤掉最老的）；`test_hud_150` 版本号 7；`test_map_travel`、`test_event_constructs` 的 `refused` 回调多一个参数。截图 `/mnt/project-files/screenshots/186/notice_line.png`。

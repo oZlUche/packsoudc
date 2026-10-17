@@ -163,7 +163,7 @@ static func run_refusals(t: TestCase) -> void:
 	var start: int = g.entry_ids[0]
 	travel.start_at(start)
 	var whys := []
-	travel.refused.connect(func(_i: MoveIntent, why: String): whys.append(why))
+	travel.refused.connect(func(_i: MoveIntent, why: String, _code: StringName): whys.append(why))
 
 	var dist := MapNavigator.distance_map(g, start)
 	var far := -1

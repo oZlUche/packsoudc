@@ -34,7 +34,7 @@ const TERMS := {
 	"吃力": {"text": "负重超过上限：急速 −10%、耐力回复 −10%。"},
 	"超重": {"text": "负重超过上限的 1.25 倍：急速 −25%、耐力回复 −25%、耐力上限 −20%。"},
 	"寸步难行": {"text": "负重超过上限的 1.5 倍：超重的减益照旧，地图上每走一步（传送也算）计两步；原地等待不翻倍。"},
-	"地上": {"text": "棋盘之外的整块屏幕（128，原「暂存区」）：拖出棋盘放哪就落在哪。不参战、不吃邻接、不算套装、撤离不带走；留在这个点上，回来还在原处。", "tip": false},
+	"地上": {"text": "棋盘之外的整块屏幕：拖出棋盘放哪就落在哪。不参战、不吃邻接、不算套装、撤离不带走；留在这个点上，回来还在原处。", "tip": false},
 	# 以下都带玩家猜不到的规则（换算、结算顺序、叠层方式），照弹
 	"急速": {"text": "出手速度的倍率，越高冷却越短。"},
 	# 153（作者定）：防护改名格挡，只有盾牌给，几面盾只算最高的一面
@@ -46,7 +46,7 @@ const TERMS := {
 	"合成": {"text": "把一件道具拖到另一件上面，两件有配方就立刻合成一件新的；装不下就到地上。"},
 	"增益槽": {"text": "这件道具的一种格位：邻居占着它，邻居就得到写着的加成。"},
 	"受益槽": {"text": "这件道具的一种格位：每被邻居点亮一格，自己就得一份写着的加成。"},
-	"装载槽": {"text": "法杖的晶石座（171）：放上去的魔晶石把它带的供给交给法杖。一颗晶石只给一把法杖（压着两把的给后放的那把），占了同一把的几个装载槽也只算一份。"},
+	"装载槽": {"text": "法杖的晶石座：放上去的魔晶石把它带的供给交给法杖。一颗晶石只给一把法杖（压着两把的给后放的那把），占了同一把的几个装载槽也只算一份。"},
 	# 107（作者定）：这两条写的是**buff**（每层每秒掉血、无视格挡与护甲），不是武器的伤害类型 —— 同名的标签
 	# 「中毒」「流血」指类型，那边 tip 为 false。两边文字都保留
 	"中毒": {"text": "每层每秒造成毒伤，无视格挡与护甲，永续叠层。"},
@@ -201,67 +201,224 @@ static func mods_text(mods: Array) -> String:
 	return "、".join(out)
 
 
-## 一个 buff 的具体效果（侧窗的正文）：增益 / 减益、叠层、时长、每层的属性、自带的规则、上身 / 到期时的效果
-static func describe_buff(def: BuffDef) -> String:
+#region 185（作者 2026-10-17 定稿）：效果悬浮窗 —— 名字行 + 现在的合计
+## 玩家看到的只有两段：名字行（名字、×层数、增益 / 减益 / 系统）与效果（每条一行，写**这个状态现在的合计**）。
+## 叠层、计时、减半、元素印、不可解除这些机制说明是内部说明（作者 16:07：不该给玩家看），只进 [method buff_rule_lines] 给作者工具。
+## 限时状态写时间（作者 16:24）：战斗里写还剩几秒，别处写持续几秒。数值统一走 [method val] 上色（样式 `val`）
+
+const NAME_SIZE := 19
+const KIND_SIZE := 13
+const BODY_SIZE := 15
+## 名字描边（同 [constant UiTheme.OUTLINE_SIZE] / [constant UiTheme.OUTLINE_COLOR]；core 不引界面）
+const NAME_OUTLINE := "[outline_size=2][outline_color=#000000bf]%s[/outline_color][/outline_size]"
+## 系统状态（衰竭、鏖战）的名字色（同 [constant CombatantPanel.SYSTEM_COLOR]）
+const SYSTEM_NAME_COLOR := "#e0b45c"
+
+static var _num_re: RegEx = null
+
+
+## 一个数值上数值色
+static func val(text: String) -> String:
+	return "[color=%sval]%s[/color]" % [TextTemplate.STYLE_PREFIX, text]
+
+
+## 一段字里的数字（连同正负号与 %）都上数值色；方括号标签里面不动
+static func val_numbers(text: String) -> String:
+	if _num_re == null:
+		_num_re = RegEx.create_from_string("[+\\-−]?\\d+(?:\\.\\d+)?%?")
+	var out := ""
+	var at := 0
+	while at < text.length():
+		var open := text.find("[", at)
+		if open < 0:
+			out += _val_plain(text.substr(at))
+			break
+		out += _val_plain(text.substr(at, open - at))
+		var close := text.find("]", open)
+		if close < 0:
+			out += text.substr(open)
+			break
+		out += text.substr(open, close - open + 1)
+		at = close + 1
+	return out
+
+
+static func _val_plain(s: String) -> String:
+	var out := ""
+	var last := 0
+	for m in _num_re.search_all(s):
+		out += s.substr(last, m.get_start() - last) + val(m.get_string())
+		last = m.get_end()
+	return out + s.substr(last)
+
+
+## 增益 / 减益 / 系统
+static func buff_kind(def: BuffDef) -> String:
+	if def != null and def.system:
+		return "系统"
+	return "减益" if def != null and def.is_debuff else "增益"
+
+
+## 名字行（BBCode）：名字（状态色、描边）+ 可叠层的 ×层数 + 右边的增益 / 减益 / 系统小字。[param stacks] ≤ 0 = 不写层数（图鉴、子窗）
+static func buff_head(def: BuffDef, stacks: int = 0) -> String:
 	if def == null:
 		return ""
+	var name := Names.of(def) if Names.of(def) != "" else String(def.id)
+	var color := SYSTEM_NAME_COLOR if def.system else TextTemplate.STYLE_PREFIX + status_style(def)
+	return tip_head(name, color, "×" + str(stacks) if stacks > 0 and def.is_stackable() else "", buff_kind(def))
+
+
+## 名字行的通用版（轴格、鏖战、格挡、常驻格也用）：名字（[param color]、描边）+ 层数 / 读数（数值色）+ 右边的小字
+static func tip_head(name: String, color: String, count: String = "", kind: String = "") -> String:
+	var line := NAME_OUTLINE % ("[b][color=%s]%s[/color][/b]" % [color, name])
+	if count != "":
+		line += " [b][color=%stip_fg]%s[/color][/b]" % [TextTemplate.STYLE_PREFIX, val_numbers(count)]
+	var out := "[font_size=%d]%s[/font_size]" % [NAME_SIZE, line]
+	if kind != "":
+		out += "　　[font_size=%d][color=%stip_meta]%s[/color][/font_size]" % [KIND_SIZE, TextTemplate.STYLE_PREFIX, kind]
+	return out
+
+
+## 效果段（纯文字，一条一行）：每层的量 × [param stacks]（≤ 0 按 1 层）。顺序：恢复 / 规则伤害 → 轴 → 属性 → 按类型易伤 → 出手 / 付耐力 → 上身 / 到期
+static func buff_effect_lines(def: BuffDef, stacks: int = 1) -> Array[String]:
 	var lines: Array[String] = []
-	var kind := "减益" if def.is_debuff else "增益"
-	var stacks := "不可叠层" if not def.is_stackable() else "不限层"
-	var duration := def.duration_text()
-	# 103：默认永续、可叠层；不可叠层与会过期是例外，用例外色标出来，作者 / 玩家一眼看出「这个不是默认」
-	if not def.is_stackable():
-		stacks = _exception(stacks)
-	if not def.is_permanent() or def.seconds_per_stack > 0:
-		duration = _exception(duration)
-	lines.append("%s　%s　%s" % [kind, stacks, duration])
-	if not def.axes.is_empty():     # 152：每层带的标准轴
-		var parts: Array[String] = []
-		for a in def.axes:
-			if a != null:
-				var ba := a as BuffAxis
-				parts.append("【%s】%d 层（%s）" % [StatAxes.name_of(ba.axis, ba.stacks), absi(ba.stacks), StatAxes.effect_text(ba.axis, ba.stacks)])
-		lines.append("每层带%s" % "、".join(parts))
-	if not def.mods.is_empty():
-		lines.append("%s%s" % ["每层：" if def.is_stackable() else "", mods_text(def.mods)])
+	if def == null:
+		return lines
+	var n := maxi(1, stacks)
+	var dmg: Array[String] = []
 	for r in def.rules:
 		var rule := r as AbilityRule
-		if rule != null:
-			lines.append(rule_text(rule))
+		if rule == null:
+			continue
+		var line := _self_damage_text(rule, n)
+		dmg.append(line if line != "" else rule_text(rule))
+	var heal: Array[String] = []
+	if def.heal_cut > 0:
+		heal.append("恢复量减半" if def.heal_cut == 50 else "恢复量归零" if def.heal_cut >= 100 else "恢复量少 %d%%" % def.heal_cut)
+	if def.heal_echo != &"":
+		var per := def.heal_echo_per_point
+		heal.append(("每次恢复获得等量的%s" if is_equal_approx(per, 1.0) else "每次恢复按 " + TextTemplate.num(per) + " 倍获得%s") % status_name(def.heal_echo))
+	if not heal.is_empty():
+		heal.append_array(dmg)     # 作者原话：「恢复量归零，每秒受到 N 点火焰伤害」一句说完
+		lines.append("，".join(heal))
+	else:
+		lines.append_array(dmg)
+	for a in def.axes:
+		var ba := a as BuffAxis
+		if ba != null:
+			lines.append(StatAxes.effect_text(ba.axis, ba.stacks * n))
+	for m in def.mods:
+		var mod := m as StatModifier
+		if mod == null:
+			continue
+		var total := mod.duplicate() as StatModifier
+		total.amount = mod.amount * n
+		lines.append(mod_text(total))
+	for k in def.damage_taken_by_type.keys():
+		lines.append("受到的%s伤害 +%s%%" % [damage_type_name(StringName(String(k))), TextTemplate.num(float(def.damage_taken_by_type[k]) * n)])
+	var pct := TextTemplate.num(def.per_stack_percent * n)
+	match def.decay_halve_on:
+		BuffDef.HALVE_WEAPON_FIRED:
+			lines.append("下一次出手的冷却 +%s%%" % pct)
+		BuffDef.HALVE_STAMINA_PAID:
+			lines.append("下一次付耐力多付 %s%%" % pct)
 	if not def.on_apply.is_empty():
 		lines.append("上身时：" + effects_text(def.on_apply))
 	if not def.on_expire.is_empty():
 		lines.append("到期时：" + effects_text(def.on_expire))
-	# 175：元素印、衰减、截治疗、恢复叠层、按类型易伤
+	return lines
+
+
+## 按层对自己的定时伤害（中毒、流血、灼伤、燃血）：「每秒受到 5 点毒素伤害」；不是这种规则返回空
+static func _self_damage_text(rule: AbilityRule, n: int) -> String:
+	if not _scheduled(rule) or rule.effects.size() != 1:
+		return ""
+	var d := rule.effects[0] as DealDamage
+	if d == null or d.target != CombatEffect.Target.SELF or not d.per_stack or d.percent_of != &"":
+		return ""
+	var secs := (rule.cadence as CooldownCadence).seconds
+	var every := "每秒" if is_equal_approx(secs, 1.0) else "每 %s 秒" % TextTemplate.num(secs)
+	return "%s受到 %s 点%s伤害" % [every, TextTemplate.num(d.amount * n), damage_type_name(d.damage_type)]
+
+
+## 时间那一行：[param time_left] ≥ 0（战斗里，回放时刻）写「还剩 N 秒」；< 0 写定义里的时长；永续的没有
+static func buff_time_line(def: BuffDef, time_left: float = -1.0) -> String:
+	if def == null:
+		return ""
+	if time_left >= 0.0:
+		return "还剩 %d 秒" % ceili(time_left)
+	if def.seconds_per_stack > 0 and def.is_stackable():
+		return "每层 %d 秒" % def.seconds_per_stack
+	return "" if def.is_permanent() else "持续 %s 秒" % TextTemplate.num(def.duration_sec)
+
+
+## 效果段（BBCode）：效果行 + 时间行，数值上色；[param marked] 时同时标关键词（菌血句里的「中毒」）与伤害色
+static func buff_body(def: BuffDef, stacks: int = 1, time_left: float = -1.0) -> String:
+	var lines := buff_effect_lines(def, stacks)
+	var time := buff_time_line(def, time_left)
+	if time != "":
+		lines.append(time)
+	return mark_rich(val_numbers("\n".join(lines)), buff_terms(def))
+
+
+## 效果段里能开子窗的状态词条（`terms_in` 的格式）：恢复叠层叠的那个、规则里施加的那些；不含它自己
+static func buff_terms(def: BuffDef) -> Array:
+	if def == null:
+		return []
+	var refs := {}
+	buffs_in_rules(def.rules, refs)
+	if def.heal_echo != &"":
+		var echo := ReactionResolver.mark_buff(def.heal_echo)
+		if echo != null:
+			refs[echo.id] = echo
+	refs.erase(def.id)
+	var extra := {}
+	for id in refs:
+		var b: BuffDef = refs[id]
+		extra[Names.of(b)] = {"id": "buff:" + String(id), "text": describe_buff(b), "style": status_style(b)}
+	# 属性 / 轴名（护甲上限、格挡）用正文色不另染：只标状态词
+	return terms_in("\n".join(buff_effect_lines(def, 1)), extra).filter(func(f: Dictionary) -> bool: return String(f["id"]).begins_with("buff:"))
+
+
+## 悬浮窗的两块：`{"head", "body", "terms"}`（terms 是 `{id: {"name", "text"}}`，钉住后开子窗）
+static func buff_tip_parts(def: BuffDef, stacks: int = 0, time_left: float = -1.0) -> Dictionary:
+	var found := buff_terms(def)
+	var terms := {}
+	for f in found:
+		terms[String(f["id"])] = {"name": f["name"], "text": f["text"]}
+	return {"head": buff_head(def, stacks),
+		"body": "[font_size=%d][color=%stip_fg]%s[/color][/font_size]" % [BODY_SIZE, TextTemplate.STYLE_PREFIX, buff_body(def, stacks, time_left)],
+		"terms": terms}
+
+
+## 一个状态的整段说明（名字行 + 效果），给子窗与只写一段字的地方。不传层数按 1 层、名字行不写 ×N
+static func describe_buff(def: BuffDef, stacks: int = 0) -> String:
+	if def == null:
+		return ""
+	return buff_head(def, stacks) + "\n" + buff_body(def, stacks)
+
+
+## 机制说明（叠层、时长、计时、减半、元素印、不可解除）：**只给作者工具**（buff 制作器预览、check_content 的词条报告），玩家的窗不拼
+static func buff_rule_lines(def: BuffDef) -> Array[String]:
+	var lines: Array[String] = []
+	if def == null:
+		return lines
+	lines.append("%s　%s　%s" % [buff_kind(def), "不限层" if def.is_stackable() else "不可叠层", def.duration_text()])
 	if def.seconds_per_stack > 0:
-		lines.append(_exception("每层持续 %d 秒" % def.seconds_per_stack) + "：再叠上来就延长，时间到整个消失")
-	var pct := TextTemplate.num(def.per_stack_percent)
+		lines.append("每层持续 %d 秒" % def.seconds_per_stack)
 	match def.decay_halve_on:
 		BuffDef.HALVE_TICK:
-			lines.append(_exception("每次结算后层数减半"))
+			lines.append("每次生效后层数减半")
 		BuffDef.HALVE_WEAPON_FIRED:
-			lines.append("武器出手时，这一次的冷却每层 +%s%%；之后%s" % [pct, _exception("层数减半")])
+			lines.append("武器出手后层数减半")
 		BuffDef.HALVE_STAMINA_PAID:
-			lines.append("付耐力时，这一次的消耗每层 +%s%%；之后%s" % [pct, _exception("层数减半")])
-	for k in def.damage_taken_by_type.keys():
-		lines.append("受到的%s伤害每层 +%s%%" % [damage_type_name(StringName(String(k))), TextTemplate.num(float(def.damage_taken_by_type[k]))])
+			lines.append("付耐力后层数减半")
 	if def.element != &"":
-		lines.append("%s元素的印：带着它再挨上别的元素，引发反应" % ReactionResolver.element_name(def.element))
-	if def.heal_cut > 0:
-		lines.append("治疗无效" if def.heal_cut >= 100 else "每次恢复生命少 %d%%" % def.heal_cut)
-	if def.heal_echo != &"":
-		var per := def.heal_echo_per_point
-		var each := "" if is_equal_approx(per, 1.0) else "×%s" % TextTemplate.num(per)
-		lines.append("每次恢复生命，实际回了几点就叠几层%s%s" % [status_name(def.heal_echo), each])
-	return "\n".join(lines)
-
-
-## 例外色（103）：buff 的默认是永续、可叠层，不是默认的那几个字染成这个色
-const EXCEPTION_COLOR := Color("e0b45c")
-
-
-static func _exception(text: String) -> String:
-	return "[color=#%s]%s[/color]" % [EXCEPTION_COLOR.to_html(false), text]
+		lines.append("%s元素印" % ReactionResolver.element_name(def.element))
+	if def.system:
+		lines.append("系统效果，不可解除")
+	return lines
+#endregion
 
 
 ## 一条规则的一句（142：全部由字段生成）：「[你给对手施加流血时] 获得血勇」「[造成物理伤害前] 若对手有流血，伤害 +20%」。

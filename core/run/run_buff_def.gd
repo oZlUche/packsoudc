@@ -50,10 +50,9 @@ func summary() -> String:
 	for e in effects:
 		if e != null and (e as Effect).describe() != "":
 			parts.append((e as Effect).describe())
-	if not tags.is_empty():
-		parts.append("标记 " + ", ".join(tags))
 	if not mods.is_empty():
-		parts.append("战斗属性 %d 条" % mods.size())
-	if not rules.is_empty():
-		parts.append("战斗规则 %d 条" % rules.size())
+		parts.append(Glossary.mods_text(mods))
+	for r in rules:
+		if r != null and Glossary.rule_text(r) != "":
+			parts.append(Glossary.rule_text(r))
 	return "；".join(parts) if not parts.is_empty() else Names.description_of(self)

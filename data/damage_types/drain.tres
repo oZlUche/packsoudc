@@ -9,9 +9,9 @@ display_name = "流失"
 display_names = {
 "en": "Drain"
 }
-description = "以血为代价时扣的血：走完整管线但不触发受伤效果。"
+description = "以血为代价时扣的血：不会触发受伤时的效果。"
 descriptions = {
-"en": "Life paid as a cost: full pipeline, but no on-damage effects."
+"en": "Life paid as a cost: does not trigger on-damage effects."
 }
 armor_absorbable = false
 provokes = false

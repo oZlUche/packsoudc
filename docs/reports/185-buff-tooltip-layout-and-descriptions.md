@@ -213,3 +213,18 @@
 
 1. **按层计时要不要环** —— 推荐 **甲**：不画（层数在掉就是计时）。乙：画，比例 = seconds_left / 最大曾达到的秒数（要多记一个峰值）。
 2. **环的位置** —— 推荐 **甲**：图标外缘 2 px（不压数字）。乙：图标内缘（压到图的边，28 px 太小）。
+
+## 落地（2026-10-17，架构方案执行）
+
+按定稿与补充一实现，待定都按推荐。
+
+- **字色**：`TipWindow` 挂 `UiTheme.bright_text_theme()`，皮革窗嵌在浅石板里也是亮字。
+- **宽度**：只写文字的主窗排完版按内容收窄到 220～360（`HoverTip.MIN_WIDTH`，`_shrink_to_text`）；道具窗和下面挂了棋盘的窗不收。
+- **版式**：新的 `HoverTip.show_status(parts)` 画名字行 / 分隔线 / 效果；`Glossary.buff_tip_parts(def, stacks, time_left)` 给这三样（`head`、`body`、`terms`）。`tip_head` 是通用的名字行，轴格、鏖战、格挡、常驻格也用它。
+- **文案**：`buff_effect_lines` 写合计；`buff_time_line` 写时间（战斗里「还剩 N 秒」，别处「持续 N 秒」「每层 N 秒」）；`buff_rule_lines` 只进 buff 制作器的摘要。103 例外色删了。查询清单二、1～3 的措辞落在 `buff_rule_lines` 里：「每层持续 N 秒」去掉后半句、「X元素印」、「每次生效后层数减半」。
+- **关键词**：效果段只标状态词（菌血句里的「中毒」）；属性和轴名（护甲上限、格挡）不标。
+- **数值色**：样式 `val`，深版 `#f3c969`、浅版 `#6b4e00`，登记在 `UiPalette.EXTRA_STYLES` 和 `VAL`。`Glossary.val` / `val_numbers` 负责上色。
+- **计时（补充一）**：`status_stacked` 的载荷加了 `expires_at` 与 `seconds_left`（`BuffInstance.timer_payload`）。叠满了只刷新时长时，补发一条 delta 0 的 status_stacked（`reason: refresh`），不发 status_applied。`CombatantPanel.note_stacked / time_left / time_ratio / set_now` 读这两个键。图标外缘画计时环：颜色跟图标，底下垫半透明黑；按层计时的不画环。开着的状态窗在秒数变时用 `HoverTip.update_status` 换字。老回放没有这两个键，当永续处理。
+- **数据**：血怒改为强攻 5 层 + 加速 5 层，快照已刷新。
+- **测试**：新增 `tests/ui/test_buff_tip_185.gd`；087、103、152、153、157、175 和内容管线里跟着旧文案的断言都改了。
+- 截图：`/mnt/project-files/screenshots/185/buff_tips.png`。

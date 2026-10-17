@@ -23,7 +23,7 @@ func compile_into(input: CompileInput, board: GridInventory, _run: RunState) -> 
 
 
 func _summary() -> String:
-	return "开战时每件食物给 %.0f + %.0f × 稀有度 的护甲" % [base, per_rarity]
+	return "开战时每件食物给 %.0f 点护甲，越稀有越多（每档 +%.0f）" % [base, per_rarity]
 
 
 ## 103：作用于角色本身 → 进 buff 栏

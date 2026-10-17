@@ -133,12 +133,11 @@ static func describe(axis: StringName, stacks: int, system_stacks: int = 0) -> S
 		step *= 100.0
 		unit = "%"
 	var what := what_of(axis)
-	var lines: Array[String] = ["%s：每层 %s%s%s（正为%s、负为%s，相抵）" % [
-		what, "±", _num(step), unit, String(info(axis).get("pos", "")), String(info(axis).get("neg", ""))]]
+	var lines: Array[String] = ["%s：每层 %s%s%s" % [what, "±", _num(step), unit]]
 	var total := stacks + system_stacks
 	lines.append("现在 %+d 层 → %s%s%s" % [total, "+" if total >= 0 else "−", _num(absf(total * step)), unit])
 	if system_stacks != 0:
-		lines.append("其中 %+d 层来自系统规则，不可解除" % system_stacks)
+		lines.append("其中 %+d 层无法清除" % system_stacks)
 	return "\n".join(lines)
 
 
@@ -148,7 +147,7 @@ static func what_of(axis: StringName) -> String:
 		ATTACK_SPEED: "攻速", DAMAGE_DEALT: "造成的伤害", DAMAGE_TAKEN: "受到的最终伤害",
 		REGEN_HP: "每秒回血", REGEN_HP_PCT: "每秒按生命上限回血", REGEN_STAMINA: "每秒回耐力",
 		CRIT_CHANCE: "暴击率", CRIT_DAMAGE: "暴击伤害", FIRE_DAMAGE: "造成的火焰伤害",
-		BLOCK: "格挡（加在生效的那层之上）", MAX_HP: "生命上限", MAX_MANA: "法力上限",
+		BLOCK: "格挡", MAX_HP: "生命上限", MAX_MANA: "法力上限",
 		STAMINA_COST: "耐力消耗",
 	}.get(axis, String(axis)))
 
@@ -171,12 +170,11 @@ static func _describe_compound(axis: StringName, stacks: int, system_stacks: int
 	var i := info(axis)
 	var per := step_of(axis)
 	var what := what_of(axis)
-	var lines: Array[String] = ["%s：每层 ×%s%%（正为%s、负为%s，相抵）" % [
-		what, _num(per), String(i.get("pos", "")), String(i.get("neg", ""))]]
+	var lines: Array[String] = ["%s：每层 ×%s%%" % [what, _num(per)]]
 	var total := stacks + system_stacks
 	lines.append("现在 %+d 层 → ×%.1f%%" % [total, StatMath.to_float(factor(axis, total)) * 100.0])
 	if system_stacks != 0:
-		lines.append("其中 %+d 层来自系统规则，不可解除" % system_stacks)
+		lines.append("其中 %+d 层无法清除" % system_stacks)
 	return "\n".join(lines)
 
 

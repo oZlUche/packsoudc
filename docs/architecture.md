@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.26 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.29 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3448,6 +3448,7 @@ func player_spec() -> CombatantSpec …
 - **基地屏布局**（164，作者定；178 改）：三列 —— 左列竖排页签（178 起 仓库 / 出售 / 科技 / 图鉴 / 成就，再点一次回「家」）与左下角「再来一局 / 回主菜单」；中列当前页（默认「家」：这一局、战绩；178：带回来的背包与一键置入 / 整理在「仓库」页，从结算屏带着没清空的背包回来就落这页），各页垫粗布；右半边分页仓库（木架框；178：图鉴 / 成就页收起、中列吃满），格子 `WarehousePages.cell_for` 按宽高取小、夹在 40 ～ 80，10 × 8 整块可见。整屏一层拖拽；双击右边仓库一件按当前页：仓库（178 前是家）→ 置入带回来的背包、出售 → 卖、科技 → 上交。「家」套件（`assets/ui/home/`：`bg_home` 背景、`btn_wood*` 木牌按钮 `BUTTON_HOME / BUTTON_HOME_PRIMARY`、`panel_cloth` 粗布 `PANEL_HOME_BOX`、`shelf` 木架 `PANEL_SHELF`、`tab_mark`）。
   139：开发开关、局外解锁、科技等级、最近几局收在 `DevDrawer`（`ui/game/dev_drawer.gd`）里 —— 右上角的箭头「◂ / ▸」点一下开、再点一下关，默认收起，开着时盖在右半边上、宽 420、自己竖向滚，状态不进设置。
   **格子大小是每块视图自己的**：`InventoryView.cell_px`（默认 `CELL` = 60），基地右半边与带回来的背包按 164 算；`DragLayer` 对着某块视图的落点、残影、整块判定读那块的 `cell_px`，跟手的残影按起拖那块的；`ScrollBox` 跟着 `cell_px_changed` 改尺寸。地图背包、战前、开局、地上、冷却覆盖层仍是 60。图鉴一行几个按宽度算（`codex_columns_for`），不横向滚。
+  **棋盘格线（187）**：`InventoryView.grid_shown`（设置「显示」节「棋盘格线」，`GameSettings.show_grid` 三态：没动过就跟着道具图走 —— `ItemPainter.art_available()` 为真就不画）。关着时不画底、格底、线、外框，包体与道具照画；拖着东西时 `DragLayer` 给登记的棋盘 `drag_hint`，格按 50 % 临时出现。所有棋盘视图在 `InventoryView.GROUP`，设置一改整组重画。
 
 一局结束时（`GameFlow._settle_run`，进结算屏之前）就 `absorb`、存 meta、删这一局的存档；结算屏拿到的已经是记完账的局外。
 `MetaSave` 与 `RunSave` 同一套做法：`user://meta.json`，版本号 2（v1 是开发期的，作废），只写 id；仓库大小以存档里的为准（成长过的不该被规则缩回去）。
@@ -3549,7 +3550,7 @@ func player_spec() -> CombatantSpec …
   - 先按整块摆，占多宽就是 `right_inset()`，地图往左让这么多。
   - 其余的在剩下那块里对齐，所以顶上那排读数仍在地图正上方居中。
   - `top_inset()` 不算右边那一条。
-- 调试模式 `GameSettings.debug_mode`：默认开，发布版改 `DEBUG_MODE_DEFAULT` 一处。
+- 调试模式 `GameSettings.debug_mode`：默认开；读的地方一律走 `debug_on()` = `DevGate.on() and debug_mode`，玩家包（导出版）里恒为假（186）。
   - 开关在设置页和基地调试台里，地图调试台头部写着现在的状态。
   - 布局项多一个 `debug_only`；文件里没写，就按默认布局里这件的值（只有日志是）。
   - 关着时宿主不造这些组件，也不占地上；从暂停菜单的设置回来，地图屏照新值重摆（`apply_debug_mode`）。
@@ -3569,6 +3570,15 @@ func player_spec() -> CombatantSpec …
 - 图例只列这张图上有的节点类型（揭开了的随机点按揭开的算），顺序按 `MapNodeStyle.STYLES`，名字是 `MapNodeStyle.NAMES` 的短名，图标与地图上那枚一样。
 - 166 补充一：角色的主动技能对玩家藏着（`RunSkills.ACTIVE_HIDDEN`）—— 右槽的 `skills` 默认不显示（摆读数右键还能放出来验技能），战前屏不建「溜走」，开局屏与百科只列被动；记账与代码都留着，日后翻这一处。
 - 自动存档：`GameFlow.step_to` 人到了新点、事件还没给玩家看就存一次；看完叠层回到地图（`_flush` 最后）再存一次。暂停菜单只留「回主菜单」（照旧先存）。
+
+**186（作者定）：调试台只在开发包、玩家看的「提示行」**：
+- `DevGate.on()`（`core/dev_gate.gd`）= 不是导出版（测试可设 `force_player`）。`BattleArchive.default_on()`、`GameSettings.debug_on()` 都读它。
+  - 玩家包里不造：地图的调试台箭头与抽屉（`HudWidgets.DEV_ONLY`）、基地的调试台、设置的「调试」节与「节点浮窗预览」。
+  - 地图屏的 `_status` / `_log` 照样造、照样记（不进树），开发提示行写原因。
+- 提示行 `notice`（`ui/hud/widgets/notice_widget.gd`）：锚 `top`、偏移 `HudLayout.NOTICE_OFFSET`，在顶端栏下面、和倒计时同一条中线；布局版本 7。
+  - 没底板（`PanelBare`），字按地图纸的深浅取色、外加一圈纸色描边；来一句 3 秒 + 0.4 秒淡出，要紧的 5 秒、红字；最多两行，第三句挤掉最老的；同一句只重置时间。
+  - `HudWidget.takes_space()`：提示行为 false —— `top_inset()` 不算它，整组都不占边的按整块宽对齐（不让右边那一条）。
+  - 入口：`HudHost.notice(text, urgent)`；地图屏 `say(text)` / `warn(text)`。拒绝原因（`MapTravel.refused(intent, why, code)` 按 `code` 选话）、撤离被拒、倒计时只剩几步、撤离点关闭、侵蚀、动静、保险箱、到了撤离点、负重变级走它，句子都在 `UiText` 的 `notice.*` 键里，不写点号与内部原因。
 
 ### 8.8 叠层的石板框、换屏、光标（157）
 
@@ -4285,6 +4295,9 @@ res://
 | v3.24 | 2026-10-17 | **开局屏 180 定稿美术**：第二页皮框 / 木框 / 挂牌页签，第三页地图纸上的地图条目、规模、便条、按钮 A 套、预览圈虚线参数；难度组（「开启挑战」铜牌压两根相接的卷轴、梯形标题牌、计数器外框 + 翻页卡 + 中缝、−/＋ 四态图、264 宽羊皮纸）按演示页的尺寸与时长；各变体没图退回平面版（`UiTheme._art_button` / `_tex_box`） |
 | v3.25 | 2026-10-17 | **182 出生点在开局第三页挑定**：预览纸上画这张图的入口印记（真图按种子提前算好），必须点一个「出发」才亮；点入口微放大 ×1.35 并在屏幕正中弹 `NodeHintCard`；`flow.begin(spawn_id)` 直接站上去，`MapGraph.demote_entries()` 把别的入口降为搜索点、路线只留一条；入局转场从第三页此刻的视角起、终点对准出生点；地图屏的挑出生点路径只留给旧档 |
 | v3.26 | 2026-10-17 | **184 小兵棋子、可走墨路、跟镜头**：`MapView` 末尾屏幕空间一层 —— 玩家是立在节点正中的小兵棋子（60 px 定长，走一步弧线跳、传送淡出淡入）；可走的边是行进的 4 px 虚线墨路（沿真边形状 `MapLayout.edge_points`）+ 28 px 墨环 +「计二步」/「传送」纸签；人出了安全区中央三分之一镜头 0.3 s 平移回来（缩放不动）；拖出屏外屏边有小棋子、点它回去；删三角人标与可走细环；图例「你」= 棋子、「出生」= 小旗。182 定稿美术（小旗三态、纸签 + 红蜡封）接上；`UiTheme.art_cached` 给 `_draw` 里的小图 |
+| v3.29 | 2026-10-17 | **187 棋盘格线默认跟着道具图走**（作者 2026-10-17，待定 1–3 按推荐）：`GameSettings.show_grid` 三态（没动过 = 跟默认，道具图到了就不画；`grid_on(item_art)`）；`ItemPainter.art_available()` 现在恒 false；`InventoryView.grid_shown` / `grid_alpha()`，关着不画底、格底、线、外框，拖着东西时格按 50 % 出现（`DragLayer` 给 `drag_hint`）；设置屏「显示」节「棋盘格线」 |
+| v3.28 | 2026-10-17 | **186 调试台对玩家隐藏、提示行**（作者 2026-10-17，待定 1–4 按推荐；改 8.7）：`DevGate` 一个开关（非导出包），地图 / 基地调试台、设置调试节、`debug_mode` 的效果只在开发包；玩家出口 = 顶端栏下居中的提示行组件 `notice`（3 秒淡出、要紧 5 秒红字、最多两行，`takes_space()` 为 false 不占边）；拒绝与要紧提示改玩家用语（`UiText` 的 `notice.*`），`MapTravel.refused` 加 `code`；布局版本 7 |
+| v3.27 | 2026-10-17 | **185 效果悬浮窗重排**：皮革窗挂亮字主题（嵌在浅石板里不再继承墨字）；只写文字的主窗按内容收窄 220–360；状态窗 = 名字行（×层数、增益 / 减益 / 系统）+ 现在的合计（`Glossary.buff_tip_parts`），机制说明只给作者工具（`buff_rule_lines`），103 例外色退役；数值样式 `val`；限时状态写还剩几秒、图标外缘计时环（`status_stacked` 载荷带 `expires_at` / `seconds_left`，叠满刷新补发 delta 0）；血怒 +15% / +15% |
 | v3.21 | 2026-10-17 | **入局转场：从第三页预览拉近到局内地图（180 批三）**：`SetupScreen.reveal_payload()`（预览圆心全局像素、化开半径、圈距、环数）出发时写进 `GameFlow.map_reveal`，`begin` 把它作为地图屏 payload 的 `reveal` 交出去、用一次就清；`GameDirector` 见 `reveal` 不再叠换屏淡入。`MapScreen.begin_reveal` 起点缩放 = 圈距 ÷ `RING_STEP`、画布中心落在预览圆心（第一帧的圈和预览重合），1.4 s 时间线 `apply_reveal(t)`：纸（第三页背景画或底色 + `ink_reveal.gdshader` 的 `invert`）从预览半径化开到盖过全屏、镜头按倍数插值拉到平时进图的视角（终点每帧现算）、`MapView.node_front` 让节点按离出生环几环逐环放大长出（边、路口、危险圈按同一系数透明）、挑出生点的遮罩最后盖上、`deco_alpha` 浮现装饰层、读数层最后出来；任意点击 / 按键直接到头；结束才放规则卡与教程。换屏淡入关着、不是同心环的图、没经过第三页都不转场。`MapSkin.deco(id)` = `<id>_deco.png`，没交为 null |
 | v3.20 | 2026-10-17 | **地上道具不重叠、相遇弹开（180 批二）**：`GroundLayer` 里一套无重力的轴对齐包围盒解算（`wake_bumps / advance_bumps / settle_bumps`，`_process` 里和落地动画同一条管线，1/120 s 小步）：落稳、读档 / 程序摆放、面板推开之后有相交就把地上不在落的每件变成物体（质量 = `ItemWeight`，至少 0.5），沿重叠较小的轴分开 —— 迎面来的按 e = 0.5 反弹、之后速度 ×0.5，相交时补到「重叠 ÷ 0.1 s」的分开速度；屏边、地面、登记的面板是推不动的墙，吸收大部分弹力（e = 0.15、反弹封顶 `LAND_VMAX` 的一半、之后 ×0.3），两次反弹隔不到 0.05 s 就贴住；每 1/60 s 衰减 0.85，低于 20 px/s 算静止。解算中 `item_rect` 按物体位置画，结束一次写回落点；1 s 还相交的退回 `next_free_spot()`。节点地上、结算地上同一个类，一并生效 |
 | v3.19 | 2026-10-17 | **开局第二、三页重排（180 批一）**：第二页仓库标题只写页数、说明句删掉、棋盘下读数只留负重与带入预算两行（`carry_text` 改「带入预算　420 / 600」）；第三页左列 = 非教程章（`SetupScreen.map_chapters`）+ 选中图下展开规模（`scale_note`，`MapSource.scale_options` 多给 `rings`），中间 `MapPreview`（`ui/map/map_preview.gd` + `ink_reveal.gdshader`：底图按窗口铺、虚线圈数 = 按种子真生成的环数、半径按规模 0.55 / 0.75 / 0.95），右边摘要 + 当前难度（数字、加减、红字 `DifficultyDef.challenge` 逐级累列）；种子不给玩家（进第三页现取，`GameFlow.next_run_seed` 由地图屏调试台指定）；上次的图 / 规模 / 难度存局外旗标 `last_map / last_scale / last_difficulty`（整数）。`free_mode` 显示名「魔法废墟」、底图 `ruins`，`ascension_1` 名「进阶一」 |
