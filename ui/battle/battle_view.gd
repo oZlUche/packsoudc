@@ -52,6 +52,8 @@ var _suppress_popups: bool = false
 var _tip: HoverTip = null
 
 var _clock: Label
+## 计时 + 胜负那一行（作者 2026-10-17：游戏里的战斗屏不给玩家看，[method set_header_visible]；回放浏览器 / 沙盒照显示）
+var _header: HBoxContainer
 var _verdict: Label
 ## 逐条的文字播报：157 补充一起正式游戏不显示（[member show_ticker] 假 = 不建），回放浏览器（开发工具）开着
 var _ticker: RichTextLabel = null
@@ -192,7 +194,7 @@ func _system_of(side: int, axis: StringName) -> int:
 
 func _on_buff_unhovered() -> void:
 	if _tip != null:
-		_tip.hide_tip()
+		_tip.release()
 
 
 ## 103 第 7 条：把一方的棋盘交给回放（只读展示）。uid 和日志里的一致（就是编译它的那张，[member CombatantSpec.board]）。
@@ -601,6 +603,7 @@ func _build() -> void:
 	add_child(root)
 
 	var header := HBoxContainer.new()
+	_header = header
 	header.add_theme_constant_override("separation", 12)
 	UiTheme.set_tone(header, on_bg)
 	root.add_child(header)
@@ -698,3 +701,13 @@ func _sync_buttons() -> void:
 	if _speed_btn.icon_id != "speed_%d" % x:
 		_speed_btn.set_art("speed_%d" % x, SPEED_NUMERALS[x], "倍速 %s\n一倍、两倍、四倍循环切，下一场也照这个速度" % SPEED_NUMERALS[x])
 #endregion
+
+
+## 作者 2026-10-17：计时与「X 获胜」那一行藏不藏（游戏里的战斗屏藏，调试用的回放浏览器留着）
+func set_header_visible(v: bool) -> void:
+	if _header != null:
+		_header.visible = v
+
+
+func header_visible() -> bool:
+	return _header != null and _header.visible

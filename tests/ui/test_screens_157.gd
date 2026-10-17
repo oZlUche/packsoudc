@@ -168,7 +168,7 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	for tip in screen.find_children("*", "HoverTip", true, false):
 		t.check(int(abs_z.call(tip)) > int(abs_z.call(screen)), "叠层里的悬浮窗高于叠层本身")
 	t.check(int(abs_z.call(game.ground)) > int(abs_z.call(screen)), "地上画在叠层之上")
-	t.check(screen.overlay_frame().title().begins_with("战斗"), "标题在标题条上")
+	t.eq(screen.overlay_frame().title(), "", "作者 2026-10-17：回放屏标题条不写「战斗　X」")
 	var view: BattleView = screen._view
 	var result: BattleResult = flow.last_payload.get("result", null)
 	t.eq(view.find_children("*", "Nameplate", true, false).size(), 2, "回放面板顶上也是两块名牌")
@@ -210,7 +210,8 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	t.check(report.contains("我造成 %d、承受 %d" % [dealt[0], dealt[1]]) and report.contains("秒"), "战报：%s" % report)
 	t.check(screen.verdict_shown(), "胜负写上了")
 	view.seek(result.duration_sec() + 1.0)
-	t.eq(screen._title.text.count("——"), 1, "拖到头再「看完」一次，胜负不重复写")
+	t.check(screen.verdict_shown(), "拖到头再「看完」一次：照样算看完")
+	t.check(not view.header_visible(), "作者 2026-10-17：计时与胜负那一行不给玩家看")
 	# 拿真实的一下：正常播放时三种反馈会出
 	var cs: Array = counts.call()
 	view.play(result, ["我", "敌"])

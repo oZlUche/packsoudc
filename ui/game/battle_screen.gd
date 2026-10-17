@@ -4,8 +4,8 @@ extends GameScreen
 
 var _view: BattleView
 var _next: Button
-var _title: Label
-var _verdict: String = ""
+## 回放看完（或跳到底）了没有（作者 2026-10-17：标题不再写胜负，按状态判断）
+var _seen_end := false
 var _won: bool = false
 ## 166 补充二：战斗教程（章节的 `coach_battle`），开着时回放停着
 var _coach: CoachOverlay = null
@@ -19,15 +19,14 @@ func open(payload: Dictionary) -> void:
 	var result: BattleResult = payload.get("result", null)
 	_won = bool(payload.get("won", false))
 	var enemy_name := _enemy_name(payload.get("enemy_content", {}))
-	# 084（作者定）：不提前显示胜负，看完回放（或跳过）才写
-	_title = _frame_title("战斗　%s" % enemy_name)     # 157：标题在石板框的标题条上
-	_verdict = "赢了" if _won else ("平局，按输算" if result != null and result.is_draw() else "输了")
+	# 作者 2026-10-17：顶端的「战斗　X —— 赢了」和计时行都不给玩家看（胜负看地图日志与结算屏）；看完没看完记在 _seen_end
 
 	_view = BattleView.new()
 	_view.label_font = font
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_view.custom_minimum_size = Vector2(1160, 780)
 	col.add_child(_view)
+	_view.set_header_visible(false)
 	_view.finished.connect(_on_finished)
 	# 109（作者定）：倍速跨局继承 —— 开场按设置里的，切了就写回去
 	if flow.settings != null:
@@ -64,12 +63,12 @@ func proceed() -> void:
 func _on_finished() -> void:
 	if _next != null:
 		_next.text = "继续"
-	if _title != null and not verdict_shown():     # 157：拖时间轴拖到头会再「看完」一次
-		_title.text += "　—— " + _verdict
+	_seen_end = true     # 157：拖时间轴拖到头会再「看完」一次
 
 
+## 回放看完（或跳到底）了没有 —— 084：胜负（只给调试看的那一行）此后才写
 func verdict_shown() -> bool:
-	return _title != null and _title.text.contains(_verdict)
+	return _seen_end
 
 
 #region 166 补充二：战斗教程

@@ -2,7 +2,8 @@
 ##
 ## 170（作者定）：**十字军之王式的固定悬浮窗** —— 深底白字（[constant UiTheme.ART_TOOLTIP]），道具说明分块（头 / 分隔线 / 正文 / 虚线 / 脚注）。
 ## - 跟随：停在道具上出现、跟着鼠标；鼠标离开道具后给 [constant GRACE_SEC] 秒宽限，这期间进了悬浮窗就留下（不换、不收）；往窗外走就不等（[constant AWAY_PX]）。
-## - 钉住：鼠标在悬浮窗里停满 [constant PIN_SEC] 秒 —— 一道黄铜线从左上角沿外框**顺时针**走一圈，走完即钉；中途移出归零。钉住后右上角一颗钉子，窗不再动。
+## - 钉住：作者 2026-10-17 —— 悬浮窗出来后，鼠标还停在**叫出它的源**上（道具 / 关键词 / 地图点）或在窗里，满 [constant PIN_SEC] 秒就钉 ——
+##   一道黄铜线从左上角沿外框**顺时针**走一圈，走完即钉；源和窗都离开了归零。钉住后右上角一颗钉子，窗不再动；源换了也不换窗。
 ## - 关键词：钉住的窗里带下划线的词（`[url=term:<id>]`，[method Glossary.mark]）停 [constant TERM_SEC] 秒开**子窗**（同样可钉、可再开），深度封顶 [constant MAX_DEPTH]。
 ## - 收起：离开钉住的窗与它所有子窗 [constant AWAY_SEC] 秒、按 Esc、点窗外（开始拖拽也是先点下去）→ 整串收掉。
 ## 087 的词条侧窗取消：词条只以下划线关键词存在，`terms` 是 `{id: {"name", "text"}}`（[method ItemTooltip.describe_full]）供子窗查。
@@ -171,6 +172,8 @@ var _pending_view: ContainerView = null
 var _pending_local := Vector2.ZERO
 ## 离开钉住的那一串窗多久了
 var _away := 0.0
+## 鼠标还在叫出主窗的源上（作者 2026-10-17：停在源上也走钉住进度；钉住后在源上也不算离开）。源离开时调 [method release]
+var _on_source := false
 ## 宽限开始时鼠标离主窗多远（-1 = 还没记）
 var _leave_d := -1.0
 ## 最后一次摆放用的鼠标位置（全局）：排版完再量一次尺寸后照这个重摆
@@ -227,13 +230,18 @@ func watch(view: ContainerView) -> void:
 	_views.append(view)
 	view.gui_input.connect(func(event: InputEvent): _on_view_input(view, event))
 	view.mouse_exited.connect(func():
-		if _for_view == view and not _panel.pinned:
+		if _for_view != view:
+			return
+		_on_source = false
+		if not _panel.pinned:
 			_begin_leave(null, Vector2.ZERO))     # 170：出视图（多半是往悬浮窗里去）先给宽限
 
 
 ## 直接显示一段文字（地图上的点）；[param extra] 是文字下面再放的一个控件（对手的棋盘），可为 null；
 ## [param terms] 是关键词的词条（`{id: {"name", "text"}}`，或老的 `[{name, text}]`），钉住后停在关键词上开子窗
 func show_text(bbcode: String, at: Vector2, extra: Control = null, terms = {}) -> void:
+	if _panel.visible and _panel.pinned:
+		return     # 钉住的窗不被别的源换掉（离开它才收，[constant AWAY_SEC]）
 	_close_from(1)
 	_panel.reset_state()
 	_panel.set_text(bbcode)
@@ -257,6 +265,7 @@ func show_item(full: Dictionary, at: Vector2) -> void:
 
 
 func _open_main(at: Vector2) -> void:
+	_on_source = true
 	_panel.visible = true
 	_panel.reset_size()
 	_place(at)
@@ -323,6 +332,14 @@ func hide_tip() -> void:
 	_for_view = null
 	_pending_view = null
 	_away = 0.0
+	_on_source = false
+
+
+## 作者 2026-10-17：叫出悬浮窗的源（按钮、图鉴格、地图点、buff 图标）鼠标离开时调这个 —— 没钉住就收；钉住了留着，离开窗 [constant AWAY_SEC] 秒才收
+func release() -> void:
+	_on_source = false
+	if not _panel.pinned:
+		hide_tip()
 
 
 func is_showing() -> bool:
@@ -357,13 +374,16 @@ func tick(delta: float, mouse: Vector2) -> void:
 	if not _panel.visible:
 		return
 	if not _panel.pinned:
-		if _panel.global_rect().has_point(mouse):
+		var in_panel := _panel.global_rect().has_point(mouse)
+		if in_panel:
 			_panel.leave_t = -1.0
+		if in_panel or (_on_source and _panel.leave_t < 0.0):
 			_panel.dwell += delta
 			if _panel.dwell >= PIN_SEC:
 				pin(_panel)
-		else:
+		elif _panel.leave_t < 0.0:
 			_panel.dwell = 0.0
+		else:     # 宽限里（往窗里去的路上）：进度停着不归零
 			if _panel.leave_t >= 0.0:
 				var d := rect_distance(_panel.global_rect(), mouse)
 				if _leave_d < 0.0:
@@ -375,7 +395,7 @@ func tick(delta: float, mouse: Vector2) -> void:
 		_panel.queue_redraw()
 		return
 	var open := windows()
-	var inside := false
+	var inside := _on_source
 	for w in open:
 		if w.global_rect().has_point(mouse):
 			inside = true
@@ -389,20 +409,19 @@ func tick(delta: float, mouse: Vector2) -> void:
 	for i in open.size():
 		var w := open[i]
 		if w.depth > 0 and not w.pinned:
-			if w.global_rect().has_point(mouse):
+			var on_word := open[i - 1].hover_term == w.origin_term     # 还停在开它的那个词上（作者 2026-10-17：也走钉住进度）
+			if w.global_rect().has_point(mouse) or on_word:
 				w.leave_t = -1.0
 				w.dwell += delta
 				if w.dwell >= PIN_SEC:
 					pin(w)
+					return
 			else:
 				w.dwell = 0.0
-				if open[i - 1].hover_term == w.origin_term:
-					w.leave_t = -1.0     # 还停在开它的那个词上
-				else:
-					w.leave_t = maxf(w.leave_t, 0.0) + delta
-					if w.leave_t >= GRACE_SEC:
-						_close_from(i)
-						return
+				w.leave_t = maxf(w.leave_t, 0.0) + delta
+				if w.leave_t >= GRACE_SEC:
+					_close_from(i)
+					return
 			w.queue_redraw()
 		if w.pinned and w.hover_term != "":
 			w.hover_t += delta
@@ -494,9 +513,12 @@ func click_at(global_at: Vector2) -> void:
 
 func _on_view_input(view: ContainerView, event: InputEvent) -> void:
 	var mm := event as InputEventMouseMotion
-	if mm == null or _panel.pinned:
+	if mm == null:
 		return
 	var uid := _uid_under(view, mm.position)
+	if _panel.pinned:
+		_on_source = _panel.visible and view == _for_view and uid == _uid     # 钉住了：只记还在不在源上
+		return
 	var inst := _shown_item(view, uid)
 	if not _panel.visible:
 		if inst != null:
@@ -504,6 +526,7 @@ func _on_view_input(view: ContainerView, event: InputEvent) -> void:
 		return
 	if inst != null and view == _for_view and uid == _uid:
 		_panel.leave_t = -1.0
+		_on_source = true
 		_place(view.get_global_position() + mm.position)
 		return
 	_begin_leave(view, mm.position)     # 170：离开这件（换到别的、空格）先给宽限 —— 这期间进了悬浮窗就留下
@@ -529,6 +552,7 @@ func _show_for(view: ContainerView, uid: int, inst: ItemInstance, local: Vector2
 
 
 func _begin_leave(view: ContainerView, local: Vector2) -> void:
+	_on_source = false
 	_pending_view = view
 	_pending_local = local
 	if _panel.leave_t < 0.0:
