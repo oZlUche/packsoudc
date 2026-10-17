@@ -117,7 +117,7 @@ func open(payload: Dictionary) -> void:
 	place_chest()
 
 
-## 背景图写了落地线：把宝箱那一列上下挪，让箱底（[constant FOOT_SHARE]）落在图上那块光斑上（背景按 cover 铺，跟着窗口算）。
+## 背景图写了落地线：把宝箱那一列上下挪，让箱底（[constant FOOT_SHARE]）落在图上那块亮处（背景按 cover 铺，跟着窗口算）。
 ## 没写落地线就照旧整列居中。按最小尺寸算，不等容器排版
 func place_chest() -> void:
 	if _center == null or view == null or _title == null:

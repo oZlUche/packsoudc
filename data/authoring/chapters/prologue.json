@@ -27,6 +27,5 @@
     "打输了扣体力，体力归零这一局就结束。"
   ],
   "coach": "prologue_map",
-  "coach_battle": "prologue_battle",
-  "chest_skin": "ruins"
+  "coach_battle": "prologue_battle"
 }
