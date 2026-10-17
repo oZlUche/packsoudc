@@ -266,3 +266,5 @@ reveal = { center: Vector2(屏幕像素), radius: float(像素), ring_gap: float
 - 为什么推荐：〇级是默认的一局，把一个大黑牌写着「〇」和一张空纸常驻右栏是噪音；收成铜牌后右栏只剩角色名和一枚牌，和左列、中央的留白一致。备选 B：不收起，〇级显示「〇」+ 空纸（现状 + 第 1 条）——省一个动画，但右栏始终多一块空壳。
 
 **3. 到头的按钮要变灰。** 逻辑层已经在做：`_refresh_difficulty()` 里 `_minus_btn.disabled = difficulty_index <= 0`、`_plus_btn.disabled = difficulty_index >= avail.size() - 1`（`setup_screen.gd`），所以是**样式**问题：MINOR 档按钮的 `disabled` 样式盒与正常态几乎一样（`UiTheme` 里 `_button_box(UiPalette.BTN_DISABLED, …)` + `font_disabled_color = DIM` 在深底小按钮上看不出区别）。改法：给 ± 这两颗按钮一个专用变体（或给 MINOR 档的 disabled 态）—— 底色压到背景色、字 `DIM` 再乘 0.5 透明度、去掉悬停反馈；美术交深黄铜按钮图时带 `_disabled` 一张（§5 第 10 项补上）。顺手核对两件事：`step_difficulty()` 后确实走到 `_refresh_difficulty()`（不是只翻页不刷新按钮）；只有 normal 可选时两颗一开始就灰（待定 7 做了的话这时整块收着，只剩灰铜牌）。测试：到顶 / 到底时 `disabled` 为真，且截图里两颗按钮的平均亮度和可用态相差可辨。
+
+**补四定稿（作者 2026-10-17 11:43）：** 待定 7 取乙方案（收起）。收起态不是「难度 〇　点开加挑战」那块扁牌，而是一颗居中写**「开启挑战」**的按钮：上下加高（美术图 `diff_open_*`，304 × 104），按钮后面压两根卷好的卷轴，让它一眼看出能点。点开 = 拨到 Ⅰ 级展开；在 Ⅰ 级按「−」= 收回按钮态，所以「−」永远不变灰，只有「＋」到最高级时变灰（补四第 3 条据此收窄）。协调者已直接告知执行，这里只作记录。
