@@ -58,6 +58,11 @@ const LABEL_CAP_VALUE := &"LabelCapValue"
 const LABEL_SKILL_NAME := &"LabelSkillName"
 const LABEL_SKILL_TEXT := &"LabelSkillText"
 const LABEL_SCREEN_TITLE := &"LabelScreenTitle"
+## 180 补二：开局屏第三页的难度翻页计数器 —— 黑底白字的牌面、压深的黄铜外框（美术给了 `setup/flip_counter` 九宫格就用图）
+const PANEL_FLIP_COUNTER := &"PanelFlipCounter"
+const LABEL_FLIP_NUM := &"LabelFlipNum"
+const FLIP_NUM_SIZE := 72
+const FLIP_BRASS := Color("6e5226")
 const CAP_VALUE_SIZE := 28
 const SKILL_NAME_SIZE := 22
 const SKILL_TEXT_SIZE := 17
@@ -76,7 +81,7 @@ const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, 
 	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
 	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
 	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_GROOVE, PANEL_CAP_TILE, LABEL_CAP_VALUE,
-	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE]
+	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM]
 
 const TITLE_SIZE := 18
 ## 168：大标题字号
@@ -129,6 +134,8 @@ const ART_SETUP_BG := "setup/bg_hall"
 const ART_SETUP_KIT_BG := "setup/bg_kit"
 const ART_SETUP_MAP_BG := "setup/bg_map"
 const ART_GROOVE := "setup/groove"
+## 180 补二：难度翻页计数器的牌面（黑底、深黄铜框）
+const ART_FLIP_COUNTER := "setup/flip_counter"
 ## 战斗界面的整屏背景（白天的沙地场子，铺满裁边；深浅读图旁 json 的 `tone`）；没图：照旧纯色底
 const ART_BATTLE_BG := "battle/battle_bg"
 ## 179：凹槽板没图时的平面底（样稿第二版的色）
@@ -438,13 +445,13 @@ const TONE_LIGHT := &"light"
 const PANEL_TONES := {
 	PANEL_DARK: TONE_DARK, PANEL_LINE: TONE_DARK, PANEL_HUD: TONE_DARK, PANEL_OVERLAY: TONE_DARK, PANEL_TOOLTIP: TONE_DARK,
 	PANEL_NAMEPLATE: TONE_DARK, PANEL_HOME_BOX: TONE_LIGHT, PANEL_SHELF: TONE_DARK, PANEL_HUD_BAR: TONE_DARK,
-	PANEL_WINDOW: TONE_DARK, PANEL_GROOVE: TONE_DARK, PANEL_CAP_TILE: TONE_DARK,
+	PANEL_WINDOW: TONE_DARK, PANEL_GROOVE: TONE_DARK, PANEL_CAP_TILE: TONE_DARK, PANEL_FLIP_COUNTER: TONE_DARK,
 }
 ## 面板变体用哪张美术图（有图时深浅读它的 json）
 ## 157 补充三：叠层框与顶端栏是石板（深浅读板边的 json；顶端栏是自己那张长条板边），板里的分区都是凹槽
 const PANEL_ART := {PANEL_DARK: ART_INSET, PANEL_LINE: ART_INSET, PANEL_HUD: ART_INSET, PANEL_OVERLAY: ART_SLAB_EDGE, PANEL_TOOLTIP: ART_TOOLTIP,
 	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_BAR,
-	PANEL_WINDOW: ART_SLAB_EDGE, PANEL_GROOVE: ART_GROOVE}
+	PANEL_WINDOW: ART_SLAB_EDGE, PANEL_GROOVE: ART_GROOVE, PANEL_FLIP_COUNTER: ART_FLIP_COUNTER}
 ## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸。
 ## 169：读字色模板 `fg / dim / warn` 的浅版（[method text_colors_changed] 换），这几个常量是文件不在时的默认
 const INK_DEFAULT := Color("2e2219")
@@ -801,6 +808,18 @@ static func _fill(t: Theme, bg: Color) -> void:
 	var groove_box: StyleBox = _art_box(ART_GROOVE)
 	t.set_stylebox("panel", PANEL_GROOVE, groove_box if groove_box != null else _groove_box())
 	_setup_card(t)
+	# 180 补二：难度翻页计数器（没图是平色黑牌 + 压深的黄铜边）
+	t.set_type_variation(PANEL_FLIP_COUNTER, "PanelContainer")
+	var flip_art: StyleBox = _art_box(ART_FLIP_COUNTER)
+	var flip := _box(Color("0b0b0d"), FLIP_BRASS, 6)
+	flip.set_border_width_all(3)
+	flip.set_corner_radius_all(6)
+	flip.content_margin_left = 28
+	flip.content_margin_right = 28
+	t.set_stylebox("panel", PANEL_FLIP_COUNTER, flip_art if flip_art != null else flip)
+	t.set_type_variation(LABEL_FLIP_NUM, "Label")
+	t.set_font_size("font_size", LABEL_FLIP_NUM, FLIP_NUM_SIZE)
+	t.set_color("font_color", LABEL_FLIP_NUM, Color.WHITE)
 	_home_buttons(t)
 	# 150：读数组件（原来地图屏那条 HUD 的无边窄底，搬成变体）
 	t.set_type_variation(PANEL_HUD, "PanelContainer")

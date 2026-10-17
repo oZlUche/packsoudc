@@ -213,7 +213,8 @@ func _switch_screen(screen: int, payload: Dictionary) -> void:
 	_base = _make(screen)
 	add_child(_base)
 	_base.open(payload)
-	_fade_in(_base, BASE_FADE)
+	if not payload.has("reveal"):
+		_fade_in(_base, BASE_FADE)     # 180：入局转场自己从第三页接过来，不再叠一层淡入
 	if _base.has_signal("dev_tools_requested"):
 		_base.connect("dev_tools_requested", _to_launcher)
 

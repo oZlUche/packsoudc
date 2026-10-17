@@ -93,7 +93,7 @@ static func frame_map_page(t: TestCase, root: Window) -> void:
 	pv.finish()
 	t.check(pv.levels >= 9 and is_equal_approx(pv.radius_frac, MapPreview.RADIUS_BY_SCALE[&"large"]), "大型：圈多、几乎铺满（%d 环）" % pv.levels)
 	t.check(pv.ring_width() < MapPreview.RING_WIDTH_MAX, "大型圈细")
-	t.check(setup._summary.get_parsed_text().contains("地图　魔法废墟 · 大型"), "摘要：%s" % setup._summary.get_parsed_text())
+	t.eq(setup._summary.text, Names.of(setup.character()), "180 补二：右上只写角色名")
 	game.queue_free()
 	Support.cleanup("setup180b")
 
@@ -106,8 +106,11 @@ static func frame_difficulty_and_memory(t: TestCase, root: Window) -> void:
 	setup.show_page(2)
 	var ladder := flow.available_difficulties()
 	t.check(ladder.size() >= 2, "解锁后至少两档")
-	t.eq(setup._difficulty_num.text, "0", "首局默认 0")
+	t.eq(setup._difficulty_num.text, "〇", "首局默认 0 级，写「〇」（180 补二：罗马数字）")
 	t.eq(setup._difficulty_num.get_theme_font_size("font_size"), 72, "数字 72 号")
+	t.eq(setup._counter.theme_type_variation, UiTheme.PANEL_FLIP_COUNTER, "翻页计数器牌面")
+	t.eq(setup._difficulty_num.get_theme_color("font_color"), Color.WHITE, "白字")
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_FLIP_COUNTER), UiTheme.TONE_DARK, "黑底")
 	t.check(setup._minus_btn.disabled and not setup._plus_btn.disabled, "0 档：减灰、加亮")
 	t.eq(setup._challenge.text, "", "0 档红字留白")
 	setup.step_difficulty(-1)
@@ -115,6 +118,7 @@ static func frame_difficulty_and_memory(t: TestCase, root: Window) -> void:
 	for i in ladder.size() + 2:
 		setup.step_difficulty(1)
 	t.eq(setup.difficulty(), ladder[ladder.size() - 1], "加到最高的已解锁档就停")
+	t.eq(setup._difficulty_num.text, TextTemplate.roman(ladder[ladder.size() - 1].level), "罗马数字（%s）" % setup._difficulty_num.text)
 	t.check(setup._plus_btn.disabled, "到顶：加灰")
 	t.eq(setup._challenge.get_theme_color("font_color"), UiPalette.HP, "红字")
 	for i in range(1, ladder.size()):
@@ -142,3 +146,138 @@ static func frame_difficulty_and_memory(t: TestCase, root: Window) -> void:
 	again.show_page(2)
 	game.queue_free()
 	Support.cleanup("setup180c")
+
+
+static func frame_reveal_into_run(t: TestCase, root: Window) -> void:
+	t.begin("180 §4 · 入局转场：第一帧的圈和预览上的圈重合（缩放 = 圈距 ÷ 环距、画布中心在预览圆心）；纸化开、节点一环一环长出来、读数最后出来；点一下直接到头；换屏淡入关着就不转场")
+	var was := GameDirector.fades_allowed
+	GameDirector.fades_allowed = true
+	var game = _game(root, "setup180d")
+	var flow: GameFlow = game.flow
+	flow.settings.ui_fades = true
+	var setup = game.base()
+	setup.show_page(2)
+	var pv: MapPreview = setup.preview()
+	pv.size = Vector2(640, 600)     # 第一帧里容器还没排版
+	pv.finish()
+	var want: Dictionary = setup.reveal_payload()
+	t.check(not want.is_empty(), "第三页开着：有转场的几何")
+	if want.is_empty():
+		GameDirector.fades_allowed = was
+		game.queue_free()
+		return
+	t.check(is_equal_approx(float(want["ring_gap"]), pv.ring_gap()) and int(want["levels"]) == pv.levels, "圈距、环数取预览的")
+	t.check(setup.depart(), "出发")
+	t.eq(flow.map_reveal, {}, "交出去就清")
+	var map = game.base()
+	t.eq(map.screen, GameFlow.Screen.MAP, "→ 地图屏")
+	t.eq(map.modulate.a, 1.0, "不叠换屏淡入")
+	t.check(map.revealing(), "在转场")
+	var view: MapView = map._view
+	t.check(is_equal_approx(view.zoom, float(want["ring_gap"]) / RingLayoutBase.RING_STEP), "缩放 = 圈距 ÷ 环距（%.3f）" % view.zoom)
+	var c_local: Vector2 = view.get_global_transform().affine_inverse() * (want["center"] as Vector2)
+	t.check(view.to_screen(view.canvas_rect().get_center()).distance_to(c_local) < 0.5, "画布中心落在预览圆心")
+	t.check(absf(RingLayoutBase.RING_STEP * view.zoom - pv.ring_gap()) < 0.01, "第一环和预览第一圈一样大")
+	t.not_null(map.reveal_paper(), "盖着一张纸")
+	var mat := map.reveal_paper().material as ShaderMaterial
+	t.check(mat.get_shader_parameter(&"invert") == true and is_equal_approx(float(mat.get_shader_parameter(&"radius")), float(want["radius"])), "纸从预览的半径化开")
+	t.eq(view.node_front, 0.0, "节点还没长出来")
+	t.eq(view.deco_alpha, 0.0, "装饰还没浮现")
+	t.check(map._floating.all(func(c: Control) -> bool: return c.modulate.a == 0.0), "读数还藏着")
+	t.is_null(map._rules, "规则卡等转场完")
+	var to: Dictionary = map.reveal_target()
+	map.apply_reveal(0.6)
+	t.check(view.zoom > minf(float(want["ring_gap"]) / RingLayoutBase.RING_STEP, float(to["zoom"])) - 0.001 and view.zoom < maxf(float(want["ring_gap"]) / RingLayoutBase.RING_STEP, float(to["zoom"])) + 0.001, "半程：缩放在起止之间")
+	t.check(view.node_front > 0.0 and view.node_front < float(view.level_count() + 1), "节点一环一环长（%.2f）" % view.node_front)
+	var grow: Dictionary = view._grow_map()
+	var origin := view.reveal_origin_ring()
+	var rings: Dictionary = (view._layout as RingLayoutBase).levels_of(view.graph)
+	var near := -1.0
+	var far_ := 2.0
+	for id in grow:
+		var k := absi(int(rings[id]) - origin)
+		if k == 0:
+			near = maxf(near, float(grow[id]))
+		if k == view.level_count() - 1:
+			far_ = minf(far_, float(grow[id]))
+	t.check(near > far_, "离出生环近的先长（%.2f > %.2f）" % [near, far_])
+	map.apply_reveal(1.0)
+	t.check(float(mat.get_shader_parameter(&"radius")) > Vector2(root.size).length(), "纸已经化出屏外")
+	var ev := InputEventMouseButton.new()
+	ev.button_index = MOUSE_BUTTON_LEFT
+	ev.pressed = true
+	map._input(ev)
+	t.check(not map.revealing(), "点一下：直接到头")
+	t.is_null(map.reveal_paper(), "纸撤了")
+	t.check(is_equal_approx(view.zoom, float(to["zoom"])) and view.pan.distance_to(to["pan"]) < 0.5, "视角落到平时进图的那样")
+	t.eq(view.node_front, INF, "节点画全")
+	t.eq(view.deco_alpha, 1.0, "装饰画全")
+	t.check(map._floating.all(func(c: Control) -> bool: return c.modulate.a == 1.0), "读数出来了")
+	t.eq(map.rules_open(), flow.rules_card_pending() or map._rules != null, "转场完才轮到规则卡")
+	game.queue_free()
+	Support.cleanup("setup180d")
+
+	# 换屏淡入关着：直接进图
+	var g2 = _game(root, "setup180e")
+	g2.flow.settings.ui_fades = false
+	var s2 = g2.base()
+	s2.show_page(2)
+	s2.preview().finish()
+	s2.depart()
+	t.check(not g2.base().revealing(), "淡入关着：不转场")
+	t.eq(g2.base()._view.node_front, INF, "一步到位")
+	g2.queue_free()
+	Support.cleanup("setup180e")
+	GameDirector.fades_allowed = was
+
+
+static func run_map_deco(t: TestCase) -> void:
+	t.begin("180 §4 · 地图装饰层 `<底图>_deco.png`：美术没交 = null；交了地图屏铺在底图上")
+	t.is_null(MapSkin.deco(&"ruins") if not FileAccess.file_exists(MapSkin.root + "ruins_deco.png") else null, "遗迹的装饰层还没交")
+	t.is_null(MapSkin.deco(&""), "没底图就没装饰")
+	var keep := MapSkin.root
+	var dir := "user://test_map_deco_180/"
+	DirAccess.make_dir_recursive_absolute(dir)
+	var img := Image.create(8, 8, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0.5, 0.4, 0.3))
+	img.save_png(dir + "t180.png")
+	img.fill(Color(0, 0, 0, 0))
+	img.save_png(dir + "t180_deco.png")
+	MapSkin.root = dir
+	t.not_null(MapSkin.deco(&"t180"), "交了就读得到")
+	var v := MapView.new()
+	v.skin = &"t180"
+	t.not_null(v._deco_tex, "地图屏铺上")
+	v.free()
+	MapSkin.root = keep
+	for f in ["t180.png", "t180_deco.png"]:
+		DirAccess.remove_absolute(dir + f)
+
+
+static func frame_supplement_two(t: TestCase, root: Window) -> void:
+	t.begin("180 补二（作者 10:09）：仓库框按自己的内容定大小、留滚动条位、放不下就滚，不和棋盘对齐；第三页右上只写角色名、没有「出发摘要」；「返回」大两号仍比「出发」小")
+	var game = _game(root, "setup180f")
+	var setup = game.base()
+	setup.show_page(1)
+	var scroll: ScrollContainer = setup.warehouse_scroll()
+	t.not_null(scroll, "仓库在滚动区里")
+	var want: Vector2 = setup._warehouse_pages.get_combined_minimum_size()
+	t.eq(scroll.custom_minimum_size.x, want.x + setup.SCROLL_GUTTER, "宽 = 页签 + 格子 + 滚动条位")
+	t.eq(scroll.horizontal_scroll_mode, ScrollContainer.SCROLL_MODE_DISABLED, "只竖着滚")
+	t.check(scroll.custom_minimum_size.y <= want.y, "高不超过格子")
+	t.check(setup._warehouse_box is PanelContainer and (setup._warehouse_box as PanelContainer).theme_type_variation == UiTheme.PANEL_GROOVE, "仓库自己一块板")
+	t.check(setup._warehouse_box.get_parent() != setup._board_host.get_parent(), "和棋盘不在同一块板里")
+	t.eq(setup._warehouse_box.size_flags_vertical, Control.SIZE_SHRINK_BEGIN, "按内容高、顶边对齐")
+	# 一屏放不下：这一页只剩 300 高 → 滚动区夹在剩下的高里
+	setup.fit_warehouse_to(300.0)
+	t.check(scroll.custom_minimum_size.y < want.y, "放不下就滚（%.0f < %.0f）" % [scroll.custom_minimum_size.y, want.y])
+	setup.show_page(2)
+	var texts := _texts(setup._pages[2])
+	t.check(not texts.any(func(s: String) -> bool: return s.contains("出发摘要") or s.contains("负重") or s.begins_with("地图　")), "没有「出发摘要」和其余各行")
+	t.eq(setup._summary.text, Names.of(setup.character()), "只写角色名")
+	t.eq(setup._back_btn.get_theme_font_size("font_size"), UiPalette.button_font_size(setup.BACK_FONT, UiPalette.Tier.MINOR), "「返回」大两号")
+	t.check(setup._back_btn.get_theme_font_size("font_size") < setup._enter_btn.get_theme_font_size("font_size"), "仍比「出发」小")
+	t.eq(setup.difficulty_numeral(0), "〇", "0 级「〇」")
+	t.eq(setup.difficulty_numeral(3), "Ⅲ", "3 级「Ⅲ」")
+	game.queue_free()
+	Support.cleanup("setup180f")

@@ -55,12 +55,17 @@ var _stash_title: Label = null
 var _chapters: Array[ChapterDef] = []
 var _characters: Array[CharacterDef] = []
 var _char_box: VBoxContainer = null
-var _warehouse_box: VBoxContainer = null
+## 180 补二：第二页右边的仓库框（按自己的内容定大小）与框里的滚动区（格子多到放不下时滚，预留滚动条位）
+var _warehouse_box: Control = null
+var _warehouse_scroll: ScrollContainer = null
 var _character_btns: Array[Button] = []
 ## 180：第三页 —— 左列的地图 / 规模、中间的预览、右边的难度块
 var _map_list: VBoxContainer = null
 var _preview: MapPreview = null
 var _difficulty_num: Label = null
+## 180 补二：难度的翻页计数器牌面（黑底白字、深黄铜框）
+var _counter: PanelContainer = null
+var _flip: Tween = null
 var _minus_btn: Button = null
 var _plus_btn: Button = null
 var _challenge: Label = null
@@ -84,17 +89,25 @@ var _back_btn: Button
 const PAGE_NAMES: Array[String] = ["选角色", "配道具", "选地图与难度"]
 const PAGE_MAP := 2
 ## 180：难度数字的字号、加减键的大小、规模那一列缩进多少
-const DIFFICULTY_NUM_SIZE := 72
+const DIFFICULTY_NUM_SIZE := UiTheme.FLIP_NUM_SIZE
 const DIFFICULTY_BTN := Vector2(56, 44)
 const SCALE_INDENT := 20
+## 180 补二：翻页计数器翻一页多久；仓库框给滚动条留多宽；底下「返回」的字号（按钮按档放大，仍比「出发」小）
+const FLIP_SEC := 0.15
+const SCROLL_GUTTER := 16
+const BACK_FONT := 28
+## 整屏内容区的边距、底下留给两颗大按钮的高、标题与页之间的空
+const PAGE_MARGIN := 36
+const NAV_ROOM := 140
+const PAGE_SEP := 14
 var _pages: Array[Control] = []
 var _page: int = 0
 var _title: Label = null
-## 161：第一页的角色卡与棋盘预览、第三页的出发摘要
+## 161：第一页的角色卡与棋盘预览；第三页右上只写角色名（180 补二）
 var _card: VBoxContainer = null
 var _preview_host: VBoxContainer = null
 var _preview_view: InventoryView = null
-var _summary: RichTextLabel = null
+var _summary: Label = null
 ## 179：整屏的内容区（[method GameScreen._painted_screen]：场地背景上，不再是石板）
 var _area: Control = null
 ## 179：第一页三栏的凹槽板（左、中、右）
@@ -114,11 +127,11 @@ func open(_payload: Dictionary) -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top"]:
-		margin.add_theme_constant_override("margin_" + side, 36)
-	margin.add_theme_constant_override("margin_bottom", 140)     # 161：底下留给右下角那两颗大按钮
+		margin.add_theme_constant_override("margin_" + side, PAGE_MARGIN)
+	margin.add_theme_constant_override("margin_bottom", NAV_ROOM)     # 161：底下留给右下角那两颗大按钮
 	_area = _painted_screen(PAGE_ART[0])     # 179：整屏一幅画（157 补充三的整块石板不要了），各块内容坐凹槽板；翻页换画（[constant PAGE_ART]）
 	_area.add_child(margin)
-	var col := _vbox(14)
+	var col := _vbox(PAGE_SEP)
 	margin.add_child(col)
 	_title = UiTheme.make_variant_label("", UiTheme.LABEL_SCREEN_TITLE)     # 179：直接写在背景画上 —— 深底白字带阴影，浅底（白天的场地）墨字
 	col.add_child(_title)
@@ -174,51 +187,91 @@ func _build_character_page() -> Control:
 
 
 ## 161 第二页：预设装备一行 + 棋盘（可拖）/ 地上 / 仓库，拖拽层盖在下面那一块上
+## 180 补二（作者 10:09）：左 行囊板（预设、棋盘、两行读数）| 中 地上 | 右 仓库框。仓库框按自己的内容定大小、不和左边棋盘对齐，
+## 包住页签、格子和右边预留的滚动条位（格子多到一屏放不下时竖着滚）；两块板各按内容高、顶边对齐
 func _build_kit_page() -> Control:
-	var board_panel := _groove(16, 14, 16, 14)     # 179：场地背景上整页坐一块凹槽板
-	var page := _vbox(12)
-	board_panel.add_child(page)
+	# 拖拽层盖在整行上（两块板和中间的地上）
+	var play := MarginContainer.new()
+	play.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	play.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var row := _hbox(36)
+	play.add_child(row)
+
+	var board_panel := _groove(16, 14, 16, 14)
+	board_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(board_panel)
+	var left := _vbox(12)
+	board_panel.add_child(left)
 	if not flow.presets().is_empty():
 		var presets := _hbox(8)
 		presets.add_child(_label("预设装备", 15, UiPalette.DIM))
 		_preset_box = presets
-		page.add_child(presets)
+		left.add_child(presets)
 		_rebuild_presets()
-
-	# 棋盘与仓库在同一块矩形里，拖拽层盖在上面
-	var play := MarginContainer.new()
-	play.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	play.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	page.add_child(play)
-	var grids := _hbox(28)
-	play.add_child(grids)
-
 	_board_host = _vbox(6)
-	grids.add_child(_board_host)
+	left.add_child(_board_host)
 
-	# 090：中间是地上（有上一局带回来的东西才显示）
+	# 090：中间是地上（有上一局带回来的东西才显示）；没有也占着中间，把仓库框推到右边
+	var middle := _vbox(0)
+	middle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(middle)
 	_stash_box = _vbox(6)
-	grids.add_child(_stash_box)
+	middle.add_child(_stash_box)
 
-	_warehouse_box = _vbox(6)
-	var right := _warehouse_box
-	grids.add_child(right)
+	var ware_panel := _groove(16, 14, 16, 14)
+	ware_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(ware_panel)
+	_warehouse_box = ware_panel
+	var right := _vbox(6)
+	ware_panel.add_child(right)
 	var w := flow.meta.warehouse
 	right.add_child(_label("仓库　%d 页" % w.page_count(), 15, UiPalette.DIM))     # 180：件数与那句「往左边的包里拖……」都不要
 
 	_drag = DragLayer.new()
 	_drag.label_font = font
 	# 163：仓库分页 —— 左边竖排页签，拖着东西停在页签上切页
+	_warehouse_scroll = ScrollContainer.new()
+	_warehouse_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	right.add_child(_warehouse_scroll)
 	_warehouse_pages = WarehousePages.new()
-	right.add_child(_warehouse_pages)
+	_warehouse_scroll.add_child(_warehouse_pages)
 	_warehouse_pages.setup(w, font, _drag, TechWarehousePages.plan_of(flow.tech_defs))
 	_warehouse_view = _warehouse_pages.view
-	play.add_child(_drag)     # 容器把它铺到和 grids 一样大，盖在两块格子上
+	play.add_child(_drag)     # 容器把它铺到和整行一样大，盖在两块板上
 	_drag.register_view(_warehouse_view)
 	_warehouse_view.item_double_clicked.connect(quick_move)     # 109：双击 = 快速置入，和局内一样
 	w.changed.connect(_refresh)
+	_warehouse_pages.minimum_size_changed.connect(_fit_warehouse)
+	_area.resized.connect(_fit_warehouse)
+	_fit_warehouse()
 	_build_stash()
-	return board_panel
+	return play
+
+
+## 180 补二：仓库框的大小 —— 宽 = 页签 + 格子 + 滚动条位；高 = 格子的高，但不超过这一页还剩的高（超出就滚）。
+## 页还剩多高按整屏内容区算（不按页自己的尺寸：页的高又被框撑着）
+func _fit_warehouse() -> void:
+	var room := -1.0
+	if _area != null and _area.size.y > 0.0 and _title != null:
+		room = _area.size.y - PAGE_MARGIN - NAV_ROOM - _title.get_combined_minimum_size().y - PAGE_SEP
+	fit_warehouse_to(room)
+
+
+## [param page_h]：这一页能占多高（负 = 不知道，按格子全高）
+func fit_warehouse_to(page_h: float) -> void:
+	if _warehouse_scroll == null or _warehouse_pages == null:
+		return
+	var want := _warehouse_pages.get_combined_minimum_size()
+	var room := want.y
+	if page_h > 0.0:
+		var chrome := _warehouse_box.get_combined_minimum_size().y - _warehouse_scroll.custom_minimum_size.y     # 框的边距与标题
+		room = minf(want.y, page_h - chrome)
+	_warehouse_scroll.custom_minimum_size = Vector2(want.x + SCROLL_GUTTER, maxf(UiTheme.FONT_SIZE * 4.0, room))
+
+
+## 仓库框里的滚动区（测试看）
+func warehouse_scroll() -> ScrollContainer:
+	return _warehouse_scroll
 
 
 ## 180 第三页：左 地图（一级）与规模（选中的图下面展开）| 中 化开的地图预览 | 右 出发摘要 + 当前难度
@@ -247,17 +300,21 @@ func _build_map_page() -> Control:
 	var right := _vbox(10)
 	right.custom_minimum_size.x = 340 - 32
 	right_board.add_child(right)
-	right.add_child(_label("出发摘要", 15, UiPalette.DIM))
-	_summary = _log_box(14)
-	_summary.scroll_following = false
-	_summary.custom_minimum_size = Vector2(340 - 32, 120)
+	# 180 补二（作者 10:09）：右上只写角色名，没有标题，负重 / 地图 / 难度各行都不要（左列与难度块自己在显示）
+	_summary = _label("", 22, UiPalette.FG)
 	right.add_child(_summary)
 	var title := _label("当前难度", 15, UiPalette.DIM)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	right.add_child(title)
-	_difficulty_num = _label("0", DIFFICULTY_NUM_SIZE, UiPalette.FG)     # 正文字体：标题字体的数字是笔刷体，「1」认不出
+	# 180 补二：翻页计数器 —— 黑底白字牌面、深黄铜框，罗马数字（0 级写「〇」）；正文字体（标题字体的笔画认不出）
+	_counter = PanelContainer.new()
+	_counter.theme_type_variation = UiTheme.PANEL_FLIP_COUNTER
+	_counter.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	right.add_child(_counter)
+	_difficulty_num = UiTheme.make_variant_label(difficulty_numeral(0), UiTheme.LABEL_FLIP_NUM)
 	_difficulty_num.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	right.add_child(_difficulty_num)
+	_difficulty_num.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_counter.add_child(_difficulty_num)
 	var steps := _hbox(16)
 	steps.alignment = BoxContainer.ALIGNMENT_CENTER
 	right.add_child(steps)
@@ -662,13 +719,33 @@ func _sync_difficulty() -> void:
 	var avail := flow.available_difficulties()
 	var d := difficulty()
 	if _difficulty_num != null:
-		_difficulty_num.text = str(d.level if d != null else 0)
+		var text := difficulty_numeral(d.level if d != null else 0)
+		if text != _difficulty_num.text:
+			_difficulty_num.text = text
+			_flip_counter()
 	if _minus_btn != null:
 		_minus_btn.disabled = difficulty_index <= 0
 	if _plus_btn != null:
 		_plus_btn.disabled = difficulty_index >= avail.size() - 1
 	if _challenge != null:
 		_challenge.text = challenge_text()
+
+
+## 180 补二：难度写成罗马数字（和回放倍速、仓库页签一套字形）；0 级写「〇」
+static func difficulty_numeral(level: int) -> String:
+	return "〇" if level <= 0 else TextTemplate.roman(level)
+
+
+## 180 补二：换了数就翻一页 —— 新的一页从中线往上下展开（字已经是新的，测试不用等）。换屏淡入关着就不翻
+func _flip_counter() -> void:
+	if _difficulty_num == null or not _difficulty_num.is_inside_tree() or (flow.settings != null and not flow.settings.ui_fades):
+		return
+	if _flip != null:
+		_flip.kill()
+	_difficulty_num.pivot_offset = _difficulty_num.size * 0.5
+	_difficulty_num.scale = Vector2(1.0, 0.0)
+	_flip = _difficulty_num.create_tween()
+	_flip.tween_property(_difficulty_num, ^"scale:y", 1.0, FLIP_SEC).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 
 
 ## 180：红字说明：到现在这一级为止，每一级新加的挑战（DifficultyDef.challenge）
@@ -850,7 +927,7 @@ func _build_nav() -> void:
 	box.add_child(_status)
 	var row := _hbox(16)
 	row.alignment = BoxContainer.ALIGNMENT_END
-	_back_btn = _button("返回", prev_page, 24, UiPalette.Tier.MINOR)
+	_back_btn = _button("返回", prev_page, BACK_FONT, UiPalette.Tier.MINOR)     # 180 补二：大两号，仍比「出发」小
 	_back_btn.custom_minimum_size = Vector2(240, 76)
 	row.add_child(_back_btn)
 	_enter_btn = _button("继续", func(): next_page(), 24, UiPalette.Tier.PRIMARY)
@@ -868,7 +945,9 @@ func depart() -> bool:
 		return false
 	var c := chapter()
 	var ch := character()
+	flow.map_reveal = reveal_payload()
 	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value())
+	flow.map_reveal = {}
 	if run == null:
 		_status.text = "这一章生成不出图：%s" % (c.map_source.last_error if c.map_source != null else "没有地图来源")
 		return false
@@ -879,6 +958,14 @@ func depart() -> bool:
 		stash.clear()
 	_pending.clear()
 	return true
+
+
+## 180 §4：交给地图屏的入局转场 —— 预览此刻的圆心（全局像素）、化开半径、圈距、环数；第三页没开着 / 没圈 = 空（不转场）
+func reveal_payload() -> Dictionary:
+	if _preview == null or not _preview.is_visible_in_tree() or _preview.levels <= 0 or _preview.ring_gap() <= 0.0:
+		return {}
+	return {"center": _preview.get_global_transform() * _preview.center(), "radius": _preview.radius_frac * _preview.half_extent(),
+		"ring_gap": _preview.ring_gap(), "levels": _preview.levels}
 
 
 ## 180：记下这一局挑的图、规模、难度（下次进开局屏默认它们）
@@ -1061,26 +1148,10 @@ static func _num(v: float) -> String:
 	return str(int(v)) if is_equal_approx(v, roundf(v)) else "%.1f" % v
 
 
-## 161：第三页的出发摘要。180：角色 / 负重 / 地图 · 规模 / 难度（不写带了几件）
+## 161：第三页右上那一块。180 补二（作者 10:09）：只写角色名
 func summary_text() -> String:
-	var lines: Array[String] = []
 	var ch := character()
-	if ch != null:
-		lines.append("角色　%s" % Names.of(ch))
-	var enc := encumbrance_text()
-	if enc != "":
-		lines.append(enc)
-	var c := chapter()
-	if c != null:
-		var map_name := c.display_name if c.display_name != "" else String(c.id)
-		for o in scale_options_of(c):
-			if o["id"] == scale_id:
-				map_name += " · " + String(o["display_name"])
-		lines.append("地图　%s" % map_name)
-	var d := difficulty()
-	if d != null:
-		lines.append("难度　%d" % d.level)
-	return "\n".join(lines)
+	return Names.of(ch) if ch != null else ""
 
 
 ## 099（作者定）：右键棋盘上的信物 = 奉它为主信仰（出发带走的就是这个顺序）。不是信物什么也不做

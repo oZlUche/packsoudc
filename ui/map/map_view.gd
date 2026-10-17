@@ -30,9 +30,22 @@ var skin: StringName = &"":
 	set(v):
 		skin = v
 		_skin_tex = MapSkin.texture(v)
+		_deco_tex = MapSkin.deco(v)
 		_skin_light = _skin_tex != null and MapSkin.tone(v) == UiTheme.TONE_LIGHT
 		queue_redraw()
 var _skin_tex: Texture2D = null
+var _deco_tex: Texture2D = null
+## 180 §4 入局转场（[MapScreen] 推这两个；平时 INF / 1）：节点与边按「离出生环几环」一环一环长出来 ——
+## 离出生环 k 环的点长到 clamp(node_front − k, 0, 1)（点从圆心放大、边与危险圈按它的透明度）；挑出生点的遮罩在最后一环之后才盖上来
+var node_front: float = INF:
+	set(v):
+		node_front = v
+		queue_redraw()
+## 装饰层（[method MapSkin.deco]）浮现几成
+var deco_alpha: float = 1.0:
+	set(v):
+		deco_alpha = v
+		queue_redraw()
 var _skin_light := false
 var graph: MapGraph = null:
 	set(v):
@@ -440,6 +453,8 @@ func press(p: Vector2, button: int = MOUSE_BUTTON_LEFT, shift: bool = false) -> 
 func _draw() -> void:
 	if _skin_tex != null:     # 这一章的手绘底图：铺满、裁边，画在路网底下
 		draw_texture_rect_region(_skin_tex, Rect2(Vector2.ZERO, size), MapSkin.cover_region(_skin_tex.get_size(), size))
+		if _deco_tex != null and deco_alpha > 0.0:     # 180：装饰层叠在底图上、圈下面
+			draw_texture_rect_region(_deco_tex, Rect2(Vector2.ZERO, size), MapSkin.cover_region(_deco_tex.get_size(), size), Color(1, 1, 1, deco_alpha))
 	else:     # 157 补充三：地图屏不走石板，没底图就是设置里的底色
 		draw_rect(Rect2(Vector2.ZERO, size), UiPalette.bg())
 	if graph == null:
@@ -453,13 +468,14 @@ func _draw() -> void:
 	var rect := canvas_rect()
 	_layout.draw_backdrop(self, graph, rect)
 	var pos := _layout.positions(graph, rect)
+	var grow := _grow_map()
 
 	# 危险区域：节点底下垫一圈。高危红，中危橙
 	for id in graph.node_ids():
 		var n := graph.get_node(id)
 		if n.danger > 0 and pos.has(id):
 			draw_circle(pos[id], NODE_RADIUS + 9.0,
-				Color(UiPalette.HP if n.danger >= 2 else UiPalette.STAMINA, 0.18))
+				Color(UiPalette.HP if n.danger >= 2 else UiPalette.STAMINA, 0.18 * float(grow.get(id, 1.0))))
 	# 路线经过的边：哪条边属于哪条路线
 	var route_of_edge := {}
 	for i in graph.routes.size() if show_routes else 0:
@@ -480,19 +496,29 @@ func _draw() -> void:
 		var key := MapJunctions.edge_key(e.from_id, e.to_id)
 		if in_junction.has(key):
 			continue
+		var f := minf(float(grow.get(e.from_id, 1.0)), float(grow.get(e.to_id, 1.0)))
+		if f <= 0.0:
+			continue
 		var color := _ink(UiPalette.DIM).darkened(0.25)
 		var width := 1.5
 		if route_of_edge.has(key):
 			var ri: int = route_of_edge[key]
 			color = Color(MapNodeStyle.route_color(ri), 0.9 if ri == bold_route else 0.7)
 			width = 6.0 if ri == bold_route else 3.0
+		color.a *= f
 		if e.is_portal():
+			if f < 1.0:
+				continue     # 传送点的虚线自己定色，长全了再画
 			MapLayout.draw_portal(self, pos[e.from_id], pos[e.to_id], width)     # 传送点（8-1）：虚线紫，哪种布局都一样
 		else:
 			_layout.draw_edge(self, graph, e, pos[e.from_id], pos[e.to_id], color, width, rect)
 
 	for clique in (junctions["quads"] as Array) + (junctions["tris"] as Array):
-		_draw_junction(clique, pos, route_of_edge)
+		var f := 1.0
+		for id in clique:
+			f = minf(f, float(grow.get(int(id), 1.0)))
+		if f > 0.0:
+			_draw_junction(clique, pos, route_of_edge, f)
 
 	if show_free_slots:
 		for slot in _layout.free_slots(graph, rect):
@@ -502,7 +528,7 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	# 侵蚀（075）：被侵蚀的点垫一圈锈色、快被侵蚀的那一档一圈闪的红环（必须预警）。
 	# 画在屏幕坐标里、节点底下：缩小整张图时画布坐标的圈会缩到节点底下看不见
-	if not erosion.is_empty():
+	if not erosion.is_empty() and grow.is_empty():
 		var eroded := int(erosion.get("eroded", -1))
 		var warn := int(erosion.get("warn", -1))
 		for id in graph.node_ids():
@@ -517,28 +543,69 @@ func _draw() -> void:
 				draw_arc(sp, NODE_RADIUS + 6.0, 0.0, TAU, 32, Color(UiPalette.HP, 0.35 + 0.35 * (0.5 + 0.5 * sin(_pulse * 4.0))), 2.0, true)
 	for id in graph.node_ids():
 		if pos.has(id):
-			_draw_node(graph.get_node(id), to_screen(pos[id]))
+			_draw_grown(graph.get_node(id), to_screen(pos[id]), float(grow.get(id, 1.0)))
 	for mark in hunters:
 		var hid := int((mark as Dictionary).get("node", -1))
-		if pos.has(hid):
+		if pos.has(hid) and float(grow.get(hid, 1.0)) >= 1.0:
 			_draw_hunter(to_screen(pos[hid]), String((mark as Dictionary).get("label", "")))
 	if spawn_mask:
-		_draw_spawn_mask(pos)
+		_draw_spawn_mask(pos, grow)
+
+
+## 180 §4：转场中每个点长到几成（id → 0..1）；不在转场 = 空（都画全）
+func _grow_map() -> Dictionary:
+	if node_front == INF or graph == null or not (_layout is RingLayoutBase):
+		return {}
+	var rings: Dictionary = (_layout as RingLayoutBase).levels_of(graph)
+	var origin := reveal_origin_ring()
+	var out := {}
+	for id in rings:
+		out[id] = clampf(node_front - float(absi(int(rings[id]) - origin)), 0.0, 1.0)
+	return out
+
+
+## 长出来从哪一环起：人在的那个点，挑出生点时是第一个出生点（没有 = 第 0 环）
+func reveal_origin_ring() -> int:
+	if graph == null or not (_layout is RingLayoutBase):
+		return 0
+	var rings: Dictionary = (_layout as RingLayoutBase).levels_of(graph)
+	var from := current_id if current_id >= 0 else (int(graph.entry_ids[0]) if not graph.entry_ids.is_empty() else -1)
+	return int(rings.get(from, 0))
+
+
+## 长到 [param f] 成的点：绕自己的圆心从零放大
+func _draw_grown(n: MapNode, p: Vector2, f: float) -> void:
+	if f <= 0.0:
+		return
+	if f < 1.0:
+		draw_set_transform(p * (1.0 - f), 0.0, Vector2(f, f))
+	_draw_node(n, p)
+	if f < 1.0:
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 ## 096（作者定）：挑出生点的遮罩 —— 整张图盖一层底色，只把出生点重新画在上面（带呼吸的绿环），顶上一行字
-func _draw_spawn_mask(pos: Dictionary) -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), Color(UiPalette.bg(), 0.8))
+func _draw_spawn_mask(pos: Dictionary, grow: Dictionary = {}) -> void:
+	# 180：转场里最后一环长全之后才盖上来
+	var k := 1.0 if grow.is_empty() else clampf(node_front - float(level_count()), 0.0, 1.0)
+	if k <= 0.0:
+		return
+	draw_rect(Rect2(Vector2.ZERO, size), Color(UiPalette.bg(), 0.8 * k))
 	for id in graph.entry_ids:
 		if not pos.has(id):
 			continue
 		var sp := to_screen(pos[id])
-		draw_circle(sp, NODE_RADIUS + 18.0, Color(UiPalette.HEAL, 0.10 + 0.08 * sin(_pulse * 2.0)))
+		draw_circle(sp, NODE_RADIUS + 18.0, Color(UiPalette.HEAL, (0.10 + 0.08 * sin(_pulse * 2.0)) * k))
 		_draw_node(graph.get_node(id), sp)
-		draw_arc(sp, NODE_RADIUS + 10.0 + 2.0 * sin(_pulse * 2.0), 0.0, TAU, 40, UiPalette.HEAL, 2.0, true)
+		draw_arc(sp, NODE_RADIUS + 10.0 + 2.0 * sin(_pulse * 2.0), 0.0, TAU, 40, Color(UiPalette.HEAL, k), 2.0, true)
 	var text := "挑一个出生点" if UiText.lang == "zh" else "Pick a starting point"
 	var tw := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
-	draw_string(_font, Vector2((size.x - tw) / 2.0, 34.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, UiPalette.HEAL)
+	draw_string(_font, Vector2((size.x - tw) / 2.0, 34.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(UiPalette.HEAL, k))
+
+
+## 环数（同心环布局；别的布局 0）
+func level_count() -> int:
+	return (_layout as RingLayoutBase).level_count(graph) if graph != null and _layout is RingLayoutBase else 0
 
 
 func _junctions() -> Dictionary:
@@ -551,7 +618,7 @@ func _junctions() -> Dictionary:
 
 ## 一个路口：中心一个小点，向每个成员伸一条腿。
 ## 腿的颜色：这个成员在路口内部有路线经过的边，就用那条路线的颜色。
-func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary) -> void:
+func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary, fade: float = 1.0) -> void:
 	var center := Vector2.ZERO
 	for id in clique:
 		if not pos.has(int(id)):
@@ -565,10 +632,12 @@ func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary) -
 			if other != id and route_of_edge.has(key):
 				route = int(route_of_edge[key])
 		if route >= 0:
-			draw_line(center, pos[int(id)], Color(MapNodeStyle.route_color(route), 0.85), 3.0, true)
+			draw_line(center, pos[int(id)], Color(MapNodeStyle.route_color(route), 0.85 * fade), 3.0, true)
 		else:
-			draw_line(center, pos[int(id)], _ink(UiPalette.DIM).darkened(0.25), 1.5, true)
-	draw_circle(center, 3.0, _ink(UiPalette.DIM))
+			var c := _ink(UiPalette.DIM).darkened(0.25)
+			draw_line(center, pos[int(id)], Color(c, c.a * fade), 1.5, true)
+	var dot := _ink(UiPalette.DIM)
+	draw_circle(center, 3.0, Color(dot, dot.a * fade))
 
 
 ## 猎手：节点外一圈红环 + 名字（占位画法）

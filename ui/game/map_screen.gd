@@ -57,12 +57,34 @@ var _pause_book: Control = null
 ## 091（作者定 10.2 第 3 条）：「本图规则」卡 —— 第一次进这一章弹出来（局外记住看过了），暂停菜单里能再看
 var _rules: Control = null
 var _rules_first: bool = false
+## 180 §4：入局转场 —— 从开局第三页的预览拉近到这张图（[method begin_reveal]）。总长、各段起止（秒）
+const REVEAL_SEC := 1.4
+const REVEAL_PAPER := Vector2(0.0, 0.5)
+const REVEAL_CAMERA := Vector2(0.2, 1.0)
+const REVEAL_NODES := Vector2(0.5, 1.2)
+const REVEAL_DECO := Vector2(0.6, 1.3)
+const REVEAL_HUD := Vector2(1.2, 1.35)
+## 转场里盖在地图上的那张纸（圆里透明、越化越大），没在转场 = null
+var _paper: Control = null
+## 转场的起止：{zoom0, pan0, zoom1, pan1, r0, r1, levels}；空 = 没在转场
+var _reveal: Dictionary = {}
+var _reveal_tween: Tween = null
+## 浮在地图上的读数与预览两行：转场最后才出来
+var _floating: Array[Control] = []
 
 
-func open(_payload: Dictionary) -> void:
+func open(payload: Dictionary) -> void:
 	_run = flow.run
 	_build()
 	_adopt()
+	var reveal: Dictionary = payload.get("reveal", {})
+	if reveal_allowed(reveal):
+		begin_reveal(reveal)     # 180：规则卡、教程等转场完再放
+		return
+	_after_open()
+
+
+func _after_open() -> void:
 	if flow.rules_card_pending():
 		show_rules(true)     # 091：第一次进这一章：本图规则卡
 	_maybe_coach.call_deferred()     # 166：开场没有事件压着就直接放
@@ -362,9 +384,7 @@ func _adopt() -> void:
 	_view.skin = _run.chapter.map_skin if _run.chapter != null else &""     # 每章一张手绘底图
 	_view.graph = _run.map
 	_view.current_id = _run.travel.current_id if _run.phase != RunState.Phase.PICK_SPAWN else -1
-	# 反馈：进图用玩家上次的缩放（没有就按点距自动），人在正中；作者 2026-10-16：挑出生点时先装下所有出生点、按相对位置偏移视角
-	var spawns: Array = _run.map.entry_ids.duplicate() if _run.phase == RunState.Phase.PICK_SPAWN else []
-	_view.open_at(flow.settings.map_zoom if flow.settings != null else 0.0, spawns)
+	_open_view()
 	_view.reachable = {}
 	_view.bold_route = -1
 	_view.spawn_mask = _run.phase == RunState.Phase.PICK_SPAWN     # 096：挑出生点时全图蒙灰，只露出生点
@@ -807,6 +827,7 @@ func _build() -> void:
 			_drawer.dock(_hud_host.bar_height() + 8.0, DRAWER_MARGIN))
 	area.add_child(_hud_host)
 	var mid := lines
+	_floating = [lines, _hud_host]
 	_view.node_pressed.connect(_on_node_pressed)
 	_view.node_hovered.connect(_on_node_hovered)
 	_view.zoom_changed.connect(_remember_zoom)
@@ -1039,6 +1060,150 @@ func show_coach(replay: bool = false) -> bool:
 
 func coach() -> CoachOverlay:
 	return _coach
+
+
+## 反馈：进图用玩家上次的缩放（没有就按点距自动），人在正中；作者 2026-10-16：挑出生点时先装下所有出生点、按相对位置偏移视角
+func _open_view() -> void:
+	var spawns: Array = _run.map.entry_ids.duplicate() if _run.phase == RunState.Phase.PICK_SPAWN else []
+	_view.open_at(flow.settings.map_zoom if flow.settings != null else 0.0, spawns)
+
+
+#region 入局转场（180 §4）
+## 能不能走转场：带了预览的几何、换屏淡入开着（跑测试时关着）、是同心环的图
+func reveal_allowed(reveal: Dictionary) -> bool:
+	if reveal.is_empty() or float(reveal.get("ring_gap", 0.0)) <= 0.0:
+		return false
+	if not GameDirector.fades_allowed or flow.settings == null or not flow.settings.ui_fades:
+		return false
+	return _view != null and _view.graph != null and _view.canvas_rect().size.x > 0.0 and MapLayout.for_graph(_view.graph) is RingLayoutBase
+
+
+## 起点对齐第三页：缩放 = 预览的圈距 ÷ 环距（[constant RingLayoutBase.RING_STEP]），画布中心落在预览圆心 —— 第一帧的圈和预览上的圈重合；
+## 终点是平时进图的视角（[method MapView.open_at] 算好的）。纸从预览的半径化开到盖过全屏。视图还没尺寸就等它一下
+func begin_reveal(reveal: Dictionary) -> void:
+	if _view.size.x <= 0.0 or _view.size.y <= 0.0:
+		await _view.resized
+		if not is_instance_valid(_view):
+			return
+	var center := _view.get_global_transform().affine_inverse() * (reveal.get("center", _view.size * 0.5) as Vector2)
+	var zoom0 := float(reveal["ring_gap"]) / RingLayoutBase.RING_STEP
+	var far := 0.0
+	for corner in [Vector2.ZERO, Vector2(_view.size.x, 0.0), Vector2(0.0, _view.size.y), _view.size]:
+		far = maxf(far, center.distance_to(corner))
+	_reveal = {"zoom0": zoom0, "pan0": center - _view.canvas_rect().get_center() * zoom0,
+		"r0": maxf(0.0, float(reveal.get("radius", 0.0))), "r1": far * 1.3 + MapPreview.SOFTNESS * 2.0, "center": center}
+	_paper = _make_paper(center)
+	var area := _view.get_parent()
+	area.add_child(_paper)
+	area.move_child(_paper, _view.get_index() + 1)
+	apply_reveal(0.0)
+	_reveal_tween = create_tween()
+	_reveal_tween.tween_method(apply_reveal, 0.0, REVEAL_SEC, REVEAL_SEC)
+	_reveal_tween.tween_callback(finish_reveal)
+
+
+## 那张纸：开局第三页的背景画（有就铺，和那一页同一种铺法），没有就是底色；挂反过来的墨化着色器
+func _make_paper(center: Vector2) -> Control:
+	var tex := UiTheme.art(UiTheme.ART_SETUP_MAP_BG)
+	var paper: Control
+	if tex != null:
+		var pic := TextureRect.new()
+		pic.texture = tex
+		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		paper = pic
+	else:
+		var flat := ColorRect.new()
+		flat.color = UiPalette.bg()
+		paper = flat
+	paper.name = "RevealPaper"
+	paper.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	paper.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var m := ShaderMaterial.new()
+	m.shader = MapPreview.SHADER
+	m.set_shader_parameter(&"invert", true)
+	m.set_shader_parameter(&"softness", MapPreview.SOFTNESS)
+	m.set_shader_parameter(&"noise", MapPreview.noise_texture())
+	m.set_shader_parameter(&"center", center)
+	paper.material = m
+	return paper
+
+
+## 时间线上的第 [param t] 秒（测试直接调）：纸化开、镜头拉近、节点一环一环长出来、装饰浮现、读数最后出来
+func apply_reveal(t: float) -> void:
+	if _reveal.is_empty():
+		return
+	var paper := _seg(t, REVEAL_PAPER)
+	if _paper != null:
+		(_paper.material as ShaderMaterial).set_shader_parameter(&"radius", lerpf(float(_reveal["r0"]), float(_reveal["r1"]), paper * paper))
+	var cam := smoothstep(0.0, 1.0, _seg(t, REVEAL_CAMERA))
+	var to := reveal_target()
+	var z0 := float(_reveal["zoom0"])
+	var z1 := float(to["zoom"])
+	_view.zoom = z0 * pow(z1 / z0, cam) if z0 > 0.0 and z1 > 0.0 else lerpf(z0, z1, cam)     # 按倍数插值，拉近匀速
+	_view.pan = (_reveal["pan0"] as Vector2).lerp(to["pan"], cam)
+	_view.node_front = _seg(t, REVEAL_NODES) * float(_view.level_count() + 1)
+	_view.deco_alpha = _seg(t, REVEAL_DECO)
+	for c in _floating:
+		if is_instance_valid(c):
+			c.modulate.a = _seg(t, REVEAL_HUD)
+	_view.queue_redraw()
+
+
+## 终点视角：每次现算（读数层摆好、视图换尺寸之后平时进图的视角会变）—— 按平时那样开一次、读回来、再还原
+func reveal_target() -> Dictionary:
+	var z := _view.zoom
+	var p := _view.pan
+	_open_view()
+	var out := {"zoom": _view.zoom, "pan": _view.pan}
+	_view.zoom = z
+	_view.pan = p
+	return out
+
+
+## 这一段走了几成
+static func _seg(t: float, span: Vector2) -> float:
+	return clampf((t - span.x) / maxf(0.001, span.y - span.x), 0.0, 1.0)
+
+
+## 到头（或被点掉）：撤纸、视角落到终点、节点与装饰画全、读数出来，再放规则卡 / 教程
+func finish_reveal() -> void:
+	if _reveal.is_empty():
+		return
+	if _reveal_tween != null:
+		_reveal_tween.kill()
+		_reveal_tween = null
+	_open_view()
+	_view.node_front = INF
+	_view.deco_alpha = 1.0
+	for c in _floating:
+		if is_instance_valid(c):
+			c.modulate.a = 1.0
+	_reveal = {}
+	if _paper != null:
+		_paper.queue_free()
+		_paper = null
+	_view.queue_redraw()
+	_after_open()
+
+
+func revealing() -> bool:
+	return not _reveal.is_empty()
+
+
+func reveal_paper() -> Control:
+	return _paper
+
+
+## 转场中任意点击 / 按键 = 直接到头
+func _input(event: InputEvent) -> void:
+	if _reveal.is_empty():
+		return
+	var press := (event is InputEventMouseButton and (event as InputEventMouseButton).pressed) or (event is InputEventKey and (event as InputEventKey).pressed and not (event as InputEventKey).echo)
+	if press:
+		finish_reveal()
+		get_viewport().set_input_as_handled()
+#endregion
 
 
 ## 166 补充二：调试台「重放战斗教程」—— 把看过的那条删掉，下一场战斗再放
