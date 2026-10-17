@@ -93,7 +93,7 @@ static func frame_map_page(t: TestCase, root: Window) -> void:
 	pv.finish()
 	t.check(pv.levels >= 9 and is_equal_approx(pv.radius_frac, MapPreview.RADIUS_BY_SCALE[&"large"]), "大型：圈多、几乎铺满（%d 环）" % pv.levels)
 	t.check(pv.ring_width() < MapPreview.RING_WIDTH_MAX, "大型圈细")
-	t.check(setup._summary.get_parsed_text().contains("地图　魔法废墟 · 大型"), "摘要：%s" % setup._summary.get_parsed_text())
+	t.eq(setup._summary.text, Names.of(setup.character()), "180 补二：右上只写角色名")
 	game.queue_free()
 	Support.cleanup("setup180b")
 
@@ -106,8 +106,11 @@ static func frame_difficulty_and_memory(t: TestCase, root: Window) -> void:
 	setup.show_page(2)
 	var ladder := flow.available_difficulties()
 	t.check(ladder.size() >= 2, "解锁后至少两档")
-	t.eq(setup._difficulty_num.text, "0", "首局默认 0")
+	t.eq(setup._difficulty_num.text, "〇", "首局默认 0 级，写「〇」（180 补二：罗马数字）")
 	t.eq(setup._difficulty_num.get_theme_font_size("font_size"), 72, "数字 72 号")
+	t.eq(setup._counter.theme_type_variation, UiTheme.PANEL_FLIP_COUNTER, "翻页计数器牌面")
+	t.eq(setup._difficulty_num.get_theme_color("font_color"), Color.WHITE, "白字")
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_FLIP_COUNTER), UiTheme.TONE_DARK, "黑底")
 	t.check(setup._minus_btn.disabled and not setup._plus_btn.disabled, "0 档：减灰、加亮")
 	t.eq(setup._challenge.text, "", "0 档红字留白")
 	setup.step_difficulty(-1)
@@ -115,6 +118,7 @@ static func frame_difficulty_and_memory(t: TestCase, root: Window) -> void:
 	for i in ladder.size() + 2:
 		setup.step_difficulty(1)
 	t.eq(setup.difficulty(), ladder[ladder.size() - 1], "加到最高的已解锁档就停")
+	t.eq(setup._difficulty_num.text, TextTemplate.roman(ladder[ladder.size() - 1].level), "罗马数字（%s）" % setup._difficulty_num.text)
 	t.check(setup._plus_btn.disabled, "到顶：加灰")
 	t.eq(setup._challenge.get_theme_color("font_color"), UiPalette.HP, "红字")
 	for i in range(1, ladder.size()):
@@ -248,3 +252,32 @@ static func run_map_deco(t: TestCase) -> void:
 	MapSkin.root = keep
 	for f in ["t180.png", "t180_deco.png"]:
 		DirAccess.remove_absolute(dir + f)
+
+
+static func frame_supplement_two(t: TestCase, root: Window) -> void:
+	t.begin("180 补二（作者 10:09）：仓库框按自己的内容定大小、留滚动条位、放不下就滚，不和棋盘对齐；第三页右上只写角色名、没有「出发摘要」；「返回」大两号仍比「出发」小")
+	var game = _game(root, "setup180f")
+	var setup = game.base()
+	setup.show_page(1)
+	var scroll: ScrollContainer = setup.warehouse_scroll()
+	t.not_null(scroll, "仓库在滚动区里")
+	var want: Vector2 = setup._warehouse_pages.get_combined_minimum_size()
+	t.eq(scroll.custom_minimum_size.x, want.x + setup.SCROLL_GUTTER, "宽 = 页签 + 格子 + 滚动条位")
+	t.eq(scroll.horizontal_scroll_mode, ScrollContainer.SCROLL_MODE_DISABLED, "只竖着滚")
+	t.check(scroll.custom_minimum_size.y <= want.y, "高不超过格子")
+	t.check(setup._warehouse_box is PanelContainer and (setup._warehouse_box as PanelContainer).theme_type_variation == UiTheme.PANEL_GROOVE, "仓库自己一块板")
+	t.check(setup._warehouse_box.get_parent() != setup._board_host.get_parent(), "和棋盘不在同一块板里")
+	t.eq(setup._warehouse_box.size_flags_vertical, Control.SIZE_SHRINK_BEGIN, "按内容高、顶边对齐")
+	# 一屏放不下：这一页只剩 300 高 → 滚动区夹在剩下的高里
+	setup.fit_warehouse_to(300.0)
+	t.check(scroll.custom_minimum_size.y < want.y, "放不下就滚（%.0f < %.0f）" % [scroll.custom_minimum_size.y, want.y])
+	setup.show_page(2)
+	var texts := _texts(setup._pages[2])
+	t.check(not texts.any(func(s: String) -> bool: return s.contains("出发摘要") or s.contains("负重") or s.begins_with("地图　")), "没有「出发摘要」和其余各行")
+	t.eq(setup._summary.text, Names.of(setup.character()), "只写角色名")
+	t.eq(setup._back_btn.get_theme_font_size("font_size"), UiPalette.button_font_size(setup.BACK_FONT, UiPalette.Tier.MINOR), "「返回」大两号")
+	t.check(setup._back_btn.get_theme_font_size("font_size") < setup._enter_btn.get_theme_font_size("font_size"), "仍比「出发」小")
+	t.eq(setup.difficulty_numeral(0), "〇", "0 级「〇」")
+	t.eq(setup.difficulty_numeral(3), "Ⅲ", "3 级「Ⅲ」")
+	game.queue_free()
+	Support.cleanup("setup180f")
