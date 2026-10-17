@@ -189,9 +189,17 @@ const ART_SUMMARY_NOTE := "setup/summary_note"
 const ART_SETUP_BACK := "setup/btn_back"
 const ART_SETUP_GO := "setup/btn_go"
 const ART_RINGS := "setup/rings"
-## 182：第三页纸上的入口印记（常态；`_hover` 悬停、`_on` 选中，缺的态用常态）与居中提示窗的纸签底；没图：印记现画、纸签退回摘要便条
-const ART_SPAWN_MARK := "setup/spawn_mark"
-const ART_NODE_HINT := "setup/node_hint"
+## 182：第三页纸上的入口小旗（作者 15:32 定；`_normal` / `_hover` / `_sel` 三态，锚点在图中心），居中提示窗的纸签底与上沿正中的红蜡封（单独摆，不进九宫格）；
+## 没图：小旗现画成纸底墨圈、纸签退回摘要便条
+const ART_SPAWN_MARK := "setup/spawn_flag"
+const ART_NODE_HINT := "setup/node_tip_paper"
+const ART_NODE_SEAL := "setup/node_tip_seal"
+## 184：地图上的玩家棋子（锚点 = 脚底中心，对准节点圆心）、离屏指示的小棋子、图例里的棋子与小旗、步数签的小纸签底
+const ART_MAP_PAWN := "map/player_pawn"
+const ART_MAP_PAWN_SMALL := "map/pawn_36"
+const ART_LEGEND_PAWN := "map/pawn_24"
+const ART_LEGEND_FLAG := "map/flag_24"
+const ART_MAP_TAG := "map/tag_paper"
 ## 战斗界面的整屏背景（白天的沙地场子，铺满裁边；深浅读图旁 json 的 `tone`）；没图：照旧纯色底
 const ART_BATTLE_BG := "battle/battle_bg"
 ## 179：凹槽板没图时的平面底（样稿第二版的色）
@@ -689,6 +697,21 @@ static func art(name: String) -> Texture2D:
 	return EventImage.load_texture(path)
 
 
+## 184：每帧在 `_draw` 里画的小图走这个 —— [method art] 不缓存，画完没人拿着引用，贴图当帧就被释放、画出来是一块白；
+## 这里按路径留一份（没有的不记，美术后到也能读到）
+static func art_cached(name: String) -> Texture2D:
+	var path := asset_root + name
+	if _art_cache.has(path):
+		return _art_cache[path]
+	var tex := art(name)
+	if tex != null:
+		_art_cache[path] = tex
+	return tex
+
+
+static var _art_cache: Dictionary = {}
+
+
 ## 贴图旁边的 `<name>.json`（九宫格边距 `margin: [左, 上, 右, 下]`、石板框的 `title_height`）；没有或读不成字典是空字典
 static func art_meta(name: String) -> Dictionary:
 	var path := asset_root + name + ".json"
@@ -1073,6 +1096,11 @@ static func _setup_art(t: Theme) -> void:
 	# 182：提示窗的纸签 —— 自己的图 → 摘要便条那张 → 平色纸
 	t.set_type_variation(PANEL_NODE_HINT, "PanelContainer")
 	var hint: StyleBox = _art_box(ART_NODE_HINT)
+	if hint != null:     # 纸签的边是毛边：字再往里收一点
+		hint.content_margin_left += 12.0
+		hint.content_margin_right += 12.0
+		hint.content_margin_top += 6.0
+		hint.content_margin_bottom += 8.0
 	if hint == null:
 		hint = _art_box(ART_SUMMARY_NOTE)
 	if hint == null:

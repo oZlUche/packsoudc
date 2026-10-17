@@ -515,12 +515,19 @@ func _adopt() -> void:
 		_say("%s　种子 %d：%d 个点。挑一个出生点（绿圈的「生」）开始" % [
 			_run.chapter.display_name, _run.run_seed, _run.map.node_count()])
 	else:
-		_say("%s　种子 %d：在点 %d 上（三角标是你），已走 %d 步。点相邻的点走一步；B 开背包" % [
+		_say("%s　种子 %d：在点 %d 上（小兵棋子是你），已走 %d 步。点相邻的点走一步；B 开背包" % [
 			_run.chapter.display_name, _run.run_seed, _run.travel.current_id, _run.travel.clock.total])
+
+
+## 184：走一步的动画（棋子跳、镜头跟）跟着换屏淡入的开关
+func _animate_moves() -> bool:
+	return GameDirector.fades_allowed and flow.settings != null and flow.settings.ui_fades
 
 
 func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
 	_view.current_id = intent.to_id
+	_view.animate_moves = _animate_moves()
+	_view.hop_from(intent.from_id, intent.kind == MoveIntent.TELEPORT)     # 184：棋子从旧点跳过来
 	var n := _run.map.get_node(intent.to_id)
 	var what: String = MapNodeStyle.of(n.type)["label"]
 	if intent.kind == MoveIntent.TELEPORT:
@@ -575,10 +582,22 @@ func _after_move() -> void:
 	if _run == null or _view == null:
 		return
 	var reach := {}
+	var cost := {}
+	var teleport := {}
 	if _run.phase == RunState.Phase.ON_MAP:
 		for id in _run.travel.available_moves():
 			reach[id] = true
+			# 184：墨路上的「计二步」与传送签 —— 和悬停预览（129）同一份算法
+			var intent := MapNavigator.resolve_step(_run.map, _run.travel.current_id, id)
+			cost[id] = _run.travel.cost_of(intent) if intent != null else 1
+			if intent != null and intent.kind == MoveIntent.TELEPORT:
+				teleport[id] = true
 	_view.reachable = reach
+	_view.reach_cost = cost
+	_view.reach_teleport = teleport
+	_view.animate_moves = _animate_moves()
+	if not revealing():
+		_view.follow_current(_view.animate_moves)     # 184：人出了屏幕中央三分之一就把镜头带回来（缩放不动）
 	_view.queue_redraw()
 	_refresh_hud()
 	_refresh_hunter_marks()
@@ -1100,6 +1119,7 @@ func begin_reveal(reveal: Dictionary) -> void:
 	var far := 0.0
 	for corner in [Vector2.ZERO, Vector2(_view.size.x, 0.0), Vector2(0.0, _view.size.y), _view.size]:
 		far = maxf(far, hole.distance_to(corner))
+	_view.stop_follow()
 	_reveal = {"zoom0": zoom0, "pan0": center - _view.canvas_rect().get_center() * zoom0,
 		"r0": maxf(0.0, float(reveal.get("radius", 0.0))), "r1": far * 1.3 + MapPreview.SOFTNESS * 2.0, "center": center, "hole": hole}
 	_paper = _make_paper(hole)
