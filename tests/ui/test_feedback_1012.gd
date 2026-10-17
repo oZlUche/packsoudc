@@ -177,3 +177,75 @@ static func run_window_and_nameplate_art(t: TestCase) -> void:
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_NAMEPLATE), UiTheme.TONE_DARK, "深铜底：名字用亮色字")
 	t.eq(UiTheme.tip_icon("no_such_icon", "值 "), "值 ", "没有图：写字")
 	t.check(UiTheme.tip_icon("coin", "值 ").begins_with("[img"), "金币图读得出来：用图")
+
+
+static func frame_tip_pin_on_source(t: TestCase, root: Window) -> void:
+	t.begin("作者 2026-10-17 · 钉住看源：悬浮窗出来后鼠标还停在道具 / 关键词 / 别的源上满 0.6 秒就钉，不必先移进窗；钉住后在源上不算离开，源离开窗还留着，离开 0.4 秒才收")
+	var c := TestSupport.load_content()
+	var host := Control.new()
+	host.size = Vector2(1600, 900)
+	root.add_child(host)
+	var board := GridInventory.new(Vector2i(4, 3), 1)
+	board.place(ItemInstance.create(c.items.get_def(&"poison_arrows")), Vector2i(0, 0), 0)
+	var view := InventoryView.new()
+	view.inventory = board
+	view.position = Vector2(20, 20)
+	view.size = Vector2(board.size) * InventoryView.CELL
+	host.add_child(view)
+	var tip := HoverTip.new()
+	host.add_child(tip)
+	tip.watch(view)
+	var on := InputEventMouseMotion.new()
+	on.position = Vector2(24, 24)
+	view.gui_input.emit(on)
+	var src := view.global_position + on.position
+	t.check(tip.is_showing() and not tip._panel.global_rect().has_point(src), "停在道具上：出现（鼠标不在窗里）")
+	tip.tick(0.3, src)
+	t.check(not tip.is_pinned() and tip._panel.dwell > 0.0, "停在道具上 0.3 秒：进度在走、还没钉")
+	tip.tick(0.31, src)
+	t.check(tip.is_pinned(), "停在道具上满 0.6 秒：钉住")
+	tip.tick(1.0, src)
+	t.check(tip.is_showing(), "钉住后还在道具上：不收")
+	var empty := InputEventMouseMotion.new()
+	empty.position = Vector2(200, 160)
+	view.gui_input.emit(empty)
+	var far := Vector2(5, 880)
+	tip.tick(0.2, far)
+	t.check(tip.is_showing(), "离开道具 0.2 秒：钉住的窗还在")
+	tip.tick(0.25, far)
+	t.check(not tip.is_showing(), "源和窗都离开 0.4 秒：收")
+
+	# 关键词：停在开子窗的词上也走子窗的钉住进度
+	view.gui_input.emit(on)
+	tip.tick(0.61, src)
+	var terms: Dictionary = tip._panel.terms
+	if not terms.is_empty():
+		var inside := tip._panel.global_position + tip._panel.size * 0.5
+		tip._panel.hover("term:" + String(terms.keys()[0]))
+		tip.tick(0.3, inside)
+		t.eq(tip.windows().size(), 2, "停在关键词上：开子窗")
+		var child: HoverTip.TipWindow = tip.windows()[1]
+		tip.tick(0.61, inside)
+		t.check(child.pinned, "还停在那个词上满 0.6 秒：子窗钉住（鼠标没进子窗）")
+	tip.hide_tip()
+
+	# 别的源（地图点、按钮）：show_text + release
+	tip.show_text("地图上的点", Vector2(400, 400))
+	tip.release()
+	t.check(not tip.is_showing(), "没钉住就离开源：立刻收")
+	tip.show_text("地图上的点", Vector2(400, 400))
+	tip.tick(0.61, far)
+	t.check(tip.is_pinned(), "源上停满：钉住")
+	tip.show_text("别的点", Vector2(400, 400))
+	t.eq(tip.text(), "地图上的点", "钉住的窗不被别的源换掉")
+	tip.release()
+	t.check(tip.is_showing(), "钉住后离开源：还在")
+	tip.tick(0.45, far)
+	t.check(not tip.is_showing(), "离开窗 0.4 秒：收")
+	host.queue_free()
+
+
+static func run_routes_hidden(t: TestCase) -> void:
+	t.begin("作者 2026-10-17 · 挑出生点时的路线卡（风险 / 收益）对玩家隐藏：卡片不建，左下角那件跟着藏")
+	var consts: Dictionary = (load("res://ui/game/map_screen.gd") as Script).get_script_constant_map()
+	t.eq(consts.get("SHOW_ROUTES", true), false, "路线卡关着")

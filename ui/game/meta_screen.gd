@@ -769,7 +769,7 @@ func _codex_tile_for(def: ItemDef) -> CodexTile:
 ## 图鉴格的悬浮接线：停上去显示说明、离开就藏
 func _wire_tile(tile: CodexTile) -> void:
 	tile.hovered.connect(_on_tile_hovered)
-	tile.unhovered.connect(func(_t: CodexTile): _codex_tip.hide_tip())
+	tile.unhovered.connect(func(_t: CodexTile): _codex_tip.release())
 
 
 ## 095：点开一格：有异体就弹出列表（原件、蛮神版、日神版……各一小格，点亮的亮着），再点关闭 / 别处关掉

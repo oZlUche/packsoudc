@@ -73,4 +73,4 @@ func _ready() -> void:
 	mouse_exited.connect(func():
 		var tip: HoverTip = screen.get("_tip") if screen != null else null
 		if tip != null:
-			tip.hide_tip())
+			tip.release())     # 作者 2026-10-17：钉住了就留着
