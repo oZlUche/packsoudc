@@ -295,3 +295,18 @@ reveal = { center: Vector2(屏幕像素), radius: float(像素), ring_gap: float
 - **底图**：`assets/maps/ruins.png`、`imperial_camp.png` 换成美术去掉右下角罗盘的版本（作者 11:49「局内地图右下角的指南去掉」）。
 - **美术接口**（到图即生效，到之前平色）：`setup/parchment_strip`（竖向平铺）、`setup/scroll_rod_top` / `scroll_rod_bottom`、`setup/difficulty_plate`（「开启挑战」按钮面与「当前难度」铜牌共用）、`setup/flip_counter`。
 - **测试**：`test_setup_180.gd` 补三 / 四 / 五一条（按钮 → Ⅰ、两段动画的中间态、翻页方向、收起、挡板点一下到终态、灰态、锁住时的提示）与羊皮纸一条（排序、点对齐、底卷轴常在、收束、滚轮、回到顶）。截图 `/mnt/project-files/screenshots/180/s5_*.png`（收起、下移中、拉开中、展开、收起中、锁住）。
+
+### 定稿美术（v3.24，作者 2026-10-17 12:04「定稿」）：开局第二、三页换图
+
+美术源在 `art/ui/setup/p180/`（README 有尺寸、九宫格边距、动画时长），拷进 `assets/ui/setup/`（不拷 @2x 与 `mock/`）。每样没图时退回原来的平面样子。
+
+- **背景**：`bg_kit`（第二页墙 + 地面）、`bg_map`（第三页木桌上一张地图纸，浅底）。第三页左右两列与标题离屏边再让 36 像素（`PAPER_INSET`，避开纸的毛边）；右下按钮组按 `bg_map.json` 的 `paper_x` 换算，离纸右沿 60 像素（`_fit_nav`）。
+- **第二页**：行囊板 `PANEL_PACK_LEATHER`（皮框）、仓库 `PANEL_STASH_FRAME`（木框铁角），内边距 44。仓库页签是挂牌 `BUTTON_SETUP_TAB`（52 × 60；常态 / 按下 = 选中 / 灰态 = 没解锁三张图，字写在 `text_area` 里）。`WarehousePages` 加 `tab_variation` / `tab_height`，基地和结算屏不受影响。
+- **第三页**：两列直接摆在纸上（`PANEL_BARE`，透明底、浅色调），没有「地图」小标题。地图条目 `BUTTON_MAP_ENTRY`、规模 `BUTTON_MAP_SUB`：选中是 on 图（`toggle_mode` 按下）。角色名写在钉着的便条 `PANEL_SUMMARY_NOTE` 上。「返回」/「继续 · 出发」是按钮 A 套 `BUTTON_SETUP_BACK`（深色铜铸牌、浅字）和 `BUTTON_SETUP_GO`（亮黄铜、墨字），各四态。预览圈按 `rings.json`：小型粗而疏，大型细而密，中型取两者中间（`MapPreview.ring_style`）。
+- **难度组**（`DifficultyBlock`，宽 304）：
+  - 收起：「开启挑战」铜牌 `diff_open_plate_*`（304 × 104，墨字 28 粗体）。两根卷轴 `diff_roller`（304 × 30，下面那根竖翻）上下边缘相接、压在铜牌后面居中，只露两端轴头。
+  - 展开：梯形标题牌 `diff_title_tab`（墨字，下沿压计数器 4 像素）、计数器外框 `diff_counter_frame` 250 × 160（窗里是翻页卡 `diff_flip_card`、数字、中缝 `diff_flip_split`；翻页的半页底也用卡）、−/＋ `diff_minus_*`/`diff_plus_*`（各 124 × 56，并排留 2，字画在图上）、羊皮纸 `diff_parch`（264 宽居中、纵向平铺）。
+  - 挑战字血红 #C81018，行高 32。
+  - 时长按演示页：翻页每半页 0.16 s，纸伸缩 0.3 s，卷轴下移 0.42 s，拉开 0.3 s；收起时卷轴上移到位后，铜牌再淡入 0.26 s。
+- **字色**：浅底字主题里，`LABEL_FLIP_NUM` 固定白字，因为数字永远在黑翻页卡上。
+- **测试**：180 的几条按定稿放宽（加减灰态比图、仓库框接受木框、收起时两轴相接居中）。截图在 `/mnt/project-files/screenshots/180/final/`。

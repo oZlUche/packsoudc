@@ -37,6 +37,10 @@ var radius_frac: float = 0.0:
 static var _noise: NoiseTexture2D = null
 var _skin_tex: Texture2D = null
 var _tween: Tween = null
+## 180 定稿：虚线圈的样子（美术 `setup/rings.json` 给小型 / 大型两套，中型取中间）：{width, dash, gap, color}；没给 = 空，按常量画
+var _ring_style: Dictionary = {}
+## 规模在两套之间的位置（小 0、中 0.5、大 1）
+const RING_STYLE_T := {&"small": 0.0, &"medium": 0.5, &"large": 1.0}
 
 
 func _init() -> void:
@@ -71,6 +75,7 @@ func show_map(skin_id: StringName, ring_levels: int, scale_id: StringName, anima
 	_skin_tex = MapSkin.texture(skin_id)
 	levels = maxi(0, ring_levels)
 	target_frac = float(RADIUS_BY_SCALE.get(scale_id, RADIUS_DEFAULT))
+	_ring_style = ring_style(scale_id)
 	if _tween != null:
 		_tween.kill()
 		_tween = null
@@ -124,9 +129,29 @@ func ring_gap() -> float:
 	return target_radius() / float(levels) if levels > 0 else 0.0
 
 
-## 线宽：环越多越细
+## 线宽：有美术参数按规模取，没有就环越多越细
 func ring_width() -> float:
+	if not _ring_style.is_empty():
+		return float(_ring_style["width"])
 	return clampf(RING_WIDTH_MAX - 0.2 * float(maxi(0, levels - 3)), RING_WIDTH_MIN, RING_WIDTH_MAX)
+
+
+## 一档规模的虚线样子（小型、大型照 json，中型两套各取一半）；没有 json 空字典
+static func ring_style(scale_id: StringName) -> Dictionary:
+	var meta := UiTheme.art_meta(UiTheme.ART_RINGS)
+	if not meta.has("small") or not meta.has("large"):
+		return {}
+	var a: Dictionary = meta["small"]
+	var b: Dictionary = meta["large"]
+	var k := float(RING_STYLE_T.get(scale_id, 0.5))
+	var ca := Color(String(a.get("color", "#3a2c1e")), float(a.get("alpha", 0.8)))
+	var cb := Color(String(b.get("color", "#3a2c1e")), float(b.get("alpha", 0.8)))
+	return {
+		"width": lerpf(float(a.get("width", RING_WIDTH_MAX)), float(b.get("width", RING_WIDTH_MIN)), k),
+		"dash": lerpf(float(a.get("dash", DASH)), float(b.get("dash", DASH)), k),
+		"gap": lerpf(float(a.get("gap", DASH_GAP)), float(b.get("gap", DASH_GAP)), k),
+		"color": ca.lerp(cb, k),
+	}
 
 
 func _sync_material() -> void:
@@ -148,15 +173,16 @@ func _draw() -> void:
 	var gap := ring_gap()
 	if gap <= 0.0:
 		return
-	var ink := Color(UiTheme.INK, 0.75)
+	var ink: Color = _ring_style.get("color", Color(UiTheme.INK, 0.75))
 	var width := ring_width()
 	for lv in range(1, levels + 1):
 		_dashed_circle(center(), gap * float(lv), ink, width)
 
 
 func _dashed_circle(at: Vector2, r: float, color: Color, width: float) -> void:
-	var step := (DASH + DASH_GAP) / r
-	var dash := DASH / r
+	var on := float(_ring_style.get("dash", DASH))
+	var step := (on + float(_ring_style.get("gap", DASH_GAP))) / r
+	var dash := on / r
 	var a := 0.0
 	while a < TAU:
 		draw_arc(at, r, a, minf(a + dash, TAU), 4, color, width, true)
