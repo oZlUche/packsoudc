@@ -210,3 +210,14 @@ reveal = { center: Vector2(屏幕像素), radius: float(像素), ring_gap: float
 - **兜底**：1 s 还相交的（地上挤满了）退回 `ItemStash.next_free_spot()`；扫也扫不出空处时记下这一批，地上的东西没变就不再反复弹。
 - **没做**：没有重力（地上的东西被推高了就停在那儿，不往下掉）；落地途中的不参与碰撞，落稳才算。
 - **测试**：新 `tests/inventory/test_ground_bump_180.gd`（横向分开、重的挪得少、很快贴住、写回；撞墙限速、不出屏；掉在别人身上落稳后弹开；二十件压一堆最后两两不相交；读档的重叠也弹开）。
+
+### 批三（v3.21，2026-10-17）：入局拉近转场 + 装饰层接口
+
+- **接力**：出发时 `SetupScreen.reveal_payload()` = {center（预览圆心，全局像素）, radius（此刻化开半径）, ring_gap, levels}，写进 `GameFlow.map_reveal`；`begin` 交给地图屏 payload 的 `reveal` 并清掉（**和方案不同**：方案写 `depart()` 直接塞 payload，但 payload 是 `begin` 里 `_go` 发的，所以经 flow 转一手）。`GameDirector` 见 `reveal` 不叠 `_fade_in`。
+- **时间线**（`MapScreen.apply_reveal(t)`，一条 1.4 s 的 `tween_method`）：0–0.5 s 纸化开；0.2–1.0 s 镜头从 `zoom0 = ring_gap / RING_STEP`、画布中心在预览圆心拉到平时进图的视角（缩放按倍数插值、smoothstep；**终点每帧现算** `reveal_target()`，因为读数层排版后平时的视角会变）；0.5–1.2 s `node_front` 0 → 环数 + 1；0.6–1.3 s `deco_alpha`；1.2–1.35 s 读数层与底下两行出来；结束 `finish_reveal()` 才放规则卡 / 教程。任意点击、按键直接到头。
+- **纸**（**和方案不同**：`reveal_radius` 不在 `MapView` 上）：`MapScreen` 在地图视图上面盖一块全屏的「纸」—— 第三页的背景画（`setup/bg_map`，有就铺）或底色，挂同一个 `ink_reveal.gdshader`，新增 `invert`：圆里透明、圆外显出。这样着色器只画一块矩形，不受 `MapView` 内部 `draw_set_transform` 的影响。
+- **节点长出来**：离出生环 k 环的点长到 clamp(node_front − k, 0, 1)，**按比例从圆心放大**（不是改 alpha：节点十几种颜色，放大更省也更像「长出来」）；边、路口、危险圈按两端较小的那个系数透明；传送点虚线长全再画；猎手标记、侵蚀圈转场里不画；挑出生点的遮罩在最后一环长全之后盖上来（新开一局一定是挑出生点阶段）。
+- **装饰层**：`MapSkin.deco(id)` 读 `<id>_deco.png`（同目录、同铺法），`MapView` 画在底图上、圈下面，透明度 `deco_alpha`。美术交图即生效，不用改代码。
+- **不转场**：设置里「换屏淡入」关着、跑测试（`GameDirector.fades_allowed`）、不是同心环布局、不经第三页（读档、从节点 / 战斗回来）。
+- **没做**：`flow.begin` 的 `pregen` 复用没加（第三页按种子只算一次，`begin` 再算一次，出发时只多一次生成）。
+- **测试**：`test_setup_180.gd` 加入局转场（起点圈重合、纸从预览半径起、半程、点一下到头、规则卡在后、淡入关着不转场）与装饰层读取。截图 `/mnt/project-files/screenshots/180/b3_*.png`。
