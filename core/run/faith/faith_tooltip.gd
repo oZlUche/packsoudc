@@ -1,64 +1,96 @@
-## 信仰的悬浮说明（087，作者定：鼠标停在「信仰：X」上时显示具体效果与信力怎么涨）。
+## 信仰的悬浮说明（087；188 作者 2026-10-17 重排：「信仰说明的悬浮窗需要重新排版和设计字体颜色」）。
 ##
-## 纯文字（BBCode）：神与说明、**信力怎么涨**（[FaithDef.deeds] 各一句）、阈值与现在几阶、这个信仰的道具各阶解锁什么
-## （从道具库里按 `faith:<id>` 标签找，[method FaithBonus.describe]）。画是 [HoverTip] 的事
+## 和道具窗同一套版式：名字行（神名、等级、休眠几件）+ 信力行 + 到下一阶的进度条 / 分隔线 / 各阶效果 / 虚线 / 信力来源 / 虚线 / 献祭。
+## 颜色全走字色模板（`@faith` `@val` `@tip_fg` `@tip_desc` `@tip_meta` `@warn`），不写死十六进制。
+## 不写：神的括号注、背景故事、阈值串、这个信仰的道具清单、机制说明。画是 [HoverTip] 的事（[method HoverTip.show_faith]）
 class_name FaithTooltip
 extends RefCounted
 
+const META_SIZE := 13
+const POWER_SIZE := 14
 
-## [param power] 可为 null（只写定义）；[param items] 可为 null（不列道具）
-static func describe(def: FaithDef, power: FaithPower = null, items: ItemDatabase = null) -> String:
+
+## `{"head": 名字行 + 信力行, "sections": [各阶效果?, 信力来源, 献祭?]（各段 BBCode）, "progress": 到下一阶的比例（满阶 -1）, "text": 连起来}`。
+## [param power] 可为 null（只写定义，按 0 点算）；[param board] 给了就数休眠的道具。没有信仰返回空字典（悬浮窗不开）
+static func describe_full(def: FaithDef, power: FaithPower = null, board: ItemContainer = null) -> Dictionary:
 	if def == null:
-		return "[b]没有信仰[/b]\n棋盘上放一件带信仰标签的道具就激活它的信仰；最后放进去的那件说了算。"
-	var lines: Array[String] = []
-	lines.append("[b]%s[/b]%s" % [Names.of(def), ("　" + def.god) if def.god != "" and def.god != def.display_name else ""])
-	var desc := Names.description_of(def)
-	if desc != "":
-		lines.append("[color=#8b93a1]%s[/color]" % desc)
-	# 信力怎么涨
-	var deeds := def.deeds_summary()
-	lines.append("[color=#f0ad4e]信力怎么涨：[/color]%s" % (deeds if deeds != "" else "（无）"))
-	# 阈值与现在
-	var ths: Array[String] = []
-	for th in def.thresholds:
-		ths.append(str(th))
-	var now_line := "阈值：%s" % ("、".join(ths) if not ths.is_empty() else "无")
-	if power != null:
-		var p := power.points_of(def.id)
-		var tier := def.tier_of(p)
-		var next := def.next_threshold(p)
-		now_line += "　现在 %d 点、第 %d 阶%s" % [p, tier, ("，再 %d 点到下一阶" % (next - p)) if next >= 0 else "，已满阶"]
-	lines.append(now_line)
-	# 093：献祭品与信仰级效果
-	if not def.offerings.is_empty():
-		lines.append("[color=#f0ad4e]献祭品（神坛）：[/color]%s" % def.offerings_summary())
+		return {}
+	var p := power.points_of(def.id) if power != null else 0
+	var tier := def.tier_of(p)
+	var next := def.next_threshold(p)
+	var dormant := FaithState.dormant_uids(board).size() if board != null else 0
+	var sections: Array[String] = []
 	if not def.perks.is_empty():
-		var tier_now := def.tier_of(power.points_of(def.id)) if power != null else -1
-		lines.append("[color=#f0ad4e]各级效果：[/color]")
-		for pk in def.perks:
-			var perk := pk as FaithPerk
-			if perk == null:
-				continue
-			var on := tier_now >= perk.tier
-			lines.append("　%sLv.%d　%s%s" % ["[color=#5cb85c]" if on else "[color=#8b93a1]", perk.tier, perk.describe(), "[/color]"])
-	# 这个信仰的道具各阶解锁什么
-	if items != null:
-		var ids: Array = items.ids()
-		ids.sort()
-		var any := false
-		for id in ids:
-			var d := items.get_def(id)
-			if d == null or d.faith_tag() != def.tag():
-				continue
-			if not any:
-				lines.append("[color=#f0ad4e]这个信仰的道具：[/color]")
-				any = true
-			var bits: Array[String] = []
-			for fb in d.faith_bonuses:
-				var b := fb as FaithBonus
-				if b == null:
-					continue
-				bits.append(b.describe())
-			lines.append("　%s%s" % [Names.of(d), ("：" + "；".join(bits)) if not bits.is_empty() else "（没有按阶解锁的功能）"])
-	lines.append("[color=#8b93a1]其他信仰的道具会休眠，只保留基础效果。右键信物可切换主信仰。[/color]")
+		sections.append(_perk_section(def, tier))
+	var deeds: Array[String] = []
+	for d in def.deeds:
+		if d != null and String(d.describe()) != "":
+			deeds.append(_fg(Glossary.val_numbers(String(d.describe()))))
+	if not deeds.is_empty():
+		sections.append(_section("信力来源", deeds))
+	var offers: Array[String] = []
+	for r in def.offerings:
+		if r != null:
+			offers.append(_fg(Glossary.val_numbers((r as OfferingRule).describe())))
+	if not offers.is_empty():
+		sections.append(_section("献祭", offers))
+	for i in sections.size():
+		sections[i] = "[font_size=%d]%s[/font_size]" % [Glossary.BODY_SIZE, sections[i]]
+	var head := _head(def, p, tier, next, dormant)
+	return {
+		"head": head,
+		"sections": sections,
+		"progress": progress_of(def, p),
+		"text": "\n".join([head] + sections),
+	}
+
+
+## 只要文字（连起来）；没有信仰空串
+static func describe(def: FaithDef, power: FaithPower = null, board: ItemContainer = null) -> String:
+	return String(describe_full(def, power, board).get("text", ""))
+
+
+## 到下一阶走了多少（待定 3 甲：从本阶阈值算起）；满阶 -1
+static func progress_of(def: FaithDef, points: int) -> float:
+	var next := def.next_threshold(points)
+	if next < 0:
+		return -1.0
+	var tier := def.tier_of(points)
+	var from := def.thresholds[tier - 1] if tier > 0 else 0
+	return clampf(float(points - from) / float(maxi(1, next - from)), 0.0, 1.0)
+
+
+static func _head(def: FaithDef, points: int, tier: int, next: int, dormant: int) -> String:
+	var right := ""
+	if dormant > 0:
+		right += _meta("[color=%swarn]%d 件休眠[/color]" % [TextTemplate.STYLE_PREFIX, dormant]) + "　"
+	right += _meta("Lv.%s" % Glossary.val(str(tier)))
+	var name := "[font_size=%d]%s[/font_size]" % [Glossary.NAME_SIZE, Glossary.NAME_OUTLINE % ("[b][color=%sfaith]%s[/color][/b]" % [TextTemplate.STYLE_PREFIX, Names.of(def)])]
+	var power := "信力 %s%s" % [Glossary.val(str(points)), (" / " + Glossary.val(str(next))) if next >= 0 else "（满阶）"]
+	return "%s　　%s\n[font_size=%d][color=%stip_meta]%s[/color][/font_size]" % [name, right, POWER_SIZE, TextTemplate.STYLE_PREFIX, power]
+
+
+## 各阶效果：到了的亮字（数值色），没到的整行暗
+static func _perk_section(def: FaithDef, tier: int) -> String:
+	var lines: Array[String] = []
+	for pk in def.perks:
+		var perk := pk as FaithPerk
+		if perk == null or perk.describe() == "":
+			continue
+		if tier >= perk.tier:
+			lines.append("%s　%s" % [_meta("Lv.%d" % perk.tier), _fg(Glossary.val_numbers(perk.describe()))])
+		else:
+			lines.append("[color=%stip_desc][font_size=%d]Lv.%d[/font_size]　%s[/color]" % [TextTemplate.STYLE_PREFIX, META_SIZE, perk.tier, perk.describe()])
 	return "\n".join(lines)
+
+
+static func _section(title: String, lines: Array[String]) -> String:
+	return _meta(title) + "\n" + "\n".join(lines)
+
+
+static func _meta(text: String) -> String:
+	return "[font_size=%d][color=%stip_meta]%s[/color][/font_size]" % [META_SIZE, TextTemplate.STYLE_PREFIX, text]
+
+
+static func _fg(text: String) -> String:
+	return "[color=%stip_fg]%s[/color]" % [TextTemplate.STYLE_PREFIX, text]
