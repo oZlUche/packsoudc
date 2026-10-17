@@ -156,3 +156,60 @@
 - v2（16:00）：每条效果一行「每层的量，现共合计」。作者：只要合计。
 - v3（16:06）：只写合计。作者：菌血 / 燃血改措辞；规则行是内部说明，去掉；类似文字全游戏检索（→「查询」线程）。
 - v4（16:10，定稿）：https://claude.ai/artifact/XfzezPkZ1CdB6xvWwm8Rok —— 八个窗：标记、坚韧 ×2、中毒 ×5、寒冷 ×3、血怒、菌血 ×4、鏖战 ×2、燃血 ×3，只有名字行与效果，左上角是现状对照。
+
+## 补充一（2026-10-17 16:24，作者）：限时状态窗内写剩余时间，图标加计时环
+
+> 作者：「有时限的状态还是要在窗内显示时间的，同样也可以在图标上加计时环」。
+
+### 一、哪些算「限时」
+
+- **整体限时**：`duration_sec > 0` 的不可叠层状态 —— 血怒 10 秒、弹开 4 秒、久弹 8 秒、标记 8 秒（`BuffInstance.expires_at`，再上身 `refresh` 重置）。
+- **按层计时**：`seconds_per_stack > 0` 的 —— 菌血、燃血（`BuffInstance.seconds_left`，每秒掉一层，再叠就延长）。
+- 其余永续，不写时间、不画环。
+
+### 二、回放现在不知道到期时刻
+
+战斗是先算完再回放的；面板只认日志。`STATUS_STACKED` 的载荷是 `{buff, delta, stacks, guard}`（`core/battle/combatant_runtime.gd:418`），**没有到期时刻**；`expires_at` 只进开发 trace（`_trace_buff`，:331-338）。回放的当前时刻在 `BattleView._now`（秒，`battle_view.gd:286`）。
+
+改动：
+- `STATUS_STACKED` 载荷加 `expires_at`（定点整数，−1 = 永续）与 `seconds_left`（按层计时的秒数，其余 0）；上身、再叠、刷新都发这个事件，所以面板永远拿得到最新的到期时刻。老回放存档没有这两个键 → 当永续画（不画环、不写时间），不报错。
+- `CombatantPanel` 记 `_expires[id]`、`_seconds_left[id]`、`_born[id]`（这次计时从哪一刻起，= 事件的 `time`）；新增 `set_now(sec: float)`，回放每帧调，面板只在身上有限时状态时 `queue_redraw`。
+
+### 三、窗内怎么写
+
+效果段最后一行：
+
+| 类型 | 写法 | 例 |
+|---|---|---|
+| 整体限时 | 「还剩 N 秒」，N = ⌈(expires_at − now)⌉，到 0 那一刻事件会把它摘掉 | 标记：「格挡 −3 ／ 还剩 6 秒」 |
+| 按层计时 | 「还剩 N 秒」，N = `seconds_left`（= 现在层数 × 每层秒数，掉一层少一秒） | 菌血 ×4：「恢复量减半，每次恢复获得等量的中毒 ／ 还剩 4 秒」 |
+
+- 数字 `val` 色；这一行是**现在的量**，不是机制说明，所以不算 16:07 去掉的那类。
+- 窗开着时每 0.25 秒按 `_now` 重算这一行：`HoverTip` 加 `update_text(bbcode)`（只换字、不重摆、不重置钉住状态），`BattleView._process` 在悬浮窗开着且停在限时状态上时调它。暂停回放时数字不走（`_now` 不动）。
+- 图鉴、道具子窗没有「现在」：整体限时的写「持续 N 秒」（N = `duration_sec`）放在效果最后一行；按层计时的写「每层 1 秒」。这两句是字段量，不是说明。
+
+### 四、图标上的计时环
+
+- 画在 `EffectIcons` 的 28×28 图标**外缘**：半径 15、2 px、从十二点起顺时针，画的是**剩余**那一段（满环 = 刚上身，缩到零 = 到期）；颜色 = 这个图标的 `tint_of()`（元素状态用元素色，其余按增益 / 减益色），底下垫一圈 1 px 半透明黑让它在浅沙地上也看得见。
+- 整体限时：剩余比例 = (expires_at − now) / duration_sec；再上身刷新时环回满。
+- 按层计时：剩余比例 = seconds_left / (stacks × seconds_per_stack) —— 永远接近满，没有信息，**不画环**；层数本身在掉就是它的计时。
+- 右下角的层数数字不动；环不压数字（数字在图标内，环在图标外）。
+- 不需要美术件（程序画弧）。
+
+### 五、改动清单（并进 §4）
+
+- `core/battle/combatant_runtime.gd:418`：事件载荷加 `expires_at`、`seconds_left`；`BattleEvent` 读取处加默认值。
+- `ui/battle/combatant_panel.gd`：`set_stacks` 读两个新键；`set_now()`；`_draw` 的图标段画环；`remaining_sec(id, now)` 给悬浮窗与测试读。
+- `core/text/glossary.gd`：`describe_buff(def, stacks := 1, remaining_sec := -1.0)`，≥ 0 时末尾加「还剩 N 秒」；`remaining_sec < 0` 且 `duration_sec > 0` 写「持续 N 秒」，`seconds_per_stack > 0` 写「每层 N 秒」。
+- `ui/battle/battle_view.gd`：`buff_tip()` 传 `panel.remaining_sec(id, _now)`；`_process` 里悬浮窗开着就 `_tip.update_text(buff_tip(...))`（每 0.25 秒一次）。
+- `ui/inventory/hover_tip.gd`：`update_text(bbcode)`。
+- 测试：
+  1. 回放里血怒上身后 `panel.remaining_sec("blood_rage", t)` 从 10 递减，到期事件后为 −1；老格式事件（无 `expires_at`）→ −1。
+  2. `describe_buff(marked, 1, 6.0)` 末行「还剩 6 秒」；`describe_buff(marked)` 末行「持续 8 秒」；`describe_buff(poison, 5, -1)` 没有时间行。
+  3. 面板有限时状态时 `set_now` 触发重绘、环的弧度随时间缩（读 `ring_fraction(id)`）；永续与按层计时的 `ring_fraction` 为 −1。
+  4. 悬浮窗开着时推进 `_now` 1 秒，`_tip.text()` 里的秒数少 1，钉住状态不变。
+
+### 六、待定（默认按推荐）
+
+1. **按层计时要不要环** —— 推荐 **甲**：不画（层数在掉就是计时）。乙：画，比例 = seconds_left / 最大曾达到的秒数（要多记一个峰值）。
+2. **环的位置** —— 推荐 **甲**：图标外缘 2 px（不压数字）。乙：图标内缘（压到图的边，28 px 太小）。
