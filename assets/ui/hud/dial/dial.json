@@ -1,0 +1,24 @@
+{
+ "pivot": [
+  52,
+  46
+ ],
+ "radius": 40,
+ "shadow_points": "up (90°)",
+ "tone": "light",
+ "stages": {
+  "calm": {
+   "above": 0.5,
+   "wash": "#6b6255"
+  },
+  "half": {
+   "above": 0.25,
+   "wash": "#9A5A22"
+  },
+  "low": {
+   "above": 0,
+   "wash": "#8E2A22"
+  }
+ },
+ "wash_opacity": 0.16
+}
