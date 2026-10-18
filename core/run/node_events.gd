@@ -38,6 +38,8 @@ signal shop_closed(node: MapNode)
 signal safe_opened(node: MapNode)
 ## 093：神坛（休息处的「神坛」选项）：开了
 signal altar_opened(node: MapNode)
+## 194：铸炉（休息点的「铸炉」选项）：开了
+signal forge_opened(node: MapNode)
 ## 154：踩上没开锁的宝箱（开锁画面由持有方画；锁开了调 [method open_chest]）
 signal chest_shown(node: MapNode)
 signal event_resolved(node: MapNode, outcome: StringName, detail: Dictionary)
@@ -405,6 +407,9 @@ func choose(i: int) -> bool:
 	if ctx.open_altar and not over:
 		last_handled_id = node.id
 		altar_opened.emit(node)     # 093：休息完开神坛（选项里写 proceed + open_altar）
+	elif ctx.open_forge and not over:
+		last_handled_id = node.id
+		forge_opened.emit(node)     # 194：铸炉和神坛并列，不算用掉休息那一份
 	# 8-3 传送：这个点的事都完了才挪人（打输了、开着会话就不挪）。造一个 teleport 意图交给持有方 / 旅程，
 	# 和走一条传送点边是同一条路：计数、侵蚀、落地那个点头一回踩上就触发它的事
 	if ctx.teleport_to >= 0 and not over and travel != null and current_search == null and current_shop == null and pending_battle.is_empty():
