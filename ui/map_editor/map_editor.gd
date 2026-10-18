@@ -540,6 +540,7 @@ func _build() -> void:
 	row.add_child(_build_side())
 	_view = MapView.new()
 	_view.show_backdrop = true     # 编辑器里留着辅助圆
+	_view.show_routes = true     # 编辑器里照旧按路线上色
 	_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_view.show_free_slots = true

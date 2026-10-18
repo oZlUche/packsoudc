@@ -255,4 +255,5 @@ static func run_map_no_backdrop_rings(t: TestCase) -> void:
 	t.begin("作者 2026-10-17 · 局内地图不画不是路的同心圆（布局底纹默认关，地图编辑器才开）")
 	var view := MapView.new()
 	t.check(not view.show_backdrop, "默认不画底纹")
+	t.check(not view.show_routes, "作者 10-17：默认不按路线类型上色")
 	view.free()

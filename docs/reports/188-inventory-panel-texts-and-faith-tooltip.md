@@ -81,3 +81,15 @@ Lv.4  不死
 1. **背包叠层里要不要留信仰悬浮目标** —— 推荐 **甲**：不留，用顶端栏徽记（叠层开着时栏露着）。乙：面板左上放 32 px 徽记。
 2. **进度条做法** —— 推荐 **甲**：控件挂在名字行下（`show_faith`）。乙：BBCode 画一条（粗糙）。
 3. **进度条的「到下一阶」比例** —— 推荐 **甲**：(p − 本阶阈值) / (下阶阈值 − 本阶阈值)。乙：p / 下阶阈值（刚升阶时条也接近满，误导）。
+
+## 落地（2026-10-17，架构方案执行）
+
+待定 1–3 都按推荐（甲）：背包里不留信仰悬浮目标（用顶端栏徽记）；进度条是控件，挂在名字行下；比例从本阶阈值算起。
+
+- **背包面板**（`ui/game/inventory_panel.gd`）：操作提示、地上说明、参战 / 可用格读数、信仰行都不造；棋盘上面那行「作战棋盘　只有包里的东西参战　拖出棋盘 = 放在地上」是同一类玩法说明，也一起删了。剩棋盘、耐力消耗、负重。面板的回话（顶出来了、放不下、合成了、奉为主信仰）都走 `hint_sink`：地图屏接 `say()`（提示行），商店 / 容器 / 祭坛等照旧接自己的那行；没有宿主就不说（`last_hint` 留给测试）。
+- **信仰窗**：`FaithTooltip.describe_full(def, power, board)` → `{head, sections, progress, text}`（没有信仰返回空字典，窗不开）；`describe()` 只返回连起来的文字。各段每行沿用 `perk.describe()` / `deed.describe()` / `offering.describe()`，数字过 `Glossary.val_numbers`。
+- **`HoverTip.show_faith(full, at)`**：名字行（`set_status`）下插 `FaithBar`（6 px，槽 `#1a1512`、填 `UiPalette.FAITH`，满阶不挂），第一段进正文，后面每段前插一条虚线（`TipWindow.dashed`，与脚注虚线同款）；宽固定 360。换窗时 `_drop_extra` 一并摘掉。
+- 顶端栏 `faith_widget` 改调 `show_faith`，休眠件数从 `run.board` 数。
+- 献祭行沿用 `OfferingRule.describe()`（「骨制品（越稀有给得越多）」），没改成样张里的「骨 ×5」：倍率是内部系数，玩家用语那一版是作者 10-17 早些时候定的。
+
+测试 `tests/ui/test_faith_tip_188.gd`；`test_author_087` 的信仰窗用例按新版式改写，`test_ground_landing` 读 `last_hint`。截图 `/mnt/project-files/screenshots/188/faith_tip.png`。
