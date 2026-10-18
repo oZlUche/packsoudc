@@ -36,8 +36,13 @@ func anchor_weight() -> float:
 
 
 func canvas_size(graph: MapGraph) -> Vector2:
-	var side := 2.0 * (float(level_count(graph)) * RING_STEP + MARGIN)
+	var side := canvas_side(level_count(graph))
 	return Vector2(side, side)
+
+
+## 192：[param levels] 环的画布边长（开局第三页的预览没有图，按环数算同一个数，转场不跳）
+static func canvas_side(levels: int) -> float:
+	return 2.0 * (float(levels) * RING_STEP + MARGIN)
 
 
 func positions(graph: MapGraph, rect: Rect2) -> Dictionary:
