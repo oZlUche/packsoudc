@@ -1,0 +1,19 @@
+{
+  "id": "datura_flower",
+  "display_name": "曼陀罗花",
+  "display_names": {
+    "en": "Datura Flower"
+  },
+  "description": "好看，别闻久。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "reagent",
+    "material",
+    "nature",
+    "herb",
+    "poison"
+  ]
+}

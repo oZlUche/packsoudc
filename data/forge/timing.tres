@@ -1,178 +1,244 @@
 [gd_resource type="Resource" script_class="ForgeTable" format=3]
 
-[ext_resource type="Script" path="res://core/forge/forge_entry.gd" id="1_e0txd"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_item_fired.gd" id="2_quqy6"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_damage.gd" id="3_xfm68"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="4_vhjab"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="5_8phli"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="6_p1ev1"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_status_applied.gd" id="7_63mlq"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_before_damage.gd" id="8_c01fj"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="9_wtt7h"]
-[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="10_g4f3t"]
-[ext_resource type="Script" path="res://core/forge/forge_table.gd" id="11_6r7ig"]
+[ext_resource type="Script" path="res://core/forge/forge_entry.gd" id="1_5y6vs"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_item_fired.gd" id="2_e0txd"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_damage.gd" id="3_quqy6"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="4_xfm68"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="5_vhjab"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="6_8phli"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_status_applied.gd" id="7_p1ev1"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="8_63mlq"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="9_c01fj"]
+[ext_resource type="Script" path="res://core/forge/forge_table.gd" id="10_wtt7h"]
 
-[sub_resource type="Resource" id="Resource_qpkqv"]
-script = ExtResource("2_quqy6")
+[sub_resource type="Resource" id="Resource_g4f3t"]
+script = ExtResource("2_e0txd")
 metadata/part_ref = &"on_item_fired"
 
-[sub_resource type="Resource" id="Resource_iv7u8"]
-script = ExtResource("1_e0txd")
+[sub_resource type="Resource" id="Resource_6r7ig"]
+script = ExtResource("1_5y6vs")
 key = &"metal"
+trigger = SubResource("Resource_g4f3t")
+
+[sub_resource type="Resource" id="Resource_qpkqv"]
+script = ExtResource("3_quqy6")
+
+[sub_resource type="Resource" id="Resource_iv7u8"]
+script = ExtResource("1_5y6vs")
+key = &"bone"
 trigger = SubResource("Resource_qpkqv")
 
 [sub_resource type="Resource" id="Resource_5sq6y"]
-script = ExtResource("3_xfm68")
-
-[sub_resource type="Resource" id="Resource_xgc43"]
-script = ExtResource("1_e0txd")
-key = &"bone"
-trigger = SubResource("Resource_5sq6y")
-
-[sub_resource type="Resource" id="Resource_kx4o6"]
-script = ExtResource("4_vhjab")
+script = ExtResource("4_xfm68")
 metadata/part_ref = &"always"
 
-[sub_resource type="Resource" id="Resource_hwatv"]
-script = ExtResource("5_8phli")
+[sub_resource type="Resource" id="Resource_xgc43"]
+script = ExtResource("5_vhjab")
 metadata/part_ref = &"on_battle_start"
 
-[sub_resource type="Resource" id="Resource_p81pj"]
-script = ExtResource("1_e0txd")
+[sub_resource type="Resource" id="Resource_kx4o6"]
+script = ExtResource("1_5y6vs")
 key = &"leather"
-trigger = SubResource("Resource_hwatv")
-fixed_cadence = SubResource("Resource_kx4o6")
+trigger = SubResource("Resource_xgc43")
+fixed_cadence = SubResource("Resource_5sq6y")
 
-[sub_resource type="Resource" id="Resource_uxx7y"]
-script = ExtResource("6_p1ev1")
+[sub_resource type="Resource" id="Resource_hwatv"]
+script = ExtResource("6_8phli")
 metadata/part_ref = &"on_schedule"
 
-[sub_resource type="Resource" id="Resource_h8ipy"]
-script = ExtResource("1_e0txd")
+[sub_resource type="Resource" id="Resource_p81pj"]
+script = ExtResource("1_5y6vs")
 key = &"stone"
+trigger = SubResource("Resource_hwatv")
+
+[sub_resource type="Resource" id="Resource_uxx7y"]
+script = ExtResource("7_p1ev1")
+
+[sub_resource type="Resource" id="Resource_h8ipy"]
+script = ExtResource("1_5y6vs")
+key = &"wood"
 trigger = SubResource("Resource_uxx7y")
 
 [sub_resource type="Resource" id="Resource_qm3p1"]
-script = ExtResource("7_63mlq")
+script = ExtResource("3_quqy6")
+crit_only = true
 
 [sub_resource type="Resource" id="Resource_hbt5q"]
-script = ExtResource("1_e0txd")
-key = &"wood"
+script = ExtResource("1_5y6vs")
+key = &"gem"
 trigger = SubResource("Resource_qm3p1")
 
 [sub_resource type="Resource" id="Resource_aw5yd"]
-script = ExtResource("8_c01fj")
-
-[sub_resource type="Resource" id="Resource_w0w6u"]
-script = ExtResource("1_e0txd")
-key = &"gem"
-trigger = SubResource("Resource_aw5yd")
-
-[sub_resource type="Resource" id="Resource_1o25m"]
-script = ExtResource("9_wtt7h")
+script = ExtResource("8_63mlq")
 percent = 40
 metadata/part_ref = &"on_resource_below_40"
 
-[sub_resource type="Resource" id="Resource_l5sma"]
-script = ExtResource("1_e0txd")
+[sub_resource type="Resource" id="Resource_w0w6u"]
+script = ExtResource("1_5y6vs")
 key = &"flesh"
+trigger = SubResource("Resource_aw5yd")
+
+[sub_resource type="Resource" id="Resource_1o25m"]
+script = ExtResource("7_p1ev1")
+on_self = true
+by_self = false
+
+[sub_resource type="Resource" id="Resource_l5sma"]
+script = ExtResource("1_5y6vs")
+key = &"cloth"
 trigger = SubResource("Resource_1o25m")
 
 [sub_resource type="Resource" id="Resource_udmaw"]
-script = ExtResource("2_quqy6")
-metadata/part_ref = &"on_item_fired"
+script = ExtResource("8_63mlq")
+percent = 70
+direction = 1
 
 [sub_resource type="Resource" id="Resource_13pbg"]
-script = ExtResource("1_e0txd")
-key = &"default"
+script = ExtResource("1_5y6vs")
+key = &"herb"
 trigger = SubResource("Resource_udmaw")
 
 [sub_resource type="Resource" id="Resource_w716l"]
-script = ExtResource("1_e0txd")
+script = ExtResource("3_quqy6")
+min_amount = 6.0
+
+[sub_resource type="Resource" id="Resource_hfbih"]
+script = ExtResource("1_5y6vs")
+key = &"clay"
+trigger = SubResource("Resource_w716l")
+
+[sub_resource type="Resource" id="Resource_t1vek"]
+script = ExtResource("7_p1ev1")
+
+[sub_resource type="Resource" id="Resource_qbqmk"]
+script = ExtResource("1_5y6vs")
+key = &"nature"
+trigger = SubResource("Resource_t1vek")
+
+[sub_resource type="Resource" id="Resource_rlbi7"]
+script = ExtResource("2_e0txd")
+metadata/part_ref = &"on_item_fired"
+
+[sub_resource type="Resource" id="Resource_v0wpc"]
+script = ExtResource("1_5y6vs")
+key = &"crafted"
+trigger = SubResource("Resource_rlbi7")
+
+[sub_resource type="Resource" id="Resource_ddq0p"]
+script = ExtResource("3_quqy6")
+crit_only = true
+
+[sub_resource type="Resource" id="Resource_i4xbh"]
+script = ExtResource("1_5y6vs")
+key = &"magic"
+trigger = SubResource("Resource_ddq0p")
+
+[sub_resource type="Resource" id="Resource_6ewqg"]
+script = ExtResource("2_e0txd")
+metadata/part_ref = &"on_item_fired"
+
+[sub_resource type="Resource" id="Resource_qx4v6"]
+script = ExtResource("1_5y6vs")
+key = &"default"
+trigger = SubResource("Resource_6ewqg")
+
+[sub_resource type="Resource" id="Resource_2v228"]
+script = ExtResource("1_5y6vs")
 key = &"weapon"
 trigger_props = {
 "direction": "DEALT"
 }
+cadence_mult = 0.75
 
-[sub_resource type="Resource" id="Resource_hfbih"]
-script = ExtResource("1_e0txd")
+[sub_resource type="Resource" id="Resource_jjvna"]
+script = ExtResource("1_5y6vs")
 key = &"shield"
 trigger_props = {
 "direction": "TAKEN"
 }
 
-[sub_resource type="Resource" id="Resource_t1vek"]
-script = ExtResource("1_e0txd")
+[sub_resource type="Resource" id="Resource_sr4aq"]
+script = ExtResource("1_5y6vs")
 key = &"armor"
 trigger_props = {
 "direction": "TAKEN"
 }
-
-[sub_resource type="Resource" id="Resource_qbqmk"]
-script = ExtResource("1_e0txd")
-key = &"default"
-
-[sub_resource type="Resource" id="Resource_rlbi7"]
-script = ExtResource("10_g4f3t")
-seconds = 6.0
-
-[sub_resource type="Resource" id="Resource_v0wpc"]
-script = ExtResource("1_e0txd")
-key = &"0"
-cadence = SubResource("Resource_rlbi7")
-
-[sub_resource type="Resource" id="Resource_ddq0p"]
-script = ExtResource("10_g4f3t")
-seconds = 4.0
-
-[sub_resource type="Resource" id="Resource_i4xbh"]
-script = ExtResource("1_e0txd")
-key = &"1"
-cadence = SubResource("Resource_ddq0p")
-
-[sub_resource type="Resource" id="Resource_6ewqg"]
-script = ExtResource("10_g4f3t")
-seconds = 3.0
-
-[sub_resource type="Resource" id="Resource_qx4v6"]
-script = ExtResource("1_e0txd")
-key = &"2"
-cadence = SubResource("Resource_6ewqg")
-
-[sub_resource type="Resource" id="Resource_2v228"]
-script = ExtResource("10_g4f3t")
-
-[sub_resource type="Resource" id="Resource_jjvna"]
-script = ExtResource("1_e0txd")
-key = &"3"
-cadence = SubResource("Resource_2v228")
-
-[sub_resource type="Resource" id="Resource_sr4aq"]
-script = ExtResource("4_vhjab")
-metadata/part_ref = &"always"
+cadence_mult = 1.25
 
 [sub_resource type="Resource" id="Resource_2dh86"]
-script = ExtResource("1_e0txd")
-key = &"4"
-cadence = SubResource("Resource_sr4aq")
+script = ExtResource("1_5y6vs")
+key = &"default"
 
 [sub_resource type="Resource" id="Resource_05d40"]
-script = ExtResource("10_g4f3t")
+script = ExtResource("9_c01fj")
 seconds = 6.0
 
 [sub_resource type="Resource" id="Resource_epg7f"]
-script = ExtResource("1_e0txd")
-key = &"default"
+script = ExtResource("1_5y6vs")
+key = &"0"
 cadence = SubResource("Resource_05d40")
 
+[sub_resource type="Resource" id="Resource_ldsdq"]
+script = ExtResource("9_c01fj")
+seconds = 4.0
+
+[sub_resource type="Resource" id="Resource_0nlf3"]
+script = ExtResource("1_5y6vs")
+key = &"1"
+cadence = SubResource("Resource_ldsdq")
+
+[sub_resource type="Resource" id="Resource_cv2l6"]
+script = ExtResource("9_c01fj")
+seconds = 3.0
+
+[sub_resource type="Resource" id="Resource_vlvck"]
+script = ExtResource("1_5y6vs")
+key = &"2"
+cadence = SubResource("Resource_cv2l6")
+
+[sub_resource type="Resource" id="Resource_c10no"]
+script = ExtResource("9_c01fj")
+
+[sub_resource type="Resource" id="Resource_wvjs0"]
+script = ExtResource("1_5y6vs")
+key = &"3"
+cadence = SubResource("Resource_c10no")
+
+[sub_resource type="Resource" id="Resource_blddt"]
+script = ExtResource("4_xfm68")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_sony3"]
+script = ExtResource("1_5y6vs")
+key = &"4"
+cadence = SubResource("Resource_blddt")
+
+[sub_resource type="Resource" id="Resource_i8dvj"]
+script = ExtResource("4_xfm68")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_fxbap"]
+script = ExtResource("1_5y6vs")
+key = &"5"
+cadence = SubResource("Resource_i8dvj")
+
+[sub_resource type="Resource" id="Resource_q8r7d"]
+script = ExtResource("9_c01fj")
+seconds = 6.0
+
+[sub_resource type="Resource" id="Resource_7gbfw"]
+script = ExtResource("1_5y6vs")
+key = &"default"
+cadence = SubResource("Resource_q8r7d")
+
 [resource]
-script = ExtResource("11_6r7ig")
+script = ExtResource("10_wtt7h")
 id = &"timing"
 display_name = "时机"
 display_names = {
 "en": "Timing"
 }
-description = "时机槽：放进去的道具按材质定「什么时候」、按用途定方向（造成 / 受到）、按稀有度定多久一次。占位表，作者过内容。"
-material = Array[ExtResource("1_e0txd")]([SubResource("Resource_iv7u8"), SubResource("Resource_xgc43"), SubResource("Resource_p81pj"), SubResource("Resource_h8ipy"), SubResource("Resource_hbt5q"), SubResource("Resource_w0w6u"), SubResource("Resource_l5sma"), SubResource("Resource_13pbg")])
-purpose = Array[ExtResource("1_e0txd")]([SubResource("Resource_w716l"), SubResource("Resource_hfbih"), SubResource("Resource_t1vek"), SubResource("Resource_qbqmk")])
-rarity = Array[ExtResource("1_e0txd")]([SubResource("Resource_v0wpc"), SubResource("Resource_i4xbh"), SubResource("Resource_qx4v6"), SubResource("Resource_jjvna"), SubResource("Resource_2dh86"), SubResource("Resource_epg7f")])
+description = "时机槽：放进去的道具按材质定「什么时候」（每种材质各不同，来源标签兜底），按用途定方向（造成 / 受到）并乘节奏系数（武器快、盾中、防具慢），按稀有度定多久一次。"
+material = Array[ExtResource("1_5y6vs")]([SubResource("Resource_6r7ig"), SubResource("Resource_iv7u8"), SubResource("Resource_kx4o6"), SubResource("Resource_p81pj"), SubResource("Resource_h8ipy"), SubResource("Resource_hbt5q"), SubResource("Resource_w0w6u"), SubResource("Resource_l5sma"), SubResource("Resource_13pbg"), SubResource("Resource_hfbih"), SubResource("Resource_qbqmk"), SubResource("Resource_v0wpc"), SubResource("Resource_i4xbh"), SubResource("Resource_qx4v6")])
+purpose = Array[ExtResource("1_5y6vs")]([SubResource("Resource_2v228"), SubResource("Resource_jjvna"), SubResource("Resource_sr4aq"), SubResource("Resource_2dh86")])
+rarity = Array[ExtResource("1_5y6vs")]([SubResource("Resource_epg7f"), SubResource("Resource_0nlf3"), SubResource("Resource_vlvck"), SubResource("Resource_wvjs0"), SubResource("Resource_sony3"), SubResource("Resource_fxbap"), SubResource("Resource_7gbfw")])

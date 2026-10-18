@@ -1,0 +1,19 @@
+{
+  "id": "granite_mortar",
+  "display_name": "花岗石臼",
+  "display_names": {
+    "en": "Granite Mortar"
+  },
+  "description": "捣药捣盐都用它，就是沉。",
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 1,
+  "weight": 7,
+  "tags": [
+    "material",
+    "crafted",
+    "stone"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "whetstone",
+  "display_name": "磨刀石",
+  "display_names": {
+    "en": "Whetstone"
+  },
+  "description": "磨过的刀，刃上一道亮。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "crafted",
+    "stone",
+    "supply"
+  ]
+}

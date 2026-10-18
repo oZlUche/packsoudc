@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_kj1de"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_kikox"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_uqxtg"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_a175h"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_f5bjr"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_6au2m"]
+
+[sub_resource type="Resource" id="Resource_bglum"]
+script = ExtResource("6_6au2m")
+
+[resource]
+script = ExtResource("5_f5bjr")
+id = &"gravestone_shard"
+display_name = "墓碑碎块"
+display_names = {
+"en": "Gravestone Shard"
+}
+description = "刻字磨平了的半块石碑。"
+shape = SubResource("Resource_bglum")
+weight = 4
+tags = Array[StringName]([&"material", &"nature", &"stone"])

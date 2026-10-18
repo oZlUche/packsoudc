@@ -369,7 +369,8 @@ static func import_reaction(data: Dictionary, ctx: Context, report: ImportReport
 
 ## 146：规则构件库里的一份。四类里正好填一个
 ## 175 第三批：铸炉的一张映射表（时机 / 效果 / 数值）。每列都要有 default 行；时机行要有扳机、稀有度行要有节奏；
-## 效果行要有效果、数值写到的那一项效果上得有；拼出来的附魔规则不许有消耗（规则上本来就没有这一格）
+## 效果行要有效果、数值写到的那一项效果上得有；拼出来的附魔规则不许有消耗（规则上本来就没有这一格）。
+## 195：稀有度 0–5；效果的材质行攻式、守式两套基础句都要写（数值那一项各自校验，空 = 不写数）；用途行的 stance 只认 attack / guard
 static func import_forge_table(data: Dictionary, ctx: Context, report: ImportReport) -> ForgeTable:
 	var def := ForgeTable.new()
 	_fill(def, data, "", ctx, report)
@@ -387,8 +388,8 @@ static func import_forge_table(data: Dictionary, ctx: Context, report: ImportRep
 			if e == null or e.key == &"":
 				report.error(at, "每一行要写 key")
 				continue
-			if col == "rarity" and e.key != ForgeTable.DEFAULT and not (String(e.key).is_valid_int() and int(String(e.key)) >= 0 and int(String(e.key)) <= 4):
-				report.error(at + ".key", "稀有度行的 key 写 0–4 或 default")
+			if col == "rarity" and e.key != ForgeTable.DEFAULT and not (String(e.key).is_valid_int() and int(String(e.key)) >= 0 and int(String(e.key)) <= 5):
+				report.error(at + ".key", "稀有度行的 key 写 0–5 或 default")
 			match def.id:
 				&"timing":
 					if col == "material" and e.trigger == null:
@@ -398,11 +399,17 @@ static func import_forge_table(data: Dictionary, ctx: Context, report: ImportRep
 				&"effect":
 					if col == "material":
 						if e.effect == null:
-							report.error(at + ".effect", "效果的材质行要写效果")
-						elif not (String(e.amount_field) in e.effect):
+							report.error(at + ".effect", "效果的材质行要写效果（攻式基础句）")
+						elif e.amount_field != &"" and not (String(e.amount_field) in e.effect):
 							report.error(at + ".amount_field", "效果上没有「%s」这一项" % e.amount_field)
+						if e.guard_effect == null:
+							report.error(at + ".guard_effect", "效果的材质行要写守式基础句")
+						elif e.guard_amount_field != &"" and not (String(e.guard_amount_field) in e.guard_effect):
+							report.error(at + ".guard_amount_field", "守式效果上没有「%s」这一项" % e.guard_amount_field)
 					if col == "purpose" and (e.target < -1 or e.target > 2):
 						report.error(at + ".target", "给谁写 0（对手）/ 1（自己）/ 2（双方）/ -1（不改）")
+					if col == "purpose" and not [&"", &"attack", &"guard"].has(e.stance):
+						report.error(at + ".stance", "攻守只写 attack / guard（现在是 %s）" % e.stance)
 	return def
 
 

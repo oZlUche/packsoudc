@@ -15,7 +15,8 @@
     "weapon",
     "ranged",
     "rapid",
-    "nature"
+    "nature",
+    "wood"
   ],
   "combat": {
     "base_stats": {

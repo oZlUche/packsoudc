@@ -1,0 +1,20 @@
+{
+  "id": "sealed_wine_jar",
+  "display_name": "封泥酒坛",
+  "display_names": {
+    "en": "Sealed Wine Jar"
+  },
+  "description": "泥封还没开，摇一摇还有半坛。",
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 1,
+  "weight": 6,
+  "tags": [
+    "material",
+    "crafted",
+    "clay",
+    "food"
+  ]
+}

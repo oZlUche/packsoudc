@@ -1,0 +1,18 @@
+{
+  "id": "glazed_inkstone",
+  "display_name": "釉彩砚",
+  "display_names": {
+    "en": "Glazed Inkstone"
+  },
+  "description": "文士的物件，釉色像雨后天。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "material",
+    "crafted",
+    "clay",
+    "treasure"
+  ]
+}

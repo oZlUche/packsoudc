@@ -55,5 +55,5 @@ display_names = {
 description = "几味解毒草装一囊。"
 shape = SubResource("Resource_bu3yf")
 rarity = 2
-tags = Array[StringName]([&"remedy", &"tool"])
+tags = Array[StringName]([&"remedy", &"tool", &"herb"])
 combat = SubResource("Resource_lspcg")

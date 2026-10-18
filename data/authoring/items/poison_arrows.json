@@ -11,7 +11,8 @@
   "tags": [
     "ammo",
     "poison",
-    "nature"
+    "nature",
+    "wood"
   ],
   "adjacency": {
     "grant_cells": [

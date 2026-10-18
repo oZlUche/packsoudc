@@ -1,0 +1,23 @@
+{
+  "id": "smoked_fish",
+  "display_name": "熏鱼",
+  "display_names": {
+    "en": "Smoked Fish"
+  },
+  "description": "熏得发黑，咬着咸香。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "tags": [
+    "nature",
+    "food",
+    "flesh"
+  ],
+  "combat": {
+    "base_stats": {
+      "max_stamina": 40,
+      "regen_stamina": 2
+    }
+  }
+}

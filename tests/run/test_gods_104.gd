@@ -118,7 +118,7 @@ static func run_acquired_wiring(t: TestCase) -> void:
 	var before := s.faith_power.points_of(&"skill")
 	s.storage.admit(ItemInstance.create(metal, 0))
 	t.eq(s.reconcile_owned(), 2, "护符和金属道具两件新对上")
-	var want := 3 * ItemVolume.cells_of(metal) + _gain(defs[&"skill"], &"item_acquired", {"tags": ["treasure", "faith", "faith:skill", "faith_anchor"], "cells": 1})
+	var want := 3 * ItemVolume.cells_of(metal) + _gain(defs[&"skill"], &"item_acquired", {"tags": charm.def.tags.map(func(x): return String(x)), "cells": 1})     # 195：护符也带材质标签（技巧之神的护符是金属）
 	t.eq(s.faith_power.points_of(&"skill") - before, want, "%s（%d 格金属）+%d" % [metal.id, ItemVolume.cells_of(metal), 3 * ItemVolume.cells_of(metal)])
 	var mid := s.faith_power.points_of(&"skill")
 	t.eq(s.reconcile_owned(), 0, "再对一次：没有新的")

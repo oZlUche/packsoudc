@@ -1,0 +1,17 @@
+{
+  "id": "honey_jar",
+  "display_name": "蜂蜜罐",
+  "display_names": {
+    "en": "Honey Jar"
+  },
+  "description": "蜂蜡挤出来的那点甜。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "nature",
+    "flesh"
+  ]
+}

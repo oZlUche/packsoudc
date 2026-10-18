@@ -1,0 +1,13 @@
+{
+  "id": "herb",
+  "display_name": "草药",
+  "display_names": {
+    "en": "Herb"
+  },
+  "description": "草药与用草药配的药。自然之神看重它。",
+  "descriptions": {
+    "en": "Herbs and the remedies made from them. Favoured by the nature god."
+  },
+  "tip": false,
+  "category": "material"
+}

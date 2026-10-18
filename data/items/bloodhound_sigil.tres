@@ -50,5 +50,5 @@ display_names = {
 description = "猎人循着血迹，越追越凶。"
 shape = SubResource("Resource_tctfc")
 rarity = 2
-tags = Array[StringName]([&"part", &"sigil", &"bleed"])
+tags = Array[StringName]([&"part", &"sigil", &"bleed", &"bone"])
 combat = SubResource("Resource_bnkf0")

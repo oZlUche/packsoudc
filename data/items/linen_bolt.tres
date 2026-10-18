@@ -21,4 +21,4 @@ display_names = {
 description = "一卷素色亚麻。"
 shape = SubResource("Resource_7ojrt")
 weight = 2
-tags = Array[StringName]([&"material", &"crafted", &"supply"])
+tags = Array[StringName]([&"material", &"crafted", &"supply", &"cloth"])

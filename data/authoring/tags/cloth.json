@@ -1,0 +1,13 @@
+{
+  "id": "cloth",
+  "display_name": "织物",
+  "display_names": {
+    "en": "Cloth"
+  },
+  "description": "布、绳、绷带这类织出来的东西。",
+  "descriptions": {
+    "en": "Woven things: cloth, rope, bandages."
+  },
+  "tip": false,
+  "category": "material"
+}

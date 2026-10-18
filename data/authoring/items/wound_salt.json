@@ -13,7 +13,8 @@
     "reagent",
     "material",
     "crafted",
-    "bleed"
+    "bleed",
+    "stone"
   ],
   "combat": {
     "rules": [

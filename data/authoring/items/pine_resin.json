@@ -1,0 +1,16 @@
+{
+  "id": "pine_resin",
+  "display_name": "松脂块",
+  "display_names": {
+    "en": "Pine Resin"
+  },
+  "description": "黏手，点火引子。",
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "material",
+    "nature",
+    "wood"
+  ]
+}

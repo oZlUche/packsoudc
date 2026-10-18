@@ -114,7 +114,7 @@ static func _diff_path(a: Variant, b: Variant, prefix: String) -> String:
 	if a is float or a is int:
 		if (b is float or b is int) and is_equal_approx(float(a), float(b)):
 			return ""
-	if a == b:
+	if typeof(a) == typeof(b) and a == b:     # 195：类型不同（数 vs 字符串）直接算不一致，不让 == 报错
 		return ""
 	return "%s：JSON 是 %s，资产是 %s" % [prefix, _brief(a), _brief(b)]
 
