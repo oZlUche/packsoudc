@@ -179,3 +179,14 @@
 
 - 单位词收进 `Glossary.COUNTDOWN_WORD := "倒计时"` 一处，上面各处拼句子用它；测试 `test_rest_event_193` 加一条：玩家可见的倒计时句子里不含「步」（对 `countdown_widget.tooltip_bbcode()`、`PassTime.describe()`、扎营选项文字断言）。
 - 这一条随 193 一起落地。
+
+## 10. 落地（2026-10-18，架构方案执行）
+
+待定 1–4 按推荐，补充一（「倒计时」）同 PR 落地。和方案的出入：
+
+- §4 手上这件的标记没有给 `set_preview` 加参数，而是另加 `InventoryView.set_held(def, rot)`（`DragLayer._update_preview` 每帧喂；拖的是包不画）；`clear_preview` 一并清掉。棋盘外的残影旁画未点亮态（`DragLayer._draw_held_markers`）。
+- §7 信仰道具加成按 `items.ids_where(信仰标签 = 这位神 且 有 faith_bonuses)` 收；**赐福版合成一行「赐福的道具：…」**，不逐件列（逐件列会把狩猎神的窗撑到几十行）。包内转化一句挂在「事迹」段末尾，这位神没有赐福模板或概率 ≤ 0 不写。
+- §3 献祭一行：图标之间空一格，规则之间用 8 号字的两个全角空格隔开；任何一条规则缺图标就整段退回文字（188 补充一的退路不变）。
+- 补充一：`Glossary.COUNTDOWN_WORD` 一处，十几处拼句子都引用它（含 `UiText` 的 `notice.countdown` 与 `寸步难行` 词条）。「最近的撤离点倒计时剩 N 时关闭」/ 地图上的牌子 / 栏上的字，N 都改成**关闭时倒计时的读数**（`PaidExtracts.closes_at`），和节点浮窗一致；原来写的是「还有几步关」。地图牌子另收 `closing["at"]`。`CountdownModule.describe` 改成「走路、原地等待都扣它」。帮助页 6 张按判据逐句改，路程句不动。
+
+测试：新增 `test_tooltip_193`、`test_drag_markers_193`、`test_faith_tip_193`、`test_rest_event_193`（含补充一：日规悬浮窗、栏上的字、`PassTime.describe`、扎营、代价提示、快没了的提醒都不含「步」）；`test_tooltip_170` / `test_feedback_1012` 的钉住时刻加 `PIN_DELAY_SEC`；`test_hud_189`、`test_screens_157`、`test_altar`、`test_brute_188b` 跟着新文字改。截图见 /mnt/project-files/screenshots/193/。

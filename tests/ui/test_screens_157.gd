@@ -85,7 +85,7 @@ static func run_cost_icons(t: TestCase) -> void:
 	opt.requires = [FaithActive.new()] as Array[EventCondition]
 	var kinds := EventCostIcons.kinds_of(opt)
 	t.eq(kinds, ["vitality", "money", "item", "time", "faith"] as Array[String], "五种，按表的顺序、不重复")
-	t.eq(EventCostIcons.describe(kinds), "代价：耗体力、花钱、交出道具、耗步、要信仰", "悬浮提示")
+	t.eq(EventCostIcons.describe(kinds), "代价：耗体力、花钱、交出道具、耗倒计时、要信仰", "悬浮提示")
 	var strip := EventCostIcons.strip(kinds)
 	t.check(strip != null and strip.get_width() == 5 * EventCostIcons.SIZE + 4 * EventCostIcons.GAP and strip.get_height() == EventCostIcons.SIZE, "拼成一条 16 像素高的图")
 	t.eq(EventCostIcons.glyph_slots(kinds), [] as Array[int], "美术交付的五张图都在：不用画字符")

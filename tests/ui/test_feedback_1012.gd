@@ -202,8 +202,8 @@ static func frame_tip_pin_on_source(t: TestCase, root: Window) -> void:
 	t.check(tip.is_showing() and not tip._panel.global_rect().has_point(src), "停在道具上：出现（鼠标不在窗里）")
 	tip.tick(0.3, src)
 	t.check(not tip.is_pinned() and tip._panel.dwell > 0.0, "停在道具上 0.3 秒：进度在走、还没钉")
-	tip.tick(0.31, src)
-	t.check(tip.is_pinned(), "停在道具上满 0.6 秒：钉住")
+	tip.tick(0.31 + HoverTip.PIN_DELAY_SEC, src)
+	t.check(tip.is_pinned(), "停在道具上满 0.5 + 0.6 秒：钉住（193 先等半秒）")
 	tip.tick(1.0, src)
 	t.check(tip.is_showing(), "钉住后还在道具上：不收")
 	var empty := InputEventMouseMotion.new()
@@ -217,7 +217,7 @@ static func frame_tip_pin_on_source(t: TestCase, root: Window) -> void:
 
 	# 关键词：停在开子窗的词上也走子窗的钉住进度
 	view.gui_input.emit(on)
-	tip.tick(0.61, src)
+	tip.tick(0.61 + HoverTip.PIN_DELAY_SEC, src)
 	var terms: Dictionary = tip._panel.terms
 	if not terms.is_empty():
 		var inside := tip._panel.global_position + tip._panel.size * 0.5
@@ -225,8 +225,8 @@ static func frame_tip_pin_on_source(t: TestCase, root: Window) -> void:
 		tip.tick(0.3, inside)
 		t.eq(tip.windows().size(), 2, "停在关键词上：开子窗")
 		var child: HoverTip.TipWindow = tip.windows()[1]
-		tip.tick(0.61, inside)
-		t.check(child.pinned, "还停在那个词上满 0.6 秒：子窗钉住（鼠标没进子窗）")
+		tip.tick(0.61 + HoverTip.PIN_DELAY_SEC, inside)
+		t.check(child.pinned, "还停在那个词上满 0.5 + 0.6 秒：子窗钉住（鼠标没进子窗）")
 	tip.hide_tip()
 
 	# 别的源（地图点、按钮）：show_text + release
@@ -234,7 +234,7 @@ static func frame_tip_pin_on_source(t: TestCase, root: Window) -> void:
 	tip.release()
 	t.check(not tip.is_showing(), "没钉住就离开源：立刻收")
 	tip.show_text("地图上的点", Vector2(400, 400))
-	tip.tick(0.61, far)
+	tip.tick(0.61 + HoverTip.PIN_DELAY_SEC, far)
 	t.check(tip.is_pinned(), "源上停满：钉住")
 	tip.show_text("别的点", Vector2(400, 400))
 	t.eq(tip.text(), "地图上的点", "钉住的窗不被别的源换掉")

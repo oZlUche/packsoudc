@@ -187,6 +187,13 @@ func _open_confirm(node: MapNode) -> void:
 	col.add_child(buttons)
 
 
+## 193 §3.2：叠层（背包、撤离确认、暂停、规则卡）一打开就收掉浮窗 —— 叠层盖住了源，不一定还有鼠标事件来收
+func _shade(alpha: float = 0.7, centered: bool = false) -> ColorRect:
+	if _tip != null:
+		_tip.hide_tip()
+	return super(alpha, centered)
+
+
 ## 背包整理面板叠在地图上，再按一次收起。084：是能拖着走的浮窗，关掉再开还在上次放的位置
 func toggle_bag() -> void:
 	if _bag != null:
@@ -394,7 +401,7 @@ func _adopt() -> void:
 	_view.spawn_mask = _run.phase == RunState.Phase.PICK_SPAWN     # 096：挑出生点时全图蒙灰，只露出生点
 	_run.travel.moved.connect(_on_moved)
 	_run.travel.waited.connect(func(actions: int):
-		_note("　原地耗了 %d 步" % actions)
+		_note("　原地等待：%s −%d" % [Glossary.COUNTDOWN_WORD, actions])
 		_after_move())
 	_run.travel.refused.connect(_on_refused)
 	var problems: Array[String] = []
@@ -552,7 +559,7 @@ func _on_moved(intent: MoveIntent, first_visit: bool) -> void:
 		_note(("→ %d %s（花 %d 点）" if first_visit else "→ %d %s，穿行（花 %d 点，这里用过了）") % [intent.to_id, what, _run.travel.last_cost])
 	var cd := CountdownModule.of(_run)
 	if cd != null and cd.has_countdown() and cd.left() > 0 and cd.left() <= 5:
-		_note("[color=#d9534f]　倒计时只剩 %d 步！[/color]" % cd.left())
+		_note("[color=#d9534f]　%s只剩 %d！[/color]" % [Glossary.COUNTDOWN_WORD, cd.left()])
 		warn(UiText.t("notice.countdown") % cd.left())
 	_after_move()
 
@@ -658,10 +665,10 @@ func _on_node_hovered(id: int) -> void:
 	if intent == null:
 		_preview.text = ""
 		return
-	# 179：只说步 —— 代价 1 不写，别的写「计 N 步」
+	# 179：代价 1 不写，别的写「倒计时 −N」（193 补充一）
 	var cost := _run.travel.cost_of(intent)
-	_preview.text = "→ %s%s%s%s" % [MapNodeStyle.of(n.type)["label"], "" if cost == 1 or _run.travel.next_step_free() else "　计 %d 步" % cost,
-		"（熟门熟路：这一步不计）" if _run.travel.next_step_free() else ("（负重：双倍）" if _run.travel.action_cost_mult > 1 else ""), "（用过了，只是穿行）" if n.is_visited() else ""]
+	_preview.text = "→ %s%s%s%s" % [MapNodeStyle.of(n.type)["label"], "" if cost == 1 or _run.travel.next_step_free() else "　%s −%d" % [Glossary.COUNTDOWN_WORD, cost],
+		"（熟门熟路：这一步不扣" + Glossary.COUNTDOWN_WORD + "）" if _run.travel.next_step_free() else ("（负重：双倍）" if _run.travel.action_cost_mult > 1 else ""), "（用过了，只是穿行）" if n.is_visited() else ""]
 
 
 ## 084：节点浮窗（章节开关 `node_tooltips`）：文字按 NodeTooltip 的模板渲染，没用过的战斗点下面画对手的棋盘
@@ -749,7 +756,7 @@ func _refresh_countdown() -> void:
 		_view.closing = {}
 		return
 	var node := _run.map.get_node(closing)
-	_view.closing = {"id": closing, "closed": cd.extract_closed(node), "left": cd.left() - PaidExtracts.closes_at(node)}
+	_view.closing = {"id": closing, "closed": cd.extract_closed(node), "left": cd.left() - PaidExtracts.closes_at(node), "at": PaidExtracts.closes_at(node)}
 
 
 ## 这个撤离点被倒计时关掉了没（没装倒计时模块 = 不会关）
@@ -894,6 +901,8 @@ func _build() -> void:
 	_build_parts()
 	_build_drawer()
 	flow.screen_changed.connect(func(s: int, _p: Dictionary):
+		if s != GameFlow.Screen.MAP and _tip != null:
+			_tip.hide_tip()     # 193 §3.2：换屏（进点开事件屏……）那一刻收掉浮窗，不等鼠标事件
 		if s == GameFlow.Screen.MAP:
 			_maybe_coach.call_deferred())
 

@@ -75,6 +75,9 @@ var _preview_on: bool = false
 var _preview_victims: Array[int] = []
 ## 合法但有代价：顶人或脱落
 var _preview_costly: bool = false
+## 193 §4：手上拿着的那件（拖拽中从容器里拿走了）与它现在的朝向 —— 落点预览上照样画它的增益 / 受益 / 装载格
+var _held: ItemDef = null
+var _held_rot: int = 0
 
 ## 是否画邻接标记格。战利品、商店货架这类地方不参战，画了只是噪音。
 @export var show_adjacency: bool = true
@@ -158,6 +161,44 @@ func set_preview(
 	queue_redraw()
 
 
+## 193 §4：落点预览带上手上这件（[DragLayer] 每次刷新预览时给）；null = 不画它的格位
+func set_held(def: ItemDef, rot: int) -> void:
+	_held = def
+	_held_rot = rot
+	queue_redraw()
+
+
+## 193 §4：一件道具在 [param rot] 朝向下的格位标记（相对它的锚点，和 [method ItemInstance.absolute_cells] 同一套旋转）：
+## `[[格, 种类, 过滤, 全要过滤]]`，种类 grant / receive / load。拖拽层在棋盘外也按它画
+static func marker_offsets(def: ItemDef, rot: int) -> Array:
+	var out := []
+	if def == null or def.adjacency == null or def.shape == null:
+		return out
+	var p := def.adjacency
+	if p.has_grant():
+		for o in p.grant_cells:
+			out.append([def.shape.transform_point(o, rot), "grant", p.grant_filter, p.grant_filter_all])
+	if p.has_receive():
+		for o in p.receive_cells:
+			out.append([def.shape.transform_point(o, rot), "receive", p.receive_filter, [] as Array[StringName]])
+	if p.has_load():
+		for o in p.load_cells:
+			out.append([def.shape.transform_point(o, rot), "load", p.load_tags(), [] as Array[StringName]])
+	return out
+
+
+## 193 §4：这一帧落点预览上会画的手上这件的格位 `[[格, 种类, 点亮]]` —— 点亮按现在棋盘上的邻居算，放手前就看得见谁会亮
+func preview_markers() -> Array:
+	var out := []
+	if not _preview_on or _held == null or inventory == null or inventory.acts_as_bag(_held):
+		return out
+	for m in marker_offsets(_held, _held_rot):
+		var cell: Vector2i = _preview_origin + (m[0] as Vector2i)
+		if inventory.in_bounds(cell):
+			out.append([cell, String(m[1]), _cell_lit(-1, cell, m[2], m[3])])
+	return out
+
+
 ## 157：现在画着的落点预览是不是能放（拖拽层按它切光标）
 func preview_ok() -> bool:
 	return _preview_on and _preview_valid
@@ -170,6 +211,7 @@ func clear_preview() -> void:
 	_preview_cells = []
 	_preview_victims = []
 	_preview_costly = false
+	_held = null
 	queue_redraw()
 #endregion
 
@@ -288,6 +330,18 @@ func _draw() -> void:
 				continue
 			draw_rect(Rect2(cell_origin_px(p), Vector2(cell_px, cell_px)), tint, true)
 
+		# 193 §4：手上这件的格位（含旋转），点亮照现在的邻居
+		var held := {}
+		for m in preview_markers():
+			if not held.has(m[0]):
+				held[m[0]] = []
+			(held[m[0]] as Array).append(m)
+		for cell in held:
+			var list: Array = held[cell]
+			for i in list.size():
+				var kind := String(list[i][1])
+				_draw_marker(cell, kind, bool(list[i][2]), MARK_COLORS.get(kind, UiPalette.GRANT), MARK_INSET_GRANT if kind == "grant" else MARK_INSET_RECEIVE, i, list.size())
+
 		# 被顶的那几件描一圈，让人放手前就知道要付什么代价
 		for uid in _preview_victims:
 			var victim := inventory.get_item(uid)
@@ -338,6 +392,8 @@ func _draw_grid(grid_px: Vector2, alpha: float) -> void:
 ## 等于让人对着说明书心算，而摆位正是这类游戏的全部乐趣所在。
 const MARK_INSET_GRANT := 3.0
 const MARK_INSET_RECEIVE := 9.0
+## 193：格位种类 → 没图时画角括号用的颜色
+const MARK_COLORS := {"grant": UiPalette.GRANT, "receive": UiPalette.RECEIVE, "load": UiPalette.MANA}
 ## 角括号单边长度，占格边的比例
 const MARK_CORNER := 0.3
 
@@ -462,8 +518,13 @@ func _draw_corners(rect: Rect2, color: Color, width: float) -> void:
 ## 这一格是否被一个符合过滤条件的邻居占住。判据与 [Compiler] 的点亮规则一致：
 ## 得是别人、得是普通物品、标签得对得上。
 func _marker_lit(item: ItemInstance, cell: Vector2i, filter: Array[StringName], filter_all: Array[StringName] = []) -> bool:
+	return _cell_lit(item.uid, cell, filter, filter_all)
+
+
+## 193：[method _marker_lit] 按 uid 的版本（手上那件不在棋盘上，传 -1）
+func _cell_lit(self_uid: int, cell: Vector2i, filter: Array[StringName], filter_all: Array[StringName] = []) -> bool:
 	var other := inventory.cell_uid(cell)
-	if other == GridInventory.EMPTY_UID or other == item.uid:
+	if other == GridInventory.EMPTY_UID or other == self_uid:
 		return false
 	var other_inst := inventory.get_item(other)
 	return other_inst != null and AdjacencyProfile.accepts(filter, other_inst.def) and AdjacencyProfile.accepts_all(filter_all, other_inst.def)

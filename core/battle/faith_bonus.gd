@@ -54,6 +54,11 @@ func gate_text() -> String:
 
 ## 给界面的一整句（104 第十节）：生效条件 + 属性修饰 + 规则 + 作者补充。道具浮窗、信仰浮窗都用它，数只来自字段
 func describe() -> String:
+	return "%s：%s" % [gate_text(), effect_text()]
+
+
+## 193：只要效果那半句（属性修饰 + 规则 + 作者补充），不带生效条件 —— 信仰窗按级列赐福道具时用
+func effect_text() -> String:
 	var bits: Array[String] = []
 	if not mods.is_empty():
 		bits.append(Glossary.mods_text(mods))
@@ -62,4 +67,9 @@ func describe() -> String:
 			bits.append(Glossary.rule_text(r))
 	if note != "":
 		bits.append(TextTemplate.render(note, TextParams.of(self)))
-	return "%s：%s" % [gate_text(), "；".join(bits) if not bits.is_empty() else "（无）"]
+	return "；".join(bits) if not bits.is_empty() else "（无）"
+
+
+## 193：信仰窗里归到第几级（按阶 = 那一阶；激活即 / 按信力 = 1 级）
+func list_tier() -> int:
+	return tier if mode == "tier" else 1

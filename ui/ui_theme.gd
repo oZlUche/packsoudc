@@ -582,9 +582,21 @@ static func bright_text_theme() -> Theme:
 		if parent != &"":
 			t.set_type_variation(type, parent)
 		for key in ink.get_color_list(type):
-			t.set_color(key, type, base.get_color(key, type))
+			var at := _color_owner(base, key, type)
+			if at != &"":     # 193：全局主题沿变体链都没写这一色 = 不写（让它照常继承），绝不写 Color() 的纯黑
+				t.set_color(key, type, base.get_color(key, at))
 	_tone_themes[&"bright"] = t
 	return t
+
+
+## 193：[param theme] 里 [param type] 的 [param key] 这一色实际写在哪一层（沿变体链往基类找）；都没有 = 空
+static func _color_owner(theme: Theme, key: StringName, type: StringName) -> StringName:
+	var at := type
+	while at != &"":
+		if theme.has_color(key, at):
+			return at
+		at = theme.get_type_variation_base(at)
+	return &""
 
 
 ## 给一块底挂上它的字色（[method panel]、[OverlayFrame]、[HudWidget] 调）。深底不动别人挂的主题，只摘掉以前挂的字色。
@@ -946,9 +958,12 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_font_size("font_size", LABEL_HUD_LARGE, HUD_LARGE_SIZE)
 	t.set_type_variation(LABEL_HUD_DOUBLE, "Label")
 	t.set_font_size("font_size", LABEL_HUD_DOUBLE, HUD_DOUBLE_SIZE)
+	for v in [LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE]:
+		t.set_color("font_color", v, UiPalette.FG)     # 193：变体自己写上默认字色（缺了别人取色会拿到纯黑）
 	# 富文本
 	for pair in [[RICH_BODY, RICH_BODY_SIZE], [RICH_SMALL, RICH_SMALL_SIZE]]:
 		t.set_type_variation(pair[0], "RichTextLabel")
+		t.set_color("default_color", pair[0], UiPalette.FG)     # 193：同上
 		for k in RICH_FONT_SIZES:
 			t.set_font_size(k, pair[0], pair[1])
 	t.set_constant("line_separation", RICH_BODY, 8)

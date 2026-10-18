@@ -110,7 +110,7 @@ var hunters: Array = []:
 	set(v):
 		hunters = v
 		queue_redraw()
-## 092：倒计时过半关闭的撤离点：{"id", "closed": bool, "left": 还剩几步关}；空 = 没有
+## 092：倒计时过半关闭的撤离点：{"id", "closed": bool, "left": 还剩几步关, "at": 倒计时剩几时关}；空 = 没有
 var closing: Dictionary = {}:
 	set(v):
 		closing = v
@@ -828,10 +828,10 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	# 危险等级：右上角几个红点
 	for k in n.danger:
 		draw_circle(p + Vector2(NODE_RADIUS - 2.0 - 6.0 * k, -NODE_RADIUS + 1.0), 2.5, UiPalette.HP)
-	# 092：倒计时过半关闭的撤离点 —— 关了画红叉 + 「已关闭」，没关写着「剩 n 步关闭」
+	# 092：倒计时过半关闭的撤离点 —— 关了画红叉 + 「已关闭」，没关写着「倒计时剩 n 时关闭」（193 补充一：n 是关闭时倒计时的读数）
 	if not closing.is_empty() and int(closing.get("id", -1)) == n.id:
 		var closed := bool(closing.get("closed", false))
-		var text := "已关闭" if closed else "剩 %d 步关闭" % int(closing.get("left", 0))
+		var text := "已关闭" if closed else "%s剩 %d 时关闭" % [Glossary.COUNTDOWN_WORD, int(closing.get("at", 0))]
 		var col := UiPalette.HP if closed else UiPalette.STAMINA
 		if closed:
 			var d := NODE_RADIUS * 0.8

@@ -128,6 +128,22 @@ static func describe(id: StringName, lang: String = "") -> String:
 	return Names.description_of(def, lang) if def != null else ""
 
 
+## 193：标签图标在的目录（文件名 = [member TagDef.icon]，空 = id）
+const ICON_DIR := "res://assets/ui/tags/"
+
+
+## 193：这个标签的图标路径；没图返回空串。没登记的标签按 id 找（献祭条件里的标签也走这里）
+static func icon_path(id: StringName) -> String:
+	var def := get_def(id)
+	return icon_path_of_file(def.icon if def != null and def.icon != "" else String(id))
+
+
+## 193：[constant ICON_DIR] 下这个文件名（不含扩展名）的图在不在：在给路径，不在给空串（导入器、标签制作器的预览也用）
+static func icon_path_of_file(file: String) -> String:
+	var path := ICON_DIR + file + ".png"
+	return path if file != "" and (ResourceLoader.exists(path) or FileAccess.file_exists(path)) else ""
+
+
 ## 107：这个标签要不要弹词条（没登记的标签没有词条，返回 false）
 static func tip_of(id: StringName) -> bool:
 	var def := get_def(id)
