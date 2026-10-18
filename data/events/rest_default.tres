@@ -84,6 +84,5 @@ label = "不算用掉"
 script = ExtResource("12_xkvak")
 id = &"rest_default"
 title = "休息点"
-text = "一处能歇脚的地方。歇多久，你自己定。歇脚和神坛各算一次，现在不用就留着，回头还能来。"
 options = Array[ExtResource("1_64hfv")]([SubResource("Resource_anxhh"), SubResource("Resource_spppq"), SubResource("Resource_trsnw"), SubResource("Resource_5la2b"), SubResource("Resource_f48da")])
 scene = &"rest_camp"

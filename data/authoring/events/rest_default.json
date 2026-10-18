@@ -1,7 +1,6 @@
 {
   "id": "rest_default",
   "title": "休息点",
-  "text": "一处能歇脚的地方。歇多久，你自己定。歇脚和神坛各算一次，现在不用就留着，回头还能来。",
   "options": [
     {
       "label": "回 {rest_restore} 点体力",
