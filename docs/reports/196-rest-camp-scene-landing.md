@@ -132,3 +132,7 @@
 - 右上角一个小「×」收起；收起后字板缩成左上角一枚卷轴小图标（可用 `assets/ui/setup/summary_note` 一类现有的纸卷图），再点展开。同一个休息点内记住收起状态（营地屏重画不弹回来）。
 - `rest_default` 的 `text` 清空（「一处能歇脚的地方…」是说明书口吻，营地本身已经说明了一切；`help_pages/rest_point.json` 已改写）；两份教程事件保留正文，照旧显示。以后要给某个休息点写几句故事，只要给事件填 `text` 就会出字板。
 - 测试：`test_rest_camp_196` 加两条 —— `tut3_rest_1` 的营地有字板且正文里 `{item:bone_dice}` 已替换成「骨骰子」；`rest_default` 没有字板。
+
+### 补充一落地（2026-10-18，架构方案执行）
+
+字板是 `PanelContainer`，用 `UiTheme.PANEL_TOOLTIP` 的皮革深底，放在左上 36 / 36，正文 `rich_block` 宽 520、17 号，走 `TextTemplate.render`。右上「×」收起后换成 `setup/summary_note` 卷轴（56 px），点它展开。收起状态记在 `RestCampScreen._board_folded`（点 id，本次运行内有效，不进存档）。`rest_default` 的 `text` 删掉了。测试 `frame_text_board`：教程的字板有「骨骰子」、收起后重画仍收着；`rest_default` 没字板。截图 `/mnt/project-files/screenshots/196/tutorial_board.png`。顺手修了一处：营地屏原地重画（收起背包）时 `resized` 会重复连接。

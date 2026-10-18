@@ -150,3 +150,41 @@ static func frame_camp_screen(t: TestCase, root: Window) -> void:
 	t.eq(flow.screen, GameFlow.Screen.MAP, "回地图")
 	game.queue_free()
 	Support.cleanup("camp196_ui")
+
+
+static func frame_text_board(t: TestCase, root: Window) -> void:
+	t.begin("196 补充一 · 事件有正文才出字板（教程的神坛教献祭）：正文照事件屏替换，× 收起成卷轴、同一个点里记住；rest_default 没字板")
+	var c = NodeScreens._content()
+	var kit: LoadoutDef = NodeScreens._kit(c)
+	for case in [[&"tut3_rest_1", true], [&"rest_default", false]]:
+		Support.cleanup("camp196_board")
+		var game = (load(GAME) as PackedScene).instantiate()
+		game.save_path = String(Support.paths("camp196_board")["run"])
+		game.meta_path = String(Support.paths("camp196_board")["meta"])
+		game.settings_path = String(Support.paths("camp196_board")["settings"])
+		root.add_child(game)
+		var flow: GameFlow = game.flow
+		flow.chapters = [c.chapter] as Array[ChapterDef]
+		var node := F175._rest_next_to_spawn(flow, c, kit)
+		if node == null:
+			t.check(false, "找得到休息点")
+			game.queue_free()
+			continue
+		node.content["event"] = String(case[0])
+		t.check(flow.step_to(node.id), "走上休息点（%s）" % case[0])
+		var screen = game.overlay()
+		t.check(screen != null and screen.has_method("board_shown"), "叠层是营地屏")
+		if screen != null and screen.has_method("board_shown"):
+			if case[1]:
+				t.check(screen.board_shown(), "教程：有字板")
+				t.check(screen.board_text().contains("骨骰子") and not screen.board_text().contains("{"), "{item:bone_dice} 换成了名字（%s）" % screen.board_text().left(60))
+				screen.fold_board(true)
+				t.check(not screen.board_shown() and screen._scroll.visible, "× 收起：只剩卷轴")
+				screen._reopen(screen._payload)
+				t.check(not screen.board_shown(), "营地重画：还是收着")
+				screen.fold_board(false)
+				t.check(screen.board_shown(), "点卷轴：展开")
+			else:
+				t.check(not screen.board_shown() and screen.board_text() == "", "rest_default：没有字板")
+		game.queue_free()
+	Support.cleanup("camp196_board")

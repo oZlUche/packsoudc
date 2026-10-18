@@ -14,6 +14,13 @@ const DEFAULT_BG := &"ruins"
 const NOTE_SEC := 3.0
 ## 徽章画多大（待定 1 A：@2x 那张画 64，不放大糊）
 const MEDAL_SIZE := 64.0
+## 196 补充一：事件有正文才出的字板 —— 左上角、宽、字号；收起后那枚卷轴多大
+const BOARD_AT := Vector2(36, 36)
+const BOARD_WIDTH := 520.0
+const BOARD_FONT := 17
+const SCROLL_SIZE := 56.0
+## 196 补充一：字板收起了的休息点（点 id → true；同一个点里营地重画不弹回来）
+static var _board_folded: Dictionary = {}
 
 ## 造物 → [未用的图, 用过的图, 名字]
 const PIECES := {
@@ -45,6 +52,10 @@ var _note: Control = null
 var _note_text := ""
 var _bag: Control = null
 var _bag_panel: Control = null
+## 196 补充一：正文字板与收起后的卷轴（没正文都是 null）
+var _board: Control = null
+var _board_text: RichTextLabel = null
+var _scroll: Control = null
 
 
 func open(payload: Dictionary) -> void:
@@ -69,9 +80,11 @@ func open(payload: Dictionary) -> void:
 	add_child(_scene)
 	_build_pieces()
 	_build_footer()
+	_build_board()
 	_tip = HoverTip.new()
 	add_child(_tip)
-	resized.connect(_place)
+	if not resized.is_connected(_place):     # 收起背包时原地重画（_reopen），别连两次
+		resized.connect(_place)
 	_place()
 	_show_rest_note()
 
@@ -228,6 +241,73 @@ func _on_piece_hovered(on: bool, piece: CampPiece) -> void:
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and _tip != null:
 		_tip.follow(get_global_mouse_position())
+#endregion
+
+
+#region 正文字板（196 补充一）
+## 事件写了正文（教程的神坛教献祭）就在左上角出一块深底字板；标题不显示。右上「×」收起成一枚卷轴，再点展开
+func _build_board() -> void:
+	if _def == null or _def.text_for().strip_edges() == "":
+		return
+	var ctx := TextTemplate.context_for(flow.run, _node, {})
+	var panel := PanelContainer.new()
+	panel.theme_type_variation = UiTheme.PANEL_TOOLTIP
+	panel.position = BOARD_AT
+	panel.set_meta(&"tone", UiTheme.TONE_DARK)
+	var col := _vbox(4)
+	panel.add_child(col)
+	var close_row := HBoxContainer.new()
+	close_row.alignment = BoxContainer.ALIGNMENT_END
+	var close := Button.new()
+	close.text = "×"
+	close.flat = true
+	close.tooltip_text = "收起"
+	close.pressed.connect(fold_board.bind(true))
+	close_row.add_child(close)
+	col.add_child(close_row)
+	_board_text = UiTheme.rich_block(BOARD_WIDTH, BOARD_FONT, TextTemplate.render(_def.text_for(), ctx))
+	col.add_child(_board_text)
+	add_child(panel)
+	_board = panel
+	var scroll := TextureButton.new()
+	scroll.texture_normal = UiTheme.art_cached("setup/summary_note")
+	scroll.ignore_texture_size = true
+	scroll.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+	scroll.custom_minimum_size = Vector2.ONE * SCROLL_SIZE
+	scroll.size = Vector2.ONE * SCROLL_SIZE
+	scroll.position = BOARD_AT
+	scroll.tooltip_text = "展开"
+	scroll.pressed.connect(fold_board.bind(false))
+	add_child(scroll)
+	_scroll = scroll
+	_apply_fold()
+
+
+## 收起 / 展开字板（记在这个休息点上）
+func fold_board(folded: bool) -> void:
+	if _node != null:
+		if folded:
+			_board_folded[_node.id] = true
+		else:
+			_board_folded.erase(_node.id)
+	_apply_fold()
+
+
+func _apply_fold() -> void:
+	if _board == null:
+		return
+	var folded := _node != null and _board_folded.has(_node.id)
+	_board.visible = not folded
+	_scroll.visible = folded
+
+
+## 字板上的字（测试看；没字板是空串）
+func board_text() -> String:
+	return Glossary.strip_bbcode(_board_text.text) if _board_text != null else ""
+
+
+func board_shown() -> bool:
+	return _board != null and _board.visible
 #endregion
 
 
