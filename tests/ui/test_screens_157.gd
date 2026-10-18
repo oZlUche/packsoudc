@@ -223,14 +223,13 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 
 
 static func frame_other_overlays(t: TestCase, root: Window) -> void:
-	t.begin("157 · 别的叠层也是同一块石板框：休息、容器、保险箱、商店、神坛、百科 —— 各一块，标题在标题条上")
+	t.begin("157 · 别的叠层也是同一块石板框：容器、保险箱、商店、神坛、百科 —— 各一块，标题在标题条上")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	var f := Support.flow(c, "s157b")
 	f.begin(c.chapter, kit, 1)
 	f.pick_spawn(f.run.map.entry_ids[0])
 	var cases := [
-		["rest", {"restored": 1}, "休息区"],
 		["container", {"container": GridInventory.new(Vector2i(3, 3), 0, false)}, "战利品"],
 		["shop", {}, "商店"],
 		["encyclopedia", {}, "百科"],

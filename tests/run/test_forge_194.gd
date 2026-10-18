@@ -6,13 +6,12 @@ const GAME := "res://ui/game/game.tscn"
 const F175 := preload("res://tests/run/test_forge_175.gd")
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const Support := preload("res://tests/run/flow_support.gd")
+const Camp := preload("res://ui/game/rest_camp_screen.gd")
 
 
-static func _index_of(def: EventDef, head: String) -> int:
-	for i in def.options.size():
-		if (def.options[i] as EventOption).label.begins_with(head):
-			return i
-	return -1
+## 196：选项文字只写效果了，按它画成哪件造物找
+static func _index_of(def: EventDef, piece: StringName) -> int:
+	return def.options.map(func(o): return Camp.piece_of(o as EventOption)).find(piece)
 
 
 static func _open_labels(f: GameFlow) -> Array[String]:
@@ -24,7 +23,7 @@ static func _open_labels(f: GameFlow) -> Array[String]:
 		return out
 	for opt in def.options:
 		if (opt as EventOption).locked_reason(ectx) == "":
-			out.append((opt as EventOption).label)
+			out.append(String(Camp.piece_of(opt as EventOption)))
 	return out
 
 
@@ -35,11 +34,10 @@ static func run_entry(t: TestCase) -> void:
 	t.not_null(rest, "有默认休息事件")
 	if rest == null:
 		return
-	var forge_at := _index_of(rest, "铸炉")
-	t.check(forge_at > _index_of(rest, "神坛") and forge_at < _index_of(rest, "继续赶路"), "神坛后、继续赶路前（第 %d 项）" % forge_at)
+	var forge_at := _index_of(rest, &"forge")
+	t.check(forge_at > _index_of(rest, &"altar") and forge_at < _index_of(rest, &"sign"), "神坛后、继续赶路前（第 %d 项）" % forge_at)
 	var opt := rest.options[forge_at] as EventOption
 	t.check(opt.hide_when_locked, "用过就藏")
-	t.check(not FileAccess.get_file_as_string("res://ui/game/rest_screen.gd").contains("open_forge"), "休息屏不再开铸炉")
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	var f := Support.flow(c, "forge194")
 	var node := F175._rest_next_to_spawn(f, c, kit)
@@ -48,7 +46,7 @@ static func run_entry(t: TestCase) -> void:
 		Support.cleanup("forge194")
 		return
 	t.eq(f.screen, GameFlow.Screen.EVENT, "先是休息点的事件")
-	t.check(_open_labels(f).any(func(l): return l.begins_with("铸炉")), "选项里有铸炉（%s）" % str(_open_labels(f)))
+	t.check(_open_labels(f).has("forge"), "选项里有铸炉（%s）" % str(_open_labels(f)))
 	t.check(f.choose_event(forge_at), "选铸炉")
 	t.eq(f.screen, GameFlow.Screen.FORGE, "→ 铸炉屏")
 	t.check(not NodeEvents.rest_part_used(node, &"rest") and not node.is_visited(), "休息那一份没用、点不灰")
@@ -59,10 +57,9 @@ static func run_entry(t: TestCase) -> void:
 		picks.append(inst)
 	t.not_null(f.forge_token(node, picks[0], picks[1], picks[2], [f.run.storage, f.run.storage, f.run.storage]), "铸成")
 	t.check(f.leave_forge(), "离开铸炉")
-	t.check(f.can_reopen() and f.reopen_node(), "站着再打开休息点")
-	t.eq(f.screen, GameFlow.Screen.EVENT, "→ 休息点的事件")
+	t.eq(f.screen, GameFlow.Screen.EVENT, "196：→ 回到营地（休息点的事件）")
 	var labels := _open_labels(f)
-	t.check(not labels.any(func(l): return l.begins_with("铸炉")) and labels.any(func(l): return l.begins_with("歇一会儿")), "铸过：铸炉藏了、歇一会儿还在（%s）" % str(labels))
+	t.check(not labels.has("forge") and labels.has("fire"), "铸过：铸炉锁了、篝火还在（%s）" % str(labels))
 	Support.cleanup("forge194")
 
 
