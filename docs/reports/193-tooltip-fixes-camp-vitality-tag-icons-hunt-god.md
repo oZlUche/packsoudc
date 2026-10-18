@@ -152,3 +152,30 @@
 | `docs/architecture.md` | 悬浮窗一节：源核对、钉住延迟；标签 `icon` |
 
 美术两件（§5 图标重做、§6 标签 27 枚）派给「美术设计」，样图到了作者在那边挑；代码侧不等它们。
+
+## 补充一（2026-10-18 20:36，作者在选择卡上选了「改成「倒计时」」）
+
+待定 1 定为 **乙**：凡是说**倒计时这口钟**的消耗与剩余，单位词从「步」换成「倒计时」；**走路的距离**仍然说「步」（「走一步」「离最近的休息点 3 步」「躲开猎手 N 步」是路程 / 回合数，不是钟）。判据：这个数是从 `CountdownModule` / `ActionClock` 读的，或者是扣进它的代价 → 说「倒计时」。
+
+| 处 | 现在 | 改成 |
+|---|---|---|
+| `rest_default.json` 扎营 | 多耗 {pass_time_actions} 步，多回 1 点体力 | **倒计时 −{pass_time_actions}，回 {rest_total} 点体力** |
+| `pass_time.describe()` | 耗 N 步 | 倒计时 −N |
+| `event_cost_icons.gd:15` | 耗步 | 耗倒计时 |
+| `event_screen.gd:105` / `map_screen.gd:397` | 耗了 N 步 / 原地耗了 N 步 | 倒计时 −N |
+| `countdown_widget.gd:195` | 还剩 N 步（共 M 步） | **倒计时还剩 N（共 M）** |
+| `countdown_widget.gd:202` / `:74` | 最近的撤离点还剩 N 步关闭 / 剩 N 步关闭 | 最近的撤离点倒计时剩 N 时关闭 / 倒计时剩 N 时关闭 |
+| `node_tooltip._countdown_line` | 倒计时剩 N 时关闭（还有 M 步） | 倒计时剩 N 时关闭（还有 M） |
+| `ui_text.gd` `notice.countdown` / `map_screen.gd:555` | 倒计时只剩 N 步 | 倒计时只剩 N |
+| `map_screen.gd:663` 路线预览 | 计 N 步 | **倒计时 −N**（「熟门熟路：这一步不计」→「熟门熟路：这一步不扣倒计时」） |
+| `travel_discount.gd` | 每走 N 步，下一步不计入倒计时 | 不动（已是倒计时的说法） |
+| `encumbrance_rules.gd:77` / `encumbrance_widget.gd:20` | 走一步计 N 步 / 走一步花 N 倍 | 走一步倒计时 −N / 走一步倒计时扣 N 倍 |
+| `glossary.gd` 寸步难行 | 每走一步计两步 | 每走一步倒计时 −2 |
+| `setup_screen.gd:550` | N 步 | 倒计时 N |
+| `field_text.gd` `step_limit` | 全局倒计时（步） | 全局倒计时 |
+| 帮助页 `countdown_and_closing` / `map_and_steps` / `rest_point` / `vitality` / `encumbrance` 等 | 「多耗几步」「一局只能走这么多步」 | 按同一判据逐句改；路程句不动 |
+
+**不改**（路程 / 回合数）：`distances_widget`「N 步」、`evade_skill`「躲开猎手 N 步」、技能「冷却 N 步」、`buffs_widget`「剩 N 步」（这几处是「再走几步」）、`result_screen`「走了 N 步」、`erosion_widget`「N 步后开始」、猎手行为。184 的「计二步签」纸签是美术图上的字，含义是路程倍数，不动。
+
+- 单位词收进 `Glossary.COUNTDOWN_WORD := "倒计时"` 一处，上面各处拼句子用它；测试 `test_rest_event_193` 加一条：玩家可见的倒计时句子里不含「步」（对 `countdown_widget.tooltip_bbcode()`、`PassTime.describe()`、扎营选项文字断言）。
+- 这一条随 193 一起落地。
