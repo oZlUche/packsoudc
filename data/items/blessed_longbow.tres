@@ -32,12 +32,12 @@ metadata/part_ref = &"resource_5"
 script = ExtResource("8_h1622")
 metadata/part_ref = &"deal_damage"
 
-[sub_resource type="Resource" id="Resource_oti8u"]
+[sub_resource type="Resource" id="Resource_jwar4"]
 script = ExtResource("9_73hxw")
 axis = &"block"
 stacks = -3
 
-[sub_resource type="Resource" id="Resource_yuedj"]
+[sub_resource type="Resource" id="Resource_yeqor"]
 script = ExtResource("10_rfg4m")
 id = &"marked"
 display_name = "标记"
@@ -47,49 +47,49 @@ display_names = {
 is_debuff = true
 stackable = false
 duration_sec = 8.0
-axes = Array[ExtResource("9_73hxw")]([SubResource("Resource_oti8u")])
+axes = Array[ExtResource("9_73hxw")]([SubResource("Resource_jwar4")])
+
+[sub_resource type="Resource" id="Resource_yuedj"]
+script = ExtResource("11_ec1u3")
+buff = SubResource("Resource_yeqor")
 
 [sub_resource type="Resource" id="Resource_prqpx"]
-script = ExtResource("11_ec1u3")
-buff = SubResource("Resource_yuedj")
-
-[sub_resource type="Resource" id="Resource_5mbfv"]
 script = ExtResource("12_fvayp")
 metadata/part_ref = &"on_schedule"
 
-[sub_resource type="Resource" id="Resource_qk25w"]
+[sub_resource type="Resource" id="Resource_5mbfv"]
 script = ExtResource("3_104mt")
-trigger = SubResource("Resource_5mbfv")
+trigger = SubResource("Resource_prqpx")
 cadence = SubResource("Resource_7wm0t")
 costs = Array[ExtResource("5_hsokv")]([SubResource("Resource_77af5")])
-effects = Array[ExtResource("7_nxyqp")]([SubResource("Resource_hoprw"), SubResource("Resource_prqpx")])
+effects = Array[ExtResource("7_nxyqp")]([SubResource("Resource_hoprw"), SubResource("Resource_yuedj")])
 
-[sub_resource type="Resource" id="Resource_mykjl"]
+[sub_resource type="Resource" id="Resource_qk25w"]
 script = ExtResource("13_1f6sa")
 base_stats = {
 "damage": 18
 }
-rules = Array[ExtResource("3_104mt")]([SubResource("Resource_qk25w")])
+rules = Array[ExtResource("3_104mt")]([SubResource("Resource_5mbfv")])
 
-[sub_resource type="Resource" id="Resource_175lk"]
+[sub_resource type="Resource" id="Resource_mykjl"]
 script = ExtResource("2_lmu52")
 amount = 4.0
 
-[sub_resource type="Resource" id="Resource_jjmdc"]
+[sub_resource type="Resource" id="Resource_175lk"]
 script = ExtResource("15_jtqhf")
-mods = Array[ExtResource("2_lmu52")]([SubResource("Resource_175lk")])
+mods = Array[ExtResource("2_lmu52")]([SubResource("Resource_mykjl")])
 
-[sub_resource type="Resource" id="Resource_d4ojb"]
+[sub_resource type="Resource" id="Resource_jjmdc"]
 script = ExtResource("2_lmu52")
 mode = 1
 amount = 15.0
 
-[sub_resource type="Resource" id="Resource_15un4"]
+[sub_resource type="Resource" id="Resource_d4ojb"]
 script = ExtResource("15_jtqhf")
 tier = 2
-mods = Array[ExtResource("2_lmu52")]([SubResource("Resource_d4ojb")])
+mods = Array[ExtResource("2_lmu52")]([SubResource("Resource_jjmdc")])
 
-[sub_resource type="Resource" id="Resource_sak6p"]
+[sub_resource type="Resource" id="Resource_15un4"]
 script = ExtResource("17_mr88r")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2i(0, 3), Vector2i(0, 4), Vector2i(1, 4)])
 
@@ -100,8 +100,8 @@ display_name = "狩猎之神赐福的长弓"
 display_names = {
 "en": "Hunt God's Blessed Longbow"
 }
-shape = SubResource("Resource_sak6p")
+shape = SubResource("Resource_15un4")
 rarity = 3
-tags = Array[StringName]([&"faith", &"faith:hunt", &"weapon", &"ranged", &"rapid", &"blessed", &"faith_anchor", &"bow"])
-faith_bonuses = Array[ExtResource("15_jtqhf")]([SubResource("Resource_jjmdc"), SubResource("Resource_15un4")])
-combat = SubResource("Resource_mykjl")
+tags = Array[StringName]([&"faith", &"faith:hunt", &"weapon", &"ranged", &"rapid", &"blessed", &"faith_anchor", &"bow", &"wood"])
+faith_bonuses = Array[ExtResource("15_jtqhf")]([SubResource("Resource_175lk"), SubResource("Resource_d4ojb")])
+combat = SubResource("Resource_qk25w")

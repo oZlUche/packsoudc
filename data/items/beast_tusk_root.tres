@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_dffr4"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_vmbe2"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_nu8dh"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_i25uy"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_ajyck"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_i3aej"]
+
+[sub_resource type="Resource" id="Resource_sodlc"]
+script = ExtResource("6_i3aej")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("5_ajyck")
+id = &"beast_tusk_root"
+display_name = "巨兽獠牙根"
+display_names = {
+"en": "Beast Tusk Root"
+}
+description = "带着牙髓的一截，没剔干净。"
+shape = SubResource("Resource_sodlc")
+rarity = 2
+weight = 3
+tags = Array[StringName]([&"material", &"nature", &"flesh", &"trophy"])

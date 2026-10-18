@@ -60,5 +60,5 @@ display_names = {
 description = "传说什么毒都解，至少解得不少。"
 shape = SubResource("Resource_kdat0")
 rarity = 3
-tags = Array[StringName]([&"remedy", &"tool"])
+tags = Array[StringName]([&"remedy", &"tool", &"herb"])
 combat = SubResource("Resource_s5fnb")

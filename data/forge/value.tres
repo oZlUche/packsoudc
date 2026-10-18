@@ -5,64 +5,117 @@
 
 [sub_resource type="Resource" id="Resource_iq77w"]
 script = ExtResource("1_yutys")
-key = &"metal"
-mult = 1.25
+key = &"gem"
+mult = 1.5
 
 [sub_resource type="Resource" id="Resource_ueodt"]
 script = ExtResource("1_yutys")
-key = &"gem"
+key = &"metal"
 mult = 1.25
 
 [sub_resource type="Resource" id="Resource_gar4k"]
 script = ExtResource("1_yutys")
-key = &"bone"
+key = &"stone"
+mult = 1.25
 
 [sub_resource type="Resource" id="Resource_3c51i"]
 script = ExtResource("1_yutys")
-key = &"default"
+key = &"bone"
 
 [sub_resource type="Resource" id="Resource_4ndsu"]
+script = ExtResource("1_yutys")
+key = &"leather"
+
+[sub_resource type="Resource" id="Resource_42i21"]
+script = ExtResource("1_yutys")
+key = &"flesh"
+
+[sub_resource type="Resource" id="Resource_yuhqp"]
+script = ExtResource("1_yutys")
+key = &"herb"
+
+[sub_resource type="Resource" id="Resource_8a0b6"]
+script = ExtResource("1_yutys")
+key = &"wood"
+mult = 0.75
+
+[sub_resource type="Resource" id="Resource_03yps"]
+script = ExtResource("1_yutys")
+key = &"cloth"
+mult = 0.75
+
+[sub_resource type="Resource" id="Resource_a0skf"]
+script = ExtResource("1_yutys")
+key = &"clay"
+mult = 0.75
+
+[sub_resource type="Resource" id="Resource_hnehu"]
+script = ExtResource("1_yutys")
+key = &"nature"
+mult = 0.75
+
+[sub_resource type="Resource" id="Resource_h2vyp"]
+script = ExtResource("1_yutys")
+key = &"crafted"
+mult = 1.25
+
+[sub_resource type="Resource" id="Resource_wnu0d"]
+script = ExtResource("1_yutys")
+key = &"magic"
+mult = 1.5
+
+[sub_resource type="Resource" id="Resource_qven1"]
+script = ExtResource("1_yutys")
+key = &"default"
+
+[sub_resource type="Resource" id="Resource_mx3xn"]
 script = ExtResource("1_yutys")
 key = &"weapon"
 mult = 1.2
 
-[sub_resource type="Resource" id="Resource_42i21"]
+[sub_resource type="Resource" id="Resource_2l5tf"]
 script = ExtResource("1_yutys")
 key = &"shield"
 
-[sub_resource type="Resource" id="Resource_yuhqp"]
+[sub_resource type="Resource" id="Resource_qvraj"]
 script = ExtResource("1_yutys")
 key = &"armor"
+mult = 1.5
 
-[sub_resource type="Resource" id="Resource_8a0b6"]
+[sub_resource type="Resource" id="Resource_as05x"]
 script = ExtResource("1_yutys")
 key = &"default"
 
-[sub_resource type="Resource" id="Resource_03yps"]
+[sub_resource type="Resource" id="Resource_rnf4v"]
 script = ExtResource("1_yutys")
 key = &"0"
 
-[sub_resource type="Resource" id="Resource_a0skf"]
+[sub_resource type="Resource" id="Resource_y1wok"]
 script = ExtResource("1_yutys")
 key = &"1"
 size = 1.5
 
-[sub_resource type="Resource" id="Resource_hnehu"]
+[sub_resource type="Resource" id="Resource_kjvi1"]
 script = ExtResource("1_yutys")
 key = &"2"
 size = 2.0
 
-[sub_resource type="Resource" id="Resource_h2vyp"]
+[sub_resource type="Resource" id="Resource_kn4w6"]
 script = ExtResource("1_yutys")
 key = &"3"
 size = 3.0
 
-[sub_resource type="Resource" id="Resource_wnu0d"]
+[sub_resource type="Resource" id="Resource_bmcf1"]
 script = ExtResource("1_yutys")
 key = &"4"
 size = 4.0
 
-[sub_resource type="Resource" id="Resource_qven1"]
+[sub_resource type="Resource" id="Resource_iu6dk"]
+script = ExtResource("1_yutys")
+key = &"5"
+size = 5.0
+
+[sub_resource type="Resource" id="Resource_y2tv7"]
 script = ExtResource("1_yutys")
 key = &"default"
 
@@ -73,7 +126,7 @@ display_name = "数值"
 display_names = {
 "en": "Value"
 }
-description = "数值槽：放进去的道具按稀有度定几档，材质与用途再各乘一个系数。占位表，作者过内容。"
-material = Array[ExtResource("1_yutys")]([SubResource("Resource_iq77w"), SubResource("Resource_ueodt"), SubResource("Resource_gar4k"), SubResource("Resource_3c51i")])
-purpose = Array[ExtResource("1_yutys")]([SubResource("Resource_4ndsu"), SubResource("Resource_42i21"), SubResource("Resource_yuhqp"), SubResource("Resource_8a0b6")])
-rarity = Array[ExtResource("1_yutys")]([SubResource("Resource_03yps"), SubResource("Resource_a0skf"), SubResource("Resource_hnehu"), SubResource("Resource_h2vyp"), SubResource("Resource_wnu0d"), SubResource("Resource_qven1")])
+description = "数值槽：放进去的道具按稀有度定几档，材质（宝石最贵，织物、木、陶最便宜）与用途（防具最大）再各乘一个系数。"
+material = Array[ExtResource("1_yutys")]([SubResource("Resource_iq77w"), SubResource("Resource_ueodt"), SubResource("Resource_gar4k"), SubResource("Resource_3c51i"), SubResource("Resource_4ndsu"), SubResource("Resource_42i21"), SubResource("Resource_yuhqp"), SubResource("Resource_8a0b6"), SubResource("Resource_03yps"), SubResource("Resource_a0skf"), SubResource("Resource_hnehu"), SubResource("Resource_h2vyp"), SubResource("Resource_wnu0d"), SubResource("Resource_qven1")])
+purpose = Array[ExtResource("1_yutys")]([SubResource("Resource_mx3xn"), SubResource("Resource_2l5tf"), SubResource("Resource_qvraj"), SubResource("Resource_as05x")])
+rarity = Array[ExtResource("1_yutys")]([SubResource("Resource_rnf4v"), SubResource("Resource_y1wok"), SubResource("Resource_kjvi1"), SubResource("Resource_kn4w6"), SubResource("Resource_bmcf1"), SubResource("Resource_iu6dk"), SubResource("Resource_y2tv7")])

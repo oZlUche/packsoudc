@@ -4,18 +4,55 @@
   "display_names": {
     "en": "Value"
   },
-  "description": "数值槽：放进去的道具按稀有度定几档，材质与用途再各乘一个系数。占位表，作者过内容。",
+  "description": "数值槽：放进去的道具按稀有度定几档，材质（宝石最贵，织物、木、陶最便宜）与用途（防具最大）再各乘一个系数。",
   "material": [
+    {
+      "key": "gem",
+      "mult": 1.5
+    },
     {
       "key": "metal",
       "mult": 1.25
     },
     {
-      "key": "gem",
+      "key": "stone",
       "mult": 1.25
     },
     {
       "key": "bone"
+    },
+    {
+      "key": "leather"
+    },
+    {
+      "key": "flesh"
+    },
+    {
+      "key": "herb"
+    },
+    {
+      "key": "wood",
+      "mult": 0.75
+    },
+    {
+      "key": "cloth",
+      "mult": 0.75
+    },
+    {
+      "key": "clay",
+      "mult": 0.75
+    },
+    {
+      "key": "nature",
+      "mult": 0.75
+    },
+    {
+      "key": "crafted",
+      "mult": 1.25
+    },
+    {
+      "key": "magic",
+      "mult": 1.5
     },
     {
       "key": "default"
@@ -30,7 +67,8 @@
       "key": "shield"
     },
     {
-      "key": "armor"
+      "key": "armor",
+      "mult": 1.5
     },
     {
       "key": "default"
@@ -55,6 +93,10 @@
     {
       "key": "4",
       "size": 4.0
+    },
+    {
+      "key": "5",
+      "size": 5.0
     },
     {
       "key": "default"

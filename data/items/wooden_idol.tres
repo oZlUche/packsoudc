@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_mgyq7"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_u6i4j"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_shtdx"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_1e470"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_iqrbq"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_pk4mb"]
+
+[sub_resource type="Resource" id="Resource_jrrj0"]
+script = ExtResource("6_pk4mb")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
+
+[resource]
+script = ExtResource("5_iqrbq")
+id = &"wooden_idol"
+display_name = "木雕神像"
+display_names = {
+"en": "Wooden Idol"
+}
+description = "路边小庙里请出来的。"
+shape = SubResource("Resource_jrrj0")
+rarity = 2
+tags = Array[StringName]([&"material", &"crafted", &"wood", &"treasure"])

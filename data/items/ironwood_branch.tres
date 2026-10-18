@@ -22,4 +22,4 @@ description = "比铁沉的木头，难得。"
 shape = SubResource("Resource_c7hid")
 rarity = 2
 weight = 4
-tags = Array[StringName]([&"material", &"nature"])
+tags = Array[StringName]([&"material", &"nature", &"wood"])

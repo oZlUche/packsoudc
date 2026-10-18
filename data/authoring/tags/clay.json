@@ -1,0 +1,13 @@
+{
+  "id": "clay",
+  "display_name": "陶瓷",
+  "display_names": {
+    "en": "Ceramic"
+  },
+  "description": "烧出来的土：陶罐、瓷瓶。",
+  "descriptions": {
+    "en": "Fired earth: pots and vases."
+  },
+  "tip": false,
+  "category": "material"
+}

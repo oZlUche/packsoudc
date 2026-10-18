@@ -18,7 +18,8 @@
     "gear",
     "shield",
     "blessed",
-    "faith_anchor"
+    "faith_anchor",
+    "metal"
   ],
   "faith_bonuses": [
     {

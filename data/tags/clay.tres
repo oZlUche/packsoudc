@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_gkedr"]
+
+[resource]
+script = ExtResource("1_gkedr")
+id = &"clay"
+display_name = "陶瓷"
+display_names = {
+"en": "Ceramic"
+}
+description = "烧出来的土：陶罐、瓷瓶。"
+descriptions = {
+"en": "Fired earth: pots and vases."
+}
+tip = false
+category = "material"

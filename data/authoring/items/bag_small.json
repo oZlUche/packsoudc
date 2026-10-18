@@ -8,5 +8,8 @@
     "11",
     "11"
   ],
-  "is_bag": true
+  "is_bag": true,
+  "tags": [
+    "cloth"
+  ]
 }

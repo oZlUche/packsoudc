@@ -21,4 +21,4 @@ display_names = {
 description = "一截还带树皮的硬木。"
 shape = SubResource("Resource_oll58")
 weight = 6
-tags = Array[StringName]([&"material", &"nature"])
+tags = Array[StringName]([&"material", &"nature", &"wood"])

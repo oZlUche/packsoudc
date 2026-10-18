@@ -1,0 +1,17 @@
+{
+  "id": "gravestone_shard",
+  "display_name": "墓碑碎块",
+  "display_names": {
+    "en": "Gravestone Shard"
+  },
+  "description": "刻字磨平了的半块石碑。",
+  "shape": [
+    "1"
+  ],
+  "weight": 4,
+  "tags": [
+    "material",
+    "nature",
+    "stone"
+  ]
+}

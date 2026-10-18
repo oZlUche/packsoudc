@@ -21,4 +21,4 @@ display_names = {
 description = "粗陶烧的罐子，装什么都行。"
 shape = SubResource("Resource_4ibxi")
 weight = 3
-tags = Array[StringName]([&"material", &"crafted"])
+tags = Array[StringName]([&"material", &"crafted", &"clay"])

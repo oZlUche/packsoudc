@@ -20,5 +20,5 @@ display_names = {
 shape = SubResource("Resource_1wv7q")
 rarity = 3
 value = 200
-tags = Array[StringName]([&"treasure", &"faith", &"faith:earth", &"faith_anchor"])
+tags = Array[StringName]([&"treasure", &"faith", &"faith:earth", &"faith_anchor", &"stone"])
 is_bag = true

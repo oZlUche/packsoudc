@@ -63,5 +63,5 @@ display_names = {
 description = "挤一滴进去，寻常的毒就烈了。"
 shape = SubResource("Resource_5286j")
 rarity = 3
-tags = Array[StringName]([&"reagent", &"material", &"nature", &"poison"])
+tags = Array[StringName]([&"reagent", &"material", &"nature", &"poison", &"flesh"])
 combat = SubResource("Resource_q2ohf")

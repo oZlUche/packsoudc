@@ -1,0 +1,18 @@
+{
+  "id": "stone_figurine",
+  "display_name": "石雕小像",
+  "display_names": {
+    "en": "Stone Figurine"
+  },
+  "description": "不知哪座神的像，手艺倒细。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "crafted",
+    "stone",
+    "treasure"
+  ]
+}

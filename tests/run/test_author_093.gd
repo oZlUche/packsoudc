@@ -52,7 +52,8 @@ static func run_faith_files(t: TestCase) -> void:
 	# 献祭规矩：一件满足几条算几次；2^稀有度 × 倍率（104：倍率照神明总表）
 	var sword := db.get_def(&"shortsword")     # 稀有度 1、武器、金属、2 格
 	t.eq(brute.offering_value(sword), 4, "蛮神：短剑只算「武器」一条 → 2 × 2 = 4")
-	t.check(not brute.accepts_offering(db.get_def(&"ration")), "口粮不是蛮神的祭品")
+	t.check(not brute.accepts_offering(db.get_def(&"dried_herbs")), "干草药束（草药）不是蛮神的祭品")
+	t.check(brute.accepts_offering(db.get_def(&"ration")), "195：口粮归血肉，是蛮神的祭品")
 	var sun: FaithDef = defs[&"sun"]
 	t.eq(sun.offering_value(sword), 10, "日神：短剑算「金属」→ 2 × 5 = 10（体积是小不是中）")
 	t.eq(sun.offering_value(db.get_def(&"core")), 40, "日神：能量核心稀有度 3、体积正好为中、不是金属 → 只算一条：2^3 × 5 = 40")

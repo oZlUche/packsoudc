@@ -20,5 +20,6 @@ display_names = {
 }
 shape = SubResource("Resource_e0scv")
 rarity = 2
+tags = Array[StringName]([&"leather"])
 is_bag = true
 bag_accept_tags = Array[StringName]([&"remedy", &"food"])

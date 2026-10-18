@@ -1,156 +1,457 @@
 [gd_resource type="Resource" script_class="ForgeTable" format=3]
 
-[ext_resource type="Script" path="res://core/forge/forge_entry.gd" id="1_o0uq2"]
-[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="2_jqr3y"]
-[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="3_vea7e"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="4_vwqfe"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_rnfoh"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="6_shedm"]
-[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="7_24osx"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="8_el8jf"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="9_xy6yg"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="10_yvehp"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="11_4q2pq"]
-[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="12_gg7jr"]
-[ext_resource type="Script" path="res://core/forge/forge_table.gd" id="13_h6o10"]
+[ext_resource type="Script" path="res://core/forge/forge_entry.gd" id="1_vwqfe"]
+[ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="2_rnfoh"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="3_shedm"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="4_24osx"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="5_el8jf"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_xy6yg"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="7_yvehp"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="8_4q2pq"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="9_gg7jr"]
+[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="10_h6o10"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="11_bo358"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="12_abkp4"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="13_tay32"]
+[ext_resource type="Script" path="res://core/battle/effects/remove_status.gd" id="14_pel7x"]
+[ext_resource type="Script" path="res://core/battle/effects/guard_status.gd" id="15_ayglt"]
+[ext_resource type="Script" path="res://core/forge/forge_table.gd" id="16_er3gl"]
 
-[sub_resource type="Resource" id="Resource_bo358"]
-script = ExtResource("2_jqr3y")
+[sub_resource type="Resource" id="Resource_wv3yw"]
+script = ExtResource("2_rnfoh")
+target = 0
+axis = &"block"
+delta = -1
+
+[sub_resource type="Resource" id="Resource_2yut8"]
+script = ExtResource("3_shedm")
+amount = 3.0
+damage_stat = &""
+
+[sub_resource type="Resource" id="Resource_ru1w3"]
+script = ExtResource("4_24osx")
+axis = &"block"
+stacks = 8
+
+[sub_resource type="Resource" id="Resource_osobw"]
+script = ExtResource("8_4q2pq")
+id = &"deflect"
+display_name = "弹开"
+display_names = {
+"en": "Deflect"
+}
+stackable = false
+duration_sec = 4.0
+axes = Array[ExtResource("4_24osx")]([SubResource("Resource_ru1w3")])
+
+[sub_resource type="Resource" id="Resource_ic0yg"]
+script = ExtResource("9_gg7jr")
+target = 1
+buff = SubResource("Resource_osobw")
+
+[sub_resource type="Resource" id="Resource_iibkp"]
+script = ExtResource("10_h6o10")
+resource_key = &"armor"
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_5lvvs"]
+script = ExtResource("2_rnfoh")
+axis = &"block"
+
+[sub_resource type="Resource" id="Resource_1x2lw"]
+script = ExtResource("3_shedm")
+damage_type = &"bleed"
+amount = 3.0
+damage_stat = &""
+
+[sub_resource type="Resource" id="Resource_md3qy"]
+script = ExtResource("1_vwqfe")
+key = &"metal"
+effect = SubResource("Resource_2yut8")
+upgraded = SubResource("Resource_1x2lw")
+bonus = SubResource("Resource_wv3yw")
+base = 3.0
+guard_effect = SubResource("Resource_iibkp")
+guard_upgraded = SubResource("Resource_5lvvs")
+guard_bonus = SubResource("Resource_ic0yg")
+guard_base = 2.0
+guard_prefix = "铁壁的"
+guard_prefixes = {
+"en": "Bulwark "
+}
+prefix = "锋利的"
+prefixes = {
+"en": "Keen "
+}
+
+[sub_resource type="Resource" id="Resource_1p202"]
+script = ExtResource("3_shedm")
+damage_type = &"bleed"
 amount = 2.0
 damage_stat = &""
 
-[sub_resource type="Resource" id="Resource_fos0o"]
-script = ExtResource("7_24osx")
+[sub_resource type="Resource" id="Resource_imdws"]
+script = ExtResource("11_bo358")
 seconds = 1.0
 
-[sub_resource type="Resource" id="Resource_m2ceh"]
-script = ExtResource("2_jqr3y")
+[sub_resource type="Resource" id="Resource_psjp1"]
+script = ExtResource("3_shedm")
 target = 1
 damage_type = &"bleed"
 amount = 1.0
 damage_stat = &""
 per_stack = true
 
-[sub_resource type="Resource" id="Resource_r2hia"]
-script = ExtResource("9_xy6yg")
+[sub_resource type="Resource" id="Resource_iuh5t"]
+script = ExtResource("13_tay32")
 
-[sub_resource type="Resource" id="Resource_e0tjf"]
-script = ExtResource("6_shedm")
-trigger = SubResource("Resource_r2hia")
-cadence = SubResource("Resource_fos0o")
-effects = Array[ExtResource("5_rnfoh")]([SubResource("Resource_m2ceh")])
+[sub_resource type="Resource" id="Resource_dohsk"]
+script = ExtResource("7_yvehp")
+trigger = SubResource("Resource_iuh5t")
+cadence = SubResource("Resource_imdws")
+effects = Array[ExtResource("6_xy6yg")]([SubResource("Resource_psjp1")])
 
 [sub_resource type="Resource" id="Resource_505co"]
-script = ExtResource("10_yvehp")
+script = ExtResource("8_4q2pq")
 id = &"bleed"
 display_name = "流血"
 display_names = {
 "en": "Bleed"
 }
 decay_halve_on = &"tick"
-rules = Array[ExtResource("6_shedm")]([SubResource("Resource_e0tjf")])
+rules = Array[ExtResource("7_yvehp")]([SubResource("Resource_dohsk")])
 element = &"bleed"
 
-[sub_resource type="Resource" id="Resource_abkp4"]
-script = ExtResource("11_4q2pq")
+[sub_resource type="Resource" id="Resource_b4a3x"]
+script = ExtResource("9_gg7jr")
 buff = SubResource("Resource_505co")
+stacks = 2
 
-[sub_resource type="Resource" id="Resource_tay32"]
-script = ExtResource("1_o0uq2")
+[sub_resource type="Resource" id="Resource_o4h3v"]
+script = ExtResource("4_24osx")
+axis = &"damage_dealt"
+stacks = 5
+
+[sub_resource type="Resource" id="Resource_3dtjv"]
+script = ExtResource("4_24osx")
+axis = &"attack_speed"
+stacks = 5
+
+[sub_resource type="Resource" id="Resource_mlp7p"]
+script = ExtResource("8_4q2pq")
+id = &"blood_rage"
+display_name = "血怒"
+display_names = {
+"en": "Blood Rage"
+}
+stackable = false
+duration_sec = 10.0
+axes = Array[ExtResource("4_24osx")]([SubResource("Resource_o4h3v"), SubResource("Resource_3dtjv")])
+
+[sub_resource type="Resource" id="Resource_yppss"]
+script = ExtResource("9_gg7jr")
+target = 1
+buff = SubResource("Resource_mlp7p")
+
+[sub_resource type="Resource" id="Resource_no0ck"]
+script = ExtResource("14_pel7x")
+buff_id = &"bleed"
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_8know"]
+script = ExtResource("10_h6o10")
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_djagm"]
+script = ExtResource("15_ayglt")
+buff = SubResource("Resource_505co")
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_qjhcv"]
+script = ExtResource("1_vwqfe")
 key = &"bone"
-effect = SubResource("Resource_abkp4")
-bonus = SubResource("Resource_bo358")
+effect = SubResource("Resource_b4a3x")
+upgraded = SubResource("Resource_djagm")
+bonus = SubResource("Resource_1p202")
 amount_field = &"stacks"
+base = 2.0
+guard_effect = SubResource("Resource_no0ck")
+guard_upgraded = SubResource("Resource_8know")
+guard_bonus = SubResource("Resource_yppss")
+guard_amount_field = &"stacks"
+guard_base = 2.0
+guard_prefix = "蛮勇的"
+guard_prefixes = {
+"en": "Brutish "
+}
 prefix = "嗜血的"
 prefixes = {
 "en": "Bloodthirsty "
 }
 
-[sub_resource type="Resource" id="Resource_pel7x"]
-script = ExtResource("11_4q2pq")
+[sub_resource type="Resource" id="Resource_jwar4"]
+script = ExtResource("4_24osx")
+axis = &"block"
+stacks = -3
+
+[sub_resource type="Resource" id="Resource_yeqor"]
+script = ExtResource("8_4q2pq")
+id = &"marked"
+display_name = "标记"
+display_names = {
+"en": "Marked"
+}
+is_debuff = true
+stackable = false
+duration_sec = 8.0
+axes = Array[ExtResource("4_24osx")]([SubResource("Resource_jwar4")])
+
+[sub_resource type="Resource" id="Resource_bfxf1"]
+script = ExtResource("9_gg7jr")
+buff = SubResource("Resource_yeqor")
+
+[sub_resource type="Resource" id="Resource_yam5q"]
+script = ExtResource("2_rnfoh")
+target = 0
+axis = &"attack_speed"
+delta = -1
+
+[sub_resource type="Resource" id="Resource_5mj7q"]
+script = ExtResource("10_h6o10")
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_q3bts"]
+script = ExtResource("10_h6o10")
+resource_key = &"armor"
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_66u2r"]
+script = ExtResource("5_el8jf")
+stat = &"max_armor"
+amount = 15.0
+
+[sub_resource type="Resource" id="Resource_acm6v"]
+script = ExtResource("8_4q2pq")
+id = &"hardy_guard"
+display_name = "坚韧"
+display_names = {
+"en": "Hardy"
+}
+mods = Array[ExtResource("5_el8jf")]([SubResource("Resource_66u2r")])
+
+[sub_resource type="Resource" id="Resource_lqbqh"]
+script = ExtResource("9_gg7jr")
+target = 1
+buff = SubResource("Resource_acm6v")
+
+[sub_resource type="Resource" id="Resource_ujg46"]
+script = ExtResource("2_rnfoh")
+target = 0
+axis = &"stamina_cost"
+delta = -1
+
+[sub_resource type="Resource" id="Resource_7upl7"]
+script = ExtResource("1_vwqfe")
+key = &"leather"
+effect = SubResource("Resource_yam5q")
+upgraded = SubResource("Resource_ujg46")
+bonus = SubResource("Resource_bfxf1")
+amount_field = &"delta"
+guard_effect = SubResource("Resource_q3bts")
+guard_upgraded = SubResource("Resource_lqbqh")
+guard_bonus = SubResource("Resource_5mj7q")
+guard_base = 2.0
+guard_prefix = "坚壁的"
+guard_prefixes = {
+"en": "Hardened "
+}
+prefix = "束缚的"
+prefixes = {
+"en": "Binding "
+}
+
+[sub_resource type="Resource" id="Resource_ovtd2"]
+script = ExtResource("8_4q2pq")
+id = &"numb"
+display_name = "麻痹"
+display_names = {
+"en": "Paralysis"
+}
+is_debuff = true
+decay_halve_on = &"stamina_paid"
+element = &"lightning"
+per_stack_percent = 10.0
+
+[sub_resource type="Resource" id="Resource_yus4x"]
+script = ExtResource("9_gg7jr")
+buff = SubResource("Resource_ovtd2")
+
+[sub_resource type="Resource" id="Resource_3e34a"]
+script = ExtResource("3_shedm")
+amount = 4.0
+damage_stat = &""
+
+[sub_resource type="Resource" id="Resource_8mis3"]
+script = ExtResource("2_rnfoh")
+axis = &"block"
+
+[sub_resource type="Resource" id="Resource_3xi62"]
+script = ExtResource("9_gg7jr")
+target = 1
+buff = SubResource("Resource_osobw")
+
+[sub_resource type="Resource" id="Resource_l284u"]
+script = ExtResource("4_24osx")
+axis = &"block"
+stacks = 4
+
+[sub_resource type="Resource" id="Resource_o300j"]
+script = ExtResource("8_4q2pq")
+id = &"deflect_long"
+display_name = "久弹"
+display_names = {
+"en": "Long Deflect"
+}
+stackable = false
+duration_sec = 8.0
+axes = Array[ExtResource("4_24osx")]([SubResource("Resource_l284u")])
+
+[sub_resource type="Resource" id="Resource_1y807"]
+script = ExtResource("9_gg7jr")
+target = 1
+buff = SubResource("Resource_o300j")
+
+[sub_resource type="Resource" id="Resource_rf1ik"]
+script = ExtResource("2_rnfoh")
+target = 0
+axis = &"attack_speed"
+delta = -1
+
+[sub_resource type="Resource" id="Resource_8ka2w"]
+script = ExtResource("1_vwqfe")
+key = &"stone"
+effect = SubResource("Resource_3e34a")
+upgraded = SubResource("Resource_rf1ik")
+bonus = SubResource("Resource_yus4x")
+base = 4.0
+guard_effect = SubResource("Resource_3xi62")
+guard_upgraded = SubResource("Resource_1y807")
+guard_bonus = SubResource("Resource_8mis3")
+guard_amount_field = &""
+guard_prefix = "坚固的"
+guard_prefixes = {
+"en": "Sturdy "
+}
+prefix = "碎岩的"
+prefixes = {
+"en": "Crushing "
+}
+
+[sub_resource type="Resource" id="Resource_wg5eo"]
+script = ExtResource("2_rnfoh")
+axis = &"attack_speed"
+
+[sub_resource type="Resource" id="Resource_s072o"]
+script = ExtResource("3_shedm")
+amount = 2.0
+damage_stat = &""
+
+[sub_resource type="Resource" id="Resource_104hi"]
+script = ExtResource("10_h6o10")
+resource_key = &"mana"
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_c83tf"]
+script = ExtResource("10_h6o10")
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_hhl1p"]
+script = ExtResource("2_rnfoh")
+axis = &"regen_hp"
+
+[sub_resource type="Resource" id="Resource_6qfri"]
+script = ExtResource("9_gg7jr")
 buff = SubResource("Resource_505co")
 
-[sub_resource type="Resource" id="Resource_aai0p"]
-script = ExtResource("7_24osx")
-seconds = 1.0
-
-[sub_resource type="Resource" id="Resource_ekrv1"]
-script = ExtResource("2_jqr3y")
-target = 1
-damage_type = &"poison"
-amount = 1.0
-damage_stat = &""
-per_stack = true
-
-[sub_resource type="Resource" id="Resource_1qngc"]
-script = ExtResource("9_xy6yg")
-
-[sub_resource type="Resource" id="Resource_cv4xq"]
-script = ExtResource("6_shedm")
-trigger = SubResource("Resource_1qngc")
-cadence = SubResource("Resource_aai0p")
-effects = Array[ExtResource("5_rnfoh")]([SubResource("Resource_ekrv1")])
-
-[sub_resource type="Resource" id="Resource_isath"]
-script = ExtResource("10_yvehp")
-id = &"poison"
-display_name = "中毒"
-display_names = {
-"en": "Poison"
-}
-is_debuff = true
-rules = Array[ExtResource("6_shedm")]([SubResource("Resource_cv4xq")])
-element = &"poison"
-
-[sub_resource type="Resource" id="Resource_ayglt"]
-script = ExtResource("11_4q2pq")
-buff = SubResource("Resource_isath")
-
-[sub_resource type="Resource" id="Resource_85rp2"]
-script = ExtResource("10_yvehp")
-id = &"virulent"
-display_name = "剧毒"
-display_names = {
-"en": "Virulent Poison"
-}
-is_debuff = true
-damage_taken_by_type = {
-"poison": 25
-}
-
-[sub_resource type="Resource" id="Resource_er3gl"]
-script = ExtResource("11_4q2pq")
-buff = SubResource("Resource_85rp2")
-
-[sub_resource type="Resource" id="Resource_wv3yw"]
-script = ExtResource("1_o0uq2")
-key = &"flesh"
-effect = SubResource("Resource_ayglt")
-upgraded = SubResource("Resource_er3gl")
-bonus = SubResource("Resource_pel7x")
-amount_field = &"stacks"
-prefix = "淬毒的"
-prefixes = {
-"en": "Venomous "
-}
-
-[sub_resource type="Resource" id="Resource_2yut8"]
-script = ExtResource("2_jqr3y")
-amount = 2.0
-damage_stat = &""
-
-[sub_resource type="Resource" id="Resource_osobw"]
-script = ExtResource("2_jqr3y")
-damage_type = &"fire"
-amount = 2.0
-damage_stat = &""
-
-[sub_resource type="Resource" id="Resource_ic0yg"]
-script = ExtResource("1_o0uq2")
-key = &"gem"
-effect = SubResource("Resource_osobw")
-bonus = SubResource("Resource_2yut8")
+[sub_resource type="Resource" id="Resource_68q5f"]
+script = ExtResource("1_vwqfe")
+key = &"wood"
+effect = SubResource("Resource_s072o")
+upgraded = SubResource("Resource_6qfri")
+bonus = SubResource("Resource_wg5eo")
 base = 2.0
+guard_effect = SubResource("Resource_c83tf")
+guard_upgraded = SubResource("Resource_hhl1p")
+guard_bonus = SubResource("Resource_104hi")
+guard_base = 2.0
+guard_prefix = "回春的"
+guard_prefixes = {
+"en": "Verdant "
+}
+prefix = "荆棘的"
+prefixes = {
+"en": "Thorned "
+}
+
+[sub_resource type="Resource" id="Resource_pg2pd"]
+script = ExtResource("2_rnfoh")
+target = 0
+axis = &"damage_taken"
+
+[sub_resource type="Resource" id="Resource_71bn2"]
+script = ExtResource("3_shedm")
+damage_type = &"fire"
+amount = 3.0
+damage_stat = &""
+
+[sub_resource type="Resource" id="Resource_xeebe"]
+script = ExtResource("5_el8jf")
+stat = &"max_armor"
+amount = 8.0
+
+[sub_resource type="Resource" id="Resource_mj88a"]
+script = ExtResource("8_4q2pq")
+id = &"ward"
+display_name = "护符结界"
+display_names = {
+"en": "Ward"
+}
+mods = Array[ExtResource("5_el8jf")]([SubResource("Resource_xeebe")])
+
+[sub_resource type="Resource" id="Resource_6uh6w"]
+script = ExtResource("9_gg7jr")
+target = 1
+buff = SubResource("Resource_mj88a")
+
+[sub_resource type="Resource" id="Resource_bn78q"]
+script = ExtResource("10_h6o10")
+resource_key = &"mana"
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_0ovim"]
+script = ExtResource("2_rnfoh")
+axis = &"crit_chance"
+
+[sub_resource type="Resource" id="Resource_agq1t"]
+script = ExtResource("3_shedm")
+amount = 3.0
+damage_stat = &""
+
+[sub_resource type="Resource" id="Resource_0lbgw"]
+script = ExtResource("1_vwqfe")
+key = &"gem"
+effect = SubResource("Resource_71bn2")
+upgraded = SubResource("Resource_agq1t")
+bonus = SubResource("Resource_pg2pd")
+base = 3.0
+guard_effect = SubResource("Resource_bn78q")
+guard_upgraded = SubResource("Resource_0ovim")
+guard_bonus = SubResource("Resource_6uh6w")
+guard_base = 2.0
+guard_prefix = "璨光的"
+guard_prefixes = {
+"en": "Gleaming "
+}
 prefix = "燃烧的"
 prefixes = {
 "en": "Burning "
@@ -188,175 +489,528 @@ by_element = {
 }
 }
 
-[sub_resource type="Resource" id="Resource_iibkp"]
-script = ExtResource("12_gg7jr")
-amount = 2.0
-
-[sub_resource type="Resource" id="Resource_5lvvs"]
-script = ExtResource("12_gg7jr")
-resource_key = &"armor"
-amount = 3.0
-
-[sub_resource type="Resource" id="Resource_1x2lw"]
-script = ExtResource("1_o0uq2")
-key = &"leather"
-effect = SubResource("Resource_5lvvs")
-bonus = SubResource("Resource_iibkp")
-base = 3.0
-self_only = true
-prefix = "坚壁的"
-prefixes = {
-"en": "Bulwark "
-}
-
-[sub_resource type="Resource" id="Resource_md3qy"]
-script = ExtResource("12_gg7jr")
-resource_key = &"armor"
-amount = 2.0
-
-[sub_resource type="Resource" id="Resource_1p202"]
-script = ExtResource("12_gg7jr")
-amount = 2.0
-
-[sub_resource type="Resource" id="Resource_b4a3x"]
-script = ExtResource("1_o0uq2")
-key = &"wood"
-effect = SubResource("Resource_1p202")
-bonus = SubResource("Resource_md3qy")
-base = 2.0
-self_only = true
-prefix = "回春的"
-prefixes = {
-"en": "Verdant "
-}
-
-[sub_resource type="Resource" id="Resource_mlp7p"]
-script = ExtResource("12_gg7jr")
-resource_key = &"armor"
-amount = 2.0
-
-[sub_resource type="Resource" id="Resource_db85r"]
-script = ExtResource("3_vea7e")
-axis = &"block"
-stacks = 8
-
-[sub_resource type="Resource" id="Resource_yppss"]
-script = ExtResource("10_yvehp")
-id = &"deflect"
-display_name = "弹开"
+[sub_resource type="Resource" id="Resource_vlyke"]
+script = ExtResource("8_4q2pq")
+id = &"fungal_blood"
+display_name = "菌血"
 display_names = {
-"en": "Deflect"
+"en": "Fungal Blood"
 }
-stackable = false
-duration_sec = 4.0
-axes = Array[ExtResource("3_vea7e")]([SubResource("Resource_db85r")])
+is_debuff = true
+seconds_per_stack = 1
+heal_cut = 50
+heal_echo = &"poison"
 
-[sub_resource type="Resource" id="Resource_no0ck"]
-script = ExtResource("11_4q2pq")
+[sub_resource type="Resource" id="Resource_801aa"]
+script = ExtResource("9_gg7jr")
+buff = SubResource("Resource_vlyke")
+
+[sub_resource type="Resource" id="Resource_lr2xp"]
+script = ExtResource("11_bo358")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_vj3v3"]
+script = ExtResource("3_shedm")
 target = 1
-buff = SubResource("Resource_yppss")
+damage_type = &"poison"
+amount = 1.0
+damage_stat = &""
+per_stack = true
 
-[sub_resource type="Resource" id="Resource_8know"]
-script = ExtResource("1_o0uq2")
-key = &"stone"
-effect = SubResource("Resource_no0ck")
-bonus = SubResource("Resource_mlp7p")
-amount_field = &"stacks"
-self_only = true
-prefix = "坚固的"
-prefixes = {
-"en": "Sturdy "
+[sub_resource type="Resource" id="Resource_bda45"]
+script = ExtResource("13_tay32")
+
+[sub_resource type="Resource" id="Resource_56y6x"]
+script = ExtResource("7_yvehp")
+trigger = SubResource("Resource_bda45")
+cadence = SubResource("Resource_lr2xp")
+effects = Array[ExtResource("6_xy6yg")]([SubResource("Resource_vj3v3")])
+
+[sub_resource type="Resource" id="Resource_isath"]
+script = ExtResource("8_4q2pq")
+id = &"poison"
+display_name = "中毒"
+display_names = {
+"en": "Poison"
+}
+is_debuff = true
+rules = Array[ExtResource("7_yvehp")]([SubResource("Resource_56y6x")])
+element = &"poison"
+
+[sub_resource type="Resource" id="Resource_ea37y"]
+script = ExtResource("9_gg7jr")
+buff = SubResource("Resource_isath")
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_3apn6"]
+script = ExtResource("9_gg7jr")
+target = 1
+buff = SubResource("Resource_acm6v")
+
+[sub_resource type="Resource" id="Resource_ojwvd"]
+script = ExtResource("10_h6o10")
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_oyloi"]
+script = ExtResource("14_pel7x")
+buff_id = &"poison"
+stacks = 0
+
+[sub_resource type="Resource" id="Resource_85rp2"]
+script = ExtResource("8_4q2pq")
+id = &"virulent"
+display_name = "剧毒"
+display_names = {
+"en": "Virulent Poison"
+}
+is_debuff = true
+damage_taken_by_type = {
+"poison": 25
 }
 
-[sub_resource type="Resource" id="Resource_djagm"]
-script = ExtResource("11_4q2pq")
-buff = SubResource("Resource_505co")
+[sub_resource type="Resource" id="Resource_bdcps"]
+script = ExtResource("9_gg7jr")
+buff = SubResource("Resource_85rp2")
 
-[sub_resource type="Resource" id="Resource_qjhcv"]
-script = ExtResource("2_jqr3y")
+[sub_resource type="Resource" id="Resource_4j7hm"]
+script = ExtResource("1_vwqfe")
+key = &"flesh"
+effect = SubResource("Resource_ea37y")
+upgraded = SubResource("Resource_bdcps")
+bonus = SubResource("Resource_801aa")
+amount_field = &"stacks"
+base = 2.0
+guard_effect = SubResource("Resource_ojwvd")
+guard_upgraded = SubResource("Resource_oyloi")
+guard_bonus = SubResource("Resource_3apn6")
+guard_base = 2.0
+guard_prefix = "厚皮的"
+guard_prefixes = {
+"en": "Thick-hided "
+}
+prefix = "淬毒的"
+prefixes = {
+"en": "Venomous "
+}
+
+[sub_resource type="Resource" id="Resource_w31iu"]
+script = ExtResource("9_gg7jr")
+buff = SubResource("Resource_yeqor")
+
+[sub_resource type="Resource" id="Resource_81wba"]
+script = ExtResource("2_rnfoh")
+target = 0
+axis = &"stamina_cost"
+delta = -1
+
+[sub_resource type="Resource" id="Resource_c0a51"]
+script = ExtResource("9_gg7jr")
+target = 1
+buff = SubResource("Resource_acm6v")
+
+[sub_resource type="Resource" id="Resource_hsdl7"]
+script = ExtResource("14_pel7x")
+buff_id = &"bleed"
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_wf1r8"]
+script = ExtResource("10_h6o10")
+resource_key = &"armor"
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_hli8r"]
+script = ExtResource("14_pel7x")
+target = 0
+all_buffs = true
+
+[sub_resource type="Resource" id="Resource_y3q3e"]
+script = ExtResource("1_vwqfe")
+key = &"cloth"
+effect = SubResource("Resource_81wba")
+upgraded = SubResource("Resource_hli8r")
+bonus = SubResource("Resource_w31iu")
+amount_field = &"delta"
+guard_effect = SubResource("Resource_hsdl7")
+guard_upgraded = SubResource("Resource_wf1r8")
+guard_bonus = SubResource("Resource_c0a51")
+guard_amount_field = &"stacks"
+guard_base = 2.0
+guard_prefix = "裹伤的"
+guard_prefixes = {
+"en": "Dressed "
+}
+prefix = "缠绕的"
+prefixes = {
+"en": "Tangling "
+}
+
+[sub_resource type="Resource" id="Resource_7wilw"]
+script = ExtResource("14_pel7x")
+target = 0
+all_buffs = true
+
+[sub_resource type="Resource" id="Resource_n6cc0"]
+script = ExtResource("9_gg7jr")
+buff = SubResource("Resource_isath")
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_nmno0"]
+script = ExtResource("2_rnfoh")
+axis = &"regen_hp"
+
+[sub_resource type="Resource" id="Resource_gc6yj"]
+script = ExtResource("14_pel7x")
+stacks = 2
+all_debuffs = true
+
+[sub_resource type="Resource" id="Resource_wmnok"]
+script = ExtResource("10_h6o10")
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_ilgi0"]
+script = ExtResource("2_rnfoh")
+target = 0
+axis = &"regen_hp_pct"
+delta = -1
+
+[sub_resource type="Resource" id="Resource_xqbji"]
+script = ExtResource("1_vwqfe")
+key = &"herb"
+effect = SubResource("Resource_n6cc0")
+upgraded = SubResource("Resource_ilgi0")
+bonus = SubResource("Resource_7wilw")
+amount_field = &"stacks"
+base = 2.0
+guard_effect = SubResource("Resource_gc6yj")
+guard_upgraded = SubResource("Resource_wmnok")
+guard_bonus = SubResource("Resource_nmno0")
+guard_amount_field = &"stacks"
+guard_base = 2.0
+guard_prefix = "药香的"
+guard_prefixes = {
+"en": "Fragrant "
+}
+prefix = "苦涩的"
+prefixes = {
+"en": "Bitter "
+}
+
+[sub_resource type="Resource" id="Resource_7x46b"]
+script = ExtResource("2_rnfoh")
+target = 0
+axis = &"block"
+delta = -1
+
+[sub_resource type="Resource" id="Resource_p7hmw"]
+script = ExtResource("3_shedm")
 amount = 3.0
 damage_stat = &""
 
-[sub_resource type="Resource" id="Resource_yeqor"]
-script = ExtResource("1_o0uq2")
-key = &"metal"
-effect = SubResource("Resource_qjhcv")
-bonus = SubResource("Resource_djagm")
+[sub_resource type="Resource" id="Resource_n6c0e"]
+script = ExtResource("2_rnfoh")
+axis = &"max_hp"
+
+[sub_resource type="Resource" id="Resource_q4yiw"]
+script = ExtResource("10_h6o10")
+resource_key = &"mana"
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_0s2l6"]
+script = ExtResource("9_gg7jr")
+target = 1
+buff = SubResource("Resource_mj88a")
+
+[sub_resource type="Resource" id="Resource_hchqr"]
+script = ExtResource("9_gg7jr")
+buff = SubResource("Resource_505co")
+
+[sub_resource type="Resource" id="Resource_a2b26"]
+script = ExtResource("1_vwqfe")
+key = &"clay"
+effect = SubResource("Resource_p7hmw")
+upgraded = SubResource("Resource_hchqr")
+bonus = SubResource("Resource_7x46b")
 base = 3.0
+guard_effect = SubResource("Resource_q4yiw")
+guard_upgraded = SubResource("Resource_0s2l6")
+guard_bonus = SubResource("Resource_n6c0e")
+guard_base = 2.0
+guard_prefix = "釉彩的"
+guard_prefixes = {
+"en": "Glazed "
+}
+prefix = "碎瓷的"
+prefixes = {
+"en": "Shattering "
+}
+
+[sub_resource type="Resource" id="Resource_l261m"]
+script = ExtResource("2_rnfoh")
+axis = &"attack_speed"
+
+[sub_resource type="Resource" id="Resource_pn814"]
+script = ExtResource("3_shedm")
+amount = 2.0
+damage_stat = &""
+
+[sub_resource type="Resource" id="Resource_4ji27"]
+script = ExtResource("10_h6o10")
+resource_key = &"mana"
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_j8jy7"]
+script = ExtResource("10_h6o10")
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_oh00e"]
+script = ExtResource("2_rnfoh")
+axis = &"regen_hp"
+
+[sub_resource type="Resource" id="Resource_aotdw"]
+script = ExtResource("9_gg7jr")
+buff = SubResource("Resource_505co")
+
+[sub_resource type="Resource" id="Resource_j1ibe"]
+script = ExtResource("1_vwqfe")
+key = &"nature"
+effect = SubResource("Resource_pn814")
+upgraded = SubResource("Resource_aotdw")
+bonus = SubResource("Resource_l261m")
+base = 2.0
+guard_effect = SubResource("Resource_j8jy7")
+guard_upgraded = SubResource("Resource_oh00e")
+guard_bonus = SubResource("Resource_4ji27")
+guard_base = 2.0
+guard_prefix = "回春的"
+guard_prefixes = {
+"en": "Verdant "
+}
+prefix = "荆棘的"
+prefixes = {
+"en": "Thorned "
+}
+
+[sub_resource type="Resource" id="Resource_pnaiy"]
+script = ExtResource("2_rnfoh")
+target = 0
+axis = &"block"
+delta = -1
+
+[sub_resource type="Resource" id="Resource_tjydo"]
+script = ExtResource("3_shedm")
+amount = 3.0
+damage_stat = &""
+
+[sub_resource type="Resource" id="Resource_dx6xx"]
+script = ExtResource("9_gg7jr")
+target = 1
+buff = SubResource("Resource_osobw")
+
+[sub_resource type="Resource" id="Resource_102ri"]
+script = ExtResource("10_h6o10")
+resource_key = &"armor"
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_upvnp"]
+script = ExtResource("2_rnfoh")
+axis = &"block"
+
+[sub_resource type="Resource" id="Resource_18ene"]
+script = ExtResource("3_shedm")
+damage_type = &"bleed"
+amount = 3.0
+damage_stat = &""
+
+[sub_resource type="Resource" id="Resource_i3l1i"]
+script = ExtResource("1_vwqfe")
+key = &"crafted"
+effect = SubResource("Resource_tjydo")
+upgraded = SubResource("Resource_18ene")
+bonus = SubResource("Resource_pnaiy")
+base = 3.0
+guard_effect = SubResource("Resource_102ri")
+guard_upgraded = SubResource("Resource_upvnp")
+guard_bonus = SubResource("Resource_dx6xx")
+guard_base = 2.0
+guard_prefix = "铁壁的"
+guard_prefixes = {
+"en": "Bulwark "
+}
 prefix = "锋利的"
 prefixes = {
 "en": "Keen "
 }
 
-[sub_resource type="Resource" id="Resource_bfxf1"]
-script = ExtResource("2_jqr3y")
+[sub_resource type="Resource" id="Resource_nyyf4"]
+script = ExtResource("2_rnfoh")
+target = 0
+axis = &"damage_taken"
+
+[sub_resource type="Resource" id="Resource_s1wnt"]
+script = ExtResource("3_shedm")
+damage_type = &"fire"
+amount = 3.0
+damage_stat = &""
+
+[sub_resource type="Resource" id="Resource_pxk0q"]
+script = ExtResource("9_gg7jr")
+target = 1
+buff = SubResource("Resource_mj88a")
+
+[sub_resource type="Resource" id="Resource_onoc1"]
+script = ExtResource("10_h6o10")
+resource_key = &"mana"
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_irq6i"]
+script = ExtResource("2_rnfoh")
+axis = &"crit_chance"
+
+[sub_resource type="Resource" id="Resource_kiw4t"]
+script = ExtResource("3_shedm")
+amount = 3.0
+damage_stat = &""
+
+[sub_resource type="Resource" id="Resource_lp6bk"]
+script = ExtResource("1_vwqfe")
+key = &"magic"
+effect = SubResource("Resource_s1wnt")
+upgraded = SubResource("Resource_kiw4t")
+bonus = SubResource("Resource_nyyf4")
+base = 3.0
+guard_effect = SubResource("Resource_onoc1")
+guard_upgraded = SubResource("Resource_irq6i")
+guard_bonus = SubResource("Resource_pxk0q")
+guard_base = 2.0
+guard_prefix = "璨光的"
+guard_prefixes = {
+"en": "Gleaming "
+}
+prefix = "燃烧的"
+prefixes = {
+"en": "Burning "
+}
+by_element = {
+"fire": {
+"applies": {
+"buff": "scorch"
+},
+"damage_type": "fire",
+"prefix": "燃烧的",
+"prefixes": {
+"en": "Burning "
+}
+},
+"ice": {
+"applies": {
+"buff": "chill"
+},
+"damage_type": "ice",
+"prefix": "霜冻的",
+"prefixes": {
+"en": "Frozen "
+}
+},
+"lightning": {
+"applies": {
+"buff": "numb"
+},
+"damage_type": "lightning",
+"prefix": "雷鸣的",
+"prefixes": {
+"en": "Thundering "
+}
+}
+}
+
+[sub_resource type="Resource" id="Resource_k5e8s"]
+script = ExtResource("3_shedm")
 amount = 2.0
 damage_stat = &""
 
-[sub_resource type="Resource" id="Resource_yam5q"]
-script = ExtResource("1_o0uq2")
+[sub_resource type="Resource" id="Resource_dldrt"]
+script = ExtResource("10_h6o10")
+resource_key = &"armor"
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_5wk6u"]
+script = ExtResource("1_vwqfe")
 key = &"default"
-effect = SubResource("Resource_bfxf1")
+effect = SubResource("Resource_k5e8s")
 base = 2.0
+guard_effect = SubResource("Resource_dldrt")
+guard_base = 2.0
+guard_prefix = "护身的"
+guard_prefixes = {
+"en": "Warded "
+}
 prefix = "附魔的"
 prefixes = {
 "en": "Enchanted "
 }
 
-[sub_resource type="Resource" id="Resource_5mj7q"]
-script = ExtResource("1_o0uq2")
+[sub_resource type="Resource" id="Resource_mb1sw"]
+script = ExtResource("1_vwqfe")
 key = &"weapon"
-target = 0
+stance = &"attack"
 
-[sub_resource type="Resource" id="Resource_q3bts"]
-script = ExtResource("1_o0uq2")
+[sub_resource type="Resource" id="Resource_6b7nj"]
+script = ExtResource("1_vwqfe")
 key = &"shield"
-target = 1
+stance = &"guard"
 
-[sub_resource type="Resource" id="Resource_acm6v"]
-script = ExtResource("1_o0uq2")
+[sub_resource type="Resource" id="Resource_yc1w8"]
+script = ExtResource("1_vwqfe")
 key = &"armor"
-target = 1
+stance = &"guard"
 
-[sub_resource type="Resource" id="Resource_lqbqh"]
-script = ExtResource("1_o0uq2")
+[sub_resource type="Resource" id="Resource_hnn45"]
+script = ExtResource("1_vwqfe")
 key = &"default"
+stance = &"attack"
 
-[sub_resource type="Resource" id="Resource_ujg46"]
-script = ExtResource("1_o0uq2")
+[sub_resource type="Resource" id="Resource_coo8x"]
+script = ExtResource("1_vwqfe")
 key = &"0"
 
-[sub_resource type="Resource" id="Resource_7upl7"]
-script = ExtResource("1_o0uq2")
+[sub_resource type="Resource" id="Resource_ntehv"]
+script = ExtResource("1_vwqfe")
 key = &"1"
 
-[sub_resource type="Resource" id="Resource_ovtd2"]
-script = ExtResource("1_o0uq2")
+[sub_resource type="Resource" id="Resource_wxpe8"]
+script = ExtResource("1_vwqfe")
 key = &"2"
 tier = 1
 
-[sub_resource type="Resource" id="Resource_yus4x"]
-script = ExtResource("1_o0uq2")
+[sub_resource type="Resource" id="Resource_shv1f"]
+script = ExtResource("1_vwqfe")
 key = &"3"
-tier = 1
-
-[sub_resource type="Resource" id="Resource_3e34a"]
-script = ExtResource("1_o0uq2")
-key = &"4"
 tier = 2
 
-[sub_resource type="Resource" id="Resource_8mis3"]
-script = ExtResource("1_o0uq2")
+[sub_resource type="Resource" id="Resource_jn5uv"]
+script = ExtResource("1_vwqfe")
+key = &"4"
+tier = 2
+main_mult = 1.5
+
+[sub_resource type="Resource" id="Resource_pg6q7"]
+script = ExtResource("1_vwqfe")
+key = &"5"
+tier = 2
+main_mult = 2.0
+
+[sub_resource type="Resource" id="Resource_0qpun"]
+script = ExtResource("1_vwqfe")
 key = &"default"
 
 [resource]
-script = ExtResource("13_h6o10")
+script = ExtResource("16_er3gl")
 id = &"effect"
 display_name = "效果"
 display_names = {
 "en": "Effect"
 }
-description = "效果槽：放进去的道具按材质定「做什么」（也给附魔前缀）、按用途定给谁、按稀有度定几阶（低的是基础，中间升阶，最高再附带一个）。占位表，作者过内容。"
-material = Array[ExtResource("1_o0uq2")]([SubResource("Resource_tay32"), SubResource("Resource_wv3yw"), SubResource("Resource_ic0yg"), SubResource("Resource_1x2lw"), SubResource("Resource_b4a3x"), SubResource("Resource_8know"), SubResource("Resource_yeqor"), SubResource("Resource_yam5q")])
-purpose = Array[ExtResource("1_o0uq2")]([SubResource("Resource_5mj7q"), SubResource("Resource_q3bts"), SubResource("Resource_acm6v"), SubResource("Resource_lqbqh")])
-rarity = Array[ExtResource("1_o0uq2")]([SubResource("Resource_ujg46"), SubResource("Resource_7upl7"), SubResource("Resource_ovtd2"), SubResource("Resource_yus4x"), SubResource("Resource_3e34a"), SubResource("Resource_8mis3")])
+description = "效果槽：放进去的道具按材质定「做什么」（每种材质写攻式、守式两套，也给附魔前缀），按用途定攻守（盾、防具用守式，其它用攻式），按稀有度定几阶：升阶、附带都是在基础句后面追加一句。"
+material = Array[ExtResource("1_vwqfe")]([SubResource("Resource_md3qy"), SubResource("Resource_qjhcv"), SubResource("Resource_7upl7"), SubResource("Resource_8ka2w"), SubResource("Resource_68q5f"), SubResource("Resource_0lbgw"), SubResource("Resource_4j7hm"), SubResource("Resource_y3q3e"), SubResource("Resource_xqbji"), SubResource("Resource_a2b26"), SubResource("Resource_j1ibe"), SubResource("Resource_i3l1i"), SubResource("Resource_lp6bk"), SubResource("Resource_5wk6u")])
+purpose = Array[ExtResource("1_vwqfe")]([SubResource("Resource_mb1sw"), SubResource("Resource_6b7nj"), SubResource("Resource_yc1w8"), SubResource("Resource_hnn45")])
+rarity = Array[ExtResource("1_vwqfe")]([SubResource("Resource_coo8x"), SubResource("Resource_ntehv"), SubResource("Resource_wxpe8"), SubResource("Resource_shv1f"), SubResource("Resource_jn5uv"), SubResource("Resource_pg6q7"), SubResource("Resource_0qpun")])

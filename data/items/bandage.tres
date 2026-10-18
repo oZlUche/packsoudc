@@ -47,5 +47,5 @@ display_names = {
 "en": "Bandage"
 }
 shape = SubResource("Resource_kpxgu")
-tags = Array[StringName]([&"remedy", &"nature"])
+tags = Array[StringName]([&"remedy", &"nature", &"cloth"])
 combat = SubResource("Resource_tn85m")

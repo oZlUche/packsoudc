@@ -22,4 +22,4 @@ description = "织着狩猎图的整幅挂毯。"
 shape = SubResource("Resource_r6h7e")
 rarity = 3
 weight = 4
-tags = Array[StringName]([&"material", &"crafted"])
+tags = Array[StringName]([&"material", &"crafted", &"cloth"])

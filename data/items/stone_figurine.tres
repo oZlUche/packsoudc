@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_daq7w"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_81v1t"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_x3ug0"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_ruuq2"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_0xwyw"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_8vc3k"]
+
+[sub_resource type="Resource" id="Resource_o5t4l"]
+script = ExtResource("6_8vc3k")
+
+[resource]
+script = ExtResource("5_0xwyw")
+id = &"stone_figurine"
+display_name = "石雕小像"
+display_names = {
+"en": "Stone Figurine"
+}
+description = "不知哪座神的像，手艺倒细。"
+shape = SubResource("Resource_o5t4l")
+rarity = 2
+tags = Array[StringName]([&"material", &"crafted", &"stone", &"treasure"])

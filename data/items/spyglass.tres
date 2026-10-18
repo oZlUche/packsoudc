@@ -21,4 +21,4 @@ description = "一支旧军团的黄铜望远镜。不占背包：拿到之后�
 shape = SubResource("Resource_mqm3k")
 rarity = 2
 weight = 2
-tags = Array[StringName]([&"keepsake", &"node_tooltips"])
+tags = Array[StringName]([&"keepsake", &"node_tooltips", &"metal"])
