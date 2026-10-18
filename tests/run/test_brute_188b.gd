@@ -155,7 +155,7 @@ static func run_sacrifice_and_smite(t: TestCase) -> void:
 
 
 static func run_offering_words(t: TestCase) -> void:
-	t.begin("188 补充一 · 献祭：「占 9 格以上」改叫「大型道具」；没有图标时退回文字（有「骨制品」）；有图时排一行 [img=24]")
+	t.begin("188 补充一 · 献祭：「占 9 格以上」改叫「大型道具」；没有图标时退回文字（有「骨制品」）；有图时排一行图标（193 起 32 像素）")
 	var defs := FaithDef.load_all()
 	var leaks: Array[String] = []
 	for id in defs:
@@ -175,7 +175,7 @@ static func run_offering_words(t: TestCase) -> void:
 		if FaithTooltip.icon_paths(r).is_empty():
 			all_art = false
 	if all_art:
-		t.check(offer.contains("[img=24]res://assets/ui/tags/bone.png"), "图标都在：排一行图标")
+		t.check(offer.contains("[img=%d]res://assets/ui/tags/bone.png" % FaithTooltip.ICON_SIZE), "图标都在：排一行图标")
 		t.check(not Glossary.strip_bbcode(offer).contains("大型道具"), "193 §3：图标都在就不写名字")
 	else:
 		t.check(Glossary.strip_bbcode(offer).contains("骨制品") and not offer.contains("[img="), "还没有图标：文字")
