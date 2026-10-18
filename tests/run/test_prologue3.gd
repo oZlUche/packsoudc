@@ -144,7 +144,7 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(s.step_to(4), "走到第一座神坛")
 	ev = s.events.pending_event()
 	t.check(ev != null and ev.id == &"tut3_rest_1", "教程版的休息点")
-	var altar_i := _option(ev, "神坛（献祭或特殊操作，二选一）")
+	var altar_i := _option(ev, "献祭或特殊操作，二选一")
 	t.check(bool(s.events.option_state(altar_i)["ok"]), "信了神：神坛能开")
 	t.check(s.events.choose(altar_i), "开神坛")
 	var altar := AltarModule.of(s)
@@ -192,7 +192,7 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(s.step_to(7), "走到第二座神坛")
 	ev = s.events.pending_event()
 	t.check(ev != null and ev.id == &"tut3_rest_2", "第二座神坛")
-	t.check(s.events.choose(_option(ev, "神坛（献祭或特殊操作，二选一）")), "开神坛")
+	t.check(s.events.choose(_option(ev, "献祭或特殊操作，二选一")), "开神坛")
 	var acts := altar.actions()
 	var names: Array[StringName] = []
 	for p in acts:

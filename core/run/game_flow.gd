@@ -84,6 +84,12 @@ var seen_loot: Dictionary = {}
 var recorder: CalibrationRecorder = null
 var _queue: Array[Dictionary] = []
 var _settled: bool = false
+## 196：营地里刚歇过 —— `{"node": 点 id, "restored": 这次一共回了几点}`，营地屏打开时读了冒一行字、清掉。没歇过是空
+var camp_rest: Dictionary = {}
+## 196：这一次 [method choose_event] 选的是营地屏上的选项（歇完不跳屏、结果页不弹）
+var _camp_choice: bool = false
+## 196：营地选项的后果里另回的体力（扎营的 restore_vitality），并进 [member camp_rest]
+var _camp_extra: int = 0
 
 
 func _init(p_items: ItemDatabase = null, p_enemies: EnemyDatabase = null, p_sets: SetDatabase = null, p_meta: MetaState = null) -> void:
@@ -798,6 +804,10 @@ func open_forge(node: MapNode) -> bool:
 func leave_forge() -> bool:
 	if run == null or screen != Screen.FORGE:
 		return false
+	var here := run.current_node()
+	if _queue.is_empty() and here != null and not here.is_visited() and not run.is_over() and run.events.pending_event() == null \
+			and NodeEvents.effective_type(here) == &"rest":
+		run.events.handle(here)     # 196（待定 2 A）：休息点还有没用的 —— 回营地
 	_flush()
 	return true
 
@@ -826,8 +836,8 @@ func close_altar() -> void:
 		return
 	_go(Screen.MAP, {})
 	var here := run.current_node()
-	if here != null and not here.is_visited() and not run.is_over() and NodeEvents.effective_type(here) != &"rest":
-		run.events.handle(here)     # 093：神坛上把这个点改造成别的了：立刻发生（还是没用完的休息点就不算，回地图）
+	if here != null and not here.is_visited() and not run.is_over() and run.events.pending_event() == null:
+		run.events.handle(here)     # 093：神坛上把这个点改造成别的了：立刻发生；196：还是没用完的休息点就回营地
 	_flush()
 
 
@@ -1139,11 +1149,31 @@ func use_skill(id: StringName) -> String:
 func choose_event(i: int) -> bool:
 	if run != null and bool(run.events.pending.get("search_stage", false)):
 		run.fold_loot_into_search()     # 战利品屏没关就到了「再搜 / 走」（读档回来等）：同上
-	if run == null or not run.events.choose(i):
+	if run == null:
 		return false
+	var def := run.events.pending_event()
+	var node := run.events.pending_node()
+	_camp_choice = def != null and def.scene == EventDef.SCENE_REST_CAMP
+	_camp_extra = 0
+	camp_rest = {}
+	var ok := run.events.choose(i)
+	_camp_choice = false
+	if not ok:
+		return false
+	if not camp_rest.is_empty() and node != null and not run.is_over():
+		_back_to_camp(node, def)     # 196：营地里歇完不跳屏 —— 营地重开，篝火熄、冒一行体力
 	save_meta()     # 091：选项可能立了局外旗标（set_flag）
 	_flush()
 	return true
+
+
+## 196：回到营地 —— 休息点还有没用的就重新挂起它的事件（营地重画成剩下的样子）；两份都用完了也留在营地，只剩路标能点
+func _back_to_camp(node: MapNode, def: EventDef) -> void:
+	if not node.is_visited():
+		if run.events.pending_event() == null:
+			run.events.handle(node)
+		return
+	_push({"screen": Screen.EVENT, "node": node, "camp": def, "done": true})
 
 
 func take_loot(uid: int) -> bool:
@@ -1282,11 +1312,17 @@ func _adopt(state: RunState) -> void:
 		else:
 			_push(entry))
 	ev.event_resolved.connect(func(node: MapNode, outcome: StringName, detail: Dictionary):
+		# 196：营地里只回了体力、扣了倒计时（扎营）不弹结果页 —— 营地里冒一行字说回了几点
+		if _camp_choice and detail.keys().all(func(k): return k in ["restored", "waited"]):
+			_camp_extra += int(detail.get("restored", 0))
+			return
 		# 结果页排在这一步别的事（回放、战利品）前面：先看「你翻出了什么」，再看接下来打的那一场。什么都没发生就不打扰
 		if not detail.is_empty():
 			_queue.push_front({"screen": Screen.EVENT, "node": node, "outcome": outcome, "detail": detail}))
 	ev.rested.connect(func(node: MapNode, restored: int):
-		_push({"screen": Screen.REST, "node": node, "restored": restored}))
+		# 196：不再跳「休息区」那一屏（rest_screen 删了）。营地里歇的由营地屏冒字；别处歇的（没配事件的休息点）只看顶上的体力
+		if _camp_choice:
+			camp_rest = {"node": node.id, "restored": restored + _camp_extra})
 	run_changed.emit(state)     # 101 第 5 刀：UI 把只属于一局的东西挂上（信仰探针）
 
 

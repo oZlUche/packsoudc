@@ -66,7 +66,7 @@ const HARDCODED := ["蛮兵", "制式短剑", "弯刀", "塔盾", "板甲", "长
 static func run_tutorial_events_clean(t: TestCase) -> void:
 	t.begin("112 · 序章事件与规则卡：全部占位符都换得掉，名字不写死，汉字数没了")
 	var defs := EventPlacer.load_all()
-	var ctx := {"char_name": "阿岚", "vitality": 5, "loss_cost": 1, "_items": _db()}
+	var ctx := {"char_name": "阿岚", "vitality": 5, "loss_cost": 1, "_items": _db(), "rest_restore": 1}     # 196：教程的休息点选项写「回 {rest_restore} 点体力」
 	var n := 0
 	for id in defs:
 		if not String(id).begins_with("tut"):
@@ -79,7 +79,7 @@ static func run_tutorial_events_clean(t: TestCase) -> void:
 			for word in HARDCODED:
 				t.check(not field.contains(word), "%s 里「%s」不写死" % [id, word])
 		for opt in def.options:
-			t.check(not TextTemplate.plain((opt as EventOption).label, ctx).contains("{"), "%s 选项没漏换" % id)
+			t.check(not TextTemplate.plain((opt as EventOption).label, TextTemplate.option_context(ctx, opt)).contains("{"), "%s 选项没漏换" % id)
 		for digits in ["三秒一下", "二十多点", "十二点", "六秒一次", "输两场"]:
 			t.check(not def.text.contains(digits), "%s 不再写死「%s」" % [id, digits])
 	t.eq(n, 37, "三张序章 37 条事件都查了（113 加了序章三的 12 条）")

@@ -18,6 +18,13 @@ extends Resource
 ## 图像路径，占位：没有文件就画一块底色写路径
 @export var image: String = ""
 @export var options: Array[EventOption] = []
+## 196：用哪一屏演这个事件 —— 空 = 通用事件屏（石板、左图右选项）；`rest_camp` = 夜晚营地（选项画成造物，见 RestCampScreen）
+@export var scene: StringName = &""
+
+## 196：[member scene] 认得的值
+const SCENES: Array[StringName] = [&"", &"rest_camp"]
+## 196：营地屏
+const SCENE_REST_CAMP := &"rest_camp"
 
 
 ## 当前语言（或指定语言）下的标题；没写回落 title（[method Names.pick]）

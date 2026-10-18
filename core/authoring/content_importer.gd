@@ -1450,6 +1450,8 @@ static func import_event(data: Dictionary, ctx: Context, report: ImportReport) -
 	var def := EventDef.new()
 	_fill(def, data, "", ctx, report)
 	_require_id(def.id, "事件", report)
+	if not EventDef.SCENES.has(def.scene):
+		report.error("scene", "场景只写空（通用事件屏）或 rest_camp（营地），不认得「%s」" % def.scene)
 	if def.options.is_empty():
 		report.error("options", "事件至少一个选项，不然关不掉")
 	else:

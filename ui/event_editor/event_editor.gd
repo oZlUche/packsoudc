@@ -29,6 +29,8 @@ var _id_edit: LineEdit
 var _title_edit: LineEdit
 var _text_edit: TextEdit
 var _image_edit: LineEdit
+## 196：用哪一屏演（空 = 通用事件屏 / 营地）
+var _scene_pick: OptionButton
 var _thumb: TextureRect
 var _form_host: VBoxContainer
 var _preview_host: VBoxContainer
@@ -162,6 +164,14 @@ func _build_ui() -> void:
 	image_row.add_child(UiTheme.make_button("导入图片…", _pick_image, UiTheme.TIER_PLAIN, 13))
 	image_row.add_child(UiTheme.make_button("清除", _clear_image, UiTheme.TIER_PLAIN, 13))
 	body.add_child(image_row)
+	var scene_row := HBoxContainer.new()
+	scene_row.add_child(UiTheme.make_label("场景", 13, UiPalette.DIM))
+	_scene_pick = OptionButton.new()
+	for sc in EventDef.SCENES:
+		_scene_pick.add_item(SCENE_NAMES.get(sc, String(sc)))
+	_scene_pick.item_selected.connect(_on_scene_selected)
+	scene_row.add_child(_scene_pick)
+	body.add_child(scene_row)
 	_thumb = TextureRect.new()
 	_thumb.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	_thumb.custom_minimum_size = Vector2(0, 0)
@@ -273,6 +283,7 @@ func _on_bound() -> void:
 	_syncing = true
 	_id_edit.text = String(_def.id)
 	_image_edit.text = _def.image
+	_scene_pick.select(maxi(0, EventDef.SCENES.find(_def.scene)))
 	_syncing = false
 	_sync_fields()
 	_rebuild_form()
@@ -360,6 +371,17 @@ func _on_text_changed() -> void:
 		_def.text = _text_edit.text
 	else:
 		_put_lang(_def.texts, _lang, _text_edit.text)
+	_refresh()
+
+
+## 196：场景下拉里的名字
+const SCENE_NAMES := {&"": "通用事件屏", &"rest_camp": "营地（休息点）"}
+
+
+func _on_scene_selected(i: int) -> void:
+	if _syncing or _def == null:
+		return
+	_def.scene = EventDef.SCENES[i]
 	_refresh()
 
 
