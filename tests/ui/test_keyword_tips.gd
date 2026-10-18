@@ -63,7 +63,8 @@ static func run_longbow_sidebar(t: TestCase) -> void:
 	var full := ItemTooltip.describe_full(ItemInstance.create(bow))
 	var names: Array[String] = []
 	for term in (full["terms"] as Dictionary).values():
-		names.append(String((term as Dictionary)["name"]))
+		if String((term as Dictionary)["text"]) != "":     # 193 补充三：标签图标各有一条只写名字的词条（停上去看名字），不算「有说明的词条」
+			names.append(String((term as Dictionary)["name"]))
 	names.sort()
 	# 方案举例时说「只剩信仰、信物两个」，漏算了它自己施加的【标记】——
 	# buff 词条按 2.3 的规矩不受 tip 管（说明是按定义生成的效果，正是玩家要看的），所以是三个
@@ -73,7 +74,7 @@ static func run_longbow_sidebar(t: TestCase) -> void:
 	var text := String(full["text"])
 	for quiet in ["自发", "耗耐力", "冷却", "信力"]:
 		t.check(not text.contains("[u]%s[/u]" % quiet), "「%s」在主文字里不标色" % quiet)
-	t.check(Glossary.strip_bbcode(text).contains(" · 武器"), "副行的标签照旧（170：稀有度 · 标签）")
+	t.check(text.contains("term:tag:weapon"), "副行的标签照旧（193 补充三起画成图标）")
 	ItemTooltip.faith_probe = saved
 
 
@@ -182,6 +183,6 @@ static func run_internal_style_tags(t: TestCase) -> void:
 			continue
 		var text := String(ItemTooltip.describe_full(ItemInstance.create(def))["text"])
 		t.check(not text.contains(pair[1]), "%s 的悬浮窗不写「%s」" % [pair[0], pair[1]])
-		t.check(Glossary.strip_bbcode(text).contains(" · 武器"), "%s 的标签还在副行里（列别的标签）" % pair[0])
+		t.check(text.contains("term:tag:weapon"), "%s 的标签还在副行里（列别的标签，193 补充三起是图标）" % pair[0])
 	ItemTooltip.faith_probe = saved
 	t.check(Glossary.tag_terms([&"rapid", &"burst", &"heavy"]).is_empty(), "也不进词条侧窗")

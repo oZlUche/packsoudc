@@ -190,3 +190,38 @@
 - 补充一：`Glossary.COUNTDOWN_WORD` 一处，十几处拼句子都引用它（含 `UiText` 的 `notice.countdown` 与 `寸步难行` 词条）。「最近的撤离点倒计时剩 N 时关闭」/ 地图上的牌子 / 栏上的字，N 都改成**关闭时倒计时的读数**（`PaidExtracts.closes_at`），和节点浮窗一致；原来写的是「还有几步关」。地图牌子另收 `closing["at"]`。`CountdownModule.describe` 改成「走路、原地等待都扣它」。帮助页 6 张按判据逐句改，路程句不动。
 
 测试：新增 `test_tooltip_193`、`test_drag_markers_193`、`test_faith_tip_193`、`test_rest_event_193`（含补充一：日规悬浮窗、栏上的字、`PassTime.describe`、扎营、代价提示、快没了的提醒都不含「步」）；`test_tooltip_170` / `test_feedback_1012` 的钉住时刻加 `PIN_DELAY_SEC`；`test_hud_189`、`test_screens_157`、`test_altar`、`test_brute_188b` 跟着新文字改。截图见 /mnt/project-files/screenshots/193/。
+
+## 补充二（2026-10-18 21:21，作者在美术设计线程定的尺寸）
+
+作者原话：「32像素，另外献祭栏里面不要名字，图标也要32像素」。据此改三处写法：
+
+- **悬浮窗里的标签图标**（§6）：显示尺寸 **32 px**（`[img=32]`），不是 24；美术按 32 / 64 两档交付（`/mnt/project-files/art/ui/tags/`，文件名 = 标签 id）。
+- **信仰献祭栏**（§3.4）：只放图标、不放名字（已定），图标也是 **32 px**，同一条规矩里间隔 4 px、规矩之间 16 px 不变。
+- **增益 / 受益 / 装载格位图标**（§5）：§5 写的「格 48 px 时图标 20 px」不对，实际用的是 **40 px**（作者 21:37 看过 32 的试玩截图后说「放大一些」，由 32 改 40；新图已交付 `art/ui/tip/v3/`，v2 作废）；颜色按 `UiPalette`：增益蓝 `6fb3f0`、受益橙 `f0a85c`、装载紫 `7a8cf0`。两种叠在同一格时仍沿对角线错开，40 px 已超过格子（48）的一半，推荐错开量由 6 px 放到 8 px、允许图标压到格边（执行按实际效果定）。
+
+美术已把两套图交给执行线程；执行落地时按本补充的尺寸接。
+
+## 补充三（2026-10-18 21:37，作者在美术设计线程：「现在就改」）—— 道具悬浮窗的标签行换成图标
+
+作者定：道具悬浮窗副行里的标签**现在就从文字换成 32 px 图标**，名字放进图标的悬停提示，和献祭栏（§3.4 / 补充二）一致。图标已在 `assets/ui/tags/`（PR #182，42 枚）；195 的 cloth / herb / clay 三枚在 `/mnt/project-files/art/ui/tags/`，随 195 一起接。
+
+**改法（都在 `ui/inventory/item_tooltip.gd` 的 `describe_full`，副行那三行）**：
+
+1. `sub` 的「 · 名字 · 名字」改成图标串：每个要列的标签 `t`（仍是 `TagRegistry.shown` → 按大类排 → 去掉来源类，不变）取 `TagRegistry.icon_path(t)`，有图就拼 `[url=term:tag:<id>][img=32]<path>[/img][/url]`，图标之间一个半角空格（4 px）；没图的标签退回今天的文字名（`[color=@tip_meta]名字[/color]`），所以 195 的三枚图标没接上之前织物 / 草药 / 陶瓷照旧显示文字，不会出空洞。稀有度名仍在最前，后面不再写「 · 」分隔，直接接图标。
+2. **名字进悬停提示 = 复用关键词子窗**（`HoverTip` 的 `[url=term:<id>]` 机制，钉住后停 `TERM_SEC` 0.25 秒开子窗）：`terms` 字典给每个画成图标的标签加一条 `"tag:<id>": {"name": 标签显示名, "text": 登记了说明且 tip 为真的给 TagRegistry.describe(t)，否则空串, "style": "term"}`。子窗标题就是名字，有说明的照旧带说明 —— 今天 `Glossary.tag_terms(listed)` 靠在文字里找名字加下划线，换成图标后找不到字，所以改为直接按 id 加词条；`tag_terms` 对别处（商店、图鉴）仍可用，不删。
+3. 子窗（`CHILD_WIDTH` 260）里只有一个名字时显得空：`HoverTip._open_child` 查到 `text` 为空的词条就按名字宽度收窄（`MIN_WIDTH` 220 以下，取名字宽 + 边距），不留大块空白。
+4. 不动的：`_names()` 继续给「只收 ×× 标签」的包和别的文字句用；献祭栏已是图标行；标签制作器预览不变。
+
+**待定（默认按推荐）**：
+- 补 3.1 32 px 图标在 13 号字的副行里会把那一行撑高：推荐 **A** 图标另起一行（稀有度名一行、图标一行，行距 2 px），B 同一行接在稀有度名后。两者都 ≤ 360 宽；A 不挤名字。
+- 补 3.2 没钉住时鼠标停在图标上要不要也出名字：推荐 **A 不出**（和关键词一致，钉住 0.5 秒后再停 0.25 秒），B 用 RichTextLabel 原生 `[img tooltip=…]`（4.7 支持）—— 原生提示是另一套样式，和 170 的悬浮窗风格不一致，先不用。
+
+**测试**：`tests/ui/test_item_tooltip_*` 里断言副行含标签名字的那几条改成断言含 `[img=32]…/weapon.png` 与 `terms` 里有 `tag:weapon`；没图的标签（临时去掉一个 png 或用假标签）仍出文字名。
+
+## 11. 补充二、补充三落地（2026-10-18，架构方案执行）
+
+- **格位图标 40**：`assets/ui/tip/` 六张换成 v3。尺寸收进 `InventoryView.marker_side(cell)` = `minf(40, cell × 0.67)`，棋盘与拖拽残影（`DragLayer._draw_held_markers`）共用。棋盘格实际是 60 px（`InventoryView.CELL`），不是补充二写的 48，所以图标是 40。两枚叠在一格时，对角错开沿用原来的 lerp（两端各留 2 px），没有改成固定 8 px：格 60、图 40 时两枚已经错开 16 px。
+- **悬浮窗标签图标**：`ItemTooltip.tag_icons(tags)` 拼图标行，`ItemTooltip.tag_icon_terms(tags)` 给每个画成图标的标签加一条 `tag:<id>` 词条。图标另起一行（待定 3.1 A），没钉住时不出名字（3.2 A）。没图的标签照写名字，仍走 `Glossary.tag_terms` 按文字找词条。
+- **子窗收窄**：只写名字的子窗按名字宽收窄，最窄 40（`HoverTip.NAME_ONLY_MIN_WIDTH`），最宽仍是 `CHILD_WIDTH`。
+- 195 的织物 / 草药 / 陶瓷三枚图标已随 PR #184 接上。
+- 测试：新增 `test_tag_icons_193c.gd`。`test_text_and_tooltips`、`test_tooltip_170`、`test_author_096`、`test_keyword_tips` 里断言副行含标签名字、或数词条的几条，改成断言图标与 `tag:<id>` 词条（只写名字的标签词条不算「有说明的词条」）。截图在 `/mnt/project-files/screenshots/193c/`。

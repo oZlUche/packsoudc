@@ -110,11 +110,16 @@ static func run_tooltip_tags(t: TestCase) -> void:
 	var knife := ItemInstance.create(c.items.get_def(&"knife"))
 	var full := ItemTooltip.describe_full(knife)
 	var text := Glossary.strip_bbcode(String(full["text"]))
-	t.check(text.contains("武器 · 近战 · 金属"), "副行照样列出标签名字（107：不弹词条不等于不显示；快攻是内部标签不列；171：按大类排）：%s" % text.split("\n")[1] if text.split("\n").size() > 1 else text)
-	var names: Array[String] = []
-	for term in (full["terms"] as Dictionary).values():
-		names.append(String((term as Dictionary)["name"]))
-	t.check(names.has("金属") and not names.has("武器") and not names.has("近战"), "107：只有 tip 开着的标签成词条：%s" % str(names))
+	var head := String(full["head"])
+	var at := ["weapon", "melee", "metal"].map(func(id): return head.find("term:tag:%s]" % id))
+	t.check(at[0] >= 0 and at[0] < at[1] and at[1] < at[2] and not head.contains("rapid"), "副行照样列出标签（107：不弹词条不等于不显示；快攻是内部标签不列；171：按大类排；193 补充三起画成图标）：%s" % str(at))
+	var terms: Dictionary = full["terms"]
+	t.eq(String((terms.get("tag:weapon", {}) as Dictionary).get("name", "")), "武器", "图标的词条按数据里的名字")
+	var with_text: Array[String] = []
+	for k in terms:
+		if String(k).begins_with("tag:") and String((terms[k] as Dictionary)["text"]) != "":
+			with_text.append(String((terms[k] as Dictionary)["name"]))
+	t.check(with_text.size() == 1 and with_text[0] == "金属", "107：只有 tip 开着的标签带说明：%s" % str(with_text))
 
 
 static func run_faith_bonus_lit(t: TestCase) -> void:
