@@ -3,7 +3,7 @@
 ## 190（189 作者 2026-10-18 定案：倒计时换成刻在槽底的半圆日规，去掉数字，停上去弹悬浮窗）：
 ## 栏上只画一枚刻在槽底的半圆日规（[constant SIZE]，轴心 / 半径 / 各阶染色读 `hud/dial/dial.json`），不写字：
 ## 走过的扇面淡淡染色 → 表盘刻线（`face`）→ 深色刻凿的影子绕轴心转到当前时刻（`shadow_<阶段>`）→ 轴心（`hub`）。
-## 停上去弹悬浮窗：「倒计时」/「还剩 N 步（共 M 步）」/「最近的撤离点还剩 N 步关闭」，开着时走一步字跟着变。
+## 停上去弹悬浮窗：「倒计时」/「倒计时还剩 N（共 M）」/「最近的撤离点倒计时剩 N 时关闭」，开着时走一步字跟着变（193 补充一：钟的数不说「步」）。
 ## 小档按 0.5 缩。缺任何一张图 → 退回原来的一行字「倒计时 N / M」+ 随剩余变色的边框
 extends HudWidget
 
@@ -71,7 +71,7 @@ func text_of() -> String:
 	var closing := cd.closing_extract_id()
 	if closing >= 0:
 		var node := run.map.get_node(closing)
-		text += "　　限时撤离点%s" % ["已关闭" if cd.extract_closed(node) else "剩 %d 步关闭" % (left - PaidExtracts.closes_at(node))]     # 186：不写点号
+		text += "　　限时撤离点%s" % ["已关闭" if cd.extract_closed(node) else ("%s剩 %d 时关闭" % [Glossary.COUNTDOWN_WORD, PaidExtracts.closes_at(node)])]     # 186：不写点号
 	return text
 
 
@@ -192,14 +192,14 @@ func tip_parts() -> Dictionary:
 	var num := "[color=%s%s]%%d[/color]" % [p, STAGE_STYLE[stage()]]
 	var left := cd.left()
 	var lines: Array[String] = []
-	lines.append(("还剩 " + num + " 步（共 [color=%sval]%d[/color] 步）") % [left, p, cd.limit()])
+	lines.append((Glossary.COUNTDOWN_WORD + "还剩 " + num + "（共 [color=%sval]%d[/color]）") % [left, p, cd.limit()])
 	var closing := cd.closing_extract_id()
 	if closing >= 0:
 		var node := run.map.get_node(closing)
 		if cd.extract_closed(node):
 			lines.append("[color=%sdim]最近的撤离点已关闭[/color]" % p)
 		else:
-			lines.append(("最近的撤离点还剩 " + num + " 步关闭") % (left - PaidExtracts.closes_at(node)))
+			lines.append(("最近的撤离点" + Glossary.COUNTDOWN_WORD + "剩 " + num + " 时关闭") % PaidExtracts.closes_at(node))
 	return {
 		"head": Glossary.tip_head("倒计时", p + "tip_fg"),
 		"body": "[font_size=%d][color=%stip_fg]%s[/color][/font_size]" % [Glossary.BODY_SIZE, p, "\n".join(lines)],

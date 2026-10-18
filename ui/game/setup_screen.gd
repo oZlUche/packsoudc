@@ -539,7 +539,7 @@ static func scale_options_of(c: ChapterDef) -> Array[Dictionary]:
 	return c.map_source.scale_options() if c != null and c.map_source != null else [] as Array[Dictionary]
 
 
-## 180：规模那一行右边的小字：「4~5 环　36 步」
+## 180：规模那一行右边的小字：「4~5 环　倒计时 36」（193 补充一）
 static func scale_note(o: Dictionary) -> String:
 	var parts: Array[String] = []
 	var r: Vector2i = o.get("rings", Vector2i.ZERO)
@@ -547,11 +547,11 @@ static func scale_note(o: Dictionary) -> String:
 		parts.append(("%d 环" % r.x) if r.y <= r.x else ("%d~%d 环" % [r.x, r.y]))
 	var limit := int(o.get("step_limit", 0))
 	if limit > 0:
-		parts.append("%d 步" % limit)
+		parts.append("%s %d" % [Glossary.COUNTDOWN_WORD, limit])
 	return "　".join(parts)
 
 
-## 180：左列重排 —— 每张图一个按钮；选中的那张下面缩进一列规模（名字在左、环数与步数小字在右）
+## 180：左列重排 —— 每张图一个按钮；选中的那张下面缩进一列规模（名字在左、环数与倒计时小字在右）
 func _rebuild_map_list() -> void:
 	if _map_list == null:
 		return

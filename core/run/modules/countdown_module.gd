@@ -27,7 +27,7 @@ func id() -> StringName:
 
 
 func describe() -> String:
-	return "全局倒计时：一局只能走这么多步，归零就是行动失败"
+	return "全局倒计时：走路、原地等待都扣它，归零就是行动失败"
 
 
 func install(run: RunState) -> void:

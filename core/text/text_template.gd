@@ -326,6 +326,14 @@ static func _find_field(obj: Variant, key: String, depth: int) -> Variant:
 	return null
 
 
+## 193：事件选项文字的上下文 = 屏的上下文 + 这个选项自己的字段（[TextParams]）+ `{rest_total}`：
+## 这一下总共回几点体力 = `{rest_restore}` + 第一条「回体力」后果的量（没有就等于 `{rest_restore}`）
+static func option_context(ctx: Dictionary, opt: Object) -> Dictionary:
+	var out := ctx.merged(TextParams.of(opt))
+	out["rest_total"] = int(ctx.get("rest_restore", 0)) + int(out.get("restore_vitality_amount", 0))
+	return out
+
+
 ## 把 `{…}` 全剥掉的纯文字（Label、日志用）：占位符照替，样式码去掉
 static func plain(text: String, ctx: Dictionary = {}) -> String:
 	return cached_regex("\\[/?(color|b|i)(=[^\\]]*)?\\]").sub(render(text, ctx), "", true)
@@ -361,6 +369,8 @@ static func context_for(run: RunState, node: MapNode = null, extra: Dictionary =
 			ctx["_enemies"] = run.enemies     # 112：{enemy:…} 用
 		# 112：输一场普通战斗扣几点体力（节点规则的 loss_cost.battle）
 		ctx["loss_cost"] = int(run.node_rules.loss_cost.get("battle", 1)) if run.node_rules != null else 1
+		# 193：休息点照类型发生回几点体力（节点规则的 rest_restore + 局内效果的 rest_bonus）；扎营这类选项的总数见 [method rest_total]
+		ctx["rest_restore"] = (run.node_rules.rest_restore + run.hooks.run_context().rest_bonus) if run.node_rules != null else 0
 	if node != null:
 		ctx["node_id"] = node.id
 		var type := NodeEvents.effective_type(node)

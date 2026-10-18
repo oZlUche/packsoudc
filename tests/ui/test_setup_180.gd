@@ -55,7 +55,7 @@ static func frame_kit_page_text(t: TestCase, root: Window) -> void:
 
 
 static func frame_map_page(t: TestCase, root: Window) -> void:
-	t.begin("180 · 第三页：序章不进地图列表；选中的图下面展开规模（「小型」+ 右边小字「4~5 环　36 步」）；没有种子框、没有「默认（章节配置）」；预览按真生成的环数画圈、半径按规模")
+	t.begin("180 · 第三页：序章不进地图列表；选中的图下面展开规模（「小型」+ 右边小字「4~5 环　倒计时 36」，193 补充一）；没有种子框、没有「默认（章节配置）」；预览按真生成的环数画圈、半径按规模")
 	var game = _game(root, "setup180b")
 	var flow: GameFlow = game.flow
 	var setup = game.base()
@@ -73,7 +73,7 @@ static func frame_map_page(t: TestCase, root: Window) -> void:
 	var sb: Button = setup._scale_btns[&"small"]
 	t.eq(sb.text, "小型", "名字不带括号")
 	var note := sb.get_child(0) as Label
-	t.check(note != null and note.text == "4~5 环　36 步", "右边小字（%s）" % (note.text if note != null else "?"))
+	t.check(note != null and note.text == "4~5 环　倒计时 36", "右边小字（%s）" % (note.text if note != null else "?"))
 	t.check(not (setup._scale_btns[&"large"] as Button).text.contains("占位"), "大型去掉「（占位）」")
 	var texts := _texts(setup._pages[2])
 	t.check(not texts.any(func(s: String) -> bool: return s.contains("种子") or s.contains("默认（章节配置）") or s.contains("自由模式")), "没有种子、默认项、自由模式")

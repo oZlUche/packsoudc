@@ -73,7 +73,7 @@ func _ready() -> void:
 	mouse_entered.connect(func():
 		var tip: HoverTip = screen.get("_tip") if screen != null else null
 		if tip != null and run != null and not editing:
-			tip.show_faith(FaithTooltip.describe_full(run.active_faith(), run.faith_power, run.board), global_position + Vector2(0, size.y)))     # 188
+			tip.show_faith(FaithTooltip.describe_full(run.active_faith(), run.faith_power, run.board, run.items), global_position + Vector2(0, size.y)))     # 188
 	mouse_exited.connect(func():
 		var tip: HoverTip = screen.get("_tip") if screen != null else null
 		if tip != null:

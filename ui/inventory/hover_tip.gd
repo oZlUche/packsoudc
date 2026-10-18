@@ -2,10 +2,11 @@
 ##
 ## 170（作者定）：**十字军之王式的固定悬浮窗** —— 深底白字（[constant UiTheme.ART_TOOLTIP]），道具说明分块（头 / 分隔线 / 正文 / 虚线 / 脚注）。
 ## - 跟随：停在道具上出现、跟着鼠标；鼠标离开道具后给 [constant GRACE_SEC] 秒宽限，这期间进了悬浮窗就留下（不换、不收）；往窗外走就不等（[constant AWAY_PX]）。
-## - 钉住：作者 2026-10-17 —— 悬浮窗出来后，鼠标还停在**叫出它的源**上（道具 / 关键词 / 地图点）或在窗里，满 [constant PIN_SEC] 秒就钉 ——
+## - 钉住：作者 2026-10-17 —— 悬浮窗出来后，鼠标还停在**叫出它的源**上（道具 / 关键词 / 地图点）或在窗里，先等 [constant PIN_DELAY_SEC] 秒（193），再满 [constant PIN_SEC] 秒就钉 ——
 ##   一道黄铜线从左上角沿外框**顺时针**走一圈，走完即钉；源和窗都离开了归零。钉住后右上角一颗钉子，窗不再动；源换了也不换窗。
 ## - 关键词：钉住的窗里带下划线的词（`[url=term:<id>]`，[method Glossary.mark]）停 [constant TERM_SEC] 秒开**子窗**（同样可钉、可再开），深度封顶 [constant MAX_DEPTH]。
 ## - 收起：离开钉住的窗与它所有子窗 [constant AWAY_SEC] 秒、按 Esc、点窗外（开始拖拽也是先点下去）→ 整串收掉。
+## - 193：源每帧核对（[method tick]）—— 道具窗的视图藏了 / 释放了、道具不在了就整串收；鼠标在不在那一格每帧重算，不只信鼠标事件
 ## 087 的词条侧窗取消：词条只以下划线关键词存在，`terms` 是 `{id: {"name", "text"}}`（[method ItemTooltip.describe_full]）供子窗查。
 ##
 ## 加进一个铺满的宿主控件里（叠层 / 屏），自己不挡鼠标（窗本身挡）。登记容器视图后，鼠标在视图里动就查底下是哪件、显示说明；
@@ -20,6 +21,8 @@ const CHILD_WIDTH := 260.0
 ## 170 §3：离开道具后的宽限、钉住要停多久、关键词开子窗要停多久、离开钉住的窗多久收、子窗最多几层（含主窗）
 const GRACE_SEC := 0.15
 const PIN_SEC := 0.6
+## 193（作者「放在道具区域内 0.5 秒后再开始」）：钉住进度线先等这么久才起步；主窗子窗一样
+const PIN_DELAY_SEC := 0.5
 const TERM_SEC := 0.25
 const AWAY_SEC := 0.4
 ## 作者 2026-10-16（移开道具后悬浮窗消失有延迟）：宽限只留给往悬浮窗去的鼠标 —— 宽限期里离窗比刚离开时远出这么多像素就立刻收 / 换
@@ -43,7 +46,7 @@ class TipWindow extends PanelContainer:
 	## 词条 id → {"name", "text"}（停在关键词上开子窗时查）
 	var terms: Dictionary = {}
 	var pinned := false
-	## 鼠标在窗里停了多久（钉住进度 = dwell / PIN_SEC）
+	## 鼠标在窗里停了多久（钉住进度 = [method HoverTip.pin_progress]）
 	var dwell := 0.0
 	## 离开计时（主窗：离开道具后的宽限；子窗：离开它和开它的那个词）；< 0 = 没在离开
 	var leave_t := -1.0
@@ -162,12 +165,20 @@ class TipWindow extends PanelContainer:
 		UiTheme.set_rich(head, String(full.get("head", "")))
 		UiTheme.set_rich(body, String(full.get("body", "")))
 		UiTheme.set_rich(foot, String(full.get("foot", "")))
+		# 193：没有正文（只有价值与重量）→ 分隔线与正文都藏，只剩 头 / 虚线 / 脚注
+		var has_body := not Glossary.strip_bbcode(String(full.get("body", ""))).strip_edges().is_empty()
+		sep.visible = has_body
+		body.visible = has_body
 		set_label.text = String(full.get("set", ""))
 
 	func text() -> String:
 		if not item_mode:
 			return (head.text + "\n" + body.text) if head.visible else body.text
-		return "\n".join([head.text, body.text, foot.text + ("　" + set_label.text if set_label.text != "" else "")])
+		var parts: Array[String] = [head.text]
+		if body.visible:
+			parts.append(body.text)
+		parts.append(foot.text + ("　" + set_label.text if set_label.text != "" else ""))
+		return "\n".join(parts)
 
 	func reset_state() -> void:
 		pinned = false
@@ -189,7 +200,7 @@ class TipWindow extends PanelContainer:
 			else:
 				draw_rect(Rect2(Vector2(size.x - 12, 6), Vector2(6, 6)), HoverTip.RING_COLOR)
 			return
-		var p := clampf(dwell / HoverTip.PIN_SEC, 0.0, 1.0)
+		var p := HoverTip.pin_progress(dwell)
 		if p <= 0.0:
 			return
 		draw_polyline(HoverTip.ring_points(r, p), HoverTip.RING_COLOR, HoverTip.RING_WIDTH)
@@ -556,13 +567,16 @@ func _process(delta: float) -> void:
 func tick(delta: float, mouse: Vector2) -> void:
 	if not _panel.visible:
 		return
+	if not _source_alive(mouse):
+		hide_tip()
+		return
 	if not _panel.pinned:
 		var in_panel := _panel.global_rect().has_point(mouse)
 		if in_panel:
 			_panel.leave_t = -1.0
 		if in_panel or (_on_source and _panel.leave_t < 0.0):
 			_panel.dwell += delta
-			if _panel.dwell >= PIN_SEC:
+			if _panel.dwell >= PIN_DELAY_SEC + PIN_SEC:
 				pin(_panel)
 		elif _panel.leave_t < 0.0:
 			_panel.dwell = 0.0
@@ -596,7 +610,7 @@ func tick(delta: float, mouse: Vector2) -> void:
 			if w.global_rect().has_point(mouse) or on_word:
 				w.leave_t = -1.0
 				w.dwell += delta
-				if w.dwell >= PIN_SEC:
+				if w.dwell >= PIN_DELAY_SEC + PIN_SEC:
 					pin(w)
 					return
 			else:
@@ -614,10 +628,37 @@ func tick(delta: float, mouse: Vector2) -> void:
 				return
 
 
+## 193：停了 [param dwell] 秒时钉住进度线走了几成：先等 [constant PIN_DELAY_SEC] 不画，再按 [constant PIN_SEC] 走满
+static func pin_progress(dwell: float) -> float:
+	return clampf((dwell - PIN_DELAY_SEC) / PIN_SEC, 0.0, 1.0)
+
+
+## 193 §3.2（作者：进新节点时鼠标正指着道具，窗就一直不收）：每帧核对叫出主窗的源，不只信鼠标事件翻的旗子。
+## 道具窗：视图释放了 / 不在树里 / 藏了 / 停了，或那件道具不在了 → 假（整串收，钉住的也收）；否则按鼠标现在的位置重算在不在那一格上，
+## 不在了就开始宽限（和鼠标事件走的是同一条路）。文字窗：宿主自己藏了 → 假
+func _source_alive(mouse: Vector2) -> bool:
+	if _for_view == null:
+		return is_visible_in_tree()
+	if not is_instance_valid(_for_view) or not _for_view.is_inside_tree() or not _for_view.is_visible_in_tree() or not _for_view.can_process():
+		return false
+	if _shown_item(_for_view, _uid) == null:
+		return false
+	var local := _for_view.get_global_transform().affine_inverse() * mouse
+	var on := _for_view.get_global_rect().has_point(mouse) and _uid_under(_for_view, local) == _uid
+	if _panel.pinned:
+		_on_source = on
+	elif on:
+		_on_source = true
+		_panel.leave_t = -1.0
+	elif _on_source:
+		_begin_leave(_for_view, local)
+	return true
+
+
 ## 钉住一扇窗：进度走满，右上角画钉子；主窗不再跟鼠标
 func pin(w: TipWindow) -> void:
 	w.pinned = true
-	w.dwell = PIN_SEC
+	w.dwell = PIN_DELAY_SEC + PIN_SEC
 	w.leave_t = -1.0
 	_away = 0.0
 	w.queue_redraw()

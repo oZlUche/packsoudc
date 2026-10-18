@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.33 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.34 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1494,7 +1494,7 @@ while 双方存活 and now < 安全上限:
 - **版式 A**（`ItemTooltip.describe_full` 分块返回 `head / body / foot / set / text / terms`）：头 = 名字（粗体 19、稀有度色）、副行（稀有度名 · 标签，按 171 的大类排、来源类不列）、说明（`[i]` 斜体：正文字体斜切 0.2，`UiTheme.slanted`，主题的 `italics_font`）；分隔线；正文一行一条，行首图标（`UiTheme.tip_icon`，缺图退回「【增益】」等字，图标链到「增益槽 / 受益槽 / 装载槽」词条）；虚线；脚注金币与秤砣图标 + 右边套装名。不写格数、冷却、DPS。
 - **武器句**（`ItemTooltip.weapon_sentence`）：「每 X 秒造成 Y 点伤害，消耗 Z 耐力」，X / Y 用编译后（含开战 buff）的实值；规则施加 buff 就接「，附带【中毒】」（有专属解说写解说）。
 - **生成句**（171 §3，`AdjacencyText`）：条件 = 标签（`grant_filter` OR「XX、YY」，`grant_filter_all` AND 连写「XXYY」，都空「邻居」）+ 效果名（`Glossary.SENTENCE_NAMES`：伤害乘算「增伤」、加速、护甲……；`mod_text(m, true)`：乘算「10%」、加算「+5」）+ 附加规则（提到的 buff 走 `BuffDef.sentence_text`）。受益句「挨着盾时 护甲 +5」；晶石「装进法杖：…」+「装在：魔法杖 / 闲置」；法杖每颗装上的晶石一行「火焰魔晶石　每 X 秒 Y 火焰伤害　剩 N 次」。
-- **固定式悬浮窗**（`HoverTip`，十字军之王式）：离开道具后 `GRACE_SEC` 0.15 秒宽限（这期间进窗就留下）；窗里停满 `PIN_SEC` 0.6 秒钉住（2 px 黄铜线从左上角沿外框顺时针走一圈，`ring_points`；钉住画钉子 `pin.png`）；钉住后停在 `[url=term:<id>]` 关键词上 `TERM_SEC` 0.25 秒开子窗（`TipWindow`，同样可钉、可再开，`MAX_DEPTH` 3 层），位置右边、放不下下面、夹回屏内；离开整串 `AWAY_SEC` 0.4 秒、Esc、点窗外（含开始拖拽）收掉。计时都在 `tick(delta, 鼠标)`。087 的词条侧窗取消，`terms` 是 `{id: {name, text}}`；`Glossary.mark` 输出关键词链接，`wrap_terms` 不替 BBCode 标签里面的字。
+- **固定式悬浮窗**（`HoverTip`，十字军之王式）：离开道具后 `GRACE_SEC` 0.15 秒宽限（这期间进窗就留下）；窗里先停 `PIN_DELAY_SEC` 0.5 秒（193：路过不起圈），再停满 `PIN_SEC` 0.6 秒钉住（`pin_progress(dwell)`；2 px 黄铜线从左上角沿外框顺时针走一圈，`ring_points`；钉住画钉子 `pin.png`）；钉住后停在 `[url=term:<id>]` 关键词上 `TERM_SEC` 0.25 秒开子窗（`TipWindow`，同样可钉、可再开，`MAX_DEPTH` 3 层），位置右边、放不下下面、夹回屏内；离开整串 `AWAY_SEC` 0.4 秒、Esc、点窗外（含开始拖拽）收掉。计时都在 `tick(delta, 鼠标)`；193 起 `tick` 每帧先查源（`_source_alive`：文字窗看来源控件还在不在树里、可不可见，道具窗看那一格下面还是不是那件），源没了立刻收，换屏 / 叠层打开时地图屏也主动 `hide_tip()`。道具窗没有正文时不画分隔线与正文。087 的词条侧窗取消，`terms` 是 `{id: {name, text}}`；`Glossary.mark` 输出关键词链接，`wrap_terms` 不替 BBCode 标签里面的字。
 - 字号：名字 19、副行 13、说明 14、正文 15、脚注 13（`ItemTooltip.NAME_SIZE` 等）。字体常量 `UiPalette.FONT_BODY / FONT_BOLD`（原 `FONT_REGULAR / FONT_MEDIUM`）指思源宋体 Regular / Bold（见 8.10）。
 
 #### 关键词弹不弹：一个 `tip` 字段（107，作者定）
@@ -1509,6 +1509,7 @@ buff 词条（`Glossary.describe_buff` 按定义生成）。原来「有说明 =
   （没写按 true；取文字一律走 `Glossary.term_text`，取开关走 `Glossary.term_tip`）。
 - `tip = false` 的词**不进侧窗、主文字里也不标色** —— 标了色玩家就会去找解释，找不到比没有更糟。
 - **说明文字一字不动**：编辑器的词典、文档、将来的帮助页照用；标签行照样列出名字（内部标签除外，见下）。
+- **标签图标**（193 §6）：`TagDef.icon` 是 `res://assets/ui/tags/` 下的文件名，空 = 用 id；取路径只走 `TagRegistry.icon_path(id)`（文件不在给空串）；写了但文件不在导入报错；标签制作器有「图标」一栏带预览。信仰窗的献祭段、将来的标签行都从这里取图。
 - **内部标签**（`TagDef.internal`，作者定 2026-10-03）：只给内容逻辑用、玩家哪儿都看不到 —— 标签行不列、不进侧窗。
   快攻 / 重击 / 重型是武器的特色不是标签，但敌人的流派与身份标签靠它们圈武器，所以留着、藏起来。判断只走 `TagRegistry.is_internal / shown`。
 - buff 词条不受这个字段管：它们的说明就是按数据生成的效果（「标记：防护 −3，持续 8 秒」），正是玩家要看的。
@@ -4298,6 +4299,7 @@ res://
 | v3.30 | 2026-10-17 | **188 背包面板去字、信仰窗重排**（作者 2026-10-17，待定 1–3 按推荐）：背包面板不再写操作提示、地上说明、参战 / 可用格读数、信仰行与棋盘上方说明，回话走 `hint_sink`（地图屏 = 提示行）；`FaithTooltip.describe_full` → 名字行（Lv、休眠件数）+ 信力行 + 各阶效果 / 信力来源 / 献祭，颜色全走模板；`HoverTip.show_faith` 名字行下挂到下一阶的进度条、各段虚线分隔、宽 360 |
 | v3.31 | 2026-10-18 | **188 补充一 信仰窗分段、蛮神改写**（作者 2026-10-18，待定 1–4 按推荐）：`HoverTip.FaithBar` 一段一级、长度按所需信力（满阶也挂）；`FaithTooltip` 同一级的效果合成一行（`[table=2]`），没到的级整行 `@dim`，句子按 `FaithPerk.summary_for(def, points)` 写、锁住的级按那一级的阈值算；`FaithPerk.scaled` 给「随信力」的数（每 50 信力一阶、封顶）；蛮神一级门槛式增伤、二级献祭生命上限二选一（信力 / 全体造成伤害 + 急速）、三级 `prebattle_actions` 两个按钮（耗体力 / 耗信力、非首领）、四级持续战斗秒数随信力；献祭规矩 `OfferingRule.short_name`、`ItemVolume.size_label`（「大型道具」），有图标时排一行 `[img]`（`assets/ui/tags/<tag>.png`、`assets/ui/offerings/{large,medium,crit}.png`），缺一枚就退回文字 |
 | v3.32 | 2026-10-18 | **189 / 190 顶端栏长槽与日晷倒计时**（作者 2026-10-18 定案，待定 1–3 按推荐）：`hud_bar` 在板上画一条贯通的浅槽（`hud/groove` 九宫格、`band` 定槽身），宿主排完把铜点交给栏画（同行相邻两件之间、右槽图标组左边，空着的件两边不放）；`HudWidget.set_in_bar` 让栏里的件坐在槽底上（`PANEL_BARE`、浅底墨字），拖出栏回 `PANEL_HUD`；栏里同行间距 24、组在槽身里居中；倒计时改成刻在槽底的半圆日规（`hud/dial/*`：染色扇面 / 表盘 / 绕轴心转的影子 / 轴心，三阶 calm·half·low），栏上不写数字，停上去 `show_status` 弹「倒计时」窗、走一步 `update_status` 换字；缺图退回文字版 |
+| v3.34 | 2026-10-18 | **193 浮窗修补 / 扎营写总数 / 标签图标 / 狩猎神**（架构线程方案，待定 1–4 按推荐；补充一作者在卡上选「倒计时」）：`UiTheme.bright_text_theme` 沿 `get_type_variation_base` 找颜色的主人（`_color_owner`），全局主题给 HUD 标签与正文富文本变体补默认字色；`TextTemplate` 加 `{rest_restore}`、`option_context` 算 `{rest_total}`；`HoverTip.PIN_DELAY_SEC` / `pin_progress` / `_source_alive`，地图屏换屏与 `_shade` 时收窗，道具窗空正文不画分隔线；`InventoryView.set_held` / `marker_offsets` / `preview_markers` 与 `DragLayer._draw_held_markers`；`TagDef.icon`、`TagRegistry.icon_path`、导入校验、标签制作器「图标」栏；`FaithBonus.effect_text / list_tier`、`FaithTooltip.item_lines / convert_line`，各级段并入信仰道具加成（赐福版合一行），献祭一行图标无字；`Glossary.COUNTDOWN_WORD`：倒计时的消耗与剩余说「倒计时」，撤离点关闭写倒计时读数，路程照说「步」 |
 | v3.33 | 2026-10-18 | **192 地图底图钉在画布上**（191 甲，作者 2026-10-18「实施」，待定 1–3 按推荐）：`MapSkin.logical_size` / `safe_rect` / `paper_rect`，地图 json 的 `safe_area` 改四个数；`MapView` 的 `_paper` 随底图 / 图更新，`_draw` 先桌面再在画布变换里画纸影、底图、装饰层；`zoom_min()`（有底图 = 纸装进安全区）用于 `fit` / `zoom_at` / `open_at` / `frame_spawns`，`_clamp_pan()` 在拖动、滚轮、跟镜头结束、开局摆视角、改窗口后夹；`MapPreview.paper_on_screen()` 与入局第一帧同一张纸；`RingLayoutBase.canvas_side(levels)` |
 | v3.29 | 2026-10-17 | **187 棋盘格线默认跟着道具图走**（作者 2026-10-17，待定 1–3 按推荐）：`GameSettings.show_grid` 三态（没动过 = 跟默认，道具图到了就不画；`grid_on(item_art)`）；`ItemPainter.art_available()` 现在恒 false；`InventoryView.grid_shown` / `grid_alpha()`，关着不画底、格底、线、外框，拖着东西时格按 50 % 出现（`DragLayer` 给 `drag_hint`）；设置屏「显示」节「棋盘格线」 |
 | v3.28 | 2026-10-17 | **186 调试台对玩家隐藏、提示行**（作者 2026-10-17，待定 1–4 按推荐；改 8.7）：`DevGate` 一个开关（非导出包），地图 / 基地调试台、设置调试节、`debug_mode` 的效果只在开发包；玩家出口 = 顶端栏下居中的提示行组件 `notice`（3 秒淡出、要紧 5 秒红字、最多两行，`takes_space()` 为 false 不占边）；拒绝与要紧提示改玩家用语（`UiText` 的 `notice.*`），`MapTravel.refused` 加 `code`；布局版本 7 |

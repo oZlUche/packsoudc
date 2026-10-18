@@ -72,7 +72,7 @@ static func _countdown_line(run: RunState, node: MapNode, text: String) -> Strin
 		if cd.extract_closed(node):
 			text += "\n[color=#d9534f]这个撤离点已经关闭（倒计时过半）。[/color]"
 		else:
-			text += "\n[color=#f0ad4e]倒计时剩 %d 时关闭（还有 %d 步）。[/color]" % [PaidExtracts.closes_at(node), cd.left() - PaidExtracts.closes_at(node)]
+			text += "\n[color=#f0ad4e]%s剩 %d 时关闭（还有 %d）。[/color]" % [Glossary.COUNTDOWN_WORD, PaidExtracts.closes_at(node), cd.left() - PaidExtracts.closes_at(node)]
 	return text
 
 

@@ -231,8 +231,9 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		if rest.contains("term:" + k):
 			terms[k] = {"name": k, "text": Glossary.term_text(k)}
 	var head := name_line + "\n" + Glossary.mark_rich("\n".join(head_rest), found)
-	var body := "[font_size=%d][color=@tip_fg]%s[/color][/font_size]" % [BODY_SIZE, Glossary.mark_rich("\n".join(lines), found)]
-	var text := head + "\n" + body + "\n" + foot + ("　套装：%s" % set_name if set_name != "" else "")
+	# 193：没有正文（战利品只有价值与重量）就是空串 —— 悬浮窗藏掉分隔线与正文，纯文字也不拼空行
+	var body := "[font_size=%d][color=@tip_fg]%s[/color][/font_size]" % [BODY_SIZE, Glossary.mark_rich("\n".join(lines), found)] if not lines.is_empty() else ""
+	var text := head + "\n" + (body + "\n" if body != "" else "") + foot + ("　套装：%s" % set_name if set_name != "" else "")
 	return {"head": head, "body": body, "foot": foot, "set": set_name, "text": text, "terms": terms}
 
 

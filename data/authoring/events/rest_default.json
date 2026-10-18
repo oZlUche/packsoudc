@@ -4,7 +4,7 @@
   "text": "一处能歇脚的地方。歇多久，你自己定。歇脚和神坛各算一次，现在不用就留着，回头还能来。",
   "options": [
     {
-      "label": "歇一会儿",
+      "label": "歇一会儿（回 {rest_restore} 点体力）",
       "hide_when_locked": true,
       "requires": [
         {
@@ -18,7 +18,7 @@
       ]
     },
     {
-      "label": "扎营（多耗 {pass_time_actions} 步，多回 {restore_vitality_amount} 点体力）",
+      "label": "扎营（倒计时 −{pass_time_actions}，回 {rest_total} 点体力）",
       "hide_when_locked": true,
       "requires": [
         {
