@@ -1,9 +1,12 @@
 ## 铸炉屏（175 第三批，作者定；补充二：铸炉在休息点里，从休息屏的「铸炉」一栏或站在休息点上「重新打开」进来）。上面三个凹槽【时机】【效果】【数值】，任意道具都能进任意槽（一槽一件），
-## 三槽都填了「铸」才亮；预览写将要铸出的那一枚（名字与那一句附魔）。铸完三件消失、出牌槽出现一枚铸牌，铸炉熄掉。
+## 三槽都填了「铸」才亮；预览写将要铸出的那一枚（名字与那一句附魔）。194 §2：每槽下面三行小字，放进一件立刻写它在这个槽里贡献什么；
+## 两槽满时灰字按空槽的 default 行试算一枚。194 §1：入口是休息点事件的「铸炉」选项（和神坛并列），不再挂在休息屏里。铸完三件消失、出牌槽出现一枚铸牌，铸炉熄掉。
 ## 「返回」= 接着看排着的、没有就回地图：槽里的东西先回背包，出牌槽里没拿走的铸牌也放回背包（放不下到地上）。没铸过还能再来
 extends GameScreen
 
 const SLOT_SIZE := Vector2i(4, 4)
+## 194 §2：槽下小字的字号
+const SUMMARY_SIZE := 13
 
 var _node: MapNode = null
 ## 时机、效果、数值三个槽
@@ -13,6 +16,10 @@ var _out: GridInventory = null
 var _out_view: InventoryView = null
 var _head: Label
 var _preview: Label
+## 194 §2：每槽下面的三行小字（时机、效果、数值）
+var _summaries: Array[RichTextLabel] = []
+## 194 §2：两槽满时按空槽 default 行试算的那一句
+var _guess: Label
 var _line: Label
 var _forge_btn: Button
 var _inv: Control = null
@@ -42,6 +49,9 @@ func open(payload: Dictionary) -> void:
 		v.show_adjacency = false
 		v.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		box.add_child(v)
+		var sum := UiTheme.rich_block(float(SLOT_SIZE.x * InventoryView.CELL), SUMMARY_SIZE)
+		box.add_child(sum)
+		_summaries.append(sum)
 		slots_row.add_child(box)
 		_slots.append(g)
 		_slot_views.append(v)
@@ -57,6 +67,8 @@ func open(payload: Dictionary) -> void:
 	out_row.add_child(_out_view)
 	_preview = _label("", 13, UiPalette.STAMINA)
 	left.add_child(_preview)
+	_guess = _label("", 12, UiPalette.DIM)
+	left.add_child(_guess)
 	var buttons := _hbox(8)
 	_forge_btn = _button("铸", forge, 14, UiPalette.Tier.PRIMARY)
 	_forge_btn.disabled = true
@@ -172,6 +184,29 @@ func preview_text() -> String:
 	return _preview.text if _preview != null else ""
 
 
+## 194 §2：第 [param i] 个槽下面的三行（去掉标记）
+func summary_text(i: int) -> String:
+	return Glossary.strip_bbcode(_summaries[i].text) if i >= 0 and i < _summaries.size() else ""
+
+
+## 194 §2：两槽满时的试算句；别的时候空
+func guess_text() -> String:
+	return _guess.text if _guess != null else ""
+
+
+## 194 §2：两槽满、一槽空时按空槽的 default 行试算的附魔；别的时候空
+func guess() -> Dictionary:
+	var defs: Array = []
+	var filled := 0
+	for g in _slots:
+		var inst: ItemInstance = g.items()[0] if g.item_count() == 1 else null
+		defs.append(inst.def if inst != null else null)
+		filled += 1 if inst != null else 0
+	if filled != _slots.size() - 1:
+		return {}
+	return Forge.forge(defs[0], defs[1], defs[2], true)
+
+
 func slot(i: int) -> GridInventory:
 	return _slots[i]
 
@@ -193,8 +228,14 @@ func _refresh() -> void:
 			empty = g
 	if _inv != null:
 		_inv.set("quick_target", empty if open else null)
+	for i in _slots.size():
+		var inst: ItemInstance = _slots[i].items()[0] if _slots[i].item_count() == 1 else null
+		var lines := Forge.slot_summary(ForgeTable.SLOTS[i], inst.def) if inst != null else ([] as Array[String])
+		UiTheme.set_rich(_summaries[i], _summary_bbcode(lines))
 	var ench := preview()
 	_forge_btn.disabled = ench.is_empty() or not open
+	var g := guess() if open else {}
+	_guess.text = "" if g.is_empty() else "按空槽的默认行：将铸出 铸牌 · %s —— %s" % [Forge.prefix(g), Glossary.strip_bbcode(Forge.sentence(g))]
 	if not open:
 		_head.text = "铸炉（已熄）"
 		_preview.text = "这座铸炉已经用过了" if _out.item_count() == 0 else "铸好了：把铸牌拖回背包，或拖到武器上附魔"
@@ -208,3 +249,13 @@ func _refresh() -> void:
 	else:
 		_head.text = "铸炉"
 		_preview.text = "将铸出：铸牌 · %s —— %s" % [Forge.prefix(ench), Glossary.strip_bbcode(Forge.sentence(ench))]
+
+
+## 194 §2：三行小字 —— 字走 dim、数字走 val
+static func _summary_bbcode(lines: Array[String]) -> String:
+	var p := TextTemplate.STYLE_PREFIX
+	var re := RegEx.create_from_string("(×?\\d+(?:\\.\\d+)?)")
+	var out: Array[String] = []
+	for line in lines:
+		out.append("[color=%sdim]%s[/color]" % [p, re.sub(line, "[color=%sval]$1[/color]" % p, true)])
+	return "\n".join(out)

@@ -45,6 +45,8 @@ var revisit: bool = false
 var proceed: bool = false
 ## 093：打开神坛
 var open_altar: bool = false
+## 194：打开铸炉
+var open_forge: bool = false
 ## 085：从这个撤离点撤离（事件对话里的「撤离」选项）
 var extract: bool = false
 ## 8-3：这个点从此算这种类型（空 = 不改）

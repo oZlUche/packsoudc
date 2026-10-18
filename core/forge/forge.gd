@@ -63,12 +63,15 @@ static func slot_name(slot: StringName, lang: String = "") -> String:
 
 
 #region 铸
-## 三件道具（时机、效果、数值槽各一件）铸成的附魔字典；表缺了返回空
-static func forge(timing: ItemDef, effect: ItemDef, value: ItemDef) -> Dictionary:
+## 三件道具（时机、效果、数值槽各一件）铸成的附魔字典；表缺了返回空。
+## 194 §2：[param preview] = 试算 —— 空槽（null）按三张表的 default 行补齐（稀有度也落 default 行），给「两槽满时」的灰字预览用
+static func forge(timing: ItemDef, effect: ItemDef, value: ItemDef, preview: bool = false) -> Dictionary:
 	var t := table(&"timing")
 	var e := table(&"effect")
 	var v := table(&"value")
-	if t == null or e == null or v == null or timing == null or effect == null or value == null:
+	if t == null or e == null or v == null:
+		return {}
+	if not preview and (timing == null or effect == null or value == null):
 		return {}
 	var tm := t.by_material(timing)
 	var tp := t.by_purpose(timing)
@@ -76,16 +79,25 @@ static func forge(timing: ItemDef, effect: ItemDef, value: ItemDef) -> Dictionar
 	var ep := e.by_purpose(effect)
 	var vm := v.by_material(value)
 	var vp := v.by_purpose(value)
-	var vr := v.by_rarity(value.rarity)
+	var vr := v.by_rarity(_rarity(value))
 	if tm == null or em == null:
 		return {}
 	var mag := maxi(1, roundi(em.base * (vr.size if vr != null else 1.0) * (vm.mult if vm != null else 1.0) * (vp.mult if vp != null else 1.0)))
 	return {
-		"trigger": String(tm.key), "direction": String(tp.key if tp != null else ForgeTable.DEFAULT), "rate": timing.rarity,
-		"effect": String(em.key), "target": String(ep.key if ep != null else ForgeTable.DEFAULT), "tier": effect.rarity,
+		"trigger": String(tm.key), "direction": String(tp.key if tp != null else ForgeTable.DEFAULT), "rate": _rarity(timing),
+		"effect": String(em.key), "target": String(ep.key if ep != null else ForgeTable.DEFAULT), "tier": _rarity(effect),
 		"magnitude": mag, "element": String(_element_for(em, effect)),
-		"from": [String(timing.id), String(effect.id), String(value.id)],
+		"from": [_id(timing), _id(effect), _id(value)],
 	}
+
+
+## 194：空槽的稀有度 —— -1 查不到具体档，落 default 行
+static func _rarity(def: ItemDef) -> int:
+	return def.rarity if def != null else -1
+
+
+static func _id(def: ItemDef) -> String:
+	return String(def.id) if def != null else ""
 
 
 ## 晶石这类按元素换：这件道具自己施加的元素（供给规则、战斗规则里施加的状态；补充五：不看伤害类型），表里有的第一个；没有就表里第一个
@@ -93,9 +105,9 @@ static func _element_for(em: ForgeEntry, def: ItemDef) -> StringName:
 	if em.by_element.is_empty():
 		return &""
 	var rules: Array = []
-	if def.adjacency != null:
+	if def != null and def.adjacency != null:
 		rules.append_array(def.adjacency.feed_rules)
-	if def.combat != null:
+	if def != null and def.combat != null:
 		rules.append_array(def.combat.rules)
 	for el in ReactionResolver.elements_of_rules(rules):
 		if em.by_element.has(String(el)):
@@ -170,6 +182,24 @@ static func rule_of(ench: Dictionary) -> AbilityRule:
 	var er := e.by_rarity(int(ench.get("tier", 0)))
 	if tm.trigger == null or em.effect == null:
 		return null
+	var rule := _timing_rule(tm, tp, tr)
+	var tier := er.tier if er != null else 0
+	var main := (em.upgraded if tier >= 1 and em.upgraded != null else em.effect).duplicate(true) as CombatEffect
+	_shape_effect(main, em, ep, ench)
+	rule.effects.append(main)
+	if tier >= 2 and em.bonus != null:
+		var extra := em.bonus.duplicate(true) as CombatEffect
+		if not em.self_only and ep != null and ep.target >= 0 and "target" in extra:
+			extra.set("target", ep.target)
+		rule.effects.append(extra)
+	var app := _element_apply(em, ep, ench, tier)
+	if app != null:
+		rule.effects.append(app)
+	return rule
+
+
+## 时机槽三行拼成的半条规则（扳机 + 节奏，没有效果）：[method rule_of] 与 194 的逐槽显示共用
+static func _timing_rule(tm: ForgeEntry, tp: ForgeEntry, tr: ForgeEntry) -> AbilityRule:
 	var rule := AbilityRule.new()
 	rule.trigger = tm.trigger.duplicate(true) as Trigger
 	if tp != null:
@@ -183,18 +213,6 @@ static func rule_of(ench: Dictionary) -> AbilityRule:
 		var cd := CooldownCadence.new()
 		cd.seconds = MIN_COOLDOWN
 		rule.cadence = cd
-	var tier := er.tier if er != null else 0
-	var main := (em.upgraded if tier >= 1 and em.upgraded != null else em.effect).duplicate(true) as CombatEffect
-	_shape_effect(main, em, ep, ench)
-	rule.effects.append(main)
-	if tier >= 2 and em.bonus != null:
-		var extra := em.bonus.duplicate(true) as CombatEffect
-		if not em.self_only and ep != null and ep.target >= 0 and "target" in extra:
-			extra.set("target", ep.target)
-		rule.effects.append(extra)
-	var app := _element_apply(em, ep, ench, tier)
-	if app != null:
-		rule.effects.append(app)
 	return rule
 
 
@@ -289,4 +307,85 @@ static func prefix(ench: Dictionary, lang: String = "") -> String:
 static func sentence(ench: Dictionary) -> String:
 	var rule := rule_of(ench)
 	return AdjacencyText.rule_phrase(rule) if rule != null else ""
+#endregion
+
+
+#region 逐槽显示（194 §2）
+## 一件道具放进 [param slot] 槽贡献的三行（放进去立刻显示，不等三槽满）：
+## 时机槽「什么时候 / 方向 / 多久一次」，效果槽「做什么 / 给谁 / 阶」，数值槽「档 / 材质 × 用途 / 合计」。表缺了返回空
+static func slot_summary(slot: StringName, def: ItemDef) -> Array[String]:
+	var out: Array[String] = []
+	var t := table(slot)
+	if t == null or def == null:
+		return out
+	match slot:
+		&"timing":
+			_timing_summary(t, def, out)
+		&"effect":
+			_effect_summary(t, def, out)
+		&"value":
+			_value_summary(t, def, out)
+	return out
+
+
+static func _timing_summary(t: ForgeTable, def: ItemDef, out: Array[String]) -> void:
+	var tm := t.by_material(def)
+	if tm == null or tm.trigger == null:
+		return
+	var tp := t.by_purpose(def)
+	var rule := _timing_rule(tm, tp, t.by_rarity(def.rarity))
+	out.append("什么时候：%s" % Glossary.trigger_text(rule.trigger))
+	var said := String((tp.trigger_props if tp != null else {}).get("direction", ""))
+	var way := {"DEALT": "造成", "TAKEN": "受到"}.get(said, "—") as String
+	if "direction" in rule.trigger:
+		way = "造成" if int(rule.trigger.get("direction")) == DamageTrigger.Direction.DEALT else "受到"
+		out.append("方向：%s" % way)
+	else:
+		out.append("方向：%s（这种时机不分方向）" % way)
+	var how := "每次"
+	if rule.cadence is CooldownCadence:
+		how = "每 %s 秒最多一次" % TextTemplate.num((rule.cadence as CooldownCadence).seconds)
+	if tm.fixed_cadence != null:
+		how = ("一次" if rule.trigger is OnBattleStart else how) + "（这种时机不看稀有度）"
+	out.append("多久一次：%s" % how)
+
+
+static func _effect_summary(t: ForgeTable, def: ItemDef, out: Array[String]) -> void:
+	var em := t.by_material(def)
+	if em == null or em.effect == null:
+		return
+	var ep := t.by_purpose(def)
+	var er := t.by_rarity(def.rarity)
+	var ench := {"effect": String(em.key), "element": String(_element_for(em, def)), "magnitude": maxi(1, roundi(em.base))}
+	var main := em.effect.duplicate(true) as CombatEffect
+	_shape_effect(main, em, null, ench)
+	var did := Glossary.effects_text([main])
+	var pre := prefix(ench)
+	out.append("做什么：%s%s" % [did, "（前缀「%s」）" % pre if pre != "" else ""])
+	var who := "不改（效果自带）"
+	if em.self_only:
+		who = "只能给自己"
+	elif ep != null and ep.target >= 0:
+		who = "自己" if ep.target == CombatEffect.Target.SELF else "对手"
+	out.append("给谁：%s" % who)
+	var tier := er.tier if er != null else 0
+	var up := "升阶：没有变化" if em.upgraded == null else "升阶（换成%s）" % Glossary.effects_text([em.upgraded])
+	var line := "基础"
+	if tier == 1:
+		line = up
+	elif tier >= 2:
+		line = "%s，附带%s" % [up, Glossary.effects_text([em.bonus]) if em.bonus != null else "：没有"]
+	out.append("阶：%s" % line)
+
+
+static func _value_summary(t: ForgeTable, def: ItemDef, out: Array[String]) -> void:
+	var vr := t.by_rarity(def.rarity)
+	var vm := t.by_material(def)
+	var vp := t.by_purpose(def)
+	var size := vr.size if vr != null else 1.0
+	var m := vm.mult if vm != null else 1.0
+	var p := vp.mult if vp != null else 1.0
+	out.append("档：×%s（稀有度 %d）" % [TextTemplate.num(size), def.rarity])
+	out.append("材质 ×%s · 用途 ×%s" % [TextTemplate.num(m), TextTemplate.num(p)])
+	out.append("合计 ×%s" % TextTemplate.num(size * m * p))
 #endregion

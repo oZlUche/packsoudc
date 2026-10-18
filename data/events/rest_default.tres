@@ -1,73 +1,88 @@
 [gd_resource type="Resource" script_class="EventDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_44v1f"]
-[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_k4swn"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="3_64hfv"]
-[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_eejmq"]
-[ext_resource type="Script" path="res://core/run/events/conditions/rest_part_unused.gd" id="5_dp8ju"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/pass_time.gd" id="6_wcnx5"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/restore_vitality.gd" id="7_vey5p"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/open_altar.gd" id="8_1p6xl"]
-[ext_resource type="Script" path="res://core/run/events/conditions/faith_active.gd" id="9_vjav7"]
-[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="10_146qw"]
-
-[sub_resource type="Resource" id="Resource_n64np"]
-script = ExtResource("3_64hfv")
-
-[sub_resource type="Resource" id="Resource_0sn4r"]
-script = ExtResource("5_dp8ju")
-
-[sub_resource type="Resource" id="Resource_u8irx"]
-script = ExtResource("1_44v1f")
-label = "歇一会儿（回 {rest_restore} 点体力）"
-hide_when_locked = true
-requires = Array[ExtResource("4_eejmq")]([SubResource("Resource_0sn4r")])
-outcomes = Array[ExtResource("2_k4swn")]([SubResource("Resource_n64np")])
-
-[sub_resource type="Resource" id="Resource_xkvak"]
-script = ExtResource("6_wcnx5")
-actions = 2
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_64hfv"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_eejmq"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="3_dp8ju"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_wcnx5"]
+[ext_resource type="Script" path="res://core/run/events/conditions/rest_part_unused.gd" id="5_vey5p"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/pass_time.gd" id="6_1p6xl"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/restore_vitality.gd" id="7_vjav7"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/open_altar.gd" id="8_146qw"]
+[ext_resource type="Script" path="res://core/run/events/conditions/faith_active.gd" id="9_n64np"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/open_forge.gd" id="10_0sn4r"]
+[ext_resource type="Script" path="res://core/run/events/conditions/forge_unused.gd" id="11_u8irx"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="12_xkvak"]
 
 [sub_resource type="Resource" id="Resource_ye14d"]
-script = ExtResource("3_64hfv")
+script = ExtResource("3_dp8ju")
 
 [sub_resource type="Resource" id="Resource_upvsa"]
-script = ExtResource("7_vey5p")
+script = ExtResource("5_vey5p")
 
 [sub_resource type="Resource" id="Resource_anxhh"]
-script = ExtResource("5_dp8ju")
+script = ExtResource("1_64hfv")
+label = "歇一会儿（回 {rest_restore} 点体力）"
+hide_when_locked = true
+requires = Array[ExtResource("4_wcnx5")]([SubResource("Resource_upvsa")])
+outcomes = Array[ExtResource("2_eejmq")]([SubResource("Resource_ye14d")])
 
 [sub_resource type="Resource" id="Resource_oxytg"]
-script = ExtResource("1_44v1f")
-label = "扎营（倒计时 −{pass_time_actions}，回 {rest_total} 点体力）"
-hide_when_locked = true
-requires = Array[ExtResource("4_eejmq")]([SubResource("Resource_anxhh")])
-outcomes = Array[ExtResource("2_k4swn")]([SubResource("Resource_xkvak"), SubResource("Resource_ye14d"), SubResource("Resource_upvsa")])
+script = ExtResource("6_1p6xl")
+actions = 2
 
 [sub_resource type="Resource" id="Resource_y42ju"]
-script = ExtResource("8_1p6xl")
+script = ExtResource("3_dp8ju")
 
 [sub_resource type="Resource" id="Resource_qc75h"]
-script = ExtResource("9_vjav7")
+script = ExtResource("7_vjav7")
 
 [sub_resource type="Resource" id="Resource_7r3ws"]
-script = ExtResource("5_dp8ju")
-part = &"altar"
+script = ExtResource("5_vey5p")
 
 [sub_resource type="Resource" id="Resource_spppq"]
-script = ExtResource("1_44v1f")
-label = "神坛（献祭或特殊操作，二选一）"
+script = ExtResource("1_64hfv")
+label = "扎营（倒计时 −{pass_time_actions}，回 {rest_total} 点体力）"
 hide_when_locked = true
-requires = Array[ExtResource("4_eejmq")]([SubResource("Resource_qc75h"), SubResource("Resource_7r3ws")])
-outcomes = Array[ExtResource("2_k4swn")]([SubResource("Resource_y42ju")])
+requires = Array[ExtResource("4_wcnx5")]([SubResource("Resource_7r3ws")])
+outcomes = Array[ExtResource("2_eejmq")]([SubResource("Resource_oxytg"), SubResource("Resource_y42ju"), SubResource("Resource_qc75h")])
 
 [sub_resource type="Resource" id="Resource_7wd84"]
-script = ExtResource("1_44v1f")
+script = ExtResource("8_146qw")
+
+[sub_resource type="Resource" id="Resource_pvksp"]
+script = ExtResource("9_n64np")
+
+[sub_resource type="Resource" id="Resource_lp1md"]
+script = ExtResource("5_vey5p")
+part = &"altar"
+
+[sub_resource type="Resource" id="Resource_trsnw"]
+script = ExtResource("1_64hfv")
+label = "神坛（献祭或特殊操作，二选一）"
+hide_when_locked = true
+requires = Array[ExtResource("4_wcnx5")]([SubResource("Resource_pvksp"), SubResource("Resource_lp1md")])
+outcomes = Array[ExtResource("2_eejmq")]([SubResource("Resource_7wd84")])
+
+[sub_resource type="Resource" id="Resource_e61ae"]
+script = ExtResource("10_0sn4r")
+
+[sub_resource type="Resource" id="Resource_vqmjx"]
+script = ExtResource("11_u8irx")
+
+[sub_resource type="Resource" id="Resource_5la2b"]
+script = ExtResource("1_64hfv")
+label = "铸炉（三件道具熔成一枚铸牌）"
+hide_when_locked = true
+requires = Array[ExtResource("4_wcnx5")]([SubResource("Resource_vqmjx")])
+outcomes = Array[ExtResource("2_eejmq")]([SubResource("Resource_e61ae")])
+
+[sub_resource type="Resource" id="Resource_f48da"]
+script = ExtResource("1_64hfv")
 label = "继续赶路（不算用掉）"
 
 [resource]
-script = ExtResource("10_146qw")
+script = ExtResource("12_xkvak")
 id = &"rest_default"
 title = "休息点"
 text = "一处能歇脚的地方。歇多久，你自己定。歇脚和神坛各算一次，现在不用就留着，回头还能来。"
-options = Array[ExtResource("1_44v1f")]([SubResource("Resource_u8irx"), SubResource("Resource_oxytg"), SubResource("Resource_spppq"), SubResource("Resource_7wd84")])
+options = Array[ExtResource("1_64hfv")]([SubResource("Resource_anxhh"), SubResource("Resource_spppq"), SubResource("Resource_trsnw"), SubResource("Resource_5la2b"), SubResource("Resource_f48da")])
