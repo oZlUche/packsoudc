@@ -786,7 +786,7 @@ func leave_chest() -> bool:
 	return hide_overlay()
 
 
-## 175 补充二：在休息点 [param node] 上打开铸炉（休息屏的「铸炉」一栏）。不是休息点、铸过了返回 false
+## 175 补充二：在休息点 [param node] 上打开铸炉。194 起玩家走休息点事件的「铸炉」选项（[OpenForge]），这里留给测试 / 调试台。不是休息点、铸过了返回 false
 func open_forge(node: MapNode) -> bool:
 	if run == null or run.is_over() or node == null or NodeEvents.effective_type(node) != &"rest" or NodeEvents.forge_used(node):
 		return false
@@ -1267,6 +1267,8 @@ func _adopt(state: RunState) -> void:
 		_push({"screen": Screen.SAFE, "node": node}))     # 092：踩上保险箱就开
 	ev.altar_opened.connect(func(node: MapNode):
 		_push({"screen": Screen.ALTAR, "node": node}))     # 093：休息处的神坛
+	ev.forge_opened.connect(func(node: MapNode):
+		_push({"screen": Screen.FORGE, "node": node}))     # 194：休息点的「铸炉」选项
 	ev.chest_shown.connect(func(node: MapNode):
 		_push({"screen": Screen.CHEST, "node": node}))     # 154：踩上没开锁的宝箱
 	ev.event_pending.connect(func(node: MapNode, def: EventDef):

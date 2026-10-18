@@ -67,6 +67,7 @@ const EVENT_CONDITIONS := {
 	&"has_flag": "res://core/run/events/conditions/has_flag.gd",
 	&"faith_active": "res://core/run/events/conditions/faith_active.gd",
 	&"rest_part_unused": "res://core/run/events/conditions/rest_part_unused.gd",
+	&"forge_unused": "res://core/run/events/conditions/forge_unused.gd",     # 194
 	&"skill_ready": "res://core/run/events/conditions/skill_ready.gd",     # 136
 }
 
@@ -93,6 +94,7 @@ const EVENT_OUTCOMES := {
 	&"lose_item": "res://core/run/events/outcomes/lose_item.gd",
 	&"set_flag": "res://core/run/events/outcomes/set_flag.gd",
 	&"open_altar": "res://core/run/events/outcomes/open_altar.gd",
+	&"open_forge": "res://core/run/events/outcomes/open_forge.gd",     # 194
 	&"next_event_random": "res://core/run/events/outcomes/next_event_random.gd",
 	&"revisit_later": "res://core/run/events/outcomes/revisit_later.gd",     # 作者 2026-10-12：门禁事件的退路
 	&"bless_item": "res://core/run/events/outcomes/bless_item.gd",

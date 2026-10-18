@@ -57,6 +57,20 @@
       ]
     },
     {
+      "label": "铸炉（三件道具熔成一枚铸牌）",
+      "hide_when_locked": true,
+      "requires": [
+        {
+          "type": "forge_unused"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "open_forge"
+        }
+      ]
+    },
+    {
       "label": "继续赶路（不算用掉）"
     }
   ]

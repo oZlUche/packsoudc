@@ -111,7 +111,7 @@ const TYPE_LABELS := {
 	# 093 信仰流派
 	"damage": "造成 / 受到伤害", "vitality_lost": "失去体力", "item_cycle": "道具成功循环", "heal": "战斗内回血", "item_triggered": "触发某类道具", "enter_node": "进入空白节点",
 	"item_acquired": "获得道具", "distinct_items_fired": "不同名字的道具出手", "first_place": "每局首次置入一种道具",
-	"faith_active": "激活了信仰", "rest_part_unused": "休息点这一份没用过", "open_altar": "打开神坛", "next_event_random": "随机接一个事件", "revisit_later": "先回地图（回来再弹）", "low_hp_empower": "低血增伤", "fire_enchant": "火焰附魔",
+	"faith_active": "激活了信仰", "rest_part_unused": "休息点这一份没用过", "open_altar": "打开神坛", "open_forge": "打开铸炉", "forge_unused": "铸炉没用过", "next_event_random": "随机接一个事件", "revisit_later": "先回地图（回来再弹）", "low_hp_empower": "低血增伤", "fire_enchant": "火焰附魔",
 	"stat_mod": "属性修饰（信仰级）", "enchant_weapons": "武器火焰附魔", "food_armor": "按食物给护甲", "food_double": "食物效果翻倍",
 	"altar_sacrifice_hp": "神坛：献祭生命上限", "altar_pray_fire": "神坛：祈祷火焰", "altar_food_vitality": "献祭食物回体力", "altar_train_board": "神坛：锻炼（棋盘 +1 行）",
 	"altar_reshape_node": "神坛：改造此点", "smite": "秒杀（耗体力）", "extra_drop_by_node": "按点类型必掉额外一件", "gift_on_enter": "踩上点给对应道具", "overtime_regen": "加时阶段回春", "on_axis_at_least": "标准轴到 N 层时", "shift_axis": "改标准轴层数", "axis_boost": "开战带几层标准轴", "undying": "血归零后坚持几秒", "altar_bless": "神坛：祈求赐福", "bless_item": "赐福一件",
