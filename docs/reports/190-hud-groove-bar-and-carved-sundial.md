@@ -87,3 +87,17 @@ var _meta := UiTheme.art_meta("hud/dial/dial")   # pivot [52,46] radius 40 stage
 1. **小档日晷** —— 推荐 **甲**：同一套图缩到 0.5（52 × 26）。乙：小档仍画文字版。
 2. **铜点规则** —— 推荐 **甲**：同槽相邻两件之间 + 右槽图标组左边一枚（照样张）。乙：只在两件之间，右槽不加。
 3. **槽身范围** —— 推荐 **甲**：`groove.json` 写 `band`，宿主按它居中。乙：改 `slab_bar.json` 的上下边距成 12 / 20（会动所有读 `slab_bar` 的地方）。
+
+## 落地（2026-10-18，架构方案执行）
+
+待定 1–3 都按推荐：小档日晷缩到 0.5；铜点放在同槽相邻两件之间，右槽图标组左边再放一枚；`groove.json` 写 `band`，宿主按它居中。
+
+- **美术进仓库**：`assets/ui/hud/groove.png` + `groove.json`（加了 `band: [12, 68]`）、`dot.png`，`assets/ui/hud/dial/{face,hub,shadow_calm,shadow_half,shadow_low}.png` + `dial.json`（原样）。`@2x` 没进。
+- **槽**：和方案不一样的一处：槽不是 `NinePatchRect` 子节点，而是 `hud_bar._draw()` 用 `StyleBoxTexture`（边距读 `groove.json`）画在板上、栏里的件下面。原因是 `PanelContainer` 会把子节点按板的内边距重新排，排不到 `Rect2(14, 0, 宽 − 28, 栏高)`。测试读 `groove_rect()`。没有槽图就不画。
+- **铜点**：`HudHost` 排完把点交给 `hud_bar.set_dots()`，栏在 `_draw` 里画。同一行相邻两件之间的正中各一枚；整行都是屏幕控件（右槽图标）时只在组左边放一枚。另外加了一条方案没写的：**空着的件两边不放**（没信仰时信仰那格空着，`HudWidget.occupied()`），不然金币后面会多一枚点着空地。
+- **栏里的件去底**：`HudWidget.set_in_bar(on, grooved)` 由宿主每次排的时候设：栏里 + 有槽 = `PANEL_BARE` 加 `PANEL_HUD_BAR` 的字色（浅底墨字），拖出栏或没槽图 = `PANEL_HUD`。提示行、顶端栏自己不参与（`groovable = false`）。栏里同一行的间距 `BAR_GAP 24`，其余照旧 `GAP 6`。`_bar_margins()` 有槽图时返回槽身的上下（12 / 20，按栏高等比）。
+- **日晷**：`countdown_widget.gd` 重写。`stage()`（calm / half / low，low = 不到四分之一（含）或只剩 5 步以内，和原来 `color()` 的规矩一致）、`angle()`（180 − 180 × 用掉的比例），`_draw` 按染色扇面 → 表盘 → 影子（绕轴心转）→ 轴心的顺序画。`bar_nudge()` 返回 (0, 3) 让轴心落在 y 63。大档 104 × 52，小档一半。缺任何一张图就退回原来的「倒计时 N / M」+ 变色边框。
+- **悬浮窗**：`show_status` / `update_status`（185 的接口）：名字行「倒计时」，正文「还剩 N 步（共 M 步）」、有限时撤离点时「最近的撤离点还剩 K 步关闭」或灰字「最近的撤离点已关闭」。N 和 K 的样式按阶段取 `val` / `stamina` / `hp`，没有十六进制。开着时走一步只换字。
+- **字集**：注释里「晷」「渗」不在字集里（168 的覆盖检查连注释一起扫），代码里写成「日规」「轴心」「表盘」「染色」。玩家看到的字只有「倒计时」「还剩」「步」「撤离点」等，都在字集里。
+- **测试**：新增 `tests/ui/test_hud_189.gd`（35 项：槽铺满、铜点数、间距、去底与拖出、槽身居中与轴心 y 63、四个阶段、154°、不写数字、小档、缺图退回、悬浮窗三种情况与走一步跟着变）；`test_hud_150` 倒计时那一条改读 `stage()`。
+- **截图**：`/mnt/project-files/screenshots/189/190-顶端栏日晷-悬浮窗.png`、`190-日晷三阶.png`。

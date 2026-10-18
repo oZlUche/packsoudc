@@ -20,6 +20,10 @@ var shown: bool = true
 ## 「摆读数」模式：显示虚线框与 id、能拖；藏着的也画出来（半透明）
 var editing: bool = false
 var host: Node = null
+## 190：宿主排进顶端栏的槽（`bar_*`）时置 true，排到别处置 false（[method set_in_bar]）
+var in_bar: bool = false
+## 190：栏里有长槽时坐在槽底上、不画自己的凹槽（提示行、顶端栏本身这类自有底的件设成 false）
+var groovable: bool = true
 
 var _text: Label
 var _drag_from: Vector2 = Vector2.ZERO
@@ -121,6 +125,35 @@ func set_editing(on: bool) -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP if on else _idle_mouse_filter()
 	modulate.a = 0.45 if on and not shown else 1.0
 	refresh()
+
+
+## 190：宿主排完一遍告诉这件在不在栏里、栏上有没有长槽图。栏里 + 有槽 = 坐在槽底上（[constant UiTheme.PANEL_BARE]，浅底墨字）；
+## 拖出栏或没有槽图 = 自带凹槽（[constant UiTheme.PANEL_HUD]）。没变就不动（换底会改大小、又排一遍）
+func set_in_bar(on: bool, grooved: bool) -> void:
+	in_bar = on
+	if not groovable:
+		return
+	var want := UiTheme.PANEL_BARE if on and grooved else UiTheme.PANEL_HUD
+	if theme_type_variation == want:
+		return
+	theme_type_variation = want
+	UiTheme.apply_tone(self, UiTheme.PANEL_HUD_BAR if want == UiTheme.PANEL_BARE else UiTheme.PANEL_HUD)
+	_bar_changed()
+
+
+## 子类可改：进出栏之后（日规按新底重算大小）
+func _bar_changed() -> void:
+	pass
+
+
+## 190：栏里这会儿有没有东西看得见（没信仰时信仰那格空着）；空着的两边不放铜点
+func occupied() -> bool:
+	return true
+
+
+## 190：排进栏里时，在槽身里竖向居中之后再挪这么多（日规把轴心落到槽底）
+func bar_nudge() -> Vector2:
+	return Vector2.ZERO
 
 
 ## 平时要不要接鼠标（信仰那件要开悬浮窗）
