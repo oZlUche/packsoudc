@@ -1061,7 +1061,7 @@ func _draw() -> void:
 
 ## 193 §4：棋盘外（地上 / 空处）在残影上画手上这件的格位，未点亮态 —— 转了方向在哪儿都看得出格位转到哪了
 func _draw_held_markers(anchor: Vector2, cell: float) -> void:
-	var side := minf(32.0, cell * 0.55)
+	var side := InventoryView.marker_side(cell)
 	for m in InventoryView.marker_offsets(_inst.def, _rot):
 		var tex := UiTheme.slot_icon(String(m[1]), false)
 		if tex != null:

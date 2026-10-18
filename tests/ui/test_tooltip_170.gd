@@ -37,7 +37,8 @@ static func run_item_layout(t: TestCase) -> void:
 	t.eq(head.count("[outline_size=%d]" % UiTheme.OUTLINE_SIZE), 2, "头里只有名字和稀有度名两处描边")
 	t.check(not body.contains("[outline_size=") and not foot.contains("[outline_size="), "正文、脚注不描边")
 	t.check(body.begins_with("[font_size=%d][color=@tip_fg]" % ItemTooltip.BODY_SIZE), "正文白（tip_fg）")
-	t.check(foot.contains("[color=@tip_meta]") and head.contains("[color=@tip_meta]"), "标签与脚注 tip_meta")
+	t.check(foot.contains("[color=@tip_meta]"), "脚注 tip_meta")
+	t.check(head.contains("[url=term:tag:weapon][img=%d]" % ItemTooltip.TAG_ICON_SIZE), "193 补充三：副行的标签是图标，链到词条")
 	if Names.description_of(knife.def) != "":
 		t.check(head.contains("[i][color=@tip_desc]"), "说明 tip_desc")
 

@@ -470,12 +470,20 @@ func _collect_markers(
 		marks[cell].append([kind, lit, color, inset])
 
 
+## 193 补充二（作者 2026-10-18 21:39 定 40）：格位图标的边长 —— 40，格子小了按格宽的 0.67 缩（格 60 时正好 40）
+static func marker_side(cell: float) -> float:
+	return minf(MARKER_SIDE, cell * 0.67)
+
+
+const MARKER_SIDE := 40.0
+
+
 ## 170（作者定）：格位画美术给的图标（`assets/ui/tip/<种类>_on|off.png`，点亮 / 没点亮两张），替换原来的半透明方框；
 ## 一格上只有一种就居中，好几种沿对角线错开。图不在就画回原来的角括号（点亮的填色加粗）
 func _draw_marker(cell: Vector2i, kind: String, lit: bool, color: Color, inset: float, index: int, count: int) -> void:
 	var tex := UiTheme.slot_icon(kind, lit)
 	if tex != null:
-		var side := minf(32.0, cell_px * 0.55)
+		var side := marker_side(cell_px)
 		var origin := cell_origin_px(cell)
 		var at := origin + Vector2.ONE * (cell_px - side) * 0.5
 		if count > 1:
