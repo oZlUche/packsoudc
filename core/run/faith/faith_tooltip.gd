@@ -16,7 +16,8 @@ const META_SIZE := 13
 const POWER_SIZE := 14
 ## 献祭图标（标签 → [method TagRegistry.icon_path]；体积 / 属性条件 → `<OFFER_ICON_DIR>large.png` 等）
 const OFFER_ICON_DIR := "res://assets/ui/offerings/"
-const ICON_SIZE := 24
+## 193 美术定稿（作者 2026-10-18「32像素，献祭栏里面不要名字，图标也要32像素」）
+const ICON_SIZE := 32
 ## 193：献祭一行里规矩之间空多宽（两个全角空格，按这个字号算）
 const OFFER_GAP_SIZE := 8
 ## 赐福版合成一行时写的名字
