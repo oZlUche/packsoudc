@@ -314,7 +314,7 @@ func update_status(parts: Dictionary) -> void:
 	UiTheme.set_rich(_panel.body, String(parts.get("body", "")))
 
 
-## 188：信仰窗（[method FaithTooltip.describe_full]）：名字行 + 信力行 / 进度条（满阶不挂）/ 分隔线 / 第一段 / 虚线 / 下一段……
+## 188：信仰窗（[method FaithTooltip.describe_full]）：名字行 + 信力行 / 分段进度条（补充一：一段一级，满阶也挂）/ 分隔线 / 第一段 / 虚线 / 下一段……
 ## 宽固定 [constant MAX_WIDTH]（和道具窗一样，不按内容收窄）；钉住的窗不换；空字典（没有信仰）不开
 func show_faith(full: Dictionary, at: Vector2) -> void:
 	if full.is_empty() or (_panel.visible and _panel.pinned):
@@ -326,10 +326,11 @@ func show_faith(full: Dictionary, at: Vector2) -> void:
 	_panel.set_status(String(full.get("head", "")), String(sections[0]) if not sections.is_empty() else "")
 	_panel.body.visible = not sections.is_empty()
 	_panel.terms = {}
-	var progress := float(full.get("progress", -1.0))
-	if progress >= 0.0:
-		var bar := FaithBar.new()
-		bar.ratio = progress
+	var bar_data: Dictionary = full.get("bar", {})
+	if not (bar_data.get("thresholds", []) as Array).is_empty():
+		var bar := FaithBar.new()     # 188 补充一：分段，满阶也挂（全满）
+		bar.thresholds.assign(bar_data["thresholds"])
+		bar.points = int(bar_data.get("points", 0))
 		bar.custom_minimum_size = Vector2(_panel.full_width, FaithBar.HEIGHT)
 		_insert_part(bar, _panel.head.get_index() + 1)
 	for i in range(1, sections.size()):
@@ -347,16 +348,64 @@ func _insert_part(c: Control, at: int) -> void:
 	_faith_parts.append(c)
 
 
-## 188：信仰窗名字行下那条细进度条（到下一阶的比例）：槽深色、填充信仰色
+## 188：信仰窗名字行下那条进度条。补充一（作者 2026-10-18「分段式，一段代表一个等级，长度和需要的信力对应」）：
+## 一段 = 一级，段宽按这一级要涨的信力（阈值差）成比例，最窄 [constant MIN_SEG]；段间 1 px 分隔；填到现在的信力（已到的级整段、正在涨的按比例）
 class FaithBar extends Control:
-	const HEIGHT := 6.0
+	const HEIGHT := 8.0
+	const MIN_SEG := 12.0
 	const SLOT := Color("1a1512")
-	var ratio := 0.0
+	var thresholds: Array[int] = []
+	var points := 0
+
+	## 各段 [起点, 宽]（按 [param width] 排；最窄 MIN_SEG，多出的从别的段按比例扣）
+	func segments(width: float) -> Array[Vector2]:
+		var out: Array[Vector2] = []
+		var n := thresholds.size()
+		if n == 0:
+			return out
+		var gaps: Array[float] = []
+		var prev := 0
+		for th in thresholds:
+			gaps.append(float(maxi(1, th - prev)))
+			prev = th
+		var usable := maxf(0.0, width - float(n - 1))     # 段间 1 px
+		var total := 0.0
+		for g in gaps:
+			total += g
+		var widths: Array[float] = []
+		var small := 0.0
+		var rest := 0.0
+		for g in gaps:
+			var w := usable * g / total
+			widths.append(w)
+			if w < MIN_SEG:
+				small += MIN_SEG - w
+			else:
+				rest += w
+		if small > 0.0 and rest > 0.0:
+			for i in n:
+				widths[i] = MIN_SEG if widths[i] < MIN_SEG else widths[i] - small * widths[i] / rest
+		var x := 0.0
+		for w in widths:
+			out.append(Vector2(x, w))
+			x += w + 1.0
+		return out
+
+	## 第 [param i] 段填了几成
+	func fill_of(i: int) -> float:
+		var from := thresholds[i - 1] if i > 0 else 0
+		return clampf(float(points - from) / float(maxi(1, thresholds[i] - from)), 0.0, 1.0)
 
 	func _draw() -> void:
-		draw_rect(Rect2(Vector2.ZERO, size), SLOT, true)
-		if ratio > 0.0:
-			draw_rect(Rect2(Vector2.ZERO, Vector2(size.x * clampf(ratio, 0.0, 1.0), size.y)), UiPalette.FAITH, true)
+		var segs := segments(size.x)
+		for i in segs.size():
+			var seg := segs[i]
+			draw_rect(Rect2(seg.x, 0.0, seg.y, size.y), SLOT, true)
+			var f := fill_of(i)
+			if f > 0.0:
+				draw_rect(Rect2(seg.x, 0.0, seg.y * f, size.y), UiPalette.FAITH, true)
+			if i > 0:
+				draw_rect(Rect2(seg.x - 1.0, 0.0, 1.0, size.y), UiPalette.LINE, true)
 
 
 ## 188：主窗里现在挂着的进度条（测试看；没有 null）

@@ -187,7 +187,10 @@ func _rebuild_actions() -> void:
 			var pick := OptionButton.new()
 			for i in perk.altar_options().size():
 				var t: StringName = perk.altar_options()[i]
-				pick.add_item(String(MapNodeStyle.of(t)["label"]) if MapNodeTypes.has(t) else String(t), i)
+				var label := perk.altar_option_label(t)     # 188 补充一：效果自己给字（蛮神献祭的二选一）
+				if label == "":
+					label = String(MapNodeStyle.of(t)["label"]) if MapNodeTypes.has(t) else String(t)
+				pick.add_item(label, i)
 			pick.set_meta("options", perk.altar_options())
 			arow.add_child(pick)
 			b.set_meta("pick", pick)

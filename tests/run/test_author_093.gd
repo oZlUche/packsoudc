@@ -202,7 +202,8 @@ static func run_undying(t: TestCase) -> void:
 	var input := CompileInput.of(CombatantBaseline.with_hp(10.0))
 	und.compile_into(input, null, null)
 	var spec := BattleCompiler.compile(null, input)
-	t.eq(spec.undying_sec, 10.0, "编译后的单位带 undying_sec = 10（带类型的字段，101 第 5 刀；105 之后经 CompileInput）")
+	t.eq(spec.undying_sec, 2.0, "编译后的单位带 undying_sec（带类型的字段，101 第 5 刀；105 之后经 CompileInput）；没有一局按 0 信力 = 2 秒（188 补充一：秒数随信力）")
+	t.eq((und as UndyingPerk).seconds_at(400), 10.0, "400 信力：2 + 8 × 1 = 10 秒")
 
 
 static func run_faith_call(t: TestCase) -> void:

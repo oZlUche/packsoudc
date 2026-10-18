@@ -41,5 +41,20 @@ func altar_apply(run: RunState, _node: MapNode, _option: StringName = &"") -> St
 	return "花 %d 信力：「%s」成了「%s」" % [cost, was, Names.of(v)]
 
 
+## 188 补充一（作者原话「可以在祭坛赐福武器」）：花多少信力只在神坛按钮上写
 func _summary() -> String:
-	return "神坛：花 %d 信力赐福一件" % cost
+	return "可以在祭坛赐福道具"
+
+
+## 能赐福什么 = 这位神赐福模板圈的标签（中文名）
+func summary_for(def: FaithDef, _points: int) -> String:
+	var names: Array[String] = []
+	if def != null:
+		for b in def.blessings:
+			if b == null:
+				continue
+			for t in (b as Blessing).tags:
+				var n := Glossary.tag_name(t)
+				if not names.has(n):
+					names.append(n)
+	return "可以在祭坛赐福%s" % ("、".join(names) if not names.is_empty() else "道具")

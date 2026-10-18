@@ -23,3 +23,8 @@ static func grade_of_cells(n: int) -> int:
 
 static func grade_name(g: int) -> String:
 	return NAMES[clampi(g, 0, NAMES.size() - 1)]
+
+
+## 188 补充一（作者定「占 9 格以上」叫「大型道具」）：这一档的玩家叫法「X型道具」
+static func size_label(g: int) -> String:
+	return "%s型道具" % grade_name(g)
