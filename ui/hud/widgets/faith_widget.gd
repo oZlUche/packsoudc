@@ -54,6 +54,11 @@ func _sync_empty() -> void:
 	self_modulate.a = 0.0 if not editing and run != null and run.active_faith_id() == &"" else 1.0
 
 
+## 190：没信仰时这一格是空的，两边不放铜点
+func occupied() -> bool:
+	return editing or run == null or run.active_faith_id() != &""
+
+
 ## 没信仰也占着位置（一个空槽），不藏
 func _sync_visible() -> void:
 	visible = editing or (shown and run != null)

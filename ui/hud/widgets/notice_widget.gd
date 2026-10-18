@@ -22,6 +22,7 @@ func _init() -> void:
 	super()
 	theme_type_variation = UiTheme.PANEL_BARE     # 没有底板：字直接写在地图纸上（字色、描边写在每行的 LabelSettings 里，不贴主题覆写）
 	UiTheme.apply_tone(self, UiTheme.PANEL_BARE)
+	groovable = false
 	_text.visible = false
 	_col = UiTheme.vbox(2)
 	_col.mouse_filter = Control.MOUSE_FILTER_IGNORE

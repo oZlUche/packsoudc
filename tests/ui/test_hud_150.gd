@@ -190,7 +190,7 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	if cd.visible:
 		t.check(absf(cd.position.x + cd.size.x * 0.5 - HOST_SIZE.x * 0.5) <= 1.0, "倒计时在栏正中")
 		t.eq(cd.tier, HudWidget.Tier.LARGE, "倒计时大档")
-		t.eq(cd.get("_text").get_theme_color("font_color"), cd.color(), "倒计时的颜色跟着剩余")
+		t.check(cd.stage() == &"calm" and cd.color() == UiPalette.FG and not cd.get("_text").visible, "190：倒计时是一枚日晷、栏上不写字；刚开局在 calm 阶（颜色跟着阶段）")
 	t.eq(host.top_inset(), bar_h, "顶上让出栏高")
 	var inset := host.content_inset()
 	t.eq(inset.position.y, bar_h, "地图上边躲开顶端栏")
