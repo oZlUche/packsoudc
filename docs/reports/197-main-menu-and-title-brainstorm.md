@@ -82,6 +82,9 @@
 
 ## 4. 下一步
 
+概念图（UI替换美术，2026-10-18 21:53）：`/mnt/project-files/art/ui/menu/preview_A.png`（甲，《神弃之地》）、`preview_B.png`（乙，《负重者》对比字形）、`preview_C.png`（丙）、`preview_compare.png`，源 `gen.py`。
+
+
 1. 作者在 §2 圈一个方向、§3 圈一个正名（或改）。
 2. UI替换美术按圈定的方向出 2–3 版细稿（含标题字的写法：马善政直书 / 横书、烙痕 / 黄铜线）。
 3. 本线程写落地报告（新 `main_menu.gd` 排布、boot 屏渐亮、改名清单与 `custom_user_dir_name`），派执行。
