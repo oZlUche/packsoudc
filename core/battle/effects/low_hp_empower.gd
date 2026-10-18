@@ -1,29 +1,26 @@
-## 低血增伤（093，蛮神 1 级）：改写本方正在造成的这一包伤害 —— 当前生命百分比越低加得越多，[member min_percent]（满血）到 [member max_percent]（空血）线性。
+## 低血增伤（093，蛮神 1 级；188 补充一作者改成门槛式）：改写本方正在造成的这一包伤害 —— 生命低于 [member hp_percent]% 时 +[member percent]%。
 ## 配 on_before_damage（本方施加）用；不在受伤前阶段静默跳过
 class_name LowHpEmpower
 extends CombatEffect
 
-@export var min_percent: int = 10
-@export var max_percent: int = 50
+@export var hp_percent: int = 30
+@export var percent: int = 10
 
 
 func apply(ctx: RuleContext) -> void:
 	var p := ctx.damage()
-	if p == null or ctx.owner == null:
+	if p == null or ctx.owner == null or percent == 0:
 		return
 	var cur := ctx.owner.resources.current(BattleStats.RES_HP)
 	var mx := maxi(1, ctx.owner.resources.maximum(BattleStats.RES_HP))
-	var ratio := clampf(float(cur) / float(mx), 0.0, 1.0)
-	var percent := roundi(float(min_percent) + float(max_percent - min_percent) * (1.0 - ratio))
-	if percent != 0:
+	if cur * 100 < mx * hp_percent:
 		p.add_percent(StatMath.from_percent(percent))
 
 
 func describe() -> String:
-	return "所有伤害 +%d%%～+%d%%（血越少越高）" % [min_percent, max_percent]
+	return "生命值低于 %d%% 时，造成伤害提高 %d%%" % [hp_percent, percent]
 
 
-## 151：估值 —— 自己出手那一下 × (满血的百分比 + 血少时多出来的 × 低血时间占比)
+## 151：估值 —— 自己出手那一下 × 加成 × 低血时间占比
 func estimated_value(ctx: PowerContext) -> float:
-	var pct := float(min_percent) + float(max_percent - min_percent) * ctx.weights.low_hp_share
-	return ctx.hit_size() * pct / 100.0
+	return ctx.hit_size() * float(percent) / 100.0 * ctx.weights.low_hp_share

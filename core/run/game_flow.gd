@@ -886,12 +886,12 @@ func use_belt(skill_id: StringName) -> String:
 
 
 ## 093（蛮神 3 级）：战前准备屏上秒杀这一场（效果构件自己查条件、扣体力）
-func smite() -> bool:
+func smite(option: StringName = SmitePerk.VITALITY) -> bool:
 	if run == null:
 		return false
 	var altar := AltarModule.of(run)     # 101：信仰级效果在神坛模块里取
 	var perk := altar.perk(&"smite") if altar != null else null
-	if perk == null or not perk.prebattle_apply(run):
+	if perk == null or not perk.prebattle_apply(run, option):     # 188 补充一：耗体力还是耗信力
 		return false
 	_flush()
 	return true

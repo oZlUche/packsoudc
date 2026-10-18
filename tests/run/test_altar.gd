@@ -60,24 +60,43 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	var line := altar.special(actions[0], run.current_node())
 	t.check(line.contains("献祭了 5 点生命上限"), "做了：%s" % line)
 	t.eq(run.effective_baseline().value_of(BattleStats.MAX_HP, 0.0), hp0 - 5.0, "基线生命 −5")
-	t.eq(run.effective_baseline().value_of(BattleStats.MAX_STAMINA, 0.0), 10.0 + (run.player_baseline.value_of(BattleStats.MAX_STAMINA, 0.0) if run.player_baseline != null else 0.0), "耐力上限 +10")
+	t.eq(int(altar.rituals.get(AltarSacrificeHpPerk.KEY_BUFF, 0)), 1, "没挑（缺省）= 换「能力」（188 补充一）")
 	var spec2 := run.compile_player()
 	var hasted := false
 	for it in spec2.items:
 		if (it as CompiledItem).stats.has(BattleStats.HASTE) and (it as CompiledItem).stats.ensure(BattleStats.HASTE).percent > 0:
 			hasted = true
 	t.check(hasted, "道具急速 +5%")
+	var dmg_mods := 0
+	var hst_mods := 0
+	var cin := CompileInput.new()
+	(actions[0] as AltarSacrificeHpPerk).compile_into(cin, run.board, run)
+	for m in cin.mods:
+		if (m as StatModifier).stat == BattleStats.DAMAGE and (m as StatModifier).amount == 5.0:
+			dmg_mods += 1
+		if (m as StatModifier).stat == BattleStats.HASTE and (m as StatModifier).amount == 5.0:
+			hst_mods += 1
+	t.check(dmg_mods == 1 and hst_mods == 1, "「能力」：全体造成伤害 +5%、急速 +5%")
 	t.check(not altar.is_open() and altar.used.has(altar.node), "特殊操作用掉了这一次机会：神坛关了")
 	t.eq(altar.special(actions[0], run.current_node()), "", "再做不成")
 	# 存档往返带着账
 	var back := RunState.from_dict(run.to_dict(), c.chapter, c.items, c.enemies, c.sets)
 	var back_altar := AltarModule.of(back) if back != null else null
-	t.check(back_altar != null and int(back_altar.rituals.get("sacrifice_hp", 0)) == 1 and float(back_altar.stat_bonus.get("max_hp", 0.0)) == -5.0 and back_altar.used.has(altar.node), "仪式的账、改过的基线、用过的点都跟存档（modules.altar）")
-	# 3 级：秒杀
+	t.check(back_altar != null and int(back_altar.rituals.get(AltarSacrificeHpPerk.KEY_BUFF, 0)) == 1 and float(back_altar.stat_bonus.get("max_hp", 0.0)) == -5.0 and back_altar.used.has(altar.node), "仪式的账、改过的基线、用过的点都跟存档（modules.altar）")
+	# 188 补充一：也可以换信力
+	altar.used.clear()
+	altar.node = run.travel.current_id
+	var pts0 := run.faith_power.points_of(&"brute")
+	var fl := altar.special(actions[0], run.current_node(), AltarSacrificeHpPerk.FAITH)
+	t.check(fl.contains("信力 +20"), "换信力：%s" % fl)
+	t.eq(run.faith_power.points_of(&"brute"), pts0 + 20, "信力 +20")
+	t.eq(run.effective_baseline().value_of(BattleStats.MAX_HP, 0.0), hp0 - 10.0, "两回都扣生命上限")
+	t.eq(AltarSacrificeHpPerk.buff_times(run), 1, "换信力不叠「能力」")
+	# 3 级：立即击败
 	run.faith_power.add_points(&"brute", 100)
 	t.eq(run.active_faith_tier(), 3, "Lv.3")
 	var smite := altar.perk(&"smite")
-	t.check(smite != null and smite.prebattle_label(run, &"elite") != "" and smite.prebattle_label(run, &"battle") == "", "秒杀只对精英")
+	t.check(smite != null and smite.prebattle_actions(run, &"elite").size() == 2 and smite.prebattle_actions(run, &"battle").size() == 2 and smite.prebattle_actions(run, &"boss").is_empty(), "立即击败：普通与精英都能（耗体力 / 耗信力两个按钮），首领不能")
 	# 献祭（GameFlow.offer：从棋盘上拿走、换信力）
 	var sword: ItemInstance = null
 	for inst in run.board.items():

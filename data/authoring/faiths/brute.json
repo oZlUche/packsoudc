@@ -60,6 +60,7 @@
     {
       "type": "smite",
       "types": [
+        "battle",
         "elite"
       ],
       "tier": 3

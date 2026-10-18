@@ -93,3 +93,88 @@ Lv.4  不死
 - 献祭行沿用 `OfferingRule.describe()`（「骨制品（越稀有给得越多）」），没改成样张里的「骨 ×5」：倍率是内部系数，玩家用语那一版是作者 10-17 早些时候定的。
 
 测试 `tests/ui/test_faith_tip_188.gd`；`test_author_087` 的信仰窗用例按新版式改写，`test_ground_landing` 读 `last_hint`。截图 `/mnt/project-files/screenshots/188/faith_tip.png`。
+
+## 补充一（2026-10-18，作者看了落地版的反馈）
+
+> 作者：「进度条做成分段式，一段代表一个等级，长度和需要的信力对应 / 一个等级的效果合并进一行 / 没激活的等级效果颜色要改成灰色 / 说明还要修改，以蛮神为例子：【祭坛可赐福武器】→【可以在祭坛赐福武器】　【生命值低于三成时伤害提高】→【生命值低于30%时，造成伤害提高X%】　祭坛可献祭生命换信力 → 可以在祭坛献祭生命上限换取能力　对精英一击必杀 → 可消耗信力或体力立即击败非首领敌人　不死 → 在战斗中，首次生命值归零时会持续战斗X秒 / 关于提到的X，让它和信力值挂钩，而不是固定，lv2的献祭生命上限，改成可以选择获得信力还是获得额外的全局增伤/加速buff / 另外，献祭要做成图标，【占9格以上】要替换成【大型道具】」
+>
+> 样张更新在同一个链接（下方第二排）。前三条是版式，后几条是蛮神四条效果的**机制改动**（X 随信力、二级可选、三级两种代价、非首领），要先改 `docs/gods.xlsx` 再生成 JSON（见 §A.6）。
+
+### A.1 分段进度条（`HoverTip.FaithBar`）
+
+- 一条 8 px 高的条，**一段 = 一级**，段宽 ∝ 这一级要涨的信力（阈值差）：蛮神 30 / 100 / 200 / 400 → 四段宽 30 : 70 : 100 : 200。段之间 1 px 分隔线（`UiPalette.LINE`）。
+- 填充从左往右到当前信力：已到的级整段信仰色，正在涨的级填到比例，没到的级只剩槽（`#1a1512`）。满阶 = 全满，**不再隐藏**（原来 `progress < 0` 不挂）。
+- 最窄一段不低于 12 px（自然之神第一段 25 / 800 太细），超出的宽度从其余段按比例扣。
+- 接口：`FaithBar.thresholds: Array[int]`、`points: int`，`FaithTooltip.describe_full` 返回里 `progress` 换成 `{"thresholds", "points"}`（键名 `bar`）。条上不写字；「信力 45 / 100」那行照旧（右边数仍是下一阈值，满阶写「满阶」）。
+
+### A.2 每级一行、没到的灰
+
+- 同一 `tier` 的效果合并进一行，句子之间用「；」：`Lv.1　可以在祭坛赐福武器；生命值低于 30% 时，造成伤害提高 10%`。
+- 用 `[table=2]` 排：左列 `Lv.n`（13 号 `tip_meta`，固定宽），右列句子（15 号），这样折行后第二行对齐在句子下面而不是回到 Lv 下面。
+- **没到的级整行 `dim`**（dark `#8b93a1` / light `#5a4433`），Lv 号也 `dim`；原来的 `tip_desc` 不够灰。已到的级照旧 `tip_fg` + 数字 `val`。
+- 没到的级里出现的 X（见 A.3）按**到那一级时至少有的信力**算（`max(points, thresholds[tier-1])`），不按现在的信力：Lv.4 没到就不会显示「持续战斗 1 秒」这种刺眼的数。
+
+### A.3 蛮神五句（`_summary()` 全按字段拼，数字来自字段）
+
+| 效果 | 新句子（玩家看到的） | 机制改动 |
+|---|---|---|
+| `altar_bless` Lv.1 | 可以在祭坛赐福**武器** | 不改。「武器」= 这个信仰 `blessings[].tags` 的中文名（`Glossary.tag_name`，多个用「、」）；`FaithPerk` 加 `summary_for(def: FaithDef) -> String`（默认回 `_summary()`），`AltarBlessPerk` 重写它取 def 的赐福标签；`FaithTooltip` 改调 `summary_for(def)`。花多少信力只在神坛按钮上写。 |
+| `low_hp_empower` Lv.1 | 生命值低于 **30%** 时，造成伤害提高 **X%** | **改成门槛式**：现在是满血 10% → 空血 50% 线性。改为生命 < `hp_percent`（30）时造成伤害 +X%，X = `base_percent` 10 + ⌊信力 / 50⌋ × 5，上限 `max_percent` 50（30 点 → 10%，100 → 20%，400 → 50%）。`LowHpEmpower` 效果加 `hp_percent`、`percent` 两个字段，`compile_into` 时算好 X 塞进去（开战时的信力定一场）。 |
+| `altar_sacrifice_hp` Lv.2 | 可以在祭坛献祭生命上限换取能力 | **二选一**：`altar_options()` = `[&"faith", &"buff"]`，神坛上是现成的 OptionButton（大地改造此点同款）。每次 −`hp_cost` 5 生命上限（最少留 5）：选「信力」+`faith_gain` 20 信力（`add_points`）；选「能力」这局所有道具**造成伤害 +5%、急速 +5%**（`StatModifier` MULT 进 `input.mods`，按次数叠），不再给耐力上限。按钮文字：「献祭 5 生命上限 → +20 信力」/「献祭 5 生命上限 → 这局造成伤害 +5%、急速 +5%」。次数分开记 `rituals["sacrifice_hp_buff"]`；旧存档里的 `sacrifice_hp` 次数当成 buff 次数（给过的耐力上限留在 `stat_bonus` 里不动）。 |
+| `smite` Lv.3 | 可消耗 **1** 体力或 **30** 信力立即击败非首领敌人 | `types` 改 `[battle, elite]`（核心 = 首领，不含）；加 `faith_cost` 30。战前准备屏两个按钮「立即击败（耗 1 体力）」「立即击败（耗 30 信力）」，不够的那个灰掉并写原因；`prebattle_label/apply` 改成 `prebattle_actions(run, type) -> Array[{option, label, why}]` + `prebattle_apply(run, option)`，`GameFlow.smite(option)` 跟着带参数。 |
+| `undying` Lv.4 | 在战斗中，首次生命值归零时会持续战斗 **X** 秒 | X = `base_sec` 2 + ⌊信力 / 50⌋ × 1，上限 `max_sec` 20（400 点 → 10 秒，和原来一样；800 → 18）。`compile_into` 算好秒数再 `keep_undying`。 |
+
+- 「X 随信力」统一走一个小工具 `FaithPerk.scaled(points, base, step, per, cap)`，三处共用；信力取 `run.faith_power.points_of(run.active_faith().id)`。信力花掉（赐福、三级秒杀）X 就跟着降，这是作者要的「挂钩」。
+- 旧句子（「所有伤害 +10%～+50%，血越少越高」「神坛：花 40 信力赐福一件」……）全部替换；`battle_note` 走同一句（185 的 buff 窗里显示的就是它）。
+- 其他神的句子这次不动；按同一口气改写另开补充（自然 / 日神 / 大地各 4～5 句）。
+
+### A.4 献祭做成图标，「占 9 格以上」→「大型道具」
+
+- 献祭段改成**一行图标**：每条规矩一枚 24 px 图标 + 下方 12 号名字，横排、间距 14 px；倍率不写（作者 10-17：不写公式；神坛拖上去就看到实际点数）。
+- 图标来源：标签 → `assets/ui/tags/<tag>.png`（和徽记 `assets/ui/faith/<id>.png` 同一做法，`UiTheme.art_cached`）；多标签一条规矩（狩猎「血肉 / 骨制品」）画两枚挨着；体积条件 → `assets/ui/offerings/large.png`（大型道具）/ `medium.png`（中型道具，日神）；属性条件 → `assets/ui/offerings/crit.png`（技巧「带暴击属性」）。图没到位时退回文字（现状那行），不画白块。
+- 文字层：`OfferingRule.describe()` 的 `min_cells` 分支改成「大型道具」（≥ 9 格 = 大及以上，作者定这个词），`exact_grade` 分支「中型道具」这类（`ItemVolume.grade_name(g) + "型道具"`）；神坛屏等别处凡是「X 体积及以上」的字一起换（grep `体积及以上`）。
+- **交美术**（一并转「美术设计」）：标签图标 14 枚 —— 骨制品、血肉、武器、战利品、皮革、自然、食物、装备、防具、盾、金属、工艺、火、宝石；条件图标 3 枚 —— 大型道具、中型道具、暴击属性。24 px 显示、按 48 px 画；风格跟徽记。
+
+### A.5 改动清单（给执行）
+
+- `ui/inventory/hover_tip.gd`：`FaithBar` 分段（A.1）；`show_faith` 第一段用 `[table=2]`（A.2），献祭段用 `[img=24]`（A.4）。
+- `core/run/faith/faith_tooltip.gd`：按 tier 分组合并、`dim`、`summary_for(def)`、锁住级的 X 按阈值算、献祭段图标 / 文字回退。
+- `core/run/faith/faith_perk.gd`：`summary_for(def)`、`scaled(...)`、`prebattle_actions(run, type)`、`prebattle_apply(run, option)`。
+- `core/run/faith/perks/`：`altar_bless`（赐福标签名）、`low_hp_empower`（门槛 + X）、`altar_sacrifice_hp`（二选一 + 增伤 / 急速）、`smite`（两种代价、非首领）、`undying`（X 秒）。`core/battle/effects/low_hp_empower.gd` 门槛式；`estimated_value` 跟着改（低血时间占比 × percent）。
+- `ui/game/prebattle_screen.gd:78-85`、`core/run/game_flow.gd:889` `smite(option)`；`ui/game/altar_screen.gd` 选项按钮文字用 `altar_option_label(option)`（新钩子，默认回 `String(option)`）。
+- `core/run/faith/offering_rule.gd` 的「大型道具」措辞；`ItemVolume` 加 `size_label(g)`。
+- **数据**：`docs/gods.xlsx` 等级效果页先改（蛮神 1 级参数 `hp_percent/base_percent/step/per/max_percent`、2 级 `faith_gain/damage_percent/haste_percent`、3 级 `types: [battle, elite]` `faith_cost`、4 级 `base_sec/step/per_sec/max_sec`），再 `tools/gods_xlsx_to_json.gd` → `tools/import_content.gd`，否则 `check_content` 红；`gods.md` 镜像重生成。存档：`rituals` 键沿用，`bash tools/snapshot_content.sh`。
+- 字体：新字（「击败」「持续」「首领」「能力」「换取」「型」等）按 168 重裁。
+- 测试：
+  1. `FaithBar` 四段宽度比 30:70:100:200（容差 1 px），45 点时第一段满、第二段 15/70；满阶全满且仍挂着。
+  2. 蛮神 45 点：第一段只有 4 行（Lv.1～Lv.4 各一行），Lv.1 行同时含「赐福武器」「30%」「10%」，Lv.2～4 行在 `[color=@dim]` 里；Lv.4 行写「10 秒」（按 400 算）不是「2 秒」。
+  3. 400 点时 Lv.1 行「50%」；花 40 信力赐福后降到 360 → 「45%」（⌊360/50⌋×5+10 = 45）。
+  4. `LowHpEmpower`：生命 29% 时伤害 ×1.10（45 点），31% 时不加。
+  5. 神坛二级：选「信力」+20 点；选「能力」后编译出的单位每件道具 `damage` MULT +5、`haste` MULT +5；再做一次 +10。
+  6. 战前准备屏在普通战斗点也有两个按钮；信力 29 时信力按钮灰且 `why` 非空；体力 1 时体力按钮灰（现在就是 `<= cost` 不许）。
+  7. 献祭段：有图时含 `[img=24]res://assets/ui/tags/bone.png`，无图时含「骨制品」；文字里没有「9 格」「体积及以上」，有「大型道具」。
+  8. `check_content` 过（表与 JSON 一致）。
+
+### A.6 待定（默认按推荐）
+
+1. **二级「能力」是一个 buff 还是增伤 / 加速二选一** —— 推荐 **甲**：一个 buff，增伤 +5% 和急速 +5% 一起给（作者原话「全局增伤/加速buff」）。乙：选项变三个（信力 / 增伤 / 加速），各 +10%。
+2. **X 的台阶** —— 推荐 **甲**：每 50 信力一阶（表里 `step` 可调）。乙：连续线性（每点 +0.1%），数字会很零碎。
+3. **献祭段写不写倍率** —— 推荐 **甲**：不写（作者 10-17）。乙：图标右下角小字「×5」。
+4. **三级信力代价** —— 推荐 **甲**：30 信力（和一级赐福的 40 一个量级，普通战斗点也能用）。乙：50。
+
+## 补充一 落地（2026-10-18，架构方案执行）
+
+待定 1–4 都按推荐：「能力」是一个 buff（造成伤害 +5%、急速 +5% 一起给）；X 每 50 信力一阶；献祭段不写倍率；三级信力代价 30。
+
+- **进度条**：`HoverTip.FaithBar` 按 `describe_full()["bar"]`（`thresholds` 与 `points`）画，一段一级，段长与这一级要的信力成正比（段间 1 px，太短的段至少 12 px、多出来的从长段按比例扣）；满阶也挂着、全满。`progress` 键去掉了。
+- **一级一行、没到的灰**：`FaithTooltip._perk_section` 按级分组、同级用「；」连，排成两列表（左 Lv、右句子，折行对齐在句子下面）。到了的级亮字 + 数值色；没到的整行 `@dim`，句子里随信力的数按 max(现在的信力, 那一级的阈值) 写（45 信力时 Lv.4 写「10 秒」）。
+- **句子**：新钩子 `FaithPerk.summary_for(def, points)`，各效果自己拼；`FaithPerk.scaled(points, base, step, per, cap)` 算随信力的数，`points_now(run)` 取当前信力。蛮神五句：
+  1. 「可以在祭坛赐福武器」（赐福的标签名从信仰定义的 `blessings` 来）；
+  2. 「生命值低于 30% 时，造成伤害提高 X%」，X = 10 + 信力 / 50 取整 × 5，最多 50。战斗效果 `LowHpEmpower` 改成门槛式（低于 `hp_percent` 才加 `percent`），开战时的信力定一场；
+  3. 「可以在祭坛献祭生命上限换取能力」：神坛下拉两项「→ +20 信力」/「→ 这局造成伤害 +5%、急速 +5%」（新钩子 `altar_option_label`），每次 −5 生命上限。不再加耐力上限；旧存档的 `sacrifice_hp` 次数按「能力」算，当时给过的耐力上限留着不动；
+  4. 「可消耗 1 体力或 30 信力立即击败非首领敌人」：战前准备屏两个按钮（`prebattle_actions(run, type)` → `[{option, label, why}]`，`prebattle_apply(run, option)`），普通与精英点都有，首领没有；不够的灰着、停上去写原因。旧的 `prebattle_label` 去掉了；
+  5. 「在战斗中，首次生命值归零时会持续战斗 X 秒」，X = 2 + 信力 / 50 取整 × 1，最多 20。
+- **献祭**：`OfferingRule.short_name()`（标签名 / 「大型道具」/「带有X属性」）；「占 9 格以上」「体积及以上」都换成 `ItemVolume.size_label`（「X型道具」）。每条规矩的图标都在（`res://assets/ui/tags/<tag>.png`、`res://assets/ui/offerings/large.png` 等）时排成一行 `[img=24]` + 小字名字；有一枚缺图就整段退回文字。图标是美术设计线程画的 17 枚（标签 14 枚圆章 + 大型 / 中型 / 暴击 3 枚圆角方章，48×48、显示 24），放进 `assets/ui/tags/` 与 `assets/ui/offerings/`，七位神的献祭规矩全有图。
+- **数据**：`docs/gods.xlsx` 等级效果页蛮神五行（参数与说明）→ `tools/gods_xlsx_to_json.gd` → 导入；`docs/gods.md` 蛮神表同步。序章三两段神坛教程、帮助页「蛮神」「特殊操作」、序章三撤离那句里的旧说法一起改了。
+- **数值上要知道的**：花信力会掉级。三级要 200 信力，所以屏上「信力不够」那一档实际碰不到；在 200～229 信力时用信力立即击败会掉回二级。
+- **测试**：新增 `tests/run/test_brute_188b.gd`（四段 + 句子 + 门槛 + 二选一 + 两个按钮 + 「大型道具」）；`test_faith_tip_188` 改成分段条（30:70:100:200、45 点第二段 15/70、满阶全满）；`test_altar` / `test_author_093` 跟着新机制；编译金样有意重录蛮神那份（undying 20 秒、耐力上限少 20、造成伤害 +10%）。

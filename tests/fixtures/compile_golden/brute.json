@@ -2,7 +2,7 @@
 	"faith": "brute",
 	"tier": 4,
 	"max_hp": 900000,
-	"undying_sec": 10.0,
+	"undying_sec": 20.0,
 	"axes": {},
 	"baseline": {
 		"regen_stamina": {
@@ -12,8 +12,8 @@
 			"percent": 0
 		},
 		"max_stamina": {
-			"total": 700000,
-			"base": 700000,
+			"total": 500000,
+			"base": 500000,
 			"flat": 0,
 			"percent": 0
 		},
@@ -43,10 +43,10 @@
 					"percent": 1000
 				},
 				"damage": {
-					"total": 80000,
+					"total": 88000,
 					"base": 80000,
 					"flat": 0,
-					"percent": 0
+					"percent": 1000
 				}
 			},
 			"rules": [
@@ -78,6 +78,12 @@
 					"base": 10000,
 					"flat": 0,
 					"percent": 1000
+				},
+				"damage": {
+					"total": 0,
+					"base": 0,
+					"flat": 0,
+					"percent": 1000
 				}
 			},
 			"rules": []
@@ -89,6 +95,12 @@
 				"haste": {
 					"total": 11000,
 					"base": 10000,
+					"flat": 0,
+					"percent": 1000
+				},
+				"damage": {
+					"total": 0,
+					"base": 0,
 					"flat": 0,
 					"percent": 1000
 				}
