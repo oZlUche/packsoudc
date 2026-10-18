@@ -6,7 +6,7 @@ const CountdownWidget := preload("res://ui/hud/widgets/countdown_widget.gd")
 
 
 static func run_rest_labels(t: TestCase) -> void:
-	t.begin("193 §2 · 休息点：歇一会儿写「回 N 点」、扎营写「倒计时 −2，回 N+1 点」；扎营真的回 N+1 点")
+	t.begin("193 §2 · 休息点：篝火写「回 N 点」、帐篷写「倒计时 −2，回 N+1 点」（196 起只写效果）；扎营真的回 N+1 点")
 	var c := EC._content()
 	var rest: EventDef = c.events.get(&"rest_default", null)
 	t.not_null(rest, "有默认休息事件")
@@ -24,13 +24,13 @@ static func run_rest_labels(t: TestCase) -> void:
 	var labels: Array[String] = []
 	for opt in rest.options:
 		labels.append(TextTemplate.plain((opt as EventOption).label_for(), TextTemplate.option_context(ctx, opt)))
-	t.check(labels.has("歇一会儿（回 %d 点体力）" % restore), "歇一会儿（%s）" % str(labels))
-	t.check(labels.has("扎营（倒计时 −2，回 %d 点体力）" % (restore + 1)), "扎营写总数")
+	t.check(labels.has("回 %d 点体力" % restore), "篝火（%s）" % str(labels))
+	t.check(labels.has("倒计时 −2，回 %d 点体力" % (restore + 1)), "帐篷写总数")
 	t.check(not labels.any(func(l): return l.contains("多回")), "不再写「多回」")
 	s.vitality.spend(s.vitality.current - 1, &"test")
 	var vit := s.vitality.current
 	s.step_to(n)
-	var camp := labels.find("扎营（倒计时 −2，回 %d 点体力）" % (restore + 1))
+	var camp := labels.find("倒计时 −2，回 %d 点体力" % (restore + 1))
 	s.events.choose(camp)
 	t.eq(s.vitality.current, mini(vit + restore + 1, s.vitality.maximum), "扎营真的回 %d 点" % (restore + 1))
 
@@ -60,7 +60,7 @@ static func frame_countdown_words(t: TestCase, root: Window) -> void:
 	var camp := ""
 	for opt in rest.options:
 		var l := TextTemplate.plain((opt as EventOption).label_for(), TextTemplate.option_context(ctx, opt))
-		if l.begins_with("扎营"):
+		if l.begins_with(Glossary.COUNTDOWN_WORD):
 			camp = l
 	t.check(camp.contains(Glossary.COUNTDOWN_WORD) and not camp.contains("步"), "扎营：%s" % camp)
 	t.check(not EventCostIcons.describe(["time"] as Array[String]).contains("步"), "代价提示：%s" % EventCostIcons.describe(["time"] as Array[String]))

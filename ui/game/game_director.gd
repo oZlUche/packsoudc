@@ -17,8 +17,7 @@ const SCREEN_SCRIPTS := {
 	GameFlow.Screen.LOOT: "res://ui/game/container_screen.gd",
 	GameFlow.Screen.SEARCH: "res://ui/game/container_screen.gd",
 	GameFlow.Screen.SHOP: "res://ui/game/shop_screen.gd",
-	GameFlow.Screen.EVENT: "res://ui/game/event_screen.gd",
-	GameFlow.Screen.REST: "res://ui/game/rest_screen.gd",
+	GameFlow.Screen.EVENT: "res://ui/game/event_screen.gd",     # 196：营地事件换 [constant CAMP_SCRIPT]（[method script_for]）
 	GameFlow.Screen.RESULT: "res://ui/game/result_screen.gd",
 	GameFlow.Screen.META: "res://ui/game/meta_screen.gd",
 	GameFlow.Screen.SETTINGS: "res://ui/game/settings_screen.gd",
@@ -30,6 +29,8 @@ const SCREEN_SCRIPTS := {
 	GameFlow.Screen.CHEST: "res://ui/game/chest_screen.gd",     # 154：宝箱（叠层；不画地上 —— 开锁时只看箱子）
 	GameFlow.Screen.FORGE: "res://ui/game/forge_screen.gd",     # 175：铸炉（叠层）
 }
+## 196：`scene = rest_camp` 的事件（休息点）演成夜晚营地
+const CAMP_SCRIPT := "res://ui/game/rest_camp_screen.gd"
 const LAUNCHER := "res://ui/launcher.tscn"
 ## 157：换屏淡入 —— 叠层、底屏各多久（设置里 [member GameSettings.ui_fades] 能关）
 const OVERLAY_FADE := 0.15
@@ -189,7 +190,7 @@ func _switch_screen(screen: int, payload: Dictionary) -> void:
 			_overlay.process_mode = Node.PROCESS_MODE_INHERIT
 			return
 		_drop_minimized()
-		_overlay = _make(screen)
+		_overlay = _make(screen, payload)
 		_overlay.z_index = OVERLAY_Z
 		add_child(_overlay)
 		_overlay.open(payload)
@@ -211,7 +212,7 @@ func _switch_screen(screen: int, payload: Dictionary) -> void:
 	if _base != null:
 		_base.queue_free()
 		_base = null
-	_base = _make(screen)
+	_base = _make(screen, payload)
 	add_child(_base)
 	_base.open(payload)
 	if not payload.has("reveal"):
@@ -280,8 +281,17 @@ func escape() -> bool:
 	return _base != null and _base.escape()
 
 
-func _make(screen: int) -> GameScreen:
-	var script := load(String(SCREEN_SCRIPTS[screen])) as GDScript
+## 196：这一屏用哪个脚本 —— 事件屏看事件的 [member EventDef.scene]（营地歇完、两份用完的那一屏载荷带 `camp`）
+static func script_for(screen: int, payload: Dictionary = {}) -> String:
+	if screen == GameFlow.Screen.EVENT:
+		var def = payload.get("def", payload.get("camp", null))
+		if def is EventDef and (def as EventDef).scene == EventDef.SCENE_REST_CAMP:
+			return CAMP_SCRIPT
+	return String(SCREEN_SCRIPTS[screen])
+
+
+func _make(screen: int, payload: Dictionary = {}) -> GameScreen:
+	var script := load(script_for(screen, payload)) as GDScript
 	var s: GameScreen = script.new()
 	s.screen = screen
 	s.flow = flow

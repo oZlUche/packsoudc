@@ -4,7 +4,7 @@
   "text": "一座碎骨堆成的神坛。神坛上两件事{b}二选一{/b}：献祭（把东西毁了换信力），或者特殊操作（阶到了才有）。做了哪一件，这座神坛就关了。\n\n现在先献祭：把{item:bone_dice}和{item:bone_charm_bits}拖上祭品台，看信力过 {faith_threshold:brute:1}，升到第一阶 —— 生命值低于 {faith_perk:brute:low_hp_empower:hp_percent}% 时，造成伤害提高（信力越多提高越多，最多 {faith_perk:brute:low_hp_empower:max_percent}%）。{item:tibia_violence}也能献（它是骨头又是武器，倍数叠在一起），但留着打可能更划算，你自己定。\n\n歇脚和神坛各算一次。",
   "options": [
     {
-      "label": "神坛（献祭或特殊操作，二选一）",
+      "label": "献祭或特殊操作，二选一",
       "hide_when_locked": true,
       "requires": [
         {
@@ -22,7 +22,7 @@
       ]
     },
     {
-      "label": "歇一会儿",
+      "label": "回 {rest_restore} 点体力",
       "hide_when_locked": true,
       "requires": [
         {
@@ -36,7 +36,29 @@
       ]
     },
     {
-      "label": "继续赶路（不算用掉）"
+      "label": "倒计时 −{pass_time_actions}，回 {rest_total} 点体力",
+      "hide_when_locked": true,
+      "requires": [
+        {
+          "type": "rest_part_unused"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "pass_time",
+          "actions": 2
+        },
+        {
+          "type": "proceed"
+        },
+        {
+          "type": "restore_vitality"
+        }
+      ]
+    },
+    {
+      "label": "不算用掉"
     }
-  ]
+  ],
+  "scene": "rest_camp"
 }

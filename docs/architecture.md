@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.37 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.38 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1826,7 +1826,7 @@ func resolve(run_seed: int) -> MapGraph      # 失败返回 null，原因在 las
 | `random` | `?` | 随机：进入时在 A / S / R / V / Q 里按概率挑一种。**不会**变成精英或 BOSS | 普通 |
 | `search` | `V` | 搜索点：可以搜索至多 N 次找战利品，每搜一次遭遇敌人的概率上升；随时可以离开。第三种选项占位 | 普通 |
 | `shop` | `S` | 商店 | **必须型** |
-| `rest` | `R` | 休息区。175 补充二（作者定）：里面有一座**铸炉** —— 194 起是休息点事件的「铸炉」选项（排在神坛后、继续赶路前；后果 `open_forge` → `NodeEvents.forge_opened` → `Screen.FORGE`，条件 `forge_unused` 铸过就藏，不算用掉休息那一份；`GameFlow.open_forge` 留给测试 / 调试台）开铸炉屏（三件道具放进【时机】【效果】【数值】三槽，各按材质 / 用途 / 稀有度查 `data/authoring/forge/<槽>.json`（`ForgeTable`），熔铸成一枚 1×1 的铸牌 `forge_token`：标签 `token`，不进 `ItemDatabase.ids()`、不进图鉴，能带出、存仓库，价值固定 3；铸牌压到武器上放手 = 附魔，后来者覆盖）。每座铸一次就熄（`content.used_forge`），不影响休息点灰不灰；没铸过站在上面「重新打开」：休息点还没用完先回事件（选项里有铸炉），用完了直接是铸炉屏。铸炉屏每槽下面三行小字（`Forge.slot_summary(slot, def)`：时机「什么时候 / 方向 / 多久一次」、效果「做什么 / 攻守 / 阶」、数值「档 / 材质 × 用途 / 合计」），放进一件立刻写；两槽满时灰字按空槽的 default 行试算一枚（`Forge.forge(…, preview = true)`）。老存档里的独立铸炉点按休息点读（`IdAliases.NODE_TYPES`，`SaveReconcile.node_types`） | **必须型** |
+| `rest` | `R` | 休息区（196 起整屏是夜晚营地：`rest_default` 的 `scene: rest_camp`，选项画成篝火 / 帐篷 / 祭坛 / 铁炉 / 路标，歇完不跳屏、从神坛 / 铸炉回来还是营地）。175 补充二（作者定）：里面有一座**铸炉** —— 194 起是休息点事件的「铸炉」选项（排在神坛后、继续赶路前；后果 `open_forge` → `NodeEvents.forge_opened` → `Screen.FORGE`，条件 `forge_unused` 铸过就藏，不算用掉休息那一份；`GameFlow.open_forge` 留给测试 / 调试台）开铸炉屏（三件道具放进【时机】【效果】【数值】三槽，各按材质 / 用途 / 稀有度查 `data/authoring/forge/<槽>.json`（`ForgeTable`），熔铸成一枚 1×1 的铸牌 `forge_token`：标签 `token`，不进 `ItemDatabase.ids()`、不进图鉴，能带出、存仓库，价值固定 3；铸牌压到武器上放手 = 附魔，后来者覆盖）。每座铸一次就熄（`content.used_forge`），不影响休息点灰不灰；没铸过站在上面「重新打开」：休息点还没用完先回事件（选项里有铸炉），用完了直接是铸炉屏。铸炉屏每槽下面三行小字（`Forge.slot_summary(slot, def)`：时机「什么时候 / 方向 / 多久一次」、效果「做什么 / 攻守 / 阶」、数值「档 / 材质 × 用途 / 合计」），放进一件立刻写；两槽满时灰字按空槽的 default 行试算一枚（`Forge.forge(…, preview = true)`）。老存档里的独立铸炉点按休息点读（`IdAliases.NODE_TYPES`，`SaveReconcile.node_types`） | **必须型** |
 | `extract` | `X`（暂定） | 中途撤离点 | 覆盖型，见下。符号是解析器先占的位，等作者在表里定 |
 | `chest` | `C` | 宝箱（154）：生成时定好稀有度与皮肤（`content.chest`，`ChestPlacer`）；踩上去是开锁画面，长按开锁、开了搜一次（不遭遇、能出珍宝、每件不低于下限）。没开锁走开不算用过 | 普通（随机点也能揭出） |
 | `junction` | — | 岔路口：路上的一个拐点，没有事件 | 手绘地图才有，见 5.4.1 |
@@ -4300,6 +4300,7 @@ res://
 | v3.30 | 2026-10-17 | **188 背包面板去字、信仰窗重排**（作者 2026-10-17，待定 1–3 按推荐）：背包面板不再写操作提示、地上说明、参战 / 可用格读数、信仰行与棋盘上方说明，回话走 `hint_sink`（地图屏 = 提示行）；`FaithTooltip.describe_full` → 名字行（Lv、休眠件数）+ 信力行 + 各阶效果 / 信力来源 / 献祭，颜色全走模板；`HoverTip.show_faith` 名字行下挂到下一阶的进度条、各段虚线分隔、宽 360 |
 | v3.31 | 2026-10-18 | **188 补充一 信仰窗分段、蛮神改写**（作者 2026-10-18，待定 1–4 按推荐）：`HoverTip.FaithBar` 一段一级、长度按所需信力（满阶也挂）；`FaithTooltip` 同一级的效果合成一行（`[table=2]`），没到的级整行 `@dim`，句子按 `FaithPerk.summary_for(def, points)` 写、锁住的级按那一级的阈值算；`FaithPerk.scaled` 给「随信力」的数（每 50 信力一阶、封顶）；蛮神一级门槛式增伤、二级献祭生命上限二选一（信力 / 全体造成伤害 + 急速）、三级 `prebattle_actions` 两个按钮（耗体力 / 耗信力、非首领）、四级持续战斗秒数随信力；献祭规矩 `OfferingRule.short_name`、`ItemVolume.size_label`（「大型道具」），有图标时排一行 `[img]`（`assets/ui/tags/<tag>.png`、`assets/ui/offerings/{large,medium,crit}.png`），缺一枚就退回文字 |
 | v3.32 | 2026-10-18 | **189 / 190 顶端栏长槽与日晷倒计时**（作者 2026-10-18 定案，待定 1–3 按推荐）：`hud_bar` 在板上画一条贯通的浅槽（`hud/groove` 九宫格、`band` 定槽身），宿主排完把铜点交给栏画（同行相邻两件之间、右槽图标组左边，空着的件两边不放）；`HudWidget.set_in_bar` 让栏里的件坐在槽底上（`PANEL_BARE`、浅底墨字），拖出栏回 `PANEL_HUD`；栏里同行间距 24、组在槽身里居中；倒计时改成刻在槽底的半圆日规（`hud/dial/*`：染色扇面 / 表盘 / 绕轴心转的影子 / 轴心，三阶 calm·half·low），栏上不写数字，停上去 `show_status` 弹「倒计时」窗、走一步 `update_status` 换字；缺图退回文字版 |
+| v3.38 | 2026-10-18 | **196 休息点整屏换成夜晚营地**（作者在 UI替换美术定稿「甲」，待定按推荐）：`EventDef.scene`（空 / `rest_camp`，导入器校验，事件编辑器有下拉）；`GameDirector.script_for` 按它开 `ui/game/rest_camp_screen.gd`；选项按后果画成造物（`RestCampScreen.piece_of`），锁住换图不藏，悬停铜圈 + 悬浮窗，造物按图的 alpha 接鼠标；营地里歇完不跳屏（`GameFlow.camp_rest`，营地重开冒一行体力、两份用完留一屏只剩路标）；从神坛 / 铸炉回来回营地；`rest_screen.gd` 删除；素材在 `assets/ui/rest/` |
 | v3.37 | 2026-10-18 | **193 补充二 / 三 悬浮窗标签图标、格位图标 40**（作者 21:37）：道具悬浮窗副行的标签另起一行画 32 px 图标（`ItemTooltip.tag_icons`），每枚链到 `tag:<id>` 词条（`tag_icon_terms`），钉住后停上去开子窗写名字，只写名字的子窗按名字收窄；没图的标签照写字；格位图标换 v3、`InventoryView.marker_side` = 40（格小了按 0.67 缩），拖拽残影同尺寸 |
 | v3.36 | 2026-10-18 | **195 铸炉三表重做与材质标签**（架构线程方案，作者「按推荐来」，§3 十六件候选全做）：道具每件一个材质标签，新标签 `cloth` 织物 / `herb` 草药 / `clay` 陶瓷（图标进 `assets/ui/tags/`）；十六件新材料 / 吃食 / 摆件；三张铸炉表按十种材质逐行重写；`ForgeEntry` 加 `cadence_mult`、`guard_*`、`stance`、`main_mult`；`Forge.rule_of` 攻守两式、升阶附带追加；导入器稀有度 0–5、攻守都要写、`stance` 只许 attack / guard；落地差异见报告 §9 |
 | v3.35 | 2026-10-18 | **194 铸炉入口与逐槽显示**（架构线程方案 §1 §2；§3 映射表重复度清单待作者过目，§4 铸炉屏换美术记进待办）：后果 `OpenForge`（`ctx.open_forge`）、条件 `ForgeUnused`，`NodeEvents.forge_opened` → `GameFlow` 推 `Screen.FORGE`；`rest_default` 加「铸炉（三件道具熔成一枚铸牌）」；休息屏删掉铸炉一栏；`Forge._timing_rule`（`rule_of` 与逐槽显示共用）、`Forge.slot_summary`、`Forge.forge` 的 `preview` 参数（空槽落 default 行，稀有度 -1 落 default）；铸炉屏 `summary_text / guess / guess_text` |
