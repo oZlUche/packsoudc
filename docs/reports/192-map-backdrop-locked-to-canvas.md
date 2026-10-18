@@ -105,3 +105,17 @@ draw_texture_rect(_skin_tex, 屏上)
 1. **纸影** —— 推荐 **甲**：代码画一块偏 (8, 10)、35% 黑的矩形（随缩放）。乙：美术出带软边的投影九宫格。
 2. **`safe_area` 默认值** —— 推荐 **甲**：按 gen.py 的 80% × 72%。乙：等美术量完再填。
 3. **放大上限** —— 推荐 **甲**：2.5 不动，等两倍图。乙：两倍图到之前压到 1.5。
+
+## 9. 落地（2026-10-18，架构方案执行）
+
+待定 1–3 按推荐（纸影代码画、`safe_area` 默认 80% × 72%、放大上限 2.5 不动）。照方案做，几处补充：
+
+- `MapSkin.logical_size` / `safe_rect` / `paper_rect`；四张底图的 json 填了默认的 `[192, 168, 1536, 864]`（美术量完各自改）。`stretch` 字段留着不读。
+- `MapView`：`_paper` 在 `skin` / `graph` 的 setter 里算（`_sync_paper`，先于 `fit()`）；`_draw` 按 §4.1 —— 桌面（`map/desk` 平铺，没图 `UiPalette.bg()`）→ 纸影 → 底图 → 装饰层，后三样在画布变换里。还没有图（画布未定）时退回原来的铺满裁边。
+- `zoom_min()`、`paper()`、`paper_on_screen()`、`_clamp_pan()`。夹拖动的地方：中键拖动、`zoom_at`、`_pan_to`（不带动画直接夹；带动画在 tween 结束时夹）、`frame_spawns` 之后。**补了一处方案没写的**：`_on_resized` 里窗口变大后若缩放低于新的下限，抬到下限并居中，再夹一次（不然放大窗口时纸会小于安全区）。
+- 入局转场照旧直接写 `zoom` / `pan`，不经过下限（转场起点 zoom0 可以比下限小，第一帧和预览重合才是要的）。
+- `MapPreview.paper_on_screen()`：§5 的矩形；还没有圈距时退回整页 cover。`RingLayoutBase.canvas_side(levels)`。
+- 测试 `tests/ui/test_map_backdrop_192.gd`（§7 的 1–7，33 项）；截图 `/mnt/project-files/screenshots/192/`（`0_preview` 第三页、`1_fit` 看全图、`2_open` 进图、`3_zoom2` 放大 2.0、`4_drag_corner` 拖到头）。
+- 美术（§6）同一个 PR 里换上：四张底图 3840 × 2400（json `size` 仍 1920 × 1200、`safe_area` 美术写好、`stretch` 去掉），桌面 `assets/ui/map/desk.png`（512 平铺深色木桌）。截图 `4_drag_corner` 是拖到头时露出的桌面。
+
+看到的一点（没改，按 166 现状）：左下图例算进了安全区的下边距，1600 × 1000 时安全区只有上半屏高，所以「看全图」时纸摆在上半屏、下面露一大片桌面。
