@@ -401,12 +401,16 @@ func _draw() -> void:
 	if radius_frac <= 0.0:
 		return
 	if _skin_tex != null:
-		# 按整个窗口铺（和局内地图同一种铺法），本地坐标里窗口左上是 -global_position
+		# 192：和局内同一张纸、同一大小（纸按画布摆，画布按入局转场的 zoom0 缩到这一页）
 		# 182：微放大时底图一起放大（直接算放大后的矩形，不用 draw_set_transform：墨化着色器读的是没变换的顶点）
-		var vp := get_viewport_rect().size
-		var area := Rect2(-get_global_rect().position, vp)
-		var shown := Rect2(to_view(area.position), area.size * view_zoom)
-		draw_texture_rect_region(_skin_tex, shown, MapSkin.cover_region(_skin_tex.get_size(), vp))
+		var shown := paper_on_screen()
+		if shown.has_area():
+			draw_texture_rect(_skin_tex, shown, false)
+		else:
+			# 还没有圈距：按整个窗口铺，本地坐标里窗口左上是 -global_position
+			var vp := get_viewport_rect().size
+			var area := Rect2(-get_global_rect().position, vp)
+			draw_texture_rect_region(_skin_tex, Rect2(to_view(area.position), area.size * view_zoom), MapSkin.cover_region(_skin_tex.get_size(), vp))
 	var gap := ring_gap()
 	if gap <= 0.0:
 		return
@@ -415,6 +419,20 @@ func _draw() -> void:
 	var at := to_view(center())
 	for lv in range(1, levels + 1):
 		_dashed_circle(at, gap * float(lv) * view_zoom, ink, width)
+
+
+## 192：纸在这一页上的矩形（本地像素，含 182 的微放大）。和局内 [MapView] 在入局 zoom0 = 圈距 / RING_STEP 时一样大、一样摆；
+## 没底图或还没有圈距是空矩形
+func paper_on_screen() -> Rect2:
+	var gap := ring_gap()
+	if _skin_tex == null or gap <= 0.0:
+		return Rect2()
+	var canvas := Rect2(Vector2.ZERO, Vector2.ONE * RingLayoutBase.canvas_side(levels))
+	var paper := MapSkin.paper_rect(skin, canvas)
+	if not paper.has_area():
+		return Rect2()
+	var zoom_p := gap / RingLayoutBase.RING_STEP
+	return Rect2(to_view(center() + (paper.position - canvas.get_center()) * zoom_p), paper.size * zoom_p * view_zoom)
 
 
 func _dashed_circle(at: Vector2, r: float, color: Color, width: float) -> void:

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.32 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.33 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3615,8 +3615,8 @@ func player_spec() -> CombatantSpec …
 （`ui/widgets/`）—— 框永远在（`portrait_frame.png` 画在位子外扩 json `inset` 处，不占排版；没图画细线），有肖像填图、没有放 `portrait_empty.png` 剪影（再没有就自己画）。
 **回放**（157 补充一）：正式游戏的 `BattleView` 不建逐条文字播报（`show_ticker` 默认假，回放浏览器与战斗沙盒设真），空出来的高度给棋盘；`BOARD_SCALE` 0.5 → 1.0。
 
-**地图底图**（作者定：每章一张手绘地图，风格各不同）：`ChapterDef.map_skin`（默认 `ruins`）→ `assets/maps/<id>.png` + json（`tone`）。`MapView.skin` 设了就铺满（`MapSkin.cover_region`：
-等比盖满、裁两边）画在路网底下；浅纸上前景 / 暗色字取字色模板的浅版（`UiPalette.for_tone`，169）。现配：序章一遗迹、序章二北方林地、序章三诅咒之地深处（深）、自由模式帝国营地。
+**地图底图**（作者定：每章一张手绘地图，风格各不同）：`ChapterDef.map_skin`（默认 `ruins`）→ `assets/maps/<id>.png` + json（`tone`）。`MapView.skin` 设了就钉在画布上（192：json `safe_area` = 美术留给路网的淡色椭圆的外接矩形，`MapSkin.paper_rect` 把它等比放大到盖住画布、中心对齐，
+底图 / 装饰层 / 纸影和路网同一个变换一起缩放平移；画布外平铺桌面 `map/desk`，没图用底色；缩放下限 `zoom_min()` = 整张纸刚好装进安全区，拖动时纸边不越过安全区中心线；开局第三页预览按入局 zoom0 画同一张纸）画在路网底下；浅纸上前景 / 暗色字取字色模板的浅版（`UiPalette.for_tone`，169）。现配：序章一遗迹、序章二北方林地、序章三诅咒之地深处（深）、自由模式帝国营地。
 
 光标：`UiCursor.apply(skin)` 启动时（和设置里换材质时）按 `GameSettings.cursor_skin` 从 `cursors/<材质>/` 取图换上（铠甲手套秘银 / 铁 / 皮革，默认秘银，热点 (2, 2)）；拖拽层拿起是「拖动」、对准了按 `DragLayer.drop_ok_at` 切「可放 / 不可放」、放下还原。
 
@@ -4298,6 +4298,7 @@ res://
 | v3.30 | 2026-10-17 | **188 背包面板去字、信仰窗重排**（作者 2026-10-17，待定 1–3 按推荐）：背包面板不再写操作提示、地上说明、参战 / 可用格读数、信仰行与棋盘上方说明，回话走 `hint_sink`（地图屏 = 提示行）；`FaithTooltip.describe_full` → 名字行（Lv、休眠件数）+ 信力行 + 各阶效果 / 信力来源 / 献祭，颜色全走模板；`HoverTip.show_faith` 名字行下挂到下一阶的进度条、各段虚线分隔、宽 360 |
 | v3.31 | 2026-10-18 | **188 补充一 信仰窗分段、蛮神改写**（作者 2026-10-18，待定 1–4 按推荐）：`HoverTip.FaithBar` 一段一级、长度按所需信力（满阶也挂）；`FaithTooltip` 同一级的效果合成一行（`[table=2]`），没到的级整行 `@dim`，句子按 `FaithPerk.summary_for(def, points)` 写、锁住的级按那一级的阈值算；`FaithPerk.scaled` 给「随信力」的数（每 50 信力一阶、封顶）；蛮神一级门槛式增伤、二级献祭生命上限二选一（信力 / 全体造成伤害 + 急速）、三级 `prebattle_actions` 两个按钮（耗体力 / 耗信力、非首领）、四级持续战斗秒数随信力；献祭规矩 `OfferingRule.short_name`、`ItemVolume.size_label`（「大型道具」），有图标时排一行 `[img]`（`assets/ui/tags/<tag>.png`、`assets/ui/offerings/{large,medium,crit}.png`），缺一枚就退回文字 |
 | v3.32 | 2026-10-18 | **189 / 190 顶端栏长槽与日晷倒计时**（作者 2026-10-18 定案，待定 1–3 按推荐）：`hud_bar` 在板上画一条贯通的浅槽（`hud/groove` 九宫格、`band` 定槽身），宿主排完把铜点交给栏画（同行相邻两件之间、右槽图标组左边，空着的件两边不放）；`HudWidget.set_in_bar` 让栏里的件坐在槽底上（`PANEL_BARE`、浅底墨字），拖出栏回 `PANEL_HUD`；栏里同行间距 24、组在槽身里居中；倒计时改成刻在槽底的半圆日规（`hud/dial/*`：染色扇面 / 表盘 / 绕轴心转的影子 / 轴心，三阶 calm·half·low），栏上不写数字，停上去 `show_status` 弹「倒计时」窗、走一步 `update_status` 换字；缺图退回文字版 |
+| v3.33 | 2026-10-18 | **192 地图底图钉在画布上**（191 甲，作者 2026-10-18「实施」，待定 1–3 按推荐）：`MapSkin.logical_size` / `safe_rect` / `paper_rect`，地图 json 的 `safe_area` 改四个数；`MapView` 的 `_paper` 随底图 / 图更新，`_draw` 先桌面再在画布变换里画纸影、底图、装饰层；`zoom_min()`（有底图 = 纸装进安全区）用于 `fit` / `zoom_at` / `open_at` / `frame_spawns`，`_clamp_pan()` 在拖动、滚轮、跟镜头结束、开局摆视角、改窗口后夹；`MapPreview.paper_on_screen()` 与入局第一帧同一张纸；`RingLayoutBase.canvas_side(levels)` |
 | v3.29 | 2026-10-17 | **187 棋盘格线默认跟着道具图走**（作者 2026-10-17，待定 1–3 按推荐）：`GameSettings.show_grid` 三态（没动过 = 跟默认，道具图到了就不画；`grid_on(item_art)`）；`ItemPainter.art_available()` 现在恒 false；`InventoryView.grid_shown` / `grid_alpha()`，关着不画底、格底、线、外框，拖着东西时格按 50 % 出现（`DragLayer` 给 `drag_hint`）；设置屏「显示」节「棋盘格线」 |
 | v3.28 | 2026-10-17 | **186 调试台对玩家隐藏、提示行**（作者 2026-10-17，待定 1–4 按推荐；改 8.7）：`DevGate` 一个开关（非导出包），地图 / 基地调试台、设置调试节、`debug_mode` 的效果只在开发包；玩家出口 = 顶端栏下居中的提示行组件 `notice`（3 秒淡出、要紧 5 秒红字、最多两行，`takes_space()` 为 false 不占边）；拒绝与要紧提示改玩家用语（`UiText` 的 `notice.*`），`MapTravel.refused` 加 `code`；布局版本 7 |
 | v3.27 | 2026-10-17 | **185 效果悬浮窗重排**：皮革窗挂亮字主题（嵌在浅石板里不再继承墨字）；只写文字的主窗按内容收窄 220–360；状态窗 = 名字行（×层数、增益 / 减益 / 系统）+ 现在的合计（`Glossary.buff_tip_parts`），机制说明只给作者工具（`buff_rule_lines`），103 例外色退役；数值样式 `val`；限时状态写还剩几秒、图标外缘计时环（`status_stacked` 载荷带 `expires_at` / `seconds_left`，叠满刷新补发 delta 0）；血怒 +15% / +15% |

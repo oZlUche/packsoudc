@@ -34,9 +34,16 @@ var skin: StringName = &"":
 		_skin_tex = MapSkin.texture(v)
 		_deco_tex = MapSkin.deco(v)
 		_skin_light = _skin_tex != null and MapSkin.tone(v) == UiTheme.TONE_LIGHT
+		_sync_paper()
 		queue_redraw()
 var _skin_tex: Texture2D = null
 var _deco_tex: Texture2D = null
+## 192：底图在画布坐标里占的矩形（[method MapSkin.paper_rect]）；没底图 / 没图是空矩形
+var _paper: Rect2 = Rect2()
+## 192：画布外的桌面（`assets/ui/map/desk.png` 平铺；没图用底色）与纸影
+const ART_DESK := "map/desk"
+const PAPER_SHADOW := Vector2(8, 10)
+const PAPER_SHADOW_COLOR := Color(0, 0, 0, 0.35)
 ## 180 §4 入局转场（[MapScreen] 推这两个；平时 INF / 1）：节点与边按「离出生环几环」一环一环长出来 ——
 ## 离出生环 k 环的点长到 clamp(node_front − k, 0, 1)（点从圆心放大、边与危险圈按它的透明度）；挑出生点的遮罩在最后一环之后才盖上来
 var node_front: float = INF:
@@ -53,6 +60,7 @@ var graph: MapGraph = null:
 	set(v):
 		graph = v
 		_layout = MapLayout.for_graph(v)
+		_sync_paper()
 		fit()       # 先整张看全；要看细节滚轮放大到原比例（1 键）
 
 var selected_id: int = -1:
@@ -216,6 +224,10 @@ func _on_resized() -> void:
 		center()
 	else:
 		pan += (size - _last_size) / 2.0     # 看着的那块留在视图正中（放大看局部时改尺寸不跳回整图中央）
+	if _paper.has_area() and zoom < zoom_min():     # 192：窗口变大后纸装不满安全区了 —— 缩放下限跟着抬
+		zoom = zoom_min()
+		center()
+	_clamp_pan()
 	_last_size = size
 	queue_redraw()
 
@@ -271,7 +283,7 @@ func fit() -> void:
 	if c.x <= 0.0 or c.y <= 0.0:
 		return
 	var room := safe_rect().size
-	zoom = clampf(minf(room.x / c.x, room.y / c.y), ZOOM_MIN, 1.0)
+	zoom = zoom_min() if _paper.has_area() else clampf(minf(room.x / c.x, room.y / c.y), ZOOM_MIN, 1.0)     # 192：有底图 = 整张纸刚好装进安全区
 	center()
 
 
@@ -288,7 +300,7 @@ func open_at(preferred: float, spawns: Array = []) -> void:
 
 func _apply_open() -> void:
 	_open_pending = false
-	zoom = clampf(_open_zoom, ZOOM_MIN, ZOOM_MAX) if _open_zoom > 0.0 else start_zoom()
+	zoom = clampf(_open_zoom if _open_zoom > 0.0 else start_zoom(), zoom_min(), ZOOM_MAX)
 	if not _open_spawns.is_empty():
 		frame_spawns(_open_spawns)
 		return
@@ -312,8 +324,9 @@ func frame_spawns(ids: Array) -> void:
 		return
 	box = box.grow(SPAWN_MARGIN)
 	var fit := minf(size.x / maxf(box.size.x, 1.0), size.y / maxf(box.size.y, 1.0))
-	zoom = clampf(minf(zoom, fit), ZOOM_MIN, ZOOM_MAX)
+	zoom = clampf(minf(zoom, fit), zoom_min(), ZOOM_MAX)
 	var c := canvas_rect().size
+	var cover := _paper if _paper.has_area() else Rect2(Vector2.ZERO, c)     # 192：有底图夹的是纸，不是画布
 	var mid := box.get_center()
 	var p := Vector2.ZERO
 	for i in 2:
@@ -321,13 +334,45 @@ func frame_spawns(ids: Array) -> void:
 		# 出生点团在屏上的位置 = 它在图上的相对位置；再夹住，别让团的边出屏
 		var want := lerpf(box.size[i] * zoom * 0.5, size[i] - box.size[i] * zoom * 0.5, t)
 		p[i] = want - mid[i] * zoom
-		var cz := c[i] * zoom
+		var cz := cover.size[i] * zoom
 		if cz <= size[i]:
-			p[i] = (size[i] - cz) / 2.0
+			p[i] = (size[i] - cz) / 2.0 - cover.position[i] * zoom
 		else:
-			p[i] = clampf(p[i], size[i] - cz, 0.0)
+			p[i] = clampf(p[i], size[i] - cover.end[i] * zoom, -cover.position[i] * zoom)
 	pan = p
+	_clamp_pan()
 	queue_redraw()
+
+
+## 192：最小缩放 —— 有底图 = 整张纸刚好装进安全区（再缩就露出纸外的桌面一大片），没底图 = [constant ZOOM_MIN]
+func zoom_min() -> float:
+	if not _paper.has_area() or size.x <= 0.0 or size.y <= 0.0:
+		return ZOOM_MIN
+	var room := safe_rect().size
+	return clampf(minf(room.x / _paper.size.x, room.y / _paper.size.y), ZOOM_MIN, ZOOM_MAX)
+
+
+## 192：底图在画布里的矩形（测试读）
+func paper() -> Rect2:
+	return _paper
+
+
+## 192：纸在屏幕上的矩形
+func paper_on_screen() -> Rect2:
+	return Rect2(_paper.position * zoom + pan, _paper.size * zoom)
+
+
+func _sync_paper() -> void:
+	_paper = MapSkin.paper_rect(skin, canvas_rect()) if graph != null and _layout != null and _skin_tex != null else Rect2()
+
+
+## 192（待定 4 甲，软限制）：纸的任何一边不越过安全区的中心线 —— 拖、滚轮、跟镜头、开局摆视角之后各夹一次
+func _clamp_pan() -> void:
+	if not _paper.has_area():
+		return
+	var c := safe_rect().get_center()
+	pan.x = clampf(pan.x, c.x - _paper.end.x * zoom, c.x - _paper.position.x * zoom)
+	pan.y = clampf(pan.y, c.y - _paper.end.y * zoom, c.y - _paper.position.y * zoom)
 
 
 ## 自动的进图缩放：能看全就看全，但相邻两点在屏幕上至少隔 [constant START_GAP]（最短的那条边算），最多放大到 [constant START_ZOOM_MAX]
@@ -463,6 +508,7 @@ func _gui_input(event: InputEvent) -> void:
 		if _dragging:
 			stop_follow()
 			pan += mm.relative
+			_clamp_pan()
 			queue_redraw()
 			accept_event()
 			return
@@ -498,8 +544,9 @@ func _gui_input(event: InputEvent) -> void:
 func zoom_at(screen: Vector2, factor: float) -> void:
 	stop_follow()
 	var anchor := to_canvas(screen)
-	zoom = clampf(zoom * factor, ZOOM_MIN, ZOOM_MAX)
+	zoom = clampf(zoom * factor, zoom_min(), ZOOM_MAX)
 	pan = screen - anchor * zoom
+	_clamp_pan()
 	queue_redraw()
 	zoom_changed.emit(zoom)
 
@@ -524,7 +571,22 @@ func press(p: Vector2, button: int = MOUSE_BUTTON_LEFT, shift: bool = false) -> 
 
 #region 绘制
 func _draw() -> void:
-	if _skin_tex != null:     # 这一章的手绘底图：铺满、裁边，画在路网底下
+	if _paper.has_area():     # 192：底图钉在画布上 —— 桌面（屏幕坐标）→ 纸影 → 底图 → 装饰层，后三样和路网同一个变换
+		var desk := UiTheme.art_cached(ART_DESK)
+		if desk != null:
+			var step := desk.get_size()
+			for y in range(0, int(ceil(size.y / step.y))):
+				for x in range(0, int(ceil(size.x / step.x))):
+					draw_texture(desk, Vector2(x, y) * step)
+		else:
+			draw_rect(Rect2(Vector2.ZERO, size), UiPalette.bg())
+		draw_set_transform(pan, 0.0, Vector2(zoom, zoom))
+		draw_rect(Rect2(_paper.position + PAPER_SHADOW, _paper.size).grow(2.0), PAPER_SHADOW_COLOR)
+		draw_texture_rect(_skin_tex, _paper, false)
+		if _deco_tex != null and deco_alpha > 0.0:     # 180：装饰层叠在底图上、圈下面
+			draw_texture_rect(_deco_tex, _paper, false, Color(1, 1, 1, deco_alpha))
+		draw_set_transform(Vector2.ZERO)
+	elif _skin_tex != null:     # 还没有图（画布未定）：照旧铺满、裁边
 		draw_texture_rect_region(_skin_tex, Rect2(Vector2.ZERO, size), MapSkin.cover_region(_skin_tex.get_size(), size))
 		if _deco_tex != null and deco_alpha > 0.0:     # 180：装饰层叠在底图上、圈下面
 			draw_texture_rect_region(_deco_tex, Rect2(Vector2.ZERO, size), MapSkin.cover_region(_deco_tex.get_size(), size), Color(1, 1, 1, deco_alpha))
@@ -865,10 +927,12 @@ func _pan_to(target: Vector2, animate: bool) -> void:
 	stop_follow()
 	if not animate or not animate_moves or not is_inside_tree():
 		pan = target
+		_clamp_pan()
 		queue_redraw()
 		return
 	_follow_tween = create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	_follow_tween.tween_property(self, ^"pan", target, FOLLOW_SEC)
+	_follow_tween.finished.connect(_clamp_pan)
 
 
 ## 镜头正在跟人
