@@ -7,7 +7,9 @@
 ## - 献祭之后 [method on_offered]
 ## - 踩上一个点 [method on_node_entered]
 ## - 掉落 [method modify_loot]
-## - 战前准备屏 [method prebattle_label] / [method prebattle_apply]
+## - 战前准备屏 [method prebattle_actions] / [method prebattle_apply]
+##
+## 188 补充一（作者 2026-10-18）：数值可以「随信力」—— [method scaled]；界面的句子按某个信力值写（[method summary_for]）
 class_name FaithPerk
 extends Resource
 
@@ -30,6 +32,25 @@ func describe() -> String:
 ## 子类重写：按字段拼的主句
 func _summary() -> String:
 	return ""
+
+
+## 188 补充一：给信仰窗的一句 —— 按 [param def] 与信力 [param points] 写（随信力的数按它算；没到的级由调用方传那一级的阈值）。
+## 默认就是 [method describe]
+func summary_for(_def: FaithDef, _points: int) -> String:
+	return describe()
+
+
+## 188 补充一：随信力的数 = [param base] + （信力 / [param step] 取整） × [param per]，不超过 [param cap]（cap ≤ 0 不封顶）
+static func scaled(points: int, base: float, step: int, per: float, cap: float) -> float:
+	var v := base + float(maxi(0, points) / maxi(1, step)) * per
+	return minf(v, cap) if cap > 0.0 else v
+
+
+## 这一局现在激活的信仰的信力（没有 0）
+static func points_now(run: RunState) -> int:
+	if run == null or run.faith_power == null or run.active_faith_id() == &"":
+		return 0
+	return run.faith_power.points_of(run.active_faith_id())
 
 
 ## [member note] 的占位符：自己的数值字段（[TextParams]）
@@ -68,6 +89,11 @@ func altar_options() -> Array[StringName]:
 	return [] as Array[StringName]
 
 
+## 188 补充一：下拉里那一项的字（空 = 界面自己按类型名写）
+func altar_option_label(_option: StringName) -> String:
+	return ""
+
+
 ## 做神坛操作（[param option] 是挑的那一项，不用挑就空）。返回给日志的一句（空 = 没做）
 func altar_apply(_run: RunState, _node: MapNode, _option: StringName = &"") -> String:
 	return ""
@@ -88,11 +114,11 @@ func modify_loot(_ctx: LootContext, _node_type: StringName) -> void:
 	pass
 
 
-## 战前准备屏的额外按钮；空 = 没有
-func prebattle_label(_run: RunState, _type: StringName) -> String:
-	return ""
+## 战前准备屏的额外按钮（188 补充一：可以几个）：`[{option, label, why}]`，why 非空 = 灰着、写原因；空数组 = 没有
+func prebattle_actions(_run: RunState, _type: StringName) -> Array[Dictionary]:
+	return [] as Array[Dictionary]
 
 
-## 战前准备屏按了那个按钮。返回 true = 这一场按它处理了
-func prebattle_apply(_run: RunState) -> bool:
+## 战前准备屏按了 [param option] 那个按钮。返回 true = 这一场按它处理了
+func prebattle_apply(_run: RunState, _option: StringName = &"") -> bool:
 	return false

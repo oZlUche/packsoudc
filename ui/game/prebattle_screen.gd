@@ -74,14 +74,16 @@ func open(payload: Dictionary) -> void:
 	buttons.add_child(_belt_row)
 	_start_btn = _button("开战", start_battle, 16, UiPalette.Tier.PRIMARY)
 	buttons.add_child(_start_btn)
-	# 093（蛮神 3 级）：信仰级效果给的额外动作（秒杀精英）
+	# 093（蛮神 3 级）：信仰级效果给的额外动作。188 补充一：一条效果可以给几个（耗体力 / 耗信力立即击败），不够的灰着、写原因
 	var altar := AltarModule.of(flow.run)     # 101：信仰级效果在神坛模块里取
 	for p in (altar.perks() if altar != null else []):
 		var perk := p as FaithPerk
-		var text := perk.prebattle_label(flow.run, _type)
-		if text != "":
-			var pb := _button(text, func(): flow.smite(), 14)
-			pb.tooltip_text = perk.describe()
+		for a in perk.prebattle_actions(flow.run, _type):
+			var option: StringName = a["option"]
+			var pb := _button(String(a["label"]), func(): flow.smite(option), 14)
+			pb.disabled = String(a["why"]) != ""
+			pb.tooltip_text = String(a["why"]) if pb.disabled else perk.describe()
+			pb.set_meta("perk_option", option)
 			buttons.add_child(pb)
 	# 136：脱身（安德烈乌斯）：这一场不打。166 补充一：主动技能藏着时不建
 	var slip := flow.slip_skill()
