@@ -132,7 +132,7 @@ static func run_dial(t: TestCase) -> void:
 
 
 static func frame_dial_tip(t: TestCase, root: Window) -> void:
-	t.begin("190 · 日规的悬浮窗：「倒计时」/「还剩 N 步（共 M 步）」/「最近的撤离点还剩 K 步关闭」（关了写「已关闭」）；N 随阶段换样式、不写十六进制；开着时走一步字跟着变")
+	t.begin("190 · 日规的悬浮窗：「倒计时」/「倒计时还剩 N（共 M）」/「最近的撤离点倒计时剩 K 时关闭」（关了写「已关闭」；193 补充一）；N 随阶段换样式、不写十六进制；开着时走一步字跟着变")
 	var run := _run()
 	if run == null:
 		t.check(false, "开不了局")
@@ -153,14 +153,14 @@ static func frame_dial_tip(t: TestCase, root: Window) -> void:
 	var tip: HoverTip = screen._tip
 	t.check(tip.is_showing(), "停上去：开窗")
 	var shown := Glossary.strip_bbcode(tip.text()).replace("\n", " / ")
-	t.check(shown.contains("倒计时") and shown.contains("还剩 %d 步（共 %d 步）" % [cdm.left(), lim]), "两行字：%s" % shown)
+	t.check(shown.contains("倒计时") and shown.contains("倒计时还剩 %d（共 %d）" % [cdm.left(), lim]), "两行字：%s" % shown)
 	var body := String(w.tip_parts()["body"])
 	t.check(body.contains("[color=@stamina]%d[/color]" % cdm.left()) and not body.contains("[color=#"), "不过半：数字走 stamina 样式、没有十六进制")
 	if closing >= 0:
 		var at := PaidExtracts.closes_at(run.map.get_node(closing))
 		run.travel.clock.total = lim - (at + 12)
 		w.refresh()
-		t.check(Glossary.strip_bbcode(tip.text()).contains("最近的撤离点还剩 12 步关闭"), "撤离点还剩 12 步：%s" % Glossary.strip_bbcode(tip.text()).replace("\n", " / "))
+		t.check(Glossary.strip_bbcode(tip.text()).contains("最近的撤离点倒计时剩 %d 时关闭" % at), "撤离点倒计时剩 %d 时关闭：%s" % [at, Glossary.strip_bbcode(tip.text()).replace("\n", " / ")])
 		run.travel.clock.total = lim - at
 		w.refresh()
 		t.check(Glossary.strip_bbcode(tip.text()).contains("最近的撤离点已关闭"), "关了：%s" % Glossary.strip_bbcode(tip.text()).replace("\n", " / "))
@@ -168,7 +168,7 @@ static func frame_dial_tip(t: TestCase, root: Window) -> void:
 		t.check(not w.tip_plain().contains("撤离点"), "没有限时撤离点：只有一行")
 	run.travel.clock.total = lim - 3
 	w.refresh()
-	t.check(Glossary.strip_bbcode(tip.text()).contains("还剩 3 步") and String(w.tip_parts()["body"]).contains("[color=@hp]3[/color]"), "开着时走到剩 3 步：字跟着变、数字走 hp 样式")
+	t.check(Glossary.strip_bbcode(tip.text()).contains("倒计时还剩 3（") and String(w.tip_parts()["body"]).contains("[color=@hp]3[/color]"), "开着时走到倒计时剩 3：字跟着变、数字走 hp 样式")
 	w.close_tip()
 	host.queue_free()
 	screen.queue_free()

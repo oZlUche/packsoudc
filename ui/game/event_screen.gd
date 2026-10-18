@@ -54,8 +54,8 @@ func _open_options() -> void:
 				_hints.append(hint)     # 113：藏起来的选项说一句为什么（排在选项之后）
 			continue
 		var idx := i
-		# 104：选项文字里的数写成 {change_money_amount|abs} 这类，取这个选项自己的结果 / 条件的字段（TextParams）
-		var b := _option_button(TextTemplate.plain(opt.label_for(), ctx.merged(TextParams.of(opt))), func(): choose(idx))
+		# 104：选项文字里的数写成 {change_money_amount|abs} 这类，取这个选项自己的结果 / 条件的字段（TextParams）；193 加 {rest_total}
+		var b := _option_button(TextTemplate.plain(opt.label_for(), TextTemplate.option_context(ctx, opt)), func(): choose(idx))
 		b.disabled = not ok
 		EventCostIcons.attach(b, opt)     # 157：选项前一排代价图标（只画会花掉什么）
 		_option_btns.append(b)
@@ -102,7 +102,7 @@ func _open_result(payload: Dictionary) -> void:
 	if not lost.is_empty():
 		lines.append("失去：%s" % "、".join(lost))
 	if int(detail.get("waited", 0)) > 0:
-		lines.append("耗了 %d 步" % int(detail["waited"]))
+		lines.append("%s −%d" % [Glossary.COUNTDOWN_WORD, int(detail["waited"])])
 	if String(detail.get("type_changed", "")) != "":
 		lines.append("这里变成了%s点" % MapNodeStyle.of(StringName(String(detail["type_changed"])))["label"])
 	if int(detail.get("teleported", -1)) >= 0:

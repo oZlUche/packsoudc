@@ -807,6 +807,9 @@ static func import_tag(data: Dictionary, ctx: Context, report: ImportReport) -> 
 		report.error("category", "标签得归一类：%s" % " / ".join(_string_choices(def, "category")))
 	elif def.category == "internal" and not def.internal:
 		report.warn("internal", "内部类的标签应该勾上「内部标签」（玩家看不到）")
+	# 193：写了图标就得有那张图（空 = 用 id，没图不报错）
+	if def.icon != "" and TagRegistry.icon_path_of_file(def.icon) == "":
+		report.error("icon", "图标 '%s' 不在 %s" % [def.icon, TagRegistry.ICON_DIR])
 	ctx.register_tag(def)
 	return def
 

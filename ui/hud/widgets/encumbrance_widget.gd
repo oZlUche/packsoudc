@@ -17,5 +17,5 @@ func text_of() -> String:
 	var tag := "负重：" + run.encumbrance.name_of(lv)
 	var mult := run.encumbrance.travel_mult_of(lv)
 	if mult > 1:
-		tag += "（走一步花 %d 倍）" % mult
+		tag += "（走一步%s扣 %d 倍）" % [Glossary.COUNTDOWN_WORD, mult]
 	return tag

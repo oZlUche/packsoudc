@@ -44,7 +44,7 @@ const TEXT := {
 	"notice.extract_fee": {"zh": "钱不够：撤离要 %d 币", "en": "Not enough coins: extracting costs %d"},
 	"notice.nothing_to_reopen": {"zh": "这里没有能再打开的东西", "en": "There's nothing here to reopen"},
 	"notice.pick_spawn": {"zh": "先在地图上挑一个出生点", "en": "Pick a starting point on the map first"},
-	"notice.countdown": {"zh": "倒计时只剩 %d 步", "en": "Only %d steps left"},
+	"notice.countdown": {"zh": Glossary.COUNTDOWN_WORD + "只剩 %d", "en": "Countdown: only %d left"},
 	"notice.erosion_warned": {"zh": "侵蚀快到了：还有 %d 步", "en": "Erosion is coming: %d steps left"},
 	"notice.erosion_advanced": {"zh": "外圈被侵蚀了", "en": "The outer ring has eroded"},
 	"notice.erosion_total": {"zh": "全图都被侵蚀了，快撤", "en": "The whole map has eroded. Get out"},

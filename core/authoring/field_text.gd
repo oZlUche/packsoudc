@@ -14,7 +14,7 @@ extends RefCounted
 const LABELS := {
 	"id": "id", "display_name": "名字", "display_names": "别的语言的名字", "description": "说明", "descriptions": "别的语言的说明",
 	"title": "标题", "titles": "别的语言的标题", "text": "正文", "texts": "别的语言的正文", "label": "选项文字", "labels": "别的语言的选项文字",
-	"image": "配图", "tags": "标签", "tag": "标签", "order": "先后", "hidden": "隐藏", "note": "备注", "tip": "弹词条", "internal": "内部标签", "category": "大类", "has_blurb": "有专属解说", "blurb": "解说", "blurbs": "解说（别的语言）",
+	"image": "配图", "tags": "标签", "tag": "标签", "order": "先后", "hidden": "隐藏", "note": "备注", "tip": "弹词条", "internal": "内部标签", "icon": "图标", "category": "大类", "has_blurb": "有专属解说", "blurb": "解说", "blurbs": "解说（别的语言）",
 	"amount": "数量", "value": "数值", "count": "件数", "percent": "百分比", "flat": "固定值", "mult": "倍率", "StatModifier.mode": "乘算 / 加算", "StatBonus.mode": "乘算 / 加算",
 	"chance": "概率", "seconds": "秒", "step_seconds": "单次冷却（秒）", "steps": "步数", "min_steps": "最少步数", "max_steps": "最多步数", "min_value": "最少", "flag": "旗标",
 	"absent": "反过来（要求没有）", "add": "累加", "clear": "拔掉", "target": "对象", "where": "在哪", "pick": "挑法", "item": "道具", "items": "道具",
@@ -48,7 +48,7 @@ const LABELS := {
 	# 章节 / 地图
 	"map_source": "地图来源", "mode": "方式", "preset_path": "预设文件", "generator_id": "生成器", "generator_config": "生成参数",
 	"enemy_pool": "敌人池", "difficulty": "难度", "drop_rule": "掉落规则", "carry_rule": "携带规则", "encumbrance_rules": "负重规则", "weight": "重量", "weight_capacity": "负重上限", "node_rules": "节点规则", "economy_rules": "经济规则",
-	"step_limit": "全局倒计时（步）", "blessings": "赐福模板", "blessed_of": "从哪件派生", "per_points": "每多少信力一份",
+	"step_limit": "全局倒计时", "blessings": "赐福模板", "blessed_of": "从哪件派生", "per_points": "每多少信力一份",
 	"name_prefix": "名字前缀", "name_prefix_en": "英文前缀", "add_tags": "多出的标签", "rarity_up": "稀有度加几", "value_mult": "价值倍率", "convert_chance": "包内转化概率", "convert_per_tier": "每级加的转化概率",
 	"bless_chance": "赐福替代概率（没激活）", "bless_chance_active": "赐福替代概率（激活了）", "cost": "花费", "carry_budget": "带入预算（价值）", "carry_over_cost": "每超多少价值倒计时 −1", "event_groups": "成组限量的事件", "events": "事件与权重", "offerings": "献祭品", "perks": "信仰效果", "multiplier": "倍率", "cap": "每场上限",
 	"count_dealt": "算造成的", "count_taken": "算受到的", "min_cells": "最少格子数", "exact_grade": "体积恰好", "per_cell": "乘格子数", "first_amount": "首次给", "again_amount": "再次给", "has_stat": "显式带有的属性", "rarity_pow": "按 2^稀有度给", "plus": "再加", "first_kind_only": "同种一局只算一次", "by_type": "按节点类型", "closing_extract": "过半关一个撤离点", "safes": "保险箱个数", "safe_size": "保险箱大小",

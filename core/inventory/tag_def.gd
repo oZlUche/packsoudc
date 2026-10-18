@@ -31,3 +31,6 @@ extends Resource
 ## 玩家在哪儿都看不到：道具悬浮窗的标签行不列它、也不弹词条。快攻 / 重击 / 重型就是这种 ——
 ## 那是武器的特色，不该当标签给玩家看；但删了敌人就组不出装，所以留着、藏起来。编辑器照常显示
 @export var internal: bool = false
+## 193（作者「未来计划把标签文字换成图标」）：图标 —— `assets/ui/tags/` 下的文件名（不含扩展名）；空 = 用 id。
+## 文件不在就没图（[method TagRegistry.icon_path] 给空串），界面照旧写字
+@export var icon: String = ""

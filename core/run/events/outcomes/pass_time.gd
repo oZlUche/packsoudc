@@ -10,4 +10,4 @@ func apply(ctx: EventContext) -> void:
 
 
 func describe() -> String:
-	return "耗 %d 步" % maxi(0, actions)
+	return "%s −%d" % [Glossary.COUNTDOWN_WORD, maxi(0, actions)]

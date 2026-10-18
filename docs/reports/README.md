@@ -203,6 +203,7 @@
 | 190 | [落地：顶端栏一条长槽 + 刻在槽底的半圆日晷（189 作者定案）—— 槽九宫格铺满栏、栏里的件去底浅底墨字、相邻两件间铜点；倒计时改成 104×52 的日晷件（渗色扇面 / 刻线 / 深色刻凿影子 / 晷心，三阶段 calm · half · low），栏上不写数字，悬停弹「倒计时」窗（还剩 N 步（共 M 步）、最近的撤离点还剩 N 步关闭）；美术文件进 assets/ui/hud/](190-hud-groove-bar-and-carved-sundial.md) | 已落地 | 待定 1–3 按推荐；美术定稿 /mnt/project-files/art/ui/hud/v2/；槽改成在栏的 _draw 里画（不是 NinePatchRect 子节点），空着的件两边不放铜点；截图 /mnt/project-files/screenshots/189/ |
 | 191 | [讨论稿：地图底图跟着路网一起缩放平移（不再各自独立）—— 现状底图铺在屏幕上、路网在画布上；甲 底图钉在画布上（按美术留的淡色椭圆对准路网画布）、乙 视差、丙 只在看全图时对齐；范例图 191/compare.png](191-map-backdrop-locked-to-canvas-brainstorm.md) | 作者选甲 | 实施见 192 |
 | 192 | [落地：地图底图钉在画布上（191 甲）—— json `safe_area` 四个数、`MapSkin.paper_rect` 把安全区放大盖住画布；底图 / 装饰层 / 纸影和路网同一个变换，画布外是桌面；看全图 = 纸刚好装进安全区（缩放下限）、拖动时纸边不越过安全区中心线；第三页预览的纸和局内第一帧同一大小](192-map-backdrop-locked-to-canvas.md) | 已落地 | 待定 1–3 按推荐；两倍底图与桌面纹理同 PR 换上；截图 /mnt/project-files/screenshots/192/ |
+| 193 | [浮窗修补 / 扎营写总数 / 标签图标 / 狩猎神 —— 节点浮窗黑字（`bright_text_theme` 沿变体链找颜色）；休息两项写总共回几点（`{rest_restore}` `{rest_total}`）；悬浮窗延 0.5 秒才开始钉、每帧查源、空正文不画分隔线、献祭一行图标；拿起道具（含旋转）画它的格位标记；`TagDef.icon`；信仰窗各级并入信仰道具加成、包内转化一句；补充一：倒计时的消耗与剩余说「倒计时」不说「步」](193-tooltip-fixes-camp-vitality-tag-icons-hunt-god.md) | 已落地 | 待定 1–4 按推荐，补充一同 PR；图标美术（§5 §6）交美术线程；截图 /mnt/project-files/screenshots/193/ |
 
 ## 已归档（被覆盖或作废的方案，只留作历史）
 
