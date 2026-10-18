@@ -123,3 +123,16 @@
 - 对不上造物的选项排在左下角，和「整理背包（B）」一排，方案没写位置。
 - **教程两份事件的正文**（`tut3_rest_1/2` 里教献祭的那段）照 §3 不再显示。献祭的说明只剩祭坛悬停时的那一行，和神坛屏本身的提示。需要的话可以另议。
 - 测试：新增 `tests/ui/test_rest_camp_196.gd`。`test_rest_event_193`、`test_forge_194`、`test_altar`、`test_prologue3`、`test_screens_157`、`test_tutorial_text_112` 按新的选项文字和流程改了期望：从神坛回来是营地，休息区那一屏没有了。营地屏也有 `proceed()`（和事件屏一样选第一个能选的，导演测试走它）。三份事件 json 按导出器的写法存。
+
+## 补充一（2026-10-18 22:26，答执行的问题：教程事件的正文放哪）
+
+§3 把 `title` / `text` 从营地屏上拿掉，顺手拿掉了 `tut3_rest_1` / `tut3_rest_2` 里教献祭、教「二选一」的那段正文 —— 这段不能丢，它就是第三章教程的内容。定法：
+
+- 营地屏加一块**字板**：`text` 不为空的事件才出，左上角（标题行的位置，36 / 36），宽 520，170 悬浮窗的深底皮革框（`UiTheme.rich_block`，tone dark，17 号正文），正文走 `TextTemplate.render`（`{item:…}`、`{faith_perk:…}`、`{b}…{/b}` 照事件屏那样替换）；`title` 不显示。
+- 右上角一个小「×」收起；收起后字板缩成左上角一枚卷轴小图标（可用 `assets/ui/setup/summary_note` 一类现有的纸卷图），再点展开。同一个休息点内记住收起状态（营地屏重画不弹回来）。
+- `rest_default` 的 `text` 清空（「一处能歇脚的地方…」是说明书口吻，营地本身已经说明了一切；`help_pages/rest_point.json` 已改写）；两份教程事件保留正文，照旧显示。以后要给某个休息点写几句故事，只要给事件填 `text` 就会出字板。
+- 测试：`test_rest_camp_196` 加两条 —— `tut3_rest_1` 的营地有字板且正文里 `{item:bone_dice}` 已替换成「骨骰子」；`rest_default` 没有字板。
+
+### 补充一落地（2026-10-18，架构方案执行）
+
+字板是 `PanelContainer`，用 `UiTheme.PANEL_TOOLTIP` 的皮革深底，放在左上 36 / 36，正文 `rich_block` 宽 520、17 号，走 `TextTemplate.render`。右上「×」收起后换成 `setup/summary_note` 卷轴（56 px），点它展开。收起状态记在 `RestCampScreen._board_folded`（点 id，本次运行内有效，不进存档）。`rest_default` 的 `text` 删掉了。测试 `frame_text_board`：教程的字板有「骨骰子」、收起后重画仍收着；`rest_default` 没字板。截图 `/mnt/project-files/screenshots/196/tutorial_board.png`。顺手修了一处：营地屏原地重画（收起背包）时 `resized` 会重复连接。
