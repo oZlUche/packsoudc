@@ -87,9 +87,10 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		if TagRegistry.category_of(StringName(String(t))) != "source":
 			listed.append(t)
 	var sub := UiTheme.outline("[color=%s]%s[/color]" % [rarity_style, rarity_name(def.rarity)])
-	if not listed.is_empty():
-		sub += "[color=@tip_meta] · %s[/color]" % " · ".join(_names(listed))     # 096：标签按当前语言显示名字
 	var head_rest: Array[String] = ["[font_size=%d]%s[/font_size]" % [SUB_SIZE, sub]]
+	if not listed.is_empty():
+		head_rest.append("[font_size=%d]%s[/font_size]" % [SUB_SIZE, tag_icons(listed)])     # 193 补充三：标签另起一行画图标
+	var text_tags := listed.filter(func(t): return TagRegistry.icon_path(StringName(String(t))) == "")
 	var desc := Names.description_of(def)     # 104：说明里的 {字段} 按这件道具自己的字段填
 	if desc != "":
 		head_rest.append("[font_size=%d][i][color=@tip_desc]%s[/color][/i][/font_size]" % [DESC_SIZE, desc])
@@ -207,7 +208,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var foot := "[font_size=%d][color=@tip_meta]%s%d　%s%d[/color][/font_size]" % [FOOT_SIZE, icon("coin"), ItemValue.of_instance(inst), icon("weight"), ItemWeight.of(def)]     # 129：重
 	var set_name := set_name_of(def.set_id)
 	# --- 词条：这件道具会施加的 buff（id → 按定义生成的说明）+ 固定词条 + 弹词条的标签
-	var extra := Glossary.tag_terms(listed)     # 096：登记了说明的标签也是词条
+	var extra := Glossary.tag_terms(text_tags)     # 096：登记了说明的标签也是词条（193 补充三：只剩没图、还写成字的那些）
 	var item_buffs := Glossary.buffs_in_item(def)
 	item_buffs.merge(attached_buffs)     # 108：挂到我身上的规则施加的 buff（弓身上的【中毒】）也是词条
 	if compiled != null:
@@ -227,6 +228,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var terms := {}
 	for f in found:
 		terms[String(f["id"])] = {"name": f["name"], "text": f["text"], "style": String(f.get("style", "term"))}
+	terms.merge(tag_icon_terms(listed))
 	for k in ICON_TERMS.values():     # 行首图标链到格位的词条
 		if rest.contains("term:" + k):
 			terms[k] = {"name": k, "text": Glossary.term_text(k)}
@@ -537,6 +539,36 @@ static func _mods(mods: Array) -> String:
 
 
 ## 096：标签给人看（数据里的名字，按当前语言）
+## 193 补充三：标签图标的边长（和献祭栏一样，[constant FaithTooltip.ICON_SIZE]）
+const TAG_ICON_SIZE := FaithTooltip.ICON_SIZE
+
+
+## 193 补充三（作者定）：副行的标签画成图标 —— 有图的 `[url=term:tag:<id>][img]…[/img][/url]`（钉住后停上去开子窗写名字），
+## 没图的退回文字名，图标之间一个空格
+static func tag_icons(tags: Array) -> String:
+	var parts: Array[String] = []
+	for t in tags:
+		var id := StringName(String(t))
+		var path := TagRegistry.icon_path(id)
+		if path != "":
+			parts.append("[url=term:tag:%s][img=%d]%s[/img][/url]" % [id, TAG_ICON_SIZE, path])
+		else:
+			parts.append("[color=@tip_meta]%s[/color]" % Glossary.tag_name(id))
+	return " ".join(parts)
+
+
+## 193 补充三：画成图标的标签各一条词条 `tag:<id>`：名字 + 登记了说明、要弹词条的给说明，否则空（子窗只写名字）
+static func tag_icon_terms(tags: Array) -> Dictionary:
+	var out := {}
+	for t in tags:
+		var id := StringName(String(t))
+		if TagRegistry.icon_path(id) == "":
+			continue
+		var text := TagRegistry.describe(id) if TagRegistry.tip_of(id) else ""
+		out["tag:%s" % id] = {"name": Glossary.tag_name(id), "text": text, "style": "term"}
+	return out
+
+
 static func _names(tags: Array) -> Array[String]:
 	var out: Array[String] = []
 	for t in tags:

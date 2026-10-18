@@ -18,6 +18,8 @@ const MAX_WIDTH := 360.0     # 170 定稿：字大一号后 340 放不下武器�
 ## 185：只写文字的主窗按内容收窄，下限这么宽（道具窗固定 [constant MAX_WIDTH]）
 const MIN_WIDTH := 220.0
 const CHILD_WIDTH := 260.0
+## 193 补充三：只写一个名字的子窗最窄多宽
+const NAME_ONLY_MIN_WIDTH := 40.0
 ## 170 §3：离开道具后的宽限、钉住要停多久、关键词开子窗要停多久、离开钉住的窗多久收、子窗最多几层（含主窗）
 const GRACE_SEC := 0.15
 const PIN_SEC := 0.6
@@ -697,7 +699,11 @@ func open_child(parent: TipWindow, meta: String) -> TipWindow:
 		w.terms[k] = parent.terms[k]
 	for f in found:
 		w.terms[String(f["id"])] = {"name": f["name"], "text": f["text"], "style": String(f.get("style", "term"))}
-	w.set_text("%s\n[color=@tip_fg]%s[/color]" % [UiTheme.outline("[b][color=@%s]%s[/color][/b]" % [String((entry as Dictionary).get("style", "term")), String(entry["name"])]), Glossary.mark_rich(String(entry["text"]), found)])     # 170 定稿：只有名字描边；175 补 5.4：伤害字带色
+	var title := UiTheme.outline("[b][color=@%s]%s[/color][/b]" % [String((entry as Dictionary).get("style", "term")), String(entry["name"])])
+	var only_name := String(entry["text"]) == ""
+	w.set_text(title if only_name else "%s\n[color=@tip_fg]%s[/color]" % [title, Glossary.mark_rich(String(entry["text"]), found)])     # 170 定稿：只有名字描边；175 补 5.4：伤害字带色
+	if only_name:     # 193 补充三：只有名字（标签图标的子窗）按名字宽收窄，不留大块空白
+		w.set_width(clampf(ceilf(w.content_width()) + 1.0, NAME_ONLY_MIN_WIDTH, CHILD_WIDTH))
 	w.visible = true
 	w.reset_size()
 	_place_child(w, parent)

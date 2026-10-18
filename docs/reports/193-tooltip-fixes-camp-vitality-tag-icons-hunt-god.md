@@ -217,3 +217,11 @@
 - 补 3.2 没钉住时鼠标停在图标上要不要也出名字：推荐 **A 不出**（和关键词一致，钉住 0.5 秒后再停 0.25 秒），B 用 RichTextLabel 原生 `[img tooltip=…]`（4.7 支持）—— 原生提示是另一套样式，和 170 的悬浮窗风格不一致，先不用。
 
 **测试**：`tests/ui/test_item_tooltip_*` 里断言副行含标签名字的那几条改成断言含 `[img=32]…/weapon.png` 与 `terms` 里有 `tag:weapon`；没图的标签（临时去掉一个 png 或用假标签）仍出文字名。
+
+## 11. 补充二、补充三落地（2026-10-18，架构方案执行）
+
+- **格位图标 40**：`assets/ui/tip/` 六张换成 v3。尺寸收进 `InventoryView.marker_side(cell)` = `minf(40, cell × 0.67)`，棋盘与拖拽残影（`DragLayer._draw_held_markers`）共用。棋盘格实际是 60 px（`InventoryView.CELL`），不是补充二写的 48，所以图标是 40。两枚叠在一格时，对角错开沿用原来的 lerp（两端各留 2 px），没有改成固定 8 px：格 60、图 40 时两枚已经错开 16 px。
+- **悬浮窗标签图标**：`ItemTooltip.tag_icons(tags)` 拼图标行，`ItemTooltip.tag_icon_terms(tags)` 给每个画成图标的标签加一条 `tag:<id>` 词条。图标另起一行（待定 3.1 A），没钉住时不出名字（3.2 A）。没图的标签照写名字，仍走 `Glossary.tag_terms` 按文字找词条。
+- **子窗收窄**：只写名字的子窗按名字宽收窄，最窄 40（`HoverTip.NAME_ONLY_MIN_WIDTH`），最宽仍是 `CHILD_WIDTH`。
+- 195 的织物 / 草药 / 陶瓷三枚图标已随 PR #184 接上。
+- 测试：新增 `test_tag_icons_193c.gd`。`test_text_and_tooltips`、`test_tooltip_170`、`test_author_096`、`test_keyword_tips` 里断言副行含标签名字、或数词条的几条，改成断言图标与 `tag:<id>` 词条（只写名字的标签词条不算「有说明的词条」）。截图在 `/mnt/project-files/screenshots/193c/`。

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.36 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.37 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4300,6 +4300,7 @@ res://
 | v3.30 | 2026-10-17 | **188 背包面板去字、信仰窗重排**（作者 2026-10-17，待定 1–3 按推荐）：背包面板不再写操作提示、地上说明、参战 / 可用格读数、信仰行与棋盘上方说明，回话走 `hint_sink`（地图屏 = 提示行）；`FaithTooltip.describe_full` → 名字行（Lv、休眠件数）+ 信力行 + 各阶效果 / 信力来源 / 献祭，颜色全走模板；`HoverTip.show_faith` 名字行下挂到下一阶的进度条、各段虚线分隔、宽 360 |
 | v3.31 | 2026-10-18 | **188 补充一 信仰窗分段、蛮神改写**（作者 2026-10-18，待定 1–4 按推荐）：`HoverTip.FaithBar` 一段一级、长度按所需信力（满阶也挂）；`FaithTooltip` 同一级的效果合成一行（`[table=2]`），没到的级整行 `@dim`，句子按 `FaithPerk.summary_for(def, points)` 写、锁住的级按那一级的阈值算；`FaithPerk.scaled` 给「随信力」的数（每 50 信力一阶、封顶）；蛮神一级门槛式增伤、二级献祭生命上限二选一（信力 / 全体造成伤害 + 急速）、三级 `prebattle_actions` 两个按钮（耗体力 / 耗信力、非首领）、四级持续战斗秒数随信力；献祭规矩 `OfferingRule.short_name`、`ItemVolume.size_label`（「大型道具」），有图标时排一行 `[img]`（`assets/ui/tags/<tag>.png`、`assets/ui/offerings/{large,medium,crit}.png`），缺一枚就退回文字 |
 | v3.32 | 2026-10-18 | **189 / 190 顶端栏长槽与日晷倒计时**（作者 2026-10-18 定案，待定 1–3 按推荐）：`hud_bar` 在板上画一条贯通的浅槽（`hud/groove` 九宫格、`band` 定槽身），宿主排完把铜点交给栏画（同行相邻两件之间、右槽图标组左边，空着的件两边不放）；`HudWidget.set_in_bar` 让栏里的件坐在槽底上（`PANEL_BARE`、浅底墨字），拖出栏回 `PANEL_HUD`；栏里同行间距 24、组在槽身里居中；倒计时改成刻在槽底的半圆日规（`hud/dial/*`：染色扇面 / 表盘 / 绕轴心转的影子 / 轴心，三阶 calm·half·low），栏上不写数字，停上去 `show_status` 弹「倒计时」窗、走一步 `update_status` 换字；缺图退回文字版 |
+| v3.37 | 2026-10-18 | **193 补充二 / 三 悬浮窗标签图标、格位图标 40**（作者 21:37）：道具悬浮窗副行的标签另起一行画 32 px 图标（`ItemTooltip.tag_icons`），每枚链到 `tag:<id>` 词条（`tag_icon_terms`），钉住后停上去开子窗写名字，只写名字的子窗按名字收窄；没图的标签照写字；格位图标换 v3、`InventoryView.marker_side` = 40（格小了按 0.67 缩），拖拽残影同尺寸 |
 | v3.36 | 2026-10-18 | **195 铸炉三表重做与材质标签**（架构线程方案，作者「按推荐来」，§3 十六件候选全做）：道具每件一个材质标签，新标签 `cloth` 织物 / `herb` 草药 / `clay` 陶瓷（图标进 `assets/ui/tags/`）；十六件新材料 / 吃食 / 摆件；三张铸炉表按十种材质逐行重写；`ForgeEntry` 加 `cadence_mult`、`guard_*`、`stance`、`main_mult`；`Forge.rule_of` 攻守两式、升阶附带追加；导入器稀有度 0–5、攻守都要写、`stance` 只许 attack / guard；落地差异见报告 §9 |
 | v3.35 | 2026-10-18 | **194 铸炉入口与逐槽显示**（架构线程方案 §1 §2；§3 映射表重复度清单待作者过目，§4 铸炉屏换美术记进待办）：后果 `OpenForge`（`ctx.open_forge`）、条件 `ForgeUnused`，`NodeEvents.forge_opened` → `GameFlow` 推 `Screen.FORGE`；`rest_default` 加「铸炉（三件道具熔成一枚铸牌）」；休息屏删掉铸炉一栏；`Forge._timing_rule`（`rule_of` 与逐槽显示共用）、`Forge.slot_summary`、`Forge.forge` 的 `preview` 参数（空槽落 default 行，稀有度 -1 落 default）；铸炉屏 `summary_text / guess / guess_text` |
 | v3.34 | 2026-10-18 | **193 浮窗修补 / 扎营写总数 / 标签图标 / 狩猎神**（架构线程方案，待定 1–4 按推荐；补充一作者在卡上选「倒计时」）：`UiTheme.bright_text_theme` 沿 `get_type_variation_base` 找颜色的主人（`_color_owner`），全局主题给 HUD 标签与正文富文本变体补默认字色；`TextTemplate` 加 `{rest_restore}`、`option_context` 算 `{rest_total}`；`HoverTip.PIN_DELAY_SEC` / `pin_progress` / `_source_alive`，地图屏换屏与 `_shade` 时收窗，道具窗空正文不画分隔线；`InventoryView.set_held` / `marker_offsets` / `preview_markers` 与 `DragLayer._draw_held_markers`；`TagDef.icon`、`TagRegistry.icon_path`、导入校验、标签制作器「图标」栏；`FaithBonus.effect_text / list_tier`、`FaithTooltip.item_lines / convert_line`，各级段并入信仰道具加成（赐福版合一行），献祭一行图标无字；`Glossary.COUNTDOWN_WORD`：倒计时的消耗与剩余说「倒计时」，撤离点关闭写倒计时读数，路程照说「步」 |
