@@ -1,6 +1,6 @@
 ## 标签制作器（171，作者定）：标签不是道具随手写的，得先在这里建 —— id、名字、多语言、说明、大类（用途 / 属性 / 材料 / 归属 / 来源 / 内部）、
 ## 弹不弹词条、是不是内部标签。道具编辑器的标签栏只能从登记过的标签里挑（按大类分组的下拉）。
-## 193：一栏「图标」—— `assets/ui/tags/` 下的文件名（空 = 用 id），右边 24 px 预览，读不出写「无图」
+## 193：一栏「图标」—— `assets/ui/tags/` 下的文件名（空 = 用 id），右边按悬浮窗的大小（`FaithTooltip.ICON_SIZE`）预览，读不出写「无图」
 ##
 ## 和别的编辑器同一条原则：**不是另一条通路，只是同一条通路的另一个入口。** 存的是 `data/authoring/tags/<id>.json`，
 ## 校验走导入器（`import_tag`：得有名字、得归一类），字段由 [PropertyForm] 反射生成；保存同时产出 `.tres`、登记进 [TagRegistry]。
@@ -126,7 +126,7 @@ func _build_ui() -> void:
 		_refresh())
 	icon_row.add_child(_icon_edit)
 	_icon_preview = TextureRect.new()
-	_icon_preview.custom_minimum_size = Vector2(24, 24)
+	_icon_preview.custom_minimum_size = Vector2.ONE * FaithTooltip.ICON_SIZE
 	_icon_preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_icon_preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon_row.add_child(_icon_preview)
