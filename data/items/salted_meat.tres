@@ -29,5 +29,5 @@ display_names = {
 description = "腌透的肉，耐放也顶饿。"
 shape = SubResource("Resource_vwxib")
 rarity = 1
-tags = Array[StringName]([&"nature", &"food"])
+tags = Array[StringName]([&"nature", &"food", &"flesh"])
 combat = SubResource("Resource_g15dq")

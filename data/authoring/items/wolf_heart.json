@@ -1,0 +1,18 @@
+{
+  "id": "wolf_heart",
+  "display_name": "狼心",
+  "display_names": {
+    "en": "Wolf Heart"
+  },
+  "description": "还温着时取下来的，巫医出高价。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "reagent",
+    "material",
+    "nature",
+    "flesh"
+  ]
+}

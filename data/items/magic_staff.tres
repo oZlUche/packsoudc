@@ -64,6 +64,6 @@ display_names = {
 description = "不放晶石就是根木棍；杖头两侧的装载槽放魔晶石，按顺时针一颗一颗读，打出各自的元素伤害。颗与颗之间走单次冷却，一轮读完歇一个总冷却。"
 shape = SubResource("Resource_vikiy")
 rarity = 1
-tags = Array[StringName]([&"weapon", &"melee", &"staff", &"magic"])
+tags = Array[StringName]([&"weapon", &"melee", &"staff", &"magic", &"wood"])
 combat = SubResource("Resource_b04a4")
 adjacency = SubResource("Resource_1ekhf")

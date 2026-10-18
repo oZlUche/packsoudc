@@ -51,7 +51,7 @@ static func run_forge_and_rule(t: TestCase) -> void:
 	t.eq(String(ench.get("effect", "")), "bone", "效果：骨行")
 	t.eq(ench.get("from", []), ["knife", "antler", "knife"], "记下三件")
 	var v := Forge.table(&"value")
-	var expect := maxi(1, roundi(1.0 * v.by_rarity(db.get_def(&"knife").rarity).size * v.by_material(db.get_def(&"knife")).mult * v.by_purpose(db.get_def(&"knife")).mult))
+	var expect := maxi(1, roundi(Forge.table(&"effect").by_material(db.get_def(&"antler")).base * v.by_rarity(db.get_def(&"knife").rarity).size * v.by_material(db.get_def(&"knife")).mult * v.by_purpose(db.get_def(&"knife")).mult))
 	t.eq(int(ench.get("magnitude", 0)), expect, "数值 = 基数 × 几档 × 材质系数 × 用途系数")
 	var rule := Forge.rule_of(ench)
 	t.not_null(rule, "拼得出规则")
@@ -77,10 +77,11 @@ static func run_forge_and_rule(t: TestCase) -> void:
 	var shield := Forge.forge(db.get_def(&"knife"), db.get_def(&"antler"), db.get_def(&"knife"))
 	shield["target"] = "shield"
 	var r4 := Forge.rule_of(shield)
-	t.eq(int((r4.effects[0] as ApplyStatus).target), CombatEffect.Target.SELF, "用途是盾：给自己")
+	t.check(r4 != null and r4.effects[0] is RemoveStatus, "195：用途是盾 → 守式（骨：清掉自己身上的流血）")
+	t.eq(int(r4.effects[0].get("target")), CombatEffect.Target.SELF, "用途是盾：给自己")
 	var top := ench.duplicate()
 	top["tier"] = 4
-	t.eq(Forge.rule_of(top).effects.size(), 2, "效果槽稀有度 4：再附带一个")
+	t.eq(Forge.rule_of(top).effects.size(), 3, "195：效果槽稀有度 4 = 基础 + 升阶 + 附带（追加，不换掉）")
 	t.eq(Forge.problem({"trigger": "nope", "effect": "bone"}), "时机表里没有「nope」", "表里查不到：坏了")
 
 
@@ -172,7 +173,9 @@ static func run_preset_and_naming(t: TestCase) -> void:
 	var inst := ItemInstance.create(def)
 	t.eq(Forge.prefix(Forge.enchant_of(inst)), "嗜血的", "预置的生效")
 	inst.state[Forge.KEY] = {"trigger": "metal", "effect": "leather", "magnitude": 3}
-	t.eq(Forge.prefix(Forge.enchant_of(inst)), "坚壁的", "实例的覆盖预置的")
+	t.eq(Forge.prefix(Forge.enchant_of(inst)), "束缚的", "实例的覆盖预置的（195：皮革攻式）")
+	inst.state[Forge.KEY] = {"trigger": "metal", "effect": "leather", "target": "shield", "magnitude": 3}
+	t.eq(Forge.prefix(Forge.enchant_of(inst)), "坚壁的", "195：效果槽放盾 = 守式前缀")
 	var crystal := _inst(db, &"fire_crystal")
 	crystal.state[Forge.KEY] = {"trigger": "metal", "effect": "bone", "magnitude": 1}
 	t.eq(Names.of_item(crystal), "明亮的嗜血的火焰魔晶石", "耐久前缀 + 附魔前缀 + 名字")

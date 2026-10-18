@@ -1,0 +1,19 @@
+{
+  "id": "clay_figure",
+  "display_name": "陶俑",
+  "display_names": {
+    "en": "Clay Figure"
+  },
+  "description": "随葬的小人，表情认真。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "crafted",
+    "clay",
+    "treasure"
+  ]
+}

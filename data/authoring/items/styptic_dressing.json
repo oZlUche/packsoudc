@@ -12,7 +12,8 @@
   "rarity": 2,
   "tags": [
     "remedy",
-    "nature"
+    "nature",
+    "cloth"
   ],
   "combat": {
     "base_stats": {

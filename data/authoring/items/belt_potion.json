@@ -14,5 +14,8 @@
   "bag_accept_tags": [
     "remedy",
     "food"
+  ],
+  "tags": [
+    "leather"
   ]
 }

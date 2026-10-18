@@ -19,4 +19,4 @@ display_names = {
 }
 shape = SubResource("Resource_8kcs5")
 value = 20
-tags = Array[StringName]([&"trophy"])
+tags = Array[StringName]([&"trophy", &"bone"])

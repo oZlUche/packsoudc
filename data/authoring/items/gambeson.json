@@ -9,7 +9,8 @@
   ],
   "rarity": 1,
   "tags": [
-    "gear_plug"
+    "gear_plug",
+    "cloth"
   ],
   "adjacency": {
     "grant_cells": [

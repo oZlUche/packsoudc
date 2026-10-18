@@ -56,5 +56,5 @@ display_names = {
 description = "琉璃瓶里淡绿的药水。"
 shape = SubResource("Resource_134wm")
 rarity = 3
-tags = Array[StringName]([&"remedy", &"nature"])
+tags = Array[StringName]([&"remedy", &"nature", &"herb"])
 combat = SubResource("Resource_vrlyw")

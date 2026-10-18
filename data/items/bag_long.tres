@@ -20,4 +20,5 @@ display_names = {
 }
 shape = SubResource("Resource_vt84i")
 rarity = 1
+tags = Array[StringName]([&"cloth"])
 is_bag = true

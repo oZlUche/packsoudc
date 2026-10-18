@@ -82,7 +82,7 @@ static func forge(timing: ItemDef, effect: ItemDef, value: ItemDef, preview: boo
 	var vr := v.by_rarity(_rarity(value))
 	if tm == null or em == null:
 		return {}
-	var mag := maxi(1, roundi(em.base * (vr.size if vr != null else 1.0) * (vm.mult if vm != null else 1.0) * (vp.mult if vp != null else 1.0)))
+	var mag := maxi(1, roundi(_base(em, _guard(em, ep)) * (vr.size if vr != null else 1.0) * (vm.mult if vm != null else 1.0) * (vp.mult if vp != null else 1.0)))
 	return {
 		"trigger": String(tm.key), "direction": String(tp.key if tp != null else ForgeTable.DEFAULT), "rate": _rarity(timing),
 		"effect": String(em.key), "target": String(ep.key if ep != null else ForgeTable.DEFAULT), "tier": _rarity(effect),
@@ -184,17 +184,23 @@ static func rule_of(ench: Dictionary) -> AbilityRule:
 		return null
 	var rule := _timing_rule(tm, tp, tr)
 	var tier := er.tier if er != null else 0
-	var main := (em.upgraded if tier >= 1 and em.upgraded != null else em.effect).duplicate(true) as CombatEffect
-	_shape_effect(main, em, ep, ench)
+	var guard := _guard(em, ep)
+	# 195：攻式 / 守式按用途选；升阶、附带是**追加**的句子（不再替换基础句）；数值只写进基础句（再乘稀有度的 main_mult）
+	var main := _stance_effect(em, guard, 0).duplicate(true) as CombatEffect
+	_shape_effect(main, em, ep, ench, guard, er.main_mult if er != null else 1.0)
 	rule.effects.append(main)
-	if tier >= 2 and em.bonus != null:
-		var extra := em.bonus.duplicate(true) as CombatEffect
-		if not em.self_only and ep != null and ep.target >= 0 and "target" in extra:
-			extra.set("target", ep.target)
-		rule.effects.append(extra)
-	var app := _element_apply(em, ep, ench, tier)
-	if app != null:
-		rule.effects.append(app)
+	if not guard:
+		var app := _element_apply(em, ep, ench, tier)
+		if app != null:
+			rule.effects.append(app)
+	for step in [1, 2]:
+		var extra := _stance_effect(em, guard, step)
+		if tier < step or extra == null:
+			continue
+		var more := extra.duplicate(true) as CombatEffect
+		if not guard and more is DealDamage:
+			_element_type(more, em, ench)     # 宝石的追加伤害随元素换类型
+		rule.effects.append(more)
 	return rule
 
 
@@ -208,6 +214,10 @@ static func _timing_rule(tm: ForgeEntry, tp: ForgeEntry, tr: ForgeEntry) -> Abil
 		(rule.trigger as OnItemFired).self_only = true
 	var cad: Cadence = tm.fixed_cadence if tm.fixed_cadence != null else (tr.cadence if tr != null else null)
 	rule.cadence = (cad.duplicate(true) if cad != null else Always.new()) as Cadence
+	# 195：用途的节奏系数乘在冷却上（固定节奏、每次触发不乘），乘完不低于 MIN_COOLDOWN
+	if tm.fixed_cadence == null and tp != null and rule.cadence is CooldownCadence:
+		var cc := rule.cadence as CooldownCadence
+		cc.seconds = maxf(MIN_COOLDOWN, cc.seconds * tp.cadence_mult)
 	# 每次都触发只许给「宿主出手时」「开战时」：别的时机（受伤、造成伤害、施加状态、按节拍）每次都触发会自己点燃自己
 	if rule.cadence is Always and not (rule.trigger is OnItemFired or rule.trigger is OnBattleStart):
 		var cd := CooldownCadence.new()
@@ -237,12 +247,18 @@ static func _element_apply(em: ForgeEntry, ep: ForgeEntry, ench: Dictionary, tie
 	return eff
 
 
-## 数值、给谁、按元素换的伤害类型（元素的施加另成一个效果，[method _element_apply]）
-static func _shape_effect(eff: CombatEffect, em: ForgeEntry, ep: ForgeEntry, ench: Dictionary) -> void:
-	var mag := maxi(1, int(ench.get("magnitude", 1)))
-	if em.amount_field in eff:
-		var cur: Variant = eff.get(em.amount_field)
-		eff.set(em.amount_field, float(mag) if cur is float else mag)
+## 数值、给谁、按元素换的伤害类型（元素的施加另成一个效果，[method _element_apply]）。
+## 195：数值写到这一式的那一项（攻式 `amount_field`、守式 `guard_amount_field`；空 = 不写），原值是负的照负号写（减速 −N）；
+## [param mult] 是稀有度的 main_mult。守式的给谁由效果自己写，用途不改；元素只换攻式
+static func _shape_effect(eff: CombatEffect, em: ForgeEntry, ep: ForgeEntry, ench: Dictionary, guard: bool = false, mult: float = 1.0) -> void:
+	var mag := maxi(1, roundi(maxi(1, int(ench.get("magnitude", 1))) * mult))
+	var field := em.guard_amount_field if guard else em.amount_field
+	if field != &"" and field in eff:
+		var cur: Variant = eff.get(field)
+		var sign := -1 if (cur is float or cur is int) and cur < 0 else 1
+		eff.set(field, float(mag * sign) if cur is float else mag * sign)
+	if guard:
+		return
 	if not em.self_only and ep != null and ep.target >= 0 and "target" in eff:
 		eff.set("target", ep.target)
 	var el := String(ench.get("element", ""))
@@ -261,6 +277,32 @@ static func _shape_effect(eff: CombatEffect, em: ForgeEntry, ep: ForgeEntry, enc
 			eff.set(key, StringName(String(row[k])))
 		else:
 			eff.set(key, row[k])
+
+
+## 195：宝石的追加伤害跟着元素换伤害类型
+static func _element_type(eff: CombatEffect, em: ForgeEntry, ench: Dictionary) -> void:
+	var el := String(ench.get("element", ""))
+	if el == "" or not em.by_element.has(el) or not ("damage_type" in eff):
+		return
+	var dt: Variant = (em.by_element[el] as Dictionary).get("damage_type", null)
+	if dt != null:
+		eff.set("damage_type", StringName(String(dt)))
+
+
+## 195：效果槽这一行用守式吗 —— 用途行写了 guard 且这一行有守式
+static func _guard(em: ForgeEntry, ep: ForgeEntry) -> bool:
+	return em != null and ep != null and ep.stance == &"guard" and em.guard_effect != null
+
+
+## 195：这一式的第 [param step] 句（0 基础、1 升阶、2 附带）
+static func _stance_effect(em: ForgeEntry, guard: bool, step: int) -> CombatEffect:
+	if guard:
+		return [em.guard_effect, em.guard_upgraded, em.guard_bonus][step]
+	return [em.effect, em.upgraded, em.bonus][step]
+
+
+static func _base(em: ForgeEntry, guard: bool) -> float:
+	return em.guard_base if guard else em.base
 
 
 ## 用途给扳机写的几项：扳机有这一项才写；枚举可以写名字（"DEALT"）
@@ -295,6 +337,8 @@ static func prefix(ench: Dictionary, lang: String = "") -> String:
 	var em := ForgeTable.find(e.material, StringName(String(ench.get("effect", ""))))
 	if em == null:
 		return ""
+	if _guard(em, ForgeTable.find(e.purpose, StringName(String(ench.get("target", ForgeTable.DEFAULT))))):
+		return Names.pick(em.guard_prefixes, em.guard_prefix, lang)
 	var el := String(ench.get("element", ""))
 	if el != "" and em.by_element.has(el):
 		var row: Dictionary = em.by_element[el]
@@ -337,8 +381,8 @@ static func _timing_summary(t: ForgeTable, def: ItemDef, out: Array[String]) -> 
 	out.append("什么时候：%s" % Glossary.trigger_text(rule.trigger))
 	var said := String((tp.trigger_props if tp != null else {}).get("direction", ""))
 	var way := {"DEALT": "造成", "TAKEN": "受到"}.get(said, "—") as String
-	if "direction" in rule.trigger:
-		way = "造成" if int(rule.trigger.get("direction")) == DamageTrigger.Direction.DEALT else "受到"
+	if rule.trigger is DamageTrigger:
+		way = "造成" if (rule.trigger as DamageTrigger).direction == DamageTrigger.Direction.DEALT else "受到"
 		out.append("方向：%s" % way)
 	else:
 		out.append("方向：%s（这种时机不分方向）" % way)
@@ -356,26 +400,22 @@ static func _effect_summary(t: ForgeTable, def: ItemDef, out: Array[String]) -> 
 		return
 	var ep := t.by_purpose(def)
 	var er := t.by_rarity(def.rarity)
-	var ench := {"effect": String(em.key), "element": String(_element_for(em, def)), "magnitude": maxi(1, roundi(em.base))}
-	var main := em.effect.duplicate(true) as CombatEffect
-	_shape_effect(main, em, null, ench)
-	var did := Glossary.effects_text([main])
+	var guard := _guard(em, ep)
+	var ench := {"effect": String(em.key), "target": String(ep.key if ep != null else ForgeTable.DEFAULT), "element": String(_element_for(em, def)),
+		"magnitude": maxi(1, roundi(_base(em, guard)))}
+	var main := _stance_effect(em, guard, 0).duplicate(true) as CombatEffect
+	_shape_effect(main, em, null, ench, guard)
 	var pre := prefix(ench)
-	out.append("做什么：%s%s" % [did, "（前缀「%s」）" % pre if pre != "" else ""])
-	var who := "不改（效果自带）"
-	if em.self_only:
-		who = "只能给自己"
-	elif ep != null and ep.target >= 0:
-		who = "自己" if ep.target == CombatEffect.Target.SELF else "对手"
-	out.append("给谁：%s" % who)
+	out.append("做什么：%s%s" % [Glossary.effects_text([main]), "（前缀「%s」）" % pre if pre != "" else ""])
+	out.append("攻守：%s" % ("守式（放的是盾或防具）" if guard else "攻式（放盾或防具时换成守式）"))
 	var tier := er.tier if er != null else 0
-	var up := "升阶：没有变化" if em.upgraded == null else "升阶（换成%s）" % Glossary.effects_text([em.upgraded])
-	var line := "基础"
-	if tier == 1:
-		line = up
-	elif tier >= 2:
-		line = "%s，附带%s" % [up, Glossary.effects_text([em.bonus]) if em.bonus != null else "：没有"]
-	out.append("阶：%s" % line)
+	var parts: Array[String] = ["基础"]
+	for step in [1, 2]:
+		var extra := _stance_effect(em, guard, step)
+		if tier >= step and extra != null:
+			parts.append("+%s（%s）" % ["升阶" if step == 1 else "附带", Glossary.effects_text([extra])])
+	var mult := er.main_mult if er != null else 1.0
+	out.append("阶：%s%s" % ["；".join(parts), "，基础句 ×%s" % TextTemplate.num(mult) if mult != 1.0 else ""])
 
 
 static func _value_summary(t: ForgeTable, def: ItemDef, out: Array[String]) -> void:

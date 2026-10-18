@@ -67,10 +67,10 @@ static func run_entry(t: TestCase) -> void:
 
 
 static func run_slot_summary(t: TestCase) -> void:
-	t.begin("194 §2 · 逐槽三行：时机槽的金属武器「出手时 / 造成 / 6 秒」，效果槽的骨制品「流血 / 嗜血的」，数值槽稀有度 2 的金属「×2 / ×1.25」；两槽满按 default 行试算")
+	t.begin("194 §2 · 逐槽三行：时机槽的金属武器「出手时 / 造成 / 4.5 秒」（195：武器节奏 ×0.75），效果槽的骨制品「流血 / 嗜血的」，数值槽稀有度 2 的金属「×2 / ×1.25」；两槽满按 default 行试算")
 	var db := F175._db()
 	var timing := "\n".join(Forge.slot_summary(&"timing", db.get_def(&"knife")))
-	t.check(timing.contains("出手时") and timing.contains("造成") and timing.contains("6 秒"), "时机：%s" % timing.replace("\n", " / "))
+	t.check(timing.contains("出手时") and timing.contains("造成") and timing.contains("4.5 秒"), "时机：%s" % timing.replace("\n", " / "))
 	t.eq(Forge.slot_summary(&"timing", db.get_def(&"knife")).size(), 3, "三行")
 	var bone := "\n".join(Forge.slot_summary(&"timing", db.get_def(&"antler")))
 	t.check(bone.contains("方向：受到") and not bone.contains("不分方向"), "骨的受伤时分方向：%s" % bone.replace("\n", " / "))
@@ -78,7 +78,7 @@ static func run_slot_summary(t: TestCase) -> void:
 	t.check(effect.contains("流血") and effect.contains("嗜血的"), "效果：%s" % effect.replace("\n", " / "))
 	t.check(effect.contains("阶：基础"), "稀有度 1：基础阶")
 	var high := "\n".join(Forge.slot_summary(&"effect", db.get_def(&"bone_dice")))
-	t.check(high.contains("升阶：没有变化"), "骨没有升阶那一档：%s" % high.replace("\n", " / "))
+	t.check(high.contains("+升阶") and high.contains("+附带"), "195：稀有度 3 追加升阶与附带：%s" % high.replace("\n", " / "))
 	var value := "\n".join(Forge.slot_summary(&"value", db.get_def(&"brass_gear")))
 	t.check(value.contains("×2") and value.contains("×1.25") and value.contains("合计 ×2.5"), "数值：%s" % value.replace("\n", " / "))
 	t.eq(Forge.slot_summary(&"timing", null), [] as Array[String], "空槽：没有字")

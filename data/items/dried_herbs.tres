@@ -19,4 +19,4 @@ display_names = {
 }
 description = "晒干扎好的草药。"
 shape = SubResource("Resource_2frbc")
-tags = Array[StringName]([&"material", &"nature"])
+tags = Array[StringName]([&"material", &"nature", &"herb"])

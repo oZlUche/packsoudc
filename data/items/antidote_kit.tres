@@ -49,5 +49,5 @@ display_names = {
 shape = SubResource("Resource_hjk3w")
 rarity = 1
 value = 20
-tags = Array[StringName]([&"remedy", &"tool"])
+tags = Array[StringName]([&"remedy", &"tool", &"herb"])
 combat = SubResource("Resource_s8m46")

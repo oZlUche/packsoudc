@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_3xubi"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_ih0nm"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_fdoxh"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_ccn31"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_ha85p"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_mdexi"]
+
+[sub_resource type="Resource" id="Resource_i1pl6"]
+script = ExtResource("6_mdexi")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
+
+[resource]
+script = ExtResource("5_ha85p")
+id = &"granite_mortar"
+display_name = "花岗石臼"
+display_names = {
+"en": "Granite Mortar"
+}
+description = "捣药捣盐都用它，就是沉。"
+shape = SubResource("Resource_i1pl6")
+rarity = 1
+weight = 7
+tags = Array[StringName]([&"material", &"crafted", &"stone"])

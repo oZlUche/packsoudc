@@ -89,5 +89,5 @@ display_names = {
 description = "倒钩的箭头，拔出来比射进去还疼。"
 shape = SubResource("Resource_47ov5")
 rarity = 1
-tags = Array[StringName]([&"ammo", &"bleed", &"nature"])
+tags = Array[StringName]([&"ammo", &"bleed", &"nature", &"wood"])
 adjacency = SubResource("Resource_fs1pn")

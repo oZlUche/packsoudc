@@ -1,0 +1,16 @@
+{
+  "id": "mint_bundle",
+  "display_name": "薄荷叶束",
+  "display_names": {
+    "en": "Mint Bundle"
+  },
+  "description": "嚼着凉，提神。",
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "material",
+    "nature",
+    "herb"
+  ]
+}

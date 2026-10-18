@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Timing"
   },
-  "description": "时机槽：放进去的道具按材质定「什么时候」、按用途定方向（造成 / 受到）、按稀有度定多久一次。占位表，作者过内容。",
+  "description": "时机槽：放进去的道具按材质定「什么时候」（每种材质各不同，来源标签兜底），按用途定方向（造成 / 受到）并乘节奏系数（武器快、盾中、防具慢），按稀有度定多久一次。",
   "material": [
     {
       "key": "metal",
@@ -34,12 +34,53 @@
     {
       "key": "gem",
       "trigger": {
-        "type": "on_before_damage"
+        "type": "on_damage",
+        "crit_only": true
       }
     },
     {
       "key": "flesh",
       "trigger": "@on_resource_below_40"
+    },
+    {
+      "key": "cloth",
+      "trigger": {
+        "type": "on_status_applied",
+        "on_self": true,
+        "by_self": false
+      }
+    },
+    {
+      "key": "herb",
+      "trigger": {
+        "type": "on_resource_below",
+        "percent": 70,
+        "direction": "ABOVE"
+      }
+    },
+    {
+      "key": "clay",
+      "trigger": {
+        "type": "on_damage",
+        "min_amount": 6.0
+      }
+    },
+    {
+      "key": "nature",
+      "trigger": {
+        "type": "on_status_applied"
+      }
+    },
+    {
+      "key": "crafted",
+      "trigger": "@on_item_fired"
+    },
+    {
+      "key": "magic",
+      "trigger": {
+        "type": "on_damage",
+        "crit_only": true
+      }
     },
     {
       "key": "default",
@@ -51,7 +92,8 @@
       "key": "weapon",
       "trigger_props": {
         "direction": "DEALT"
-      }
+      },
+      "cadence_mult": 0.75
     },
     {
       "key": "shield",
@@ -63,7 +105,8 @@
       "key": "armor",
       "trigger_props": {
         "direction": "TAKEN"
-      }
+      },
+      "cadence_mult": 1.25
     },
     {
       "key": "default"
@@ -99,6 +142,10 @@
     },
     {
       "key": "4",
+      "cadence": "@always"
+    },
+    {
+      "key": "5",
       "cadence": "@always"
     },
     {

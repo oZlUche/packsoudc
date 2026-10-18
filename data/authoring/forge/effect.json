@@ -4,151 +4,8 @@
   "display_names": {
     "en": "Effect"
   },
-  "description": "效果槽：放进去的道具按材质定「做什么」（也给附魔前缀）、按用途定给谁、按稀有度定几阶（低的是基础，中间升阶，最高再附带一个）。占位表，作者过内容。",
+  "description": "效果槽：放进去的道具按材质定「做什么」（每种材质写攻式、守式两套，也给附魔前缀），按用途定攻守（盾、防具用守式，其它用攻式），按稀有度定几阶：升阶、附带都是在基础句后面追加一句。",
   "material": [
-    {
-      "key": "bone",
-      "effect": {
-        "type": "apply_status",
-        "buff": "bleed"
-      },
-      "bonus": {
-        "type": "deal_damage",
-        "amount": 2.0,
-        "damage_stat": ""
-      },
-      "amount_field": "stacks",
-      "prefix": "嗜血的",
-      "prefixes": {
-        "en": "Bloodthirsty "
-      }
-    },
-    {
-      "key": "flesh",
-      "effect": {
-        "type": "apply_status",
-        "buff": "poison"
-      },
-      "upgraded": {
-        "type": "apply_status",
-        "buff": "virulent"
-      },
-      "bonus": {
-        "type": "apply_status",
-        "buff": "bleed"
-      },
-      "amount_field": "stacks",
-      "prefix": "淬毒的",
-      "prefixes": {
-        "en": "Venomous "
-      }
-    },
-    {
-      "key": "gem",
-      "effect": {
-        "type": "deal_damage",
-        "damage_type": "fire",
-        "amount": 2.0,
-        "damage_stat": ""
-      },
-      "bonus": {
-        "type": "deal_damage",
-        "amount": 2.0,
-        "damage_stat": ""
-      },
-      "base": 2.0,
-      "prefix": "燃烧的",
-      "prefixes": {
-        "en": "Burning "
-      },
-      "by_element": {
-        "fire": {
-          "damage_type": "fire",
-          "prefix": "燃烧的",
-          "prefixes": {
-            "en": "Burning "
-          },
-          "applies": {
-            "buff": "scorch"
-          }
-        },
-        "ice": {
-          "damage_type": "ice",
-          "prefix": "霜冻的",
-          "prefixes": {
-            "en": "Frozen "
-          },
-          "applies": {
-            "buff": "chill"
-          }
-        },
-        "lightning": {
-          "damage_type": "lightning",
-          "prefix": "雷鸣的",
-          "prefixes": {
-            "en": "Thundering "
-          },
-          "applies": {
-            "buff": "numb"
-          }
-        }
-      }
-    },
-    {
-      "key": "leather",
-      "effect": {
-        "type": "change_resource",
-        "resource_key": "armor",
-        "amount": 3.0
-      },
-      "bonus": {
-        "type": "change_resource",
-        "amount": 2.0
-      },
-      "base": 3.0,
-      "self_only": true,
-      "prefix": "坚壁的",
-      "prefixes": {
-        "en": "Bulwark "
-      }
-    },
-    {
-      "key": "wood",
-      "effect": {
-        "type": "change_resource",
-        "amount": 2.0
-      },
-      "bonus": {
-        "type": "change_resource",
-        "resource_key": "armor",
-        "amount": 2.0
-      },
-      "base": 2.0,
-      "self_only": true,
-      "prefix": "回春的",
-      "prefixes": {
-        "en": "Verdant "
-      }
-    },
-    {
-      "key": "stone",
-      "effect": {
-        "type": "apply_status",
-        "target": "SELF",
-        "buff": "deflect"
-      },
-      "bonus": {
-        "type": "change_resource",
-        "resource_key": "armor",
-        "amount": 2.0
-      },
-      "amount_field": "stacks",
-      "self_only": true,
-      "prefix": "坚固的",
-      "prefixes": {
-        "en": "Sturdy "
-      }
-    },
     {
       "key": "metal",
       "effect": {
@@ -156,14 +13,614 @@
         "amount": 3.0,
         "damage_stat": ""
       },
+      "upgraded": {
+        "type": "deal_damage",
+        "damage_type": "bleed",
+        "amount": 3.0,
+        "damage_stat": ""
+      },
       "bonus": {
-        "type": "apply_status",
-        "buff": "bleed"
+        "type": "shift_axis",
+        "target": "OPPONENT",
+        "axis": "block",
+        "delta": -1
       },
       "base": 3.0,
+      "guard_effect": {
+        "type": "change_resource",
+        "resource_key": "armor",
+        "amount": 2.0
+      },
+      "guard_upgraded": {
+        "type": "shift_axis",
+        "axis": "block"
+      },
+      "guard_bonus": {
+        "type": "apply_status",
+        "target": "SELF",
+        "buff": "deflect"
+      },
+      "guard_base": 2.0,
+      "guard_prefix": "铁壁的",
+      "guard_prefixes": {
+        "en": "Bulwark "
+      },
       "prefix": "锋利的",
       "prefixes": {
         "en": "Keen "
+      }
+    },
+    {
+      "key": "bone",
+      "effect": {
+        "type": "apply_status",
+        "buff": "bleed",
+        "stacks": 2
+      },
+      "upgraded": {
+        "type": "guard_status",
+        "buff": "bleed",
+        "stacks": 2
+      },
+      "bonus": {
+        "type": "deal_damage",
+        "damage_type": "bleed",
+        "amount": 2.0,
+        "damage_stat": ""
+      },
+      "amount_field": "stacks",
+      "base": 2.0,
+      "guard_effect": {
+        "type": "remove_status",
+        "buff_id": "bleed",
+        "stacks": 2
+      },
+      "guard_upgraded": {
+        "type": "change_resource",
+        "amount": 2.0
+      },
+      "guard_bonus": {
+        "type": "apply_status",
+        "target": "SELF",
+        "buff": "blood_rage"
+      },
+      "guard_amount_field": "stacks",
+      "guard_base": 2.0,
+      "guard_prefix": "蛮勇的",
+      "guard_prefixes": {
+        "en": "Brutish "
+      },
+      "prefix": "嗜血的",
+      "prefixes": {
+        "en": "Bloodthirsty "
+      }
+    },
+    {
+      "key": "leather",
+      "effect": {
+        "type": "shift_axis",
+        "target": "OPPONENT",
+        "axis": "attack_speed",
+        "delta": -1
+      },
+      "upgraded": {
+        "type": "shift_axis",
+        "target": "OPPONENT",
+        "axis": "stamina_cost",
+        "delta": -1
+      },
+      "bonus": {
+        "type": "apply_status",
+        "buff": "marked"
+      },
+      "amount_field": "delta",
+      "guard_effect": {
+        "type": "change_resource",
+        "resource_key": "armor",
+        "amount": 2.0
+      },
+      "guard_upgraded": {
+        "type": "apply_status",
+        "target": "SELF",
+        "buff": "hardy_guard"
+      },
+      "guard_bonus": {
+        "type": "change_resource",
+        "amount": 2.0
+      },
+      "guard_base": 2.0,
+      "guard_prefix": "坚壁的",
+      "guard_prefixes": {
+        "en": "Hardened "
+      },
+      "prefix": "束缚的",
+      "prefixes": {
+        "en": "Binding "
+      }
+    },
+    {
+      "key": "stone",
+      "effect": {
+        "type": "deal_damage",
+        "amount": 4.0,
+        "damage_stat": ""
+      },
+      "upgraded": {
+        "type": "shift_axis",
+        "target": "OPPONENT",
+        "axis": "attack_speed",
+        "delta": -1
+      },
+      "bonus": {
+        "type": "apply_status",
+        "buff": "numb"
+      },
+      "base": 4.0,
+      "guard_effect": {
+        "type": "apply_status",
+        "target": "SELF",
+        "buff": "deflect"
+      },
+      "guard_upgraded": {
+        "type": "apply_status",
+        "target": "SELF",
+        "buff": "deflect_long"
+      },
+      "guard_bonus": {
+        "type": "shift_axis",
+        "axis": "block"
+      },
+      "guard_amount_field": "",
+      "guard_prefix": "坚固的",
+      "guard_prefixes": {
+        "en": "Sturdy "
+      },
+      "prefix": "碎岩的",
+      "prefixes": {
+        "en": "Crushing "
+      }
+    },
+    {
+      "key": "wood",
+      "effect": {
+        "type": "deal_damage",
+        "amount": 2.0,
+        "damage_stat": ""
+      },
+      "upgraded": {
+        "type": "apply_status",
+        "buff": "bleed"
+      },
+      "bonus": {
+        "type": "shift_axis",
+        "axis": "attack_speed"
+      },
+      "base": 2.0,
+      "guard_effect": {
+        "type": "change_resource",
+        "amount": 2.0
+      },
+      "guard_upgraded": {
+        "type": "shift_axis",
+        "axis": "regen_hp"
+      },
+      "guard_bonus": {
+        "type": "change_resource",
+        "resource_key": "mana",
+        "amount": 2.0
+      },
+      "guard_base": 2.0,
+      "guard_prefix": "回春的",
+      "guard_prefixes": {
+        "en": "Verdant "
+      },
+      "prefix": "荆棘的",
+      "prefixes": {
+        "en": "Thorned "
+      }
+    },
+    {
+      "key": "gem",
+      "effect": {
+        "type": "deal_damage",
+        "damage_type": "fire",
+        "amount": 3.0,
+        "damage_stat": ""
+      },
+      "upgraded": {
+        "type": "deal_damage",
+        "amount": 3.0,
+        "damage_stat": ""
+      },
+      "bonus": {
+        "type": "shift_axis",
+        "target": "OPPONENT",
+        "axis": "damage_taken"
+      },
+      "base": 3.0,
+      "guard_effect": {
+        "type": "change_resource",
+        "resource_key": "mana",
+        "amount": 2.0
+      },
+      "guard_upgraded": {
+        "type": "shift_axis",
+        "axis": "crit_chance"
+      },
+      "guard_bonus": {
+        "type": "apply_status",
+        "target": "SELF",
+        "buff": "ward"
+      },
+      "guard_base": 2.0,
+      "guard_prefix": "璨光的",
+      "guard_prefixes": {
+        "en": "Gleaming "
+      },
+      "prefix": "燃烧的",
+      "prefixes": {
+        "en": "Burning "
+      },
+      "by_element": {
+        "fire": {
+          "applies": {
+            "buff": "scorch"
+          },
+          "damage_type": "fire",
+          "prefix": "燃烧的",
+          "prefixes": {
+            "en": "Burning "
+          }
+        },
+        "ice": {
+          "applies": {
+            "buff": "chill"
+          },
+          "damage_type": "ice",
+          "prefix": "霜冻的",
+          "prefixes": {
+            "en": "Frozen "
+          }
+        },
+        "lightning": {
+          "applies": {
+            "buff": "numb"
+          },
+          "damage_type": "lightning",
+          "prefix": "雷鸣的",
+          "prefixes": {
+            "en": "Thundering "
+          }
+        }
+      }
+    },
+    {
+      "key": "flesh",
+      "effect": {
+        "type": "apply_status",
+        "buff": "poison",
+        "stacks": 2
+      },
+      "upgraded": {
+        "type": "apply_status",
+        "buff": "virulent"
+      },
+      "bonus": {
+        "type": "apply_status",
+        "buff": "fungal_blood"
+      },
+      "amount_field": "stacks",
+      "base": 2.0,
+      "guard_effect": {
+        "type": "change_resource",
+        "amount": 2.0
+      },
+      "guard_upgraded": {
+        "type": "remove_status",
+        "buff_id": "poison",
+        "stacks": 0
+      },
+      "guard_bonus": {
+        "type": "apply_status",
+        "target": "SELF",
+        "buff": "hardy_guard"
+      },
+      "guard_base": 2.0,
+      "guard_prefix": "厚皮的",
+      "guard_prefixes": {
+        "en": "Thick-hided "
+      },
+      "prefix": "淬毒的",
+      "prefixes": {
+        "en": "Venomous "
+      }
+    },
+    {
+      "key": "cloth",
+      "effect": {
+        "type": "shift_axis",
+        "target": "OPPONENT",
+        "axis": "stamina_cost",
+        "delta": -1
+      },
+      "upgraded": {
+        "type": "remove_status",
+        "target": "OPPONENT",
+        "all_buffs": true
+      },
+      "bonus": {
+        "type": "apply_status",
+        "buff": "marked"
+      },
+      "amount_field": "delta",
+      "guard_effect": {
+        "type": "remove_status",
+        "buff_id": "bleed",
+        "stacks": 2
+      },
+      "guard_upgraded": {
+        "type": "change_resource",
+        "resource_key": "armor",
+        "amount": 2.0
+      },
+      "guard_bonus": {
+        "type": "apply_status",
+        "target": "SELF",
+        "buff": "hardy_guard"
+      },
+      "guard_amount_field": "stacks",
+      "guard_base": 2.0,
+      "guard_prefix": "裹伤的",
+      "guard_prefixes": {
+        "en": "Dressed "
+      },
+      "prefix": "缠绕的",
+      "prefixes": {
+        "en": "Tangling "
+      }
+    },
+    {
+      "key": "herb",
+      "effect": {
+        "type": "apply_status",
+        "buff": "poison",
+        "stacks": 2
+      },
+      "upgraded": {
+        "type": "shift_axis",
+        "target": "OPPONENT",
+        "axis": "regen_hp_pct",
+        "delta": -1
+      },
+      "bonus": {
+        "type": "remove_status",
+        "target": "OPPONENT",
+        "all_buffs": true
+      },
+      "amount_field": "stacks",
+      "base": 2.0,
+      "guard_effect": {
+        "type": "remove_status",
+        "stacks": 2,
+        "all_debuffs": true
+      },
+      "guard_upgraded": {
+        "type": "change_resource",
+        "amount": 2.0
+      },
+      "guard_bonus": {
+        "type": "shift_axis",
+        "axis": "regen_hp"
+      },
+      "guard_amount_field": "stacks",
+      "guard_base": 2.0,
+      "guard_prefix": "药香的",
+      "guard_prefixes": {
+        "en": "Fragrant "
+      },
+      "prefix": "苦涩的",
+      "prefixes": {
+        "en": "Bitter "
+      }
+    },
+    {
+      "key": "clay",
+      "effect": {
+        "type": "deal_damage",
+        "amount": 3.0,
+        "damage_stat": ""
+      },
+      "upgraded": {
+        "type": "apply_status",
+        "buff": "bleed"
+      },
+      "bonus": {
+        "type": "shift_axis",
+        "target": "OPPONENT",
+        "axis": "block",
+        "delta": -1
+      },
+      "base": 3.0,
+      "guard_effect": {
+        "type": "change_resource",
+        "resource_key": "mana",
+        "amount": 2.0
+      },
+      "guard_upgraded": {
+        "type": "apply_status",
+        "target": "SELF",
+        "buff": "ward"
+      },
+      "guard_bonus": {
+        "type": "shift_axis",
+        "axis": "max_hp"
+      },
+      "guard_base": 2.0,
+      "guard_prefix": "釉彩的",
+      "guard_prefixes": {
+        "en": "Glazed "
+      },
+      "prefix": "碎瓷的",
+      "prefixes": {
+        "en": "Shattering "
+      }
+    },
+    {
+      "key": "nature",
+      "effect": {
+        "type": "deal_damage",
+        "amount": 2.0,
+        "damage_stat": ""
+      },
+      "upgraded": {
+        "type": "apply_status",
+        "buff": "bleed"
+      },
+      "bonus": {
+        "type": "shift_axis",
+        "axis": "attack_speed"
+      },
+      "base": 2.0,
+      "guard_effect": {
+        "type": "change_resource",
+        "amount": 2.0
+      },
+      "guard_upgraded": {
+        "type": "shift_axis",
+        "axis": "regen_hp"
+      },
+      "guard_bonus": {
+        "type": "change_resource",
+        "resource_key": "mana",
+        "amount": 2.0
+      },
+      "guard_base": 2.0,
+      "guard_prefix": "回春的",
+      "guard_prefixes": {
+        "en": "Verdant "
+      },
+      "prefix": "荆棘的",
+      "prefixes": {
+        "en": "Thorned "
+      }
+    },
+    {
+      "key": "crafted",
+      "effect": {
+        "type": "deal_damage",
+        "amount": 3.0,
+        "damage_stat": ""
+      },
+      "upgraded": {
+        "type": "deal_damage",
+        "damage_type": "bleed",
+        "amount": 3.0,
+        "damage_stat": ""
+      },
+      "bonus": {
+        "type": "shift_axis",
+        "target": "OPPONENT",
+        "axis": "block",
+        "delta": -1
+      },
+      "base": 3.0,
+      "guard_effect": {
+        "type": "change_resource",
+        "resource_key": "armor",
+        "amount": 2.0
+      },
+      "guard_upgraded": {
+        "type": "shift_axis",
+        "axis": "block"
+      },
+      "guard_bonus": {
+        "type": "apply_status",
+        "target": "SELF",
+        "buff": "deflect"
+      },
+      "guard_base": 2.0,
+      "guard_prefix": "铁壁的",
+      "guard_prefixes": {
+        "en": "Bulwark "
+      },
+      "prefix": "锋利的",
+      "prefixes": {
+        "en": "Keen "
+      }
+    },
+    {
+      "key": "magic",
+      "effect": {
+        "type": "deal_damage",
+        "damage_type": "fire",
+        "amount": 3.0,
+        "damage_stat": ""
+      },
+      "upgraded": {
+        "type": "deal_damage",
+        "amount": 3.0,
+        "damage_stat": ""
+      },
+      "bonus": {
+        "type": "shift_axis",
+        "target": "OPPONENT",
+        "axis": "damage_taken"
+      },
+      "base": 3.0,
+      "guard_effect": {
+        "type": "change_resource",
+        "resource_key": "mana",
+        "amount": 2.0
+      },
+      "guard_upgraded": {
+        "type": "shift_axis",
+        "axis": "crit_chance"
+      },
+      "guard_bonus": {
+        "type": "apply_status",
+        "target": "SELF",
+        "buff": "ward"
+      },
+      "guard_base": 2.0,
+      "guard_prefix": "璨光的",
+      "guard_prefixes": {
+        "en": "Gleaming "
+      },
+      "prefix": "燃烧的",
+      "prefixes": {
+        "en": "Burning "
+      },
+      "by_element": {
+        "fire": {
+          "applies": {
+            "buff": "scorch"
+          },
+          "damage_type": "fire",
+          "prefix": "燃烧的",
+          "prefixes": {
+            "en": "Burning "
+          }
+        },
+        "ice": {
+          "applies": {
+            "buff": "chill"
+          },
+          "damage_type": "ice",
+          "prefix": "霜冻的",
+          "prefixes": {
+            "en": "Frozen "
+          }
+        },
+        "lightning": {
+          "applies": {
+            "buff": "numb"
+          },
+          "damage_type": "lightning",
+          "prefix": "雷鸣的",
+          "prefixes": {
+            "en": "Thundering "
+          }
+        }
       }
     },
     {
@@ -174,6 +631,16 @@
         "damage_stat": ""
       },
       "base": 2.0,
+      "guard_effect": {
+        "type": "change_resource",
+        "resource_key": "armor",
+        "amount": 2.0
+      },
+      "guard_base": 2.0,
+      "guard_prefix": "护身的",
+      "guard_prefixes": {
+        "en": "Warded "
+      },
       "prefix": "附魔的",
       "prefixes": {
         "en": "Enchanted "
@@ -183,18 +650,19 @@
   "purpose": [
     {
       "key": "weapon",
-      "target": 0
+      "stance": "attack"
     },
     {
       "key": "shield",
-      "target": 1
+      "stance": "guard"
     },
     {
       "key": "armor",
-      "target": 1
+      "stance": "guard"
     },
     {
-      "key": "default"
+      "key": "default",
+      "stance": "attack"
     }
   ],
   "rarity": [
@@ -210,11 +678,17 @@
     },
     {
       "key": "3",
-      "tier": 1
+      "tier": 2
     },
     {
       "key": "4",
-      "tier": 2
+      "tier": 2,
+      "main_mult": 1.5
+    },
+    {
+      "key": "5",
+      "tier": 2,
+      "main_mult": 2.0
     },
     {
       "key": "default"

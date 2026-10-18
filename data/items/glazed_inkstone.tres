@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_bxra3"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_0mmeo"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_be6xu"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_sj1ct"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_hxd64"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_bn23r"]
+
+[sub_resource type="Resource" id="Resource_p6ygv"]
+script = ExtResource("6_bn23r")
+
+[resource]
+script = ExtResource("5_hxd64")
+id = &"glazed_inkstone"
+display_name = "釉彩砚"
+display_names = {
+"en": "Glazed Inkstone"
+}
+description = "文士的物件，釉色像雨后天。"
+shape = SubResource("Resource_p6ygv")
+rarity = 3
+tags = Array[StringName]([&"material", &"crafted", &"clay", &"treasure"])

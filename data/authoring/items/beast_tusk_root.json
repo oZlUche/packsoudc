@@ -1,0 +1,20 @@
+{
+  "id": "beast_tusk_root",
+  "display_name": "巨兽獠牙根",
+  "display_names": {
+    "en": "Beast Tusk Root"
+  },
+  "description": "带着牙髓的一截，没剔干净。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "weight": 3,
+  "tags": [
+    "material",
+    "nature",
+    "flesh",
+    "trophy"
+  ]
+}
