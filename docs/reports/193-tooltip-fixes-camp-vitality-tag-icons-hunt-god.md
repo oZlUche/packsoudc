@@ -190,3 +190,13 @@
 - 补充一：`Glossary.COUNTDOWN_WORD` 一处，十几处拼句子都引用它（含 `UiText` 的 `notice.countdown` 与 `寸步难行` 词条）。「最近的撤离点倒计时剩 N 时关闭」/ 地图上的牌子 / 栏上的字，N 都改成**关闭时倒计时的读数**（`PaidExtracts.closes_at`），和节点浮窗一致；原来写的是「还有几步关」。地图牌子另收 `closing["at"]`。`CountdownModule.describe` 改成「走路、原地等待都扣它」。帮助页 6 张按判据逐句改，路程句不动。
 
 测试：新增 `test_tooltip_193`、`test_drag_markers_193`、`test_faith_tip_193`、`test_rest_event_193`（含补充一：日规悬浮窗、栏上的字、`PassTime.describe`、扎营、代价提示、快没了的提醒都不含「步」）；`test_tooltip_170` / `test_feedback_1012` 的钉住时刻加 `PIN_DELAY_SEC`；`test_hud_189`、`test_screens_157`、`test_altar`、`test_brute_188b` 跟着新文字改。截图见 /mnt/project-files/screenshots/193/。
+
+## 补充二（2026-10-18 21:21，作者在美术设计线程定的尺寸）
+
+作者原话：「32像素，另外献祭栏里面不要名字，图标也要32像素」。据此改三处写法：
+
+- **悬浮窗里的标签图标**（§6）：显示尺寸 **32 px**（`[img=32]`），不是 24；美术按 32 / 64 两档交付（`/mnt/project-files/art/ui/tags/`，文件名 = 标签 id）。
+- **信仰献祭栏**（§3.4）：只放图标、不放名字（已定），图标也是 **32 px**，同一条规矩里间隔 4 px、规矩之间 16 px 不变。
+- **增益 / 受益 / 装载格位图标**（§5）：§5 写的「格 48 px 时图标 20 px」不对，实际用的是 **32 px**（已交付 `art/ui/tip/v2/`）；颜色按 `UiPalette`：增益蓝 `6fb3f0`、受益橙 `f0a85c`、装载紫 `7a8cf0`。
+
+美术已把两套图交给执行线程；执行落地时按本补充的尺寸接。
