@@ -106,6 +106,12 @@ const BUTTON_ICON := &"ButtonIcon"
 const BUTTON_ART := &"ButtonArt"
 ## 168：大标题（马善政，[method UiPalette.display_font]）—— 主菜单游戏名、开局屏与开场事件的章节名、宝箱屏的说明字
 const LABEL_DISPLAY := &"LabelDisplay"
+## 197 补充一 §6：主菜单 / 启动屏的游戏名 —— 思源宋体 Bold、暖纸色、6 px 深褐描边、下投影、字距 +6（[method make_hero_title]）
+const LABEL_HERO_TITLE := &"LabelHeroTitle"
+## 197 补充一 §7：主菜单左列木牌（主档琥珀木 / 次档木牌，朱雀仿宋）与左下那一行小字链接（语言、开发工具、退出）
+const BUTTON_MENU_PRIMARY := &"ButtonMenuPrimary"
+const BUTTON_MENU := &"ButtonMenu"
+const BUTTON_MENU_FOOT := &"ButtonMenuFoot"
 
 ## 全部变体（测试看齐全）
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
@@ -114,11 +120,25 @@ const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, 
 	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_GROOVE, PANEL_CAP_TILE, LABEL_CAP_VALUE,
 	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
 	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB,
-	BUTTON_MAP_ENTRY, BUTTON_MAP_SUB, BUTTON_SETUP_BACK, BUTTON_SETUP_GO, BUTTON_DIFF_MINUS, BUTTON_DIFF_PLUS, PANEL_BARE, PANEL_NODE_HINT]
+	BUTTON_MAP_ENTRY, BUTTON_MAP_SUB, BUTTON_SETUP_BACK, BUTTON_SETUP_GO, BUTTON_DIFF_MINUS, BUTTON_DIFF_PLUS, PANEL_BARE, PANEL_NODE_HINT,
+	LABEL_HERO_TITLE, BUTTON_MENU_PRIMARY, BUTTON_MENU, BUTTON_MENU_FOOT]
 
 const TITLE_SIZE := 18
 ## 168：大标题字号
 const DISPLAY_SIZE := 40
+## 197 补充一 §6：游戏名（1080 高时；屏幕按高等比缩放）、颜色、描边、投影、字距
+const HERO_TITLE_SIZE := 96
+const HERO_TITLE_COLOR := Color("f0e2c4")
+const HERO_OUTLINE_COLOR := Color("1a1410")
+const HERO_OUTLINE := 6
+const HERO_SHADOW := Color(0, 0, 0, 0.6)
+const HERO_SHADOW_OFFSET := Vector2i(0, 4)
+const HERO_SHADOW_SPREAD := 4
+const HERO_SPACING := 6
+## 197 补充一 §7：主菜单木牌字号（主档 / 次档）、左下小字
+const MENU_PRIMARY_SIZE := 28
+const MENU_BUTTON_SIZE := 20
+const MENU_FOOT_SIZE := 15
 const PANEL_MARGIN := 16
 const PANEL_LINE_MARGIN := 8
 const RICH_BODY_SIZE := 20
@@ -161,6 +181,8 @@ const ART_HOME_BTN_PRIMARY := "home/btn_wood_primary"
 const ART_HOME_BOX := "home/panel_cloth"
 const ART_SHELF := "home/shelf"
 const ART_TAB_MARK := "home/tab_mark"
+## 197 补充一 §5：主菜单轮换的三张整屏画（营地 → 军营 → 地图；2112 × 1320，四边留出血给镜头走）
+const ART_MENU_BGS: Array[String] = ["menu/bg_camp", "menu/bg_legion", "menu/bg_map"]
 ## 179：开局三页的整屏背景「选人场地」（铺满裁边）与三栏的凹槽板；没图：纯色底、平面板
 const ART_SETUP_BG := "setup/bg_hall"
 ## 作者 2026-10-17：选人场地只给第一页；第二页（带装备）木板拼接 / 仓库，第三页（选地图）桌上铺着的军用地图。没图：纯色底
@@ -221,6 +243,7 @@ static var _font_italic: Font = null
 static var _font_bold_italic: Font = null
 static var _font_title: Font = null
 static var _font_display: Font = null
+static var _font_hero: Font = null
 ## 157：界面贴图的目录。测试指到 `res://tests/fixtures/ui/`（那里放一张小图），用完改回来
 static var asset_root := "res://assets/ui/"
 
@@ -365,6 +388,42 @@ static func make_display(text: String, font_size: int = DISPLAY_SIZE) -> Label:
 	if font_size != DISPLAY_SIZE:
 		l.add_theme_font_size_override("font_size", font_size)
 	return l
+
+
+## 197 补充一 §6：游戏名（[constant LABEL_HERO_TITLE]）；字号不是 [constant HERO_TITLE_SIZE] 才覆写（主菜单按屏高缩放时改它）
+static func make_hero_title(text: String, font_size: int = HERO_TITLE_SIZE) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.theme_type_variation = LABEL_HERO_TITLE
+	set_hero_size(l, font_size)
+	return l
+
+
+## 游戏名换字号（窗口改了高度）
+static func set_hero_size(l: Label, font_size: int) -> void:
+	if font_size == HERO_TITLE_SIZE:
+		l.remove_theme_font_size_override("font_size")
+	else:
+		l.add_theme_font_size_override("font_size", font_size)
+
+
+## 197 补充一 §7：主菜单左列的木牌（[param primary] = 主档琥珀木）
+static func make_menu_button(text: String, handler: Callable, primary: bool = false) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.theme_type_variation = BUTTON_MENU_PRIMARY if primary else BUTTON_MENU
+	b.pressed.connect(handler)
+	return b
+
+
+## 197 补充一 §7：左下那一行的小字链接（暗色，悬停变亮）
+static func make_menu_link(text: String, handler: Callable) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.flat = true
+	b.theme_type_variation = BUTTON_MENU_FOOT
+	b.pressed.connect(handler)
+	return b
 
 
 ## 会折行的说明文字。必须给最小宽度：中文没有词边界，容器算出的最小宽度是一个字
@@ -928,6 +987,7 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_stylebox("panel", PANEL_PARCHMENT, parchment_art if parchment_art != null else parchment)
 	_difficulty_buttons(t)
 	_home_buttons(t)
+	_menu_styles(t)
 	# 150：读数组件（原来地图屏那条 HUD 的无边窄底，搬成变体）
 	t.set_type_variation(PANEL_HUD, "PanelContainer")
 	var hud_art: StyleBox = _art_box(ART_INSET, false, HUD_MARGIN)     # 157 补充三：读数是刻在板里的凹槽
@@ -1045,6 +1105,47 @@ static func _home_buttons(t: Theme) -> void:
 		for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
 			t.set_color(state, name, INK)
 		t.set_color("font_disabled_color", name, INK_SOFT)
+
+
+## 197 补充一：游戏名与主菜单的木牌 / 小字链接。木牌借家的那套五态（[method _home_buttons]），换朱雀仿宋
+static func _menu_styles(t: Theme) -> void:
+	if _font_hero == null:
+		var hero := FontVariation.new()
+		hero.base_font = UiPalette.cjk_font_bold()
+		hero.spacing_glyph = HERO_SPACING
+		_font_hero = hero
+	t.set_type_variation(LABEL_HERO_TITLE, "Label")
+	t.set_font("font", LABEL_HERO_TITLE, _font_hero)
+	t.set_font_size("font_size", LABEL_HERO_TITLE, HERO_TITLE_SIZE)
+	t.set_color("font_color", LABEL_HERO_TITLE, HERO_TITLE_COLOR)
+	t.set_color("font_outline_color", LABEL_HERO_TITLE, HERO_OUTLINE_COLOR)
+	t.set_constant("outline_size", LABEL_HERO_TITLE, HERO_OUTLINE)
+	t.set_color("font_shadow_color", LABEL_HERO_TITLE, HERO_SHADOW)
+	t.set_constant("shadow_offset_x", LABEL_HERO_TITLE, HERO_SHADOW_OFFSET.x)
+	t.set_constant("shadow_offset_y", LABEL_HERO_TITLE, HERO_SHADOW_OFFSET.y)
+	t.set_constant("shadow_outline_size", LABEL_HERO_TITLE, HERO_SHADOW_SPREAD)
+	for pair in [[BUTTON_MENU_PRIMARY, BUTTON_HOME_PRIMARY, MENU_PRIMARY_SIZE], [BUTTON_MENU, BUTTON_HOME, MENU_BUTTON_SIZE]]:
+		var name: StringName = pair[0]
+		var home: StringName = pair[1]
+		t.set_type_variation(name, "Button")
+		for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
+			if t.has_stylebox(state, home):
+				t.set_stylebox(state, name, t.get_stylebox(state, home))
+		for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color", "font_disabled_color"]:
+			if t.has_color(state, home):
+				t.set_color(state, name, t.get_color(state, home))
+		t.set_font("font", name, _font_title)
+		t.set_font_size("font_size", name, pair[2])
+	t.set_type_variation(BUTTON_MENU_FOOT, "Button")
+	var bare := StyleBoxEmpty.new()
+	bare.set_content_margin_all(2)
+	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
+		t.set_stylebox(state, BUTTON_MENU_FOOT, bare)
+	t.set_font_size("font_size", BUTTON_MENU_FOOT, MENU_FOOT_SIZE)
+	t.set_color("font_color", BUTTON_MENU_FOOT, UiPalette.DIM)
+	t.set_color("font_focus_color", BUTTON_MENU_FOOT, UiPalette.DIM)
+	for state in ["font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
+		t.set_color(state, BUTTON_MENU_FOOT, UiPalette.FG)
 
 
 static func _button_box(bg: Color, edge: Color, pad: Vector2i) -> StyleBoxFlat:

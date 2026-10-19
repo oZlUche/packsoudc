@@ -239,3 +239,28 @@
 - 启动屏 `ui/boot.gd`：`load("res://assets/ui/menu/title_boot.png")` 画在同一位置、调制 40 % 亮度（图不在时仍 `draw_string_outline` 文字），菜单接管后由 40 % 淡到 100 %。
 - 悬停 / 点击标题无交互；不做发光动画（画面已经在动，标题要静）。
 - 补充一其余（§5 轮换镜头、§7 木牌列、`custom_user_dir_name`）不变。
+
+---
+
+## 13. 落地（2026-10-19，架构方案执行：补充一 §5–§7 + 补充二 §10、§12）
+
+**做了什么**
+
+- §5 背景：新 `ui/game/menu_backdrop.gd`（`MenuBackdrop`），两层 `TextureRect`（铺满裁边、中心为轴）交叉淡化 1.5 s；每张 14 s，平移 ≤ 屏宽 3 %、缩放 1.00 ↔ 1.06 推拉交替、`TRANS_SINE / EASE_IN_OUT`；同一张再出现时方向和上次夹角不超过 90°（不走回头路）。顺序营地 → 军营 → 地图（`UiTheme.ART_MENU_BGS`）。出树全停、失焦暂停。菜单不再调 `_slab_screen`。
+- §6 标题：`UiTheme.LABEL_HERO_TITLE` + `make_hero_title` / `set_hero_size`（思源宋体 Bold、字距 +6、`#f0e2c4`、6 px `#1a1410` 描边、投影 (0, 4) 黑 60 %），按屏高等比缩放。启动屏 `ui/boot.gd` 改 `serif_bold.otf`、先整排描边再整排填字，底画 `bg_camp` 压暗到 40 %；菜单第一次打开时整张画从 40 % 亮到 100 %（0.8 s）再起镜头。
+- 补充二 §12 字标接法：`UiTheme.art_cached("menu/title")` 非空就用图（`TextureRect`，1080 高时宽 720、按图的比例定高，左上 x 96、y 72，随高缩放，不接鼠标、无动画），空就退回文字标题；启动屏同理读 `title_boot.png`（1×），也压暗 40 %，菜单第一次打开时字标跟画一起亮起来。字标还没到，现在画的是文字标题；图到了只需放进 `assets/ui/menu/`，不用改代码。
+- §7 按钮：左 1/3 竖向暗纱（`GradientTexture2D`，黑 0 → 55 % → 0，宽 640）；按钮列左对齐 x 96、y 240，主档琥珀木 360 × 72 / 28 号、次档木牌 300 × 52 / 20 号（新变体 `ButtonMenuPrimary` / `ButtonMenu`，借家的木牌五态、换朱雀仿宋），间距 14、档间 28；末档左下一行小字（`ButtonMenuFoot` 15 号暗色，悬停变亮）：「中 / EN」（新键 `menu.lang_short`）· 开发工具（开发版）· 退出。战绩行拿掉；备份 / 对账提示右下 13 号小字，没有不占位。
+- 存档目录：见下「偏差 1」。
+
+**偏差**
+
+1. **`custom_user_dir_name` 单独写不生效、照方案写会换目录**：Godot 只在 `use_custom_user_dir = true` 时才读这个名字，而一打开它，目录就从 `<数据目录>/Godot/app_userdata/背包搜打撤` 变成 `<数据目录>/背包搜打撤` —— 老存档找不到。所以落地是 `use_custom_user_dir=true` + `custom_user_dir_name="Godot/app_userdata/背包搜打撤"`（Linux 用小写 `godot/…` 的 `.linux` 覆盖，Godot 在 Linux 上的目录名是小写）：路径和现在一模一样，以后改 `config/name` 也不动。实测：改名前后 `OS.get_user_data_dir()` 都是原目录；测试守着。
+2. **三张画的占位**：概念图 `preview_A/B/C` 画进了标题和按钮，直接当底会出现两套按钮。占位改为用美术的 `gen.py` 原样重画、只去掉字 / 木牌 / 路牌柱，放大到 2112 × 1320，json 带 `"placeholder": true`。美术交图时直接覆盖同名文件即可。
+3. **投影没有模糊**：`Label` 的投影只有偏移和外扩（`shadow_outline_size`），没有高斯模糊；「模糊 4」按外扩 4 做。
+4. **次档木牌也用朱雀仿宋**（§7 只写了主档）：一列两种字体看着散。
+5. **启动屏的游戏名挪到左上**（原来在屏中），和菜单同一位置，亮起来时不跳；进度条和「载入中」留在屏中。
+6. **每次回菜单从营地起**；只有进程里第一次打开（刚从启动屏过来）才从 40 % 亮起来，之后回菜单直接开镜头。
+
+**测试**：新 `tests/ui/test_main_menu_197.gd`（样式、三张画、启动屏常量、存档目录、菜单排布、镜头参数 / 推拉交替 / 不走回头路 / 失焦暂停 / 出树全停；字标用夹具 `tests/fixtures/ui/menu/title.png` 验图的位置与大小）；`test_screens_157` 的石板用例改看设置屏。
+
+截图：`/mnt/project-files/screenshots/197/`（`menu.png` 营地、`fade.png` 营地淡到军营、`boot.png` 启动屏）。

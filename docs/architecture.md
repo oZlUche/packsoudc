@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.38 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.39 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4300,6 +4300,7 @@ res://
 | v3.30 | 2026-10-17 | **188 背包面板去字、信仰窗重排**（作者 2026-10-17，待定 1–3 按推荐）：背包面板不再写操作提示、地上说明、参战 / 可用格读数、信仰行与棋盘上方说明，回话走 `hint_sink`（地图屏 = 提示行）；`FaithTooltip.describe_full` → 名字行（Lv、休眠件数）+ 信力行 + 各阶效果 / 信力来源 / 献祭，颜色全走模板；`HoverTip.show_faith` 名字行下挂到下一阶的进度条、各段虚线分隔、宽 360 |
 | v3.31 | 2026-10-18 | **188 补充一 信仰窗分段、蛮神改写**（作者 2026-10-18，待定 1–4 按推荐）：`HoverTip.FaithBar` 一段一级、长度按所需信力（满阶也挂）；`FaithTooltip` 同一级的效果合成一行（`[table=2]`），没到的级整行 `@dim`，句子按 `FaithPerk.summary_for(def, points)` 写、锁住的级按那一级的阈值算；`FaithPerk.scaled` 给「随信力」的数（每 50 信力一阶、封顶）；蛮神一级门槛式增伤、二级献祭生命上限二选一（信力 / 全体造成伤害 + 急速）、三级 `prebattle_actions` 两个按钮（耗体力 / 耗信力、非首领）、四级持续战斗秒数随信力；献祭规矩 `OfferingRule.short_name`、`ItemVolume.size_label`（「大型道具」），有图标时排一行 `[img]`（`assets/ui/tags/<tag>.png`、`assets/ui/offerings/{large,medium,crit}.png`），缺一枚就退回文字 |
 | v3.32 | 2026-10-18 | **189 / 190 顶端栏长槽与日晷倒计时**（作者 2026-10-18 定案，待定 1–3 按推荐）：`hud_bar` 在板上画一条贯通的浅槽（`hud/groove` 九宫格、`band` 定槽身），宿主排完把铜点交给栏画（同行相邻两件之间、右槽图标组左边，空着的件两边不放）；`HudWidget.set_in_bar` 让栏里的件坐在槽底上（`PANEL_BARE`、浅底墨字），拖出栏回 `PANEL_HUD`；栏里同行间距 24、组在槽身里居中；倒计时改成刻在槽底的半圆日规（`hud/dial/*`：染色扇面 / 表盘 / 绕轴心转的影子 / 轴心，三阶 calm·half·low），栏上不写数字，停上去 `show_status` 弹「倒计时」窗、走一步 `update_status` 换字；缺图退回文字版 |
+| v3.39 | 2026-10-19 | **197 主菜单重做**（补充一、二）：`MenuBackdrop`（`ui/game/menu_backdrop.gd`）三张画 `UiTheme.ART_MENU_BGS` 轮换，每张 14 s 慢镜头（平移 ≤ 屏宽 3 %、1.00 ↔ 1.06 推拉交替、1.5 s 交叉淡化，出树全停、失焦暂停）；游戏名 `UiTheme.make_hero_title`（思源宋体 Bold 描边），字标图 `menu/title` 在就用图；左列木牌 `ButtonMenuPrimary` / `ButtonMenu`、左下小字 `ButtonMenuFoot`；菜单不再上石板；启动屏底画营地压暗 40 %、菜单从那档亮起来；`use_custom_user_dir` + `custom_user_dir_name="Godot/app_userdata/背包搜打撤"`（Linux 小写）钉住存档目录、路径不变 |
 | v3.38 | 2026-10-18 | **196 休息点整屏换成夜晚营地**（作者在 UI替换美术定稿「甲」，待定按推荐）：`EventDef.scene`（空 / `rest_camp`，导入器校验，事件编辑器有下拉）；`GameDirector.script_for` 按它开 `ui/game/rest_camp_screen.gd`；选项按后果画成造物（`RestCampScreen.piece_of`），锁住换图不藏，悬停铜圈 + 悬浮窗，造物按图的 alpha 接鼠标；营地里歇完不跳屏（`GameFlow.camp_rest`，营地重开冒一行体力、两份用完留一屏只剩路标）；从神坛 / 铸炉回来回营地；`rest_screen.gd` 删除；素材在 `assets/ui/rest/` |
 | v3.37 | 2026-10-18 | **193 补充二 / 三 悬浮窗标签图标、格位图标 40**（作者 21:37）：道具悬浮窗副行的标签另起一行画 32 px 图标（`ItemTooltip.tag_icons`），每枚链到 `tag:<id>` 词条（`tag_icon_terms`），钉住后停上去开子窗写名字，只写名字的子窗按名字收窄；没图的标签照写字；格位图标换 v3、`InventoryView.marker_side` = 40（格小了按 0.67 缩），拖拽残影同尺寸 |
 | v3.36 | 2026-10-18 | **195 铸炉三表重做与材质标签**（架构线程方案，作者「按推荐来」，§3 十六件候选全做）：道具每件一个材质标签，新标签 `cloth` 织物 / `herb` 草药 / `clay` 陶瓷（图标进 `assets/ui/tags/`）；十六件新材料 / 吃食 / 摆件；三张铸炉表按十种材质逐行重写；`ForgeEntry` 加 `cadence_mult`、`guard_*`、`stance`、`main_mult`；`Forge.rule_of` 攻守两式、升阶附带追加；导入器稀有度 0–5、攻守都要写、`stance` 只许 attack / guard；落地差异见报告 §9 |
