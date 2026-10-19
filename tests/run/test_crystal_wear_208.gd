@@ -60,6 +60,7 @@ static func run_charge_dots(t: TestCase) -> void:
 	t.begin("208 · 次数角标：满的不画；没满画 max 个点、亮的 = 剩的；落在当前朝向最靠左下那一格；有这一档的变体图就不画")
 	var db := _db()
 	ItemPainter.clear_art_cache()
+	ItemPainter.art_variants().erase(&"fire_crystal")     # 先当作还没交变体图（交了的另在下面验）
 	var cell := 60.0
 	t.eq(ItemPainter.charge_dots(ItemInstance.create(db.get_def(&"fire_crystal")), 0, Vector2.ZERO, cell).size(), 0, "满的：不画")
 	t.eq(ItemPainter.charge_dots(ItemInstance.create(db.get_def(&"knife")), 0, Vector2.ZERO, cell).size(), 0, "没耐久：不画")
