@@ -52,6 +52,9 @@ var resolution: Vector2i = Vector2i.ZERO
 ## 道具图在不在是界面的事，由界面传进 [method grid_on]（core 不认识 ui）
 var show_grid: int = GRID_AUTO
 const GRID_AUTO := -1
+## 204：音效 / 音乐音量（0～1，线性；0 = 静音）。界面层套到总线上（`Audio.apply`）；音乐那行等第一首曲子再在设置屏露出来
+var sfx_volume: float = 0.8
+var music_volume: float = 0.6
 
 ## 172：认得的窗口模式；全屏 = 无边框铺满桌面（待定 4 A）
 const WINDOW_MODES: Array[String] = ["windowed", "fullscreen"]
@@ -92,6 +95,8 @@ func to_dict() -> Dictionary:
 		"window_mode": window_mode,
 		"resolution": [resolution.x, resolution.y],
 		"show_grid": show_grid,
+		"sfx_volume": sfx_volume,
+		"music_volume": music_volume,
 	}
 
 
@@ -118,6 +123,8 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	s.window_mode = mode if WINDOW_MODES.has(mode) else "windowed"
 	s.resolution = normalize_resolution(d.get("resolution", []))
 	s.show_grid = clampi(int(d.get("show_grid", GRID_AUTO)), GRID_AUTO, 1)
+	s.sfx_volume = clampf(float(d.get("sfx_volume", 0.8)), 0.0, 1.0)
+	s.music_volume = clampf(float(d.get("music_volume", 0.6)), 0.0, 1.0)
 	return s
 
 

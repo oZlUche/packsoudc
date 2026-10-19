@@ -22,6 +22,8 @@ config/custom_user_dir_name.linux="godot/app_userdata/背包搜打撤"
 
 ; 开发期导航：任何场景里按 F1 回启动选择器。见 ui/dev_nav.gd
 DevNav="*res://ui/dev_nav.gd"
+; 204：声音 —— 总线、音效播放器、按钮音钩子。见 ui/audio.gd
+Audio="*res://ui/audio.gd"
 
 [display]
 

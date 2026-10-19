@@ -1,7 +1,7 @@
 ## 176：启动图。GDScript 没有预编译，主场景引用到的每个全局类在第一帧之前都要从源码编译一遍，
 ## 所以「启动时碰得到哪些脚本」得守住：
 ## - 启动屏 `ui/boot.tscn` 一个全局类都不引用（第一帧马上出来，正式游戏在后台线程载）；
-## - 正式游戏（`game.tscn` + 自动加载 DevNav）碰不到编辑器、启动器、导入器 / 导出器 / 表格工具。
+## - 正式游戏（`game.tscn` + 自动加载 DevNav、Audio）碰不到编辑器、启动器、导入器 / 导出器 / 表格工具。
 ## 扫法：从起点出发，脚本里出现的全局类名（去掉字符串与注释）、`preload` / `extends` 的路径、场景与资源里的脚本路径，一路跟下去。
 ## 运行时 `load()` 的路径不算 —— 那不在启动时编译
 extends RefCounted
@@ -11,6 +11,7 @@ const DevNavScript := preload("res://ui/dev_nav.gd")
 const BOOT := "res://ui/boot.tscn"
 const GAME := "res://ui/game/game.tscn"
 const DEV_NAV := "res://ui/dev_nav.gd"
+const AUDIO := "res://ui/audio.gd"     # 204：第二个自动加载
 ## 游戏启动时不该编译到的开发工具（编辑器整目录另按路径认）
 const FORBIDDEN := [
 	"res://core/authoring/content_importer.gd",
@@ -106,8 +107,8 @@ static func run_boot_isolated(t: TestCase) -> void:
 
 
 static func run_game_graph(t: TestCase) -> void:
-	t.begin("176 · 正式游戏的启动图（game.tscn + DevNav）碰不到编辑器、启动器、导入器与导出器")
-	var r := reachable([GAME, DEV_NAV])
+	t.begin("176 · 正式游戏的启动图（game.tscn + DevNav + Audio）碰不到编辑器、启动器、导入器与导出器")
+	var r := reachable([GAME, DEV_NAV, AUDIO])
 	t.check(r.has("res://ui/game/game_director.gd") and r.has("res://core/inventory/item_database.gd") and r.has("res://core/authoring/content_library.gd"), "扫得到游戏自己（%d 个文件）" % r.size())
 	var bad: Array[String] = []
 	for p in r:

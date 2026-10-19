@@ -65,6 +65,8 @@ func body() -> VBoxContainer:
 func _ready() -> void:
 	# 尺寸要等内容排完才知道，居中放要晚一帧
 	_place.call_deferred()
+	AudioHub.play(&"ui.open")     # 204：开 / 关窗的声音（关闭键、换屏撤掉都算关）
+	tree_exiting.connect(func(): AudioHub.play(&"ui.close"))
 
 
 ## 第一次摆：上次放的地方，没有就居中
