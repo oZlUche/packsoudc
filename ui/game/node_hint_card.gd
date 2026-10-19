@@ -59,12 +59,14 @@ func _init() -> void:
 
 
 ## 说明节点 [param id]（类型 [param p_type]）：[param hint] 是说明句（BBCode），[param extra] 第三行（空 = 不要这一行），[param foot] 底下的小字
-func show_for(id: int, p_type: StringName, hint: String, extra: String = "", foot: String = "", animate: bool = true) -> void:
+## [param title] 给了就用它当标题、不画类型字（作者 10-19：出生点写「出生点·搜索」）
+func show_for(id: int, p_type: StringName, hint: String, extra: String = "", foot: String = "", animate: bool = true, title: String = "") -> void:
 	node_id = id
 	type = p_type
 	var style := MapNodeStyle.of(p_type)
-	_glyph.text = String(style.get("glyph", ""))
-	_name.text = NodeText.label_of(p_type)
+	_glyph.text = String(style.get("glyph", "")) if title == "" else ""
+	_glyph.visible = _glyph.text != ""
+	_name.text = title if title != "" else NodeText.label_of(p_type)
 	UiTheme.set_rich(_body, hint)
 	UiTheme.set_rich(_extra, extra)
 	_extra.visible = extra != ""
