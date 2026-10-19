@@ -29,7 +29,15 @@ const MARK_INSET := 0.06
 ## 路径 → 贴图（没有的也记 null，别每帧探文件）
 static var _art: Dictionary = {}
 static var _listed: Dictionary = {}
+## 208：清单的 `variants`：id → {变体名: true}
+static var _variants: Dictionary = {}
 static var _manifest_read := false
+
+## 208：剩余次数角标 —— 点径、点距、内缩（按一格的比例）；暗点的颜色
+const CHARGE_DOT := 0.1
+const CHARGE_GAP := 0.14
+const CHARGE_INSET := 0.08
+const CHARGE_DIM := Color(1, 1, 1, 0.3)
 
 
 ## 187 → 201：道具图包到了没有 = 清单在不在。棋盘格线的默认（[method GameSettings.grid_on]）跟着它
@@ -42,12 +50,49 @@ static func art_ids() -> Dictionary:
 	if not _manifest_read:
 		_manifest_read = true
 		_listed = {}
+		_variants = {}
 		if art_available():
 			var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(ART_MANIFEST))
 			if data is Dictionary:
 				for id in (data as Dictionary).get("items", []):
 					_listed[StringName(String(id))] = true
+				var vs: Variant = (data as Dictionary).get("variants", {})
+				if vs is Dictionary:
+					for id in vs:
+						var names := {}
+						for v in (vs[id] if vs[id] is Array else []):
+							names[StringName(String(v))] = true
+						_variants[StringName(String(id))] = names
 	return _listed
+
+
+## 208：清单里的变体（id → {变体名: true}；测试与 [method art_of] 用）
+static func art_variants() -> Dictionary:
+	art_ids()
+	return _variants
+
+
+## 208：这一件现在该用哪张变体图 —— 耐久没满：`c<剩几次>`；207 生长到了第几阶：`s<阶>`；两样都有耐久优先；都没有空。
+## 变体图有没有画是 [method art_of] 的事，这里只按状态说名字
+static func variant_of(inst: ItemInstance) -> StringName:
+	if inst == null or inst.def == null:
+		return &""
+	if inst.def.wear != null and inst.charges() < inst.def.wear.max_charges:
+		return StringName("c%d" % inst.charges())
+	var stage := GrowthProfile.stage_of(inst)
+	if stage > 0:
+		return StringName("s%d" % stage)
+	return &""
+
+
+## 208：[param variant] 这张变体图在清单里的文件名（`<id>@<变体>`）—— 先找自己的，赐福版再找原件的；没有返回空
+static func variant_file(def: ItemDef, variant: StringName) -> String:
+	if def == null or variant == &"":
+		return ""
+	for id in [def.id, def.blessed_of if def.is_blessed() else &""]:
+		if id != &"" and (art_variants().get(id, {}) as Dictionary).has(variant):
+			return "%s@%s" % [id, variant]
+	return ""
 
 
 ## 205：这件用哪张图的 id —— 清单里有自己的 → 自己；赐福版且清单里有原件 → 原件；都没有 → 空
@@ -61,12 +106,14 @@ static func art_id_of(def: ItemDef) -> StringName:
 	return &""
 
 
-## 201：这件的图（没有 → null）。[param cell_px] 是画的时候一格多大：大于 [constant ART_CELL] 取 @2x
-static func art_of(def: ItemDef, cell_px: float = ART_CELL) -> Texture2D:
+## 201：这件的图（没有 → null）。[param cell_px] 是画的时候一格多大：大于 [constant ART_CELL] 取 @2x。
+## 208：[param variant] 非空且清单里有这张变体就取它（`<id>@<变体>.png`），没有回落本图
+static func art_of(def: ItemDef, cell_px: float = ART_CELL, variant: StringName = &"") -> Texture2D:
 	var id := art_id_of(def)
 	if def == null or def.shape == null or id == &"":
 		return null
-	return _cached(ART_DIR + ("@2x/" if cell_px > ART_CELL else "") + String(id) + ".png")
+	var file := variant_file(def, variant)
+	return _cached(ART_DIR + ("@2x/" if cell_px > ART_CELL else "") + (file if file != "" else String(id)) + ".png")
 
 
 static func _cached(path: String) -> Texture2D:
@@ -113,9 +160,10 @@ static func draw_art(
 	anchor: Vector2,
 	cell: float,
 	modulate: Color = Color.WHITE,
-	base: Transform2D = Transform2D.IDENTITY
+	base: Transform2D = Transform2D.IDENTITY,
+	variant: StringName = &""
 ) -> bool:
-	var tex := art_of(def, cell)
+	var tex := art_of(def, cell, variant)
 	if tex == null:
 		return false
 	canvas.draw_set_transform_matrix(base * art_transform(def, rot, anchor, cell))
@@ -136,10 +184,44 @@ static func art_transform(def: ItemDef, rot: int, anchor: Vector2, cell: float) 
 	return Transform2D(k * PI * 0.5, anchor + off * cell)
 
 
+## 208：剩余次数角标 —— 耐久没满、又没有这一档的变体图时，在当前朝向脚印最靠左下的那一格（y 最大、再 x 最小）
+## 画 max 个小点，亮的 = 剩的（稀有度色），暗的 = 用掉的。和 205 的信仰印记（右下）错开。画了返回 true
+static func draw_charges(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
+	var dots := charge_dots(inst, rot, anchor, cell)
+	if dots.is_empty():
+		return false
+	var lit := rarity_color(inst.def) * modulate
+	var dim := CHARGE_DIM * modulate
+	for d in dots:
+		canvas.draw_circle(d["at"], cell * CHARGE_DOT * 0.5, lit if bool(d["lit"]) else dim)
+	return true
+
+
+## 208：角标的那几个点 [{at: 圆心, lit: 亮不亮}]；不该画（没耐久、满的、有这一档的变体图）返回空
+static func charge_dots(inst: ItemInstance, rot: int, anchor: Vector2, cell: float) -> Array:
+	var out: Array = []
+	if inst == null or inst.def == null or inst.def.wear == null or inst.def.shape == null:
+		return out
+	var full := inst.def.wear.max_charges
+	var left := inst.charges()
+	if left >= full or variant_file(inst.def, variant_of(inst)) != "":
+		return out
+	var best := Vector2i(1 << 20, -1)
+	for c in inst.def.shape.cells_rotated(rot):
+		if c.y > best.y or (c.y == best.y and c.x < best.x):
+			best = c
+	var r := cell * CHARGE_DOT * 0.5
+	var start := anchor + Vector2(best.x, best.y + 1) * cell + Vector2(cell * CHARGE_INSET + r, -cell * CHARGE_INSET - r)
+	for i in full:
+		out.append({"at": start + Vector2(i * cell * CHARGE_GAP, 0.0), "lit": i < left})
+	return out
+
+
 ## 测试用：清掉缓存（换了 [constant ART_MANIFEST] 的内容之后）
 static func clear_art_cache() -> void:
 	_art.clear()
 	_listed.clear()
+	_variants.clear()
 	_manifest_read = false
 
 

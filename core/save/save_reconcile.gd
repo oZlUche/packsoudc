@@ -98,6 +98,7 @@ static func item(raw: Dictionary, db: ItemDatabase, report: SaveReport = null, f
 	var id := StringName(String(raw.get("def", "")))
 	if id == &"" or db.has_exact(id):
 		_check_enchant(raw, id, report, from)
+		_shatter(raw, id, db, report, from)
 		return 0
 	var alias := IdAliases.item(id)
 	if alias != id and db.has_exact(alias):
@@ -134,6 +135,21 @@ static func _check_enchant(raw: Dictionary, id: StringName, report: SaveReport, 
 	(state as Dictionary).erase(Forge.KEY)
 	if report != null:
 		report.unenchant(id, why, from)
+
+
+## 208：老档里已经碎了（`charges` 0）、定义又写了 [member WearProfile.broken_into] 的 → 换成碎晶：原点不动、朝向 0、状态清空，报告记一条
+static func _shatter(raw: Dictionary, id: StringName, db: ItemDatabase, report: SaveReport, from: String) -> void:
+	var def := db.get_def(id) if id != &"" else null
+	if def == null or def.wear == null or def.wear.broken_into == &"" or not db.has_exact(def.wear.broken_into):
+		return
+	var state: Variant = raw.get("state", {})
+	if not (state is Dictionary) or int((state as Dictionary).get(WearProfile.CHARGES_KEY, def.wear.max_charges)) != 0:
+		return
+	raw["def"] = String(def.wear.broken_into)
+	raw["rot"] = 0
+	raw["state"] = {}
+	if report != null:
+		report.replace(id, def.wear.broken_into, from)
 
 
 static func _walk(node: Variant, db: ItemDatabase, report: SaveReport, from: String) -> int:

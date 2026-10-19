@@ -54,13 +54,37 @@ static func run_manifest(t: TestCase) -> void:
 		var files := _pngs(ItemPainter.ART_DIR + sub)
 		var extra: Array[String] = []
 		for f in files:
-			if not listed.has(StringName(f)):
+			if f.contains("@"):     # 208：变体图归 variants 管
+				if not (ItemPainter.art_variants().get(StringName(f.get_slice("@", 0)), {}) as Dictionary).has(StringName(f.get_slice("@", 1))):
+					extra.append(f)
+			elif not listed.has(StringName(f)):
 				extra.append(f)
 		var missing: Array[String] = []
 		for id in listed:
 			if not files.has(String(id)):
 				missing.append(String(id))
 		t.check(extra.is_empty() and missing.is_empty(), "assets/items/%s 与清单对得上（多：%s 缺：%s）" % [sub, extra, missing])
+
+
+static func run_variants(t: TestCase) -> void:
+	t.begin("208 · 实例变体图：variants 的 id 有定义、本图在清单里；每张 <id>@<变体> 两套都在，尺寸 = 本图")
+	if not ItemPainter.art_available():
+		return
+	var c = NodeScreens._content()
+	var bad: Array[String] = []
+	for id in ItemPainter.art_variants():
+		if c.items.get_def(id) == null or not ItemPainter.art_ids().has(id):
+			bad.append("%s 没有定义或本图" % id)
+			continue
+		for v in ItemPainter.art_variants()[id]:
+			if not String(v).is_valid_identifier() or String(v).contains("."):
+				bad.append("%s@%s 变体名" % [id, v])
+			for pair in [["", CELL_1X], ["@2x/", CELL_2X]]:
+				var base := _image(ItemPainter.ART_DIR + String(pair[0]) + String(id) + ".png")
+				var img := _image(ItemPainter.ART_DIR + String(pair[0]) + "%s@%s.png" % [id, v])
+				if img == null or base == null or img.get_size() != base.get_size():
+					bad.append("%s%s@%s 尺寸 %s ≠ 本图" % [pair[0], id, v, img.get_size() if img != null else "无"])
+	t.check(bad.is_empty(), "变体图都对（%s）" % [bad])
 
 
 static func run_canvas(t: TestCase) -> void:

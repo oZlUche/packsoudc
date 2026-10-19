@@ -46,7 +46,7 @@ effects = Array[ExtResource("5_4s0f7")]([SubResource("Resource_4gap6")])
 script = ExtResource("3_moof6")
 metadata/part_ref = &"always"
 
-[sub_resource type="Resource" id="Resource_k5k3a"]
+[sub_resource type="Resource" id="Resource_olu5x"]
 script = ExtResource("9_jf2rd")
 id = &"numb"
 display_name = "麻痹"
@@ -58,33 +58,33 @@ decay_halve_on = &"stamina_paid"
 element = &"lightning"
 per_stack_percent = 10.0
 
-[sub_resource type="Resource" id="Resource_qn8oe"]
+[sub_resource type="Resource" id="Resource_k5k3a"]
 script = ExtResource("10_40ief")
-buff = SubResource("Resource_k5k3a")
+buff = SubResource("Resource_olu5x")
 
-[sub_resource type="Resource" id="Resource_xmv5o"]
+[sub_resource type="Resource" id="Resource_qn8oe"]
 script = ExtResource("11_8tnqc")
 direction = 1
 own_only = true
 landed_only = true
 
-[sub_resource type="Resource" id="Resource_koati"]
+[sub_resource type="Resource" id="Resource_xmv5o"]
 script = ExtResource("2_mf588")
-trigger = SubResource("Resource_xmv5o")
+trigger = SubResource("Resource_qn8oe")
 cadence = SubResource("Resource_moakj")
-effects = Array[ExtResource("5_4s0f7")]([SubResource("Resource_qn8oe")])
+effects = Array[ExtResource("5_4s0f7")]([SubResource("Resource_k5k3a")])
 
-[sub_resource type="Resource" id="Resource_vc120"]
+[sub_resource type="Resource" id="Resource_koati"]
 script = ExtResource("12_1ia6g")
 feed_mods = Array[ExtResource("1_h2x6p")]([SubResource("Resource_7w6cy")])
-feed_rules = Array[ExtResource("2_mf588")]([SubResource("Resource_rjdxw"), SubResource("Resource_koati")])
+feed_rules = Array[ExtResource("2_mf588")]([SubResource("Resource_rjdxw"), SubResource("Resource_xmv5o")])
 feed_filter = Array[StringName]([&"staff"])
 
-[sub_resource type="Resource" id="Resource_r73ab"]
+[sub_resource type="Resource" id="Resource_vc120"]
 script = ExtResource("17_52a6t")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
 
-[sub_resource type="Resource" id="Resource_d7a2g"]
+[sub_resource type="Resource" id="Resource_r73ab"]
 script = ExtResource("18_qedcq")
 prefixes_by_lang = {
 "en": ["Dim ", "Flickering ", "Bright "]
@@ -92,6 +92,7 @@ prefixes_by_lang = {
 broken_prefixes = {
 "en": "Shattered "
 }
+broken_into = &"crystal_shards"
 
 [resource]
 script = ExtResource("16_wc27w")
@@ -100,9 +101,9 @@ display_name = "闪电魔晶石"
 display_names = {
 "en": "Lightning Crystal"
 }
-description = "放在法杖的装载槽上：法杖伤害 +{amount}，打出闪电伤害，打中后给对手施加一层【麻痹】。能供给 {max_charges} 场，用完就碎。"
-shape = SubResource("Resource_r73ab")
+description = "放在法杖的装载槽上：法杖伤害 +{amount}，打出闪电伤害，打中后给对手施加一层【麻痹】。能供给 {max_charges} 场，用完碎成{item:crystal_shards}。"
+shape = SubResource("Resource_vc120")
 rarity = 1
 tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal"])
-adjacency = SubResource("Resource_vc120")
-wear = SubResource("Resource_d7a2g")
+adjacency = SubResource("Resource_koati")
+wear = SubResource("Resource_r73ab")

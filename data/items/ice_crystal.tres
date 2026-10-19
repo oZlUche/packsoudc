@@ -46,7 +46,7 @@ effects = Array[ExtResource("5_cmpis")]([SubResource("Resource_sls28")])
 script = ExtResource("3_lnt1r")
 metadata/part_ref = &"always"
 
-[sub_resource type="Resource" id="Resource_2l8vh"]
+[sub_resource type="Resource" id="Resource_sihn0"]
 script = ExtResource("9_vrq35")
 id = &"chill"
 display_name = "寒冷"
@@ -58,33 +58,33 @@ decay_halve_on = &"weapon_fired"
 element = &"ice"
 per_stack_percent = 10.0
 
-[sub_resource type="Resource" id="Resource_dmy7q"]
+[sub_resource type="Resource" id="Resource_2l8vh"]
 script = ExtResource("10_5k6e4")
-buff = SubResource("Resource_2l8vh")
+buff = SubResource("Resource_sihn0")
 
-[sub_resource type="Resource" id="Resource_uj8go"]
+[sub_resource type="Resource" id="Resource_dmy7q"]
 script = ExtResource("11_qx2nn")
 direction = 1
 own_only = true
 landed_only = true
 
-[sub_resource type="Resource" id="Resource_b1q3e"]
+[sub_resource type="Resource" id="Resource_uj8go"]
 script = ExtResource("2_1q6ev")
-trigger = SubResource("Resource_uj8go")
+trigger = SubResource("Resource_dmy7q")
 cadence = SubResource("Resource_cttf2")
-effects = Array[ExtResource("5_cmpis")]([SubResource("Resource_dmy7q")])
+effects = Array[ExtResource("5_cmpis")]([SubResource("Resource_2l8vh")])
 
-[sub_resource type="Resource" id="Resource_b7d3c"]
+[sub_resource type="Resource" id="Resource_b1q3e"]
 script = ExtResource("12_q8f2x")
 feed_mods = Array[ExtResource("1_hph3v")]([SubResource("Resource_pf0rb")])
-feed_rules = Array[ExtResource("2_1q6ev")]([SubResource("Resource_dkbph"), SubResource("Resource_b1q3e")])
+feed_rules = Array[ExtResource("2_1q6ev")]([SubResource("Resource_dkbph"), SubResource("Resource_uj8go")])
 feed_filter = Array[StringName]([&"staff"])
 
-[sub_resource type="Resource" id="Resource_4p8pg"]
+[sub_resource type="Resource" id="Resource_b7d3c"]
 script = ExtResource("17_imkgn")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
 
-[sub_resource type="Resource" id="Resource_e014a"]
+[sub_resource type="Resource" id="Resource_4p8pg"]
 script = ExtResource("18_7tnc7")
 prefixes_by_lang = {
 "en": ["Dim ", "Flickering ", "Bright "]
@@ -92,6 +92,7 @@ prefixes_by_lang = {
 broken_prefixes = {
 "en": "Shattered "
 }
+broken_into = &"crystal_shards"
 
 [resource]
 script = ExtResource("16_s32v7")
@@ -100,9 +101,9 @@ display_name = "冰霜魔晶石"
 display_names = {
 "en": "Ice Crystal"
 }
-description = "放在法杖的装载槽上：法杖伤害 +{amount}，打出冰霜伤害，打中后给对手施加一层【寒冷】。能供给 {max_charges} 场，用完就碎。"
-shape = SubResource("Resource_4p8pg")
+description = "放在法杖的装载槽上：法杖伤害 +{amount}，打出冰霜伤害，打中后给对手施加一层【寒冷】。能供给 {max_charges} 场，用完碎成{item:crystal_shards}。"
+shape = SubResource("Resource_b7d3c")
 rarity = 1
 tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal"])
-adjacency = SubResource("Resource_b7d3c")
-wear = SubResource("Resource_e014a")
+adjacency = SubResource("Resource_b1q3e")
+wear = SubResource("Resource_4p8pg")

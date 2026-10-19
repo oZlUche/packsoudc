@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.53 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.54 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3421,6 +3421,9 @@ func describe() -> String                # 开局屏的规则卡、编辑器
 **耐久**（148，作者定）：`ItemDef.wear: WearProfile`（满几次、前缀表、破碎前缀与卖价折扣），剩几次记在 `ItemInstance.state.charges`（新的一件满；老档没记按满算）。
 **一件道具一个定义**，明亮 / 闪烁 / 黯淡 / 破碎是同一件的状态；名字看实例：`Names.of_item(inst)`（格子标签、悬浮窗、拖拽、回放名字表），只有定义的地方照旧 `Names.of(def)`。
 破碎的卖价 `ItemValue.of_instance` 打折；开局带入（`layout_of / place_layout`）也带着 `state`。
+**碎成别的**（208）：`WearProfile.broken_into`（三颗晶石写 `crystal_shards` 碎晶，导入器查得是 1 格的道具）。`WearModule` 扣到 0 就 `shatter`：原件摘下、碎晶放在原点那一格（朝向 0），
+装载格空出来；原地换件不发 `placed`（信力不记、「最后置入」不变），原点放不下进地上，再不行原件放回。
+老档里已经碎了的，读档时 `SaveReconcile._shatter` 换成碎晶（原点不动、状态清空、报告一条 replace）。
 
 为此 `RunState` 一共多了三个**通用**生命周期信号（都不认识任何具体模块）与一个方法：
 
@@ -3514,6 +3517,10 @@ func player_spec() -> CombatantSpec …
   **格子大小是每块视图自己的**：`InventoryView.cell_px`（默认 `CELL` = 60），基地右半边与带回来的背包按 164 算；`DragLayer` 对着某块视图的落点、残影、整块判定读那块的 `cell_px`，跟手的残影按起拖那块的；`ScrollBox` 跟着 `cell_px_changed` 改尺寸。地图背包、战前、开局、地上、冷却覆盖层仍是 60。图鉴一行几个按宽度算（`codex_columns_for`），不横向滚。
   **棋盘格线（187）**：`InventoryView.grid_shown`（设置「显示」节「棋盘格线」，`GameSettings.show_grid` 三态：没动过就跟着道具图走 —— `ItemPainter.art_available()` 为真就不画）。关着时不画底、格底、线、外框，包体与道具照画；拖着东西时 `DragLayer` 给登记的棋盘 `drag_hint`，格按 50 % 临时出现。所有棋盘视图在 `InventoryView.GROUP`，设置一改整组重画。
   **道具图（201）**：`assets/items/<id>.png`（60 px / 格）与 `@2x/<id>.png`（160 px / 格），画布 = 形状 rot 0 的包围盒，格外透明；`assets/items/manifest.json` 列出有图的 id（`tools/sync_item_art.sh <美术导出目录>` 拷图、重写清单、导入）。`ItemPainter.art_available()` = 清单在不在，`art_of(def, cell_px)`（cell > 60 取 @2x，静态缓存），`draw_art(…, base)` 按 `art_transform`（转 k × 90° 顺时针、左上角偏移 (0,0)/(H,0)/(W,H)/(0,W) 格，和 `ItemShape` 同一套）画，没图返回 false、调用方照旧色块 + 名字。棋盘、包体、残影、收成排、地面、图鉴（没点亮压暗影）有图都画图不写名字；没亮的战利品剪影不用图（087）。地面轮廓（198 第二阶段）有图按透明通道。`tests/content/test_item_art_201.gd` 守尺寸、格外透明、旋转对位。
+  **实例变体图（208）**：同一件道具按实例状态换图 —— `assets/items/<id>@<变体>.png`（与 `@2x/` 同名，画布同本图），清单 `variants: {id: [变体…]}`（`sync_item_art.sh` 按文件名里的 `@` 分拣，本图没收的变体不收）。
+  `ItemPainter.variant_of(inst)`：耐久没满 `c<剩几次>`，207 生长到阶 `s<阶>`，都有耐久优先；`art_of(def, cell, variant)` 清单里有就取 `<id>@<变体>`（赐福版再找原件的），没有回落本图。
+  `draw_art` 多一个 `variant` 参数：棋盘（道具与包）、拖拽中的道具、地面、收成排传；图鉴、剪影、顶替残影不传。
+  **次数角标**：没有这一档的变体图时，棋盘在当前朝向最靠左下那一格画 max 个小点（亮 = 剩的，稀有度色；暗 = 用掉的），`charge_dots` 算位置、`draw_charges` 画；满的不画。和赐福印记（右下）错开。
   **赐福版（205）**：派生的赐福版不单画，`ItemPainter.art_id_of(def)` 清单里没有自己的 id 就退回原件（`blessed_of`）的图，以后放进清单的 `<原件>_<神>.png` 自动优先；`draw_art` 画完图在当前朝向脚印最右下那一格的右下角盖信仰印记（`mark_rect`，0.4 格、内缩 0.06 格、不随朝向转，`modulate` 同图），贴图 `mark_of(faith)` 取 `assets/items/marks/<神>.png`（24 px，`@2x/` 64 px），没有退回 HUD 徽记 `assets/ui/faith/<神>.png`；`sync_item_art.sh` 源目录有 `marks/` 一并拷、不进清单。手写的 `blessed_longbow` / `blessed_shield` 不是派生的，不盖印。`tests/ui/test_blessed_art_205.gd`。
 
 一局结束时（`GameFlow._settle_run`，进结算屏之前）就 `absorb`、存 meta、删这一局的存档；结算屏拿到的已经是记完账的局外。
@@ -4381,6 +4388,7 @@ res://
 | v3.32 | 2026-10-18 | **189 / 190 顶端栏长槽与日晷倒计时**（作者 2026-10-18 定案，待定 1–3 按推荐）：`hud_bar` 在板上画一条贯通的浅槽（`hud/groove` 九宫格、`band` 定槽身），宿主排完把铜点交给栏画（同行相邻两件之间、右槽图标组左边，空着的件两边不放）；`HudWidget.set_in_bar` 让栏里的件坐在槽底上（`PANEL_BARE`、浅底墨字），拖出栏回 `PANEL_HUD`；栏里同行间距 24、组在槽身里居中；倒计时改成刻在槽底的半圆日规（`hud/dial/*`：染色扇面 / 表盘 / 绕轴心转的影子 / 轴心，三阶 calm·half·low），栏上不写数字，停上去 `show_status` 弹「倒计时」窗、走一步 `update_status` 换字；缺图退回文字版 |
 | v3.52 | 2026-10-19 | **210 机关沙漏**（架构线程夜间方案，待定按推荐）：第二张图 `clockwork_hourglass`（沙漏生成器第一次进章节，5.11）；机关池 `clockwork`：五种机关（`species construct`、没有包、天生格挡 + 护板 = 固定减伤，免疫流血 / 中毒 / 菌血 / 燃血，掉齿轮 `loot_filler`）+ 两种人（钟表匠学徒、守钟人）；零件齿轮臂 / 蒸汽阀 / 铆接护板 / 主发条 / 钟摆刃（玩家面 + 机关面）；`EnemyDef.immune_buffs` 一路传到 `apply_buff`；战前准备屏读数加「免疫：…」；底图 `assets/maps/clockwork`；新测试 `test_hourglass_chapter_210.gd`、`test_clockwork_210.gd` |
 | v3.53 | 2026-10-19 | **209 包的种类与两段掉落**（架构线程夜间方案，待定按推荐；改 3.2、6.1）：十个新包（粗麻袋 / 腰包 / 箭囊 / 工具卷 / 药草囊 / 铆钉挎包 / 符文囊 / 猎囊 / 百宝囊 / 军用行囊）；`ItemDef.bag_wear_free / bag_value_mult / bag_weight_mult`（`ItemValue.of_in`、`ItemWeight.of_in`、`WearModule`、悬浮窗）；新内容种类 `bag_pools`（`BagPool`、`ChapterDef.bag_pool`）；掉落两段（`DropResolver.bags_for`，`bags_always_drop` 默认关、序章用 `drop_rules/prologue`）；敌人开战的包从包池抽（`StrengthTier.bag_count`、`EnemyPlacer.roll_enemy_bags`）；商店包槽（`shop_bag_slot_chance`）；长包 / 皮包稀有度 1 → 0、药水腰带 2 → 1 并加急速；新测试 `test_bag_effects_209.gd`、`test_bag_drops_209.gd` |
+| v3.54 | 2026-10-19 | **208 魔晶石的消耗看得见**（架构线程夜间方案，待定按推荐；改 4.8 道具图、7.4 耐久）：实例变体图 `<id>@<变体>.png` + 清单 `variants`（`ItemPainter.variant_of / variant_file`、`art_of` / `draw_art` 的 `variant`，`sync_item_art.sh` 认 `@`）；没变体图时左下角次数点（`charge_dots` / `draw_charges`）；`WearProfile.broken_into`，归零换成新道具碎晶 `crystal_shards`（`WearModule.shatter`，读档 `SaveReconcile._shatter`）；悬浮窗与三颗晶石的说明写「用完碎成碎晶」；新测试 `test_crystal_wear_208.gd`，201 清单测试认变体 |
 | v3.51 | 2026-10-19 | **212 魔兽与「野性」两套逻辑**（架构线程夜间方案，待定按推荐）：`ItemDef.wild` + `wild_applies`、`CompileInput.wild`（4.2）；`EnemyDef.species` / `bagless`（6.0），魔兽招牌一件不少、不揣携带品、内容记 `wild`，悬浮窗写「魔兽的器官」那一面；六件新器官（火焰腺 / 霜腺 / 电囊 / 兽牙 / 兽爪 / 兽尾）+ 六件兽材补 `wild`；五种魔兽进标准池；施加宏 `@apply_status_scorch/chill/numb`；新测试 `test_wild_profile_212.gd`、`test_beasts_212.gd` |
 | v3.50 | 2026-10-19 | **战利品屏只留最小化**（作者 21:16「战利品界面应该是只有最小化，提示也删掉」）：战利品屏右上角一颗最小化钮（原收起，行为不变）在最右；火漆签旁的回话行删掉，面板回话不接 |
 | v3.49 | 2026-10-19 | **206 补一**（作者 19:18 在「音效」定）：战斗开场号角 `battle.start`（`BATTLE_START` 时响，4 倍速也放行，跳转不响）；cue 表 38 条 |
