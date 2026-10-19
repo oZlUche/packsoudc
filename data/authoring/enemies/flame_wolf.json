@@ -1,0 +1,35 @@
+{
+  "id": "flame_wolf",
+  "display_name": "焰狼",
+  "display_names": {
+    "en": "Flame Wolf"
+  },
+  "strength": 1,
+  "schools": [
+    "fire"
+  ],
+  "base_stats": {
+    "max_hp": 36,
+    "regen_stamina": 5
+  },
+  "signature": [
+    "beast_fang",
+    "beast_fang",
+    "fire_gland",
+    "beast_hide"
+  ],
+  "item_tags": [
+    "beast_part"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    4,
+    3
+  ],
+  "species": "beast",
+  "bagless": true
+}

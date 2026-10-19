@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="RulePartDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_e8700"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_ysoff"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_132bt"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_ao4n4"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="5_4ud43"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_uoeso"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="7_c4vyx"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_5w57c"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_8hq28"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_h1jei"]
+[ext_resource type="Script" path="res://core/battle/rule_part_def.gd" id="11_6ae3i"]
+
+[sub_resource type="Resource" id="Resource_gmvuk"]
+script = ExtResource("5_4ud43")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_cgorq"]
+script = ExtResource("7_c4vyx")
+target = 1
+damage_type = &"fire"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_o1704"]
+script = ExtResource("8_5w57c")
+
+[sub_resource type="Resource" id="Resource_m6he4"]
+script = ExtResource("4_ao4n4")
+trigger = SubResource("Resource_o1704")
+cadence = SubResource("Resource_gmvuk")
+effects = Array[ExtResource("3_132bt")]([SubResource("Resource_cgorq")])
+
+[sub_resource type="Resource" id="Resource_ola2g"]
+script = ExtResource("9_8hq28")
+id = &"scorch"
+display_name = "灼伤"
+display_names = {
+"en": "Burn"
+}
+is_debuff = true
+rules = Array[ExtResource("4_ao4n4")]([SubResource("Resource_m6he4")])
+element = &"fire"
+
+[sub_resource type="Resource" id="Resource_so8xx"]
+script = ExtResource("10_h1jei")
+buff = SubResource("Resource_ola2g")
+
+[resource]
+script = ExtResource("11_6ae3i")
+id = &"apply_status_scorch"
+display_name = "施加灼伤"
+effect = SubResource("Resource_so8xx")

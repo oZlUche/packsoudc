@@ -14,7 +14,8 @@
     "material",
     "nature",
     "poison",
-    "flesh"
+    "flesh",
+    "beast_part"
   ],
   "combat": {
     "rules": [
@@ -32,5 +33,33 @@
         ]
       }
     ]
-  }
+  },
+  "wild": {
+    "base_stats": {
+      "damage": 3
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown"
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 3.0
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  },
+  "wild_applies": [
+    {
+      "buff": "poison",
+      "stacks": 2
+    }
+  ]
 }

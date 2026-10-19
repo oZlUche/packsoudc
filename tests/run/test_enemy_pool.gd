@@ -245,6 +245,13 @@ static func run_authoring_files(t: TestCase) -> void:
 	var pool := enemies.pool(chapter.enemy_pool)
 	for id in TestSupport.enemy_ids():
 		var def := enemies.enemy(id)
+		if def.is_wild():
+			# 212：魔兽的流派键是它器官的元素；篓子只有兽材，没有「武器」—— 只要求流派池里有会自己出手的器官（wild 面）
+			for s in def.schools:
+				var organs := EnemyPlacer.school_items([s] as Array[StringName], items, -1, def)
+				t.check(organs.any(func(iid): return items.get_def(iid).wild != null and not items.get_def(iid).wild.rules.is_empty()),
+					"魔兽 %s 流派 '%s'：有会自己出手的器官" % [id, s])
+			continue
 		for s in def.schools:
 			var pool_items := EnemyPlacer.school_items([s] as Array[StringName], items, -1)
 			t.check(pool_items.size() >= 2, "流派 '%s' 至少两件道具（实际 %d）—— 一件就没得抽" % [s, pool_items.size()])
@@ -416,7 +423,8 @@ static func run_placement(t: TestCase) -> void:
 				"点 %d 记的档位就是规则算出来的" % id)
 			t.check(TestSupport.pool_entry(pool, def.id).fits(n), "点 %d：条目的过滤（环种类 / 节点类型 / 危险）对得上" % id)
 			var tier := pool.tier_of(s)
-			var cap := EnemyPlacer.rarity_cap_of(rule, tier)
+			var cap := EnemyPlacer.rarity_cap_of(def.loadout if def.loadout != null else rule, tier)
+			var sig := def.signature_at(s)
 			var placed: Array = c["items"]
 			# 084：敌人也背包（档位表的 bags），包不计入件数；道具全在包里
 			var bag_n := 0
@@ -426,9 +434,12 @@ static func run_placement(t: TestCase) -> void:
 					bag_n += 1
 			var goods := placed.size() - bag_n
 			var want_bags: Array[StringName] = def.bags if not def.bags.is_empty() else tier.bags
+			if def.bagless:
+				want_bags = [] as Array[StringName]     # 212：魔兽没有包
 			t.eq(bag_n, want_bags.size(), "点 %d：背着档位表说的 %d 个包" % [id, want_bags.size()])
-			t.check(goods >= tier.item_count.x and goods <= tier.item_count.y,
-				"点 %d：%d 件（不含包）在档位 %d 的 [%d, %d] 里" % [id, goods, s, tier.item_count.x, tier.item_count.y])
+			var most := maxi(tier.item_count.y, sig.size()) if def.is_wild() else tier.item_count.y     # 212：魔兽的招牌一件不少
+			t.check(goods >= tier.item_count.x and goods <= most,
+				"点 %d：%d 件（不含包）在档位 %d 的 [%d, %d] 里" % [id, goods, s, tier.item_count.x, most])
 			var rebuilt := EnemyKit.board_of(c, items)
 			t.check(rebuilt.requires_bag == (bag_n > 0), "点 %d：有包就和玩家一样 requires_bag" % id)
 			var school_n := 0
@@ -439,7 +450,8 @@ static func run_placement(t: TestCase) -> void:
 				var idef := items.get_def(iid)
 				t.not_null(idef, "点 %d 背的 '%s' 在道具库里" % [id, iid])
 				if idef != null and not idef.is_bag:
-					t.check(cap < 0 or idef.rarity <= cap, "点 %d：稀有度 %d 不超这一档的上限 %d" % [id, idef.rarity, cap])
+					# 招牌不受稀有度上限（choose_items 先占位）
+					t.check(cap < 0 or idef.rarity <= cap or sig.has(iid), "点 %d：稀有度 %d 不超这一档的上限 %d" % [id, idef.rarity, cap])
 					if EnemyPlacer._shares_tag(idef.tags, def.schools):
 						school_n += 1
 			var available := EnemyPlacer.school_items(def.schools, items, cap)

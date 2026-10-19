@@ -1,0 +1,163 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_p7bic"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_p2d6y"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_nxp4i"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_alewi"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_pfhtp"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="6_g8mma"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="7_mu720"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="8_1ffaf"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="9_1g3ab"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="10_gsh86"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="11_qt2it"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_item_fired.gd" id="12_81gtb"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="13_r6e7l"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="14_nugoo"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="15_n5kwy"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="16_mmnqn"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="17_cpfma"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="18_ue3af"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="19_4l403"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="20_1ymj7"]
+
+[sub_resource type="Resource" id="Resource_wlo1j"]
+script = ExtResource("3_nxp4i")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_nd4b0"]
+script = ExtResource("7_mu720")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_j3g22"]
+script = ExtResource("8_1ffaf")
+target = 1
+damage_type = &"fire"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_vyig7"]
+script = ExtResource("9_1g3ab")
+
+[sub_resource type="Resource" id="Resource_bbd0l"]
+script = ExtResource("2_p2d6y")
+trigger = SubResource("Resource_vyig7")
+cadence = SubResource("Resource_nd4b0")
+effects = Array[ExtResource("5_pfhtp")]([SubResource("Resource_j3g22")])
+
+[sub_resource type="Resource" id="Resource_d2jby"]
+script = ExtResource("10_gsh86")
+id = &"scorch"
+display_name = "灼伤"
+display_names = {
+"en": "Burn"
+}
+is_debuff = true
+rules = Array[ExtResource("2_p2d6y")]([SubResource("Resource_bbd0l")])
+element = &"fire"
+
+[sub_resource type="Resource" id="Resource_80u0f"]
+script = ExtResource("11_qt2it")
+buff = SubResource("Resource_d2jby")
+metadata/part_ref = &"apply_status_scorch"
+
+[sub_resource type="Resource" id="Resource_7o7xa"]
+script = ExtResource("12_81gtb")
+metadata/part_ref = &"on_item_fired"
+
+[sub_resource type="Resource" id="Resource_v6t0w"]
+script = ExtResource("2_p2d6y")
+trigger = SubResource("Resource_7o7xa")
+cadence = SubResource("Resource_wlo1j")
+effects = Array[ExtResource("5_pfhtp")]([SubResource("Resource_80u0f")])
+
+[sub_resource type="Resource" id="Resource_828i7"]
+script = ExtResource("13_r6e7l")
+grant_cells = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 1)])
+grant_filter = Array[StringName]([&"weapon"])
+grant_rules = Array[ExtResource("2_p2d6y")]([SubResource("Resource_v6t0w")])
+
+[sub_resource type="Resource" id="Resource_q322v"]
+script = ExtResource("18_ue3af")
+
+[sub_resource type="Resource" id="Resource_rpm37"]
+script = ExtResource("7_mu720")
+seconds = 1.5
+
+[sub_resource type="Resource" id="Resource_0mbxc"]
+script = ExtResource("19_4l403")
+amount = 4.0
+
+[sub_resource type="Resource" id="Resource_56sp1"]
+script = ExtResource("8_1ffaf")
+damage_type = &"fire"
+
+[sub_resource type="Resource" id="Resource_ahr4t"]
+script = ExtResource("9_1g3ab")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_ey751"]
+script = ExtResource("2_p2d6y")
+trigger = SubResource("Resource_ahr4t")
+cadence = SubResource("Resource_rpm37")
+costs = Array[ExtResource("4_alewi")]([SubResource("Resource_0mbxc")])
+effects = Array[ExtResource("5_pfhtp")]([SubResource("Resource_56sp1")])
+
+[sub_resource type="Resource" id="Resource_oqjy3"]
+script = ExtResource("20_1ymj7")
+base_stats = {
+"damage": 4
+}
+rules = Array[ExtResource("2_p2d6y")]([SubResource("Resource_ey751")])
+
+[sub_resource type="Resource" id="Resource_gmvuk"]
+script = ExtResource("7_mu720")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_cgorq"]
+script = ExtResource("8_1ffaf")
+target = 1
+damage_type = &"fire"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_o1704"]
+script = ExtResource("9_1g3ab")
+
+[sub_resource type="Resource" id="Resource_m6he4"]
+script = ExtResource("2_p2d6y")
+trigger = SubResource("Resource_o1704")
+cadence = SubResource("Resource_gmvuk")
+effects = Array[ExtResource("5_pfhtp")]([SubResource("Resource_cgorq")])
+
+[sub_resource type="Resource" id="Resource_ola2g"]
+script = ExtResource("10_gsh86")
+id = &"scorch"
+display_name = "灼伤"
+display_names = {
+"en": "Burn"
+}
+is_debuff = true
+rules = Array[ExtResource("2_p2d6y")]([SubResource("Resource_m6he4")])
+element = &"fire"
+
+[sub_resource type="Resource" id="Resource_wqvqb"]
+script = ExtResource("14_nugoo")
+buff = SubResource("Resource_ola2g")
+
+[resource]
+script = ExtResource("17_cpfma")
+id = &"fire_gland"
+display_name = "火焰腺"
+display_names = {
+"en": "Fire Gland"
+}
+description = "魔兽喷火用的腺体。挨着它的武器每次出手，都给对手添一层【灼伤】。"
+shape = SubResource("Resource_q322v")
+rarity = 2
+tags = Array[StringName]([&"reagent", &"material", &"nature", &"flesh", &"fire", &"beast_part"])
+adjacency = SubResource("Resource_828i7")
+wild = SubResource("Resource_oqjy3")
+wild_applies = Array[ExtResource("14_nugoo")]([SubResource("Resource_wqvqb")])

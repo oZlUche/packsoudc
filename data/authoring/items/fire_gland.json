@@ -1,0 +1,75 @@
+{
+  "id": "fire_gland",
+  "display_name": "火焰腺",
+  "display_names": {
+    "en": "Fire Gland"
+  },
+  "description": "魔兽喷火用的腺体。挨着它的武器每次出手，都给对手添一层【灼伤】。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "reagent",
+    "material",
+    "nature",
+    "flesh",
+    "fire",
+    "beast_part"
+  ],
+  "adjacency": {
+    "grant_cells": [
+      [
+        0,
+        -1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "grant_filter": [
+      "weapon"
+    ],
+    "grant_rules": [
+      {
+        "trigger": "@on_item_fired",
+        "cadence": "@always",
+        "effects": [
+          "@apply_status_scorch"
+        ]
+      }
+    ]
+  },
+  "wild": {
+    "base_stats": {
+      "damage": 4
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.5
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage",
+            "damage_type": "fire"
+          }
+        ]
+      }
+    ]
+  },
+  "wild_applies": [
+    {
+      "buff": "scorch"
+    }
+  ]
+}

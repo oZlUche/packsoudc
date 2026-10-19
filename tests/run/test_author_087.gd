@@ -425,6 +425,9 @@ static func run_enemy_identity(t: TestCase) -> void:
 					t.check(def.allows_item(idef), "%s（%d 档）背的「%s」带身份标签 %s" % [def.display_name, strength, idef.display_name, str(def.item_tags)])
 					if idef.tags.has(&"weapon"):
 						armed = true
+					# 212：魔兽没有武器，会自己出手的器官（wild 面有规则）就算
+					if def.is_wild() and BattleCompiler.profile_of(idef, true) != null and not BattleCompiler.profile_of(idef, true).rules.is_empty():
+						armed = true
 				t.check(armed, "%s（%d 档）有武器" % [def.display_name, strength])
 				for sid in def.signature_at(strength):
 					var has := false

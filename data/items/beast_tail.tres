@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_wigtd"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_ooltu"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_5iih6"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_p2hbj"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_rxgdn"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_vpca2"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="7_e8uxi"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="8_jygeo"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="9_qwrp6"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="10_uxs6p"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="11_q2gaq"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="12_jvyxf"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="13_p1i7p"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="14_2itan"]
+
+[sub_resource type="Resource" id="Resource_e3tnh"]
+script = ExtResource("6_vpca2")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[sub_resource type="Resource" id="Resource_oncv7"]
+script = ExtResource("8_jygeo")
+seconds = 3.0
+
+[sub_resource type="Resource" id="Resource_gowdh"]
+script = ExtResource("10_uxs6p")
+amount = 6.0
+
+[sub_resource type="Resource" id="Resource_rm57f"]
+script = ExtResource("12_jvyxf")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_g3pmo"]
+script = ExtResource("13_p1i7p")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_e5ubg"]
+script = ExtResource("7_e8uxi")
+trigger = SubResource("Resource_g3pmo")
+cadence = SubResource("Resource_oncv7")
+costs = Array[ExtResource("9_qwrp6")]([SubResource("Resource_gowdh")])
+effects = Array[ExtResource("11_q2gaq")]([SubResource("Resource_rm57f")])
+
+[sub_resource type="Resource" id="Resource_g0is3"]
+script = ExtResource("14_2itan")
+base_stats = {
+"damage": 8
+}
+rules = Array[ExtResource("7_e8uxi")]([SubResource("Resource_e5ubg")])
+
+[resource]
+script = ExtResource("5_rxgdn")
+id = &"beast_tail"
+display_name = "兽尾"
+display_names = {
+"en": "Beast Tail"
+}
+description = "粗壮的一截尾巴，能卖个好价钱。"
+shape = SubResource("Resource_e3tnh")
+rarity = 1
+tags = Array[StringName]([&"material", &"nature", &"leather", &"trophy", &"beast_part"])
+wild = SubResource("Resource_g0is3")
