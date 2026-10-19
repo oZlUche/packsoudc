@@ -200,15 +200,15 @@ static func run_loose(t: TestCase) -> void:
 	var tidy := _forced(mage, c.pool, &"two_crystals")
 	var loaded_loose := 0
 	var loaded_tidy := 0
-	for s in 20:
+	for s in 60:
 		var a := _build(loose, c, 2, 300 + s)
 		t.eq(int(a["ungrouped"]), 0, "不成组：也就没有拆散的组")
 		if _crystal_loaded(a["content"], c):
 			loaded_loose += 1
 		if _crystal_loaded(_build(tidy, c, 2, 300 + s)["content"], c):
 			loaded_tidy += 1
-	t.check(loaded_tidy >= 10, "好套路：%d / 20 次晶石在装载格上（包里挤不下时组会拆）" % loaded_tidy)
-	t.check(loaded_loose < loaded_tidy, "坏套路：%d / 20 次碰巧挨着" % loaded_loose)
+	t.check(loaded_tidy >= 30, "好套路：%d / 60 次晶石在装载格上（包里挤不下时组会拆）" % loaded_tidy)
+	t.check(loaded_loose < loaded_tidy, "坏套路：%d / 60 次碰巧挨着（好套路 %d）" % [loaded_loose, loaded_tidy])
 
 
 static func run_content(t: TestCase) -> void:

@@ -1,0 +1,29 @@
+{
+  "id": "hunting_bag",
+  "display_name": "猎囊",
+  "display_names": {
+    "en": "Hunting Bag"
+  },
+  "description": "猎人装猎物的袋子，血腥味让里面的东西更凶。",
+  "shape": [
+    "11",
+    "11",
+    "11"
+  ],
+  "rarity": 2,
+  "tags": [
+    "leather"
+  ],
+  "is_bag": true,
+  "bag_accept_tags": [
+    "flesh",
+    "bone",
+    "leather",
+    "trophy"
+  ],
+  "bag_mods": [
+    {
+      "amount": 2.0
+    }
+  ]
+}

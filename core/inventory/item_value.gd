@@ -24,6 +24,13 @@ static func of(def: ItemDef) -> int:
 	return BASE_PER_CELL[tier] * cells
 
 
+## 209：放在 [param board] 上的这一件值多少 —— 整件在一个包里就乘那个包的 [member ItemDef.bag_value_mult]（百宝囊），其余同 [method of_instance]
+static func of_in(inst: ItemInstance, board: ItemContainer) -> int:
+	var base := of_instance(inst)
+	var bag := ItemWeight.bag_def_of(inst, board)
+	return base if bag == null or bag.bag_value_mult == 1.0 else maxi(1, roundi(float(base) * bag.bag_value_mult))
+
+
 ## 148：这一件值多少 —— 用坏了（[method ItemInstance.is_broken]）按 [member WearProfile.broken_value_ratio] 打折，至少 1；其余同 [method of]
 static func of_instance(inst: ItemInstance) -> int:
 	if inst == null or inst.def == null:

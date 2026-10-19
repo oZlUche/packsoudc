@@ -123,7 +123,8 @@ static func run_enemy_bags(t: TestCase) -> void:
 		t.check(false, "没有池")
 		return
 	for tier in c.pool.tiers:
-		t.check(not (tier as StrengthTier).bags.is_empty(), "档位 %d 配了包" % (tier as StrengthTier).strength)
+		# 209：档位不再写死包，按 bag_count 从包池抽
+		t.check((tier as StrengthTier).bags.is_empty() and (tier as StrengthTier).bag_count.x >= 1, "档位 %d 从包池抽包" % (tier as StrengthTier).strength)
 	var def := c.enemies.enemy(&"raider")
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 11
@@ -135,7 +136,8 @@ static func run_enemy_bags(t: TestCase) -> void:
 	for inst in board.items():
 		if (inst as ItemInstance).def.is_bag:
 			bags += 1
-	t.eq(bags, c.pool.tier_of(1).bags.size(), "背着档位表说的包")
+	var bc := c.pool.tier_of(1).bag_count
+	t.check(bags >= bc.x and bags <= bc.y + 2 * EnemyPlacer.BAG_TOPUP, "背着档位表说的几个包（%d，[%d, %d] 再加兜底）" % [bags, bc.x, bc.y])
 	var goods := 0
 	for inst in board.items():
 		var it := inst as ItemInstance
@@ -286,8 +288,10 @@ static func run_min_drops(t: TestCase) -> void:
 	var c := _content()
 	var std: DropRule = load(ContentPaths.asset_file("drop_rules", "standard"))
 	t.eq(std.min_drops, 1, "标准规则至少掉一件")
-	t.check(std.bags_always_drop, "标准规则：包必掉")
+	t.check(not std.bags_always_drop, "209：标准规则的包不再必掉（第二段按包池掷）")
+	t.check((load(ContentPaths.asset_file("drop_rules", "prologue")) as DropRule).bags_always_drop, "序章的规则：包照旧必掉")
 	var rule := DropRule.new()
+	rule.bags_always_drop = true
 	rule.base_chance = [0.0, 0.0, 0.0, 0.0, 0.0] as Array[float]
 	rule.treasure_chance = 0.0
 	rule.min_drops = 1

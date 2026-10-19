@@ -100,8 +100,12 @@ static func roll(
 			(out["dropped"] as Array[StringName]).append(id)
 			forced += 1
 			continue
-		# 作者定：敌人身上的包必掉（bags_always_drop），不占保底名额
-		if (rule.bags_always_drop and def.is_bag) or rng.randf() < owned_chance(rule, ctx, def):
+		# 作者定：敌人身上的包必掉（bags_always_drop，序章），不占保底名额；209：开关关着就不参与第一段（装东西的包由 roll_bags 掷）
+		if def.is_bag:
+			if rule.bags_always_drop:
+				(out["dropped"] as Array[StringName]).append(id)
+			continue
+		if rng.randf() < owned_chance(rule, ctx, def):
 			(out["dropped"] as Array[StringName]).append(id)
 	# 084：节点内容 `guaranteed_drops` 一定掉（教程：遭遇的敌人必掉一个包）。**只能是它身上有的**（作者：敌人不能掉没有的东西）
 	for raw in content.get("guaranteed_drops", []):
@@ -242,41 +246,110 @@ static func corpse_of(content: Dictionary, rolled: Dictionary, items: ItemDataba
 	dropped.append_array(rolled.get("dropped", [] as Array[StringName]))
 	var treasure: Array[StringName] = []
 	treasure.append_array(rolled.get("treasure", [] as Array[StringName]))
+	var bags: Array[StringName] = []
+	bags.append_array(rolled.get("bags", [] as Array[StringName]))     # 209：第二段掷出来装东西的包
 	# 087（作者定）：敌人的包掉了就照它的棋盘摆 —— 包按原位当背景（不用探明），掉的东西回到原位（摆在包上），
-	# 珍宝与原位被占的自动找位。没有包掉下来（或摆不下）走老路：自由容器
-	var packed := _corpse_on_bags(content, dropped, treasure, size, items)
+	# 珍宝与原位被占的自动找位。209：第二段的包是敌人自己背着的那种就占它的原位，不是就找位。
+	# 没有包掉下来（或有东西摆不下）走老路：自由容器（包也当一件东西摆）
+	var packed := _corpse_on_bags(content, dropped, treasure, bags, size, items)
 	if packed != null:
 		return packed
 	var ids: Array[StringName] = dropped.duplicate()
+	ids.append_array(bags)
 	ids.append_array(treasure)
 	return LootPacker.board_of(ids, size, items)
 
 
-## 按敌人的棋盘摆：包在原位、掉的东西在原位。全摆下了返回容器；没有包、或有东西摆不下返回 null
-static func _corpse_on_bags(content: Dictionary, dropped: Array[StringName], treasure: Array[StringName], size: Vector2i, items: ItemDatabase) -> GridInventory:
+## 209：第二段 —— 掉下来的东西（[param rolled] 的 dropped + treasure）要几个包装：要装的格数 = 东西的格数 / [member BagPool.fill_target]，
+## 第一段已经掉了的包（`guaranteed_drops`）先算进容量；第一个包必抽，之后每个按 [member BagPool.extra_bag_chance] 决定还抽不抽，
+## 容量够了或到 [member BagPool.max_bags] 停。候选稀有度 ≤ [param rarity_cap]（-1 不限，BOSS），敌人身上背着的包权重 × [member BagPool.own_bag_weight_mult]。
+## 一件东西都没掉就不掉包。返回包 id（可重复）
+static func roll_bags(
+	rolled: Dictionary, content: Dictionary, pool: BagPool, rarity_cap: int, items: ItemDatabase, rng: RandomNumberGenerator
+) -> Array[StringName]:
+	var out: Array[StringName] = []
+	if pool == null or items == null:
+		return out
+	var need_cells := 0
+	var room := 0
+	for key in ["dropped", "treasure"]:
+		for id in rolled.get(key, []):
+			var d := items.get_def(StringName(String(id)))
+			if d == null:
+				continue
+			if d.is_bag:
+				room += d.cell_count()
+			else:
+				need_cells += d.cell_count()
+	if need_cells <= 0:
+		return out
+	var need := ceili(float(need_cells) / maxf(0.01, pool.fill_target))
+	if room >= need:
+		return out
+	var cands := pool.candidates(items, rarity_cap)
+	if cands.is_empty():
+		return out
+	var own: Array = []
+	for e in carried_entries(content):
+		var d := items.get_def(e["id"])
+		if d != null and d.is_bag:
+			own.append(e["id"])
+	while true:
+		var id := BagPool.pick(cands, rng, own, pool.own_bag_weight_mult)
+		out.append(id)
+		room += items.get_def(id).cell_count()
+		if room >= need or out.size() >= pool.max_bags or rng.randf() >= pool.extra_bag_chance:
+			break
+	return out
+
+
+## 209：一具尸体的第二段 —— 没有包池、或敌人 `bagless`（212 魔兽 / 210 机关）不掉包；稀有度上限按敌人档位（BOSS 不限）
+static func bags_for(
+	rolled: Dictionary, content: Dictionary, enemies: EnemyDatabase, enemy_pool: EnemyPool, bag_pool: BagPool,
+	items: ItemDatabase, rng: RandomNumberGenerator, boss: bool = false
+) -> Array[StringName]:
+	var edef := enemies.enemy(StringName(String(content.get("enemy", "")))) if enemies != null else null
+	if bag_pool == null or (edef != null and edef.bagless):
+		return [] as Array[StringName]
+	var tier := enemy_pool.tier_of(int(content.get("strength", 0))) if enemy_pool != null else null
+	var cap := -1 if boss or tier == null else tier.rarity_cap
+	return roll_bags(rolled, content, bag_pool, cap, items, rng)
+
+
+## 按敌人的棋盘摆：包在原位（第二段的包是它身上那种就占原位，不是就找位）、掉的东西在原位、别的找位。
+## 全摆下了返回容器；没有包、或有东西摆不下返回 null
+static func _corpse_on_bags(
+	content: Dictionary, dropped: Array[StringName], treasure: Array[StringName], extra_bags: Array[StringName],
+	size: Vector2i, items: ItemDatabase
+) -> GridInventory:
 	if items == null:
 		return null
 	var entries: Array = content.get("items", [])
 	var remaining: Array[StringName] = dropped.duplicate()
-	var has_bag := false
+	var bags: Array[StringName] = []
 	for id in remaining:
 		var d := items.get_def(id)
 		if d != null and d.is_bag:
-			has_bag = true
-	if not has_bag:
+			bags.append(id)
+	bags.append_array(extra_bags)
+	if bags.is_empty():
 		return null
+	for id in bags:
+		remaining.erase(id)
 	var board := GridInventory.new(size, 0, true)
-	# 包先按原位
+	# 包先按原位（同名的包一个原位只给一个）
 	for e in entries:
 		var id := StringName(String((e as Dictionary).get("id", "")))
 		var def := items.get_def(id)
-		if def == null or not def.is_bag or not remaining.has(id):
+		if def == null or not def.is_bag or not bags.has(id):
 			continue
 		var at_raw: Array = (e as Dictionary).get("at", [0, 0])
 		var rot := int((e as Dictionary).get("rot", 0))
-		var inst := ItemInstance.create(def, rot)
-		if board.place(inst, Vector2i(int(at_raw[0]), int(at_raw[1])), rot) or board.try_add(inst, true):
-			remaining.erase(id)
+		if board.place(ItemInstance.create(def, rot), Vector2i(int(at_raw[0]), int(at_raw[1])), rot):
+			bags.erase(id)
+	for id in bags:
+		if not board.try_add(ItemInstance.create(items.get_def(id), 0), true):
+			return null     # 包摆不下：走自由容器
 	# 掉的道具回原位（在包上）
 	var loose: Array[StringName] = []
 	for e in entries:

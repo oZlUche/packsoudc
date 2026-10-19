@@ -27,6 +27,7 @@ const AUTHORING_ENEMY_POOLS := AUTHORING + "/enemy_pools"
 const AUTHORING_HUNTERS := AUTHORING + "/hunters"
 const AUTHORING_DROP_RULES := AUTHORING + "/drop_rules"
 const AUTHORING_CARRY_RULES := AUTHORING + "/carry_rules"
+const AUTHORING_BAG_POOLS := AUTHORING + "/bag_pools"     # 209
 const AUTHORING_ENCUMBRANCE_RULES := AUTHORING + "/encumbrance_rules"     # 129
 const AUTHORING_NODE_RULES := AUTHORING + "/node_rules"
 const AUTHORING_ECONOMY_RULES := AUTHORING + "/economy_rules"
@@ -60,6 +61,7 @@ const ENEMY_POOLS := "res://data/enemy_pools"
 const HUNTERS := "res://data/hunters"
 const DROP_RULES := "res://data/drop_rules"
 const CARRY_RULES := "res://data/carry_rules"
+const BAG_POOLS := "res://data/bag_pools"
 const ENCUMBRANCE_RULES := "res://data/encumbrance_rules"
 const NODE_RULES := "res://data/node_rules"
 const ECONOMY_RULES := "res://data/economy_rules"
@@ -98,6 +100,7 @@ const KINDS := {
 	"hunters": [AUTHORING_HUNTERS, HUNTERS],
 	"drop_rules": [AUTHORING_DROP_RULES, DROP_RULES],
 	"carry_rules": [AUTHORING_CARRY_RULES, CARRY_RULES],
+	"bag_pools": [AUTHORING_BAG_POOLS, BAG_POOLS],
 	"encumbrance_rules": [AUTHORING_ENCUMBRANCE_RULES, ENCUMBRANCE_RULES],
 	"node_rules": [AUTHORING_NODE_RULES, NODE_RULES],
 	"economy_rules": [AUTHORING_ECONOMY_RULES, ECONOMY_RULES],
@@ -116,7 +119,7 @@ const KINDS := {
 ## 146：buff → 规则构件 → 道具（构件里的施加状态可以按 id 引用 buff；buff 自己的规则不能引用构件，所以没有环）
 ## 175：元素反应在 buff 之后（效果里按 id 施加 buff）；铸炉映射表在构件之后、道具之前（表里引用 buff 与构件，道具的预置附魔查表）
 ## 160 补一：随身技能排在前面（局外 buff、角色、事件、经济规则、章节、科技按 id 引用它）
-const ORDER := ["tags", "damage_types", "belt_skills", "run_buffs", "faiths", "buffs", "reactions", "rule_parts", "forge", "items", "recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "carry_rules", "encumbrance_rules", "node_rules", "economy_rules", "meta_rules", "chest_skins", "chapters", "achievements", "techs", "help_pages"]
+const ORDER := ["tags", "damage_types", "belt_skills", "run_buffs", "faiths", "buffs", "reactions", "rule_parts", "forge", "items", "recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "carry_rules", "bag_pools", "encumbrance_rules", "node_rules", "economy_rules", "meta_rules", "chest_skins", "chapters", "achievements", "techs", "help_pages"]
 
 
 ## 100（作者定）：有目录、但独立内容一份都还没有的种类 —— **不进 [constant KINDS]**（批量导入与一致性检查都不跑它们），

@@ -1,0 +1,29 @@
+{
+  "id": "quiver",
+  "display_name": "箭囊",
+  "display_names": {
+    "en": "Quiver"
+  },
+  "description": "只装箭和弓，取箭更利落。",
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "leather"
+  ],
+  "is_bag": true,
+  "bag_accept_tags": [
+    "ammo",
+    "bow",
+    "ranged"
+  ],
+  "bag_mods": [
+    {
+      "stat": "crit_chance",
+      "amount": 5.0
+    }
+  ]
+}

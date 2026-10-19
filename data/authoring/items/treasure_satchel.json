@@ -1,0 +1,19 @@
+{
+  "id": "treasure_satchel",
+  "display_name": "百宝囊",
+  "display_names": {
+    "en": "Treasure Satchel"
+  },
+  "description": "看着不大，装进去的东西却轻了，也更值钱。",
+  "shape": [
+    "111",
+    "111"
+  ],
+  "rarity": 3,
+  "tags": [
+    "leather"
+  ],
+  "is_bag": true,
+  "bag_value_mult": 1.25,
+  "bag_weight_mult": 0.5
+}

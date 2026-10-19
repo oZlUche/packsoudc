@@ -22,7 +22,7 @@ extends RefCounted
 ## "dropped": 补完之后总共还差几件, "short": [差了件的点：{id, enemy, strength, missing}]}
 static func fill(
 	graph: MapGraph, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase,
-	difficulty: int = 0, scale_id: StringName = &"", carry: CarryRule = null
+	difficulty: int = 0, scale_id: StringName = &"", carry: CarryRule = null, bag_pool: BagPool = null
 ) -> Dictionary:
 	var out := {"placed": 0, "skipped": [] as Array[int], "dropped": 0, "short": [] as Array[Dictionary]}
 	if graph == null or pool == null or enemies == null or items == null:
@@ -34,7 +34,7 @@ static func fill(
 			continue
 		var rng := RandomNumberGenerator.new()
 		rng.seed = n.content_seed
-		var built := place_one(n, pool, enemies, items, float(depth.get(id, 0.0)), difficulty, scale_id, rng, {}, carry)
+		var built := place_one(n, pool, enemies, items, float(depth.get(id, 0.0)), difficulty, scale_id, rng, {}, carry, bag_pool)
 		if built.is_empty():
 			(out["skipped"] as Array[int]).append(id)
 			continue
@@ -53,13 +53,13 @@ static func fill(
 static func place_one(
 	node: MapNode, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase,
 	depth: float, difficulty: int, scale_id: StringName, rng: RandomNumberGenerator,
-	exploration: Dictionary = {}, carry: CarryRule = null
+	exploration: Dictionary = {}, carry: CarryRule = null, bag_pool: BagPool = null
 ) -> Dictionary:
 	var wanted := wanted_strength(pool, node, depth, difficulty, scale_id, exploration)
 	var entry := pick(pool, enemies, node, wanted, rng)
 	if entry == null:
 		return {}
-	return build_content(enemies.enemy(entry.enemy), pool, items, wanted, rng, carry)
+	return build_content(enemies.enemy(entry.enemy), pool, items, wanted, rng, carry, bag_pool)
 
 
 ## 每个点的深度 0～1：tier 在全图 tier 范围里的位置。形态无关 —— 环形图、手绘图都只看 tier
@@ -137,7 +137,7 @@ const REFILL_TRIES := 24
 ## "ungrouped": 165 摆不开、拆成散件的组数}
 static func build_content(
 	def: EnemyDef, pool: EnemyPool, items: ItemDatabase, strength: int, rng: RandomNumberGenerator,
-	carry: CarryRule = null
+	carry: CarryRule = null, bag_pool: BagPool = null
 ) -> Dictionary:
 	var tier := pool.tier_of(strength)
 	var rule := def.loadout if def.loadout != null else pool.loadout
@@ -159,14 +159,12 @@ static func build_content(
 	var bag_ids: Array[StringName] = def.bags if not def.bags.is_empty() else (tier.bags if tier != null else [] as Array[StringName])
 	if def.bagless:
 		bag_ids = [] as Array[StringName]     # 212：魔兽没有包，器官直接摆
-	var board := GridInventory.new(size, 0, not bag_ids.is_empty())
-	var placed: Array = []
-	for bag_id in bag_ids:
-		var bdef := items.get_def(bag_id)
-		if bdef != null and bdef.is_bag:
-			_try_place(board, bdef, placed)
-	var bag_count := placed.size()
-	count += bag_count     # 包不计入件数：件数说的是包里的东西
+	var rolled := not def.bagless and bag_ids.is_empty() and tier != null
+	var brng := RandomNumberGenerator.new()
+	if rolled:
+		# 209：没写死就从包池抽（随机数另起一条，不消耗主随机数）；够装下挑好的东西为止
+		brng.seed = hash([rng.state, String(def.id), strength, "bags"])
+	var bpool := bag_pool if bag_pool != null else BagPool.standard()
 	# 包里地方有限：招牌与流派道具（会打的那几件）先摆，护甲补给后摆 —— 不然一件 2×2 的甲先占了包，1×3 的剑就横竖都塞不进（084）
 	# 143：招牌再排在流派道具前面 —— 异形装备大了，同样大的流派道具（按 id 排）先占了唯一放得下的包，招牌就塞不进了
 	# 211：套路骨架紧跟招牌 —— 设计者写的组合先占地方，抽来的件放不下再换
@@ -195,11 +193,36 @@ static func build_content(
 	var defs: Array[ItemDef] = []
 	for id in order:
 		defs.append(items.get_def(id))
-	# 165：相邻组合整组摆、散件随机摆（顺序仍是招牌 → 流派 → 其余：散件按这个先后挑位置）
 	# 211：`loose` 的套路整盘不成组 —— 摆成散件（「学徒把晶石放错了地方」）
 	var groups: Array = [] if build != null and build.loose else auto_groups(order, items, rng, def)
-	var got := _arrange(board, defs, groups, rng)
-	placed.append_array(got["placed"])
+	# 209：抽来的包摆不下招牌或唯一的武器，就重抽一套包（最多 [constant BAG_ROLLS] 次，取差得最少的那套）
+	var board: GridInventory
+	var placed: Array = []
+	var got := {}
+	var bag_count := 0
+	var best_miss := -1
+	for attempt in (BAG_ROLLS if rolled else 1):
+		var ids: Array[StringName] = roll_enemy_bags(tier, picks, items, bpool, cap, brng) if rolled else bag_ids
+		var b := GridInventory.new(size, 0, not ids.is_empty())
+		var p: Array = []
+		for bag_id in ids:
+			var bdef := items.get_def(bag_id)
+			if bdef != null and bdef.is_bag:
+				_try_place(b, bdef, p)
+		var n_bags := p.size()
+		# 165：相邻组合整组摆、散件随机摆（顺序仍是招牌 → 流派 → 其余：散件按这个先后挑位置）
+		var g := _arrange(b, defs, groups, rng)
+		var miss := _arrange_miss(g["left"], defs, sig)
+		if best_miss < 0 or miss < best_miss:
+			board = b
+			placed = p
+			placed.append_array(g["placed"])
+			got = g
+			bag_count = n_bags
+			best_miss = miss
+		if best_miss == 0:
+			break
+	count += bag_count     # 包不计入件数：件数说的是包里的东西
 	# 放不下就换一件：从同一批候选里按小到大补（同样大的随机排），小件总有地方塞。流派道具不够先补流派的。
 	# 只有棋盘真的满了才会差件数，回报里看得见 —— 那是档位表的棋盘 / 包配小了
 	if placed.size() < count:
@@ -251,6 +274,114 @@ static func build_content(
 		content["wild"] = true     # 212：棋盘上的道具是魔兽持有的那一面（悬浮窗按它写，[constant EnemyKit.WILD_META]）
 	return {"content": content, "dropped": maxi(0, count - (placed.size() - _carried_count(placed))), "carry_short": carry_short,
 		"ungrouped": int(got["ungrouped"])}
+
+
+## 209：敌人开战背的包 —— 从包池按权重抽 [member StrengthTier.bag_count] 个（稀有度 ≤ [param rarity_cap]；只收某些标签的包，
+## 挑好的东西里得有它收的才进候选）。两条兜底，各最多多补 [constant BAG_TOPUP] 个：最大的那件得有一个包放得下（看外框），
+## 包的格数得够装 [param picks] / [member BagPool.fill_target]。大的排前面（先摆）
+const BAG_TOPUP := 2
+const BAG_ROLLS := 6
+
+
+## 一盘摆下来差多少：差一件招牌记 100、差了唯一的武器记 10、其余每件记 1（越小越好，0 = 全摆上）
+static func _arrange_miss(left: Array, defs: Array[ItemDef], sig: Array[StringName]) -> int:
+	var miss := 0
+	var armed := false
+	var had_weapon := false
+	for i in defs.size():
+		var d := defs[i]
+		if d == null:
+			continue
+		var is_weapon := d.tags.has(&"weapon")
+		had_weapon = had_weapon or is_weapon
+		if not left.has(i):
+			armed = armed or is_weapon
+			continue
+		miss += 100 if sig.has(d.id) else 1
+	if had_weapon and not armed:
+		miss += 10
+	return miss
+
+static func roll_enemy_bags(
+	tier: StrengthTier, picks: Array[StringName], items: ItemDatabase, bag_pool: BagPool, rarity_cap: int, rng: RandomNumberGenerator
+) -> Array[StringName]:
+	var out: Array[StringName] = []
+	if bag_pool == null or tier == null:
+		return out
+	var cands: Array[BagPoolEntry] = []
+	for e in bag_pool.candidates(items, rarity_cap):
+		if _bag_takes_any(items.get_def(e.bag), picks, items):
+			cands.append(e)
+	if cands.is_empty():
+		return out
+	var n := rng.randi_range(maxi(0, tier.bag_count.x), maxi(tier.bag_count.x, tier.bag_count.y))
+	for i in n:
+		out.append(BagPool.pick(cands, rng))
+	# 最大的那件（外框最长边）要有个包放得下
+	var biggest: ItemDef = null
+	for id in picks:
+		var d := items.get_def(id)
+		if d != null and d.shape != null and (biggest == null or _long_side(d) > _long_side(biggest)):
+			biggest = d
+	if biggest != null and not out.any(func(b): return _bag_fits(items.get_def(b), biggest)):
+		var fitting: Array[BagPoolEntry] = []
+		for e in cands:
+			if _bag_fits(items.get_def(e.bag), biggest):
+				fitting.append(e)
+		if not fitting.is_empty():
+			out.append(BagPool.pick(fitting, rng))
+	var room := 0
+	for id in out:
+		room += items.get_def(id).cell_count()
+	var want := ceili(float(_cells_of_ids(picks, items)) / maxf(0.01, bag_pool.fill_target))
+	var extra := 0
+	while room < want and extra < BAG_TOPUP:
+		var id := BagPool.pick(cands, rng)
+		out.append(id)
+		room += items.get_def(id).cell_count()
+		extra += 1
+	out.sort_custom(func(a: StringName, b: StringName) -> bool:
+		var ca := items.get_def(a).cell_count()
+		var cb := items.get_def(b).cell_count()
+		return ca > cb or (ca == cb and String(a) < String(b)))
+	return out
+
+
+## 包收不收得下 [param picks] 里的任何一件（不限标签的包都收）
+static func _bag_takes_any(bag: ItemDef, picks: Array[StringName], items: ItemDatabase) -> bool:
+	if bag == null or bag.bag_accept_tags.is_empty():
+		return bag != null
+	for id in picks:
+		var d := items.get_def(id)
+		if d != null and bag.bag_accept_tags.any(func(t): return d.tags.has(t)):
+			return true
+	return false
+
+
+static func _long_side(d: ItemDef) -> int:
+	var sz := d.shape.size_rotated(0)
+	return maxi(sz.x, sz.y)
+
+
+## 包（矩形）的外框装得下这件的外框（可转 90°），而且不限标签或收它
+static func _bag_fits(bag: ItemDef, d: ItemDef) -> bool:
+	if bag == null or bag.shape == null or d.shape == null:
+		return false
+	if not bag.bag_accept_tags.is_empty() and not bag.bag_accept_tags.any(func(t): return d.tags.has(t)):
+		return false
+	var b := bag.shape.size_rotated(0)
+	var s := d.shape.size_rotated(0)
+	return (b.x >= s.x and b.y >= s.y) or (b.x >= s.y and b.y >= s.x)
+
+
+## 一串道具 id 一共占几格
+static func _cells_of_ids(ids: Array[StringName], items: ItemDatabase) -> int:
+	var n := 0
+	for id in ids:
+		var d := items.get_def(id)
+		if d != null:
+			n += d.cell_count()
+	return n
 
 
 ## 126：已摆上的里有几件是携带品
