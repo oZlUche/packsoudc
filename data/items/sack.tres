@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_0l856"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_e5rkd"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_71i6t"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_wxl76"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_mliwn"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_hx87l"]
+
+[sub_resource type="Resource" id="Resource_ou2vr"]
+script = ExtResource("6_hx87l")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(0, 2), Vector2i(1, 2)])
+
+[resource]
+script = ExtResource("5_mliwn")
+id = &"sack"
+display_name = "粗麻袋"
+display_names = {
+"en": "Burlap Sack"
+}
+description = "粗糙但结实，什么都能往里塞。"
+shape = SubResource("Resource_ou2vr")
+tags = Array[StringName]([&"cloth"])
+is_bag = true

@@ -17,7 +17,8 @@ display_names = {
 "en": "Prologue: Edge of the Ruins"
 }
 map_source = SubResource("Resource_v5w8j")
-drop_rule = &"standard"
+drop_rule = &"prologue"
+bag_pool = &""
 node_rules = &"prologue"
 economy_rules = &"prologue"
 grants_unlock = &"prologue_done"

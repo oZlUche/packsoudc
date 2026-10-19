@@ -1,0 +1,78 @@
+[gd_resource type="Resource" script_class="BagPool" format=3]
+
+[ext_resource type="Script" path="res://core/loot/bag_pool_entry.gd" id="1_g01c4"]
+[ext_resource type="Script" path="res://core/loot/bag_pool.gd" id="2_ta6pu"]
+
+[sub_resource type="Resource" id="Resource_anfyw"]
+script = ExtResource("1_g01c4")
+bag = &"bag_small"
+weight = 6.0
+
+[sub_resource type="Resource" id="Resource_2ywnn"]
+script = ExtResource("1_g01c4")
+bag = &"bag_long"
+weight = 4.0
+
+[sub_resource type="Resource" id="Resource_8iqgh"]
+script = ExtResource("1_g01c4")
+bag = &"bag_leather"
+weight = 6.0
+
+[sub_resource type="Resource" id="Resource_uwrw0"]
+script = ExtResource("1_g01c4")
+bag = &"sack"
+weight = 4.0
+
+[sub_resource type="Resource" id="Resource_jf5fq"]
+script = ExtResource("1_g01c4")
+bag = &"belt_potion"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_ybrc8"]
+script = ExtResource("1_g01c4")
+bag = &"fanny_pack"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_d0q00"]
+script = ExtResource("1_g01c4")
+bag = &"quiver"
+weight = 1.5
+
+[sub_resource type="Resource" id="Resource_t88oo"]
+script = ExtResource("1_g01c4")
+bag = &"tool_roll"
+weight = 1.5
+
+[sub_resource type="Resource" id="Resource_tao06"]
+script = ExtResource("1_g01c4")
+bag = &"herb_pouch"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_v2ub7"]
+script = ExtResource("1_g01c4")
+bag = &"studded_satchel"
+
+[sub_resource type="Resource" id="Resource_0f6ox"]
+script = ExtResource("1_g01c4")
+bag = &"rune_pouch"
+weight = 0.8
+
+[sub_resource type="Resource" id="Resource_jkh4e"]
+script = ExtResource("1_g01c4")
+bag = &"hunting_bag"
+
+[sub_resource type="Resource" id="Resource_1uxcj"]
+script = ExtResource("1_g01c4")
+bag = &"treasure_satchel"
+weight = 0.4
+
+[sub_resource type="Resource" id="Resource_2e3v3"]
+script = ExtResource("1_g01c4")
+bag = &"war_pack"
+weight = 0.15
+
+[resource]
+script = ExtResource("2_ta6pu")
+id = &"standard"
+display_name = "标准包池"
+entries = Array[ExtResource("1_g01c4")]([SubResource("Resource_anfyw"), SubResource("Resource_2ywnn"), SubResource("Resource_8iqgh"), SubResource("Resource_uwrw0"), SubResource("Resource_jf5fq"), SubResource("Resource_ybrc8"), SubResource("Resource_d0q00"), SubResource("Resource_t88oo"), SubResource("Resource_tao06"), SubResource("Resource_v2ub7"), SubResource("Resource_0f6ox"), SubResource("Resource_jkh4e"), SubResource("Resource_1uxcj"), SubResource("Resource_2e3v3")])

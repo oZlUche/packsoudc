@@ -17,7 +17,8 @@ display_names = {
 "en": "Prologue III: The Altar"
 }
 map_source = SubResource("Resource_07ocq")
-drop_rule = &"standard"
+drop_rule = &"prologue"
+bag_pool = &""
 node_rules = &"prologue"
 economy_rules = &"prologue"
 order = 2

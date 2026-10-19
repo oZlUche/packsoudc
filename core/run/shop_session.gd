@@ -48,13 +48,17 @@ var active: bool = true
 ## 160 补一：「随身」那一排，每格 {"id": 随身技能 id, "price": int}；买走的下标在 [member belt_sold]
 var belt_offers: Array[Dictionary] = []
 var belt_sold: Array[int] = []
+## 209：章节的包池（包槽从这里抽）；null = 不卖包
+var bag_pool: BagPool = null
 ## 160 补一：往腰带里放（`func(id, count) -> int`，[NodeEvents] 接 `belt_grant` hook）；没接 = 这一排买不了
 var belt_grant: Callable = Callable()
 
 
 func _init(
-	p_node: MapNode, p_rules: EconomyRules, p_items: ItemDatabase, p_wallet: Wallet, p_depth: float = 0.0, p_price_mult: float = 1.0
+	p_node: MapNode, p_rules: EconomyRules, p_items: ItemDatabase, p_wallet: Wallet, p_depth: float = 0.0, p_price_mult: float = 1.0,
+	p_bag_pool: BagPool = null
 ) -> void:
+	bag_pool = p_bag_pool
 	node = p_node
 	rules = p_rules
 	items = p_items
@@ -237,8 +241,41 @@ func _restock() -> void:
 		stock.append({"id": String(cands[k]), "price": price_of(def)})
 		cands.remove_at(k)
 		weights.remove_at(k)
+	_restock_bag()
 	_build_shelves()
 	_restock_belt()
+
+
+## 209：按 [member EconomyRules.shop_bag_slot_chance] 把最后一格换成包（货架没满就添一格）：包池权重 × 稀有度权重（随深度）。
+## 随机数另起一条 —— 别的格子和没有包槽时一模一样
+func _restock_bag() -> void:
+	if bag_pool == null or rules == null or rules.shop_bag_slot_chance <= 0.0 or rules.shop_slots <= 0:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%d:shop_bag:%d" % [node.content_seed if node != null else 0, refreshes])
+	if rng.randf() >= rules.shop_bag_slot_chance:
+		return
+	var cands := bag_pool.candidates(items)
+	var weights: Array[float] = []
+	var total := 0.0
+	for e in cands:
+		var w := e.weight * rules.shop_rarity_weight(items.get_def(e.bag).rarity, depth)
+		weights.append(w)
+		total += w
+	if total <= 0.0:
+		return
+	var x := rng.randf() * total
+	var pick := cands[cands.size() - 1].bag
+	for i in cands.size():
+		x -= weights[i]
+		if x <= 0.0:
+			pick = cands[i].bag
+			break
+	var entry := {"id": String(pick), "price": price_of(items.get_def(pick))}
+	if stock.size() >= rules.shop_slots:
+		stock[stock.size() - 1] = entry
+	else:
+		stock.append(entry)
 
 
 ## 160 补一：第 refreshes 次的「随身」那一排：按权重不重复抽 1 ～ belt_picks 种

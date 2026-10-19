@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_gppp2"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_n8r7i"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_cnjiq"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_p86wn"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_454yv"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_g5rsy"]
+
+[sub_resource type="Resource" id="Resource_5gowg"]
+script = ExtResource("6_g5rsy")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
+
+[resource]
+script = ExtResource("5_454yv")
+id = &"rune_pouch"
+display_name = "符文囊"
+display_names = {
+"en": "Rune Pouch"
+}
+description = "绣着符文的小囊，晶石放在里面不会磨损。"
+shape = SubResource("Resource_5gowg")
+rarity = 2
+tags = Array[StringName]([&"cloth", &"magic"])
+is_bag = true
+bag_accept_tags = Array[StringName]([&"crystal", &"magic", &"staff"])
+bag_wear_free = true

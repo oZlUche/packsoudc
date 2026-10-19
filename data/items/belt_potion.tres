@@ -8,6 +8,12 @@
 [ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_qe3cj"]
 
 [sub_resource type="Resource" id="Resource_e0scv"]
+script = ExtResource("2_rru0s")
+stat = &"haste"
+mode = 1
+amount = 10.0
+
+[sub_resource type="Resource" id="Resource_k8sxc"]
 script = ExtResource("6_qe3cj")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
 
@@ -18,8 +24,9 @@ display_name = "药水带"
 display_names = {
 "en": "Potion Belt"
 }
-shape = SubResource("Resource_e0scv")
-rarity = 2
+shape = SubResource("Resource_k8sxc")
+rarity = 1
 tags = Array[StringName]([&"leather"])
 is_bag = true
 bag_accept_tags = Array[StringName]([&"remedy", &"food"])
+bag_mods = Array[ExtResource("2_rru0s")]([SubResource("Resource_e0scv")])

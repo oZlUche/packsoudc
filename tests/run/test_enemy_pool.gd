@@ -435,8 +435,16 @@ static func run_placement(t: TestCase) -> void:
 			var goods := placed.size() - bag_n
 			var want_bags: Array[StringName] = def.bags if not def.bags.is_empty() else tier.bags
 			if def.bagless:
-				want_bags = [] as Array[StringName]     # 212：魔兽没有包
-			t.eq(bag_n, want_bags.size(), "点 %d：背着档位表说的 %d 个包" % [id, want_bags.size()])
+				t.eq(bag_n, 0, "点 %d：魔兽 / 机关没有包" % id)     # 212
+			elif not want_bags.is_empty():
+				t.eq(bag_n, want_bags.size(), "点 %d：背着写死的 %d 个包" % [id, want_bags.size()])
+			else:
+				# 209：从包池抽 bag_count 个（兜底最多各补 BAG_TOPUP 个；摆不下的少一个），稀有度不超档位上限
+				t.check(bag_n >= 1 and bag_n <= tier.bag_count.y + 2 * EnemyPlacer.BAG_TOPUP, "点 %d：包池抽的 %d 个包在 [1, %d]" % [id, bag_n, tier.bag_count.y + 2 * EnemyPlacer.BAG_TOPUP])
+				for raw in placed:
+					var bd := items.get_def(StringName(String(raw["id"])))
+					if bd != null and bd.is_bag:
+						t.check(tier.rarity_cap < 0 or bd.rarity <= tier.rarity_cap, "点 %d：包 %s 的稀有度不超档位上限" % [id, bd.id])
 			var most := maxi(tier.item_count.y, sig.size()) if def.is_wild() else tier.item_count.y     # 212：魔兽的招牌一件不少
 			t.check(goods >= tier.item_count.x and goods <= most,
 				"点 %d：%d 件（不含包）在档位 %d 的 [%d, %d] 里" % [id, goods, s, tier.item_count.x, most])

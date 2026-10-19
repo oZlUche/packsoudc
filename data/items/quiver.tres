@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_auuq1"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_6bpqr"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_yhj4y"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_025t8"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_qmgjg"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_ce8vh"]
+
+[sub_resource type="Resource" id="Resource_wowuh"]
+script = ExtResource("2_6bpqr")
+stat = &"crit_chance"
+amount = 0.05
+
+[sub_resource type="Resource" id="Resource_1bi33"]
+script = ExtResource("6_ce8vh")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
+
+[resource]
+script = ExtResource("5_qmgjg")
+id = &"quiver"
+display_name = "箭囊"
+display_names = {
+"en": "Quiver"
+}
+description = "只装箭和弓，取箭更利落。"
+shape = SubResource("Resource_1bi33")
+rarity = 1
+tags = Array[StringName]([&"leather"])
+is_bag = true
+bag_accept_tags = Array[StringName]([&"ammo", &"bow", &"ranged"])
+bag_mods = Array[ExtResource("2_6bpqr")]([SubResource("Resource_wowuh")])

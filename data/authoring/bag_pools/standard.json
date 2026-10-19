@@ -1,0 +1,60 @@
+{
+  "id": "standard",
+  "display_name": "标准包池",
+  "entries": [
+    {
+      "bag": "bag_small",
+      "weight": 6.0
+    },
+    {
+      "bag": "bag_long",
+      "weight": 4.0
+    },
+    {
+      "bag": "bag_leather",
+      "weight": 6.0
+    },
+    {
+      "bag": "sack",
+      "weight": 4.0
+    },
+    {
+      "bag": "belt_potion",
+      "weight": 2.0
+    },
+    {
+      "bag": "fanny_pack",
+      "weight": 2.0
+    },
+    {
+      "bag": "quiver",
+      "weight": 1.5
+    },
+    {
+      "bag": "tool_roll",
+      "weight": 1.5
+    },
+    {
+      "bag": "herb_pouch",
+      "weight": 2.0
+    },
+    {
+      "bag": "studded_satchel"
+    },
+    {
+      "bag": "rune_pouch",
+      "weight": 0.8
+    },
+    {
+      "bag": "hunting_bag"
+    },
+    {
+      "bag": "treasure_satchel",
+      "weight": 0.4
+    },
+    {
+      "bag": "war_pack",
+      "weight": 0.15
+    }
+  ]
+}
