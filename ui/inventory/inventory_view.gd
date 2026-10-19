@@ -27,6 +27,8 @@ const COLOR_BAG_EDGE := Color("5d6577")
 const COLOR_GRID := Color("343943")
 const COLOR_BORDER := Color("4a515e")
 const COLOR_TEXT := Color("e6e9ef")
+## 201：休眠的信仰道具有图时压到 55 % 灰
+const DORMANT_ART := Color(0.55, 0.55, 0.55)
 const COLOR_OK := Color(0.35, 0.85, 0.45, 0.35)
 const COLOR_BAD := Color(0.9, 0.3, 0.3, 0.35)
 ## 放得下，但会把别人顶出来。必须和「放不下」区分开 —— 都画成红的，
@@ -269,6 +271,8 @@ func _draw() -> void:
 		var b := bag as ItemInstance
 		var bag_cells := b.cells()
 		var bag_anchor := cell_origin_px(b.origin)
+		if ItemPainter.draw_art(self, b.def, b.rotation, bag_anchor, cell_px):
+			continue     # 201：包有图就画图（包也是道具），内容物照样压在上面
 		ItemPainter.draw_item(self, bag_cells, bag_anchor, cell_px, COLOR_BAG_FILL, COLOR_BAG_EDGE)
 		ItemPainter.draw_label(
 			self, bag_cells, bag_anchor, cell_px, Names.of(b.def), font, 11, Color("79839a")
@@ -295,12 +299,17 @@ func _draw() -> void:
 			body = body.lerp(COLOR_BAG_FILL, 0.7)
 			edge = edge.lerp(COLOR_BAG_EDGE, 0.7)
 			text_color = COLOR_TEXT.darkened(0.35)
-		ItemPainter.draw_item(self, cells, anchor, cell_px, body, edge)
-		if _label_visible(item):
-			ItemPainter.draw_label(
-				self, cells, anchor, cell_px, Names.of_item(item) + ("
+		# 201：有图就画图、不写名字（170：名字在悬浮窗）；休眠的压到 55 % 灰，仍写小字「休眠」
+		if ItemPainter.draw_art(self, item.def, item.rotation, anchor, cell_px, DORMANT_ART if dormant else Color.WHITE):
+			if dormant and _label_visible(item):
+				ItemPainter.draw_label(self, cells, anchor, cell_px, "休眠", font, 13, COLOR_TEXT)
+		else:
+			ItemPainter.draw_item(self, cells, anchor, cell_px, body, edge)
+			if _label_visible(item):
+				ItemPainter.draw_label(
+					self, cells, anchor, cell_px, Names.of_item(item) + ("
 休眠" if dormant else ""), font, 13, text_color
-			)
+				)
 		if highlights.has(item.uid):
 			var hb := item.def.shape.size_rotated(item.rotation)
 			var pulse := 0.6 + 0.4 * (0.5 + 0.5 * sin(Time.get_ticks_msec() / 180.0))

@@ -98,7 +98,8 @@ static func problems(old: Dictionary, now: Dictionary, items_alias: Dictionary =
 		var changed: bool = _ints(was.get("shape", [])) != _ints(is_now.get("shape", [])) \
 			or _ints(was.get("size", [])) != _ints(is_now.get("size", [])) or bool(was.get("bag", false)) != bool(is_now.get("bag", false))
 		if changed and not reshaped.has(sid):
-			out.append("道具 %s 的形状 / 尺寸 / 是否包变了：登记进 IdAliases.RESHAPED，并看一眼敌人预设棋盘的 at" % id)
+			out.append("道具 %s 的形状 / 尺寸 / 是否包变了：登记进 IdAliases.RESHAPED，并看一眼敌人预设棋盘的 at" % id
+				+ ("；这件有道具图（201），改形状要通知美术重画" if FileAccess.file_exists("res://assets/items/%s.png" % id) else ""))
 	for kind in ID_KINDS:
 		var table: Dictionary = alias_tables.get(kind, {})
 		var gone_ok: Array = retired.get(kind, [])
