@@ -49,11 +49,30 @@ static func formula(def: ItemDef) -> int:
 	return maxi(1, cells)
 
 
-## 一块容器里所有东西的重量之和（161：包是 0，所以棋盘上就是不含包）
+## 一块容器里所有东西的重量之和（161：包是 0，所以棋盘上就是不含包）。209：整件在一个包里的乘那个包的 [member ItemDef.bag_weight_mult]
 static func total(c: ItemContainer) -> int:
 	var sum := 0
 	if c == null:
 		return sum
 	for inst in c.items():
-		sum += of((inst as ItemInstance).def)
+		sum += of_in(inst as ItemInstance, c)
 	return sum
+
+
+## 209：放在 [param c] 上的这一件有多重 —— 整件在一个包里就乘包的 [member ItemDef.bag_weight_mult]（四舍五入），其余同 [method of]
+static func of_in(inst: ItemInstance, c: ItemContainer) -> int:
+	var w := of(inst.def)
+	var bag := bag_def_of(inst, c)
+	return w if bag == null or bag.bag_weight_mult == 1.0 else roundi(float(w) * bag.bag_weight_mult)
+
+
+## 209：这一件整件装在哪个包里（棋盘模式的 [GridInventory]，[method GridInventory.bag_of]）；不在包里 / 不是棋盘返回 null
+static func bag_def_of(inst: ItemInstance, c: ItemContainer) -> ItemDef:
+	if inst == null or not (c is GridInventory) or not c.has_item(inst.uid):
+		return null
+	var g := c as GridInventory
+	var bag_uid := g.bag_of(inst.uid)
+	if bag_uid == GridInventory.EMPTY_UID:
+		return null
+	var bag := g.get_item(bag_uid)
+	return bag.def if bag != null else null

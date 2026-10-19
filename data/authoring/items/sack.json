@@ -1,0 +1,17 @@
+{
+  "id": "sack",
+  "display_name": "粗麻袋",
+  "display_names": {
+    "en": "Burlap Sack"
+  },
+  "description": "粗糙但结实，什么都能往里塞。",
+  "shape": [
+    "11",
+    "11",
+    "11"
+  ],
+  "tags": [
+    "cloth"
+  ],
+  "is_bag": true
+}

@@ -9,13 +9,20 @@
     "1",
     "1"
   ],
-  "rarity": 2,
+  "rarity": 1,
+  "tags": [
+    "leather"
+  ],
   "is_bag": true,
   "bag_accept_tags": [
     "remedy",
     "food"
   ],
-  "tags": [
-    "leather"
+  "bag_mods": [
+    {
+      "stat": "haste",
+      "mode": "MULT",
+      "amount": 10.0
+    }
   ]
 }

@@ -19,6 +19,8 @@ extends Resource
 ## 这一档背的包（道具 id，084 作者：敌人和玩家一样，所有道具都依托背包）。先摆包，道具只能摆进包里；
 ## 包本身计入身上的东西（会掉）、不计入 item_count。空 = 老路，道具直接摆棋盘
 @export var bags: Array[StringName] = []
+## 209：没写死 [member bags] 时，这一档从包池（[BagPool]）按权重抽几个包 [min, max]，稀有度 ≤ [member rarity_cap]
+@export var bag_count: Vector2i = Vector2i(1, 2)
 
 ## 这一档背的道具稀有度上限，-1 不限；与组装规则的上限取小。
 ## 外环的小兵不该背传说品 —— 这是掉落的来源（5.10），也是低档棋盘小、别让 3×3 的重甲把它塞满的原因

@@ -46,6 +46,9 @@ func _on_battle_finished(_node: MapNode, _result: BattleResult, _won: bool) -> v
 		var inst := _run.board.get_item(uid)
 		if inst == null or inst.def == null or inst.def.wear == null:
 			continue
+		var bag := ItemWeight.bag_def_of(inst, _run.board)
+		if bag != null and bag.bag_wear_free:
+			continue     # 209：符文囊里的晶石不耗耐久
 		left[uid] = inst.spend_charge(1)
 	if not left.is_empty():
 		_run.board.changed.emit()     # 名字前缀变了：棋盘重画

@@ -1,0 +1,19 @@
+{
+  "id": "prologue",
+  "display_name": "序章掉落（身上的包必掉）",
+  "base_chance": [
+    0.6,
+    0.45,
+    0.3,
+    0.15,
+    0.05,
+    0.02
+  ],
+  "treasure_chance": 0.0,
+  "treasure_weights": {
+    "4": 3,
+    "5": 1
+  },
+  "min_drops": 1,
+  "bags_always_drop": true
+}

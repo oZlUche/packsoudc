@@ -1,0 +1,23 @@
+{
+  "id": "war_pack",
+  "display_name": "军用行囊",
+  "display_names": {
+    "en": "War Pack"
+  },
+  "description": "制式行军背囊，又大又结实。",
+  "shape": [
+    "1111",
+    "1111",
+    "1111"
+  ],
+  "rarity": 4,
+  "tags": [
+    "leather"
+  ],
+  "is_bag": true,
+  "bag_mods": [
+    {
+      "amount": 1.0
+    }
+  ]
+}

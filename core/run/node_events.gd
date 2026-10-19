@@ -63,6 +63,8 @@ var items: ItemDatabase = null
 var drop_rule: DropRule = null
 ## 126：现造的敌人（随机点揭成战斗、搜索遭遇）也按它带非战斗道具
 var carry_rule: CarryRule = null
+## 209：包池 —— 现造的敌人背什么包、打赢了第二段掉什么包、商店的包槽；null = 不掷包
+var bag_pool: BagPool = null
 ## 127：这一局的进阶难度（搜索保底按它的等级挑阶梯表的行）
 var difficulty_def: DifficultyDef = null
 ## 钱（6.6）。null = 这一局不算钱
@@ -672,6 +674,8 @@ func _settle_won(node: MapNode, type: StringName, content: Dictionary, loot_ctx:
 	var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core") \
 		if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
 	_bless_rolled(node, rolled)
+	# 209：第二段 —— 按包池掷「用哪些包装这些东西」（没有包的魔兽 / 机关不掉包；随机数另起一条）
+	rolled["bags"] = DropResolver.bags_for(rolled, content, enemies, pool, bag_pool, items, _rng_for(node, "loot_bags"), type == &"core")
 	loot_ready.emit(node, DropResolver.corpse_of(content, rolled, items))
 	_pay_battle_reward(node, content)
 	if type == &"core":
@@ -843,7 +847,7 @@ func _open_shop(node: MapNode) -> void:
 		shop_opened.emit(node, null)
 		_visited(node)
 		return
-	var session := ShopSession.new(node, economy, items, wallet, _depth_of(node), hooks.run_context().shop_price_mult)
+	var session := ShopSession.new(node, economy, items, wallet, _depth_of(node), hooks.run_context().shop_price_mult, bag_pool)
 	if hooks.has(&"belt_grant"):
 		session.belt_grant = hooks.belt_grant     # 160 补一：「随身」那一排买了直接进腰带
 	session.closed.connect(func():
@@ -919,7 +923,7 @@ func _enemy_for(node: MapNode, as_type: StringName, rng: RandomNumberGenerator) 
 	var view := MapNode.from_dict(node.to_dict())
 	view.type = as_type
 	# 踩上去才造的敌人跟探索度挂钩：走得越远、搜得越多，遇到的越强
-	var built := EnemyPlacer.place_one(view, pool, enemies, items, _depth_of(node), difficulty, scale_id, rng, exploration(), carry_rule)
+	var built := EnemyPlacer.place_one(view, pool, enemies, items, _depth_of(node), difficulty, scale_id, rng, exploration(), carry_rule, bag_pool)
 	return built.get("content", {})
 
 

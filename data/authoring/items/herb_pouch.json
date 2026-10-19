@@ -1,0 +1,28 @@
+{
+  "id": "herb_pouch",
+  "display_name": "药草囊",
+  "display_names": {
+    "en": "Herb Pouch"
+  },
+  "description": "透气的布囊，草药和吃食放久了也不坏。",
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "cloth"
+  ],
+  "is_bag": true,
+  "bag_accept_tags": [
+    "herb",
+    "remedy",
+    "food"
+  ],
+  "bag_mods": [
+    {
+      "stat": "regen_hp",
+      "amount": 0.5
+    }
+  ]
+}

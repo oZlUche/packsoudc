@@ -108,6 +108,8 @@ var pool: EnemyPool = null
 var drop_rule: DropRule = null
 ## 126：敌人携带规则（章节引用；空 = 敌人不带非战斗道具）
 var carry_rule: CarryRule = null
+## 209：这一章的包池（[member ChapterDef.bag_pool]）；null = 不掷包
+var bag_pool: BagPool = null
 var node_rules: NodeRules = null
 var economy: EconomyRules = null
 ## 129：负重规则（章节引用；空 = 这一章不算负重）
@@ -173,7 +175,7 @@ static func start(
 	ItemInstance.reset_uid_counter()
 	SafePlacerScript.mark(s.map, p_chapter.safes)     # 092：先换点，再放敌人（换掉的点不该带敌人）
 	if s.pool != null:
-		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id(), s.carry_rule)
+		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id(), s.carry_rule, s.bag_pool)
 	EnemyPlacer.arrange_map(s.map, p_items)     # 165：预设图里没写位置的敌人道具（与相邻组）在这里摆一次、记进内容
 	PaidExtracts.mark(s.map, s.economy)
 	EventPlacer.fill(s.map, s.node_rules)
@@ -962,6 +964,7 @@ func _resolve_rules() -> void:
 		pool = enemies.pool(chapter.enemy_pool)
 	drop_rule = _rule_asset("drop_rules", chapter.drop_rule) as DropRule
 	carry_rule = _rule_asset("carry_rules", chapter.carry_rule) as CarryRule
+	bag_pool = _rule_asset("bag_pools", chapter.bag_pool) as BagPool
 	encumbrance = _rule_asset("encumbrance_rules", chapter.encumbrance_rules) as EncumbranceRules
 	node_rules = _rule_asset("node_rules", chapter.node_rules) as NodeRules
 	economy = _rule_asset("economy_rules", chapter.economy_rules) as EconomyRules
@@ -999,6 +1002,7 @@ func _wire_events() -> void:
 	events.items = items
 	events.drop_rule = drop_rule
 	events.carry_rule = carry_rule
+	events.bag_pool = bag_pool
 	events.difficulty_def = difficulty
 	events.wallet = wallet
 	events.economy = economy

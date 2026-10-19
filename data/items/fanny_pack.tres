@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_ghxac"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_4c7pf"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_i5m32"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_1fki8"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_rkn5w"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_oddbf"]
+
+[sub_resource type="Resource" id="Resource_c5mbv"]
+script = ExtResource("2_4c7pf")
+stat = &"regen_stamina"
+amount = 0.5
+
+[sub_resource type="Resource" id="Resource_3vdhp"]
+script = ExtResource("6_oddbf")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
+
+[resource]
+script = ExtResource("5_rkn5w")
+id = &"fanny_pack"
+display_name = "腰包"
+display_names = {
+"en": "Fanny Pack"
+}
+description = "系在腰上，里面的东西随手就能拿。"
+shape = SubResource("Resource_3vdhp")
+rarity = 1
+tags = Array[StringName]([&"leather"])
+is_bag = true
+bag_mods = Array[ExtResource("2_4c7pf")]([SubResource("Resource_c5mbv")])

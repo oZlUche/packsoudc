@@ -1,0 +1,24 @@
+{
+  "id": "rune_pouch",
+  "display_name": "符文囊",
+  "display_names": {
+    "en": "Rune Pouch"
+  },
+  "description": "绣着符文的小囊，晶石放在里面不会磨损。",
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 2,
+  "tags": [
+    "cloth",
+    "magic"
+  ],
+  "is_bag": true,
+  "bag_accept_tags": [
+    "crystal",
+    "magic",
+    "staff"
+  ],
+  "bag_wear_free": true
+}

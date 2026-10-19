@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="DropRule" format=3]
+
+[ext_resource type="Script" path="res://core/loot/drop_rule.gd" id="1_or5pn"]
+
+[resource]
+script = ExtResource("1_or5pn")
+id = &"prologue"
+display_name = "序章掉落（身上的包必掉）"
+treasure_chance = 0.0
+min_drops = 1
+bags_always_drop = true

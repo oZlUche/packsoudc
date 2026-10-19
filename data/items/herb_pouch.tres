@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_qiixe"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_lnlwq"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_126wc"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_rwqgm"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_kjhb1"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_dfu5s"]
+
+[sub_resource type="Resource" id="Resource_bc41s"]
+script = ExtResource("2_lnlwq")
+stat = &"regen_hp"
+amount = 0.5
+
+[sub_resource type="Resource" id="Resource_ncp2w"]
+script = ExtResource("6_dfu5s")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
+
+[resource]
+script = ExtResource("5_kjhb1")
+id = &"herb_pouch"
+display_name = "药草囊"
+display_names = {
+"en": "Herb Pouch"
+}
+description = "透气的布囊，草药和吃食放久了也不坏。"
+shape = SubResource("Resource_ncp2w")
+rarity = 1
+tags = Array[StringName]([&"cloth"])
+is_bag = true
+bag_accept_tags = Array[StringName]([&"herb", &"remedy", &"food"])
+bag_mods = Array[ExtResource("2_lnlwq")]([SubResource("Resource_bc41s")])

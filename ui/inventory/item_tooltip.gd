@@ -73,6 +73,20 @@ static func icon(id: String) -> String:
 ## `{"head": 名字 / 副行 / 说明, "body": 正文, "foot": 脚注左边（金币、秤砣）, "set": 套装名, "text": 三块连起来, "terms": {id: {"name", "text"}}}`。
 ## 词条在文字里是 `[url=term:<id>]` 包着的下划线词（[method Glossary.mark]），悬浮窗钉住后停上去按 id 查 `terms` 开子窗。
 ## 词条 = 固定词条（[Glossary.TERMS]）+ 这件道具会施加的 buff（说明按定义生成）+ 弹词条的标签
+## 209：包的三个局内字段写成句子（不耗耐久 / 卖价 / 负重）；不是包或没写返回空
+static func bag_field_lines(def: ItemDef) -> Array[String]:
+	var out: Array[String] = []
+	if def == null or not def.is_bag:
+		return out
+	if def.bag_wear_free:
+		out.append("里面的魔晶石不耗耐久")
+	if def.bag_value_mult != 1.0:
+		out.append("里面的东西卖价 %s%d%%" % ["+" if def.bag_value_mult > 1.0 else "", roundi((def.bag_value_mult - 1.0) * 100.0)])
+	if def.bag_weight_mult != 1.0:
+		out.append("里面的东西负重减半" if is_equal_approx(def.bag_weight_mult, 0.5) else "里面的东西负重 ×%s" % String.num(def.bag_weight_mult, 2))
+	return out
+
+
 static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Dictionary:
 	if inst == null or inst.def == null:
 		return {"head": "", "body": "", "foot": "", "set": "", "text": "", "terms": {}}
@@ -101,6 +115,8 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		lines.append("包：%d×%d，放进去的东西才参战" % [size.x, size.y] + ("；只收 %s" % "、".join(_names(def.bag_accept_tags)) if not def.bag_accept_tags.is_empty() else ""))
 		for m in def.bag_mods:
 			lines.append("　包里的东西：%s" % Glossary.mod_text(m))
+		for s in bag_field_lines(def):
+			lines.append("　" + s)
 	# 212：魔兽 / 机关棋盘上的道具写它持有时的那一面（wild）：没有邻接、信仰、`applies`
 	var wild := is_wild_on(inst, board)
 	var profile := BattleCompiler.profile_of(def, wild)
@@ -213,7 +229,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		var line := "信物：%s" % ("当前信仰" if faith_lit(def, status) else "右键：奉为主信仰")
 		lines.append("[color=#%s]%s[/color]" % [UiPalette.FG.to_html(false) if faith_lit(def, status) else DIM_HEX, line])
 	# --- 脚注：金币、秤砣（170：不写格数），右边套装名
-	var foot := "[font_size=%d][color=@tip_meta]%s%d　%s%d[/color][/font_size]" % [FOOT_SIZE, icon("coin"), ItemValue.of_instance(inst), icon("weight"), ItemWeight.of(def)]     # 129：重
+	var foot := "[font_size=%d][color=@tip_meta]%s%d　%s%d[/color][/font_size]" % [FOOT_SIZE, icon("coin"), ItemValue.of_in(inst, board), icon("weight"), ItemWeight.of_in(inst, board)]     # 129：重
 	var set_name := set_name_of(def.set_id)
 	# --- 词条：这件道具会施加的 buff（id → 按定义生成的说明）+ 固定词条 + 弹词条的标签
 	var extra := Glossary.tag_terms(text_tags)     # 096：登记了说明的标签也是词条（193 补充三：只剩没图、还写成字的那些）
