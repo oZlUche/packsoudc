@@ -49,11 +49,11 @@ effects = Array[ExtResource("5_gdyqf")]([SubResource("Resource_s2tu1")])
 script = ExtResource("3_bcv8t")
 metadata/part_ref = &"always"
 
-[sub_resource type="Resource" id="Resource_7i0yh"]
+[sub_resource type="Resource" id="Resource_gmvuk"]
 script = ExtResource("9_e2cvp")
 seconds = 1.0
 
-[sub_resource type="Resource" id="Resource_lxdev"]
+[sub_resource type="Resource" id="Resource_cgorq"]
 script = ExtResource("10_blyti")
 target = 1
 damage_type = &"fire"
@@ -61,14 +61,14 @@ amount = 1.0
 damage_stat = &""
 per_stack = true
 
-[sub_resource type="Resource" id="Resource_3tp6u"]
+[sub_resource type="Resource" id="Resource_o1704"]
 script = ExtResource("11_yrl86")
 
-[sub_resource type="Resource" id="Resource_om0h4"]
+[sub_resource type="Resource" id="Resource_m6he4"]
 script = ExtResource("2_i0m0k")
-trigger = SubResource("Resource_3tp6u")
-cadence = SubResource("Resource_7i0yh")
-effects = Array[ExtResource("5_gdyqf")]([SubResource("Resource_lxdev")])
+trigger = SubResource("Resource_o1704")
+cadence = SubResource("Resource_gmvuk")
+effects = Array[ExtResource("5_gdyqf")]([SubResource("Resource_cgorq")])
 
 [sub_resource type="Resource" id="Resource_ola2g"]
 script = ExtResource("12_aln1v")
@@ -78,7 +78,7 @@ display_names = {
 "en": "Burn"
 }
 is_debuff = true
-rules = Array[ExtResource("2_i0m0k")]([SubResource("Resource_om0h4")])
+rules = Array[ExtResource("2_i0m0k")]([SubResource("Resource_m6he4")])
 element = &"fire"
 
 [sub_resource type="Resource" id="Resource_nxis4"]
@@ -115,6 +115,7 @@ prefixes_by_lang = {
 broken_prefixes = {
 "en": "Shattered "
 }
+broken_into = &"crystal_shards"
 
 [resource]
 script = ExtResource("19_7i1uv")
@@ -123,7 +124,7 @@ display_name = "火焰魔晶石"
 display_names = {
 "en": "Fire Crystal"
 }
-description = "放在法杖的装载槽上：法杖伤害 +{amount}，打出火焰伤害，打中后给对手施加一层【灼伤】。能供给 {max_charges} 场，用完就碎。"
+description = "放在法杖的装载槽上：法杖伤害 +{amount}，打出火焰伤害，打中后给对手施加一层【灼伤】。能供给 {max_charges} 场，用完碎成{item:crystal_shards}。"
 shape = SubResource("Resource_rcq4n")
 rarity = 1
 tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal"])

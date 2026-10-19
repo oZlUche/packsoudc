@@ -1663,7 +1663,7 @@ func _draw() -> void:
 			edge.a *= alpha
 			ink.a *= alpha
 		# 201：有图就画图、不写名字；base 是落地动画的变换（相乘，不覆盖）
-		if not ItemPainter.draw_art(self, inst.def, rot, at, InventoryView.CELL, tint, base):
+		if not ItemPainter.draw_art(self, inst.def, rot, at, InventoryView.CELL, tint, base, ItemPainter.variant_of(inst)):
 			ItemPainter.draw_item(self, cells, at, InventoryView.CELL, body, edge)
 			ItemPainter.draw_label(self, cells, at, InventoryView.CELL, Names.of_item(inst), font, 13, ink)
 		var sil := ItemSilhouette.of(inst.def, rot)

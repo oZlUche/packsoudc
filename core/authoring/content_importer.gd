@@ -925,6 +925,19 @@ static func validate_faith_charms(ctx: Context, report: ImportReport) -> void:
 			report.error("faiths/%s" % fid, "%s 没有 1 格的信物护符（带 faith、%s、faith_anchor 的 1 格道具）—— 每位神的信物必然包含一枚" % [faith.display_name, faith.tag()])
 
 
+## 208：耐久的 `broken_into` 得是一件 1 格的道具（换上去占原点那一格）—— 批量导入完了查，道具之间没有先后
+static func validate_wear_targets(ctx: Context, report: ImportReport) -> void:
+	for iid in ctx.items:
+		var item := ctx.items[iid] as ItemDef
+		if item == null or item.wear == null or item.wear.broken_into == &"":
+			continue
+		var to := ctx.items.get(item.wear.broken_into, null) as ItemDef
+		if to == null:
+			report.error("items/%s" % iid, "wear.broken_into：找不到道具 '%s'" % item.wear.broken_into)
+		elif ItemVolume.cells_of(to) != 1:
+			report.error("items/%s" % iid, "wear.broken_into：「%s」得是 1 格（换上去占原点那一格）" % to.display_name)
+
+
 ## 信仰标签（作者定的机制）：信仰道具带 `faith` + 恰好一个 `faith:<id>`；对象标签得是登记过的信仰（批量导入时）
 static func _validate_item_faith(def: ItemDef, ctx: Context, report: ImportReport) -> void:
 	var objects: Array[StringName] = []

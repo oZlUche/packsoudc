@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Lightning Crystal"
   },
-  "description": "放在法杖的装载槽上：法杖伤害 +{amount}，打出闪电伤害，打中后给对手施加一层【麻痹】。能供给 {max_charges} 场，用完就碎。",
+  "description": "放在法杖的装载槽上：法杖伤害 +{amount}，打出闪电伤害，打中后给对手施加一层【麻痹】。能供给 {max_charges} 场，用完碎成{item:crystal_shards}。",
   "shape": [
     "11"
   ],
@@ -72,6 +72,7 @@
     },
     "broken_prefixes": {
       "en": "Shattered "
-    }
+    },
+    "broken_into": "crystal_shards"
   }
 }
