@@ -85,7 +85,7 @@ func has_effect() -> bool:
 		return true
 	if adjacency != null or is_bag:
 		return true
-	if not effects.is_empty() or not bag_mods.is_empty() or not faith_bonuses.is_empty():
+	if not effects.is_empty() or not bag_mods.is_empty() or not faith_bonuses.is_empty() or growth != null:
 		return true
 	return tags.has(ANCHOR) or is_keepsake()
 
@@ -162,6 +162,10 @@ func faith_tag() -> StringName:
 @export_group("耐久")
 ## 148：耐久（次数制，魔晶石）。为空 = 不会用坏。剩几次记在实例上（[method ItemInstance.charges]）
 @export var wear: WearProfile
+
+@export_group("生长")
+## 207：自然系专属的生长（种子 → 茎叶 → 绽放）。为空 = 不会长。走到哪一阶记在实例上（[GrowthProfile]）
+@export var growth: GrowthProfile
 
 
 ## 定义是否完整可用。资产批量校验与单元测试用。

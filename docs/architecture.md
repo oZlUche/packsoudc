@@ -483,6 +483,27 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 - **科技树配置表是科技的唯一来源**（119）：`docs/techs.xlsx` 的「节点」「等级」两张表由 `tools/techs_xlsx_to_json.gd` **全量**生成 `techs/*.json` 与 `run_buffs/tech_*.json`（`tech_run_buff` 每级一条，`effect.buffs` 工具填；表里没有的删掉）和只读镜像 `docs/techs.md`，全有或全无；`TechsTable.check` 在 `tools/check_content.gd` 里对照（含镜像）。
   **改科技先改表**，别手改那些 JSON。是否点亮不进表：读存档的 `tech_levels`；开发区（基地仓库页右列，非导出包）每个科技一个数字框直接改它（`GameFlow.dev_set_tech_level`，效果走 `TechService.derive` 重算）。
 
+### 3.9 生长与扎根（207，作者定）
+
+自然之神的道具才会长（导入器拦：`growth` 只许写在带 `faith` + `faith:nature` 的道具上）。阶段不是几件道具，是**同一件的状态**，和魔晶石耐久一条路：
+
+- **数据**：`ItemDef.growth: GrowthProfile`（`stages: Array[GrowthStage]`、`stage0_name`、`reset_on_leave`）。每阶：`name` / `prefix`（中英）、`after`（从上一阶起再走几步）、
+  `lock`（`none` / `item` / `bag`）、`mods` + `rules`（**这一阶的终值，不累加**）、`bonus_pool: Array[GrowthBonus]` + `bonus_count`（到阶随机抽几条，`hash(局种子, uid, 阶)`）。
+- **实例**：`state.growth_ticks` / `growth_stage` / `growth_bonus`（抽中的下标），读写都走 `GrowthProfile` 的静态函数；存档原样带走，读回来整数化（`normalize_state`）。
+- **什么时候长**：`GrowthModule`（一局的模块，`RunModules.standard` 里）订 `travel.clock.advanced` —— 全局倒计时每走一步（走路、原地耗时）长一步，战斗不算；
+  只数作战棋盘上**整件在包里**、**不休眠**的。一次最多升一阶，剩下的不结转。升阶发 `grown(uid, stage)`。
+- **休眠**（自然不是当前信仰）：不长、不退，阶段加成不算（编译器 `dormant` 跳过），**锁保留**。
+- **加成**：编译器第 4b 步旁（信仰加成之后）：当前阶的 `mods` 施加、`rules` 与抽中的额外效果并进 `bonus_rules[uid]`。
+- **锁（扎根）**：`GridInventory.is_locked(uid)` —— 这件到了 `item` / `bag` 锁，或它是包、包里有一件到了 `bag` 锁（`bag_locked`）。只有 `growth_locks` 开着的棋盘才锁
+  （`GrowthModule` 装的时候给一局的作战棋盘开，不进存档）；基地带回来的棋盘、仓库、容器都不锁。兑现在玩家能动东西的口上：
+  `DragLayer` 按下（不拿起，发 `grab_refused` → 面板提示 `notice.rooted`）、换包（`_replaceable_bag`）、顶替（`_displaceable`、`GridInventory.place_displacing`）、
+  `InventoryService.move` / `transfer_auto`（双击、全部拾取都走它）/ `_take_bag_apart`。**核心层 `remove` / `detach_bag` 不看锁**（结算、行动失败、死亡清棋盘照旧）。
+  `GridTidy` 本来就不碰棋盘模式的格子，不用改。锁住的包里**别的东西照旧能动**。
+- **清零**（`reset_on_leave`，默认真）：`GrowthModule` 记着棋盘上每件会长的道具的置入序号 —— 到了别的容器就清零，从别处回来（序号变了）也清零；
+  拿在手上（`container_id == 0`）、包里挪位置（序号不变）不算。带回基地那一下 `MetaState._adopt` 清（`GrowthProfile.on_leave`）。
+- **名字 / 悬浮窗**：`Names.of_item` 最前面加阶段前缀（`盛放的荆棘种子`）；悬浮窗一行「生长：茎叶（再 6 步绽放）　已扎根」+ 每阶一行（到了的亮、没到的灰）+ 抽中的额外效果。
+- 首批三件：荆棘种子（反伤）、铁木苗（护甲）、月光草籽（回血 + 定时拔减益）。阶段变体图（`<id>@s1.png`）走 208 的实例变体图规则，没有图就画本图。
+
 ## 4. M2 · 自动战斗
 
 ### 4.1 核心决策：模拟与表现彻底分离

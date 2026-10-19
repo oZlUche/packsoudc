@@ -51,6 +51,7 @@ const RUN_MODULES := {
 	&"buff": "res://core/run/modules/buff_module.gd",
 	&"belt": "res://core/run/modules/belt_module.gd",     # 147
 	&"wear": "res://core/run/modules/wear_module.gd",     # 148
+	&"growth": "res://core/run/modules/growth_module.gd",     # 207
 }
 
 ## 事件层（063）：选项的条件（只读）与后果（做一件事或立一面旗）
