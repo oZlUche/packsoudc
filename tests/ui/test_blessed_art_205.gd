@@ -77,6 +77,10 @@ static func run_mark_texture(t: TestCase) -> void:
 		var want2 := own2 if ResourceLoader.exists(own2) or FileAccess.file_exists(own2) else hud
 		t.eq(ItemPainter.mark_of(StringName(f), 80.0).resource_path, want2, "%s 格子 80 来自 %s" % [f, want2])
 		t.check(ItemPainter.mark_of(StringName(f)) == m, "%s 同一张（缓存）" % f)
+		if want == own:
+			t.eq(m.get_size(), Vector2(24, 24), "%s 印记 24 px" % f)
+		if want2 == own2:
+			t.eq(ItemPainter.mark_of(StringName(f), 80.0).get_size(), Vector2(64, 64), "%s 印记 @2x 64 px" % f)
 
 
 static func run_codex_variants(t: TestCase) -> void:
