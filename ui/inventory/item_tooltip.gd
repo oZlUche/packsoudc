@@ -495,12 +495,15 @@ static func set_name_of(id: StringName) -> String:
 	return Names.of(d) if d != null and Names.of(d) != "" else String(id)
 
 
-## 148：耐久那一行（「耐久 2 / 3：每供给一场少一次，用完就碎」；碎了写不再供给）
+## 148：耐久那一行（「耐久 2 / 3：每供给一场少一次，用完就碎」；碎了写不再供给）。208：写了换成什么就说「用完碎成碎晶」
 static func wear_line(inst: ItemInstance) -> String:
 	var w := inst.def.wear
 	if inst.is_broken():
 		return "[color=#%s]耐久 0 / %d：破碎了，不再供给，卖价打折[/color]" % [DIM_HEX, w.max_charges]
-	return "耐久 %d / %d：每供给一场少一次，用完就碎" % [inst.charges(), w.max_charges]
+	var end := "用完就碎"
+	if w.broken_into != &"":
+		end = "用完碎成%s" % TextTemplate.render("{item:%s}" % w.broken_into)
+	return "耐久 %d / %d：每供给一场少一次，%s" % [inst.charges(), w.max_charges, end]
 
 
 ## 207：生长那几行 —— 「生长：茎叶（再 6 步绽放）· 已扎根」，然后每阶一行（到了的亮、没到的灰），抽中的额外效果各一行。
