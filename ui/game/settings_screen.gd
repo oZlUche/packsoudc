@@ -19,6 +19,8 @@ var _bg_btns: Dictionary = {}
 var _mode_btns: Dictionary = {}
 var _res_btns: Dictionary = {}
 var _res_note: Label = null
+## 204：「声音」一节的音效音量读数
+var _sfx_label: Label = null
 ## 090：从地图的暂停菜单嵌进来时的「返回」（回暂停菜单，一局还在）；空 = 独立的一屏，回主菜单
 var back: Callable = Callable()
 
@@ -39,6 +41,7 @@ func open(_payload: Dictionary) -> void:
 	center.add_child(col)
 	col.add_child(_label("设置", 26, UiPalette.FG))
 	_build_display(col)
+	_build_sound(col)
 	col.add_child(HSeparator.new())
 	col.add_child(_label("战利品 / 容器屏", 15, UiPalette.DIM))
 	_auto_close_btn = _toggle("拿走最后一件后自动关闭", toggle_loot_auto_close)
@@ -128,6 +131,28 @@ func _build_display(col: VBoxContainer) -> void:
 	col.add_child(_res_note)
 	_grid_btn = _toggle("棋盘格线", toggle_show_grid)     # 187
 	col.add_child(_grid_btn)
+
+
+## 204：「声音」一节 —— 音效音量一行（− / + 一步 10%，按钮本身响 `ui.press`，当场听到新音量）。音乐那行等第一首曲子再露出来（待定 4.2）
+func _build_sound(col: VBoxContainer) -> void:
+	col.add_child(HSeparator.new())
+	col.add_child(_label("声音", 15, UiPalette.DIM))
+	var row := _hbox(8)
+	_sfx_label = _label("", 14, UiPalette.FG)
+	_sfx_label.custom_minimum_size.x = 120
+	row.add_child(_sfx_label)
+	row.add_child(_button("−", func(): step_sfx_volume(-1), 13, UiPalette.Tier.MINOR))
+	row.add_child(_button("+", func(): step_sfx_volume(1), 13, UiPalette.Tier.MINOR))
+	col.add_child(row)
+
+
+## 204：音效音量调一步（[param dir] = ±1，一步 10%，夹在 0～100%）；当场套用、存盘
+func step_sfx_volume(dir: int) -> void:
+	var steps := clampi(roundi(flow.settings.sfx_volume * 10.0) + dir, 0, 10)
+	flow.settings.sfx_volume = steps / 10.0
+	AudioHub.apply(flow.settings)
+	flow.save_settings()
+	_refresh()
 
 
 ## 172：窗口 / 全屏（当场套用、存盘）
@@ -265,6 +290,8 @@ func toggle_unlock_all() -> void:
 
 func _refresh() -> void:
 	refresh_display()
+	if _sfx_label != null:
+		_sfx_label.text = "音效 %d%%" % roundi(flow.settings.sfx_volume * 100.0)
 	if _tooltip_btn != null:
 		_tooltip_btn.set_pressed_no_signal(flow.settings.node_tooltips_preview)
 		_tooltip_btn.text = "节点浮窗预览：%s" % ("开（不管章节）" if flow.settings.node_tooltips_preview else "关（按章节：第二章开）")
