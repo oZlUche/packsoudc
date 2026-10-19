@@ -92,7 +92,15 @@ static func frame_pick_on_page_3(t: TestCase, root: Window) -> void:
 	t.check(hint.is_open() and hint.visible and hint.node_id == a, "正中弹提示窗")
 	t.eq(hint.type, &"spawn", "说的是出生点")
 	var texts := Setup._texts(hint)
-	t.check(texts.has("出生点") and texts.any(func(s: String) -> bool: return s.contains(String(MapNodeTypes.HINTS[&"spawn"]))), "类型名与一句说明")
+	var style := ""
+	for r in g.routes:
+		if int(r.get("entry_id", -1)) == a:
+			style = String(r.get("style", ""))
+	var rt := RouteStyle.player_text(StringName(style))
+	t.check(not rt.is_empty(), "这条路线有给玩家的名字（%s）" % style)
+	t.check(texts.has("出生点·" + String(rt.get("name", ""))) and texts.any(func(s: String) -> bool: return s.contains(String(MapNodeTypes.HINTS[&"spawn"]))), "作者 10-19：标题「出生点·路线名」与一句说明")
+	t.check(texts.has(String(rt.get("text", ""))), "路线特点那一句")
+	t.check(not hint._glyph.visible, "标题不画「生」字")
 	t.check(texts.has("点别处可以换一个"), "底下的小字")
 	t.check(not texts.any(func(s: String) -> bool: return s.contains("风险")), "路线风险 / 收益跟着地图屏一起藏着")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_NODE_HINT), UiTheme.TONE_LIGHT, "浅底纸签")

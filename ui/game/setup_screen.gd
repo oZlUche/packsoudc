@@ -83,7 +83,6 @@ var spawn_id: int = -1
 var _preview_key: String = ""
 ## 182：点入口时屏幕正中弹的提示窗
 var _hint: NodeHintCard = null
-const MAP_SCREEN := preload("res://ui/game/map_screen.gd")
 ## 180：上次挑的图 / 规模 / 难度记在局外旗标里（旗标只存整数：图记 order + 1、规模记下标 + 1、难度记档位）
 const FLAG_LAST_MAP := &"last_map"
 const FLAG_LAST_SCALE := &"last_scale"
@@ -1159,19 +1158,20 @@ func _show_hint(id: int) -> void:
 		return
 	var g := preview_graph(chapter(), scale_id)
 	var type: StringName = g.get_node(id).type if g != null and g.has_node(id) else &"spawn"
-	_hint.show_for(id, type, NodeHintCard.hint_for(chapter(), type), _route_line(g, id), "点别处可以换一个", _animations_on())
+	var route := _route_text(g, id)
+	var title := "%s·%s" % [NodeText.label_of(type), route["name"]] if not route.is_empty() else ""
+	_hint.show_for(id, type, NodeHintCard.hint_for(chapter(), type), String(route.get("text", "")), "点别处可以换一个", _animations_on(), title)
 
 
 ## 提示窗第三行：这个入口的路线。作者 2026-10-17 已把路线卡（风险 / 收益）对玩家藏起来（地图屏的 `SHOW_ROUTES`），跟着它藏
-func _route_line(g: MapGraph, id: int) -> String:
-	if g == null or not MAP_SCREEN.SHOW_ROUTES:
-		return ""
+## 作者 10-19：这个出生点那条路线给玩家看的名字与特点（{name, text}）；风险 / 收益的数照旧不给玩家看
+func _route_text(g: MapGraph, id: int) -> Dictionary:
+	if g == null:
+		return {}
 	for route in g.routes:
 		if int(route.get("entry_id", -1)) == id:
-			return "%s → %s　风险 %.1f　收益 %.1f" % [route.get("style", "?"),
-				"核心（打 BOSS）" if String(route.get("ends_at", "core")) == "core" else "撤离点（可以不打）",
-				float(route.get("risk_x100", 0)) / 100.0, float(route.get("reward_x100", 0)) / 100.0]
-	return ""
+			return RouteStyle.player_text(StringName(String(route.get("style", ""))))
+	return {}
 
 
 func _forget_spawn() -> void:
