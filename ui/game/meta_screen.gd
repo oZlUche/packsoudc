@@ -302,8 +302,8 @@ func _build_dev_drawer(m: MetaState) -> void:
 	_debug_btn = _button("", toggle_debug_mode, 13, UiPalette.Tier.MINOR)
 	_debug_btn.text = _debug_text()
 	right.add_child(_debug_btn)
-	# 开发开关：只在非导出包显示。科技给的局外 buff 由「科技」页的等级决定（写进 tech_buffs），不在这里重复开关
-	if not OS.has_feature("template"):
+	# 开发开关：只在开发包显示（200：DevGate，开发版导出也有）。科技给的局外 buff 由「科技」页的等级决定（写进 tech_buffs），不在这里重复开关
+	if DevGate.on():
 		right.add_child(_label("开发：局外 buff 开关（科技给的在下面「科技等级」里改）", 15, UiPalette.DIM))
 		var ids_b: Array = flow.buff_defs.keys()
 		ids_b.sort()
@@ -354,8 +354,8 @@ func _build_dev_drawer(m: MetaState) -> void:
 			ub.set_pressed_no_signal(m.has_unlock(key))
 			_unlock_btns[key] = ub
 			right.add_child(ub)
-	# 119：开发区手改进度表（存档的 tech_levels）—— 每个科技一个数字框，导出包里没有
-	if not OS.has_feature("template") and not flow.tech_defs.is_empty():
+	# 119：开发区手改进度表（存档的 tech_levels）—— 每个科技一个数字框，玩家版里没有
+	if DevGate.on() and not flow.tech_defs.is_empty():
 		right.add_child(_label("科技等级　开发：直接改存档里点到几级（0 = 没点亮），效果跟着重算", 15, UiPalette.DIM))
 		var grid := GridContainer.new()
 		grid.columns = 2     # 139：抽屉窄，一行一个科技

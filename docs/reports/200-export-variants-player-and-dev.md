@@ -110,3 +110,16 @@ godot --headless --export-debug  "开发版" build/dev/packsoudc.exe
 
 - 不加密、不内嵌 pck、不做 Linux / Mac 预设 —— 作者没问，和这题无关。
 - 不新建分支、不加编译开关宏。GDScript 没有预处理器，`OS.has_feature()` 就是它的 `#ifdef`。
+
+## 6 落地（2026-10-19，架构方案执行）
+
+按 §3 改动清单与 §4 推荐全做：
+
+- `export_presets.cfg`：`[preset.0]`「玩家版」（runnable、`custom_features=""`、`debug/export_console_wrapper=0`、`exclude_filter="tests/*, addons/godot_ai/*, docs/*"`、`build/packsoudc.exe`）；`[preset.1]`「开发版」（`runnable=false`、`custom_features="dev"`、包装器 1、同样的排除、`build/dev/packsoudc.exe`）。options 段整段照抄，两个都是 `script_export_mode=2`。`tools/` 不排除。
+- `core/dev_gate.gd`：`on()` = `not force_player and (not template or dev)`。
+- `ui/dev_nav.gd`：`keep_in()` 改成无参数、直接返回 `DevGate.on()`，`_ready` 走它。**和方案的差别**：`dev_nav.gd` 有规矩「不许按类名引用任何全局类」（115：类缓存坏着它也得能解析），所以没写 `DevGate.on()`，而是 `const DevGateScript := preload("res://core/dev_gate.gd")` 按路径拿同一个脚本；`force_player` 是同一个静态变量，测试拨它两边一起变。
+- `ui/game/meta_screen.gd` 两处开发开关 → `DevGate.on()`；`tests/ui/test_base_drawer_139.gd` 里照抄的那一处判断也跟着改。`hud_layout.gd:115`、`dev_nav.gd` 类缓存自检的 `template` 判断没动。
+- `tools/export.bat`：先 `chcp 65001`（预设名是中文，cmd 默认代码页会把参数读坏），`mkdir build\dev`，再 `--export-release "玩家版"`、`--export-debug "开发版"`；`GODOT` 变量默认值同 `run_game.bat`。需要先装 4.7.1 导出模板。
+- 测试：`tests/tools/test_startup_graph.gd` 的导出一节加 8 条 —— 两个预设都在；玩家版不带 `dev`、开发版带；两者都排除 `tests/*`、都不排除 `tools/`；玩家版包装器 0；「运行导出」用玩家版；`keep_in()` 开发包留、`force_player` 时撤。
+- 没验证的：云端没有导出模板，两条导出命令没实际跑过；作者在本机导一次、看玩家版没有 F1 启动器和调试台、开发版都有即可。
+

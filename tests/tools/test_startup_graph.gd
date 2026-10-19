@@ -138,7 +138,7 @@ static func run_boot_loads(t: TestCase) -> void:
 
 
 static func run_export_and_devnav(t: TestCase) -> void:
-	t.begin("176 · 导出预设的脚本是二进制令牌（压缩）；DevNav 只留在编辑器版与 debug 导出里")
+	t.begin("176 → 200 · 导出预设的脚本是二进制令牌（压缩）；玩家版 / 开发版两个预设；DevNav 和调试台同一把门（DevGate）")
 	var cfg := ConfigFile.new()
 	t.eq(cfg.load("res://export_presets.cfg"), OK, "有导出预设")
 	var n := 0
@@ -147,5 +147,23 @@ static func run_export_and_devnav(t: TestCase) -> void:
 			n += 1
 			t.eq(int(cfg.get_value(s, "script_export_mode", -1)), 2, "%s（%s）脚本导出 = 二进制令牌（压缩）" % [s, cfg.get_value(s, "name", "")])
 	t.check(n > 0, "至少一个预设")
-	t.check(DevNavScript.keep_in(true, false) and DevNavScript.keep_in(false, true), "编辑器版直接跑、debug 导出：留")
-	t.check(not DevNavScript.keep_in(false, false), "release 导出：撤掉")
+	t.check(DevNavScript.keep_in(), "命令行跑（开发包）：留")
+	DevGate.force_player = true
+	t.check(not DevNavScript.keep_in(), "玩家包：撤掉（和调试台同一把门）")
+	DevGate.force_player = false
+	# 200：两个预设 —— 玩家版不带 dev、不打包测试；开发版带 dev
+	var by_name := {}
+	for s in cfg.get_sections():
+		if s.begins_with("preset.") and s.count(".") == 1:
+			by_name[String(cfg.get_value(s, "name", ""))] = s
+	t.check(by_name.has("玩家版") and by_name.has("开发版"), "有「玩家版」「开发版」两个预设（%s）" % [by_name.keys()])
+	if by_name.has("玩家版") and by_name.has("开发版"):
+		var player: String = by_name["玩家版"]
+		var dev: String = by_name["开发版"]
+		t.check(not String(cfg.get_value(player, "custom_features", "")).contains("dev"), "玩家版不带 dev 特性")
+		t.check(String(cfg.get_value(dev, "custom_features", "")).split(",", false).has("dev"), "开发版带 dev 特性")
+		for s in [player, dev]:
+			var ex := String(cfg.get_value(s, "exclude_filter", ""))
+			t.check(ex.contains("tests/*") and not ex.contains("tools/"), "%s 不打包 tests/，tools/ 留着（DevNav preload 了里面的脚本）" % cfg.get_value(s, "name"))
+		t.eq(int(cfg.get_value(player + ".options", "debug/export_console_wrapper", -1)), 0, "玩家版不出控制台包装器")
+		t.check(bool(cfg.get_value(player, "runnable", false)) and not bool(cfg.get_value(dev, "runnable", true)), "「运行导出」用玩家版")
