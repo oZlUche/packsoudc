@@ -48,9 +48,10 @@ static func centroid(def: ItemDef, rot: int) -> Vector2:
 	return of(def, rot)["centroid"]
 
 
-## 阶段二（187 那批接道具图时）在这里按图包取这件的图；现在没有道具图
-static func _art_image(_def: ItemDef) -> Image:
-	return null
+## 198 阶段二（201 接道具图）：这件的图，没有 → null（按格子外形）
+static func _art_image(def: ItemDef) -> Image:
+	var tex := ItemPainter.art_of(def)     # 201：60 px / 格那一套，画布 = 包围盒 × 60
+	return tex.get_image() if tex != null else null
 
 
 static func _empty() -> Dictionary:

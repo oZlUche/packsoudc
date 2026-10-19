@@ -15,6 +15,8 @@ const PAD := 8.0
 const NAME_H := 18.0
 const COLOR_DARK := Color("2a2e36")
 const COLOR_DARK_EDGE := Color("3c424d")
+## 201：没点亮、有图的画成暗影
+const ART_UNLIT := Color(0.22, 0.24, 0.28)
 
 var def: ItemDef = null
 var lit: bool = false
@@ -96,7 +98,9 @@ func _draw() -> void:
 	var body := ItemPainter.body_color(def) if lit else COLOR_DARK
 	var edge := ItemPainter.rarity_color(def).lightened(0.2) if lit else COLOR_DARK_EDGE
 	_draw_variant_stack(cells, anchor, cell, layers)
-	ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
+	# 201：有图就画图；没点亮的压成暗影（还看得出形，看不出细节）。异体叠影照旧用色块（错位叠图会花）
+	if not ItemPainter.draw_art(self, def, 0, anchor, cell, Color.WHITE if lit else ART_UNLIT):
+		ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
 	# 名字
 	var name := Names.of(def)
 	var color := UiPalette.FG if lit else Color("4a515e")

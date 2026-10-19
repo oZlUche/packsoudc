@@ -14,10 +14,82 @@ const RARITY_COLORS: Array[Color] = [
 ]
 
 
-## 187：道具图包到了没有。现在没有道具图，恒为 false；道具图落地那一批把这里接到图包的存在判断上
-## （例如 `assets/items/manifest.json` 在不在），棋盘格线的默认（[method GameSettings.grid_on]）跟着翻成不画
+## 201：道具图（`assets/items/<id>.png`，60 px / 格；`@2x/<id>.png`，160 px / 格）。画布 = 形状 rot 0 的包围盒，格外透明
+const ART_DIR := "res://assets/items/"
+const ART_MANIFEST := "res://assets/items/manifest.json"
+## 图的一格多少像素；格子画得比它大（仓库最大 80）就取 @2x
+const ART_CELL := 60.0
+
+## 路径 → 贴图（没有的也记 null，别每帧探文件）
+static var _art: Dictionary = {}
+static var _listed: Dictionary = {}
+static var _manifest_read := false
+
+
+## 187 → 201：道具图包到了没有 = 清单在不在。棋盘格线的默认（[method GameSettings.grid_on]）跟着它
 static func art_available() -> bool:
-	return false
+	return FileAccess.file_exists(ART_MANIFEST)
+
+
+## 201：清单里的 id（测试与 [method art_of] 用）
+static func art_ids() -> Dictionary:
+	if not _manifest_read:
+		_manifest_read = true
+		_listed = {}
+		if art_available():
+			var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(ART_MANIFEST))
+			if data is Dictionary:
+				for id in (data as Dictionary).get("items", []):
+					_listed[StringName(String(id))] = true
+	return _listed
+
+
+## 201：这件的图（没有 → null）。[param cell_px] 是画的时候一格多大：大于 [constant ART_CELL] 取 @2x
+static func art_of(def: ItemDef, cell_px: float = ART_CELL) -> Texture2D:
+	if def == null or def.shape == null or not art_ids().has(def.id):
+		return null
+	var path := ART_DIR + ("@2x/" if cell_px > ART_CELL else "") + String(def.id) + ".png"
+	if not _art.has(path):
+		_art[path] = EventImage.load_texture(path)
+	return _art[path]
+
+
+## 201：按格子对位画道具图 —— 图只画 rot 0 一张，k 个朝向 = 整张绕左上角顺时针转 k × 90° 再平移回来，
+## 和 [method ItemShape.cells_rotated] 同一套变换，每格的那块图永远跟着那一格（推导见报告 201 §2.2）。
+## [param anchor] 是转好朝向后 (0, 0) 格的左上角；[param base] 是调用方当前的画布变换（地面落地动画），相乘不覆盖。
+## 没图返回 false，调用方照旧画色块 + 名字
+static func draw_art(
+	canvas: CanvasItem,
+	def: ItemDef,
+	rot: int,
+	anchor: Vector2,
+	cell: float,
+	modulate: Color = Color.WHITE,
+	base: Transform2D = Transform2D.IDENTITY
+) -> bool:
+	var tex := art_of(def, cell)
+	if tex == null:
+		return false
+	canvas.draw_set_transform_matrix(base * art_transform(def, rot, anchor, cell))
+	canvas.draw_texture_rect(tex, Rect2(Vector2.ZERO, Vector2(def.shape.size_rotated(0)) * cell), false, modulate)
+	canvas.draw_set_transform_matrix(base)
+	return true
+
+
+## 201：rot 0 的图（左上角在原点、一格 [param cell] 像素）→ 画布：转 k × 90° 顺时针，左上角挪到 anchor + 偏移
+## (0, 0) / (H, 0) / (W, H) / (0, W) 格（W、H = rot 0 的包围盒）
+static func art_transform(def: ItemDef, rot: int, anchor: Vector2, cell: float) -> Transform2D:
+	var size := Vector2(def.shape.size_rotated(0))
+	var k := posmod(rot, 4)
+	var off: Vector2 = [Vector2.ZERO, Vector2(size.y, 0.0), size, Vector2(0.0, size.x)][k]
+	return Transform2D(k * PI * 0.5, anchor + off * cell)
+
+
+## 测试用：清掉缓存（换了 [constant ART_MANIFEST] 的内容之后）
+static func clear_art_cache() -> void:
+	_art.clear()
+	_listed.clear()
+	_manifest_read = false
 
 
 ## 物品主色（087 作者定）：**整格的底色就是稀有度的颜色**，不靠边框。往面板色压一点，字才看得清；描边同色稍亮
