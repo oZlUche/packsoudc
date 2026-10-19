@@ -459,7 +459,7 @@ static func run_stone(t: TestCase) -> void:
 
 ## 157 补充三：底屏的内容在一块居中的大石板上（九成宽高）、板外纯色；叠层的底是半透明暗罩、不铺石砖
 static func frame_slab_screens(t: TestCase, root: Window) -> void:
-	t.begin("157 补充三 · 一屏一块石板：主菜单 / 设置的内容在一块居中的大石板上（屏幕九成），板外纯色底；叠层是暗罩压着地图 + 一块石板框")
+	t.begin("157 补充三 · 一屏一块石板：设置的内容在一块居中的大石板上（屏幕九成），板外纯色底；叠层是暗罩压着地图 + 一块石板框（197 补充一：主菜单改整屏画，不再上石板）")
 	var p := Support.paths("s157s")
 	Support.cleanup("s157s")
 	var game = load(GAME).instantiate()
@@ -467,14 +467,16 @@ static func frame_slab_screens(t: TestCase, root: Window) -> void:
 	game.meta_path = p["meta"]
 	game.settings_path = p["settings"]
 	root.add_child(game)
+	t.is_null(game.base().screen_slab(), "197 补充一：主菜单没有石板")
+	game.flow.show_settings()
 	var menu = game.base()
 	var slab: PanelContainer = menu.screen_slab()
-	t.not_null(slab, "主菜单有一块大石板")
+	t.not_null(slab, "设置屏有一块大石板")
 	if slab != null:
 		t.eq(slab.theme_type_variation, UiTheme.PANEL_OVERLAY, "大石板用石板变体")
 		t.check(is_equal_approx(slab.anchor_left, 0.05) and is_equal_approx(slab.anchor_top, 0.05) and is_equal_approx(slab.anchor_right, 0.95) and is_equal_approx(slab.anchor_bottom, 0.95), "占屏幕九成、居中")
 		var area: Control = menu.get_node_or_null(^"SlabContent")
-		t.check(area != null and area.find_children("*", "Button", true, false).size() > 0, "菜单按钮都在板的内容区里")
+		t.check(area != null and area.find_children("*", "Button", true, false).size() > 0, "按钮都在板的内容区里")
 		t.check(area != null and is_equal_approx(area.anchor_left, slab.anchor_left) and is_equal_approx(area.anchor_right, slab.anchor_right), "内容区和板同锚点（按板的内边距缩进）")
 		t.eq(slab.theme, UiTheme.text_theme(UiTheme.tone_of(UiTheme.PANEL_OVERLAY)), "板上的字色按石板的深浅挂")
 		var holder: Control = menu.get_node_or_null(^"SlabContent")
