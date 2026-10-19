@@ -1,4 +1,4 @@
-## 197 补充一（作者 2026-10-19 定稿）：主菜单 —— 三张画轮换带慢镜头、描边粗体游戏名、左列木牌分三档、启动屏同一张画压暗、存档目录钉死
+## 197（作者 2026-10-19 定稿）：主菜单 —— 三张画轮换带慢镜头、描边粗体游戏名居中上方（补充三）、左下角几行字分三档（补充三）、启动屏同一张画压暗、存档目录钉死
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
@@ -10,12 +10,12 @@ static func run(t: TestCase) -> void:
 	t.begin("197 补充一 · 游戏名样式（思源宋体 Bold、字距 +6、6 px 深褐描边、下投影）、三张画（暗调）、启动屏的字体与底画、存档目录不随改名走")
 	var title := UiTheme.make_hero_title("背包搜打撤")
 	t.eq(title.theme_type_variation, UiTheme.LABEL_HERO_TITLE, "走 LabelHeroTitle 变体")
-	t.check(not title.has_theme_font_size_override("font_size"), "默认 96 号：零覆写")
+	t.check(not title.has_theme_font_size_override("font_size"), "默认 128 号：零覆写")
 	UiTheme.set_hero_size(title, 64)
 	t.check(title.has_theme_font_size_override("font_size"), "随屏高缩放：改字号")
 	title.free()
 	var th := UiTheme.current()
-	t.eq(th.get_font_size("font_size", UiTheme.LABEL_HERO_TITLE), 96, "96 号（1080 高）")
+	t.eq(th.get_font_size("font_size", UiTheme.LABEL_HERO_TITLE), 128, "128 号（1080 高，补充三）")
 	t.eq(th.get_color("font_color", UiTheme.LABEL_HERO_TITLE), Color("f0e2c4"), "暖纸色")
 	t.eq(th.get_color("font_outline_color", UiTheme.LABEL_HERO_TITLE), Color("1a1410"), "深褐描边")
 	t.eq(th.get_constant("outline_size", UiTheme.LABEL_HERO_TITLE), 6, "描边 6 px")
@@ -24,10 +24,22 @@ static func run(t: TestCase) -> void:
 	t.check(font != null and font.spacing_glyph == 6, "字距 +6")
 	var base := font.base_font as FontVariation if font != null else null
 	t.check(base != null and base.base_font != null and base.base_font.resource_path.ends_with("serif_bold.otf"), "思源宋体 Bold")
-	t.eq(th.get_font("font", UiTheme.BUTTON_MENU_PRIMARY), th.get_font("font", UiTheme.LABEL_TITLE), "木牌是朱雀仿宋（同标题字体）")
-	t.eq(th.get_font_size("font_size", UiTheme.BUTTON_MENU_PRIMARY), 28, "主档 28 号")
-	t.eq(th.get_font_size("font_size", UiTheme.BUTTON_MENU), 20, "次档 20 号")
-	t.eq(th.get_font_size("font_size", UiTheme.BUTTON_MENU_FOOT), 15, "末档小字 15 号")
+	var line_font := th.get_font("font", UiTheme.BUTTON_MENU_LINE) as FontVariation
+	t.check(line_font != null and line_font.base_font != null and line_font.base_font.resource_path.ends_with("serif_bold.otf"), "菜单那几行字：思源宋体 Bold")
+	t.eq(th.get_font_size("font_size", UiTheme.BUTTON_MENU_LINE), 44, "主档 44 号")
+	t.eq(th.get_color("font_color", UiTheme.BUTTON_MENU_LINE), Color("f0e2c4"), "暖纸色")
+	t.eq(th.get_color("font_hover_color", UiTheme.BUTTON_MENU_LINE), Color("fff6e0"), "悬停提亮")
+	t.eq(th.get_color("font_focus_color", UiTheme.BUTTON_MENU_LINE), Color("fff6e0"), "键盘焦点也提亮")
+	t.eq(th.get_constant("outline_size", UiTheme.BUTTON_MENU_LINE), 7, "描边 7 px")
+	t.eq(th.get_color("font_outline_color", UiTheme.BUTTON_MENU_LINE), Color("1a1410"), "深褐描边")
+	var still := th.get_stylebox("normal", UiTheme.BUTTON_MENU_LINE)
+	var sunk := th.get_stylebox("pressed", UiTheme.BUTTON_MENU_LINE)
+	t.check(sunk.content_margin_top - still.content_margin_top == 1.0 and still.content_margin_left == UiTheme.MENU_LINE_INDENT, "按下下沉 1 px；左边留菱形的缩进")
+	var second := UiTheme.make_menu_line("百科", 34, func(): pass)
+	t.check(second.flat and second.alignment == HORIZONTAL_ALIGNMENT_LEFT and second.get_theme_font_size("font_size") == 34, "次档 34 号、左对齐")
+	t.check(not UiTheme.menu_line_lit(second), "没悬停没焦点：不画菱形")
+	second.free()
+	t.eq(th.get_font_size("font_size", UiTheme.BUTTON_MENU_FOOT), 18, "末档小字 18 号")
 	t.eq(th.get_color("font_color", UiTheme.BUTTON_MENU_FOOT), UiPalette.DIM, "末档暗色")
 	t.eq(UiTheme.ART_MENU_BGS, ["menu/bg_camp", "menu/bg_legion", "menu/bg_map"] as Array[String], "顺序：营地 → 军营 → 地图")
 	for n in UiTheme.ART_MENU_BGS:
@@ -47,7 +59,7 @@ static func run(t: TestCase) -> void:
 
 
 static func frame_menu_layout(t: TestCase, root: Window) -> void:
-	t.begin("197 补充一 · 主菜单：整屏画、不上石板、首张营地；游戏名与按钮列同一左边线；主档琥珀木 360 × 72、次档 300 × 52、末档左下小字；没有战绩行")
+	t.begin("197 补充三 · 主菜单：整屏画、不上石板、首张营地；游戏名水平居中、上沿 90；左下角几行字从底往上堆（主 44 / 次 34 / 末行小字），字的左沿 x 96、末行离屏底 72；焦点行前画菱形；没有木牌、暗纱、战绩行")
 	var p := Support.paths("menu197")
 	Support.cleanup("menu197")
 	var game = (load(GAME) as PackedScene).instantiate()
@@ -65,29 +77,34 @@ static func frame_menu_layout(t: TestCase, root: Window) -> void:
 	t.eq(sc.current_name(), "menu/bg_camp", "第一张是营地（启动屏那张）")
 	t.eq(sc.art_names.size(), 3, "三张画")
 	t.check(sc.live_tweens() > 0, "镜头在走")
+	var s: float = menu.ui_scale()
 	var c: float = menu.column_scale()
-	t.check(c >= 0.75 and is_equal_approx(menu.ui_scale(), menu.size.y / 1080.0), "按屏高缩放（%.3f），按钮列不小于 0.75" % c)
-	t.check(is_equal_approx(menu.title_node().position.x, menu.column().position.x), "游戏名与按钮列同一左边线")
-	t.check(is_equal_approx(menu.column().position.x, 96.0 * c), "左边线 x = 96（随高缩放）")
-	var planks: Array = menu.column().get_children().filter(func(n): return n is Button)
-	t.check(planks.size() >= 4, "按钮列有木牌（%d）" % planks.size())
-	if planks.size() >= 4:
-		var first: Button = planks[0]
-		t.eq(first.text, UiText.t("menu.new_run"), "没存档：第一块是「新的游戏」（不留「继续」的空位）")
-		t.eq(first.theme_type_variation, UiTheme.BUTTON_MENU_PRIMARY, "主档：琥珀木牌")
-		t.eq(first.custom_minimum_size, Vector2(360, 72), "主档 360 × 72")
-		var second: Button = planks[1]
-		t.eq(second.theme_type_variation, UiTheme.BUTTON_MENU, "次档：木牌")
-		t.eq(second.custom_minimum_size, Vector2(300, 52), "次档 300 × 52")
-		var texts: Array = planks.map(func(b): return (b as Button).text)
-		t.check(texts.has(UiText.t("menu.meta")) and texts.has(UiText.t("menu.encyclopedia")) and texts.has(UiText.t("menu.settings")), "次档：仓库与战绩 / 百科 / 设置")
-		t.check(not texts.has(UiText.t("menu.quit")), "退出不在木牌里")
+	t.check(c >= 0.75 and is_equal_approx(s, menu.size.y / 1080.0), "按屏高缩放（%.3f），菜单不小于 0.75" % c)
+	var title: Control = menu.title_node()
+	t.check(title is Label and (title as Label).horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER and is_equal_approx(title.size.x, menu.size.x), "没字标图：文字标题横贯整屏、居中")
+	t.check(is_equal_approx(title.position.y, 90.0 * s), "上沿 90（随高缩放）")
+	var col: VBoxContainer = menu.column()
+	t.check(is_equal_approx(col.position.x + UiTheme.MENU_LINE_INDENT * c, 96.0 * c), "字的左沿 x = 96（菱形挂在左边的缩进里）")
+	t.check(is_equal_approx(col.position.y + col.size.y * c, menu.size.y - 72.0 * c), "最底下一行离屏底 72（从底往上堆）")
+	var lines: Array[Button] = menu.lines()
+	t.check(lines.size() >= 4, "几行字（%d）" % lines.size())
+	if lines.size() >= 4:
+		t.eq(lines[0].text, UiText.t("menu.new_run"), "没存档：第一行是「新的游戏」（不留「继续」的空行）")
+		t.eq(lines[0].get_theme_font_size("font_size"), 44, "主档 44 号")
+		t.eq(lines[1].get_theme_font_size("font_size"), 34, "次档 34 号")
+		t.check(lines.all(func(b): return b.theme_type_variation == UiTheme.BUTTON_MENU_LINE), "都是描边字，不是木牌")
+		var texts: Array = lines.map(func(b): return b.text)
+		t.eq(texts.slice(1), [UiText.t("menu.meta"), UiText.t("menu.encyclopedia"), UiText.t("menu.settings")], "次档：仓库与战绩 / 百科 / 设置")
+		t.check(not UiTheme.menu_line_lit(lines[1]), "没焦点：不亮")
+		lines[1].grab_focus()
+		t.check(UiTheme.menu_line_lit(lines[1]), "键盘焦点：亮、画菱形")
+		lines[1].release_focus()
 	var links: Array = menu.foot().get_children().filter(func(n): return n is Button)
 	var link_texts: Array = links.map(func(b): return (b as Button).text)
-	t.eq(link_texts.front() if not link_texts.is_empty() else "", "中 / EN", "末档第一个：语言「中 / EN」")
-	t.eq(link_texts.back() if not link_texts.is_empty() else "", UiText.t("menu.quit"), "末档最后：退出")
-	t.check(links.all(func(b): return (b as Button).theme_type_variation == UiTheme.BUTTON_MENU_FOOT), "末档是小字链接")
-	t.check(menu.foot().position.y > menu.size.y * 0.8, "末档在屏幕左下")
+	t.eq(link_texts.front() if not link_texts.is_empty() else "", "中 / EN", "末行第一个：语言「中 / EN」")
+	t.eq(link_texts.back() if not link_texts.is_empty() else "", UiText.t("menu.quit"), "末行最后：退出")
+	t.check(links.all(func(b): return (b as Button).theme_type_variation == UiTheme.BUTTON_MENU_FOOT), "末行是小字链接")
+	t.eq(menu.find_children("MenuVeil", "", true, false).size(), 0, "没有暗纱")
 	t.eq(menu.notices().get_child_count(), 0, "没有提示：右下不占位")
 	var stats := false
 	for l in menu.find_children("*", "Label", true, false):
@@ -138,7 +155,7 @@ static func frame_backdrop_camera(t: TestCase, root: Window) -> void:
 
 
 static func frame_logo(t: TestCase, root: Window) -> void:
-	t.begin("197 补充二 §12 · 字标图在就用图（宽 720、上沿 72，随高缩放，和按钮列同一左边线），不在退回文字标题；启动屏读 1× 那张")
+	t.begin("197 补充二 §12 / 补充三 · 字标图在就用图（宽 1116、按图的比例，水平居中、上沿 90，随高缩放），不在退回文字标题；启动屏读 1× 那张")
 	var consts := (load(BOOT) as GDScript).get_script_constant_map()
 	t.eq(consts["LOGO"], "res://assets/ui/menu/title_boot.png", "启动屏的字标是 1× 那张")
 	var saved := UiTheme.asset_root
@@ -155,8 +172,8 @@ static func frame_logo(t: TestCase, root: Window) -> void:
 	t.check(logo is TextureRect, "有图：标题是图")
 	if logo is TextureRect:
 		var s: float = menu.ui_scale()
-		t.check(is_equal_approx(logo.size.x, 720.0 * s) and is_equal_approx(logo.size.y, 200.0 * s), "宽 720、按图的比例（%s）" % logo.size)
-		t.check(is_equal_approx(logo.position.y, 72.0 * s) and is_equal_approx(logo.position.x, menu.column().position.x), "左上 x 96、y 72（%s）" % logo.position)
+		t.check(is_equal_approx(logo.size.x, 1116.0 * s) and is_equal_approx(logo.size.y, 1116.0 * s * 40.0 / 144.0), "宽 1116、按图的比例（%s）" % logo.size)
+		t.check(is_equal_approx(logo.position.y, 90.0 * s) and is_equal_approx(logo.position.x + logo.size.x * 0.5, menu.size.x * 0.5), "水平居中、上沿 90（%s）" % logo.position)
 		t.eq(logo.mouse_filter, Control.MOUSE_FILTER_IGNORE, "不接鼠标")
 	game.queue_free()
 	UiTheme.asset_root = saved
