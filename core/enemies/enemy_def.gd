@@ -104,6 +104,11 @@ func combo_list() -> Array[Array]:
 ## 212：没有包 —— 不摆包，棋盘不要求包（道具直接摆）；死了不掉包（209）
 @export var bagless: bool = false
 
+## 210：免疫的状态 id（机关：流血、中毒、菌血、燃血）—— 编译进 [member CombatantSpec.immune_buffs]
+@export var immune_buffs: Array[StringName] = []
+## 210：不是人的不揣携带品，改为招牌之外必带 1～2 件这里头的（机关掉齿轮）；计入件数、标 carried 必掉
+@export var loot_filler: Array[StringName] = []
+
 const SPECIES: Array[StringName] = [&"human", &"beast", &"construct"]
 
 

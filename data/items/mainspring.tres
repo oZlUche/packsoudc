@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_sve4e"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_smdlm"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_0y7n7"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="4_7861x"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_yk6kp"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_tvd1c"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="7_mxb8b"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="8_g8owe"]
+
+[sub_resource type="Resource" id="Resource_a73qx"]
+script = ExtResource("4_7861x")
+base_stats = {
+"max_stamina": 10
+}
+
+[sub_resource type="Resource" id="Resource_g7axs"]
+script = ExtResource("8_g8owe")
+
+[sub_resource type="Resource" id="Resource_7go1y"]
+script = ExtResource("4_7861x")
+base_stats = {
+"regen_stamina": 2
+}
+
+[resource]
+script = ExtResource("7_mxb8b")
+id = &"mainspring"
+display_name = "主发条"
+display_names = {
+"en": "Mainspring"
+}
+description = "卷得紧紧的发条，带在身上更有劲。"
+shape = SubResource("Resource_g7axs")
+rarity = 2
+tags = Array[StringName]([&"material", &"crafted", &"metal", &"part", &"clockwork"])
+combat = SubResource("Resource_a73qx")
+wild = SubResource("Resource_7go1y")

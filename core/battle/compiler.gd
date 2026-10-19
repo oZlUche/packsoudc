@@ -48,6 +48,7 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	base.seed_stats(spec.baseline)
 	spec.axes = inp.axes.duplicate()
 	spec.undying_sec = inp.undying_sec
+	spec.immune_buffs = inp.immune_buffs.duplicate()     # 210
 
 	# --- 1. 收集参战物品：棋盘上的非包物品，按 uid 升序 ---
 	# 信仰（8-4）：只激活最后置入的信仰道具所属的信仰，别的信仰的道具休眠。

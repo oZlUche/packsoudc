@@ -1,0 +1,13 @@
+{
+  "id": "clockwork",
+  "display_name": "机关",
+  "display_names": {
+    "en": "Clockwork"
+  },
+  "description": "发条与齿轮驱动的机关零件。",
+  "descriptions": {
+    "en": "Driven by springs and gears."
+  },
+  "tip": false,
+  "category": "origin"
+}

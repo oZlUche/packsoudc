@@ -422,7 +422,7 @@ static func run_gating(t: TestCase) -> void:
 	t.check(avail.size() == 1 and avail[0].id == &"prologue_3", "序章二也通关：序章三顶上（113）")
 	f.meta.grant_unlock(&"prologue3_done")
 	avail = f.available_chapters()
-	t.check(avail.size() == 1 and avail[0].id == &"free_mode", "序章三也通关：只剩第一章")
+	t.check(avail.size() == 2 and avail[0].id == &"free_mode" and avail[1].id == &"clockwork_hourglass", "序章三也通关：只剩第一章（210：后面跟着机关沙漏）")
 	# 解锁跟着局外存档
 	var meta2 := MetaSave.read(c.items, META)
 	t.check(meta2 != null and meta2.has_unlock(c.prologue.grants_unlock), "解锁存进了局外存档")

@@ -1,0 +1,29 @@
+{
+  "id": "mainspring",
+  "display_name": "主发条",
+  "display_names": {
+    "en": "Mainspring"
+  },
+  "description": "卷得紧紧的发条，带在身上更有劲。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "crafted",
+    "metal",
+    "part",
+    "clockwork"
+  ],
+  "combat": {
+    "base_stats": {
+      "max_stamina": 10
+    }
+  },
+  "wild": {
+    "base_stats": {
+      "regen_stamina": 2
+    }
+  }
+}

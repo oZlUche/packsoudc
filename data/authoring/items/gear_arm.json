@@ -1,0 +1,72 @@
+{
+  "id": "gear_arm",
+  "display_name": "齿轮臂",
+  "display_names": {
+    "en": "Gear Arm"
+  },
+  "description": "一节带齿轮的机械臂。挨着的武器出手更快。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "crafted",
+    "metal",
+    "part",
+    "clockwork"
+  ],
+  "adjacency": {
+    "grant_cells": [
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        -1,
+        1
+      ],
+      [
+        1,
+        1
+      ]
+    ],
+    "grant_filter": [
+      "weapon"
+    ],
+    "grant_mods": [
+      {
+        "stat": "haste",
+        "mode": "MULT",
+        "amount": 10.0
+      }
+    ]
+  },
+  "wild": {
+    "base_stats": {
+      "damage": 10
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown"
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 5.0
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

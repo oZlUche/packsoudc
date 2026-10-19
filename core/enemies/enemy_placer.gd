@@ -216,6 +216,16 @@ static func build_content(
 				(placed[placed.size() - 1] as Dictionary)["carried"] = true
 			else:
 				carry_short += 1
+	elif def.is_wild() and not def.loot_filler.is_empty():
+		# 210：机关不揣携带品，改为必带 1～2 件替身（齿轮），同样标 carried 必掉；随机数同样另起一条
+		var frng := RandomNumberGenerator.new()
+		frng.seed = hash([rng.state, String(def.id), strength, "filler"])
+		for i in frng.randi_range(1, 2):
+			var fid: StringName = def.loot_filler[frng.randi_range(0, def.loot_filler.size() - 1)]
+			if _place_random(board, items.get_def(fid), placed, frng):
+				(placed[placed.size() - 1] as Dictionary)["carried"] = true
+			else:
+				carry_short += 1
 	ItemInstance._next_uid = uid_mark
 	var content := {
 		"enemy": String(def.id),
