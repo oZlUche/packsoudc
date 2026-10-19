@@ -288,7 +288,7 @@ static func frame_run_container_screen(t: TestCase, root: Window) -> void:
 	t.check(view.rules == run.node_rules.search, "耗时表 = 这一局节点规则里的")
 	t.check(screen._drag.drop_filter.is_valid(), "拖拽层装了第二道门")
 	t.check(view.is_revealing(), "打开就开始搜")
-	t.eq(screen._line.text, "", "棋盘美术：没有状态行（搜着也不写读数）")
+	t.check(not "_line" in screen, "棋盘美术：没有状态行（搜着也不写读数）、火漆签旁也没有回话行")
 	var unrevealed := box.get_item(view.next_uid())
 	t.check(not bool(screen._drag.drop_filter.call(unrevealed, run.board)), "没亮的不许放到棋盘")
 	t.check(bool(screen._drag.drop_filter.call(unrevealed, box)), "没亮的许放回容器")
