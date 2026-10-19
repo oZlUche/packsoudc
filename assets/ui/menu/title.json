@@ -1,0 +1,12 @@
+{
+ "id": "title",
+ "source": "logo2.py logo_wu（logo26 定稿）",
+ "canvas": [
+  720,
+  200
+ ],
+ "title.png_scale": 3.1,
+ "title_boot.png_scale": 1.55,
+ "display": "可见框 1920×1200 内水平居中，上沿 y=90，宽约 1116",
+ "tone": "dark"
+}
