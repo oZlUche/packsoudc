@@ -211,7 +211,7 @@
 | 197 | [主菜单重做与游戏标题（讨论稿 + 补充一：三张背景轮换带慢镜头；补充二：名字定为《背包搜打撤》，标题做成字标图；补充三：标题居中上方、菜单是左下角几行描边字）](197-main-menu-and-title-brainstorm.md) | 已落地（美术定稿） | 字标（皮革「背包」+ 青铜「搜打撤」）与三张背景定稿已进 `assets/ui/menu/`（§17）；落地差异见 §13、§16；截图 /mnt/project-files/screenshots/197/ |
 | 198 | [方案：地上的掉落物按贴图轮廓算碰撞，不按格子 —— 轮廓 = 图的透明通道（没图先按格子外形）→ 凸分解 ≤ 6 块，180 的弹开 / 支撑 / 推开改用分离轴，点选按透明通道；落地朝向仍四选一](198-ground-collision-by-sprite-silhouette.md) | 阶段一已落地 | 按格子外形：L / T 能互相嵌、斜着弹开、落在真实底边上，矩形件不变；道具图落地时轮廓来源自动切换（阶段二）；落地差异见 §6；截图 /mnt/project-files/screenshots/198/ |
 
-| 199 | [落地：铸炉屏换成铁炉近景 —— 196 §5 美术定稿（乙 炉台版）接进 forge_screen：底图 lit / cold、layout.json 坐标、三槽与出牌槽对齐格子、风箱把手三态「铸」、路标「返回」](199-forge-screen-art-landing.md) | 待执行 | 美术已交付 art/ui/forge/out/；执行搬进 assets/ui/forge/ 并改接法 |
+| 199 | [落地：铸炉屏换成铁炉近景 —— 196 §5 美术定稿（乙 炉台版）接进 forge_screen：底图 lit / cold、layout.json 坐标、三槽与出牌槽对齐格子、风箱把手三态「铸」、路标「返回」](199-forge-screen-art-landing.md) | 已落地 | 素材在 `assets/ui/forge/`；落地差异见 §6；截图 /mnt/project-files/screenshots/196/forge_*.png |
 
 ## 已归档（被覆盖或作废的方案，只留作历史）
 

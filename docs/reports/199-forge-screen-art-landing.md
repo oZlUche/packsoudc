@@ -45,3 +45,16 @@
 
 - `/mnt/project-files/reference/待做-界面.md` 的铸炉一条改成「已定稿（199），执行落地中」。
 - `docs/architecture.md` 铸炉一节加一句：铸炉屏是整屏画（`assets/ui/forge/`），坐标来自 `layout.json`。
+
+## 6. 落地（2026-10-19，架构方案执行）
+
+已落地：素材（只收 1x，加 `bg_lit.json` / `bg_cold.json`，tone dark）进 `assets/ui/forge/`；`forge_screen.gd` 按 §3 换底换框，公开动作（`put_in / forge / take_back / take_token / to_map / preview_text / summary_text / guess_text`）不变；新读法 `handle_state()`（`&"idle" / &"ready" / &"off"`）、`backdrop_state()`（`&"lit" / &"cold"`）、`spot_rect(名)`、`slot_view(i)`。`test_forge_175` 的铸炉屏一条加了：没铸过 lit + idle、三槽满 ready、铸后 cold + off；时机槽按 layout 摆；三个 4 × 4 格子都在槽口里；背包不出屏；底图里画了的标签代码不再写。截图 `/mnt/project-files/screenshots/196/forge_idle.png`、`forge_ready.png`、`forge_done.png`（1600 × 1000）。
+
+和 §3 不一样的地方：
+
+1. **缩放不是 cover，是按宽铺满、竖直居中**（`s = 宽 / 1920`）。1600 × 1000 下和 cover 完全一样（0.8333）。但项目是 `aspect = expand`，窗口比 16 : 10 窄（4 : 3、全屏到方屏）时逻辑尺寸会变高，cover 就按高放大、左右裁掉 —— 左下路标和右边背包都贴着画边，一裁就出屏（测试窗口 1600 × 1600 下背包右沿到了 2064）。现在窄屏上下留暗边，宽屏裁上下的天和地。底图也跟着同一个变换画（自己的 `TextureRect`，没用 `_painted_screen`，它是 cover）。
+2. **格子不缩放，在槽口里居中**：槽口 288 × s ≥ 240，`InventoryView` 照 60 像素一格放中间；1600 × 1000 下正好贴满。
+3. **说明石板字号 15**（不是 12）：按美术预览的字大小，12 号在那块板上太小；板面从石板外框往里缩 (28, 36)（底图像素）。
+4. **试算那一行空着时藏起来**，不占一行（铸完以后「铸好了」和「铸成」之间原来空一行）。
+5. **槽下小字会越过石带**：效果槽那三行里「做什么：施加 2 层流血（前缀「嗜血的」）」在 240 宽里折成两行，一共四行，底下一行压到铁砧正面（也是深底，看得清）。小字登记成占地（`_reserve_ground`），地上的东西不会压着它。要严丝合缝得改字（缩短前缀那半句）或把石带画高，先不动。
+6. 键盘焦点：把手先于路标加进树，焦点链就是这个顺序；没另加别的焦点逻辑。悬停提亮 1.12。
