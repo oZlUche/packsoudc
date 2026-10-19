@@ -1,7 +1,7 @@
 ## 容器屏（063；作者：搜索和战利品本质上是同一个界面，只是装载的生成规则不同）。
 ##
 ## 左边是渐进揭示的容器（[LootView]），右边是自己的棋盘与地上，同一层拖拽盖着三块 —— 亮出来的直接拖走。
-## 装的是**尸体容器 / 待拾取**（payload 带 `container`）时只有「全部拾取」与关闭（原「收起」）—— 收起只是回地图，没拿的留在这个点上，
+## 装的是**尸体容器 / 待拾取**（payload 带 `container`）时只有「全部拾取」与最小化（原「收起」）—— 收起只是回地图，没拿的留在这个点上，
 ## 地图上「回到这个点」能再开，走了才没（084）；
 ## 装的是**搜索会话**（payload 带 `session`）时容器是会话的收获箱：这一屏就是**刚搜的那一次**（084 作者定的循环：事件屏选「搜索」
 ## 自动搜一次 → 这里亮出来拖走 → 「关闭」回事件屏再搜 / 走）；没亮的只对新来的走时间线；遭遇那一次不开这一屏。
@@ -9,8 +9,8 @@
 ##
 ## 棋盘美术（UI替换美术，作者 2026-10-19 19:02 定稿）：左边容器按种类换外框（搜索 藤编 / 宝箱 铁角或金角 / 敌人战利品 生皮 /
 ## BOSS 黑铁金钉 + 纹章），右边背包细皮带框；外框是九宫格（中段平铺），浅灰内垫在图里，格缝由棋盘视图画。
-## 标题不写字（标题分隔行还在），右上角两颗圆钮：最小化（原「回到地图」）、关闭（原「关闭」/「收起」）；
-## 「全部拾取」是火漆签；快速搜索、状态行、耐力行都去掉了。摆位按 `assets/ui/board/layout.json` 的设计像素，见 [method _layout]
+## 标题不写字（标题分隔行还在），右上角圆钮：搜索屏两颗 最小化（原「回到地图」）、关闭（原「关闭」）；战利品屏只有一颗
+## 最小化（原「收起」，作者 21:16），在最右那个位置；「全部拾取」是火漆签；快速搜索、状态行、耐力行、火漆签旁的回话行都去掉了。摆位按 `assets/ui/board/layout.json` 的设计像素，见 [method _layout]
 extends GameScreen
 
 const BOARD_DIR := "res://assets/ui/board/"
@@ -36,9 +36,8 @@ var _container: GridInventory = null
 var _session: SearchSession = null
 var _loot: LootView
 ## 回话（拿不下放在地上、合成了……）：平时空着，不写状态
-var _line: Label
 var _take_btn: IconButton
-var _close_btn: IconButton
+var _close_btn: IconButton = null
 var _minimize_btn: IconButton = null
 ## 090：这是不是 BOSS 的战利品屏（Esc 不收）
 var _boss: bool = false
@@ -90,8 +89,6 @@ func open(payload: Dictionary) -> void:
 	_loot.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_loot_box = ScrollBox.wrap(_loot)     # 反馈：容器太高时竖向滚动，不撑出窗口
 	_stage.add_child(_loot_box)
-	_line = _label("", 13, UiPalette.FG)
-	_stage.add_child(_line)
 	# 090：长说明在悬浮提示里，按钮上只写动作（棋盘美术：字画在火漆签上）
 	_take_btn = IconButton.make_art(BOARD_DIR, "take_all", "全部拾取", "全部拾取\n先进背包，放不下的到地上", take_all)
 	_take_btn.set_meta(AudioHub.META_KEY, &"")     # 206：响 loot.take_all（搬走了才响），不叠按钮声
@@ -100,13 +97,13 @@ func open(payload: Dictionary) -> void:
 		_close_btn = _corner("btn_close", "×", "关闭\n回到事件：再搜 / 走", close_search)
 		_minimize_btn = _corner("btn_minimize", "－", "回到地图\n不结束：回到这个点接着搜（Esc）", to_map)
 	else:
-		_close_btn = _corner("btn_close", "×", "收起\n" + ("撤离结算" if _boss else "剩下的留在这里；走了会落到这个点的地上（Esc）"), to_map)
+		_minimize_btn = _corner("btn_minimize", "－", "收起\n" + ("撤离结算" if _boss else "剩下的留在这里；走了会落到这个点的地上（Esc）"), to_map)
 
-	_inv = _mount_bag(_stage, _loot, func(text: String): _log_line(text), _container)     # 084：棋盘上双击 → 放回容器
+	_inv = _mount_bag(_stage, _loot, Callable(), _container)     # 084：棋盘上双击 → 放回容器；回话不显示（作者 21:16 删了那一行）
 	_inv.hide_stamina()
 	_inv.board_view.seams = _layout_data.get("cell_seams", {})
 	_stage.move_child(_inv, _player_frame.get_index() + 1)
-	# 084：容器里双击 → 试着放进背包（没空间就提示并到地上）；没亮的不动。
+	# 084：容器里双击 → 试着放进背包（没空间就到地上）；没亮的不动。
 	# 玩家自己的东西放回容器不会变成「未知」：LootView 把绑定之后才出现的都当亮过
 	_loot.item_double_clicked.connect(func(_v: ContainerView, uid: int): quick_take(uid))
 	_tip.can_show = func(_v: ContainerView, uid: int) -> bool: return not _loot.is_locked(uid)     # 没亮的不说是什么
@@ -237,10 +234,11 @@ func _layout() -> void:
 	_place_frame(_player_frame, player_cells, player_size, pp)
 	_place_extras(loot_cells - Vector2(lp, lp), loot_size + Vector2(lp, lp) * 2.0)
 	_take_btn.position = Vector2(TAKE_AT.x, want.y + TAKE_AT.y) - off
-	_line.position = _take_btn.position + Vector2(_take_btn.custom_minimum_size.x + 12.0, TAKE_INSET + TAKE_VISIBLE * 0.5 - 10.0)
-	var side := _close_btn.custom_minimum_size
-	_close_btn.position = Vector2(want.x, 0.0) + CLOSE_AT - side * 0.5 - off
-	if _minimize_btn != null:
+	# 最右那个位置给关闭；没有关闭（战利品屏）就给最小化
+	var right := _close_btn if _close_btn != null else _minimize_btn
+	var side := right.custom_minimum_size
+	right.position = Vector2(want.x, 0.0) + CLOSE_AT - side * 0.5 - off
+	if _close_btn != null and _minimize_btn != null:
 		_minimize_btn.position = Vector2(want.x, 0.0) + MINIMIZE_AT - side * 0.5 - off
 
 
@@ -286,24 +284,13 @@ func close_search() -> bool:
 	return flow.close_search()
 
 
-## 084：容器里双击一件：亮了的才动；先试背包（自动找位），放不下提示并到地上。返回去了哪（"board" / "storage" / ""）
+## 084：容器里双击一件：亮了的才动；先试背包（自动找位），放不下到地上。返回去了哪（"board" / "storage" / ""）
 func quick_take(uid: int) -> String:
 	if _container == null or _loot.is_locked(uid):
 		return ""
-	var inst := _container.get_item(uid)
-	if inst == null:
+	if _container.get_item(uid) == null:
 		return ""
-	var where := _take_to_player(_container, uid)
-	if where == "board":
-		_log_line("「%s」放进了背包" % inst.def.display_name)
-	elif where == "storage":
-		_log_line("背包里没有空间放「%s」，放在了地上" % inst.def.display_name)
-	return where
-
-
-## 回话写在「全部拾取」旁边那一行（棋盘美术：不再有状态行与搜索记录）
-func _log_line(text: String) -> void:
-	_line.text = text
+	return _take_to_player(_container, uid)
 
 
 func skip_reveal() -> void:
