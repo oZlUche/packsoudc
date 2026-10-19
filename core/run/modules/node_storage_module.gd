@@ -17,6 +17,8 @@ signal restored(node_id: int, items: Array)
 var nodes: Dictionary = {}
 ## 128：`node_id → {uid: Vector2}` —— 地上每件的落点跟着留在那个点上，回来还在原处
 var spots: Dictionary = {}
+## 198 补充一：`node_id → {uid: 斜度（弧度）}` —— 斜着躺的回来还斜着（没斜的不记）
+var tilts: Dictionary = {}
 var _run: RunState = null
 ## 读档拿到的那份，等 install 里有道具库了再装回来
 var _saved: Dictionary = {}
@@ -68,10 +70,11 @@ func to_dict() -> Dictionary:
 		var list: Array = []
 		var at: Array = []
 		var node_spots: Dictionary = spots.get(key, {})
+		var node_tilts: Dictionary = tilts.get(key, {})
 		for inst in nodes[key]:
 			list.append((inst as ItemInstance).to_dict())
-			var p: Vector2 = node_spots.get((inst as ItemInstance).uid, ItemStash.NO_SPOT)
-			at.append([p.x, p.y])
+			var uid := (inst as ItemInstance).uid
+			at.append(ItemStash.spot_entry(node_spots.get(uid, ItemStash.NO_SPOT), float(node_tilts.get(uid, 0.0))))
 		out[str(key)] = list
 		where[str(key)] = at
 	return {"nodes": out, "spots": where}     # 128：落点与 nodes 里的道具一一对应；旧档没有就回来时重新铺
@@ -89,6 +92,7 @@ func _load(d: Dictionary, items: ItemDatabase) -> void:
 	for key in (raw as Dictionary):
 		var list: Array = []
 		var node_spots := {}
+		var node_tilts := {}
 		var raws: Array = (raw as Dictionary)[key] as Array
 		var at: Array = where.get(key, []) as Array
 		for i in raws.size():
@@ -98,9 +102,13 @@ func _load(d: Dictionary, items: ItemDatabase) -> void:
 				var p := ItemStash.read_spot(at[i] if i < at.size() else null)
 				if ItemStash.has_spot_value(p):
 					node_spots[inst.uid] = p
+				var tilt := ItemStash.read_tilt(at[i] if i < at.size() else null)
+				if not is_zero_approx(tilt):
+					node_tilts[inst.uid] = tilt
 		if not list.is_empty():
 			nodes[int(String(key))] = list
 			spots[int(String(key))] = node_spots
+			tilts[int(String(key))] = node_tilts
 
 
 ## 离开一个点：地上的东西留在那个点上（087：不是丢掉，回来能拿）
@@ -109,13 +117,18 @@ func _on_leaving(node_id: int) -> void:
 		return
 	var leaving_items: Array = _run.storage.items().duplicate()
 	var node_spots: Dictionary = spots.get(node_id, {})
+	var node_tilts: Dictionary = tilts.get(node_id, {})
 	for inst in leaving_items:
-		node_spots[(inst as ItemInstance).uid] = _run.storage.spot_of((inst as ItemInstance).uid)     # 128：落点一起留下
+		var uid := (inst as ItemInstance).uid
+		node_spots[uid] = _run.storage.spot_of(uid)     # 128：落点一起留下
+		if not is_zero_approx(_run.storage.tilt_of(uid)):
+			node_tilts[uid] = _run.storage.tilt_of(uid)     # 198 补充一：斜度也留下
 	_run.storage.clear()
 	var kept: Array = nodes.get(node_id, [])
 	kept.append_array(leaving_items)
 	nodes[node_id] = kept
 	spots[node_id] = node_spots
+	tilts[node_id] = node_tilts
 	dropped.emit(node_id, leaving_items)
 
 
@@ -125,11 +138,16 @@ func _on_arrived(node_id: int, _first_time: bool) -> void:
 		return
 	var back: Array = nodes[node_id]
 	var node_spots: Dictionary = spots.get(node_id, {})
+	var node_tilts: Dictionary = tilts.get(node_id, {})
 	nodes.erase(node_id)
 	spots.erase(node_id)
+	tilts.erase(node_id)
 	if back.is_empty():
 		return
 	for inst in back:
-		_run.storage.insert(inst, -1, node_spots.get((inst as ItemInstance).uid, ItemStash.NO_SPOT))     # 128：回到原处
-		_run.storage.landing_from[(inst as ItemInstance).uid] = false     # 134：本来就在，不播落地
+		var uid := (inst as ItemInstance).uid
+		_run.storage.insert(inst, -1, node_spots.get(uid, ItemStash.NO_SPOT))     # 128：回到原处
+		_run.storage.landing_from[uid] = false     # 134：本来就在，不播落地
+		if node_tilts.has(uid):
+			_run.storage.tilts[uid] = float(node_tilts[uid])     # 198 补充一：还斜着
 	restored.emit(node_id, back)

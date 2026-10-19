@@ -6,7 +6,9 @@
 ## 180 §2.2（作者定）：**不重叠，相遇弹开** —— 两件相交就按半弹性碰撞分开（物件之间 e = 0.5；墙、地面、面板吸收大部分弹力 e = 0.15），
 ## 很快贴住；分开后的终点写回落点。只在画面层（这一类）里解算，核心层照旧不碰撞。
 ## 198（作者 2026-10-19）：碰撞、找支撑、推开面板、落稳朝向都按**轮廓**（[ItemSilhouette]：有道具图按透明通道，没图按格子外形），
-## 不按格子的包围盒 —— L / T 能互相嵌、斜着弹开、落在真实的底边上；矩形件和以前一样。落点仍是包围盒左上角
+## 不按格子的包围盒 —— L / T 能互相嵌、斜着弹开、落在真实的底边上；矩形件和以前一样。落点仍是包围盒左上角。
+## 198 补充一（作者 2026-10-19 选「自由角度」）：地上的东西可以**斜着躺** —— 四向（[member ItemInstance.rotation]）之外每件多一个斜度
+## （[method ItemStash.tilt_of]，绕轮廓重心转，(−45°, 45°]）；解算补上转动、重力、摩擦，落在堆上的会翻、会靠、会滑到停。捡起来斜度即丢
 ##
 ## 两种用法：
 ## [codeblock]
@@ -61,15 +63,36 @@ const BUMP_AFTER := 0.5
 const BUMP_AFTER_WALL := 0.3
 const BUMP_STICK_SEC := 0.05
 const BUMP_REST := 20.0
-## 每 1/60 秒速度乘的衰减；相交时以「重叠 ÷ BUMP_SEP_SEC」的相对速度分开（封顶 BUMP_SEP_VMAX），每小步再直接推开重叠的 BUMP_FIX 成
-const BUMP_DAMP := 0.85
+## 相交时以「重叠 ÷ BUMP_SEP_SEC」的速度挪开（只挪位置、不留速度，封顶 BUMP_SEP_VMAX），每小步再直接推开重叠的 BUMP_FIX 成
 const BUMP_SEP_SEC := 0.1
 const BUMP_SEP_VMAX := 900.0
 const BUMP_FIX := 0.05
-## 一小步多久、最多解算多久（到时还相交的退回 [method ItemStash.next_free_spot]）、重叠不到这么多像素不算
+## 一小步多久、一件最多醒着解算多久（198 补充一：翻一下再滑停比弹开慢；到时这件冻住，§7.3）、一整轮最多多久（从最后一次有新落稳的 / 被叫醒的算起：
+## 互相撞醒个没完时的兜底；到时都冻住，还相交的先就地推开 [constant BUMP_RELAX_MAX] 像素以内的，再不行退回 [method ItemStash.next_free_spot]）、重叠不到这么多像素不算
 const BUMP_STEP := 1.0 / 120.0
-const BUMP_MAX_SEC := 1.0
+const BUMP_MAX_SEC := 1.5
+const BUMP_RUN_MAX_SEC := 6.0
 const BUMP_EPS := 0.5
+const BUMP_RELAX_MAX := 4.0
+const BUMP_REFALL_MAX := 2
+## 198 补充一：摩擦系数（物件之间 / 地面、面板、屏边），角速度低于这个（弧度 / 秒）算不转，静着（且有接触、没在被推开）连续这么久就睡着，
+## 每小步冲量迭代几轮，压进去这么深以内不推（贴着的不抖），隔这么近（像素）就算接触，斜不到这么多（弧度，约 0.5°）收尾时摆正，
+## 找支撑时离这么近（像素）算托着
+const BUMP_MU := 0.6
+const BUMP_MU_WALL := 0.8
+const BUMP_W_REST := 0.2
+const BUMP_SLEEP_SEC := 0.1
+## 重心不在接触点区间上方的（斜卡在别的东西和墙之间之类）静这么久也睡（真在往下倒的这么久早就快起来了）
+const BUMP_SLEEP_WEDGED_SEC := 0.5
+## 角速度封顶（弧度 / 秒）
+const BUMP_W_MAX := 12.0
+const BUMP_ITERS := 8
+const BUMP_SLOP := 0.25
+const BUMP_TOUCH := 0.5
+const BUMP_TILT_SNAP := 0.0087
+## 摆正后往下贴回支撑最多挪多少像素（再远就当悬着，收尾时掉下去）
+const BUMP_SNAP_SEAT := 4.0
+const SUPPORT_TOUCH := 1.0
 
 ## 导演持有的那一层（没有 = null：测试、沙盒）。各屏开拖拽时拿它登记
 static var _current: GroundLayer = null
@@ -95,11 +118,15 @@ var _landing: Dictionary = {}
 var _support: Dictionary = {}
 ## 作者 2026-10-17（碰撞有延迟、没弹性）：落在哪件东西的顶上（uid → 底下那件的 uid）；底下那件被拿走 / 又掉了，这几件跟着再掉
 var _rest_on: Dictionary = {}
+## 正在让托在它上面的再掉的（uid → true；防托着的关系绕成圈时来回掉）
+var _dropping: Dictionary = {}
 var _scan_queued: bool = false
-## 180 §2.2：正在弹开的（uid → {pos: 包围盒左上角像素, vel, m: 质量, size, floor: 地面 y, last: 上次反弹时刻, skip: 起手就压着的面板}）；
-## 空 = 都静着。解算中 [method item_rect] 按这里画，结束一次写回落点
+## 180 §2.2：正在解算的（uid → 一个物体，见 [method _new_body]）；空 = 都静着。解算中 [method item_rect] / [method tilt_of] 按这里画，结束一次写回落点与斜度
 var _bodies: Dictionary = {}
 var _bump_t: float = 0.0
+var _bump_start: float = 0.0
+## 198 补充一：解算收尾时又落了几次（翻倒 / 悬着）—— 够 [constant BUMP_REFALL_MAX] 次的再落稳就不再按站不住解算（同一处落了翻、翻了落的兜底）
+var _refalls: Dictionary = {}
 var _bump_acc: float = 0.0
 ## 挤满了放弃弹开时地上有哪些（uid → true）；还是这几件就不再弹
 var _bump_hold: Dictionary = {}
@@ -201,6 +228,9 @@ func _scan() -> void:
 	for uid in _rest_on.keys():
 		if not now.has(uid):
 			_rest_on.erase(uid)
+	for uid in _refalls.keys():
+		if not now.has(uid):
+			_refalls.erase(uid)
 	for uid in _known.keys():
 		if not now.has(uid):
 			_drop_resting_on(uid)     # 底下那件被拿走了
@@ -233,12 +263,15 @@ func _scan() -> void:
 
 
 ## 一件从 [param from_local]（本控件内像素，现在朝向的包围盒左上角）往下掉：算地、算落稳朝向，改落点与朝向（核心层的状态立刻是终态），记一段动画
-func _begin_fall(inst: ItemInstance, from_local: Vector2, stagger: float) -> void:
+## [param carry]：托在它上面的跟着再掉（198 补充一：解算收尾时不连带 —— 上面的各自看还悬不悬着，低的先落）
+func _begin_fall(inst: ItemInstance, from_local: Vector2, stagger: float, carry: bool = true) -> void:
 	if inst.def == null or inst.def.shape == null:
 		return
 	var rot_from := inst.rotation
+	var tilt_from := stash.tilt_of(inst.uid)     # 198 补充一：从斜着的姿态起落，落完是四向之一
 	var rot_to := ItemSilhouette.rest_rotation(inst.def, rot_from)
 	var land := spot_below(from_local, inst, rot_from, rot_to)
+	stash.set_tilt(inst.uid, 0.0)
 	inst.rotation = rot_to
 	var target: Vector2 = land["pos"]
 	if land["panel"] != null:
@@ -249,9 +282,10 @@ func _begin_fall(inst: ItemInstance, from_local: Vector2, stagger: float) -> voi
 		_rest_on[inst.uid] = int(land["item"])
 	else:
 		_rest_on.erase(inst.uid)
-	_landing[inst.uid] = _fall(inst, from_local, rot_from, target, rot_to, stagger, false)
+	_landing[inst.uid] = _fall(inst, from_local, rot_from, target, rot_to, stagger, false, tilt_from)
 	stash.set_spot(inst.uid, to_spot(target))
-	_drop_resting_on(inst.uid)     # 托在它上面的跟着再掉
+	if carry:
+		_drop_resting_on(inst.uid)     # 托在它上面的跟着再掉
 
 
 ## 162 补充二：起点 [param from_local]（朝向 [param rot_from] 的包围盒左上角）正下方的落点：重心 x 不变（夹在屏内），
@@ -280,10 +314,10 @@ func floor_under(parts: Array, pos: Vector2, self_uid: int = -1) -> Dictionary:
 			var inst := it as ItemInstance
 			if inst.uid == self_uid or inst.def == null:
 				continue
-			var r := item_rect(inst.uid)
+			var r := item_bounds(inst.uid)
 			if r.size.x <= 0.0 or r.position.x >= box.end.x - BUMP_EPS or r.end.x <= box.position.x + BUMP_EPS:
 				continue
-			var gap := ItemSilhouette.drop_gap(parts, pos, _parts(inst), r.position, BUMP_EPS)
+			var gap := ItemSilhouette.drop_gap(parts, pos, _parts_of(inst.uid), item_rect(inst.uid).position, BUMP_EPS)
 			if gap < best:
 				best = gap
 				on_item = inst.uid
@@ -302,20 +336,21 @@ func floor_under(parts: Array, pos: Vector2, self_uid: int = -1) -> Dictionary:
 	return {"dy": best, "panel": by, "item": on_item}
 
 
-## 198：这件此刻朝向（或 [param rot]）的轮廓凸块
+## 198：这件此刻朝向（或 [param rot]）不斜时的轮廓凸块（斜着的用 [method _parts_of]）
 static func _parts(inst: ItemInstance, rot: int = -1) -> Array:
 	if inst == null or inst.def == null:
 		return []
 	return ItemSilhouette.of(inst.def, inst.rotation if rot < 0 else rot)["parts"]
 
 
-## 底下那件 [param uid] 没了 / 挪了：托在它顶上的从现在的位置再掉一次（再往上托着的跟着掉）
+## 底下那件 [param uid] 没了 / 挪了：托在它顶上的从现在的位置（斜着的从斜着的姿态）再掉一次（再往上托着的跟着掉）
 func _drop_resting_on(uid: int) -> void:
-	if stash == null:
+	if stash == null or _dropping.has(uid):
 		return
+	_dropping[uid] = true     # 斜靠着的互相托着时不会来回掉个没完
 	for top in _rest_on.keys():
-		if int(_rest_on[top]) != uid:
-			continue
+		if int(_rest_on.get(top, -1)) != uid:
+			continue     # 前面掉下去的连带着已经挪走了的也跳过
 		_rest_on.erase(top)
 		var inst := stash.get_item(top)
 		if inst == null:
@@ -324,10 +359,12 @@ func _drop_resting_on(uid: int) -> void:
 		_landing.erase(top)
 		_bodies.erase(top)
 		_begin_fall(inst, at, 0.0)
+	_dropping.erase(uid)
 
 
-## 一段下落：重心从起点到终点，竖直按重力（沉的不封顶、飘的到末速度封顶），横向线性（只有夹边时才有），翻转 / 缩放 / 透明跟落了几成走；触地后弹一下
-func _fall(inst: ItemInstance, from_local: Vector2, rot_from: int, to_local: Vector2, rot_to: int, stagger: float, in_place: bool) -> Dictionary:
+## 一段下落：重心从起点到终点，竖直按重力（沉的不封顶、飘的到末速度封顶），横向线性（只有夹边时才有），翻转 / 缩放 / 透明跟落了几成走；触地后弹一下。
+## [param tilt_from]：起手斜着多少（198 补充一，再掉一次的斜着的件），途中转回四向
+func _fall(inst: ItemInstance, from_local: Vector2, rot_from: int, to_local: Vector2, rot_to: int, stagger: float, in_place: bool, tilt_from: float = 0.0) -> Dictionary:
 	var prof := land_profile(inst.def)
 	var com_from := ItemSilhouette.centroid(inst.def, rot_from)     # 198：转轴 = 轮廓重心
 	var com_to := ItemSilhouette.centroid(inst.def, rot_to)
@@ -354,7 +391,7 @@ func _fall(inst: ItemInstance, from_local: Vector2, rot_from: int, to_local: Vec
 	var steps := posmod(rot_to - rot_from, 4)
 	var turn: float = [0.0, PI * 0.5, PI, -PI * 0.5][steps]     # 走最短的一边（顺时针为正）
 	return {"t": stagger, "p0": p0, "p1": p1, "falls": falls, "g": g, "vmax": vmax, "t_hit": t_hit, "v_hit": v_hit,
-		"sec": t_hit + LAND_BOUNCE_SEC, "amp": amp, "rot_from": rot_from, "turn": turn, "com_from": com_from,
+		"sec": t_hit + LAND_BOUNCE_SEC, "amp": amp, "rot_from": rot_from, "turn": turn, "tilt_from": tilt_from, "com_from": com_from,
 		"in_place": in_place, "profile": prof}
 
 
@@ -437,15 +474,15 @@ func advance_landing(delta: float) -> void:
 	if _landing.is_empty():
 		_sync_process()
 		return
-	var landed := false
+	var landed: Array = []
 	for uid in _landing.keys():
 		var a: Dictionary = _landing[uid]
 		a["t"] = float(a["t"]) + delta
 		if float(a["t"]) >= float(a["sec"]):
 			_landing.erase(uid)
-			landed = true
-	if landed:
-		wake_bumps()     # 180：落稳了压着别人就弹开
+			landed.append(uid)
+	if not landed.is_empty():
+		wake_bumps(landed)     # 180：落稳了压着别人就弹开；198 补充一：站不住的翻下去
 	_sync_process()
 	queue_redraw()
 
@@ -466,28 +503,29 @@ func landing_uids() -> Array:
 
 
 ## 一件此刻画成什么样：{"pos": 不转不缩时包围盒左上角（起手朝向 `rot`）, "pivot": 重心（转与缩放绕它）, "angle": 转了多少（弧度）,
-## "rot": 画的是哪个朝向的格子, "scale", "alpha", "hidden": 还在排队}。没在落 = 落点、现在的朝向、1、1
+## "rot": 画的是哪个朝向的格子, "scale", "alpha", "hidden": 还在排队}。没在落 = 落点、现在的朝向、斜度（198 补充一）、1、1
 func landing_pose(uid: int) -> Dictionary:
 	var r := item_rect(uid)
 	var inst := stash.get_item(uid) if stash != null else null
 	var rot := inst.rotation if inst != null else 0
 	if not _landing.has(uid):
 		var com := ItemSilhouette.centroid(inst.def, rot) if inst != null and inst.def != null and inst.def.shape != null else r.size * 0.5
-		return {"pos": r.position, "pivot": r.position + com, "angle": 0.0, "rot": rot, "scale": 1.0, "alpha": 1.0, "hidden": false}
+		return {"pos": r.position, "pivot": r.position + com, "angle": tilt_of(uid), "rot": rot, "scale": 1.0, "alpha": 1.0, "hidden": false}
 	var a: Dictionary = _landing[uid]
 	var prof: Dictionary = a["profile"]
 	var t := float(a["t"])
 	var com_from: Vector2 = a["com_from"]
 	var p0: Vector2 = a["p0"]
+	var tilt0 := float(a.get("tilt_from", 0.0))
 	if t < 0.0:
-		return {"pos": p0 - com_from, "pivot": p0, "angle": 0.0, "rot": a["rot_from"], "scale": float(prof["scale"]), "alpha": 0.0, "hidden": true}
+		return {"pos": p0 - com_from, "pivot": p0, "angle": tilt0, "rot": a["rot_from"], "scale": float(prof["scale"]), "alpha": 0.0, "hidden": true}
 	var s := _fall_progress(a, t)
 	var pivot := p0.lerp(a["p1"], s)
 	if bool(a["falls"]):
 		pivot.x += float(prof["sway"]) * sin(TAU * s)     # 飘的左右荡下来；沉的摆幅 0
 	if t > float(a["t_hit"]):
 		pivot.y -= float(a["amp"]) * sin(PI * clampf((t - float(a["t_hit"])) / LAND_BOUNCE_SEC, 0.0, 1.0))
-	var angle := float(a["turn"]) * s * s     # 缓入：越落转得越快，触地正好转到位
+	var angle := tilt0 + (float(a["turn"]) - tilt0) * s * s     # 缓入：越落转得越快，触地正好转到位
 	return {"pos": pivot - com_from, "pivot": pivot, "angle": angle, "rot": a["rot_from"], "scale": lerpf(float(prof["scale"]), 1.0, s), "alpha": lerpf(LAND_ALPHA, 1.0, s), "hidden": false}
 #endregion
 
@@ -528,14 +566,82 @@ static func span_px(inst: ItemInstance, rot: int) -> Vector2:
 	return Vector2(hi + Vector2i.ONE) * InventoryView.CELL
 
 
-## 一件画在哪（本控件内像素）：落点乘回尺寸，再整块夹进屏里 —— 换了窗口大小东西也还在屏内
+## 一件画在哪（本控件内像素）：落点乘回尺寸，再整块夹进屏里 —— 换了窗口大小东西也还在屏内。
+## 198 补充一：给的是**不斜时**的包围盒（斜着的绕它的轮廓重心再转 [method tilt_of]）；斜着的落点记的是斜着的包围盒（[method _spot_off]），夹边也按它
 func item_rect(uid: int) -> Rect2:
 	var inst := stash.get_item(uid) if stash != null else null
 	if inst == null:
 		return Rect2()
+	var span := span_px(inst, inst.rotation)
 	if _bodies.has(uid):
-		return Rect2(_bodies[uid]["pos"], span_px(inst, inst.rotation))
-	return _fit(Rect2(stash.spot_of(uid) * size, span_px(inst, inst.rotation)))
+		return Rect2(_bodies[uid]["pos"], span)
+	var tilt := stash.tilt_of(uid)
+	if tilt == 0.0:
+		# 夹边按轮廓：道具图四周透明的那一圈可以出屏（解算、落地都按轮廓贴地贴边，按包围盒夹会把它顶离地面）
+		var sb: Rect2 = ItemSilhouette.of(inst.def, inst.rotation)["bounds"]
+		return Rect2(_fit(Rect2(stash.spot_of(uid) * size + sb.position, sb.size)).position - sb.position, span)
+	var off := _spot_off(inst, tilt)
+	var box: Rect2 = _tilted(inst, tilt)["bounds"]
+	return Rect2(_fit(Rect2(stash.spot_of(uid) * size, box.size)).position - off, span)
+
+
+## 198 补充一：斜着的包围盒（本控件内像素）—— 屏边夹取、找支撑按它
+func item_bounds(uid: int) -> Rect2:
+	var inst := stash.get_item(uid) if stash != null else null
+	if inst == null or inst.def == null:
+		return Rect2()
+	var tilt := tilt_of(uid)
+	if tilt == 0.0:
+		return item_rect(uid)
+	var box: Rect2 = _tilted(inst, tilt)["bounds"]
+	return Rect2(item_rect(uid).position + box.position, box.size)
+
+
+## 198 补充一：这件斜了多少（弧度，顺时针为正；解算中按此刻的）
+func tilt_of(uid: int) -> float:
+	if _bodies.has(uid):
+		return float(_bodies[uid]["ang"])
+	return stash.tilt_of(uid) if stash != null else 0.0
+
+
+## 这件此刻的轮廓凸块（从不斜时包围盒左上角量；斜着的已转好）
+func _parts_of(uid: int) -> Array:
+	var inst := stash.get_item(uid) if stash != null else null
+	if inst == null or inst.def == null:
+		return []
+	return _tilted(inst, tilt_of(uid))["parts"]
+
+
+static func _tilted(inst: ItemInstance, tilt: float) -> Dictionary:
+	return ItemSilhouette.tilted(ItemSilhouette.of(inst.def, inst.rotation), tilt)
+
+
+## 斜着的件落点记的是斜着的包围盒的左上角（屏边夹取时整块留在屏内、存档里也不会出界）：比不斜时的左上角挪了多少。不斜 = 0
+static func _spot_off(inst: ItemInstance, tilt: float) -> Vector2:
+	if tilt == 0.0:
+		return Vector2.ZERO
+	return (_tilted(inst, tilt)["bounds"] as Rect2).position - (ItemSilhouette.of(inst.def, inst.rotation)["bounds"] as Rect2).position
+
+
+## 写回一件的落点（不斜时包围盒左上角在 [param pos]）与斜度
+func _store(uid: int, pos: Vector2, tilt: float) -> void:
+	var inst := stash.get_item(uid)
+	if inst == null:
+		return
+	stash.set_tilt(uid, tilt)
+	var spot := to_spot(pos + _spot_off(inst, tilt))
+	if not stash.spot_of(uid).is_equal_approx(spot):
+		stash.set_spot(uid, spot)
+
+
+## 点 [param p] 反着转回这件不斜时的样子（绕轮廓重心转 −斜度）；不斜原样
+func _untilt(uid: int, p: Vector2) -> Vector2:
+	var tilt := tilt_of(uid)
+	if tilt == 0.0:
+		return p
+	var inst := stash.get_item(uid)
+	var pivot := item_rect(uid).position + ItemSilhouette.centroid(inst.def, inst.rotation)
+	return pivot + (p - pivot).rotated(-tilt)
 
 
 func _fit(r: Rect2) -> Rect2:
@@ -546,7 +652,7 @@ func _fit(r: Rect2) -> Rect2:
 
 
 ## 鼠标下最上面那一件（后放的在上）；没有 -1。162：半空中的也接（按它此刻画在哪、多大），排队还没出现的不接。
-## 198：有道具图的（落稳的）按透明通道点，透明的角点不着；没图按格子
+## 198：有道具图的（落稳的）按透明通道点，透明的角点不着；没图按格子。198 补充一：斜着的把点反着转回去再查
 func uid_at_local(p: Vector2) -> int:
 	if stash == null:
 		return -1
@@ -556,7 +662,7 @@ func uid_at_local(p: Vector2) -> int:
 		if _landing.has(inst.uid) and bool(landing_pose(inst.uid)["hidden"]):
 			continue
 		if not _landing.has(inst.uid) and inst.def != null and ItemSilhouette.of(inst.def, inst.rotation)["mask"] != null:
-			if ItemSilhouette.hit(inst.def, inst.rotation, p - item_rect(inst.uid).position):
+			if ItemSilhouette.hit(inst.def, inst.rotation, _untilt(inst.uid, p) - item_rect(inst.uid).position):
 				return inst.uid
 			continue
 		var cell := _cell_under(inst.uid, p)
@@ -566,10 +672,10 @@ func uid_at_local(p: Vector2) -> int:
 
 
 ## [param p] 落在这一件的哪一格（现在朝向的坐标；不夹边，包围盒外是越界的格）：正在落的按此刻的位置、缩放、转角（绕重心）反推，
-## 再从画着的起手朝向换到现在的朝向
+## 再从画着的起手朝向换到现在的朝向。斜着的先反着转回去
 func _cell_under(uid: int, p: Vector2) -> Vector2i:
 	var r := item_rect(uid)
-	var q := p - r.position
+	var q := _untilt(uid, p) - r.position
 	var drawn_rot := -1
 	if _landing.has(uid):
 		var pose := landing_pose(uid)
@@ -711,17 +817,19 @@ func settle() -> void:
 	if stash == null or size.x <= 0.0 or size.y <= 0.0:
 		return
 	for inst in stash.items():
-		var r := item_rect((inst as ItemInstance).uid)
-		var moved := push_out(r, _parts(inst))
+		var uid := (inst as ItemInstance).uid
+		var r := item_rect(uid)
+		var moved := push_out(r, _parts_of(uid))
 		if moved.position != r.position:
-			_bodies.erase((inst as ItemInstance).uid)
-			stash.set_spot((inst as ItemInstance).uid, to_spot(moved.position))
+			var tilt := tilt_of(uid)
+			_bodies.erase(uid)
+			_store(uid, moved.position, tilt)
 	wake_bumps()
 #endregion
 
 
-#region 相遇弹开（180 §2.2）
-## 地上（不在落的）两两相交的（uid 对；测试看「任何时候都不重叠」）。198：按轮廓，压进去超过 [constant BUMP_EPS] 才算
+#region 相遇弹开（180 §2.2）、翻、靠（198 补充一）
+## 地上（不在落的）两两相交的（uid 对；测试看「任何时候都不重叠」）。198：按轮廓（斜着的按斜着的），压进去超过 [constant BUMP_EPS] 才算
 func overlapping_pairs() -> Array:
 	var out: Array = []
 	if stash == null:
@@ -732,7 +840,7 @@ func overlapping_pairs() -> Array:
 		var it := inst as ItemInstance
 		if not _landing.has(it.uid) and it.def != null:
 			at[it.uid] = item_rect(it.uid).position
-			parts[it.uid] = _parts(it)
+			parts[it.uid] = _parts_of(it.uid)
 	var keys := at.keys()
 	for i in keys.size():
 		for j in range(i + 1, keys.size()):
@@ -742,34 +850,73 @@ func overlapping_pairs() -> Array:
 	return out
 
 
-## 有相交的就开始弹开：地上不在落的每件都成一个物体（被撞到的邻居也会动）。地藏着、没尺寸时不动
-func wake_bumps() -> void:
-	if not _bodies.is_empty() or stash == null or size.x <= 0.0 or size.y <= 0.0:
+## 有相交的、或刚落稳却站不住的（[param landed] 里重心不在支撑上方的，198 补充一）就开始解算：地上不在落的每件都成一个物体，
+## 相交的和站不住的醒着，其余睡着（被撞到再醒）。正在解算时新落稳的加进去。地藏着、没尺寸时不动
+func wake_bumps(landed: Array = []) -> void:
+	if stash == null or size.x <= 0.0 or size.y <= 0.0:
 		return
 	if is_inside_tree() and not is_visible_in_tree():
 		return
-	if not _bump_hold.is_empty() and _bump_hold == _uids():
-		return
-	if overlapping_pairs().is_empty():
-		return
+	var restless := {}
+	if _bodies.is_empty() and not _bump_hold.is_empty() and _bump_hold == _uids():
+		pass     # 挤满了放弃过：重叠不再弹，只看新落稳的
+	else:
+		for pair in overlapping_pairs():
+			if _bodies.has(pair[0]) and _bodies.has(pair[1]):
+				continue     # 正在解算的两件之间的事解算自己管（别把它们醒着的钟拨回去）
+			restless[pair[0]] = true
+			restless[pair[1]] = true
+	for uid in landed:
+		if stash.has_item(uid) and not _landing.has(uid) and int(_refalls.get(uid, 0)) < BUMP_REFALL_MAX and not is_stable(uid):
+			restless[uid] = true
+	if _bodies.is_empty():
+		if restless.is_empty():
+			return
+		_bump_t = 0.0
+		_bump_acc = 0.0
+	if not restless.is_empty():
+		_bump_start = _bump_t
 	var ground_y := size.y * (1.0 - ItemStash.SPOT_MARGIN)
 	var walls := reserved_rects()
 	for inst in stash.items():
 		var it := inst as ItemInstance
 		if _landing.has(it.uid) or it.def == null:
 			continue
-		var r := item_rect(it.uid)
-		var parts := _parts(it)
-		var box := ItemSilhouette.bounds_of(parts)
-		var skip: Array[int] = []
-		for i in walls.size():
-			if _presses(parts, r.position, walls[i]):
-				skip.append(i)     # 起手就压着的面板不当墙（那是 settle 的事），免得一推推出屏
-		_bodies[it.uid] = {"pos": r.position, "vel": Vector2.ZERO, "m": maxf(0.5, float(ItemWeight.of(it.def))),
-			"size": r.size, "parts": parts, "box": box, "floor": maxf(ground_y, r.position.y + box.end.y), "last": -INF, "skip": skip}
-	_bump_t = 0.0
-	_bump_acc = 0.0
+		if _bodies.has(it.uid):
+			if restless.has(it.uid):
+				_wake(_bodies[it.uid])
+			continue
+		_bodies[it.uid] = _new_body(it, ground_y, walls, restless.has(it.uid))
 	_sync_process()
+
+
+## 一件成一个物体：{pos: 不斜时包围盒左上角, vel: 重心速度, ang: 斜度, w: 角速度, m: 质量, I: 转动惯量, com: 轮廓重心（从 pos 量）,
+## sil: 这一向的轮廓, floor: 地面 y, last: 上次撞击时刻, skip: 起手就压着的面板, rest: 静了多久, asleep}
+func _new_body(it: ItemInstance, ground_y: float, walls: Array[Rect2], awake: bool) -> Dictionary:
+	var r := item_rect(it.uid)
+	var sil := ItemSilhouette.of(it.def, it.rotation)
+	var ang := tilt_of(it.uid)
+	var parts: Array = ItemSilhouette.tilted(sil, ang)["parts"]
+	var skip: Array[int] = []
+	for i in walls.size():
+		if _presses(parts, r.position, walls[i]):
+			skip.append(i)     # 起手就压着的面板不当墙（那是 settle 的事），免得一推推出屏
+	var box: Rect2 = sil["bounds"]
+	var m := sqrt(maxf(0.5, float(ItemWeight.of(it.def))))     # 开方：重的仍挪得少，但轻重差几十倍时夹在中间的不会被挤炸
+	var low := r.position.y + ItemSilhouette.bounds_of(parts).end.y
+	return {"uid": it.uid, "pos": r.position, "vel": Vector2.ZERO, "ang": ang, "w": 0.0, "m": m, "I": m * (box.size.x * box.size.x + box.size.y * box.size.y) / 12.0,
+		"com": sil["centroid"], "sil": sil, "floor": maxf(ground_y, low), "last": -INF, "skip": skip, "rest": 0.0,
+		"asleep": not awake, "vp": Vector2.ZERO, "age": 0.0, "topple": false, "settled": false, "more": false}
+
+
+## [param fresh]：新的事（刚落稳、刚被摆过来）—— 醒着的钟从头算；被旁边的碰醒的接着算（一堆东西互相碰醒个没完时，每件醒着的总时长仍封顶）
+static func _wake(b: Dictionary, fresh: bool = true) -> void:
+	b["asleep"] = false
+	b["rest"] = 0.0
+	if fresh:
+		b["age"] = 0.0
+	b["topple"] = false
+	b["settled"] = false
 
 
 ## 是不是正在弹开
@@ -788,7 +935,7 @@ func advance_bumps(delta: float) -> void:
 	while _bump_acc >= BUMP_STEP and not _bodies.is_empty():
 		_bump_acc -= BUMP_STEP
 		_bump_t += BUMP_STEP
-		if _bump_step(BUMP_STEP) or _bump_t >= BUMP_MAX_SEC:
+		if _bump_step(BUMP_STEP) or _bump_t - _bump_start >= BUMP_RUN_MAX_SEC:
 			_finish_bumps()
 	_sync_process()
 	queue_redraw()
@@ -800,147 +947,648 @@ func settle_bumps() -> void:
 		advance_bumps(BUMP_STEP)
 
 
-## 一小步：走、物件两两分开、撞墙。返回「都静了且不再相交」
+## 一个物体此刻的凸块（本控件内像素，斜着的已转好）
+static func _body_parts(b: Dictionary) -> Array:
+	var out: Array = []
+	var com: Vector2 = b["com"]
+	for poly in (b["sil"]["parts"] as Array):
+		out.append(ItemSilhouette.turn(poly, com, float(b["ang"]), b["pos"]))
+	return out
+
+
+## 一小步（198 补充一 §7.3）：重力 → 找接触（物件两两、屏边与地面、面板）→ 冲量迭代（法向带反弹、切向摩擦）→ 分开重叠（只挪位置）→
+## 撞击后的衰减与贴住 → 直接推开一点重叠 → 走 → 夹回屏内、推出面板 → 静够了睡着。返回「都睡着了」
 func _bump_step(h: float) -> bool:
-	var damp := pow(BUMP_DAMP, h * 60.0)
-	for b in _bodies.values():
-		b["pos"] = (b["pos"] as Vector2) + (b["vel"] as Vector2) * h
-	var keys := _bodies.keys()
-	var touching := false
-	for i in keys.size():
-		for j in range(i + 1, keys.size()):
-			if _bump_pair(_bodies[keys[i]], _bodies[keys[j]], int(keys[i]) < int(keys[j])):
-				touching = true
+	var g := LAND_G * _screen_h()
+	var impact := maxf(BUMP_REST, 2.0 * g * h)     # 躺着时每步被重力压进去的速度不算撞
+	var list: Array = _bodies.values()
+	for b in list:
+		if not bool(b["asleep"]):
+			b["vel"] = (b["vel"] as Vector2) + Vector2(0.0, g * h)
+		b["world"] = _body_parts(b)
+		b["wb"] = ItemSilhouette.bounds_of(b["world"])
+		b["pushed"] = false
+		b["hit"] = 0
+		b["held"] = Vector2(INF, -INF)
+		b["cx"] = (b["pos"] as Vector2).x + (b["com"] as Vector2).x
+	var contacts: Array = []
+	for i in list.size():
+		for j in range(i + 1, list.size()):
+			_pair_contacts(list[i], list[j], contacts, impact)
 	var walls := reserved_rects()
+	for b in list:
+		if not bool(b["asleep"]):
+			_wall_contacts(b, walls, contacts)
+	for c in contacts:
+		_prep(c, h, impact)
+		_note_hold(c)
+	for _it in BUMP_ITERS:
+		for c in contacts:
+			_solve(c)
+	for _it in BUMP_ITERS:
+		for c in contacts:
+			_solve_split(c)
 	var cap := BUMP_WALL_VCAP * LAND_VMAX * _screen_h()
-	var still := not touching
-	for b in _bodies.values():
-		_bump_walls(b, walls, cap)
-		var v: Vector2 = (b["vel"] as Vector2) * damp
-		if v.length() < BUMP_REST:
-			v = Vector2.ZERO
-		b["vel"] = v
-		if v != Vector2.ZERO:
-			still = false
-	return still
+	for b in list:
+		_after_impact(b, cap)
+		b["vel"] = (b["vel"] as Vector2).limit_length(BUMP_SEP_VMAX)     # 夹在两件之间解不开时冲量会越攒越大：封顶
+		b["w"] = clampf(float(b["w"]), -BUMP_W_MAX, BUMP_W_MAX)
+	for c in contacts:
+		if c["b"] != null and float(c["depth"]) > BUMP_SLOP:
+			_fix_pair(c)
+	for b in list:
+		if bool(b["asleep"]):
+			continue
+		b["pos"] = (b["pos"] as Vector2) + ((b["vel"] as Vector2) + (b["vp"] as Vector2)) * h
+		b["ang"] = float(b["ang"]) + float(b["w"]) * h
+		if absf(float(b["ang"])) < 0.00001:
+			b["ang"] = 0.0     # 浮点误差攒出来的几乎为零的斜度不算斜
+		b["vp"] = Vector2.ZERO
+		_clamp_body(b, walls)
+	var all_asleep := true
+	for b in list:
+		if bool(b["asleep"]):
+			continue
+		var v: Vector2 = b["vel"]
+		var held: Vector2 = b["held"]
+		var propped := float(b["cx"]) >= held.x - 0.5 and float(b["cx"]) <= held.y + 0.5
+		b["age"] = float(b["age"]) + h
+		if float(b["age"]) >= BUMP_MAX_SEC - 0.000001 and not propped and not bool(b["more"]):
+			b["more"] = true     # 到时还在倒（重心不在支撑上方）：再给一段，让它自己翻下去 —— 比收尾时再落一次自然
+			b["age"] = 0.0
+		if float(b["age"]) >= BUMP_MAX_SEC - 0.000001:
+			b["asleep"] = true     # 醒着解算够久了：冻在这个姿态（还在倒的收尾时再落一次）
+			b["topple"] = not propped
+			b["vel"] = Vector2.ZERO
+			b["w"] = 0.0
+			continue
+		if not bool(b["pushed"]) and v.length() < BUMP_REST and absf(float(b["w"])) < BUMP_W_REST:
+			b["rest"] = float(b["rest"]) + h
+			if float(b["rest"]) >= (BUMP_SLEEP_SEC if propped else BUMP_SLEEP_WEDGED_SEC) - 0.000001:
+				b["asleep"] = true
+				b["settled"] = true     # 自己静下来的：解算认定它被托着 / 卡着
+				b["vel"] = Vector2.ZERO
+				b["w"] = 0.0
+				continue
+		else:
+			b["rest"] = 0.0
+		all_asleep = false
+	return all_asleep
 
 
-## 一对：相交就沿分离轴分开（198：轮廓的 SAT 给的方向，任意角度；矩形件就是重叠较小的那条轴）——
-## 迎面来的先按 e = 0.5 反弹（按质量反比分），再把分开的相对速度补到「重叠 ÷ BUMP_SEP_SEC」，外加直接推开一点。返回是否相交
-func _bump_pair(a: Dictionary, b: Dictionary, a_first: bool) -> bool:
-	var hit := ItemSilhouette.separate(a["parts"], a["pos"], b["parts"], b["pos"], 1.0 if a_first else -1.0)
-	var depth := float(hit["depth"])
-	if depth <= BUMP_EPS:
+## 一对物体的接触（至少一件醒着）。睡着的那件被撞得够狠（压进 1 像素以上、迎面速度过撞击线）或被正在动的碰到就醒；没醒就当推不动
+func _pair_contacts(a: Dictionary, b: Dictionary, out: Array, impact: float) -> void:
+	if bool(a["asleep"]) and bool(b["asleep"]):
+		return
+	if not (a["wb"] as Rect2).grow(BUMP_TOUCH).intersects(b["wb"]):
+		return
+	var wa: Array = a["world"]
+	var wb: Array = b["world"]
+	for i in wa.size():
+		var ra := ItemSilhouette.bounds_of([wa[i]]).grow(BUMP_TOUCH)
+		for j in wb.size():
+			if not ra.intersects(ItemSilhouette.bounds_of([wb[j]])):
+				continue
+			var c := ItemSilhouette.contact(wa[i], wb[j], BUMP_TOUCH)
+			if c.is_empty():
+				continue
+			c["a"] = a
+			c["b"] = b
+			c["mu"] = BUMP_MU
+			c["e"] = BUMP_E
+			if bool(a["asleep"]) or bool(b["asleep"]):
+				var mover: Dictionary = a if bool(b["asleep"]) else b
+				var sleeper: Dictionary = b if bool(b["asleep"]) else a
+				var woken := float(c["depth"]) > 1.0 or float(mover["rest"]) <= 0.0 or -_rel_normal(c) > impact
+				if woken and float(sleeper["age"]) < BUMP_MAX_SEC - 0.000001:
+					_wake(sleeper, false)     # 醒着够久冻住了的不再被碰醒，当推不动
+			if float(c["depth"]) > BUMP_EPS:
+				a["pushed"] = true
+				b["pushed"] = true
+			out.append(c)
+
+
+## 记下谁被这处接触撑着：不是从上面压下来的接触，接触点的横向区间（重心在区间上方才睡得着 —— 只有一个角着地、还在往下倒的不算静）
+static func _note_hold(c: Dictionary) -> void:
+	var n: Vector2 = c["n"]
+	var sides := []
+	if n.y > -0.3:
+		sides.append(c["a"])
+	if c["b"] != null and n.y < 0.3:
+		sides.append(c["b"])
+	for side in sides:
+		var held: Vector2 = side["held"]
+		for p in (c["points"] as PackedVector2Array):
+			held = Vector2(minf(held.x, p.x), maxf(held.y, p.x))
+		side["held"] = held
+
+
+## 迎面速度（接触点上 b 相对 a 沿 n；负 = 靠近），取几个接触点里最快的
+static func _rel_normal(c: Dictionary) -> float:
+	var worst := INF
+	for p in (c["points"] as PackedVector2Array):
+		worst = minf(worst, _point_vel(c["b"], p).dot(c["n"]) - _point_vel(c["a"], p).dot(c["n"]))
+	return worst
+
+
+## 物体 [param b]（null = 墙）上点 [param p] 的速度
+static func _point_vel(b: Variant, p: Vector2) -> Vector2:
+	if b == null:
+		return Vector2.ZERO
+	var r := p - ((b["pos"] as Vector2) + (b["com"] as Vector2))
+	var w := float(b["w"])
+	return (b["vel"] as Vector2) + Vector2(-w * r.y, w * r.x)
+
+
+## 屏边、地面（半平面：碰到的顶点）与登记的面板（凸块对矩形）—— 都是推不动的
+func _wall_contacts(b: Dictionary, walls: Array[Rect2], out: Array) -> void:
+	var verts := PackedVector2Array()
+	for poly in (b["world"] as Array):
+		verts.append_array(poly)
+	var planes := [[Vector2(0, 1), float(b["floor"])], [Vector2(-1, 0), 0.0], [Vector2(1, 0), size.x], [Vector2(0, -1), 0.0]]
+	for k in planes.size():
+		var c := _plane_contact(verts, planes[k][0], planes[k][1])
+		if not c.is_empty():
+			c["a"] = b
+			c["b"] = null
+			c["mu"] = BUMP_MU_WALL
+			c["e"] = BUMP_E_WALL
+			out.append(c)
+	var skip: Array[int] = b["skip"]
+	for i in walls.size():
+		if skip.has(i) or not (b["wb"] as Rect2).grow(BUMP_TOUCH).intersects(walls[i]):
+			continue
+		var panel := ItemSilhouette.rect_poly(walls[i])
+		var world: Array = b["world"]
+		for j in world.size():
+			var c := ItemSilhouette.contact(world[j], panel, BUMP_TOUCH)
+			if c.is_empty():
+				continue
+			c["a"] = b
+			c["b"] = null
+			c["mu"] = BUMP_MU_WALL
+			c["e"] = BUMP_E_WALL
+			out.append(c)
+
+
+## 一堆顶点碰半平面（[param n] 指向墙外，墙在 `p·n = limit`）：最深的那几个顶点沿墙的两头（1～2 个接触点）
+static func _plane_contact(verts: PackedVector2Array, n: Vector2, limit: float) -> Dictionary:
+	var deepest := -INF
+	for v in verts:
+		deepest = maxf(deepest, v.dot(n) - limit)
+	if deepest <= -BUMP_TOUCH:
+		return {}
+	var tan := Vector2(-n.y, n.x)
+	var lo := INF
+	var hi := -INF
+	var p_lo := Vector2.ZERO
+	var p_hi := Vector2.ZERO
+	for v in verts:
+		if v.dot(n) - limit < deepest - ItemSilhouette.FEATURE_TOL:
+			continue
+		var t := v.dot(tan)
+		if t < lo:
+			lo = t
+			p_lo = v
+		if t > hi:
+			hi = t
+			p_hi = v
+	var points := PackedVector2Array([p_lo])
+	if hi - lo >= 1.0:
+		points.append(p_hi)
+	return {"n": n, "depth": deepest, "points": points}
+
+
+## 解算前：每个接触点的力臂、有效质量；迎面快过撞击线的按恢复系数反弹（记一次撞击）
+func _prep(c: Dictionary, h: float, impact: float) -> void:
+	var a: Dictionary = c["a"]
+	var b: Variant = c["b"]
+	var n: Vector2 = c["n"]
+	var t := Vector2(-n.y, n.x)
+	var ima := _inv_m(a)
+	var iia := _inv_i(a)
+	var imb := _inv_m(b)
+	var iib := _inv_i(b)
+	var pts: Array = []
+	var vn0 := _rel_normal(c)
+	var target := 0.0
+	if float(c["depth"]) < 0.0:
+		target = float(c["depth"]) / h     # 还隔着一点：允许这一步正好靠上
+	if -vn0 > impact:
+		target = maxf(target, -float(c["e"]) * vn0)
+		a["hit"] = int(a["hit"]) | (2 if b == null else 1)
+		if b != null:
+			b["hit"] = int(b["hit"]) | 1
+	for p in (c["points"] as PackedVector2Array):
+		var ra := p - ((a["pos"] as Vector2) + (a["com"] as Vector2))
+		var rb := p - ((b["pos"] as Vector2) + (b["com"] as Vector2)) if b != null else Vector2.ZERO
+		var kn := ima + imb + iia * pow(ra.cross(n), 2) + iib * pow(rb.cross(n), 2)
+		var kt := ima + imb + iia * pow(ra.cross(t), 2) + iib * pow(rb.cross(t), 2)
+		pts.append({"p": p, "ra": ra, "rb": rb, "kn": kn, "kt": kt, "pn": 0.0, "pt": 0.0})
+	c["pts"] = pts
+	c["t"] = t
+	c["target"] = target
+	c["ims"] = [ima, iia, imb, iib]
+	c["bias"] = minf(maxf(0.0, float(c["depth"]) - BUMP_SLOP) / BUMP_SEP_SEC, BUMP_SEP_VMAX)
+	c["ps"] = 0.0
+
+
+## 推不动的（墙、睡着的）逆质量 0
+static func _inv_m(b: Variant) -> float:
+	return 0.0 if b == null or bool(b["asleep"]) else 1.0 / float(b["m"])
+
+
+static func _inv_i(b: Variant) -> float:
+	return 0.0 if b == null or bool(b["asleep"]) else 1.0 / maxf(0.0001, float(b["I"]))
+
+
+## 一轮冲量：法向（累计不为负；两个接触点的一起解，平底边压着平面时左右一样、不会凭空转起来），再每个点切向摩擦（累计封顶「摩擦系数 × 法向」）
+static func _solve(c: Dictionary) -> void:
+	var a: Dictionary = c["a"]
+	var b: Variant = c["b"]
+	var n: Vector2 = c["n"]
+	var t: Vector2 = c["t"]
+	var ims: Array = c["ims"]
+	var pts: Array = c["pts"]
+	if pts.size() != 2 or not _solve_pair(c):
+		for q in pts:
+			if float(q["kn"]) <= 0.0:
+				continue
+			var p: Vector2 = q["p"]
+			var dv := _point_vel(b, p) - _point_vel(a, p)
+			var d := (float(c["target"]) - dv.dot(n)) / float(q["kn"])
+			var pn := maxf(float(q["pn"]) + d, 0.0)
+			d = pn - float(q["pn"])
+			q["pn"] = pn
+			_push(a, b, q, n * d, ims)
+	for q in pts:
+		if float(q["kt"]) <= 0.0:
+			continue
+		var p: Vector2 = q["p"]
+		var pn := float(q["pn"])
+		var dv := _point_vel(b, p) - _point_vel(a, p)
+		var cap := float(c["mu"]) * pn
+		var dt := -dv.dot(t) / float(q["kt"])
+		var pt := clampf(float(q["pt"]) + dt, -cap, cap)
+		dt = pt - float(q["pt"])
+		q["pt"] = pt
+		_push(a, b, q, t * dt, ims)
+
+
+## 两个接触点的法向冲量一起解（累计不为负的 2 × 2 线性互补，Box2D 的块解法）。两点太近（矩阵病态）返回 false，退回逐点解
+static func _solve_pair(c: Dictionary) -> bool:
+	var a: Dictionary = c["a"]
+	var b: Variant = c["b"]
+	var n: Vector2 = c["n"]
+	var ims: Array = c["ims"]
+	var q1: Dictionary = c["pts"][0]
+	var q2: Dictionary = c["pts"][1]
+	var ima := float(ims[0]) + float(ims[2])
+	var k11 := float(q1["kn"])
+	var k22 := float(q2["kn"])
+	var k12 := ima + float(ims[1]) * (q1["ra"] as Vector2).cross(n) * (q2["ra"] as Vector2).cross(n) + float(ims[3]) * (q1["rb"] as Vector2).cross(n) * (q2["rb"] as Vector2).cross(n)
+	var det := k11 * k22 - k12 * k12
+	if k11 <= 0.0 or k22 <= 0.0 or k11 * k11 >= 1000.0 * det:
 		return false
-	var n: Vector2 = hit["n"]
-	var ia := 1.0 / float(a["m"])
-	var ib := 1.0 / float(b["m"])
-	var va: Vector2 = a["vel"]
-	var vb: Vector2 = b["vel"]
-	var vn := (vb - va).dot(n)
-	if vn < 0.0:
-		var j := -(1.0 + BUMP_E) * vn / (ia + ib)
-		va = (va - n * j * ia) * BUMP_AFTER
-		vb = (vb + n * j * ib) * BUMP_AFTER
-		if _bump_t - float(a["last"]) < BUMP_STICK_SEC:
-			va = Vector2.ZERO
-		if _bump_t - float(b["last"]) < BUMP_STICK_SEC:
-			vb = Vector2.ZERO
-		a["last"] = _bump_t
-		b["last"] = _bump_t
-		vn = (vb - va).dot(n)
-	var want := minf(depth / BUMP_SEP_SEC, BUMP_SEP_VMAX)
-	if vn < want:
-		var k := (want - vn) / (ia + ib)
-		va -= n * k * ia
-		vb += n * k * ib
-	a["vel"] = va
-	b["vel"] = vb
-	var fix := depth * BUMP_FIX / (ia + ib)
-	a["pos"] = (a["pos"] as Vector2) - n * fix * ia
-	b["pos"] = (b["pos"] as Vector2) + n * fix * ib
+	var a1 := float(q1["pn"])
+	var a2 := float(q2["pn"])
+	var target := float(c["target"])
+	var vn1 := (_point_vel(b, q1["p"]) - _point_vel(a, q1["p"])).dot(n) - target
+	var vn2 := (_point_vel(b, q2["p"]) - _point_vel(a, q2["p"])).dot(n) - target
+	var b1 := vn1 - (k11 * a1 + k12 * a2)
+	var b2 := vn2 - (k12 * a1 + k22 * a2)
+	var x1 := -(k22 * b1 - k12 * b2) / det
+	var x2 := -(k11 * b2 - k12 * b1) / det
+	if x1 < 0.0 or x2 < 0.0:
+		x1 = -b1 / k11
+		x2 = 0.0
+		if x1 < 0.0 or k12 * x1 + b2 < 0.0:
+			x1 = 0.0
+			x2 = -b2 / k22
+			if x2 < 0.0 or k12 * x2 + b1 < 0.0:
+				x1 = 0.0
+				x2 = 0.0
+				if b1 < 0.0 or b2 < 0.0:
+					return false
+	_push(a, b, q1, n * (x1 - a1), ims)
+	_push(a, b, q2, n * (x2 - a2), ims)
+	q1["pn"] = x1
+	q2["pn"] = x2
 	return true
 
 
-## 撞墙：屏边、地面、登记的面板都是推不动的，但吸收大部分弹力（e = 0.15，反弹速度封顶 [param cap]），撞完速度再乘 0.3；
-## 两次撞墙隔得太近就贴住。198：屏边、地面碰的是轮廓最左 / 最右 / 最高 / 最低的顶点，面板按轮廓的 SAT
-func _bump_walls(b: Dictionary, walls: Array[Rect2], cap: float) -> void:
-	var pos: Vector2 = b["pos"]
-	var box: Rect2 = b["box"]
+## 冲量 [param imp] 加在 b 上、反向加在 a 上（各按逆质量、逆转动惯量）
+static func _push(a: Dictionary, b: Variant, q: Dictionary, imp: Vector2, ims: Array) -> void:
+	a["vel"] = (a["vel"] as Vector2) - imp * float(ims[0])
+	a["w"] = float(a["w"]) - float(ims[1]) * (q["ra"] as Vector2).cross(imp)
+	if b != null:
+		b["vel"] = (b["vel"] as Vector2) + imp * float(ims[2])
+		b["w"] = float(b["w"]) + float(ims[3]) * (q["rb"] as Vector2).cross(imp)
+
+
+## 分开重叠：只改「这一步的挪动」（vp），不留速度 —— 读档压在一起的推开就停，不会炸开。墙、地面、面板也一起解（推不动），
+## 否则夹在墙和别的件之间的会被推进墙、再被夹回来，一直压着睡不着
+static func _solve_split(c: Dictionary) -> void:
+	var a: Dictionary = c["a"]
+	var b: Variant = c["b"]
+	var ims: Array = c["ims"]
+	var k := float(ims[0]) + float(ims[2])
+	if k <= 0.0:
+		return
+	var n: Vector2 = c["n"]
+	var vb: Vector2 = b["vp"] if b != null else Vector2.ZERO
+	var vn := (vb - (a["vp"] as Vector2)).dot(n)
+	var ps := maxf(float(c["ps"]) + (float(c["bias"]) - vn) / k, 0.0)
+	var d := ps - float(c["ps"])
+	c["ps"] = ps
+	a["vp"] = (a["vp"] as Vector2) - n * d * float(ims[0])
+	if b != null:
+		b["vp"] = (b["vp"] as Vector2) + n * d * float(ims[2])
+
+
+## 撞过之后（180）：撞墙的弹回速度封顶、再乘 0.3，物件之间乘 0.5；两次撞击隔得太近就贴住
+func _after_impact(b: Dictionary, cap: float) -> void:
+	var hit := int(b["hit"])
+	if hit == 0 or bool(b["asleep"]):
+		return
 	var v: Vector2 = b["vel"]
-	var hit := false
-	var lo := -box.position
-	var hi := Vector2(maxf(lo.x, size.x - box.end.x), maxf(lo.y, float(b["floor"]) - box.end.y))
-	for axis in 2:
-		if pos[axis] < lo[axis]:
-			pos[axis] = lo[axis]
-			if v[axis] < 0.0:
-				v[axis] = minf(-v[axis] * BUMP_E_WALL, cap)
-				hit = true
-		elif pos[axis] > hi[axis]:
-			pos[axis] = hi[axis]
-			if v[axis] > 0.0:
-				v[axis] = -minf(v[axis] * BUMP_E_WALL, cap)
-				hit = true
+	var w := float(b["w"])
+	if hit & 2:
+		for axis in 2:
+			v[axis] = clampf(v[axis], -cap, cap)
+		v *= BUMP_AFTER_WALL
+		w *= BUMP_AFTER_WALL
+	if hit & 1:
+		v *= BUMP_AFTER
+		w *= BUMP_AFTER
+	if _bump_t - float(b["last"]) < BUMP_STICK_SEC:
+		v = Vector2.ZERO
+		w = 0.0
+	b["last"] = _bump_t
+	b["vel"] = v
+	b["w"] = w
+
+
+## 走完夹回去：斜着的轮廓整块留在屏内、不低于地面；压着面板就推出来
+func _clamp_body(b: Dictionary, walls: Array[Rect2]) -> void:
+	var parts := _body_parts(b)
+	var box := ItemSilhouette.bounds_of(parts)
+	var shift := Vector2.ZERO
+	if box.position.x < 0.0:
+		shift.x = -box.position.x
+	elif box.end.x > size.x:
+		shift.x = maxf(size.x - box.end.x, -box.position.x)
+	if box.end.y > float(b["floor"]):
+		shift.y = float(b["floor"]) - box.end.y
+	elif box.position.y < 0.0:
+		shift.y = -box.position.y
+	var pos: Vector2 = (b["pos"] as Vector2) + shift
 	var skip: Array[int] = b["skip"]
 	for i in walls.size():
 		if skip.has(i):
 			continue
-		var sep := ItemSilhouette.separate(b["parts"], pos, [ItemSilhouette.rect_poly(walls[i])], Vector2.ZERO)
-		var depth := float(sep["depth"])
-		if depth <= 0.0:
-			continue
-		var n: Vector2 = sep["n"]     # 指向面板：往 −n 推出来
-		pos -= n * depth
-		var vn := v.dot(n)
-		if vn > 0.0:
-			v = v - n * vn - n * minf(vn * BUMP_E_WALL, cap)
-			hit = true
-	if hit:
-		v *= BUMP_AFTER_WALL
-		if _bump_t - float(b["last"]) < BUMP_STICK_SEC:
-			v = Vector2.ZERO
-		b["last"] = _bump_t
+		var sep := ItemSilhouette.separate(parts, shift, [ItemSilhouette.rect_poly(walls[i])], Vector2.ZERO)
+		if float(sep["depth"]) > 0.0:
+			pos -= (sep["n"] as Vector2) * float(sep["depth"])     # n 指向面板：往 −n 推出来
 	b["pos"] = pos
-	b["vel"] = v
 
 
-## 收尾：动过的写回落点；到时还相交的（地上挤满了）退回网格扫出来的空处
+## 物件之间每小步再直接推开重叠的 [constant BUMP_FIX] 成（按逆质量分）
+static func _fix_pair(c: Dictionary) -> void:
+	var ims: Array = c["ims"]
+	var k := float(ims[0]) + float(ims[2])
+	if k <= 0.0:
+		return
+	var fix := (float(c["depth"]) - BUMP_SLOP) * BUMP_FIX / k
+	var n: Vector2 = c["n"]
+	c["a"]["pos"] = (c["a"]["pos"] as Vector2) - n * fix * float(ims[0])
+	c["b"]["pos"] = (c["b"]["pos"] as Vector2) + n * fix * float(ims[2])
+
+
+## 站得住吗（198 补充一）：重心在托着它的那些接触点（地面、面板、别的东西的顶）横向围成的区间上方。没有任何支撑 = 站不住
+func is_stable(uid: int) -> bool:
+	var sup := supports_of(uid)
+	if not bool(sup["any"]):
+		return false
+	var inst := stash.get_item(uid)
+	var com_x := item_rect(uid).position.x + ItemSilhouette.centroid(inst.def, inst.rotation).x
+	var span: Vector2 = sup["span"]
+	return com_x >= span.x - 0.5 and com_x <= span.y + 0.5
+
+
+## 这件此刻被谁托着：{any, span: 托着它的接触点横向从 .x 到 .y, item: 托着它的那件的 uid（没有 -1）, panel: 托着它的面板（没有 null）, floor: 着地}。
+## 接触法线朝下（对方在它下面）的才算托着
+func supports_of(uid: int) -> Dictionary:
+	var out := {"any": false, "span": Vector2(INF, -INF), "item": -1, "panel": null, "floor": false}
+	var inst := stash.get_item(uid) if stash != null else null
+	if inst == null or inst.def == null:
+		return out
+	var at := item_rect(uid).position
+	var mine: Array = []
+	for poly in _parts_of(uid):
+		mine.append(ItemSilhouette.turn(poly, Vector2.ZERO, 0.0, at))
+	var box := ItemSilhouette.bounds_of(mine)
+	var span := Vector2(INF, -INF)
+	var floor_y := maxf(size.y * (1.0 - ItemStash.SPOT_MARGIN), box.end.y)
+	for poly in mine:
+		for v in (poly as PackedVector2Array):
+			if v.y >= floor_y - SUPPORT_TOUCH:
+				span = Vector2(minf(span.x, v.x), maxf(span.y, v.x))
+				out["floor"] = true
+	for it in stash.items():
+		var other := it as ItemInstance
+		if other.uid == uid or other.def == null or _landing.has(other.uid):
+			continue
+		if not item_bounds(other.uid).grow(SUPPORT_TOUCH).intersects(box):
+			continue
+		var o_at := item_rect(other.uid).position
+		for pb in _parts_of(other.uid):
+			var hit := _support_span(mine, ItemSilhouette.turn(pb, Vector2.ZERO, 0.0, o_at))
+			if hit.x <= hit.y:
+				span = Vector2(minf(span.x, hit.x), maxf(span.y, hit.y))
+				if int(out["item"]) < 0:
+					out["item"] = other.uid
+	for panel in _reserved:
+		if not is_instance_valid(panel) or not panel.is_inside_tree() or not panel.is_visible_in_tree():
+			continue
+		var g := panel.get_global_rect()
+		var hit := _support_span(mine, ItemSilhouette.rect_poly(Rect2(g.position - global_position, g.size)))
+		if hit.x <= hit.y:
+			span = Vector2(minf(span.x, hit.x), maxf(span.y, hit.y))
+			out["panel"] = panel
+	out["span"] = span
+	out["any"] = span.x <= span.y
+	return out
+
+
+## 凸块们 [param mine] 压在凸块 [param below] 上的接触点横向区间（没压着：x > y）
+static func _support_span(mine: Array, below: PackedVector2Array) -> Vector2:
+	var span := Vector2(INF, -INF)
+	for pa in mine:
+		var c := ItemSilhouette.contact(pa, below, SUPPORT_TOUCH)
+		if c.is_empty() or (c["n"] as Vector2).y < 0.3:
+			continue
+		for p in (c["points"] as PackedVector2Array):
+			span = Vector2(minf(span.x, p.x), maxf(span.y, p.x))
+	return span
+
+
+## 收尾：斜过 45° 的换成相邻的四向（画面一个像素不跳，§7.2）、几乎没斜的摆正，写回落点与斜度；到时还相交的（地上挤满了）退回网格扫出来的空处；
+## 按最后的接触重算托着谁；悬着的（解算到时冻在半空、托着的被挪走）掉下去。
+## 到时（这件醒着够 [constant BUMP_MAX_SEC]、或整轮到 [constant BUMP_RUN_MAX_SEC]）还在倒、重心不在支撑上方的（一个角着地正往下翻）不冻在半倒的样子：
+## 从这个姿态再落一次（落地动画转回四向里最稳的那个）
 func _finish_bumps() -> void:
 	var bodies := _bodies
 	_bodies = {}
 	if stash == null:
 		return
-	var moved: Array[int] = []
+	var toppling := {}
 	for uid in bodies.keys():
-		if stash.has_item(uid):
-			var p := to_spot(bodies[uid]["pos"])
-			if not stash.spot_of(uid).is_equal_approx(p):
-				stash.set_spot(uid, p)
-				moved.append(uid)
+		var b: Dictionary = bodies[uid]
+		var unpropped: bool = b.has("held") and (float(b["cx"]) < (b["held"] as Vector2).x - 0.5 or float(b["cx"]) > (b["held"] as Vector2).y + 0.5)
+		if bool(b["topple"]) or (not bool(b["asleep"]) and unpropped):
+			toppling[uid] = true
+	for uid in bodies.keys():
+		var inst := stash.get_item(uid)
+		if inst == null:
+			continue
+		var pose := normalize_pose(inst.def, inst.rotation, bodies[uid]["pos"], float(bodies[uid]["ang"]))
+		var pos: Vector2 = pose["pos"]
+		var ang := float(pose["tilt"])
+		inst.rotation = int(pose["rot"])
+		if absf(ang) < BUMP_TILT_SNAP and ang != 0.0 and _snaps_clear(inst, pos):
+			ang = 0.0
+			var dy := float(floor_under(_parts(inst), pos, uid)["dy"])
+			if dy > -1.5 and dy < BUMP_SNAP_SEAT:
+				pos.y += dy     # 摆正后贴回支撑上（长条斜一点点，摆正时一头会抬起一两像素）
+		_store(uid, pos, ang)
+	_relax_overlaps(bodies)
 	for pair in overlapping_pairs():
 		var inst := stash.get_item(pair[1])
 		if inst != null:
+			stash.set_tilt(inst.uid, 0.0)
 			stash.set_spot(inst.uid, stash.next_free_spot(inst))
 	# 地上真挤满了（扫也扫不出空处）：这一批不再反复弹，等地上的东西变了再说
 	_bump_hold = _uids() if not overlapping_pairs().is_empty() else {}
-	# 作者 2026-10-17：弹开后悬空的（被推离了托着它的那件）掉下去；托在挪走那件上的也掉
-	moved.sort_custom(func(a: int, b: int) -> bool: return item_rect(a).end.y > item_rect(b).end.y)     # 低的先落，上面的落在它的新位置上
-	for uid in moved:
-		_refall_if_hanging(uid)
-		_drop_resting_on(uid)
+	var order: Array = bodies.keys().filter(func(uid: int) -> bool: return stash.has_item(uid))
+	for uid in order:
+		var sup := supports_of(uid)
+		if int(sup["item"]) >= 0:
+			_rest_on[uid] = int(sup["item"])
+		else:
+			_rest_on.erase(uid)
+		if sup["panel"] != null:
+			_support[uid] = sup["panel"]
+		else:
+			_support.erase(uid)
+	# 作者 2026-10-17：悬着的掉下去 —— 低的先落，上面的落在它的新位置上
+	order.sort_custom(func(a: int, b: int) -> bool: return item_bounds(a).end.y > item_bounds(b).end.y)
+	for uid in order:
+		if toppling.has(uid) and not _landing.has(uid):
+			_rest_on.erase(uid)
+			_begin_fall(stash.get_item(uid), item_rect(uid).position, 0.0, false)
+		elif not bool(bodies[uid]["settled"]) or not _touches_any(uid):
+			_refall_if_hanging(uid)     # 自己静下来、还挨着东西的（卡在两件之间、靠着侧面）不算悬着
+		if _landing.has(uid):
+			_refalls[uid] = int(_refalls.get(uid, 0)) + 1
+		elif bool(bodies[uid]["settled"]):
+			_refalls.erase(uid)
 
 
-## 这件底下离支撑还有空（悬着）就从现在的位置掉下去
+## 收尾时还压着一点的（到时冻在半路、静下来时还压进去零点几像素）：沿分开方向就地推开，轻的挪得多；往下推的那件不动、全给上面那件（不推进地里）。
+## 只推 [constant BUMP_RELAX_MAX] 像素以内的，推几遍；压得更深的留给后面退回空处
+func _relax_overlaps(bodies: Dictionary) -> void:
+	for _pass in 8:
+		var moved := false
+		for pair in overlapping_pairs():
+			var a: int = pair[0]
+			var b: int = pair[1]
+			var pa := item_rect(a).position
+			var pb := item_rect(b).position
+			var hit := ItemSilhouette.separate(_parts_of(a), pa, _parts_of(b), pb)
+			var depth := float(hit["depth"])
+			if depth > BUMP_RELAX_MAX:
+				continue
+			var n: Vector2 = hit["n"]
+			var ma := float(bodies[a]["m"]) if bodies.has(a) else 1.0
+			var mb := float(bodies[b]["m"]) if bodies.has(b) else 1.0
+			var share_b := ma / (ma + mb)
+			if n.y > 0.3:
+				share_b = 0.0     # b 在下面：只抬 a
+			elif n.y < -0.3:
+				share_b = 1.0     # a 在下面：只抬 b
+			var d := n * (depth + 0.1)
+			_store(a, pa - d * (1.0 - share_b), tilt_of(a))
+			_store(b, pb + d * share_b, tilt_of(b))
+			moved = true
+		if not moved:
+			return
+
+
+## 198 补充一 §7.2 归一化：斜过 45° 的换成相邻的四向 —— 朝向 [param rot]、不斜时包围盒左上角 [param pos]、斜 [param ang] 的这件，
+## 返回画面上一模一样的 {rot, pos, tilt}，斜度落在 (−45°, 45°]（重心不动；201 的贴图与 cells_rotated 同一套顺时针变换，所以一个像素不跳）
+static func normalize_pose(def: ItemDef, rot: int, pos: Vector2, ang: float) -> Dictionary:
+	var k := 0
+	while ang > PI * 0.25 + 0.000001:
+		ang -= PI * 0.5
+		k += 1
+	while ang <= -PI * 0.25 - 0.000001:
+		ang += PI * 0.5
+		k -= 1
+	if k == 0:
+		return {"rot": rot, "pos": pos, "tilt": ang}
+	var to := posmod(rot + k, 4)
+	return {"rot": to, "pos": pos + ItemSilhouette.centroid(def, rot) - ItemSilhouette.centroid(def, to), "tilt": ang}
+
+
+## 几乎没斜的摆正之后不压着别人才摆正
+func _snaps_clear(inst: ItemInstance, pos: Vector2) -> bool:
+	var parts := _parts(inst)
+	for it in stash.items():
+		var other := it as ItemInstance
+		if other.uid == inst.uid or other.def == null or _landing.has(other.uid):
+			continue
+		if float(ItemSilhouette.separate(parts, pos, _parts_of(other.uid), item_rect(other.uid).position)["depth"]) > BUMP_EPS:
+			return false
+	return true
+
+
+## 这件是不是挨着什么（别的道具、面板、地面、屏幕两边，差 [constant SUPPORT_TOUCH] 以内，哪个方向都算）
+func _touches_any(uid: int) -> bool:
+	var at := item_rect(uid).position
+	var mine: Array = []
+	for poly in _parts_of(uid):
+		mine.append(ItemSilhouette.turn(poly, Vector2.ZERO, 0.0, at))
+	var box := ItemSilhouette.bounds_of(mine)
+	if box.end.y >= size.y * (1.0 - ItemStash.SPOT_MARGIN) - SUPPORT_TOUCH or box.position.x <= SUPPORT_TOUCH or box.end.x >= size.x - SUPPORT_TOUCH:
+		return true
+	var others: Array = []
+	for it in stash.items():
+		var other := it as ItemInstance
+		if other.uid == uid or other.def == null or _landing.has(other.uid) or not item_bounds(other.uid).grow(SUPPORT_TOUCH).intersects(box):
+			continue
+		var o_at := item_rect(other.uid).position
+		for pb in _parts_of(other.uid):
+			others.append(ItemSilhouette.turn(pb, Vector2.ZERO, 0.0, o_at))
+	for r in reserved_rects():
+		if r.grow(SUPPORT_TOUCH).intersects(box):
+			others.append(ItemSilhouette.rect_poly(r))
+	for pa in mine:
+		for pb in others:
+			if not ItemSilhouette.contact(pa, pb, SUPPORT_TOUCH).is_empty():
+				return true
+	return false
+
+
+## 这件底下离支撑还有空（悬着）就从现在的位置掉下去（斜着的按斜着的轮廓量）
 func _refall_if_hanging(uid: int) -> void:
 	var inst := stash.get_item(uid) if stash != null else null
 	if inst == null or inst.def == null or inst.def.shape == null or _landing.has(uid):
 		return
 	var at := item_rect(uid).position
-	var land := spot_below(at, inst, inst.rotation, ItemSilhouette.rest_rotation(inst.def, inst.rotation))
-	if (land["pos"] as Vector2).y > at.y + 1.0:
+	if float(floor_under(_parts_of(uid), at, uid)["dy"]) > 1.0:
 		_rest_on.erase(uid)
-		_begin_fall(inst, at, 0.0)
+		_begin_fall(inst, at, 0.0, false)
 #endregion
 
 
@@ -980,7 +1628,14 @@ func _draw() -> void:
 		var base := Transform2D.IDENTITY
 		var tint := Color.WHITE
 		var rot := inst.rotation
-		if landing:
+		var tilt := 0.0 if landing else tilt_of(inst.uid)
+		if tilt != 0.0:
+			# 198 补充一：斜着躺 —— 绕轮廓重心转
+			var pivot := r.position + ItemSilhouette.centroid(inst.def, rot)
+			draw_set_transform(pivot, tilt)
+			base = Transform2D(tilt, pivot)
+			at = r.position - pivot
+		elif landing:
 			# 134 / 162 补充二：正在落 —— 画起手朝向的格子，绕重心转、缩放，颜色乘透明度
 			var pose := landing_pose(inst.uid)
 			if bool(pose["hidden"]):
@@ -1009,5 +1664,5 @@ func _draw() -> void:
 				for k in line.size():
 					line[k] += at
 				draw_polyline(line, edge, 2.0)
-		if landing:
+		if landing or tilt != 0.0:
 			draw_set_transform(Vector2.ZERO)

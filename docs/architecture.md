@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.43 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.44 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -343,6 +343,10 @@ func begin_batch() / end_batch()                  # 变更合批
 每件记一个落点 `ItemStash.spots`（uid → 归一化 0～1 的屏幕坐标，存档带着；旧档没有就自动从左下角铺开），
 **地上的位置只是样子**：不占格、不参与任何规则，下面这条理由原样成立。核心层不碰撞，画面层保证不重叠（180 §2.2）。
 198：画面层的碰撞、找支撑、推开面板、落稳朝向都按**轮廓**（`ItemSilhouette`：有道具图按透明通道，没图按格子外形；凸块 ≤ 6 块，两两用分离轴），不按格子的包围盒 —— 落点仍是包围盒左上角、仍只是样子，存档格式不变。
+198 补充一（作者选「自由角度」）：地上的东西可以**斜着躺** —— 四向 `rotation` 之外每件一个斜度 `ItemStash.tilts`（绕轮廓重心，顺时针为正，(−45°, 45°]，捡起即丢；存档落点斜着的多一项 `[x, y, 斜度°]`，斜着的落点记斜着的包围盒左上角）。
+`GroundLayer` 的小解算有转动、重力（与落地动画同一个 g）、摩擦（物件 0.6、地面 / 面板 / 屏边 0.8）、质量 = √重量、接触点（`ItemSilhouette.contact`，平底边两个点、块解法）、睡眠（静 0.1 s 且重心在接触点区间上方；卡着的静 0.5 s），重叠只挪位置不留速度；
+落稳时站不住（`is_stable`）的进解算 —— 堆上的会翻、会斜靠、会滑到停；每件醒着总共 1.5 s（被邻居碰醒不重新计时，醒够的当推不动；还在倒的多给一段），一整轮从最后一次新落稳起 6 s 兜底；
+收尾 `normalize_pose` 斜过 45° 换相邻四向（画面不跳），还在倒的从当前姿态再落一次（不连带上面的件），压着 4 像素以内的就地推开，同一件收尾时落两次后不再按站不住解算。点选、描边、`item_bounds` 都按斜着的；夹进屏里按轮廓（透明的一圈可出屏）。
 134：东西落到地上有个**落地动画**，同样只是样子 —— `GroundLayer` 记着见过的 uid，多出来的从起点落到落点（缓出 + 小弹跳，0.28 秒）；
 起点 `ItemStash.landing_from` 是界面层写的运行时字典（不存档）：拖拽放手 = 松手时残影的左上角、顶出 / 全部拾取从原来那一格、地上单击放回原处就地（`true`）、没写的从落点上方竖直落下；读档 / 回到存过东西的点不播。
 162 补充二（作者定「固定朝下方掉落，且有重心系统……模拟重力加速度」）：给了起点像素的**竖直往下掉** —— `GroundLayer.spot_below` 让重心 x 不变，落到 `floor_under`（这一列往下第一个登记面板的上沿，没有就是屏幕底）上，
@@ -4302,6 +4306,7 @@ res://
 | v3.30 | 2026-10-17 | **188 背包面板去字、信仰窗重排**（作者 2026-10-17，待定 1–3 按推荐）：背包面板不再写操作提示、地上说明、参战 / 可用格读数、信仰行与棋盘上方说明，回话走 `hint_sink`（地图屏 = 提示行）；`FaithTooltip.describe_full` → 名字行（Lv、休眠件数）+ 信力行 + 各阶效果 / 信力来源 / 献祭，颜色全走模板；`HoverTip.show_faith` 名字行下挂到下一阶的进度条、各段虚线分隔、宽 360 |
 | v3.31 | 2026-10-18 | **188 补充一 信仰窗分段、蛮神改写**（作者 2026-10-18，待定 1–4 按推荐）：`HoverTip.FaithBar` 一段一级、长度按所需信力（满阶也挂）；`FaithTooltip` 同一级的效果合成一行（`[table=2]`），没到的级整行 `@dim`，句子按 `FaithPerk.summary_for(def, points)` 写、锁住的级按那一级的阈值算；`FaithPerk.scaled` 给「随信力」的数（每 50 信力一阶、封顶）；蛮神一级门槛式增伤、二级献祭生命上限二选一（信力 / 全体造成伤害 + 急速）、三级 `prebattle_actions` 两个按钮（耗体力 / 耗信力、非首领）、四级持续战斗秒数随信力；献祭规矩 `OfferingRule.short_name`、`ItemVolume.size_label`（「大型道具」），有图标时排一行 `[img]`（`assets/ui/tags/<tag>.png`、`assets/ui/offerings/{large,medium,crit}.png`），缺一枚就退回文字 |
 | v3.32 | 2026-10-18 | **189 / 190 顶端栏长槽与日晷倒计时**（作者 2026-10-18 定案，待定 1–3 按推荐）：`hud_bar` 在板上画一条贯通的浅槽（`hud/groove` 九宫格、`band` 定槽身），宿主排完把铜点交给栏画（同行相邻两件之间、右槽图标组左边，空着的件两边不放）；`HudWidget.set_in_bar` 让栏里的件坐在槽底上（`PANEL_BARE`、浅底墨字），拖出栏回 `PANEL_HUD`；栏里同行间距 24、组在槽身里居中；倒计时改成刻在槽底的半圆日规（`hud/dial/*`：染色扇面 / 表盘 / 绕轴心转的影子 / 轴心，三阶 calm·half·low），栏上不写数字，停上去 `show_status` 弹「倒计时」窗、走一步 `update_status` 换字；缺图退回文字版 |
+| v3.44 | 2026-10-19 | **198 补充一 地上自由角度躺倒**（作者在卡片上选「自由角度」，架构线程方案，待定 1–4 按推荐）：`ItemStash.tilts / tilt_of / set_tilt / spot_entry / read_tilt`，`NodeStorageModule.tilts`；`ItemSilhouette.tilted / turn / contact`；`GroundLayer` 解算段重写（`_new_body`、`_bump_step`、`_pair_contacts`、`_wall_contacts`、`_prep`、`_solve`（两点块解法）、`_solve_split`、`_after_impact`、`_clamp_body`、`is_stable`、`supports_of`、`normalize_pose`），`BUMP_MAX_SEC` 1 → 1.5（每件醒着的总时长）、`BUMP_RUN_MAX_SEC` 6、`BUMP_DAMP` 删除，`_relax_overlaps`、`_touches_any`、`_refalls`，`_begin_fall(carry)`，`item_rect` 按轮廓夹边；`item_bounds`、`tilt_of`、点选反转、`_draw` 绕重心转、落地动画起手角；拖拽层取消放回保留斜度。新测试 `test_ground_tilt_198.gd`（含真道具图 20 件堆叠）；落地差异见报告 §8 |
 | v3.43 | 2026-10-19 | **201 道具图接进棋盘**（作者「素材可以实装了，让贴图和格子位置对应」，架构线程方案，待定按推荐）：`assets/items/` 86 件（60 px + @2x 160 px）+ `manifest.json`，`tools/sync_item_art.sh`；`ItemPainter.art_available / art_ids / art_of / draw_art / art_transform`，一张 rot 0 图按同一套顺时针变换画四个朝向；棋盘 / 包体 / 残影 / 收成排 / 地面 / 图鉴有图画图，剪影不用图；187 默认格线跟着翻成不画；198 第二阶段 `_art_image` 接上；新测试 `test_item_art_201.gd` |
 | v3.42 | 2026-10-19 | **200 导出玩家版 / 开发版**（作者问，架构线程方案，待定按推荐）：不建分支，`export_presets.cfg` 两个预设 ——「玩家版」release、`custom_features=""`、控制台包装器 0、排除 `tests/* addons/godot_ai/* docs/*`；「开发版」debug、`custom_features="dev"`、包装器 1；`tools/` 都留（`DevNav` preload 了里面的脚本）。`DevGate.on()` 认 `dev` 特性；`DevNav.keep_in()` 改走 `DevGate`（按路径 preload）；`meta_screen` 两处 `template` 开发开关并进 `DevGate`。`tools/export.bat` 两条导出命令 |
 | v3.41 | 2026-10-19 | **199 铸炉屏换成铁炉近景**（196 §5 美术定稿「乙 炉台版」，架构线程接法）：`forge_screen.gd` 不再是石板叠层 —— 底图 `assets/ui/forge/bg_lit|bg_cold` + `layout.json`（`ForgeScreen.layout()`、`_place()` 按宽铺满竖直居中），【时机】【效果】【数值】【出牌】「铸炉」画在底图里不再写；`_forge_btn` 改 `TextureButton`（风箱把手 `handle_ready / idle / off`），「返回」= `sign_back` 路标；测试读 `handle_state()`、`backdrop_state()`、`spot_rect()`。落地差异见报告 199 §6 |

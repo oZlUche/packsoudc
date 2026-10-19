@@ -15,6 +15,8 @@ const GROW := 2
 const TRACE_EPSILON := 2.0
 ## 支撑面：离最低点这么近（像素）的轮廓顶点都算着地
 const SUPPORT_TOL := 2.0
+## 198 补充一：接触点 —— 离最深处这么近（像素）的顶点算同一条边 / 同一个角
+const FEATURE_TOL := 1.0
 
 ## 「格子外形 / 图」+ 朝向 → 轮廓（第一次用到时算，之后查表）
 static var _cache: Dictionary = {}
@@ -378,6 +380,96 @@ static func _cast(from: PackedVector2Array, from_pos: Vector2, onto: PackedVecto
 			if d >= -0.5:
 				best = minf(best, d)
 	return best
+#endregion
+
+
+#region 斜着（198 补充一）
+## 一份轮廓（[method of] 给的）绕它的重心转 [param ang]（弧度，顺时针为正）：{parts, outline, bounds, centroid}，原点不变（仍从不斜时包围盒的左上角量）。
+## 位图不转 —— 点选把点反着转回去查（[method GroundLayer.uid_at_local]）
+static func tilted(sil: Dictionary, ang: float) -> Dictionary:
+	if is_zero_approx(ang):
+		return sil
+	var c: Vector2 = sil["centroid"]
+	var parts: Array[PackedVector2Array] = []
+	for poly in (sil["parts"] as Array):
+		parts.append(turn(poly, c, ang))
+	var outline: Array[PackedVector2Array] = []
+	for poly in (sil["outline"] as Array):
+		outline.append(turn(poly, c, ang))
+	return {"parts": parts, "outline": outline, "mask": sil["mask"], "bounds": bounds_of(parts), "centroid": c}
+
+
+## 一圈点绕 [param pivot] 转 [param ang]，再挪 [param off]
+static func turn(poly: PackedVector2Array, pivot: Vector2, ang: float, off: Vector2 = Vector2.ZERO) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	out.resize(poly.size())
+	if ang == 0.0:
+		for i in poly.size():
+			out[i] = poly[i] + off     # 不斜：原样挪（不绕重心来回算，免得 −0.000001 这种出界）
+		return out
+	var cs := cos(ang)
+	var sn := sin(ang)
+	for i in poly.size():
+		var d := poly[i] - pivot
+		out[i] = pivot + off + Vector2(d.x * cs - d.y * sn, d.x * sn + d.y * cs)
+	return out
+
+
+## 两块凸块（都已摆到同一坐标系）的接触：分离轴给方向与深度，再取接触点。
+## 返回 {n: 单位向量（a → b）, depth: 压进去多深（隔开的为负）, points: 1～2 个接触点}；隔得比 [param touch] 还远 → 空字典。
+## 接触点：两块各取沿 n 最深、离最深不到 [constant FEATURE_TOL] 的那几个顶点（一条边或一个角），两段沿切线的区间取交，交出一段就取两头、一个点就取那点
+## （平底边压着平面要两个点才不摇，198 §7.4）
+static func contact(pa: PackedVector2Array, pb: PackedVector2Array, touch: float = 0.0) -> Dictionary:
+	var depth := INF
+	var n := Vector2.ZERO
+	for poly in [pa, pb]:
+		var m: int = (poly as PackedVector2Array).size()
+		for i in m:
+			var e: Vector2 = poly[(i + 1) % m] - poly[i]
+			if e.length_squared() < 0.000001:
+				continue
+			var axis := Vector2(-e.y, e.x).normalized()
+			var ia := _project(pa, Vector2.ZERO, axis)
+			var ib := _project(pb, Vector2.ZERO, axis)
+			var o := minf(ia.y, ib.y) - maxf(ia.x, ib.x)
+			if o <= -touch:
+				return {}
+			if o < depth - 0.0001 or (absf(o - depth) <= 0.0001 and absf(axis.x) > absf(n.x) + 0.0001):
+				depth = o
+				n = axis
+	if depth == INF:
+		return {}
+	var ia := _project(pa, Vector2.ZERO, n)
+	var ib := _project(pb, Vector2.ZERO, n)
+	if ia.x + ia.y > ib.x + ib.y:
+		n = -n
+		ia = Vector2(-ia.y, -ia.x)
+		ib = Vector2(-ib.y, -ib.x)
+	var tan := Vector2(-n.y, n.x)
+	var fa := _feature(pa, n, ia.y, tan)
+	var fb := _feature(pb, -n, -ib.x, tan)
+	var lo := maxf(fa.x, fb.x)
+	var hi := minf(fa.y, fb.y)
+	var s := (ia.y + ib.x) * 0.5
+	var points := PackedVector2Array()
+	if hi - lo < 1.0:
+		points.append(n * s + tan * ((lo + hi) * 0.5))
+	else:
+		points.append(n * s + tan * lo)
+		points.append(n * s + tan * hi)
+	return {"n": n, "depth": depth, "points": points}
+
+
+## 一块沿 [param dir] 最远（离 [param far] 不到 [constant FEATURE_TOL]）的那几个顶点在切线 [param tan] 上占的区间
+static func _feature(poly: PackedVector2Array, dir: Vector2, far: float, tan: Vector2) -> Vector2:
+	var lo := INF
+	var hi := -INF
+	for p in poly:
+		if p.dot(dir) >= far - FEATURE_TOL:
+			var t := p.dot(tan)
+			lo = minf(lo, t)
+			hi = maxf(hi, t)
+	return Vector2(lo, hi)
 #endregion
 
 
