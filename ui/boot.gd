@@ -4,6 +4,9 @@
 ##
 ## **不引用任何全局类**（自己不写 class_name，不碰 UiPalette 等）：引用一个，那个类的整张引用图就又回到第一帧之前。
 ## 颜色写死（与 UiPalette 同值），字体按路径 load()。`tests/tools/test_startup_graph.gd` 守着这条
+##
+## 197 补充一：底画主菜单第一张画（营地）压暗到 40 %、游戏名同菜单那样写在左上（思源宋体 Bold 描边）；
+## 菜单打开时那张画从 40 % 亮起来 —— 启动到菜单是「同一张画亮起来」，不换画面。画按路径 load()，不碰 UiTheme
 extends Control
 
 const TARGET := "res://ui/game/game.tscn"
@@ -11,7 +14,20 @@ const TARGET := "res://ui/game/game.tscn"
 const BG := Color("101216")
 const FG := Color("dfe3ea")
 const DIM := Color("8b93a1")
-const TITLE_FONT := "res://assets/fonts/zhuque_fangsong.ttf"
+const TITLE_FONT := "res://assets/fonts/serif_bold.otf"
+## 与主菜单第一张画、[constant UiTheme.HERO_TITLE_COLOR] 等同值（不能引用它们）
+const BACKDROP := "res://assets/ui/menu/bg_camp.png"
+const BACKDROP_DIM := 0.4
+const BACKDROP_BLEED := 0.05
+const TITLE := "背包搜打撤"
+const TITLE_COLOR := Color("f0e2c4")
+const TITLE_OUTLINE_COLOR := Color("1a1410")
+const TITLE_OUTLINE := 6
+const TITLE_SIZE := 96
+const TITLE_SPACING := 6
+const TITLE_LEFT := 96.0
+const TITLE_TOP := 96.0
+const DESIGN_HEIGHT := 1080.0
 const BODY_FONT := "res://assets/fonts/serif_regular.otf"
 const BAR_W := 360.0
 const BAR_H := 4.0
@@ -25,12 +41,14 @@ var failed := false
 var scene: PackedScene = null
 var _title_font: Font = null
 var _body_font: Font = null
+var _backdrop: Texture2D = null
 
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_title_font = _font(TITLE_FONT)
 	_body_font = _font(BODY_FONT)
+	_backdrop = load(BACKDROP) as Texture2D if ResourceLoader.exists(BACKDROP) else null
 	start()
 
 
@@ -63,15 +81,36 @@ func poll() -> int:
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), BG)
+	if _backdrop != null:
+		draw_texture_rect(_backdrop, cover_rect(_backdrop.get_size(), size), false, Color(BACKDROP_DIM, BACKDROP_DIM, BACKDROP_DIM))
 	var mid := size * 0.5
-	if _title_font != null:
-		draw_string(_title_font, Vector2(0, mid.y - 24), "背包搜打撤", HORIZONTAL_ALIGNMENT_CENTER, size.x, 48, FG)
+	if _title_font != null and size.y > 0.0:
+		var s := size.y / DESIGN_HEIGHT
+		var font_size := int(round(TITLE_SIZE * s))
+		var at := Vector2(TITLE_LEFT * maxf(s, 0.75), TITLE_TOP * s + _title_font.get_ascent(font_size))
+		var spots: Array[Vector2] = []
+		for ch in TITLE:     # 字距：一个字一个字往右排（Font 没有字距参数）
+			spots.append(at)
+			at.x += _title_font.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + TITLE_SPACING
+		for i in TITLE.length():     # 先整排描边、再整排填字（后一个字的描边不压前一个字）
+			draw_string_outline(_title_font, spots[i], TITLE[i], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, TITLE_OUTLINE, TITLE_OUTLINE_COLOR)
+		for i in TITLE.length():
+			draw_string(_title_font, spots[i], TITLE[i], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, TITLE_COLOR)
 	var bar := Rect2(mid.x - BAR_W * 0.5, mid.y + 20, BAR_W, BAR_H)
 	draw_rect(bar, Color(DIM, 0.35))
 	draw_rect(Rect2(bar.position, Vector2(BAR_W * progress, BAR_H)), FG)
 	if _body_font != null:
 		var note := "载入失败，请重启游戏" if failed else "载入中……"
 		draw_string(_body_font, Vector2(0, bar.end.y + 30), note, HORIZONTAL_ALIGNMENT_CENTER, size.x, 16, DIM)
+
+
+## 画铺满屏幕、四边各多出屏宽 [constant BACKDROP_BLEED]（同主菜单那层的起点），按比例、多的裁到屏外
+static func cover_rect(tex_size: Vector2, screen: Vector2) -> Rect2:
+	var m := screen.x * BACKDROP_BLEED
+	var box := Rect2(-m, -m, screen.x + 2.0 * m, screen.y + 2.0 * m)
+	var k := maxf(box.size.x / tex_size.x, box.size.y / tex_size.y)
+	var drawn := tex_size * k
+	return Rect2(box.get_center() - drawn * 0.5, drawn)
 
 
 ## 打包的字体；不在就用引擎默认（不崩）

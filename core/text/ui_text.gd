@@ -71,6 +71,7 @@ const TEXT := {
 	"menu.dev_tools": {"zh": "开发工具（沙盒与编辑器）", "en": "Dev tools (sandboxes & editors)"},
 	"menu.quit": {"zh": "退出", "en": "Quit"},
 	"menu.language": {"zh": "语言：中文（点击切换 English）", "en": "Language: English (click for 中文)"},
+	"menu.lang_short": {"zh": "中 / EN", "en": "中 / EN"},     # 197 补充一：主菜单左下那一行的语言开关
 	"menu.stats": {"zh": "第 %d 局　撤离 %d 次　战败 %d 次　仓库 %d 件　累计价值 %d　钱 %d", "en": "Run %d · extracted %d · died %d · warehouse %d items · score %d · funds %d"},
 	# buff 制作器
 	"buff.title": {"zh": "Buff 制作器", "en": "Buff maker"},
