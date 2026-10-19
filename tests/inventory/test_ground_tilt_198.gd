@@ -346,3 +346,27 @@ static func run_real_pile(t: TestCase) -> void:
 			bad.append([seed, pairs, inside, snappedf(sec, 0.1)])
 		ground.free()
 	t.eq(bad, [], "3 个种子都在 20 秒内停稳、不相交、轮廓都在屏内")
+
+
+static func run_sword_lies_flat(t: TestCase) -> void:
+	t.begin("198 补充二 · 长的躺平：长剑（有图）四个朝向起手都落成横躺，斜不过 15°，1.5 秒内睡着")
+	var db := ItemDatabase.new()
+	db.load_dir()
+	var def := db.get_def(&"longsword")
+	var bad := []
+	for rot in 4:
+		ItemInstance.reset_uid_counter()
+		var stash := ItemStash.new(2, 0)
+		var ground := B._ground(stash)
+		var inst := _drop(stash, ground, def, Vector2(600.0, 200.0), rot)
+		ground.advance_landing(ground.landing_sec(inst.uid) + 0.001)
+		var sec := 0.0
+		while ground.is_bumping() and sec < 3.0:
+			ground.advance_bumps(DT)
+			sec += DT
+		var span := GroundLayer.span_px(inst, inst.rotation)
+		var tilt := rad_to_deg(ground.tilt_of(inst.uid))
+		if span.x <= span.y or absf(tilt) >= 15.0 or sec > GroundLayer.BUMP_MAX_SEC + DT:
+			bad.append([rot, inst.rotation, snappedf(tilt, 0.1), snappedf(sec, 0.01)])
+		ground.free()
+	t.eq(bad, [], "四个朝向都横躺、斜不过 15°、及时睡着")

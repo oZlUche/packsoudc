@@ -17,6 +17,8 @@ const TRACE_EPSILON := 2.0
 const SUPPORT_TOL := 2.0
 ## 198 补充一：接触点 —— 离最深处这么近（像素）的顶点算同一条边 / 同一个角
 const FEATURE_TOL := 1.0
+## 198 补充二：落稳朝向 —— 重心高度差这么多像素以内算并列
+const REST_TIE := 2.0
 
 ## 「格子外形 / 图」+ 朝向 → 轮廓（第一次用到时算，之后查表）
 static var _cache: Dictionary = {}
@@ -475,7 +477,8 @@ static func _feature(poly: PackedVector2Array, dir: Vector2, far: float, tan: Ve
 
 #region 落稳朝向
 ## 落在地上会躺成哪个朝向（四选一，162 补充二的规则按轮廓算）：重心 = 轮廓的面积重心，支撑面 = 轮廓最低一段的横向区间；
-## 重心不在支撑面上方的朝向不稳。先挑稳的，再挑重心离底边最近的（距离 ÷ 高），并列取更宽的，再并列留在 [param current]
+## 重心不在支撑面上方的朝向不稳。198 补充二：先挑重心最低的（离底边的像素，最低的最稳 —— 长条一律躺平，站不稳的歪几度由解算接着），
+## 差 [constant REST_TIE] 像素以内算并列，并列才挑稳的，再并列取更宽的，再并列留在 [param current]
 static func rest_rotation(def: ItemDef, current: int) -> int:
 	if def == null or def.shape == null:
 		return posmod(current, 4)
@@ -492,13 +495,15 @@ static func rest_rotation(def: ItemDef, current: int) -> int:
 		var c: Vector2 = sil["centroid"]
 		var sup := support_span(sil)
 		var stable := c.x >= sup.x - 0.01 and c.x <= sup.y + 0.01
-		var d := (box.end.y - c.y) / box.size.y
+		var d := box.end.y - c.y
 		var w := box.size.x
 		var better := best < 0
-		if not better and stable != best_stable:
+		if not better and absf(d - best_d) > REST_TIE:
+			better = d < best_d
+		elif not better and stable != best_stable:
 			better = stable
 		elif not better:
-			better = d < best_d - 0.0001 or (absf(d - best_d) <= 0.0001 and w > best_w + 0.0001)
+			better = w > best_w + 0.0001
 		if better:
 			best = rot
 			best_stable = stable
