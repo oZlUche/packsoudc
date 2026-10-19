@@ -1050,7 +1050,7 @@ func _draw() -> void:
 	var edge := (
 		InventoryView.COLOR_BAG_EDGE if is_bag else ItemPainter.rarity_color(_inst.def)
 	)
-	if not ItemPainter.draw_art(self, _inst.def, _rot, anchor, cell, Color(1, 1, 1, 0.85)):     # 201：有图画图
+	if not ItemPainter.draw_art(self, _inst.def, _rot, anchor, cell, Color(1, 1, 1, 0.85), Transform2D.IDENTITY, ItemPainter.variant_of(_inst)):     # 201：有图画图
 		ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
 		ItemPainter.draw_label(
 			self, cells, anchor, cell,
@@ -1077,7 +1077,7 @@ func _draw() -> void:
 			var g := GridInventory.to_global(bag, locals[i], item, Vector2i.ZERO, _rot)
 			var at: Vector2 = anchor + Vector2(g["origin"] as Vector2i) * cell
 			var item_cells := item.def.cells_rotated(int(g["rot"]))
-			if ItemPainter.draw_art(self, item.def, int(g["rot"]), at, cell, Color(1, 1, 1, 0.9)):
+			if ItemPainter.draw_art(self, item.def, int(g["rot"]), at, cell, Color(1, 1, 1, 0.9), Transform2D.IDENTITY, ItemPainter.variant_of(item)):
 				continue
 			var c_body := ItemPainter.body_color(item.def)
 			c_body.a = 0.9

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_qrr5b"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_tfora"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_p5cw2"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_tinob"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_l68ek"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_tb8nj"]
+
+[sub_resource type="Resource" id="Resource_ml0ed"]
+script = ExtResource("6_tb8nj")
+
+[resource]
+script = ExtResource("5_l68ek")
+id = &"crystal_shards"
+display_name = "碎晶"
+display_names = {
+"en": "Crystal Shards"
+}
+description = "魔晶石用尽后碎成的一小堆碎片，不再供给法杖，还能卖几个钱。"
+shape = SubResource("Resource_ml0ed")
+value = 6
+tags = Array[StringName]([&"material", &"magic", &"gem"])

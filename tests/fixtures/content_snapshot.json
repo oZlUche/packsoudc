@@ -72,6 +72,7 @@
     "copper_ore_sun": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "core": {"bag":false,"cells":5,"shape":[[0,1],[1,0],[1,1],[1,2],[2,1]],"size":[3,3]},
     "crowbar": {"bag":false,"cells":3,"shape":[[0,0],[0,1],[1,0]],"size":[2,2]},
+    "crystal_shards": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "datura_flower": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "datura_flower_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "douxing": {"bag":false,"cells":4,"shape":[[0,0],[0,1],[1,0],[1,1]],"size":[2,2]},

@@ -17,6 +17,8 @@ const CHARGES_KEY := "charges"
 @export var broken_prefixes: Dictionary = {}
 ## 破碎的卖价是原价的几成
 @export var broken_value_ratio: float = 0.25
+## 208：归零就换成这件道具（碎晶 `crystal_shards`，占原点那一格）；空 = 破碎的原件留在格里
+@export var broken_into: StringName = &""
 
 
 ## 剩 [param charges] 次时的前缀（0 = 破碎）
