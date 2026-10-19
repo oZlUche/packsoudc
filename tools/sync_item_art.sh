@@ -17,6 +17,13 @@ cp "$SRC"/*.png "$DST"/
 if [ -d "$SRC/@2x" ]; then
   cp "$SRC"/@2x/*.png "$DST"/@2x/
 fi
+# 205：信仰印记（marks/<faith>.png 24 px 与 marks/@2x/ 64 px）一并拷，不进清单
+if [ -d "$SRC/marks" ]; then
+  mkdir -p "$DST/marks/@2x"
+  cp "$SRC"/marks/*.png "$DST"/marks/
+  [ -d "$SRC/marks/@2x" ] && cp "$SRC"/marks/@2x/*.png "$DST"/marks/@2x/
+  echo "印记：$(ls "$DST"/marks/*.png | wc -l) 枚 → assets/items/marks/"
+fi
 
 ids=()
 missing=()

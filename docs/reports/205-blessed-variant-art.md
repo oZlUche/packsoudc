@@ -71,3 +71,16 @@
 - 一件件画赐福版（92 件，而且模板一改数量就变）。
 - 信仰色调 / 发光（和稀有度梯子打架）。
 - 手写的 `blessed_longbow` / `blessed_shield`：有自己的图与功能，不盖印（它们 `is_blessed()` 为假，自然不盖）。
+
+## 6 落地（架构方案执行 · 2026-10-19 · v3.46）
+
+按 §3 落了，待定 4.1–4.4 按推荐，没有偏离。
+
+- `ItemPainter.art_id_of(def)`：清单有自己的 id → 自己；赐福版且清单有 `blessed_of` → 原件；否则空。`art_of` 改查它。现有的赐福版全部拿到原件的图（同一张贴图对象）。
+- 新增 `faith_of(def)`（id 去掉 `原件_` 前缀，只认派生的赐福版）、`mark_of(faith, cell_px)`（`assets/items/marks/` 优先，格子大于 60 取 `@2x/`，没有退回 `assets/ui/faith/`；进 `_art` 缓存，`clear_art_cache` 一起清）、`mark_rect(def, rot, anchor, cell)`（§2.2 的落点）。
+- `draw_art` 画完图、复位变换后盖印记，`modulate` 同图（图鉴没点亮一起压暗）。地面的 `base` 变换照常相乘，印记跟着落地动画走，但不跟着朝向转。
+- `tools/sync_item_art.sh`：源目录有 `marks/`（与 `marks/@2x/`）就一并拷进 `assets/items/marks/`，不进清单。
+- `tests/ui/test_blessed_art_205.gd`：§3 的 ①～⑤ 五组。② 是直接往 `art_ids()` 的字典里塞一个赐福版 id，再 `clear_art_cache` 复原，不写临时清单文件。
+- `docs/architecture.md` v3.46：201 那段加了「赐福版（205）」一段。
+- 印记现在用的是 HUD 的 32 px 徽记（缩到 0.4 格）。美术的 7 枚到了只拷文件：`bash tools/sync_item_art.sh <含 marks/ 的目录>`，不改代码。
+- 全量测试 23697 项断言、185 个套件全绿。
