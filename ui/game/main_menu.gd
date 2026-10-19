@@ -3,6 +3,7 @@
 ## 197 补充一（作者定稿）：不再是屏心一块石板 —— 整屏三张画轮换带慢镜头（[MenuBackdrop]），左上描边粗体游戏名，
 ## 左 1/3 一道暗纱上挂一列木牌（主档琥珀木：继续 / 新的游戏；次档：读取存档 / 仓库与战绩 / 百科 / 设置），
 ## 末档（语言 / 开发工具 / 退出）是左下一行小字；战绩行拿掉（在仓库与战绩页），备份 / 对账提示是右下角小字。
+## 补充二 §12：游戏名做成字标图（`menu/title`，2×）—— 图在就用图，不在退回描边粗体的文字标题（[method UiTheme.make_hero_title]）。
 ## 尺寸都按 1080 高写，随屏高等比缩放（游戏名照比例，按钮列最小缩到 [constant MIN_SCALE]）
 extends GameScreen
 
@@ -15,6 +16,10 @@ const MIN_SCALE := 0.75
 ## 游戏名与按钮列的左边线、游戏名上沿、按钮列上沿
 const LEFT := 96.0
 const TITLE_TOP := 96.0
+## 补充二 §12：字标图（1080 高时宽 720、上沿 72）
+const ART_LOGO := "menu/title"
+const LOGO_WIDTH := 720.0
+const LOGO_TOP := 72.0
 const COLUMN_TOP := 240.0
 ## 木牌大小（主档 / 次档）、牌间距、主次两档之间
 const PRIMARY_SIZE := Vector2(360, 72)
@@ -33,7 +38,8 @@ static var _shown_once := false
 var _continue_btn: Button = null
 var _scenery: MenuBackdrop = null
 var _veil: TextureRect = null
-var _title: Label = null
+## 游戏名：字标图（[TextureRect]）或文字（[Label]）
+var _title: Control = null
 var _column: VBoxContainer = null
 var _foot: HBoxContainer = null
 var _notices: VBoxContainer = null
@@ -45,7 +51,8 @@ func open(_payload: Dictionary) -> void:
 	_backdrop()
 	_scenery = MenuBackdrop.new()
 	add_child(_scenery)
-	_scenery.start(UiTheme.ART_MENU_BGS, not _shown_once)
+	var brighten := not _shown_once
+	_scenery.start(UiTheme.ART_MENU_BGS, brighten)
 	_shown_once = true
 	_veil = _make_veil()
 	add_child(_veil)
@@ -56,8 +63,22 @@ func open(_payload: Dictionary) -> void:
 	UiTheme.set_tone(area, UiTheme.art_tone(UiTheme.ART_MENU_BGS[0]))     # 三张都是暗画：亮字
 	add_child(area)
 
-	_title = UiTheme.make_hero_title("背包搜打撤")
+	var logo := UiTheme.art_cached(ART_LOGO)
+	if logo != null:
+		var pic := TextureRect.new()
+		pic.name = "MenuLogo"
+		pic.texture = logo
+		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
+		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_title = pic
+		if brighten:     # 启动屏把字标压暗到 40 %：跟着画一起亮起来
+			pic.modulate = Color(MenuBackdrop.BOOT_DIM, MenuBackdrop.BOOT_DIM, MenuBackdrop.BOOT_DIM)
+	else:
+		_title = UiTheme.make_hero_title("背包搜打撤")
 	area.add_child(_title)
+	if brighten and _title is TextureRect:
+		create_tween().tween_property(_title, "modulate", Color.WHITE, MenuBackdrop.BRIGHTEN).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 	# 089（作者定）：第一项「继续」（当前位有存档才显示）；「读取存档」（有任何一位有存档才显示）；「新的游戏」= 开一份新存档。只写这几个词，不写章名
 	_column = _vbox(GAP)
@@ -146,8 +167,14 @@ func _layout() -> void:
 	var w := size.x if size.x > 0.0 else DESIGN_HEIGHT * 1.6
 	_veil.position = Vector2.ZERO
 	_veil.size = Vector2(VEIL_WIDTH * c, h)
-	UiTheme.set_hero_size(_title, int(round(UiTheme.HERO_TITLE_SIZE * s)))
-	_title.position = Vector2(LEFT * c, TITLE_TOP * s)
+	if _title is TextureRect:
+		var tex := (_title as TextureRect).texture
+		var wide := LOGO_WIDTH * s
+		_title.size = Vector2(wide, wide * tex.get_height() / maxf(tex.get_width(), 1.0))
+		_title.position = Vector2(LEFT * c, LOGO_TOP * s)
+	else:
+		UiTheme.set_hero_size(_title as Label, int(round(UiTheme.HERO_TITLE_SIZE * s)))
+		_title.position = Vector2(LEFT * c, TITLE_TOP * s)
 	_column.scale = Vector2.ONE * c
 	_column.position = Vector2(LEFT * c, COLUMN_TOP * c)
 	_column.reset_size()
@@ -172,7 +199,7 @@ func scenery() -> MenuBackdrop:
 	return _scenery
 
 
-func title_label() -> Label:
+func title_node() -> Control:
 	return _title
 
 

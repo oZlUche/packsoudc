@@ -67,7 +67,7 @@ static func frame_menu_layout(t: TestCase, root: Window) -> void:
 	t.check(sc.live_tweens() > 0, "镜头在走")
 	var c: float = menu.column_scale()
 	t.check(c >= 0.75 and is_equal_approx(menu.ui_scale(), menu.size.y / 1080.0), "按屏高缩放（%.3f），按钮列不小于 0.75" % c)
-	t.check(is_equal_approx(menu.title_label().position.x, menu.column().position.x), "游戏名与按钮列同一左边线")
+	t.check(is_equal_approx(menu.title_node().position.x, menu.column().position.x), "游戏名与按钮列同一左边线")
 	t.check(is_equal_approx(menu.column().position.x, 96.0 * c), "左边线 x = 96（随高缩放）")
 	var planks: Array = menu.column().get_children().filter(func(n): return n is Button)
 	t.check(planks.size() >= 4, "按钮列有木牌（%d）" % planks.size())
@@ -135,3 +135,30 @@ static func frame_backdrop_camera(t: TestCase, root: Window) -> void:
 	root.remove_child(sc)
 	t.eq(sc.live_tweens(), 0, "离开菜单：全停")
 	sc.free()
+
+
+static func frame_logo(t: TestCase, root: Window) -> void:
+	t.begin("197 补充二 §12 · 字标图在就用图（宽 720、上沿 72，随高缩放，和按钮列同一左边线），不在退回文字标题；启动屏读 1× 那张")
+	var consts := (load(BOOT) as GDScript).get_script_constant_map()
+	t.eq(consts["LOGO"], "res://assets/ui/menu/title_boot.png", "启动屏的字标是 1× 那张")
+	var saved := UiTheme.asset_root
+	UiTheme.asset_root = "res://tests/fixtures/ui/"     # 夹具里有一张 menu/title.png（144 × 40）
+	var p := Support.paths("menu197l")
+	Support.cleanup("menu197l")
+	var game = (load(GAME) as PackedScene).instantiate()
+	game.save_path = p["run"]
+	game.meta_path = p["meta"]
+	game.settings_path = p["settings"]
+	root.add_child(game)
+	var menu = game.base()
+	var logo = menu.title_node() if menu != null and menu.has_method("title_node") else null
+	t.check(logo is TextureRect, "有图：标题是图")
+	if logo is TextureRect:
+		var s: float = menu.ui_scale()
+		t.check(is_equal_approx(logo.size.x, 720.0 * s) and is_equal_approx(logo.size.y, 200.0 * s), "宽 720、按图的比例（%s）" % logo.size)
+		t.check(is_equal_approx(logo.position.y, 72.0 * s) and is_equal_approx(logo.position.x, menu.column().position.x), "左上 x 96、y 72（%s）" % logo.position)
+		t.eq(logo.mouse_filter, Control.MOUSE_FILTER_IGNORE, "不接鼠标")
+	game.queue_free()
+	UiTheme.asset_root = saved
+	Support.cleanup("menu197l")
+	t.check(UiTheme.art_cached("menu/title") == null, "仓库里还没有字标：主菜单写文字标题")

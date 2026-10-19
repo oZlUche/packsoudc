@@ -6,6 +6,7 @@
 ## 颜色写死（与 UiPalette 同值），字体按路径 load()。`tests/tools/test_startup_graph.gd` 守着这条
 ##
 ## 197 补充一：底画主菜单第一张画（营地）压暗到 40 %、游戏名同菜单那样写在左上（思源宋体 Bold 描边）；
+## 补充二 §12：有字标图（`menu/title_boot.png`，1×）就画图（同菜单位置、也压暗 40 %），没有才写字。
 ## 菜单打开时那张画从 40 % 亮起来 —— 启动到菜单是「同一张画亮起来」，不换画面。画按路径 load()，不碰 UiTheme
 extends Control
 
@@ -19,6 +20,9 @@ const TITLE_FONT := "res://assets/fonts/serif_bold.otf"
 const BACKDROP := "res://assets/ui/menu/bg_camp.png"
 const BACKDROP_DIM := 0.4
 const BACKDROP_BLEED := 0.05
+const LOGO := "res://assets/ui/menu/title_boot.png"
+const LOGO_WIDTH := 720.0
+const LOGO_TOP := 72.0
 const TITLE := "背包搜打撤"
 const TITLE_COLOR := Color("f0e2c4")
 const TITLE_OUTLINE_COLOR := Color("1a1410")
@@ -42,6 +46,7 @@ var scene: PackedScene = null
 var _title_font: Font = null
 var _body_font: Font = null
 var _backdrop: Texture2D = null
+var _logo: Texture2D = null
 
 
 func _ready() -> void:
@@ -49,6 +54,7 @@ func _ready() -> void:
 	_title_font = _font(TITLE_FONT)
 	_body_font = _font(BODY_FONT)
 	_backdrop = load(BACKDROP) as Texture2D if ResourceLoader.exists(BACKDROP) else null
+	_logo = load(LOGO) as Texture2D if ResourceLoader.exists(LOGO) else null
 	start()
 
 
@@ -84,7 +90,12 @@ func _draw() -> void:
 	if _backdrop != null:
 		draw_texture_rect(_backdrop, cover_rect(_backdrop.get_size(), size), false, Color(BACKDROP_DIM, BACKDROP_DIM, BACKDROP_DIM))
 	var mid := size * 0.5
-	if _title_font != null and size.y > 0.0:
+	if _logo != null and size.y > 0.0:
+		var k := size.y / DESIGN_HEIGHT
+		var wide := LOGO_WIDTH * k
+		var dim := Color(BACKDROP_DIM, BACKDROP_DIM, BACKDROP_DIM)
+		draw_texture_rect(_logo, Rect2(Vector2(TITLE_LEFT * maxf(k, 0.75), LOGO_TOP * k), Vector2(wide, wide * _logo.get_height() / maxf(_logo.get_width(), 1.0))), false, dim)
+	elif _title_font != null and size.y > 0.0:
 		var s := size.y / DESIGN_HEIGHT
 		var font_size := int(round(TITLE_SIZE * s))
 		var at := Vector2(TITLE_LEFT * maxf(s, 0.75), TITLE_TOP * s + _title_font.get_ascent(font_size))
