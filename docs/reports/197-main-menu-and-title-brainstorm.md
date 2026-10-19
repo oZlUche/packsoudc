@@ -334,3 +334,7 @@
 - 字标图居中、宽 1116。
 
 截图：`/mnt/project-files/screenshots/197/`。`menu.png` 里「仓库与战绩」有焦点，`fade.png` 是营地淡到军营，`boot.png` 是启动屏。
+
+## 17. 字标与背景定稿（2026-10-19 10:01，作者在「UI替换美术」定）
+
+最终字标不是补充三 §14 列的甲 / 乙 / 丙之一，而是合体：「背包」两字皮革缝线质地，「搜打撤」三字青铜铸字；「背」的下半换成一只小背包，「打」的右半换成剑尖朝下的一把剑（美术编号 logo26，特写 `/mnt/project-files/art/ui/menu/logo26_closeup.png`）。导出：`title.png` 2232 × 620 透明、`title_boot.png` 1116 × 310、三张背景 `bg_camp / bg_legion / bg_map` 2112 × 1320 + json（`/mnt/project-files/art/ui/menu/out/`），由执行放进 `assets/ui/menu/`，代码按 §14 / §16 自适应，无需改动。197 到此全部定稿；剩余只有「道具图落地后再看」类的后续，不在本篇。
