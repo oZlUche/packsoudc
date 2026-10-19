@@ -20,7 +20,7 @@ static func of(obj: Object, lang: String = "") -> String:
 	return pick(table as Dictionary if table is Dictionary else {}, String(base) if base != null else "", lang)
 
 
-## 148：**这一件**叫什么 —— 有耐久的（魔晶石）前面加状态前缀（明亮的 / 闪烁的 / 黯淡的 / 破碎的），其余同 [method of]。
+## 148：**这一件**叫什么 —— 有耐久的（魔晶石）前面加状态前缀（明亮的 / 闪烁的 / 黯淡的 / 破碎的），会长的（207）加阶段前缀（抽芽的 / 盛放的），其余同 [method of]。
 ## 格子标签、悬浮窗标题、拖拽中的那一件这些**手里有实例**的地方用它；只有定义的地方（图鉴、商店货架、编辑器）照旧 [method of]
 static func of_item(inst: ItemInstance, lang: String = "") -> String:
 	if inst == null or inst.def == null:
@@ -32,7 +32,8 @@ static func of_item(inst: ItemInstance, lang: String = "") -> String:
 	if inst.def.is_token():
 		return base + (" · " + enchant if enchant != "" else "")
 	var wear := inst.def.wear.prefix_for(inst.charges(), lang) if inst.def.wear != null else ""
-	return wear + enchant + base
+	var growth := GrowthProfile.prefix_of(inst, lang) if inst.def.growth != null else ""     # 207：生长前缀在最前
+	return growth + wear + enchant + base
 
 
 ## 语言回落的那一步（名字、事件的标题 / 正文 / 选项都走它）：[param table] 里有当前语言（或指定语言 [param lang]）且不是空串就用它，

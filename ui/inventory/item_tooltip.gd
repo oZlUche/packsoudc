@@ -175,6 +175,9 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		lines.append("效果：%s" % (d if d != "" else _type_name(e)))
 	if def.wear != null:     # 148：耐久 —— 剩几次、用完就碎
 		lines.append(wear_line(inst))
+	if def.growth != null:     # 207：生长 —— 现在第几阶、再几步、各阶加什么、扎根没有
+		var gst := faith_status()
+		lines.append_array(growth_lines(inst, board, not gst.is_empty() and not faith_lit(def, gst)))
 	if def.adjacency != null:
 		var adj := def.adjacency
 		var g := AdjacencyText.grant(adj)
@@ -477,6 +480,40 @@ static func wear_line(inst: ItemInstance) -> String:
 	if inst.is_broken():
 		return "[color=#%s]耐久 0 / %d：破碎了，不再供给，卖价打折[/color]" % [DIM_HEX, w.max_charges]
 	return "耐久 %d / %d：每供给一场少一次，用完就碎" % [inst.charges(), w.max_charges]
+
+
+## 207：生长那几行 —— 「生长：茎叶（再 6 步绽放）· 已扎根」，然后每阶一行（到了的亮、没到的灰），抽中的额外效果各一行。
+## [param dormant] 真：自然之神不是当前信仰，整块灰、写一句不长
+static func growth_lines(inst: ItemInstance, board: GridInventory = null, dormant: bool = false) -> Array[String]:
+	var out: Array[String] = []
+	var g := inst.def.growth
+	var stage := GrowthProfile.stage_of(inst)
+	var nxt := GrowthProfile.next_stage(inst)
+	var head := "生长：%s" % GrowthProfile.stage_name(inst)
+	if nxt != null:
+		head += "（再 %d 步%s）" % [maxi(1, nxt.after - GrowthProfile.ticks_of(inst)), nxt.name_in()]
+	else:
+		head += "（长成了）"
+	if board != null and board.has_item(inst.uid) and board.growth_locks:
+		if GrowthProfile.locks_bag(inst):
+			head += "　连包扎根：它和它的包都动不了"
+		elif GrowthProfile.locks_item(inst):
+			head += "　已扎根：动不了"
+	if dormant:
+		head += "　自然之神不是当前信仰：不长，加成不算"
+	out.append("[color=#%s]%s[/color]" % [DIM_HEX, head] if dormant else head)
+	for i in g.stages.size():
+		var st := g.stages[i]
+		var lock := "，连包扎根" if st.locks_bag() else ("，扎根" if st.locks_item() else "")
+		var line := "%s：%s%s" % [st.name_in(), st.effect_text(), lock]
+		var lit := i + 1 == stage and not dormant
+		out.append("[color=@grant]%s[/color]" % line if lit else "[color=#%s]%s[/color]" % [DIM_HEX, line])
+		if not st.bonus_pool.is_empty() and i + 1 != stage:
+			out.append("[color=#%s]　另有 %d 种额外效果，长到时随机得 %d 种[/color]" % [DIM_HEX, st.bonus_pool.size(), mini(st.bonus_count, st.bonus_pool.size())])
+	for b in GrowthProfile.bonuses_of(inst):
+		var bl := "额外：%s" % b.effect_text()
+		out.append("[color=#%s]%s[/color]" % [DIM_HEX, bl] if dormant else "[color=@grant]%s[/color]" % bl)
+	return out
 
 
 ## 这条规则每次出手花多少耐力（面板数或属性值）

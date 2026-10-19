@@ -1,0 +1,93 @@
+{
+  "id": "moonherb_seed",
+  "display_name": "月光草籽",
+  "display_names": {
+    "en": "Moonherb Seed"
+  },
+  "description": "自然之神的草籽：放进背包，随倒计时长大。长到茎叶就扎根、慢慢给你回血；长到绽放连包一起扎根，还会隔一阵替你拔掉一层减益。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "faith",
+    "faith:nature",
+    "nature",
+    "herb"
+  ],
+  "growth": {
+    "stages": [
+      {
+        "name": "茎叶",
+        "names_by_lang": {
+          "en": "Sprout"
+        },
+        "prefix": "抽芽的",
+        "prefixes_by_lang": {
+          "en": "Sprouting "
+        },
+        "mods": [
+          {
+            "stat": "regen_hp",
+            "amount": 1.0
+          }
+        ]
+      },
+      {
+        "name": "绽放",
+        "names_by_lang": {
+          "en": "Bloom"
+        },
+        "prefix": "盛放的",
+        "prefixes_by_lang": {
+          "en": "Blooming "
+        },
+        "after": 6,
+        "lock": "bag",
+        "mods": [
+          {
+            "stat": "regen_hp",
+            "amount": 2.0
+          }
+        ],
+        "rules": [
+          {
+            "trigger": "@on_schedule",
+            "cadence": {
+              "type": "cooldown",
+              "seconds": 5.0
+            },
+            "effects": [
+              {
+                "type": "remove_status",
+                "all_debuffs": true
+              }
+            ]
+          }
+        ],
+        "bonus_pool": [
+          {
+            "mods": [
+              {
+                "stat": "max_hp",
+                "amount": 15.0
+              }
+            ]
+          },
+          {
+            "mods": [
+              {
+                "stat": "regen_stamina",
+                "amount": 0.5
+              }
+            ]
+          }
+        ],
+        "bonus_count": 1
+      }
+    ],
+    "stage0_names": {
+      "en": "Seed"
+    }
+  }
+}

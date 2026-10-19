@@ -495,6 +495,15 @@ static func _rule_groups(def: ItemDef) -> Array:
 		groups.append(["adjacency.grant_rules", def.adjacency.grant_rules])     # 108：附加规则同样适用
 		groups.append(["adjacency.receive_rules", def.adjacency.receive_rules])     # 132
 		groups.append(["adjacency.feed_rules", def.adjacency.feed_rules])     # 148
+	if def.growth != null:     # 207：各阶的规则与额外效果池
+		for k in def.growth.stages.size():
+			var st := def.growth.stages[k]
+			if st == null:
+				continue
+			groups.append(["growth.stages[%d].rules" % k, st.rules])
+			for j in st.bonus_pool.size():
+				if st.bonus_pool[j] != null:
+					groups.append(["growth.stages[%d].bonus_pool[%d].rules" % [k, j], st.bonus_pool[j].rules])
 	return groups
 
 
@@ -2024,6 +2033,57 @@ static func _validate_item(def: ItemDef, report: ImportReport) -> void:
 			report.warn("adjacency.feed_filter", "写了「只供给」却没有供给的加成或规则")
 		_warn_overlapping_markers(def, report)
 	_validate_wear(def, report)
+	_validate_growth(def, report)
+
+
+## 207（作者定）：生长是自然之神的东西 —— 只许写在带 `faith` + `faith:nature` 的道具上；至少一阶，每阶至少走 1 步，锁只能是那三种；
+## 规则同信仰加成：不许 costs、要有频率
+static func _validate_growth(def: ItemDef, report: ImportReport) -> void:
+	var g := def.growth
+	if g == null:
+		return
+	if not def.has_faith() or def.faith_tag() != GrowthProfile.FAITH_TAG:
+		report.error("growth", "生长是自然之神的东西：只许写在带 faith 与 %s 标签的道具上" % GrowthProfile.FAITH_TAG)
+	if def.is_bag:
+		report.error("growth", "包不会长")
+	if g.stages.is_empty():
+		report.error("growth.stages", "至少写一阶")
+	for k in g.stages.size():
+		var st := g.stages[k]
+		var at := "growth.stages[%d]" % k
+		if st == null:
+			report.error(at, "空的一阶")
+			continue
+		if st.after < 1:
+			report.error(at + ".after", "每阶至少要走 1 步")
+		if not _string_choices(st, "lock").has(st.lock):
+			report.error(at + ".lock", "锁只能是 %s" % " / ".join(_string_choices(st, "lock")))
+		if st.bonus_count > st.bonus_pool.size():
+			report.error(at + ".bonus_count", "额外效果池只有 %d 条，抽不出 %d 条" % [st.bonus_pool.size(), st.bonus_count])
+		if not st.bonus_pool.is_empty() and st.bonus_count == 0:
+			report.warn(at + ".bonus_count", "写了额外效果池却一条都不抽")
+		var groups: Array = [[at + ".rules", st.rules]]
+		for j in st.bonus_pool.size():
+			var b := st.bonus_pool[j]
+			if b == null:
+				report.error("%s.bonus_pool[%d]" % [at, j], "空的额外效果")
+			elif b.mods.is_empty() and b.rules.is_empty():
+				report.error("%s.bonus_pool[%d]" % [at, j], "额外效果得有修饰或规则")
+			else:
+				groups.append(["%s.bonus_pool[%d].rules" % [at, j], b.rules])
+		for gr in groups:
+			var rules: Array = gr[1]
+			for i in rules.size():
+				var rule := rules[i] as AbilityRule
+				var rat := "%s[%d]" % [gr[0], i]
+				if rule == null:
+					report.error(rat, "空的规则")
+				elif not rule.costs.is_empty():
+					report.error(rat + ".costs", "生长给的规则不能有消耗")
+				elif rule.cadence == null:
+					report.error(rat + ".cadence", "规则必须有频率")
+		if k > 0 and st.locks_item() == false and g.stages[k - 1] != null and g.stages[k - 1].locks_item():
+			report.warn(at + ".lock", "上一阶扎了根，这一阶不锁：长到这一阶根会松开，确定吗")
 
 
 ## 148：耐久要有正的次数（147 的随身道具 160 补一搬出了道具库，校验跟着搬到 [method import_belt_skill]）

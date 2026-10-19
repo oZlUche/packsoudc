@@ -14,7 +14,7 @@
 ## 2  各物品写入基础值                       ← base 只在这里写，和第 7 步的 base_scale
 ## 3  包体效果：按 bag_of() 聚合，施加给内容物
 ## 4  整单位的修饰（套装、一局 buff）：input.mods → 每件
-## 4b 信力解锁的功能：这件道具的信仰现在第几阶
+## 4b 信力解锁的功能：这件道具的信仰现在第几阶；生长（207）：这件长到了第几阶
 ## 5  邻接标记点亮：数每件物品的增益/受益格被几个【不同的】物品占住
 ## 6  打包 CompiledItem（先不算 max_hp）
 ## 7  按件：input.scoped 逐条筛一批件，加修饰 / 缩放基础值 / 挂规则
@@ -106,6 +106,28 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 			extra.append_array(bonus.rules)
 		if not extra.is_empty():
 			bonus_rules[uid] = extra
+
+	# --- 4b'. 生长（207）：长到第几阶记在实例上，取当前阶那一份（不累加）+ 抽中的额外效果；休眠的不算 ---
+	for uid in fighters:
+		var inst := board.get_item(uid)
+		if inst.def.growth == null or dormant.has(uid):
+			continue
+		var st := GrowthProfile.current(inst)
+		if st == null:
+			continue
+		var grown: Array[AbilityRule] = []
+		for mod in st.mods:
+			(mod as StatModifier).apply_to(stats[uid], 1)
+		grown.append_array(st.rules)
+		for gb in GrowthProfile.bonuses_of(inst):
+			for mod in gb.mods:
+				(mod as StatModifier).apply_to(stats[uid], 1)
+			grown.append_array(gb.rules)
+		if not grown.is_empty():
+			var merged: Array[AbilityRule] = []
+			merged.append_array(bonus_rules.get(uid, [] as Array[AbilityRule]))
+			merged.append_array(grown)
+			bonus_rules[uid] = merged
 
 	# --- 5. 邻接标记。顺带记下连结关系，供 OnItemFired 的 LINKED 来源使用 ---
 	var links: Dictionary = {}  # uid -> {uid: true}
