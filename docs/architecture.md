@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.42 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.43 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3452,6 +3452,7 @@ func player_spec() -> CombatantSpec …
   139：开发开关、局外解锁、科技等级、最近几局收在 `DevDrawer`（`ui/game/dev_drawer.gd`）里 —— 右上角的箭头「◂ / ▸」点一下开、再点一下关，默认收起，开着时盖在右半边上、宽 420、自己竖向滚，状态不进设置。
   **格子大小是每块视图自己的**：`InventoryView.cell_px`（默认 `CELL` = 60），基地右半边与带回来的背包按 164 算；`DragLayer` 对着某块视图的落点、残影、整块判定读那块的 `cell_px`，跟手的残影按起拖那块的；`ScrollBox` 跟着 `cell_px_changed` 改尺寸。地图背包、战前、开局、地上、冷却覆盖层仍是 60。图鉴一行几个按宽度算（`codex_columns_for`），不横向滚。
   **棋盘格线（187）**：`InventoryView.grid_shown`（设置「显示」节「棋盘格线」，`GameSettings.show_grid` 三态：没动过就跟着道具图走 —— `ItemPainter.art_available()` 为真就不画）。关着时不画底、格底、线、外框，包体与道具照画；拖着东西时 `DragLayer` 给登记的棋盘 `drag_hint`，格按 50 % 临时出现。所有棋盘视图在 `InventoryView.GROUP`，设置一改整组重画。
+  **道具图（201）**：`assets/items/<id>.png`（60 px / 格）与 `@2x/<id>.png`（160 px / 格），画布 = 形状 rot 0 的包围盒，格外透明；`assets/items/manifest.json` 列出有图的 id（`tools/sync_item_art.sh <美术导出目录>` 拷图、重写清单、导入）。`ItemPainter.art_available()` = 清单在不在，`art_of(def, cell_px)`（cell > 60 取 @2x，静态缓存），`draw_art(…, base)` 按 `art_transform`（转 k × 90° 顺时针、左上角偏移 (0,0)/(H,0)/(W,H)/(0,W) 格，和 `ItemShape` 同一套）画，没图返回 false、调用方照旧色块 + 名字。棋盘、包体、残影、收成排、地面、图鉴（没点亮压暗影）有图都画图不写名字；没亮的战利品剪影不用图（087）。地面轮廓（198 第二阶段）有图按透明通道。`tests/content/test_item_art_201.gd` 守尺寸、格外透明、旋转对位。
 
 一局结束时（`GameFlow._settle_run`，进结算屏之前）就 `absorb`、存 meta、删这一局的存档；结算屏拿到的已经是记完账的局外。
 `MetaSave` 与 `RunSave` 同一套做法：`user://meta.json`，版本号 2（v1 是开发期的，作废），只写 id；仓库大小以存档里的为准（成长过的不该被规则缩回去）。
@@ -4301,6 +4302,7 @@ res://
 | v3.30 | 2026-10-17 | **188 背包面板去字、信仰窗重排**（作者 2026-10-17，待定 1–3 按推荐）：背包面板不再写操作提示、地上说明、参战 / 可用格读数、信仰行与棋盘上方说明，回话走 `hint_sink`（地图屏 = 提示行）；`FaithTooltip.describe_full` → 名字行（Lv、休眠件数）+ 信力行 + 各阶效果 / 信力来源 / 献祭，颜色全走模板；`HoverTip.show_faith` 名字行下挂到下一阶的进度条、各段虚线分隔、宽 360 |
 | v3.31 | 2026-10-18 | **188 补充一 信仰窗分段、蛮神改写**（作者 2026-10-18，待定 1–4 按推荐）：`HoverTip.FaithBar` 一段一级、长度按所需信力（满阶也挂）；`FaithTooltip` 同一级的效果合成一行（`[table=2]`），没到的级整行 `@dim`，句子按 `FaithPerk.summary_for(def, points)` 写、锁住的级按那一级的阈值算；`FaithPerk.scaled` 给「随信力」的数（每 50 信力一阶、封顶）；蛮神一级门槛式增伤、二级献祭生命上限二选一（信力 / 全体造成伤害 + 急速）、三级 `prebattle_actions` 两个按钮（耗体力 / 耗信力、非首领）、四级持续战斗秒数随信力；献祭规矩 `OfferingRule.short_name`、`ItemVolume.size_label`（「大型道具」），有图标时排一行 `[img]`（`assets/ui/tags/<tag>.png`、`assets/ui/offerings/{large,medium,crit}.png`），缺一枚就退回文字 |
 | v3.32 | 2026-10-18 | **189 / 190 顶端栏长槽与日晷倒计时**（作者 2026-10-18 定案，待定 1–3 按推荐）：`hud_bar` 在板上画一条贯通的浅槽（`hud/groove` 九宫格、`band` 定槽身），宿主排完把铜点交给栏画（同行相邻两件之间、右槽图标组左边，空着的件两边不放）；`HudWidget.set_in_bar` 让栏里的件坐在槽底上（`PANEL_BARE`、浅底墨字），拖出栏回 `PANEL_HUD`；栏里同行间距 24、组在槽身里居中；倒计时改成刻在槽底的半圆日规（`hud/dial/*`：染色扇面 / 表盘 / 绕轴心转的影子 / 轴心，三阶 calm·half·low），栏上不写数字，停上去 `show_status` 弹「倒计时」窗、走一步 `update_status` 换字；缺图退回文字版 |
+| v3.43 | 2026-10-19 | **201 道具图接进棋盘**（作者「素材可以实装了，让贴图和格子位置对应」，架构线程方案，待定按推荐）：`assets/items/` 86 件（60 px + @2x 160 px）+ `manifest.json`，`tools/sync_item_art.sh`；`ItemPainter.art_available / art_ids / art_of / draw_art / art_transform`，一张 rot 0 图按同一套顺时针变换画四个朝向；棋盘 / 包体 / 残影 / 收成排 / 地面 / 图鉴有图画图，剪影不用图；187 默认格线跟着翻成不画；198 第二阶段 `_art_image` 接上；新测试 `test_item_art_201.gd` |
 | v3.42 | 2026-10-19 | **200 导出玩家版 / 开发版**（作者问，架构线程方案，待定按推荐）：不建分支，`export_presets.cfg` 两个预设 ——「玩家版」release、`custom_features=""`、控制台包装器 0、排除 `tests/* addons/godot_ai/* docs/*`；「开发版」debug、`custom_features="dev"`、包装器 1；`tools/` 都留（`DevNav` preload 了里面的脚本）。`DevGate.on()` 认 `dev` 特性；`DevNav.keep_in()` 改走 `DevGate`（按路径 preload）；`meta_screen` 两处 `template` 开发开关并进 `DevGate`。`tools/export.bat` 两条导出命令 |
 | v3.41 | 2026-10-19 | **199 铸炉屏换成铁炉近景**（196 §5 美术定稿「乙 炉台版」，架构线程接法）：`forge_screen.gd` 不再是石板叠层 —— 底图 `assets/ui/forge/bg_lit|bg_cold` + `layout.json`（`ForgeScreen.layout()`、`_place()` 按宽铺满竖直居中），【时机】【效果】【数值】【出牌】「铸炉」画在底图里不再写；`_forge_btn` 改 `TextureButton`（风箱把手 `handle_ready / idle / off`），「返回」= `sign_back` 路标；测试读 `handle_state()`、`backdrop_state()`、`spot_rect()`。落地差异见报告 199 §6 |
 | v3.40 | 2026-10-19 | **198 地上按轮廓碰撞**（阶段一，架构线程方案，待定按推荐）：新 `ItemSilhouette`（`ui/inventory/item_silhouette.gd`）—— 每件 × 朝向一份轮廓（凸块、外轮廓、透明通道位图、面积重心），没图按格子外形（凸块 = 合并的整格矩形）、有图按透明通道（膨胀 2 像素 → 外轮廓 → 凸分解，> 6 块退凸包），静态缓存；`separate`（SAT，矩形件与 180 完全一致）、`drop_gap`（竖直投射）、`rest_rotation`（稳的先选）、`hit`。`GroundLayer` 的 `_bump_pair` / `_bump_walls` / `floor_under`（改为按轮廓投射，返回 `dy`）/ `overlapping_pairs` / `push_out`（可带轮廓）/ 落地转轴 / 点选（有位图时）都换成轮廓，`_overlap` 删除；有图时 `_draw` 沿外轮廓描 2 像素。落地差异见报告 §6 |

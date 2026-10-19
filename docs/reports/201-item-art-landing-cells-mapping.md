@@ -114,3 +114,31 @@ W、H 取 `size_rotated(0)`。实现：`draw_set_transform_matrix(base * Transfo
 
 - 不改 `ItemShape`、不改存档、不改 `.import` 参数（默认无损、不生成 mipmap）。
 - 不给道具图加描边 / 稀有度色框：稀有度已经画进图里（美术 §稀有度规则）。
+
+## 7 落地（2026-10-19，架构方案执行）
+
+待定 1–4 按推荐：现在就翻、剪影不用图、图鉴暗影、@2x 进仓库。
+
+- **素材**：首批是 **86 件**，比方案写的 56 件多，因为美术第四批（材料 30 件）在派单前后已经放进 `out/`，一起接了。`tools/sync_item_art.sh <源目录>` 用纯 bash 写（作者机器上不一定有 python），做三件事：拷 png；按字母序重写 `manifest.json`，只收两套都有的 id，缺一套的会报出来；用 `$GODOT` 跑一次 `--import`，没设就找 PATH 里的 godot，再不行用 `run_game.bat` 那个路径。`.import` 都是默认参数（无损、不生成 mipmap）。
+- **`ItemPainter`**：
+  - `art_available()` 看清单在不在；`art_ids()` 读清单，结果缓存。
+  - `art_of(def, cell_px)` 只认清单里的 id，`cell_px > 60` 时取 `@2x`，按路径静态缓存，没有的也缓存成 null。
+  - `draw_art(canvas, def, rot, anchor, cell, modulate, base)` 按 `base * art_transform(...)` 画，画完把变换设回 `base`。
+  - `art_transform()` 单独拆出来给测试用：它就是 §2.2 那张偏移表。
+  - 另有 `clear_art_cache()`。
+- **调用处**（§3.3 六处之外，多接了两处）：
+  - `harvest_row.gd`（收成那一排）有图也画图。
+  - `drag_layer` 里「跨包被留下的」那几件（straddlers）有图时：图按 45 % 透明画，橙色描边照旧（用 `draw_item` 画一个透明底）。
+  - 包体有图就画图、不写名字。目前三只包都还没画，所以仍是包灰。
+  - 休眠的信仰道具：图乘 `Color(0.55, 0.55, 0.55)`，上面写小字「休眠」，用的是 `COLOR_TEXT`。
+  - 地面：落地动画的变换在 `base = Transform2D(angle, (k, k), 0, pivot)` 里重算一份，透明度放进 modulate。198 沿轮廓描边照旧，颜色是稀有度色或高亮色。
+- **198 第二阶段**：`ItemSilhouette._art_image(def)` 现在返回 `ItemPainter.art_of(def).get_image()`（60 px 那一套）。有图的道具在地上按透明通道的轮廓碰撞、描边。
+- **173**：`ContentSnapshot.problems()` 在形状变了的提示后面加一句：有图（看 png 在不在）就提示「改形状要通知美术重画」。
+- **测试**：
+  - `tests/content/test_item_art_201.gd` 共 15 条，覆盖 §2.4 的 1–5，另加 `art_transform` 的逐格对位：鹿角、长弓、弯刀、匕首、甲片，四个朝向，每格中心都落到 `ItemShape` 顺时针规则算出的那一格。
+  - 「有墨的格 = 占格」只钉了鹿角、长弓：有些件的某一格可能没画到墨，全量钉会误报。
+  - `test_board_grid_187.gd` 里假设「没图」的断言改成跟着 `art_available()` 走：有图时默认不画格、开关先切到「开」。
+- **截图**：`/mnt/project-files/screenshots/201/`
+  - `board_grid.png` / `board_nogrid.png`：鹿角四个朝向、长弓竖横、弯刀转 90°、木头转 90°，图都落在各自的格子里。
+  - `ground.png`：地上按图描边。
+

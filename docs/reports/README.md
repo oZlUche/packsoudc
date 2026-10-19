@@ -213,6 +213,7 @@
 
 | 199 | [落地：铸炉屏换成铁炉近景 —— 196 §5 美术定稿（乙 炉台版）接进 forge_screen：底图 lit / cold、layout.json 坐标、三槽与出牌槽对齐格子、风箱把手三态「铸」、路标「返回」](199-forge-screen-art-landing.md) | 已落地 | 素材在 `assets/ui/forge/`；落地差异见 §6；截图 /mnt/project-files/screenshots/196/forge_*.png |
 | 200 | [导出两种版本：玩家版 / 开发版 —— 不建分支，一份 export_presets.cfg 两个预设（release 无控制台包装器、排除 tests/addons/docs；debug 带 `dev` 特性），DevGate 认 `dev`、DevNav 改走 DevGate，三处 template 开发开关并成一把门](200-export-variants-player-and-dev.md) | 已落地 | 待定按推荐（不排除 tools/、加 `tools/export.bat`、开发版过滤同玩家版）；落地差异见 §6 |
+| 201 | [落地：道具图接进棋盘 —— `assets/items/<id>.png` 画布 = rot 0 包围盒 × 60，格外全透明；四个朝向用同一套顺时针变换（偏移 (0,0)/(H,0)/(W,H)/(0,W)），测试用 `rotate_90` 对 `cells_rotated` 钉死；`manifest.json` = 187 的图包判断，198 第二阶段同时翻；六处调用有图走 `draw_art`、没图照旧色块，分批到图分批拷文件](201-item-art-landing-cells-mapping.md) | 已落地 | 首批 86 件（前三批 56 + 材料 30）；以后每批跑 `tools/sync_item_art.sh`；落地差异见 §7；截图 /mnt/project-files/screenshots/201/ |
 
 | 201 | [落地：道具图接进棋盘 —— `assets/items/<id>.png` 画布 = rot 0 包围盒 × 60，格外全透明；四个朝向用同一套顺时针变换（偏移 (0,0)/(H,0)/(W,H)/(0,W)），测试用 `rotate_90` 对 `cells_rotated` 钉死；`manifest.json` = 187 的图包判断，198 第二阶段同时翻；六处调用有图走 `draw_art`、没图照旧色块，分批到图分批拷文件](201-item-art-landing-cells-mapping.md) | 待定按推荐 | 首批 56 件；已派给 架构方案执行 |
 ## 已归档（被覆盖或作废的方案，只留作历史）

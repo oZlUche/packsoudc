@@ -977,6 +977,9 @@ func _draw() -> void:
 		var ink := ItemPainter.label_color(inst.def)
 		var at := r.position
 		var landing := _landing.has(inst.uid)
+		var base := Transform2D.IDENTITY
+		var tint := Color.WHITE
+		var rot := inst.rotation
 		if landing:
 			# 134 / 162 补充二：正在落 —— 画起手朝向的格子，绕重心转、缩放，颜色乘透明度
 			var pose := landing_pose(inst.uid)
@@ -986,14 +989,19 @@ func _draw() -> void:
 			var alpha := float(pose["alpha"])
 			var pivot: Vector2 = pose["pivot"]
 			draw_set_transform(pivot, float(pose["angle"]), Vector2(k, k))
-			cells = inst.def.cells_rotated(int(pose["rot"]))
+			base = Transform2D(float(pose["angle"]), Vector2(k, k), 0.0, pivot)
+			rot = int(pose["rot"])
+			tint.a = alpha
+			cells = inst.def.cells_rotated(rot)
 			at = (pose["pos"] as Vector2) - pivot
 			body.a *= alpha
 			edge.a *= alpha
 			ink.a *= alpha
-		ItemPainter.draw_item(self, cells, at, InventoryView.CELL, body, edge)
-		ItemPainter.draw_label(self, cells, at, InventoryView.CELL, Names.of_item(inst), font, 13, ink)
-		var sil := ItemSilhouette.of(inst.def, int(landing_pose(inst.uid)["rot"]) if landing else inst.rotation)
+		# 201：有图就画图、不写名字；base 是落地动画的变换（相乘，不覆盖）
+		if not ItemPainter.draw_art(self, inst.def, rot, at, InventoryView.CELL, tint, base):
+			ItemPainter.draw_item(self, cells, at, InventoryView.CELL, body, edge)
+			ItemPainter.draw_label(self, cells, at, InventoryView.CELL, Names.of_item(inst), font, 13, ink)
+		var sil := ItemSilhouette.of(inst.def, rot)
 		if sil["mask"] != null:     # 198：有道具图的描边 / 高亮沿轮廓走（没图的格子已经沿外形描过了）
 			for poly in (sil["outline"] as Array):
 				var line := (poly as PackedVector2Array).duplicate()

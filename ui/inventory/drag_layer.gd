@@ -1021,11 +1021,12 @@ func _draw() -> void:
 	var edge := (
 		InventoryView.COLOR_BAG_EDGE if is_bag else ItemPainter.rarity_color(_inst.def)
 	)
-	ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
-	ItemPainter.draw_label(
-		self, cells, anchor, cell,
-		Names.of_item(_inst), font, 11 if is_bag else 13, Color("f2f4f8")
-	)
+	if not ItemPainter.draw_art(self, _inst.def, _rot, anchor, cell, Color(1, 1, 1, 0.85)):     # 201：有图画图
+		ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
+		ItemPainter.draw_label(
+			self, cells, anchor, cell,
+			Names.of_item(_inst), font, 11 if is_bag else 13, Color("f2f4f8")
+		)
 	if not is_bag and not (view_at(mouse) is InventoryView):
 		_draw_held_markers(anchor, cell)
 	if craft_hint != "":     # 140：压在能合的那件上：残影下面一行小字
@@ -1047,6 +1048,8 @@ func _draw() -> void:
 			var g := GridInventory.to_global(bag, locals[i], item, Vector2i.ZERO, _rot)
 			var at: Vector2 = anchor + Vector2(g["origin"] as Vector2i) * cell
 			var item_cells := item.def.cells_rotated(int(g["rot"]))
+			if ItemPainter.draw_art(self, item.def, int(g["rot"]), at, cell, Color(1, 1, 1, 0.9)):
+				continue
 			var c_body := ItemPainter.body_color(item.def)
 			c_body.a = 0.9
 			ItemPainter.draw_item(
@@ -1087,6 +1090,9 @@ func _draw_straddlers(font: Font) -> void:
 		var item: ItemInstance = s["inst"]
 		var at := base + Vector2(s["origin"] as Vector2i) * cell
 		var item_cells := item.def.cells_rotated(int(s["rot"]))
+		if ItemPainter.draw_art(self, item.def, int(s["rot"]), at, cell, Color(1, 1, 1, 0.45)):
+			ItemPainter.draw_item(self, item_cells, at, cell, Color(0, 0, 0, 0), InventoryView.COLOR_VICTIM)     # 201：图压暗，照旧描橙
+			continue
 		var c_body := ItemPainter.body_color(item.def)
 		c_body.a = 0.45
 		ItemPainter.draw_item(
