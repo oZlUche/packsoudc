@@ -19,6 +19,12 @@ const ART_DIR := "res://assets/items/"
 const ART_MANIFEST := "res://assets/items/manifest.json"
 ## 图的一格多少像素；格子画得比它大（仓库最大 80）就取 @2x
 const ART_CELL := 60.0
+## 205：赐福版的信仰印记（`marks/<faith>.png` 24 px，`marks/@2x/` 64 px）；没有退回 HUD 的徽记（166）
+const MARK_DIR := "res://assets/items/marks/"
+const MARK_FALLBACK_DIR := "res://assets/ui/faith/"
+## 印记边长与内缩（按一格的比例）
+const MARK_SIZE := 0.4
+const MARK_INSET := 0.06
 
 ## 路径 → 贴图（没有的也记 null，别每帧探文件）
 static var _art: Dictionary = {}
@@ -44,14 +50,56 @@ static func art_ids() -> Dictionary:
 	return _listed
 
 
+## 205：这件用哪张图的 id —— 清单里有自己的 → 自己；赐福版且清单里有原件 → 原件；都没有 → 空
+static func art_id_of(def: ItemDef) -> StringName:
+	if def == null:
+		return &""
+	if art_ids().has(def.id):
+		return def.id
+	if def.is_blessed() and art_ids().has(def.blessed_of):
+		return def.blessed_of
+	return &""
+
+
 ## 201：这件的图（没有 → null）。[param cell_px] 是画的时候一格多大：大于 [constant ART_CELL] 取 @2x
 static func art_of(def: ItemDef, cell_px: float = ART_CELL) -> Texture2D:
-	if def == null or def.shape == null or not art_ids().has(def.id):
+	var id := art_id_of(def)
+	if def == null or def.shape == null or id == &"":
 		return null
-	var path := ART_DIR + ("@2x/" if cell_px > ART_CELL else "") + String(def.id) + ".png"
+	return _cached(ART_DIR + ("@2x/" if cell_px > ART_CELL else "") + String(id) + ".png")
+
+
+static func _cached(path: String) -> Texture2D:
 	if not _art.has(path):
 		_art[path] = EventImage.load_texture(path)
 	return _art[path]
+
+
+## 205：赐福版是哪位神的（id = 原件_神）；不是赐福版 → 空
+static func faith_of(def: ItemDef) -> StringName:
+	if def == null or not def.is_blessed():
+		return &""
+	return StringName(String(def.id).trim_prefix(String(def.blessed_of) + "_"))
+
+
+## 205：信仰印记的贴图：有 `marks/` 取它（格子大于 [constant ART_CELL] 取 @2x），没有退回 HUD 徽记；都没有 null
+static func mark_of(faith_id: StringName, cell_px: float = ART_CELL) -> Texture2D:
+	if faith_id == &"":
+		return null
+	var name := String(faith_id) + ".png"
+	var tex := _cached(MARK_DIR + ("@2x/" if cell_px > ART_CELL else "") + name)
+	return tex if tex != null else _cached(MARK_FALLBACK_DIR + name)
+
+
+## 205：印记落在哪 —— 当前朝向脚印里最靠右下的那一格（y 最大、再 x 最大）的右下角，内缩一点；不随朝向转
+static func mark_rect(def: ItemDef, rot: int, anchor: Vector2, cell: float) -> Rect2:
+	var best := Vector2i(-1, -1)
+	for c in def.shape.cells_rotated(rot):
+		if c.y > best.y or (c.y == best.y and c.x > best.x):
+			best = c
+	var side := cell * MARK_SIZE
+	var corner := anchor + Vector2(best + Vector2i.ONE) * cell - Vector2.ONE * cell * MARK_INSET
+	return Rect2(corner - Vector2(side, side), Vector2(side, side))
 
 
 ## 201：按格子对位画道具图 —— 图只画 rot 0 一张，k 个朝向 = 整张绕左上角顺时针转 k × 90° 再平移回来，
@@ -73,6 +121,9 @@ static func draw_art(
 	canvas.draw_set_transform_matrix(base * art_transform(def, rot, anchor, cell))
 	canvas.draw_texture_rect(tex, Rect2(Vector2.ZERO, Vector2(def.shape.size_rotated(0)) * cell), false, modulate)
 	canvas.draw_set_transform_matrix(base)
+	var mark := mark_of(faith_of(def), cell)     # 205：赐福版盖信仰印记（画完图再盖，永远正着）
+	if mark != null:
+		canvas.draw_texture_rect(mark, mark_rect(def, rot, anchor, cell), false, modulate)
 	return true
 
 
