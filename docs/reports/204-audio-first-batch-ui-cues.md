@@ -125,6 +125,8 @@ cue 名不在表里：静默，`Audio.missing` 记一次（测试与开发台看
 | 长度与响度 | 按钮 ≤ 120 ms，开 / 关 ≤ 300 ms；**头部不留静音**（留了就像延迟）；峰值统一到约 −3 dBFS，四个文件听感一致（细调由 cue 表 `volume_db`） |
 | 交付 | `/mnt/project-files/art/audio/ui/` + 同目录 `CREDITS.md`；云端下载受限时作者下载到这里（203 §4） |
 
+> 实际交付（美术设计 2026-10-19 16:45）：云端连不上 kenney.nl 与 freesound，美术没有等作者下载，先自己合成了原创音效（木块敲击、皮面接触、纸页摩擦，脚本 `/mnt/project-files/art/audio/ui/src/synth.py`），许可记为项目自有，已交给 执行。作者更想要 Kenney 的话，同名替换文件即可，cue 表与代码都不用改。
+
 测试（`tests/ui/test_audio_204.gd`）：
 - cue 表解析：三个 cue 都在、字段类型对、未知字段报错；`files` 里每个文件都存在且是 `.ogg`；
 - `project.godot` 有 `Audio` 自动加载；176 启动图从 `audio.gd` 碰不到编辑器；分层测试照旧绿（`core/audio` 不认识 `ui/`）；
