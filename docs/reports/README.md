@@ -215,6 +215,8 @@
 | 200 | [导出两种版本：玩家版 / 开发版 —— 不建分支，一份 export_presets.cfg 两个预设（release 无控制台包装器、排除 tests/addons/docs；debug 带 `dev` 特性），DevGate 认 `dev`、DevNav 改走 DevGate，三处 template 开发开关并成一把门](200-export-variants-player-and-dev.md) | 已落地 | 待定按推荐（不排除 tools/、加 `tools/export.bat`、开发版过滤同玩家版）；落地差异见 §6 |
 | 201 | [落地：道具图接进棋盘 —— `assets/items/<id>.png` 画布 = rot 0 包围盒 × 60，格外全透明；四个朝向用同一套顺时针变换（偏移 (0,0)/(H,0)/(W,H)/(0,W)），测试用 `rotate_90` 对 `cells_rotated` 钉死；`manifest.json` = 187 的图包判断，198 第二阶段同时翻；六处调用有图走 `draw_art`、没图照旧色块，分批到图分批拷文件](201-item-art-landing-cells-mapping.md) | 已落地 | 首批 86 件（前三批 56 + 材料 30）；以后每批跑 `tools/sync_item_art.sh`；落地差异见 §7；截图 /mnt/project-files/screenshots/201/ |
 
+| 203 | [讨论稿：音频怎么接、现在要不要占位、素材从哪来 —— 挂点已是信号（BattleEvent / 拖拽 / 翻牌 / 换屏），后插 = 一个 Audio 自动加载 + cue 表，什么时候做都一样；现在只定 cue 清单（约 40 音效 + 6 曲）；素材：音效 CC0 包 + freesound 补缺，配乐买包或定制，AI 只补个别音效](203-audio-plan-discussion.md) | 讨论稿 · 作者 10-19 定按推荐 | 正式方案见 204 |
+| 204 | [音频接入第一批：界面音效 —— 自动加载 `Audio`（ui/audio.gd）+ 手写 cue 表 `data/authoring/audio/cues.json` + `GameSettings` 两个音量；按钮音不逐个挂：`node_added` 钩住每颗 `BaseButton` 的 `pressed`（meta `sfx` 换声 / 静音）；窗口开 / 关只挂 `GameDirector._switch_screen` 与 `FloatingWindow`；第一批 3 个 cue，素材 CC0（Kenney）由 美术设计 挑，代码先落空表](204-audio-first-batch-ui-cues.md) | 待定按推荐 | 已派给 架构方案执行（代码）与 美术设计（素材）；配乐等风格定 |
 ## 已归档（被覆盖或作废的方案，只留作历史）
 
 实施报告（做了什么、为什么、验证结果）一律留在上面的清单里；**提议 / 计划 / 设想**一旦被后续实施覆盖、或作者否决，就挪进 `archive/`，设计以架构文档正文为准。
