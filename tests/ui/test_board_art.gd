@@ -1,5 +1,5 @@
 ## 棋盘美术（UI替换美术，作者 2026-10-19 19:02 定稿）：容器屏左边按种类换外框、右边背包细皮带框，格缝由棋盘视图画；
-## 标题不写字、去掉快速搜索 / 状态行 / 耐力行；右上角最小化 + 关闭圆钮；「全部拾取」火漆签；面板宽按格子算（8 列背包 + 6 列容器 = 1188）
+## 标题不写字、去掉快速搜索 / 状态行 / 耐力行 / 火漆签旁的回话行；搜索屏右上角最小化 + 关闭圆钮，战利品屏只有最小化（作者 21:16）；「全部拾取」火漆签；面板宽按格子算（8 列背包 + 6 列容器 = 1188）
 extends RefCounted
 
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
@@ -47,7 +47,7 @@ static func run_frame_kind(t: TestCase) -> void:
 
 
 static func frame_loot_screen(t: TestCase, root: Window) -> void:
-	t.begin("棋盘美术 · 战利品屏：生皮外框包住容器、细皮带框包住背包；两块都画格缝；标题空、只有关闭钮；没有状态行与耐力行；面板按格子算宽高")
+	t.begin("棋盘美术 · 战利品屏：生皮外框包住容器、细皮带框包住背包；两块都画格缝；标题空、只有最小化钮（在最右）；没有状态行、回话行与耐力行；面板按格子算宽高")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	var f := Support.flow(c, "boardart")
@@ -62,10 +62,11 @@ static func frame_loot_screen(t: TestCase, root: Window) -> void:
 	screen.open({"container": box})
 	t.eq(screen.frame_kind(), "corpse", "敌人战利品：生皮")
 	t.eq(screen.overlay_frame().title(), "", "标题不写字")
-	t.check(screen._minimize_btn == null and screen._close_btn != null and screen._close_btn.has_art(), "只有关闭钮（原「收起」），有图")
-	t.check(screen._close_btn.tooltip_text.begins_with("收起"), "关闭钮的说明还是收起那句")
+	t.check(screen._close_btn == null and screen._minimize_btn != null and screen._minimize_btn.has_art(), "只有最小化钮（原「收起」），有图")
+	t.check(screen._minimize_btn.tooltip_text.begins_with("收起"), "最小化钮的说明还是收起那句")
 	t.check(screen._take_btn.has_art() and screen._take_btn.text == "", "全部拾取是火漆签（字在图里）")
-	t.eq(screen._line.text, "", "没有状态行")
+	t.check(not "_line" in screen, "没有状态行、火漆签旁没有回话行")
+	t.check(not screen._inv.hint_sink.is_valid(), "面板的回话（放不下、合成了）不接到屏上")
 	t.check(not screen._inv._stamina.visible, "耐力行去掉了")
 	t.check(not screen._loot.seams.is_empty() and not screen._inv.board_view.seams.is_empty(), "两块棋盘都画格缝")
 	var buttons: Array = screen.find_children("*", "Button", true, false).filter(func(b): return (b as Button).text in ["快速搜索", "关闭", "回到地图", "收起", "全部拾取"])
@@ -86,6 +87,9 @@ static func frame_loot_screen(t: TestCase, root: Window) -> void:
 	if board.size == Vector2i(8, 6):
 		t.eq(want, Vector2(1188, 526), "8 列背包 + 6 列容器 = 定稿的 1188 × 526")
 	t.eq(screen.overlay_frame().custom_minimum_size, want, "石板框按它定大小")
+	var side: Vector2 = screen._minimize_btn.custom_minimum_size
+	var off: Vector2 = screen._stage.global_position - screen.overlay_frame().global_position
+	t.eq(screen._minimize_btn.position, Vector2(want.x, 0.0) + CS.CLOSE_AT - side * 0.5 - off, "最小化钮在原关闭钮的位置（最右）")
 	screen.take_all()
 	t.eq(box.item_count(), 0, "全部拾取照旧拿完")
 	screen.queue_free()
@@ -110,7 +114,7 @@ static func frame_boss_screen(t: TestCase, root: Window) -> void:
 	t.eq(screen.frame_kind(), "boss", "BOSS：黑铁")
 	t.eq(screen.frame_pad("boss"), 36.0, "黑铁外框比格子宽 36")
 	t.eq(screen._extras.size(), 1, "一枚纹章")
-	t.check(screen._close_btn.tooltip_text.contains("撤离结算"), "关闭 = 收起 = 撤离结算")
+	t.check(screen._close_btn == null and screen._minimize_btn.tooltip_text.contains("撤离结算"), "只有最小化钮 = 收起 = 撤离结算（行为不变）")
 	t.check(not screen.escape(), "Esc 不收（090）")
 	screen.queue_free()
 	Support.cleanup("boardart2")
