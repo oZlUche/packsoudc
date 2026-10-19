@@ -84,3 +84,7 @@
 - `docs/architecture.md` v3.46：201 那段加了「赐福版（205）」一段。
 - 印记现在用的是 HUD 的 32 px 徽记（缩到 0.4 格）。美术的 7 枚到了只拷文件：`bash tools/sync_item_art.sh <含 marks/ 的目录>`，不改代码。
 - 全量测试 23697 项断言、185 个套件全绿。
+
+### 6.1 印记到位（同日）
+
+美术设计交来 7 枚封蜡章印记（`/mnt/project-files/art/items/marks/`，24 px 与 `@2x/` 64 px，RGBA 透明底），已拷进 `assets/items/marks/` 并导入，没有改代码。测试 ③ 加了尺寸核对：有 marks 的取 marks，1x 是 24 px，@2x 是 64 px。全量测试 23711 项断言全部通过。
