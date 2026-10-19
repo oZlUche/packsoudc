@@ -1,9 +1,24 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_yrnrn"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_kmdt5"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_kvy5x"]
+
+[sub_resource type="Resource" id="Resource_foyd0"]
+script = ExtResource("1_kmdt5")
+id = &"heavy_cure"
+strength = Vector2i(1, 3)
+items = Array[StringName]([&"warhammer", &"salve", &"strong_salve"])
+
+[sub_resource type="Resource" id="Resource_b6j0k"]
+script = ExtResource("1_kmdt5")
+id = &"all_swing"
+strength = Vector2i(0, 1)
+quality = &"bad"
+items = Array[StringName]([&"warhammer", &"longsword"])
+note = "战锤 + 长剑，都是费耐力的：开场就喘"
 
 [resource]
-script = ExtResource("1_yrnrn")
+script = ExtResource("2_kvy5x")
 id = &"bruiser"
 display_name = "重击手"
 display_names = {
@@ -15,3 +30,4 @@ base_stats = {
 "max_hp": 30
 }
 item_tags = Array[StringName]([&"burst", &"heavy", &"remedy"])
+builds = Array[ExtResource("1_kmdt5")]([SubResource("Resource_foyd0"), SubResource("Resource_b6j0k")])

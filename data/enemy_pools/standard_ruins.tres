@@ -39,10 +39,48 @@ weight = 4.0
 node_types = Array[StringName]([&"core"])
 
 [sub_resource type="Resource" id="Resource_vnoua"]
+script = ExtResource("1_78rxq")
+enemy = &"ragpicker"
+weight = 2.0
+kinds = Array[StringName]([&"outskirts"])
+
+[sub_resource type="Resource" id="Resource_gowdh"]
+script = ExtResource("1_78rxq")
+enemy = &"smuggler"
+kinds = Array[StringName]([&"outskirts", &"ruins"])
+
+[sub_resource type="Resource" id="Resource_baqq6"]
+script = ExtResource("1_78rxq")
+enemy = &"assassin"
+
+[sub_resource type="Resource" id="Resource_kda3q"]
+script = ExtResource("1_78rxq")
+enemy = &"tracker"
+
+[sub_resource type="Resource" id="Resource_4ni8y"]
+script = ExtResource("1_78rxq")
+enemy = &"berserker"
+
+[sub_resource type="Resource" id="Resource_woeue"]
+script = ExtResource("1_78rxq")
+enemy = &"witch_doctor"
+kinds = Array[StringName]([&"ruins", &"depths", &"core_ring", &"inner"])
+
+[sub_resource type="Resource" id="Resource_inwvc"]
+script = ExtResource("1_78rxq")
+enemy = &"shield_wall"
+kinds = Array[StringName]([&"ruins", &"depths", &"core_ring", &"inner", &"core"])
+
+[sub_resource type="Resource" id="Resource_5sm3v"]
+script = ExtResource("1_78rxq")
+enemy = &"apprentice_mage"
+kinds = Array[StringName]([&"depths", &"core_ring", &"inner", &"core"])
+
+[sub_resource type="Resource" id="Resource_h5gnx"]
 script = ExtResource("2_60qvx")
 common_tags = Array[StringName]([&"gear", &"remedy", &"food", &"part", &"tool"])
 
-[sub_resource type="Resource" id="Resource_gowdh"]
+[sub_resource type="Resource" id="Resource_6c3lu"]
 script = ExtResource("4_f422k")
 type_bonus = {
 "core": 1,
@@ -54,7 +92,7 @@ by_scale = {
 steps_per_tier = 12
 searches_per_tier = 4
 
-[sub_resource type="Resource" id="Resource_baqq6"]
+[sub_resource type="Resource" id="Resource_srhy2"]
 script = ExtResource("5_v0xwg")
 board = Vector2i(5, 3)
 stat_scale = {
@@ -63,7 +101,7 @@ stat_scale = {
 bags = Array[StringName]([&"bag_leather", &"bag_small"])
 rarity_cap = 1
 
-[sub_resource type="Resource" id="Resource_kda3q"]
+[sub_resource type="Resource" id="Resource_llhlc"]
 script = ExtResource("5_v0xwg")
 strength = 1
 item_count = Vector2i(3, 4)
@@ -74,7 +112,7 @@ stat_scale = {
 bags = Array[StringName]([&"bag_leather", &"bag_leather"])
 rarity_cap = 2
 
-[sub_resource type="Resource" id="Resource_4ni8y"]
+[sub_resource type="Resource" id="Resource_j2dpq"]
 script = ExtResource("5_v0xwg")
 strength = 2
 item_count = Vector2i(4, 6)
@@ -85,7 +123,7 @@ stat_scale = {
 }
 bags = Array[StringName]([&"bag_leather", &"bag_leather", &"bag_small"])
 
-[sub_resource type="Resource" id="Resource_woeue"]
+[sub_resource type="Resource" id="Resource_a1gkl"]
 script = ExtResource("5_v0xwg")
 strength = 3
 item_count = Vector2i(6, 8)
@@ -100,7 +138,7 @@ bags = Array[StringName]([&"bag_leather", &"bag_leather", &"bag_leather", &"bag_
 script = ExtResource("3_sjn6r")
 id = &"standard_ruins"
 display_name = "标准废墟（占位）"
-entries = Array[ExtResource("1_78rxq")]([SubResource("Resource_vx45e"), SubResource("Resource_hbwg7"), SubResource("Resource_432bk"), SubResource("Resource_e4v6v"), SubResource("Resource_8jd65"), SubResource("Resource_ratu2")])
-tiers = Array[ExtResource("5_v0xwg")]([SubResource("Resource_baqq6"), SubResource("Resource_kda3q"), SubResource("Resource_4ni8y"), SubResource("Resource_woeue")])
-strength_rule = SubResource("Resource_gowdh")
-loadout = SubResource("Resource_vnoua")
+entries = Array[ExtResource("1_78rxq")]([SubResource("Resource_vx45e"), SubResource("Resource_hbwg7"), SubResource("Resource_432bk"), SubResource("Resource_e4v6v"), SubResource("Resource_8jd65"), SubResource("Resource_ratu2"), SubResource("Resource_vnoua"), SubResource("Resource_gowdh"), SubResource("Resource_baqq6"), SubResource("Resource_kda3q"), SubResource("Resource_4ni8y"), SubResource("Resource_woeue"), SubResource("Resource_inwvc"), SubResource("Resource_5sm3v")])
+tiers = Array[ExtResource("5_v0xwg")]([SubResource("Resource_srhy2"), SubResource("Resource_llhlc"), SubResource("Resource_j2dpq"), SubResource("Resource_a1gkl")])
+strength_rule = SubResource("Resource_6c3lu")
+loadout = SubResource("Resource_h5gnx")

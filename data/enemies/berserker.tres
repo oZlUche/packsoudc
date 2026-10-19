@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_xf1ry"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_i5mkb"]
+
+[sub_resource type="Resource" id="Resource_dl01v"]
+script = ExtResource("1_xf1ry")
+id = &"twin_hammers"
+weight = 2.0
+strength = Vector2i(1, 1)
+quality = &"bad"
+items = Array[StringName]([&"warhammer", &"warhammer"])
+note = "两把重锤：开场两下，之后半天才攒够一下"
+
+[sub_resource type="Resource" id="Resource_vpyxj"]
+script = ExtResource("1_xf1ry")
+id = &"hammer_and_hide"
+strength = Vector2i(1, 3)
+items = Array[StringName]([&"warhammer", &"salted_meat", &"salted_meat"])
+note = "战锤 + 两块咸肉，吃饱了抡"
+
+[resource]
+script = ExtResource("2_i5mkb")
+id = &"berserker"
+display_name = "狂战士"
+display_names = {
+"en": "Berserker"
+}
+strength = 1
+schools = Array[StringName]([&"burst"])
+base_stats = {
+"max_hp": 60,
+"max_stamina": 55
+}
+signature = Array[StringName]([&"scimitar"])
+item_tags = Array[StringName]([&"barbarian", &"burst", &"melee", &"gear", &"food"])
+board = Vector2i(9, 5)
+bags = Array[StringName]([&"bag_leather", &"bag_leather", &"bag_leather", &"bag_small", &"bag_small"])
+builds = Array[ExtResource("1_xf1ry")]([SubResource("Resource_dl01v"), SubResource("Resource_vpyxj")])

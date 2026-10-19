@@ -28,3 +28,7 @@ extends Resource
 ## 一个敌人只信一个神（8-4）：抽到的信仰道具得同属一个信仰（招牌与流派里的第一件说了算），别的信仰的换掉 ——
 ## 不然它自己的兵器就休眠了。false = 不管（老路）
 @export var single_faith: bool = true
+## 211：招牌之后掷一次，掷中就从这一档可用的套路（[member EnemyDef.builds]）里挑一套当骨架；没掷中、或没有可用的套路 → 全抽（老路）
+@export var build_chance: float = 0.6
+## 211：坏套路（`quality: bad`）的权重再乘它；档位 ≥ 2 时再乘一次 —— 深处的敌人少犯傻
+@export var bad_build_mult: float = 0.5

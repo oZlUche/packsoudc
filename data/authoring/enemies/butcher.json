@@ -18,5 +18,21 @@
     "bleed",
     "melee",
     "remedy"
+  ],
+  "builds": [
+    {
+      "id": "butcher_block",
+      "weight": 2.0,
+      "strength": [
+        1,
+        3
+      ],
+      "items": [
+        "cleaver",
+        "bloodletter",
+        "wound_salt"
+      ],
+      "note": "剁肉刀 + 放血刀 + 伤口盐：流血成套"
+    }
   ]
 }

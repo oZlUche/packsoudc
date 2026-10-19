@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_vssyw"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_ocbcx"]
+
+[sub_resource type="Resource" id="Resource_uy8wp"]
+script = ExtResource("1_vssyw")
+id = &"rags"
+weight = 2.0
+strength = Vector2i(0, 1)
+quality = &"bad"
+items = Array[StringName]([&"bandage", &"bandage", &"ration", &"smoked_fish"])
+note = "一身纱布和吃的，没武器"
+
+[sub_resource type="Resource" id="Resource_esn38"]
+script = ExtResource("1_vssyw")
+id = &"cleaver"
+items = Array[StringName]([&"cleaver", &"ration"])
+note = "一把剁肉刀 + 口粮"
+
+[resource]
+script = ExtResource("2_ocbcx")
+id = &"ragpicker"
+display_name = "拾破烂的"
+display_names = {
+"en": "Ragpicker"
+}
+schools = Array[StringName]([&"bleed"])
+base_stats = {
+"max_hp": 24
+}
+item_tags = Array[StringName]([&"material", &"tool", &"remedy", &"food", &"melee"])
+builds = Array[ExtResource("1_vssyw")]([SubResource("Resource_uy8wp"), SubResource("Resource_esn38")])

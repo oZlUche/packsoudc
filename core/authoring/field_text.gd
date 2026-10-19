@@ -69,7 +69,7 @@ const LABELS := {
 	"shop_refresh_cost": "刷新价", "extract_fee": "撤离费", "starting_balance": "开局钱", "reward_base": "打赢基础进账", "warehouse_size": "仓库大小", "first_kit": "第一套",
 	# 角色 / 敌人 / 猎手 / 信仰
 	"board_size": "棋盘尺寸", "starting_bags": "初始包", "vitality_max": "体力上限", "carry_max_items": "最多带几件", "carry_rarity_cap": "带入稀有度上限", "skills": "技能",
-	"bags": "包", "board": "棋盘", "signature": "招牌道具", "signature_by_strength": "按档位的招牌", "combos": "相邻组合", "schools": "流派", "item_tags": "道具标签", "item_count": "道具件数",
+	"bags": "包", "board": "棋盘", "signature": "招牌道具", "signature_by_strength": "按档位的招牌", "combos": "相邻组合", "builds": "套路", "carry_mult": "携带倍率", "build_chance": "套路概率", "bad_build_mult": "坏套路权重倍率", "quality": "好坏", "loose": "不成组", "schools": "流派", "item_tags": "道具标签", "item_count": "道具件数",
 	"strength": "档位", "strength_rule": "档位规则", "loadout": "装备", "behavior": "行动逻辑", "visibility": "可见性", "loss_options": "战败结果档", "loss_pick": "选档方式", "HunterLossOption.weight": "权重", "LossPickFixed.index": "第几档（从 0 数）", "loss_type": "战败类型",
 	"god": "神", "camp": "阵营", "thresholds": "阈值", "deeds": "行为", "single_faith": "只认一位神", "grants": "给的解锁", "level": "档",
 	"mechanics": "机制", "warn_lead_actions": "预警提前量", "first_at_action": "第一次在第几步", "interval_actions": "间隔步数",

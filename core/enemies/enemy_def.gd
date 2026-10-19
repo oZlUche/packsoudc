@@ -97,6 +97,29 @@ func combo_list() -> Array[Array]:
 ## 覆盖档位表的包（084）。空 = 用档位表的
 @export var bags: Array[StringName] = []
 
+## 211：命名套路 —— 几套写死的道具组合，组装时按概率选一套当骨架（[EnemyBuild]）。空 = 全靠抽（老路）
+@export var builds: Array[EnemyBuild] = []
+
+## 211：126 的携带品件数乘它再取整（走私贩 2.0：身上值钱货多）
+@export var carry_mult: float = 1.0
+
+
+## 211：这一档可用的套路（权重 > 0、档位区间含它），按写的先后
+func builds_at(p_strength: int) -> Array[EnemyBuild]:
+	var out: Array[EnemyBuild] = []
+	for b in builds:
+		if b != null and b.weight > 0.0 and b.fits(p_strength):
+			out.append(b)
+	return out
+
+
+## 211：按 id 找套路（内容里记的 `build`）
+func build_of(build_id: StringName) -> EnemyBuild:
+	for b in builds:
+		if b != null and b.id == build_id:
+			return b
+	return null
+
 
 func is_valid() -> bool:
 	return id != &"" and strength >= 0

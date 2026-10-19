@@ -2831,6 +2831,12 @@ class_name EnemyPool extends Resource             # data/authoring/enemy_pools/*
 之后存档、战前、战斗、尸体、掉落都照这份内容重建，下游不认「没摆过」这回事。
 `EnemyKit` 把它重建成棋盘、走 `BattleCompiler` 编译（预览 = 编译，5.10）、给一行摘要。
 
+**套路**（报告 211，作者定）：`EnemyDef.builds` 是几套写死的道具组合（`EnemyBuild`：`id` / `weight` / `strength [min, max]` / `quality good|bad` / `items` / `loose` / `note`）。
+组装时招牌之后按 `EnemyLoadout.build_chance`（默认 0.6）掷一次：掷中就从本档可用的套路里按权重挑一套（坏套路权重 × `bad_build_mult` 0.5，档位 ≥ 2 再 ×0.5），
+骨架进 picks（不受稀有度上限约束，导入器提醒）、余数照旧抽；骨架与招牌一样不被信仰统一 / 保底武器换掉，**坏套路不补保底武器**（「根本不成套」：两把 12 耐力的锤、弓没箭、一身纱布）。
+`loose` 的套路整盘不自动成组（晶石摆不到杖上）。掷套路用另一条派生随机数：没写套路、没掷中的敌人和以前一模一样。
+内容记 `"build": id`（回放 / 测试看，不进玩家摘要）。`EnemyDef.carry_mult` 乘 126 携带品件数区间（走私贩 2.0）。
+
 导入顺序：items → enemies（招牌道具、流派标签对着道具查）→ enemy_pools（条目对着敌人查）→ chapters（池按 id 查）。
 「对着别的东西查」的校验只在批量导入时生效 —— 单独导一个敌人时上下文是空的，无从判断。
 

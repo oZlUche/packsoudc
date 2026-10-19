@@ -19,5 +19,33 @@
     "burst",
     "gear",
     "remedy"
+  ],
+  "builds": [
+    {
+      "id": "barbarian_kit",
+      "weight": 2.0,
+      "strength": [
+        1,
+        3
+      ],
+      "items": [
+        "scimitar",
+        "salve",
+        "strong_salve"
+      ]
+    },
+    {
+      "id": "two_hammers",
+      "strength": [
+        1,
+        3
+      ],
+      "quality": "bad",
+      "items": [
+        "warhammer",
+        "warhammer"
+      ],
+      "note": "两把重锤，耐力跟不上"
+    }
   ]
 }

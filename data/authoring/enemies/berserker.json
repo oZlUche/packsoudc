@@ -1,0 +1,65 @@
+{
+  "id": "berserker",
+  "display_name": "狂战士",
+  "display_names": {
+    "en": "Berserker"
+  },
+  "strength": 1,
+  "schools": [
+    "burst"
+  ],
+  "base_stats": {
+    "max_hp": 60,
+    "max_stamina": 55
+  },
+  "signature": [
+    "scimitar"
+  ],
+  "item_tags": [
+    "barbarian",
+    "burst",
+    "melee",
+    "gear",
+    "food"
+  ],
+  "board": [
+    9,
+    5
+  ],
+  "bags": [
+    "bag_leather",
+    "bag_leather",
+    "bag_leather",
+    "bag_small",
+    "bag_small"
+  ],
+  "builds": [
+    {
+      "id": "twin_hammers",
+      "weight": 2.0,
+      "strength": [
+        1,
+        1
+      ],
+      "quality": "bad",
+      "items": [
+        "warhammer",
+        "warhammer"
+      ],
+      "note": "两把重锤：开场两下，之后半天才攒够一下"
+    },
+    {
+      "id": "hammer_and_hide",
+      "strength": [
+        1,
+        3
+      ],
+      "items": [
+        "warhammer",
+        "salted_meat",
+        "salted_meat"
+      ],
+      "note": "战锤 + 两块咸肉，吃饱了抡"
+    }
+  ]
+}

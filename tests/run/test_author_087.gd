@@ -425,7 +425,10 @@ static func run_enemy_identity(t: TestCase) -> void:
 					t.check(def.allows_item(idef), "%s（%d 档）背的「%s」带身份标签 %s" % [def.display_name, strength, idef.display_name, str(def.item_tags)])
 					if idef.tags.has(&"weapon"):
 						armed = true
-				t.check(armed, "%s（%d 档）有武器" % [def.display_name, strength])
+				# 211：坏套路本来就可以没武器（「根本不成套」）
+				var b := def.build_of(StringName(String(content.get("build", ""))))
+				if b == null or not b.is_bad():
+					t.check(armed, "%s（%d 档）有武器" % [def.display_name, strength])
 				for sid in def.signature_at(strength):
 					var has := false
 					for raw in content.get("items", []):

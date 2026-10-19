@@ -37,6 +37,57 @@
       "node_types": [
         "core"
       ]
+    },
+    {
+      "enemy": "ragpicker",
+      "weight": 2.0,
+      "kinds": [
+        "outskirts"
+      ]
+    },
+    {
+      "enemy": "smuggler",
+      "kinds": [
+        "outskirts",
+        "ruins"
+      ]
+    },
+    {
+      "enemy": "assassin"
+    },
+    {
+      "enemy": "tracker"
+    },
+    {
+      "enemy": "berserker"
+    },
+    {
+      "enemy": "witch_doctor",
+      "kinds": [
+        "ruins",
+        "depths",
+        "core_ring",
+        "inner"
+      ]
+    },
+    {
+      "enemy": "shield_wall",
+      "kinds": [
+        "ruins",
+        "depths",
+        "core_ring",
+        "inner",
+        "core"
+      ]
+    },
+    {
+      "enemy": "apprentice_mage",
+      "kinds": [
+        "depths",
+        "core_ring",
+        "inner",
+        "core"
+      ]
     }
   ],
   "tiers": [

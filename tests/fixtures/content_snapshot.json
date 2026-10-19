@@ -1,6 +1,6 @@
 {
   "chapters": ["free_mode","prologue","prologue_2","prologue_3"],
-  "enemies": ["apothecary","bruiser","brute","butcher","core_guardian","marksman","raider","shieldbearer","skirmisher","warden"],
+  "enemies": ["apothecary","apprentice_mage","assassin","berserker","bruiser","brute","butcher","core_guardian","marksman","ragpicker","raider","shield_wall","shieldbearer","skirmisher","smuggler","tracker","warden","witch_doctor"],
   "faiths": ["brute","church","earth","hunt","nature","skill","sun"],
   "items": {
     "antidote_kit": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},

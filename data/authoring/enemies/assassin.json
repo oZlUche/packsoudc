@@ -1,0 +1,55 @@
+{
+  "id": "assassin",
+  "display_name": "刺客",
+  "display_names": {
+    "en": "Assassin"
+  },
+  "strength": 1,
+  "schools": [
+    "rapid",
+    "bleed"
+  ],
+  "base_stats": {
+    "max_hp": 30,
+    "regen_stamina": 5
+  },
+  "signature": [
+    "knife"
+  ],
+  "item_tags": [
+    "rapid",
+    "bleed",
+    "melee",
+    "remedy"
+  ],
+  "builds": [
+    {
+      "id": "twin_blades",
+      "weight": 2.0,
+      "strength": [
+        1,
+        3
+      ],
+      "items": [
+        "knife",
+        "bloodletter",
+        "bloodlust_bracer"
+      ],
+      "note": "两把刀 + 放血刀 + 嗜血护腕：快、带流血"
+    },
+    {
+      "id": "four_knives",
+      "strength": [
+        0,
+        0
+      ],
+      "quality": "bad",
+      "items": [
+        "knife",
+        "knife",
+        "knife"
+      ],
+      "note": "四把轻刀：开场一下把耐力刷完，之后空挥"
+    }
+  ]
+}

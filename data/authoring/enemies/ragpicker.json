@@ -1,0 +1,46 @@
+{
+  "id": "ragpicker",
+  "display_name": "拾破烂的",
+  "display_names": {
+    "en": "Ragpicker"
+  },
+  "schools": [
+    "bleed"
+  ],
+  "base_stats": {
+    "max_hp": 24
+  },
+  "item_tags": [
+    "material",
+    "tool",
+    "remedy",
+    "food",
+    "melee"
+  ],
+  "builds": [
+    {
+      "id": "rags",
+      "weight": 2.0,
+      "strength": [
+        0,
+        1
+      ],
+      "quality": "bad",
+      "items": [
+        "bandage",
+        "bandage",
+        "ration",
+        "smoked_fish"
+      ],
+      "note": "一身纱布和吃的，没武器"
+    },
+    {
+      "id": "cleaver",
+      "items": [
+        "cleaver",
+        "ration"
+      ],
+      "note": "一把剁肉刀 + 口粮"
+    }
+  ]
+}

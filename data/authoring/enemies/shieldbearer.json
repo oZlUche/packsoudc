@@ -16,5 +16,34 @@
     "shield",
     "rapid",
     "melee"
+  ],
+  "builds": [
+    {
+      "id": "charm_guard",
+      "weight": 2.0,
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "round_shield",
+        "warding_charm",
+        "shortsword"
+      ]
+    },
+    {
+      "id": "all_charms",
+      "strength": [
+        1,
+        2
+      ],
+      "quality": "bad",
+      "items": [
+        "warding_charm",
+        "bloodhound_sigil",
+        "warding_charm"
+      ],
+      "note": "全是符，没武器"
+    }
   ]
 }
