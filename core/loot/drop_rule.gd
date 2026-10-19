@@ -41,8 +41,9 @@ extends Resource
 ## 至少掉几件身上有的（084 作者定：打赢了至少掉一件敌人拥有的道具）。掷完不够就从没掉的里随机补；身上没那么多就掉光。0 = 不保底。
 ## **包不算在这个名额里**（作者定：包另有 bags_always_drop）
 @export var min_drops: int = 0
-## 敌人身上的包必掉（作者定），且不占 min_drops 的名额。false = 包和别的东西一样按稀有度掷
-@export var bags_always_drop: bool = true
+## 敌人身上的包必掉，且不占 min_drops 的名额（序章还这样）。209 起默认假：身上的包**不参与**第一段（不掷、不计保底），
+## 装东西的包由第二段按包池掷（[method DropResolver.roll_bags]）；`guaranteed_drops` 里写了包的仍必掉
+@export var bags_always_drop: bool = false
 ## 126（作者定）：敌人身上的携带品（内容里 `carried: true` 的非战斗道具）必掉 —— 战前看见了才有「为了它多打一场」的决定。
 ## 不占 min_drops 的名额。false = 和别的东西一样按稀有度掷
 @export var carried_always_drop: bool = true

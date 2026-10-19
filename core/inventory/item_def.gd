@@ -109,6 +109,12 @@ func faith_tag() -> StringName:
 ## 仅 is_bag 为真时有效：施加给包内每件物品的效果。
 ## 「包内物品触发快 10%」这类语义放这里。
 @export var bag_mods: Array[StatModifier] = []
+## 209：仅 is_bag 为真时有效：里面的魔晶石供给一场不扣耐久（[WearModule]）
+@export var bag_wear_free: bool = false
+## 209：仅 is_bag 为真时有效：里面的东西卖价倍率（撤离结算、悬浮窗的「值」，[method ItemValue.of_in]）
+@export var bag_value_mult: float = 1.0
+## 209：仅 is_bag 为真时有效：里面的东西负重倍率（[method ItemWeight.total]、[method ItemWeight.of_in]）
+@export var bag_weight_mult: float = 1.0
 
 ## 所属套装的 id，为空表示不属于任何套装。
 ##

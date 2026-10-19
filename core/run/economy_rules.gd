@@ -36,6 +36,8 @@ extends Resource
 @export var shop_sell_ratio: float = 0.5
 ## 不上架的道具标签（珍宝只从敌人身上掉）
 @export var shop_exclude_tags: Array[StringName] = [&"treasure"]
+## 209：每次上货有多大概率把一格换成包（从章节的包池按权重 × 稀有度权重抽）；0 = 不卖包
+@export var shop_bag_slot_chance: float = 0.3
 ## 刷新一次多少钱；每刷一次涨 shop_refresh_step
 @export var shop_refresh_cost: int = 10
 @export var shop_refresh_step: int = 5

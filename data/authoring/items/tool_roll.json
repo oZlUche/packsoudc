@@ -1,0 +1,27 @@
+{
+  "id": "tool_roll",
+  "display_name": "工具卷",
+  "display_names": {
+    "en": "Tool Roll"
+  },
+  "description": "一卷帆布，工具和零件各有各的格子。",
+  "shape": [
+    "111"
+  ],
+  "rarity": 1,
+  "tags": [
+    "cloth"
+  ],
+  "is_bag": true,
+  "bag_accept_tags": [
+    "tool",
+    "part"
+  ],
+  "bag_mods": [
+    {
+      "stat": "haste",
+      "mode": "MULT",
+      "amount": 10.0
+    }
+  ]
+}

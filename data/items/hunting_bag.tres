@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_wp3kx"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_dkcsg"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_7jban"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_i48ah"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_h47aj"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_lrupm"]
+
+[sub_resource type="Resource" id="Resource_r6vea"]
+script = ExtResource("2_dkcsg")
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_4mwbd"]
+script = ExtResource("6_lrupm")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(0, 2), Vector2i(1, 2)])
+
+[resource]
+script = ExtResource("5_h47aj")
+id = &"hunting_bag"
+display_name = "猎囊"
+display_names = {
+"en": "Hunting Bag"
+}
+description = "猎人装猎物的袋子，血腥味让里面的东西更凶。"
+shape = SubResource("Resource_4mwbd")
+rarity = 2
+tags = Array[StringName]([&"leather"])
+is_bag = true
+bag_accept_tags = Array[StringName]([&"flesh", &"bone", &"leather", &"trophy"])
+bag_mods = Array[ExtResource("2_dkcsg")]([SubResource("Resource_r6vea")])

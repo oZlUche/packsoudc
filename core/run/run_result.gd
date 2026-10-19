@@ -69,7 +69,7 @@ static func settle(state: RunState) -> RunResult:
 		for inst in state.board.items():
 			var item := inst as ItemInstance
 			r.carried.append(item)
-			r.value += ItemValue.of_instance(item)
+			r.value += ItemValue.of_in(item, state.board)     # 209：百宝囊里的按倍率
 		for inst in state.storage.items():
 			r.left_behind += 1
 			r.left_value += ItemValue.of((inst as ItemInstance).def)

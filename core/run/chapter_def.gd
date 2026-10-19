@@ -28,6 +28,8 @@ extends Resource
 
 ## 126：敌人携带规则的 id（`data/carry_rules/`）：敌人身上随机带几件非战斗道具。空 = 不带（序章不带：教程敌人身上的东西是设计好的）
 @export var carry_rule: StringName = &""
+## 209：包池的 id（`data/bag_pools/`）：敌人开战背的包、死后第二段掉的包、商店的包槽都从这里抽。空 = 不掷包（序章：教程敌人的包是设计好的）
+@export var bag_pool: StringName = &"standard"
 
 ## 129：负重规则的 id（`data/encumbrance_rules/`）：超重分几级、每级减什么、走路翻不翻倍。空 = 这一章不算负重（序章不算）
 @export var encumbrance_rules: StringName = &""

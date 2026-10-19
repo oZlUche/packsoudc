@@ -1,0 +1,23 @@
+{
+  "id": "studded_satchel",
+  "display_name": "铆钉挎包",
+  "display_names": {
+    "en": "Studded Satchel"
+  },
+  "description": "钉满铆钉的皮包，挡得住刀。",
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 2,
+  "tags": [
+    "leather"
+  ],
+  "is_bag": true,
+  "bag_mods": [
+    {
+      "stat": "max_armor",
+      "amount": 2.0
+    }
+  ]
+}

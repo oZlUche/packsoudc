@@ -29,6 +29,8 @@ class Context:
 	var drop_rules: Dictionary = {}
 	## 126：id -> CarryRule。章节对着它查
 	var carry_rules: Dictionary = {}
+	## 209：id -> BagPool。章节对着它查
+	var bag_pools: Dictionary = {}
 	## 129：id -> EncumbranceRules。章节对着它查
 	var encumbrance_rules: Dictionary = {}
 	## id -> NodeRules。章节对着它查
@@ -91,6 +93,9 @@ class Context:
 
 	func register_carry_rule(rule: CarryRule) -> void:
 		_put(carry_rules, rule)
+
+	func register_bag_pool(pool: BagPool) -> void:
+		_put(bag_pools, pool)
 
 	func register_drop_rule(rule: DropRule) -> void:
 		_put(drop_rules, rule)
@@ -219,6 +224,8 @@ static func import_of(kind: String, data: Dictionary, ctx: Context, report: Impo
 			return import_drop_rule(data, ctx, report)
 		"carry_rules":
 			return import_carry_rule(data, ctx, report)
+		"bag_pools":
+			return import_bag_pool(data, ctx, report)
 		"encumbrance_rules":
 			return import_encumbrance_rules(data, ctx, report)
 		"node_rules":
@@ -1037,6 +1044,36 @@ static func import_carry_rule(data: Dictionary, ctx: Context, report: ImportRepo
 		report.warn("tags", "没有标签，什么都抽不到")
 	ctx.register_carry_rule(rule)
 	return rule
+
+
+## 209：包池 —— 每行是道具库里的包、权重 > 0；fill_target 在 (0, 1]、max_bags ≥ 1、两个概率 / 倍率不为负
+static func import_bag_pool(data: Dictionary, ctx: Context, report: ImportReport) -> BagPool:
+	var pool := BagPool.new()
+	_fill(pool, data, "", ctx, report)
+	_require_id(pool.id, "包池", report)
+	if pool.entries.is_empty():
+		report.error("entries", "包池是空的")
+	for i in pool.entries.size():
+		var e := pool.entries[i]
+		if e == null:
+			continue
+		if e.weight <= 0.0:
+			report.error("entries[%d].weight" % i, "权重得大于 0")
+		if not ctx.items.is_empty():
+			if not ctx.items.has(e.bag):
+				report.error("entries[%d].bag" % i, "找不到道具 '%s'" % e.bag)
+			elif not (ctx.items[e.bag] as ItemDef).is_bag:
+				report.error("entries[%d].bag" % i, "'%s' 不是包" % e.bag)
+	if pool.fill_target <= 0.0 or pool.fill_target > 1.0:
+		report.error("fill_target", "得在 (0, 1] 之间")
+	if pool.max_bags < 1:
+		report.error("max_bags", "至少 1")
+	if pool.extra_bag_chance < 0.0 or pool.extra_bag_chance > 1.0:
+		report.error("extra_bag_chance", "概率应在 0～1 之间")
+	if pool.own_bag_weight_mult < 0.0:
+		report.error("own_bag_weight_mult", "不能为负")
+	ctx.register_bag_pool(pool)
+	return pool
 
 
 ## 129：负重规则 —— 每级 over ≥ 1 且严格递增、travel_mult ≥ 1、减益不碰伤害（作者定）
@@ -1953,6 +1990,8 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 		report.error("enemy_pool", "找不到敌人池 '%s'（已知：%s）" % [def.enemy_pool, ", ".join(ctx.pools.keys())])
 	if def.drop_rule != &"" and not ctx.drop_rules.is_empty() and not ctx.drop_rules.has(def.drop_rule):
 		report.error("drop_rule", "找不到掉落规则 '%s'（已知：%s）" % [def.drop_rule, ", ".join(ctx.drop_rules.keys())])
+	if def.bag_pool != &"" and not ctx.bag_pools.is_empty() and not ctx.bag_pools.has(def.bag_pool):
+		report.error("bag_pool", "找不到包池 '%s'（已知：%s）" % [def.bag_pool, ", ".join(ctx.bag_pools.keys())])     # 209
 	if def.carry_rule != &"" and not ctx.carry_rules.is_empty() and not ctx.carry_rules.has(def.carry_rule):
 		report.error("carry_rule", "找不到携带规则 '%s'（已知：%s）" % [def.carry_rule, ", ".join(ctx.carry_rules.keys())])
 	if def.encumbrance_rules != &"" and not ctx.encumbrance_rules.is_empty() and not ctx.encumbrance_rules.has(def.encumbrance_rules):
@@ -2019,6 +2058,10 @@ static func _validate_item(def: ItemDef, report: ImportReport) -> void:
 			report.warn("bag_accept_tags", "不是包，准入标签不会生效")
 		if not def.bag_mods.is_empty():
 			report.warn("bag_mods", "不是包，包体效果不会生效")
+		if def.bag_wear_free or def.bag_value_mult != 1.0 or def.bag_weight_mult != 1.0:
+			report.warn("bag_wear_free", "不是包，包体效果不会生效")     # 209：三个包体字段同一句
+	elif def.bag_value_mult < 0.0 or def.bag_weight_mult < 0.0:
+		report.error("bag_value_mult", "倍率不能为负")
 
 	if def.combat != null:
 		for i in def.combat.rules.size():

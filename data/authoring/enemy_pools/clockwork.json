@@ -52,10 +52,6 @@
       "stat_scale": {
         "max_hp": 1.15
       },
-      "bags": [
-        "bag_leather",
-        "bag_small"
-      ],
       "rarity_cap": 1
     },
     {
@@ -71,9 +67,9 @@
       "stat_scale": {
         "max_hp": 1.5
       },
-      "bags": [
-        "bag_leather",
-        "bag_leather"
+      "bag_count": [
+        2,
+        2
       ],
       "rarity_cap": 2
     },
@@ -91,10 +87,9 @@
         "max_hp": 1.9,
         "block": 1.25
       },
-      "bags": [
-        "bag_leather",
-        "bag_leather",
-        "bag_small"
+      "bag_count": [
+        2,
+        3
       ]
     },
     {
@@ -111,12 +106,9 @@
         "max_hp": 2.4,
         "block": 1.75
       },
-      "bags": [
-        "bag_leather",
-        "bag_leather",
-        "bag_leather",
-        "bag_small",
-        "bag_small"
+      "bag_count": [
+        3,
+        4
       ]
     }
   ],
