@@ -209,16 +209,12 @@
 | 196 | [休息点整屏换成夜晚营地 —— 事件 `scene: rest_camp` 开营地屏；选项按后果画成篝火 / 帐篷 / 祭坛 / 铁炉 / 路标，锁住换图不藏；歇完不跳屏，篝火熄、冒一行体力；底图跟宝箱皮肤；教程三档摆位](196-rest-camp-scene-landing.md) | 已落地 | 待定按推荐；落地差异见 §9；截图 /mnt/project-files/screenshots/196/ |
 
 | 197 | [主菜单重做与游戏标题（讨论稿 + 补充一：三张背景轮换带慢镜头；补充二：名字定为《背包搜打撤》，标题做成字标图；补充三：标题居中上方、菜单是左下角几行描边字）](197-main-menu-and-title-brainstorm.md) | 已落地（美术定稿） | 字标（皮革「背包」+ 青铜「搜打撤」）与三张背景定稿已进 `assets/ui/menu/`（§17）；落地差异见 §13、§16；截图 /mnt/project-files/screenshots/197/ |
-| 198 | [方案：地上的掉落物按贴图轮廓算碰撞，不按格子 —— 轮廓 = 图的透明通道（没图先按格子外形）→ 凸分解 ≤ 6 块，180 的弹开 / 支撑 / 推开改用分离轴，点选按透明通道；落地朝向仍四选一](198-ground-collision-by-sprite-silhouette.md) | 阶段一、二已落地；补充一已派 | 按格子外形：L / T 能互相嵌、斜着弹开、落在真实底边上，矩形件不变；道具图落地时轮廓来源自动切换（阶段二）；落地差异见 §6；截图 /mnt/project-files/screenshots/198/；**补充一（§7，作者选自由角度）**：四向 + 斜度 tilt，弹开解算补转动 / 重力 / 摩擦 / 睡眠，堆上翻、靠，落稳归一化到四向，存档第三项 |
+| 198 | [方案：地上的掉落物按贴图轮廓算碰撞，不按格子 —— 轮廓 = 图的透明通道（没图先按格子外形）→ 凸分解 ≤ 6 块，180 的弹开 / 支撑 / 推开改用分离轴，点选按透明通道；落地朝向仍四选一](198-ground-collision-by-sprite-silhouette.md) | 阶段一、二、补充一已落地 | 按格子外形：L / T 能互相嵌、斜着弹开、落在真实底边上，矩形件不变；道具图落地时轮廓来源自动切换（阶段二）；落地差异见 §6；截图 /mnt/project-files/screenshots/198/；**补充一（§7，作者选自由角度）**：四向 + 斜度 tilt，弹开解算补转动 / 重力 / 摩擦 / 睡眠，堆上翻、靠，落稳归一化到四向，存档第三项；落地差异见 §8；截图 tilt_*.png |
 
 | 199 | [落地：铸炉屏换成铁炉近景 —— 196 §5 美术定稿（乙 炉台版）接进 forge_screen：底图 lit / cold、layout.json 坐标、三槽与出牌槽对齐格子、风箱把手三态「铸」、路标「返回」](199-forge-screen-art-landing.md) | 已落地 | 素材在 `assets/ui/forge/`；落地差异见 §6；截图 /mnt/project-files/screenshots/196/forge_*.png |
 | 200 | [导出两种版本：玩家版 / 开发版 —— 不建分支，一份 export_presets.cfg 两个预设（release 无控制台包装器、排除 tests/addons/docs；debug 带 `dev` 特性），DevGate 认 `dev`、DevNav 改走 DevGate，三处 template 开发开关并成一把门](200-export-variants-player-and-dev.md) | 已落地 | 待定按推荐（不排除 tools/、加 `tools/export.bat`、开发版过滤同玩家版）；落地差异见 §6 |
 | 201 | [落地：道具图接进棋盘 —— `assets/items/<id>.png` 画布 = rot 0 包围盒 × 60，格外全透明；四个朝向用同一套顺时针变换（偏移 (0,0)/(H,0)/(W,H)/(0,W)），测试用 `rotate_90` 对 `cells_rotated` 钉死；`manifest.json` = 187 的图包判断，198 第二阶段同时翻；六处调用有图走 `draw_art`、没图照旧色块，分批到图分批拷文件](201-item-art-landing-cells-mapping.md) | 已落地 | 首批 86 件（前三批 56 + 材料 30）；以后每批跑 `tools/sync_item_art.sh`；落地差异见 §7；截图 /mnt/project-files/screenshots/201/ |
 
-| 201 | [落地：道具图接进棋盘 —— `assets/items/<id>.png` 画布 = rot 0 包围盒 × 60，格外全透明；四个朝向用同一套顺时针变换（偏移 (0,0)/(H,0)/(W,H)/(0,W)），测试用 `rotate_90` 对 `cells_rotated` 钉死；`manifest.json` = 187 的图包判断，198 第二阶段同时翻；六处调用有图走 `draw_art`、没图照旧色块，分批到图分批拷文件](201-item-art-landing-cells-mapping.md) | 待定按推荐 | 首批 56 件；已派给 架构方案执行 |
-| 202 | [评估：当前游戏的完整度 —— 机制 9 成（183 套件守着，从主菜单玩到科技树闭环）、内容 3 成半（正式图 1、敌人 10、常规事件 20）、数值 2 成（占位清单一条没销）、美术 6 成（道具图 86 / 127，肖像 0、事件图 0）、音频 0、中文 9 成半、英文 4 成（事件 / 百科没翻）；建议顺序：平衡轮 → 内容 → 音频 → 美术补齐 → 英文 → 发布工程](202-completeness-assessment.md) | 盘点 · 等作者定方向 | 不派单；status.md 落后到 10-06，建议一并更新 |
-| 203 | [讨论稿：音频怎么接、现在要不要占位、素材从哪来 —— 挂点已是信号（BattleEvent / 拖拽 / 翻牌 / 换屏），后插 = 一个 Audio 自动加载 + cue 表，什么时候做都一样；现在只定 cue 清单（约 40 音效 + 6 曲）；素材：音效 CC0 包 + freesound 补缺，配乐买包或定制，AI 只补个别音效](203-audio-plan-discussion.md) | 讨论稿 · 作者 10-19 定按推荐 | 正式方案见 204 |
-| 204 | [音频接入第一批：界面音效 —— 自动加载 `Audio`（ui/audio.gd）+ 手写 cue 表 `data/authoring/audio/cues.json` + `GameSettings` 两个音量；按钮音不逐个挂：`node_added` 钩住每颗 `BaseButton` 的 `pressed`（meta `sfx` 换声 / 静音）；窗口开 / 关只挂 `GameDirector._switch_screen` 与 `FloatingWindow`；第一批 3 个 cue，素材 CC0（Kenney）由 美术设计 挑，代码先落空表](204-audio-first-batch-ui-cues.md) | 待定按推荐 | 已派给 架构方案执行（代码）与 美术设计（素材）；配乐等风格定 |
 ## 已归档（被覆盖或作废的方案，只留作历史）
 
 实施报告（做了什么、为什么、验证结果）一律留在上面的清单里；**提议 / 计划 / 设想**一旦被后续实施覆盖、或作者否决，就挪进 `archive/`，设计以架构文档正文为准。

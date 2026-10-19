@@ -29,6 +29,8 @@ const NO_SPOT := Vector2(-1, -1)
 const SPOT_MARGIN := 0.02
 ## 128：uid → 落点（归一化到 0～1 的屏幕坐标，道具包围盒的左上角）。只是样子，见类注释
 var spots: Dictionary = {}
+## 198 补充一：uid → 斜度（弧度，绕轮廓重心转，顺时针为正，(−45°, 45°]）。只是样子；没有 = 0。捡起即丢（[method remove]）
+var tilts: Dictionary = {}
 ## 一格在地上占多大（归一化）。[GroundLayer] 按自己的尺寸设；没有地层（测试、沙盒）用默认 1600×900 下的一格（60 像素）
 var cell_norm: Vector2 = Vector2(60.0 / 1600.0, 60.0 / 900.0)
 ## 自动铺放要躲开的区域（归一化矩形，各屏的面板）。[GroundLayer] 设，不存档
@@ -122,6 +124,7 @@ func remove(uid: int) -> ItemInstance:
 	var inst := _list[i]
 	_list.remove_at(i)
 	spots.erase(uid)
+	tilts.erase(uid)
 	landing_from.erase(uid)
 	inst.container_id = 0
 	_notify_changed()
@@ -135,6 +138,7 @@ func clear() -> void:
 		inst.container_id = 0
 	_list.clear()
 	spots.clear()
+	tilts.clear()
 	landing_from.clear()
 	_notify_changed()
 #endregion
@@ -159,6 +163,25 @@ func set_spot(uid: int, spot: Vector2) -> bool:
 	if not has_item(uid) or not has_spot_value(spot):
 		return false
 	spots[uid] = _clamp_spot(spot)
+	_notify_changed()
+	return true
+
+
+## 198 补充一：这件在地上斜了多少（弧度；没斜 / 不在 = 0）
+func tilt_of(uid: int) -> float:
+	return float(tilts.get(uid, 0.0))
+
+
+## 设斜度（[GroundLayer] 落稳时写）。0 就从表里删掉。不在表里返回 false
+func set_tilt(uid: int, tilt: float) -> bool:
+	if not has_item(uid):
+		return false
+	if is_zero_approx(tilt):
+		if not tilts.has(uid):
+			return true
+		tilts.erase(uid)
+	else:
+		tilts[uid] = tilt
 	_notify_changed()
 	return true
 
@@ -210,8 +233,7 @@ func to_dict() -> Dictionary:
 	var where: Array = []
 	for inst in _list:
 		out.append(inst.to_dict())
-		var at := spot_of(inst.uid)
-		where.append([at.x, at.y])
+		where.append(spot_entry(spot_of(inst.uid), tilt_of(inst.uid)))
 	return {"id": id, "capacity": capacity, "items": out, "spots": where}
 
 
@@ -223,13 +245,29 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> ItemStash:
 	for i in raws.size():
 		var inst := ItemInstance.from_dict(raws[i] as Dictionary, db)
 		if inst != null:
-			stash.insert(inst, -1, read_spot(where[i] if i < where.size() else null))
+			var raw: Variant = where[i] if i < where.size() else null
+			stash.insert(inst, -1, read_spot(raw))
+			if not is_zero_approx(read_tilt(raw)):
+				stash.tilts[inst.uid] = read_tilt(raw)
 	return stash
 
 
-## 存档里的一个落点 `[x, y]` → 落点；不合法 [constant NO_SPOT]
+## 存档里的一个落点：`[x, y]`，斜了的多一项 `[x, y, 斜度（度，一位小数）]`（198 补充一；第三项可省，省 = 0）
+static func spot_entry(at: Vector2, tilt: float) -> Array:
+	var deg := snappedf(rad_to_deg(tilt), 0.1)
+	return [at.x, at.y] if is_zero_approx(deg) else [at.x, at.y, deg]
+
+
+## 存档里的一个落点 `[x, y]`（或 `[x, y, 斜度]`）→ 落点；不合法 [constant NO_SPOT]
 static func read_spot(raw: Variant) -> Vector2:
 	if raw is Array and (raw as Array).size() >= 2:
 		return Vector2(float(raw[0]), float(raw[1]))
 	return NO_SPOT
+
+
+## 存档里的一个落点的斜度（弧度）：第三项（度），没有 = 0
+static func read_tilt(raw: Variant) -> float:
+	if raw is Array and (raw as Array).size() >= 3:
+		return deg_to_rad(float(raw[2]))
+	return 0.0
 #endregion

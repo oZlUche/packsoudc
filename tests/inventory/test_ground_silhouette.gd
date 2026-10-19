@@ -158,7 +158,7 @@ static func _stable(sil: Dictionary) -> bool:
 
 
 static func run_concave_settle(t: TestCase) -> void:
-	t.begin("198 · L、T、长条、方块压成一堆：按轮廓弹开，收尾后两两不相交、都在屏内；落点照旧是归一化的 [x, y]")
+	t.begin("198 · L、T、长条、方块压成一堆：按轮廓弹开，收尾后两两不相交、都在屏内；落点照旧是归一化的 [x, y]（斜着的多一项）")
 	ItemInstance.reset_uid_counter()
 	var defs := [G._def(&"t_ell", ["1.", "11"]), G._def(&"t_tee", ["111", ".1."]), G._def(&"t_bar", ["111"]), G._def(&"t_sq", ["11", "11"])]
 	var stash := ItemStash.new(2, 0)
@@ -178,8 +178,8 @@ static func run_concave_settle(t: TestCase) -> void:
 	var saved := stash.to_dict()
 	var ok := (saved["spots"] as Array).size() == stash.item_count()
 	for p in (saved["spots"] as Array):
-		ok = ok and p is Array and (p as Array).size() == 2 and float(p[0]) >= 0.0 and float(p[0]) <= 1.0 and float(p[1]) >= 0.0 and float(p[1]) <= 1.0
-	t.check(ok, "存档 spots 仍是每件一个 [x, y]（0 ～ 1）")
+		ok = ok and p is Array and (p as Array).size() in [2, 3] and float(p[0]) >= 0.0 and float(p[0]) <= 1.0 and float(p[1]) >= 0.0 and float(p[1]) <= 1.0
+	t.check(ok, "存档 spots 仍是每件一个 [x, y]（0 ～ 1；198 补充一：斜着的多一项斜度）")
 	ground.free()
 
 

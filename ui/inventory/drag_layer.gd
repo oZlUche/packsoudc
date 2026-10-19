@@ -73,6 +73,8 @@ var _src_rot: int = 0
 var _src_index: int = -1
 ## 128：源容器是地上时的原落点
 var _src_spot: Vector2 = ItemStash.NO_SPOT
+## 198 补充一：从地上拿起时它斜着多少 —— 只在取消（原样放回）时用；放到别处一律从不斜起落
+var _src_tilt: float = 0.0
 ## 162：从棋盘（格子视图）拿起时原来那一格的左上角（全局像素）；拖出去落地从这里飞到放手点。不是从格子拿的为 null
 var _src_px: Variant = null
 ## 抓取点相对物品 origin 的格偏移，拖拽时用它反推落点
@@ -159,6 +161,7 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 		_grab_cell = (view as GroundLayer).grab_cell_at(uid, local_pos) if view is GroundLayer else Vector2i.ZERO
 		_src_index = (from as ItemStash).index_of(uid)
 		_src_spot = (from as ItemStash).spot_of(uid)
+		_src_tilt = (from as ItemStash).tilt_of(uid)
 		if from.remove(uid) == null:
 			_source = null
 			_inst = null
@@ -956,6 +959,8 @@ func _restore() -> void:
 	if _source is ItemStash:
 		if (_source as ItemStash).insert(_inst, _src_index, _src_spot):
 			(_source as ItemStash).landing_from[_inst.uid] = false     # 134：放回原处不算落地
+			if _src_tilt != 0.0:
+				(_source as ItemStash).tilts[_inst.uid] = _src_tilt     # 198 补充一：原样放回还斜着
 			return
 		push_error("DragLayer: uid %d 放不回地上，物品已丢失" % _inst.uid)
 		return
@@ -996,6 +1001,7 @@ func _end_drag() -> void:
 	_source = null
 	_src_index = -1
 	_src_spot = ItemStash.NO_SPOT
+	_src_tilt = 0.0
 	_src_px = null
 	_payload = {}
 	set_process_input(false)
