@@ -1,6 +1,6 @@
 {
   "chapters": ["free_mode","prologue","prologue_2","prologue_3"],
-  "enemies": ["apothecary","bruiser","brute","butcher","core_guardian","marksman","raider","shieldbearer","skirmisher","warden"],
+  "enemies": ["apothecary","bruiser","brute","butcher","cave_bear","core_guardian","flame_wolf","frost_toad","marksman","pit_viper","raider","shieldbearer","shock_eel","skirmisher","warden"],
   "faiths": ["brute","church","earth","hunt","nature","skill","sun"],
   "items": {
     "antidote_kit": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
@@ -20,9 +20,15 @@
     "bandage_roll_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "barbarian_necklace": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "battery": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
+    "beast_claw": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
+    "beast_claw_nature": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
+    "beast_fang": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
+    "beast_fang_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "beast_hide": {"bag":false,"cells":6,"shape":[[0,0],[0,1],[1,0],[1,1],[2,0],[2,1]],"size":[3,2]},
     "beast_hide_earth": {"bag":false,"cells":6,"shape":[[0,0],[0,1],[1,0],[1,1],[2,0],[2,1]],"size":[3,2]},
     "beast_hide_nature": {"bag":false,"cells":6,"shape":[[0,0],[0,1],[1,0],[1,1],[2,0],[2,1]],"size":[3,2]},
+    "beast_tail": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
+    "beast_tail_nature": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
     "beast_tusk_root": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
     "beast_tusk_root_nature": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
     "beeswax": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
@@ -78,9 +84,13 @@
     "fine_fur": {"bag":false,"cells":2,"shape":[[0,0],[1,0]],"size":[2,1]},
     "fine_fur_nature": {"bag":false,"cells":2,"shape":[[0,0],[1,0]],"size":[2,1]},
     "fire_crystal": {"bag":false,"cells":2,"shape":[[0,0],[1,0]],"size":[2,1]},
+    "fire_gland": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
+    "fire_gland_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "flint": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "flint_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "forge_token": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
+    "frost_gland": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
+    "frost_gland_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "gambeson": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "gilded_goblet": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "gilded_goblet_sun": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
@@ -176,6 +186,8 @@
     "sealed_wine_jar": {"bag":false,"cells":4,"shape":[[0,0],[0,1],[1,0],[1,1]],"size":[2,2]},
     "serrated_arrows": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "serrated_arrows_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
+    "shock_sac": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
+    "shock_sac_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "shortbow": {"bag":false,"cells":5,"shape":[[0,0],[0,1],[0,2],[1,0],[1,2]],"size":[2,3]},
     "shortbow_brute": {"bag":false,"cells":5,"shape":[[0,0],[0,1],[0,2],[1,0],[1,2]],"size":[2,3]},
     "shortbow_earth": {"bag":false,"cells":5,"shape":[[0,0],[0,1],[0,2],[1,0],[1,2]],"size":[2,3]},
@@ -226,5 +238,5 @@
     "wool_cloth": {"bag":false,"cells":2,"shape":[[0,0],[1,0]],"size":[2,1]},
     "wound_salt": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]}
   },
-  "tags": ["ammo","armor","barbarian","bleed","blessed","bone","bow","burst","clay","cloth","crafted","crystal","enchanted","faith","faith_anchor","fire","flesh","food","gear","gear_plug","gem","gun","heavy","herb","imperial","keepsake","leather","magic","material","melee","metal","nature","node_tooltips","part","poison","ranged","rapid","reagent","relic","remedy","sealed","shield","sigil","staff","stone","supply","token","tool","treasure","trophy","weapon","wood"]
+  "tags": ["ammo","armor","barbarian","beast_part","bleed","blessed","bone","bow","burst","clay","cloth","crafted","crystal","enchanted","faith","faith_anchor","fire","flesh","food","gear","gear_plug","gem","gun","heavy","herb","ice","imperial","keepsake","leather","lightning","magic","material","melee","metal","nature","node_tooltips","part","poison","ranged","rapid","reagent","relic","remedy","sealed","shield","sigil","staff","stone","supply","token","tool","treasure","trophy","weapon","wood"]
 }

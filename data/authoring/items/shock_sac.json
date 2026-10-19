@@ -1,0 +1,75 @@
+{
+  "id": "shock_sac",
+  "display_name": "电囊",
+  "display_names": {
+    "en": "Shock Sac"
+  },
+  "description": "还在微微发麻。挨着它的武器每次出手，都给对手添一层【麻痹】。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "reagent",
+    "material",
+    "nature",
+    "flesh",
+    "lightning",
+    "beast_part"
+  ],
+  "adjacency": {
+    "grant_cells": [
+      [
+        0,
+        -1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "grant_filter": [
+      "weapon"
+    ],
+    "grant_rules": [
+      {
+        "trigger": "@on_item_fired",
+        "cadence": "@always",
+        "effects": [
+          "@apply_status_numb"
+        ]
+      }
+    ]
+  },
+  "wild": {
+    "base_stats": {
+      "damage": 2
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.2
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 3.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage",
+            "damage_type": "lightning"
+          }
+        ]
+      }
+    ]
+  },
+  "wild_applies": [
+    {
+      "buff": "numb"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "lightning",
+  "display_name": "雷电",
+  "display_names": {
+    "en": "Lightning"
+  },
+  "description": "带电的东西。",
+  "descriptions": {
+    "en": "Carries lightning."
+  },
+  "tip": false,
+  "category": "element"
+}

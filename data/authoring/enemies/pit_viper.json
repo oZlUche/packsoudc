@@ -1,0 +1,33 @@
+{
+  "id": "pit_viper",
+  "display_name": "坑蝰",
+  "display_names": {
+    "en": "Pit Viper"
+  },
+  "strength": 1,
+  "schools": [
+    "poison"
+  ],
+  "base_stats": {
+    "max_hp": 30
+  },
+  "signature": [
+    "viper_gland",
+    "beast_fang",
+    "beast_fang"
+  ],
+  "item_tags": [
+    "beast_part"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    4,
+    3
+  ],
+  "species": "beast",
+  "bagless": true
+}

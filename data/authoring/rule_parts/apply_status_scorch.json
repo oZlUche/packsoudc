@@ -1,0 +1,8 @@
+{
+  "id": "apply_status_scorch",
+  "display_name": "施加灼伤",
+  "effect": {
+    "type": "apply_status",
+    "buff": "scorch"
+  }
+}

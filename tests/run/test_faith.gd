@@ -245,7 +245,8 @@ static func run_run_and_save(t: TestCase) -> void:
 						ok = false
 			checked += 1
 			t.check(ok, "%s 第 %d 次：只信一个神（%s）" % [eid, round, str(picks)])
-			t.check(weapons >= rule.min_weapons, "%s 第 %d 次：至少 %d 件武器（%s）" % [eid, round, rule.min_weapons, str(picks)])
+			var need := (def.loadout if def.loadout != null else rule).min_weapons     # 212：魔兽自己的组装规则不要武器
+			t.check(weapons >= need, "%s 第 %d 次：至少 %d 件武器（%s）" % [eid, round, need, str(picks)])
 	t.check(checked > 0, "检查了 %d 次组装" % checked)
 	var pool_items := EnemyPlacer.school_items([&"faith:brute"] as Array[StringName], db, -1)
 	for id in pool_items:

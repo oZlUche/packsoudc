@@ -101,22 +101,27 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		lines.append("包：%d×%d，放进去的东西才参战" % [size.x, size.y] + ("；只收 %s" % "、".join(_names(def.bag_accept_tags)) if not def.bag_accept_tags.is_empty() else ""))
 		for m in def.bag_mods:
 			lines.append("　包里的东西：%s" % Glossary.mod_text(m))
+	# 212：魔兽 / 机关棋盘上的道具写它持有时的那一面（wild）：没有邻接、信仰、`applies`
+	var wild := is_wild_on(inst, board)
+	var profile := BattleCompiler.profile_of(def, wild)
+	if wild:
+		lines.append("[color=@dim]魔兽的器官（它持有时这样用）[/color]")
 	var spec := spec_for(inst, board)
 	var compiled: CompiledItem = spec.item_of(inst.uid) if spec != null else null
 	if compiled == null and spec != null and not spec.items.is_empty():
 		compiled = spec.items[0]     # 单独编的那块棋盘上只有它的副本
 	var use_stats: StatSet = spec.stats_with_opening(compiled) if compiled != null else null
-	var weapon := def.tags.has(&"weapon")
+	var weapon := def.tags.has(&"weapon") or wild     # 212：魔兽身上的器官就是它的武器
 	# 175 补 5.4：道具自己的「造成伤害后施加」（[member ItemDef.applies]）并进武器句写成一句两段；没有武器句才单写一行
-	var own_gives := applies_phrases(def.applies)
+	var own_gives := applies_phrases(def.wild_applies if wild else def.applies)
 	var gives_used := false
 	# 087（作者定）：没有「主武器」—— 包里每一件武器都各自出手，这里每件都按自己的规则写
-	if def.combat != null:
-		for key in def.combat.base_stats:
+	if profile != null:
+		for key in profile.base_stats:
 			if weapon and String(key) == "damage":
 				continue     # 170：武器的伤害写在武器句里
-			lines.append("%s [b]%s[/b]" % [Glossary.stat_name(StringName(String(key))), str(def.combat.base_stats[key])])
-		for r in def.combat.rules:
+			lines.append("%s [b]%s[/b]" % [Glossary.stat_name(StringName(String(key))), str(profile.base_stats[key])])
+		for r in profile.rules:
 			var rule := r as AbilityRule
 			if rule == null:
 				continue
@@ -178,7 +183,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	if def.growth != null:     # 207：生长 —— 现在第几阶、再几步、各阶加什么、扎根没有
 		var gst := faith_status()
 		lines.append_array(growth_lines(inst, board, not gst.is_empty() and not faith_lit(def, gst)))
-	if def.adjacency != null:
+	if def.adjacency != null and not wild:
 		var adj := def.adjacency
 		var g := AdjacencyText.grant(adj)
 		if g != "":
@@ -194,7 +199,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 				lines.append("%s[color=@grant]%s[/color]" % [icon("load"), line])
 				lines.append(load_status_line(inst, board, spec))
 	var status := faith_status() if def.has_faith() else {}
-	for fb in def.faith_bonuses:
+	for fb in ([] if wild else def.faith_bonuses):
 		var b := fb as FaithBonus
 		if b != null:
 			var line := "信力 " + b.describe()
@@ -219,7 +224,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			var lb := ReactionResolver.mark_buff(StringName(String((e.get("applies", {}) as Dictionary).get("buff", ""))))
 			if lb != null:
 				item_buffs[lb.id] = lb
-	for a in def.applies:
+	for a in (def.wild_applies if wild else def.applies):
 		if a != null and (a as ElementApply).buff != null:
 			item_buffs[(a as ElementApply).buff.id] = (a as ElementApply).buff
 	for id in item_buffs:
@@ -550,16 +555,24 @@ static func rarity_name(rarity: int) -> String:
 
 ## 这件道具所在的编译结果：在 [param board] 上就编整块棋盘；否则单独编一遍（放在一块刚好装下它的棋盘上，副本是那块棋盘上唯一的一件）
 static func spec_for(inst: ItemInstance, board: GridInventory) -> CombatantSpec:
-	if inst == null or inst.def == null or inst.def.combat == null:
+	var wild := is_wild_on(inst, board)
+	if inst == null or inst.def == null or BattleCompiler.profile_of(inst.def, wild) == null:
 		return null
 	if board != null and board.has_item(inst.uid):
-		return BattleCompiler.compile_board(board)
+		var inp := CompileInput.new()
+		inp.wild = wild
+		return BattleCompiler.compile(board, inp)
 	var size := inst.def.shape.size_rotated(0) if inst.def.shape != null else Vector2i.ONE
 	var scratch := GridInventory.new(size, 0, false)
 	var copy := ItemInstance.create(inst.def, 0)
 	if not scratch.place(copy, Vector2i.ZERO, 0):
 		return null
 	return BattleCompiler.compile_board(scratch)
+
+
+## 212：这件在魔兽 / 机关的棋盘上（[constant EnemyKit.WILD_META]）
+static func is_wild_on(inst: ItemInstance, board: GridInventory) -> bool:
+	return inst != null and board != null and bool(board.get_meta(EnemyKit.WILD_META, false)) and board.has_item(inst.uid)
 
 
 ## 这件道具现在的编译结果（一件）

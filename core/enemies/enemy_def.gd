@@ -98,5 +98,19 @@ func combo_list() -> Array[Array]:
 @export var bags: Array[StringName] = []
 
 
+## 212：种族。`human`（人，默认）/ `beast`（魔兽）/ `construct`（机关，210）—— 不是人的身上的道具用 [member ItemDef.wild] 那一面，
+## 不揣携带品（126）
+@export var species: StringName = &"human"
+## 212：没有包 —— 不摆包，棋盘不要求包（道具直接摆）；死了不掉包（209）
+@export var bagless: bool = false
+
+const SPECIES: Array[StringName] = [&"human", &"beast", &"construct"]
+
+
+## 212：不是人（魔兽、机关）：编译用 `wild` 面
+func is_wild() -> bool:
+	return species != &"human"
+
+
 func is_valid() -> bool:
 	return id != &"" and strength >= 0

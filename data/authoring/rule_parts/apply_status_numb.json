@@ -1,0 +1,8 @@
+{
+  "id": "apply_status_numb",
+  "display_name": "施加麻痹",
+  "effect": {
+    "type": "apply_status",
+    "buff": "numb"
+  }
+}

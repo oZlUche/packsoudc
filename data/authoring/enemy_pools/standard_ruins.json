@@ -37,6 +37,39 @@
       "node_types": [
         "core"
       ]
+    },
+    {
+      "enemy": "flame_wolf",
+      "weight": 1.5,
+      "kinds": [
+        "outskirts",
+        "ruins"
+      ]
+    },
+    {
+      "enemy": "frost_toad",
+      "kinds": [
+        "outskirts",
+        "ruins"
+      ]
+    },
+    {
+      "enemy": "shock_eel",
+      "kinds": [
+        "outskirts",
+        "ruins"
+      ]
+    },
+    {
+      "enemy": "pit_viper"
+    },
+    {
+      "enemy": "cave_bear",
+      "kinds": [
+        "depths",
+        "core_ring",
+        "inner"
+      ]
     }
   ],
   "tiers": [
