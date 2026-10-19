@@ -1,0 +1,84 @@
+{
+  "id": "ironwood_sapling",
+  "display_name": "铁木苗",
+  "display_names": {
+    "en": "Ironwood Sapling"
+  },
+  "description": "自然之神的树苗：放进背包，随倒计时长大。长成小树就扎根、给你护甲；长成大树连包一起扎根，护甲更厚。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "faith",
+    "faith:nature",
+    "nature",
+    "wood"
+  ],
+  "growth": {
+    "stages": [
+      {
+        "name": "小树",
+        "names_by_lang": {
+          "en": "Young Tree"
+        },
+        "prefix": "抽枝的",
+        "prefixes_by_lang": {
+          "en": "Branching "
+        },
+        "mods": [
+          {
+            "stat": "max_armor",
+            "amount": 8.0
+          }
+        ]
+      },
+      {
+        "name": "大树",
+        "names_by_lang": {
+          "en": "Old Tree"
+        },
+        "prefix": "参天的",
+        "prefixes_by_lang": {
+          "en": "Towering "
+        },
+        "after": 6,
+        "lock": "bag",
+        "mods": [
+          {
+            "stat": "max_armor",
+            "amount": 18.0
+          },
+          {
+            "stat": "max_hp",
+            "amount": 10.0
+          }
+        ],
+        "bonus_pool": [
+          {
+            "mods": [
+              {
+                "stat": "max_armor",
+                "amount": 8.0
+              }
+            ]
+          },
+          {
+            "mods": [
+              {
+                "stat": "regen_hp",
+                "amount": 1.0
+              }
+            ]
+          }
+        ],
+        "bonus_count": 1
+      }
+    ],
+    "stage0_name": "树苗",
+    "stage0_names": {
+      "en": "Sapling"
+    }
+  }
+}

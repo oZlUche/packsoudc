@@ -134,5 +134,6 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> ItemInstance:
 	inst.state = (d.get("state", {}) as Dictionary).duplicate(true)
 	if inst.state.has(WearProfile.CHARGES_KEY):     # 148：JSON 读回来是 3.0，存回去得还是 3（存档逐字节往返）
 		inst.state[WearProfile.CHARGES_KEY] = int(inst.state[WearProfile.CHARGES_KEY])
+	GrowthProfile.normalize_state(inst.state)     # 207：生长计数同理
 	reserve_uid_above(inst.uid)
 	return inst

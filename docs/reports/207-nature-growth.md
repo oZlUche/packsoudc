@@ -138,3 +138,37 @@
 - 不做别的神的同类机制；词留给 `growth`。
 - 不做阶段切换动画与音效（挂点在 `grown` 信号上，以后一行）。
 - 不动 099 的信仰切换规则。
+
+## 7 落地（架构方案执行 · 2026-10-19）
+
+§4 待定全部按推荐：倒计时 = 全局倒计时的步数；离开棋盘清零；休眠保留阶段与锁；锁住的包里别的东西能动；卖出不另列（扎了根的拖不出去，卖不了）；数值见下。
+
+**和方案不一样的地方**
+
+| 方案 | 落地 | 为什么 |
+|---|---|---|
+| `bonus_pool` 是规则池，抽中的 id 记进 `growth_bonus` | 池子里每条是 `GrowthBonus`（mods + rules + note），记的是**下标** | 规则没有 id；额外效果也可能只是加属性 |
+| `GridInventory.displaced_by` 跳过锁住的 | `displaced_by` 不改；`place_displacing` 与 `DragLayer._displaceable` 见到锁住的就整件作废 | `displaced_by` 还给合成 / 附魔认「压着谁」用，跳过会让预览说谎 |
+| `GridTidy.tidy` 绕开锁住的 | 不改 | 它本来就不碰棋盘模式的格子（只整理仓库） |
+| 锁在任何棋盘上都算 | 只有一局的作战棋盘锁（`GridInventory.growth_locks`，`GrowthModule` 装的时候开，不进存档） | 基地带回来的棋盘要能一键放进仓库 |
+| 带回基地清零（隐含） | `MetaState._adopt` 调 `GrowthProfile.on_leave` | 带回来的那一下不经过一局的棋盘信号 |
+| 铁木苗：增益格两侧武器 +2 伤害 | 改成自己给护甲：小树 `max_armor` +8，大树 +18 且 `max_hp` +10 | 阶段加成只作用于这件自己（同信仰加成）；按阶改邻接要另开一套，先不做 |
+| 荆棘种子绽放：反伤命中施加流血 | 反伤 3 + 挨到实打实的一下时给对手 1 层流血（冷却 3 秒） | 反伤是伤害包，挂不上「命中后」；用受击时机等价 |
+| 月光草籽绽放：开战清一层减益 | 每 5 秒拔掉身上每种减益各一层 | 开战那一刻身上没有减益，原写法永远不起作用 |
+| 阶段名「种子」 | 铁木苗写「树苗 → 小树 → 大树」，另两件「种子 → 茎叶 → 绽放」 | 作者原话：也可以是树木的成长阶段 |
+
+**首批三件**（都带 `faith` + `faith:nature` + `nature`，进搜索 / 商店池照常，赐福不派生——它们本身就是信仰道具）
+
+| id | 稀有度 | 第一阶（4 步，扎根） | 第二阶（再 6 步，连包扎根） | 额外效果池（抽 1） |
+|---|---|---|---|---|
+| `thorn_seed` 荆棘种子 1×1 | 1 | 受直接伤害反伤 1 | 反伤 3；受击给对手 1 层流血（3 秒一次） | 耐力回复 +0.5 / 生命 +12 |
+| `ironwood_sapling` 铁木苗 1×2 | 2 | 护甲上限 +8 | 护甲上限 +18、生命 +10 | 护甲上限 +8 / 生命回复 +1 |
+| `moonherb_seed` 月光草籽 1×1 | 3 | 生命回复 +1 | 生命回复 +2；每 5 秒拔每种减益一层 | 生命 +15 / 耐力回复 +0.5 |
+
+**改动**：`core/inventory/growth_profile.gd` / `growth_stage.gd` / `growth_bonus.gd`（新）、`item_def.gd`（`growth`）、`item_instance.gd`（整数化）、
+`grid_inventory.gd`（`growth_locks`、`is_locked`、`bag_locked`、`any_locked`；`place_displacing` 不顶锁住的）、`inventory_service.gd`（三处）、
+`core/run/modules/growth_module.gd`（新，`RunModules.standard` 与 `RunRegistry` 登记）、`compiler.gd`（4b'）、`names.gd`（前缀）、`content_importer.gd`（`_validate_growth`、规则组）、
+`field_text.gd`（字段 / 类 / 枚举中文名）、`meta_state.gd`（带回清零）、`ui_text.gd`（`notice.rooted`）、`drag_layer.gd`（按下 / 换包 / 顶替 + `grab_refused`）、
+`inventory_panel.gd`（提示 + 双击）、`item_tooltip.gd`（`growth_lines`）；三件道具 JSON + .tres、内容快照、字体子集（新字）；`docs/architecture.md` 3.9；测试 `tests/run/test_growth_207.gd`（4 组）。
+
+**没做**：阶段变体图（等 208 的实例变体图规则与美术的 `@s1/@s2`）、升阶动画与音效（挂 `GrowthModule.grown`）、猎手池没有特意排除（没核过猎手的装备会不会抽到种子）。

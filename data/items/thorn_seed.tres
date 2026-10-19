@@ -1,0 +1,179 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_wwvrx"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_py3pg"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_ww37g"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_yclry"]
+[ext_resource type="Script" path="res://core/inventory/growth_profile.gd" id="5_v7hcv"]
+[ext_resource type="Script" path="res://core/inventory/growth_stage.gd" id="6_e24t0"]
+[ext_resource type="Script" path="res://core/inventory/growth_bonus.gd" id="7_682t5"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="8_ksiix"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="9_dol4m"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="10_6d8bm"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="11_md0xm"]
+[ext_resource type="Script" path="res://core/battle/effects/reflect_damage.gd" id="12_p0owd"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_before_damage.gd" id="13_f5cgq"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="14_x7nv2"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="15_uv1cr"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="16_1cm17"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="17_2l8kh"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="18_rhlpk"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="19_rgspv"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_damage.gd" id="20_jkuk8"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="21_70c2n"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="22_x6mt1"]
+
+[sub_resource type="Resource" id="Resource_dh37x"]
+script = ExtResource("9_dol4m")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_xjl6w"]
+script = ExtResource("12_p0owd")
+percent = 0
+flat = 1.0
+
+[sub_resource type="Resource" id="Resource_62fji"]
+script = ExtResource("13_f5cgq")
+
+[sub_resource type="Resource" id="Resource_ni3hj"]
+script = ExtResource("8_ksiix")
+trigger = SubResource("Resource_62fji")
+cadence = SubResource("Resource_dh37x")
+effects = Array[ExtResource("11_md0xm")]([SubResource("Resource_xjl6w")])
+
+[sub_resource type="Resource" id="Resource_oa8x0"]
+script = ExtResource("6_e24t0")
+name = "茎叶"
+names_by_lang = {
+"en": "Sprout"
+}
+prefix = "抽芽的"
+prefixes_by_lang = {
+"en": "Sprouting "
+}
+rules = Array[ExtResource("8_ksiix")]([SubResource("Resource_ni3hj")])
+
+[sub_resource type="Resource" id="Resource_u0yf1"]
+script = ExtResource("2_py3pg")
+stat = &"regen_stamina"
+amount = 0.5
+
+[sub_resource type="Resource" id="Resource_py7vt"]
+script = ExtResource("7_682t5")
+mods = Array[ExtResource("2_py3pg")]([SubResource("Resource_u0yf1")])
+
+[sub_resource type="Resource" id="Resource_65br4"]
+script = ExtResource("2_py3pg")
+stat = &"max_hp"
+amount = 12.0
+
+[sub_resource type="Resource" id="Resource_u8oph"]
+script = ExtResource("7_682t5")
+mods = Array[ExtResource("2_py3pg")]([SubResource("Resource_65br4")])
+
+[sub_resource type="Resource" id="Resource_jo2ps"]
+script = ExtResource("9_dol4m")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_n742w"]
+script = ExtResource("12_p0owd")
+percent = 0
+flat = 3.0
+
+[sub_resource type="Resource" id="Resource_qk8vi"]
+script = ExtResource("13_f5cgq")
+
+[sub_resource type="Resource" id="Resource_35wr6"]
+script = ExtResource("8_ksiix")
+trigger = SubResource("Resource_qk8vi")
+cadence = SubResource("Resource_jo2ps")
+effects = Array[ExtResource("11_md0xm")]([SubResource("Resource_n742w")])
+
+[sub_resource type="Resource" id="Resource_58ywx"]
+script = ExtResource("14_x7nv2")
+seconds = 3.0
+
+[sub_resource type="Resource" id="Resource_imdws"]
+script = ExtResource("14_x7nv2")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_psjp1"]
+script = ExtResource("16_1cm17")
+target = 1
+damage_type = &"bleed"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_iuh5t"]
+script = ExtResource("17_2l8kh")
+
+[sub_resource type="Resource" id="Resource_dohsk"]
+script = ExtResource("8_ksiix")
+trigger = SubResource("Resource_iuh5t")
+cadence = SubResource("Resource_imdws")
+effects = Array[ExtResource("11_md0xm")]([SubResource("Resource_psjp1")])
+
+[sub_resource type="Resource" id="Resource_505co"]
+script = ExtResource("18_rhlpk")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+decay_halve_on = &"tick"
+rules = Array[ExtResource("8_ksiix")]([SubResource("Resource_dohsk")])
+element = &"bleed"
+
+[sub_resource type="Resource" id="Resource_ybwgo"]
+script = ExtResource("19_rgspv")
+buff = SubResource("Resource_505co")
+
+[sub_resource type="Resource" id="Resource_gqhvi"]
+script = ExtResource("20_jkuk8")
+landed_only = true
+
+[sub_resource type="Resource" id="Resource_nx5c4"]
+script = ExtResource("8_ksiix")
+trigger = SubResource("Resource_gqhvi")
+cadence = SubResource("Resource_58ywx")
+effects = Array[ExtResource("11_md0xm")]([SubResource("Resource_ybwgo")])
+
+[sub_resource type="Resource" id="Resource_5r4tr"]
+script = ExtResource("6_e24t0")
+name = "绽放"
+names_by_lang = {
+"en": "Bloom"
+}
+prefix = "盛放的"
+prefixes_by_lang = {
+"en": "Blooming "
+}
+after = 6
+lock = "bag"
+rules = Array[ExtResource("8_ksiix")]([SubResource("Resource_35wr6"), SubResource("Resource_nx5c4")])
+bonus_pool = Array[ExtResource("7_682t5")]([SubResource("Resource_py7vt"), SubResource("Resource_u8oph")])
+bonus_count = 1
+
+[sub_resource type="Resource" id="Resource_s4n6b"]
+script = ExtResource("5_v7hcv")
+stages = Array[ExtResource("6_e24t0")]([SubResource("Resource_oa8x0"), SubResource("Resource_5r4tr")])
+stage0_names = {
+"en": "Seed"
+}
+
+[sub_resource type="Resource" id="Resource_pptqk"]
+script = ExtResource("22_x6mt1")
+
+[resource]
+script = ExtResource("21_70c2n")
+id = &"thorn_seed"
+display_name = "荆棘种子"
+display_names = {
+"en": "Thorn Seed"
+}
+description = "自然之神的种子：放进背包，随倒计时长大。长到茎叶就扎根，挨打时扎回去；长到绽放连包一起扎根。"
+shape = SubResource("Resource_pptqk")
+rarity = 1
+tags = Array[StringName]([&"faith", &"faith:nature", &"nature", &"herb"])
+growth = SubResource("Resource_s4n6b")
