@@ -469,6 +469,15 @@ static func land_profile(def: ItemDef) -> Dictionary:
 	return {"sink": false, "vmax": LAND_VMAX_BAG if bag else LAND_VMAX, "bounce": LAND_BOUNCE, "sway": LAND_SWAY_BAG if bag else LAND_SWAY, "scale": LAND_SCALE}
 
 
+## 206：这几件同时落稳响哪一声：有一件是沉的（[method land_profile] 的 `sink`）就是重的
+func landing_cue(uids: Array) -> StringName:
+	for uid in uids:
+		var inst := stash.get_item(int(uid)) if stash != null else null
+		if inst != null and bool(land_profile(inst.def)["sink"]):
+			return &"bag.land.heavy"
+	return &"bag.land.light"
+
+
 ## 推进落地动画 [param delta] 秒（测试直接调）
 func advance_landing(delta: float) -> void:
 	if _landing.is_empty():
@@ -482,6 +491,7 @@ func advance_landing(delta: float) -> void:
 			_landing.erase(uid)
 			landed.append(uid)
 	if not landed.is_empty():
+		AudioHub.play(landing_cue(landed))     # 206：一帧落稳几件只响一声，按最重的那件
 		wake_bumps(landed)     # 180：落稳了压着别人就弹开；198 补充一：站不住的翻下去
 	_sync_process()
 	queue_redraw()

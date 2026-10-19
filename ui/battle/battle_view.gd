@@ -461,6 +461,8 @@ func _finish() -> void:
 	_report.text = report_of(_result, _names)     # 157：收尾战报（跳过也出）
 	_report.visible = true
 	_sync_buttons()
+	if result_cue(_result) != &"":
+		_sfx(result_cue(_result))
 	finished.emit()
 
 
@@ -488,8 +490,11 @@ func _apply(e: BattleEvent) -> void:
 	match e.name:
 		BattleEvent.RESOURCE_CHANGED:
 			if e.side >= 0 and e.side < _panels.size():
+				var key := String(e.get_name(&"key"))
+				if key == CombatantPanel.ARMOR_KEY and _panels[e.side].armor_value() > 0 and e.get_int(&"current") <= 0:
+					_sfx(&"battle.armor_break")     # 206：护甲打穿
 				_panels[e.side].set_resource(
-					String(e.get_name(&"key")),
+					key,
 					StatMath.to_int(e.get_int(&"current")),
 					StatMath.to_int(e.get_int(&"max"))
 				)
@@ -506,6 +511,8 @@ func _apply(e: BattleEvent) -> void:
 					_panels[e.side].guards[buff] = e.get_int(&"guard")     # 175 补充四：凝毒 / 冻疮的保底
 				if first and not _suppress_popups:
 					_panels[e.side].pop(buff, _feedback_scale())     # 157：buff 上身（首层）
+					var def: BuffDef = _panels[e.side].buff_defs.get(StringName(buff), null)
+					_sfx(&"battle.buff_down" if def != null and def.is_debuff else &"battle.buff_up")
 		BattleEvent.AXIS_SHIFTED:
 			if e.side >= 0 and e.side < _panels.size():
 				_panels[e.side].set_axis(String(e.get_name(&"axis")), e.get_int(&"stacks"))
@@ -529,6 +536,7 @@ func _apply(e: BattleEvent) -> void:
 		BattleEvent.DIED:
 			if e.side >= 0 and e.side < _panels.size():
 				_panels[e.side].mark_dead()
+				_sfx(&"battle.fall")
 		BattleEvent.DISPATCH_OVERFLOW:
 			_log_line(e.time, "[color=#e0a030]派发超限，内容可能配出了死循环[/color]")
 	_log_event(e)
@@ -543,10 +551,17 @@ func _flash(e: BattleEvent) -> void:
 
 func _on_damage(e: BattleEvent) -> void:
 	var amount := e.get_int(&"amount")
-	if amount == 0 or _suppress_popups or e.side < 0 or e.side >= _panels.size():
+	if _suppress_popups or e.side < 0 or e.side >= _panels.size():
+		return
+	if e.get_int(&"block") > 0:
+		_sfx(&"battle.block")     # 206：格挡减了伤（负数是破绽，不算）
+	if amount == 0:
 		return
 	if amount > 0:
 		_panels[e.side].shake(_feedback_scale())     # 157：挨打的一方整块抖一下
+		_sfx(StringName("battle.hit." + String(e.get_name(&"type"))))
+		if e.get_bool(&"crit"):
+			_sfx(&"battle.crit")     # 叠在命中上
 	# amount 为负表示这一下最终是治疗（受伤前效果把它反转了）
 	_panels[e.side].popup(
 		StatMath.to_int(absi(amount)), e.get_name(&"type"), amount < 0, e.get_bool(&"crit")
@@ -558,6 +573,29 @@ func _on_reaction(e: BattleEvent) -> void:
 	if _suppress_popups or e.side < 0 or e.side >= _panels.size():
 		return
 	_panels[e.side].popup_text(reaction_label(e), reaction_color(e), _feedback_scale())
+	_sfx(StringName("battle.reaction." + String(e.get_name(&"reaction"))))
+
+
+## 206：战斗音效都走这里。跳转（不弹字）时全不响；倍速 ≥ 4 只放行暴击、反应、倒下、胜负
+func _sfx(cue: StringName) -> void:
+	if _suppress_popups:
+		return
+	if speed() >= 4.0 and not fast_cue(cue):
+		return
+	AudioHub.play(cue)
+
+
+## 206：收尾那一声：玩家一方（0）赢 win、输 lose；平局不响（空）
+static func result_cue(result: BattleResult) -> StringName:
+	if result == null or result.is_draw():
+		return &""
+	return &"battle.win" if result.winner == 0 else &"battle.lose"
+
+
+## 206：倍速 ≥ 4 时还放行的那几个
+static func fast_cue(cue: StringName) -> bool:
+	var s := String(cue)
+	return s in ["battle.crit", "battle.fall", "battle.win", "battle.lose"] or s.begins_with("battle.reaction.")
 
 
 ## 175：反应名（当前语言；反应表里查不到就写 id）

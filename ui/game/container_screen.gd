@@ -94,6 +94,7 @@ func open(payload: Dictionary) -> void:
 	_stage.add_child(_line)
 	# 090：长说明在悬浮提示里，按钮上只写动作（棋盘美术：字画在火漆签上）
 	_take_btn = IconButton.make_art(BOARD_DIR, "take_all", "全部拾取", "全部拾取\n先进背包，放不下的到地上", take_all)
+	_take_btn.set_meta(AudioHub.META_KEY, &"")     # 206：响 loot.take_all（搬走了才响），不叠按钮声
 	_stage.add_child(_take_btn)
 	if _session != null:
 		_close_btn = _corner("btn_close", "×", "关闭\n回到事件：再搜 / 走", close_search)
@@ -319,7 +320,10 @@ func take_all() -> void:
 		var it := inst as ItemInstance
 		starts[it.uid] = _loot.global_position + _loot.cell_origin_px(it.origin)
 	ground.landing_from.merge(starts, true)
+	var before := _container.item_count()
 	InventoryService.transfer_all_prefer(_container, flow.run.board, ground)
+	if _container.item_count() < before:
+		AudioHub.play(&"loot.take_all")     # 206：搬走了至少一件才响
 	for uid in starts:
 		if not ground.has_item(uid):
 			ground.landing_from.erase(uid)

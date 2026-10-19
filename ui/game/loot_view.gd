@@ -31,6 +31,8 @@ var _known: Dictionary = {}
 var _current: int = GridInventory.EMPTY_UID
 var _progress: float = 0.0
 var _running: bool = false
+## 206：这一轮亮了几张（翻完那一声要至少亮过一张）
+var _flips: int = 0
 
 
 func _init() -> void:
@@ -94,7 +96,7 @@ func start_reveal() -> void:
 	if _running:
 		return
 	if not _pick_current():
-		reveal_finished.emit()
+		_finished()
 		return
 	_running = true
 	set_process(true)
@@ -107,10 +109,11 @@ func skip() -> void:
 	_stop()
 	for uid in _unrevealed_in_slot_order():
 		_revealed[uid] = true
+		_flips += 1     # 206：快速搜索不逐张响，只响翻完
 		item_revealed.emit(uid)
 	queue_redraw()
 	if had:
-		reveal_finished.emit()
+		_finished()
 
 
 ## 全亮，不管在不在搜
@@ -170,6 +173,8 @@ func advance(delta: float) -> void:
 			break
 		left -= remain
 		_revealed[_current] = true
+		_flips += 1
+		AudioHub.play(flip_cue(inst.def))     # 206：逐张翻按稀有度响
 		item_revealed.emit(_current)
 		if not _pick_current():
 			_finish()
@@ -193,7 +198,20 @@ func _pick_current() -> bool:
 
 func _finish() -> void:
 	_stop()
+	_finished()
+
+
+## 206：翻完 —— 这一轮至少亮过一张才响
+func _finished() -> void:
+	if _flips > 0:
+		AudioHub.play(&"loot.flip_done")
+	_flips = 0
 	reveal_finished.emit()
+
+
+## 206：翻开这一件响哪个 cue（稀有度 0～5）
+static func flip_cue(def: ItemDef) -> StringName:
+	return StringName("loot.flip.r%d" % clampi(def.rarity if def != null else 0, 0, 5))
 
 
 func _stop() -> void:

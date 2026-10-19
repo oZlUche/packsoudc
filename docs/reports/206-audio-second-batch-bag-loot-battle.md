@@ -118,3 +118,17 @@ cue 的「按什么选」全放进表与一个小的纯类：材质 → `SfxMate
 - 地图 / 节点组（203 §3 的后两组）：等第三批素材。
 - 每件道具专属声（素材按材质三类就够）。
 - 反应 10 声各配：先 4 声别名，哪个想单独配再换 files。
+
+## 6 落地（2026-10-19，架构方案执行，v3.48）
+
+按 §2～§4 落了，37 个 cue 先用音效线程的 v1（`sync_audio.sh <round2> --variant v1`），作者挑完放进 `final/` 再跑一次 sync 同名覆盖，不改代码不改表。和方案不一样或方案没写死的地方：
+
+1. **格挡不用补 core 字段**：DAMAGE 的 payload 里已有 `block`（格挡减掉的量；负数是破绽多吃的），`> 0` 就响 `battle.block`。整下都被格挡住（amount = 0）也响，在 amount 为 0 提前返回之前判。
+2. **被顶出来自动上手也算上手**：顶出一件时那件自动到手上，走的是第二处 `drag_started.emit`（`grab_free`），所以这一下是 place + pick + bump 三声（方案表「两处 drag_started 之前」照字面落）。
+3. **治疗不响**：amount 为负（受伤前效果反转成治疗）不响命中声，弹字照旧。
+4. **胜负抽成静态 `BattleView.result_cue(result)`**：`_finish` 调它；测试直接喂 `BattleResult`。跳过（`skip_to_end`）先抽干日志再 `_finish`，所以跳过也响胜负；跳转到结尾同理。
+5. **护甲打穿**在 `set_resource` 之前比面板上一次的 `armor_value()`：上一次 > 0、这次 ≤ 0 才响；本来就 0 再报 0 不响。
+6. **快速搜索按钮已在容器屏换美术时去掉**，`LootView.skip()` 路径还在（只响 `loot.flip_done`），测试直接调它。
+7. **测试拨钟**：`AudioHub.clock_override`（≥ 0 时代替真时钟），限频测试一秒里 20 下火伤只记 8 下、过一秒再记。测试 `tests/ui/test_audio_206.gd` 按 §4 七组。
+
+> 架构设计注（19:40）：§6 落的是 37 个 cue；19:18 补的 `battle.start`（§2.3 / §2.4 / §3 / §4.6）不在 PR #206 里，待执行作为小跟进单独落（cues.json 一条、`_apply` 一行、`round3/battle_start.ogg` 拷入、测试一例）。
