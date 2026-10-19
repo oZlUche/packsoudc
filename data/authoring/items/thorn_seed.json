@@ -1,0 +1,112 @@
+{
+  "id": "thorn_seed",
+  "display_name": "荆棘种子",
+  "display_names": {
+    "en": "Thorn Seed"
+  },
+  "description": "自然之神的种子：放进背包，随倒计时长大。长到茎叶就扎根，挨打时扎回去；长到绽放连包一起扎根。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "faith",
+    "faith:nature",
+    "nature",
+    "herb"
+  ],
+  "growth": {
+    "stages": [
+      {
+        "name": "茎叶",
+        "names_by_lang": {
+          "en": "Sprout"
+        },
+        "prefix": "抽芽的",
+        "prefixes_by_lang": {
+          "en": "Sprouting "
+        },
+        "rules": [
+          {
+            "trigger": {
+              "type": "on_before_damage"
+            },
+            "cadence": "@always",
+            "effects": [
+              {
+                "type": "reflect_damage",
+                "percent": 0,
+                "flat": 1.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "绽放",
+        "names_by_lang": {
+          "en": "Bloom"
+        },
+        "prefix": "盛放的",
+        "prefixes_by_lang": {
+          "en": "Blooming "
+        },
+        "after": 6,
+        "lock": "bag",
+        "rules": [
+          {
+            "trigger": {
+              "type": "on_before_damage"
+            },
+            "cadence": "@always",
+            "effects": [
+              {
+                "type": "reflect_damage",
+                "percent": 0,
+                "flat": 3.0
+              }
+            ]
+          },
+          {
+            "trigger": {
+              "type": "on_damage",
+              "landed_only": true
+            },
+            "cadence": {
+              "type": "cooldown",
+              "seconds": 3.0
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "buff": "bleed"
+              }
+            ]
+          }
+        ],
+        "bonus_pool": [
+          {
+            "mods": [
+              {
+                "stat": "regen_stamina",
+                "amount": 0.5
+              }
+            ]
+          },
+          {
+            "mods": [
+              {
+                "stat": "max_hp",
+                "amount": 12.0
+              }
+            ]
+          }
+        ],
+        "bonus_count": 1
+      }
+    ],
+    "stage0_names": {
+      "en": "Seed"
+    }
+  }
+}

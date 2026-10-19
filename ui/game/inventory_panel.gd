@@ -76,6 +76,7 @@ func _build() -> void:
 	_drag.drop_outside_to_stash = true     # 084 / 128：棋盘外的空间全都是地上
 	_attach_ground()
 	_drag.items_displaced.connect(_on_displaced)
+	_drag.grab_refused.connect(func(_uid: int): _hint_text(UiText.t(DragLayer.ROOTED_NOTICE)))     # 207
 	# 114 合成（作者定）：拖到上面立刻合 —— 拖起一件时能合的那几件高光；压到其中一件上放手，两件立刻变成产物
 	var crafting := CraftingModule.of(_run)     # 101：合成是一局的模块
 	_drag.craft = func(a: ItemInstance, b: ItemInstance) -> ItemDef:
@@ -150,6 +151,9 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 		say_no_room(inst)
 		return false
 	if from == _run.board:
+		if _run.board.is_locked(uid):
+			_hint_text(UiText.t(DragLayer.ROOTED_NOTICE))     # 207：扎了根的双击也搬不走
+			return false
 		if quick_target != null and InventoryService.transfer_auto(_run.board, uid, quick_target):
 			return true
 		if InventoryService.transfer_auto(_run.board, uid, _run.storage):

@@ -28,6 +28,10 @@ signal drag_finished(uid: int, dropped: bool)
 signal items_displaced(instances: Array, grabbed: bool)
 ## 包换了朝向放下，依附不上的内容物脱落进了 [member stash]。
 signal items_shed(instances: Array)
+## 207：按下去的这件扎了根（或它是被扎根钉住的包），没拿起来。宿主拿它给玩家一句（[constant ROOTED_NOTICE]）
+signal grab_refused(uid: int)
+
+const ROOTED_NOTICE := "notice.rooted"
 
 @export var label_font: Font
 
@@ -145,6 +149,9 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 		return     # 128：同一层地接着好几块面板，只有最上面那块抓
 	var inst := from.get_item(uid)
 	if inst == null:
+		return
+	if from is GridInventory and (from as GridInventory).is_locked(uid):
+		grab_refused.emit(uid)     # 207：扎了根的拿不起来（包被钉住同理）
 		return
 
 	_src_origin = inst.origin
@@ -505,8 +512,12 @@ func _replaceable_bag(inv: GridInventory, origin: Vector2i) -> int:
 			pressed.append(item)
 	if victim == GridInventory.EMPTY_UID:
 		return GridInventory.EMPTY_UID
+	if inv.is_locked(victim):
+		return GridInventory.EMPTY_UID     # 207：钉住的包不被替换
 	var belongs := inv.contents_of(victim)
 	belongs.append_array(inv.straddlers_of(victim))
+	if inv.any_locked(belongs):
+		return GridInventory.EMPTY_UID     # 207：包里有扎了根的，换包会把它抖出来
 	for item in pressed:
 		if not belongs.has(item):
 			return GridInventory.EMPTY_UID
@@ -898,6 +909,8 @@ func _displaceable(inv: GridInventory, origin: Vector2i) -> Array[int]:
 	var victims := inv.displaced_by(_inst.def, origin, _rot, _inst.uid)
 	if victims.size() >= 2 and stash == null:
 		return none
+	if inv.any_locked(victims):
+		return none     # 207：扎了根的顶不动
 	return victims
 
 
