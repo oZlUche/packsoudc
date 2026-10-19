@@ -108,9 +108,8 @@ const BUTTON_ART := &"ButtonArt"
 const LABEL_DISPLAY := &"LabelDisplay"
 ## 197 补充一 §6：主菜单 / 启动屏的游戏名 —— 思源宋体 Bold、暖纸色、6 px 深褐描边、下投影、字距 +6（[method make_hero_title]）
 const LABEL_HERO_TITLE := &"LabelHeroTitle"
-## 197 补充一 §7：主菜单左列木牌（主档琥珀木 / 次档木牌，朱雀仿宋）与左下那一行小字链接（语言、开发工具、退出）
-const BUTTON_MENU_PRIMARY := &"ButtonMenuPrimary"
-const BUTTON_MENU := &"ButtonMenu"
+## 197 补充三 §14：主菜单左下角那几行字（思源宋体 Bold 描边字，悬停 / 焦点行前一枚铜菱形）与最底下一行小字链接（语言、开发工具、退出）
+const BUTTON_MENU_LINE := &"ButtonMenuLine"
 const BUTTON_MENU_FOOT := &"ButtonMenuFoot"
 
 ## 全部变体（测试看齐全）
@@ -121,13 +120,13 @@ const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, 
 	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
 	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB,
 	BUTTON_MAP_ENTRY, BUTTON_MAP_SUB, BUTTON_SETUP_BACK, BUTTON_SETUP_GO, BUTTON_DIFF_MINUS, BUTTON_DIFF_PLUS, PANEL_BARE, PANEL_NODE_HINT,
-	LABEL_HERO_TITLE, BUTTON_MENU_PRIMARY, BUTTON_MENU, BUTTON_MENU_FOOT]
+	LABEL_HERO_TITLE, BUTTON_MENU_LINE, BUTTON_MENU_FOOT]
 
 const TITLE_SIZE := 18
 ## 168：大标题字号
 const DISPLAY_SIZE := 40
-## 197 补充一 §6：游戏名（1080 高时；屏幕按高等比缩放）、颜色、描边、投影、字距
-const HERO_TITLE_SIZE := 96
+## 197 补充一 §6：游戏名（1080 高时；屏幕按高等比缩放；补充三：居中上方、128 号）、颜色、描边、投影、字距
+const HERO_TITLE_SIZE := 128
 const HERO_TITLE_COLOR := Color("f0e2c4")
 const HERO_OUTLINE_COLOR := Color("1a1410")
 const HERO_OUTLINE := 6
@@ -135,10 +134,18 @@ const HERO_SHADOW := Color(0, 0, 0, 0.6)
 const HERO_SHADOW_OFFSET := Vector2i(0, 4)
 const HERO_SHADOW_SPREAD := 4
 const HERO_SPACING := 6
-## 197 补充一 §7：主菜单木牌字号（主档 / 次档）、左下小字
-const MENU_PRIMARY_SIZE := 28
-const MENU_BUTTON_SIZE := 20
-const MENU_FOOT_SIZE := 15
+## 197 补充三 §14：主菜单的字 —— 主档 44 / 次档 34 号，暖纸色、悬停提亮，7 px 深褐描边；行前菱形（≈ 0.4 字高、离字 14）画在固定的左缩进里；
+## 最底下一行小字 18 号
+const MENU_PRIMARY_SIZE := 44
+const MENU_SECONDARY_SIZE := 34
+const MENU_LINE_COLOR := Color("f0e2c4")
+const MENU_LINE_HOVER := Color("fff6e0")
+const MENU_LINE_OUTLINE := 7
+const MENU_MARK_COLOR := Color("b08a4a")
+const MENU_MARK_GAP := 14.0
+const MENU_MARK_SHARE := 0.4
+const MENU_LINE_INDENT := 32
+const MENU_FOOT_SIZE := 18
 const PANEL_MARGIN := 16
 const PANEL_LINE_MARGIN := 8
 const RICH_BODY_SIZE := 20
@@ -407,13 +414,36 @@ static func set_hero_size(l: Label, font_size: int) -> void:
 		l.add_theme_font_size_override("font_size", font_size)
 
 
-## 197 补充一 §7：主菜单左列的木牌（[param primary] = 主档琥珀木）
-static func make_menu_button(text: String, handler: Callable, primary: bool = false) -> Button:
+## 197 补充三 §14：主菜单的一行字（[constant BUTTON_MENU_LINE]）：左对齐、描边；悬停或键盘焦点时行前画一枚铜菱形，按下时菱形与字一起下沉 1 px。
+## 字号不是主档 44 才覆写
+static func make_menu_line(text: String, font_size: int, handler: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.theme_type_variation = BUTTON_MENU_PRIMARY if primary else BUTTON_MENU
+	b.flat = true
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.theme_type_variation = BUTTON_MENU_LINE
+	if font_size != MENU_PRIMARY_SIZE:
+		b.add_theme_font_size_override("font_size", font_size)
 	b.pressed.connect(handler)
+	b.draw.connect(_draw_menu_mark.bind(b))
+	b.focus_entered.connect(b.queue_redraw)
+	b.focus_exited.connect(b.queue_redraw)
 	return b
+
+
+## 这一行现在亮不亮（悬停或有焦点）—— 亮的才画菱形
+static func menu_line_lit(b: Button) -> bool:
+	return b.is_hovered() or b.has_focus()
+
+
+static func _draw_menu_mark(b: Button) -> void:
+	if not menu_line_lit(b):
+		return
+	var em := float(b.get_theme_font_size("font_size"))
+	var half := em * MENU_MARK_SHARE * 0.5
+	var sink := 1.0 if b.get_draw_mode() in [BaseButton.DRAW_PRESSED, BaseButton.DRAW_HOVER_PRESSED] else 0.0
+	var c := Vector2(MENU_LINE_INDENT - MENU_MARK_GAP - half, b.size.y * 0.5 + sink)
+	b.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -half), c + Vector2(half, 0), c + Vector2(0, half), c + Vector2(-half, 0)]), MENU_MARK_COLOR)
 
 
 ## 197 补充一 §7：左下那一行的小字链接（暗色，悬停变亮）
@@ -1107,7 +1137,7 @@ static func _home_buttons(t: Theme) -> void:
 		t.set_color("font_disabled_color", name, INK_SOFT)
 
 
-## 197 补充一：游戏名与主菜单的木牌 / 小字链接。木牌借家的那套五态（[method _home_buttons]），换朱雀仿宋
+## 197 补充一 / 三：游戏名与主菜单的几行字、小字链接
 static func _menu_styles(t: Theme) -> void:
 	if _font_hero == null:
 		var hero := FontVariation.new()
@@ -1124,18 +1154,25 @@ static func _menu_styles(t: Theme) -> void:
 	t.set_constant("shadow_offset_x", LABEL_HERO_TITLE, HERO_SHADOW_OFFSET.x)
 	t.set_constant("shadow_offset_y", LABEL_HERO_TITLE, HERO_SHADOW_OFFSET.y)
 	t.set_constant("shadow_outline_size", LABEL_HERO_TITLE, HERO_SHADOW_SPREAD)
-	for pair in [[BUTTON_MENU_PRIMARY, BUTTON_HOME_PRIMARY, MENU_PRIMARY_SIZE], [BUTTON_MENU, BUTTON_HOME, MENU_BUTTON_SIZE]]:
-		var name: StringName = pair[0]
-		var home: StringName = pair[1]
-		t.set_type_variation(name, "Button")
-		for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
-			if t.has_stylebox(state, home):
-				t.set_stylebox(state, name, t.get_stylebox(state, home))
-		for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color", "font_disabled_color"]:
-			if t.has_color(state, home):
-				t.set_color(state, name, t.get_color(state, home))
-		t.set_font("font", name, _font_title)
-		t.set_font_size("font_size", name, pair[2])
+	t.set_type_variation(BUTTON_MENU_LINE, "Button")
+	var still := StyleBoxEmpty.new()     # 左缩进留给菱形；下边多 1 px，按下时挪到上边 = 字下沉 1 px
+	still.content_margin_left = MENU_LINE_INDENT
+	still.content_margin_top = 0
+	still.content_margin_bottom = 1
+	var sunk := still.duplicate() as StyleBoxEmpty
+	sunk.content_margin_top = 1
+	sunk.content_margin_bottom = 0
+	for state in ["normal", "hover", "disabled", "focus"]:
+		t.set_stylebox(state, BUTTON_MENU_LINE, still)
+	for state in ["pressed", "hover_pressed"]:
+		t.set_stylebox(state, BUTTON_MENU_LINE, sunk)
+	t.set_font("font", BUTTON_MENU_LINE, _font_bold)
+	t.set_font_size("font_size", BUTTON_MENU_LINE, MENU_PRIMARY_SIZE)
+	t.set_color("font_color", BUTTON_MENU_LINE, MENU_LINE_COLOR)
+	for state in ["font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
+		t.set_color(state, BUTTON_MENU_LINE, MENU_LINE_HOVER)
+	t.set_color("font_outline_color", BUTTON_MENU_LINE, HERO_OUTLINE_COLOR)
+	t.set_constant("outline_size", BUTTON_MENU_LINE, MENU_LINE_OUTLINE)
 	t.set_type_variation(BUTTON_MENU_FOOT, "Button")
 	var bare := StyleBoxEmpty.new()
 	bare.set_content_margin_all(2)

@@ -5,7 +5,7 @@
 ## **不引用任何全局类**（自己不写 class_name，不碰 UiPalette 等）：引用一个，那个类的整张引用图就又回到第一帧之前。
 ## 颜色写死（与 UiPalette 同值），字体按路径 load()。`tests/tools/test_startup_graph.gd` 守着这条
 ##
-## 197 补充一：底画主菜单第一张画（营地）压暗到 40 %、游戏名同菜单那样写在左上（思源宋体 Bold 描边）；
+## 197 补充一：底画主菜单第一张画（营地）压暗到 40 %、游戏名同菜单那样写（补充三：居中在上方，思源宋体 Bold 描边）；
 ## 补充二 §12：有字标图（`menu/title_boot.png`，1×）就画图（同菜单位置、也压暗 40 %），没有才写字。
 ## 菜单打开时那张画从 40 % 亮起来 —— 启动到菜单是「同一张画亮起来」，不换画面。画按路径 load()，不碰 UiTheme
 extends Control
@@ -21,16 +21,15 @@ const BACKDROP := "res://assets/ui/menu/bg_camp.png"
 const BACKDROP_DIM := 0.4
 const BACKDROP_BLEED := 0.05
 const LOGO := "res://assets/ui/menu/title_boot.png"
-const LOGO_WIDTH := 720.0
-const LOGO_TOP := 72.0
+const LOGO_WIDTH := 1116.0
+const LOGO_TOP := 90.0
 const TITLE := "背包搜打撤"
 const TITLE_COLOR := Color("f0e2c4")
 const TITLE_OUTLINE_COLOR := Color("1a1410")
 const TITLE_OUTLINE := 6
-const TITLE_SIZE := 96
+const TITLE_SIZE := 128
 const TITLE_SPACING := 6
-const TITLE_LEFT := 96.0
-const TITLE_TOP := 96.0
+const TITLE_TOP := 90.0
 const DESIGN_HEIGHT := 1080.0
 const BODY_FONT := "res://assets/fonts/serif_regular.otf"
 const BAR_W := 360.0
@@ -94,15 +93,20 @@ func _draw() -> void:
 		var k := size.y / DESIGN_HEIGHT
 		var wide := LOGO_WIDTH * k
 		var dim := Color(BACKDROP_DIM, BACKDROP_DIM, BACKDROP_DIM)
-		draw_texture_rect(_logo, Rect2(Vector2(TITLE_LEFT * maxf(k, 0.75), LOGO_TOP * k), Vector2(wide, wide * _logo.get_height() / maxf(_logo.get_width(), 1.0))), false, dim)
+		draw_texture_rect(_logo, Rect2(Vector2((size.x - wide) * 0.5, LOGO_TOP * k), Vector2(wide, wide * _logo.get_height() / maxf(_logo.get_width(), 1.0))), false, dim)
 	elif _title_font != null and size.y > 0.0:
 		var s := size.y / DESIGN_HEIGHT
 		var font_size := int(round(TITLE_SIZE * s))
-		var at := Vector2(TITLE_LEFT * maxf(s, 0.75), TITLE_TOP * s + _title_font.get_ascent(font_size))
+		var widths: Array[float] = []
+		var total := 0.0
+		for ch in TITLE:     # 字距：一个字一个字往右排（Font 没有字距参数），整排居中
+			widths.append(_title_font.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
+			total += widths.back() + TITLE_SPACING
+		var at := Vector2((size.x - total + TITLE_SPACING) * 0.5, TITLE_TOP * s + _title_font.get_ascent(font_size))
 		var spots: Array[Vector2] = []
-		for ch in TITLE:     # 字距：一个字一个字往右排（Font 没有字距参数）
+		for wd in widths:
 			spots.append(at)
-			at.x += _title_font.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + TITLE_SPACING
+			at.x += wd + TITLE_SPACING
 		for i in TITLE.length():     # 先整排描边、再整排填字（后一个字的描边不压前一个字）
 			draw_string_outline(_title_font, spots[i], TITLE[i], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, TITLE_OUTLINE, TITLE_OUTLINE_COLOR)
 		for i in TITLE.length():

@@ -1,35 +1,33 @@
 ## 主菜单（M6）：继续（有存档才显示）、读取存档（有任何一位有存档才显示）、新的游戏（= 开一份新存档）、仓库、开发工具、退出（089 作者定的顺序）。
 ## 085：多了一个「语言」按钮 —— 切 [GameSettings.language] 并存盘，[UiText.lang] 跟着改，菜单原地重建。
-## 197 补充一（作者定稿）：不再是屏心一块石板 —— 整屏三张画轮换带慢镜头（[MenuBackdrop]），左上描边粗体游戏名，
-## 左 1/3 一道暗纱上挂一列木牌（主档琥珀木：继续 / 新的游戏；次档：读取存档 / 仓库与战绩 / 百科 / 设置），
-## 末档（语言 / 开发工具 / 退出）是左下一行小字；战绩行拿掉（在仓库与战绩页），备份 / 对账提示是右下角小字。
-## 补充二 §12：游戏名做成字标图（`menu/title`，2×）—— 图在就用图，不在退回描边粗体的文字标题（[method UiTheme.make_hero_title]）。
-## 尺寸都按 1080 高写，随屏高等比缩放（游戏名照比例，按钮列最小缩到 [constant MIN_SCALE]）
+## 197（作者定稿）：不再是屏心一块石板 —— 整屏三张画轮换带慢镜头（[MenuBackdrop]）；补充三 §14（作者草图）：游戏名居中在上方天空，
+## 菜单是左下角几行描边字，从底往上堆：主档（继续 / 新的游戏）、次档（读取存档 / 仓库与战绩 / 百科 / 设置）、最底下一行小字（语言 / 开发工具 / 退出）。
+## 不用木牌、不加暗纱（左下角的安静由画自己负责）；战绩行拿掉（在仓库与战绩页），备份 / 对账提示是右下角小字。
+## 补充二 §12：游戏名做成字标图（`menu/title`）—— 图在就用图，不在退回描边粗体的文字标题（[method UiTheme.make_hero_title]）。
+## 尺寸都按 1080 高写，随屏高等比缩放（游戏名照比例，菜单最小缩到 [constant MIN_SCALE]）
 extends GameScreen
 
 signal dev_tools_requested
 
 ## 设计稿按这个屏高写
 const DESIGN_HEIGHT := 1080.0
-## 按钮列最窄缩到这么多（1280 × 720）
+## 菜单最小缩到这么多（1280 × 720）
 const MIN_SCALE := 0.75
-## 游戏名与按钮列的左边线、游戏名上沿、按钮列上沿
-const LEFT := 96.0
-const TITLE_TOP := 96.0
-## 补充二 §12：字标图（1080 高时宽 720、上沿 72）
+## 游戏名（文字退路）的上沿；字标图的宽（美术 720 × 200 的画布放大 1.55 倍）与上沿 —— 都居中
+const TITLE_TOP := 90.0
 const ART_LOGO := "menu/title"
-const LOGO_WIDTH := 720.0
-const LOGO_TOP := 72.0
-const COLUMN_TOP := 240.0
-## 木牌大小（主档 / 次档）、牌间距、主次两档之间
-const PRIMARY_SIZE := Vector2(360, 72)
-const SECONDARY_SIZE := Vector2(300, 52)
-const GAP := 14
-## 左边暗纱的宽、中间最深处
-const VEIL_WIDTH := 640.0
-const VEIL_ALPHA := 0.55
-## 左下小字、右下提示离屏边
-const FOOT_MARGIN := 48.0
+const LOGO_WIDTH := 1116.0
+const LOGO_TOP := 90.0
+## 菜单的左边线（字的左沿；行前菱形画在字左边的缩进里）、最底下一行离屏底
+const LEFT := 96.0
+const BOTTOM := 72.0
+## 行距：主档 / 次档；档与档之间：主次、次末
+const PRIMARY_GAP := 10
+const SECONDARY_GAP := 8
+const PRIMARY_TO_SECONDARY := 18
+const SECONDARY_TO_FOOT := 24
+## 右下提示离屏边、字号
+const NOTICE_MARGIN := 48.0
 const NOTICE_SIZE := 13
 
 ## 菜单第一次打开（刚从启动屏过来）：第一张画从启动屏那档暗亮起来；之后回菜单直接开镜头
@@ -37,10 +35,12 @@ static var _shown_once := false
 
 var _continue_btn: Button = null
 var _scenery: MenuBackdrop = null
-var _veil: TextureRect = null
 ## 游戏名：字标图（[TextureRect]）或文字（[Label]）
 var _title: Control = null
+## 左下角整块（主档、次档、最底下一行），从底往上堆
 var _column: VBoxContainer = null
+var _primary: VBoxContainer = null
+var _secondary: VBoxContainer = null
 var _foot: HBoxContainer = null
 var _notices: VBoxContainer = null
 
@@ -54,8 +54,6 @@ func open(_payload: Dictionary) -> void:
 	var brighten := not _shown_once
 	_scenery.start(UiTheme.ART_MENU_BGS, brighten)
 	_shown_once = true
-	_veil = _make_veil()
-	add_child(_veil)
 	var area := Control.new()
 	area.name = "MenuContent"
 	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -81,23 +79,31 @@ func open(_payload: Dictionary) -> void:
 		create_tween().tween_property(_title, "modulate", Color.WHITE, MenuBackdrop.BRIGHTEN).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 	# 089（作者定）：第一项「继续」（当前位有存档才显示）；「读取存档」（有任何一位有存档才显示）；「新的游戏」= 开一份新存档。只写这几个词，不写章名
-	_column = _vbox(GAP)
+	_column = _vbox(0)
 	_column.name = "MenuColumn"
 	area.add_child(_column)
+	_primary = _vbox(PRIMARY_GAP)
+	_column.add_child(_primary)
 	_continue_btn = null
 	if flow.profile_exists():
-		_continue_btn = _plank(UiText.t("menu.continue"), func(): flow.continue_game(), true)
-	_plank(UiText.t("menu.new_run"), func(): flow.start_new_game(), true)
-	_column.add_child(Control.new())     # 主次两档之间：两份间距
+		_continue_btn = _line(_primary, UiText.t("menu.continue"), func(): flow.continue_game(), UiTheme.MENU_PRIMARY_SIZE)
+	_line(_primary, UiText.t("menu.new_run"), func(): flow.start_new_game(), UiTheme.MENU_PRIMARY_SIZE)
+	_column.add_child(_spacer(PRIMARY_TO_SECONDARY))
+	_secondary = _vbox(SECONDARY_GAP)
+	_column.add_child(_secondary)
 	if flow.slots != null and flow.slots.any():
-		_plank(UiText.t("menu.load"), flow.show_slots)
-	_plank(UiText.t("menu.meta"), flow.show_meta)
-	_plank(UiText.t("menu.encyclopedia"), func(): flow.show_encyclopedia())     # 114
-	_plank(UiText.t("menu.settings"), flow.show_settings)
+		_line(_secondary, UiText.t("menu.load"), flow.show_slots)
+	_line(_secondary, UiText.t("menu.meta"), flow.show_meta)
+	_line(_secondary, UiText.t("menu.encyclopedia"), func(): flow.show_encyclopedia())     # 114
+	_line(_secondary, UiText.t("menu.settings"), flow.show_settings)
+	_column.add_child(_spacer(SECONDARY_TO_FOOT))
 
 	_foot = _hbox(10)
 	_foot.name = "MenuFoot"
-	area.add_child(_foot)
+	var indent := MarginContainer.new()     # 和上面几行字同一条左边线（它们左边留着菱形的缩进）
+	UiTheme.margins(indent, UiTheme.MENU_LINE_INDENT, 0, 0, 0)
+	indent.add_child(_foot)
+	_column.add_child(indent)
 	var links: Array[Button] = [UiTheme.make_menu_link(UiText.t("menu.lang_short"), toggle_language)]
 	if GameSettings.dev_build():     # 作者 2026-10-17：开发工具只在开发环境
 		links.append(UiTheme.make_menu_link(UiText.t("menu.dev_tools"), func(): dev_tools_requested.emit()))
@@ -121,31 +127,20 @@ func open(_payload: Dictionary) -> void:
 	_layout()
 
 
-## 一块木牌挂进按钮列
-func _plank(text: String, handler: Callable, primary: bool = false) -> Button:
-	var b := UiTheme.make_menu_button(text, handler, primary)
-	b.custom_minimum_size = PRIMARY_SIZE if primary else SECONDARY_SIZE
+## 一行字挂进 [param box]
+func _line(box: VBoxContainer, text: String, handler: Callable, font_size: int = UiTheme.MENU_SECONDARY_SIZE) -> Button:
+	var b := UiTheme.make_menu_line(text, font_size, handler)
 	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_column.add_child(b)
+	box.add_child(b)
 	return b
 
 
-## 左 1/3 那道竖向暗纱：横着黑 0 → 55 % → 0
-static func _make_veil() -> TextureRect:
-	var g := Gradient.new()
-	g.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
-	g.colors = PackedColorArray([Color(0, 0, 0, 0), Color(0, 0, 0, VEIL_ALPHA), Color(0, 0, 0, 0)])
-	var tex := GradientTexture2D.new()
-	tex.gradient = g
-	tex.width = 256
-	tex.height = 4
-	var veil := TextureRect.new()
-	veil.name = "MenuVeil"
-	veil.texture = tex
-	veil.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	veil.stretch_mode = TextureRect.STRETCH_SCALE
-	veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return veil
+## 档与档之间的空（VBox 两侧的间距是 0，空多高就隔多远）
+static func _spacer(height: float) -> Control:
+	var c := Control.new()
+	c.custom_minimum_size.y = height
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return c
 
 
 ## 这一屏比设计稿的缩放（游戏名按它）
@@ -153,7 +148,7 @@ func ui_scale() -> float:
 	return (size.y if size.y > 0.0 else DESIGN_HEIGHT) / DESIGN_HEIGHT
 
 
-## 按钮列的缩放：同 [method ui_scale]，但不小于 [constant MIN_SCALE]
+## 菜单的缩放：同 [method ui_scale]，但不小于 [constant MIN_SCALE]
 func column_scale() -> float:
 	return maxf(ui_scale(), MIN_SCALE)
 
@@ -165,24 +160,23 @@ func _layout() -> void:
 	var c := column_scale()
 	var h := size.y if size.y > 0.0 else DESIGN_HEIGHT
 	var w := size.x if size.x > 0.0 else DESIGN_HEIGHT * 1.6
-	_veil.position = Vector2.ZERO
-	_veil.size = Vector2(VEIL_WIDTH * c, h)
 	if _title is TextureRect:
 		var tex := (_title as TextureRect).texture
 		var wide := LOGO_WIDTH * s
 		_title.size = Vector2(wide, wide * tex.get_height() / maxf(tex.get_width(), 1.0))
-		_title.position = Vector2(LEFT * c, LOGO_TOP * s)
+		_title.position = Vector2((w - wide) * 0.5, LOGO_TOP * s)
 	else:
-		UiTheme.set_hero_size(_title as Label, int(round(UiTheme.HERO_TITLE_SIZE * s)))
-		_title.position = Vector2(LEFT * c, TITLE_TOP * s)
+		var label := _title as Label
+		UiTheme.set_hero_size(label, int(round(UiTheme.HERO_TITLE_SIZE * s)))
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.position = Vector2(0, TITLE_TOP * s)
+		label.size = Vector2(w, 0)
+	# 菜单从底往上堆：字的左沿对齐 LEFT（行前留给菱形的缩进挂在线左边），最底下一行离屏底 BOTTOM
 	_column.scale = Vector2.ONE * c
-	_column.position = Vector2(LEFT * c, COLUMN_TOP * c)
 	_column.reset_size()
-	_foot.scale = Vector2.ONE * c
-	_foot.reset_size()
-	_foot.position = Vector2(LEFT * c, h - FOOT_MARGIN * c - _foot.size.y * c)
+	_column.position = Vector2((LEFT - UiTheme.MENU_LINE_INDENT) * c, h - (BOTTOM + _column.size.y) * c)
 	_notices.reset_size()
-	_notices.position = Vector2(w - FOOT_MARGIN * c - _notices.size.x, h - FOOT_MARGIN * c - _notices.size.y)
+	_notices.position = Vector2(w - NOTICE_MARGIN * c - _notices.size.x, h - NOTICE_MARGIN * c - _notices.size.y)
 
 
 ## 切到下一种界面语言：写进设置并存盘，然后把菜单原地重建（按钮文字立刻换）
@@ -205,6 +199,16 @@ func title_node() -> Control:
 
 func column() -> VBoxContainer:
 	return _column
+
+
+## 主档 / 次档那几行（测试看）
+func lines() -> Array[Button]:
+	var out: Array[Button] = []
+	for box in [_primary, _secondary]:
+		for n in box.get_children():
+			if n is Button:
+				out.append(n)
+	return out
 
 
 func foot() -> HBoxContainer:
