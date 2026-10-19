@@ -212,6 +212,7 @@
 | 198 | [方案：地上的掉落物按贴图轮廓算碰撞，不按格子 —— 轮廓 = 图的透明通道（没图先按格子外形）→ 凸分解 ≤ 6 块，180 的弹开 / 支撑 / 推开改用分离轴，点选按透明通道；落地朝向仍四选一](198-ground-collision-by-sprite-silhouette.md) | 阶段一已落地 | 按格子外形：L / T 能互相嵌、斜着弹开、落在真实底边上，矩形件不变；道具图落地时轮廓来源自动切换（阶段二）；落地差异见 §6；截图 /mnt/project-files/screenshots/198/ |
 
 | 199 | [落地：铸炉屏换成铁炉近景 —— 196 §5 美术定稿（乙 炉台版）接进 forge_screen：底图 lit / cold、layout.json 坐标、三槽与出牌槽对齐格子、风箱把手三态「铸」、路标「返回」](199-forge-screen-art-landing.md) | 已落地 | 素材在 `assets/ui/forge/`；落地差异见 §6；截图 /mnt/project-files/screenshots/196/forge_*.png |
+| 200 | [导出两种版本：玩家版 / 开发版 —— 不建分支，一份 export_presets.cfg 两个预设（release 无控制台包装器、排除 tests/addons/docs；debug 带 `dev` 特性），DevGate 认 `dev`、DevNav 改走 DevGate，三处 template 开发开关并成一把门](200-export-variants-player-and-dev.md) | 已落地 | 待定按推荐（不排除 tools/、加 `tools/export.bat`、开发版过滤同玩家版）；落地差异见 §6 |
 
 ## 已归档（被覆盖或作废的方案，只留作历史）
 

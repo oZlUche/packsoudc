@@ -59,7 +59,7 @@ static func frame_drawer(t: TestCase, root: Window) -> void:
 	_collect_text(drawer.content, texts)
 	var joined := " ".join(texts)
 	t.check(joined.contains("最近几局"), "最近几局在抽屉里")
-	if not OS.has_feature("template") and not f.tech_defs.is_empty():
+	if DevGate.on() and not f.tech_defs.is_empty():
 		var tid: StringName = f.tech_defs[0].id
 		var spin: SpinBox = screen.tech_level_spin(tid)
 		t.not_null(spin, "科技等级的数字框还拿得到（抽屉收着也在树里）")
