@@ -98,6 +98,12 @@ func _build() -> void:
 	board_view.item_context.connect(func(_v: ContainerView, uid: int): reseat_anchor(uid))     # 099：右键信物 = 奉为主信仰
 
 
+## 棋盘美术（2026-10-19 定稿）：容器屏不要耐力那一行（作者定稿去掉说明文字）；负重行照旧（这一章算负重才显示）
+func hide_stamina() -> void:
+	if _stamina != null:
+		_stamina.visible = false
+
+
 ## 128：接上导演那一层地（画的是这一局的 storage 才接）：地上的东西能拿起来拖、双击进棋盘；面板占的地方登记上，地上的东西不压着面板
 func _attach_ground() -> void:
 	var g := GroundLayer.current()

@@ -230,7 +230,7 @@ static func frame_other_overlays(t: TestCase, root: Window) -> void:
 	f.begin(c.chapter, kit, 1)
 	f.pick_spawn(f.run.map.entry_ids[0])
 	var cases := [
-		["container", {"container": GridInventory.new(Vector2i(3, 3), 0, false)}, "战利品"],
+		["container", {"container": GridInventory.new(Vector2i(3, 3), 0, false)}, ""],     # 棋盘美术：标题不写字
 		["shop", {}, "商店"],
 		["encyclopedia", {}, "百科"],
 		["altar", {}, "神坛"],

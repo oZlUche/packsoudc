@@ -259,7 +259,7 @@ static func frame_run_drop_filter(t: TestCase, root: Window) -> void:
 
 
 static func frame_run_container_screen(t: TestCase, root: Window) -> void:
-	t.begin("容器屏 · 耗时表从节点规则来、拖拽层装了第二道门、读数写着正在搜")
+	t.begin("容器屏 · 耗时表从节点规则来、拖拽层装了第二道门、不写状态行")
 	var db := _items()
 	var enemies := EnemyDatabase.new()
 	enemies.load_all()
@@ -288,12 +288,11 @@ static func frame_run_container_screen(t: TestCase, root: Window) -> void:
 	t.check(view.rules == run.node_rules.search, "耗时表 = 这一局节点规则里的")
 	t.check(screen._drag.drop_filter.is_valid(), "拖拽层装了第二道门")
 	t.check(view.is_revealing(), "打开就开始搜")
-	t.check(screen._line.text.contains("正在搜"), "读数写着正在搜：%s" % screen._line.text)
+	t.eq(screen._line.text, "", "棋盘美术：没有状态行（搜着也不写读数）")
 	var unrevealed := box.get_item(view.next_uid())
 	t.check(not bool(screen._drag.drop_filter.call(unrevealed, run.board)), "没亮的不许放到棋盘")
 	t.check(bool(screen._drag.drop_filter.call(unrevealed, box)), "没亮的许放回容器")
 	view.skip()
-	t.check(not screen._line.text.contains("正在搜"), "搜完读数不再写正在搜")
 	t.check(bool(screen._drag.drop_filter.call(unrevealed, run.board)), "亮了许放到棋盘")
 	t.check(view.get_parent() is ScrollContainer, "格子包在竖向滚动容器里（容器太高不撑出窗口）")
 	screen.take_all()
