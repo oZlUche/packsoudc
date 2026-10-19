@@ -15,6 +15,30 @@
     "material",
     "nature",
     "flesh",
-    "trophy"
-  ]
+    "trophy",
+    "beast_part"
+  ],
+  "wild": {
+    "base_stats": {
+      "damage": 14
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 2.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 6.0
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
 }

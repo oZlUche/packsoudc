@@ -7,6 +7,10 @@ class_name EnemyKit
 extends RefCounted
 
 
+## 212：魔兽 / 机关的棋盘带这个标记（meta）—— 悬浮窗看到它就写道具的 wild 面
+const WILD_META := &"wild"
+
+
 ## 这个点里有没有敌人
 static func has_enemy(content: Dictionary) -> bool:
 	return content.has("enemy") and String(content["enemy"]) != ""
@@ -37,6 +41,8 @@ static func board_of(content: Dictionary, items: ItemDatabase, find_room: bool =
 			if rank.call(pair) == r:
 				order.append(pair)
 	var board := GridInventory.new(size, 0, has_bag)
+	if bool(content.get("wild", false)):
+		board.set_meta(WILD_META, true)
 	for pair in order:
 		var def: ItemDef = pair[0]
 		var entry: Dictionary = pair[1]
@@ -118,7 +124,10 @@ static func spec_of(content: Dictionary, enemies: EnemyDatabase, pool: EnemyPool
 	if def == null:
 		return null
 	var tier := pool.tier_of(int(content.get("strength", 0))) if pool != null else null
-	return BattleCompiler.compile_board(board_of(content, items), baseline_of(def, tier, content))
+	var inp := CompileInput.of(baseline_of(def, tier, content))
+	inp.wild = def.is_wild()     # 212：魔兽 / 机关用道具的 wild 面
+	inp.immune_buffs = def.immune_buffs     # 210
+	return BattleCompiler.compile(board_of(content, items), inp)
 
 
 ## 一行给人看的摘要：名字、生命、几件、都是什么（2026-10-17：档位、流派键、DPS 是内部读数，不给玩家看）

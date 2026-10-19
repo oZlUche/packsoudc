@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="ChapterDef" format=3]
+
+[ext_resource type="Script" path="res://core/map/generators/lattice_type_rules.gd" id="1_wssfy"]
+[ext_resource type="Script" path="res://core/map/generators/hourglass_map_config.gd" id="2_8hby8"]
+[ext_resource type="Script" path="res://core/map/map_source.gd" id="3_435f1"]
+[ext_resource type="Script" path="res://core/run/run_module.gd" id="4_w3br4"]
+[ext_resource type="Script" path="res://core/run/chapter_def.gd" id="5_v1jqg"]
+
+[sub_resource type="Resource" id="Resource_owm41"]
+script = ExtResource("1_wssfy")
+type_weights = {
+"battle": 3,
+"chest": 1,
+"elite": 1,
+"event": 2,
+"random": 2,
+"search": 3
+}
+quota = {
+"elite": [0, 2],
+"rest": [0, 1],
+"shop": [0, 1]
+}
+
+[sub_resource type="Resource" id="Resource_q5eu5"]
+script = ExtResource("2_8hby8")
+half_rows = 4
+with_core = true
+danger_by_row = Array[int]([0, 0, 1, 1, 2, 2, 1, 1, 1, 0])
+rules = SubResource("Resource_owm41")
+
+[sub_resource type="Resource" id="Resource_es1ne"]
+script = ExtResource("3_435f1")
+generator_id = &"hourglass"
+generator_config = SubResource("Resource_q5eu5")
+
+[resource]
+script = ExtResource("5_v1jqg")
+id = &"clockwork_hourglass"
+display_name = "机关沙漏"
+display_names = {
+"en": "Clockwork Hourglass"
+}
+map_source = SubResource("Resource_es1ne")
+enemy_pool = &"clockwork"
+drop_rule = &"standard"
+carry_rule = &"standard"
+encumbrance_rules = &"standard"
+node_rules = &"standard"
+economy_rules = &"standard"
+order = 4
+requires_unlock = &"prologue3_done"
+rules = Array[String](["横置的沙漏：从左边进去，穿过中间两条窄道到对侧；撤离点只在最右一列，中途没有。", "这里的敌人是机关：天生格挡，直接伤害先减一截；流血和中毒对它们无效，火、冰、雷照常。", "机关身上掉零件：齿轮臂、蒸汽阀、铆接护板。护板拿回来就是一面小盾。"])
+step_limit = 40
+safes = 1
+chest_skin = &"imperial_camp"
+map_skin = &"clockwork"
+carry_budget = 600

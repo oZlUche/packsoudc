@@ -29,6 +29,9 @@ var accept_filter: Callable = Callable()
 ## 147：按标签的准入。`only_tags` 非空 = 只收命中其一的（腰带只收【随身】）；`reject_tags` 命中其一就不收（作战棋盘不收【随身】）。跟着存档走
 var only_tags: Array[StringName] = []
 var reject_tags: Array[StringName] = []
+## 207：这块棋盘兑现生长的「扎根」（[method is_locked]）。只有一局的作战棋盘开（[GrowthModule] 装的时候开），不进存档；
+## 基地带回来的棋盘、仓库、容器不锁 —— 扎根是这一局里的事
+var growth_locks: bool = false
 
 var _occ: PackedInt32Array = PackedInt32Array()
 var _bag_owner: PackedInt32Array = PackedInt32Array()
@@ -302,6 +305,9 @@ func place_displacing(inst: ItemInstance, origin: Vector2i, rot: int = 0):
 		push_warning("GridInventory.place_displacing: uid %d 已在本容器中" % inst.uid)
 		return null
 
+	if any_locked(displaced_by(inst.def, origin, rot, inst.uid)):
+		return null     # 207：扎了根的不被顶替（顶它 = 放不下）
+
 	var victims: Array[ItemInstance] = []
 	# 原位记下来，放不成的时候要一件不差地摆回去
 	var homes: Array[Vector2i] = []
@@ -416,6 +422,40 @@ func clear() -> void:
 	_bag_owner.fill(EMPTY_UID)
 	_notify_changed()
 	end_batch()
+#endregion
+
+
+#region 生长的扎根（207）
+## 玩家动不了这一件：它自己扎了根（茎叶起），或者它是包、包里有一件连包扎了根（绽放）。
+## 只有 [member growth_locks] 开着的棋盘才锁；核心层的 [method remove] 不看它（结算、存档、死亡清棋盘照旧）
+func is_locked(uid: int) -> bool:
+	if not growth_locks:
+		return false
+	var inst: ItemInstance = _items.get(uid, null)
+	if inst == null or inst.def == null:
+		return false
+	if acts_as_bag(inst.def):
+		return bag_locked(uid)
+	return inst.def.growth != null and GrowthProfile.locks_item(inst)
+
+
+## 这个包被包里扎了根的东西钉住了（包里别的东西照旧能动）
+func bag_locked(bag_uid: int) -> bool:
+	if not growth_locks:
+		return false
+	for uid in contents_of(bag_uid):
+		var inst: ItemInstance = _items.get(uid, null)
+		if inst != null and inst.def != null and inst.def.growth != null and GrowthProfile.locks_bag(inst):
+			return true
+	return false
+
+
+## 这些里有没有扎了根的
+func any_locked(uids: Array) -> bool:
+	for uid in uids:
+		if is_locked(int(uid)):
+			return true
+	return false
 #endregion
 
 

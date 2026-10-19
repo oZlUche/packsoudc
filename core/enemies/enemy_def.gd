@@ -121,5 +121,24 @@ func build_of(build_id: StringName) -> EnemyBuild:
 	return null
 
 
+## 212：种族。`human`（人，默认）/ `beast`（魔兽）/ `construct`（机关，210）—— 不是人的身上的道具用 [member ItemDef.wild] 那一面，
+## 不揣携带品（126）
+@export var species: StringName = &"human"
+## 212：没有包 —— 不摆包，棋盘不要求包（道具直接摆）；死了不掉包（209）
+@export var bagless: bool = false
+
+## 210：免疫的状态 id（机关：流血、中毒、菌血、燃血）—— 编译进 [member CombatantSpec.immune_buffs]
+@export var immune_buffs: Array[StringName] = []
+## 210：不是人的不揣携带品，改为招牌之外必带 1～2 件这里头的（机关掉齿轮）；计入件数、标 carried 必掉
+@export var loot_filler: Array[StringName] = []
+
+const SPECIES: Array[StringName] = [&"human", &"beast", &"construct"]
+
+
+## 212：不是人（魔兽、机关）：编译用 `wild` 面
+func is_wild() -> bool:
+	return species != &"human"
+
+
 func is_valid() -> bool:
 	return id != &"" and strength >= 0

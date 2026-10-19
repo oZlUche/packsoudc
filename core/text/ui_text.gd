@@ -38,6 +38,7 @@ const TEXT := {
 	# 186：地图顶端栏下面的提示行（玩家用语：不写点号、花费、内部原因）
 	"notice.not_adjacent": {"zh": "那里走不过去", "en": "You can't get there from here"},
 	"notice.cannot_move": {"zh": "现在走不了", "en": "You can't move right now"},
+	"notice.rooted": {"zh": "它已经扎根了，拔不出来", "en": "It has taken root and won't come loose"},     # 207：按住扎了根的道具 / 被钉住的包
 	"notice.busy": {"zh": "先把眼前的事做完", "en": "Finish what's in front of you first"},
 	"notice.not_extract": {"zh": "这里不是撤离点", "en": "This isn't an extraction point"},
 	"notice.extract_closed": {"zh": "这个撤离点已经关闭了", "en": "This extraction point has closed"},

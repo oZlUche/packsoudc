@@ -1,0 +1,61 @@
+{
+  "id": "beast_fang",
+  "display_name": "兽牙",
+  "display_names": {
+    "en": "Beast Fang"
+  },
+  "description": "磨利了能镶在刀上。挨着的近战武器伤害更高。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "nature",
+    "bone",
+    "beast_part"
+  ],
+  "adjacency": {
+    "grant_cells": [
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "grant_filter": [
+      "melee"
+    ],
+    "grant_mods": [
+      {
+        "amount": 1.0
+      }
+    ]
+  },
+  "wild": {
+    "base_stats": {
+      "damage": 6
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.6
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

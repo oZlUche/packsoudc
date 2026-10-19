@@ -1,0 +1,145 @@
+{
+  "id": "clockwork",
+  "display_name": "机关池",
+  "entries": [
+    {
+      "enemy": "clockwork_sentry",
+      "weight": 3.0
+    },
+    {
+      "enemy": "steam_turret",
+      "weight": 2.0,
+      "node_types": [
+        "battle",
+        "elite"
+      ]
+    },
+    {
+      "enemy": "gear_golem",
+      "weight": 2.0,
+      "min_danger": 1
+    },
+    {
+      "enemy": "pendulum_warden",
+      "weight": 2.0,
+      "node_types": [
+        "elite"
+      ],
+      "min_danger": 1
+    },
+    {
+      "enemy": "great_clock",
+      "node_types": [
+        "core"
+      ]
+    },
+    {
+      "enemy": "tinker_apprentice",
+      "weight": 2.0
+    },
+    {
+      "enemy": "clock_keeper",
+      "weight": 1.5,
+      "min_danger": 1
+    }
+  ],
+  "tiers": [
+    {
+      "board": [
+        5,
+        3
+      ],
+      "stat_scale": {
+        "max_hp": 1.15
+      },
+      "bags": [
+        "bag_leather",
+        "bag_small"
+      ],
+      "rarity_cap": 1
+    },
+    {
+      "strength": 1,
+      "item_count": [
+        3,
+        4
+      ],
+      "board": [
+        6,
+        4
+      ],
+      "stat_scale": {
+        "max_hp": 1.5
+      },
+      "bags": [
+        "bag_leather",
+        "bag_leather"
+      ],
+      "rarity_cap": 2
+    },
+    {
+      "strength": 2,
+      "item_count": [
+        4,
+        6
+      ],
+      "board": [
+        6,
+        5
+      ],
+      "stat_scale": {
+        "max_hp": 1.9,
+        "block": 1.25
+      },
+      "bags": [
+        "bag_leather",
+        "bag_leather",
+        "bag_small"
+      ]
+    },
+    {
+      "strength": 3,
+      "item_count": [
+        6,
+        8
+      ],
+      "board": [
+        8,
+        6
+      ],
+      "stat_scale": {
+        "max_hp": 2.4,
+        "block": 1.75
+      },
+      "bags": [
+        "bag_leather",
+        "bag_leather",
+        "bag_leather",
+        "bag_small",
+        "bag_small"
+      ]
+    }
+  ],
+  "strength_rule": {
+    "type_bonus": {
+      "elite": 1,
+      "core": 1
+    },
+    "steps_per_tier": 10,
+    "searches_per_tier": 4
+  },
+  "loadout": {
+    "common_tags": [
+      "gear",
+      "remedy",
+      "food",
+      "part",
+      "tool"
+    ]
+  },
+  "combat_types": [
+    "battle",
+    "elite",
+    "core"
+  ]
+}

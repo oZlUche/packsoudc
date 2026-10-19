@@ -1,0 +1,43 @@
+{
+  "id": "beast_tail",
+  "display_name": "兽尾",
+  "display_names": {
+    "en": "Beast Tail"
+  },
+  "description": "粗壮的一截尾巴，能卖个好价钱。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "nature",
+    "leather",
+    "trophy",
+    "beast_part"
+  ],
+  "wild": {
+    "base_stats": {
+      "damage": 8
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 3.0
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 6.0
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

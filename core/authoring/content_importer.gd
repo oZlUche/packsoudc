@@ -487,6 +487,8 @@ static func _rule_groups(def: ItemDef) -> Array:
 	var groups: Array = []
 	if def.combat != null:
 		groups.append(["combat.rules", def.combat.rules])
+	if def.wild != null:
+		groups.append(["wild.rules", def.wild.rules])     # 212：魔兽持有的那一面
 	for k in def.faith_bonuses.size():
 		var fb := def.faith_bonuses[k] as FaithBonus
 		if fb != null:
@@ -495,6 +497,15 @@ static func _rule_groups(def: ItemDef) -> Array:
 		groups.append(["adjacency.grant_rules", def.adjacency.grant_rules])     # 108：附加规则同样适用
 		groups.append(["adjacency.receive_rules", def.adjacency.receive_rules])     # 132
 		groups.append(["adjacency.feed_rules", def.adjacency.feed_rules])     # 148
+	if def.growth != null:     # 207：各阶的规则与额外效果池
+		for k in def.growth.stages.size():
+			var st := def.growth.stages[k]
+			if st == null:
+				continue
+			groups.append(["growth.stages[%d].rules" % k, st.rules])
+			for j in st.bonus_pool.size():
+				if st.bonus_pool[j] != null:
+					groups.append(["growth.stages[%d].bonus_pool[%d].rules" % [k, j], st.bonus_pool[j].rules])
 	return groups
 
 
@@ -676,6 +687,8 @@ static func _validate_item_combat(def: ItemDef, report: ImportReport) -> void:
 	if is_weapon:
 		return
 	for g in _rule_groups(def):
+		if String(g[0]).begins_with("wild."):
+			continue     # 212：魔兽身上的器官就是它的武器，耗耐力照人
 		var rules: Array = g[1]
 		for i in rules.size():
 			var rule := rules[i] as AbilityRule
@@ -709,6 +722,7 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_validate_rule_shapes(def, ctx, report)
 	_validate_power(def, ctx, report)
 	_validate_block(def, report)
+	_validate_wild(def, report)
 	ctx.register_item(def)
 	return def
 
@@ -1775,6 +1789,13 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 		report.warn("schools", "没有流派，只会背通用道具")
 	if def.loadout != null:
 		_validate_loadout(def.loadout, "loadout", report)
+	if not EnemyDef.SPECIES.has(def.species):
+		report.error("species", "种族 '%s' 不认识（%s）" % [def.species, " / ".join(PackedStringArray(EnemyDef.SPECIES))])     # 212
+	for b in def.immune_buffs:     # 210
+		if not ctx.buffs.is_empty() and not ctx.buffs.has(b):
+			report.error("immune_buffs", "找不到状态 '%s'" % b)
+	if not def.loot_filler.is_empty() and not def.is_wild():
+		report.warn("loot_filler", "只有不是人的（魔兽 / 机关）才用替身；人照旧掷携带品")
 	# 165：相邻组合 —— 每组至少两件道具 id
 	for k in def.combos.size():
 		if not (def.combos[k] is Array) or (def.combos[k] as Array).size() < 2:
@@ -1821,6 +1842,9 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 			continue
 		for raw in list:
 			sigs.append(["signature_by_strength.%s" % String(key), StringName(String(raw))])
+	for fid in def.loot_filler:     # 210
+		if not ctx.items.has(fid):
+			report.error("loot_filler", "找不到道具 '%s'" % fid)
 	for pair in sigs:
 		var at: String = pair[0]
 		var sid: StringName = pair[1]
@@ -1841,7 +1865,7 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 			if d == null or d.is_bag or d.is_sealed() or not def.allows_item(d):
 				continue
 			any += 1
-			if d.tags.has(&"weapon"):
+			if d.tags.has(&"weapon") or (def.is_wild() and _wild_attacks(d)):     # 212：魔兽的器官自己出手
 				weapons += 1
 		if any == 0:
 			report.error("item_tags", "没有任何道具带这些身份标签，组不出东西")
@@ -1884,6 +1908,18 @@ static func _validate_builds(def: EnemyDef, ctx: Context, report: ImportReport) 
 				report.error(at + ".items", "'%s' 已封存" % bid)
 			elif not def.allows_item(d):
 				report.error(at + ".items", "'%s' 不带这个身份的任何标签（item_tags）" % bid)
+
+
+## 212：这件在魔兽身上会不会自己出手（wild 面里有直接伤害）
+static func _wild_attacks(d: ItemDef) -> bool:
+	var profile := BattleCompiler.profile_of(d, true)
+	if profile == null:
+		return false
+	for r in profile.rules:
+		for e in (r as AbilityRule).effects if r != null else []:
+			if e is DealDamage:
+				return true
+	return false
 
 
 static func _validate_loadout(rule: EnemyLoadout, at: String, report: ImportReport) -> void:
@@ -2087,9 +2123,66 @@ static func _validate_item(def: ItemDef, report: ImportReport) -> void:
 			report.warn("adjacency.feed_filter", "写了「只供给」却没有供给的加成或规则")
 		_warn_overlapping_markers(def, report)
 	_validate_wear(def, report)
+	_validate_growth(def, report)
+
+
+## 207（作者定）：生长是自然之神的东西 —— 只许写在带 `faith` + `faith:nature` 的道具上；至少一阶，每阶至少走 1 步，锁只能是那三种；
+## 规则同信仰加成：不许 costs、要有频率
+static func _validate_growth(def: ItemDef, report: ImportReport) -> void:
+	var g := def.growth
+	if g == null:
+		return
+	if not def.has_faith() or def.faith_tag() != GrowthProfile.FAITH_TAG:
+		report.error("growth", "生长是自然之神的东西：只许写在带 faith 与 %s 标签的道具上" % GrowthProfile.FAITH_TAG)
+	if def.is_bag:
+		report.error("growth", "包不会长")
+	if g.stages.is_empty():
+		report.error("growth.stages", "至少写一阶")
+	for k in g.stages.size():
+		var st := g.stages[k]
+		var at := "growth.stages[%d]" % k
+		if st == null:
+			report.error(at, "空的一阶")
+			continue
+		if st.after < 1:
+			report.error(at + ".after", "每阶至少要走 1 步")
+		if not _string_choices(st, "lock").has(st.lock):
+			report.error(at + ".lock", "锁只能是 %s" % " / ".join(_string_choices(st, "lock")))
+		if st.bonus_count > st.bonus_pool.size():
+			report.error(at + ".bonus_count", "额外效果池只有 %d 条，抽不出 %d 条" % [st.bonus_pool.size(), st.bonus_count])
+		if not st.bonus_pool.is_empty() and st.bonus_count == 0:
+			report.warn(at + ".bonus_count", "写了额外效果池却一条都不抽")
+		var groups: Array = [[at + ".rules", st.rules]]
+		for j in st.bonus_pool.size():
+			var b := st.bonus_pool[j]
+			if b == null:
+				report.error("%s.bonus_pool[%d]" % [at, j], "空的额外效果")
+			elif b.mods.is_empty() and b.rules.is_empty():
+				report.error("%s.bonus_pool[%d]" % [at, j], "额外效果得有修饰或规则")
+			else:
+				groups.append(["%s.bonus_pool[%d].rules" % [at, j], b.rules])
+		for gr in groups:
+			var rules: Array = gr[1]
+			for i in rules.size():
+				var rule := rules[i] as AbilityRule
+				var rat := "%s[%d]" % [gr[0], i]
+				if rule == null:
+					report.error(rat, "空的规则")
+				elif not rule.costs.is_empty():
+					report.error(rat + ".costs", "生长给的规则不能有消耗")
+				elif rule.cadence == null:
+					report.error(rat + ".cadence", "规则必须有频率")
+		if k > 0 and st.locks_item() == false and g.stages[k - 1] != null and g.stages[k - 1].locks_item():
+			report.warn(at + ".lock", "上一阶扎了根，这一阶不锁：长到这一阶根会松开，确定吗")
 
 
 ## 148：耐久要有正的次数（147 的随身道具 160 补一搬出了道具库，校验跟着搬到 [method import_belt_skill]）
+## 212：wild 写在包上没意义（包不进魔兽的棋盘：魔兽没有包）
+static func _validate_wild(def: ItemDef, report: ImportReport) -> void:
+	if def.is_bag and (def.wild != null or not def.wild_applies.is_empty()):
+		report.warn("wild", "「%s」是包：魔兽没有包，wild 不会用到" % def.id)
+
+
 static func _validate_wear(def: ItemDef, report: ImportReport) -> void:
 	if def.wear != null and def.wear.max_charges <= 0:
 		report.error("wear.max_charges", "耐久至少 1 次")

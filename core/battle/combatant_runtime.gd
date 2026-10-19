@@ -33,6 +33,8 @@ var axes: Dictionary = {}
 ## **只有最高的一层生效**，其余保留（最高那层没了就轮到次高）；格挡轴（加固 / 破绽）加在生效层之上。
 ## `{uid: int, id: StringName（道具 def id，天生是 &"innate"）, value: int（定点）}`，按值从高到低
 var block_layers: Array[Dictionary] = []
+## 210：免疫的状态 id（[member CombatantSpec.immune_buffs]）
+var immune_buffs: Array[StringName] = []
 
 var _merged: StatSet = null
 var _merged_items: Dictionary = {}
@@ -83,6 +85,7 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 	rt.block_layers.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return int(a["value"]) > int(b["value"]) or (int(a["value"]) == int(b["value"]) and int(a["uid"]) < int(b["uid"])))
 	rt.undying_sec = StatMath.from_float(spec.undying_sec)     # 093：蛮神 4 级
+	rt.immune_buffs = spec.immune_buffs.duplicate()     # 210
 	# 105：编译期带来的轴层数种进**系统层**（103 第 6 条：常驻加成不是 buff、不走净化）
 	for axis in spec.axes:
 		rt.shift_axis(axis, int(spec.axes[axis]), true)
@@ -303,8 +306,17 @@ func find_buff(buff_id: StringName) -> BuffInstance:
 ##
 ## [b]会改变规则集[/b]（buff 可携带 rules），调用方必须随后重算事件掩码，
 ## 否则新规则订阅的事件可能尚未开启，那条规则会静默失效。
+## 210：这个状态对我无效（机关不流血不中毒）
+func is_immune(id: StringName) -> bool:
+	return immune_buffs.has(id)
+
+
 func apply_buff(def: BuffDef, stacks: int = 1, now: int = 0) -> int:
 	var ctx: BattleContext = _ctx_ref.get_ref() if _ctx_ref != null else null
+	if is_immune(def.id):
+		if ctx != null and ctx.trace != null:
+			_trace_buff(ctx, def.id, 0, 0, "immune")     # 210：不叠、不发事件，追踪记一笔
+		return 0
 	if ctx != null and not ctx.seen_buffs.has(def.id):
 		ctx.seen_buffs[def.id] = def     # 103 第 6 条：上过身的都登记，回放的 buff 栏靠它认得所有 buff
 	var existing := find_buff(def.id)

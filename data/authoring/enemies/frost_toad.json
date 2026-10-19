@@ -1,0 +1,33 @@
+{
+  "id": "frost_toad",
+  "display_name": "霜蟾",
+  "display_names": {
+    "en": "Frost Toad"
+  },
+  "strength": 1,
+  "schools": [
+    "ice"
+  ],
+  "base_stats": {
+    "max_hp": 44
+  },
+  "signature": [
+    "frost_gland",
+    "frost_gland",
+    "beast_hide"
+  ],
+  "item_tags": [
+    "beast_part"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    4,
+    3
+  ],
+  "species": "beast",
+  "bagless": true
+}

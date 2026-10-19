@@ -16,7 +16,7 @@ static func move(
 	if from == null or to == null:
 		return false
 	var inst := from.get_item(uid)
-	if inst == null:
+	if inst == null or from.is_locked(uid):     # 207：扎了根的挪不动（包内换位置也不行）
 		return false
 	if from.is_bag_with_contents(uid):
 		return _move_bag(from, uid, to, origin, rot)
@@ -89,6 +89,8 @@ static func transfer_auto(from: ItemContainer, uid: int, to: ItemContainer) -> b
 		return false
 	var inst := from.get_item(uid)
 	if inst == null or not to.can_admit(inst.def):
+		return false
+	if from is GridInventory and (from as GridInventory).is_locked(uid):     # 207：扎了根的搬不走（双击、全部拾取都走这里）
 		return false
 	# 087：带东西的包（尸体容器里包当背景、上面摆着东西）：连内容物一起搬 —— 内容物先各自进目标，包最后
 	if from is GridInventory and (from as GridInventory).is_bag_with_contents(uid):
@@ -226,6 +228,8 @@ static func _take_one(from: ItemContainer, uid: int, first: ItemContainer, fallb
 ## 162：带东西的包摘下来，包自己先进 first / fallback，包上的东西进 loose 等着按件试；包两边都进不去就整个放回原处
 static func _take_bag_apart(from: GridInventory, uid: int, first: ItemContainer, fallback: ItemContainer,
 		loose: Array, out: Dictionary) -> void:
+	if from.is_locked(uid):     # 207：钉住的包留在原地；包里没扎根的东西在后面按件搬
+		return
 	var bag := from.get_item(uid)
 	var home := bag.origin
 	var rot := bag.rotation

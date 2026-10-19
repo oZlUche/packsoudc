@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="1_p7yxa"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_ffcsi"]
+
+[sub_resource type="Resource" id="Resource_lap6q"]
+script = ExtResource("1_p7yxa")
+school_share = 1.0
+min_weapons = 0
+single_faith = false
+
+[resource]
+script = ExtResource("2_ffcsi")
+id = &"gear_golem"
+display_name = "齿轮傀儡"
+display_names = {
+"en": "Gear Golem"
+}
+strength = 2
+schools = Array[StringName]([&"clockwork"])
+base_stats = {
+"block": 4,
+"max_hp": 70
+}
+signature = Array[StringName]([&"gear_arm", &"gear_arm", &"brass_plating", &"brass_plating", &"mainspring"])
+item_tags = Array[StringName]([&"clockwork"])
+loadout = SubResource("Resource_lap6q")
+board = Vector2i(6, 4)
+species = &"construct"
+bagless = true
+immune_buffs = Array[StringName]([&"bleed", &"poison", &"fungal_blood", &"scorched_blood"])
+loot_filler = Array[StringName]([&"brass_gear"])

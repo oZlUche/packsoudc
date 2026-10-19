@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_2p6tb"]
+
+[resource]
+script = ExtResource("1_2p6tb")
+id = &"beast_part"
+display_name = "兽材"
+display_names = {
+"en": "Beast Part"
+}
+description = "从魔兽身上取下的东西。"
+descriptions = {
+"en": "Taken from a beast."
+}
+tip = false
+category = "purpose"

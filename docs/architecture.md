@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.50 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.52 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -483,6 +483,27 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 - **科技树配置表是科技的唯一来源**（119）：`docs/techs.xlsx` 的「节点」「等级」两张表由 `tools/techs_xlsx_to_json.gd` **全量**生成 `techs/*.json` 与 `run_buffs/tech_*.json`（`tech_run_buff` 每级一条，`effect.buffs` 工具填；表里没有的删掉）和只读镜像 `docs/techs.md`，全有或全无；`TechsTable.check` 在 `tools/check_content.gd` 里对照（含镜像）。
   **改科技先改表**，别手改那些 JSON。是否点亮不进表：读存档的 `tech_levels`；开发区（基地仓库页右列，非导出包）每个科技一个数字框直接改它（`GameFlow.dev_set_tech_level`，效果走 `TechService.derive` 重算）。
 
+### 3.9 生长与扎根（207，作者定）
+
+自然之神的道具才会长（导入器拦：`growth` 只许写在带 `faith` + `faith:nature` 的道具上）。阶段不是几件道具，是**同一件的状态**，和魔晶石耐久一条路：
+
+- **数据**：`ItemDef.growth: GrowthProfile`（`stages: Array[GrowthStage]`、`stage0_name`、`reset_on_leave`）。每阶：`name` / `prefix`（中英）、`after`（从上一阶起再走几步）、
+  `lock`（`none` / `item` / `bag`）、`mods` + `rules`（**这一阶的终值，不累加**）、`bonus_pool: Array[GrowthBonus]` + `bonus_count`（到阶随机抽几条，`hash(局种子, uid, 阶)`）。
+- **实例**：`state.growth_ticks` / `growth_stage` / `growth_bonus`（抽中的下标），读写都走 `GrowthProfile` 的静态函数；存档原样带走，读回来整数化（`normalize_state`）。
+- **什么时候长**：`GrowthModule`（一局的模块，`RunModules.standard` 里）订 `travel.clock.advanced` —— 全局倒计时每走一步（走路、原地耗时）长一步，战斗不算；
+  只数作战棋盘上**整件在包里**、**不休眠**的。一次最多升一阶，剩下的不结转。升阶发 `grown(uid, stage)`。
+- **休眠**（自然不是当前信仰）：不长、不退，阶段加成不算（编译器 `dormant` 跳过），**锁保留**。
+- **加成**：编译器第 4b 步旁（信仰加成之后）：当前阶的 `mods` 施加、`rules` 与抽中的额外效果并进 `bonus_rules[uid]`。
+- **锁（扎根）**：`GridInventory.is_locked(uid)` —— 这件到了 `item` / `bag` 锁，或它是包、包里有一件到了 `bag` 锁（`bag_locked`）。只有 `growth_locks` 开着的棋盘才锁
+  （`GrowthModule` 装的时候给一局的作战棋盘开，不进存档）；基地带回来的棋盘、仓库、容器都不锁。兑现在玩家能动东西的口上：
+  `DragLayer` 按下（不拿起，发 `grab_refused` → 面板提示 `notice.rooted`）、换包（`_replaceable_bag`）、顶替（`_displaceable`、`GridInventory.place_displacing`）、
+  `InventoryService.move` / `transfer_auto`（双击、全部拾取都走它）/ `_take_bag_apart`。**核心层 `remove` / `detach_bag` 不看锁**（结算、行动失败、死亡清棋盘照旧）。
+  `GridTidy` 本来就不碰棋盘模式的格子，不用改。锁住的包里**别的东西照旧能动**。
+- **清零**（`reset_on_leave`，默认真）：`GrowthModule` 记着棋盘上每件会长的道具的置入序号 —— 到了别的容器就清零，从别处回来（序号变了）也清零；
+  拿在手上（`container_id == 0`）、包里挪位置（序号不变）不算。带回基地那一下 `MetaState._adopt` 清（`GrowthProfile.on_leave`）。
+- **名字 / 悬浮窗**：`Names.of_item` 最前面加阶段前缀（`盛放的荆棘种子`）；悬浮窗一行「生长：茎叶（再 6 步绽放）　已扎根」+ 每阶一行（到了的亮、没到的灰）+ 抽中的额外效果。
+- 首批三件：荆棘种子（反伤）、铁木苗（护甲）、月光草籽（回血 + 定时拔减益）。阶段变体图（`<id>@s1.png`）走 208 的实例变体图规则，没有图就画本图。
+
 ## 4. M2 · 自动战斗
 
 ### 4.1 核心决策：模拟与表现彻底分离
@@ -555,6 +576,12 @@ static func compile(board: GridInventory, input: CompileInput) -> CombatantSpec:
 > **为什么搬家不改数值。** 乘算与加算可交换（`StatValue` 乘算相加后乘一次、加算最后加；133 之前是四个乘区按枚举顺序连乘），
 > 所以第 7 步放在第 5 步之后还是之前，`total()` 一样；`base` 只有第 2 步写、第 7 步缩放，别处不碰；
 > 规则是 append 到同一条尾巴上，次序不变。落地时录了四份金样（`tests/fixtures/compile_golden/`）逐件逐字段对过。
+
+**一件道具两套逻辑（212）。** `ItemDef` 除了玩家用的 `combat` / `adjacency` / `applies`，还可以写 `wild: CombatProfile` + `wild_applies`
+（`@export_group("魔兽持有")`）：魔兽 / 机关持有时用的那一面。开关是 `CompileInput.wild`（`EnemyKit.spec_of` 按 `EnemyDef.is_wild()` 填）：
+为真时第 2 / 6 步按 `BattleCompiler.profile_of(def, true)` 取（没写 `wild` 的道具退回 `combat`），打中施加取 `wild_applies`，
+信仰（`active_faith` 空、不判休眠、4b 不跑）与邻接（第 5 步）都不算。同一件道具只有一个定义 —— 图鉴、掉落、快照、IdAliases 都只认一件，
+魔兽死了掉下来的就是玩家那一面。
 
 #### 邻接标记：增益与受益
 
@@ -2748,6 +2775,8 @@ M4-1 落地的形态（6.0）：`EnemyDef` **不带固定棋盘** —— 棋盘�
 
 ### 5.11 格阵形态：沙漏与塔（8-2，报告 078）
 
+> **第一次用上（210）**：章节 `clockwork_hourglass`「机关沙漏」（开局屏第二张，order 4，序章三通关解锁）用沙漏生成器：宽 5、十层（4 + 2 + 4）、对侧两个撤离点 + 正中核心、倒计时 40；没有规模档（开局屏不列）；敌人池 `clockwork`（格阵的点没有 `kind`，条目只用 `node_types` / `min_danger`）；底图 `assets/maps/clockwork`。
+
 第二章的两个底层模板，作者定的：**横置的沙漏**（`hourglass`，像蝴蝶结：左右两块对称的长方形、中间收紧成两条平行线段；出生在左，**撤离点在对侧**，核心不是必须的，中途没有撤离点）与**等腰三角形的塔**（`tower`：横向的层，**登上一层就不能向下**，同层自由横走、纵向单向）。
 两者都是**分层格阵**：从出生那一层一层层走向终点那一层，每层若干格；差别只在形状（每层有哪些格、哪几层不许横着走）。
 所以形状单独描述（`LatticeShape`：每层的格、直上层、终点那一层放什么 `goals`（格 → 类型，核心不是必须）、横着画还是竖着画 `orientation`；由配置算出、不进管线），铺点 / 连边 / 断边 / 定类型 / 校验只在 `LatticeMapGenerator` 里写一遍，
@@ -2791,6 +2820,10 @@ class_name EnemyDef extends Resource            # data/authoring/enemies/*.json
 @export var signature: Array[StringName]          # 招牌道具，一定背着（屠夫总带着刀）
 @export var loadout: EnemyLoadout                 # 覆盖池的默认组装规则；null = 用池的
 @export var board: Vector2i                       # 覆盖档位表的棋盘；零 = 用档位表的
+@export var species: StringName                   # 212：human（默认）/ beast 魔兽 / construct 机关；不是人 = 编译用道具的 wild 面（4.2）
+@export var bagless: bool                         # 212：没有包，器官直接摆（棋盘不要求包）；不掷携带品（126）
+@export var immune_buffs: Array[StringName]       # 210：免疫的状态 → CompileInput → CombatantSpec → CombatantRuntime.apply_buff 直接不叠（不发事件、不引发反应）
+@export var loot_filler: Array[StringName]        # 210：不是人的不掷携带品，改带 1～2 件这里头的（机关的齿轮），标 carried 必掉
 
 class_name EnemyPool extends Resource             # data/authoring/enemy_pools/*.json，章节按 id 引用
 @export var entries: Array[EnemyPoolEntry]        # {enemy, weight, kinds, node_types, min_danger}
@@ -4329,6 +4362,8 @@ res://
 | v3.30 | 2026-10-17 | **188 背包面板去字、信仰窗重排**（作者 2026-10-17，待定 1–3 按推荐）：背包面板不再写操作提示、地上说明、参战 / 可用格读数、信仰行与棋盘上方说明，回话走 `hint_sink`（地图屏 = 提示行）；`FaithTooltip.describe_full` → 名字行（Lv、休眠件数）+ 信力行 + 各阶效果 / 信力来源 / 献祭，颜色全走模板；`HoverTip.show_faith` 名字行下挂到下一阶的进度条、各段虚线分隔、宽 360 |
 | v3.31 | 2026-10-18 | **188 补充一 信仰窗分段、蛮神改写**（作者 2026-10-18，待定 1–4 按推荐）：`HoverTip.FaithBar` 一段一级、长度按所需信力（满阶也挂）；`FaithTooltip` 同一级的效果合成一行（`[table=2]`），没到的级整行 `@dim`，句子按 `FaithPerk.summary_for(def, points)` 写、锁住的级按那一级的阈值算；`FaithPerk.scaled` 给「随信力」的数（每 50 信力一阶、封顶）；蛮神一级门槛式增伤、二级献祭生命上限二选一（信力 / 全体造成伤害 + 急速）、三级 `prebattle_actions` 两个按钮（耗体力 / 耗信力、非首领）、四级持续战斗秒数随信力；献祭规矩 `OfferingRule.short_name`、`ItemVolume.size_label`（「大型道具」），有图标时排一行 `[img]`（`assets/ui/tags/<tag>.png`、`assets/ui/offerings/{large,medium,crit}.png`），缺一枚就退回文字 |
 | v3.32 | 2026-10-18 | **189 / 190 顶端栏长槽与日晷倒计时**（作者 2026-10-18 定案，待定 1–3 按推荐）：`hud_bar` 在板上画一条贯通的浅槽（`hud/groove` 九宫格、`band` 定槽身），宿主排完把铜点交给栏画（同行相邻两件之间、右槽图标组左边，空着的件两边不放）；`HudWidget.set_in_bar` 让栏里的件坐在槽底上（`PANEL_BARE`、浅底墨字），拖出栏回 `PANEL_HUD`；栏里同行间距 24、组在槽身里居中；倒计时改成刻在槽底的半圆日规（`hud/dial/*`：染色扇面 / 表盘 / 绕轴心转的影子 / 轴心，三阶 calm·half·low），栏上不写数字，停上去 `show_status` 弹「倒计时」窗、走一步 `update_status` 换字；缺图退回文字版 |
+| v3.52 | 2026-10-19 | **210 机关沙漏**（架构线程夜间方案，待定按推荐）：第二张图 `clockwork_hourglass`（沙漏生成器第一次进章节，5.11）；机关池 `clockwork`：五种机关（`species construct`、没有包、天生格挡 + 护板 = 固定减伤，免疫流血 / 中毒 / 菌血 / 燃血，掉齿轮 `loot_filler`）+ 两种人（钟表匠学徒、守钟人）；零件齿轮臂 / 蒸汽阀 / 铆接护板 / 主发条 / 钟摆刃（玩家面 + 机关面）；`EnemyDef.immune_buffs` 一路传到 `apply_buff`；战前准备屏读数加「免疫：…」；底图 `assets/maps/clockwork`；新测试 `test_hourglass_chapter_210.gd`、`test_clockwork_210.gd` |
+| v3.51 | 2026-10-19 | **212 魔兽与「野性」两套逻辑**（架构线程夜间方案，待定按推荐）：`ItemDef.wild` + `wild_applies`、`CompileInput.wild`（4.2）；`EnemyDef.species` / `bagless`（6.0），魔兽招牌一件不少、不揣携带品、内容记 `wild`，悬浮窗写「魔兽的器官」那一面；六件新器官（火焰腺 / 霜腺 / 电囊 / 兽牙 / 兽爪 / 兽尾）+ 六件兽材补 `wild`；五种魔兽进标准池；施加宏 `@apply_status_scorch/chill/numb`；新测试 `test_wild_profile_212.gd`、`test_beasts_212.gd` |
 | v3.50 | 2026-10-19 | **战利品屏只留最小化**（作者 21:16「战利品界面应该是只有最小化，提示也删掉」）：战利品屏右上角一颗最小化钮（原收起，行为不变）在最右；火漆签旁的回话行删掉，面板回话不接 |
 | v3.49 | 2026-10-19 | **206 补一**（作者 19:18 在「音效」定）：战斗开场号角 `battle.start`（`BATTLE_START` 时响，4 倍速也放行，跳转不响）；cue 表 38 条 |
 | v3.48 | 2026-10-19 | **206 音效第二批**（架构线程方案，待定按推荐）：cue 表加别名（不许链）与 `max_per_sec`；`SfxMaterial` 材质三类；背包拖放 / 落地、战利品翻牌 / 全部拾取、战斗回放 37 个 cue 挂上（8.11）；`sync_audio.sh --variant`；新测试 `test_audio_206.gd` |

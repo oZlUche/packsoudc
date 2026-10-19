@@ -85,7 +85,7 @@ func has_effect() -> bool:
 		return true
 	if adjacency != null or is_bag:
 		return true
-	if not effects.is_empty() or not bag_mods.is_empty() or not faith_bonuses.is_empty():
+	if not effects.is_empty() or not bag_mods.is_empty() or not faith_bonuses.is_empty() or growth != null:
 		return true
 	return tags.has(ANCHOR) or is_keepsake()
 
@@ -147,6 +147,14 @@ func faith_tag() -> StringName:
 ## 道具带哪种元素只看它施加什么（[method ReactionResolver.elements_of_item]）
 @export var applies: Array[ElementApply] = []
 
+@export_group("魔兽持有")
+## 212：**一件道具两套逻辑** —— 魔兽（[member EnemyDef.species] 不是 human）自己持有这件时用它代替 [member combat]；
+## 那时 [member adjacency]、[member applies]、[member faith_bonuses] 都不生效（魔兽没有邻接、没有信仰）。
+## null = 魔兽持有时和玩家一样。掉下来就是玩家版（同一件，不换 id）
+@export var wild: CombatProfile
+## 212：魔兽持有时的「打中后施加」（写法同 [member applies]）
+@export var wild_applies: Array[ElementApply] = []
+
 @export_group("附魔")
 ## 175 第三批（作者定：所有附魔都视为铸牌附魔）：预置附魔 —— 实例的 `state.enchant`（铸牌附上的）覆盖它，见 [Forge]
 @export var enchant: EnchantDef
@@ -154,6 +162,10 @@ func faith_tag() -> StringName:
 @export_group("耐久")
 ## 148：耐久（次数制，魔晶石）。为空 = 不会用坏。剩几次记在实例上（[method ItemInstance.charges]）
 @export var wear: WearProfile
+
+@export_group("生长")
+## 207：自然系专属的生长（种子 → 茎叶 → 绽放）。为空 = 不会长。走到哪一阶记在实例上（[GrowthProfile]）
+@export var growth: GrowthProfile
 
 
 ## 定义是否完整可用。资产批量校验与单元测试用。

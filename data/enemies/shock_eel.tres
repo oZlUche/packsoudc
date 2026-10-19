@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="1_xjaxi"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_e7w4s"]
+
+[sub_resource type="Resource" id="Resource_vpcoi"]
+script = ExtResource("1_xjaxi")
+school_share = 1.0
+min_weapons = 0
+single_faith = false
+
+[resource]
+script = ExtResource("2_e7w4s")
+id = &"shock_eel"
+display_name = "电鳗"
+display_names = {
+"en": "Shock Eel"
+}
+strength = 2
+schools = Array[StringName]([&"lightning"])
+base_stats = {
+"max_hp": 40,
+"regen_stamina": 6
+}
+signature = Array[StringName]([&"shock_sac", &"shock_sac", &"beast_tail"])
+item_tags = Array[StringName]([&"beast_part"])
+loadout = SubResource("Resource_vpcoi")
+board = Vector2i(5, 3)
+species = &"beast"
+bagless = true

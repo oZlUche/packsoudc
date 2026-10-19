@@ -1,0 +1,77 @@
+{
+  "id": "beast_claw",
+  "display_name": "兽爪",
+  "display_names": {
+    "en": "Beast Claw"
+  },
+  "description": "弯得正好。挨着的武器更容易暴击。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "nature",
+    "bone",
+    "bleed",
+    "beast_part"
+  ],
+  "adjacency": {
+    "grant_cells": [
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        -1,
+        1
+      ],
+      [
+        1,
+        1
+      ]
+    ],
+    "grant_filter": [
+      "weapon"
+    ],
+    "grant_mods": [
+      {
+        "stat": "crit_chance",
+        "amount": 5.0
+      }
+    ]
+  },
+  "wild": {
+    "base_stats": {
+      "damage": 4
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.2
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  },
+  "wild_applies": [
+    {
+      "buff": "bleed"
+    }
+  ]
+}

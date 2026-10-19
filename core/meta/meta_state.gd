@@ -223,6 +223,7 @@ func _record_codex(inst: ItemInstance, got: Dictionary) -> void:
 func _adopt(inst: ItemInstance) -> bool:
 	if not keeps(inst.def):
 		return false
+	GrowthProfile.on_leave(inst)     # 207：带回基地 = 离开了作战棋盘，长到哪一阶都清零（reset_on_leave）
 	inst.uid = _next_uid
 	_next_uid += 1
 	return true

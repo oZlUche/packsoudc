@@ -419,11 +419,14 @@ static func run_enemy_identity(t: TestCase) -> void:
 				var armed := false
 				for raw in content.get("items", []):
 					var idef := c.items.get_def(StringName(String(raw["id"])))
-					if idef == null or idef.is_bag:
-						continue
+					if idef == null or idef.is_bag or bool(raw.get("carried", false)):
+						continue     # 210：机关的替身（齿轮）是携带品，不在身份圈里
 					checked += 1
 					t.check(def.allows_item(idef), "%s（%d 档）背的「%s」带身份标签 %s" % [def.display_name, strength, idef.display_name, str(def.item_tags)])
 					if idef.tags.has(&"weapon"):
+						armed = true
+					# 212：魔兽没有武器，会自己出手的器官（wild 面有规则）就算
+					if def.is_wild() and BattleCompiler.profile_of(idef, true) != null and not BattleCompiler.profile_of(idef, true).rules.is_empty():
 						armed = true
 				# 211：坏套路本来就可以没武器（「根本不成套」）
 				var b := def.build_of(StringName(String(content.get("build", ""))))

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_8qwdy"]
+
+[resource]
+script = ExtResource("1_8qwdy")
+id = &"clockwork"
+display_name = "机关"
+display_names = {
+"en": "Clockwork"
+}
+description = "发条与齿轮驱动的机关零件。"
+descriptions = {
+"en": "Driven by springs and gears."
+}
+tip = false
+category = "origin"
