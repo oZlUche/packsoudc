@@ -81,7 +81,7 @@ static func frame_menu_layout(t: TestCase, root: Window) -> void:
 	var c: float = menu.column_scale()
 	t.check(c >= 0.75 and is_equal_approx(s, menu.size.y / 1080.0), "按屏高缩放（%.3f），菜单不小于 0.75" % c)
 	var title: Control = menu.title_node()
-	t.check(title is Label and (title as Label).horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER and is_equal_approx(title.size.x, menu.size.x), "没字标图：文字标题横贯整屏、居中")
+	t.check(title is TextureRect and is_equal_approx(title.size.x, 1116.0 * s) and is_equal_approx(title.position.x + title.size.x * 0.5, menu.size.x * 0.5), "定稿字标图：宽 1116、水平居中")
 	t.check(is_equal_approx(title.position.y, 90.0 * s), "上沿 90（随高缩放）")
 	var col: VBoxContainer = menu.column()
 	t.check(is_equal_approx(col.position.x + UiTheme.MENU_LINE_INDENT * c, 96.0 * c), "字的左沿 x = 96（菱形挂在左边的缩进里）")
@@ -176,6 +176,22 @@ static func frame_logo(t: TestCase, root: Window) -> void:
 		t.check(is_equal_approx(logo.position.y, 90.0 * s) and is_equal_approx(logo.position.x + logo.size.x * 0.5, menu.size.x * 0.5), "水平居中、上沿 90（%s）" % logo.position)
 		t.eq(logo.mouse_filter, Control.MOUSE_FILTER_IGNORE, "不接鼠标")
 	game.queue_free()
+	# 没字标图（图包里缺这张）：退回文字标题，横贯整屏、居中
+	UiTheme.asset_root = "res://tests/fixtures/ui/no_such_pack/"
+	var bare = (load(GAME) as PackedScene).instantiate()
+	bare.save_path = p["run"]
+	bare.meta_path = p["meta"]
+	bare.settings_path = p["settings"]
+	root.add_child(bare)
+	var plain = bare.base()
+	var text = plain.title_node() if plain != null and plain.has_method("title_node") else null
+	t.check(text is Label and (text as Label).horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER and is_equal_approx(text.size.x, plain.size.x), "没图：文字标题横贯整屏、居中")
+	if text is Label:
+		t.check(is_equal_approx(text.position.y, 90.0 * plain.ui_scale()), "文字标题上沿 90")
+	bare.queue_free()
 	UiTheme.asset_root = saved
 	Support.cleanup("menu197l")
-	t.check(UiTheme.art_cached("menu/title") == null, "仓库里还没有字标：主菜单写文字标题")
+	var real := UiTheme.art_cached("menu/title")
+	t.check(real != null and real.get_size() == Vector2(2232, 620), "仓库里是定稿字标：2232 × 620（720 × 200 画布 × 3.1）")
+	var boot_logo := load(consts["LOGO"]) as Texture2D
+	t.check(boot_logo != null and boot_logo.get_size() == Vector2(1116, 310), "启动屏那张 1116 × 310（× 1.55）")
