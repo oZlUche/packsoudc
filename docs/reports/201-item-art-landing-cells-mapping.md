@@ -27,7 +27,7 @@
 - `ItemPainter.art_available()` 恒 false（187 预留）；`GameSettings.grid_on(art)` 的默认跟它走；`ItemSilhouette._art_image()` 返回 null（198 第二阶段预留，`from_image(img, rot, canvas)` 已经写好）。
 - 旋转：`ItemShape._rotate_cw` 顺时针 `(x, y) → (-y, x)`，再平移到 min = (0, 0)。rot 0 的包围盒是紧的（min 就是 (0,0)），所以每转一步的平移量恰好是 `(H − 1, 0)`（H = 转前的高）。
 - 图片加载：`EventImage.load_texture(path)`（导出包里走 `.import`，测试里兜底 `Image.load_from_file`）；`UiTheme.art_cached()` 只认 `assets/ui/`，道具图另放一处，缓存自己管（[[art-cached-in-draw]]：`_draw` 里每帧取的贴图必须缓存，否则画成白块）。
-- 格子边长：棋盘、地面、残影都是 60（`InventoryView.CELL`）；仓库 `cell_for()` 夹在 `CELL_MIN..CELL_MAX`；图鉴 `codex_tile` 最大 40。没有比 60 大的地方，60 px 的图够用。
+- 格子边长：棋盘、地面、残影都是 60（`InventoryView.CELL`）；图鉴 `codex_tile` 最大 40；**仓库** `warehouse_pages.cell_for()` 夹在 40～80（`CELL_MAX = 80`），窄仓库会把格子放大到 80 —— 60 px 的图在那里要放大 1.33 倍，会软。
 
 ## 2 对应规则（作者的要求，写进代码和测试）
 
@@ -52,14 +52,14 @@ W、H 取 `size_rotated(0)`。实现：`draw_set_transform_matrix(base * Transfo
 
 ### 2.3 缩放
 
-画进 `Rect2(anchor, Vector2(W, H) × cell_px)`：cell_px ≠ 60 时整张等比缩，线性过滤。只有哪个视图的格子超过 60 才需要 `@2x`，现在没有（§1.2），所以 `@2x` 不进仓库；留在美术目录里备用。
+画进 `Rect2(anchor, Vector2(W, H) × cell_px)`：cell_px ≠ 60 时整张等比缩，线性过滤。缩小没问题（图鉴 ≤ 40）；放大会软，仓库最大 80（§1.2）。所以 `@2x`（160 px / 格）也进仓库，放 `assets/items/@2x/<id>.png`，`art_of(def, cell_px)` 在 **cell_px > 60 时取 @2x**，否则取 60 的（160 → 60 是 2.7 倍缩小，没有 mipmap 会闪，不能只带 @2x）。@2x 的尺寸规则同 §2.1，乘 160。
 
 ### 2.4 测试守着
 
 `tests/content/test_item_art_201.gd`：
 
 1. `manifest.json` 里的每个 id 有 `ItemDef`，`assets/items/` 里的每张 png 在 manifest 里（两边对得上，少一张多一张都红）。
-2. 每张图的尺寸 = `size_rotated(0) × 60`。
+2. 每张图的尺寸 = `size_rotated(0) × 60`；`@2x/` 里同名的 = × 160，且 manifest 里的每个 id 两套都有。
 3. 异形件：形状没占的格里 alpha ≤ 8（读 `Image`，逐格扫）。
 4. 旋转对位：取一件 L 形（有图的，比如 `antler` / `longbow`），把 `Image` 用 `rotate_90(CLOCKWISE)` 转 k 次，「有墨的格」集合 == `cells_rotated(k)`。这一条把 §2.2 的推导钉在代码上，`ItemShape` 以后改旋转约定它就会红。
 5. `ItemPainter.art_available()` == manifest 在不在；`test_board_grid_187.gd:11` 现有的 `not art_available()` 断言改成这一条。
@@ -70,13 +70,13 @@ W、H 取 `size_rotated(0)`。实现：`draw_set_transform_matrix(base * Transfo
 
 ### 3.1 资产与脚本
 
-- `tools/sync_item_art.sh <源目录>`：把 `<源目录>/*.png`（不含子目录）拷到 `assets/items/`，重写 `manifest.json`（id 按字母序）。云端源目录是 `/mnt/project-files/art/items/drafts1/out`；作者本机就给它美术导出的目录。拷完 `godot --headless --import` 一次生成 `.import`，和别的美术一样提交 `.import` 文件。
+- `tools/sync_item_art.sh <源目录>`：把 `<源目录>/*.png` 拷到 `assets/items/`、`<源目录>/@2x/*.png` 拷到 `assets/items/@2x/`，重写 `manifest.json`（id 按字母序；只收两套都有的 id，缺一套的报出来不收）。云端源目录是 `/mnt/project-files/art/items/drafts1/out`；作者本机就给它美术导出的目录。拷完 `godot --headless --import` 一次生成 `.import`，和别的美术一样提交 `.import` 文件。
 - 这一次先接 56 件；以后每批：美术把 png 放进 `out/`、知会执行 → 执行跑脚本 → 测试 → PR。不改代码。
 
 ### 3.2 `ItemPainter`
 
 - `art_available()` := `FileAccess.file_exists("res://assets/items/manifest.json")`（json 走 `include_filter`，导出包里也在）。
-- `art_of(def) -> Texture2D`：按 id 取 `assets/items/<id>.png`，`EventImage.load_texture`，**静态字典缓存**（没有的也记一个 null，别每帧探文件）。
+- `art_of(def, cell_px := 60.0) -> Texture2D`：按 id 取 `assets/items/<id>.png`，cell_px > 60 取 `@2x/<id>.png`；`EventImage.load_texture`，**静态字典缓存**（键 = 路径；没有的也记一个 null，别每帧探文件）。
 - `draw_art(canvas, def, rot, anchor, cell, modulate := Color.WHITE, base := Transform2D.IDENTITY) -> bool`：按 §2.2 画；没图返回 false，调用方回落到 `draw_item` + `draw_label`。
 - `draw_item` / `draw_label` 保留（没图的、包体没图的、剪影都还用）。
 
@@ -103,7 +103,7 @@ W、H 取 `size_rotated(0)`。实现：`draw_set_transform_matrix(base * Transfo
 1. **现在就翻还是等 127 件齐** —— 推荐 **现在翻**（作者说的是「可以拿来实装了」）：56 件有图、71 件色块，过渡期混着；每批到了只拷文件。
 2. **没亮的战利品剪影用不用贴图轮廓** —— 推荐 **不用**（087：剪影不能泄露身份）。
 3. **图鉴没点亮的画法** —— 推荐暗影 modulate（§3.3）；备选照旧色块。
-4. **`@2x` 进不进仓库** —— 推荐不进（没有格子大于 60 的视图）。
+4. **`@2x` 进不进仓库** —— 推荐 **进**：仓库格子最大 80，没有 @2x 那里会软；两套都走同一条尺寸测试。备选：仓库 `CELL_MAX` 降到 60，只带一套图。
 
 ## 5 给美术的两条（随本篇知会）
 
