@@ -306,17 +306,39 @@ static func frame_forge_screen(t: TestCase, root: Window) -> void:
 		flow.run.storage.admit(inst)
 		uids.append(inst.uid)
 	t.check(screen.preview_text().contains("还差"), "空槽：还差几个（%s）" % screen.preview_text())
+	# 196 §5（美术定稿）：整屏炉台近景，槽 / 出牌槽 / 背包按 layout.json 摆，跟底图同一个 cover 变换
+	t.eq(screen.backdrop_state(), "lit", "没铸过：炉火亮着")
+	t.eq(screen.handle_state(), "idle", "没放满：风箱把手是暗的那张")
+	var lay: Dictionary = screen.layout()
+	var s: float = screen.size.x / 1920.0     # 按宽铺满、竖直居中
+	var off: Vector2 = (screen.size - Vector2(1920, 1200) * s) * 0.5
+	var r0: Dictionary = lay["slots"][0]
+	t.check(screen.spot_rect("slot0").position.is_equal_approx(off + Vector2(r0["x"], r0["y"]) * s), "时机槽按 layout 摆（%s）" % screen.spot_rect("slot0"))
+	var fits := true
+	for i in 3:
+		var v: InventoryView = screen.slot_view(i)
+		fits = fits and Rect2(Vector2.ZERO, screen.spot_rect("slot%d" % i).size).grow(0.5).encloses(v.get_rect())
+	t.check(fits, "4 × 4 的格子在槽口里")
+	var bag: Rect2 = screen.spot_rect("bag")
+	t.check(Rect2(Vector2.ZERO, screen.size).encloses(bag) and bag.size.x > 0.0, "背包摆在工作台皮垫上、不出屏（%s）" % bag)
+	var baked := true
+	for n in screen.find_children("*", "Label", true, false):
+		baked = baked and not ((n as Label).text in ["【时机】", "【效果】", "【数值】", "出牌", "铸炉"])
+	t.check(baked, "画在底图里的标签代码不再写")
 	t.check(screen.put_in(0, uids[0]) and screen.put_in(1, uids[1]), "放进时机、效果")
 	t.check(not screen.put_in(1, uids[3]), "一槽一件")
 	t.check(screen.forge() == null, "差一槽不能铸")
 	t.check(screen.put_in(2, uids[2]), "放进数值")
 	t.check(screen.preview_text().contains("将铸出：铸牌 · 嗜血的"), "预览（%s）" % screen.preview_text())
+	t.eq(screen.handle_state(), "ready", "三槽满：风箱把手发亮、能按")
 	var tok: ItemInstance = screen.forge()
 	t.not_null(tok, "铸成")
 	t.eq(screen.output().item_count(), 1, "出牌槽一枚")
 	for i in 3:
 		t.eq(screen.slot(i).item_count(), 0, "槽 %d 空了" % i)
 	t.check(NodeEvents.forge_used(node), "铸炉熄了")
+	t.eq(screen.backdrop_state(), "cold", "铸过：换冷炉底")
+	t.eq(screen.handle_state(), "off", "铸过：风箱把手灰掉")
 	t.check(screen.to_map(), "返回")
 	t.check(flow.screen != GameFlow.Screen.FORGE, "离开了铸炉屏")
 	t.check(tok != null and flow.run.holder_of(tok.uid) != null, "铸牌回了背包（棋盘或地上）")
