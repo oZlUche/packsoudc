@@ -488,6 +488,8 @@ func _feedback_scale() -> float:
 #region 事件 → 画面
 func _apply(e: BattleEvent) -> void:
 	match e.name:
+		BattleEvent.BATTLE_START:
+			_sfx(&"battle.start")     # 206 补一：开场号角
 		BattleEvent.RESOURCE_CHANGED:
 			if e.side >= 0 and e.side < _panels.size():
 				var key := String(e.get_name(&"key"))
@@ -576,7 +578,7 @@ func _on_reaction(e: BattleEvent) -> void:
 	_sfx(StringName("battle.reaction." + String(e.get_name(&"reaction"))))
 
 
-## 206：战斗音效都走这里。跳转（不弹字）时全不响；倍速 ≥ 4 只放行暴击、反应、倒下、胜负
+## 206：战斗音效都走这里。跳转（不弹字）时全不响；倍速 ≥ 4 只放行开场、暴击、反应、倒下、胜负
 func _sfx(cue: StringName) -> void:
 	if _suppress_popups:
 		return
@@ -595,7 +597,7 @@ static func result_cue(result: BattleResult) -> StringName:
 ## 206：倍速 ≥ 4 时还放行的那几个
 static func fast_cue(cue: StringName) -> bool:
 	var s := String(cue)
-	return s in ["battle.crit", "battle.fall", "battle.win", "battle.lose"] or s.begins_with("battle.reaction.")
+	return s in ["battle.start", "battle.crit", "battle.fall", "battle.win", "battle.lose"] or s.begins_with("battle.reaction.")
 
 
 ## 175：反应名（当前语言；反应表里查不到就写 id）

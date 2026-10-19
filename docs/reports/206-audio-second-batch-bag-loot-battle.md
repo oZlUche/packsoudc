@@ -131,4 +131,8 @@ cue 的「按什么选」全放进表与一个小的纯类：材质 → `SfxMate
 6. **快速搜索按钮已在容器屏换美术时去掉**，`LootView.skip()` 路径还在（只响 `loot.flip_done`），测试直接调它。
 7. **测试拨钟**：`AudioHub.clock_override`（≥ 0 时代替真时钟），限频测试一秒里 20 下火伤只记 8 下、过一秒再记。测试 `tests/ui/test_audio_206.gd` 按 §4 七组。
 
-> 架构设计注（19:40）：§6 落的是 37 个 cue；19:18 补的 `battle.start`（§2.3 / §2.4 / §3 / §4.6）不在 PR #206 里，待执行作为小跟进单独落（cues.json 一条、`_apply` 一行、`round3/battle_start.ogg` 拷入、测试一例）。
+> 架构设计注（19:40）：§6 落的是 37 个 cue；19:18 补的 `battle.start`（§2.3 / §2.4 / §3 / §4.6）不在 PR #206 里，已作为跟进落地，见 §6.1。
+
+### 6.1 跟进落地：`battle.start`（2026-10-19，v3.49）
+
+`round3/battle_start.ogg` 单独拷成 `assets/audio/sfx/battle_start.ogg`（CREDITS 里音效线程已写明是第二轮合成号角，没再追加）；cues.json 一条（音量 0、不变调）；`_apply` 收到 `BATTLE_START` 走 `_sfx`；4× 白名单加 start。测试：§4.6 加开场一例，§4.7 加「跳转时开场也不响」「4× 开场照响」。`seek(0)` 那一例用 `_suppress_popups` 为真代替（seek / skip_to_end 重演就是靠它压住，测的是同一个门）。`sync_audio.sh` 没改：定稿 `final/` 里已是最终名，整体拷时 `battle_start.ogg` 会一起覆盖。

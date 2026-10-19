@@ -49,6 +49,7 @@
 	"battle.buff_up": {"files": ["sfx/battle_buff_up.ogg"], "volume_db": -4, "pitch_var": 0.05, "max_per_sec": 4},
 	"battle.buff_down": {"files": ["sfx/battle_buff_down.ogg"], "volume_db": -4, "pitch_var": 0.05, "max_per_sec": 4},
 	"battle.fall": {"files": ["sfx/battle_fall.ogg"], "volume_db": -3, "pitch_var": 0.05},
+	"battle.start": {"files": ["sfx/battle_start.ogg"]},
 	"battle.win": {"files": ["sfx/battle_win.ogg"]},
 	"battle.lose": {"files": ["sfx/battle_lose.ogg"]}
 }

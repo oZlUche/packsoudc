@@ -15,7 +15,7 @@ const NEW_CUES := [
 	"battle.hit.physical", "battle.hit.fire", "battle.hit.ice", "battle.hit.lightning", "battle.hit.poison", "battle.hit.bleed",
 	"battle.crit", "battle.block", "battle.armor_break",
 	"battle.reaction.1", "battle.reaction.2", "battle.reaction.3", "battle.reaction.4",
-	"battle.buff_up", "battle.buff_down", "battle.fall", "battle.win", "battle.lose",
+	"battle.buff_up", "battle.buff_down", "battle.fall", "battle.start", "battle.win", "battle.lose",
 ]
 
 
@@ -60,7 +60,7 @@ static func _def(id: String, tags: Array = [], rarity: int = 0, weight: int = 0)
 
 
 static func run_table(t: TestCase) -> void:
-	t.begin("206 · ① 表：37 个新 cue 都在、文件是 .ogg；别名解到真名；每种伤害、每个反应都有声；别名指向不在的、带 files、链起来都报")
+	t.begin("206 · ① 表：38 个新 cue 都在、文件是 .ogg；别名解到真名；每种伤害、每个反应都有声；别名指向不在的、带 files、链起来都报")
 	var table := CueTable.load_default()
 	t.eq(table.errors, [], "默认表没有问题")
 	var bad_files: Array[String] = []
@@ -71,7 +71,7 @@ static func run_table(t: TestCase) -> void:
 		for f in files:
 			if not f.ends_with(".ogg") or not ResourceLoader.exists(f):
 				bad_files.append(f)
-	t.eq(bad_files, [], "37 个 cue 都有文件、都是 .ogg（%s）" % [bad_files])
+	t.eq(bad_files, [], "38 个 cue 都有文件、都是 .ogg（%s）" % [bad_files])
 	t.eq(table.resolve(&"battle.hit.drain"), &"battle.hit.physical", "吸血 = 物理那一声")
 	t.eq(table.resolve(&"battle.reaction.ice_poison"), &"battle.reaction.3", "凝毒 = 第 3 声")
 	t.eq(table.resolve(&"battle.hit.fire"), &"battle.hit.fire", "不是别名的解到自己")
@@ -296,13 +296,14 @@ static func _hit(type: String, amount: float, crit: bool = false, block: int = 0
 
 
 static func frame_battle(t: TestCase, root: Window) -> void:
-	t.begin("206 · ⑥ 战斗：火伤、吸血 = 物理、暴击叠在命中上、格挡、凝毒 = 第 3 声、减益首层（续层不响）、护甲打穿、倒下、胜负（平局不响）")
+	t.begin("206 · ⑥ 战斗：火伤、吸血 = 物理、暴击叠在命中上、格挡、凝毒 = 第 3 声、减益首层（续层不响）、护甲打穿、倒下、胜负（平局不响）、开场号角")
 	var audio := _audio(root)
 	if audio == null:
 		t.check(false, "没有 Audio")
 		return
 	var view := _battle(root)
 	var steps := [
+		[BattleEvent.make(BattleEvent.BATTLE_START, 0, -1), [&"battle.start"], "开场：号角"],
 		[_hit("fire", 5.0), [&"battle.hit.fire"], "火伤"],
 		[_hit("drain", 5.0), [&"battle.hit.physical"], "吸血：物理那一声"],
 		[_hit("physical", 9.0, true), [&"battle.hit.physical", &"battle.crit"], "暴击：命中 + 暴击两声"],
@@ -340,7 +341,7 @@ static func frame_battle(t: TestCase, root: Window) -> void:
 
 
 static func frame_battle_gates(t: TestCase, root: Window) -> void:
-	t.begin("206 · ⑦ 门：跳转（不弹字）时全不响；4 倍速火伤不响、暴击 / 反应 / 倒下照响；每秒上限 8：一秒里 20 下火伤只响 8 下")
+	t.begin("206 · ⑦ 门：跳转（不弹字）时全不响；4 倍速火伤不响、开场 / 暴击 / 反应 / 倒下照响；每秒上限 8：一秒里 20 下火伤只响 8 下")
 	var audio := _audio(root)
 	if audio == null:
 		t.check(false, "没有 Audio")
@@ -349,9 +350,10 @@ static func frame_battle_gates(t: TestCase, root: Window) -> void:
 	_fresh(audio)
 	view._suppress_popups = true
 	view._apply(_hit("fire", 5.0, true))
+	view._apply(BattleEvent.make(BattleEvent.BATTLE_START, 0, -1))
 	view._apply(BattleEvent.make(BattleEvent.DIED, 0, 1))
 	view._sfx(&"battle.win")
-	t.eq(_got(audio, "battle."), [], "跳转：一声都没有")
+	t.eq(_got(audio, "battle."), [], "跳转（seek / 跳过重演）：开场号角也不响，一声都没有")
 	view._suppress_popups = false
 	view._speed_idx = BattleView.SPEEDS.find(4.0)
 	t.eq(view.speed(), 4.0, "4 倍速")
@@ -364,7 +366,8 @@ static func frame_battle_gates(t: TestCase, root: Window) -> void:
 	_tick(audio)
 	view._apply(BattleEvent.make(BattleEvent.EFFECT_RESOLVED, 0, 1, {"effect": ReactionResolver.EFFECT, "reaction": "fire_poison", "elements": ["fire", "poison"]}))
 	view._apply(BattleEvent.make(BattleEvent.DIED, 0, 0))
-	t.eq(_got(audio, "battle."), [&"battle.crit", &"battle.reaction.1", &"battle.fall"], "4 倍速：反应、倒下照响")
+	view._apply(BattleEvent.make(BattleEvent.BATTLE_START, 0, -1))
+	t.eq(_got(audio, "battle."), [&"battle.crit", &"battle.reaction.1", &"battle.fall", &"battle.start"], "4 倍速：反应、倒下、开场照响")
 	t.check(BattleView.fast_cue(&"battle.win") and BattleView.fast_cue(&"battle.lose") and not BattleView.fast_cue(&"battle.block"), "胜负放行、格挡不放")
 	view._speed_idx = BattleView.SPEEDS.find(2.0)
 	_fresh(audio)

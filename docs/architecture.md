@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.48 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.49 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3661,7 +3661,7 @@ func player_spec() -> CombatantSpec …
   - `DragLayer`：上手（含被顶出来自动上手）`bag.pick.*`，放进棋盘 `bag.place.*`，放不下退回 `bag.invalid`（Esc / 右键取消不响），旋转 `bag.rotate`，顶出一批 `bag.bump`。
   - `GroundLayer.advance_landing`：一帧落稳几件只响一声，有一件沉（`land_profile.sink`）就 `bag.land.heavy`，否则 `light`。
   - `LootView`：逐张揭开 `loot.flip.r<稀有度>`，翻完（至少亮过一张）`loot.flip_done`，快速搜索只响翻完。`ContainerScreen.take_all` 搬走了才响 `loot.take_all`（火漆按钮 meta `sfx` 空串，不叠 `ui.press`）。
-  - `BattleView._sfx(cue)` 一个门：`_suppress_popups`（跳转）时全不响；`speed() ≥ 4` 只放行暴击、反应、倒下、胜负。命中 `battle.hit.<伤害类型>`（吸血 / 反伤别名到物理），暴击叠在命中上，格挡减了伤 `battle.block`，护甲由正到 0 `battle.armor_break`，反应 `battle.reaction.<id>`（十个反应别名到四声），buff 首层按 `is_debuff` 响 `buff_down` / `buff_up`，倒下 `battle.fall`，收尾 `result_cue`（玩家一方赢 win、输 lose、平局不响）。
+  - `BattleView._sfx(cue)` 一个门：`_suppress_popups`（跳转）时全不响；`speed() ≥ 4` 只放行开场、暴击、反应、倒下、胜负。开场 `BATTLE_START` 响 `battle.start`（号角）；命中 `battle.hit.<伤害类型>`（吸血 / 反伤别名到物理），暴击叠在命中上，格挡减了伤 `battle.block`，护甲由正到 0 `battle.armor_break`，反应 `battle.reaction.<id>`（十个反应别名到四声），buff 首层按 `is_debuff` 响 `buff_down` / `buff_up`，倒下 `battle.fall`，收尾 `result_cue`（玩家一方赢 win、输 lose、平局不响）。
 
 ## 9. 套装与跨域效果
 
@@ -4323,6 +4323,7 @@ res://
 | v3.30 | 2026-10-17 | **188 背包面板去字、信仰窗重排**（作者 2026-10-17，待定 1–3 按推荐）：背包面板不再写操作提示、地上说明、参战 / 可用格读数、信仰行与棋盘上方说明，回话走 `hint_sink`（地图屏 = 提示行）；`FaithTooltip.describe_full` → 名字行（Lv、休眠件数）+ 信力行 + 各阶效果 / 信力来源 / 献祭，颜色全走模板；`HoverTip.show_faith` 名字行下挂到下一阶的进度条、各段虚线分隔、宽 360 |
 | v3.31 | 2026-10-18 | **188 补充一 信仰窗分段、蛮神改写**（作者 2026-10-18，待定 1–4 按推荐）：`HoverTip.FaithBar` 一段一级、长度按所需信力（满阶也挂）；`FaithTooltip` 同一级的效果合成一行（`[table=2]`），没到的级整行 `@dim`，句子按 `FaithPerk.summary_for(def, points)` 写、锁住的级按那一级的阈值算；`FaithPerk.scaled` 给「随信力」的数（每 50 信力一阶、封顶）；蛮神一级门槛式增伤、二级献祭生命上限二选一（信力 / 全体造成伤害 + 急速）、三级 `prebattle_actions` 两个按钮（耗体力 / 耗信力、非首领）、四级持续战斗秒数随信力；献祭规矩 `OfferingRule.short_name`、`ItemVolume.size_label`（「大型道具」），有图标时排一行 `[img]`（`assets/ui/tags/<tag>.png`、`assets/ui/offerings/{large,medium,crit}.png`），缺一枚就退回文字 |
 | v3.32 | 2026-10-18 | **189 / 190 顶端栏长槽与日晷倒计时**（作者 2026-10-18 定案，待定 1–3 按推荐）：`hud_bar` 在板上画一条贯通的浅槽（`hud/groove` 九宫格、`band` 定槽身），宿主排完把铜点交给栏画（同行相邻两件之间、右槽图标组左边，空着的件两边不放）；`HudWidget.set_in_bar` 让栏里的件坐在槽底上（`PANEL_BARE`、浅底墨字），拖出栏回 `PANEL_HUD`；栏里同行间距 24、组在槽身里居中；倒计时改成刻在槽底的半圆日规（`hud/dial/*`：染色扇面 / 表盘 / 绕轴心转的影子 / 轴心，三阶 calm·half·low），栏上不写数字，停上去 `show_status` 弹「倒计时」窗、走一步 `update_status` 换字；缺图退回文字版 |
+| v3.49 | 2026-10-19 | **206 补一**（作者 19:18 在「音效」定）：战斗开场号角 `battle.start`（`BATTLE_START` 时响，4 倍速也放行，跳转不响）；cue 表 38 条 |
 | v3.48 | 2026-10-19 | **206 音效第二批**（架构线程方案，待定按推荐）：cue 表加别名（不许链）与 `max_per_sec`；`SfxMaterial` 材质三类；背包拖放 / 落地、战利品翻牌 / 全部拾取、战斗回放 37 个 cue 挂上（8.11）；`sync_audio.sh --variant`；新测试 `test_audio_206.gd` |
 | v3.47 | 2026-10-19 | **容器屏棋盘美术**（UI替换美术定稿，作者 19:02「其他说明性文本也可以去掉了」）：五种容器外框 + 背包外框（九宫格平铺）、宝箱铁条与 BOSS 纹章、格缝（`InventoryView.seams`）、面板按格子算宽高、右上角最小化 / 关闭圆钮、火漆「全部拾取」；去掉标题文字、快速搜索、状态行与搜索记录、耐力行；切图在 `assets/ui/board/`；新测试 `test_board_art.gd` |
 | v3.46 | 2026-10-19 | **205 赐福版道具图**（作者「这种被赐福的亚种道具还缺少贴图」，架构线程方案，待定按推荐）：`ItemPainter.art_id_of` 赐福版退回原件的图（约 92 件）、`faith_of / mark_of / mark_rect` 与 `draw_art` 末尾盖信仰印记（印记先用 HUD 徽记顶上，美术的 `assets/items/marks/` 到了自动换）；`sync_item_art.sh` 拷 `marks/`；新测试 `test_blessed_art_205.gd` |
