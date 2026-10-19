@@ -33,6 +33,10 @@ var _next: int = 0
 ## cue → 上次播的时刻（秒）、上次挑的文件下标
 var _last_at: Dictionary = {}
 var _last_file: Dictionary = {}
+## 206：cue → 最近一秒内响过的时刻（[code]max_per_sec[/code] 的滑动窗口）
+var _window: Dictionary = {}
+## 测试用的钟（秒；负 = 用真钟）
+var clock_override: float = -1.0
 ## 路径 → AudioStream（读不到的记 null，不再试）
 var _streams: Dictionary = {}
 var _music: AudioStreamPlayer = null
@@ -103,9 +107,19 @@ func play_cue(cue: StringName) -> void:
 		if not missing.has(cue):
 			missing.append(cue)
 		return
-	var now := Time.get_ticks_msec() / 1000.0
+	cue = table.resolve(cue)     # 206：别名记成真名（冷却与限频也按真名算）
+	var now := clock_override if clock_override >= 0.0 else Time.get_ticks_msec() / 1000.0
 	if _last_at.has(cue) and now - float(_last_at[cue]) < float(c["cooldown"]):
 		return     # 同一下（同一帧连发两次）只响一次
+	var cap := int(c.get("max_per_sec", 0))
+	if cap > 0:
+		var hits: Array = _window.get(cue, [])
+		while not hits.is_empty() and now - float(hits[0]) >= 1.0:
+			hits.pop_front()
+		if hits.size() >= cap:
+			return     # 206：高倍速连发，一秒内超了的静默丢掉
+		hits.append(now)
+		_window[cue] = hits
 	_last_at[cue] = now
 	recent.append(cue)
 	if recent.size() > RECENT_MAX:

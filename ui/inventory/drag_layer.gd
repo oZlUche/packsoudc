@@ -187,6 +187,7 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 	UiCursor.set_drag(true)     # 157
 	_hint_grids(true)     # 187
 	queue_redraw()
+	AudioHub.play(SfxMaterial.pick_cue(_inst.def))     # 206：上手按材质响
 	drag_started.emit(uid)
 
 
@@ -217,6 +218,7 @@ func grab_free(inst: ItemInstance, home: ItemContainer, home_at: Vector2i, home_
 	if is_inside_tree():
 		update_preview(get_global_mouse_position())
 	queue_redraw()
+	AudioHub.play(SfxMaterial.pick_cue(inst.def))     # 206
 	drag_started.emit(inst.uid)
 
 
@@ -261,6 +263,7 @@ func rotate_dragged() -> void:
 	var box := _inst.def.shape.size_rotated(_rot)
 	_grab_cell.x = clampi(_grab_cell.x, 0, maxi(0, box.x - 1))
 	_grab_cell.y = clampi(_grab_cell.y, 0, maxi(0, box.y - 1))
+	AudioHub.play(&"bag.rotate")     # 206
 	# 测试里本控件不在场景树内，取不到鼠标；那时由调用方自行刷新预览
 	if is_inside_tree():
 		update_preview(get_global_mouse_position())
@@ -629,6 +632,8 @@ func drop_at(global_pos: Vector2) -> bool:
 			inst.rotation = _rot
 			stash.landing_from[inst.uid] = true if _put_back(spot) else _release_px(global_pos)
 		if _source == stash or dropped:
+			if not dropped:
+				AudioHub.play(&"bag.invalid")     # 206：落到地上那一声在落稳时（GroundLayer）
 			_end_drag()
 			drag_finished.emit(inst.uid, dropped)
 			return dropped
@@ -693,6 +698,9 @@ func drop_at(global_pos: Vector2) -> bool:
 
 	if not dropped:
 		_restore()
+		AudioHub.play(&"bag.invalid")     # 206：放不下、退回原处（Esc / 右键取消走 [method cancel]，不响）
+	elif target is InventoryView:
+		AudioHub.play(SfxMaterial.place_cue(inst.def))     # 206：放进棋盘按材质响；放到地上的那一声在落稳时
 
 	_end_drag()
 	drag_finished.emit(inst.uid, dropped)
@@ -863,8 +871,10 @@ func _settle_displaced(victims: Array, home: ItemContainer, global_pos: Vector2)
 		if view is InventoryView:
 			cell = (view as InventoryView).cell_at_global(global_pos)
 		grab_free(v, home, v.origin, v.rotation, cell - v.origin)
+		AudioHub.play(&"bag.bump")     # 206：顶出一批响一声
 		items_displaced.emit(victims, true)
 		return
+	AudioHub.play(&"bag.bump")
 	items_displaced.emit(victims, false)
 
 
