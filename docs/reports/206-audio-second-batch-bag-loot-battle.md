@@ -1,7 +1,7 @@
 # 206 音效第二批接入：背包 / 战利品 / 战斗（37 个 cue）
 
 > 架构设计 thread · 2026-10-19 · 提案（作者 18:57 在「音效」线程「开始做下一组音效，全做，并给我几个备用选项」；协调者转来要接入方案）
-> 承 204（`Audio` 自动加载、cue 表、`AudioHub.play`）。素材：`/mnt/project-files/art/audio/sfx2/`（`cues.json` 37 个 cue，每个 3 版：v1 推荐 / v2 轻亮 / v3 厚重；作者挑完，「音效」线程把定稿放进 `sfx2/final/`，文件名 = cue 名点换下划线，如 `bag_pick_cloth.ogg`）。
+> 承 204（`Audio` 自动加载、cue 表、`AudioHub.play`）。素材：`/mnt/project-files/art/audio/sfx2/`（`cues.json` 37 个 cue，每个 3 版：v1 推荐 / v2 轻亮 / v3 厚重；另加 19:18 的 `battle.start`，见 §2.4；作者挑完，「音效」线程把定稿放进 `sfx2/final/`，文件名 = cue 名点换下划线，如 `bag_pick_cloth.ogg`）。
 
 ## 0 一句话
 
@@ -70,8 +70,9 @@ cue 的「按什么选」全放进表与一个小的纯类：材质 → `SfxMate
 | battle.buff_up / down | STATUS_STACKED 的 `first`（和 `pop` 同一条件） | 续层不响 |
 | battle.fall | DIED | 每方一次 |
 | battle.win / lose | `_finish()`：`_result.winner` 是玩家一方 → win，否则 lose；平局不响 | 回放到结尾同样响 |
+| battle.start（19:18 补）| `_apply` 收到 `BATTLE_START`（`BattleSim` 开场发一次，`battle_sim.gd:54`）| 走同一个 `_sfx`：`seek` / `skip_to_end` 重演时 `_suppress_popups` 为真，自然不响；任何倍速都放行；按「重播」从头放会再响一次（就是开场，合理） |
 
-**倍速**：`BattleView` 里一个 `_sfx(cue)`：`speed() >= 4.0` 时只放行 crit / reaction / fall / win / lose（203 §3 的约定），其余战斗 cue 不发；2× 全放，靠表里 `max_per_sec` 限：hit 8、block 6、buff 4、crit 4、reaction 4。
+**倍速**：`BattleView` 里一个 `_sfx(cue)`：`speed() >= 4.0` 时只放行 start / crit / reaction / fall / win / lose（203 §3 的约定，start 是 19:18 加的），其余战斗 cue 不发；2× 全放，靠表里 `max_per_sec` 限：hit 8、block 6、buff 4、crit 4、reaction 4。
 
 ### 2.4 素材与文件名
 
@@ -79,6 +80,8 @@ cue 的「按什么选」全放进表与一个小的纯类：材质 → `SfxMate
 - 表里 `volume_db` 起点：背包组 −6，翻牌 r0～r5 −8 → −3 渐强（素材已按此做，表里写 0），战斗命中 −5、暴击 / 反应 / 倒下 −3、胜负 0。
 - `tools/sync_audio.sh <目录> [--variant v1]`：目录下有 `ogg/` 且给了 `--variant` 就把 `ogg/<cue>_v1.ogg` 拷成 `sfx/<cue>.ogg`；目录下是定稿（`final/`，已是最终名）就照旧整体拷。CREDITS 照旧并入 `assets/audio/CREDITS.md`。
 - 落地顺序：执行现在用 `--variant v1` 落（37 个文件齐、测试「文件都在」绿）；作者挑完、「音效」线程放好 `final/`，执行再跑一次 sync（同名覆盖）、合并，不改代码不改表。
+- **`battle.start`（19:18 补）**：作者听第二轮时定了「胜利的号角」（`round2/battle_win_b3.ogg`）当战斗开场；「音效」线程已复制为 `sfx2/round3/battle_start.ogg`。它**不在** `ogg/` 的 37 个里，`--variant v1` 扫不到，执行从 `round3/battle_start.ogg` 单独拷成 `assets/audio/sfx/battle_start.ogg`（或 sync 顺手支持「`<cue>.ogg` 已是最终名就照拷」）。`volume_db` 0、`pitch_var` 0（开场一声，不要飘）。
+- 作者对 37 个的版本选择记在 `/mnt/project-files/art/audio/sfx2/picks.md`（厚重版 4 个、推荐版 21 个、12 个在重做，第三轮文件 `round3/<cue>_c1..3`）。挑哪版只换文件，**挂点、表、测试都不受影响**；`battle.win` 本身仍另有定稿，不是号角那一版。
 
 **与 UI替换美术 的容器界面定稿（19:02）对齐**：容器 / 搜索界面正在换美术（/mnt/project-files/art/ui/board/README.md）：「快速搜索」按钮去掉，「全部拾取」换成火漆按钮。所以上表里「快速搜索不逐张响」只对 `LootView.skip()` 还在的路径生效；`loot.take_all` 的静音 meta 要挂在新的火漆按钮上（它仍是 BaseButton，204 的钩子照样接）。两件事都在执行手里，挂点以新控件为准。
 
@@ -89,11 +92,11 @@ cue 的「按什么选」全放进表与一个小的纯类：材质 → `SfxMate
 | `core/audio/cue_table.gd` | `alias`、`max_per_sec` 字段与校验（别名目标要存在、别名不带 files、不链） |
 | `ui/audio.gd` | 解别名；`max_per_sec` 滑动窗口（每 cue 记最近 N 次时间戳）；`_sfx` 不变 |
 | `core/audio/sfx_material.gd`（新） | §2.2 材质三类 |
-| `data/authoring/audio/cues.json` | 37 条 + 别名条（2 个伤害类型、10 个反应） |
+| `data/authoring/audio/cues.json` | 38 条（37 + `battle.start`）+ 别名条（2 个伤害类型、10 个反应） |
 | `ui/inventory/drag_layer.gd` | 拿起、放下 / 放不下、旋转、顶出 |
 | `ui/inventory/ground_layer.gd` | `advance_landing` 落地轻 / 重 |
 | `ui/game/loot_view.gd`、`ui/game/container_screen.gd` | 翻牌 / 翻完 / 全部拾取；按钮 meta 静音 |
-| `ui/battle/battle_view.gd` | `_sfx(cue)`（suppress + 倍速门）；`_on_damage`、`_on_reaction`、STATUS_STACKED、DIED、`_finish`、`set_resource` 护甲碎、格挡 |
+| `ui/battle/battle_view.gd` | `_sfx(cue)`（suppress + 倍速门）；`BATTLE_START` 开场、`_on_damage`、`_on_reaction`、STATUS_STACKED、DIED、`_finish`、`set_resource` 护甲碎、格挡 |
 | `core/battle/combatant_runtime.gd` | 仅当 DAMAGE 没带格挡减量时补 `blocked` 字段 |
 | `tools/sync_audio.sh` | `--variant` 与 `ogg/` 目录 |
 | `tests/ui/test_audio_206.gd`（新） | 见 §4 |
@@ -106,7 +109,7 @@ cue 的「按什么选」全放进表与一个小的纯类：材质 → `SfxMate
 3. 拖拽：上手 → `bag.pick.*`；放进棋盘 → `bag.place.*`；放不下退回 → `bag.invalid`；Esc 取消 → 不记；旋转 → `bag.rotate`；顶出一批 → 一条 `bag.bump`。
 4. 落地：两件同帧落稳，一重一轻 → 只记一条 `bag.land.heavy`。
 5. 战利品：逐张揭 3 张（稀有度 0 / 3 / 5）→ `loot.flip.r0 / r3 / r5` + `loot.flip_done`；快速搜索 → 只有 `loot.flip_done`；全部拾取搬走 ≥ 1 件 → `loot.take_all`，空容器不响。
-6. 战斗：喂一串事件给 `_apply`：火伤 → `battle.hit.fire`；吸血（drain）→ `battle.hit.physical`；暴击 → hit + crit 两条；凝毒反应 → `battle.reaction.3`；减益首层 → `battle.buff_down`，续层不响；护甲 3 → 0 → `battle.armor_break`；DIED → `battle.fall`；玩家赢 → `battle.win`。
+6. 战斗：喂一串事件给 `_apply`：`BATTLE_START` → `battle.start`（4× 也响；`seek(0)` 重演不响）；火伤 → `battle.hit.fire`；吸血（drain）→ `battle.hit.physical`；暴击 → hit + crit 两条；凝毒反应 → `battle.reaction.3`；减益首层 → `battle.buff_down`，续层不响；护甲 3 → 0 → `battle.armor_break`；DIED → `battle.fall`；玩家赢 → `battle.win`。
 7. 门：`_suppress_popups` 为真时上面全部不记；`speed()` = 4 时火伤不记、暴击记；`max_per_sec` = 8 时 1 秒内 20 条火伤只记 8 条。
 
 ## 5 不做
