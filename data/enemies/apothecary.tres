@@ -1,9 +1,25 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_ib6on"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_4fen5"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_lwtag"]
+
+[sub_resource type="Resource" id="Resource_3t31c"]
+script = ExtResource("1_4fen5")
+id = &"poisoner"
+weight = 2.0
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"poisoned_knife", &"poison_vial", &"antidote_satchel"])
+
+[sub_resource type="Resource" id="Resource_s5bb6"]
+script = ExtResource("1_4fen5")
+id = &"all_potions"
+strength = Vector2i(1, 2)
+quality = &"bad"
+items = Array[StringName]([&"salve", &"strong_salve", &"antidote_kit", &"bandage_roll"])
+note = "一包药，没刀"
 
 [resource]
-script = ExtResource("1_ib6on")
+script = ExtResource("2_lwtag")
 id = &"apothecary"
 display_name = "药师"
 display_names = {
@@ -15,3 +31,4 @@ base_stats = {
 "max_hp": 45
 }
 item_tags = Array[StringName]([&"remedy", &"tool", &"reagent", &"material", &"rapid", &"melee", &"poison"])
+builds = Array[ExtResource("1_4fen5")]([SubResource("Resource_3t31c"), SubResource("Resource_s5bb6")])

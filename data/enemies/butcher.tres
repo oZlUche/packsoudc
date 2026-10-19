@@ -1,9 +1,18 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_k5q1s"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_iedgn"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_ppovf"]
+
+[sub_resource type="Resource" id="Resource_juunp"]
+script = ExtResource("1_iedgn")
+id = &"butcher_block"
+weight = 2.0
+strength = Vector2i(1, 3)
+items = Array[StringName]([&"cleaver", &"bloodletter", &"wound_salt"])
+note = "剁肉刀 + 放血刀 + 伤口盐：流血成套"
 
 [resource]
-script = ExtResource("1_k5q1s")
+script = ExtResource("2_ppovf")
 id = &"butcher"
 display_name = "屠夫"
 display_names = {
@@ -16,3 +25,4 @@ base_stats = {
 }
 signature = Array[StringName]([&"knife"])
 item_tags = Array[StringName]([&"bleed", &"melee", &"remedy"])
+builds = Array[ExtResource("1_iedgn")]([SubResource("Resource_juunp")])

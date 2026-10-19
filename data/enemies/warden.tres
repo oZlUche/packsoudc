@@ -1,9 +1,18 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_b1i6m"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_obb67"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_bw1s5"]
+
+[sub_resource type="Resource" id="Resource_rfka8"]
+script = ExtResource("1_obb67")
+id = &"legionary"
+weight = 2.0
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"shortsword", &"salve"])
+note = "圆盾 + 短剑 + 药膏"
 
 [resource]
-script = ExtResource("1_b1i6m")
+script = ExtResource("2_bw1s5")
 id = &"warden"
 display_name = "守卫"
 display_names = {
@@ -16,3 +25,4 @@ base_stats = {
 }
 signature = Array[StringName]([&"round_shield"])
 item_tags = Array[StringName]([&"imperial", &"shield", &"gear", &"remedy"])
+builds = Array[ExtResource("1_obb67")]([SubResource("Resource_rfka8")])

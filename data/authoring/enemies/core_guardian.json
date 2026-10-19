@@ -24,5 +24,18 @@
     "shield",
     "part",
     "remedy"
+  ],
+  "builds": [
+    {
+      "id": "bastion",
+      "strength": [
+        3,
+        3
+      ],
+      "items": [
+        "warding_charm",
+        "strong_salve"
+      ]
+    }
   ]
 }

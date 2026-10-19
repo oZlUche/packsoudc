@@ -1,9 +1,23 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_i240v"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_up7ch"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_8o2qr"]
+
+[sub_resource type="Resource" id="Resource_ngug2"]
+script = ExtResource("1_up7ch")
+id = &"knife_and_salve"
+items = Array[StringName]([&"knife", &"salve"])
+
+[sub_resource type="Resource" id="Resource_phgom"]
+script = ExtResource("1_up7ch")
+id = &"pockets_full"
+strength = Vector2i(0, 1)
+quality = &"bad"
+items = Array[StringName]([&"bandage", &"bandage", &"bitter_root"])
+note = "一兜子药，没刀"
 
 [resource]
-script = ExtResource("1_i240v")
+script = ExtResource("2_8o2qr")
 id = &"raider"
 display_name = "拾荒者"
 display_names = {
@@ -14,3 +28,4 @@ base_stats = {
 "max_hp": 26
 }
 item_tags = Array[StringName]([&"rapid", &"melee", &"remedy", &"tool", &"material"])
+builds = Array[ExtResource("1_up7ch")]([SubResource("Resource_ngug2"), SubResource("Resource_phgom")])

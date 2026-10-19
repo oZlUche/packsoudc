@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_0uox2"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_7eb7o"]
+
+[sub_resource type="Resource" id="Resource_5ef77"]
+script = ExtResource("1_0uox2")
+id = &"phalanx"
+weight = 2.0
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"shortsword", &"knife"])
+note = "圆盾 + 短剑 + 小刀"
+
+[sub_resource type="Resource" id="Resource_loyly"]
+script = ExtResource("1_0uox2")
+id = &"two_shields"
+strength = Vector2i(1, 2)
+quality = &"bad"
+items = Array[StringName]([&"round_shield"])
+note = "两面盾只取最高一层格挡、没武器"
+
+[resource]
+script = ExtResource("2_7eb7o")
+id = &"shield_wall"
+display_name = "盾卫"
+display_names = {
+"en": "Shield Wall"
+}
+strength = 2
+schools = Array[StringName]([&"rapid"])
+base_stats = {
+"block": 2,
+"max_hp": 50
+}
+signature = Array[StringName]([&"round_shield"])
+item_tags = Array[StringName]([&"imperial", &"shield", &"armor", &"melee", &"rapid"])
+builds = Array[ExtResource("1_0uox2")]([SubResource("Resource_5ef77"), SubResource("Resource_loyly")])

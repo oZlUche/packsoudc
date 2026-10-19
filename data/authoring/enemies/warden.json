@@ -20,5 +20,20 @@
     "shield",
     "gear",
     "remedy"
+  ],
+  "builds": [
+    {
+      "id": "legionary",
+      "weight": 2.0,
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "shortsword",
+        "salve"
+      ],
+      "note": "圆盾 + 短剑 + 药膏"
+    }
   ]
 }

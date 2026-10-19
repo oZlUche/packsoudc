@@ -1,0 +1,52 @@
+{
+  "id": "apprentice_mage",
+  "display_name": "学徒法师",
+  "display_names": {
+    "en": "Apprentice Mage"
+  },
+  "strength": 2,
+  "schools": [
+    "magic"
+  ],
+  "base_stats": {
+    "max_hp": 32
+  },
+  "signature": [
+    "magic_staff"
+  ],
+  "item_tags": [
+    "magic",
+    "crystal",
+    "staff",
+    "remedy"
+  ],
+  "builds": [
+    {
+      "id": "two_crystals",
+      "weight": 2.0,
+      "strength": [
+        1,
+        3
+      ],
+      "items": [
+        "fire_crystal",
+        "ice_crystal"
+      ],
+      "note": "法杖 + 两颗不同晶石，挨着装载格"
+    },
+    {
+      "id": "misplaced_crystals",
+      "strength": [
+        1,
+        2
+      ],
+      "quality": "bad",
+      "items": [
+        "fire_crystal",
+        "fire_crystal"
+      ],
+      "loose": true,
+      "note": "两颗火晶石不挨着法杖：摆成散件"
+    }
+  ]
+}

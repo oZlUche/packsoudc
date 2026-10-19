@@ -16,5 +16,28 @@
     "remedy",
     "tool",
     "material"
+  ],
+  "builds": [
+    {
+      "id": "knife_and_salve",
+      "items": [
+        "knife",
+        "salve"
+      ]
+    },
+    {
+      "id": "pockets_full",
+      "strength": [
+        0,
+        1
+      ],
+      "quality": "bad",
+      "items": [
+        "bandage",
+        "bandage",
+        "bitter_root"
+      ],
+      "note": "一兜子药，没刀"
+    }
   ]
 }

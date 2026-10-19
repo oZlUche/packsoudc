@@ -15,5 +15,32 @@
     "burst",
     "heavy",
     "remedy"
+  ],
+  "builds": [
+    {
+      "id": "heavy_cure",
+      "strength": [
+        1,
+        3
+      ],
+      "items": [
+        "warhammer",
+        "salve",
+        "strong_salve"
+      ]
+    },
+    {
+      "id": "all_swing",
+      "strength": [
+        0,
+        1
+      ],
+      "quality": "bad",
+      "items": [
+        "warhammer",
+        "longsword"
+      ],
+      "note": "战锤 + 长剑，都是费耐力的：开场就喘"
+    }
   ]
 }

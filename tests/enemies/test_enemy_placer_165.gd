@@ -126,6 +126,7 @@ static func run_build_content(t: TestCase) -> void:
 	# 现有的神射手抽不到箭（箭不带 ranged）：造一个招牌就是弓 + 箭的弓手，别的照神射手
 	var who := (c.enemies.enemy(&"marksman") as EnemyDef).duplicate() as EnemyDef
 	who.id = &"t_archer"
+	who.builds = [] as Array[EnemyBuild]     # 211：只看招牌的弓箭，不掷神射手的套路
 	who.signature_by_strength = {}
 	who.signature = _ids(["longbow", "arrows", "arrows"])
 	who.item_tags = _ids(["ranged", "ammo", "remedy"])

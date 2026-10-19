@@ -1,0 +1,68 @@
+{
+  "id": "witch_doctor",
+  "display_name": "巫医",
+  "display_names": {
+    "en": "Witch Doctor"
+  },
+  "strength": 2,
+  "schools": [
+    "poison",
+    "rapid"
+  ],
+  "base_stats": {
+    "max_hp": 40
+  },
+  "item_tags": [
+    "poison",
+    "reagent",
+    "remedy",
+    "tool",
+    "herb",
+    "rapid"
+  ],
+  "builds": [
+    {
+      "id": "venom_kit",
+      "weight": 2.0,
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "poisoned_knife",
+        "viper_gland",
+        "envenomed_gauntlet",
+        "antidote_satchel"
+      ],
+      "note": "淬毒刀 + 蝰蛇腺 + 淬毒护手 + 解毒包：成套的毒"
+    },
+    {
+      "id": "festering",
+      "strength": [
+        1,
+        3
+      ],
+      "items": [
+        "festering_blade",
+        "poison_vial",
+        "salve"
+      ],
+      "note": "腐刃 + 毒药瓶"
+    },
+    {
+      "id": "vials_only",
+      "strength": [
+        0,
+        2
+      ],
+      "quality": "bad",
+      "items": [
+        "poison_vial",
+        "poison_vial",
+        "poison_vial",
+        "bandage"
+      ],
+      "note": "只有毒药瓶没有刀：瓶子自己会扔但很慢"
+    }
+  ]
+}

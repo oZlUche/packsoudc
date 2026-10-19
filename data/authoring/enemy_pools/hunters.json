@@ -19,6 +19,12 @@
     },
     {
       "enemy": "warden"
+    },
+    {
+      "enemy": "assassin"
+    },
+    {
+      "enemy": "tracker"
     }
   ],
   "tiers": [

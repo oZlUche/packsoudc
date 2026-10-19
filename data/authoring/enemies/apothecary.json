@@ -20,5 +20,35 @@
     "rapid",
     "melee",
     "poison"
+  ],
+  "builds": [
+    {
+      "id": "poisoner",
+      "weight": 2.0,
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "poisoned_knife",
+        "poison_vial",
+        "antidote_satchel"
+      ]
+    },
+    {
+      "id": "all_potions",
+      "strength": [
+        1,
+        2
+      ],
+      "quality": "bad",
+      "items": [
+        "salve",
+        "strong_salve",
+        "antidote_kit",
+        "bandage_roll"
+      ],
+      "note": "一包药，没刀"
+    }
   ]
 }

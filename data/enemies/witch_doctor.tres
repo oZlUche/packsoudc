@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_383hr"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_y3qap"]
+
+[sub_resource type="Resource" id="Resource_7n64e"]
+script = ExtResource("1_383hr")
+id = &"venom_kit"
+weight = 2.0
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"poisoned_knife", &"viper_gland", &"envenomed_gauntlet", &"antidote_satchel"])
+note = "淬毒刀 + 蝰蛇腺 + 淬毒护手 + 解毒包：成套的毒"
+
+[sub_resource type="Resource" id="Resource_tleko"]
+script = ExtResource("1_383hr")
+id = &"festering"
+strength = Vector2i(1, 3)
+items = Array[StringName]([&"festering_blade", &"poison_vial", &"salve"])
+note = "腐刃 + 毒药瓶"
+
+[sub_resource type="Resource" id="Resource_ikgwr"]
+script = ExtResource("1_383hr")
+id = &"vials_only"
+strength = Vector2i(0, 2)
+quality = &"bad"
+items = Array[StringName]([&"poison_vial", &"poison_vial", &"poison_vial", &"bandage"])
+note = "只有毒药瓶没有刀：瓶子自己会扔但很慢"
+
+[resource]
+script = ExtResource("2_y3qap")
+id = &"witch_doctor"
+display_name = "巫医"
+display_names = {
+"en": "Witch Doctor"
+}
+strength = 2
+schools = Array[StringName]([&"poison", &"rapid"])
+base_stats = {
+"max_hp": 40
+}
+item_tags = Array[StringName]([&"poison", &"reagent", &"remedy", &"tool", &"herb", &"rapid"])
+builds = Array[ExtResource("1_383hr")]([SubResource("Resource_7n64e"), SubResource("Resource_tleko"), SubResource("Resource_ikgwr")])
