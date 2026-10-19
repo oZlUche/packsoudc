@@ -1,0 +1,36 @@
+{
+  "id": "cave_bear",
+  "display_name": "穴熊",
+  "display_names": {
+    "en": "Cave Bear"
+  },
+  "strength": 3,
+  "schools": [
+    "bleed"
+  ],
+  "base_stats": {
+    "max_hp": 90,
+    "block": 2
+  },
+  "signature": [
+    "beast_claw",
+    "beast_claw",
+    "beast_hide",
+    "beast_hide",
+    "beast_tusk_root"
+  ],
+  "item_tags": [
+    "beast_part"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    6,
+    4
+  ],
+  "species": "beast",
+  "bagless": true
+}

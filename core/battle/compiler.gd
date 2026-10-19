@@ -54,14 +54,15 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	# 087（作者定）：休眠的仍可能有**通用效果**（盾的固定减伤、武器的攻击力 = 它自己的 combat）：留着的照样参战，
 	# 只丢信力加成与邻接（`dormant` 记着谁是休眠的）；不留的（护符）彻底不参战
 	# 140：没有棋盘（敌人基线、测试）只跳过这一段 —— 后面几步对着空的 fighters 自然什么都不做，九步只有一条路
-	var active_faith := FaithState.active_tag(board) if board != null else &""
+	# 212：魔兽的棋盘不认信仰（身上本来就没有信仰道具；不让 is_dormant 去猜）
+	var active_faith := FaithState.active_tag(board) if board != null and not inp.wild else &""
 	var fighters: Array[int] = []
 	var dormant: Dictionary = {}     # uid -> true
 	for inst in (board.items() if board != null else []):
 		var item := inst as ItemInstance
 		if item.def == null or board.acts_as_bag(item.def):
 			continue
-		if FaithState.is_dormant(item.def, active_faith):
+		if not inp.wild and FaithState.is_dormant(item.def, active_faith):
 			if not FaithState.keeps_combat_when_dormant(item.def):
 				continue
 			dormant[item.uid] = true
@@ -72,9 +73,9 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	var stats: Dictionary = {}  # uid -> StatSet
 	for uid in fighters:
 		var set := StatSet.new()
-		var def := board.get_item(uid).def
-		if def.combat != null:
-			def.combat.seed_stats(set)
+		var profile := profile_of(board.get_item(uid).def, inp.wild)
+		if profile != null:
+			profile.seed_stats(set)
 		stats[uid] = set
 
 	# --- 3. 包体效果施加给内容物 ---
@@ -89,7 +90,7 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	var bonus_rules: Dictionary = {}  # uid -> Array[AbilityRule]
 	for uid in fighters:
 		var def := board.get_item(uid).def
-		if not def.has_faith() or def.faith_bonuses.is_empty() or dormant.has(uid):
+		if inp.wild or not def.has_faith() or def.faith_bonuses.is_empty() or dormant.has(uid):
 			continue
 		var tier := int(inp.faith_tiers.get(def.faith_tag(), 0))
 		var pts := int(inp.faith_points.get(def.faith_tag(), 0))
@@ -111,7 +112,7 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	var links: Dictionary = {}  # uid -> {uid: true}
 	var social: Array[int] = []     # 参与邻接的：休眠的不给也不收
 	for uid in fighters:
-		if not dormant.has(uid):
+		if not dormant.has(uid) and not inp.wild:     # 212：魔兽的棋盘不跑邻接
 			social.append(uid)
 	var attach_pending: Dictionary = {}     # uid -> [[rule, origin], ...]（108：邻居给我挂的规则，第 6 步打包时挂上）
 	var fed: Dictionary = {}     # 148：这一场真的供给了的（魔晶石点亮了法杖）uid -> true，耐久按它扣
@@ -131,15 +132,17 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 		item.def_id = def.id
 		item.tags = def.tags.duplicate()
 		item.stats = set
-		if def.combat != null:
-			item.rules = def.combat.rules.duplicate()
+		var profile := profile_of(def, inp.wild)
+		if profile != null:
+			item.rules = profile.rules.duplicate()
 		if bonus_rules.has(uid):
 			item.rules.append_array(bonus_rules[uid])
 		for pair in attach_pending.get(uid, []):
 			_attach(item, pair[0], pair[1])
 		# 175 补充五：道具自己的「造成伤害后施加」简写，也走附加入口（来源是道具自己 → 直接来源，130 的「施加时」听得到）
-		if not def.applies.is_empty():
-			_attach(item, ElementApply.rule_of(def.applies), ElementApply.ORIGIN)
+		var applies := def.wild_applies if inp.wild else def.applies     # 212：魔兽咬人施加的是 wild_applies
+		if not applies.is_empty():
+			_attach(item, ElementApply.rule_of(applies), ElementApply.ORIGIN)
 		# 175 第三批：附魔（铸牌附上的覆盖预置的）走同一个附加入口，一把只挂一条；表里查不到了就不挂
 		var ench := Forge.enchant_of(board.get_item(uid))
 		if not ench.is_empty():
@@ -168,6 +171,13 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	spec.max_hp = maxi(0, hp)
 	spec.board = board
 	return spec
+
+
+## 212：这件道具这一边用哪份战斗定义 —— 魔兽持有（[param wild]）且写了 `wild` 就用它，否则 `combat`
+static func profile_of(def: ItemDef, wild: bool) -> CombatProfile:
+	if def == null:
+		return null
+	return def.wild if wild and def.wild != null else def.combat
 
 
 ## 第 7 步：按件修饰。逐条按下标顺序 —— 随机挑选的种子里带着下标，所以两条都挑 3 把时挑的不是同一批

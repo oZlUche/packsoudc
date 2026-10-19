@@ -1,0 +1,13 @@
+{
+  "id": "beast_part",
+  "display_name": "兽材",
+  "display_names": {
+    "en": "Beast Part"
+  },
+  "description": "从魔兽身上取下的东西。",
+  "descriptions": {
+    "en": "Taken from a beast."
+  },
+  "tip": false,
+  "category": "purpose"
+}

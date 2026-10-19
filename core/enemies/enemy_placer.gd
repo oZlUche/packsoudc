@@ -145,6 +145,8 @@ static func build_content(
 		rule = EnemyLoadout.new()
 	var size := def.board if def.board != Vector2i.ZERO else (tier.board if tier != null else Vector2i(4, 3))
 	var count := rng.randi_range(tier.item_count.x, tier.item_count.y) if tier != null else 2
+	if def.is_wild():
+		count = maxi(count, def.signature_at(strength).size())     # 212：魔兽的招牌是它的器官，一件不少；档位多出来的再补
 	var cap := rarity_cap_of(rule, tier)
 	var picks := choose_items(def, rule, items, count, rng, cap, strength)
 	_sort_big_first(picks, items)
@@ -153,6 +155,8 @@ static func build_content(
 
 	# 084：敌人也背包 —— 先摆包（档位的，敌人自己的覆盖），道具只能摆进包里（棋盘 requires_bag，和玩家一样）
 	var bag_ids: Array[StringName] = def.bags if not def.bags.is_empty() else (tier.bags if tier != null else [] as Array[StringName])
+	if def.bagless:
+		bag_ids = [] as Array[StringName]     # 212：魔兽没有包，器官直接摆
 	var board := GridInventory.new(size, 0, not bag_ids.is_empty())
 	var placed: Array = []
 	for bag_id in bag_ids:
@@ -203,7 +207,7 @@ static func build_content(
 	# 126：战斗道具摆完再摆携带品（非战斗道具，越值钱越少见）—— 同一块棋盘 / 同一些包，小件先摆，放不下的跳过（计入差件）。
 	# 随机数另起一条（由主随机数的当前状态派生、不消耗它）：加不加携带规则，敌人本身与战斗道具都不变
 	var carry_short := 0
-	if carry != null:
+	if carry != null and not def.is_wild():     # 212：魔兽 / 机关不揣金器
 		var crng := RandomNumberGenerator.new()
 		crng.seed = hash([rng.state, String(def.id), strength, "carry"])
 		var carried := carry.roll(items, strength, cap, crng)
@@ -219,6 +223,8 @@ static func build_content(
 		"board": [size.x, size.y],
 		"items": placed,
 	}
+	if def.is_wild():
+		content["wild"] = true     # 212：棋盘上的道具是魔兽持有的那一面（悬浮窗按它写，[constant EnemyKit.WILD_META]）
 	return {"content": content, "dropped": maxi(0, count - (placed.size() - _carried_count(placed))), "carry_short": carry_short,
 		"ungrouped": int(got["ungrouped"])}
 

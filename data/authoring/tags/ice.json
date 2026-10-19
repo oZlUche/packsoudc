@@ -1,0 +1,13 @@
+{
+  "id": "ice",
+  "display_name": "冰霜",
+  "display_names": {
+    "en": "Ice"
+  },
+  "description": "带寒气的东西。",
+  "descriptions": {
+    "en": "Carries frost."
+  },
+  "tip": false,
+  "category": "element"
+}

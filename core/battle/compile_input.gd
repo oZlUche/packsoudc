@@ -31,6 +31,9 @@ var axes: Dictionary = {}
 ## 结算旗子（093 蛮神 4 级）：生命归零后还能坚持几秒。多个来源取最大
 var undying_sec: float = 0.0
 
+## 212：魔兽的棋盘 —— 道具用 [member ItemDef.wild] 那一面，不跑信仰、邻接、`applies`，跑 `wild_applies`
+var wild: bool = false
+
 ## 按件随机挑选用。调用方算好（`hash(run_seed, "compile", clock.total)`），一局之内不变 ——
 ## 所以拖动预估挑的和真打挑的是同一批
 var seed: int = 0

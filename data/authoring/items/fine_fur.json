@@ -13,6 +13,12 @@
   "tags": [
     "material",
     "nature",
-    "leather"
-  ]
+    "leather",
+    "beast_part"
+  ],
+  "wild": {
+    "base_stats": {
+      "max_armor": 6
+    }
+  }
 }

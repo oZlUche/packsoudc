@@ -1,25 +1,64 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_dffr4"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_vmbe2"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_nu8dh"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_i25uy"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_ajyck"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_i3aej"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_jpmsk"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_qth60"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_jt4o6"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_vwsk6"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_jfxjv"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_73504"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="7_b8b54"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="8_xysc7"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="9_gxvtf"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="10_7fta8"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="11_440od"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="12_g05vn"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="13_ngtbe"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="14_oj7n4"]
 
-[sub_resource type="Resource" id="Resource_sodlc"]
-script = ExtResource("6_i3aej")
+[sub_resource type="Resource" id="Resource_gt2wj"]
+script = ExtResource("6_73504")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
 
+[sub_resource type="Resource" id="Resource_meqhi"]
+script = ExtResource("8_xysc7")
+seconds = 2.8
+
+[sub_resource type="Resource" id="Resource_yyjqm"]
+script = ExtResource("10_7fta8")
+amount = 6.0
+
+[sub_resource type="Resource" id="Resource_64ffo"]
+script = ExtResource("12_g05vn")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_pitsm"]
+script = ExtResource("13_ngtbe")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_k0u6x"]
+script = ExtResource("7_b8b54")
+trigger = SubResource("Resource_pitsm")
+cadence = SubResource("Resource_meqhi")
+costs = Array[ExtResource("9_gxvtf")]([SubResource("Resource_yyjqm")])
+effects = Array[ExtResource("11_440od")]([SubResource("Resource_64ffo")])
+
+[sub_resource type="Resource" id="Resource_i3r2o"]
+script = ExtResource("14_oj7n4")
+base_stats = {
+"damage": 14
+}
+rules = Array[ExtResource("7_b8b54")]([SubResource("Resource_k0u6x")])
+
 [resource]
-script = ExtResource("5_ajyck")
+script = ExtResource("5_jfxjv")
 id = &"beast_tusk_root"
 display_name = "巨兽獠牙根"
 display_names = {
 "en": "Beast Tusk Root"
 }
 description = "带着牙髓的一截，没剔干净。"
-shape = SubResource("Resource_sodlc")
+shape = SubResource("Resource_gt2wj")
 rarity = 2
 weight = 3
-tags = Array[StringName]([&"material", &"nature", &"flesh", &"trophy"])
+tags = Array[StringName]([&"material", &"nature", &"flesh", &"trophy", &"beast_part"])
+wild = SubResource("Resource_i3r2o")

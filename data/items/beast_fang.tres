@@ -1,0 +1,74 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_6s2ye"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_saxxx"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_yofa2"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="4_tj26m"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_62ljx"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_iqy0q"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="7_cuh2o"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="8_ygdtw"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="9_tr8ia"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="10_ug373"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="11_56gfa"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="12_f81dw"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="13_2gsup"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="14_1d73x"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="15_5ukh0"]
+
+[sub_resource type="Resource" id="Resource_gi0m7"]
+script = ExtResource("1_6s2ye")
+amount = 1.0
+
+[sub_resource type="Resource" id="Resource_0xgcw"]
+script = ExtResource("3_yofa2")
+grant_cells = Array[Vector2i]([Vector2i(-1, 0), Vector2i(1, 0)])
+grant_filter = Array[StringName]([&"melee"])
+grant_mods = Array[ExtResource("1_6s2ye")]([SubResource("Resource_gi0m7")])
+
+[sub_resource type="Resource" id="Resource_60sg8"]
+script = ExtResource("8_ygdtw")
+
+[sub_resource type="Resource" id="Resource_h80r6"]
+script = ExtResource("9_tr8ia")
+seconds = 1.6
+
+[sub_resource type="Resource" id="Resource_lh10q"]
+script = ExtResource("11_56gfa")
+amount = 4.0
+
+[sub_resource type="Resource" id="Resource_vpb35"]
+script = ExtResource("13_2gsup")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_0mjti"]
+script = ExtResource("14_1d73x")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_43eq1"]
+script = ExtResource("2_saxxx")
+trigger = SubResource("Resource_0mjti")
+cadence = SubResource("Resource_h80r6")
+costs = Array[ExtResource("10_ug373")]([SubResource("Resource_lh10q")])
+effects = Array[ExtResource("12_f81dw")]([SubResource("Resource_vpb35")])
+
+[sub_resource type="Resource" id="Resource_nklha"]
+script = ExtResource("15_5ukh0")
+base_stats = {
+"damage": 6
+}
+rules = Array[ExtResource("2_saxxx")]([SubResource("Resource_43eq1")])
+
+[resource]
+script = ExtResource("7_cuh2o")
+id = &"beast_fang"
+display_name = "兽牙"
+display_names = {
+"en": "Beast Fang"
+}
+description = "磨利了能镶在刀上。挨着的近战武器伤害更高。"
+shape = SubResource("Resource_60sg8")
+rarity = 1
+tags = Array[StringName]([&"material", &"nature", &"bone", &"beast_part"])
+adjacency = SubResource("Resource_0xgcw")
+wild = SubResource("Resource_nklha")

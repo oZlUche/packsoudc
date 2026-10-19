@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_6sang"]
+
+[resource]
+script = ExtResource("1_6sang")
+id = &"lightning"
+display_name = "雷电"
+display_names = {
+"en": "Lightning"
+}
+description = "带电的东西。"
+descriptions = {
+"en": "Carries lightning."
+}
+tip = false
+category = "element"

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.50 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.51 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -555,6 +555,12 @@ static func compile(board: GridInventory, input: CompileInput) -> CombatantSpec:
 > **为什么搬家不改数值。** 乘算与加算可交换（`StatValue` 乘算相加后乘一次、加算最后加；133 之前是四个乘区按枚举顺序连乘），
 > 所以第 7 步放在第 5 步之后还是之前，`total()` 一样；`base` 只有第 2 步写、第 7 步缩放，别处不碰；
 > 规则是 append 到同一条尾巴上，次序不变。落地时录了四份金样（`tests/fixtures/compile_golden/`）逐件逐字段对过。
+
+**一件道具两套逻辑（212）。** `ItemDef` 除了玩家用的 `combat` / `adjacency` / `applies`，还可以写 `wild: CombatProfile` + `wild_applies`
+（`@export_group("魔兽持有")`）：魔兽 / 机关持有时用的那一面。开关是 `CompileInput.wild`（`EnemyKit.spec_of` 按 `EnemyDef.is_wild()` 填）：
+为真时第 2 / 6 步按 `BattleCompiler.profile_of(def, true)` 取（没写 `wild` 的道具退回 `combat`），打中施加取 `wild_applies`，
+信仰（`active_faith` 空、不判休眠、4b 不跑）与邻接（第 5 步）都不算。同一件道具只有一个定义 —— 图鉴、掉落、快照、IdAliases 都只认一件，
+魔兽死了掉下来的就是玩家那一面。
 
 #### 邻接标记：增益与受益
 
@@ -2791,6 +2797,8 @@ class_name EnemyDef extends Resource            # data/authoring/enemies/*.json
 @export var signature: Array[StringName]          # 招牌道具，一定背着（屠夫总带着刀）
 @export var loadout: EnemyLoadout                 # 覆盖池的默认组装规则；null = 用池的
 @export var board: Vector2i                       # 覆盖档位表的棋盘；零 = 用档位表的
+@export var species: StringName                   # 212：human（默认）/ beast 魔兽 / construct 机关；不是人 = 编译用道具的 wild 面（4.2）
+@export var bagless: bool                         # 212：没有包，器官直接摆（棋盘不要求包）；不掷携带品（126）
 
 class_name EnemyPool extends Resource             # data/authoring/enemy_pools/*.json，章节按 id 引用
 @export var entries: Array[EnemyPoolEntry]        # {enemy, weight, kinds, node_types, min_danger}
@@ -4323,6 +4331,7 @@ res://
 | v3.30 | 2026-10-17 | **188 背包面板去字、信仰窗重排**（作者 2026-10-17，待定 1–3 按推荐）：背包面板不再写操作提示、地上说明、参战 / 可用格读数、信仰行与棋盘上方说明，回话走 `hint_sink`（地图屏 = 提示行）；`FaithTooltip.describe_full` → 名字行（Lv、休眠件数）+ 信力行 + 各阶效果 / 信力来源 / 献祭，颜色全走模板；`HoverTip.show_faith` 名字行下挂到下一阶的进度条、各段虚线分隔、宽 360 |
 | v3.31 | 2026-10-18 | **188 补充一 信仰窗分段、蛮神改写**（作者 2026-10-18，待定 1–4 按推荐）：`HoverTip.FaithBar` 一段一级、长度按所需信力（满阶也挂）；`FaithTooltip` 同一级的效果合成一行（`[table=2]`），没到的级整行 `@dim`，句子按 `FaithPerk.summary_for(def, points)` 写、锁住的级按那一级的阈值算；`FaithPerk.scaled` 给「随信力」的数（每 50 信力一阶、封顶）；蛮神一级门槛式增伤、二级献祭生命上限二选一（信力 / 全体造成伤害 + 急速）、三级 `prebattle_actions` 两个按钮（耗体力 / 耗信力、非首领）、四级持续战斗秒数随信力；献祭规矩 `OfferingRule.short_name`、`ItemVolume.size_label`（「大型道具」），有图标时排一行 `[img]`（`assets/ui/tags/<tag>.png`、`assets/ui/offerings/{large,medium,crit}.png`），缺一枚就退回文字 |
 | v3.32 | 2026-10-18 | **189 / 190 顶端栏长槽与日晷倒计时**（作者 2026-10-18 定案，待定 1–3 按推荐）：`hud_bar` 在板上画一条贯通的浅槽（`hud/groove` 九宫格、`band` 定槽身），宿主排完把铜点交给栏画（同行相邻两件之间、右槽图标组左边，空着的件两边不放）；`HudWidget.set_in_bar` 让栏里的件坐在槽底上（`PANEL_BARE`、浅底墨字），拖出栏回 `PANEL_HUD`；栏里同行间距 24、组在槽身里居中；倒计时改成刻在槽底的半圆日规（`hud/dial/*`：染色扇面 / 表盘 / 绕轴心转的影子 / 轴心，三阶 calm·half·low），栏上不写数字，停上去 `show_status` 弹「倒计时」窗、走一步 `update_status` 换字；缺图退回文字版 |
+| v3.51 | 2026-10-19 | **212 魔兽与「野性」两套逻辑**（架构线程夜间方案，待定按推荐）：`ItemDef.wild` + `wild_applies`、`CompileInput.wild`（4.2）；`EnemyDef.species` / `bagless`（6.0），魔兽招牌一件不少、不揣携带品、内容记 `wild`，悬浮窗写「魔兽的器官」那一面；六件新器官（火焰腺 / 霜腺 / 电囊 / 兽牙 / 兽爪 / 兽尾）+ 六件兽材补 `wild`；五种魔兽进标准池；施加宏 `@apply_status_scorch/chill/numb`；新测试 `test_wild_profile_212.gd`、`test_beasts_212.gd` |
 | v3.50 | 2026-10-19 | **战利品屏只留最小化**（作者 21:16「战利品界面应该是只有最小化，提示也删掉」）：战利品屏右上角一颗最小化钮（原收起，行为不变）在最右；火漆签旁的回话行删掉，面板回话不接 |
 | v3.49 | 2026-10-19 | **206 补一**（作者 19:18 在「音效」定）：战斗开场号角 `battle.start`（`BATTLE_START` 时响，4 倍速也放行，跳转不响）；cue 表 38 条 |
 | v3.48 | 2026-10-19 | **206 音效第二批**（架构线程方案，待定按推荐）：cue 表加别名（不许链）与 `max_per_sec`；`SfxMaterial` 材质三类；背包拖放 / 落地、战利品翻牌 / 全部拾取、战斗回放 37 个 cue 挂上（8.11）；`sync_audio.sh --variant`；新测试 `test_audio_206.gd` |

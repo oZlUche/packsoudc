@@ -1,0 +1,8 @@
+{
+  "id": "apply_status_chill",
+  "display_name": "施加寒冷",
+  "effect": {
+    "type": "apply_status",
+    "buff": "chill"
+  }
+}

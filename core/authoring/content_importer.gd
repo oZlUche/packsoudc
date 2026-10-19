@@ -487,6 +487,8 @@ static func _rule_groups(def: ItemDef) -> Array:
 	var groups: Array = []
 	if def.combat != null:
 		groups.append(["combat.rules", def.combat.rules])
+	if def.wild != null:
+		groups.append(["wild.rules", def.wild.rules])     # 212：魔兽持有的那一面
 	for k in def.faith_bonuses.size():
 		var fb := def.faith_bonuses[k] as FaithBonus
 		if fb != null:
@@ -676,6 +678,8 @@ static func _validate_item_combat(def: ItemDef, report: ImportReport) -> void:
 	if is_weapon:
 		return
 	for g in _rule_groups(def):
+		if String(g[0]).begins_with("wild."):
+			continue     # 212：魔兽身上的器官就是它的武器，耗耐力照人
 		var rules: Array = g[1]
 		for i in rules.size():
 			var rule := rules[i] as AbilityRule
@@ -709,6 +713,7 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_validate_rule_shapes(def, ctx, report)
 	_validate_power(def, ctx, report)
 	_validate_block(def, report)
+	_validate_wild(def, report)
 	ctx.register_item(def)
 	return def
 
@@ -1775,6 +1780,8 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 		report.warn("schools", "没有流派，只会背通用道具")
 	if def.loadout != null:
 		_validate_loadout(def.loadout, "loadout", report)
+	if not EnemyDef.SPECIES.has(def.species):
+		report.error("species", "种族 '%s' 不认识（%s）" % [def.species, " / ".join(PackedStringArray(EnemyDef.SPECIES))])     # 212
 	# 165：相邻组合 —— 每组至少两件道具 id
 	for k in def.combos.size():
 		if not (def.combos[k] is Array) or (def.combos[k] as Array).size() < 2:
@@ -1838,12 +1845,24 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 			if d == null or d.is_bag or d.is_sealed() or not def.allows_item(d):
 				continue
 			any += 1
-			if d.tags.has(&"weapon"):
+			if d.tags.has(&"weapon") or (def.is_wild() and _wild_attacks(d)):     # 212：魔兽的器官自己出手
 				weapons += 1
 		if any == 0:
 			report.error("item_tags", "没有任何道具带这些身份标签，组不出东西")
 		elif weapons == 0:
 			report.warn("item_tags", "身份标签圈住的道具里没有武器：这个敌人不会出手")
+
+
+## 212：这件在魔兽身上会不会自己出手（wild 面里有直接伤害）
+static func _wild_attacks(d: ItemDef) -> bool:
+	var profile := BattleCompiler.profile_of(d, true)
+	if profile == null:
+		return false
+	for r in profile.rules:
+		for e in (r as AbilityRule).effects if r != null else []:
+			if e is DealDamage:
+				return true
+	return false
 
 
 static func _validate_loadout(rule: EnemyLoadout, at: String, report: ImportReport) -> void:
@@ -2027,6 +2046,12 @@ static func _validate_item(def: ItemDef, report: ImportReport) -> void:
 
 
 ## 148：耐久要有正的次数（147 的随身道具 160 补一搬出了道具库，校验跟着搬到 [method import_belt_skill]）
+## 212：wild 写在包上没意义（包不进魔兽的棋盘：魔兽没有包）
+static func _validate_wild(def: ItemDef, report: ImportReport) -> void:
+	if def.is_bag and (def.wild != null or not def.wild_applies.is_empty()):
+		report.warn("wild", "「%s」是包：魔兽没有包，wild 不会用到" % def.id)
+
+
 static func _validate_wear(def: ItemDef, report: ImportReport) -> void:
 	if def.wear != null and def.wear.max_charges <= 0:
 		report.error("wear.max_charges", "耐久至少 1 次")

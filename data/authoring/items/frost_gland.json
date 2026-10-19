@@ -1,0 +1,74 @@
+{
+  "id": "frost_gland",
+  "display_name": "霜腺",
+  "display_names": {
+    "en": "Frost Gland"
+  },
+  "description": "摸上去是凉的。挨着它的武器每次出手，都给对手添一层【寒冷】。",
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "reagent",
+    "material",
+    "nature",
+    "flesh",
+    "ice",
+    "beast_part"
+  ],
+  "adjacency": {
+    "grant_cells": [
+      [
+        0,
+        -1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "grant_filter": [
+      "weapon"
+    ],
+    "grant_rules": [
+      {
+        "trigger": "@on_item_fired",
+        "cadence": "@always",
+        "effects": [
+          "@apply_status_chill"
+        ]
+      }
+    ]
+  },
+  "wild": {
+    "base_stats": {
+      "damage": 3
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown"
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage",
+            "damage_type": "ice"
+          }
+        ]
+      }
+    ]
+  },
+  "wild_applies": [
+    {
+      "buff": "chill"
+    }
+  ]
+}

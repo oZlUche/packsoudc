@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="1_674sr"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_d2vqq"]
+
+[sub_resource type="Resource" id="Resource_mf2vi"]
+script = ExtResource("1_674sr")
+school_share = 1.0
+min_weapons = 0
+single_faith = false
+
+[resource]
+script = ExtResource("2_d2vqq")
+id = &"cave_bear"
+display_name = "穴熊"
+display_names = {
+"en": "Cave Bear"
+}
+strength = 3
+schools = Array[StringName]([&"bleed"])
+base_stats = {
+"block": 2,
+"max_hp": 90
+}
+signature = Array[StringName]([&"beast_claw", &"beast_claw", &"beast_hide", &"beast_hide", &"beast_tusk_root"])
+item_tags = Array[StringName]([&"beast_part"])
+loadout = SubResource("Resource_mf2vi")
+board = Vector2i(6, 4)
+species = &"beast"
+bagless = true

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="1_iww8k"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_j23o0"]
+
+[sub_resource type="Resource" id="Resource_qms54"]
+script = ExtResource("1_iww8k")
+school_share = 1.0
+min_weapons = 0
+single_faith = false
+
+[resource]
+script = ExtResource("2_j23o0")
+id = &"pit_viper"
+display_name = "坑蝰"
+display_names = {
+"en": "Pit Viper"
+}
+strength = 1
+schools = Array[StringName]([&"poison"])
+base_stats = {
+"max_hp": 30
+}
+signature = Array[StringName]([&"viper_gland", &"beast_fang", &"beast_fang"])
+item_tags = Array[StringName]([&"beast_part"])
+loadout = SubResource("Resource_qms54")
+board = Vector2i(4, 3)
+species = &"beast"
+bagless = true
