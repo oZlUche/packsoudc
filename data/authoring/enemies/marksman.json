@@ -36,5 +36,29 @@
     "bag_long",
     "bag_leather",
     "bag_small"
+  ],
+  "builds": [
+    {
+      "id": "quiver_full",
+      "weight": 2.0,
+      "items": [
+        "arrows",
+        "serrated_arrows"
+      ],
+      "note": "弓 + 箭 + 锯齿箭"
+    },
+    {
+      "id": "bow_no_arrows",
+      "strength": [
+        0,
+        1
+      ],
+      "quality": "bad",
+      "items": [
+        "bandage",
+        "salve"
+      ],
+      "note": "弓没箭"
+    }
   ]
 }

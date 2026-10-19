@@ -30,19 +30,27 @@ script = ExtResource("1_1bmk3")
 enemy = &"warden"
 
 [sub_resource type="Resource" id="Resource_ayh5t"]
+script = ExtResource("1_1bmk3")
+enemy = &"assassin"
+
+[sub_resource type="Resource" id="Resource_y6d4q"]
+script = ExtResource("1_1bmk3")
+enemy = &"tracker"
+
+[sub_resource type="Resource" id="Resource_31igm"]
 script = ExtResource("2_4i4ys")
 common_tags = Array[StringName]([&"gear", &"remedy", &"food", &"part", &"tool"])
 
-[sub_resource type="Resource" id="Resource_y6d4q"]
+[sub_resource type="Resource" id="Resource_lu6e0"]
 script = ExtResource("4_8j5x1")
 steps_per_tier = 10
 
-[sub_resource type="Resource" id="Resource_31igm"]
+[sub_resource type="Resource" id="Resource_v86fg"]
 script = ExtResource("5_mdteq")
 board = Vector2i(5, 3)
 rarity_cap = 1
 
-[sub_resource type="Resource" id="Resource_lu6e0"]
+[sub_resource type="Resource" id="Resource_6xw0d"]
 script = ExtResource("5_mdteq")
 strength = 1
 item_count = Vector2i(3, 4)
@@ -52,7 +60,7 @@ stat_scale = {
 }
 rarity_cap = 2
 
-[sub_resource type="Resource" id="Resource_v86fg"]
+[sub_resource type="Resource" id="Resource_yqs7m"]
 script = ExtResource("5_mdteq")
 strength = 2
 item_count = Vector2i(4, 6)
@@ -61,7 +69,7 @@ stat_scale = {
 "max_hp": 1.6
 }
 
-[sub_resource type="Resource" id="Resource_6xw0d"]
+[sub_resource type="Resource" id="Resource_k5qvw"]
 script = ExtResource("5_mdteq")
 strength = 3
 item_count = Vector2i(6, 8)
@@ -75,8 +83,8 @@ stat_scale = {
 script = ExtResource("3_i2aep")
 id = &"hunters"
 display_name = "猎手专属池（占位）"
-entries = Array[ExtResource("1_1bmk3")]([SubResource("Resource_i20xh"), SubResource("Resource_vwr3t"), SubResource("Resource_ur6nl"), SubResource("Resource_kcby6"), SubResource("Resource_d1vu6")])
-tiers = Array[ExtResource("5_mdteq")]([SubResource("Resource_31igm"), SubResource("Resource_lu6e0"), SubResource("Resource_v86fg"), SubResource("Resource_6xw0d")])
-strength_rule = SubResource("Resource_y6d4q")
-loadout = SubResource("Resource_ayh5t")
+entries = Array[ExtResource("1_1bmk3")]([SubResource("Resource_i20xh"), SubResource("Resource_vwr3t"), SubResource("Resource_ur6nl"), SubResource("Resource_kcby6"), SubResource("Resource_d1vu6"), SubResource("Resource_ayh5t"), SubResource("Resource_y6d4q")])
+tiers = Array[ExtResource("5_mdteq")]([SubResource("Resource_v86fg"), SubResource("Resource_6xw0d"), SubResource("Resource_yqs7m"), SubResource("Resource_k5qvw")])
+strength_rule = SubResource("Resource_lu6e0")
+loadout = SubResource("Resource_31igm")
 combat_types = Array[StringName]([&"battle"])

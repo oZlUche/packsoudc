@@ -428,7 +428,10 @@ static func run_enemy_identity(t: TestCase) -> void:
 					# 212：魔兽没有武器，会自己出手的器官（wild 面有规则）就算
 					if def.is_wild() and BattleCompiler.profile_of(idef, true) != null and not BattleCompiler.profile_of(idef, true).rules.is_empty():
 						armed = true
-				t.check(armed, "%s（%d 档）有武器" % [def.display_name, strength])
+				# 211：坏套路本来就可以没武器（「根本不成套」）
+				var b := def.build_of(StringName(String(content.get("build", ""))))
+				if b == null or not b.is_bad():
+					t.check(armed, "%s（%d 档）有武器" % [def.display_name, strength])
 				for sid in def.signature_at(strength):
 					var has := false
 					for raw in content.get("items", []):

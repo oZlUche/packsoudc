@@ -1850,6 +1850,9 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 	for k in def.combos.size():
 		if not (def.combos[k] is Array) or (def.combos[k] as Array).size() < 2:
 			report.error("combos[%d]" % k, "一组相邻组合得是至少两件道具 id 的列表")
+	if def.carry_mult < 0.0:
+		report.error("carry_mult", "携带倍率不能为负")
+	_validate_builds(def, ctx, report)
 	if ctx.items.is_empty():
 		return
 	for k in def.combos.size():
@@ -1920,6 +1923,43 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 			report.warn("item_tags", "身份标签圈住的道具里没有武器：这个敌人不会出手")
 
 
+## 211：套路 —— id 不空不重、档位区间合法、quality 只认 good / bad；有道具库时每件得存在、不是包、没封存、身份圈得住
+static func _validate_builds(def: EnemyDef, ctx: Context, report: ImportReport) -> void:
+	var seen := {}
+	for k in def.builds.size():
+		var b := def.builds[k]
+		var at := "builds[%d]" % k
+		if b == null:
+			report.error(at, "套路为空")
+			continue
+		if b.id == &"":
+			report.error(at + ".id", "套路得有 id")
+		elif seen.has(b.id):
+			report.error(at + ".id", "套路 '%s' 重复" % b.id)
+		seen[b.id] = true
+		if b.strength.x < 0 or b.strength.y < b.strength.x:
+			report.error(at + ".strength", "档位区间应为 [min, max] 且 0 ≤ min ≤ max")
+		if not EnemyBuild.QUALITIES.has(b.quality):
+			report.error(at + ".quality", "只认 good / bad，写的是 '%s'" % b.quality)
+		if b.weight <= 0.0:
+			report.error(at + ".weight", "权重应为正")
+		if b.items.is_empty():
+			report.error(at + ".items", "套路至少一件道具")
+		if ctx.items.is_empty():
+			continue
+		for bid in b.items:
+			if not ctx.items.has(bid):
+				report.error(at + ".items", "找不到道具 '%s'" % bid)
+				continue
+			var d := ctx.items[bid] as ItemDef
+			if d.is_bag:
+				report.error(at + ".items", "'%s' 是个包 —— 包由档位表给" % bid)
+			elif d.is_sealed():
+				report.error(at + ".items", "'%s' 已封存" % bid)
+			elif not def.allows_item(d):
+				report.error(at + ".items", "'%s' 不带这个身份的任何标签（item_tags）" % bid)
+
+
 ## 212：这件在魔兽身上会不会自己出手（wild 面里有直接伤害）
 static func _wild_attacks(d: ItemDef) -> bool:
 	var profile := BattleCompiler.profile_of(d, true)
@@ -1937,6 +1977,10 @@ static func _validate_loadout(rule: EnemyLoadout, at: String, report: ImportRepo
 		report.error(at + ".school_share", "份额应在 0～1 之间")
 	if rule.min_school < 0:
 		report.error(at + ".min_school", "不能为负")
+	if rule.build_chance < 0.0 or rule.build_chance > 1.0:
+		report.error(at + ".build_chance", "概率应在 0～1 之间")
+	if rule.bad_build_mult < 0.0:
+		report.error(at + ".bad_build_mult", "不能为负")
 
 
 ## 池：条目指向存在的敌人、档位表不空不重、每条规则都在。
@@ -1981,6 +2025,25 @@ static func _validate_enemy_pool(pool: EnemyPool, ctx: Context, report: ImportRe
 				report.error(at + ".node_types", "'%s' 不在池的 combat_types 里，永远不会出现" % nt)
 		if not ctx.enemies.is_empty() and not ctx.enemies.has(e.enemy):
 			report.error(at + ".enemy", "找不到敌人 '%s'（已知：%s）" % [e.enemy, ", ".join(ctx.enemies.keys())])
+		elif ctx.enemies.has(e.enemy) and not ctx.items.is_empty():
+			_warn_build_caps(ctx.enemies[e.enemy] as EnemyDef, pool, at, ctx, report)
+
+
+## 211（4.5）：套路里超出档位稀有度上限的件照样带（套路是设计者写的），这里提醒一句
+static func _warn_build_caps(def: EnemyDef, pool: EnemyPool, at: String, ctx: Context, report: ImportReport) -> void:
+	var rule := def.loadout if def.loadout != null else pool.loadout
+	for b in def.builds:
+		if b == null:
+			continue
+		for st in range(b.strength.x, b.strength.y + 1):
+			var tier := pool.tier_of(st)
+			var cap := EnemyPlacer.rarity_cap_of(rule, tier)
+			if cap < 0:
+				continue
+			for bid in b.items:
+				var d := ctx.items.get(bid) as ItemDef
+				if d != null and d.rarity > cap:
+					report.warn(at + ".enemy", "%s 的套路 %s 在档位 %d 带了 '%s'（稀有度 %d > 上限 %d）：照样带" % [def.id, b.id, st, bid, d.rarity, cap])
 
 
 ## 章节（M3-5）。结构和道具完全不同，走的却是同一条 _fill ——

@@ -1,0 +1,38 @@
+{
+  "id": "smuggler",
+  "display_name": "走私贩",
+  "display_names": {
+    "en": "Smuggler"
+  },
+  "strength": 1,
+  "schools": [
+    "rapid"
+  ],
+  "base_stats": {
+    "max_hp": 36
+  },
+  "signature": [
+    "knife"
+  ],
+  "item_tags": [
+    "rapid",
+    "melee",
+    "tool",
+    "treasure"
+  ],
+  "builds": [
+    {
+      "id": "quick_hands",
+      "strength": [
+        1,
+        3
+      ],
+      "items": [
+        "shortsword",
+        "antidote_kit"
+      ],
+      "note": "小刀 + 短剑 + 解毒包；身上值钱货多（携带倍率加倍）"
+    }
+  ],
+  "carry_mult": 2.0
+}

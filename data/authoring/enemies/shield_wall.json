@@ -1,0 +1,52 @@
+{
+  "id": "shield_wall",
+  "display_name": "盾卫",
+  "display_names": {
+    "en": "Shield Wall"
+  },
+  "strength": 2,
+  "schools": [
+    "rapid"
+  ],
+  "base_stats": {
+    "max_hp": 50,
+    "block": 2
+  },
+  "signature": [
+    "round_shield"
+  ],
+  "item_tags": [
+    "imperial",
+    "shield",
+    "armor",
+    "melee",
+    "rapid"
+  ],
+  "builds": [
+    {
+      "id": "phalanx",
+      "weight": 2.0,
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "shortsword",
+        "knife"
+      ],
+      "note": "圆盾 + 短剑 + 小刀"
+    },
+    {
+      "id": "two_shields",
+      "strength": [
+        1,
+        2
+      ],
+      "quality": "bad",
+      "items": [
+        "round_shield"
+      ],
+      "note": "两面盾只取最高一层格挡、没武器"
+    }
+  ]
+}

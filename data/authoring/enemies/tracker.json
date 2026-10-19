@@ -1,0 +1,56 @@
+{
+  "id": "tracker",
+  "display_name": "猎人",
+  "display_names": {
+    "en": "Tracker"
+  },
+  "strength": 1,
+  "schools": [
+    "ranged",
+    "bleed"
+  ],
+  "base_stats": {
+    "max_hp": 34
+  },
+  "item_tags": [
+    "ranged",
+    "ammo",
+    "bleed",
+    "remedy",
+    "trophy"
+  ],
+  "signature_by_strength": {
+    "0": [
+      "shortbow"
+    ],
+    "1": [
+      "longbow"
+    ]
+  },
+  "builds": [
+    {
+      "id": "serrated_volley",
+      "weight": 2.0,
+      "items": [
+        "serrated_arrows",
+        "serrated_arrows",
+        "antler"
+      ],
+      "note": "弓 + 两袋锯齿箭 + 鹿角"
+    },
+    {
+      "id": "bow_no_arrows",
+      "strength": [
+        0,
+        1
+      ],
+      "quality": "bad",
+      "items": [
+        "bandage",
+        "bandage",
+        "salve"
+      ],
+      "note": "弓没箭：弓本身能打，箭矢加成一份也没有"
+    }
+  ]
+}

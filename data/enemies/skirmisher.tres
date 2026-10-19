@@ -1,9 +1,16 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_grpoy"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_qpgh2"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_ddfhc"]
+
+[sub_resource type="Resource" id="Resource_a82cs"]
+script = ExtResource("1_qpgh2")
+id = &"two_blades"
+strength = Vector2i(1, 3)
+items = Array[StringName]([&"shortsword", &"knife"])
 
 [resource]
-script = ExtResource("1_grpoy")
+script = ExtResource("2_ddfhc")
 id = &"skirmisher"
 display_name = "游兵"
 display_names = {
@@ -15,3 +22,4 @@ base_stats = {
 "max_hp": 50
 }
 item_tags = Array[StringName]([&"rapid", &"melee"])
+builds = Array[ExtResource("1_qpgh2")]([SubResource("Resource_a82cs")])

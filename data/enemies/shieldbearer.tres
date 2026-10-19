@@ -1,9 +1,25 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_wx7fy"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_vn7ac"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_5mbqm"]
+
+[sub_resource type="Resource" id="Resource_tm5tb"]
+script = ExtResource("1_vn7ac")
+id = &"charm_guard"
+weight = 2.0
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"round_shield", &"warding_charm", &"shortsword"])
+
+[sub_resource type="Resource" id="Resource_04p8m"]
+script = ExtResource("1_vn7ac")
+id = &"all_charms"
+strength = Vector2i(1, 2)
+quality = &"bad"
+items = Array[StringName]([&"warding_charm", &"bloodhound_sigil", &"warding_charm"])
+note = "全是符，没武器"
 
 [resource]
-script = ExtResource("1_wx7fy")
+script = ExtResource("2_5mbqm")
 id = &"shieldbearer"
 display_name = "持符者"
 display_names = {
@@ -15,3 +31,4 @@ base_stats = {
 "max_hp": 40
 }
 item_tags = Array[StringName]([&"sigil", &"shield", &"rapid", &"melee"])
+builds = Array[ExtResource("1_vn7ac")]([SubResource("Resource_tm5tb"), SubResource("Resource_04p8m")])

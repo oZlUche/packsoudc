@@ -1,6 +1,6 @@
 {
   "chapters": ["clockwork_hourglass","free_mode","prologue","prologue_2","prologue_3"],
-  "enemies": ["apothecary","bruiser","brute","butcher","cave_bear","clock_keeper","clockwork_sentry","core_guardian","flame_wolf","frost_toad","gear_golem","great_clock","marksman","pendulum_warden","pit_viper","raider","shieldbearer","shock_eel","skirmisher","steam_turret","tinker_apprentice","warden"],
+  "enemies": ["apothecary","apprentice_mage","assassin","berserker","bruiser","brute","butcher","cave_bear","clock_keeper","clockwork_sentry","core_guardian","flame_wolf","frost_toad","gear_golem","great_clock","marksman","pendulum_warden","pit_viper","ragpicker","raider","shield_wall","shieldbearer","shock_eel","skirmisher","smuggler","steam_turret","tinker_apprentice","tracker","warden","witch_doctor"],
   "faiths": ["brute","church","earth","hunt","nature","skill","sun"],
   "items": {
     "antidote_kit": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},

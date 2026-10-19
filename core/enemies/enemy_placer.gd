@@ -148,7 +148,9 @@ static func build_content(
 	if def.is_wild():
 		count = maxi(count, def.signature_at(strength).size())     # 212：魔兽的招牌是它的器官，一件不少；档位多出来的再补
 	var cap := rarity_cap_of(rule, tier)
-	var picks := choose_items(def, rule, items, count, rng, cap, strength)
+	var build := pick_build(def, rule, strength, rng)
+	var picks := choose_items(def, rule, items, count, rng, cap, strength, build)
+	count = maxi(count, picks.size())     # 211：套路是设计者写的，比档位件数长也全带上
 	_sort_big_first(picks, items)
 	# 摆的是草稿实例（内容只记 id 与位置），uid 计数原样还回去 —— 摆几次、重来几次都不影响之后的编号
 	var uid_mark := ItemInstance._next_uid
@@ -165,25 +167,34 @@ static func build_content(
 	var bpool := bag_pool if bag_pool != null else BagPool.standard()
 	# 包里地方有限：招牌与流派道具（会打的那几件）先摆，护甲补给后摆 —— 不然一件 2×2 的甲先占了包，1×3 的剑就横竖都塞不进（084）
 	# 143：招牌再排在流派道具前面 —— 异形装备大了，同样大的流派道具（按 id 排）先占了唯一放得下的包，招牌就塞不进了
+	# 211：套路骨架紧跟招牌 —— 设计者写的组合先占地方，抽来的件放不下再换
 	var signature: Array[StringName] = []
+	var skeleton: Array[StringName] = []
 	var first: Array[StringName] = []
 	var later: Array[StringName] = []
 	var sig := def.signature_at(strength)
+	var bone: Array[StringName] = []
+	if build != null:
+		bone.assign(build.items)
 	for item_id in picks:
 		var idef := items.get_def(item_id)
 		if idef == null:
 			continue
 		if sig.has(item_id):
 			signature.append(item_id)
+		elif bone.has(item_id):
+			bone.erase(item_id)
+			skeleton.append(item_id)
 		elif _shares_tag(idef.tags, def.schools):
 			first.append(item_id)
 		else:
 			later.append(item_id)
-	var order: Array[StringName] = signature + first + later
+	var order: Array[StringName] = signature + skeleton + first + later
 	var defs: Array[ItemDef] = []
 	for id in order:
 		defs.append(items.get_def(id))
-	var groups := auto_groups(order, items, rng, def)
+	# 211：`loose` 的套路整盘不成组 —— 摆成散件（「学徒把晶石放错了地方」）
+	var groups: Array = [] if build != null and build.loose else auto_groups(order, items, rng, def)
 	# 209：抽来的包摆不下招牌或唯一的武器，就重抽一套包（最多 [constant BAG_ROLLS] 次，取差得最少的那套）
 	var board: GridInventory
 	var placed: Array = []
@@ -234,7 +245,7 @@ static func build_content(
 	if carry != null and not def.is_wild():     # 212：魔兽 / 机关不揣金器
 		var crng := RandomNumberGenerator.new()
 		crng.seed = hash([rng.state, String(def.id), strength, "carry"])
-		var carried := carry.roll(items, strength, cap, crng)
+		var carried := carry.roll(items, strength, cap, crng, def.carry_mult)
 		for id in _small_first(carried, items, crng):
 			if _place_random(board, items.get_def(id), placed, crng):
 				(placed[placed.size() - 1] as Dictionary)["carried"] = true
@@ -257,6 +268,8 @@ static func build_content(
 		"board": [size.x, size.y],
 		"items": placed,
 	}
+	if build != null:
+		content["build"] = String(build.id)     # 211：回放 / 测试看得见，不进玩家可见的摘要
 	if def.is_wild():
 		content["wild"] = true     # 212：棋盘上的道具是魔兽持有的那一面（悬浮窗按它写，[constant EnemyKit.WILD_META]）
 	return {"content": content, "dropped": maxi(0, count - (placed.size() - _carried_count(placed))), "carry_short": carry_short,
@@ -452,21 +465,64 @@ static func rarity_cap_of(rule: EnemyLoadout, tier: StrengthTier) -> int:
 	return a if b < 0 else mini(a, b)
 
 
+## 211：这一档掷不掷套路、掷哪套。随机数另起一条（由主随机数的当前状态派生、不消耗它）：没写套路、或没掷中，敌人与老路一模一样。
+## 没掷中 / 这一档没有可用的套路返回 null
+static func pick_build(def: EnemyDef, rule: EnemyLoadout, strength: int, rng: RandomNumberGenerator) -> EnemyBuild:
+	var cands := def.builds_at(strength)
+	if cands.is_empty() or rule == null or rule.build_chance <= 0.0:
+		return null
+	var brng := RandomNumberGenerator.new()
+	brng.seed = hash([rng.state, String(def.id), strength, "build"])
+	if brng.randf() >= rule.build_chance:
+		return null
+	var weights: Array[float] = []
+	var total := 0.0
+	for b in cands:
+		var w := build_weight(b, rule, strength)
+		weights.append(w)
+		total += w
+	if total <= 0.0:
+		return null
+	var r := brng.randf() * total
+	for i in cands.size():
+		r -= weights[i]
+		if r <= 0.0:
+			return cands[i]
+	return cands[cands.size() - 1]
+
+
+## 211：一套在这一档的抽取权重：坏套路乘 bad_build_mult，档位 ≥ 2 再乘一次
+static func build_weight(b: EnemyBuild, rule: EnemyLoadout, strength: int) -> float:
+	var w := b.weight
+	if b.is_bad():
+		w *= rule.bad_build_mult
+		if strength >= 2:
+			w *= rule.bad_build_mult
+	return maxf(0.0, w)
+
+
 ## 挑哪几件（还没摆）：招牌先占位（含这一档的招牌，087），再抽流派道具，剩下的抽通用道具。
+## 211：给了套路 [param build] 就招牌之后先放它的骨架（不受稀有度上限约束，导入器 warn），余数照抽；骨架和招牌一样不被信仰统一 / 保底武器换掉；
+## 坏套路不补保底武器（「根本不成套」）
 ## 流派池空了就全从通用池抽，通用池也空了就从流派池补 —— 池子太小不是这里该报的错，导入器会拦。
 ## 087：两个池子都先过身份标签（[method EnemyDef.allows_item]）—— 神射手只在弓箭里抽
 static func choose_items(
 	def: EnemyDef, rule: EnemyLoadout, items: ItemDatabase, count: int, rng: RandomNumberGenerator,
-	rarity_cap: int = -1, strength: int = -1
+	rarity_cap: int = -1, strength: int = -1, build: EnemyBuild = null
 ) -> Array[StringName]:
 	var picks: Array[StringName] = []
 	var sig := def.signature_at(strength if strength >= 0 else def.strength)     # 算一次，下面三处共用
 	for sid in sig:
 		if items.has_def(sid) and picks.size() < count:
 			picks.append(sid)
+	if build != null:
+		for bid in build.items:
+			if items.has_def(bid):
+				picks.append(bid)
+	var fixed := picks.size()     # 招牌 + 套路骨架：后面的信仰统一与保底武器都不动它们
 	var school_pool := school_items(def.schools, items, rarity_cap, def)
 	var common_pool := common_items(def.schools, rule, items, rarity_cap, def)
-	var room := count - picks.size()
+	var room := maxi(0, count - picks.size())
 	var n_school := 0
 	if not school_pool.is_empty():
 		n_school = clampi(maxi(rule.min_school, roundi(float(count) * rule.school_share)), 0, room)
@@ -479,10 +535,11 @@ static func choose_items(
 	elif not school_pool.is_empty():
 		_draw(picks, school_pool, rest, rule.allow_repeat, rng)
 	if rule.single_faith:
-		var faith := _unify_faith(picks, sig.size(), items, rng, school_pool, common_pool, def.schools)
+		var faith := _unify_faith(picks, fixed, items, rng, school_pool, common_pool, def.schools)
 		school_pool = _same_faith(school_pool, faith, items)
 		common_pool = _same_faith(common_pool, faith, items)
-	_ensure_weapons(picks, sig.size(), school_pool, common_pool, rule, items, rng)
+	if build == null or not build.is_bad():
+		_ensure_weapons(picks, fixed, school_pool, common_pool, rule, items, rng)
 	return picks
 
 

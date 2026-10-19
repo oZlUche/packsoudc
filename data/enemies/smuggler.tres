@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_f1y25"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_iiy5t"]
+
+[sub_resource type="Resource" id="Resource_gg5ql"]
+script = ExtResource("1_f1y25")
+id = &"quick_hands"
+strength = Vector2i(1, 3)
+items = Array[StringName]([&"shortsword", &"antidote_kit"])
+note = "小刀 + 短剑 + 解毒包；身上值钱货多（携带倍率加倍）"
+
+[resource]
+script = ExtResource("2_iiy5t")
+id = &"smuggler"
+display_name = "走私贩"
+display_names = {
+"en": "Smuggler"
+}
+strength = 1
+schools = Array[StringName]([&"rapid"])
+base_stats = {
+"max_hp": 36
+}
+signature = Array[StringName]([&"knife"])
+item_tags = Array[StringName]([&"rapid", &"melee", &"tool", &"treasure"])
+builds = Array[ExtResource("1_f1y25")]([SubResource("Resource_gg5ql")])
+carry_mult = 2.0

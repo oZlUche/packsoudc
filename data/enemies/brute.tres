@@ -1,9 +1,25 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_enbfl"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_fu46k"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_cb57j"]
+
+[sub_resource type="Resource" id="Resource_7xw1r"]
+script = ExtResource("1_fu46k")
+id = &"barbarian_kit"
+weight = 2.0
+strength = Vector2i(1, 3)
+items = Array[StringName]([&"scimitar", &"salve", &"strong_salve"])
+
+[sub_resource type="Resource" id="Resource_fv3vh"]
+script = ExtResource("1_fu46k")
+id = &"two_hammers"
+strength = Vector2i(1, 3)
+quality = &"bad"
+items = Array[StringName]([&"warhammer", &"warhammer"])
+note = "两把重锤，耐力跟不上"
 
 [resource]
-script = ExtResource("1_enbfl")
+script = ExtResource("2_cb57j")
 id = &"brute"
 display_name = "蛮兵"
 display_names = {
@@ -16,3 +32,4 @@ base_stats = {
 "max_hp": 50
 }
 item_tags = Array[StringName]([&"barbarian", &"bleed", &"burst", &"gear", &"remedy"])
+builds = Array[ExtResource("1_fu46k")]([SubResource("Resource_7xw1r"), SubResource("Resource_fv3vh")])

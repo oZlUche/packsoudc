@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_7ou0o"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_t6gev"]
+
+[sub_resource type="Resource" id="Resource_pgiq5"]
+script = ExtResource("1_7ou0o")
+id = &"serrated_volley"
+weight = 2.0
+items = Array[StringName]([&"serrated_arrows", &"serrated_arrows", &"antler"])
+note = "弓 + 两袋锯齿箭 + 鹿角"
+
+[sub_resource type="Resource" id="Resource_imso4"]
+script = ExtResource("1_7ou0o")
+id = &"bow_no_arrows"
+strength = Vector2i(0, 1)
+quality = &"bad"
+items = Array[StringName]([&"bandage", &"bandage", &"salve"])
+note = "弓没箭：弓本身能打，箭矢加成一份也没有"
+
+[resource]
+script = ExtResource("2_t6gev")
+id = &"tracker"
+display_name = "猎人"
+display_names = {
+"en": "Tracker"
+}
+strength = 1
+schools = Array[StringName]([&"ranged", &"bleed"])
+base_stats = {
+"max_hp": 34
+}
+item_tags = Array[StringName]([&"ranged", &"ammo", &"bleed", &"remedy", &"trophy"])
+signature_by_strength = {
+"0": ["shortbow"],
+"1": ["longbow"]
+}
+builds = Array[ExtResource("1_7ou0o")]([SubResource("Resource_pgiq5"), SubResource("Resource_imso4")])

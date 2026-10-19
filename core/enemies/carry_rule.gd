@@ -24,11 +24,14 @@ extends Resource
 const TREASURE := &"treasure"
 
 
-## 这一档抽几件的区间
-func count_range(strength: int) -> Vector2i:
+## 这一档抽几件的区间。211：[param mult] 是敌人的 [member EnemyDef.carry_mult]，两端各乘它再取整
+func count_range(strength: int, mult: float = 1.0) -> Vector2i:
 	if count_by_strength.is_empty():
 		return Vector2i.ZERO
-	return count_by_strength[clampi(strength, 0, count_by_strength.size() - 1)]
+	var span: Vector2i = count_by_strength[clampi(strength, 0, count_by_strength.size() - 1)]
+	if mult == 1.0:
+		return span
+	return Vector2i(roundi(span.x * maxf(0.0, mult)), roundi(span.y * maxf(0.0, mult)))
 
 
 ## 候选：id 按文本升序（抽出来的才可复现）。[param rarity_cap] < 0 = 不限
@@ -61,9 +64,9 @@ func weight(def: ItemDef) -> float:
 
 
 ## 掷：这个敌人身上带哪几件（还没摆）
-func roll(items: ItemDatabase, strength: int, rarity_cap: int, rng: RandomNumberGenerator) -> Array[StringName]:
+func roll(items: ItemDatabase, strength: int, rarity_cap: int, rng: RandomNumberGenerator, mult: float = 1.0) -> Array[StringName]:
 	var out: Array[StringName] = []
-	var span := count_range(strength)
+	var span := count_range(strength, mult)
 	var n := rng.randi_range(maxi(0, span.x), maxi(0, span.y)) if span.y > 0 else 0
 	if n <= 0:
 		return out

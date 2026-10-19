@@ -1,9 +1,25 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_ys8gs"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_2e3rs"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_vgals"]
+
+[sub_resource type="Resource" id="Resource_57jy0"]
+script = ExtResource("1_2e3rs")
+id = &"quiver_full"
+weight = 2.0
+items = Array[StringName]([&"arrows", &"serrated_arrows"])
+note = "弓 + 箭 + 锯齿箭"
+
+[sub_resource type="Resource" id="Resource_08o4m"]
+script = ExtResource("1_2e3rs")
+id = &"bow_no_arrows"
+strength = Vector2i(0, 1)
+quality = &"bad"
+items = Array[StringName]([&"bandage", &"salve"])
+note = "弓没箭"
 
 [resource]
-script = ExtResource("1_ys8gs")
+script = ExtResource("2_vgals")
 id = &"marksman"
 display_name = "神射手"
 display_names = {
@@ -22,3 +38,4 @@ signature_by_strength = {
 }
 board = Vector2i(7, 5)
 bags = Array[StringName]([&"bag_long", &"bag_long", &"bag_leather", &"bag_small"])
+builds = Array[ExtResource("1_2e3rs")]([SubResource("Resource_57jy0"), SubResource("Resource_08o4m")])
