@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.41 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.42 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3575,7 +3575,7 @@ func player_spec() -> CombatantSpec …
 - 自动存档：`GameFlow.step_to` 人到了新点、事件还没给玩家看就存一次；看完叠层回到地图（`_flush` 最后）再存一次。暂停菜单只留「回主菜单」（照旧先存）。
 
 **186（作者定）：调试台只在开发包、玩家看的「提示行」**：
-- `DevGate.on()`（`core/dev_gate.gd`）= 不是导出版（测试可设 `force_player`）。`BattleArchive.default_on()`、`GameSettings.debug_on()` 都读它。
+- `DevGate.on()`（`core/dev_gate.gd`）= 不是导出版，或导出时带 `dev` 特性（200：`export_presets.cfg` 两个预设 —— 「玩家版」release、无 `dev`、不出控制台包装器、不打包 `tests/ addons/godot_ai/ docs/`；「开发版」debug + `dev`；`tools/export.bat` 一次导两个）（测试可设 `force_player`）。`BattleArchive.default_on()`、`GameSettings.debug_on()` 都读它。
   - 玩家包里不造：地图的调试台箭头与抽屉（`HudWidgets.DEV_ONLY`）、基地的调试台、设置的「调试」节与「节点浮窗预览」。
   - 地图屏的 `_status` / `_log` 照样造、照样记（不进树），开发提示行写原因。
 - 提示行 `notice`（`ui/hud/widgets/notice_widget.gd`）：锚 `top`、偏移 `HudLayout.NOTICE_OFFSET`，在顶端栏下面、和倒计时同一条中线；布局版本 7。
@@ -4176,7 +4176,7 @@ res://
 三条用得到它的路各自解决：编辑器打开项目时自己重建；`tools/test.sh` 每次先 `--import`；
 **158 起**：`DevNav` 缺类时不再起编辑器，`tools/class_cache.gd`（无 `class_name`，preload）扫全项目脚本头（`class_name` / `extends` / `@tool` / `@abstract` / `@icon`，路径式 extends 往上找类名）写出和编辑器**逐字节一样**的缓存（全项目约 0.1 秒），盖一屏「已重写」后带原参数重开；`tools/import_check.gd` 发现没导入的素材（`.import` 的目标不在、或新图旁没 `.import`）才后台 `--import`，不盖板、不重开，右上角小字「新素材导入中……下次启动生效」。`run_game` 不再先 `--import`。`tests/tools/test_class_cache.gd` 拿编辑器刚写的那份逐条对照。以下 115 的导入式自救是原来的做法：不开编辑器也直接跑即可（115）：`DevNav`（autoload，代码里不引用任何项目全局类，缓存全坏也解析得了）发现缺类就盖一屏「正在重建」，`OS.create_process` 后台 `--headless --path <根> --import`，`_process` 里轮询，导完带原用户参数加 `cache-rebuilt` 重开自己并退出；重开过还缺（导入失败）就回落红字、不循环。门是「非导出包、`Engine.is_editor_hint()` 为假」—— 不能用 `OS.has_feature("editor")`，编辑器版 Godot 直接跑游戏时它也是真。`tools/run_game.sh` / `.bat` 可选，省一次重启。
 
-**176 起**（启动卡住两三秒）：GDScript 没有预编译，主场景静态引用到的每个全局类都要在第一帧之前从源码编译。所以主场景是 `ui/boot.tscn`（`ui/boot.gd`，**不引用任何全局类**，颜色写死、字体按路径 `load()`）：第一帧只画游戏名和一条进度，`ResourceLoader.load_threaded_request` 在后台线程载 `game.tscn`，每帧 `poll()`，载好 `change_scene_to_packed`；载失败写「载入失败，请重启游戏」。导演 `_ready` 的内容加载（约 0.5 秒）仍在主线程。游戏侧不得静态引用导入器、导出器、表格工具、编辑器、启动器：`ContentLibrary` 只管读库，导入上下文在 `core/authoring/authoring_context.gd`（无 `class_name`，编辑器与测试 `preload`）；`DevNav` 只按路径字符串换场景，release 导出（非编辑器版、非 debug）里 `_ready` 第一件事自卸（`DevNav.keep_in`）。`tests/tools/test_startup_graph.gd` 从 `boot.tscn` 与 `game.tscn` + `dev_nav.gd` 出发扫静态引用（去掉字符串与注释后的全局类名、`preload` / `extends` 路径、场景与资源里的脚本路径；运行时 `load()` 不算），断言启动屏只碰到自己、游戏碰不到上面那些；同一套件读 `export_presets.cfg` 断言脚本导出为二进制令牌（压缩，`script_export_mode=2`）。渲染器（176 待定 1）仍是 Forward+ / D3D12，等作者对照后定。
+**176 起**（启动卡住两三秒）：GDScript 没有预编译，主场景静态引用到的每个全局类都要在第一帧之前从源码编译。所以主场景是 `ui/boot.tscn`（`ui/boot.gd`，**不引用任何全局类**，颜色写死、字体按路径 `load()`）：第一帧只画游戏名和一条进度，`ResourceLoader.load_threaded_request` 在后台线程载 `game.tscn`，每帧 `poll()`，载好 `change_scene_to_packed`；载失败写「载入失败，请重启游戏」。导演 `_ready` 的内容加载（约 0.5 秒）仍在主线程。游戏侧不得静态引用导入器、导出器、表格工具、编辑器、启动器：`ContentLibrary` 只管读库，导入上下文在 `core/authoring/authoring_context.gd`（无 `class_name`，编辑器与测试 `preload`）；`DevNav` 只按路径字符串换场景，玩家版导出里 `_ready` 第一件事自卸（`DevNav.keep_in()`，200 起 = `DevGate.on()`，按路径 preload）。`tests/tools/test_startup_graph.gd` 从 `boot.tscn` 与 `game.tscn` + `dev_nav.gd` 出发扫静态引用（去掉字符串与注释后的全局类名、`preload` / `extends` 路径、场景与资源里的脚本路径；运行时 `load()` 不算），断言启动屏只碰到自己、游戏碰不到上面那些；同一套件读 `export_presets.cfg` 断言脚本导出为二进制令牌（压缩，`script_export_mode=2`）。渲染器（176 待定 1）仍是 Forward+ / D3D12，等作者对照后定。
 `DevNav` 的缺类自检因此只在**非编辑器**运行时提示（编辑器里缓存必然是新的，提示只会是误报）。
 
 ---
@@ -4301,6 +4301,7 @@ res://
 | v3.30 | 2026-10-17 | **188 背包面板去字、信仰窗重排**（作者 2026-10-17，待定 1–3 按推荐）：背包面板不再写操作提示、地上说明、参战 / 可用格读数、信仰行与棋盘上方说明，回话走 `hint_sink`（地图屏 = 提示行）；`FaithTooltip.describe_full` → 名字行（Lv、休眠件数）+ 信力行 + 各阶效果 / 信力来源 / 献祭，颜色全走模板；`HoverTip.show_faith` 名字行下挂到下一阶的进度条、各段虚线分隔、宽 360 |
 | v3.31 | 2026-10-18 | **188 补充一 信仰窗分段、蛮神改写**（作者 2026-10-18，待定 1–4 按推荐）：`HoverTip.FaithBar` 一段一级、长度按所需信力（满阶也挂）；`FaithTooltip` 同一级的效果合成一行（`[table=2]`），没到的级整行 `@dim`，句子按 `FaithPerk.summary_for(def, points)` 写、锁住的级按那一级的阈值算；`FaithPerk.scaled` 给「随信力」的数（每 50 信力一阶、封顶）；蛮神一级门槛式增伤、二级献祭生命上限二选一（信力 / 全体造成伤害 + 急速）、三级 `prebattle_actions` 两个按钮（耗体力 / 耗信力、非首领）、四级持续战斗秒数随信力；献祭规矩 `OfferingRule.short_name`、`ItemVolume.size_label`（「大型道具」），有图标时排一行 `[img]`（`assets/ui/tags/<tag>.png`、`assets/ui/offerings/{large,medium,crit}.png`），缺一枚就退回文字 |
 | v3.32 | 2026-10-18 | **189 / 190 顶端栏长槽与日晷倒计时**（作者 2026-10-18 定案，待定 1–3 按推荐）：`hud_bar` 在板上画一条贯通的浅槽（`hud/groove` 九宫格、`band` 定槽身），宿主排完把铜点交给栏画（同行相邻两件之间、右槽图标组左边，空着的件两边不放）；`HudWidget.set_in_bar` 让栏里的件坐在槽底上（`PANEL_BARE`、浅底墨字），拖出栏回 `PANEL_HUD`；栏里同行间距 24、组在槽身里居中；倒计时改成刻在槽底的半圆日规（`hud/dial/*`：染色扇面 / 表盘 / 绕轴心转的影子 / 轴心，三阶 calm·half·low），栏上不写数字，停上去 `show_status` 弹「倒计时」窗、走一步 `update_status` 换字；缺图退回文字版 |
+| v3.42 | 2026-10-19 | **200 导出玩家版 / 开发版**（作者问，架构线程方案，待定按推荐）：不建分支，`export_presets.cfg` 两个预设 ——「玩家版」release、`custom_features=""`、控制台包装器 0、排除 `tests/* addons/godot_ai/* docs/*`；「开发版」debug、`custom_features="dev"`、包装器 1；`tools/` 都留（`DevNav` preload 了里面的脚本）。`DevGate.on()` 认 `dev` 特性；`DevNav.keep_in()` 改走 `DevGate`（按路径 preload）；`meta_screen` 两处 `template` 开发开关并进 `DevGate`。`tools/export.bat` 两条导出命令 |
 | v3.41 | 2026-10-19 | **199 铸炉屏换成铁炉近景**（196 §5 美术定稿「乙 炉台版」，架构线程接法）：`forge_screen.gd` 不再是石板叠层 —— 底图 `assets/ui/forge/bg_lit|bg_cold` + `layout.json`（`ForgeScreen.layout()`、`_place()` 按宽铺满竖直居中），【时机】【效果】【数值】【出牌】「铸炉」画在底图里不再写；`_forge_btn` 改 `TextureButton`（风箱把手 `handle_ready / idle / off`），「返回」= `sign_back` 路标；测试读 `handle_state()`、`backdrop_state()`、`spot_rect()`。落地差异见报告 199 §6 |
 | v3.40 | 2026-10-19 | **198 地上按轮廓碰撞**（阶段一，架构线程方案，待定按推荐）：新 `ItemSilhouette`（`ui/inventory/item_silhouette.gd`）—— 每件 × 朝向一份轮廓（凸块、外轮廓、透明通道位图、面积重心），没图按格子外形（凸块 = 合并的整格矩形）、有图按透明通道（膨胀 2 像素 → 外轮廓 → 凸分解，> 6 块退凸包），静态缓存；`separate`（SAT，矩形件与 180 完全一致）、`drop_gap`（竖直投射）、`rest_rotation`（稳的先选）、`hit`。`GroundLayer` 的 `_bump_pair` / `_bump_walls` / `floor_under`（改为按轮廓投射，返回 `dy`）/ `overlapping_pairs` / `push_out`（可带轮廓）/ 落地转轴 / 点选（有位图时）都换成轮廓，`_overlap` 删除；有图时 `_draw` 沿外轮廓描 2 像素。落地差异见报告 §6 |
 | v3.39 | 2026-10-19 | **197 主菜单重做**（补充一、二）：`MenuBackdrop`（`ui/game/menu_backdrop.gd`）三张画 `UiTheme.ART_MENU_BGS` 轮换，每张 14 s 慢镜头（平移 ≤ 屏宽 3 %、1.00 ↔ 1.06 推拉交替、1.5 s 交叉淡化，出树全停、失焦暂停）；游戏名居中上方 `UiTheme.make_hero_title`（思源宋体 Bold 描边），字标图 `menu/title` 在就用图；菜单是左下角几行描边字 `UiTheme.make_menu_line`（`ButtonMenuLine`，悬停 / 焦点行前铜菱形）、末行小字 `ButtonMenuFoot`（补充三）；菜单不再上石板；启动屏底画营地压暗 40 %、菜单从那档亮起来；`use_custom_user_dir` + `custom_user_dir_name="Godot/app_userdata/背包搜打撤"`（Linux 小写）钉住存档目录、路径不变 |

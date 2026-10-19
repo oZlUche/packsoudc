@@ -1,6 +1,7 @@
 ## 186（作者 2026-10-17：内部说明不给玩家看）：开发包还是玩家包 —— 调试台、设置里的调试节、调试模式的效果只在开发包里有。
 ##
-## 开发包 = 非导出（编辑器、命令行跑的都算）；导出包带 `template` 特性。测试里把 [member force_player] 打开就是玩家包
+## 开发包 = 非导出（编辑器、命令行跑的都算），或带 `dev` 特性的导出包（200：`export_presets.cfg` 的「开发版」预设）；
+## 玩家版导出带 `template`、不带 `dev`。测试里把 [member force_player] 打开就是玩家包
 class_name DevGate
 extends RefCounted
 
@@ -9,4 +10,4 @@ static var force_player := false
 
 
 static func on() -> bool:
-	return not force_player and not OS.has_feature("template")
+	return not force_player and (not OS.has_feature("template") or OS.has_feature("dev"))

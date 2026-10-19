@@ -34,6 +34,8 @@ const WARN_COLOR := Color("f0ad4e")
 ## 158：类缓存自己写（不起编辑器）、缺素材才后台导入（不挡游戏）。两个脚本都没有 class_name，缓存坏着也拿得到
 const ClassCache := preload("res://tools/class_cache.gd")
 const ImportCheck := preload("res://tools/import_check.gd")
+## 200：开发版 / 玩家版只认一把门。按路径 preload（DevGate 是全局类，这个脚本不许按类名引用）
+const DevGateScript := preload("res://core/dev_gate.gd")
 ## 158：后台导新素材的进程（-1 = 没在导）；导完不重开，只撤掉右上角那行小字
 var _asset_import_pid: int = -1
 var _asset_note: Label = null
@@ -42,8 +44,8 @@ var _rebuild_cover: Control = null
 
 
 func _ready() -> void:
-	if not keep_in(OS.has_feature("editor"), OS.is_debug_build()):
-		set_process(false)     # 176 待定 3 选 A：正式导出（release 模板）不带开发期导航，玩家按不出启动器
+	if not keep_in():
+		set_process(false)     # 176 待定 3 选 A → 200：玩家版导出不带开发期导航，玩家按不出启动器
 		set_process_unhandled_key_input(false)
 		queue_free()
 		return
@@ -106,9 +108,9 @@ func _request_back() -> void:
 		push_error("DevNav: 回不去启动选择器")
 
 
-## 176：这一份进程留不留 DevNav —— 编辑器版 Godot 直接跑、debug 导出留；release 导出不留
-static func keep_in(editor: bool, debug: bool) -> bool:
-	return editor or debug
+## 176 → 200：这一份进程留不留 DevNav —— 和调试台同一把门（[code]DevGate.on()[/code]）：编辑器 / 命令行跑、开发版导出留；玩家版导出不留
+static func keep_in() -> bool:
+	return DevGateScript.on()
 
 
 ## 094：全局类缓存里缺的类（脚本里写了 class_name、缓存里没有）。缺了就是「拉了新脚本没重新导入」——
