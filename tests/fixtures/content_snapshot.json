@@ -1,6 +1,6 @@
 {
-  "chapters": ["free_mode","prologue","prologue_2","prologue_3"],
-  "enemies": ["apothecary","bruiser","brute","butcher","cave_bear","core_guardian","flame_wolf","frost_toad","marksman","pit_viper","raider","shieldbearer","shock_eel","skirmisher","warden"],
+  "chapters": ["clockwork_hourglass","free_mode","prologue","prologue_2","prologue_3"],
+  "enemies": ["apothecary","bruiser","brute","butcher","cave_bear","clock_keeper","clockwork_sentry","core_guardian","flame_wolf","frost_toad","gear_golem","great_clock","marksman","pendulum_warden","pit_viper","raider","shieldbearer","shock_eel","skirmisher","steam_turret","tinker_apprentice","warden"],
   "faiths": ["brute","church","earth","hunt","nature","skill","sun"],
   "items": {
     "antidote_kit": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
@@ -50,6 +50,9 @@
     "bone_dice": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "brass_gear": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "brass_gear_sun": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
+    "brass_plating": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
+    "brass_plating_nature": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
+    "brass_plating_sun": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
     "charm_brute": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "charm_earth": {"bag":true,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "charm_hunt": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
@@ -92,6 +95,8 @@
     "frost_gland": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "frost_gland_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "gambeson": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
+    "gear_arm": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
+    "gear_arm_sun": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
     "gilded_goblet": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "gilded_goblet_sun": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "glazed_inkstone": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
@@ -131,6 +136,8 @@
     "mag": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "magic_staff": {"bag":false,"cells":3,"shape":[[0,0],[0,1],[0,2]],"size":[1,3]},
     "magic_staff_brute": {"bag":false,"cells":3,"shape":[[0,0],[0,1],[0,2]],"size":[1,3]},
+    "mainspring": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
+    "mainspring_sun": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "medkit": {"bag":false,"cells":4,"shape":[[0,0],[0,1],[1,0],[1,1]],"size":[2,2]},
     "mint_bundle": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "mint_bundle_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
@@ -148,6 +155,9 @@
     "pale_shard": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "pale_shard_sun": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "panacea": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
+    "pendulum_blade": {"bag":false,"cells":3,"shape":[[0,0],[0,1],[0,2]],"size":[1,3]},
+    "pendulum_blade_brute": {"bag":false,"cells":3,"shape":[[0,0],[0,1],[0,2]],"size":[1,3]},
+    "pendulum_blade_sun": {"bag":false,"cells":3,"shape":[[0,0],[0,1],[0,2]],"size":[1,3]},
     "pine_resin": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "pine_resin_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "pistol": {"bag":false,"cells":2,"shape":[[0,0],[1,0]],"size":[2,1]},
@@ -205,6 +215,8 @@
     "smoked_fish": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
     "smoked_fish_nature": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
     "spyglass": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
+    "steam_vent": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
+    "steam_vent_sun": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "steel_ingot": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "steel_ingot_sun": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "stim": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
@@ -238,5 +250,5 @@
     "wool_cloth": {"bag":false,"cells":2,"shape":[[0,0],[1,0]],"size":[2,1]},
     "wound_salt": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]}
   },
-  "tags": ["ammo","armor","barbarian","beast_part","bleed","blessed","bone","bow","burst","clay","cloth","crafted","crystal","enchanted","faith","faith_anchor","fire","flesh","food","gear","gear_plug","gem","gun","heavy","herb","ice","imperial","keepsake","leather","lightning","magic","material","melee","metal","nature","node_tooltips","part","poison","ranged","rapid","reagent","relic","remedy","sealed","shield","sigil","staff","stone","supply","token","tool","treasure","trophy","weapon","wood"]
+  "tags": ["ammo","armor","barbarian","beast_part","bleed","blessed","bone","bow","burst","clay","clockwork","cloth","crafted","crystal","enchanted","faith","faith_anchor","fire","flesh","food","gear","gear_plug","gem","gun","heavy","herb","ice","imperial","keepsake","leather","lightning","magic","material","melee","metal","nature","node_tooltips","part","poison","ranged","rapid","reagent","relic","remedy","sealed","shield","sigil","staff","stone","supply","token","tool","treasure","trophy","weapon","wood"]
 }

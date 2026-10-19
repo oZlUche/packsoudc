@@ -1,0 +1,50 @@
+{
+  "id": "great_clock",
+  "display_name": "大钟",
+  "display_names": {
+    "en": "Great Clock"
+  },
+  "strength": 3,
+  "schools": [
+    "burst",
+    "fire"
+  ],
+  "base_stats": {
+    "max_hp": 140,
+    "block": 6
+  },
+  "signature": [
+    "pendulum_blade",
+    "pendulum_blade",
+    "steam_vent",
+    "steam_vent",
+    "brass_plating",
+    "brass_plating",
+    "brass_plating",
+    "mainspring",
+    "mainspring"
+  ],
+  "item_tags": [
+    "clockwork"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    8,
+    5
+  ],
+  "species": "construct",
+  "bagless": true,
+  "immune_buffs": [
+    "bleed",
+    "poison",
+    "fungal_blood",
+    "scorched_blood"
+  ],
+  "loot_filler": [
+    "brass_gear"
+  ]
+}

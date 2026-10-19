@@ -419,8 +419,8 @@ static func run_enemy_identity(t: TestCase) -> void:
 				var armed := false
 				for raw in content.get("items", []):
 					var idef := c.items.get_def(StringName(String(raw["id"])))
-					if idef == null or idef.is_bag:
-						continue
+					if idef == null or idef.is_bag or bool(raw.get("carried", false)):
+						continue     # 210：机关的替身（齿轮）是携带品，不在身份圈里
 					checked += 1
 					t.check(def.allows_item(idef), "%s（%d 档）背的「%s」带身份标签 %s" % [def.display_name, strength, idef.display_name, str(def.item_tags)])
 					if idef.tags.has(&"weapon"):

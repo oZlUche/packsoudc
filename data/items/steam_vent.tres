@@ -1,0 +1,163 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_lpq21"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_stwk6"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_svtyt"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_a2r8d"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_wf0nj"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="6_1iflv"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="7_ys6xk"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="8_63wud"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="9_cqkby"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="10_3rnfb"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="11_tid2d"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_item_fired.gd" id="12_qr4hc"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="13_hke64"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="14_xf47q"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="15_g7olp"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="16_q1dkc"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="17_4s78e"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="18_x80er"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="19_i3kdq"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="20_hrwud"]
+
+[sub_resource type="Resource" id="Resource_a4b7u"]
+script = ExtResource("3_svtyt")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_3m7ao"]
+script = ExtResource("7_ys6xk")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_7be5v"]
+script = ExtResource("8_63wud")
+target = 1
+damage_type = &"fire"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_fb0om"]
+script = ExtResource("9_cqkby")
+
+[sub_resource type="Resource" id="Resource_0c7h5"]
+script = ExtResource("2_stwk6")
+trigger = SubResource("Resource_fb0om")
+cadence = SubResource("Resource_3m7ao")
+effects = Array[ExtResource("5_wf0nj")]([SubResource("Resource_7be5v")])
+
+[sub_resource type="Resource" id="Resource_wwy0d"]
+script = ExtResource("10_3rnfb")
+id = &"scorch"
+display_name = "灼伤"
+display_names = {
+"en": "Burn"
+}
+is_debuff = true
+rules = Array[ExtResource("2_stwk6")]([SubResource("Resource_0c7h5")])
+element = &"fire"
+
+[sub_resource type="Resource" id="Resource_3jher"]
+script = ExtResource("11_tid2d")
+buff = SubResource("Resource_wwy0d")
+metadata/part_ref = &"apply_status_scorch"
+
+[sub_resource type="Resource" id="Resource_c8fg1"]
+script = ExtResource("12_qr4hc")
+metadata/part_ref = &"on_item_fired"
+
+[sub_resource type="Resource" id="Resource_qaqam"]
+script = ExtResource("2_stwk6")
+trigger = SubResource("Resource_c8fg1")
+cadence = SubResource("Resource_a4b7u")
+effects = Array[ExtResource("5_wf0nj")]([SubResource("Resource_3jher")])
+
+[sub_resource type="Resource" id="Resource_mpo7s"]
+script = ExtResource("13_hke64")
+grant_cells = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 1)])
+grant_filter = Array[StringName]([&"weapon"])
+grant_rules = Array[ExtResource("2_stwk6")]([SubResource("Resource_qaqam")])
+
+[sub_resource type="Resource" id="Resource_hynug"]
+script = ExtResource("18_x80er")
+
+[sub_resource type="Resource" id="Resource_auuge"]
+script = ExtResource("7_ys6xk")
+seconds = 1.5
+
+[sub_resource type="Resource" id="Resource_w0j2f"]
+script = ExtResource("19_i3kdq")
+amount = 4.0
+
+[sub_resource type="Resource" id="Resource_u6xdt"]
+script = ExtResource("8_63wud")
+damage_type = &"fire"
+
+[sub_resource type="Resource" id="Resource_ytyea"]
+script = ExtResource("9_cqkby")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_xtnnf"]
+script = ExtResource("2_stwk6")
+trigger = SubResource("Resource_ytyea")
+cadence = SubResource("Resource_auuge")
+costs = Array[ExtResource("4_a2r8d")]([SubResource("Resource_w0j2f")])
+effects = Array[ExtResource("5_wf0nj")]([SubResource("Resource_u6xdt")])
+
+[sub_resource type="Resource" id="Resource_7fv7n"]
+script = ExtResource("20_hrwud")
+base_stats = {
+"damage": 3
+}
+rules = Array[ExtResource("2_stwk6")]([SubResource("Resource_xtnnf")])
+
+[sub_resource type="Resource" id="Resource_gmvuk"]
+script = ExtResource("7_ys6xk")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_cgorq"]
+script = ExtResource("8_63wud")
+target = 1
+damage_type = &"fire"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_o1704"]
+script = ExtResource("9_cqkby")
+
+[sub_resource type="Resource" id="Resource_m6he4"]
+script = ExtResource("2_stwk6")
+trigger = SubResource("Resource_o1704")
+cadence = SubResource("Resource_gmvuk")
+effects = Array[ExtResource("5_wf0nj")]([SubResource("Resource_cgorq")])
+
+[sub_resource type="Resource" id="Resource_ola2g"]
+script = ExtResource("10_3rnfb")
+id = &"scorch"
+display_name = "灼伤"
+display_names = {
+"en": "Burn"
+}
+is_debuff = true
+rules = Array[ExtResource("2_stwk6")]([SubResource("Resource_m6he4")])
+element = &"fire"
+
+[sub_resource type="Resource" id="Resource_6rlnj"]
+script = ExtResource("14_xf47q")
+buff = SubResource("Resource_ola2g")
+
+[resource]
+script = ExtResource("17_4s78e")
+id = &"steam_vent"
+display_name = "蒸汽阀"
+display_names = {
+"en": "Steam Vent"
+}
+description = "还烫手的阀门。挨着它的武器每次出手，都给对手添一层【灼伤】。"
+shape = SubResource("Resource_hynug")
+rarity = 2
+tags = Array[StringName]([&"material", &"crafted", &"metal", &"part", &"clockwork", &"fire"])
+adjacency = SubResource("Resource_mpo7s")
+wild = SubResource("Resource_7fv7n")
+wild_applies = Array[ExtResource("14_xf47q")]([SubResource("Resource_6rlnj")])

@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_f5cif"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_7ofqv"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_ws43a"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_43q1k"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_ogenh"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="6_gl3ok"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_t8xkh"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="8_72o68"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="9_ac2un"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="10_ov102"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="11_fgbeo"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="12_f1gqu"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="13_pog4a"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="14_kj6xb"]
+
+[sub_resource type="Resource" id="Resource_i0f3l"]
+script = ExtResource("4_43q1k")
+seconds = 2.6
+
+[sub_resource type="Resource" id="Resource_0hmg6"]
+script = ExtResource("6_gl3ok")
+amount = 9.0
+
+[sub_resource type="Resource" id="Resource_1xdt1"]
+script = ExtResource("8_72o68")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_8f11d"]
+script = ExtResource("9_ac2un")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_8ncar"]
+script = ExtResource("3_ws43a")
+trigger = SubResource("Resource_8f11d")
+cadence = SubResource("Resource_i0f3l")
+costs = Array[ExtResource("5_ogenh")]([SubResource("Resource_0hmg6")])
+effects = Array[ExtResource("7_t8xkh")]([SubResource("Resource_1xdt1")])
+
+[sub_resource type="Resource" id="Resource_jvbpk"]
+script = ExtResource("10_ov102")
+base_stats = {
+"damage": 30
+}
+rules = Array[ExtResource("3_ws43a")]([SubResource("Resource_8ncar")])
+
+[sub_resource type="Resource" id="Resource_8g6sj"]
+script = ExtResource("14_kj6xb")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
+
+[resource]
+script = ExtResource("13_pog4a")
+id = &"pendulum_blade"
+display_name = "钟摆刃"
+display_names = {
+"en": "Pendulum Blade"
+}
+description = "大钟里拆出来的摆锤，边缘磨成了刃。"
+shape = SubResource("Resource_8g6sj")
+rarity = 2
+weight = 8
+tags = Array[StringName]([&"weapon", &"melee", &"burst", &"heavy", &"crafted", &"metal", &"clockwork"])
+combat = SubResource("Resource_jvbpk")

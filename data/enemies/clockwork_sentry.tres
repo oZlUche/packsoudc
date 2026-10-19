@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="1_pqewv"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_m2e1m"]
+
+[sub_resource type="Resource" id="Resource_dt65v"]
+script = ExtResource("1_pqewv")
+school_share = 1.0
+min_weapons = 0
+single_faith = false
+
+[resource]
+script = ExtResource("2_m2e1m")
+id = &"clockwork_sentry"
+display_name = "发条哨兵"
+display_names = {
+"en": "Clockwork Sentry"
+}
+schools = Array[StringName]([&"clockwork"])
+base_stats = {
+"block": 2,
+"max_hp": 30
+}
+signature = Array[StringName]([&"gear_arm", &"brass_plating"])
+item_tags = Array[StringName]([&"clockwork"])
+loadout = SubResource("Resource_dt65v")
+board = Vector2i(4, 3)
+species = &"construct"
+bagless = true
+immune_buffs = Array[StringName]([&"bleed", &"poison", &"fungal_blood", &"scorched_blood"])
+loot_filler = Array[StringName]([&"brass_gear"])

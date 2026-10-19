@@ -1,0 +1,88 @@
+{
+  "id": "clockwork_hourglass",
+  "display_name": "机关沙漏",
+  "display_names": {
+    "en": "Clockwork Hourglass"
+  },
+  "map_source": {
+    "generator_id": "hourglass",
+    "generator_config": {
+      "type": "HourglassMapConfig",
+      "half_rows": 4,
+      "with_core": true,
+      "danger_by_row": [
+        0,
+        0,
+        1,
+        1,
+        2,
+        2,
+        1,
+        1,
+        1,
+        0
+      ],
+      "rules": {
+        "type_weights": {
+          "battle": 3,
+          "search": 3,
+          "event": 2,
+          "random": 2,
+          "elite": 1,
+          "chest": 1
+        },
+        "quota": {
+          "shop": [
+            0,
+            1
+          ],
+          "rest": [
+            0,
+            1
+          ],
+          "elite": [
+            0,
+            2
+          ]
+        },
+        "coverage": {
+          "rest": 4,
+          "shop": 6
+        },
+        "no_adjacent": [
+          [
+            "elite",
+            "elite"
+          ],
+          [
+            "shop",
+            "shop"
+          ]
+        ],
+        "mandatory_types": [
+          "elite",
+          "shop",
+          "rest"
+        ]
+      }
+    }
+  },
+  "enemy_pool": "clockwork",
+  "drop_rule": "standard",
+  "carry_rule": "standard",
+  "encumbrance_rules": "standard",
+  "node_rules": "standard",
+  "economy_rules": "standard",
+  "order": 4,
+  "requires_unlock": "prologue3_done",
+  "rules": [
+    "横置的沙漏：从左边进去，穿过中间两条窄道到对侧；撤离点只在最右一列，中途没有。",
+    "这里的敌人是机关：天生格挡，直接伤害先减一截；流血和中毒对它们无效，火、冰、雷照常。",
+    "机关身上掉零件：齿轮臂、蒸汽阀、铆接护板。护板拿回来就是一面小盾。"
+  ],
+  "step_limit": 40,
+  "safes": 1,
+  "chest_skin": "imperial_camp",
+  "map_skin": "clockwork",
+  "carry_budget": 600
+}

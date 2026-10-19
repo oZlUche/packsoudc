@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="1_sc702"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_yx66t"]
+
+[sub_resource type="Resource" id="Resource_fp67t"]
+script = ExtResource("1_sc702")
+school_share = 1.0
+min_weapons = 0
+single_faith = false
+
+[resource]
+script = ExtResource("2_yx66t")
+id = &"pendulum_warden"
+display_name = "钟摆卫士"
+display_names = {
+"en": "Pendulum Warden"
+}
+strength = 3
+schools = Array[StringName]([&"burst"])
+base_stats = {
+"block": 5,
+"max_hp": 80
+}
+signature = Array[StringName]([&"pendulum_blade", &"brass_plating", &"brass_plating", &"mainspring"])
+item_tags = Array[StringName]([&"clockwork"])
+loadout = SubResource("Resource_fp67t")
+board = Vector2i(6, 4)
+species = &"construct"
+bagless = true
+immune_buffs = Array[StringName]([&"bleed", &"poison", &"fungal_blood", &"scorched_blood"])
+loot_filler = Array[StringName]([&"brass_gear"])

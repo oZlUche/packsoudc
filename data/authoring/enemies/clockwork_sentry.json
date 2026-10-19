@@ -1,0 +1,41 @@
+{
+  "id": "clockwork_sentry",
+  "display_name": "发条哨兵",
+  "display_names": {
+    "en": "Clockwork Sentry"
+  },
+  "schools": [
+    "clockwork"
+  ],
+  "base_stats": {
+    "max_hp": 30,
+    "block": 2
+  },
+  "signature": [
+    "gear_arm",
+    "brass_plating"
+  ],
+  "item_tags": [
+    "clockwork"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    4,
+    3
+  ],
+  "species": "construct",
+  "bagless": true,
+  "immune_buffs": [
+    "bleed",
+    "poison",
+    "fungal_blood",
+    "scorched_blood"
+  ],
+  "loot_filler": [
+    "brass_gear"
+  ]
+}

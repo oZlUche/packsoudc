@@ -249,8 +249,8 @@ static func run_authoring_files(t: TestCase) -> void:
 			# 212：魔兽的流派键是它器官的元素；篓子只有兽材，没有「武器」—— 只要求流派池里有会自己出手的器官（wild 面）
 			for s in def.schools:
 				var organs := EnemyPlacer.school_items([s] as Array[StringName], items, -1, def)
-				t.check(organs.any(func(iid): return items.get_def(iid).wild != null and not items.get_def(iid).wild.rules.is_empty()),
-					"魔兽 %s 流派 '%s'：有会自己出手的器官" % [id, s])
+				t.check(organs.any(func(iid): return not BattleCompiler.profile_of(items.get_def(iid), true).rules.is_empty()),
+					"魔兽 / 机关 %s 流派 '%s'：有会自己出手的" % [id, s])
 			continue
 		for s in def.schools:
 			var pool_items := EnemyPlacer.school_items([s] as Array[StringName], items, -1)

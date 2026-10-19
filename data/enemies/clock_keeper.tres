@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_8h8hb"]
+
+[resource]
+script = ExtResource("1_8h8hb")
+id = &"clock_keeper"
+display_name = "守钟人"
+display_names = {
+"en": "Clock Keeper"
+}
+strength = 2
+schools = Array[StringName]([&"rapid"])
+base_stats = {
+"block": 2,
+"max_hp": 48
+}
+signature = Array[StringName]([&"shortsword", &"brass_plating"])
+item_tags = Array[StringName]([&"imperial", &"shield", &"melee", &"rapid", &"remedy"])

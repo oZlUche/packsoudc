@@ -1,0 +1,27 @@
+{
+  "id": "brass_plating",
+  "display_name": "铆接护板",
+  "display_names": {
+    "en": "Riveted Plating"
+  },
+  "description": "从机关身上拆下的护板，能当一面小盾。",
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "weight": 6,
+  "tags": [
+    "gear",
+    "shield",
+    "heavy",
+    "crafted",
+    "metal",
+    "clockwork"
+  ],
+  "combat": {
+    "base_stats": {
+      "block": 2
+    }
+  }
+}

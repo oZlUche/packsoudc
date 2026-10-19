@@ -1,0 +1,44 @@
+{
+  "id": "steam_turret",
+  "display_name": "蒸汽炮台",
+  "display_names": {
+    "en": "Steam Turret"
+  },
+  "strength": 1,
+  "schools": [
+    "fire"
+  ],
+  "base_stats": {
+    "max_hp": 34,
+    "block": 3,
+    "regen_stamina": 6
+  },
+  "signature": [
+    "steam_vent",
+    "steam_vent",
+    "brass_plating"
+  ],
+  "item_tags": [
+    "clockwork"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    4,
+    3
+  ],
+  "species": "construct",
+  "bagless": true,
+  "immune_buffs": [
+    "bleed",
+    "poison",
+    "fungal_blood",
+    "scorched_blood"
+  ],
+  "loot_filler": [
+    "brass_gear"
+  ]
+}
