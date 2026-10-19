@@ -80,6 +80,8 @@ cue 的「按什么选」全放进表与一个小的纯类：材质 → `SfxMate
 - `tools/sync_audio.sh <目录> [--variant v1]`：目录下有 `ogg/` 且给了 `--variant` 就把 `ogg/<cue>_v1.ogg` 拷成 `sfx/<cue>.ogg`；目录下是定稿（`final/`，已是最终名）就照旧整体拷。CREDITS 照旧并入 `assets/audio/CREDITS.md`。
 - 落地顺序：执行现在用 `--variant v1` 落（37 个文件齐、测试「文件都在」绿）；作者挑完、「音效」线程放好 `final/`，执行再跑一次 sync（同名覆盖）、合并，不改代码不改表。
 
+**与 UI替换美术 的容器界面定稿（19:02）对齐**：容器 / 搜索界面正在换美术（/mnt/project-files/art/ui/board/README.md）：「快速搜索」按钮去掉，「全部拾取」换成火漆按钮。所以上表里「快速搜索不逐张响」只对 `LootView.skip()` 还在的路径生效；`loot.take_all` 的静音 meta 要挂在新的火漆按钮上（它仍是 BaseButton，204 的钩子照样接）。两件事都在执行手里，挂点以新控件为准。
+
 ## 3 改动
 
 | 文件 | 改什么 |
