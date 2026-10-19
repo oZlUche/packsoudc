@@ -1,0 +1,5 @@
+{
+	"ui.press": {"files": ["sfx/ui_press_1.ogg", "sfx/ui_press_2.ogg", "sfx/ui_press_3.ogg"], "volume_db": -6, "pitch_var": 0.04, "cooldown": 0.04},
+	"ui.open": {"files": ["sfx/ui_open.ogg"], "volume_db": -4},
+	"ui.close": {"files": ["sfx/ui_close.ogg"], "volume_db": -4}
+}

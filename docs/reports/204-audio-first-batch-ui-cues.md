@@ -143,3 +143,24 @@ cue 名不在表里：静默，`Audio.missing` 记一次（测试与开发台看
 - 配乐：等风格定；`music()` 与 `music.json` 先空着。
 - 环境声、混响、Godot 的 `AudioStreamRandomizer` 资源：JSON 表里的 `files` 数组够用。
 - 声音编辑器：cue 表手写，三个 cue 不值得做界面。
+
+## 7 落地（2026-10-19，架构方案执行）
+
+按 §2、§3 做完，待定 4.1–4.6 全按推荐。素材已经到了，两条线合成一个 PR：
+- `tools/sync_audio.sh /mnt/project-files/art/audio/ui` 拷进了 5 个文件和 CREDITS；
+- `cues.json` 里 `ui.press` 填了三个变体（`ui_press_1/2/3`），`ui.open`、`ui.close` 各一个，音量、音高、冷却照 §2.1 的例子。
+
+**和方案不一样的地方**
+
+1. **别处调用走静态入口 `AudioHub.play / apply / music`，不直接写 `Audio.play`。** `--script` 跑测试时，主脚本 `run_tests.gd` 先于自动加载编译；导演、浮窗里只要直接写自动加载的名字 `Audio`，整套测试都编译不过。所以 `ui/audio.gd` 带 `class_name AudioHub`，自动加载仍叫 `Audio`。静态函数转给自动加载那一份（`_enter_tree` 记下 `_inst`），没有就什么都不做。实例上的方法叫 `play_cue / apply_settings / play_music`。
+2. 设置屏音效一行写成「音效 80%」加 `−` / `+` 两个按钮，放在「显示」一节下面、自己一节「声音」。
+
+**测试**：`tests/ui/test_audio_204.gd` 六组，按 §5 末清单：
+1. cue 表三个 cue、文件都在且是 `.ogg`，坏字段报错；
+2. 自动加载登记、`CueTable` 不碰 ui；
+3. 两个音量往返、缺键默认、越界夹住；
+4. 总线分贝等于 `linear_to_db`、0 静音；按钮钩子（默认 `ui.press`、meta 空串不响、专属 cue、同一下只响一次、再进树只接一次）；未知 cue 记进 `missing`；
+5. 浮窗进树 `ui.open`、出树 `ui.close`；
+6. 叠层：开、收起、恢复、叠层换叠层、回地图各响一次对的；底屏换底屏不响。
+
+`test_startup_graph` 176 的根加了 `res://ui/audio.gd`。全套测试全过。

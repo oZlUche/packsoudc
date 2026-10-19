@@ -97,6 +97,7 @@ func _ready() -> void:
 	flow.settings_path = settings_path
 	flow.settings = GameSettings.load_from(settings_path)
 	UiText.apply(flow.settings)
+	AudioHub.apply(flow.settings)     # 204：音效 / 音乐音量
 	UiPalette.apply(flow.settings)     # 091：背景底色
 	InputKeys.apply(flow.settings)     # 154 补充一：改过的键盖到默认上
 	UiTheme.install()     # 121：界面主题挂在窗口上
@@ -181,7 +182,8 @@ func _exit_tree() -> void:
 
 func _switch_screen(screen: int, payload: Dictionary) -> void:
 	if GameFlow.is_overlay(screen):
-		_drop_overlay()
+		_drop_overlay(true)     # 204：叠层换叠层只响「开」
+		AudioHub.play(&"ui.open")
 		if bool(payload.get("restore", false)) and _minimized != null and _minimized.screen == screen:
 			# 084：恢复最小化的那一屏，不重造
 			_overlay = _minimized
@@ -201,6 +203,7 @@ func _switch_screen(screen: int, payload: Dictionary) -> void:
 		_drop_minimized()
 		_minimized = _overlay
 		_overlay = null
+		AudioHub.play(&"ui.close")
 		_minimized.visible = false
 		_minimized.process_mode = Node.PROCESS_MODE_DISABLED
 	else:
@@ -231,10 +234,13 @@ func _fade_in(s: Control, seconds: float) -> Tween:
 	return tw
 
 
-func _drop_overlay() -> void:
+## [param silent]：不响「关」（204：马上又要开一个叠层）
+func _drop_overlay(silent: bool = false) -> void:
 	if _overlay != null:
 		_overlay.queue_free()
 		_overlay = null
+		if not silent:
+			AudioHub.play(&"ui.close")
 
 
 func _drop_minimized() -> void:

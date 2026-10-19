@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.44 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.45 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3646,6 +3646,15 @@ func player_spec() -> CombatantSpec …
 - 裁字：`tools/font_charset.py` 扫 data / ui / core / tools 的文案写 `assets/fonts/charset.txt`，`tools/subset_fonts.sh` 按它裁四个子集（要 fonttools）。三款都没有保留字体名，子集照原名（168 时文楷要改名 PackSDC Kai，换掉后这一步删了）。
 - 兜底：`FontCoverage`（`tools/font_coverage.gd`）查文案用到的字都在字集里、用到的汉字正文子集都有；`tools/check_content.gd` 与 `tests/ui/test_fonts_168.gd` 都跑它，红了就重裁。
 
+### 8.11 音频（204）
+
+- **自动加载 `Audio`**（`ui/audio.gd`，类名 `AudioHub`）：运行时 `AudioServer.add_bus` 造 `SFX` / `Music` 两条总线送 Master，8 个 `AudioStreamPlayer` 轮用。别处只调静态的 `AudioHub.play(cue)` / `AudioHub.apply(settings)` / `AudioHub.music(track)`：`--script` 跑的测试主脚本先于自动加载编译，直接写 `Audio` 编译不过。
+- **cue 表** `data/authoring/audio/cues.json`（手写，直接读，不走内容管线、不进快照）：cue 名 `组.名` → `files`（相对 `res://assets/audio/`，多个随机挑、连续两次不挑同一个）、`volume_db`、`pitch_var`、`cooldown`（默认 0.04 s）。`music.json` = 曲名 → `file`、`volume_db`（先空）。读和校字段的是 `core/audio/cue_table.gd`（`CueTable`，RefCounted，不认识 ui）。不在表里的 cue 静默，记进 `AudioHub.missing`。
+- **按钮音一处钩子**：`Audio` 接 `SceneTree.node_added`，凡 `BaseButton` 进树就接它的 `pressed`（松开时发，拖出去不响），播按钮 meta `sfx`（默认 `ui.press`，空串 = 不响）。要专属声就在造按钮的地方 `set_meta("sfx", &"…")`，不加新钩子。
+- **开 / 关窗**：`GameDirector._switch_screen` 叠层新造 / 恢复 = `ui.open`，收起、回底屏撤叠层 = `ui.close`，叠层换叠层只响开（`_drop_overlay(silent)`）；`FloatingWindow` 进树开、出树关。底屏换底屏不响。
+- **音量**：`GameSettings.sfx_volume`（0.8）/ `music_volume`（0.6），0～1 线性，0 = 静音。导演 `_ready` 与设置屏「声音」一节（音效一行，− / + 一步 10%）套用；音乐那行等第一首曲子再露出来。
+- **素材**：`assets/audio/sfx/*.ogg`（Vorbis、单声道、不循环）+ `assets/audio/CREDITS.md`（每个文件的来源、作者、许可）。`tools/sync_audio.sh <美术目录>` 拷文件和 CREDITS、导入一次，cue 表手填。测试 `tests/ui/test_audio_204.gd` 看 `AudioHub.recent`（最近 32 个 cue）。
+
 ## 9. 套装与跨域效果
 
 > **已实现、暂无内容**（140 登记，见 [status.md](status.md)）：本节的套装、道具跨域效果、包体加成、敌人 `loadout` 代码与测试都在，数据里还没有一份；第一份内容待流派 / 掉落设计需要时再写。
@@ -4306,6 +4315,7 @@ res://
 | v3.30 | 2026-10-17 | **188 背包面板去字、信仰窗重排**（作者 2026-10-17，待定 1–3 按推荐）：背包面板不再写操作提示、地上说明、参战 / 可用格读数、信仰行与棋盘上方说明，回话走 `hint_sink`（地图屏 = 提示行）；`FaithTooltip.describe_full` → 名字行（Lv、休眠件数）+ 信力行 + 各阶效果 / 信力来源 / 献祭，颜色全走模板；`HoverTip.show_faith` 名字行下挂到下一阶的进度条、各段虚线分隔、宽 360 |
 | v3.31 | 2026-10-18 | **188 补充一 信仰窗分段、蛮神改写**（作者 2026-10-18，待定 1–4 按推荐）：`HoverTip.FaithBar` 一段一级、长度按所需信力（满阶也挂）；`FaithTooltip` 同一级的效果合成一行（`[table=2]`），没到的级整行 `@dim`，句子按 `FaithPerk.summary_for(def, points)` 写、锁住的级按那一级的阈值算；`FaithPerk.scaled` 给「随信力」的数（每 50 信力一阶、封顶）；蛮神一级门槛式增伤、二级献祭生命上限二选一（信力 / 全体造成伤害 + 急速）、三级 `prebattle_actions` 两个按钮（耗体力 / 耗信力、非首领）、四级持续战斗秒数随信力；献祭规矩 `OfferingRule.short_name`、`ItemVolume.size_label`（「大型道具」），有图标时排一行 `[img]`（`assets/ui/tags/<tag>.png`、`assets/ui/offerings/{large,medium,crit}.png`），缺一枚就退回文字 |
 | v3.32 | 2026-10-18 | **189 / 190 顶端栏长槽与日晷倒计时**（作者 2026-10-18 定案，待定 1–3 按推荐）：`hud_bar` 在板上画一条贯通的浅槽（`hud/groove` 九宫格、`band` 定槽身），宿主排完把铜点交给栏画（同行相邻两件之间、右槽图标组左边，空着的件两边不放）；`HudWidget.set_in_bar` 让栏里的件坐在槽底上（`PANEL_BARE`、浅底墨字），拖出栏回 `PANEL_HUD`；栏里同行间距 24、组在槽身里居中；倒计时改成刻在槽底的半圆日规（`hud/dial/*`：染色扇面 / 表盘 / 绕轴心转的影子 / 轴心，三阶 calm·half·low），栏上不写数字，停上去 `show_status` 弹「倒计时」窗、走一步 `update_status` 换字；缺图退回文字版 |
+| v3.45 | 2026-10-19 | **204 音频第一批：界面音效**（作者「按推荐来吧 … 先加一些最常规最不容易出错的按钮点击、窗口关闭/打开音效」，架构线程方案，待定按推荐）：自动加载 `Audio`（`ui/audio.gd`，`AudioHub` 静态入口）、`CueTable` + `data/authoring/audio/cues.json` / `music.json`、按钮 `node_added` 钩子与 meta `sfx`、叠层 / 浮窗开关音、`GameSettings.sfx_volume / music_volume`、设置屏「声音」一节、`tools/sync_audio.sh`；素材 `assets/audio/sfx/` 5 个（美术自己合成，CC0 / 项目自有）；新测试 `test_audio_204.gd`。同日 198 补充二：`rest_rotation` 按重心绝对高度挑（长条躺平） |
 | v3.44 | 2026-10-19 | **198 补充一 地上自由角度躺倒**（作者在卡片上选「自由角度」，架构线程方案，待定 1–4 按推荐）：`ItemStash.tilts / tilt_of / set_tilt / spot_entry / read_tilt`，`NodeStorageModule.tilts`；`ItemSilhouette.tilted / turn / contact`；`GroundLayer` 解算段重写（`_new_body`、`_bump_step`、`_pair_contacts`、`_wall_contacts`、`_prep`、`_solve`（两点块解法）、`_solve_split`、`_after_impact`、`_clamp_body`、`is_stable`、`supports_of`、`normalize_pose`），`BUMP_MAX_SEC` 1 → 1.5（每件醒着的总时长）、`BUMP_RUN_MAX_SEC` 6、`BUMP_DAMP` 删除，`_relax_overlaps`、`_touches_any`、`_refalls`，`_begin_fall(carry)`，`item_rect` 按轮廓夹边；`item_bounds`、`tilt_of`、点选反转、`_draw` 绕重心转、落地动画起手角；拖拽层取消放回保留斜度。新测试 `test_ground_tilt_198.gd`（含真道具图 20 件堆叠）；落地差异见报告 §8 |
 | v3.43 | 2026-10-19 | **201 道具图接进棋盘**（作者「素材可以实装了，让贴图和格子位置对应」，架构线程方案，待定按推荐）：`assets/items/` 86 件（60 px + @2x 160 px）+ `manifest.json`，`tools/sync_item_art.sh`；`ItemPainter.art_available / art_ids / art_of / draw_art / art_transform`，一张 rot 0 图按同一套顺时针变换画四个朝向；棋盘 / 包体 / 残影 / 收成排 / 地面 / 图鉴有图画图，剪影不用图；187 默认格线跟着翻成不画；198 第二阶段 `_art_image` 接上；新测试 `test_item_art_201.gd` |
 | v3.42 | 2026-10-19 | **200 导出玩家版 / 开发版**（作者问，架构线程方案，待定按推荐）：不建分支，`export_presets.cfg` 两个预设 ——「玩家版」release、`custom_features=""`、控制台包装器 0、排除 `tests/* addons/godot_ai/* docs/*`；「开发版」debug、`custom_features="dev"`、包装器 1；`tools/` 都留（`DevNav` preload 了里面的脚本）。`DevGate.on()` 认 `dev` 特性；`DevNav.keep_in()` 改走 `DevGate`（按路径 preload）；`meta_screen` 两处 `template` 开发开关并进 `DevGate`。`tools/export.bat` 两条导出命令 |
