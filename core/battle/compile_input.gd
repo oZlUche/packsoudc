@@ -33,6 +33,8 @@ var undying_sec: float = 0.0
 
 ## 212：魔兽的棋盘 —— 道具用 [member ItemDef.wild] 那一面，不跑信仰、邻接、`applies`，跑 `wild_applies`
 var wild: bool = false
+## 210：免疫的状态 id（机关不流血不中毒）—— 原样进 [member CombatantSpec.immune_buffs]
+var immune_buffs: Array[StringName] = []
 
 ## 按件随机挑选用。调用方算好（`hash(run_seed, "compile", clock.total)`），一局之内不变 ——
 ## 所以拖动预估挑的和真打挑的是同一批

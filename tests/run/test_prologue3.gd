@@ -230,7 +230,7 @@ static func run_gating(t: TestCase) -> void:
 	t.check(not f.tutorials_done(), "教程还没全通")
 	f.meta.grant_unlock(&"prologue3_done")
 	avail = f.available_chapters()
-	t.check(avail.size() == 1 and avail[0].id == &"free_mode", "序章三通关后只剩自由模式")
+	t.check(avail.size() == 2 and avail[0].id == &"free_mode" and avail[1].id == &"clockwork_hourglass", "序章三通关后只剩自由模式（210：后面跟着机关沙漏）")
 	t.check(f.tutorials_done(), "教程全通")
 	t.is_null(f.new_run_target(), "新的一局不直接开：进开局屏挑角色、规模")
 	t.eq(Names.of(avail[0]), "魔法废墟", "显示名（180：自由模式改叫魔法废墟，id 不变）")

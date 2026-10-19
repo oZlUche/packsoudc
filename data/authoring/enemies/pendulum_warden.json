@@ -1,0 +1,44 @@
+{
+  "id": "pendulum_warden",
+  "display_name": "钟摆卫士",
+  "display_names": {
+    "en": "Pendulum Warden"
+  },
+  "strength": 3,
+  "schools": [
+    "burst"
+  ],
+  "base_stats": {
+    "max_hp": 80,
+    "block": 5
+  },
+  "signature": [
+    "pendulum_blade",
+    "brass_plating",
+    "brass_plating",
+    "mainspring"
+  ],
+  "item_tags": [
+    "clockwork"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    6,
+    4
+  ],
+  "species": "construct",
+  "bagless": true,
+  "immune_buffs": [
+    "bleed",
+    "poison",
+    "fungal_blood",
+    "scorched_blood"
+  ],
+  "loot_filler": [
+    "brass_gear"
+  ]
+}

@@ -177,11 +177,26 @@ func _refresh_belt() -> void:
 		_belt_row.add_child(b)
 
 
+## 210：「免疫：流血、中毒」—— 机关不吃的状态；没有就空
+static func immune_text(spec: CombatantSpec) -> String:
+	if spec == null or spec.immune_buffs.is_empty():
+		return ""
+	var names: PackedStringArray = []
+	var lib := ContentLibrary.buffs()
+	for id in spec.immune_buffs:
+		var b: BuffDef = lib.get(id, null)
+		names.append(b.display_name if b != null and b.display_name != "" else String(id))
+	return "免疫：%s" % "、".join(names)
+
+
 func _refresh() -> void:
 	var spec := flow.run.events.pending_battle_spec() if flow.run != null else null
 	if spec != null:
 		# 157（作者定）：读数只剩生命与 DPS，出手几件道具不写
 		_enemy_line.text = "生命 %d　约 %.1f DPS" % [spec.max_hp_int(), spec.rough_dps()]
+		var immune := immune_text(spec)
+		if immune != "":
+			_enemy_line.text += "\n" + immune
 	if _seam != null and flow.run != null:
 		var mine := flow.run.compile_player()
 		_seam.set_strength(strength_of(spec), strength_of(mine))

@@ -1,0 +1,47 @@
+{
+  "id": "pendulum_blade",
+  "display_name": "钟摆刃",
+  "display_names": {
+    "en": "Pendulum Blade"
+  },
+  "description": "大钟里拆出来的摆锤，边缘磨成了刃。",
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "weight": 8,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "heavy",
+    "crafted",
+    "metal",
+    "clockwork"
+  ],
+  "combat": {
+    "base_stats": {
+      "damage": 30
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 2.6
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 9.0
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

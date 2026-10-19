@@ -23,6 +23,9 @@ func apply(ctx: RuleContext) -> void:
 ## （施加方 = 本规则的主人）、跑 on_apply；叠满了只刷新时长的那一下只发一条 delta 0 的 status_stacked（185 补充一：回放的计时环）。[ConvertStatus] 也走这里
 ## 175 补充一 / 三：状态本身是印（中毒、流血、灼……）就先问 [method ReactionResolver.before_status] —— 引发了反应，只叠扣掉 N 层后的余量
 static func give(ctx: RuleContext, who: CombatantRuntime, def: BuffDef, n: int) -> int:
+	if who.is_immune(def.id):
+		who.apply_buff(def, n, ctx.battle.now)     # 210：免疫 —— 印不存在，也就不引发反应；只留追踪那一笔
+		return 0
 	if def.element != &"":
 		n = ReactionResolver.before_status(ctx.battle, who, def, n)
 		if n <= 0 or who.dead:

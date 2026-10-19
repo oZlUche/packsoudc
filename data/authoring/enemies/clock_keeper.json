@@ -1,0 +1,26 @@
+{
+  "id": "clock_keeper",
+  "display_name": "守钟人",
+  "display_names": {
+    "en": "Clock Keeper"
+  },
+  "strength": 2,
+  "schools": [
+    "rapid"
+  ],
+  "base_stats": {
+    "max_hp": 48,
+    "block": 2
+  },
+  "signature": [
+    "shortsword",
+    "brass_plating"
+  ],
+  "item_tags": [
+    "imperial",
+    "shield",
+    "melee",
+    "rapid",
+    "remedy"
+  ]
+}

@@ -1791,6 +1791,11 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 		_validate_loadout(def.loadout, "loadout", report)
 	if not EnemyDef.SPECIES.has(def.species):
 		report.error("species", "种族 '%s' 不认识（%s）" % [def.species, " / ".join(PackedStringArray(EnemyDef.SPECIES))])     # 212
+	for b in def.immune_buffs:     # 210
+		if not ctx.buffs.is_empty() and not ctx.buffs.has(b):
+			report.error("immune_buffs", "找不到状态 '%s'" % b)
+	if not def.loot_filler.is_empty() and not def.is_wild():
+		report.warn("loot_filler", "只有不是人的（魔兽 / 机关）才用替身；人照旧掷携带品")
 	# 165：相邻组合 —— 每组至少两件道具 id
 	for k in def.combos.size():
 		if not (def.combos[k] is Array) or (def.combos[k] as Array).size() < 2:
@@ -1834,6 +1839,9 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 			continue
 		for raw in list:
 			sigs.append(["signature_by_strength.%s" % String(key), StringName(String(raw))])
+	for fid in def.loot_filler:     # 210
+		if not ctx.items.has(fid):
+			report.error("loot_filler", "找不到道具 '%s'" % fid)
 	for pair in sigs:
 		var at: String = pair[0]
 		var sid: StringName = pair[1]

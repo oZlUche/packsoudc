@@ -8,6 +8,8 @@ var max_hp: int = 0                  ## 定点
 ## 101 第 5 刀：原来是 `flags: Dictionary` 里的一个字符串键 —— 结算规则（不是效果）留在内核，但**按带类型的字段读**：
 ## 拼错键名不会再默默失效。写它的是 [UndyingPerk]，读它的是 [CombatantRuntime]
 var undying_sec: float = 0.0
+## 210：免疫的状态 id —— [method CombatantRuntime.apply_buff] 直接不叠（机关不流血不中毒）
+var immune_buffs: Array[StringName] = []
 
 ## 105：开战时就带着的标准轴层数（4.3）：轴 → 层数。来源是编译期的单位级增益
 ## （祈祷攒的火焰加成、将来的局内 / 局外 / 套装 / 技能）。[CombatantRuntime] 把它种进**系统层** ——
