@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.46 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.47 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3001,6 +3001,7 @@ class_name SearchRules extends Resource
 然后按后果立的旗子走：接下一个事件（再发 `event_pending`）/ 开搜索 / 开店 / 开战（点自己有敌人就打它，没有就现造）/ 点用过。`pending` 跟着存档，读档回来还在这一屏。
 `GameFlow` 把 `event_pending` 排进队（事件屏），`event_resolved` 有内容时把结果页插到队首（先看「你翻出了什么」，再看接下来打的那一场）；
 队列空了还有等着选的事件就显示它。搜索屏与战利品屏合成一个**容器屏**（`ui/game/container_screen.gd`）：装的是待拾取还是搜索会话由 payload 决定。
+棋盘美术（2026-10-19 定稿）：左边容器按种类换外框（`frame_kind_of`：搜索 藤编 / 宝箱 稀有及以上金角、以下铁角 / 敌人战利品 生皮 / BOSS 黑铁 + 纹章），右边背包细皮带框，都是 `NinePatchRect`（平铺），浅灰内垫在图里，格缝由 `InventoryView.seams` 画；摆位按 `assets/ui/board/layout.json` 的设计像素（外框到面板边 26、标题分隔行下 14、两块外框之间 200，面板宽高按格子算，8 列背包 + 6 列容器 = 1188 × 526）。标题不写字，右上角最小化（原「回到地图」）+ 关闭（原「关闭」/「收起」）两颗圆钮，「全部拾取」是火漆签；快速搜索、状态行、耐力行去掉（`InventoryPanel.hide_stamina`），回话写在火漆签旁边。
 
 **构件按内容需要加（8-3，报告 077）。** 条件看得见的一局状态进了 `EventContext`：地图、步数、棋盘与地上、段位与侵蚀深度（两个回调，持有方接；没接 = -1，条件永远不满足）。
 后果里**传送**只挑目的地（最近 / 最远 / 随机 / 内容里指定的 id，按类型与步数区间筛）、立旗，挪人在 `choose` 的最后：这个点的事都完了才造一个 `MoveIntent.teleport` 交给持有方的 `relocate`
@@ -4316,6 +4317,7 @@ res://
 | v3.30 | 2026-10-17 | **188 背包面板去字、信仰窗重排**（作者 2026-10-17，待定 1–3 按推荐）：背包面板不再写操作提示、地上说明、参战 / 可用格读数、信仰行与棋盘上方说明，回话走 `hint_sink`（地图屏 = 提示行）；`FaithTooltip.describe_full` → 名字行（Lv、休眠件数）+ 信力行 + 各阶效果 / 信力来源 / 献祭，颜色全走模板；`HoverTip.show_faith` 名字行下挂到下一阶的进度条、各段虚线分隔、宽 360 |
 | v3.31 | 2026-10-18 | **188 补充一 信仰窗分段、蛮神改写**（作者 2026-10-18，待定 1–4 按推荐）：`HoverTip.FaithBar` 一段一级、长度按所需信力（满阶也挂）；`FaithTooltip` 同一级的效果合成一行（`[table=2]`），没到的级整行 `@dim`，句子按 `FaithPerk.summary_for(def, points)` 写、锁住的级按那一级的阈值算；`FaithPerk.scaled` 给「随信力」的数（每 50 信力一阶、封顶）；蛮神一级门槛式增伤、二级献祭生命上限二选一（信力 / 全体造成伤害 + 急速）、三级 `prebattle_actions` 两个按钮（耗体力 / 耗信力、非首领）、四级持续战斗秒数随信力；献祭规矩 `OfferingRule.short_name`、`ItemVolume.size_label`（「大型道具」），有图标时排一行 `[img]`（`assets/ui/tags/<tag>.png`、`assets/ui/offerings/{large,medium,crit}.png`），缺一枚就退回文字 |
 | v3.32 | 2026-10-18 | **189 / 190 顶端栏长槽与日晷倒计时**（作者 2026-10-18 定案，待定 1–3 按推荐）：`hud_bar` 在板上画一条贯通的浅槽（`hud/groove` 九宫格、`band` 定槽身），宿主排完把铜点交给栏画（同行相邻两件之间、右槽图标组左边，空着的件两边不放）；`HudWidget.set_in_bar` 让栏里的件坐在槽底上（`PANEL_BARE`、浅底墨字），拖出栏回 `PANEL_HUD`；栏里同行间距 24、组在槽身里居中；倒计时改成刻在槽底的半圆日规（`hud/dial/*`：染色扇面 / 表盘 / 绕轴心转的影子 / 轴心，三阶 calm·half·low），栏上不写数字，停上去 `show_status` 弹「倒计时」窗、走一步 `update_status` 换字；缺图退回文字版 |
+| v3.47 | 2026-10-19 | **容器屏棋盘美术**（UI替换美术定稿，作者 19:02「其他说明性文本也可以去掉了」）：五种容器外框 + 背包外框（九宫格平铺）、宝箱铁条与 BOSS 纹章、格缝（`InventoryView.seams`）、面板按格子算宽高、右上角最小化 / 关闭圆钮、火漆「全部拾取」；去掉标题文字、快速搜索、状态行与搜索记录、耐力行；切图在 `assets/ui/board/`；新测试 `test_board_art.gd` |
 | v3.46 | 2026-10-19 | **205 赐福版道具图**（作者「这种被赐福的亚种道具还缺少贴图」，架构线程方案，待定按推荐）：`ItemPainter.art_id_of` 赐福版退回原件的图（约 92 件）、`faith_of / mark_of / mark_rect` 与 `draw_art` 末尾盖信仰印记（印记先用 HUD 徽记顶上，美术的 `assets/items/marks/` 到了自动换）；`sync_item_art.sh` 拷 `marks/`；新测试 `test_blessed_art_205.gd` |
 | v3.45 | 2026-10-19 | **204 音频第一批：界面音效**（作者「按推荐来吧 … 先加一些最常规最不容易出错的按钮点击、窗口关闭/打开音效」，架构线程方案，待定按推荐）：自动加载 `Audio`（`ui/audio.gd`，`AudioHub` 静态入口）、`CueTable` + `data/authoring/audio/cues.json` / `music.json`、按钮 `node_added` 钩子与 meta `sfx`、叠层 / 浮窗开关音、`GameSettings.sfx_volume / music_volume`、设置屏「声音」一节、`tools/sync_audio.sh`；素材 `assets/audio/sfx/` 5 个（美术自己合成，CC0 / 项目自有）；新测试 `test_audio_204.gd`。同日 198 补充二：`rest_rotation` 按重心绝对高度挑（长条躺平） |
 | v3.44 | 2026-10-19 | **198 补充一 地上自由角度躺倒**（作者在卡片上选「自由角度」，架构线程方案，待定 1–4 按推荐）：`ItemStash.tilts / tilt_of / set_tilt / spot_entry / read_tilt`，`NodeStorageModule.tilts`；`ItemSilhouette.tilted / turn / contact`；`GroundLayer` 解算段重写（`_new_body`、`_bump_step`、`_pair_contacts`、`_wall_contacts`、`_prep`、`_solve`（两点块解法）、`_solve_split`、`_after_impact`、`_clamp_body`、`is_stable`、`supports_of`、`normalize_pose`），`BUMP_MAX_SEC` 1 → 1.5（每件醒着的总时长）、`BUMP_RUN_MAX_SEC` 6、`BUMP_DAMP` 删除，`_relax_overlaps`、`_touches_any`、`_refalls`，`_begin_fall(carry)`，`item_rect` 按轮廓夹边；`item_bounds`、`tilt_of`、点选反转、`_draw` 绕重心转、落地动画起手角；拖拽层取消放回保留斜度。新测试 `test_ground_tilt_198.gd`（含真道具图 20 件堆叠）；落地差异见报告 §8 |

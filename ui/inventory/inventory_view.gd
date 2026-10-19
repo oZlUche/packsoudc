@@ -81,6 +81,12 @@ var _preview_costly: bool = false
 var _held: ItemDef = null
 var _held_rot: int = 0
 
+## 棋盘美术（2026-10-19 定稿）：外框美术里已经画好了浅灰内垫，格缝由这里按 `layout.json` 的 `cell_seams` 画（容器屏设）；空 = 照旧
+var seams: Dictionary = {}:
+	set(v):
+		seams = v
+		queue_redraw()
+
 ## 是否画邻接标记格。战利品、商店货架这类地方不参战，画了只是噪音。
 @export var show_adjacency: bool = true
 ## 085：物品右上角的小记号（uid → 文字），比如配了对等着合成的「合」。持有方设，改了 queue_redraw
@@ -258,10 +264,14 @@ func _draw() -> void:
 
 	# 187：格线关着时不画底、格底、线、外框 —— 包体与道具照画；拖着东西时格底与线按 [constant GRID_DRAG_ALPHA] 临时画
 	var grid_alpha := grid_alpha()
-	if grid_shown:
-		draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BG, true)
-	if grid_alpha > 0.0:
-		_draw_grid(grid_px, grid_alpha)
+	var framed := not seams.is_empty()
+	if framed:
+		_draw_seams(grid_px, grid_alpha)     # 棋盘美术：内垫在外框图里，这里只画格缝（拖着东西时压暗不能用的格）
+	else:
+		if grid_shown:
+			draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BG, true)
+		if grid_alpha > 0.0:
+			_draw_grid(grid_px, grid_alpha)
 
 	var font := label_font if label_font != null else get_theme_default_font()
 
@@ -363,8 +373,33 @@ func _draw() -> void:
 					COLOR_VICTIM, false, 2.0
 				)
 
-	if grid_shown:
+	if grid_shown and not framed:
 		draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BORDER, false, 2.0)
+
+
+## 棋盘美术：格缝 = 深线 + 右 / 下错开一点的亮线，两端各留一点；外圈不画（内垫的缝线框就是边）。
+## 格线开着或拖着东西时，被挡住的、没被包盖住的格压一层暗（按 [param alpha]），落点照样看得准
+func _draw_seams(grid_px: Vector2, alpha: float) -> void:
+	if alpha > 0.0:
+		for y in inventory.size.y:
+			for x in inventory.size.x:
+				var c := Vector2i(x, y)
+				if inventory.is_blocked(c) or not inventory.is_covered(c):
+					draw_rect(Rect2(cell_origin_px(c), Vector2(cell_px, cell_px)), Color(0, 0, 0, 0.16 * alpha), true)
+	var seam := Color(String(seams.get("seam", "#8e8b85")))
+	var hi := Color(String(seams.get("hi", "#ebe9e4")))
+	var seam_w := float(seams.get("seam_w", 1.6))
+	var hi_w := float(seams.get("hi_w", 1.0))
+	var off := float(seams.get("hi_offset", 1.4))
+	const TRIM := 2.0
+	for x in range(1, inventory.size.x):
+		var fx := x * cell_px
+		draw_line(Vector2(fx, TRIM), Vector2(fx, grid_px.y - TRIM), seam, seam_w)
+		draw_line(Vector2(fx + off, TRIM), Vector2(fx + off, grid_px.y - TRIM), hi, hi_w)
+	for y in range(1, inventory.size.y):
+		var fy := y * cell_px
+		draw_line(Vector2(TRIM, fy), Vector2(grid_px.x - TRIM, fy), seam, seam_w)
+		draw_line(Vector2(TRIM, fy + off), Vector2(grid_px.x - TRIM, fy + off), hi, hi_w)
 
 
 ## 格底（棋盘模式下未被包覆盖的格子最暗，表示「还不能用」）与网格线
