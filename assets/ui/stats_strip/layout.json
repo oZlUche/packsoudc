@@ -1,0 +1,194 @@
+{
+ "design": [
+  1600,
+  1000
+ ],
+ "tone": "light",
+ "strip": {
+  "width": 480,
+  "height": 58,
+  "tag_top_in_strip": 6,
+  "tag_w": 152,
+  "tag_gap": 12,
+  "order": [
+   "stamina",
+   "dps",
+   "load"
+  ],
+  "note": "三张签居中排在 480 宽里；这一章不算负重时只排两张，仍居中。每张签 = 签底 + 字 + 火漆（从下到上）"
+ },
+ "text": {
+  "main": {
+   "pos_in_tag": [
+    50,
+    23
+   ],
+   "font": "serif_bold",
+   "size": 19,
+   "baseline": true
+  },
+  "sub": {
+   "pos_in_tag": [
+    50,
+    38
+   ],
+   "font": "serif_regular",
+   "size": 12,
+   "baseline": true
+  },
+  "stamina": {
+   "main": "档位（低/中/高/极高）",
+   "main_color": {
+    "低": "#4f7a32",
+    "中": "#2e2219",
+    "高": "#b8651c",
+    "极高": "#b23a2a"
+   },
+   "sub": "耗 x · 回 y（每秒，一位小数）",
+   "sub_color": "#6b6058"
+  },
+  "dps": {
+   "main": "估算总 DPS（一位小数）",
+   "main_color": "#2e2219",
+   "sub": "DPS",
+   "sub_color": "#6b6058"
+  },
+  "load": {
+   "main": "当前 / 上限",
+   "main_color": "#2e2219",
+   "sub": "负重档名",
+   "sub_color": {
+    "轻装": "#6b6058",
+    "吃力": "#b8651c",
+    "超重": "#b23a2a"
+   },
+   "sub_bold_when": [
+    "吃力",
+    "超重"
+   ]
+  }
+ },
+ "tooltip": "三张签各自悬停开悬浮窗；耐力沿用 StaminaEstimate.describe",
+ "bag_window": {
+  "chosen": "乙 格子 72（作者 2026-10-20 15:27）",
+  "cell": 72,
+  "board": [
+   8,
+   6
+  ],
+  "window_size": [
+   660,
+   620
+  ],
+  "window_center": [
+   800,
+   510
+  ],
+  "gap": 26,
+  "header_h": 52,
+  "divider": "标题分隔行：y = 窗上沿 + 52，左右各缩 gap，1.2 px #786e64；不写字，整行当拖动把手",
+  "board_cells_topleft_rel_window": [
+   42,
+   82
+  ],
+  "board_frame": {
+   "file": "frame_player_72.png",
+   "size": [
+    264,
+    264
+   ],
+   "margin": 54,
+   "cells_offset": 24,
+   "note": "NinePatchRect，四边 margin 一样；皮带框无花纹，STRETCH 或 TILE 都行。格缝按 72 由代码画（颜色同 board/out/layout.json 的 cell_seams）"
+  },
+  "items": "道具图按 72/60 = 1.2 倍画；用 @2x（160 每格）缩到 72 比放大 1x 清楚",
+  "strip_topleft_rel_board_cells": [
+   48,
+   454
+  ],
+  "strip_note": "数值签在棋盘下面、相对棋盘居中（棋盘 576 宽，签栏 480）",
+  "minimize": {
+   "piece": "assets/ui/board/btn_minimize_*",
+   "scale": 0.72,
+   "topleft_rel_window": [
+    594,
+    13
+   ],
+   "tooltip": "收起（B）"
+  },
+  "window_frame": "沿用现有背包窗的石框 / 纸纹底，只是放大",
+  "removed": [
+   "标题「背包」",
+   "「按住标题拖动」",
+   "「收起（B）」文字按钮",
+   "原耐力说明行"
+  ]
+ },
+ "loot_and_search": {
+  "strip_topleft_rel_player_board": [
+   0,
+   382
+  ],
+  "note": "放在右边玩家棋盘正下方；面板下沿往下加到能放下（约 +34），和左边【全部拾取】大致同一高度"
+ },
+ "pieces": {
+  "tag": {
+   "file": "tag.png",
+   "size": [
+    140,
+    58
+   ],
+   "origin_in_tag": [
+    16,
+    -6
+   ],
+   "note": "签底（空白），图左上 = 签左上 + (16, -6)（上下各留 6 放阴影）；燕尾在右端。宽度固定，不拉伸"
+  },
+  "seal_stamina": {
+   "file": "seal_stamina.png",
+   "size": [
+    56,
+    56
+   ],
+   "center_in_tag": [
+    20,
+    23.0
+   ],
+   "note": "火漆中心 = 签左上 + (20, 23)；画在签底和字的上面"
+  },
+  "seal_dps": {
+   "file": "seal_dps.png",
+   "size": [
+    56,
+    56
+   ],
+   "center_in_tag": [
+    20,
+    23.0
+   ],
+   "note": "火漆中心 = 签左上 + (20, 23)；画在签底和字的上面"
+  },
+  "seal_load": {
+   "file": "seal_load.png",
+   "size": [
+    56,
+    56
+   ],
+   "center_in_tag": [
+    20,
+    23.0
+   ],
+   "note": "火漆中心 = 签左上 + (20, 23)；画在签底和字的上面"
+  },
+  "frame_player_72": {
+   "file": "frame_player_72.png",
+   "size": [
+    264,
+    264
+   ],
+   "margin": 54,
+   "cells_offset": 24,
+   "note": "NinePatchRect，四边 margin 一样；皮带框无花纹，STRETCH 或 TILE 都行。格缝按 72 由代码画（颜色同 board/out/layout.json 的 cell_seams）"
+  }
+ }
+}

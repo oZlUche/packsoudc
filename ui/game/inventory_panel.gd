@@ -16,6 +16,8 @@ var _drag: DragLayer
 ## 188：最近一句回话（测试看；面板上不再写字）
 var last_hint := ""
 var board_view: InventoryView
+## 棋盘一格多大（[method setup] 之前设；背包浮窗 72，别处默认 60）
+var cell_px: float = InventoryView.CELL
 ## 128：导演那一层地（没有 = null：测试里单开面板）
 var ground: GroundLayer = null
 var tip: HoverTip
@@ -53,6 +55,7 @@ func _build() -> void:
 	board_view = InventoryView.new()
 	board_view.label_font = _font
 	board_view.inventory = _run.board
+	board_view.cell_px = cell_px
 	board_view.show_adjacency = true
 	board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(board_view)

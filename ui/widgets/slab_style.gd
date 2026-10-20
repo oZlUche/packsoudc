@@ -4,13 +4,14 @@
 class_name SlabStyle
 extends StyleBox
 
+## 三项都 @export：`duplicate()` 只复制存盘的属性，不导出的话改内边距复制出来的那块两层都丢了
 ## 板身（平铺的纹）
-var body: StyleBoxTexture = null
+@export var body: StyleBoxTexture = null
 ## 板边（九宫格，四角原样、四边拉伸）
-var edge: StyleBoxTexture = null
+@export var edge: StyleBoxTexture = null
 ## 板身比外框往里缩多少 [左, 上, 右, 下]（板边轮廓外沿的缺口透出底下的暗处，不透板身；板边 json 的 `body_inset`，
 ## 一个数 = 四边一样，四个数 = 各边分开 —— 顶端栏那条板顶上贴着屏幕，顶边不缩）
-var body_inset: Array = [0.0, 0.0, 0.0, 0.0]
+@export var body_inset: Array = [0.0, 0.0, 0.0, 0.0]
 
 
 ## json 里的 `body_inset`：数 → 四边一样；[左, 上, 右, 下] → 各边；别的当 0

@@ -416,13 +416,9 @@ func toggle_bag() -> void:
 		return
 	_tip.hide_tip()
 	_bag = _shade(0.7)
-	var win := FloatingWindow.new()
-	win.setup("bag", "背包", toggle_bag, "收起（B）", FloatingWindow.CHROME_BARE)     # 216：不写字、圆钮
+	var win := BagWindow.new()
 	_bag.add_child(win)
-	var inv := InventoryPanelScript.new()
-	inv.setup(flow.run, font, null)
-	win.body().add_child(inv)
-	_bag_panel = inv
+	_bag_panel = win.setup_bag(flow.run, font, toggle_bag)
 
 
 func bag_open() -> bool:

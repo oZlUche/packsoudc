@@ -1,4 +1,4 @@
-## 216（作者 2026-10-20 选定丁 火漆签）：背包窗去字、收起换圆钮、棋盘下的数值栏（耐力 / DPS / 负重）；
+## 216（作者 2026-10-20 选定丁 火漆签）：背包窗去字、收起换圆钮、棋盘下的数值栏（耐力 / DPS / 负重）；补充（选乙）：背包窗一格 72、定尺寸；
 ## 战利品 / 搜索屏右棋盘下同一条，和「全部拾取」同一行。没精修图先占位画
 extends RefCounted
 
@@ -52,7 +52,7 @@ static func frame_refresh(t: TestCase, root: Window) -> void:
 
 
 static func frame_bag_window(t: TestCase, root: Window) -> void:
-	t.begin("216 · 背包浮窗 bare：没有「背包」「按住标题拖动」，右上是圆钮（停上去写收起（B）），按了收起；棋盘下是数值栏，没有老耐力行")
+	t.begin("216 补充 · 背包浮窗（作者选乙 一格 72）：不写字、右上圆钮（停上去写收起（B））按了收起；窗 660×620、棋盘格子在窗 (42,82)、一格 72、皮带外框比格子外扩 24；棋盘下居中一条数值栏，没有老耐力行")
 	var game = Setup._game(root, "strip216b")
 	var setup = game.base()
 	setup.show_page(2)
@@ -68,28 +68,40 @@ static func frame_bag_window(t: TestCase, root: Window) -> void:
 		map.close_rules()
 	map.toggle_bag()
 	t.check(map.bag_open(), "开背包")
-	var wins: Array = map.find_children("*", "FloatingWindow", true, false)
-	t.eq(wins.size(), 1, "一个浮窗")
+	var wins: Array = map.find_children("*", "BagWindow", true, false)
+	t.eq(wins.size(), 1, "一个背包浮窗")
 	if wins.size() == 1:
-		var win: FloatingWindow = wins[0]
+		var win: BagWindow = wins[0]
+		var spec := BagWindow.spec()
 		var labels: Array = win.find_children("*", "Label", true, false).filter(func(l): return (l as Label).text in ["背包", "按住标题拖动"])
 		t.eq(labels.size(), 0, "标题行不写字")
 		t.check(win.close_button is IconButton, "收起是圆钮")
 		t.eq(win.close_button.tooltip_text, "收起（B）", "停上去写收起（B）")
-		t.check(absf(win.close_button.custom_minimum_size.x - 56.0 * FloatingWindow.MINIMIZE_SCALE) < 0.5, "按 0.72 画")
+		var side := 56.0 * float(spec["minimize"]["scale"])
+		t.check(absf(win.close_button.custom_minimum_size.x - side) < 0.5, "按 %.2f 画" % float(spec["minimize"]["scale"]))
+		var inv = map.bag_panel()
+		var cell := float(spec["cell"])
+		t.eq(inv.board_view.cell_px, cell, "一格 %d" % int(cell))
+		var extra := (Vector2(inv.board_view.inventory.size) - BagWindow._vec(spec["board"])) * cell
+		t.eq(win.window_size(), BagWindow._vec(spec["window_size"]) + extra, "窗按精修稿（棋盘 %s）" % str(inv.board_view.inventory.size))
+		t.eq(inv.position, BagWindow._vec(spec["board_cells_topleft_rel_window"]), "棋盘格子左上在窗 (42,82)")
+		var off := float(spec["board_frame"]["cells_offset"])
+		t.eq(win.frame.position, inv.position - Vector2(off, off), "外框比格子外扩 %d" % int(off))
+		t.eq(win.frame.size, Vector2(inv.board_view.inventory.size) * cell + Vector2(off, off) * 2.0, "外框包住整块棋盘")
+		t.not_null(win.frame.texture, "外框切图在")
+		t.eq(win.close_button.position, BagWindow._vec(spec["minimize"]["topleft_rel_window"]) + Vector2(extra.x, 0.0), "圆钮在右上")
+		t.check(not inv.board_view.seams.is_empty(), "格缝按棋盘美术画")
 		var strips: Array = win.find_children("*", "StatsStrip", true, false)
 		t.eq(strips.size(), 1, "棋盘下一条数值栏")
 		if strips.size() == 1:
-			var inv = map.bag_panel()
 			var s := strips[0] as StatsStrip
 			var box := s.get_parent() as MarginContainer
 			var col := box.get_parent() as VBoxContainer if box != null else null
 			t.check(col != null and col == inv.board_view.get_parent() and box.get_index() == inv.board_view.get_index() + 1, "数值栏紧跟在棋盘下面")
 			if col != null:
 				t.eq(box.get_theme_constant("margin_top") + col.get_theme_constant("separation"), int(InvPanel.STRIP_GAP), "上沿离棋盘下沿 %d" % int(InvPanel.STRIP_GAP))
-			var board_w: float = float(inv.board_view.inventory.size.x) * inv.board_view.cell_px
-			var tags_w := s.tag_rect(s.shown()[s.shown().size() - 1]).end.x - s.tag_rect(s.shown()[0]).position.x
-			t.eq(s.custom_minimum_size.x, maxf(board_w, tags_w), "和棋盘一样宽，棋盘窄于签就按签宽（棋盘 %.0f / 签 %.0f）" % [board_w, tags_w])
+			var board_w: float = float(inv.board_view.inventory.size.x) * cell
+			t.eq(s.custom_minimum_size.x, board_w, "和棋盘一样宽，签在里面居中")
 		win.close_button.pressed.emit()
 		t.check(not map.bag_open(), "按圆钮：收起")
 	game.queue_free()
