@@ -126,10 +126,11 @@ static func run_achievements(t: TestCase) -> void:
 	flow.settings.unlock_all = false
 	t.eq(flow.check_achievements().size(), 1, "关掉再算：「老手」达成")
 	# 规则卡
-	t.check(not c.chapter.rules.is_empty() and c.chapter.rules.size() <= 3, "第一章写了本图规则（≤ 3 条）")
-	t.check(not flow.meta.has_seen_rules(c.chapter.id), "没看过")
-	flow.meta.mark_rules_seen(c.chapter.id)
-	t.check(flow.meta.has_seen_rules(c.chapter.id) and MetaState.from_dict(flow.meta.to_dict(), c.items).has_seen_rules(c.chapter.id), "看过了，跟存档")
+	var ruled := load(ContentPaths.asset_file("chapters", "clockwork_hourglass")) as ChapterDef     # 218：自由模式的规则卡拆了，拿机关沙漏验
+	t.check(not ruled.rules.is_empty() and ruled.rules.size() <= 3, "机关沙漏写了本图规则（≤ 3 条）")
+	t.check(not flow.meta.has_seen_rules(ruled.id), "没看过")
+	flow.meta.mark_rules_seen(ruled.id)
+	t.check(flow.meta.has_seen_rules(ruled.id) and MetaState.from_dict(flow.meta.to_dict(), c.items).has_seen_rules(ruled.id), "看过了，跟存档")
 	Support.cleanup("090")
 
 
@@ -182,16 +183,21 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	flow.begin(c.chapter, kit, int(found["seed"]))
 	var map = game.base()
 	t.eq(map.screen, GameFlow.Screen.MAP, "→ 地图")
-	# 091：第一次进这一章弹「本图规则」卡；Esc 关掉并记住；暂停菜单里能再看
-	t.check(not c.chapter.rules.is_empty() and map.rules_open(), "第一次进这一章：本图规则卡弹出来")
-	t.check(game.escape() and not map.rules_open(), "Esc 关掉规则卡")
-	t.check(flow.meta.has_seen_rules(c.chapter.id), "记住看过了")
+	# 218（作者定）：自由模式不再弹「本图规则」卡，第一次露出地图放教程（日晷、负重、腰带），Esc 一下一步
+	t.check(c.chapter.rules.is_empty() and not map.rules_open(), "218：自由模式没有规则卡")
+	map.call("_maybe_coach")
+	t.not_null(map.coach(), "218：放了自由模式的教程")
+	for i in 3:
+		var o: CoachOverlay = map.coach()
+		t.check(o != null and o.hole().size.x > 0.0, "第 %d 步（%s）的目标找得到" % [i + 1, o.steps[i]["target"] if o != null else "?"])
+		t.check(game.escape(), "Esc 接了（教程第 %d 步）" % (i + 1))
+	t.is_null(map.coach(), "三步走完：教程收掉")
+	t.check(flow.meta.coach_seen.has("free_mode_map"), "记住看过了")
 	map.toggle_pause()
+	var pause_btns: Array = map._pause.find_children("*", "Button", true, false).map(func(b): return (b as Button).text)
+	t.check(not pause_btns.is_empty() and not pause_btns.has("本图规则"), "暂停菜单：没有「本图规则」：%s" % str(pause_btns))
 	map.show_rules()
-	t.check(map.rules_open(), "暂停菜单里再看规则卡")
-	var rule_lines: Array = map._rules.find_children("*", "RichTextLabel", true, false).map(func(r): return (r as RichTextLabel).get_parsed_text())
-	t.check(rule_lines.any(func(s): return String(s).contains("百科")), "217：规则卡末尾一行指向百科")
-	t.check(game.escape() and not map.rules_open() and map.pause_open(), "Esc 先关规则卡、暂停菜单还在")
+	t.check(not map.rules_open(), "没有规则：show_rules 不弹")
 	map.toggle_pause()
 	# 166（作者定）：「回到这个点」换成顶端栏的放大镜图标按钮（缺图写字），快捷键与说明进悬浮提示；撤离按钮删了
 	t.check(map._reopen_btn is IconButton and map._reopen_btn.hotkey == "N", "「回到这个点」是放大镜图标按钮，角上标 N")

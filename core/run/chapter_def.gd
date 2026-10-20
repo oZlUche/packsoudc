@@ -70,6 +70,8 @@ extends Resource
 @export var skip_setup: bool = false
 ## 开局先过的事件（intro）：站到出生点之后、地图能动之前弹一屏事件（`data/events/` 里的 id）。空 = 不弹
 @export var intro_event: StringName = &""
+## 218（作者定）：这一章撤离成功之后、进结算之前弹的一屏收尾事件（序章三是「军团的交代」`tut3_outro`）。只读不改局面，选项关掉进结算。空 = 不弹
+@export var outro_event: StringName = &""
 ## 091（作者定 10.2 第 3 条）：这一章的「本图规则」卡（≤ 3 条）—— 第一次进图弹一页（局外记住看过了），暂停菜单里能再看。空 = 不弹
 @export var rules: Array[String] = []
 ## 166（作者定）：这一章开头的界面教程（`data/authoring/coach/<id>.json` 的步骤：阴影里挖洞指着顶端栏的读数，点哪都下一步）。

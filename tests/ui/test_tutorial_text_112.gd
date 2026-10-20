@@ -82,7 +82,7 @@ static func run_tutorial_events_clean(t: TestCase) -> void:
 			t.check(not TextTemplate.plain((opt as EventOption).label, TextTemplate.option_context(ctx, opt)).contains("{"), "%s 选项没漏换" % id)
 		for digits in ["三秒一下", "二十多点", "十二点", "六秒一次", "输两场"]:
 			t.check(not def.text.contains(digits), "%s 不再写死「%s」" % [id, digits])
-	t.eq(n, 37, "三张序章 37 条事件都查了（113 加了序章三的 12 条）")
+	t.eq(n, 38, "三张序章 38 条事件都查了（113 加了序章三的 12 条，218 加了交代）")
 	var ch := load(ContentPaths.asset_file("chapters", "prologue_2")) as ChapterDef
 	for line in ch.rules:
 		var shown := TextTemplate.plain(line, ctx)
@@ -94,7 +94,7 @@ static func run_tutorial_events_clean(t: TestCase) -> void:
 
 
 static func run_stale_wording_217(t: TestCase) -> void:
-	t.begin("217 · 教程和百科不再写已经变了的界面（三角标、地图左上的信力）；口粮那条讲耐力；自由模式规则卡讲负重")
+	t.begin("217 · 教程和百科不再写已经变了的界面（三角标、地图左上的信力）；口粮那条讲耐力；218：自由模式没有规则卡")
 	var defs := EventPlacer.load_all()
 	var ctx := {"char_name": "阿岚", "vitality": 5, "loss_cost": 1, "_items": _db(), "rest_restore": 1}
 	for id in defs:
@@ -109,6 +109,4 @@ static func run_stale_wording_217(t: TestCase) -> void:
 	var cap := int(_db().get_def(&"ration").combat.base_stats.get("max_stamina", 0))
 	t.check(ration.contains("耐力上限加 %d" % cap), "口粮那条讲耐力上限（按数据 %d）" % cap)
 	var free := load(ContentPaths.asset_file("chapters", "free_mode")) as ChapterDef
-	t.check(free.rules.size() <= 3, "自由模式规则卡仍不超过三条（091）")
-	t.check(free.rules.any(func(r): return String(r).contains("负重")), "自由模式规则卡讲负重")
-	t.check(not free.rules.any(func(r): return String(r).contains("百科")), "百科那句挪到规则卡末尾统一一行")
+	t.check(free.rules.is_empty(), "218：自由模式规则卡拆了（总规则进序章三的交代，负重进教程）")
