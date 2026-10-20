@@ -130,6 +130,9 @@ var _page: int = 0
 var _title: Label = null
 ## 161：第一页的角色卡与棋盘预览；第三页右上只写角色名（180 补二）
 var _card: VBoxContainer = null
+## 214：角色卡顶上的大头像
+var _portrait: PortraitSlot = null
+const CARD_PORTRAIT := 160
 var _preview_host: VBoxContainer = null
 var _preview_view: InventoryView = null
 var _summary: Label = null
@@ -1300,7 +1303,16 @@ func _rebuild_card() -> void:
 	if ch == null:
 		return
 	# 179：角色说明不放在这一屏（字段留着给图鉴 / 帮助）
-	_card.add_child(Nameplate.new().setup(Names.of(ch), "角色", Nameplate.character_face(ch.id)))
+	# 214：开局是玩家唯一盯着角色看的地方 —— 一张大头像（同一张源图缩放），换角色跟着换。
+	# 放在铭牌左边同一行（放铭牌上方整张卡要高 170，1600×1000 下卡底压到「回主菜单」）
+	var head := _hbox(16)
+	_card.add_child(head)
+	_portrait = PortraitSlot.new(CARD_PORTRAIT, Nameplate.character_face(ch.id), true)
+	head.add_child(_portrait)
+	var plate := Nameplate.new().setup(Names.of(ch), "角色", Nameplate.character_face(ch.id))
+	plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(plate)
 	var base := ch.baseline()
 	_card.add_child(_stat_row("生命", StatBlocks.new().setup(StatBlocks.HP, base.value_of(&"max_hp"))))
 	var stamina := _stat_row("耐力", StatBlocks.new().setup(StatBlocks.STAMINA, base.value_of(&"max_stamina")))

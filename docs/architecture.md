@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.57 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.58 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4399,6 +4399,7 @@ res://
 | v3.55 | 2026-10-20 | **213 开局第三页的预览认格阵（机关沙漏）**（作者 2026-10-20 定，待定按推荐）：`MapPreview.show_graph(skin, graph, scale, animate)` 记布局 + 图 + 画布（`show_map` 变薄封装），`preview_zoom()` 同心环 = 化开半径 ÷ 环数 ÷ `RING_STEP`、格阵 = `LATTICE_FIT` × 化开直径 ÷ 画布长边（格阵固定按大型 0.95 化开），`ring_gap` / `paper_on_screen` / 入口印记 / 转场载荷一律走它；格阵每层一条虚线（`LatticeMapLayout.row_span / row_segment`，局内衬底共用），`straight_rows` 不画；纸盖不满化开那片时纸外先画桌面；深色底图的层线用纸色（`line_color`）；`MapLayout.level_of / layer_count`（同心环 = `levels_of` / 环数，格阵 = 行 / 行数 − 1），`MapView` 的转场按层长、`MapScreen.reveal_allowed` 认两种布局；`SetupScreen.ring_levels` 对格阵数行；新测试 `test_setup_preview_213.gd` |
 | v3.56 | 2026-10-20 | **215 沙漏中段逐步收窄**（作者 2026-10-20「中间逐步收窄，确实要这样」，待定按推荐；改 5.11）：`HourglassMapConfig.taper` + `half_cols(k)`，生成器按层取格、出口半边对称、颈部那层盖不住线段报 `build_note`；第二章 `generator_config.taper 1`（5 / 4 / 3 / 3 / 2 / 2 / 3 / 3 / 4 / 5）；`test_lattice_maps` 加 `run_hourglass_taper`，210 验宽度序列，213 的蝴蝶结断言改成必验 |
 | v3.57 | 2026-10-20 | **216 背包窗数值栏（火漆签）**（作者 2026-10-20 选定丁，待定按推荐）：新 `StatsStrip`（`ui/widgets/stats_strip.gd`，`refresh(spec, run)`：耐力档 + 耗 · 回、`rough_dps`、负重「当前 / 上限」+ 档名，不算负重的章只排两张居中，三张各自悬浮窗；读 `assets/ui/stats_strip/` 的签底 / 火漆 / `layout.json`，没图画占位；签宽固定，棋盘窄于签按签宽）；`FloatingWindow.setup(..., chrome)` 加 `bare`（不写字、标题行当把手、右上 `btn_minimize` 按 0.72，`close_button`），背包三处用它；`InventoryPanel` 耐力行 / 负重行换成 `strip`（`hide_stamina` 删，`detach_strip` 给容器屏）；容器 / 搜索屏把数值栏摆在玩家棋盘下、与「全部拾取」中线对齐（`layout.json` 的 `stats_strip.gap`，面板 8 + 6 列 526 → 556）；新测试 `test_stats_strip_216.gd` |
+| v3.58 | 2026-10-20 | **214 头像与铭牌尺寸**（作者 2026-10-20 按推荐）：`Nameplate.PORTRAIT_SIZE` 64 → 96（铭牌 +32 高，宽与字不动；战前 / 战斗两屏 1600×1000 下底部按钮照旧在框里）；开局第一页角色卡第一行 = 160 的 `PortraitSlot`（`SetupScreen._portrait`，换角色跟着换）+ 铭牌；`assets/portraits/README.md` 源图 256（@2x 512）；测试 157 改 96、161 验大头像 |
 | v3.51 | 2026-10-19 | **212 魔兽与「野性」两套逻辑**（架构线程夜间方案，待定按推荐）：`ItemDef.wild` + `wild_applies`、`CompileInput.wild`（4.2）；`EnemyDef.species` / `bagless`（6.0），魔兽招牌一件不少、不揣携带品、内容记 `wild`，悬浮窗写「魔兽的器官」那一面；六件新器官（火焰腺 / 霜腺 / 电囊 / 兽牙 / 兽爪 / 兽尾）+ 六件兽材补 `wild`；五种魔兽进标准池；施加宏 `@apply_status_scorch/chill/numb`；新测试 `test_wild_profile_212.gd`、`test_beasts_212.gd` |
 | v3.50 | 2026-10-19 | **战利品屏只留最小化**（作者 21:16「战利品界面应该是只有最小化，提示也删掉」）：战利品屏右上角一颗最小化钮（原收起，行为不变）在最右；火漆签旁的回话行删掉，面板回话不接 |
 | v3.49 | 2026-10-19 | **206 补一**（作者 19:18 在「音效」定）：战斗开场号角 `battle.start`（`BATTLE_START` 时响，4 倍速也放行，跳转不响）；cue 表 38 条 |
