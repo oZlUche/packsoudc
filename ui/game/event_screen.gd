@@ -246,15 +246,11 @@ func toggle_bag() -> void:
 		return
 	_bag = _shade(0.7)
 	# 084：背包是能拖着走的浮窗，不锁在一个地方；关掉再开还在上次放的位置
-	var win := FloatingWindow.new()
-	win.setup("bag", "背包", toggle_bag, "收起（B）", FloatingWindow.CHROME_BARE)     # 216：不写字、圆钮
+	var win := BagWindow.new()
 	_bag.add_child(win)
-	var inv := InventoryPanelScript.new()
 	# 157：结果页有收获行时和它共用一层拖拽（从收获行拖进棋盘）；拖拽层挪到最上面，残影画在背包浮窗之上
 	var shared := _drag if _harvest != null and is_instance_valid(_drag) else null
-	inv.setup(flow.run, font, shared)
-	win.body().add_child(inv)
-	_bag_panel = inv
+	_bag_panel = win.setup_bag(flow.run, font, toggle_bag, shared)
 	if shared != null:
 		move_child(shared, -1)
 
