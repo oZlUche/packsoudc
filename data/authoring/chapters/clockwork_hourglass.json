@@ -9,6 +9,7 @@
     "generator_config": {
       "type": "HourglassMapConfig",
       "half_rows": 4,
+      "taper": 1,
       "with_core": true,
       "danger_by_row": [
         0,

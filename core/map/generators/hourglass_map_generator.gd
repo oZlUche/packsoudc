@@ -20,20 +20,22 @@ func shape(cfg: Resource) -> LatticeShape:
 	var s := LatticeShape.new()
 	s.kind = ID
 	s.cols = c.width
-	var full: Array[int] = []
-	for x in c.width:
-		full.append(x)
 	var lanes := c.lane_cols()
 	for x in lanes:
 		if x < 0 or x >= c.width:
 			build_note = "线段的列 %d 超出宽度 %d" % [x, c.width]
 			return null
-	for _r in c.half_rows:
-		s.add_row(full.duplicate(), true, false, c.fill)
+	var neck_side := c.half_cols(c.half_rows - 1)
+	for x in lanes:
+		if not neck_side.has(x):
+			build_note = "颈部线段落在收窄的层外：列 %d 不在 %s 里" % [x, neck_side]
+			return null
+	for k in c.half_rows:
+		s.add_row(c.half_cols(k), true, false, c.fill)
 	for _r in c.neck_rows:
 		s.add_row(lanes.duplicate(), false, true, 1.0)
-	for _r in c.half_rows:
-		s.add_row(full.duplicate(), true, false, c.fill)
+	for k in c.half_rows:
+		s.add_row(c.half_cols(c.half_rows - 1 - k), true, false, c.fill)
 	# 横置：出生在左、终点在右。对侧一排撤离点；核心（BOSS）不是必须的
 	s.orientation = LatticeShape.HORIZONTAL
 	for x in c.exit_cols():
