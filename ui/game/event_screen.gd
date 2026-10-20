@@ -46,7 +46,7 @@ func _open_options() -> void:
 	var col := _frame(_def.image, title, body)
 	for i in _def.options.size():
 		var opt := _def.options[i] as EventOption
-		var state := flow.run.events.option_state(i)
+		var state := {"ok": true, "why": ""} if is_outro() else flow.run.events.option_state(i)
 		var ok := bool(state["ok"])
 		var hint := TextTemplate.plain(opt.hint_when_hidden, ctx) if opt.hint_when_hidden != "" else ""
 		if not ok and opt.hide_when_locked:
@@ -65,7 +65,7 @@ func _open_options() -> void:
 	for line in _hints:
 		col.add_child(_wrapped(line, 13, UiPalette.DIM, 420))
 	# 083：事件屏上也能整理背包（教程的「先整理再开打」要在这里做；15 节第 7 项的尾巴）
-	if flow.run != null:
+	if flow.run != null and not is_outro():     # 218：收尾事件时已经撤出来了，不整理
 		col.add_child(_button("整理背包（B）", toggle_bag, 13, UiPalette.Tier.MINOR))
 
 
@@ -216,11 +216,17 @@ func _option_button(text: String, handler: Callable) -> Button:
 #region 公开动作
 ## 选第 i 项。选不了返回 false
 func choose(i: int) -> bool:
+	if is_outro():
+		flow.resume()     # 218：收尾事件只是一屏话，选项都是「关掉，进结算」
+		return true
 	return flow.choose_event(i)
 
 
 ## 通用的「往下走」：选项页选第一个能选的，结果页继续
 func proceed() -> void:
+	if is_outro():
+		flow.resume()
+		return
 	if _def != null and flow.run != null and flow.run.events.pending_event() == _def:
 		for i in _def.options.size():
 			if bool(flow.run.events.option_state(i)["ok"]):
@@ -232,6 +238,11 @@ func proceed() -> void:
 
 func is_options_page() -> bool:
 	return _def != null
+
+
+## 218：这一屏是撤离之后、结算之前的收尾事件（[method GameFlow.outro_event]）
+func is_outro() -> bool:
+	return bool(_payload.get("outro", false))
 
 
 ## 背包整理面板叠在事件上；收起时重画选项（条件可能因为整理过了而满足）
@@ -292,7 +303,7 @@ func _rebuild() -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
-	if key == null or not key.pressed or key.echo or key.keycode != KEY_B or not is_options_page():
+	if key == null or not key.pressed or key.echo or key.keycode != KEY_B or not is_options_page() or is_outro():
 		return
 	toggle_bag()
 	get_viewport().set_input_as_handled()

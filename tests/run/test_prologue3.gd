@@ -53,6 +53,7 @@ static func run_data(t: TestCase) -> void:
 	t.check(c.prologue2.order < c.chapter.order and c.chapter.order < c.chapter1.order, "顺序：序章二、序章三、自由模式")
 	t.check(c.chapter.skip_setup and c.chapter.auto_spawn and c.chapter.intro_event == &"tut3_intro", "不走开局屏、先过 intro")
 	t.eq(c.chapter.rules.size(), 3, "规则卡三条")
+	t.eq(c.chapter.outro_event, &"tut3_outro", "218：撤离后先过「军团的交代」")
 	var g := c.chapter.map_source.resolve(1)
 	t.not_null(g, "预设图过了校验：%s" % c.chapter.map_source.last_error)
 	if g == null:
@@ -259,3 +260,48 @@ static func run_faith_placeholders(t: TestCase) -> void:
 	var cond := FaithActive.new()
 	cond.faith = &"brute"
 	t.check(cond.describe().contains("蛮神"), "条件说明点名要哪位神")
+
+
+static func run_outro_218(t: TestCase) -> void:
+	t.begin("218 · 序章三撤离成功：先弹「军团的交代」（一局一次）再进结算；交代的字都换得掉、不写数字")
+	var c := _content()
+	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
+	f.chapters = GameFlow.load_chapters()
+	f.characters = GameFlow.load_characters()
+	f.event_defs = c.events
+	f.save_path = SAVE
+	f.meta_path = META
+	var run := f.begin_direct(c.chapter, 7)
+	t.not_null(run, "开了序章三")
+	if run == null:
+		return
+	t.check(f.choose_event(0), "intro：出发")
+	t.is_null(f.outro_event(), "还没撤：没有交代")
+	run.travel.start_at(run.map.goal_ids[0])
+	t.check(f.extract(), "撤离")
+	t.check(f.meta.has_unlock(c.chapter.grants_unlock), "账先记上了（解锁自由模式）")
+	t.eq(f.screen, GameFlow.Screen.EVENT, "→ 事件屏，不是结算")
+	var def: EventDef = f.last_payload.get("def", null)
+	t.check(def != null and def.id == &"tut3_outro" and bool(f.last_payload.get("outro", false)), "是收尾的交代")
+	var ctx := TextTemplate.context_for(run, run.current_node())
+	var shown := TextTemplate.plain(def.text_for(), ctx) if def != null else ""
+	t.check(shown != "" and not shown.contains("{") and not shown.contains("}"), "占位符都换掉了")
+	t.eq(TextLint.scan({"text": def.text if def != null else ""}).size(), 0, "不写数字")
+	for word in ["日晷", "免费出口", "保险箱", "主人", "百科"]:
+		t.check(shown.contains(word), "讲到「%s」" % word)
+	f.resume()
+	t.eq(f.screen, GameFlow.Screen.RESULT, "关掉 → 结算")
+	t.check(f.result != null and f.result.is_extracted(), "结算是撤离成功")
+	f.resume()
+	t.eq(f.screen, GameFlow.Screen.RESULT, "一局只弹一次")
+	f.finish_result()
+	# 没配收尾事件的章（序章二）撤离照旧直接结算
+	var p2 := f.chapter_of(&"prologue_2")
+	var run2 := f.begin_direct(p2, 7) if p2 != null else null
+	if run2 != null:
+		f.choose_event(0)
+		run2.travel.start_at(run2.map.goal_ids[0])
+		t.check(f.extract(), "序章二撤离")
+		t.eq(f.screen, GameFlow.Screen.RESULT, "没配交代：直接结算")
+	RunSave.remove(SAVE)
+	MetaSave.remove(META)
