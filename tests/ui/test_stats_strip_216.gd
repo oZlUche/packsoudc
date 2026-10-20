@@ -18,7 +18,7 @@ static func _flow(prefix: String) -> GameFlow:
 
 
 static func frame_refresh(t: TestCase, root: Window) -> void:
-	t.begin("216 · 数值栏：耐力档 / 耗 · 回、DPS 和战前屏同一个数、负重「当前 / 上限」与档名；不算负重的章只排两张、居中；字里没有「停上去」「按住」")
+	t.begin("216 · 数值栏：耐力档 / 耗 · 回、DPS 和战前屏同一个数、负重「当前 / 上限」与档名；三张总在（不算负重的章负重签照样在，小字空着）；字里没有「停上去」「按住」")
 	var f := _flow("strip216a")
 	var run := f.run
 	var strip := StatsStrip.new()
@@ -31,22 +31,32 @@ static func frame_refresh(t: TestCase, root: Window) -> void:
 	t.eq(strip.texts(StatsStrip.DPS), ["%.1f" % spec.rough_dps(), "DPS"] as Array[String], "DPS：和战前屏「约 x DPS」同一个数")
 	t.eq(strip.tip_text(StatsStrip.STAMINA), StaminaEstimate.describe(spec), "耐力的悬浮窗沿用原来的细节")
 	t.check(strip.tip_text(StatsStrip.DPS).contains("%.1f" % spec.rough_dps()), "DPS 的悬浮窗写总数、列出手件")
+	t.eq(strip.shown(), StatsStrip.ORDER, "三张总在")
 	if run.encumbrance_line() != "":
-		t.eq(strip.shown(), StatsStrip.ORDER, "算负重：三张")
 		t.eq(strip.texts(StatsStrip.LOAD), ["%d / %d" % [run.carry_weight(), run.carry_capacity()], run.encumbrance.name_of(run.encumbrance_level())] as Array[String], "负重：当前 / 上限 + 档名")
 	for kind in strip.shown():
 		var both := " ".join(strip.texts(kind)) + strip.tip_text(kind)
 		t.check(not both.contains("停上去") and not both.contains("按住"), "%s 没有老说明字" % kind)
 	var three := strip.tag_rect(StatsStrip.STAMINA).position.x
-	var had_load := strip.shown().size() == 3
+	t.check(absf(three - (480.0 - strip.tag_rect(StatsStrip.LOAD).end.x)) <= 1.0, "三张居中")
+	# 作者 2026-10-20 16:20：负重签任何章节都显示
 	run.encumbrance = null     # 这一章不算负重
 	strip.refresh(spec, run)
-	t.eq(strip.shown(), [StatsStrip.STAMINA, StatsStrip.DPS] as Array[StringName], "不算负重：只排两张")
+	t.eq(strip.shown(), StatsStrip.ORDER, "不算负重：负重签照样在")
+	var cap := run.carry_capacity()
+	var want_main := "%d / %d" % [run.carry_weight(), cap] if cap > 0 else str(run.carry_weight())
+	t.eq(strip.texts(StatsStrip.LOAD), [want_main, ""] as Array[String], "不算负重：大字「当前 / 上限」（没上限只写当前），小字空着")
+	t.check(strip.tip_text(StatsStrip.LOAD).contains("不算负重"), "悬浮窗说这一章不算负重")
+	var ch := run.character
+	run.character = null     # 没角色 = 没上限
+	strip.refresh(spec, run)
+	t.eq(strip.texts(StatsStrip.LOAD), [str(run.carry_weight()), ""] as Array[String], "没上限：只写当前重量")
+	run.character = ch
+	strip.refresh(spec, null)
+	t.eq(strip.shown(), [StatsStrip.STAMINA, StatsStrip.DPS] as Array[StringName], "没有这一局（run 为 null）：只排两张")
 	var a := strip.tag_rect(StatsStrip.STAMINA)
 	var b := strip.tag_rect(StatsStrip.DPS)
 	t.check(absf(a.position.x - (480.0 - b.end.x)) <= 1.0, "两张居中（左 %.0f / 右 %.0f）" % [a.position.x, 480.0 - b.end.x])
-	if had_load:
-		t.check(a.position.x > three, "比三张时往里收")
 	t.eq(String(strip.get_meta(&"tone")), "light", "浅纸墨字")
 	strip.queue_free()
 
