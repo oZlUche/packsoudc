@@ -306,8 +306,8 @@ static func frame_chest_screen(t: TestCase, root: Window) -> void:
 
 ## 作者 2026-10-17（「都可以」）：宝箱屏四张背景，一章一张，和地图底同一套；浅图墨字、深图白字
 static func run_backgrounds(t: TestCase) -> void:
-	t.begin("宝箱 · 背景：四套皮肤各有一张背景（带深浅与落地线），各章节按地图底分配")
-	var want := {&"ruins": UiTheme.TONE_LIGHT, &"imperial_camp": UiTheme.TONE_LIGHT, &"cursed_depths": UiTheme.TONE_DARK, &"north_woods": UiTheme.TONE_LIGHT}
+	t.begin("宝箱 · 背景：五套皮肤各有一张背景（带深浅与落地线），各章节按地图底分配")
+	var want := {&"ruins": UiTheme.TONE_LIGHT, &"imperial_camp": UiTheme.TONE_LIGHT, &"cursed_depths": UiTheme.TONE_DARK, &"north_woods": UiTheme.TONE_LIGHT, &"clockwork": UiTheme.TONE_DARK}
 	for id in want:
 		var skin := ContentPaths.load_asset("chest_skins", String(id)) as ChestSkinDef
 		t.not_null(skin, "皮肤 %s" % id)
@@ -317,7 +317,7 @@ static func run_backgrounds(t: TestCase) -> void:
 		var meta := skin.background_meta()
 		t.eq(StringName(String(meta.get("tone", ""))), want[id], "%s 的深浅" % id)
 		t.check(float(meta.get("chest_foot_y", 0.0)) > 0.0, "%s 写了落地线" % id)
-	var by_chapter := {"prologue": &"ruins", "prologue_2": &"north_woods", "prologue_3": &"cursed_depths", "free_mode": &"imperial_camp"}
+	var by_chapter := {"prologue": &"ruins", "prologue_2": &"north_woods", "prologue_3": &"cursed_depths", "free_mode": &"imperial_camp", "clockwork_hourglass": &"clockwork"}
 	for ch in by_chapter:
 		var def := ContentPaths.load_asset("chapters", ch) as ChapterDef
 		t.check(def != null and def.chest_skin == by_chapter[ch], "%s 的宝箱用 %s" % [ch, by_chapter[ch]])
