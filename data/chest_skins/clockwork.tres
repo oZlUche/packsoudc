@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ChestSkinDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/chest_skin_def.gd" id="1_j0e8w"]
+
+[resource]
+script = ExtResource("1_j0e8w")
+id = &"clockwork"
+display_name = "机关沙漏"
+background = "res://assets/chest/bg/clockwork.png"
