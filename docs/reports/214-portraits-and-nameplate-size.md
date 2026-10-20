@@ -67,5 +67,5 @@
 3. **mipmap**：源图 256 缩到 96 / 160 / 32，不开 mipmap 币缘的细纹会起锯齿。
    - 导入：这 33 张头像和框、空位的 `.import` 都改成 `mipmaps/generate=true`。以后新加头像，照抄已有的 `.import`。
    - 显示：`PortraitSlot` 自己设 `texture_filter = LINEAR_WITH_MIPMAPS`，图、占位、框跟着它。
-4. 测试 157：框外扩改按 json 的 `inset` 验（原来写死 4），并加验肖像位按 mipmap 缩小、框图导入开了 mipmap。
+4. 测试 157：框外扩改按 json 的 `inset` 验（原来写死 4）；战前名牌那条从「没图先放占位」改成「有图放图、没图放占位」；加验肖像位按 mipmap 缩小、框图导入开了 mipmap。
 

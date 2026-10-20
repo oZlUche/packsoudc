@@ -136,8 +136,9 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	var plates: Array = pre.find_children("*", "Nameplate", true, false)
 	t.eq(plates.size(), 2, "两块名牌")
 	for p in plates:
-		t.check((p as Nameplate).portrait == null and (p as Nameplate).portrait_slot != null and (p as Nameplate).portrait_slot.is_inside_tree(),
-			"没肖像图：肖像位照样在、先放占位（%s）" % (p as Nameplate).name_label.text)
+		var slot := (p as Nameplate).portrait_slot
+		t.check(slot != null and slot.is_inside_tree() and (slot.picture != null or slot.placeholder != null),
+			"肖像位照样在：有图放图（214 头像定稿），没图先放占位（%s）" % (p as Nameplate).name_label.text)
 	var before: float = pre.seam().tilt
 	var moved: Array[int] = []
 	for inst in run.board.items():
