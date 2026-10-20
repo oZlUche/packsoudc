@@ -136,8 +136,9 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	var plates: Array = pre.find_children("*", "Nameplate", true, false)
 	t.eq(plates.size(), 2, "两块名牌")
 	for p in plates:
-		t.check((p as Nameplate).portrait == null and (p as Nameplate).portrait_slot != null and (p as Nameplate).portrait_slot.is_inside_tree(),
-			"没肖像图：肖像位照样在、先放占位（%s）" % (p as Nameplate).name_label.text)
+		var slot := (p as Nameplate).portrait_slot
+		t.check(slot != null and slot.is_inside_tree() and (slot.picture != null or slot.placeholder != null),
+			"肖像位照样在：有图放图（214 头像定稿），没图先放占位（%s）" % (p as Nameplate).name_label.text)
 	var before: float = pre.seam().tilt
 	var moved: Array[int] = []
 	for inst in run.board.items():
@@ -507,7 +508,10 @@ static func frame_nameplate_slots(t: TestCase, root: Window) -> void:
 	t.eq(plate.portrait, null, "没肖像图：portrait 空")
 	t.check(plate.portrait_slot != null and plate.portrait_slot.custom_minimum_size == Vector2(96, 96), "肖像位 96×96 在（214，原 64）")
 	t.check(plate.portrait_slot.placeholder != null, "放的是美术的占位剪影")
-	t.check(plate.portrait_slot.frame != null and is_equal_approx(plate.portrait_slot.frame.offset_left, -4.0), "框画在肖像位外扩 4 px")
+	var inset := float(UiTheme.art_meta(UiTheme.ART_PORTRAIT_FRAME).get("inset", 4))
+	t.check(plate.portrait_slot.frame != null and is_equal_approx(plate.portrait_slot.frame.offset_left, -inset), "框画在肖像位外扩 json 的 inset（214 圆框 0）")
+	t.eq(plate.portrait_slot.texture_filter, CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS, "214：肖像位按 mipmap 缩小")
+	t.check(plate.portrait_slot.frame.texture.get_image().has_mipmaps(), "214：框图导入开了 mipmap")
 	t.check(plate.badge_slot != null and plate.badge_slot.custom_minimum_size == Vector2(32, 32) and plate.badge_slot.frame != null, "徽记位 32×32、先画框")
 	t.check(plate.badge_slot.picture == null and plate.badge_slot.placeholder == null, "徽记位里空着")
 	t.check(plate.get_combined_minimum_size().y >= 96.0, "名牌高至少放得下肖像位")
