@@ -144,6 +144,57 @@ static func run_hourglass(t: TestCase) -> void:
 	t.check(gen_bad.build_note.contains("超出宽度") or str(gen_bad.failure_tally).contains("build"), "失败原因说得出（%s）" % gen_bad.build_note)
 
 
+## 215（作者 2026-10-20「中间逐步收窄，确实要这样」）：taper = 每半边从外层往颈部每层收几格，居中、两半对称
+static func run_hourglass_taper(t: TestCase) -> void:
+	t.begin("215 · 沙漏逐层收窄：taper 1 时每层的点落在居中的那几列，宽度往颈部单调不增、两半对称，紧挨颈部那层盖住线段；多种子过校验")
+	var cfg := HourglassMapConfig.sample()
+	cfg.half_rows = 4
+	cfg.taper = 1
+	var widths: Array[int] = []
+	for k in cfg.half_rows:
+		widths.append(cfg.half_cols(k).size())
+	t.eq(widths, [5, 4, 3, 3] as Array[int], "宽 5、收 1：5 / 4 / 3 / 3（收到线段跨度 3 为止）")
+	t.eq(cfg.half_cols(1), [0, 1, 2, 3] as Array[int], "偶差偏左（同塔）")
+	t.eq(cfg.half_cols(2), [1, 2, 3] as Array[int], "宽 3 居中")
+	var zero := HourglassMapConfig.sample()
+	t.eq(zero.half_cols(zero.half_rows - 1).size(), zero.width, "taper 0：每层满宽（老样子）")
+	var gen := HourglassMapGenerator.new()
+	var made := 0
+	for seed in range(1, 17):
+		var g := gen.generate(cfg, seed)
+		if g == null:
+			continue
+		made += 1
+		var cells: Array = g.layout_meta["cells"]
+		var seq: Array[int] = []
+		for row in cells:
+			seq.append((row as Array).size())
+		t.eq(seq, [5, 4, 3, 3, 2, 2, 3, 3, 4, 5] as Array[int], "种子 %d 的格子表两半对称、往颈部收窄" % seed)
+		for id in g.node_ids():
+			t.check((cells[_row(g, id)] as Array).has(_col(g, id)), "点 %d 落在第 %d 层允许的列里" % [id, _row(g, id)])
+		for r in _neck_end_rows(cfg):
+			t.eq(_nodes_in_row(g, r).size(), (cells[r] as Array).size(), "颈部两头第 %d 层全填" % r)
+		var v := MapValidation.new()
+		gen.validate(g, v)
+		t.check(v.ok(), "种子 %d 过校验：%s" % [seed, v.to_text()])
+	t.check(made >= 14, "16 个种子里生成出 %d 张" % made)
+	var bad := HourglassMapConfig.sample()
+	bad.taper = 1
+	bad.half_rows = 4
+	bad.neck_cols = [0, 4] as Array[int]
+	bad.neck_lanes = 2
+	# 线段跨度 5：收不进去，照样满宽，不报错
+	t.not_null(gen.generate(bad, 1), "线段贴边：收窄停在线段跨度，照样生成")
+	var off := HourglassMapConfig.sample()
+	off.width = 6
+	off.taper = 2
+	off.half_rows = 3
+	off.neck_cols = [5] as Array[int]
+	var gen_off := HourglassMapGenerator.new()
+	t.is_null(gen_off.generate(off, 1, 2), "单条线段贴边、收窄后落在层外：生成失败")
+	t.check(gen_off.build_note.contains("收窄的层外"), "失败原因说得出（%s）" % gen_off.build_note)
+
+
 static func run_tower(t: TestCase) -> void:
 	t.begin("塔 · 等腰：每层两边各收 shrink 列直到塔尖；塔尖是唯一终点；不回头 = 层间的路只许向上、每个点都到得了塔尖；校验守着方向")
 	var cfg := TowerMapConfig.sample()

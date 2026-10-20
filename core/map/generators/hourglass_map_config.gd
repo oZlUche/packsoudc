@@ -18,6 +18,8 @@ extends Resource
 @export var neck_cols: Array[int] = []
 ## 半边的每层填几成格子（第 0 层、最后一层、颈部及其两头全填）
 @export var fill: float = 0.75
+## 215：每半边从外层往颈部每层收几格（居中、两半对称；收到线段的跨度为止）。0 = 每层满宽
+@export var taper: int = 0
 @export var entry_count: int = 2
 
 @export_group("对侧")
@@ -56,6 +58,19 @@ func lane_cols() -> Array[int]:
 		out.assign(neck_cols)
 		return out
 	return _spread(maxi(1, neck_lanes), 1)
+
+
+## 215：半边第 k 层（0 = 最外层，half_rows − 1 = 紧挨颈部）的格：宽 max(线段跨度, width − taper × k)，
+## 居中偏移 (width − 宽) / 2（和塔一样，偶差偏左）。出口半边对称取
+func half_cols(k: int) -> Array[int]:
+	var lanes := lane_cols()
+	var span: int = (int(lanes.max()) - int(lanes.min()) + 1) if not lanes.is_empty() else 1
+	var w := clampi(width - maxi(0, taper) * k, mini(span, width), width)
+	var offset := (width - w) / 2
+	var out: Array[int] = []
+	for x in w:
+		out.append(offset + x)
+	return out
 
 
 ## 对侧撤离点的格：在宽度里匀着放
