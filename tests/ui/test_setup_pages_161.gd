@@ -87,12 +87,20 @@ static func frame_three_pages(t: TestCase, root: Window) -> void:
 	t.eq(int((by_kind[StatBlocks.VITALITY] as StatBlocks).value), ch.vitality_max, "体力按角色")
 	t.check(setup._preview_view != null and setup._preview_view.inventory == setup.board, "右边是这个角色的棋盘预览")
 	t.check(not setup._drag._views.has(setup._preview_view), "预览只看不拖（不在拖拽层上）")
+	# 214：角色卡第一行 = 160 的大头像 + 铭牌，图 = 这个角色的肖像（没图是占位剪影）
+	var big: PortraitSlot = setup._portrait
+	t.check(big != null and big.get_parent().get_parent() == setup._card and big.get_parent().get_index() == 0 and big.get_index() == 0, "角色卡第一行打头是大头像")
+	t.check(big != null and big.get_parent().get_child(1) is Nameplate, "铭牌在它右边")
+	t.check(big != null and big.custom_minimum_size == Vector2(160, 160), "大头像 160×160")
+	t.check(big != null and (big.picture.texture if big.picture != null else null) == Nameplate.character_face(ch.id), "大头像 = 这个角色的肖像")
 
 	# 换角色：卡和预览跟着变
 	setup.choose_character(1)
 	var ch2: CharacterDef = setup.character()
 	t.check(ch2 != ch, "换了角色")
 	t.eq(setup._preview_view.inventory.size, ch2.board_size, "预览的棋盘尺寸跟着变")
+	t.check(setup._portrait != big and is_instance_valid(setup._portrait) and setup._portrait.get_parent().get_index() == 0, "换角色：大头像跟着重画")
+	t.check((setup._portrait.picture.texture if setup._portrait.picture != null else null) == Nameplate.character_face(ch2.id), "换成新角色的肖像")
 
 	# 第二页：仓库在，带一件
 	t.check(setup.next_page(), "继续")

@@ -1,4 +1,4 @@
-## 名牌（157）：一块名牌底（[constant UiTheme.PANEL_NAMEPLATE]，美术的铜名牌，2026-10-17 前是切角石碑）—— 左边肖像位（64×64）、中间名字（大）与副行、右边徽记位（32×32）。
+## 名牌（157）：一块名牌底（[constant UiTheme.PANEL_NAMEPLATE]，美术的铜名牌，2026-10-17 前是切角石碑）—— 左边肖像位（214：96×96，原 64）、中间名字（大）与副行、右边徽记位（32×32）。
 ## 战前准备与战斗回放共用，两屏的位置一致。
 ##
 ## 157 补充二（作者定：没图也先留框）：肖像位**永远在**，框永远画，图来了填进去 —— `assets/portraits/enemies/<敌人 id>.png`、
@@ -6,7 +6,8 @@
 class_name Nameplate
 extends PanelContainer
 
-const PORTRAIT_SIZE := 64
+## 214（作者 2026-10-20 按推荐）：64 看不清五官，96 是下限；铭牌高跟着 +32，宽与字不动
+const PORTRAIT_SIZE := 96
 const BADGE_SIZE := 32
 const NAME_SIZE := 20
 
