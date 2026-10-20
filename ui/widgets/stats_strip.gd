@@ -1,5 +1,5 @@
 ## 216（作者 2026-10-20 选定丁 火漆签）：背包窗与战利品 / 搜索屏右棋盘下面那条数值栏 —— 三张羊皮纸签，从左到右
-## 耐力 / DPS / 负重；每张 = 签底 + 大字 + 小字 + 左头一枚火漆。这一章不算负重就只排两张，仍居中。
+## 耐力 / DPS / 负重；每张 = 签底 + 大字 + 小字 + 左头一枚火漆。三张总在（作者 2026-10-20 16:20：负重签任何章节都显示）。
 ##
 ## 数据一个入口 [method refresh]（和战前屏同一套算法：`StaminaEstimate.of`、`rough_dps`、`encumbrance_*`）；纯读数，点了没动作。
 ## 三张签各自停上去开悬浮窗（[member tip]）。
@@ -65,7 +65,8 @@ func set_width(px: float) -> void:
 	_relayout()
 
 
-## 重算三张签的字。[param run] 为 null 时负重那张不显示
+## 重算三张签的字。负重那张：算负重的章「当前 / 上限」+ 档名；不算负重的章有上限照样写「当前 / 上限」、小字空着，
+## 没有上限（没角色、角色没配）只写当前重量。[param run] 为 null 时负重那张不显示
 func refresh(spec: CombatantSpec, run: RunState) -> void:
 	var e := StaminaEstimate.of(spec)
 	var rating := String(e["rating"])
@@ -75,14 +76,9 @@ func refresh(spec: CombatantSpec, run: RunState) -> void:
 	var dps := spec.rough_dps()
 	_blocks[DPS] = {"main": "%.1f" % dps, "sub": "DPS", "main_color": UiTheme.INK, "sub_color": UiTheme.INK_SOFT, "sub_bold": false,
 		"tip": _dps_tip(spec, run)}
-	var line := run.encumbrance_line() if run != null else ""
-	_shown.assign(ORDER if line != "" else [STAMINA, DPS])
-	if line != "":
-		var lv := run.encumbrance_level()
-		var level_name := run.encumbrance.name_of(lv)
-		_blocks[LOAD] = {"main": "%d / %d" % [run.carry_weight(), run.carry_capacity()], "sub": level_name,
-			"main_color": UiTheme.INK, "sub_color": _color("load", "sub_color", level_name, _level_color(lv)), "sub_bold": lv > 0,
-			"tip": line + ("\n" + run.encumbrance.effect_text(lv) if lv > 0 else "")}
+	_shown.assign(ORDER if run != null else [STAMINA, DPS])
+	if run != null:
+		_blocks[LOAD] = _load_block(run)
 	_relayout()
 	for kind in ORDER:
 		(_tags[kind] as Control).queue_redraw()
@@ -164,6 +160,21 @@ func _draw_tag(tag: Control, kind: StringName) -> void:
 func _hover(tag: Control, kind: StringName) -> void:
 	if tip != null and tip_text(kind) != "":
 		tip.show_text(tip_text(kind), tag.global_position + Vector2(0, tag.size.y))
+
+
+func _load_block(run: RunState) -> Dictionary:
+	var weight := run.carry_weight()
+	var cap := run.carry_capacity()
+	var main := "%d / %d" % [weight, cap] if cap > 0 else str(weight)
+	var line := run.encumbrance_line()
+	if line == "":     # 这一章不算负重：没有档
+		return {"main": main, "sub": "", "main_color": UiTheme.INK, "sub_color": UiTheme.INK_SOFT, "sub_bold": false,
+			"tip": "负重 %s\n这一章不算负重" % main}
+	var lv := run.encumbrance_level()
+	var level_name := run.encumbrance.name_of(lv)
+	return {"main": main, "sub": level_name,
+		"main_color": UiTheme.INK, "sub_color": _color("load", "sub_color", level_name, _level_color(lv)), "sub_bold": lv > 0,
+		"tip": line + ("\n" + run.encumbrance.effect_text(lv) if lv > 0 else "")}
 
 
 ## 出手的几件各自约多少 DPS（3.1 待定：列）
