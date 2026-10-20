@@ -131,9 +131,15 @@ static func frame_setup_and_depart(t: TestCase, root: Window) -> void:
 			break
 	t.eq(setup.page(), Setup.PAGE_MAP, "到了选地图那一页")
 	t.eq(setup._scale_btns.size(), 0, "没有规模按钮")
+	# 213 起开局屏也画沙漏的入口：先在第三页挑一个，再出发
 	var went := false
+	var pick := -1
 	for seed in range(1, 20):
 		setup.set_run_seed(seed)
+		var ids: Array[int] = setup.preview().entry_ids()
+		if ids.is_empty() or not setup.pick_spawn(ids[0]):
+			continue
+		pick = ids[0]
 		if setup.depart():
 			went = true
 			break
@@ -142,11 +148,9 @@ static func frame_setup_and_depart(t: TestCase, root: Window) -> void:
 		var run: RunState = flow.run
 		t.eq(run.chapter.id, &"clockwork_hourglass", "这一局是机关沙漏")
 		t.eq(run.map.layout_kind, &"hourglass", "沙漏图")
-		# 开局屏的入口印记只画同心环（182）；沙漏在地图屏上挑出生点（老路），入口都在第 0 层
-		t.eq(run.phase, RunState.Phase.PICK_SPAWN, "进图先挑出生点")
-		for id in run.map.entry_ids:
-			t.eq(int(run.map.get_node(id).layout.get("row", -1)), 0, "入口 %d 在第 0 层（左边）" % id)
-		t.check(flow.pick_spawn(run.map.entry_ids[0]), "挑一个入口")
+		t.eq(run.phase, RunState.Phase.ON_MAP, "直接在图上（出生点在开局屏挑过了）")
+		t.eq(run.map.entry_ids, [pick] as Array[int], "图上只剩挑的那个入口")
+		t.eq(int(run.map.get_node(pick).layout.get("row", -1)), 0, "入口在第 0 层（左边）")
 		var node := run.current_node()
 		t.check(node != null and int(node.layout.get("row", -1)) == 0, "站在第 0 层（出生那一侧）")
 	game.queue_free()

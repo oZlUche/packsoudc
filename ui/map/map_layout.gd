@@ -54,6 +54,19 @@ func edge_kind(_graph: MapGraph, _a: int, _b: int) -> StringName:
 	return &""
 
 
+## 213：每个点在第几层（入局转场从出生那层起一层层长出来）：id → int。没有层的形态返回空（不长，一步画全）
+func level_of(_graph: MapGraph) -> Dictionary:
+	return {}
+
+
+## 213：最远一层的层号（同心环 = 环数；格阵 = 行数 − 1）；没有层 0
+func layer_count(graph: MapGraph) -> int:
+	var top := 0
+	for lv in level_of(graph).values():
+		top = maxi(top, int(lv))
+	return top
+
+
 ## 画一条边。默认直线；同心环的切向边画弧 —— 画直线会把同心环的视觉语言破坏掉，
 ## 玩家看到的就是一张普通的网。[param rect] 是画布（点的坐标就是按它算的），画弧要拿它当圆心。
 ## 传送点不到这里：[MapView] 画边之前先判，统一走 [method draw_portal]，布局不必记得
