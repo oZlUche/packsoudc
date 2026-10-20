@@ -50,3 +50,13 @@
 
 ## 5 不做
 - 排版本身（美术 + UI 线程定）；战前准备屏的读数行不动。
+
+## 6 落地（v3.57，2026-10-20）
+
+按 3.1～3.4 推荐落地（没有精修图先合，占位画）。和方案的差别：
+
+1. **签宽固定，棋盘窄时整条按签宽**。精修稿的签底不拉伸（152 × 3 + 间距 = 480）；地图屏开局的棋盘只有六七列，比三张签窄，数值栏就按签宽，背包窗跟着撑宽一点，签不出框。
+2. **字位、尺寸、配色先照精修稿 `layout.json` 的默认值写进代码**（`StatsStrip.DEFAULTS`），交图时 `assets/ui/stats_strip/layout.json` 一到就按它；档位色 json 里没给就按调色板压成纸上看得清的墨色。
+3. **容器屏的数值栏摘出背包面板**（`InventoryPanel.detach_strip`），按「全部拾取」看得见那块的中线摆，上沿至少离棋盘格子 22（`layout.json` 的 `stats_strip.gap` 可改）；8 列背包 + 6 列容器的面板 526 → 556（+30）。
+4. **背包窗的标题行**空着当把手，下面一条 `HSeparator` 当拉通的分隔线；别处用 `FloatingWindow` 的浮窗（编辑器规则窗）照旧 text 样式。
+5. 精修图（UI替换美术 `art/ui/stats_strip/out/`）还没交：交来时拷 `tag.png`、`seal_stamina / dps / load.png`（+ `@2x`）和 `layout.json` 到 `assets/ui/stats_strip/` 即可，不改代码。

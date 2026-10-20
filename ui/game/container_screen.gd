@@ -31,6 +31,8 @@ const TAKE_VISIBLE := 62.0
 ## 右上角圆钮：中心离面板右上角（关闭在右、最小化在它左边 48）
 const CLOSE_AT := Vector2(-46.0, 33.0)
 const MINIMIZE_AT := Vector2(-94.0, 33.0)
+## 216：玩家棋盘下的数值栏，和「全部拾取」看得见的那块同一行（中线对齐）；上沿至少离棋盘格子下沿这么多（`layout.json` 的 `stats_strip.gap` 可改）
+const STRIP_GAP := 22.0
 
 var _container: GridInventory = null
 var _session: SearchSession = null
@@ -42,6 +44,7 @@ var _minimize_btn: IconButton = null
 ## 090：这是不是 BOSS 的战利品屏（Esc 不收）
 var _boss: bool = false
 var _inv: InventoryPanelScript = null
+var _strip: StatsStrip = null
 ## 棋盘美术：左边容器的外框种类（`search` / `chest_iron` / `chest_gold` / `corpse` / `boss`）与摆位用的那几块
 var _kind := ""
 var _layout_data: Dictionary = {}
@@ -100,7 +103,8 @@ func open(payload: Dictionary) -> void:
 		_minimize_btn = _corner("btn_minimize", "－", "收起\n" + ("撤离结算" if _boss else "剩下的留在这里；走了会落到这个点的地上（Esc）"), to_map)
 
 	_inv = _mount_bag(_stage, _loot, Callable(), _container)     # 084：棋盘上双击 → 放回容器；回话不显示（作者 21:16 删了那一行）
-	_inv.hide_stamina()
+	_strip = _inv.detach_strip()     # 216：数值栏摆到「全部拾取」那一行
+	_stage.add_child(_strip)
 	_inv.board_view.seams = _layout_data.get("cell_seams", {})
 	_stage.move_child(_inv, _player_frame.get_index() + 1)
 	# 084：容器里双击 → 试着放进背包（没空间就到地上）；没亮的不动。
@@ -203,7 +207,18 @@ func panel_size() -> Vector2:
 	var player := Vector2(_inv.board_view.inventory.size) * _inv.board_view.cell_px + Vector2(pp, pp) * 2.0 if _inv != null else Vector2.ZERO
 	var w := EDGE + loot.x + MID + player.x + EDGE
 	var h := maxf(TOP + loot.y + ABOVE_TAKE + TAKE_VISIBLE + EDGE + 6.0, TOP + player.y + BELOW_PLAYER)
+	if _strip != null and _inv != null:     # 216：数值栏放得下（中线对齐「全部拾取」，上沿让开棋盘）
+		h = maxf(h, TOP + player.y - pp + strip_gap() + _strip.strip_height() * 0.5 + take_mid())
 	return Vector2(w, h)
+
+
+## 「全部拾取」看得见那块的中线离面板下沿多高
+static func take_mid() -> float:
+	return -(TAKE_AT.y + TAKE_INSET + TAKE_VISIBLE * 0.5)
+
+
+func strip_gap() -> float:
+	return float((_layout_data.get("stats_strip", {}) as Dictionary).get("gap", STRIP_GAP))
 
 
 ## 容器那块看得见的格子区（太高时是滚动窗口那么高）
@@ -234,6 +249,9 @@ func _layout() -> void:
 	_place_frame(_player_frame, player_cells, player_size, pp)
 	_place_extras(loot_cells - Vector2(lp, lp), loot_size + Vector2(lp, lp) * 2.0)
 	_take_btn.position = Vector2(TAKE_AT.x, want.y + TAKE_AT.y) - off
+	if _strip != null:
+		_strip.set_width(player_size.x)
+		_strip.position = Vector2(player_cells.x, want.y - take_mid() - _strip.strip_height() * 0.5 - off.y).floor()
 	# 最右那个位置给关闭；没有关闭（战利品屏）就给最小化
 	var right := _close_btn if _close_btn != null else _minimize_btn
 	var side := right.custom_minimum_size

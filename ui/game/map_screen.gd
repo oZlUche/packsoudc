@@ -203,7 +203,7 @@ func toggle_bag() -> void:
 		return
 	_bag = _shade(0.7)
 	var win := FloatingWindow.new()
-	win.setup("bag", "背包", toggle_bag, "收起（B）")
+	win.setup("bag", "背包", toggle_bag, "收起（B）", FloatingWindow.CHROME_BARE)     # 216：不写字、圆钮
 	_bag.add_child(win)
 	_reserve_ground(win)     # 128：背包浮窗占着的地方，地上的东西让开
 	var inv := InventoryPanelScript.new()
