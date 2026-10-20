@@ -84,6 +84,8 @@ var seen_loot: Dictionary = {}
 var recorder: CalibrationRecorder = null
 var _queue: Array[Dictionary] = []
 var _settled: bool = false
+## 218：收尾事件弹过的那一局（换了一局自然不算弹过）
+var _outro_run: RunState = null
 ## 196：营地里刚歇过 —— `{"node": 点 id, "restored": 这次一共回了几点}`，营地屏打开时读了冒一行字、清掉。没歇过是空
 var camp_rest: Dictionary = {}
 ## 196：这一次 [method choose_event] 选的是营地屏上的选项（歇完不跳屏、结果页不弹）
@@ -1377,10 +1379,22 @@ func _flush() -> void:
 	_go(Screen.MAP)
 
 
-## 一局结束了：记账（只一次）然后进结算屏
+## 一局结束了：记账（只一次）然后进结算屏。218：撤离成功、这一章有收尾事件的，先弹那一屏（一局一次），关掉再回到这里进结算
 func _show_result() -> void:
 	_settle_run()
+	var outro := outro_event()
+	if outro != null and _outro_run != run:
+		_outro_run = run
+		_go(Screen.EVENT, {"def": outro, "node": run.current_node(), "outro": true})
+		return
 	_go(Screen.RESULT, {"result": result})
+
+
+## 218：这一局该弹的收尾事件（撤离成功、这一章配了 [member ChapterDef.outro_event]、定义找得到）；没有 null
+func outro_event() -> EventDef:
+	if result == null or not result.is_extracted() or run == null or run.chapter == null or run.chapter.outro_event == &"" or run.events == null:
+		return null
+	return run.events.def_by_id(run.chapter.outro_event)
 
 
 ## 087：这一局现在是不是「BOSS 已倒下、收完就撤」的状态

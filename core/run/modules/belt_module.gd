@@ -33,7 +33,7 @@ func id() -> StringName:
 
 
 func describe() -> String:
-	return "腰带：%d 格，放随身技能（烟雾弹、急救包……），同种叠在一格，点一下用一个" % slot_count()
+	return "腰带：%d 格，放随身技能（烟雾弹、急救包……），同种叠在一格，双击用一个" % slot_count()
 
 
 func install(run: RunState) -> void:

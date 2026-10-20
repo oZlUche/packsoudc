@@ -102,6 +102,13 @@ static func run_coach_data(t: TestCase) -> void:
 	var bad := CoachOverlay.problems([{"target": "nope", "text": "x"}, {"target": "wallet"}])
 	t.check(bad.size() == 2 and bad[0].contains("nope") and bad[1].contains("没写说明"), "坏目标、没写字都报：%s" % "；".join(bad))
 	t.eq(CoachOverlay.load_steps(&"no_such_coach"), [], "没有这份：空")
+	# 218：自由模式那份三步（日晷、背包按钮、腰带）；负重读数默认藏着，所以指背包按钮
+	var free := CoachOverlay.load_steps(&"free_mode_map")
+	t.eq(free.map(func(s: Dictionary) -> String: return String(s["target"])), ["countdown", "bag_button", "belt"], "218：自由模式三步按顺序")
+	t.eq(CoachOverlay.problems(free), [] as Array[String], "218：没有问题")
+	t.check(free.all(func(s: Dictionary) -> bool: return TextLint.scan({"text": String(s["text"])}).is_empty()), "218：不写数字")
+	for ch_id in ["free_mode", "clockwork_hourglass"]:
+		t.eq((load(ContentPaths.asset_file("chapters", ch_id)) as ChapterDef).coach, &"free_mode_map", "218：%s 配了这份" % ch_id)
 	# 每一章写了教程的，那份都在、都没问题
 	var c := TestSupport.load_content("free_mode", [])
 	for ch in DirAccess.get_files_at("res://data/chapters"):
@@ -170,6 +177,8 @@ static func frame_prologue_coach(t: TestCase, root: Window) -> void:
 	if map.get("_rules") != null:
 		map.call("_maybe_coach")
 		t.is_null(map.coach(), "规则卡压着：先不放")
+		var rule_lines: Array = map._rules.find_children("*", "RichTextLabel", true, false).map(func(r): return (r as RichTextLabel).get_parsed_text())
+		t.check(rule_lines.any(func(s): return String(s).contains("百科")), "217：规则卡末尾一行指向百科")
 		map.close_rules()
 	map.call("_maybe_coach")     # 屏上是延迟调用，这里直接叫
 	var o: CoachOverlay = map.coach()
