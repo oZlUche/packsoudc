@@ -1,6 +1,8 @@
 ## 肖像位 / 徽记位（157 补充二，作者定：没图也先留框）：一块方位，**框永远在，图来了填进去**。
 ##
 ## 框是美术的 `portrait_frame.png`（中间透明的九宫格），画在位子外扩 json `inset` 处，不占排版；没这张图就画一圈细线。
+## 214 定稿是铜币圆框：json 的边距、外扩都是 0，整张等比缩放盖在币缘上。
+## 图都比位子大（源图 256，摆在 96 / 160 / 32），整块按 mipmap 缩小，币缘的细纹和刻线才不起锯齿（导入也要开 mipmap）
 ## 里面：有图放图；没图且是肖像位放 `portrait_empty.png`（暗底半身剪影），连这张也没有就自己画剪影；徽记位没图就空着
 class_name PortraitSlot
 extends Control
@@ -18,6 +20,7 @@ var _silhouette := false
 func _init(side: int, face: Texture2D = null, silhouette: bool = true) -> void:
 	custom_minimum_size = Vector2(side, side)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS     # 子节点（图、占位、框）随它
 	if face != null:
 		picture = _fill(face)
 	elif silhouette:
