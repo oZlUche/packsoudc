@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_proa5"]
+
+[resource]
+script = ExtResource("1_proa5")
+id = &"crystals_and_load"
+display_name = "魔晶石与装载"
+category = &"bag"
+order = 9
+text = "{item:magic_staff}杖头两侧是{b}装载槽{/b}：魔晶石放上去，就把它带的供给交给法杖；一颗晶石只给一把法杖。没装晶石的法杖只是一根木棍。装了一颗，每过一轮冷却打一发；装了几颗，就按顺时针一颗一颗轮着打，颗与颗之间隔一个单次冷却，一轮打完歇一个总冷却。悬浮窗上写着装了几颗、怎么轮。
+
+魔晶石有耐久：一场仗里给法杖供过能，打完就少一次，名字跟着从{b}明亮的{/b}变成{b}闪烁的{/b}、{b}黯淡的{/b}；用完碎成{item:crystal_shards}，不再供能，装载槽也空出来。放在{item:rune_pouch}里的魔晶石不耗耐久。"
+related = Array[String](["grant_receive_slots", "bags", "stamina_and_cooldown"])
+see_items = Array[StringName]([&"magic_staff", &"fire_crystal", &"crystal_shards", &"rune_pouch"])

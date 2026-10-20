@@ -344,6 +344,10 @@ func _embed_in_pause(script: GDScript, screen_id: int, payload: Dictionary, on_c
 	return s
 
 
+## 217：规则卡末尾统一一行，把百科指出来（序章一第一张规则卡就看得见）
+const RULES_CODEX_LINE := "看不懂的词，Esc 菜单里的{ui:百科}都有一页。"
+
+
 ## 091：「本图规则」卡：章节写的 ≤ 3 条，一页；[param first] = 第一次进这一章弹的（关掉时记住看过了）
 func show_rules(first: bool = false) -> void:
 	if _rules != null or _run == null or _run.chapter == null or _run.chapter.rules.is_empty():
@@ -357,6 +361,7 @@ func show_rules(first: bool = false) -> void:
 	var ctx := TextTemplate.context_for(_run)     # 112：规则卡也过占位符（{item:…} 按稀有度上色）
 	for i in _run.chapter.rules.size():
 		col.add_child(UiTheme.rich_block(560, 15, "%d. %s" % [i + 1, TextTemplate.render(_run.chapter.rules[i], ctx)]))
+	col.add_child(UiTheme.rich_block(560, 13, TextTemplate.render(RULES_CODEX_LINE, ctx)))     # 217：每章都指一次百科
 	col.add_child(_wrapped("暂停菜单（Esc）里能再看", 12, UiPalette.DIM, 560))
 	col.add_child(_button("知道了（Esc）", close_rules, 14, UiPalette.Tier.PRIMARY))
 

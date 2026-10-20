@@ -1,0 +1,17 @@
+{
+  "id": "enemy_kinds",
+  "display_name": "敌人的三类",
+  "category": "combat",
+  "order": 8,
+  "text": "敌人分三类。{b}人{/b}和你一样背着包，东西放在包里，打赢了掉他的包和身上的东西。{b}机关{/b}和{b}魔兽{/b}没有包，东西直接摆在棋盘上，也不掉包：机关天生带格挡，不会中毒、流血，打赢了掉零件；魔兽身上摆的是器官，牙、腺、皮之类。\n\n同一件东西在机关和魔兽手里是另一套打法：不看相邻、不吃信仰，只按它那份野性数值出手。掉到你手里就是普通的那一件，相邻和信仰照常算。",
+  "related": [
+    "battle_and_prebattle",
+    "direct_damage_and_block",
+    "elements_and_reactions"
+  ],
+  "see_items": [
+    "brass_gear",
+    "beast_fang",
+    "fire_gland"
+  ]
+}

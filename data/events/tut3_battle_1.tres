@@ -38,5 +38,5 @@ text = "前面有个{enemy:raider}，一把小刀，不难对付。
 
 信力是这样涨的：{faith:brute}看你打出去和挨到的伤害，每点算 {faith_deed:brute:damage:multiplier} 信力，一场最多 {faith_deed:brute:damage:cap}；还有失去体力，每点算 {faith_deed:brute:vitality_lost:multiplier} —— 输了也不白输。
 
-打完看看地图左上那一行。"
+打完把鼠标停到顶端栏的徽记上看看。"
 options = Array[ExtResource("1_q8rax")]([SubResource("Resource_12wis"), SubResource("Resource_1o8ha")])
