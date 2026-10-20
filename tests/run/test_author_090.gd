@@ -189,6 +189,8 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	map.toggle_pause()
 	map.show_rules()
 	t.check(map.rules_open(), "暂停菜单里再看规则卡")
+	var rule_lines: Array = map._rules.find_children("*", "RichTextLabel", true, false).map(func(r): return (r as RichTextLabel).get_parsed_text())
+	t.check(rule_lines.any(func(s): return String(s).contains("百科")), "217：规则卡末尾一行指向百科")
 	t.check(game.escape() and not map.rules_open() and map.pause_open(), "Esc 先关规则卡、暂停菜单还在")
 	map.toggle_pause()
 	# 166（作者定）：「回到这个点」换成顶端栏的放大镜图标按钮（缺图写字），快捷键与说明进悬浮提示；撤离按钮删了

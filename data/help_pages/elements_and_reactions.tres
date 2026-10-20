@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_bs2qe"]
+
+[resource]
+script = ExtResource("1_bs2qe")
+id = &"elements_and_reactions"
+display_name = "元素与反应"
+category = &"combat"
+order = 7
+text = "元素有五种：火、冰、雷、毒、血，都是挂在身上的层数。火是{b}灼伤{/b}，每层每秒烧一下；冰是{b}寒冷{/b}，冷却变长；雷是{b}麻痹{/b}，出手多花耐力；毒是{b}中毒{/b}，每层每秒掉血；血是{b}流血{/b}，每秒掉血、每跳一次层数减半。{b}造成伤害和施加元素是两回事{/b}：道具写着「施加」才挂层数，打出火属性的伤害本身不挂灼伤，反过来也一样。
+
+给一个挂着某种元素的目标再挂另一种，两种碰上就起{b}反应{/b}：两边各抵掉一部分层数，抵掉的越多反应越强，剩下的新元素照常挂上；反应不连锁。五种元素两两一对，每种反应在百科里有一页，打出过一次才点亮。机关不会中毒、流血，这两种挂不上，也就碰不出带它们的反应；火、冰、雷照常挂得上。"
+related = Array[String](["buffs_and_stacks", "direct_damage_and_block", "enemy_kinds", "stamina_and_cooldown"])

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_m41ac"]
+
+[resource]
+script = ExtResource("1_m41ac")
+id = &"forge"
+display_name = "铸炉"
+category = &"map"
+order = 9
+text = "休息点的铁炉能把三件道具熔成一枚{b}铸牌{/b}。三个槽是【时机】【效果】【数值】，哪件放哪个槽都行；每个槽都看放进去那件的材质、用途和稀有度。时机槽定什么时候触发、是打出去还是挨打时、多久一次；效果槽定做什么、是攻是守（盾和甲算守）、强到哪一档；数值槽定有多大，稀有度定底数，材质和用途各乘一下。放的时候铸炉屏会实时试算。
+
+熔掉的三件就没了。铸牌只占一格，能带出去、能放仓库；拿起来压到一把{b}武器{/b}上放手就是附魔，铸牌用掉，效果永远跟着这把武器，已经附过魔的再附一次会覆盖旧的。铸炉和神坛一样不算用掉休息那一份，但每个铸炉只能用一次。"
+related = Array[String](["rest_point", "crafting", "altar_offering"])

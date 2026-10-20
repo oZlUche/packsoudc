@@ -3,11 +3,13 @@ extends RefCounted
 
 const EXPECTED := {
 	"flow": ["map_and_steps", "search_point", "battle_and_prebattle", "staging_zone", "extraction_and_defeat", "vitality", "settlement_and_warehouse", "characters"],
-	"bag": ["drag_and_rotate", "bags", "quick_place", "tidy", "crafting", "grant_receive_slots", "anchor_and_right_click", "encumbrance"],
-	"combat": ["auto_battle", "direct_damage_and_block", "armor", "buffs_and_stacks", "stamina_and_cooldown", "haste", "multipliers"],
+	"bag": ["drag_and_rotate", "bags", "quick_place", "tidy", "crafting", "grant_receive_slots", "anchor_and_right_click", "encumbrance",
+		"belt_skills", "crystals_and_load", "growth_and_rooting"],
+	"combat": ["auto_battle", "direct_damage_and_block", "armor", "buffs_and_stacks", "stamina_and_cooldown", "haste", "multipliers",
+		"elements_and_reactions", "enemy_kinds"],
 	"faith": ["anchor_activation", "faith_power_and_tiers", "altar_offering", "special_rites", "switch_and_dormant",
 		"god_brute", "god_sun", "god_nature", "god_earth", "god_skill", "god_hunt"],
-	"map": ["node_types", "random_node", "shop", "rest_point", "safe_box", "countdown_and_closing", "hunters", "erosion", "teleport"],
+	"map": ["node_types", "random_node", "shop", "rest_point", "safe_box", "countdown_and_closing", "hunters", "erosion", "teleport", "forge"],
 	"meta": ["warehouse", "tech_tree", "codex", "achievements", "save_slots"],
 }
 
@@ -21,7 +23,7 @@ static func run(t: TestCase) -> void:
 	for h in help:
 		by_id[String((h as HelpPageDef).id)] = h
 
-	t.begin("125 · 机制页齐全（136：四十八页），分类对得上")
+	t.begin("125 · 机制页齐全（217：五十四页），分类对得上")
 	var total := 0
 	for cat in EXPECTED:
 		total += (EXPECTED[cat] as Array).size()
@@ -29,8 +31,8 @@ static func run(t: TestCase) -> void:
 			t.check(by_id.has(id), "%s 在" % id)
 			if by_id.has(id):
 				t.eq(String((by_id[id] as HelpPageDef).category), cat, "%s 在 %s 分类" % [id, cat])
-	t.eq(total, 48, "清单四十八页（129 加了「负重」、136 加了「三个角色」）")
-	t.eq(help.size(), 48, "库里四十八页")
+	t.eq(total, 54, "清单五十四页（129 加了「负重」、136 加了「三个角色」、217 补了六页）")
+	t.eq(help.size(), 54, "库里五十四页")
 
 	t.begin("125 · 每个分类的 order 从零连续、不撞位，目录按 order 排")
 	var toc := book.toc()
