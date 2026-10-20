@@ -182,6 +182,7 @@ func _exit_tree() -> void:
 
 func _switch_screen(screen: int, payload: Dictionary) -> void:
 	if GameFlow.is_overlay(screen):
+		_ensure_map_base()
 		_drop_overlay(true)     # 204：叠层换叠层只响「开」
 		AudioHub.play(&"ui.open")
 		if bool(payload.get("restore", false)) and _minimized != null and _minimized.screen == screen:
@@ -222,6 +223,19 @@ func _switch_screen(screen: int, payload: Dictionary) -> void:
 		_fade_in(_base, BASE_FADE)     # 180：入局转场自己从第三页接过来，不再叠一层淡入
 	if _base.has_signal("dev_tools_requested"):
 		_base.connect("dev_tools_requested", _to_launcher)
+
+
+## 作者 10-20：一局里的叠层底下得是地图。读档回来直接落在点上（搜索、事件……）时，底屏还是主菜单 / 读取存档屏 ——
+## 先把底屏换成地图，再叠上去（不淡入：叠层自己会淡入）
+func _ensure_map_base() -> void:
+	if flow.run == null or (_base != null and _base.screen == GameFlow.Screen.MAP):
+		return
+	if _base != null:
+		_base.queue_free()
+		_base = null
+	_base = _make(GameFlow.Screen.MAP, {})
+	add_child(_base)
+	_base.open({})
 
 
 ## 157：新上来的一屏从透明淡到不透明（墨水扫过那种 shader 等美术方案）。关着就什么也不造；返回造的那个 Tween（测试看）
