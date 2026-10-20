@@ -25,6 +25,7 @@ quota = {
 [sub_resource type="Resource" id="Resource_q5eu5"]
 script = ExtResource("2_8hby8")
 half_rows = 4
+taper = 1
 with_core = true
 danger_by_row = Array[int]([0, 0, 1, 1, 2, 2, 1, 1, 1, 0])
 rules = SubResource("Resource_owm41")

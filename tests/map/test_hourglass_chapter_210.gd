@@ -55,6 +55,10 @@ static func run_generate(t: TestCase) -> void:
 			continue
 		t.eq(g.layout_kind, &"hourglass", "横置沙漏")
 		t.eq(int(g.layout_meta["rows"]), 10, "十层")
+		var widths: Array[int] = []
+		for row in g.layout_meta["cells"]:
+			widths.append((row as Array).size())
+		t.eq(widths, [5, 4, 3, 3, 2, 2, 3, 3, 4, 5] as Array[int], "215 · 中段逐层收窄（taper %d）" % cfg.taper)
 		var cores := 0
 		var exits := 0
 		for id in g.goal_ids:

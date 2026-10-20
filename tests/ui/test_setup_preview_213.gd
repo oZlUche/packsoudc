@@ -53,12 +53,14 @@ static func frame_lattice_preview(t: TestCase, root: Window) -> void:
 	t.check(drawn > 0, "有 %d 条层线" % drawn)
 	t.check(pv.line_color().get_luminance() > 0.5, "深底的图：层线用纸色（墨色压在深底上看不见）")
 	t.check(not pv._paper_covers(pv.paper_on_screen()), "宽图的纸上下盖不满化开那片：纸外画桌面")
-	if LatticeMapLayout.is_horizontal(g) and drawn >= 3:
-		var len_of := func(r: int) -> float:
-			var seg: Array = lat.row_segment(g, pv.canvas, r)
-			return (seg[0] as Vector2).distance_to(seg[1]) if not seg.is_empty() else 0.0
-		var mid := pv.levels / 2
-		t.check(len_of.call(mid) < len_of.call(0) and len_of.call(mid) < len_of.call(pv.levels - 1), "横置沙漏：中间短、两头长（蝴蝶结）")
+	# 215 起第二章逐层收窄：层线中间短、两头长
+	t.check(LatticeMapLayout.is_horizontal(g), "横置沙漏")
+	var len_of := func(r: int) -> float:
+		var seg: Array = lat.row_segment(g, pv.canvas, r)
+		return (seg[0] as Vector2).distance_to(seg[1]) if not seg.is_empty() else 0.0
+	var neck_side := pv.levels / 2 - 2
+	t.check(len_of.call(neck_side) < len_of.call(1) and len_of.call(1) < len_of.call(0), "左半往颈部一层比一层短（蝴蝶结）")
+	t.check(is_equal_approx(len_of.call(0), len_of.call(pv.levels - 1)) and is_equal_approx(len_of.call(1), len_of.call(pv.levels - 2)), "两半对称")
 	game.queue_free()
 	_cleanup("setup213a")
 
