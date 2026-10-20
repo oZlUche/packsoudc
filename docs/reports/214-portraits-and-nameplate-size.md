@@ -57,3 +57,15 @@
 1. **开局大头像放在铭牌左边同一行，不在铭牌上方**。放上方时角色卡整张高约 170，1600×1000 下卡底右角压到「回主菜单」按钮；改成一行（160 头像 + 铭牌竖向居中）只多 28 px，三个角色都不碰按钮。
 2. 战前准备、战斗回放截图核过：铭牌 +32 后「开战」「跳过并继续」都还在框里。
 3. 美术图还没交：`assets/portraits/{characters,enemies}/<id>.png` 放进去即生效，没图照旧是剪影。
+
+## 8 头像定稿落地（v3.60，2026-10-20）
+
+美术设计交图（`art/portraits/final/`）。作者 2026-10-20 15:26 选乙「罗马铜币侧像」，并说「既然选择钱币的话，肖像框可以改成圆形的」。
+
+1. **头像**：3 个角色、30 个敌人的 256 图拷进 `assets/portraits/characters|enemies/`，文件名就是 id（敌人 id 和 `data/authoring/enemies` 逐个对过）。`@2x`（512）没拷：游戏只读 256，显示最大 160，用不上，留在美术源目录。
+2. **圆框和空位**：`assets/ui/portrait_frame.*` 换成深铜圆框，json 的 `margin` 是 `[0,0,0,0]`、`inset` 是 0，`PortraitSlot` 原有代码读到 0 就整张等比缩放、不外扩，不用改代码。`portrait_empty.*` 换成一枚磨平的暗旧币。徽记位（32）用同一张框，变成一个小圆圈。
+3. **mipmap**：源图 256 缩到 96 / 160 / 32，不开 mipmap 币缘的细纹会起锯齿。
+   - 导入：这 33 张头像和框、空位的 `.import` 都改成 `mipmaps/generate=true`。以后新加头像，照抄已有的 `.import`。
+   - 显示：`PortraitSlot` 自己设 `texture_filter = LINEAR_WITH_MIPMAPS`，图、占位、框跟着它。
+4. 测试 157：框外扩改按 json 的 `inset` 验（原来写死 4），并加验肖像位按 mipmap 缩小、框图导入开了 mipmap。
+
