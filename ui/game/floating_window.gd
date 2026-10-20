@@ -13,14 +13,25 @@ static var _remembered: Dictionary = {}
 var key: String = ""
 var _body: VBoxContainer
 var _header: HBoxContainer
-var _title: Label
+var _title: Label = null
+## 216：收起钮（bare 样式是 [IconButton]，text 样式是文字按钮）
+var close_button: Button = null
 var _dragging: bool = false
 var _grab: Vector2 = Vector2.ZERO
 var _placed: bool = false
 
 
+## 216：标题栏的两种样式。text = 标题字 +「按住标题拖动」+ 文字按钮；bare = 不写字（标题行留作拖动把手，分隔线拉通），
+## 收起换战利品屏那枚圆钮（[constant MINIMIZE_ART] 按 [constant MINIMIZE_SCALE]），停上去写 [param close_text]
+const CHROME_TEXT := &"text"
+const CHROME_BARE := &"bare"
+const MINIMIZE_DIR := "res://assets/ui/board/"
+const MINIMIZE_ART := "btn_minimize"
+const MINIMIZE_SCALE := 0.72
+
+
 ## [param on_close] 给了就在标题栏右边放一个「收起」按钮
-func setup(p_key: String, title: String, on_close: Callable = Callable(), close_text: String = "收起") -> void:
+func setup(p_key: String, title: String, on_close: Callable = Callable(), close_text: String = "收起", chrome: StringName = CHROME_TEXT) -> void:
 	key = p_key
 	UiTheme.panel(self, -1, UiTheme.PANEL_WINDOW)     # 作者 2026-10-16：一整块石板（原来是凹槽，没有不透明的底）
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -34,23 +45,41 @@ func setup(p_key: String, title: String, on_close: Callable = Callable(), close_
 	_header.mouse_default_cursor_shape = Control.CURSOR_MOVE
 	_header.gui_input.connect(_on_header_input)
 	col.add_child(_header)
-	_title = Label.new()
-	_title.text = title
-	_title.theme_type_variation = UiTheme.LABEL_TITLE
-	_title.mouse_filter = Control.MOUSE_FILTER_PASS
-	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_header.add_child(_title)
-	var hint := Label.new()
-	hint.text = "按住标题拖动"
-	UiTheme.label(hint, 11, UiPalette.DIM)
-	hint.mouse_filter = Control.MOUSE_FILTER_PASS
-	_header.add_child(hint)
+	if chrome == CHROME_BARE:
+		var grip := Control.new()     # 标题行空着，整行都是把手
+		grip.mouse_filter = Control.MOUSE_FILTER_PASS
+		grip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_header.add_child(grip)
+	else:
+		_title = Label.new()
+		_title.text = title
+		_title.theme_type_variation = UiTheme.LABEL_TITLE
+		_title.mouse_filter = Control.MOUSE_FILTER_PASS
+		_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_header.add_child(_title)
+		var hint := Label.new()
+		hint.text = "按住标题拖动"
+		UiTheme.label(hint, 11, UiPalette.DIM)
+		hint.mouse_filter = Control.MOUSE_FILTER_PASS
+		_header.add_child(hint)
 	if on_close.is_valid():
-		var b := Button.new()
-		b.text = close_text
-		UiPalette.style_button(b, UiPalette.Tier.MINOR, UiPalette.button_font_size(12, UiPalette.Tier.MINOR))     # 090
-		b.pressed.connect(on_close)
-		_header.add_child(b)
+		if chrome == CHROME_BARE:
+			var art := IconButton.make_art(MINIMIZE_DIR, MINIMIZE_ART, "－", close_text, on_close)
+			var side := 56.0 * MINIMIZE_SCALE
+			art.custom_minimum_size = Vector2(side, side)
+			art.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			close_button = art
+		else:
+			var b := Button.new()
+			b.text = close_text
+			UiPalette.style_button(b, UiPalette.Tier.MINOR, UiPalette.button_font_size(12, UiPalette.Tier.MINOR))     # 090
+			b.pressed.connect(on_close)
+			close_button = b
+		_header.add_child(close_button)
+	if chrome == CHROME_BARE:
+		var line := HSeparator.new()
+		line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		col.add_child(line)
 	_body = VBoxContainer.new()
 	_body.add_theme_constant_override("separation", 10)
 	col.add_child(_body)
