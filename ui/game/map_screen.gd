@@ -1145,7 +1145,10 @@ func reveal_allowed(reveal: Dictionary) -> bool:
 		return false
 	if not GameDirector.fades_allowed or flow.settings == null or not flow.settings.ui_fades:
 		return false
-	return _view != null and _view.graph != null and _view.canvas_rect().size.x > 0.0 and MapLayout.for_graph(_view.graph) is RingLayoutBase
+	if _view == null or _view.graph == null or _view.canvas_rect().size.x <= 0.0:
+		return false
+	var lay := MapLayout.for_graph(_view.graph)
+	return lay is RingLayoutBase or lay is LatticeMapLayout     # 213：格阵的行距和环距一样宽，转场同一套式子
 
 
 ## 起点对齐第三页：缩放 = 预览的圈距 ÷ 环距（[constant RingLayoutBase.RING_STEP]），画布中心落在预览圆心 —— 第一帧的圈和预览上的圈重合；

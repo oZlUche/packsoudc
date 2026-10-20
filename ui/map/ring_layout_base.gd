@@ -28,6 +28,15 @@ var _warnings: Array[String] = []
 @abstract func level_count(graph: MapGraph) -> int
 
 
+## 213：[MapLayout] 的通用层号 = 环号
+func level_of(graph: MapGraph) -> Dictionary:
+	return levels_of(graph)
+
+
+func layer_count(graph: MapGraph) -> int:
+	return level_count(graph)
+
+
 ## 每个点往自己名义位置拉多少（见 RingAngleSolver.anchor）。随机生成的图默认留三成半：
 ## 它每个点向内连一两条斜边是本意，只把径向边往竖直方向带一带，不把点挤成一团。
 ## 手绘图覆盖成 0：作者画的 `|` 就该竖直

@@ -5,6 +5,8 @@
 ## 没有底图的章：只画圈。不进核心层，只是画面
 ## 182（作者 2026-10-17 15:26）：纸上还画这张图的几个入口（出生点）的印记，别的节点一概不画（入局转场里一环环长出来）。
 ## 点印记 / 点空白发信号（选不选、开不开提示窗是开局屏的事）；挑中的入口以它为偏移中心微放大（底图、圈、印记一起动，墨化的那片不动）
+## 213：不再以「环」为中心，记的是这张图的布局 + 画布 + 预览缩放（[method preview_zoom]）。格阵（沙漏、塔）同样对准底图、
+## 每层画一条虚线（横置沙漏是蝴蝶结）、第 0 层画入口；同心环的数值照旧（圈距 = 缩放 × [constant RingLayoutBase.RING_STEP]）
 class_name MapPreview
 extends Control
 
@@ -16,6 +18,9 @@ const SHADER := preload("res://ui/map/ink_reveal.gdshader")
 ## 化开半径：× 自己较短边的一半
 const RADIUS_BY_SCALE := {&"small": 0.55, &"medium": 0.75, &"large": 0.95}
 const RADIUS_DEFAULT := 0.75
+## 213：格阵没有规模档，按大型化开；画布长边占化开直径几成
+const LATTICE_SCALE := &"large"
+const LATTICE_FIT := 0.9
 ## 第一次化开、换图时先收再长
 const GROW_SEC := 0.6
 const SHRINK_SEC := 0.25
@@ -29,9 +34,13 @@ const DASH_GAP := 8.0
 const RING_WIDTH_MAX := 3.0
 const RING_WIDTH_MIN := 1.0
 
-## 现在铺的底图（[MapSkin] 的 id）与环数
+## 现在铺的底图（[MapSkin] 的 id）与层数（同心环 = 环数，格阵 = 行数；别的布局 0：只铺底图）
 var skin: StringName = &""
 var levels: int = 0
+## 213：这张图的布局（同心环走 [method show_map] 时为空）、图、画布（布局坐标）
+var layout: MapLayout = null
+var graph: MapGraph = null
+var canvas: Rect2 = Rect2()
 ## 目标半径与现在的半径（都是 × 较短边一半）
 var target_frac: float = 0.0
 var radius_frac: float = 0.0:
@@ -114,13 +123,35 @@ static func noise_texture() -> NoiseTexture2D:
 	return _noise
 
 
-## 换一张图：[param skin_id] 底图、[param ring_levels] 环数、[param scale_id] 规模（定半径）。
+## 213：换一张图 —— 按 [param p_graph] 的布局定层数与画布：同心环按规模定化开半径，格阵按大型；别的布局只铺底图。
 ## 第一次从零化开；已经化开着就先收一点再长到新的。[param animate] 假 = 一步到位（测试、转场关着）
+func show_graph(skin_id: StringName, p_graph: MapGraph, scale_id: StringName, animate: bool = true) -> void:
+	graph = p_graph
+	layout = MapLayout.for_graph(p_graph) if p_graph != null else null
+	if layout is RingLayoutBase:
+		levels = (layout as RingLayoutBase).level_count(p_graph)
+	elif layout is LatticeMapLayout:
+		levels = LatticeMapLayout.rows_of(p_graph)
+		scale_id = LATTICE_SCALE
+	else:
+		levels = 0
+	canvas = Rect2(Vector2.ZERO, layout.canvas_size(p_graph)) if levels > 0 else Rect2()
+	_open(skin_id, scale_id, animate)
+
+
+## 换一张同心环的图：[param skin_id] 底图、[param ring_levels] 环数、[param scale_id] 规模（定半径）。没有图在手时用（画布按环数算）
 func show_map(skin_id: StringName, ring_levels: int, scale_id: StringName, animate: bool = true) -> void:
+	graph = null
+	layout = null
+	levels = maxi(0, ring_levels)
+	canvas = Rect2(Vector2.ZERO, Vector2.ONE * RingLayoutBase.canvas_side(levels)) if levels > 0 else Rect2()
+	_open(skin_id, scale_id, animate)
+
+
+func _open(skin_id: StringName, scale_id: StringName, animate: bool) -> void:
 	var was_open := radius_frac > 0.0
 	skin = skin_id
 	_skin_tex = MapSkin.texture(skin_id)
-	levels = maxi(0, ring_levels)
 	target_frac = float(RADIUS_BY_SCALE.get(scale_id, RADIUS_DEFAULT))
 	_ring_style = ring_style(scale_id)
 	zoom_reset(false)
@@ -146,6 +177,9 @@ func clear() -> void:
 	skin = &""
 	_skin_tex = null
 	levels = 0
+	layout = null
+	graph = null
+	canvas = Rect2()
 	target_frac = 0.0
 	radius_frac = 0.0
 	set_entries(null)
@@ -178,8 +212,18 @@ func target_radius() -> float:
 	return target_frac * half_extent()
 
 
+## 213：预览像素 ÷ 画布像素（入局转场的 zoom0 就是它）。同心环 = 化开半径 ÷ 环数 ÷ 环距；格阵 = 画布长边占化开直径 [constant LATTICE_FIT]
+func preview_zoom() -> float:
+	if levels <= 0 or not canvas.has_area():
+		return 0.0
+	if layout is LatticeMapLayout:
+		return LATTICE_FIT * 2.0 * target_radius() / maxf(canvas.size.x, canvas.size.y)
+	return target_radius() / float(levels) / RingLayoutBase.RING_STEP
+
+
+## 预览里一层多少像素（= 缩放 × 环距；格阵的行距和环距一样宽，所以入局转场按它算两种形态都对）
 func ring_gap() -> float:
-	return target_radius() / float(levels) if levels > 0 else 0.0
+	return preview_zoom() * RingLayoutBase.RING_STEP
 
 
 ## 线宽：有美术参数按规模取，没有就环越多越细
@@ -208,26 +252,26 @@ static func ring_style(scale_id: StringName) -> Dictionary:
 
 
 #region 182：入口印记与微放大
-## 换上这张图的入口（[param graph] 的 `entry_ids`，位置按同心环布局真算）；null / 不是同心环的图 = 不画入口。选择、放大一并清掉
-func set_entries(graph: MapGraph) -> void:
+## 换上这张图的入口（[param p_graph] 的 `entry_ids`，位置按它的布局真算：同心环、格阵）；null / 别的布局 = 不画入口。选择、放大一并清掉。
+## 位置记成「离画布中心几个环距」（rel），和预览尺寸无关
+func set_entries(p_graph: MapGraph) -> void:
 	entries.clear()
 	selected = -1
 	hovered = -1
 	zoom_reset(false)
-	var lay := MapLayout.for_graph(graph) if graph != null else null
-	if lay is RingLayoutBase:
-		var ring := lay as RingLayoutBase
-		var canvas := Rect2(Vector2.ZERO, ring.canvas_size(graph))
-		var pos := ring.positions(graph, canvas)
-		for i in graph.entry_ids.size():
-			var id := graph.entry_ids[i]
+	var lay := MapLayout.for_graph(p_graph) if p_graph != null else null
+	if lay is RingLayoutBase or lay is LatticeMapLayout:
+		var area := Rect2(Vector2.ZERO, lay.canvas_size(p_graph))
+		var pos := lay.positions(p_graph, area)
+		for i in p_graph.entry_ids.size():
+			var id := p_graph.entry_ids[i]
 			if not pos.has(id):
 				continue
-			var route := -1
-			for r in graph.routes.size():
-				if int(graph.routes[r].get("entry_id", -1)) == id:
+			var route := -1     # 格阵没有路线
+			for r in p_graph.routes.size():
+				if int(p_graph.routes[r].get("entry_id", -1)) == id:
 					route = r
-			entries.append({"id": id, "rel": ((pos[id] as Vector2) - canvas.get_center()) / RingLayoutBase.RING_STEP, "route": route})
+			entries.append({"id": id, "rel": ((pos[id] as Vector2) - area.get_center()) / RingLayoutBase.RING_STEP, "route": route})
 	_redraw_marks()
 
 
@@ -405,6 +449,8 @@ func _draw() -> void:
 		# 182：微放大时底图一起放大（直接算放大后的矩形，不用 draw_set_transform：墨化着色器读的是没变换的顶点）
 		var shown := paper_on_screen()
 		if shown.has_area():
+			if not _paper_covers(shown):
+				_draw_desk(shown)     # 213：宽图（横置沙漏）的纸上下盖不满化开那片：和局内第一帧一样，纸外是桌面、纸带影子
 			draw_texture_rect(_skin_tex, shown, false)
 		else:
 			# 还没有圈距：按整个窗口铺，本地坐标里窗口左上是 -global_position
@@ -414,25 +460,85 @@ func _draw() -> void:
 	var gap := ring_gap()
 	if gap <= 0.0:
 		return
-	var ink: Color = _ring_style.get("color", Color(UiTheme.INK, 0.75))
+	var ink := line_color()
 	var width := ring_width()
+	if layout is LatticeMapLayout:
+		_draw_rows(ink, width)
+		return
 	var at := to_view(center())
 	for lv in range(1, levels + 1):
 		_dashed_circle(at, gap * float(lv) * view_zoom, ink, width)
 
 
+## 圈 / 层线的颜色：美术给的墨色；213：底图是深底（机关沙漏）时换成纸色，墨色压在深底上看不见（UI 深浅规则）
+func line_color() -> Color:
+	var ink: Color = _ring_style.get("color", Color(UiTheme.INK, 0.75))
+	if _skin_tex != null and MapSkin.tone(skin) != UiTheme.TONE_LIGHT:
+		return Color(MARK_PAPER, ink.a)
+	return ink
+
+
+## 213：格阵每层一条虚线（从这层最左到最右的格子、两端各放 0.4 列，和局内衬底同一根线）；直行的层不画
+func _draw_rows(ink: Color, width: float) -> void:
+	var lat := layout as LatticeMapLayout
+	var straight: Array = graph.layout_meta.get("straight_rows", [])
+	for r in LatticeMapLayout.rows_of(graph):
+		if straight.has(r):
+			continue
+		var seg := lat.row_segment(graph, canvas, r)
+		if seg.is_empty():
+			continue
+		_dashed_line(canvas_to_view(seg[0]), canvas_to_view(seg[1]), ink, width)
+
+
+## 画布上一点 → 预览上画在哪（本地像素，含微放大）
+func canvas_to_view(p: Vector2) -> Vector2:
+	return to_view(center() + (p - canvas.get_center()) * preview_zoom())
+
+
+## 213：纸盖没盖住化开那片（外接方形）
+func _paper_covers(shown: Rect2) -> bool:
+	var r := radius_frac * half_extent() + SOFTNESS
+	return shown.encloses(Rect2(center() - Vector2(r, r), Vector2(r, r) * 2.0))
+
+
+## 213：纸外的桌面（[constant MapView.ART_DESK] 平铺；没有图用底色）与纸影，和局内 [MapView] 同一种画法
+func _draw_desk(shown: Rect2) -> void:
+	var desk := UiTheme.art_cached(MapView.ART_DESK)
+	if desk != null:
+		var step := desk.get_size()
+		for y in range(0, int(ceil(size.y / step.y))):
+			for x in range(0, int(ceil(size.x / step.x))):
+				draw_texture(desk, Vector2(x, y) * step)
+	else:
+		draw_rect(Rect2(Vector2.ZERO, size), UiPalette.bg())
+	var k := shown.size.x / maxf(1.0, MapSkin.paper_rect(skin, canvas).size.x)     # 影子按纸的缩放
+	draw_rect(Rect2(shown.position + MapView.PAPER_SHADOW * k, shown.size).grow(2.0 * k), MapView.PAPER_SHADOW_COLOR)
+
+
 ## 192：纸在这一页上的矩形（本地像素，含 182 的微放大）。和局内 [MapView] 在入局 zoom0 = 圈距 / RING_STEP 时一样大、一样摆；
 ## 没底图或还没有圈距是空矩形
 func paper_on_screen() -> Rect2:
-	var gap := ring_gap()
-	if _skin_tex == null or gap <= 0.0:
+	var zoom_p := preview_zoom()
+	if _skin_tex == null or zoom_p <= 0.0:
 		return Rect2()
-	var canvas := Rect2(Vector2.ZERO, Vector2.ONE * RingLayoutBase.canvas_side(levels))
 	var paper := MapSkin.paper_rect(skin, canvas)
 	if not paper.has_area():
 		return Rect2()
-	var zoom_p := gap / RingLayoutBase.RING_STEP
-	return Rect2(to_view(center() + (paper.position - canvas.get_center()) * zoom_p), paper.size * zoom_p * view_zoom)
+	return Rect2(canvas_to_view(paper.position), paper.size * zoom_p * view_zoom)
+
+
+func _dashed_line(a: Vector2, b: Vector2, color: Color, width: float) -> void:
+	var length := a.distance_to(b)
+	if length <= 0.0:
+		return
+	var dir := (b - a) / length
+	var on := float(_ring_style.get("dash", DASH))
+	var step := on + float(_ring_style.get("gap", DASH_GAP))
+	var d := 0.0
+	while d < length:
+		draw_line(a + dir * d, a + dir * minf(d + on, length), color, width, true)
+		d += step
 
 
 func _dashed_circle(at: Vector2, r: float, color: Color, width: float) -> void:
