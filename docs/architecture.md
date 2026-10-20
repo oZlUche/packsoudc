@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.61 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.62 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4399,6 +4399,7 @@ res://
 | v3.55 | 2026-10-20 | **213 开局第三页的预览认格阵（机关沙漏）**（作者 2026-10-20 定，待定按推荐）：`MapPreview.show_graph(skin, graph, scale, animate)` 记布局 + 图 + 画布（`show_map` 变薄封装），`preview_zoom()` 同心环 = 化开半径 ÷ 环数 ÷ `RING_STEP`、格阵 = `LATTICE_FIT` × 化开直径 ÷ 画布长边（格阵固定按大型 0.95 化开），`ring_gap` / `paper_on_screen` / 入口印记 / 转场载荷一律走它；格阵每层一条虚线（`LatticeMapLayout.row_span / row_segment`，局内衬底共用），`straight_rows` 不画；纸盖不满化开那片时纸外先画桌面；深色底图的层线用纸色（`line_color`）；`MapLayout.level_of / layer_count`（同心环 = `levels_of` / 环数，格阵 = 行 / 行数 − 1），`MapView` 的转场按层长、`MapScreen.reveal_allowed` 认两种布局；`SetupScreen.ring_levels` 对格阵数行；新测试 `test_setup_preview_213.gd` |
 | v3.56 | 2026-10-20 | **215 沙漏中段逐步收窄**（作者 2026-10-20「中间逐步收窄，确实要这样」，待定按推荐；改 5.11）：`HourglassMapConfig.taper` + `half_cols(k)`，生成器按层取格、出口半边对称、颈部那层盖不住线段报 `build_note`；第二章 `generator_config.taper 1`（5 / 4 / 3 / 3 / 2 / 2 / 3 / 3 / 4 / 5）；`test_lattice_maps` 加 `run_hourglass_taper`，210 验宽度序列，213 的蝴蝶结断言改成必验 |
 | v3.57 | 2026-10-20 | **216 背包窗数值栏（火漆签）**（作者 2026-10-20 选定丁，待定按推荐）：新 `StatsStrip`（`ui/widgets/stats_strip.gd`，`refresh(spec, run)`：耐力档 + 耗 · 回、`rough_dps`、负重「当前 / 上限」+ 档名，不算负重的章只排两张居中，三张各自悬浮窗；读 `assets/ui/stats_strip/` 的签底 / 火漆 / `layout.json`，没图画占位；签宽固定，棋盘窄于签按签宽）；`FloatingWindow.setup(..., chrome)` 加 `bare`（不写字、标题行当把手、右上 `btn_minimize` 按 0.72，`close_button`），背包三处用它；`InventoryPanel` 耐力行 / 负重行换成 `strip`（`hide_stamina` 删，`detach_strip` 给容器屏）；容器 / 搜索屏把数值栏摆在玩家棋盘下、与「全部拾取」中线对齐（`layout.json` 的 `stats_strip.gap`，面板 8 + 6 列 526 → 556）；新测试 `test_stats_strip_216.gd` |
+| v3.62 | 2026-10-20 | **217 新手教程查缺补漏 批一、批二**：五处过期句改成棋子 / 顶端栏徽记；口粮那条讲耐力上限；`MapScreen.RULES_CODEX_LINE` 规则卡末尾统一一行指向百科；自由模式规则卡讲负重（仍三条）；百科补六页（腰带与随身技能、魔晶石与装载、生长与扎根、元素与反应、敌人的三类、铸炉，共 54 页），「包」补 209，「负重」改「包本身不算重」；测试 112 / 090 / help_pages 跟着改 |
 | v3.61 | 2026-10-20 | **216 补充：负重签总在**（作者 2026-10-20 16:20）：`StatsStrip` 三张签总在（216 待定 3.2 作废）；不算负重的章负重签大字「当前 / 上限」、小字空着，没上限只写当前重量，悬浮窗说「这一章不算负重」；负重规则不动；测试 216 改验 |
 | v3.60 | 2026-10-20 | **214 头像定稿：铜币侧像 + 圆框**（美术设计交图，作者选乙）：3 角色 + 30 敌人头像 256 进 `assets/portraits/`（只拷 1x）；`portrait_frame` 换深铜圆框（`margin` 0、`inset` 0，整张等比缩放），`portrait_empty` 换磨平旧币；头像、框、空位导入开 `mipmaps/generate`；`PortraitSlot.texture_filter = LINEAR_WITH_MIPMAPS`；测试 157 框外扩按 json 验、加 mipmap 两条 |
 | v3.59 | 2026-10-20 | **216 补充：数值签精修图 + 背包窗一格 72**（UI替换美术交图，作者选乙）：`assets/ui/stats_strip/` 签底 / 三枚火漆 / `layout.json` / `frame_player_72.png`；新 `BagWindow`（`ui/game/bag_window.gd`，继承 `FloatingWindow`，`setup_bag(run, font, on_close, drag, hint_sink)`）按 `bag_window` 摆：8×6 时 660×620、标题行不写字当把手 + 分隔线、右上圆钮 0.72、棋盘格子在 (42,82) 一格 72、皮带外框九宫格外扩 24、数值栏在棋盘下居中，棋盘大了窗跟着长；地图 / 事件 / 休息三屏用它；`FloatingWindow` 去掉 `bare`，加 `_grip` / `center_shift`；`InventoryPanel.cell_px`（setup 前设，默认 60）；`SlabStyle` 三项 `@export`（复制改边距不再丢两层）；测试 216 背包窗那条改验尺寸与摆位 |

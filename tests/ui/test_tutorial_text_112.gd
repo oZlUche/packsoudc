@@ -91,3 +91,24 @@ static func run_tutorial_events_clean(t: TestCase) -> void:
 	var heavy := defs[&"tut2_battle_heavy"] as EventDef
 	t.eq(TextTemplate.plain(heavy.title, ctx), "重击手", "标题按敌人定义的名字")
 	t.check(TextTemplate.plain(heavy.text, ctx).contains("2.5 秒一下"), "战锤的节奏按数据：%s" % TextTemplate.plain(heavy.text, ctx).left(30))
+
+
+static func run_stale_wording_217(t: TestCase) -> void:
+	t.begin("217 · 教程和百科不再写已经变了的界面（三角标、地图左上的信力）；口粮那条讲耐力；自由模式规则卡讲负重")
+	var defs := EventPlacer.load_all()
+	var ctx := {"char_name": "阿岚", "vitality": 5, "loss_cost": 1, "_items": _db(), "rest_restore": 1}
+	for id in defs:
+		if not String(id).begins_with("tut"):
+			continue
+		var text := String((defs[id] as EventDef).text)
+		for stale in ["三角标", "地图左上"]:
+			t.check(not text.contains(stale), "%s 不再写「%s」" % [id, stale])
+	for h in GameFlow.load_help_pages():
+		t.check(not String((h as HelpPageDef).text).contains("地图左上"), "百科 %s 不再写「地图左上」" % (h as HelpPageDef).id)
+	var ration := TextTemplate.plain((defs[&"tut_search_2_again_2"] as EventDef).text, ctx)
+	var cap := int(_db().get_def(&"ration").combat.base_stats.get("max_stamina", 0))
+	t.check(ration.contains("耐力上限加 %d" % cap), "口粮那条讲耐力上限（按数据 %d）" % cap)
+	var free := load(ContentPaths.asset_file("chapters", "free_mode")) as ChapterDef
+	t.check(free.rules.size() <= 3, "自由模式规则卡仍不超过三条（091）")
+	t.check(free.rules.any(func(r): return String(r).contains("负重")), "自由模式规则卡讲负重")
+	t.check(not free.rules.any(func(r): return String(r).contains("百科")), "百科那句挪到规则卡末尾统一一行")
