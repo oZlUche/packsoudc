@@ -629,11 +629,14 @@ func map_chapters() -> Array[ChapterDef]:
 	return out
 
 
-## 180：这一章这一档按现在的种子真生成一次、数环（入局时 flow.begin 用同一个种子再生成，确定性生成两次一样）
+## 180：这一章这一档按现在的种子真生成一次、数环（入局时 flow.begin 用同一个种子再生成，确定性生成两次一样）。
+## 213：格阵数行；别的布局 0
 func ring_levels(c: ChapterDef, sid: StringName) -> int:
 	var g := preview_graph(c, sid)
 	var lay := MapLayout.for_graph(g) if g != null else null
-	return (lay as RingLayoutBase).level_count(g) if lay is RingLayoutBase else 0
+	if lay is RingLayoutBase:
+		return (lay as RingLayoutBase).level_count(g)
+	return LatticeMapLayout.rows_of(g) if lay is LatticeMapLayout else 0
 
 
 ## 182：这一章这一档按现在的种子生成的那张图（缓存；生成不出 null）。入口印记、环数都从它来
@@ -664,7 +667,7 @@ func _sync_preview() -> void:
 	if key == _preview_key and _preview.levels > 0:
 		return     # 同一张图（换难度、回到这一页）：不重新化开，挑好的出生点留着
 	_preview_key = key
-	_preview.show_map(c.map_skin, ring_levels(c, scale_id), scale_id, animate)
+	_preview.show_graph(c.map_skin, preview_graph(c, scale_id), scale_id, animate)     # 213：同心环、格阵都按图本身
 	# 182：换了图（换图、换规模、重取种子）—— 入口换成新图的、挑的清掉（「出发」重新灰）；自己会站上出生点的章不画入口
 	_forget_spawn()
 	_preview.set_entries(preview_graph(c, scale_id) if not c.auto_spawn else null)

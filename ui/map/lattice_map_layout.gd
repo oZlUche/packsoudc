@@ -21,6 +21,37 @@ static func is_horizontal(graph: MapGraph) -> bool:
 	return String(graph.layout_meta.get("orientation", "vertical")) == "horizontal"
 
 
+## 213：每个点在第几层 = 它的 row（入局转场一层层长出来按它）
+func level_of(graph: MapGraph) -> Dictionary:
+	var out := {}
+	for id in graph.node_ids():
+		out[id] = int(graph.get_node(id).layout.get("row", 0))
+	return out
+
+
+func layer_count(graph: MapGraph) -> int:
+	return rows_of(graph) - 1
+
+
+## 213：第 [param r] 层从最左到最右的格子（列号）[lo, hi]；这层没格子 = 空
+static func row_span(graph: MapGraph, r: int) -> Array:
+	var cells: Array = graph.layout_meta.get("cells", [])
+	if r < 0 or r >= cells.size() or (cells[r] as Array).is_empty():
+		return []
+	return [int((cells[r] as Array).min()), int((cells[r] as Array).max())]
+
+
+## 213：第 [param r] 层那根线的两端（画布坐标，两端各放 0.4 列）—— 局内衬底与开局预览的层线是同一根；这层没格子 = 空
+func row_segment(graph: MapGraph, rect: Rect2, r: int) -> Array:
+	var span := row_span(graph, r)
+	if span.is_empty():
+		return []
+	var a := cell_pos(graph, rect, r, span[0])
+	var b := cell_pos(graph, rect, r, span[1])
+	var pad := (b - a).normalized() * COL_STEP * 0.4 if span[1] > span[0] else Vector2.ZERO
+	return [a - pad, b + pad]
+
+
 func canvas_size(graph: MapGraph) -> Vector2:
 	var along := float(rows_of(graph) - 1) * ROW_STEP + 2.0 * MARGIN
 	var across := float(cols_of(graph) - 1) * COL_STEP + 2.0 * MARGIN
@@ -92,12 +123,8 @@ func draw_backdrop(canvas: CanvasItem, graph: MapGraph, rect: Rect2) -> void:
 		var cols: Array = cells[r]
 		if cols.is_empty():
 			continue
-		var lo := int(cols.min())
-		var hi := int(cols.max())
 		if not straight.has(r):
-			var a := cell_pos(graph, rect, r, lo)
-			var b := cell_pos(graph, rect, r, hi)
-			var pad := (b - a).normalized() * COL_STEP * 0.4 if hi > lo else Vector2.ZERO
-			canvas.draw_line(a - pad, b + pad, UiPalette.LINE, 1.0, true)
+			var seg := row_segment(graph, rect, r)
+			canvas.draw_line(seg[0], seg[1], UiPalette.LINE, 1.0, true)
 		for c in cols:
 			canvas.draw_circle(cell_pos(graph, rect, r, int(c)), 3.0, UiPalette.LINE)

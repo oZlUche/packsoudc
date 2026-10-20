@@ -691,9 +691,11 @@ func _draw() -> void:
 
 ## 180 §4：转场中每个点长到几成（id → 0..1）；不在转场 = 空（都画全）
 func _grow_map() -> Dictionary:
-	if node_front == INF or graph == null or not (_layout is RingLayoutBase):
+	if node_front == INF or graph == null or _layout == null:
 		return {}
-	var rings: Dictionary = (_layout as RingLayoutBase).levels_of(graph)
+	var rings: Dictionary = _layout.level_of(graph)     # 213：同心环按环、格阵按层
+	if rings.is_empty():
+		return {}
 	var origin := reveal_origin_ring()
 	var out := {}
 	for id in rings:
@@ -701,11 +703,11 @@ func _grow_map() -> Dictionary:
 	return out
 
 
-## 长出来从哪一环起：人在的那个点，挑出生点时是第一个出生点（没有 = 第 0 环）
+## 长出来从哪一环（格阵：哪一层）起：人在的那个点，挑出生点时是第一个出生点（没有 = 第 0 环）
 func reveal_origin_ring() -> int:
-	if graph == null or not (_layout is RingLayoutBase):
+	if graph == null or _layout == null:
 		return 0
-	var rings: Dictionary = (_layout as RingLayoutBase).levels_of(graph)
+	var rings: Dictionary = _layout.level_of(graph)
 	var from := current_id if current_id >= 0 else (int(graph.entry_ids[0]) if not graph.entry_ids.is_empty() else -1)
 	return int(rings.get(from, 0))
 
@@ -740,9 +742,9 @@ func _draw_spawn_mask(pos: Dictionary, grow: Dictionary = {}) -> void:
 	draw_string(_font, Vector2((size.x - tw) / 2.0, 34.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(UiPalette.HEAL, k))
 
 
-## 环数（同心环布局；别的布局 0）
+## 最远一层的层号（同心环 = 环数，213 格阵 = 行数 − 1；别的布局 0）
 func level_count() -> int:
-	return (_layout as RingLayoutBase).level_count(graph) if graph != null and _layout is RingLayoutBase else 0
+	return _layout.layer_count(graph) if graph != null and _layout != null else 0
 
 
 func _junctions() -> Dictionary:

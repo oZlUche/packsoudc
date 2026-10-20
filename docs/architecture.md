@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.54 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.55 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4395,6 +4395,7 @@ res://
 | v3.52 | 2026-10-19 | **210 机关沙漏**（架构线程夜间方案，待定按推荐）：第二张图 `clockwork_hourglass`（沙漏生成器第一次进章节，5.11）；机关池 `clockwork`：五种机关（`species construct`、没有包、天生格挡 + 护板 = 固定减伤，免疫流血 / 中毒 / 菌血 / 燃血，掉齿轮 `loot_filler`）+ 两种人（钟表匠学徒、守钟人）；零件齿轮臂 / 蒸汽阀 / 铆接护板 / 主发条 / 钟摆刃（玩家面 + 机关面）；`EnemyDef.immune_buffs` 一路传到 `apply_buff`；战前准备屏读数加「免疫：…」；底图 `assets/maps/clockwork`；新测试 `test_hourglass_chapter_210.gd`、`test_clockwork_210.gd` |
 | v3.53 | 2026-10-19 | **209 包的种类与两段掉落**（架构线程夜间方案，待定按推荐；改 3.2、6.1）：十个新包（粗麻袋 / 腰包 / 箭囊 / 工具卷 / 药草囊 / 铆钉挎包 / 符文囊 / 猎囊 / 百宝囊 / 军用行囊）；`ItemDef.bag_wear_free / bag_value_mult / bag_weight_mult`（`ItemValue.of_in`、`ItemWeight.of_in`、`WearModule`、悬浮窗）；新内容种类 `bag_pools`（`BagPool`、`ChapterDef.bag_pool`）；掉落两段（`DropResolver.bags_for`，`bags_always_drop` 默认关、序章用 `drop_rules/prologue`）；敌人开战的包从包池抽（`StrengthTier.bag_count`、`EnemyPlacer.roll_enemy_bags`）；商店包槽（`shop_bag_slot_chance`）；长包 / 皮包稀有度 1 → 0、药水腰带 2 → 1 并加急速；新测试 `test_bag_effects_209.gd`、`test_bag_drops_209.gd` |
 | v3.54 | 2026-10-19 | **208 魔晶石的消耗看得见**（架构线程夜间方案，待定按推荐；改 4.8 道具图、7.4 耐久）：实例变体图 `<id>@<变体>.png` + 清单 `variants`（`ItemPainter.variant_of / variant_file`、`art_of` / `draw_art` 的 `variant`，`sync_item_art.sh` 认 `@`）；没变体图时左下角次数点（`charge_dots` / `draw_charges`）；`WearProfile.broken_into`，归零换成新道具碎晶 `crystal_shards`（`WearModule.shatter`，读档 `SaveReconcile._shatter`）；悬浮窗与三颗晶石的说明写「用完碎成碎晶」；新测试 `test_crystal_wear_208.gd`，201 清单测试认变体 |
+| v3.55 | 2026-10-20 | **213 开局第三页的预览认格阵（机关沙漏）**（作者 2026-10-20 定，待定按推荐）：`MapPreview.show_graph(skin, graph, scale, animate)` 记布局 + 图 + 画布（`show_map` 变薄封装），`preview_zoom()` 同心环 = 化开半径 ÷ 环数 ÷ `RING_STEP`、格阵 = `LATTICE_FIT` × 化开直径 ÷ 画布长边（格阵固定按大型 0.95 化开），`ring_gap` / `paper_on_screen` / 入口印记 / 转场载荷一律走它；格阵每层一条虚线（`LatticeMapLayout.row_span / row_segment`，局内衬底共用），`straight_rows` 不画；纸盖不满化开那片时纸外先画桌面；深色底图的层线用纸色（`line_color`）；`MapLayout.level_of / layer_count`（同心环 = `levels_of` / 环数，格阵 = 行 / 行数 − 1），`MapView` 的转场按层长、`MapScreen.reveal_allowed` 认两种布局；`SetupScreen.ring_levels` 对格阵数行；新测试 `test_setup_preview_213.gd` |
 | v3.51 | 2026-10-19 | **212 魔兽与「野性」两套逻辑**（架构线程夜间方案，待定按推荐）：`ItemDef.wild` + `wild_applies`、`CompileInput.wild`（4.2）；`EnemyDef.species` / `bagless`（6.0），魔兽招牌一件不少、不揣携带品、内容记 `wild`，悬浮窗写「魔兽的器官」那一面；六件新器官（火焰腺 / 霜腺 / 电囊 / 兽牙 / 兽爪 / 兽尾）+ 六件兽材补 `wild`；五种魔兽进标准池；施加宏 `@apply_status_scorch/chill/numb`；新测试 `test_wild_profile_212.gd`、`test_beasts_212.gd` |
 | v3.50 | 2026-10-19 | **战利品屏只留最小化**（作者 21:16「战利品界面应该是只有最小化，提示也删掉」）：战利品屏右上角一颗最小化钮（原收起，行为不变）在最右；火漆签旁的回话行删掉，面板回话不接 |
 | v3.49 | 2026-10-19 | **206 补一**（作者 19:18 在「音效」定）：战斗开场号角 `battle.start`（`BATTLE_START` 时响，4 倍速也放行，跳转不响）；cue 表 38 条 |
