@@ -202,15 +202,10 @@ func toggle_bag() -> void:
 		_bag = null
 		return
 	_bag = _shade(0.7)
-	var win := FloatingWindow.new()
-	win.setup("bag", "背包", toggle_bag, "收起（B）", FloatingWindow.CHROME_BARE)     # 216：不写字、圆钮
+	var win := BagWindow.new()
 	_bag.add_child(win)
 	_reserve_ground(win)     # 128：背包浮窗占着的地方，地上的东西让开
-	var inv := InventoryPanelScript.new()
-	inv.hint_sink = say     # 188：顶出来了、放不下、合成了 —— 走提示行
-	inv.setup(_run, font)
-	win.body().add_child(inv)
-	_bag_panel = inv
+	_bag_panel = win.setup_bag(_run, font, toggle_bag, null, say)     # 188：顶出来了、放不下、合成了 —— 走提示行
 
 
 func bag_open() -> bool:
