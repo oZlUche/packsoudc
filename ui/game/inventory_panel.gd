@@ -1,7 +1,7 @@
 ## 背包整理面板（M6）：一局里的作战棋盘，同一套拖拽（M1 的 [DragLayer]）。
 ## 128：不再画地上框 —— 棋盘外的整块屏幕就是「地上」（导演持有的那一层 [GroundLayer]），拖出棋盘放哪就落在哪。
 ##
-## 拖一下就重新编译一次读数（耐力消耗、负重）—— 编译是纯函数（4.2），这条读数永远和真打出来的一致。
+## 拖一下就重新编译一次读数（216：棋盘下的数值栏 [StatsStrip] —— 耐力 / DPS / 负重）—— 编译是纯函数（4.2），这条读数永远和真打出来的一致。
 ## 188（作者 2026-10-17）：操作提示、地上说明、参战 / 可用格读数、信仰行都删了；信仰的悬浮窗在顶端栏的徽记上。
 ## 面板自己的回话（顶出来了、放不下、合成了）交给宿主（[member hint_sink]），地图屏走提示行
 ## 地图屏把它叠在地图上；出发前、走到哪都能开。战斗中不会开：战斗在开打那一瞬就算完了，回放是叠层，挡着它。
@@ -19,9 +19,11 @@ var board_view: InventoryView
 ## 128：导演那一层地（没有 = null：测试里单开面板）
 var ground: GroundLayer = null
 var tip: HoverTip
-var _stamina: Label
-## 129：负重那一行（这一章不算负重就藏着）
-var _weight: Label
+## 216：棋盘下的数值栏（容器屏把它摘出去摆到「全部拾取」那一行，[method detach_strip]）
+var strip: StatsStrip
+var _strip_box: MarginContainer
+## 数值栏上沿离棋盘格子下沿（让开棋盘外框，精修稿 22）
+const STRIP_GAP := 22.0
 ## 084：棋盘上双击的东西优先去这里（容器屏设成战利品 / 收获箱）；null = 放到地上
 var quick_target: ItemContainer = null
 ## 双击之后的提示回调（容器屏想自己写）：`func(text: String)`
@@ -54,18 +56,14 @@ func _build() -> void:
 	board_view.show_adjacency = true
 	board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(board_view)
-	# 084：耐力消耗评估（低 / 中 / 高 / 极高），停上去看每秒消耗与回复
-	_stamina = UiTheme.make_label("", 13, UiPalette.STAMINA)
-	_stamina.mouse_filter = Control.MOUSE_FILTER_STOP
-	_stamina.mouse_entered.connect(func():
-		if tip != null:
-			tip.show_text(StaminaEstimate.describe(_run.compile_player()), _stamina.global_position + Vector2(0, _stamina.size.y)))
-	_stamina.mouse_exited.connect(func():
-		if tip != null:
-			tip.release())
-	left.add_child(_stamina)
-	_weight = UiTheme.make_label("", 13, UiPalette.FG)
-	left.add_child(_weight)
+	# 216：耐力 / DPS / 负重三张火漆签（原耐力行、负重行）；各自停上去看细节
+	_strip_box = MarginContainer.new()
+	_strip_box.add_theme_constant_override("margin_top", int(STRIP_GAP) - 8)     # 竖排本身隔 8
+	_strip_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	left.add_child(_strip_box)
+	strip = StatsStrip.new()
+	strip.set_width(float(_run.board.size.x) * board_view.cell_px)
+	_strip_box.add_child(strip)
 
 	if _drag == null:
 		_drag = DragLayer.new()
@@ -95,14 +93,18 @@ func _build() -> void:
 	tip = HoverTip.new()
 	add_child(tip)
 	tip.watch(board_view)
+	strip.tip = tip
 	board_view.item_double_clicked.connect(quick_move)
 	board_view.item_context.connect(func(_v: ContainerView, uid: int): reseat_anchor(uid))     # 099：右键信物 = 奉为主信仰
 
 
-## 棋盘美术（2026-10-19 定稿）：容器屏不要耐力那一行（作者定稿去掉说明文字）；负重行照旧（这一章算负重才显示）
-func hide_stamina() -> void:
-	if _stamina != null:
-		_stamina.visible = false
+## 216：容器屏把数值栏摘出去，自己摆到「全部拾取」那一行；面板里那格空位一起拿掉
+func detach_strip() -> StatsStrip:
+	if _strip_box != null:
+		_strip_box.remove_child(strip)
+		_strip_box.queue_free()
+		_strip_box = null
+	return strip
 
 
 ## 128：接上导演那一层地（画的是这一局的 storage 才接）：地上的东西能拿起来拖、双击进棋盘；面板占的地方登记上，地上的东西不压着面板
@@ -185,16 +187,9 @@ func _hint_text(text: String) -> void:
 
 
 func _refresh_readout() -> void:
-	var spec := _run.compile_player()
-	if _stamina != null:
-		var e := StaminaEstimate.of(spec)
-		_stamina.text = "耐力消耗：%s（每秒 %.1f，回 %.1f）　停上去看细节" % [e["rating"], e["cost"], e["regen"]]
-	if _weight != null:
-		var line := _run.encumbrance_line()
-		var lv := _run.encumbrance_level()
-		_weight.visible = line != ""
-		_weight.text = line + ("　" + _run.encumbrance.effect_text(lv) if lv > 0 else "")
-		_weight.add_theme_color_override("font_color", UiPalette.HP if lv >= 2 else (UiPalette.STAMINA if lv == 1 else UiPalette.FG))     # 129：超重整行警示色
+	if strip != null:
+		strip.set_width(float(_run.board.size.x) * board_view.cell_px)     # 包撑大了棋盘，签跟着宽
+		strip.refresh(_run.compile_player(), _run)     # 129：超重那张的档名变色由数值栏管
 
 
 func _on_displaced(instances: Array, grabbed: bool) -> void:
