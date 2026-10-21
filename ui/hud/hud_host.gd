@@ -142,20 +142,23 @@ func release(roll: bool = true) -> void:
 	_queue_arrange()
 
 
-## 场上那个读数层（没有 null）
-static func of_tree(tree: SceneTree) -> HudHost:
-	return tree.get_first_node_in_group(GROUP) as HudHost if tree != null else null
+## 场上的读数层（正常只有地图屏那一个；都按住 / 都放开，不挑）
+static func hosts_in(tree: SceneTree) -> Array[HudHost]:
+	var out: Array[HudHost] = []
+	if tree != null:
+		for n in tree.get_nodes_in_group(GROUP):
+			if n is HudHost and not (n as Node).is_queued_for_deletion():
+				out.append(n)
+	return out
 
 
 static func hold_in(tree: SceneTree) -> void:
-	var host := of_tree(tree)
-	if host != null:
+	for host in hosts_in(tree):
 		host.hold()
 
 
 static func release_in(tree: SceneTree, roll: bool = true) -> void:
-	var host := of_tree(tree)
-	if host != null:
+	for host in hosts_in(tree):
 		host.release(roll)
 #endregion
 

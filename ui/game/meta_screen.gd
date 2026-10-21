@@ -452,9 +452,13 @@ func _build_sell(root: Control) -> Control:
 	_sell_tag_pick = OptionButton.new()
 	_sell_tag_pick.item_selected.connect(func(i: int): set_sell_tag(StringName(String(_sell_tag_pick.get_item_metadata(i)))))
 	row.add_child(_sell_tag_pick)
+	# 美术设计 20:38：一行放不下（两个下拉 + 预览 + 大按钮把中列撑宽，右边仓库被挤出屏幕）—— 预览与按钮另起一行
+	var row2 := _hbox(10)
+	row2.alignment = BoxContainer.ALIGNMENT_END
+	page.add_child(row2)
 	_sell_preview = _label("", 13, UiPalette.FG)
-	row.add_child(_sell_preview)
-	row.add_child(_button(UiText.t("meta.sell_all"), func(): sell_filtered(), 13, UiPalette.Tier.PRIMARY))
+	row2.add_child(_sell_preview)
+	row2.add_child(_button(UiText.t("meta.sell_all"), func(): sell_filtered(), 13, UiPalette.Tier.PRIMARY))
 	_sell_line = _label("", 13, UiPalette.STAMINA)
 	page.add_child(_sell_line)
 	# 225：包架也是货源 —— 双击一只卖掉（一键出售不碰包：包是装备不是战利品）

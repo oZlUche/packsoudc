@@ -28,7 +28,7 @@ static func frame_hold(t: TestCase, root: Window) -> void:
 	t.eq(wallet.text(), "%d" % run.wallet.balance, "没按住：一变就刷")
 	before = wallet.text()
 	host.hold()
-	t.check(HudHost.of_tree(root.get_tree()) == host, "场上找得到读数层")
+	t.check(HudHost.hosts_in(root.get_tree()).has(host), "场上找得到读数层")
 	run.wallet.earn(10)
 	run.vitality.change(-1)
 	host.refresh()
@@ -86,7 +86,7 @@ static func frame_battle_holds_hud(t: TestCase, root: Window) -> void:
 		_done(game)
 		return
 	var host: HudHost = map._hud_host
-	t.check(HudHost.of_tree(root.get_tree()) == host, "场上的读数层就是地图屏那个")
+	t.check(HudHost.hosts_in(root.get_tree()).has(host), "地图屏的读数层在场上")
 	var wallet := host.widget(&"wallet")
 	var shown := wallet.text()
 	var funds := flow.run.wallet.balance
