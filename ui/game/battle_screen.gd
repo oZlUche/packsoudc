@@ -100,6 +100,7 @@ func open(payload: Dictionary) -> void:
 			var spec: CombatantSpec = payload.get("player" if side == 0 else "enemy", null)
 			if spec != null and spec.board != null:
 				_view.set_board(side, spec.board)
+	_fit_duel_panel()     # 作者 10-21：和战前那块一样大
 	if coach_due():
 		_view.hold()     # 166 补充二：教程要放 —— 一开场就停住，一帧都不偷跑
 		_maybe_coach.call_deferred()
@@ -204,6 +205,8 @@ func intro_running() -> bool:
 func intro_from(prev: Control) -> void:
 	_outgoing = prev
 	_intro_running = true
+	var pf = prev.call("overlay_frame") if prev.has_method("overlay_frame") else null
+	_fit_duel_panel(pf as Control)     # 两块铜框撑齐：过场里不用缩放
 	_view.hold()
 	var from := Rect2()
 	if prev.has_method("outro"):

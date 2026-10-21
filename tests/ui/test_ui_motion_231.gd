@@ -169,6 +169,9 @@ static func frame_battle_intro(t: TestCase, root: Window) -> void:
 		return
 	var result: BattleResult = flow.last_payload.get("result", null)
 	log_size = result.log.size() if result != null else -1
+	var pre_sz: Vector2 = pre.overlay_frame().get_combined_minimum_size()
+	var bat_sz: Vector2 = screen.overlay_frame().get_combined_minimum_size()
+	t.eq(bat_sz, pre_sz, "战前与战斗两块铜面板一样大（作者 10-21：尺寸统一，过场里铜框不缩放）：%s / %s" % [pre_sz, bat_sz])
 	t.check(screen.intro_running(), "过场在演")
 	t.check(is_instance_valid(pre) and pre.is_inside_tree(), "战前屏还垫在底下")
 	t.check(pre._lane.medal_hidden, "战前中缝的铜章交出去了（不再画）")

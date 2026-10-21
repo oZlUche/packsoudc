@@ -134,6 +134,7 @@ func open(payload: Dictionary) -> void:
 		belt.changed.connect(_refresh_belt)
 	_refresh_belt()
 	_refresh()
+	_fit_duel_panel()
 	_maybe_coach.call_deferred()
 	_unfurl_flag.call_deferred()
 
