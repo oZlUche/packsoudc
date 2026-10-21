@@ -143,3 +143,36 @@
 
 **裸露文字（作者 16:32 全游戏规矩，另开 226 清查）**：结算屏先照做：第一页「撤离成功」刻进标题牌 `out/title_plate.png`（320×60 半透明，页内 (640, 84)，字由代码写 36 号），副标题「帝国营地 · 从撤离点出来」删；第二页两块棋盘上方的说明字和底下「带回来的背包里还有 N 件：置入仓库；…」那行删。美术已发执行。
 
+
+## 八、落地（执行，2026-10-21，v3.77）
+
+②③④ 与第一页 / 第二页的按钮一起落了（§一 的主钮由「继续」石键顶替，见 §七末）。
+
+**账单**（`ui/game/ledger_view.gd`，`LedgerView`）：账面 720×440 摆在设计稿 (440, 190)（屏幕正中对齐）；底图 `assets/ui/result/ledger_stele.png` 按 origin (−24, −24) 整图画在结算页石板上，不垫底、代码不画线。十行 + 合计照 §7.1（去表头后的版本）：数量 Cinzel Bold 20 右对齐 x 584（串里的汉字落到思源宋体），最高稀有度写稀有度名、serif_bold 18、`UiPalette.rarity_color(r, light)`，经验列每行「—」、合计行「合计 —」。逐行显出照 §3.3；`_input` 里点一下或按任意键全显，这一下不往下传；全显时发 `revealed`，结算屏这时才让「继续」可点。给测试的：`rows()`（key / label / 到位的数 / 显没显）、`numbers()`（行名 → 到位的数）、`reveal_all()`、`text_at(row, p)`。战败同一张账单：带出的东西写「保险箱 N 件」，最高稀有度按保险箱算。
+
+**新计数**：`RunState.tally` 加 `elite_won` / `boss_won`（赢了按这一场的点类型，`elite` / `core`）、`searches`（`search_opened`，宝箱也算；同一个点只算一次，翻过的点记在 `RunState.searched_nodes`，进存档）、`crafts`（`CraftingModule.craft` 成了一次记一笔）；`RunResult` 同名四个字段。旧存档缺的键 = 0。
+
+**「继续」与第二页按钮**：`UiTheme.make_art_text_button(text, handler, art, size, center, font_size)` —— 四态 `StyleBoxTexture`（图四周各多 6 px），字 serif_bold、按字心算内边距，按下往下挪 1 px，字色照美术（normal / pressed `#2e2219`、hover `#16110d`、disabled `#8d8a84`）；缺图退回平板主钮。两页的「继续」都是 `result/btn_stone`（210×64，字心 (92, 32)），第一页摆在 (695, 690)；第二页「一键置入」「整理」是 `result/btn_small_stone`（150×56，字心 (75, 28)，间隔 14），`WarehousePanel.art_buttons` 打开；「继续」放进同一行右端，整行挪到滚动区外钉在底下、宽度跟着仓库面板（右沿对齐仓库区右沿）。序章连打时「进入下一张：X」那颗大钮去掉，按钮写「继续」。
+
+**棋盘**（§七末作者 15:19 的规矩）：187 的设置项删了，不是只改默认 —— `GameSettings.show_grid` / `GRID_AUTO` / `grid_on`、设置屏的开关与 `settings.grid*` 文案、`InventoryView.grid_shown` / `drag_hint` / `apply_grid_setting` / `GRID_DRAG_ALPHA`、`DragLayer._hint_grids` 都删；旧设置文件里的 `show_grid` 读时忽略。仓库按 UI替换美术 的 `boards.warehouse` 画：`InventoryView.ground = GROUND_WAREHOUSE`（棕底 `#543c2a`、两层内格线在道具下面、外圈 4 px 圆角深边），`WarehousePages` 三处（基地、开局屏第二页、结算屏）一起换。带回来的背包套 `board/frame_player` 素皮带框（`StyleBoxTexture`，四边 54、中段平铺、格子缩进 24）加战利品屏同一套格缝；不滚时不留滚动条那 14 px（`ScrollBox` 的 meta `tight`），基地中列算格子边长时扣掉框宽。
+
+**字体**：`assets/fonts/cinzel_bold.ttf`（Cinzel Bold，只裁 `0-9 I V X + − - % / · —` 和空格，4 KB）+ `LICENSES/OFL_Cinzel.txt`，`tools/subset_fonts.sh` 跟着裁；`UiPalette.FONT_NUMERAL` / `numeral_font()`（缺字走思源宋体）。
+
+**稀有度色**：`data/authoring/ui/text_colors.json` 的 `rarity` 换成美术设计核过的六对（§七末），`ItemPainter.RARITY_COLORS` 没动。
+
+**地上出售撤销**（§7.2）：照单删干净；帮助页「地上」末句改成「撤离时地上没背出来的那几件就没了：不进仓库，也不换钱。」（英文同改）。
+
+**作者 16:32 的补充**（美术设计 16:36 转来）：
+- 第一页标题刻进标题牌：`result/title_plate`（320×60，摆在 (640, 84)，图 origin −6），字 36、居中、墨色（`UiTheme.make_title_label`）；副标题「章节 · 结局」删了，页面 tone 设成 light。
+- 去掉裸露文字：第二页顶上那行「置入仓库 / 总价值 · 带出」删了；`WarehousePanel.art_buttons` 打开时两块棋盘上面的说明字（带回来的背包、仓库大小）和底下那行状态字（「带回来的背包里还有…」、一键置入的结果）不显示（`visible = false`，字照旧更新）；序章之间那句「下面直接进…」也删了。没再用到的 `result.reason_*` / `store_title` / `store_recap` / `next_note` 文案一起删。
+- 第二页仓库连同分页签右对齐（面板里加一个撑开的空位），带回来的背包仍靠左；仓库框右沿和「继续」右沿对齐。
+
+**221 补充五**（随这次落）：`event_marked_reward` 台词改「他塞给你一瓶{item:salve}」；`faith_call` 标题改「无名的祭坛」/ A Nameless Altar；`extract_default` 里的仓库、地上改 `{zone:…}`；`event_altar` 的匕首改 `{item:knife}`；四个 `faith_call_*` 和 `tut3_faith_call` 台词里的护符名改 `{item:charm_*}`。中英同改。
+
+### 和方案不一样的地方
+
+1. **`FONT_DISPLAY` 没有整体换成 Cinzel，另加了 `FONT_NUMERAL`。** §四 / §7.3 说火漆签大字、倍速罗马数字、翻页计数器都走 `FONT_DISPLAY`、汉字不走它 —— 查下来不是：`FONT_DISPLAY`（马善政）现在画的是开场事件的章节名和宝箱屏的说明字，都是汉字；倍速钮是图（缺图时写的是 Ⅰ Ⅱ Ⅳ 这种 Unicode 罗马数字字符，Cinzel 没有）；翻页计数器和火漆签走的是正文 / 粗体。整体换掉会让章节名变成朱雀仿宋，所以 Cinzel 只用在账单的数上，马善政留着。倍速、翻页计数器要换 Cinzel 得先把 Ⅳ 这类字符改成字母 IV，要做的话另开一条。
+2. **战败也可能有第 2 步。** 原来战败时带回来的背包里有东西（保险箱带出的进了这块背包，或上一局没置入的），第一页下面会挂一块仓库面板；账单占了页面中间，放不下了。现在这种情况下第一页的「继续」翻到和撤离一样的第 2 步置入仓库；带回来的背包是空的就照旧一步到底。
+3. **战败页的布局**：保险箱放大后摆在账单右边（1200, 190），「全都留在了里面」那句在「继续」下面。战败页这两句（保险箱上面那句、「继续」下面那句）作者 16:32 没点名，稿里也没有战败页，这次先留着；报告 226 批二把它们删掉。
+
+截图：`/mnt/project-files/art/ui/ledger/shots/`（第一页逐行中途 / 全显、第二页、战败、基地仓库页）。

@@ -13,9 +13,9 @@ item = &"charm_earth"
 
 [sub_resource type="Resource" id="Resource_ojui4"]
 script = ExtResource("4_sum4f")
-text = "大地之神的护符沉甸甸的，是个空匣子。"
+text = "{item:charm_earth}沉甸甸的，是个空匣子。"
 texts = {
-"en": "The charm of the God of the Earth sits heavy in your hand. It's an empty casket."
+"en": "The {item:charm_earth} sits heavy in your hand. It's an empty casket."
 }
 
 [sub_resource type="Resource" id="Resource_5e8x2"]

@@ -24,9 +24,9 @@
         },
         {
           "type": "say",
-          "text": "自然之神的护符上，藤还在长。",
+          "text": "{item:charm_nature}上，藤还在长。",
           "texts": {
-            "en": "On the charm of the God of Nature, the vine is still growing."
+            "en": "On the {item:charm_nature}, the vine is still growing."
           }
         }
       ]

@@ -448,27 +448,6 @@ func sell_tags() -> Array:
 	return tags
 
 
-## 092（作者定；101 第 4 刀从 [GameFlow] 搬来）：离开结算屏时地上没背出来的一键出售。这里只算不卖
-static func left_behind_preview(result: RunResult, ratio: float = 0.5) -> Dictionary:
-	var out := {"count": 0, "funds": 0}
-	if result == null or not result.is_extracted():
-		return out
-	for inst in result.left_items:
-		out["count"] = int(out["count"]) + 1
-		out["funds"] = int(out["funds"]) + sell_price((inst as ItemInstance).def, ratio)
-	return out
-
-
-## 真卖：钱进局外、清单清掉（**只卖一次**）。返回卖了几件、得多少
-func sell_left_behind(result: RunResult, ratio: float = 0.5) -> Dictionary:
-	var got := left_behind_preview(result, ratio)
-	if int(got["count"]) > 0:
-		funds += int(got["funds"])
-		result.left_items.clear()
-		changed.emit()
-	return got
-
-
 ## 090（101 第 4 刀从开局屏搬来）：上一局带回来、还没置入的东西从带回来的棋盘挪进暂存那一栏，
 ## 记住各自原位（回主菜单时 [method return_stash] 原样放回）。返回 `uid → {"origin", "rot"}`
 func take_board_to_stash(stash: ItemStash) -> Dictionary:

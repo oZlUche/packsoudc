@@ -299,6 +299,8 @@ const FONT_BODY := "serif_regular.otf"
 const FONT_BOLD := "serif_bold.otf"
 const FONT_TITLE := "zhuque_fangsong.ttf"
 const FONT_DISPLAY := "mashanzheng.ttf"
+## 224（作者定，按推荐）：数字字体 Cinzel Bold（罗马碑刻体，OFL）—— 只裁了数字、I V X 和 + − % / · — 空格；汉字缺字走思源宋体
+const FONT_NUMERAL := "cinzel_bold.ttf"
 static var _font_files: Dictionary = {}
 
 
@@ -350,6 +352,11 @@ static func title_font() -> Font:
 ## 大标题（主菜单游戏名、章节名、宝箱屏说明）：马善政，缺字走标题字体
 static func display_font() -> Font:
 	return _wrap(FONT_DISPLAY, title_font())
+
+
+## 224：结算账单的数字（Cinzel Bold）；一串里的汉字（「27 件 · 保险箱 2 件」）落到思源宋体
+static func numeral_font() -> Font:
+	return _wrap(FONT_NUMERAL, cjk_font())
 #endregion
 
 

@@ -211,27 +211,8 @@ static func run_meta_stash_and_sale(t: TestCase) -> void:
 	t.check(meta.board != null and meta.board.item_count() == 1, "回到带回来的棋盘上")
 	var put_back := meta.board.items()[0] as ItemInstance
 	t.eq(put_back.origin, origin, "按原位放回")
-	# 地上没背出来的一键出售：只算 / 真卖 / 只卖一次
-	var r := RunResult.new()
-	r.outcome = &"extracted"
-	var left: Array[ItemInstance] = [ItemInstance.create(def), ItemInstance.create(def)]
-	r.left_items = left
-	var ratio := 0.5
-	var preview := MetaState.left_behind_preview(r, ratio)
-	t.eq(int(preview["count"]), 2, "预览：两件")
-	t.eq(int(preview["funds"]), 2 * MetaState.sell_price(def, ratio), "预览：卖价之和")
-	t.eq(MetaState.left_behind_preview(r, ratio), preview, "只算不卖：再算一次一样")
-	var funds0 := meta.funds
-	var sold := meta.sell_left_behind(r, ratio)
-	t.eq(sold, preview, "真卖：和预览一致")
-	t.eq(meta.funds, funds0 + int(preview["funds"]), "钱进局外")
-	t.check(r.left_items.is_empty(), "清单清掉")
-	t.eq(int(meta.sell_left_behind(r, ratio)["count"]), 0, "只卖一次")
-	# 没撤离出来的（战败）不卖
-	var dead := RunResult.new()
-	dead.outcome = &"defeated"
-	dead.left_items = [ItemInstance.create(def)] as Array[ItemInstance]
-	t.eq(int(MetaState.left_behind_preview(dead, ratio)["count"]), 0, "没撤离出来：地上的不卖（东西没带出来）")
+	# 224：地上的一键出售撤了（092 作废）—— 局外不再有这两个入口
+	t.check(not MetaState.new().has_method("sell_left_behind") and not MetaState.new().has_method("left_behind_preview"), "224：没有一键出售地上")
 
 ## 101 第 5 刀：只属于一局的 UI 接线走信号，core 不认识 ui
 static func run_run_changed_signal(t: TestCase) -> void:

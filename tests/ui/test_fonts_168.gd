@@ -13,7 +13,12 @@ static func run_files(t: TestCase) -> void:
 	if body != null:
 		for ch in ["Ⅳ", "♥", "×", "…"]:
 			t.check(body.has_char(ch.unicode_at(0)), "正文字体有「%s」" % ch)
-	for lic in ["OFL_NotoSerifCJK.txt", "OFL_ZhuqueFangsong.txt", "OFL_MaShanZheng.txt"]:
+	# 224：账单数字 Cinzel Bold —— 只裁了数字与罗马数字那几个；缺的（汉字）落到思源宋体
+	var num := UiPalette.font_file(UiPalette.FONT_NUMERAL)
+	t.check(num is FontFile and num.has_char("7".unicode_at(0)) and num.has_char("X".unicode_at(0)) and not num.has_char("件".unicode_at(0)), "Cinzel 子集：有数字和 X，没有汉字")
+	var nf := UiPalette.numeral_font()
+	t.check(nf is FontVariation and (nf as FontVariation).base_font == num and (nf.fallbacks[0] as FontVariation).base_font == body, "账单数字：Cinzel 打底、汉字走思源宋体")
+	for lic in ["OFL_NotoSerifCJK.txt", "OFL_ZhuqueFangsong.txt", "OFL_MaShanZheng.txt", "OFL_Cinzel.txt"]:
 		t.check(FileAccess.file_exists("res://assets/fonts/LICENSES/" + lic), "授权 %s 随包" % lic)
 	t.check(FontCoverage.charset().size() > 1000, "字集 %d 个字" % FontCoverage.charset().size())
 

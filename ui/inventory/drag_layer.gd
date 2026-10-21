@@ -193,7 +193,6 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 	InventoryView.set_focused(_inst, get_tree() if is_inside_tree() else null)     # 作者 10-21：拿起的这件就是点中的那件（地上拿起的也算）
 	_highlight_partners()
 	UiCursor.set_drag(true)     # 157
-	_hint_grids(true)     # 187
 	queue_redraw()
 	AudioHub.play(SfxMaterial.pick_cue(_inst.def))     # 206：上手按材质响
 	drag_started.emit(uid)
@@ -222,7 +221,6 @@ func grab_free(inst: ItemInstance, home: ItemContainer, home_at: Vector2i, home_
 	set_process_input(true)
 	_highlight_partners()
 	UiCursor.set_drag(true)     # 157
-	_hint_grids(true)     # 187
 	if is_inside_tree():
 		update_preview(get_global_mouse_position())
 	queue_redraw()
@@ -1005,19 +1003,10 @@ func _restore() -> void:
 	push_error("DragLayer: uid %d 放不回源容器，物品已丢失" % _inst.uid)
 
 
-## 187：格线关着时，拖着东西的那段时间各棋盘临时画半透明的格
-func _hint_grids(on: bool) -> void:
-	_prune_views()
-	for view in _views:
-		if view is InventoryView:
-			(view as InventoryView).drag_hint = on
-
-
 func _end_drag() -> void:
 	_prune_views()
 	for view in _views:
 		view.clear_preview()
-	_hint_grids(false)     # 187
 	_inst = null
 	_cell = InventoryView.CELL
 	craft_hint = ""

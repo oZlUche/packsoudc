@@ -40,7 +40,7 @@ const CHARGE_INSET := 0.08
 const CHARGE_DIM := Color(1, 1, 1, 0.3)
 
 
-## 187 → 201：道具图包到了没有 = 清单在不在。棋盘格线的默认（[method GameSettings.grid_on]）跟着它
+## 201：道具图包到了没有 = 清单在不在
 static func art_available() -> bool:
 	return FileAccess.file_exists(ART_MANIFEST)
 
