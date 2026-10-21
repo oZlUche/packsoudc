@@ -6,6 +6,9 @@
 ## 包把棋盘撑大时窗跟着长（左、右、下边距不变）。
 ## 223（作者 16:07 选蜡板、甲 角色卡）：窗加宽到 984，原来整扇 660 一字不动；x 660 一条竖分隔线，右栏（`col`）放名牌和 [CharacterCard]，
 ## 棋盘变宽时竖线和右栏整体右移同样的量。
+## 232（作者 19:23 选 2）：石板窗换成一只背包 —— 四件皮料（包身九宫格、翻盖、提手徽、两只侧环，`assets/ui/bag/layout.json`）
+## 垫在画布底下（[member _back]），翻盖整块是拖动把手、盖住标题行（横分隔线不画了），提手与侧环凸出窗外、夹边时算进去（[member FloatingWindow.outset]）。
+## 缺包身图退回石板窗
 class_name BagWindow
 extends FloatingWindow
 
@@ -17,6 +20,8 @@ const LAYOUT := ART_DIR + "layout.json"
 const MINIMIZE_DIR := "res://assets/ui/board/"
 const MINIMIZE_ART := "btn_minimize"
 const MINIMIZE_SIDE := 56.0
+## 232：背包皮的图与摆位
+const SATCHEL_DIR := "bag/"
 const DIVIDER_COLOR := Color("786e64")
 const DIVIDER_W := 1.2
 ## 没有 `layout.json` 时的摆位（和精修稿同一份）
@@ -43,6 +48,9 @@ var coach: CoachOverlay = null
 var _canvas: Control
 var _font: Font = null
 var _spec: Dictionary = {}
+## 232：背包皮（包身 / 侧环 / 翻盖 / 提手徽，画在 [member _canvas] 底下）；没图 null
+var _back: Control = null
+var _satchel: Dictionary = {}
 
 
 ## 搭好整块窗并返回里面的面板。[param drag] 同 [method InventoryPanelScript.setup]；[param hint_sink] 是面板回话的去处
@@ -50,9 +58,12 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	key = "bag"
 	_font = font
 	_spec = spec()
-	UiTheme.panel(self, 0, UiTheme.PANEL_WINDOW)     # 内边距 0：子节点按窗左上的设计像素摆
+	_satchel = satchel() if UiTheme.art_cached(SATCHEL_DIR + "bag_body") != null else {}
+	UiTheme.panel(self, 0, UiTheme.PANEL_BARE if skinned() else UiTheme.PANEL_WINDOW)     # 内边距 0：子节点按窗左上的设计像素摆
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	center_shift = _vec(_spec["window_center"]) - DESIGN * 0.5
+	if skinned():
+		_build_back()
 
 	_canvas = Control.new()
 	_canvas.name = "Canvas"
@@ -148,6 +159,91 @@ func control_rect(id: StringName) -> Rect2:
 	return strip.get_global_transform() * strip.tag_rect(kind)
 
 
+## 232：背包皮的摆位表（`bag/layout.json`）
+static func satchel() -> Dictionary:
+	return UiTheme.art_meta(SATCHEL_DIR + "layout")
+
+
+## 232：换上背包皮了没有
+func skinned() -> bool:
+	return not _satchel.is_empty()
+
+
+## 四件皮料（叠放：包身 → 侧环 → 翻盖 → 提手徽）；位置在 [method _layout] 里随窗宽摆
+func _build_back() -> void:
+	_back = Control.new()
+	_back.name = "Satchel"
+	_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_back)
+	_back.add_child(_patch("Body", "body", true))
+	for side in ["TabLeft", "TabRight"]:
+		var tab := TextureRect.new()
+		tab.name = side
+		tab.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tab.texture = UiTheme.art_cached(SATCHEL_DIR + String((_satchel["tab"] as Dictionary)["file"]).get_basename())
+		tab.flip_h = side == "TabRight" and bool((_satchel["tab"] as Dictionary).get("right_flip_h", true))
+		_back.add_child(tab)
+	_back.add_child(_patch("Flap", "flap", false))
+	var crest := TextureRect.new()
+	crest.name = "Crest"
+	crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	crest.texture = UiTheme.art_cached(SATCHEL_DIR + String((_satchel["crest"] as Dictionary)["file"]).get_basename())
+	_back.add_child(crest)
+	var o: Dictionary = _satchel.get("outset", {})
+	outset = Rect2(float(o.get("left", 0)), float(o.get("top", 0)), float(o.get("right", 0)), float(o.get("bottom", 0)))
+
+
+## 一件九宫格皮料（[param stretch] 拉伸；否则平铺）
+func _patch(node_name: String, key: String, stretch: bool) -> NinePatchRect:
+	var d: Dictionary = _satchel[key]
+	var n := NinePatchRect.new()
+	n.name = node_name
+	n.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	n.texture = UiTheme.art_cached(SATCHEL_DIR + String(d["file"]).get_basename())
+	var m: Array = d.get("patch_margin", [0, 0, 0, 0])
+	n.patch_margin_left = int(m[0])
+	n.patch_margin_top = int(m[1])
+	n.patch_margin_right = int(m[2])
+	n.patch_margin_bottom = int(m[3])
+	var mode := NinePatchRect.AXIS_STRETCH_MODE_STRETCH if stretch else NinePatchRect.AXIS_STRETCH_MODE_TILE_FIT
+	n.axis_stretch_horizontal = mode
+	n.axis_stretch_vertical = mode
+	return n
+
+
+## 皮料随窗大小摆（W、H = [method window_size]）
+func _layout_back(want: Vector2) -> void:
+	if _back == null:
+		return
+	var body: Dictionary = _satchel["body"]
+	var b := _back.get_node("Body") as Control
+	b.position = _vec(body["at"])
+	b.size = want + _vec(body["grow"])
+	var flap: Dictionary = _satchel["flap"]
+	var f := _back.get_node("Flap") as Control
+	f.position = _vec(flap["at"])
+	f.size = Vector2(want.x + float(flap.get("grow_x", 80)), _vec(flap["size"]).y)
+	var crest := _back.get_node("Crest") as Control
+	crest.size = _vec((_satchel["crest"] as Dictionary)["size"])
+	crest.position = Vector2(want.x * 0.5 - crest.size.x * 0.5, float(((_satchel["crest"] as Dictionary)["at"] as Array)[1]))
+	var tab: Dictionary = _satchel["tab"]
+	var left := _back.get_node("TabLeft") as Control
+	left.size = _vec(tab["size"])
+	left.position = _vec(tab["left_at"])
+	var right := _back.get_node("TabRight") as Control
+	right.size = left.size
+	var right_at: Array = tab["right_at"]
+	right.position = Vector2(want.x + float(String(right_at[0]).trim_prefix("W").replace(" ", "").replace("+-", "-")), float(right_at[1]))
+
+
+## 翻盖的矩形（窗里的坐标；拖动把手就是它）；没换皮 = 标题行
+func grip_rect() -> Rect2:
+	if _back != null:
+		var f := _back.get_node("Flap") as Control
+		return Rect2(f.position, f.size)
+	return Rect2(Vector2.ZERO, Vector2(window_size().x, float(_spec["header_h"])))
+
+
 ## 精修稿的 `bag_window`（缺的键按 [constant DEFAULTS]）
 static func spec() -> Dictionary:
 	var out := DEFAULTS.duplicate(true)
@@ -176,8 +272,10 @@ func _layout() -> void:
 		return
 	var want := window_size()
 	_canvas.custom_minimum_size = want
-	_header.position = Vector2.ZERO
-	_header.size = Vector2(want.x, float(_spec["header_h"]))
+	_layout_back(want)
+	var grip := grip_rect()
+	_header.position = grip.position
+	_header.size = grip.size
 	var cells := board_cells_at()
 	var cells_size := Vector2(panel.board_view.inventory.size) * float(_spec["cell"])
 	var off := float((_spec["board_frame"] as Dictionary).get("cells_offset", 24))
@@ -197,16 +295,18 @@ func _layout() -> void:
 	nameplate.size = Vector2(want_plate.x / k, want_plate.y / k)
 	card.position = Vector2(col_x, float((col.get("card", {}) as Dictionary).get("y", 202)))
 	var ms: Dictionary = _spec["minimize"]
-	close_button.position = _vec(ms.get("topleft_rel_window", [918, 13])) + Vector2(grow.x, 0.0)
+	var at: Array = (_satchel.get("minimize", {}) as Dictionary).get("topleft_rel_window", ms.get("topleft_rel_window", [918, 13]))
+	close_button.position = _vec(at) + Vector2(grow.x, 0.0)
 	_canvas.queue_redraw()
 	reset_size()
 
 
-## 标题行下那条线：y = 窗上沿 + header_h，左右各缩 gap；223：棋盘右边一条竖线（同色同粗，跟着棋盘右移、下端跟着窗长）
+## 标题行下那条线：y = 窗上沿 + header_h，左右各缩 gap（232 换了背包皮不画：翻盖下沿就是分隔）；223：棋盘右边一条竖线（同色同粗，跟着棋盘右移、下端跟着窗长）
 func _draw_divider() -> void:
-	var y := float(_spec["header_h"])
-	var gap := float(_spec["gap"])
-	_canvas.draw_line(Vector2(gap, y), Vector2(_canvas.size.x - gap, y), DIVIDER_COLOR, DIVIDER_W)
+	if not skinned():
+		var y := float(_spec["header_h"])
+		var gap := float(_spec["gap"])
+		_canvas.draw_line(Vector2(gap, y), Vector2(_canvas.size.x - gap, y), DIVIDER_COLOR, DIVIDER_W)
 	var v := divider_v()
 	_canvas.draw_line(v[0], v[1], DIVIDER_COLOR, DIVIDER_W)
 

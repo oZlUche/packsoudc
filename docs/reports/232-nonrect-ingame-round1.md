@@ -83,3 +83,14 @@
 
 - **执行**：四样一单，按 §二 做；排在 230（悬浮窗按钮）之后、226 批二之前。落地后截图交游戏测试。
 - **美术设计**：商店（3）与战斗三屏边框（4）的方向稿等作者挑；挑定后另开报告。
+
+## 六、落地（v3.87）
+
+待定 1 / 2 / 3 按推荐：「军团的交代」和结果页一起换成书；翻盖整块当把手；超过 6 格退回直圆槽。
+
+- **事件窗 = 书**：`OverlayFrame` 第三种皮 `book`（`_init(margin, bronze, book)`，`GameScreen._centered_panel(…, book)`）：面板底空、`event/event_book` 整张图往外 (40, 34)，没有标题条，[member OverlayFrame.title_label] 由事件屏摆进右页（墨色 26 居中）；`EventScreen._book_page` 绝对摆位：插图 `image_rect`、右页一列 `text_rect`（标题 → 章节名 → 正文滚动 → 选项）；`EventImage.area(…, light)` 没图时淡墨框。缺图退回石板窗（老路径保留）。
+- **背包窗 = 背包**：`BagWindow._back`（包身九宫格 STRETCH、两只侧环、翻盖左右分段、提手徽）垫在 `_canvas` 底下，`_layout_back(W, H)` 随窗宽摆；窗底换 `PANEL_BARE`；横分隔线不画；收起钮读 `bag/layout.json` 的 `minimize`；把手 = 翻盖矩形（`grip_rect()`）。`FloatingWindow.outset`（左 50 上 100 右 50 下 32）进 `_clamp`。缺包身图退回石板窗。
+- **腰带 = 弯皮带**：`BeltSlots` 按格数取 `belt/belt_<n>` 整张、圆心读 `belt/layout.json`（`belt_layouts()`、`curved()`），命中半径 `HIT` 36，不画圆底与绿圆，没图标的字用墨色；7 格以上或缺图退回直圆槽。`BeltWidget._sync_skin`：弯皮带时 `PANEL_BARE`、不进凹槽。
+- **图例 = 双尾旗**：`LegendWidget.pennant_box()`（`hud/legend_pennant` 九宫格，边距读 json），最窄 158；缺图退回深色方块。
+- 图：`assets/ui/event/`、`assets/ui/bag/`、`assets/ui/belt/`、`assets/ui/hud/legend_pennant.png`（只拷 1x）。
+- 测试：新 `test_bag_window_232`（四件摆位随 W、把手 = 翻盖、outset 夹边、弯皮带 1–6 格圆心与 7 格退回）、`test_event_book_232`（图摆位、左页插图、右页标题与选项、浅底）；改 `test_belt_slots_160`（弯皮带大小）、`test_map_screen_166`（图例旗底、最窄 158）、`test_stats_strip_216`（收起钮在翻盖上）。

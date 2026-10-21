@@ -32,8 +32,9 @@ static func is_image_file(path: String) -> bool:
 
 ## 配图那一块（事件屏的左栏、编辑器的预览）：有图就铺满、按比例裁；没有图就一块深底色，居中写两行占位字（标题、提示）。
 ## [param size] 是最小尺寸；[param broken_hint] 是路径有、图却读不到时的提示（空 = 写出路径）；[param sep] 是两行占位字的间距
+## [param light]（232 书页）：没图时不画深底黑块，画一块淡墨框、墨色字
 static func area(path: String, title: String, size: Vector2, big_size: int = 22, small_size: int = 12,
-		broken_hint: String = "", sep: int = 6) -> Control:
+		broken_hint: String = "", sep: int = 6, light: bool = false) -> Control:
 	var area := Control.new()
 	area.clip_contents = true
 	area.custom_minimum_size = size
@@ -47,7 +48,7 @@ static func area(path: String, title: String, size: Vector2, big_size: int = 22,
 		area.add_child(tex)
 		return area
 	var bg := ColorRect.new()
-	bg.color = Color("0d0f12")
+	bg.color = Color(UiTheme.INK_DEFAULT, 0.08) if light else Color("0d0f12")
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	area.add_child(bg)
 	var center := CenterContainer.new()
@@ -55,7 +56,7 @@ static func area(path: String, title: String, size: Vector2, big_size: int = 22,
 	area.add_child(center)
 	var col := UiTheme.vbox(sep)
 	center.add_child(col)
-	var big := UiTheme.make_label(title, big_size, UiPalette.DIM.darkened(0.35))
+	var big := UiTheme.make_label(title, big_size, Color(UiTheme.INK_DEFAULT, 0.55) if light else UiPalette.DIM.darkened(0.35))
 	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(big)
 	# 2026-10-17：没配图就只画标题；路径坏了的提示只在开发版露出

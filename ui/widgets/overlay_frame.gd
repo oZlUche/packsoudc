@@ -23,11 +23,23 @@ var bronze := false
 const BRONZE_ART := "bronze/panel_bronze"
 const BRONZE_MARGIN := 83
 const BRONZE_INSET := 40
+## 232（作者 19:23 选 1）：事件屏是一本摊开的书 —— 一整张图（`event/event_book`）不拉伸，图左上 = 框左上 − `panel_at`；
+## 没有标题条，标题标签（[member title_label]）由事件屏摆进右页；书页浅底墨字
+const BOOK_ART := "event/event_book"
+const BOOK_TITLE_SIZE := 26
+var book := false
+## 书那张图（测试看位置）
+var book_back: TextureRect = null
 
 
 ## [param margin] 是各屏原来给面板的内边距：平面底照旧当外框内边距；九宫格底时外框边距由图定，多出来的部分垫在内容区里。
 ## [param p_bronze]：铜面板（没图退回石板）
-func _init(margin: int = -1, p_bronze: bool = false) -> void:
+## [param p_book]：书（232；没图退回石板）
+func _init(margin: int = -1, p_bronze: bool = false, p_book: bool = false) -> void:
+	book = p_book and UiTheme.art_cached(BOOK_ART) != null
+	if book:
+		_init_book()
+		return
 	bronze = p_bronze and UiTheme.art(BRONZE_ART) != null
 	if bronze:
 		_init_bronze(margin)
@@ -91,6 +103,48 @@ func _init_bronze(margin: int) -> void:
 	var pad := maxi(0, margin - BRONZE_INSET) if margin >= 0 else 0
 	UiTheme.margins(content, pad, pad, pad, pad)
 	col.add_child(content)
+
+
+func _init_book() -> void:
+	add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	UiTheme.set_tone(self, UiTheme.TONE_LIGHT)
+	var meta := book_meta()
+	var back := Control.new()     # 框把它铺满；图在它里面往左上出 panel_at
+	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(back)
+	book_back = TextureRect.new()
+	book_back.name = "Book"
+	book_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	book_back.texture = UiTheme.art_cached(BOOK_ART)
+	var at: Array = meta.get("panel_at", [40, 34])
+	book_back.position = -Vector2(float(at[0]), float(at[1]))
+	book_back.size = book_back.texture.get_size()
+	back.add_child(book_back)
+	title_bar = UiTheme.hbox(8)     # 没有标题条：留着空的
+	title_bar.visible = false
+	back.add_child(title_bar)
+	slots = UiTheme.hbox(8)
+	title_bar.add_child(slots)
+	title_label = UiTheme.make_label("", BOOK_TITLE_SIZE)
+	title_label.theme_type_variation = UiTheme.LABEL_OVERLAY_TITLE
+	title_label.add_theme_font_size_override("font_size", BOOK_TITLE_SIZE)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	content = MarginContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	UiTheme.margins(content, 0, 0, 0, 0)
+	add_child(content)
+
+
+## 书的摆位（`event_book.json`：panel_at、image_rect、text_rect、title_h，面板坐标）
+static func book_meta() -> Dictionary:
+	return UiTheme.art_meta(BOOK_ART)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE and title_label != null and is_instance_valid(title_label) and title_label.get_parent() == null:
+		title_label.free()     # 书：标题标签没被摆进右页时自己收
 
 
 func set_title(text: String) -> Label:

@@ -6,10 +6,9 @@ extends HudWidget
 const ICON := 24.0
 const ROW_GAP := 4.0
 const TEXT_GAP := 8.0
-## 作者 2026-10-13（图例看不清、字压边框）：图例自己一块深色半透明底、白字，内边距让图标和字离边框远一点
-const BG := Color(0.08, 0.07, 0.06, 0.78)
-const PAD_X := 10
-const PAD_Y := 6
+## 232（作者 19:23 选 10）：图例的底是一面双尾旗（`hud/legend_pennant` 九宫格，钉子、绳、横杆都在图里），白字；最窄这么宽，英文长名往宽撑
+const PENNANT := "hud/legend_pennant"
+const MIN_WIDTH := 158.0
 
 static var _dark_theme: Theme = null
 
@@ -21,6 +20,7 @@ func _init() -> void:
 	theme = _legend_theme()     # 深底（tone dark）：不挂墨色字，自己的底和白字
 	set_meta(&"tone", UiTheme.TONE_DARK)     # 169：里面的字按深底取版（HudWidget 默认挂的是凹槽的浅）
 	_text.visible = false
+	custom_minimum_size.x = MIN_WIDTH
 	_rows = UiTheme.vbox(int(ROW_GAP))
 	_rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_rows)
@@ -90,27 +90,43 @@ func row_names() -> Array[String]:
 	return out
 
 
-## 深色底 + 白字的一份小主题（只给图例）
+## 双尾旗底 + 白字的一份小主题（只给图例）；旗的图缺了退回深色半透明方块
 static func _legend_theme() -> Theme:
 	if _dark_theme != null:
 		return _dark_theme
-	var box := StyleBoxFlat.new()
-	box.bg_color = BG
-	box.border_color = Color(1, 1, 1, 0.18)
-	box.set_border_width_all(1)
-	box.set_corner_radius_all(4)
-	box.content_margin_left = PAD_X
-	box.content_margin_right = PAD_X
-	box.content_margin_top = PAD_Y
-	box.content_margin_bottom = PAD_Y
 	var t := Theme.new()
 	t.set_type_variation(UiTheme.PANEL_HUD, "PanelContainer")
-	t.set_stylebox("panel", UiTheme.PANEL_HUD, box)
+	t.set_stylebox("panel", UiTheme.PANEL_HUD, pennant_box())
 	t.set_type_variation(UiTheme.LABEL_HUD, "Label")
 	t.set_color("font_color", UiTheme.LABEL_HUD, Color.WHITE)
 	t.set_color("font_color", "Label", Color.WHITE)
 	_dark_theme = t
 	return t
+
+
+## 旗的九宫格（边距读 `legend_pennant.json`）
+static func pennant_box() -> StyleBox:
+	var tex := UiTheme.art_cached(PENNANT)
+	if tex == null:
+		var flat := StyleBoxFlat.new()
+		flat.bg_color = Color(0.08, 0.07, 0.06, 0.78)
+		flat.set_corner_radius_all(4)
+		flat.set_content_margin_all(10)
+		return flat
+	var meta := UiTheme.art_meta(PENNANT)
+	var tm: Array = meta.get("texture_margin", [44, 52, 44, 58])
+	var cm: Array = meta.get("content_margin", [30, 54, 26, 50])
+	var box := StyleBoxTexture.new()
+	box.texture = tex
+	box.texture_margin_left = float(tm[0])
+	box.texture_margin_top = float(tm[1])
+	box.texture_margin_right = float(tm[2])
+	box.texture_margin_bottom = float(tm[3])
+	box.content_margin_left = float(cm[0])
+	box.content_margin_top = float(cm[1])
+	box.content_margin_right = float(cm[2])
+	box.content_margin_bottom = float(cm[3])
+	return box
 
 
 ## 一枚图标：图（按类型色着色）或者圆里一个字

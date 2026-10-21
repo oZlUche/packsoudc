@@ -99,7 +99,8 @@ static func frame_bag_window(t: TestCase, root: Window) -> void:
 		t.eq(win.frame.position, inv.position - Vector2(off, off), "外框比格子外扩 %d" % int(off))
 		t.eq(win.frame.size, Vector2(inv.board_view.inventory.size) * cell + Vector2(off, off) * 2.0, "外框包住整块棋盘")
 		t.not_null(win.frame.texture, "外框切图在")
-		t.eq(win.close_button.position, BagWindow._vec(spec["minimize"]["topleft_rel_window"]) + Vector2(extra.x, 0.0), "圆钮在右上")
+		var mini: Array = (BagWindow.satchel().get("minimize", {}) as Dictionary).get("topleft_rel_window", spec["minimize"]["topleft_rel_window"]) if win.skinned() else spec["minimize"]["topleft_rel_window"]
+		t.eq(win.close_button.position, BagWindow._vec(mini) + Vector2(extra.x, 0.0), "圆钮在右上（232：背包皮时在翻盖上）")
 		t.check(not inv.board_view.seams.is_empty(), "格缝按棋盘美术画")
 		# 223：窗加宽 984，竖线在原窗右沿 660，右栏名牌 + 角色卡（都跟着棋盘右移）
 		t.eq(BagWindow._vec(spec["window_size"]), Vector2(984, 620), "223：窗 984×620")
