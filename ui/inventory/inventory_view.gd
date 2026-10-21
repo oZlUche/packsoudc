@@ -36,13 +36,8 @@ const COLOR_BAD := Color(0.9, 0.3, 0.3, 0.35)
 const COLOR_DISPLACE := Color(0.95, 0.72, 0.25, 0.38)
 ## 即将被顶出来的那几件，描一圈边，让人看清代价
 const COLOR_VICTIM := Color(0.98, 0.62, 0.25)
-## 187：格线关着、手上拖着东西时，格底与格线按这个透明度临时画出来（落点要看得准）
-const GRID_DRAG_ALPHA := 0.5
-## 187：所有棋盘视图都在这一组里 —— 设置一改，整组重画
+## 所有棋盘视图都在这一组里（点中一件时整组重画）
 const GROUP := &"inventory_views"
-
-## 187：棋盘格线画不画（设置「棋盘格线」，[method apply_grid_setting] 写）。背包、棋盘、仓库、敌人棋盘同一个开关
-static var grid_shown := true
 
 ## 中文标签需要系统字体，Godot 内置字体不含 CJK 字形。
 @export var label_font: Font
@@ -59,14 +54,6 @@ var cell_px: float = CELL:
 			custom_minimum_size = Vector2(inventory.size) * cell_px
 			size = custom_minimum_size
 		cell_px_changed.emit()
-		queue_redraw()
-
-## 187：拖拽层拖着东西时打开（格线关着也临时画半透明的格）
-var drag_hint := false:
-	set(v):
-		if drag_hint == v:
-			return
-		drag_hint = v
 		queue_redraw()
 
 var _preview_cells: Array[Vector2i] = []
@@ -86,6 +73,22 @@ var seams: Dictionary = {}:
 	set(v):
 		seams = v
 		queue_redraw()
+## 224（作者 15:19：所有棋盘都显示外框和格线）：没有外框图的棋盘自己画的底 —— 仓库是 [constant GROUND_WAREHOUSE]（棕底、浅格线在道具下面、外圈深色细边）；空 = 默认的深底格
+var ground: Dictionary = {}:
+	set(v):
+		ground = v
+		queue_redraw()
+
+## 224：仓库的底（UI替换美术 `art/ui/result/out/layout.json` 的 boards.warehouse）
+const GROUND_WAREHOUSE := {
+	"ground": "#543c2a",
+	"edge": {"color": "#2e2219", "width": 4.0, "radius": 6},
+	"lines": [
+		{"color": "#1a0e06", "alpha": 0.3, "width": 1.0, "offset": [1, 1]},
+		{"color": "#f3e2c4", "alpha": 0.38, "width": 1.2, "offset": [0, 0]},
+	],
+	"trim": 2.0,
+}
 
 ## 是否画邻接标记格。战利品、商店货架这类地方不参战，画了只是噪音。
 @export var show_adjacency: bool = true
@@ -114,13 +117,6 @@ static func set_focused(item: ItemInstance, tree: SceneTree) -> void:
 func _init() -> void:
 	UiTheme.warm_slot_icons()     # 170：格位图标先读好，别等到 _draw 里第一次读（兼容渲染器下会画成白块）
 	add_to_group(GROUP)
-
-
-## 187：按设置定格线画不画，开着的棋盘都重画（启动时导演调、设置屏切了也调）
-static func apply_grid_setting(settings: GameSettings, tree: SceneTree = null) -> void:
-	grid_shown = settings == null or settings.grid_on(ItemPainter.art_available())
-	if tree != null:
-		tree.call_group(GROUP, "queue_redraw")
 
 
 func container() -> ItemContainer:
@@ -263,11 +259,6 @@ func _gui_input(event: InputEvent) -> void:
 				accept_event()
 
 
-## 187：格底与格线此刻按多少透明度画：开着 1；关着时拖着东西 [constant GRID_DRAG_ALPHA]，否则 0（不画）
-func grid_alpha() -> float:
-	return 1.0 if grid_shown else (GRID_DRAG_ALPHA if drag_hint else 0.0)
-
-
 ## 这件要不要画名字。[LootView] 覆盖：没亮的不画（087）
 func _label_visible(_item: ItemInstance) -> bool:
 	return true
@@ -278,16 +269,16 @@ func _draw() -> void:
 		return
 	var grid_px := Vector2(inventory.size) * cell_px
 
-	# 187：格线关着时不画底、格底、线、外框 —— 包体与道具照画；拖着东西时格底与线按 [constant GRID_DRAG_ALPHA] 临时画
-	var grid_alpha := grid_alpha()
+	# 224 补充三（作者 15:19）：格线常开（187 的设置删了）—— 有外框图的画格缝，有底样式的画底，否则深底格
 	var framed := not seams.is_empty()
+	var grounded := not framed and not ground.is_empty()
 	if framed:
-		_draw_seams(grid_px, grid_alpha)     # 棋盘美术：内垫在外框图里，这里只画格缝（拖着东西时压暗不能用的格）
+		_draw_seams(grid_px)     # 棋盘美术：内垫在外框图里，这里只画格缝
+	elif grounded:
+		_draw_ground(grid_px)
 	else:
-		if grid_shown:
-			draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BG, true)
-		if grid_alpha > 0.0:
-			_draw_grid(grid_px, grid_alpha)
+		draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BG, true)
+		_draw_grid(grid_px)
 
 	var font := label_font if label_font != null else get_theme_default_font()
 
@@ -391,19 +382,18 @@ func _draw() -> void:
 					COLOR_VICTIM, false, 2.0
 				)
 
-	if grid_shown and not framed:
+	if not framed and not grounded:
 		draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BORDER, false, 2.0)
 
 
 ## 棋盘美术：格缝 = 深线 + 右 / 下错开一点的亮线，两端各留一点；外圈不画（内垫的缝线框就是边）。
-## 格线开着或拖着东西时，被挡住的、没被包盖住的格压一层暗（按 [param alpha]），落点照样看得准
-func _draw_seams(grid_px: Vector2, alpha: float) -> void:
-	if alpha > 0.0:
-		for y in inventory.size.y:
-			for x in inventory.size.x:
-				var c := Vector2i(x, y)
-				if inventory.is_blocked(c) or not inventory.is_covered(c):
-					draw_rect(Rect2(cell_origin_px(c), Vector2(cell_px, cell_px)), Color(0, 0, 0, 0.16 * alpha), true)
+## 被挡住的、没被包盖住的格压一层暗，落点照样看得准
+func _draw_seams(grid_px: Vector2) -> void:
+	for y in inventory.size.y:
+		for x in inventory.size.x:
+			var c := Vector2i(x, y)
+			if inventory.is_blocked(c) or not inventory.is_covered(c):
+				draw_rect(Rect2(cell_origin_px(c), Vector2(cell_px, cell_px)), Color(0, 0, 0, 0.16), true)
 	var seam := Color(String(seams.get("seam", "#8e8b85")))
 	var hi := Color(String(seams.get("hi", "#ebe9e4")))
 	var seam_w := float(seams.get("seam_w", 1.6))
@@ -420,8 +410,32 @@ func _draw_seams(grid_px: Vector2, alpha: float) -> void:
 		draw_line(Vector2(TRIM, fy + off), Vector2(grid_px.x - TRIM, fy + off), hi, hi_w)
 
 
+## 224：[member ground] 的底 —— 外圈深色细边（圆角，画在格子外面）、底色、几层内格线（两端各留 trim，线在道具下面）
+func _draw_ground(grid_px: Vector2) -> void:
+	var edge: Dictionary = ground.get("edge", {})
+	var ew := float(edge.get("width", 0.0))
+	if ew > 0.0:
+		var box := StyleBoxFlat.new()
+		box.bg_color = Color(String(edge.get("color", "#2e2219")))
+		box.set_corner_radius_all(int(edge.get("radius", 0)))
+		box.draw(get_canvas_item(), Rect2(-Vector2(ew, ew), grid_px + Vector2(ew, ew) * 2.0))
+	draw_rect(Rect2(Vector2.ZERO, grid_px), Color(String(ground.get("ground", "#543c2a"))), true)
+	var trim := float(ground.get("trim", 0.0))
+	for l in ground.get("lines", []):
+		var col := Color(String(l.get("color", "#ffffff")), float(l.get("alpha", 1.0)))
+		var w := float(l.get("width", 1.0))
+		var off: Array = l.get("offset", [0, 0])
+		var o := Vector2(float(off[0]), float(off[1]))
+		for x in range(1, inventory.size.x):
+			var fx := x * cell_px + o.x
+			draw_line(Vector2(fx, trim), Vector2(fx, grid_px.y - trim), col, w)
+		for y in range(1, inventory.size.y):
+			var fy := y * cell_px + o.y
+			draw_line(Vector2(trim, fy), Vector2(grid_px.x - trim, fy), col, w)
+
+
 ## 格底（棋盘模式下未被包覆盖的格子最暗，表示「还不能用」）与网格线
-func _draw_grid(grid_px: Vector2, alpha: float) -> void:
+func _draw_grid(grid_px: Vector2) -> void:
 	for y in inventory.size.y:
 		for x in inventory.size.x:
 			var c := Vector2i(x, y)
@@ -430,8 +444,8 @@ func _draw_grid(grid_px: Vector2, alpha: float) -> void:
 				col = COLOR_BLOCKED
 			elif not inventory.is_covered(c):
 				col = COLOR_UNUSABLE
-			draw_rect(Rect2(cell_origin_px(c) + Vector2.ONE, Vector2(cell_px - 2, cell_px - 2)), Color(col, col.a * alpha), true)
-	var line := Color(COLOR_GRID, COLOR_GRID.a * alpha)
+			draw_rect(Rect2(cell_origin_px(c) + Vector2.ONE, Vector2(cell_px - 2, cell_px - 2)), col, true)
+	var line := COLOR_GRID
 	for x in inventory.size.x + 1:
 		var fx := x * cell_px
 		draw_line(Vector2(fx, 0), Vector2(fx, grid_px.y), line, 1.0)

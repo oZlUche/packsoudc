@@ -51,9 +51,9 @@ script = ExtResource("8_esh8s")
 
 [sub_resource type="Resource" id="Resource_8lbh3"]
 script = ExtResource("5_xibjb")
-text = "匕首断了，石缝里有东西。"
+text = "{item:knife}断了，石缝里有东西。"
 texts = {
-"en": "The Knife snaps. There's something in the crack."
+"en": "The {item:knife} snaps. There's something in the crack."
 }
 
 [sub_resource type="Resource" id="Resource_3jcw6"]
@@ -62,9 +62,9 @@ item = &"knife"
 
 [sub_resource type="Resource" id="Resource_008v4"]
 script = ExtResource("1_iddjc")
-label = "用匕首撬开石缝"
+label = "用{item:knife}撬开石缝"
 labels = {
-"en": "Pry the crack open with your Knife"
+"en": "Pry the crack open with your {item:knife}"
 }
 requires = Array[ExtResource("6_p34rm")]([SubResource("Resource_3jcw6")])
 outcomes = Array[ExtResource("2_nmtw7")]([SubResource("Resource_4jjh3"), SubResource("Resource_ntmko"), SubResource("Resource_8lbh3")])

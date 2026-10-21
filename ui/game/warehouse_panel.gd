@@ -12,6 +12,8 @@
 ## 带回来的棋盘是一块不要求包的格子：包已经不在（只计图鉴），东西位置照旧 —— 作者说的「包统一替换成最大的默认背景包」。
 extends MarginContainer
 
+const ContainerScreenScript := preload("res://ui/game/container_screen.gd")
+
 signal changed()
 
 ## 两块格子之间的空隙
@@ -20,6 +22,9 @@ const ROW_GAP := 20.0
 const BOARD_MIN_ROWS := 6
 ## 177 补 1.1：一键置入的提示行最多列几个放不下的名字
 const STUCK_SHOWN := 3
+## 224（作者 15:19：所有棋盘都显示外框和格线）：带回来的背包套素皮带框（`board/frame_player`，和战利品屏右边同一张九宫格），格子离框外沿这么远
+const BOARD_FRAME_PAD := 24
+const BOARD_FRAME_ART := "res://assets/ui/board/frame_player.png"
 
 var _meta: MetaState = null
 var _flow: GameFlow = null
@@ -36,6 +41,9 @@ var _line: Label
 var _store_btn: Button
 var _tidy_btn: Button
 var _size_label: Label = null
+## 224：结算屏第二页 —— 「一键置入」「整理」换石键图按钮（150 × 56，字由代码写），按钮行间隔 14；在 [method setup] 之前设
+var art_buttons := false
+var _buttons: HBoxContainer = null
 
 
 ## [param shelf] / [param drag] 给了 = 基地「家」页（仓库在别处、拖拽层是整屏那一层）
@@ -63,20 +71,27 @@ func _build() -> void:
 	row.add_child(_board_box)
 
 	if _own_shelf:
+		if art_buttons:     # 224（作者 16:32）：仓库连同分页签右对齐，带回来的背包仍靠左
+			var spacer := Control.new()
+			spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_child(spacer)
 		var right := UiTheme.vbox(6)
 		row.add_child(right)
 		_size_label = UiTheme.make_label("", 13, UiPalette.DIM)
+		_size_label.visible = not art_buttons     # 224：结算屏不写裸露的说明字（字照旧更新，只是不显示）
 		right.add_child(_size_label)
 		_shelf = WarehousePages.new()
 		right.add_child(_shelf)
 
 	_line = UiTheme.make_label("", 13, UiPalette.FG)
+	_line.visible = not art_buttons
 	col.add_child(_line)
-	var buttons := UiTheme.hbox(8)
+	var buttons := UiTheme.hbox(14 if art_buttons else 8)
+	_buttons = buttons
 	col.add_child(buttons)
-	_store_btn = UiTheme.make_button(UiText.t("wh.store_all"), store_all, UiPalette.Tier.SECONDARY, 13)
+	_store_btn = _small_button(UiText.t("wh.store_all"), store_all)
 	buttons.add_child(_store_btn)
-	_tidy_btn = UiTheme.make_button(UiText.t("wh.tidy"), tidy, UiPalette.Tier.SECONDARY, 13)
+	_tidy_btn = _small_button(UiText.t("wh.tidy"), tidy)
 	buttons.add_child(_tidy_btn)
 
 	if _drag == null:
@@ -89,6 +104,17 @@ func _build() -> void:
 		_shelf.view.item_double_clicked.connect(quick_move)
 	_shelf.page_changed.connect(func(_i: int): _refresh())     # 「整理」只管当前页：翻页了按钮跟着亮灭
 	_rebuild_board_view()
+
+
+func _small_button(text: String, handler: Callable) -> Button:
+	if art_buttons:
+		return UiTheme.make_art_text_button(text, handler, "result/btn_small_stone", Vector2(150, 56), Vector2(75, 28), 22)
+	return UiTheme.make_button(text, handler, UiPalette.Tier.SECONDARY, 13)
+
+
+## 224：按钮那一行（结算屏把「继续」靠右放进来）
+func button_row() -> HBoxContainer:
+	return _buttons
 
 
 ## 带回来的棋盘换了（置入完了、丢了、新的一局带回来）就重画那一块
@@ -105,6 +131,7 @@ func _rebuild_board_view() -> void:
 		return
 	_board_box.visible = true
 	_board_label = UiTheme.make_label("", 13, UiPalette.DIM)
+	_board_label.visible = not art_buttons
 	_board_box.add_child(_board_label)
 	_sync_board_label()
 	_board_view = InventoryView.new()
@@ -113,10 +140,36 @@ func _rebuild_board_view() -> void:
 	_board_view.show_adjacency = false
 	_board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_board_view.cell_px = _shelf.view.cell_px if _shelf != null and _shelf.view != null else InventoryView.CELL     # 139：和仓库一样大
+	_board_view.seams = ContainerScreenScript.board_layout().get("cell_seams", {})     # 224：格缝同战利品屏
 	_board_scroll = ScrollBox.wrap(_board_view, BOARD_MIN_ROWS)     # 带回来的棋盘也可能很高：竖向滚动
-	_board_box.add_child(_board_scroll)
+	_board_scroll.set_meta("tight", true)
+	ScrollBox.set_rows(_board_scroll, _board_view, BOARD_MIN_ROWS)
+	var frame := PanelContainer.new()
+	frame.name = "BoardFrame"
+	frame.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	frame.add_theme_stylebox_override("panel", board_frame_box())
+	frame.add_child(_board_scroll)
+	_board_box.add_child(frame)
 	_drag.register_view(_board_view)
 	_board_view.item_double_clicked.connect(quick_move)     # 视图每次新建，信号跟着重接
+
+
+## 224：带回来的背包的外框（素皮带框九宫格，四边 54、中段平铺；格子缩进 [constant BOARD_FRAME_PAD]）。没图 = 空框只留边距
+static func board_frame_box() -> StyleBox:
+	var piece: Dictionary = (ContainerScreenScript.board_layout().get("pieces", {}) as Dictionary).get("player", {})
+	var tex := EventImage.load_texture(BOARD_FRAME_ART) if ResourceLoader.exists(BOARD_FRAME_ART) else null
+	var box: StyleBox
+	if tex != null:
+		var sbt := StyleBoxTexture.new()
+		sbt.texture = tex
+		sbt.set_texture_margin_all(float(piece.get("margin", 54)))
+		sbt.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+		sbt.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+		box = sbt
+	else:
+		box = StyleBoxEmpty.new()
+	box.set_content_margin_all(float(piece.get("cells_offset", BOARD_FRAME_PAD)))
+	return box
 
 
 ## 164：带回来的背包的格子边长（基地按中列宽和右边仓库一起算）

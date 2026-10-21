@@ -50,9 +50,13 @@ func setup(p_warehouse: Warehouse, font: Font, p_drag: DragLayer = null, plan: D
 	view = InventoryView.new()
 	view.label_font = font
 	view.show_adjacency = false
+	view.ground = InventoryView.GROUND_WAREHOUSE     # 224：棕底、浅格线在道具下面、外圈深色细边（三处一样）
 	view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	view.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	add_child(view)
+	var edge_room := Control.new()     # 外圈深边（4 px）画在格子外面：右边垫一个空件，默认间距 4 正好让出它，别被滚动区裁掉（结算屏仓库右对齐时）
+	edge_room.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(edge_room)
 	warehouse.changed.connect(_refresh)
 	_refresh()
 

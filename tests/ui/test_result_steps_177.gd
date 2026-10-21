@@ -154,8 +154,13 @@ static func _extracted_result(gun: ItemDef) -> RunResult:
 	r.safe_items = [ItemInstance.create(gun)] as Array[ItemInstance]
 	r.safe_value = 40
 	r.safe_layout = [{"def": gun, "origin": Vector2i.ZERO, "rotation": 0}] as Array[Dictionary]
-	r.left_behind = 2
-	r.left_value = 30
+	r.visited = 12
+	r.steps = 37
+	r.battles_won = 5
+	r.elite_won = 1
+	r.battles_lost = 1
+	r.searches = 4
+	r.crafts = 2
 	return r
 
 
@@ -168,7 +173,7 @@ static func _buttons(screen: Node, prefix: String) -> Array[Button]:
 
 
 static func frame_result_steps(t: TestCase, root: Window) -> void:
-	t.begin("177 · 结算屏：撤离第 1 步三块大数（总价值 = 背出来 + 保险箱）、没有仓库；「继续」→ 第 2 步有仓库与保险箱格；战败一步")
+	t.begin("177 / 224 · 结算屏：撤离第 1 步是逐行账单（十行 + 合计，全显前「继续」不可点）、没有仓库；「继续」→ 第 2 步有仓库与保险箱格；战败一步")
 	var c = NodeScreens._content()
 	var f := Support.flow(c, "s177r", 10000.0)
 	var gun: ItemDef = _defs(c)[0]
@@ -181,16 +186,32 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	root.add_child(screen)
 	screen.open({"result": r})
 	t.eq(screen.step(), 1, "第 1 步")
+	var ledger: LedgerView = screen.ledger()
+	t.not_null(ledger, "有账单")
+	var keys: Array = []
+	for row in ledger.rows():
+		keys.append(row["key"])
+	t.eq(keys, ["visited", "steps", "defeated", "elite_boss", "lost", "search_craft", "lit", "carried", "rarity", "coins", "total"], "十行 + 合计（作者 16:00 去掉表头）")
 	var nums: Dictionary = screen.numbers()
-	t.eq(nums.keys(), ["总价值", "图鉴新点亮", "带出金币"], "三块大数")
-	t.eq((nums.get("总价值") as Label).text if nums.has("总价值") else "", "993", "总价值 = 953 + 40（待定 1 选 A）")
-	t.eq((nums.get("图鉴新点亮") as Label).text if nums.has("图鉴新点亮") else "", "7", "图鉴新点亮")
-	t.eq((nums.get("带出金币") as Label).text if nums.has("带出金币") else "", "153", "带出金币")
-	t.eq((nums["总价值"] as Label).get_theme_font_size("font_size"), screen.BIG_NUMBER_PX, "总价值用大号")
-	t.eq((nums["带出金币"] as Label).get_theme_font_size("font_size"), screen.NUMBER_PX, "其余用中号")
+	t.eq(nums.get("走过的点"), "12", "走过的点")
+	t.eq(nums.get("走了多少步"), "37", "步数")
+	t.eq(nums.get("其中精英 / 首领"), "1 / 0", "精英 / 首领")
+	t.eq(nums.get("翻过的搜索点 · 合成"), "4 · 2", "搜索点 · 合成")
+	t.eq(nums.get("图鉴新点亮"), "7", "图鉴新点亮")
+	t.eq(nums.get("带出的东西"), "2 件 · 保险箱 1 件", "带出的东西一行写件数")
+	t.eq(nums.get("最高稀有度"), ItemTooltip.rarity_name(gun.rarity), "最高稀有度写稀有度名")
+	t.eq(nums.get("带出金币"), "153", "带出金币")
+	t.eq(nums.get("总价值"), "993", "总价值 = 953 + 40（177 待定 1 选 A）")
+	t.check(not ledger.is_revealed() and not ledger.rows()[0]["shown"], "进屏时还没显出")
+	var plate := screen.find_child("TitlePlate", true, false) as TextureRect
+	t.check(plate != null and plate.texture != null, "224（作者 16:32）：标题刻在标题牌上")
+	t.check(screen.continue_button() != null and screen.continue_button().disabled, "全显之前「继续」不可点")
+	t.eq(LedgerView.text_at(ledger._rows[0], 0.5), "6", "数字从零滚到实值（一半时 6）")
+	ledger.reveal_all()
+	t.check(ledger.is_revealed() and ledger.rows()[10]["shown"], "点一下：全显")
+	t.check(not screen.continue_button().disabled, "全显后「继续」可点")
 	t.eq(screen.get("_wh"), null, "第 1 步没有仓库面板")
 	t.eq(screen.safe_view(), null, "第 1 步没有保险箱格")
-	t.check(screen._stash_line != null and screen._stash_line.text.contains("一键出售"), "遗落提示在第 1 步")
 	t.eq(_buttons(screen, "继续").size(), 1, "一个「继续」")
 	var before: int = f.screen
 	_buttons(screen, "继续")[0].pressed.emit()
@@ -198,13 +219,19 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	t.eq(screen.step(), 2, "按「继续」→ 第 2 步")
 	t.check(screen.get("_wh") != null, "第 2 步有仓库面板")
 	t.check(screen.safe_view() != null, "第 2 步有保险箱格")
-	t.check(screen.numbers().is_empty(), "第 2 步不画大数")
-	var head := false
+	t.check(screen.numbers().is_empty(), "第 2 步没有账单")
+	var wh = screen.get("_wh")
+	var bare := []
 	for l: Label in screen.find_children("*", "Label", true, false):
-		head = head or l.text == "总价值 993 · 带出 153 币"
-	t.check(head, "顶上回看一行账（待定 2 选 A）")
-	var cont := _buttons(screen, "继续") + _buttons(screen, "进入下一张")
+		if l.is_visible_in_tree() and l.text.contains("993"):
+			bare.append(l.text)
+	t.eq(bare, [], "224（作者 16:32）：顶上那行账删了")
+	t.check(not wh._line.visible and not wh._size_label.visible and (wh._board_label == null or not wh._board_label.visible), "224：两块棋盘上面与底下的说明字不显示")
+	var cont := _buttons(screen, "继续")
 	t.eq(cont.size(), 1, "第 2 步一个离开的按钮")
+	if cont.size() == 1:
+		var row := cont[0].get_parent()
+		t.check(row is HBoxContainer and _buttons(row, "一键置入").size() == 1 and _buttons(row, "整理").size() == 1, "224：一键置入、整理、继续同一行")
 	t.check(screen.store_all() is Dictionary, "store_all 可用")
 	screen.queue_free()
 
@@ -220,9 +247,24 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	lost.font = UiPalette.cjk_font()
 	root.add_child(lost)
 	lost.open({"result": d})
-	t.eq(lost.numbers().keys(), ["保险箱带出"], "战败只画保险箱那块")
-	t.check(lost.safe_view() != null and is_equal_approx(lost.safe_view().cell_px, 60.0), "保险箱居中放大，一步就有")
+	t.eq(lost.numbers().get("带出的东西"), "保险箱 1 件", "224：战败同一张账单，带出的东西只有保险箱那半句")
+	t.eq(lost.numbers().get("总价值"), "40", "总价值 = 保险箱")
+	t.eq(lost.numbers().get("带出金币"), "0", "钱没了")
+	t.check(lost.safe_view() != null and is_equal_approx(lost.safe_view().cell_px, 60.0), "保险箱放大，一步就有")
 	lost.to_step(2)
-	t.eq(lost.numbers().keys(), ["保险箱带出"], "战败没有第 2 步：还是那一屏")
+	t.check(lost.ledger() != null and lost.safe_view() != null, "战败没有第 2 步：还是那一屏")
 	lost.queue_free()
+	# 224：战败但带回来的背包里有东西（保险箱带出的进了这块）→ 也翻到第 2 步置入仓库
+	f.meta.board = GridInventory.new(Vector2i(3, 3), 0, false)
+	f.meta.board.try_add(ItemInstance.create(gun), true)
+	var lost2 = load("res://ui/game/result_screen.gd").new()
+	lost2.flow = f
+	lost2.font = UiPalette.cjk_font()
+	root.add_child(lost2)
+	lost2.open({"result": d})
+	lost2.ledger().reveal_all()
+	_buttons(lost2, "继续")[0].pressed.emit()
+	t.check(lost2.step() == 2 and lost2.get("_wh") != null, "战败 + 带回来的背包有东西：第 2 步有仓库")
+	lost2.queue_free()
+	f.meta.board = null
 	Support.cleanup("s177r")

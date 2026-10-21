@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.76 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.77 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3349,7 +3349,7 @@ flow 只说「现在该显示哪一屏、给它什么」（`screen_changed(scree
 |---|---|---|
 | `Achievements`（`core/meta/achievements.gd`） | 有没有新成就、这个解锁开了什么、现在哪些道具锁着、规则卡看过没有。**纯逻辑**：看局外与内容算结果，不碰存盘、不碰转屏 | `_sync_achievements()` 把局外 / 内容 / 「全部解锁」开关同步过去，拿到结果决定要不要 `save_meta()` |
 | `SaveSlots.open(n, items, rules)` | 切存档位的文件层：建目录、算两条路径、读局外，**读不出来先备份再从零开始**（098） | 谁是当前位、设置里记哪一位、这一局怎么办 |
-| `MetaState`（已有的类，把账搬回去） | `left_behind_preview` / `sell_left_behind`（092 地上一键出售）、`take_board_to_stash` / `return_stash`（090 带回来的棋盘 ⇄ 开局屏那一栏） | 结算屏与开局屏只管画，不再自己算 |
+| `MetaState`（已有的类，把账搬回去） | `take_board_to_stash` / `return_stash`（090 带回来的棋盘 ⇄ 开局屏那一栏）；092 的地上一键出售 224 撤了 | 结算屏与开局屏只管画，不再自己算 |
 
 **不许漏接**（`tests/run/test_flow_wiring.gd`）：一局、节点事件与六个模块声明的每个 signal，在 `core/` 或 `ui/` 里都得有人接，
 否则测试红。「发了没人听」的表现是某个屏永远不弹、某句提示永远不出现，而编译与别的测试都不会红 —— 这是加了信号忘接线时唯一会响的铃。
@@ -3522,7 +3522,7 @@ func player_spec() -> CombatantSpec …
 - **基地屏布局**（164，作者定；178 改）：三列 —— 左列竖排页签（178 起 仓库 / 出售 / 科技 / 图鉴 / 成就，再点一次回「家」）与左下角「再来一局 / 回主菜单」；中列当前页（默认「家」：这一局、战绩；178：带回来的背包与一键置入 / 整理在「仓库」页，从结算屏带着没清空的背包回来就落这页），各页垫粗布；右半边分页仓库（木架框；178：图鉴 / 成就页收起、中列吃满），格子 `WarehousePages.cell_for` 按宽高取小、夹在 40 ～ 80，10 × 8 整块可见。整屏一层拖拽；双击右边仓库一件按当前页：仓库（178 前是家）→ 置入带回来的背包、出售 → 卖、科技 → 上交。「家」套件（`assets/ui/home/`：`bg_home` 背景、`btn_wood*` 木牌按钮 `BUTTON_HOME / BUTTON_HOME_PRIMARY`、`panel_cloth` 粗布 `PANEL_HOME_BOX`、`shelf` 木架 `PANEL_SHELF`、`tab_mark`）。
   139：开发开关、局外解锁、科技等级、最近几局收在 `DevDrawer`（`ui/game/dev_drawer.gd`）里 —— 右上角的箭头「◂ / ▸」点一下开、再点一下关，默认收起，开着时盖在右半边上、宽 420、自己竖向滚，状态不进设置。
   **格子大小是每块视图自己的**：`InventoryView.cell_px`（默认 `CELL` = 60），基地右半边与带回来的背包按 164 算；`DragLayer` 对着某块视图的落点、残影、整块判定读那块的 `cell_px`，跟手的残影按起拖那块的；`ScrollBox` 跟着 `cell_px_changed` 改尺寸。地图背包、战前、开局、地上、冷却覆盖层仍是 60。图鉴一行几个按宽度算（`codex_columns_for`），不横向滚。
-  **棋盘格线（187）**：`InventoryView.grid_shown`（设置「显示」节「棋盘格线」，`GameSettings.show_grid` 三态：没动过就跟着道具图走 —— `ItemPainter.art_available()` 为真就不画）。关着时不画底、格底、线、外框，包体与道具照画；拖着东西时 `DragLayer` 给登记的棋盘 `drag_hint`，格按 50 % 临时出现。所有棋盘视图在 `InventoryView.GROUP`，设置一改整组重画。
+  **棋盘格线（187 → 224 常开）**：作者 2026-10-21 15:19「所有棋盘都显示外框和格线」—— 187 的设置项（`GameSettings.show_grid`、`InventoryView.grid_shown` / `drag_hint`）删了，格线一律画：有外框图的棋盘画格缝（`seams`），仓库画 `InventoryView.ground`（`GROUND_WAREHOUSE`：棕底、浅格线在道具下面、外圈深色细边；`WarehousePages` 三处共用），其余是默认深底格。结算屏 / 基地的「带回来的背包」套 `board/frame_player` 素皮带框（`WarehousePanel.board_frame_box()`）加格缝。所有棋盘视图在 `InventoryView.GROUP`（点中一件时整组重画）。
   **道具图（201）**：`assets/items/<id>.png`（60 px / 格）与 `@2x/<id>.png`（160 px / 格），画布 = 形状 rot 0 的包围盒，格外透明；`assets/items/manifest.json` 列出有图的 id（`tools/sync_item_art.sh <美术导出目录>` 拷图、重写清单、导入）。`ItemPainter.art_available()` = 清单在不在，`art_of(def, cell_px)`（cell > 60 取 @2x，静态缓存），`draw_art(…, base)` 按 `art_transform`（转 k × 90° 顺时针、左上角偏移 (0,0)/(H,0)/(W,H)/(0,W) 格，和 `ItemShape` 同一套）画，没图返回 false、调用方照旧色块 + 名字。棋盘、包体、残影、收成排、地面、图鉴（没点亮压暗影）有图都画图不写名字；没亮的战利品剪影不用图（087）。地面轮廓（198 第二阶段）有图按透明通道。`tests/content/test_item_art_201.gd` 守尺寸、格外透明、旋转对位。
   **实例变体图（208）**：同一件道具按实例状态换图 —— `assets/items/<id>@<变体>.png`（与 `@2x/` 同名，画布同本图），清单 `variants: {id: [变体…]}`（`sync_item_art.sh` 按文件名里的 `@` 分拣，本图没收的变体不收）。
   `ItemPainter.variant_of(inst)`：耐久没满 `c<剩几次>`，207 生长到阶 `s<阶>`，都有耐久优先；`art_of(def, cell, variant)` 清单里有就取 `<id>@<变体>`（赐福版再找原件的），没有回落本图。
@@ -4414,6 +4414,7 @@ res://
 | v3.74 | 2026-10-21 | **开战 / 继续按钮换图（作者 14:30，14:43 选战旗 / 纸卷）**：战前屏「开战」是战旗图（`assets/ui/battle/fight*.png` 四态，216×134，只点旗面 `IconButton.hit_rect`，灰态 `_disabled` + `sync_art()`）；战斗屏回放中不放按钮（删「跳过并继续」`battle.skip_continue`），看完或拖到头才在那一格落下「继续」纸卷（`continue*.png` 三态，246×94）；序章战斗教程第四步指那一格、改说「看完这里会出现继续」 |
 | v3.75 | 2026-10-21 | **221 F5b 局外屏英文 + 补充三**：基地（家 / 仓库 / 出售 / 科技 / 图鉴 / 成就）、设置、读取存档屏、科技与成就构件的固定字过 `UiText`（137 键）；仓库页签英文写数字；`TechDef.descriptions`（科技表加「英文说明」列）、`AchievementDef.descriptions`；底色、光标名分中英；`RunBuffDef.summary` 分隔符随语言。补充三：节点类型条件写短名、掉落加成写标签名、信仰「满级」并进「满阶」、`trig.own_only` 改「%s（只算这件）」、科技面板「先在上面选一个科技」；开战 / 继续按钮英文版图 `fight_en*` / `continue_en*` |
 | v3.76 | 2026-10-21 | **221 F5c 数据说明英文（F5 完）**：道具 95 / 信仰 7 / 角色与技能 / 难度（含挑战句）/ 腰带 / 配方 / 20 条自由模式事件都有英文；新字段 `CharacterDef`·`RunSkill`·`BeltSkillDef`·`DifficultyDef.descriptions`、`DifficultyDef.challenges`、`RunBuffDef.display_names`·`descriptions`、`RecipeDef.notes`；科技表生成的局外 buff 名带英文；补充三五件道具说明改中文并重译（字体重新子集化）；游戏英文名 Pack & Extract（`game.title`，启动屏读设置文件的语言） |
+| v3.77 | 2026-10-21 | **224 结算屏：账单、石键、格线常开、Cinzel**：第一页换成逐行显出的账单 `LedgerView`（十行 + 合计、经验占位列；大理石碑板 `result/ledger_stele` 直接画在石板上；0.4 s 起每 0.35 s 一行、数字 0.3 s 滚到位，点一下 / 按键全显，全显前「继续」不可点）；两页「继续」与第二页「一键置入」「整理」换石键图按钮（`UiTheme.make_art_text_button`，字由代码写），第二页按钮同一行、钉在滚动区外；`RunState.tally` 加 `elite_won` / `boss_won` / `searches`（同一个点只算一次，`searched_nodes` 进存档）/ `crafts`；数字字体 Cinzel Bold（`UiPalette.numeral_font()`，只裁数字与 I V X）；稀有度六色换美术核过的一套；092 的地上一键出售撤销（地上的撤离时就没了）；187 格线设置删掉、格线常开，仓库棕底浅格线、带回来的背包套皮带框；作者 16:32：标题刻进标题牌 `result/title_plate`、结算页去掉裸露说明字（`WarehousePanel.art_buttons` 时隐藏）、第二页仓库右对齐；221 补充五的事件文字（中英） |
 | v3.61 | 2026-10-20 | **216 补充：负重签总在**（作者 2026-10-20 16:20）：`StatsStrip` 三张签总在（216 待定 3.2 作废）；不算负重的章负重签大字「当前 / 上限」、小字空着，没上限只写当前重量，悬浮窗说「这一章不算负重」；负重规则不动；测试 216 改验 |
 | v3.60 | 2026-10-20 | **214 头像定稿：铜币侧像 + 圆框**（美术设计交图，作者选乙）：3 角色 + 30 敌人头像 256 进 `assets/portraits/`（只拷 1x）；`portrait_frame` 换深铜圆框（`margin` 0、`inset` 0，整张等比缩放），`portrait_empty` 换磨平旧币；头像、框、空位导入开 `mipmaps/generate`；`PortraitSlot.texture_filter = LINEAR_WITH_MIPMAPS`；测试 157 框外扩按 json 验、加 mipmap 两条 |
 | v3.59 | 2026-10-20 | **216 补充：数值签精修图 + 背包窗一格 72**（UI替换美术交图，作者选乙）：`assets/ui/stats_strip/` 签底 / 三枚火漆 / `layout.json` / `frame_player_72.png`；新 `BagWindow`（`ui/game/bag_window.gd`，继承 `FloatingWindow`，`setup_bag(run, font, on_close, drag, hint_sink)`）按 `bag_window` 摆：8×6 时 660×620、标题行不写字当把手 + 分隔线、右上圆钮 0.72、棋盘格子在 (42,82) 一格 72、皮带外框九宫格外扩 24、数值栏在棋盘下居中，棋盘大了窗跟着长；地图 / 事件 / 休息三屏用它；`FloatingWindow` 去掉 `bare`，加 `_grip` / `center_shift`；`InventoryPanel.cell_px`（setup 前设，默认 60）；`SlabStyle` 三项 `@export`（复制改边距不再丢两层）；测试 216 背包窗那条改验尺寸与摆位 |

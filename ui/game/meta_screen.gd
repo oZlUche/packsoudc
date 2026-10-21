@@ -168,10 +168,6 @@ func open(payload: Dictionary) -> void:
 		info.add_child(_wrapped(UiText.t("meta.just_run") % (UiText.t("meta.just_extracted") % [just.carried.size(), just.value, just.balance]
 			if just.is_extracted() else (UiText.t("meta.just_died_safe") % just.safe_items.size() if not just.safe_items.is_empty() else UiText.t("meta.just_died"))), 15,
 			UiPalette.for_tone(c, tone), 460))
-	# 092：离开结算屏时地上一键出售了 —— 提示一句
-	var sold: Dictionary = payload.get("stash_sold", {})
-	if int(sold.get("count", 0)) > 0:
-		info.add_child(_wrapped(UiText.t("meta.stash_sold") % [int(sold["count"]), int(sold["funds"])], 14, UiPalette.STAMINA, 460))
 	info.add_child(_wrapped(UiText.t("meta.stats") % [
 		m.runs, m.extractions, m.deaths, m.score, m.best_value, m.funds, m.codex.size(), flow.items.ids(true).size()], 15, UiPalette.FG, 460))
 	# 178：「仓库」页 —— 带回来的背包（一键置入 / 整理 / 提示行）；没有带回来的就一行字（整理照旧管右边当前页）
@@ -237,7 +233,7 @@ func layout() -> void:
 	_margin.add_theme_constant_override("margin_right", int(MARGIN + right_gutter()))
 	var mid_w := middle_width(screen)
 	if _wh != null and flow.meta.board != null:
-		_wh.set_board_cell(minf(c, maxf(WarehousePages.CELL_MIN, floorf((mid_w - 50.0) / float(maxi(1, flow.meta.board.size.x))))))
+		_wh.set_board_cell(minf(c, maxf(WarehousePages.CELL_MIN, floorf((mid_w - 50.0 - 2.0 * _wh.BOARD_FRAME_PAD) / float(maxi(1, flow.meta.board.size.x))))))
 
 
 ## 178：右半边收起时，右边空出调试台箭头那一条（箭头钉在屏幕右上，别压在中列上）

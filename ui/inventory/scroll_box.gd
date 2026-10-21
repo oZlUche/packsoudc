@@ -33,4 +33,6 @@ static func set_rows(sc: ScrollContainer, view: InventoryView, max_rows: int) ->
 static func _fit(sc: ScrollContainer, view: InventoryView, max_rows: int) -> void:
 	var cols := view.inventory.size.x if view.inventory != null else 8
 	var rows := view.inventory.size.y if view.inventory != null else max_rows
-	sc.custom_minimum_size = Vector2(cols * view.cell_px + 14.0, mini(rows, max_rows) * view.cell_px)
+	# 224：套了外框的（meta `tight`）不滚时不留滚动条那 14 px —— 框贴着格子
+	var bar := 0.0 if bool(sc.get_meta("tight", false)) and rows <= max_rows else 14.0
+	sc.custom_minimum_size = Vector2(cols * view.cell_px + bar, mini(rows, max_rows) * view.cell_px)

@@ -488,6 +488,53 @@ static func make_home_button(text: String, handler: Callable, primary: bool = fa
 	return b
 
 
+## 224：结算屏的图按钮 —— `<art>_normal / _hover / _pressed / _disabled.png` 四态（图四周各比按钮大 [param bleed]，留给阴影），
+## 字不在图上、由这里写（serif_bold，[param center] 是字在按钮里的中心；按下往下挪 1 px）。缺图退回平板按钮
+const ART_BTN_INK := {"normal": Color("2e2219"), "hover": Color("16110d"), "pressed": Color("2e2219"), "disabled": Color("8d8a84")}
+static func make_art_text_button(text: String, handler: Callable, art: String, btn_size: Vector2, center: Vector2,
+		font_size: int, bleed: float = 6.0) -> Button:
+	if art_cached(art + "_normal") == null:
+		return make_button(text, handler, UiPalette.Tier.PRIMARY, 16)
+	var b := Button.new()
+	b.text = text
+	b.custom_minimum_size = btn_size
+	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	b.add_theme_font_override("font", UiPalette.cjk_font_bold())
+	b.add_theme_font_size_override("font_size", font_size)
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		var tex := art_cached(art + "_" + state)
+		var box := StyleBoxTexture.new()
+		box.texture = tex if tex != null else art_cached(art + "_normal")
+		box.set_expand_margin_all(bleed)
+		box.content_margin_left = maxf(0.0, center.x * 2.0 - btn_size.x)
+		box.content_margin_right = maxf(0.0, btn_size.x - center.x * 2.0)
+		box.content_margin_top = maxf(0.0, center.y * 2.0 - btn_size.y) + (2.0 if state == "pressed" else 0.0)
+		box.content_margin_bottom = maxf(0.0, btn_size.y - center.y * 2.0)
+		b.add_theme_stylebox_override(state, box)
+		if state == "normal":
+			b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+		if state == "pressed":
+			b.add_theme_stylebox_override("hover_pressed", box)
+	b.add_theme_color_override("font_color", ART_BTN_INK["normal"])
+	b.add_theme_color_override("font_focus_color", ART_BTN_INK["normal"])
+	b.add_theme_color_override("font_hover_color", ART_BTN_INK["hover"])
+	b.add_theme_color_override("font_pressed_color", ART_BTN_INK["pressed"])
+	b.add_theme_color_override("font_hover_pressed_color", ART_BTN_INK["pressed"])
+	b.add_theme_color_override("font_disabled_color", ART_BTN_INK["disabled"])
+	b.pressed.connect(handler)
+	return b
+
+
+## 224：标题牌上的字（[constant LABEL_TITLE] 变体 = 朱雀仿宋，字号另给；字色跟所在的底走）
+static func make_title_label(text: String, font_size: int) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.theme_type_variation = LABEL_TITLE
+	l.add_theme_font_size_override("font_size", font_size)
+	return l
+
+
 static func vbox(separation: int = 8) -> VBoxContainer:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", separation)

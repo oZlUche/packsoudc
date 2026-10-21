@@ -19,9 +19,9 @@ item = &"salve"
 
 [sub_resource type="Resource" id="Resource_f25k2"]
 script = ExtResource("5_32i03")
-text = "「上次的事，谢了。」他塞给你一个医疗包。"
+text = "「上次的事，谢了。」他塞给你一瓶{item:salve}。"
 texts = {
-"en": "\"Thanks for last time.\" He presses a Salve into your hand."
+"en": "\"Thanks for last time.\" He presses a {item:salve} into your hand."
 }
 
 [sub_resource type="Resource" id="Resource_4yy8h"]

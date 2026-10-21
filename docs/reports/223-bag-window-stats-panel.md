@@ -124,3 +124,8 @@
 - 第一稿的轴签芯片底、`chip_base` 都不要了（第二稿没有轴签行；乙案块里也不放芯片，只写字）。
 
 执行落地时以美术 `out/layout.json` 落到 `assets/ui/stats_strip/layout.json` 的 `bag_window.col` 为准，报告里的数只是校对用。§四 里 `stats_col` 改名 `col`，`stats_panel.gd` 改叫 `character_card.gd` 也行，由执行定。
+
+## 八、派执行（2026-10-21 16:1x）
+
+作者 16:07 在美术设计的卡上选了**蜡板**底板（`card_wax.png`）；甲 / 乙按推荐 **甲 角色卡**，乙的「这包给的」块不做。派执行，排在 224 之后：窗 984、右栏坐标与卡内坐标按 §七 与美术 `out/layout.json`；新件 `ui/widgets/character_card.gd`（§四里的 `stats_panel` 改此名），`layout.json` 的 `bag_window.col`，教练目标 `character_card`；测试 `test_bag_window_216` 改尺寸、新 `test_character_card_223`（空包三行 = `effective_baseline()`、局外加成后 ▲、被动两条、英文无汉字）。
+

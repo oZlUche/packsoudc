@@ -92,6 +92,7 @@ func craft(a: ItemInstance, b_uid: int) -> Dictionary:
 	if where == "storage":
 		lines.append(UiText.t("craft.to_ground"))
 	var detail := {"ok": true, "output": String(out_def.id), "where": where, "log": lines}
+	_run.tally["crafts"] = int(_run.tally.get("crafts", 0)) + 1     # 224：结算账单「合成」
 	done.emit(detail)
 	return detail
 

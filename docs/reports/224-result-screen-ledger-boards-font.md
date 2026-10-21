@@ -120,3 +120,59 @@
 
 ②③④（棋盘格线与皮带框、账单、字体）现在做；①按钮等 UI替换美术 的图；账单底（720×480 蜡板或羊皮纸）已向美术设计要，图没到之前先用现有石板色块占位，图到了换一行。§六 三条全按推荐。
 
+**账单底已出（美术设计 15:11）**：三款样稿 甲 碑板（推荐）/ 乙 账簿 / 丙 蜡板，在 `/mnt/project-files/art/ui/ledger/`（README、`out/ledger_<stele|book|wax>.png` + @2x + json、`out/layout.json`、`mocks/page_*.png`）。整图不拉伸，图比账面大（框 / 耳朵 / 阴影在外），图左上 = 账面左上 + origin（碑板改版后 (−32, −32)，图 784×544；账簿 (−22, −22)、蜡板 (−18, −18)）；行间线、表头双线、合计双线、分栏线 x 300 / 600 都在图里，代码不画线。字：标签 x 18 思源宋体 18 基线 +27；数量右对齐 x 584 Cinzel Bold 20 基线 +28，串里的汉字退回思源宋体；经验右对齐 x 704「—」16 dim；表头 14 基线 26；总价值标签思源粗体 22 基线 +29、数字 Cinzel Bold 32 基线 +33；三款字色各一套在 layout.json。Cinzel ttf 在 `/mnt/project-files/art/fonts/chosen/`（来源 `Cinzel_SOURCE.txt`），打包时另补 `assets/fonts/LICENSES/OFL_Cinzel.txt`。材质按作者 15:02 的规矩（美术风格的选择按推荐）默认 **甲 碑板**，作者另选再换图。
+
+**稀有度行的颜色（作者 15:23）**：「代表稀有度的字体要有颜色，和稀有度本身对应，颜色要足够显眼但不跳脱」。做法：稀有度名用 `UiPalette.rarity_color(r, tone)`（`data/authoring/ui/text_colors.json` 的六档，dark / light 两套，tone 跟账单底走），serif_bold 18；美术设计把六档放到碑板 / 账簿 / 蜡板三款底上核一遍，暗的提亮、扎眼的压一压，改在 `text_colors.json` 里（全游戏的稀有度字色一起受益），执行只照表取色、不另写颜色。
+
+**§二 被更大的规矩盖过（作者 2026-10-21 15:19，在 UI替换美术 线程定）**：所有棋盘都显示外框和格线，新出现的棋盘视图默认 `frame_*` + `cell_seams`，格线常开。于是不必按视图开 `ALWAYS`：`InventoryView` 格线一律画，187 的 `GameSettings.show_grid` / `GRID_AUTO` 失去意义（执行定是删掉设置项还是只把默认改成常开；玩家设置里不再露这一项）。结算屏第二页的按钮和格线定稿在 `/mnt/project-files/art/ui/result/`，战前 / 战斗屏的属性签与生命耐力条在 `/mnt/project-files/art/ui/battle_stats/`，都已交执行。
+
+**甲 碑板改版（美术设计 15:32，作者 15:23 在美术设计线程要「更有大理石味，参考《凯撒大帝 3》」）**：暖米色大理石，外框凸起、账面凹下，表头与合计是两条凸起石条，铜线铜钉和耳朵都去了；图 784×544，origin (−32, −32)；表头字 serif_bold 15 墨色（`styles.stele.head_font`），字色 数字 / 表头 `#16110d`、标签 `#2e2219`、dim `#6e604c`、总价值 `#8c2b22`。账面 720×480、行栏字号不变；文件名不变。凯撒 3 记进了 `art/style-guide.md` 的参考对象。
+
+**稀有度六色核完（美术设计 15:38）**：改的是 `data/authoring/ui/text_colors.json` 的 `rarity`，账单不另配。新六对（0..5）：light `#525862 #186521 #1b56a4 #842ca7 #7c4d00 #a8221b`，dark `#d8dce3 #5fa85f #5598e6 #bd7bde #e0b040 #ee6253`（`/mnt/project-files/art/ui/ledger/rarity/rarity_colors.json`，并排图 `rarity_compare.png`，逐档理由同目录 README）。改动理由：浅版 0 普通由墨色改冷石板灰（原来和标签分不开）、4 传说由橄榄绿挪到琥珀金、5 神话避开甲款总价值的朱红；深版 2 / 3 / 5 在蜡板上提亮，深版 5 在 PANEL 上从 4.04 提到 5.40（原来唯一会触发 TextColorCheck 警告的一档）。对比度：浅版在 PAPER ≥ 6.2、在甲大理石凹面 ≥ 4.2；深版在 PANEL ≥ 5.4。执行留意：深版 2 / 3 / 5 从此和 `ItemPainter.RARITY_COLORS`（棋盘格色，087 作者定，不动）不再相同，`test_text_colors_169` 只断言第 0 档相等，照旧过；没有代码把稀有度色写死进 BBCode。
+
+**账单底定稿 甲（美术设计 15:44；作者 15:41 在美术设计线程：「甲的整体可以，不过边框不用那么复杂，稍微简易一点，颜色白灰」）**：白灰大理石，外框只留一层斜面加一道墨线；图 768×528，origin **(−24, −24)**（盖掉上面的 (−32, −32)），dim 色 `#68655f`，其余字色不变；只交甲，定稿说明在 `/mnt/project-files/art/ui/ledger/README.md`，执行已收。
+
+**账单去表头、「继续」钮出样（美术设计 16:05；作者 16:00 在美术设计线程提的）**：
+- 表头行删掉：账面 720×**440**（十行 + 合计），第 i 行（1..10）上沿 40×(i−1)，合计 400..440；图 768×488，origin (−24, −24) 不变。经验列仍留着占位，只是没有「经验」二字的表头 —— 占位列每行写「—」即可，将来接经验值时再决定要不要表头。
+- 「继续」钮：美术出了三款 210×64 四态（甲 石键 推荐 / 乙 纸卷（第二页那张）/ 丙 铜线石键），放账单下居中，字由代码写，文件 `/mnt/project-files/art/ui/ledger/continue/`；作者在美术设计线程挑，甲先落。
+- **统一规矩（架构定）**：结算屏两页是同一屏，「继续」钮两页用同一款，作者在卡上选哪款，第二页就跟着换（选乙则两页都是纸卷，第二页不动）；战斗 / 回放屏的「继续」照旧是 UI替换美术 的纸卷，不跟结算屏走。§一的「主钮一条」改由这一款顶替，UI替换美术 那边结算屏主钮的样不用再出。第二页「继续」旁的两枚 150×56 小钮（一键置入、整理）跟着同一款：作者选甲或丙，美术设计补两枚同款石键小钮（四态，字由代码写）交执行；选乙则整行都是纸卷、不动。
+
+**「继续」定稿 甲 石键（作者 16:06 在美术设计线程：「甲的整体样式，但箭头更加罗马式一点，比如在箭头的左侧凹陷处加上一个圆形」）**：箭头后沿内凹、凹口嵌一颗圆珠；按两页同款的规矩第二页「继续」也换石键，旁边两枚 150×56 小钮（一键置入、整理）同款石键、不带箭头；切图与规格全在 `/mnt/project-files/art/ui/ledger/continue/`，已交执行。
+
+**第二页仓库棋盘右对齐（作者 16:32 在美术设计线程）**：分页签贴着棋盘左边，和棋盘一起整块右移，棋盘外框右沿对齐「继续」钮右沿（第二页内容区右沿）；带回来的背包仍靠左，两块棋盘中间留空。效果图 `/mnt/project-files/art/ui/ledger/continue/mocks/page2_right.png`，美术已直接发执行。
+
+**裸露文字（作者 16:32 全游戏规矩，另开 226 清查）**：结算屏先照做：第一页「撤离成功」刻进标题牌 `out/title_plate.png`（320×60 半透明，页内 (640, 84)，字由代码写 36 号），副标题「帝国营地 · 从撤离点出来」删；第二页两块棋盘上方的说明字和底下「带回来的背包里还有 N 件：置入仓库；…」那行删。美术已发执行。
+
+
+## 八、落地（执行，2026-10-21，v3.77）
+
+②③④ 与第一页 / 第二页的按钮一起落了（§一 的主钮由「继续」石键顶替，见 §七末）。
+
+**账单**（`ui/game/ledger_view.gd`，`LedgerView`）：账面 720×440 摆在设计稿 (440, 190)（屏幕正中对齐）；底图 `assets/ui/result/ledger_stele.png` 按 origin (−24, −24) 整图画在结算页石板上，不垫底、代码不画线。十行 + 合计照 §7.1（去表头后的版本）：数量 Cinzel Bold 20 右对齐 x 584（串里的汉字落到思源宋体），最高稀有度写稀有度名、serif_bold 18、`UiPalette.rarity_color(r, light)`，经验列每行「—」、合计行「合计 —」。逐行显出照 §3.3；`_input` 里点一下或按任意键全显，这一下不往下传；全显时发 `revealed`，结算屏这时才让「继续」可点。给测试的：`rows()`（key / label / 到位的数 / 显没显）、`numbers()`（行名 → 到位的数）、`reveal_all()`、`text_at(row, p)`。战败同一张账单：带出的东西写「保险箱 N 件」，最高稀有度按保险箱算。
+
+**新计数**：`RunState.tally` 加 `elite_won` / `boss_won`（赢了按这一场的点类型，`elite` / `core`）、`searches`（`search_opened`，宝箱也算；同一个点只算一次，翻过的点记在 `RunState.searched_nodes`，进存档）、`crafts`（`CraftingModule.craft` 成了一次记一笔）；`RunResult` 同名四个字段。旧存档缺的键 = 0。
+
+**「继续」与第二页按钮**：`UiTheme.make_art_text_button(text, handler, art, size, center, font_size)` —— 四态 `StyleBoxTexture`（图四周各多 6 px），字 serif_bold、按字心算内边距，按下往下挪 1 px，字色照美术（normal / pressed `#2e2219`、hover `#16110d`、disabled `#8d8a84`）；缺图退回平板主钮。两页的「继续」都是 `result/btn_stone`（210×64，字心 (92, 32)），第一页摆在 (695, 690)；第二页「一键置入」「整理」是 `result/btn_small_stone`（150×56，字心 (75, 28)，间隔 14），`WarehousePanel.art_buttons` 打开；「继续」放进同一行右端，整行挪到滚动区外钉在底下、宽度跟着仓库面板（右沿对齐仓库区右沿）。序章连打时「进入下一张：X」那颗大钮去掉，按钮写「继续」。
+
+**棋盘**（§七末作者 15:19 的规矩）：187 的设置项删了，不是只改默认 —— `GameSettings.show_grid` / `GRID_AUTO` / `grid_on`、设置屏的开关与 `settings.grid*` 文案、`InventoryView.grid_shown` / `drag_hint` / `apply_grid_setting` / `GRID_DRAG_ALPHA`、`DragLayer._hint_grids` 都删；旧设置文件里的 `show_grid` 读时忽略。仓库按 UI替换美术 的 `boards.warehouse` 画：`InventoryView.ground = GROUND_WAREHOUSE`（棕底 `#543c2a`、两层内格线在道具下面、外圈 4 px 圆角深边），`WarehousePages` 三处（基地、开局屏第二页、结算屏）一起换。带回来的背包套 `board/frame_player` 素皮带框（`StyleBoxTexture`，四边 54、中段平铺、格子缩进 24）加战利品屏同一套格缝；不滚时不留滚动条那 14 px（`ScrollBox` 的 meta `tight`），基地中列算格子边长时扣掉框宽。
+
+**字体**：`assets/fonts/cinzel_bold.ttf`（Cinzel Bold，只裁 `0-9 I V X + − - % / · —` 和空格，4 KB）+ `LICENSES/OFL_Cinzel.txt`，`tools/subset_fonts.sh` 跟着裁；`UiPalette.FONT_NUMERAL` / `numeral_font()`（缺字走思源宋体）。
+
+**稀有度色**：`data/authoring/ui/text_colors.json` 的 `rarity` 换成美术设计核过的六对（§七末），`ItemPainter.RARITY_COLORS` 没动。
+
+**地上出售撤销**（§7.2）：照单删干净；帮助页「地上」末句改成「撤离时地上没背出来的那几件就没了：不进仓库，也不换钱。」（英文同改）。
+
+**作者 16:32 的补充**（美术设计 16:36 转来）：
+- 第一页标题刻进标题牌：`result/title_plate`（320×60，摆在 (640, 84)，图 origin −6），字 36、居中、墨色（`UiTheme.make_title_label`）；副标题「章节 · 结局」删了，页面 tone 设成 light。
+- 去掉裸露文字：第二页顶上那行「置入仓库 / 总价值 · 带出」删了；`WarehousePanel.art_buttons` 打开时两块棋盘上面的说明字（带回来的背包、仓库大小）和底下那行状态字（「带回来的背包里还有…」、一键置入的结果）不显示（`visible = false`，字照旧更新）；序章之间那句「下面直接进…」也删了。没再用到的 `result.reason_*` / `store_title` / `store_recap` / `next_note` 文案一起删。
+- 第二页仓库连同分页签右对齐（面板里加一个撑开的空位），带回来的背包仍靠左；仓库框右沿和「继续」右沿对齐。
+
+**221 补充五**（随这次落）：`event_marked_reward` 台词改「他塞给你一瓶{item:salve}」；`faith_call` 标题改「无名的祭坛」/ A Nameless Altar；`extract_default` 里的仓库、地上改 `{zone:…}`；`event_altar` 的匕首改 `{item:knife}`；四个 `faith_call_*` 和 `tut3_faith_call` 台词里的护符名改 `{item:charm_*}`。中英同改。
+
+### 和方案不一样的地方
+
+1. **`FONT_DISPLAY` 没有整体换成 Cinzel，另加了 `FONT_NUMERAL`。** §四 / §7.3 说火漆签大字、倍速罗马数字、翻页计数器都走 `FONT_DISPLAY`、汉字不走它 —— 查下来不是：`FONT_DISPLAY`（马善政）现在画的是开场事件的章节名和宝箱屏的说明字，都是汉字；倍速钮是图（缺图时写的是 Ⅰ Ⅱ Ⅳ 这种 Unicode 罗马数字字符，Cinzel 没有）；翻页计数器和火漆签走的是正文 / 粗体。整体换掉会让章节名变成朱雀仿宋，所以 Cinzel 只用在账单的数上，马善政留着。倍速、翻页计数器要换 Cinzel 得先把 Ⅳ 这类字符改成字母 IV，要做的话另开一条。
+2. **战败也可能有第 2 步。** 原来战败时带回来的背包里有东西（保险箱带出的进了这块背包，或上一局没置入的），第一页下面会挂一块仓库面板；账单占了页面中间，放不下了。现在这种情况下第一页的「继续」翻到和撤离一样的第 2 步置入仓库；带回来的背包是空的就照旧一步到底。
+3. **战败页的布局**：保险箱放大后摆在账单右边（1200, 190），「全都留在了里面」那句在「继续」下面。战败页这两句（保险箱上面那句、「继续」下面那句）作者 16:32 没点名，稿里也没有战败页，这次先留着；报告 226 批二把它们删掉。
+
+截图：`/mnt/project-files/art/ui/ledger/shots/`（第一页逐行中途 / 全显、第二页、战败、基地仓库页）。

@@ -1001,27 +1001,11 @@ func meta_buffs() -> Array[StringName]:
 	return out
 
 
-## 092（作者定）：离开结算屏时，地上没背出来的一键出售（按基地的出售比例），钱进局外。这里只算不卖
-func stash_sale_preview() -> Dictionary:
-	return MetaState.left_behind_preview(result, sell_ratio())
-
-
-## 真卖（账在 MetaState 里算，101 第 4 刀）：只卖一次，记进 last_absorbed["stash_sold"] 给局外屏提示
-func _sell_left_behind() -> Dictionary:
-	if meta == null:
-		return {"count": 0, "funds": 0}
-	var got := meta.sell_left_behind(result, sell_ratio())
-	if int(got["count"]) > 0:
-		last_absorbed["stash_sold"] = got
-	return got
-
-
-## 结算看完了：去局外（账在进结算屏之前就记了，见 _settle_run）；地上剩的在这一步一键出售（092）
+## 结算看完了：去局外（账在进结算屏之前就记了，见 _settle_run）。224：地上剩的撤离时就没了，不卖
 func finish_result() -> void:
-	_sell_left_behind()
 	meta.drop_empty_board()     # 作者 2026-10-13：结算屏里搬空的棋盘留着显示，离开时才丢
 	save_meta()
-	_go(Screen.META, {"result": result, "stash_sold": last_absorbed.get("stash_sold", {})})
+	_go(Screen.META, {"result": result})
 
 
 ## 085：结算之后该直接进的下一章（撤离成功、这一章配了 next_chapter、它开着）；没有 null
@@ -1045,7 +1029,6 @@ func start_next_chapter() -> bool:
 	if next == null:
 		finish_result()
 		return false
-	_sell_left_behind()     # 092：离开结算屏就卖地上剩的
 	meta.store_all()
 	if meta.board != null:
 		meta.discard_board()

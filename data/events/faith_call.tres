@@ -33,9 +33,9 @@ labels = {
 [resource]
 script = ExtResource("5_eywxh")
 id = &"faith_call"
-title = "触发信仰"
+title = "无名的祭坛"
 titles = {
-"en": "A Call to Faith"
+"en": "A Nameless Altar"
 }
 text = "废墟深处立着一座祭坛，看不出供的是哪位神。空气里有什么在等你。"
 texts = {

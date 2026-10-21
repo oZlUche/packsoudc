@@ -3,7 +3,7 @@
 ## 只读：从结束了的 [RunState] 里算一份账，不动它。谁保留、谁进仓库是 [MetaState.absorb] 的事（保留规则在那一处）。
 ##
 ## **只算棋盘上的。** 地上的道具 = 不存在（3.4）：它是关卡内的临时摆放区，撤离时连同里面的东西一起消失。
-## 这里把它记成 `left_behind`，只为了结算界面能提一句「遗落了 n 件」——那是提示，不是挽留。
+## 224：撤离时地上的就没了 —— 不卖、不提示、不记账（092 的「一键出售」撤销）。
 class_name RunResult
 extends RefCounted
 
@@ -17,6 +17,11 @@ var steps: int = 0
 var visited: int = 0
 var battles_won: int = 0
 var battles_lost: int = 0
+## 224：其中精英 / 首领、翻过的搜索点（同一个点只算一次）、合成几次
+var elite_won: int = 0
+var boss_won: int = 0
+var searches: int = 0
+var crafts: int = 0
 ## 撤离时剩多少钱（战败为 0：钱也没了）
 var balance: int = 0
 ## 背出去的：撤离时棋盘上的全部（含包）。战败为空
@@ -25,9 +30,6 @@ var carried: Array[ItemInstance] = []
 var board_size: Vector2i = Vector2i.ZERO
 ## carried 的价值之和（6.4）
 var value: int = 0
-## 地上遗落的件数与价值（撤离时才有意义）
-var left_behind: int = 0
-var left_value: int = 0
 ## 091：这一局击败了核心（BOSS）没有 —— 成就的条件看它
 var boss_cleared: bool = false
 ## 092（作者定）：保险箱里的 —— **不管撤离还是战败都带出**；结算屏单独一格画它们（layout 记每件的定义 / 位置 / 朝向）
@@ -35,8 +37,6 @@ var safe_items: Array[ItemInstance] = []
 var safe_size: Vector2i = Vector2i(3, 3)
 var safe_value: int = 0
 var safe_layout: Array[Dictionary] = []
-## 092：撤离时地上没背出来的那几件（离开结算屏时一键出售）
-var left_items: Array[ItemInstance] = []
 ## 104 信力节奏的量尺：这一局每次加点的记录（[member FaithPower.history]）；结算屏一行、开发模式导 CSV
 var faith_history: Array = []
 ## 结算屏那一行（「信力节奏：日神 第 3 步到 1 阶……」）；没攒过信力为空
@@ -59,6 +59,10 @@ static func settle(state: RunState) -> RunResult:
 			r.visited += 1
 	r.battles_won = int(state.tally.get("battles_won", 0))
 	r.battles_lost = int(state.tally.get("battles_lost", 0))
+	r.elite_won = int(state.tally.get("elite_won", 0))
+	r.boss_won = int(state.tally.get("boss_won", 0))
+	r.searches = int(state.tally.get("searches", 0))
+	r.crafts = int(state.tally.get("crafts", 0))
 	r.board_size = state.board.size if state.board != null else Vector2i.ZERO
 	r.boss_cleared = state.boss_cleared
 	if state.faith_power != null:
@@ -70,10 +74,6 @@ static func settle(state: RunState) -> RunResult:
 			var item := inst as ItemInstance
 			r.carried.append(item)
 			r.value += ItemValue.of_in(item, state.board)     # 209：百宝囊里的按倍率
-		for inst in state.storage.items():
-			r.left_behind += 1
-			r.left_value += ItemValue.of((inst as ItemInstance).def)
-			r.left_items.append(inst as ItemInstance)
 	var safe := SafeModule.of(state)     # 101：保险箱的状态在模块里
 	if safe != null and safe.inventory != null:
 		r.safe_size = safe.inventory.size
@@ -110,6 +110,6 @@ func to_dict() -> Dictionary:
 	return {
 		"outcome": String(outcome), "reason": String(reason), "seed": run_seed, "chapter": String(chapter_id),
 		"steps": steps, "visited": visited, "battles_won": battles_won, "battles_lost": battles_lost,
-		"balance": balance, "value": value, "items": ids, "left_behind": left_behind, "left_value": left_value,
+		"balance": balance, "value": value, "items": ids,
 		"safe": safe_items.size(), "safe_value": safe_value,
 	}

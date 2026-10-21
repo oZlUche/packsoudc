@@ -43,9 +43,9 @@
       ]
     },
     {
-      "label": "用匕首撬开石缝",
+      "label": "用{item:knife}撬开石缝",
       "labels": {
-        "en": "Pry the crack open with your Knife"
+        "en": "Pry the crack open with your {item:knife}"
       },
       "requires": [
         {
@@ -63,9 +63,9 @@
         },
         {
           "type": "say",
-          "text": "匕首断了，石缝里有东西。",
+          "text": "{item:knife}断了，石缝里有东西。",
           "texts": {
-            "en": "The Knife snaps. There's something in the crack."
+            "en": "The {item:knife} snaps. There's something in the crack."
           }
         }
       ]

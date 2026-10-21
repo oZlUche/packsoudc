@@ -24,9 +24,9 @@
         },
         {
           "type": "say",
-          "text": "蛮神的护符在掌心发烫。先把它放进包里。",
+          "text": "{item:charm_brute}在掌心发烫。先把它放进包里。",
           "texts": {
-            "en": "The Brute's charm burns in your palm. Put it in a bag first."
+            "en": "The {item:charm_brute} burns in your palm. Put it in a bag first."
           }
         }
       ]

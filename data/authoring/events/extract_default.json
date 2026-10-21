@@ -4,9 +4,9 @@
   "titles": {
     "en": "Extraction Point"
   },
-  "text": "能出去的地方。{c:warn}撤了这一局就结束{/c}：包里的东西带回仓库，地上的留在这儿，钱带出去。\n\n费用：{extract_fee} 币（零即免费）。",
+  "text": "能出去的地方。{c:warn}撤了这一局就结束{/c}：包里的东西带回{zone:仓库}，{zone:地上}的留在这儿，钱带出去。\n\n费用：{extract_fee} 币（零即免费）。",
   "texts": {
-    "en": "A way out. {c:warn}Extract and this run ends{/c}: what's in your bag goes back to the Warehouse, what's on the Ground stays here, and your coins come with you.\n\nFee: {extract_fee} coins (zero means free)."
+    "en": "A way out. {c:warn}Extract and this run ends{/c}: what's in your bag goes back to the {zone:仓库}, what's on the {zone:地上} stays here, and your coins come with you.\n\nFee: {extract_fee} coins (zero means free)."
   },
   "options": [
     {

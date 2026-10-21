@@ -152,8 +152,7 @@ static func run_result_and_meta(t: TestCase) -> void:
 	t.check(r.is_extracted(), "撤离")
 	t.eq(r.carried.size(), s.board.item_count(), "背出去的 = 棋盘上的全部（含包）")
 	t.eq(r.value, _sum_value(s.board), "价值 = 每件 ItemValue 之和")
-	t.eq(r.left_behind, s.storage.item_count(), "地上的记成遗落")
-	t.eq(r.left_value, _sum_value(s.storage), "遗落的价值")
+	t.check(not ("left_behind" in r), "224：地上的撤离时就没了，不记账")
 	t.eq(r.balance, s.wallet.balance, "钱")
 	t.eq((r.to_dict()["items"] as Array).size(), r.carried.size(), "历史只写 id")
 
@@ -272,6 +271,22 @@ static func run_flow_screens(t: TestCase) -> void:
 	t.eq(f.screen, GameFlow.Screen.MAP, "→ 地图")
 	t.eq(f.run.travel.current_id, at, "还站在原地")
 	t.eq(int(f.run.tally["battles_won"]), 1, "计数跟着存档")
+	# 224：账单的新计数 —— 赢了按点类型记精英 / 首领；搜索点同一个点只算一次；都跟着存档
+	t.eq([int(f.run.tally.get("elite_won", -1)), int(f.run.tally.get("boss_won", -1))], [0, 0], "普通战斗不算精英 / 首领")
+	f.run.events.last_battle = {"type": "elite"}
+	f.run._tally_battle(true)
+	f.run.events.last_battle = {"type": "core"}
+	f.run._tally_battle(true)
+	f.run._tally_battle(false)
+	t.eq([int(f.run.tally["battles_won"]), int(f.run.tally["elite_won"]), int(f.run.tally["boss_won"]), int(f.run.tally["battles_lost"])], [3, 1, 1, 1], "精英、首领各记一笔（输了不算）")
+	var spot := f.run.map.get_node(at)
+	f.run._tally_search(spot)
+	f.run._tally_search(spot)
+	t.eq(int(f.run.tally["searches"]), 1, "同一个搜索点只算一次")
+	t.check(f.save_and_quit() and f.continue_run(), "再存一次读回来")
+	t.eq([int(f.run.tally["elite_won"]), int(f.run.tally["searches"])], [1, 1], "新计数跟着存档")
+	f.run._tally_search(f.run.map.get_node(at))
+	t.eq(int(f.run.tally["searches"]), 1, "读档后还记得翻过哪些点")
 	t.check(seen.has(GameFlow.Screen.SETUP) and seen.has(GameFlow.Screen.BATTLE), "屏的切换都发了信号")
 	Support.cleanup("flow")
 
@@ -492,7 +507,7 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	t.check(map.confirm_extract(), "确定撤离")
 	t.eq(game.base().screen, GameFlow.Screen.RESULT, "→ 结算")
 	var result: RunResult = flow.result
-	t.check(result != null and result.is_extracted() and result.left_behind == left, "账上遗落 %d 件 = 地上的" % left)
+	t.check(result != null and result.is_extracted() and result.carried.size() > 0, "撤离了（地上的 %d 件不记账，224）" % left)
 	t.check(flow.meta.has_pending_board(), "结算屏上带回来的棋盘等着置入")
 	game.base().to_step(2)     # 177：第 1 步看账，第 2 步才置入仓库
 	var stored: Dictionary = game.base().store_all()

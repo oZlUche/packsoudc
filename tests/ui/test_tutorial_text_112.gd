@@ -37,7 +37,7 @@ static func run_typed_placeholders(t: TestCase) -> void:
 	UiText.lang = old
 
 	var resolved := UiPalette.resolve_styles(TextTemplate.render("{item:steel_ingot}", ctx))
-	t.check(resolved.contains("#" + ItemPainter.rarity_color(steel).to_html(false)), "界面把稀有度色换成真颜色：%s" % resolved)
+	t.check(resolved.contains("#" + UiPalette.rarity_color(steel.rarity).to_html(false)), "界面把稀有度色换成真颜色（224：字色模板里的稀有度色）：%s" % resolved)
 	t.check(not resolved.contains("@"), "不留颜色名")
 	t.eq(TextTemplate.refs("{item:knife}和{enemy:brute}、{item_stat:longsword:damage}").size(), 3, "refs 找到三处引用")
 

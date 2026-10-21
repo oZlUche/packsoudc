@@ -32,12 +32,12 @@
     "val": {"dark": "#f3c969", "light": "#6b4e00"}
   },
   "rarity": [
-    {"dark": "#d8dce3", "light": "#2e2219"},
-    {"dark": "#5fa85f", "light": "#2f6b2f"},
-    {"dark": "#4a86c8", "light": "#1f4f8a"},
-    {"dark": "#b06ccf", "light": "#6a2f8a"},
-    {"dark": "#e0b040", "light": "#725600"},
-    {"dark": "#d9453f", "light": "#8c2b22"}
+    {"dark": "#d8dce3", "light": "#525862"},
+    {"dark": "#5fa85f", "light": "#186521"},
+    {"dark": "#5598e6", "light": "#1b56a4"},
+    {"dark": "#bd7bde", "light": "#842ca7"},
+    {"dark": "#e0b040", "light": "#7c4d00"},
+    {"dark": "#ee6253", "light": "#a8221b"}
   ],
   "damage": {
     "physical": {"dark": "#ff8a7a", "light": "#8c2b22"},

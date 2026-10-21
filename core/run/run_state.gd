@@ -127,8 +127,10 @@ var repair: SaveReport = null
 ## 159：搜索收获箱里哪件算「亮过」（uid → bool）—— 走开时开着的搜索只落亮过的，没亮的算没搜到（下次回来再搜还能亮）。
 ## [GameFlow] 接上它的 `seen_loot`；没接（纯核心）= 都算亮过
 var loot_seen: Callable = Callable()
-## 这一局的计数（给结算看）：打赢 / 打输几场。跟着存档走
-var tally: Dictionary = {"battles_won": 0, "battles_lost": 0}
+## 这一局的计数（给结算看）：打赢 / 打输几场；224 加其中精英 / 首领、翻过几个搜索点（同一个点只算一次）、合成几次。跟着存档走（旧档缺的键 = 0）
+var tally: Dictionary = {"battles_won": 0, "battles_lost": 0, "elite_won": 0, "boss_won": 0, "searches": 0, "crafts": 0}
+## 224：翻过的搜索点（点 id → true）—— tally.searches 同一个点只算一次。跟着存档走
+var searched_nodes: Dictionary = {}
 ## buff（059）：定义表由持有方给（id → RunBuffDef，存档只写 id）；局外的在开局那一刻定下来跟着存档；
 ## 一局里的每条 {"id", "left"}（left = 还能走几步，-1 = 整局）
 var buff_defs: Dictionary = {}
@@ -1028,9 +1030,8 @@ func _wire_events() -> void:
 		if hunters != null:
 			hunters.on_player_step()
 		stepped.emit(travel.current_id, &"wait"))
-	events.battle_finished.connect(func(_n: MapNode, _r: BattleResult, won: bool):
-		var key := "battles_won" if won else "battles_lost"
-		tally[key] = int(tally.get(key, 0)) + 1)
+	events.battle_finished.connect(func(_n: MapNode, _r: BattleResult, won: bool): _tally_battle(won))
+	events.search_opened.connect(func(n: MapNode, _s: SearchSession): _tally_search(n))
 	events.loot_ready.connect(func(_n: MapNode, corpse: GridInventory): _offer_loot(corpse))
 	events.search_closed.connect(func(_n: MapNode, haul: GridInventory, _why: StringName): drop_seen_haul(haul))     # 作者 2026-10-16：不再弹战利品屏
 	events.shop_opened.connect(func(_n: MapNode, session: ShopSession):
@@ -1196,6 +1197,7 @@ func to_dict() -> Dictionary:
 		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
 		"boss_cleared": boss_cleared,
 		"tally": tally.duplicate(),
+		"searched_nodes": searched_nodes.keys(),     # 224
 		"buffs": {"meta": meta_buff_ids()},     # 一局里拿到的在 modules.buff 下（101）
 		"modules": _modules_to_dict(),     # 101：每个模块自己的状态；加模块 = 新键、带默认值，不升版
 	}
@@ -1298,6 +1300,8 @@ static func from_dict(
 			"loss_cost": int(pb.get("loss_cost", NodeEvents.LOSS_DEFAULT))}     # 审查 B1：搜索遇敌无代价（0）读档后不能变回默认
 	for key in d.get("tally", {}):
 		s.tally[String(key)] = int((d["tally"] as Dictionary)[key])
+	for id in d.get("searched_nodes", []):
+		s.searched_nodes[int(id)] = true
 	var buffs: Dictionary = d.get("buffs", {})
 	for id in buffs.get("meta", []):
 		s.meta_buffs.append(StringName(String(id)))
@@ -1333,3 +1337,23 @@ static func from_dict(
 		s._seed_owned()
 	return s
 #endregion
+
+
+## 打完一场记一笔；224：赢了按这一场的点类型再记其中精英 / 首领（last_battle 在发信号前记好）
+func _tally_battle(won: bool) -> void:
+	var key := "battles_won" if won else "battles_lost"
+	tally[key] = int(tally.get(key, 0)) + 1
+	if not won:
+		return
+	var type := StringName(String(events.last_battle.get("type", "")))
+	if type == &"elite":
+		tally["elite_won"] = int(tally.get("elite_won", 0)) + 1
+	elif type == &"core":
+		tally["boss_won"] = int(tally.get("boss_won", 0)) + 1
+
+
+## 224：翻过的搜索点（宝箱也算），同一个点只算一次
+func _tally_search(n: MapNode) -> void:
+	if n != null and not searched_nodes.has(n.id):
+		searched_nodes[n.id] = true
+		tally["searches"] = int(tally.get("searches", 0)) + 1
