@@ -29,6 +29,13 @@ func _fit() -> void:
 	size = custom_minimum_size
 
 
+## 几枚并排时拉到同一宽度；字在圆点右边那段里居中
+func widen(w: float) -> void:
+	custom_minimum_size.x = maxf(custom_minimum_size.x, ceilf(w))
+	size = custom_minimum_size
+	queue_redraw()
+
+
 func _draw() -> void:
 	var r := Rect2(Vector2.ZERO, size)
 	var tex := UiTheme.art_cached(ART)
@@ -48,4 +55,6 @@ func _draw() -> void:
 		draw_style_box(flat, r)
 	var font := UiPalette.cjk_font_bold()
 	var base := (size.y + font.get_ascent(FONT_SIZE) - font.get_descent(FONT_SIZE)) * 0.5
-	draw_string(font, Vector2(LEFT, base), text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, INK)
+	var room := size.x - LEFT - RIGHT
+	var tw := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
+	draw_string(font, Vector2(LEFT + maxf(0.0, (room - tw) * 0.5), base), text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, INK)

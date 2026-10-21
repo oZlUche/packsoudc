@@ -79,12 +79,18 @@ func rebuild() -> void:
 		add_child(b)
 		_fit_text(b, r.size.x - 18.0)     # 两边留白 6 + 选中描边 3
 		_nodes[def.id] = b
+	var tags: Dictionary = {}
+	var widest := 0.0
 	for c in _col_mid:
 		var key := "tech.col_%d" % int(c)
 		if UiText.TEXT.has(key):
-			var tag := HeaderTag.new(UiText.t(key))
-			tag.position = Vector2(floorf(float(_col_mid[c]) - tag.size.x * 0.5), MARGIN)
-			add_child(tag)
+			tags[c] = HeaderTag.new(UiText.t(key))
+			widest = maxf(widest, (tags[c] as HeaderTag).size.x)
+	for c in tags:     # 三枚取最宽那枚的宽度（UI替换美术 18:59）
+		var tag: HeaderTag = tags[c]
+		tag.widen(widest)
+		tag.position = Vector2(floorf(float(_col_mid[c]) - widest * 0.5), MARGIN)
+		add_child(tag)
 	queue_redraw()
 
 
