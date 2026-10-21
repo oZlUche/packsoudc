@@ -30,7 +30,11 @@ static func frame_slots(t: TestCase, root: Window) -> void:
 	root.add_child(slots)
 	slots.bind(belt)
 	var n := belt.slot_count()
-	t.eq(slots.custom_minimum_size, Vector2(n * BeltSlots.SLOT + (n - 1) * BeltSlots.GAP, BeltSlots.SLOT), "%d 个圆排一行" % n)
+	if slots.curved():     # 232：1–6 格是一整张弯皮带，大小 = 图
+		var lay: Dictionary = BeltSlots.belt_layouts()[str(n)]
+		t.eq(slots.custom_minimum_size, Vector2(lay["size"][0], lay["size"][1]), "%d 格弯皮带：大小是图的" % n)
+	else:
+		t.eq(slots.custom_minimum_size, Vector2(n * BeltSlots.SLOT + (n - 1) * BeltSlots.GAP, BeltSlots.SLOT), "%d 个圆排一行" % n)
 	for i in n:
 		t.eq(slots.slot_at(slots.slot_center(i)), i, "第 %d 个圆心命中第 %d 格" % [i, i])
 	t.eq(slots.slot_at(Vector2(BeltSlots.SLOT + BeltSlots.GAP * 0.5, BeltSlots.SLOT * 0.5)), -1, "两个圆之间的空：不命中")

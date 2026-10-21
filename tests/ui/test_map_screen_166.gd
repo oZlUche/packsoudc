@@ -54,10 +54,12 @@ static func run_legend(t: TestCase) -> void:
 		if MapNodeStyle.NAMES.has(ty):
 			t.check(types.has(ty), "图上有的 %s 列进去了" % ty)
 	t.eq(legend.title(), "图例", "部件标题")
-	# 作者 2026-10-13：图例深色半透明底、白字、有内边距，往右上挪一点
-	var box := legend.theme.get_stylebox("panel", UiTheme.PANEL_HUD) as StyleBoxFlat
-	t.check(box != null and box.bg_color.get_luminance() < 0.2 and box.bg_color.a > 0.5, "深色底（%s）" % (box.bg_color if box != null else null))
+	# 作者 2026-10-13：图例白字、有内边距；232：底是双尾旗九宫格（深底），最窄 158
+	var box := legend.theme.get_stylebox("panel", UiTheme.PANEL_HUD) as StyleBoxTexture
+	t.check(box != null and box.texture != null, "双尾旗底")
 	t.check(box != null and box.content_margin_left >= 8 and box.content_margin_top >= 4, "有内边距，图标和字不压边框")
+	t.check(legend.custom_minimum_size.x >= 158.0, "最窄 158")
+	t.eq(legend.get_meta(&"tone", &""), UiTheme.TONE_DARK, "深底（白字）")
 	t.eq(legend.theme.get_color("font_color", UiTheme.LABEL_HUD), Color.WHITE, "白字")
 	t.check(HudLayout.CORNER_OFFSET.x > 8 and HudLayout.CORNER_OFFSET.y < -8, "左下角离边远一点（往右上挪）")
 	legend.free()

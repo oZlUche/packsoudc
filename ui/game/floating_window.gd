@@ -19,6 +19,8 @@ var _title: Label = null
 var close_button: Button = null
 ## 第一次摆时离正中偏多少（[BagWindow] 按精修稿的窗中心）
 var center_shift := Vector2.ZERO
+## 232：画在矩形外的凸出件（背包窗的提手、侧环）：position = 左 / 上凸出多少，size = 右 / 下凸出多少。夹边时算进去，别被屏幕边裁掉
+var outset := Rect2()
 var _dragging: bool = false
 var _grab: Vector2 = Vector2.ZERO
 var _placed: bool = false
@@ -131,6 +133,8 @@ func _area() -> Vector2:
 
 func _clamp() -> void:
 	var area := _area()
+	var lo := outset.position
+	var hi := area - size - outset.size
 	position = Vector2(
-		clampf(position.x, 0.0, maxf(0.0, area.x - size.x)),
-		clampf(position.y, 0.0, maxf(0.0, area.y - size.y)))
+		clampf(position.x, lo.x, maxf(lo.x, hi.x)),
+		clampf(position.y, lo.y, maxf(lo.y, hi.y)))

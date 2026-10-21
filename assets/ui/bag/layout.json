@@ -1,0 +1,93 @@
+{
+ "tone": "light",
+ "design_window": [
+  984,
+  620
+ ],
+ "note": "四件都按窗左上（BagWindow 的 0,0）的设计像素摆；W、H = BagWindow.window_size()。字和格子照旧由代码画，内衬是浅底墨字。",
+ "body": {
+  "file": "bag_body.png",
+  "size": [
+   1044,
+   670
+  ],
+  "at": [
+   -30,
+   -18
+  ],
+  "grow": [
+   60,
+   50
+  ],
+  "patch_margin": [
+   72,
+   70,
+   72,
+   90
+  ],
+  "stretch": "STRETCH",
+  "note": "NinePatchRect：左上 = 窗 (-30, -18)，大小 = (W + 60, H + 50)。内衬（浅帆布）是窗 x 8..W-8、y 30..H-6，皮边画在窗外。窗原来的石板底（PANEL_WINDOW）换成 StyleBoxEmpty。画在最底层。"
+ },
+ "flap": {
+  "file": "bag_flap.png",
+  "size": [
+   1064,
+   110
+  ],
+  "at": [
+   -40,
+   -46
+  ],
+  "grow_x": 80,
+  "patch_margin": [
+   112,
+   0,
+   112,
+   0
+  ],
+  "note": "NinePatchRect 只左右分段（上下 margin 0，高度不变）：左上 = 窗 (-40, -46)，宽 = W + 80。盖住窗顶那行拖动条（窗 y -34..46），整块翻盖都当拖动把手。标题行下那条横分隔线不画了（翻盖下沿就是分隔）；竖分隔线照旧。画在包身上面、棋盘和右栏下面。"
+ },
+ "crest": {
+  "file": "bag_crest.png",
+  "size": [
+   300,
+   168
+  ],
+  "at": [
+   "W/2 - 150",
+   -100
+  ],
+  "note": "固定大小不拉伸：左上 = 窗 (W/2 - 150, -100)。提手拱到窗顶上面 90，中间带子尖到窗 y 60（棋盘框上沿是 58，压 2 px 没关系）。画在翻盖上面。"
+ },
+ "tab": {
+  "file": "bag_tab.png",
+  "size": [
+   56,
+   80
+  ],
+  "left_at": [
+   -50,
+   92
+  ],
+  "right_at": [
+   "W + -6",
+   92
+  ],
+  "right_flip_h": true,
+  "note": "左边一件：左上 = 窗 (-50, 92)；右边同一张图水平翻转，左上 = 窗 (W + -6, 92)。画在包身上面。"
+ },
+ "outset": {
+  "left": 50,
+  "right": 50,
+  "top": 100,
+  "bottom": 32,
+  "note": "窗往屏幕边夹（FloatingWindow._clamp）时把这几个凸出量算进去，提手和侧环不被裁掉"
+ },
+ "minimize": {
+  "topleft_rel_window": [
+   914,
+   -6
+  ],
+  "note": "收起钮挪到翻盖上（原来 [918, 13] 的下半截会落到内衬上）；随窗宽右移照旧"
+ }
+}

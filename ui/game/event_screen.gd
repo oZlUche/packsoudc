@@ -161,7 +161,9 @@ func harvest_row() -> HarvestRow:
 ##
 ## 返回右栏底部放选项的容器，调用方往里加按钮；正文在可滚的区域里，选项贴在底部
 func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
-	var panel := _centered_panel(PANEL_SIZE, 0)
+	var panel := _centered_panel(PANEL_SIZE, 0, false, true)
+	if _overlay_frame.book:
+		return _book_page(panel, image_path, title, body)
 	var row := _hbox(0)
 	panel.add_child(row)
 	var image := EventImage.area(image_path, title, Vector2(IMAGE_WIDTH, 0))     # 左栏：图铺满、按比例裁；没有图就一块深底色写着占位
@@ -195,6 +197,54 @@ func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
 	options.name = "Options"
 	col.add_child(options)
 	return options
+
+
+## 232（作者 19:23 选 1）：书皮 —— 插图摆在左页 `image_rect`，右页 `text_rect` 里一列：标题（`title_h` 高，墨色居中）→ 章节名 → 正文 → 选项
+func _book_page(panel: Container, image_path: String, title: String, body: String) -> VBoxContainer:
+	var meta := OverlayFrame.book_meta()
+	var page := Control.new()
+	page.name = "Book"
+	page.custom_minimum_size = PANEL_SIZE
+	page.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(page)
+	var ir := _rect(meta.get("image_rect", [14, 44, 640, 672]))
+	var image := EventImage.area(image_path, title, ir.size, 22, 12, "", 6, true)
+	image.name = "Image"
+	image.position = ir.position
+	image.size = ir.size
+	page.add_child(image)
+	var tr := _rect(meta.get("text_rect", [704, 44, 560, 672]))
+	var col := _vbox(14)
+	col.name = "Page"
+	col.position = tr.position
+	col.size = tr.size
+	col.custom_minimum_size = tr.size
+	page.add_child(col)
+	var head := _frame_title(title)
+	head.custom_minimum_size.y = float(meta.get("title_h", 52))
+	col.add_child(head)
+	var under := Control.new()     # 花饰线在图里：正文从 title_h + 22 起
+	under.custom_minimum_size.y = 22.0 - 14.0
+	col.add_child(under)
+	var heading := intro_heading()
+	if heading != "":
+		col.add_child(UiTheme.make_display(heading))
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	col.add_child(scroll)
+	if body != "":
+		var text := UiTheme.rich_block(tr.size.x, UiTheme.RICH_BODY_SIZE, body)
+		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		scroll.add_child(text)
+	var options := _vbox(8)
+	options.name = "Options"
+	col.add_child(options)
+	return options
+
+
+static func _rect(a: Array) -> Rect2:
+	return Rect2(float(a[0]), float(a[1]), float(a[2]), float(a[3]))
 
 
 ## 168：这一屏是这一章的开场事件 → 章节名；别的事件空

@@ -54,6 +54,11 @@ func _box(state: String) -> StyleBox:
 	box.texture = tex
 	box.set_texture_margin_all(12.0)
 	box.set_expand_margin_all(BLEED)
+	# 内边距不跟九宫格边走（那 12 含投影边）：上下 0、左右 8，按钮高就是 HEIGHT（UI替换美术 21:37 量出 46）
+	box.content_margin_top = 0.0
+	box.content_margin_bottom = 0.0
+	box.content_margin_left = 8.0
+	box.content_margin_right = 8.0
 	return box
 
 

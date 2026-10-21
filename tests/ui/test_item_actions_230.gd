@@ -142,6 +142,7 @@ static func frame_pin_and_lock(t: TestCase, root: Window) -> void:
 	t.eq(tip.action_rows(), [["quick", "lock"]], "放到地上 | 锁定 一行")
 	var lock_btn: TipButton = tip.action_buttons()[1]
 	t.eq(lock_btn.text, UiText.t("act.lock"), "写着锁定")
+	t.eq(lock_btn.get_combined_minimum_size().y, TipButton.HEIGHT, "按钮高 28（内边距不跟九宫格边走）")
 	lock_btn._on_pressed()
 	t.check(sword.is_locked_by_player(), "锁上了")
 	t.check(tip.is_pinned(), "窗还钉着")

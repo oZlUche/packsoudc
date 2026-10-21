@@ -1,0 +1,22 @@
+{
+ "file": "legend_pennant.png",
+ "size": [
+  158,
+  300
+ ],
+ "tone": "dark",
+ "texture_margin": [
+  44,
+  52,
+  44,
+  58
+ ],
+ "content_margin": [
+  30,
+  54,
+  26,
+  50
+ ],
+ "min_width": 158,
+ "note": "LegendWidget 的底（_legend_theme 里那块 StyleBoxFlat）换成 StyleBoxTexture：texture_margin 左上右下 = [44, 52, 44, 58]，content_margin 左上右下 = [30, 54, 26, 50]，中段 STRETCH（竖着、横着都行）。控件最窄 158（custom_minimum_size.x），英文长名再往宽撑。字照旧白色、图标照旧按类型色；钉子、绳、横杆都在图里，控件左上就是图左上。"
+}
