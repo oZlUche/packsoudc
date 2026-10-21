@@ -3,7 +3,6 @@
 extends RefCounted
 
 const R := preload("res://tests/battle/test_reactions_175.gd")
-const Prebattle := preload("res://ui/game/prebattle_screen.gd")
 
 const CONSTRUCTS: Array[StringName] = [&"clockwork_sentry", &"steam_turret", &"gear_golem", &"pendulum_warden", &"great_clock"]
 
@@ -79,9 +78,9 @@ static func run_immune(t: TestCase) -> void:
 	R._apply("poison", 2).apply(R._rc(ctx))
 	t.check(R._reactions(ctx).is_empty() and ctx.sides[1].stacks_of(&"scorch") == 2, "中毒打不上，也就不引发爆燃")
 	t.eq(ctx.sides[1].apply_buff(R._b("scorched_blood"), 3, ctx.now), 0, "燃血不叠")
-	var line := Prebattle.immune_text(spec)
-	t.check(line.contains("免疫") and line.contains("流血") and line.contains("中毒"), "读数：%s" % line)
-	t.eq(Prebattle.immune_text(_spec(c, _build(c, &"clock_keeper", 5))), "", "人没有免疫行")
+	var line := "\n".join(StatsStrip.specials_of(spec))     # 铜面板三屏：免疫归进战前屏敌人「特殊能力」签
+	t.check(line.contains("免疫流血") and line.contains("免疫中毒"), "特殊能力：%s" % line)
+	t.check(not "\n".join(StatsStrip.specials_of(_spec(c, _build(c, &"clock_keeper", 5)))).contains("免疫"), "人没有免疫")
 
 
 static func run_parts(t: TestCase) -> void:

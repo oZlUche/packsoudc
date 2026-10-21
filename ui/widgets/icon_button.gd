@@ -35,6 +35,11 @@ var _hover := false
 var _down := false
 ## 开战战旗：可点的只有旗面（按图里的像素，空 = 整张图都能点）
 var hit_rect := Rect2()
+## 图上不带字的整图按钮（铜面板「全部拾取」）：字由这里写 —— 字心在图里的位置、字号、颜色；空 = 不写
+var art_label := ""
+var art_label_center := Vector2.ZERO
+var art_label_size := 16
+var art_label_color := Color.WHITE
 
 
 ## [param name] 写进悬浮窗第一行；[param hint] 是那一句说明
@@ -139,6 +144,13 @@ func _draw() -> void:
 	if font == null:
 		return
 	var col := get_theme_color("font_color")
+	if art_label != "" and _tex != null:
+		var lf := UiPalette.cjk_font_bold()
+		var ls := lf.get_string_size(art_label, HORIZONTAL_ALIGNMENT_LEFT, -1, art_label_size)
+		var at := art_label_center * (size / _tex.get_size()) + Vector2(-ls.x * 0.5, lf.get_ascent(art_label_size) - ls.y * 0.5)
+		if _down:
+			at.y += 2.0
+		draw_string(lf, at.floor(), art_label, HORIZONTAL_ALIGNMENT_LEFT, -1, art_label_size, art_label_color)
 	if hotkey != "":
 		draw_string(font, Vector2(size.x - 12, HINT_SIZE + 1), hotkey, HORIZONTAL_ALIGNMENT_LEFT, -1, HINT_SIZE, Color(col, 0.75))
 	if badge >= 0:

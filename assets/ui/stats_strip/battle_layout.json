@@ -1,0 +1,174 @@
+{
+ "design": [
+  1600,
+  1000
+ ],
+ "tone": "light（都放在石板纸面上：墨字）",
+ "pieces": {
+  "seal_hp": {
+   "file": "seal_hp.png",
+   "size": [
+    56,
+    56
+   ]
+  },
+  "seal_vigor": {
+   "file": "seal_vigor.png",
+   "size": [
+    56,
+    56
+   ]
+  },
+  "tag_s": {
+   "file": "tag_s.png",
+   "size": [
+    78,
+    58
+   ],
+   "origin_in_tag": [
+    12,
+    -6
+   ],
+   "slice": {
+    "left": 22,
+    "right": 16,
+    "axis": "x"
+   }
+  },
+  "bar_trough": {
+   "file": "bar_trough.png",
+   "slice": {
+    "left": 8,
+    "right": 8,
+    "axis": "x"
+   },
+   "size": [
+    120,
+    26
+   ]
+  },
+  "bar_fill_hp": {
+   "file": "bar_fill_hp.png",
+   "slice": {
+    "left": 8,
+    "right": 8,
+    "axis": "x"
+   }
+  },
+  "bar_fill_vigor": {
+   "file": "bar_fill_vigor.png",
+   "slice": {
+    "left": 8,
+    "right": 8,
+    "axis": "x"
+   }
+  },
+  "bar_armor": {
+   "file": "bar_armor.png",
+   "slice": {
+    "left": 8,
+    "right": 8,
+    "axis": "x"
+   }
+  },
+  "seal_special": {
+   "file": "seal_special.png",
+   "size": [
+    56,
+    56
+   ]
+  }
+ },
+ "boards": {
+  "rule": "作者 2026-10-21 15:19：所有棋盘都显示外框和格子线（战前准备、战斗、结算、战利品/搜索、背包窗、仓库……）",
+  "enemy": "外框用 assets/ui/board/frame_corpse.png（生皮穿绳，内垫已在图里），同容器屏的九宫和 pad；以后按敌人种类/强度换框，见 reference/待做-界面.md",
+  "player": "外框用 frame_player.png（素皮带），同战利品屏",
+  "grid": "格缝照 assets/ui/board/layout.json 的 cell_seams（InventoryView.seams），且不受 187 的自动关格线影响（224 的 grid_mode ALWAYS）",
+  "battle": "战斗屏竞技场里的两块棋盘同样加框 + 格缝；框在场地上面、道具下面"
+ },
+ "prebattle_row": {
+  "where": "两列棋盘下方同一条横线（两边取较低的棋盘外框下沿 + 18），各自从本列左沿排起，左对齐",
+  "order_player": [
+   "hp",
+   "vigor",
+   "stamina",
+   "dps",
+   "load"
+  ],
+  "order_enemy": [
+   "hp",
+   "vigor",
+   "stamina",
+   "dps",
+   "special"
+  ],
+  "tag_w": {
+   "hp": 88,
+   "vigor": 88,
+   "stamina": 122,
+   "dps": 88,
+   "load": 92,
+   "special": 88
+  },
+  "gap": 6,
+  "tag_h": 46,
+  "seal": "火漆用 56 图缩到 0.8（≈45），中心 = 签左上 + (16, 23)；stamina/dps/load 沿用 assets/ui/stats_strip/ 的三枚",
+  "text": {
+   "main": {
+    "pos_in_tag": [
+     36,
+     22
+    ],
+    "font": "serif_bold",
+    "size": 17
+   },
+   "sub": {
+    "pos_in_tag": [
+     36,
+     37
+    ],
+    "font": "serif_regular",
+    "size": 11,
+    "color": "#6b6058"
+   },
+   "hp": "生命上限 / 「生命」",
+   "vigor": "耐力上限 / 「耐力」",
+   "stamina": "档位（颜色同 216）/ 耗 x · 回 y",
+   "dps": "估算 DPS / 「DPS」",
+   "load": "当前 / 上限，副行负重档名（无负重章节副行写「负重」）",
+   "special": "主字 = 特殊能力条数（没有写「无」），副行「特殊能力」；悬浮窗标题「特殊能力」，逐条写名字和当前效果（免疫流血…）；没有时悬浮窗只写「此敌人没有特殊能力」"
+  },
+  "removed": "敌人那行「生命 35 约 5.2 DPS」和「免疫：…」两行都删掉（免疫归进特殊能力签的悬浮窗）",
+  "tooltip": "每张签各自悬浮窗，沿用 216"
+ },
+ "battle_bars": {
+  "removed": "两边状态区的黑底去掉，直接放在石板纸面上（tone light）",
+  "layout": "每边：生命条在上、耐力条在下，间隔 14；火漆 0.72（≈40）中心 = 条左 + (14, 11)；槽从条左 +30 起到本列右沿 -10，高 22",
+  "fill": "填充 = bar_fill_* 九宫，宽 = (槽宽 - 4) × 当前 / 上限，贴槽内 2 px；护甲 = bar_armor 盖在生命填充上，从左起，宽 = (槽宽 - 4) × 护甲 / 生命上限",
+  "text": {
+   "font": "serif_bold",
+   "size": 14,
+   "color": "#fbf2de",
+   "outline": "#2a1a10 / 3",
+   "pos": "槽左 + 12，竖直居中",
+   "format": "生命 20 / 60　甲 30（无护甲不写）；耐力 38 / 50"
+  },
+  "status_icons": "格挡等状态小标原来是黑底青线，挪到纸面后改墨线（#2e2219）＋ 铁灰填充，层数墨字",
+  "action_line": "「▸ 制式短剑」这行改墨灰字（INK2）"
+ },
+ "prebattle_screen": {
+  "removed": "顶上两行字都删：石板框标题条「战前准备 战斗 —— 整理好背包再开战」和下面那行玩法说明；内容整体上移约 70（设计）",
+  "background": "面板里面换成 assets/ui/battle/battle_bg.png（竞技场全景，cover，tone light）—— 和接下来的战斗屏同一个场地；铭牌压在拱墙上，棋盘和签在沙地上",
+  "right_margin": "作者 15:44：右列离面板右沿再远一点（右边有阴影）—— 右列整体左移 18（设计），右列右沿到框内沿留 ≥ 22",
+  "mock": "pre_v2_甲.png（定）；pre_v2_乙.png（只用沙地，备选）"
+ },
+ "battle_screen": {
+  "note": "作者 15:45：黑底那块不盖纸，直接露出场地贴图（场地从铭牌下沿开始），生命/耐力条、状态小标、「▸ 武器名」都在场地上（浅字 + 深描边）；棋盘上移紧跟在条下面；时间轴贴着场地下沿；面板去掉底下那条空白，变矮（截图里底边 880 → 731）",
+  "arena": "battle_bg.png 取沙地部分（上面的拱墙露一条边即可），铺满场地区域",
+  "text_on_arena": {
+   "color": "#fbf2de",
+   "outline": "#2a1a10 / 3"
+  },
+  "mock": "battle_v2.png"
+ }
+}

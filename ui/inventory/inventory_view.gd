@@ -394,20 +394,21 @@ func _draw_seams(grid_px: Vector2) -> void:
 			var c := Vector2i(x, y)
 			if inventory.is_blocked(c) or not inventory.is_covered(c):
 				draw_rect(Rect2(cell_origin_px(c), Vector2(cell_px, cell_px)), Color(0, 0, 0, 0.16), true)
-	var seam := Color(String(seams.get("seam", "#8e8b85")))
-	var hi := Color(String(seams.get("hi", "#ebe9e4")))
+	# 铜面板三屏（boards_dark）：深色半透明内垫上的格缝带透明度、两端缩 trim
+	var seam := Color(String(seams.get("seam", "#8e8b85")), float(seams.get("seam_alpha", 1.0)))
+	var hi := Color(String(seams.get("hi", "#ebe9e4")), float(seams.get("hi_alpha", 1.0)))
 	var seam_w := float(seams.get("seam_w", 1.6))
 	var hi_w := float(seams.get("hi_w", 1.0))
 	var off := float(seams.get("hi_offset", 1.4))
-	const TRIM := 2.0
+	var trim := float(seams.get("trim", 2.0))
 	for x in range(1, inventory.size.x):
 		var fx := x * cell_px
-		draw_line(Vector2(fx, TRIM), Vector2(fx, grid_px.y - TRIM), seam, seam_w)
-		draw_line(Vector2(fx + off, TRIM), Vector2(fx + off, grid_px.y - TRIM), hi, hi_w)
+		draw_line(Vector2(fx, trim), Vector2(fx, grid_px.y - trim), seam, seam_w)
+		draw_line(Vector2(fx + off, trim), Vector2(fx + off, grid_px.y - trim), hi, hi_w)
 	for y in range(1, inventory.size.y):
 		var fy := y * cell_px
-		draw_line(Vector2(TRIM, fy), Vector2(grid_px.x - TRIM, fy), seam, seam_w)
-		draw_line(Vector2(TRIM, fy + off), Vector2(grid_px.x - TRIM, fy + off), hi, hi_w)
+		draw_line(Vector2(trim, fy), Vector2(grid_px.x - trim, fy), seam, seam_w)
+		draw_line(Vector2(trim, fy + off), Vector2(grid_px.x - trim, fy + off), hi, hi_w)
 
 
 ## 224：[member ground] 的底 —— 外圈深色细边（圆角，画在格子外面）、底色、几层内格线（两端各留 trim，线在道具下面）

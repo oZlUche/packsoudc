@@ -15,22 +15,26 @@ extends GameScreen
 
 const BOARD_DIR := "res://assets/ui/board/"
 const BOARD_LAYOUT := BOARD_DIR + "layout.json"
+## 铜面板第三轮（UI替换美术 bronze3，作者 2026-10-21 16:15–16:22）：外框换 `frame_<kind>_dark`（同几何，内垫深色半透明）、
+## 格缝按 `boards_dark.cell_seams`、「全部拾取」与右上圆钮换铜面板那套；切图与 `layout.json` 在这里
+const BRONZE_DIR := "res://assets/ui/bronze/"
 ## 外框切图四周多留的透明边（描边与抖动），外框看得见的边 = 节点往里缩这么多
 const FRAME_BLEED := 8.0
-## 定稿摆位（面板左上角为原点，设计像素）：外框到面板左右边、外框上沿到面板上沿（标题分隔行 52 + 14）、两块外框之间
-const EDGE := 26.0
-const TOP := 66.0
+## 定稿摆位（面板左上角为原点，设计像素）：外框到面板左右边、外框上沿到面板上沿、两块外框之间。
+## 铜面板：边框 32 + 离内沿 16（作者 16:22「两边组件离边远一点」），没有标题条
+const EDGE := 48.0
+const TOP := 48.0
 const MID := 200.0
 ## 背包外框下沿到面板下沿；容器外框下沿到「全部拾取」看得见的上沿；「全部拾取」切图的左上角离面板左下角
-const BELOW_PLAYER := 68.0
-const ABOVE_TAKE := 62.0
-const TAKE_AT := Vector2(22.0, -102.0)
-## 「全部拾取」切图里看得见的那块从切图上沿往下多少、多高（切图 250 × 82）
+const BELOW_PLAYER := 48.0
+const ABOVE_TAKE := 40.0
+const TAKE_AT := Vector2(43.0, -141.0)
+## 「全部拾取」切图里看得见的那块从切图上沿往下多少、多高（铜面板切图 307 × 104，放大 1.3；字由代码写）
 const TAKE_INSET := 8.0
-const TAKE_VISIBLE := 62.0
-## 右上角圆钮：中心离面板右上角（关闭在右、最小化在它左边 48）
-const CLOSE_AT := Vector2(-46.0, 33.0)
-const MINIMIZE_AT := Vector2(-94.0, 33.0)
+const TAKE_VISIBLE := 85.0
+## 右上角圆钮（铜面板 52 × 52）：钮心压在面板右上角的边框上（往里 29, 29）；两颗时最小化在关闭左边 58
+const CLOSE_AT := Vector2(-29.0, 29.0)
+const MINIMIZE_AT := Vector2(-87.0, 29.0)
 ## 216：玩家棋盘下的数值栏，和「全部拾取」看得见的那块同一行（中线对齐）；上沿至少离棋盘格子下沿这么多（`layout.json` 的 `stats_strip.gap` 可改）
 const STRIP_GAP := 22.0
 
@@ -64,14 +68,13 @@ func open(payload: Dictionary) -> void:
 		if _container == null:
 			_container = flow.run.pending_loot
 	_layout_data = board_layout()
-	var panel := _centered_panel(Vector2(0, 0))
+	var panel := _bronze_panel(Vector2(0, 0))
 	_stage = Control.new()
 	_stage.name = "BoardStage"
 	_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel.add_child(_stage)
-	_frame_title("")     # 棋盘美术：标题不写字，分隔行照旧
 
 	_boss = _session == null and flow.run != null and flow.run.boss_cleared
 	var chest := _session != null and NodeEvents.effective_type(_session.node) == &"chest"     # 154：宝箱开锁后的那一次搜索
@@ -84,7 +87,7 @@ func open(payload: Dictionary) -> void:
 	_loot = LootView.new()
 	_loot.label_font = font
 	_loot.inventory = _container
-	_loot.seams = _layout_data.get("cell_seams", {})
+	_loot.seams = BoardFrame.dark_seams()
 	# 每档稀有度搜几秒是节点规则里的数（058 第 5 条）：会话有自己的规则，尸体容器用这一局的
 	var search_rules: SearchRules = _session.rules if _session != null else (flow.run.node_rules.search if flow.run != null and flow.run.node_rules != null else null)
 	if search_rules != null and not search_rules.reveal_seconds.is_empty():
@@ -93,7 +96,12 @@ func open(payload: Dictionary) -> void:
 	_loot_box = ScrollBox.wrap(_loot)     # 反馈：容器太高时竖向滚动，不撑出窗口
 	_stage.add_child(_loot_box)
 	# 090：长说明在悬浮提示里，按钮上只写动作（棋盘美术：字画在火漆签上）
-	_take_btn = IconButton.make_art(BOARD_DIR, "take_all", UiText.t("loot.take_all"), UiText.t("loot.take_all_tip"), take_all)
+	_take_btn = IconButton.make_art(BRONZE_DIR, "take_all", UiText.t("loot.take_all"), UiText.t("loot.take_all_tip"), take_all)
+	var take_label: Dictionary = ((BoardFrame.layout().get("loot_screen", {}) as Dictionary).get("take_all", {}) as Dictionary).get("label", {})
+	_take_btn.art_label = UiText.t("loot.take_all")     # 铜面板那张图上不带字（英文界面也就不用另出图）
+	_take_btn.art_label_center = _v2(take_label.get("center_in_image", [185, 51]))
+	_take_btn.art_label_size = int(take_label.get("size", 29))
+	_take_btn.art_label_color = Color(String(take_label.get("color", "#f3e6c8")))
 	_take_btn.set_meta(AudioHub.META_KEY, &"")     # 206：响 loot.take_all（搬走了才响），不叠按钮声
 	_stage.add_child(_take_btn)
 	if _session != null:
@@ -104,8 +112,9 @@ func open(payload: Dictionary) -> void:
 
 	_inv = _mount_bag(_stage, _loot, Callable(), _container)     # 084：棋盘上双击 → 放回容器；回话不显示（作者 21:16 删了那一行）
 	_strip = _inv.detach_strip()     # 216：数值栏摆到「全部拾取」那一行
+	_strip.use_inlay(false)     # 铜面板：152 宽嵌槽签、浅字
 	_stage.add_child(_strip)
-	_inv.board_view.seams = _layout_data.get("cell_seams", {})
+	_inv.board_view.seams = BoardFrame.dark_seams()
 	_stage.move_child(_inv, _player_frame.get_index() + 1)
 	# 084：容器里双击 → 试着放进背包（没空间就到地上）；没亮的不动。
 	# 玩家自己的东西放回容器不会变成「未知」：LootView 把绑定之后才出现的都当亮过
@@ -154,6 +163,10 @@ static func board_layout() -> Dictionary:
 	return parsed if parsed is Dictionary else {}
 
 
+static func _v2(a) -> Vector2:
+	return Vector2(float(a[0]), float(a[1])) if a is Array and (a as Array).size() >= 2 else Vector2.ZERO
+
+
 ## 左边容器用哪种外框：搜索 藤编；宝箱开锁后那一次 稀有及以上金角、以下铁角；战利品 BOSS 黑铁，其余 生皮
 static func frame_kind_of(is_search: bool, chest: bool, chest_rarity: int, boss: bool) -> String:
 	if is_search:
@@ -165,7 +178,7 @@ static func frame_kind_of(is_search: bool, chest: bool, chest_rarity: int, boss:
 
 ## 这种外框的看得见的边比格子宽多少（切图的 cells_offset 减去四周的透明边）
 func frame_pad(kind: String) -> float:
-	var piece: Dictionary = (_layout_data.get("pieces", {}) as Dictionary).get(kind, {})
+	var piece: Dictionary = (BoardFrame.layout().get("frames_dark", {}) as Dictionary).get(kind, {})
 	return float(piece.get("cells_offset", FRAME_BLEED + 32.0)) - FRAME_BLEED
 
 
@@ -177,8 +190,8 @@ func _nine(kind: String) -> NinePatchRect:
 	var n := NinePatchRect.new()
 	n.name = "Frame_" + kind
 	n.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var piece: Dictionary = (_layout_data.get("pieces", {}) as Dictionary).get(kind, {})
-	n.texture = EventImage.load_texture(BOARD_DIR + String(piece.get("file", "frame_%s.png" % kind)))
+	var piece: Dictionary = (BoardFrame.layout().get("frames_dark", {}) as Dictionary).get(kind, {})
+	n.texture = EventImage.load_texture(BRONZE_DIR + String(piece.get("file", "frame_%s_dark.png" % kind)))
 	var m := int(piece.get("margin", 70))
 	n.patch_margin_left = m
 	n.patch_margin_top = m
@@ -189,10 +202,10 @@ func _nine(kind: String) -> NinePatchRect:
 	return n
 
 
-## 右上角圆钮（56 的切图按 0.72 画）；缺图写字
+## 右上角圆钮（铜面板 52 × 52，原大）；缺图写字
 func _corner(art: String, fallback: String, tip: String, on_press: Callable) -> IconButton:
-	var b := IconButton.make_art(BOARD_DIR, art, fallback, tip, on_press)
-	var side := 56.0 * float((_layout_data.get("corner_buttons", {}) as Dictionary).get("scale", 0.72))
+	var b := IconButton.make_art(BRONZE_DIR, art, fallback, tip, on_press)
+	var side := _v2(((BoardFrame.layout().get("loot_screen", {}) as Dictionary).get("corner_buttons", {}) as Dictionary).get("size", [52, 52])).x
 	b.custom_minimum_size = Vector2(side, side)
 	b.size = b.custom_minimum_size
 	_stage.add_child(b)
@@ -209,7 +222,7 @@ func panel_size() -> Vector2:
 	var h := maxf(TOP + loot.y + ABOVE_TAKE + TAKE_VISIBLE + EDGE + 6.0, TOP + player.y + BELOW_PLAYER)
 	if _strip != null and _inv != null:     # 216：数值栏放得下（中线对齐「全部拾取」，上沿让开棋盘）
 		h = maxf(h, TOP + player.y - pp + strip_gap() + _strip.strip_height() * 0.5 + take_mid())
-	return Vector2(w, h)
+	return Vector2(w, ceilf(h))     # 「全部拾取」中线是半像素：面板高取整
 
 
 ## 「全部拾取」看得见那块的中线离面板下沿多高

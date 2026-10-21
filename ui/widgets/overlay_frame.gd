@@ -15,10 +15,23 @@ var title_label: Label
 var slots: HBoxContainer
 ## 各屏的东西放这里
 var content: MarginContainer
+## 铜面板三屏（战前准备 / 战斗 / 战利品）用 [constant BRONZE_ART]，不是石板
+var bronze := false
+
+## 铜面板（UI替换美术 甲 铜战板，作者 2026-10-21 16:07）：九宫边 83、边段 TILE_FIT（铆钉每 70 一颗），内容从 [constant BRONZE_INSET] 起；
+## 没有标题条（作者 16:01 去掉顶上的空白条）；铜面偏深 = 深底浅字
+const BRONZE_ART := "bronze/panel_bronze"
+const BRONZE_MARGIN := 83
+const BRONZE_INSET := 40
 
 
-## [param margin] 是各屏原来给面板的内边距：平面底照旧当外框内边距；九宫格底时外框边距由图定，多出来的部分垫在内容区里
-func _init(margin: int = -1) -> void:
+## [param margin] 是各屏原来给面板的内边距：平面底照旧当外框内边距；九宫格底时外框边距由图定，多出来的部分垫在内容区里。
+## [param p_bronze]：铜面板（没图退回石板）
+func _init(margin: int = -1, p_bronze: bool = false) -> void:
+	bronze = p_bronze and UiTheme.art(BRONZE_ART) != null
+	if bronze:
+		_init_bronze(margin)
+		return
 	UiTheme.slab(self)     # 157 补充三：一整块石板；深底浅字、浅底墨字
 	var box := UiTheme.current().get_stylebox("panel", UiTheme.PANEL_OVERLAY)
 	var textured := UiTheme.is_art_box(box)
@@ -52,6 +65,32 @@ func _init(margin: int = -1) -> void:
 		# 内边距很小的框（事件屏：左栏的图铺到边）—— 标题条自己垫一点，字不贴边
 		var head_pad := maxi(0, UiTheme.PANEL_MARGIN - want)
 		UiTheme.margins(head, head_pad, head_pad, head_pad, 0)
+
+
+func _init_bronze(margin: int) -> void:
+	var box := StyleBoxTexture.new()
+	box.texture = UiTheme.art(BRONZE_ART)
+	box.set_texture_margin_all(BRONZE_MARGIN)
+	box.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
+	box.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
+	box.set_content_margin_all(BRONZE_INSET)
+	add_theme_stylebox_override("panel", box)
+	UiTheme.set_tone(self, UiTheme.TONE_DARK)
+	var col := UiTheme.vbox(0)
+	add_child(col)
+	title_bar = UiTheme.hbox(8)     # 没有标题条：留着空的，[method set_title] 照旧能调（字不显示）
+	title_bar.visible = false
+	col.add_child(title_bar)
+	title_label = UiTheme.make_label("")
+	title_bar.add_child(title_label)
+	slots = UiTheme.hbox(8)
+	title_bar.add_child(slots)
+	content = MarginContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var pad := maxi(0, margin - BRONZE_INSET) if margin >= 0 else 0
+	UiTheme.margins(content, pad, pad, pad, pad)
+	col.add_child(content)
 
 
 func set_title(text: String) -> Label:

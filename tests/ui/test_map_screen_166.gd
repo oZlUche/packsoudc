@@ -122,7 +122,7 @@ static func run_coach_data(t: TestCase) -> void:
 	t.eq(bag.map(func(s: Dictionary) -> String: return String(s["target"])), ["board", "board", "board", "strip_stamina"], "220：背包窗棋盘三步、三枚签并成一步")
 	t.eq(CoachOverlay.problems(bag, BagWindow.COACH_TARGETS), [] as Array[String], "背包窗的目标都认得")
 	var pre := CoachOverlay.load_steps(&"prologue_prebattle")
-	t.eq(pre.map(func(s: Dictionary) -> String: return String(s["target"])), ["enemy_board", "scale", "my_board"], "战前屏三步")
+	t.eq(pre.map(func(s: Dictionary) -> String: return String(s["target"])), ["enemy_board", "stats", "my_board"], "战前屏三步")
 	t.eq(CoachOverlay.problems(pre, PrebattleScript.COACH_TARGETS), [] as Array[String], "战前屏的目标都认得")
 	for some in [free, bag, pre]:
 		t.check((some as Array).all(func(s: Dictionary) -> bool: return TextLint.scan({"text": String(s["text"])}).is_empty()), "不写数字")
