@@ -39,7 +39,7 @@
 | 搜刮 / 战利品 | `container_screen.gd` | 两块 | 已有框 + 格缝 | 保留 |
 | 背包窗 | `bag_window.gd` 78 | 玩家 | 已有框 + 格缝 | 保留 |
 | 地图 | `map_screen.gd` 697 悬浮窗里的敌人棋盘 | 敌方预览 | 默认，在纸签上 | `corpse` + 格缝，缩小一档（纸签里放得下） |
-| 结算 | `result_screen.gd` 206 `_safe_view` | 保险箱带出 | 默认 | `plain` + 格缝 |
+| 结算 | `result_screen.gd` 206 `_safe_view` | 保险箱带出 | 默认 | **`player` + 格缝**（作者 17:23：和背包棋盘统一颜色；224 补充二） |
 | 结算 | `warehouse_panel.gd` 137 带回棋盘 / 83 仓库 | 两块 | 已有皮带框 + 格缝 / 棕底 | 保留 |
 | 基地 | `meta_screen.gd` 147 仓库 | 仓库 | 棕底 + 木架 `PANEL_SHELF` | 保留 |
 | 基地 | 仓库页带回棋盘（`warehouse_panel`） | 带回 | 皮带框 + 格缝 | 保留 |
