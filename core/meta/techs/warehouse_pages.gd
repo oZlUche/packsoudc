@@ -15,7 +15,7 @@ func derive(meta: MetaState, level: int) -> void:
 
 
 func describe() -> String:
-	return UiText.t("tech.pages_plus") % pages
+	return UiText.t("tech.pages_plus") % UiText.count(pages, "unit.page")
 
 
 ## 118：到第 k 级一共几页

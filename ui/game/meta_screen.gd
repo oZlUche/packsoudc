@@ -278,7 +278,7 @@ func drag_layer() -> DragLayer:
 
 func _refresh_shelf_title() -> void:
 	if _shelf_title != null:
-		_shelf_title.text = UiText.t("meta.shelf_title") % [flow.meta.warehouse.item_count(), flow.meta.warehouse.page_count()]
+		_shelf_title.text = UiText.t("meta.shelf_title") % [UiText.count(flow.meta.warehouse.item_count(), "unit.item"), UiText.count(flow.meta.warehouse.page_count(), "unit.page")]
 
 
 ## 双击右边仓库的一件：按当前页 —— 仓库 → 置入带回来的背包（178：原来在家页）；出售 → 卖；科技 → 上交；家 / 图鉴 / 成就 → 不做事
