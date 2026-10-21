@@ -784,8 +784,8 @@ func _refresh_skills() -> void:
 		if _run.skills.cooldown_of(d.id) > 0:
 			bits.append(UiText.t("map.skill_cooldown") % _run.skills.cooldown_of(d.id))
 		var hint := d.summary() + ("\n" + Names.description_of(d) if d.description != "" else "") + ("" if d.map_usable() else "\n" + UiText.t("map.skill_prebattle_only"))
-		var btn := IconButton.make("skill_" + String(d.id), d.display_name,
-			UiText.t("map.skill_state") % [d.display_name, UiText.t("map.skill_sep").join(bits)] if not bits.is_empty() else d.display_name, hint, func(): use_skill(d.id))
+		var btn := IconButton.make("skill_" + String(d.id), Names.of(d),
+			UiText.t("map.skill_state") % [Names.of(d), UiText.t("map.skill_sep").join(bits)] if not bits.is_empty() else Names.of(d), hint, func(): use_skill(d.id))
 		btn.badge = _run.skills.uses_of(d.id)
 		btn.disabled = _run.skills.can_use(d.id) != "" or not d.map_usable()
 		_skills_box.add_child(btn)
