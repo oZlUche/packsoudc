@@ -407,6 +407,7 @@ func _adopt() -> void:
 	var problems: Array[String] = []
 	_hud_host.debug = debug_mode()     # 150 补 2
 	_hud_host.setup(_run, self, HudLayout.load_for("map", problems))     # 150
+	_wire_notice()
 	for p in problems:
 		_note("[color=#f0ad4e]　读数布局：%s[/color]" % p)
 	_run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh_hud())
@@ -962,12 +963,20 @@ func debug_mode() -> bool:
 	return DevGate.on() and GameSettings.DEBUG_MODE_DEFAULT
 
 
+## 231：提示行一句句横着开卷（设置的「过渡动画」关着就不卷）
+func _wire_notice() -> void:
+	var notice := _hud_host.widget(&"notice")
+	if notice != null:
+		notice.set("motion", UiMotion.enabled(flow.settings))
+
+
 ## 照设置里的调试模式重摆读数层（变了才重摆）：关掉时日志那件不造，开回来日志里之前写的都还在
 func apply_debug_mode() -> void:
 	if _hud_host == null or _hud_host.layout == null or _hud_host.debug == debug_mode():
 		return
 	_hud_host.debug = debug_mode()
 	_hud_host.setup(_run, self, _hud_host.layout)
+	_wire_notice()
 	if _debug_line != null:
 		_debug_line.text = _debug_text()
 

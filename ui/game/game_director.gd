@@ -212,6 +212,10 @@ func codex() -> GameScreen:
 func _switch_screen(screen: int, payload: Dictionary) -> void:
 	if GameFlow.is_overlay(screen):
 		_ensure_map_base()
+		# 231：战前 → 战斗是一镜到底 —— 战前屏先不撤，垫在底下由战斗屏演完过场再放掉
+		var prev: GameScreen = _overlay if _intro_pair(screen) else null
+		if prev != null:
+			_overlay = null
 		_drop_overlay(true)     # 204：叠层换叠层只响「开」
 		AudioHub.play(&"ui.open")
 		if bool(payload.get("restore", false)) and _minimized != null and _minimized.screen == screen:
@@ -226,7 +230,10 @@ func _switch_screen(screen: int, payload: Dictionary) -> void:
 		_overlay.z_index = OVERLAY_Z
 		add_child(_overlay)
 		_overlay.open(payload)
-		_fade_in(_overlay, OVERLAY_FADE)     # 157：撤叠层直接撤，不等
+		if prev != null:
+			_overlay.call("intro_from", prev)
+		else:
+			_fade_in(_overlay, OVERLAY_FADE)     # 157：撤叠层直接撤，不等
 		return
 	if bool(payload.get("minimized", false)) and _overlay != null:
 		# 084：收起 = 最小化：藏起来、停掉它的计时（揭示动画不在背后偷跑），流程与会话都还在
@@ -269,6 +276,12 @@ func _ensure_map_base() -> void:
 	_base = _make(GameFlow.Screen.MAP, {})
 	add_child(_base)
 	_base.open({})
+
+
+## 231：这一次换屏走不走开战过场（战前 → 战斗、动效开着）
+func _intro_pair(screen: int) -> bool:
+	return screen == GameFlow.Screen.BATTLE and _overlay != null and _overlay.screen == GameFlow.Screen.PREBATTLE \
+		and UiMotion.enabled(flow.settings)
 
 
 ## 157：新上来的一屏从透明淡到不透明（墨水扫过那种 shader 等美术方案）。关着就什么也不造；返回造的那个 Tween（测试看）

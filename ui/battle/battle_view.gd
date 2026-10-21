@@ -21,6 +21,8 @@ signal finished
 signal speed_changed(speed: float)
 ## 220：回放里弹了一次反应字（[param side] = 挨反应的那一方）；跳转 / 跳过时不发。战斗屏拿它停下来解释第一次见的反应
 signal reaction_shown(id: StringName, side: int)
+## 231：一条事件照常播到了画面上（跳转、跳过补的那些不发）—— 战斗屏的双剑铜章跟着它动
+signal event_applied(e: BattleEvent)
 
 const SPEEDS := GameSettings.BATTLE_SPEEDS
 ## 167：倍速按钮上的罗马数字（缺图时写它，悬浮窗也写它；不写阿拉伯数字）
@@ -87,6 +89,8 @@ var _resume_after_scrub := false
 var _skip_btn: IconButton
 ## 166 补充二：教程压着时停住（[method hold]），收掉按原状态接着放（[method release]）
 var _held := false
+## 231：这一次「看完」是跳过 / 拖到头来的（不是一条条放完的）—— 收尾的动画不演、直接终态
+var ended_by_jump := false
 var _resume_after_hold := false
 ## 166 补充二：宿主登记的教程目标（id → 控件）
 var _coach_extra: Dictionary = {}
@@ -107,6 +111,7 @@ func play(result: BattleResult, names: Array = []) -> void:
 		_names = [str(names[0]), str(names[1])]
 	_cursor = 0
 	_now = 0.0
+	ended_by_jump = false
 	_playing = not _held
 	if _held:
 		_resume_after_hold = true
@@ -304,6 +309,7 @@ func skip_to_end() -> void:
 	if _result == null:
 		return
 	_now = _result.duration_sec() + 0.001
+	ended_by_jump = true
 	_suppress_popups = true
 	_drain_until(_now)
 	_suppress_popups = false
@@ -328,6 +334,7 @@ func seek(t: float) -> void:
 	_timeline.cursor = _now
 	_sync_buttons()
 	if _cursor >= _result.log.size():
+		ended_by_jump = true
 		_finish()     # 157：拖到了头 = 看完了（战报照出）
 
 
@@ -563,6 +570,8 @@ func _apply(e: BattleEvent) -> void:
 		BattleEvent.DISPATCH_OVERFLOW:
 			_log_line(e.time, "[color=#e0a030]派发超限，内容可能配出了死循环[/color]")
 	_log_event(e)
+	if not _suppress_popups:
+		event_applied.emit(e)
 
 
 ## 157：出手那件的格子亮一下（跳转时不亮）
@@ -810,6 +819,11 @@ func _get_minimum_size() -> Vector2:
 ## 战报显不显示（铜面板不显示，测试看）
 func report_shown() -> bool:
 	return _report.visible
+
+
+## 231：名牌、条、棋盘、时间轴那一整块（开战过场先藏着、沙场显出后再淡进来）
+func content() -> Control:
+	return _root
 
 
 ## 宿主的控件挂在回放最底下（时间轴、战报之下），压在斗技场图上（铜面板：「继续」那一格，场地图一直铺到底，夹在底栏正中）。进树之后调
