@@ -102,6 +102,9 @@ display_names = {
 "en": "Ice Crystal"
 }
 description = "放在法杖的装载槽上：法杖伤害 +{amount}，打出冰霜伤害，打中后给对手施加一层【寒冷】。能供给 {max_charges} 场，用完碎成{item:crystal_shards}。"
+descriptions = {
+"en": "Set it in a staff's loading slot: staff Damage +{amount}, deals Ice damage, and each hit gives the opponent one stack of Chill. Lasts {max_charges} battles, then shatters into {item:crystal_shards}."
+}
 shape = SubResource("Resource_b7d3c")
 rarity = 1
 tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal"])

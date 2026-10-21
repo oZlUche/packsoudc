@@ -18,6 +18,9 @@ display_names = {
 "en": "Honey Jar"
 }
 description = "蜂蜡挤出来的那点甜。"
+descriptions = {
+"en": "The little sweetness pressed out of the beeswax."
+}
 shape = SubResource("Resource_qqgfl")
 rarity = 1
 tags = Array[StringName]([&"material", &"nature", &"flesh"])

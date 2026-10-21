@@ -5,6 +5,9 @@
     "en": "Pendulum Blade"
   },
   "description": "大钟里拆出来的摆锤，边缘磨成了刃。",
+  "descriptions": {
+    "en": "A pendulum pulled from a great clock, its edge ground into a blade."
+  },
   "shape": [
     "1",
     "1",

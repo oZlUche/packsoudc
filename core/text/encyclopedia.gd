@@ -307,7 +307,7 @@ func recipe_lines() -> Array[String]:
 			all_lit = all_lit and not (lit.is_valid() and not bool(lit.call(item_id)))
 		var line := UiText.t("codex.recipe_line") % names
 		if all_lit and r.note != "":
-			line += UiText.t("codex.recipe_note") % r.note
+			line += UiText.t("codex.recipe_note") % Names.pick(r.notes, r.note)
 		out.append(line)
 	return out
 

@@ -12,3 +12,6 @@ display_names = {
 inputs = Array[StringName]([&"salve", &"beeswax"])
 output = &"strong_salve"
 note = "把蜂蜡块拖到伤药上：熬成浓缩伤药。"
+notes = {
+"en": "Drag the Beeswax onto the Salve: it boils down into a Strong Salve."
+}

@@ -5,6 +5,9 @@
     "en": "Rope Coil"
   },
   "description": "盘好的粗麻绳。",
+  "descriptions": {
+    "en": "Thick hemp rope, neatly coiled."
+  },
   "shape": [
     "1"
   ],

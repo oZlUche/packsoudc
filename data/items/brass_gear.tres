@@ -18,6 +18,9 @@ display_names = {
 "en": "Brass Gear"
 }
 description = "齿口精细的小齿轮。"
+descriptions = {
+"en": "A small, finely toothed gear."
+}
 shape = SubResource("Resource_e3svu")
 rarity = 2
 tags = Array[StringName]([&"material", &"crafted", &"metal"])

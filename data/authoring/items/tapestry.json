@@ -5,6 +5,9 @@
     "en": "Tapestry"
   },
   "description": "织着狩猎图的整幅挂毯。",
+  "descriptions": {
+    "en": "A full tapestry woven with a hunting scene."
+  },
   "shape": [
     "111",
     "111"

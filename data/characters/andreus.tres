@@ -22,6 +22,9 @@ display_names = {
 "en": "Old Paths"
 }
 description = "每走 {travel_discount_every} 步，下一步不计入倒计时。"
+descriptions = {
+"en": "Every {travel_discount_every} steps, the next step doesn't count toward the Countdown."
+}
 passive = Array[ExtResource("3_37qd7")]([SubResource("Resource_r1w6e")])
 
 [sub_resource type="Resource" id="Resource_53naf"]
@@ -42,6 +45,9 @@ display_names = {
 "en": "Slippery"
 }
 description = "猎手更难发现你，从猎手面前逃跑更容易；首次战败于敌人时不扣体力。"
+descriptions = {
+"en": "Hunters have a harder time spotting you and fleeing from them is easier; the first time you lose to an enemy, you lose no Vitality."
+}
 passive = Array[ExtResource("3_37qd7")]([SubResource("Resource_53naf"), SubResource("Resource_8iq08"), SubResource("Resource_x06lg")])
 
 [sub_resource type="Resource" id="Resource_ecief"]
@@ -52,6 +58,9 @@ display_names = {
 "en": "Slip"
 }
 description = "开战前脱离：不战斗、不扣体力、无战利品，该点视为已用（核心点不可用）；对猎手使用必定逃脱。"
+descriptions = {
+"en": "Slip away before a battle: no fight, no Vitality lost, no loot, and the spot counts as used (not at the core). Always escapes when used on a hunter."
+}
 uses = 2
 cooldown_steps = 4
 
@@ -63,6 +72,9 @@ display_names = {
 "en": "Andreus"
 }
 description = "擅长逃跑的奴隶探索者。生命最低（{max_hp}）、棋盘最窄、背得最少，但带的钱多、走得远、溜得掉。"
+descriptions = {
+"en": "A slave explorer who is good at running. Lowest Health ({max_hp}), the narrowest board and the least he can carry, but he brings more money, travels far and slips away."
+}
 base_stats = {
 "max_hp": 45,
 "max_stamina": 55,

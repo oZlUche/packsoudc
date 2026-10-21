@@ -14,6 +14,9 @@ amount = 2
 script = ExtResource("5_507ry")
 id = &"tech_luck_2"
 display_name = "幸运（科技）"
+display_names = {
+"en": "Fortune (Tech)"
+}
 description = "幸运 {luck_bonus_amount|signed}：敌人的东西更容易掉"
 scope = 0
 effects = Array[ExtResource("1_nimgy")]([SubResource("Resource_6k3cy")])

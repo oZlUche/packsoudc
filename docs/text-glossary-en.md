@@ -145,6 +145,7 @@
 | 角色技能 | 见数据 | Old Paths / Slippery / Raised in the Wild / Tough / Spoils of War / Drill / Second Wind / Assault / Slip |
 | 自发 / 开战时 / 出手时 / 受伤时 | Automatic / At battle start / On attack / When hit | 时机类别名（`Glossary.TRIGGER_NAMES`） |
 | 增益 / 减益 / 系统 | Buff / Debuff / System | 状态悬浮窗名字行右边的小字 |
+| 背包搜打撤（游戏名） | Pack & Extract | 作者 2026-10-21 定；主菜单兜底标题、启动屏 |
 | 基地 / 科技 / 成就 / 出售 | Base / Tech / Achievements / Sell | F5b 局外屏 |
 | 诅咒之地 | Cursed Lands | 成就说明 |
 | 进阶难度 | Ascension | 难度名 Ascension I… |

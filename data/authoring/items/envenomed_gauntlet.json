@@ -5,6 +5,9 @@
     "en": "Envenomer's Gauntlet"
   },
   "description": "摸过的刀都带毒。",
+  "descriptions": {
+    "en": "Every blade it touches comes away poisoned."
+  },
   "shape": [
     "1"
   ],

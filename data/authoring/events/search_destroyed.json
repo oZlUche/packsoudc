@@ -1,10 +1,19 @@
 {
   "id": "search_destroyed",
   "title": "被赶跑了",
+  "titles": {
+    "en": "Driven Off"
+  },
   "text": "被打退了。对方守在那儿，这里不能再翻了。之前翻到的还在，走的时候带上。",
+  "texts": {
+    "en": "They beat you back and they're holding the spot. No more searching here. What you found before is still here; take it when you go."
+  },
   "options": [
     {
-      "label": "离开"
+      "label": "离开",
+      "labels": {
+        "en": "Leave"
+      }
     }
   ]
 }

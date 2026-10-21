@@ -5,7 +5,13 @@
     "en": "God of Skill"
   },
   "god": "技巧之神（尺度、变形、结构）",
+  "gods": {
+    "en": "God of Skill (measure, transformation, structure)"
+  },
   "description": "锻造、战斗技巧和各种手艺，是矮人族和盗贼以及工匠信奉的神明，帝国祭祀的诸神之一",
+  "descriptions": {
+    "en": "Forging, combat technique and every craft. The god of dwarves, thieves and artisans; one of the gods in the Empire's rites."
+  },
   "thresholds": [
     25,
     80

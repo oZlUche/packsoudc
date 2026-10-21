@@ -5,6 +5,9 @@
     "en": "Wooden Idol"
   },
   "description": "路边小庙里请出来的。",
+  "descriptions": {
+    "en": "Brought out of a little roadside shrine."
+  },
   "shape": [
     "1",
     "1",

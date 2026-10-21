@@ -5,6 +5,9 @@
     "en": "Riveted Plating"
   },
   "description": "从机关身上拆下的护板，能当一面小盾。",
+  "descriptions": {
+    "en": "A plate pried off a clockwork machine. Works as a small shield."
+  },
   "shape": [
     "1",
     "1"

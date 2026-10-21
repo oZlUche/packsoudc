@@ -5,6 +5,9 @@
     "en": "Pine Resin"
   },
   "description": "黏手，点火引子。",
+  "descriptions": {
+    "en": "Sticky. Good kindling."
+  },
   "shape": [
     "1"
   ],

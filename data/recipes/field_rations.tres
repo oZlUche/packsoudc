@@ -12,3 +12,6 @@ display_names = {
 inputs = Array[StringName]([&"salted_meat", &"beeswax"])
 output = &"field_rations"
 note = "把蜂蜡块拖到腌肉干上：封成军粮。"
+notes = {
+"en": "Drag the Beeswax onto the Salted Meat: it seals into Field Rations."
+}

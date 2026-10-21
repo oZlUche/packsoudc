@@ -19,6 +19,9 @@ display_names = {
 "en": "Burlap Sack"
 }
 description = "粗糙但结实，什么都能往里塞。"
+descriptions = {
+"en": "Rough but sturdy. Stuff anything in it."
+}
 shape = SubResource("Resource_ou2vr")
 tags = Array[StringName]([&"cloth"])
 is_bag = true

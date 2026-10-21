@@ -12,17 +12,31 @@ script = ExtResource("3_kxrt3")
 [sub_resource type="Resource" id="Resource_d6uot"]
 script = ExtResource("1_wwjr2")
 label = "撤离"
+labels = {
+"en": "Extract"
+}
 outcomes = Array[ExtResource("2_8ybje")]([SubResource("Resource_7rcik")])
 
 [sub_resource type="Resource" id="Resource_vwjvj"]
 script = ExtResource("1_wwjr2")
 label = "再看看"
+labels = {
+"en": "Not yet"
+}
 
 [resource]
 script = ExtResource("5_3heij")
 id = &"extract_default"
 title = "撤离点"
+titles = {
+"en": "Extraction Point"
+}
 text = "能出去的地方。{c:warn}撤了这一局就结束{/c}：包里的东西带回仓库，地上的留在这儿，钱带出去。
 
 费用：{extract_fee} 币（零即免费）。"
+texts = {
+"en": "A way out. {c:warn}Extract and this run ends{/c}: what's in your bag goes back to the Warehouse, what's on the Ground stays here, and your coins come with you.
+
+Fee: {extract_fee} coins (zero means free)."
+}
 options = Array[ExtResource("1_wwjr2")]([SubResource("Resource_d6uot"), SubResource("Resource_vwjvj")])

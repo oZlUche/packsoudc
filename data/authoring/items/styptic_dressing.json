@@ -5,6 +5,9 @@
     "en": "Styptic Dressing"
   },
   "description": "药粉和布一起压在伤口上。",
+  "descriptions": {
+    "en": "Powder and cloth, pressed onto the wound together."
+  },
   "shape": [
     "1",
     "1"

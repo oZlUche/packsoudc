@@ -5,6 +5,9 @@
     "en": "Granite Mortar"
   },
   "description": "捣药捣盐都用它，就是沉。",
+  "descriptions": {
+    "en": "Good for grinding herbs or salt. Just heavy."
+  },
   "shape": [
     "11",
     "11"

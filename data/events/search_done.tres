@@ -8,10 +8,19 @@
 [sub_resource type="Resource" id="Resource_ra0eq"]
 script = ExtResource("1_ryvpa")
 label = "离开"
+labels = {
+"en": "Leave"
+}
 
 [resource]
 script = ExtResource("4_bm6op")
 id = &"search_done"
 title = "翻遍了"
+titles = {
+"en": "Picked Clean"
+}
 text = "能翻的地方都翻过了，这里没有别的东西了。"
+texts = {
+"en": "You've searched every place you can. There's nothing else here."
+}
 options = Array[ExtResource("1_ryvpa")]([SubResource("Resource_ra0eq")])

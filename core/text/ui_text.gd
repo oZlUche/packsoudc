@@ -1,8 +1,8 @@
 ## 界面语言（085，作者定：主菜单切换中文 / 英语，编辑器等界面跟着走）。
 ##
 ## 一张键 → 两种文字的表；`t(key)` 按当前语言取，没有的键原样返回（写错一眼看得见）。语言存在 [GameSettings.language]，
-## 主菜单切换后由持有方把 [member lang] 改过来。现在只有主菜单与 buff 制作器用它 —— 别的屏还是写死的中文，
-## 逐屏换成 `UiText.t()` 就跟着切（15 节待办）。不是 autoload：一个静态变量就够，和 UiPalette 一样
+## 主菜单切换后由持有方把 [member lang] 改过来。221 起整个玩家界面都走它（开发工具除外），数据里的名字与说明走 [Names]。
+## 不是 autoload：一个静态变量就够，和 UiPalette 一样
 class_name UiText
 extends RefCounted
 
@@ -12,6 +12,7 @@ static var lang: String = "zh"
 
 const TEXT := {
 	# 主菜单
+	"game.title": {"zh": "背包搜打撤", "en": "Pack & Extract"},     # author 2026-10-21 15:40
 	"menu.new_run": {"zh": "新的游戏", "en": "New game"},
 	"menu.skip_prologue": {"zh": "跳过序章", "en": "Skip the prologue"},     # 221 G
 	"menu.skip_prologue_confirm": {"zh": "再点一次：这份存档不再有序章", "en": "Click again: this save skips the prologue for good"},

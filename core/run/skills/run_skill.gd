@@ -15,6 +15,8 @@ extends Resource
 ## 221 F4：别的语言的名字（{"en": …}），经 [Names] 取
 @export var display_names: Dictionary = {}
 @export_multiline var description: String = ""
+## 221 F5: description in other languages, {"en": ...}
+@export var descriptions: Dictionary = {}
 ## 常驻的效果：一局规则（体力上限、逃跑、属性加成……）或掉落
 @export var passive: Array[Effect] = []
 ## 136：战斗里常驻的规则（布鲁图斯「坚韧」：低血一次性护甲）。编译玩家时和套装 / buff 的规则一起挂到单位上

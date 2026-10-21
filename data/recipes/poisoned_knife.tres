@@ -12,3 +12,6 @@ display_names = {
 inputs = Array[StringName]([&"knife", &"poison_vial"])
 output = &"poisoned_knife"
 note = "把毒药瓶拖到匕首上：中毒无视格挡与护甲。"
+notes = {
+"en": "Drag the Poison Vial onto the Knife: its poison ignores Block and Armor."
+}

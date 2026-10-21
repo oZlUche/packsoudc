@@ -24,6 +24,9 @@ display_names = {
 "en": "Studded Satchel"
 }
 description = "钉满铆钉的皮包，挡得住刀。"
+descriptions = {
+"en": "A leather bag covered in rivets. It'll turn a blade."
+}
 shape = SubResource("Resource_ysr5f")
 rarity = 2
 tags = Array[StringName]([&"leather"])

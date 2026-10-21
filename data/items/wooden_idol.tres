@@ -19,6 +19,9 @@ display_names = {
 "en": "Wooden Idol"
 }
 description = "路边小庙里请出来的。"
+descriptions = {
+"en": "Brought out of a little roadside shrine."
+}
 shape = SubResource("Resource_jrrj0")
 rarity = 2
 tags = Array[StringName]([&"material", &"crafted", &"wood", &"treasure"])

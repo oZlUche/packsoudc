@@ -19,5 +19,8 @@ display_names = {
 "en": "Stack of Clay Bowls"
 }
 description = "五只粗陶碗，缺了一只口。"
+descriptions = {
+"en": "Five coarse clay bowls, one with a chipped rim."
+}
 shape = SubResource("Resource_k81bb")
 tags = Array[StringName]([&"material", &"crafted", &"clay", &"supply"])

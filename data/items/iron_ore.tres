@@ -19,6 +19,9 @@ display_names = {
 "en": "Iron Ore"
 }
 description = "沉手的黑石，铁匠的饭。"
+descriptions = {
+"en": "Heavy black stone. A blacksmith's bread and butter."
+}
 shape = SubResource("Resource_1lxpa")
 rarity = 1
 tags = Array[StringName]([&"material", &"nature", &"metal"])

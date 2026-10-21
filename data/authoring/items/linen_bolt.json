@@ -5,6 +5,9 @@
     "en": "Linen Bolt"
   },
   "description": "一卷素色亚麻。",
+  "descriptions": {
+    "en": "A bolt of plain linen."
+  },
   "shape": [
     "111"
   ],

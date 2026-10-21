@@ -19,6 +19,9 @@ display_names = {
 "en": "Whetstone"
 }
 description = "磨过的刀，刃上一道亮。"
+descriptions = {
+"en": "Any blade it's touched has a bright line along the edge."
+}
 shape = SubResource("Resource_ewisq")
 rarity = 1
 tags = Array[StringName]([&"material", &"crafted", &"stone", &"supply"])

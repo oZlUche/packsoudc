@@ -5,6 +5,9 @@
     "en": "Beeswax"
   },
   "description": "带蜜香的蜡。",
+  "descriptions": {
+    "en": "Wax that smells of honey."
+  },
   "shape": [
     "1"
   ],

@@ -57,6 +57,9 @@ display_names = {
 "en": "Beast Tail"
 }
 description = "粗壮的一截尾巴，能卖个好价钱。"
+descriptions = {
+"en": "A thick length of tail. It'll fetch a good price."
+}
 shape = SubResource("Resource_e3tnh")
 rarity = 1
 tags = Array[StringName]([&"material", &"nature", &"leather", &"trophy", &"beast_part"])

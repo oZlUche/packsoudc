@@ -1,10 +1,19 @@
 {
   "id": "shop_default",
   "title": "商店",
+  "titles": {
+    "en": "Shop"
+  },
   "text": "有人在这里摆了摊。",
+  "texts": {
+    "en": "Someone has set up a stall here."
+  },
   "options": [
     {
       "label": "进去看看",
+      "labels": {
+        "en": "Have a look"
+      },
       "outcomes": [
         {
           "type": "open_shop"
@@ -12,7 +21,10 @@
       ]
     },
     {
-      "label": "不进"
+      "label": "不进",
+      "labels": {
+        "en": "Pass"
+      }
     }
   ]
 }

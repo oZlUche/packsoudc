@@ -5,6 +5,9 @@
     "en": "Flint"
   },
   "description": "敲一下就出火星。",
+  "descriptions": {
+    "en": "Strike it once and it sparks."
+  },
   "shape": [
     "1"
   ],

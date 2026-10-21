@@ -5,6 +5,9 @@
     "en": "Wound Salt"
   },
   "description": "往伤口上撒的那种。",
+  "descriptions": {
+    "en": "The kind you rub into a wound."
+  },
   "shape": [
     "1"
   ],

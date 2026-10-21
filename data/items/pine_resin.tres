@@ -18,5 +18,8 @@ display_names = {
 "en": "Pine Resin"
 }
 description = "黏手，点火引子。"
+descriptions = {
+"en": "Sticky. Good kindling."
+}
 shape = SubResource("Resource_tt0sq")
 tags = Array[StringName]([&"material", &"nature", &"wood"])

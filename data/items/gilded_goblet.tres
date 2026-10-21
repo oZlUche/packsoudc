@@ -18,6 +18,9 @@ display_names = {
 "en": "Gilded Goblet"
 }
 description = "金皮包的杯子，贵族的。"
+descriptions = {
+"en": "A cup sheathed in gold. A noble's."
+}
 shape = SubResource("Resource_pdg0l")
 rarity = 3
 tags = Array[StringName]([&"material", &"crafted", &"metal"])

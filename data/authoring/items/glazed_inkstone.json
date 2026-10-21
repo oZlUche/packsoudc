@@ -5,6 +5,9 @@
     "en": "Glazed Inkstone"
   },
   "description": "文士的物件，釉色像雨后天。",
+  "descriptions": {
+    "en": "A scholar's piece, its glaze the color of the sky after rain."
+  },
   "shape": [
     "1"
   ],

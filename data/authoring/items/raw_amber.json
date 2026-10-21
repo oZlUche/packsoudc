@@ -5,6 +5,9 @@
     "en": "Raw Amber"
   },
   "description": "封着一只远古小虫。",
+  "descriptions": {
+    "en": "A tiny ancient insect sealed inside."
+  },
   "shape": [
     "1"
   ],

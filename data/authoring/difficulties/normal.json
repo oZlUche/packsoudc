@@ -4,5 +4,8 @@
   "display_names": {
     "en": "Normal"
   },
-  "description": "没有额外机制。"
+  "description": "没有额外机制。",
+  "descriptions": {
+    "en": "No extra mechanics."
+  }
 }

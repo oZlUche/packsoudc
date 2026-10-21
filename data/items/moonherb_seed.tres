@@ -108,7 +108,10 @@ display_name = "月光草籽"
 display_names = {
 "en": "Moonherb Seed"
 }
-description = "自然之神的草籽：放进背包，随倒计时长大。长到茎叶就扎根、慢慢给你回血；长到绽放连包一起扎根，还会隔一阵替你拔掉一层减益。"
+description = "自然之神的草籽：放进背包，随倒计时长大。长到茎叶就扎根、慢慢给你回血；长到绽放连包一起扎根，还会隔一阵替你把身上的减益都拔干净。"
+descriptions = {
+"en": "A seed of the God of Nature: put it in your pack and it grows with the Countdown. At Sprout it takes root and slowly heals you; at Bloom it roots its whole bag, and every so often pulls all your debuffs off you."
+}
 shape = SubResource("Resource_b3o5d")
 rarity = 3
 tags = Array[StringName]([&"faith", &"faith:nature", &"nature", &"herb"])

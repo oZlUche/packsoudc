@@ -14,20 +14,35 @@ item = &"charm_brute"
 [sub_resource type="Resource" id="Resource_s6pvj"]
 script = ExtResource("4_qk5q5")
 text = "蛮神的护符在掌心发烫。"
+texts = {
+"en": "The Brute's charm burns in your palm."
+}
 
 [sub_resource type="Resource" id="Resource_kdwn6"]
 script = ExtResource("1_rb0ga")
 label = "接过骨护符"
+labels = {
+"en": "Take the bone charm"
+}
 tags = Array[StringName]([&"offering"])
 outcomes = Array[ExtResource("2_ljj1e")]([SubResource("Resource_vw6ri"), SubResource("Resource_s6pvj")])
 
 [sub_resource type="Resource" id="Resource_oakp1"]
 script = ExtResource("1_rb0ga")
 label = "不拿，离开"
+labels = {
+"en": "Leave it and go"
+}
 
 [resource]
 script = ExtResource("6_0kpy6")
 id = &"faith_call_brute"
 title = "蛮神的低语"
+titles = {
+"en": "Whispers of the Brute"
+}
 text = "祭坛上摆着一堆碎骨，血迹还没干透。你听见有人在耳边低吼：{b}杀，再杀。{/b}一枚骨制的护符从骨堆里滚到你脚边。"
+texts = {
+"en": "A pile of shattered bones sits on the altar, the blood not yet dry. Something growls in your ear: {b}Kill. Kill again.{/b} A bone charm rolls out of the pile and stops at your feet."
+}
 options = Array[ExtResource("1_rb0ga")]([SubResource("Resource_kdwn6"), SubResource("Resource_oakp1")])

@@ -5,6 +5,9 @@
     "en": "Bloodlust Bracer"
   },
   "description": "闻到血腥，手就快了。",
+  "descriptions": {
+    "en": "Smell blood, and the hands get faster."
+  },
   "shape": [
     "1"
   ],

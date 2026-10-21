@@ -9,5 +9,11 @@
 script = ExtResource("4_0nl67")
 id = &"marked"
 display_name = "被盯上了"
+display_names = {
+"en": "Marked"
+}
 description = "一个标记，什么都不改：某些事件的选项只对带它的人开"
+descriptions = {
+"en": "A mark that changes nothing: some event options only open to whoever carries it"
+}
 tags = Array[StringName]([&"marked"])

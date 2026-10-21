@@ -5,6 +5,9 @@
     "en": "Bloodletter"
   },
   "description": "一刀一刀地放，攒够了就开个大口子。",
+  "descriptions": {
+    "en": "Let it out cut by cut; once enough has built up, open one big wound."
+  },
   "shape": [
     "01",
     "01",

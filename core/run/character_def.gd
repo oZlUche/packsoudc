@@ -14,6 +14,8 @@ extends Resource
 ## 088：别的语言的名字，`{"en": "Knife"}`；界面用 [method Names.of] 取（当前语言没有就用 display_name）
 @export var display_names: Dictionary = {}
 @export var description: String = ""
+## 221 F5: description in other languages, {"en": ...}
+@export var descriptions: Dictionary = {}
 ## 战斗基线的覆盖项（4.2 的属性键 → 值），没写的沿用 [CombatantBaseline.DEFAULT_STATS]
 @export var base_stats: Dictionary = {}
 ## 体力上限（7.1）

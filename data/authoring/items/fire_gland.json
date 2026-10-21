@@ -5,6 +5,9 @@
     "en": "Fire Gland"
   },
   "description": "魔兽喷火用的腺体。挨着它的武器每次出手，都给对手添一层【灼伤】。",
+  "descriptions": {
+    "en": "The gland a magic beast breathes fire with. Each time an adjacent weapon activates, it gives the opponent one stack of Burn."
+  },
   "shape": [
     "1"
   ],

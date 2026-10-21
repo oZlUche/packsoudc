@@ -109,7 +109,13 @@ display_names = {
 "en": "The Sun God"
 }
 god = "日神（太阳、火、周期性重复）"
+gods = {
+"en": "The Sun God (the sun, fire, cyclical repetition)"
+}
 description = "恒常（周期循环）被人类推向太阳、又夺了火；帝国诸神之一，日神一族地位崇高"
+descriptions = {
+"en": "Constancy (the recurring cycle), which humans pushed onto the sun before stealing its fire; one of the Empire's gods, and the Sun God's people hold high standing."
+}
 thresholds = Array[int]([50, 150, 300, 1000])
 deeds = Array[ExtResource("5_8yila")]([SubResource("Resource_shyoi"), SubResource("Resource_5bfhi")])
 offerings = Array[ExtResource("8_sqqvu")]([SubResource("Resource_vaeam"), SubResource("Resource_65qkw"), SubResource("Resource_kclds"), SubResource("Resource_xrgrx")])

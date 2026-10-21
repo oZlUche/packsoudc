@@ -5,6 +5,9 @@
     "en": "Fanny Pack"
   },
   "description": "系在腰上，里面的东西随手就能拿。",
+  "descriptions": {
+    "en": "Tied at the waist; whatever's inside is always within reach."
+  },
   "shape": [
     "11"
   ],

@@ -14,20 +14,35 @@ item = &"charm_nature"
 [sub_resource type="Resource" id="Resource_66s8m"]
 script = ExtResource("4_mldol")
 text = "自然之神的护符上，藤还在长。"
+texts = {
+"en": "On the charm of the God of Nature, the vine is still growing."
+}
 
 [sub_resource type="Resource" id="Resource_jg5xq"]
 script = ExtResource("1_yppqg")
 label = "取下木牌"
+labels = {
+"en": "Take the wooden token"
+}
 tags = Array[StringName]([&"offering"])
 outcomes = Array[ExtResource("2_xhdw7")]([SubResource("Resource_glis7"), SubResource("Resource_66s8m")])
 
 [sub_resource type="Resource" id="Resource_8gop5"]
 script = ExtResource("1_yppqg")
 label = "不拿，离开"
+labels = {
+"en": "Leave it and go"
+}
 
 [resource]
 script = ExtResource("6_o6ogb")
 id = &"faith_call_nature"
 title = "自然之神的藤"
+titles = {
+"en": "Vines of the God of Nature"
+}
 text = "祭坛已经被藤蔓裹住，缝隙里长出小小的白花。藤蔓里托着一枚木牌，像是专为你留的。"
+texts = {
+"en": "Vines have wrapped the altar, and small white flowers grow from the cracks. Cradled in the vines is a wooden token, as if left there just for you."
+}
 options = Array[ExtResource("1_yppqg")]([SubResource("Resource_jg5xq"), SubResource("Resource_8gop5")])

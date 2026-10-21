@@ -1,6 +1,9 @@
 {
   "id": "tech_sinew_3",
   "display_name": "筋骨（科技）",
+  "display_names": {
+    "en": "Sinew (Tech)"
+  },
   "description": "开局生命 {stat_bonus_amount|signed}%",
   "scope": "META",
   "effects": [

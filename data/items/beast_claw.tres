@@ -107,6 +107,9 @@ display_names = {
 "en": "Beast Claw"
 }
 description = "弯得正好。挨着的武器更容易暴击。"
+descriptions = {
+"en": "Curved just right. Adjacent weapons crit more easily."
+}
 shape = SubResource("Resource_6lons")
 rarity = 2
 tags = Array[StringName]([&"material", &"nature", &"bone", &"bleed", &"beast_part"])

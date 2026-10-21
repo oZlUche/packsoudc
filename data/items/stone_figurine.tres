@@ -18,6 +18,9 @@ display_names = {
 "en": "Stone Figurine"
 }
 description = "不知哪座神的像，手艺倒细。"
+descriptions = {
+"en": "Some god or other. Fine work, though."
+}
 shape = SubResource("Resource_o5t4l")
 rarity = 2
 tags = Array[StringName]([&"material", &"crafted", &"stone", &"treasure"])

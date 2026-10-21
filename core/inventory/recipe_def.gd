@@ -16,6 +16,8 @@ extends Resource
 @export var output: StringName = &""
 ## 给界面看的一句（悬浮窗 / 事件文本里引用）
 @export var note: String = ""
+## 221 F5: note in other languages, {"en": ...}
+@export var notes: Dictionary = {}
 
 
 ## 这两件能不能合成本配方

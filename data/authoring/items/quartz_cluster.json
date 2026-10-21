@@ -5,6 +5,9 @@
     "en": "Quartz Cluster"
   },
   "description": "一丛透亮的石英。",
+  "descriptions": {
+    "en": "A cluster of clear quartz."
+  },
   "shape": [
     "11",
     "11"
