@@ -525,7 +525,7 @@ func _adopt() -> void:
 	if safe != null:
 		safe.closed.connect(func(n: int):
 			_note("[color=#c8a2ff]　保险箱关上了：%d 件送回基地，不能再改[/color]" % n)
-			_hud_host.notice(UiText.t("notice.safe_closed") % n))
+			_hud_host.notice(UiText.t("notice.safe_closed") % UiText.count(n, "unit.item")))
 	var altar := AltarModule.of(_run)     # 101：神坛是一局的模块，信号在它身上
 	if altar != null:
 		altar.noted.connect(func(text: String):
