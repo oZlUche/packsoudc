@@ -52,7 +52,7 @@ static func run_data(t: TestCase) -> void:
 	t.eq(c.prologue2.next_chapter, c.chapter.id, "序章二撤离直接进序章三")
 	t.check(c.prologue2.order < c.chapter.order and c.chapter.order < c.chapter1.order, "顺序：序章二、序章三、自由模式")
 	t.check(c.chapter.skip_setup and c.chapter.auto_spawn and c.chapter.intro_event == &"tut3_intro", "不走开局屏、先过 intro")
-	t.eq(c.chapter.rules.size(), 3, "规则卡三条")
+	t.check(c.chapter.rules.is_empty(), "220：序章三的规则卡删了")
 	var g := c.chapter.map_source.resolve(1)
 	t.not_null(g, "预设图过了校验：%s" % c.chapter.map_source.last_error)
 	if g == null:

@@ -19,6 +19,8 @@ extends Control
 signal finished
 ## 109：玩家切了倍速（战斗屏接它写回设置，下一场照这个速度开场）
 signal speed_changed(speed: float)
+## 220：回放里弹了一次反应字（[param side] = 挨反应的那一方）；跳转 / 跳过时不发。战斗屏拿它停下来解释第一次见的反应
+signal reaction_shown(id: StringName, side: int)
 
 const SPEEDS := GameSettings.BATTLE_SPEEDS
 ## 167：倍速按钮上的罗马数字（缺图时写它，悬浮窗也写它；不写阿拉伯数字）
@@ -28,7 +30,7 @@ const PLAY_HINT := "结果在开打那一瞬就已定，这里只是回放；停
 ## 167（作者定 D 版）：回放控件的符石按键图（`<id>.png` / `_hover` / `_pressed`）。测试指到别处走文字退路
 static var art_dir := "res://assets/ui/replay/"
 ## 166 补充二：战斗教程能指的控件（[method control_rect] 认这些；`next_button` 由战斗屏 [method add_coach_target] 登记）
-const COACH_TARGETS: Array[StringName] = [&"timeline", &"play_button", &"speed_button", &"skip_button", &"buffs_mine", &"next_button"]
+const COACH_TARGETS: Array[StringName] = [&"timeline", &"play_button", &"speed_button", &"skip_button", &"buffs_mine", &"buffs_enemy", &"next_button"]
 
 var label_font: Font
 
@@ -366,8 +368,8 @@ func control_rect(id: StringName) -> Rect2:
 		&"play_button": c = _play_btn
 		&"speed_button": c = _speed_btn
 		&"skip_button": c = _skip_btn
-		&"buffs_mine":
-			var p := panel(0)
+		&"buffs_mine", &"buffs_enemy":     # 220：对手那一排（反应解释指它）
+			var p := panel(0 if id == &"buffs_mine" else 1)
 			if p == null or not p.is_visible_in_tree():
 				return Rect2()
 			var r := p.chips_rect()
@@ -426,6 +428,8 @@ func _drain_until(t: float) -> void:
 			break
 		_apply(e)
 		_cursor += 1
+		if _held and not _suppress_popups:
+			break     # 220：这一条把回放停住了（反应解释）—— 后面的等放开再走，不在停着时偷跑
 
 
 ## 遮罩的进度是回放时刻的纯函数：倍速、跳转都只是 _now 变了
@@ -576,6 +580,7 @@ func _on_reaction(e: BattleEvent) -> void:
 		return
 	_panels[e.side].popup_text(reaction_label(e), reaction_color(e), _feedback_scale())
 	_sfx(StringName("battle.reaction." + String(e.get_name(&"reaction"))))
+	reaction_shown.emit(e.get_name(&"reaction"), e.side)
 
 
 ## 206：战斗音效都走这里。跳转（不弹字）时全不响；倍速 ≥ 4 只放行开场、暴击、反应、倒下、胜负

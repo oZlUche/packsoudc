@@ -33,6 +33,13 @@ const MAX_DEPTH := 3
 ## 钉住进度线：2 px 黄铜色
 const RING_WIDTH := 2.0
 const RING_COLOR := Color("d4a84f")
+## 220 E：词条子窗底部那一行（点了开百科的对应页）
+const CODEX_LINK := "百科 >"
+const CODEX_META := "codex:"
+
+## 220 E：导演挂上的两个钩子 —— 词条名 → 百科页 id（查不到给空），和「开这一页」。没挂（测试里单独造的悬浮窗）就不画那一行
+static var codex_page: Callable = Callable()
+static var open_codex: Callable = Callable()
 
 ## 一扇悬浮窗（主窗或子窗）：头 / 分隔线 / 正文 / 虚线 / 脚注（只写文字时只有正文），外框上画钉住进度与钉子
 class TipWindow extends PanelContainer:
@@ -90,6 +97,7 @@ class TipWindow extends PanelContainer:
 		col.add_child(foot_row)
 		foot = _rich(0)
 		foot.autowrap_mode = TextServer.AUTOWRAP_OFF
+		foot.meta_clicked.connect(func(meta): HoverTip.follow_codex(self, String(meta)))     # 220 E
 		foot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		foot_row.add_child(foot)
 		set_label = UiTheme.make_label("", 12, UiPalette.DIM)
@@ -133,7 +141,26 @@ class TipWindow extends PanelContainer:
 		var w := float(body.get_content_width())
 		if head.visible:
 			w = maxf(w, float(head.get_content_width()))
+		if foot_row.visible:
+			w = maxf(w, float(foot.get_content_width()))
 		return w
+
+	## 220 E：子窗底部的「百科 >」（[param page] 空 = 不画）
+	func set_codex(page: String) -> void:
+		foot_sep.visible = page != ""
+		foot_row.visible = page != ""
+		set_label.text = ""
+		UiTheme.set_rich(foot, "" if page == "" else "[url=%s%s][u]%s[/u][/url]" % [HoverTip.CODEX_META, page, HoverTip.CODEX_LINK])
+
+	## 220 E：这扇窗底部链到的百科页（没有给空；测试看）
+	func codex() -> String:
+		if not foot_row.visible:
+			return ""
+		var at := foot.text.find(HoverTip.CODEX_META)
+		if at < 0:
+			return ""
+		var rest := foot.text.substr(at + HoverTip.CODEX_META.length())
+		return rest.substr(0, rest.find("]"))
 
 	## 185：状态说明 —— 名字行 / 分隔线 / 效果（[method Glossary.buff_tip_parts]）
 	func set_status(head_bb: String, body_bb: String) -> void:
@@ -702,12 +729,30 @@ func open_child(parent: TipWindow, meta: String) -> TipWindow:
 	var title := UiTheme.outline("[b][color=@%s]%s[/color][/b]" % [String((entry as Dictionary).get("style", "term")), String(entry["name"])])
 	var only_name := String(entry["text"]) == ""
 	w.set_text(title if only_name else "%s\n[color=@tip_fg]%s[/color]" % [title, Glossary.mark_rich(String(entry["text"]), found)])     # 170 定稿：只有名字描边；175 补 5.4：伤害字带色
+	w.set_codex(codex_for(String(entry["name"])))     # 220 E
 	if only_name:     # 193 补充三：只有名字（标签图标的子窗）按名字宽收窄，不留大块空白
 		w.set_width(clampf(ceilf(w.content_width()) + 1.0, NAME_ONLY_MIN_WIDTH, CHILD_WIDTH))
 	w.visible = true
 	w.reset_size()
 	_place_child(w, parent)
 	return w
+
+
+## 220 E：词条名在百科里是哪一页（没挂钩子 / 查不到给空）
+static func codex_for(name: String) -> String:
+	if not codex_page.is_valid() or name == "":
+		return ""
+	return String(codex_page.call(name))
+
+
+## 220 E：点了某扇窗底部的「百科 >」—— 整串收掉，开那一页
+static func follow_codex(w: TipWindow, meta: String) -> void:
+	if not meta.begins_with(CODEX_META) or not open_codex.is_valid():
+		return
+	var tip := w.get_parent() as HoverTip
+	if tip != null:
+		tip.hide_tip()
+	open_codex.call(meta.trim_prefix(CODEX_META))
 
 
 ## 关掉第 [param index] 扇起（含）往后的窗

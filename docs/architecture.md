@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.64 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.65 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4402,6 +4402,7 @@ res://
 | v3.62 | 2026-10-20 | **217 新手教程查缺补漏 批一、批二**：五处过期句改成棋子 / 顶端栏徽记；口粮那条讲耐力上限；`MapScreen.RULES_CODEX_LINE` 规则卡末尾统一一行指向百科；自由模式规则卡讲负重（仍三条）；百科补六页（腰带与随身技能、魔晶石与装载、生长与扎根、元素与反应、敌人的三类、铸炉，共 54 页），「包」补 209，「负重」改「包本身不算重」；测试 112 / 090 / help_pages 跟着改 |
 | v3.63 | 2026-10-20 | **218 自由模式规则卡拆掉**：`ChapterDef.outro_event` —— 撤离成功后、结算前先弹一屏收尾事件（`GameFlow._show_result`，一局一次，事件屏 `outro` 载荷，局结束不画地上）；序章三配「军团的交代」`tut3_outro`；`free_mode.rules` 清空，自由模式和机关沙漏配教练 `free_mode_map`（日晷 / 背包按钮讲负重 / 腰带）；字库加「晷」；腰带说明改「双击用一个」 |
 | v3.64 | 2026-10-21 | **218 补充一**：交代改到开局屏第一次按「出发」前（`ChapterDef.outro_event` → `departure_event`，`MetaState.briefing_seen`，`GameFlow.departure_briefing` / `show_briefing` / `close_briefing`，`SetupScreen.depart` 先问再 `_go_now`），自由模式与机关沙漏同配 `briefing_legion`、只弹一次；撤离后那一跳删掉；沙漏不配教程；`ChapterDef.coach` / `coach_battle` 收成 `coaches` 字典（`coach_for`，导入器认旧字段）；序章一加背包窗（`prologue_bag` 六步，`BagWindow.control_rect`）与战前屏（`prologue_prebattle` 三步，`PrebattleScreen.control_rect`）教程，`CoachOverlay.due` / `run_on` 共用 |
+| v3.65 | 2026-10-21 | **220 反应第一次触发暂停解释 + 219 A–E**：`BattleView` 新信号 `reaction_shown(id, side)`、新教练目标 `buffs_enemy`，停住后 `_drain_until` 不再往下走；`GameFlow` 开战载荷带 `new_reactions`（算完那一刻比 `reactions_seen` 得出），`BattleScreen._on_reaction_shown` 头一回见的停住放一步纸条（`Encyclopedia.reaction_intro`），跳过不停；`HoverTip` 词条子窗底部「百科 >」（静态钩子 `codex_page` / `open_codex`，导演挂），`GameDirector.open_codex(page)` 在屏栈与地上之上盖一层百科（z 200，Esc / 返回关）；序章背包窗、回放教练各压到四步；序章三章 `rules` 清空；沙漏规则卡改接应者口吻；`tut_search_2_again_1` 提示带弯刀（序章一精英能打出菌血） |
 | v3.61 | 2026-10-20 | **216 补充：负重签总在**（作者 2026-10-20 16:20）：`StatsStrip` 三张签总在（216 待定 3.2 作废）；不算负重的章负重签大字「当前 / 上限」、小字空着，没上限只写当前重量，悬浮窗说「这一章不算负重」；负重规则不动；测试 216 改验 |
 | v3.60 | 2026-10-20 | **214 头像定稿：铜币侧像 + 圆框**（美术设计交图，作者选乙）：3 角色 + 30 敌人头像 256 进 `assets/portraits/`（只拷 1x）；`portrait_frame` 换深铜圆框（`margin` 0、`inset` 0，整张等比缩放），`portrait_empty` 换磨平旧币；头像、框、空位导入开 `mipmaps/generate`；`PortraitSlot.texture_filter = LINEAR_WITH_MIPMAPS`；测试 157 框外扩按 json 验、加 mipmap 两条 |
 | v3.59 | 2026-10-20 | **216 补充：数值签精修图 + 背包窗一格 72**（UI替换美术交图，作者选乙）：`assets/ui/stats_strip/` 签底 / 三枚火漆 / `layout.json` / `frame_player_72.png`；新 `BagWindow`（`ui/game/bag_window.gd`，继承 `FloatingWindow`，`setup_bag(run, font, on_close, drag, hint_sink)`）按 `bag_window` 摆：8×6 时 660×620、标题行不写字当把手 + 分隔线、右上圆钮 0.72、棋盘格子在 (42,82) 一格 72、皮带外框九宫格外扩 24、数值栏在棋盘下居中，棋盘大了窗跟着长；地图 / 事件 / 休息三屏用它；`FloatingWindow` 去掉 `bare`，加 `_grip` / `center_shift`；`InventoryPanel.cell_px`（setup 前设，默认 60）；`SlabStyle` 三项 `@export`（复制改边距不再丢两层）；测试 216 背包窗那条改验尺寸与摆位 |
