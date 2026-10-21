@@ -1,9 +1,15 @@
 {
   "id": "countdown_and_closing",
   "display_name": "倒计时与撤离点关闭",
+  "display_names": {
+    "en": "Countdown and Closing Extractions"
+  },
   "category": "map",
   "order": 5,
   "text": "有倒计时的图，倒计时就是这一局能花的全部：走一条路按它写的步数扣倒计时，原地等待也扣；归零就是行动失败，当场按战败结算，只有保险箱里的带得出。上限和地图规模正相关，地图屏顶上一直写着剩多少，剩得少时变色提醒。\n\n倒计时过半时，离出生点最近的免费撤离点关闭。从开局起它下面就挂着「倒计时剩几时关闭」的牌子，关了画红叉，站在上面也撤不了。从仓库带进来的东西有价值预算，超出的部分按比例换掉倒计时，开局屏上写着。",
+  "texts": {
+    "en": "On maps with a Countdown, the Countdown is everything you can spend this run: taking a path costs the number of steps written on it, and waiting in place costs too. When it hits zero, the run fails and is settled on the spot as a defeat; only what is in the Safe makes it out. Its maximum scales with the size of the map. The top of the map screen always shows how much is left, and it changes color as a warning when little remains.\n\nWhen the Countdown is half gone, the free extraction point closest to the starting point closes. From the start of the run it carries a sign showing the Countdown at which it closes; once closed it is marked with a red cross, and you can't extract there even standing on it. Items you bring in from the Warehouse have a value budget; anything over it is traded for Countdown in proportion, as shown on the Setup screen."
+  },
   "related": [
     "map_and_steps",
     "extraction_and_defeat",

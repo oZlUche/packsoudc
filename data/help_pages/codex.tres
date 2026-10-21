@@ -6,10 +6,18 @@
 script = ExtResource("1_htd3t")
 id = &"codex"
 display_name = "图鉴"
+display_names = {
+"en": "Collection"
+}
 category = &"meta"
 order = 2
 text = "图鉴记的是带出过的道具：撤离成功时棋盘上的每件各计一次，保险箱里的也计，点亮之后右上角写着累计件数。它不代表东西还在仓库里，只是见过并带回来过。基地的图鉴页按稀有度排成缩略图网格，没获得的画灰，停在一格上看属性。
 
 赐福版算在内。特殊道具另列一段：望远镜这类不进背包、代表一种能力的东西，拿到就点亮。有些成就看图鉴点亮的数量，或有没有某一件。"
+texts = {
+"en": "The Collection records items you have carried out: each item on your board when you successfully extract counts once, and items in the Safe count too. Once an item is lit up, the top-right corner shows how many you have carried out in total. It doesn't mean the item is still in your Warehouse, only that you have seen it and brought it back. The Collection page at the base is a grid of thumbnails sorted by Rarity; items you haven't got are grayed out, and hovering over a cell shows its stats.
+
+Blessed versions count. Keepsakes have their own section: things like the Spyglass, which never go into your pack and stand for an ability, light up as soon as you get them. Some achievements look at how many entries are lit up, or at whether a particular one is."
+}
 related = Array[String](["warehouse", "achievements", "settlement_and_warehouse"])
 see_items = Array[StringName]([&"spyglass"])

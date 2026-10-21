@@ -1,9 +1,15 @@
 {
   "id": "random_node",
   "display_name": "随机点",
+  "display_names": {
+    "en": "Random Nodes"
+  },
   "category": "map",
   "order": 1,
   "text": "随机点生成时是空的，踩上去才按权重揭成一种：战斗、搜索、商店、休息或事件，不会变成精英或核心。揭成什么由这个点自己的种子决定，同一局同一个点每次揭开都一样，只是事先看不见。\n\n揭成战斗时敌人是当场造的，按探索度抬档：走得越远、搜得越多，这里的对手越强。揭开之后它就是那种点，浮窗与规则都照那种点走。",
+  "texts": {
+    "en": "A random node is empty when the map is generated and is revealed only when you step on it, rolled by weight as one type: battle, search, shop, rest or event, never elite or core. What it becomes is decided by the node's own seed, so the same node in the same run always reveals the same thing; you just can't see it in advance.\n\nIf it turns out to be a battle, the enemy is built on the spot and scaled up by how much you have explored: the farther you have walked and the more you have searched, the stronger the opponents here. Once revealed, it is that type of node, and its tooltip and rules follow that type."
+  },
   "related": [
     "node_types",
     "battle_and_prebattle",

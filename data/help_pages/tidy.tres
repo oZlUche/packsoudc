@@ -6,9 +6,17 @@
 script = ExtResource("1_mq0l6")
 id = &"tidy"
 display_name = "整理"
+display_names = {
+"en": "Sort"
+}
 category = &"bag"
 order = 3
 text = "{zone:仓库}的「整理」把格子里的东西重排一遍：占用的聚到左上，空格聚到右下。顺序是先同类再大小：武器，盾与防具，信仰道具，药剂与食物，弹药、工具与试剂，材料、零件与宝石，最后是珍宝与其他；同类里占格多的先放、小件去填缝，同大小稀有度高的在前。
 
 整理永远不丢东西：有一件放不下就整批放回原位，什么都不变。它只认不要求包的自由容器，棋盘上摆的是阵，不归它管；同容器内挪位不算置入，不会改信物的激活顺序。"
+texts = {
+"en": "Sort in the {zone:仓库} rearranges everything in the grid: occupied cells gather at the top left and empty cells at the bottom right. Items are ordered by kind first, then by size: weapons; shields and armor; Faith items; potions and food; ammo, tools and reagents; materials, parts and gems; and finally Treasures and everything else. Within a kind, items that take more cells go first and small ones fill the gaps; among items of the same size, higher Rarity comes first.
+
+Sorting never loses anything: if even one item won't fit, the whole batch goes back where it was and nothing changes. It only works on free containers that need no bag; what is laid out on the board is your formation, and Sort leaves it alone. Moving things within the same container doesn't count as placing them, so it never changes the order in which your Anchors activate."
+}
 related = Array[String](["warehouse", "quick_place"])

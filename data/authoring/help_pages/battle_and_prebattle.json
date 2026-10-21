@@ -1,8 +1,14 @@
 {
   "id": "battle_and_prebattle",
   "display_name": "战斗与战前准备",
+  "display_names": {
+    "en": "Battle and Pre-battle"
+  },
   "order": 2,
-  "text": "踩上战斗点、事件里选了开打、搜索遭遇，都先到战前准备屏。左边是对手的棋盘与读数，和真打用的是同一份编译；右边是自己的棋盘与{zone:地上}，可以随便拖。拖出棋盘的东西不参战，打完还在地上。棋盘上没有一件会出手的道具时「开战」是灰的。\n\n开战之后整场战斗在那一瞬算完，回放只是重演，倍速和跳过不改结果，战斗中没有任何操作。打赢了对手的东西摆进战利品箱等你拿；打输了扣体力，输赢都算用过这个点，没有再打一次。搜索中遭遇的那一场例外：打输不扣体力，打赢了还能接着搜。精英扣得更多，核心输了直接战败。",
+  "text": "踩上战斗点、事件里选了开打、搜索遭遇，都先到战前准备屏。左边是对手的棋盘与读数，和真打用的是同一份编译；右边是自己的棋盘与{zone:地上}，可以随便拖。拖出棋盘的东西不参战，打完还在地上。棋盘上没有一件会出手的道具时「开战」照样能点，只会提醒一句；空手开战就是纯挨打。\n\n开战之后整场战斗在那一瞬算完，回放只是重演，倍速和跳过不改结果，战斗中没有任何操作。打赢了对手的东西摆进战利品箱等你拿；打输了扣体力，输赢都算用过这个点，没有再打一次。搜索中遭遇的那一场例外：打输不扣体力，打赢了还能接着搜。精英扣得更多，核心输了直接战败。",
+  "texts": {
+    "en": "Stepping onto a battle spot, choosing to fight in an event, or running into an encounter while searching all take you to the Pre-battle screen first. On the left are your opponent's board and stats, compiled exactly as for the real fight; on the right are your own board and the {zone:地上}, and you can drag freely. Anything you drag off the board doesn't fight and is still on the Ground afterward. If nothing on your board can attack, you can still press \"Fight\"; you just get a reminder, and fighting empty-handed means taking every hit.\n\nOnce you fight, the whole battle is decided in that instant. The replay only shows it again: Speed and Skip don't change the result, and you take no actions during battle. Win, and your opponent's items are laid out in a loot chest for you to take; lose, and you lose Vitality. Win or lose, the spot counts as used, and there is no rematch. A battle met while searching is the exception: losing costs no Vitality, and winning lets you keep searching. Elites cost more Vitality, and losing at the core means outright defeat."
+  },
   "related": [
     "auto_battle",
     "vitality",

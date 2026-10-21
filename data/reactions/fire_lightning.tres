@@ -16,6 +16,9 @@ display_names = {
 "en": "Overload"
 }
 description = "你获得反应层数那么多层【加速】。"
+descriptions = {
+"en": "You gain Haste equal to the reaction stacks."
+}
 elements = Array[StringName]([&"fire", &"lightning"])
 effects = Array[ExtResource("1_f3puj")]([SubResource("Resource_hefih")])
 scaling = [{

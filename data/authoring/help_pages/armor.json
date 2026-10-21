@@ -1,9 +1,15 @@
 {
   "id": "armor",
   "display_name": "护甲",
+  "display_names": {
+    "en": "Armor"
+  },
   "category": "combat",
   "order": 2,
   "text": "护甲是先于生命被扣的一层资源。开战时按护甲上限充满，之后不自己回复；带护甲上限的护甲越多，开战时这一层越厚，也有道具在战斗中往上叠。能被护甲吸收的伤害先扣护甲，扣完才扣血。\n\n中毒和流血无视护甲，直接伤在里面；反伤与火焰照样被护甲吸收。受伤前效果看到的是护甲吸收之后剩下的那部分。战斗结束护甲清零，下一场重新按上限充。",
+  "texts": {
+    "en": "Armor is a layer of resource that is used up before Health. It fills to your max Armor when a battle starts and doesn't regenerate afterward; the more gear with max Armor you carry, the thicker this layer is at the start, and some items add more during battle. Damage that Armor can absorb comes off Armor first, and only then off Health.\n\nPoison and Bleed ignore Armor and hurt you directly; Reflect and Fire are absorbed by Armor as usual. Effects that trigger before you take damage see only what is left after Armor absorbs its share. Armor drops to zero when a battle ends and refills to max at the start of the next one."
+  },
   "related": [
     "direct_damage_and_block",
     "buffs_and_stacks",

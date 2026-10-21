@@ -62,6 +62,9 @@ display_names = {
 "en": "Combustion"
 }
 description = "按反应的层数造成一下火焰伤害，再叠一半层数的【灼伤】。"
+descriptions = {
+"en": "Deals one burst of Fire damage based on the reaction stacks, then applies half that many stacks of Burn."
+}
 elements = Array[StringName]([&"fire", &"poison"])
 effects = Array[ExtResource("1_hwp7r")]([SubResource("Resource_0ak11"), SubResource("Resource_4a6y3")])
 scaling = [{

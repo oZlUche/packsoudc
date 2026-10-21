@@ -6,10 +6,18 @@
 script = ExtResource("1_4aean")
 id = &"god_nature"
 display_name = "自然之神"
+display_names = {
+"en": "God of Nature"
+}
 category = &"faith"
 order = 7
 text = "{faith:nature}管回归与容纳，和生命密切相关，信徒极广。信力看的是带自然印记的道具出手，以及战斗内的回血，都有每场上限。献祭爱自然之物、食物与防具。自然之神赐福盾牌、防具和自然道具，赐福版激活即加生命，再按信力累计：盾牌加格挡，别的加护甲上限。
 
 一阶起开战就带着每秒回血；二阶在神坛上献祭食物时顺带恢复体力，每个神坛有上限；三阶开战时按包里的食物给护甲，越稀有的食物给得越多；四阶食物的效果翻倍，献祭食物回的体力也翻倍；五阶进入加时后大量回血。"
+texts = {
+"en": "{faith:nature} governs return and containment, is closely bound to life, and has followers almost everywhere. You gain Faith when items bearing the Nature mark activate and when you heal during battle, each capped per battle. Offerings favor natural things, food and armor. The God of Nature blesses shields, armor and Nature items. A blessed version gains Health as soon as the faith is active, then more as your Faith accumulates: Block on shields, max Armor on everything else.
+
+From Rank one, you start every battle with Health regeneration each second; at Rank two, offering food at an Altar also restores Vitality, up to a limit per Altar; at Rank three, you gain Armor at the start of battle for the food in your bags, more for rarer food; at Rank four, food effects are doubled, and so is the Vitality restored by offering food; at Rank five, you heal a large amount once battle enters Overtime."
+}
 related = Array[String](["special_rites", "faith_power_and_tiers", "altar_offering"])
 see_items = Array[StringName]([&"charm_nature", &"ration"])

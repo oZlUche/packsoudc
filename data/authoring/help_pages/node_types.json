@@ -1,8 +1,14 @@
 {
   "id": "node_types",
   "display_name": "节点类型",
+  "display_names": {
+    "en": "Node Types"
+  },
   "category": "map",
   "text": "出生点是开局站的地方。普通战斗与精英战斗要打一场；搜索点能翻几次；事件点发生一段对话；商店买卖；休息点回体力、有神坛；随机点踩上才揭开是哪种；撤离点是出口；保险箱点放进去的东西视为已带出；宝箱点要在宝箱上长按开锁（也可以按住确认键，默认空格或回车），越好的箱子按得越久，开了搜一次、不遭遇，能开出珍宝；核心是这一章的头目，打赢直接结算离场。\n\n每个点的事只发生一次，用过就变灰，之后只能穿行。地图越往里越肥也越险，撤离点在中段，核心在最深处。鼠标停在点上有浮窗，战斗点能看见对手的配置；浮窗要拿到望远镜之后才开。",
+  "texts": {
+    "en": "The starting point is where you begin. Normal and elite battles mean a fight; search spots can be searched a few times; event nodes play out a conversation; shops buy and sell; rest spots restore Vitality and have an Altar; random nodes reveal what they are only when you step on them; the extraction point is the exit; anything you put in at a Safe counts as carried out; at a Chest you hold on the chest to pick the lock (or hold the confirm key, Space or Enter by default), and better chests take longer. Once open, you search it once with no encounter, and it can hold treasures. The core is this chapter's boss; beat it and you go straight to Results.\n\nEach node's event happens only once; once used, the node turns gray and you can only pass through it. The deeper into the map, the richer and more dangerous it gets; the extraction point sits in the middle, and the core at the very deepest point. Hovering over a node shows a tooltip, and on battle nodes it reveals the opponent's setup, but tooltips only appear once you have the spyglass."
+  },
   "related": [
     "random_node",
     "shop",

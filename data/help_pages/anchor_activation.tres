@@ -6,9 +6,17 @@
 script = ExtResource("1_nm4gf")
 id = &"anchor_activation"
 display_name = "信物与激活"
+display_names = {
+"en": "Anchors and Activation"
+}
 category = &"faith"
 text = "信仰靠道具激活。信仰道具带着某位神的印记；其中能激活信仰的叫信物，护符、符号、遗物这一类，每位神至少有一枚一格的护符。把信物放进棋盘就算信了这位神，任何时刻只信一位，棋盘上最后置入的那枚信物说了算。
 
 激活之后这位神的道具按阶解锁功能，别的神的道具休眠。信物多半是从地图上的祭坛事件里拿到的，也能跟着包带回仓库、下一局带进去就从这位神开始。把信物从{zone:地上}挪回棋盘也算置入，会重新决定激活的是谁。"
+texts = {
+"en": "Faith is activated by items. Faith items carry a god's mark; the ones that can activate a Faith are called Anchors: charms, symbols, relics and the like, and every god has at least one one-cell Charm. Put an Anchor on the board and you follow that god. You follow only one god at a time: the Anchor most recently placed on the board decides which.
+
+Once a Faith is active, that god's items unlock their effects by Rank, and other gods' items go dormant. Anchors mostly come from Altar events on the map. You can also carry them back to the Warehouse with your pack and bring one into your next run to start with that god. Moving an Anchor from the {zone:地上} back onto the board also counts as placing it, and decides again which god is active."
+}
 related = Array[String](["anchor_and_right_click", "switch_and_dormant", "faith_power_and_tiers"])
 see_items = Array[StringName]([&"charm_brute", &"charm_sun", &"charm_nature", &"charm_earth"])

@@ -5,6 +5,9 @@
     "en": "Fungal Blood"
   },
   "description": "对手叠上反应层数那么多层【菌血】：每次恢复生命减半，实际回了几点就叠几层【中毒】，每层持续一秒，再反应就延长。",
+  "descriptions": {
+    "en": "The opponent gains Fungal Blood equal to the reaction stacks: every heal is halved, and they gain one stack of Poison per point actually healed. Each stack lasts one second; reacting again extends it."
+  },
   "elements": [
     "poison",
     "bleed"

@@ -6,8 +6,14 @@
 script = ExtResource("1_12xdj")
 id = &"god_skill"
 display_name = "技巧之神"
+display_names = {
+"en": "God of Skill"
+}
 category = &"faith"
 order = 9
 text = "{faith:skill}管尺度、变形与结构，锻造、战斗技巧和各种手艺都归祂，矮人、盗贼与工匠信祂。信力看的是获得金属道具，按格子数给；还看一场战斗里出手过的不同武器有几种，每场有上限。献祭爱金属、防具、工艺品，带暴击属性的道具倍率最高。"
+texts = {
+"en": "{faith:skill} governs measure, transformation and structure. Forging, combat technique and every craft belong to this god, worshipped by dwarves, thieves and artisans. You gain Faith from obtaining Metal items, by the number of cells they take up, and from how many different weapons activate in a single battle, capped per battle. Offerings favor metal, armor and crafted goods, and items with Crit stats earn the highest multiplier."
+}
 related = Array[String](["faith_power_and_tiers", "altar_offering"])
 see_items = Array[StringName]([&"charm_skill"])

@@ -57,6 +57,9 @@ display_names = {
 "en": "Seared Blood"
 }
 description = "对手叠上反应层数那么多层【燃血】：治疗无效，每秒受到层数等量的火焰伤害，每层持续一秒，再反应就延长。"
+descriptions = {
+"en": "The opponent gains Seared Blood equal to the reaction stacks: healing does nothing, and they take Fire damage each second equal to the stacks. Each stack lasts one second; reacting again extends it."
+}
 elements = Array[StringName]([&"fire", &"bleed"])
 effects = Array[ExtResource("1_krjo3")]([SubResource("Resource_vkbic")])
 scaling = [{

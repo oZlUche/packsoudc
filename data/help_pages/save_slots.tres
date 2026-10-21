@@ -6,9 +6,17 @@
 script = ExtResource("1_gyndo")
 id = &"save_slots"
 display_name = "存档位"
+display_names = {
+"en": "Save Slots"
+}
 category = &"meta"
 order = 4
 text = "有三个存档位，每一位是一份独立的局外进度，加上可能有的一局进行中的存档。主菜单的「继续」读当前位接着玩；「读取存档」换位，有存档的能载入或删除，删除要点两次确认；「新的游戏」在空位上开一份新的，三位都满了会带你去读取存档屏删一个。
 
 一局的进度在走步时自动存，读档回来接着走和没存过一样，停在战前准备屏或事件屏上也原样恢复。战斗倍速、语言这类设置不跟存档位走，所有位共用。存档读不出来时会先备份再从零开始，不会悄悄覆盖。"
+texts = {
+"en": "There are three save slots. Each one holds its own progress between runs, plus a run in progress if there is one. On the main menu, Continue loads the current slot so you can pick up where you left off; Load game switches slots, where you can load or delete any slot that has a save (deleting asks you to confirm twice); New game starts a fresh save in an empty slot, and if all three are full it takes you to the Load game screen to delete one.
+
+A run saves automatically as you move. When you load it, you carry on exactly as if you had never left, even if you stopped on the Pre-battle screen or an event screen. Settings such as battle speed and language don't belong to a slot; all slots share them. If a save can't be read, it is backed up first and you start from scratch, so nothing is ever silently overwritten."
+}
 related = Array[String](["achievements", "warehouse"])
