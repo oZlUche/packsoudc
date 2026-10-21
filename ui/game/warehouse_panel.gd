@@ -165,15 +165,21 @@ func _rebuild_board_view() -> void:
 	_board_scroll = ScrollBox.wrap(_board_view, BOARD_MIN_ROWS)     # 带回来的棋盘也可能很高：竖向滚动
 	_board_scroll.set_meta("tight", true)
 	ScrollBox.set_rows(_board_scroll, _board_view, BOARD_MIN_ROWS)
-	var frame := PanelContainer.new()
-	frame.name = "BoardFrame"
+	var frame := framed(_board_scroll, "BoardFrame")
 	frame.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	frame.add_theme_stylebox_override("panel", board_frame_box())
-	frame.add_child(_board_scroll)
 	_board_box.add_child(frame)
 	_drag.register_view(_board_view)
 	_board_view.item_double_clicked.connect(quick_move)     # 视图每次新建，信号跟着重接
 	_board_view.actions_for = board_actions     # 230
+
+
+## 把 [param child] 套进带回来的背包那款皮带框（[method board_frame_box]）。224 补充二：结算第一页的保险箱也用它
+static func framed(child: Control, frame_name: String) -> PanelContainer:
+	var frame := PanelContainer.new()
+	frame.name = frame_name
+	frame.add_theme_stylebox_override("panel", board_frame_box())
+	frame.add_child(child)
+	return frame
 
 
 ## 224：带回来的背包的外框（素皮带框九宫格，四边 54、中段平铺；格子缩进 [constant BOARD_FRAME_PAD]）。没图 = 空框只留边距
