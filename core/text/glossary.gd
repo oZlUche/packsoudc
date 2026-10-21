@@ -235,9 +235,9 @@ static func mods_text(mods: Array) -> String:
 ## 叠层、计时、减半、元素印、不可解除这些机制说明是内部说明（作者 16:07：不该给玩家看），只进 [method buff_rule_lines] 给作者工具。
 ## 限时状态写时间（作者 16:24）：战斗里写还剩几秒，别处写持续几秒。数值统一走 [method val] 上色（样式 `val`）
 
-const NAME_SIZE := 19
-const KIND_SIZE := 13
-const BODY_SIZE := 15
+const NAME_SIZE := 20
+const KIND_SIZE := 14
+const BODY_SIZE := 16
 ## 名字描边（同 [constant UiTheme.OUTLINE_SIZE] / [constant UiTheme.OUTLINE_COLOR]；core 不引界面）
 const NAME_OUTLINE := "[outline_size=2][outline_color=#000000bf]%s[/outline_color][/outline_size]"
 ## 系统状态（衰竭、鏖战）的名字色（同 [constant CombatantPanel.SYSTEM_COLOR]）

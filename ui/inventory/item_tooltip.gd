@@ -13,11 +13,11 @@ extends RefCounted
 ## 稀有度的名字，下标即稀有度；颜色见 [ItemPainter.RARITY_COLORS]（白 / 绿 / 蓝 / 紫 / 金 / 红）
 const RARITY_NAMES := ["普通", "优良", "稀有", "史诗", "传说", "神话"]
 ## 170：各层字号（定稿各大一号：名字 19、副行 13、说明 14、正文 15、脚注 13）
-const NAME_SIZE := 19
-const SUB_SIZE := 13
-const DESC_SIZE := 14
-const BODY_SIZE := 15
-const FOOT_SIZE := 13
+const NAME_SIZE := 20
+const SUB_SIZE := 14
+const DESC_SIZE := 15
+const BODY_SIZE := 16
+const FOOT_SIZE := 14
 ## 170：行首图标（缺图退回的文字，221 F1：[UiText] 键，按当前语言取）；图标本身链到格位的词条，钉住后停上去能看解释
 const ICONS := {"grant": "tip.icon_grant", "receive": "tip.icon_receive", "load": "tip.icon_load", "enchant": "tip.icon_enchant", "coin": "tip.icon_coin", "weight": "tip.icon_weight"}
 const ICON_TERMS := {"grant": "增益槽", "receive": "受益槽", "load": "装载槽"}

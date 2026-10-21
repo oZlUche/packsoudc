@@ -12,8 +12,8 @@
 class_name FaithTooltip
 extends RefCounted
 
-const META_SIZE := 13
-const POWER_SIZE := 14
+const META_SIZE := 14
+const POWER_SIZE := 15
 ## 献祭图标（标签 → [method TagRegistry.icon_path]；体积 / 属性条件 → `<OFFER_ICON_DIR>large.png` 等）
 const OFFER_ICON_DIR := "res://assets/ui/offerings/"
 ## 193 美术定稿（作者 2026-10-18「32像素，献祭栏里面不要名字，图标也要32像素」）
