@@ -28,14 +28,13 @@ func open(payload: Dictionary) -> void:
 	var col := _vbox(10)
 	panel.add_child(col)
 	_head = _frame_title("")     # 157：标题在石板框的标题条上
-	col.add_child(_wrapped(UiText.t("altar.intro") +
-		((UiText.t("altar.offerings") % def.offerings_summary()) if def != null and not def.offerings.is_empty() else ""), 12, UiPalette.DIM, 900))
+	# 226 批二：顶上的说明删了，献祭品与规矩进「献祭」的悬浮窗
 	var row := _hbox(24)
 	col.add_child(row)
 
 	var left := _vbox(8)
 	row.add_child(left)
-	left.add_child(_label(UiText.t("altar.table"), 14, UiPalette.FG))
+	left.add_child(HeaderTag.new(UiText.t("altar.table")))     # 226 批二：段头签
 	_table = GridInventory.new(Vector2i(4, 4), TABLE_ID, false)
 	_table_view = InventoryView.new()
 	_table_view.label_font = font
@@ -48,6 +47,7 @@ func open(payload: Dictionary) -> void:
 	var buttons := _hbox(8)
 	_offer_btn = _button(UiText.t("altar.offer"), offer, 14, UiPalette.Tier.PRIMARY)
 	_offer_btn.disabled = true
+	_offer_btn.tooltip_text = UiText.t("altar.intro") + ((UiText.t("altar.offerings") % def.offerings_summary()) if def != null and not def.offerings.is_empty() else "")
 	buttons.add_child(_offer_btn)
 	var back := _button(UiText.t("setup.back"), to_map, 13)
 	back.tooltip_text = UiText.t("altar.back_tip")
@@ -178,14 +178,13 @@ func _rebuild_actions() -> void:
 	if actions.is_empty():
 		return
 	_actions_box.add_child(HSeparator.new())
-	_actions_box.add_child(_label(UiText.t("altar.actions"), 14, UiPalette.FG))
 	for p in actions:
 		var perk := p as FaithPerk
 		var arow := _hbox(6)
 		var b := _button(perk.altar_label(), func(): special(perk), 13)
 		var why := perk.altar_available(run, _node)
 		b.disabled = why != "" or not _altar_open()
-		b.tooltip_text = why if why != "" else perk.describe()
+		b.tooltip_text = why if why != "" else perk.describe() + "\n" + UiText.t("altar.actions")     # 226 批二：「特殊操作（二选一……）」那行删了，括号里的话进按钮悬浮窗
 		arow.add_child(b)
 		if not perk.altar_options().is_empty():
 			var pick := OptionButton.new()

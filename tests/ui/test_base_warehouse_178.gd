@@ -49,9 +49,9 @@ static func frame_warehouse_page(t: TestCase, root: Window) -> void:
 	var page: Control = screen._pages["warehouse"]
 	t.check(page.is_ancestor_of(screen._wh), "带回来的背包在「仓库」页")
 	t.check(not (screen._pages["home"] as Control).is_ancestor_of(screen._wh), "家页没有")
-	t.check(not screen._no_board.visible, "有棋盘：不显示那一行")
 	t.check(screen._wh._store_btn.visible, "有棋盘：一键置入在")
-	t.check(screen.pending_text().contains("「仓库」页"), "左列提示指向「仓库」页（%s）" % screen.pending_text())
+	t.check(screen.pending_text().contains("「仓库」页"), "提示指向「仓库」页（%s）" % screen.pending_text())
+	t.eq((screen._tab_btns["warehouse"] as Button).tooltip_text, screen.pending_text(), "226 批二：那句提示在「仓库」页签的悬浮窗里，左列不再写字")
 	screen.show_tab("warehouse")
 	t.eq(screen.tab(), "warehouse", "不再被改成家")
 	t.check(page.is_visible_in_tree() and screen.shelf().is_visible_in_tree(), "仓库页与右半边都在")
@@ -61,9 +61,8 @@ static func frame_warehouse_page(t: TestCase, root: Window) -> void:
 
 	var g := _flow()
 	var bare = _screen(g, root)
-	t.check(bare._no_board.visible, "没棋盘：「没有带回来的东西」")
-	t.eq(bare._no_board.text, "没有带回来的东西", "那一行的字")
-	t.eq(bare.pending_text(), "", "没棋盘：左列不提示")
+	t.check(bare.get("_no_board") == null, "226 批二：空态那一行删了")
+	t.eq(bare.pending_text(), "", "没棋盘：不提示")
 	t.check(not bare._wh._store_btn.visible and bare._wh._tidy_btn.visible, "没棋盘：不摆一键置入，整理还在")
 	bare.queue_free()
 	_cleanup()

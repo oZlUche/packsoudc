@@ -38,15 +38,14 @@ static func _texts(n: Node) -> Array[String]:
 
 
 static func frame_kit_page_text(t: TestCase, root: Window) -> void:
-	t.begin("180 · 第二页减文案：仓库标题只写页数、没有「往左边的包里拖……」；棋盘标题「行囊　名字　N × M 格」；读数只有负重一行（225：带入预算去掉了）")
+	t.begin("180 · 第二页减文案：没有「往左边的包里拖……」；226 批二起仓库标题、棋盘标题也删了；读数只有负重一行（225：带入预算去掉了）")
 	var game = _game(root, "setup180a")
 	var setup = game.base()
 	setup.show_page(1)
 	var texts := _texts(setup._pages[1])
 	t.check(not texts.any(func(s: String) -> bool: return s.contains("往左边") or s.contains("撤离了回来")), "没有那句说明")
-	t.check(texts.any(func(s: String) -> bool: return s.begins_with("仓库　") and s.ends_with("页") and not s.contains("件")), "仓库标题只写页数")
-	var ch: CharacterDef = setup.character()
-	t.check(texts.has("行囊　%s　　%d × %d 格" % [Names.of(ch), ch.board_size.x, ch.board_size.y]), "棋盘标题")
+	# 226 批二：仓库标题「仓库 N 页」与棋盘标题「行囊　名字　N × M 格」也删了（页签、背包皮框已说明）
+	t.check(not texts.any(func(s: String) -> bool: return s.begins_with("仓库　") or s.begins_with("行囊　")), "仓库标题、棋盘标题删了")
 	t.check(not texts.any(func(s: String) -> bool: return s.contains("已带") or s.contains("带上")), "没有「已带」「带上」")
 	var readout: String = setup._readout.get_parsed_text()
 	t.check(readout.contains("负重") and not readout.contains("带入预算") and readout.get_slice_count("\n") == 1, "225：只剩负重一行：%s" % readout)

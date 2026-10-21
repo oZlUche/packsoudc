@@ -28,7 +28,6 @@ var _preview: Label
 ## 194 §2：每槽下面的三行小字（时机、效果、数值）
 var _summaries: Array[RichTextLabel] = []
 ## 194 §2：两槽满时按空槽 default 行试算的那一句
-var _guess: Label
 ## 风箱把手（三张图跟着状态换）
 var _forge_btn: TextureButton
 var _back_btn: TextureButton
@@ -92,8 +91,6 @@ func open(payload: Dictionary) -> void:
 	_spots[_text_box] = _rect(_layout.get("text", {}))
 	_preview = _label("", 13, UiPalette.STAMINA)
 	_text_box.add_child(_preview)
-	_guess = _label("", 12, UiPalette.DIM)
-	_text_box.add_child(_guess)
 
 	_forge_btn = _piece_button("handle", UiText.t("forge.forge_btn"), forge)
 	_forge_btn.disabled = true
@@ -297,9 +294,10 @@ func summary_text(i: int) -> String:
 	return Glossary.strip_bbcode(_summaries[i].text) if i >= 0 and i < _summaries.size() else ""
 
 
-## 194 §2：两槽满时的试算句；别的时候空
+## 194 §2：两槽满时的试算句；别的时候空（226 批二：那一行删了，句子进风箱把手的悬浮窗）
 func guess_text() -> String:
-	return _guess.text if _guess != null else ""
+	var g := guess() if _forge_open() else {}
+	return "" if g.is_empty() else UiText.t("forge.guess") % [Forge.prefix(g), Glossary.strip_bbcode(Forge.sentence(g))]
 
 
 ## 194 §2：两槽满、一槽空时按空槽的 default 行试算的附魔；别的时候空
@@ -345,9 +343,6 @@ func _refresh() -> void:
 	_forge_btn.texture_normal = UiTheme.art_cached(UiTheme.lang_art("forge/handle_ready"))     # 221：把手与底图上的铭牌画着字，英文版另一套
 	_forge_btn.texture_disabled = UiTheme.art_cached(UiTheme.lang_art("forge/handle_%s" % ("idle" if open else "off")))
 	_bg.texture = UiTheme.art_cached(UiTheme.lang_art("forge/bg_%s" % ("lit" if open else "cold")))     # 铸过：炉熄
-	var g := guess() if open else {}
-	_guess.text = "" if g.is_empty() else UiText.t("forge.guess") % [Forge.prefix(g), Glossary.strip_bbcode(Forge.sentence(g))]
-	_guess.visible = _guess.text != ""     # 空着不占一行
 	if not open:
 		_forge_btn.tooltip_text = UiText.t("forge.used")
 		_preview.text = UiText.t("forge.used") if _out.item_count() == 0 else UiText.t("forge.ready")
@@ -357,7 +352,8 @@ func _refresh() -> void:
 			if _slots[i].item_count() == 0:
 				missing.append(UiText.t("forge.slot_bracket") % Forge.slot_name(ForgeTable.SLOTS[i]))
 		_preview.text = UiText.t("forge.missing") % UiText.t("forge.missing_sep").join(missing)
-		_forge_btn.tooltip_text = _preview.text
+		var guessed := guess_text()
+		_forge_btn.tooltip_text = _preview.text + ("\n" + guessed if guessed != "" else "")
 	else:
 		_preview.text = UiText.t("forge.preview") % [Forge.prefix(ench), Glossary.strip_bbcode(Forge.sentence(ench))]
 		_forge_btn.tooltip_text = UiText.t("forge.forge_btn")

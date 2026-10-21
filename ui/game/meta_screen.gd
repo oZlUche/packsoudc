@@ -27,7 +27,6 @@ const NO_SHELF_TABS := ["codex", "achievements", "tech"]     # 229：科技页�
 
 var _wh = null
 var _new_run_btn: Button
-var _hint: Label
 var _buff_btns: Dictionary = {}
 var _unlock_btns: Dictionary = {}
 ## 119：开发区的科技等级数字框，科技 id → SpinBox（导出包里空）
@@ -63,7 +62,6 @@ var _shelf: WarehousePages = null
 var _shelf_frame: PanelContainer = null
 var _shelf_title: Label = null
 ## 178：「仓库」页没有带回来的棋盘时那一行
-var _no_board: Label = null
 
 
 func open(payload: Dictionary) -> void:
@@ -83,7 +81,7 @@ func open(payload: Dictionary) -> void:
 	var left := _vbox(12)
 	left.custom_minimum_size.x = LEFT_W
 	_cols.add_child(left)
-	left.add_child(_label(UiText.t("meta.title"), 30, UiPalette.FG))
+	# 226 批二：「基地」二字删了（页签已说明在哪）
 	for pair in TABS:
 		var key: String = pair[0]
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): toggle_tab(key))
@@ -101,14 +99,7 @@ func open(payload: Dictionary) -> void:
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(spacer)
-	_hint = _wrapped("", 13, UiPalette.STAMINA, LEFT_W)
-	# 178：提示指向「仓库」页 —— 点一下直接过去
-	_hint.mouse_filter = Control.MOUSE_FILTER_STOP
-	_hint.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_hint.gui_input.connect(func(e: InputEvent):
-		if e is InputEventMouseButton and (e as InputEventMouseButton).pressed and (e as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT and flow.meta.has_pending_board():
-			show_tab("warehouse"))
-	left.add_child(_hint)
+	# 226 批二：左下「带回来的背包还有 N 件……」那句删了（[method pending_text] 留给「仓库」页签的悬浮窗）
 	_new_run_btn = UiTheme.make_home_button(UiText.t("meta.new_run"), flow.new_run, true)
 	_new_run_btn.custom_minimum_size = Vector2(LEFT_W, 76)
 	left.add_child(_new_run_btn)
@@ -176,8 +167,7 @@ func open(payload: Dictionary) -> void:
 	_pages["warehouse"] = wh_page
 	var wh_col := _vbox(10)
 	wh_page.add_child(wh_col)
-	_no_board = _label(UiText.t("meta.no_board"), 15, UiPalette.DIM)
-	wh_col.add_child(_no_board)
+	# 226 批二：空态「没有带回来的东西」删了
 	_wh = WarehousePanelScript.new()
 	_wh.sell_one = sell
 	_wh.setup(flow, font, _shelf, _drag)
@@ -441,10 +431,8 @@ func _build_sell(root: Control) -> Control:
 	var page := _vbox(8)
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(page)
-	page.add_child(_wrapped(UiText.t("meta.sell_intro") % int(round(flow.sell_ratio() * 100)), 15, UiPalette.DIM, 460))
 	var row := HFlowContainer.new()     # 游戏测试 v3.84：一行排不下时折行，不把中列撑宽、把右边仓库挤出屏
 	page.add_child(row)
-	row.add_child(_label(UiText.t("meta.sell_all"), 13, UiPalette.DIM))
 	_sell_pick = OptionButton.new()
 	for i in SELL_FILTERS.size():
 		_sell_pick.add_item(UiText.t(String(SELL_FILTERS[i][0])), i)
@@ -459,7 +447,9 @@ func _build_sell(root: Control) -> Control:
 	page.add_child(row2)
 	_sell_preview = _label("", 13, UiPalette.FG)
 	row2.add_child(_sell_preview)
-	row2.add_child(_button(UiText.t("meta.sell_all"), func(): sell_filtered(), 13, UiPalette.Tier.PRIMARY))
+	var sell_btn := _button(UiText.t("meta.sell_all"), func(): sell_filtered(), 13, UiPalette.Tier.PRIMARY)
+	sell_btn.tooltip_text = UiText.t("meta.sell_intro") % int(round(flow.sell_ratio() * 100))     # 226 批二：说明那段与行首「一键出售」删了，卖价比例进按钮悬浮窗
+	row2.add_child(sell_btn)
 	# 225：包架也是货源 —— 双击一只卖掉（一键出售不碰包：包是装备不是战利品）
 	_sell_rack = BagRackView.boxed(flow.meta.rack, font)
 	_sell_rack.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -603,7 +593,6 @@ func _build_achievements(root: Control) -> Control:
 	root.add_child(page)
 	var head := _hbox(8)
 	page.add_child(head)
-	head.add_child(_label(UiText.t("meta.ach_intro"), 15, UiPalette.DIM))
 	for pair in [["all", "meta.all"], ["done", "meta.ach_filter_done"], ["todo", "meta.ach_filter_todo"]]:
 		var key: String = pair[0]
 		var b := _button(UiText.t(pair[1]), func(): show_achievement_filter(key), 13, UiPalette.Tier.MINOR)
@@ -656,16 +645,13 @@ func _fill_achievements() -> void:
 	if _ach_hint != null:
 		_ach_hint.text = (UiText.t("meta.ach_unlock_all_on") if flow.settings != null and flow.settings.unlock_all else "") + UiText.t("meta.ach_count") % [done_n, total]
 	if total == 0:
-		_ach_list.add_child(_label("（没有成就的内容：data/authoring/achievements/）", 12, UiPalette.DIM))
-		return
+		return     # 226 批二：空态的字删了
 	for def in flow.achievement_defs:
 		var done := m.has_achievement(def.id)
 		if _ach_filter == "done" and not done or _ach_filter == "todo" and done:
 			continue
 		_ach_rows.append({"id": def.id, "done": done})
 		_ach_list.add_child(_achievement_row(def, done))
-	if _ach_rows.is_empty():
-		_ach_list.add_child(_label(UiText.t("meta.ach_empty"), 12, UiPalette.DIM))
 
 
 func _achievement_row(def: AchievementDef, done: bool) -> Control:
@@ -711,14 +697,7 @@ func _build_codex(root: Control) -> Control:
 		var db := flow.items.get_def(b)
 		return da.rarity < db.rarity if da.rarity != db.rarity else String(a) < String(b))
 	# 095（作者定）：派生的赐福版并进原件那一格（ids() 本来就不列赐福版），格子叠影 + 角标，点开弹异体列表
-	var lit_n := 0
-	var total_n := 0
-	for id in ids:
-		for vid in flow.items.variants_of(id):
-			total_n += 1
-			if m.codex_lit(vid):
-				lit_n += 1
-	page.add_child(_label(UiText.t("meta.codex_intro") % [lit_n, total_n], 15, UiPalette.DIM))
+	# 226 批二：说明行（「图鉴　带出过的点亮 N / N……」）删了
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED     # 139：按宽度定列数，不横向滚
@@ -742,7 +721,7 @@ func _build_codex(root: Control) -> Control:
 	var keeps: Array = flow.items.keepsake_ids()
 	if not keeps.is_empty():
 		keeps.sort()
-		inner.add_child(_label(UiText.t("meta.codex_keepsakes"), 14, UiPalette.DIM))
+		inner.add_child(HeaderTag.new(UiText.t("meta.codex_keepsakes")))     # 226 批二：段头签，只留四个字
 		var kgrid := GridContainer.new()
 		kgrid.add_theme_constant_override("h_separation", CODEX_GAP)
 		inner.add_child(kgrid)
@@ -950,8 +929,7 @@ func toggle_unlock(id: StringName) -> bool:
 
 func _refresh() -> void:
 	# 090：带回来的没清不再拦，只提示（开局屏里到地上，出发就没了）
-	_hint.text = pending_text()
-	if _no_board != null:
-		_no_board.visible = flow.meta.board == null
+	if _tab_btns.has("warehouse"):
+		(_tab_btns["warehouse"] as Button).tooltip_text = pending_text()     # 226 批二：那句提示挪进页签的悬浮窗
 	for id in _tech_spins:     # 119：科技页点亮 / 升级了，开发区的数字框跟上
 		(_tech_spins[id] as SpinBox).set_value_no_signal(TechService.level(flow.meta, id))

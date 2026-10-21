@@ -522,7 +522,6 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	var wh = game.base().get("_wh")
 	t.check(wh._board_box.visible and wh._board_view != null and flow.meta.board != null and flow.meta.board.item_count() == 0,
 		"作者 2026-10-13：一键置入后左边的棋盘还在（空的），仓库不跳位")
-	t.check(wh._board_label != null and wh._board_label.text.contains("已清空"), "标签写着已清空")
 	game.base().proceed()
 	t.eq(game.base().screen, GameFlow.Screen.META, "→ 局外")
 	t.eq(flow.meta.board, null, "离开结算屏：空棋盘丢了")

@@ -30,8 +30,6 @@ var _next_seed: SpinBox = null
 const DRAWER_MARGIN := 12.0
 var _hud_edit_btn: Button = null
 var _debug_line: Label = null
-var _preview: Label
-var _enemy_line: Label
 var _status: Label
 var _routes_box: VBoxContainer
 var _log: RichTextLabel
@@ -283,7 +281,6 @@ func toggle_pause() -> void:
 	_pause.get_child(0).add_child(panel)
 	var col := _vbox(12)
 	panel.content.add_child(col)
-	col.add_child(_wrapped(UiText.t("map.pause_note"), 12, UiPalette.DIM, 360))
 	col.add_child(_button(UiText.t("map.pause_resume"), toggle_pause, 14, UiPalette.Tier.PRIMARY))
 	col.add_child(_button(UiText.t("map.pause_settings"), pause_settings, 14))
 	col.add_child(_button(UiText.t("map.pause_encyclopedia"), func(): pause_encyclopedia(), 14))     # 114
@@ -361,8 +358,7 @@ func show_rules(first: bool = false) -> void:
 	var ctx := TextTemplate.context_for(_run)     # 112：规则卡也过占位符（{item:…} 按稀有度上色）
 	for i in _run.chapter.rules.size():
 		col.add_child(UiTheme.rich_block(560, 15, "%d. %s" % [i + 1, TextTemplate.render(_run.chapter.rules[i], ctx)]))
-	col.add_child(UiTheme.rich_block(560, 13, TextTemplate.render(UiText.t("map.rules_codex_line"), ctx)))     # 217：规则卡末尾统一一行，每章都指一次百科
-	col.add_child(_wrapped(UiText.t("map.rules_again"), 12, UiPalette.DIM, 560))
+	# 226 批二：末尾那两句（「看不懂的词……百科」「暂停菜单里能再看」）删了
 	col.add_child(_button(UiText.t("map.rules_ok"), close_rules, 14, UiPalette.Tier.PRIMARY))
 
 
@@ -538,6 +534,7 @@ func _adopt() -> void:
 	if _run.phase == RunState.Phase.PICK_SPAWN:
 		_say("%s　种子 %d：%d 个点。挑一个出生点（绿圈的「生」）开始" % [
 			_run.chapter.display_name, _run.run_seed, _run.map.node_count()])
+		super.say(UiText.t("map.pick_spawn"))     # 226 批二：蒙层上那句挪到告示卷轴
 	else:
 		_say("%s　种子 %d：在点 %d 上（小兵棋子是你），已走 %d 步。点相邻的点走一步；B 开背包" % [
 			_run.chapter.display_name, _run.run_seed, _run.travel.current_id, _run.travel.clock.total])
@@ -643,33 +640,10 @@ func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
 		step(id)
 
 
-## 文字再长也不撑宽所在的容器：最小宽度 0、横向铺满、超出裁成省略号
-func _pin_width(l: Label) -> void:
-	l.clip_text = true
-	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	l.custom_minimum_size.x = 0
-	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-
 func _on_node_hovered(id: int) -> void:
-	_enemy_line.text = enemy_preview(id)
 	_update_tooltip(id)
 	if _run.phase == RunState.Phase.PICK_SPAWN:
 		_view.bold_route = _route_index_of_entry(id) if id >= 0 else -1
-		_preview.text = ""
-		return
-	if id < 0 or not _view.reachable.has(id):
-		_preview.text = ""
-		return
-	var intent := MapNavigator.resolve_step(_run.map, _run.travel.current_id, id)
-	var n := _run.map.get_node(id)
-	if intent == null:
-		_preview.text = ""
-		return
-	# 179：代价 1 不写，别的写「倒计时 −N」（193 补充一）
-	var cost := _run.travel.cost_of(intent)
-	_preview.text = "→ %s%s%s%s" % [MapNodeStyle.of(n.type)["label"], "" if cost == 1 or _run.travel.next_step_free() else UiText.t("map.preview_cost") % cost,
-		UiText.t("map.preview_free_step") if _run.travel.next_step_free() else (UiText.t("map.preview_double") if _run.travel.action_cost_mult > 1 else ""), UiText.t("map.preview_visited") if n.is_visited() else ""]
 
 
 ## 084：节点浮窗（章节开关 `node_tooltips`）：文字按 NodeTooltip 的模板渲染，没用过的战斗点下面画对手的棋盘
@@ -826,7 +800,6 @@ func _rebuild_routes() -> void:
 	UiTheme.clear_children(_routes_box)
 	if not SHOW_ROUTES or _run.phase != RunState.Phase.PICK_SPAWN:
 		return
-	_routes_box.add_child(_label("路线：挑一个出生点", 14, UiPalette.FG))
 	var g := _run.map
 	for i in g.routes.size():
 		var route: Dictionary = g.routes[i]
@@ -884,19 +857,7 @@ func _build() -> void:
 	_view.gui_input.connect(func(event: InputEvent):
 		if event is InputEventMouseMotion and _tip != null:
 			_tip.follow(get_global_mouse_position()))     # 084：浮窗跟着鼠标走，和道具悬浮窗一样
-	# 反馈（bug：悬停节点时地图错位、闪烁）：这两行的文字随悬停的点变长变短，Label 的最小宽度跟着文字走，
-	# 把中间这一列撑宽 → 地图视图被挤窄 → 触发 resized 重新居中 → 地图位移、鼠标脱离节点 → 文字清空又缩回去 → 再悬停，如此往复。
-	# 让它们不参与布局宽度（超长就省略号裁掉），悬停就不会再改变地图的尺寸
-	_preview = _label("", 13, UiPalette.FG)
-	_preview.custom_minimum_size.y = 22
-	_pin_width(_preview)
-	_preview.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	mid.add_child(_preview)
-	_enemy_line = _label("", 13, UiPalette.DIM)
-	_enemy_line.custom_minimum_size.y = 22
-	_pin_width(_enemy_line)
-	_enemy_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	mid.add_child(_enemy_line)
+	# 226 批二：地图底边那两行（「→ 节点名　倒计时 −N」、敌人摘要）删了 —— 墨路签写步数，节点的事在悬浮窗里
 	_tip = HoverTip.new()
 	add_child(_tip)
 	_build_parts()
