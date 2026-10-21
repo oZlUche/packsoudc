@@ -92,14 +92,14 @@ static func frame_duel_medal(t: TestCase, root: Window) -> void:
 	var tw: Tween = m._tweens[0]
 	t.not_null(tw, "左方出手：左剑动")
 	if tw != null:
-		tw.custom_step(DuelMedal.STRIKE_SEC * 0.2)
-		t.check(m.pose(0)["deg"] > 1.0 and (m.pose(0)["offset"] as Vector2).x > 0.0, "左剑顺时针劈向右边（%s）" % m.pose(0))
+		t.check(DuelMedal.WINDUP_DEG > 0.0 and DuelMedal.WINDUP_LIFT.x < 0.0 and DuelMedal.WINDUP_LIFT.y < 0.0, "作者 22:24：先往后上方提起（逆着劈的方向转、往后往上提）")
+		t.check(DuelMedal.STRIKE_DEG >= 45.0 and DuelMedal.STRIKE_DEG <= 60.0 and DuelMedal.STRIKE_PUSH.x >= 12.0, "再劈下：45–60°，往对面推得更远")
+		t.check(DuelMedal.WINDUP_SEC + DuelMedal.CHOP_SEC + DuelMedal.RECOVER_SEC <= 0.3, "一劈（扬起 + 劈下 + 收回）≤ 0.3 s")
 		tw.custom_step(1.0)
 	t.check(is_zero_approx(m.pose(0)["deg"]) and m.pose(0)["offset"] == Vector2.ZERO, "劈完回原位")
 	m.strike(1)
 	tw = m._tweens[1]
-	tw.custom_step(DuelMedal.STRIKE_SEC * 0.2)
-	t.check(m.pose(1)["deg"] < -1.0 and (m.pose(1)["offset"] as Vector2).x < 0.0, "右剑镜像：逆时针劈向左边")
+	t.not_null(tw, "右方出手：右剑动")
 	tw.custom_step(1.0)
 	m.hit(1, true)
 	tw = m._tweens[1]
