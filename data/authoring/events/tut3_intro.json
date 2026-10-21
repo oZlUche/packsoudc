@@ -1,10 +1,19 @@
 {
   "id": "tut3_intro",
   "title": "祭坛",
+  "titles": {
+    "en": "The Altar"
+  },
   "text": "{char}第三次被送进来。这一带的废墟里有人拜神：碎骨堆成的祭坛、没干透的血。\n\n拜对了神，神会在战斗里帮你；拜神要信物，供神要祭品。这一张图教你怎么和神打交道。\n\n先往前走。",
+  "texts": {
+    "en": "{char}, sent in for the third time. People worship gods in this stretch of the ruins: altars of shattered bone, blood not yet dry.\n\nPick the right god and it helps you in battle. Following a god takes an Anchor; feeding it takes Offerings. This map teaches you how to deal with the gods.\n\nMove on ahead."
+  },
   "options": [
     {
-      "label": "出发"
+      "label": "出发",
+      "labels": {
+        "en": "Set out"
+      }
     }
   ]
 }

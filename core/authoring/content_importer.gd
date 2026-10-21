@@ -1023,6 +1023,10 @@ static func validate_event_text_refs(ctx: Context, report: ImportReport) -> void
 			if opt != null:
 				check_text_refs(opt.label, "options[%d].label" % i, ctx, report)
 				check_text_refs(opt.hint_when_hidden, "options[%d].hint_when_hidden" % i, ctx, report)
+				for lang in opt.labels:
+					check_text_refs(String(opt.labels[lang]), "options[%d].labels.%s" % [i, lang], ctx, report)
+				for lang in opt.hints_when_hidden:
+					check_text_refs(String(opt.hints_when_hidden[lang]), "options[%d].hints_when_hidden.%s" % [i, lang], ctx, report)
 
 
 ## 敌人（M4-1）。校验里「对着道具查」的那几条只在批量导入（上下文里有道具）时生效。

@@ -1,10 +1,19 @@
 {
   "id": "tut2_search_1_done",
   "title": "{item:plate_cuirass}",
+  "titles": {
+    "en": "{item:plate_cuirass}"
+  },
   "text": "又翻出一件{item:plate_cuirass}：开战时给一大截一次性护甲，先替你挨，挨完就没了。几下重击它接得住；绵绵不断的小刀会把它磨光，然后就是你自己挨。\n\n前面分岔：{c:warn}把鼠标停在两个战斗点上看看对手{/c}，再决定带盾还是带甲、走哪一边。装不下的那件留在{zone:地上}：走了它留在这个点上，回来还能拿，但撤离不带走。",
+  "texts": {
+    "en": "Next you dig up a {item:plate_cuirass}: a big chunk of one-time Armor when the fight starts. It takes the hits for you, and once it's gone, it's gone. It holds up against a few heavy blows; a steady stream of small blades wears it away, and then it's you taking the hits.\n\nThe road forks ahead. {c:warn}Hover over both battle spots to see who you'd face{/c}, then decide: shield or armor, and which side. Whatever doesn't fit stays on the {zone:地上}. It stays at this spot when you leave and you can come back for it, but it won't leave with you when you extract."
+  },
   "options": [
     {
-      "label": "继续"
+      "label": "继续",
+      "labels": {
+        "en": "Continue"
+      }
     }
   ]
 }

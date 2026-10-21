@@ -12,15 +12,28 @@ script = ExtResource("3_ybda3")
 [sub_resource type="Resource" id="Resource_1ogtw"]
 script = ExtResource("1_js0bp")
 label = "搜索"
+labels = {
+"en": "Search"
+}
 outcomes = Array[ExtResource("2_7k3nk")]([SubResource("Resource_qv0fi")])
 
 [resource]
 script = ExtResource("5_fh7qp")
 id = &"tut_search_2"
 title = "再翻一次"
+titles = {
+"en": "Search Again"
+}
 text = "这里的东西更多，也更危险。
 
 要搜三次：前两次安全，第三次一定会惊动什么。遭遇了就地打一场，打赢了对方身上的东西归你。
 
 打输了不扣体力，但这个点就不能再翻了。"
+texts = {
+"en": "More to find here, and more danger.
+
+Three searches. The first two are safe; the third will wake something, guaranteed. If you run into something, you fight it on the spot. Win, and whatever it carries is yours.
+
+Lose, and it costs no Vitality, but this spot can't be searched again."
+}
 options = Array[ExtResource("1_js0bp")]([SubResource("Resource_1ogtw")])

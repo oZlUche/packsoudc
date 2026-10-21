@@ -8,12 +8,23 @@
 [sub_resource type="Resource" id="Resource_fb70a"]
 script = ExtResource("1_8drt6")
 label = "继续"
+labels = {
+"en": "Continue"
+}
 
 [resource]
 script = ExtResource("4_ocfw4")
 id = &"tut3_search_done"
 title = "{item:tibia_violence}"
+titles = {
+"en": "{item:tibia_violence}"
+}
 text = "最后是一根{item:tibia_violence}。它带着{faith:brute}的印记，但{b}不是信物{/b}：放进包里不会换神，只在你信{faith:brute}的时候多出一截效果；换了别的神，它那几行字会变灰（休眠），只剩普通的那部分。
 
 前面是休息点，有神坛。"
+texts = {
+"en": "Last, a {item:tibia_violence}. It bears the mark of {faith:brute}, but it's {b}not an Anchor{/b}: putting it in your bag won't switch gods. It just does a bit more while you follow {faith:brute}. Follow a different god and those lines turn grey (dormant), leaving only the plain part.
+
+The rest stop ahead has an altar."
+}
 options = Array[ExtResource("1_8drt6")]([SubResource("Resource_fb70a")])

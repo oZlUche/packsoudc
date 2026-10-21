@@ -12,11 +12,20 @@ script = ExtResource("3_o4pha")
 [sub_resource type="Resource" id="Resource_mfqjl"]
 script = ExtResource("1_0mnyf")
 label = "再搜一次"
+labels = {
+"en": "Search again"
+}
 outcomes = Array[ExtResource("2_xy7ar")]([SubResource("Resource_keqnv")])
 
 [resource]
 script = ExtResource("5_xr173")
 id = &"tut_search_1_again"
 title = "再翻一次"
+titles = {
+"en": "Search Again"
+}
 text = "第一次翻出了一把{item:shortsword}和一瓶{item:salve}。这里还安静，再翻一次，看看还有什么。"
+texts = {
+"en": "The first pass turned up a {item:shortsword} and a {item:salve}. Still quiet. Search again and see what else is down there."
+}
 options = Array[ExtResource("1_0mnyf")]([SubResource("Resource_mfqjl")])

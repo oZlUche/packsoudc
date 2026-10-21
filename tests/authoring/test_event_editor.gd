@@ -334,6 +334,11 @@ static func frame_run_chain_and_lang(t: TestCase, root: Window) -> void:
 
 	# 语言
 	ed._open("tut_search_1")
+	ed.set_lang("en")
+	t.eq(ed._title_edit.text, String(ed._def.titles["en"]), "221 F2：序章事件写了英文标题，框里是它")
+	ed.set_lang("zh")
+	ed._on_discard()
+	ed._open("search_default")     # 还没写英文的事件
 	var zh_title: String = ed._def.title
 	ed.set_lang("en")
 	t.eq(ed.lang(), "en", "切到英文")

@@ -12,13 +12,24 @@ script = ExtResource("3_vf0f0")
 [sub_resource type="Resource" id="Resource_w2wo0"]
 script = ExtResource("1_3gwse")
 label = "进入战前准备"
+labels = {
+"en": "Go to Pre-battle"
+}
 outcomes = Array[ExtResource("2_j8dbi")]([SubResource("Resource_tf4xs")])
 
 [resource]
 script = ExtResource("5_ykrm7")
 id = &"tut2_battle_ward"
 title = "{enemy:shieldbearer}"
+titles = {
+"en": "{enemy:shieldbearer}"
+}
 text = "{item:warding_charm}每秒给它叠一层护甲（{item_stat:warding_charm:max_armor} 点，一直叠、没有上限），用剑砍只是在砍盾。
 
 毒不看护甲：{item:poisoned_knife}扎进去，它的盾再厚也一样掉血。"
+texts = {
+"en": "Its {item:warding_charm} stacks Armor on it every second ({item_stat:warding_charm:max_armor} a stack, and it never stops, no cap). Swinging a sword at it just hits the shield.
+
+Poison ignores Armor. Stick it with a {item:poisoned_knife} and it bleeds no matter how thick the shield gets."
+}
 options = Array[ExtResource("1_3gwse")]([SubResource("Resource_w2wo0")])

@@ -12,13 +12,24 @@ script = ExtResource("3_x7j5q")
 [sub_resource type="Resource" id="Resource_jbnht"]
 script = ExtResource("1_pbo5t")
 label = "进入战前准备"
+labels = {
+"en": "Go to Pre-battle"
+}
 outcomes = Array[ExtResource("2_cnvqm")]([SubResource("Resource_i7cw7")])
 
 [resource]
 script = ExtResource("5_2wr02")
 id = &"tut2_battle_swarm"
 title = "{enemy:skirmisher}"
+titles = {
+"en": "{enemy:skirmisher}"
+}
 text = "三把{item:knife}，一下接一下。每下不重，可一直不停。
 
 {item:tower_shield}每下减 {item_stat:tower_shield:block}，正好把它的刀磨成钝的；{item:plate_cuirass}的护甲会被它磨光，然后你会一直掉血。"
+texts = {
+"en": "Three blades, each a {item:knife}, one strike after another. No single hit is heavy, but they never stop.
+
+The {item:tower_shield} takes {item_stat:tower_shield:block} off every hit, just enough to blunt them. The Armor on the {item:plate_cuirass} gets worn away, and after that you just keep bleeding."
+}
 options = Array[ExtResource("1_pbo5t")]([SubResource("Resource_jbnht")])

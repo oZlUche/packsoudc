@@ -12,13 +12,24 @@ script = ExtResource("3_6thxx")
 [sub_resource type="Resource" id="Resource_rfb7b"]
 script = ExtResource("1_fm15x")
 label = "再搜一次"
+labels = {
+"en": "Search again"
+}
 outcomes = Array[ExtResource("2_qahiu")]([SubResource("Resource_ymnnm")])
 
 [resource]
 script = ExtResource("5_c2w27")
 id = &"tut3_search_again_2"
 title = "{item:bone_charm_bits}"
+titles = {
+"en": "{item:bone_charm_bits}"
+}
 text = "又是一串{item:bone_charm_bits}，也是骨头。前面的休息点有神坛，两件一起献上去。
 
 还有一样东西，再搜一次。"
+texts = {
+"en": "Another {item:bone_charm_bits}, bone again. The rest stop ahead has an altar. Offer both together.
+
+There's one more thing. Search again."
+}
 options = Array[ExtResource("1_fm15x")]([SubResource("Resource_rfb7b")])

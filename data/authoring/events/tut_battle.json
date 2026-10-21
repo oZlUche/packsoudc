@@ -1,10 +1,19 @@
 {
   "id": "tut_battle",
   "title": "整理",
+  "titles": {
+    "en": "Gear Up"
+  },
   "text": "前面有人守着。\n\n开打之前先过一道{ui:战前准备}：左边是对手的棋盘（带了什么、多少血、大概多少输出），右边是你自己的棋盘和{zone:地上}。战斗是自动的：只有放进包里的东西参战，武器自己出手，防具替你挨打，挨着放的东西之间还会互相加成。\n\n在准备屏里把搜到的武器和防具拖进包里；拖出棋盘就是弃置，会掉到{zone:地上}（不参战，打完还在）。整理好了按{ui:开战}，胜负在那一瞬就定了，之后是回放。",
+  "texts": {
+    "en": "Someone is guarding the way ahead.\n\nEvery fight starts with {ui:战前准备}. On the left is the enemy's board: what it carries, its Health, roughly how much damage it deals. On the right are your board and the {zone:地上}. The battle plays out on its own. Only what's in your bag fights: weapons strike by themselves, armor takes the hits for you, and items placed next to each other boost one another.\n\nOn the pre-battle screen, drag the weapons and armor you found into your bag. Dragging something off the board discards it to the {zone:地上} (it doesn't fight, and it's still there afterwards). When you're set, press {ui:开战}. The outcome is decided that instant; what follows is a replay."
+  },
   "options": [
     {
       "label": "进入战前准备",
+      "labels": {
+        "en": "Go to Pre-battle"
+      },
       "outcomes": [
         {
           "type": "proceed"

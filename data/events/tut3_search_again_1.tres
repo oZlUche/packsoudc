@@ -12,13 +12,24 @@ script = ExtResource("3_yr7ch")
 [sub_resource type="Resource" id="Resource_0xag4"]
 script = ExtResource("1_4rewu")
 label = "再搜一次"
+labels = {
+"en": "Search again"
+}
 outcomes = Array[ExtResource("2_2rsn7")]([SubResource("Resource_fdyd8")])
 
 [resource]
 script = ExtResource("5_afcp7")
 id = &"tut3_search_again_1"
 title = "{item:bone_dice}"
+titles = {
+"en": "{item:bone_dice}"
+}
 text = "翻出一副{item:bone_dice}。它不能打，但它是{b}祭品{/b}：骨头做的东西是{faith:brute}最爱的，献祭时信力按稀有度再乘 {faith_offer:brute:bone:multiplier} 倍。
 
 再搜一次。"
+texts = {
+"en": "You dig up some {item:bone_dice}. You can't fight with them, but they're an {b}Offering{/b}: {faith:brute} loves anything made of bone. Offer them and the Faith, already set by Rarity, is multiplied by {faith_offer:brute:bone:multiplier}.
+
+Search again."
+}
 options = Array[ExtResource("1_4rewu")]([SubResource("Resource_0xag4")])

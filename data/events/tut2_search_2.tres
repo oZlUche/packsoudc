@@ -12,13 +12,24 @@ script = ExtResource("3_svtc6")
 [sub_resource type="Resource" id="Resource_c6dir"]
 script = ExtResource("1_4lmut")
 label = "搜索"
+labels = {
+"en": "Search"
+}
 outcomes = Array[ExtResource("2_wiij2")]([SubResource("Resource_w0pvk")])
 
 [resource]
 script = ExtResource("5_imr3y")
 id = &"tut2_search_2"
 title = "两把武器"
+titles = {
+"en": "Two Weapons"
+}
 text = "这里的东西够凑两套打法。搜三次。
 
 先搜。"
+texts = {
+"en": "There's enough here for two ways to fight. Search three times.
+
+Search first."
+}
 options = Array[ExtResource("1_4lmut")]([SubResource("Resource_c6dir")])

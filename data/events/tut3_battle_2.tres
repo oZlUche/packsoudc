@@ -18,8 +18,14 @@ faith = &"brute"
 [sub_resource type="Resource" id="Resource_c183t"]
 script = ExtResource("1_blc65")
 label = "进入战前准备"
+labels = {
+"en": "Enter Pre-battle"
+}
 hide_when_locked = true
 hint_when_hidden = "你现在信的不是{faith:brute}：右键{item:charm_brute}切回来再打。"
+hints_when_hidden = {
+"en": "You're not following {faith:brute} right now. Right-click the {item:charm_brute} to switch back, then fight."
+}
 requires = Array[ExtResource("4_tpcon")]([SubResource("Resource_si11y")])
 outcomes = Array[ExtResource("2_h0fse")]([SubResource("Resource_nwb2n")])
 
@@ -29,13 +35,24 @@ script = ExtResource("6_tp4t6")
 [sub_resource type="Resource" id="Resource_2thao"]
 script = ExtResource("1_blc65")
 label = "先回地图"
+labels = {
+"en": "Back to the map"
+}
 outcomes = Array[ExtResource("2_h0fse")]([SubResource("Resource_aced0")])
 
 [resource]
 script = ExtResource("7_s0p7i")
 id = &"tut3_battle_2"
 title = "{enemy:brute}"
+titles = {
+"en": "{enemy:brute}"
+}
 text = "一个{enemy:brute}挡在路上，皮糙肉厚。
 
 带着{faith:brute}的第一阶打这一场：血掉得越多，你打得越狠，留意回放里的数字。打完信力该过 {faith_threshold:brute:2} 了。"
+texts = {
+"en": "A {enemy:brute} blocks the road. Thick hide.
+
+Fight this one at Rank one of {faith:brute}: the more Health you lose, the harder you hit. Watch the numbers in the replay. By the end your Faith should be past {faith_threshold:brute:2}."
+}
 options = Array[ExtResource("1_blc65")]([SubResource("Resource_c183t"), SubResource("Resource_2thao")])
