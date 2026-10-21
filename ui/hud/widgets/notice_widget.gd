@@ -16,6 +16,8 @@ const OUTLINE := 2
 ## 一行一条：{"label": Label, "left": 还剩几秒（含淡出）, "urgent": bool}
 var _lines: Array[Dictionary] = []
 var _col: VBoxContainer
+## 231：新来的一句从正中往两边开卷（[method UiMotion.unroll]，0.25 s）；地图屏按设置开
+var motion := false
 
 
 func _init() -> void:
@@ -83,6 +85,7 @@ func push(text: String, urgent: bool = false) -> void:
 	_col.add_child(label)
 	_lines.append(l)
 	_paint_line(l)
+	UiMotion.unroll(label, motion)
 	refresh()
 
 

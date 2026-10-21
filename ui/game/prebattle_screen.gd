@@ -22,6 +22,8 @@ const STRIP_GAP := 18
 const ENEMY_FRAME := "corpse"
 const PLAYER_FRAME := "player"
 var _start_btn: Button
+## 231：面板里的整列（开战过场时淡掉，铜面板本身留着）
+var _col: VBoxContainer = null
 ## 作者 2026-10-21 定（战旗 / 纸卷）：「开战」是一面战旗，四态，字画在图里；可点的是旗面
 const FIGHT_ART := "res://assets/ui/battle/"
 const FIGHT_HIT := Rect2(22, 10, 156, 108)
@@ -47,6 +49,7 @@ func open(payload: Dictionary) -> void:
 	var panel := _bronze_panel(Vector2(0, 0), PANEL_MARGIN)
 	var col := _vbox(14)
 	panel.add_child(col)
+	_col = col
 
 	# 157：对阵式，两列等宽；作者 2026-10-21 18:19：和战斗回放统一 —— 自己在左、对手在右。属性签在两块棋盘下面同一条线上（battle_stats v2 `prebattle_row`）
 	var row := _hbox(0)
@@ -132,6 +135,25 @@ func open(payload: Dictionary) -> void:
 	_refresh_belt()
 	_refresh()
 	_maybe_coach.call_deferred()
+	_unfurl_flag.call_deferred()
+
+
+## 231：进场时「开战」战旗从挂杆往下展开（排版定了再展；灰着的旗不摆）
+func _unfurl_flag() -> void:
+	if _start_btn != null and is_instance_valid(_start_btn):
+		UiMotion.unfurl(_start_btn, UiMotion.enabled(flow.settings), UiMotion.UNFURL_SEC, not _start_btn.disabled)
+
+
+## 231：开战过场的前半（战斗屏 [method BattleScreen.intro_from] 调）：战旗收起、两列内容淡掉，铜章交出去。返回铜章的屏幕框
+func outro(on: bool, sec: float = 0.2) -> Rect2:
+	if _start_btn != null:
+		UiMotion.furl(_start_btn, on, sec)
+	if _col != null:
+		UiMotion.fade(_col, on, 1.0, 0.0, sec)
+	var rect := _lane.medal_rect() if _lane != null else Rect2()
+	if _lane != null:
+		_lane.medal_hidden = true
+	return rect
 
 
 #region 公开动作

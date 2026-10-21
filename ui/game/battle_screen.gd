@@ -22,6 +22,25 @@ const VIEW_WIDTH := 1100.0
 const FLAG_HIT := Rect2(22, 10, 156, 108)
 ## 纸卷「继续」的大小（没有图时也按它留位）
 const SCROLL_SIZE := Vector2(246, 94)
+## 231：双剑铜章（回放中在「继续」那一格里随出手对攻，看完分胜负、让位给继续旗）
+var _medal: DuelMedal = null
+var _result: BattleResult = null
+## 231：动效开着没有（设置 ui_fades、测试开关）
+var _motion := false
+## 231：开战过场还在演（演完才放回放、才放教程）
+var _intro_running := false
+## 231：开战过场里还垫在底下的战前屏（演完释放）
+var _outgoing: Control = null
+## 231 §2.1 开战过场的分镜（秒，一倍速，从按下「开战」算）
+const INTRO_OUT := 0.2          # 战前屏：旗收、两列淡掉
+const INTRO_ARENA := 0.6        # 沙场（本屏铜面板 + 斗技场）淡进、战前屏淡出
+const INTRO_MEDAL_AT := 0.3     # 铜章开始下移
+const INTRO_MEDAL := 0.6
+const INTRO_CONTENT_AT := 0.8   # 名牌、条、棋盘淡进
+const INTRO_CONTENT := 0.25
+## 终局：剑分胜负之后多久继续旗开始展开、铜章淡出多久
+const FLAG_AFTER := 0.4
+const MEDAL_OUT := 0.25
 
 
 func open(payload: Dictionary) -> void:
@@ -31,6 +50,8 @@ func open(payload: Dictionary) -> void:
 	panel.add_child(col)
 	var node: MapNode = payload.get("node", null)
 	var result: BattleResult = payload.get("result", null)
+	_result = result
+	_motion = UiMotion.enabled(flow.settings)
 	_won = bool(payload.get("won", false))
 	for id in payload.get("new_reactions", []):
 		_fresh_reactions.append(StringName(String(id)))
@@ -55,6 +76,10 @@ func open(payload: Dictionary) -> void:
 	_next_slot.custom_minimum_size = _continue_size(_won)     # 先按图留好位置，看完才放按钮（面板不跳）
 	_view.add_footer(_next_slot)     # UI替换美术 18:16：「继续」纸卷压在场地上，场地图铺满面板里面（没有和铜面的硬边）
 	_view.add_coach_target(&"next_button", _next_slot)
+	_medal = DuelMedal.new()
+	_medal.rate = _view.speed()
+	_next_slot.add_child(_medal)
+	_view.event_applied.connect(_on_event)
 
 	if result != null:
 		_view.play(result, [UiText.t("battle.me"), enemy_name])
@@ -101,7 +126,129 @@ func _on_finished() -> void:
 		_next = IconButton.make_art(CONTINUE_ART, art, UiText.t("battle.continue"), "", proceed)
 		_next.hit_rect = FLAG_HIT if _next.has_art() and art.begins_with("continue_") and not art.begins_with("continue_en") else Rect2()     # 旗：挂绳与旗尾点不着
 		_next_slot.add_child(_next)
+		_settle_medal()
 	_seen_end = true     # 157：拖时间轴拖到头会再「看完」一次
+
+
+## 231：看完了 —— 铜章里输的剑垂下、赢的剑举起（一倍速 0.4 s），再淡掉，继续旗在同一格展开；跳过 / 拖到头 / 动效关着直接终态
+func _settle_medal() -> void:
+	var winner := -1 if _result == null or _result.is_draw() else _result.winner
+	var animate := _motion and not _view.ended_by_jump and _medal != null and _medal.is_visible_in_tree()
+	if _medal != null:
+		_medal.set_final(winner, animate)
+	if not animate:
+		if _medal != null:
+			_medal.visible = false
+		return
+	UiMotion.furl(_next, false)     # 先藏着（裁到 0），点不着
+	_next.disabled = true
+	var tw := create_tween()
+	tw.tween_interval(FLAG_AFTER)
+	tw.tween_callback(func():
+		_next.disabled = false
+		UiMotion.unfurl(_next, true))
+	tw.tween_property(_medal, "modulate:a", 0.0, MEDAL_OUT)
+	tw.tween_callback(func(): _medal.visible = false)
+
+
+## 231：回放里一条事件播到了 —— 铜章跟着：出手那方的剑劈一下、挨打那方的剑后仰（大伤迸火星）、反应晕一圈
+func _on_event(e: BattleEvent) -> void:
+	if _medal == null or not _motion:
+		return
+	match e.name:
+		BattleEvent.ITEM_FIRED:
+			_medal.strike(e.side)
+		BattleEvent.DAMAGE:
+			var amount := StatMath.to_int(e.get_int(&"amount"))
+			if amount > 0 and _view.panel(e.side) != null:
+				var top := _view.panel(e.side).resource_max("hp")
+				_medal.hit(e.side, top > 0 and amount >= top * 0.15)
+		BattleEvent.EFFECT_RESOLVED:
+			if String(e.payload.get("effect", "")) == ReactionResolver.EFFECT:
+				_medal.react(BattleView.reaction_color(e))
+
+
+## 铜章（测试看）
+func medal() -> DuelMedal:
+	return _medal
+
+
+func intro_running() -> bool:
+	return _intro_running
+
+
+## 231 §2.1 开战一镜到底（导演在战前 → 战斗换屏、动效开着时调；战前屏还垫在底下）：
+## 0–0.2 战前屏旗收、两列淡掉 → 0.2–0.8 本屏铜面板与斗技场淡进、战前屏淡出 → 0.3–0.9 铜章从战前中缝正中下移到「继续」那一格 →
+## 0.8–1.05 名牌、条、棋盘淡进 → 回放开始。全程不碰回放的结果与时序（回放 hold 着，演完 release）
+func intro_from(prev: Control) -> void:
+	_outgoing = prev
+	_intro_running = true
+	_view.hold()
+	var from := Rect2()
+	if prev.has_method("outro"):
+		from = prev.call("outro", true, INTRO_OUT)
+	# 本屏的东西（除了铜章）先全透明，过一会儿淡进来
+	for c in get_children():
+		if c is CanvasItem and c != _medal:
+			(c as CanvasItem).modulate.a = 0.0
+			create_tween().tween_property(c, "modulate:a", 1.0, INTRO_ARENA).set_delay(INTRO_OUT)
+	var parts: Array[CanvasItem] = []
+	for c in _view.content().get_children():
+		if c is CanvasItem and not (c as Node).is_ancestor_of(_next_slot) and c != _next_slot:
+			parts.append(c)
+			(c as CanvasItem).modulate.a = 0.0
+			create_tween().tween_property(c, "modulate:a", 1.0, INTRO_CONTENT).set_delay(INTRO_CONTENT_AT)
+	var fade_prev := prev.create_tween()
+	fade_prev.tween_interval(INTRO_OUT)
+	fade_prev.tween_property(prev, "modulate:a", 0.0, INTRO_ARENA)
+	# 铜章：先摘出来挂在本屏上（不跟着面板一起透明），从战前的位置飞到格子正中，再放回格子
+	if from.size != Vector2.ZERO and _medal != null:
+		_next_slot.remove_child(_medal)
+		add_child(_medal)     # 本屏铺满全屏，放最上面；位置按屏幕坐标给
+		_medal.global_position = from.position
+		var fly := create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+		fly.tween_interval(INTRO_MEDAL_AT)
+		fly.tween_method(_fly_medal.bind(from.position), 0.0, 1.0, INTRO_MEDAL)
+		fly.tween_callback(_land_medal)
+	var done := create_tween()
+	done.tween_interval(INTRO_CONTENT_AT + INTRO_CONTENT)
+	done.tween_callback(_end_intro)
+
+
+## 铜章飞到一半：目标每一步重算（排版可能还在变）
+func _fly_medal(t: float, start: Vector2) -> void:
+	var goal := _next_slot.global_position + (_next_slot.size - _medal.size) * 0.5
+	_medal.global_position = start.lerp(goal, t)
+
+
+func _land_medal() -> void:
+	if _medal == null or _medal.get_parent() == _next_slot:
+		return
+	remove_child(_medal)
+	_next_slot.add_child(_medal)
+	_next_slot.move_child(_medal, 0)
+
+
+func _end_intro() -> void:
+	if not _intro_running:
+		return
+	_intro_running = false
+	_land_medal()
+	if _outgoing != null and is_instance_valid(_outgoing):
+		_outgoing.queue_free()
+	_outgoing = null
+	if _coach != null:
+		return
+	if coach_due():
+		show_coach()     # 166 补充二：教程接着停住回放，一帧都不偷跑
+	else:
+		_view.release()
+
+
+func _exit_tree() -> void:
+	if _outgoing != null and is_instance_valid(_outgoing):
+		_outgoing.queue_free()     # 过场没演完就被换走了：垫着的战前屏也一起走
+	_outgoing = null
 
 
 ## 回放看完（或跳到底）了没有 —— 084：胜负（只给调试看的那一行）此后才写
@@ -127,7 +274,7 @@ func coach_due() -> bool:
 func _maybe_coach() -> void:
 	if _coach != null or not is_inside_tree():
 		return
-	if modulate.a < 1.0:
+	if modulate.a < 1.0 or _intro_running:     # 231：开战过场演完再放
 		get_tree().create_timer(0.05).timeout.connect(_maybe_coach)
 		return
 	show_coach()
@@ -187,6 +334,8 @@ func view() -> BattleView:
 
 ## 109：玩家在回放里切了倍速 → 记进设置并存盘（和「拿走最后一件自动关闭」同一个写法）
 func _on_speed_changed(speed: float) -> void:
+	if _medal != null:
+		_medal.rate = speed     # 231：铜章的动作跟着倍速
 	if flow.settings == null:
 		return
 	flow.settings.battle_speed = speed

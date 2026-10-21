@@ -287,6 +287,11 @@ func reset(snapshot: Dictionary) -> void:
 	queue_redraw()
 
 
+## 某条资源的上限（没有 = 0）；231 铜章看「大伤」用
+func resource_max(key: String) -> int:
+	return int((_resources.get(key, [0, 0]) as Array)[1])
+
+
 func set_resource(key: String, current: int, maximum: int) -> void:
 	_resources[key] = [current, maximum]
 	queue_redraw()
