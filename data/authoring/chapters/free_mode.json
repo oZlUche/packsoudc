@@ -199,6 +199,9 @@
         {
           "id": "small",
           "display_name": "小型",
+          "display_names": {
+            "en": "Small"
+          },
           "nodes_by_rings": {
             "4": [
               25,
@@ -220,6 +223,9 @@
         {
           "id": "medium",
           "display_name": "中型",
+          "display_names": {
+            "en": "Medium"
+          },
           "rings": [
             6,
             8
@@ -264,6 +270,9 @@
         {
           "id": "large",
           "display_name": "大型",
+          "display_names": {
+            "en": "Large"
+          },
           "rings": [
             9,
             12

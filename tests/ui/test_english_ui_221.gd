@@ -141,3 +141,18 @@ static func _no_han(t: TestCase, where: String, texts: Array[String]) -> void:
 	var bad := texts.filter(func(s: String) -> bool: return han.search(s) != null)
 	t.check(texts.size() > 0, "%s：有字（%d 处）" % [where, texts.size()])
 	t.eq(bad, [], "%s：没有汉字" % where)
+
+
+## 游戏测试 2026-10-21 第 4 条：开局屏的地图规模、合成那一句、回放屏条上的字在英文里没有汉字
+static func run_smoke_221(t: TestCase) -> void:
+	t.begin("221 F3 顺带 · 英文：规模名、合成日志、条上的资源名")
+	var ch := load(ContentPaths.asset_file("chapters", "free_mode")) as ChapterDef
+	UiText.lang = "en"
+	var names: Array = ch.map_source.scale_options().map(func(o: Dictionary) -> String: return String(o["display_name"]))
+	var craft := UiText.t("craft.done") % ["Knife", "Poison Vial", "Poisoned Knife"]
+	var bars := [UiText.t("battle.bar_hp"), UiText.t("battle.bar_stamina")]
+	UiText.lang = "zh"
+	t.eq(names, ["Small", "Medium", "Large"], "规模名是英文")
+	t.check(_han().search(craft) == null, "合成那一句没有汉字：%s" % craft)
+	t.eq(bars, ["HP", "Stamina"], "条上的资源名首字母大写")
+	t.eq(UiText.t("battle.bar_hp"), "hp", "中文照旧")

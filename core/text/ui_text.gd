@@ -301,7 +301,7 @@ const TEXT := {
 	"strip.rating_mid": {"zh": "中", "en": "Medium"},
 	"strip.rating_high": {"zh": "高", "en": "High"},
 	"strip.rating_max": {"zh": "极高", "en": "Very high"},
-	"strip.stamina_sub": {"zh": "耗 %.1f · 回 %.1f", "en": "Cost %.1f · Regen %.1f"},
+	"strip.stamina_sub": {"zh": "耗 %.1f · 回 %.1f", "en": "−%.1f · +%.1f"},
 	"strip.load_off": {"zh": "负重 %s\n这一章不算负重", "en": "Load %s\nLoad doesn't count in this chapter"},
 	"strip.dps_total": {"zh": "估算总 DPS %.1f（和出战前同一个数）", "en": "Est. total DPS %.1f (same number as before battle)"},
 	"strip.dps_row": {"zh": "%s　%.1f", "en": "%s  %.1f"},
@@ -669,6 +669,12 @@ const TEXT := {
 	# core/enemies/enemy_kit.gd：地图底下那一行敌人摘要
 	"enemy.summary": {"zh": "%s　生命 %d　%d 件：%s", "en": "%s · Health %d · %d items: %s"},
 	"enemy.carried": {"zh": "　携带 %d 件", "en": " · carrying %d"},
+	# —— 221 F3 顺带（游戏测试 2026-10-21 第 4 条）——
+	"craft.done": {"zh": "「%s」和「%s」合成了「%s」。", "en": "%s and %s crafted into %s."},
+	"craft.to_ground": {"zh": "背包里装不下它：放在了地上。走之前记得放回包里，地上的东西会留在这个点上。", "en": "It doesn't fit in your pack, so it's on the Ground. Put it back in a bag before you leave: anything on the Ground stays at this spot."},
+	"battle.bar_hp": {"zh": "hp", "en": "HP"},     # 回放屏血条上的字（中文原样是键名）
+	"battle.bar_stamina": {"zh": "stamina", "en": "Stamina"},
+	"battle.bar_mana": {"zh": "mana", "en": "Mana"},
 	# —— 221 F1：faith perks ——
 	"perk.no_active_faith": {"zh": "没有激活的信仰", "en": "No active Faith"},
 	"perk.faith_short": {"zh": "信力不够（要 %d）", "en": "Not enough Faith points (need %d)"},
