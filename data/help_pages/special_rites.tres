@@ -6,9 +6,17 @@
 script = ExtResource("1_fy2nc")
 id = &"special_rites"
 display_name = "特殊操作"
+display_names = {
+"en": "Special Rites"
+}
 category = &"faith"
 order = 3
 text = "到了阶的神会在神坛上刷出特殊操作按钮，升阶当场多出来。各神都有「祈求赐福」：花一笔信力，把包里能被赐福的最值钱那件换成这位神的赐福版。再往上各神不同：蛮神献祭生命上限换信力或这局的造成伤害与急速，日神祈祷攒局内永久的火焰加成，大地之神锻炼加棋盘行数、或把当前点改造成别的类型。
 
 做了一次特殊操作，这个休息点的神坛就关了，献祭也不能再做；想两样都要就得找下一个休息点。有的操作要先挑一项，比如改造此点要选类型；大地的改造在关掉神坛那一刻才发生。特殊操作改的数跟着这一局走，不进下一局。"
+texts = {
+"en": "Once a god reaches the right Rank, special rite buttons appear on its Altar; ranking up adds them on the spot. Every god offers Pray for a Blessing: spend some Faith to turn the most valuable item in your bags that can be blessed into this god's blessed version. Beyond that, each god differs: the Brute lets you offer max Health for Faith, or for damage dealt and Haste for this run; the Sun God lets you pray to build up a Fire bonus that lasts for the rest of the run; the God of the Earth lets you train to add rows to your board, or reshape the current spot into a different type.
+
+Once you perform a special rite, this rest spot's Altar closes and you can no longer make an Offering either; if you want both, you have to find the next rest spot. Some rites ask you to pick an option first, such as choosing a type when you reshape a spot; the God of the Earth's reshaping only takes effect the moment the Altar closes. Whatever a special rite changes lasts for this run only and does not carry into the next."
+}
 related = Array[String](["altar_offering", "god_brute", "god_sun", "god_earth"])

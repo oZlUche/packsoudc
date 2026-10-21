@@ -1,9 +1,15 @@
 {
   "id": "growth_and_rooting",
   "display_name": "生长与扎根",
+  "display_names": {
+    "en": "Growth and Rooting"
+  },
   "category": "bag",
   "order": 10,
   "text": "{faith:nature}的种子和树苗会{b}生长{/b}：整件放在棋盘上的包里时，全局倒计时每走一步（走路和原地等待都算，打仗不算）就长一点，到一阶换个名字、效果变强。长过一阶就{b}扎根{/b}，拖不动了；长到最后一阶{b}连包扎根{/b}，它和它的包都动不了。\n\n还没扎根时拿下棋盘（比如放到{zone:地上}），回来就得从头长；在棋盘上挪来挪去不算。自然之神不是当前信仰时它{b}休眠{/b}：不长也不退，扎下的根还在，加成不算。",
+  "texts": {
+    "en": "{faith:nature}'s seeds and saplings {b}grow{/b}: while the whole item sits in a bag on the Board, it grows a little with every step of the global Countdown (walking and waiting in place both count; battles don't). Each new stage gives it a new name and a stronger effect. Once it has grown past a stage it {b}takes root{/b} and can no longer be dragged; at the final stage it {b}roots its bag{/b}, and neither it nor its bag can move.\n\nIf you take it off the Board before it has rooted (onto the {zone:地上}, for example), it starts growing from scratch when it comes back; moving it around on the Board doesn't count. While the God of Nature is not your current Faith, it goes {b}dormant{/b}: it neither grows nor shrinks, any roots it has put down stay, and its bonuses don't count."
+  },
   "related": [
     "god_nature",
     "countdown_and_closing",

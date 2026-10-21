@@ -6,6 +6,9 @@
 script = ExtResource("1_4v4q5")
 id = &"anchor_and_right_click"
 display_name = "信物与右键"
+display_names = {
+"en": "Anchors and Right-Click"
+}
 category = &"bag"
 order = 6
 text = "信物是带着某位神印记、能激活信仰的那类道具，护符就是；赐福版的武器防具带印记但不是信物。棋盘上最后置入的那枚信物决定你现在信谁，别的神的信仰道具就休眠：战斗里不出手、不给也不吃邻接，占格照占。一枚信物都没有就是不信者。
@@ -13,5 +16,12 @@ text = "信物是带着某位神印记、能激活信仰的那类道具，护符
 切换不花钱、不进菜单：右键棋盘上的信物就把它奉为主信仰，或者把它拿起来再放回棋盘任意位置。取消拖拽和放不回去都不切。切换本身不算置入，不记信力；各神的信力各自记着，切回来还在。
 
 ---"
+texts = {
+"en": "An Anchor is an item that carries a god's mark and can activate a Faith; Charms are Anchors. Blessed weapons and armor carry a mark but are not Anchors. The Anchor most recently placed on the board decides which god you follow, and other gods' Faith items go dormant: in battle they don't act and neither give nor receive adjacency bonuses, but they still take up their cells. With no Anchor at all, you follow no god.
+
+Switching costs nothing and needs no menu: right-click an Anchor on the board to make it your main Faith, or pick it up and put it back anywhere on the board. Canceling a drag, or failing to put it back, doesn't switch. Switching itself doesn't count as placing and earns no Faith; each god's Faith is kept separately and is still there when you switch back.
+
+---"
+}
 related = Array[String](["anchor_activation", "switch_and_dormant", "drag_and_rotate"])
 see_items = Array[StringName]([&"charm_brute", &"charm_sun", &"charm_nature", &"charm_earth"])

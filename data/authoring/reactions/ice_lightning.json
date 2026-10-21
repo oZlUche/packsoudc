@@ -5,6 +5,9 @@
     "en": "Superconduct"
   },
   "description": "对手获得反应层数那么多层【易伤】。",
+  "descriptions": {
+    "en": "The opponent gains Vulnerable equal to the reaction stacks."
+  },
   "elements": [
     "ice",
     "lightning"

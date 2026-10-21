@@ -1,9 +1,15 @@
 {
   "id": "rest_point",
   "display_name": "休息点",
+  "display_names": {
+    "en": "Rest Spots"
+  },
   "category": "map",
   "order": 3,
   "text": "休息点是一片营地：点篝火歇一会儿回体力，点帐篷扎营多扣倒计时、多回体力，有信仰时能点祭坛，铁炉能铸牌，右边的路标是继续赶路、不算用掉。歇脚和神坛是两份独立的机会，各用各的，现在不用可以留着，走开再回来还能用剩下的那份，两份都用完这个点才变灰。\n\n回多少由章节配置定，不同章节可能不同。地图生成时保证任何点离最近的休息点不超过一定步数，但高危区里不放休息点，岔进去就别指望在里面喘气。",
+  "texts": {
+    "en": "A rest spot is a camp. Click the Campfire to rest a while and restore Vitality; click the Tent to make camp, which costs more Countdown and restores more Vitality. If you have a Faith, you can click the Altar; the Forge makes forge tokens; and the signpost on the right lets you move on without using the spot. Resting and the Altar are two separate opportunities, each used on its own. You don't have to use one now: walk away, come back, and the remaining one is still there. The spot turns gray only once both are used.\n\nHow much you restore is set by the chapter and may differ between chapters. Map generation guarantees that no node is more than a certain number of steps from the nearest rest spot, but high-danger zones contain no rest spots, so if you branch into one, don't count on catching your breath inside."
+  },
   "related": [
     "altar_offering",
     "vitality",

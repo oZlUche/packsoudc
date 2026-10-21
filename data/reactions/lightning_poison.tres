@@ -32,6 +32,9 @@ display_names = {
 "en": "Electrolysis"
 }
 description = "对手获得反应层数那么多层【剧毒】：受到的毒素伤害提高。"
+descriptions = {
+"en": "The opponent gains Virulent Poison equal to the reaction stacks: they take more toxin damage."
+}
 elements = Array[StringName]([&"lightning", &"poison"])
 effects = Array[ExtResource("1_f808r")]([SubResource("Resource_opfnf")])
 scaling = [{

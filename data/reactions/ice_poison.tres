@@ -56,6 +56,9 @@ display_names = {
 "en": "Congeal"
 }
 description = "对手身上反应层数那么多层【中毒】变为不可解除，也不会被反应消耗。"
+descriptions = {
+"en": "That many stacks of Poison on the opponent (equal to the reaction stacks) can no longer be removed, and reactions won't consume them either."
+}
 elements = Array[StringName]([&"ice", &"poison"])
 effects = Array[ExtResource("1_erika")]([SubResource("Resource_1bde1")])
 scaling = [{

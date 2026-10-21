@@ -6,9 +6,17 @@
 script = ExtResource("1_lu75r")
 id = &"shop"
 display_name = "商店"
+display_names = {
+"en": "Shop"
+}
 category = &"map"
 order = 2
 text = "商店的货架是一格格栏位，商品是真的道具，看得见尺寸。把商品拖进自己的包就是买，放手时收钱，钱不够弹回架上；双击也是买，自动找位。把自己的东西拖进出售区就是卖，回定价的一部分。价格按道具的价值乘倍数，深处的店货更稀有。
 
 刷新花钱换一批，每刷一次更贵。商店可以回头再逛：走了再回来，货架、刷新次数和卖掉的格子都还记着，刷新价不重置。包与珍宝不上架。局外的加成能让商店便宜一点。"
+texts = {
+"en": "The Shop's shelves are grids of slots, and the wares are real items, so you can see their size. Dragging a ware into one of your bags buys it: you pay when you let go, and if you can't afford it, it snaps back to the shelf. Double-clicking also buys, finding a place for it automatically. Dragging your own things into the sell area sells them for part of their price. Prices are an item's Value times a multiplier, and shops deeper in stock rarer goods.
+
+Refreshing costs coins and brings a new selection, and each refresh costs more than the last. You can come back to a shop: leave and return, and it still remembers its shelves, how many times you refreshed and which slots are sold out; the refresh price doesn't reset. Bags and Treasures are never for sale. Bonuses from between runs can make shops a little cheaper."
+}
 related = Array[String](["quick_place", "node_types"])

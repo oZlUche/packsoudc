@@ -5,6 +5,9 @@
     "en": "Surge"
   },
   "description": "你获得反应层数那么多层【锐目】；暴击率满了，多出的层数改为【致命】。",
+  "descriptions": {
+    "en": "You gain Keen Eye equal to the reaction stacks. Once your Crit chance is maxed, the extra stacks become Lethal instead."
+  },
   "elements": [
     "lightning",
     "bleed"

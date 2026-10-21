@@ -6,9 +6,17 @@
 script = ExtResource("1_hn3nj")
 id = &"haste"
 display_name = "急速"
+display_names = {
+"en": "Haste"
+}
 category = &"combat"
 order = 5
 text = "急速是出手速度的倍率，基准是一倍：冷却的实际时长等于周期除以急速，急速越高冷却越短；冷却有下限，快到一定程度不再变快。它是一条属性，所以包体、邻接、信仰加成、急速药都能改它，这些加成和其它属性一样：乘算先相加再乘一次，加算在最后加上。
 
 冷却是快照语义：出手那一刻按当时的速率算死下一次时刻，之后不再重算，所以战斗中新来的急速只影响再下一次出手，正在走的这一轮不变快。作用于角色本身的加速与减速走标准轴，层数相抵之后再乘到急速的终值上。"
+texts = {
+"en": "Haste is a multiplier on attack speed, with a base of one: the actual length of a Cooldown is the cycle divided by Haste, so the higher your Haste, the shorter your Cooldowns. Cooldowns have a floor; past a certain speed they get no faster. Haste is a stat, so bags, adjacency, Faith bonuses and haste potions can all change it, and those bonuses work like any other stat's: multipliers are added together and applied once, and flat bonuses are added at the end.
+
+Cooldowns are snapshots: the moment an item attacks, the time of its next attack is locked in at the current rate and never recalculated. Haste gained mid-battle therefore affects only the attack after next; the cycle already running doesn't speed up. Haste and Slow on the character itself follow the standard axis: stacks cancel each other out first, then the result multiplies the final Haste value."
+}
 related = Array[String](["stamina_and_cooldown", "multipliers", "急速", "冷却"])

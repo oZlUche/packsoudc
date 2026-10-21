@@ -6,9 +6,17 @@
 script = ExtResource("1_a8uya")
 id = &"achievements"
 display_name = "成就"
+display_names = {
+"en": "Achievements"
+}
 category = &"meta"
 order = 3
 text = "成就是局外的里程碑，看的是跨局累计的数：撤离几次、战败几次、单局背出的价值、图鉴点亮多少、击败核心、拿到某件特殊道具等等。一局结算之后和读档之后各查一次，新完成的在地图日志里报一句。
 
 有的成就给解锁：开出新的道具、地图或难度，比如背出足够的价值解锁进阶难度。成就页写着途径与进度，能按全部、已解锁、未解锁切；隐藏成就完成前只显示问号。「全部解锁」开着时成就不计。"
+texts = {
+"en": "Achievements are milestones outside of runs, tracked by totals across all your runs: how many times you have extracted, how many times you have been defeated, the value you carried out in a single run, how much of the Collection you have lit up, beating the core, getting a particular Keepsake, and so on. They are checked once after each run's Results and once after loading a save, and any newly completed one is announced in the map Log.
+
+Some achievements grant unlocks: new items, maps or difficulties. For example, carrying out enough value unlocks the Ascension difficulties. The achievements page shows how to earn each one and your progress, and you can filter it by All, Unlocked and Locked; a hidden achievement shows only a question mark until you complete it. While \"Unlock all\" is on, achievements don't count."
+}
 related = Array[String](["codex", "save_slots"])

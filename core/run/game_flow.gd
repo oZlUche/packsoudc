@@ -43,6 +43,7 @@ var tech_defs: Array[TechDef] = []
 ## 114：百科手写的机制页；词条页按内容自动生成（[method encyclopedia]）
 var help_pages: Array[HelpPageDef] = []
 var _encyclopedia: Encyclopedia = null
+var _encyclopedia_lang: String = ""
 ## 101 第 4 刀：成就与解锁的逻辑在这个服务里（纯逻辑：看局外与内容算结果，不碰存盘与转屏）。
 ## 内容与「全部解锁」开关由 [method _sync_achievements] 同步过去
 var achievements: Achievements = Achievements.new()
@@ -762,8 +763,9 @@ func show_encyclopedia(page: String = "") -> void:
 
 ## 114：这本百科（第一次用时按手写页 + 当前内容造；「相关道具」按图鉴遮名字）
 func encyclopedia() -> Encyclopedia:
-	if _encyclopedia == null:
+	if _encyclopedia == null or _encyclopedia_lang != UiText.lang:     # 221 F4：标题、正文、链接都按语言，切了语言重造
 		_encyclopedia = Encyclopedia.build(help_pages, items, recipes)
+		_encyclopedia_lang = UiText.lang
 	_encyclopedia.lit = func(id: StringName) -> bool: return meta == null or meta.codex_lit(id)
 	_encyclopedia.reaction_lit = func(id: StringName) -> bool: return meta == null or meta.reaction_seen(id)     # 175
 	return _encyclopedia
