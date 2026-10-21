@@ -57,8 +57,27 @@ func rebuild() -> void:
 		var id := def.id
 		b.pressed.connect(func(): select(id))
 		add_child(b)
+		_fit_text(b, r.size.x - 18.0)     # 两边留白 6 + 选中描边 3
 		_nodes[def.id] = b
 	queue_redraw()
+
+
+## 名字长（英文）放不下就把字号往下收，别被截掉（游戏测试 10-21：Warehouse Expansion 截成 Expansio）
+static func _fit_text(b: Button, room: float) -> void:
+	var font := b.get_theme_font("font")
+	if font == null:
+		return
+	var size := b.get_theme_font_size("font_size")
+	while size > 10 and _widest(font, b.text, size) > room:
+		size -= 1
+	b.add_theme_font_size_override("font_size", size)
+
+
+static func _widest(font: Font, text: String, size: int) -> float:
+	var w := 0.0
+	for line in text.split("\n"):
+		w = maxf(w, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x)
+	return w
 
 
 ## 选中一个节点（发 [signal selected]）；没有这个 id 返回 false
@@ -151,26 +170,27 @@ func _style(b: Button, def: TechDef) -> void:
 	var box := StyleBoxFlat.new()
 	box.set_corner_radius_all(4)
 	box.set_content_margin_all(6)
+	var fg := UiPalette.FG
 	match st:
 		State.LIT:
 			box.bg_color = UiPalette.BTN_PRIMARY
-			b.add_theme_color_override("font_color", UiPalette.BTN_PRIMARY_TEXT)
+			fg = UiPalette.BTN_PRIMARY_TEXT
 		State.AVAILABLE:
 			box.bg_color = UiPalette.PANEL
 			box.border_color = UiPalette.BTN_SECONDARY_EDGE
 			box.set_border_width_all(2)
-			b.add_theme_color_override("font_color", UiPalette.FG)
+			fg = UiPalette.FG
 		State.LOCKED:
 			box.bg_color = UiPalette.PANEL.darkened(0.2)
-			b.add_theme_color_override("font_color", UiPalette.DIM)
+			fg = UiPalette.DIM
 	if def.id == _selected:
 		box.border_color = UiPalette.FG
 		box.set_border_width_all(3)
 	# 121 特例：节点的样子按点亮状态实时换、可点亮的边框还要呼吸（_process 改这份底的边色），每个节点得有自己的一份
 	for k in ["normal", "hover", "pressed", "focus"]:
 		b.add_theme_stylebox_override(k, box)
-	b.add_theme_color_override("font_hover_color", b.get_theme_color("font_color"))
-	b.add_theme_color_override("font_pressed_color", b.get_theme_color("font_color"))
+	for k in ["font_color", "font_hover_color", "font_pressed_color"]:
+		b.add_theme_color_override(k, fg)
 	_boxes[def.id] = box
 
 

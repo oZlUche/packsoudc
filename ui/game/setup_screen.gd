@@ -277,7 +277,7 @@ func _build_kit_page() -> Control:
 	var right := _vbox(6)
 	ware_panel.add_child(right)
 	var w := flow.meta.warehouse
-	right.add_child(_label(UiText.t("setup.warehouse_pages") % w.page_count(), 15, UiPalette.DIM))     # 180：件数与那句「往左边的包里拖……」都不要
+	right.add_child(_label(UiText.t("setup.warehouse_pages") % UiText.count(w.page_count(), "unit.page"), 15, UiPalette.DIM))     # 180：件数与那句「往左边的包里拖……」都不要
 
 	_drag = DragLayer.new()
 	_drag.label_font = font
