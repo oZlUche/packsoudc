@@ -159,26 +159,66 @@ func continue_game() -> bool:
 
 ## 主菜单「新的游戏」：开一份新存档 —— 挑一个空位切过去再开局；三位都满了去读取存档屏（删一个再来）。单文件模式就是 new_run
 func start_new_game() -> bool:
+	return _start_new(false)
+
+
+## 221 G：主菜单「跳过序章」—— 和「新的游戏」一样开一份新存档（位满了同样去存档位屏，那边开的也跳过），开第一局之前先 [method skip_prologue]
+func start_new_game_skipping() -> bool:
+	return _start_new(true)
+
+
+func _start_new(skip: bool) -> bool:
 	if slots == null:
+		if skip:
+			skip_prologue()
 		new_run()
 		return true
 	var n := slots.first_empty()
 	if n < 0:
-		_go(Screen.SLOTS, {"full": true})
+		_go(Screen.SLOTS, {"full": true, "skip_prologue": skip})
 		return false
-	return new_game_in(n)
+	return new_game_in(n, skip)
 
 
-## 在第 n 位开新存档（那一位有东西就先删）
-func new_game_in(n: int) -> bool:
+## 在第 n 位开新存档（那一位有东西就先删）；[param skip] = 跳过序章（221 G）
+func new_game_in(n: int, skip: bool = false) -> bool:
 	if slots == null:
+		if skip:
+			skip_prologue()
 		new_run()
 		return true
 	save_meta()
 	slots.remove(n)
 	use_slot(n)
+	if skip:
+		skip_prologue()
 	new_run()
 	return true
+
+
+## 221 G：跳过序章时补的两枚信物（序章三撤离时随包回仓库的那两枚）
+const SKIP_PROLOGUE_ITEMS: Array[StringName] = [&"charm_brute", &"charm_sun"]
+
+
+## 221 G：把三张序章「打完」留下的东西补进这份局外 —— 各章的 `grants_unlock`、`starting_keepsakes`（望远镜）、两枚信物进仓库，存盘。
+## 不补图鉴、教练看过与否；交代、自由模式教练、反应暂停照旧会来
+func skip_prologue() -> void:
+	if meta == null:
+		return
+	grant_first_kit()     # 开局那套先进仓库（[method new_run] 见仓库不空就不再发）
+	for c in tutorial_chapters():
+		if c.grants_unlock != &"":
+			meta.grant_unlock(c.grants_unlock)
+		for id in c.starting_keepsakes:
+			if items != null and items.get_def(id) != null:
+				meta.grant_keepsake(id)
+	var defs: Array = []
+	for id in SKIP_PROLOGUE_ITEMS:
+		var def := items.get_def(id) if items != null else null
+		if def != null:
+			defs.append(def)
+	meta.grant(defs)
+	save_meta()
 
 
 ## 读第 n 位：切过去，然后和「继续」一样。空位返回 false
