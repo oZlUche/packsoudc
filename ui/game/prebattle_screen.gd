@@ -150,10 +150,9 @@ func outro(on: bool, sec: float = 0.2) -> Rect2:
 		UiMotion.furl(_start_btn, on, sec)
 	if _col != null:
 		UiMotion.fade(_col, on, 1.0, 0.0, sec)
-	var rect := _lane.medal_rect() if _lane != null else Rect2()
 	if _lane != null:
-		_lane.medal_hidden = true
-	return rect
+		_lane.medal_hidden = true     # 铜章交给战斗屏（它从同一个位置接着画）
+	return _lane.medal_rect() if _lane != null else Rect2()
 
 
 #region 公开动作

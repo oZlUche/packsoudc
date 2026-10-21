@@ -34,7 +34,8 @@ var _intro_running := false
 var _outgoing: Control = null
 ## 231 §2.1 开战过场的分镜（秒，一倍速，从按下「开战」算）
 const INTRO_OUT := 0.2          # 战前屏：旗收、两列淡掉
-const INTRO_ARENA := 0.6        # 沙场（本屏铜面板 + 斗技场）淡进、战前屏淡出
+const INTRO_ARENA := 0.6        # 框里的斗技场淡进
+const INTRO_FRAME := 0.4        # 铜框从战前那块的大小缩到自己的
 const INTRO_MEDAL_AT := 0.3     # 铜章开始下移
 const INTRO_MEDAL := 0.6
 const INTRO_CONTENT_AT := 0.8   # 名牌、条、棋盘淡进
@@ -196,7 +197,7 @@ func intro_running() -> bool:
 
 
 ## 231 §2.1 开战一镜到底（导演在战前 → 战斗换屏、动效开着时调；战前屏还垫在底下）：
-## 0–0.2 战前屏旗收、两列淡掉 → 0.2–0.8 本屏铜面板与斗技场淡进、战前屏淡出 → 0.3–0.9 铜章从战前中缝正中下移到「继续」那一格 →
+## 0–0.2 战前屏旗收、两列淡掉 → 0.2 整块换成本屏（铜框先是战前那块的大小，0.4 s 缩到自己的），0.2–0.8 框里斗技场淡进 → 0.3–0.9 铜章从战前中缝正中下移到「继续」那一格 →
 ## 0.8–1.05 名牌、条、棋盘淡进 → 回放开始。全程不碰回放的结果与时序（回放 hold 着，演完 release）
 func intro_from(prev: Control) -> void:
 	_outgoing = prev
@@ -205,20 +206,18 @@ func intro_from(prev: Control) -> void:
 	var from := Rect2()
 	if prev.has_method("outro"):
 		from = prev.call("outro", true, INTRO_OUT)
-	# 本屏的东西（除了铜章）先全透明，过一会儿淡进来
-	for c in get_children():
-		if c is CanvasItem and c != _medal:
-			(c as CanvasItem).modulate.a = 0.0
-			create_tween().tween_property(c, "modulate:a", 1.0, INTRO_ARENA).set_delay(INTRO_OUT)
-	var parts: Array[CanvasItem] = []
+	# 战前屏的两列先淡掉（铜框留着、是实的）；本屏先藏着，0.2 s 时整块换上来：
+	# 铜框先撑成战前那块的大小（看不出换了），再缩到自己的大小；框里的斗技场从素铜面上淡出来（复测 v3.84：框不透明、不跳尺寸）
+	_hide_parts(true)
+	var swap := create_tween()
+	swap.tween_interval(INTRO_OUT)
+	swap.tween_callback(_swap_in.bind(prev))
+	_view.modulate.a = 0.0
+	create_tween().tween_property(_view, "modulate:a", 1.0, INTRO_ARENA).set_delay(INTRO_OUT)
 	for c in _view.content().get_children():
 		if c is CanvasItem and not (c as Node).is_ancestor_of(_next_slot) and c != _next_slot:
-			parts.append(c)
 			(c as CanvasItem).modulate.a = 0.0
 			create_tween().tween_property(c, "modulate:a", 1.0, INTRO_CONTENT).set_delay(INTRO_CONTENT_AT)
-	var fade_prev := prev.create_tween()
-	fade_prev.tween_interval(INTRO_OUT)
-	fade_prev.tween_property(prev, "modulate:a", 0.0, INTRO_ARENA)
 	# 铜章：先摘出来挂在本屏上（不跟着面板一起透明），从战前的位置飞到格子正中，再放回格子
 	if from.size != Vector2.ZERO and _medal != null:
 		_next_slot.remove_child(_medal)
@@ -231,6 +230,30 @@ func intro_from(prev: Control) -> void:
 	var done := create_tween()
 	done.tween_interval(INTRO_CONTENT_AT + INTRO_CONTENT)
 	done.tween_callback(_end_intro)
+
+
+## 本屏除了铜章的东西（压暗底、铜框）藏着 / 亮出来（铜章一直亮着：它就是战前中缝那一枚）
+func _hide_parts(hide: bool) -> void:
+	for c in get_children():
+		if c is CanvasItem and c != _medal:
+			(c as CanvasItem).modulate.a = 0.0 if hide else 1.0
+
+
+## 0.2 s：战前屏藏掉、本屏亮出来；铜框从战前那块的大小缩到自己的（绕中心，[constant INTRO_FRAME] 秒）
+func _swap_in(prev: Control) -> void:
+	var from_size := Vector2.ZERO
+	if is_instance_valid(prev):
+		var pf = prev.call("overlay_frame") if prev.has_method("overlay_frame") else null
+		if pf is Control:
+			from_size = (pf as Control).size
+		prev.visible = false
+	_hide_parts(false)
+	var frame := overlay_frame()
+	if frame == null or from_size == Vector2.ZERO or frame.size.x <= 0.0 or frame.size.y <= 0.0:
+		return
+	frame.pivot_offset = frame.size * 0.5
+	frame.scale = from_size / frame.size
+	create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT).tween_property(frame, "scale", Vector2.ONE, INTRO_FRAME)
 
 
 ## 铜章飞到一半：目标每一步重算（排版可能还在变）
