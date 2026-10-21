@@ -16,7 +16,7 @@ static func run_coach_data(t: TestCase) -> void:
 	t.eq(targets, ["timeline", "play_button", "buffs_mine", "next_button"], "220：四步按顺序（播放 / 倍速 / 跳过并成一步）")
 	t.eq(CoachOverlay.problems(steps, BattleView.COACH_TARGETS), [] as Array[String], "目标都认得、都有字")
 	t.check(not CoachOverlay.problems(steps).is_empty(), "拿地图屏的读数部件去对：对不上（两套目标分开认）")
-	var bad := CoachOverlay.problems([{"target": "vitality", "text": "x"}], BattleView.COACH_TARGETS)
+	var bad := CoachOverlay.problems([{"target": "vitality", "text": "x", "texts": {"en": "x"}}], BattleView.COACH_TARGETS)
 	t.check(bad.size() == 1 and bad[0].contains("vitality"), "战斗屏没有体力读数：报出来")
 	for ch in DirAccess.get_files_at("res://data/chapters"):
 		if not ch.ends_with(".tres"):

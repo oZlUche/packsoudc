@@ -181,6 +181,9 @@ reward_band = Vector2(0.8, 1.3)
 script = ExtResource("3_t1rkx")
 id = &"small"
 display_name = "小型"
+display_names = {
+"en": "Small"
+}
 nodes_by_rings = {
 "4": [25, 30],
 "5": [35, 40]
@@ -197,6 +200,9 @@ carry_budget = 600
 script = ExtResource("3_t1rkx")
 id = &"medium"
 display_name = "中型"
+display_names = {
+"en": "Medium"
+}
 rings = Vector2i(6, 8)
 entries = Vector2i(3, 4)
 zones = Vector2i(1, 3)
@@ -218,6 +224,9 @@ carry_budget = 900
 script = ExtResource("3_t1rkx")
 id = &"large"
 display_name = "大型"
+display_names = {
+"en": "Large"
+}
 rings = Vector2i(9, 12)
 entries = Vector2i(3, 3)
 zones = Vector2i(1, 4)

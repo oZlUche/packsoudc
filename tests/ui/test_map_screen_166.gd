@@ -100,8 +100,15 @@ static func run_coach_data(t: TestCase) -> void:
 	var targets: Array = steps.map(func(s: Dictionary) -> String: return String(s["target"]))
 	t.eq(targets, ["vitality", "wallet", "bag_button", "reopen_button"], "四步按顺序")
 	t.eq(CoachOverlay.problems(steps), [] as Array[String], "没有问题")
-	var bad := CoachOverlay.problems([{"target": "nope", "text": "x"}, {"target": "wallet"}])
+	var bad := CoachOverlay.problems([{"target": "nope", "text": "x", "texts": {"en": "x"}}, {"target": "wallet", "texts": {"en": "x"}}])
 	t.check(bad.size() == 2 and bad[0].contains("nope") and bad[1].contains("没写说明"), "坏目标、没写字都报：%s" % "；".join(bad))
+	var no_en := CoachOverlay.problems([{"target": "wallet", "text": "x"}])
+	t.check(no_en.size() == 1 and no_en[0].contains("texts.en"), "221 F3：没写英文也报：%s" % "；".join(no_en))
+	var step := {"target": "wallet", "text": "货币", "texts": {"en": "Coins"}}
+	UiText.lang = "en"
+	var en := CoachOverlay.text_of(step)
+	UiText.lang = "zh"
+	t.eq([en, CoachOverlay.text_of(step), CoachOverlay.text_of({"text": "只有中文"})], ["Coins", "货币", "只有中文"], "221 F3：按语言取，没写英文回落中文")
 	t.eq(CoachOverlay.load_steps(&"no_such_coach"), [], "没有这份：空")
 	# 218：自由模式那份三步（日晷、背包按钮、腰带）；负重读数默认藏着，所以指背包按钮
 	var free := CoachOverlay.load_steps(&"free_mode_map")

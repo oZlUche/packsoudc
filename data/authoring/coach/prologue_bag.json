@@ -1,9 +1,9 @@
 {
   "id": "prologue_bag",
   "steps": [
-    {"target": "board", "text": "这是棋盘。先把包放上去，包占住的格子才放得下东西。"},
-    {"target": "board", "text": "拿起一件，按 R 转一格；拿着的时候点右键，放回原处。"},
-    {"target": "board", "text": "双击一件，在棋盘和地上之间快速挪；直接拖到棋盘外面，也是放到地上。"},
-    {"target": "strip_stamina", "text": "底下三枚火漆签：耐力档、估算输出、负重 —— 这几张图不限重，正式进去才算。"}
+    {"target": "board", "text": "这是棋盘。先把包放上去，包占住的格子才放得下东西。", "texts": {"en": "This is the Board. Put a bag on it first; you can only place things on cells a bag covers."}},
+    {"target": "board", "text": "拿起一件，按 R 转一格；拿着的时候点右键，放回原处。", "texts": {"en": "Pick something up and press R to rotate it. Right-click while holding it to put it back."}},
+    {"target": "board", "text": "双击一件，在棋盘和地上之间快速挪；直接拖到棋盘外面，也是放到地上。", "texts": {"en": "Double-click an item to move it between the Board and the Ground. Dragging it off the Board also drops it on the Ground."}},
+    {"target": "strip_stamina", "text": "底下三枚火漆签：耐力档、估算输出、负重 —— 这几张图不限重，正式进去才算。", "texts": {"en": "The three wax seals at the bottom: stamina band, est. damage, Load. These maps have no weight limit; it only counts once you go in for real."}}
   ]
 }

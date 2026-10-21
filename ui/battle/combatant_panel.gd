@@ -642,7 +642,7 @@ func _draw_bar(key: String, current: int, maximum: int, y: float) -> void:
 		draw_rect(Rect2(PAD, y, w * ratio, BAR_H), UiPalette.resource_color(key))
 	draw_rect(Rect2(PAD, y, w, BAR_H), UiPalette.LINE, false, 1.0)
 
-	var text := "%s  %d / %d" % [key, current, maximum]
+	var text := "%s  %d / %d" % [UiText.pick(UiText.TEXT.get("battle.bar_" + key), key), current, maximum]     # 221：没登记的资源照写键名
 	if key == "hp" and armor_value() > 0:
 		text += UiText.t("battle.armor_on_bar") % armor_value()     # 106：护甲的数写在生命条上，框只说明它顶得住几成
 	draw_string(

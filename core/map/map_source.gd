@@ -46,7 +46,7 @@ func scale_options() -> Array[Dictionary]:
 		return out
 	for p in generator_config.get("scales"):
 		if p != null:
-			out.append({"id": p.id, "display_name": p.display_name if p.display_name != "" else String(p.id), "step_limit": int(p.get("step_limit")) if "step_limit" in p else 0,
+			out.append({"id": p.id, "display_name": Names.of(p) if p.display_name != "" else String(p.id), "step_limit": int(p.get("step_limit")) if "step_limit" in p else 0,
 				"rings": p.get("rings") if "rings" in p else Vector2i.ZERO})     # 180：开局屏规模那行右边写环数
 	return out
 
