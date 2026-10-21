@@ -120,9 +120,11 @@
 
 ②③④（棋盘格线与皮带框、账单、字体）现在做；①按钮等 UI替换美术 的图；账单底（720×480 蜡板或羊皮纸）已向美术设计要，图没到之前先用现有石板色块占位，图到了换一行。§六 三条全按推荐。
 
-**账单底已出（美术设计 15:11）**：三款样稿 甲 碑板（推荐）/ 乙 账簿 / 丙 蜡板，在 `/mnt/project-files/art/ui/ledger/`（README、`out/ledger_<stele|book|wax>.png` + @2x + json、`out/layout.json`、`mocks/page_*.png`）。整图不拉伸，图比账面大（框 / 耳朵 / 阴影在外），图左上 = 账面左上 + origin（碑板 (−80, −24)、账簿 (−22, −22)、蜡板 (−18, −18)）；行间线、表头双线、合计双线、分栏线 x 300 / 600 都在图里，代码不画线。字：标签 x 18 思源宋体 18 基线 +27；数量右对齐 x 584 Cinzel Bold 20 基线 +28，串里的汉字退回思源宋体；经验右对齐 x 704「—」16 dim；表头 14 基线 26；总价值标签思源粗体 22 基线 +29、数字 Cinzel Bold 32 基线 +33；三款字色各一套在 layout.json。Cinzel ttf 在 `/mnt/project-files/art/fonts/chosen/`（来源 `Cinzel_SOURCE.txt`），打包时另补 `assets/fonts/LICENSES/OFL_Cinzel.txt`。材质按作者 15:02 的规矩（美术风格的选择按推荐）默认 **甲 碑板**，作者另选再换图。
+**账单底已出（美术设计 15:11）**：三款样稿 甲 碑板（推荐）/ 乙 账簿 / 丙 蜡板，在 `/mnt/project-files/art/ui/ledger/`（README、`out/ledger_<stele|book|wax>.png` + @2x + json、`out/layout.json`、`mocks/page_*.png`）。整图不拉伸，图比账面大（框 / 耳朵 / 阴影在外），图左上 = 账面左上 + origin（碑板改版后 (−32, −32)，图 784×544；账簿 (−22, −22)、蜡板 (−18, −18)）；行间线、表头双线、合计双线、分栏线 x 300 / 600 都在图里，代码不画线。字：标签 x 18 思源宋体 18 基线 +27；数量右对齐 x 584 Cinzel Bold 20 基线 +28，串里的汉字退回思源宋体；经验右对齐 x 704「—」16 dim；表头 14 基线 26；总价值标签思源粗体 22 基线 +29、数字 Cinzel Bold 32 基线 +33；三款字色各一套在 layout.json。Cinzel ttf 在 `/mnt/project-files/art/fonts/chosen/`（来源 `Cinzel_SOURCE.txt`），打包时另补 `assets/fonts/LICENSES/OFL_Cinzel.txt`。材质按作者 15:02 的规矩（美术风格的选择按推荐）默认 **甲 碑板**，作者另选再换图。
 
 **稀有度行的颜色（作者 15:23）**：「代表稀有度的字体要有颜色，和稀有度本身对应，颜色要足够显眼但不跳脱」。做法：稀有度名用 `UiPalette.rarity_color(r, tone)`（`data/authoring/ui/text_colors.json` 的六档，dark / light 两套，tone 跟账单底走），serif_bold 18；美术设计把六档放到碑板 / 账簿 / 蜡板三款底上核一遍，暗的提亮、扎眼的压一压，改在 `text_colors.json` 里（全游戏的稀有度字色一起受益），执行只照表取色、不另写颜色。
 
 **§二 被更大的规矩盖过（作者 2026-10-21 15:19，在 UI替换美术 线程定）**：所有棋盘都显示外框和格线，新出现的棋盘视图默认 `frame_*` + `cell_seams`，格线常开。于是不必按视图开 `ALWAYS`：`InventoryView` 格线一律画，187 的 `GameSettings.show_grid` / `GRID_AUTO` 失去意义（执行定是删掉设置项还是只把默认改成常开；玩家设置里不再露这一项）。结算屏第二页的按钮和格线定稿在 `/mnt/project-files/art/ui/result/`，战前 / 战斗屏的属性签与生命耐力条在 `/mnt/project-files/art/ui/battle_stats/`，都已交执行。
+
+**甲 碑板改版（美术设计 15:32，作者 15:23 在美术设计线程要「更有大理石味，参考《凯撒大帝 3》」）**：暖米色大理石，外框凸起、账面凹下，表头与合计是两条凸起石条，铜线铜钉和耳朵都去了；图 784×544，origin (−32, −32)；表头字 serif_bold 15 墨色（`styles.stele.head_font`），字色 数字 / 表头 `#16110d`、标签 `#2e2219`、dim `#6e604c`、总价值 `#8c2b22`。账面 720×480、行栏字号不变；文件名不变。凯撒 3 记进了 `art/style-guide.md` 的参考对象。
 
