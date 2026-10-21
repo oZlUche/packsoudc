@@ -49,5 +49,15 @@ static func frame_card(t: TestCase, root: Window) -> void:
 	for i in 5:
 		var text := card.tip_text(i) + (String(card.row(i).get("label", "")) + String(card.row(i).get("unit", "")) if i < 3 else "")
 		t.check(han.search(text) == null, "英文：第 %d 行没有汉字（%s）" % [i, text])
+	for i in card.passive_names().size():
+		var lines := card.passive_lines(i)
+		var whole := String(buffed.character.skill_entries()[i]["text"])
+		t.eq(" ".join(lines), whole, "游戏测试 v3.81：英文被动写全文、只在空格处折行（%d 行）" % lines.size())
+	t.check(card.size.y >= CharacterCard.SIZE.y and card.size.y <= 400.0, "卡跟着说明长高，仍在背包窗里（%.0f）" % card.size.y)
+	var f := UiPalette.cjk_font()
+	t.eq(CharacterCard.wrap_lines("Erosion takes 1 less Vitality", f, 13, f.get_string_size("Erosion takes 1", HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 2.0, 6),
+		["Erosion takes 1", "less Vitality"] as Array[String], "按词断，不拆 Erosion")
+	t.eq(CharacterCard.wrap_lines("一二三四", f, 13, f.get_string_size("一二", HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 1.0, 6), ["一二", "三四"] as Array[String], "汉字逐字断")
+	t.eq(CharacterCard.wrap_lines("一二三四五六", f, 13, f.get_string_size("一二", HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 1.0, 2)[1].right(1), "…", "超行数：末行加省略号")
 	UiText.lang = "zh"
 	card.queue_free()
