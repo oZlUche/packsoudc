@@ -217,3 +217,9 @@
 
 派：本节随 §9.4 一起给执行（已派），文案 / 帮助页在同一批。美术设计：包架挂牌 + 角标（已要）。
 
+### 11.8 包架两小件已出图（美术设计 2026-10-21 18:36）
+
+`/mnt/project-files/art/ui/notice/out/`（+`@2x`，规格在同目录 `README.md` 末节）：① `header_stone_hang` 160×46，margin [24,22,24,8]，tone light —— 226 的段头石牌加 14 px 挂绳，字由代码写（serif_bold 18 墨色，宽 = 字宽 + 58，牌身中线 y 30，右让 5）；② `count_badge` 32×20，margin [7,6,7,6]，tone light，Cinzel Bold 14「×n」，宽 = max(28, 字宽 + 14)，贴格右下角往里 2，×1 不画；「×」要进 Cinzel 子集字串（168）。
+
+**采纳美术的建议：包架那一列不用 `PANEL_DARK` 占位，直接套 227 的 `frame_plain`（青铜屏 `frame_plain_dark`）+ 格缝** —— 包架是一块棋盘，归「所有棋盘都显示外框 + 格子」那条规矩管，§9.4 / §11.2 里的「`PANEL_DARK` 行 + 格缝占位」作废。样张 `mocks/rack_setup_p2.png`、`rack_home_en.png`、`rack_parts.png`。
+
