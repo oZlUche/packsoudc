@@ -17,7 +17,9 @@ func open(payload: Dictionary) -> void:
 	var col := _vbox(12)
 	col.custom_minimum_size.x = 860
 	center.add_child(col)
-	col.add_child(_label(UiText.t("slots.title"), 26, UiPalette.FG))
+	var plate := TitlePlate.new(UiText.t("slots.title"))     # 226 批二：标题刻在标题牌上（整屏石板，同结算屏）
+	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(plate)
 	# 098：读不出来的存档已备份 —— 这一句比「三位都满了」更要紧，优先写它
 	var notice := flow.backup_notice()
 	if notice != "":

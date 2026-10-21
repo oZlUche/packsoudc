@@ -22,8 +22,6 @@ func open(payload: Dictionary) -> void:
 	var left := _vbox(8)
 	row.add_child(left)
 	_frame_title(UiText.t("safe.title") % [_safe.size.x, _safe.size.y])     # 157：标题在石板框的标题条上
-	left.add_child(_wrapped(UiText.t("safe.intro"), 12, UiPalette.DIM, 340))
-	left.add_child(_wrapped(UiText.t("safe.warning"), 12, UiPalette.HP, 340))
 	_view = InventoryView.new()
 	_view.label_font = font
 	_view.inventory = _safe
@@ -32,7 +30,7 @@ func open(payload: Dictionary) -> void:
 	left.add_child(_view)
 	var buttons := _hbox(8)
 	var back := _button(UiText.t("safe.close"), to_map, 13, UiPalette.Tier.PRIMARY)
-	back.tooltip_text = UiText.t("safe.close_tip")
+	back.tooltip_text = UiText.t("safe.intro") + "\n" + UiText.t("safe.close_tip")     # 226 批二：说明并进「关上」的悬浮窗，重复的那句警告删了
 	buttons.add_child(back)
 	left.add_child(buttons)
 

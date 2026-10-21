@@ -30,6 +30,7 @@ var hang := false
 
 func _init(p_text: String = "") -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN     # 摆进竖排容器时按字宽，不被拉满一行
 	text = p_text
 
 

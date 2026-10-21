@@ -499,8 +499,8 @@ static func frame_loot_manual_close(t: TestCase, root: Window) -> void:
 	GameSettings.remove("user://test_084b_settings.json")
 
 
-## 反馈 bug：地图上悬停节点，下方两行说明文字随节点变长，把中间一列撑宽、地图视图被挤窄后重新居中，
-## 地图一位移鼠标就脱离节点、文字清空又缩回去，再悬停又触发 —— 闪烁。这两行的文字再长也不许影响布局宽度
+## 反馈 bug：地图上悬停节点，下方两行说明文字随节点变长，把中间一列撑宽、地图视图被挤窄后重新居中 —— 闪烁。
+## 226 批二起那两行整个删了：悬停不再改地图列里的任何东西
 static func frame_map_hover_line_does_not_resize(t: TestCase, root: Window) -> void:
 	t.begin("地图 · 悬停说明行（反馈 bug）：文字再长也不撑宽所在的列，地图视图尺寸不随悬停变化")
 	var NodeScreens := preload("res://tests/ui/test_node_screens.gd")
@@ -517,11 +517,13 @@ static func frame_map_hover_line_does_not_resize(t: TestCase, root: Window) -> v
 	flow.chapters = [c.chapter] as Array[ChapterDef]
 	flow.begin(c.chapter, kit, 1)
 	var screen = game.base()
-	t.check(screen != null and screen.get("_enemy_line") != null, "进了地图屏")
-	if screen != null and screen.get("_enemy_line") != null:
-		var long_text := "很长的一行说明".repeat(60)
-		for l in [screen._enemy_line, screen._preview]:
-			(l as Label).text = long_text
-			t.check((l as Label).get_combined_minimum_size().x <= 1.0, "超长文字也不抬高最小宽度（%s）" % str((l as Label).get_combined_minimum_size()))
+	t.check(screen != null and screen.has_method("hud_part"), "进了地图屏")
+	if screen != null:
+		# 226 批二：那两行删了 —— 悬停什么都不再往地图列里写字
+		t.check(screen.get("_enemy_line") == null and screen.get("_preview") == null, "底边两行说明删了")
+		var before: Vector2 = screen._view.size
+		for id in screen._run.map.nodes.keys():
+			screen._on_node_hovered(id)
+		t.eq(screen._view.size, before, "挨个悬停，地图视图尺寸不变")
 	game.queue_free()
 	Support.cleanup("maphover")

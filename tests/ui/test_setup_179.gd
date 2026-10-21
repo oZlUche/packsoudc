@@ -42,8 +42,7 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	t.eq(setup.find_children("PaintedBackdrop", "TextureRect", true, false).size(), 1, "大厅背景画铺上了")
 	t.eq(UiTheme.art_tone(UiTheme.ART_SETUP_BG), UiTheme.TONE_LIGHT, "大厅背景标浅底")
 	t.eq(UiTheme.tone_at(setup._area), UiTheme.TONE_LIGHT, "内容区记着浅底")
-	t.eq(setup._title.get_theme_color("font_color"), UiTheme.INK, "标题墨字")
-	t.eq(setup._title.get_theme_color("font_shadow_color").a, 0.0, "浅底上标题不带黑影")
+	t.check(setup._title is TitlePlate and setup._title.text == "选角色", "226 批二：页标题刻在标题牌上、页码去掉（%s）" % setup._title.text)
 	for g in setup._grooves:
 		t.eq(UiTheme.tone_at(g), UiTheme.TONE_DARK, "凹槽板里是深底")
 		t.check(not g.theme_type_variation.is_empty() and (g as Control).theme == null, "凹槽板没挂墨字主题")
@@ -59,7 +58,7 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 			t.eq((pics[0] as TextureRect).texture, UiTheme.art(art_name), "第 %d 页是自己那幅" % (page + 1))
 		var tone := UiTheme.art_tone(art_name) if has_art else UiTheme.TONE_DARK
 		t.eq(UiTheme.tone_at(setup._area), tone, "第 %d 页内容区按画的深浅" % (page + 1))
-		t.eq(setup._title.get_theme_color("font_color"), UiTheme.INK if tone == UiTheme.TONE_LIGHT else UiPalette.FG, "第 %d 页标题字色跟着画" % (page + 1))
+		t.eq(setup._title.text, UiText.t(setup.PAGE_TITLES[page]), "第 %d 页标题牌跟着换字（石牌浅底墨字，不随画变）" % (page + 1))
 	var groove_label := UiTheme.make_label("x", 15, UiPalette.DIM)
 	setup._grooves[0].add_child(groove_label)
 	t.eq(groove_label.get_theme_color("font_color"), UiPalette.DIM, "凹槽板里的字照旧浅色")

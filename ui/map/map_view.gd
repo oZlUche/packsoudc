@@ -743,9 +743,7 @@ func _draw_spawn_mask(pos: Dictionary, grow: Dictionary = {}) -> void:
 		draw_circle(sp, NODE_RADIUS + 18.0, Color(UiPalette.HEAL, (0.10 + 0.08 * sin(_pulse * 2.0)) * k))
 		_draw_node(graph.get_node(id), sp)
 		draw_arc(sp, NODE_RADIUS + 10.0 + 2.0 * sin(_pulse * 2.0), 0.0, TAU, 40, Color(UiPalette.HEAL, k), 2.0, true)
-	var text := UiText.t("map.pick_spawn")
-	var tw := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
-	draw_string(_font, Vector2((size.x - tw) / 2.0, 34.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(UiPalette.HEAL, k))
+	# 226 批二：蒙层上那句「挑一个出生点」删了（告示层会说）
 
 
 ## 最远一层的层号（同心环 = 环数，213 格阵 = 行数 − 1；别的布局 0）

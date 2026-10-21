@@ -118,7 +118,7 @@ func _open_result(payload: Dictionary) -> void:
 	var col := _frame(image, String(payload.get("outcome", UiText.t("event.default_title"))), "\n".join(lines))
 	_harvest = null
 	if not harvest.is_empty():
-		col.add_child(_label(UiText.t("event.harvest"), 13, UiPalette.DIM))
+		# 226 批二：「收获　拖进背包，或双击……」那行删了（格上的悬浮窗说双击进包）
 		_harvest = HarvestRow.new()
 		_harvest.label_font = font
 		_harvest.setup(flow.run.storage, harvest)
@@ -166,7 +166,7 @@ func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
 		return _book_page(panel, image_path, title, body)
 	var row := _hbox(0)
 	panel.add_child(row)
-	var image := EventImage.area(image_path, title, Vector2(IMAGE_WIDTH, 0))     # 左栏：图铺满、按比例裁；没有图就一块深底色写着占位
+	var image := EventImage.area(image_path, "", Vector2(IMAGE_WIDTH, 0))     # 左栏：图铺满、按比例裁；没有图就一块深底色（226 批二：占位标题不写）
 	image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_child(image)
 
@@ -208,7 +208,7 @@ func _book_page(panel: Container, image_path: String, title: String, body: Strin
 	page.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(page)
 	var ir := _rect(meta.get("image_rect", [14, 44, 640, 672]))
-	var image := EventImage.area(image_path, title, ir.size, 22, 12, "", 6, true)
+	var image := EventImage.area(image_path, "", ir.size, 22, 12, "", 6, true)     # 226 批二：缺图不写占位标题
 	image.name = "Image"
 	image.position = ir.position
 	image.size = ir.size

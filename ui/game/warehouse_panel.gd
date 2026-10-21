@@ -40,13 +40,11 @@ var _board_box: VBoxContainer
 var _rack_box: Control = null
 var _rack_view: BagRackView = null
 var _board_view: InventoryView
-var _board_label: Label = null
 var _board_scroll: ScrollContainer = null
 ## 226 批一：最近一句回话（回话本身走告示卷轴；测试读 [method line_text]）
 var _last_said := ""
 var _store_btn: Button
 var _tidy_btn: Button
-var _size_label: Label = null
 ## 224：结算屏第二页 —— 「一键置入」「整理」换石键图按钮（补充二 180 × 67，字由代码写），按钮行间隔 14；在 [method setup] 之前设
 var art_buttons := false
 ## 224 补充二：带回来的棋盘格子定死这个边长（结算屏 72，同背包窗）；0 = 跟仓库一样大。在 [method setup] 之前设
@@ -90,9 +88,6 @@ func _build() -> void:
 			row.add_child(spacer)
 		var right := UiTheme.vbox(6)
 		row.add_child(right)
-		_size_label = UiTheme.make_label("", 13, UiPalette.DIM)
-		_size_label.visible = not art_buttons     # 224：结算屏不写裸露的说明字（字照旧更新，只是不显示）
-		right.add_child(_size_label)
 		_shelf = WarehousePages.new()
 		right.add_child(_shelf)
 
@@ -151,16 +146,11 @@ func _rebuild_board_view() -> void:
 		_drag.unregister_view(_board_view)
 	UiTheme.clear_children(_board_box)
 	_board_view = null
-	_board_label = null
 	_board_scroll = null
 	if _meta.board == null:
 		_board_box.visible = false
 		return
 	_board_box.visible = true
-	_board_label = UiTheme.make_label("", 13, UiPalette.DIM)
-	_board_label.visible = not art_buttons
-	_board_box.add_child(_board_label)
-	_sync_board_label()
 	_board_view = InventoryView.new()
 	_board_view.label_font = _font
 	_board_view.inventory = _meta.board
@@ -366,19 +356,9 @@ func _saved() -> void:
 #endregion
 
 
-## 作者 2026-10-13：搬空了棋盘留着，标签说一声已清空
-func _sync_board_label() -> void:
-	if _board_label == null or _meta.board == null:
-		return
-	_board_label.text = UiText.t("wh.board_label_empty") if _meta.board.item_count() == 0 else UiText.t("wh.board_label")
-
-
 func _refresh() -> void:
 	if _meta.board == null and _board_view != null or _meta.board != null and (_board_view == null or _board_view.inventory != _meta.board):
 		_rebuild_board_view()
-	if _size_label != null:
-		_size_label.text = UiText.t("wh.size_label") % [_meta.warehouse.page_count(), _meta.warehouse.size.x, _meta.warehouse.size.y]
-	_sync_board_label()
 	var pending := _meta.has_pending_board()
 	_store_btn.disabled = not pending
 	_store_btn.visible = _meta.board != null     # 178：没有带回来的背包就不摆「一键置入」（基地「仓库」页只剩整理）

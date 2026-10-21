@@ -7,13 +7,14 @@ extends RefCounted
 ## 原来的底色（最深的那档）；运行时的底色走 [method bg]
 const BG := Color("101216")
 ## 091（作者定）：背景底色可选，默认比原来浅一点。设置屏挑，存在 [GameSettings.bg_theme]
+## 226 批二：名字只留本名（六键挤在 520 宽的列里，英文带括号注解放不下），注解（`note`）进按钮的悬浮窗
 const BG_THEMES := [
-	{"id": "graphite", "name": {"zh": "石墨（默认）", "en": "Graphite (default)"}, "color": Color("262b33")},
+	{"id": "graphite", "name": {"zh": "石墨", "en": "Graphite"}, "note": {"zh": "默认", "en": "Default"}, "color": Color("262b33")},
 	{"id": "dark", "name": {"zh": "深夜", "en": "Midnight"}, "color": Color("101216")},
 	{"id": "slate", "name": {"zh": "石板", "en": "Slate"}, "color": Color("1b2028")},
 	{"id": "dusk", "name": {"zh": "暮色", "en": "Dusk"}, "color": Color("2a2733")},
 	{"id": "moss", "name": {"zh": "苔绿", "en": "Moss"}, "color": Color("1f2a24")},
-	{"id": "mist", "name": {"zh": "雾灰（最浅）", "en": "Mist (lightest)"}, "color": Color("3a3f48")},
+	{"id": "mist", "name": {"zh": "雾灰", "en": "Mist"}, "note": {"zh": "最浅", "en": "Lightest"}, "color": Color("3a3f48")},
 ]
 const BG_DEFAULT := "graphite"
 static var bg_theme: String = BG_DEFAULT

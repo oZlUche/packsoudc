@@ -56,12 +56,14 @@ static func area(path: String, title: String, size: Vector2, big_size: int = 22,
 	area.add_child(center)
 	var col := UiTheme.vbox(sep)
 	center.add_child(col)
-	var big := UiTheme.make_label(title, big_size, Color(UiTheme.INK_DEFAULT, 0.55) if light else UiPalette.DIM.darkened(0.35))
-	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(big)
-	# 2026-10-17：没配图就只画标题；路径坏了的提示只在开发版露出
+	if title != "":     # 226 批二：游戏里的事件屏不写占位标题（传空），编辑器预览照写
+		var big := UiTheme.make_label(title, big_size, Color(UiTheme.INK_DEFAULT, 0.55) if light else UiPalette.DIM.darkened(0.35))
+		big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		col.add_child(big)
+	# 2026-10-17：路径坏了的提示只在开发版露出
 	var missing := "" if path == "" else (broken_hint if broken_hint != "" else ("（图像占位：%s）" % path if GameSettings.dev_build() else ""))
-	var hint := UiTheme.make_label(missing, small_size, UiPalette.DIM.darkened(0.45))
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(hint)
+	if missing != "":
+		var hint := UiTheme.make_label(missing, small_size, UiPalette.DIM.darkened(0.45))
+		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		col.add_child(hint)
 	return area
