@@ -1085,11 +1085,23 @@ func _fit_nav() -> void:
 	_nav_box.offset_right = -right
 
 
-## 出发。开不了（生成不出图、超上限）返回 false，留在这一屏说明原因
+## 出发。开不了（生成不出图、超上限）返回 false，留在这一屏说明原因。
+## 218 补充一（作者定）：这一章配了出发前的交代、这个存档没看过 —— 先叠一层事件屏弹它，「知道了」之后才真出发（返回 true：交代弹出来了）
 func depart() -> bool:
 	var why := can_depart()
 	if why != "":
 		_status.text = why
+		return false
+	var brief := flow.departure_briefing(chapter())
+	if brief != null:
+		flow.show_briefing(brief, func(): _go_now())
+		return true
+	return _go_now()
+
+
+## 真出发：按这一页的选择开局，交给地图屏的入局转场
+func _go_now() -> bool:
+	if not is_inside_tree():
 		return false
 	var c := chapter()
 	var ch := character()

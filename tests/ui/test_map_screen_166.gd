@@ -7,6 +7,7 @@ const GF := preload("res://tests/run/test_game_flow.gd")
 const Support := preload("res://tests/run/flow_support.gd")
 const GAME := "res://ui/game/game.tscn"
 const PREFIX := "map166"
+const PrebattleScript := preload("res://ui/game/prebattle_screen.gd")
 
 
 static func run_icon_button(t: TestCase) -> void:
@@ -107,17 +108,36 @@ static func run_coach_data(t: TestCase) -> void:
 	t.eq(free.map(func(s: Dictionary) -> String: return String(s["target"])), ["countdown", "bag_button", "belt"], "218：自由模式三步按顺序")
 	t.eq(CoachOverlay.problems(free), [] as Array[String], "218：没有问题")
 	t.check(free.all(func(s: Dictionary) -> bool: return TextLint.scan({"text": String(s["text"])}).is_empty()), "218：不写数字")
-	for ch_id in ["free_mode", "clockwork_hourglass"]:
-		t.eq((load(ContentPaths.asset_file("chapters", ch_id)) as ChapterDef).coach, &"free_mode_map", "218：%s 配了这份" % ch_id)
+	t.eq((load(ContentPaths.asset_file("chapters", "free_mode")) as ChapterDef).coach_for(&"map"), &"free_mode_map", "218：自由模式配了这份")
+	t.eq((load(ContentPaths.asset_file("chapters", "clockwork_hourglass")) as ChapterDef).coaches, {}, "218 补充一：机关沙漏不配教程（作者）")
+	# 218 补充一（217 批三）：序章一的背包窗六步、战前屏三步，目标各认各的屏
+	var bag := CoachOverlay.load_steps(&"prologue_bag")
+	t.eq(bag.map(func(s: Dictionary) -> String: return String(s["target"])), ["board", "board", "board", "strip_stamina", "strip_dps", "strip_load"], "背包窗：棋盘三步、三枚签各一步")
+	t.eq(CoachOverlay.problems(bag, BagWindow.COACH_TARGETS), [] as Array[String], "背包窗的目标都认得")
+	var pre := CoachOverlay.load_steps(&"prologue_prebattle")
+	t.eq(pre.map(func(s: Dictionary) -> String: return String(s["target"])), ["enemy_board", "scale", "my_board"], "战前屏三步")
+	t.eq(CoachOverlay.problems(pre, PrebattleScript.COACH_TARGETS), [] as Array[String], "战前屏的目标都认得")
+	for some in [free, bag, pre]:
+		t.check((some as Array).all(func(s: Dictionary) -> bool: return TextLint.scan({"text": String(s["text"])}).is_empty()), "不写数字")
+	var p1 := load(ContentPaths.asset_file("chapters", "prologue")) as ChapterDef
+	t.eq(p1.coaches, {"map": "prologue_map", "battle": "prologue_battle", "bag": "prologue_bag", "prebattle": "prologue_prebattle"}, "序章一四份教程收在一个字典里")
+	# 旧 json 的 coach / coach_battle 导入时收进字典
+	var old_ch := ContentImporter.import_chapter({"id": "x", "coach": "a", "coach_battle": "b", "map_source": {"mode": "PRESET", "preset_path": "res://data/maps/prologue.json"}}, ContentImporter.Context.new(), ImportReport.new())
+	t.eq(old_ch.coaches, {"map": "a", "battle": "b"}, "旧字段 coach / coach_battle → coaches")
+	var bad_kind := ImportReport.new()
+	ContentImporter.import_chapter({"id": "x", "coaches": {"nope": "a"}}, ContentImporter.Context.new(), bad_kind)
+	t.check(bad_kind.to_text().contains("nope"), "认不得的屏报出来")
 	# 每一章写了教程的，那份都在、都没问题
 	var c := TestSupport.load_content("free_mode", [])
 	for ch in DirAccess.get_files_at("res://data/chapters"):
 		if not ch.ends_with(".tres"):
 			continue
 		var def := load("res://data/chapters/" + ch) as ChapterDef
-		if def != null and def.coach != &"":
-			var s := CoachOverlay.load_steps(def.coach)
-			t.check(not s.is_empty() and CoachOverlay.problems(s).is_empty(), "%s 的教程 %s 读得到、没问题" % [def.id, def.coach])
+		if def != null and def.coach_for(&"map") != &"":
+			var s := CoachOverlay.load_steps(def.coach_for(&"map"))
+			t.check(not s.is_empty() and CoachOverlay.problems(s).is_empty(), "%s 的教程 %s 读得到、没问题" % [def.id, def.coach_for(&"map")])
+		for kind in (def.coaches.keys() if def != null else []):
+			t.check(ChapterDef.COACH_KINDS.has(StringName(String(kind))) and not CoachOverlay.load_steps(StringName(String(def.coaches[kind]))).is_empty(), "%s 的 %s 教程读得到" % [def.id, kind])
 	t.not_null(c, "内容读得到")
 
 
@@ -167,7 +187,7 @@ static func frame_prologue_coach(t: TestCase, root: Window) -> void:
 	if prologue == null:
 		game.queue_free()
 		return
-	t.eq(prologue.coach, &"prologue_map", "序章一写了教程")
+	t.eq(prologue.coach_for(&"map"), &"prologue_map", "序章一写了教程")
 	flow.begin_direct(prologue)
 	var map = game.base()
 	if flow.screen != GameFlow.Screen.MAP:
@@ -195,6 +215,36 @@ static func frame_prologue_coach(t: TestCase, root: Window) -> void:
 	t.is_null(map.coach(), "放过了：不再自己放")
 	t.check(map.show_coach(true), "调试台「重放教程」照样能放")
 	t.not_null(map.coach(), "重放开了")
+	for i in map.coach().steps.size():
+		map.coach().next()
+	# 218 补充一（217 批三）：第一次开背包窗放背包窗教程 —— 六步，棋盘与三枚签都挖得到洞；走完记在局外，再开不放
+	t.check(CoachOverlay.due(flow, &"prologue_bag"), "背包窗教程还没看过")
+	map.toggle_bag()
+	var win: BagWindow = null
+	for ch in map._bag.get_children():
+		if ch is BagWindow:
+			win = ch
+	t.not_null(win, "开了背包窗")
+	if win != null:
+		_lay_out(win)     # 屏上等一帧再放；这里手动排一遍
+		t.check(win.show_coach(flow, map._bag), "背包窗教程开了")
+		var bo: CoachOverlay = win.coach
+		if bo != null:
+			t.eq(bo.get_parent(), map._bag, "铺在压暗那一层上")
+			t.eq(bo.steps.size(), 6, "六步")
+			for id in BagWindow.COACH_TARGETS:
+				var r := win.control_rect(id)
+				t.check(r.size.x > 0.0 and r.size.y > 0.0, "背包窗 %s 找得到（%s）" % [id, r])
+			t.check(win.control_rect(&"strip_stamina").position.y > win.control_rect(&"board").end.y, "签在棋盘下面（%s / %s）" % [win.control_rect(&"strip_stamina"), win.control_rect(&"board")])
+			for i in 6:
+				t.check(bo.hole().size.x > 0.0, "背包窗第 %d 步挖了洞" % (i + 1))
+				bo.next()
+		t.is_null(win.coach, "六步点完：收掉")
+		t.check(flow.meta.coach_seen.has("prologue_bag"), "背包窗教程记在局外")
+	map.toggle_bag()
+	t.check(not CoachOverlay.due(flow, &"prologue_bag"), "看过了：再开不放")
+	map.replay_coach(&"bag")
+	t.check(CoachOverlay.due(flow, &"prologue_bag"), "调试台「重放背包教程」：下一次开窗再放")
 	game.queue_free()
 	Support.cleanup(PREFIX)
 
@@ -231,3 +281,10 @@ static func frame_prebattle_no_slip(t: TestCase, root: Window) -> void:
 	game.queue_free()
 	Support.cleanup(PREFIX)
 
+
+## 容器的排布是延迟的，同一帧里手动排一遍（从外到里）
+static func _lay_out(n: Node) -> void:
+	if n is Container:
+		n.notification(Container.NOTIFICATION_SORT_CHILDREN)
+	for c in n.get_children():
+		_lay_out(c)

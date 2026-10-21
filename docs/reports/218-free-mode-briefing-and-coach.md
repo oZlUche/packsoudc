@@ -129,3 +129,35 @@ v3.63 把交代挂在序章三撤离之后（`ChapterDef.outro_event`），作�
 
 1. 交代两章同一个事件、按事件 id 记一次（推荐）还是只给自由模式配。
 2. `outro_event` 直接改名删旧路径（推荐）还是留着备用 —— 140 的原则是没用的不留。
+
+## 九、补充一落地（v3.64，架构方案执行 2026-10-21）
+
+8.1～8.4 照做，8.5 两条都按推荐。和方案不一样的地方：
+
+1. **事件 id 用 `briefing_legion`**。8.1 写的是两章都配 `"departure_event": "tut3_outro"`，但事件文件已经改名 `briefing_legion.json`，为了 id 和文件名一致，id 也跟着改了。旧的 `data/events/tut3_outro.tres` 已删。
+2. **交代怎么接回出发**：
+   - `GameFlow.show_briefing(def, then)` 记住弹交代时停在哪一屏，然后 `_go(EVENT, {def, briefing: true})`。导演会把事件屏叠在开局屏上；这时没有一局，不会换成地图底。
+   - 点「知道了」走 `GameFlow.close_briefing()`：先记 `briefing_seen`、存局外，再调 `then`，也就是 `SetupScreen._go_now()`，原来的出发流程原样搬进去。如果 `then` 没把屏换走（开不了局），就回到原来那一屏。
+   - `SetupScreen.depart()` 弹了交代就返回 true。测试里走开局屏出发的地方改用 `flow_support.depart(setup)`，它会替玩家点「知道了」。
+3. **撤离后那一跳全删**：`GameFlow` 里的 `outro_event()`、`_outro_run` 和 `_show_result` 里那一段都删了。导演里 v3.63 加的「局结束不画地上」也一并退回：交代屏现在是叠在开局屏上，那时没有一局，本来就不画地上。
+4. **背包窗教程是六步，不是四步**。三枚签各挖一个洞，各用一句话：
+   - ①～③ 指棋盘：先放包；按 R 转、右键放回；双击在棋盘和地上之间挪、拖出去是放地上；
+   - ④ 耐力签、⑤ 输出签、⑥ 负重签，⑥ 用的是「这几张图不限重，正式进去才算」。
+   - 一步一件事，所以是六步；作者要压成四步就改 `data/authoring/coach/prologue_bag.json`。
+5. **战前屏教程三步**：对手（名牌 + 棋盘）、天平、自己（名牌 + 棋盘）。`fight_button` 也登记了，但这三步都没指它。
+6. **重放按钮在调试台**。166 的「重放教程」本来就在调试台，不在暂停菜单，所以这次也放调试台：「重放教程」当场放地图那份；「重放战斗 / 背包 / 战前教程」是删掉看过的记录，下一次进那一屏再放。
+7. **代码**：
+   - `ChapterDef.coaches` 字典配 `COACH_KINDS` 和 `coach_for(kind)`；导入器的 `legacy_coaches` 把旧的 `coach` / `coach_battle` 收进字典，认不得的屏会报错。
+   - `CoachOverlay.due` / `run_on` 是共用的「该不该放 / 放完记一笔」。
+   - `BagWindow.COACH_TARGETS` / `control_rect` / `maybe_coach`：地图、事件、营地三处开窗都会调。
+   - `PrebattleScreen.COACH_TARGETS` / `control_rect`。
+   - 两屏都等一帧再放，用的是 `process_frame` 单次连接，屏关了连接跟着断。
+8. **腰带那步**：已改成「商店里买得到」。
+9. **交代正文**：用的是压短版。截图看，右栏还差一行才能不滚就看到百科那行，所以按「只动第一段」的规矩把第一段压成「三趟都活着回来了。下一趟没有图，废墟每次都不一样。」，并且和第二段并成一段。「来接你的人把纸推过来」和「路得你自己走」这两句修饰删了，后三段一字没动。现在不用滚就能看到百科那行。
+10. **测试**：
+   - `test_prologue3.run_departure_briefing_218`：序章三撤离直接结算；两章同一个交代，弹一次、记看过、跟存档；局还没开时字也换得掉、不写数字。
+   - `test_setup_pages_161`：真按「出发」，叠出交代、开局屏在底下、局没开、没有整理背包，点「知道了」进图。
+   - `test_map_screen_166`：背包窗六步、四个目标都挖得到洞，记看过，调试台重放；`coaches` 字典、旧字段导入、沙漏不配。
+   - `test_battle_coach`：战前三步、四个目标都找得到、记看过。
+   - `test_tutorial_text_112`：序章事件回到 37 条。
+

@@ -444,7 +444,7 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	for inst in flow.meta.warehouse.items().duplicate():
 		setup.carry_in((inst as ItemInstance).uid)
 	t.check(setup.carried().size() > 0, "从仓库带上了第一套")
-	t.check(setup.depart(), "出发")
+	t.check(Support.depart(setup), "出发")
 	var map = game.base()
 	t.eq(map.screen, GameFlow.Screen.MAP, "→ 地图")
 	t.check(map.pick_spawn(int(found["entry"])), "挑出生点")

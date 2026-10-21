@@ -206,6 +206,7 @@ func toggle_bag() -> void:
 	_bag.add_child(win)
 	_reserve_ground(win)     # 128：背包浮窗占着的地方，地上的东西让开
 	_bag_panel = win.setup_bag(_run, font, toggle_bag, null, say)     # 188：顶出来了、放不下、合成了 —— 走提示行
+	win.maybe_coach(flow, _bag)     # 218 补充一：序章一第一次开背包窗放教程
 
 
 func bag_open() -> bool:
@@ -345,6 +346,8 @@ func _embed_in_pause(script: GDScript, screen_id: int, payload: Dictionary, on_c
 
 
 ## 217：规则卡末尾统一一行，把百科指出来（序章一第一张规则卡就看得见）
+## 218 补充一：调试台里「下一次再放」的那几种教程 → 按钮上的屏名
+const REPLAY_LATER := {&"battle": "战斗", &"bag": "背包", &"prebattle": "战前"}
 const RULES_CODEX_LINE := "看不懂的词，Esc 菜单里的{ui:百科}都有一页。"
 
 
@@ -996,10 +999,11 @@ func _build_drawer() -> void:
 	_next_seed.value_changed.connect(func(v: float): flow.next_run_seed = int(v))
 	seed_row.add_child(_next_seed)
 	c.add_child(seed_row)
-	if _run != null and _run.chapter != null and _run.chapter.coach != &"":
+	if _run != null and _run.chapter != null and _run.chapter.coach_for(&"map") != &"":
 		c.add_child(_button("重放教程", func(): show_coach(true), 13))     # 166
-	if _run != null and _run.chapter != null and _run.chapter.coach_battle != &"":
-		c.add_child(_button("重放战斗教程", replay_battle_coach, 13))     # 166 补充二：下一场再放
+	for kind in REPLAY_LATER:     # 166 补充二 / 218 补充一：别的屏下一次露出来再放
+		if _run != null and _run.chapter != null and _run.chapter.coach_for(kind) != &"":
+			c.add_child(_button("重放%s教程" % REPLAY_LATER[kind], replay_coach.bind(kind), 13))
 	c.add_child(_label("摆读数", 16, UiPalette.FG))
 	c.add_child(_wrapped("开着时：拖动读数换位置（松手吸附 %d 像素网格，记成离它最近的锚点 + 偏移）；右键切显示 / 隐藏；滚轮切大小两档。保存写到 %s。" % [
 		HudLayout.GRID, HudLayout.save_path("map")], 12, UiPalette.DIM, DevDrawer.WIDTH - 40))
@@ -1092,18 +1096,18 @@ func _note(text: String) -> void:
 #region 166：序章静态教程
 ## 这一章要放的教程步骤（章节的 `coach`，没有 = 不放）
 func coach_steps() -> Array:
-	if _run == null or _run.chapter == null or _run.chapter.coach == &"":
+	if _run == null or _run.chapter == null or _run.chapter.coach_for(&"map") == &"":
 		return []
-	return CoachOverlay.load_steps(_run.chapter.coach)
+	return CoachOverlay.load_steps(_run.chapter.coach_for(&"map"))
 
 
 ## 第一次露出地图（开场事件关掉、规则卡收起、地图在最上面）时放一次；放过了记在局外（[member MetaState.coach_seen]）
 func _maybe_coach() -> void:
-	if _coach != null or _run == null or _run.chapter == null or _run.chapter.coach == &"":
+	if _coach != null or _run == null or _run.chapter == null or _run.chapter.coach_for(&"map") == &"":
 		return
 	if flow.screen != GameFlow.Screen.MAP or _rules != null or _pause != null or not is_visible_in_tree():
 		return
-	if flow.meta != null and flow.meta.coach_seen.has(String(_run.chapter.coach)):
+	if flow.meta != null and flow.meta.coach_seen.has(String(_run.chapter.coach_for(&"map"))):
 		return
 	show_coach()
 
@@ -1121,8 +1125,8 @@ func show_coach(replay: bool = false) -> bool:
 	add_child(_coach)
 	_coach.finished.connect(func():
 		_coach = null
-		if flow.meta != null and not flow.meta.coach_seen.has(String(_run.chapter.coach)):
-			flow.meta.coach_seen.append(String(_run.chapter.coach))
+		if flow.meta != null and not flow.meta.coach_seen.has(String(_run.chapter.coach_for(&"map"))):
+			flow.meta.coach_seen.append(String(_run.chapter.coach_for(&"map")))
 			flow.save_meta())
 	_coach.start(steps)
 	return true
@@ -1284,13 +1288,18 @@ func _input(event: InputEvent) -> void:
 #endregion
 
 
-## 166 补充二：调试台「重放战斗教程」—— 把看过的那条删掉，下一场战斗再放
-func replay_battle_coach() -> void:
+## 166 补充二 / 218 补充一：调试台「重放战斗 / 背包 / 战前教程」—— 把看过的那条删掉，那一屏下一次露出来再放
+func replay_coach(kind: StringName) -> void:
 	if flow.meta == null or _run == null or _run.chapter == null:
 		return
-	flow.meta.coach_seen.erase(String(_run.chapter.coach_battle))
+	flow.meta.coach_seen.erase(String(_run.chapter.coach_for(kind)))
 	flow.save_meta()
-	_say("下一场战斗会再放一次战斗教程")
+	_say("下一次进%s会再放一次教程" % REPLAY_LATER.get(kind, ""))
+
+
+## 166 补充二：旧名（调试台、测试）
+func replay_battle_coach() -> void:
+	replay_coach(&"battle")
 #endregion
 
 

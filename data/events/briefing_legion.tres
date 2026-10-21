@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_368fg"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_n8b3s"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="3_s3qvl"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="4_khpw8"]
+
+[sub_resource type="Resource" id="Resource_3nsxs"]
+script = ExtResource("1_368fg")
+label = "知道了"
+
+[resource]
+script = ExtResource("4_khpw8")
+id = &"briefing_legion"
+title = "军团的交代"
+text = "「三趟都活着回来了。下一趟没有图，废墟每次都不一样。别久留：每走一步，日晷就走一格，走完了没人来接你；走到一半，离你进去那个口最近的免费出口会被封死，地图上提前标着。」
+
+「越往里越值钱，也越要命。最里头坐着这片废墟的主人，放倒它就直接带着东西出来结算；不想碰，就从外面几环的出口走。」
+
+「路上有做买卖的、能歇脚的，还有我们埋的保险箱，鼠标停在点上就看得见。塞进保险箱的，就算你死在里头也会送回来。」
+
+{c:dim}看不懂的词，Esc 菜单里的{ui:百科}都有一页。{/c}"
+image = "res://assets/chest/bg/cursed_depths.png"
+options = Array[ExtResource("1_368fg")]([SubResource("Resource_3nsxs")])

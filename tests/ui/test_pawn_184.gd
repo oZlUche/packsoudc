@@ -16,7 +16,7 @@ static func _map(root: Window, prefix: String) -> Node:
 	var ids: Array[int] = setup.preview().entry_ids()
 	if not ids.is_empty():
 		setup.pick_spawn(ids[0])
-	setup.depart()
+	Support.depart(setup)
 	return game
 
 

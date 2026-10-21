@@ -1,6 +1,7 @@
 ## 192（191 甲，作者 2026-10-18「实施」）：地图底图钉在画布上 —— 按 json 的 `safe_area` 把底图对准路网画布，之后和路、点一起缩放平移；
 ## 看全图 = 整张纸刚好装进安全区；拖动时纸的任何一边不越过安全区中心线；开局第三页的预览和局内第一帧是同一张纸、同一大小
 extends RefCounted
+const Support := preload("res://tests/run/flow_support.gd")
 
 const Setup := preload("res://tests/ui/test_setup_180.gd")
 const VIEW_SIZE := Vector2(1600, 1000)
@@ -123,7 +124,7 @@ static func frame_preview_matches_reveal(t: TestCase, root: Window) -> void:
 	var want_paper := MapSkin.paper_rect(pv.skin, Rect2(Vector2.ZERO, Vector2.ONE * RingLayoutBase.canvas_side(pv.levels)))
 	t.check(absf(pv.paper_on_screen().size.x - want_paper.size.x * zoom_p * pv.view_zoom) < 0.01, "纸的大小 = 画布里的纸 × 圈距 ÷ 环距 × 微放大")
 	var from: Rect2 = pv.get_global_transform() * pv.paper_on_screen()
-	t.check(setup.depart(), "出发")
+	t.check(Support.depart(setup), "出发")
 	var map = game.base()
 	var view: MapView = map._view
 	t.check(map.revealing(), "在转场")
