@@ -54,7 +54,7 @@ const TEXT := {
 	"notice.erosion_total": {"zh": "全图都被侵蚀了，快撤", "en": "The whole map has eroded. Get out"},
 	"notice.hunter_sensed": {"zh": "附近有动静……", "en": "Something stirs nearby..."},
 	"notice.expelled": {"zh": "被赶了回来", "en": "You were driven back"},
-	"notice.safe_closed": {"zh": "保险箱关上了：%d 件送回基地", "en": "The safe has closed: %d items sent home"},
+	"notice.safe_closed": {"zh": "保险箱关上了：%s送回基地", "en": "The safe has closed: %s sent home"},
 	"notice.at_extract": {"zh": "到了撤离点：按「撤离」结束这一局", "en": "Extraction point reached: press Extract to end the run"},
 	"notice.at_extract_paid": {"zh": "到了撤离点：按「撤离」结束这一局，要 %d 币", "en": "Extraction point reached: press Extract to end the run (costs %d)"},
 	"notice.encumbrance": {"zh": "负重变成「%s」", "en": "Load is now \"%s\""},
