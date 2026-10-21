@@ -62,7 +62,7 @@ static func frame_refresh(t: TestCase, root: Window) -> void:
 
 
 static func frame_bag_window(t: TestCase, root: Window) -> void:
-	t.begin("216 补充 · 背包浮窗（作者选乙 一格 72）：不写字、右上圆钮（停上去写收起（B））按了收起；窗 660×620、棋盘格子在窗 (42,82)、一格 72、皮带外框比格子外扩 24；棋盘下居中一条数值栏，没有老耐力行")
+	t.begin("216 补充 / 223 · 背包浮窗（作者选乙 一格 72）：不写字、右上圆钮（停上去写收起（B））按了收起；窗 984×620（右栏名牌 + 角色卡）、棋盘格子在窗 (42,82)、一格 72、皮带外框比格子外扩 24；棋盘下居中一条数值栏，没有老耐力行")
 	var game = Setup._game(root, "strip216b")
 	var setup = game.base()
 	setup.show_page(2)
@@ -101,6 +101,15 @@ static func frame_bag_window(t: TestCase, root: Window) -> void:
 		t.not_null(win.frame.texture, "外框切图在")
 		t.eq(win.close_button.position, BagWindow._vec(spec["minimize"]["topleft_rel_window"]) + Vector2(extra.x, 0.0), "圆钮在右上")
 		t.check(not inv.board_view.seams.is_empty(), "格缝按棋盘美术画")
+		# 223：窗加宽 984，竖线在原窗右沿 660，右栏名牌 + 角色卡（都跟着棋盘右移）
+		t.eq(BagWindow._vec(spec["window_size"]), Vector2(984, 620), "223：窗 984×620")
+		var dv := win.divider_v()
+		t.eq([dv[0], dv[1].x], [Vector2(660.0 + extra.x, 66.0), 660.0 + extra.x], "竖分隔线在 x 660、从 y 66 起")
+		t.eq(win.nameplate.position, Vector2(686.0 + extra.x, 78.0), "名牌在右栏 (686, 78)")
+		t.check((win.nameplate.size * win.nameplate.scale - Vector2(272, 112)).length() < 0.5, "名牌画出来 272×112（%s）" % str(win.nameplate.size * win.nameplate.scale))
+		t.eq(win.card.position, Vector2(686.0 + extra.x, 202.0), "角色卡在 (686, 202)")
+		t.check(win.card.row(0).has("value") and win.card.passive_names().size() > 0, "角色卡有数、有被动")
+		t.check(win.control_rect(&"character_card").has_area(), "教程能指角色卡")
 		var strips: Array = win.find_children("*", "StatsStrip", true, false)
 		t.eq(strips.size(), 1, "棋盘下一条数值栏")
 		if strips.size() == 1:

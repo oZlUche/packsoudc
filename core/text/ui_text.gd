@@ -316,6 +316,17 @@ const TEXT := {
 	"strip.special_immune": {"zh": "免疫%s", "en": "Immune to %s"},
 	"strip.special_sep": {"zh": "：", "en": ": "},
 	"strip.load": {"zh": "负重", "en": "Load"},
+	# ui/widgets/character_card.gd（223）
+	"card.max_hp": {"zh": "生命上限", "en": "Max health"},
+	"card.max_stamina": {"zh": "耐力上限", "en": "Max stamina"},
+	"card.regen": {"zh": "回气", "en": "Stamina regen"},
+	"card.per_sec": {"zh": "每秒", "en": "/s"},
+	"card.up": {"zh": "▲%s", "en": "▲%s"},
+	"card.down": {"zh": "▼%s", "en": "▼%s"},
+	"card.tip_line": {"zh": "%s：%s", "en": "%s: %s"},
+	"card.tip_base": {"zh": "角色本身 %s", "en": "Character base %s"},
+	"card.tip_source": {"zh": "%s　%s", "en": "%s  %s"},
+	"card.src_faith": {"zh": "信仰", "en": "Faith"},
 	# ui/widgets/belt_slots.gd
 	"belt.empty_slot": {"zh": "这一格是空的", "en": "This slot is empty"},
 	"belt.flash": {"zh": "%s：%s", "en": "%s: %s"},
