@@ -18,7 +18,7 @@ var _offer_btn: Button
 var _action_btns: Array = []
 var _actions_box: VBoxContainer = null
 var _actions_tier: int = -99
-var _inv: Control = null
+var _inv: InventoryPanelScript = null
 
 
 func open(payload: Dictionary) -> void:
@@ -62,11 +62,15 @@ func open(payload: Dictionary) -> void:
 
 	_inv = _mount_bag(row, _table_view, func(text: String): _line.text = text, _table)     # 棋盘上双击 → 祭品台
 	_table_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): take_back(uid))
+	_tip_double(_table_view, "act.take_back")     # 230
+	_tip_quick(_inv, "act.offer", func(inst: ItemInstance) -> String:
+		var d := flow.run.active_faith()
+		return "" if d == null or d.accepts_offering(inst.def) else UiText.t("altar.rejected") % [Names.of(inst.def), Names.of(d)])
 	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
 		if target != _table:
 			return true
 		var d := flow.run.active_faith()
-		return d != null and d.accepts_offering(inst.def) and _altar_open()
+		return d != null and d.accepts_offering(inst.def) and _altar_open() and not inst.is_locked_by_player()     # 230：锁住的不献
 	_table.changed.connect(_refresh)
 	run.faith_power.changed.connect(func(_id: StringName, _p: int, _t: int): _refresh())
 	_refresh()
@@ -89,6 +93,9 @@ func put_on_table(uid: int) -> bool:
 	if from == null or def == null or not _altar_open():
 		return false
 	var inst := from.get_item(uid)
+	if inst != null and inst.is_locked_by_player():
+		_line.text = UiText.t("item.locked_no") % Names.of(inst.def)     # 230
+		return false
 	if inst == null or not def.accepts_offering(inst.def):
 		_line.text = UiText.t("altar.rejected") % [Names.of(inst.def) if inst != null else "?", Names.of(def)]
 		return false

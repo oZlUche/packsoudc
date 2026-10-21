@@ -217,6 +217,36 @@ static func charge_dots(inst: ItemInstance, rot: int, anchor: Vector2, cell: flo
 	return out
 
 
+## 230：玩家锁住的道具 —— 当前朝向脚印最靠左上的那一格（y 最小、再 x 最小）左上角往里 8% 一枚小锁（`tip/lock_badge`），
+## 边长 16 × 格 / 60；格子比 60 大时用 2 倍图缩。没锁不画；画了返回 true
+static func draw_lock(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
+	var r := lock_rect(inst, rot, anchor, cell)
+	if r.size == Vector2.ZERO:
+		return false
+	var tex := UiTheme.art_cached("tip/lock_badge_2x" if cell > InventoryView.CELL else "tip/lock_badge")
+	if tex == null:
+		canvas.draw_rect(r, Color("d4a84f") * modulate)
+		return true
+	canvas.draw_texture_rect(tex, r, false, modulate)
+	return true
+
+
+## 小锁画在哪（没锁 / 没形状给空矩形）
+static func lock_rect(inst: ItemInstance, rot: int, anchor: Vector2, cell: float) -> Rect2:
+	if inst == null or inst.def == null or inst.def.shape == null or not inst.is_locked_by_player():
+		return Rect2()
+	var best := Vector2i(1 << 20, 1 << 20)
+	for c in inst.def.shape.cells_rotated(rot):
+		if c.y < best.y or (c.y == best.y and c.x < best.x):
+			best = c
+	var side := LOCK_SIDE * cell / InventoryView.CELL
+	return Rect2(anchor + Vector2(best) * cell + Vector2.ONE * cell * LOCK_INSET, Vector2(side, side))
+
+
+const LOCK_SIDE := 16.0
+const LOCK_INSET := 0.08
+
+
 ## 测试用：清掉缓存（换了 [constant ART_MANIFEST] 的内容之后）
 static func clear_art_cache() -> void:
 	_art.clear()

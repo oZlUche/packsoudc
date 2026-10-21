@@ -9,7 +9,7 @@ var _safe: GridInventory = null
 var _module: SafeModule = null
 var _view: InventoryView
 var _line: Label
-var _inv: Control = null
+var _inv: InventoryPanelScript = null
 
 
 func open(payload: Dictionary) -> void:
@@ -41,6 +41,9 @@ func open(payload: Dictionary) -> void:
 
 	_inv = _mount_bag(row, _view, func(text: String): _line.text = text, _safe)     # 棋盘上双击 → 进保险箱
 	_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): take_back(uid))
+	_tip_double(_view, "act.take_back")     # 230
+	_tip_quick(_inv, "act.to_safe", func(inst: ItemInstance) -> String:
+		return "" if MetaState.keeps(inst.def) else UiText.t("safe.no_bags"))
 	# 包不进保险箱（局外不留包，MetaState.keeps）
 	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
 		return _is_open() and (target != _safe or MetaState.keeps(inst.def))

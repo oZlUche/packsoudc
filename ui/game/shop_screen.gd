@@ -17,7 +17,7 @@ var _sell_view: InventoryView
 var _refresh_btn: Button
 var _wallet_line: Label
 var _line: Label
-var _inv: Control
+var _inv: InventoryPanelScript
 
 
 func open(payload: Dictionary) -> void:
@@ -63,6 +63,7 @@ func open(payload: Dictionary) -> void:
 	_drag.drop_filter = _allow_drop
 	_drag.craft_filter = _allow_craft     # 审查 A1：没付钱的商品不能拿去合成（会被消耗掉、结不了账）
 	_drag.drag_finished.connect(_on_drag_finished)
+	_inv.extra_actions = _sell_actions     # 230：棋盘上的东西多两颗「出售 | 出售同类」
 
 	if _session != null:
 		_session.stock_changed.connect(_rebuild)
@@ -92,6 +93,17 @@ func buy(i: int) -> bool:
 ## 双击栏位里的商品
 func quick_buy(uid: int) -> bool:
 	return _session != null and buy(_session.slot_of(uid))
+
+
+## 230：直接卖掉自己的一件（不经出售区）：从它所在的容器拿走、进账。锁着的不卖。返回得了多少；没卖 -1
+func sell_now(uid: int) -> int:
+	if _session == null:
+		return -1
+	var from := flow.run.holder_of(uid)
+	var inst := from.get_item(uid) if from != null else null
+	if inst == null or inst.is_locked_by_player() or _cant_sell(inst) != "" or from.remove(uid) == null:
+		return -1
+	return _session.sell(inst)
 
 
 func refresh_stock() -> bool:
@@ -147,7 +159,10 @@ func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 			_say(UiText.t("shop.short") % [Names.of(inst.def), int(_session.stock[slot]["price"]), flow.run.wallet.balance])
 			return false
 		return false
-	# 自己的东西
+	# 自己的东西（230：锁住的不进出售区）
+	if target == _session.sell_box and inst.is_locked_by_player():
+		_say(UiText.t("item.locked_no") % Names.of(inst.def))
+		return false
 	return not _is_shelf(target)
 
 
@@ -194,6 +209,34 @@ func _on_drag_finished(uid: int, dropped: bool) -> void:
 		_refresh()
 
 
+## 230：栏位上那件的按钮「买下 N 币」；钱不够灰
+func _buy_action(i: int) -> ItemActions.Action:
+	var a := ItemActions.make(&"buy", UiText.t("act.buy") % int(_session.stock[i]["price"]), func(): buy(i))
+	return a if _session.can_buy(i) else ItemActions.disable(a, UiText.t("act.short"))
+
+
+func _sell_actions(inst: ItemInstance) -> Array:
+	if _session == null:
+		return []
+	var price_of := func(i: ItemInstance) -> int: return _session.sell_price_of(i.def)
+	var one := ItemActions.sell(inst, _session.sell_price_of(inst.def), sell_now)
+	var why := _cant_sell(inst)
+	return [ItemActions.disable(one, why) if why != "" and one.enabled else one,
+		ItemActions.sell_same(inst, flow.run.board, price_of, sell_now)]
+
+
+## 棋盘上这件现在卖不了的原因（扎了根、包里还有东西）；能卖空串
+func _cant_sell(inst: ItemInstance) -> String:
+	var board := flow.run.board
+	if not board.has_item(inst.uid):
+		return ""
+	if board.is_locked(inst.uid):
+		return UiText.t(DragLayer.ROOTED_NOTICE)
+	if board.acts_as_bag(inst.def) and not board.contents_of(inst.uid).is_empty():
+		return UiText.t("act.bag_full")
+	return ""
+
+
 func _say(text: String) -> void:
 	if _line != null:
 		_line.text = text
@@ -218,6 +261,7 @@ func _rebuild() -> void:
 		view.inventory = _session.shelves[i]
 		view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		view.item_double_clicked.connect(func(_v: ContainerView, uid: int): quick_buy(uid))
+		view.actions_for = func(_uid: int) -> Array: return [_buy_action(idx)]     # 230
 		col.add_child(view)
 		var inst := _session.item_at(i)     # 卖掉的格子是空的（价签只写「已售」，用不到尺寸）
 		var def := inst.def if inst != null else null

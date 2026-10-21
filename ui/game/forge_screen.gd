@@ -33,7 +33,7 @@ var _line: Label
 ## 风箱把手（三张图跟着状态换）
 var _forge_btn: TextureButton
 var _back_btn: TextureButton
-var _inv: Control = null
+var _inv: InventoryPanelScript = null
 var _layout: Dictionary = {}
 var _bg: TextureRect
 ## 摆在底图上的几块（底图像素的矩形 → 屏上）：Control → Rect2
@@ -117,13 +117,17 @@ func open(payload: Dictionary) -> void:
 	_drag.register_view(_out_view)
 	_tip.watch(_out_view)
 	_out_view.item_double_clicked.connect(func(_v: ContainerView, _uid: int): take_token())
+	for v in _slot_views:
+		_tip_double(v, "act.take_back")     # 230
+	_tip_double(_out_view, "act.take")
+	_tip_quick(_inv, "act.to_forge")
 	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
 		if target == _out:
 			return _out.has_item(inst.uid)     # 出牌槽只出不进
 		var i := _slots.find(target)
 		if i < 0:
 			return true
-		if not _forge_open() or Forge.is_token(inst):
+		if not _forge_open() or Forge.is_token(inst) or inst.is_locked_by_player():     # 230：锁住的不进铸炉
 			return false
 		var g := _slots[i]
 		return g.item_count() == 0 or (g.item_count() == 1 and g.has_item(inst.uid))     # 一槽一件
@@ -220,7 +224,7 @@ func put_in(slot: int, uid: int) -> bool:
 	if from == null or slot < 0 or slot >= _slots.size() or not _forge_open() or _slots[slot].item_count() > 0:
 		return false
 	var inst := from.get_item(uid)
-	if inst == null or Forge.is_token(inst):
+	if inst == null or Forge.is_token(inst) or inst.is_locked_by_player():
 		return false
 	return InventoryService.transfer_auto(from, uid, _slots[slot])
 

@@ -30,6 +30,11 @@ const STRIP_GAP := 22.0
 var quick_target: ItemContainer = null
 ## 双击之后的提示回调（容器屏想自己写）：`func(text: String)`
 var hint_sink: Callable = Callable()
+## 230：悬浮窗按钮里「双击做的那件事」叫什么（有 [member quick_target] 的屏给：`func(inst) -> ItemActions.Action`，出售区写「出售 N 币」……）；
+## 不给 = 「放进去」；没有 quick_target = 「放到地上」
+var quick_action: Callable = Callable()
+## 230：这一屏另加的按钮（`func(inst) -> Array`，排在锁定后面）
+var extra_actions: Callable = Callable()
 
 
 ## [param drag] 给了就把两个视图登记到那一层（战利品屏要一层盖住三个容器）；不给就自己造一层盖在面板上
@@ -98,7 +103,7 @@ func _build() -> void:
 	tip.watch(board_view)
 	strip.tip = tip
 	board_view.item_double_clicked.connect(quick_move)
-	board_view.item_context.connect(func(_v: ContainerView, uid: int): reseat_anchor(uid))     # 099：右键信物 = 奉为主信仰
+	board_view.actions_for = board_actions     # 230：右键 = 钉住悬浮窗（信物奉为主信仰改成按钮）
 
 
 ## 216：容器屏把数值栏摘出去，自己摆到「全部拾取」那一行；面板里那格空位一起拿掉
@@ -133,7 +138,32 @@ func _on_ground_double(view: ContainerView, uid: int) -> void:
 		quick_move(view, uid)
 
 
-## 099（作者定）：右键棋盘上的信物 = 奉它为主信仰（不弹菜单）。不是信物的右键什么也不做。返回切没切
+## 230：棋盘上一件的按钮 —— 双击做的那件事（放到地上 / 送去这一屏的容器）→ 锁定 → 奉为主信仰（信物）→ 这一屏另加的
+func board_actions(uid: int) -> Array:
+	var inst := _run.board.get_item(uid) if _run != null else null
+	if inst == null:
+		return []
+	var out: Array = []
+	var first: ItemActions.Action = null
+	if quick_target != null and quick_action.is_valid():
+		first = quick_action.call(inst)
+	if first == null:
+		first = ItemActions.make(&"quick", UiText.t("act.into_box" if quick_target != null else "act.drop"),
+			func(): quick_move(board_view, uid), quick_target == null)
+	if inst.is_locked_by_player() and (quick_target == null or not _quick_allows(inst)):
+		ItemActions.disable(first, UiText.t("act.locked"))
+	elif _run.board.is_locked(uid):
+		ItemActions.disable(first, UiText.t(DragLayer.ROOTED_NOTICE))
+	out.append(first)
+	out.append(ItemActions.lock(inst, _run.board))
+	if inst.def.is_anchor():
+		out.append(ItemActions.anchor(inst, _run.board, reseat_anchor))
+	if extra_actions.is_valid():
+		out.append_array(extra_actions.call(inst))
+	return out
+
+
+## 099（作者定）：信物奉为主信仰（230 起走悬浮窗按钮，右键改成钉住悬浮窗）。不是信物什么也不做。返回切没切
 func reseat_anchor(uid: int) -> bool:
 	var inst := _run.board.get_item(uid) if _run != null and _run.board != null else null
 	if inst == null or inst.def == null or not inst.def.is_anchor():
@@ -159,8 +189,14 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 		if _run.board.is_locked(uid):
 			_hint_text(UiText.t(DragLayer.ROOTED_NOTICE))     # 207：扎了根的双击也搬不走
 			return false
+		if inst.is_locked_by_player() and not _quick_allows(inst):
+			_hint_text(UiText.t("item.locked_no") % Names.of(inst.def))     # 230：锁住的不丢地上、不卖、不献
+			return false
 		if quick_target != null and InventoryService.transfer_auto(_run.board, uid, quick_target):
 			return true
+		if inst.is_locked_by_player():
+			_hint_text(UiText.t("item.locked_no") % Names.of(inst.def))
+			return false
 		if InventoryService.transfer_auto(_run.board, uid, _run.storage):
 			if quick_target != null:
 				_hint_text(UiText.t("bag.no_room_container") % Names.of(inst.def))
@@ -168,6 +204,11 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 	return false
 
 
+
+
+## 230：锁住的这件能不能双击送去 [member quick_target]（那一屏的落点规矩说了算：出售区、祭品台不收锁住的）
+func _quick_allows(inst: ItemInstance) -> bool:
+	return quick_target != null and (not _drag.drop_filter.is_valid() or bool(_drag.drop_filter.call(inst, quick_target)))
 
 
 ## 地上那件进不了背包：提示一句（134：地图 / 事件屏双击地上、放不下只开背包时也用这句）

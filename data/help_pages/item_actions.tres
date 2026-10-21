@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_7d03h"]
+
+[resource]
+script = ExtResource("1_7d03h")
+id = &"item_actions"
+display_name = "道具按钮与锁定"
+display_names = {
+"en": "Item Buttons and Locking"
+}
+category = &"bag"
+order = 7
+text = "右键一件道具，它的说明窗立刻钉住，下面一排按钮就是这件此刻能做的事：第一颗和双击做的一样（放进背包、放到地上、买下、取回……），后面是锁定、出售、奉为主信仰等。停在道具上等一会儿，说明窗也会钉住、按钮照样能点。出售、放到地上这类收不回来的要点两下：第一下变成「再点一次」，两秒内不点就回原样。
+
+锁定的道具角上有一把小锁。锁着的不能出售、不能放到地上、不能献上祭品台、不能放进铸炉，一键出售会跳过它；在背包里、仓库里照常挪动和带出。锁只防手滑，事件和侵蚀照旧会拿走它。「锁定同类」「出售同类」管的是同一个容器里同名的那几件。"
+texts = {
+"en": "Right-click an item and its tooltip pins at once; the row of buttons under it is what you can do with that item right now. The first button does the same as a double-click (into the pack, drop to the Ground, buy, take back...), followed by Lock, Sell, Make main faith and so on. Hovering over an item for a moment pins the tooltip too, and the buttons work the same way. Buttons that can't be undone, such as Sell or Drop, need two clicks: the first turns it into Click again, and it reverts if you don't click within two seconds.
+
+A locked item shows a small lock in its corner. Locked items can't be sold, dropped to the Ground, put on the Offering table or put in the Forge, and selling by rarity skips them; you can still move them in your pack and warehouse and carry them out. The lock only guards against slips: events and Erosion can still take the item. Lock all and Sell all act on every item with the same name in the same container."
+}
+related = Array[String](["quick_place", "anchor_and_right_click", "shop", "warehouse"])

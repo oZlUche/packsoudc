@@ -99,6 +99,20 @@ func _mount_bag(row: Control, other: ContainerView, hint_sink: Callable, quick_t
 	return inv
 
 
+## 230：这块视图上的悬浮窗按钮只有一颗「双击做的那件事」（取回、拾取……），点了走同一条双击的路
+func _tip_double(view: ContainerView, label_key: String) -> void:
+	view.actions_for = func(uid: int) -> Array:
+		return [ItemActions.make(&"quick", UiText.t(label_key), func(): view.item_double_clicked.emit(view, uid))]
+
+
+## 230：棋盘上「双击做的那件事」那颗按钮换个名字（放进保险箱、放上祭品台……）；[param ok] = `func(inst) -> String` 不让放的原因，空串 = 能放
+func _tip_quick(inv: InventoryPanelScript, label_key: String, ok: Callable = Callable()) -> void:
+	inv.quick_action = func(inst: ItemInstance) -> ItemActions.Action:
+		var a := ItemActions.make(&"quick", UiText.t(label_key), func(): inv.quick_move(inv.board_view, inst.uid))
+		var why: String = ok.call(inst) if ok.is_valid() else ""
+		return ItemActions.disable(a, why) if why != "" else a
+
+
 ## 「先试棋盘、放不下再到地上」（神坛退回祭品、保险箱取出、容器里双击共用）：返回落点 "board" / "storage"，都放不下 ""。
 ## 提示语各屏按返回值自己写
 func _take_to_player(from: ItemContainer, uid: int) -> String:

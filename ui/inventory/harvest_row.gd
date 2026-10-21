@@ -81,12 +81,14 @@ func _exit_tree() -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	var mb := event as InputEventMouseButton
-	if mb == null or mb.button_index != MOUSE_BUTTON_LEFT or not mb.pressed:
+	if mb == null or not mb.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT] or not mb.pressed:
 		return
 	var uid := uid_at_local(mb.position)
 	if uid < 0:
 		return
-	if mb.double_click:
+	if mb.button_index == MOUSE_BUTTON_RIGHT:
+		item_context.emit(self, uid)     # 230：右键 = 钉住悬浮窗
+	elif mb.double_click:
 		item_double_clicked.emit(self, uid)
 	else:
 		grab_requested.emit(self, uid, mb.position)

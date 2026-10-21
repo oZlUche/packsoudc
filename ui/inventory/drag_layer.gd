@@ -604,6 +604,8 @@ func _stash_accepts(target: ItemStash, inst: ItemInstance) -> bool:
 		return false
 	if not target.accepts(inst.def):
 		return false
+	if inst.is_locked_by_player() and _source != target:
+		return false     # 230：锁住的不丢到地上（地上拿起来挪位置照旧）
 	# 087：带东西的包也能进列表 —— 包一行、内容物各一行（打散），得都装得下
 	return target.room_for(1 + _payload_items().size())
 

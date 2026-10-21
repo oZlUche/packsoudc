@@ -11,8 +11,11 @@ extends Control
 signal grab_requested(view: ContainerView, uid: int, local_pos: Vector2)
 ## 084：双击了一件（快速置入：棋盘 ⇄ 容器 / 地上，由持有这个视图的屏决定去哪）。双击时不发 grab_requested
 signal item_double_clicked(view: ContainerView, uid: int)
-## 099：右键按在一件上（没在拖的时候）。棋盘用它把信物奉为主信仰；别的屏可以不接
+## 099：右键按在一件上（没在拖的时候）。230：悬浮窗接它 —— 立刻钉住这件的窗、展开按钮（信物奉为主信仰改成按钮）
 signal item_context(view: ContainerView, uid: int)
+
+## 230：这一屏在这块视图上给道具的操作按钮 `func(uid) -> Array[ItemActions.Action]`（[HoverTip] 画在脚注下面）；没设 = 没按钮
+var actions_for: Callable = Callable()
 
 
 ## 087（作者定）：**道具这个实体本身就有悬浮窗** —— 任何容器视图进树之后自己找（或造）一个 [HoverTip] 登记上去：

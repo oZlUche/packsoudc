@@ -106,3 +106,13 @@ class ItemAction:  id: StringName   # &"lock" &"sell" ...
 
 作者在卡上选 **丙 两者**：按钮在悬浮窗脚下，右键一件 = 立刻钉住悬浮窗展开按钮，信物的右键切换改成按钮。待定 2 / 3 / 4 没回音按推荐（锁不防系统损失、危险动作两步、同类 = 同 id）。执行已按此派。
 
+
+## 七、落地（v3.86）
+
+- **供给层**：`core/inventory/item_actions.gd`（`ItemActions.Action`：id / 字 / 灰与原因 / 危险 / 成对键 / run）；通用几颗 `lock` / `lock_same` / `sell` / `sell_same` / `anchor`；排行 `rows()` 照 §2.6。各屏在视图上登记 `ContainerView.actions_for(uid)`。
+- **按钮**：`ui/widgets/tip_button.gd`（平墨签 `tip/tipbtn_*` 五态，高 28、字 14，半宽 177 / 满宽 360；危险的第一下变「再点一次」2 秒回弹）。`HoverTip` 在脚注下画按钮行，右键（`item_context`）= `pin_on` 立刻钉住；点了钉住的窗原地刷新，东西走了就收窗。
+- **锁**：`ItemInstance.state["locked"]`（`is_locked_by_player` / `set_locked`，解锁删键）；守门 `MetaState.sell_item / sell_bag / _sellable`（一键出售写「跳过 N 件锁定的」）、商店出售区、祭品台、铸炉、`DragLayer` 丢地上、`InventoryPanel.quick_move`。小锁 `tip/lock_badge`（格子 > 60 用 `_2x`）画在左上那格 + 8%，悬浮窗副标题加「已锁定」。
+- **各屏**：局内棋盘（放到地上 / 送去这一屏的容器 → 锁定 → 奉为主信仰）、地上（放进背包 → 锁定）、商店（栏位「买下 N 币」钱不够灰；棋盘多「出售 | 出售同类」，`ShopScreen.sell_now` 直接卖）、神坛 / 保险箱 / 铸炉（棋盘第一颗换名、台上 / 箱里 / 槽里「取回」）、战利品与事件收获「拾取」；开局屏（仓库：带上、锁定一对、出售一对；地上：摆上棋盘、置入、锁定；棋盘：放回仓库 / 收进包架、锁定、奉为主信仰；包架：摆上棋盘）；基地与结算（`WarehousePanel.warehouse_actions` / `board_actions`，出售页包架「出售 N 币」）。信物的右键切换改成按钮（`InventoryPanel` 与开局屏不再接 `item_context → reseat_anchor`）。
+- **帮助页**：新页「道具按钮与锁定」（`item_actions`，背包类第 8 页），「信物与右键」「换神与休眠」改成按钮说法。
+- **没做**：科技页「上交」（229 起科技页没有双击上交那条路，按钮留空）；局内别的容器（台上、箱里）不给锁定。
+- 测试：`tests/ui/test_item_actions_230.gd`（排行、锁的守门与存档、两步按钮、右键钉住与原地刷新、商店买卖按钮、英文）；`test_help_pages` 改五十五页。
