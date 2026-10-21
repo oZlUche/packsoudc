@@ -10,10 +10,10 @@ const PREFIX := "battle_coach"
 
 
 static func run_coach_data(t: TestCase) -> void:
-	t.begin("166 补充二 · 战斗教程是数据：六步按看屏幕的顺序，目标都在 BattleView.COACH_TARGETS 里、都有字；只有序章一写了")
+	t.begin("166 补充二 · 战斗教程是数据：四步按看屏幕的顺序（220 压了步），目标都在 BattleView.COACH_TARGETS 里、都有字；只有序章一写了")
 	var steps := CoachOverlay.load_steps(&"prologue_battle")
 	var targets: Array = steps.map(func(s: Dictionary) -> String: return String(s["target"]))
-	t.eq(targets, ["timeline", "play_button", "speed_button", "skip_button", "buffs_mine", "next_button"], "六步按顺序")
+	t.eq(targets, ["timeline", "play_button", "buffs_mine", "next_button"], "220：四步按顺序（播放 / 倍速 / 跳过并成一步）")
 	t.eq(CoachOverlay.problems(steps, BattleView.COACH_TARGETS), [] as Array[String], "目标都认得、都有字")
 	t.check(not CoachOverlay.problems(steps).is_empty(), "拿地图屏的读数部件去对：对不上（两套目标分开认）")
 	var bad := CoachOverlay.problems([{"target": "vitality", "text": "x"}], BattleView.COACH_TARGETS)
@@ -40,7 +40,7 @@ static func _lay_out(n: Node) -> void:
 
 
 static func frame_battle_coach(t: TestCase, root: Window) -> void:
-	t.begin("166 补充二 · 写了战斗教程的章：第一场开屏就停住回放、放六步，点完收掉、接着放、记在局外；再开不放；调试台让下一场再放")
+	t.begin("166 补充二 · 写了战斗教程的章：第一场开屏就停住回放、放四步，点完收掉、接着放、记在局外；再开不放；调试台让下一场再放")
 	var c := GF._content()
 	var kit := GF._loadout(c, &"standard")
 	var found := GF._seed_with(c, &"battle", kit.items)
@@ -101,7 +101,7 @@ static func frame_battle_coach(t: TestCase, root: Window) -> void:
 		Support.cleanup(PREFIX)
 		return
 	t.eq(o.get_parent(), screen, "盖在回放屏上")
-	t.eq(o.steps.size(), 6, "六步")
+	t.eq(o.steps.size(), 4, "220：四步")
 	_lay_out(screen)
 	for id in BattleView.COACH_TARGETS:
 		var r := view.control_rect(id)
@@ -115,7 +115,7 @@ static func frame_battle_coach(t: TestCase, root: Window) -> void:
 	view._process(1.0)
 	t.eq(view.now(), 0.0, "教程期间时间一直没走")
 	o.next()
-	t.is_null(screen.coach(), "六步点完：收掉")
+	t.is_null(screen.coach(), "四步点完：收掉")
 	t.check(not view.is_held() and view.is_playing(), "回放接着放")
 	view._process(0.1)
 	t.check(view.now() > 0.0, "时间走起来了（%.2f 秒）" % view.now())
@@ -171,3 +171,89 @@ static func frame_hold_release(t: TestCase, root: Window) -> void:
 	view.release()
 	t.check(not view.is_playing(), "播完了：不动")
 	view.queue_free()
+
+
+## 220 §2.1：回放里头一回碰到一种反应 —— 弹字那一刻停住、一步纸条（文字由反应定义拼）指着挨反应那一方的状态行，点了接着放；
+## 同一场第二次不停；跳过不停；流程开战时把「这一场头一回的」交给回放屏，局外当场就记下
+static func frame_reaction_pause(t: TestCase, root: Window) -> void:
+	t.begin("220 · 反应第一次触发：回放停住解释一句，点了接着放；第二次不停；跳过不停；局外当场记")
+	var c := GF._content()
+	var f := Support.flow(c, PREFIX)
+	var kit := GF._loadout(c, &"standard")
+	var found := GF._seed_with(c, &"battle", kit.items)
+	if not found.is_empty():
+		f.new_run()
+		f.begin(c.chapter, kit, int(found["seed"]))
+		f.pick_spawn(int(found["entry"]))
+		f.step_to(int(found["next"]))
+		f.start_battle()
+		var fresh = f.last_payload.get("new_reactions", null)
+		t.check(fresh is Array, "开战的载荷里带「这一场头一回的反应」")
+		var res: BattleResult = f.last_payload.get("result", null)
+		if fresh is Array and res != null:
+			t.eq((fresh as Array).size(), ReactionResolver.reactions_in(res.log).size(), "新档：这一场打出的都是头一回")
+			t.check((fresh as Array).all(func(id): return f.meta.reaction_seen(StringName(String(id)))), "局外当场记下（不等回放看完）")
+	Support.cleanup(PREFIX)
+	f = Support.flow(c, PREFIX)
+	var make := func(at_sec: float) -> BattleEvent:
+		return BattleEvent.make(BattleEvent.EFFECT_RESOLVED, int(at_sec * StatMath.ONE), 1,
+			{"effect": ReactionResolver.EFFECT, "reaction": "poison_bleed", "elements": ["poison", "bleed"]})
+	var r := BattleResult.new()
+	r.winner = 0
+	r.duration = 3 * StatMath.ONE
+	r.log.append(BattleEvent.make(BattleEvent.BATTLE_START, 0, -1))
+	r.log.append(make.call(1.0))
+	r.log.append(make.call(1.0))     # 同一刻又来一次：不能叠第二张纸条
+	r.log.append(BattleEvent.make(BattleEvent.DAMAGE, int(1.0 * StatMath.ONE), 1, {"amount": 1, "type": "physical"}))
+	r.log.append(make.call(2.0))
+	var screen = load("res://ui/game/battle_screen.gd").new()
+	screen.screen = GameFlow.Screen.BATTLE
+	screen.flow = f
+	screen.font = UiPalette.cjk_font()
+	root.add_child(screen)
+	screen.open({"result": r, "won": true, "new_reactions": [&"poison_bleed"]})
+	var view: BattleView = screen.view()
+	_lay_out(screen)
+	t.check(view.is_playing() and screen.coach() == null, "开播，没停")
+	view._process(0.5)
+	t.check(screen.coach() == null, "反应之前不停")
+	view._process(0.6)
+	var o: CoachOverlay = screen.coach()
+	t.not_null(o, "第一次菌血：停下来放一张纸条")
+	if o != null:
+		t.check(view.is_held() and not view.is_playing(), "回放停住")
+		t.eq(o.steps.size(), 1, "一步")
+		var text := String(o.step()["text"])
+		var def := ReactionResolver.by_id(&"poison_bleed")
+		t.eq(text, Encyclopedia.reaction_intro(def), "文字由反应定义拼")
+		t.check(text.begins_with(Names.of(def) + "：毒碰上血。") and text.ends_with("百科里点亮了这一页。"), "「名字：甲碰上乙。说明　百科里点亮了这一页。」（%s）" % text)
+		t.eq(String(o.step()["target"]), "buffs_enemy", "指着挨反应那一方（对手）的状态行")
+		t.check(o.hole().size.x > 0.0, "对手的状态行挖得到洞")
+		var cur := view._cursor
+		view._process(1.0)
+		t.eq(view._cursor, cur, "停着：后面的事件不偷跑（同一刻的第二次也没走）")
+		o.next()
+		t.is_null(screen.coach(), "点一下：收掉")
+		t.check(not view.is_held() and view.is_playing(), "接着放")
+		view._process(1.5)
+		t.is_null(screen.coach(), "同一场第二次菌血：不再停")
+	screen.queue_free()
+	var skip = load("res://ui/game/battle_screen.gd").new()
+	skip.screen = GameFlow.Screen.BATTLE
+	skip.flow = f
+	skip.font = UiPalette.cjk_font()
+	root.add_child(skip)
+	skip.open({"result": r, "won": true, "new_reactions": [&"poison_bleed"]})
+	skip.view().skip_to_end()
+	t.check(skip.coach() == null and not skip.view().is_held(), "跳过：不停、不解释")
+	skip.queue_free()
+	var seen = load("res://ui/game/battle_screen.gd").new()
+	seen.screen = GameFlow.Screen.BATTLE
+	seen.flow = f
+	seen.font = UiPalette.cjk_font()
+	root.add_child(seen)
+	seen.open({"result": r, "won": true})
+	seen.view()._process(1.5)
+	t.check(seen.coach() == null, "见过的反应（载荷里没有）：不停")
+	seen.queue_free()
+	Support.cleanup(PREFIX)

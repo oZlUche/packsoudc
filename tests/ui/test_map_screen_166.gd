@@ -110,9 +110,9 @@ static func run_coach_data(t: TestCase) -> void:
 	t.check(free.all(func(s: Dictionary) -> bool: return TextLint.scan({"text": String(s["text"])}).is_empty()), "218：不写数字")
 	t.eq((load(ContentPaths.asset_file("chapters", "free_mode")) as ChapterDef).coach_for(&"map"), &"free_mode_map", "218：自由模式配了这份")
 	t.eq((load(ContentPaths.asset_file("chapters", "clockwork_hourglass")) as ChapterDef).coaches, {}, "218 补充一：机关沙漏不配教程（作者）")
-	# 218 补充一（217 批三）：序章一的背包窗六步、战前屏三步，目标各认各的屏
+	# 218 补充一（217 批三）：序章一的背包窗四步（220 压了步）、战前屏三步，目标各认各的屏
 	var bag := CoachOverlay.load_steps(&"prologue_bag")
-	t.eq(bag.map(func(s: Dictionary) -> String: return String(s["target"])), ["board", "board", "board", "strip_stamina", "strip_dps", "strip_load"], "背包窗：棋盘三步、三枚签各一步")
+	t.eq(bag.map(func(s: Dictionary) -> String: return String(s["target"])), ["board", "board", "board", "strip_stamina"], "220：背包窗棋盘三步、三枚签并成一步")
 	t.eq(CoachOverlay.problems(bag, BagWindow.COACH_TARGETS), [] as Array[String], "背包窗的目标都认得")
 	var pre := CoachOverlay.load_steps(&"prologue_prebattle")
 	t.eq(pre.map(func(s: Dictionary) -> String: return String(s["target"])), ["enemy_board", "scale", "my_board"], "战前屏三步")
@@ -194,12 +194,11 @@ static func frame_prologue_coach(t: TestCase, root: Window) -> void:
 		map.call("_maybe_coach")
 		t.is_null(map.coach(), "开场事件压着（屏 %s）：先不放" % flow.screen)
 		Support.settle(flow)
-	if map.get("_rules") != null:
-		map.call("_maybe_coach")
-		t.is_null(map.coach(), "规则卡压着：先不放")
-		var rule_lines: Array = map._rules.find_children("*", "RichTextLabel", true, false).map(func(r): return (r as RichTextLabel).get_parsed_text())
-		t.check(rule_lines.any(func(s): return String(s).contains("百科")), "217：规则卡末尾一行指向百科")
-		map.close_rules()
+	t.is_null(map.get("_rules"), "220：序章一没有规则卡，不弹")
+	map.toggle_pause()
+	var pause_labels: Array = map._pause.find_children("*", "Button", true, false).map(func(b): return (b as Button).text)
+	t.check(not pause_labels.has("本图规则") and pause_labels.has("百科"), "220：序章的暂停菜单没有「本图规则」（%s）" % [pause_labels])
+	map.toggle_pause()
 	map.call("_maybe_coach")     # 屏上是延迟调用，这里直接叫
 	var o: CoachOverlay = map.coach()
 	t.not_null(o, "地图露出来：教程开了（屏 %s）" % flow.screen)
@@ -217,7 +216,7 @@ static func frame_prologue_coach(t: TestCase, root: Window) -> void:
 	t.not_null(map.coach(), "重放开了")
 	for i in map.coach().steps.size():
 		map.coach().next()
-	# 218 补充一（217 批三）：第一次开背包窗放背包窗教程 —— 六步，棋盘与三枚签都挖得到洞；走完记在局外，再开不放
+	# 218 补充一（217 批三）：第一次开背包窗放背包窗教程 —— 四步，棋盘与三枚签都挖得到洞；走完记在局外，再开不放
 	t.check(CoachOverlay.due(flow, &"prologue_bag"), "背包窗教程还没看过")
 	map.toggle_bag()
 	var win: BagWindow = null
@@ -231,15 +230,15 @@ static func frame_prologue_coach(t: TestCase, root: Window) -> void:
 		var bo: CoachOverlay = win.coach
 		if bo != null:
 			t.eq(bo.get_parent(), map._bag, "铺在压暗那一层上")
-			t.eq(bo.steps.size(), 6, "六步")
+			t.eq(bo.steps.size(), 4, "220：四步")
 			for id in BagWindow.COACH_TARGETS:
 				var r := win.control_rect(id)
 				t.check(r.size.x > 0.0 and r.size.y > 0.0, "背包窗 %s 找得到（%s）" % [id, r])
 			t.check(win.control_rect(&"strip_stamina").position.y > win.control_rect(&"board").end.y, "签在棋盘下面（%s / %s）" % [win.control_rect(&"strip_stamina"), win.control_rect(&"board")])
-			for i in 6:
+			for i in 4:
 				t.check(bo.hole().size.x > 0.0, "背包窗第 %d 步挖了洞" % (i + 1))
 				bo.next()
-		t.is_null(win.coach, "六步点完：收掉")
+		t.is_null(win.coach, "四步点完：收掉")
 		t.check(flow.meta.coach_seen.has("prologue_bag"), "背包窗教程记在局外")
 	map.toggle_bag()
 	t.check(not CoachOverlay.due(flow, &"prologue_bag"), "看过了：再开不放")

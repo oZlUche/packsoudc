@@ -54,6 +54,9 @@ var _base: GameScreen = null
 var _overlay: GameScreen = null
 ## 084：最小化的叠层（作者定：收起不是关掉，是藏起来 —— 揭示进度、日志、拖到一半的状态都留着，「回到这个点」原样放回）
 var _minimized: GameScreen = null
+## 220 E：从词条小窗「百科 >」开的那本百科（盖在整个屏栈和地上之上；关了回原处，底下哪一屏都不动）
+var _codex: GameScreen = null
+const CODEX_Z := 200
 ## 128：地上 —— 一个节点一层，导演持有唯一一份，盖在整个屏栈上面（只有道具本身接鼠标，各屏的面板登记了地方、东西会让开）
 var ground: GroundLayer = null
 ## 地上在这些屏里画（一局里、在某个点上的界面）；战斗回放、结算、局外都不画
@@ -113,6 +116,8 @@ func _ready() -> void:
 	add_child(ground)
 	GroundLayer.set_current(ground)
 	ground.item_double_clicked.connect(_on_ground_double)     # 134
+	HoverTip.codex_page = func(name: String) -> String: return flow.encyclopedia().page_for(name)     # 220 E
+	HoverTip.open_codex = open_codex
 	# 089：存档位 —— 用默认路径（正式游戏）时按位存：老的单文件存档先搬进第 1 位，再切到设置里记的那一位。
 	# 测试 / 演示改了路径的走单文件模式
 	if save_path == RunSave.DEFAULT_PATH and meta_path == MetaSave.DEFAULT_PATH:
@@ -178,6 +183,31 @@ func _on_ground_double(_view: ContainerView, uid: int) -> void:
 func _exit_tree() -> void:
 	if GroundLayer.current() == ground:
 		GroundLayer.set_current(null)
+	if HoverTip.open_codex == open_codex:
+		HoverTip.codex_page = Callable()
+		HoverTip.open_codex = Callable()
+
+
+## 220 E：开百科翻到 [param page]（词条小窗底部那一行）。局内局外一个样：一层盖在最上面，「返回」/ Esc 关掉回原处 ——
+## 不走暂停菜单（战斗回放、叠层里没有暂停菜单）也不换屏（开局屏、基地换走就丢了正在挑的东西）
+func open_codex(page: String) -> void:
+	close_codex()
+	_codex = _make(GameFlow.Screen.ENCYCLOPEDIA)
+	_codex.set("back", close_codex)
+	_codex.z_index = CODEX_Z
+	add_child(_codex)
+	_codex.open({"page": page})
+
+
+func close_codex() -> void:
+	if _codex != null:
+		_codex.queue_free()
+		_codex = null
+
+
+## 开着的那本（测试看）
+func codex() -> GameScreen:
+	return _codex
 
 
 func _switch_screen(screen: int, payload: Dictionary) -> void:
@@ -296,6 +326,8 @@ const DISPLAY_GROUP := &"display_settings"
 
 ## 按一次 Esc 该做的事；返回有没有人接（测试直接调）
 func escape() -> bool:
+	if _codex != null:
+		return _codex.escape()
 	if _overlay != null:
 		return _overlay.escape()
 	return _base != null and _base.escape()

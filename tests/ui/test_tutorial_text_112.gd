@@ -83,11 +83,15 @@ static func run_tutorial_events_clean(t: TestCase) -> void:
 		for digits in ["三秒一下", "二十多点", "十二点", "六秒一次", "输两场"]:
 			t.check(not def.text.contains(digits), "%s 不再写死「%s」" % [id, digits])
 	t.eq(n, 37, "三张序章 37 条事件都查了（113 加了序章三的 12 条）")
-	var ch := load(ContentPaths.asset_file("chapters", "prologue_2")) as ChapterDef
-	for line in ch.rules:
+	for cid in ["prologue", "prologue_2", "prologue_3"]:
+		t.check((load(ContentPaths.asset_file("chapters", cid)) as ChapterDef).rules.is_empty(), "220：%s 没有规则卡" % cid)
+	var glass := load(ContentPaths.asset_file("chapters", "clockwork_hourglass")) as ChapterDef
+	t.eq(glass.rules.size(), 3, "220：沙漏的规则卡还是三条")
+	for line in glass.rules:
 		var shown := TextTemplate.plain(line, ctx)
-		t.check(not shown.contains("{"), "规则卡没漏换：%s" % shown)
-	t.check(TextTemplate.plain(ch.rules[1], ctx).contains(Names.of(_db().get_def(&"poison_vial"))), "规则卡里的毒药瓶是读出来的名字")
+		t.check(not shown.contains("{") and not RegEx.create_from_string("[0-9]").search(shown), "220：沙漏规则没漏换、不写数字：%s" % shown.left(20))
+	var again := TextTemplate.plain((defs[&"tut_search_2_again_1"] as EventDef).text, ctx)
+	t.check(again.contains(Names.of(_db().get_def(&"scimitar")) + "也带上"), "220 §2.2：翻出弯刀那条提示带上它")
 	var heavy := defs[&"tut2_battle_heavy"] as EventDef
 	t.eq(TextTemplate.plain(heavy.title, ctx), "重击手", "标题按敌人定义的名字")
 	t.check(TextTemplate.plain(heavy.text, ctx).contains("2.5 秒一下"), "战锤的节奏按数据：%s" % TextTemplate.plain(heavy.text, ctx).left(30))
