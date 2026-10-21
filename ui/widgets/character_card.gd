@@ -1,7 +1,7 @@
 ## 223（作者 2026-10-21 16:07 选蜡板、甲 角色卡）：背包窗右栏名牌下面那张角色卡 ——「这个人是谁」，开包时随时可看，没有零行。
 ##
 ## 身体三行（生命上限 / 耐力上限 / 回气 每秒）= [method RunState.effective_baseline]（局外加成、信仰、难度、角色被动乘完之后的数），
-## 比角色本身的基线多或少就在数后面写 ▲N / ▼N，停上去看是谁给的；下面两条被动（名字 + 现成的一句说明，超两行截断，全文进悬浮窗）。
+## 比角色本身的基线多或少就在数后面写 ▲N / ▼N，停上去看是谁给的；下面两条被动（名字 + 现成的一句说明，写全文：英文按词折行，卡跟着长高）。
 ## 画法读 `assets/ui/stats_panel/`（`card_wax` 九宫底板、`layout.json` 的卡内坐标与字色，美术设计出）；行间刻线由代码画
 class_name CharacterCard
 extends Control
@@ -20,15 +20,21 @@ const VALUE_RIGHT := 252.0
 const RULE_X := Vector2(18, 254)
 const DIVIDER_Y: Array[float] = [105.0, 108.0]
 const PASSIVE_TOP := 111.0
-const PASSIVE_H := 53.0
+## 被动一条：名字一行 [constant PASSIVE_HEAD] + 说明 n 行 × [constant SUMMARY_LINE_H] + 下留白 [constant PASSIVE_PAD]
+const PASSIVE_HEAD := 26.0
+const PASSIVE_PAD := 8.0
 const SUMMARY_W := 232.0
-const SUMMARY_LINES := 2
+const SUMMARY_SIZE := 13
+const SUMMARY_LINE_H := 16.0
+## 说明最多几行（游戏测试 10-21：两行装不下英文，改成写全文；这只是防一条特别长的撑破窗）
+const SUMMARY_LINES := 6
+const BOTTOM_PAD := 11.0
 
 ## 悬浮窗（宿主给；没有就不开）
 var tip: HoverTip = null
 ## 每行：{"label", "unit", "value", "delta"（带号的整数 / 一位小数，0 = 没变）, "tip"}
 var _rows: Array[Dictionary] = []
-## 每条被动：{"name", "text"}
+## 每条被动：{"name", "text", "lines"（折好的说明）, "top", "height"}
 var _passives: Array[Dictionary] = []
 var _style: Dictionary = {}
 var _hover := -1
@@ -55,6 +61,14 @@ func refresh(run: RunState) -> void:
 		if run.character != null:
 			for e in run.character.skill_entries():
 				_passives.append({"name": String(e["name"]), "text": String(e["text"])})
+	var top := PASSIVE_TOP
+	for p in _passives:
+		p["lines"] = wrap_lines(String(p["text"]), UiPalette.cjk_font(), SUMMARY_SIZE, SUMMARY_W, SUMMARY_LINES)
+		p["top"] = top
+		p["height"] = PASSIVE_HEAD + SUMMARY_LINE_H * (p["lines"] as Array).size() + PASSIVE_PAD
+		top += float(p["height"])
+	custom_minimum_size = Vector2(SIZE.x, maxf(SIZE.y, top + BOTTOM_PAD))
+	size = custom_minimum_size
 	queue_redraw()
 
 
@@ -70,6 +84,11 @@ func passive_names() -> Array[String]:
 	return out
 
 
+## 测试看：第 i 条被动折好的说明行
+func passive_lines(i: int) -> Array:
+	return (_passives[i]["lines"] as Array) if i >= 0 and i < _passives.size() else []
+
+
 ## 这一格（卡内坐标）压着哪一行：0..2 身体行，3.. 被动；没有 -1
 func row_at(local: Vector2) -> int:
 	if local.x < 0.0 or local.x > size.x:
@@ -79,8 +98,8 @@ func row_at(local: Vector2) -> int:
 		if local.y >= top and local.y < top + ROW_H:
 			return i
 	for i in _passives.size():
-		var top := PASSIVE_TOP + PASSIVE_H * i
-		if local.y >= top and local.y < top + PASSIVE_H:
+		var top := float(_passives[i]["top"])
+		if local.y >= top and local.y < top + float(_passives[i]["height"]):
 			return ROWS.size() + i
 	return -1
 
@@ -199,14 +218,14 @@ func _draw() -> void:
 	for y in DIVIDER_Y:
 		_rule(y)
 	for i in _passives.size():
-		var top := PASSIVE_TOP + PASSIVE_H * i
+		var p: Dictionary = _passives[i]
+		var top := float(p["top"])
 		if i > 0:
 			_rule(top)
-		var p: Dictionary = _passives[i]
 		draw_string(bold, Vector2(LABEL_X, top + 18.0), String(p["name"]), HORIZONTAL_ALIGNMENT_LEFT, SUMMARY_W, 15, value)
-		var lines := wrap_lines(String(p["text"]), regular, 12, SUMMARY_W, SUMMARY_LINES)
+		var lines: Array = p["lines"]
 		for j in lines.size():
-			draw_string(regular, Vector2(LABEL_X, top + 34.0 + 15.0 * j), lines[j], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, dim)
+			draw_string(regular, Vector2(LABEL_X, top + PASSIVE_HEAD + 9.0 + SUMMARY_LINE_H * j), String(lines[j]), HORIZONTAL_ALIGNMENT_LEFT, -1, SUMMARY_SIZE, dim)
 
 
 ## 行间刻线：`styles.<材质>.rule` 的几条 1 px 横线叠出来
@@ -217,27 +236,57 @@ func _rule(y: float) -> void:
 		draw_line(Vector2(RULE_X.x, yy), Vector2(RULE_X.y, yy), c, 1.0)
 
 
-## 按宽度折成最多 [param max_lines] 行（逐字量，中英都行）；超出的最后一行截断加「…」
+## 按宽度折成最多 [param max_lines] 行：汉字逐字可断，拉丁字母成词不拆（游戏测试 10-21：英文被拆成「Er/osion」），
+## 一个词比整行还宽才逐字断；超出的最后一行截断加「…」
 static func wrap_lines(text: String, f: Font, px: int, width: float, max_lines: int) -> Array[String]:
 	var out: Array[String] = []
 	var line := ""
-	var i := 0
-	while i < text.length():
-		var ch := text[i]
-		if ch == "\n" or f.get_string_size(line + ch, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > width:
+	for tok in _tokens(text):
+		if tok == "\n":
 			out.append(line)
-			line = "" if ch == "\n" else ch
-			if out.size() == max_lines:
-				var last := out[max_lines - 1]
-				while last != "" and f.get_string_size(last + "…", HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > width:
-					last = last.left(last.length() - 1)
-				out[max_lines - 1] = last + "…"
-				return out
+			line = ""
+		elif tok == " " and line == "":
+			continue     # 行首不留空格
+		elif f.get_string_size(line + tok, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x <= width:
+			line += tok
+		elif tok == " ":
+			out.append(line)
+			line = ""
 		else:
-			line += ch
-		i += 1
-	if line != "":
-		out.append(line)
+			if line != "":
+				out.append(line.strip_edges(false, true))
+				line = ""
+			for ch in tok:     # 只有一个词比整行还宽时才会在这里逐字断
+				if line != "" and f.get_string_size(line + ch, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > width:
+					out.append(line)
+					line = ""
+				line += ch
+	if line.strip_edges() != "":
+		out.append(line.strip_edges(false, true))
+	if out.size() > max_lines:
+		out.resize(max_lines)
+		var last := out[max_lines - 1]
+		while last != "" and f.get_string_size(last + "…", HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > width:
+			last = last.left(last.length() - 1)
+		out[max_lines - 1] = last.strip_edges(false, true) + "…"
+	return out
+
+
+## 折行的最小单位：一串连着的非空白非汉字（一个英文词连标点）、一个汉字 / 全角符号、一个空格、一个换行
+static func _tokens(text: String) -> Array[String]:
+	var out: Array[String] = []
+	var word := ""
+	for ch in text:
+		var wide := ch.unicode_at(0) >= 0x2E80
+		if ch == " " or ch == "\n" or wide:
+			if word != "":
+				out.append(word)
+				word = ""
+			out.append(ch)
+		else:
+			word += ch
+	if word != "":
+		out.append(word)
 	return out
 
 
