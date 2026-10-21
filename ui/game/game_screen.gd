@@ -118,20 +118,20 @@ func _enemy_name(content: Dictionary) -> String:
 
 
 ## 157：对手的名牌（战前准备、战斗回放共用）：名字、肖像（有图才画）
-func _enemy_plate(content: Dictionary) -> Nameplate:
+func _enemy_plate(content: Dictionary, portrait_side: int = Nameplate.PORTRAIT_SIZE) -> Nameplate:
 	var id := StringName(String(content.get("enemy", ""))) if not content.is_empty() else &""
 	var def := flow.enemies.enemy(id) if id != &"" else null
 	if def == null:
-		return Nameplate.new().setup(UiText.t("screen.enemy"), "")
-	return Nameplate.new().setup(Names.of(def), "", Nameplate.enemy_face(id))
+		return Nameplate.new().setup(UiText.t("screen.enemy"), "", null, portrait_side)
+	return Nameplate.new().setup(Names.of(def), "", Nameplate.enemy_face(id), portrait_side)
 
 
 ## 157：自己的名牌：角色名（没选角色写「我」）、肖像（有图才画）
-func _player_plate() -> Nameplate:
+func _player_plate(portrait_side: int = Nameplate.PORTRAIT_SIZE) -> Nameplate:
 	var ch := flow.run.character if flow.run != null else null
 	if ch == null:
-		return Nameplate.new().setup(UiText.t("battle.me"), "")
-	return Nameplate.new().setup(Names.of(ch), UiText.t("battle.side_mine"), Nameplate.character_face(ch.id))
+		return Nameplate.new().setup(UiText.t("battle.me"), "", null, portrait_side)
+	return Nameplate.new().setup(Names.of(ch), UiText.t("battle.side_mine"), Nameplate.character_face(ch.id), portrait_side)
 
 
 #region 控件（造控件的活在 [UiTheme] 里，这里只留给子类的短名字）
@@ -272,6 +272,7 @@ func _modal_panel(title: String, margin: int = 16) -> OverlayFrame:
 func _centered_panel(min_size: Vector2, margin: int = 16, bronze: bool = false) -> Container:
 	_shade(OVERLAY_SHADE)     # 157 补充三：地图压暗透出来，石板浮在上面
 	var center := _full_center()
+	center.offset_top = HudHost.bar_height_in(get_tree()) if is_inside_tree() else 0.0     # 复测 v3.79：面板在顶端栏下面居中，不压住红心和金币
 	add_child(center)
 	_overlay_frame = OverlayFrame.new(margin, bronze)
 	_overlay_frame.custom_minimum_size = min_size

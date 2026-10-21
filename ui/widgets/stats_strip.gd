@@ -38,6 +38,9 @@ const DEFAULTS := {
 }
 ## 签高（没图时的纸）与火漆没图时的颜色（耐力橙、伤害红、负重铁灰）
 const TAG_H := 46.0
+## 签里的字离签右沿至少这么远；放不下就收字号，最小到这么大
+const TEXT_RIGHT_PAD := 8.0
+const MIN_TEXT_SIZE := 11
 const SEAL_COLORS := {HP: Color("b0303a"), VIGOR: Color("d49a2a"), STAMINA: Color("c8742a"), DPS: Color("a8322a"), LOAD: Color("5d6168"), SPECIAL: Color("5a3c8c")}
 ## 切图文件里负重那枚叫 load、DPS 那枚叫 dps
 const SEAL_ART := {HP: "seal_hp", VIGOR: "seal_vigor", STAMINA: "seal_stamina", DPS: "seal_dps", LOAD: "seal_load", SPECIAL: "seal_special"}
@@ -109,6 +112,19 @@ func use_inlay(narrow: bool, kinds: Array[StringName] = []) -> void:
 func set_width(px: float) -> void:
 	_width = maxf(px, 0.0)
 	_relayout()
+
+
+## 给 [param px] 宽时整条实际多宽（宽签一张不拉伸：签比棋盘宽就按签宽；窄嵌槽那排按各签宽之和）
+func span_for(px: float) -> float:
+	if _inlay == "narrow":
+		var widths: Dictionary = _row.get("tag_w", {})
+		var total := 0.0
+		for kind in _shown:
+			total += float(widths.get(String(kind), 88))
+		return total + float(_row.get("gap", 6)) * maxi(0, _shown.size() - 1)
+	var s := _strip()
+	var n := _shown.size()
+	return maxf(px, float(s.get("tag_w", 152)) * n + float(s.get("tag_gap", 12)) * maxi(0, n - 1))
 
 
 ## 重算各张签的字。负重那张：算负重的章「当前 / 上限」+ 档名；不算负重的章有上限照样写「当前 / 上限」、小字空着，
@@ -279,10 +295,12 @@ func _draw_tag(tag: Control, kind: StringName) -> void:
 			tag.draw_style_box(paper, Rect2(Vector2(16, 0), Vector2(tag.size.x - 16, tag.size.y)))
 		var seal_piece: Dictionary = pieces.get(SEAL_ART[kind], pieces.get("seal", {}))
 		center = _vec(seal_piece.get("center_in_tag", [20, 23]))
+	var room := tag.size.x - main_pos.x - TEXT_RIGHT_PAD     # 复测 v3.79：「37 / 40」「Very high」比签宽时收字号，不顶签的右沿
+	var sub_font := UiPalette.cjk_font_bold() if bool(b["sub_bold"]) else UiPalette.cjk_font()
 	tag.draw_string(UiPalette.cjk_font_bold(), main_pos, String(b["main"]),
-		HORIZONTAL_ALIGNMENT_LEFT, -1, main_size, b["main_color"])
-	tag.draw_string(UiPalette.cjk_font_bold() if bool(b["sub_bold"]) else UiPalette.cjk_font(), sub_pos, String(b["sub"]),
-		HORIZONTAL_ALIGNMENT_LEFT, -1, sub_size, b["sub_color"])
+		HORIZONTAL_ALIGNMENT_LEFT, -1, fit_size(UiPalette.cjk_font_bold(), String(b["main"]), main_size, room), b["main_color"])
+	tag.draw_string(sub_font, sub_pos, String(b["sub"]),
+		HORIZONTAL_ALIGNMENT_LEFT, -1, fit_size(sub_font, String(b["sub"]), sub_size, tag.size.x - sub_pos.x - TEXT_RIGHT_PAD), b["sub_color"])
 	var seal := UiTheme.art_cached(ART + String(SEAL_ART[kind]))
 	if seal != null:
 		var side := seal.get_size() * seal_scale
@@ -290,6 +308,14 @@ func _draw_tag(tag: Control, kind: StringName) -> void:
 	else:
 		tag.draw_circle(center, 15.0 * seal_scale, SEAL_COLORS[kind])
 		tag.draw_arc(center, 15.0 * seal_scale, 0.0, TAU, 32, Color(SEAL_COLORS[kind]).darkened(0.35), 2.0, true)
+
+
+## 放得进 [param room] 宽的字号：从 [param size] 往下收，最小 [constant MIN_TEXT_SIZE]
+static func fit_size(font: Font, text: String, size: int, room: float) -> int:
+	var n := size
+	while n > MIN_TEXT_SIZE and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, n).x > room:
+		n -= 1
+	return n
 
 
 ## 嵌槽签底：从火漆下面（x = [constant INLAY_TAG_X]）铺到签右沿；[param sliced] 三段切拉到签宽，否则原大

@@ -8,6 +8,8 @@ extends PanelContainer
 
 ## 214（作者 2026-10-20 按推荐）：64 看不清五官，96 是下限；铭牌高跟着 +32，宽与字不动
 const PORTRAIT_SIZE := 96
+## 战前准备屏、战斗回放的名牌（复测 v3.79：面板要放进顶端栏下面那块，名牌矮一截）
+const COMPACT_PORTRAIT := 72
 const BADGE_SIZE := 32
 const NAME_SIZE := 20
 
@@ -32,10 +34,10 @@ func _init() -> void:
 	add_child(_row)
 
 
-## 填上名字、副行、肖像（[param face] 为 null = 占位剪影）。重复调会换掉原来的
-func setup(display_name: String, sub: String, face: Texture2D = null) -> Nameplate:
+## 填上名字、副行、肖像（[param face] 为 null = 占位剪影）；[param portrait_side] 肖像边长。重复调会换掉原来的
+func setup(display_name: String, sub: String, face: Texture2D = null, portrait_side: int = PORTRAIT_SIZE) -> Nameplate:
 	UiTheme.clear_children(_row)
-	portrait_slot = PortraitSlot.new(PORTRAIT_SIZE, face, true)
+	portrait_slot = PortraitSlot.new(portrait_side, face, true)
 	portrait = portrait_slot.picture
 	_row.add_child(portrait_slot)
 	var col := UiTheme.vbox(2)

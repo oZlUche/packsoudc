@@ -2,6 +2,8 @@
 ## 回放时间轴（刻度、拖动 = seek）与三种反馈（跳转时抑制）、收尾战报；战败结算保险箱放大居中；事件选项代价图标与结果页收获行
 extends RefCounted
 
+## 复测 v3.79：基准画面高（project.godot viewport_height）；战前 / 回放面板要放进它减去顶端栏，上下各留一点
+const FIT_HEIGHT := 1000.0 - 16.0
 const GAME := "res://ui/game/game.tscn"
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const Support := preload("res://tests/run/flow_support.gd")
@@ -127,6 +129,10 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	t.check(pre.overlay_frame().bronze and pre.overlay_frame().title() == "", "铜面板，顶上不写标题（bronze3：两行字都删）")
 	t.check(pre.lane() != null and pre.lane().center_on == pre.overlay_frame(), "中缝铜章对着整块面板居中")
 	t.eq(pre.find_children("*", "BoardFrame", true, false).size(), 2, "两块棋盘都套外框")
+	# 复测 v3.79：面板在顶端栏下面居中，高度放得进 1000 高的画面减去顶端栏（不压红心和金币）
+	var bar := HudHost.bar_height_in(root.get_tree())
+	t.check(bar > 0.0 and is_equal_approx((pre.overlay_frame().get_parent() as Control).offset_top, bar), "战前面板的居中区从顶端栏下沿算起（%.0f）" % bar)
+	t.check(pre.overlay_frame().get_combined_minimum_size().y <= FIT_HEIGHT - bar, "战前面板高 %.0f ≤ %.0f" % [pre.overlay_frame().get_combined_minimum_size().y, FIT_HEIGHT - bar])
 	var es: StatsStrip = pre.enemy_strip()
 	var ps: StatsStrip = pre.player_strip()
 	t.eq([es.inlay(), ps.inlay()], ["narrow", "narrow"], "两排都是窄嵌槽签")
@@ -216,6 +222,9 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	view.seek(result.duration_sec() + 1.0)
 	t.check(screen.verdict_shown(), "拖到头再「看完」一次：照样算看完")
 	t.check(not view.header_visible(), "作者 2026-10-17：计时与胜负那一行不给玩家看")
+	t.check(view.report_plate() != null and view.report_plate().visible and view.report_plate().is_ancestor_of(view._report), "战报垫在嵌槽上（不直接写在场地上）")
+	t.check(screen.overlay_frame().get_combined_minimum_size().y <= FIT_HEIGHT - HudHost.bar_height_in(root.get_tree()),
+		"回放面板（带战报）高 %.0f 放得进顶端栏下面" % screen.overlay_frame().get_combined_minimum_size().y)
 	# 拿真实的一下：正常播放时三种反馈会出
 	var cs: Array = counts.call()
 	view.play(result, ["我", "敌"])

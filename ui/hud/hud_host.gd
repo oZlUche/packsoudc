@@ -26,6 +26,7 @@ const BAR_GAP := 24
 ## 166：顶端栏至少多高、左右留多宽、里面的组上下至少留多少。
 ## 作者 2026-10-13（「凹槽没有和石板位置对齐，考虑增加顶端栏纵向面积」）：64 → 88，组在板边上下内边距之间居中（底下的投影不算）
 const BAR_HEIGHT := 88.0
+const GROUP := &"hud_host"
 const BAR_SIDE := 16.0
 ## 作者 2026-10-17（体力条和金币栏更靠近中央，右边同理）：左右两组各往里收屏宽的这么多成（至少 [constant BAR_SIDE]）
 const BAR_SIDE_FRAC := 0.1
@@ -53,6 +54,7 @@ var _pending: bool = false
 
 func _init() -> void:
 	name = "HudHost"
+	add_to_group(GROUP)     # 叠层居中时让开顶端栏（[method GameScreen._centered_panel]）
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	resized.connect(_queue_arrange)
 
@@ -148,6 +150,12 @@ func content_inset() -> Rect2:
 ## 166：顶端栏多高（没有栏 0）
 func bar_height() -> float:
 	return _bar_h
+
+
+## 场上那个读数层的顶端栏多高（没有读数层 / 藏着 = 0）：叠层面板在栏下面居中
+static func bar_height_in(tree: SceneTree) -> float:
+	var host := tree.get_first_node_in_group(GROUP) as HudHost if tree != null else null
+	return host.bar_height() if host != null and host.is_visible_in_tree() else 0.0
 
 
 ## 166：一件读数在屏幕上的包围盒（教程挖洞用：部件挪了位置教程跟着走）；没有 / 藏着返回空矩形
