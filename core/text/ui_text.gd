@@ -13,6 +13,8 @@ static var lang: String = "zh"
 const TEXT := {
 	# 主菜单
 	"menu.new_run": {"zh": "新的游戏", "en": "New game"},
+	"menu.skip_prologue": {"zh": "跳过序章", "en": "Skip the prologue"},     # 221 G
+	"menu.skip_prologue_confirm": {"zh": "再点一次：这份存档不再有序章", "en": "Click again: this save skips the prologue for good"},
 	"menu.continue": {"zh": "继续", "en": "Continue"},
 	"menu.load": {"zh": "读取存档", "en": "Load game"},
 	"slots.title": {"zh": "读取存档", "en": "Load game"},

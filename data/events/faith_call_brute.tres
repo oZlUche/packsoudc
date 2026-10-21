@@ -29,5 +29,5 @@ label = "不拿，离开"
 script = ExtResource("6_0kpy6")
 id = &"faith_call_brute"
 title = "蛮神的低语"
-text = "祭坛上摆着一堆碎骨，血迹还没干透。你听见有人在耳边低吼：**杀，再杀。** 一枚骨制的护符从骨堆里滚到你脚边。"
+text = "祭坛上摆着一堆碎骨，血迹还没干透。你听见有人在耳边低吼：{b}杀，再杀。{/b}一枚骨制的护符从骨堆里滚到你脚边。"
 options = Array[ExtResource("1_rb0ga")]([SubResource("Resource_kdwn6"), SubResource("Resource_oakp1")])
