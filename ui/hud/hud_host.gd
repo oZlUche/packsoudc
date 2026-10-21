@@ -114,11 +114,50 @@ func notice(text: String, urgent: bool = false) -> void:
 		w.push(text, urgent)
 
 
-## 全部刷一遍（地图屏每次动完调它；组件自己也订了各自的信号）
+## 全部刷一遍（地图屏每次动完调它；组件自己也订了各自的信号）。231 补充二：按住时只记下要刷（[method hold]）
 func refresh() -> void:
 	for w in widgets.values():
-		(w as HudWidget).refresh()
+		(w as HudWidget).poke()
 	_queue_arrange()
+
+
+#region 231 补充二：顶栏别剧透
+## 按住着：读数的信号照响，组件只记「要刷」不刷（一按「开战」结算就同步算完了，回放没放之前顶栏不能先变）
+var held := false
+
+
+## 按住（战前屏按「开战」/ 蛮神秒杀之前）
+func hold() -> void:
+	held = true
+
+
+## 放开（回放看完 / 跳到底、离开战斗屏）：记着要刷的那几件刷一遍；[param roll] = 金币 / 信力这类数从旧值滚到新值（[method HudWidget.release_hold]）。
+## 没按住时什么也不做（两次放开不重复刷）
+func release(roll: bool = true) -> void:
+	if not held:
+		return
+	held = false
+	for w in widgets.values():
+		(w as HudWidget).release_hold(roll)
+	_queue_arrange()
+
+
+## 场上那个读数层（没有 null）
+static func of_tree(tree: SceneTree) -> HudHost:
+	return tree.get_first_node_in_group(GROUP) as HudHost if tree != null else null
+
+
+static func hold_in(tree: SceneTree) -> void:
+	var host := of_tree(tree)
+	if host != null:
+		host.hold()
+
+
+static func release_in(tree: SceneTree, roll: bool = true) -> void:
+	var host := of_tree(tree)
+	if host != null:
+		host.release(roll)
+#endregion
 
 
 ## 顶上那几组（含顶端栏）占到多高。右边那一条不算（它让的是宽）

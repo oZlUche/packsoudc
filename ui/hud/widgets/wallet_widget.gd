@@ -24,7 +24,15 @@ func watch() -> Array[Signal]:
 
 
 func text_of() -> String:
-	return "%d" % run.wallet.balance
+	return text_at(run.wallet.balance)
+
+
+func roll_value() -> int:
+	return run.wallet.balance
+
+
+func text_at(v: int) -> String:
+	return "%d" % v
 
 
 func _idle_mouse_filter() -> Control.MouseFilter:

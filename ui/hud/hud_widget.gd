@@ -92,10 +92,67 @@ func _paint() -> void:
 
 
 func _poke(_a: Variant = null, _b: Variant = null, _c: Variant = null, _d: Variant = null) -> void:
+	poke()
+
+
+## 该刷了：宿主按住着（231 补充二，[method HudHost.hold]）就只记下，放开时再刷
+func poke() -> void:
+	if host is HudHost and (host as HudHost).held:
+		_dirty = true
+		return
 	refresh()
 
 
+## 231 补充二：按住期间有没有攒下要刷的
+var _dirty := false
+## 滚数用：现在显示到几（[method roll_value] 有数的件）
+var _roll_tween: Tween = null
+
+
+## 宿主放开：攒下了就刷；[param roll] 且这件有数可滚（[method roll_value]）、动效开着，就从旧数滚到新数（0.6 秒）
+func release_hold(roll: bool) -> void:
+	if not _dirty:
+		return
+	_dirty = false
+	var from := _shown_value
+	refresh()
+	var to := roll_value()
+	if not roll or from < 0 or to < 0 or from == to or not _motion() or not is_inside_tree():
+		return
+	if _roll_tween != null:
+		_roll_tween.kill()
+	_text.text = text_at(from)
+	_roll_tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_roll_tween.tween_method(func(v: float): _text.text = text_at(roundi(v)), float(from), float(to), ROLL_SEC)
+
+
+const ROLL_SEC := 0.6
+
+
+## 子类可改：这件显示的那个数（滚数用）；没有 -1
+func roll_value() -> int:
+	return -1
+
+
+## 子类可改：数是 [param v] 时这一行写什么（滚数的中间帧）
+func text_at(_v: int) -> String:
+	return text_of()
+
+
+## 上一次刷时的数（[method roll_value]；没有 -1）
+var _shown_value := -1
+
+
+func _motion() -> bool:
+	var flow = screen.get("flow") if screen != null else null
+	return UiMotion.enabled(flow.settings if flow != null else null)
+
+
 func refresh() -> void:
+	if _roll_tween != null:
+		_roll_tween.kill()
+		_roll_tween = null
+	_shown_value = roll_value() if run != null else -1
 	var t := text_of() if run != null else ""
 	_text.text = t if t != "" or not editing else "（%s）" % title()     # 摆读数时没内容的也露个名字，好拖
 	_paint()

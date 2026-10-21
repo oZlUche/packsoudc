@@ -150,6 +150,8 @@ func _on_run_changed(state: RunState) -> void:
 
 
 func _on_screen_changed(screen: int, payload: Dictionary) -> void:
+	if screen != GameFlow.Screen.BATTLE:
+		HudHost.release_in(get_tree(), false)     # 231 补充二：离开战斗屏还按着的（秒杀直接回地图之类）兜底放开
 	# 128：先把地接到这一局的 storage 上（各屏开面板时要找它），换完屏再决定画不画、挪到最上面
 	ground.stash = flow.run.storage if flow.run != null else null
 	_switch_screen(screen, payload)

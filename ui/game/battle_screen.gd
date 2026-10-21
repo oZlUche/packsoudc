@@ -122,10 +122,12 @@ static func _continue_size(won: bool) -> Vector2:
 
 ## 看完了（或不想看了）：回到流程
 func proceed() -> void:
+	HudHost.release_in(get_tree())     # 231 补充二：兜底（没看完就走了）
 	flow.resume()
 
 
 func _on_finished() -> void:
+	HudHost.release_in(get_tree())     # 231 补充二：回放看完（或跳到底）顶栏才变，和「继续」旗同一刻
 	if _next == null and _next_slot != null:
 		var art := continue_art(_won)
 		_next = IconButton.make_art(CONTINUE_ART, art, UiText.t("battle.continue"), "", proceed)
