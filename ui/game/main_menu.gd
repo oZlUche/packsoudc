@@ -104,7 +104,7 @@ func open(_payload: Dictionary) -> void:
 	_line(_secondary, UiText.t("menu.settings"), flow.show_settings)
 	_column.add_child(_spacer(SECONDARY_TO_FOOT))
 
-	_foot = _hbox(10)
+	_foot = _hbox(28)     # 226 批二：链接之间的「·」删了，改成间距
 	_foot.name = "MenuFoot"
 	var indent := MarginContainer.new()     # 和上面几行字同一条左边线（它们左边留着菱形的缩进）
 	UiTheme.margins(indent, UiTheme.MENU_LINE_INDENT, 0, 0, 0)
@@ -114,10 +114,8 @@ func open(_payload: Dictionary) -> void:
 	if GameSettings.dev_build():     # 作者 2026-10-17：开发工具只在开发环境
 		links.append(UiTheme.make_menu_link(UiText.t("menu.dev_tools"), func(): dev_tools_requested.emit()))
 	links.append(UiTheme.make_menu_link(UiText.t("menu.quit"), func(): get_tree().quit()))
-	for i in links.size():
-		if i > 0:
-			_foot.add_child(_label("·", UiTheme.MENU_FOOT_SIZE, UiPalette.DIM))
-		_foot.add_child(links[i])
+	for link in links:
+		_foot.add_child(link)
 
 	# 098：这个存档位读不回来、已备份的那一句；173：读档时对账 / 挪位 / 打捞过 —— 右下角小字，没有不占位
 	_notices = _vbox(4)

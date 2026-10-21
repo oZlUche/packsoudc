@@ -29,7 +29,6 @@ func open(payload: Dictionary) -> void:
 	var left := _vbox(8)
 	row.add_child(left)
 	_frame_title(UiText.t("node.label.shop"))     # 157：标题在石板框的标题条上，说明留在原处
-	left.add_child(_label(UiText.t("shop.intro"), 13, UiPalette.DIM))
 	_wallet_line = _label("", 13, UiPalette.DIM)
 	left.add_child(_wallet_line)
 	_shelf_row = _hbox(10)
@@ -281,7 +280,6 @@ func _rebuild_belt() -> void:
 	_belt_btns.clear()
 	if _session.belt_offers.is_empty():
 		return
-	_belt_row.add_child(_label(UiText.t("shop.carried_row"), 13, UiPalette.DIM))
 	for i in _session.belt_offers.size():
 		var idx := i
 		var def := BeltSkillDef.find(StringName(String(_session.belt_offers[i]["id"])))

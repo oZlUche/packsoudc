@@ -134,15 +134,13 @@ func _fill_toc() -> void:
 	UiTheme.clear_children(_toc)
 	if _query.strip_edges() != "":
 		var hits := book.search(_query, _ctx)
-		_toc.add_child(_label(UiText.t("codex.found") % hits.size(), 13, UiPalette.DIM))
+		# 226 批二：「找到 N 页」删了（命中的就是下面这几条）
 		for id in hits:
 			_toc.add_child(_page_button(id))
 		return
 	for cat in book.toc():
-		_toc.add_child(_label(String(cat["name"]), 16, UiPalette.FG))
+		_toc.add_child(HeaderTag.new(String(cat["name"])))     # 226 批二：分类名上段头签，分组名删了
 		for g in cat["groups"]:
-			if String(g["name"]) != "":
-				_toc.add_child(_label("　" + String(g["name"]), 13, UiPalette.DIM))
 			for id in g["ids"]:
 				_toc.add_child(_page_button(id))
 

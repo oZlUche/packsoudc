@@ -262,11 +262,11 @@ static func frame_chest_screen(t: TestCase, root: Window) -> void:
 		game.queue_free()
 		Support.cleanup("chest_ui")
 		return
-	t.eq(screen.hint.text, "点击宝箱开锁", "没按：点击宝箱开锁")
+	t.check(screen.find_children("*", "Label", true, false).is_empty(), "226 批二：箱子上下没有字（标题、开锁提示删了）")
+	t.eq(screen.notice_layer().current_text(), "点击宝箱开锁", "进来时告示卷轴说一次")
 	var hold: LockHold = screen.hold
 	t.eq(hold.hold_seconds, flow.run.events.chest_hold_seconds(node), "按住秒数按稀有度")
 	t.check(screen.press(), "按下")
-	t.eq(screen.hint.text, "尝试开锁", "按着：尝试开锁")
 	screen.step(hold.hold_seconds * 0.5)
 	t.check(absf(hold.progress - 0.5) < 0.01, "走了一半")
 	screen.view.queue_redraw()
@@ -293,7 +293,6 @@ static func frame_chest_screen(t: TestCase, root: Window) -> void:
 	t.check(hold.is_holding(), "只松确认键还按着")
 	screen.step(hold.hold_seconds * 2.0)
 	t.check(hold.is_unlocked() and screen.opening, "走满：开箱动画")
-	t.eq(screen.hint.text, "", "字没了")
 	t.eq(flow.screen, GameFlow.Screen.CHEST, "开箱动画播完才弹搜索")
 	screen.step(screen.OPEN_PAUSE_SECONDS * 0.5)
 	t.eq(flow.screen, GameFlow.Screen.CHEST, "开了先停一会儿（箱内漆黑），再弹搜索")
@@ -352,6 +351,6 @@ static func frame_chest_on_ground(t: TestCase, root: Window) -> void:
 		var s := maxf(wh.x / 1920.0, wh.y / 1200.0)
 		var line: float = (wh.y - 1200.0 * s) * 0.5 + foot * s
 		t.check(absf(screen.chest_foot_y() - line) < 0.5, "%s：箱底 %.1f 对着落地线 %.1f" % [wh, screen.chest_foot_y(), line])
-	t.eq(UiTheme.tone_at(screen.hint), UiTheme.TONE_LIGHT, "浅图：字按浅底取色")
+	t.eq(screen.bg_tone, UiTheme.TONE_LIGHT, "浅图记着浅底")
 	game.queue_free()
 	Support.cleanup("chest_bg")

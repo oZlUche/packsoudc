@@ -229,7 +229,7 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 		if l.is_visible_in_tree() and l.text.contains("993"):
 			bare.append(l.text)
 	t.eq(bare, [], "224（作者 16:32）：顶上那行账删了")
-	t.check(not "_line" in wh and not wh._size_label.visible and (wh._board_label == null or not wh._board_label.visible), "224：两块棋盘上面与底下的说明字不显示")
+	t.check(not "_line" in wh and not "_size_label" in wh and not "_board_label" in wh, "224 / 226 批二：两块棋盘上面与底下的说明字删了")
 	var cont := _buttons(screen, "继续")
 	t.eq(cont.size(), 1, "第 2 步一个离开的按钮")
 	if cont.size() == 1:

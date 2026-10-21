@@ -38,24 +38,33 @@ func open(_payload: Dictionary) -> void:
 	var col := _vbox(10)
 	col.custom_minimum_size.x = 520
 	center.add_child(col)
-	col.add_child(_label(UiText.t("menu.settings"), 26, UiPalette.FG))
+	var plate := TitlePlate.new(UiText.t("menu.settings"))     # 226 批二：标题刻在标题牌上
+	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(plate)
 	_build_display(col)
 	_build_sound(col)
 	col.add_child(HSeparator.new())
-	col.add_child(_label(UiText.t("settings.loot_section"), 15, UiPalette.DIM))
+	col.add_child(HeaderTag.new(UiText.t("settings.loot_section")))     # 226 批二：分区名上段头签
 	_auto_close_btn = _toggle(UiText.t("settings.loot_auto_close"), toggle_loot_auto_close)
 	col.add_child(_auto_close_btn)
 	col.add_child(HSeparator.new())
-	col.add_child(_label(UiText.t("settings.bg_section"), 15, UiPalette.DIM))
+	col.add_child(HeaderTag.new(UiText.t("settings.bg_section")))
 	var bg_row := _hbox(8)
 	for t in UiPalette.BG_THEMES:
 		var tid := String(t["id"])
 		var b := _button(UiText.pick(t["name"]), func(): set_bg_theme(tid), 13, UiPalette.Tier.MINOR)
 		b.toggle_mode = true
+		if t.has("note"):
+			b.tooltip_text = UiText.pick(t["note"])     # 226 批二：「默认」「最浅」进悬浮窗
 		var box := b.get_theme_stylebox("normal") as StyleBoxFlat
 		if box != null:
 			var swatch := box.duplicate() as StyleBoxFlat
 			swatch.bg_color = t["color"]
+			b.ready.connect(func():     # 226 批二：按下态边距更宽，按它撑宽（不然选中那键字被裁成「石」「Graphi」）；进了树才取得到主题里的按下态
+				var pressed_box := b.get_theme_stylebox("pressed")
+				for side in [SIDE_LEFT, SIDE_RIGHT]:
+					swatch.set_content_margin(side, maxf(swatch.get_content_margin(side), pressed_box.get_content_margin(side)))
+				b.update_minimum_size())
 			b.add_theme_stylebox_override("normal", swatch)     # 121 特例：底色色板，按钮底就是那档底色（画布色）
 		_bg_btns[tid] = b
 		bg_row.add_child(b)
@@ -72,9 +81,9 @@ func open(_payload: Dictionary) -> void:
 		cursor_row.add_child(cb)
 	col.add_child(cursor_row)
 	col.add_child(HSeparator.new())
-	col.add_child(_label(UiText.t("settings.veteran"), 15, UiPalette.DIM))
-	col.add_child(_wrapped(UiText.t("settings.unlock_all_desc"), 12, UiPalette.DIM, 500))
+	col.add_child(HeaderTag.new(UiText.t("settings.veteran")))
 	_unlock_all_btn = _toggle(UiText.t("settings.unlock_all"), toggle_unlock_all)
+	_unlock_all_btn.tooltip_text = UiText.t("settings.unlock_all_desc")     # 226 批二：说明进开关的悬浮窗
 	col.add_child(_unlock_all_btn)
 	col.add_child(HSeparator.new())
 	if DevGate.on():     # 117：开发区只在非导出包里有 —— 日志是给作者看的，玩家看不到。186：调试模式、节点浮窗预览也挪进来
@@ -100,9 +109,8 @@ func open(_payload: Dictionary) -> void:
 ## 主菜单的设置和 Esc 暂停菜单里嵌的是同一屏，两个入口都有它
 func _build_display(col: VBoxContainer) -> void:
 	add_to_group(GameDirector.DISPLAY_GROUP)     # F11 切了模式，这一节跟着刷新
-	col.add_child(_label(UiText.t("settings.display"), 15, UiPalette.DIM))
+	col.add_child(HeaderTag.new(UiText.t("settings.display")))
 	var mode_row := _hbox(8)
-	mode_row.add_child(_label(UiText.t("settings.window_row"), 14, UiPalette.FG))
 	for m in [[WindowSetup.WINDOWED, "settings.windowed"], [WindowSetup.FULLSCREEN, "settings.fullscreen"]]:
 		var mode: String = m[0]
 		var b := _button(UiText.t(String(m[1])), func(): set_window_mode(mode), 13, UiPalette.Tier.MINOR)
@@ -133,7 +141,7 @@ func _build_display(col: VBoxContainer) -> void:
 ## 204：「声音」一节 —— 音效音量一行（− / + 一步 10%，按钮本身响 `ui.press`，当场听到新音量）。音乐那行等第一首曲子再露出来（待定 4.2）
 func _build_sound(col: VBoxContainer) -> void:
 	col.add_child(HSeparator.new())
-	col.add_child(_label(UiText.t("settings.sound"), 15, UiPalette.DIM))
+	col.add_child(HeaderTag.new(UiText.t("settings.sound")))
 	var row := _hbox(8)
 	_sfx_label = _label("", 14, UiPalette.FG)
 	_sfx_label.custom_minimum_size.x = 120

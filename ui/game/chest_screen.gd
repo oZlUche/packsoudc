@@ -15,12 +15,8 @@ const OPEN_PAUSE_SECONDS := 0.45
 const PLACEHOLDER_SIZE := Vector2(280, 220)
 ## 宝箱图里「落地」那条线在图高的几成（占位宝箱地上影子的中心）：对着背景图的 `chest_foot_y` 摆
 const FOOT_SHARE := 0.9
-## 宝箱上下两行字的间距
-const COL_GAP := 14
-
-## 宝箱下面那行字的 UiText 键（221 F1：用时按当前语言取）
+## 一进来告示卷轴说的那句（226 批二：箱子上下两行字删了，环形进度 + 抖动够说明；221 F1：用时按当前语言取）
 const TEXT_IDLE := "chest.idle"
-const TEXT_TRYING := "chest.trying"
 
 var node: MapNode = null
 var rarity: int = 0
@@ -28,8 +24,6 @@ var skin: ChestSkinDef = null
 var hold: LockHold = null
 ## 中央画宝箱的那块画布
 var view: ChestView = null
-## 宝箱下面那一行字
-var hint: Label = null
 ## 锁开了、开箱动画在播
 var opening: bool = false
 ## 已经交给流程开搜索了（只交一次）
@@ -49,7 +43,6 @@ var _foot_y := 0.0
 var bg_tone: StringName = UiTheme.TONE_DARK
 ## 居中放宝箱那一列的容器（上下挪它让箱底落在背景的地上）
 var _center: CenterContainer = null
-var _title: Label = null
 
 
 func open(payload: Dictionary) -> void:
@@ -91,44 +84,32 @@ func open(payload: Dictionary) -> void:
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
 	_center = center
-	var col := _vbox(COL_GAP)
-	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	center.add_child(col)
-	var title := _label(UiText.t("chest.title") % ItemTooltip.rarity_name(rarity), 16, ItemPainter.RARITY_COLORS[rarity])
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(title)
-	_title = title
+	# 226 批二：「稀有宝箱」标题（箱子按稀有度换图换色）与「点击宝箱开锁 / 尝试开锁」那行字删了；进来时告示卷轴说一次
 	view = ChestView.new()
 	view.screen = self
 	view.custom_minimum_size = _closed_tex.get_size() if _closed_tex != null else PLACEHOLDER_SIZE
-	view.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	col.add_child(view)
-	hint = UiTheme.make_display(UiText.t(TEXT_IDLE), 28)     # 168：说明字是马善政
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(hint)
+	center.add_child(view)
 
 	var back := _button(UiText.t("chest.back"), leave, 13, UiPalette.Tier.MINOR)
 	back.focus_mode = Control.FOCUS_NONE     # 确认键是开锁键，别让按钮抢走
 	back.tooltip_text = UiText.t("chest.back_tip")
 	add_child(back)
 	back.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, 24)
-	UiTheme.set_tone(center, bg_tone)
-	UiTheme.refresh_tones(center)
 	resized.connect(place_chest)
 	place_chest()
+	say(UiText.t(TEXT_IDLE))
 
 
 ## 背景图写了落地线：把宝箱那一列上下挪，让箱底（[constant FOOT_SHARE]）落在图上那块亮处（背景按 cover 铺，跟着窗口算）。
 ## 没写落地线就照旧整列居中。按最小尺寸算，不等容器排版
 func place_chest() -> void:
-	if _center == null or view == null or _title == null:
+	if _center == null or view == null:
 		return
 	var shift := 0.0
 	if _foot_y > 0.0 and _bg_size.y > 0.0 and size.y > 0.0:
 		var s := maxf(size.x / _bg_size.x, size.y / _bg_size.y)
 		var want := (size.y - _bg_size.y * s) * 0.5 + _foot_y * s
-		var col_h := (_center.get_child(0) as Control).get_combined_minimum_size().y
-		var foot := (size.y - col_h) * 0.5 + _title.get_combined_minimum_size().y + COL_GAP + view.custom_minimum_size.y * FOOT_SHARE
+		var foot := (size.y - view.custom_minimum_size.y) * 0.5 + view.custom_minimum_size.y * FOOT_SHARE
 		shift = want - foot
 	_center.offset_top = shift
 	_center.offset_bottom = shift
@@ -136,10 +117,9 @@ func place_chest() -> void:
 
 ## 箱底现在落在屏上哪一行（测试看；按最小尺寸算，和 [method place_chest] 同一套）
 func chest_foot_y() -> float:
-	if _center == null or view == null or _title == null:
+	if _center == null or view == null:
 		return 0.0
-	var col_h := (_center.get_child(0) as Control).get_combined_minimum_size().y
-	return _center.offset_top + (size.y - col_h) * 0.5 + _title.get_combined_minimum_size().y + COL_GAP + view.custom_minimum_size.y * FOOT_SHARE
+	return _center.offset_top + (size.y - view.custom_minimum_size.y) * 0.5 + view.custom_minimum_size.y * FOOT_SHARE
 
 
 static func _load_skin(id: StringName) -> ChestSkinDef:
@@ -161,7 +141,6 @@ func press(by_key: bool = false) -> bool:
 	if hold.press():
 		_unlock_strip.reset()
 		_trying_strip.reset()
-	_refresh_hint()
 	return true
 
 
@@ -176,7 +155,6 @@ func release(by_key: bool = false) -> bool:
 	if _by_key or _by_mouse:
 		return false
 	var changed := hold.release()
-	_refresh_hint()
 	return changed
 
 
@@ -200,7 +178,6 @@ func step(delta: float) -> void:
 		_by_mouse = false
 		_by_key = false
 		_open_strip.reset()
-	_refresh_hint()
 	view.queue_redraw()
 
 
@@ -215,17 +192,6 @@ func leave() -> bool:
 func _hand_over() -> void:
 	_handed = true
 	flow.open_chest(node)
-
-
-func _refresh_hint() -> void:
-	if hint == null:
-		return
-	if opening or hold.is_unlocked():
-		hint.text = ""
-	elif hold.is_holding():
-		hint.text = UiText.t(TEXT_TRYING)
-	else:
-		hint.text = UiText.t(TEXT_IDLE)
 
 
 func _process(delta: float) -> void:
@@ -256,7 +222,6 @@ func escape() -> bool:
 		_by_mouse = false
 		_by_key = false
 		hold.release()
-		_refresh_hint()
 		return true
 	leave()
 	return true

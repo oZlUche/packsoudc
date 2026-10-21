@@ -137,7 +137,7 @@ const NAV_PAPER_GAP := 60.0
 const PAPER_INSET := 36
 var _pages: Array[Control] = []
 var _page: int = 0
-var _title: Label = null
+var _title: TitlePlate = null
 ## 161：第一页的角色卡与棋盘预览；第三页右上只写角色名（180 补二）
 var _card: VBoxContainer = null
 ## 214：角色卡顶上的大头像
@@ -171,7 +171,7 @@ func open(_payload: Dictionary) -> void:
 	_area.add_child(margin)
 	var col := _vbox(PAGE_SEP)
 	margin.add_child(col)
-	_title = UiTheme.make_variant_label("", UiTheme.LABEL_SCREEN_TITLE)     # 179：直接写在背景画上 —— 深底白字带阴影，浅底（白天的场地）墨字
+	_title = TitlePlate.new()     # 226 批二：页标题刻在标题牌上（页码去掉，翻页计数在右下角按钮上）
 	var title_row := _hbox(0)
 	_title_indent = Control.new()     # 180 定稿：第三页让开地图纸的毛边
 	title_row.add_child(_title_indent)
@@ -224,11 +224,8 @@ func _build_character_page() -> Control:
 	var left := _vbox(8)
 	left.custom_minimum_size.x = 260 - 28
 	left_board.add_child(left)
-	left.add_child(_label(UiText.t("setup.characters"), 15, UiPalette.DIM))
-	_char_box = _vbox(8)
+	_char_box = _vbox(8)     # 226 批二：段头「角色」与缺数据那句删了
 	left.add_child(_char_box)
-	if flow.characters.is_empty():
-		left.add_child(_label(UiText.t("setup.no_characters"), 13, UiPalette.HP))
 	var mid_board := _groove(30, 24, 30, 28)
 	mid_board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -264,8 +261,7 @@ func _build_kit_page() -> Control:
 	var left := _vbox(12)
 	board_panel.add_child(left)
 	if not flow.presets().is_empty():
-		var presets := _hbox(8)
-		presets.add_child(_label(UiText.t("setup.presets"), 15, UiPalette.DIM))
+		var presets := _hbox(8)     # 226 批二：段头「预设装备」删了
 		_preset_box = presets
 		left.add_child(presets)
 		_rebuild_presets()
@@ -290,7 +286,6 @@ func _build_kit_page() -> Control:
 	var right := _vbox(6)
 	ware_panel.add_child(right)
 	var w := flow.meta.warehouse
-	right.add_child(_label(UiText.t("setup.warehouse_pages") % UiText.count(w.page_count(), "unit.page"), 15, UiPalette.DIM))     # 180：件数与那句「往左边的包里拖……」都不要
 
 	_drag = DragLayer.new()
 	_drag.label_font = font
@@ -356,12 +351,8 @@ func _build_map_page() -> Control:
 	var left := _vbox(8)
 	left.custom_minimum_size.x = 300 - 32
 	left_board.add_child(left)
-	if not _paper_art():     # 定稿：摆在纸上的地图条目自己带钉，不要小标题
-		left.add_child(_label(UiText.t("setup.maps"), 15, UiPalette.DIM))
-	_map_list = _vbox(6)
+	_map_list = _vbox(6)     # 226 批二：小标题「地图」与缺数据那句删了
 	left.add_child(_map_list)
-	if _chapters.is_empty():
-		left.add_child(_label(UiText.t("setup.no_chapters"), 13, UiPalette.HP))
 
 	_preview = MapPreview.new()
 	_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -427,7 +418,6 @@ func show_page(i: int) -> void:
 		_title_indent.custom_minimum_size.x = PAPER_INSET if _page == PAGE_MAP and _paper_art() else 0.0
 	if _title != null:
 		_title.text = UiText.t(PAGE_TITLES[_page])
-		UiTheme.set_tone(_title, tone)
 	if _enter_btn != null:
 		_enter_btn.text = UiText.t("setup.depart") if _page == PAGE_TITLES.size() - 1 else UiText.t("menu.continue")
 	if _back_btn != null:
@@ -1414,7 +1404,6 @@ func _rebuild_board() -> void:
 			flow.meta.put_bag(inst)
 	board.end_batch()
 	_note = ""
-	_board_host.add_child(_label(UiText.t("setup.pack_title") % [Names.of(ch), ch.board_size.x, ch.board_size.y], 15, UiPalette.DIM))     # 180
 	_board_view = InventoryView.new()
 	_board_view.label_font = font
 	_board_view.inventory = board
@@ -1508,7 +1497,6 @@ func _rebuild_card() -> void:
 	if board == null:
 		return
 	_grooves[2].custom_minimum_size.x = ch.board_size.x * InventoryView.CELL + 2 * RIGHT_PAD
-	_preview_host.add_child(_label(UiText.t("setup.board_title") % [ch.board_size.x, ch.board_size.y], 15, UiPalette.DIM))
 	_preview_view = InventoryView.new()
 	_preview_view.label_font = font
 	_preview_view.inventory = board

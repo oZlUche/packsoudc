@@ -349,8 +349,10 @@ func _fit_duel_panel(other: Control = null) -> void:
 
 
 ## 157：叠层的标题写进石板框的标题条（原来各屏自己在内容里摆的那一行）；返回那个标签，之后改字直接改它
+## 226 批二：只有叠层能写标题（没有石板框时造一个不挂树的孤儿标签那条退路删了）
 func _frame_title(text: String) -> Label:
-	return _overlay_frame.set_title(text) if _overlay_frame != null else _label(text, UiTheme.OVERLAY_TITLE_SIZE, UiPalette.FG)
+	assert(_overlay_frame != null, "_frame_title 要先 _centered_panel")
+	return _overlay_frame.set_title(text)
 
 
 ## 157：石板框（测试看）；底屏 null
