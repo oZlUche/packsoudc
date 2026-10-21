@@ -845,6 +845,13 @@ static func art(name: String) -> Texture2D:
 	return EventImage.load_texture(path)
 
 
+## 221：画着字的图按语言换 —— 非中文界面有 `<name>_en.png` 就用它（尺寸、原点、可点区域和中文版一样），没有就用原图
+static func lang_art(name: String) -> String:
+	if UiText.lang != "zh" and ResourceLoader.exists(asset_root + name + "_en.png"):
+		return name + "_en"
+	return name
+
+
 ## 184：每帧在 `_draw` 里画的小图走这个 —— [method art] 不缓存，画完没人拿着引用，贴图当帧就被释放、画出来是一块白；
 ## 这里按路径留一份（没有的不记，美术后到也能读到）
 static func art_cached(name: String) -> Texture2D:

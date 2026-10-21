@@ -100,9 +100,17 @@ static func run_countdown(t: TestCase) -> void:
 
 
 static func run_carry_budget(t: TestCase) -> void:
-	t.begin("倒计时 · 带入预算换步数（094）：小 600 / 中 900 / 大 1200（章节兜底 600）；超出每 50 价值倒计时 −1，至少留 1；关闭的撤离点按罚后的一半；存档带着带入价值；开局屏的读数一行；序章没有预算")
+	t.begin("倒计时 · 带入预算换步数（094）：机制照旧（手搭章节 小 600 / 中 900 / 大 1200，章节兜底 600）；超出每 50 价值倒计时 −1，至少留 1；关闭的撤离点按罚后的一半；存档带着带入价值；开局屏的读数一行；225：真章节预算 0")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
+	# 225（作者 16:42 去掉开局带入预算）：自由模式与沙漏章都改 0 = 不限，机制留给更高难度
+	for real in [c.chapter, load("res://data/chapters/clockwork_hourglass.tres")]:
+		if real != null:
+			t.eq(CountdownModule.budget_for(real, &""), 0, "225：%s 不限带入" % real.id)
+			t.eq(CountdownModule.penalty_for(real, &"small", 99999), 0, "225：%s 带多少都不罚" % real.id)
+	t.eq(String(load("res://ui/game/setup_screen.gd").carry_text(c.chapter, &"small", 9999)), "", "225：开局屏没有预算读数")
+	var real_chapter: ChapterDef = c.chapter
+	c.chapter = _budget_chapter(real_chapter)
 	t.eq(CountdownModule.budget_for(c.chapter, &"small"), 600, "小图预算 600")
 	t.eq(CountdownModule.budget_for(c.chapter, &"medium"), 900, "中图 900")
 	t.eq(CountdownModule.budget_for(c.chapter, &"large"), 1200, "大图 1200")
@@ -166,4 +174,21 @@ static func run_carry_budget(t: TestCase) -> void:
 	var over_text: String = SetupScript.carry_text(c.chapter, &"small", 750)
 	t.check(over_text.contains("超出 150") and over_text.contains("倒计时 −3") and over_text.contains("36 → 33"), "超了：说清超多少、扣几步（%s）" % over_text)
 	t.eq(String(SetupScript.carry_text(c.prologue, &"", 999)), "", "序章没有预算：不显示")
+	c.chapter = real_chapter
 	Support.cleanup("countdown")
+
+
+## 225：测试手搭一张有预算的章节（真章节已改 0）—— 章节 600，规模档 小 600 / 中 900 / 大 1200
+static func _budget_chapter(real: ChapterDef) -> ChapterDef:
+	var ch: ChapterDef = real.duplicate()
+	ch.carry_budget = 600
+	ch.map_source = real.map_source.duplicate()
+	var cfg: Resource = real.map_source.generator_config.duplicate()
+	ch.map_source.generator_config = cfg
+	var scales: Array[MapScaleProfile] = []     # 新数组：复制出来的配置和真章节共用同一个 scales 数组，原地改会改到真章节
+	for p in cfg.scales:
+		var q: MapScaleProfile = p.duplicate()
+		q.carry_budget = {&"small": 600, &"medium": 900, &"large": 1200}.get(q.id, 0)
+		scales.append(q)
+	cfg.scales = scales
+	return ch

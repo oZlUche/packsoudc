@@ -284,7 +284,7 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 	# 180（作者定）：棋盘下的读数只留负重与带入预算两行 —— 不列带了什么、不写「已带」「带上」
 	var readout: String = setup._readout.get_parsed_text()
 	t.check(not readout.contains(name) and not readout.contains("已带") and not readout.contains("带上"), "读数不列道具、不写已带 / 带上（%s）" % readout)
-	t.check(readout.contains("带入预算") and readout.get_slice_count("\n") <= 2, "读数至多两行：负重、带入预算（%s）" % readout)
+	t.check(not readout.contains("带入预算") and readout.get_slice_count("\n") <= 1, "225：读数只剩负重一行（%s）" % readout)
 	t.check(setup.carry_out(first.uid), "放回去")
 	t.eq(flow.meta.warehouse.item_count(), n, "仓库又是 %d 件" % n)
 	t.check(setup.carry_in(first.uid), "再带上")
