@@ -263,15 +263,19 @@ func absorb(result: RunResult) -> Dictionary:
 		got["funds"] = result.balance
 	else:
 		deaths += 1
-	# 092（作者定）：保险箱里的视为已带出 —— 战败也带得出。图鉴各计一次，进带回来的棋盘（没有就新开一块），放不下直接进仓库
+	# 092（作者定）：保险箱里的视为已带出 —— 战败也带得出。图鉴各计一次，进带回来的棋盘（没有就新开一块），放不下直接进仓库。
+	# 224 补充二（作者 17:23）：战败没有置入那一页 —— 反过来，直接进仓库（包进包架），放不下的才进待置入的棋盘（基地「仓库」页清）
 	if not result.safe_items.is_empty():
+		var extracted := result.is_extracted()
 		var size2 := result.board_size if result.board_size.x > 0 and result.board_size.y > 0 else RunState.BOARD_SIZE
 		var back2 := board if board != null else GridInventory.new(size2, BOARD_ID, false)
 		for inst in result.safe_items:
 			_record_codex(inst, got)
 			if not _adopt(inst):
 				continue
-			if back2.try_add(inst, true) or warehouse.try_add(inst, true):
+			var kept := (back2.try_add(inst, true) or warehouse.try_add(inst, true)) if extracted \
+				else (BagRack.holds(inst.def) and rack.insert(inst) or warehouse.try_add(inst, true) or back2.try_add(inst, true))
+			if kept:
 				got["items"] = int(got["items"]) + 1
 				got["safe"] = int(got["safe"]) + 1
 			else:

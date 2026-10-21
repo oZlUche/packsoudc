@@ -3,32 +3,49 @@
 ## 177（作者定）：撤离分两步 —— 第 1 步看账，「继续」屏内换到第 2 步置入仓库，第 2 步的「继续」才离开这一屏；战败一步到底
 ## 224（作者定）：第 1 步是一张逐行显出的账单（[LedgerView]，十行 + 合计，大理石碑板直接画在石板上），全显之前「继续」不可点；
 ## 两页的「继续」同一款石键图按钮（作者 16:06 定），第 2 步「一键置入」「整理」是同款石键小钮、和「继续」同一行
+## 224 补充二（作者 17:22–17:23）：两页的石板换没有标题刻线的板边；第一页整体 ×1.2（图 2 倍分辨率缩着画）；撤离时保险箱在账单右边
+## （皮带框 + 格缝，同背包棋盘），第二页只剩带回的棋盘（格子 72）和贴右上角的仓库；战败只有标题牌、账单、继续，没有第二页
 extends GameScreen
 
 const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
+const ContainerScreenScript := preload("res://ui/game/container_screen.gd")
 
 var _wh = null
 var _safe_view: InventoryView = null
-## 157：战败时保险箱放大居中 —— 格子按这个画（撤离时照旧是视图的默认格）
-const DEFEAT_SAFE_CELL := 60.0
+## 224 补充二：撤离第一页的保险箱 —— 框左上（账单右边），框最宽到石板内沿，格子最大 [constant SAFE_CELL]
+const SAFE_AT := Vector2(1280, 160)
+const SAFE_MAX_W := 218.0
+const SAFE_CELL := 60.0
+## 224 补充二：第二页带回来的棋盘格子（同背包窗）
+const BOARD_CELL := 72.0
+## 224 补充二：结算屏两页的板边（没有顶上那道标题刻线）
+const SLAB_EDGE := "slab_edge_plain"
+## 第 2 步内容离石板内沿的边距
+const PAGE_MARGIN := 32
+## 第 2 步的石板内容区（量仓库格子用）
+var _area: Control = null
 ## 177（作者 2026-10-16「将撤离界面分为两部」）：撤离分两步 —— 1 看账，2 置入仓库；战败只有一步
 var _step: int = 1
 var _r: RunResult = null
 ## 224：第 1 步的账单与「继续」
 var _ledger: LedgerView = null
 var _continue: Button = null
-## 224：设计稿（1600 × 1000）上的摆位 —— 账面左上、继续钮左上（账单下居中）
-const LEDGER_AT := Vector2(440, 190)
-const CONTINUE_AT := Vector2(695, 690)
-const CONTINUE_SIZE := Vector2(210, 64)
-## 224：「继续」的图（`assets/ui/result/<它>_*.png`）与字心。作者 16:06 定石键（罗马式箭头），两页同款；第 2 页的小钮也是石键
+## 224：设计稿（1600 × 1000）上的摆位 —— 账面左上、继续钮左上（账单下居中）。补充二按美术 v2 `layout.json`（×1.2）
+const LEDGER_AT := Vector2(368, 210)
+const CONTINUE_AT := Vector2(674, 834)
+const CONTINUE_SIZE := Vector2(252, 77)
+## 224：「继续」的图（`assets/ui/result/<它>_*.png`）与字心。作者 16:06 定石键（罗马式箭头），两页同款；第 2 页的小钮也是石键。
+## 补充二：英文小一号、字心左移（字尾离箭头的圆头留 25 px）
 const CONTINUE_ART := "result/btn_stone"
-const CONTINUE_LABEL_AT := Vector2(92, 32)
-## 224（作者 16:32）：第一页的标题牌 —— 牌左上、大小；图比牌四周各大 6
+const CONTINUE_LABEL_AT := Vector2(110, 38)
+const CONTINUE_LABEL_AT_EN := Vector2(100, 38)
+const CONTINUE_BLEED := 7.0
+## 224（作者 16:32）：第一页的标题牌 —— 牌左上、大小；图比牌四周各大 7（2 倍分辨率，按图的 1x 大小缩着画）
 const TITLE_PLATE_ART := "result/title_plate"
-const TITLE_PLATE_AT := Vector2(640, 84)
-const TITLE_PLATE_SIZE := Vector2(320, 60)
-const TITLE_PLATE_ORIGIN := Vector2(-6, -6)
+const TITLE_PLATE_AT := Vector2(608, 92)
+const TITLE_PLATE_SIZE := Vector2(384, 72)
+const TITLE_PLATE_ORIGIN := Vector2(-7, -7)
+const TITLE_SIZE := 43
 
 
 func open(payload: Dictionary) -> void:
@@ -66,19 +83,21 @@ func continue_button() -> Button:
 
 func _build() -> void:
 	_wh = null
+	_area = null
 	_safe_view = null
 	_ledger = null
 	_continue = null
 	_backdrop()
 	if _r != null and not (_has_store_step() and _step == 2):
-		_slab_screen()     # 157 补充三：内容在一整块石板上
+		_slab_screen(Vector2.ZERO, SLAB_EDGE)     # 157 补充三：内容在一整块石板上
 		_build_summary()
 		return
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 32)
-	_slab_screen().add_child(margin)
+		margin.add_theme_constant_override("margin_" + side, PAGE_MARGIN)
+	_area = _slab_screen(Vector2.ZERO, SLAB_EDGE)
+	_area.add_child(margin)
 	# 反馈：仓库面板按自己的最小高度占满，把底部的继续按钮挤出窗口。内容放进竖向滚动，按钮钉在底下
 	var outer := _vbox(10)
 	margin.add_child(outer)
@@ -97,9 +116,10 @@ func _build() -> void:
 	_build_store(col, outer)
 
 
-## 有没有第 2 步（置入仓库）：撤离了有；224：战败但带回来的背包里有东西（保险箱带出的、上一局没置入的）也有 —— 账单占了第一页，放不下仓库
+## 有没有第 2 步（置入仓库）：撤离了才有。224 补充二（作者 17:23）：战败永远没有第二页 —— 保险箱带出的直接进了仓库
+## （[method MetaState.absorb]），放不下的才留在待置入的棋盘上、基地「仓库」页清
 func _has_store_step() -> bool:
-	return _r != null and (_r.is_extracted() or flow.meta.has_pending_board())
+	return _r != null and _r.is_extracted()
 
 
 ## 224：按设计稿（1600 × 1000，屏幕正中对齐）摆一块
@@ -117,11 +137,13 @@ func _place(c: Control, at: Vector2, sz: Vector2) -> Control:
 
 ## 224：两页同一款「继续」图按钮（字由代码写）
 func _continue_button(handler: Callable) -> Button:
-	return UiTheme.make_art_text_button(UiText.t("menu.continue"), handler, CONTINUE_ART, CONTINUE_SIZE, CONTINUE_LABEL_AT, 28)
+	var en := UiText.lang == "en"
+	return UiTheme.make_art_text_button(UiText.t("menu.continue"), handler, CONTINUE_ART, CONTINUE_SIZE,
+		CONTINUE_LABEL_AT_EN if en else CONTINUE_LABEL_AT, 28 if en else 34, CONTINUE_BLEED)
 
 
-## 177 第 1 步（撤离）/ 唯一一步（战败）：标题、章节 · 结局，下面账单（224），账单下居中「继续」（全显之前不可点）。
-## 战败另把保险箱放大摆在账单右边、「全丢了」一句在账单下
+## 177 第 1 步（撤离）/ 唯一一步（战败）：标题牌，下面账单（224），账单下居中「继续」（全显之前不可点）。
+## 224 补充二：撤离时保险箱摆在账单右边；战败只有这三样
 func _build_summary() -> void:
 	var r := _r
 	var extracted := r.is_extracted()
@@ -135,9 +157,11 @@ func _build_summary() -> void:
 	var plate := TextureRect.new()
 	plate.name = "TitlePlate"
 	plate.texture = UiTheme.art_cached(TITLE_PLATE_ART)
+	plate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE     # 补充二：图是 2 倍分辨率，按牌的 1x 大小缩着画
+	plate.stretch_mode = TextureRect.STRETCH_SCALE
 	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	page.add_child(_place(plate, TITLE_PLATE_AT + TITLE_PLATE_ORIGIN, TITLE_PLATE_SIZE - TITLE_PLATE_ORIGIN * 2.0))
-	var title := UiTheme.make_title_label(UiText.t("result.extracted") if extracted else UiText.t("result.defeat"), 36)
+	var title := UiTheme.make_title_label(UiText.t("result.extracted") if extracted else UiText.t("result.defeat"), TITLE_SIZE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	page.add_child(_place(title, TITLE_PLATE_AT, TITLE_PLATE_SIZE))
@@ -155,13 +179,8 @@ func _build_summary() -> void:
 	_ledger = LedgerView.new()
 	_ledger.setup(r, int(flow.last_absorbed.get("lit", 0)))
 	page.add_child(_place(_ledger, LEDGER_AT, LedgerView.LEDGER_SIZE))
-	if not extracted:
-		var lost := _wrapped(UiText.t("result.lost_all") + (UiText.t("result.lost_safe") % r.safe_items.size() if not r.safe_items.is_empty() else ""), 15, UiTheme.INK, 720)
-		lost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		page.add_child(_place(lost, Vector2(440, 772), Vector2(720, 40)))     # 「继续」下面
-		var safe_col := _vbox(6)
-		_add_safe(safe_col, false)
-		page.add_child(_place(safe_col, Vector2(1200, 190), Vector2(320, 260)))
+	if extracted:
+		_add_safe(page)
 	_continue = _continue_button(to_step.bind(2) if _has_store_step() else proceed)
 	page.add_child(_place(_continue, CONTINUE_AT, CONTINUE_SIZE))
 	_continue.disabled = not _ledger.is_revealed()
@@ -170,49 +189,58 @@ func _build_summary() -> void:
 			_continue.disabled = false)
 
 
-## 177 第 2 步：保险箱小格 + 带回来的棋盘（靠左）与仓库（224：右对齐）；不写说明字
+## 177 第 2 步：带回来的棋盘（靠左）与仓库（贴右上角）；不写说明字。224 补充二：保险箱挪到第一页，中间那道分隔线删了
 func _build_store(col: VBoxContainer, outer: VBoxContainer) -> void:
-	_add_safe(col, true)     # 224（作者 16:32 去掉裸露文字）：顶上那行「置入仓库 / 总价值 · 带出」删了
-	col.add_child(HSeparator.new())
 	_add_warehouse(col)
 	_add_proceed(outer)
 
 
-## 224：第 2 步的仓库面板 —— 石键小钮，「继续」放进同一行的右端（右沿对齐仓库区右沿）
+## 224：第 2 步的仓库面板 —— 石键小钮，「继续」放进同一行的右端（右沿对齐仓库区右沿）。
+## 补充二：带回来的棋盘格子 72，仓库格子按剩下的宽高放大（[method WarehousePages.fit]）
 func _add_warehouse(col: VBoxContainer) -> void:
 	_wh = WarehousePanelScript.new()
 	_wh.art_buttons = true
+	_wh.board_cell = BOARD_CELL
 	_wh.setup(flow, font)
 	_wh.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(_wh)
+	if _area != null:     # 量石板内容区（锚在屏上，不随内容变）；量滚动区会被仓库撑宽、越放越大
+		_area.resized.connect(_fit_shelf.bind(_area))
+		_fit_shelf(_area)
 
 
-## 092：保险箱单独一格（放进去的视为已带出，战败也在）
-## 157：战败时这是唯一带出来的东西 —— 居中、放大（格子 60），字也大一号
-func _add_safe(col: VBoxContainer, extracted: bool) -> void:
+## 补充二：仓库格子吃满带回来的棋盘右边剩下的宽、按钮行上面剩下的高（[param area] = 石板内容区，扣掉四边 [constant PAGE_MARGIN]）
+func _fit_shelf(area: Control) -> void:
+	if _wh == null or not is_instance_valid(area) or area.size.x <= 0.0:
+		return
+	var used: float = _wh.rack_room()
+	if flow.meta.board != null:
+		used += BOARD_CELL * flow.meta.board.size.x + 2.0 * WarehousePanelScript.BOARD_FRAME_PAD + WarehousePanelScript.ROW_GAP
+	var w := area.size.x - 2.0 * PAGE_MARGIN - used
+	var h := area.size.y - 2.0 * PAGE_MARGIN - CONTINUE_SIZE.y - 2.0 * CONTINUE_BLEED - 10.0 - 12.0     # 按钮行、行距、分页签顶上那点空
+	_wh.shelf().fit(w, h)
+
+
+## 092：保险箱单独一格（放进去的视为已带出，战败也在）。224 补充二：只在撤离的第一页、账单右边，
+## 皮带框 + 格缝同背包棋盘（227 清单那行 `plain` → `player`）；格子按框能占的宽缩（最大 [constant SAFE_CELL]）
+func _add_safe(page: Control) -> void:
 	var r := _r
 	if r.safe_items.is_empty():
 		return
-	var safe_row := _hbox(16)
-	var safe_col := _vbox(4)
-	if not extracted:
-		safe_row.alignment = BoxContainer.ALIGNMENT_CENTER
-		safe_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		safe_col.alignment = BoxContainer.ALIGNMENT_CENTER
-	if not extracted:     # 224：第 2 步不写说明字（作者 16:32）；战败第一页那句在账单右边、保险箱上
-		var safe_label := _label(UiText.t("result.safe_line") % [r.safe_items.size(), r.safe_value], 16, LedgerView.INK_LABEL)
-		safe_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		safe_col.add_child(safe_label)
 	_safe_view = InventoryView.new()
 	_safe_view.label_font = font
 	_safe_view.inventory = _safe_display(r)
 	_safe_view.show_adjacency = false
-	_safe_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if extracted else Control.SIZE_SHRINK_CENTER
-	if not extracted:
-		_safe_view.cell_px = DEFEAT_SAFE_CELL
-	safe_col.add_child(_safe_view)
-	safe_row.add_child(safe_col)
-	col.add_child(safe_row)
+	_safe_view.seams = ContainerScreenScript.board_layout().get("cell_seams", {})
+	var pad := 2.0 * WarehousePanelScript.BOARD_FRAME_PAD
+	_safe_view.cell_px = minf(SAFE_CELL, floorf((SAFE_MAX_W - pad) / float(maxi(1, r.safe_size.x))))
+	var frame := PanelContainer.new()
+	frame.name = "SafeFrame"
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_theme_stylebox_override("panel", WarehousePanelScript.board_frame_box())
+	frame.add_child(_safe_view)
+	var sz := Vector2(_safe_view.cell_px * r.safe_size.x, _safe_view.cell_px * r.safe_size.y) + Vector2(pad, pad)
+	page.add_child(_place(frame, SAFE_AT, sz))
 
 
 ## 「继续」（[method proceed]）：224 起放进仓库面板按钮行的右端（作者 16:32：序章之间那句「下面直接进…」也删了）
