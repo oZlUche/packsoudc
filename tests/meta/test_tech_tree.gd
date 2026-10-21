@@ -223,6 +223,13 @@ static func frame_tree_panel(t: TestCase, root: Window) -> void:
 	t.eq(tree.state_of(&"safe_box"), TechTreeView.State.LOCKED, "前置没点：锁住")
 	t.eq(TechTreeView.level_text(m, f.tech_of(&"undaunted")), "未点亮", "单级写未点亮")
 	t.eq(TechTreeView.level_text(m, f.tech_of(&"warehouse")), "Lv 0 / 6", "多级写 Lv")
+	var lang0 := UiText.lang
+	UiText.lang = "en"
+	tree.rebuild()
+	var wb := tree.node_button(&"warehouse")
+	t.check(TechTreeView._widest(wb.get_theme_font("font"), wb.text, wb.get_theme_font_size("font_size")) <= tree.node_rect(&"warehouse").size.x - 18.0, "英文长名字收字号放得下，不被截：%s" % wb.text)
+	UiText.lang = lang0
+	tree.rebuild()
 
 	# 选中锁住的节点：费用区写要先点亮谁、按钮灰
 	t.check(panel.select(&"safe_box"), "选保险箱扩格")

@@ -1,4 +1,4 @@
-## 作者 2026-10-21：只有最后点中的那件画增益槽 / 受益槽；按住 Alt 藏悬浮窗
+## 作者 2026-10-21：只有最后点中的那件画增益槽 / 受益槽；按住 Alt 藏悬浮窗；游戏测试：英文计数分单复数
 extends RefCounted
 
 const TT := preload("res://tests/ui/test_tooltip_193.gd")
@@ -36,3 +36,15 @@ static func frame_alt_hides_tip(t: TestCase, root: Window) -> void:
 	tip.hold_alt(false)
 	t.check(tip.is_visible_in_tree(), "松开：回来")
 	(f["host"] as Control).queue_free()
+
+
+static func run_english_counts(t: TestCase) -> void:
+	t.begin("游戏测试 10-21 · 英文计数分单复数：1 page / 2 pages，中文照旧")
+	var lang0 := UiText.lang
+	UiText.lang = "en"
+	t.eq(UiText.count(1, "unit.page"), "1 page", "一页单数")
+	t.eq(UiText.count(2, "unit.page"), "2 pages", "两页复数")
+	t.eq(UiText.t("meta.shelf_title") % [UiText.count(0, "unit.item"), UiText.count(1, "unit.page")], "Warehouse · 0 items · 1 page", "仓库标题")
+	UiText.lang = "zh"
+	t.eq(UiText.t("meta.shelf_title") % [UiText.count(3, "unit.item"), UiText.count(1, "unit.page")], "仓库　3 件　1 页", "中文不变")
+	UiText.lang = lang0
