@@ -21,6 +21,7 @@ const BACKDROP := "res://assets/ui/menu/bg_camp.png"
 const BACKDROP_DIM := 0.4
 const BACKDROP_BLEED := 0.05
 const LOGO := "res://assets/ui/menu/title_boot.png"
+const LOGO_EN := "res://assets/ui/menu/title_boot_en.png"
 const LOGO_WIDTH := 1116.0
 const LOGO_TOP := 90.0
 ## 221: the words on this screen by language (the boot screen can't use UiText; same text as `game.title`)
@@ -61,7 +62,8 @@ func _ready() -> void:
 	_title_font = _font(TITLE_FONT)
 	_body_font = _font(BODY_FONT)
 	_backdrop = load(BACKDROP) as Texture2D if ResourceLoader.exists(BACKDROP) else null
-	_logo = load(LOGO) as Texture2D if ResourceLoader.exists(LOGO) else null
+	var logo_path := LOGO_EN if lang == "en" and ResourceLoader.exists(LOGO_EN) else LOGO     # 221: English wordmark, same canvas
+	_logo = load(logo_path) as Texture2D if ResourceLoader.exists(logo_path) else null
 	start()
 
 

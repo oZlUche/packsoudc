@@ -167,7 +167,7 @@ func _piece_button(which: String, text: String, handler: Callable) -> TextureBut
 	b.mouse_exited.connect(func(): b.modulate = Color.WHITE)
 	b.set_meta(&"piece", which)
 	if which == "sign":
-		b.texture_normal = UiTheme.art_cached("forge/sign_back")
+		b.texture_normal = UiTheme.art_cached(UiTheme.lang_art("forge/sign_back"))     # 221：英文版 BACK
 	add_child(b)
 	return b
 
@@ -341,9 +341,9 @@ func _refresh() -> void:
 		UiTheme.set_rich(_summaries[i], _summary_bbcode(lines))
 	var ench := preview()
 	_forge_btn.disabled = ench.is_empty() or not open
-	_forge_btn.texture_normal = UiTheme.art_cached("forge/handle_ready")
-	_forge_btn.texture_disabled = UiTheme.art_cached("forge/handle_%s" % ("idle" if open else "off"))
-	_bg.texture = UiTheme.art_cached("forge/bg_%s" % ("lit" if open else "cold"))     # 铸过：炉熄
+	_forge_btn.texture_normal = UiTheme.art_cached(UiTheme.lang_art("forge/handle_ready"))     # 221：把手与底图上的铭牌画着字，英文版另一套
+	_forge_btn.texture_disabled = UiTheme.art_cached(UiTheme.lang_art("forge/handle_%s" % ("idle" if open else "off")))
+	_bg.texture = UiTheme.art_cached(UiTheme.lang_art("forge/bg_%s" % ("lit" if open else "cold")))     # 铸过：炉熄
 	var g := guess() if open else {}
 	_guess.text = "" if g.is_empty() else UiText.t("forge.guess") % [Forge.prefix(g), Glossary.strip_bbcode(Forge.sentence(g))]
 	_guess.visible = _guess.text != ""     # 空着不占一行

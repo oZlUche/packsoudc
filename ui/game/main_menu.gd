@@ -65,7 +65,7 @@ func open(_payload: Dictionary) -> void:
 	UiTheme.set_tone(area, UiTheme.art_tone(UiTheme.ART_MENU_BGS[0]))     # 三张都是暗画：亮字
 	add_child(area)
 
-	var logo := UiTheme.art_cached(ART_LOGO)
+	var logo := UiTheme.art_cached(UiTheme.lang_art(ART_LOGO))     # 221：英文字标 Pack & Extract，画布比例一样
 	if logo != null:
 		var pic := TextureRect.new()
 		pic.name = "MenuLogo"

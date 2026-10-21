@@ -139,3 +139,11 @@
 7. **测试**：撤离带两只包 → 包架 +2、仓库里没有包；战败 → 包架不变；第一次选角色 → 包架得 `starting_bags`；包架空且无预设 → 棋盘有一只 `sack`；开局屏从包架拖包上板、拖回。
 
 甲 若作者更想要「卷起来」，再写一份：`rolled_shape` 字段、卷 / 铺交互、15 张卷起图（可请美术设计出一张通用包裹按包色着色）。
+
+## 十、落地（执行，2026-10-21，v3.78）
+
+§八照做：`free_mode.json` 章节级与三档规模档的 `carry_budget`、`clockwork_hourglass.json` 的 `carry_budget` 都去掉（0 是默认值，按导出器的写法不写这个键；`.tres` 跟着重导），`carry_over_cost` 没动。094 的代码一行没改：`CountdownModule.budget_for` 回 0 就不罚，开局屏 `_refresh` 本来只在预算 > 0 时加那一行，第二页读数自动只剩负重一行。
+
+测试：`test_countdown.run_carry_budget` 的机制部分改用测试里手搭的章节（`_budget_chapter`：复制真章节，章节 600，规模档 小 600 / 中 900 / 大 1200），超带换步、至少留 1、关闭的撤离点按罚后一半、存档往返照旧验；另对两张真章节断言 `budget_for == 0`、`penalty_for == 0`，开局屏读数为空。`test_setup_180`、`test_character_setup` 两处「负重 + 带入预算两行」改成只剩负重一行。
+
+没有和方案不一样的地方。

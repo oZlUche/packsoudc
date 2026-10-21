@@ -549,7 +549,7 @@ class CampPiece extends Control:
 			var ring := UiTheme.art_cached("rest/hover_ring")
 			if ring != null:
 				draw_texture_rect(ring, Rect2(org - _origin("hover_ring") * _scale, _size_of("hover_ring") * _scale), false)
-		var tex := UiTheme.art_cached("rest/" + name)
+		var tex := UiTheme.art_cached(UiTheme.lang_art("rest/" + name))     # 221：路标英文版 MOVE ON
 		if tex != null:
 			draw_texture_rect(tex, Rect2(Vector2.ZERO, size), false)
 		if medal != "":
@@ -575,6 +575,7 @@ class CampPiece extends Control:
 		return mask.get_bitv(px)
 
 	static func _mask(name: String) -> BitMap:
+		name = UiTheme.lang_art("rest/" + name).trim_prefix("rest/")
 		if _masks.has(name):
 			return _masks[name]
 		var tex := UiTheme.art_cached("rest/" + name)

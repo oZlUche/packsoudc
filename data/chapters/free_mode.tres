@@ -194,7 +194,6 @@ haven_at = {
 "shop": 0.5
 }
 step_limit = 36
-carry_budget = 600
 
 [sub_resource type="Resource" id="Resource_qpydc"]
 script = ExtResource("3_t1rkx")
@@ -218,7 +217,6 @@ haven_at = {
 "shop": 0.666666666666667
 }
 step_limit = 60
-carry_budget = 900
 
 [sub_resource type="Resource" id="Resource_8w064"]
 script = ExtResource("3_t1rkx")
@@ -246,7 +244,6 @@ haven_at = {
 }
 placeholder = true
 step_limit = 90
-carry_budget = 1200
 
 [sub_resource type="Resource" id="Resource_40h42"]
 script = ExtResource("5_8lx42")
@@ -320,4 +317,3 @@ departure_event = &"briefing_legion"
 step_limit = 36
 safes = 1
 chest_skin = &"imperial_camp"
-carry_budget = 600
