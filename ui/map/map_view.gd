@@ -595,7 +595,7 @@ func _draw() -> void:
 	if graph == null:
 		return
 	if _layout == null:
-		draw_string(_font, Vector2(16, 28), "没有登记布局：%s" % graph.layout_kind,
+		draw_string(_font, Vector2(16, 28), UiText.t("map.no_layout") % graph.layout_kind,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, _ink(UiPalette.DIM))
 		return
 	# 下面全用画布坐标画，变换交给画布→屏幕这一层
@@ -737,7 +737,7 @@ func _draw_spawn_mask(pos: Dictionary, grow: Dictionary = {}) -> void:
 		draw_circle(sp, NODE_RADIUS + 18.0, Color(UiPalette.HEAL, (0.10 + 0.08 * sin(_pulse * 2.0)) * k))
 		_draw_node(graph.get_node(id), sp)
 		draw_arc(sp, NODE_RADIUS + 10.0 + 2.0 * sin(_pulse * 2.0), 0.0, TAU, 40, Color(UiPalette.HEAL, k), 2.0, true)
-	var text := "挑一个出生点" if UiText.lang == "zh" else "Pick a starting point"
+	var text := UiText.t("map.pick_spawn")
 	var tw := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
 	draw_string(_font, Vector2((size.x - tw) / 2.0, 34.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(UiPalette.HEAL, k))
 
@@ -833,7 +833,7 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	# 092：倒计时过半关闭的撤离点 —— 关了画红叉 + 「已关闭」，没关写着「倒计时剩 n 时关闭」（193 补充一：n 是关闭时倒计时的读数）
 	if not closing.is_empty() and int(closing.get("id", -1)) == n.id:
 		var closed := bool(closing.get("closed", false))
-		var text := "已关闭" if closed else "%s剩 %d 时关闭" % [Glossary.COUNTDOWN_WORD, int(closing.get("at", 0))]
+		var text := UiText.t("map.extract_closed") if closed else UiText.t("map.extract_closes_at") % int(closing.get("at", 0))
 		var col := UiPalette.HP if closed else UiPalette.STAMINA
 		if closed:
 			var d := NODE_RADIUS * 0.8
@@ -992,7 +992,7 @@ func _draw_player_layer(pos: Dictionary, grow: Dictionary, rect: Rect2) -> void:
 			var mid := to_sp
 			if bool(reach_teleport.get(id, false)):
 				mid = to_sp + Vector2(END_RING_R + 30.0, 0.0)
-				_draw_tag("传送", mid, tags)
+				_draw_tag(UiText.t("map.tag_teleport"), mid, tags)
 			else:
 				var e := MapNavigator.edge_for_step(graph, current_id, int(id))
 				var pts := PackedVector2Array([pos[current_id], pos[id]])
@@ -1006,7 +1006,7 @@ func _draw_player_layer(pos: Dictionary, grow: Dictionary, rect: Rect2) -> void:
 					_march_line(sp, PATH_W_HOVER if hot else PATH_W, Color(ink, 1.0 if hot else 0.85), _march)
 					mid = _point_at(sp, _length(sp) * 0.5)
 				if cost > 1:
-					_draw_tag("计%s步" % _han(cost), mid, tags)
+					_draw_tag(step_tag(cost), mid, tags)
 			var r := END_RING_R + 2.0 * sin(_pulse)
 			draw_arc(to_sp, r, 0.0, TAU, 48, Color(ink, 1.0 if hot else 0.6), END_RING_W, true)
 	var pawn := pawn_at()
@@ -1097,15 +1097,27 @@ func tags_text() -> Array[String]:
 		return out
 	for id in reachable:
 		if bool(reach_teleport.get(id, false)):
-			out.append("传送")
+			out.append(UiText.t("map.tag_teleport"))
 		elif int(reach_cost.get(id, 1)) > 1:
-			out.append("计%s步" % _han(int(reach_cost.get(id, 1))))
+			out.append(step_tag(int(reach_cost.get(id, 1))))
 	return out
 
 
+## 墨路上的「计二步」签（221 F1：按当前语言；数写成字，十以上写数字）
+static func step_tag(cost: int) -> String:
+	return UiText.t("map.tag_steps") % _count_word(cost)
+
+
+## 汉字的数（测试照它对「计N步」的中文）
 static func _han(n: int) -> String:
 	const DIGITS := ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"]
 	return DIGITS[n] if n >= 0 and n <= 10 else str(n)
+
+
+## 当前语言的数（中文同 [method _han]）
+static func _count_word(n: int) -> String:
+	var words := UiText.t("map.count_words").split(",")
+	return words[n] if n >= 0 and n < words.size() else str(n)
 
 
 ## 行进的虚线：段 [constant PATH_DASH]、隙 [constant PATH_GAP]，整串往离开玩家的方向挪 [param phase] 像素

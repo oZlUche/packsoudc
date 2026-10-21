@@ -71,17 +71,17 @@ func evading() -> bool:
 func can_use(id: StringName) -> String:
 	var d := skill(id)
 	if d == null:
-		return "没有这个技能"
+		return UiText.t("log.skill_unknown")
 	if not d.is_active():
-		return "「%s」是被动技能" % d.display_name
+		return UiText.t("log.skill_passive") % d.display_name
 	if run != null and run.phase != RunState.Phase.ON_MAP:
-		return "不在图上"
+		return UiText.t("log.not_on_map")
 	if is_armed(id):
-		return "「%s」已经准备好了，等下一场战斗" % d.display_name
+		return UiText.t("log.skill_armed") % d.display_name
 	if uses_of(id) == 0:
-		return "「%s」的次数用完了" % d.display_name
+		return UiText.t("log.skill_no_uses") % d.display_name
 	if cooldown_of(id) > 0:
-		return "「%s」还要走 %d 步" % [d.display_name, cooldown_of(id)]
+		return UiText.t("log.skill_cooldown") % [d.display_name, cooldown_of(id)]
 	return ""
 
 

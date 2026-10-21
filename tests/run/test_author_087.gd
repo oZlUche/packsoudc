@@ -636,7 +636,7 @@ static func run_names_and_hunters_and_mana(t: TestCase) -> void:
 	t.eq(Names.of(buffs[&"poison"]), "Poison", "道具里内联的 buff 也有英文名")
 	var full := ItemTooltip.describe_full(ItemInstance.create(poisoned))
 	var plain_en := Glossary.strip_bbcode(String(full["text"]))
-	t.check(plain_en.contains("Poisoned Knife") and plain_en.contains("层Poison"), "悬浮窗按当前语言写名字：%s" % plain_en.replace("\n", " / "))
+	t.check(plain_en.contains("Poisoned Knife") and plain_en.contains("1 Poison"), "悬浮窗按当前语言写名字：%s" % plain_en.replace("\n", " / "))
 	UiText.lang = before
 	# 往返
 	var back := ContentImporter.import_item(ContentExporter.export_item(knife), ContentImporter.Context.new(), ImportReport.new())

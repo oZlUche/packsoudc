@@ -53,6 +53,9 @@ display_names = {
 "en": "Bandage Roll"
 }
 description = "卷好的干净布条，裹上就止血。"
+descriptions = {
+"en": "Clean cloth, rolled up. Wrap it on and the bleeding stops."
+}
 shape = SubResource("Resource_f2bo6")
 rarity = 1
 tags = Array[StringName]([&"remedy", &"nature", &"cloth"])

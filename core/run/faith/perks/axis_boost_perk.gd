@@ -23,4 +23,4 @@ func compile_into(input: CompileInput, _board: GridInventory, _run: RunState) ->
 func _summary() -> String:
 	if axis == &"" or stacks == 0:
 		return ""
-	return "开战时获得 %d 层「%s」（%s）" % [absi(stacks), StatAxes.name_of(axis, stacks), StatAxes.describe(axis, stacks).get_slice("\n", 0)]
+	return UiText.t("perk.axis_boost") % [absi(stacks), StatAxes.name_of(axis, stacks), StatAxes.describe(axis, stacks).get_slice("\n", 0)]

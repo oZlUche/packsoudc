@@ -147,9 +147,9 @@ func chip_at(local: Vector2) -> String:
 ## 缺图时格子上写的字：名字的第一个字
 func icon_of(id: String) -> String:
 	if id == OVERTIME_CHIP:
-		return "鏖"
+		return UiText.t("battle.overtime").substr(0, 1)
 	if id == BLOCK_CHIP:
-		return "格"
+		return UiText.t("battle.block").substr(0, 1)
 	if id.begins_with(AXIS_PREFIX):
 		return StatAxes.name_of(axis_of(id), int(_stacks.get(id, 0))).substr(0, 1)
 	var note := passive_of(id)
@@ -393,7 +393,7 @@ func mark_dead() -> void:
 
 
 func note_fired(uid: int, now: float) -> void:
-	_last_fired = String(item_names.get(uid, "数据缺失"))
+	_last_fired = String(item_names.get(uid, UiText.t("battle.missing")))
 	_fired_at = now
 	queue_redraw()
 
@@ -496,7 +496,7 @@ func _draw() -> void:
 
 	var y := float(PAD)
 	if show_title:
-		var title := display_name + ("　【倒下】" if _dead else "")
+		var title := display_name + (UiText.t("battle.fallen_tag") if _dead else "")
 		draw_string(
 			label_font, Vector2(PAD, y + 14), title,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 16,
@@ -644,7 +644,7 @@ func _draw_bar(key: String, current: int, maximum: int, y: float) -> void:
 
 	var text := "%s  %d / %d" % [key, current, maximum]
 	if key == "hp" and armor_value() > 0:
-		text += "　甲 %d" % armor_value()     # 106：护甲的数写在生命条上，框只说明它顶得住几成
+		text += UiText.t("battle.armor_on_bar") % armor_value()     # 106：护甲的数写在生命条上，框只说明它顶得住几成
 	draw_string(
 		label_font, Vector2(PAD + 6, y + BAR_H - 4), text,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiPalette.FG

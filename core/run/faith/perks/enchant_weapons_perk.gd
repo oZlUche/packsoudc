@@ -50,7 +50,7 @@ func rule() -> AbilityRule:
 
 
 func _summary() -> String:
-	var line := "开战时%s火焰附魔（每击附带火焰伤害：武器伤害的 %d%%，至少 %.0f 点）" % ["全部武器" if count <= 0 else "随机 %d 把武器" % count, percent, fixed]
+	var line := UiText.t("perk.enchant") % [UiText.t("perk.enchant_all") if count <= 0 else UiText.t("perk.enchant_some") % count, percent, fixed]
 	if applies_buff != &"" and applies_stacks > 0:
-		line += "，并施加 %d 层%s" % [applies_stacks, Glossary.status_name(applies_buff)]
+		line += UiText.t("perk.enchant_applies") % [applies_stacks, Glossary.status_name(applies_buff)]
 	return line

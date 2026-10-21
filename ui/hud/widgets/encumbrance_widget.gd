@@ -14,8 +14,8 @@ func text_of() -> String:
 	var lv := run.encumbrance_level()
 	if lv <= 0 or run.encumbrance == null:
 		return ""
-	var tag := "负重：" + run.encumbrance.name_of(lv)
+	var tag := UiText.t("hud.load") % run.encumbrance.name_of(lv)
 	var mult := run.encumbrance.travel_mult_of(lv)
 	if mult > 1:
-		tag += "（走一步%s扣 %d 倍）" % [Glossary.COUNTDOWN_WORD, mult]
+		tag += UiText.t("hud.load_mult") % mult
 	return tag

@@ -8,7 +8,7 @@
 class_name NodeText
 extends RefCounted
 
-## type → 名字
+## type → 名字（中文原名；玩家看到的按语言取 —— [method label_of] 读 `UiText` 的 `node.label.<type>`，221 F1）
 const LABELS := {
 	&"battle": "战斗",
 	&"elite": "精英战斗",
@@ -28,6 +28,8 @@ const LABELS := {
 const UNKNOWN := "未知"
 
 
-## 这种点叫什么；没登记的叫「未知」
+## 这种点叫什么（按当前语言）；没登记的叫「未知」
 static func label_of(type: StringName) -> String:
-	return String(LABELS.get(type, UNKNOWN))
+	if not LABELS.has(type):
+		return UiText.pick(UiText.TEXT.get("node.label.unknown"), UNKNOWN)
+	return UiText.pick(UiText.TEXT.get("node.label.%s" % type), String(LABELS[type]))

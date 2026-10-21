@@ -15,7 +15,6 @@ const EncyclopediaScreenScript := preload("res://ui/game/encyclopedia_screen.gd"
 const PART_WIDTH := 300
 ## 166：地图底下浮着的预览几行（走过去花多少、敌人一行）
 const PREVIEW_LINES := 2
-const REOPEN_HINT := "再看一眼脚下这个点：没拿完的战利品、还开着的搜索或商店。点地图上的当前节点也行"
 ## 调试台里日志那一块的高
 const LOG_HEIGHT := 220
 
@@ -152,7 +151,7 @@ func confirm_open() -> bool:
 func _open_confirm(node: MapNode) -> void:
 	cancel_extract()
 	_confirm = _shade(0.7, true)
-	var panel := _modal_panel("撤离？", 20)
+	var panel := _modal_panel(UiText.t("map.extract_title"), 20)
 	panel.custom_minimum_size.x = 520
 	_confirm.get_child(0).add_child(panel)
 	var col := _vbox(10)
@@ -160,14 +159,14 @@ func _open_confirm(node: MapNode) -> void:
 	var fee := _run.events.extract_fee(node)
 	var affordable := fee <= 0 or _run.wallet.can_afford(fee)
 	if fee > 0:
-		col.add_child(_wrapped("这是付费撤离点：%d 币（现有 %d 币%s）" % [fee, _run.wallet.balance, "" if affordable else "，付不起"],
+		col.add_child(_wrapped(UiText.t("map.extract_fee") % [fee, _run.wallet.balance, "" if affordable else UiText.t("map.extract_cant_afford")],
 			14, UiPalette.FG if affordable else UiPalette.HP, 480))
 	var carried := 0
 	var carried_value := 0
 	for inst in _run.board.items():
 		carried += 1
 		carried_value += ItemValue.of((inst as ItemInstance).def)
-	col.add_child(_wrapped("棋盘上 %d 件、值 %d 币会背出去进仓库；剩 %d 币带出" % [carried, carried_value, _run.wallet.balance - maxi(0, fee)], 14, UiPalette.FG, 480))
+	col.add_child(_wrapped(UiText.t("map.extract_carried") % [carried, carried_value, _run.wallet.balance - maxi(0, fee)], 14, UiPalette.FG, 480))
 	var left := _run.storage.item_count()
 	if left > 0:
 		var left_value := 0
@@ -177,13 +176,13 @@ func _open_confirm(node: MapNode) -> void:
 			left_value += ItemValue.of(def)
 			if def.rarity >= 2:
 				rare += 1
-		col.add_child(_wrapped("地上还有 %d 件（值 %d 币%s）不会带出去 —— 地上不参战也不出关。想带走先放进棋盘（B）" % [
-			left, left_value, "，其中 %d 件稀有以上" % rare if rare > 0 else ""], 14, UiPalette.STAMINA, 480))
+		col.add_child(_wrapped(UiText.t("map.extract_ground_left") % [
+			left, left_value, UiText.t("map.extract_ground_rare") % rare if rare > 0 else ""], 14, UiPalette.STAMINA, 480))
 	var buttons := _hbox(8)
-	var go := _button("确定撤离", func(): confirm_extract(), 14)
+	var go := _button(UiText.t("map.extract_confirm"), func(): confirm_extract(), 14)
 	go.disabled = not affordable
 	buttons.add_child(go)
-	buttons.add_child(_button("再想想", cancel_extract, 14, UiPalette.Tier.MINOR))
+	buttons.add_child(_button(UiText.t("map.extract_cancel"), cancel_extract, 14, UiPalette.Tier.MINOR))
 	col.add_child(buttons)
 
 
@@ -280,17 +279,17 @@ func toggle_pause() -> void:
 		_pause = null
 		return
 	_pause = _shade(0.72, true)
-	var panel := _modal_panel("暂停", 28)
+	var panel := _modal_panel(UiText.t("map.pause_title"), 28)
 	_pause.get_child(0).add_child(panel)
 	var col := _vbox(12)
 	panel.content.add_child(col)
-	col.add_child(_wrapped("一局还在：搜索 / 商店 / 没拿完的战利品都留在原地", 12, UiPalette.DIM, 360))
-	col.add_child(_button("继续（Esc）", toggle_pause, 14, UiPalette.Tier.PRIMARY))
-	col.add_child(_button("设置", pause_settings, 14))
-	col.add_child(_button("百科", func(): pause_encyclopedia(), 14))     # 114
+	col.add_child(_wrapped(UiText.t("map.pause_note"), 12, UiPalette.DIM, 360))
+	col.add_child(_button(UiText.t("map.pause_resume"), toggle_pause, 14, UiPalette.Tier.PRIMARY))
+	col.add_child(_button(UiText.t("map.pause_settings"), pause_settings, 14))
+	col.add_child(_button(UiText.t("map.pause_encyclopedia"), func(): pause_encyclopedia(), 14))     # 114
 	if _run != null and _run.chapter != null and not _run.chapter.rules.is_empty():
-		col.add_child(_button("本图规则", func(): show_rules(), 14))     # 091：再看一遍规则卡
-	col.add_child(_button("回主菜单", func(): flow.save_and_quit(), 14))     # 166：进点自动存档；这里回去之前也静默存一次
+		col.add_child(_button(UiText.t("map.pause_rules"), func(): show_rules(), 14))     # 091：再看一遍规则卡
+	col.add_child(_button(UiText.t("map.pause_main_menu"), func(): flow.save_and_quit(), 14))     # 166：进点自动存档；这里回去之前也静默存一次
 
 
 func pause_open() -> bool:
@@ -345,10 +344,8 @@ func _embed_in_pause(script: GDScript, screen_id: int, payload: Dictionary, on_c
 	return s
 
 
-## 217：规则卡末尾统一一行，把百科指出来（序章一第一张规则卡就看得见）
 ## 218 补充一：调试台里「下一次再放」的那几种教程 → 按钮上的屏名
 const REPLAY_LATER := {&"battle": "战斗", &"bag": "背包", &"prebattle": "战前"}
-const RULES_CODEX_LINE := "看不懂的词，Esc 菜单里的{ui:百科}都有一页。"
 
 
 ## 091：「本图规则」卡：章节写的 ≤ 3 条，一页；[param first] = 第一次进这一章弹的（关掉时记住看过了）
@@ -357,16 +354,16 @@ func show_rules(first: bool = false) -> void:
 		return
 	_rules_first = first
 	_rules = _shade(0.72, true)
-	var panel := _modal_panel("本图规则　%s" % Names.of(_run.chapter), 28)
+	var panel := _modal_panel(UiText.t("map.rules_title") % Names.of(_run.chapter), 28)
 	_rules.get_child(0).add_child(panel)
 	var col := _vbox(12)
 	panel.content.add_child(col)
 	var ctx := TextTemplate.context_for(_run)     # 112：规则卡也过占位符（{item:…} 按稀有度上色）
 	for i in _run.chapter.rules.size():
 		col.add_child(UiTheme.rich_block(560, 15, "%d. %s" % [i + 1, TextTemplate.render(_run.chapter.rules[i], ctx)]))
-	col.add_child(UiTheme.rich_block(560, 13, TextTemplate.render(RULES_CODEX_LINE, ctx)))     # 217：每章都指一次百科
-	col.add_child(_wrapped("暂停菜单（Esc）里能再看", 12, UiPalette.DIM, 560))
-	col.add_child(_button("知道了（Esc）", close_rules, 14, UiPalette.Tier.PRIMARY))
+	col.add_child(UiTheme.rich_block(560, 13, TextTemplate.render(UiText.t("map.rules_codex_line"), ctx)))     # 217：规则卡末尾统一一行，每章都指一次百科
+	col.add_child(_wrapped(UiText.t("map.rules_again"), 12, UiPalette.DIM, 560))
+	col.add_child(_button(UiText.t("map.rules_ok"), close_rules, 14, UiPalette.Tier.PRIMARY))
 
 
 func close_rules() -> void:
@@ -589,7 +586,7 @@ func _hunter_tip(id: int) -> String:
 			continue
 		var def: HunterDef = _run.hunters.def_of(h)
 		var hint := _run.hunters.loss_hint(h)
-		lines.append("[color=#d9534f]%s[/color]%s" % [def.display_name if def != null else "?", "　输了会怎样 —— " + hint if hint != "" else ""])
+		lines.append("[color=#d9534f]%s[/color]%s" % [def.display_name if def != null else "?", UiText.t("map.hunter_loss") % hint if hint != "" else ""])
 	return "\n".join(lines)
 
 
@@ -629,7 +626,7 @@ func _after_move() -> void:
 	_refresh_hud()
 	_refresh_hunter_marks()
 	_reopen_btn.disabled = not flow.can_reopen()
-	_reopen_btn.tooltip_text = "放大镜（N）\n" + (REOPEN_HINT if flow.can_reopen() else "这里没有可重开的界面")
+	_reopen_btn.tooltip_text = UiText.t("map.lens_tip") % UiText.t("map.reopen_hint" if flow.can_reopen() else "map.reopen_none")
 
 
 func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
@@ -670,8 +667,8 @@ func _on_node_hovered(id: int) -> void:
 		return
 	# 179：代价 1 不写，别的写「倒计时 −N」（193 补充一）
 	var cost := _run.travel.cost_of(intent)
-	_preview.text = "→ %s%s%s%s" % [MapNodeStyle.of(n.type)["label"], "" if cost == 1 or _run.travel.next_step_free() else "　%s −%d" % [Glossary.COUNTDOWN_WORD, cost],
-		"（熟门熟路：这一步不扣" + Glossary.COUNTDOWN_WORD + "）" if _run.travel.next_step_free() else ("（负重：双倍）" if _run.travel.action_cost_mult > 1 else ""), "（用过了，只是穿行）" if n.is_visited() else ""]
+	_preview.text = "→ %s%s%s%s" % [MapNodeStyle.of(n.type)["label"], "" if cost == 1 or _run.travel.next_step_free() else UiText.t("map.preview_cost") % cost,
+		UiText.t("map.preview_free_step") if _run.travel.next_step_free() else (UiText.t("map.preview_double") if _run.travel.action_cost_mult > 1 else ""), UiText.t("map.preview_visited") if n.is_visited() else ""]
 
 
 ## 084：节点浮窗（章节开关 `node_tooltips`）：文字按 NodeTooltip 的模板渲染，没用过的战斗点下面画对手的棋盘
@@ -738,7 +735,7 @@ func enemy_preview(id: int) -> String:
 			DropResolver.treasure_chance(_run.drop_rule, ctx) * 100.0]
 	if _run.economy != null:
 		var depth: float = EnemyPlacer.depths_of(_run.map).get(id, 0.0)
-		line += "　打赢 +%d 币" % _run.economy.battle_reward(int(content.get("strength", 0)), depth, _run.chapter.difficulty)
+		line += UiText.t("map.enemy_reward") % _run.economy.battle_reward(int(content.get("strength", 0)), depth, _run.chapter.difficulty)
 	return line
 
 
@@ -781,19 +778,19 @@ func _refresh_skills() -> void:
 		var d := s as RunSkill
 		var bits: Array[String] = []
 		if _run.skills.is_armed(d.id):
-			bits.append("已准备")
+			bits.append(UiText.t("map.skill_armed"))
 		if _run.skills.uses_of(d.id) >= 0:
-			bits.append("剩 %d 次" % _run.skills.uses_of(d.id))
+			bits.append(UiText.t("map.skill_uses") % _run.skills.uses_of(d.id))
 		if _run.skills.cooldown_of(d.id) > 0:
-			bits.append("冷却 %d 步" % _run.skills.cooldown_of(d.id))
-		var hint := d.summary() + ("\n" + Names.description_of(d) if d.description != "" else "") + ("" if d.map_usable() else "\n在战前准备屏（或猎手面前）用")
+			bits.append(UiText.t("map.skill_cooldown") % _run.skills.cooldown_of(d.id))
+		var hint := d.summary() + ("\n" + Names.description_of(d) if d.description != "" else "") + ("" if d.map_usable() else "\n" + UiText.t("map.skill_prebattle_only"))
 		var btn := IconButton.make("skill_" + String(d.id), d.display_name,
-			d.display_name + ("（" + "，".join(bits) + "）" if not bits.is_empty() else ""), hint, func(): use_skill(d.id))
+			UiText.t("map.skill_state") % [d.display_name, UiText.t("map.skill_sep").join(bits)] if not bits.is_empty() else d.display_name, hint, func(): use_skill(d.id))
 		btn.badge = _run.skills.uses_of(d.id)
 		btn.disabled = _run.skills.can_use(d.id) != "" or not d.map_usable()
 		_skills_box.add_child(btn)
 	if _run.skills.evading():
-		_skills_box.add_child(_label("躲避中（剩 %d 步）" % _run.skills.evade_left, 12, UiPalette.DIM))
+		_skills_box.add_child(_label(UiText.t("map.skill_evading") % _run.skills.evade_left, 12, UiPalette.DIM))
 
 
 ## 用一个技能。用不了把原因写在状态栏；用了写进日志
@@ -925,9 +922,9 @@ func _build_parts() -> void:
 	_status = _wrapped("", 12, UiPalette.DIM, PART_WIDTH)
 	# 090（作者定）：三个互动按键放大到 300%
 	# 166（作者定）：背包与「回到这个点」换成顶端栏里的图标按钮（背包 / 放大镜），快捷键照旧
-	_bag_btn = IconButton.make("bag", "背包", "背包", "整理棋盘上的东西，打架前先排好", toggle_bag, "B")
+	_bag_btn = IconButton.make("bag", UiText.t("map.bag"), UiText.t("map.bag"), UiText.t("map.bag_hint"), toggle_bag, "B")
 	_part(&"bag_button", _bag_btn)
-	_reopen_btn = IconButton.make("lens", "放大镜", "放大镜", REOPEN_HINT, func(): reopen(), "N")
+	_reopen_btn = IconButton.make("lens", UiText.t("map.lens"), UiText.t("map.lens"), UiText.t("map.reopen_hint"), func(): reopen(), "N")
 	_reopen_btn.disabled = true
 	_part(&"reopen_button", _reopen_btn)
 	_skills_box = _hbox(4)

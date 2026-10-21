@@ -67,11 +67,11 @@ func text_of() -> String:
 	if has_dial():
 		return "倒计时"     # 只为显隐：栏上不写字
 	var left := cd.left()
-	var text := "倒计时 %d / %d" % [left, cd.limit()]
+	var text := UiText.t("hud.countdown_line") % [left, cd.limit()]
 	var closing := cd.closing_extract_id()
 	if closing >= 0:
 		var node := run.map.get_node(closing)
-		text += "　　限时撤离点%s" % ["已关闭" if cd.extract_closed(node) else ("%s剩 %d 时关闭" % [Glossary.COUNTDOWN_WORD, PaidExtracts.closes_at(node)])]     # 186：不写点号
+		text += UiText.t("hud.timed_extract") % [UiText.t("hud.timed_extract_closed") if cd.extract_closed(node) else (UiText.t("hud.timed_extract_closes") % PaidExtracts.closes_at(node))]     # 186：不写点号
 	return text
 
 
@@ -192,16 +192,16 @@ func tip_parts() -> Dictionary:
 	var num := "[color=%s%s]%%d[/color]" % [p, STAGE_STYLE[stage()]]
 	var left := cd.left()
 	var lines: Array[String] = []
-	lines.append((Glossary.COUNTDOWN_WORD + "还剩 " + num + "（共 [color=%sval]%d[/color]）") % [left, p, cd.limit()])
+	lines.append(UiText.t("hud.countdown_left") % [num % left, p, cd.limit()])
 	var closing := cd.closing_extract_id()
 	if closing >= 0:
 		var node := run.map.get_node(closing)
 		if cd.extract_closed(node):
-			lines.append("[color=%sdim]最近的撤离点已关闭[/color]" % p)
+			lines.append(UiText.t("hud.nearest_closed") % p)
 		else:
-			lines.append(("最近的撤离点" + Glossary.COUNTDOWN_WORD + "剩 " + num + " 时关闭") % PaidExtracts.closes_at(node))
+			lines.append(UiText.t("hud.nearest_closes") % (num % PaidExtracts.closes_at(node)))
 	return {
-		"head": Glossary.tip_head("倒计时", p + "tip_fg"),
+		"head": Glossary.tip_head(UiText.t("hud.countdown"), p + "tip_fg"),
 		"body": "[font_size=%d][color=%stip_fg]%s[/color][/font_size]" % [Glossary.BODY_SIZE, p, "\n".join(lines)],
 	}
 

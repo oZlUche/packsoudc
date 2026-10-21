@@ -37,6 +37,9 @@ const TYPED_STYLES := {
 const TERMS_EN := {
 	"搜索": "Search", "开战": "Fight", "战前准备": "Pre-battle", "迎战": "Fight", "撤离": "Extract",
 	"地上": "Ground", "仓库": "Warehouse", "棋盘": "Board", "包": "Bag",
+	# 221 F1：教程里用到、或可能用到的界面词（词表 docs/text-glossary-en.md）
+	"背包": "Pack", "百科": "Encyclopedia", "自由模式": "Free mode", "出发": "Set out", "本图规则": "Map rules",
+	"休息": "Rest", "整理背包": "Sort pack", "全部拾取": "Take all",
 }
 
 

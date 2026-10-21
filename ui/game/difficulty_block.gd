@@ -69,12 +69,12 @@ func _init() -> void:
 	# 叠放次序（下 → 上）：计数器、标题牌（压在计数器上沿）、加减 | 卷轴（往下走时压过它们）|「开启挑战」按钮面（收起时压在卷轴前）| 动画挡板
 	scroll = ChallengeScroll.new(WIDTH)
 	scroll.minimum_size_changed.connect(update_minimum_size)
-	open_btn = UiTheme.make_difficulty_plate("开启挑战", func(): open_pressed.emit())
+	open_btn = UiTheme.make_difficulty_plate(UiText.t("diff.open"), func(): open_pressed.emit())
 	title = PanelContainer.new()
 	title.theme_type_variation = UiTheme.PANEL_DIFF_TITLE
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UiTheme.set_tone(title, UiTheme.tone_of(UiTheme.PANEL_DIFF_TITLE))
-	var words := UiTheme.make_variant_label("当前难度", UiTheme.LABEL_DIFF_TITLE)
+	var words := UiTheme.make_variant_label(UiText.t("diff.current"), UiTheme.LABEL_DIFF_TITLE)
 	words.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	words.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.add_child(words)
@@ -113,7 +113,7 @@ func _step_button(text: String, delta: int) -> Button:
 	if _art:     # 定稿：−、＋ 画在图上，四态各一张
 		b.theme_type_variation = UiTheme.BUTTON_DIFF_MINUS if delta < 0 else UiTheme.BUTTON_DIFF_PLUS
 		b.text = ""
-		b.tooltip_text = "降一级" if delta < 0 else "升一级"
+		b.tooltip_text = UiText.t("diff.down") if delta < 0 else UiText.t("diff.up")
 		b.custom_minimum_size = STEP_BTN
 	steps.add_child(b)
 	return b
@@ -207,7 +207,7 @@ func transitioning() -> bool:
 ## 一个难度都没解锁：按钮压灰、悬停提示
 func set_locked(locked: bool) -> void:
 	open_btn.disabled = locked
-	open_btn.tooltip_text = "通关一次后开放" if locked else ""
+	open_btn.tooltip_text = UiText.t("diff.locked") if locked else ""
 
 
 ## 摆成：计数器写 [param numeral]、纸上 [param lines]（[[级, 文字]...] 从低到高）、[param open] 展开与否。

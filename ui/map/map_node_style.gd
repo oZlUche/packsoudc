@@ -25,7 +25,8 @@ const STYLES := {
 
 const UNKNOWN := {"glyph": "?", "color": Color("8b93a1")}
 
-## 166（作者定）：左下角图例用的短名（地图上一眼看的那种；岔路口不列）。长名（事件文本、日志）照旧在 [NodeText]
+## 166（作者定）：左下角图例用的短名（地图上一眼看的那种；岔路口不列）。长名（事件文本、日志）照旧在 [NodeText]。
+## 221 F1：值是中文原文，界面按语言取用 [method name_of]；表本身还管「图例列不列」
 const NAMES := {
 	&"battle": "战斗", &"elite": "精英", &"event": "事件", &"random": "未知", &"search": "搜索", &"shop": "商店",
 	&"rest": "休息", &"extract": "撤离", &"core": "核心", &"spawn": "出生", &"safe": "保险箱", &"chest": "宝箱",
@@ -61,6 +62,8 @@ static func route_color(index: int) -> Color:
 	return ROUTE_COLORS[posmod(index, ROUTE_COLORS.size())]
 
 
-## 166：图例里的短名；表里没有的退回 [NodeText] 的长名
+## 166：图例里的短名（221 F1：按当前语言，`UiText` 的 `node.short.<type>`）；表里没有的退回 [NodeText] 的长名
 static func name_of(type: StringName) -> String:
-	return String(NAMES.get(type, NodeText.label_of(type)))
+	if not NAMES.has(type):
+		return NodeText.label_of(type)
+	return UiText.pick(UiText.TEXT.get("node.short.%s" % type), String(NAMES[type]))

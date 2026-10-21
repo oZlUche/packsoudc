@@ -24,7 +24,7 @@ func _summary() -> String:
 
 
 func summary_for(_def: FaithDef, points: int) -> String:
-	return "在战斗中，首次生命值归零时会持续战斗 %s 秒" % TextTemplate.num(seconds_at(points))
+	return UiText.t("perk.undying") % TextTemplate.num(seconds_at(points))
 
 
 ## 103：作用于角色本身 → 进 buff 栏

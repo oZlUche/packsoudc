@@ -12,7 +12,7 @@ func _init() -> void:
 	coin = HudIcon.make(COIN, &"coin")
 	coin.texture = HudIcon.load_art(COIN_ART)
 	_prepend_icon(coin)
-	tooltip_text = "货币"
+	tooltip_text = UiText.t("hud.wallet")
 
 
 func title() -> String:

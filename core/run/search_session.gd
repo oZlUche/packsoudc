@@ -218,11 +218,16 @@ static func floor_for(node: MapNode, p_rules: SearchRules, difficulty: Difficult
 	return p_rules.floor_row((difficulty.level if difficulty != null else 0) + (1 if adv else 0))
 
 
+## 221 F1：保底说明用的颜色词、数词，按当前语言取（[UiText] 里一串用「|」隔开）
+static func floor_colors() -> PackedStringArray:
+	return UiText.t("log.floor_colors").split("|")
+
+
+static func count_words() -> PackedStringArray:
+	return UiText.t("log.count_words").split("|")
+
+
 ## 127：给人看的保底说明：「一件绿及以上、两件任意」。空表返回 ""
-const FLOOR_COLORS := ["白", "绿", "蓝", "紫", "金", "红"]
-const COUNT_WORDS := ["零", "一", "两", "三", "四", "五", "六", "七", "八", "九"]
-
-
 static func floor_text(p_floor: Array[int]) -> String:
 	if p_floor.is_empty():
 		return ""
@@ -232,12 +237,14 @@ static func floor_text(p_floor: Array[int]) -> String:
 	var keys := counts.keys()
 	keys.sort()
 	keys.reverse()
+	var colors := floor_colors()
+	var words := count_words()
 	var parts: Array[String] = []
 	for k in keys:
 		var n: int = counts[k]
-		var word: String = COUNT_WORDS[n] if n < COUNT_WORDS.size() else str(n)
-		parts.append("%s件%s" % [word, "任意" if int(k) <= 0 else FLOOR_COLORS[clampi(int(k), 0, 5)] + "及以上"])
-	return "、".join(parts)
+		var word: String = words[n] if n < words.size() else str(n)
+		parts.append(UiText.t("log.floor_any") % word if int(k) <= 0 else UiText.t("log.floor_min") % [word, colors[clampi(int(k), 0, colors.size() - 1)]])
+	return UiText.t("log.list_sep").join(parts)
 
 
 ## 找几件：候选是不带排除标签、（默认）不是包的道具，按稀有度权重抽；权重随深度与危险上偏。

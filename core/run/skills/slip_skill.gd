@@ -15,9 +15,9 @@ func map_usable() -> bool:
 ## 战前准备屏上能不能用（不看次数与冷却，那是 [RunSkills] 的事）：空串 = 能
 static func blocked_reason(run: RunState) -> String:
 	if run == null or run.events == null or run.events.pending_battle.is_empty():
-		return "只能在开战前用"
+		return UiText.t("log.prebattle_only")
 	if StringName(String(run.events.pending_battle.get("type", ""))) == &"core":
-		return "这里溜不掉"
+		return UiText.t("log.slip_core")
 	return ""
 
 
@@ -25,8 +25,8 @@ func activate(run: RunState) -> String:
 	var why := blocked_reason(run)
 	if why != "":
 		return why
-	return "" if run.events.skip_pending_battle() else "没有等着开打的一场"
+	return "" if run.events.skip_pending_battle() else UiText.t("log.no_pending_battle")
 
 
 func describe() -> String:
-	return "开战前溜走：这一场不打、不扣体力、没有战利品；猎手面前必定逃掉"
+	return UiText.t("log.slip_describe")

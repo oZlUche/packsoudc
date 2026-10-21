@@ -18,8 +18,9 @@ const FOOT_SHARE := 0.9
 ## 宝箱上下两行字的间距
 const COL_GAP := 14
 
-const TEXT_IDLE := "点击宝箱开锁"
-const TEXT_TRYING := "尝试开锁"
+## 宝箱下面那行字的 UiText 键（221 F1：用时按当前语言取）
+const TEXT_IDLE := "chest.idle"
+const TEXT_TRYING := "chest.trying"
 
 var node: MapNode = null
 var rarity: int = 0
@@ -93,7 +94,7 @@ func open(payload: Dictionary) -> void:
 	var col := _vbox(COL_GAP)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_child(col)
-	var title := _label("%s宝箱" % ItemTooltip.rarity_name(rarity), 16, ItemPainter.RARITY_COLORS[rarity])
+	var title := _label(UiText.t("chest.title") % ItemTooltip.rarity_name(rarity), 16, ItemPainter.RARITY_COLORS[rarity])
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(title)
 	_title = title
@@ -102,13 +103,13 @@ func open(payload: Dictionary) -> void:
 	view.custom_minimum_size = _closed_tex.get_size() if _closed_tex != null else PLACEHOLDER_SIZE
 	view.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	col.add_child(view)
-	hint = UiTheme.make_display(TEXT_IDLE, 28)     # 168：说明字是马善政
+	hint = UiTheme.make_display(UiText.t(TEXT_IDLE), 28)     # 168：说明字是马善政
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(hint)
 
-	var back := _button("回地图", leave, 13, UiPalette.Tier.MINOR)
+	var back := _button(UiText.t("chest.back"), leave, 13, UiPalette.Tier.MINOR)
 	back.focus_mode = Control.FOCUS_NONE     # 确认键是开锁键，别让按钮抢走
-	back.tooltip_text = "没开锁就走：这个点不算用过，站着或回来还能再开（Esc）"
+	back.tooltip_text = UiText.t("chest.back_tip")
 	add_child(back)
 	back.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, 24)
 	UiTheme.set_tone(center, bg_tone)
@@ -222,9 +223,9 @@ func _refresh_hint() -> void:
 	if opening or hold.is_unlocked():
 		hint.text = ""
 	elif hold.is_holding():
-		hint.text = TEXT_TRYING
+		hint.text = UiText.t(TEXT_TRYING)
 	else:
-		hint.text = TEXT_IDLE
+		hint.text = UiText.t(TEXT_IDLE)
 
 
 func _process(delta: float) -> void:

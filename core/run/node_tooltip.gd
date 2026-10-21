@@ -1,7 +1,8 @@
 ## 地图节点的浮窗文字（084，作者：鼠标移到节点上显示；第二章开放，所以是开关；内容能在默认 / 自定义之间切）。
 ##
 ## 一个点归到一个**类别**（[method category_of]）：用过的点一律 `visited`（已经没东西了），其余按类型。
-## 模板从三处取，先到先得：节点内容 `tooltip`（这个点专有）→ 章节 `tooltip_texts[类别]`（`tooltip_mode == "custom"` 时）→ 内置 [constant DEFAULTS]。
+## 模板从三处取，先到先得：节点内容 `tooltip`（这个点专有）→ 章节 `tooltip_texts[类别]`（`tooltip_mode == "custom"` 时）→ 内置 [constant DEFAULTS]
+## （221 F1：[constant DEFAULTS] 是中文原文，按语言取用 [method default_for]，`UiText` 的 `node.tip.<类别>`）。
 ## 模板经 [TextTemplate] 渲染，战斗点常用 `{battle_data}`；全部键见 docs/text-placeholders.md。
 ## 纯逻辑：返回 BBCode 文字与要不要画对手的棋盘，画是地图屏的事
 class_name NodeTooltip
@@ -45,7 +46,14 @@ static func template_for(chapter: ChapterDef, node: MapNode) -> String:
 	var cat := category_of(node)
 	if chapter != null and chapter.tooltip_mode == "custom" and chapter.tooltip_texts.has(cat):
 		return String(chapter.tooltip_texts[cat])
-	return String(DEFAULTS.get(cat, DEFAULTS["other"]))
+	return default_for(cat)
+
+
+## 221 F1：内置模板，按当前语言（没登记的类别用 `other`）
+static func default_for(cat: String) -> String:
+	if not DEFAULTS.has(cat):
+		cat = "other"
+	return UiText.pick(UiText.TEXT.get("node.tip.%s" % cat), String(DEFAULTS[cat]))
 
 
 ## 渲染好的浮窗文字（BBCode）
@@ -54,15 +62,11 @@ static func text_for(run: RunState, chapter: ChapterDef, node: MapNode) -> Strin
 	# 127：没用过的搜索点 —— 进阶的第一行写明；有保底就加一行「每次至少几件，其中……」
 	if node != null and category_of(node) == "search":
 		if SearchSession.is_advanced(node):
-			text = "[color=#f0ad4e]进阶搜索点[/color]\n" + text
+			text = "[color=#f0ad4e]%s[/color]\n" % UiText.t("node.advanced_search") + text
 		var p_floor := SearchSession.floor_for(node, run.node_rules.search if run != null and run.node_rules != null else null, run.difficulty if run != null else null)
 		if not p_floor.is_empty():
-			text += "\n" + TextTemplate.render(SEARCH_FLOOR_LINE, {"search_floor_count": p_floor.size(), "search_floor_text": SearchSession.floor_text(p_floor)})
+			text += "\n" + TextTemplate.render(UiText.t("node.search_floor_line"), {"search_floor_count": p_floor.size(), "search_floor_text": SearchSession.floor_text(p_floor)})
 	return _countdown_line(run, node, text)
-
-
-## 127：搜索点的保底一行（占位符：{search_floor_count} {search_floor_text}）
-const SEARCH_FLOOR_LINE := "{c:dim}每次至少 {search_floor_count} 件，其中{search_floor_text}。{/c}"
 
 
 static func _countdown_line(run: RunState, node: MapNode, text: String) -> String:
@@ -70,9 +74,9 @@ static func _countdown_line(run: RunState, node: MapNode, text: String) -> Strin
 	var cd := CountdownModule.of(run)     # 101：倒计时是一局的模块
 	if node != null and PaidExtracts.closes_at(node) >= 0 and cd != null and cd.has_countdown():
 		if cd.extract_closed(node):
-			text += "\n[color=#d9534f]这个撤离点已经关闭（倒计时过半）。[/color]"
+			text += "\n[color=#d9534f]%s[/color]" % UiText.t("node.extract_closed")
 		else:
-			text += "\n[color=#f0ad4e]%s剩 %d 时关闭（还有 %d）。[/color]" % [Glossary.COUNTDOWN_WORD, PaidExtracts.closes_at(node), cd.left() - PaidExtracts.closes_at(node)]
+			text += "\n[color=#f0ad4e]%s[/color]" % (UiText.t("node.extract_closes_at") % [PaidExtracts.closes_at(node), cd.left() - PaidExtracts.closes_at(node)])
 	return text
 
 
@@ -99,7 +103,7 @@ static func stash_text(run: RunState, node: MapNode) -> String:
 	var parts: Array[String] = []
 	for name in order:
 		parts.append(name if int(counts[name]) == 1 else "%s ×%d" % [name, counts[name]])
-	return "[color=#f0ad4e]地上（%d 件）：[/color]%s" % [items.size(), "、".join(parts)]
+	return "[color=#f0ad4e]%s[/color]%s" % [UiText.t("node.stash") % items.size(), UiText.t("node.stash_sep").join(parts)]
 
 
 ## 浮窗里要不要画对手的棋盘：没用过的战斗点、内容里有敌人

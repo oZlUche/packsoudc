@@ -67,8 +67,8 @@ func _build() -> void:
 	col.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(col)
 	if _r == null:
-		col.add_child(_label("没有可结算的一局", 18, UiPalette.FG))
-		col.add_child(_button("回主菜单", flow.to_main_menu, 14))
+		col.add_child(_label(UiText.t("result.none"), 18, UiPalette.FG))
+		col.add_child(_button(UiText.t("setup.main_menu"), flow.to_main_menu, 14))
 		return
 	if _r.is_extracted() and _step == 2:
 		_build_store(col, outer)
@@ -81,9 +81,9 @@ func _build_summary(col: VBoxContainer, outer: VBoxContainer) -> void:
 	var r := _r
 	var extracted := r.is_extracted()
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_child(_centered(_label("撤离成功" if extracted else "战败", 28, UiPalette.HEAL if extracted else UiPalette.HP)))
-	col.add_child(_centered(_label("%s　%s" % [r.chapter_name, _reason_text(r.reason)], 13, UiPalette.DIM)))     # 作者 2026-10-17：种子不给玩家看
-	col.add_child(_centered(_label("走了 %d 步　踩过 %d 个点　打赢 %d 场　打输 %d 场" % [r.steps, r.visited, r.battles_won, r.battles_lost], 14, UiPalette.FG)))
+	col.add_child(_centered(_label(UiText.t("result.extracted") if extracted else UiText.t("result.defeat"), 28, UiPalette.HEAL if extracted else UiPalette.HP)))
+	col.add_child(_centered(_label(UiText.t("result.reason_line") % [r.chapter_name, _reason_text(r.reason)], 13, UiPalette.DIM)))     # 作者 2026-10-17：种子不给玩家看
+	col.add_child(_centered(_label(UiText.t("result.tally") % [r.steps, r.visited, r.battles_won, r.battles_lost], 14, UiPalette.FG)))
 	# 104：信力节奏的量尺（数值都是占位，作者打几局对着这一行调表）；开发版可以导 CSV
 	if r.faith_pace != "" and GameSettings.dev_build():     # 作者 2026-10-17：调表用的量尺只在开发环境
 		var pace_row := _hbox(12)
@@ -101,28 +101,28 @@ func _build_summary(col: VBoxContainer, outer: VBoxContainer) -> void:
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	if extracted:
 		# 177 待定 1 选 A：总价值 = 背出来的 + 保险箱里的
-		row.add_child(_number_block("总价值", r.value + r.safe_value, BIG_NUMBER_PX, UiPalette.HEAL))
-		row.add_child(_number_block("图鉴新点亮", lit, NUMBER_PX, UiPalette.FG if lit > 0 else UiPalette.DIM))
-		row.add_child(_number_block("带出金币", r.balance, NUMBER_PX, UiPalette.STAMINA))
+		row.add_child(_number_block(UiText.t("result.total_value"), r.value + r.safe_value, BIG_NUMBER_PX, UiPalette.HEAL))
+		row.add_child(_number_block(UiText.t("result.new_in_collection"), lit, NUMBER_PX, UiPalette.FG if lit > 0 else UiPalette.DIM))
+		row.add_child(_number_block(UiText.t("result.coins_out"), r.balance, NUMBER_PX, UiPalette.STAMINA))
 	else:
 		# 177 §2.3：战败只画保险箱那块（有图鉴点亮再画一块）；钱是 0，不画
 		if not r.safe_items.is_empty():
-			row.add_child(_number_block("保险箱带出", r.safe_value, BIG_NUMBER_PX, UiPalette.HEAL))
+			row.add_child(_number_block(UiText.t("result.from_safe"), r.safe_value, BIG_NUMBER_PX, UiPalette.HEAL))
 		if lit > 0:
-			row.add_child(_number_block("图鉴新点亮", lit, NUMBER_PX, UiPalette.FG))
+			row.add_child(_number_block(UiText.t("result.new_in_collection"), lit, NUMBER_PX, UiPalette.FG))
 	if row.get_child_count() > 0:
 		col.add_child(row)
 	if extracted:
-		col.add_child(_centered(_label("背出来 %d 件、保险箱 %d 件" % [r.carried.size(), r.safe_items.size()], 13, UiPalette.DIM)))
+		col.add_child(_centered(_label(UiText.t("result.carried_count") % [r.carried.size(), r.safe_items.size()], 13, UiPalette.DIM)))
 		# 092（作者定）：地上没背出来的，离开这一屏时一键出售 —— 先说清楚（177：第 1 步就说）
 		if r.left_behind > 0:
 			var sale := flow.stash_sale_preview()
-			_stash_line = _wrapped("地上还有 %d 件（值 %d 币）没背出来：离开这一屏时会一键出售，得 %d 币（按基地出售比例）。" % [r.left_behind, r.left_value, int(sale["funds"])], 13, UiPalette.STAMINA, 700)
+			_stash_line = _wrapped(UiText.t("result.ground_sale") % [r.left_behind, r.left_value, int(sale["funds"])], 13, UiPalette.STAMINA, 700)
 			_stash_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			col.add_child(_centered(_stash_line))
-		col.add_child(_centered(_button("继续", to_step.bind(2), 16, UiPalette.Tier.PRIMARY)))
+		col.add_child(_centered(_button(UiText.t("menu.continue"), to_step.bind(2), 16, UiPalette.Tier.PRIMARY)))
 		return
-	var lost := _wrapped("背包、地上、钱，全都留在了里面。" + ("保险箱里的 %d 件带出来了。" % r.safe_items.size() if not r.safe_items.is_empty() else ""), 14, UiPalette.FG, 600)
+	var lost := _wrapped(UiText.t("result.lost_all") + (UiText.t("result.lost_safe") % r.safe_items.size() if not r.safe_items.is_empty() else ""), 14, UiPalette.FG, 600)
 	lost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_centered(lost))
 	_add_safe(col, false)
@@ -136,11 +136,11 @@ func _build_summary(col: VBoxContainer, outer: VBoxContainer) -> void:
 func _build_store(col: VBoxContainer, outer: VBoxContainer) -> void:
 	var r := _r
 	var head := _hbox(16)
-	head.add_child(_label("置入仓库", 18, UiPalette.FG))
+	head.add_child(_label(UiText.t("result.store_title"), 18, UiPalette.FG))
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(spacer)
-	head.add_child(_label("总价值 %d · 带出 %d 币" % [r.value + r.safe_value, r.balance], 13, UiPalette.DIM))
+	head.add_child(_label(UiText.t("result.store_recap") % [r.value + r.safe_value, r.balance], 13, UiPalette.DIM))
 	col.add_child(head)
 	_add_safe(col, true)
 	col.add_child(HSeparator.new())
@@ -160,7 +160,7 @@ func _add_safe(col: VBoxContainer, extracted: bool) -> void:
 		safe_row.alignment = BoxContainer.ALIGNMENT_CENTER
 		safe_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		safe_col.alignment = BoxContainer.ALIGNMENT_CENTER
-	var safe_label := _label("保险箱带出 %d 件、值 %d 币" % [r.safe_items.size(), r.safe_value], 13 if extracted else 16, UiPalette.HEAL)
+	var safe_label := _label(UiText.t("result.safe_line") % [r.safe_items.size(), r.safe_value], 13 if extracted else 16, UiPalette.HEAL)
 	if not extracted:
 		safe_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	safe_col.add_child(safe_label)
@@ -187,10 +187,10 @@ func _add_warehouse(col: VBoxContainer) -> void:
 func _add_proceed(outer: VBoxContainer) -> void:
 	var next := flow.next_chapter()
 	if next != null:
-		outer.add_child(_wrapped("带回来的东西会进仓库。序章一张接一张：下面直接进「%s」。" % next.display_name, 13, UiPalette.DIM, 600))
-		outer.add_child(_button("进入下一张：%s" % next.display_name, proceed, 16, UiPalette.Tier.PRIMARY))
+		outer.add_child(_wrapped(UiText.t("result.next_note") % Names.of(next), 13, UiPalette.DIM, 600))
+		outer.add_child(_button(UiText.t("result.next_map") % Names.of(next), proceed, 16, UiPalette.Tier.PRIMARY))
 	else:
-		outer.add_child(_button("继续", proceed, 16, UiPalette.Tier.PRIMARY))
+		outer.add_child(_button(UiText.t("menu.continue"), proceed, 16, UiPalette.Tier.PRIMARY))
 
 
 ## 177：一块大数 —— 上数（马善政）下名，竖排居中
@@ -245,15 +245,15 @@ func proceed() -> void:
 func _reason_text(reason: StringName) -> String:
 	match reason:
 		&"extract":
-			return "从撤离点出来"
+			return UiText.t("result.reason_extract")
 		&"vitality_depleted":
-			return "体力耗尽"
+			return UiText.t("result.reason_vitality")
 		&"boss_lost":
-			return "核心一战失利"
+			return UiText.t("result.reason_boss_lost")
 		&"fatal_loss":
-			return "输了一场不能输的仗"
+			return UiText.t("result.reason_fatal")
 		&"boss":
-			return "击败了核心的 BOSS，直接撤离"
+			return UiText.t("result.reason_boss")
 		&"time_out":
-			return "倒计时归零：行动失败"
+			return UiText.t("result.reason_time_out")
 	return String(reason)

@@ -45,17 +45,17 @@ func short_name() -> String:
 		var names: Array[String] = []
 		for t in tags:
 			names.append(Glossary.tag_name(t))
-		parts.append("、".join(names))
+		parts.append(UiText.t("log.list_sep").join(names))
 	if min_cells > 0:
 		parts.append(ItemVolume.size_label(ItemVolume.grade_of_cells(min_cells)))     # 188 补充一：「大型道具」
 	if exact_grade >= 0:
 		parts.append(ItemVolume.size_label(exact_grade))
 	if has_stat != &"":
-		parts.append("带有%s属性" % Glossary.stat_name(has_stat))
-	return "；".join(parts) if not parts.is_empty() else "任何道具"
+		parts.append(UiText.t("log.offering_has_stat") % Glossary.stat_name(has_stat))
+	return UiText.t("repair.sep").join(parts) if not parts.is_empty() else UiText.t("log.offering_any")
 
 
 func describe() -> String:
 	# 作者 2026-10-17：不写公式，写成玩家话
-	var main := "%s（越稀有给得越多%s）" % [short_name(), "，越大给得越多" if per_cell else ""]
-	return main if note == "" else "%s　%s" % [main, TextTemplate.render(note, TextParams.of(self))]
+	var main := UiText.t("log.offering_main") % [short_name(), UiText.t("log.offering_per_cell") if per_cell else ""]
+	return main if note == "" else UiText.t("log.offering_note") % [main, TextTemplate.render(note, TextParams.of(self))]

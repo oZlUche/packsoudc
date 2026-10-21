@@ -5,6 +5,9 @@
     "en": "Bitter Root"
   },
   "description": "嚼着苦，吃毒的时候就不那么疼了。",
+  "descriptions": {
+    "en": "Bitter to chew, but poison hurts less once you have."
+  },
   "shape": [
     "1"
   ],

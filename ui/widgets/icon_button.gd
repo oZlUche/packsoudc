@@ -41,7 +41,7 @@ static func make(p_icon_id: String, p_fallback: String, name: String, hint: Stri
 	b.icon_id = p_icon_id
 	b.fallback = p_fallback
 	b.hotkey = p_hotkey
-	b.tooltip_text = name + ("（%s）" % p_hotkey if p_hotkey != "" else "") + ("\n" + hint if hint != "" else "")
+	b.tooltip_text = name + (UiText.t("ui.hotkey") % p_hotkey if p_hotkey != "" else "") + ("\n" + hint if hint != "" else "")
 	if on_press.is_valid():
 		b.pressed.connect(on_press)
 	b._load()

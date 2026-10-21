@@ -93,14 +93,14 @@ func open(payload: Dictionary) -> void:
 	_loot_box = ScrollBox.wrap(_loot)     # 反馈：容器太高时竖向滚动，不撑出窗口
 	_stage.add_child(_loot_box)
 	# 090：长说明在悬浮提示里，按钮上只写动作（棋盘美术：字画在火漆签上）
-	_take_btn = IconButton.make_art(BOARD_DIR, "take_all", "全部拾取", "全部拾取\n先进背包，放不下的到地上", take_all)
+	_take_btn = IconButton.make_art(BOARD_DIR, "take_all", UiText.t("loot.take_all"), UiText.t("loot.take_all_tip"), take_all)
 	_take_btn.set_meta(AudioHub.META_KEY, &"")     # 206：响 loot.take_all（搬走了才响），不叠按钮声
 	_stage.add_child(_take_btn)
 	if _session != null:
-		_close_btn = _corner("btn_close", "×", "关闭\n回到事件：再搜 / 走", close_search)
-		_minimize_btn = _corner("btn_minimize", "－", "回到地图\n不结束：回到这个点接着搜（Esc）", to_map)
+		_close_btn = _corner("btn_close", "×", UiText.t("loot.close_tip"), close_search)
+		_minimize_btn = _corner("btn_minimize", "－", UiText.t("loot.to_map_tip"), to_map)
 	else:
-		_minimize_btn = _corner("btn_minimize", "－", "收起\n" + ("撤离结算" if _boss else "剩下的留在这里；走了会落到这个点的地上（Esc）"), to_map)
+		_minimize_btn = _corner("btn_minimize", "－", UiText.t("camp.fold") + "\n" + (UiText.t("loot.extract_results") if _boss else UiText.t("loot.leave_rest")), to_map)
 
 	_inv = _mount_bag(_stage, _loot, Callable(), _container)     # 084：棋盘上双击 → 放回容器；回话不显示（作者 21:16 删了那一行）
 	_strip = _inv.detach_strip()     # 216：数值栏摆到「全部拾取」那一行

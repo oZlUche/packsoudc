@@ -74,7 +74,7 @@ func skills_summary() -> String:
 	for s in skills:
 		if s != null and not (RunSkills.ACTIVE_HIDDEN and (s as RunSkill).is_active()):
 			parts.append((s as RunSkill).summary())
-	return "　".join(parts)
+	return UiText.t("log.skill_sep").join(parts)
 
 
 ## 136：开局屏的分组行：被动在前、主动在后，各一行「被动：名字　说明」（作者定：角色 = 初始面板 + 技能，没有身份这一层）。
@@ -85,7 +85,7 @@ func skill_lines() -> Array[String]:
 		for s in skills:
 			var sk := s as RunSkill
 			if sk != null and sk.is_active() == active:
-				out.append("%s：%s" % ["主动" if active else "被动", _skill_line(sk)])
+				out.append(UiText.t("log.skill_line") % [UiText.t("log.skill_active") if active else UiText.t("log.skill_passive_kind"), _skill_line(sk)])
 	return out
 
 
@@ -96,12 +96,12 @@ func skill_entries() -> Array[Dictionary]:
 		for s in skills:
 			var sk := s as RunSkill
 			if sk != null and sk.is_active() == active:
-				out.append({"kind": "主动" if active else "被动", "name": sk.display_name, "text": _skill_text(sk)})
+				out.append({"kind": UiText.t("log.skill_active") if active else UiText.t("log.skill_passive_kind"), "name": sk.display_name, "text": _skill_text(sk)})
 	return out
 
 
 static func _skill_line(sk: RunSkill) -> String:
-	return "%s　%s" % [sk.display_name, _skill_text(sk)]
+	return UiText.t("log.skill_name_text") % [sk.display_name, _skill_text(sk)]
 
 
 ## 技能的说明（主动的次数 / 冷却附在末尾）
@@ -110,19 +110,19 @@ static func _skill_text(sk: RunSkill) -> String:
 	var bits: Array[String] = []
 	if sk.is_active():
 		if sk.uses >= 0:
-			bits.append("%d 次" % sk.uses)
+			bits.append(UiText.t("log.skill_uses") % sk.uses)
 		if sk.cooldown_steps > 0:
-			bits.append("冷却 %d 步" % sk.cooldown_steps)
-	return text + (("（" + "，".join(bits) + "）") if not bits.is_empty() else "")
+			bits.append(UiText.t("log.skill_cooldown_steps") % sk.cooldown_steps)
+	return text + ((UiText.t("log.skill_bits") % UiText.t("log.comma_sep").join(bits)) if not bits.is_empty() else "")
 
 
 ## 带入的东西合不合上限。[param defs] 是要带的（非包）道具定义；返回不合的原因，空串 = 合
 func carry_problem(defs: Array) -> String:
 	if carry_max_items >= 0 and defs.size() > carry_max_items:
-		return "最多带 %d 件，现在 %d 件" % [carry_max_items, defs.size()]
+		return UiText.t("log.carry_max") % [carry_max_items, defs.size()]
 	if carry_rarity_cap >= 0:
 		for d in defs:
 			var def := d as ItemDef
 			if def != null and def.rarity > carry_rarity_cap:
-				return "「%s」的稀有度 %d 超过上限 %d" % [def.display_name, def.rarity, carry_rarity_cap]
+				return UiText.t("log.carry_rarity") % [def.display_name, def.rarity, carry_rarity_cap]
 	return ""

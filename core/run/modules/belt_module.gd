@@ -33,7 +33,7 @@ func id() -> StringName:
 
 
 func describe() -> String:
-	return "腰带：%d 格，放随身技能（烟雾弹、急救包……），同种叠在一格，双击用一个" % slot_count()
+	return UiText.t("log.belt_describe") % slot_count()
 
 
 func install(run: RunState) -> void:
@@ -106,14 +106,14 @@ func add(skill_id: StringName, count: int = 1) -> int:
 func can_use(skill_id: StringName) -> String:
 	var def := BeltSkillDef.find(skill_id)
 	if def == null or count_of(skill_id) <= 0:
-		return "腰带里没有这个"
+		return UiText.t("log.belt_none_left")
 	if _run == null or _run.is_over():
-		return "这一局结束了"
+		return UiText.t("log.run_over")
 	var prebattle := _run.events != null and not _run.events.pending_battle.is_empty()
 	if prebattle and not def.on_prebattle():
-		return "开战前用不了"
+		return UiText.t("log.not_prebattle")
 	if not prebattle and not def.on_map():
-		return "只能在开战前用"
+		return UiText.t("log.prebattle_only")
 	for e in def.effects:
 		if e == null:
 			continue

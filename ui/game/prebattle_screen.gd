@@ -33,8 +33,8 @@ func open(payload: Dictionary) -> void:
 	var panel := _centered_panel(Vector2(0, 0), 20)
 	var col := _vbox(12)
 	panel.add_child(col)
-	_frame_title("战前准备　%s　—— 整理好背包再开战" % _title_of())     # 157：标题在石板框的标题条上
-	col.add_child(_wrapped("战斗是自动的：只有棋盘上包里的东西参战，武器自己出手、防具替你挨打，挨着放的互相加成。开战那一瞬胜负就定了，之后只是回放。拖出棋盘 = 弃置到地上（不参战，打完还在）。",
+	_frame_title(UiText.t("pre.title") % _title_of())     # 157：标题在石板框的标题条上
+	col.add_child(_wrapped(UiText.t("pre.intro"),
 		13, UiPalette.DIM, 1100))
 
 	# 157：对阵式 —— 左对手、右自己，两列等宽，中间一道缝，缝顶一杆天平
@@ -76,7 +76,7 @@ func open(payload: Dictionary) -> void:
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	_belt_row = _hbox(10)     # 147：腰带里能在战前用的（160：名字后面带数量）
 	buttons.add_child(_belt_row)
-	_start_btn = _button("开战", start_battle, 16, UiPalette.Tier.PRIMARY)
+	_start_btn = _button(UiText.t("pre.fight"), start_battle, 16, UiPalette.Tier.PRIMARY)
 	buttons.add_child(_start_btn)
 	# 093（蛮神 3 级）：信仰级效果给的额外动作。188 补充一：一条效果可以给几个（耗体力 / 耗信力立即击败），不够的灰着、写原因
 	var altar := AltarModule.of(flow.run)     # 101：信仰级效果在神坛模块里取
@@ -119,10 +119,10 @@ func start_battle() -> bool:
 ## 现在能不能开战：空串 = 能，否则是原因
 func can_start() -> String:
 	if flow.run == null or flow.run.events.pending_battle.is_empty():
-		return "没有等着开打的一场"
+		return UiText.t("pre.no_battle")
 	var spec := flow.run.compile_player()
 	if spec.active_items().is_empty():
-		return "棋盘上一件会出手的东西都没有：先把武器放进包里"
+		return UiText.t("pre.no_attacker")
 	return ""
 
 
@@ -138,7 +138,7 @@ func slip_battle() -> String:
 func slip_reason() -> String:
 	var slip := flow.slip_skill()
 	if slip == null:
-		return "没有能溜走的技能"
+		return UiText.t("pre.no_slip")
 	var why := SlipSkill.blocked_reason(flow.run)
 	return why if why != "" else flow.run.skills.can_use(slip.id)
 
@@ -174,9 +174,9 @@ func _refresh_belt() -> void:
 	var belt := BeltModule.of(flow.run)
 	for sid in belt_ids():
 		var def := BeltSkillDef.find(sid)
-		var name := "%s ×%d" % [def.display_name, belt.count_of(sid)]
+		var name := "%s ×%d" % [Names.of(def), belt.count_of(sid)]
 		var why := belt.can_use(sid)
-		var b := _button(("用%s" % name) if why == "" else ("%s：%s" % [name, why]), func(): use_belt(sid), 14)
+		var b := _button((UiText.t("pre.use_belt") % name) if why == "" else (UiText.t("pre.belt_blocked") % [name, why]), func(): use_belt(sid), 14)
 		b.tooltip_text = def.describe()
 		b.disabled = why != ""
 		_belt_row.add_child(b)
@@ -190,15 +190,15 @@ static func immune_text(spec: CombatantSpec) -> String:
 	var lib := ContentLibrary.buffs()
 	for id in spec.immune_buffs:
 		var b: BuffDef = lib.get(id, null)
-		names.append(b.display_name if b != null and b.display_name != "" else String(id))
-	return "免疫：%s" % "、".join(names)
+		names.append(Names.of(b) if b != null and b.display_name != "" else String(id))
+	return UiText.t("pre.immune") % UiText.t("pre.list_sep").join(names)
 
 
 func _refresh() -> void:
 	var spec := flow.run.events.pending_battle_spec() if flow.run != null else null
 	if spec != null:
 		# 157（作者定）：读数只剩生命与 DPS，出手几件道具不写
-		_enemy_line.text = "生命 %d　约 %.1f DPS" % [spec.max_hp_int(), spec.rough_dps()]
+		_enemy_line.text = UiText.t("pre.enemy_line") % [spec.max_hp_int(), spec.rough_dps()]
 		var immune := immune_text(spec)
 		if immune != "":
 			_enemy_line.text += "\n" + immune
@@ -212,7 +212,7 @@ func _refresh() -> void:
 		var slip := flow.slip_skill()
 		var left := flow.run.skills.uses_of(slip.id)
 		var sw := slip_reason()
-		_slip_btn.text = "%s（%s）" % ["溜走" if sw == "" else ("溜走：" + sw), "不限次" if left < 0 else "剩 %d 次" % left]
+		_slip_btn.text = UiText.t("pre.slip_btn") % [UiText.t("pre.slip") if sw == "" else (UiText.t("pre.slip_blocked") % sw), UiText.t("pre.slip_unlimited") if left < 0 else UiText.t("pre.slip_left") % left]
 		_slip_btn.disabled = sw != ""
 
 
@@ -280,9 +280,9 @@ func enemy_line() -> String:
 func _title_of() -> String:
 	match _type:
 		&"elite":
-			return "精英"
+			return UiText.t("pre.kind_elite")
 		&"core":
-			return "核心"
+			return UiText.t("pre.kind_core")
 		&"search":
-			return "搜索中遭遇（输了不扣体力）"
-	return "战斗"
+			return UiText.t("pre.kind_search")
+	return UiText.t("pre.kind_battle")
