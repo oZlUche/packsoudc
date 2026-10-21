@@ -441,7 +441,7 @@ func _build_sell(root: Control) -> Control:
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(page)
 	page.add_child(_wrapped(UiText.t("meta.sell_intro") % int(round(flow.sell_ratio() * 100)), 15, UiPalette.DIM, 460))
-	var row := _hbox(10)
+	var row := HFlowContainer.new()     # 游戏测试 v3.84：一行排不下时折行，不把中列撑宽、把右边仓库挤出屏
 	page.add_child(row)
 	row.add_child(_label(UiText.t("meta.sell_all"), 13, UiPalette.DIM))
 	_sell_pick = OptionButton.new()
