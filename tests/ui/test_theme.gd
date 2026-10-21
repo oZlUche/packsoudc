@@ -8,7 +8,8 @@ extends RefCounted
 ## 要加覆写先想清楚为什么不是变体；真要加就改这个数，并在那行注一句为什么。
 ## 150：读数组件（ui/hud）也扫进来；地图屏那条 HUD 的窄底变成主题变体 PanelHud，倒计时的两处特例搬进组件 —— 135 → 134
 ## 157：悬浮窗的词条小窗改走主题变体 PanelTooltip（术语色边那处特例没了）—— 134 → 133
-const RATCHET := 133
+## 游戏测试 10-21：科技树节点长名字收字号（+1），节点字色三处并成一处（-4）—— 133 → 130
+const RATCHET := 130
 const SCANNED := ["res://ui/game", "res://ui/inventory", "res://ui/battle", "res://ui/hud",
 	"res://ui/editor", "res://ui/event_editor", "res://ui/buff_editor", "res://ui/set_editor", "res://ui/map_editor", "res://ui/part_editor"]
 

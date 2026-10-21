@@ -429,7 +429,7 @@ const TEXT := {
 	"setup.characters": {"zh": "角色", "en": "Characters"},
 	"setup.no_characters": {"zh": "没有角色（数据缺失）", "en": "No characters (data missing)"},
 	"setup.presets": {"zh": "预设装备", "en": "Presets"},
-	"setup.warehouse_pages": {"zh": "仓库　%d 页", "en": "Warehouse · %d pages"},
+	"setup.warehouse_pages": {"zh": "仓库　%s", "en": "Warehouse · %s"},
 	"setup.maps": {"zh": "地图", "en": "Maps"},
 	"setup.no_chapters": {"zh": "没有章节（数据缺失）", "en": "No chapters (data missing)"},
 	"setup.rings": {"zh": "%d 环", "en": "%d rings"},
@@ -1142,7 +1142,7 @@ const TEXT := {
 	"meta.stash_sold": {"zh": "上一局地上没背出来的 %d 件已一键出售，得 %d 币。", "en": "Items left on the Ground last run were sold: %d, for %d coins."},
 	"meta.stats": {"zh": "%d 局　撤离 %d　战败 %d　累计价值 %d　单局最高 %d\n钱 %d　图鉴 %d / %d", "en": "Runs %d · extracted %d · died %d · total value %d · best run %d\nCoins %d · Collection %d / %d"},
 	"meta.no_board": {"zh": "没有带回来的东西", "en": "Nothing brought back"},
-	"meta.shelf_title": {"zh": "仓库　%d 件　%d 页", "en": "Warehouse · %d items · %d pages"},
+	"meta.shelf_title": {"zh": "仓库　%s　%s", "en": "Warehouse · %s · %s"},
 	"meta.pending": {"zh": "带回来的背包还有 %d 件没清空，去「仓库」页置入；不管的话，开局屏里它们会放到地上，出发就没了", "en": "Items still in the pack you brought back: %d. Put them away on the Warehouse tab; otherwise they go to the Ground at Setup and are lost when you set out"},
 	"meta.all": {"zh": "全部", "en": "All"},     # sell filter and achievement filter
 	"meta.sell_white": {"zh": "白色", "en": "White"},
@@ -1240,7 +1240,7 @@ const TEXT := {
 	"tech.safe_cols": {"zh": "+%d 列", "en": "+%d columns"},
 	"tech.safe_rows": {"zh": "+%d 行", "en": "+%d rows"},
 	"tech.safe_unchanged": {"zh": "不变", "en": "unchanged"},
-	"tech.pages_plus": {"zh": "+%d 页", "en": "+%d pages"},
+	"tech.pages_plus": {"zh": "+%s", "en": "+%s"},
 	"tech.pages_total": {"zh": "仓库共 %d 页", "en": "Warehouse: %d pages in all"},
 	# —— 221 F5b：warehouse ——
 	"wh.expand_tech": {"zh": "仓库扩建", "en": "Warehouse expansion"},     # fallback when the tech is missing
@@ -1270,12 +1270,23 @@ const TEXT := {
 	# —— 221 F5b：save slots ——
 	"slots.sep": {"zh": "　", "en": " · "},
 	"slots.confirm_delete_slot": {"zh": "再点一次确认删除（%s）", "en": "Click again to confirm (%s)"},
+	# —— 计数（英文单复数）：[method count] 取；`_one` 是数为 1 时的写法 ——
+	"unit.page": {"zh": "%d 页", "en": "%d pages"},
+	"unit.page_one": {"zh": "%d 页", "en": "%d page"},
+	"unit.item": {"zh": "%d 件", "en": "%d items"},
+	"unit.item_one": {"zh": "%d 件", "en": "%d item"},
 }
 
 
 ## 取一句；没有的键原样返回
 static func t(key: String) -> String:
 	return pick(TEXT.get(key, null), key)
+
+
+## 数 + 量词：「3 页」/ 3 pages；数为 1 且有 `<unit>_one` 时取它（英文单数）
+static func count(n: int, unit: String) -> String:
+	var key := unit + "_one" if n == 1 and TEXT.has(unit + "_one") else unit
+	return t(key) % n
 
 
 ## 一张「语言 → 文字」的小表按当前语言取；没有就中文、再没有给 [param fallback]；传进来的不是表就原样
