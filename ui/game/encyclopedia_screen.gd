@@ -35,9 +35,9 @@ func open(payload: Dictionary) -> void:
 	var left := _vbox(8)
 	left.custom_minimum_size.x = TOC_WIDTH
 	row.add_child(left)
-	_frame_title("百科")     # 157：标题在石板框的标题条上
+	_frame_title(UiText.t("menu.encyclopedia"))     # 157：标题在石板框的标题条上
 	_search = LineEdit.new()
-	_search.placeholder_text = "搜索标题或正文"
+	_search.placeholder_text = UiText.t("codex.search")
 	_search.text_changed.connect(set_query)
 	left.add_child(_search)
 	var toc_scroll := ScrollContainer.new()
@@ -47,13 +47,13 @@ func open(payload: Dictionary) -> void:
 	_toc = _vbox(2)
 	_toc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	toc_scroll.add_child(_toc)
-	left.add_child(_button("返回" if back.is_valid() else "回主菜单", go_back, 14))
+	left.add_child(_button(UiText.t("setup.back") if back.is_valid() else UiText.t("setup.main_menu"), go_back, 14))
 
 	var right := _vbox(10)
 	right.custom_minimum_size.x = PAGE_WIDTH
 	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_child(right)
-	_prev_btn = _button("← 上一页", go_previous, 13, UiPalette.Tier.MINOR)
+	_prev_btn = _button(UiText.t("codex.prev"), go_previous, 13, UiPalette.Tier.MINOR)
 	_prev_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	right.add_child(_prev_btn)
 	_title = _label("", 24, UiPalette.FG)
@@ -134,7 +134,7 @@ func _fill_toc() -> void:
 	UiTheme.clear_children(_toc)
 	if _query.strip_edges() != "":
 		var hits := book.search(_query, _ctx)
-		_toc.add_child(_label("找到 %d 页" % hits.size(), 13, UiPalette.DIM))
+		_toc.add_child(_label(UiText.t("codex.found") % hits.size(), 13, UiPalette.DIM))
 		for id in hits:
 			_toc.add_child(_page_button(id))
 		return

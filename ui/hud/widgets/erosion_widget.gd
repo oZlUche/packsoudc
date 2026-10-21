@@ -16,7 +16,7 @@ func text_of() -> String:
 	if f == null:
 		return ""
 	if f.is_total():
-		return "侵蚀：全图"
+		return UiText.t("hud.erosion_total")
 	if not f.started():
-		return "侵蚀：%d 步后开始" % f.actions_left()
-	return "侵蚀 %d 档（下一档 %d 步）" % [f.eroded_bands + 1, f.actions_left()]
+		return UiText.t("hud.erosion_soon") % f.actions_left()
+	return UiText.t("hud.erosion_band") % [f.eroded_bands + 1, f.actions_left()]

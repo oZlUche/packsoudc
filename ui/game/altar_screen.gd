@@ -29,14 +29,14 @@ func open(payload: Dictionary) -> void:
 	var col := _vbox(10)
 	panel.add_child(col)
 	_head = _frame_title("")     # 157：标题在石板框的标题条上
-	col.add_child(_wrapped("神坛：把道具拖到祭品台上献祭换信力（至少满足一条献祭规矩的才收，一件满足几条算几次）。献祭（一次献一批）和特殊操作只能做一个，做了神坛就关了；不占休息。" +
-		(("\n献祭品：" + def.offerings_summary()) if def != null and not def.offerings.is_empty() else ""), 12, UiPalette.DIM, 900))
+	col.add_child(_wrapped(UiText.t("altar.intro") +
+		((UiText.t("altar.offerings") % def.offerings_summary()) if def != null and not def.offerings.is_empty() else ""), 12, UiPalette.DIM, 900))
 	var row := _hbox(24)
 	col.add_child(row)
 
 	var left := _vbox(8)
 	row.add_child(left)
-	left.add_child(_label("祭品台", 14, UiPalette.FG))
+	left.add_child(_label(UiText.t("altar.table"), 14, UiPalette.FG))
 	_table = GridInventory.new(Vector2i(4, 4), TABLE_ID, false)
 	_table_view = InventoryView.new()
 	_table_view.label_font = font
@@ -47,11 +47,11 @@ func open(payload: Dictionary) -> void:
 	_preview = _label("", 13, UiPalette.STAMINA)
 	left.add_child(_preview)
 	var buttons := _hbox(8)
-	_offer_btn = _button("献祭", offer, 14, UiPalette.Tier.PRIMARY)
+	_offer_btn = _button(UiText.t("altar.offer"), offer, 14, UiPalette.Tier.PRIMARY)
 	_offer_btn.disabled = true
 	buttons.add_child(_offer_btn)
-	var back := _button("返回", to_map, 13)
-	back.tooltip_text = "回到地图；没用过神坛还能再来（Esc）"
+	var back := _button(UiText.t("setup.back"), to_map, 13)
+	back.tooltip_text = UiText.t("altar.back_tip")
 	buttons.add_child(back)
 	left.add_child(buttons)
 	_line = _label("", 13, UiPalette.HEAL)
@@ -90,7 +90,7 @@ func put_on_table(uid: int) -> bool:
 		return false
 	var inst := from.get_item(uid)
 	if inst == null or not def.accepts_offering(inst.def):
-		_line.text = "「%s」不是%s认的祭品" % [Names.of(inst.def) if inst != null else "?", Names.of(def)]
+		_line.text = UiText.t("altar.rejected") % [Names.of(inst.def) if inst != null else "?", Names.of(def)]
 		return false
 	return InventoryService.transfer_auto(from, uid, _table)
 
@@ -119,7 +119,7 @@ func offer() -> Dictionary:
 		for inst in insts:
 			_table.remove((inst as ItemInstance).uid)
 		flow.save()
-		_line.text = "、".join(got["log"])
+		_line.text = UiText.t("setup.list_sep").join(got["log"])
 	_refresh()
 	return got
 
@@ -174,7 +174,7 @@ func _rebuild_actions() -> void:
 	if actions.is_empty():
 		return
 	_actions_box.add_child(HSeparator.new())
-	_actions_box.add_child(_label("特殊操作（和献祭二选一，做了就关神坛）", 14, UiPalette.FG))
+	_actions_box.add_child(_label(UiText.t("altar.actions"), 14, UiPalette.FG))
 	for p in actions:
 		var perk := p as FaithPerk
 		var arow := _hbox(6)
@@ -205,19 +205,19 @@ func _refresh() -> void:
 		_actions_tier = run.active_faith_tier()
 		_rebuild_actions()
 	if def == null:
-		_head.text = "神坛　没有激活的信仰"
+		_head.text = UiText.t("altar.no_faith")
 		_offer_btn.disabled = true
 		return
-	_head.text = "神坛　%s　%s" % [Names.of(def), run.faith_power.line()]
+	_head.text = UiText.t("altar.head") % [Names.of(def), run.faith_power.line()]
 	var p := preview()
 	var open := _altar_open()
 	_offer_btn.disabled = int(p["points"]) <= 0 or not open
 	if not open:
-		_preview.text = "这个休息处的神坛已经用过了，关了"
+		_preview.text = UiText.t("altar.used")
 	elif int(p["count"]) == 0:
-		_preview.text = "把祭品拖上台来"
+		_preview.text = UiText.t("altar.drag_hint")
 	else:
-		_preview.text = "献祭 %d 件：信力 +%d（Lv.%d → Lv.%d）" % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
+		_preview.text = UiText.t("altar.preview") % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
 	for b in _action_btns:
 		(b as Button).disabled = (b as Button).disabled or not open
 

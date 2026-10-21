@@ -12,4 +12,4 @@ func modify_loot(ctx: LootContext, node_type: StringName) -> void:
 
 
 func _summary() -> String:
-	return "敌人必掉额外一件：普通紫 / 精英金 / BOSS 红"
+	return UiText.t("perk.extra_drop")

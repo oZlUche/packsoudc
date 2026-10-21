@@ -71,11 +71,11 @@ func slot_at(local: Vector2) -> int:
 func use_slot(i: int) -> String:
 	var sid := skill_at(i)
 	if sid == &"":
-		return "这一格是空的"
+		return UiText.t("belt.empty_slot")
 	var why: String = on_use.call(sid) if on_use.is_valid() else module.use(sid)
 	if why != "":
 		var def := BeltSkillDef.find(sid)
-		flash("%s：%s" % [def.display_name if def != null else String(sid), why], i)
+		flash(UiText.t("belt.flash") % [Names.of(def) if def != null else String(sid), why], i)
 	return why
 
 
@@ -116,8 +116,8 @@ func _gui_input(event: InputEvent) -> void:
 func _get_tooltip(at: Vector2) -> String:
 	var def := BeltSkillDef.find(skill_at(slot_at(at)))
 	if def == null:
-		return "腰带：空格" if slot_at(at) >= 0 else ""
-	return "%s ×%d\n%s\n%s\n双击使用" % [def.display_name, module.count_of(def.id), def.description, def.describe()]
+		return UiText.t("belt.empty_tip") if slot_at(at) >= 0 else ""
+	return UiText.t("belt.tip") % [Names.of(def), module.count_of(def.id), def.description, def.describe()]
 
 
 func _draw() -> void:

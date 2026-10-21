@@ -12,7 +12,7 @@ func apply(ctx: EventContext) -> void:
 		return
 	var got := ctx.hooks.belt_grant(skill, count) if ctx.hooks != null else 0
 	var def := BeltSkillDef.find(skill)
-	var name := def.display_name if def != null else String(skill)
+	var name := Names.of(def) if def != null else String(skill)
 	if got > 0:
 		ctx.belts_given.append("%s ×%d" % [name, got])
 	else:

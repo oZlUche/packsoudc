@@ -66,7 +66,7 @@ func _open_options() -> void:
 		col.add_child(_wrapped(line, 13, UiPalette.DIM, 420))
 	# 083：事件屏上也能整理背包（教程的「先整理再开打」要在这里做；15 节第 7 项的尾巴）
 	if flow.run != null and not is_briefing():     # 218 补充一：交代时局还没开
-		col.add_child(_button("整理背包（B）", toggle_bag, 13, UiPalette.Tier.MINOR))
+		col.add_child(_button(UiText.t("event.sort_pack"), toggle_bag, 13, UiPalette.Tier.MINOR))
 
 
 func _open_result(payload: Dictionary) -> void:
@@ -79,46 +79,46 @@ func _open_result(payload: Dictionary) -> void:
 	var names: Array[String] = []
 	for id in detail.get("items", []):
 		var d := flow.items.get_def(StringName(String(id)))
-		names.append(d.display_name if d != null else String(id))
+		names.append(Names.of(d) if d != null else String(id))
 	if not names.is_empty() and harvest.is_empty():
-		lines.append("得到：%s（已放到地上）" % "、".join(names))
+		lines.append(UiText.t("event.got_items") % UiText.t("setup.list_sep").join(names))
 	if int(detail.get("restored", 0)) != 0:
-		lines.append("体力 +%d" % int(detail["restored"]))
+		lines.append(UiText.t("event.vitality_up") % int(detail["restored"]))
 	if int(detail.get("spent", 0)) != 0:
-		lines.append("体力 -%d" % int(detail["spent"]))
+		lines.append(UiText.t("event.vitality_down") % int(detail["spent"]))
 	if int(detail.get("money", 0)) != 0:
-		lines.append("钱 %+d" % int(detail["money"]))
+		lines.append(UiText.t("event.money") % int(detail["money"]))
 	for id in detail.get("buffs", []):
 		var bd: RunBuffDef = flow.buff_defs.get(StringName(String(id)), null)
-		lines.append("获得「%s」" % (bd.display_name if bd != null else String(id)))
+		lines.append(UiText.t("event.buff_gained") % (Names.of(bd) if bd != null else String(id)))
 	for id in detail.get("buffs_removed", []):
 		var bd2: RunBuffDef = flow.buff_defs.get(StringName(String(id)), null)
-		lines.append("失去「%s」" % (bd2.display_name if bd2 != null else String(id)))
+		lines.append(UiText.t("event.buff_lost") % (Names.of(bd2) if bd2 != null else String(id)))
 	for got in detail.get("belt", []):
-		lines.append("腰带里多了 %s" % String(got))     # 160 补一
+		lines.append(UiText.t("event.belt_got") % String(got))     # 160 补一
 	var lost: Array[String] = []
 	for name in detail.get("items_lost", []):
 		lost.append(String(name))
 	if not lost.is_empty():
-		lines.append("失去：%s" % "、".join(lost))
+		lines.append(UiText.t("event.items_lost") % UiText.t("setup.list_sep").join(lost))
 	if int(detail.get("waited", 0)) > 0:
-		lines.append("%s −%d" % [Glossary.COUNTDOWN_WORD, int(detail["waited"])])
+		lines.append(UiText.t("event.waited") % int(detail["waited"]))
 	if String(detail.get("type_changed", "")) != "":
-		lines.append("这里变成了%s点" % MapNodeStyle.of(StringName(String(detail["type_changed"])))["label"])
+		lines.append(UiText.t("event.type_changed") % MapNodeStyle.of(StringName(String(detail["type_changed"])))["label"])
 	if int(detail.get("teleported", -1)) >= 0:
-		lines.append("被传送到了别处")
+		lines.append(UiText.t("event.teleported"))
 	if lines.is_empty():
-		lines.append("什么也没发生。")
+		lines.append(UiText.t("event.nothing"))
 	# 结果页配图沿用这个点的事件（结果只是同一件事的下一页）；老路的事件点没有定义，画占位
 	var image := ""
 	if _node != null and flow.event_defs != null:
 		var def: EventDef = flow.event_defs.get(StringName(String(_node.content.get("event", ""))), null)
 		if def != null:
 			image = def.image
-	var col := _frame(image, String(payload.get("outcome", "事件")), "\n".join(lines))
+	var col := _frame(image, String(payload.get("outcome", UiText.t("event.default_title"))), "\n".join(lines))
 	_harvest = null
 	if not harvest.is_empty():
-		col.add_child(_label("收获　拖进背包，或双击；不拿的留在地上", 13, UiPalette.DIM))
+		col.add_child(_label(UiText.t("event.harvest"), 13, UiPalette.DIM))
 		_harvest = HarvestRow.new()
 		_harvest.label_font = font
 		_harvest.setup(flow.run.storage, harvest)
@@ -134,7 +134,7 @@ func _open_result(payload: Dictionary) -> void:
 		_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		add_child(_drag)
 		_drag.register_view(_harvest)
-	col.add_child(_option_button("继续", proceed))
+	col.add_child(_option_button(UiText.t("menu.continue"), proceed))
 	if _harvest != null and not _bag_auto_opened:
 		_bag_auto_opened = true
 		toggle_bag()     # 157：有收获就把背包打开，拖过去就进棋盘
@@ -201,7 +201,7 @@ func intro_heading() -> String:
 	var ch: ChapterDef = flow.run.chapter if flow.run != null else null
 	if _def == null or ch == null or ch.intro_event == &"" or _def.id != ch.intro_event:
 		return ""
-	return ch.display_name if ch.display_name != "" else String(ch.id)
+	return Names.of(ch) if ch.display_name != "" else String(ch.id)
 
 
 ## 一个选项：整行宽、左对齐、够高

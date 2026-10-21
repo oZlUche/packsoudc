@@ -33,12 +33,12 @@ func gain_at(n: int) -> int:
 
 
 func altar_label() -> String:
-	return "祈祷（火焰伤害永久加成，%s）" % ("按表" if not gains.is_empty() else "越祈越多")
+	return UiText.t("perk.pray_label") % (UiText.t("perk.pray_by_table") if not gains.is_empty() else UiText.t("perk.pray_growing"))
 
 
 func altar_available(run: RunState, _node: MapNode) -> String:
 	var rituals := AltarModule.rituals_of(run)
-	return "" if max_times <= 0 or int(rituals.get(KEY, 0)) < max_times else "祈祷已到上限"
+	return "" if max_times <= 0 or int(rituals.get(KEY, 0)) < max_times else UiText.t("perk.pray_capped")
 
 
 func altar_apply(run: RunState, _node: MapNode, _option: StringName = &"") -> String:
@@ -49,10 +49,10 @@ func altar_apply(run: RunState, _node: MapNode, _option: StringName = &"") -> St
 	altar.rituals[KEY] = n
 	var gain := gain_at(n)
 	var total := altar.shift_axis(axis, gain)
-	return "向日神祈祷（第 %d 次）：%s +%d 层，现在 %d 层（火焰伤害 +%d%%）" % [
+	return UiText.t("perk.pray_done") % [
 		n, StatAxes.name_of(axis, gain), gain, total, roundi(total * StatAxes.step_of(axis))]
 
 
 func _summary() -> String:
-	return "神坛：祈祷换局内永久的%s（每层火焰伤害 +%d%%）" % [
+	return UiText.t("perk.pray_summary") % [
 		StatAxes.name_of(axis, 1), roundi(StatAxes.step_of(axis))]

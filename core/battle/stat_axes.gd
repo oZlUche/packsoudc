@@ -40,21 +40,22 @@ const STAMINA_COST := &"stamina_cost"
 enum Mode { PERCENT, FLAT, COMPOUND }
 
 ## id → {stat: 作用的属性（空 = 不直接落在属性上：受到伤害与火焰伤害由伤害管线读，按上限回血折进 regen_hp）, mode, step: 百分比轴是百分数、固定值轴是每层的量, pos, neg,
-## items: 固定值轴也落到每件道具上（暴击按道具读，104）, pct: 固定值按百分数显示}
+## items: 固定值轴也落到每件道具上（暴击按道具读，104）, pct: 固定值按百分数显示}。
+## 221 F1：pos_en / neg_en 是英文名（`docs/text-glossary-en.md`），[method name_of] 按 [member UiText.lang] 取
 const TABLE := {
-	ATTACK_SPEED: {"stat": &"haste", "mode": Mode.PERCENT, "step": 3.0, "pos": "加速", "neg": "减速"},
-	DAMAGE_DEALT: {"stat": &"damage", "mode": Mode.PERCENT, "step": 3.0, "pos": "强攻", "neg": "虚弱"},
-	DAMAGE_TAKEN: {"stat": &"", "mode": Mode.PERCENT, "step": 5.0, "pos": "易伤", "neg": "坚韧"},
-	REGEN_HP: {"stat": &"regen_hp", "mode": Mode.FLAT, "step": 1.0, "pos": "回春", "neg": "失血"},
-	REGEN_HP_PCT: {"stat": &"", "mode": Mode.PERCENT, "step": 1.0, "pos": "再生", "neg": "腐蚀"},
-	REGEN_STAMINA: {"stat": &"regen_stamina", "mode": Mode.FLAT, "step": 1.0, "pos": "回气", "neg": "疲乏"},
-	CRIT_CHANCE: {"stat": &"crit_chance", "mode": Mode.FLAT, "step": 0.01, "pos": "锐目", "neg": "失准", "items": true, "pct": true},
-	CRIT_DAMAGE: {"stat": &"crit_damage", "mode": Mode.FLAT, "step": 0.05, "pos": "致命", "neg": "钝击", "items": true, "pct": true},
-	FIRE_DAMAGE: {"stat": &"", "mode": Mode.PERCENT, "step": 3.0, "pos": "炽烈", "neg": "熄火"},
-	STAMINA_COST: {"stat": &"stamina_cost", "mode": Mode.COMPOUND, "step": 97.0, "pos": "灵巧", "neg": "笨拙"},
-	BLOCK: {"stat": &"block", "mode": Mode.FLAT, "step": 1.0, "pos": "加固", "neg": "破绽"},
-	MAX_HP: {"stat": &"max_hp", "mode": Mode.FLAT, "step": 1.0, "pos": "生长", "neg": "衰颓"},
-	MAX_MANA: {"stat": &"max_mana", "mode": Mode.FLAT, "step": 1.0, "pos": "充盈", "neg": "枯竭"},
+	ATTACK_SPEED: {"stat": &"haste", "mode": Mode.PERCENT, "step": 3.0, "pos": "加速", "neg": "减速", "pos_en": "Haste", "neg_en": "Slow"},
+	DAMAGE_DEALT: {"stat": &"damage", "mode": Mode.PERCENT, "step": 3.0, "pos": "强攻", "neg": "虚弱", "pos_en": "Might", "neg_en": "Weak"},
+	DAMAGE_TAKEN: {"stat": &"", "mode": Mode.PERCENT, "step": 5.0, "pos": "易伤", "neg": "坚韧", "pos_en": "Vulnerable", "neg_en": "Hardy"},
+	REGEN_HP: {"stat": &"regen_hp", "mode": Mode.FLAT, "step": 1.0, "pos": "回春", "neg": "失血", "pos_en": "Renewal", "neg_en": "Bleeding Out"},
+	REGEN_HP_PCT: {"stat": &"", "mode": Mode.PERCENT, "step": 1.0, "pos": "再生", "neg": "腐蚀", "pos_en": "Regeneration", "neg_en": "Corrosion"},
+	REGEN_STAMINA: {"stat": &"regen_stamina", "mode": Mode.FLAT, "step": 1.0, "pos": "回气", "neg": "疲乏", "pos_en": "Second Wind", "neg_en": "Fatigue"},
+	CRIT_CHANCE: {"stat": &"crit_chance", "mode": Mode.FLAT, "step": 0.01, "pos": "锐目", "neg": "失准", "pos_en": "Keen Eye", "neg_en": "Off Target", "items": true, "pct": true},
+	CRIT_DAMAGE: {"stat": &"crit_damage", "mode": Mode.FLAT, "step": 0.05, "pos": "致命", "neg": "钝击", "pos_en": "Lethal", "neg_en": "Blunted", "items": true, "pct": true},
+	FIRE_DAMAGE: {"stat": &"", "mode": Mode.PERCENT, "step": 3.0, "pos": "炽烈", "neg": "熄火", "pos_en": "Blaze", "neg_en": "Doused"},
+	STAMINA_COST: {"stat": &"stamina_cost", "mode": Mode.COMPOUND, "step": 97.0, "pos": "灵巧", "neg": "笨拙", "pos_en": "Nimble", "neg_en": "Clumsy"},
+	BLOCK: {"stat": &"block", "mode": Mode.FLAT, "step": 1.0, "pos": "加固", "neg": "破绽", "pos_en": "Fortified", "neg_en": "Exposed"},
+	MAX_HP: {"stat": &"max_hp", "mode": Mode.FLAT, "step": 1.0, "pos": "生长", "neg": "衰颓", "pos_en": "Vigor", "neg_en": "Decline"},
+	MAX_MANA: {"stat": &"max_mana", "mode": Mode.FLAT, "step": 1.0, "pos": "充盈", "neg": "枯竭", "pos_en": "Brimming", "neg_en": "Drained"},
 }
 
 ## 显示顺序（面板）
@@ -115,7 +116,9 @@ static func name_of(axis: StringName, stacks: int) -> String:
 	var i := info(axis)
 	if i.is_empty():
 		return String(axis)
-	return String(i["neg"]) if stacks < 0 else String(i["pos"])
+	var k := "neg" if stacks < 0 else "pos"
+	var loc := k + "_" + UiText.lang
+	return String(i[loc]) if UiText.lang != "zh" and i.has(loc) else String(i[k])
 
 
 ## 固定值轴是不是也落到每件道具上（104：暴击按道具读）
@@ -133,23 +136,18 @@ static func describe(axis: StringName, stacks: int, system_stacks: int = 0) -> S
 		step *= 100.0
 		unit = "%"
 	var what := what_of(axis)
-	var lines: Array[String] = ["%s：每层 %s%s%s" % [what, "±", _num(step), unit]]
+	var lines: Array[String] = [UiText.t("axis.per_stack") % [what, "±", _num(step), unit]]
 	var total := stacks + system_stacks
-	lines.append("现在 %+d 层 → %s%s%s" % [total, "+" if total >= 0 else "−", _num(absf(total * step)), unit])
+	lines.append(UiText.t("axis.now") % [total, "+" if total >= 0 else "−", _num(absf(total * step)), unit])
 	if system_stacks != 0:
-		lines.append("其中 %+d 层无法清除" % system_stacks)
+		lines.append(UiText.t("axis.locked") % system_stacks)
 	return "\n".join(lines)
 
 
 ## 这条轴作用在什么上（悬浮窗用的全称）
+## 221 F1：文字在 [UiText] 的 `axis.what_<轴 id>`（表里每条轴都有一句）；不在表里的轴原样
 static func what_of(axis: StringName) -> String:
-	return String({
-		ATTACK_SPEED: "攻速", DAMAGE_DEALT: "造成的伤害", DAMAGE_TAKEN: "受到的最终伤害",
-		REGEN_HP: "每秒回血", REGEN_HP_PCT: "每秒按生命上限回血", REGEN_STAMINA: "每秒回耐力",
-		CRIT_CHANCE: "暴击率", CRIT_DAMAGE: "暴击伤害", FIRE_DAMAGE: "造成的火焰伤害",
-		BLOCK: "格挡", MAX_HP: "生命上限", MAX_MANA: "法力上限",
-		STAMINA_COST: "耐力消耗",
-	}.get(axis, String(axis)))
+	return UiText.t("axis.what_" + String(axis)) if TABLE.has(axis) else String(axis)
 
 
 ## 152：[param stacks] 层折成多少，短的一句（「造成的伤害 +3%」「格挡 −3」「耐力消耗 ×97%」）
@@ -170,11 +168,11 @@ static func _describe_compound(axis: StringName, stacks: int, system_stacks: int
 	var i := info(axis)
 	var per := step_of(axis)
 	var what := what_of(axis)
-	var lines: Array[String] = ["%s：每层 ×%s%%" % [what, _num(per)]]
+	var lines: Array[String] = [UiText.t("axis.per_stack_mult") % [what, _num(per)]]
 	var total := stacks + system_stacks
-	lines.append("现在 %+d 层 → ×%.1f%%" % [total, StatMath.to_float(factor(axis, total)) * 100.0])
+	lines.append(UiText.t("axis.now_mult") % [total, StatMath.to_float(factor(axis, total)) * 100.0])
 	if system_stacks != 0:
-		lines.append("其中 %+d 层无法清除" % system_stacks)
+		lines.append(UiText.t("axis.locked") % system_stacks)
 	return "\n".join(lines)
 
 

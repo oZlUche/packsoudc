@@ -125,4 +125,4 @@ func _fade(to: float, animate: bool) -> void:
 static func hint_for(chapter: ChapterDef, p_type: StringName) -> String:
 	if chapter != null and chapter.tooltip_texts.has(String(p_type)):
 		return TextTemplate.render(String(chapter.tooltip_texts[String(p_type)]), {})
-	return String(MapNodeTypes.HINTS.get(p_type, NodeText.label_of(p_type)))
+	return MapNodeTypes.hint_of(p_type)

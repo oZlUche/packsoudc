@@ -8,20 +8,20 @@ const KEY := "train_board"
 
 
 func altar_label() -> String:
-	return "锻炼（棋盘 +%d 行）" % rows
+	return UiText.t("perk.train_label") % rows
 
 
 func altar_available(run: RunState, _node: MapNode) -> String:
 	var rituals := AltarModule.rituals_of(run)
-	return "" if max_times <= 0 or int(rituals.get(KEY, 0)) < max_times else "锻炼已到上限"
+	return "" if max_times <= 0 or int(rituals.get(KEY, 0)) < max_times else UiText.t("perk.train_capped")
 
 
 func altar_apply(run: RunState, _node: MapNode, _option: StringName = &"") -> String:
 	run.board.grow_rows(rows)
 	var rituals := AltarModule.rituals_of(run)
 	rituals[KEY] = int(rituals.get(KEY, 0)) + 1
-	return "向大地之神锻炼：棋盘多了 %d 行（现在 %d × %d）" % [rows, run.board.size.x, run.board.size.y]
+	return UiText.t("perk.train_done") % [rows, run.board.size.x, run.board.size.y]
 
 
 func _summary() -> String:
-	return "神坛：锻炼，棋盘 +%d 行（局内）" % rows
+	return UiText.t("perk.train_summary") % rows

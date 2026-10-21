@@ -38,12 +38,12 @@ func open(payload: Dictionary) -> void:
 	_view.speed_changed.connect(_on_speed_changed)
 	_view.reaction_shown.connect(_on_reaction_shown)
 
-	_next = _button("跳过并继续", proceed, 14, UiPalette.Tier.PRIMARY)
+	_next = _button(UiText.t("battle.skip_continue"), proceed, 14, UiPalette.Tier.PRIMARY)
 	col.add_child(_next)
 	_view.add_coach_target(&"next_button", _next)
 
 	if result != null:
-		_view.play(result, ["我", enemy_name])
+		_view.play(result, [UiText.t("battle.me"), enemy_name])
 		# 157：名牌和战前准备屏同一份控件、同一个位置（面板顶上）
 		_view.set_nameplate(0, _player_plate())
 		_view.set_nameplate(1, _enemy_plate(payload.get("enemy_content", {})))
@@ -67,7 +67,7 @@ func proceed() -> void:
 
 func _on_finished() -> void:
 	if _next != null:
-		_next.text = "继续"
+		_next.text = UiText.t("battle.continue")
 	_seen_end = true     # 157：拖时间轴拖到头会再「看完」一次
 
 

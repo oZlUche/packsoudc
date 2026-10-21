@@ -47,7 +47,7 @@ func id() -> StringName:
 
 
 func describe() -> String:
-	return "神坛：献祭换信力，或者做一次特殊操作（每个点一次机会）"
+	return UiText.t("log.altar_describe")
 
 
 func install(run: RunState) -> void:
@@ -112,14 +112,14 @@ func offer(insts: Array, at_node: MapNode = null) -> Dictionary:
 	if int(out["points"]) <= 0:
 		return out
 	out["tier_after"] = _run.faith_power.add_points(def.id, int(out["points"]))
-	(out["log"] as Array[String]).append("献祭 %d 件，%s +%d 信力" % [int(out["count"]), Names.of(def), int(out["points"])])
+	(out["log"] as Array[String]).append(UiText.t("log.offered") % [int(out["count"]), Names.of(def), int(out["points"])])
 	if int(out["tier_after"]) > int(out["tier_before"]):
-		(out["log"] as Array[String]).append("%s升到 Lv.%d" % [Names.of(def), int(out["tier_after"])])
+		(out["log"] as Array[String]).append(UiText.t("log.faith_tier_up") % [Names.of(def), int(out["tier_after"])])
 	for p in perks():
 		var line := (p as FaithPerk).on_offered(_run, defs, at_node)
 		if line != "":
 			(out["log"] as Array[String]).append(line)
-	noted.emit("、".join(out["log"]))
+	noted.emit(UiText.t("log.list_sep").join(out["log"]))
 	_use()     # 反馈：献祭和特殊操作只能做一个 —— 献了就关
 	return out
 
@@ -186,7 +186,7 @@ func bless_step() -> void:
 			if v != null:
 				board.changed.emit()
 				item_blessed.emit(inst, def.id)
-				noted.emit("%s的目光落在「%s」上：它成了「%s」" % [Names.of(def), was, Names.of(v)])
+				noted.emit(UiText.t("log.blessed") % [Names.of(def), was, Names.of(v)])
 #endregion
 
 

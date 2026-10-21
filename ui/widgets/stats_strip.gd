@@ -27,6 +27,8 @@ const TAG_H := 46.0
 const SEAL_COLORS := {STAMINA: Color("c8742a"), DPS: Color("a8322a"), LOAD: Color("5d6168")}
 ## 切图文件里负重那枚叫 load、DPS 那枚叫 dps
 const SEAL_ART := {STAMINA: "seal_stamina", DPS: "seal_dps", LOAD: "seal_load"}
+## 221 F1：耐力档（[StaminaEstimate] 给的中文档名，配色按它比对）→ 给人看的字的 [UiText] 键
+const RATING_KEYS := {"低": "strip.rating_low", "中": "strip.rating_mid", "高": "strip.rating_high", "极高": "strip.rating_max"}
 
 ## 悬浮窗（宿主给；没有就不开）
 var tip: HoverTip = null
@@ -70,7 +72,7 @@ func set_width(px: float) -> void:
 func refresh(spec: CombatantSpec, run: RunState) -> void:
 	var e := StaminaEstimate.of(spec)
 	var rating := String(e["rating"])
-	_blocks[STAMINA] = {"main": rating, "sub": "耗 %.1f · 回 %.1f" % [e["cost"], e["regen"]],
+	_blocks[STAMINA] = {"main": UiText.t(RATING_KEYS[rating]) if RATING_KEYS.has(rating) else rating, "sub": UiText.t("strip.stamina_sub") % [e["cost"], e["regen"]],
 		"main_color": _color("stamina", "main_color", rating, _rating_color(rating)), "sub_color": UiTheme.INK_SOFT, "sub_bold": false,
 		"tip": StaminaEstimate.describe(spec)}
 	var dps := spec.rough_dps()
@@ -169,7 +171,7 @@ func _load_block(run: RunState) -> Dictionary:
 	var line := run.encumbrance_line()
 	if line == "":     # 这一章不算负重：没有档
 		return {"main": main, "sub": "", "main_color": UiTheme.INK, "sub_color": UiTheme.INK_SOFT, "sub_bold": false,
-			"tip": "负重 %s\n这一章不算负重" % main}
+			"tip": UiText.t("strip.load_off") % main}
 	var lv := run.encumbrance_level()
 	var level_name := run.encumbrance.name_of(lv)
 	return {"main": main, "sub": level_name,
@@ -179,12 +181,12 @@ func _load_block(run: RunState) -> Dictionary:
 
 ## 出手的几件各自约多少 DPS（3.1 待定：列）
 func _dps_tip(spec: CombatantSpec, run: RunState) -> String:
-	var lines: Array[String] = ["估算总 DPS %.1f（和出战前同一个数）" % spec.rough_dps()]
+	var lines: Array[String] = [UiText.t("strip.dps_total") % spec.rough_dps()]
 	var names := CombatantSpec.item_names(spec, run.items) if run != null else {}
 	for it in spec.active_items():
 		var d := spec.estimated_dps_of(it)
 		if d > 0.0:
-			lines.append("%s　%.1f" % [names.get(it.source_uid, String(it.def_id)), d])
+			lines.append(UiText.t("strip.dps_row") % [names.get(it.source_uid, String(it.def_id)), d])
 	return "\n".join(lines)
 
 

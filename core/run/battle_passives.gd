@@ -25,7 +25,7 @@ static func of(run: RunState) -> Array[PassiveNote]:
 			if d != "":
 				lines.append(d)
 		if not lines.is_empty():
-			out.append(PassiveNote.make(StringName("faith:" + String(faith.id)), "信仰：%s" % Names.of(faith), tier, [], "\n".join(lines)))
+			out.append(PassiveNote.make(StringName("faith:" + String(faith.id)), UiText.t("log.faith_line") % Names.of(faith), tier, [], "\n".join(lines)))
 	# --- 套装：层数 = 激活的档位数 ---
 	var tracker := run.tracker
 	if tracker != null:
@@ -41,7 +41,7 @@ static func of(run: RunState) -> Array[PassiveNote]:
 				for r in (t as SetTier).rules:
 					rules.append(Glossary.rule_text(r as AbilityRule))
 			var name := Names.of(def) if def != null and Names.of(def) != "" else String(set_id)
-			out.append(PassiveNote.make(StringName("set:" + String(set_id)), "%s %d 件" % [name, tracker.count_of(set_id)],
+			out.append(PassiveNote.make(StringName("set:" + String(set_id)), UiText.t("log.set_count") % [name, tracker.count_of(set_id)],
 				tiers.size(), mods, "\n".join(rules)))
 	# --- 局外 / 一局 buff：有战斗加成的才算 ---
 	for d in run.active_buff_defs():
@@ -76,7 +76,7 @@ static func of(run: RunState) -> Array[PassiveNote]:
 			m.amount = float(bonus[k])
 			mods2.append(m)
 		if not mods2.is_empty():
-			out.append(PassiveNote.make(&"base_bonus", "基础属性加成", 1, mods2, "技能、难度、神坛改的基础属性"))
+			out.append(PassiveNote.make(&"base_bonus", UiText.t("log.base_bonus"), 1, mods2, UiText.t("log.base_bonus_desc")))
 	# --- 105：神坛攒的标准轴层数（祈祷的「炽烈」）。层数种在系统层，战斗里不会发 AXIS_SHIFTED，
 	# 所以来源靠这一格说清楚；轴格本身按 103 的规矩由面板画 ---
 	var axes: Dictionary = AltarModule.of(run).axes() if AltarModule.of(run) != null else {}
@@ -89,6 +89,6 @@ static func of(run: RunState) -> Array[PassiveNote]:
 	# --- 129：负重减益（层数 = 级数）。说清楚为什么出手慢了、耐力少了 ---
 	var enc_level := run.encumbrance_level()
 	if run.encumbrance != null and enc_level > 0:
-		out.append(PassiveNote.make(&"encumbrance", "负重：%s" % run.encumbrance.name_of(enc_level), enc_level, [],
-			"负重 %d / %d：%s" % [run.carry_weight(), run.carry_capacity(), run.encumbrance.effect_text(enc_level)]))
+		out.append(PassiveNote.make(&"encumbrance", UiText.t("log.load_passive") % run.encumbrance.name_of(enc_level), enc_level, [],
+			UiText.t("log.load_passive_desc") % [run.carry_weight(), run.carry_capacity(), run.encumbrance.effect_text(enc_level)]))
 	return out

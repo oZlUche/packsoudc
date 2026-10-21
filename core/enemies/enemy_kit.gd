@@ -142,9 +142,9 @@ static func summary(content: Dictionary, enemies: EnemyDatabase, pool: EnemyPool
 		if bool((raw as Dictionary).get("carried", false)):
 			carried += 1
 		var idef := items.get_def(StringName(String((raw as Dictionary).get("id", ""))))
-		names.append(idef.display_name if idef != null else String((raw as Dictionary).get("id", "?")))
-	var line := "%s　生命 %d　%d 件：%s" % [def.display_name, spec.max_hp_int(), names.size(), "、".join(names)]
+		names.append(Names.of(idef) if idef != null else String((raw as Dictionary).get("id", "?")))
+	var line := UiText.t("enemy.summary") % [Names.of(def), spec.max_hp_int(), names.size(), UiText.t("hud.buff_sep").join(names)]
 	# 126：身上带的非战斗道具（必掉）
 	if carried > 0:
-		line += "　携带 %d 件" % carried
+		line += UiText.t("enemy.carried") % carried
 	return line

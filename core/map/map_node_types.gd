@@ -17,7 +17,8 @@ const ALL: Array[StringName] = [
 const STRUCTURAL: Array[StringName] = [&"core", &"spawn", &"extract", &"junction"]
 
 
-## 182：每一类节点一句说明（对玩家说的话）—— 开局第三页点出生点时居中弹的提示窗用；章节的浮窗文字（`ChapterDef.tooltip_texts`）有就先用那份
+## 182：每一类节点一句说明（对玩家说的话）—— 开局第三页点出生点时居中弹的提示窗用；章节的浮窗文字（`ChapterDef.tooltip_texts`）有就先用那份。
+## 221 F1：这里是中文原文，界面按语言取用 [method hint_of]
 const HINTS := {
 	&"battle": "有人守着，过去就得打一场。",
 	&"elite": "守着这里的是狠角色，打赢了收获也大。",
@@ -33,6 +34,13 @@ const HINTS := {
 	&"safe": "保险箱：放进去的东西就算带出去了。",
 	&"chest": "上锁的宝箱，长按开锁。",
 }
+
+
+## 221 F1：这一类节点的说明句，按当前语言（`UiText` 的 `node.hint.<type>`；[constant HINTS] 是中文原文）。没登记的类型给它的名字
+static func hint_of(type: StringName) -> String:
+	if not HINTS.has(type):
+		return NodeText.label_of(type)
+	return UiText.pick(UiText.TEXT.get("node.hint.%s" % type), String(HINTS[type]))
 
 
 static func has(type: StringName) -> bool:

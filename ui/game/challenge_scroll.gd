@@ -173,7 +173,7 @@ func _add_row(level: int, text: String, at: int) -> Dictionary:
 	var line := UiTheme.hbox(0)
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(line)
-	var num := UiTheme.make_label("〇" if level <= 0 else TextTemplate.roman(level), FONT_SIZE, UiTheme.INK)
+	var num := UiTheme.make_label(UiText.t("diff.level_zero") if level <= 0 else TextTemplate.roman(level), FONT_SIZE, UiTheme.INK)
 	num.custom_minimum_size.x = NUM_W
 	num.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	num.size_flags_vertical = Control.SIZE_SHRINK_BEGIN     # 正文折几行，数字都贴第一行

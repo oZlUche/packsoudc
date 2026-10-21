@@ -27,6 +27,9 @@ const SPEEDS := GameSettings.BATTLE_SPEEDS
 const SPEED_NUMERALS := {1: "Ⅰ", 2: "Ⅱ", 4: "Ⅳ"}
 ## 167：原来底下那行常驻说明，挪进播放键的悬浮窗
 const PLAY_HINT := "结果在开打那一瞬就已定，这里只是回放；停在 buff 图标上看效果"
+## 221 F1：[constant PLAY_HINT] 按当前语言（中文就是它）
+static func play_hint() -> String:
+	return UiText.t("battle.play_hint")
 ## 167（作者定 D 版）：回放控件的符石按键图（`<id>.png` / `_hover` / `_pressed`）。测试指到别处走文字退路
 static var art_dir := "res://assets/ui/replay/"
 ## 166 补充二：战斗教程能指的控件（[method control_rect] 认这些；`next_button` 由战斗屏 [method add_coach_target] 登记）
@@ -35,7 +38,7 @@ const COACH_TARGETS: Array[StringName] = [&"timeline", &"play_button", &"speed_b
 var label_font: Font
 
 var _result: BattleResult = null
-var _names := ["我方", "敌方"]
+var _names := [UiText.t("battle.side_mine"), UiText.t("battle.side_enemy")]
 var _panels: Array[CombatantPanel] = []
 ## 103 第 7 条：双方棋盘（只读展示）与盖在上面的冷却遮罩；没给棋盘的一方不画
 var _boards: Array[InventoryView] = []
@@ -159,20 +162,20 @@ func buff_tip_parts(id: String, side: int = 0) -> Dictionary:
 	if id == CombatantPanel.OVERTIME_CHIP:
 		var n := int(panel.stacks().get(id, 0))
 		var sys := _system_of(side, StatAxes.DAMAGE_TAKEN)
-		return _parts(Glossary.tip_head("鏖战", Glossary.SYSTEM_NAME_COLOR, "×%d" % n, "系统"), [StatAxes.effect_text(StatAxes.DAMAGE_TAKEN, sys)])
+		return _parts(Glossary.tip_head(UiText.t("battle.overtime"), Glossary.SYSTEM_NAME_COLOR, "×%d" % n, UiText.t("battle.kind_system")), [StatAxes.effect_text(StatAxes.DAMAGE_TAKEN, sys)])
 	if id == CombatantPanel.BLOCK_CHIP:
 		return block_tip_parts(panel)
 	if id.begins_with(CombatantPanel.AXIS_PREFIX):
 		var a := CombatantPanel.axis_of(id)
 		var v := int(panel.stacks().get(id, 0))
-		var kind := "减益" if panel.is_bad_axis(id) else "增益"
+		var kind := UiText.t("battle.kind_debuff") if panel.is_bad_axis(id) else UiText.t("battle.kind_buff")
 		return _parts(Glossary.tip_head(StatAxes.name_of(a, v), "@term", "×%d" % absi(v), kind), [StatAxes.effect_text(a, v + _system_of(side, a))])
 	var note := panel.passive_of(id)
 	if note != null:
-		return _parts(Glossary.tip_head(note.name, "@term", "", "常驻"), [note.describe()])
+		return _parts(Glossary.tip_head(note.name, "@term", "", UiText.t("battle.kind_passive")), [note.describe()])
 	var def: BuffDef = panel.buff_defs.get(StringName(id), null)
 	if def == null:
-		return _parts(Glossary.tip_head(id, "@term"), ["（数据缺失）"])
+		return _parts(Glossary.tip_head(id, "@term"), [UiText.t("battle.missing_paren")])
 	return Glossary.buff_tip_parts(def, int(panel.stacks().get(id, 0)), panel.time_left(id))
 
 
@@ -191,8 +194,8 @@ static func block_tip_parts(panel: CombatantPanel) -> Dictionary:
 	var lines: Array[String] = []
 	for i in panel.block_layers.size():
 		var l: Dictionary = panel.block_layers[i]
-		var who := "天生" if String(l["id"]) == "innate" else String(panel.item_names.get(int(l["uid"]), l["id"]))
-		lines.append("%s %d%s" % [who, int(l["value"]), "　← 生效" if i == 0 else "（备用）"])
+		var who := UiText.t("battle.innate") if String(l["id"]) == "innate" else String(panel.item_names.get(int(l["uid"]), l["id"]))
+		lines.append("%s %d%s" % [who, int(l["value"]), UiText.t("battle.block_active") if i == 0 else UiText.t("battle.block_spare")])
 	if panel.axis_value(StatAxes.BLOCK) != 0:
 		var a := panel.axis_value(StatAxes.BLOCK)
 		lines.append("%s ×%d" % [StatAxes.name_of(StatAxes.BLOCK, a), absi(a)])
@@ -200,8 +203,8 @@ static func block_tip_parts(panel: CombatantPanel) -> Dictionary:
 		var def: BuffDef = panel.buff_defs.get(StringName(id), null)
 		if def != null and def.axis_stacks_per(StatAxes.BLOCK) != 0:
 			var n := def.axis_stacks_per(StatAxes.BLOCK) * int(panel.stacks()[id])
-			lines.append("%s ×%d（%s）" % [StatAxes.name_of(StatAxes.BLOCK, n), absi(n), Names.of(def)])
-	return _parts(Glossary.tip_head("格挡", "@term", str(panel.block_value())), lines)
+			lines.append(UiText.t("battle.block_source") % [StatAxes.name_of(StatAxes.BLOCK, n), absi(n), Names.of(def)])
+	return _parts(Glossary.tip_head(UiText.t("battle.block"), "@term", str(panel.block_value())), lines)
 
 
 ## 回放到当前游标为止，某一方某条轴的系统层（从日志里最近一条 axis_shifted 读）
@@ -307,7 +310,7 @@ func seek(t: float) -> void:
 	_drain_until(_now)
 	_sync_overlays()
 	_suppress_popups = false
-	_clock.text = "%.2f 秒" % _now
+	_clock.text = UiText.t("battle.clock") % _now
 	_timeline.cursor = _now
 	_sync_buttons()
 	if _cursor >= _result.log.size():
@@ -414,7 +417,7 @@ func _process(delta: float) -> void:
 	_now += delta * SPEEDS[_speed_idx]
 	_drain_until(_now)
 	_sync_overlays()
-	_clock.text = "%.2f 秒" % _now
+	_clock.text = UiText.t("battle.clock") % _now
 	_timeline.cursor = _now
 	if _cursor >= _result.log.size():
 		_finish()
@@ -457,9 +460,9 @@ func _finish() -> void:
 	if not _playing and _verdict.text != "":
 		return
 	_playing = false
-	_clock.text = "%.2f 秒" % _result.duration_sec()
+	_clock.text = UiText.t("battle.clock") % _result.duration_sec()
 	_verdict.text = (
-		"平局" if _result.is_draw() else "%s 获胜" % _names[_result.winner]
+		UiText.t("battle.draw") if _result.is_draw() else UiText.t("battle.wins") % _names[_result.winner]
 	)
 	_timeline.cursor = _result.duration_sec()
 	_report.text = report_of(_result, _names)     # 157：收尾战报（跳过也出）
@@ -477,10 +480,10 @@ static func report_of(result: BattleResult, names: Array) -> String:
 		var ev := e as BattleEvent
 		if ev.name == BattleEvent.DAMAGE and ev.side >= 0 and ev.side <= 1 and ev.get_int(&"amount") > 0:
 			dealt[1 - ev.side] += StatMath.to_int(ev.get_int(&"amount"))
-	var end := "平局"
+	var end := UiText.t("battle.draw")
 	if not result.is_draw():
-		end = "%s 打倒了 %s" % [names[result.winner], names[1 - result.winner]]
-	return "%.1f 秒 ｜ %s造成 %d、承受 %d ｜ %s造成 %d ｜ %s" % [result.duration_sec(), names[0], dealt[0], dealt[1], names[1], dealt[1], end]
+		end = UiText.t("battle.defeated") % [names[result.winner], names[1 - result.winner]]
+	return UiText.t("battle.report") % [result.duration_sec(), names[0], dealt[0], dealt[1], names[1], dealt[1], end]
 
 
 ## 157：倍速 ≥ 4 时三种反馈按倍速缩短（不叠加，新的一下打断上一下）
@@ -691,7 +694,7 @@ func _build() -> void:
 	header.add_theme_constant_override("separation", 12)
 	UiTheme.set_tone(header, on_bg)
 	root.add_child(header)
-	_clock = UiTheme.make_label("0.00 秒", 16, UiPalette.DIM)
+	_clock = UiTheme.make_label(UiText.t("battle.clock") % 0.0, 16, UiPalette.DIM)
 	header.add_child(_clock)
 	_verdict = UiTheme.make_label("", 16, UiPalette.FG)
 	header.add_child(_verdict)
@@ -761,7 +764,7 @@ func _build() -> void:
 	bar.add_child(_timeline)
 	_speed_btn = IconButton.make_art(art_dir, "", "", "", cycle_speed)
 	bar.add_child(_speed_btn)
-	_skip_btn = IconButton.make_art(art_dir, "skip", "跳过", "跳过\n直接看到结尾，结果不会变", skip_to_end)
+	_skip_btn = IconButton.make_art(art_dir, "skip", UiText.t("battle.skip"), UiText.t("battle.skip_tip"), skip_to_end)
 	bar.add_child(_skip_btn)
 	_report = UiTheme.rich_block(0, UiTheme.RICH_SMALL_SIZE)
 	_report.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -778,12 +781,12 @@ func _sync_buttons() -> void:
 		return
 	var done := _result != null and _cursor >= _result.log.size()
 	var id := "replay" if done else ("pause" if _playing else "play")
-	var name: String = {"replay": "重播", "pause": "暂停", "play": "播放"}[id]
+	var name: String = UiText.t("battle." + id)     # battle.replay / battle.pause / battle.play
 	if _play_btn.icon_id != id:
-		_play_btn.set_art(id, name, name + "\n" + PLAY_HINT)
+		_play_btn.set_art(id, name, name + "\n" + play_hint())
 	var x := int(SPEEDS[_speed_idx])
 	if _speed_btn.icon_id != "speed_%d" % x:
-		_speed_btn.set_art("speed_%d" % x, SPEED_NUMERALS[x], "倍速 %s\n一倍、两倍、四倍循环切，下一场也照这个速度" % SPEED_NUMERALS[x])
+		_speed_btn.set_art("speed_%d" % x, SPEED_NUMERALS[x], UiText.t("battle.speed_tip") % SPEED_NUMERALS[x])
 #endregion
 
 

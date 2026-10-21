@@ -25,7 +25,7 @@ func watch() -> Array[Signal]:
 
 
 func text_of() -> String:
-	return "体力 %d/%d" % [run.vitality.current, run.vitality.maximum]
+	return UiText.t("hud.vitality") % [run.vitality.current, run.vitality.maximum]
 
 
 func _idle_mouse_filter() -> Control.MouseFilter:

@@ -140,7 +140,7 @@ func reseat_anchor(uid: int) -> bool:
 		return false
 	if not _run.board.reseat(uid):
 		return false
-	_hint_text("奉「%s」为主信仰" % Names.of(inst.def))
+	_hint_text(UiText.t("bag.reseat") % Names.of(inst.def))
 	return true
 
 
@@ -163,7 +163,7 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 			return true
 		if InventoryService.transfer_auto(_run.board, uid, _run.storage):
 			if quick_target != null:
-				_hint_text("容器里放不下「%s」，放在了地上" % Names.of(inst.def))
+				_hint_text(UiText.t("bag.no_room_container") % Names.of(inst.def))
 			return true
 	return false
 
@@ -173,7 +173,7 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 ## 地上那件进不了背包：提示一句（134：地图 / 事件屏双击地上、放不下只开背包时也用这句）
 func say_no_room(inst: ItemInstance) -> void:
 	if inst != null and inst.def != null:
-		_hint_text("背包里没有空间放「%s」" % Names.of(inst.def))
+		_hint_text(UiText.t("bag.no_room") % Names.of(inst.def))
 
 
 ## 114：合成了：提示一句产物（装不下落在地上也说）

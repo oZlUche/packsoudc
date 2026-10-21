@@ -317,11 +317,11 @@ func belt_price_of(skill_id: StringName) -> int:
 ## 160 补一：「随身」那一排第 i 格能不能买：没卖掉、付得起、腰带收得下
 func can_buy_belt(i: int) -> String:
 	if not active or i < 0 or i >= belt_offers.size() or belt_sold.has(i):
-		return "没有这一格"
+		return UiText.t("log.shop_no_slot")
 	if wallet == null or not wallet.can_afford(int(belt_offers[i]["price"])):
-		return "钱不够"
+		return UiText.t("log.shop_no_coins")
 	if not belt_grant.is_valid():
-		return "没有腰带"
+		return UiText.t("log.no_belt")
 	return ""
 
 
@@ -333,7 +333,7 @@ func buy_belt(i: int) -> String:
 	var sid := StringName(String(belt_offers[i]["id"]))
 	var price := int(belt_offers[i]["price"])
 	if int(belt_grant.call(sid, 1)) <= 0:
-		return "腰带满了"
+		return UiText.t("log.belt_full")
 	wallet.spend(price, &"shop")
 	belt_sold.append(i)
 	_persist()

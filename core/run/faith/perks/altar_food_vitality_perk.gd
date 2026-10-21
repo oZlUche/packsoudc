@@ -23,8 +23,8 @@ func on_offered(run: RunState, defs: Array, node: MapNode) -> String:
 		amount = roundi(float(amount) * float(double.get("factor")))
 	node.content["altar_food_used"] = true
 	var got := run.vitality.restore(amount, &"altar")
-	return "献祭食物：体力 +%d" % got
+	return UiText.t("perk.offer_food_done") % got
 
 
 func _summary() -> String:
-	return "神坛献祭食物回体力（每件 +%d，每个休息处最多 %d，一次）" % [per_food, max_per_altar]
+	return UiText.t("perk.offer_food_summary") % [per_food, max_per_altar]
