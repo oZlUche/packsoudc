@@ -57,7 +57,8 @@ static func frame_layer(t: TestCase, root: Window) -> void:
 	var screen := GameScreen.new()
 	screen.flow = f
 	root.add_child(screen)
-	t.check(NoticeLayer.current() == null, "单测里没有导演那一层")
+	var director_layer := NoticeLayer.current()     # 同一帧里前面的用例造的导演可能还没走：先摘下来
+	NoticeLayer.set_current(null)
 	screen.say("你好")
 	t.check(screen.notice_layer().get_parent() == screen and screen.notice_layer().current_text() == "你好", "屏自己挂一层，字写在卷上")
 	var host := Control.new()
@@ -65,6 +66,7 @@ static func frame_layer(t: TestCase, root: Window) -> void:
 	NoticeLayer.post(host, "从子节点喊", true)
 	t.eq(screen.notice_layer().current_text(), "从子节点喊", "子节点（面板、腰带）往上找到屏的那层")
 	screen.queue_free()
+	NoticeLayer.set_current(director_layer)
 	Support.cleanup("n226")
 
 

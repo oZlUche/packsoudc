@@ -165,10 +165,10 @@ func _on_screen_changed(screen: int, payload: Dictionary) -> void:
 	# 128：先把地接到这一局的 storage 上（各屏开面板时要找它），换完屏再决定画不画、挪到最上面
 	ground.stash = flow.run.storage if flow.run != null else null
 	_switch_screen(screen, payload)
-	_sync_ground()
 	if notices != null:
 		notices.motion = UiMotion.enabled(flow.settings)     # 设置里关了动效：告示直接开合
-		move_child(notices, -1)
+		move_child(notices, -1)     # 新屏加在后面：告示层挪回去（画的先后按 z，地上随后照旧挪到最后）
+	_sync_ground()
 
 
 ## 128：地上画不画（最上面那一屏是一局里某个点上的界面才画），并保持在屏栈之上
