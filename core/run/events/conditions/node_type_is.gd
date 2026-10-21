@@ -12,5 +12,5 @@ func check(ctx: EventContext) -> bool:
 func describe() -> String:
 	var names: Array[String] = []
 	for t in types:
-		names.append(String(t))
+		names.append(UiText.pick(UiText.TEXT.get("node.short.%s" % t), String(t)))     # short names, as on the map legend
 	return UiText.t("cond.node_type") % " / ".join(names)

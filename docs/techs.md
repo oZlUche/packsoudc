@@ -5,19 +5,19 @@
 
 ## 节点
 
-| id | 名称 | 英文名 | 列 | 排序 | 前置 | 说明 | 效果构件 | 构件参数 | 每级说明模板 |
-|---|---|---|---|---|---|---|---|---|---|
-| pack | 行囊 | Travel Pack | 0 | 0 | safe_box | 出发时多带一笔钱：按角色自己的开局钱加百分比。 | tech_run_buff | {"effect": "starting_funds_bonus"} | 开局钱 {starting_funds_bonus_percent\|signed}% |
-| safe_box | 保险箱扩格 | Bigger Safe | 0 | 0 | warehouse | 局内的保险箱多出格子，撤不出来也能多保住几件。 | tech_safe_size | {"rows": 1} |  |
-| warehouse | 仓库扩建 | Warehouse Expansion | 0 | 0 |  | 仓库多一页，放得下更多带回来的东西；各页独立，左边的页签切换。 | warehouse_pages |  |  |
-| endurance | 耐久 | Endurance | 1 | 0 |  | 体力上限更高，在图上走得更远：按角色自己的体力上限加百分比。 | tech_run_buff | {"effect": "vitality_max_bonus"} | 体力上限 {vitality_max_bonus_percent\|signed}% |
-| undaunted | 不屈 | Undaunted | 1 | 0 | endurance | 打输了少扣体力，最少还是扣一点。 | tech_run_buff | {"effect": "loss_discount"} | 打输了少扣 {loss_discount_amount} 点体力（最少扣一点） |
-| sinew | 筋骨 | Sinew | 1 | 1 | endurance | 开局生命上限更高：按角色自己的生命加百分比。 | tech_run_buff | {"effect": "stat_bonus"} | 开局生命 {stat_bonus_amount\|signed}% |
-| luck | 幸运 | Fortune | 2 | 0 | thorough_search | 敌人的东西更容易掉。 | tech_run_buff | {"effect": "luck_bonus"} | 幸运 {luck_bonus_amount\|signed}：敌人的东西更容易掉 |
-| hauling | 扛重 | Hauling | 1 | 2 | endurance | 背得更多再开始吃力：按角色自己的负重上限加百分比。 | tech_run_buff | {"effect": "carry_capacity_bonus"} | 负重上限 {carry_capacity_bonus_percent\|signed}% |
-| scouting | 侦察 | Scouting | 2 | 0 | luck、bargain | 隐形的猎手走近到一定距离就看得见。 | tech_run_buff | {"effect": "scout_range"} | 侦察距离 {scout_range_range} |
-| thorough_search | 细搜 | Thorough Search | 2 | 0 |  | 每个搜索点能多搜几次。 | tech_run_buff | {"effect": "extra_searches"} | 每个搜索点多搜 {extra_searches_amount} 次 |
-| bargain | 讨价 | Haggling | 2 | 1 | thorough_search | 商店的东西更便宜。 | tech_run_buff | {"effect": "shop_price_mult"} | 商店售价 ×{shop_price_mult_factor} |
+| id | 名称 | 英文名 | 列 | 排序 | 前置 | 说明 | 英文说明 | 效果构件 | 构件参数 | 每级说明模板 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| pack | 行囊 | Travel Pack | 0 | 0 | safe_box | 出发时多带一笔钱：按角色自己的开局钱加百分比。 | Set out with extra money: a percentage of the character's own starting money. | tech_run_buff | {"effect": "starting_funds_bonus"} | 开局钱 {starting_funds_bonus_percent\|signed}% |
+| safe_box | 保险箱扩格 | Bigger Safe | 0 | 0 | warehouse | 局内的保险箱多出格子，撤不出来也能多保住几件。 | The safe in a run gets more cells, so more is kept even if you fail to extract. | tech_safe_size | {"rows": 1} |  |
+| warehouse | 仓库扩建 | Warehouse Expansion | 0 | 0 |  | 仓库多一页，放得下更多带回来的东西；各页独立，左边的页签切换。 | One more Warehouse page for what you bring back; each page is separate, switch with the tabs on the left. | warehouse_pages |  |  |
+| endurance | 耐久 | Endurance | 1 | 0 |  | 体力上限更高，在图上走得更远：按角色自己的体力上限加百分比。 | Higher max Vitality, so you travel further on the map: a percentage of the character's own max Vitality. | tech_run_buff | {"effect": "vitality_max_bonus"} | 体力上限 {vitality_max_bonus_percent\|signed}% |
+| undaunted | 不屈 | Undaunted | 1 | 0 | endurance | 打输了少扣体力，最少还是扣一点。 | Lose less Vitality when you lose a battle, but always at least one point. | tech_run_buff | {"effect": "loss_discount"} | 打输了少扣 {loss_discount_amount} 点体力（最少扣一点） |
+| sinew | 筋骨 | Sinew | 1 | 1 | endurance | 开局生命上限更高：按角色自己的生命加百分比。 | Higher max Health at the start: a percentage of the character's own Health. | tech_run_buff | {"effect": "stat_bonus"} | 开局生命 {stat_bonus_amount\|signed}% |
+| luck | 幸运 | Fortune | 2 | 0 | thorough_search | 敌人的东西更容易掉。 | Enemies drop their things more often. | tech_run_buff | {"effect": "luck_bonus"} | 幸运 {luck_bonus_amount\|signed}：敌人的东西更容易掉 |
+| hauling | 扛重 | Hauling | 1 | 2 | endurance | 背得更多再开始吃力：按角色自己的负重上限加百分比。 | Carry more before it gets heavy: a percentage of the character's own Load limit. | tech_run_buff | {"effect": "carry_capacity_bonus"} | 负重上限 {carry_capacity_bonus_percent\|signed}% |
+| scouting | 侦察 | Scouting | 2 | 0 | luck、bargain | 隐形的猎手走近到一定距离就看得见。 | Hidden hunters become visible once they come close enough. | tech_run_buff | {"effect": "scout_range"} | 侦察距离 {scout_range_range} |
+| thorough_search | 细搜 | Thorough Search | 2 | 0 |  | 每个搜索点能多搜几次。 | Search each search spot a few more times. | tech_run_buff | {"effect": "extra_searches"} | 每个搜索点多搜 {extra_searches_amount} 次 |
+| bargain | 讨价 | Haggling | 2 | 1 | thorough_search | 商店的东西更便宜。 | Shop prices are lower. | tech_run_buff | {"effect": "shop_price_mult"} | 商店售价 ×{shop_price_mult_factor} |
 
 ## 等级
 

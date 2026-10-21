@@ -5,6 +5,9 @@
     "en": "Down but Not Out"
   },
   "description": "战败三次。",
+  "descriptions": {
+    "en": "Be defeated three times."
+  },
   "hidden": true,
   "order": 7,
   "kind": "deaths",

@@ -5,6 +5,9 @@
     "en": "Warehouse Expansion"
   },
   "description": "仓库多一页，放得下更多带回来的东西；各页独立，左边的页签切换。",
+  "descriptions": {
+    "en": "One more Warehouse page for what you bring back; each page is separate, switch with the tabs on the left."
+  },
   "effect": {
     "type": "warehouse_pages"
   },

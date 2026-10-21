@@ -15,12 +15,12 @@ func derive(meta: MetaState, level: int) -> void:
 
 
 func describe() -> String:
-	return "+%d 页" % pages
+	return UiText.t("tech.pages_plus") % pages
 
 
 ## 118：到第 k 级一共几页
 func describe_level(level: int, _buff_defs: Dictionary = {}) -> String:
-	return "仓库共 %d 页" % (1 + pages * level)
+	return UiText.t("tech.pages_total") % (1 + pages * level)
 
 
 ## 163：界面列出未解锁的页用 —— {"max": 升满时几页, "per_level": 每级几页, "name": 科技名}；科技里没有仓库扩建 = {}
@@ -29,5 +29,5 @@ static func plan_of(defs: Array) -> Dictionary:
 		var def := d as TechDef
 		if def != null and def.effect is TechWarehousePages:
 			var per := (def.effect as TechWarehousePages).pages
-			return {"max": 1 + per * def.tiers.size(), "per_level": per, "name": def.display_name}
+			return {"max": 1 + per * def.tiers.size(), "per_level": per, "name": Names.of(def)}
 	return {}

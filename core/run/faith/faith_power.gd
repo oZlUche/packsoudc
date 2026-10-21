@@ -166,7 +166,7 @@ func line() -> String:
 	var p := points_of(def.id)
 	var tier := def.tier_of(p)
 	var next := def.next_threshold(p)
-	return UiText.t("faith.line") % [Names.of(def), tier, p, (" / %d" % next) if next >= 0 else UiText.t("faith.max_level")]
+	return UiText.t("faith.line") % [Names.of(def), tier, p, (" / %d" % next) if next >= 0 else UiText.t("faith.max_rank")]
 
 
 func to_dict() -> Dictionary:

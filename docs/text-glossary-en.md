@@ -145,5 +145,11 @@
 | 角色技能 | 见数据 | Old Paths / Slippery / Raised in the Wild / Tough / Spoils of War / Drill / Second Wind / Assault / Slip |
 | 自发 / 开战时 / 出手时 / 受伤时 | Automatic / At battle start / On attack / When hit | 时机类别名（`Glossary.TRIGGER_NAMES`） |
 | 增益 / 减益 / 系统 | Buff / Debuff / System | 状态悬浮窗名字行右边的小字 |
+| 基地 / 科技 / 成就 / 出售 | Base / Tech / Achievements / Sell | F5b 局外屏 |
+| 诅咒之地 | Cursed Lands | 成就说明 |
+| 进阶难度 | Ascension | 难度名 Ascension I… |
+| 底色：石墨 / 深夜 / 石板 / 暮色 / 苔绿 / 雾灰 | Graphite / Midnight / Slate / Dusk / Moss / Mist | 设置屏 |
+| 光标：秘银 / 铁 / 皮革 | Mithril / Iron / Leather | 设置屏 |
+| 仓库页签「一 / 二 / 三」 | 1 / 2 / 3 | 英文写数字 |
 
 规则句（道具悬浮窗）的英文：扳机写成方括号里大写开头的短句（[When hit]），条件与效果小写接在后面，整行句首由 `Glossary.cap` 大写；伤害一律写「<类型名> damage」，`Glossary.mark_rich` 认这个写法上色。

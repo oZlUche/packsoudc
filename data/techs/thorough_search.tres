@@ -25,5 +25,8 @@ display_names = {
 }
 column = 2
 description = "每个搜索点能多搜几次。"
+descriptions = {
+"en": "Search each search spot a few more times."
+}
 effect = SubResource("Resource_76y06")
 tiers = Array[ExtResource("3_kl40i")]([SubResource("Resource_p6knc"), SubResource("Resource_qym8b")])

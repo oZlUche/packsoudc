@@ -4,6 +4,8 @@ extends RefCounted
 
 const GF := preload("res://tests/run/test_game_flow.gd")
 const Support := preload("res://tests/run/flow_support.gd")
+const Drawer139 := preload("res://tests/ui/test_base_drawer_139.gd")
+const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const GAME := "res://ui/game/game.tscn"
 const PREFIX := "english_ui_221"
 ## 切语言那个按钮故意两种字都写
@@ -107,6 +109,8 @@ static func frame_english_screens(t: TestCase, root: Window) -> void:
 	t.check(pre != null and pre.screen == GameFlow.Screen.PREBATTLE, "到了战前准备")
 	if pre != null and pre.screen == GameFlow.Screen.PREBATTLE:
 		_no_han(t, "战前屏", _texts(pre))
+		var flag: IconButton = pre._start_btn
+		t.check(flag.has_art() and flag.icon_id == "fight_en", "the Fight banner uses the English art (%s)" % flag.icon_id)
 		t.check(pre.start_battle(), "战前准备 → 开战")
 		var screen = game.overlay()
 		t.check(screen != null and screen.screen == GameFlow.Screen.BATTLE, "到了回放屏")
@@ -315,3 +319,45 @@ static func _same_keys(a: Dictionary, b: Dictionary) -> bool:
 ## 去掉 BBCode 标签（小写字母开头的 [tag] / [/tag]），方括号里的扳机句（[At battle start]、[开战时]）留着一起查
 static func _tags_off(text: String) -> String:
 	return RegEx.create_from_string("\\[/?[a-z_]+[^\\]]*\\]").sub(text, "", true)
+
+
+## 221 F5b：局外屏切到英文 —— 基地（家与五个页签）、设置屏、读取存档屏的可见字里没有汉字（玩家包：开发区不算）
+static func frame_english_base_screens(t: TestCase, root: Window) -> void:
+	t.begin("221 F5b · 英文：基地各页、设置屏、读取存档屏没有汉字")
+	DevGate.force_player = true
+	UiText.lang = "en"
+	var f := Drawer139._flow()
+	f.achievement_defs = GameFlow.load_achievements()
+	for id in [&"knife", &"bandage"]:
+		var def := f.items.get_def(id)
+		if def != null:
+			f.meta.warehouse.try_add(ItemInstance.create(def))
+	var base = Drawer139._screen(f, root)
+	_no_han(t, "base home", _texts(base))
+	for tab in ["warehouse", "sell", "tech", "codex", "achievements"]:
+		base.show_tab(tab)
+		_no_han(t, "base %s" % tab, _texts(base))
+	base.queue_free()
+	Drawer139._cleanup()
+	var c = NodeScreens._content()
+	var sf := Support.flow(c, PREFIX + "_s")
+	sf.settings = GameSettings.new()
+	var settings = load("res://ui/game/settings_screen.gd").new()
+	settings.flow = sf
+	settings.font = UiPalette.cjk_font()
+	root.add_child(settings)
+	settings.open({})
+	var st: Array[String] = []
+	st.assign(_texts(settings).filter(func(s: String) -> bool: return not s.contains("中文")))     # the language switch names both
+	_no_han(t, "settings", st)
+	settings.queue_free()
+	var slots = load("res://ui/game/slots_screen.gd").new()
+	slots.flow = sf
+	slots.font = UiPalette.cjk_font()
+	root.add_child(slots)
+	slots.open({"full": true})
+	_no_han(t, "slots", _texts(slots))
+	slots.queue_free()
+	Support.cleanup(PREFIX + "_s")
+	UiText.lang = "zh"
+	DevGate.force_player = false

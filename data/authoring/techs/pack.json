@@ -8,6 +8,9 @@
     "safe_box"
   ],
   "description": "出发时多带一笔钱：按角色自己的开局钱加百分比。",
+  "descriptions": {
+    "en": "Set out with extra money: a percentage of the character's own starting money."
+  },
   "effect": {
     "type": "tech_run_buff",
     "buffs": [

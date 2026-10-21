@@ -27,5 +27,8 @@ display_names = {
 requires = Array[StringName]([&"luck", &"bargain"])
 column = 2
 description = "隐形的猎手走近到一定距离就看得见。"
+descriptions = {
+"en": "Hidden hunters become visible once they come close enough."
+}
 effect = SubResource("Resource_jek2h")
 tiers = Array[ExtResource("3_es8ai")]([SubResource("Resource_pkg26")])

@@ -9,6 +9,9 @@
   ],
   "column": 1,
   "description": "打输了少扣体力，最少还是扣一点。",
+  "descriptions": {
+    "en": "Lose less Vitality when you lose a battle, but always at least one point."
+  },
   "effect": {
     "type": "tech_run_buff",
     "buffs": [

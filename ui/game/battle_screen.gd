@@ -3,7 +3,11 @@
 extends GameScreen
 
 var _view: BattleView
-var _next: Button
+## 作者 2026-10-21 定（战旗 / 纸卷）：「继续」是一条纸卷，回放看完（或拖到头）才出现；回放中这里空着。没看完前是 null
+var _next: Button = null
+## 纸卷放的那一格（教程「next_button」指它：回放中空着，看完纸卷落在这里）
+var _next_slot: CenterContainer
+const CONTINUE_ART := "res://assets/ui/battle/"
 ## 回放看完（或跳到底）了没有（作者 2026-10-17：标题不再写胜负，按状态判断）
 var _seen_end := false
 var _won: bool = false
@@ -38,9 +42,10 @@ func open(payload: Dictionary) -> void:
 	_view.speed_changed.connect(_on_speed_changed)
 	_view.reaction_shown.connect(_on_reaction_shown)
 
-	_next = _button(UiText.t("battle.skip_continue"), proceed, 14, UiPalette.Tier.PRIMARY)
-	col.add_child(_next)
-	_view.add_coach_target(&"next_button", _next)
+	_next_slot = CenterContainer.new()
+	_next_slot.custom_minimum_size = Vector2(246, 94)
+	col.add_child(_next_slot)
+	_view.add_coach_target(&"next_button", _next_slot)
 
 	if result != null:
 		_view.play(result, [UiText.t("battle.me"), enemy_name])
@@ -66,8 +71,9 @@ func proceed() -> void:
 
 
 func _on_finished() -> void:
-	if _next != null:
-		_next.text = UiText.t("battle.continue")
+	if _next == null and _next_slot != null:
+		_next = IconButton.make_art(CONTINUE_ART, "continue" if UiText.lang == "zh" else "continue_en", UiText.t("battle.continue"), "", proceed)
+		_next_slot.add_child(_next)
 	_seen_end = true     # 157：拖时间轴拖到头会再「看完」一次
 
 

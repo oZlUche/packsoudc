@@ -11,6 +11,9 @@ var _type: StringName = &"battle"
 var _enemy_view: InventoryView
 var _enemy_line: Label
 var _start_btn: Button
+## 作者 2026-10-21 定（战旗 / 纸卷）：「开战」是一面战旗，四态，字画在图里；可点的是旗面
+const FIGHT_ART := "res://assets/ui/battle/"
+const FIGHT_HIT := Rect2(22, 10, 156, 108)
 var _why: Label
 var _slip_btn: Button = null
 ## 147：腰带里能在这儿用的（烟雾弹）一件一个按钮
@@ -76,7 +79,9 @@ func open(payload: Dictionary) -> void:
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	_belt_row = _hbox(10)     # 147：腰带里能在战前用的（160：名字后面带数量）
 	buttons.add_child(_belt_row)
-	_start_btn = _button(UiText.t("pre.fight"), start_battle, 16, UiPalette.Tier.PRIMARY)
+	var flag := IconButton.make_art(FIGHT_ART, "fight" if UiText.lang == "zh" else "fight_en", UiText.t("pre.fight"), "", start_battle)
+	flag.hit_rect = FIGHT_HIT if flag.has_art() else Rect2()
+	_start_btn = flag
 	buttons.add_child(_start_btn)
 	# 093（蛮神 3 级）：信仰级效果给的额外动作。188 补充一：一条效果可以给几个（耗体力 / 耗信力立即击败），不够的灰着、写原因
 	var altar := AltarModule.of(flow.run)     # 101：信仰级效果在神坛模块里取
@@ -95,6 +100,8 @@ func open(payload: Dictionary) -> void:
 		_slip_btn = _button("", func(): slip_battle(), 14)
 		_slip_btn.tooltip_text = slip.describe()
 		buttons.add_child(_slip_btn)
+	for c in buttons.get_children():
+		(c as Control).size_flags_vertical = Control.SIZE_SHRINK_CENTER     # 旗比按钮高：别的按钮不跟着拉长
 	col.add_child(buttons)
 	_why = _label("", 13, UiPalette.STAMINA)
 	_why.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -209,6 +216,7 @@ func _refresh() -> void:
 		_seam.set_strength(strength_of(spec), strength_of(mine))
 	var why := can_start()
 	_start_btn.disabled = why != ""
+	(_start_btn as IconButton).sync_art()
 	_why.text = why if why != "" else (UiText.t("pre.no_attacker") if unarmed() else "")
 	if _slip_btn != null:
 		var slip := flow.slip_skill()

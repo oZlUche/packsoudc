@@ -6,6 +6,9 @@
   },
   "column": 2,
   "description": "每个搜索点能多搜几次。",
+  "descriptions": {
+    "en": "Search each search spot a few more times."
+  },
   "effect": {
     "type": "tech_run_buff",
     "buffs": [

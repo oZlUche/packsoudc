@@ -125,7 +125,7 @@ static func run_conditions(t: TestCase) -> void:
 	t.check(not nt.check(ctx), "event 点不在名单")
 	ctx.node.content["resolved_type"] = "rest"
 	t.check(nt.check(ctx), "揭成 rest 的按 rest 算")
-	t.eq(nt.describe(), "需要这是rest / shop点", "说明")
+	t.eq(nt.describe(), "需要这是休息 / 商店点", "说明")
 
 	# 都在注册表里，导入器认得
 	for name in [&"steps_within", &"bracket_within", &"erosion_depth_within", &"has_item", &"node_type_is"]:
