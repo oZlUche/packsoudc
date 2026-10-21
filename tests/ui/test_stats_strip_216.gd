@@ -198,6 +198,19 @@ static func frame_inlay_bronze(t: TestCase, root: Window) -> void:
 	t.eq(es.texts(StatsStrip.SPECIAL), [str(StatsStrip.specials_of(foe).size()), "特殊能力"] as Array[String], "特殊能力：条数")
 	t.check(es.tip_text(StatsStrip.SPECIAL).contains("免疫流血"), "悬浮窗写免疫：%s" % es.tip_text(StatsStrip.SPECIAL))
 	t.eq(StatsStrip.specials_of(CombatantSpec.new()), [] as Array[String], "什么都没有：空")
+	UiText.lang = "en"
+	es.refresh(CombatantSpec.new(), null)
+	strip.refresh(spec, run)
+	var sub: Dictionary = (row.get("text", {}) as Dictionary).get("sub", {})
+	var sub_x := float((sub.get("pos_in_tag", [36, 37]) as Array)[0])
+	var regular := UiPalette.cjk_font()
+	for pair in [[es, StatsStrip.ORDER_ENEMY], [strip, StatsStrip.ORDER_PLAYER]]:
+		for k in (pair[1] as Array):
+			var s := String((pair[0] as StatsStrip).texts(k)[1])
+			var room := (pair[0] as StatsStrip).tag_rect(k).size.x - sub_x - StatsStrip.TEXT_RIGHT_PAD
+			var w := regular.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, StatsStrip.fit_size(regular, s, int(sub.get("size", 11)), room)).x
+			t.check(w <= room + 0.5, "游戏测试 v3.81：英文小字「%s」不伸出签（%.0f ≤ %.0f）" % [s, w, room])
+	UiText.lang = "zh"
 	for s in [wide, strip, es]:
 		(s as Node).queue_free()
 	Support.cleanup("stripbronze")

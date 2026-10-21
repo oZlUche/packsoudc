@@ -39,7 +39,7 @@
 - `ui/game/prebattle_screen.gd`：进场 `UiMotion.unfurl(_start_btn)`；`start_battle` 的 payload 加 `medal_from: Rect2`、`lane` 刻线可缩；按下后属性签 / 地上栏淡出。
 - `ui/game/battle_screen.gd`：`open` 按 §2.1 排时间（`_view.hold()` → 过场完 `release()`）；「继续」换成战旗图（`continue_win_*` / `continue_lose_*`，执行已收到）后再套 `unfurl`。
 - `ui/game/game_director.gd`：`PREBATTLE → BATTLE` 这一对换屏不走 `_fade_in`，由战斗屏自己过场；其它不变。
-- 美术（UI替换美术）：① `medal_swords` 拆三层（盘 / 左剑 / 右剑，同一 132 画布对位）+ 剑尖金光一帧；② 「继续」战旗**不用再要**：UI替换美术 19:15 已切好 `continue_win_*` / `continue_lose_*` 四态中英（216 × 134，热区同「开战」），已交执行；③ 火星不用图（代码画 6 个小菱形）。战旗展开**不要帧图**（裁切 + 摆动够了；要是作者想要布料的皱褶再出 4 帧）。
+- 美术（UI替换美术）：① `medal_swords` 拆三层（盘 / 左剑 / 右剑，同一 132 画布对位）+ 剑尖金光一帧；② 「继续」战旗**不用再要**：UI替换美术 19:15 已切好 `continue_win_*` / `continue_lose_*` 四态中英（216 × 134，热区同「开战」），已交执行；③ 火星不用图（代码画 6 个小菱形）。**图已到**（UI替换美术 19:31）：`/mnt/project-files/art/ui/anim231/`（README、`out/layout.json`、`preview.png`）—— 盘 / 右剑 / 左剑三层同 132 画布叠起等于原图，剑的旋转轴在握柄中点（坐标在 layout.json），金光 40 × 12；已交界面动画。战旗展开**不要帧图**（裁切 + 摆动够了；要是作者想要布料的皱褶再出 4 帧）。
 
 ### 2.3 「继续」战旗（作者已定，不再待定）
 
