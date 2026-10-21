@@ -168,3 +168,16 @@ static func frame_entries(t: TestCase, root: Window) -> void:
 	flow.to_main_menu()
 	game.queue_free()
 	Support.cleanup("114")
+
+
+## 221（架构设计 220 后）：词条 / 百科正文不写 Markdown 的 `**`（富文本不认，星号会原样露出来）；要强调用 {b}…{/b}
+static func run_no_markdown_bold(t: TestCase) -> void:
+	t.begin("221 · 词条与百科、事件正文渲染后都不含 `**`")
+	for name in Glossary.TERMS:
+		t.check(not Glossary.term_text(String(name)).contains("**"), "词条「%s」没有 **" % name)
+	var book := _book()
+	for id in book.ids():
+		t.check(not book.render(id).contains("**"), "百科 %s 渲染后没有 **" % id)
+	var defs := EventPlacer.load_all()
+	for id in defs:
+		t.check(not String((defs[id] as EventDef).text).contains("**"), "事件 %s 没有 **" % id)
