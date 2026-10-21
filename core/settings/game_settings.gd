@@ -177,9 +177,19 @@ static func normalize_speed(v: float) -> float:
 	return 1.0
 
 
+## 测试用（复测 10-21 第 3 条）：非空时，凡是读写默认路径（玩家真实的设置文件）都改去这里。
+## 测试入口设它，免得本机游戏切了英文、改了底色，跑全套就红
+static var redirect: String = ""
+
+
+static func _resolve(path: String) -> String:
+	return redirect if path == DEFAULT_PATH and redirect != "" else path
+
+
 ## 读设置；没有文件、文件坏了、版本不对都返回默认值
 ## 173：读不出来先试上一份（`.prev`），再不行用默认
 static func load_from(path: String = DEFAULT_PATH) -> GameSettings:
+	path = _resolve(path)
 	for p in [path, AtomicFile.prev_path(path)]:
 		if FileAccess.file_exists(p):
 			var parsed = JSON.parse_string(FileAccess.get_file_as_string(p))
@@ -190,11 +200,11 @@ static func load_from(path: String = DEFAULT_PATH) -> GameSettings:
 
 ## 173：原子写（[AtomicFile]）
 func save_to(path: String = DEFAULT_PATH) -> Error:
-	return AtomicFile.write(path, JSON.stringify(to_dict(), "  ", false) + "\n")
+	return AtomicFile.write(_resolve(path), JSON.stringify(to_dict(), "  ", false) + "\n")
 
 
 static func remove(path: String = DEFAULT_PATH) -> void:
-	AtomicFile.remove(path)
+	AtomicFile.remove(_resolve(path))
 
 
 ## 作者 2026-10-17（内部文字不给玩家看）：是不是开发环境 —— 正式导出包（release / debug 模板）都不是。

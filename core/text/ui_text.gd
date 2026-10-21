@@ -402,7 +402,7 @@ const TEXT := {
 		"en": "Battles fight themselves: only what's in the bags on your board takes part. Weapons strike on their own, armor takes the hits for you, and adjacent items boost each other. The outcome is settled the moment you press Fight; after that it's only a replay. Drag something off the board to drop it on the Ground (it sits out the battle and is still there afterwards)."},
 	"pre.fight": {"zh": "开战", "en": "Fight"},
 	"pre.no_battle": {"zh": "没有等着开打的一场", "en": "There's no battle waiting"},
-	"pre.no_attacker": {"zh": "棋盘上一件会出手的东西都没有：先把武器放进包里", "en": "Nothing on your Board can attack: put a weapon in a bag first"},     # 222：只提醒，不灰「开战」
+	"pre.no_attacker": {"zh": "棋盘上一件会出手的东西都没有，开战就是挨打。", "en": "Nothing on your Board can fight back. Start like this and you just take hits."},     # 222：只提醒，不灰「开战」
 	"setup.unarmed": {"zh": "包里一件能出手的都没有，进去就是挨打。", "en": "Nothing in your pack can fight back. Go in like this and you just take hits."},
 	"pre.no_slip": {"zh": "没有能溜走的技能", "en": "You have no skill to slip away with"},
 	"pre.use_belt": {"zh": "用%s", "en": "Use %s"},
