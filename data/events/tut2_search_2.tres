@@ -20,9 +20,9 @@ outcomes = Array[ExtResource("2_wiij2")]([SubResource("Resource_w0pvk")])
 [resource]
 script = ExtResource("5_imr3y")
 id = &"tut2_search_2"
-title = "两把武器"
+title = "两套打法"
 titles = {
-"en": "Two Weapons"
+"en": "Two Ways to Fight"
 }
 text = "这里的东西够凑两套打法。搜三次。
 

@@ -2,7 +2,7 @@
 ## 一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右，按方向转；缺图画一笔折线箭头）从洞外指向洞，箭尾一块悬浮窗底（[constant UiTheme.PANEL_TOOLTIP]）写说明。
 ## **点任意处下一步**（键盘任意键也算，Esc 也是），最后一步点了收掉、发 [signal finished]。阴影层吞掉所有点击。
 ##
-## 步骤是数据（`data/authoring/coach/<id>.json`：`{"id", "steps": [{"target": 目标 id, "text"}]}`）；
+## 步骤是数据（`data/authoring/coach/<id>.json`：`{"id", "steps": [{"target": 目标 id, "text", "texts": {"en"}}]}`）；
 ## 目标的位置每一步现问（[member target_rect]：地图屏给 [method HudHost.rect_of]，战斗屏给 [method BattleView.control_rect]，背包窗、战前屏各有 `control_rect`）—— 部件挪了位置，教程跟着走
 class_name CoachOverlay
 extends Control
@@ -73,6 +73,8 @@ static func problems(p_steps: Array, known_ids: Array = []) -> Array[String]:
 			out.append("steps[%d]：没有这个目标 '%s'" % [i, target])
 		if String(s.get("text", "")) == "":
 			out.append("steps[%d]：没写说明" % i)
+		if String((s.get("texts", {}) as Dictionary).get("en", "")) == "":     # 221 F3
+			out.append("steps[%d]：没写英文（texts.en）" % i)
 	return out
 
 
@@ -108,8 +110,14 @@ func next() -> void:
 		finished.emit()
 		queue_free()
 		return
-	_line.text = String((steps[index] as Dictionary).get("text", ""))
+	_line.text = text_of(steps[index])
 	_layout()
+
+
+## 221 F3：一步的字按当前语言取（`texts: {"en": …}`），没写回落 `text`
+static func text_of(p_step: Dictionary) -> String:
+	var table: Variant = p_step.get("texts", {})
+	return Names.pick(table as Dictionary if table is Dictionary else {}, String(p_step.get("text", "")))
 
 
 func step() -> Dictionary:

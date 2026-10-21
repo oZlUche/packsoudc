@@ -7,6 +7,8 @@ extends Resource
 
 @export var id: StringName = &""
 @export var display_name: String = ""
+## 221：别的语言的名字，`{"en": "Small"}`；开局屏用 [method Names.of] 取
+@export var display_names: Dictionary = {}
 
 ## 这种规模覆盖的环数 [min, max]
 @export var rings: Vector2i = Vector2i(4, 5)

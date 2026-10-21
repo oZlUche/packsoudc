@@ -88,9 +88,9 @@ func craft(a: ItemInstance, b_uid: int) -> Dictionary:
 		board.end_batch()
 		return failed
 	board.end_batch()
-	var lines: Array = ["「%s」和「%s」合成了「%s」。" % [Names.of(a.def), Names.of(b.def), Names.of(out_def)]]
+	var lines: Array = [UiText.t("craft.done") % [Names.of(a.def), Names.of(b.def), Names.of(out_def)]]
 	if where == "storage":
-		lines.append("背包里装不下它：放在了地上。走之前记得放回包里，地上的东西会留在这个点上。")
+		lines.append(UiText.t("craft.to_ground"))
 	var detail := {"ok": true, "output": String(out_def.id), "where": where, "log": lines}
 	done.emit(detail)
 	return detail

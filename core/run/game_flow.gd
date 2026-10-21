@@ -111,7 +111,8 @@ static func is_overlay(s: int) -> bool:
 func to_main_menu() -> void:
 	_reset_run()
 	run_changed.emit(null)     # 096：局外悬浮窗不按信仰状态上色（UI 摘掉探针）
-	save_meta()
+	if slots == null or slots.exists(slot):
+		save_meta()     # 测试报告 10-21 第 3 条：空位不落地，否则第一次启动就有「继续」「读取存档」
 	_go(Screen.MAIN_MENU)
 
 
