@@ -126,6 +126,14 @@ static func reaction_text(def: ReactionDef) -> String:
 	return "\n".join(lines)
 
 
+## 220：回放里第一次碰到这种反应时停下来说的那一句（教练纸条，纯文字）：「{名字}：{元素甲}碰上{元素乙}。{说明}　百科里点亮了这一页。」
+static func reaction_intro(def: ReactionDef) -> String:
+	var a := ReactionResolver.element_name(def.elements[0]) if def.elements.size() > 0 else "?"
+	var b := ReactionResolver.element_name(def.elements[1]) if def.elements.size() > 1 else "?"
+	var desc := Glossary.strip_bbcode(Names.description_of(def)).strip_edges()
+	return "%s：%s碰上%s。%s　百科里点亮了这一页。" % [Names.of(def), a, b, desc]
+
+
 ## 175：「火 + 毒」
 static func pair_line(def: ReactionDef) -> String:
 	var a := ReactionResolver.element_name(def.elements[0]) if def.elements.size() > 0 else "?"

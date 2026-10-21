@@ -1302,9 +1302,13 @@ func _adopt(state: RunState) -> void:
 	ev.battle_pending.connect(func(node: MapNode, type: StringName, content: Dictionary):
 		_push({"screen": Screen.PREBATTLE, "node": node, "type": type, "content": content}))
 	ev.battle_finished.connect(func(node: MapNode, r: BattleResult, won: bool):
+		var fresh: Array[StringName] = []     # 220：这一场头一回打出的反应 —— 回放到那一刻停下来解释（记是现在就记了，跳过也算见过）
 		if meta != null and r != null:
+			for id in ReactionResolver.reactions_in(r.log):
+				if not meta.reaction_seen(StringName(String(id))):
+					fresh.append(StringName(String(id)))
 			meta.note_reactions(ReactionResolver.reactions_in(r.log))     # 175：百科的反应页点亮
-		_push({"screen": Screen.BATTLE, "node": node, "result": r, "won": won,
+		_push({"screen": Screen.BATTLE, "node": node, "result": r, "won": won, "new_reactions": fresh,
 			"player": ev.last_battle.get("player", null), "enemy": ev.last_battle.get("enemy", null),
 			"enemy_content": ev.last_battle.get("content", {})}))
 	# 114：合成是拖到上面立刻发生的（整理面板里），提示就在面板上，不再排结果屏

@@ -330,8 +330,17 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(pk != null and s.board.has_item(pk.uid) and pk.origin == knife_home, "涂毒匕首在匕首原来的位置")
 	t.check(_find(s, &"knife") == null and _find(s, &"poison_vial") == null, "两件原料没了")
 	t.check(bool(s.events.option_state(0)["ok"]), "合成了：门开了")
+	# 220 §2.2：翻出弯刀那条事件提示带上它 —— 涂毒匕首 + 弯刀对守卫，这一场打得出菌血（序章一的「第一次反应」）
+	var scim := _find(s, &"scimitar")
+	t.check(scim != null, "弯刀在身上（点 3 第一次翻出来的）")
+	if scim != null and not s.board.has_item(scim.uid):
+		s.equip(scim.uid)
+	t.check(scim != null and s.board.has_item(scim.uid), "弯刀放进了包里")
+	var reacted: Array[StringName] = []
+	s.events.battle_finished.connect(func(_n, r: BattleResult, _w): reacted.append_array(ReactionResolver.reactions_in(r.log)))
 	t.check(s.events.choose(0), "开打精英")
 	t.eq(int(s.tally["battles_won"]), 3, "精英也赢了")
+	t.check(reacted.has(&"poison_bleed"), "220：涂毒匕首 + 弯刀打守卫，打出了菌血（%s）" % [reacted])
 	if s.pending_loot != null:
 		s.take_all_loot()
 	# 撤离
@@ -356,13 +365,13 @@ static func _find(s: RunState, id: StringName) -> ItemInstance:
 
 ## 114：序章一教合成 —— 匕首必掉、毒药瓶第一次就搜到；没拿到匕首（打输了 / 没捡）有退路，不卡死
 static func run_crafting_gate(t: TestCase) -> void:
-	t.begin("114 · 序章一：拾荒者必掉匕首、点 3 第一次搜到毒药瓶；精英门要涂毒匕首（灰显 + 提示）；没有匕首时退路出现；规则卡三条")
+	t.begin("114 · 序章一：拾荒者必掉匕首、点 3 第一次搜到毒药瓶；精英门要涂毒匕首（灰显 + 提示）；没有匕首时退路出现；220：序章一没有规则卡")
 	var c := _content()
 	var g := c.prologue.map_source.resolve(1)
 	var path := _path(g)
 	t.eq(path[2].content.get("guaranteed_drops", []), ["knife"], "拾荒者必掉匕首")
 	t.check((path[3].content["search_finds"][0] as Array).has("poison_vial"), "第一次搜到毒药瓶")
-	t.eq(c.prologue.rules.size(), 3, "规则卡三条")
+	t.check(c.prologue.rules.is_empty(), "220：序章一的规则卡删了")
 	var s := _start(c)
 	t.check(_find(s, &"knife") == null and s.storage.item_count() == 0, "开局只有包")
 	# 直接站到精英点上看门（没匕首、没毒药瓶）

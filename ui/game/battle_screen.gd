@@ -9,6 +9,8 @@ var _seen_end := false
 var _won: bool = false
 ## 166 补充二：战斗教程（章节 `coaches` 的 `battle`），开着时回放停着
 var _coach: CoachOverlay = null
+## 220：这一场头一回打出的反应（流程给的）；回放放到第一次弹字时停下解释一句，解释过的划掉
+var _fresh_reactions: Array[StringName] = []
 
 
 func open(payload: Dictionary) -> void:
@@ -18,6 +20,8 @@ func open(payload: Dictionary) -> void:
 	var node: MapNode = payload.get("node", null)
 	var result: BattleResult = payload.get("result", null)
 	_won = bool(payload.get("won", false))
+	for id in payload.get("new_reactions", []):
+		_fresh_reactions.append(StringName(String(id)))
 	var enemy_name := _enemy_name(payload.get("enemy_content", {}))
 	# 作者 2026-10-17：顶端的「战斗　X —— 赢了」和计时行都不给玩家看（胜负看地图日志与结算屏）；看完没看完记在 _seen_end
 
@@ -32,6 +36,7 @@ func open(payload: Dictionary) -> void:
 	if flow.settings != null:
 		_view.set_speed(flow.settings.battle_speed)
 	_view.speed_changed.connect(_on_speed_changed)
+	_view.reaction_shown.connect(_on_reaction_shown)
 
 	_next = _button("跳过并继续", proceed, 14, UiPalette.Tier.PRIMARY)
 	col.add_child(_next)
@@ -121,6 +126,25 @@ func _on_coach_finished() -> void:
 
 func coach() -> CoachOverlay:
 	return _coach
+
+
+## 220：回放弹了一次反应字 —— 这一场头一回见的就停住，一步纸条指着挨反应那一方的状态行，点了接着放
+func _on_reaction_shown(id: StringName, side: int) -> void:
+	if not _fresh_reactions.has(id) or _coach != null:
+		return
+	var def := ReactionResolver.by_id(id)
+	if def == null:
+		return
+	_fresh_reactions.erase(id)
+	_view.hold()
+	_coach = CoachOverlay.new()
+	_coach.font = font
+	_coach.target_rect = _view.control_rect
+	add_child(_coach)
+	_coach.finished.connect(func():
+		_coach = null
+		_view.release())
+	_coach.start([{"target": "buffs_mine" if side == 0 else "buffs_enemy", "text": Encyclopedia.reaction_intro(def)}])
 
 
 func view() -> BattleView:
