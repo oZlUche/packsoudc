@@ -173,7 +173,7 @@ static func _buttons(screen: Node, prefix: String) -> Array[Button]:
 
 
 static func frame_result_steps(t: TestCase, root: Window) -> void:
-	t.begin("177 / 224 · 结算屏：撤离第 1 步是逐行账单（十行 + 合计，全显前「继续」不可点）、没有仓库；「继续」→ 第 2 步有仓库与保险箱格；战败一步")
+	t.begin("177 / 224 · 结算屏：撤离第 1 步是逐行账单（十一行 + 合计，全显前「继续」不可点）+ 保险箱、没有仓库；「继续」→ 第 2 步有仓库；战败一步、没有保险箱")
 	var c = NodeScreens._content()
 	var f := Support.flow(c, "s177r", 10000.0)
 	var gun: ItemDef = _defs(c)[0]
@@ -191,11 +191,13 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	var keys: Array = []
 	for row in ledger.rows():
 		keys.append(row["key"])
-	t.eq(keys, ["visited", "steps", "defeated", "elite_boss", "lost", "search_craft", "lit", "carried", "rarity", "coins", "total"], "十行 + 合计（作者 16:00 去掉表头）")
+	t.eq(keys, ["visited", "steps", "defeated", "elite", "boss", "lost", "search_craft", "lit", "carried", "rarity", "coins", "total"], "十一行 + 合计（224 补充二：击败的敌人 / 精英 / 首领分三行）")
 	var nums: Dictionary = screen.numbers()
 	t.eq(nums.get("走过的点"), "12", "走过的点")
 	t.eq(nums.get("走了多少步"), "37", "步数")
-	t.eq(nums.get("其中精英 / 首领"), "1 / 0", "精英 / 首领")
+	t.eq(nums.get("击败的敌人"), "4", "击败的敌人 = 5 场胜 − 1 精英 − 0 首领")
+	t.eq(nums.get("击败的精英"), "1", "精英一行")
+	t.eq(nums.get("击败的首领"), "0", "首领一行")
 	t.eq(nums.get("翻过的搜索点 · 合成"), "4 · 2", "搜索点 · 合成")
 	t.eq(nums.get("图鉴新点亮"), "7", "图鉴新点亮")
 	t.eq(nums.get("带出的东西"), "2 件 · 保险箱 1 件", "带出的东西一行写件数")
@@ -208,17 +210,18 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	t.check(screen.continue_button() != null and screen.continue_button().disabled, "全显之前「继续」不可点")
 	t.eq(LedgerView.text_at(ledger._rows[0], 0.5), "6", "数字从零滚到实值（一半时 6）")
 	ledger.reveal_all()
-	t.check(ledger.is_revealed() and ledger.rows()[10]["shown"], "点一下：全显")
+	t.check(ledger.is_revealed() and ledger.rows()[11]["shown"], "点一下：全显")
 	t.check(not screen.continue_button().disabled, "全显后「继续」可点")
 	t.eq(screen.get("_wh"), null, "第 1 步没有仓库面板")
-	t.eq(screen.safe_view(), null, "第 1 步没有保险箱格")
+	t.check(screen.safe_view() != null and screen.find_child("SafeFrame", true, false) != null, "224 补充二：第 1 步账单右边有保险箱（皮带框）")
 	t.eq(_buttons(screen, "继续").size(), 1, "一个「继续」")
 	var before: int = f.screen
 	_buttons(screen, "继续")[0].pressed.emit()
 	t.eq(f.screen, before, "第 1 步的继续不离开这一屏")
 	t.eq(screen.step(), 2, "按「继续」→ 第 2 步")
 	t.check(screen.get("_wh") != null, "第 2 步有仓库面板")
-	t.check(screen.safe_view() != null, "第 2 步有保险箱格")
+	t.eq(screen.safe_view(), null, "224 补充二：第 2 步不再有保险箱格")
+	t.eq(screen.find_children("*", "HSeparator", true, false).size(), 0, "224 补充二：中间的分隔横线删了")
 	t.check(screen.numbers().is_empty(), "第 2 步没有账单")
 	var wh = screen.get("_wh")
 	var bare := []
@@ -250,11 +253,16 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	t.eq(lost.numbers().get("带出的东西"), "保险箱 1 件", "224：战败同一张账单，带出的东西只有保险箱那半句")
 	t.eq(lost.numbers().get("总价值"), "40", "总价值 = 保险箱")
 	t.eq(lost.numbers().get("带出金币"), "0", "钱没了")
-	t.check(lost.safe_view() != null and is_equal_approx(lost.safe_view().cell_px, 60.0), "保险箱放大，一步就有")
+	t.eq(lost.safe_view(), null, "224 补充二：战败不显示保险箱")
+	var said: Array = []
+	for l: Label in lost.find_children("*", "Label", true, false):
+		if l.text.contains("全都留在") or l.text.contains("保险箱带出"):
+			said.append(l.text)
+	t.eq(said, [], "224 补充二：战败没有「全丢了」「保险箱带出」那两句")
 	lost.to_step(2)
-	t.check(lost.ledger() != null and lost.safe_view() != null, "战败没有第 2 步：还是那一屏")
+	t.check(lost.ledger() != null and lost.safe_view() == null, "战败没有第 2 步：还是那一屏")
 	lost.queue_free()
-	# 224：战败但带回来的背包里有东西（保险箱带出的进了这块）→ 也翻到第 2 步置入仓库
+	# 224 补充二：战败但带回来的背包里有东西（保险箱放不下仓库的）→ 也不开第 2 步，基地「仓库」页清
 	f.meta.board = GridInventory.new(Vector2i(3, 3), 0, false)
 	f.meta.board.try_add(ItemInstance.create(gun), true)
 	var lost2 = load("res://ui/game/result_screen.gd").new()
@@ -262,9 +270,7 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	lost2.font = UiPalette.cjk_font()
 	root.add_child(lost2)
 	lost2.open({"result": d})
-	lost2.ledger().reveal_all()
-	_buttons(lost2, "继续")[0].pressed.emit()
-	t.check(lost2.step() == 2 and lost2.get("_wh") != null, "战败 + 带回来的背包有东西：第 2 步有仓库")
+	t.check(not lost2._has_store_step(), "战败 + 带回来的背包有东西：仍然没有第 2 步")
 	lost2.queue_free()
 	f.meta.board = null
 	Support.cleanup("s177r")

@@ -193,3 +193,14 @@
 顺带（游戏测试 17:28 提、美术已改图）：Cinzel 的「1」加长顶旗，英文「Continue」字缩一号 —— 换图即可。
 
 排序：这单紧跟 226 批二（同一屏），在 227 / 228 之前。
+
+### 补充二落地（v3.88）
+
+- 板边：`UiTheme.slab(c, edge_art)` / `GameScreen._slab_screen(min_size, edge_art)` 多一个板边参数，结算屏两页传 `slab_edge_plain`；内容区边距照旧按主题的石板。
+- 第一页按 v2 `layout.json`：账单 864 × 576 摆 (368, 210)，行高 48，图 2 倍分辨率按 922 × 634 `draw_texture_rect`；标题牌 (608, 92) 384 × 72，图 `EXPAND_IGNORE_SIZE` 画成 398 × 86，字 43；继续 252 × 77 摆 (674, 834)，字 34、字心 (110, 38)，英文 28、字心 (100, 38)，出血 7。
+- 三行：`LedgerView.rows_for` 的 `defeated` = 胜场 − 精英 − 首领，新增 `elite` / `boss`（`ledger.elite` / `ledger.boss`），删 `elite_boss` 与 `ledger.pair`。
+- 保险箱：只在撤离的第一页，框左上 (1280, 160)，皮带框 `player`（`WarehousePanel.board_frame_box`）+ 格缝，格子最大 60、按框最宽 218 缩；第二页不再画保险箱，分隔线删了（带出的东西已经在带回来的棋盘里）。
+- 第二页：带回来的棋盘格子 72（`WarehousePanel.board_cell`）；仓库格子按石板内容区扣掉包架、棋盘、按钮行后剩下的宽高 `WarehousePages.fit`（量内容区，不量滚动区，免得越撑越大）；小钮 180 × 67，字 26（英文 22）。
+- 战败：只有标题牌、账单、继续；`_has_store_step()` 只看 `is_extracted()`。`MetaState.absorb` 战败分支：包进包架 → 仓库 → 放不下才进待置入的棋盘。删 `result.lost_all / lost_safe / safe_line`。
+- 测试：新套件 `test_result_v2_224`（战败进仓库 / 溢出进棋盘；板边、摆位、2 倍图、保险箱框、第二页棋盘 72、仓库靠右、英文字号）；`test_result_steps_177`、`test_screens_157`、`test_author_092` 跟着改。截图 `/mnt/project-files/art/ui/ledger/shots_v2/`。
+

@@ -46,8 +46,10 @@ var _line: Label
 var _store_btn: Button
 var _tidy_btn: Button
 var _size_label: Label = null
-## 224：结算屏第二页 —— 「一键置入」「整理」换石键图按钮（150 × 56，字由代码写），按钮行间隔 14；在 [method setup] 之前设
+## 224：结算屏第二页 —— 「一键置入」「整理」换石键图按钮（补充二 180 × 67，字由代码写），按钮行间隔 14；在 [method setup] 之前设
 var art_buttons := false
+## 224 补充二：带回来的棋盘格子定死这个边长（结算屏 72，同背包窗）；0 = 跟仓库一样大。在 [method setup] 之前设
+var board_cell := 0.0
 var _buttons: HBoxContainer = null
 ## 230：悬浮窗「出售」怎么卖一件（`func(uid) -> int`）；基地屏换成自己的（写出售页那一行）。不给 = 直接卖、存档
 var sell_one: Callable = Callable()
@@ -123,7 +125,8 @@ func _build() -> void:
 
 func _small_button(text: String, handler: Callable) -> Button:
 	if art_buttons:
-		return UiTheme.make_art_text_button(text, handler, "result/btn_small_stone", Vector2(150, 56), Vector2(75, 28), 22)
+		var en := UiText.lang == "en"     # 补充二：英文「Put all away」26 号顶满，小一号
+		return UiTheme.make_art_text_button(text, handler, "result/btn_small_stone", Vector2(180, 67), Vector2(90, 33), 22 if en else 26, 7.0)
 	return UiTheme.make_button(text, handler, UiPalette.Tier.SECONDARY, 13)
 
 
@@ -154,20 +157,29 @@ func _rebuild_board_view() -> void:
 	_board_view.inventory = _meta.board
 	_board_view.show_adjacency = false
 	_board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_board_view.cell_px = _shelf.view.cell_px if _shelf != null and _shelf.view != null else InventoryView.CELL     # 139：和仓库一样大
+	if board_cell > 0.0:
+		_board_view.cell_px = board_cell
+	else:
+		_board_view.cell_px = _shelf.view.cell_px if _shelf != null and _shelf.view != null else InventoryView.CELL     # 139：和仓库一样大
 	_board_view.seams = ContainerScreenScript.board_layout().get("cell_seams", {})     # 224：格缝同战利品屏
 	_board_scroll = ScrollBox.wrap(_board_view, BOARD_MIN_ROWS)     # 带回来的棋盘也可能很高：竖向滚动
 	_board_scroll.set_meta("tight", true)
 	ScrollBox.set_rows(_board_scroll, _board_view, BOARD_MIN_ROWS)
-	var frame := PanelContainer.new()
-	frame.name = "BoardFrame"
+	var frame := framed(_board_scroll, "BoardFrame")
 	frame.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	frame.add_theme_stylebox_override("panel", board_frame_box())
-	frame.add_child(_board_scroll)
 	_board_box.add_child(frame)
 	_drag.register_view(_board_view)
 	_board_view.item_double_clicked.connect(quick_move)     # 视图每次新建，信号跟着重接
 	_board_view.actions_for = board_actions     # 230
+
+
+## 把 [param child] 套进带回来的背包那款皮带框（[method board_frame_box]）。224 补充二：结算第一页的保险箱也用它
+static func framed(child: Control, frame_name: String) -> PanelContainer:
+	var frame := PanelContainer.new()
+	frame.name = frame_name
+	frame.add_theme_stylebox_override("panel", board_frame_box())
+	frame.add_child(child)
+	return frame
 
 
 ## 224：带回来的背包的外框（素皮带框九宫格，四边 54、中段平铺；格子缩进 [constant BOARD_FRAME_PAD]）。没图 = 空框只留边距

@@ -1,7 +1,7 @@
-## 224（作者定）：结算第一页的账单 —— 十行 + 合计（作者 16:00 去掉了表头），三栏：项目 | 数量 | 经验（经验先占位写「—」）。
+## 224（作者定）：结算第一页的账单 —— 十一行 + 合计（作者 16:00 去掉了表头；补充二 击败的敌人 / 精英 / 首领分三行），三栏：项目 | 数量 | 经验（经验先占位写「—」）。
 ## 底是 `result/ledger_stele`（美术设计定稿甲：半透明的大理石光影与刻线，直接画在结算页的石板上，不另垫底）；字和数由这里写：
-## 标签思源宋体 18，数量 Cinzel Bold 20 右对齐（「27 件 · 保险箱 2 件」里的汉字落到思源宋体），最高稀有度写稀有度名、用稀有度色，
-## 合计行标签粗体 22、数 Cinzel 32 朱红。规格见 `art/ui/ledger/out/layout.json`。
+## 标签思源宋体 22，数量 Cinzel Bold 24 右对齐（「27 件 · 保险箱 2 件」里的汉字落到思源宋体），最高稀有度写稀有度名、用稀有度色，
+## 合计行标签粗体 26、数 Cinzel 38 朱红。补充二：整页放大 1.2 倍，图是 2 倍分辨率、按 [constant ART_SIZE] 缩着画。规格见 `art/ui/ledger/out/v2/layout.json`。
 ##
 ## 逐行显出：进屏 [constant FIRST_DELAY] 秒后第一行，之后每 [constant ROW_GAP] 秒一行，数字 [constant ROLL_SEC] 秒里从零滚到实值；
 ## 点一下或按任意键剩下的全显、数字直接到位。全显那一刻发 [signal revealed]（结算屏这时才让「继续」可点）。重看结算同一套，不记「看过」
@@ -11,13 +11,15 @@ extends Control
 signal revealed
 
 ## 账面（字和线落的那块）；图比它大，左上差 [constant ART_ORIGIN]
-const LEDGER_SIZE := Vector2(720, 440)
-const ROW_H := 40.0
+const LEDGER_SIZE := Vector2(864, 576)
+const ROW_H := 48.0
 const ART := "result/ledger_stele"
-const ART_ORIGIN := Vector2(-24, -24)
-const LABEL_X := 18.0
-const NUMBER_RIGHT := 584.0
-const XP_RIGHT := 704.0
+const ART_ORIGIN := Vector2(-29, -29)
+## 图按这个（1x）大小画（文件是 2 倍分辨率）
+const ART_SIZE := Vector2(922, 634)
+const LABEL_X := 22.0
+const NUMBER_RIGHT := 701.0
+const XP_RIGHT := 845.0
 const FIRST_DELAY := 0.4
 const ROW_GAP := 0.35
 const ROLL_SEC := 0.3
@@ -45,7 +47,7 @@ func _init() -> void:
 	_num_font = UiPalette.numeral_font()
 
 
-## 按一局的账摆十一行。[param lit] = 这一局图鉴新点亮几件（`GameFlow.last_absorbed`）
+## 按一局的账摆十二行（十一行 + 合计）。[param lit] = 这一局图鉴新点亮几件（`GameFlow.last_absorbed`）
 func setup(r: RunResult, lit: int) -> void:
 	_rows = rows_for(r, lit)
 	_t = 0.0
@@ -54,7 +56,7 @@ func setup(r: RunResult, lit: int) -> void:
 	queue_redraw()
 
 
-## 账单的十一行（战败同一张：带出的东西只有保险箱那半句，最高稀有度按保险箱算，钱与总价值是零）
+## 账单的十一行 + 合计（战败同一张：带出的东西只有保险箱那半句，最高稀有度按保险箱算，钱与总价值是零）
 static func rows_for(r: RunResult, lit: int) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if r == null:
@@ -62,8 +64,9 @@ static func rows_for(r: RunResult, lit: int) -> Array[Dictionary]:
 	var extracted := r.is_extracted()
 	out.append(_num_row("visited", [r.visited]))
 	out.append(_num_row("steps", [r.steps]))
-	out.append(_num_row("defeated", [r.battles_won]))
-	out.append(_num_row("elite_boss", [r.elite_won, r.boss_won], "ledger.pair"))
+	out.append(_num_row("defeated", [maxi(0, r.battles_won - r.elite_won - r.boss_won)]))     # 补充二：普通敌人，精英、首领各一行
+	out.append(_num_row("elite", [r.elite_won]))
+	out.append(_num_row("boss", [r.boss_won]))
 	out.append(_num_row("lost", [r.battles_lost]))
 	out.append(_num_row("search_craft", [r.searches, r.crafts], "ledger.dot"))
 	out.append(_num_row("lit", [lit]))
@@ -171,7 +174,7 @@ func _input(event: InputEvent) -> void:
 func _draw() -> void:
 	var tex := UiTheme.art_cached(ART)
 	if tex != null:
-		draw_texture(tex, ART_ORIGIN)
+		draw_texture_rect(tex, Rect2(ART_ORIGIN, ART_SIZE), false)
 	for i in _rows.size():
 		if not _shown(i):
 			continue
@@ -180,15 +183,15 @@ func _draw() -> void:
 		var total := bool(row.get("total", false))
 		var label := String(row["label"])
 		if total:
-			draw_string(_bold_font, Vector2(LABEL_X, y + 29), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, INK_LABEL)
+			draw_string(_bold_font, Vector2(LABEL_X, y + 35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, INK_LABEL)
 		else:
-			draw_string(_body_font, Vector2(LABEL_X, y + 27), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, INK_LABEL)
+			draw_string(_body_font, Vector2(LABEL_X, y + 32), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, INK_LABEL)
 		var text := text_at(row, _progress(i))
 		var font := _bold_font if bool(row.get("rarity", false)) or (row.get("values", []) as Array).is_empty() else _num_font
-		var px := 32 if total else (18 if font == _bold_font else 20)
+		var px := 38 if total else (22 if font == _bold_font else 24)
 		var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-		draw_string(font, Vector2(NUMBER_RIGHT - w, y + (33 if total else 28)), text, HORIZONTAL_ALIGNMENT_LEFT, -1, px, row["color"])
+		draw_string(font, Vector2(NUMBER_RIGHT - w, y + (40 if total else (32 if font == _bold_font else 34))), text, HORIZONTAL_ALIGNMENT_LEFT, -1, px, row["color"])
 		var xp := UiText.t("ledger.xp_total") if total else UiText.t("ledger.none")
-		var xp_px := 15 if total else 16
+		var xp_px := 18 if total else 19
 		var xw := _body_font.get_string_size(xp, HORIZONTAL_ALIGNMENT_LEFT, -1, xp_px).x
-		draw_string(_body_font, Vector2(XP_RIGHT - xw, y + (29 if total else 27)), xp, HORIZONTAL_ALIGNMENT_LEFT, -1, xp_px, INK_DIM)
+		draw_string(_body_font, Vector2(XP_RIGHT - xw, y + (33 if total else 32)), xp, HORIZONTAL_ALIGNMENT_LEFT, -1, xp_px, INK_DIM)
