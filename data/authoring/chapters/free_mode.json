@@ -217,8 +217,7 @@
             "rest": 0.5,
             "shop": 0.5
           },
-          "step_limit": 36,
-          "carry_budget": 600
+          "step_limit": 36
         },
         {
           "id": "medium",
@@ -264,8 +263,7 @@
             "rest": 0.333333333333333,
             "shop": 0.666666666666667
           },
-          "step_limit": 60,
-          "carry_budget": 900
+          "step_limit": 60
         },
         {
           "id": "large",
@@ -318,8 +316,7 @@
             "shop": 0.666666666666667
           },
           "placeholder": true,
-          "step_limit": 90,
-          "carry_budget": 1200
+          "step_limit": 90
         }
       ],
       "routes": [
@@ -454,6 +451,5 @@
   "departure_event": "briefing_legion",
   "step_limit": 36,
   "safes": 1,
-  "chest_skin": "imperial_camp",
-  "carry_budget": 600
+  "chest_skin": "imperial_camp"
 }

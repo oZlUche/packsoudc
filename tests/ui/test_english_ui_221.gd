@@ -419,3 +419,20 @@ static func run_game_title(t: TestCase) -> void:
 	t.eq(String(boot.WORDS["en"]["title"]), en, "boot screen uses the same name")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	t.eq(boot.read_lang(path), "zh", "no settings file: zh")
+
+
+static func run_baked_text_art_en(t: TestCase) -> void:
+	t.begin("221 · English art for images with baked-in words: camp sign, forge sign / handle / backdrop, menu wordmark — same size as the Chinese art, picked by language")
+	var old := UiText.lang
+	var names := ["rest/sign", "forge/sign_back", "forge/handle_ready", "forge/handle_idle", "forge/handle_off", "forge/bg_lit", "forge/bg_cold", "menu/title"]
+	UiText.lang = "en"
+	for n in names:
+		t.eq(UiTheme.lang_art(n), n + "_en", "%s → English" % n)
+		var zh := UiTheme.art(n)
+		var en := UiTheme.art(n + "_en")
+		t.check(zh != null and en != null and zh.get_size() == en.get_size(), "%s: same size as the Chinese one" % n)
+	t.eq(UiTheme.lang_art("rest/fire_lit"), "rest/fire_lit", "no English file: keep the original")
+	UiText.lang = "zh"
+	t.eq(UiTheme.lang_art("rest/sign"), "rest/sign", "Chinese UI: original art")
+	t.check(ResourceLoader.exists(load("res://ui/boot.gd").LOGO_EN), "boot wordmark has an English file")
+	UiText.lang = old
