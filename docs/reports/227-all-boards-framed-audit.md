@@ -66,3 +66,8 @@
 ## 六、派工
 
 执行：排在 226 批二之后（和 226 的「签」一起动屏最省）。顺序：`BoardFrame` + 格缝默认 → 十块补框（图没到前 `plain` 用 `player` 代） → 搜刮屏 / 背包窗 / `InventoryPanel` 改走 `BoardFrame` → 守门测试。青铜三屏那四块由 UI替换美术的方案落，落时也走 `BoardFrame`（深色变体）。
+
+## 补充一：frame_plain 已出图（美术设计 2026-10-21 17:45）
+
+`/mnt/project-files/art/ui/board/out/frame_plain.png` / `frame_plain_dark.png`，212×212，**margin 46、`cells_offset` 16**（§三 估的 ≈40 / ≈16 以此为准）；`layout.json` 的 `pieces` 已加 `plain` / `plain_dark` 两条（NinePatchRect 四边同 margin，`axis_stretch = TILE`，中段 120 px = 两格；格缝仍由代码按 `cell_seams` 画）。浅色 tone light 白灰石边，深色给青铜屏。已直接发执行，`BoardFrame` 落地时随 `layout.json` 一起拷进 `assets/ui/board/`。
+
