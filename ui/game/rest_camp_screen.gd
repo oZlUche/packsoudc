@@ -419,6 +419,7 @@ func toggle_bag() -> void:
 	var win := BagWindow.new()
 	_bag.add_child(win)
 	_bag_panel = win.setup_bag(flow.run, font, toggle_bag)
+	win.maybe_coach(flow, _bag)     # 218 补充一
 
 
 func bag_open() -> bool:

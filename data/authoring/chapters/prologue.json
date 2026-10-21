@@ -27,6 +27,10 @@
     "{item:poison_vial}拖到{item:knife}上面，立刻合成{item:poisoned_knife}。",
     "打输了扣体力，体力归零这一局就结束。"
   ],
-  "coach": "prologue_map",
-  "coach_battle": "prologue_battle"
+  "coaches": {
+    "map": "prologue_map",
+    "battle": "prologue_battle",
+    "bag": "prologue_bag",
+    "prebattle": "prologue_prebattle"
+  }
 }

@@ -155,7 +155,7 @@ func _on_screen_changed(screen: int, payload: Dictionary) -> void:
 ## 128：地上画不画（最上面那一屏是一局里某个点上的界面才画），并保持在屏栈之上
 func _sync_ground() -> void:
 	var top := _overlay if _overlay != null else _base
-	ground.visible = flow.run != null and not flow.run.is_over() and top != null and GROUND_SCREENS.has(top.screen)     # 218：撤出来之后的收尾事件屏不画
+	ground.visible = flow.run != null and top != null and GROUND_SCREENS.has(top.screen)
 	move_child(ground, -1)
 	ground.z_index = (top.z_index if top != null else 0) + GROUND_Z
 	if _overlay != null and _base != null:

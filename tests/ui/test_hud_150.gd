@@ -1,6 +1,7 @@
 ## 150（作者定，四项待定按推荐）：地图屏的读数拆成组件（[HudWidget]），按布局（[HudLayout]）摆在读数层（[HudHost]）上；
 ## 没有布局文件 = 默认布局（166：顶端栏三个槽、左下路线与图例、右下腰带）；调试台里「摆读数」：拖、右键切显隐、滚轮切档、保存 / 重置
 extends RefCounted
+const Support := preload("res://tests/run/flow_support.gd")
 
 const CS := preload("res://tests/run/test_character_skills.gd")
 const GAME := "res://ui/game/game.tscn"
@@ -264,7 +265,7 @@ static func frame_map_screen(t: TestCase, root: Window) -> void:
 	for gi in setup._chapters.size():
 		if setup._chapters[gi].id == &"free_mode":
 			setup.choose_chapter(gi)
-	t.check(setup.depart(), "出发")
+	t.check(Support.depart(setup), "出发")
 	var map = game.base()
 	var run: RunState = flow.run
 	map.pick_spawn(run.map.entry_ids[0])

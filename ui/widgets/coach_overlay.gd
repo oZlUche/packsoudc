@@ -3,7 +3,7 @@
 ## **点任意处下一步**（键盘任意键也算，Esc 也是），最后一步点了收掉、发 [signal finished]。阴影层吞掉所有点击。
 ##
 ## 步骤是数据（`data/authoring/coach/<id>.json`：`{"id", "steps": [{"target": 目标 id, "text"}]}`）；
-## 目标的位置每一步现问（[member target_rect]：地图屏给 [method HudHost.rect_of]，战斗屏给 [method BattleView.control_rect]）—— 部件挪了位置，教程跟着走
+## 目标的位置每一步现问（[member target_rect]：地图屏给 [method HudHost.rect_of]，战斗屏给 [method BattleView.control_rect]，背包窗、战前屏各有 `control_rect`）—— 部件挪了位置，教程跟着走
 class_name CoachOverlay
 extends Control
 
@@ -26,6 +26,28 @@ var index: int = -1
 var _paper: PanelContainer
 var _line: Label
 var _arrow: Texture2D = null
+
+
+## 218 补充一：[param id] 这份教程该不该自己放（写了、这个存档还没看过）
+static func due(flow: GameFlow, id: StringName) -> bool:
+	return id != &"" and (flow == null or flow.meta == null or not flow.meta.coach_seen.has(String(id)))
+
+
+## 218 补充一：在 [param host] 上铺满放 [param id] 这份教程，走完记进 [member MetaState.coach_seen]、存局外。没有步骤返回 null
+static func run_on(host: Control, id: StringName, flow: GameFlow, p_font: Font, p_target_rect: Callable) -> CoachOverlay:
+	var p_steps := load_steps(id)
+	if p_steps.is_empty() or host == null:
+		return null
+	var o := CoachOverlay.new()
+	o.font = p_font
+	o.target_rect = p_target_rect
+	host.add_child(o)
+	o.finished.connect(func():
+		if flow != null and flow.meta != null and not flow.meta.coach_seen.has(String(id)):
+			flow.meta.coach_seen.append(String(id))
+			flow.save_meta())
+	o.start(p_steps)
+	return o
 
 
 ## 读一份步骤；文件不在 / 读不成返回空

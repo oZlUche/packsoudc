@@ -20,6 +20,10 @@ var _inv: Control
 var _enemy_plate_node: Nameplate = null
 var _player_plate_node: Nameplate = null
 var _seam: BalanceSeam = null
+## 218 补充一（217 批三）：战前屏的教程（章节 `coaches` 的 `prebattle`），名牌与天平刷出来之后放
+var _coach: CoachOverlay = null
+## 218 补充一：战前屏教程能指的地方（[method control_rect]）
+const COACH_TARGETS: Array[StringName] = [&"enemy_board", &"scale", &"my_board", &"fight_button"]
 
 
 func open(payload: Dictionary) -> void:
@@ -101,6 +105,7 @@ func open(payload: Dictionary) -> void:
 		belt.changed.connect(_refresh_belt)
 	_refresh_belt()
 	_refresh()
+	_maybe_coach.call_deferred()
 
 
 #region 公开动作
@@ -219,6 +224,53 @@ static func strength_of(spec: CombatantSpec) -> float:
 ## 157：天平（测试看）
 func seam() -> BalanceSeam:
 	return _seam
+
+
+#region 218 补充一：战前屏教程
+func coach_id() -> StringName:
+	return flow.run.chapter.coach_for(&"prebattle") if flow.run != null and flow.run.chapter != null else &""
+
+
+func coach() -> CoachOverlay:
+	return _coach
+
+
+## 第一次进战前屏（这个存档没看过）放一次：等一帧，名牌、天平、两块棋盘都摆好了再挖洞
+func _maybe_coach() -> void:
+	if not CoachOverlay.due(flow, coach_id()) or not is_inside_tree():
+		return
+	get_tree().process_frame.connect(show_coach, CONNECT_ONE_SHOT)     # 屏关了连接跟着断
+
+
+func show_coach() -> bool:
+	if _coach != null or not is_inside_tree():
+		return false
+	_coach = CoachOverlay.run_on(self, coach_id(), flow, font, control_rect)
+	if _coach == null:
+		return false
+	_coach.finished.connect(func(): _coach = null)
+	return true
+
+
+## 教程目标的全局包围盒（[constant COACH_TARGETS]）：对手 = 名牌 + 棋盘，自己 = 名牌 + 棋盘；没有 / 不在屏上 = 空矩形
+func control_rect(id: StringName) -> Rect2:
+	match id:
+		&"enemy_board": return _union([_enemy_plate_node, _enemy_view])
+		&"scale": return _union([_seam])
+		&"my_board": return _union([_player_plate_node, _inv.get("board_view") if _inv != null else null])
+		&"fight_button": return _union([_start_btn])
+	return Rect2()
+
+
+static func _union(parts: Array) -> Rect2:
+	var out := Rect2()
+	for c in parts:
+		if c == null or not is_instance_valid(c) or not (c as Control).is_visible_in_tree():
+			continue
+		var r := (c as Control).get_global_rect()
+		out = r if out.size == Vector2.ZERO else out.merge(r)
+	return out
+#endregion
 
 
 func enemy_line() -> String:

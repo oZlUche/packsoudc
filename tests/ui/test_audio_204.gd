@@ -1,6 +1,7 @@
 ## 204（作者 2026-10-19「先加一些最常规最不容易出错的按钮点击、窗口关闭/打开音效」，待定按推荐）：
 ## 自动加载 `Audio` + cue 表 + 两个音量；按钮音一处钩子（meta `sfx`），叠层与浮窗开 / 关
 extends RefCounted
+const Support := preload("res://tests/run/flow_support.gd")
 
 const GAME := "res://ui/game/game.tscn"
 const SAVE := "user://test_audio204_run.json"
@@ -151,6 +152,7 @@ static func frame_overlays(t: TestCase, root: Window) -> void:
 	for gi in setup._chapters.size():
 		if setup._chapters[gi].id == &"free_mode":
 			setup.choose_chapter(gi)
+	flow.meta.briefing_seen.append(&"briefing_legion")     # 218 补充一：交代是叠层（开 / 关各一声），这里只验底屏换底屏
 	_fresh(audio)
 	t.check(setup.depart(), "出发")
 	game.base().pick_spawn(flow.run.map.entry_ids[0])

@@ -1,5 +1,6 @@
 ## 134（作者定）：东西落到地上有个落地动画（只是样子）；地上的东西双击直接进包并打开背包，放不下就只开背包
 extends RefCounted
+const Support := preload("res://tests/run/flow_support.gd")
 
 const G := preload("res://tests/inventory/test_ground.gd")
 const GAME := "res://ui/game/game.tscn"
@@ -356,7 +357,7 @@ static func frame_double_click_opens_bag(t: TestCase, root: Window) -> void:
 	for gi in setup._chapters.size():
 		if setup._chapters[gi].id == &"free_mode":
 			setup.choose_chapter(gi)
-	t.check(setup.depart(), "出发")
+	t.check(Support.depart(setup), "出发")
 	var map = game.base()
 	var run: RunState = flow.run
 	map.pick_spawn(run.map.entry_ids[0])

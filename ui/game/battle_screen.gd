@@ -7,7 +7,7 @@ var _next: Button
 ## 回放看完（或跳到底）了没有（作者 2026-10-17：标题不再写胜负，按状态判断）
 var _seen_end := false
 var _won: bool = false
-## 166 补充二：战斗教程（章节的 `coach_battle`），开着时回放停着
+## 166 补充二：战斗教程（章节 `coaches` 的 `battle`），开着时回放停着
 var _coach: CoachOverlay = null
 
 
@@ -74,7 +74,7 @@ func verdict_shown() -> bool:
 #region 166 补充二：战斗教程
 ## 这一章的战斗教程 id（没有 = 空）
 func coach_id() -> StringName:
-	return flow.run.chapter.coach_battle if flow.run != null and flow.run.chapter != null else &""
+	return flow.run.chapter.coach_for(&"battle") if flow.run != null and flow.run.chapter != null else &""
 
 
 ## 这一场该不该放：章节写了、这个存档位没看过

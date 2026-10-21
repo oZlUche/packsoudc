@@ -304,7 +304,10 @@ node_rules = &"standard"
 economy_rules = &"standard"
 order = 3
 requires_unlock = &"prologue3_done"
-coach = &"free_mode_map"
+coaches = {
+"map": "free_mode_map"
+}
+departure_event = &"briefing_legion"
 step_limit = 36
 safes = 1
 chest_skin = &"imperial_camp"

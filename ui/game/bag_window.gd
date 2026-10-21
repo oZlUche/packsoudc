@@ -25,17 +25,23 @@ const DEFAULTS := {
 	"minimize": {"scale": 0.72, "topleft_rel_window": [594, 13], "tooltip": "收起（B）"},
 }
 const DESIGN := Vector2(1600, 1000)
+## 218 补充一（217 批三）：背包窗教程能指的地方（[method control_rect]）
+const COACH_TARGETS: Array[StringName] = [&"board", &"strip_stamina", &"strip_dps", &"strip_load"]
 
 ## 窗里那块背包面板
 var panel: InventoryPanelScript = null
 var frame: NinePatchRect = null
+## 218 补充一：开着的背包窗教程（没开 null）
+var coach: CoachOverlay = null
 var _canvas: Control
+var _font: Font = null
 var _spec: Dictionary = {}
 
 
 ## 搭好整块窗并返回里面的面板。[param drag] 同 [method InventoryPanelScript.setup]；[param hint_sink] 是面板回话的去处
 func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = null, hint_sink: Callable = Callable()) -> InventoryPanelScript:
 	key = "bag"
+	_font = font
 	_spec = spec()
 	UiTheme.panel(self, 0, UiTheme.PANEL_WINDOW)     # 内边距 0：子节点按窗左上的设计像素摆
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -84,6 +90,41 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	resized.connect(_clamp)
 	_layout()
 	return panel
+
+
+## 218 补充一：这一章写了背包窗教程（章节 `coaches` 的 `bag`）、这个存档还没看过就放 —— 窗摆稳了再放（等一帧），铺满 [param host]（压暗那一层）
+func maybe_coach(flow: GameFlow, host: Control) -> void:
+	if not CoachOverlay.due(flow, coach_id(flow)) or not is_inside_tree():
+		return
+	get_tree().process_frame.connect(show_coach.bind(flow, host), CONNECT_ONE_SHOT)     # 窗关了连接跟着断
+
+
+## 放背包窗教程（调试 / 测试也直接叫）。没有步骤、已经开着返回 false
+func show_coach(flow: GameFlow, host: Control) -> bool:
+	if coach != null or not is_inside_tree() or not is_instance_valid(host):
+		return false
+	coach = CoachOverlay.run_on(host, coach_id(flow), flow, _font, control_rect)
+	if coach == null:
+		return false
+	coach.finished.connect(func(): coach = null)
+	return true
+
+
+static func coach_id(flow: GameFlow) -> StringName:
+	return flow.run.chapter.coach_for(&"bag") if flow != null and flow.run != null and flow.run.chapter != null else &""
+
+
+## 218 补充一：教程目标的全局包围盒（[constant COACH_TARGETS]）；没有 / 不在屏上 = 空矩形
+func control_rect(id: StringName) -> Rect2:
+	if panel == null or not is_inside_tree():
+		return Rect2()
+	if id == &"board":
+		return panel.board_view.get_global_rect() if panel.board_view.is_visible_in_tree() else Rect2()
+	var kind := StringName(String(id).trim_prefix("strip_"))
+	var strip: StatsStrip = panel.strip
+	if not COACH_TARGETS.has(id) or strip == null or not strip.is_visible_in_tree() or not strip.shown().has(kind):
+		return Rect2()
+	return strip.get_global_transform() * strip.tag_rect(kind)
 
 
 ## 精修稿的 `bag_window`（缺的键按 [constant DEFAULTS]）

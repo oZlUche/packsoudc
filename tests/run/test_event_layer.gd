@@ -450,7 +450,7 @@ static func frame_director(t: TestCase, root: Window) -> void:
 		setup.carry_in((inst as ItemInstance).uid)
 	setup.choose_scale(&"")     # 180：种子是按章节默认配置找的（开局屏默认第一档规模）
 	setup.set_run_seed(int(found["seed"]))
-	t.check(setup.depart(), "出发")
+	t.check(Support.depart(setup), "出发")
 	var map = game.base()
 	map.pick_spawn(int(found["entry"]))
 	t.check(map.step(int(found["next"])), "走上搜索点")

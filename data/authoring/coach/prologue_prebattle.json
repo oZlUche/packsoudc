@@ -1,0 +1,8 @@
+{
+  "id": "prologue_prebattle",
+  "steps": [
+    {"target": "enemy_board", "text": "左边是对手的棋盘，上面的铭牌写着它是谁。"},
+    {"target": "scale", "text": "中间的天平是粗估的强弱，不是结果。"},
+    {"target": "my_board", "text": "右边是你的棋盘。整理好了，按开战。"}
+  ]
+}
