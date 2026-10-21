@@ -21,6 +21,9 @@ script = ExtResource("4_g2ila")
 script = ExtResource("6_dh4py")
 id = &"merit"
 display_name = "军功"
+display_names = {
+"en": "Spoils of War"
+}
 description = "战斗胜利所得金币增加四分之一。"
 passive = Array[ExtResource("3_oxqwc")]([SubResource("Resource_kvgj3")])
 
@@ -53,6 +56,9 @@ effects = Array[ExtResource("10_6q5m6")]([SubResource("Resource_tkx2e")])
 script = ExtResource("6_dh4py")
 id = &"drill"
 display_name = "操练"
+display_names = {
+"en": "Drill"
+}
 description = "耐力低于两成时，立即恢复 {change_resource_amount} 点耐力（每场一次）。"
 rules = Array[ExtResource("5_2w6jy")]([SubResource("Resource_11484")])
 
@@ -60,6 +66,9 @@ rules = Array[ExtResource("5_2w6jy")]([SubResource("Resource_11484")])
 script = ExtResource("13_a6kav")
 id = &"assault"
 display_name = "突击"
+display_names = {
+"en": "Assault"
+}
 description = "下次战斗开始时，先扣除敌方三成生命。"
 uses = 3
 cooldown_steps = 3

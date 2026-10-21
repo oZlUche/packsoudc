@@ -96,12 +96,12 @@ func skill_entries() -> Array[Dictionary]:
 		for s in skills:
 			var sk := s as RunSkill
 			if sk != null and sk.is_active() == active:
-				out.append({"kind": UiText.t("log.skill_active") if active else UiText.t("log.skill_passive_kind"), "name": sk.display_name, "text": _skill_text(sk)})
+				out.append({"kind": UiText.t("log.skill_active") if active else UiText.t("log.skill_passive_kind"), "name": Names.of(sk), "text": _skill_text(sk)})
 	return out
 
 
 static func _skill_line(sk: RunSkill) -> String:
-	return UiText.t("log.skill_name_text") % [sk.display_name, _skill_text(sk)]
+	return UiText.t("log.skill_name_text") % [Names.of(sk), _skill_text(sk)]
 
 
 ## 技能的说明（主动的次数 / 冷却附在末尾）

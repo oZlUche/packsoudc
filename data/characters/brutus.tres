@@ -28,6 +28,9 @@ script = ExtResource("5_063lg")
 script = ExtResource("7_ipor7")
 id = &"wild_born"
 display_name = "野地里长大"
+display_names = {
+"en": "Raised in the Wild"
+}
 description = "休息时额外恢复 {rest_bonus_amount} 点体力；侵蚀扣除体力时减少 {erosion_resist_amount} 点。"
 passive = Array[ExtResource("3_nd1kg")]([SubResource("Resource_x8pem"), SubResource("Resource_056bq")])
 
@@ -72,6 +75,9 @@ effects = Array[ExtResource("11_utyi1")]([SubResource("Resource_66poc")])
 script = ExtResource("7_ipor7")
 id = &"hardy"
 display_name = "坚韧"
+display_names = {
+"en": "Tough"
+}
 description = "战斗中生命低于三成时，立即获得一层护甲（每场一次）。"
 rules = Array[ExtResource("6_kraql")]([SubResource("Resource_3htg3")])
 
@@ -79,6 +85,9 @@ rules = Array[ExtResource("6_kraql")]([SubResource("Resource_3htg3")])
 script = ExtResource("17_mv4vl")
 id = &"second_wind"
 display_name = "咬牙"
+display_names = {
+"en": "Second Wind"
+}
 description = "在地图上恢复 {amount} 点体力。"
 uses = 2
 cooldown_steps = 6
