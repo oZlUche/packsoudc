@@ -704,7 +704,7 @@ func _draw_art_bar(key: String, current: int, maximum: int, y: float) -> void:
 	var tint := Color.WHITE if ART_FILL.has(key) else UiPalette.resource_color(key)
 	if ratio > 0.0:
 		_hslice(fill, Rect2(trough.position + Vector2(2, 2), Vector2(inner * ratio, ART_BAR_H - 4.0)), UiPalette.resource_color(key), tint)
-	var text := "%s %d / %d" % [Glossary.resource_name(StringName(key)), current, maximum]
+	var text := "%d / %d" % [current, maximum]     # 作者 19:09：火漆已经说明是哪条，不再写「生命 / 耐力」
 	if key == "hp":
 		var hp_cap := maxi(1, maximum)
 		var armor := armor_value()

@@ -135,3 +135,11 @@
 
 **按甲**：数据改三个 json 的 `requires`；另外 `TechTreeView._place` 现在每列两侧各垫一个 `H_GAP`（列宽 = n × 160 + (n − 1) × 28 + 56），链化后仍算出 836，比羊皮内框 792 宽 —— 改成**只在列与列之间垫一个 `H_GAP`**（外侧由 `MARGIN` 管），树宽 = 724；`test_tech` 加一条「树宽 ≤ 792」的守门（`TechService.layout` 算出的总宽），以后加节点时自动拦住扇形。§三 那张备选表要加节点时同样守这条：每列同深度最多并排两个，宽的扇形改成链。
 
+## 九、落地（执行，2026-10-21，v3.82）
+
+- 布局：`NO_SHELF_TABS` 加 `tech`，仓库双击的科技分支删；`tech_panel.gd` 左树右板 —— 左 `TreeArea`（羊皮 `tech/tech_tree_hide` 原大 936 × 700、放不下等比缩到九成，树在双线框里居中，比框大才滚）、右说明板 320 宽一整条 `PANEL_PARCHMENT`（1600 宽的画面里中列只有约 1290，340 放不下，收到 320）。
+- 上交区整个删（`_zone / _wanted / submit(uid) / zone() / drag_layer()`、`setup` 的 `drag` 参数）；文案删 `tech.tree_intro / effect / cost / zone_intro / pick_first / locked / not_wanted / handed_in / none_selected`。
+- 226 并进来的三条：名称 + 等级进铜名牌（没选中时整块不画）；效果 / 费用两个段头删；钱与材料改账目行（名称｜数（Cinzel）｜拥有 n｜【交 k】，行下一道淡墨线，悬浮窗写已交 / 需要与「上交即消耗」）。回话行 `_line` 暂时写在纸上，告示层落地时换。
+- 树：前置三处改链（`docs/techs.xlsx` 与 JSON 同改、`tools/techs_xlsx_to_json.gd` 核过）；`_place` 只在列与列之间垫 `H_GAP`，`MARGIN` 12 → 6；每列顶上一枚段头签 `HeaderTag`（`ui/widgets/header_tag.gd`，226 的甲 小石牌 `notice/header_stone`，以后 226 批二直接用）；连线墨 / 朱红、宽 3、圆头（读底纸 json 的 `line`）。树宽 736、高 416。
+- 守门：`test_tech_tree` 树宽 ≤ 792、树高 ≤ 556、三枚列头签。帮助页「科技」改成材料行一键上交。
+

@@ -198,13 +198,24 @@ static func run_first_tree(t: TestCase) -> void:
 	var lay := TechService.layout(defs)
 	t.eq(lay[&"warehouse"], Vector2i(0, 0), "仓库扩建：第 0 列根")
 	t.eq(lay[&"pack"], Vector2i(0, 2), "行囊：第 0 列深度 2")
-	t.eq(lay[&"scouting"], Vector2i(2, 2), "侦察：第 2 列深度 2")
-	t.eq(TechService.find(defs, &"scouting").requires.size(), 2, "侦察要两个前置")
+	t.eq(lay[&"scouting"], Vector2i(2, 3), "229 补充一：侦察 ← 讨价 ← 幸运 ← 细搜，第 2 列深度 3")
+	t.eq(TechService.find(defs, &"scouting").requires, [&"bargain"] as Array[StringName], "侦察只要讨价")
+	t.eq(TechService.find(defs, &"undaunted").requires, [&"sinew"] as Array[StringName], "不屈 ← 筋骨")
+	t.eq(lay[&"undaunted"], Vector2i(1, 2), "不屈：第 1 列深度 2")
 	t.check(TechService.cycle_members(defs).is_empty(), "没有环")
+	# 229 补充一 守门：树要装进羊皮的双线框（792 宽）；以后加节点扇形过宽就红 —— 每列同深度最多并排两个，宽的扇形改成链
+	var view := TechTreeView.new()
+	view.setup(MetaState.new(), defs, UiPalette.cjk_font())
+	t.check(view.custom_minimum_size.x <= 792.0, "树宽 %.0f ≤ 792（羊皮内框）" % view.custom_minimum_size.x)
+	t.check(view.custom_minimum_size.y <= 556.0, "树高 %.0f ≤ 556" % view.custom_minimum_size.y)
+	var tags := view.find_children("*", "HeaderTag", true, false)
+	t.eq(tags.size(), 3, "三列各一枚列头签")
+	t.eq(tags.map(func(n): return (n as HeaderTag).text), ["后勤", "体魄", "探索"], "列头签：后勤 / 体魄 / 探索")
+	view.free()
 
 
 static func frame_tree_panel(t: TestCase, root: Window) -> void:
-	t.begin("118 · 科技页：左树（深度 0 在下、锁住 / 可点亮 / 已点亮）右板（名称 / 效果 / 费用）；上交只记给选中的节点；锁住的按钮灰、写要先点亮谁")
+	t.begin("118 / 229 · 科技页：左树（深度 0 在下、锁住 / 可点亮 / 已点亮）右板（名牌 / 效果 / 账目行）；上交只记给选中的节点；锁住的按钮灰、写要先点亮谁")
 	ItemInstance.reset_uid_counter()
 	var db := _db()
 	var m := _meta()
@@ -250,25 +261,23 @@ static func frame_tree_panel(t: TestCase, root: Window) -> void:
 	t.eq(tree.state_of(&"safe_box"), TechTreeView.State.AVAILABLE, "保险箱扩格可点亮了")
 	t.check(String(panel.panel_texts()["effect"]).contains("现在："), "效果区有「现在」")
 
-	# 上交只给选中的：选不屈（要建材、前置耐久没点）→ 交不进；点了耐久再交 → 记给不屈
+	# 上交只给选中的：选不屈（要建材、前置筋骨没点）→ 没有【交】；点了耐久、筋骨再交 → 记给不屈
 	t.check(panel.select(&"undaunted"), "选不屈")
 	t.eq(panel.upgrade_button(&"undaunted").text, "点亮", "单级的按钮叫「点亮」")
-	var plank := _add(m, db, &"hardwood_plank")
-	t.check(not panel.submit(plank.uid), "不屈锁着：交不进")
-	t.check(panel.line_text().contains("锁着"), "提示：%s" % panel.line_text())
-	TechService.upgrade(m, f.tech_of(&"endurance"))
+	_add(m, db, &"hardwood_plank")
+	_add(m, db, &"rivet_box")
 	m.changed.emit()
-	t.check(panel.submit(plank.uid), "耐久点了：硬木板交给不屈")
+	t.is_null(panel.submit_button(&"hardwood_plank"), "不屈锁着：没有【交】")
+	t.eq(panel.submit_many(&"hardwood_plank", 1), 0, "锁着：交不进")
+	TechService.upgrade(m, f.tech_of(&"endurance"))
+	TechService.upgrade(m, f.tech_of(&"sinew"))
+	m.changed.emit()
+	t.eq(panel.submit_many(&"hardwood_plank", 1), 1, "前置点了：硬木板交给不屈")
 	t.eq(TechService.deposited(m, &"undaunted", &"hardwood_plank"), 1, "记在不屈名下")
 	t.eq(TechService.deposited(m, &"luck", &"hardwood_plank"), 0, "没记给别的科技")
-	var rivet := _add(m, db, &"rivet_box")
-	t.check(not panel.submit(rivet.uid), "不屈不要铆钉盒")
-	t.check(panel.line_text().contains("不是它下一级要的"), "提示：%s" % panel.line_text())
-	var b := _add(m, db, &"steel_ingot")
-	m.warehouse.remove(b.uid)
-	t.check(panel.zone().place(b, Vector2i.ZERO, 0), "钢锭拖进上交区")
-	t.eq(TechService.deposited(m, &"undaunted", &"steel_ingot"), 1, "记给选中的不屈")
-	t.check(not ("_warehouse_box" in panel), "164：科技页不再有收起式仓库（用基地右半边的）")
+	t.is_null(panel.submit_button(&"rivet_box"), "不屈不要铆钉盒：没有那一行")
+	t.check(not ("_warehouse_box" in panel), "164：科技页不再有收起式仓库")
+	t.check(panel.nameplate() != null and panel.nameplate().visible, "226：名称 + 等级进名牌")
 	panel.queue_free()
 	MetaSave.remove(META)
 	GameSettings.remove(SETTINGS)
@@ -292,12 +301,12 @@ static func frame_owned_count_quick_submit(t: TestCase, root: Window) -> void:
 	_add(m, db, &"hardwood_plank")
 	m.changed.emit()
 
-	# 不屈：前置耐久没点 → 拥有照写，但不给按钮
+	# 不屈：前置筋骨没点 → 拥有照写，但不给按钮
 	t.check(panel.select(&"undaunted"), "选不屈")
 	t.check(String(panel.panel_texts()["cost"]).contains("拥有 5"), "锁着也写拥有：%s" % panel.panel_texts()["cost"])
 	t.is_null(panel.submit_button(&"steel_ingot"), "前置没点：没有【交】")
 	m.funds = 100000
-	t.check(TechService.upgrade(m, f.tech_of(&"endurance")), "点亮耐久")
+	t.check(TechService.upgrade(m, f.tech_of(&"endurance")) and TechService.upgrade(m, f.tech_of(&"sinew")), "点亮耐久、筋骨")
 	m.changed.emit()
 
 	# 钢锭：要 2、已交 0、拥有 5 → 【交 2】
@@ -308,7 +317,7 @@ static func frame_owned_count_quick_submit(t: TestCase, root: Window) -> void:
 	t.eq(TechService.deposited(m, &"undaunted", &"steel_ingot"), 2, "交齐两块")
 	t.eq(panel._owned_counts().get("steel_ingot", 0), 3, "仓库剩三块")
 	t.is_null(panel.submit_button(&"steel_ingot"), "交齐：按钮没了")
-	t.check(String(panel.panel_texts()["cost"]).contains("已交 2 / 需要 2　✓"), "行打 ✓")
+	t.check(String(panel.panel_texts()["cost"]).contains("　✓　2 / 2"), "账目行：名称打 ✓、已交 / 需要 2 / 2：%s" % panel.panel_texts()["cost"])
 	t.check(panel.line_text().contains("交了 2 件"), "提示：%s" % panel.line_text())
 	t.eq(MetaSave.read(db, META, m.rules, f.tech_defs).tech_deposits.get("undaunted", {}).get("steel_ingot", 0), 2, "meta 存了")
 

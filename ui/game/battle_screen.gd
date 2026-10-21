@@ -18,6 +18,10 @@ var _fresh_reactions: Array[StringName] = []
 ## 铜面板：斗技场图从面板内缩（40）处铺起；场地宽
 const PANEL_MARGIN := 40
 const VIEW_WIDTH := 1100.0
+## 继续旗的可点区（同战前「开战」旗）
+const FLAG_HIT := Rect2(22, 10, 156, 108)
+## 纸卷「继续」的大小（没有图时也按它留位）
+const SCROLL_SIZE := Vector2(246, 94)
 
 
 func open(payload: Dictionary) -> void:
@@ -48,7 +52,7 @@ func open(payload: Dictionary) -> void:
 	_view.reaction_shown.connect(_on_reaction_shown)
 
 	_next_slot = CenterContainer.new()
-	_next_slot.custom_minimum_size = Vector2(246, 94)
+	_next_slot.custom_minimum_size = _continue_size(_won)     # 先按图留好位置，看完才放按钮（面板不跳）
 	_view.add_footer(_next_slot)     # UI替换美术 18:16：「继续」纸卷压在场地上，场地图铺满面板里面（没有和铜面的硬边）
 	_view.add_coach_target(&"next_button", _next_slot)
 
@@ -70,6 +74,22 @@ func open(payload: Dictionary) -> void:
 		_maybe_coach.call_deferred()
 
 
+## 「继续」用哪张图（作者 19:09：沿用战前的旗 —— 赢了一面完整的红旗 `continue_win`，输了一面破口的旧旗 `continue_lose`）；
+## 旗图还没到时用原来的纸卷 `continue`。英文有 `_en` 版就换
+static func continue_art(won: bool) -> String:
+	var flag := "continue_win" if won else "continue_lose"
+	var name := flag if ResourceLoader.exists(CONTINUE_ART + flag + ".png") else "continue"
+	if UiText.lang != "zh" and ResourceLoader.exists(CONTINUE_ART + name + "_en.png"):
+		name += "_en"
+	return name
+
+
+static func _continue_size(won: bool) -> Vector2:
+	var path := CONTINUE_ART + continue_art(won) + ".png"
+	var tex := EventImage.load_texture(path) if ResourceLoader.exists(path) else null
+	return tex.get_size() if tex != null else SCROLL_SIZE
+
+
 ## 看完了（或不想看了）：回到流程
 func proceed() -> void:
 	flow.resume()
@@ -77,7 +97,9 @@ func proceed() -> void:
 
 func _on_finished() -> void:
 	if _next == null and _next_slot != null:
-		_next = IconButton.make_art(CONTINUE_ART, "continue" if UiText.lang == "zh" else "continue_en", UiText.t("battle.continue"), "", proceed)
+		var art := continue_art(_won)
+		_next = IconButton.make_art(CONTINUE_ART, art, UiText.t("battle.continue"), "", proceed)
+		_next.hit_rect = FLAG_HIT if _next.has_art() and art.begins_with("continue_") and not art.begins_with("continue_en") else Rect2()     # 旗：挂绳与旗尾点不着
 		_next_slot.add_child(_next)
 	_seen_end = true     # 157：拖时间轴拖到头会再「看完」一次
 

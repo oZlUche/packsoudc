@@ -64,12 +64,12 @@ static func frame_layout(t: TestCase, root: Window) -> void:
 	var shelf: WarehousePages = screen.shelf()
 	t.not_null(shelf, "右半边有分页仓库")
 	t.check(screen._right.is_ancestor_of(shelf), "仓库在右列")
-	for k in ["home", "warehouse", "sell", "tech"]:
+	for k in ["home", "warehouse", "sell"]:
 		screen.show_tab(k)
 		t.check(shelf.is_visible_in_tree(), "%s 页时仓库照常显示" % k)
-	for k in ["codex", "achievements"]:
+	for k in ["codex", "achievements", "tech"]:
 		screen.show_tab(k)
-		t.check(not shelf.is_visible_in_tree(), "178：%s 页收起仓库" % k)
+		t.check(not shelf.is_visible_in_tree(), "178 / 229：%s 页收起仓库" % k)
 	screen.show_tab("sell")
 	screen.layout()
 	t.check(screen._right.custom_minimum_size.x >= root.get_visible_rect().size.x * 0.5 - screen.MARGIN - 1.0, "右列占半个屏宽")
@@ -79,7 +79,7 @@ static func frame_layout(t: TestCase, root: Window) -> void:
 
 
 static func frame_double_click(t: TestCase, root: Window) -> void:
-	t.begin("164 · 双击右边仓库一件按当前页：仓库（178，原来是家）→ 置入带回来的背包；出售 → 卖；科技 → 上交；家 / 图鉴 → 不做事；出售 / 科技页没有自己的仓库")
+	t.begin("164 · 双击右边仓库一件按当前页：仓库（178，原来是家）→ 置入带回来的背包；出售 → 卖；家 / 图鉴 / 科技（229）→ 不做事；出售 / 科技页没有自己的仓库")
 	ItemInstance.reset_uid_counter()
 	var f := _flow()
 	f.meta.tech_levels["warehouse"] = 3
@@ -110,9 +110,9 @@ static func frame_double_click(t: TestCase, root: Window) -> void:
 	var tech = screen.tech_panel()
 	tech.select(&"warehouse")
 	screen._on_shelf_double_clicked(view, ingot.uid)
-	t.eq(TechService.deposited(f.meta, &"warehouse", &"steel_ingot"), 1, "科技页：上交了一块钢锭")
-	t.check(not ("_warehouse_view" in tech), "科技页没有收起式仓库")
-	t.eq(tech.drag_layer(), screen.drag_layer(), "上交区登记在整屏那一层拖拽上（从右边拖得进）")
+	t.eq(TechService.deposited(f.meta, &"warehouse", &"steel_ingot"), 0, "229：科技页收起仓库，双击不上交（上交走材料行的【交 k】）")
+	t.check(f.meta.warehouse.has_item(ingot.uid), "钢锭还在仓库")
+	t.check(not ("_warehouse_view" in tech) and not tech.has_method("drag_layer"), "科技页没有自己的仓库、没有上交区")
 	screen.queue_free()
 	_cleanup()
 

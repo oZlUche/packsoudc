@@ -222,7 +222,7 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	view.seek(result.duration_sec() + 1.0)
 	t.check(screen.verdict_shown(), "拖到头再「看完」一次：照样算看完")
 	t.check(not view.header_visible(), "作者 2026-10-17：计时与胜负那一行不给玩家看")
-	t.check(view.report_plate() != null and view.report_plate().visible and view.report_plate().is_ancestor_of(view._report), "战报垫在嵌槽上（不直接写在场地上）")
+	t.check(not view.report_shown(), "作者 19:09：左下的战报不画（字照样算）")
 	t.check(screen.overlay_frame().get_combined_minimum_size().y <= FIT_HEIGHT - HudHost.bar_height_in(root.get_tree()),
 		"回放面板（带战报）高 %.0f 放得进顶端栏下面" % screen.overlay_frame().get_combined_minimum_size().y)
 	# 拿真实的一下：正常播放时三种反馈会出

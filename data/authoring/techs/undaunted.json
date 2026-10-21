@@ -5,7 +5,7 @@
     "en": "Undaunted"
   },
   "requires": [
-    "endurance"
+    "sinew"
   ],
   "column": 1,
   "description": "打输了少扣体力，最少还是扣一点。",

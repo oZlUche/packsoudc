@@ -24,7 +24,7 @@ display_name = "侦察"
 display_names = {
 "en": "Scouting"
 }
-requires = Array[StringName]([&"luck", &"bargain"])
+requires = Array[StringName]([&"bargain"])
 column = 2
 description = "隐形的猎手走近到一定距离就看得见。"
 descriptions = {
