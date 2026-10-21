@@ -10,6 +10,8 @@
 ##   仓库在右半边，跨列拖拽走那一层。
 ##
 ## 带回来的棋盘是一块不要求包的格子：包已经不在（只计图鉴），东西位置照旧 —— 作者说的「包统一替换成最大的默认背景包」。
+## 225（作者 18:27 定包架）：包也带回来了、照旧铺着（这时棋盘要求包）；最左一列是**包架**（[BagRackView]），
+## 「一键置入」货进仓库、包进包架；从棋盘拖空包只能落包架，包架上的包只在包架里挪。
 extends MarginContainer
 
 const ContainerScreenScript := preload("res://ui/game/container_screen.gd")
@@ -34,6 +36,9 @@ var _drag: DragLayer
 var _shelf: WarehousePages = null
 var _own_shelf := true
 var _board_box: VBoxContainer
+## 225：包架（挂牌 + 一列）与它的视图
+var _rack_box: Control = null
+var _rack_view: BagRackView = null
 var _board_view: InventoryView
 var _board_label: Label = null
 var _board_scroll: ScrollContainer = null
@@ -67,6 +72,9 @@ func _build() -> void:
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(row)
 
+	_rack_box = BagRackView.boxed(_meta.rack, _font)
+	_rack_view = BagRackView.view_in(_rack_box)
+	row.add_child(_rack_box)
 	_board_box = UiTheme.vbox(6)
 	row.add_child(_board_box)
 
@@ -98,6 +106,10 @@ func _build() -> void:
 		_drag = DragLayer.new()
 		_drag.label_font = _font
 		add_child(_drag)     # 容器把它铺满，盖在两块格子上
+	_drag.register_view(_rack_view)     # 225
+	_rack_view.item_double_clicked.connect(quick_move)
+	if not _drag.drop_filter.is_valid():
+		_drag.drop_filter = _allow_drop
 	if _own_shelf:
 		_shelf.setup(_meta.warehouse, _font, _drag, TechWarehousePages.plan_of(_flow.tech_defs))
 		_drag.register_view(_shelf.view)
@@ -183,6 +195,25 @@ func board_view() -> InventoryView:
 	return _board_view
 
 
+## 225：包架的视图
+func rack_view() -> BagRackView:
+	return _rack_view
+
+
+## 225：包架那一列连同和棋盘的间隔占多宽（基地按中列宽算带回来背包的格子时扣掉）
+func rack_room() -> float:
+	return (_rack_box.get_combined_minimum_size().x + ROW_GAP) if _rack_box != null else 0.0
+
+
+## 225：落点规则 —— 包架上的包只在包架里挪（不上带回来的棋盘）；进包架的只能是包（[BagRack] 自己也会拒）
+func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
+	if inst == null:
+		return false
+	if _drag != null and _drag.source() == _meta.rack:
+		return target == _meta.rack
+	return target != _meta.rack or BagRack.holds(inst.def)
+
+
 ## 仓库分页（结算屏自己的，基地是右半边那块）
 func shelf() -> WarehousePages:
 	return _shelf
@@ -241,7 +272,11 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 	if inst == null:
 		return false
 	var ok := false
-	if from == _meta.board:
+	if from == _meta.board and BagRack.holds(inst.def):     # 225：包 → 包架（空包才行）
+		ok = not _meta.board.is_bag_with_contents(uid) and _meta.board.remove(uid) != null and _meta.put_bag(inst)
+		if not ok:
+			_line.text = UiText.t("rack.has_contents") % Names.of(inst.def)
+	elif from == _meta.board:
 		ok = InventoryService.transfer_auto(_meta.board, uid, _meta.warehouse)
 		if not ok:
 			_line.text = UiText.t("setup.no_room_warehouse") % Names.of(inst.def)

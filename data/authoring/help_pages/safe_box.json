@@ -6,9 +6,9 @@
   },
   "category": "map",
   "order": 4,
-  "text": "保险箱点上有一只小格子，放进去的东西视为已带出：不管这一局撤离还是失败，结算时都送回基地，结算屏单独一格画着它们。拖着放或棋盘上双击进箱，箱里双击回棋盘；包放不进去，局外不留包。\n\n关上保险箱或走开，里面有东西就锁上，送回基地、不能再改，这个点随之变灰；空着关不算关，回来还能开。箱子的大小由局外规则定，科技能扩格。保险箱点落在地图偏中央的位置，那里没有敌人。",
+  "text": "保险箱点上有一只小格子，放进去的东西视为已带出：不管这一局撤离还是失败，结算时都送回基地，结算屏单独一格画着它们。拖着放或棋盘上双击进箱，箱里双击回棋盘；包放不进去：包不进保险箱。\n\n关上保险箱或走开，里面有东西就锁上，送回基地、不能再改，这个点随之变灰；空着关不算关，回来还能开。箱子的大小由局外规则定，科技能扩格。保险箱点落在地图偏中央的位置，那里没有敌人。",
   "texts": {
-    "en": "A Safe node holds a small grid, and anything you put in counts as carried out: whether you extract or fail this run, it is sent back to base at Results, where it gets its own section on the Results screen. Drag items in or double-click them on the Board to put them in; double-click them in the Safe to bring them back to the Board. Bags don't fit, since no bags are kept between runs.\n\nWhen you close the Safe or walk away with something inside, it locks: the contents are sent back to base and can no longer be changed, and the node turns gray. Closing it empty doesn't count, so you can come back and open it again. The Safe's size is set by out-of-run rules, and tech can add cells. Safe nodes sit near the middle of the map, where there are no enemies."
+    "en": "A Safe node holds a small grid, and anything you put in counts as carried out: whether you extract or fail this run, it is sent back to base at Results, where it gets its own section on the Results screen. Drag items in or double-click them on the Board to put them in; double-click them in the Safe to bring them back to the Board. Bags don't fit: the Safe doesn't take bags.\n\nWhen you close the Safe or walk away with something inside, it locks: the contents are sent back to base and can no longer be changed, and the node turns gray. Closing it empty doesn't count, so you can come back and open it again. The Safe's size is set by out-of-run rules, and tech can add cells. Safe nodes sit near the middle of the map, where there are no enemies."
   },
   "related": [
     "extraction_and_defeat",
