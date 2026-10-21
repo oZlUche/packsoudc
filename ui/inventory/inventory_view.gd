@@ -313,7 +313,7 @@ func _draw() -> void:
 		var tint := DORMANT_ART if dormant else Color.WHITE
 		if ItemPainter.draw_art(self, item.def, item.rotation, anchor, cell_px, tint, Transform2D.IDENTITY, ItemPainter.variant_of(item)):
 			if dormant and _label_visible(item):
-				ItemPainter.draw_label(self, cells, anchor, cell_px, "休眠", font, 13, COLOR_TEXT)
+				ItemPainter.draw_label(self, cells, anchor, cell_px, UiText.t("inv.dormant"), font, 13, COLOR_TEXT)
 		else:
 			ItemPainter.draw_item(self, cells, anchor, cell_px, body, edge)
 			if _label_visible(item):

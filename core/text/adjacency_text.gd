@@ -12,11 +12,11 @@ const NEIGHBOUR := {"zh": "邻居", "en": "neighbours"}
 
 ## 条件那一段
 static func condition(any: Array, all: Array = []) -> String:
-	var a := "".join(_names(all))
-	var o := "、".join(_names(any))
+	var a := UiText.t("tip.adj_and_sep").join(_names(all))
+	var o := UiText.t("tip.adj_or_sep").join(_names(any))
 	if a == "" and o == "":
 		return UiText.pick(NEIGHBOUR)
-	return a + o
+	return a + o if a == "" or o == "" else a + UiText.t("tip.adj_and_sep") + o
 
 
 ## 效果那一段：修饰与规则，用「、」连
@@ -27,8 +27,8 @@ static func effects(mods: Array, rules: Array) -> String:
 			parts.append(Glossary.mod_text(m as StatModifier, true))
 	for r in rules:
 		if r != null:
-			parts.append("附加：" + rule_phrase(r as AbilityRule))
-	return "、".join(parts)
+			parts.append(UiText.t("tip.adj_added") % rule_phrase(r as AbilityRule))
+	return UiText.t("tip.list_sep").join(parts)
 
 
 ## 一条附加规则的一句；提到的 buff 有专属解说就写解说（171 §1）
@@ -47,7 +47,7 @@ static func rule_phrase(rule: AbilityRule) -> String:
 static func grant(adj: AdjacencyProfile) -> String:
 	if adj == null or not adj.has_grant():
 		return ""
-	return condition(adj.grant_filter, adj.grant_filter_all) + effects(adj.grant_mods, adj.grant_rules)
+	return UiText.t("tip.adj_grant") % [condition(adj.grant_filter, adj.grant_filter_all), effects(adj.grant_mods, adj.grant_rules)]
 
 
 ## 受益句：主语是自己 ——「挨着盾时 护甲 +5」；不止一个受益格写「每挨着一件盾 护甲 +5」（点亮几格得几份）
@@ -55,7 +55,7 @@ static func receive(adj: AdjacencyProfile) -> String:
 	if adj == null or not adj.has_receive():
 		return ""
 	var who := condition(adj.receive_filter)
-	var head := ("挨着%s时" % who) if adj.receive_cells.size() <= 1 else ("每挨着一件%s" % who)
+	var head := (UiText.t("tip.adj_next_to") % who) if adj.receive_cells.size() <= 1 else (UiText.t("tip.adj_per_next") % who)
 	return "%s %s" % [head, effects(adj.receive_mods, adj.receive_rules)]
 
 
@@ -63,7 +63,7 @@ static func receive(adj: AdjacencyProfile) -> String:
 static func feed(adj: AdjacencyProfile) -> String:
 	if adj == null or not adj.has_feed():
 		return ""
-	return "装进%s：%s" % [condition(adj.feed_filter) if not adj.feed_filter.is_empty() else "宿主", effects(adj.feed_mods, adj.feed_rules)]
+	return UiText.t("tip.adj_feed") % [condition(adj.feed_filter) if not adj.feed_filter.is_empty() else UiText.t("tip.adj_host"), effects(adj.feed_mods, adj.feed_rules)]
 
 
 ## 晶石供给里把伤害转成的类型（`convert_damage_type` 的 `to`）；没有返回空

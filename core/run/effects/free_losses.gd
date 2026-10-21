@@ -10,4 +10,4 @@ func modify(ctx: RunContext) -> void:
 
 
 func describe() -> String:
-	return "前 %d 次输给节点敌人不扣体力" % amount
+	return UiText.t("bonus.free_losses") % amount

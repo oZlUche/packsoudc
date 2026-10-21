@@ -10,4 +10,4 @@ func modify(ctx: LootContext) -> void:
 	ctx.add_rarity_bias(rarity, amount)
 
 func describe() -> String:
-	return "稀有度 %d 出现率 %+d" % [rarity, amount]
+	return UiText.t("loot.rarity_bias") % [rarity, amount]

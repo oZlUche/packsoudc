@@ -45,10 +45,10 @@ func apply(ctx: RuleContext) -> void:
 
 func describe() -> String:
 	if flat != 0.0 and percent != 0:
-		return "反弹 %d%% 伤害并附加 %.0f 点" % [percent, flat]
+		return UiText.t("fx.reflect_both") % [percent, flat]
 	if flat != 0.0:
-		return "反弹 %.0f 点" % flat
-	return "反弹 %d%% 伤害" % percent
+		return UiText.t("fx.reflect_flat") % flat
+	return UiText.t("fx.reflect") % percent
 
 
 ## 151：估值 —— 对面那一下的百分之几 + 固定值，打回去

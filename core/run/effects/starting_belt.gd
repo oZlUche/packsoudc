@@ -14,4 +14,4 @@ func modify(ctx: RunContext) -> void:
 
 func describe() -> String:
 	var def := BeltSkillDef.find(skill)
-	return "开局腰带里多 %d 个%s" % [count, def.display_name if def != null else String(skill)]
+	return UiText.t("bonus.starting_belt") % [count, Names.of(def) if def != null else String(skill)]

@@ -10,4 +10,4 @@ func modify(ctx: RunContext) -> void:
 
 
 func describe() -> String:
-	return "潜行 ×%.2f" % mult
+	return UiText.t("bonus.stealth") % mult

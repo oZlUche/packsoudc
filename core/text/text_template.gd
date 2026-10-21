@@ -358,13 +358,13 @@ static func context_for(run: RunState, node: MapNode = null, extra: Dictionary =
 		ctx["board_count"] = run.board.item_count() if run.board != null else 0
 		ctx["storage_count"] = run.storage.item_count() if run.storage != null else 0
 		var faith := run.active_faith()
-		ctx["faith"] = Names.of(faith) if faith != null else "无"
+		ctx["faith"] = Names.of(faith) if faith != null else UiText.t("tip.none")
 		# 113：激活信仰现在的信力与阶（没激活 0 / 0）
 		ctx["faith_points"] = run.faith_power.points_of(faith.id) if faith != null and run.faith_power != null else 0
 		ctx["faith_tier"] = maxi(0, run.active_faith_tier()) if faith != null else 0
 		if not run.faith_defs.is_empty():
 			ctx["_faiths"] = run.faith_defs
-		ctx["difficulty"] = run.difficulty.display_name if run.difficulty != null and "display_name" in run.difficulty else "普通"
+		ctx["difficulty"] = Names.of(run.difficulty) if run.difficulty != null and "display_name" in run.difficulty else UiText.t("tip.difficulty_default")
 		ctx["battles_won"] = int(run.tally.get("battles_won", 0))
 		ctx["battles_lost"] = int(run.tally.get("battles_lost", 0))
 		ctx["_items"] = run.items     # {item_stat:…} {item:…} 用；以下划线开头的键不是给作者写的
@@ -404,12 +404,12 @@ static func _enemy_into(ctx: Dictionary, content: Dictionary, run: RunState) -> 
 	for raw in content.get("items", []):
 		var idef := run.items.get_def(StringName(String((raw as Dictionary).get("id", ""))))
 		names.append(Names.of(idef) if idef != null else String((raw as Dictionary).get("id", "?")))
-	ctx["enemy_items"] = "、".join(names)
+	ctx["enemy_items"] = UiText.t("tip.list_sep").join(names)
 	ctx["enemy_count"] = names.size()
 	if spec != null:
 		ctx["enemy_hp"] = spec.max_hp_int()
 		ctx["enemy_dps"] = "%.1f" % spec.rough_dps()
-		ctx["battle_data"] = "%s　生命 %d　%d 件：%s" % [Names.of(def), spec.max_hp_int(), names.size(), "、".join(names)]
+		ctx["battle_data"] = UiText.t("tip.battle_data") % [Names.of(def), spec.max_hp_int(), names.size(), UiText.t("tip.list_sep").join(names)]
 	else:
 		ctx["battle_data"] = Names.of(def)
 

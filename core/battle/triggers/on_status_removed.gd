@@ -23,7 +23,7 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 
 
 func describe() -> String:
-	return "%s的%s掉光时" % ["你" if on_self else "对手", Glossary.status_name(buff_id)]
+	return UiText.t("trig.removed_self" if on_self else "trig.removed_opp") % Glossary.status_name(buff_id)
 
 
 ## 151：假定频率

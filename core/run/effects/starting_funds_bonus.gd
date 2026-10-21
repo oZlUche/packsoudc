@@ -19,4 +19,4 @@ func describe() -> String:
 		parts.append("%+d%%" % percent)
 	if amount != 0 or percent == 0:
 		parts.append("%+d" % amount)
-	return "开局钱 " + "、".join(parts)
+	return UiText.t("bonus.start_funds") % UiText.t("tip.list_sep").join(parts)

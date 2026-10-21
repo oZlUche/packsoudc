@@ -49,7 +49,7 @@ func text_of() -> String:
 	var names: Array[String] = []
 	for t in types():
 		names.append(MapNodeStyle.name_of(t))
-	return "、".join(names)
+	return UiText.t("hud.buff_sep").join(names)
 
 
 func refresh() -> void:

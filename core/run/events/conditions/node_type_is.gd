@@ -13,4 +13,4 @@ func describe() -> String:
 	var names: Array[String] = []
 	for t in types:
 		names.append(String(t))
-	return "需要这是%s点" % " / ".join(names)
+	return UiText.t("cond.node_type") % " / ".join(names)

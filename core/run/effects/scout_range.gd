@@ -10,4 +10,4 @@ func modify(ctx: RunContext) -> void:
 
 
 func describe() -> String:
-	return "侦察 %.0f" % range
+	return UiText.t("bonus.scout") % range

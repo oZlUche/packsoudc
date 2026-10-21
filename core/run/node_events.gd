@@ -315,7 +315,7 @@ func option_state(i: int) -> Dictionary:
 	var def := pending_event()
 	var node := pending_node()
 	if def == null or node == null or i < 0 or i >= def.options.size():
-		return {"ok": false, "why": "没有这个选项"}
+		return {"ok": false, "why": UiText.t("node.no_option")}
 	var why := (def.options[i] as EventOption).locked_reason(_event_ctx(node))
 	return {"ok": why == "", "why": why}
 
@@ -344,7 +344,7 @@ func choose(i: int) -> bool:
 	if hunter_uid >= 0:
 		if ctx.hunter_flee:
 			ctx.hunter_fight = not hooks.flee_hunter(node, hunter_uid, ctx)
-		event_resolved.emit(node, StringName(option.label), ctx.detail())
+		event_resolved.emit(node, StringName(option.label_for()), ctx.detail())
 		if vitality != null and vitality.is_depleted():
 			_defeat(&"vitality_depleted")
 			return true
@@ -356,7 +356,7 @@ func choose(i: int) -> bool:
 		node.content["resolved_type"] = String(ctx.new_type)
 		type = ctx.new_type
 		type_changed.emit(node, type)
-	event_resolved.emit(node, StringName(option.label), ctx.detail())
+	event_resolved.emit(node, StringName(option.label_for()), ctx.detail())
 	# 8-3：原地耗时：计数、侵蚀推进、站的这个点照结算 —— 可能把体力耗光，所以在判战败之前
 	if ctx.wait_actions > 0 and travel != null:
 		travel.wait(ctx.wait_actions, &"event")
@@ -374,7 +374,7 @@ func choose(i: int) -> bool:
 		_visited(node)
 		if hooks.request_extract():
 			return true
-		event_resolved.emit(node, &"撤离", {"log": ["付不起这个撤离点的费用（%d 币），先去挣点钱，或者找别的出口。" % PaidExtracts.fee_of(node)]})
+		event_resolved.emit(node, StringName(UiText.t("node.short.extract")), {"log": [UiText.t("node.extract_unaffordable") % PaidExtracts.fee_of(node)]})
 		return true
 	# 作者 2026-10-12：先回地图 —— 不标用过，记一笔，回到这个点时再弹同一个事件（[method RunState._arrived_again]）
 	if ctx.revisit:

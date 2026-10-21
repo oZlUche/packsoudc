@@ -19,7 +19,11 @@ func gain(event: StringName, payload: Dictionary) -> int:
 
 
 func describe() -> String:
-	var what := ("「%s」" % Glossary.tag_name(tag)) if tag != &"" else "道具"
+	var plus_text := (" + %d" % plus) if plus != 0 else ""
+	if tag != &"":
+		if rarity_pow:
+			return UiText.t("deed.first_place_pow_tagged") % Glossary.tag_name(tag)     # 作者 2026-10-17：不写公式
+		return UiText.t("deed.first_place_tagged") % [Glossary.tag_name(tag), str(amount), plus_text]
 	if rarity_pow:
-		return "每局头一回置入一种%s：获得信力，越稀有越多" % what     # 作者 2026-10-17：不写公式
-	return "每局头一回置入一种%s +%s%s" % [what, str(amount), (" + %d" % plus) if plus != 0 else ""]
+		return UiText.t("deed.first_place_pow")
+	return UiText.t("deed.first_place") % [str(amount), plus_text]

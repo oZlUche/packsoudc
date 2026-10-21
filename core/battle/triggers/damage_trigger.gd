@@ -60,20 +60,48 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 	return event.get_int(&"amount") >= StatMath.from_float(min_amount)
 
 
-## 142：「受到攻击前」「造成物理伤害前」「受到流血伤害时」—— 方向、类型、门槛都从字段来；[method _when] 由子类给「前 / 时」
+## 142：「受到攻击前」「造成物理伤害前」「受到流血伤害时」—— 方向、类型、门槛都从字段来；[method _phase] 由子类给
 func describe() -> String:
+	var taken := direction == Direction.TAKEN
 	var line := ""
 	if damage_type == &"":
-		line = ("受到攻击" if direction == Direction.TAKEN else "攻击命中") + _when()
+		line = _hit_line(taken)
 	else:
-		line = "%s%s伤害%s" % ["受到" if direction == Direction.TAKEN else "造成", Glossary.damage_type_name(damage_type), _when()]
+		line = _type_line(taken) % Glossary.damage_type_name(damage_type)
+	if own_only:
+		line = UiText.t("trig.own_only") % line
 	if min_amount > 0.0:
-		line += "（单次至少 %s 点）" % TextTemplate.num(min_amount)
-	return ("这件" + line) if own_only else line
+		line += UiText.t("trig.min_amount") % TextTemplate.num(min_amount)
+	return line
 
 
-func _when() -> String:
-	return "时"
+## Sentence phase, given by subclasses: after (on), before, or after a crit
+const PHASE_ON := 0
+const PHASE_BEFORE := 1
+const PHASE_CRIT := 2
+
+
+func _phase() -> int:
+	return PHASE_ON
+
+
+func _hit_line(taken: bool) -> String:
+	match _phase():
+		PHASE_BEFORE:
+			return UiText.t("trig.hit_taken_before" if taken else "trig.hit_dealt_before")
+		PHASE_CRIT:
+			return UiText.t("trig.crit_taken" if taken else "trig.crit_dealt")
+	return UiText.t("trig.hit_taken" if taken else "trig.hit_dealt")
+
+
+## One %s: the damage type name
+func _type_line(taken: bool) -> String:
+	match _phase():
+		PHASE_BEFORE:
+			return UiText.t("trig.type_taken_before" if taken else "trig.type_dealt_before")
+		PHASE_CRIT:
+			return UiText.t("trig.type_crit_taken" if taken else "trig.type_crit_dealt")
+	return UiText.t("trig.type_taken" if taken else "trig.type_dealt")
 
 
 ## 151：一秒命中几次 —— 受击按假定受击频率，出手按自己的出手频率

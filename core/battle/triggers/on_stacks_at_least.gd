@@ -44,8 +44,8 @@ func implied_costs() -> Array[Cost]:
 
 func describe() -> String:
 	var n := maxi(1, stacks)
-	var line := "%s的%s达到 %d 层时" % ["你" if on_self else "对手", Glossary.status_name(buff_id), n]
-	return line + ("（消耗这 %d 层）" % n if consume else "")
+	var line := UiText.t("trig.stacks_self" if on_self else "trig.stacks_opp") % [Glossary.status_name(buff_id), n]
+	return line + (UiText.t("trig.consume_stacks") % n if consume else "")
 
 
 ## 151：本件自己在叠这个 buff（一秒施加几层）就按「几秒叠够一次」；否则按门槛占比 × 频率

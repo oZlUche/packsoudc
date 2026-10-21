@@ -10,4 +10,4 @@ func modify(ctx: RunContext) -> void:
 
 
 func describe() -> String:
-	return "打输了少扣 %d 点体力（最少扣一点）" % amount
+	return UiText.t("bonus.loss_discount") % amount

@@ -17,6 +17,6 @@ func modify(ctx: RunContext) -> void:
 
 
 func describe() -> String:
-	var names := {"max_hp": "生命", "max_stamina": "耐力", "regen_stamina": "耐力回复"}
-	var what: String = names.get(String(stat), String(stat))
+	var names := {"max_hp": "bonus.stat_max_hp", "max_stamina": "bonus.stat_max_stamina", "regen_stamina": "bonus.stat_regen_stamina"}
+	var what: String = UiText.t(names[String(stat)]) if names.has(String(stat)) else String(stat)
 	return "%s %+.0f%%" % [what, amount] if mode == Mode.MULT else "%s %+.0f" % [what, amount]

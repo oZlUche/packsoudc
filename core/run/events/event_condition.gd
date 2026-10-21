@@ -14,8 +14,8 @@ func describe() -> String:
 ## 2026-10-17：给玩家看的说明里写名字、不写 id —— 按种类与 id 读定义的名字；查不到给「数据缺失」
 static func content_name(kind: String, id: StringName) -> String:
 	if id == &"":
-		return "数据缺失"
+		return UiText.t("battle.missing")
 	var path := ContentPaths.asset_file(kind, String(id))
 	var res: Resource = load(path) if path != "" and ResourceLoader.exists(path) else null
 	var name := Names.of(res)
-	return name if name != "" else "数据缺失"
+	return name if name != "" else UiText.t("battle.missing")

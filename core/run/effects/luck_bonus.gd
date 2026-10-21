@@ -10,4 +10,4 @@ func modify(ctx: RunContext) -> void:
 
 
 func describe() -> String:
-	return "幸运 %+d" % amount
+	return UiText.t("bonus.luck") % amount

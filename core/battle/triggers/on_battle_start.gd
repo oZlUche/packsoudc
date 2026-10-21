@@ -10,7 +10,7 @@ func matches(_ctx: RuleContext, _event: BattleEvent) -> bool:
 
 
 func describe() -> String:
-	return "开战时"
+	return UiText.t("trig.battle_start")
 
 
 ## 151：一场一次

@@ -12,4 +12,4 @@ func check(ctx: EventContext) -> bool:
 
 
 func describe() -> String:
-	return "这里的神坛已经用过了" if part == &"altar" else "这里已经休息过了"
+	return UiText.t("cond.altar_used") if part == &"altar" else UiText.t("cond.rested")

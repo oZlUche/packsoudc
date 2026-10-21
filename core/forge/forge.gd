@@ -378,20 +378,20 @@ static func _timing_summary(t: ForgeTable, def: ItemDef, out: Array[String]) -> 
 		return
 	var tp := t.by_purpose(def)
 	var rule := _timing_rule(tm, tp, t.by_rarity(def.rarity))
-	out.append("什么时候：%s" % Glossary.trigger_text(rule.trigger))
+	out.append(UiText.t("forge.sum_when") % Glossary.trigger_text(rule.trigger))
 	var said := String((tp.trigger_props if tp != null else {}).get("direction", ""))
-	var way := {"DEALT": "造成", "TAKEN": "受到"}.get(said, "—") as String
+	var way := {"DEALT": UiText.t("forge.dir_dealt"), "TAKEN": UiText.t("forge.dir_taken")}.get(said, "—") as String
 	if rule.trigger is DamageTrigger:
-		way = "造成" if (rule.trigger as DamageTrigger).direction == DamageTrigger.Direction.DEALT else "受到"
-		out.append("方向：%s" % way)
+		way = UiText.t("forge.dir_dealt") if (rule.trigger as DamageTrigger).direction == DamageTrigger.Direction.DEALT else UiText.t("forge.dir_taken")
+		out.append(UiText.t("forge.sum_dir") % way)
 	else:
-		out.append("方向：%s（这种时机不分方向）" % way)
-	var how := "每次"
+		out.append(UiText.t("forge.sum_dir_any") % way)
+	var how := UiText.t("forge.every_time")
 	if rule.cadence is CooldownCadence:
-		how = "每 %s 秒最多一次" % TextTemplate.num((rule.cadence as CooldownCadence).seconds)
+		how = UiText.t("forge.cooldown") % TextTemplate.num((rule.cadence as CooldownCadence).seconds)
 	if tm.fixed_cadence != null:
-		how = ("一次" if rule.trigger is OnBattleStart else how) + "（这种时机不看稀有度）"
-	out.append("多久一次：%s" % how)
+		how = UiText.t("forge.fixed_cadence") % (UiText.t("forge.once") if rule.trigger is OnBattleStart else how)
+	out.append(UiText.t("forge.sum_how") % how)
 
 
 static func _effect_summary(t: ForgeTable, def: ItemDef, out: Array[String]) -> void:
@@ -406,16 +406,16 @@ static func _effect_summary(t: ForgeTable, def: ItemDef, out: Array[String]) -> 
 	var main := _stance_effect(em, guard, 0).duplicate(true) as CombatEffect
 	_shape_effect(main, em, null, ench, guard)
 	var pre := prefix(ench)
-	out.append("做什么：%s%s" % [Glossary.effects_text([main]), "（前缀「%s」）" % pre if pre != "" else ""])
-	out.append("攻守：%s" % ("守式（放的是盾或防具）" if guard else "攻式（放盾或防具时换成守式）"))
+	out.append(UiText.t("forge.sum_what") % [Glossary.effects_text([main]), UiText.t("forge.prefix_note") % pre if pre != "" else ""])
+	out.append(UiText.t("forge.sum_stance") % (UiText.t("forge.guard") if guard else UiText.t("forge.attack")))
 	var tier := er.tier if er != null else 0
-	var parts: Array[String] = ["基础"]
+	var parts: Array[String] = [UiText.t("forge.base")]
 	for step in [1, 2]:
 		var extra := _stance_effect(em, guard, step)
 		if tier >= step and extra != null:
-			parts.append("+%s（%s）" % ["升阶" if step == 1 else "附带", Glossary.effects_text([extra])])
+			parts.append(UiText.t("forge.tier_extra") % [UiText.t("forge.tier_up") if step == 1 else UiText.t("forge.tier_bonus"), Glossary.effects_text([extra])])
 	var mult := er.main_mult if er != null else 1.0
-	out.append("阶：%s%s" % ["；".join(parts), "，基础句 ×%s" % TextTemplate.num(mult) if mult != 1.0 else ""])
+	out.append(UiText.t("forge.sum_tier") % [UiText.t("repair.sep").join(parts), UiText.t("forge.base_mult") % TextTemplate.num(mult) if mult != 1.0 else ""])
 
 
 static func _value_summary(t: ForgeTable, def: ItemDef, out: Array[String]) -> void:
@@ -425,7 +425,7 @@ static func _value_summary(t: ForgeTable, def: ItemDef, out: Array[String]) -> v
 	var size := vr.size if vr != null else 1.0
 	var m := vm.mult if vm != null else 1.0
 	var p := vp.mult if vp != null else 1.0
-	out.append("档：×%s（稀有度 %d）" % [TextTemplate.num(size), def.rarity])
-	out.append("材质 ×%s · 用途 ×%s" % [TextTemplate.num(m), TextTemplate.num(p)])
-	out.append("合计 ×%s" % TextTemplate.num(size * m * p))
+	out.append(UiText.t("forge.sum_size") % [TextTemplate.num(size), def.rarity])
+	out.append(UiText.t("forge.sum_mults") % [TextTemplate.num(m), TextTemplate.num(p)])
+	out.append(UiText.t("forge.sum_total") % TextTemplate.num(size * m * p))
 #endregion

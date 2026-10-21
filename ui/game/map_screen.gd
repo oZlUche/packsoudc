@@ -586,7 +586,7 @@ func _hunter_tip(id: int) -> String:
 			continue
 		var def: HunterDef = _run.hunters.def_of(h)
 		var hint := _run.hunters.loss_hint(h)
-		lines.append("[color=#d9534f]%s[/color]%s" % [def.display_name if def != null else "?", UiText.t("map.hunter_loss") % hint if hint != "" else ""])
+		lines.append("[color=#d9534f]%s[/color]%s" % [Names.of(def) if def != null else "?", UiText.t("map.hunter_loss") % hint if hint != "" else ""])
 	return "\n".join(lines)
 
 
@@ -598,7 +598,7 @@ func _refresh_hunter_marks() -> void:
 	if _run.hunters != null:
 		for h in _run.hunters.visible_hunters():
 			var def: HunterDef = _run.hunters.def_of(h)
-			marks.append({"node": h.node_id, "label": def.display_name if def != null else "?"})
+			marks.append({"node": h.node_id, "label": Names.of(def) if def != null else "?"})
 	_view.hunters = marks
 
 

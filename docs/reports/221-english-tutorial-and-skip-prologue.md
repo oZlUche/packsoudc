@@ -142,3 +142,15 @@ F1 代码量最大（几百处换键），F4 字最多。建议执行按 F1 → 
 8. 测试：`test_english_ui_221` 加一组百科英文、一组出生点路线英文 —— 54 页都有英文且占位符一致、词条英文齐全、反应都有英文说明；英文下整本书页标题、机制页正文没有汉字；反应讲解整句英文；按英文名 Block 连到 `term:格挡`。条上资源名那条改成查 Health / Stamina / Mana 与中文「生命」。
 
 **补充（v3.72，架构设计裁定 §八第 7 条的疑点，只改措辞、不动机制）**：god_hunt、anchor_and_right_click、multipliers、settlement_and_warehouse、teleport 删去结尾多余的 `---`（猎神现在本就没有阶效果）；anchor_activation「跟着包带回仓库」改「撤离时也会回到仓库」；bags 补上大地之神护符的例外（093 原话）；shop「定价的一部分」改「一半」（`shop_sell_ratio = 0.5`）；direct_damage_and_block 的「反应」改「反伤、吸血这类回应规则」（「反应」留给元素反应）；multipliers 写明「乘算之和低于负一（把倍率压到零以下）时按零算」。中英一起改。角色技能英文名进数据：`RunSkill.display_names`（新字段），九个技能都写了 `en`（含隐藏的主动技能 Second Wind / Assault / Slip），技能名的显示走 `Names.of`。
+
+## 十、F5a 落地（执行，2026-10-21，v3.73）
+
+按 §九 补充二的 F5a 落了：局内其余屏的固定字过 `UiText`，中文输出逐字不变（全套中文测试照绿）。约 380 个新键，按屏分组 `# —— 221 F5a：<屏> ——`。
+
+1. **地图与一局里的字**：猎手遭遇事件（标题、输了怎样、打 / 逃 / 溜的选项与日志）、猎手的输法、负重档名「轻装」Unburdened 与「走一步倒计时」、撤离点关闭提示、事件里锁住的选项。猎手与输法的名字、说明进数据（`HunterDef.display_names` / `descriptions`、`HunterLossOption.display_names`，追猎者 Stalker、守路人 Road Warden）。
+2. **商店 / 铸炉 / 保险箱 / 事件 / 信仰**：商店整屏（含「随身」那排，Carried）、铸炉整屏与每槽的小结、保险箱屏、事件选项的条件提示（锁住时那句）、信力那一行、等级效果、16 种攒信力的行为、掉落加成。
+3. **道具悬浮窗的规则句**：扳机、条件 / 消耗、效果（`core/battle/triggers|costs|effects`）按整句模板写，英文扳机写成方括号里的短句、伤害一律「<类型> damage」；`Glossary` 的拼接（规则行、节奏、状态效果行、时长、增益 / 减益 / 系统、时机类别名）换 `gloss.*` 键，英文句首由 `Glossary.cap` 大写。邻接句、属性名、体积档、腰带用法、生长 / 信仰加成、技能 `summary`、一局里的加成（`core/run/effects`）一并换键。信仰加成的补充一句加 `FaithBonus.notes`（赐福盾「弹开更久」Deflects for longer）。
+4. **不翻的**：开发版才有的字（调试台、日志抽屉、`DevGate` 下的读数）、作者工具与报错、编辑器专用的 `describe()`（事件结果、猎手行为、侵蚀效果、难度小结）。
+5. 词表 `docs/text-glossary-en.md` 加「F5 补充」一节。
+6. 测试：`test_english_ui_221` 加一组 —— 英文下全部道具的悬浮窗（不算道具自己的说明，那是 F5c）、全部状态的说明、百科状态 / 反应 / 时机页没有汉字（方括号里的扳机句一起查）。
+

@@ -8,4 +8,4 @@ func modify(ctx: LootContext) -> void:
 	ctx.add_rolls(rolls)
 
 func describe() -> String:
-	return "掉落次数 %+d" % rolls
+	return UiText.t("loot.extra_rolls") % rolls

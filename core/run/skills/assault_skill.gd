@@ -25,4 +25,4 @@ func prepare_battle(_me: CombatantSpec, enemy: CombatantSpec) -> void:
 
 
 func describe() -> String:
-	return "下次战斗先扣对方 %.0f%% 血" % (hp_fraction * 100.0)
+	return UiText.t("skill.assault") % (hp_fraction * 100.0)

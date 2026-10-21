@@ -18,7 +18,7 @@ func apply(ctx: RuleContext) -> void:
 
 
 func describe() -> String:
-	return "生命值低于 %d%% 时，造成伤害提高 %d%%" % [hp_percent, percent]
+	return UiText.t("fx.low_hp") % [hp_percent, percent]
 
 
 ## 151：估值 —— 自己出手那一下 × 加成 × 低血时间占比

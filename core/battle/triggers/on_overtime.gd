@@ -14,4 +14,4 @@ func matches(_ctx: RuleContext, event: BattleEvent) -> bool:
 
 
 func describe() -> String:
-	return "加时开始时"
+	return UiText.t("trig.overtime")

@@ -1,7 +1,13 @@
 {
   "id": "hunter_2",
   "display_name": "守路人",
+  "display_names": {
+    "en": "Road Warden"
+  },
   "description": "它在这一带巡逻，见了你就追。输了它可能把你打退，也可能把你赶回去，甚至守在原地不让你过。",
+  "descriptions": {
+    "en": "It patrols this stretch and gives chase on sight. If you lose, it may beat you back, drive you back the way you came, or even stand its ground and bar your way."
+  },
   "level": 2,
   "visibility": "VISIBLE",
   "sense_range": 4.0,
@@ -12,6 +18,9 @@
     {
       "id": "repel",
       "display_name": "击退",
+      "display_names": {
+        "en": "Repel"
+      },
       "outcomes": [
         {
           "type": "spend_vitality"
@@ -24,6 +33,9 @@
     {
       "id": "expel",
       "display_name": "驱逐",
+      "display_names": {
+        "en": "Expel"
+      },
       "outcomes": [
         {
           "type": "spend_vitality"
@@ -36,6 +48,9 @@
     {
       "id": "expel_guard",
       "display_name": "驱逐并驻守",
+      "display_names": {
+        "en": "Expel and Hold"
+      },
       "outcomes": [
         {
           "type": "spend_vitality"

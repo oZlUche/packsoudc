@@ -34,7 +34,7 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 
 
 func describe() -> String:
-	return "%s的%s达到 %d 层时" % ["你" if on_self else "对手", StatAxes.name_of(axis, stacks), absi(maxi(1, stacks) if stacks >= 0 else stacks)]
+	return UiText.t("trig.stacks_self" if on_self else "trig.stacks_opp") % [StatAxes.name_of(axis, stacks), absi(maxi(1, stacks) if stacks >= 0 else stacks)]
 
 
 ## 151：门槛占比 × 频率

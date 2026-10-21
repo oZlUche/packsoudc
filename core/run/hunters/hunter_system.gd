@@ -313,24 +313,24 @@ func _encounter_def(def: HunterDef, option: HunterLossOption = null) -> EventDef
 		return run.events.extra_defs[id]
 	var ev := EventDef.new()
 	ev.id = id
-	ev.title = def.display_name if def.display_name != "" else String(def.id)
-	ev.text = Names.description_of(def) if def.description != "" else "它盯上了你。"
+	ev.title = Names.of(def) if def.display_name != "" else String(def.id)
+	ev.text = Names.description_of(def) if def.description != "" else UiText.t("hunter.stares")
 	if option != null and option.summary() != "":
-		ev.text += "\n输了会怎样 —— %s" % option.summary()
+		ev.text += UiText.t("hunter.loss_line") % option.summary()
 	var fight_opt := EventOption.new()
-	fight_opt.label = "迎战"
+	fight_opt.label = UiText.t("hunter.fight")
 	fight_opt.outcomes.append(HunterFight.new())
 	ev.options.append(fight_opt)
 	if def.can_flee():
 		var flee_opt := EventOption.new()
-		flee_opt.label = "逃跑（%.0f%%）" % (clampf(def.flee_chance + run.buff_context().flee_bonus, 0.0, 1.0) * 100.0)
+		flee_opt.label = UiText.t("hunter.flee") % (clampf(def.flee_chance + run.buff_context().flee_bonus, 0.0, 1.0) * 100.0)
 		flee_opt.outcomes.append(HunterFlee.new())
 		ev.options.append(flee_opt)
 	# 136：角色有「脱身」：多一项，必定逃掉（次数与冷却和战前准备屏上同一本账；用不了时这一项锁着、写原因）
 	var slip := _slip_skill()
 	if slip != null:
 		var slip_opt := EventOption.new()
-		slip_opt.label = "%s（必定逃掉）" % slip.display_name
+		slip_opt.label = UiText.t("hunter.slip") % Names.of(slip)
 		var ready := SkillReady.new()
 		ready.skill = slip.id
 		slip_opt.requires.append(ready)
@@ -395,9 +395,9 @@ func flee(_node: MapNode, uid: int, ctx: EventContext) -> bool:
 	var escaped := rng().randf() < chance
 	if escaped:
 		h.cooldown = maxi(0, def.flee_cooldown)
-		ctx.log.append("你甩开了它。")
+		ctx.log.append(UiText.t("hunter.flee_ok"))
 	else:
-		ctx.log.append("没甩开。")
+		ctx.log.append(UiText.t("hunter.flee_fail"))
 		if def.flee_fail_vitality > 0:
 			spend_vitality(def.flee_fail_vitality)
 			ctx.spent += def.flee_fail_vitality

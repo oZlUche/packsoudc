@@ -38,6 +38,12 @@ static func rating_of(ratio: float) -> String:
 	return "极高"
 
 
+## 221 F5a: player text for a rating id (zh unchanged); same keys as [StatsStrip]
+static func rating_label(rating: String) -> String:
+	var keys := {"低": "strip.rating_low", "中": "strip.rating_mid", "高": "strip.rating_high", "极高": "strip.rating_max"}
+	return UiText.t(keys[rating]) if keys.has(rating) else rating
+
+
 ## 这条规则每次出手花多少耐力（面板数或属性值；扳机隐含的消耗也算）
 static func _stamina_of(rule: AbilityRule, stats: StatSet) -> float:
 	var total := 0.0
@@ -56,5 +62,5 @@ static func _stamina_of(rule: AbilityRule, stats: StatSet) -> float:
 static func describe(spec: CombatantSpec) -> String:
 	var e := of(spec)
 	var cap := StatMath.to_float(CombatantRuntime.from_spec(spec, 0).stat(BattleStats.MAX_STAMINA)) if spec != null else 0.0
-	return "耐力消耗：%s\n每秒平均消耗 %.1f　每秒回复 %.1f%s　耐力上限 %.0f" % [
-		e["rating"], e["cost"], e["regen"], "" if e["regen"] > 0.0 else "（不回复）", cap]
+	return UiText.t("stat.stamina_tip") % [
+		rating_label(String(e["rating"])), e["cost"], e["regen"], "" if e["regen"] > 0.0 else UiText.t("stat.no_regen"), cap]

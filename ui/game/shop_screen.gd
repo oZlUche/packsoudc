@@ -29,8 +29,8 @@ func open(payload: Dictionary) -> void:
 
 	var left := _vbox(8)
 	row.add_child(left)
-	_frame_title("商店")     # 157：标题在石板框的标题条上，说明留在原处
-	left.add_child(_label("把商品拖进背包 = 买　双击 = 买　把自己的东西拖进出售区 = 卖（半价）", 13, UiPalette.DIM))
+	_frame_title(UiText.t("node.label.shop"))     # 157：标题在石板框的标题条上，说明留在原处
+	left.add_child(_label(UiText.t("shop.intro"), 13, UiPalette.DIM))
 	_wallet_line = _label("", 13, UiPalette.DIM)
 	left.add_child(_wallet_line)
 	_shelf_row = _hbox(10)
@@ -39,7 +39,7 @@ func open(payload: Dictionary) -> void:
 	left.add_child(_belt_row)
 	var sell_col := _vbox(4)
 	left.add_child(sell_col)
-	sell_col.add_child(_label("出售区　拖进来就卖，回定价的一半", 13, UiPalette.DIM))
+	sell_col.add_child(_label(UiText.t("shop.sell_area"), 13, UiPalette.DIM))
 	_sell_view = InventoryView.new()
 	_sell_view.label_font = font
 	_sell_view.show_adjacency = false
@@ -51,10 +51,10 @@ func open(payload: Dictionary) -> void:
 	var buttons := _hbox(8)
 	_refresh_btn = _button("", refresh_stock, 13)
 	buttons.add_child(_refresh_btn)
-	var back := _button("收起", to_map, 13)
-	back.tooltip_text = "回地图，店还开着（Esc）"
+	var back := _button(UiText.t("camp.fold"), to_map, 13)
+	back.tooltip_text = UiText.t("shop.fold_tip")
 	buttons.add_child(back)
-	buttons.add_child(_button("离开", leave, 13))
+	buttons.add_child(_button(UiText.t("shop.leave"), leave, 13))
 	left.add_child(buttons)
 
 	# 右边：自己的背包（棋盘 + 地上），和店共用一层拖拽
@@ -67,10 +67,10 @@ func open(payload: Dictionary) -> void:
 	if _session != null:
 		_session.stock_changed.connect(_rebuild)
 		_session.bought.connect(func(def: ItemDef, price: int, _inst: ItemInstance):
-			_say("买下了「%s」，花了 %d 币" % [Names.of(def), price])
+			_say(UiText.t("shop.bought") % [Names.of(def), price])
 			_refresh())
 		_session.sold_item.connect(func(def: ItemDef, gain: int):
-			_say("卖掉了「%s」，得 %d 币" % [Names.of(def), gain])
+			_say(UiText.t("shop.sold") % [Names.of(def), gain])
 			_refresh())
 		flow.run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh())
 	_rebuild()
@@ -84,7 +84,7 @@ func buy(i: int) -> bool:
 	if not _session.can_buy(i):
 		if i >= 0 and i < _session.stock.size() and not _session.sold.has(i):
 			var inst := _session.item_at(i)
-			_say("金币不足：「%s」要 %d 币，你有 %d" % [Names.of(inst.def) if inst != null else "?", int(_session.stock[i]["price"]), flow.run.wallet.balance])
+			_say(UiText.t("shop.short") % [Names.of(inst.def) if inst != null else "?", int(_session.stock[i]["price"]), flow.run.wallet.balance])
 		return false
 	return _session.buy(i) != null
 
@@ -144,7 +144,7 @@ func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 		if target == flow.run.board or target == flow.run.storage:
 			if _session.can_buy(slot):
 				return true
-			_say("金币不足：「%s」要 %d 币，你有 %d" % [Names.of(inst.def), int(_session.stock[slot]["price"]), flow.run.wallet.balance])
+			_say(UiText.t("shop.short") % [Names.of(inst.def), int(_session.stock[slot]["price"]), flow.run.wallet.balance])
 			return false
 		return false
 	# 自己的东西
@@ -184,7 +184,7 @@ func _on_drag_finished(uid: int, dropped: bool) -> void:
 	if slot >= 0 and (flow.run.board.has_item(uid) or flow.run.storage.has_item(uid)):
 		# 101 第 6 刀：结账与结不成时的回滚都在会话里（ShopSession.pay_or_return），这里只说一句
 		if not _session.pay_or_return(slot, uid, [flow.run.board, flow.run.storage]):
-			_say("金币不足，东西放回了栏位")
+			_say(UiText.t("shop.returned"))
 		_refresh()
 		return
 	# 自己的东西进了出售区：卖
@@ -223,7 +223,7 @@ func _rebuild() -> void:
 		var def := inst.def if inst != null else null
 		var sold := _session.sold.has(i)
 		var size := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
-		var price := _label("已售" if sold else "%d 币　%d×%d" % [int(_session.stock[i]["price"]), size.x, size.y], 12, UiPalette.DIM if sold else UiPalette.STAMINA)
+		var price := _label(UiText.t("shop.sold_tag") if sold else UiText.t("shop.price_tag") % [int(_session.stock[i]["price"]), size.x, size.y], 12, UiPalette.DIM if sold else UiPalette.STAMINA)
 		price.name = "Price%d" % idx
 		col.add_child(price)
 		_shelf_row.add_child(col)
@@ -240,22 +240,22 @@ func _rebuild_belt() -> void:
 	_belt_btns.clear()
 	if _session.belt_offers.is_empty():
 		return
-	_belt_row.add_child(_label("随身", 13, UiPalette.DIM))
+	_belt_row.add_child(_label(UiText.t("shop.carried_row"), 13, UiPalette.DIM))
 	for i in _session.belt_offers.size():
 		var idx := i
 		var def := BeltSkillDef.find(StringName(String(_session.belt_offers[i]["id"])))
 		var b := _button("", func(): buy_belt(idx), 13)
-		b.tooltip_text = "%s\n%s\n买了直接进腰带（右下角）" % [def.description, def.describe()] if def != null else ""
+		b.tooltip_text = UiText.t("shop.belt_tip") % [Names.description_of(def), def.describe()] if def != null else ""
 		_belt_row.add_child(b)
 		_belt_btns.append(b)
 
 
 ## 160 补一：买「随身」那一排第 i 格。返回空串 = 买了，否则是原因（写在提示行）
 func buy_belt(i: int) -> String:
-	var why := _session.buy_belt(i) if _session != null else "没有店"
+	var why := _session.buy_belt(i) if _session != null else UiText.t("shop.no_shop")
 	var def := BeltSkillDef.find(StringName(String(_session.belt_offers[i]["id"]))) if _session != null and i >= 0 and i < _session.belt_offers.size() else null
-	var name := def.display_name if def != null else "随身技能"
-	_say("买下了「%s」，放进了腰带" % name if why == "" else "「%s」买不了：%s" % [name, why])
+	var name := Names.of(def) if def != null else UiText.t("shop.carried_tool")
+	_say(UiText.t("shop.belt_bought") % name if why == "" else UiText.t("shop.cant_buy") % [name, why])
 	_refresh()
 	return why
 
@@ -263,17 +263,17 @@ func buy_belt(i: int) -> String:
 func _refresh() -> void:
 	if _session == null:
 		return
-	_wallet_line.text = "货币 %d　商品按真实尺寸摆着；拖进棋盘或地上就买下" % flow.run.wallet.balance
-	_refresh_btn.text = "刷新（%d 币）" % _session.refresh_cost()
+	_wallet_line.text = UiText.t("shop.wallet") % flow.run.wallet.balance
+	_refresh_btn.text = UiText.t("shop.refresh") % _session.refresh_cost()
 	_refresh_btn.disabled = not _session.can_refresh()
 	for i in _shelf_views.size():
 		var price := _shelf_row.get_child(i).get_node_or_null("Price%d" % i) as Label
 		if price != null and _session.sold.has(i):
-			price.text = "已售"
+			price.text = UiText.t("shop.sold_tag")
 			price.theme_type_variation = UiTheme.LABEL_DIM     # 121：卖掉了换暗色变体
 	for i in _belt_btns.size():
 		var offer: Dictionary = _session.belt_offers[i]
 		var def := BeltSkillDef.find(StringName(String(offer["id"])))
 		var sold := _session.belt_sold.has(i)
-		_belt_btns[i].text = "%s　已售" % def.display_name if sold else "%s　%d 币" % [def.display_name if def != null else String(offer["id"]), int(offer["price"])]
+		_belt_btns[i].text = UiText.t("shop.belt_sold") % Names.of(def) if sold else UiText.t("shop.belt_price") % [Names.of(def) if def != null else String(offer["id"]), int(offer["price"])]
 		_belt_btns[i].disabled = sold

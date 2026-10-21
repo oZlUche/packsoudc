@@ -16,4 +16,4 @@ func gain(event: StringName, payload: Dictionary) -> int:
 
 
 func describe() -> String:
-	return "头一回踩上岔路 +%d，再踩用过的点 +%d" % [first_amount, again_amount]
+	return UiText.t("deed.enter_node") % [first_amount, again_amount]

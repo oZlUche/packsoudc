@@ -13,4 +13,4 @@ func gain(event: StringName, payload: Dictionary) -> int:
 
 
 func describe() -> String:
-	return "每失去 1 点体力 +%s" % TextTemplate.num(multiplier)
+	return UiText.t("deed.vitality_lost") % TextTemplate.num(multiplier)

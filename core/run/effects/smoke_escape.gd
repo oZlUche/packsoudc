@@ -6,9 +6,9 @@ extends BeltEffect
 
 func blocked_reason(run: RunState) -> String:
 	if run == null or run.events == null or run.events.pending_battle.is_empty():
-		return "只能在开战前用"
+		return UiText.t("log.prebattle_only")
 	if StringName(String(run.events.pending_battle.get("type", ""))) == &"core":
-		return "核心的战斗躲不开"
+		return UiText.t("bonus.smoke_core")
 	return ""
 
 
@@ -17,4 +17,4 @@ func apply(run: RunState) -> void:
 
 
 func describe() -> String:
-	return "这一场不打：不扣体力、没有战利品（核心用不了）"
+	return UiText.t("bonus.smoke")

@@ -17,7 +17,6 @@ const SLATE_SIZE := 15
 ## 把手 / 路标悬停时提亮
 const HOVER_LIFT := 1.12
 const SLATE_INSET := Vector2(28, 36)
-const DESCRIPTION := "把三件道具分别放进【时机】【效果】【数值】三个槽：时机槽定什么时候、效果槽定做什么、数值槽定多大，各按道具的材质、用途、稀有度查表。三槽都放了才能铸；铸成一枚铸牌，拖到武器上就是附魔（永久，后来者覆盖前者）。铸炉用一次就熄。"
 
 var _node: MapNode = null
 ## 时机、效果、数值三个槽
@@ -86,7 +85,7 @@ func open(payload: Dictionary) -> void:
 	_out_host.add_child(_out_view)
 	_reserve_ground(_out_host)
 
-	_slate = _wrapped(DESCRIPTION, SLATE_SIZE, UiPalette.FG, 400)
+	_slate = _wrapped(UiText.t("forge.description"), SLATE_SIZE, UiPalette.FG, 400)
 	add_child(_slate)
 	_spots[_slate] = _rect(_layout.get("slate", {}))
 	_text_box = _vbox(2)
@@ -99,10 +98,10 @@ func open(payload: Dictionary) -> void:
 	_line = _label("", 13, UiPalette.HEAL)
 	_text_box.add_child(_line)
 
-	_forge_btn = _piece_button("handle", "铸", forge)
+	_forge_btn = _piece_button("handle", UiText.t("forge.forge_btn"), forge)
 	_forge_btn.disabled = true
-	_back_btn = _piece_button("sign", "返回", to_map)
-	_back_btn.tooltip_text = "离开铸炉；没铸过站在这个休息点上还能再开（Esc）"
+	_back_btn = _piece_button("sign", UiText.t("setup.back"), to_map)
+	_back_btn.tooltip_text = UiText.t("forge.back_tip")
 
 	_bag_host = _host(_rect(_layout.get("bag", {})))
 	_reserve_ground(_bag_host)
@@ -266,11 +265,11 @@ func forge() -> ItemInstance:
 		return null
 	var token := flow.forge_token(_node, p[0], p[1], p[2], [_slots[0], _slots[1], _slots[2]])
 	if token == null:
-		_line.text = "铸不出来（铸炉映射表缺了）"
+		_line.text = UiText.t("forge.failed")
 		return null
 	if not _out.try_add(token):
 		flow.run.storage.admit(token)
-	_line.text = "铸成：%s —— 拖到武器上就是附魔" % Names.of_item(token)
+	_line.text = UiText.t("forge.done") % Names.of_item(token)
 	_refresh()
 	return token
 
@@ -346,21 +345,21 @@ func _refresh() -> void:
 	_forge_btn.texture_disabled = UiTheme.art_cached("forge/handle_%s" % ("idle" if open else "off"))
 	_bg.texture = UiTheme.art_cached("forge/bg_%s" % ("lit" if open else "cold"))     # 铸过：炉熄
 	var g := guess() if open else {}
-	_guess.text = "" if g.is_empty() else "按空槽的默认行：将铸出 铸牌 · %s —— %s" % [Forge.prefix(g), Glossary.strip_bbcode(Forge.sentence(g))]
+	_guess.text = "" if g.is_empty() else UiText.t("forge.guess") % [Forge.prefix(g), Glossary.strip_bbcode(Forge.sentence(g))]
 	_guess.visible = _guess.text != ""     # 空着不占一行
 	if not open:
-		_forge_btn.tooltip_text = "这座铸炉已经用过了"
-		_preview.text = "这座铸炉已经用过了" if _out.item_count() == 0 else "铸好了：把铸牌拖回背包，或拖到武器上附魔"
+		_forge_btn.tooltip_text = UiText.t("forge.used")
+		_preview.text = UiText.t("forge.used") if _out.item_count() == 0 else UiText.t("forge.ready")
 	elif ench.is_empty():
 		var missing: Array[String] = []
 		for i in _slots.size():
 			if _slots[i].item_count() == 0:
-				missing.append("【%s】" % Forge.slot_name(ForgeTable.SLOTS[i]))
-		_preview.text = "还差：%s" % "".join(missing)
+				missing.append(UiText.t("forge.slot_bracket") % Forge.slot_name(ForgeTable.SLOTS[i]))
+		_preview.text = UiText.t("forge.missing") % UiText.t("forge.missing_sep").join(missing)
 		_forge_btn.tooltip_text = _preview.text
 	else:
-		_preview.text = "将铸出：铸牌 · %s —— %s" % [Forge.prefix(ench), Glossary.strip_bbcode(Forge.sentence(ench))]
-		_forge_btn.tooltip_text = "铸"
+		_preview.text = UiText.t("forge.preview") % [Forge.prefix(ench), Glossary.strip_bbcode(Forge.sentence(ench))]
+		_forge_btn.tooltip_text = UiText.t("forge.forge_btn")
 
 
 ## 风箱把手现在是哪一张（ready / idle / off；测试看）

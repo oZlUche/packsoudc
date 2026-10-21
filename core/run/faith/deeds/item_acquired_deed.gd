@@ -20,5 +20,7 @@ func gain(event: StringName, payload: Dictionary) -> int:
 
 
 func describe() -> String:
-	var what := ("带「%s」的" % Glossary.tag_name(tag)) if tag != &"" else ""
-	return "获得%s道具 +%d%s" % [what, amount, "× 格子数" if per_cell else ""]
+	var per := UiText.t("deed.per_cell") if per_cell else ""
+	if tag != &"":
+		return UiText.t("deed.acquired_tagged") % [Glossary.tag_name(tag), amount, per]
+	return UiText.t("deed.acquired") % [amount, per]
