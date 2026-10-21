@@ -5,6 +5,9 @@
     "en": "Antler"
   },
   "description": "一对分叉的角，猎人的凭证。",
+  "descriptions": {
+    "en": "A pair of forked antlers. Proof of a hunter."
+  },
   "shape": [
     "11",
     "10"

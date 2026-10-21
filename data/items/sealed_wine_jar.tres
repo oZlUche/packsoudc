@@ -19,6 +19,9 @@ display_names = {
 "en": "Sealed Wine Jar"
 }
 description = "泥封还没开，摇一摇还有半坛。"
+descriptions = {
+"en": "The clay seal is still on. Give it a shake: half full."
+}
 shape = SubResource("Resource_mbcq2")
 rarity = 1
 weight = 6

@@ -1,10 +1,19 @@
 {
   "id": "event_rest_spot",
   "title": "歇脚处",
+  "titles": {
+    "en": "A Place to Rest"
+  },
   "text": "一处避风的角落，看起来能歇一会儿。",
+  "texts": {
+    "en": "A corner out of the wind. Looks like you could rest a while."
+  },
   "options": [
     {
       "label": "歇一会儿",
+      "labels": {
+        "en": "Rest a while"
+      },
       "outcomes": [
         {
           "type": "restore_vitality"
@@ -12,7 +21,10 @@
       ]
     },
     {
-      "label": "继续走"
+      "label": "继续走",
+      "labels": {
+        "en": "Keep going"
+      }
     }
   ]
 }

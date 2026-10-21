@@ -1,6 +1,9 @@
 {
   "id": "tech_bargain_2",
   "display_name": "讨价（科技）",
+  "display_names": {
+    "en": "Haggling (Tech)"
+  },
   "description": "商店售价 ×{shop_price_mult_factor}",
   "scope": "META",
   "effects": [

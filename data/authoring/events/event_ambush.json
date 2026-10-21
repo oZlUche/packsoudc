@@ -1,10 +1,19 @@
 {
   "id": "event_ambush",
   "title": "动静",
+  "titles": {
+    "en": "Something Moving"
+  },
   "text": "前面有动静。",
+  "texts": {
+    "en": "Something's moving up ahead."
+  },
   "options": [
     {
       "label": "上去看看",
+      "labels": {
+        "en": "Go take a look"
+      },
       "outcomes": [
         {
           "type": "start_battle"
@@ -13,6 +22,9 @@
     },
     {
       "label": "绕开",
+      "labels": {
+        "en": "Go around"
+      },
       "outcomes": [
         {
           "type": "grant_map_buff",
@@ -20,7 +32,10 @@
         },
         {
           "type": "say",
-          "text": "你屏着气绕了过去，手还在抖。"
+          "text": "你屏着气绕了过去，手还在抖。",
+          "texts": {
+            "en": "You hold your breath and slip past. Your hands are still shaking."
+          }
         }
       ]
     }

@@ -1,6 +1,9 @@
 {
   "id": "tech_undaunted_1",
   "display_name": "不屈（科技）",
+  "display_names": {
+    "en": "Undaunted (Tech)"
+  },
   "description": "打输了少扣 {loss_discount_amount} 点体力（最少扣一点）",
   "scope": "META",
   "effects": [

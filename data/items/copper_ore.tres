@@ -18,5 +18,8 @@ display_names = {
 "en": "Copper Ore"
 }
 description = "带绿锈的矿石，熔了就是铜。"
+descriptions = {
+"en": "Ore streaked with green rust. Smelt it and you have copper."
+}
 shape = SubResource("Resource_6oun0")
 tags = Array[StringName]([&"material", &"nature", &"metal"])

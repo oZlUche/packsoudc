@@ -15,4 +15,7 @@ display_names = {
 "en": "Aid Pack"
 }
 description = "路上包扎一下，缓口气。"
+descriptions = {
+"en": "Patch yourself up on the road and catch your breath."
+}
 effects = Array[ExtResource("1_myimd")]([SubResource("Resource_n1log")])

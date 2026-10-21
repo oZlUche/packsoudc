@@ -5,6 +5,9 @@
     "en": "Copper Ingot"
   },
   "description": "熔好的铜，匀净。",
+  "descriptions": {
+    "en": "Smelted copper, clean and even."
+  },
   "shape": [
     "1"
   ],

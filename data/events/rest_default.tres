@@ -22,6 +22,9 @@ script = ExtResource("5_vey5p")
 [sub_resource type="Resource" id="Resource_anxhh"]
 script = ExtResource("1_64hfv")
 label = "回 {rest_restore} 点体力"
+labels = {
+"en": "Restore {rest_restore} Vitality"
+}
 hide_when_locked = true
 requires = Array[ExtResource("4_wcnx5")]([SubResource("Resource_upvsa")])
 outcomes = Array[ExtResource("2_eejmq")]([SubResource("Resource_ye14d")])
@@ -42,6 +45,9 @@ script = ExtResource("5_vey5p")
 [sub_resource type="Resource" id="Resource_spppq"]
 script = ExtResource("1_64hfv")
 label = "倒计时 −{pass_time_actions}，回 {rest_total} 点体力"
+labels = {
+"en": "Countdown −{pass_time_actions}, restore {rest_total} Vitality"
+}
 hide_when_locked = true
 requires = Array[ExtResource("4_wcnx5")]([SubResource("Resource_7r3ws")])
 outcomes = Array[ExtResource("2_eejmq")]([SubResource("Resource_oxytg"), SubResource("Resource_y42ju"), SubResource("Resource_qc75h")])
@@ -59,6 +65,9 @@ part = &"altar"
 [sub_resource type="Resource" id="Resource_trsnw"]
 script = ExtResource("1_64hfv")
 label = "献祭或特殊操作，二选一"
+labels = {
+"en": "Offering or special action, pick one"
+}
 hide_when_locked = true
 requires = Array[ExtResource("4_wcnx5")]([SubResource("Resource_pvksp"), SubResource("Resource_lp1md")])
 outcomes = Array[ExtResource("2_eejmq")]([SubResource("Resource_7wd84")])
@@ -72,6 +81,9 @@ script = ExtResource("11_u8irx")
 [sub_resource type="Resource" id="Resource_5la2b"]
 script = ExtResource("1_64hfv")
 label = "三件道具熔成一枚铸牌"
+labels = {
+"en": "Melt three items into one Forge Token"
+}
 hide_when_locked = true
 requires = Array[ExtResource("4_wcnx5")]([SubResource("Resource_vqmjx")])
 outcomes = Array[ExtResource("2_eejmq")]([SubResource("Resource_e61ae")])
@@ -79,10 +91,16 @@ outcomes = Array[ExtResource("2_eejmq")]([SubResource("Resource_e61ae")])
 [sub_resource type="Resource" id="Resource_f48da"]
 script = ExtResource("1_64hfv")
 label = "不算用掉"
+labels = {
+"en": "Not now"
+}
 
 [resource]
 script = ExtResource("12_xkvak")
 id = &"rest_default"
 title = "休息点"
+titles = {
+"en": "Rest Spot"
+}
 options = Array[ExtResource("1_64hfv")]([SubResource("Resource_anxhh"), SubResource("Resource_spppq"), SubResource("Resource_trsnw"), SubResource("Resource_5la2b"), SubResource("Resource_f48da")])
 scene = &"rest_camp"

@@ -5,6 +5,9 @@
     "en": "Silver Ore"
   },
   "description": "石头缝里一线银光。",
+  "descriptions": {
+    "en": "A thread of silver gleaming in a crack of stone."
+  },
   "shape": [
     "1"
   ],

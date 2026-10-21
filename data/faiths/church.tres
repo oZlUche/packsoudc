@@ -19,6 +19,12 @@ display_names = {
 }
 camp = 1
 god = "新教（唯一神）"
+gods = {
+"en": "The New Church (the one God)"
+}
 description = "皇帝暗中扶持的一神教，在无信的贫民、奴隶与行商之间传。概念暂不引入，只占位"
+descriptions = {
+"en": "A one-god faith quietly backed by the Emperor, spreading among the faithless poor, slaves and traveling merchants. The concept isn't introduced yet; placeholder only."
+}
 thresholds = Array[int]([3, 8])
 deeds = Array[ExtResource("2_awism")]([SubResource("Resource_0vdir")])

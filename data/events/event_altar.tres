@@ -24,6 +24,9 @@ amount = 2
 [sub_resource type="Resource" id="Resource_pgpwc"]
 script = ExtResource("5_xibjb")
 text = "印子亮了一下。"
+texts = {
+"en": "The handprint flares for a moment."
+}
 
 [sub_resource type="Resource" id="Resource_re61q"]
 script = ExtResource("7_3uf8i")
@@ -32,6 +35,9 @@ where = 0
 [sub_resource type="Resource" id="Resource_kdbt3"]
 script = ExtResource("1_iddjc")
 label = "献上棋盘上最值钱的一件"
+labels = {
+"en": "Offer the most valuable item on your board"
+}
 tags = Array[StringName]([&"offering"])
 requires = Array[ExtResource("6_p34rm")]([SubResource("Resource_re61q")])
 outcomes = Array[ExtResource("2_nmtw7")]([SubResource("Resource_yh5aj"), SubResource("Resource_apajt"), SubResource("Resource_pgpwc")])
@@ -46,6 +52,9 @@ script = ExtResource("8_esh8s")
 [sub_resource type="Resource" id="Resource_8lbh3"]
 script = ExtResource("5_xibjb")
 text = "匕首断了，石缝里有东西。"
+texts = {
+"en": "The Knife snaps. There's something in the crack."
+}
 
 [sub_resource type="Resource" id="Resource_3jcw6"]
 script = ExtResource("7_3uf8i")
@@ -54,6 +63,9 @@ item = &"knife"
 [sub_resource type="Resource" id="Resource_008v4"]
 script = ExtResource("1_iddjc")
 label = "用匕首撬开石缝"
+labels = {
+"en": "Pry the crack open with your Knife"
+}
 requires = Array[ExtResource("6_p34rm")]([SubResource("Resource_3jcw6")])
 outcomes = Array[ExtResource("2_nmtw7")]([SubResource("Resource_4jjh3"), SubResource("Resource_ntmko"), SubResource("Resource_8lbh3")])
 
@@ -66,19 +78,34 @@ script = ExtResource("10_ikocn")
 [sub_resource type="Resource" id="Resource_3535k"]
 script = ExtResource("5_xibjb")
 text = "石台碎了，有什么从底下爬了出来。"
+texts = {
+"en": "The slab shatters. Something crawls out from underneath."
+}
 
 [sub_resource type="Resource" id="Resource_g64cf"]
 script = ExtResource("1_iddjc")
 label = "砸了它"
+labels = {
+"en": "Smash it"
+}
 outcomes = Array[ExtResource("2_nmtw7")]([SubResource("Resource_rsdfd"), SubResource("Resource_bygq7"), SubResource("Resource_3535k")])
 
 [sub_resource type="Resource" id="Resource_21gwu"]
 script = ExtResource("1_iddjc")
 label = "离开"
+labels = {
+"en": "Leave"
+}
 
 [resource]
 script = ExtResource("11_qknfi")
 id = &"event_altar"
 title = "祭坛"
+titles = {
+"en": "The Altar"
+}
 text = "一座石台，上面刻着手掌的印子。"
+texts = {
+"en": "A stone slab with the print of a hand carved into it."
+}
 options = Array[ExtResource("1_iddjc")]([SubResource("Resource_kdbt3"), SubResource("Resource_008v4"), SubResource("Resource_g64cf"), SubResource("Resource_21gwu")])

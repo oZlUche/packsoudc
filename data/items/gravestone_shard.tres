@@ -18,6 +18,9 @@ display_names = {
 "en": "Gravestone Shard"
 }
 description = "刻字磨平了的半块石碑。"
+descriptions = {
+"en": "Half a headstone, its carving worn smooth."
+}
 shape = SubResource("Resource_bglum")
 weight = 4
 tags = Array[StringName]([&"material", &"nature", &"stone"])

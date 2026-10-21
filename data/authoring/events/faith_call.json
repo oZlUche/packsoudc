@@ -1,10 +1,19 @@
 {
   "id": "faith_call",
   "title": "触发信仰",
+  "titles": {
+    "en": "A Call to Faith"
+  },
   "text": "废墟深处立着一座祭坛，看不出供的是哪位神。空气里有什么在等你。",
+  "texts": {
+    "en": "Deep in the ruins stands an altar. You can't tell which god it belongs to. Something in the air is waiting for you."
+  },
   "options": [
     {
       "label": "靠近",
+      "labels": {
+        "en": "Go closer"
+      },
       "outcomes": [
         {
           "type": "next_event_random",
@@ -18,7 +27,10 @@
       ]
     },
     {
-      "label": "离开"
+      "label": "离开",
+      "labels": {
+        "en": "Leave"
+      }
     }
   ]
 }

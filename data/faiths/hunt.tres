@@ -46,7 +46,13 @@ display_names = {
 "en": "God of the Hunt"
 }
 god = "狩猎之神（比较、差异、拆解）"
+gods = {
+"en": "God of the Hunt (comparison, difference, dissection)"
+}
 description = "不被帝国祭祀，但在民间被猎人信奉"
+descriptions = {
+"en": "Not worshipped in the Empire's rites, but common hunters follow this god."
+}
 thresholds = Array[int]([25, 80])
 deeds = Array[ExtResource("2_mrnmw")]([SubResource("Resource_yrrbb"), SubResource("Resource_0k2lu")])
 offerings = Array[ExtResource("5_w22es")]([SubResource("Resource_xpuyb"), SubResource("Resource_8obof"), SubResource("Resource_otlgf")])

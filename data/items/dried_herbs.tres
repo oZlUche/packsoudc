@@ -18,5 +18,8 @@ display_names = {
 "en": "Dried Herbs"
 }
 description = "晒干扎好的草药。"
+descriptions = {
+"en": "Herbs dried in the sun and tied in bundles."
+}
 shape = SubResource("Resource_2frbc")
 tags = Array[StringName]([&"material", &"nature", &"herb"])

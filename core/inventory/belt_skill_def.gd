@@ -15,6 +15,8 @@ const ICON_DIR := "res://assets/belt_skills/"
 ## 别的语言的名字（语言码 → 名字）
 @export var display_names: Dictionary = {}
 @export var description: String = ""
+## 221 F5: description in other languages, {"en": ...}
+@export var descriptions: Dictionary = {}
 ## 商店「随身」那一排的标价（经济规则的价格倍数照乘）
 @export var price: int = 20
 

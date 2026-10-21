@@ -1,10 +1,19 @@
 {
   "id": "search_default",
   "title": "搜索点",
+  "titles": {
+    "en": "Search Spot"
+  },
   "text": "这里像是能翻出点什么。翻得越久，越可能惊动附近的人。",
+  "texts": {
+    "en": "Looks like there's something to dig up here. The longer you dig, the likelier you are to wake someone nearby."
+  },
   "options": [
     {
       "label": "搜索",
+      "labels": {
+        "en": "Search"
+      },
       "outcomes": [
         {
           "type": "open_search"
@@ -12,7 +21,10 @@
       ]
     },
     {
-      "label": "离开"
+      "label": "离开",
+      "labels": {
+        "en": "Leave"
+      }
     }
   ]
 }

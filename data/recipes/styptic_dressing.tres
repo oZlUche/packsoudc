@@ -12,3 +12,6 @@ display_names = {
 inputs = Array[StringName]([&"bandage_roll", &"dried_herbs"])
 output = &"styptic_dressing"
 note = "把干草药束拖到绷带卷上：做成止血敷料。"
+notes = {
+"en": "Drag the Dried Herbs onto the Bandage Roll: they make a Styptic Dressing."
+}

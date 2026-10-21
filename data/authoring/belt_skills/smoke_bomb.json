@@ -5,6 +5,9 @@
     "en": "Smoke Bomb"
   },
   "description": "开战前丢出去，趁乱溜走。",
+  "descriptions": {
+    "en": "Throw it before a battle starts and slip away in the confusion."
+  },
   "price": 30,
   "when": "PREBATTLE",
   "effects": [

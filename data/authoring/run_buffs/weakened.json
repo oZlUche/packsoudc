@@ -1,7 +1,13 @@
 {
   "id": "weakened",
   "display_name": "虚弱",
+  "display_names": {
+    "en": "Weakened"
+  },
   "description": "走 {duration_steps} 步之内伤害 {amount|signed}%",
+  "descriptions": {
+    "en": "Damage {amount|signed}% for {duration_steps} steps"
+  },
   "duration_steps": 5,
   "mods": [
     {

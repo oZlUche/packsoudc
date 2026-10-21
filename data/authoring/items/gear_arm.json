@@ -5,6 +5,9 @@
     "en": "Gear Arm"
   },
   "description": "一节带齿轮的机械臂。挨着的武器出手更快。",
+  "descriptions": {
+    "en": "A geared length of mechanical arm. Adjacent weapons activate faster."
+  },
   "shape": [
     "1",
     "1"

@@ -1,9 +1,15 @@
 {
   "id": "rest_default",
   "title": "休息点",
+  "titles": {
+    "en": "Rest Spot"
+  },
   "options": [
     {
       "label": "回 {rest_restore} 点体力",
+      "labels": {
+        "en": "Restore {rest_restore} Vitality"
+      },
       "hide_when_locked": true,
       "requires": [
         {
@@ -18,6 +24,9 @@
     },
     {
       "label": "倒计时 −{pass_time_actions}，回 {rest_total} 点体力",
+      "labels": {
+        "en": "Countdown −{pass_time_actions}, restore {rest_total} Vitality"
+      },
       "hide_when_locked": true,
       "requires": [
         {
@@ -39,6 +48,9 @@
     },
     {
       "label": "献祭或特殊操作，二选一",
+      "labels": {
+        "en": "Offering or special action, pick one"
+      },
       "hide_when_locked": true,
       "requires": [
         {
@@ -57,6 +69,9 @@
     },
     {
       "label": "三件道具熔成一枚铸牌",
+      "labels": {
+        "en": "Melt three items into one Forge Token"
+      },
       "hide_when_locked": true,
       "requires": [
         {
@@ -70,7 +85,10 @@
       ]
     },
     {
-      "label": "不算用掉"
+      "label": "不算用掉",
+      "labels": {
+        "en": "Not now"
+      }
     }
   ],
   "scene": "rest_camp"

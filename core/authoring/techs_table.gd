@@ -113,6 +113,8 @@ static func generate(f: Dictionary, problems: Array[String] = []) -> Dictionary:
 				var e := ((t["tiers"][k] as Dictionary)["params"] as Dictionary).duplicate(true)
 				e["type"] = XlsxReader.cell_text(t["params"].get("effect", ""))
 				var buff := {"id": bid, "display_name": "%s（科技）" % t["name"], "description": t["template"], "scope": "META", "effects": [e]}
+				if t["en"] != "":
+					buff["display_names"] = {"en": "%s (Tech)" % t["en"]}
 				var report := ImportReport.new()
 				var def := ContentImporter.import_run_buff(buff, ctx, report)
 				if not report.ok():

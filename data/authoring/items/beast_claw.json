@@ -5,6 +5,9 @@
     "en": "Beast Claw"
   },
   "description": "弯得正好。挨着的武器更容易暴击。",
+  "descriptions": {
+    "en": "Curved just right. Adjacent weapons crit more easily."
+  },
   "shape": [
     "1",
     "1"

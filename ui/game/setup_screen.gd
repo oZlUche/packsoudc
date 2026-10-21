@@ -861,7 +861,7 @@ func challenge_lines() -> Array:
 	var out: Array = []
 	var avail := flow.available_difficulties()
 	for i in range(0, mini(difficulty_index + 1, avail.size())):
-		var c := avail[i].challenge.strip_edges()
+		var c := Names.pick(avail[i].challenges, avail[i].challenge).strip_edges()
 		if c != "":
 			out.append([avail[i].level, c])
 	return out

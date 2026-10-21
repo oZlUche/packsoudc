@@ -12,11 +12,20 @@ script = ExtResource("3_711kb")
 [sub_resource type="Resource" id="Resource_cc02l"]
 script = ExtResource("1_kdcog")
 label = "迎战"
+labels = {
+"en": "Fight"
+}
 outcomes = Array[ExtResource("2_saroh")]([SubResource("Resource_8w7yo")])
 
 [resource]
 script = ExtResource("5_xvjdf")
 id = &"search_encounter"
 title = "有人来了"
+titles = {
+"en": "Someone's Coming"
+}
 text = "翻动的声响惊动了附近的人。什么都没来得及拿，对方已经到了跟前。"
+texts = {
+"en": "The noise woke someone nearby. Before you could grab anything, they were on you."
+}
 options = Array[ExtResource("1_kdcog")]([SubResource("Resource_cc02l")])

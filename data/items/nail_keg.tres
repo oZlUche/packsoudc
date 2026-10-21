@@ -19,6 +19,9 @@ display_names = {
 "en": "Nail Keg"
 }
 description = "一小桶铁钉。"
+descriptions = {
+"en": "A small keg of iron nails."
+}
 shape = SubResource("Resource_hvtv8")
 rarity = 1
 tags = Array[StringName]([&"material", &"crafted", &"metal", &"supply"])

@@ -20,6 +20,9 @@ buff = &"marked"
 [sub_resource type="Resource" id="Resource_40iol"]
 script = ExtResource("5_dahyu")
 text = "他记住了你的脸。"
+texts = {
+"en": "He remembers your face."
+}
 
 [sub_resource type="Resource" id="Resource_k8k15"]
 script = ExtResource("7_pqjsx")
@@ -27,21 +30,36 @@ script = ExtResource("7_pqjsx")
 [sub_resource type="Resource" id="Resource_xy8ud"]
 script = ExtResource("1_chx3k")
 label = "给他 {change_money_amount|abs} 币"
+labels = {
+"en": "Give him {change_money_amount|abs} coins"
+}
 requires = Array[ExtResource("6_v7ers")]([SubResource("Resource_k8k15")])
 outcomes = Array[ExtResource("2_doguw")]([SubResource("Resource_o80rv"), SubResource("Resource_l5hy7"), SubResource("Resource_40iol")])
 
 [sub_resource type="Resource" id="Resource_dvpk6"]
 script = ExtResource("5_dahyu")
 text = "他缩回了手。"
+texts = {
+"en": "He pulls his hand back."
+}
 
 [sub_resource type="Resource" id="Resource_yfkhl"]
 script = ExtResource("1_chx3k")
 label = "不理他"
+labels = {
+"en": "Ignore him"
+}
 outcomes = Array[ExtResource("2_doguw")]([SubResource("Resource_dvpk6")])
 
 [resource]
 script = ExtResource("8_g30eo")
 id = &"event_stranger"
 title = "陌生人"
+titles = {
+"en": "A Stranger"
+}
 text = "一个瘦削的人靠在墙边，向你伸出手。"
+texts = {
+"en": "A gaunt man leans against the wall and holds out his hand."
+}
 options = Array[ExtResource("1_chx3k")]([SubResource("Resource_xy8ud"), SubResource("Resource_yfkhl")])

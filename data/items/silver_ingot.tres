@@ -18,6 +18,9 @@ display_names = {
 "en": "Silver Ingot"
 }
 description = "打了印记的银。"
+descriptions = {
+"en": "Silver with a stamped mark."
+}
 shape = SubResource("Resource_a5uob")
 rarity = 2
 tags = Array[StringName]([&"material", &"crafted", &"metal", &"supply"])

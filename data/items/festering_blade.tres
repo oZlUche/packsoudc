@@ -97,6 +97,9 @@ display_names = {
 "en": "Festering Blade"
 }
 description = "伤口不会愈合，只会烂下去。"
+descriptions = {
+"en": "Its wounds never heal. They only fester."
+}
 shape = SubResource("Resource_dixyd")
 rarity = 3
 tags = Array[StringName]([&"weapon", &"melee", &"bleed", &"poison", &"metal"])

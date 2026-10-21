@@ -15,6 +15,9 @@ percent = 40
 script = ExtResource("5_tkckf")
 id = &"tech_endurance_2"
 display_name = "耐久（科技）"
+display_names = {
+"en": "Endurance (Tech)"
+}
 description = "体力上限 {vitality_max_bonus_percent|signed}%"
 scope = 0
 effects = Array[ExtResource("1_xfin6")]([SubResource("Resource_7vaev")])

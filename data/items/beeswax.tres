@@ -18,6 +18,9 @@ display_names = {
 "en": "Beeswax"
 }
 description = "带蜜香的蜡。"
+descriptions = {
+"en": "Wax that smells of honey."
+}
 shape = SubResource("Resource_kxnct")
 rarity = 1
 tags = Array[StringName]([&"material", &"nature", &"flesh"])

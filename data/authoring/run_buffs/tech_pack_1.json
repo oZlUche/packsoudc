@@ -1,6 +1,9 @@
 {
   "id": "tech_pack_1",
   "display_name": "行囊（科技）",
+  "display_names": {
+    "en": "Travel Pack (Tech)"
+  },
   "description": "开局钱 {starting_funds_bonus_percent|signed}%",
   "scope": "META",
   "effects": [

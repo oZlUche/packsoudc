@@ -55,7 +55,7 @@ func note_of(a: ItemDef, b: ItemDef) -> String:
 	if a == null or b == null:
 		return ""
 	var r := RecipeDef.find(recipes, a.id, b.id)
-	return r.note if r != null else ""
+	return Names.pick(r.notes, r.note) if r != null else ""
 
 
 ## 114（作者定）：**拖到上面立刻合** —— 手上的 [param a]（拖拽中，不在任何容器里）压在棋盘上的 [param b_uid] 那件上、

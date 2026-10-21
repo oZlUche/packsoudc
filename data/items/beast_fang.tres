@@ -67,6 +67,9 @@ display_names = {
 "en": "Beast Fang"
 }
 description = "磨利了能镶在刀上。挨着的近战武器伤害更高。"
+descriptions = {
+"en": "Sharpen it and it'll sit in a blade. Adjacent melee weapons deal more damage."
+}
 shape = SubResource("Resource_60sg8")
 rarity = 1
 tags = Array[StringName]([&"material", &"nature", &"bone", &"beast_part"])

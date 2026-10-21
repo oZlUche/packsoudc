@@ -5,6 +5,9 @@
     "en": "Ironwood Sapling"
   },
   "description": "自然之神的树苗：放进背包，随倒计时长大。长成小树就扎根、给你护甲；长成大树连包一起扎根，护甲更厚。",
+  "descriptions": {
+    "en": "A sapling of the God of Nature: put it in your pack and it grows with the Countdown. As a Young Tree it takes root and gives you Armor; as an Old Tree it roots its whole bag, and the Armor gets thicker."
+  },
   "shape": [
     "1",
     "1"

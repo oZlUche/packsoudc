@@ -5,6 +5,9 @@
     "en": "Aid Pack"
   },
   "description": "路上包扎一下，缓口气。",
+  "descriptions": {
+    "en": "Patch yourself up on the road and catch your breath."
+  },
   "effects": [
     {
       "type": "mend_vitality"

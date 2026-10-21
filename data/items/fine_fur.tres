@@ -27,6 +27,9 @@ display_names = {
 "en": "Fine Fur"
 }
 description = "雪地兽的冬毛，又软又密。"
+descriptions = {
+"en": "A snow beast's winter coat, soft and thick."
+}
 shape = SubResource("Resource_vreeu")
 rarity = 2
 weight = 1

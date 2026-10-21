@@ -1,10 +1,19 @@
 {
   "id": "faith_call_earth",
   "title": "大地之神的匣",
+  "titles": {
+    "en": "Casket of the God of the Earth"
+  },
   "text": "祭坛是一整块没有接缝的石头。石面上凹进去一个拳头大的洞，里面是一只空心的石匣 —— 能装一件小东西。",
+  "texts": {
+    "en": "The altar is one seamless block of stone. A fist-sized hole is sunk into its face, and in it sits a hollow stone casket, big enough for one small thing."
+  },
   "options": [
     {
       "label": "取出石匣",
+      "labels": {
+        "en": "Take out the casket"
+      },
       "tags": [
         "offering"
       ],
@@ -15,12 +24,18 @@
         },
         {
           "type": "say",
-          "text": "大地之神的护符沉甸甸的，是个空匣子。"
+          "text": "大地之神的护符沉甸甸的，是个空匣子。",
+          "texts": {
+            "en": "The charm of the God of the Earth sits heavy in your hand. It's an empty casket."
+          }
         }
       ]
     },
     {
-      "label": "不拿，离开"
+      "label": "不拿，离开",
+      "labels": {
+        "en": "Leave it and go"
+      }
     }
   ]
 }

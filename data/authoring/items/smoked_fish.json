@@ -5,6 +5,9 @@
     "en": "Smoked Fish"
   },
   "description": "熏得发黑，咬着咸香。",
+  "descriptions": {
+    "en": "Smoked black. Salty and savory to bite."
+  },
   "shape": [
     "1",
     "1"

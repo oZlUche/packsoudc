@@ -5,7 +5,13 @@
     "en": "God of Nature"
   },
   "god": "自然之神（回归、容纳、变化）",
+  "gods": {
+    "en": "God of Nature (return, containment, change)"
+  },
   "description": "和生命密切相关，帝国诸神之一，信徒分布极为宽广，祭祀繁多，影响力很大",
+  "descriptions": {
+    "en": "Closely bound to life. One of the Empire's gods, with followers almost everywhere, many rites and great influence."
+  },
   "thresholds": [
     25,
     80,

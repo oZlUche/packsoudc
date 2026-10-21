@@ -120,7 +120,13 @@ display_names = {
 "en": "God of the Earth"
 }
 god = "大地之神（体积、空间）"
+gods = {
+"en": "God of the Earth (volume, space)"
+}
 description = "帝国祭祀的主神之一，但信徒很少，对应种族也极为低调"
+descriptions = {
+"en": "One of the chief gods in the Empire's rites, but with very few followers; its people keep a very low profile."
+}
 thresholds = Array[int]([25, 100, 250, 500])
 deeds = Array[ExtResource("5_81xyc")]([SubResource("Resource_mgcyf"), SubResource("Resource_7l3a5")])
 offerings = Array[ExtResource("8_rcova")]([SubResource("Resource_leima")])

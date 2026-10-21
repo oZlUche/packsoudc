@@ -5,6 +5,9 @@
     "en": "Gilded Goblet"
   },
   "description": "金皮包的杯子，贵族的。",
+  "descriptions": {
+    "en": "A cup sheathed in gold. A noble's."
+  },
   "shape": [
     "1"
   ],

@@ -18,5 +18,8 @@ display_names = {
 "en": "Mint Bundle"
 }
 description = "嚼着凉，提神。"
+descriptions = {
+"en": "Cool to chew. Wakes you up."
+}
 shape = SubResource("Resource_lq6ee")
 tags = Array[StringName]([&"material", &"nature", &"herb"])

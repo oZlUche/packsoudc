@@ -5,6 +5,9 @@
     "en": "Silver Ingot"
   },
   "description": "打了印记的银。",
+  "descriptions": {
+    "en": "Silver with a stamped mark."
+  },
   "shape": [
     "1"
   ],

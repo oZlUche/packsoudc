@@ -5,6 +5,9 @@
     "en": "Treasure Satchel"
   },
   "description": "看着不大，装进去的东西却轻了，也更值钱。",
+  "descriptions": {
+    "en": "Doesn't look like much, but what goes in gets lighter, and worth more."
+  },
   "shape": [
     "111",
     "111"

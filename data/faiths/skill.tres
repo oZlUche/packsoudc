@@ -48,7 +48,13 @@ display_names = {
 "en": "God of Skill"
 }
 god = "技巧之神（尺度、变形、结构）"
+gods = {
+"en": "God of Skill (measure, transformation, structure)"
+}
 description = "锻造、战斗技巧和各种手艺，是矮人族和盗贼以及工匠信奉的神明，帝国祭祀的诸神之一"
+descriptions = {
+"en": "Forging, combat technique and every craft. The god of dwarves, thieves and artisans; one of the gods in the Empire's rites."
+}
 thresholds = Array[int]([25, 80])
 deeds = Array[ExtResource("2_h8ube")]([SubResource("Resource_vjyer"), SubResource("Resource_padec")])
 offerings = Array[ExtResource("5_jvie7")]([SubResource("Resource_oirgc"), SubResource("Resource_diunh"), SubResource("Resource_5wnkl"), SubResource("Resource_n4w8t")])

@@ -97,7 +97,13 @@ display_names = {
 "en": "The Brute"
 }
 god = "蛮神（暴力与杀戮：力 / 冲撞）"
+gods = {
+"en": "The Brute (violence and slaughter: force / impact)"
+}
 description = "自然的概念（石头砸下也是暴力）；北境蛮族信祂，帝国边缘行省大多也信，帝国诸神之一，但地位不高"
+descriptions = {
+"en": "A concept of nature (a falling stone is violence too). Worshipped by the northern barbarians and by most of the Empire's border provinces; one of the Empire's gods, but of low standing."
+}
 thresholds = Array[int]([30, 100, 200, 400])
 deeds = Array[ExtResource("5_7cvah")]([SubResource("Resource_dyeg3"), SubResource("Resource_6l0tu")])
 offerings = Array[ExtResource("8_yf1t8")]([SubResource("Resource_ogl8n"), SubResource("Resource_47mtk"), SubResource("Resource_d5och"), SubResource("Resource_ffrn5")])
