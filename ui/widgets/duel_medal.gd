@@ -15,13 +15,13 @@ const GRIP := [Vector2(46.0, 85.45), Vector2(82.0, 85.45)]
 const TIP := [Vector2(93.57, 28.76), Vector2(34.43, 28.76)]
 ## 两剑交点（火星从这儿迸）
 const CROSS := Vector2(64.5, 61)
-## 劈：转多少、往对面推多少、多久（去 + 回）
-const STRIKE_DEG := 14.0
-const STRIKE_PUSH := 6.0
-const STRIKE_SEC := 0.12
+## 劈：转多少、往对面推多少、多久（去 + 回）。作者 2026-10-21 21:47：幅度、位移大一点，快一点
+const STRIKE_DEG := 26.0
+const STRIKE_PUSH := 12.0
+const STRIKE_SEC := 0.09
 ## 挨打：后仰多少、多久；剑身白闪
-const RECOIL_DEG := 8.0
-const RECOIL_SEC := 0.1
+const RECOIL_DEG := 14.0
+const RECOIL_SEC := 0.08
 ## 分胜负：赢的竖起来（剑尖朝正上，静止时偏 40°）、输的垂下去
 const RAISE_DEG := 40.0
 const DROP_DEG := 52.0
