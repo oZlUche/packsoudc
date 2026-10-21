@@ -256,9 +256,13 @@ func _switch_screen(screen: int, payload: Dictionary) -> void:
 
 
 ## 作者 10-20：一局里的叠层底下得是地图。读档回来直接落在点上（搜索、事件……）时，底屏还是主菜单 / 读取存档屏 ——
-## 先把底屏换成地图，再叠上去（不淡入：叠层自己会淡入）
+## 先把底屏换成地图，再叠上去（不淡入：叠层自己会淡入）。
+## 只换这两种读档入口的底屏：开局屏上也会叠事件（军团的交代），那时 flow.run 可能还是上一局，不能把开局屏换掉（测试报告 10-21 第 1 条）
+const _READ_ENTRY_SCREENS := [GameFlow.Screen.MAIN_MENU, GameFlow.Screen.SLOTS]
+
+
 func _ensure_map_base() -> void:
-	if flow.run == null or (_base != null and _base.screen == GameFlow.Screen.MAP):
+	if flow.run == null or _base == null or not _READ_ENTRY_SCREENS.has(_base.screen):
 		return
 	if _base != null:
 		_base.queue_free()
