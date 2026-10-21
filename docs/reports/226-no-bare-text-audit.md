@@ -175,3 +175,10 @@
 **守门测试** `test_no_bare_text_226`：给「算控件」的变体列一张白名单（`UiTheme.PLATE_VARIANTS`），headless 走一遍每个屏，凡 `Label / RichTextLabel` 的祖先链里没有白名单变体、没有 `Button`、没有 `OverlayFrame` 标题条的，就报出来（豁免：`DevGate`、`meta.exempt_bare_text` 标记的退路字）。以后新屏加裸字会红。
 
 落地顺序排在 224 → 223 → 225 之后。
+
+## 五、补充一：美术三件图到位（美术设计 2026-10-21 17:07）
+
+图在 `/mnt/project-files/art/ui/notice/`（README 写了尺寸、九宫格边距、tone、字号），甲套已交执行先落地；作者若改选乙只换图。和 §四 写法不同的两处，以美术为准：
+- **告示签高 40**（浅 / 深 / 要紧三张石条），不是 36–40。
+- **商店「已售」是一枚 56×56 的戳**，盖在价签右上角、不挡价钱；英文版 `stamp_sold_en`，按 `UiText.lang` 换（任何带字的图都要有 `_en` 版，UI替换美术的规矩）。
+- 段头签 = 小石牌，价签 = 纸挂牌。
