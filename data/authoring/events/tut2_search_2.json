@@ -1,10 +1,19 @@
 {
   "id": "tut2_search_2",
   "title": "两把武器",
+  "titles": {
+    "en": "Two Weapons"
+  },
   "text": "这里的东西够凑两套打法。搜三次。\n\n先搜。",
+  "texts": {
+    "en": "There's enough here for two ways to fight. Search three times.\n\nSearch first."
+  },
   "options": [
     {
       "label": "搜索",
+      "labels": {
+        "en": "Search"
+      },
       "outcomes": [
         {
           "type": "open_search"

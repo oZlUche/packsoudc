@@ -14,10 +14,16 @@ item = &"charm_brute"
 [sub_resource type="Resource" id="Resource_1iy0e"]
 script = ExtResource("4_76k2b")
 text = "蛮神的护符在掌心发烫。先把它放进包里。"
+texts = {
+"en": "The Brute's charm burns in your palm. Put it in a bag first."
+}
 
 [sub_resource type="Resource" id="Resource_8h5w3"]
 script = ExtResource("1_norlb")
 label = "接过护符"
+labels = {
+"en": "Take the charm"
+}
 tags = Array[StringName]([&"offering"])
 outcomes = Array[ExtResource("2_e8gh1")]([SubResource("Resource_ium5k"), SubResource("Resource_1iy0e")])
 
@@ -25,7 +31,15 @@ outcomes = Array[ExtResource("2_e8gh1")]([SubResource("Resource_ium5k"), SubReso
 script = ExtResource("6_xubpb")
 id = &"tut3_faith_call"
 title = "蛮神的低语"
+titles = {
+"en": "Whispers of the Brute"
+}
 text = "祭坛上摆着一堆碎骨，血迹还没干透。你听见有人在耳边低吼：{b}杀，再杀。{/b}一枚骨制的护符从骨堆里滚到你脚边。
 
 这是一枚{b}信物{/b}：{item:charm_brute}，只占一格。{b}把它放进包里{/b}就算信了{faith:brute}（走之前就放：{zone:地上}的东西会留在这个点上）；信了之后，顶端栏会多出一枚{faith:brute}的徽记，鼠标停上去看信力和阶；打仗、受伤、献祭都会让它涨，涨够了就升阶，阶越高神给的越多。"
+texts = {
+"en": "A pile of shattered bones sits on the altar, the blood not yet dry. Something growls in your ear: {b}Kill. Kill again.{/b} A bone charm rolls out of the pile and stops at your feet.
+
+This is an {b}Anchor{/b}: the {item:charm_brute}, one cell. {b}Put it in your bag{/b} and you follow {faith:brute} (do it before you leave: anything on the {zone:地上} stays at this spot). Once you do, an emblem for {faith:brute} shows up in the top bar. Hover over it to see your Faith and Rank. Fighting, getting hurt and making Offerings all raise it. Raise it enough and you go up a Rank. The higher the Rank, the more the god gives."
+}
 options = Array[ExtResource("1_norlb")]([SubResource("Resource_8h5w3")])

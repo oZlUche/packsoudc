@@ -12,13 +12,24 @@ script = ExtResource("3_exfex")
 [sub_resource type="Resource" id="Resource_rrs05"]
 script = ExtResource("1_kwo4u")
 label = "搜索"
+labels = {
+"en": "Search"
+}
 outcomes = Array[ExtResource("2_vpa61")]([SubResource("Resource_b18nb")])
 
 [resource]
 script = ExtResource("5_dep0e")
 id = &"tut_search_1"
 title = "翻找"
+titles = {
+"en": "Rummage"
+}
 text = "脚下这片还没人翻过。每个搜索点能搜几次，翻得越久，越可能惊动附近的东西。这里很安静，放心搜。
 
 按{ui:搜索}翻一次：搜到的东西会一件一件亮出来，直接拖进包里就行；拖到棋盘外的都算{zone:地上}，{zone:地上}是这个点上的临时地方：走了东西留在这个点，回来能拿。关掉搜索界面会回到这里，再决定搜不搜。"
+texts = {
+"en": "Nobody has picked through this patch yet. Each search spot can be searched a few times, and the longer you dig, the likelier you are to wake something nearby. It's quiet here. Search freely.
+
+Press {ui:搜索} to search once. Finds turn up one at a time; drag them straight into your bag. Anything dragged off the board goes to the {zone:地上}. The {zone:地上} is a holding place at this spot: leave, and the items stay here for you to come back to. Close the search window to come back here and decide whether to search again."
+}
 options = Array[ExtResource("1_kwo4u")]([SubResource("Resource_rrs05")])

@@ -1,10 +1,19 @@
 {
   "id": "tut2_search_2_done",
   "title": "小包",
+  "titles": {
+    "en": "Small Bag"
+  },
   "text": "一个{item:bag_long}，正好装得下{item:longsword}，或者装得下{item:knife}加{item:poison_vial}。两套只带得走一套 —— 前面又是岔路，{c:warn}先看对手再合成、再装包{/c}。",
+  "texts": {
+    "en": "A {item:bag_long}. It fits the {item:longsword}, or the {item:knife} plus the {item:poison_vial}. You can only take one set. Another fork is ahead: {c:warn}check the enemy first, then craft, then pack{/c}."
+  },
   "options": [
     {
-      "label": "继续"
+      "label": "继续",
+      "labels": {
+        "en": "Continue"
+      }
     }
   ]
 }

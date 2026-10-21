@@ -12,13 +12,24 @@ script = ExtResource("3_0imek")
 [sub_resource type="Resource" id="Resource_v1ilt"]
 script = ExtResource("1_g5urj")
 label = "再搜一次"
+labels = {
+"en": "Search again"
+}
 outcomes = Array[ExtResource("2_t1vc6")]([SubResource("Resource_x38mc")])
 
 [resource]
 script = ExtResource("5_rkf7e")
 id = &"tut2_search_2_again_1"
 title = "{item:poison_vial}"
+titles = {
+"en": "{item:poison_vial}"
+}
 text = "一个{item:poison_vial}。上一张合过一次：拖到{item:knife}上面就是{item:poisoned_knife}，毒不看护甲。
 
 再搜一次。"
+texts = {
+"en": "A {item:poison_vial}. You crafted with one last time: drag it onto the {item:knife} and you get a {item:poisoned_knife}. Poison ignores Armor.
+
+Search again."
+}
 options = Array[ExtResource("1_g5urj")]([SubResource("Resource_v1ilt")])

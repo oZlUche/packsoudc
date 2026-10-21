@@ -48,7 +48,7 @@ func _open_options() -> void:
 		var opt := _def.options[i] as EventOption
 		var state := {"ok": true, "why": ""} if is_briefing() else flow.run.events.option_state(i)
 		var ok := bool(state["ok"])
-		var hint := TextTemplate.plain(opt.hint_when_hidden, ctx) if opt.hint_when_hidden != "" else ""
+		var hint := TextTemplate.plain(opt.hint_for(), ctx) if opt.hint_when_hidden != "" else ""
 		if not ok and opt.hide_when_locked:
 			if hint != "":
 				_hints.append(hint)     # 113：藏起来的选项说一句为什么（排在选项之后）

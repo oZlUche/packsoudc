@@ -114,7 +114,7 @@ static func _expand(token: String, ctx: Dictionary) -> Variant:
 static func _typed(token: String, ctx: Dictionary) -> Variant:
 	if token == "char":
 		var name := String(ctx.get("char_name", ""))
-		return _paint(name if name != "" else "你", String(TYPED_STYLES["char"]), false)
+		return _paint(name if name != "" else UiText.t("hud.you"), String(TYPED_STYLES["char"]), false)
 	var colon := token.find(":")
 	if colon <= 0:
 		return null
@@ -347,7 +347,7 @@ static func plain(text: String, ctx: Dictionary = {}) -> String:
 static func context_for(run: RunState, node: MapNode = null, extra: Dictionary = {}) -> Dictionary:
 	var ctx := {}
 	if run != null:
-		ctx["char_name"] = Names.of(run.character) if run.character != null else "你"
+		ctx["char_name"] = Names.of(run.character) if run.character != null else UiText.t("hud.you")
 		ctx["char_id"] = String(run.character_id)
 		ctx["chapter_name"] = Names.of(run.chapter) if run.chapter != null else ""
 		ctx["seed"] = run.run_seed

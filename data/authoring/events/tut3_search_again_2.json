@@ -1,10 +1,19 @@
 {
   "id": "tut3_search_again_2",
   "title": "{item:bone_charm_bits}",
+  "titles": {
+    "en": "{item:bone_charm_bits}"
+  },
   "text": "又是一串{item:bone_charm_bits}，也是骨头。前面的休息点有神坛，两件一起献上去。\n\n还有一样东西，再搜一次。",
+  "texts": {
+    "en": "Another {item:bone_charm_bits}, bone again. The rest stop ahead has an altar. Offer both together.\n\nThere's one more thing. Search again."
+  },
   "options": [
     {
       "label": "再搜一次",
+      "labels": {
+        "en": "Search again"
+      },
       "outcomes": [
         {
           "type": "open_search"

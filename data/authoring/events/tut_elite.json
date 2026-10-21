@@ -1,11 +1,23 @@
 {
   "id": "tut_elite",
   "title": "守卫",
+  "titles": {
+    "en": "The Guard"
+  },
   "text": "最后一道门有精英守着：更硬，带的东西也更好。输给精英扣的体力更多。\n\n和刚才一样先进{ui:战前准备}：看清对手的棋盘，把新搜到的也放进包里，调整好位置再按{ui:开战}。\n\n它披着甲，普通刀剑每下都要被削掉一截；{item:poisoned_knife}的毒不看这个。",
+  "texts": {
+    "en": "An elite guards the last door: tougher, and better equipped. Losing to an elite costs more Vitality.\n\nSame as before, go through {ui:战前准备} first: read the enemy's board, put your new finds in your bag, adjust where everything sits, then press {ui:开战}.\n\nIt's armored, so ordinary blades lose a chunk of every hit. The poison on a {item:poisoned_knife} doesn't care."
+  },
   "options": [
     {
       "label": "进入战前准备",
+      "labels": {
+        "en": "Go to Pre-battle"
+      },
       "hint_when_hidden": "先把{item:poison_vial}拖到{item:knife}上面合成{item:poisoned_knife}（按 {key:B} 打开背包）。",
+      "hints_when_hidden": {
+        "en": "First drag the {item:poison_vial} onto the {item:knife} to craft a {item:poisoned_knife} (press {key:B} to open your pack)."
+      },
       "requires": [
         {
           "type": "has_item",
@@ -20,6 +32,9 @@
     },
     {
       "label": "手里没有{item:knife}，就这么上",
+      "labels": {
+        "en": "No {item:knife} on hand. Go in anyway"
+      },
       "hide_when_locked": true,
       "requires": [
         {
@@ -41,6 +56,9 @@
     },
     {
       "label": "先回地图",
+      "labels": {
+        "en": "Back to the map"
+      },
       "outcomes": [
         {
           "type": "revisit_later"

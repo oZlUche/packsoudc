@@ -1,12 +1,24 @@
 {
   "id": "tut3_battle_2",
   "title": "{enemy:brute}",
+  "titles": {
+    "en": "{enemy:brute}"
+  },
   "text": "一个{enemy:brute}挡在路上，皮糙肉厚。\n\n带着{faith:brute}的第一阶打这一场：血掉得越多，你打得越狠，留意回放里的数字。打完信力该过 {faith_threshold:brute:2} 了。",
+  "texts": {
+    "en": "A {enemy:brute} blocks the road. Thick hide.\n\nFight this one at Rank one of {faith:brute}: the more Health you lose, the harder you hit. Watch the numbers in the replay. By the end your Faith should be past {faith_threshold:brute:2}."
+  },
   "options": [
     {
       "label": "进入战前准备",
+      "labels": {
+        "en": "Enter Pre-battle"
+      },
       "hide_when_locked": true,
       "hint_when_hidden": "你现在信的不是{faith:brute}：右键{item:charm_brute}切回来再打。",
+      "hints_when_hidden": {
+        "en": "You're not following {faith:brute} right now. Right-click the {item:charm_brute} to switch back, then fight."
+      },
       "requires": [
         {
           "type": "faith_active",
@@ -21,6 +33,9 @@
     },
     {
       "label": "先回地图",
+      "labels": {
+        "en": "Back to the map"
+      },
       "outcomes": [
         {
           "type": "revisit_later"

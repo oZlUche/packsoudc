@@ -1,10 +1,19 @@
 {
   "id": "tut2_battle_cure",
   "title": "{enemy:apothecary}",
+  "titles": {
+    "en": "{enemy:apothecary}"
+  },
   "text": "它随身带着解毒的东西，中毒一冒头就被清掉。\n\n毒对它没用；{item:longsword}硬砍反而最快。",
+  "texts": {
+    "en": "It carries its own antidotes. Poison gets cleared the moment it shows up.\n\nPoison is wasted on it. Hacking away with the {item:longsword} is the fastest way through."
+  },
   "options": [
     {
       "label": "进入战前准备",
+      "labels": {
+        "en": "Go to Pre-battle"
+      },
       "outcomes": [
         {
           "type": "proceed"

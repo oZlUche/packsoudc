@@ -8,10 +8,19 @@
 [sub_resource type="Resource" id="Resource_kl3ha"]
 script = ExtResource("1_qdq2o")
 label = "继续"
+labels = {
+"en": "Continue"
+}
 
 [resource]
 script = ExtResource("4_nr0ty")
 id = &"tut_search_1_done"
 title = "翻遍了"
+titles = {
+"en": "Picked Clean"
+}
 text = "又翻出一件{item:leather_armor}：穿上就多 {item_stat:leather_armor:max_armor} 点护甲，先替你挨打。这里能翻的都翻过了。前面有人守着 —— 走之前把搜到的东西放进包里：只有包里的东西参战，{zone:地上}的东西会留在这个点上（回来能拿，撤离不带走）。"
+texts = {
+"en": "One more find: {item:leather_armor}. Wear it for {item_stat:leather_armor:max_armor} more Armor; it takes the hits before you do. That's everything here. Someone is guarding the way ahead. Before you go, put your finds into your bag: only what's in the bag fights. Anything on the {zone:地上} stays at this spot (you can come back for it, but it doesn't leave with you when you extract)."
+}
 options = Array[ExtResource("1_qdq2o")]([SubResource("Resource_kl3ha")])
