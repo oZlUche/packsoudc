@@ -124,3 +124,5 @@
 
 **稀有度行的颜色（作者 15:23）**：「代表稀有度的字体要有颜色，和稀有度本身对应，颜色要足够显眼但不跳脱」。做法：稀有度名用 `UiPalette.rarity_color(r, tone)`（`data/authoring/ui/text_colors.json` 的六档，dark / light 两套，tone 跟账单底走），serif_bold 18；美术设计把六档放到碑板 / 账簿 / 蜡板三款底上核一遍，暗的提亮、扎眼的压一压，改在 `text_colors.json` 里（全游戏的稀有度字色一起受益），执行只照表取色、不另写颜色。
 
+**§二 被更大的规矩盖过（作者 2026-10-21 15:19，在 UI替换美术 线程定）**：所有棋盘都显示外框和格线，新出现的棋盘视图默认 `frame_*` + `cell_seams`，格线常开。于是不必按视图开 `ALWAYS`：`InventoryView` 格线一律画，187 的 `GameSettings.show_grid` / `GRID_AUTO` 失去意义（执行定是删掉设置项还是只把默认改成常开；玩家设置里不再露这一项）。结算屏第二页的按钮和格线定稿在 `/mnt/project-files/art/ui/result/`，战前 / 战斗屏的属性签与生命耐力条在 `/mnt/project-files/art/ui/battle_stats/`，都已交执行。
+
