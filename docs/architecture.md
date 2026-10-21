@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.80 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.81 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4420,6 +4420,7 @@ res://
 | v3.78 | 2026-10-21 | **225 去掉开局带入预算**（作者 16:42）：自由模式（章节与三档规模档）和沙漏章的 `carry_budget` 改 0（不限），094 的机制与代码留着给更高难度；开局屏第二页读数只剩负重一行；测试的预算机制改用手搭章节。另：画着字的图出英文版（UI替换美术清点），`UiTheme.lang_art(name)` 在非中文界面有 `<name>_en.png` 就换它 —— 营地路标、铸炉返回路标 / 风箱把手 / 底图（五块铭牌）、主菜单与启动屏字标 |
 | v3.79 | 2026-10-21 | **铜面板三屏**（UI替换美术 bronze3 + battle_stats v2，作者 15:19–16:22；改 8.8）：战前准备、战斗回放、战利品 / 搜索三屏换铜面板（`_bronze_panel`，没有标题条）；棋盘一律套深色外框 `BoardFrame`（`frames_dark`）与深色格缝；数值签换嵌槽签（`StatsStrip.use_inlay`，新签 生命 / 耐力 / 特殊能力，`specials_of` = 免疫 + 常驻加成）；战前屏去掉标题、玩法说明、敌人读数行和天平（`BalanceSeam` 删），两列中间 `PrebattleLane`（刻线、铜钉、双剑铜章），属性签两排压在两块棋盘下面同一条线；序章战前教程第二步改指两排签（`stats`）；回放 `BattleView.bronze`：斗技场图整张铺、美术条、状态小标垫嵌槽、不画「▸ 武器名」；战利品屏「全部拾取」1.3 倍带字、右上铜圆钮 52 |
 | v3.80 | 2026-10-21 | **223 背包窗角色卡**（作者 16:07 选蜡板、甲 角色卡）：背包窗加宽到 984，x 660 一条竖分隔线，右栏放名牌（等比缩到 272×112）和 `CharacterCard`（`ui/widgets/character_card.gd`）：身体三行 生命上限 / 耐力上限 / 回气 每秒 取 `effective_baseline()`，比角色基线多少写 ▲▼，悬浮窗按来源列（`CharacterCard.sources`）；两条被动（`skill_entries`）。▲▼ 进字集固定符号，中文子集重裁；教程目标 `character_card`。同版两处小改：**战前准备屏左右对调**（作者 18:19「统一位置」）：自己的棋盘与地上在左、对手在右，跟回放一致（`PrebattleScreen` 行里 `_right` 挪到第 0 位，序章战前教程、「战斗与战前准备」百科页、`tut_battle` 的左右说法随之改）；回放的斗技场图也铺到「继续」那一栏（`BattleView.add_footer`，UI替换美术 18:16） |
+| v3.81 | 2026-10-21 | **铜面板复测五处**（游戏测试 v3.79 报告）：叠层面板在顶端栏下面居中（`HudHost.bar_height_in`，`GameScreen._centered_panel` 的居中区 `offset_top`），战前准备与回放矮下来放得进 1000 高减顶端栏（名牌肖像 `Nameplate.COMPACT_PORTRAIT` 72、战前面板边距 50、空的提示行不占行、回放 `BRONZE_PAD` 4 与行距 8）；战利品屏三张签比棋盘宽时面板加宽、签右对齐棋盘（`StatsStrip.span_for`）；签里字放不下收字号（`StatsStrip.fit_size`，最小 11）；回放条上的字 17 号、描边 5，条高 26；战报垫一块嵌槽（`InlayPlate`，`ui/widgets/inlay_plate.gd`），和「继续」排在底栏同一行（`BattleView` 底栏：战报 · 继续 · 空） |
 | v3.77 | 2026-10-21 | **224 结算屏：账单、石键、格线常开、Cinzel**：第一页换成逐行显出的账单 `LedgerView`（十行 + 合计、经验占位列；大理石碑板 `result/ledger_stele` 直接画在石板上；0.4 s 起每 0.35 s 一行、数字 0.3 s 滚到位，点一下 / 按键全显，全显前「继续」不可点）；两页「继续」与第二页「一键置入」「整理」换石键图按钮（`UiTheme.make_art_text_button`，字由代码写），第二页按钮同一行、钉在滚动区外；`RunState.tally` 加 `elite_won` / `boss_won` / `searches`（同一个点只算一次，`searched_nodes` 进存档）/ `crafts`；数字字体 Cinzel Bold（`UiPalette.numeral_font()`，只裁数字与 I V X）；稀有度六色换美术核过的一套；092 的地上一键出售撤销（地上的撤离时就没了）；187 格线设置删掉、格线常开，仓库棕底浅格线、带回来的背包套皮带框；作者 16:32：标题刻进标题牌 `result/title_plate`、结算页去掉裸露说明字（`WarehousePanel.art_buttons` 时隐藏）、第二页仓库右对齐；221 补充五的事件文字（中英） |
 | v3.61 | 2026-10-20 | **216 补充：负重签总在**（作者 2026-10-20 16:20）：`StatsStrip` 三张签总在（216 待定 3.2 作废）；不算负重的章负重签大字「当前 / 上限」、小字空着，没上限只写当前重量，悬浮窗说「这一章不算负重」；负重规则不动；测试 216 改验 |
 | v3.60 | 2026-10-20 | **214 头像定稿：铜币侧像 + 圆框**（美术设计交图，作者选乙）：3 角色 + 30 敌人头像 256 进 `assets/portraits/`（只拷 1x）；`portrait_frame` 换深铜圆框（`margin` 0、`inset` 0，整张等比缩放），`portrait_empty` 换磨平旧币；头像、框、空位导入开 `mipmaps/generate`；`PortraitSlot.texture_filter = LINEAR_WITH_MIPMAPS`；测试 157 框外扩按 json 验、加 mipmap 两条 |

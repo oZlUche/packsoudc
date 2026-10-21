@@ -35,15 +35,17 @@ const POP_SEC := 0.12
 ## 条和状态小标直接压在斗技场图上 —— 生命在上、耐力在下（隔 [constant ART_BAR_GAP]），左头一枚火漆，槽 + 九宫填充 + 护甲盖在生命上；
 ## 字浅色深描边写在槽里；每个状态小标垫一块小嵌槽（[constant SLOT_SIZE]），层数浅字写在槽里；「▸ 武器名」那行不画（无裸字）
 const ART_DIR := "stats_strip/"
-const ART_BAR_H := 22.0
-const ART_BAR_GAP := 14.0
+const ART_BAR_H := 26.0
+const ART_BAR_GAP := 10.0
 const ART_TROUGH_X := 30.0
 const ART_RIGHT := 10.0
 const ART_SLICE := 8.0
 const ART_SEAL_SCALE := 0.72
-const ART_SEAL_AT := Vector2(14, 11)
+const ART_SEAL_AT := Vector2(14, 13)
 const ART_TEXT := Color("fbf2de")
 const ART_OUTLINE := Color("2a1a10")
+const ART_TEXT_SIZE := 17
+const ART_TEXT_OUTLINE := 5
 const SLOT_SIZE := Vector2(34, 30)
 const SLOT_ART := "bronze/tag_inlay"
 ## 嵌槽图里看得见的那段（上下各 8 透明）与九宫边
@@ -714,9 +716,10 @@ func _draw_art_bar(key: String, current: int, maximum: int, y: float) -> void:
 		var side := seal.get_size() * ART_SEAL_SCALE
 		draw_texture_rect(seal, Rect2((Vector2(0, y) + ART_SEAL_AT - side * 0.5).floor(), side), false)
 	var font := UiPalette.cjk_font_bold()
-	var at := Vector2(trough.position.x + 12.0, y + ART_BAR_H * 0.5 + 5.0)
-	draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, 3, ART_OUTLINE)
-	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, ART_TEXT)
+	var at := Vector2(trough.position.x + 12.0, y + ART_BAR_H * 0.5 + 6.0)
+	# 复测 v3.79：14 号细描边在红 / 橙填充上看不清 —— 17 号、描边 5
+	draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, ART_TEXT_SIZE, ART_TEXT_OUTLINE, ART_OUTLINE)
+	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, ART_TEXT_SIZE, ART_TEXT)
 
 
 ## 横向三段切（左右各 [constant ART_SLICE]，中段拉）；比两头还窄时两头按比例缩。缺图画纯色

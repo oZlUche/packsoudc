@@ -68,7 +68,9 @@ var show_ticker: bool = false
 ## 条与状态小标直接压在图上（[member CombatantPanel.bronze]），两块棋盘套深色外框（[BoardFrame]），时间轴贴着场地下沿
 var bronze: bool = false
 ## 铜面板：内容离场地边
-const BRONZE_PAD := 14
+const BRONZE_PAD := 4
+## 铜面板：战报那块嵌槽里字的最小宽（底栏左半）
+const REPORT_WIDTH := 300.0
 ## 两块棋盘的外框（自己素皮带、对手生皮）
 const BOARD_FRAMES := ["player", "corpse"]
 ## 整块的竖排（[method add_footer] 往它底下加）
@@ -78,6 +80,9 @@ var _speed_btn: IconButton
 ## 157：时间轴（可拖）、收尾战报、双方名牌的位置（面板顶上）
 var _timeline: ReplayTimeline
 var _report: RichTextLabel
+## 铜面板：底栏（战报嵌槽 · 宿主的「继续」· 空）与战报那块嵌槽
+var _footer: HBoxContainer = null
+var _report_plate: InlayPlate = null
 var _plate_slots: Array[Control] = []
 ## 157：拖时间轴之前在不在放（松手按原状态接着放）
 var _resume_after_scrub := false
@@ -129,6 +134,8 @@ func play(result: BattleResult, names: Array = []) -> void:
 	_timeline.load_result(result)
 	_report.text = ""
 	_report.visible = false
+	if _report_plate != null:
+		_report_plate.visible = false
 	_sync_buttons()
 
 
@@ -478,6 +485,8 @@ func _finish() -> void:
 	_timeline.cursor = _result.duration_sec()
 	_report.text = report_of(_result, _names)     # 157：收尾战报（跳过也出）
 	_report.visible = true
+	if _report_plate != null:
+		_report_plate.visible = true
 	_sync_buttons()
 	if result_cue(_result) != &"":
 		_sfx(result_cue(_result))
@@ -702,7 +711,7 @@ func _build() -> void:
 	if bronze:     # 高按内容：场地图跟着内容（名牌、条、棋盘、时间轴）一起长
 		root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, BRONZE_PAD)
 		root.minimum_size_changed.connect(update_minimum_size)
-	root.add_theme_constant_override("separation", 12)
+	root.add_theme_constant_override("separation", 8 if bronze else 12)
 	add_child(root)
 	_root = root
 
@@ -722,7 +731,7 @@ func _build() -> void:
 	for i in 2:
 		var col := VBoxContainer.new()
 		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		col.add_theme_constant_override("separation", 8)
+		col.add_theme_constant_override("separation", 6 if bronze else 8)
 		arena.add_child(col)
 		var plate_slot := MarginContainer.new()     # 157：名牌（战斗屏给了才有）
 		plate_slot.visible = false
@@ -790,8 +799,11 @@ func _build() -> void:
 	_report = UiTheme.rich_block(0, UiTheme.RICH_SMALL_SIZE)
 	_report.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_report.visible = false
-	UiTheme.set_tone(_report, on_bg)
-	root.add_child(_report)
+	if bronze:
+		_build_footer()
+	else:
+		UiTheme.set_tone(_report, on_bg)
+		root.add_child(_report)
 	_tip = HoverTip.new()
 	add_child(_tip)
 	_sync_buttons()
@@ -801,9 +813,37 @@ func _get_minimum_size() -> Vector2:
 	return _root.get_combined_minimum_size() + Vector2.ONE * BRONZE_PAD * 2 if bronze and _root != null else Vector2.ZERO
 
 
-## 宿主的控件挂在回放最底下（时间轴、战报之下），压在斗技场图上（铜面板：「继续」那一格，场地图一直铺到底）。进树之后调
+## 铜面板：战报那块嵌槽（测试看；不是铜面板 null）
+func report_plate() -> InlayPlate:
+	return _report_plate
+
+
+## 宿主的控件挂在回放最底下（时间轴、战报之下），压在斗技场图上（铜面板：「继续」那一格，场地图一直铺到底，夹在底栏正中）。进树之后调
 func add_footer(c: Control) -> void:
-	_root.add_child(c)
+	if _footer != null:
+		_footer.add_child(c)
+		_footer.move_child(c, 1)
+	else:
+		_root.add_child(c)
+
+
+## 铜面板的底栏：左半是战报（垫一块 [InlayPlate]，不直接写在场地上 —— 复测 v3.79 裸字），正中留给宿主的「继续」，右半空着让「继续」居中
+func _build_footer() -> void:
+	_footer = UiTheme.hbox(12)
+	_root.add_child(_footer)
+	var left := MarginContainer.new()
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_footer.add_child(left)
+	_report_plate = InlayPlate.new()
+	_report_plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_report_plate.visible = false
+	left.add_child(_report_plate)
+	_report.custom_minimum_size.x = REPORT_WIDTH     # 自动换行的字：排版前宽 0 会一字一行把面板撑高
+	_report_plate.add_child(_report)
+	var right := Control.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_footer.add_child(right)
 
 
 ## 铜面板：底图 cover、顶对齐（[method UiTheme.dress_backdrop] 是居中裁）—— 宿主变大小时重算

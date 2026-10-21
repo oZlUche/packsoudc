@@ -150,6 +150,8 @@ static func frame_container_screen(t: TestCase, root: Window) -> void:
 		t.check(absf(strip.global_position.x - board.position.x) <= 1.0 and absf(strip.size.x - board.size.x) <= 1.0, "和玩家棋盘左对齐、一样宽")
 		var bottom: float = screen.overlay_frame().global_position.y + screen.panel_size().y
 		t.check(strip.get_global_rect().end.y <= bottom, "面板放得下（%.0f ≤ %.0f）" % [strip.get_global_rect().end.y, bottom])
+		var right: float = screen.overlay_frame().global_position.x + screen.panel_size().x - CS.EDGE
+		t.check(strip.get_global_rect().end.x <= right + 0.5, "复测 v3.79：签不伸出铜板右边（%.0f ≤ %.0f）" % [strip.get_global_rect().end.x, right])
 		t.check(strip.texts(StatsStrip.DPS)[0] != "", "有读数")
 	screen.queue_free()
 
@@ -167,6 +169,12 @@ static func frame_inlay_bronze(t: TestCase, root: Window) -> void:
 	t.eq(wide.shown(), StatsStrip.ORDER, "还是耐力 / DPS / 负重三张")
 	t.eq(wide.tag_rect(StatsStrip.STAMINA).size.x, 152.0, "签宽 152")
 	t.eq(String(wide.get_meta(&"tone")), "dark", "铜面板上浅字")
+	t.eq(wide.span_for(100.0), 152.0 * 3 + 12.0 * 2, "复测 v3.79：棋盘比三张签窄，整条按签宽")
+	t.eq(wide.span_for(600.0), 600.0, "棋盘更宽：跟棋盘一样宽")
+	var bold := UiPalette.cjk_font_bold()
+	t.check(StatsStrip.fit_size(bold, "37 / 40", 17, 40.0) < 17, "放不下：收字号")
+	t.eq(StatsStrip.fit_size(bold, "37 / 40", 17, 400.0), 17, "放得下：原字号")
+	t.eq(StatsStrip.fit_size(bold, "37 / 40", 17, 1.0), StatsStrip.MIN_TEXT_SIZE, "最小收到 MIN_TEXT_SIZE")
 	var strip := StatsStrip.new()
 	root.add_child(strip)
 	strip.use_inlay(true, StatsStrip.ORDER_PLAYER)
