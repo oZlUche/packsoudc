@@ -810,7 +810,7 @@ func preset_items() -> Array[ItemInstance]:
 
 ## 换角色：带上的先放回仓库，按新角色的棋盘尺寸与初始包重摆
 func choose_character(i: int) -> void:
-	_return_carried()
+	_return_bags()
 	if not _characters.is_empty():
 		character_index = clampi(i, 0, _characters.size() - 1)
 	_mark_choice(_character_btns, character_index)
@@ -1283,7 +1283,7 @@ func escape() -> bool:
 #endregion
 
 
-## 棋盘上带着的都下来：仓库来的回仓库；090 地上来的回地上；225 包回包架（预设套的包不算 —— 那是预设发的）
+## 棋盘上带着的都下来：仓库来的回仓库；090 地上来的回地上
 func _return_carried() -> void:
 	if board == null:
 		return
@@ -1293,9 +1293,18 @@ func _return_carried() -> void:
 			stash.insert(inst)
 		elif not flow.meta.take_back(inst):
 			push_warning("setup: %s 放不回仓库，丢弃" % inst.def.id)
+
+
+## 225：这块棋盘不要了（换角色、回主菜单）—— 带上的先下来（[method _return_carried]），预设套与发的袋子拿掉（重摆时再发），
+## 剩下的包都回包架（包里这时已经空了）
+func _return_bags() -> void:
+	_return_carried()
+	if board == null:
+		return
+	_clear_preset()
 	for inst in board.items():
 		var it := inst as ItemInstance
-		if BagRack.holds(it.def) and not _preset_uids.has(it.uid) and not board.is_bag_with_contents(it.uid):
+		if BagRack.holds(it.def) and not board.is_bag_with_contents(it.uid):
 			board.remove(it.uid)
 			flow.meta.put_bag(it)
 
@@ -1303,7 +1312,7 @@ func _return_carried() -> void:
 ## 090：回主菜单 —— 上一局带回来的（不管还在地上还是已经拖上了棋盘）按原位放回带回来的棋盘；
 ## 原位放不下（不该发生）就找位置，再不行进仓库。玩家已经拖进仓库的留在仓库（那是他自己置入的）
 func _restore_pending() -> void:
-	_return_carried()
+	_return_bags()
 	if stash == null:
 		return
 	for id in flow.meta.return_stash(stash, _pending):     # 101 第 4 刀：放回的账在 MetaState 里

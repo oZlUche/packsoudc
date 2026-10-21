@@ -168,7 +168,7 @@ static func frame_setup_rack(t: TestCase, root: Window) -> void:
 	t.check(holder >= 0 and not setup.rack_bag(holder), "有东西的包收不回包架")
 	setup.board.remove(knife.uid)
 	# 回主菜单：包回包架
-	setup._return_carried()
+	setup._return_bags()
 	t.eq(setup.board.bags().size(), 0, "棋盘上的包都下来了")
 	t.eq(flow.meta.rack.item_count(), ch.starting_bags.size(), "都回了包架")
 	# 包架空、棋盘没包、不带预设：发一只粗麻袋（发的不进包架）
@@ -179,8 +179,10 @@ static func frame_setup_rack(t: TestCase, root: Window) -> void:
 	t.eq(sack.def.id, &"sack", "粗麻袋")
 	t.check(setup._status.text.contains(Names.of(sack.def)), "状态行说军需官发的")
 	t.check(not setup._allow_drop(sack, flow.meta.rack) and not setup.rack_bag(sack.uid), "发的袋子进不了包架")
-	setup._return_carried()
+	setup._return_bags()
 	t.eq(flow.meta.rack.item_count(), 0, "回主菜单也不进包架（免得白拿去卖）")
+	t.eq(setup.board.bags().size(), 0, "发的袋子收走了")
+	t.check(setup.ensure_bag(), "再进来再发一只")
 	t.check(not setup.ensure_bag(), "棋盘上已经有包：不再发")
 	game.queue_free()
 	Support.cleanup("rack225a")
