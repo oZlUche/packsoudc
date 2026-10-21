@@ -33,6 +33,8 @@ var art_dir: String = ""
 var _states: Dictionary = {}
 var _hover := false
 var _down := false
+## 开战战旗：可点的只有旗面（按图里的像素，空 = 整张图都能点）
+var hit_rect := Rect2()
 
 
 ## [param name] 写进悬浮窗第一行；[param hint] 是那一句说明
@@ -68,7 +70,7 @@ func set_art(p_icon_id: String, p_fallback: String, tooltip: String) -> void:
 	fallback = p_fallback
 	tooltip_text = tooltip
 	_states.clear()
-	for st in ["", "_hover", "_pressed"]:
+	for st in ["", "_hover", "_pressed", "_disabled"]:
 		var path: String = art_dir + p_icon_id + st + ".png"
 		if ResourceLoader.exists(path) or FileAccess.file_exists(path):
 			_states[st] = EventImage.load_texture(path)
@@ -98,7 +100,18 @@ func _sync_state() -> void:
 	if _tex == null:
 		icon = null
 		return
-	icon = _states.get(state(), _tex)
+	icon = _states.get("_disabled" if disabled and _states.has("_disabled") else state(), _tex)
+
+
+## 改了 disabled 之后叫一下，换成那一态的图
+func sync_art() -> void:
+	_sync_state()
+
+
+func _has_point(point: Vector2) -> bool:
+	if not hit_rect.has_area():
+		return Rect2(Vector2.ZERO, size).has_point(point)
+	return hit_rect.has_point(point)
 
 
 func _init() -> void:

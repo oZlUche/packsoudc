@@ -82,6 +82,17 @@ static func frame_battle_coach(t: TestCase, root: Window) -> void:
 		t.is_null(pre.coach(), "三步点完：收掉")
 		t.check(flow.meta.coach_seen.has("prologue_prebattle"), "战前教程记在局外")
 		t.check(not CoachOverlay.due(flow, &"prologue_prebattle"), "看过了：下一次不放")
+	var flag: IconButton = pre._start_btn as IconButton if pre != null else null
+	t.check(flag != null and flag.has_art() and flag.text == "", "作者 2026-10-21：「开战」是战旗图（字画在图里）")
+	if flag != null:
+		t.eq(flag.custom_minimum_size, Vector2(216, 134), "战旗 216 × 134")
+		t.check(flag._has_point(Vector2(100, 60)) and not flag._has_point(Vector2(4, 4)) and not flag._has_point(Vector2(210, 60)), "可点的是旗面，挂杆两头不算")
+		t.check(not flag.disabled and flag.icon == flag._states[""], "能开战：正常那一态")
+		flag.disabled = true
+		flag.sync_art()
+		t.eq(flag.icon, flag._states.get("_disabled", null), "灰着：换灰的那一态")
+		flag.disabled = false
+		flag.sync_art()
 	t.check(pre != null and pre.start_battle(), "战前准备 → 开战")
 	var screen = game.overlay()
 	if screen == null or screen.screen != GameFlow.Screen.BATTLE:
@@ -107,7 +118,8 @@ static func frame_battle_coach(t: TestCase, root: Window) -> void:
 		var r := view.control_rect(id)
 		t.check(r.size.x > 0.0 and r.size.y > 0.0, "%s 找得到（%s）" % [id, r])
 	t.eq(view.control_rect(&"nope"), Rect2(), "不认得的 id：空矩形")
-	t.eq(view.control_rect(&"next_button"), screen._next.get_global_rect(), "「跳过并继续」是战斗屏登记的那个按钮")
+	t.eq(view.control_rect(&"next_button"), screen._next_slot.get_global_rect(), "教程指的是「继续」那一格（回放中空着）")
+	t.is_null(screen._next, "作者 2026-10-21：回放中没有按钮（「跳过并继续」删了）")
 	t.check(o.hole().size.x > 0.0, "第一步挖了洞（时间轴）")
 	for i in o.steps.size() - 1:
 		o.next()
@@ -119,6 +131,13 @@ static func frame_battle_coach(t: TestCase, root: Window) -> void:
 	t.check(not view.is_held() and view.is_playing(), "回放接着放")
 	view._process(0.1)
 	t.check(view.now() > 0.0, "时间走起来了（%.2f 秒）" % view.now())
+	t.is_null(screen._next, "还在放：没有「继续」")
+	view.seek(view._result.duration_sec() + 1.0)
+	var cont: IconButton = screen._next as IconButton
+	t.check(cont != null and cont.get_parent() == screen._next_slot and cont.has_art(), "拖时间轴拖到头 = 看完：「继续」纸卷落在那一格")
+	t.eq(cont.custom_minimum_size if cont != null else Vector2.ZERO, Vector2(246, 94), "纸卷 246 × 94")
+	view.seek(view._result.duration_sec() + 1.0)
+	t.eq(screen._next_slot.get_child_count(), 1, "再拖到头一次：还是那一条")
 	t.check(flow.meta.coach_seen.has("prologue_battle"), "记在局外")
 	t.check(not screen.coach_due(), "看过了：下一场不放")
 	ch.coaches = {}

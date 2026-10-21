@@ -4,6 +4,6 @@
     {"target": "timeline", "text": "这是时间轴。结果在开打那一瞬就定了，这里只是回放：朝上的刻度是我方打出的，朝下的是挨的，长刻度是有人倒下。拖它可以来回看。", "texts": {"en": "This is the timeline. The outcome was decided the moment the fight began; this is just the replay. Ticks pointing up are hits you dealt, ticks pointing down are hits you took, and a long tick means someone fell. Drag it to scrub back and forth."}},
     {"target": "play_button", "text": "播放、倍速、跳过：播完再按是重播，倍速一二四倍循环，跳过直接看结尾，结果都不会变。", "texts": {"en": "Play, Speed, Skip. Press play after it ends to replay; Speed cycles through normal, double and quadruple; Skip jumps to the end. None of it changes the result."}},
     {"target": "buffs_mine", "text": "这一排是上身的增益和减益，鼠标停在图标上看效果。", "texts": {"en": "This row shows the buffs and debuffs on you. Hover over an icon to see what it does."}},
-    {"target": "next_button", "text": "看完按这里继续赶路。", "texts": {"en": "When you're done watching, press here to move on."}}
+    {"target": "next_button", "text": "看完这里会出现「继续」，按它接着赶路。", "texts": {"en": "When the replay ends, Continue appears here. Press it to move on."}}
   ]
 }

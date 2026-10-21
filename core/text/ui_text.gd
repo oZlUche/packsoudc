@@ -391,7 +391,6 @@ const TEXT := {
 	"battle.fallen_tag": {"zh": "　【倒下】", "en": "  [Fallen]"},
 	"battle.armor_on_bar": {"zh": "　甲 %d", "en": "  Armor %d"},
 	# ui/game/battle_screen.gd
-	"battle.skip_continue": {"zh": "跳过并继续", "en": "Skip and continue"},
 	"battle.me": {"zh": "我", "en": "You"},
 	"battle.continue": {"zh": "继续", "en": "Continue"},
 	# ui/game/game_screen.gd（"我" 用 battle.me，"我方" 用 battle.side_mine）
