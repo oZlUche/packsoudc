@@ -120,3 +120,5 @@
 
 ②③④（棋盘格线与皮带框、账单、字体）现在做；①按钮等 UI替换美术 的图；账单底（720×480 蜡板或羊皮纸）已向美术设计要，图没到之前先用现有石板色块占位，图到了换一行。§六 三条全按推荐。
 
+**账单底已出（美术设计 15:11）**：三款样稿 甲 碑板（推荐）/ 乙 账簿 / 丙 蜡板，在 `/mnt/project-files/art/ui/ledger/`（README、`out/ledger_<stele|book|wax>.png` + @2x + json、`out/layout.json`、`mocks/page_*.png`）。整图不拉伸，图比账面大（框 / 耳朵 / 阴影在外），图左上 = 账面左上 + origin（碑板 (−80, −24)、账簿 (−22, −22)、蜡板 (−18, −18)）；行间线、表头双线、合计双线、分栏线 x 300 / 600 都在图里，代码不画线。字：标签 x 18 思源宋体 18 基线 +27；数量右对齐 x 584 Cinzel Bold 20 基线 +28，串里的汉字退回思源宋体；经验右对齐 x 704「—」16 dim；表头 14 基线 26；总价值标签思源粗体 22 基线 +29、数字 Cinzel Bold 32 基线 +33；三款字色各一套在 layout.json。Cinzel ttf 在 `/mnt/project-files/art/fonts/chosen/`（来源 `Cinzel_SOURCE.txt`），打包时另补 `assets/fonts/LICENSES/OFL_Cinzel.txt`。材质按作者 15:02 的规矩（美术风格的选择按推荐）默认 **甲 碑板**，作者另选再换图。
+
