@@ -1,17 +1,18 @@
 ## 231：开战的双剑铜章（作者 2026-10-21 19:12：「战前中央的圆形纹章下移，里面的两把交叉的剑开始互相攻击，最终左边或者右边胜利」）。
-## 三层贴图同一 132 画布对位：盘 `bronze/medal_disc`、左剑 `medal_sword_l`（自己，剑柄在左下）、右剑 `medal_sword_r`（对手）；
-## 火星、金光、反应晕圈代码画。姿态只是表现，不碰回放：[member rate] = 回放倍速（时长除以它，≥ 4 只闪不挥）；[method set_final] 不演直接摆终态
+## 三层贴图同一 132 画布对位（UI替换美术 art/ui/anim231，19:31）：盘 `bronze/medal_plate`、左剑 `medal_sword_left`（自己，剑柄在左下）、
+## 右剑 `medal_sword_right`（对手），剑自带暗影；剑尖金光 `tip_glint`（横的，不随剑转）；火星、反应晕圈代码画。姿态只是表现，不碰回放：[member rate] = 回放倍速（时长除以它，≥ 4 只闪不挥）；[method set_final] 不演直接摆终态
 class_name DuelMedal
 extends Control
 
 const SIDE := 132.0
-const ART := ["bronze/medal_sword_l", "bronze/medal_sword_r"]
-const DISC_ART := "bronze/medal_disc"
+const ART := ["bronze/medal_sword_left", "bronze/medal_sword_right"]
+const DISC_ART := "bronze/medal_plate"
+const GLINT_ART := "bronze/tip_glint"
 ## 原图（拆层前的整枚），层图缺时整枚画它、不动
 const WHOLE_ART := "bronze/medal_swords"
-## 两把剑转动的支点（握把中段，132 画布里）与剑尖（金光扫到那儿）
-const GRIP := [Vector2(43, 86), Vector2(85, 86)]
-const TIP := [Vector2(89, 33), Vector2(39, 33)]
+## 两把剑转动的支点（握把中点，132 画布里）与剑尖（anim231 layout.json）
+const GRIP := [Vector2(46.0, 85.45), Vector2(82.0, 85.45)]
+const TIP := [Vector2(93.57, 28.76), Vector2(34.43, 28.76)]
 ## 两剑交点（火星从这儿迸）
 const CROSS := Vector2(64.5, 61)
 ## 劈：转多少、往对面推多少、多久（去 + 回）
@@ -21,8 +22,8 @@ const STRIKE_SEC := 0.12
 ## 挨打：后仰多少、多久；剑身白闪
 const RECOIL_DEG := 8.0
 const RECOIL_SEC := 0.1
-## 分胜负：赢的竖起来（剑尖朝正上）、输的垂下去
-const RAISE_DEG := 40.5
+## 分胜负：赢的竖起来（剑尖朝正上，静止时偏 40°）、输的垂下去
+const RAISE_DEG := 40.0
 const DROP_DEG := 52.0
 const DROP_FALL := 10.0
 const FINAL_SEC := 0.4
@@ -212,13 +213,27 @@ func _draw() -> void:
 		var c := _ring_color
 		c.a = 0.8 * (1.0 - _ring)
 		draw_arc(size * 0.5, (52.0 + 6.0 * _ring) * k, 0.0, TAU, 48, c, 4.0 * k, true)
-	# 赢的那把压在上面；没分时右剑在上（和原图一样）
-	var order := [0, 1] if _winner != 0 else [1, 0]
+	# 赢的那把压在上面；没分时左剑在上（和原图一样：盘、右剑、左剑）
+	var order := [1, 0] if _winner != 1 else [0, 1]
 	for s in order:
 		_draw_sword(s, k)
 	if _spark >= 0.0:
 		_draw_sparks(k)
-	draw_set_transform_matrix(Transform2D.IDENTITY)
+	if _glint >= 0.0 and _glint_side >= 0:
+		_draw_glint(k)
+
+
+## 剑尖金光：横的一道，中心从护手沿剑身扫到剑尖（剑转过之后的位置），中途最亮
+func _draw_glint(k: float) -> void:
+	var tex := UiTheme.art_cached(GLINT_ART)
+	if tex == null:
+		return
+	var xf := _sword_xform(_glint_side, k)
+	var grip: Vector2 = GRIP[_glint_side]
+	var tip: Vector2 = TIP[_glint_side]
+	var at := (xf * (grip * k)).lerp(xf * (tip * k), 0.2 + 0.8 * _glint)
+	var ts := tex.get_size() * k
+	draw_texture_rect(tex, Rect2(at - ts * 0.5, ts), false, Color(1, 1, 1, sin(_glint * PI)))
 
 
 func _sword_xform(s: int, k: float) -> Transform2D:
@@ -233,17 +248,6 @@ func _draw_sword(s: int, k: float) -> void:
 	draw_texture_rect(tex, Rect2(Vector2.ZERO, size), false, tint)
 	if _flash[s] > 0.0:
 		draw_texture_rect(tex, Rect2(Vector2.ZERO, size), false, Color(1.6, 1.6, 1.6, _flash[s] * 0.7))
-	if _glint >= 0.0 and _glint_side == s:
-		# 一道亮斑从护手扫到剑尖
-		var from: Vector2 = GRIP[s] * k
-		var to: Vector2 = TIP[s] * k
-		var at := from.lerp(to, 0.15 + 0.85 * _glint)
-		var along := (to - from).normalized()
-		var across := Vector2(-along.y, along.x)
-		var a := sin(_glint * PI)
-		draw_colored_polygon(PackedVector2Array([
-			at - along * 7.0 * k, at + across * 3.0 * k, at + along * 7.0 * k, at - across * 3.0 * k,
-		]), Color(1.0, 0.95, 0.7, 0.9 * a))
 	draw_set_transform_matrix(Transform2D.IDENTITY)
 
 

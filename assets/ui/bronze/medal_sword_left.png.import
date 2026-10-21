@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bke7jb3gm4md3"
-path="res://.godot/imported/medal_sword_l.png-c3052d222167a11d0b1d6bdc6721867b.ctex"
+uid="uid://co5p15unq2h1k"
+path="res://.godot/imported/medal_sword_left.png-292eb24931de6d33bb89732bab2d21a8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/bronze/medal_sword_l.png"
-dest_files=["res://.godot/imported/medal_sword_l.png-c3052d222167a11d0b1d6bdc6721867b.ctex"]
+source_file="res://assets/ui/bronze/medal_sword_left.png"
+dest_files=["res://.godot/imported/medal_sword_left.png-292eb24931de6d33bb89732bab2d21a8.ctex"]
 
 [params]
 

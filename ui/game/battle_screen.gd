@@ -5,8 +5,9 @@ extends GameScreen
 var _view: BattleView
 ## 作者 2026-10-21 定（战旗 / 纸卷）：「继续」是一条纸卷，回放看完（或拖到头）才出现；回放中这里空着。没看完前是 null
 var _next: Button = null
-## 纸卷放的那一格（教程「next_button」指它：回放中空着，看完纸卷落在这里）
-var _next_slot: CenterContainer
+## 纸卷放的那一格（教程「next_button」指它：回放中空着，看完纸卷落在这里）。
+## 231：格子比旗矮（[constant SLOT_HEIGHT]），里面的铜章 / 继续旗不进排版、居中摆、上下伸出格子（面板要放进 1000 高）
+var _next_slot: Control
 const CONTINUE_ART := "res://assets/ui/battle/"
 ## 回放看完（或跳到底）了没有（作者 2026-10-17：标题不再写胜负，按状态判断）
 var _seen_end := false
@@ -41,6 +42,9 @@ const INTRO_CONTENT := 0.25
 ## 终局：剑分胜负之后多久继续旗开始展开、铜章淡出多久
 const FLAG_AFTER := 0.4
 const MEDAL_OUT := 0.25
+## 231：「继续」那一格的高（旗 134、铜章 132 上下伸出去；往下多伸一点 —— 旗底有 8 px 留白）
+const SLOT_HEIGHT := 102.0
+const SLOT_DROP := 4.0
 
 
 func open(payload: Dictionary) -> void:
@@ -72,8 +76,9 @@ func open(payload: Dictionary) -> void:
 	_view.speed_changed.connect(_on_speed_changed)
 	_view.reaction_shown.connect(_on_reaction_shown)
 
-	_next_slot = CenterContainer.new()
-	_next_slot.custom_minimum_size = _continue_size(_won)     # 先按图留好位置，看完才放按钮（面板不跳）
+	_next_slot = Control.new()
+	_next_slot.custom_minimum_size = Vector2(_continue_size(_won).x, minf(SLOT_HEIGHT, _continue_size(_won).y))     # 先按图留好位置，看完才放按钮（面板不跳）
+	_next_slot.resized.connect(_center_slot)
 	_view.add_footer(_next_slot)     # UI替换美术 18:16：「继续」纸卷压在场地上，场地图铺满面板里面（没有和铜面的硬边）
 	_view.add_coach_target(&"next_button", _next_slot)
 	_medal = DuelMedal.new()
@@ -126,8 +131,21 @@ func _on_finished() -> void:
 		_next = IconButton.make_art(CONTINUE_ART, art, UiText.t("battle.continue"), "", proceed)
 		_next.hit_rect = FLAG_HIT if _next.has_art() and art.begins_with("continue_") and not art.begins_with("continue_en") else Rect2()     # 旗：挂绳与旗尾点不着
 		_next_slot.add_child(_next)
+		_center_slot()
 		_settle_medal()
 	_seen_end = true     # 157：拖时间轴拖到头会再「看完」一次
+
+
+## 231：格子里的东西（铜章、继续旗）按自己的大小居中摆、略往下
+func _center_slot() -> void:
+	for c in _next_slot.get_children():
+		if c is Control:
+			(c as Control).position = _slot_spot(c)
+
+
+func _slot_spot(c: Control) -> Vector2:
+	var sz := c.get_combined_minimum_size().max(c.size)
+	return ((_next_slot.size - sz) * 0.5 + Vector2(0, SLOT_DROP)).floor()
 
 
 ## 231：看完了 —— 铜章里输的剑垂下、赢的剑举起（一倍速 0.4 s），再淡掉，继续旗在同一格展开；跳过 / 拖到头 / 动效关着直接终态
@@ -217,8 +235,7 @@ func intro_from(prev: Control) -> void:
 
 ## 铜章飞到一半：目标每一步重算（排版可能还在变）
 func _fly_medal(t: float, start: Vector2) -> void:
-	var goal := _next_slot.global_position + (_next_slot.size - _medal.size) * 0.5
-	_medal.global_position = start.lerp(goal, t)
+	_medal.global_position = start.lerp(_next_slot.global_position + _slot_spot(_medal), t)
 
 
 func _land_medal() -> void:
@@ -227,6 +244,7 @@ func _land_medal() -> void:
 	remove_child(_medal)
 	_next_slot.add_child(_medal)
 	_next_slot.move_child(_medal, 0)
+	_center_slot()
 
 
 func _end_intro() -> void:
