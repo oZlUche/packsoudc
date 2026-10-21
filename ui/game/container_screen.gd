@@ -219,6 +219,8 @@ func panel_size() -> Vector2:
 	var loot := _loot_cells_size() + Vector2(lp, lp) * 2.0
 	var player := Vector2(_inv.board_view.inventory.size) * _inv.board_view.cell_px + Vector2(pp, pp) * 2.0 if _inv != null else Vector2.ZERO
 	var w := EDGE + loot.x + MID + player.x + EDGE
+	if _strip != null and _inv != null:     # 复测 v3.79：棋盘窄、三张签比它宽时面板跟着加宽，签不伸出铜板
+		w += maxf(0.0, _strip.span_for(player.x - pp * 2.0) - (player.x - pp))
 	var h := maxf(TOP + loot.y + ABOVE_TAKE + TAKE_VISIBLE + EDGE + 6.0, TOP + player.y + BELOW_PLAYER)
 	if _strip != null and _inv != null:     # 216：数值栏放得下（中线对齐「全部拾取」，上沿让开棋盘）
 		h = maxf(h, TOP + player.y - pp + strip_gap() + _strip.strip_height() * 0.5 + take_mid())
@@ -264,7 +266,9 @@ func _layout() -> void:
 	_take_btn.position = Vector2(TAKE_AT.x, want.y + TAKE_AT.y) - off
 	if _strip != null:
 		_strip.set_width(player_size.x)
-		_strip.position = Vector2(player_cells.x, want.y - take_mid() - _strip.strip_height() * 0.5 - off.y).floor()
+		var span := _strip.span_for(player_size.x)     # 比棋盘宽：右沿对齐棋盘外框右沿，往左伸
+		var x := player_cells.x if span <= player_size.x else player_cells.x + player_size.x + pp - span
+		_strip.position = Vector2(x, want.y - take_mid() - _strip.strip_height() * 0.5 - off.y).floor()
 	# 最右那个位置给关闭；没有关闭（战利品屏）就给最小化
 	var right := _close_btn if _close_btn != null else _minimize_btn
 	var side := right.custom_minimum_size

@@ -16,7 +16,7 @@ var _lane: PrebattleLane = null
 var _enemy_strip: StatsStrip = null
 var _player_strip: StatsStrip = null
 ## 内容离铜面板外沿（含面板自己的 40 内缩）；作者 15:44：右列离右沿再远一点 —— 两边一起放宽，中缝仍在正中
-const PANEL_MARGIN := 62
+const PANEL_MARGIN := 50
 ## 属性签上沿离较低那块棋盘的外框下沿（battle_stats v2 `prebattle_row`：+18；竖排本身隔 10）
 const STRIP_GAP := 18
 const ENEMY_FRAME := "corpse"
@@ -54,7 +54,7 @@ func open(payload: Dictionary) -> void:
 	_left = _vbox(10)
 	_left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(_left)
-	_enemy_plate_node = _enemy_plate(_content)
+	_enemy_plate_node = _enemy_plate(_content, Nameplate.COMPACT_PORTRAIT)
 	_left.add_child(_enemy_plate_node)
 	_enemy_view = InventoryView.new()
 	_enemy_view.label_font = font
@@ -80,7 +80,7 @@ func open(payload: Dictionary) -> void:
 	_right = _vbox(10)
 	_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(_right)
-	_player_plate_node = _player_plate()
+	_player_plate_node = _player_plate(Nameplate.COMPACT_PORTRAIT)
 	_right.add_child(_player_plate_node)
 	_inv = InventoryPanelScript.new()
 	_inv.setup(flow.run, font)
@@ -219,6 +219,7 @@ func _refresh() -> void:
 	_start_btn.disabled = why != ""
 	(_start_btn as IconButton).sync_art()
 	_why.text = why if why != "" else (UiText.t("pre.no_attacker") if unarmed() else "")
+	_why.visible = _why.text != ""     # 空着不占一行
 	if _slip_btn != null:
 		var slip := flow.slip_skill()
 		var left := flow.run.skills.uses_of(slip.id)

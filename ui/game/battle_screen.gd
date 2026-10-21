@@ -55,8 +55,8 @@ func open(payload: Dictionary) -> void:
 	if result != null:
 		_view.play(result, [UiText.t("battle.me"), enemy_name])
 		# 157：名牌和战前准备屏同一份控件、同一个位置（面板顶上）
-		_view.set_nameplate(0, _player_plate())
-		_view.set_nameplate(1, _enemy_plate(payload.get("enemy_content", {})))
+		_view.set_nameplate(0, _player_plate(Nameplate.COMPACT_PORTRAIT))
+		_view.set_nameplate(1, _enemy_plate(payload.get("enemy_content", {}), Nameplate.COMPACT_PORTRAIT))
 		_view.set_item_names(0, CombatantSpec.item_names(payload.get("player", null), flow.items))
 		_view.set_item_names(1, CombatantSpec.item_names(payload.get("enemy", null), flow.items))
 		# 087 / 103：双方上过身的 buff（图标 + 悬浮说明）在 result.buffs 里，play 已经接上
