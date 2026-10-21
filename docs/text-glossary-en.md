@@ -36,6 +36,7 @@
 | 战利品 | Loot | |
 | 地上 | Ground | `TERMS_EN` |
 | 仓库 | Warehouse | `TERMS_EN` |
+| 包架 | Bag Rack | 225：局外放包的那一列（UiText `rack.title`） |
 | 本图规则 | Map rules | |
 | 百科 | Encyclopedia | 链接短写 "Codex >" 不用，统一 "Encyclopedia" |
 | 图鉴 | Collection | |

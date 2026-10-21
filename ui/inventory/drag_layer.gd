@@ -394,6 +394,8 @@ func drop_ok_at(global_pos: Vector2) -> bool:
 		return false
 	if target is InventoryView:
 		return (target as InventoryView).preview_ok()
+	if target is BagRackView:
+		return _payload.is_empty() and (target as BagRackView).rack.accepts(_inst.def)     # 225：包架只收空包
 	return target is GroundLayer
 
 
@@ -660,6 +662,13 @@ func drop_at(global_pos: Vector2) -> bool:
 			home = gl.stash
 			inst.rotation = _rot
 			gl.stash.landing_from[inst.uid] = true if _source == gl.stash and _put_back(at_spot) else _release_px(global_pos)     # 162 补充二：同上
+	elif target is BagRackView and (target as BagRackView).rack != null:
+		# 225：包架只收空包（带东西的包先把东西拿下来）；从包架拿起又放回 = 原样
+		var rack := (target as BagRackView).rack
+		if _payload.is_empty() and rack.accepts(inst.def):
+			dropped = rack.insert(inst, _src_index if _source == rack else -1)
+		if dropped:
+			home = rack
 	elif target is InventoryView and (target as InventoryView).inventory != null:     # 157：别的列表视图（事件的收获行）不是落点
 		var grid_view := target as InventoryView
 		var at := target_origin(grid_view, global_pos)
@@ -709,8 +718,8 @@ func drop_at(global_pos: Vector2) -> bool:
 	if not dropped:
 		_restore()
 		AudioHub.play(&"bag.invalid")     # 206：放不下、退回原处（Esc / 右键取消走 [method cancel]，不响）
-	elif target is InventoryView:
-		AudioHub.play(SfxMaterial.place_cue(inst.def))     # 206：放进棋盘按材质响；放到地上的那一声在落稳时
+	elif target is InventoryView or target is BagRackView:
+		AudioHub.play(SfxMaterial.place_cue(inst.def))     # 206：放进棋盘按材质响；放到地上的那一声在落稳时（225：挂上包架同一声）
 
 	_end_drag()
 	drag_finished.emit(inst.uid, dropped)

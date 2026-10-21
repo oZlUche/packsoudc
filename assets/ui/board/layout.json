@@ -221,6 +221,26 @@
     56,
     56
    ]
+  },
+  "plain": {
+   "file": "frame_plain.png",
+   "size": [
+    212,
+    212
+   ],
+   "margin": 46,
+   "cells_offset": 16,
+   "note": "227 小件素框（出售区、祭品台、铸炉槽、上交区、地上、商店货位）。NinePatchRect：四边 margin 一样；axis_stretch = TILE（中段 120 px = 两格）。节点比棋盘四周各大 cells_offset；格缝照 cell_seams 由代码画。白灰石边，tone light"
+  },
+  "plain_dark": {
+   "file": "frame_plain_dark.png",
+   "size": [
+    212,
+    212
+   ],
+   "margin": 46,
+   "cells_offset": 16,
+   "note": "227 小件素框（出售区、祭品台、铸炉槽、上交区、地上、商店货位）。NinePatchRect：四边 margin 一样；axis_stretch = TILE（中段 120 px = 两格）。节点比棋盘四周各大 cells_offset；格缝照 cell_seams 由代码画。深青铜石边，tone dark 的屏用"
   }
  }
 }

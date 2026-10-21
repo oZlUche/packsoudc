@@ -13,13 +13,13 @@ category = &"bag"
 order = 1
 text = "棋盘开局全是不可用格，可用格来自放上去的包：先放包，再往包里放东西。包之间不能重叠，普通道具的每一格都得被某个包覆盖，碰到的每个包都得接受它的标签，有些包只收药剂或食物。只有包里的东西参战，没有装备栏，空间是唯一的约束。
 
-一件东西可以横跨两个相邻的包，但跨包的东西不属于任何包，两边的包体加成都拿不到，拿起包时它也不跟着走。包躺在战利品箱或{zone:地上}只是件普通异形物品，到棋盘上才是包。包不进局外的仓库（唯一例外是{faith:earth}的护符：它是个一格的包，也算珍宝，留），所以既带不回去也带不进来。
+一件东西可以横跨两个相邻的包，但跨包的东西不属于任何包，两边的包体加成都拿不到，拿起包时它也不跟着走。包躺在战利品箱或{zone:地上}只是件普通异形物品，到棋盘上才是包。包不进局外的仓库（{faith:earth}的护符例外：它是个一格的包，也算珍宝），而是放在基地的包架上：撤离时棋盘上的包跟着带回来，置入时进包架；开局屏从包架拖包上棋盘，拖回包架就收起。战败时棋盘上的包跟着没了，保险箱也不收包。
 
 包本身不算重。有的包自带效果，悬浮窗上写着：{item:rune_pouch}里的魔晶石不耗耐久，{item:treasure_satchel}里的东西卖价更高、负重减半。敌人背什么包、战利品装在什么包里、商店偶尔摆出来卖的包，都从同一张包池里出。"
 texts = {
 "en": "The board starts with every cell unusable; usable cells come from the bags you place on it. Place a bag first, then put things in it. Bags can't overlap. Every cell of an ordinary item must be covered by a bag, and every bag it touches must accept its Tags; some bags take only potions or food. Only what is inside bags fights. There are no equipment slots: space is the only limit.
 
-An item can span two adjacent bags, but an item that spans bags belongs to neither: it gets neither bag's bonus, and it doesn't move with a bag when you pick the bag up. A bag lying in a loot chest or on the {zone:地上} is just an oddly shaped item; it only becomes a bag on the board. Bags don't go into the Warehouse between runs (the one exception is the {faith:earth} charm: it is a one-cell bag but also counts as a treasure, so it stays), so you can neither take them home nor bring them in.
+An item can span two adjacent bags, but an item that spans bags belongs to neither: it gets neither bag's bonus, and it doesn't move with a bag when you pick the bag up. A bag lying in a loot chest or on the {zone:地上} is just an oddly shaped item; it only becomes a bag on the board. Bags don't go into the Warehouse between runs (the {faith:earth} charm is the exception: it is a one-cell bag but also counts as a treasure). They go on your base's Bag Rack instead: when you extract, the bags on your board come back with it and go onto the rack when you store things; on the Setup screen you drag bags from the rack onto your board, and dragging one back puts it away. Bags on your board are lost if you are defeated, and the Safe doesn't take bags.
 
 Bags themselves weigh nothing. Some bags have their own effects, listed in their tooltip: Crystals in a {item:rune_pouch} don't use up Durability, and things in a {item:treasure_satchel} sell for more and count only half toward Load. The bags enemies carry, the bags loot comes in, and the bags the Shop occasionally sells all come from the same bag pool."
 }

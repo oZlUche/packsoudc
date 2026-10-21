@@ -241,7 +241,7 @@ static func frame_warehouse_double_click(t: TestCase, root: Window) -> void:
 
 
 static func frame_setup_double_click(t: TestCase, root: Window) -> void:
-	t.begin("开局屏 · 双击快速置入：仓库 → 初始包、棋盘 → 仓库；初始包本体不动")
+	t.begin("开局屏 · 双击快速置入：仓库 → 初始包、棋盘 → 仓库；225：空的初始包 ⇄ 包架")
 
 	var save := "user://test_109_run.json"
 	RunSave.remove(save)
@@ -281,9 +281,11 @@ static func frame_setup_double_click(t: TestCase, root: Window) -> void:
 			if (inst as ItemInstance).def.is_bag:
 				bag_uid = (inst as ItemInstance).uid
 		t.check(bag_uid > 0, "棋盘上有初始包")
-		t.check(not setup.quick_move(setup._board_view, bag_uid), "双击初始包本体：不动")
-		t.check(setup.board.has_item(bag_uid), "初始包还在棋盘上")
-		t.check(setup._status.text.contains("初始包"), "状态行说了一句：%s" % setup._status.text)
+		# 225：包回包架（空包才行），双击包架上的又摆回来
+		t.check(setup.quick_move(setup._board_view, bag_uid), "双击空的初始包：收回包架")
+		t.check(not setup.board.has_item(bag_uid) and flow.meta.rack.get_item(bag_uid) != null, "包在包架上")
+		t.check(setup.quick_move(setup._rack_view, bag_uid), "双击包架上的：摆回棋盘")
+		t.check(setup.board.has_item(bag_uid), "初始包回到棋盘上")
 	flow.to_main_menu()
 	game.queue_free()
 	RunSave.remove(save)

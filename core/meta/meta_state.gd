@@ -8,6 +8,7 @@
 ## - **撤离不直接进仓库**：棋盘原样带回来（包统一换成「默认背景」= 不要求包的格子，东西位置照旧），玩家在结算屏 / 局外屏拖或一键置入，
 ##   放不下就停下来提示；带回来的棋盘没清空之前不能开下一局；
 ## - **包只计图鉴**：什么能存进局外由 [method keeps] 一处说了算，将来删掉「包」这个媒介就删那一个分支。
+##   225 补充一（作者 18:27 定包架）：包不进仓库，但进**包架**（[member rack]，不占格）：撤离时包连同棋盘一起带回，置入时货进仓库、包进包架。
 ##
 ## 局外有自己的 uid 空间：每局的 uid 从 1 重来，进来时重新编号。
 class_name MetaState
@@ -17,6 +18,8 @@ extends RefCounted
 const SAVE_VERSION := 3
 const WAREHOUSE_ID := 100
 const BOARD_ID := 101
+## 225：包架的容器 id
+const RACK_ID := 102
 ## 最近几局的账留几条
 const HISTORY_MAX := 20
 
@@ -25,8 +28,12 @@ signal changed()
 var rules: MetaRules = null
 ## 仓库：不要求包的格子，163 起分页（[Warehouse]，每页 [method warehouse_size] 大，页数由科技推算）
 var warehouse: Warehouse = null
-## 撤离带回来的棋盘（非包道具按原位置）；null = 没有
+## 撤离带回来的棋盘（东西按原位置；225 起包也带回来、照旧铺着，这时它是要求包的棋盘）；null = 没有
 var board: GridInventory = null
+## 225：包架 —— 包 id → 几只（[BagRack]，不占格）。开局第二页从这里拿包，置入时包回到这里
+var rack: BagRack = null
+## 225：已经发过初始包的角色（第一次选这个角色时把 `starting_bags` 发进包架，像 [member MetaRules.first_kit]）
+var bag_grants: Array[StringName] = []
 ## 图鉴：道具 id（字符串）→ 累计带出件数。点亮 = 计数 > 0
 var codex: Dictionary = {}
 ## 175：引发过的元素反应（id）—— 百科的反应页点亮。打完一场由 [method note_reactions] 记
@@ -79,6 +86,7 @@ func _init(p_rules: MetaRules = null) -> void:
 	rules = p_rules
 	warehouse = Warehouse.new(warehouse_size(), WAREHOUSE_ID)
 	warehouse.accept_filter = keeps
+	rack = BagRack.new(RACK_ID)
 
 
 ## 一页仓库多大（163：扩建加页，页的大小不变）
@@ -148,6 +156,64 @@ func take_back(inst: ItemInstance) -> bool:
 	_next_uid = maxi(_next_uid, inst.uid + 1)
 	return warehouse.try_add(inst, true)
 
+#region 包架（225）
+## 包架上各种包几只：包 id（字符串）→ 只数
+func bags() -> Dictionary:
+	return rack.counts()
+
+
+## 往包架里发包（局外的 uid 空间）。只收 [method BagRack.holds] 认的；返回进了几只
+func grant_bags(defs: Array) -> int:
+	var n := 0
+	rack.begin_batch()
+	for d in defs:
+		var def := d as ItemDef
+		if not BagRack.holds(def):
+			continue
+		var inst := ItemInstance.create(def, 0)
+		inst.uid = allocate_uid()
+		if rack.insert(inst):
+			n += 1
+	rack.end_batch()
+	if n > 0:
+		changed.emit()
+	return n
+
+
+## 第一次选这个角色：把它的 `starting_bags` 发进包架（每个存档位每个角色一次）。返回发了几只
+func grant_starting_bags(ch: CharacterDef, items: ItemDatabase) -> int:
+	if ch == null or items == null or bag_grants.has(ch.id):
+		return 0
+	bag_grants.append(ch.id)
+	var defs: Array = []
+	for id in ch.starting_bags:
+		defs.append(items.get_def(id))
+	var n := grant_bags(defs)
+	changed.emit()
+	return n
+
+
+## 一只包回包架（开局屏拖回、取消带入）。保留它的 uid；不是包架收的返回 false
+func put_bag(inst: ItemInstance) -> bool:
+	if inst == null or not BagRack.holds(inst.def):
+		return false
+	_next_uid = maxi(_next_uid, inst.uid + 1)
+	return rack.insert(inst)
+
+
+## 卖包架上的一只（基地出售页双击）：按定价的 [param ratio] 进钱。返回得了多少；没这只 -1
+func sell_bag(uid: int, ratio: float = 0.5) -> int:
+	var inst := rack.get_item(uid)
+	if inst == null:
+		return -1
+	var price := sell_price(inst.def, ratio)
+	rack.remove(uid)
+	funds += price
+	changed.emit()
+	return price
+#endregion
+
+
 #region 一局结束
 ## 一局结束了进来。返回这次进了什么：{"items": 带回棋盘的件数, "value", "funds", "lit": 新点亮的图鉴条目数}
 func absorb(result: RunResult) -> Dictionary:
@@ -165,17 +231,26 @@ func absorb(result: RunResult) -> Dictionary:
 		# 图鉴：每件各计一次（包也算），第一次带出算点亮
 		for inst in result.carried:
 			_record_codex(inst, got)
-		# 棋盘原样带回：不要求包的格子，非包道具按原位置；uid 重新编号
+		# 棋盘原样带回，uid 重新编号。225：包也带回来、照旧铺着（这块棋盘就要求包），置入时包进包架；
+		# 没带包回来的照旧是不要求包的格子
 		var size := result.board_size if result.board_size.x > 0 and result.board_size.y > 0 else RunState.BOARD_SIZE
-		var back := GridInventory.new(size, BOARD_ID, false)
-		back.begin_batch()
+		var kept: Array[ItemInstance] = []
 		for inst in result.carried:
-			if not _adopt(inst):
-				continue
-			if not back.place(inst, inst.origin, inst.rotation) and not back.try_add(inst, true):
+			if _adopt(inst):
+				kept.append(inst)
+		var with_bags := kept.any(func(i: ItemInstance) -> bool: return BagRack.holds(i.def))
+		kept.sort_custom(func(a: ItemInstance, b: ItemInstance) -> bool: return a.def.is_bag and not b.def.is_bag)     # 包先铺
+		var back := GridInventory.new(size, BOARD_ID, with_bags)
+		back.begin_batch()
+		for inst in kept:
+			if back.place(inst, inst.origin, inst.rotation) or back.try_add(inst, true):
+				got["items"] = int(got["items"]) + 1
+			elif BagRack.holds(inst.def) and rack.insert(inst):
+				got["items"] = int(got["items"]) + 1
+			elif keeps(inst.def) and warehouse.rescue(inst) >= 0:
+				got["items"] = int(got["items"]) + 1
+			else:
 				push_warning("MetaState.absorb: %s 放不回带回来的棋盘，丢弃" % inst.def.id)
-				continue
-			got["items"] = int(got["items"]) + 1
 		back.end_batch()
 		if board != null and board.item_count() > 0:
 			# 上一次带回来的还没清（正常流程不会：没清空开不了新局）；并进去，一件不丢
@@ -221,9 +296,9 @@ func _record_codex(inst: ItemInstance, got: Dictionary) -> void:
 	codex[key] = int(codex.get(key, 0)) + 1
 
 
-## 一件东西要不要留进局外（[method keeps]）；留的换成局外号段的 uid。返回要不要留
+## 一件东西要不要留进局外（[method keeps]；225：包架收的包也留）；留的换成局外号段的 uid。返回要不要留
 func _adopt(inst: ItemInstance) -> bool:
-	if not keeps(inst.def):
+	if not keeps(inst.def) and not BagRack.holds(inst.def):
 		return false
 	GrowthProfile.on_leave(inst)     # 207：带回基地 = 离开了作战棋盘，长到哪一阶都清零（reset_on_leave）
 	inst.uid = _next_uid
@@ -244,10 +319,18 @@ func store_all() -> Dictionary:
 		return out
 	var order: Array = board.items()
 	order.sort_custom(func(a: ItemInstance, b: ItemInstance) -> bool:
+		if a.def.is_bag != b.def.is_bag:
+			return b.def.is_bag     # 225：货先走、包最后（包上的货搬空了包才收得起来）
 		return a.origin.y < b.origin.y if a.origin.y != b.origin.y else a.origin.x < b.origin.x)
 	for inst in order:
 		var item := inst as ItemInstance
-		if InventoryService.transfer_auto(board, item.uid, warehouse):
+		if BagRack.holds(item.def):
+			if board.is_bag_with_contents(item.uid):
+				continue     # 上面的货没搬走（仓库满了），包留着垫它
+			board.remove(item.uid)
+			rack.insert(item)     # 225：包进包架
+			out["moved"] = int(out["moved"]) + 1
+		elif InventoryService.transfer_auto(board, item.uid, warehouse):
 			out["moved"] = int(out["moved"]) + 1
 		else:
 			var name := Names.of_item(item)
@@ -268,8 +351,12 @@ func drop_empty_board() -> void:
 		changed.emit()
 
 
-## 带回来的棋盘上剩下的不要了
+## 带回来的棋盘上剩下的不要了。225：包不白丢 —— 棋盘上的包收进包架，货才没了
 func discard_board() -> void:
+	if board != null:
+		for inst in board.items():
+			if BagRack.holds((inst as ItemInstance).def):
+				rack.insert(inst)
 	board = null
 	changed.emit()
 
@@ -449,16 +536,22 @@ func sell_tags() -> Array:
 
 
 ## 090（101 第 4 刀从开局屏搬来）：上一局带回来、还没置入的东西从带回来的棋盘挪进暂存那一栏，
-## 记住各自原位（回主菜单时 [method return_stash] 原样放回）。返回 `uid → {"origin", "rot"}`
+## 记住各自原位（回主菜单时 [method return_stash] 原样放回）。返回 `uid → {"origin", "rot"}`。
+## 225（补充二 §11.2）：包不倒地、直接进包架（`"rack": true`）—— 包不会白丢；回主菜单照样铺回原位
 func take_board_to_stash(stash: ItemStash) -> Dictionary:
 	var pending := {}
 	if stash == null or board == null:
 		return pending
-	for inst in board.items():
+	var order: Array = board.items()
+	order.sort_custom(func(a: ItemInstance, b: ItemInstance) -> bool: return not a.def.is_bag and b.def.is_bag)     # 先拿货、再收包
+	for inst in order:
 		var it := inst as ItemInstance
 		var origin := it.origin
 		var rot := it.rotation
-		if board.remove(it.uid) != null and stash.insert(it):
+		if BagRack.holds(it.def):
+			if board.remove(it.uid) != null and rack.insert(it):
+				pending[it.uid] = {"origin": origin, "rot": rot, "rack": true}
+		elif board.remove(it.uid) != null and stash.insert(it):
 			pending[it.uid] = {"origin": origin, "rot": rot}
 	return pending
 
@@ -469,6 +562,16 @@ func return_stash(stash: ItemStash, pending: Dictionary) -> Array[StringName]:
 	var lost: Array[StringName] = []
 	if stash == null:
 		return lost
+	for uid in pending:     # 225：先把收进包架的包铺回原位（还在包架上的才铺 —— 玩家拖上棋盘带走的就不管了）
+		var rec: Dictionary = pending[uid]
+		var bag := rack.get_item(int(uid)) if bool(rec.get("rack", false)) else null
+		if bag == null:
+			continue
+		if board == null:
+			board = GridInventory.new(RunState.BOARD_SIZE, BOARD_ID, true)
+		rack.remove(bag.uid)
+		if not board.place(bag, rec["origin"], int(rec.get("rot", 0))):
+			rack.insert(bag)
 	for inst in stash.items():
 		var it := inst as ItemInstance
 		stash.remove(it.uid)
@@ -517,6 +620,8 @@ func to_dict() -> Dictionary:
 		"active_buffs": _names_of(active_buffs),
 		"unlocks": _names_of(unlocks),
 		"keepsakes": _names_of(keepsakes),
+		"bags": rack.to_save(),     # 225：包架只记包 id 与 uid
+		"bag_grants": _names_of(bag_grants),
 		"next_uid": _next_uid,
 		"funds": funds, "score": score, "runs": runs, "extractions": extractions, "deaths": deaths,
 		"best_value": best_value,
@@ -603,6 +708,14 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	if m.board != null:
 		for inst in m.board.items():
 			m._next_uid = maxi(m._next_uid, (inst as ItemInstance).uid + 1)
+	var rack_lost: Array = []
+	m.rack = BagRack.from_save(d.get("bags", {}) as Dictionary if d.get("bags", {}) is Dictionary else {}, items, m.allocate_uid, RACK_ID, rack_lost)
+	for inst in m.rack.items():
+		m._next_uid = maxi(m._next_uid, (inst as ItemInstance).uid + 1)
+	for id in rack_lost:
+		push_warning("MetaState.from_dict: 包架上的 %s 内容里已经没有，丢弃" % id)
+	for id in d.get("bag_grants", []):
+		m.bag_grants.append(StringName(String(id)))
 	m.funds = int(d.get("funds", 0))
 	for inst in lost:
 		var value := ItemValue.of_instance(inst as ItemInstance)

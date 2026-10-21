@@ -10,12 +10,12 @@ display_names = {
 "en": "Results and Warehouse"
 }
 order = 6
-text = "一局结束就进结算屏。撤离了，棋盘原样带回来，拖进{zone:仓库}或一键置入，带回来的每件在图鉴里计一次，剩的钱全部带出；没置入的可以留着，进开局屏时它们会放进那一屏的地上，拖上包就带走，不管的出发就没了。战败只有保险箱里的东西。
+text = "一局结束就进结算屏。撤离了，棋盘原样带回来，拖进{zone:仓库}或一键置入，带回来的每件在图鉴里计一次，剩的钱全部带出；没置入的可以留着，进开局屏时它们会放进那一屏的地上（包回包架），拖上包就带走，不管的出发就没了。战败只有保险箱里的东西。
 
-仓库是基地的一块格子，不要求包，所以包进不了仓库，只记进图鉴。仓库里的东西能在开局屏拖进初始包带进下一局；带入有价值预算，超了按比例换掉倒计时。结算屏还写着这一局的步数、几场胜负与信力节奏。"
+仓库是基地的一块格子，不要求包，所以包不进仓库，放在旁边的包架上：一键置入时货进仓库、包进包架。仓库里的东西能在开局屏拖进包里带进下一局。结算屏还写着这一局的步数、几场胜负与信力节奏。"
 texts = {
-"en": "When a run ends, you go to the Results screen. If you extracted, your board comes back exactly as it was: drag things into the {zone:仓库} or store them all with one click. Every item you bring back counts once in the Collection, and all your remaining coins come out with you. You can leave things unstored: when you open the Setup screen, they are placed on that screen's Ground, and you take them along by dragging them onto a bag; anything you leave there is gone once you set out. In defeat, you keep only what was in the Safe.
+"en": "When a run ends, you go to the Results screen. If you extracted, your board comes back exactly as it was: drag things into the {zone:仓库} or store them all with one click. Every item you bring back counts once in the Collection, and all your remaining coins come out with you. You can leave things unstored: when you open the Setup screen, they are placed on that screen's Ground (bags go back to the Bag Rack), and you take them along by dragging them onto a bag; anything you leave there is gone once you set out. In defeat, you keep only what was in the Safe.
 
-The Warehouse is a grid at your base that needs no bag, so bags themselves can't go into it; they are only recorded in the Collection. On the Setup screen, you can drag things from the Warehouse into your starting bag to take them into the next run. What you bring in has a value budget; going over it costs you Countdown in proportion. The Results screen also shows the run's steps, battles won and lost, and your Faith pace."
+The Warehouse is a grid at your base that needs no bag, so bags themselves don't go into it; they go on the Bag Rack next to it, and Store All puts items in the Warehouse and bags on the rack. On the Setup screen, you can drag things from the Warehouse into your bags to take them into the next run. The Results screen also shows the run's steps, battles won and lost, and your Faith pace."
 }
 related = Array[String](["warehouse", "codex", "safe_box", "staging_zone"])
