@@ -269,15 +269,20 @@ func _modal_panel(title: String, margin: int = 16) -> OverlayFrame:
 
 ## 居中的一块面板（叠层用）：半透明压暗底下的地图，石板框放中间（157：[OverlayFrame]，标题写进 [method _frame_title]）。
 ## 返回框的内容区，各屏往里加东西；128：框占着地上的地方
-func _centered_panel(min_size: Vector2, margin: int = 16) -> Container:
+func _centered_panel(min_size: Vector2, margin: int = 16, bronze: bool = false) -> Container:
 	_shade(OVERLAY_SHADE)     # 157 补充三：地图压暗透出来，石板浮在上面
 	var center := _full_center()
 	add_child(center)
-	_overlay_frame = OverlayFrame.new(margin)
+	_overlay_frame = OverlayFrame.new(margin, bronze)
 	_overlay_frame.custom_minimum_size = min_size
 	_reserve_ground(_overlay_frame)
 	center.add_child(_overlay_frame)
 	return _overlay_frame.content
+
+
+## 铜面板三屏（战前准备 / 战斗 / 战利品，UI替换美术 甲 铜战板）：同 [method _centered_panel]，框换铜面板、没有标题条
+func _bronze_panel(min_size: Vector2, margin: int = -1) -> Container:
+	return _centered_panel(min_size, margin, true)
 
 
 ## 157：叠层的标题写进石板框的标题条（原来各屏自己在内容里摆的那一行）；返回那个标签，之后改字直接改它

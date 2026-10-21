@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.78 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.79 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3666,6 +3666,9 @@ func player_spec() -> CombatantSpec …
 顶上标题条（左标题、右槽）+ 内容区，返回内容区给各屏；标题写 `_frame_title(text)`。外观是主题变体 `PanelOverlay`：`UiTheme.asset_root`（默认 `res://assets/ui/`）
 下有石板两张图（`slab_body` + `slab_edge`，157 补充三）就是一整块石板（边距与标题条高读 `slab_edge.json`），没有就是平面底 —— 换皮只换图。悬浮窗（`HoverTip`）同理走 `PanelTooltip`（170 起是深底 `tip/tooltip_dark.png`，原来的纸 `tooltip_paper.png` 退了）。
 宝箱屏整屏铺背景，不套框。
+**铜面板三屏**（战前准备、战斗回放、战利品 / 搜索，UI替换美术 bronze3，v3.79）走 `GameScreen._bronze_panel()` = `OverlayFrame.new(margin, true)`：`bronze/panel_bronze` 九宫（边 83、TILE_FIT，内容从 40 起）、tone dark、没有标题条。
+三屏的棋盘都套 `BoardFrame`（`ui/widgets/board_frame.gd`，`frame_<kind>_dark.png`：内垫深色半透明，格缝 `BoardFrame.dark_seams()`）；属性签用 `StatsStrip.use_inlay`（战利品屏 152 宽嵌槽、战前屏窄嵌槽两排：自己 生命 / 耐力 / 耗气 / DPS / 负重，敌人把负重换成特殊能力，免疫写在特殊能力签的悬浮窗）。
+战前屏两列中间是 `PrebattleLane`（刻线 + 铜钉，双剑铜章压在面板正中；157 的天平拿掉了）。回放的 `BattleView.bronze`：斗技场图 cover 顶对齐铺满、高按内容，`CombatantPanel.bronze` 画美术条（火漆 + 槽 + 九宫填充 + 护甲盖在生命上）和状态小标的嵌槽，不画「▸ 武器名」那行。
 
 换屏：导演加叠层时 0.15 秒、换底屏时 0.2 秒从透明淡入（撤叠层直接撤）；`GameSettings.ui_fades` 关掉，测试与截图工具用 `GameDirector.fades_allowed` 关掉。
 **深浅字色（每块底都要标深浅）**：浅底配墨色字、深底配浅色字。面板变体的深浅登记在 `UiTheme.PANEL_TONES`（新加面板变体必须登记，测试看全）；
@@ -4415,6 +4418,7 @@ res://
 | v3.75 | 2026-10-21 | **221 F5b 局外屏英文 + 补充三**：基地（家 / 仓库 / 出售 / 科技 / 图鉴 / 成就）、设置、读取存档屏、科技与成就构件的固定字过 `UiText`（137 键）；仓库页签英文写数字；`TechDef.descriptions`（科技表加「英文说明」列）、`AchievementDef.descriptions`；底色、光标名分中英；`RunBuffDef.summary` 分隔符随语言。补充三：节点类型条件写短名、掉落加成写标签名、信仰「满级」并进「满阶」、`trig.own_only` 改「%s（只算这件）」、科技面板「先在上面选一个科技」；开战 / 继续按钮英文版图 `fight_en*` / `continue_en*` |
 | v3.76 | 2026-10-21 | **221 F5c 数据说明英文（F5 完）**：道具 95 / 信仰 7 / 角色与技能 / 难度（含挑战句）/ 腰带 / 配方 / 20 条自由模式事件都有英文；新字段 `CharacterDef`·`RunSkill`·`BeltSkillDef`·`DifficultyDef.descriptions`、`DifficultyDef.challenges`、`RunBuffDef.display_names`·`descriptions`、`RecipeDef.notes`；科技表生成的局外 buff 名带英文；补充三五件道具说明改中文并重译（字体重新子集化）；游戏英文名 Pack & Extract（`game.title`，启动屏读设置文件的语言） |
 | v3.78 | 2026-10-21 | **225 去掉开局带入预算**（作者 16:42）：自由模式（章节与三档规模档）和沙漏章的 `carry_budget` 改 0（不限），094 的机制与代码留着给更高难度；开局屏第二页读数只剩负重一行；测试的预算机制改用手搭章节。另：画着字的图出英文版（UI替换美术清点），`UiTheme.lang_art(name)` 在非中文界面有 `<name>_en.png` 就换它 —— 营地路标、铸炉返回路标 / 风箱把手 / 底图（五块铭牌）、主菜单与启动屏字标 |
+| v3.79 | 2026-10-21 | **铜面板三屏**（UI替换美术 bronze3 + battle_stats v2，作者 15:19–16:22；改 8.8）：战前准备、战斗回放、战利品 / 搜索三屏换铜面板（`_bronze_panel`，没有标题条）；棋盘一律套深色外框 `BoardFrame`（`frames_dark`）与深色格缝；数值签换嵌槽签（`StatsStrip.use_inlay`，新签 生命 / 耐力 / 特殊能力，`specials_of` = 免疫 + 常驻加成）；战前屏去掉标题、玩法说明、敌人读数行和天平（`BalanceSeam` 删），两列中间 `PrebattleLane`（刻线、铜钉、双剑铜章），属性签两排压在两块棋盘下面同一条线；序章战前教程第二步改指两排签（`stats`）；回放 `BattleView.bronze`：斗技场图整张铺、美术条、状态小标垫嵌槽、不画「▸ 武器名」；战利品屏「全部拾取」1.3 倍带字、右上铜圆钮 52 |
 | v3.77 | 2026-10-21 | **224 结算屏：账单、石键、格线常开、Cinzel**：第一页换成逐行显出的账单 `LedgerView`（十行 + 合计、经验占位列；大理石碑板 `result/ledger_stele` 直接画在石板上；0.4 s 起每 0.35 s 一行、数字 0.3 s 滚到位，点一下 / 按键全显，全显前「继续」不可点）；两页「继续」与第二页「一键置入」「整理」换石键图按钮（`UiTheme.make_art_text_button`，字由代码写），第二页按钮同一行、钉在滚动区外；`RunState.tally` 加 `elite_won` / `boss_won` / `searches`（同一个点只算一次，`searched_nodes` 进存档）/ `crafts`；数字字体 Cinzel Bold（`UiPalette.numeral_font()`，只裁数字与 I V X）；稀有度六色换美术核过的一套；092 的地上一键出售撤销（地上的撤离时就没了）；187 格线设置删掉、格线常开，仓库棕底浅格线、带回来的背包套皮带框；作者 16:32：标题刻进标题牌 `result/title_plate`、结算页去掉裸露说明字（`WarehousePanel.art_buttons` 时隐藏）、第二页仓库右对齐；221 补充五的事件文字（中英） |
 | v3.61 | 2026-10-20 | **216 补充：负重签总在**（作者 2026-10-20 16:20）：`StatsStrip` 三张签总在（216 待定 3.2 作废）；不算负重的章负重签大字「当前 / 上限」、小字空着，没上限只写当前重量，悬浮窗说「这一章不算负重」；负重规则不动；测试 216 改验 |
 | v3.60 | 2026-10-20 | **214 头像定稿：铜币侧像 + 圆框**（美术设计交图，作者选乙）：3 角色 + 30 敌人头像 256 进 `assets/portraits/`（只拷 1x）；`portrait_frame` 换深铜圆框（`margin` 0、`inset` 0，整张等比缩放），`portrait_empty` 换磨平旧币；头像、框、空位导入开 `mipmaps/generate`；`PortraitSlot.texture_filter = LINEAR_WITH_MIPMAPS`；测试 157 框外扩按 json 验、加 mipmap 两条 |

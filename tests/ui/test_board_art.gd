@@ -82,11 +82,17 @@ static func frame_loot_screen(t: TestCase, root: Window) -> void:
 	var board: GridInventory = f.run.board
 	var pb := pp + CS.FRAME_BLEED
 	t.eq(screen._player_frame.size, Vector2(board.size) * 60.0 + Vector2(pb, pb) * 2.0, "背包外框大小 = 格子 + 两边")
-	var want := Vector2(26.0 + 6 * 60 + 64 + 200 + board.size.x * 60 + 32 + 26.0, maxf(66.0 + 4 * 60 + 64 + 62 + 62 + 32, maxf(66.0 + board.size.y * 60 + 32 + 68, 66.0 + board.size.y * 60 + 16 + 22 + 29 + 63)))     # 216：数值栏（上沿离格子 22、半高 29、中线对「全部拾取」63）
+	# 铜面板三屏：外框换 frames_dark（生皮 cells_offset 40、素皮带 24），面板四边 48、中缝 200（loot_v3）
+	var loot := Vector2(6, 4) * 60.0 + Vector2(lp, lp) * 2.0
+	var player := Vector2(board.size) * 60.0 + Vector2(pp, pp) * 2.0
+	var take_mid := -(CS.TAKE_AT.y + CS.TAKE_INSET + CS.TAKE_VISIBLE * 0.5)
+	var want := Vector2(CS.EDGE + loot.x + CS.MID + player.x + CS.EDGE,
+		ceilf(maxf(maxf(CS.TOP + loot.y + CS.ABOVE_TAKE + CS.TAKE_VISIBLE + CS.EDGE + 6.0, CS.TOP + player.y + CS.BELOW_PLAYER),
+			CS.TOP + player.y - pp + screen.strip_gap() + screen._strip.strip_height() * 0.5 + take_mid)))     # 216：数值栏中线对「全部拾取」
 	t.eq(screen.panel_size(), want, "面板宽高按格子算（%s）" % want)
 	if board.size == Vector2i(8, 6):
-		t.eq(want, Vector2(1188, 556), "8 列背包 + 6 列容器 = 1188 × 556（定稿 526 + 216 数值栏 30）")
-	t.eq(screen.overlay_frame().custom_minimum_size, want, "石板框按它定大小")
+		t.eq(want, Vector2(1232, 566), "8 列背包 + 6 列容器 = 1232 × 566")
+	t.eq(screen.overlay_frame().custom_minimum_size, want, "铜面板按它定大小")
 	var side: Vector2 = screen._minimize_btn.custom_minimum_size
 	var off: Vector2 = screen._stage.global_position - screen.overlay_frame().global_position
 	t.eq(screen._minimize_btn.position, Vector2(want.x, 0.0) + CS.CLOSE_AT - side * 0.5 - off, "最小化钮在原关闭钮的位置（最右）")
@@ -153,8 +159,8 @@ static func frame_search_screen(t: TestCase, root: Window) -> void:
 		t.check(ov._minimize_btn != null and ov._minimize_btn.has_art() and ov._minimize_btn.tooltip_text.begins_with("回到地图"), "最小化钮 = 原「回到地图」")
 		t.check(ov._close_btn.tooltip_text.begins_with("关闭"), "关闭钮 = 原「关闭」")
 		t.check(ov._minimize_btn.position.x < ov._close_btn.position.x and is_equal_approx(ov._minimize_btn.position.y, ov._close_btn.position.y), "最小化在关闭左边、同一行")
-		t.check(is_equal_approx(ov._close_btn.position.x - ov._minimize_btn.position.x, 48.0), "两颗钮中心隔 48")
-		t.check(is_equal_approx(ov._close_btn.size.x, 56.0 * 0.72), "圆钮按 0.72 画")
+		t.check(is_equal_approx(ov._close_btn.position.x - ov._minimize_btn.position.x, CS.MINIMIZE_AT.x * -1.0 + CS.CLOSE_AT.x), "两颗钮中心隔 58")
+		t.check(is_equal_approx(ov._close_btn.size.x, 52.0), "铜圆钮原大 52")
 		ov._minimize_btn.pressed.emit()
 		t.is_null(game.overlay(), "最小化 = 回到地图（叠层藏起来）")
 		t.check(game.minimized() == ov, "藏着没销毁")

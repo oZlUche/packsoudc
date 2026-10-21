@@ -31,10 +31,33 @@ const SHAKE_SEC := 0.1
 const POP_FROM := 0.6
 const POP_SEC := 0.12
 
+## 铜面板三屏（UI替换美术 battle_stats v2 `battle_bars` + bronze3，作者 2026-10-21）：[member bronze] 时没有黑底，
+## 条和状态小标直接压在斗技场图上 —— 生命在上、耐力在下（隔 [constant ART_BAR_GAP]），左头一枚火漆，槽 + 九宫填充 + 护甲盖在生命上；
+## 字浅色深描边写在槽里；每个状态小标垫一块小嵌槽（[constant SLOT_SIZE]），层数浅字写在槽里；「▸ 武器名」那行不画（无裸字）
+const ART_DIR := "stats_strip/"
+const ART_BAR_H := 22.0
+const ART_BAR_GAP := 14.0
+const ART_TROUGH_X := 30.0
+const ART_RIGHT := 10.0
+const ART_SLICE := 8.0
+const ART_SEAL_SCALE := 0.72
+const ART_SEAL_AT := Vector2(14, 11)
+const ART_TEXT := Color("fbf2de")
+const ART_OUTLINE := Color("2a1a10")
+const SLOT_SIZE := Vector2(34, 30)
+const SLOT_ART := "bronze/tag_inlay"
+## 嵌槽图里看得见的那段（上下各 8 透明）与九宫边
+const SLOT_REGION := Rect2(0, 8, 90, 42)
+const SLOT_MARGIN := 10.0
+const ART_FILL := {"hp": "bar_fill_hp", "stamina": "bar_fill_vigor"}
+const ART_SEAL := {"hp": "seal_hp", "stamina": "seal_vigor"}
+
 signal buff_hovered(buff_id: String, at: Vector2)
 signal buff_unhovered
 
 var display_name: String = ""
+## 铜面板三屏的画法（进树之前设）
+var bronze := false
 ## 顶上画不画名字那一行（作者 2026-10-13：战斗屏有名牌了，这行去掉；沙盒、回放浏览器没名牌照画）
 var show_title: bool = true:
 	set(v):
@@ -101,7 +124,7 @@ var _pop_tw: Tween = null
 
 
 func _ready() -> void:
-	custom_minimum_size = Vector2(320, 190)
+	custom_minimum_size = Vector2(320, 110 if bronze else 190)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_process(true)
 
@@ -489,12 +512,13 @@ func _ordered_keys() -> Array:
 
 func _draw() -> void:
 	draw_set_transform(Vector2(_shake_x, 0.0))     # 157：挨打的抖动
-	draw_rect(Rect2(Vector2.ZERO, size), UiPalette.PANEL)
-	draw_rect(Rect2(Vector2.ZERO, size), UiPalette.LINE, false, 1.0)
+	if not bronze:
+		draw_rect(Rect2(Vector2.ZERO, size), UiPalette.PANEL)
+		draw_rect(Rect2(Vector2.ZERO, size), UiPalette.LINE, false, 1.0)
 	if label_font == null:
 		return
 
-	var y := float(PAD)
+	var y := 0.0 if bronze else float(PAD)
 	if show_title:
 		var title := display_name + (UiText.t("battle.fallen_tag") if _dead else "")
 		draw_string(
@@ -512,6 +536,10 @@ func _draw() -> void:
 		var cap: int = pair[1]
 		if cap <= 0:
 			continue
+		if bronze:
+			_draw_art_bar(key, cur, cap, y)
+			y += ART_BAR_H + ART_BAR_GAP
+			continue
 		_draw_bar(key, cur, cap, y)
 		if key == "hp":
 			_draw_armor_frame(y)
@@ -521,22 +549,30 @@ func _draw() -> void:
 	_chip_y = y + 4
 	if not _stacks.is_empty() or not passives.is_empty():
 		y += 4
-		var x := float(PAD)
+		var left := ART_TROUGH_X if bronze else float(PAD)
+		var x := left
+		var row_h := SLOT_SIZE.y if bronze else float(CHIP_H)
 		for id in ordered_ids():
 			var def: BuffDef = buff_defs.get(StringName(String(id)), null)
 			var tex := icon_texture(String(id))
 			var text := chip_text(String(id))
 			var w := EffectIcons.SIZE if tex != null else label_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 14
+			if bronze:
+				w = maxf(w, SLOT_SIZE.x) if tex == null else SLOT_SIZE.x
 			if x + w > size.x - PAD:
-				x = PAD
-				y += CHIP_H + 4
-			var rect := Rect2(x, y, w, CHIP_H)
+				x = left
+				y += row_h + 4
+			var rect := Rect2(x, y, w, row_h)
 			var drawn := rect
 			var k := 1.0
 			if String(id) == _pop_id and _pop_t < 1.0:     # 157：刚上身的那一格从小弹到原大
 				k = lerpf(POP_FROM, 1.0, _pop_t)
 				drawn = Rect2(rect.get_center() - rect.size * k * 0.5, rect.size * k)
 			var group := _group_of(String(id))
+			if bronze:
+				_draw_slot(drawn)
+				if tex != null:
+					drawn = Rect2(drawn.position + Vector2(1, 1) * k, Vector2(EffectIcons.SIZE, EffectIcons.SIZE) * k * 0.9)
 			if tex != null:
 				_draw_icon_chip(String(id), def, group, tex, drawn, k)
 			else:
@@ -545,7 +581,7 @@ func _draw() -> void:
 			_chips.append([rect, String(id)])
 			x += w + 6
 
-	if _last_fired != "":
+	if _last_fired != "" and not bronze:
 		draw_string(
 			label_font, Vector2(PAD, size.y - PAD), "▸ " + _last_fired,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiPalette.DIM
@@ -564,6 +600,11 @@ func _draw_icon_chip(id: String, def: BuffDef, group: int, tex: Texture2D, drawn
 	if n == "":
 		return
 	var px := maxi(6, roundi(12 * k))
+	if bronze:     # 层数写在嵌槽右下角，浅字深描边
+		var slot_at := Vector2(drawn.position.x - k, drawn.position.y - k + SLOT_SIZE.y * k - 3.0 * k)
+		draw_string_outline(UiPalette.cjk_font_bold(), slot_at, n, HORIZONTAL_ALIGNMENT_RIGHT, SLOT_SIZE.x * k - 3.0 * k, px, 3, ART_OUTLINE)
+		draw_string(UiPalette.cjk_font_bold(), slot_at, n, HORIZONTAL_ALIGNMENT_RIGHT, SLOT_SIZE.x * k - 3.0 * k, px, ART_TEXT)
+		return
 	var at := Vector2(drawn.position.x, drawn.end.y - 1.0)
 	draw_string_outline(label_font, at, n, HORIZONTAL_ALIGNMENT_RIGHT, drawn.size.x, px, 3, UiPalette.BG)
 	draw_string(label_font, at, n, HORIZONTAL_ALIGNMENT_RIGHT, drawn.size.x, px, UiPalette.FG)
@@ -649,3 +690,61 @@ func _draw_bar(key: String, current: int, maximum: int, y: float) -> void:
 		label_font, Vector2(PAD + 6, y + BAR_H - 4), text,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiPalette.FG
 	)
+
+
+## 铜面板：一条资源（槽、填充、护甲、火漆、字），见 battle_stats v2 `battle_bars`
+func _draw_art_bar(key: String, current: int, maximum: int, y: float) -> void:
+	var trough := Rect2(ART_TROUGH_X, y, maxf(0.0, size.x - ART_TROUGH_X - ART_RIGHT), ART_BAR_H)
+	var inner := trough.size.x - 4.0
+	var ratio := clampf(float(current) / float(maxi(1, maximum)), 0.0, 1.0)
+	_hslice(UiTheme.art_cached(ART_DIR + "bar_trough"), trough, Color("1a120a", 0.8))
+	var fill := UiTheme.art_cached(ART_DIR + String(ART_FILL.get(key, "bar_fill_vigor")))
+	var tint := Color.WHITE if ART_FILL.has(key) else UiPalette.resource_color(key)
+	if ratio > 0.0:
+		_hslice(fill, Rect2(trough.position + Vector2(2, 2), Vector2(inner * ratio, ART_BAR_H - 4.0)), UiPalette.resource_color(key), tint)
+	var text := "%s %d / %d" % [Glossary.resource_name(StringName(key)), current, maximum]
+	if key == "hp":
+		var hp_cap := maxi(1, maximum)
+		var armor := armor_value()
+		if armor > 0:
+			_hslice(UiTheme.art_cached(ART_DIR + "bar_armor"), Rect2(trough.position + Vector2(2, 2), Vector2(inner * clampf(float(armor) / float(hp_cap), 0.0, 1.0), ART_BAR_H - 4.0)), UiPalette.ARMOR_FRAME)
+			text += UiText.t("battle.armor_on_bar") % armor     # 106：护甲的数写在生命条上
+	var seal := UiTheme.art_cached(ART_DIR + String(ART_SEAL.get(key, "")))
+	if seal != null:
+		var side := seal.get_size() * ART_SEAL_SCALE
+		draw_texture_rect(seal, Rect2((Vector2(0, y) + ART_SEAL_AT - side * 0.5).floor(), side), false)
+	var font := UiPalette.cjk_font_bold()
+	var at := Vector2(trough.position.x + 12.0, y + ART_BAR_H * 0.5 + 5.0)
+	draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, 3, ART_OUTLINE)
+	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, ART_TEXT)
+
+
+## 横向三段切（左右各 [constant ART_SLICE]，中段拉）；比两头还窄时两头按比例缩。缺图画纯色
+func _hslice(tex: Texture2D, r: Rect2, fallback: Color, modulate: Color = Color.WHITE) -> void:
+	if r.size.x <= 0.0:
+		return
+	if tex == null:
+		draw_rect(r, fallback)
+		return
+	var ts := tex.get_size()
+	var cap := minf(ART_SLICE, r.size.x * 0.5)
+	draw_texture_rect_region(tex, Rect2(r.position, Vector2(cap, r.size.y)), Rect2(0, 0, ART_SLICE, ts.y), modulate)
+	if r.size.x > cap * 2.0:
+		draw_texture_rect_region(tex, Rect2(r.position + Vector2(cap, 0), Vector2(r.size.x - cap * 2.0, r.size.y)), Rect2(ART_SLICE, 0, ts.x - ART_SLICE * 2.0, ts.y), modulate)
+	draw_texture_rect_region(tex, Rect2(r.end.x - cap, r.position.y, cap, r.size.y), Rect2(ts.x - ART_SLICE, 0, ART_SLICE, ts.y), modulate)
+
+
+## 铜面板：状态小标底下那块小嵌槽（`tag_inlay` 看得见的那段，九宫缩到 [constant SLOT_SIZE]）
+func _draw_slot(r: Rect2) -> void:
+	var tex := UiTheme.art_cached(SLOT_ART)
+	if tex == null:
+		var box := StyleBoxFlat.new()
+		box.bg_color = Color("2a1c0e", 0.85)
+		box.set_corner_radius_all(4)
+		draw_style_box(box, r)
+		return
+	var sb := StyleBoxTexture.new()
+	sb.texture = tex
+	sb.region_rect = SLOT_REGION
+	sb.set_texture_margin_all(SLOT_MARGIN)
+	draw_style_box(sb, r)

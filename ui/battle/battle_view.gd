@@ -64,6 +64,14 @@ var _verdict: Label
 var _ticker: RichTextLabel = null
 ## 进树之前设；真 = 建文字播报（回放浏览器）
 var show_ticker: bool = false
+## 铜面板三屏（UI替换美术 bronze3 `battle_arena`，作者 2026-10-21 16:15；进树之前设，战斗屏给）：斗技场图整张铺满（cover、顶对齐，看台在铭牌背后），
+## 条与状态小标直接压在图上（[member CombatantPanel.bronze]），两块棋盘套深色外框（[BoardFrame]），时间轴贴着场地下沿
+var bronze: bool = false
+## 铜面板：内容离场地边
+const BRONZE_PAD := 14
+## 两块棋盘的外框（自己素皮带、对手生皮）
+const BOARD_FRAMES := ["player", "corpse"]
+var _root: VBoxContainer = null
 var _play_btn: IconButton
 var _speed_btn: IconButton
 ## 157：时间轴（可拖）、收尾战报、双方名牌的位置（面板顶上）
@@ -233,6 +241,8 @@ func set_board(side: int, board: GridInventory) -> void:
 	view.inventory = board
 	_board_slots[side].custom_minimum_size = view.custom_minimum_size * BOARD_SCALE
 	_board_slots[side].visible = true
+	if _board_slots[side].get_parent() is BoardFrame:
+		(_board_slots[side].get_parent() as Control).visible = true
 
 
 ## 文字播报（没开 null）
@@ -681,11 +691,17 @@ func _build() -> void:
 	var bg := UiTheme.prepare_root(self, false)     # 091：底色跟设置走 —— 设置由宿主（导演 / 沙盒 / 回放浏览器）读过、apply 过，这里不再读盘
 	# 战斗背景（白天的沙地场子，铺满裁边）垫在最底层；直接写在它上面的字（顶上一行、战报、播报）按它的深浅取字色，
 	# 对阵面板、名牌自带深底，不跟着变
-	UiTheme.dress_backdrop(bg, UiTheme.ART_BATTLE_BG, "BattleBackdrop")
+	var pic := UiTheme.dress_backdrop(bg, UiTheme.ART_BATTLE_BG, "BattleBackdrop")
+	if bronze and pic != null:
+		_cover_top(pic)
 	var on_bg := UiTheme.art_tone(UiTheme.ART_BATTLE_BG)
 
 	var root := VBoxContainer.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	if bronze:     # 高按内容：场地图跟着内容（名牌、条、棋盘、时间轴）一起长
+		root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, BRONZE_PAD)
+		_root = root
+		root.minimum_size_changed.connect(update_minimum_size)
 	root.add_theme_constant_override("separation", 12)
 	add_child(root)
 
@@ -712,6 +728,7 @@ func _build() -> void:
 		col.add_child(plate_slot)
 		_plate_slots.append(plate_slot)
 		var p := CombatantPanel.new()
+		p.bronze = bronze
 		p.label_font = label_font
 		p.display_name = _names[i]
 		p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -728,6 +745,9 @@ func _build() -> void:
 		board.label_font = label_font
 		board.scale = Vector2.ONE * BOARD_SCALE
 		slot.add_child(board)
+		if bronze:
+			BoardFrame.around(slot, String(BOARD_FRAMES[i])).visible = false     # 框跟着棋盘：给了才显示
+			board.seams = BoardFrame.dark_seams()
 		var o := CooldownOverlay.new()
 		o.view = board
 		board.add_child(o)
@@ -774,6 +794,25 @@ func _build() -> void:
 	_tip = HoverTip.new()
 	add_child(_tip)
 	_sync_buttons()
+
+
+func _get_minimum_size() -> Vector2:
+	return _root.get_combined_minimum_size() + Vector2.ONE * BRONZE_PAD * 2 if _root != null else Vector2.ZERO
+
+
+## 铜面板：底图 cover、顶对齐（[method UiTheme.dress_backdrop] 是居中裁）—— 宿主变大小时重算
+func _cover_top(pic: TextureRect) -> void:
+	var host := pic.get_parent() as Control
+	host.clip_contents = true
+	pic.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	pic.stretch_mode = TextureRect.STRETCH_SCALE
+	var fit := func():
+		var ts := pic.texture.get_size()
+		var k := maxf(host.size.x / ts.x, host.size.y / ts.y)
+		pic.size = ts * k
+		pic.position = Vector2((host.size.x - pic.size.x) * 0.5, 0.0)
+	host.resized.connect(fit)
+	fit.call()
 
 
 func _sync_buttons() -> void:

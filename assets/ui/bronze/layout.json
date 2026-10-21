@@ -1,0 +1,190 @@
+{
+ "design": [
+  1600,
+  1000
+ ],
+ "round": "第三轮（作者 2026-10-21 16:15）",
+ "tag_style": "丙 嵌槽",
+ "frames_dark": {
+  "search": {
+   "file": "frame_search_dark.png",
+   "size": [
+    260,
+    260
+   ],
+   "margin": 70,
+   "cells_offset": 40,
+   "axis_stretch": "TILE（同原 frame_*）"
+  },
+  "chest_iron": {
+   "file": "frame_chest_iron_dark.png",
+   "size": [
+    260,
+    260
+   ],
+   "margin": 70,
+   "cells_offset": 40,
+   "axis_stretch": "TILE（同原 frame_*）"
+  },
+  "chest_gold": {
+   "file": "frame_chest_gold_dark.png",
+   "size": [
+    260,
+    260
+   ],
+   "margin": 70,
+   "cells_offset": 40,
+   "axis_stretch": "TILE（同原 frame_*）"
+  },
+  "corpse": {
+   "file": "frame_corpse_dark.png",
+   "size": [
+    260,
+    260
+   ],
+   "margin": 70,
+   "cells_offset": 40,
+   "axis_stretch": "TILE（同原 frame_*）"
+  },
+  "boss": {
+   "file": "frame_boss_dark.png",
+   "size": [
+    268,
+    268
+   ],
+   "margin": 74,
+   "cells_offset": 44,
+   "axis_stretch": "TILE（同原 frame_*）"
+  },
+  "player": {
+   "file": "frame_player_dark.png",
+   "size": [
+    228,
+    228
+   ],
+   "margin": 54,
+   "cells_offset": 24,
+   "axis_stretch": "TILE（同原 frame_*）"
+  }
+ },
+ "boards_dark": {
+  "note": "战前准备 / 战斗 / 战利品（含搜索、宝箱）三屏的棋盘内垫改深色半透明；外框照旧（frame_* 的外圈），框里原来画好的浅灰内垫不再用 —— 换成 frame_<kind>_dark.png（同几何、同 margin，只是内垫换成深色半透明，铜面板透出来）",
+  "pad": {
+   "color": "#140d06",
+   "alpha": 0.58,
+   "radius": 6,
+   "margin": 10
+  },
+  "bevel": "下沉：上 / 左一道 #000 55% 2.4 px，下 / 右一道 #e8c886 55% 1.6 px",
+  "cell_seams": {
+   "seam": "#000000",
+   "seam_alpha": 0.4,
+   "hi": "#f0dcb4",
+   "hi_alpha": 0.3,
+   "seam_w": 1.2,
+   "hi_w": 1.2,
+   "hi_offset": -1,
+   "trim": 3
+  }
+ },
+ "prebattle_lane": {
+  "note": "面板加宽，两列中间留一条中缝（截图 114 px ≈ 设计 126）；中缝里两道刻线（各一暗一亮）+ 每 70 一颗铜钉，从铭牌上沿到属性签下沿；交叉双剑铜章 medal_swords 放在整块面板正中（水平、竖直都居中），刻线在铜章上下断开",
+  "lines": [
+   {
+    "dx": -4,
+    "color": "#3a2810",
+    "alpha": 0.8,
+    "w": 2.4
+   },
+   {
+    "dx": -2,
+    "color": "#e8c886",
+    "alpha": 0.6,
+    "w": 1.2
+   },
+   {
+    "dx": 3,
+    "color": "#3a2810",
+    "alpha": 0.8,
+    "w": 2.4
+   },
+   {
+    "dx": 5,
+    "color": "#e8c886",
+    "alpha": 0.6,
+    "w": 1.2
+   }
+  ],
+  "medal": {
+   "file": "medal_swords.png",
+   "size": [
+    132,
+    132
+   ],
+   "center_in_image": [
+    64,
+    64
+   ]
+  },
+  "removes": "原来的 BalanceSeam（天平缝）和 emblem_swords（放在两块棋盘之间那个）都不要了"
+ },
+ "battle_arena": "面板里面整张铺 battle_bg.png（cover，顶对齐：拱墙在铭牌背后），不再只取沙地、也不要深色内边；铭牌、条、棋盘、时间轴都直接叠在这张图上",
+ "tags_on_bronze": {
+  "note": "铜面板三屏上的属性签和全部拾取用这一套（背包窗还是石板，照旧用 216 的羊皮纸签）",
+  "tag_inlay": "窄签（战前），三段切 左 20 / 右 12",
+  "tag_inlay_wide": "152 宽（战利品 / 搜索屏右下）",
+  "take_all_plate": "全部拾取：签底 + 原来的红蜡 ▼ 压在左头",
+  "text": {
+   "main": "#f3e6c8",
+   "sub": "#c8b890",
+   "rating": {
+    "低": "#a6d470",
+    "中": "#f3e6c8",
+    "高": "#f2a654",
+    "极高": "#ff8068"
+   },
+   "load": {
+    "轻装": "#c8b890",
+    "吃力": "#f2a654",
+    "超重": "#ff8068"
+   },
+   "tone": "dark（浅字）"
+  }
+ },
+ "loot_screen": {
+  "note": "作者 16:21–16:22：两边组件离面板内沿各留 14（截图像素，设计 ≈ 16）；全部拾取放大 1.3；右上收起 / 关闭钮按铜面板重画，钮心压在面板右上角的边框上（中心 = 面板右上角往里 29, 29 设计）",
+  "take_all": {
+   "files": "take_all_{normal,hover,pressed}.png",
+   "size": [
+    307,
+    104
+   ],
+   "label": {
+    "font": "serif_bold",
+    "size": 29,
+    "color": "#f3e6c8",
+    "center_in_image": [
+     185,
+     51
+    ]
+   }
+  },
+  "corner_buttons": {
+   "files": "btn_minimize_bronze_*.png / btn_close_bronze_*.png（normal/hover/pressed）",
+   "size": [
+    52,
+    52
+   ],
+   "center_in_image": [
+    26,
+    26
+   ]
+  }
+ },
+ "mocks": [
+  "pre_v3.png",
+  "battle_v3.png",
+  "loot_v3_丙.png",
+  "loot_compare.png"
+ ]
+}

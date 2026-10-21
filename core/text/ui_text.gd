@@ -306,6 +306,16 @@ const TEXT := {
 	"strip.load_off": {"zh": "负重 %s\n这一章不算负重", "en": "Load %s\nLoad doesn't count in this chapter"},
 	"strip.dps_total": {"zh": "估算总 DPS %.1f（和出战前同一个数）", "en": "Est. total DPS %.1f (same number as before battle)"},
 	"strip.dps_row": {"zh": "%s　%.1f", "en": "%s  %.1f"},
+	"strip.hp": {"zh": "生命", "en": "Health"},
+	"strip.hp_tip": {"zh": "生命上限 %d", "en": "Max health %d"},
+	"strip.vigor": {"zh": "耐力", "en": "Stamina"},
+	"strip.vigor_tip": {"zh": "耐力上限 %d", "en": "Max stamina %d"},
+	"strip.special": {"zh": "特殊能力", "en": "Special abilities"},
+	"strip.special_none": {"zh": "无", "en": "None"},
+	"strip.special_empty": {"zh": "此敌人没有特殊能力", "en": "This enemy has no special abilities"},
+	"strip.special_immune": {"zh": "免疫%s", "en": "Immune to %s"},
+	"strip.special_sep": {"zh": "：", "en": ": "},
+	"strip.load": {"zh": "负重", "en": "Load"},
 	# ui/widgets/belt_slots.gd
 	"belt.empty_slot": {"zh": "这一格是空的", "en": "This slot is empty"},
 	"belt.flash": {"zh": "%s：%s", "en": "%s: %s"},
@@ -397,9 +407,6 @@ const TEXT := {
 	# ui/game/game_screen.gd（"我" 用 battle.me，"我方" 用 battle.side_mine）
 	"screen.enemy": {"zh": "敌人", "en": "Enemy"},
 	# ui/game/prebattle_screen.gd
-	"pre.title": {"zh": "战前准备　%s　—— 整理好背包再开战", "en": "Pre-battle · %s — sort your pack, then fight"},
-	"pre.intro": {"zh": "战斗是自动的：只有棋盘上包里的东西参战，武器自己出手、防具替你挨打，挨着放的互相加成。开战那一瞬胜负就定了，之后只是回放。拖出棋盘 = 弃置到地上（不参战，打完还在）。",
-		"en": "Battles fight themselves: only what's in the bags on your board takes part. Weapons strike on their own, armor takes the hits for you, and adjacent items boost each other. The outcome is settled the moment you press Fight; after that it's only a replay. Drag something off the board to drop it on the Ground (it sits out the battle and is still there afterwards)."},
 	"pre.fight": {"zh": "开战", "en": "Fight"},
 	"pre.no_battle": {"zh": "没有等着开打的一场", "en": "There's no battle waiting"},
 	"pre.no_attacker": {"zh": "棋盘上一件会出手的东西都没有，开战就是挨打。", "en": "Nothing on your Board can fight back. Start like this and you just take hits."},     # 222：只提醒，不灰「开战」
@@ -407,18 +414,11 @@ const TEXT := {
 	"pre.no_slip": {"zh": "没有能溜走的技能", "en": "You have no skill to slip away with"},
 	"pre.use_belt": {"zh": "用%s", "en": "Use %s"},
 	"pre.belt_blocked": {"zh": "%s：%s", "en": "%s: %s"},
-	"pre.immune": {"zh": "免疫：%s", "en": "Immune: %s"},
-	"pre.list_sep": {"zh": "、", "en": ", "},
-	"pre.enemy_line": {"zh": "生命 %d　约 %.1f DPS", "en": "Health %d  ~%.1f DPS"},
 	"pre.slip_btn": {"zh": "%s（%s）", "en": "%s (%s)"},
 	"pre.slip": {"zh": "溜走", "en": "Slip away"},
 	"pre.slip_blocked": {"zh": "溜走：%s", "en": "Slip away: %s"},
 	"pre.slip_unlimited": {"zh": "不限次", "en": "unlimited"},
 	"pre.slip_left": {"zh": "剩 %d 次", "en": "%d left"},
-	"pre.kind_elite": {"zh": "精英", "en": "Elite"},
-	"pre.kind_core": {"zh": "核心", "en": "Core"},
-	"pre.kind_search": {"zh": "搜索中遭遇（输了不扣体力）", "en": "Search encounter (losing costs no Vitality)"},
-	"pre.kind_battle": {"zh": "战斗", "en": "Battle"},
 	# —— 221 F1：screens ——
 	# ui/game/setup_screen.gd
 	"setup.page_1": {"zh": "开局 · 一 / 三　选角色", "en": "Setup · 1 / 3 · Choose a character"},

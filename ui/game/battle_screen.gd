@@ -15,10 +15,14 @@ var _won: bool = false
 var _coach: CoachOverlay = null
 ## 220：这一场头一回打出的反应（流程给的）；回放放到第一次弹字时停下解释一句，解释过的划掉
 var _fresh_reactions: Array[StringName] = []
+## 铜面板：斗技场图从面板内缩（40）处铺起；场地宽
+const PANEL_MARGIN := 40
+const VIEW_WIDTH := 1100.0
 
 
 func open(payload: Dictionary) -> void:
-	var panel := _centered_panel(Vector2(1200, 900))     # 103 第 7 条：要放下双方棋盘
+	# 铜面板三屏（UI替换美术 bronze3，作者 2026-10-21 16:15）：铜面板，斗技场图铺满面板里面；高按内容（103 第 7 条：放得下双方棋盘）
+	var panel := _bronze_panel(Vector2(0, 0), PANEL_MARGIN)
 	var col := _vbox(8)
 	panel.add_child(col)
 	var node: MapNode = payload.get("node", null)
@@ -30,9 +34,10 @@ func open(payload: Dictionary) -> void:
 	# 作者 2026-10-17：顶端的「战斗　X —— 赢了」和计时行都不给玩家看（胜负看地图日志与结算屏）；看完没看完记在 _seen_end
 
 	_view = BattleView.new()
+	_view.bronze = true
 	_view.label_font = font
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_view.custom_minimum_size = Vector2(1160, 780)
+	_view.custom_minimum_size = Vector2(VIEW_WIDTH, 0)
 	col.add_child(_view)
 	_view.set_header_visible(false)
 	_view.finished.connect(_on_finished)

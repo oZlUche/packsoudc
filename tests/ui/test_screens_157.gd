@@ -98,16 +98,9 @@ static func run_cost_icons(t: TestCase) -> void:
 	UiTheme.asset_root = saved
 	b.free()
 
-	t.begin("157 · 天平：强弱比取对数再 atan，限 ±25°；哪边强哪边沉，一边是 0 斜满")
-	t.eq(BalanceSeam.tilt_of(100.0, 100.0), 0.0, "一样强：平")
-	t.check(BalanceSeam.tilt_of(100.0, 300.0) > 0.0, "自己强：自己这边（右）沉")
-	t.check(BalanceSeam.tilt_of(300.0, 100.0) < 0.0, "对手强：对手那边（左）沉")
-	t.eq(BalanceSeam.tilt_of(100.0, 0.0), -BalanceSeam.MAX_TILT, "自己空棋盘：往对手那边沉到底")
-	t.eq(BalanceSeam.tilt_of(1.0, 1e9), BalanceSeam.MAX_TILT, "差得再多也只斜 25°")
-
 
 static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
-	t.begin("157 · 战前对阵式与回放：叠层是石板框（标题在标题条）、读数不写几件、两边名牌（没图不画肖像）、清空棋盘天平往对手沉；回放的时间轴刻度、拖动 = seek、跳转不出反馈、战报")
+	t.begin("157 / 铜面板三屏 · 战前对阵式与回放：叠层是铜面板（没有标题）、两排嵌槽属性签、两边名牌、棋盘套深色外框、中缝铜章；回放的时间轴刻度、拖动 = seek、跳转不出反馈、战报")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	Support.cleanup("s157")
@@ -125,34 +118,42 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	t.check(found.has("next") and flow.step_to(int(found["next"])), "走上战斗点")
 	t.eq(flow.screen, GameFlow.Screen.PREBATTLE, "→ 战前准备")
 	var pre = game.overlay()
-	if pre == null or not pre.has_method("seam"):
+	if pre == null or not pre.has_method("lane"):
 		t.check(false, "叠层不是战前准备屏")
 		game.queue_free()
 		Support.cleanup("s157")
 		return
-	t.eq(pre.find_children("*", "OverlayFrame", true, false).size(), 1, "一块石板框")
-	t.check(pre.overlay_frame().title().begins_with("战前准备"), "标题在标题条上：%s" % pre.overlay_frame().title())
-	t.check(pre.enemy_line().begins_with("生命") and pre.enemy_line().contains("DPS") and not pre.enemy_line().contains("件"), "读数只有生命与 DPS：%s" % pre.enemy_line())
+	t.eq(pre.find_children("*", "OverlayFrame", true, false).size(), 1, "一块面板")
+	t.check(pre.overlay_frame().bronze and pre.overlay_frame().title() == "", "铜面板，顶上不写标题（bronze3：两行字都删）")
+	t.check(pre.lane() != null and pre.lane().center_on == pre.overlay_frame(), "中缝铜章对着整块面板居中")
+	t.eq(pre.find_children("*", "BoardFrame", true, false).size(), 2, "两块棋盘都套外框")
+	var es: StatsStrip = pre.enemy_strip()
+	var ps: StatsStrip = pre.player_strip()
+	t.eq([es.inlay(), ps.inlay()], ["narrow", "narrow"], "两排都是窄嵌槽签")
+	t.eq(es.shown(), StatsStrip.ORDER_ENEMY, "敌人：生命 / 耐力 / 耗气 / DPS / 特殊能力")
+	t.eq(ps.shown(), StatsStrip.ORDER_PLAYER, "自己：生命 / 耐力 / 耗气 / DPS / 负重")
+	var spec := run.events.pending_battle_spec()
+	t.eq(es.texts(StatsStrip.HP)[0], str(spec.max_hp_int()), "敌人生命签 = 生命上限")
+	t.eq(es.texts(StatsStrip.DPS)[0], "%.1f" % spec.rough_dps(), "敌人 DPS 签")
+	t.eq(ps.texts(StatsStrip.HP)[0], str(run.compile_player().max_hp_int()), "自己生命签")
 	var plates: Array = pre.find_children("*", "Nameplate", true, false)
 	t.eq(plates.size(), 2, "两块名牌")
 	for p in plates:
 		var slot := (p as Nameplate).portrait_slot
 		t.check(slot != null and slot.is_inside_tree() and (slot.picture != null or slot.placeholder != null),
 			"肖像位照样在：有图放图（214 头像定稿），没图先放占位（%s）" % (p as Nameplate).name_label.text)
-	var before: float = pre.seam().tilt
 	var moved: Array[int] = []
 	for inst in run.board.items():
 		moved.append((inst as ItemInstance).uid)
 	for uid in moved:
 		InventoryService.transfer_auto(run.board, uid, run.storage)
-	t.eq(pre.seam().tilt, -BalanceSeam.MAX_TILT, "清空棋盘：天平往对手那边沉到底")
-	t.check(before > -BalanceSeam.MAX_TILT, "清空之前没沉到底（%.2f）" % before)
+	t.eq(ps.texts(StatsStrip.DPS)[0], "0.0", "清空棋盘：自己的 DPS 签跟着变 0")
 	for uid in moved:
 		InventoryService.transfer_auto(run.storage, uid, run.board)
 	t.check(pre.start_battle(), "放回去、开战")
 	t.eq(flow.screen, GameFlow.Screen.BATTLE, "→ 回放")
 	var screen = game.overlay()
-	t.eq(screen.find_children("*", "OverlayFrame", true, false).size(), 1, "回放也是一块石板框")
+	t.eq(screen.find_children("*", "OverlayFrame", true, false).size(), 1, "回放也是一块面板")
 	# 作者 2026-10-13：悬浮窗的层高跟着自己那一屏 —— 底屏（地图）的悬浮窗低于叠层、已收起；叠层里的悬浮窗高于叠层；地上在最上面那一屏之上
 	var abs_z := func(n: CanvasItem) -> int:
 		var z := 0
@@ -174,6 +175,8 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	var result: BattleResult = flow.last_payload.get("result", null)
 	t.eq(view.find_children("*", "Nameplate", true, false).size(), 2, "回放面板顶上也是两块名牌")
 	t.check(not view.panel(0).show_title and not view.panel(1).show_title, "作者 2026-10-13：有名牌就不在面板顶上再写名字那一行")
+	t.check(screen.overlay_frame().bronze and view.bronze and view.panel(0).bronze and view.panel(1).bronze, "铜面板三屏：回放是铜面板，条和状态小标压在斗技场图上")
+	t.eq(view.find_children("*", "BoardFrame", true, false).filter(func(n): return (n as Control).visible).size(), 2, "回放里两块棋盘也套外框")
 	t.eq(view.ticker(), null, "157 补充一：正式游戏的回放没有文字播报")
 	t.check(view.board_view(0) != null and view.board_view(0).scale == Vector2.ONE, "棋盘不缩（格子和战前一样大）")
 	t.check(not view.find_children("*", "RichTextLabel", true, false).any(func(r): return (r as RichTextLabel).scroll_following), "树里没有滚动的播报框")
