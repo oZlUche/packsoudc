@@ -115,7 +115,7 @@ class TipWindow extends PanelContainer:
 		return c
 
 	func _rich(width: float) -> RichTextLabel:
-		var r := UiTheme.rich_block(width, UiTheme.RICH_SMALL_SIZE)
+		var r := UiTheme.rich_block(width, UiTheme.RICH_SMALL_SIZE + 1)     # 悬浮窗整体比小字大一号（作者 10-21）
 		r.mouse_filter = Control.MOUSE_FILTER_PASS     # 关键词要收得到鼠标（meta 悬停），点击照样往上传给窗
 		r.meta_underlined = false     # 下划线由 BBCode 自己写（[u]），url 不再额外画
 		r.meta_hover_started.connect(func(meta): hover(String(meta)))
