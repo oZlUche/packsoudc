@@ -134,10 +134,11 @@ static func frame_battle_coach(t: TestCase, root: Window) -> void:
 	t.is_null(screen._next, "还在放：没有「继续」")
 	view.seek(view._result.duration_sec() + 1.0)
 	var cont: IconButton = screen._next as IconButton
-	t.check(cont != null and cont.get_parent() == screen._next_slot and cont.has_art(), "拖时间轴拖到头 = 看完：「继续」纸卷落在那一格")
-	t.eq(cont.custom_minimum_size if cont != null else Vector2.ZERO, Vector2(246, 94), "纸卷 246 × 94")
+	t.check(cont != null and cont.get_parent() == screen._next_slot and cont.has_art(), "拖时间轴拖到头 = 看完：「继续」战旗落在那一格")
+	t.eq(cont.custom_minimum_size if cont != null else Vector2.ZERO, Vector2(216, 134), "作者 19:09：继续是战旗 216 × 134（231：比格子高，上下伸出去）")
+	t.check(not screen.medal().visible, "231：拖到头 = 跳过：铜章直接藏起，让位给旗")
 	view.seek(view._result.duration_sec() + 1.0)
-	t.eq(screen._next_slot.get_child_count(), 1, "再拖到头一次：还是那一条")
+	t.eq(screen._next_slot.get_children().filter(func(n): return n is IconButton).size(), 1, "再拖到头一次：还是那一面")
 	t.check(flow.meta.coach_seen.has("prologue_battle"), "记在局外")
 	t.check(not screen.coach_due(), "看过了：下一场不放")
 	ch.coaches = {}

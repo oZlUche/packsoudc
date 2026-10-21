@@ -26,6 +26,11 @@ var center_on: Control = null:
 		if c != null:
 			c.resized.connect(queue_redraw)
 var _lines: Array = LINES
+## 231：开战过场把铜章交给战斗屏的 [DuelMedal]（同一个位置接着画）—— 这边不再画
+var medal_hidden := false:
+	set(v):
+		medal_hidden = v
+		queue_redraw()
 
 
 func _init() -> void:
@@ -64,7 +69,7 @@ func _draw() -> void:
 			_stud(Vector2(cx + 0.5, y))
 		y += STUD_STEP
 	var medal := UiTheme.art_cached(MEDAL_ART)
-	if medal != null:
+	if medal != null and not medal_hidden:
 		draw_texture_rect(medal, Rect2(Vector2(cx, my) - Vector2.ONE * MEDAL_SIDE * 0.5, Vector2.ONE * MEDAL_SIDE), false)
 
 
