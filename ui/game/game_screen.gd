@@ -185,9 +185,10 @@ func refresh_backdrop() -> void:
 
 
 ## 157 补充三（作者定：每个界面在一块完整的石板上显示）：底屏的一整块大石板 —— 屏幕九成宽高、居中，板外是纯色底（[method _backdrop]）。
-## 返回板里的内容区（一块铺满板内边距的空控件）：各屏照旧往里放铺满的居中 / 边距容器
-func _slab_screen(min_size: Vector2 = Vector2.ZERO) -> Control:
-	var slab := UiTheme.slab(PanelContainer.new())
+## 返回板里的内容区（一块铺满板内边距的空控件）：各屏照旧往里放铺满的居中 / 边距容器。
+## [param edge_art] = 板边换一张（224 补充二：结算屏用没有标题刻线的 `slab_edge_plain`），内容区边距照旧按主题的石板
+func _slab_screen(min_size: Vector2 = Vector2.ZERO, edge_art: String = "") -> Control:
+	var slab := UiTheme.slab(PanelContainer.new(), edge_art)
 	slab.name = "ScreenSlab"
 	var side := (1.0 - SLAB_SHARE) * 0.5
 	slab.anchor_left = side

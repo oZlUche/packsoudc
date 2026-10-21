@@ -265,7 +265,7 @@ static func frame_other_overlays(t: TestCase, root: Window) -> void:
 
 
 static func frame_result_defeat(t: TestCase, root: Window) -> void:
-	t.begin("157 · 战败结算：有保险箱件 → 保险箱居中、格子 60；没有 → 只有一句，没有那一格")
+	t.begin("157 / 224 补充二 · 战败结算：有没有保险箱件都不画保险箱（作者 17:23：只有标题牌、账单、继续）")
 	var c = NodeScreens._content()
 	var f := Support.flow(c, "s157c")
 	var gun: ItemDef = c.items.get_def(StringName(String(c.items.ids()[0])))
@@ -282,12 +282,8 @@ static func frame_result_defeat(t: TestCase, root: Window) -> void:
 		screen.font = UiPalette.cjk_font()
 		root.add_child(screen)
 		screen.open({"result": r})
-		var sv: InventoryView = screen.safe_view()
-		if with_safe:
-			t.check(sv != null and is_equal_approx(sv.cell_px, 60.0), "保险箱那一格按 60 画")
-			t.check(sv != null and sv.size_flags_horizontal == Control.SIZE_SHRINK_CENTER and (sv.get_parent().get_parent() as HBoxContainer).alignment == BoxContainer.ALIGNMENT_CENTER, "居中")
-		else:
-			t.check(sv == null, "空保险箱：没有那一格")
+		t.check(screen.safe_view() == null and screen.find_child("SafeFrame", true, false) == null, "保险箱%s：不画那一格" % ("有东西" if with_safe else "空"))
+		t.check(screen.ledger() != null and screen.continue_button() != null, "账单与「继续」在")
 		screen.queue_free()
 	Support.cleanup("s157c")
 

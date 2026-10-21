@@ -76,7 +76,7 @@ static func run_countdown(t: TestCase) -> void:
 	if board_item != null:
 		t.check(r != null and r.safe_items.size() == 1 and r.safe_layout.size() == 1, "保险箱里那件在账上")
 		t.eq(int(f.last_absorbed.get("safe", 0)), 1, "进了局外（safe 计 1）")
-		t.check(f.meta.board != null and f.meta.board.item_count() == 1, "战败也有带回来的棋盘：就是保险箱那件")
+		t.check(not f.meta.has_pending_board() and (f.meta.warehouse.item_count() >= 1 or f.meta.rack.count_of(board_item.def.id) >= 1), "224 补充二：战败没有置入页，保险箱那件直接进了仓库（包进包架）")
 		t.check(int(f.meta.codex.get(String(board_item.def.id), 0)) >= 1, "图鉴记了")
 	t.eq(f.meta.deaths, 1, "记一败")
 	# 倒计时和地图规模正相关：小图 36、中图 60（过半 30）

@@ -917,10 +917,14 @@ static func is_art_box(box: StyleBox) -> bool:
 	return box is StyleBoxTexture or box is SlabStyle
 
 
-## 157 补充三：把一块面板做成一整块石板（叠层框、底屏的大板）：石板变体 + 按石板的深浅挂字色
-static func slab(c: PanelContainer) -> PanelContainer:
+## 157 补充三：把一块面板做成一整块石板（叠层框、底屏的大板）：石板变体 + 按石板的深浅挂字色。
+## 224 补充二：[param edge_art] 给了 = 板边换这张（结算屏的 `slab_edge_plain`：没有顶上那道标题刻线）；缺图照旧
+static func slab(c: PanelContainer, edge_art: String = "") -> PanelContainer:
 	c.theme_type_variation = PANEL_OVERLAY
 	apply_tone(c, PANEL_OVERLAY)
+	var edge: StyleBox = slab_box(true, -1, edge_art) if edge_art != "" else null
+	if edge != null:
+		c.add_theme_stylebox_override("panel", edge)
 	return c
 
 
