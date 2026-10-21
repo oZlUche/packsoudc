@@ -1075,23 +1075,21 @@ func _say(text: String) -> void:
 	_status.text = text     # 作者 2026-10-12：开发提示行在调试台里
 
 
-## 186：给玩家的一句 —— 顶端栏下面的提示行（[method HudHost.notice]），调试台的提示行也记一份。组件（腰带）也走它
+## 186：给玩家的一句 —— 226 批一起是告示卷轴（[method GameScreen.say]），调试台的提示行也记一份。组件（腰带）也走它
 func say(text: String) -> void:
 	_say(text)
-	if _hud_host != null:
-		_hud_host.notice(text)
+	super(text)
 
 
-## 186：要紧的一句（红、停得久）：倒计时、撤离点关闭、侵蚀、动静
+## 186：要紧的一句（朱红、停得久）：倒计时、撤离点关闭、侵蚀、动静
 func warn(text: String) -> void:
 	_say(text)
-	if _hud_host != null:
-		_hud_host.notice(text, true)
+	super(text)
 
 
-## 186：提示行（测试看）；布局里删了返回 null
-func notice_widget() -> HudWidget:
-	return _hud_host.widget(&"notice") if _hud_host != null else null
+## 186：提示行（测试看）—— 226 批一起就是告示层
+func notice_widget() -> NoticeLayer:
+	return notice_layer()
 
 
 func _note(text: String) -> void:

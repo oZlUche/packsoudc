@@ -107,11 +107,9 @@ func widget(id: StringName) -> HudWidget:
 	return widgets.get(id, null)
 
 
-## 186：往提示行写一句（[param urgent] = 要紧：红、停得久）。没有提示行（布局删了）就不写
+## 186：给玩家的一句（[param urgent] = 要紧：朱红、停得久）。226 批一：提示行组件删了，转给告示层（[NoticeLayer]）
 func notice(text: String, urgent: bool = false) -> void:
-	var w := widget(&"notice")
-	if w != null:
-		w.push(text, urgent)
+	NoticeLayer.post(self, text, urgent)
 
 
 ## 全部刷一遍（地图屏每次动完调它；组件自己也订了各自的信号）。231 补充二：按住时只记下要刷（[method hold]）

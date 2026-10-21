@@ -1,5 +1,5 @@
 ## 160（作者定）：腰带的圆槽 —— 一排圆，一格一种随身技能（[BeltModule]），圆里画图标（没图画名字的头一个字），
-## 右下角一个小圆标写还有几个；空槽一个淡的小圆点。双击一个圆 = 用一个（[member on_use]，用不了的原因在圆的上方飘一行 1.5 秒）。
+## 右下角一个小圆标写还有几个；空槽一个淡的小圆点。双击一个圆 = 用一个（[member on_use]，用不了的原因走告示卷轴 —— 226 批一删了圆上方的飘字）。
 ## 没有拖进拖出：随身技能不是道具，不落地、不进包。悬停看名字、说明与什么时候能用。
 ## 圆槽底图 `assets/ui/belt_slot.png`（72 px 一张圆底，有就贴，没有画圆）。
 ## 232（作者 19:23 选 6）：1–6 格换成一整张弯皮带挂皮袋（`belt/belt_<n>`，圆心读 `belt/layout.json`，袋面的压花圆就是槽）；
@@ -12,7 +12,6 @@ const SLOT := 72.0
 const GAP := 12.0
 const BADGE := 24.0
 const SLOT_ART := "res://assets/ui/belt_slot.png"
-const FLOAT_SEC := 1.5
 ## 232：弯皮带的图与摆位表
 const BELT_DIR := "belt/"
 ## 双击 / 悬停算进这一格的半径
@@ -29,7 +28,8 @@ var on_use: Callable = Callable()
 var font: Font = null
 
 var _slot_tex: Texture2D = null
-var _float: Label = null
+## 最近一句用不了的原因（测试读 [method flashed]）
+var _last_flash := ""
 
 
 func _init() -> void:
@@ -104,7 +104,7 @@ static func belt_layouts() -> Dictionary:
 	return _belt_layouts
 
 
-## 用第 [param i] 格的那一种。返回原因（空串 = 用了）；用不了在圆上方飘字
+## 用第 [param i] 格的那一种。返回原因（空串 = 用了）；用不了走告示
 func use_slot(i: int) -> String:
 	var sid := skill_at(i)
 	if sid == &"":
@@ -116,28 +116,15 @@ func use_slot(i: int) -> String:
 	return why
 
 
-## 圆上方飘一行字（[constant FLOAT_SEC] 秒）
-func flash(text: String, at_slot: int = 0) -> void:
-	if _float == null:
-		_float = UiTheme.make_label("", 13, UiPalette.STAMINA)
-		_float.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_child(_float)
-	_float.text = text
-	_float.modulate.a = 1.0
-	_float.reset_size()
-	_float.position = Vector2(slot_center(at_slot).x - _float.size.x * 0.5, -_float.size.y - 4)
-	var room := size.x - _float.size.x     # 字比圆槽宽：右对齐贴着腰带右边（腰带默认在屏幕右下角）
-	_float.position.x = clampf(_float.position.x, minf(0.0, room), maxf(0.0, room))
-	_float.visible = true
-	if is_inside_tree():
-		var tw := create_tween()
-		tw.tween_interval(FLOAT_SEC * 0.6)
-		tw.tween_property(_float, "modulate:a", 0.0, FLOAT_SEC * 0.4)
+## 226 批一：用不了的原因走告示卷轴（[NoticeLayer]），不再在圆上方飘字。[param _at_slot] 留着给调用方
+func flash(text: String, _at_slot: int = 0) -> void:
+	_last_flash = text
+	NoticeLayer.post(self, text, true)
 
 
-## 现在飘着的那行字（测试读）
+## 最近一句（测试读）
 func flashed() -> String:
-	return _float.text if _float != null and _float.visible and _float.modulate.a > 0.0 else ""
+	return _last_flash
 
 
 func _gui_input(event: InputEvent) -> void:

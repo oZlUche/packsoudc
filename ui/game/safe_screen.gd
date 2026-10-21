@@ -8,7 +8,6 @@ extends GameScreen
 var _safe: GridInventory = null
 var _module: SafeModule = null
 var _view: InventoryView
-var _line: Label
 var _inv: InventoryPanelScript = null
 
 
@@ -31,15 +30,13 @@ func open(payload: Dictionary) -> void:
 	_view.show_adjacency = false
 	_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(_view)
-	_line = _label("", 13, UiPalette.HEAL)
-	left.add_child(_line)
 	var buttons := _hbox(8)
 	var back := _button(UiText.t("safe.close"), to_map, 13, UiPalette.Tier.PRIMARY)
 	back.tooltip_text = UiText.t("safe.close_tip")
 	buttons.add_child(back)
 	left.add_child(buttons)
 
-	_inv = _mount_bag(row, _view, func(text: String): _line.text = text, _safe)     # 棋盘上双击 → 进保险箱
+	_inv = _mount_bag(row, _view, Callable(), _safe)     # 棋盘上双击 → 进保险箱；226 批一：回话走告示层
 	_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): take_back(uid))
 	_tip_double(_view, "act.take_back")     # 230
 	_tip_quick(_inv, "act.to_safe", func(inst: ItemInstance) -> String:
@@ -64,7 +61,7 @@ func take_back(uid: int) -> bool:
 		return false
 	var where := _take_to_player(_safe, uid)
 	if where == "storage":
-		_line.text = UiText.t("safe.to_ground") % Names.of(inst.def)
+		say(UiText.t("safe.to_ground") % Names.of(inst.def))
 	return where != ""
 
 
@@ -72,18 +69,18 @@ func take_back(uid: int) -> bool:
 func put_in(uid: int) -> bool:
 	var run := flow.run
 	if not _is_open():
-		_line.text = UiText.t("safe.locked")
+		say(UiText.t("safe.locked"))
 		return false
 	var from := run.holder_of(uid)
 	if from == null:
 		return false
 	var inst := from.get_item(uid)
 	if inst == null or not MetaState.keeps(inst.def):
-		_line.text = UiText.t("safe.no_bags")
+		say(UiText.t("safe.no_bags"))
 		return false
 	if InventoryService.transfer_auto(from, uid, _safe):
 		return true
-	_line.text = UiText.t("safe.no_room") % Names.of(inst.def)
+	say(UiText.t("safe.no_room") % Names.of(inst.def))
 	return false
 
 
@@ -103,9 +100,7 @@ func safe_view() -> InventoryView:
 
 
 func _refresh() -> void:
-	if _line == null or _safe == null:
+	if _safe == null:
 		return
-	var value := 0
-	for inst in _safe.items():
-		value += ItemValue.of((inst as ItemInstance).def)
-	_line.text = UiText.t("safe.status") % [_safe.item_count(), value]
+	# 226 批一：状态行删了 —— 件数并进标题条
+	_frame_title(UiText.t("safe.title_count") % [_safe.size.x, _safe.size.y, _safe.item_count()])

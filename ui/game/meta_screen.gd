@@ -432,7 +432,6 @@ var _sell_pick: OptionButton = null
 var _sell_tag: StringName = &""
 var _sell_tag_pick: OptionButton = null
 var _sell_preview: Label = null
-var _sell_line: Label = null
 ## 225：出售页的包架（双击卖一只）
 var _sell_rack: Control = null
 
@@ -461,8 +460,6 @@ func _build_sell(root: Control) -> Control:
 	_sell_preview = _label("", 13, UiPalette.FG)
 	row2.add_child(_sell_preview)
 	row2.add_child(_button(UiText.t("meta.sell_all"), func(): sell_filtered(), 13, UiPalette.Tier.PRIMARY))
-	_sell_line = _label("", 13, UiPalette.STAMINA)
-	page.add_child(_sell_line)
 	# 225：包架也是货源 —— 双击一只卖掉（一键出售不碰包：包是装备不是战利品）
 	_sell_rack = BagRackView.boxed(flow.meta.rack, font)
 	_sell_rack.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -555,8 +552,8 @@ func sell(uid: int) -> int:
 	var inst := flow.meta.warehouse.get_item(uid)
 	var name := Names.of(inst.def) if inst != null else ""
 	var got := flow.sell_item(uid)
-	if got >= 0 and _sell_line != null:
-		_sell_line.text = UiText.t("meta.sold_one") % [name, got, flow.meta.funds]
+	if got >= 0:
+		say(UiText.t("meta.sold_one") % [name, got, flow.meta.funds])     # 226 批一：卖出回话走告示卷轴
 	return got
 
 
@@ -565,8 +562,8 @@ func sell_bag(uid: int) -> int:
 	var inst := flow.meta.rack.get_item(uid)
 	var name := Names.of(inst.def) if inst != null else ""
 	var got := flow.sell_bag(uid)
-	if got >= 0 and _sell_line != null:
-		_sell_line.text = UiText.t("meta.sold_one") % [name, got, flow.meta.funds]
+	if got >= 0:
+		say(UiText.t("meta.sold_one") % [name, got, flow.meta.funds])
 	return got
 
 
@@ -578,11 +575,11 @@ func sell_rack_view() -> BagRackView:
 ## 按当前那一档一键卖；返回 {"count", "funds"}
 func sell_filtered() -> Dictionary:
 	var got := flow.sell_where(sell_filter_max(), _sell_tag)
-	if _sell_line != null:
-		_sell_line.text = UiText.t("meta.sold_many") % [int(got["count"]), int(got["funds"]), flow.meta.funds] if int(got["count"]) > 0 else UiText.t("meta.nothing_to_sell")
-		var skipped := flow.meta.locked_matching(sell_filter_max(), _sell_tag)
-		if skipped > 0:
-			_sell_line.text += UiText.t("meta.sell_skipped") % skipped     # 230
+	var text := UiText.t("meta.sold_many") % [int(got["count"]), int(got["funds"]), flow.meta.funds] if int(got["count"]) > 0 else UiText.t("meta.nothing_to_sell")
+	var skipped := flow.meta.locked_matching(sell_filter_max(), _sell_tag)
+	if skipped > 0:
+		text += UiText.t("meta.sell_skipped") % skipped     # 230
+	say(text)
 	return got
 
 

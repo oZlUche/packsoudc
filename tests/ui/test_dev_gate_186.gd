@@ -20,7 +20,7 @@ static func run_gate(t: TestCase) -> void:
 	DevGate.force_player = false
 	t.eq(HudLayout.VERSION, 7, "布局版本 7（默认布局加了提示行）")
 	var d := HudLayout.default_for("map")
-	t.eq(String(d.entry_of(&"notice")["anchor"]), "top", "提示行在顶端栏下面居中")
+	t.check(d.entry_of(&"notice").is_empty() and not HudWidgets.KINDS.has(&"notice"), "226 批一：提示行组件删了（回话走告示层）")
 	t.check(HudWidgets.DEV_ONLY.has(&"dev_drawer"), "调试台箭头只在开发包里造")
 
 
@@ -36,7 +36,7 @@ static func frame_player_build(t: TestCase, root: Window) -> void:
 		return
 	t.check(map.dev_drawer() == null, "没有抽屉")
 	t.check(map.hud().widget(&"dev_drawer") == null, "顶端栏右槽没有调试台箭头")
-	t.not_null(map.notice_widget(), "有提示行")
+	t.not_null(map.notice_widget(), "有告示层")
 	t.check(map.find_children("*", "DevDrawer", true, false).is_empty(), "整屏找不到 DevDrawer")
 	game.queue_free()
 	Support.cleanup("gate186a")
@@ -88,22 +88,23 @@ static func frame_notice_line(t: TestCase, root: Window) -> void:
 		notice.step(10.0)     # 开局可能已经有一句（负重、倒计时……）：先等它们走完
 	if far >= 0 and notice != null:
 		map.step(far)
-		t.eq(notice.current(), "那里走不过去", "玩家用语")
-		t.check(RegEx.create_from_string("\\d").search(notice.current()) == null, "不带点号")
+		t.eq(notice.current_text(), "那里走不过去", "玩家用语")
+		t.check(RegEx.create_from_string("\\d").search(notice.current_text()) == null, "不带点号")
 		t.check(map._status.text.begins_with("走不了：") and RegEx.create_from_string("\\d").search(map._status.text) != null, "开发提示行写原因（%s）" % map._status.text)
 	if notice != null:
 		map.extract()
-		t.eq(notice.current(), "这里不是撤离点", "不在撤离点按撤离")
+		t.eq(notice.current_text(), "这里不是撤离点", "不在撤离点按撤离")
 		t.eq(notice.lines().size(), 2, "两句叠着")
 		map.warn("倒计时只剩 3 步")
 		t.eq(notice.lines().size(), 2, "第三句来了：最老的走了")
 		t.eq(notice.lines()[0], "这里不是撤离点", "留下的是第二句")
 		t.check(notice.is_urgent(), "要紧")
-		t.eq(notice.color_of(true), UiPalette.for_tone(UiPalette.HP, notice.paper_tone()), "要紧的用红（按纸的深浅）")
+		var last: NoticeScroll = notice.scrolls()[-1]
+		t.check(last.urgent and last.label().text == "倒计时只剩 3 步", "要紧的是朱红那一卷，字写在卷上")
 		notice.step(3.5)
 		t.eq(notice.lines(), ["倒计时只剩 3 步"] as Array[String], "普通的 3 秒多一点淡掉，要紧的还在")
 		notice.step(2.0)
-		t.check(notice.lines().is_empty() and not notice.visible, "要紧的 5 秒多一点也走了，提示行收起")
-		t.check(not notice.takes_space(), "不占地图的边")
+		t.check(notice.lines().is_empty() and notice.scrolls().is_empty(), "要紧的 5 秒多一点也走了，卷都收了")
+		t.eq(notice.mouse_filter, Control.MOUSE_FILTER_IGNORE, "不接鼠标")
 	game.queue_free()
 	Support.cleanup("gate186b")

@@ -29,7 +29,6 @@ var _preview: Label
 var _summaries: Array[RichTextLabel] = []
 ## 194 §2：两槽满时按空槽 default 行试算的那一句
 var _guess: Label
-var _line: Label
 ## 风箱把手（三张图跟着状态换）
 var _forge_btn: TextureButton
 var _back_btn: TextureButton
@@ -95,8 +94,6 @@ func open(payload: Dictionary) -> void:
 	_text_box.add_child(_preview)
 	_guess = _label("", 12, UiPalette.DIM)
 	_text_box.add_child(_guess)
-	_line = _label("", 13, UiPalette.HEAL)
-	_text_box.add_child(_line)
 
 	_forge_btn = _piece_button("handle", UiText.t("forge.forge_btn"), forge)
 	_forge_btn.disabled = true
@@ -105,7 +102,7 @@ func open(payload: Dictionary) -> void:
 
 	_bag_host = _host(_rect(_layout.get("bag", {})))
 	_reserve_ground(_bag_host)
-	_inv = _mount_bag(_bag_host, _slot_views[0], func(text: String): _line.text = text, null)     # 棋盘上双击 → 第一个空槽（见 put_in）
+	_inv = _mount_bag(_bag_host, _slot_views[0], Callable(), null)     # 棋盘上双击 → 第一个空槽（见 put_in）
 	move_child(_drag, -1)
 	move_child(_tip, -1)
 	for i in _slot_views.size():
@@ -269,11 +266,11 @@ func forge() -> ItemInstance:
 		return null
 	var token := flow.forge_token(_node, p[0], p[1], p[2], [_slots[0], _slots[1], _slots[2]])
 	if token == null:
-		_line.text = UiText.t("forge.failed")
+		warn(UiText.t("forge.failed"))
 		return null
 	if not _out.try_add(token):
 		flow.run.storage.admit(token)
-	_line.text = UiText.t("forge.done") % Names.of_item(token)
+	say(UiText.t("forge.done") % Names.of_item(token))
 	_refresh()
 	return token
 

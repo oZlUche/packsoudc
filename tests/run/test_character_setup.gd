@@ -305,7 +305,7 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 	ch.carry_max_items = 0
 	t.ne(setup.can_depart(), "", "件数上限 0：带了一件就走不了")
 	t.check(not setup.depart(), "出发被拦")
-	t.ne(setup._status.text, "", "说了原因")
+	t.ne(setup.notice_layer().current_text(), "", "说了原因（226：告示卷轴）")
 	ch.carry_max_items = cap
 	t.eq(setup.can_depart(), "", "上限放回不限：能走")
 

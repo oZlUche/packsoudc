@@ -6,7 +6,6 @@ var _rows: Dictionary = {}
 var _armed_delete: int = -1
 ## 221 G：从「跳过序章」来的 —— 在这里开的新存档也跳过序章
 var _skip_prologue := false
-var _hint: Label
 
 
 func open(payload: Dictionary) -> void:
@@ -21,9 +20,10 @@ func open(payload: Dictionary) -> void:
 	col.add_child(_label(UiText.t("slots.title"), 26, UiPalette.FG))
 	# 098：读不出来的存档已备份 —— 这一句比「三位都满了」更要紧，优先写它
 	var notice := flow.backup_notice()
-	var hint_text := notice if notice != "" else (UiText.t("slots.full") if bool(payload.get("full", false)) else "")
-	_hint = _label(hint_text, 13, UiPalette.STAMINA)
-	col.add_child(_hint)
+	if notice != "":
+		warn(notice)     # 226 批一：提示句走告示卷轴
+	elif bool(payload.get("full", false)):
+		say(UiText.t("slots.full"))
 	var repaired := flow.repair_notice()     # 173：读档修复报告（和 098 的备份提示同一处）
 	if repaired != "":
 		col.add_child(_wrapped(repaired, 13, UiPalette.STAMINA, 840))
@@ -75,7 +75,7 @@ func new_game_here(n: int) -> bool:
 func delete_slot(n: int) -> bool:
 	if _armed_delete != n:
 		_armed_delete = n
-		_hint.text = UiText.t("slots.confirm_delete_slot") % (UiText.t("slots.slot") % n)
+		warn(UiText.t("slots.confirm_delete_slot") % (UiText.t("slots.slot") % n))
 		return false
 	_armed_delete = -1
 	flow.delete_slot(n)

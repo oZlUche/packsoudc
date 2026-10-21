@@ -848,7 +848,7 @@ static func run_save_slots(t: TestCase) -> void:
 	screen.font = UiPalette.cjk_font()
 	screen.screen = GameFlow.Screen.SLOTS
 	screen.open({"full": true})
-	t.check(screen._hint.text.contains("满"), "满了的提示")
+	t.check(screen.notice_layer().current_text().contains("满"), "满了的提示（226：走告示卷轴）")
 	t.check(not screen.delete_slot(1), "第一次点删除只是武装")
 	t.eq(screen.armed_delete(), 1, "记着要删第 1 位")
 	t.check(screen.delete_slot(1), "第二次删了")

@@ -42,7 +42,8 @@ var _rack_view: BagRackView = null
 var _board_view: InventoryView
 var _board_label: Label = null
 var _board_scroll: ScrollContainer = null
-var _line: Label
+## 226 批一：最近一句回话（回话本身走告示卷轴；测试读 [method line_text]）
+var _last_said := ""
 var _store_btn: Button
 var _tidy_btn: Button
 var _size_label: Label = null
@@ -95,9 +96,6 @@ func _build() -> void:
 		_shelf = WarehousePages.new()
 		right.add_child(_shelf)
 
-	_line = UiTheme.make_label("", 13, UiPalette.FG)
-	_line.visible = not art_buttons
-	col.add_child(_line)
 	var buttons := UiTheme.hbox(14 if art_buttons else 8)
 	_buttons = buttons
 	col.add_child(buttons)
@@ -128,6 +126,17 @@ func _small_button(text: String, handler: Callable) -> Button:
 		var en := UiText.lang == "en"     # 补充二：英文「Put all away」26 号顶满，小一号
 		return UiTheme.make_art_text_button(text, handler, "result/btn_small_stone", Vector2(180, 67), Vector2(90, 33), 22 if en else 26, 7.0)
 	return UiTheme.make_button(text, handler, UiPalette.Tier.SECONDARY, 13)
+
+
+## 226 批一：回话 —— 告示卷轴（本地那行字删了）
+func _say(text: String) -> void:
+	_last_said = text
+	NoticeLayer.post(self, text)
+
+
+## 最近一句回话（测试看）
+func line_text() -> String:
+	return _last_said
 
 
 ## 224：按钮那一行（结算屏把「继续」靠右放进来）
@@ -258,14 +267,14 @@ static func store_text(got: Dictionary) -> String:
 func store_all() -> Dictionary:
 	var got := _flow.store_all()
 	if int(got["moved"]) > 0 or int(got["left"]) > 0:
-		_line.text = store_text(got)
+		_say(store_text(got))
 	changed.emit()
 	return got
 
 
 func discard_board() -> void:
 	_flow.discard_board()
-	_line.text = UiText.t("wh.board_cleared")
+	_say(UiText.t("wh.board_cleared"))
 	changed.emit()
 
 
@@ -276,7 +285,7 @@ func tidy() -> bool:
 		return false
 	var ok := GridTidy.tidy(page)
 	if page.item_count() > 1:
-		_line.text = UiText.t("wh.page_tidied") if ok else UiText.t("wh.tidy_failed")
+		_say(UiText.t("wh.page_tidied") if ok else UiText.t("wh.tidy_failed"))
 	changed.emit()
 	return ok
 
@@ -291,18 +300,18 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 	if from == _meta.board and BagRack.holds(inst.def):     # 225：包 → 包架（空包才行）
 		ok = not _meta.board.is_bag_with_contents(uid) and _meta.board.remove(uid) != null and _meta.put_bag(inst)
 		if not ok:
-			_line.text = UiText.t("rack.has_contents") % Names.of(inst.def)
+			_say(UiText.t("rack.has_contents") % Names.of(inst.def))
 	elif from == _meta.board:
 		ok = InventoryService.transfer_auto(_meta.board, uid, _meta.warehouse)
 		if not ok:
-			_line.text = UiText.t("setup.no_room_warehouse") % Names.of(inst.def)
+			_say(UiText.t("setup.no_room_warehouse") % Names.of(inst.def))
 		else:
 			if _shelf != null:
 				_shelf.show_item(uid)
 	elif _meta.warehouse.owns(from) and _meta.board != null:
 		ok = InventoryService.transfer_auto(_meta.warehouse, uid, _meta.board)
 		if not ok:
-			_line.text = UiText.t("wh.board_no_room") % Names.of(inst.def)
+			_say(UiText.t("wh.board_no_room") % Names.of(inst.def))
 	if ok:
 		changed.emit()
 	return ok
@@ -375,5 +384,4 @@ func _refresh() -> void:
 	_store_btn.visible = _meta.board != null     # 178：没有带回来的背包就不摆「一键置入」（基地「仓库」页只剩整理）
 	var page := _shelf.current_page() if _shelf != null else null
 	_tidy_btn.disabled = page == null or page.item_count() <= 1
-	if _line != null and _line.text == "":
-		_line.text = UiText.t("wh.pending") % _meta.board.item_count() if pending else UiText.t("wh.count") % _meta.warehouse.item_count()
+

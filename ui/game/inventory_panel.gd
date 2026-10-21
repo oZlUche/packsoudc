@@ -3,7 +3,7 @@
 ##
 ## 拖一下就重新编译一次读数（216：棋盘下的数值栏 [StatsStrip] —— 耐力 / DPS / 负重）—— 编译是纯函数（4.2），这条读数永远和真打出来的一致。
 ## 188（作者 2026-10-17）：操作提示、地上说明、参战 / 可用格读数、信仰行都删了；信仰的悬浮窗在顶端栏的徽记上。
-## 面板自己的回话（顶出来了、放不下、合成了）交给宿主（[member hint_sink]），地图屏走提示行
+## 面板自己的回话（顶出来了、放不下、合成了）交给宿主（[member hint_sink]）；没接就走告示层（226 批一）
 ## 地图屏把它叠在地图上；出发前、走到哪都能开。战斗中不会开：战斗在开打那一瞬就算完了，回放是叠层，挡着它。
 ##
 ## 是个 MarginContainer：容器按内容定大小，拖拽层作为它的第二个子节点自然铺满同一块矩形 —— 一个普通 Control
@@ -228,6 +228,8 @@ func _hint_text(text: String) -> void:
 	last_hint = text
 	if hint_sink.is_valid():
 		hint_sink.call(text)
+	else:
+		NoticeLayer.post(self, text)     # 226 批一：默认走宿主屏的告示
 
 
 func _refresh_readout() -> void:

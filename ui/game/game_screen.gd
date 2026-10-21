@@ -26,6 +26,9 @@ var _screen_slab: PanelContainer = null
 ## 179：整屏一幅画时的内容区（[method _painted_screen] 造）；别的屏没有
 var _painted: Control = null
 
+## 226 批一：没有导演时这一屏自己挂的告示层（[method notice_layer]）
+var _own_notices: NoticeLayer = null
+
 ## 157 补充三：底屏的大石板占屏幕多少（宽高各九成、居中，板外是纯色底）
 const SLAB_SHARE := 0.9
 ## 叠层的暗罩（底下的地图压暗透出来，石板像浮在地图上）
@@ -36,6 +39,29 @@ func _ready() -> void:
 	if font == null:
 		font = UiPalette.cjk_font()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+
+## 226 批一（作者「去掉所有界面里的裸露文字」）：这一屏的回话都走告示层 —— 导演盖在所有屏上的那层（[method NoticeLayer.current]），
+## 没有导演（单测里单独造的屏）就在屏上自己挂一层
+func notice_layer() -> NoticeLayer:
+	var layer := NoticeLayer.current()
+	if layer != null:
+		return layer
+	if not is_instance_valid(_own_notices) or _own_notices.get_parent() != self:
+		_own_notices = NoticeLayer.new()
+		_own_notices.z_index = 50
+		add_child(_own_notices)
+	return _own_notices
+
+
+## 给玩家的一句（告示卷轴）
+func say(text: String) -> void:
+	notice_layer().push(text)
+
+
+## 要紧的一句（朱红卷、停得久）
+func warn(text: String) -> void:
+	notice_layer().push(text, true)
 
 
 ## 第一次显示。[param payload] 是 flow 给的（战斗结果、会话……）

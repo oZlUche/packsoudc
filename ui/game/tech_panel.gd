@@ -31,7 +31,8 @@ var _level: Label
 var _effect: VBoxContainer
 var _cost: VBoxContainer
 var _action: Button
-var _line: Label
+## 226 批一：最近一句回话（回话本身走告示卷轴；测试读 [method line_text]）
+var _last_said := ""
 var _selected: StringName = &""
 ## 材料行的【交 k】按钮：道具 id（字符串）→ Button（138；只有选中节点、前置满足、拥有且还差的才有）
 var _submit_buttons: Dictionary = {}
@@ -91,8 +92,6 @@ func _build() -> void:
 	_action.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_action.pressed.connect(func(): upgrade(_selected))
 	col.add_child(_action)
-	_line = UiTheme.make_wrapped("", 13, UiPalette.DIM, TEXT_WIDTH)     # 回话写在纸上（告示层落地前）
-	col.add_child(_line)
 
 
 #region 公开动作
@@ -127,7 +126,7 @@ func submit_many(item_id: StringName, k: int) -> int:
 			done += 1
 	if done > 0:
 		var item_def := _flow.items.get_def(item_id) if _flow.items != null else null
-		_line.text = UiText.t("tech.handed_in_many") % [done, Names.of(item_def) if item_def != null else String(item_id)]
+		_say(UiText.t("tech.handed_in_many") % [done, Names.of(item_def) if item_def != null else String(item_id)])
 		changed.emit()
 		_refresh()
 	return done
@@ -142,7 +141,7 @@ func upgrade(id: StringName) -> bool:
 	var ok := _flow.upgrade_tech(id)
 	if ok:
 		var def := _flow.tech_of(id)
-		_line.text = UiText.t("tech.lit_up") % Names.of(def) if def.max_level() <= 1 else UiText.t("tech.leveled_up") % [Names.of(def), TechService.level(_meta, id)]
+		_say(UiText.t("tech.lit_up") % Names.of(def) if def.max_level() <= 1 else UiText.t("tech.leveled_up") % [Names.of(def), TechService.level(_meta, id)])
 		changed.emit()
 	return ok
 
@@ -173,7 +172,13 @@ func nameplate() -> PanelContainer:
 
 
 func line_text() -> String:
-	return _line.text
+	return _last_said
+
+
+## 226 批一：回话 —— 告示卷轴（本地那行纸上的字删了）
+func _say(text: String) -> void:
+	_last_said = text
+	NoticeLayer.post(self, text)
 #endregion
 
 
@@ -187,7 +192,7 @@ func _default_selection() -> StringName:
 
 func _on_tree_selected(id: StringName) -> void:
 	_selected = id
-	_line.text = ""
+	_last_said = ""
 	_refresh()
 
 

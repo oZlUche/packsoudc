@@ -217,7 +217,7 @@ static func frame_warehouse_double_click(t: TestCase, root: Window) -> void:
 	t.check(fillers > 0, "仓库塞满了（%d 件）" % fillers)
 	t.check(not panel.quick_move(panel._board_view, rod.uid), "仓库满了：双击不动")
 	t.check(meta.board.has_item(rod.uid), "东西还在带回来的背包里")
-	t.check(panel._line.text.contains("放不下"), "提示一句：%s" % panel._line.text)
+	t.check(panel.line_text().contains("放不下"), "提示一句：%s" % panel.line_text())
 
 	t.check(not panel._tidy_btn.disabled, "仓库多于一件：整理可按")
 	t.check(panel.tidy(), "整理")
