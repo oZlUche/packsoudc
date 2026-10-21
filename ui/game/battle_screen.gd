@@ -49,7 +49,7 @@ func open(payload: Dictionary) -> void:
 
 	_next_slot = CenterContainer.new()
 	_next_slot.custom_minimum_size = Vector2(246, 94)
-	col.add_child(_next_slot)
+	_view.add_footer(_next_slot)     # UI替换美术 18:16：「继续」纸卷压在场地上，场地图铺满面板里面（没有和铜面的硬边）
 	_view.add_coach_target(&"next_button", _next_slot)
 
 	if result != null:

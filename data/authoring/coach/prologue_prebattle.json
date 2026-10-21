@@ -1,8 +1,8 @@
 {
   "id": "prologue_prebattle",
   "steps": [
-    {"target": "enemy_board", "text": "左边是对手的棋盘，上面的铭牌写着它是谁。", "texts": {"en": "On the left is your opponent's Board. The nameplate on top says who it is."}},
+    {"target": "enemy_board", "text": "右边是对手的棋盘，上面的铭牌写着它是谁。", "texts": {"en": "On the right is your opponent's Board. The nameplate on top says who it is."}},
     {"target": "stats", "text": "两边棋盘下面的签是粗估的生命、耐力和输出，不是结果。", "texts": {"en": "The tags under each Board are rough estimates of health, stamina and damage, not the result."}},
-    {"target": "my_board", "text": "右边是你的棋盘。整理好了，按开战。", "texts": {"en": "On the right is your Board. Once it's sorted, press Fight."}}
+    {"target": "my_board", "text": "左边是你的棋盘。整理好了，按开战。", "texts": {"en": "On the left is your Board. Once it's sorted, press Fight."}}
   ]
 }
