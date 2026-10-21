@@ -19,6 +19,9 @@ display_names = {
 "en": "Silk Bolt"
 }
 description = "光滑如水的一卷丝。"
+descriptions = {
+"en": "A bolt of silk, smooth as water."
+}
 shape = SubResource("Resource_iicvs")
 rarity = 3
 weight = 2

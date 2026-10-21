@@ -25,6 +25,9 @@ display_names = {
 "en": "Tool Roll"
 }
 description = "一卷帆布，工具和零件各有各的格子。"
+descriptions = {
+"en": "A roll of canvas; every tool and part has its own pocket."
+}
 shape = SubResource("Resource_7vngl")
 rarity = 1
 tags = Array[StringName]([&"cloth"])

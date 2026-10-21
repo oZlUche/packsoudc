@@ -5,6 +5,9 @@
     "en": "Beast Tail"
   },
   "description": "粗壮的一截尾巴，能卖个好价钱。",
+  "descriptions": {
+    "en": "A thick length of tail. It'll fetch a good price."
+  },
   "shape": [
     "1",
     "1"

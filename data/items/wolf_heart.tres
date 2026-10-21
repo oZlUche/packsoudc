@@ -26,6 +26,9 @@ display_names = {
 "en": "Wolf Heart"
 }
 description = "还温着时取下来的，巫医出高价。"
+descriptions = {
+"en": "Taken while still warm. Witch doctors pay well for it."
+}
 shape = SubResource("Resource_arrr7")
 rarity = 2
 tags = Array[StringName]([&"reagent", &"material", &"nature", &"flesh", &"beast_part"])

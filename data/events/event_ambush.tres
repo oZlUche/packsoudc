@@ -14,6 +14,9 @@ script = ExtResource("3_wold3")
 [sub_resource type="Resource" id="Resource_r7e20"]
 script = ExtResource("1_ink0l")
 label = "上去看看"
+labels = {
+"en": "Go take a look"
+}
 outcomes = Array[ExtResource("2_56isx")]([SubResource("Resource_0s1a8")])
 
 [sub_resource type="Resource" id="Resource_xhop5"]
@@ -23,15 +26,27 @@ buff = &"weakened"
 [sub_resource type="Resource" id="Resource_vm0j5"]
 script = ExtResource("6_8grfd")
 text = "你屏着气绕了过去，手还在抖。"
+texts = {
+"en": "You hold your breath and slip past. Your hands are still shaking."
+}
 
 [sub_resource type="Resource" id="Resource_rfd8m"]
 script = ExtResource("1_ink0l")
 label = "绕开"
+labels = {
+"en": "Go around"
+}
 outcomes = Array[ExtResource("2_56isx")]([SubResource("Resource_xhop5"), SubResource("Resource_vm0j5")])
 
 [resource]
 script = ExtResource("7_0cxap")
 id = &"event_ambush"
 title = "动静"
+titles = {
+"en": "Something Moving"
+}
 text = "前面有动静。"
+texts = {
+"en": "Something's moving up ahead."
+}
 options = Array[ExtResource("1_ink0l")]([SubResource("Resource_r7e20"), SubResource("Resource_rfd8m")])

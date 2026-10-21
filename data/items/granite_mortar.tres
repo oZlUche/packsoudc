@@ -19,6 +19,9 @@ display_names = {
 "en": "Granite Mortar"
 }
 description = "捣药捣盐都用它，就是沉。"
+descriptions = {
+"en": "Good for grinding herbs or salt. Just heavy."
+}
 shape = SubResource("Resource_i1pl6")
 rarity = 1
 weight = 7

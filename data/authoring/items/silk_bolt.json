@@ -5,6 +5,9 @@
     "en": "Silk Bolt"
   },
   "description": "光滑如水的一卷丝。",
+  "descriptions": {
+    "en": "A bolt of silk, smooth as water."
+  },
   "shape": [
     "111"
   ],

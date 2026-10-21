@@ -5,7 +5,13 @@
     "en": "Ascension I"
   },
   "description": "侵蚀开启（本体第七阶段），体力上限 {vitality_max_bonus_amount|signed}。局外解锁后可选。",
+  "descriptions": {
+    "en": "Erosion is on (stage seven of the base game), max Vitality {vitality_max_bonus_amount|signed}. Selectable once unlocked outside of runs."
+  },
   "challenge": "体力上限少一点；越往深处走，侵蚀越重，包里的东西会受损；猎手会循着你的脚步追来。",
+  "challenges": {
+    "en": "A little less max Vitality; the deeper you go, the heavier the Erosion, and things in your pack get damaged; hunters follow your footsteps."
+  },
   "level": 1,
   "requires_unlock": "ascension_1",
   "mechanics": [

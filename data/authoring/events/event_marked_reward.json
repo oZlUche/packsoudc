@@ -1,10 +1,19 @@
 {
   "id": "event_marked_reward",
   "title": "熟面孔",
+  "titles": {
+    "en": "A Familiar Face"
+  },
   "text": "路边坐着的人抬起头看你。",
+  "texts": {
+    "en": "Someone sitting by the road looks up at you."
+  },
   "options": [
     {
       "label": "他认出了你",
+      "labels": {
+        "en": "He knows you"
+      },
       "requires": [
         {
           "type": "has_buff_tag",
@@ -22,12 +31,18 @@
         },
         {
           "type": "say",
-          "text": "「上次的事，谢了。」他塞给你一个医疗包。"
+          "text": "「上次的事，谢了。」他塞给你一个医疗包。",
+          "texts": {
+            "en": "\"Thanks for last time.\" He presses a Salve into your hand."
+          }
         }
       ]
     },
     {
-      "label": "走过去"
+      "label": "走过去",
+      "labels": {
+        "en": "Walk past"
+      }
     }
   ]
 }

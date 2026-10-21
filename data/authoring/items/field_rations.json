@@ -5,6 +5,9 @@
     "en": "Field Rations"
   },
   "description": "军团配的一包，吃一天不饿。",
+  "descriptions": {
+    "en": "A Legion-issue pack. Eat it and you won't go hungry all day."
+  },
   "shape": [
     "1",
     "1"

@@ -361,3 +361,61 @@ static func frame_english_base_screens(t: TestCase, root: Window) -> void:
 	Support.cleanup(PREFIX + "_s")
 	UiText.lang = "zh"
 	DevGate.force_player = false
+
+
+## 221 F5c：数据里给玩家看的说明都有英文、英文里没有汉字（{ui:…} {zone:…} 词除外）
+static func run_data_descriptions_english(t: TestCase) -> void:
+	t.begin("221 F5c · 数据说明：道具、信仰、角色与技能、难度、腰带、科技、成就、配方、事件都有英文")
+	var term := RegEx.create_from_string("\\{(ui|zone):[^}]*\\}")
+	var han := _han()
+	var bad: Array[String] = []
+	var counts := {}
+	var check := func(where: String, zh: String, table: Dictionary) -> void:
+		if zh.strip_edges() == "":
+			return
+		var en := String(table.get("en", ""))
+		if en == "" or han.search(term.sub(en, "", true)) != null:
+			bad.append("%s：%s" % [where, en])
+	for dir in [ContentPaths.ITEMS, ContentPaths.FAITHS, ContentPaths.CHARACTERS, ContentPaths.DIFFICULTIES,
+			ContentPaths.BELT_SKILLS, ContentPaths.TECHS, ContentPaths.ACHIEVEMENTS, ContentPaths.RECIPES, ContentPaths.EVENTS]:
+		for res in ContentPaths.load_resources(dir):
+			var where := "%s/%s" % [dir.get_file(), String(res.get("id"))]
+			counts[dir.get_file()] = int(counts.get(dir.get_file(), 0)) + 1
+			if res is RecipeDef:
+				check.call(where, (res as RecipeDef).note, (res as RecipeDef).notes)
+			elif res is EventDef:
+				var ev := res as EventDef
+				check.call(where + " title", ev.title, ev.titles)
+				check.call(where + " text", ev.text, ev.texts)
+				for o in ev.options:
+					check.call(where + " option", o.label, o.labels)
+			else:
+				check.call(where, String(res.get("description")), res.get("descriptions"))
+			if res is FaithDef:
+				check.call(where + " god", (res as FaithDef).god, (res as FaithDef).gods)
+			if res is CharacterDef:
+				for sk in (res as CharacterDef).skills:
+					check.call(where + "/" + String(sk.id), sk.description, sk.descriptions)
+			if res is DifficultyDef:
+				check.call(where + " challenge", (res as DifficultyDef).challenge, (res as DifficultyDef).challenges)
+	t.check(int(counts.get("items", 0)) >= 95 and int(counts.get("faiths", 0)) == 7, "items and faiths loaded (%s)" % [counts])
+	t.eq(bad, [] as Array[String], "every description has English")
+
+
+## 221 F5c：游戏英文名 Pack & Extract（作者 2026-10-21）—— 主菜单兜底标题走 game.title，启动屏按设置文件里的语言写
+static func run_game_title(t: TestCase) -> void:
+	t.begin("221 F5c · 游戏名：中文 背包搜打撤、英文 Pack & Extract；启动屏读设置文件的语言")
+	UiText.lang = "en"
+	var en := UiText.t("game.title")
+	UiText.lang = "zh"
+	t.eq(en, "Pack & Extract", "English name")
+	t.eq(UiText.t("game.title"), "背包搜打撤", "Chinese name")
+	var boot = load("res://ui/boot.gd")
+	var path := "user://test_221_boot_settings.json"
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(JSON.stringify({"language": "en"}))
+	f.close()
+	t.eq(boot.read_lang(path), "en", "settings say en")
+	t.eq(String(boot.WORDS["en"]["title"]), en, "boot screen uses the same name")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	t.eq(boot.read_lang(path), "zh", "no settings file: zh")

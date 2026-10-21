@@ -5,6 +5,9 @@
     "en": "Beast Tusk Root"
   },
   "description": "带着牙髓的一截，没剔干净。",
+  "descriptions": {
+    "en": "A chunk with the pulp still in it, never scraped clean."
+  },
   "shape": [
     "1",
     "1"

@@ -18,6 +18,9 @@ display_names = {
 "en": "Datura Flower"
 }
 description = "好看，别闻久。"
+descriptions = {
+"en": "Pretty. Don't smell it too long."
+}
 shape = SubResource("Resource_o0pko")
 rarity = 2
 tags = Array[StringName]([&"reagent", &"material", &"nature", &"herb", &"poison"])

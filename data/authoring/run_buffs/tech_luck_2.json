@@ -1,6 +1,9 @@
 {
   "id": "tech_luck_2",
   "display_name": "幸运（科技）",
+  "display_names": {
+    "en": "Fortune (Tech)"
+  },
   "description": "幸运 {luck_bonus_amount|signed}：敌人的东西更容易掉",
   "scope": "META",
   "effects": [

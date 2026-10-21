@@ -12,15 +12,27 @@ script = ExtResource("3_p05wf")
 [sub_resource type="Resource" id="Resource_4wptb"]
 script = ExtResource("1_81w3b")
 label = "歇一会儿"
+labels = {
+"en": "Rest a while"
+}
 outcomes = Array[ExtResource("2_v2iuu")]([SubResource("Resource_l63mj")])
 
 [sub_resource type="Resource" id="Resource_gtc0i"]
 script = ExtResource("1_81w3b")
 label = "继续走"
+labels = {
+"en": "Keep going"
+}
 
 [resource]
 script = ExtResource("5_cdwsf")
 id = &"event_rest_spot"
 title = "歇脚处"
+titles = {
+"en": "A Place to Rest"
+}
 text = "一处避风的角落，看起来能歇一会儿。"
+texts = {
+"en": "A corner out of the wind. Looks like you could rest a while."
+}
 options = Array[ExtResource("1_81w3b")]([SubResource("Resource_4wptb"), SubResource("Resource_gtc0i")])

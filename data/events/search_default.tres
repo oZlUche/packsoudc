@@ -12,15 +12,27 @@ script = ExtResource("3_xluuq")
 [sub_resource type="Resource" id="Resource_fvbb4"]
 script = ExtResource("1_qvr5w")
 label = "搜索"
+labels = {
+"en": "Search"
+}
 outcomes = Array[ExtResource("2_s1mrf")]([SubResource("Resource_e8l03")])
 
 [sub_resource type="Resource" id="Resource_kaqpk"]
 script = ExtResource("1_qvr5w")
 label = "离开"
+labels = {
+"en": "Leave"
+}
 
 [resource]
 script = ExtResource("5_u7esl")
 id = &"search_default"
 title = "搜索点"
+titles = {
+"en": "Search Spot"
+}
 text = "这里像是能翻出点什么。翻得越久，越可能惊动附近的人。"
+texts = {
+"en": "Looks like there's something to dig up here. The longer you dig, the likelier you are to wake someone nearby."
+}
 options = Array[ExtResource("1_qvr5w")]([SubResource("Resource_fvbb4"), SubResource("Resource_kaqpk")])

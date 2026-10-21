@@ -19,6 +19,9 @@ display_names = {
 "en": "Wool Cloth"
 }
 description = "厚实的呢料，御寒。"
+descriptions = {
+"en": "Thick woolen cloth. Keeps out the cold."
+}
 shape = SubResource("Resource_6ueq3")
 rarity = 1
 weight = 1

@@ -18,5 +18,8 @@ display_names = {
 "en": "Flint"
 }
 description = "敲一下就出火星。"
+descriptions = {
+"en": "Strike it once and it sparks."
+}
 shape = SubResource("Resource_osbdd")
 tags = Array[StringName]([&"material", &"nature", &"stone"])

@@ -29,6 +29,9 @@ display_names = {
 "en": "Field Rations"
 }
 description = "军团配的一包，吃一天不饿。"
+descriptions = {
+"en": "A Legion-issue pack. Eat it and you won't go hungry all day."
+}
 shape = SubResource("Resource_mvxqd")
 rarity = 2
 tags = Array[StringName]([&"nature", &"food", &"flesh"])

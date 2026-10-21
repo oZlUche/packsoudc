@@ -5,6 +5,9 @@
     "en": "Oil Lamp"
   },
   "description": "还有半盏油。",
+  "descriptions": {
+    "en": "Still half full of oil."
+  },
   "shape": [
     "1",
     "1"

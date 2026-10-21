@@ -1,10 +1,19 @@
 {
   "id": "faith_call_sun",
   "title": "日神的光",
+  "titles": {
+    "en": "Light of the Sun God"
+  },
   "text": "祭坛的石面被烤得发白，正午的光从没有窗的顶上直直落下来。一枚铜牌躺在光里，热得像刚从火里夹出来。",
+  "texts": {
+    "en": "The altar's stone face is baked white. Noon light falls straight down from a roof with no windows. A copper token lies in the light, hot as if just pulled from the fire."
+  },
   "options": [
     {
       "label": "拿起铜牌",
+      "labels": {
+        "en": "Pick up the copper token"
+      },
       "tags": [
         "offering"
       ],
@@ -15,12 +24,18 @@
         },
         {
           "type": "say",
-          "text": "日神的护符温热不退。"
+          "text": "日神的护符温热不退。",
+          "texts": {
+            "en": "The Sun God's charm stays warm."
+          }
         }
       ]
     },
     {
-      "label": "不拿，离开"
+      "label": "不拿，离开",
+      "labels": {
+        "en": "Leave it and go"
+      }
     }
   ]
 }

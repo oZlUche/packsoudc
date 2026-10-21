@@ -23,7 +23,10 @@ display_name = "药草囊"
 display_names = {
 "en": "Herb Pouch"
 }
-description = "透气的布囊，草药和吃食放久了也不坏。"
+description = "透气的布囊，装草药和吃食；带着它，伤口好得快些。"
+descriptions = {
+"en": "A breathable cloth pouch for herbs and food. Carry it and your wounds heal a little faster."
+}
 shape = SubResource("Resource_ncp2w")
 rarity = 1
 tags = Array[StringName]([&"cloth"])

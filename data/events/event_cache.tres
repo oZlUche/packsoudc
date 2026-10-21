@@ -19,6 +19,9 @@ rarity_cap = 2
 [sub_resource type="Resource" id="Resource_i0dru"]
 script = ExtResource("5_op7e7")
 text = "锁应声而断。"
+texts = {
+"en": "The lock snaps."
+}
 
 [sub_resource type="Resource" id="Resource_w2cwq"]
 script = ExtResource("7_eybb5")
@@ -26,16 +29,28 @@ script = ExtResource("7_eybb5")
 [sub_resource type="Resource" id="Resource_safsw"]
 script = ExtResource("1_35w1q")
 label = "撬开（体力 -{spend_vitality_amount}）"
+labels = {
+"en": "Pry it open (Vitality -{spend_vitality_amount})"
+}
 requires = Array[ExtResource("6_jlyur")]([SubResource("Resource_w2cwq")])
 outcomes = Array[ExtResource("2_4twy5")]([SubResource("Resource_1auhx"), SubResource("Resource_smgla"), SubResource("Resource_i0dru")])
 
 [sub_resource type="Resource" id="Resource_ukd1x"]
 script = ExtResource("1_35w1q")
 label = "走开"
+labels = {
+"en": "Walk away"
+}
 
 [resource]
 script = ExtResource("8_i2soc")
 id = &"event_cache"
 title = "上锁的箱子"
+titles = {
+"en": "A Locked Chest"
+}
 text = "角落里有一只上了锁的铁箱，锁已经锈得差不多了。"
+texts = {
+"en": "An iron chest sits locked in the corner. The lock is nearly rusted through."
+}
 options = Array[ExtResource("1_35w1q")]([SubResource("Resource_safsw"), SubResource("Resource_ukd1x")])

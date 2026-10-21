@@ -15,6 +15,9 @@ display_names = {
 "en": "Smoke Bomb"
 }
 description = "开战前丢出去，趁乱溜走。"
+descriptions = {
+"en": "Throw it before a battle starts and slip away in the confusion."
+}
 price = 30
 when = 1
 effects = Array[ExtResource("1_83lp1")]([SubResource("Resource_15wst")])

@@ -13,6 +13,9 @@ script = ExtResource("2_8wohu")
 script = ExtResource("5_gnc7m")
 id = &"tech_bargain_2"
 display_name = "讨价（科技）"
+display_names = {
+"en": "Haggling (Tech)"
+}
 description = "商店售价 ×{shop_price_mult_factor}"
 scope = 0
 effects = Array[ExtResource("1_t1gbg")]([SubResource("Resource_fajmo")])

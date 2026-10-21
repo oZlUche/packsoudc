@@ -5,7 +5,13 @@
     "en": "The Sun God"
   },
   "god": "日神（太阳、火、周期性重复）",
+  "gods": {
+    "en": "The Sun God (the sun, fire, cyclical repetition)"
+  },
   "description": "恒常（周期循环）被人类推向太阳、又夺了火；帝国诸神之一，日神一族地位崇高",
+  "descriptions": {
+    "en": "Constancy (the recurring cycle), which humans pushed onto the sun before stealing its fire; one of the Empire's gods, and the Sun God's people hold high standing."
+  },
   "thresholds": [
     50,
     150,

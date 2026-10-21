@@ -15,6 +15,9 @@ percent = 100
 script = ExtResource("5_y8vw2")
 id = &"tech_pack_3"
 display_name = "行囊（科技）"
+display_names = {
+"en": "Travel Pack (Tech)"
+}
 description = "开局钱 {starting_funds_bonus_percent|signed}%"
 scope = 0
 effects = Array[ExtResource("1_unkpu")]([SubResource("Resource_c40ll")])

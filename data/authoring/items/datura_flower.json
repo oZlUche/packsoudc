@@ -5,6 +5,9 @@
     "en": "Datura Flower"
   },
   "description": "好看，别闻久。",
+  "descriptions": {
+    "en": "Pretty. Don't smell it too long."
+  },
   "shape": [
     "1"
   ],

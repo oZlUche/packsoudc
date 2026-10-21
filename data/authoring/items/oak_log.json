@@ -5,6 +5,9 @@
     "en": "Oak Log"
   },
   "description": "一截还带树皮的硬木。",
+  "descriptions": {
+    "en": "A length of hardwood, bark still on."
+  },
   "shape": [
     "1",
     "1",

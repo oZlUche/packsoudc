@@ -18,15 +18,27 @@ events = {
 [sub_resource type="Resource" id="Resource_rvgbf"]
 script = ExtResource("1_krn0e")
 label = "靠近"
+labels = {
+"en": "Go closer"
+}
 outcomes = Array[ExtResource("2_ci2vb")]([SubResource("Resource_inin6")])
 
 [sub_resource type="Resource" id="Resource_myi7w"]
 script = ExtResource("1_krn0e")
 label = "离开"
+labels = {
+"en": "Leave"
+}
 
 [resource]
 script = ExtResource("5_eywxh")
 id = &"faith_call"
 title = "触发信仰"
+titles = {
+"en": "A Call to Faith"
+}
 text = "废墟深处立着一座祭坛，看不出供的是哪位神。空气里有什么在等你。"
+texts = {
+"en": "Deep in the ruins stands an altar. You can't tell which god it belongs to. Something in the air is waiting for you."
+}
 options = Array[ExtResource("1_krn0e")]([SubResource("Resource_rvgbf"), SubResource("Resource_myi7w")])

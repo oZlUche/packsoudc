@@ -5,6 +5,9 @@
     "en": "Whetstone"
   },
   "description": "磨过的刀，刃上一道亮。",
+  "descriptions": {
+    "en": "Any blade it's touched has a bright line along the edge."
+  },
   "shape": [
     "1",
     "1"

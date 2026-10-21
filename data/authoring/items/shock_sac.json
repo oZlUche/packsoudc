@@ -5,6 +5,9 @@
     "en": "Shock Sac"
   },
   "description": "还在微微发麻。挨着它的武器每次出手，都给对手添一层【麻痹】。",
+  "descriptions": {
+    "en": "Still tingling faintly. Each time an adjacent weapon activates, it gives the opponent one stack of Paralysis."
+  },
   "shape": [
     "1"
   ],

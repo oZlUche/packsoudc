@@ -19,6 +19,9 @@ display_names = {
 "en": "Rune Pouch"
 }
 description = "绣着符文的小囊，晶石放在里面不会磨损。"
+descriptions = {
+"en": "A small rune-stitched pouch. Crystals kept inside lose no Durability."
+}
 shape = SubResource("Resource_5gowg")
 rarity = 2
 tags = Array[StringName]([&"cloth", &"magic"])

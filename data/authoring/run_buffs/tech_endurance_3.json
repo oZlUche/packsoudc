@@ -1,6 +1,9 @@
 {
   "id": "tech_endurance_3",
   "display_name": "耐久（科技）",
+  "display_names": {
+    "en": "Endurance (Tech)"
+  },
   "description": "体力上限 {vitality_max_bonus_percent|signed}%",
   "scope": "META",
   "effects": [

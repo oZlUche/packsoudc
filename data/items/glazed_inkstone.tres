@@ -18,6 +18,9 @@ display_names = {
 "en": "Glazed Inkstone"
 }
 description = "文士的物件，釉色像雨后天。"
+descriptions = {
+"en": "A scholar's piece, its glaze the color of the sky after rain."
+}
 shape = SubResource("Resource_p6ygv")
 rarity = 3
 tags = Array[StringName]([&"material", &"crafted", &"clay", &"treasure"])

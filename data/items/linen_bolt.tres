@@ -19,6 +19,9 @@ display_names = {
 "en": "Linen Bolt"
 }
 description = "一卷素色亚麻。"
+descriptions = {
+"en": "A bolt of plain linen."
+}
 shape = SubResource("Resource_7ojrt")
 weight = 2
 tags = Array[StringName]([&"material", &"crafted", &"supply", &"cloth"])

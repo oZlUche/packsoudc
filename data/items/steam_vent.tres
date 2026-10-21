@@ -155,6 +155,9 @@ display_names = {
 "en": "Steam Vent"
 }
 description = "还烫手的阀门。挨着它的武器每次出手，都给对手添一层【灼伤】。"
+descriptions = {
+"en": "A valve still too hot to hold. Each time an adjacent weapon activates, it gives the opponent one stack of Burn."
+}
 shape = SubResource("Resource_hynug")
 rarity = 2
 tags = Array[StringName]([&"material", &"crafted", &"metal", &"part", &"clockwork", &"fire"])

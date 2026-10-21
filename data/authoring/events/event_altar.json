@@ -1,10 +1,19 @@
 {
   "id": "event_altar",
   "title": "祭坛",
+  "titles": {
+    "en": "The Altar"
+  },
   "text": "一座石台，上面刻着手掌的印子。",
+  "texts": {
+    "en": "A stone slab with the print of a hand carved into it."
+  },
   "options": [
     {
       "label": "献上棋盘上最值钱的一件",
+      "labels": {
+        "en": "Offer the most valuable item on your board"
+      },
       "tags": [
         "offering"
       ],
@@ -26,12 +35,18 @@
         },
         {
           "type": "say",
-          "text": "印子亮了一下。"
+          "text": "印子亮了一下。",
+          "texts": {
+            "en": "The handprint flares for a moment."
+          }
         }
       ]
     },
     {
       "label": "用匕首撬开石缝",
+      "labels": {
+        "en": "Pry the crack open with your Knife"
+      },
       "requires": [
         {
           "type": "has_item",
@@ -48,12 +63,18 @@
         },
         {
           "type": "say",
-          "text": "匕首断了，石缝里有东西。"
+          "text": "匕首断了，石缝里有东西。",
+          "texts": {
+            "en": "The Knife snaps. There's something in the crack."
+          }
         }
       ]
     },
     {
       "label": "砸了它",
+      "labels": {
+        "en": "Smash it"
+      },
       "outcomes": [
         {
           "type": "change_node_type"
@@ -63,12 +84,18 @@
         },
         {
           "type": "say",
-          "text": "石台碎了，有什么从底下爬了出来。"
+          "text": "石台碎了，有什么从底下爬了出来。",
+          "texts": {
+            "en": "The slab shatters. Something crawls out from underneath."
+          }
         }
       ]
     },
     {
-      "label": "离开"
+      "label": "离开",
+      "labels": {
+        "en": "Leave"
+      }
     }
   ]
 }

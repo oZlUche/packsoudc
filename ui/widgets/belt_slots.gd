@@ -117,7 +117,7 @@ func _get_tooltip(at: Vector2) -> String:
 	var def := BeltSkillDef.find(skill_at(slot_at(at)))
 	if def == null:
 		return UiText.t("belt.empty_tip") if slot_at(at) >= 0 else ""
-	return UiText.t("belt.tip") % [Names.of(def), module.count_of(def.id), def.description, def.describe()]
+	return UiText.t("belt.tip") % [Names.of(def), module.count_of(def.id), Names.description_of(def), def.describe()]
 
 
 func _draw() -> void:

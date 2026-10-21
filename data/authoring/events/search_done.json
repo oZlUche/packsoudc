@@ -1,10 +1,19 @@
 {
   "id": "search_done",
   "title": "翻遍了",
+  "titles": {
+    "en": "Picked Clean"
+  },
   "text": "能翻的地方都翻过了，这里没有别的东西了。",
+  "texts": {
+    "en": "You've searched every place you can. There's nothing else here."
+  },
   "options": [
     {
-      "label": "离开"
+      "label": "离开",
+      "labels": {
+        "en": "Leave"
+      }
     }
   ]
 }

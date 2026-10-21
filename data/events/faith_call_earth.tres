@@ -14,20 +14,35 @@ item = &"charm_earth"
 [sub_resource type="Resource" id="Resource_ojui4"]
 script = ExtResource("4_sum4f")
 text = "大地之神的护符沉甸甸的，是个空匣子。"
+texts = {
+"en": "The charm of the God of the Earth sits heavy in your hand. It's an empty casket."
+}
 
 [sub_resource type="Resource" id="Resource_5e8x2"]
 script = ExtResource("1_m8ys8")
 label = "取出石匣"
+labels = {
+"en": "Take out the casket"
+}
 tags = Array[StringName]([&"offering"])
 outcomes = Array[ExtResource("2_aous5")]([SubResource("Resource_7vuux"), SubResource("Resource_ojui4")])
 
 [sub_resource type="Resource" id="Resource_djldp"]
 script = ExtResource("1_m8ys8")
 label = "不拿，离开"
+labels = {
+"en": "Leave it and go"
+}
 
 [resource]
 script = ExtResource("6_0jwkf")
 id = &"faith_call_earth"
 title = "大地之神的匣"
+titles = {
+"en": "Casket of the God of the Earth"
+}
 text = "祭坛是一整块没有接缝的石头。石面上凹进去一个拳头大的洞，里面是一只空心的石匣 —— 能装一件小东西。"
+texts = {
+"en": "The altar is one seamless block of stone. A fist-sized hole is sunk into its face, and in it sits a hollow stone casket, big enough for one small thing."
+}
 options = Array[ExtResource("1_m8ys8")]([SubResource("Resource_5e8x2"), SubResource("Resource_djldp")])

@@ -77,7 +77,7 @@ func open(_payload: Dictionary) -> void:
 		if brighten:     # 启动屏把字标压暗到 40 %：跟着画一起亮起来
 			pic.modulate = Color(MenuBackdrop.BOOT_DIM, MenuBackdrop.BOOT_DIM, MenuBackdrop.BOOT_DIM)
 	else:
-		_title = UiTheme.make_hero_title("背包搜打撤")
+		_title = UiTheme.make_hero_title(UiText.t("game.title"))
 	area.add_child(_title)
 	if brighten and _title is TextureRect:
 		create_tween().tween_property(_title, "modulate", Color.WHITE, MenuBackdrop.BRIGHTEN).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
