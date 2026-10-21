@@ -15,12 +15,17 @@ const GRIP := [Vector2(46.0, 85.45), Vector2(82.0, 85.45)]
 const TIP := [Vector2(93.57, 28.76), Vector2(34.43, 28.76)]
 ## 两剑交点（火星从这儿迸）
 const CROSS := Vector2(64.5, 61)
-## 劈：转多少、往对面推多少、多久（去 + 回）。作者 2026-10-21 21:47：幅度、位移大一点，快一点
-const STRIKE_DEG := 26.0
-const STRIKE_PUSH := 12.0
-const STRIKE_SEC := 0.09
+## 劈（作者 2026-10-21 22:24：角度到 45–60°、距离再大，先往后上方提起再劈下）：
+## 提起 —— 往背离对面的方向转、往后上方提；劈下 —— 转过头、往对面推；收回原位。各段多久（一倍速，合计 0.22 s）
+const WINDUP_DEG := 30.0
+const WINDUP_LIFT := Vector2(-8, -10)
+const STRIKE_DEG := 55.0
+const STRIKE_PUSH := Vector2(20, 4)
+const WINDUP_SEC := 0.07
+const CHOP_SEC := 0.05
+const RECOVER_SEC := 0.1
 ## 挨打：后仰多少、多久；剑身白闪
-const RECOIL_DEG := 14.0
+const RECOIL_DEG := 18.0
 const RECOIL_SEC := 0.08
 ## 分胜负：赢的竖起来（剑尖朝正上，静止时偏 40°）、输的垂下去
 const RAISE_DEG := 40.0
@@ -69,14 +74,19 @@ func strike(side: int) -> void:
 	if not _live(side) or rate >= 4.0:
 		return
 	var dir := 1.0 if side == 0 else -1.0
-	var sec := STRIKE_SEC / rate
+	var mirror := Vector2(dir, 1.0)
+	var up := deg_to_rad(-WINDUP_DEG) * dir
+	var down := deg_to_rad(STRIKE_DEG) * dir
 	var tw := _fresh(side)
 	tw.set_parallel()
-	tw.tween_method(_set_rot.bind(side), _rot[side], deg_to_rad(STRIKE_DEG) * dir, sec * 0.4)
-	tw.tween_method(_set_off.bind(side), _off[side], Vector2(STRIKE_PUSH * dir, 0), sec * 0.4)
+	tw.tween_method(_set_rot.bind(side), _rot[side], up, WINDUP_SEC / rate)
+	tw.tween_method(_set_off.bind(side), _off[side], WINDUP_LIFT * mirror, WINDUP_SEC / rate)
 	tw.chain().set_parallel()
-	tw.tween_method(_set_rot.bind(side), deg_to_rad(STRIKE_DEG) * dir, 0.0, sec * 0.6)
-	tw.tween_method(_set_off.bind(side), Vector2(STRIKE_PUSH * dir, 0), Vector2.ZERO, sec * 0.6)
+	tw.tween_method(_set_rot.bind(side), up, down, CHOP_SEC / rate).set_ease(Tween.EASE_IN)
+	tw.tween_method(_set_off.bind(side), WINDUP_LIFT * mirror, STRIKE_PUSH * mirror, CHOP_SEC / rate).set_ease(Tween.EASE_IN)
+	tw.chain().set_parallel()
+	tw.tween_method(_set_rot.bind(side), down, 0.0, RECOVER_SEC / rate)
+	tw.tween_method(_set_off.bind(side), STRIKE_PUSH * mirror, Vector2.ZERO, RECOVER_SEC / rate)
 
 
 ## [param side] 那一方挨了打：那把剑后仰一下、剑身白闪；[param big] 交点迸火星
