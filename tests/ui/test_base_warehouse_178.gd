@@ -79,6 +79,7 @@ static func frame_shelf_hidden(t: TestCase, root: Window) -> void:
 	var shelf: WarehousePages = screen.shelf()
 	screen.show_tab("sell")
 	screen.layout()
+	t.check(screen._sell_pick.get_parent().get_combined_minimum_size().x <= screen.middle_width(full), "出售那一行不撑宽中列（%.0f ≤ %.0f；游戏测试 v3.84：右边仓库被挤出屏）" % [screen._sell_pick.get_parent().get_combined_minimum_size().x, screen.middle_width(full)])
 	t.check(shelf.tab_count() > 1, "有好几页（%d）" % shelf.tab_count())
 	shelf.show_page(1)
 	var shown_w: float = screen.middle_width(full)
