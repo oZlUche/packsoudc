@@ -98,6 +98,19 @@ var highlights: Dictionary = {}
 const COLOR_HIGHLIGHT := Color(0.42, 0.86, 0.52)
 
 
+## 作者 10-21：只有最后点中的那件画增益槽 / 受益槽 / 装载槽（不点就都不画）；所有棋盘共用这一件
+static var focused: ItemInstance = null
+
+
+## 点中一件（null = 都不点）：开着的棋盘都重画
+static func set_focused(item: ItemInstance, tree: SceneTree) -> void:
+	if focused == item:
+		return
+	focused = item
+	if tree != null:
+		tree.call_group(GROUP, "queue_redraw")
+
+
 func _init() -> void:
 	UiTheme.warm_slot_icons()     # 170：格位图标先读好，别等到 _draw 里第一次读（兼容渲染器下会画成白块）
 	add_to_group(GROUP)
@@ -235,6 +248,8 @@ func _gui_input(event: InputEvent) -> void:
 			var uid := inventory.cell_uid(c)
 			if uid == GridInventory.EMPTY_UID:
 				uid = inventory.bag_at(c)
+			if uid == GridInventory.EMPTY_UID and mb.button_index == MOUSE_BUTTON_LEFT:
+				set_focused(null, get_tree())     # 点空处：槽位都收起
 			if uid != GridInventory.EMPTY_UID:
 				# 099：右键按在一件上 = 这一屏自己决定做什么（棋盘：信物奉为主信仰）。
 				# 拖拽中的右键是「取消」，那一下已经被 [DragLayer] 吃掉，走不到这里
@@ -243,6 +258,7 @@ func _gui_input(event: InputEvent) -> void:
 				elif mb.double_click:
 					item_double_clicked.emit(self, uid)     # 084：双击 = 快速置入，不再抓
 				else:
+					set_focused(inventory.get_item(uid), get_tree())
 					grab_requested.emit(self, uid, mb.position)
 				accept_event()
 
@@ -480,7 +496,7 @@ func _draw_adjacency() -> void:
 	var loads := {}     # 171：晶石 uid → 拿到它的法杖（被别的法杖抢走的那把，装载格按空画）
 	for inst in inventory.items():
 		var item := inst as ItemInstance
-		if item.def == null or item.def.adjacency == null:
+		if item != focused or item.def == null or item.def.adjacency == null:
 			continue
 		if inventory.acts_as_bag(item.def):
 			continue

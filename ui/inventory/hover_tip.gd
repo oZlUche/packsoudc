@@ -588,8 +588,15 @@ func windows() -> Array[TipWindow]:
 
 
 func _process(delta: float) -> void:
+	hold_alt(Input.is_key_pressed(KEY_ALT))
 	if _panel.visible:
 		tick(delta, get_global_mouse_position())
+
+
+## 作者 10-21：按住 Alt 时悬浮窗整串藏起来（松开回来，计时和钉住照旧）；藏着的窗也不挡鼠标
+func hold_alt(down: bool) -> void:
+	if visible == down:
+		visible = not down
 
 
 ## 170 §3 的全部计时：宽限、钉住进度、关键词停留、子窗的去留、离开收起。[param mouse] 是全局坐标
