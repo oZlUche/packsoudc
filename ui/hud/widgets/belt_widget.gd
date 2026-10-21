@@ -43,9 +43,9 @@ func text_of() -> String:
 ## 用一个随身技能。返回用不了的原因（空串 = 用了）
 func use(skill_id: StringName) -> String:
 	var def := BeltSkillDef.find(skill_id)
-	var name := def.display_name if def != null else String(skill_id)
+	var name := Names.of(def) if def != null else String(skill_id)
 	var flow: Variant = screen.get("flow") if screen != null else null
 	var why: String = flow.use_belt(skill_id) if flow != null else run.hooks.belt_use(skill_id)
 	if why == "" and screen != null and screen.has_method("say"):
-		screen.call("say", "用了「%s」" % name)
+		screen.call("say", UiText.t("hud.belt_used") % name)
 	return why

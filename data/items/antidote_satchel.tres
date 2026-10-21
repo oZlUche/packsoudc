@@ -53,6 +53,9 @@ display_names = {
 "en": "Antidote Satchel"
 }
 description = "几味解毒草装一囊。"
+descriptions = {
+"en": "A pouch stuffed with a few antidote herbs."
+}
 shape = SubResource("Resource_bu3yf")
 rarity = 2
 tags = Array[StringName]([&"remedy", &"tool", &"herb"])

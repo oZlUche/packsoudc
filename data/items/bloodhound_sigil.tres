@@ -48,6 +48,9 @@ display_names = {
 "en": "Bloodhound Sigil"
 }
 description = "猎人循着血迹，越追越凶。"
+descriptions = {
+"en": "The hunter follows the blood trail, fiercer the longer the chase."
+}
 shape = SubResource("Resource_tctfc")
 rarity = 2
 tags = Array[StringName]([&"part", &"sigil", &"bleed", &"bone"])

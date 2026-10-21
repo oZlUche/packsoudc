@@ -24,9 +24,9 @@ func compile_into(input: CompileInput, _board: GridInventory, _run: RunState) ->
 
 func _summary() -> String:
 	if target == "baseline":
-		return "开战时%s" % Glossary.mods_text(mods)
-	var where := "带「%s」的道具" % Glossary.tag_name(item_tag) if item_tag != &"" else "每件道具"
-	return "%s：%s" % [where, Glossary.mods_text(mods)]
+		return UiText.t("perk.at_battle_start") % Glossary.mods_text(mods)
+	var where := UiText.t("perk.items_tagged") % Glossary.tag_name(item_tag) if item_tag != &"" else UiText.t("perk.each_item")
+	return UiText.t("perk.where_mods") % [where, Glossary.mods_text(mods)]
 
 
 ## 103：给基线或「每件道具」的是通用 buff，进栏；只给带某标签的道具的不进

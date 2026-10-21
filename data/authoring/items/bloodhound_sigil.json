@@ -5,6 +5,9 @@
     "en": "Bloodhound Sigil"
   },
   "description": "猎人循着血迹，越追越凶。",
+  "descriptions": {
+    "en": "The hunter follows the blood trail, fiercer the longer the chase."
+  },
   "shape": [
     "1"
   ],

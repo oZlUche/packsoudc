@@ -469,7 +469,7 @@ func _grant_keepsakes(chapter: ChapterDef) -> Array[ItemDef]:
 		if def == null or not meta.grant_keepsake(id):
 			continue
 		got.append(def)
-		_notes.append("获得特殊道具【%s】：不占背包，图鉴里点亮%s" % [Names.of(def), "；从现在起把鼠标停在地图的点上能看到它的情报" if def.tags.has(&"node_tooltips") else ""])
+		_notes.append(UiText.t("log.keepsake") % [Names.of(def), UiText.t("log.keepsake_tooltips") if def.tags.has(&"node_tooltips") else ""])
 	if not got.is_empty():
 		save_meta()
 	return got
@@ -631,7 +631,7 @@ func characters_for(chapter: ChapterDef) -> Array[CharacterDef]:
 ## 留着的出发就没了、回主菜单原样放回。局外屏只提示这一句；没有就空串
 func pending_hint() -> String:
 	if meta != null and meta.has_pending_board():
-		return "上一局带回来的背包还有 %d 件没置入：可以现在置入或不要了；不管的话，开局屏里它们会放到地上，出发就没了" % meta.board.item_count()
+		return UiText.t("log.pending_board") % meta.board.item_count()
 	return ""
 
 
@@ -949,7 +949,7 @@ func slip_skill() -> RunSkill:
 func slip_battle() -> String:
 	var d := slip_skill()
 	if d == null:
-		return "没有能溜走的技能"
+		return UiText.t("log.no_slip_skill")
 	var why := run.use_skill(d.id)
 	if why != "":
 		return why
@@ -961,7 +961,7 @@ func slip_battle() -> String:
 ## 返回空串 = 用了，否则是原因
 func use_belt(skill_id: StringName) -> String:
 	if run == null:
-		return "没有在跑的一局"
+		return UiText.t("log.no_run")
 	var had_battle := not run.events.pending_battle.is_empty()
 	var why := run.hooks.belt_use(skill_id)
 	if why == "" and had_battle and run.events.pending_battle.is_empty():
@@ -1215,7 +1215,7 @@ func _prebattle_payload() -> Dictionary:
 ## 地图上用一个局内技能（082）。返回空串 = 用了；否则是不能用的原因
 func use_skill(id: StringName) -> String:
 	if run == null:
-		return "没有进行中的一局"
+		return UiText.t("log.no_run_in_progress")
 	return run.use_skill(id)
 
 

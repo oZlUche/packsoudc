@@ -15,7 +15,7 @@ func text_of() -> String:
 		return ""
 	var at := run.travel.current_id
 	var parts: Array[String] = []
-	for pair in [[&"extract", "距最近撤离点"], [&"rest", "距最近休息区"], [&"core", "距核心"]]:
+	for pair in [[&"extract", "hud.dist_extract"], [&"rest", "hud.dist_rest"], [&"core", "hud.dist_core"]]:
 		var near := MapNavigator.nearest_of_type(run.map, at, pair[0])
-		parts.append("%s %s 步" % [pair[1], str(near["steps"]) if int(near["id"]) >= 0 else "—"])
-	return "　　".join(parts)
+		parts.append(UiText.t("hud.dist_steps") % [UiText.t(pair[1]), str(near["steps"]) if int(near["id"]) >= 0 else "—"])
+	return UiText.t("hud.dist_sep").join(parts)

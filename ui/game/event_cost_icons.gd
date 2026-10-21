@@ -7,13 +7,13 @@ extends RefCounted
 
 const SIZE := 16
 const GAP := 4
-## [类, 种, 没图时写的字符, 说法]；钱只有花钱（数是负的）才算
+## [类, 种, 没图时写的字符, 说法的 UiText 键]；钱只有花钱（数是负的）才算
 static var KINDS: Array = [
-	[SpendVitality, "vitality", "♥", "耗体力"],
-	[ChangeMoney, "money", "¤", "花钱"],
-	[LoseItem, "item", "▣", "交出道具"],
-	[PassTime, "time", "⌛", "耗" + Glossary.COUNTDOWN_WORD],
-	[FaithActive, "faith", "✦", "要信仰"],
+	[SpendVitality, "vitality", "♥", "event.cost_vitality"],
+	[ChangeMoney, "money", "¤", "event.cost_money"],
+	[LoseItem, "item", "▣", "event.cost_item"],
+	[PassTime, "time", "⌛", "event.cost_time"],
+	[FaithActive, "faith", "✦", "event.cost_faith"],
 ]
 
 
@@ -58,8 +58,8 @@ static func describe(kinds: Array[String]) -> String:
 	var words: Array[String] = []
 	for row in KINDS:
 		if kinds.has(String(row[1])):
-			words.append(String(row[3]))
-	return "代价：" + "、".join(words) if not words.is_empty() else ""
+			words.append(UiText.t(String(row[3])))
+	return UiText.t("event.costs") % UiText.t("setup.list_sep").join(words) if not words.is_empty() else ""
 
 
 ## 一排代价拼成的一张图（没有代价 null）。没图的那几种在图上留空，[method glyph_slots] 说哪几格要画字符

@@ -34,4 +34,4 @@ func rule() -> AbilityRule:
 
 
 func _summary() -> String:
-	return "加时开始后回春：每秒回血 +%d" % roundi(stacks * StatAxes.step_of(StatAxes.REGEN_HP))
+	return UiText.t("perk.overtime_regen") % roundi(stacks * StatAxes.step_of(StatAxes.REGEN_HP))

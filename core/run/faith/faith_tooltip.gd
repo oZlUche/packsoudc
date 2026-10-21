@@ -24,6 +24,11 @@ const OFFER_GAP_SIZE := 8
 const BLESSED_NAME := "赐福的道具"
 
 
+## 221 F1：[constant BLESSED_NAME] 按当前语言
+static func blessed_name() -> String:
+	return UiText.t("faith.blessed")
+
+
 ## `{"head": 名字行 + 信力行, "sections": [各阶效果?, 信力来源, 献祭?]（各段 BBCode）, "bar": {"thresholds", "points"}（分段进度条）, "text": 连起来}`。
 ## [param power] 可为 null（只写定义，按 0 点算）；[param board] 给了就数休眠的道具；[param items] 给了就把这位神的道具的按阶加成并进各级效果（193）。
 ## 没有信仰返回空字典（悬浮窗不开）
@@ -46,7 +51,7 @@ static func describe_full(def: FaithDef, power: FaithPower = null, board: ItemCo
 	if convert != "":
 		deeds.append(_fg(Glossary.val_numbers(convert)))
 	if not deeds.is_empty():
-		sections.append(_section("信力来源", deeds))
+		sections.append(_section(UiText.t("faith.sources"), deeds))
 	var offers := _offer_section(def)
 	if offers != "":
 		sections.append(offers)
@@ -69,10 +74,10 @@ static func describe(def: FaithDef, power: FaithPower = null, board: ItemContain
 static func _head(def: FaithDef, points: int, tier: int, next: int, dormant: int) -> String:
 	var right := ""
 	if dormant > 0:
-		right += _meta("[color=%swarn]%d 件休眠[/color]" % [TextTemplate.STYLE_PREFIX, dormant]) + "　"
+		right += _meta("[color=%swarn]%s[/color]" % [TextTemplate.STYLE_PREFIX, UiText.t("faith.dormant") % dormant]) + "　"
 	right += _meta("Lv.%s" % Glossary.val(str(tier)))
 	var name := "[font_size=%d]%s[/font_size]" % [Glossary.NAME_SIZE, Glossary.NAME_OUTLINE % ("[b][color=%sfaith]%s[/color][/b]" % [TextTemplate.STYLE_PREFIX, Names.of(def)])]
-	var power := "信力 %s%s" % [Glossary.val(str(points)), (" / " + Glossary.val(str(next))) if next >= 0 else "（满阶）"]
+	var power := UiText.t("faith.points") % [Glossary.val(str(points)), (" / " + Glossary.val(str(next))) if next >= 0 else UiText.t("faith.max_rank")]
 	return "%s　　%s\n[font_size=%d][color=%stip_meta]%s[/color][/font_size]" % [name, right, POWER_SIZE, TextTemplate.STYLE_PREFIX, power]
 
 
@@ -103,7 +108,7 @@ static func _perk_section(def: FaithDef, points: int, items: ItemDatabase = null
 	order.sort()
 	var cells: Array[String] = []
 	for lv in order:
-		var text := "；".join(PackedStringArray(by_tier[lv]))
+		var text := UiText.t("faith.perk_sep").join(PackedStringArray(by_tier[lv]))
 		if tier >= lv:
 			cells.append("[cell]%s　[/cell][cell expand=1]%s[/cell]" % [_meta("Lv.%d" % lv), _fg(Glossary.val_numbers(text))])
 		else:
@@ -123,14 +128,14 @@ static func item_lines(def: FaithDef, items: ItemDatabase) -> Dictionary:
 	var seen := {}
 	for id in ids:
 		var item := items.get_def(id)
-		var name := BLESSED_NAME if item.is_blessed() else Names.of(item)
+		var name := blessed_name() if item.is_blessed() else Names.of(item)
 		for fb in item.faith_bonuses:
 			var b := fb as FaithBonus
 			if b == null:
 				continue
-			var line := "%s：%s" % [name, b.effect_text()]
+			var line := UiText.t("faith.item_line") % [name, b.effect_text()]
 			if b.mode == "scaled":
-				line += "（%s）" % b.gate_text()
+				line += UiText.t("faith.gate") % b.gate_text()
 			var lv := b.list_tier()
 			if seen.has(str(lv) + line):
 				continue
@@ -148,7 +153,7 @@ static func convert_line(def: FaithDef, tier: int) -> String:
 	var chance := def.convert_chance + def.convert_per_tier * float(maxi(0, tier))
 	if chance <= 0.0:
 		return ""
-	return "每走一步，包里能被赐福的道具各有 %s%% 转化成赐福版" % String.num(chance * 100.0, 1).trim_suffix(".0")
+	return UiText.t("faith.convert") % String.num(chance * 100.0, 1).trim_suffix(".0")
 
 
 ## 献祭：每条规矩的图标都在 → 一行图标（193：不写名字；同一条规矩的图标间一个半角空格，规矩之间两个全角空格）；有一枚缺图就整段退回文字
@@ -171,11 +176,11 @@ static func _offer_section(def: FaithDef) -> String:
 			imgs.append("[img=%d]%s[/img]" % [ICON_SIZE, path])
 		groups.append(" ".join(imgs))
 	if all_art:
-		return _meta("献祭") + "\n" + ("[font_size=%d]　　[/font_size]" % OFFER_GAP_SIZE).join(groups)
+		return _meta(UiText.t("faith.offering")) + "\n" + ("[font_size=%d]　　[/font_size]" % OFFER_GAP_SIZE).join(groups)
 	var lines: Array[String] = []
 	for r in rules:
 		lines.append(_fg(Glossary.val_numbers(r.describe())))
-	return _section("献祭", lines)
+	return _section(UiText.t("faith.offering"), lines)
 
 
 ## 一条献祭规矩的图标（标签各一枚、体积 / 属性条件一枚）；有一枚没有图就返回空

@@ -6,7 +6,7 @@ extends FaithPerk
 
 
 func altar_label() -> String:
-	return "改造此点（挑一种类型）"
+	return UiText.t("perk.reshape_label")
 
 
 func altar_options() -> Array[StringName]:
@@ -17,8 +17,8 @@ func altar_apply(run: RunState, node: MapNode, option: StringName = &"") -> Stri
 	if node == null or option == &"" or not types.has(option) or option in [&"core", &"extract", &"spawn", &"junction"]:
 		return ""
 	run.events.retype(node, option)
-	return "大地之神改造了这个点：变成%s点" % NodeText.label_of(option)
+	return UiText.t("perk.reshape_done") % NodeText.label_of(option)
 
 
 func _summary() -> String:
-	return "神坛：把当前的点改成别的类型（核心 / 撤离以外），不限次数"
+	return UiText.t("perk.reshape_summary")

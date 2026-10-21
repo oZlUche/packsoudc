@@ -799,9 +799,9 @@ func _enchant_target(inv: GridInventory, origin: Vector2i) -> ItemInstance:
 ## 175：「附魔：嗜血的长剑」（武器原有的附魔被覆盖时再写一句）
 static func enchant_hint(token: ItemInstance, weapon: ItemInstance) -> String:
 	var ench := Forge.enchant_of(token)
-	var text := "附魔：%s%s" % [Forge.prefix(ench), Names.of(weapon.def)]
+	var text := UiText.t("bag.enchant") % [Forge.prefix(ench), Names.of(weapon.def)]
 	if not Forge.enchant_of(weapon).is_empty():
-		text += "（覆盖原有的%s附魔）" % Forge.prefix(Forge.enchant_of(weapon)).trim_suffix("的")
+		text += UiText.t("bag.enchant_replace") % Forge.prefix(Forge.enchant_of(weapon)).trim_suffix("的")
 	return text
 
 
@@ -810,9 +810,9 @@ func _hint_for(partner: ItemInstance) -> String:
 	var out: Variant = craft.call(_inst, partner)
 	if not (out is ItemDef):
 		return ""
-	var text := "合成 → " + Names.of(out as ItemDef)
+	var text := UiText.t("bag.craft") + Names.of(out as ItemDef)
 	var note := String(craft_note.call(_inst, partner)) if craft_note.is_valid() else ""
-	return text + ("：" + note if note != "" else "")
+	return text + (UiText.t("tip.colon") + note if note != "" else "")
 
 
 func _set_craft_hint(text: String) -> void:
@@ -895,7 +895,7 @@ static func displaced_text(instances: Array, grabbed: bool) -> String:
 	for inst in instances:
 		var item := inst as ItemInstance
 		names.append(Names.of(item.def) if item.def != null else "?")
-	return "顶出了「%s」，已经拿在手上" % names[0] if grabbed else "顶出了 %d 件（%s），都放在地上了" % [names.size(), "、".join(names)]
+	return UiText.t("bag.displaced_one") % names[0] if grabbed else UiText.t("bag.displaced_many") % [names.size(), UiText.t("tip.list_sep").join(names)]
 
 
 ## 这个落点能顶掉哪些：地形得允许，且确实压着别人。

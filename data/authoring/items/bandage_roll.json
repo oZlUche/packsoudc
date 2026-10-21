@@ -5,6 +5,9 @@
     "en": "Bandage Roll"
   },
   "description": "卷好的干净布条，裹上就止血。",
+  "descriptions": {
+    "en": "Clean cloth, rolled up. Wrap it on and the bleeding stops."
+  },
   "shape": [
     "1"
   ],

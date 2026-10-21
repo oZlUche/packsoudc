@@ -23,7 +23,7 @@ func apply(ctx: ErosionContext) -> void:
 		return
 	var inst := chosen["inst"] as ItemInstance
 	if (chosen["from"] as ItemContainer).remove(inst.uid) != null:
-		ctx.items_lost.append(inst.def.display_name)
+		ctx.items_lost.append(Names.of(inst.def))
 
 
 func describe() -> String:

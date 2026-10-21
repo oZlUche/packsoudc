@@ -294,7 +294,7 @@ func _draw_progress(item: ItemInstance) -> void:
 func _draw_next(item: ItemInstance) -> void:
 	var anchor := cell_origin_px(item.origin)
 	var font := label_font if label_font != null else get_theme_default_font()
-	draw_string(font, anchor + Vector2(4.0, 13.0), "下一件", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, COLOR_NEXT)
+	draw_string(font, anchor + Vector2(4.0, 13.0), UiText.t("loot.next"), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, COLOR_NEXT)
 
 
 ## 正在搜的那件锁住，抓不起来；别的没亮的能抓（只能在容器里挪，那道门在拖拽层）

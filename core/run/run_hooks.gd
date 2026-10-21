@@ -107,7 +107,7 @@ func active_faith_id() -> StringName:
 
 ## 136：局内技能现在能不能用：空串 = 能。没人接 = 不能
 func skill_ready(id: StringName) -> String:
-	return String(_at(&"skill_ready").call(id)) if has(&"skill_ready") else "没有技能"
+	return String(_at(&"skill_ready").call(id)) if has(&"skill_ready") else UiText.t("log.no_skill")
 
 
 func before_battle(me: CombatantSpec, enemy: CombatantSpec, type: StringName) -> void:
@@ -124,7 +124,7 @@ func safe_open() -> bool:
 
 ## 147：用腰带里的一个（160 补一：按随身技能 id）。空串 = 用了
 func belt_use(skill_id: StringName) -> String:
-	return String(_at(&"belt_use").call(skill_id)) if has(&"belt_use") else "没有腰带"
+	return String(_at(&"belt_use").call(skill_id)) if has(&"belt_use") else UiText.t("log.no_belt")
 
 
 ## 160 补一：往腰带里放 [param count] 个，返回放进了几个（没腰带 / 满了 = 0）

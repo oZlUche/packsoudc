@@ -16,6 +16,8 @@ extends Resource
 @export var display_names: Dictionary = {}
 ## 088：给玩家看的一句说明（悬浮窗、图鉴）。空 = 不写
 @export_multiline var description: String = ""
+## 221 F1：别的语言的说明，`{"en": "…"}`；界面用 [method Names.description_of] 取
+@export var descriptions: Dictionary = {}
 
 ## 占格形状。为 null 时本定义不可用。
 @export var shape: ItemShape

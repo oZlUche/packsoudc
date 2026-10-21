@@ -20,7 +20,7 @@ const KEY_OLD := "sacrifice_hp"
 
 
 func altar_label() -> String:
-	return "献祭 %.0f 生命上限" % hp_cost
+	return UiText.t("perk.sacrifice_label") % hp_cost
 
 
 func altar_options() -> Array[StringName]:
@@ -29,14 +29,14 @@ func altar_options() -> Array[StringName]:
 
 func altar_option_label(option: StringName) -> String:
 	if option == FAITH:
-		return "→ +%d 信力" % faith_gain
-	return "→ 这局造成伤害 +%d%%、急速 +%d%%" % [damage_percent, haste_percent]
+		return UiText.t("perk.sacrifice_opt_faith") % faith_gain
+	return UiText.t("perk.sacrifice_opt_buff") % [damage_percent, haste_percent]
 
 
 func altar_available(run: RunState, _node: MapNode) -> String:
 	var base := run.effective_baseline() if run != null else null
 	var hp := base.value_of(BattleStats.MAX_HP, 0.0) if base != null else 0.0
-	return "" if hp - hp_cost >= min_hp_left else "生命上限不能再低了"
+	return "" if hp - hp_cost >= min_hp_left else UiText.t("perk.sacrifice_floor")
 
 
 func altar_apply(run: RunState, _node: MapNode, option: StringName = &"") -> String:
@@ -50,10 +50,10 @@ func altar_apply(run: RunState, _node: MapNode, option: StringName = &"") -> Str
 		altar.rituals[KEY_FAITH] = int(altar.rituals.get(KEY_FAITH, 0)) + 1
 		if def != null:
 			run.faith_power.add_points(def.id, faith_gain)
-		return "献祭了 %.0f 点生命上限：信力 +%d" % [hp_cost, faith_gain]
+		return UiText.t("perk.sacrifice_done_faith") % [hp_cost, faith_gain]
 	altar.rituals[KEY_BUFF] = int(altar.rituals.get(KEY_BUFF, 0)) + 1
 	var n := buff_times(run)
-	return "献祭了 %.0f 点生命上限：这局造成伤害 +%d%%、急速 +%d%%（共 %d 次）" % [hp_cost, damage_percent, haste_percent, n]
+	return UiText.t("perk.sacrifice_done_buff") % [hp_cost, damage_percent, haste_percent, n]
 
 
 ## 选「能力」的次数（含 188 之前的老次数）
@@ -74,10 +74,10 @@ func compile_into(input: CompileInput, _board: GridInventory, run: RunState) -> 
 
 
 func _summary() -> String:
-	return "可以在祭坛献祭生命上限换取能力"
+	return UiText.t("perk.sacrifice_summary")
 
 
 ## 103：所有道具一起加成 → 通用 buff，选过「能力」才有
 func battle_note(run: RunState) -> String:
 	var n := buff_times(run)
-	return "献祭生命上限：造成伤害 +%d%%、急速 +%d%%" % [damage_percent * n, haste_percent * n] if n > 0 else ""
+	return UiText.t("perk.sacrifice_note") % [damage_percent * n, haste_percent * n] if n > 0 else ""

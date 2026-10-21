@@ -37,10 +37,10 @@ func setup(p_kind: StringName, p_value: float, p_unit: float = 10.0) -> StatBloc
 func text_of() -> String:
 	match kind:
 		VITALITY:
-			return "体力 %d（一颗心一点）" % int(value)
+			return UiText.t("strip.vitality_blocks") % int(value)
 		STAMINA:
-			return "耐力上限 %d（一块 %d 点）" % [int(value), int(unit)]
-	return "生命上限 %d（一块 %d 点）" % [int(value), int(unit)]
+			return UiText.t("strip.stamina_blocks") % [int(value), int(unit)]
+	return UiText.t("strip.hp_blocks") % [int(value), int(unit)]
 
 
 ## 每块填了多少（0..1，最后一块可能不满）；心都是 1

@@ -18,4 +18,4 @@ func compile_into(input: CompileInput, _board: GridInventory, _run: RunState) ->
 
 
 func _summary() -> String:
-	return "食物给的所有效果 ×%.0f（含献祭食物回体力）" % factor
+	return UiText.t("perk.food_double") % factor

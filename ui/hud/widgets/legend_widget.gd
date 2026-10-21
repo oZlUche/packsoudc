@@ -60,7 +60,7 @@ func refresh() -> void:
 	if run == null:
 		return
 	if run.map != null and UiTheme.art_cached(UiTheme.ART_LEGEND_PAWN) != null:
-		_add_row(&"", "你", UiTheme.ART_LEGEND_PAWN)
+		_add_row(&"", UiText.t("hud.you"), UiTheme.ART_LEGEND_PAWN)
 	for t in types():
 		_add_row(t, MapNodeStyle.name_of(t), UiTheme.ART_LEGEND_FLAG if t == &"spawn" and UiTheme.art_cached(UiTheme.ART_LEGEND_FLAG) != null else "")
 

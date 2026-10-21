@@ -113,7 +113,7 @@ func _take_to_player(from: ItemContainer, uid: int) -> String:
 func _enemy_name(content: Dictionary) -> String:
 	var def := flow.enemies.enemy(StringName(String(content.get("enemy", "")))) if not content.is_empty() else null
 	if def == null:
-		return "敌人"
+		return UiText.t("screen.enemy")
 	return Names.of(def)
 
 
@@ -122,7 +122,7 @@ func _enemy_plate(content: Dictionary) -> Nameplate:
 	var id := StringName(String(content.get("enemy", ""))) if not content.is_empty() else &""
 	var def := flow.enemies.enemy(id) if id != &"" else null
 	if def == null:
-		return Nameplate.new().setup("敌人", "")
+		return Nameplate.new().setup(UiText.t("screen.enemy"), "")
 	return Nameplate.new().setup(Names.of(def), "", Nameplate.enemy_face(id))
 
 
@@ -130,8 +130,8 @@ func _enemy_plate(content: Dictionary) -> Nameplate:
 func _player_plate() -> Nameplate:
 	var ch := flow.run.character if flow.run != null else null
 	if ch == null:
-		return Nameplate.new().setup("我", "")
-	return Nameplate.new().setup(Names.of(ch), "我方", Nameplate.character_face(ch.id))
+		return Nameplate.new().setup(UiText.t("battle.me"), "")
+	return Nameplate.new().setup(Names.of(ch), UiText.t("battle.side_mine"), Nameplate.character_face(ch.id))
 
 
 #region 控件（造控件的活在 [UiTheme] 里，这里只留给子类的短名字）

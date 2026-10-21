@@ -18,6 +18,9 @@ display_names = {
 "en": "Spyglass"
 }
 description = "一支旧军团的黄铜望远镜。不占背包：拿到之后，把鼠标停在地图的点上就能看到那个点的情报。"
+descriptions = {
+"en": "An old Legion brass spyglass. Takes no space in your pack: once you have it, hover over a node on the map to see what's there."
+}
 shape = SubResource("Resource_mqm3k")
 rarity = 2
 weight = 2

@@ -23,7 +23,7 @@ func compile_into(input: CompileInput, board: GridInventory, _run: RunState) -> 
 
 
 func _summary() -> String:
-	return "开战时每件食物给 %.0f 点护甲，越稀有越多（每档 +%.0f）" % [base, per_rarity]
+	return UiText.t("perk.food_armor") % [base, per_rarity]
 
 
 ## 103：作用于角色本身 → 进 buff 栏

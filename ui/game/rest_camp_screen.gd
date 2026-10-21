@@ -22,13 +22,13 @@ const SCROLL_SIZE := 56.0
 ## 196 补充一：字板收起了的休息点（点 id → true；同一个点里营地重画不弹回来）
 static var _board_folded: Dictionary = {}
 
-## 造物 → [未用的图, 用过的图, 名字]
+## 造物 → [未用的图, 用过的图, 名字的 UiText 键]
 const PIECES := {
-	&"fire": ["fire_lit", "fire_out", "篝火"],
-	&"tent": ["tent", "tent_used", "帐篷"],
-	&"altar": ["altar", "altar_used", "祭坛"],
-	&"forge": ["forge_lit", "forge_cold", "铁炉"],
-	&"sign": ["sign", "sign", "继续赶路"],
+	&"fire": ["fire_lit", "fire_out", "camp.fire"],
+	&"tent": ["tent", "tent_used", "camp.tent"],
+	&"altar": ["altar", "altar_used", "camp.altar"],
+	&"forge": ["forge_lit", "forge_cold", "camp.forge"],
+	&"sign": ["sign", "sign", "camp.sign"],
 }
 ## 造物集合 → 摆位（layout.json 的 variants）；不在表里的落 `full`
 const VARIANTS := [
@@ -155,11 +155,11 @@ func _build_pieces() -> void:
 		var names: Array = PIECES[p]
 		piece.tex_on = String(names[0])
 		piece.tex_off = String(names[1])
-		piece.display_name = String(names[2])
+		piece.display_name = UiText.t(String(names[2]))
 		var state := _state(i, p)
 		piece.enabled = bool(state["ok"])
 		var opt := _def.options[i] as EventOption if i >= 0 else null
-		piece.effect = TextTemplate.plain(opt.label_for(), TextTemplate.option_context(ctx, opt)) if opt != null else "离开营地"
+		piece.effect = TextTemplate.plain(opt.label_for(), TextTemplate.option_context(ctx, opt)) if opt != null else UiText.t("camp.leave")
 		piece.why = String(state["why"])
 		piece.pieces = _layout.get("pieces", {})
 		if p == &"altar" and flow.run != null and flow.run.active_faith_id() != &"":
@@ -186,7 +186,7 @@ func _state(i: int, p: StringName) -> Dictionary:
 			return {"ok": true, "why": ""}
 		if p == &"forge" and _node != null and not NodeEvents.forge_used(_node):
 			return {"ok": true, "why": ""}
-		return {"ok": false, "why": "这一份用过了"}
+		return {"ok": false, "why": UiText.t("camp.used")}
 	return flow.run.events.option_state(i) if flow.run != null else {"ok": false, "why": ""}
 
 
@@ -206,7 +206,7 @@ func _build_footer() -> void:
 	row.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	add_child(row)
 	if flow.run != null:
-		row.add_child(_button("整理背包（B）", toggle_bag, 13, UiPalette.Tier.MINOR))     # 和事件屏一样能整理背包
+		row.add_child(_button(UiText.t("event.sort_pack"), toggle_bag, 13, UiPalette.Tier.MINOR))     # 和事件屏一样能整理背包
 	for b in _extra_btns:
 		row.add_child(b)
 
@@ -234,7 +234,7 @@ func _on_piece_hovered(on: bool, piece: CampPiece) -> void:
 	if not on:
 		_tip.release()
 		return
-	var second := piece.effect if piece.enabled else (piece.why if piece.why != "" else "用不了")
+	var second := piece.effect if piece.enabled else (piece.why if piece.why != "" else UiText.t("camp.unavailable"))
 	_tip.show_text("[b]%s[/b]\n%s" % [piece.display_name, second], get_global_mouse_position())
 
 
@@ -261,7 +261,7 @@ func _build_board() -> void:
 	var close := Button.new()
 	close.text = "×"
 	close.flat = true
-	close.tooltip_text = "收起"
+	close.tooltip_text = UiText.t("camp.fold")
 	close.pressed.connect(fold_board.bind(true))
 	close_row.add_child(close)
 	col.add_child(close_row)
@@ -276,7 +276,7 @@ func _build_board() -> void:
 	scroll.custom_minimum_size = Vector2.ONE * SCROLL_SIZE
 	scroll.size = Vector2.ONE * SCROLL_SIZE
 	scroll.position = BOARD_AT
-	scroll.tooltip_text = "展开"
+	scroll.tooltip_text = UiText.t("camp.unfold")
 	scroll.pressed.connect(fold_board.bind(false))
 	add_child(scroll)
 	_scroll = scroll
@@ -319,7 +319,7 @@ func _show_rest_note() -> void:
 	var n := int(flow.camp_rest.get("restored", 0))
 	flow.camp_rest = {}
 	var v := flow.run.vitality
-	_note_text = "体力 +%d，现在 %d / %d" % [n, v.current, v.maximum]
+	_note_text = UiText.t("camp.rest_note") % [n, v.current, v.maximum]
 	var panel := PanelContainer.new()
 	var box := StyleBoxFlat.new()
 	box.bg_color = Color(0.05, 0.06, 0.08, 0.85)

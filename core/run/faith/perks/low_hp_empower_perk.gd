@@ -34,7 +34,7 @@ func _summary() -> String:
 
 
 func summary_for(_def: FaithDef, points: int) -> String:
-	return "生命值低于 %d%% 时，造成伤害提高 %d%%" % [hp_percent, percent_at(points)]
+	return UiText.t("perk.low_hp") % [hp_percent, percent_at(points)]
 
 
 ## 103：作用于角色本身 → 进 buff 栏

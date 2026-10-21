@@ -24,9 +24,11 @@ var _grab: Vector2 = Vector2.ZERO
 var _placed: bool = false
 
 
-## [param on_close] 给了就在标题栏右边放一个「收起」按钮
-func setup(p_key: String, title: String, on_close: Callable = Callable(), close_text: String = "收起") -> void:
+## [param on_close] 给了就在标题栏右边放一个「收起」按钮（[param close_text] 空 = 按当前语言的「收起」）
+func setup(p_key: String, title: String, on_close: Callable = Callable(), close_text: String = "") -> void:
 	key = p_key
+	if close_text == "":
+		close_text = UiText.t("bag.collapse")
 	UiTheme.panel(self, -1, UiTheme.PANEL_WINDOW)     # 作者 2026-10-16：一整块石板（原来是凹槽，没有不透明的底）
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
@@ -44,7 +46,7 @@ func setup(p_key: String, title: String, on_close: Callable = Callable(), close_
 	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_title)
 	var hint := Label.new()
-	hint.text = "按住标题拖动"
+	hint.text = UiText.t("bag.drag_hint")
 	UiTheme.label(hint, 11, UiPalette.DIM)
 	hint.mouse_filter = Control.MOUSE_FILTER_PASS
 	header.add_child(hint)

@@ -717,7 +717,7 @@ func encumbrance_line() -> String:
 	if encumbrance == null or carry_capacity() <= 0:
 		return ""
 	var lv := encumbrance_level()
-	return "负重 %d / %d　%s" % [carry_weight(), carry_capacity(), encumbrance.name_of(lv)]
+	return UiText.t("log.load_line") % [carry_weight(), carry_capacity(), encumbrance.name_of(lv)]
 
 
 ## 重算级数：写进走路的倍数，级数真变了才发 [signal encumbrance_changed]。棋盘变了、换了角色、开局 / 读档后调
@@ -742,7 +742,7 @@ func _ensure_skills() -> void:
 ## 地图上用一个局内技能（082）。返回空串 = 用了；否则是不能用的原因
 func use_skill(id: StringName) -> String:
 	if phase != Phase.ON_MAP:
-		return "不在图上"
+		return UiText.t("log.not_on_map")
 	return skills.use(id)
 
 
@@ -760,9 +760,9 @@ func active_faith_id() -> StringName:
 func faith_line() -> String:
 	var id := active_faith_id()
 	if id == &"":
-		return "信仰：无"
+		return UiText.t("log.faith_none")
 	var def := active_faith()
-	return "信仰：%s" % (Names.of(def) if def != null else String(id))
+	return UiText.t("log.faith_line") % (Names.of(def) if def != null else String(id))
 
 
 ## 掉落上下文（6.1）：难度、buff 给的幸运；道具与套装的战利品效果（9.2）、buff 的掉落效果都施加上去
@@ -1023,7 +1023,7 @@ func _wire_events() -> void:
 	hooks.register(&"request_extract", try_extract)     # 085：撤离点的对话里选「撤离」
 	hooks.register(&"faith_tier", active_faith_tier)     # 093：事件条件 faith_active
 	hooks.register(&"active_faith_id", active_faith_id)
-	hooks.register(&"skill_ready", func(id: StringName) -> String: return skills.can_use(id) if skills != null else "没有技能")
+	hooks.register(&"skill_ready", func(id: StringName) -> String: return skills.can_use(id) if skills != null else UiText.t("log.no_skill"))
 	events.waited.connect(func(_n: MapNode, _actions: int):
 		if hunters != null:
 			hunters.on_player_step()

@@ -1,6 +1,9 @@
 {
   "id": "tibia_violence",
   "display_name": "胫骨大棒",
+  "display_names": {
+    "en": "Shinbone Club"
+  },
   "shape": [
     "11",
     "11",

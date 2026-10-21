@@ -14,10 +14,10 @@ func prebattle_actions(run: RunState, type: StringName) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if not types.has(type) or run == null or run.vitality == null:
 		return out
-	out.append({"option": VITALITY, "label": "立即击败（耗 %d 体力）" % vitality_cost,
-		"why": "" if run.vitality.current > vitality_cost else "体力不够（要留 1 点）"})
-	out.append({"option": FAITH, "label": "立即击败（耗 %d 信力）" % faith_cost,
-		"why": "" if FaithPerk.points_now(run) >= faith_cost else "信力不够（要 %d）" % faith_cost})
+	out.append({"option": VITALITY, "label": UiText.t("perk.smite_vitality") % vitality_cost,
+		"why": "" if run.vitality.current > vitality_cost else UiText.t("perk.smite_vitality_short")})
+	out.append({"option": FAITH, "label": UiText.t("perk.smite_faith") % faith_cost,
+		"why": "" if FaithPerk.points_now(run) >= faith_cost else UiText.t("perk.faith_short") % faith_cost})
 	return out
 
 
@@ -39,4 +39,4 @@ func prebattle_apply(run: RunState, option: StringName = VITALITY) -> bool:
 
 
 func _summary() -> String:
-	return "可消耗 %d 体力或 %d 信力立即击败非首领敌人" % [vitality_cost, faith_cost]
+	return UiText.t("perk.smite_summary") % [vitality_cost, faith_cost]

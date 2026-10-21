@@ -22,7 +22,7 @@ const DEFAULTS := {
 	"cell": 72, "board": [8, 6], "window_size": [660, 620], "window_center": [800, 510], "gap": 26, "header_h": 52,
 	"board_cells_topleft_rel_window": [42, 82],
 	"board_frame": {"file": "frame_player_72.png", "margin": 54, "cells_offset": 24},
-	"minimize": {"scale": 0.72, "topleft_rel_window": [594, 13], "tooltip": "收起（B）"},
+	"minimize": {"scale": 0.72, "topleft_rel_window": [594, 13]},     # 221 F1：tooltip 没写 = UiText「bag.minimize」
 }
 const DESIGN := Vector2(1600, 1000)
 ## 218 补充一（217 批三）：背包窗教程能指的地方（[method control_rect]）
@@ -80,7 +80,7 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 
 	var ms: Dictionary = _spec["minimize"]
 	var side := MINIMIZE_SIDE * float(ms.get("scale", 0.72))
-	var b := IconButton.make_art(MINIMIZE_DIR, MINIMIZE_ART, "－", String(ms.get("tooltip", "收起（B）")), on_close)
+	var b := IconButton.make_art(MINIMIZE_DIR, MINIMIZE_ART, "－", (String(ms.get("tooltip", UiText.t("bag.minimize"))) if UiText.lang == "zh" else UiText.t("bag.minimize")), on_close)
 	b.custom_minimum_size = Vector2(side, side)
 	b.size = b.custom_minimum_size
 	close_button = b

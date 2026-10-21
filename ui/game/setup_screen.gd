@@ -102,7 +102,8 @@ var _title_indent: Control = null
 var _enter_btn: Button
 var _back_btn: Button
 ## 161：三页（0 选角色、1 配道具、2 选地图与难度）与现在是哪页
-const PAGE_NAMES: Array[String] = ["选角色", "配道具", "选地图与难度"]
+## 221 F1：每页的标题（UiText 键，用时按当前语言取）
+const PAGE_TITLES: Array[String] = ["setup.page_1", "setup.page_2", "setup.page_3"]
 const PAGE_MAP := 2
 ## 180：难度数字的字号、规模那一列缩进多少
 const DIFFICULTY_NUM_SIZE := UiTheme.FLIP_NUM_SIZE
@@ -214,11 +215,11 @@ func _build_character_page() -> Control:
 	var left := _vbox(8)
 	left.custom_minimum_size.x = 260 - 28
 	left_board.add_child(left)
-	left.add_child(_label("角色", 15, UiPalette.DIM))
+	left.add_child(_label(UiText.t("setup.characters"), 15, UiPalette.DIM))
 	_char_box = _vbox(8)
 	left.add_child(_char_box)
 	if flow.characters.is_empty():
-		left.add_child(_label("没有角色（数据缺失）", 13, UiPalette.HP))
+		left.add_child(_label(UiText.t("setup.no_characters"), 13, UiPalette.HP))
 	var mid_board := _groove(30, 24, 30, 28)
 	mid_board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -255,7 +256,7 @@ func _build_kit_page() -> Control:
 	board_panel.add_child(left)
 	if not flow.presets().is_empty():
 		var presets := _hbox(8)
-		presets.add_child(_label("预设装备", 15, UiPalette.DIM))
+		presets.add_child(_label(UiText.t("setup.presets"), 15, UiPalette.DIM))
 		_preset_box = presets
 		left.add_child(presets)
 		_rebuild_presets()
@@ -276,7 +277,7 @@ func _build_kit_page() -> Control:
 	var right := _vbox(6)
 	ware_panel.add_child(right)
 	var w := flow.meta.warehouse
-	right.add_child(_label("仓库　%d 页" % w.page_count(), 15, UiPalette.DIM))     # 180：件数与那句「往左边的包里拖……」都不要
+	right.add_child(_label(UiText.t("setup.warehouse_pages") % w.page_count(), 15, UiPalette.DIM))     # 180：件数与那句「往左边的包里拖……」都不要
 
 	_drag = DragLayer.new()
 	_drag.label_font = font
@@ -338,11 +339,11 @@ func _build_map_page() -> Control:
 	left.custom_minimum_size.x = 300 - 32
 	left_board.add_child(left)
 	if not _paper_art():     # 定稿：摆在纸上的地图条目自己带钉，不要小标题
-		left.add_child(_label("地图", 15, UiPalette.DIM))
+		left.add_child(_label(UiText.t("setup.maps"), 15, UiPalette.DIM))
 	_map_list = _vbox(6)
 	left.add_child(_map_list)
 	if _chapters.is_empty():
-		left.add_child(_label("没有章节（数据缺失）", 13, UiPalette.HP))
+		left.add_child(_label(UiText.t("setup.no_chapters"), 13, UiPalette.HP))
 
 	_preview = MapPreview.new()
 	_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -396,7 +397,7 @@ func page() -> int:
 ## 换到第 [param i] 页（0..2）：只显示那一页，标题与右下角按钮跟着变
 func show_page(i: int) -> void:
 	var was := _page
-	_page = clampi(i, 0, PAGE_NAMES.size() - 1)
+	_page = clampi(i, 0, PAGE_TITLES.size() - 1)
 	if _page == PAGE_MAP and was != PAGE_MAP:
 		_reroll_seed()     # 180：种子玩家看不见，每次进这一页随机取（调试台指定了就用那个）
 	if _page != PAGE_MAP:
@@ -407,12 +408,12 @@ func show_page(i: int) -> void:
 	if _title_indent != null:
 		_title_indent.custom_minimum_size.x = PAPER_INSET if _page == PAGE_MAP and _paper_art() else 0.0
 	if _title != null:
-		_title.text = "开局 · %s / 三　%s" % [["一", "二", "三"][_page], PAGE_NAMES[_page]]
+		_title.text = UiText.t(PAGE_TITLES[_page])
 		UiTheme.set_tone(_title, tone)
 	if _enter_btn != null:
-		_enter_btn.text = "出发" if _page == PAGE_NAMES.size() - 1 else "继续"
+		_enter_btn.text = UiText.t("setup.depart") if _page == PAGE_TITLES.size() - 1 else UiText.t("menu.continue")
 	if _back_btn != null:
-		_back_btn.text = "回主菜单" if _page == 0 else "返回"
+		_back_btn.text = UiText.t("setup.main_menu") if _page == 0 else UiText.t("setup.back")
 	_sync_preview()
 	_refresh()
 	_fit_nav()
@@ -421,7 +422,7 @@ func show_page(i: int) -> void:
 
 ## 继续（最后一页 = 出发）。第一页没角色走不了
 func next_page() -> bool:
-	if _page >= PAGE_NAMES.size() - 1:
+	if _page >= PAGE_TITLES.size() - 1:
 		return depart()
 	if _page == 0 and character() == null:
 		return false
@@ -546,11 +547,11 @@ static func scale_note(o: Dictionary) -> String:
 	var parts: Array[String] = []
 	var r: Vector2i = o.get("rings", Vector2i.ZERO)
 	if r.x > 0:
-		parts.append(("%d 环" % r.x) if r.y <= r.x else ("%d~%d 环" % [r.x, r.y]))
+		parts.append((UiText.t("setup.rings") % r.x) if r.y <= r.x else (UiText.t("setup.rings_range") % [r.x, r.y]))
 	var limit := int(o.get("step_limit", 0))
 	if limit > 0:
-		parts.append("%s %d" % [Glossary.COUNTDOWN_WORD, limit])
-	return "　".join(parts)
+		parts.append(UiText.t("setup.scale_countdown") % limit)
+	return UiText.t("setup.sep").join(parts)
 
 
 ## 180：左列重排 —— 每张图一个按钮；选中的那张下面缩进一列规模（名字在左、环数与倒计时小字在右）
@@ -561,7 +562,7 @@ func _rebuild_map_list() -> void:
 	for i in _chapters.size():
 		var c := _chapters[i]
 		var idx := i
-		var b := _button(c.display_name if c.display_name != "" else String(c.id), func(): choose_chapter(idx), 16)
+		var b := _button(Names.of(c) if c.display_name != "" else String(c.id), func(): choose_chapter(idx), 16)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_skin_entry(b, UiTheme.BUTTON_MAP_ENTRY, UiTheme.ART_MAP_ENTRY, MAP_ENTRY_H)
 		_mark_entry(b, i == chapter_index)
@@ -711,7 +712,7 @@ func _rebuild_characters() -> void:
 	UiTheme.clear_children(_char_box)
 	var names: Array[String] = []
 	for ch in _characters:
-		names.append(ch.display_name if ch.display_name != "" else String(ch.id))
+		names.append(Names.of(ch) if ch.display_name != "" else String(ch.id))
 	_character_btns = _choice_column(_char_box, names, choose_character)
 
 
@@ -721,8 +722,8 @@ func _rebuild_presets() -> void:
 	if _preset_box == null:
 		return
 	UiTheme.clear_children(_preset_box)
-	var names: Array[String] = ["不带预设"]
-	var tips: Array[String] = ["只带角色的初始包，其余从仓库拖"]
+	var names: Array[String] = [UiText.t("setup.no_preset")]
+	var tips: Array[String] = [UiText.t("setup.no_preset_tip")]
 	for def in flow.presets():
 		names.append(Names.of(def))
 		tips.append(Names.description_of(def))
@@ -776,7 +777,7 @@ func _apply_preset() -> void:
 		else:
 			missed.append(Names.of(idef))
 	if not missed.is_empty() and _status != null:
-		_status.text = "预设里放不下：%s（包太满；拿掉几件再选）" % "、".join(missed)
+		_status.text = UiText.t("setup.preset_missed") % UiText.t("setup.list_sep").join(missed)
 
 
 ## 096：棋盘上预设套的实例
@@ -907,7 +908,7 @@ func encumbrance_text() -> String:
 	var cap := RunBuffs.context(defs).carry_capacity_of(ch.weight_capacity)     # 149：科技按百分比
 	var w := ItemWeight.total(board)
 	var lv := rules.level_of(w, cap)
-	return "负重 %d / %d　%s%s" % [w, cap, rules.name_of(lv), "　" + rules.effect_text(lv) if lv > 0 else ""]
+	return UiText.t("setup.load") % [w, cap, rules.name_of(lv), UiText.t("setup.sep") + rules.effect_text(lv) if lv > 0 else ""]
 
 
 func character() -> CharacterDef:
@@ -939,18 +940,18 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 		if board == null:
 			return false
 		if not _allow_drop(inst, board):
-			why = "这一章不许把带回来的东西带进去"
+			why = UiText.t("setup.no_brought_back")
 		else:
 			ok = carry_in(uid)
-			why = "" if ok else "包里没有空间放「%s」" % Names.of(inst.def)
+			why = "" if ok else UiText.t("setup.no_room_bag") % Names.of(inst.def)
 	elif from == board:
 		if not MetaState.keeps(inst.def):
-			why = "「%s」是初始包，留在棋盘上" % Names.of(inst.def)
+			why = UiText.t("setup.starting_bag") % Names.of(inst.def)
 		elif _preset_uids.has(uid):
-			why = "预设套的东西只能在棋盘上挪"
+			why = UiText.t("setup.preset_stays")
 		else:
 			ok = carry_out(uid)
-			why = "" if ok else "仓库放不下「%s」" % Names.of(inst.def)
+			why = "" if ok else UiText.t("setup.no_room_warehouse") % Names.of(inst.def)
 	if why != "" and _status != null:
 		_status.text = why
 	return ok
@@ -996,12 +997,12 @@ static func carry_text(c: ChapterDef, sid: StringName, value: int) -> String:
 		return ""
 	var over := CountdownModule.over_for(c, sid, value)
 	if over <= 0:
-		return "[color=#5cb85c]带入预算　%d / %d[/color]" % [value, budget]
+		return "[color=#5cb85c]%s[/color]" % (UiText.t("setup.budget") % [value, budget])
 	var penalty := CountdownModule.penalty_for(c, sid, value)
 	var base := CountdownModule.base_limit_for(c, sid)
 	if base > 0 and penalty > 0:
-		return "[color=#f0ad4e]带入预算　%d / %d　超出 %d → 倒计时 −%d（%d → %d）[/color]" % [value, budget, over, penalty, base, CountdownModule.limit_for(c, sid, value)]
-	return "[color=#f0ad4e]带入预算　%d / %d　超出 %d（这一章没有倒计时，只提示）[/color]" % [value, budget, over]
+		return "[color=#f0ad4e]%s[/color]" % (UiText.t("setup.budget_over_countdown") % [value, budget, over, penalty, base, CountdownModule.limit_for(c, sid, value)])
+	return "[color=#f0ad4e]%s[/color]" % (UiText.t("setup.budget_over") % [value, budget, over])
 
 
 ## 现在带上的（非包；096：预设套的不算 —— 它不占预算、不受件数上限）
@@ -1023,12 +1024,12 @@ func set_run_seed(v: int) -> void:
 ## 能不能出发；空串 = 能，否则是原因
 func can_depart() -> String:
 	if chapter() == null:
-		return "没有章节可开"
+		return UiText.t("setup.no_chapter")
 	if needs_spawn():
-		return "先在地图上挑一个出生点"
+		return UiText.t("notice.pick_spawn")
 	var ch := character()
 	if ch == null:
-		return "没有角色可选"
+		return UiText.t("setup.no_character")
 	var defs: Array = []
 	for inst in carried():
 		defs.append(inst.def)
@@ -1051,10 +1052,10 @@ func _build_nav() -> void:
 	box.add_child(_status)
 	var row := _hbox(16)
 	row.alignment = BoxContainer.ALIGNMENT_END
-	_back_btn = _button("返回", prev_page, BACK_FONT, UiPalette.Tier.MINOR)     # 180 补二：大两号，仍比「出发」小
+	_back_btn = _button(UiText.t("setup.back"), prev_page, BACK_FONT, UiPalette.Tier.MINOR)     # 180 补二：大两号，仍比「出发」小
 	_back_btn.custom_minimum_size = Vector2(240, 76)
 	row.add_child(_back_btn)
-	_enter_btn = _button("继续", func(): next_page(), 24, UiPalette.Tier.PRIMARY)
+	_enter_btn = _button(UiText.t("menu.continue"), func(): next_page(), 24, UiPalette.Tier.PRIMARY)
 	_enter_btn.custom_minimum_size = Vector2(280, 76)
 	row.add_child(_enter_btn)
 	# 180 定稿：按钮 A 套 ——「返回」深色铜铸牌、「继续 / 出发」亮黄铜（各四态图）
@@ -1109,7 +1110,7 @@ func _go_now() -> bool:
 	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value(), spawn_id)
 	flow.map_reveal = {}
 	if run == null:
-		_status.text = "这一章生成不出图：%s" % (c.map_source.last_error if c.map_source != null else "没有地图来源")
+		_status.text = UiText.t("setup.no_map") % (c.map_source.last_error if c.map_source != null else UiText.t("setup.no_map_source"))
 		return false
 	flow.next_run_seed = -1     # 180：调试台指定的种子只管一局
 	_remember_last(c)
@@ -1178,7 +1179,7 @@ func _show_hint(id: int) -> void:
 	var type: StringName = g.get_node(id).type if g != null and g.has_node(id) else &"spawn"
 	var route := _route_text(g, id)
 	var title := "%s·%s" % [NodeText.label_of(type), route["name"]] if not route.is_empty() else ""
-	_hint.show_for(id, type, NodeHintCard.hint_for(chapter(), type), String(route.get("text", "")), "点别处可以换一个", _animations_on(), title)
+	_hint.show_for(id, type, NodeHintCard.hint_for(chapter(), type), String(route.get("text", "")), UiText.t("setup.hint_elsewhere"), _animations_on(), title)
 
 
 ## 提示窗第三行：这个入口的路线。作者 2026-10-17 已把路线卡（风险 / 收益）对玩家藏起来（地图屏的 `SHOW_ROUTES`），跟着它藏
@@ -1286,7 +1287,7 @@ func _rebuild_board() -> void:
 		inst.uid = flow.meta.allocate_uid()
 		board.try_add(inst, true)
 	board.end_batch()
-	_board_host.add_child(_label("行囊　%s　　%d × %d 格" % [Names.of(ch), ch.board_size.x, ch.board_size.y], 15, UiPalette.DIM))     # 180
+	_board_host.add_child(_label(UiText.t("setup.pack_title") % [Names.of(ch), ch.board_size.x, ch.board_size.y], 15, UiPalette.DIM))     # 180
 	_board_view = InventoryView.new()
 	_board_view.label_font = font
 	_board_view.inventory = board
@@ -1321,17 +1322,17 @@ func _rebuild_card() -> void:
 	_card.add_child(head)
 	_portrait = PortraitSlot.new(CARD_PORTRAIT, Nameplate.character_face(ch.id), true)
 	head.add_child(_portrait)
-	var plate := Nameplate.new().setup(Names.of(ch), "角色", Nameplate.character_face(ch.id))
+	var plate := Nameplate.new().setup(Names.of(ch), UiText.t("setup.character"), Nameplate.character_face(ch.id))
 	plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(plate)
 	var base := ch.baseline()
-	_card.add_child(_stat_row("生命", StatBlocks.new().setup(StatBlocks.HP, base.value_of(&"max_hp"))))
-	var stamina := _stat_row("耐力", StatBlocks.new().setup(StatBlocks.STAMINA, base.value_of(&"max_stamina")))
-	stamina.add_child(_label("每秒回 %s" % _num(base.value_of(&"regen_stamina")), 14, UiPalette.DIM))     # 161 待定 1：三人唯一不同的第三个数
+	_card.add_child(_stat_row(UiText.t("setup.stat_hp"), StatBlocks.new().setup(StatBlocks.HP, base.value_of(&"max_hp"))))
+	var stamina := _stat_row(UiText.t("setup.stat_stamina"), StatBlocks.new().setup(StatBlocks.STAMINA, base.value_of(&"max_stamina")))
+	stamina.add_child(_label(UiText.t("setup.stamina_regen") % _num(base.value_of(&"regen_stamina")), 14, UiPalette.DIM))     # 161 待定 1：三人唯一不同的第三个数
 	_card.add_child(stamina)
-	_card.add_child(_stat_row("体力", StatBlocks.new().setup(StatBlocks.VITALITY, ch.vitality_max)))
-	_card.add_child(_label("一块 10 点；角色自己的底子，不含科技加成", 12, UiPalette.DIM))
+	_card.add_child(_stat_row(UiText.t("setup.stat_vitality"), StatBlocks.new().setup(StatBlocks.VITALITY, ch.vitality_max)))
+	_card.add_child(_label(UiText.t("setup.block_note"), 12, UiPalette.DIM))
 	# 179：负重上限 / 棋盘 / 开局金币换成三块图标牌；带入上限（有才有）仍是牌下一行字
 	_cap_tiles.clear()
 	var tiles := _hbox(14)
@@ -1361,7 +1362,7 @@ func _rebuild_card() -> void:
 	if board == null:
 		return
 	_grooves[2].custom_minimum_size.x = ch.board_size.x * InventoryView.CELL + 2 * RIGHT_PAD
-	_preview_host.add_child(_label("棋盘　%d × %d 格" % [ch.board_size.x, ch.board_size.y], 15, UiPalette.DIM))
+	_preview_host.add_child(_label(UiText.t("setup.board_title") % [ch.board_size.x, ch.board_size.y], 15, UiPalette.DIM))
 	_preview_view = InventoryView.new()
 	_preview_view.label_font = font
 	_preview_view.inventory = board
@@ -1374,10 +1375,10 @@ func _rebuild_card() -> void:
 static func cap_tiles(ch: CharacterDef) -> Array:
 	var out: Array = []
 	if ch.weight_capacity > 0:
-		out.append([&"weight", str(ch.weight_capacity), "负重上限"])
-	out.append([&"board", "%d × %d" % [ch.board_size.x, ch.board_size.y], "棋盘"])
+		out.append([&"weight", str(ch.weight_capacity), UiText.t("setup.cap_load")])
+	out.append([&"board", "%d × %d" % [ch.board_size.x, ch.board_size.y], UiText.t("setup.cap_board")])
 	if ch.starting_funds >= 0:
-		out.append([&"coin", str(ch.starting_funds), "开局金币"])
+		out.append([&"coin", str(ch.starting_funds), UiText.t("setup.cap_coins")])
 	return out
 
 
@@ -1385,10 +1386,10 @@ static func cap_tiles(ch: CharacterDef) -> Array:
 static func carry_caps_text(ch: CharacterDef) -> String:
 	var caps: Array[String] = []
 	if ch.carry_max_items >= 0:
-		caps.append("最多带 %d 件" % ch.carry_max_items)
+		caps.append(UiText.t("setup.carry_max") % ch.carry_max_items)
 	if ch.carry_rarity_cap >= 0:
-		caps.append("稀有度不超过 %d" % ch.carry_rarity_cap)
-	return "　".join(caps)
+		caps.append(UiText.t("setup.carry_rarity") % ch.carry_rarity_cap)
+	return UiText.t("setup.sep").join(caps)
 
 
 func _stat_row(title: String, blocks: StatBlocks) -> HBoxContainer:
@@ -1432,7 +1433,7 @@ func _refresh() -> void:
 			lines.append(carry_text(c, scale_id, carry_value()))
 		_readout.append_text("\n".join(lines))
 	if _stash_title != null and stash != null:
-		_stash_title.text = "地上　%d 件" % stash.item_count()
+		_stash_title.text = UiText.t("setup.ground_count") % stash.item_count()
 	if _summary != null:
 		_summary.text = summary_text()
 	if _enter_btn != null:

@@ -52,7 +52,7 @@ static func settle(state: RunState) -> RunResult:
 	r.reason = state.end_reason
 	r.run_seed = state.run_seed
 	r.chapter_id = state.chapter.id if state.chapter != null else &""
-	r.chapter_name = state.chapter.display_name if state.chapter != null else ""
+	r.chapter_name = Names.of(state.chapter) if state.chapter != null else ""
 	r.steps = state.travel.clock.total if state.travel != null and state.travel.clock != null else 0
 	for id in state.map.node_ids():
 		if state.map.get_node(id).is_visited():
